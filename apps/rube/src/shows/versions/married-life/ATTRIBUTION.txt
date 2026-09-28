@@ -7,7 +7,10 @@ https://www.youtube.com/watch?v=2rn-vMbFglI
 Duration 4:11. Copyrighted — do not ship to production / public Shows without a licence.
 
 Files:
-- apps/rube/src/shows/versions/married-life/married-life-demo.mp3 — the cue as fetched (yt-dlp, audio only,
-  re-encoded at 128 kbit/s). The show plays it whole from its first sample (offset 0); no edit, no gain change.
+- (removed) married-life-demo.mp3 — was a private demo fetch; live playback is YouTube only.
 - scripts/shows/plans/married-life-onsets.json — the recording's onsets, its tracked beats and bars, and its
   landmarks, measured by scripts/shows/married-life-onsets.py; every strike in the show is held to it.
+
+Playback: YouTube only. The local demo MP3 was removed so copyrighted audio is not shipped;
+the show embeds the label upload above. Onset JSON under scripts/shows/plans/ remains for authoring
+(rebuild a local cue with the listed scripts if you need one for measurement).

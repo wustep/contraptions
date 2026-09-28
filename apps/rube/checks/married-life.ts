@@ -30,7 +30,7 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     !!version.about && typeof version.still === 'number' && version.still > 0 && version.still < DURATION)
   check('married life: the whole recording from zero, credited to Michael Giacchino and Up, on the label\'s upload',
     near(perf.duration, DURATION) && DURATION > AT.last + 10 && DURATION >= RECORDING && (perf.soundtrack?.offset ?? 0) === 0 &&
-    !!perf.soundtrack?.src?.includes('married-life-demo') &&
+    !perf.soundtrack?.src &&
     ['Michael Giacchino', 'Married Life', 'Up'].every((w) => perf.soundtrack?.credit?.includes(w)) &&
     !/tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
     perf.soundtrack?.href === 'https://www.youtube.com/watch?v=2rn-vMbFglI' && perf.soundtrack?.youtube?.[0]?.id === '2rn-vMbFglI')

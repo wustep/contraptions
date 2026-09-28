@@ -13,8 +13,10 @@ Copyrighted — used for a private Contraptions tech demo only; do not ship to p
 licence.
 
 Files:
-- apps/rube/src/shows/versions/heptapod-b/heptapod-b-demo.mp3 — the cue as fetched (yt-dlp, audio only, re-encoded
-  at 128 kbit/s with ffmpeg). The show plays it whole from its first sample (offset 0); no edit, no gain change. The
-  show then runs on in silence for its end credits.
+- (removed) heptapod-b-demo.mp3 — was a private demo fetch; live playback is YouTube only.
 - scripts/shows/plans/heptapod-b-onsets.json — the recording's pulse (one comb, every pulse on its own attack), its
   onsets and its landmarks, measured by scripts/shows/heptapod-b-onsets.py; every strike in the show is held to it.
+
+Playback: YouTube only. The local demo MP3 was removed so copyrighted audio is not shipped;
+the show embeds the label upload above. Onset JSON under scripts/shows/plans/ remains for authoring
+(rebuild a local cue with the listed scripts if you need one for measurement).

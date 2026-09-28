@@ -36,7 +36,7 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
     version.title === 'Caravan' && version.label === 'Opus 5.5' && version.note === undefined && !('director' in version))
   check('caravan: the whole recording from zero, credited to Juan Tizol, Duke Ellington, John Wasson and Whiplash, with its label upload',
     perf.show === show && near(perf.duration, DURATION) && (perf.soundtrack?.offset ?? 0) === 0 &&
-    !!perf.soundtrack?.src?.includes('whiplash-caravan-demo') && near(RECORDING, data.duration) && DURATION > RECORDING &&
+    !perf.soundtrack?.src && near(RECORDING, data.duration) && DURATION > RECORDING &&
     ['Juan Tizol', 'Duke Ellington', 'John Wasson', 'Caravan', 'Whiplash'].every((w) => perf.soundtrack?.credit?.includes(w)) &&
     !/tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
     perf.soundtrack?.href === 'https://www.youtube.com/watch?v=38CRu1rCaKg' &&

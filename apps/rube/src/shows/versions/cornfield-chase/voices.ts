@@ -1,4 +1,3 @@
-import recording from './cornfield-chase-zimmer.mp3'
 import type p5 from 'p5'
 import type { Theme } from '../../../../../../src/core/themes'
 import { R, ball, laneAt, laneTime, type BallState, type Lane, type Piece, type PieceCtx, type Pt, type Seg } from '../../../parts'
@@ -450,9 +449,9 @@ export const performance: Performance = {
   duration: DURATION,
   camera: (t) => show.cameraAt(t),
   soundtrack: {
-    src: recording,
     offset: AUDIO_OFFSET,
-    credit: 'Hans Zimmer — Cornfield Chase, from Interstellar (2014). Private tech demo; not for public Shows.',
+    credit: 'Hans Zimmer — Cornfield Chase, from Interstellar (2014).',
     href: 'https://www.youtube.com/watch?v=JuSsvM8B4Jc',
+    youtube: [{ id: 'JuSsvM8B4Jc', from: AUDIO_OFFSET }],
   },
 }

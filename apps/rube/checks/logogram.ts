@@ -29,7 +29,7 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
     version.title === 'Logogram' && version.label === 'Opus 5.5' && !!version.about && typeof version.still === 'number' && !('director' in version))
   check('logogram: the whole recording from zero, credited to Jóhann Jóhannsson and the film, played from the label\'s upload, and the credits after it',
     near(perf.duration, DURATION) && (perf.soundtrack?.offset ?? 0) === 0 && DURATION > RECORDING + 20 &&
-    !!perf.soundtrack?.src?.includes('heptapod-b-demo') &&
+    !perf.soundtrack?.src &&
     ['Jóhann Jóhannsson', 'Heptapod B', 'Arrival'].every((w) => perf.soundtrack?.credit?.includes(w)) &&
     !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
     perf.soundtrack?.href === 'https://www.youtube.com/watch?v=KzaqrQuwr1k' && perf.soundtrack?.youtube?.[0]?.id === 'KzaqrQuwr1k')

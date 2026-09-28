@@ -30,8 +30,12 @@ export interface Framing {
 }
 
 export interface SoundtrackSpec {
-  /** The recording's URL. Import the file and Vite gives it one: `import src from './take.mp3'`. */
-  src: string
+  /**
+   * Optional local recording URL. Import the file and Vite gives it one: `import src from './take.mp3'`.
+   * Keep this for open-licence / public-domain cues. Copyrighted film and TV scores omit it and play from
+   * `youtube` only — do not ship those demos.
+   */
+  src?: string
   /** Seconds into the recording at which the show's zero falls. Never negative. */
   offset?: number
   /** Who is playing, and under what licence. The panel says it; the frame never does. */
@@ -45,9 +49,9 @@ export interface SoundtrackSpec {
    */
   loop?: number
   /**
-   * The same music as the label's own YouTube uploads, which the page plays in place of `src` (`youtube.ts`). `src`
-   * stays: a saved video records the file, and the file plays wherever YouTube will not. One cue, or several laid
-   * end to end where `src` is a mix of them.
+   * The label's own YouTube uploads (`youtube.ts`). Used for live playback when present. Copyrighted scores rely on
+   * this alone. When `src` is also set (open-licence locals), YouTube is preferred and the file is the fallback for
+   * export, `?music=file`, and places YouTube will not play. One cue, or several laid end to end where `src` is a mix.
    */
   youtube?: YouTubeCue[]
 }
@@ -293,7 +297,9 @@ export function performanceProblems(p: Performance): string[] {
   if (!p.show || typeof p.show.at !== 'function') out.push('no show')
   if (!Number.isFinite(p.duration) || p.duration <= 0) out.push(`duration is ${p.duration}`)
   if (p.soundtrack) {
-    if (!text(p.soundtrack.src)) out.push('the soundtrack has no src')
+    const hasSrc = text(p.soundtrack.src)
+    const hasYouTube = (p.soundtrack.youtube?.length ?? 0) > 0
+    if (!hasSrc && !hasYouTube) out.push('the soundtrack has no src or YouTube cue')
     const offset = p.soundtrack.offset ?? 0
     if (!Number.isFinite(offset) || offset < 0) out.push(`the soundtrack's offset is ${offset}`)
     p.soundtrack.youtube?.forEach((c, i) => {

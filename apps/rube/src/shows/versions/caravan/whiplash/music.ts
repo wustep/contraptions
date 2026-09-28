@@ -2,7 +2,7 @@ import measured from '../../../../../../../scripts/shows/plans/caravan-onsets.js
 
 /**
  * The recording's clock: "Caravan" (Juan Tizol and Duke Ellington, arranged by John Wasson), the finale of
- * Whiplash, played whole from its first sample (`../whiplash-caravan-demo.mp3`, `scripts/shows/caravan-cue.sh`).
+ * Whiplash, played whole from its first sample (formerly `whiplash-caravan-demo.mp3` via `scripts/shows/caravan-cue.sh`; live playback is YouTube only).
  * Measured once by `scripts/shows/caravan-onsets.py` into `scripts/shows/plans/caravan-onsets.json`; `check:shows`
  * holds every strike of this take against that file. Show time is recording time (the soundtrack's offset is 0).
  *

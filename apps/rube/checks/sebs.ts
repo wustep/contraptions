@@ -25,7 +25,7 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     version.label === 'Opus 5.5' && version.title === 'Epilogue' && version.note === undefined && !('director' in version))
   check('sebs: the whole mix from zero (the Epilogue, then The End), credited to Justin Hurwitz and La La Land',
     perf.show === show && near(perf.duration, DURATION) && DURATION > MIX_END - 0.2 && near(END_AT, 464) && (perf.soundtrack?.offset ?? 0) === 0 &&
-    !!perf.soundtrack?.src?.includes('la-la-land-sebs-mix-demo') &&
+    !perf.soundtrack?.src && perf.soundtrack?.youtube?.[0]?.id === '_vpCaKQXhMg' &&
     ['Justin Hurwitz', 'Epilogue', 'The End', 'La La Land'].every((w) => perf.soundtrack?.credit?.includes(w)) &&
     !/tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
     perf.soundtrack?.href === 'https://www.youtube.com/watch?v=_vpCaKQXhMg')

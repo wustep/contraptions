@@ -2,7 +2,7 @@ import measured from '../../../../../../../scripts/shows/plans/time-onsets.json'
 
 /**
  * The recording's clock: Hans Zimmer's "Time", the last cue of Inception (WaterTower Music, 2010), played from its
- * first sample (`apps/rube/src/shows/versions/time/time-demo.mp3`). Measured once by `scripts/shows/time-onsets.py`
+ * first sample (formerly `time-demo.mp3`; live playback is YouTube only). Measured once by `scripts/shows/time-onsets.py`
  * into `scripts/shows/plans/time-onsets.json`; `check:shows` holds every strike of this take against that file.
  *
  * It is a click: one tempo, 63.01 beats a minute (a beat every 0.95226 s; beat k at 0.4145 + 0.95226 k), from the first

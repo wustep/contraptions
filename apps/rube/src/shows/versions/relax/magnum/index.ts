@@ -1,4 +1,3 @@
-import recording from '../relax-demo.mp3'
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION } from './music'
@@ -17,7 +16,6 @@ export const performance: Performance = {
   // The end credits' words, which the page sets over the Center's sky.
   titles: creditsAt,
   soundtrack: {
-    src: recording,
     offset: 0,
     credit: 'Frankie Goes to Hollywood · Relax · Zoolander (2001)',
     href: 'https://www.youtube.com/watch?v=kpgRJSrfoic',

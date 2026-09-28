@@ -2,7 +2,7 @@ import measured from '../../../../../../../scripts/shows/plans/heptapod-b-onsets
 
 /**
  * The recording's clock: Jóhann Jóhannsson's "Heptapod B", from Arrival, played from its first sample
- * (`apps/rube/src/shows/versions/heptapod-b/heptapod-b-demo.mp3`). Measured once by `scripts/shows/heptapod-b-onsets.py`
+ * (formerly `heptapod-b-demo.mp3`; live playback is YouTube only). Measured once by `scripts/shows/heptapod-b-onsets.py`
  * into `scripts/shows/plans/heptapod-b-onsets.json`; `check:shows` holds every strike of this take against that file.
  *
  * It is a machine made of voices. After a few free murmurs, a pulse of short sung notes that never changes pace: one

@@ -1,4 +1,3 @@
-import recording from '../lalaland-epilogue-demo.mp3'
 import type { Performance } from '../../../registry'
 import { DURATION } from './music'
 import { compose } from './score'
@@ -17,7 +16,6 @@ export const performance: Performance = {
   // The end credits' words, which the page sets over the frame as the last chords ring.
   titles: creditsAt,
   soundtrack: {
-    src: recording,
     offset: 0,
     credit: 'Justin Hurwitz · Epilogue · La La Land (2016)',
     href: 'https://www.youtube.com/watch?v=jQVvT_UKZ6w',

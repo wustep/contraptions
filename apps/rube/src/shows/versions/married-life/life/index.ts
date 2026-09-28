@@ -1,4 +1,3 @@
-import recording from '../married-life-demo.mp3'
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION } from './music'
@@ -17,7 +16,6 @@ export const performance: Performance = {
   // The end credits' words, which the page sets over the house.
   titles: creditsAt,
   soundtrack: {
-    src: recording,
     offset: 0,
     credit: 'Michael Giacchino · Married Life · Up (2009)',
     href: 'https://www.youtube.com/watch?v=2rn-vMbFglI',

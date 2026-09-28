@@ -641,7 +641,7 @@ function sync(): void {
 
   // Export.
   sizeSeg.set(FRAME_SIZES.indexOf(size))
-  const canRecord = recordingFormat(!!perf?.soundtrack) !== null
+  const canRecord = recordingFormat(!!perf?.soundtrack?.src) !== null || recordingFormat(false) !== null
   pngBtn.disabled = !ready || busy
   videoBtn.disabled = !ready || !canRecord
   videoBtn.classList.toggle('stop', busy)
@@ -651,7 +651,7 @@ function sync(): void {
   videoBtn.title = busy
     ? 'Stop the recording. No file is kept.'
     : canRecord
-      ? `The whole show as a video${perf?.soundtrack ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.`
+      ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.`
       : 'Video export needs a browser that can record the canvas.'
 }
 
