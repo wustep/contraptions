@@ -5,6 +5,7 @@ import { R, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, smooth, type Ctx, type PartShot } from '../kit'
 import { cue, UNDOCK } from '../music'
 import { BALL, DARK } from '../worlds'
+import { lensFace } from '../space/lens'
 
 /**
  * Undocking: the film's docking run backwards.
@@ -720,55 +721,20 @@ function drawSphere(p: p5, c: Ctx, t: number, f: Frame, q: Pose): void {
   if (f.x1 < sx - RS * 2 || f.x0 > sx + RS * 2 || f.y1 < sy - RS * 2 || f.y0 > sy + RS * 2) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const X = (v: number) => v * k
-  glow(p, X(sx), X(sy), X(RS * 1.8), ICE_RGB, 0.16)
-  // (Its edge is its own: no arcs of stars round it, which read as a dashed ring.)
-  p.noFill()
-  // Saturn, behind and to the left, bent into a thin gold arc on the rim that faces it.
-  const toSat = Math.atan2(SAT[1] - sy, SAT[0] - sx)
-  p.stroke(`rgba(${GOLD_RGB}, 0.55)`)
-  p.strokeWeight(X(0.05))
-  p.arc(X(sx), X(sy), X(RS * 2.08), X(RS * 2.08), toSat - 0.55, toSat + 0.55)
-  p.stroke(`rgba(${GOLD_RGB}, 0.3)`)
-  p.strokeWeight(X(0.03))
-  p.arc(X(sx), X(sy), X(RS * 2.16), X(RS * 2.16), toSat - 0.3, toSat + 0.35)
-
-  // Inside: the other side's sky, squeezed toward the rim and turning slowly.
+  glow(p, X(sx), X(sy), X(RS * 1.5), ICE_RGB, 0.08)
+  // Inside: the other side's sky, squeezed toward the rim and turning slowly (`lensFace`).
   p.push()
   ctx.beginPath()
   ctx.arc(X(sx), X(sy), X(RS), 0, TAU)
   ctx.clip()
-  p.noStroke()
-  p.fill(DARK.deep)
-  p.circle(X(sx), X(sy), X(RS * 2))
-  const shift = (f.cx - sx) * -0.06
-  const turn = t * 0.025 + (f.cy - sy) * 0.015
-  p.push()
-  ctx.translate(X(sx + shift * 0.5), X(sy))
-  ctx.rotate(0.4 + turn)
-  const band = ctx.createLinearGradient(0, X(-RS * 0.45), 0, X(RS * 0.45))
-  band.addColorStop(0, 'rgba(110, 99, 201, 0)')
-  band.addColorStop(0.5, 'rgba(110, 99, 201, 0.34)')
-  band.addColorStop(1, 'rgba(110, 99, 201, 0)')
-  ctx.fillStyle = band
-  ctx.fillRect(X(-RS * 1.3), X(-RS * 0.45), X(RS * 2.6), X(RS * 0.9))
-  p.pop()
-  for (let j = 0; j < 150; j++) {
-    const rho = hash(j, 81) ** 0.38
-    const a = hash(j, 82) * TAU + turn + shift * (1 - rho) * 0.6
-    const r = RS * rho * 0.98
-    const bright = 0.35 + 0.65 * hash(j, 83)
-    const len = 0.02 + 0.45 * rho ** 8
-    if (len < 0.06) {
-      p.noStroke()
-      p.fill(alpha(p, ink, bright * 0.85))
-      p.circle(X(sx + Math.cos(a) * r), X(sy + Math.sin(a) * r), Math.max(1.2, X(0.028) * (0.6 + bright)))
-    } else {
-      p.noFill()
-      p.stroke(alpha(p, ink, bright * 0.75))
-      p.strokeWeight(Math.max(1, X(0.02)))
-      p.arc(X(sx), X(sy), X(r * 2), X(r * 2), a, a + len)
-    }
-  }
+  lensFace(p, k, sx, sy, RS, ink, { turn: t * 0.025 + (f.cy - sy) * 0.015, shift: (f.cx - sx) * -0.06, band: 0.4, stars: 150, seed: 81 })
+  // Saturn, behind and to the left, bent into one thin gold arc just inside the rim that faces it: an image in the
+  // lens, not a second edge round it.
+  const toSat = Math.atan2(SAT[1] - sy, SAT[0] - sx)
+  p.noFill()
+  p.stroke(`rgba(${GOLD_RGB}, 0.5)`)
+  p.strokeWeight(X(0.05))
+  p.arc(X(sx), X(sy), X(RS * 1.9), X(RS * 1.9), toSat - 0.5, toSat + 0.5)
   // The touch: rings running out over its face from where the nose went in.
   const face = Math.atan2(-DIR_IN[1], -DIR_IN[0])
   const cp: Pt = [sx + Math.cos(face) * RS, sy + Math.sin(face) * RS]
