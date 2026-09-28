@@ -45,9 +45,10 @@ export const interior = scenery<InteriorState>({
       p.circle(X(ax + Math.cos(a) * r), X(ay + Math.sin(a) * r), 1.6)
     }
 
-    // The air inside: brightest round the spindle, a warm haze down by the land.
+    // The air inside: brightest round the spindle, a warm haze down by the land. Never white: the ball crosses the
+    // axis in this air (the flight), and it is a pale ball.
     const air = ctx.createRadialGradient(X(ax), X(ay), X(0.5), X(ax), X(ay), X(RIM_R))
-    air.addColorStop(0, mixHex('#3B4660', '#F7F4EA', lit))
+    air.addColorStop(0, mixHex('#3B4660', '#EDEEE6', lit))
     air.addColorStop(0.5, mixHex('#2E3850', '#DCE5E1', lit))
     air.addColorStop(0.86, mixHex('#2A2E3E', '#E5DDC6', lit))
     air.addColorStop(1, mixHex('#252938', '#CDBA94', lit))
@@ -149,12 +150,13 @@ export const interior = scenery<InteriorState>({
       p.pop()
     }
 
-    // The spindle at the axis: the station's light, lit when the lights come up.
-    const glow = ctx.createRadialGradient(X(ax), X(ay), 0, X(ax), X(ay), X(3))
-    glow.addColorStop(0, `rgba(255, 246, 214, ${0.8 * lit})`)
+    // The spindle at the axis: the station's light, lit when the lights come up. A lamp's warmth round it, not a
+    // bloom over the middle of the station.
+    const glow = ctx.createRadialGradient(X(ax), X(ay), 0, X(ax), X(ay), X(2.2))
+    glow.addColorStop(0, `rgba(255, 246, 214, ${0.42 * lit})`)
     glow.addColorStop(1, 'rgba(255, 246, 214, 0)')
     ctx.fillStyle = glow
-    ctx.fillRect(X(ax - 3), X(ay - 3), X(6), X(6))
+    ctx.fillRect(X(ax - 2.2), X(ay - 2.2), X(4.4), X(4.4))
     p.stroke(ink)
     p.strokeWeight(weight)
     p.fill(lit > 0.5 ? DUST.light : '#8A8578')
