@@ -622,51 +622,46 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
     ctx.fillRect(-reach, -reach, reach * 2, reach * 2)
     ctx.restore()
   }
-  // The far side of the disk, bent over the top of the dark and under it by the lensing: near and big, broad bands of
-  // light, hottest where they hug the dark and going off into the haze.
-  const band = (a0: number, a1: number, rout: number, peak: number, body: number) => {
+  // The far side of the disk, bent up over the top of the dark and down under it by the lensing: the silhouette the
+  // film made famous. Not a ring round the dark: light that hugs the dark at its pole and flares out wide at either
+  // side, down to where the disk's plane takes it on, so the whole reads as a hat of light over the dark and a thinner
+  // brim under it. Filled, hottest against the dark and fading outward, a little hotter to the left (the side coming
+  // at us), with one fine bright edge where the lensing folds it over.
+  const crescent = (rx: number, ry: number, upper: boolean, reach: number, peak: number) => {
     if (peak <= 0.004) return
+    const a0 = upper ? Math.PI : 0
+    const a1 = upper ? TAU : Math.PI
     ctx.save()
-    const g = ctx.createRadialGradient(0, 0, X(1.0 * r), 0, 0, X(rout * r))
+    ctx.beginPath()
+    ctx.ellipse(0, 0, X(rx * r), X(ry * r), 0, a0, a1)
+    ctx.arc(0, 0, X(r), a1, a0, true)
+    ctx.closePath()
+    const g = ctx.createRadialGradient(X(-0.07 * r), 0, X(0.98 * r), X(-0.07 * r), 0, X(reach * r))
     g.addColorStop(0, rgba(WHITE, peak))
-    g.addColorStop(0.1, rgba(DARK.gold, 0.95 * peak))
-    g.addColorStop(body, rgba(DARK.gold, 0.6 * peak))
-    g.addColorStop(Math.min(0.95, body + 0.3), rgba(DARK.amber, 0.22 * peak))
+    g.addColorStop(0.07, rgba(DARK.gold, 0.95 * peak))
+    g.addColorStop(0.45, rgba(DARK.gold, 0.62 * peak))
+    g.addColorStop(0.62, rgba(DARK.amber, 0.3 * peak))
     g.addColorStop(1, rgba(DARK.amber, 0))
     ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.arc(0, 0, X(rout * r), a0, a1)
-    ctx.arc(0, 0, X(1.0 * r), a1, a0, true)
-    ctx.closePath()
     ctx.fill()
-    ctx.restore()
-  }
-  band(Math.PI + 0.01, TAU - 0.01, 1.55, Math.min(1, 0.95 * A * (1 + 0.4 * bright)), 0.32)
-  band(0.01, Math.PI - 0.01, 1.25, Math.min(1, 0.5 * A * (1 + 0.4 * bright)), 0.2)
-  // Ribbons within the lensed disk resolve its curve through the glow. The approaching side is hotter.
-  if (A > 0.004) {
-    ctx.save()
-    const ribbon = ctx.createLinearGradient(X(-1.5 * r), 0, X(1.5 * r), 0)
-    ribbon.addColorStop(0, rgba(DARK.amber, 0))
-    ribbon.addColorStop(0.22, rgba(WHITE, 0.65 * A))
-    ribbon.addColorStop(0.52, rgba(DARK.gold, 0.48 * A))
-    ribbon.addColorStop(0.85, rgba(DARK.amber, 0.15 * A))
-    ribbon.addColorStop(1, rgba(DARK.amber, 0))
-    ctx.strokeStyle = ribbon
-    for (let i = 0; i < 4; i++) {
-      const rr = X(r * (1.065 + i * 0.068))
-      ctx.lineWidth = X(r * (0.013 - i * 0.002))
-      ctx.beginPath()
-      ctx.ellipse(X(-0.018 * i * r), 0, rr, rr * (1 + i * 0.025), 0, Math.PI + 0.07, TAU - 0.07)
-      ctx.stroke()
-    }
-    ctx.globalAlpha *= 0.4
-    ctx.lineWidth = X(r * 0.012)
+    // The fold: a hair of hot light along the band, following its shape and not the dark's.
+    const fold = ctx.createLinearGradient(X(-rx * r), 0, X(rx * r), 0)
+    fold.addColorStop(0, rgba(WHITE, 0))
+    fold.addColorStop(0.25, rgba(WHITE, 0.4 * peak))
+    fold.addColorStop(0.6, rgba(WHITE, 0.2 * peak))
+    fold.addColorStop(1, rgba(WHITE, 0))
+    ctx.strokeStyle = fold
+    ctx.lineWidth = Math.max(0.6, X(0.012 * r))
     ctx.beginPath()
-    ctx.ellipse(0, 0, X(1.075 * r), X(1.1 * r), 0, 0.08, Math.PI - 0.08)
+    const fx = 1 + (rx - 1) * 0.42
+    const fy = 1 + (ry - 1) * 0.42
+    ctx.ellipse(0, 0, X(fx * r), X(fy * r), 0, a0 + 0.05, a1 - 0.05)
     ctx.stroke()
     ctx.restore()
   }
+  const lit = (m: number) => Math.min(1, m * A * (1 + 0.4 * bright))
+  crescent(1.8, 1.44, true, 1.78, lit(0.95))
+  crescent(1.3, 1.1, false, 1.3, lit(0.5))
   // The dark.
   p.noStroke()
   p.fill(VOID.bg)
@@ -1110,22 +1105,29 @@ function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
   p.translate(X(BY_WATCH[0]), X(BY_WATCH[1]))
   p.scale(fold)
   p.translate(-X(BY_WATCH[0]), -X(BY_WATCH[1]))
-  for (const d of [2.2 - drift + 0.5, 1.2 - drift + 0.5, 0]) {
+  // Deepest first. The near layer is there from the first; the pull-back opens the deep ones, rooms behind rooms toward
+  // the one point, each dimmer and smaller, so the lattice reads as going on into depth and not as a wall of tiles.
+  const layers = [3.9, 2.6, 1.3].map((d) => d - drift * 1.3 + 0.65)
+  for (const d of [...layers, 0]) {
     const sc = depthScale(d + dv)
-    const reach = d === 0 ? 1 + Math.round(4 * far) : 2 + Math.round(3 * far)
+    const deep = d > 0
+    const reach = deep ? 2 + Math.round(3 * far) : 1 + Math.round(4 * far)
+    const lo = -1 - Math.round(2 * far)
+    const hi = 1 + Math.round(3 * far)
     for (let i = -reach; i <= reach; i++) {
-      for (let j = -1 - Math.round(2 * far); j <= 1 + Math.round(3 * far); j++) {
-        if (i === 0 && j === 0 && d === 0) continue
+      for (let j = lo; j <= hi; j++) {
+        if (i === 0 && j === 0 && !deep) continue
         const dist = Math.hypot(i, j * 1.3)
-        // Brightest round Murph's, going out into the dark with distance and depth: a lit room among rooms without end.
-        const a = on * (d === 0 ? 0.55 : 0.2 * (1 - d / 3.4)) / (1 + (d === 0 ? 1.0 : 0.7) * dist * dist * 0.35) * (dist <= 1.5 ? 1 : far)
-        if (a <= 0.01) continue
+        // Brightest round Murph's, going off gently into the dark with distance and with depth.
+        const near = dist <= 1.5 ? 1 : far
+        const a = on * near * (deep ? 0.24 * Math.max(0, 1 - d / 4.8) * (0.4 + 0.6 * far) : 0.55) / (1 + (deep ? 0.2 : 0.45) * dist * dist * 0.35)
+        if (a <= 0.012) continue
         const ox = BK[0] + i * PX
         const oy = BK[1] + j * PY
         p.push()
         p.translate(X(vp[0] + (ox - vp[0]) * sc), X(vp[1] + (oy - vp[1]) * sc))
         p.scale(-sc, sc)
-        miniCase(p, k, ink, c.weight, a)
+        miniCase(p, k, ink, c.weight, a, HOURS[Math.floor(hash(i + 40, j + 40, Math.round(d * 10) + 7) * HOURS.length)], sc > 0.45)
         p.pop()
       }
     }
@@ -1134,18 +1136,23 @@ function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
 }
 
 /** One of the tesseract's rooms, Murph's bookcase from behind, in its own (shelf) cells, `a` of it. */
-function miniCase(p: p5, k: number, ink: string, weight: number, a: number): void {
+/** The hours the tesseract's rooms are lit at: lamplight (none), moonlight, dawn, and the sepia of years before. */
+const HOURS: (string | null)[] = [null, null, '#7E93BF', '#E3A48A', '#A8845A']
+
+function miniCase(p: p5, k: number, ink: string, weight: number, a: number, hour: string | null = null, spill = true): void {
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const was = ctx.globalAlpha
   ctx.globalAlpha = was * a
   const CAP = SHELF_TOP - 0.6
   const MIDY = SHELF_TOP + 0.46
-  // Its room's light behind it, lamplight, and a little of it spilling round the case into the dark (warm, so that
-  // seen dim over the dark it goes amber, not grey; small, so a hundred of them do not fog the dark between).
-  glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.5), DARK.amber, 0.18)
+  const light = hour ? mixHex(mixHex(DUST.light, DARK.amber, 0.4), hour, 0.45) : mixHex(DUST.light, DARK.amber, 0.4)
+  // Its room's light behind it, and a little of it spilling round the case into the dark (warm, so that seen dim over
+  // the dark it goes amber, not grey; small, so a hundred of them do not fog the dark between). The far ones do not
+  // spill: they are too small to.
+  if (spill) glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.5), hour ? mixHex(DARK.amber, hour, 0.5) : DARK.amber, 0.18)
   p.noStroke()
-  p.fill(mixHex(DUST.light, DARK.amber, 0.4))
+  p.fill(light)
   p.rect(X(0.775), X((CAP + FLOOR) / 2), X(2.35), X(FLOOR - CAP))
   for (const b of ROW) {
     p.fill(mixHex(b.color, ink, 0.62))
@@ -1512,33 +1519,38 @@ function drawPassing(p: p5, c: Ctx, T: number, on: number): void {
 function murphBeyond(p: p5, c: Ctx, T: number): void {
   const { k } = c
   const X = (v: number) => v * k
-  const ink = FARM.ink
-  const w = c.weight * 0.7
-  const far = 0.8
+  // Across the room, not on the shelf: small for the distance, and hazed toward the room's light, with only a hair of
+  // ink, so she sits back in the room's depth and never reads as a thing (or a ball) on the board beside the watch.
+  const far = 0.52
+  const haze = (hex: string) => mixHex(hex, DUST.light, 0.42)
+  const ink = mixHex(FARM.ink, DUST.wall, 0.45)
+  const w = c.weight * 0.4
   // The top of her quilt, just over the top board: the bed stands across the room, its frame and legs out of sight
-  // below the board's edge (clipped to the row's opening), so it reads as seen through the shelf, not stood on it.
-  const top = SHELF_TOP - 0.075
-  const x0 = 0.12
-  const x1 = 1.3
-  const px = 0.36
+  // below the board's edge (clipped to the row's opening).
+  const top = SHELF_TOP - 0.03
+  const mid = 0.7
+  const at = (x: number) => mid + (x - mid) * far
+  const x0 = at(0.12)
+  const x1 = at(1.3)
+  const px = at(0.36)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   ctx.beginPath()
   ctx.rect(X(-0.45), X(SHELF_TOP - 0.6), X(2.45), X(0.6))
   ctx.clip()
-  solid(p, ink, w, DUST.bone)
-  p.rect(X((x0 + x1) / 2), X(top + 0.06), X(x1 - x0 - 0.02), X(0.1), X(0.01))
-  solid(p, ink, w, mixHex(DUST.teal, DUST.light, 0.15))
-  p.rect(X((px + 0.12 + x1) / 2), X(top + 0.03), X(x1 - px - 0.14), X(0.07), X(0.01))
-  solid(p, ink, w, mixHex(DUST.denim, DUST.bone, 0.62))
-  p.rect(X(px), X(top - 0.01), X(0.24), X(0.05), X(0.02))
+  solid(p, ink, w, haze(DUST.bone))
+  p.rect(X((x0 + x1) / 2), X(top + 0.06 * far), X(x1 - x0), X(0.1 * far), X(0.01))
+  solid(p, ink, w, haze(DUST.teal))
+  p.rect(X((px + 0.12 * far + x1) / 2), X(top + 0.03 * far), X(x1 - px - 0.14 * far), X(0.07 * far), X(0.01))
+  solid(p, ink, w, haze(mixHex(DUST.denim, DUST.bone, 0.62)))
+  p.rect(X(px), X(top - 0.01 * far), X(0.24 * far), X(0.05 * far), X(0.02 * far))
   // Her: asleep; the start on the first book; then still, watching.
   const r = R * MURPH_SMALL * far
   const k0 = T - PUSHES[0]
-  const start = k0 > 0 && k0 < 0.32 ? 0.06 * Math.sin((Math.PI * k0) / 0.32) : 0
-  const turn = 0.03 * smooth(T, PUSHES[0] + 0.3, PUSHES[0] + 0.8)
-  solid(p, ink, w, MURPH_YOUNG)
-  p.circle(X(px + turn), X(top - 0.035 - r - start), X(2 * r))
+  const start = k0 > 0 && k0 < 0.32 ? 0.05 * far * Math.sin((Math.PI * k0) / 0.32) : 0
+  const turn = 0.02 * smooth(T, PUSHES[0] + 0.3, PUSHES[0] + 0.8)
+  solid(p, ink, w, haze(MURPH_YOUNG))
+  p.circle(X(px + turn), X(top - 0.035 * far - r - start), X(2 * r))
   ctx.restore()
 }
 
