@@ -28,8 +28,7 @@ The folder and file names are addresses, so they are chosen once:
   not the picker's title, which is the version file's `title` and can change
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
-  `near-light` **Windowlight**, `nature-of-daylight` **Palindrome**, `relax`
-  **Magnum**, `time` **Kick**. The write-up says which is which.
+  `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
@@ -39,7 +38,7 @@ The folder and file names are addresses, so they are chosen once:
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
   Lune, Première Arabesque, Cornfield Chase, Ostinato), **Movies** and **Ambient**
-  (Gymnopédie, Windowlight). A work is Movies unless `SHELVED` in `../registry.ts` names it.
+  (Gymnopédie). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Code**: a take that is more than a score file keeps its code in a folder
   named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
   the take id carries a code name, the folder uses the same one. A take's code
@@ -422,21 +421,6 @@ along with it. E major is a gold roof the ball climbs a beat at a time; on the c
 and falls away round the drum, and the ball lands on the drum head on the last chord. The code is `bolero/tower/`;
 `check:shows` holds every strike to the comb (`apps/rube/checks/ostinato.ts`). The report is
 `apps/rube/src/shows/versions/bolero/OSTINATO.md`.
-
-`near-light/opus55` (in the picker, **Windowlight**, one take, **Opus 5.5**, on the **Ambient** shelf) is Ólafur
-Arnalds' *Near Light* (*Living Room Songs*, Erased Tapes, 2011) round a small machine on a winter windowsill at night,
-as a loop with no seam: 101 bars of the recording's click, 205.409 s. The recording is copyrighted and demo only
-(`apps/rube/src/shows/versions/near-light/ATTRIBUTION.txt`): `scripts/shows/near-light-loop.py` makes the label's
-upload into one period of a circle (its first 101 bars as they are, the room after them laid under their start) and
-`scripts/shows/near-light-onsets.py` measures its click, beats, onsets, sections and held sound into
-`scripts/shows/plans/near-light-onsets.json`. Every piece is new. The ball goes round the machine once a period, one
-mechanism a section: cups that catch it on the piano's chords, a felt trough the strings swing wider (a push on every
-chord change) and the drums kick it out of, an Archimedes screw that steps on every beat, a rail of bells rung on the
-accents after the drums, a wheel of gondolas round the lamp for the arpeggios, and a felt chute over whose crest the
-ball all but stops as the last note dies, across the seam. Outside, the aurora is the strings. The code is
-`near-light/windowlight/` (on Gymnopédie's loop plumbing: `Performance.loop`, `SoundtrackSpec.loop`); `check:shows`
-holds it to the music (`apps/rube/checks/windowlight.ts`). The report is
-`apps/rube/src/shows/versions/near-light/WINDOWLIGHT.md`.
 
 `nature-of-daylight/opus55` (in the picker, **Palindrome**, one take, **Opus 5.5**) is Max Richter's *On the Nature of
 Daylight*, the *Blue Notebooks* recording that *Arrival* opens and closes on, whole, demo only
