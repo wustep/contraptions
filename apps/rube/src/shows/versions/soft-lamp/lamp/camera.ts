@@ -31,9 +31,9 @@ const W = 1.3
 /** The room: the lower window, the whole desk, the lamp. How the show opens and closes. */
 const WIDE = { x: 0.9, y: -2.2, cells: 7.0 }
 /** The lower window and the whole machine: what a lob needs, and what a break draws back to. */
-const ROOM = { x: -0.1, y: -1.75, cells: 4.5 }
+const ROOM = { x: -0.17, y: -1.95, cells: 5.3 }
 /** The stair and the cup, with the sill's end over them. */
-const STAIR = { x: 1.05, y: -1.35, cells: 3.2 }
+const STAIR = { x: 1.5, y: -1.3, cells: 3.5 }
 
 /**
  * Where the camera sits with the listener through a groove, a phrase (eight bars) at a time. Each track takes them in
@@ -44,8 +44,8 @@ const GROOVE = [
   { x: 1.75, y: -0.64, cells: 2.45 },
   // The desk under the lamp: books, cup, band, the shade whole over them.
   { x: 2.15, y: -1.55, cells: 4.2 },
-  // The rain over the listener: the lower panes, the sill, and the cup small under them.
-  { x: 1.06, y: -1.9, cells: 4.5 },
+  // The window over the desk: the rain, the plant and the mug, and the stair and the cup small under the lamp.
+  { x: 0.21, y: -1.9, cells: 4.9 },
   // From the lamp's side: the shade, the band's arch, the cup under the light.
   { x: 3.0, y: -1.45, cells: 3.7 },
 ]
@@ -81,8 +81,8 @@ function plan(): void {
     const walkFrom = prev?.bounce ?? 6
     for (let s = walkFrom + 3; s < lap.tip - 1.5 * bar; s += 3) {
       // Where it stops following, at the sill's end, is a frame it holds until the stair.
-      const x = Math.min(SILL.x1 - 0.6, ballAt(s + 2).x + 0.5)
-      at(s, { x, y: -1.58, cells: 3.7 }, x === SILL.x1 - 0.6)
+      const x = Math.min(SILL.x1 - 0.65, ballAt(s + 2).x + 0.5)
+      at(s, { x, y: -1.58, cells: 3.7 }, x === SILL.x1 - 0.65)
     }
     // A bar and a half before the drop: back to take in the stair.
     at(lap.tip - 1.5 * bar, STAIR)

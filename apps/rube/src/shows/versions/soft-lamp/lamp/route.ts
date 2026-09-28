@@ -327,7 +327,7 @@ function build(): void {
     LANDINGS.push({ t: lob - 0.1, s: 0.45, on: 'cup' })
     // The lob, from wherever it sits in the cup, over the books to the sill, a little way short of the pot.
     const start = inCup(lob)
-    const toX = CONTACT + 0.62
+    const toX = CONTACT + 0.8
     const T = land - lob
     const vx = (toX - start.x) / T
     const vy = (ON_SILL - start.y - 0.5 * G * T * T) / T

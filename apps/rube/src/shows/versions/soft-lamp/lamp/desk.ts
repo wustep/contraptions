@@ -18,7 +18,7 @@ export { R }
 export const DESK = { y: 0, face: 0.28, x0: -12, x1: 12 }
 
 /** The window's outer frame, and the one bar across it and the one up it. */
-export const WINDOW = { x0: -3.5, x1: 0.62, y0: -5.5, y1: -1.42, frame: 0.16, mullion: -1.44, transom: -3.8 }
+export const WINDOW = { x0: -3.5, x1: 0.62, y0: -5.5, y1: -1.42, frame: 0.16, mullion: -1.44, transom: -3.55 }
 
 /** The sill: its top, and how far it runs either side of the frame. The ball tips off its right end. */
 export const SILL = { y: -1.42, x0: -3.78, x1: 0.9, thick: 0.1 }

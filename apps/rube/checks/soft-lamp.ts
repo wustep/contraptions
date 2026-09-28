@@ -141,18 +141,31 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
   }
   check('soft lamp: the camera never moves faster than half a frame a second, nor gathers faster than half a frame a second a second',
     pan < 0.5 && acc < 0.5, `speed ${pan.toFixed(3)} at ${panAt.toFixed(1)} s, acceleration ${acc.toFixed(3)} at ${accAt.toFixed(1)} s`)
+  // Whole means clear of every edge by a tenth of a cell, so nothing sits tangent to the frame either.
   const sliced: string[] = []
+  const M = 0.1
   for (const a of AIMS.filter((a) => a.held)) {
     const hw = (a.cells * 16) / 9 / 2
     const hh = a.cells / 2
     for (const [name, [x0, y0, x1, y1]] of Object.entries(PROPS)) {
-      const ix = Math.max(0, Math.min(x1, a.x + hw) - Math.max(x0, a.x - hw))
-      const iy = Math.max(0, Math.min(y1, a.y + hh) - Math.max(y0, a.y - hh))
-      const f = (ix * iy) / ((x1 - x0) * (y1 - y0))
-      if (f > 0.02 && f < 0.97) sliced.push(`${name} at ${a.t.toFixed(0)} s`)
+      const touches = x1 > a.x - hw && x0 < a.x + hw && y1 > a.y - hh && y0 < a.y + hh
+      const whole = x0 >= a.x - hw + M && x1 <= a.x + hw - M && y0 >= a.y - hh + M && y1 <= a.y + hh + 0.5
+      if (touches && !whole) sliced.push(`${name} at ${a.t.toFixed(0)} s`)
     }
   }
-  check('soft lamp: every frame the camera holds shows each thing whole or not at all', sliced.length === 0, [...new Set(sliced)].slice(0, 6).join(', '))
+  check('soft lamp: every frame the camera holds shows each thing whole, clear of its edges, or not at all', sliced.length === 0, [...new Set(sliced)].slice(0, 6).join(', '))
+  // The stage's Zoom is the same frame half again closer (FOLLOW_ZOOM): the ball is in it too, all but a moment.
+  let lost = 0
+  let seen = 0
+  for (let t = 0; t < DURATION; t += 0.1) {
+    const c = perf.camera!(t)
+    const b = ballAt(t)
+    const hh = c.cells / 1.5 / 2
+    const hw = (hh * 16) / 9
+    seen++
+    if (Math.abs(b.x - c.x) > hw - R || Math.abs(b.y - c.y) > hh - R) lost++
+  }
+  check('soft lamp: the ball is in the frame all the time, and in Zoom\'s closer frame 99.5% of it', lost / seen < 0.005, `${((lost / seen) * 100).toFixed(2)}% out`)
 
   // The words.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names, ...(c.notes ?? [])].join(' ')).join(' | ')
