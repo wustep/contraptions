@@ -73,12 +73,10 @@ export const lift = definePiece<LiftState>({
     const carY = up * top + settle
     const sheaveY = top - 0.42
 
-    // The guides, from the sheave bracket to the buffers at the bottom.
+    // The guides, from the sheave bracket to the buffers at the bottom: plain
+    // rails, with no ties ticked off up them like a ruler.
     outline(p, ink, weight)
     for (const x of [-GUIDE, GUIDE]) p.line(x * k, (sheaveY + 0.06) * k, x * k, 0.5 * k)
-    for (let y = 0.3; y > sheaveY + 0.2; y -= 0.24) {
-      for (const x of [-GUIDE, GUIDE]) p.line(x * k, y * k, (x + Math.sign(x) * 0.06) * k, y * k)
-    }
     // The ground under the guides, and the buffers on it.
     p.line((-GUIDE - 0.06) * k, 0.5 * k, (CW_X + 0.14) * k, 0.5 * k)
     for (const x of [-0.07, 0.07]) p.line(x * k, 0.44 * k, x * k, 0.5 * k)

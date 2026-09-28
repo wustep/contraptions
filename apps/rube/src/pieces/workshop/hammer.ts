@@ -63,13 +63,11 @@ export const hammer = definePiece<{ color: string }>({
 
     rail(p, k, ink, weight, -0.5, 0.5)
     outline(p, ink, weight)
-    // The frame: two guides the head rides between, a crossbar, ties to the
-    // wall, and the sheave the cable runs over.
+    // The frame: two guides the head rides between, a crossbar, and the
+    // sheave the cable runs over. The ties out to a wall there is no wall
+    // for are gone: they ruled the guides like a scale.
     for (const x of [AX - GUIDE, AX + GUIDE]) p.line(x * k, SHEAVE_Y * k, x * k, (FLOOR + 0.06) * k)
     p.line((AX - GUIDE) * k, SHEAVE_Y * k, (AX + GUIDE) * k, SHEAVE_Y * k)
-    for (let ty = -1.15; ty < 0; ty += 0.3) {
-      for (const x of [AX - GUIDE, AX + GUIDE]) p.line(x * k, ty * k, (x + Math.sign(x - AX) * 0.06) * k, ty * k)
-    }
     // The cable: taut on the winch, slack while the head is falling or down.
     const slack = since < -DROP ? 0 : since < 1.2 ? 1 : 1 - easeInOutSine(over(since, 1.2, 3.6))
     p.noFill()
