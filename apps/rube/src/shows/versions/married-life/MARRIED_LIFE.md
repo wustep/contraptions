@@ -33,7 +33,7 @@ The label's upload: Michael Giacchino - Topic, ℗ 2009 Walt Disney Records, You
 whole from its first sample, with no edit and no gain change, and has rung out by 248.5 s. The show runs to 258 s,
 the credits over the house.
 
-- **The file.** `married-life-demo.mp3`, fetched with yt-dlp and re-encoded at 128 kbit/s. It is demo-only:
+- **The file.** `married-life-demo.mp3` was removed from the repo (copyrighted). Live playback is YouTube only. Rebuild locally with yt-dlp if needed for measurement; it was demo-only:
   `ATTRIBUTION.txt` says so.
 - **The YouTube cue.** The soundtrack also plays the upload itself (`youtube: [{ id: '2rn-vMbFglI' }]`), on the same
   clock. The file is the fallback, and what an export records.

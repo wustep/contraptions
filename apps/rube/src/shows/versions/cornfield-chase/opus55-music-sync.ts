@@ -1,4 +1,3 @@
-import recording from './cornfield-chase-zimmer.mp3'
 import type { Framing, Performance } from '../../registry'
 import { StockShow } from '../../stock/show'
 import type { StockScore } from '../../stock/types'
@@ -36,7 +35,6 @@ export const performance: Performance = {
   // The last portal would iris the photograph away; the decay keeps it.
   cuts: (t) => t < door.begin,
   soundtrack: {
-    src: recording,
     offset: score.audioOffset,
     credit: 'Hans Zimmer · Cornfield Chase · Interstellar (2014) · tech demo only, not for release',
     href: 'https://www.youtube.com/watch?v=JuSsvM8B4Jc',

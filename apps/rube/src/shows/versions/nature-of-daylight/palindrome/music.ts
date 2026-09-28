@@ -3,7 +3,7 @@ import measured from '../../../../../../../scripts/shows/plans/nature-of-dayligh
 /**
  * The recording's clock: Max Richter's "On the Nature of Daylight" (The Blue Notebooks, 2004), the recording Arrival
  * opens and closes on, played from its first sample (`apps/rube/src/shows/versions/nature-of-daylight/
- * nature-of-daylight-demo.mp3`). Measured once by `scripts/shows/nature-of-daylight-onsets.py` into
+ * nature-of-daylight-demo.mp3`, removed; live playback is YouTube only). Measured once by `scripts/shows/nature-of-daylight-onsets.py` into
  * `scripts/shows/plans/nature-of-daylight-onsets.json`; `check:shows` holds every strike of this take against that
  * file.
  *

@@ -1,4 +1,3 @@
-import recording from '../nature-of-daylight-demo.mp3'
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION } from './music'
@@ -17,7 +16,6 @@ export const performance: Performance = {
   // The end credits' words, which the page sets over the lake house.
   titles: creditsAt,
   soundtrack: {
-    src: recording,
     offset: 0,
     credit: 'Max Richter · On the Nature of Daylight · The Blue Notebooks (2004), heard in Arrival (2016)',
     href: 'https://www.youtube.com/watch?v=rVN1B-tUpgs',

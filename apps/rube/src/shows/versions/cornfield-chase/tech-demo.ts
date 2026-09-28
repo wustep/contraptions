@@ -1,4 +1,3 @@
-import recording from './cornfield-chase-zimmer.mp3'
 import type { Performance } from '../../registry'
 import { StockShow } from '../../stock/show'
 import type { StockScore } from '../../stock/types'
@@ -37,7 +36,6 @@ export const performance: Performance = {
   // The closing portal would iris the souvenirs away. The decay keeps them.
   cuts: (t) => t < finale.pieces.at(-1)!.begin,
   soundtrack: {
-    src: recording,
     offset: score.audioOffset,
     credit: 'Hans Zimmer · Cornfield Chase · Interstellar (2014) · tech demo only, not for release',
     href: 'https://www.youtube.com/watch?v=JuSsvM8B4Jc',

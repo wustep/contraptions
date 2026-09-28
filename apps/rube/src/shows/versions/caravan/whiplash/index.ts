@@ -1,4 +1,3 @@
-import recording from '../whiplash-caravan-demo.mp3'
 import type { Performance } from '../../../registry'
 import { DURATION } from './music'
 import { compose } from './score'
@@ -17,7 +16,6 @@ export const performance: Performance = {
   // The end credits' words, which the page sets over the dark hall after the cut-off.
   titles: creditsAt,
   soundtrack: {
-    src: recording,
     offset: 0,
     credit: 'Juan Tizol, Duke Ellington and Irving Mills, arranged by John Wasson · Caravan · Whiplash (2014)',
     href: 'https://www.youtube.com/watch?v=38CRu1rCaKg',

@@ -1,4 +1,3 @@
-import recording from '../merry-go-round-demo.mp3'
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION } from './music'
@@ -17,7 +16,6 @@ export const performance: Performance = {
   // The end credits' words, which the page sets over the sky.
   titles: creditsAt,
   soundtrack: {
-    src: recording,
     offset: 0,
     credit: 'Joe Hisaishi · Merry-Go-Round of Life · Howl’s Moving Castle (2004)',
     href: 'https://www.youtube.com/watch?v=f7SS57LFPco',

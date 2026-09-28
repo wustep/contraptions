@@ -6,7 +6,8 @@ https://www.youtube.com/watch?v=IOh1H06Cx0w
 Duration 7:14. Copyrighted — do not ship to production / public Shows without a licence.
 
 Files:
-- apps/rube/src/shows/versions/come-recover/eeaao-come-recover-demo.mp3 — what Come Recover, All at Once plays: the cue from its first sample to
-  5:32, fading out over its last nine seconds. No other edit: every onset is the recording's own. Built from the
-  fetched cue by scripts/shows/eeaao-cue.sh, and measured by scripts/shows/eeaao-onsets.py into
-  scripts/shows/plans/eeaao-onsets.json.
+- (removed) eeaao-come-recover-demo.mp3 — was a private demo fetch; live playback is YouTube only.
+
+Playback: YouTube only. The local demo MP3 was removed so copyrighted audio is not shipped;
+the show embeds the label upload above. Onset JSON under scripts/shows/plans/ remains for authoring
+(rebuild a local cue with the listed scripts if you need one for measurement).

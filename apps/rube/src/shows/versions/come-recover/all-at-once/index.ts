@@ -1,4 +1,3 @@
-import recording from '../eeaao-come-recover-demo.mp3'
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION } from './music'
@@ -17,7 +16,6 @@ export const performance: Performance = {
   // The end credits' words, which the page sets over the frame.
   titles: creditsAt,
   soundtrack: {
-    src: recording,
     offset: 0,
     credit: 'Son Lux · Come Recover (Empathy Fight) · Everything Everywhere All at Once (2022)',
     href: 'https://www.youtube.com/watch?v=IOh1H06Cx0w',

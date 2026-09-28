@@ -2,7 +2,7 @@ import measured from '../../../../../../../scripts/shows/plans/relax-onsets.json
 
 /**
  * The recording's clock: Frankie Goes to Hollywood's "Relax", the original 7" (ZTT, 1983), played from its first
- * sample (`apps/rube/src/shows/versions/relax/relax-demo.mp3`). Measured once by `scripts/shows/relax-onsets.py` into
+ * sample (formerly `relax-demo.mp3`; live playback is YouTube only). Measured once by `scripts/shows/relax-onsets.py` into
  * `scripts/shows/plans/relax-onsets.json`; `check:shows` holds every strike of this take against that file.
  *
  * It is a drum machine's clock: one tempo, 115.405 beats a minute (a beat every 0.519908 s; beat k at

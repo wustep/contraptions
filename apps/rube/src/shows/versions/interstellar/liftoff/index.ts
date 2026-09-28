@@ -1,4 +1,3 @@
-import recording from '../interstellar-liftoff-mix-demo.mp3'
 import type { Performance } from '../../../registry'
 import { DURATION } from './music'
 import { compose } from './score'
@@ -17,7 +16,6 @@ export const performance: Performance = {
   // The end credits' words, which the page sets over the frame (the canvas draws their starlight).
   titles: creditsAt,
   soundtrack: {
-    src: recording,
     offset: 0,
     credit: 'Hans Zimmer · Cornfield Chase, then No Time for Caution · Interstellar (2014)',
     href: 'https://www.youtube.com/watch?v=JuSsvM8B4Jc',

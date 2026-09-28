@@ -2,7 +2,7 @@ import measured from '../../../../../../../scripts/shows/plans/merry-go-round-on
 
 /**
  * The recording's clock: Joe Hisaishi's concert arrangement of the Merry-Go-Round of Life, from Howl's Moving
- * Castle, played from its first sample (`apps/rube/src/shows/versions/merry-go-round/merry-go-round-demo.mp3`).
+ * Castle, played from its first sample (formerly `merry-go-round-demo.mp3`; live playback is YouTube only).
  * Measured once by `scripts/shows/merry-go-round-onsets.py` into `scripts/shows/plans/merry-go-round-onsets.json`;
  * `check:shows` holds every strike of this take against that file.
  *

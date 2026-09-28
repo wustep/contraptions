@@ -49,7 +49,7 @@ export function checkKick(perf: Performance, version: ShowVersion, check: Check)
     version.title === 'Kick' && version.label === 'Opus 5.5' && !!version.about && /after Inception/.test(version.about ?? '') && typeof version.still === 'number' && !('director' in version))
   check('kick: the whole recording from zero, credited to Hans Zimmer and the film, played from the label\'s upload, and the credits after it',
     near(perf.duration, DURATION) && (perf.soundtrack?.offset ?? 0) === 0 && DURATION > RECORDING + 20 &&
-    !!perf.soundtrack?.src?.includes('time-demo') &&
+    !perf.soundtrack?.src &&
     ['Hans Zimmer', 'Time', 'Inception'].every((w) => perf.soundtrack?.credit?.includes(w)) &&
     !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
     perf.soundtrack?.href === 'https://www.youtube.com/watch?v=c56t7upa8Bk' && perf.soundtrack?.youtube?.[0]?.id === 'c56t7upa8Bk')

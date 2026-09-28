@@ -4,7 +4,6 @@ import type { ShowBall, ShowPoint } from '../../../show'
 import { Show } from '../../../show'
 import { extentOf, universeAt, type Universe } from '../../../universe'
 import type { Framing, Performance } from '../../registry'
-import recording from './cornfield-chase-zimmer.mp3'
 
 /**
  * Cornfield Chase, as four kinematic riders on one garden.
@@ -255,10 +254,10 @@ export function cornfieldPerformance(): Performance {
     duration: CORNFIELD_DURATION,
     camera: () => show.cameraAt(),
     soundtrack: {
-      src: recording,
       offset: 0,
-      credit: 'Hans Zimmer — Cornfield Chase, from Interstellar (WaterTower, 2014). Tech demo only; not licensed for a public show.',
+      credit: 'Hans Zimmer — Cornfield Chase, from Interstellar (WaterTower, 2014).',
       href: 'https://www.youtube.com/watch?v=JuSsvM8B4Jc',
+      youtube: [{ id: 'JuSsvM8B4Jc' }],
     },
   }
 }

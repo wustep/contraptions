@@ -91,7 +91,8 @@ export interface ShowSoundtrack extends Soundtrack {
  * its upload (`SoundtrackSpec.youtube`), the file otherwise. `prefer: 'file'`
  * turns YouTube off (`?music=file`, to hear the two side by side). YouTube
  * that will not play here — blocked, refused, not embeddable — hands over to
- * the file, and says so.
+ * the file when one is shipped, and says so. Copyrighted scores ship YouTube
+ * only: without a local `src`, a failed embed leaves the show silent.
  */
 export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtube'): ShowSoundtrack {
   const file = createFileSoundtrack()
@@ -243,8 +244,9 @@ const wholeUrl = (src: string): string | null => fetched.get(src)?.url ?? null
  * before their show is up, and the file under a YouTube version is only its fallback.
  */
 export function prefetchSoundtrack(spec: SoundtrackSpec | null | undefined, prefer: MusicSource = 'youtube'): void {
-  if (!spec?.src || (spec.youtube?.length && prefer === 'youtube')) return
-  fetchWhole(spec.src).catch(() => {})
+  const src = spec?.src
+  if (!src || (spec.youtube?.length && prefer === 'youtube')) return
+  fetchWhole(src).catch(() => {})
 }
 
 function audioContext(): AudioContext | null {
@@ -381,7 +383,7 @@ function createFileSoundtrack(): Soundtrack {
    * file comes and at every pause. The next play finds it loading and waits for canplay, as it does after `load`.
    */
   const takeWhole = () => {
-    const url = spec ? wholeUrl(spec.src) : null
+    const url = spec?.src ? wholeUrl(spec.src) : null
     if (!url || audio.src === url || !audio.paused || looper.started || waiting.length || status === 'failed') return
     const at = audio.currentTime
     status = 'loading'
@@ -402,7 +404,7 @@ function createFileSoundtrack(): Soundtrack {
       for (const fn of left) fn()
       spec = next
       ear.reset()
-      if (next?.loop) {
+      if (next?.loop && next.src) {
         const mine = next
         decode(next.src).then(
           (buffer) => {
@@ -421,6 +423,12 @@ function createFileSoundtrack(): Soundtrack {
       if (!next) {
         audio.removeAttribute('src')
         set('none')
+        return
+      }
+      if (!next.src) {
+        // YouTube-only cue: no local file to fall back on.
+        audio.removeAttribute('src')
+        set('failed')
         return
       }
       status = 'loading'

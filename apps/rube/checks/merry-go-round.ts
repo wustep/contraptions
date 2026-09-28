@@ -57,7 +57,7 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
     version.title === 'Merry-Go-Round' && version.label === 'Opus 5.5' && !!version.about && typeof version.still === 'number' && !('director' in version))
   check('merry-go-round: the whole recording from zero, credited to Joe Hisaishi and the film, played from the label\'s upload, and the credits after it',
     near(perf.duration, DURATION) && (perf.soundtrack?.offset ?? 0) === 0 && DURATION > RECORDING + 20 &&
-    !!perf.soundtrack?.src?.includes('merry-go-round-demo') &&
+    !perf.soundtrack?.src &&
     ['Joe Hisaishi', 'Merry-Go-Round of Life', 'Howl’s Moving Castle'].every((w) => perf.soundtrack?.credit?.includes(w)) &&
     !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
     perf.soundtrack?.href === 'https://www.youtube.com/watch?v=f7SS57LFPco' && perf.soundtrack?.youtube?.[0]?.id === 'f7SS57LFPco')

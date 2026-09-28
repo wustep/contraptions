@@ -1,4 +1,3 @@
-import recording from '../time-demo.mp3'
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION } from './music'
@@ -18,7 +17,6 @@ export const performance: Performance = {
   // The end credits' words, which the page sets over the dark after the last chord.
   titles: creditsAt,
   soundtrack: {
-    src: recording,
     offset: 0,
     credit: 'Hans Zimmer · Time · Inception (2010)',
     href: 'https://www.youtube.com/watch?v=c56t7upa8Bk',

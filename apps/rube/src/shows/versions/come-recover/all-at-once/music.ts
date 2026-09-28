@@ -2,7 +2,7 @@ import onsets from '../../../../../../../scripts/shows/plans/eeaao-onsets.json'
 
 /**
  * The recording's clock: Son Lux's "Come Recover (Empathy Fight)", from Everything Everywhere All at Once, played
- * from its first sample (`apps/rube/src/shows/versions/come-recover/eeaao-come-recover-demo.mp3`, `scripts/shows/eeaao-cue.sh`). Measured once by
+ * from its first sample (formerly `eeaao-come-recover-demo.mp3` via `scripts/shows/eeaao-cue.sh`; live playback is YouTube only). Measured once by
  * `scripts/shows/eeaao-onsets.py` into `scripts/shows/plans/eeaao-onsets.json`; `check:shows` holds every strike of this
  * take against that file.
  *

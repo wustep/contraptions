@@ -18,7 +18,7 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
 
   check('all at once: the whole cue from zero, to its fade, credited to Son Lux and the film',
     near(perf.duration, DURATION) && (perf.soundtrack?.offset ?? 0) === 0 &&
-    !!perf.soundtrack?.src?.includes('eeaao-come-recover-demo') &&
+    !perf.soundtrack?.src && perf.soundtrack?.youtube?.[0]?.id === 'IOh1H06Cx0w' &&
     ['Son Lux', 'Come Recover', 'Everything Everywhere All at Once'].every((w) => perf.soundtrack?.credit?.includes(w)) &&
     !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
     perf.soundtrack?.href === 'https://www.youtube.com/watch?v=IOh1H06Cx0w')

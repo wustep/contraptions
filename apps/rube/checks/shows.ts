@@ -146,7 +146,8 @@ async function main(): Promise<void> {
   {
     const show = new Show('check')
     check('a performance that can be played has no problems', performanceProblems({ show, duration: 10, soundtrack: { src: 'a.mp3', offset: 1.5 } }).length === 0)
-    check('no length, no source or a negative offset is said', [{ show, duration: 0 }, { show, duration: NaN }, { show, duration: 10, soundtrack: { src: '' } }, { show, duration: 10, soundtrack: { src: 'a.mp3', offset: -1 } }].every((p) => performanceProblems(p).length === 1))
+    check('YouTube without a local file is fine', performanceProblems({ show, duration: 10, soundtrack: { youtube: [{ id: 'abcdefghijk' }] } }).length === 0)
+    check('no length, no source or a negative offset is said', [{ show, duration: 0 }, { show, duration: NaN }, { show, duration: 10, soundtrack: {} }, { show, duration: 10, soundtrack: { src: 'a.mp3', offset: -1 } }].every((p) => performanceProblems(p).length === 1))
     check('what is not a performance is refused, not thrown on', performanceProblems(null as unknown as Performance).length > 0 && performanceProblems({} as Performance).length > 0)
   }
 
@@ -302,7 +303,7 @@ async function main(): Promise<void> {
       }
       if (work.work === 'la-la-land' && version.take === 'fable5-1') {
         check('epilogue: the whole recording from zero, credited to Justin Hurwitz and La La Land, ending after the last chord',
-          (perf.soundtrack?.offset ?? 0) === 0 && !!perf.soundtrack?.src?.includes('lalaland-epilogue-demo') && near(perf.duration, EPILOGUE_END) &&
+          (perf.soundtrack?.offset ?? 0) === 0 && !perf.soundtrack?.src && perf.soundtrack?.youtube?.[0]?.id === 'jQVvT_UKZ6w' && near(perf.duration, EPILOGUE_END) &&
           EPILOGUE_END > LAST_CHORDS[LAST_CHORDS.length - 1] + 1 && EPILOGUE_END <= epilogueOnsets.duration &&
           !!perf.soundtrack?.credit?.includes('Justin Hurwitz') && !!perf.soundtrack?.credit?.includes('La La Land') &&
           !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') && perf.soundtrack?.href === 'https://www.youtube.com/watch?v=jQVvT_UKZ6w')
@@ -480,7 +481,7 @@ async function main(): Promise<void> {
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
-          !!perf.soundtrack?.src?.includes('interstellar-liftoff-mix-demo') &&
+          !perf.soundtrack?.src && perf.soundtrack?.youtube?.[0]?.id === 'JuSsvM8B4Jc' &&
           !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.includes('No Time for Caution') &&
           !!perf.soundtrack?.credit?.includes('Interstellar') && !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')

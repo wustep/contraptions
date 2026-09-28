@@ -8,5 +8,8 @@ Copyrighted — do not ship to production / public Shows without a licence.
 
 Files:
 - The two cues themselves are not kept: fetch them with yt-dlp from the uploads above to rebuild the mix.
-- apps/rube/src/shows/versions/la-la-land/la-la-land-sebs-mix-demo.mp3 — what the Seb's take plays: Epilogue whole from zero, then The End from
-  464.0 s. Built by scripts/shows/sebs-mix.sh. No gain, no fades, no timing changes.
+- (removed) la-la-land-sebs-mix-demo.mp3 — was a private demo fetch; live playback is YouTube only.
+
+Playback: YouTube only. The local demo MP3 was removed so copyrighted audio is not shipped;
+the show embeds the label upload above. Onset JSON under scripts/shows/plans/ remains for authoring
+(rebuild a local cue with the listed scripts if you need one for measurement).
