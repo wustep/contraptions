@@ -618,6 +618,16 @@ function herAt(T: number): Pt {
   return [herX(T), FLOOR_Y]
 }
 /** The ball, at show time `T`, in this part's cells. */
+/**
+ * How fast it leaves the wheels, as a share of the pace of the whole gather (GATE to PINCH over INTO): whatever the
+ * crossing to the plate needs, so the two meet at one speed.
+ */
+const PITCH_K = (() => {
+  const a = U(A_PITCH, ...PINCH)
+  const cross = Math.hypot(LAUNCH[0] - a[0], LAUNCH[1] - a[1]) / (HIT - PITCH - INTO)
+  return clamp((cross * INTO) / Math.abs(PINCH[0] - GATE[0]), 0, 3)
+})()
+
 function ballAt(T: number): Pt {
   if (T <= CATCH) return U(along(V_IN * (T - IN)), 0, -FLOOR)
   if (T <= TOSS) return U(A_MITT, ...pocket(0))
@@ -629,8 +639,10 @@ function ballAt(T: number): Pt {
   }
   if (T <= PITCH) return U(A_PITCH, ...GATE)
   if (T <= PITCH + INTO) {
+    // Gathering in the wheels from rest, and leaving them at just the pace it crosses to the plate: it came out of
+    // them at twice that and was snatched back to it in a frame.
     const u = (T - PITCH) / INTO
-    return U(A_PITCH, GATE[0] + (PINCH[0] - GATE[0]) * u * u, PINCH[1])
+    return U(A_PITCH, GATE[0] + (PINCH[0] - GATE[0]) * ((3 - PITCH_K) * u * u + (PITCH_K - 2) * u * u * u), PINCH[1])
   }
   if (T <= HIT) {
     const a = U(A_PITCH, ...PINCH)
@@ -669,7 +681,7 @@ export const ballpark = part<BallparkState>(
       [TOSS + FLIP, FEED, 30],
       [FEED, FEED + SLIDE, 10],
       [FEED + SLIDE, PITCH, 1],
-      [PITCH, PITCH + INTO, 4],
+      [PITCH, PITCH + INTO, 12],
       [PITCH + INTO, HIT, 1],
       [HIT, WINDOW, 480],
       [WINDOW, HATCH, 50],
