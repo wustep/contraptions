@@ -14,9 +14,20 @@
   /* The face of a show's credits (`.stage-words`), and of its title in the panel. */
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   --panel-w: 320px;
-  /* The panel's slide: quick off the mark, settling without a bounce, as a
-     damped drawer would. The stage gives up its room on the same curve. */
+  /* The panel's motion, from one press of its handle (or P):
+
+         0ms  the panel's track opens or closes; the stage gives up its room with it
+         0ms  the handle's chevron turns to point the other way
+       420ms  the panel is out, or gone and hidden                    (--glide)
+       420ms  at a desk, a closed handle with no pointer near tucks   (--tuck)
+
+     A pointer nearing the edge brings the handle out at once (--reveal), and
+     on it the chevron leans the way a press will go. Every step is on one
+     curve: quick off the mark, settling without a bounce, as a damped drawer
+     would. */
   --glide: 420ms;
+  --reveal: 160ms;
+  --tuck: 200ms;
   --damped: cubic-bezier(0.32, 0.72, 0, 1);
   color-scheme: dark;
 }
@@ -128,22 +139,29 @@ body.bare #panel {
   height: 14px;
   display: block;
   rotate: 180deg;
-  transition: rotate var(--glide) var(--damped);
+  transition: rotate var(--glide) var(--damped), translate var(--reveal) var(--damped);
 }
 body.hide-panel .panel-handle svg { rotate: 0deg; }
 .panel-handle path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+/* Under the pointer the chevron leans 2px the way a press will send the
+   panel: what the press will do, shown before it is made. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .panel-handle:hover svg { translate: 2px 0; }
+  body.hide-panel .panel-handle:hover svg { translate: -2px 0; }
+}
 
 /* At a desk (`handle-tucks`, set by the shell where a pointer can hover) a
    closed panel's handle tucks into the edge and comes out for a pointer near
    it, for the keyboard, and to greet a page just opened. Tucked it takes no
-   clicks, but stays in the tab order. It waits a beat before going, so
-   grazing the edge of its reach does not flap it. With the panel out it
-   stays: it is the panel's own edge. */
+   clicks, but stays in the tab order. It waits a glide before going: a panel
+   put away carries its handle to the edge first, and a pointer grazing the
+   edge of its reach does not flap it. With the panel out it stays: it is
+   the panel's own edge. */
 body.handle-tucks.hide-panel .panel-handle {
   opacity: 0;
   translate: 100% 0;
   pointer-events: none;
-  transition: translate 200ms ease-out 320ms, opacity 200ms ease-out 320ms;
+  transition: translate var(--tuck) var(--damped) var(--glide), opacity var(--tuck) var(--damped) var(--glide);
 }
 body.handle-tucks.hide-panel.handle-near .panel-handle,
 body.handle-tucks.hide-panel.handle-greet .panel-handle,
@@ -152,7 +170,7 @@ body.handle-tucks.hide-panel .panel-handle:focus-visible {
   opacity: 1;
   translate: none;
   pointer-events: auto;
-  transition-duration: 160ms;
+  transition-duration: var(--reveal);
   transition-delay: 0s;
 }
 
@@ -672,6 +690,10 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   .panel-handle::before { content: ''; position: absolute; inset: -12px -10px 0; }
   .panel-handle svg { rotate: -90deg; }
   body.hide-panel .panel-handle svg { rotate: 90deg; }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .panel-handle:hover svg { translate: 0 2px; }
+    body.hide-panel .panel-handle:hover svg { translate: 0 -2px; }
+  }
   /* The stacked panel's foot clears the home indicator too. */
   .panel-scroll {
     padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
