@@ -876,7 +876,10 @@ h2.show-title { margin: 0; font-family: var(--serif); font-size: 21px; font-weig
   font-size: 11px;
   white-space: nowrap;
 }
-.deck.player > .lb.speed { flex: none; width: 64px; }
+/* Wide enough for the longest stop, 1.25×, whole: at 64px with the listbox's
+   own padding it (and 1.5×) ran to an ellipsis. */
+.deck.player > .lb.speed { flex: none; width: 68px; }
+.deck.player > .lb.speed .lb-trigger { padding: 6px; gap: 6px; }
 .tbtn.music[aria-pressed='false'] { color: var(--dim); }
 .tbtn.music.held { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .seg.camera button { padding: 5px 0; }
