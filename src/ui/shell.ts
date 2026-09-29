@@ -498,9 +498,6 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     // Reach is a desk hover; a stacked or coarse pointer must not keep a
     // leftover near-state, or a tap in the panel can look like a slide.
     if (!desk.matches) setNear(false)
-    // A window widened past the stack with the handle holding the keyboard: a
-    // handle that tucks does not keep it (see toggle), whichever way it got there.
-    if (desk.matches && !isOpen() && document.activeElement === handle) handle.blur()
   }
   desk.addEventListener('change', syncDesk)
   syncDesk()
@@ -517,7 +514,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     if (e.pointerType === 'mouse') setNear(false)
   })
 
-  const toggle = (e?: Event) => {
+  const toggle = () => {
     // Asking for the panel from a bare stage is asking for the panel.
     const bare = document.body.classList.contains('bare')
     document.body.classList.remove('bare', 'handle-greet')
@@ -526,18 +523,13 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     rememberPanel(!hide)
     syncHandle()
     hideTip()
-    // A tap already has a place; focusing the handle would pan the visual
-    // viewport on a phone and the panel would appear to jump. P and a
-    // keyboard activation (detail 0) still land on it.
-    const fromPointer = e instanceof MouseEvent && e.detail > 0
-    if (fromPointer) {
-      if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
-      return
-    }
-    // A focused handle stands out on the edge for as long as it holds the
-    // keyboard, so one that is about to tuck is not handed it. Tab still finds it.
-    if (!hide || !desk.matches) handle.focus({ preventScroll: true })
-    else if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    // The keyboard stays where it was. P is a shortcut, not a trip to the
+    // handle: handed to it, the Space that follows would press the handle and
+    // put the panel away, not play the show. A handle reached with Tab keeps
+    // the keyboard, and stands out on the edge while it does. Only what has
+    // just left the screen gives it up.
+    const focused = document.activeElement
+    if (hide && focused instanceof HTMLElement && scroll.contains(focused)) focused.blur()
   }
   handle.addEventListener('click', toggle)
   scroll.addEventListener('scroll', hideTip, { passive: true })
