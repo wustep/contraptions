@@ -94,29 +94,35 @@ body.bare #panel {
 /* The handle: the panel's one way in and out, a tab on the panel's own edge
    in the panel's own dress, so the two read as one piece and move as one.
    Visible while its panel is hidden: it is how the panel comes back. Its
-   chevron points where a press will send the panel, and turns as it goes. */
+   chevron points where a press will send the panel, and turns as it goes.
+   It sits on the header's line: level with the brand and the switch (the
+   column's top padding), and the switch's height. It stands over the piece
+   out or away, so it casts the same shadow either way. */
 .panel-handle {
   position: absolute;
-  top: 16px;
+  top: 13px;
   right: 100%;
   z-index: 30;
   visibility: visible;
   width: 26px;
-  height: 44px;
+  height: 34px;
   padding: 0;
   border: 1px solid var(--line);
   border-right: none;
   border-radius: 8px 0 0 8px;
   background: var(--panel);
   color: var(--dim);
+  box-shadow: -2px 4px 14px rgba(0, 0, 0, 0.2);
   touch-action: manipulation;
 }
+/* Drawn to the line; a press lands on a taller strip. */
+.panel-handle::before { content: ''; position: absolute; inset: -5px 0 -5px -8px; }
 .panel-handle:hover { background: var(--panel); border-color: var(--line); color: var(--text); }
 /* It rides the edge; a press nudge would shake it loose. */
 .panel-handle:active { transform: none; }
-/* A tab standing out over the piece with nothing behind it casts a shadow;
-   once the panel is behind it, it is part of the panel and casts none. */
-body.hide-panel .panel-handle { box-shadow: -2px 4px 14px rgba(0, 0, 0, 0.2); }
+/* The keyboard lights the tab's own edge, as it does a field's. A ring
+   round the whole tab would cross the seam where it meets the panel. */
+.panel-handle:focus-visible { outline: none; border-color: var(--accent); color: var(--text); }
 .panel-handle svg {
   width: 14px;
   height: 14px;
@@ -658,12 +664,10 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
     border: 1px solid var(--line);
     border-bottom: none;
     border-radius: 10px 10px 0 0;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.16);
     transition: bottom var(--glide) var(--damped);
   }
-  body.hide-panel .panel-handle {
-    bottom: calc(100% + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.16);
-  }
+  body.hide-panel .panel-handle { bottom: calc(100% + env(safe-area-inset-bottom, 0px)); }
   /* A finger is wider than the tab: the press lands on a taller strip. */
   .panel-handle::before { content: ''; position: absolute; inset: -12px -10px 0; }
   .panel-handle svg { rotate: -90deg; }
