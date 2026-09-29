@@ -17,9 +17,8 @@ import { GOLD, INK, IVORY, PEARL, PEARL_RIM, SILVER, clamp, pulse, smooth } from
 export const COLUMNS = 32
 /** The ring's radius, cells. */
 export const RING = 6.4
-/** How far the plan is tilted back: a circle on the floor is an ellipse this much as tall as it is wide. */
+/** How far the plan is tilted back at the Aria: a circle on the floor is an ellipse this much as tall as it is wide. */
 export const SIN = 0.34
-export const COS = Math.sqrt(1 - SIN * SIN)
 /** The columns' height to the underside of the band, the top of the rail, and the height the ball's centre rides at. */
 export const HEIGHT = 2.5
 export const RAIL = 2.8
@@ -28,13 +27,26 @@ export const SEAT = RAIL + 0.2
 export const BALL_SCALE = 1.6
 const BAR = 1 / COLUMNS
 
+/** How the room is seen at a moment: how far the plan is tilted back (`sin`) and so how tall a column stands (`cos`). */
+export interface View {
+  sin: number
+  cos: number
+}
+
+const tilted = (sin: number): View => ({ sin, cos: Math.sqrt(1 - sin * sin) })
+
+/** The view at show time `t`. */
+export function viewAt(_time: number): View {
+  return tilted(SIN)
+}
+
 /** A point of the room on the screen, in world cells: `phi` round from the gate, `r` out, `h` up. */
-export function project(phi: number, r: number, h: number): Pt {
-  return [r * Math.sin(phi), r * Math.cos(phi) * SIN - h * COS]
+export function project(phi: number, r: number, h: number, view: View): Pt {
+  return [r * Math.sin(phi), r * Math.cos(phi) * view.sin - h * view.cos]
 }
 
 /** A point of the floor. */
-export const floorPt = (phi: number, r: number): Pt => project(phi, r, 0)
+export const floorPt = (phi: number, r: number, view: View): Pt => project(phi, r, 0, view)
 
 /** How far in front of the middle a point is, for laying things back to front. */
 export const depth = (phi: number, r: number): number => r * Math.cos(phi)
@@ -96,8 +108,8 @@ export interface Rider extends ShowBall {
 
 const two = 2 * Math.PI
 
-function rider(id: number, phi: number, r: number, h: number, scale: number, color: string, rim?: string): Rider {
-  const [x, y] = project(phi, r, h)
+function rider(view: View, id: number, phi: number, r: number, h: number, scale: number, color: string, rim?: string): Rider {
+  const [x, y] = project(phi, r, h, view)
   return { id, x, y, scale, color, rim, spin: x / (BALL_R * Math.max(scale, 0.3)), angle: 0, z: depth(phi, r) }
 }
 
@@ -122,6 +134,7 @@ export function ridersAt(time: number): Rider[] {
   const spec = VARIATIONS[v]
   const phi = two * p
   const pearl = pearlAt(t)
+  const view = viewAt(t)
   // The ball is seen at the first and last seconds of the period as it comes out of the dark and goes back into it.
   const seen = pulse(t, 0.4, 4.4, STARTS[N] - 14, STARTS[N] - 2)
   const out: Rider[] = []
@@ -139,22 +152,22 @@ export function ridersAt(time: number): Rider[] {
     dr = d * Math.sin(turn)
     dh = d * Math.cos(turn)
     color = mixHex(IVORY, GOLD, hands)
-    const second = rider(1, phi, RING - dr, SEAT - dh, hands * BALL_SCALE, SILVER)
+    const second = rider(view, 1, phi, RING - dr, SEAT - dh, hands * BALL_SCALE, SILVER)
     out.push(second)
   }
-  const lead = rider(0, phi, RING + dr, SEAT + dh, BALL_SCALE * (1 + 0.16 * pearl) * seen, mixHex(color, PEARL, pearl), mixHex(INK, PEARL_RIM, pearl))
+  const lead = rider(view, 0, phi, RING + dr, SEAT + dh, BALL_SCALE * (1 + 0.16 * pearl) * seen, mixHex(color, PEARL, pearl), mixHex(INK, PEARL_RIM, pearl))
   out.push(lead)
 
   if (spec.kind === 'canon') {
     const e = bars(p, 3, 3)
     const sign = spec.inverse ? -1 : 1
     const h = SEAT + ((spec.interval ?? 1) - 1) * 0.15
-    out.push(rider(1, sign * two * (p - BAR), RING, h, BALL_SCALE * 0.9 * e, SILVER))
+    out.push(rider(view, 1, sign * two * (p - BAR), RING, h, BALL_SCALE * 0.9 * e, SILVER))
   }
   if (spec.kind === 'quodlibet') {
     QUOD.forEach((c, j) => {
       const e = bars(p, 4 + j, 5 + j)
-      out.push(rider(2 + j, two * (p - (1.5 + 1.3 * j) * BAR), RING, SEAT, BALL_SCALE * 0.6 * e, c))
+      out.push(rider(view, 2 + j, two * (p - (1.5 + 1.3 * j) * BAR), RING, SEAT, BALL_SCALE * 0.6 * e, c))
     })
   }
   // The hands' second ball is nearer or farther than the first by which side of the rail it is on.

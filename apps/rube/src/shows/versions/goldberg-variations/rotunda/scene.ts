@@ -1,9 +1,8 @@
 import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
 import { PERIOD, STARTS, VARIATIONS, wrap, type Variation } from './music'
-import { COLUMNS, COS, HEIGHT, RAIL, RING, SEAT, SIN, depth, floorPt, lapAt, project, ridersAt } from './path'
-import { COOL, GOLD, IVORY, LILAC, SILVER, clamp, hash, pulse, rgba, smooth } from './world'
-import { QUOD } from './path'
+import { COLUMNS, HEIGHT, RAIL, RING, SEAT, depth, floorPt, lapAt, lapsAt, project, ridersAt, viewAt, type View } from './path'
+import { COOL, GOLD, IVORY, SILVER, clamp, hash, pulse, rgba, smooth } from './world'
 
 /**
  * Everything in the room but the ball, each a drawing told show time, with one job to a thing:
@@ -97,19 +96,39 @@ export function petalAt(b: number, time: number): number {
   return clamp(open * (0.55 + 0.45 * Math.exp(-since / 5) * (v === 0 ? 1 : 0.4)) * room.lit)
 }
 
-/** The ring a variation engraves, as a share of the ring's radius: the Aria's rose tip, each variation's ring, the last, closing one. */
+/**
+ * The ring a variation engraves, as a share of the ring's radius: the Aria's rose tip, each variation's ring, the last,
+ * closing one. The thirty variations go in from the outside in Bach's ten groups of three (each closed by a canon, the
+ * last by the quodlibet), so the floor is ten bands with dark between them rather than thirty lines evenly spaced.
+ */
 export const ROSE = 0.29
+const OUTER = 0.9
+const INNER = 0.36
+/** The dark between two groups, in the steps between two rings of a group. */
+const GAP = 2.2
+const STEP = (OUTER - INNER) / (10 * 2 + 9 * GAP)
 export function ringRadius(n: number): number {
   if (n === 0) return ROSE
   if (n === 31) return 0.985
-  return 0.9 - ((n - 1) * (0.9 - 0.36)) / 29
+  const g = Math.floor((n - 1) / 3)
+  return OUTER - STEP * (g * (2 + GAP) + ((n - 1) % 3))
 }
 
-/** The colour a variation engraves in the floor. */
+/** The colour a variation engraves in the floor: gold, ivory for the canons and the ends, and cool for the minor. */
 export function ringTint(spec: Variation, cool = 0): string {
-  const base =
-    spec.kind === 'hands' ? '#A6C0DE' : spec.kind === 'canon' ? LILAC : spec.kind === 'overture' ? '#F7DA92' : spec.kind === 'pearl' ? '#8C82BC' : spec.kind === 'quodlibet' ? IVORY : spec.kind === 'capo' ? IVORY : GOLD
-  return spec.minor ? mixHex(base, COOL, 0.45 + 0.4 * cool) : base
+  const base = spec.kind === 'hands' ? mixHex(GOLD, IVORY, 0.35) : spec.kind === 'free' || spec.kind === 'overture' ? GOLD : spec.kind === 'pearl' ? COOL : IVORY
+  return spec.minor ? mixHex(base, COOL, 0.55 + 0.4 * cool) : base
+}
+
+/**
+ * How deep a variation's ring is cut, once it is cut: how bright it rests, and how wide it is in device pixels. The
+ * canons that close the groups are the floor's spine; the overture, the Adagio and the ends are its landmarks; the rest
+ * are fine lines, there to be counted but not to be looked at.
+ */
+function ringCut(spec: Variation): { a: number; w: number } {
+  if (spec.kind === 'overture' || spec.kind === 'pearl') return { a: 0.55, w: 2.2 }
+  if (spec.kind === 'canon' || spec.kind === 'quodlibet' || spec.kind === 'capo') return { a: 0.4, w: 1.5 }
+  return { a: 0.16, w: 1 }
 }
 
 // ---------------------------------------------------------------- the air
@@ -158,21 +177,30 @@ export const air = scenery<null>('air', (p, _s, c) => {
 
 // ---------------------------------------------------------------- the floor
 
-/** A path round the floor, plan coordinates (x across, z toward the viewer), from `phi0` to `phi1` clockwise from above. */
-function arc(ctx: Ctx2D, r: number, phi0: number, phi1: number): void {
+/** A ring of the floor on the screen from `phi0` to `phi1` (clockwise from above), as a path in world cells. */
+function arc(ctx: Ctx2D, view: View, r: number, phi0: number, phi1: number): void {
   ctx.beginPath()
-  ctx.arc(0, 0, r, Math.PI / 2 - phi0, Math.PI / 2 - phi1, true)
+  ctx.ellipse(0, 0, r, r * view.sin, 0, Math.PI / 2 - phi0, Math.PI / 2 - phi1, true)
 }
+
+/** How many bars of a ring behind the ball's head are still bright with being cut, and how fast they settle. */
+const HEAD = 6
+const SETTLE = 1.5
 
 export const floor = scenery<null>('floor', (p, _s, c) => {
   const ctx = p.drawingContext as Ctx2D
   const k = c.k
   const t = wrap(c.t)
   const room = roomAt(t)
+  const view = viewAt(t)
+  const px = Math.max(1, k / 620) / k
   const { v, p: lap } = lapAt(t)
+  const laps = lapsAt(t)
   ctx.save()
-  ctx.scale(k, k * SIN)
-  // Plan coordinates from here: the ellipse of a circle on the floor is the circle of the plan.
+  ctx.scale(k, k)
+  ctx.save()
+  ctx.scale(1, view.sin)
+  // Plan coordinates for the fills: the ellipse of a circle on the floor is the circle of the plan.
   const wide = RING * 1.14
   const disc = ctx.createRadialGradient(0, 0, 0, 0, 0, wide)
   disc.addColorStop(0, mixHex('#1B141F', '#2E2028', room.warm))
@@ -182,17 +210,6 @@ export const floor = scenery<null>('floor', (p, _s, c) => {
   ctx.beginPath()
   ctx.arc(0, 0, wide, 0, two)
   ctx.fill()
-  // The steps the colonnade stands on.
-  ctx.lineWidth = 0.05
-  ctx.strokeStyle = rgba(GOLD, 0.14 + 0.1 * room.warm)
-  ctx.beginPath()
-  ctx.arc(0, 0, RING * 1.08, 0, two)
-  ctx.stroke()
-  ctx.strokeStyle = rgba(GOLD, 0.07 + 0.05 * room.warm)
-  ctx.beginPath()
-  ctx.arc(0, 0, RING * 1.14, 0, two)
-  ctx.stroke()
-
   // The pool of light under the middle, from the rose.
   const rose = ctx.createRadialGradient(0, 0, 0, 0, 0, RING * 0.5)
   rose.addColorStop(0, rgba(lampColor(room.cool), 0.22 * room.warm * room.lit))
@@ -201,36 +218,6 @@ export const floor = scenery<null>('floor', (p, _s, c) => {
   ctx.beginPath()
   ctx.arc(0, 0, RING * 0.5, 0, two)
   ctx.fill()
-
-  // The rings: a lap of the ball engraves one. The da capo dims them as it closes the last.
-  const gather = v === 31 ? smooth(lap, 0.05, 0.6) : v > 31 ? 1 : 0
-  const ringLine = (n: number, end: number): void => {
-    const spec = VARIATIONS[n]
-    const r = ringRadius(n) * RING
-    const dim = n === 31 ? 1 : 1 - 0.62 * gather
-    const strength = (spec.kind === 'overture' || spec.kind === 'pearl' ? 0.8 : 0.55) * dim * room.lit
-    ctx.lineWidth = spec.kind === 'overture' || spec.kind === 'pearl' ? 0.075 : 0.05
-    if (spec.kind === 'quodlibet') {
-      // Tunes: the ring in short lengths of five colours.
-      const segs = 40
-      for (let s = 0; s < segs; s++) {
-        const a = (s / segs) * two
-        const b = Math.min(end, ((s + 1) / segs) * two)
-        if (a >= end) break
-        ctx.strokeStyle = rgba(s % 2 ? IVORY : QUOD[(s >> 1) % QUOD.length], strength)
-        arc(ctx, r, a, b)
-        ctx.stroke()
-      }
-      return
-    }
-    ctx.strokeStyle = rgba(ringTint(spec, room.cool), strength)
-    arc(ctx, r, 0, end)
-    ctx.stroke()
-  }
-  for (let n = 1; n <= 31; n++) {
-    if (n < v) ringLine(n, two)
-    else if (n === v) ringLine(n, two * lap)
-  }
 
   // The Aria's rose: thirty-two petals, one to a bar, each opening as the ball passes its column.
   for (let b = 0; b < COLUMNS; b++) {
@@ -254,6 +241,49 @@ export const floor = scenery<null>('floor', (p, _s, c) => {
     ctx.stroke()
   }
   ctx.restore()
+
+  // The step the colonnade stands on.
+  ctx.lineWidth = px
+  ctx.strokeStyle = rgba(GOLD, 0.1 + 0.08 * room.warm)
+  arc(ctx, view, RING * 1.1, 0, two)
+  ctx.stroke()
+
+  // The rings: a lap of the ball cuts one, bright at the head and settling as the ball goes on. The da capo dims them
+  // as it closes the last round all of them.
+  const gather = v === 31 ? smooth(lap, 0.05, 0.6) : 0
+  for (let n = 1; n <= Math.min(v, 31); n++) {
+    const spec = VARIATIONS[n]
+    const cut = ringCut(spec)
+    const done = clamp(laps - n)
+    if (done <= 0) continue
+    const dim = n === 31 ? 1 : 1 - 0.62 * gather
+    ctx.lineWidth = cut.w * px
+    ctx.strokeStyle = rgba(ringTint(spec, room.cool), cut.a * dim * room.lit)
+    arc(ctx, view, ringRadius(n) * RING, 0, two * done)
+    ctx.stroke()
+  }
+  // The head: the last few bars cut, the ring's own line brighter and a little wider the more lately it was cut.
+  for (const n of [v - 1, v]) {
+    if (n < 1 || n > 31) continue
+    const spec = VARIATIONS[n]
+    const cut = ringCut(spec)
+    const done = clamp(laps - n)
+    const from = Math.max(0, done - HEAD * BAR)
+    if (done - from < 1e-4) continue
+    const pieces = 18
+    for (let j = 0; j < pieces; j++) {
+      const f0 = from + ((done - from) * j) / pieces
+      const f1 = from + ((done - from) * (j + 1)) / pieces
+      const since = (laps - n - (f0 + f1) / 2) * COLUMNS
+      const fresh = Math.exp(-since / SETTLE)
+      if (fresh < 0.02) continue
+      ctx.lineWidth = (cut.w + 0.8 * fresh) * px
+      ctx.strokeStyle = rgba(mixHex(ringTint(spec, room.cool), IVORY, 0.5 * fresh), 0.55 * fresh * room.lit)
+      arc(ctx, view, ringRadius(n) * RING, two * f0, two * f1 + 0.002)
+      ctx.stroke()
+    }
+  }
+  ctx.restore()
 })
 
 // ---------------------------------------------------------------- the colonnade
@@ -268,6 +298,7 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
   const room = roomAt(t)
   const hair = hairs(k)
   const lamp = lampColor(room.cool)
+  const view = viewAt(t)
   ctx.save()
   ctx.scale(k, k)
 
@@ -276,10 +307,10 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
 
   const column = (b: number): void => {
     const phi = (b / COLUMNS) * two
-    const [x, yb] = floorPt(phi, RING)
+    const [x, yb] = floorPt(phi, RING, view)
     const z = RING * Math.cos(phi)
     const s = 1 + 0.12 * (z / RING)
-    const top = yb - HEIGHT * COS
+    const top = yb - HEIGHT * view.cos
     const wb = 0.135 * s
     const wt = 0.105 * s
     const face = 0.5 - 0.5 * Math.cos(phi)
@@ -324,12 +355,12 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
     const steps = 48
     ctx.beginPath()
     for (let i = 0; i <= steps; i++) {
-      const [x, y] = project(phi0 + ((phi1 - phi0) * i) / steps, RING, RAIL)
+      const [x, y] = project(phi0 + ((phi1 - phi0) * i) / steps, RING, RAIL, view)
       if (i) ctx.lineTo(x, y)
       else ctx.moveTo(x, y)
     }
     for (let i = steps; i >= 0; i--) {
-      const [x, y] = project(phi0 + ((phi1 - phi0) * i) / steps, RING, HEIGHT)
+      const [x, y] = project(phi0 + ((phi1 - phi0) * i) / steps, RING, HEIGHT, view)
       ctx.lineTo(x, y)
     }
     ctx.closePath()
@@ -339,7 +370,7 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
     // The rail: its top edge.
     ctx.beginPath()
     for (let i = 0; i <= steps; i++) {
-      const [x, y] = project(phi0 + ((phi1 - phi0) * i) / steps, RING, RAIL)
+      const [x, y] = project(phi0 + ((phi1 - phi0) * i) / steps, RING, RAIL, view)
       if (i) ctx.lineTo(x, y)
       else ctx.moveTo(x, y)
     }
@@ -353,13 +384,13 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
       if (rel > phi1 - phi0) continue
       const w = 0.11 * Math.abs(Math.cos(phi))
       if (w < 0.012) continue
-      const [x, y] = project(phi, RING, (RAIL + HEIGHT) / 2)
+      const [x, y] = project(phi, RING, (RAIL + HEIGHT) / 2, view)
       const a = lit(b)
       ctx.fillStyle = rgba(lamp, 0.1 + 0.9 * a)
-      ctx.fillRect(x - w, y - 0.115 * COS, w * 2, 0.23 * COS)
+      ctx.fillRect(x - w, y - 0.115 * view.cos, w * 2, 0.23 * view.cos)
       ctx.strokeStyle = rgba(lamp, 0.25 + 0.4 * a)
       ctx.lineWidth = hair
-      ctx.strokeRect(x - w, y - 0.115 * COS, w * 2, 0.23 * COS)
+      ctx.strokeRect(x - w, y - 0.115 * view.cos, w * 2, 0.23 * view.cos)
     }
   }
 
@@ -379,7 +410,7 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
     ctx.lineWidth = hair * 1.2
     ctx.beginPath()
     for (let i = 0; i <= 96; i++) {
-      const [x, y] = project((i / 96) * two, RING, h)
+      const [x, y] = project((i / 96) * two, RING, h, view)
       if (i) ctx.lineTo(x, y)
       else ctx.moveTo(x, y)
     }
@@ -398,6 +429,7 @@ export const glow = scenery<null>('glow', () => {}, (p, _s, c) => {
   const t = wrap(c.t)
   const room = roomAt(t)
   const lamp = lampColor(room.cool)
+  const view = viewAt(t)
   ctx.save()
   ctx.scale(k, k)
   ctx.globalCompositeOperation = 'lighter'
@@ -406,7 +438,7 @@ export const glow = scenery<null>('glow', () => {}, (p, _s, c) => {
     const a = lampAt(b, t)
     if (a < 0.02) continue
     const phi = (b / COLUMNS) * two
-    const [x, y] = project(phi, RING, (RAIL + HEIGHT) / 2)
+    const [x, y] = project(phi, RING, (RAIL + HEIGHT) / 2, view)
     const r = 0.5 + 1.1 * a
     const g = ctx.createRadialGradient(x, y, 0, x, y, r)
     g.addColorStop(0, rgba(lamp, 0.34 * a * a + 0.06 * a))
@@ -417,8 +449,8 @@ export const glow = scenery<null>('glow', () => {}, (p, _s, c) => {
 
   // From above, into the middle of the room: the second half.
   if (room.second > 0.01) {
-    const [, top] = project(0, 0, HEIGHT + 4.2)
-    const [, foot] = project(0, 0, 0)
+    const [, top] = project(0, 0, HEIGHT + 4.2, view)
+    const [, foot] = project(0, 0, 0, view)
     const g = ctx.createLinearGradient(0, top, 0, foot)
     g.addColorStop(0, rgba(GOLD, 0))
     g.addColorStop(0.5, rgba(GOLD, 0.05 * room.second))
@@ -433,7 +465,7 @@ export const glow = scenery<null>('glow', () => {}, (p, _s, c) => {
     ctx.fill()
   }
 
-  // The balls' light, and the pen's on the floor.
+  // The balls' light.
   for (const r of ridersAt(t)) {
     if ((r.scale ?? 1) < 0.05) continue
     const s = r.scale ?? 1
@@ -444,15 +476,18 @@ export const glow = scenery<null>('glow', () => {}, (p, _s, c) => {
     ctx.fillStyle = g
     ctx.fillRect(r.x - rad, r.y - rad, rad * 2, rad * 2)
   }
+  // The point of the ring being cut, under the ball: it lifts between one ring and the next.
   const { v, p: lap } = lapAt(t)
-  const leader = ridersAt(t).find((r) => r.id === 0)!
-  if (leader.scale && leader.scale > 0.05) {
-    const [px, py] = floorPt(two * lap, ringRadius(v) * RING)
-    const g = ctx.createRadialGradient(px, py, 0, px, py, 0.5)
-    g.addColorStop(0, rgba(IVORY, 0.55 * room.lit))
+  const pen = smooth(lap, 0, BAR) * (1 - smooth(lap, 1 - BAR, 1)) * room.lit * (v === 0 ? smooth(t, 3, 12) : 1)
+  if (pen > 0.01) {
+    const [px, py] = floorPt(two * lap, ringRadius(v) * RING, view)
+    const rad = 0.16
+    const g = ctx.createRadialGradient(px, py, 0, px, py, rad)
+    g.addColorStop(0, rgba(IVORY, 0.8 * pen))
+    g.addColorStop(0.35, rgba(GOLD, 0.25 * pen))
     g.addColorStop(1, rgba(GOLD, 0))
     ctx.fillStyle = g
-    ctx.fillRect(px - 0.5, py - 0.5, 1, 1)
+    ctx.fillRect(px - rad, py - rad, rad * 2, rad * 2)
   }
   ctx.restore()
 })

@@ -8,7 +8,7 @@ import { performanceProblems } from '../src/shows/registry'
 import { Transport } from '../src/shows/clock'
 import { show } from '../src/shows/versions/goldberg-variations/rotunda'
 import { ALBUM, CUES, PERIOD, STARTS, VARIATIONS, trackAt } from '../src/shows/versions/goldberg-variations/rotunda/music'
-import { COLUMNS, RING, SEAT, lapAt, lapsAt, project, ridersAt } from '../src/shows/versions/goldberg-variations/rotunda/path'
+import { COLUMNS, RING, SEAT, lapAt, lapsAt, project, ridersAt, viewAt } from '../src/shows/versions/goldberg-variations/rotunda/path'
 import { camera } from '../src/shows/versions/goldberg-variations/rotunda/camera'
 import { lampAt, petalAt, roomAt } from '../src/shows/versions/goldberg-variations/rotunda/scene'
 import { CARDS, LAST_GONE, TITLES_OK, titlesAt } from '../src/shows/versions/goldberg-variations/rotunda/titles'
@@ -114,7 +114,7 @@ export function checkGoldberg(perf: Performance, version: Version, check: Check)
     const s = at(n, f)
     const { p } = lapAt(s)
     const riders = ridersAt(s)
-    const [x, y] = project(2 * Math.PI * (VARIATIONS[n].inverse ? -1 : 1) * (p - 1 / COLUMNS), RING, SEAT + (VARIATIONS[n].interval! - 1) * 0.15)
+    const [x, y] = project(2 * Math.PI * (VARIATIONS[n].inverse ? -1 : 1) * (p - 1 / COLUMNS), RING, SEAT + (VARIATIONS[n].interval! - 1) * 0.15, viewAt(s))
     const r = riders.find((q) => q.id === 1)
     return !!r && near(r.x, x, 1e-9) && near(r.y, y, 1e-9)
   }
