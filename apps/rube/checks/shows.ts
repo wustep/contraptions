@@ -692,8 +692,8 @@ async function main(): Promise<void> {
   /* ------------------------------------------------------------------ the clock */
 
   console.log('\nthe clock')
-  check('the speeds are Machine\'s six, ¼× to 4×', SHOW_SPEEDS.join(',') === '0.25,0.5,1,1.5,2,4' && SHOW_SPEEDS === SPEEDS)
-  check('the speeds read ¼ ½ 1× 1.5× 2× 4×', SHOW_SPEEDS.map(speedLabel).join(' ') === '¼ ½ 1× 1.5× 2× 4×')
+  check('the speeds are Machine\'s seven, ¼× to 4×', SHOW_SPEEDS.join(',') === '0.25,0.5,1,1.25,1.5,2,4' && SHOW_SPEEDS === SPEEDS)
+  check('the speeds read ¼ ½ 1× 1.25× 1.5× 2× 4×', SHOW_SPEEDS.map(speedLabel).join(' ') === '¼ ½ 1× 1.25× 1.5× 2× 4×')
   {
     let wall = 0
     const c = new Transport({ duration: 10, wall: () => wall })
@@ -717,6 +717,14 @@ async function main(): Promise<void> {
     check('and does not go before the top', c.now() === 0)
     c.seek(NaN)
     check('a time that is not a number is the top', c.now() === 0)
+  }
+  {
+    let wall = 0
+    const c = new Transport({ duration: 10, wall: () => wall })
+    c.play()
+    c.setSpeed(1.25)
+    wall = 4000
+    check('a quarter faster at 1.25×', near(c.now(), 5) && c.speed === 1.25)
   }
   {
     let wall = 0

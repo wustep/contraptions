@@ -205,7 +205,7 @@ export function segmented(
 }
 
 /**
- * The transport's speed, as a dropdown beside Play. Six stops are too many
+ * The transport's speed, as a dropdown beside Play. Seven stops are too many
  * for a segmented row to read at a glance, and every mode shares them.
  */
 export function speedPicker(onPick: (v: number) => void): {
