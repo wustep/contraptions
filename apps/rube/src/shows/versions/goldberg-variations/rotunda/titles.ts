@@ -28,7 +28,7 @@ const GO = 1.2
 
 const caption = (n: number): Card => {
   const spec = VARIATIONS[n]
-  const label = n === 0 ? 'Aria' : n === 31 ? 'Aria da Capo' : `Variatio ${n}`
+  const label = n === 0 ? 'Aria' : n === 31 ? 'Aria da Capo' : `Variation ${n}`
   return {
     at: STARTS[n] + (n === 0 ? 12 : 2.4),
     hold: 3.4,

@@ -136,7 +136,7 @@ export function checkGoldberg(perf: Performance, version: Version, check: Check)
     titlesAt(0).length === 0 && titlesAt(PERIOD - 1e-9).length === 0 && titlesAt(PERIOD - 30).length === 0)
   check('goldberg: the title comes as the Aria begins, each variation is named as it starts, and the credits follow the da capo',
     titlesAt(4).some((c) => c.title) &&
-    VARIATIONS.slice(1, 31).every((v) => titlesAt(STARTS[v.n] + 4.5).some((c) => c.names[0] === `Variatio ${v.n}`)) &&
+    VARIATIONS.slice(1, 31).every((v) => titlesAt(STARTS[v.n] + 4.5).some((c) => c.names[0] === `Variation ${v.n}`)) &&
     titlesAt(STARTS[31] + 4.5).some((c) => c.names[0] === 'Aria da Capo') &&
     CARDS[CARDS.length - 2].role === 'Directed by' && CARDS[CARDS.length - 1].role === 'Music' &&
     titlesAt(CARDS[CARDS.length - 1].at + 3).some((c) => c.notes?.some((n) => n.includes('Víkingur Ólafsson'))))
