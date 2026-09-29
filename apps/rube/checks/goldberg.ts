@@ -8,7 +8,7 @@ import { performanceProblems } from '../src/shows/registry'
 import { Transport } from '../src/shows/clock'
 import { show } from '../src/shows/versions/goldberg-variations/rotunda'
 import { ALBUM, CUES, PERIOD, STARTS, VARIATIONS, trackAt } from '../src/shows/versions/goldberg-variations/rotunda/music'
-import { COLUMNS, RING, SEAT, lapAt, lapsAt, project, ridersAt, viewAt } from '../src/shows/versions/goldberg-variations/rotunda/path'
+import { COLUMNS, RING, SEAT, lapAt, lapsAt, project, ridersAt, tiltAt, turnAt, viewAt } from '../src/shows/versions/goldberg-variations/rotunda/path'
 import { camera } from '../src/shows/versions/goldberg-variations/rotunda/camera'
 import { lampAt, petalAt, roomAt } from '../src/shows/versions/goldberg-variations/rotunda/scene'
 import { CARDS, LAST_GONE, TITLES_OK, titlesAt } from '../src/shows/versions/goldberg-variations/rotunda/titles'
@@ -149,10 +149,18 @@ export function checkGoldberg(perf: Performance, version: Version, check: Check)
   for (let s = 1; s <= PERIOD; s += 1) {
     const c = camera(s)
     step = Math.max(step, Math.hypot(c.x - last.x, c.y - last.y), Math.abs(c.cells - last.cells))
-    if (!(c.cells >= 7.5 && c.cells <= 14.5 && Math.abs(c.x) < 6 && c.y > -5 && c.y < 3)) bounds = false
+    if (!(c.cells >= 7.5 && c.cells <= 16.5 && Math.abs(c.x) < 6 && c.y > -5 && c.y < 3)) bounds = false
     if (c.cells !== c.cells || c.x !== c.x || c.y !== c.y) steady = false
     last = c
   }
-  check('goldberg: the camera stays on the room: between 7.5 and 14.5 cells high, never far from its middle', bounds && steady)
+  check('goldberg: the camera stays on the room: between 7.5 and 16.5 cells high, never far from its middle', bounds && steady)
+  // The view: it rises as the floor is written, and is low again at the seam; the room turns only in the Adagio.
+  check('goldberg: the view rises as the floor is written, and at the seam is where it began',
+    near(tiltAt(0), tiltAt(PERIOD - 1e-9), 1e-4) && tiltAt(mid(30)) > tiltAt(mid(1)) + 0.12 && tiltAt(mid(16)) > tiltAt(mid(15)))
+  // A whole turn is no turn: how far apart two turns are, round the circle.
+  const apart = (a: number, b: number) => Math.abs((((a - b + 0.5) % 1) + 1) % 1 - 0.5)
+  const still = [STARTS[25] + 0.01, STARTS[26] - 0.01].every((s) => apart(turnAt(s + 0.5), turnAt(s - 0.5)) < 1e-4)
+  check('goldberg: the room turns once in the Adagio, from rest to rest, and at no other time',
+    turnAt(STARTS[25]) === 0 && near(turnAt(STARTS[26] - 1e-6), 1, 1e-4) && turnAt(STARTS[26] + 0.1) === 0 && turnAt(mid(24)) === 0 && still)
   check('goldberg: the camera never cuts: no second of it moves it more than a fifth of a cell', step < 0.2, step.toFixed(3))
 }

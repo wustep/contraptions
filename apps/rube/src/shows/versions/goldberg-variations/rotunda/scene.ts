@@ -180,7 +180,7 @@ export const air = scenery<null>('air', (p, _s, c) => {
 /** A ring of the floor on the screen from `phi0` to `phi1` (clockwise from above), as a path in world cells. */
 function arc(ctx: Ctx2D, view: View, r: number, phi0: number, phi1: number): void {
   ctx.beginPath()
-  ctx.ellipse(0, 0, r, r * view.sin, 0, Math.PI / 2 - phi0, Math.PI / 2 - phi1, true)
+  ctx.ellipse(0, 0, r, r * view.sin, 0, Math.PI / 2 - phi0 + view.turn, Math.PI / 2 - phi1 + view.turn, true)
 }
 
 /** How many bars of a ring behind the ball's head are still bright with being cut, and how fast they settle. */
@@ -223,7 +223,7 @@ export const floor = scenery<null>('floor', (p, _s, c) => {
   for (let b = 0; b < COLUMNS; b++) {
     const a = petalAt(b, t)
     if (a < 0.01) continue
-    const phi = (b / COLUMNS) * two
+    const phi = (b / COLUMNS) * two - view.turn
     const half = 0.1
     const tip = (phi0: number, r0: number): [number, number] => [r0 * Math.sin(phi0), r0 * Math.cos(phi0)]
     const [bx, bz] = tip(phi, RING * 0.05)
@@ -303,17 +303,17 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
   ctx.scale(k, k)
 
   const lit = (b: number) => lampAt(b, t)
-  const order = Array.from({ length: COLUMNS }, (_, b) => b).sort((a, b) => depth(((a / COLUMNS) * two), RING) - depth(((b / COLUMNS) * two), RING))
+  const order = Array.from({ length: COLUMNS }, (_, b) => b).sort((a, b) => depth((a / COLUMNS) * two, RING, view) - depth((b / COLUMNS) * two, RING, view))
 
   const column = (b: number): void => {
     const phi = (b / COLUMNS) * two
     const [x, yb] = floorPt(phi, RING, view)
-    const z = RING * Math.cos(phi)
+    const z = RING * Math.cos(phi - view.turn)
     const s = 1 + 0.12 * (z / RING)
     const top = yb - HEIGHT * view.cos
     const wb = 0.135 * s
     const wt = 0.105 * s
-    const face = 0.5 - 0.5 * Math.cos(phi)
+    const face = 0.5 - 0.5 * Math.cos(phi - view.turn)
     const glow = lit(b)
     // Its shadow on the floor.
     ctx.fillStyle = rgba('#000000', 0.32)
@@ -382,7 +382,7 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
       const phi = (b / COLUMNS) * two
       const rel = ((phi - phi0 + 4 * two) % two)
       if (rel > phi1 - phi0) continue
-      const w = 0.11 * Math.abs(Math.cos(phi))
+      const w = 0.11 * Math.abs(Math.cos(phi - view.turn))
       if (w < 0.012) continue
       const [x, y] = project(phi, RING, (RAIL + HEIGHT) / 2, view)
       const a = lit(b)
@@ -395,9 +395,9 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
   }
 
   // Back: the far half of the band, and the columns from the back to the front. Then the near half of the band.
-  band(Math.PI / 2, (3 * Math.PI) / 2, true)
+  band(view.turn + Math.PI / 2, view.turn + (3 * Math.PI) / 2, true)
   for (const b of order) column(b)
-  band(-Math.PI / 2, Math.PI / 2, false)
+  band(view.turn - Math.PI / 2, view.turn + Math.PI / 2, false)
 
   // A canon's second rail, higher by its interval, that its second voice goes round on.
   const { v, p: lap } = lapAt(t)

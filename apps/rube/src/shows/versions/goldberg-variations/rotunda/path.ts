@@ -17,8 +17,6 @@ import { GOLD, INK, IVORY, PEARL, PEARL_RIM, SILVER, clamp, pulse, smooth } from
 export const COLUMNS = 32
 /** The ring's radius, cells. */
 export const RING = 6.4
-/** How far the plan is tilted back at the Aria: a circle on the floor is an ellipse this much as tall as it is wide. */
-export const SIN = 0.34
 /** The columns' height to the underside of the band, the top of the rail, and the height the ball's centre rides at. */
 export const HEIGHT = 2.5
 export const RAIL = 2.8
@@ -27,29 +25,73 @@ export const SEAT = RAIL + 0.2
 export const BALL_SCALE = 1.6
 const BAR = 1 / COLUMNS
 
-/** How the room is seen at a moment: how far the plan is tilted back (`sin`) and so how tall a column stands (`cos`). */
+/**
+ * How the room is seen at a moment: how far the plan is tilted back (`sin`: a circle on the floor is an ellipse this
+ * much as tall as it is wide), how tall a column stands for it (`cos`), and how far the room has been turned about its
+ * middle (`turn`, radians, the way the ball goes), which it is only in the Adagio.
+ */
 export interface View {
   sin: number
   cos: number
+  turn: number
 }
 
-const tilted = (sin: number): View => ({ sin, cos: Math.sqrt(1 - sin * sin) })
+/**
+ * The view rises as the floor is written, so that what has been played takes more of the picture the more of it there
+ * is: low for the Aria, where the colonnade is all there is; a little higher through the first half; lifted by the
+ * overture, with the light that comes in from above; brought low and close for the Adagio; highest for the quodlibet and
+ * the da capo, over the whole floor; and down again in the dark as the lamps go out, so the loop closes where it opened.
+ */
+export const LOW = 0.34
+export function tiltAt(time: number): number {
+  const t = wrap(time)
+  const end = STARTS[N]
+  return (
+    LOW +
+    0.07 * smooth(t, STARTS[1], STARTS[15]) +
+    0.1 * smooth(t, STARTS[16] + 3, STARTS[16] + 55) -
+    0.1 * pulse(t, STARTS[25] - 8, STARTS[25] + 60, STARTS[26] - 60, STARTS[26] + 8) +
+    0.06 * smooth(t, STARTS[29], STARTS[31] + 30) -
+    0.23 * smooth(t, end - 110, end - 12)
+  )
+}
+
+/**
+ * How far round the room has turned in the Adagio, as a share of a turn: it comes to follow the pearl over the first
+ * bars and turns with it, a whole turn by the end, so that the pearl is held near the front, dark over the lit floor,
+ * and the columns go by behind it. It starts and stops from rest, and a whole turn is no turn, so the room after is
+ * the room before.
+ */
+const EASE = 0.12
+const SPAN = 1 - EASE
+function eased(p: number): number {
+  const a = (x: number): number => EASE * (x * x * x - (x * x * x * x) / 2)
+  if (p <= EASE) return a(p / EASE) / SPAN
+  if (p >= 1 - EASE) return 1 - a((1 - p) / EASE) / SPAN
+  return (EASE / 2 + (p - EASE)) / SPAN
+}
+export function turnAt(time: number): number {
+  const { v, p } = lapAt(time)
+  return v === 25 ? eased(p) : 0
+}
 
 /** The view at show time `t`. */
-export function viewAt(_time: number): View {
-  return tilted(SIN)
+export function viewAt(time: number): View {
+  const sin = tiltAt(time)
+  return { sin, cos: Math.sqrt(1 - sin * sin), turn: 2 * Math.PI * turnAt(time) }
 }
 
 /** A point of the room on the screen, in world cells: `phi` round from the gate, `r` out, `h` up. */
 export function project(phi: number, r: number, h: number, view: View): Pt {
-  return [r * Math.sin(phi), r * Math.cos(phi) * view.sin - h * view.cos]
+  const a = phi - view.turn
+  return [r * Math.sin(a), r * Math.cos(a) * view.sin - h * view.cos]
 }
 
 /** A point of the floor. */
 export const floorPt = (phi: number, r: number, view: View): Pt => project(phi, r, 0, view)
 
 /** How far in front of the middle a point is, for laying things back to front. */
-export const depth = (phi: number, r: number): number => r * Math.cos(phi)
+export const depth = (phi: number, r: number, view: View): number => r * Math.cos(phi - view.turn)
 
 // ---------------------------------------------------------------- the lap
 
@@ -110,7 +152,7 @@ const two = 2 * Math.PI
 
 function rider(view: View, id: number, phi: number, r: number, h: number, scale: number, color: string, rim?: string): Rider {
   const [x, y] = project(phi, r, h, view)
-  return { id, x, y, scale, color, rim, spin: x / (BALL_R * Math.max(scale, 0.3)), angle: 0, z: depth(phi, r) }
+  return { id, x, y, scale, color, rim, spin: x / (BALL_R * Math.max(scale, 0.3)), angle: 0, z: depth(phi, r, view) }
 }
 
 /** Up over the first `a` of a lap and down over the last `b`, as shares of it. */
