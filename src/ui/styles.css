@@ -1000,16 +1000,19 @@ a.more:hover { color: var(--accent); }
 /* The byline is on every panel, pinned last once a mode has filled the
    middle. order keeps it there if something is added after it. margin-top
    auto holds it to the bottom when the sections stop short; sticky keeps
-   that foot in view when they run long on the desktop sidebar. On mobile
-   (max-width 820px) sticky is cleared so it scrolls with the panel. */
+   that foot in view when they run long on the desktop sidebar. Stuck, it
+   would stop at the column's 10px bottom padding and leave a strip under it
+   for a long list (Theater's) to scroll through; it reaches down over the
+   padding and fills it. On mobile (max-width 820px) sticky is cleared so it
+   scrolls with the panel. */
 .byline {
   order: 2;
   position: sticky;
-  bottom: 0;
+  bottom: -10px;
   z-index: 2;
   flex-shrink: 0;
-  margin: auto 0 0;
-  padding-top: 10px;
+  margin: auto 0 -10px;
+  padding: 10px 0;
   background: var(--panel);
   color: var(--faint);
   font-size: 11px;
