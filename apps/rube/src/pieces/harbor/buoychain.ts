@@ -178,8 +178,9 @@ const TOWER: [number, number][] = [
 function links(p: p5, k: number, ink: string, weight: number, x0: number, y0: number, x1: number, y1: number, link = 0.045): void {
   const L = Math.hypot(x1 - x0, y1 - y0)
   if (L < 0.01) return
+  // A chain is detail: lighter than the decks and pilings it is moored among, not heavier.
   p.stroke(ink)
-  p.strokeWeight(weight * 1.3)
+  p.strokeWeight(weight * 0.8)
   p.strokeCap(p.SQUARE)
   for (let d = 0; d < L - 0.01; d += link + 0.03) {
     const a = d / L
