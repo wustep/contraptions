@@ -566,7 +566,7 @@ videoBtn.addEventListener('click', () => {
       sync()
     })
 })
-exportSec.append(el('div', { class: 'row export-row' }, [sizeSeg.node, pngBtn, videoBtn]), exportNote)
+exportSec.append(el('div', { class: 'row export-row frames' }, [sizeSeg.node, pngBtn, videoBtn]), exportNote)
 
 const playIcon = icon(ICON.play)
 const pauseIcon = icon(ICON.pause)

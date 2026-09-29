@@ -880,6 +880,15 @@ h2.show-title { margin: 0; font-family: var(--serif); font-size: 21px; font-weig
 .tbtn.music[aria-pressed='false'] { color: var(--dim); }
 .tbtn.music.held { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .seg.camera button { padding: 5px 0; }
+/* A show's sizes are words, not multipliers. In the side panel (and on the
+   narrowest phones) they and both saves do not fit one line: "Shorts" ran
+   into its cell's edges. So the dial takes a line of its own, as the
+   camera's does, and the two saves share the next. */
+@media (min-width: 821px), (max-width: 359px) {
+  .export-row.frames { flex-wrap: wrap; }
+  .export-row.frames > .seg { flex: 1 0 100%; }
+  .export-row.frames > button { flex: 1; }
+}
 
 /* ---- theater -------------------------------------------------------- */
 
