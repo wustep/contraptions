@@ -162,6 +162,11 @@ export const ICON = {
   // A proscenium: the valance, and a curtain drawn back to either side.
   theater: ['M2 3h20v3.5H2z', 'M3 7.5h5.5c-.3 5.5-2.2 10.5-5.5 13.5z', 'M21 7.5h-5.5c.3 5.5 2.2 10.5 5.5 13.5z'],
   next: ['M5 5l9 7-9 7z', 'M15.5 5H19v14h-3.5z'],
+  // Back to the top: the bar the show starts at, and the way to it.
+  restart: ['M5 5h3.4v14H5z', 'M19.5 5v14L9.5 12z'],
+  // A speaker with its sound, and the same speaker struck quiet.
+  sound: ['M3 9h4l5.5-4.5v15L7 15H3z', 'M15.3 8.6a5 5 0 0 1 0 6.8l-1.5-1.4a3 3 0 0 0 0-4z', 'M18 5.8a9 9 0 0 1 0 12.4l-1.5-1.4a7 7 0 0 0 0-9.6z'],
+  muted: ['M3 9h4l5.5-4.5v15L7 15H3z', 'M15 9.4l1.4-1.4 2.3 2.3 2.3-2.3 1.4 1.4-2.3 2.3 2.3 2.3-1.4 1.4-2.3-2.3-2.3 2.3-1.4-1.4 2.3-2.3z'],
   // Four corners going out to the edges, and the same four drawn back in.
   fullscreen: ['M3 3h7v3H6v4H3z', 'M14 3h7v7h-3V6h-4z', 'M3 14h3v4h4v3H3z', 'M18 14h3v7h-7v-3h4z'],
   windowed: ['M7 3h3v7H3V7h4z', 'M14 3h3v4h4v3h-7z', 'M3 14h7v7H7v-4H3z', 'M14 14h7v3h-4v4h-3z'],
