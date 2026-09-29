@@ -17,13 +17,18 @@
  * start with the panel hidden, since there the piece leads; the Builder is
  * worked from its panel and starts with it out. Once the panel has been opened or closed,
  * that choice is kept for the session, so a switch of mode does not slam
- * it. `P` or the peek tab on the edge brings it out, and `P` puts it away again.
- * At a desk the tab itself keeps off the piece: it greets a page just
- * opened, tucks into the edge, and comes out when the pointer nears it.
- * The backtick clears the stage of all of it — the panel, the peek tab,
+ * it.
+ *
+ * The panel has one handle, on its own edge: a tab that rides with the panel as it slides, and points the way a
+ * press will send it. It is the only control for bringing the panel out and putting it away (`P` does the same), so
+ * the thing pressed to open is the thing pressed to close, and it is where the eye already is. The panel does not
+ * cut in: the stage gives up its room as the panel comes, on one damped curve, so the picture is never yanked.
+ * At a desk the closed handle keeps off the piece: it greets a page just opened, tucks into the edge, and comes out
+ * when the pointer nears it.
+ * The backtick clears the stage of all of it — the panel, its handle,
  * anything else standing on the stage — for the piece alone, and the
  * backtick again puts back exactly what was there. The switch is four
- * icon-only buttons, each named on hover. The Builder is off it for now.
+ * icon-only buttons beside the brand, each named on hover. The Builder is off it for now.
  * Theater (every show, shuffled, one after another) is a fifth that is not
  * on the switch until it has been visited: once `/theater/` has been open
  * in this session, it sits at the end of the switch in every mode.
@@ -84,7 +89,7 @@ function rememberVisit(visited: Set<ShellMode>, mode: ShellMode): void {
 export interface Shell {
   /** Light the tab for `mode`. The chrome stays; only the mark moves. */
   setMode(mode: ShellMode): void
-  /** The panel, which scrolls. */
+  /** The panel's scrolling column, inside the frame that slides and carries the handle. */
   root: HTMLElement
   /** Where a mode puts its sections. A switch clears this and leaves the brand and the byline. */
   body: HTMLElement
@@ -96,8 +101,8 @@ export interface Shell {
    * taking the keyboard and without writing it into the session's choice.
    */
   setPanel(open: boolean): void
-  /** Keep the peek tab standing on the edge rather than tucked in (Shows at a desk, while a show is paused). */
-  holdPeek(on: boolean): void
+  /** Keep the panel's handle standing on the edge rather than tucked in (Shows at a desk, while a show is paused). */
+  holdHandle(on: boolean): void
   /** Clear the stage of every piece of chrome, or put it all back as it was. */
   toggleBare(): void
 }
@@ -308,15 +313,20 @@ function byline(root: HTMLElement): void {
 }
 
 /**
- * Where the peek tab tucks away: a window wide enough for the panel to sit
- * beside the stage (the stylesheet stacks it at 820px), worked with a pointer
- * that can hover.
+ * Where the closed panel's handle tucks away: a window wide enough for the
+ * panel to sit beside the stage (the stylesheet stacks it at 820px), worked
+ * with a pointer that can hover.
  */
-const PEEK_TUCKS = '(min-width: 821px) and (hover: hover) and (pointer: fine)'
-/** How near the panel's edge the pointer comes, in px, before the tab comes out to meet it. */
-const PEEK_REACH = 128
-/** How long the tab stands on the edge of a page just opened before it tucks away, in ms. */
-const PEEK_GREETING_MS = 3200
+const HANDLE_TUCKS = '(min-width: 821px) and (hover: hover) and (pointer: fine)'
+/** How near the panel's edge the pointer comes, in px, before the handle comes out to meet it. */
+const HANDLE_REACH = 128
+/** How long the handle stands on the edge of a page just opened before it tucks away, in ms. */
+const HANDLE_GREETING_MS = 3200
+
+/** The panel's slide, in ms: the stylesheet's `--glide`, which is the one place it is set. */
+function glideMs(): number {
+  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--glide')) || 0
+}
 /** Open or closed, kept for the session so a mode switch does not slam the panel. */
 const PANEL_STORE = 'contraptions:panel'
 
@@ -348,21 +358,13 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   })
   // A finger focusing a control scrolls the visual viewport to it — on a
   // phone that pans the whole frame, so the panel appears to jump. Mouse
-  // already blurs on click; keep that path. Keyboard still tabs in.
+  // already blurs on click; keep that path. Keyboard still tabs in. The
+  // handle is inside the frame, so this covers it too.
   root.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse') return
     if (!(e.target instanceof Element)) return
     if (e.target.closest('button, a.mode-tab, .lb-trigger')) e.preventDefault()
   })
-
-  // Header — Hide lives here so P is not a one-way trap. Peek stays a target
-  // after `#panel { display: none }`.
-  const hideBtn = el('button', {
-    type: 'button',
-    class: 'chip',
-    title: 'Hide the panel (P)',
-    'aria-label': 'Hide panel',
-  }, ['Hide', el('kbd', {}, ['P'])])
 
   // The mode switch: a tab a mode, the one you are on lit. Real links, so
   // the address is the mode and the back button undoes a switch. On the four
@@ -372,10 +374,13 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   // icon; the name is a small label we place ourselves (`mode-tip`).
   const tip = el('div', { class: 'mode-tip', hidden: '' })
   document.body.append(tip)
+  let slidAt = 0
   const hideTip = () => {
     tip.hidden = true
   }
-  const showTip = (a: HTMLAnchorElement, label: string) => {
+  // A tab slid under a pointer that did not move has not been pointed at: no name for it while the panel moves.
+  const showTip = (a: HTMLAnchorElement, label: string, e?: Event) => {
+    if (e?.type === 'pointerenter' && performance.now() - slidAt < glideMs()) return
     tip.textContent = label
     tip.hidden = false
     const r = a.getBoundingClientRect()
@@ -402,7 +407,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   const makeLink = (m: ModeLink) => {
     const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` })
     dress(a, m)
-    a.addEventListener('pointerenter', () => showTip(a, m.label))
+    a.addEventListener('pointerenter', (e) => showTip(a, m.label, e))
     a.addEventListener('pointerleave', hideTip)
     a.addEventListener('focus', () => showTip(a, m.label))
     a.addEventListener('blur', hideTip)
@@ -442,51 +447,62 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     }
   }
   const switcher = el('nav', { class: 'seg mode-switch icons', 'aria-label': 'Mode' }, links.map((l) => l.a))
+
+  // The handle: the panel's one way in and out, on the panel's own edge so it travels with it. Its chevron points
+  // where a press will send the panel. First in the frame, so Tab goes from it into the panel it opened.
+  const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  chevron.setAttribute('viewBox', '0 0 24 24')
+  chevron.setAttribute('aria-hidden', 'true')
+  const chev = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  chev.setAttribute('d', 'M14.5 5.5 8 12l6.5 6.5')
+  chevron.append(chev)
+  const handle = el('button', { type: 'button', class: 'panel-handle', 'aria-label': 'Panel' }, [chevron])
+  if (root.id) handle.setAttribute('aria-controls', root.id)
+
+  // The frame slides; the column inside it scrolls. The brand and the switch share the head: one line of chrome.
+  const scroll = el('div', { class: 'panel-scroll' })
   const body = el('div', { class: 'panel-body' })
-  root.append(
-    el('header', { class: 'brand' }, [
-      el('div', { class: 'brand-row' }, [el('h1', {}, ['contraptions']), hideBtn]),
-      switcher,
-    ]),
-    body,
-  )
-  byline(root)
+  scroll.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions']), switcher]), body)
+  byline(scroll)
+  root.append(handle, scroll)
 
-  const peek = el('button', {
-    type: 'button',
-    class: 'panel-peek',
-    title: 'Show the panel (P)',
-    'aria-label': 'Show panel',
-  }, ['Panel', el('kbd', {}, ['P'])])
-  document.body.append(peek)
+  const isOpen = () => !document.body.classList.contains('hide-panel')
+  const syncHandle = () => {
+    slidAt = performance.now()
+    const open = isOpen()
+    handle.setAttribute('aria-expanded', String(open))
+    handle.title = open ? 'Put the panel away (P)' : 'Bring out the panel (P)'
+  }
 
-  // At a desk the tab keeps off the piece: it comes out when the pointer
-  // nears the panel's edge and tucks back in when the pointer goes. Only
+  // At a desk the closed panel's handle keeps off the piece: it comes out when
+  // the pointer nears the edge and tucks back in when the pointer goes. Only
   // where there is a pointer to near it with — a touch screen, or the stacked
-  // layout, keeps the tab out. The class says which; the stylesheet does the rest.
-  const desk = window.matchMedia(PEEK_TUCKS)
-  // Tracked with the panel out as well, so that a panel closed from under the
-  // pointer — Hide sits in the tab's corner — leaves the tab there to be met.
+  // layout, keeps it out. The class says which; the stylesheet does the rest.
+  const desk = window.matchMedia(HANDLE_TUCKS)
+  // Tracked with the panel out as well, measured from wherever the panel's
+  // edge is, so a panel closed from under the pointer leaves its handle there
+  // to be met until the pointer moves off.
   let near = false
   const setNear = (on: boolean) => {
     if (on === near) return
     near = on
-    document.body.classList.toggle('peek-near', on)
+    document.body.classList.toggle('handle-near', on)
   }
   const syncDesk = () => {
-    document.body.classList.toggle('peek-tucks', desk.matches)
+    document.body.classList.toggle('handle-tucks', desk.matches)
     // Reach is a desk hover; a stacked or coarse pointer must not keep a
     // leftover near-state, or a tap in the panel can look like a slide.
     if (!desk.matches) setNear(false)
-    // A window widened past the stack with the tab holding the keyboard: a
-    // tab that tucks does not keep it (see toggle), whichever way it got there.
-    if (desk.matches && document.activeElement === peek) peek.blur()
+    // A window widened past the stack with the handle holding the keyboard: a
+    // handle that tucks does not keep it (see toggle), whichever way it got there.
+    if (desk.matches && !isOpen() && document.activeElement === handle) handle.blur()
   }
   desk.addEventListener('change', syncDesk)
   syncDesk()
   const reach = (e: PointerEvent) => {
     if (!desk.matches) return
-    setNear(e.clientX >= window.innerWidth - PEEK_REACH)
+    const edge = window.innerWidth - (isOpen() && !document.body.classList.contains('bare') ? root.offsetWidth : 0)
+    setNear(e.clientX >= edge - HANDLE_REACH)
   }
   window.addEventListener('pointermove', reach)
   // A finger arrives without having moved — only consulted at a desk.
@@ -496,44 +512,34 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     if (e.pointerType === 'mouse') setNear(false)
   })
 
-  const focusChrome = (node: HTMLElement) => {
-    node.focus({ preventScroll: true })
-  }
-
   const toggle = (e?: Event) => {
     // Asking for the panel from a bare stage is asking for the panel.
     const bare = document.body.classList.contains('bare')
-    document.body.classList.remove('bare', 'peek-greet')
-    const hide = !bare && !document.body.classList.contains('hide-panel')
+    document.body.classList.remove('bare', 'handle-greet')
+    const hide = !bare && isOpen()
     document.body.classList.toggle('hide-panel', hide)
     rememberPanel(!hide)
+    syncHandle()
     hideTip()
-    // A tap already has a place; focusing Hide or the tab would pan the
-    // visual viewport on a phone and the panel would appear to jump. P and
-    // a keyboard activation (detail 0) still land on the chrome.
+    // A tap already has a place; focusing the handle would pan the visual
+    // viewport on a phone and the panel would appear to jump. P and a
+    // keyboard activation (detail 0) still land on it.
     const fromPointer = e instanceof MouseEvent && e.detail > 0
     if (fromPointer) {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
       return
     }
-    if (!hide) focusChrome(hideBtn)
-    // A focused tab would stand out on the edge for as long as it held the
-    // keyboard, so a tab that tucks is not handed it. Tab still finds it.
-    else if (!desk.matches) focusChrome(peek)
+    // A focused handle stands out on the edge for as long as it holds the
+    // keyboard, so one that is about to tuck is not handed it. Tab still finds it.
+    if (!hide || !desk.matches) handle.focus({ preventScroll: true })
     else if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
-  hideBtn.addEventListener('click', toggle)
-  peek.addEventListener('click', toggle)
-  // Peek lives on the body, not in the panel, so the panel's pointerdown
-  // guard does not cover it. Same rule: a tap must not focus and pan.
-  peek.addEventListener('pointerdown', (e) => {
-    if (e.pointerType !== 'mouse') e.preventDefault()
-  })
-  root.addEventListener('scroll', hideTip, { passive: true })
+  handle.addEventListener('click', toggle)
+  scroll.addEventListener('scroll', hideTip, { passive: true })
   window.addEventListener('scroll', hideTip, { passive: true })
 
   // Bare is laid over the panel's own state rather than written into it, so
-  // leaving it lands where it was entered from: panel out, or tab on the edge.
+  // leaving it lands where it was entered from: panel out, or handle on the edge.
   const toggleBare = () => {
     const bare = document.body.classList.toggle('bare')
     // Nothing that has just left the screen keeps the keyboard.
@@ -550,40 +556,45 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   })
 
   // The piece leads: Machine, Explorations, Shows and the Playground open with the panel away
-  // and the peek tab on the edge, unless this session already chose. Set here
+  // and the handle on the edge, unless this session already chose. Set here
   // rather than through toggle so nothing is focused on load. The pages set
   // the class in their markup too, so the first paint is already panel-less;
   // this covers any host that did not. The Builder is nothing without its
-  // panel, and opens with it out until the session says otherwise.
+  // panel, and opens with it out until the session says otherwise. A page
+  // opens as it stands: the slide is for a change, not for arriving.
+  document.body.classList.add('panel-still')
+  requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('panel-still')))
   const pref = panelPref()
   const hide = pref === null ? mode !== 'builder' : !pref
   if (hide) {
     document.body.classList.add('hide-panel')
-    // A tab that tucks has to be seen once to be looked for: it stands on the
-    // edge as the page opens, and going in shows where it lives. The count
+    // A handle that tucks has to be seen once to be looked for: it stands on
+    // the edge as the page opens, and going in shows where it lives. The count
     // starts when the page is looked at, not when a background tab loads it.
-    document.body.classList.add('peek-greet')
-    const tuck = () => window.setTimeout(() => document.body.classList.remove('peek-greet'), PEEK_GREETING_MS)
+    document.body.classList.add('handle-greet')
+    const tuck = () => window.setTimeout(() => document.body.classList.remove('handle-greet'), HANDLE_GREETING_MS)
     if (document.visibilityState === 'visible') tuck()
     else document.addEventListener('visibilitychange', tuck, { once: true })
   } else {
     document.body.classList.remove('hide-panel')
   }
+  syncHandle()
 
   return {
-    root,
+    root: scroll,
     body,
     setMode,
     toggle,
-    hidden: () => document.body.classList.contains('hide-panel'),
+    hidden: () => !isOpen(),
     setPanel(open) {
       if (document.body.classList.contains('bare')) return
-      document.body.classList.remove('peek-greet')
+      document.body.classList.remove('handle-greet')
       document.body.classList.toggle('hide-panel', !open)
+      syncHandle()
       hideTip()
     },
-    holdPeek(on) {
-      document.body.classList.toggle('peek-hold', on)
+    holdHandle(on) {
+      document.body.classList.toggle('handle-hold', on)
     },
     toggleBare,
   }

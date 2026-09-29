@@ -30,7 +30,7 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * The stage is the play button: a click or a tap anywhere on it plays or
  * pauses. On a phone the panel stacks under the stage and would cover half
  * the show, so it goes away while a show plays and comes back when it is
- * paused. At a desk the panel's tab stands out on the edge while paused.
+ * paused. At a desk the panel's handle stands out on the edge while paused.
  *
  * A show opens playing, music and all, where the browser lets it. Where it
  * wants a gesture first, the show waits at the top with a play button on
@@ -419,13 +419,13 @@ const onStageClick = (e: MouseEvent) => {
 stageRoot.addEventListener('click', onStageClick)
 
 // On a phone the panel stacks under the stage: away while a show plays, back when it stops. At a desk the panel's
-// tab stands out while paused. Only on a change, so the panel can still be opened or closed by hand in between.
+// handle stands out while paused. Only on a change, so the panel can still be opened or closed by hand in between.
 let wasPlaying: boolean | null = null
 function followPanel(playing: boolean): void {
   if (playing === wasPlaying) return
   wasPlaying = playing
   if (phone.matches) shell.setPanel(!playing)
-  shell.holdPeek(!playing)
+  shell.holdHandle(!playing)
 }
 
 // Transport — the clock, over the whole show.
@@ -893,7 +893,7 @@ if (import.meta.env.DEV) {
     alive = false
     window.clearTimeout(warmTimer)
     releaseSound()
-    shell.holdPeek(false)
+    shell.holdHandle(false)
     cancelAnimationFrame(raf)
     stageRoot.removeEventListener('click', onStageClick)
     window.removeEventListener('pointerup', endScrub)

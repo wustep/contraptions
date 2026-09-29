@@ -11,6 +11,11 @@
   --accent: #f0b429;
   --accent-soft: rgba(240, 180, 41, 0.14);
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  --panel-w: 320px;
+  /* The panel's slide: quick off the mark, settling without a bounce, as a
+     damped drawer would. The stage gives up its room on the same curve. */
+  --glide: 420ms;
+  --damped: cubic-bezier(0.32, 0.72, 0, 1);
   color-scheme: dark;
 }
 
@@ -29,16 +34,21 @@ html, body {
 
 /* One frame for both modes: the panel down the right edge at the window's
    full height, the stage everything that is left. minmax(0, 1fr) on both
-   axes so neither track can grow past the window on its content. */
+   axes so neither track can grow past the window on its content. The
+   panel's track opens and closes on the damped curve, so the stage gives
+   its room up as the panel comes rather than all at once. Clipped, not
+   hidden: a panel part way out must never be scrolled into view. */
 body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w);
   grid-template-rows: minmax(0, 1fr);
   height: 100vh;
   /* svh, not dvh: the dynamic viewport grows when mobile chrome hides on
      a tap, and the stacked panel rides with it — a slide that looks like
      the panel itself moved. The small viewport stays put. */
   height: 100svh;
+  overflow: clip;
+  transition: grid-template-columns var(--glide) var(--damped), grid-template-rows var(--glide) var(--damped);
 }
 
 /* The stage is paper. The show paints its canvas edge to edge; the sandbox's
@@ -57,56 +67,101 @@ body {
 /* The canvas is built at its display size, so it must never be scaled here. */
 #stage canvas { display: block; }
 
-body.hide-panel { grid-template-columns: minmax(0, 1fr) 0; }
-body.hide-panel #panel { display: none; }
+/* Away, the panel's track closes to nothing and the panel, which keeps its
+   width, runs off the edge; it is hidden once it has gone, not before, so
+   the slide is seen. Bare closes it the same way. */
+body.hide-panel,
+body.bare { grid-template-columns: minmax(0, 1fr) 0px; }
 
-/* Restore target when the panel is display:none. Stays out of the tab order
-   while hidden (display:none), then sits on the stage edge. */
-.panel-peek {
-  display: none;
-  position: fixed;
-  top: 18px;
-  right: 0;
+/* The panel is a frame that slides, with a column inside it that scrolls.
+   The frame carries the handle on its edge, outside the column's clip. */
+#panel {
+  position: relative;
+  width: var(--panel-w);
+  min-height: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  transition: visibility 0s linear 0s;
+}
+body.hide-panel #panel,
+body.bare #panel {
+  visibility: hidden;
+  transition-delay: var(--glide);
+}
+
+/* The handle: the panel's one way in and out, a tab on the panel's own edge
+   in the panel's own dress, so the two read as one piece and move as one.
+   Visible while its panel is hidden: it is how the panel comes back. Its
+   chevron points where a press will send the panel, and turns as it goes. */
+.panel-handle {
+  position: absolute;
+  top: 16px;
+  right: 100%;
   z-index: 30;
-  border-radius: 8px 0 0 8px;
+  visibility: visible;
+  width: 26px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
   border-right: none;
-  padding: 8px 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border-radius: 8px 0 0 8px;
+  background: var(--panel);
+  color: var(--dim);
   touch-action: manipulation;
 }
-body.hide-panel .panel-peek { display: inline-flex; }
+.panel-handle:hover { background: var(--panel); border-color: var(--line); color: var(--text); }
+/* It rides the edge; a press nudge would shake it loose. */
+.panel-handle:active { transform: none; }
+/* A tab standing out over the piece with nothing behind it casts a shadow;
+   once the panel is behind it, it is part of the panel and casts none. */
+body.hide-panel .panel-handle { box-shadow: -2px 4px 14px rgba(0, 0, 0, 0.2); }
+.panel-handle svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  rotate: 180deg;
+  transition: rotate var(--glide) var(--damped);
+}
+body.hide-panel .panel-handle svg { rotate: 0deg; }
+.panel-handle path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* At a desk (`peek-tucks`, set by the shell where a pointer can hover) the
-   tab tucks into the edge and comes out for a pointer near it, for the
-   keyboard, and to greet a page just opened. Tucked it takes no clicks, but
-   stays in the tab order. `translate`, not `transform`, so the press nudge
-   still lands. It waits a beat before going, so grazing the edge of its
-   reach does not flap it. */
-body.peek-tucks .panel-peek {
+/* At a desk (`handle-tucks`, set by the shell where a pointer can hover) a
+   closed panel's handle tucks into the edge and comes out for a pointer near
+   it, for the keyboard, and to greet a page just opened. Tucked it takes no
+   clicks, but stays in the tab order. It waits a beat before going, so
+   grazing the edge of its reach does not flap it. With the panel out it
+   stays: it is the panel's own edge. */
+body.handle-tucks.hide-panel .panel-handle {
   opacity: 0;
   translate: 100% 0;
   pointer-events: none;
   transition: translate 200ms ease-out 320ms, opacity 200ms ease-out 320ms;
 }
-body.peek-tucks.peek-near .panel-peek,
-body.peek-tucks.peek-greet .panel-peek,
-body.peek-tucks.peek-hold .panel-peek,
-body.peek-tucks .panel-peek:focus-visible {
+body.handle-tucks.hide-panel.handle-near .panel-handle,
+body.handle-tucks.hide-panel.handle-greet .panel-handle,
+body.handle-tucks.hide-panel.handle-hold .panel-handle,
+body.handle-tucks.hide-panel .panel-handle:focus-visible {
   opacity: 1;
   translate: none;
   pointer-events: auto;
   transition-duration: 160ms;
   transition-delay: 0s;
 }
+
+/* A page opens as it stands: the slide is for a change, not for arriving. */
+body.panel-still,
+body.panel-still #panel,
+body.panel-still .panel-handle,
+body.panel-still .panel-handle svg { transition: none; }
+
 @media (prefers-reduced-motion: reduce) {
-  body.peek-tucks .panel-peek { translate: none; transition-property: opacity; }
+  body, .panel-handle svg { transition: none; }
+  body.handle-tucks.hide-panel .panel-handle { translate: none; transition-property: opacity; }
 }
 
 /* Bare: the piece and nothing else. Laid over the panel's own state, so the
    backtick that leaves it puts back whichever of the two was there. */
-body.bare { grid-template-columns: minmax(0, 1fr) 0; }
-body.bare #panel,
-body.bare .panel-peek,
+body.bare .panel-handle,
 body.bare .crumb,
 body.bare .stage-play,
 body.bare .stage-note { display: none; }
@@ -150,10 +205,8 @@ body.bare .stage-note { display: none; }
 .crumb .crumb-step { padding: 3px 8px 5px; font-size: 15px; line-height: 1; color: var(--dim); }
 .crumb .crumb-step:hover { color: var(--text); }
 
-#panel {
-  min-height: 0;
-  background: var(--panel);
-  border-left: 1px solid var(--line);
+.panel-scroll {
+  height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: manipulation;
@@ -170,12 +223,13 @@ body.bare .stage-note { display: none; }
 
 /* ---- header: brand and the mode switch ------------------------------ */
 
-.brand { display: flex; flex-direction: column; gap: 8px; }
-.brand-row {
+/* One line of chrome: the name, and the switch beside it. */
+.brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
+  min-height: 34px;
 }
 .brand h1 {
   margin: 0;
@@ -185,10 +239,10 @@ body.bare .stage-note { display: none; }
 }
 /* A tab a mode, the one you are on lit. Same sunken track as every other
    segmented dial, so switching modes reads as turning a dial on the product
-   rather than leaving for another site. Four icon-only buttons take equal
-   square-ish cells. */
+   rather than leaving for another site. Icon-only cells, square, at the
+   brand's right. */
 .seg.mode-switch { display: grid; grid-auto-flow: column; grid-auto-columns: auto; }
-.seg.mode-switch.icons { grid-auto-columns: 1fr; }
+.seg.mode-switch.icons { grid-auto-columns: 32px; flex: none; }
 .mode-tab {
   display: block;
   padding: 6px 0;
@@ -204,7 +258,7 @@ body.bare .stage-note { display: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
+  min-height: 28px;
   padding: 0;
 }
 .mode-tab.icon svg { width: 14px; height: 14px; fill: currentColor; display: block; }
@@ -581,27 +635,39 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .readout b { color: var(--text); font-weight: 500; }
 
 @media (max-width: 820px) {
-  body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  /* Stacked below the stage the panel is a sheet in its own band, so the
+     artwork keeps most of the screen; it rises and settles the way it
+     slides in at a desk. */
+  :root { --sheet-h: 46vh; --sheet-h: 46svh; }
+  body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) var(--sheet-h); }
   body.hide-panel,
-  body.bare { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0; }
-  /* Stacked below the stage the panel scrolls within its own band, so the
-     artwork keeps most of the screen. */
-  #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; max-height: 46svh; overscroll-behavior: contain; }
-  .panel-peek {
+  body.bare { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0px; }
+  #panel { width: auto; height: var(--sheet-h); border-left: none; border-top: 1px solid var(--line); }
+  /* The handle sits on the sheet's top edge, at its middle; away, it stands
+     clear of the home indicator, as the stage's play button does. */
+  .panel-handle {
     top: auto;
     right: auto;
     left: 50%;
-    /* Sit above the home indicator; stage-play already does. */
-    bottom: env(safe-area-inset-bottom, 0px);
-    /* `translate`, not `transform`: the press nudge is a transform, and
-       would steal this centering — the tab jumps off-center on tap. */
+    bottom: 100%;
     translate: -50% 0;
-    border-radius: 8px 8px 0 0;
-    border-right: 1px solid var(--line);
+    width: 64px;
+    height: 26px;
+    border: 1px solid var(--line);
     border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    transition: bottom var(--glide) var(--damped);
   }
+  body.hide-panel .panel-handle {
+    bottom: calc(100% + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.16);
+  }
+  /* A finger is wider than the tab: the press lands on a taller strip. */
+  .panel-handle::before { content: ''; position: absolute; inset: -12px -10px 0; }
+  .panel-handle svg { rotate: -90deg; }
+  body.hide-panel .panel-handle svg { rotate: 90deg; }
   /* The stacked panel's foot clears the home indicator too. */
-  #panel {
+  .panel-scroll {
     padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
   }
 }
@@ -873,7 +939,7 @@ a.more:hover { color: var(--accent); }
 .byline a:hover { color: var(--text); text-decoration: underline; }
 /* Explorations already has a foot. The credit keeps the push, and the
    byline sits under it as a second quiet line — one rule, no split gap. */
-#panel:has(.credit) > .byline {
+.panel-scroll:has(.credit) > .byline {
   position: static;
   margin-top: -4px;
   padding-top: 4px;

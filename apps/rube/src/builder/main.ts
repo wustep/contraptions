@@ -34,7 +34,7 @@ import { BACKDROPS, BUILD_EXTENSION, BUILD_FORMAT, LIMITS, STOCK_WORLDS, emptyBu
  */
 
 const stage = document.getElementById('stage')!
-const panelRoot = document.getElementById('panel')!
+const panelFrame = document.getElementById('panel')!
 
 installBuilds(folderBuilds(), sampleBuilds())
 
@@ -276,7 +276,9 @@ function undo(): void {
 
 /* ------------------------------------------------------------------ panel */
 
-const shell = createShell(panelRoot, 'builder')
+const shell = createShell(panelFrame, 'builder')
+/** The panel's scrolling column: the frame around it slides and carries the handle. */
+const panelRoot = shell.root
 
 /** Where the outcome of an action is said: under the prompt, the build, and the file controls. One at a time. */
 const outcomes: HTMLElement[] = []
