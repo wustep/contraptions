@@ -47,7 +47,8 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  *
  * Theater (`theater.ts`) runs this same player with a host: the host picks
  * each show, keeps its own address, adds its own section to the panel, and
- * is told when a show has played through so it can put on the next.
+ * is told when a show has played through so it can put on the next. Its
+ * door is on this player (T): Theater is a way of watching Shows, not a tab.
  */
 
 /** What runs the player when the visitor is not the one choosing the show. */
@@ -58,8 +59,8 @@ export interface ShowsHost {
   first(named: Version | null): Version | null
   /** The take after this one: a show has played through, or is being skipped. Null leaves the stage as it is. */
   next(): Version | null
-  /** The host's own section in the panel, after the Show card. `skip` puts the next take on now. */
-  panel(root: HTMLElement, skip: () => void): void
+  /** The host's own section in the panel, after the Show card. `skip` puts the next take on now; `play` puts this one on. */
+  panel(root: HTMLElement, skip: () => void, play: (version: Version) => void): void
   /** A take is going on the stage. */
   opened?(version: Version): void
   /** The take `next()` would give, without moving on: loaded, and its music fetched, while this one plays. */
@@ -365,6 +366,12 @@ function step(dir: 1 | -1): void {
   void open(work.versions[(i + dir + work.versions.length) % work.versions.length], true)
 }
 
+/** A take the visitor picked out of the host's list, on now: the way the host's own next goes on. */
+function playNow(version: Version): void {
+  if (recording) return
+  void open(version, 'link')
+}
+
 /** The host's next take, on now. A pool of one plays it again. */
 function advance(): void {
   if (!host || recording) return
@@ -387,23 +394,22 @@ const workList = createListbox({
   items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section }))),
   onChange: (work) => {
     const next = pickVersion(works, work, null)
-    if (next && !recording) void open(next, true)
+    // Under a host a pick goes on as its next one would, and the running order carries on after it.
+    if (next && !recording) void open(next, host ? 'link' : true)
     // A pick refused while a recording runs: the list goes back to what is on the stage.
     else sync()
   },
 })
 workList.node.classList.add('show-title')
-// A host chooses the show, so under a host the title is only a title.
-const heading = el('h2', { class: 'show-title' })
 const takeRow = el('div', { class: 'seg wrap takes', role: 'group', 'aria-label': 'Take' })
 let takeChips: { version: Version; b: HTMLButtonElement }[] = []
 const about = el('div', { class: 'about' })
 const empty = el('div', { class: 'status' }, [
   'No shows yet. A show is a file: apps/rube/src/shows/versions/<work>/<take>.show.ts.',
 ])
-if (host) showCard.append(el('div', { class: 'section-title' }, ['Now playing']), heading)
-else showCard.append(workList.node)
-showCard.append(takeRow, about, playerHost, empty)
+// Under a host the title is still the picker: the host chooses what comes next, and any show can be put on now.
+if (host) showCard.append(el('div', { class: 'section-title' }, ['Now playing']))
+showCard.append(workList.node, takeRow, about, playerHost, empty)
 
 // The one thing to do on a stage that is standing still at either end of a show.
 const bigPlayLabel = el('span', {}, ['Play'])
@@ -493,15 +499,32 @@ cameraSeg.node.classList.add('camera')
 cameraSeg.node.setAttribute('aria-label', 'Camera')
 const cameraButtons = [...cameraSeg.node.querySelectorAll('button')]
 cameraButtons.forEach((b, i) => (b.title = CAMERAS[i].title))
+// Theater is a way of watching Shows, not a mode beside it, so its door is on the player: in, with the show that is
+// on going first and the rest shuffled after it; out, to the page of whichever show is on by then.
+const doorBtn = el('button', { type: 'button', class: 'chip' })
+if (host) {
+  doorBtn.title = 'Back to Shows, on the show that is on (T)'
+  doorBtn.replaceChildren(icon(ICON.shows), 'Leave theater', el('kbd', {}, ['T']))
+} else {
+  doorBtn.title = 'Theater: every show, shuffled, one after another, starting with this one (T)'
+  doorBtn.replaceChildren(icon(ICON.theater), 'Theater', el('span', { class: 'door-note' }, ['every show, shuffled']), el('kbd', {}, ['T']))
+}
+function goThrough(): void {
+  if (!alive || recording) return
+  if (host) shell.go('shows', current ? showPath(works, current.work, current.take) : '/shows/')
+  else shell.go('theater', current ? `/theater/?show=${current.work}&take=${current.take}` : '/theater/')
+}
+doorBtn.addEventListener('click', goThrough)
 const transportNote = el('div', { class: 'status' })
 transportSec.append(
   scrub,
   el('div', { class: 'row deck player' }, [playBtn, restartBtn, time, musicBtn, speedBox.node]),
   cameraSeg.node,
+  el('div', { class: 'row door' }, [doorBtn]),
   transportNote,
 )
 // A host's own section (Theater: what is next, and the running order) follows the controls for what is on now.
-host?.panel(panelRoot, advance)
+host?.panel(panelRoot, advance, playNow)
 
 // Export — the frame, and the show. Picture and music; nothing written on either.
 const exportSec = section(panelRoot, 'Export')
@@ -593,16 +616,15 @@ function sync(): void {
   // The title card.
   empty.hidden = works.length > 0
   workList.node.hidden = takeRow.hidden = works.length === 0
-  // A work with one take has no takes to pick between, and under a host the visitor is not the one picking: no row.
-  if (!work || work.versions.length < 2 || host) takeRow.hidden = true
+  // A work with one take has no takes to pick between: no row.
+  if (!work || work.versions.length < 2) takeRow.hidden = true
   if (current) workList.set(current.work)
-  heading.textContent = current?.title ?? ''
   workList.node.classList.toggle('disabled', busy)
   if (work && (takeChips.length !== work.versions.length || takeChips.some((c, i) => c.version !== work.versions[i]))) {
     takeChips = work.versions.map((version) => {
       const b = el('button', { type: 'button', title: version.note ?? version.label }, [version.label])
       b.addEventListener('click', () => {
-        if (version !== current && !recording) void open(version, true)
+        if (version !== current && !recording) void open(version, host ? 'link' : true)
       })
       return { version, b }
     })
@@ -615,8 +637,6 @@ function sync(): void {
   // Under the title, in the panel's own face: what this take is, and whose music. The title is not said again.
   const lines: HTMLElement[] = []
   if (current) {
-    // Under a host there is no take row, so a work with more than one take names the one on.
-    if (host && work && work.versions.length > 1 && current.label !== current.title) lines.push(el('p', { class: 'take' }, [current.label]))
     if (loading) lines.push(el('p', {}, ['Loading…']))
     else if (failed) lines.push(el('p', { class: 'bad' }, [`Would not load: ${failed}`]))
     else {
@@ -646,6 +666,7 @@ function sync(): void {
   for (const b of cameraButtons) b.disabled = !ready || busy
   speedBox.set(speed)
   speedBox.setDisabled(busy)
+  doorBtn.disabled = busy
   const hasMusic = !!perf?.soundtrack && music.state() !== 'failed'
   musicBtn.disabled = !hasMusic
   musicBtn.setAttribute('aria-pressed', String(hasMusic && !muted && !soundHeld))
@@ -869,6 +890,9 @@ const onKey = (e: KeyboardEvent) => {
       break
     case 'n':
       advance()
+      break
+    case 't':
+      goThrough()
       break
     case 'Home':
       seek(0)

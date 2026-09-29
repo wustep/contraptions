@@ -321,7 +321,7 @@ const chips = SHELVES.map((s) => {
 })
 const shelfRow = el('div', { class: 'field' }, [
   el('label', {}, [el('span', {}, ['Run a shelf as a world'])]),
-  el('div', { class: 'seg wrap', role: 'group', 'aria-label': 'Shelves' }, chips.map((c) => c.b)),
+  el('div', { class: 'seg shelves', role: 'group', 'aria-label': 'Shelves' }, chips.map((c) => c.b)),
 ])
 const prevPieceBtn = el('button', { title: 'The piece before this one on the sheet ([)' }, ['← piece', el('kbd', {}, ['['])])
 prevPieceBtn.addEventListener('click', () => step(-1))

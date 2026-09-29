@@ -1,12 +1,12 @@
 /**
- * Theater: its door (hidden from the switch until visited, then on it), and
+ * Theater: its door (on the Shows player, not the switch), and
  * its running order (every take once a round, no take twice running across
  * a reshuffle, a pool that changes mid-round). Run from `check:shows`.
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { modeFromPath } from '../../../src/ui/mode-path'
-import { HIDDEN_LINKS, MODE_LINKS, switchLinks, type ShellMode } from '../../../src/ui/shell'
+import { HIDDEN_LINKS, MODE_LINKS, tabOf } from '../../../src/ui/shell'
 import { createPlaylist } from '../src/shows/playlist'
 import type { Work } from '../src/shows/registry'
 
@@ -28,13 +28,11 @@ export function checkTheater(check: Check, works: Work[]): void {
   console.log('\ntheater: the door')
   const tab = HIDDEN_LINKS.find((m) => m.mode === 'theater')
   check('Theater is a mode, at /theater/', tab?.path === '/theater/' && tab.label === 'Theater')
-  check('it is not on the switch for a session that has not been there', switchLinks(new Set()).every((m) => m.mode !== 'theater') && MODE_LINKS.every((m) => m.mode !== 'theater'))
-  const after = switchLinks(new Set<ShellMode>(['theater']))
-  check('once visited it is on the switch, last, after the four', after.length === MODE_LINKS.length + 1 && after[after.length - 1] === tab && MODE_LINKS.every((m, i) => after[i] === m))
-  check('its address is its tab, with or without the slash', modeFromPath('/theater/') === 'theater' && modeFromPath('/theater') === 'theater' && modeFromPath('/theater/index.html') === 'theater')
+  check('it is not a tab: the switch is the four, and it lights Shows', MODE_LINKS.every((m) => m.mode !== 'theater') && tabOf('theater') === 'shows' && tabOf('shows') === 'shows')
+  check('its address is its mode, with or without the slash', modeFromPath('/theater/') === 'theater' && modeFromPath('/theater') === 'theater' && modeFromPath('/theater/index.html') === 'theater')
   check('Shows\' own addresses are still Shows', modeFromPath('/shows/') === 'shows' && modeFromPath('/shows/clair-de-lune/') === 'shows' && modeFromPath('/shows/cornfield-chase/grok47/') === 'shows')
   const shell = readFileSync(join(process.cwd(), 'src/ui/shell.ts'), 'utf8')
-  check('the switch is built from what this session has visited, and a visit is kept', /const links = switchLinks\(visited\)/.test(shell) && /rememberVisit\(visited, mode\)/.test(shell) && /sessionStorage\.setItem\(VISITED_STORE/.test(shell))
+  check('the switch is the four tabs, whatever has been visited', /const links = MODE_LINKS\.map\(makeLink\)/.test(shell) && !/sessionStorage\.setItem\(VISITED_STORE/.test(shell))
   const page = readFileSync(join(process.cwd(), 'theater/index.html'), 'utf8')
   check('the page loads Theater', page.includes('src="/apps/rube/src/shows/theater.ts"') && page.includes('name="robots" content="noindex"'))
   const vite = readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')
@@ -44,8 +42,9 @@ export function checkTheater(check: Check, works: Work[]): void {
   const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/player.ts'), 'utf8')
   check('a show that plays through puts the next one on, where the player already stops it', /if \(through && host\) \{\s*advance\(\)/.test(player) && /host\.next\(\)/.test(player))
   check('the next one goes on the way a link does: sound if allowed, the picture regardless', /if \(next\) void open\(next, 'link'\)/.test(player))
+  check('its door is on the Shows player, both ways, and T goes through it', /shell\.go\('theater', current \? `\/theater\/\?show=\$\{current\.work\}&take=\$\{current\.take\}`/.test(player) && /shell\.go\('shows', current \? showPath\(works, current\.work, current\.take\)/.test(player) && /case 't':\s*goThrough\(\)/.test(player))
   const theater = readFileSync(join(process.cwd(), 'apps/rube/src/shows/theater.ts'), 'utf8')
-  check('the panel has a Fullscreen button that follows Esc and the browser\'s own exit', /'Exit fullscreen' : 'Fullscreen'/.test(theater) && /addEventListener\('fullscreenchange', syncFullscreen\)/.test(theater) && /removeEventListener\('fullscreenchange', syncFullscreen\)/.test(theater))
+  check('Fullscreen is the shell\'s, in every mode, and follows Esc and the browser\'s own exit', /'Leave fullscreen \(F\)' : 'Fullscreen \(F\)'/.test(shell) && /addEventListener\('fullscreenchange', syncFullscreen\)/.test(shell) && !/requestFullscreen/.test(theater))
   check('the take going off is unloaded before the next goes on', /music\.load\(null\)\s*\n\s*stage\.set\(null\)/.test(player))
 
   console.log('\ntheater: the running order')

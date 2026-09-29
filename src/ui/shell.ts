@@ -27,11 +27,15 @@
  * when the pointer nears it.
  * The backtick clears the stage of all of it — the panel, its handle,
  * anything else standing on the stage — for the piece alone, and the
- * backtick again puts back exactly what was there. The switch is four
+ * backtick again puts back exactly what was there. Fullscreen (the button at
+ * the head's end, or F) is in every mode, and takes the whole page rather
+ * than the stage alone: the panel, its handle and whatever stands on the
+ * stage stay where they are, so the panel away or ` leaves the picture on its
+ * own. The switch is four
  * icon-only buttons beside the brand, each named on hover. The Builder is off it for now.
- * Theater (every show, shuffled, one after another) is a fifth that is not
- * on the switch until it has been visited: once `/theater/` has been open
- * in this session, it sits at the end of the switch in every mode.
+ * Theater (every show, shuffled, one after another) is not a tab: it is a way
+ * of watching Shows, so its door is on the Shows player, and while it is on
+ * the Shows tab stays lit.
  */
 
 import { createListbox } from './listbox'
@@ -54,36 +58,14 @@ export const MODE_LINKS: readonly ModeLink[] = [
   { mode: 'shows', label: 'Shows', path: '/shows/' },
 ]
 
-/** Tabs that are only on the switch once they have been visited this session: found by their address, not by looking. */
-export const HIDDEN_LINKS: readonly ModeLink[] = [
-  { mode: 'theater', label: 'Theater', path: '/theater/' },
+/** Modes with an address of their own and no tab: each is reached from inside another, whose tab it lights. */
+export const HIDDEN_LINKS: readonly (ModeLink & { under: ShellMode })[] = [
+  { mode: 'theater', label: 'Theater', path: '/theater/', under: 'shows' },
 ]
 
-/** The switch: the four, and after them each hidden tab that has been visited. */
-export function switchLinks(visited: ReadonlySet<ShellMode>): ModeLink[] {
-  return [...MODE_LINKS, ...HIDDEN_LINKS.filter((m) => visited.has(m.mode))]
-}
-
-/** Which hidden tabs this session has visited. */
-const VISITED_STORE = 'contraptions:visited'
-
-function visitedModes(): Set<ShellMode> {
-  try {
-    const v = sessionStorage.getItem(VISITED_STORE)
-    return new Set(v ? (v.split(',') as ShellMode[]) : [])
-  } catch {
-    return new Set()
-  }
-}
-
-function rememberVisit(visited: Set<ShellMode>, mode: ShellMode): void {
-  if (!HIDDEN_LINKS.some((m) => m.mode === mode) || visited.has(mode)) return
-  visited.add(mode)
-  try {
-    sessionStorage.setItem(VISITED_STORE, [...visited].join(','))
-  } catch {
-    // Best effort: this page still shows the tab, since it is on it.
-  }
+/** The tab that is lit for a mode: its own, or the one it is reached from. */
+export function tabOf(mode: ShellMode): ShellMode {
+  return HIDDEN_LINKS.find((m) => m.mode === mode)?.under ?? mode
 }
 
 export interface Shell {
@@ -105,6 +87,8 @@ export interface Shell {
   holdHandle(on: boolean): void
   /** Clear the stage of every piece of chrome, or put it all back as it was. */
   toggleBare(): void
+  /** Go to another mode from inside this one (Shows into Theater, and back), as a tab click would. */
+  go(mode: ShellMode, href: string): void
 }
 
 /**
@@ -317,6 +301,27 @@ function byline(root: HTMLElement): void {
   ]))
 }
 
+/** Safari before 16.4 has element fullscreen only under its own prefix. */
+type Prefixed = { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => void; webkitRequestFullscreen?: () => void }
+
+const fullscreenOn = (): boolean => !!(document.fullscreenElement ?? (document as Prefixed).webkitFullscreenElement)
+
+/** False on an iPhone, which lets only a video go fullscreen: there is no button to offer. */
+const canFullscreen = (): boolean => !!(document.fullscreenEnabled || (document.documentElement as Prefixed).webkitRequestFullscreen)
+
+function toggleFullscreen(): void {
+  const doc = document as Prefixed
+  const page = document.documentElement as Prefixed
+  if (fullscreenOn()) {
+    if (document.exitFullscreen) void document.exitFullscreen().catch(() => {})
+    else doc.webkitExitFullscreen?.()
+    return
+  }
+  // Refused (not from a gesture, or a frame that does not allow it): the page stays as it is.
+  if (document.documentElement.requestFullscreen) void document.documentElement.requestFullscreen().catch(() => {})
+  else page.webkitRequestFullscreen?.()
+}
+
 /**
  * Where the closed panel's handle tucks away: a window wide enough for the
  * panel to sit beside the stage (the stylesheet stacks it at 820px), worked
@@ -382,9 +387,10 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   let slidAt = 0
   const hideTip = () => {
     tip.hidden = true
+    delete tip.dataset.for
   }
   // A tab slid under a pointer that did not move has not been pointed at: no name for it while the panel moves.
-  const showTip = (a: HTMLAnchorElement, label: string, e?: Event) => {
+  const showTip = (a: HTMLElement, label: string, e?: Event) => {
     if (e?.type === 'pointerenter' && performance.now() - slidAt < glideMs()) return
     tip.textContent = label
     tip.hidden = false
@@ -407,10 +413,8 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     hideTip()
   }
   let currentMode = mode
-  const visited = visitedModes()
-  rememberVisit(visited, mode)
   const makeLink = (m: ModeLink) => {
-    const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` })
+    const a = el('a', { href: m.path, class: `mode-tab${m.mode === tabOf(mode) ? ' on' : ''}${m.mode === tabOf(mode) && m.mode !== mode ? ' back' : ''}` })
     dress(a, m)
     a.addEventListener('pointerenter', (e) => showTip(a, m.label, e))
     a.addEventListener('pointerleave', hideTip)
@@ -420,7 +424,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
       // Remember before the page changes, so a real navigation opens as this one stood.
       rememberPanel(!document.body.classList.contains('hide-panel'))
-      // The tab you are on is a label, not a reload.
+      // The tab you are on is a label, not a reload. Lit for a mode reached from it (Theater), it is the way back.
       if (m.mode === currentMode) {
         e.preventDefault()
         return
@@ -430,28 +434,49 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
       hideTip()
       clientGo(m.mode, a.href)
     })
-    if (m.mode === mode) a.setAttribute('aria-current', 'page')
+    if (m.mode === tabOf(mode)) a.setAttribute('aria-current', 'page')
     return { m, a }
   }
-  const links = switchLinks(visited).map(makeLink)
+  const links = MODE_LINKS.map(makeLink)
   const setMode = (next: ShellMode) => {
     currentMode = next
-    // A hidden tab arrived at by the back button, having been visited in this document: it joins the switch.
-    rememberVisit(visited, next)
-    for (const m of switchLinks(visited)) {
-      if (links.some((l) => l.m === m)) continue
-      const link = makeLink(m)
-      links.push(link)
-      switcher.append(link.a)
-    }
     for (const { m, a } of links) {
-      const on = m.mode === next
+      const on = m.mode === tabOf(next)
       a.classList.toggle('on', on)
+      a.classList.toggle('back', on && m.mode !== next)
       if (on) a.setAttribute('aria-current', 'page')
       else a.removeAttribute('aria-current')
     }
   }
   const switcher = el('nav', { class: 'seg mode-switch icons', 'aria-label': 'Mode' }, links.map((l) => l.a))
+
+  // Fullscreen, at the head's end: the same in every mode, so it is the chrome's and not a mode's. Named on hover as
+  // the tabs are. It follows whatever changed it — the button, F, Esc, or the browser's own exit.
+  const fsBtn = el('button', { type: 'button', class: 'head-btn fullscreen', 'aria-pressed': 'false' })
+  const fsLabel = () => (fullscreenOn() ? 'Leave fullscreen (F)' : 'Fullscreen (F)')
+  const syncFullscreen = () => {
+    const on = fullscreenOn()
+    fsBtn.classList.toggle('on', on)
+    fsBtn.setAttribute('aria-pressed', String(on))
+    fsBtn.setAttribute('aria-label', on ? 'Leave fullscreen' : 'Fullscreen')
+    fsBtn.replaceChildren(icon(on ? ICON.windowed : ICON.fullscreen))
+    if (!tip.hidden && tip.dataset.for === 'fullscreen') tip.textContent = fsLabel()
+  }
+  fsBtn.addEventListener('click', toggleFullscreen)
+  fsBtn.addEventListener('pointerenter', (e) => {
+    showTip(fsBtn, fsLabel(), e)
+    tip.dataset.for = 'fullscreen'
+  })
+  fsBtn.addEventListener('focus', () => {
+    showTip(fsBtn, fsLabel())
+    tip.dataset.for = 'fullscreen'
+  })
+  fsBtn.addEventListener('pointerleave', hideTip)
+  fsBtn.addEventListener('blur', hideTip)
+  document.addEventListener('fullscreenchange', syncFullscreen)
+  document.addEventListener('webkitfullscreenchange', syncFullscreen)
+  fsBtn.hidden = !canFullscreen()
+  syncFullscreen()
 
   // The handle: the panel's one way in and out, on the panel's own edge so it travels with it. Its chevron points
   // where a press will send the panel. First in the frame, so Tab goes from it into the panel it opened.
@@ -467,7 +492,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   // The frame slides; the column inside it scrolls. The brand and the switch share the head: one line of chrome.
   const scroll = el('div', { class: 'panel-scroll' })
   const body = el('div', { class: 'panel-body' })
-  scroll.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions']), switcher]), body)
+  scroll.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions']), el('div', { class: 'head-controls' }, [switcher, fsBtn])]), body)
   byline(scroll)
   root.append(handle, scroll)
 
@@ -542,14 +567,19 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     // Nothing that has just left the screen keeps the keyboard.
     if (bare && document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
-  // Here and not in each mode's key map: the key means the same thing in all of them.
+  // Here and not in each mode's key map: the keys mean the same thing in all of them.
   window.addEventListener('keydown', (e) => {
     // A held key is one press: it does not strobe the chrome.
-    if (e.key !== '`' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
+    if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
     const t = e.target
     if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
-    e.preventDefault()
-    toggleBare()
+    if (e.key === '`') {
+      e.preventDefault()
+      toggleBare()
+    } else if ((e.key === 'f' || e.key === 'F') && canFullscreen()) {
+      e.preventDefault()
+      toggleFullscreen()
+    }
   })
 
   // The piece leads: Machine, Explorations, Shows and the Playground open with the panel away
@@ -594,5 +624,11 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
       document.body.classList.toggle('handle-hold', on)
     },
     toggleBare,
+    go(next, href) {
+      rememberPanel(isOpen())
+      hideTip()
+      if (clientGo) clientGo(next, href)
+      else location.assign(href)
+    },
   }
 }

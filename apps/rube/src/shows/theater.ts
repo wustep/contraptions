@@ -11,16 +11,18 @@ import { currentTake, SECTIONS, sectionOf, type Version } from './registry'
  * (`playlist.ts`), and a show that plays through puts the next one on. The
  * panel says what is next, skips to it, and lets takes out of the pool or
  * back in; what is left out is kept in this browser, so a new take found
- * later starts in.
+ * later starts in. Any show can be put on at once, from the title (the
+ * picker, as in Shows) or by its name in the running order, and the
+ * shuffle carries on after it.
  *
- * It lives at `/theater/` and is not on the mode switch until it has been
- * visited (`shell.ts`). `/theater/?show=<work>&take=<take>` opens on that
- * take, and the shuffle carries on from there.
+ * It lives at `/theater/` and is not on the mode switch: it is a way of
+ * watching Shows, entered from the Shows player (its Theater button, or T),
+ * which opens it on the show that was on, and left the same way, for the
+ * page of the show that is on then. The Shows tab stays lit while it runs.
+ * `/theater/?show=<work>&take=<take>` opens on that take, and the shuffle
+ * carries on from there.
  *
- * Fullscreen (the panel's button, or F) takes the whole page rather than the
- * stage alone: the panel, the transport and the words on the stage stay
- * where they are, so P, the button and the cards still work, and the panel
- * away (as it opens) or ` leaves the picture on its own.
+ * Fullscreen is the shell's, as in every mode (`shell.ts`).
  */
 
 /** The takes left out of the pool, kept in this browser: a list of `work/take`. */
@@ -59,27 +61,6 @@ function writeOff(off: Set<string>): void {
   }
 }
 
-/** Safari before 16.4 has element fullscreen only under its own prefix. */
-type Prefixed = { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => void; webkitRequestFullscreen?: () => void }
-
-const fullscreenOn = (): boolean => !!(document.fullscreenElement ?? (document as Prefixed).webkitFullscreenElement)
-
-/** False on an iPhone, which lets only a video go fullscreen: there is no button to offer. */
-const canFullscreen = (): boolean => !!(document.fullscreenEnabled || (document.documentElement as Prefixed).webkitRequestFullscreen)
-
-function toggleFullscreen(): void {
-  const doc = document as Prefixed
-  const page = document.documentElement as Prefixed
-  if (fullscreenOn()) {
-    if (document.exitFullscreen) void document.exitFullscreen().catch(() => {})
-    else doc.webkitExitFullscreen?.()
-    return
-  }
-  // Refused (not from a gesture, or a frame that does not allow it): the page stays as it is.
-  if (document.documentElement.requestFullscreen) void document.documentElement.requestFullscreen().catch(() => {})
-  else page.webkitRequestFullscreen?.()
-}
-
 function mount(shell: Shell): () => void {
   const off = readOff()
   const playlist = createPlaylist(takes.map(idOf).filter((id) => !off.has(id)))
@@ -87,29 +68,6 @@ function mount(shell: Shell): () => void {
   let nextName: HTMLElement | null = null
   let count: HTMLElement | null = null
   let rows: { id: string; box: HTMLInputElement; row: HTMLElement }[] = []
-  let fsBtn: HTMLButtonElement | null = null
-
-  // Esc, the browser's own exit, or another tab's button: the button follows whatever happened.
-  function syncFullscreen(): void {
-    if (!fsBtn) return
-    const on = fullscreenOn()
-    fsBtn.classList.toggle('on', on)
-    fsBtn.setAttribute('aria-pressed', String(on))
-    fsBtn.replaceChildren(icon(on ? ICON.windowed : ICON.fullscreen), on ? 'Exit fullscreen' : 'Fullscreen', el('kbd', {}, ['F']))
-  }
-  document.addEventListener('fullscreenchange', syncFullscreen)
-  document.addEventListener('webkitfullscreenchange', syncFullscreen)
-
-  const onKey = (e: KeyboardEvent) => {
-    // As the player's own keys: never over browser chrome, a field, or a held key.
-    if (e.metaKey || e.ctrlKey || e.altKey || e.repeat || !canFullscreen()) return
-    const t = e.target
-    if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
-    if (e.key !== 'f' && e.key !== 'F') return
-    e.preventDefault()
-    toggleFullscreen()
-  }
-  window.addEventListener('keydown', onKey)
 
   function sync(): void {
     const up = playlist.peek()
@@ -154,7 +112,7 @@ function mount(shell: Shell): () => void {
       if (playlist.current !== idOf(version)) playlist.play(idOf(version))
       sync()
     },
-    panel(root, skip) {
+    panel(root, skip, play) {
       const sec = section(root, 'Theater', 'theater')
       count = el('span', { class: 'dims' })
       sec.querySelector('.section-title')!.append(count)
@@ -179,30 +137,25 @@ function mount(shell: Shell): () => void {
         list.append(group)
         return on.map((v) => {
           const id = idOf(v)
-          const box = el('input', { type: 'checkbox' })
+          // The box says whether it is in the running order; the name puts it on now, in or out.
+          const box = el('input', { type: 'checkbox', 'aria-label': `${nameOf(v)} in the running order`, title: 'In the running order' })
           box.addEventListener('change', () => setIn(id, box.checked))
-          const row = el('label', { class: 'pool-row', title: v.note ?? nameOf(v) }, [box, el('span', {}, [nameOf(v)])])
+          const name = el('button', { type: 'button', class: 'pool-play', title: v.note ? `Play now: ${v.note}` : 'Play now' }, [
+            el('span', {}, [nameOf(v)]),
+            icon(ICON.play),
+          ])
+          name.addEventListener('click', () => play(v))
+          const row = el('div', { class: 'pool-row' }, [box, name])
           group.append(row)
           return { id, box, row }
         })
       })
-      sec.append(upNext)
-      if (canFullscreen()) {
-        fsBtn = el('button', { type: 'button', class: 'chip', title: 'Fill the screen with the show, or give it back (F)' })
-        fsBtn.addEventListener('click', toggleFullscreen)
-        sec.append(el('div', { class: 'row fullscreen' }, [fsBtn]))
-        syncFullscreen()
-      }
-      sec.append(list)
+      sec.append(upNext, list)
       sync()
     },
   })
   return () => {
     stop()
-    document.removeEventListener('fullscreenchange', syncFullscreen)
-    document.removeEventListener('webkitfullscreenchange', syncFullscreen)
-    window.removeEventListener('keydown', onKey)
-    fsBtn = null
     nextName = count = null
     rows = []
   }
