@@ -1,8 +1,8 @@
 import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
 import { PERIOD, STARTS, VARIATIONS, wrap, type Variation } from './music'
-import { COLUMNS, HEIGHT, RAIL, RING, SEAT, depth, floorPt, lapAt, lapsAt, project, ridersAt, viewAt, type View } from './path'
-import { COOL, GOLD, IVORY, SILVER, clamp, hash, pulse, rgba, smooth } from './world'
+import { COLUMNS, HEIGHT, RAIL, RING, depth, floorPt, lapAt, lapsAt, project, ridersAt, viewAt, type View } from './path'
+import { COOL, GOLD, IVORY, clamp, hash, pulse, rgba, smooth } from './world'
 
 /**
  * Everything in the room but the ball, each a drawing told show time, with one job to a thing:
@@ -61,7 +61,7 @@ export function roomAt(time: number): Room {
   const ninth = VARIATIONS.find((v) => v.bassless)!.n
   return {
     lit,
-    second: smooth(t, STARTS[16], STARTS[16] + 40) * lit,
+    second: smooth(t, STARTS[16], STARTS[16] + 40) * (1 - 0.35 * smooth(t, STARTS[17] - 20, STARTS[17] + 30)) * (1 - 0.45 * pulse(t, STARTS[25], STARTS[25] + 40, STARTS[26] - 40, STARTS[26])) * lit,
     cool,
     bass: 1 - pulse(t, STARTS[ninth] - 1.5, STARTS[ninth] + 5, STARTS[ninth + 1] - 3, STARTS[ninth + 1] + 4),
     warm: smooth(t, 0, 60) * lit * (0.3 + 0.7 * smooth(t, STARTS[1], STARTS[30])),
@@ -72,24 +72,41 @@ export function roomAt(time: number): Room {
 const lampColor = (cool: number): string => mixHex(GOLD, COOL, cool * 0.85)
 
 /**
+ * Where column `b` stands round the ring, radians. The columns are half a bar round from the gate, so that the gate, in
+ * front, is an opening onto the rose and not a column across it.
+ */
+export const columnPhi = (b: number): number => ((b + 0.5) / COLUMNS) * two
+
+/**
  * How bright the lamp over column `b` burns at `time`, 0 to 1: it catches as the ball goes by, flares, and settles to a
- * glow that it keeps until the ball comes by again. Where the ball has not yet come by in the Aria it is out.
+ * glow that it keeps until the ball comes by again. Where the ball has not yet come by in the Aria it is out. In a
+ * canon the second voice, a bar behind, lights it again, more faintly: every lamp flares twice, the tune and its answer.
  */
 export function lampAt(b: number, time: number): number {
   const room = roomAt(time)
   const { v, p } = lapAt(time)
-  const a = p * COLUMNS - b
+  const a = p * COLUMNS - (b + 0.5)
   if (v === 0 && a < 0) return 0
   const since = v === 0 ? a : ((a % COLUMNS) + COLUMNS) % COLUMNS
   const base = v === 0 ? 0.3 * smooth(since, 0, 2) : 0.3
-  return clamp((base + 0.7 * Math.exp(-since / 4.5) * smooth(since, 0, 0.12)) * room.bass * room.lit)
+  let flare = 0.7 * Math.exp(-since / 4.5) * smooth(since, 0, 0.12)
+  const spec = VARIATIONS[v]
+  if (spec.kind === 'canon') {
+    // The follower's way round: one bar behind, and the other way round in contrary motion.
+    const gone = p * COLUMNS - 1
+    const sign = spec.inverse ? -1 : 1
+    const d = (((gone - sign * (b + 0.5)) % COLUMNS) + COLUMNS) % COLUMNS
+    const e = smooth(p, 0, 3 * BAR) * (1 - smooth(p, 1 - 3 * BAR, 1))
+    if (gone > 0 && d <= gone) flare = Math.max(flare, 0.45 * e * Math.exp(-d / 3) * smooth(d, 0, 0.12))
+  }
+  return clamp((base + flare) * room.bass * room.lit)
 }
 
 /** How lit the Aria's petal `b` is: it opens as the ball passes in the Aria, and glimmers as it passes after. */
 export function petalAt(b: number, time: number): number {
   const room = roomAt(time)
   const { v, p } = lapAt(time)
-  const a = p * COLUMNS - b
+  const a = p * COLUMNS - (b + 0.5)
   if (v === 0 && a < 0) return 0
   const since = v === 0 ? a : ((a % COLUMNS) + COLUMNS) % COLUMNS
   const open = v === 0 ? smooth(since, 0, 2) : 1
@@ -223,7 +240,7 @@ export const floor = scenery<null>('floor', (p, _s, c) => {
   for (let b = 0; b < COLUMNS; b++) {
     const a = petalAt(b, t)
     if (a < 0.01) continue
-    const phi = (b / COLUMNS) * two - view.turn
+    const phi = columnPhi(b) - view.turn
     const half = 0.1
     const tip = (phi0: number, r0: number): [number, number] => [r0 * Math.sin(phi0), r0 * Math.cos(phi0)]
     const [bx, bz] = tip(phi, RING * 0.05)
@@ -303,10 +320,10 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
   ctx.scale(k, k)
 
   const lit = (b: number) => lampAt(b, t)
-  const order = Array.from({ length: COLUMNS }, (_, b) => b).sort((a, b) => depth((a / COLUMNS) * two, RING, view) - depth((b / COLUMNS) * two, RING, view))
+  const order = Array.from({ length: COLUMNS }, (_, b) => b).sort((a, b) => depth(columnPhi(a), RING, view) - depth(columnPhi(b), RING, view))
 
   const column = (b: number): void => {
-    const phi = (b / COLUMNS) * two
+    const phi = columnPhi(b)
     const [x, yb] = floorPt(phi, RING, view)
     const z = RING * Math.cos(phi - view.turn)
     const s = 1 + 0.12 * (z / RING)
@@ -379,18 +396,15 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
     ctx.stroke()
     // The lamps.
     for (let b = 0; b < COLUMNS; b++) {
-      const phi = (b / COLUMNS) * two
+      const phi = columnPhi(b)
       const rel = ((phi - phi0 + 4 * two) % two)
       if (rel > phi1 - phi0) continue
       const w = 0.11 * Math.abs(Math.cos(phi - view.turn))
       if (w < 0.012) continue
       const [x, y] = project(phi, RING, (RAIL + HEIGHT) / 2, view)
       const a = lit(b)
-      ctx.fillStyle = rgba(lamp, 0.1 + 0.9 * a)
+      ctx.fillStyle = rgba(lamp, 0.14 + 0.86 * a)
       ctx.fillRect(x - w, y - 0.115 * view.cos, w * 2, 0.23 * view.cos)
-      ctx.strokeStyle = rgba(lamp, 0.25 + 0.4 * a)
-      ctx.lineWidth = hair
-      ctx.strokeRect(x - w, y - 0.115 * view.cos, w * 2, 0.23 * view.cos)
     }
   }
 
@@ -399,24 +413,6 @@ export const colonnade = scenery<null>('colonnade', (p, _s, c) => {
   for (const b of order) column(b)
   band(view.turn - Math.PI / 2, view.turn + Math.PI / 2, false)
 
-  // A canon's second rail, higher by its interval, that its second voice goes round on.
-  const { v, p: lap } = lapAt(t)
-  const spec = VARIATIONS[v]
-  if (spec.kind === 'canon' && (spec.interval ?? 1) > 1) {
-    const e = smooth(lap, 0, 3 * BAR) * (1 - smooth(lap, 1 - 3 * BAR, 1))
-    const h = SEAT + ((spec.interval ?? 1) - 1) * 0.15 - 0.2
-    ctx.setLineDash([0.05, 0.1])
-    ctx.strokeStyle = rgba(SILVER, 0.22 * e)
-    ctx.lineWidth = hair * 1.2
-    ctx.beginPath()
-    for (let i = 0; i <= 96; i++) {
-      const [x, y] = project((i / 96) * two, RING, h, view)
-      if (i) ctx.lineTo(x, y)
-      else ctx.moveTo(x, y)
-    }
-    ctx.stroke()
-    ctx.setLineDash([])
-  }
   ctx.restore()
 })
 
@@ -437,7 +433,7 @@ export const glow = scenery<null>('glow', () => {}, (p, _s, c) => {
   for (let b = 0; b < COLUMNS; b++) {
     const a = lampAt(b, t)
     if (a < 0.02) continue
-    const phi = (b / COLUMNS) * two
+    const phi = columnPhi(b)
     const [x, y] = project(phi, RING, (RAIL + HEIGHT) / 2, view)
     const r = 0.5 + 1.1 * a
     const g = ctx.createRadialGradient(x, y, 0, x, y, r)
@@ -447,23 +443,38 @@ export const glow = scenery<null>('glow', () => {}, (p, _s, c) => {
     ctx.fillRect(x - r, y - r, r * 2, r * 2)
   }
 
-  // From above, into the middle of the room: the second half.
+  // From above, into the middle of the room: the second half. A cone of light, soft at its edges and gone before its
+  // top, that lands on the rose as a pool.
   if (room.second > 0.01) {
     const [, top] = project(0, 0, HEIGHT + 4.2, view)
-    const [, foot] = project(0, 0, 0, view)
-    const g = ctx.createLinearGradient(0, top, 0, foot)
-    g.addColorStop(0, rgba(GOLD, 0))
-    g.addColorStop(0.5, rgba(GOLD, 0.05 * room.second))
-    g.addColorStop(1, rgba(GOLD, 0.13 * room.second))
-    ctx.fillStyle = g
+    const layers = 6
+    for (let j = 0; j < layers; j++) {
+      const w = 1 - (0.55 * j) / (layers - 1)
+      const g = ctx.createLinearGradient(0, top, 0, 0)
+      g.addColorStop(0, rgba(GOLD, 0))
+      g.addColorStop(0.5, rgba(GOLD, (0.022 * room.second * 6) / layers))
+      g.addColorStop(1, rgba(GOLD, (0.05 * room.second * 6) / layers))
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.moveTo(-0.55 * w, top)
+      ctx.lineTo(0.55 * w, top)
+      ctx.lineTo(1.8 * w, 0)
+      ctx.ellipse(0, 0, 1.8 * w, 1.8 * w * view.sin, 0, 0, Math.PI)
+      ctx.closePath()
+      ctx.fill()
+    }
+    ctx.save()
+    ctx.scale(1, view.sin)
+    const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, 2.3)
+    pool.addColorStop(0, rgba(GOLD, 0.1 * room.second))
+    pool.addColorStop(1, rgba(GOLD, 0))
+    ctx.fillStyle = pool
     ctx.beginPath()
-    ctx.moveTo(-0.7, top)
-    ctx.lineTo(0.7, top)
-    ctx.lineTo(1.9, foot)
-    ctx.lineTo(-1.9, foot)
-    ctx.closePath()
+    ctx.arc(0, 0, 2.3, 0, two)
     ctx.fill()
+    ctx.restore()
   }
+
 
   // The balls' light.
   for (const r of ridersAt(t)) {
