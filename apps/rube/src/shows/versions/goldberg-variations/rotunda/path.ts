@@ -158,8 +158,10 @@ function rider(view: View, id: number, phi: number, r: number, h: number, scale:
 /** Up over the first `a` of a lap and down over the last `b`, as shares of it. */
 const bars = (p: number, a: number, b: number): number => smooth(p, 0, a * BAR) * (1 - smooth(p, 1 - b * BAR, 1))
 
-/** The companions of the ball's lap: the second hand, the follower of a canon, the tunes of the quodlibet. */
-export const QUOD = ['#9CC58A', '#C58AC0', '#E58F6A', '#7DB4E0', '#E3D27A']
+/** The quodlibet's tunes: five of the lamps' own colours, from ivory down to amber, told apart by their light and not by hue. */
+export const QUOD = ['#F2DFB4', '#EBCB8C', '#E2B26C', '#D6995C', '#C4804F']
+/** The pearl's rim: the warm ivory, dimmed. */
+const PEARL_DIM = mixHex(PEARL, PEARL_RIM, 0.55)
 
 /**
  * The riders at show time `t`, back to front. The first is always the ball, on the rail at the head of the lap; the
@@ -197,14 +199,16 @@ export function ridersAt(time: number): Rider[] {
     const second = rider(view, 1, phi, RING - dr, SEAT - dh, hands * BALL_SCALE, SILVER)
     out.push(second)
   }
-  const lead = rider(view, 0, phi, RING + dr, SEAT + dh, BALL_SCALE * (1 + 0.16 * pearl) * seen, mixHex(color, PEARL, pearl), mixHex(INK, PEARL_RIM, pearl))
+  // The pearl is dark, told by a dim warm rim, and wears no mark: it does not roll, it shines (`glow` lays its sheen on).
+  const lead = rider(view, 0, phi, RING + dr, SEAT + dh, BALL_SCALE * (1 + 0.16 * pearl) * seen, mixHex(color, PEARL, pearl), mixHex(INK, PEARL_DIM, pearl))
+  if (pearl > 0.5) lead.spin = null
   out.push(lead)
 
   if (spec.kind === 'canon') {
     const e = bars(p, 3, 3)
     const sign = spec.inverse ? -1 : 1
     const h = SEAT + ((spec.interval ?? 1) - 1) * 0.15
-    out.push(rider(view, 1, sign * two * (p - BAR), RING, h, BALL_SCALE * 0.9 * e, SILVER))
+    out.push(rider(view, 1, sign * two * (p - BAR), RING, h, BALL_SCALE * 0.72 * e, SILVER))
   }
   if (spec.kind === 'quodlibet') {
     QUOD.forEach((c, j) => {

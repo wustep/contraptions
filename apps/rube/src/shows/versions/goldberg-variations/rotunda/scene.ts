@@ -1,7 +1,7 @@
 import type p5 from 'p5'
-import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
+import { R as BALL_R, mixHex, type Piece, type PieceCtx } from '../../../../parts'
 import { PERIOD, STARTS, VARIATIONS, wrap, type Variation } from './music'
-import { COLUMNS, HEIGHT, RAIL, RING, depth, floorPt, lapAt, lapsAt, project, ridersAt, viewAt, type View } from './path'
+import { COLUMNS, HEIGHT, RAIL, RING, depth, floorPt, lapAt, lapsAt, pearlAt, project, ridersAt, viewAt, type View } from './path'
 import { COOL, GOLD, IVORY, clamp, hash, pulse, rgba, smooth } from './world'
 
 /**
@@ -102,7 +102,10 @@ export function lampAt(b: number, time: number): number {
   return clamp((base + flare) * room.bass * room.lit)
 }
 
-/** How lit the Aria's petal `b` is: it opens as the ball passes in the Aria, and glimmers as it passes after. */
+/**
+ * How lit the Aria's petal `b` is: it opens as the ball passes in the Aria, glimmers as it passes after, and flares as it
+ * did at first when the Aria comes back.
+ */
 export function petalAt(b: number, time: number): number {
   const room = roomAt(time)
   const { v, p } = lapAt(time)
@@ -110,7 +113,7 @@ export function petalAt(b: number, time: number): number {
   if (v === 0 && a < 0) return 0
   const since = v === 0 ? a : ((a % COLUMNS) + COLUMNS) % COLUMNS
   const open = v === 0 ? smooth(since, 0, 2) : 1
-  return clamp(open * (0.55 + 0.45 * Math.exp(-since / 5) * (v === 0 ? 1 : 0.4)) * room.lit)
+  return clamp(open * (0.55 + 0.45 * Math.exp(-since / 5) * (v === 0 || v === 31 ? 1 : 0.4)) * room.lit)
 }
 
 /**
@@ -476,16 +479,28 @@ export const glow = scenery<null>('glow', () => {}, (p, _s, c) => {
   }
 
 
-  // The balls' light.
+  // The balls' light, and the pearl's sheen: a soft highlight up and to the left, where the light from above catches it.
+  const pearl = pearlAt(t)
   for (const r of ridersAt(t)) {
     if ((r.scale ?? 1) < 0.05) continue
     const s = r.scale ?? 1
-    const rad = 0.75 * s
+    const rad = 0.6 * s
     const g = ctx.createRadialGradient(r.x, r.y, 0, r.x, r.y, rad)
-    g.addColorStop(0, rgba(r.color, 0.3 * Math.min(1, s)))
+    g.addColorStop(0, rgba(r.color, 0.24 * Math.min(1, s)))
     g.addColorStop(1, rgba(r.color, 0))
     ctx.fillStyle = g
     ctx.fillRect(r.x - rad, r.y - rad, rad * 2, rad * 2)
+    if (r.id === 0 && pearl > 0.01) {
+      const hx = r.x - 0.36 * BALL_R * s
+      const hy = r.y - 0.4 * BALL_R * s
+      const hr = 0.34 * BALL_R * s
+      const h = ctx.createRadialGradient(hx, hy, 0, hx, hy, hr)
+      h.addColorStop(0, rgba(IVORY, 0.85 * pearl))
+      h.addColorStop(0.45, rgba(IVORY, 0.25 * pearl))
+      h.addColorStop(1, rgba(IVORY, 0))
+      ctx.fillStyle = h
+      ctx.fillRect(hx - hr, hy - hr, hr * 2, hr * 2)
+    }
   }
   // The point of the ring being cut, under the ball: it lifts between one ring and the next.
   const { v, p: lap } = lapAt(t)
