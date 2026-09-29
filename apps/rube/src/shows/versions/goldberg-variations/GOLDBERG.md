@@ -52,33 +52,49 @@ Licences and every video: `apps/rube/src/shows/versions/goldberg-variations/ATTR
 
 ## The room
 
-A round colonnade of thirty-two columns, seen from a little above. A variation is thirty-two bars over the same ground
-bass, so one column is one bar and the ball goes once round the rail on the columns' tops in each variation:
+A round colonnade of thirty-two columns, seen from above. A variation is thirty-two bars over the same ground bass, so
+one column is one bar and the ball goes once round the rail on the columns' tops in each variation:
 
 - **The lap is the recording's.** The ball's pace is a monotone cubic through "track k starts, k laps done", so it is
   at the gate at the top of every variation, goes round slower the longer the variation is (the Adagio's lap is the
   slowest, the fourth variation's the fastest), and never starts or stops between. `check:shows` holds all of that.
+  The columns stand half a bar round from the gate, so the gate, in front, is an opening onto the rose.
 - **The room is what has been played.** The ball lights the lamp of every column it passes and they stay lit. The Aria
   opens a rose of thirty-two petals in the floor, one to a bar, each opening as the ball passes its column; each
-  variation engraves a ring round it, tinted for what it was, and the da capo closes the outermost ring round all of
-  it. The minor variations (15, 21, 25) go to a cool light.
-- **Each kind of variation is one thing:** a canon has its second voice one column behind on a rail as much higher
-  as its interval, in contrary motion (the other way round) in 12 and 15; two hands (the variations for two manuals)
-  are a second ball that comes out of the first and braids round it, one again at the end of the lap; the overture (16)
-  opens a shaft of light from above for the second half; the Adagio (25) turns the ball to a black pearl and the
-  camera comes in close; 27 is bassless, so the lamps go dim; the quodlibet (30) has five small coloured followers, the
-  tunes it quotes.
+  variation cuts a ring round it, bright at the ball's head and settling as it goes on. The rings go in from the
+  outside in Bach's ten groups of three, with dark between the groups: the canon that closes each group (and the
+  quodlibet, and the da capo's closing ring round all of it) is the floor's ivory spine, the overture's and the
+  Adagio's rings its two landmarks, the rest fine gold lines. The minor variations (15, 21, 25) go to a cool light and
+  leave cool rings. The da capo opens the rose again as the Aria did.
+- **The view rises as the floor is written** (`tiltAt`). Low for the Aria, where the colonnade is all there is; a
+  little higher through the first half; lifted by the overture; low and close for the Adagio; highest for the
+  quodlibet and the da capo, looking down on the whole floor; low again as the lamps go out. The frame is fitted to the
+  room at each tilt and leans a little after the lap.
+- **Each kind of variation is one thing:** a canon's second voice, smaller, rides one column behind and as much higher
+  as its interval, the other way round in contrary motion (12 and 15), and lights the lamps again as it passes: each
+  lamp flares twice, the tune and its answer. Two hands (the variations for two manuals) are a second ball that comes
+  out of the first and braids round it, one again at the end of the lap. The overture (16) opens a soft cone of light
+  from above, onto the rose, for the second half. The Adagio (25) turns the ball to a black pearl with a sheen, and the
+  room turns once round it, from rest to rest, so the pearl is held near the front, dark over the lit rose, and the
+  columns go by behind it. 27 is bassless, so the lamps go dim. The quodlibet (30) has five small followers in the
+  lamps' own colours, the tunes it quotes.
+- **One palette.** Ivory and gold, a cool blue for the minor and silver for the second voices; nothing else.
 - **The loop closes in the dark.** The da capo's last minute puts out the lamps, the rings, the rose and the light,
   and the Aria's first lights them again: at 0 s and at 4446.52 s the room is the same, no lamp lit, no petal open,
-  the ball unseen; the camera is where it was; every shimmer runs on a whole number of cycles a period.
+  the ball unseen; the view and the camera are where they were; every shimmer runs on a whole number of cycles a
+  period.
 - **Nothing on the frame.** The title, each variation's name (with Bach's name as its note) and the credits are the
   page's cards (`Performance.titles`, `rotunda/titles.ts`), and there are none across the seam.
 
 ## What was subtracted
 
 No film, no set-piece, no second world. One room, one ball, one job each: the lamps are what has been played, the
-ring is which variation, the ball's lap is the variation's length, the camera breathes and comes in for the Adagio and
-goes out for the credits. No cuts, no strikes, no shake. Nothing but the ball moves quickly.
+ring is which variation, the ball's lap is the variation's length, the view's height is how much has been written, the
+camera breathes and comes in for the Adagio and goes out for the credits. No cuts, no strikes, no shake. Nothing but
+the ball moves quickly. The craft pass took out: thirty evenly spaced rings in four tints (a moiré by the second half),
+the soft pen light floating on the floor, the canon's dashed second rail, the outline round every lamp, a second step
+line, the overture's hard-edged trapezoid, the pearl's bright outline and dot (a reticle), and the quodlibet's five
+saturated hues.
 
 ## The player (`apps/rube/src/shows/youtube.ts`)
 
