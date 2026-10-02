@@ -171,7 +171,11 @@ export interface Work {
 
 const PATH = /(?:^|\/)versions\/([a-z0-9][a-z0-9-]*)\/([a-z0-9][a-z0-9-]*)\.show\.ts$/
 /** Takes that should lead their work in the registry, picker and Theater. */
-const PREFERRED_TAKES: Record<string, string> = { 'la-la-land': 'opus5-5', 'cornfield-chase': 'opus55' }
+const PREFERRED_TAKES: Record<string, string> = {
+  interstellar: 'opus55',
+  'la-la-land': 'opus5-5',
+  'cornfield-chase': 'opus55',
+}
 
 /**
  * Takes that shipped under another name: work → old take → take. An old link still opens the take (`pickVersion`),
