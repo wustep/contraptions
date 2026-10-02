@@ -38,6 +38,7 @@ import { CAMP_MEET as LIFTOFF_CAMP_MEET } from '../src/shows/versions/interstell
 import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX } from '../src/shows/versions/interstellar/liftoff/worlds'
 import ntfcOnsets from '../../../scripts/shows/plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from '../src/shows/versions/interstellar/liftoff/show'
+import { checkAtlas } from './atlas'
 import { checkSebs } from './sebs'
 import { checkGymnopedie } from './gymnopedie'
 import { checkMountainKing } from './mountain-king'
@@ -237,8 +238,8 @@ async function main(): Promise<void> {
   // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
   const interstellar = shipped.works.find((w) => w.work === 'interstellar')
   const liftoffTake = interstellar?.versions[0]
-  check('interstellar is Voyage, its own work of one take, labelled the same (no subtitle), with no note',
-    !!interstellar && interstellar.title === 'Voyage' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined)
+  check('interstellar is Voyage, keeps its original take as the default beside Atlas',
+    !!interstellar && interstellar.title === 'Voyage' && interstellar.versions.length === 2 && interstellar.versions.some((v) => v.take === 'astra-atlas') && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined)
   check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'grok47')?.take === 'grok47')
   // A renamed take's old address still opens it, in the page and as a page the build writes (`vite.config.ts`).
   const renamed = Object.entries(RENAMED_TAKES).flatMap(([work, old]) => Object.entries(old).map(([was, now]) => ({ work, was, now })))
@@ -478,6 +479,7 @@ async function main(): Promise<void> {
       if (work.work === 'nature-of-daylight' && version.take === 'opus55') checkPalindrome(perf, version, check)
       if (work.work === 'time' && version.take === 'opus55') checkKick(perf, version, check)
 
+      if (work.work === 'interstellar' && version.take === 'astra-atlas') checkAtlas(perf, check)
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
