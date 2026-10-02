@@ -52,6 +52,7 @@ import { checkMagnum } from './magnum'
 import { checkKick } from './kick'
 import { checkOstinato } from './ostinato'
 import { checkPalindrome } from './palindrome'
+import { checkInfiniteStage } from './infinite-stage'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -234,11 +235,11 @@ async function main(): Promise<void> {
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
   check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
-  // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
+  // Interstellar keeps its original default alongside the isolated visual redesign.
   const interstellar = shipped.works.find((w) => w.work === 'interstellar')
   const liftoffTake = interstellar?.versions[0]
-  check('interstellar is Voyage, its own work of one take, labelled the same (no subtitle), with no note',
-    !!interstellar && interstellar.title === 'Voyage' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined)
+  check('interstellar is Voyage, with opus55 unchanged as default and The Infinite Stage as a separate take',
+    !!interstellar && interstellar.title === 'Voyage' && interstellar.versions.map(v => v.take).join(',') === 'opus55,astra-stage' && interstellar.versions[1].label === 'The Infinite Stage' && pickVersion(shipped.works, 'interstellar', null)?.take === 'opus55' && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined)
   check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'grok47')?.take === 'grok47')
   // A renamed take's old address still opens it, in the page and as a page the build writes (`vite.config.ts`).
   const renamed = Object.entries(RENAMED_TAKES).flatMap(([work, old]) => Object.entries(old).map(([was, now]) => ({ work, was, now })))
@@ -477,6 +478,8 @@ async function main(): Promise<void> {
       if (work.work === 'bolero' && version.take === 'opus55') checkOstinato(perf, version, check)
       if (work.work === 'nature-of-daylight' && version.take === 'opus55') checkPalindrome(perf, version, check)
       if (work.work === 'time' && version.take === 'opus55') checkKick(perf, version, check)
+
+      if (work.work === 'interstellar' && version.take === 'astra-stage') checkInfiniteStage(perf, check)
 
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
