@@ -1,0 +1,22 @@
+Step Out — José González
+From The Secret Life of Walter Mitty (Music from and Inspired by the Motion Picture), Republic Records, 2013.
+Written by Theodore Shapiro and Craig Wedren, as the soundtrack credits it.
+Film: The Secret Life of Walter Mitty, directed by Ben Stiller, 20th Century Fox, 2013, in which "Step Out" plays as
+Walter longboards down the road in East Iceland.
+
+The recording is the label's own, as uploaded to YouTube by Republic Records ("Jose Gonzalez 'Step Out' The Secret Life
+Of Walter Mitty Soundtrack", 15 November 2013), video 5EV9IdeU3D0:
+https://www.youtube.com/watch?v=5EV9IdeU3D0
+Duration 4:01. Copyrighted; no rights are claimed.
+
+Playback: YouTube only. No recording of the song is shipped, and none is committed, in this branch or its history.
+
+Files:
+- scripts/shows/step-out-onsets.py — measures the song once from a local analysis copy of the video's audio (fetched
+  with yt-dlp into the git-ignored out/step-out/, never committed): the pulse beat by beat, its bars, its onsets, its
+  stretches, its loudness.
+- scripts/shows/plans/step-out-onsets.json — what it measured: the show is timed to it and check:shows holds the show
+  to it. It holds times and numbers only, no audio.
+
+Every picture in the show is drawn for it. Nothing from the film's frames, posters or the Life magazine logo's
+lettering is used: the magazine is a red box with a white rule.

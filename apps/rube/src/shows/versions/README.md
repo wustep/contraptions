@@ -28,7 +28,7 @@ The folder and file names are addresses, so they are chosen once:
   not the picker's title, which is the version file's `title` and can change
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
-  `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**. The write-up says which is which.
+  `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**, `step-out` **Quintessence**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
@@ -467,3 +467,19 @@ kit (parts built to timed slots, an authored camera with a roll, match cuts betw
 `scripts/shows/time-onsets.py` fits one comb (63.01 bpm) and moves every beat and off-beat onto its own attack, with
 the turns, the layers' downbeats and the free onsets, into `scripts/shows/plans/time-onsets.json`; `check:shows` holds
 every strike to it (`apps/rube/checks/kick.ts`). The report is `apps/rube/src/shows/versions/time/KICK.md`.
+
+`step-out/opus55` (in the picker, **Quintessence**, one take, **Opus 5.5**) is **Quintessence · after The Secret Life
+of Walter Mitty**: José González's *Step Out*, the film's own song, played by YouTube from Republic Records' upload only
+(5EV9IdeU3D0; no recording is shipped: `apps/rube/src/shows/versions/step-out/ATTRIBUTION.txt`), and then the end
+credits in the quiet after it. Every piece is new. It tells the film in order as one machine: the negatives room under
+the Life building, frame 25 missing; the daydream, a leap into a burning building; the clues with Cheryl; the bar at
+Nuuk, where the Cheryl he imagines leads him out and he goes for real (Walter, the ball, turns from slate to Life's
+red); the helicopter and the jump; the sea and the shark, under the song's bass-only stretch; Iceland, the bicycle,
+the longboard down to the fjord, the eruption on the band's last hit and the ash in its hush; his mother's piano, whose
+curve is the last negative; the Himalayas on the build, Sean and the snow leopard he does not photograph; negative 25
+on Ted's table on the peak, and the presses running the last issue; and the newsstand. The code is
+`step-out/quintessence/`, on Magnum's kit (parts built to timed slots, an authored camera, match cuts between places,
+one under the volcano's ash, the end credits from `Performance.titles`). The song is played, not sequenced (it leans
+between 143 and 145 bpm), so `scripts/shows/step-out-onsets.py` tracks the pulse beat by beat, each beat on its own
+attack, into `scripts/shows/plans/step-out-onsets.json`; `check:shows` holds every strike to it
+(`apps/rube/checks/quintessence.ts`). The report is `apps/rube/src/shows/versions/step-out/QUINTESSENCE.md`.
