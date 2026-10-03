@@ -121,7 +121,7 @@ export const paddlewheel = definePiece<{ color: string }>({
     p.circle(HUB[0] * k, HUB[1] * k, 0.04 * k)
 
     // The piers: the deck the ball comes off, and the deck above it lands on, standing in front of the wheel.
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
     rail(p, k, ink, weight, -0.5, WEST)
     piling(p, k, ink, weight, -0.36)
     rail(p, k, ink, weight, EAST, 1.5, -1 + FLOOR)

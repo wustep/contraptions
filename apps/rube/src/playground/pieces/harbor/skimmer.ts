@@ -192,7 +192,7 @@ export const skimmer = definePiece<{ color: string }>({
     p.circle(PX * k, PY * k, 0.075 * k)
 
     // The sea, and a ring left on it at every touch.
-    water(p, k, ink, weight, -0.5, 3.5)
+    water(p, k, ink, bg, weight, -0.5, 3.5)
     TOUCH.forEach(({ x, at }, i) => splash(p, k, sea, weight, x, WATER, over(t, at, at + 0.55), 0.95 - 0.2 * i))
   },
 })

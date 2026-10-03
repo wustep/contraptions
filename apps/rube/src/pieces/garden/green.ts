@@ -54,9 +54,12 @@ export function stem(p: p5, k: number, ink: string, weight: number, x0: number, 
   p.endShape()
 }
 
-/** Grass: a tuft of three blades at (x, y), leaning `lean`. */
+/**
+ * Grass: a tuft of three blades at (x, y), leaning `lean`. Drawn at a detail's weight, well under a rail's: the
+ * garden has a tuft at the foot of nearly everything, and at the rail's own weight the ground read as hatching.
+ */
 export function tuft(p: p5, k: number, ink: string, weight: number, x: number, y: number, h = 0.1, lean = 0): void {
-  outline(p, ink, weight * 0.9)
+  outline(p, ink, weight * 0.6)
   for (const [dx, f] of [
     [-0.03, 0.8],
     [0, 1],
@@ -73,11 +76,11 @@ export function pot(p: p5, k: number, ink: string, weight: number, color: string
   p.rect(x * k, (y - h + 0.02) * k, (w + 0.05) * k, 0.06 * k)
 }
 
-/** The ground: a line at `y` from x0 to x1 with tufts along it. */
+/** The ground: a line at `y` from x0 to x1 with a tuft here and there along it, two to a cell rather than a fringe. */
 export function soil(p: p5, k: number, ink: string, weight: number, x0: number, x1: number, y = 0.5): void {
   outline(p, ink, weight)
   p.line(x0 * k, y * k, x1 * k, y * k)
-  for (let x = x0 + 0.17; x < x1 - 0.08; x += 0.31) tuft(p, k, ink, weight, x, y, 0.07, 0.02)
+  for (let x = x0 + 0.21; x < x1 - 0.08; x += 0.53) tuft(p, k, ink, weight, x, y, 0.065, 0.02)
 }
 
 /** A drop of water: a teardrop at (x, y), `r` across, in the colour. */

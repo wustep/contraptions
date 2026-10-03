@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import type { Theme } from '../../../../../src/core/themes'
-import { FLOOR, post } from '../../parts'
+import { FLOOR, mixHex, post } from '../../parts'
 
 /**
  * The harbor's shared vocabulary: what every piece on the pier agrees on.
@@ -73,9 +73,17 @@ export function seaWater(theme: Theme): string {
 const WAVES = 3
 const AMP = 0.022
 
-/** The waterline from x0 to x1 at height `y`, in cell units. Continuous across cells. */
-export function water(p: p5, k: number, ink: string, weight: number, x0: number, x1: number, y = WATER): void {
-  outline(p, ink, weight * 0.8)
+/**
+ * The waterline from x0 to x1 at height `y`, in cell units. Continuous across cells.
+ *
+ * It is drawn half-way from the ink to the paper, and a little lighter than a deck. Every pier cell carries one,
+ * so a map has a waterline under every floor; in full ink they stood as heavy as the decks and the harbor read
+ * as striped terrain. Structure is ink and water is the tone behind it. The tone is opaque, not a see-through
+ * ink, because a line drawn across a whale or a hull has to show on it as well as on the paper.
+ */
+export function water(p: p5, k: number, ink: string, bg: string, weight: number, x0: number, x1: number, y = WATER): void {
+  outline(p, mixHex(ink, bg, 0.5), weight * 0.7)
+  p.strokeCap(p.SQUARE)
   p.beginShape()
   const n = Math.max(6, Math.round((x1 - x0) * 24))
   for (let i = 0; i <= n; i++) {
@@ -83,6 +91,7 @@ export function water(p: p5, k: number, ink: string, weight: number, x0: number,
     p.vertex(x * k, (y + AMP * Math.sin(x * Math.PI * 2 * WAVES)) * k)
   }
   p.endShape()
+  p.strokeCap(p.ROUND)
 }
 
 /** A piling: a post from the deck through the water to the seabed, with a rope band under the deck. */
@@ -102,8 +111,10 @@ export function seabed(p: p5, k: number, ink: string, weight: number, x0: number
 /**
  * A splash at (x, y): drops on short arcs either side, up and then down,
  * `f` from 0 (the instant) to 1 (gone). In the colour, so it reads as water.
+ * With `ring`, a ring spreads on the water where it went in; a splash off
+ * the head of a jet, up in the air, has no water to ring.
  */
-export function splash(p: p5, k: number, color: string, weight: number, x: number, y: number, f: number, size = 1): void {
+export function splash(p: p5, k: number, color: string, weight: number, x: number, y: number, f: number, size = 1, ring = true): void {
   if (f <= 0 || f >= 1) return
   p.push()
   p.noStroke()
@@ -119,6 +130,7 @@ export function splash(p: p5, k: number, color: string, weight: number, x: numbe
     p.circle(px * k, py * k, r * 2 * k * (1 - f * 0.5))
   }
   p.pop()
+  if (!ring) return
   // A ring on the water where it went in.
   p.push()
   p.noFill()

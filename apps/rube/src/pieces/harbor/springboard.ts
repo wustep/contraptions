@@ -149,7 +149,7 @@ export const springboard = definePiece<{ color: string }>({
 
     // The sea, and what the ball does to it: in with a splash; bubbles breaking the surface in a line toward
     // the slip; up the slip with another.
-    water(p, k, ink, weight, -0.5, 2.5)
+    water(p, k, ink, bg, weight, -0.5, 2.5)
     splash(p, k, sea, weight, IN[0] + 0.02, WATER, over(t, T_IN, T_IN + 0.55), 1.3)
     if (t > T_IN && t < T_UP + 0.25) {
       const front = IN[0] + 0.08 + (UP[0] - IN[0] - 0.12) * over(t, T_IN, T_UP)

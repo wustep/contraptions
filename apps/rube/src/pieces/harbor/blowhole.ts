@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { FLOOR, ROLL, arrive, arriveAt, definePiece, fly, over, post, rail, ramp, wait, type Lane, type Pt } from '../../parts'
-import { bodyColor, luminance, splash, water } from './sea'
+import { FLOOR, ROLL, arrive, arriveAt, definePiece, fly, mixHex, over, post, rail, ramp, wait, type Lane, type Pt } from '../../parts'
+import { bodyColor, luminance, seaWater, splash, water } from './sea'
 
 /**
  * A whale. The deck runs onto the back of a whale lying in the water,
@@ -26,7 +26,11 @@ const FLIGHT = 0.4
 const LOFT = 0.45
 const SPOUT_H = 1.12
 
-export const blowhole = definePiece<{ color: string; spout: string }>({
+export const blowhole = definePiece<{
+  color: string
+  /** The placement's pick, kept for saved shows. The spout is drawn in the sea's own blue instead (`draw`). */
+  spout: string
+}>({
   name: 'blowhole',
   weight: 1,
   flight: true,
@@ -50,7 +54,7 @@ export const blowhole = definePiece<{ color: string; spout: string }>({
     const spout = [...theme.colors].filter((c) => c !== body).sort((a, b) => Math.abs(luminance(b) - luminance(body)) - Math.abs(luminance(a) - luminance(body)))[0] ?? body
     return { cells, exit: { at: [1, -1], dir: 1 }, lane, state: { color: body, spout } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     // The rumble: the whale shivers before it blows; the spout rises fast and falls back.
     const shiver = t > ARRIVE && since < 0 ? 0.012 * Math.sin(t * 70) * over(t, ARRIVE, FIRE) : 0
     const spout = since < 0 ? 0 : since < 0.5 ? Math.sin((Math.PI * since) / 0.5) : 0
@@ -93,7 +97,7 @@ export const blowhole = definePiece<{ color: string; spout: string }>({
     p.ellipse(0, (TOP + 0.01) * k, 0.14 * k, 0.045 * k)
     p.pop()
     // The sea, in front of the whale: what is under the line is under water.
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
 
     // Bubbles up the blowhole while it rumbles.
     if (t > ARRIVE && since < 0) {
@@ -103,29 +107,33 @@ export const blowhole = definePiece<{ color: string; spout: string }>({
         p.circle((0.03 * Math.sin(f * 9 + i)) * k, (TOP - 0.14 * f) * k, (0.02 + 0.01 * i) * k)
       }
     }
-    // The spout: a column of water from the blowhole, its head where the
-    // ball is, breaking into drops at the top. Water's colour, not the whale's.
+    // The spout: a column of water from the blowhole, narrow at the hole and
+    // opening into a crown at its head, where the ball is, which breaks into
+    // drops. It is the sea's blue let down toward the paper, so it reads as
+    // water whatever the whale is: the placement's pick was the palette's
+    // farthest from the whale, a cream, and a cream column in an ink outline
+    // stood on the whale's back like a pipe.
+    const sea = mixHex(seaWater(theme), bg, 0.45)
     if (spout > 0.02) {
       const h = SPOUT_H * spout
-      solid(p, ink, weight, s.spout)
+      const head = FLOOR - h
+      // The crown opens with the jet's height, so a jet falling back is a column again and not a cup on a stem.
+      const c = 0.05 + 0.07 * Math.min(1, h / 0.8)
+      solid(p, ink, weight * 0.8, sea)
       p.beginShape()
-      p.vertex(-0.07 * k, TOP * k)
-      p.bezierVertex(-0.07 * k, (FLOOR - h * 0.5) * k, -0.12 * k, (FLOOR - h + 0.1) * k, -0.03 * k, (FLOOR - h) * k)
-      p.vertex(0.03 * k, (FLOOR - h) * k)
-      p.bezierVertex(0.12 * k, (FLOOR - h + 0.1) * k, 0.07 * k, (FLOOR - h * 0.5) * k, 0.07 * k, TOP * k)
+      p.vertex(-0.045 * k, TOP * k)
+      p.bezierVertex(-0.05 * k, (TOP - h * 0.45) * k, -0.06 * k, (head + 0.16) * k, -c * k, (head + 0.05) * k)
+      p.bezierVertex(-c * 0.8 * k, (head - 0.02) * k, -0.04 * k, (head - 0.03) * k, 0, (head - 0.03) * k)
+      p.bezierVertex(0.04 * k, (head - 0.03) * k, c * 0.8 * k, (head - 0.02) * k, c * k, (head + 0.05) * k)
+      p.bezierVertex(0.06 * k, (head + 0.16) * k, 0.05 * k, (TOP - h * 0.45) * k, 0.045 * k, TOP * k)
       p.endShape(p.CLOSE)
-      p.push()
-      p.noStroke()
-      p.fill(bg)
-      for (let i = 0; i < 4; i++) p.circle((-0.06 + 0.04 * i) * k, (FLOOR - h + 0.14 + 0.06 * (i % 2)) * k, 0.03 * k)
-      p.pop()
-      splash(p, k, s.spout, weight, 0, FLOOR - h + 0.02, 1 - spout, 1.2)
+      splash(p, k, sea, weight, 0, head + 0.02, 1 - spout, 1.2, false)
     }
     // Drips after, back into the blowhole.
     if (since > 0.5 && since < 1.4) {
       p.push()
       p.noStroke()
-      p.fill(s.spout)
+      p.fill(sea)
       for (const [dx, d] of [
         [-0.05, 0],
         [0.04, 0.3],

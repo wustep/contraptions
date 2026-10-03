@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, laneAt, over, post, rail, ramp, rankBy, wait, type Lane, type PieceCtx, type Pt } from '../../parts'
-import { tuft } from './green'
+import { nearestHue, tuft } from './green'
 
 /**
  * A frog on a lily pad, a floor or two above the path. The ball rolls onto
@@ -21,6 +21,7 @@ import { tuft } from './green'
  */
 export interface FrogState {
   color: string
+  /** The placement's pick, kept so the draw from the rng and saved shows stay as they were; the tongue is drawn pink (`over`). */
   tongue: string
   floors: number
   turn: 1 | -1
@@ -199,7 +200,7 @@ export const frog = definePiece<FrogState>({
     p.pop()
   },
   over: (p, s, c) => {
-    const { k, t, since, ink, weight } = c
+    const { k, t, since, ink, weight, theme } = c
     const { floors, turn } = s
     const top = -floors
     const pose = poseAt(t, floors)
@@ -218,11 +219,14 @@ export const frog = definePiece<FrogState>({
       tip = [turn * at.x, at.y - R]
     }
     if (tip && tip[1] > root[1] + 0.02) {
-      // Slack on the way down, a line when it is pulling.
+      // Slack on the way down, a line when it is pulling. A tongue is the palette's pink, and never the ball's
+      // colour: the placement's `tongue` could be the ball's own, and then tongue and ball ran together into one
+      // stick. It is a band, not a rod: at a pole's width it read as a pole the frog stood on.
+      const tongue = nearestHue(theme, 345, c.color)
       const slack = since < SHOT ? 0.06 * Math.sin(over(since, 0, SHOT) * Math.PI) : 0
       for (const [col, w] of [
-        [ink, 3.4],
-        [s.tongue, 1.7],
+        [ink, 2.2],
+        [tongue, 1],
       ] as [string, number][]) {
         p.noFill()
         p.stroke(col)
@@ -232,8 +236,8 @@ export const frog = definePiece<FrogState>({
         p.quadraticVertex(((root[0] + tip[0]) / 2 + slack) * k, ((root[1] + tip[1]) / 2) * k, tip[0] * k, tip[1] * k)
         p.endShape()
       }
-      solid(p, ink, weight * 0.8, s.tongue)
-      p.ellipse(tip[0] * k, (tip[1] + 0.012) * k, 0.1 * k, 0.05 * k)
+      solid(p, ink, weight * 0.8, tongue)
+      p.ellipse(tip[0] * k, (tip[1] + 0.012) * k, 0.085 * k, 0.042 * k)
     }
 
     // Where it is looking: at the ball, wherever the ball is.

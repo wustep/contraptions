@@ -182,7 +182,7 @@ export const bottle = definePiece<{ color: string }>({
     p.pop()
 
     // The sea in front, and what the bottle does to it.
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
     const way = t < T_GONE || t > FIRE ? 0 : 1.35 - 0.7 * over(t, T_GONE, FIRE)
     if (way > 0.05) {
       const mouth = onAxis(LEN, t)

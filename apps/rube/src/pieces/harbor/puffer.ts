@@ -148,7 +148,7 @@ export const puffer = definePiece<{ color: string }>({
     p.ellipse((CX - rx + 0.005) * k, (y + ry * 0.12) * k, mouth * 0.8 * k, mouth * k)
 
     // The sea in front: what is under the line is under water.
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
 
     // A snore: one bubble off the mouth every so often, while it sleeps.
     if (asleep) {

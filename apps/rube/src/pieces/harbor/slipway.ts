@@ -214,7 +214,7 @@ export const slipway = definePiece<{ color: string }>({
     p.pop()
 
     // The sea in front of it all, and the belly-flop.
-    water(p, k, ink, weight, WEST - 0.12, 1.5, 1 + WATER)
+    water(p, k, ink, bg, weight, WEST - 0.12, 1.5, 1 + WATER)
     // One splash, the hull's: water thrown out from under the bow and the stern, the bow's the bigger, and one
     // ring the hull's length that widens and is gone. Three splashes laid over one another were a cloud of dots
     // and a knot of rings.

@@ -151,18 +151,15 @@ export const well = definePiece<WellState>({
     solid(p, ink, weight, s.color)
     p.triangle(-0.43 * k, -0.3 * k, 0, -0.485 * k, 0.43 * k, -0.3 * k)
 
-    // The shaft's walls, down to its floor, with a brick's end showing here and there; an arch through the one on the way out.
+    // The shaft's walls, down to its floor, with a brick's end showing here and there, the two walls out of step; an arch through the one on the way out.
+    // A brick every fifth of a floor down both walls ruled the shaft like a tape measure.
     for (const side of [-1, 1] as const) {
       const foot = side === turn ? floors - 0.3 : bottom
       outline(p, ink, weight)
       p.line(side * SHAFT * k, 0.5 * k, side * SHAFT * k, foot * k)
       if (side === turn) p.arc(side * (SHAFT + 0.07) * k, foot * k, 0.14 * k, 0.12 * k, side > 0 ? Math.PI / 2 : 0, side > 0 ? Math.PI : Math.PI / 2)
-      outline(p, ink, weight * 0.7)
-      let i = 0
-      for (let y = 0.62; y < foot - 0.04; y += 0.19) {
-        p.line(side * SHAFT * k, y * k, side * (SHAFT + (i % 2 ? 0.05 : 0.08)) * k, y * k)
-        i++
-      }
+      outline(p, ink, weight * 0.55)
+      for (let y = side > 0 ? 1.05 : 0.75; y < foot - 0.2; y += 0.62) p.line(side * SHAFT * k, y * k, side * (SHAFT + 0.06) * k, y * k)
     }
     // The parapet above ground, with its coping level with the rail.
     for (const side of [-1, 1]) {

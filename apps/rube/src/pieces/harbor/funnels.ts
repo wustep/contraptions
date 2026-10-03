@@ -107,7 +107,7 @@ export const funnels = definePiece<{ color: string }>({
     p.vertex((STERN + 0.1) * k, (0.47 + duck) * k)
     p.quadraticVertex(STERN * k, (0.45 + duck) * k, STERN * k, (GUNWALE + duck) * k)
     p.endShape(p.CLOSE)
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
 
     // Each toot: a puff out of the rim under the ball that pops it off, swelling as it drifts away.
     STACKS.forEach((f, i) => {

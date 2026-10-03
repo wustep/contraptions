@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { FLOOR, R, ROLL, burst, chain, definePiece, over, rail, ramp, roll, segTime, type Lane, type Pt, type Seg } from '../../parts'
+import { FLOOR, R, ROLL, burst, chain, definePiece, mixHex, over, rail, ramp, roll, segTime, type Lane, type Pt, type Seg } from '../../parts'
 
 /**
  * A gravity inverter. Two coils on posts hold a field between them with a
@@ -83,15 +83,17 @@ export const inverter = definePiece<{ color: string }>({
         p.rect(x * k, (CEIL + 0.08 + i * 0.08) * k, 0.14 * k, 0.065 * k, 0.02 * k)
       }
     }
-    // The field: dashed lines between the coils while it is on.
+    // The field: three faint dashed lines between the coils while it is on,
+    // drifting up. It had seven, full weight, and filled the frame with hatch.
     if (inside) {
       p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
+      p.stroke(mixHex(s.color, bg, 0.35))
+      p.strokeWeight(weight * 0.5)
       const ctx = p.drawingContext as CanvasRenderingContext2D
-      ctx.setLineDash([0.03 * k, 0.05 * k])
-      const drift = (t * 0.4) % 0.08
-      for (let y = CEIL + 0.06 + drift; y < FLOOR - 0.04; y += 0.08) p.line((X0 + 0.1) * k, y * k, (X1 - 0.1) * k, y * k)
+      ctx.setLineDash([0.035 * k, 0.07 * k])
+      const gap = (FLOOR - CEIL) / 3
+      const drift = (t * 0.12) % gap
+      for (let y = FLOOR - 0.02 - drift; y > CEIL + 0.04; y -= gap) p.line((X0 + 0.12) * k, y * k, (X1 - 0.12) * k, y * k)
       ctx.setLineDash([])
       p.pop()
     }

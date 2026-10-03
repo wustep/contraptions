@@ -169,7 +169,7 @@ export const submarine = definePiece<{ color: string }>({
     p.pop()
 
     // The sea in front of her, and what she does to it.
-    water(p, k, ink, weight, -0.5, 2.5)
+    water(p, k, ink, bg, weight, -0.5, 2.5)
     const run = way * over(d, 0.34, DEEP)
     if (run > 0.05) {
       // Under way at periscope depth: a feather of water curling up ahead of the tube, and her wake astern of

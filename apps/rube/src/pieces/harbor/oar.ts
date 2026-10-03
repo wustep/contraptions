@@ -154,7 +154,7 @@ export const oar = definePiece<{ color: string }>({
     p.line((PIVOT[0] - 0.04) * k, (PIVOT[1] + 0.05) * k, (PIVOT[0] + 0.04) * k, (PIVOT[1] + 0.05) * k)
 
     // The sea in front, and the bucket's splash as it goes in.
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
     splash(p, k, seaWater(theme), weight, grip[0], WATER, over(t, T_SPLASH, T_SPLASH + 0.5), 1)
   },
 })

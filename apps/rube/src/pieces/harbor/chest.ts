@@ -100,7 +100,7 @@ export const chest = definePiece<{ color: string; gold: string }>({
   draw: (p, s, { k, since, ink, bg, weight }) => {
     const shut = shutAt(since)
 
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
     piling(p, k, ink, weight, -HW - 0.06)
     piling(p, k, ink, weight, HW + 0.06)
     rail(p, k, ink, weight, -0.5, -HW)

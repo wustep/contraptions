@@ -174,7 +174,7 @@ export const rod = definePiece<RodState>({
     p.ellipse(floatAt[0] * k, floatAt[1] * k, 0.06 * k, 0.09 * k)
 
     // The sea in front; the ball's splash; bubbles while it is under; and the water off it as it is hauled out.
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
     splash(p, k, sea, weight, IN[0] + 0.03, WATER, over(t, T_IN, T_IN + 0.5), 1)
     if (t > T_IN + 0.05 && t < T_OUT) bubbles(p, k, ink, weight, bg, UNDER[0] + 0.03, 0.47, WATER - 0.02, t - T_IN, 3)
     splash(p, k, sea, weight, UNDER[0], WATER, over(t, T_OUT - 0.02, T_OUT + 0.4), 0.8)

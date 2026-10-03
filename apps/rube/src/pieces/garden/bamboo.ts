@@ -1,8 +1,9 @@
 import type p5 from 'p5'
+import type { Theme } from '../../../../../src/core/themes'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, burst, definePiece, fly, over, post, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { drop, leaf, soil, tuft } from './green'
+import { drop, gardenGreen, leaf, soil, tuft, waterHue } from './green'
 
 /**
  * A shishi-odoshi, the deer scarer: a bamboo rocker pinned to a post at the
@@ -110,9 +111,12 @@ export const bamboo = definePiece<{ color: string }>({
     if (!fits(cells, [-1, 1])) return null
     return { cells, exit: { at: [-1, 1], dir: -1 }, lane: LANE, state: { color } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme, color }) => {
     const a = tiltAt(t)
     const clack = t - T_CLACK
+    const culm = culmColor(theme, s.color, color)
+    // What drips from the spout and runs off the scoop is water, the garden's blue, never the bamboo's colour.
+    const wet = waterHue(theme)
 
     // The rail in, to the scoop's tip; the terrace the rocker stands on, its face going down to the garden below.
     const railEnd = onCulm(REST, TIP)[0] - 0.015
@@ -135,7 +139,7 @@ export const bamboo = definePiece<{ color: string }>({
     p.push()
     p.translate(0.41 * k, -0.4 * k)
     p.rotate(Math.atan2(SPOUT[1] + 0.4, SPOUT[0] - 0.41))
-    solid(p, ink, weight, s.color)
+    solid(p, ink, weight, culm)
     const reach = Math.hypot(SPOUT[0] - 0.41, SPOUT[1] + 0.4)
     p.rect((reach / 2) * k, 0, reach * k, 0.05 * k, 0.012 * k)
     p.pop()
@@ -143,7 +147,7 @@ export const bamboo = definePiece<{ color: string }>({
     for (let i = 0; i < 2; i++) {
       const f = (((t * 1.3 + i * 0.5) % 1) + 1) % 1
       const y = SPOUT[1] + 0.05 + 0.9 * f * f
-      if (y < Math.min(0.4, Math.max(0.05, catchY))) drop(p, k, s.color, SPOUT[0] + 0.01, y, 0.016)
+      if (y < Math.min(0.4, Math.max(0.05, catchY))) drop(p, k, wet, SPOUT[0] + 0.01, y, 0.016)
     }
 
     // The stone the tail rests on, and the post the rocker is pinned to.
@@ -153,7 +157,7 @@ export const bamboo = definePiece<{ color: string }>({
     tuft(p, k, ink, weight, 0.2, 0.5, 0.09, -0.02)
     post(p, k, ink, weight, PIVOT[0], PIVOT[1], 0.5)
 
-    rocker(p, k, ink, weight, s.color, a, false)
+    rocker(p, k, ink, weight, culm, a, false)
     solid(p, ink, weight, bg)
     p.circle(PIVOT[0] * k, PIVOT[1] * k, 0.045 * k)
 
@@ -165,7 +169,7 @@ export const bamboo = definePiece<{ color: string }>({
         if (d < 0) continue
         const x = OUT[0] + 0.06 + VX * 0.6 * d - 0.025 * i
         const y = OUT[1] + 0.12 + VY * 0.8 * d + (G / 2) * d * d
-        if (y < 1 + FLOOR - 0.02) drop(p, k, s.color, x, y, 0.018)
+        if (y < 1 + FLOOR - 0.02) drop(p, k, wet, x, y, 0.018)
       }
     }
     // The clack: the tail on the stone.
@@ -178,11 +182,21 @@ export const bamboo = definePiece<{ color: string }>({
       p.pop()
     }
   },
-  over: (p, s, { k, t, ink, weight }) => {
+  over: (p, s, { k, t, ink, weight, theme, color }) => {
     // The scoop's near rim, in front of the ball's foot: it rides in the scoop, not on it.
-    rocker(p, k, ink, weight, s.color, tiltAt(t), true)
+    rocker(p, k, ink, weight, culmColor(theme, s.color, color), tiltAt(t), true)
   },
 })
+
+/**
+ * Bamboo is green: the palette's greenest, so the rocker reads as a culm and not as a striped pipe in whatever
+ * colour the map handed it. The placement's colour stands in only when the ball is that green too, so the ball
+ * is still seen in the scoop.
+ */
+function culmColor(theme: Theme, placed: string, ball: string): string {
+  const green = gardenGreen(theme)
+  return green === ball ? placed : green
+}
 
 /**
  * The rocker about its pivot: a culm with raised nodes and a leaf, closed

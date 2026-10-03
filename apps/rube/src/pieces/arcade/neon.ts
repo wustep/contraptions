@@ -20,16 +20,20 @@ import { mixHex } from '../../parts'
  * brightness, is what makes these read.
  */
 
-/** A soft halo behind something lit: a few rings of the colour, fading out. `f` is the brightness. */
+/**
+ * A soft halo behind something lit: a few rings of the colour, fading out. `f` is the brightness. It stays
+ * inside a lamp's own reach and never reaches half opacity at its heart: every hit on the floor pops a score
+ * and a flash as well, and a brighter, wider halo under those stacked into a blotch the ball sat in.
+ */
 export function glow(p: p5, k: number, color: string, x: number, y: number, r: number, f = 1): void {
   if (f <= 0.01) return
   p.push()
   p.noStroke()
   for (let i = 3; i >= 1; i--) {
     const c = p.color(color)
-    c.setAlpha(11 * f * (4 - i))
+    c.setAlpha(7 * f * (4 - i))
     p.fill(c)
-    p.circle(x * k, y * k, r * 2 * (0.6 + i * 0.38) * k)
+    p.circle(x * k, y * k, r * 2 * (0.6 + i * 0.3) * k)
   }
   p.pop()
 }

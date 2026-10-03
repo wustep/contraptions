@@ -84,7 +84,7 @@ export const foghorn = definePiece<{ color: string }>({
     // The horn kicks back on its bracket and quivers while it sounds.
     const kick = since < 0 ? 0 : -0.16 * flick(since, 0.04, 0.12, 0.6) + (sounding ? 0.015 * Math.sin(since * 90) : 0)
 
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
     piling(p, k, ink, weight, 0.36)
     rail(p, k, ink, weight, -0.5, HINGE)
     rail(p, k, ink, weight, PLANK_E, 0.5)

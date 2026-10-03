@@ -248,7 +248,7 @@ export const seal = definePiece<SealState>({
     p.circle((ex + Math.cos(look) * 0.011) * k, (ey + Math.sin(look) * 0.011) * k, 0.03 * k)
 
     // The sea in front: what is under the line is under water.
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
 
     // The claps: a crack of lines off the flippers each time they meet.
     if (clapping && clap > 0.8) {

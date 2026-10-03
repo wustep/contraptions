@@ -9,7 +9,7 @@ import { cleat, piling, water } from './sea'
  * the deck, or nothing but the water.
  */
 export const pierRail = makeRail(['piling', 'cleat', 'ring', 'none', 'piling'] as const, (p, s, { k, ink, weight, bg }) => {
-  water(p, k, ink, weight, -0.5, 0.5)
+  water(p, k, ink, bg, weight, -0.5, 0.5)
   if (s.decor === 'piling') piling(p, k, ink, weight, 0.08)
   if (s.decor === 'cleat') {
     cleat(p, k, ink, weight, s.color, -0.12)

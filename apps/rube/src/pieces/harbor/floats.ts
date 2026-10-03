@@ -75,7 +75,7 @@ export const floats = definePiece<{ color: string }>({
     if (!fits(cells, [2, 0])) return null
     return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
-  draw: (p, s, { k, t, ink, weight, theme }) => {
+  draw: (p, s, { k, t, ink, bg, weight, theme }) => {
     const ys = XS.map((_, i) => FY + dunkAt(i, t))
 
     rail(p, k, ink, weight, -0.5, WEST)
@@ -99,7 +99,7 @@ export const floats = definePiece<{ color: string }>({
       p.line((x - FR + 0.01) * k, (ys[i] - H * 0.55) * k, (x + FR - 0.01) * k, (ys[i] - H * 0.55) * k)
     })
     // The water goes in front of them, so they sit in it and not on it.
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
     XS.forEach((x, i) => splash(p, k, seaWater(theme), weight, x, FY + 0.04, over(t, LANDS[i] + 0.02, LANDS[i] + 0.55), 0.75))
   },
 })

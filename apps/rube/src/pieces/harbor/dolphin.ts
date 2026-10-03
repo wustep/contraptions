@@ -243,7 +243,7 @@ export const dolphin = definePiece<{ color: string }>({
     p.pop()
 
     // The sea, over where the dolphin goes through it, and the water it throws coming out and going in.
-    water(p, k, ink, weight, -0.5, 2.5)
+    water(p, k, ink, bg, weight, -0.5, 2.5)
     splash(p, k, seaWater(theme), weight, NOSE0[0], WATER, over(since, -0.02, 0.55), 1.3)
     splash(p, k, seaWater(theme), weight, noseAt(T_DIVE)[0], WATER, over(since, T_DIVE, T_DIVE + 0.6), 1.5)
     // The ring round the fin as it comes up, and the flick at the top.

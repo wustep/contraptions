@@ -187,7 +187,7 @@ export const creel = definePiece<{ color: string }>({
     p.noStroke()
     p.rect(FALL_X * k, (leadY + 0.02) * k, LEAD_W * k, 0.03 * k)
     p.pop()
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
     splash(p, k, seaWater(theme), weight, FALL_X - 0.03, WATER, over(t, T_WET, T_WET + 0.5), 0.5)
     outline(p, ink, weight)
     // The bridle, behind the pot, from the hoist point to the pot's shoulders.

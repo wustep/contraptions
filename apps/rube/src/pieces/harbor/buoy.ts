@@ -87,7 +87,7 @@ export const buoy = definePiece<{ color: string }>({
     const clang = since < CLANG_AT ? 0 : 1 - over(since, CLANG_AT, CLANG_AT + 0.35)
 
     // The pier either side, on pilings, and the water in the gap.
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
     rail(p, k, ink, weight, -0.5, -GAP)
     rail(p, k, ink, weight, GAP, 0.5)
     piling(p, k, ink, weight, -GAP - 0.05)

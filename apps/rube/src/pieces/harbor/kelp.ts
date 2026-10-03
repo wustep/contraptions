@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { FLOOR, ROLL, chain, definePiece, over, rail, ramp, rankBy, roll, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
-import { bubbles, water } from './sea'
+import { FLOOR, ROLL, chain, definePiece, mixHex, over, rail, ramp, rankBy, roll, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
+import { bubbles, seaWater, water } from './sea'
 
 /**
  * A kelp column. A glass tank stands on the pier one or two floors tall,
@@ -91,7 +91,7 @@ export const kelp = definePiece<KelpState>({
     }
     return null
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     const { floors, turn } = s
     const top = -floors
     const rim = top + FLOOR
@@ -102,12 +102,19 @@ export const kelp = definePiece<KelpState>({
     const ballY = RISE0 + (top - RISE0) * upF
 
     // The pier in, to the tank's wall; the ground the tank stands on.
-    water(p, k, ink, weight, -0.5, -WALL)
+    water(p, k, ink, bg, weight, -0.5, -WALL)
     rail(p, k, ink, weight, -0.5, -WALL)
     outline(p, ink, weight)
     p.line(-0.36 * k, 0.5 * k, 0.36 * k, 0.5 * k)
+    // The water in the tank, a pale tone of the sea's blue from the ground
+    // up to the cap. With the paper showing through, the tank read as two
+    // bare posts with weed between them.
+    p.noStroke()
+    p.fill(mixHex(seaWater(theme), bg, 0.8))
+    p.rect(0, ((under + 0.5) / 2) * k, WALL * 2 * k, (0.5 - under) * k)
     // The tank: two walls from the ground to the rim, the near one with an
     // opening at the bottom for the ball.
+    outline(p, ink, weight)
     p.line(-WALL * k, (rim - 0.02) * k, -WALL * k, -0.16 * k)
     p.line(-WALL * k, (FLOOR + 0.04) * k, -WALL * k, 0.5 * k)
     p.line(WALL * k, (rim - 0.02) * k, WALL * k, 0.5 * k)
