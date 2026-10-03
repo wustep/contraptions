@@ -115,8 +115,7 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
 
 /**
  * The looks the camera takes: on each it pushes in, at once (18 ms), and eases back slowly (τ 1 s, gone by 3.5 s).
- * Only two: the negative laid on Ted's table on the peak, and the press's first sheet a bar later. Nothing else in
- * this film is loud enough to earn one.
+ * Only one: negative 25 laid on Ted's table, on the peak. Nothing else in this film is loud enough to earn one.
  */
 export const PUNCHES: [number, number][] = [
   [PEAK, 1.0],

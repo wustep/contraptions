@@ -9,6 +9,6 @@ export default defineShow({
   title: 'Quintessence',
   label: 'Opus 5.5',
   about: "José González's Step Out, from The Secret Life of Walter Mitty, as a Rube Goldberg machine that stops daydreaming and goes.",
-  still: 110,
+  still: 113,
   async load() { return (await import('./quintessence')).performance },
 })
