@@ -26,7 +26,9 @@ const here = fileURLToPath(new URL('.', import.meta.url))
 
 /**
  * `/` is Machine's old address. Send it on to `/machine/`, query included.
- * The built page does the same with a script, so a static host agrees.
+ * Vercel answers `/` with a temporary redirect too (vercel.json), so a link
+ * unfurler lands on Machine's card. The built page does the same with a
+ * script, and carries that card itself, so any other static host agrees.
  */
 function rootToMachine(): Plugin {
   const redirect: Connect.NextHandleFunction = (req, res, next) => {
