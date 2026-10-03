@@ -38,7 +38,7 @@ The folder and file names are addresses, so they are chosen once:
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
   Lune, Première Arabesque, Cornfield Chase, Ostinato), **Movies** and **Ambient**
-  (Gymnopédie). A work is Movies unless `SHELVED` in `../registry.ts` names it.
+  (Gymnopédie, Soft Lamp). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Code**: a take that is more than a score file keeps its code in a folder
   named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
   the take id carries a code name, the folder uses the same one. A take's code
@@ -306,6 +306,19 @@ on the sea, the chords the light on the water, the phrasing the camera's breath;
 and the flowers it opens under the moon stay lit and open until dawn, so the seam's wide shot is the planet ringed with
 its night. The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
+
+`soft-lamp/opus55` (in the picker, **Soft Lamp**, one take, **Opus 5.5**, on the **Ambient** shelf) is half an hour of
+Lofi Girl's *Best of lofi hip hop 2021*, its first twelve tracks, played from the label's upload only (YouTube
+n61ULEU7CO0, from the video's zero to 30:12.4; `apps/rube/src/shows/versions/soft-lamp/ATTRIBUTION.txt`), round a small
+machine on a study desk by a rainy window at night. `scripts/shows/soft-lamp-onsets.py` measures the mix once from a
+local analysis copy that is never committed into `scripts/shows/plans/soft-lamp-onsets.json`: each track's edges, its
+grid (whole-number tempos), its downbeats (kick on one, crack on two and four, or three half-time), its drum bars, its
+kicks, and the mix's held sound. Every piece is new. A lap a track: the ball walks the sill in front of the rain through
+each intro, tips onto a stair of books as the drums come in, steps down on the strong beats into the headphones' cup,
+sits nodding on the kick through the groove, and on the last bar of drums is lobbed back to the sill, turning off the
+plant pot. The lamp comes on with the first chord and goes down as the last track rings out; the rain, the steam and the
+city's windows keep the night. The code is `soft-lamp/lamp/`; `check:shows` holds it to the music and every held frame
+to a composed crop (`apps/rube/checks/soft-lamp.ts`). The report is `apps/rube/src/shows/versions/soft-lamp/SOFTLAMP.md`.
 
 `caravan/opus55` (in the picker, **Caravan**, one take, **Opus 5.5**) is "Caravan" from the *Whiplash* soundtrack
 (Juan Tizol, Duke Ellington and Irving Mills, arranged by John Wasson), the film's finale and drum solo, played whole
