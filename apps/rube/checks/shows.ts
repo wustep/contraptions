@@ -484,11 +484,21 @@ async function main(): Promise<void> {
       if (work.work === 'soft-lamp' && version.take === 'opus55') checkSoftLamp(perf, version, check)
 
       if (work.work === 'interstellar' && version.take === 'opus55-pixel') {
-        // Pixel is Liftoff's performance with a last pass over its frames: the same show, length, cuts, credits and music.
+        // Pixel is Liftoff's score composed again (so its skies can be its own) with a last pass over its frames: the same
+        // timeline, camera, length, cuts, credits and music.
         const voyage = await work.versions[0].load()
-        check('Voyage Pixel: the Voyage take\'s show, length, camera, credits and YouTube cues, with a pixel pass over its frames',
-          perf.show === voyage.show && perf.duration === voyage.duration && perf.camera === voyage.camera && perf.cuts === voyage.cuts &&
-          perf.titles === voyage.titles && perf.soundtrack === voyage.soundtrack && !perf.soundtrack?.src && typeof perf.finish === 'function' && !voyage.finish)
+        let same = true
+        for (let t = 0; t <= voyage.duration; t += 0.37) {
+          const a = perf.show.at(t)
+          const b = voyage.show.at(t)
+          const ca = perf.camera!(t)
+          const cb = voyage.camera!(t)
+          if (a.x !== b.x || a.y !== b.y || a.universe.index !== b.universe.index || ca.x !== cb.x || ca.y !== cb.y || ca.cells !== cb.cells) same = false
+        }
+        check('Voyage Pixel: the Voyage take\'s timeline, camera, length, cuts, credits and YouTube cues, in hard pixels with a pass over its frames',
+          same && perf.show !== voyage.show && perf.duration === voyage.duration && perf.cuts === voyage.cuts &&
+          perf.titles === voyage.titles && perf.soundtrack === voyage.soundtrack && !perf.soundtrack?.src && typeof perf.finish === 'function' &&
+          perf.pixels === true && !voyage.finish && !voyage.pixels)
       }
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',

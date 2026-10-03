@@ -106,6 +106,12 @@ export interface Performance {
    * `frame` the height of the 16:9 composition within it. Left out, the picture is as drawn.
    */
   finish?(ctx: CanvasRenderingContext2D, box: { x: number; y: number; w: number; h: number }, frame: number, t: number): void
+  /**
+   * The picture is hard pixels: wherever the browser scales the canvas to the screen (a display's fractional density, a
+   * video's frame fitted over the stage), it is scaled nearest-neighbour, never smoothed. Left out, the browser's own
+   * filter, as for every other show.
+   */
+  pixels?: boolean
 }
 
 /** One card of words over the stage, as the page is to set it at a moment (and a video's frame to paint it). */

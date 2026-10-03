@@ -1,8 +1,8 @@
 import { defineShow } from '../../registry'
 
 /**
- * Voyage in pixels: the Voyage take's machine, camera, cuts, credits and soundtrack, every frame painted as it is and
- * then brought down to a coarse grid, a short palette of its own colours and an ordered dither (`pixel/look.ts`).
+ * Voyage as a pixel game: the Voyage take's machine, camera, cuts, credits and soundtrack, under its own pixel skies,
+ * every frame read back as a coarse grid of hard blocks in a game palette with outlines (`pixel/`, `PIXEL.md`).
  */
 export default defineShow({
   title: 'Voyage',

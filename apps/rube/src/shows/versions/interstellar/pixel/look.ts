@@ -1,75 +1,61 @@
-/**
- * The pixel look: Liftoff's frame, painted as it always is, then brought down to a coarse grid, snapped to a short
- * palette of Voyage's own colours through an ordered dither, and laid back over itself in hard blocks.
- *
- * - **The grid** is fixed to the 16:9 composition: `ROWS` blocks top to bottom, whatever the canvas's size, so a ball
- *   is the same handful of blocks across live, in a 1080p file and on the share card, and the cast keep their size.
- * - **The palette** (`PAINTS`) is measured from the Voyage take's own frames, with the cast's and the inks' colours
- *   kept exactly, then dulled a little: the farm's dust, the dark's navies, Edmunds' violet dusk, Miller's water.
- * - **The dither** pairs paints: each colour is the two paints that mix nearest to it and how much of the second, and
- *   a 4×4 Bayer matrix, anchored to the screen, says which a block takes. A fill that is a paint stays flat; a glow, a
- *   sky or an edge comes out in stepped bands with a checker between them, never a gradient.
- * - **The grain** is a sparse scatter of blocks nudged a step lighter or darker, re-dealt `SHIMMER` times a second and
- *   held in between, so sand, water, the dark and Gargantua's disc fizz in steps rather than glide.
- *
- * It reads the frame back at the grid's size only, so its cost is the same at any resolution.
- */
-
-/** Blocks from the top of the 16:9 composition to its bottom. */
-export const ROWS = 144
-/** Times a second the grain is dealt again. */
-export const SHIMMER = 8
-/** Out of 256: the share of blocks the grain touches at one deal. */
-const GRAIN = 18
-/** How far, per channel, the grain moves a block it touches. */
-const GRAIN_STEP = 18
-/** How much of each paint's colour is kept: the rest goes to its own grey. */
-const MUTE = 0.95
-/** How far a paint's shade and light steps go, toward the darkest and lightest paints. */
-const STEP = 0.14
-/** Two paints nearer than this (in redmean distance) are one. */
-const MERGE = 20
-/** What mixing two paints costs, for how far apart they are: high, and a dusk is two neighbours, not black and white. */
-const SPREAD = 1.1
+import { areaAt, paintsOf, type Area } from './palette'
 
 /**
- * Voyage's paints, darkest to lightest: a median cut and a coverage cut of sixty stills across the whole take, with
- * Cooper, Brand, both Murphs, the years' grey, the inks and the worlds' named colours kept exactly, near twins merged.
+ * The pixel look: Liftoff's frame, painted as it always is (with the pixel take's own skies, `sky.ts`), then read
+ * back as a coarse grid of blocks, each block snapped to one paint of the area's ramps (`palette.ts`), and laid back
+ * over the frame as hard squares at a whole number of the canvas's pixels each.
+ *
+ * - **The grid** is fixed to the 16:9 composition, `ROWS` blocks top to bottom whatever the canvas's size, so the cast
+ *   are the size they are in Voyage, drawn in fewer, bigger pixels. A block is `block` device pixels square, a whole
+ *   number, and the grid is drawn up from a canvas of one pixel a block with no smoothing: no block is ever split or
+ *   blended with its neighbour.
+ * - **A block is one paint, never an average.** It is read at `SUB`×`SUB` points, each graded and snapped to a paint
+ *   on its own, and the block takes the paint most of them landed on. So a fill stays flat, an edge stays hard, and a
+ *   gradient comes out in three or four bands of the ramp. A line of ink that crosses a block wins it if it holds a
+ *   few of its points, so the drawing's ink comes out as a one-block outline; a star on the dark does the same.
+ * - **Nothing moves that the show does not move.** No grain, no noise and no dither: a block changes only when what
+ *   is under it does.
  */
-const PAINTS = [
-  '#070914', '#101628', '#1C1F3A', '#2A1F17', '#2E2831', '#40251A', '#1B3A62', '#303654', '#46394A', '#6A2F1F',
-  '#34506F', '#4D505B', '#1F5E98', '#665331', '#5C4D73', '#63534F', '#A0412A', '#447272', '#B4492F', '#7E5E58',
-  '#8E594B', '#866628', '#4577A3', '#6E63C9', '#B9583E', '#4E8A8C', '#768151', '#E0533D', '#976E7A', '#658C82',
-  '#A37E30', '#8C806C', '#A87C58', '#7C8C9C', '#8B967E', '#CC8345', '#8E9E62', '#9A958A', '#BA8C65', '#A8929A',
-  '#7AA8A7', '#A3A262', '#9FA179', '#DB8776', '#8FA8C4', '#F09340', '#D9A441', '#E2AE3C', '#D8B36D', '#AEBABE',
-  '#BBC08D', '#8FC6E6', '#C3BA9E', '#E8AB97', '#D4BE88', '#D3C6AF', '#F0C987', '#DECEAC', '#FBCF69', '#D9D4C6',
-  '#CCDBDA', '#F5DEAD', '#ECE5D3', '#F7F1DC', '#FCF9F1',
-]
 
-/** The order a 4×4 block's cells take the second paint in: 0 first, 15 last. */
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
-
+/** Blocks from the top of the 16:9 composition to its bottom: a handheld's chunk, not a fine screen's. */
+export const ROWS = 108
 /** Points a block is read at, across and down. */
-const SUB = 3
+const SUB = 4
+/** How much darker than the block's paint (in luminance) a point must be to count as ink. */
+const INK = 60
+/** How many points of a block ink needs to take it (a light on the dark needs two). */
+const VOTES = 2
+/** What a block was read as: a fill (taken whole), or a line of ink (taken by its ink). */
+const FLAT = 1
+const LINE = 2
+/** A block whose points span less luminance than this is a fill or a gradient, and is taken whole. */
+const SMOOTH = 24
+/** Below this luminance a block is the dark, and a light in it (a star, a window) is kept. */
+const DARK = 70
+/** How much brighter than the dark a point must be to count as a light in it. */
+const LIGHT = 80
+/** How much lighter a neighbouring block must be for this one to be drawn as the edge of a shape against it. */
+const EDGE = 75
+
+/** The size of a block, in the canvas's own pixels, for a 16:9 composition `frame` of them high. */
+export const blockOf = (frame: number): number => Math.max(2, Math.round(frame / ROWS))
+
 /**
- * How far (summed over the channels) a sample of a block may stand from the block's average before the block is that
- * sample instead: an ink line, a star, a ball's edge stays a solid block rather than a smudge of it and the paper.
+ * Where the last frame's grid started and how big its blocks were, in the canvas's own pixels: what the skies snap
+ * their stars to, so that a star is exactly one block.
  */
-const EDGE = 110
+export const grid = { x: 0, y: 0, block: 0 }
 
-/** Paints considered for a colour's pair: its nearest few. */
-const NEAR = 6
-
-let palette: Uint8Array | null = null
-/** By 15-bit colour: the first paint, the second, and sixteenths of the second (0 to 16). */
-let first: Uint8Array | null = null
-let second: Uint8Array | null = null
-let share: Uint8Array | null = null
-
-function hex(c: string): [number, number, number] {
-  const n = parseInt(c.slice(1), 16)
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+/** A set of ramps, ready: its paints, their luminance, and the nearest paint to every 15-bit colour. */
+interface Paints {
+  rgb: Uint8Array
+  lum: Float32Array
+  near: Uint8Array
+  /** For each paint, the paint it takes as an outline. */
+  outline: Uint8Array
 }
+
+const sets = new Map<Area['ramps'], Paints>()
 
 /** Redmean: a cheap distance that weighs green and the reds as the eye does. */
 function distance(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): number {
@@ -77,151 +63,188 @@ function distance(r1: number, g1: number, b1: number, r2: number, g2: number, b2
   const dr = r1 - r2
   const dg = g1 - g2
   const db = b1 - b2
-  return Math.sqrt((2 + rm / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rm) / 256) * db * db)
+  return (2 + rm / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rm) / 256) * db * db
 }
 
-/** The palette, dulled, and for every 15-bit colour the pair of paints and the mix that comes nearest it. Made once. */
-function build(): void {
-  const dark = hex(PAINTS[0])
-  const light = hex(PAINTS[PAINTS.length - 1])
-  const pal: number[][] = []
-  for (const c of PAINTS) {
-    const at = hex(c)
-    // Each paint, and a step of it into the shade and into the light, so a grain or an edge stays in its own hue.
-    for (const [to, f] of [[at, 0], [dark, STEP], [light, STEP]] as const) {
-      const [r, g, b] = at.map((v, i) => v + (to[i] - v) * f)
-      const grey = 0.3 * r + 0.59 * g + 0.11 * b
-      const m = [r, g, b].map((v) => Math.round(grey + (v - grey) * MUTE))
-      if (pal.some((k) => distance(k[0], k[1], k[2], m[0], m[1], m[2]) < MERGE)) continue
-      pal.push(m)
-    }
-  }
-  palette = new Uint8Array(pal.flat())
-  first = new Uint8Array(32768)
-  second = new Uint8Array(32768)
-  share = new Uint8Array(32768)
-  const order = pal.map((_, i) => i)
-  const near = new Float64Array(pal.length)
+function paints(ramps: Area['ramps']): Paints {
+  const have = sets.get(ramps)
+  if (have) return have
+  const { rgb: pal, outline } = paintsOf(ramps)
+  const rgb = new Uint8Array(pal.flat())
+  const lum = new Float32Array(pal.map(([r, g, b]) => 0.299 * r + 0.587 * g + 0.114 * b))
+  const near = new Uint8Array(32768)
   for (let key = 0; key < 32768; key++) {
     const R = ((key >> 10) << 3) + 4
     const G = (((key >> 5) & 31) << 3) + 4
     const B = ((key & 31) << 3) + 4
-    for (let i = 0; i < pal.length; i++) near[i] = distance(R, G, B, pal[i][0], pal[i][1], pal[i][2])
-    order.sort((a, b) => near[a] - near[b])
-    let best = near[order[0]]
-    let a0 = order[0]
-    let b0 = order[0]
-    let k0 = 0
-    for (let i = 0; i < NEAR; i++) {
-      for (let j = i + 1; j < NEAR; j++) {
-        const a = pal[order[i]]
-        const b = pal[order[j]]
-        const apart = distance(a[0], a[1], a[2], b[0], b[1], b[2]) * SPREAD
-        for (let k = 1; k < 16; k++) {
-          const f = k / 16
-          const err = distance(R, G, B, a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f) + apart * f * (1 - f)
-          if (err < best) {
-            best = err
-            a0 = order[i]
-            b0 = order[j]
-            k0 = k
-          }
-        }
+    let best = Infinity
+    let at = 0
+    for (let i = 0; i < pal.length; i++) {
+      const d = distance(R, G, B, pal[i][0], pal[i][1], pal[i][2])
+      if (d < best) {
+        best = d
+        at = i
       }
     }
-    first[key] = a0
-    second[key] = b0
-    share[key] = k0
+    near[key] = at
   }
-}
-
-/** The same 32 bits for the same block in the same deal, and others in the next. */
-function hash(x: number, y: number, n: number): number {
-  let h = Math.imul(x, 0x27d4eb2d) ^ Math.imul(y, 0x165667b1) ^ Math.imul(n, 0x9e3779b1)
-  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b)
-  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35)
-  return (h ^ (h >>> 16)) >>> 0
+  const made = { rgb, lum, near, outline: new Uint8Array(outline) }
+  sets.set(ramps, made)
+  return made
 }
 
 const clamp = (v: number): number => (v < 0 ? 0 : v > 255 ? 255 : v)
 
-let grid: HTMLCanvasElement | null = null
+let reader: HTMLCanvasElement | null = null
+let blocks: HTMLCanvasElement | null = null
 
 /** `Performance.finish`: the painted frame in `box`, its 16:9 composition `frame` pixels high, made pixels. */
 export function pixelate(ctx: CanvasRenderingContext2D, box: { x: number; y: number; w: number; h: number }, frame: number, t: number): void {
-  if (!palette) build()
-  const pal = palette!
-  const one = first!
-  const two = second!
-  const mix = share!
-  const block = Math.max(2, Math.round(frame / ROWS))
+  const { area, was, u } = areaAt(t)
+  const set = paints(area.ramps)
+  const { rgb, lum, near, outline } = set
+  const mix = (a: number, b: number) => a + (b - a) * u
+  const [tr, tg, tb] = [0, 1, 2].map((i) => mix(was.tint[i], area.tint[i]))
+  const sat = mix(was.sat, area.sat)
+  const con = mix(was.contrast, area.contrast)
+
+  const block = blockOf(frame)
+  Object.assign(grid, { x: box.x, y: box.y, block })
   const w = Math.ceil(box.w / block)
   const h = Math.ceil(box.h / block)
-  if (!grid) grid = document.createElement('canvas')
-  if (grid.width !== SUB * w || grid.height !== SUB * h) {
-    grid.width = SUB * w
-    grid.height = SUB * h
+  if (!reader) reader = document.createElement('canvas')
+  if (!blocks) blocks = document.createElement('canvas')
+  if (reader.width !== SUB * w || reader.height !== SUB * h) {
+    reader.width = SUB * w
+    reader.height = SUB * h
   }
-  const g = grid.getContext('2d')!
-  // Down, to `SUB`×`SUB` points a block, each exactly what was painted there: a line as thin as the points are apart
-  // cannot pass between them, and is a whole sample somewhere rather than a tint on every one.
-  g.imageSmoothingEnabled = false
+  if (blocks.width !== w || blocks.height !== h) {
+    blocks.width = w
+    blocks.height = h
+  }
+  const r = reader.getContext('2d', { willReadFrequently: true })!
+  // Down to `SUB`×`SUB` points a block, each exactly one pixel of what was painted (no smoothing, so no averaging).
+  // The last row and column of blocks may hang off the canvas: their points there are left empty and not counted.
+  r.clearRect(0, 0, reader.width, reader.height)
+  r.imageSmoothingEnabled = false
   const sw = Math.min(w * block, ctx.canvas.width - box.x)
   const sh = Math.min(h * block, ctx.canvas.height - box.y)
-  g.drawImage(ctx.canvas, box.x, box.y, sw, sh, 0, 0, SUB * w, SUB * h)
-  const q = g.getImageData(0, 0, SUB * w, SUB * h).data
-  const img = g.createImageData(w, h)
-  const d = img.data
-  const deal = Math.floor(t * SHIMMER)
-  const at: number[] = []
-  for (let v = 0; v < SUB; v++) for (let u = 0; u < SUB; u++) at.push((v * SUB * w + u) * 4)
+  r.drawImage(ctx.canvas, box.x, box.y, sw, sh, 0, 0, (SUB * sw) / block, (SUB * sh) / block)
+  const q = r.getImageData(0, 0, SUB * w, SUB * h).data
+
+  const b = blocks.getContext('2d')!
+  const img = b.createImageData(w, h)
+  const out = img.data
+  const votes = new Uint8Array(rgb.length / 3)
+  const at = new Uint8Array(SUB * SUB)
+  const cell = new Uint8Array(w * h)
+  const kind = new Uint8Array(w * h)
+  const row = SUB * w * 4
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4
-      // A block is its samples' average, unless one of them stands well out of it: then it is that one.
-      const j = (SUB * y * SUB * w + SUB * x) * 4
-      let r = 0
-      let gg = 0
-      let b = 0
-      for (const o of at) {
-        r += q[j + o]
-        gg += q[j + o + 1]
-        b += q[j + o + 2]
-      }
-      r /= at.length
-      gg /= at.length
-      b /= at.length
-      let far = EDGE
-      let pick = -1
-      for (const o of at) {
-        const off = Math.abs(q[j + o] - r) + Math.abs(q[j + o + 1] - gg) + Math.abs(q[j + o + 2] - b)
-        if (off > far) {
-          far = off
-          pick = o
+      let n = 0
+      let sr = 0
+      let sg = 0
+      let sb = 0
+      let lo = 255
+      let hi = 0
+      for (let v = 0; v < SUB; v++) {
+        let j = (SUB * y + v) * row + SUB * x * 4
+        for (let s = 0; s < SUB; s++, j += 4) {
+          if (q[j + 3] === 0) continue
+          // The area's grade: a tint, then saturation round the grey, then contrast round the middle.
+          let R = q[j] * tr
+          let G = q[j + 1] * tg
+          let B = q[j + 2] * tb
+          const l = 0.299 * R + 0.587 * G + 0.114 * B
+          R = clamp(128 + (l + (R - l) * sat - 128) * con)
+          G = clamp(128 + (l + (G - l) * sat - 128) * con)
+          B = clamp(128 + (l + (B - l) * sat - 128) * con)
+          sr += R
+          sg += G
+          sb += B
+          const L = 0.299 * R + 0.587 * G + 0.114 * B
+          if (L < lo) lo = L
+          if (L > hi) hi = L
+          at[n++] = near[((R >> 3) << 10) | ((G >> 3) << 5) | (B >> 3)]
         }
       }
-      if (pick >= 0) {
-        r = q[j + pick]
-        gg = q[j + pick + 1]
-        b = q[j + pick + 2]
+      if (!n) continue
+      // A block with nothing in it but a sky, a glow or a fill is its own colour, snapped: so a gradient steps in
+      // straight bands, and never in a ragged row of whichever paint its points happened to land on.
+      if (hi - lo < SMOOTH) {
+        cell[y * w + x] = near[(((sr / n) >> 3) << 10) | (((sg / n) >> 3) << 5) | ((sb / n) >> 3)]
+        kind[y * w + x] = FLAT
+        continue
       }
-      const n = hash(x, y, deal)
-      const push = (n & 255) < GRAIN ? (n & 256 ? GRAIN_STEP : -GRAIN_STEP) : 0
-      const key = ((clamp(r + push) >> 3) << 10) | ((clamp(gg + push) >> 3) << 5) | (clamp(b + push) >> 3)
-      const p = (mix[key] > BAYER[((y & 3) << 2) | (x & 3)] ? two[key] : one[key]) * 3
-      d[i] = pal[p]
-      d[i + 1] = pal[p + 1]
-      d[i + 2] = pal[p + 2]
-      d[i + 3] = 255
+      // Otherwise the paint most of the block's points landed on,
+      let mode = at[0]
+      for (let i = 0; i < n; i++) votes[at[i]]++
+      for (let i = 0; i < n; i++) if (votes[at[i]] > votes[mode]) mode = at[i]
+      // unless a line of ink crosses it (the commonest ink of it wins), or a light stands in the dark (the brightest).
+      const base = lum[mode]
+      let ink = 0
+      let dark = -1
+      let lit = 0
+      let light = mode
+      for (let i = 0; i < n; i++) {
+        const L = lum[at[i]]
+        if (L <= base - INK) {
+          ink++
+          if (dark < 0 || votes[at[i]] > votes[dark] || (votes[at[i]] === votes[dark] && L < lum[dark])) dark = at[i]
+        } else if (base < DARK && L >= base + LIGHT) {
+          lit++
+          if (L > lum[light]) light = at[i]
+        }
+      }
+      for (let i = 0; i < n; i++) votes[at[i]] = 0
+      cell[y * w + x] = ink >= VOTES ? dark : lit >= 2 ? light : mode
+      kind[y * w + x] = ink >= VOTES ? LINE : 0
     }
   }
-  g.putImageData(img, 0, 0)
-  // Up: hard blocks, from the frame's top left corner, clipped to it.
+  // Tidying, as a pixel artist would: a one-block tooth on the edge of a band joins the band it sticks out of, and a
+  // fleck of ink with no ink beside it (a line too thin to hold) is dropped for what is under it.
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x
+      if (kind[i] === FLAT) {
+        if (cell[i - 1] === cell[i + 1] && cell[i - 1] !== cell[i] && kind[i - 1] === FLAT) cell[i] = cell[i - 1]
+        else if (cell[i - w] === cell[i + w] && cell[i - w] !== cell[i] && kind[i - w] === FLAT) cell[i] = cell[i - w]
+      } else if (kind[i] === LINE) {
+        let alone = true
+        for (const o of [-w - 1, -w, -w + 1, -1, 1, w - 1, w, w + 1]) if (kind[i + o] === LINE) alone = false
+        if (alone) {
+          const a = cell[i - 1]
+          cell[i] = a === cell[i + 1] || a === cell[i - w] ? a : cell[i + 1]
+          kind[i] = 0
+        }
+      }
+    }
+  }
+  // Outlines: a block on the dark side of a hard edge takes the darkest paint of its own ramp, so every shape that
+  // stands against something lighter is ringed in its own shade, as a sprite is.
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x
+      let me = cell[i]
+      const L = lum[me] + EDGE
+      if ((x > 0 && lum[cell[i - 1]] > L) || (x + 1 < w && lum[cell[i + 1]] > L) || (y > 0 && lum[cell[i - w]] > L) || (y + 1 < h && lum[cell[i + w]] > L)) {
+        me = outline[me]
+      }
+      const o = i * 4
+      out[o] = rgb[me * 3]
+      out[o + 1] = rgb[me * 3 + 1]
+      out[o + 2] = rgb[me * 3 + 2]
+      out[o + 3] = 255
+    }
+  }
+  b.putImageData(img, 0, 0)
+  // Up: one block for each pixel of the small canvas, a whole number of the canvas's pixels square, clipped to the frame.
   ctx.save()
   ctx.beginPath()
   ctx.rect(box.x, box.y, box.w, box.h)
   ctx.clip()
   ctx.imageSmoothingEnabled = false
-  ctx.drawImage(grid, 0, 0, w, h, box.x, box.y, w * block, h * block)
+  ctx.drawImage(blocks, 0, 0, w, h, box.x, box.y, w * block, h * block)
   ctx.restore()
 }

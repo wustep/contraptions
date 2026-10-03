@@ -95,6 +95,23 @@ export function paintShow(
   }
 }
 
+/**
+ * A canvas shown in hard pixels (`Performance.pixels`), or as it was. The style it had is kept on the element and put
+ * back as it was when the canvas goes back to the browser's own filter, so the next show on it is not touched.
+ */
+function crisp(canvas: HTMLCanvasElement | undefined, on: boolean): void {
+  if (!canvas) return
+  const kept = canvas.dataset.imageRendering
+  if (on && kept === undefined) {
+    canvas.dataset.imageRendering = canvas.style.imageRendering
+    // The last of these that this browser knows is the one that holds.
+    for (const v of ['-webkit-optimize-contrast', 'crisp-edges', 'pixelated']) canvas.style.imageRendering = v
+  } else if (!on && kept !== undefined) {
+    canvas.style.imageRendering = kept
+    delete canvas.dataset.imageRendering
+  }
+}
+
 /** No glyph reaches this canvas. The arcade's digits are drawn as pixels and are picture; lettering is not. */
 function refuseType(p: p5): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -142,6 +159,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
       refuseType(p)
     }
     p.draw = () => {
+      crisp(canvasOf(p), !!perf?.pixels)
       if (!perf) {
         p.clear()
         return
@@ -187,6 +205,8 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
         if (words) words(s.drawingContext as CanvasRenderingContext2D, showing.titles!(Math.max(0, Math.min(showing.duration, at))))
       }
     })
+    // A video's frame is fitted over the stage, so the browser scales it: in hard pixels if the take is.
+    crisp(canvasOf(p), !!showing.pixels)
     return {
       canvas: canvasOf(p),
       paint(t) {
