@@ -133,26 +133,36 @@ const FACE: Pt[] = [
 export function drawFace(pen: Pen, f: Frame): void {
   const { c } = pen
   c.save()
-  fillPoly(pen, FACE, vgrad(pen, -14, 2, [[0, C.rockLit], [0.6, C.face], [1, C.rock]]))
-  // Its strata: long faint seams across it, and snow lying in the gullies.
+  // Snow over all of it, a little bluer low down and in the face's shadow.
+  fillPoly(pen, FACE, vgrad(pen, -13, 3, [[0, '#F1F5F8'], [0.55, '#E0E7EE'], [1, '#CCD6E0']]))
   c.save()
   pen.c.beginPath()
   FACE.forEach(([x, y], i) => (i ? c.lineTo(x * pen.k, y * pen.k) : c.moveTo(x * pen.k, y * pen.k)))
   c.closePath()
   c.clip()
-  for (let i = 0; i < 26; i++) {
-    const y = -13 + i * 0.55 + hash(i, 41) * 0.3
-    if (y < f.y0 - 1 || y > f.y1 + 1) continue
-    const pts: Pt[] = []
-    for (let x = Math.floor(f.x0) - 1; x <= f.x1 + 1; x += 0.5) pts.push([x, y + 0.18 * Math.sin(x * 0.9 + i) - x * 0.08])
-    line(pen, pts, rgba(C.rockDark, 0.18), 0.02)
-  }
-  for (let i = 0; i < 24; i++) {
-    const x = -6 + hash(i, 51) * 16
-    const y = -13 + hash(i, 52) * 14
-    if (x < f.x0 - 2 || x > f.x1 + 2 || y < f.y0 - 1 || y > f.y1 + 1) continue
-    const w = 0.4 + hash(i, 53) * 0.9
-    fillPoly(pen, [[x - w, y + w * 0.08], [x - w * 0.2, y - 0.06], [x + w, y - w * 0.08], [x + w * 0.3, y + 0.05]], rgba(C.snow, 0.45))
+  // The rock showing through it in bands, tilted with the strata, ragged along their tops where the snow lies.
+  for (let j = 0; j < 14; j++) {
+    const y0 = -12.6 + j * 1.05 + hash(j, 41) * 0.3
+    if (y0 < f.y0 - 3 || y0 > f.y1 + 2) continue
+    for (let q = 0; q < 5; q++) {
+      const xa = -9 + q * 4.2 + hash(j, q, 42) * 2.4
+      const len = 1.4 + hash(j, q, 43) * 2.6
+      if (xa > f.x1 + 1 || xa + len < f.x0 - 1) continue
+      const th = 0.22 + hash(j, q, 44) * 0.45
+      const top: Pt[] = []
+      const low: Pt[] = []
+      const n = Math.max(4, Math.round(len / 0.3))
+      for (let i = 0; i <= n; i++) {
+        const u = i / n
+        const x = xa + len * u
+        const tilt = -x * 0.09
+        const taper = Math.sin(Math.PI * u) ** 0.6
+        top.push([x, y0 + tilt - th * taper * (0.55 + 0.45 * hash(j, q, i))])
+        low.push([x, y0 + tilt + th * 0.25 * taper])
+      }
+      fillPoly(pen, [...top, ...low.reverse()], vgrad(pen, y0 - 0.6, y0 + 0.3, [[0, C.rockLit], [1, C.rock]]))
+      line(pen, top, rgba('#FFFFFF', 0.7), 0.025)
+    }
   }
   // The snow the climb starts in, along the foot.
   const foot: Pt[] = [[-16, R + 0.02], [-1.6, R - 0.02], [-0.2, R], [0.5, R + 0.06], [1.6, R + 0.45], [3.2, R + 1.3], [5.5, R + 2.4]]
@@ -162,9 +172,10 @@ export function drawFace(pen: Pen, f: Frame): void {
   // The boulder over the foot, whose snow the gust tears off.
   fillPoly(pen, [[BOULDER[0] - 0.8, BOULDER[1] + 0.05], [BOULDER[0], BOULDER[1] - 0.25], [BOULDER[0] + 0.65, BOULDER[1] - 0.05], [BOULDER[0] + 0.8, BOULDER[1] + 0.4], [BOULDER[0] - 0.9, BOULDER[1] + 0.45]], C.rockDark)
   fillPoly(pen, [[BOULDER[0] - 0.84, BOULDER[1] + 0.06], [BOULDER[0], BOULDER[1] - 0.3], [BOULDER[0] + 0.68, BOULDER[1] - 0.06], [BOULDER[0] + 0.1, BOULDER[1] - 0.12], [BOULDER[0] - 0.5, BOULDER[1] + 0.12]], C.snow)
-  // The rock over the ledge, its lip of snow, from which it sifts down by them.
-  fillPoly(pen, [[SIFT_X - 0.6, LEDGE_Y - 1.55], [SIFT_X + 0.05, LEDGE_Y - 1.45], [SIFT_X + 0.25, LEDGE_Y - 1.25], [SIFT_X - 0.05, LEDGE_Y - 1.18], [SIFT_X - 0.7, LEDGE_Y - 1.25]], C.rockDark)
-  fillPoly(pen, [[SIFT_X - 0.65, LEDGE_Y - 1.56], [SIFT_X + 0.08, LEDGE_Y - 1.5], [SIFT_X + 0.28, LEDGE_Y - 1.28], [SIFT_X + 0.02, LEDGE_Y - 1.42], [SIFT_X - 0.5, LEDGE_Y - 1.46]], C.snow)
+  // The band of rock over the ledge, its lip of snow, from which it sifts down by them.
+  const ly = LEDGE_Y - 1.2
+  fillPoly(pen, [[SIFT_X - 2.6, ly - 0.2], [SIFT_X - 1.2, ly - 0.36], [SIFT_X - 0.1, ly - 0.42], [SIFT_X + 0.12, ly - 0.08], [SIFT_X + 0.05, ly + 0.02], [SIFT_X - 0.8, ly + 0.1], [SIFT_X - 2.5, ly + 0.15]], C.rockDark)
+  fillPoly(pen, [[SIFT_X - 2.65, ly - 0.2], [SIFT_X - 1.2, ly - 0.4], [SIFT_X - 0.1, ly - 0.47], [SIFT_X + 0.16, ly - 0.08], [SIFT_X + 0.02, ly - 0.15], [SIFT_X - 0.15, ly - 0.32], [SIFT_X - 1.2, ly - 0.28], [SIFT_X - 2.5, ly - 0.12]], C.snow)
   c.restore()
 }
 
@@ -175,7 +186,7 @@ export function drawSteps(pen: Pen, f: Frame): void {
     const leg = STEPS.slice(a, b).map((s) => s.p).sort((p, q) => p[0] - q[0])
     const top: Pt[] = leg.flatMap(([x, y]): Pt[] => [[x - 0.3, y + R + 0.1], [x + 0.3, y + R + 0.1]])
     const low = top.map(([x, y]): Pt => [x, y + 0.34]).reverse()
-    fillPoly(pen, [...top, ...low], rgba(C.rockDark, 0.4))
+    fillPoly(pen, [...top, ...low], rgba(C.rockDark, 0.22))
   }
   for (const s of STEPS) {
     const [x, y] = s.p
@@ -368,7 +379,7 @@ export function drawKicks(pen: Pen, t: number): void {
 /** Snow sifting from the rock over them: a thin fall, its front landing on the ledge on the beat. */
 const SIFT_FALL = 1.5
 export function drawSifts(pen: Pen, t: number): void {
-  const top = LEDGE_Y - 1.2
+  const top = LEDGE_Y - 1.2 + 0.02
   const h = LEDGE_Y - top
   const dur = h / SIFT_FALL
   for (const s of SIFTS) {
