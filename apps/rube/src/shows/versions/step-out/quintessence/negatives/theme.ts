@@ -1,12 +1,17 @@
 import type { Theme } from '../../../../../../../../src/core/themes'
+import { INK, WEIGHT } from './hand'
 
-/** The Negatives: this place's theme. Its builder owns this file and may tune it. */
+/**
+ * The Negatives: this place's theme (the B1 builder's). The street's hand (`hand.ts`): one graphite ink and one weight
+ * for both bookends. Here it is the dark round the one light, so a ball shows its colour and the ink only where it
+ * crosses the glass.
+ */
 export const NEGATIVES_THEME: Theme = {
   name: 'negatives',
   label: 'The Negatives',
-  bg: '#1E2124',
-  ink: '#D9DCD6',
-  colors: ['#2B2F33', '#3A3F44', '#E9F0EE', '#B7C3C4', '#6E7A80', '#14171A'],
-  weight: 0.8,
+  bg: '#121517',
+  ink: INK,
+  colors: ['#1C2023', '#3A4246', '#E4ECE8', '#B7C3C4', '#5E676C', '#2C2A27'],
+  weight: WEIGHT,
   note: 'The negative assets room under the Life building: a dark basement, the one light the light table under the film.',
 }
