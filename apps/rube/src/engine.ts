@@ -142,12 +142,16 @@ export function setupCanvas(p: p5, host: HTMLElement): { canvas: p5.Renderer; re
   canvas.parent(host)
   p.pixelDensity(window.devicePixelRatio || 1)
   drawingModes(p)
+  // The panel slides, so the stage can change size on every frame of it. Setting the density clears the canvas and
+  // does not paint it again, so it is set first and only when it moved (a window dragged to another screen); the
+  // resize after it paints the frame at the new size before the browser shows it, and no frame goes blank.
   const follow = new ResizeObserver(() => {
     const w = host.clientWidth
     const h = host.clientHeight
     if (!w || !h || (w === p.width && h === p.height)) return
+    const density = window.devicePixelRatio || 1
+    if (p.pixelDensity() !== density) p.pixelDensity(density)
     p.resizeCanvas(w, h)
-    p.pixelDensity(window.devicePixelRatio || 1)
   })
   follow.observe(host)
   return { canvas, release: () => follow.disconnect() }

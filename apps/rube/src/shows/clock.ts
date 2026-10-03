@@ -17,7 +17,7 @@
 
 import { SPEEDS } from '../../../../src/ui/view'
 
-/** The transport's stops: Machine's, so every mode offers the same six. */
+/** The transport's stops: Machine's, so every mode offers the same seven. */
 export const SHOW_SPEEDS = SPEEDS
 
 export interface TransportOptions {

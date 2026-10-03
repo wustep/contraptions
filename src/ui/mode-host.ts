@@ -3,7 +3,7 @@ import { modeFromPath } from './mode-path'
 import { clientNavigation, createShell, type Shell, type ShellMode } from './shell'
 
 /**
- * One document for the four tabs, and Theater once it is on the switch. Each page still has its own address and
+ * One document for the four tabs, and Theater, which is reached from Shows. Each page still has its own address and
  * its own entry, so a deep link loads that mode directly. A tab click does
  * not. The chrome is built once; the mode that is leaving stops its clock,
  * its keys and its canvas; the one that is arriving fills the same panel

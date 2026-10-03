@@ -30,7 +30,11 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * The stage is the play button: a click or a tap anywhere on it plays or
  * pauses. On a phone the panel stacks under the stage and would cover half
  * the show, so it goes away while a show plays and comes back when it is
- * paused. At a desk the panel's tab stands out on the edge while paused.
+ * paused. At a desk the panel's handle stands out on the edge while paused.
+ *
+ * The panel reads as the show's title card and its player: the title (the
+ * picker too) in the face of the credits, the take and a line on it, then
+ * the bar and one deck of controls, each doing one thing, then Export.
  *
  * A show opens playing, music and all, where the browser lets it. Where it
  * wants a gesture first, the show waits at the top with a play button on
@@ -43,7 +47,8 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  *
  * Theater (`theater.ts`) runs this same player with a host: the host picks
  * each show, keeps its own address, adds its own section to the panel, and
- * is told when a show has played through so it can put on the next.
+ * is told when a show has played through so it can put on the next. Its
+ * door is on this player (T): Theater is a way of watching Shows, not a tab.
  */
 
 /** What runs the player when the visitor is not the one choosing the show. */
@@ -54,8 +59,8 @@ export interface ShowsHost {
   first(named: Version | null): Version | null
   /** The take after this one: a show has played through, or is being skipped. Null leaves the stage as it is. */
   next(): Version | null
-  /** The host's own section in the panel, after the Show card. `skip` puts the next take on now. */
-  panel(root: HTMLElement, skip: () => void): void
+  /** The host's own section in the panel, after the Show card. `skip` puts the next take on now; `play` puts this one on. */
+  panel(root: HTMLElement, skip: () => void, play: (version: Version) => void): void
   /** A take is going on the stage. */
   opened?(version: Version): void
   /** The take `next()` would give, without moving on: loaded, and its music fetched, while this one plays. */
@@ -64,6 +69,14 @@ export interface ShowsHost {
 
 /** How long a show has played before the next one is fetched: the one on the stage has the line to itself first. */
 const WARM_NEXT = 15000
+
+/** Where the camera stands, widest first: the whole world, the ball followed, or close on it. */
+type Camera = 'overview' | 'follow' | 'zoom'
+const CAMERAS: readonly { name: Camera; label: string; title: string }[] = [
+  { name: 'overview', label: 'Overview', title: 'Zoom out to the whole world (O)' },
+  { name: 'follow', label: 'Follow', title: 'Follow the ball, as the show was framed' },
+  { name: 'zoom', label: 'Zoom', title: 'Zoom in on the action (Z)' },
+]
 
 /** Every take the page found, once: Shows and Theater hold the same versions, so a load is shared between them. */
 export const { works, problems } = discoverShows()
@@ -287,6 +300,14 @@ function setZoom(on: boolean): void {
   sync()
 }
 
+function setCamera(next: Camera): void {
+  overview = next === 'overview'
+  zoom = next === 'zoom'
+  stage.setOverview(overview)
+  stage.setZoom(zoom)
+  sync()
+}
+
 /** Put a version on the stage from the top, and start it if asked. */
 async function open(version: Version, thenPlay: boolean | 'link'): Promise<void> {
   if (!alive) return
@@ -345,6 +366,12 @@ function step(dir: 1 | -1): void {
   void open(work.versions[(i + dir + work.versions.length) % work.versions.length], true)
 }
 
+/** A take the visitor picked out of the host's list, on now: the way the host's own next goes on. */
+function playNow(version: Version): void {
+  if (recording) return
+  void open(version, 'link')
+}
+
 /** The host's next take, on now. A pool of one plays it again. */
 function advance(): void {
   if (!host || recording) return
@@ -355,8 +382,10 @@ function advance(): void {
 /* ------------------------------------------------------------------ panel */
 
 
-// Show — which music, and which take of it. It leads, as the seed does elsewhere.
-const showCard = el('section', { class: 'seed-card show-card' }, [el('div', { class: 'section-title' }, [host ? 'Now playing' : 'Show'])])
+// Show — which music, and which take of it. It leads, as the seed does elsewhere: a title card, its title in the face
+// of the show's own credits. The title is the picker, so the name is said once; a take row stands under it only
+// where there are takes to choose between.
+const showCard = el('section', { class: 'seed-card show-card' })
 panelRoot.append(showCard)
 const workList = createListbox({
   label: 'Show',
@@ -365,21 +394,22 @@ const workList = createListbox({
   items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section }))),
   onChange: (work) => {
     const next = pickVersion(works, work, null)
-    if (next && !recording) void open(next, true)
+    // Under a host a pick goes on as its next one would, and the running order carries on after it.
+    if (next && !recording) void open(next, host ? 'link' : true)
     // A pick refused while a recording runs: the list goes back to what is on the stage.
     else sync()
   },
 })
-const takeRow = el('div', { class: 'seg wrap', role: 'group', 'aria-label': 'Version' })
-const takeField = el('div', { class: 'field' }, [el('label', {}, [el('span', {}, ['Version'])]), takeRow])
+workList.node.classList.add('show-title')
+const takeRow = el('div', { class: 'seg wrap takes', role: 'group', 'aria-label': 'Take' })
 let takeChips: { version: Version; b: HTMLButtonElement }[] = []
-const about = el('div', { class: 'readout' })
+const about = el('div', { class: 'about' })
 const empty = el('div', { class: 'status' }, [
   'No shows yet. A show is a file: apps/rube/src/shows/versions/<work>/<take>.show.ts.',
 ])
-showCard.append(workList.node, takeField, about, playerHost, empty)
-// A host chooses the show: its own section says what is next, and the picker is not the way in.
-host?.panel(panelRoot, advance)
+// Under a host the title is still the picker: the host chooses what comes next, and any show can be put on now.
+if (host) showCard.append(el('div', { class: 'section-title' }, ['Now playing']))
+showCard.append(workList.node, takeRow, about, playerHost, empty)
 
 // The one thing to do on a stage that is standing still at either end of a show.
 const bigPlayLabel = el('span', {}, ['Play'])
@@ -419,19 +449,21 @@ const onStageClick = (e: MouseEvent) => {
 stageRoot.addEventListener('click', onStageClick)
 
 // On a phone the panel stacks under the stage: away while a show plays, back when it stops. At a desk the panel's
-// tab stands out while paused. Only on a change, so the panel can still be opened or closed by hand in between.
+// handle stands out while paused. Only on a change, so the panel can still be opened or closed by hand in between.
 let wasPlaying: boolean | null = null
 function followPanel(playing: boolean): void {
   if (playing === wasPlaying) return
   wasPlaying = playing
   if (phone.matches) shell.setPanel(!playing)
-  shell.holdPeek(!playing)
+  shell.holdHandle(!playing)
 }
 
-// Transport — the clock, over the whole show.
-const transportSec = section(panelRoot, 'Transport', 'transport')
+// Transport — the clock, over the whole show, right under the title it plays: the bar, then one deck, as a player
+// has. What runs it on the left (play, back to the top, where it is); how it is heard on the right (sound, speed).
+// Every control here is one job, its key in its title.
+const transportSec = el('section', { class: 'group transport', 'aria-label': 'Transport' })
+panelRoot.append(transportSec)
 const time = el('span', { class: 'time' }, ['0:00 / 0:00'])
-transportSec.querySelector('.section-title')!.append(time)
 const scrub = el('input', { type: 'range', class: 'scrub', min: '0', max: '1000', step: '1', value: '0', 'aria-label': 'Position in the show' })
 scrub.addEventListener('input', () => {
   if (!transport) return
@@ -449,7 +481,7 @@ window.addEventListener('pointercancel', endScrub)
 const playBtn = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 playBtn.addEventListener('click', toggle)
 const speedBox = speedPicker(setSpeed)
-const musicBtn = el('button', { type: 'button', class: 'chip music' })
+const musicBtn = el('button', { type: 'button', class: 'tbtn music', 'aria-label': 'Music' })
 musicBtn.addEventListener('click', () => {
   if (!soundHeld) {
     setMuted(!muted)
@@ -459,14 +491,40 @@ musicBtn.addEventListener('click', () => {
   setMuted(false)
   if (transport && perf?.soundtrack) void music.play(transport.now())
 })
-const restartBtn = el('button', { title: 'Back to the top of the show (Home)' }, ['Restart'])
+const restartBtn = el('button', { type: 'button', class: 'tbtn', title: 'Back to the top of the show (Home)', 'aria-label': 'Restart' }, [icon(ICON.restart)])
 restartBtn.addEventListener('click', () => seek(0))
-const overviewBtn = el('button', { title: 'Zoom out to the whole world (O)', 'aria-pressed': 'false' }, ['Overview', el('kbd', {}, ['O'])])
-overviewBtn.addEventListener('click', () => setOverview(!overview))
-const zoomBtn = el('button', { title: 'Zoom in on the action (Z)', 'aria-pressed': 'false' }, ['Zoom', el('kbd', {}, ['Z'])])
-zoomBtn.addEventListener('click', () => setZoom(!zoom))
+// Overview and Zoom were two toggles that turned each other off: one choice of three, so one control.
+const cameraSeg = segmented(CAMERAS.map((_, i) => i), (i) => CAMERAS[i].label, (i) => setCamera(CAMERAS[i].name))
+cameraSeg.node.classList.add('camera')
+cameraSeg.node.setAttribute('aria-label', 'Camera')
+const cameraButtons = [...cameraSeg.node.querySelectorAll('button')]
+cameraButtons.forEach((b, i) => (b.title = CAMERAS[i].title))
+// Theater is a way of watching Shows, not a mode beside it, so its door is on the player: in, with the show that is
+// on going first and the rest shuffled after it; out, to the page of whichever show is on by then.
+const doorBtn = el('button', { type: 'button', class: 'chip' })
+if (host) {
+  doorBtn.title = 'Back to Shows, on the show that is on (T)'
+  doorBtn.replaceChildren(icon(ICON.shows), 'Leave theater', el('kbd', {}, ['T']))
+} else {
+  doorBtn.title = 'Theater: every show, shuffled, one after another, starting with this one (T)'
+  doorBtn.replaceChildren(icon(ICON.theater), 'Theater', el('span', { class: 'door-note' }, ['every show, shuffled']), el('kbd', {}, ['T']))
+}
+function goThrough(): void {
+  if (!alive || recording) return
+  if (host) shell.go('shows', current ? showPath(works, current.work, current.take) : '/shows/')
+  else shell.go('theater', current ? `/theater/?show=${current.work}&take=${current.take}` : '/theater/')
+}
+doorBtn.addEventListener('click', goThrough)
 const transportNote = el('div', { class: 'status' })
-transportSec.append(scrub, el('div', { class: 'row deck' }, [playBtn, speedBox.node, musicBtn]), el('div', { class: 'row' }, [restartBtn, overviewBtn, zoomBtn]), transportNote)
+transportSec.append(
+  scrub,
+  el('div', { class: 'row deck player' }, [playBtn, restartBtn, time, musicBtn, speedBox.node]),
+  cameraSeg.node,
+  el('div', { class: 'row door' }, [doorBtn]),
+  transportNote,
+)
+// A host's own section (Theater: what is next, and the running order) follows the controls for what is on now.
+host?.panel(panelRoot, advance, playNow)
 
 // Export — the frame, and the show. Picture and music; nothing written on either.
 const exportSec = section(panelRoot, 'Export')
@@ -531,10 +589,12 @@ videoBtn.addEventListener('click', () => {
       sync()
     })
 })
-exportSec.append(el('div', { class: 'row export-row' }, [sizeSeg.node, pngBtn, videoBtn]), exportNote)
+exportSec.append(el('div', { class: 'row export-row frames' }, [sizeSeg.node, pngBtn, videoBtn]), exportNote)
 
 const playIcon = icon(ICON.play)
 const pauseIcon = icon(ICON.pause)
+const soundIcon = icon(ICON.sound)
+const mutedIcon = icon(ICON.muted)
 music.onChange(() => sync())
 // A press on YouTube's own player moves the show with it.
 music.onPlayer((playing) => {
@@ -553,19 +613,18 @@ function sync(): void {
   const playing = transport?.playing ?? false
   const ready = perf !== null
 
-  // The picker.
+  // The title card.
   empty.hidden = works.length > 0
-  workList.node.hidden = takeField.hidden = about.hidden = works.length === 0
-  // A work with one take has no versions to pick between: no row for it.
-  if (work && work.versions.length === 1) takeField.hidden = true
-  if (host) workList.node.hidden = takeField.hidden = true
+  workList.node.hidden = takeRow.hidden = works.length === 0
+  // A work with one take has no takes to pick between: no row.
+  if (!work || work.versions.length < 2) takeRow.hidden = true
   if (current) workList.set(current.work)
   workList.node.classList.toggle('disabled', busy)
   if (work && (takeChips.length !== work.versions.length || takeChips.some((c, i) => c.version !== work.versions[i]))) {
     takeChips = work.versions.map((version) => {
       const b = el('button', { type: 'button', title: version.note ?? version.label }, [version.label])
       b.addEventListener('click', () => {
-        if (version !== current && !recording) void open(version, true)
+        if (version !== current && !recording) void open(version, host ? 'link' : true)
       })
       return { version, b }
     })
@@ -575,22 +634,22 @@ function sync(): void {
     b.classList.toggle('on', version === current)
     b.disabled = busy
   }
-  const lines: (Node | string)[] = []
+  // Under the title, in the panel's own face: what this take is, and whose music. The title is not said again.
+  const lines: HTMLElement[] = []
   if (current) {
-    // A take that is the work (its label repeats the title) is named once.
-    lines.push(el('b', {}, [current.label === current.title ? current.title : `${current.title} · ${current.label}`]))
-    if (loading) lines.push(el('br'), 'Loading…')
-    else if (failed) lines.push(el('br'), `Would not load: ${failed}`)
+    if (loading) lines.push(el('p', {}, ['Loading…']))
+    else if (failed) lines.push(el('p', { class: 'bad' }, [`Would not load: ${failed}`]))
     else {
-      if (current.note) lines.push(el('br'), current.note)
+      if (current.note) lines.push(el('p', {}, [current.note]))
       const credit = perf?.soundtrack?.credit
       if (credit) {
         const href = perf?.soundtrack?.href
-        lines.push(el('br'), href ? el('a', { href, target: '_blank', rel: 'noreferrer', class: 'more' }, [credit]) : credit)
+        lines.push(el('p', { class: 'by' }, [href ? el('a', { href, target: '_blank', rel: 'noreferrer' }, [credit]) : credit]))
       }
     }
   }
   about.replaceChildren(...lines)
+  about.hidden = !lines.length
   // The tab says what a link to it says (`share.ts`).
   document.title = host
     ? `${current ? `${current.title} · ` : ''}Theater · contraptions`
@@ -603,20 +662,17 @@ function sync(): void {
   playBtn.replaceChildren(playing ? pauseIcon : playIcon)
   playBtn.classList.toggle('paused', !playing)
   playBtn.disabled = restartBtn.disabled = scrub.disabled = !ready || busy
-  overviewBtn.disabled = zoomBtn.disabled = !ready || busy
-  overviewBtn.classList.toggle('on', overview)
-  overviewBtn.setAttribute('aria-pressed', String(overview))
-  zoomBtn.classList.toggle('on', zoom)
-  zoomBtn.setAttribute('aria-pressed', String(zoom))
+  cameraSeg.set(overview ? 0 : zoom ? 2 : 1)
+  for (const b of cameraButtons) b.disabled = !ready || busy
   speedBox.set(speed)
   speedBox.setDisabled(busy)
+  doorBtn.disabled = busy
   const hasMusic = !!perf?.soundtrack && music.state() !== 'failed'
   musicBtn.disabled = !hasMusic
-  musicBtn.classList.toggle('on', hasMusic && !muted && !soundHeld)
-  musicBtn.replaceChildren(
-    hasMusic ? (soundHeld ? 'Tap for sound' : muted ? 'Music off' : 'Music on') : 'No music',
-    ...(hasMusic ? [el('kbd', {}, ['M'])] : []),
-  )
+  musicBtn.setAttribute('aria-pressed', String(hasMusic && !muted && !soundHeld))
+  // Held by the browser, the sound is the one thing to press for, and says so in the accent; otherwise a quiet speaker.
+  musicBtn.classList.toggle('held', hasMusic && soundHeld)
+  musicBtn.replaceChildren(hasMusic && !muted ? soundIcon : mutedIcon)
   musicBtn.title = hasMusic
     ? soundHeld
       ? 'The browser is holding the sound. Click or press M to bring it in.'
@@ -835,6 +891,9 @@ const onKey = (e: KeyboardEvent) => {
     case 'n':
       advance()
       break
+    case 't':
+      goThrough()
+      break
     case 'Home':
       seek(0)
       break
@@ -893,7 +952,7 @@ if (import.meta.env.DEV) {
     alive = false
     window.clearTimeout(warmTimer)
     releaseSound()
-    shell.holdPeek(false)
+    shell.holdHandle(false)
     cancelAnimationFrame(raf)
     stageRoot.removeEventListener('click', onStageClick)
     window.removeEventListener('pointerup', endScrub)

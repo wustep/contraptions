@@ -5,8 +5,8 @@ import { HIDDEN_LINKS, MODE_LINKS, type ShellMode } from './shell'
  * `/shows/index.html` are the same mode, so a deep link and a client switch
  * agree. A show's own page, `/shows/<work>/`, is Shows. The site root only
  * redirects to Machine, so it is not itself a tab. Anything else — the
- * Builder, an old redirect — is not a tab. Theater is a tab, though it is
- * only on the switch once visited.
+ * Builder, an old redirect — is not a tab. Theater is a mode with no tab
+ * of its own: it is reached from Shows, and lights that tab.
  */
 export function modeFromPath(pathname: string): ShellMode | null {
   let path = pathname

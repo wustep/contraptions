@@ -100,9 +100,9 @@ async function main(): Promise<void> {
   check('a named show link plays, and holds the sound only when the browser refuses it', /const linked = !!pathShow \|\| !!params\.get\('show'\)/.test(player) && /async function playLinked/.test(player) && /soundHeld = true/.test(player) && player.includes('The browser is holding the sound'))
   const soundtrack = readFileSync(join(process.cwd(), 'apps/rube/src/shows/soundtrack.ts'), 'utf8')
   check('a file play waits for canplay, as YouTube waits for its players', soundtrack.includes('status === \'loading\'') && soundtrack.includes('waiting.push') && soundtrack.includes('deep link'))
-  check('a deep link with the sound held keeps a Sound button on the stage', player.includes("soundHeld ? 'Sound'") && player.includes('Tap for sound'))
+  check('a deep link with the sound held keeps a Sound button on the stage, and lights the panel\'s', player.includes("soundHeld ? 'Sound'") && /musicBtn\.classList\.toggle\('held', hasMusic && soundHeld\)/.test(player))
   check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('cam.cells / FOLLOW_ZOOM'))
-  check('a work with one take has no Version row to pick from', /work\.versions\.length === 1\) takeField\.hidden = true/.test(player))
+  check('a work with one take has no take row to pick from', /work\.versions\.length < 2\) takeRow\.hidden = true/.test(player))
   check('no take has a byline in the panel', !/byline/.test(player) && !/director/.test(player))
   check('Z toggles Zoom and O toggles Overview', /case 'z':/.test(player) && /case 'o':/.test(player) && player.includes('Zoom in on the action (Z)') && player.includes('Zoom out to the whole world (O)'))
 
@@ -692,8 +692,8 @@ async function main(): Promise<void> {
   /* ------------------------------------------------------------------ the clock */
 
   console.log('\nthe clock')
-  check('the speeds are Machine\'s six, ¼× to 4×', SHOW_SPEEDS.join(',') === '0.25,0.5,1,1.5,2,4' && SHOW_SPEEDS === SPEEDS)
-  check('the speeds read ¼ ½ 1× 1.5× 2× 4×', SHOW_SPEEDS.map(speedLabel).join(' ') === '¼ ½ 1× 1.5× 2× 4×')
+  check('the speeds are Machine\'s seven, ¼× to 4×', SHOW_SPEEDS.join(',') === '0.25,0.5,1,1.25,1.5,2,4' && SHOW_SPEEDS === SPEEDS)
+  check('the speeds read ¼ ½ 1× 1.25× 1.5× 2× 4×', SHOW_SPEEDS.map(speedLabel).join(' ') === '¼ ½ 1× 1.25× 1.5× 2× 4×')
   {
     let wall = 0
     const c = new Transport({ duration: 10, wall: () => wall })
@@ -717,6 +717,14 @@ async function main(): Promise<void> {
     check('and does not go before the top', c.now() === 0)
     c.seek(NaN)
     check('a time that is not a number is the top', c.now() === 0)
+  }
+  {
+    let wall = 0
+    const c = new Transport({ duration: 10, wall: () => wall })
+    c.play()
+    c.setSpeed(1.25)
+    wall = 4000
+    check('a quarter faster at 1.25×', near(c.now(), 5) && c.speed === 1.25)
   }
   {
     let wall = 0

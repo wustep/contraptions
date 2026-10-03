@@ -11,6 +11,24 @@
   --accent: #f0b429;
   --accent-soft: rgba(240, 180, 41, 0.14);
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  /* The face of a show's credits (`.stage-words`), and of its title in the panel. */
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --panel-w: 320px;
+  /* The panel's motion, from one press of its handle (or P):
+
+         0ms  the panel's track opens or closes; the stage gives up its room with it
+         0ms  the handle's chevron turns to point the other way
+       420ms  the panel is out, or gone and hidden                    (--glide)
+       420ms  at a desk, a closed handle with no pointer near tucks   (--tuck)
+
+     A pointer nearing the edge brings the handle out at once (--reveal), and
+     on it the chevron leans the way a press will go. Every step is on one
+     curve: quick off the mark, settling without a bounce, as a damped drawer
+     would. */
+  --glide: 420ms;
+  --reveal: 160ms;
+  --tuck: 200ms;
+  --damped: cubic-bezier(0.32, 0.72, 0, 1);
   color-scheme: dark;
 }
 
@@ -29,16 +47,21 @@ html, body {
 
 /* One frame for both modes: the panel down the right edge at the window's
    full height, the stage everything that is left. minmax(0, 1fr) on both
-   axes so neither track can grow past the window on its content. */
+   axes so neither track can grow past the window on its content. The
+   panel's track opens and closes on the damped curve, so the stage gives
+   its room up as the panel comes rather than all at once. Clipped, not
+   hidden: a panel part way out must never be scrolled into view. */
 body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w);
   grid-template-rows: minmax(0, 1fr);
   height: 100vh;
   /* svh, not dvh: the dynamic viewport grows when mobile chrome hides on
      a tap, and the stacked panel rides with it — a slide that looks like
      the panel itself moved. The small viewport stays put. */
   height: 100svh;
+  overflow: clip;
+  transition: grid-template-columns var(--glide) var(--damped), grid-template-rows var(--glide) var(--damped);
 }
 
 /* The stage is paper. The show paints its canvas edge to edge; the sandbox's
@@ -57,56 +80,114 @@ body {
 /* The canvas is built at its display size, so it must never be scaled here. */
 #stage canvas { display: block; }
 
-body.hide-panel { grid-template-columns: minmax(0, 1fr) 0; }
-body.hide-panel #panel { display: none; }
+/* Away, the panel's track closes to nothing and the panel, which keeps its
+   width, runs off the edge; it is hidden once it has gone, not before, so
+   the slide is seen. Bare closes it the same way. */
+body.hide-panel,
+body.bare { grid-template-columns: minmax(0, 1fr) 0px; }
 
-/* Restore target when the panel is display:none. Stays out of the tab order
-   while hidden (display:none), then sits on the stage edge. */
-.panel-peek {
-  display: none;
-  position: fixed;
-  top: 18px;
-  right: 0;
+/* The panel is a frame that slides, with a column inside it that scrolls.
+   The frame carries the handle on its edge, outside the column's clip. */
+#panel {
+  position: relative;
+  width: var(--panel-w);
+  min-height: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  transition: visibility 0s linear 0s;
+}
+body.hide-panel #panel,
+body.bare #panel {
+  visibility: hidden;
+  transition-delay: var(--glide);
+}
+
+/* The handle: the panel's one way in and out, a tab on the panel's own edge
+   in the panel's own dress, so the two read as one piece and move as one.
+   Visible while its panel is hidden: it is how the panel comes back. Its
+   chevron points where a press will send the panel, and turns as it goes.
+   It sits on the header's line: level with the brand and the switch (the
+   column's top padding), and the switch's height. It stands over the piece
+   out or away, so it casts the same shadow either way. */
+.panel-handle {
+  position: absolute;
+  top: 13px;
+  right: 100%;
   z-index: 30;
-  border-radius: 8px 0 0 8px;
+  visibility: visible;
+  width: 26px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
   border-right: none;
-  padding: 8px 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border-radius: 8px 0 0 8px;
+  background: var(--panel);
+  color: var(--dim);
+  box-shadow: -2px 4px 14px rgba(0, 0, 0, 0.2);
   touch-action: manipulation;
 }
-body.hide-panel .panel-peek { display: inline-flex; }
+/* Drawn to the line; a press lands on a taller strip. */
+.panel-handle::before { content: ''; position: absolute; inset: -5px 0 -5px -8px; }
+.panel-handle:hover { background: var(--panel); border-color: var(--line); color: var(--text); }
+/* It rides the edge; a press nudge would shake it loose. */
+.panel-handle:active { transform: none; }
+/* The keyboard lights the tab's own edge, as it does a field's. A ring
+   round the whole tab would cross the seam where it meets the panel. */
+.panel-handle:focus-visible { outline: none; border-color: var(--accent); color: var(--text); }
+.panel-handle svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  rotate: 180deg;
+  transition: rotate var(--glide) var(--damped), translate var(--reveal) var(--damped);
+}
+body.hide-panel .panel-handle svg { rotate: 0deg; }
+.panel-handle path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+/* Under the pointer the chevron leans 2px the way a press will send the
+   panel: what the press will do, shown before it is made. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .panel-handle:hover svg { translate: 2px 0; }
+  body.hide-panel .panel-handle:hover svg { translate: -2px 0; }
+}
 
-/* At a desk (`peek-tucks`, set by the shell where a pointer can hover) the
-   tab tucks into the edge and comes out for a pointer near it, for the
-   keyboard, and to greet a page just opened. Tucked it takes no clicks, but
-   stays in the tab order. `translate`, not `transform`, so the press nudge
-   still lands. It waits a beat before going, so grazing the edge of its
-   reach does not flap it. */
-body.peek-tucks .panel-peek {
+/* At a desk (`handle-tucks`, set by the shell where a pointer can hover) a
+   closed panel's handle tucks into the edge and comes out for a pointer near
+   it, for the keyboard, and to greet a page just opened. Tucked it takes no
+   clicks, but stays in the tab order. It waits a glide before going: a panel
+   put away carries its handle to the edge first, and a pointer grazing the
+   edge of its reach does not flap it. With the panel out it stays: it is
+   the panel's own edge. */
+body.handle-tucks.hide-panel .panel-handle {
   opacity: 0;
   translate: 100% 0;
   pointer-events: none;
-  transition: translate 200ms ease-out 320ms, opacity 200ms ease-out 320ms;
+  transition: translate var(--tuck) var(--damped) var(--glide), opacity var(--tuck) var(--damped) var(--glide);
 }
-body.peek-tucks.peek-near .panel-peek,
-body.peek-tucks.peek-greet .panel-peek,
-body.peek-tucks.peek-hold .panel-peek,
-body.peek-tucks .panel-peek:focus-visible {
+body.handle-tucks.hide-panel.handle-near .panel-handle,
+body.handle-tucks.hide-panel.handle-greet .panel-handle,
+body.handle-tucks.hide-panel.handle-hold .panel-handle,
+body.handle-tucks.hide-panel .panel-handle:focus-visible {
   opacity: 1;
   translate: none;
   pointer-events: auto;
-  transition-duration: 160ms;
+  transition-duration: var(--reveal);
   transition-delay: 0s;
 }
+
+/* A page opens as it stands: the slide is for a change, not for arriving. */
+body.panel-still,
+body.panel-still #panel,
+body.panel-still .panel-handle,
+body.panel-still .panel-handle svg { transition: none; }
+
 @media (prefers-reduced-motion: reduce) {
-  body.peek-tucks .panel-peek { translate: none; transition-property: opacity; }
+  body, .panel-handle svg { transition: none; }
+  body.handle-tucks.hide-panel .panel-handle { translate: none; transition-property: opacity; }
 }
 
 /* Bare: the piece and nothing else. Laid over the panel's own state, so the
    backtick that leaves it puts back whichever of the two was there. */
-body.bare { grid-template-columns: minmax(0, 1fr) 0; }
-body.bare #panel,
-body.bare .panel-peek,
+body.bare .panel-handle,
 body.bare .crumb,
 body.bare .stage-play,
 body.bare .stage-note { display: none; }
@@ -150,10 +231,8 @@ body.bare .stage-note { display: none; }
 .crumb .crumb-step { padding: 3px 8px 5px; font-size: 15px; line-height: 1; color: var(--dim); }
 .crumb .crumb-step:hover { color: var(--text); }
 
-#panel {
-  min-height: 0;
-  background: var(--panel);
-  border-left: 1px solid var(--line);
+.panel-scroll {
+  height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: manipulation;
@@ -161,7 +240,12 @@ body.bare .stage-note { display: none; }
   display: flex;
   flex-direction: column;
   gap: 9px;
+  /* It scrolls, by wheel, trackpad, finger or key, without a bar down its
+     side: a gutter and a thumb in the panel's own dress were noise, and on
+     some systems took width from the controls. */
+  scrollbar-width: none;
 }
+.panel-scroll::-webkit-scrollbar { display: none; }
 
 /* A mode fills this. It is not a box: its sections are flex items of the
    panel, between the brand and the byline, so a switch can clear them
@@ -170,12 +254,13 @@ body.bare .stage-note { display: none; }
 
 /* ---- header: brand and the mode switch ------------------------------ */
 
-.brand { display: flex; flex-direction: column; gap: 8px; }
-.brand-row {
+/* One line of chrome: the name, and the switch beside it. */
+.brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
+  min-height: 34px;
 }
 .brand h1 {
   margin: 0;
@@ -185,10 +270,10 @@ body.bare .stage-note { display: none; }
 }
 /* A tab a mode, the one you are on lit. Same sunken track as every other
    segmented dial, so switching modes reads as turning a dial on the product
-   rather than leaving for another site. Four icon-only buttons take equal
-   square-ish cells. */
+   rather than leaving for another site. Icon-only cells, square, at the
+   brand's right. */
 .seg.mode-switch { display: grid; grid-auto-flow: column; grid-auto-columns: auto; }
-.seg.mode-switch.icons { grid-auto-columns: 1fr; }
+.seg.mode-switch.icons { grid-auto-columns: 32px; flex: none; }
 .mode-tab {
   display: block;
   padding: 6px 0;
@@ -204,13 +289,31 @@ body.bare .stage-note { display: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
+  min-height: 28px;
   padding: 0;
 }
 .mode-tab.icon svg { width: 14px; height: 14px; fill: currentColor; display: block; }
 .mode-tab:hover { background: var(--raised); color: var(--text); }
 .mode-tab.on { background: var(--accent-soft); color: var(--accent); cursor: default; }
+/* Lit for a mode reached from it (Shows, in Theater): still the way back to it. */
+.mode-tab.on.back { cursor: pointer; }
 .mode-tab:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
+/* The switch and, at the head's end, Fullscreen: a control of the chrome
+   and not a mode, so it stands apart from the switch, in the same sunken
+   dress and at its height. */
+.head-controls { display: flex; align-items: center; gap: 6px; flex: none; }
+.head-btn {
+  width: 32px;
+  height: 34px;
+  padding: 0;
+  background: var(--sunken);
+  border-color: var(--line);
+  color: var(--dim);
+}
+.head-btn:hover { background: var(--raised); border-color: var(--line); color: var(--text); }
+.head-btn:active { transform: none; }
+.head-btn.on { background: var(--accent-soft); border-color: var(--line); color: var(--accent); }
+.head-btn svg { width: 14px; height: 14px; fill: currentColor; display: block; }
 /* Icon tabs sit in a scrolling panel; a ::after tip would clip. The name
    is a small fixed label, shown at once on hover or keyboard focus. */
 .mode-tip {
@@ -581,27 +684,41 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .readout b { color: var(--text); font-weight: 500; }
 
 @media (max-width: 820px) {
-  body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  /* Stacked below the stage the panel is a sheet in its own band, so the
+     artwork keeps most of the screen; it rises and settles the way it
+     slides in at a desk. */
+  :root { --sheet-h: 46vh; --sheet-h: 46svh; }
+  body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) var(--sheet-h); }
   body.hide-panel,
-  body.bare { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0; }
-  /* Stacked below the stage the panel scrolls within its own band, so the
-     artwork keeps most of the screen. */
-  #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; max-height: 46svh; overscroll-behavior: contain; }
-  .panel-peek {
+  body.bare { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0px; }
+  #panel { width: auto; height: var(--sheet-h); border-left: none; border-top: 1px solid var(--line); }
+  /* The handle sits on the sheet's top edge, at its middle; away, it stands
+     clear of the home indicator, as the stage's play button does. */
+  .panel-handle {
     top: auto;
     right: auto;
     left: 50%;
-    /* Sit above the home indicator; stage-play already does. */
-    bottom: env(safe-area-inset-bottom, 0px);
-    /* `translate`, not `transform`: the press nudge is a transform, and
-       would steal this centering — the tab jumps off-center on tap. */
+    bottom: 100%;
     translate: -50% 0;
-    border-radius: 8px 8px 0 0;
-    border-right: 1px solid var(--line);
+    width: 64px;
+    height: 26px;
+    border: 1px solid var(--line);
     border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.16);
+    transition: bottom var(--glide) var(--damped);
+  }
+  body.hide-panel .panel-handle { bottom: calc(100% + env(safe-area-inset-bottom, 0px)); }
+  /* A finger is wider than the tab: the press lands on a taller strip. */
+  .panel-handle::before { content: ''; position: absolute; inset: -12px -10px 0; }
+  .panel-handle svg { rotate: -90deg; }
+  body.hide-panel .panel-handle svg { rotate: 90deg; }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .panel-handle:hover svg { translate: 0 2px; }
+    body.hide-panel .panel-handle:hover svg { translate: 0 -2px; }
   }
   /* The stacked panel's foot clears the home indicator too. */
-  #panel {
+  .panel-scroll {
     padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
   }
 }
@@ -731,11 +848,79 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .show-frame { position: absolute; inset: 0; z-index: 10; background: var(--bg); }
 .show-frame canvas { width: 100% !important; height: 100% !important; object-fit: contain; }
 
-/* Music rides with play and the speed, and keeps its own width. */
-.deck > .chip.music { flex: 0 0 auto; padding: 6px 9px; white-space: nowrap; }
 /* The work picker and the speed while a recording runs. */
 .lb.disabled { opacity: 0.55; pointer-events: none; }
-.show-card .readout a.more { font-family: inherit; }
+
+/* The show's title card. The title is the show's name in the face of its
+   own credits, and it is the picker: no box around it, only the chevron to
+   say it opens. What follows it is set in the panel's face, quieter. */
+.show-card { gap: 9px; }
+.show-title .lb-trigger {
+  gap: 10px;
+  padding: 1px 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  font-family: var(--serif);
+  font-size: 21px;
+  line-height: 1.2;
+}
+.show-title .lb-value { flex: 0 1 auto; }
+.show-title .lb-label { white-space: normal; }
+.show-title .lb-chevron { width: 14px; height: 14px; transition: color 160ms ease-out; }
+.show-title .lb-trigger:hover .lb-chevron,
+.show-title .lb-trigger[aria-expanded='true'] .lb-chevron { color: var(--text); }
+.show-title .lb-trigger:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
+.show-card .about { display: flex; flex-direction: column; gap: 5px; color: var(--dim); font-size: 12px; line-height: 1.45; }
+.show-card .about p { margin: 0; }
+.show-card .about .by { color: var(--faint); font-size: 11px; }
+.show-card .about .by a { color: inherit; text-decoration: none; }
+.show-card .about .by a:hover { color: var(--text); text-decoration: underline; }
+.show-card .about .bad { color: #f0a08a; }
+
+/* The player's deck: what runs the show on the left, then where it is,
+   then how it is heard. Square icon buttons, one job each; play alone is lit. */
+.deck.player { gap: 6px; }
+.deck.player > * { flex: none; }
+.deck.player > .tbtn { width: 34px; height: 30px; }
+.deck.player > .tbtn.play { width: 48px; }
+/* Play is the one primary here, in the dress every mode gives its primary
+   (Reroll's): solid. A lit stop in a dial is a choice made, not a call. */
+.deck.player > .tbtn.play { background: var(--accent); border-color: var(--accent); color: #1a1409; }
+.deck.player > .tbtn.play:hover { background: #ffc63d; border-color: #ffc63d; }
+.deck.player > .tbtn svg { width: 14px; height: 14px; }
+.deck.player > .time {
+  flex: 1;
+  min-width: 0;
+  padding-left: 4px;
+  color: var(--dim);
+  font-size: 11px;
+  white-space: nowrap;
+}
+/* Wide enough for the longest stop, 1.25×, whole: at 64px with the listbox's
+   own padding it (and 1.5×) ran to an ellipsis. */
+.deck.player > .lb.speed { flex: none; width: 68px; }
+.deck.player > .lb.speed .lb-trigger { padding: 6px; gap: 6px; }
+.tbtn.music[aria-pressed='false'] { color: var(--dim); }
+.tbtn.music.held { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.seg.camera button { padding: 5px 0; }
+/* A show's sizes are words, not multipliers. In the side panel (and on the
+   narrowest phones) they and both saves do not fit one line: "Shorts" ran
+   into its cell's edges. So the dial takes a line of its own, as the
+   camera's does, and the two saves share the next. */
+@media (min-width: 821px), (max-width: 359px) {
+  .export-row.frames { flex-wrap: wrap; }
+  .export-row.frames > .seg { flex: 1 0 100%; }
+  .export-row.frames > button { flex: 1; }
+}
+
+/* The door between Shows and Theater, on the player under the camera: one
+   quiet line, its name and what it is, its key at the end. */
+.row.door > .chip { flex: 1; justify-content: flex-start; gap: 7px; padding: 5px 9px; color: var(--dim); }
+.row.door > .chip:hover { color: var(--text); }
+.row.door > .chip svg { width: 11px; height: 11px; fill: currentColor; flex: none; }
+.row.door .door-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; color: var(--faint); }
+.row.door > .chip kbd { margin-left: auto; }
 
 /* ---- theater -------------------------------------------------------- */
 
@@ -744,19 +929,42 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .up-next > .readout { flex: 1; min-width: 0; }
 .up-next > .chip { flex: none; padding: 5px 9px; }
 .up-next svg { width: 11px; height: 11px; fill: currentColor; flex: none; }
-.row.fullscreen > .chip { flex: 1; padding: 5px 9px; }
-.row.fullscreen svg { width: 11px; height: 11px; fill: currentColor; flex: none; }
-/* The pool: a take a line, ticked when it is in the running order. The one on the stage is lit. */
+/* The pool: a take a line, ticked when it is in the running order. The name
+   is the way to put it on now: a play mark comes up on it under the pointer.
+   The one on the stage is lit. */
 .pool { display: flex; flex-direction: column; gap: 1px; background: var(--sunken); border: 1px solid var(--line); border-radius: 6px; padding: 3px; }
-.pool-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 4px; font-size: 12px; color: var(--dim); cursor: pointer; }
+.pool-row { display: flex; align-items: center; gap: 2px; padding: 0 0 0 6px; border-radius: 4px; font-size: 12px; color: var(--dim); }
 .pool-row:hover { background: var(--raised); color: var(--text); }
-.pool-row > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pool-row input { margin: 0; accent-color: var(--accent); cursor: pointer; }
+.pool-row input { margin: 0 4px 0 0; accent-color: var(--accent); cursor: pointer; flex: none; }
 .pool-row input:disabled { cursor: default; }
+.pool-play {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 4px 6px 4px 4px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+.pool-play:hover { background: transparent; color: var(--text); }
+.pool-play:active { transform: none; }
+.pool-play > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pool-play svg { width: 9px; height: 9px; fill: currentColor; flex: none; opacity: 0; transition: opacity 120ms ease-out; }
+.pool-play:hover svg, .pool-play:focus-visible svg { opacity: 1; }
 .pool-row.on { color: var(--accent); }
+.pool-row.on .pool-play:hover { color: var(--accent); }
+/* On the stage now: a steady dot where the play mark would be. */
+.pool-row.on .pool-play svg { display: none; }
+.pool-row.on .pool-play::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: none; }
 .pool-group { display: flex; flex-direction: column; gap: 1px; }
 .pool-group-head { padding: 5px 6px 2px; }
-.pool-row.on::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: none; }
+@media (hover: none) and (pointer: coarse) {
+  .pool-play svg { opacity: 0.6; }
+}
 
 /* ---- builder -------------------------------------------------------- */
 
@@ -823,6 +1031,10 @@ button.stop:hover, button.primary.stop:hover { background: rgba(240, 160, 138, 0
 /* A segmented dial with more stops than fit a line. */
 .seg.wrap { flex-wrap: wrap; }
 .seg.wrap button { flex: 1 0 auto; padding: 4px 8px; }
+/* The Playground's shelves: three to a line, in even cells, so the rows read
+   as one grid rather than a line that ran over. */
+.seg.shelves { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg.shelves button { padding: 4px 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .fold > summary { cursor: pointer; color: var(--dim); font-size: 11px; padding: 2px 0; user-select: none; }
 .fold > summary:hover { color: var(--text); }
@@ -847,16 +1059,19 @@ a.more:hover { color: var(--accent); }
 /* The byline is on every panel, pinned last once a mode has filled the
    middle. order keeps it there if something is added after it. margin-top
    auto holds it to the bottom when the sections stop short; sticky keeps
-   that foot in view when they run long on the desktop sidebar. On mobile
-   (max-width 820px) sticky is cleared so it scrolls with the panel. */
+   that foot in view when they run long on the desktop sidebar. Stuck, it
+   would stop at the column's 10px bottom padding and leave a strip under it
+   for a long list (Theater's) to scroll through; it reaches down over the
+   padding and fills it. On mobile (max-width 820px) sticky is cleared so it
+   scrolls with the panel. */
 .byline {
   order: 2;
   position: sticky;
-  bottom: 0;
+  bottom: -10px;
   z-index: 2;
   flex-shrink: 0;
-  margin: auto 0 0;
-  padding-top: 10px;
+  margin: auto 0 -10px;
+  padding: 10px 0;
   background: var(--panel);
   color: var(--faint);
   font-size: 11px;
@@ -873,7 +1088,7 @@ a.more:hover { color: var(--accent); }
 .byline a:hover { color: var(--text); text-decoration: underline; }
 /* Explorations already has a foot. The credit keeps the push, and the
    byline sits under it as a second quiet line — one rule, no split gap. */
-#panel:has(.credit) > .byline {
+.panel-scroll:has(.credit) > .byline {
   position: static;
   margin-top: -4px;
   padding-top: 4px;
