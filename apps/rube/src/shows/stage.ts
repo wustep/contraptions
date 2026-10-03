@@ -84,6 +84,15 @@ export function paintShow(
   const k = Math.min(W / ASPECT, H) / follow.cells
   const full = overview ? overviewCamera(here.universe.bounds, W, H) : null
   drawWorld(p, perf.show, time, here, full ?? follow, full?.scale ?? k, { x, y, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
+  if (perf.finish) {
+    // The take's own pass, in device pixels: the canvas's density is the scale between the two.
+    const d = p.pixelDensity()
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    perf.finish(ctx, { x: x * d, y: y * d, w: W * d, h: H * d }, Math.min(W / ASPECT, H) * d, time)
+    ctx.restore()
+  }
 }
 
 /** No glyph reaches this canvas. The arcade's digits are drawn as pixels and are picture; lettering is not. */

@@ -235,11 +235,14 @@ async function main(): Promise<void> {
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
   check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
-  // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
+  // Interstellar (two cues of the score, so its own work): its Opus take is the work, no subtitle, and leads; Pixel is
+  // the same performance drawn in pixels, after it.
   const interstellar = shipped.works.find((w) => w.work === 'interstellar')
   const liftoffTake = interstellar?.versions[0]
-  check('interstellar is Voyage, its own work of one take, labelled the same (no subtitle), with no note',
-    !!interstellar && interstellar.title === 'Voyage' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined)
+  check('interstellar is Voyage, its own work, led by the Opus take labelled the same (no subtitle) with no note, then Pixel',
+    !!interstellar && interstellar.versions.every((v) => v.title === 'Voyage') && interstellar.versions.map((v) => v.take).join(',') === 'opus55,opus55-pixel' &&
+    liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined &&
+    interstellar.versions[1].label === 'Pixel' && pickVersion(shipped.works, 'interstellar', null)?.take === 'opus55')
   check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'grok47')?.take === 'grok47')
   // A renamed take's old address still opens it, in the page and as a page the build writes (`vite.config.ts`).
   const renamed = Object.entries(RENAMED_TAKES).flatMap(([work, old]) => Object.entries(old).map(([was, now]) => ({ work, was, now })))
@@ -480,6 +483,13 @@ async function main(): Promise<void> {
       if (work.work === 'time' && version.take === 'opus55') checkKick(perf, version, check)
       if (work.work === 'soft-lamp' && version.take === 'opus55') checkSoftLamp(perf, version, check)
 
+      if (work.work === 'interstellar' && version.take === 'opus55-pixel') {
+        // Pixel is Liftoff's performance with a last pass over its frames: the same show, length, cuts, credits and music.
+        const voyage = await work.versions[0].load()
+        check('Voyage Pixel: the Voyage take\'s show, length, camera, credits and YouTube cues, with a pixel pass over its frames',
+          perf.show === voyage.show && perf.duration === voyage.duration && perf.camera === voyage.camera && perf.cuts === voyage.cuts &&
+          perf.titles === voyage.titles && perf.soundtrack === voyage.soundtrack && !perf.soundtrack?.src && typeof perf.finish === 'function' && !voyage.finish)
+      }
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&

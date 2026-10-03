@@ -100,6 +100,12 @@ export interface Performance {
    * none. Left out, there are none.
    */
   titles?(t: number): TitleCard[]
+  /**
+   * A last pass over the painted frame at `t`, in the canvas's own pixels and before any credits: for a take that
+   * renders another take's picture its own way (Voyage's Pixel). `box` is the frame's rectangle in those pixels, and
+   * `frame` the height of the 16:9 composition within it. Left out, the picture is as drawn.
+   */
+  finish?(ctx: CanvasRenderingContext2D, box: { x: number; y: number; w: number; h: number }, frame: number, t: number): void
 }
 
 /** One card of words over the stage, as the page is to set it at a moment (and a video's frame to paint it). */
