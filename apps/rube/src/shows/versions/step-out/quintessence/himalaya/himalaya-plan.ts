@@ -75,6 +75,8 @@ export const LEDGE_Y = REST[1] + R
 /** Sean, at rest beside him on his right, as the seam has it; leaning into the eyepiece until he lifts his eye. */
 export const SEAN_AT: Pt = [REST[0] + 0.55, REST[1]]
 export const LEAN = 0.05
+/** How far he comes back off the eyepiece when he lifts his eye: near enough to Walter to be with him. */
+export const BACK = 0.19
 
 /* ------------------------------------------------------------------ the wait */
 

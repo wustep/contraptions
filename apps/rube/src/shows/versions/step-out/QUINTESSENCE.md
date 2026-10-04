@@ -23,7 +23,7 @@ machine, and every machine strikes the music.
 - **Cheryl Melhoff** is the **marigold** ball (`#E8B04A`). She is company only in the office, in the daydream, on the
   little stage at Nuuk (imagined), and on the street at the end.
 - **Sean O'Connell** is the **khaki** ball (`#9C8F6A`), only in the Himalayas, and still.
-- **Drawn, never balls:** Ted Hendricks (a hard dark silhouette and his beard), the pilot, the fishermen, his mother,
+- **Drawn, never balls:** Ted Hendricks (a hard dark silhouette and his beard), the pilot, a fisherman, his mother,
   the kids with the longboard, the three-legged dog, the shark and the snow leopard. The leopard is barely there.
 
 Every piece, place and drawing is new for this take. The only things shared with Magnum (and through it Liftoff and
@@ -97,7 +97,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 | Time | Music | What happens |
 | ---: | --- | --- |
 | 23.738 | 9.1 | Match cut back into the blank frame, as if he never moved. Cheryl rolls in from the right, pushing the loupe on its rail. |
-| 25.833, 26.269 | 10.2, 10.3 | Ted, a dark silhouette with his beard, raps twice on the frosted door and blurs away. |
+| 25.833, 26.269 | 10.2, 10.3 | Ted, a dark silhouette with his beard, raises his fist to the frosted door, raps twice, and blurs away. |
 | 27.075 to 32.074 | 11.1 to 14.1 | Working backwards, one frame a bar, the loupe clicking down on each: the water, the thumb, the curve, and the water again, closer, with a ship's reflection in it. |
 | 33.745 to 35.411 | 15.1 to 16.1 | He goes onto the enlarger's tray, which rises up the column with a ratchet tick on each beat. The lamp comes on and throws the ship large on the far wall. |
 | 36.247 | 16.3 | The focus knob turns and the picture comes sharp. He rolls into its grey water. |
@@ -132,7 +132,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 | 76.2 to 86.9 | 40 to 47 | A blurred shape crosses far off: a porpoise, he thinks. It comes back nearer, then in front and under him, nearest and slowest: a shark. Its menace is its shape, not its teeth. |
 | 86.948, 87.784 | 47.1, 47.3 | A weighted net drops off the stern and closes round him, the shark right below. |
 | 88.620 | 48.1, the band back | Hauled out through a crown of spray. The boom swings him in, and he drops onto the deck (49.1). |
-| 91.894 | 50.1 | A fisherman's oilskin hand sets a clementine cake down beside him on its paper wrapper. Sean's notes are on the paper, in scribbles. |
+| 89.3 to 93.4 | 49 to 51 | A fisherman in a dark oilskin and a knitted cap comes out round the wheelhouse holding a clementine cake. On 50.1 (91.894) he stoops and sets it down beside Walter on its paper wrapper, straightens, and stays to watch. Sean's notes are on the paper, in scribbles. |
 
 ### Iceland (95.23 to 133.278)
 
@@ -163,7 +163,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 | 168.08 | 96.1 | On the ledge, Sean sits behind his long lens, still. Walter stops beside him. They wait. |
 | 170 to 178 | 97 to 101 | While the music builds, the picture holds its breath. Only the world round them moves on the beats: snow sifting off the rock, the camera strap knocking the tripod's leg. |
 | 178.07 to 181 | 100 to 101 | Across the valley, the snow leopard comes out onto the rocks, pale on pale, one soft step a beat, and stops. |
-| 182.2 | 102.3 | Sean does not take the picture. He lifts his eye from the camera and looks. |
+| 182.2 | 102.3 | Sean does not take the picture. He comes back off the eyepiece to Walter's side, and the camera stands alone while they look. |
 | 186 to 189.7 | 106 to 108 | The cat goes. They are left side by side on the ledge. |
 
 ### Life (191.409 to 226.384)
@@ -185,9 +185,9 @@ Times are show seconds. `n.p` is bar n, beat p.
 | ---: | --- | --- |
 | 226.384 | 131.1, the fall | He rolls along a New York street on a pale morning, clanking over two cellar doors. |
 | 228.903 | 132.3 | Cheryl comes to him from out of shot. They stop, touching, and go on together. |
-| 229.873 to 232.572 | | The newsstand's shutter goes up in two hauls. Three issues are flipped down onto the wire, and Life comes last. Its cover is the red box with its white rule, and a photograph: a dark room, a lit strip, a small slate dot at its near end. It is the show's first frame, and it is him. |
+| 229.873 to 232.572 | | The newsstand's shutter goes up in two hauls. The vendor's hand, up from behind the ledge, pulls three issues down onto the wire, and Life comes last. Its cover is the red box with its white rule, and a photograph: a dark room, a lit strip, a small slate dot at its near end. It is the show's first frame, and it is him. |
 | 233.048 | the last chord | They stop before the cover, and the issue settles. |
-| 235.3 to 245.6 | it rings out | They go on up the street side by side. The camera draws back and holds on the stand and the street. |
+| 235.3 to 245.6 | it rings out | They go on up the street side by side to the corner, and wait by the crossing signal. The camera draws back and holds on the stand, the street, the avenue's towers in the haze and the far corner. |
 | 236.2 to 270 | then quiet | The end credits. |
 
 ## End credits
@@ -286,6 +286,16 @@ under them.
   - the shark's passes were raised into the frame;
   - the press's stacker posts were taken out;
   - the dream's fire was redrawn as soft tongues in four warm values.
+- **What the last polish pass changed** (from an audit of the frames):
+  - the fisherman's hand, which came down from the top of the frame as a long pole through the wheelhouse, became
+    a whole fisherman who walks out with the cake, stoops to set it down, and stays;
+  - the street's last wide ran out of world at the corner, so the avenue, its far corner and a crossing signal
+    were drawn in;
+  - Sean's lifting his eye moved him 0.05 of a cell, which could not be seen, so he now comes back off the
+    camera to sit beside Walter;
+  - Ted's knuckles floated beside his head as a loose dot, so they now have an arm.
+  - Life was flipped down second, before the third issue, though the plan has it last, on the beat before the
+    chord. The flips are now in order, and the vendor's hand comes up from behind the ledge to pull each one down.
 
 ## Judgment calls
 

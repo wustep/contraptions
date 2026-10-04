@@ -3,7 +3,7 @@ import { box, frame, part, scenery, smooth, type Company, type PartShot } from '
 import { SEAMS } from '../seams'
 import { penOf } from '../home/pen'
 import { drawCat, drawFace, drawFarRocks, drawFarSide, drawKicks, drawSifts, drawSky, drawSteps, drawTripod, drawWind } from './himalaya-draw'
-import { CAT_GONE, CAT_IN, CAT_STEPS_IN, CAT_STEPS_OUT, GUST, LANDINGS, LEAN, LIFT, ON_LEDGE, REST, SEAN_AT, SETTLE, SIFTS, STEPS, TICKS, himalayaLane } from './himalaya-plan'
+import { BACK, CAT_GONE, CAT_IN, CAT_STEPS_IN, CAT_STEPS_OUT, GUST, LANDINGS, LEAN, LIFT, ON_LEDGE, REST, SEAN_AT, SETTLE, SIFTS, STEPS, TICKS, himalayaLane } from './himalaya-plan'
 
 /**
  * The Himalayas (146.519 → 191.409, bars 83 to 109): the build. The wind comes with it, tearing the snow off the rock
@@ -64,9 +64,10 @@ export const ghostCat = part<HimalayaState>(
       from: slot.begin,
       to: slot.end,
       at: (t: number) => {
-        // Leaning into the eyepiece, his eye on it; then, on the third beat of bar 102, lifted, and looking out.
+        // Leaning into the eyepiece, his eye on it; then, on the third beat of bar 102, back off it, beside Walter, and
+        // looking out with him: the camera left standing alone.
         const u = smooth(t, LIFT, LIFT + 1.1)
-        const x = SEAN_AT[0] + LEAN * (1 - u)
+        const x = SEAN_AT[0] + LEAN * (1 - u) - BACK * u
         return { x, y: SEAN_AT[1], spin: 0.3 * (1 - u) - 0.42 * u, scale: 1 }
       },
     }

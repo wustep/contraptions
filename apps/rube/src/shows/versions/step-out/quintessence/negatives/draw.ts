@@ -315,12 +315,22 @@ function drawDoor(ctx: C2, k: number, t: number, light: number, pane_: boolean):
     ctx.quadraticCurveTo((hx - 0.5) * k, (hy + 0.36) * k, hx * k, (hy + 0.34) * k)
     ctx.quadraticCurveTo((hx + 0.5) * k, (hy + 0.36) * k, (hx + 0.55) * k, (pane.y1 + 0.1) * k)
     ctx.fill()
-    // His knuckles, up to the glass for each rap.
+    // His arm, raised for the knock and held up between the two raps; the knuckles come to the glass on each.
+    const raised = ramp(t, RAPS[0] - 0.35, RAPS[0] - 0.1) * (1 - ramp(t, RAPS[1] + 0.1, RAPS[1] + 0.4))
     const fist = RAPS.reduce((s, r) => Math.max(s, ramp(t, r - 0.2, r - 0.02) * (1 - ramp(t, r + 0.05, r + 0.3))), 0)
-    if (fist > 0.01) {
+    if (raised > 0.01) {
+      const fx = hx - 0.42
+      const fy = hy + 0.06 + 0.5 * (1 - raised) - 0.05 * fist
+      const sh: [number, number] = [hx - 0.36, hy + 0.5]
+      ctx.fillStyle = rgba('#0E1012', here)
       ctx.beginPath()
-      ctx.ellipse((hx - 0.3) * k, (hy + 0.12 - 0.06 * fist) * k, 0.08 * k, 0.07 * k, 0, 0, Math.PI * 2)
-      ctx.fillStyle = rgba('#0E1012', here * fist)
+      ctx.moveTo((sh[0] - 0.12) * k, sh[1] * k)
+      ctx.lineTo((fx - 0.07) * k, (fy + 0.05) * k)
+      ctx.lineTo((fx + 0.07) * k, (fy + 0.07) * k)
+      ctx.lineTo((sh[0] + 0.14) * k, (sh[1] - 0.02) * k)
+      ctx.fill()
+      ctx.beginPath()
+      ctx.ellipse(fx * k, fy * k, (0.085 + 0.012 * fist) * k, (0.075 + 0.012 * fist) * k, 0, 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.restore()

@@ -94,8 +94,10 @@ function shutterAt(t: number): number {
 }
 
 /** An issue's flip down onto the rack: 0 folded up, 1 down; it slaps and settles. Life settles again on the chord. */
+/** Which flip each slot takes: the left, then the right, and Life, in the middle, last. */
+const FLIP_OF = [0, 2, 1]
 function flipAt(i: number, t: number): number {
-  const a = FLIPS[i]
+  const a = FLIPS[FLIP_OF[i]]
   const down = ramp(t, a - 0.16, a)
   return down + (t > a ? 0.06 * settle(t, a, 4, 0.18) : 0) + (i === 1 && t > STOP ? 0.03 * settle(t, STOP, 3, 0.3) : 0)
 }
@@ -143,6 +145,34 @@ function drawStand(ctx: C2, k: number, t: number): void {
     // The clothes-peg holding it.
     slab(ctx, k, sx + SLOT_W / 2 - 0.03, COVER.y0 - 0.1, sx + SLOT_W / 2 + 0.03, COVER.y0 + 0.06, '#A89C86', { color: INK, w: 0.8 })
   })
+  // The man inside: only his hand and sleeve, up out of the dark to pull each issue down off its fold.
+  SLOTS.forEach((sx, i) => {
+    const a = FLIPS[FLIP_OF[i]]
+    const reach = ramp(t, a - 0.42, a - 0.18) * (1 - ramp(t, a + 0.04, a + 0.4))
+    if (reach <= 0.01) return
+    const f = Math.max(0, Math.min(1, flipAt(i, t)))
+    const hx = sx + SLOT_W * 0.62
+    const hy = COVER.y0 + (COVER.y1 - COVER.y0) * f * 0.92 + (1 - reach) * 1.1
+    const elbow: [number, number] = [hx + 0.3, -0.5]
+    ctx.save()
+    // From behind the ledge: nothing of him below it.
+    ctx.beginPath()
+    ctx.rect(open.x0 * k, open.top * k, (open.x1 - open.x0) * k, (-0.36 - open.top) * k)
+    ctx.clip()
+    ctx.lineCap = 'round'
+    ctx.strokeStyle = rgba('#1E2421', reach)
+    ctx.lineWidth = 0.13 * k
+    ctx.beginPath()
+    ctx.moveTo((elbow[0] + 0.08) * k, 0)
+    ctx.lineTo(elbow[0] * k, elbow[1] * k)
+    ctx.lineTo((hx + 0.05) * k, (hy + 0.06) * k)
+    ctx.stroke()
+    ctx.fillStyle = rgba('#B39478', reach)
+    ctx.beginPath()
+    ctx.ellipse(hx * k, hy * k, 0.07 * k, 0.055 * k, -0.5, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+  })
   // The shutter, rolled up to its drum.
   const bottom = shutterAt(t)
   if (bottom > open.top + 0.01) {
@@ -176,6 +206,22 @@ function building(ctx: C2, k: number, x0: number, x1: number, top: number, fill:
   }
 }
 
+/** Where the pavement starts again across the avenue. */
+const AVENUE_FAR = CORNER.kerb + 3.1
+
+/** A tower far down the avenue: a flat value in the haze, its windows faint, no line round it. */
+function haze(ctx: C2, k: number, x0: number, x1: number, top: number, fill: string, seed: number): void {
+  slab(ctx, k, x0, top, x1, PAVE, fill)
+  const cols = Math.max(2, Math.round((x1 - x0) / 0.45))
+  const w = (x1 - x0) / cols
+  for (let y = top + 0.4; y < PAVE - 0.8; y += 0.62) {
+    for (let i = 0; i < cols; i++) {
+      const lit = hash(i, Math.round(y * 10), seed) > 0.85
+      slab(ctx, k, x0 + i * w + w * 0.3, y, x0 + i * w + w * 0.7, y + 0.34, rgba(lit ? S.sun : S.glass, lit ? 0.5 : 0.22))
+    }
+  }
+}
+
 export function drawStreet(p: p5, k: number, t: number): void {
   const ctx = p.drawingContext as C2
   const f = frame(p, k)
@@ -187,9 +233,9 @@ export function drawStreet(p: p5, k: number, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
   pool(ctx, k, -6, -9, 9, S.sun, 0.7, 0.8)
-  // Far: the avenue's towers across it, in the haze, past the corner.
-  slab(ctx, k, 15.6, -9.5, 18.4, PAVE, S.far)
-  slab(ctx, k, 18.9, -7.2, 23, PAVE, mix(S.far, S.sky, 0.3))
+  // Far: down the avenue past the corner, its towers in the haze, their windows just there.
+  haze(ctx, k, 14.9, 16.5, -7.4, mix(S.far, S.sky, 0.35), 5)
+  haze(ctx, k, 16.1, 17.5, -9.6, S.far, 6)
   // The fronts along the street: a tall stone one behind the stand, a low one in the middle (the sky over it is
   // where the credits come), the corner's.
   building(ctx, k, -9, 3.6, -9.2, S.stone, 1, 7)
@@ -207,6 +253,19 @@ export function drawStreet(p: p5, k: number, t: number): void {
   // The corner: the pavement ends, the avenue's crossing beyond, its stripes.
   slab(ctx, k, CORNER.kerb, PAVE + 0.2, f.x1 + 1, KERB + 0.1, S.road)
   for (let i = 0; i < 6; i++) slab(ctx, k, CORNER.kerb + 0.3 + i * 0.5, PAVE + 0.32, CORNER.kerb + 0.55 + i * 0.5, KERB + 0.06, '#D7D5CF')
+  // Across the avenue: the far corner's pavement and kerb, and its front, a little hazed by the distance.
+  slab(ctx, k, AVENUE_FAR, PAVE, f.x1 + 1, KERB, S.pave)
+  for (let x = AVENUE_FAR + 1.1; x < f.x1 + 1; x += 1.5) rule(ctx, k, x, PAVE, x - 0.12, KERB, S.paveLine, 0.9)
+  rule(ctx, k, AVENUE_FAR, PAVE, f.x1 + 1, PAVE, rgba(INK, 0.8), 0.9)
+  slab(ctx, k, AVENUE_FAR, KERB, f.x1 + 1, KERB + 0.1, S.kerb, { color: rgba(INK, 0.6), w: 0.8 })
+  building(ctx, k, AVENUE_FAR + 0.25, AVENUE_FAR + 3.4, -6.4, mix(S.brick, S.sky, 0.25), 5, 2)
+  building(ctx, k, AVENUE_FAR + 3.4, AVENUE_FAR + 7.5, -8.4, mix(S.stone, S.sky, 0.25), 6, 3)
+  slab(ctx, k, AVENUE_FAR + 1.2, PAVE - 1.45, AVENUE_FAR + 2.0, PAVE, mix('#6A6E6C', S.sky, 0.25), { color: INK, w: 0.9 })
+  // The crossing signal on the near corner, where they wait.
+  slab(ctx, k, CORNER.kerb - 0.2, -3.3, CORNER.kerb - 0.12, PAVE, '#5C625F', { color: INK, w: 0.8 })
+  slab(ctx, k, CORNER.kerb - 0.38, -3.75, CORNER.kerb + 0.06, -3.15, S.kioskDark, { color: INK, w: 0.9 })
+  slab(ctx, k, CORNER.kerb - 0.31, -3.66, CORNER.kerb - 0.01, -3.44, '#2A302D')
+  slab(ctx, k, CORNER.kerb - 0.31, -3.4, CORNER.kerb - 0.01, -3.22, '#2A302D')
   // The cellar doors in the pavement: two plates that clank as he goes over.
   const dip = (a: number) => 0.02 * knock(t, a, 0.06)
   slab(ctx, k, CELLAR.x0 - 0.06, PAVE, CELLAR.x1 + 0.06, PAVE + 0.16, '#7E8282', { color: INK, w: 0.9 })

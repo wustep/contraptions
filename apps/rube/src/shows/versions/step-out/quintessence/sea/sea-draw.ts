@@ -448,9 +448,42 @@ export function drawNet(p: p5, k: number, t: number, walter: Pt): void {
 const DECK_TOP = W + BOAT.deck
 const DECK_BACK = W + BOAT.deckBack
 
-/** Where the cake (its foot's middle) is: brought down from above by the hand, set down on bar 50. */
+/**
+ * The fisherman: a dark oilskin against the white wheelhouse, drawn, never a ball. He comes out round the house as
+ * Walter is swung in, holding the cake; stoops on bar 50 to set it down beside him; straightens, and stays to watch.
+ */
+const MAN_X = BOAT_X0 + BOAT.house.x0 + 0.78
+const MAN_FOOT = DECK_BACK + 0.07
+/** Where he stands: out from behind the house's far end, a little bob in each step. */
+const manX = (t: number): number => MAN_X + 1.5 * (1 - smooth(t, DECK_ON - 0.9, DECK_ON + 0.5))
+const walking = (t: number): number => (t > DECK_ON - 0.9 && t < DECK_ON + 0.5 ? 1 : 0)
+/** How far he is stooped, 0 standing to 1 down at the deck. */
+const stoop = (t: number): number => smooth(t, CAKE - 1.0, CAKE - 0.08) * (1 - smooth(t, CAKE + 0.45, CAKE + 1.5))
+
+interface Man {
+  hip: Pt
+  shoulder: Pt
+  head: Pt
+  lean: number
+}
+function manAt(t: number): Man {
+  const b = stoop(t)
+  const x = manX(t)
+  const bob = walking(t) * 0.025 * Math.abs(Math.sin((t - DECK_ON) * 9))
+  const hip: Pt = [x + 0.04 * b, MAN_FOOT - 0.74 + 0.16 * b - bob]
+  const lean = 1.15 * b + 0.06
+  const shoulder: Pt = [hip[0] - 0.6 * Math.sin(lean), hip[1] - 0.6 * Math.cos(lean)]
+  const hl = lean + 0.25 * b
+  const head: Pt = [shoulder[0] - 0.21 * Math.sin(hl), shoulder[1] - 0.21 * Math.cos(hl)]
+  return { hip, shoulder, head, lean }
+}
+
+/** Where the cake (its foot's middle) is: held at his chest, then set down on bar 50. */
+const HELD_DX = -0.34
+const HELD_DY = 0.4
 export function cakeAt(t: number): Pt {
-  const from: Pt = [CAKE_X + 1.2, DECK_TOP - 4.3]
+  const m = manAt(Math.min(t, CAKE - 1.0))
+  const from: Pt = [m.shoulder[0] + HELD_DX, m.shoulder[1] + HELD_DY]
   const on: Pt = [CAKE_X, DECK_TOP - 0.14]
   const u = smooth(t, CAKE - 1.0, CAKE)
   // An easing out that lands softly: most of the way quickly, the last of it slowly.
@@ -458,11 +491,8 @@ export function cakeAt(t: number): Pt {
   return [from[0] + (on[0] - from[0]) * e, from[1] + (on[1] - from[1]) * e]
 }
 
-/** How far the hand has gone back up after setting the cake down, 0..1. */
-const handBack = (t: number): number => smooth(t, CAKE + 0.4, CAKE + 1.5)
-
 export function drawDeckThings(p: p5, k: number, t: number): void {
-  if (t < CAKE - 1.05) return
+  if (t < DECK_ON - 0.9) return
   const g = ctxOf(p)
   const c = cakeAt(t)
   const down = t >= CAKE
@@ -478,8 +508,15 @@ export function drawDeckThings(p: p5, k: number, t: number): void {
     ])
     g.fill()
   }
+  drawMan(g, k, t, c)
   drawCake(g, k, c[0], c[1])
-  drawHand(g, k, t, c)
+  if (t < CAKE + 0.45) {
+    const h: Pt = [c[0] + 0.16, c[1] - 0.2]
+    g.fillStyle = SEA.skin2
+    g.beginPath()
+    g.ellipse(h[0] * k, h[1] * k, 0.085 * k, 0.065 * k, -0.4, 0, Math.PI * 2)
+    g.fill()
+  }
 }
 
 function drawWrapper(g: C2, k: number, t: number): void {
@@ -556,49 +593,96 @@ function drawCake(g: C2, k: number, x: number, y: number): void {
   }
 }
 
-function drawHand(g: C2, k: number, t: number, c: Pt): void {
-  const back = handBack(t)
-  if (back >= 1) return
-  // The hand is on the cake until it lets go, then goes back up the way it came.
-  const lift: Pt = [back * 1.0, -back * 3.9]
-  const hx = c[0] + 0.14 + lift[0]
-  const hy = c[1] - 0.24 + lift[1]
-  const elbow: Pt = [hx + 1.1, hy - 3.6]
-  // The sleeve: an oilskin, a knitted cuff at the wrist.
-  g.strokeStyle = SEA.sleeve
+/** An arm from the shoulder to the hand, bent at the elbow (away from the body) when the hand is near. */
+function arm(g: C2, k: number, from: Pt, to: Pt, w: number): void {
+  const L = 0.44
+  const dx = to[0] - from[0]
+  const dy = to[1] - from[1]
+  const d = Math.hypot(dx, dy)
+  const half = Math.min(d / 2, L)
+  const out = Math.sqrt(Math.max(0, L * L - half * half))
+  const elbow: Pt = [from[0] + dx / 2 + (dy / d) * out, from[1] + dy / 2 - (dx / d) * out]
+  g.lineWidth = w * k
+  g.beginPath()
+  g.moveTo(from[0] * k, from[1] * k)
+  g.lineTo(elbow[0] * k, elbow[1] * k)
+  g.lineTo(to[0] * k, to[1] * k)
+  g.stroke()
+}
+
+function drawMan(g: C2, k: number, t: number, c: Pt): void {
+  if (t < DECK_ON - 0.9) return
+  const m = manAt(t)
+  const holding = t < CAKE + 0.45
+  // Where his hands are: on the cake while he has it, then back at his sides.
+  const rest: Pt = [m.shoulder[0] - 0.08, m.shoulder[1] + 0.62]
+  const onCake: Pt = [c[0] + 0.16, c[1] - 0.2]
+  const u = smooth(t, CAKE + 0.45, CAKE + 1.3)
+  const hand: Pt = holding ? onCake : [onCake[0] + (rest[0] - onCake[0]) * u, onCake[1] + (rest[1] - onCake[1]) * u]
+  const far: Pt = holding ? [c[0] + 0.3, c[1] - 0.12] : [hand[0] + 0.12, hand[1] - 0.02]
+  g.save()
   g.lineCap = 'round'
-  g.lineWidth = 0.22 * k
-  g.beginPath()
-  g.moveTo(elbow[0] * k, elbow[1] * k)
-  g.lineTo((hx + 0.33) * k, (hy - 0.42) * k)
-  g.stroke()
-  g.strokeStyle = SEA.cuff
-  g.lineWidth = 0.2 * k
-  g.beginPath()
-  g.moveTo((hx + 0.36) * k, (hy - 0.5) * k)
-  g.lineTo((hx + 0.26) * k, (hy - 0.26) * k)
-  g.stroke()
-  // The hand over the cake: the back of it, the fingers curled over the far rim, the thumb down its near side.
-  g.fillStyle = SEA.skin2
-  g.beginPath()
-  g.ellipse((hx + 0.08) * k, (hy - 0.02) * k, 0.2 * k, 0.12 * k, -0.35, 0, Math.PI * 2)
-  g.fill()
-  for (let i = 0; i < 4; i++) {
-    const fx = hx - 0.12 - i * 0.012
-    const fy = hy + 0.03 + i * 0.03
+  g.lineJoin = 'round'
+  // The far arm, behind him.
+  g.strokeStyle = mix(SEA.sleeve, '#000000', 0.25)
+  arm(g, k, [m.shoulder[0] + 0.1, m.shoulder[1] + 0.03], far, 0.13)
+  // Boots, and the legs of the oilskin.
+  const step = walking(t) * 0.09 * Math.sin((t - DECK_ON) * 9)
+  g.strokeStyle = mix(SEA.sleeve, '#000000', 0.35)
+  g.lineWidth = 0.17 * k
+  for (const sx of [-0.09, 0.09]) {
     g.beginPath()
-    g.ellipse(fx * k, fy * k, 0.09 * k, 0.04 * k, 0.5, 0, Math.PI * 2)
+    g.moveTo((m.hip[0] + sx * 0.6) * k, m.hip[1] * k)
+    g.lineTo((m.hip[0] + sx + (sx < 0 ? step : -step)) * k, (MAN_FOOT - 0.08) * k)
+    g.stroke()
+  }
+  g.fillStyle = '#1F2622'
+  for (const sx of [-0.09, 0.09]) {
+    const fx = m.hip[0] + sx + (sx < 0 ? step : -step)
+    poly(g, k, [
+      [fx - 0.13, MAN_FOOT],
+      [fx + 0.09, MAN_FOOT],
+      [fx + 0.08, MAN_FOOT - 0.2],
+      [fx - 0.07, MAN_FOOT - 0.2],
+    ])
     g.fill()
   }
+  // The coat: broad, its hem flared over the hips.
+  g.strokeStyle = SEA.sleeve
+  g.lineWidth = 0.44 * k
   g.beginPath()
-  g.ellipse((hx + 0.22) * k, (hy + 0.12) * k, 0.05 * k, 0.11 * k, -0.2, 0, Math.PI * 2)
-  g.fill()
-  g.strokeStyle = rgba('#6E4E3A', 0.5)
-  g.lineWidth = Math.max(0.6, 0.01 * k)
-  g.beginPath()
-  g.moveTo((hx - 0.05) * k, (hy - 0.04) * k)
-  g.quadraticCurveTo((hx + 0.05) * k, (hy + 0.02) * k, (hx + 0.16) * k, (hy - 0.06) * k)
+  g.moveTo(m.hip[0] * k, m.hip[1] * k)
+  g.lineTo(m.shoulder[0] * k, m.shoulder[1] * k)
   g.stroke()
+  g.fillStyle = SEA.sleeve
+  poly(g, k, [
+    [m.hip[0] - 0.26, m.hip[1] + 0.12],
+    [m.hip[0] + 0.27, m.hip[1] + 0.12],
+    [m.hip[0] + 0.2, m.hip[1] - 0.2],
+    [m.hip[0] - 0.2, m.hip[1] - 0.2],
+  ])
+  g.fill()
+  // A wet sheen down his back.
+  g.strokeStyle = rgba('#A8B39A', 0.28)
+  g.lineWidth = Math.max(0.6, 0.025 * k)
+  g.beginPath()
+  g.moveTo((m.hip[0] + 0.17) * k, (m.hip[1] - 0.05) * k)
+  g.lineTo((m.shoulder[0] + 0.17 * Math.cos(m.lean)) * k, (m.shoulder[1] + 0.05 - 0.17 * Math.sin(m.lean)) * k)
+  g.stroke()
+  // His head, a beard, and a knitted cap.
+  oval(g, k, m.head[0], m.head[1], 0.14, 0.15, '#2A2F2A')
+  g.fillStyle = SEA.cuff
+  g.beginPath()
+  g.ellipse(m.head[0] * k, m.head[1] * k, 0.15 * k, 0.16 * k, -m.lean, Math.PI, 0)
+  g.fill()
+  // The near arm, to the hand.
+  g.strokeStyle = SEA.sleeve
+  arm(g, k, m.shoulder, hand, 0.15)
+  g.fillStyle = SEA.skin2
+  g.beginPath()
+  g.ellipse(hand[0] * k, hand[1] * k, 0.085 * k, 0.065 * k, -0.4, 0, Math.PI * 2)
+  g.fill()
+  g.restore()
 }
 
 /** Light from above through the surface onto him and the cake: a little brighter round the deck once he is up. */
