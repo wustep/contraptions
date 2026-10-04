@@ -304,9 +304,16 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
     sun.addColorStop(1, hexA(PAL.lamp, 0.16))
     g.fillStyle = sun
     g.fillRect(DOOR_X * k, (FLOOR - 0.28) * k, (x1 - DOOR_X) * k, (y1 - FLOOR + 0.28) * k)
-    // The building's face, round the door.
-    rect(g, k, DOOR_X - 0.12, y0, 0.34, DOOR_TOP - y0, mix(PAL.hall, '#3C3E44', 0.6))
-    rect(g, k, DOOR_X - 0.12, DOOR_TOP - 0.12, 0.6, 0.14, PAL.ironLo)
+    // The hall's end wall, cut through at the door: brick, its outer face catching the morning; a stone lintel
+    // over the opening, the curtain hung from it; the threshold at its foot.
+    const WALL = 0.52
+    const brick = mix(PAL.hall, '#5A4A44', 0.55)
+    rect(g, k, DOOR_X - 0.12, y0, WALL, DOOR_TOP - y0, brick)
+    for (let by = DOOR_TOP - 0.2; by > y0; by -= 0.2) line(g, k, DOOR_X - 0.12, by, DOOR_X - 0.12 + WALL, by, hexA('#000000', 0.18), 0.012)
+    rect(g, k, DOOR_X - 0.12 + WALL - 0.06, y0, 0.06, DOOR_TOP - y0, mix(brick, PAL.outsideHigh, 0.35))
+    rect(g, k, DOOR_X - 0.18, DOOR_TOP - 0.2, WALL + 0.12, 0.22, mix(PAL.outside, '#5C5F66', 0.55))
+    line(g, k, DOOR_X - 0.18, DOOR_TOP + 0.02, DOOR_X - 0.06 + WALL, DOOR_TOP + 0.02, hexA('#000000', 0.3), 0.02)
+    rect(g, k, DOOR_X - 0.14, FLOOR - 0.02, WALL + 0.06, 0.07, mix(PAL.pavement, '#3A3C40', 0.5))
   }
 
   // Upstairs: the conference room, warmer, on the mezzanine over the hall's left end.

@@ -329,9 +329,13 @@ export function drawBench(pen: Pen): void {
   const back: Pt = [0.3, -0.56]
   const seat = [s0, s1, [s1[0] + back[0], s1[1] + back[1]] as Pt, [s0[0] + back[0], s0[1] + back[1]] as Pt]
   for (const [x, yb] of [[s0[0] + back[0] + 0.05, -0.43], [s1[0] + back[0] - 0.05, -0.43]] as Pt[]) fillPoly(pen, [[x - 0.03, s1[1] + back[1]], [x + 0.03, s1[1] + back[1]], [x + 0.03, yb], [x - 0.03, yb]], C.lacquer)
-  fillPoly(pen, seat, '#1E1613')
+  // The seat's top, padded and catching the lamp from the right, so it reads as a long bench she sits on the far end of.
+  fillPoly(pen, seat, mix('#1E1613', C.rimLit, 0.16))
+  fillPoly(pen, [s1, [s1[0] + back[0], s1[1] + back[1]], [s1[0] + back[0] - 0.22, s1[1] + back[1]], [s1[0] - 0.22, s1[1]]], rgba(C.rimLit, 0.08))
+  line(pen, [seat[3], seat[2]], rgba(C.rimLit, 0.3), 0.012)
+  line(pen, [s1, seat[2]], rgba(C.rimLit, 0.35), 0.014)
   fillPoly(pen, [s0, s1, [s1[0], s1[1] + 0.13], [s0[0], s0[1] + 0.13]], C.lacquer)
-  line(pen, [s0, s1], rgba(C.rimLit, 0.25), 0.012)
+  line(pen, [s0, s1], rgba(C.rimLit, 0.35), 0.012)
   for (const x of [s0[0] + 0.05, s1[0] - 0.05]) fillPoly(pen, [[x - 0.035, s0[1] + 0.12], [x + 0.035, s0[1] + 0.12], [x + 0.03, 0.13], [x - 0.03, 0.13]], C.lacquer)
 }
 

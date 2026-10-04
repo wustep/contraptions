@@ -258,6 +258,10 @@ export function drawPilot(pen: Pen, t: number): void {
 }
 const PILOT_SCALE = 0.86
 
+/** The counter's top and its far end in the pilot's own (unscaled) space, so what he puts on it lands on it. */
+const TOP_L = FLOOR + (COUNTER_TOP - FLOOR) / PILOT_SCALE
+const END_L = STOOL_X + (COUNTER[1] - 0.12 - STOOL_X) / PILOT_SCALE
+
 function pilot(pen: Pen, t: number): void {
   const sx = STOOL_X
   // The stool.
@@ -289,8 +293,9 @@ function pilot(pen: Pen, t: number): void {
   ctx.restore()
   path(pen, [[sh[0] - 0.33, sh[1] + 0.08], [sh[0] - 0.05, sh[1] - 0.17]], C.rim, 0.5)
   // The arm: shoulder to the elbow on the counter, the forearm to the hand by the glass.
-  const elbow: Pt = [sh[0] + 0.25, COUNTER_TOP - 0.08]
-  const handRest: Pt = [elbow[0] + 0.5, COUNTER_TOP - 0.1]
+  const gx = END_L - 0.06
+  const handRest: Pt = [gx - 0.22, TOP_L - 0.1]
+  const elbow: Pt = [Math.min(sh[0] + 0.25, handRest[0] - 0.4), TOP_L - 0.08]
   // The hand: lifting the glass to GLASS, then up for the thumb, then the taps.
   const lift = handLift(t)
   const hand: Pt = [handRest[0] + 0.05 * lift, handRest[1] - 0.32 * lift]
@@ -307,10 +312,9 @@ function pilot(pen: Pen, t: number): void {
   for (const tap of TAPS) g = Math.max(g, 0.55 * flash(t - tap, 0.22))
   glint(pen, [ringAt[0] + 0.02, ringAt[1] - 0.01], 0.07 + 0.12 * g, C.lamp, 0.25 + 0.75 * g)
   // His glass.
-  const gx = handRest[0] + 0.28
-  rect(pen, gx - 0.06, COUNTER_TOP - 0.2, gx + 0.06, COUNTER_TOP - 0.06, C.bottle)
-  rect(pen, gx - 0.05, COUNTER_TOP - 0.13, gx + 0.05, COUNTER_TOP - 0.07, C.amber)
-  if (t >= GLASS && t < GLASS + 0.4) glow(pen, [gx, COUNTER_TOP - 0.06], 0.3, C.lamp, 0.4 * flash(t - GLASS, 0.12))
+  rect(pen, gx - 0.06, TOP_L - 0.2, gx + 0.06, TOP_L - 0.06, C.bottle)
+  rect(pen, gx - 0.05, TOP_L - 0.13, gx + 0.05, TOP_L - 0.07, C.amber)
+  if (t >= GLASS && t < GLASS + 0.4) glow(pen, [gx, TOP_L - 0.06], 0.3, C.lamp, 0.4 * flash(t - GLASS, 0.12))
 }
 
 /** How high the pilot's hand is off the counter, 0..1: the glass set down hard, the thumb up, the drunk taps. */

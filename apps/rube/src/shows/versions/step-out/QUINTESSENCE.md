@@ -296,6 +296,14 @@ under them.
   - Ted's knuckles floated beside his head as a loose dot, so they now have an arm.
   - Life was flipped down second, before the third issue, though the plan has it last, on the beat before the
     chord. The flips are now in order, and the vendor's hand comes up from behind the ledge to pull each one down.
+- **What the pass after that changed** (a second audit):
+  - the pilot is drawn at 0.86 of his size, and his arm and glass were placed at the counter's height and end
+    before that scale, so his glass stood off the end of the counter in the air. They are placed in his own space
+    now, and land on the counter;
+  - at home the bench's seat was the floor's colour, so his mother seemed to sit on air beside an empty bench. The
+    seat now catches the lamp, and she is plainly on its far end with Walter landing on its near end;
+  - the press hall stopped at the loading door in a thin dark bar, like a cutaway. It now ends in a brick wall
+    cut through at the door, with a stone lintel the strip curtain hangs from, and a threshold.
 
 ## Judgment calls
 
