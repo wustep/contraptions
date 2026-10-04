@@ -39,6 +39,8 @@ export interface ShareCard {
   title: string
   description: string
   image: string
+  /** What the picture shows, for a reader who cannot see it. */
+  alt: string
   url: string
 }
 
@@ -51,10 +53,12 @@ export function showCard(works: Work[], work: string, take: string): ShareCard |
   const v = w?.versions.find((o) => o.take === take)
   if (!w || !v) return null
   const single = w.versions.length === 1 || v.label === v.title
+  const name = single ? v.title : `${v.title} (${v.label})`
   return {
-    title: `${single ? v.title : `${v.title} (${v.label})`} · contraptions`,
+    title: `${name} · contraptions`,
     description: v.about ?? SHOWS_LINE,
     image: `${SITE}${cardPath(work, take)}`,
+    alt: `A still from ${name}, a Rube Goldberg machine set to music`,
     url: `${SITE}${showPath(works, work, take)}`,
   }
 }
