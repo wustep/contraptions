@@ -18,7 +18,14 @@ import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/sh
  *
  * `/` forwards to `/machine/`, `/sandbox/` (where Explorations used to live)
  * to `/explorations/`, and `/rube/` (where Machine did) to `/machine/`, each
- * keeping the query. `/shows/?show=<work>&take=<take>` still opens a show.
+ * keeping the query. On Vercel all three are temporary redirects
+ * (vercel.json), so a link unfurler reads the card of where they go; the
+ * forwarding pages carry that card too, for any other host.
+ * `/shows/?show=<work>&take=<take>` still opens a show.
+ *
+ * Every page's share card is in its own `<head>`: Machine's still at /og.png,
+ * the other modes' at /<mode>/card.png (`scripts/mode-cards.mjs`), the Shows
+ * page's and each show's from `scripts/shows/show-cards.mjs`.
  * One dev server serves all of it, and one `vite build` writes all of it
  * into dist/ with the core the modes share split into common chunks.
  */
@@ -26,7 +33,9 @@ const here = fileURLToPath(new URL('.', import.meta.url))
 
 /**
  * `/` is Machine's old address. Send it on to `/machine/`, query included.
- * The built page does the same with a script, so a static host agrees.
+ * Vercel answers `/` with a temporary redirect too (vercel.json), so a link
+ * unfurler lands on Machine's card. The built page does the same with a
+ * script, and carries that card itself, so any other static host agrees.
  */
 function rootToMachine(): Plugin {
   const redirect: Connect.NextHandleFunction = (req, res, next) => {
@@ -84,7 +93,7 @@ function readShowFiles(): Work[] {
   return works
 }
 
-/** The Shows page with a show's own card in its head: title, line, picture and address. */
+/** The Shows page with a show's own card in its head: title, line, picture, its alt text, and address (og:url and canonical). */
 function withCard(html: string, card: ShareCard): string {
   const attr = (v: string) => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
   const meta = (key: 'property' | 'name', name: string, value: string) => (h: string) =>
@@ -95,10 +104,13 @@ function withCard(html: string, card: ShareCard): string {
     meta('property', 'og:title', card.title),
     meta('property', 'og:description', card.description),
     meta('property', 'og:image', card.image),
+    meta('property', 'og:image:alt', card.alt),
     meta('property', 'og:url', card.url),
     meta('name', 'twitter:title', card.title),
     meta('name', 'twitter:description', card.description),
     meta('name', 'twitter:image', card.image),
+    meta('name', 'twitter:image:alt', card.alt),
+    (h: string) => h.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${attr(card.url)}$2`),
   ].reduce((h, f) => f(h), html)
 }
 
