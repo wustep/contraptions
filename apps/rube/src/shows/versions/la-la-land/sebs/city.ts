@@ -236,6 +236,15 @@ export const city = scenery<CityState>({
     if (ox > fr.x0 - 4 && ox < fr.x1 + 4) {
       const oy = HORIZON + lift(0.45) - ridge(OBSERVATORY, false) - 2.6 + 0.05
       ctx.fillStyle = HILL_NEAR
+      // The terrace it stands on, cut into the ridge and falling away down the slope, so none of it hangs in the air.
+      ctx.beginPath()
+      ctx.moveTo((ox - 3.4) * k, (oy + 2.2) * k)
+      ctx.quadraticCurveTo((ox - 2.2) * k, (oy + 0.05) * k, (ox - 1.5) * k, (oy + 0.02) * k)
+      ctx.lineTo((ox + 1.8) * k, (oy + 0.02) * k)
+      ctx.quadraticCurveTo((ox + 2.6) * k, (oy + 0.1) * k, (ox + 3.6) * k, (oy + 1.6) * k)
+      ctx.lineTo((ox + 3.6) * k, (oy + 2.2) * k)
+      ctx.closePath()
+      ctx.fill()
       ctx.fillRect((ox - 1.6) * k, (oy - 0.45) * k, 3.2 * k, 0.5 * k)
       ctx.beginPath()
       ctx.arc(ox * k, (oy - 0.45) * k, 0.62 * k, Math.PI, 0)

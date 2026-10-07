@@ -128,3 +128,8 @@ A third pass:
 - **The door.** As she goes out (466 to 468) the doorway was pushed to the frame's left edge and the neon arrow was cut off. The shot now sits on the door: the arrow is whole, she walks out of frame under it, and the door shuts in the middle of the picture. She is still out of frame when she goes.
 - **The boulevards up close.** The city's boulevard lamps run down to the street, so in close shots by the club's door the nearest of them were a row of large brown discs beside the awning. They fade out before the street.
 - **Hollywood's crest.** The lighter plateau where they stand was a flat rectangle that cut across the hill's outline. It is now a lit band that follows the curve of the crest.
+
+A fourth pass:
+
+- **The street in front of the club.** In the first and last wide shots the club stood on a blank black band. There is a road along the front now: asphalt, a dashed centre line, a near kerb, and the club's warm light lying on it. The same road shows outside the door as she leaves.
+- **The observatory's ridge.** In the last wide shot the observatory stood on the falling slope, so half of it hung in the sky. It stands on a terrace cut into the ridge.
