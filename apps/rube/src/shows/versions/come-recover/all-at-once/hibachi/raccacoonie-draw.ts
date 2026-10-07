@@ -463,7 +463,8 @@ export function drawChef(pen: Pen): void {
       hand = [lerp(mouth[0] + 0.1, rest[0], u), lerp(mouth[1] + 0.03, rest[1] + 0.02, u)]
     }
     if (t >= REACH[1] && bites < 3) drawTail(pen, hand[0] - 0.02, hand[1] - 0.06, -1.2 + 0.15 * Math.sin(t * 8), 1 - bites * 0.28)
-    drawPaw(pen, [fx + 0.2, fy + 0.18], hand)
+    // From the side of his head, so the reach up into the pocket goes past his face rather than across it.
+    drawPaw(pen, [fx + 0.27, fy + 0.1], hand)
   }
   // His paw out with the egg, and the flick.
   if (t > rig.EGG_TOSS - 0.3 && t < rig.EGG_TOSS + 0.2) {

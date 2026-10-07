@@ -1180,6 +1180,27 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     storefront(pen, t)
     frontDoor(pen, t)
   }
+  // Over the ceiling, the storey above in section: the same cut tone as the ground under the floor, going up into
+  // the night, so a camera that sees over the ceiling sees the building go on rather than a black band.
+  if (f.y0 < C - 0.4) {
+    const ux0 = Math.max(R0 - 0.3, f.x0 - 1)
+    const ux1 = Math.min(R1 + 0.3, f.x1 + 1)
+    if (ux1 > ux0) {
+      const cut = mixHex(HOME.floor, HOME.night, 0.62)
+      const deep = 1.4
+      const fade = 1.0
+      p.noStroke()
+      p.fill(cut)
+      p.rect(((ux0 + ux1) / 2) * k, (C - 0.4 - deep / 2) * k, (ux1 - ux0) * k, deep * k)
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      const e = (a: number) => `rgba(${parseInt(cut.slice(1, 3), 16)}, ${parseInt(cut.slice(3, 5), 16)}, ${parseInt(cut.slice(5, 7), 16)}, ${a})`
+      const g = ctx.createLinearGradient(0, (C - 0.4 - deep) * k, 0, (C - 0.4 - deep - fade) * k)
+      g.addColorStop(0, e(1))
+      g.addColorStop(1, e(0))
+      ctx.fillStyle = g
+      ctx.fillRect(ux0 * k, (C - 0.4 - deep - fade) * k, (ux1 - ux0) * k, (fade + 0.01) * k)
+    }
+  }
   // The ceiling and the floor, cut.
   solid(p, ink, w, CEILING_FILL)
   p.rect(((R0 + R1) / 2) * k, (C - 0.2) * k, (R1 - R0 + 0.6) * k, 0.4 * k)
@@ -1188,8 +1209,9 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
   // The ground the building stands on, cut, under the floor's slab: earth, not the night, so a low camera sees
   // what the shop stands on rather than a black band.
   if (f.y1 > FLOOR + 0.44) {
-    const gx0 = Math.max(R0 - 0.3, f.x0 - 1)
-    const gx1 = Math.min(R1 + 0.3, f.x1 + 1)
+    // Past the end walls too: outside, it is what the pavement stands on.
+    const gx0 = f.x0 - 1
+    const gx1 = f.x1 + 1
     if (gx1 > gx0) {
       // A band of earth under the slab, going down into the night: deep enough for any shot of the room, and in a
       // wide view no more than the ground's cut, not a slab to the bottom of the frame.

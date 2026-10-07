@@ -148,8 +148,12 @@ export const finale = part<FinaleState>(
       // The door, the drop, and back to take in Waymond coming.
       { t: 269.7, cells: 3.1, hold: H(-2.05, -0.5), w: 1 },
       { t: 271.7, cells: 3.8, hold: H(-1.95, -0.72), w: 1 },
-      { t: 275.2, cells: 4.3, hold: H(-2.1, -1.0), w: 1 },
+      { t: 275.2, cells: 4.3, hold: H(-2.1, -1.3), w: 1 },
       // In, slowly, to the three of them together at the washer's foot, its window glowing behind them; and hold.
+      // The string of lanterns is whole in the frame or out of it: the push goes under it in half a second, not
+      // with their tassels hanging in at the top for two.
+      { t: 276.3, cells: 3.95, hold: H(-2.08, -1.22), w: 1 },
+      { t: 276.9, cells: 3.2, hold: H(-2.05, -0.7), w: 1 },
       { t: 279.0, cells: 2.6, hold: H(-2.03, -0.6), w: 1 },
       { t: 282.2, cells: 2.6, hold: H(-2.05, -0.6), w: 1 },
       // Out again with her, under the camera's tripod, to the switch under the window.
@@ -161,10 +165,11 @@ export const finale = part<FinaleState>(
       { t: 290.2, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
       { t: FLASH + 0.6, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
       { t: 293.2, cells: 3.9, hold: H(-3.45, -1.12), w: 1 },
-      // Then back, towards the washer's glow, for the lights going out.
-      { t: 294.6, cells: 5.15, hold: H(-4.62, -1.52), w: 1 },
+      // Then back, towards the washer's glow, for the lights going out. Both stay inside the shop's end wall: the
+      // storefront's glass is the frame's left edge, so the room is never seen cut off in the dark of the tail.
+      { t: 294.6, cells: 5.15, hold: H(-3.4, -1.52), w: 1 },
       // The rest: drawing back, very slowly, over the dark.
-      { t: END - 0.05, cells: 5.45, hold: H(-4.9, -1.66), w: 1 },
+      { t: END - 0.05, cells: 5.45, hold: H(-3.1, -1.66), w: 1 },
     ]
     return shots.filter((k) => k.t > slot.begin + 0.39 && k.t <= slot.end + 1e-6)
   },

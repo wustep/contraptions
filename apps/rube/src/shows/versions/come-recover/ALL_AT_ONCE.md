@@ -175,6 +175,28 @@ The notes went back to the builders who made each part, who still had their cont
   - the ball draws out in a brief streak along its way through each jump;
   - the flickers before the jump into the dark were taken off, since the surf's collapse owns it;
   - the ground under the laundromat is drawn as earth, not a black band.
+- **A visual pass.** The whole show was rendered at 4 fps and around every jump at 20 fps, and what read wrong was
+  fixed:
+  - the tail's slow draw-back framed the shop's left end wall and the dark past it for 35 s of credits; it now stays
+    inside the room, with the storefront's glass as the frame's left edge, and the earth under the floor goes on
+    outside the walls;
+  - over the ceiling, the storey above is drawn in section, in the same tone as the earth under the floor, not as
+    a black band across the top of the bright party;
+  - the garland's last lantern hung over the big dryer, cut in half by its glass all through the tumble, and the
+    one before it hung inside the empty hanger's basket; both are set on, between where the hanger comes to rest
+    and the dryer's face;
+  - the theatre's front ended in a thin post onto the alley, like a flat; it now turns the corner in stone quoins
+    on a plinth;
+  - the alley's culvert pours into a puddle, with rings and spray, not into nothing;
+  - Raccacoonie's reach for the shrimp tail no longer crosses his face, and the close-up sits a little higher;
+  - the stray net of frames left on the wall after the great hit fades as it shrinks;
+  - in the mosaic, the hot-dog world's piano stands on legs, its keys over the seesaw's swing rather than
+    through it, and the laundromat's tube hangs from a ceiling;
+  - kindness's scissor arm keeps its lattice at full reach;
+  - the rocks' pull-back after the last pebble no longer loses the two stones to specks;
+  - the finale's push-in takes the lantern string whole or not at all, not by its tassels;
+  - in the peak, the strand off the pulley meets the line wound round the shrinking bagel in one line, and after
+    the release its free end carries its clothespin away rather than hanging as a rod in the dark.
 
 ## End credits
 

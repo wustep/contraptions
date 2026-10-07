@@ -306,9 +306,12 @@ export const peak = part<PeakState>(
           if (x < 0) break
           if (x < 0.8) twang += 0.016 * Math.exp(-x / 0.16)
         }
+        // Its foot eased onto where the turn round the rim begins, which follows the bagel as it shrinks, so the
+        // strand and the wound line meet in one line rather than a step.
+        const join = woundAt(T) > 0.002 ? C[0] - (Ro + ROPE_W * 0.55) - xr : 0
         for (let i = 0; i <= n; i++) {
           const v = i / n
-          pts.push([xr + loose * Math.sin(Math.PI * v) + twang * Math.sin(Math.PI * v) * Math.sin(T * 60 + v * 2), y0 + L * v])
+          pts.push([xr + join * v ** 4 + loose * Math.sin(Math.PI * v) + twang * Math.sin(Math.PI * v) * Math.sin(T * 60 + v * 2), y0 + L * v])
         }
         strokePath(p, c, pts, ROPE_W, true)
       } else {
@@ -359,6 +362,8 @@ export const peak = part<PeakState>(
       const gone = T - RELEASE - 0.4
       const top = gone > 0 ? P[1] + (waymondY(T) - waymondY(RELEASE + 0.4)) : P[1]
       if (slack <= 0.004) strokePath(p, c, [[wx, top], [wx, wy]], ROPE_W, true)
+      // Its end, with the clothespin still tied on: the line's end going away with him, not a rod in the dark.
+      if (slack <= 0.004 && gone > 0) drawPin(p, c, wx, top - 0.05, -Math.PI / 2, 1)
       const travel = waymondY(T) - waymondY(T_IN)
       drawPulley(p, c, P, -travel / RP, f.y0 - 1)
 
