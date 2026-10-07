@@ -105,3 +105,12 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
   - `ShowVersion.director`, for the byline (since removed: the picker has no bylines);
   - the styles for both.
 - **Rebuilding the audio.** `sh scripts/shows/sebs-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/shows/sebs-onsets.py` measures it again. Neither needs to run unless the mix changes.
+
+## Visual polish
+
+A pass over the frames, fixing what read wrong:
+
+- **The piano and her table.** The camera crossed between the keys and Mia's table (21.8, 35.6, 438 and 444.9) as a long pan at close range, so for two or three seconds each time the frame held nothing but the piano's legs and the curtain, with Seb cut off at the top. Each crossing now draws back on the way, so the middle of the move is the room: him at the keys, her at her table.
+- **The theatre's street.** Outside the theatre the frame was black above the pavement. Across the street there is now a row of buildings in the dark, a few windows lit, and a lamp at the kerb. The marquee's card, which was a red dot on a line and read as a pin, is now a rose, with petals and leaves.
+- **The club from the street.** The window high on the club's wall was a flat blue box. It is a window now: the room's rose stage light behind a half-drawn curtain, four panes and a sill. The door has panels and a brass knob.
+- **The count-in.** While the band's lamps come up and he nods the count-in (471.3 to 478), the band was a corner cut off at the bottom of the frame. The shot now holds him at the keys with the band's stands beside him.

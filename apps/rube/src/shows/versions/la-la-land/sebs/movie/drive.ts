@@ -403,8 +403,18 @@ function club(p: p5, k: number, ink: string, w: number, t: number, fr: { x0: num
   // The building: brick, and a window high up where the stage light shows.
   shape(p, k, [[WALL, WALK], [WALL + 12, WALK], [WALL + 12, top], [WALL, top]], D.brick, line, w)
   for (let y = WALK - 0.6; y > top; y -= 0.6) seg(p, k, [WALL + thick, y], [WALL + 12, y], rgba(ink, 0.06), w * 0.5)
-  box2(p, k, WALL + 1.5, WALK - 4.2, WALL + 3.2, WALK - 3.0, alpha(p, D.neon, 0.45), line, w * 0.8)
-  glow(p, k, WALL + 2.35, WALK - 3.6, 1.1, D.neon, 0.18)
+  // The window: the room's rose stage light behind a half-drawn curtain, four panes, a stone sill.
+  const [wx0, wy0, wx1, wy1] = [WALL + 1.5, WALK - 4.2, WALL + 3.2, WALK - 3.0]
+  glow(p, k, (wx0 + wx1) / 2, wy1 - 0.3, 1.3, D.rose, 0.16)
+  box2(p, k, wx0, wy0, wx1, wy1, alpha(p, D.rose, 0.55), null)
+  box2(p, k, wx0, (wy0 + wy1) / 2, wx1, wy1, alpha(p, D.sodium, 0.22), null)
+  shape(p, k, [[wx0, wy0], [wx0 + 0.45, wy0], [wx0 + 0.2, wy0 + 0.5], [wx0 + 0.12, wy1], [wx0, wy1]], D.car[0], null)
+  shape(p, k, [[wx1, wy0], [wx1 - 0.45, wy0], [wx1 - 0.2, wy0 + 0.5], [wx1 - 0.12, wy1], [wx1, wy1]], D.car[0], null)
+  const mull = D.frame
+  seg(p, k, [(wx0 + wx1) / 2, wy0], [(wx0 + wx1) / 2, wy1], mull, w * 1.6)
+  seg(p, k, [wx0, wy0 + 0.5], [wx1, wy0 + 0.5], mull, w * 1.6)
+  box2(p, k, wx0, wy0, wx1, wy1, null, mull, w * 2.4)
+  box2(p, k, wx0 - 0.12, wy1, wx1 + 0.12, wy1 + 0.1, D.sill, line, w * 0.8)
   // The doorway, lit from inside once the door opens; the door swung out onto the walk.
   const open = doorOpen(t)
   box2(p, k, WALL, DOOR_TOP, WALL + thick, WALK, alpha(p, D.asphalt, 1), line, w)
@@ -413,7 +423,20 @@ function club(p: p5, k: number, ink: string, w: number, t: number, fr: { x0: num
     glow(p, k, WALL - 0.2, WALK - 0.2, 1.1, D.sodium, 0.35 * open, 1, 0.4)
   }
   const dw = 0.62 * Math.cos(open * 1.3)
-  box2(p, k, WALL - (1 - Math.cos(open * 1.3)) * 0.02, DOOR_TOP + 0.02, WALL + Math.max(0.06, dw * (1 - open) + 0.05), WALK - 0.01, D.car[0], line, w * 0.8)
+  const dx0 = WALL - (1 - Math.cos(open * 1.3)) * 0.02
+  const dx1 = WALL + Math.max(0.06, dw * (1 - open) + 0.05)
+  box2(p, k, dx0, DOOR_TOP + 0.02, dx1, WALK - 0.01, D.car[0], line, w * 0.8)
+  // Two sunk panels and a brass knob, while the door is face on enough to show them.
+  const face = dx1 - dx0
+  if (face > 0.3) {
+    const m = face * 0.16
+    const mid = DOOR_TOP + (WALK - DOOR_TOP) * 0.42
+    box2(p, k, dx0 + m, DOOR_TOP + 0.14, dx1 - m, mid - 0.06, null, alpha(p, D.frame, 0.55), w * 0.8)
+    box2(p, k, dx0 + m, mid + 0.06, dx1 - m, WALK - 0.14, null, alpha(p, D.frame, 0.55), w * 0.8)
+    p.noStroke()
+    p.fill(D.sodium)
+    p.circle((dx1 - face * 0.14) * k, (mid + 0.02) * k, 0.07 * k)
+  }
   // The awning, and the neon over it.
   const a0 = WALL
   const a1 = WALL - 0.95

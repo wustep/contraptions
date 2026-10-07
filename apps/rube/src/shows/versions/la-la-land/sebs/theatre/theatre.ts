@@ -517,6 +517,7 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
 
   /* ---- outside: the pavement and the street, the marquee, the blade, the stage door */
   if (f.x0 < WALL + 0.5) {
+    drawStreet(p, k, ink, weight, t, f)
     // The pavement, its kerb, the street.
     p.noStroke()
     p.fill(mixHex(bg, ink, 0.1))
@@ -607,6 +608,57 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
   drawDoor(p, k, ink, weight, t)
 }
 
+/** The street across from the theatre: a row of buildings in the dark, a few windows lit, and a lamp at the kerb. */
+const BLOCKS: { x0: number; x1: number; top: number }[] = [
+  { x0: -14, x1: -10.6, top: -6.2 },
+  { x0: -10.6, x1: -7.4, top: -4.6 },
+  { x0: -7.4, x1: -3.6, top: -7.4 },
+  { x0: -3.6, x1: -0.6, top: -5.2 },
+  { x0: -0.6, x1: 3.4, top: -6.6 },
+  { x0: 3.4, x1: WALL, top: -4.9 },
+]
+const STREET_LAMP = 1.2
+function drawStreet(p: p5, k: number, ink: string, weight: number, t: number, f: { x0: number; x1: number }): void {
+  const bg = THEATRE_INK.bg
+  const marquee = t >= TREADLE ? 1 : 0
+  for (const [i, b] of BLOCKS.entries()) {
+    if (b.x1 < f.x0 - 1) continue
+    p.noStroke()
+    p.fill(mixHex(bg, M.velvetDeep, 0.1 + 0.04 * (i % 2)))
+    rrect(p, k, b.x0, b.top, b.x1, FLOOR)
+    p.stroke(alpha(p, ink, 0.12))
+    p.strokeWeight(weight * 0.5)
+    p.line(b.x0 * k, b.top * k, b.x1 * k, b.top * k)
+    // Windows, a grid of them, a few lit warm; the ones nearest the marquee catch its light when it blazes.
+    p.noStroke()
+    for (let y = b.top + 0.7; y < FLOOR - 1.6; y += 0.95) {
+      for (let x = b.x0 + 0.45; x < b.x1 - 0.5; x += 0.8) {
+        const h = Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1
+        const lit = h > 0.72
+        p.fill(lit ? rgba(M.bulb, 0.32) : mixHex(bg, M.velvetDeep, 0.04))
+        rrect(p, k, x, y, x + 0.3, y + 0.42)
+      }
+    }
+  }
+  // The lamp at the kerb: a post, a lantern, its pool on the pavement.
+  const lx = STREET_LAMP
+  glow(p, k, lx, -3.3, 1.2, M.bulb, 0.14, 1, 1)
+  glow(p, k, lx, FLOOR, 1.8, M.bulb, 0.12 + 0.04 * marquee, 1, 0.22)
+  solid(p, ink, weight * 0.7, mixHex(bg, ink, 0.18))
+  rrect(p, k, lx - 0.05, -3.1, lx + 0.05, FLOOR)
+  rrect(p, k, lx - 0.13, FLOOR - 0.25, lx + 0.13, FLOOR)
+  p.noStroke()
+  p.fill(alpha(p, M.bulb, 0.9))
+  p.beginShape()
+  p.vertex((lx - 0.16) * k, -3.6 * k)
+  p.vertex((lx + 0.16) * k, -3.6 * k)
+  p.vertex((lx + 0.1) * k, -3.1 * k)
+  p.vertex((lx - 0.1) * k, -3.1 * k)
+  p.endShape(p.CLOSE)
+  solid(p, ink, weight * 0.6, mixHex(bg, ink, 0.18))
+  p.triangle((lx - 0.2) * k, -3.6 * k, (lx + 0.2) * k, -3.6 * k, lx * k, -3.85 * k)
+}
+
 /** The footlights: low hoods on the lip, up with the stage lights, and flaring under her where she lands and leaps. */
 function drawFoot(p: p5, k: number, ink: string, weight: number, t: number, stage: number): void {
   const bg = THEATRE_INK.bg
@@ -687,13 +739,24 @@ function drawMarquee(p: p5, s: TheatreState, c: Ctx, t: number): void {
   rrect(p, k, MQ.x0 + 0.12, MQ.y0 + 0.2, MQ.x1 - 0.06, MQ.y1 - 0.2)
   if (blaze) {
     // The light box is the play's card: no name, a red rose laid across it.
-    p.fill(alpha(p, M.velvet, 0.9))
-    const cx = (MQ.x0 + MQ.x1) / 2
+    const cx = (MQ.x0 + MQ.x1) / 2 + 0.25
     const cy = (MQ.y0 + MQ.y1) / 2
-    p.circle(cx * k, cy * k, 0.2 * k)
-    p.stroke(alpha(p, M.velvetDeep, 0.9))
-    p.strokeWeight(weight * 0.8)
-    p.line((cx - 0.9) * k, (cy + 0.05) * k, (cx - 0.1) * k, cy * k)
+    // The stem, lying a little aslant, and two leaves off it.
+    p.noFill()
+    p.stroke('#3E6B3A')
+    p.strokeWeight(weight * 0.9)
+    p.line((cx - 1.15) * k, (cy + 0.07) * k, (cx - 0.12) * k, cy * k)
+    p.noStroke()
+    p.fill('#4F8048')
+    p.ellipse((cx - 0.75) * k, (cy - 0.03) * k, 0.24 * k, 0.09 * k)
+    p.ellipse((cx - 0.45) * k, (cy + 0.07) * k, 0.2 * k, 0.08 * k)
+    // The bloom: a cup of petals, darker at the heart.
+    p.fill(M.velvet)
+    p.ellipse((cx - 0.02) * k, cy * k, 0.3 * k, 0.24 * k)
+    p.fill(M.rose)
+    p.ellipse((cx + 0.04) * k, (cy - 0.03) * k, 0.2 * k, 0.17 * k)
+    p.fill(M.velvetDeep)
+    p.ellipse((cx + 0.06) * k, (cy - 0.04) * k, 0.08 * k, 0.07 * k)
   }
   // Underneath, a soffit of lamps.
   p.noStroke()

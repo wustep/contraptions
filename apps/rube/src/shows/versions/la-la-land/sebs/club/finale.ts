@@ -252,8 +252,11 @@ export const finale = part<FinaleState>(
     // At her table; then the piano on the stage, playing itself; back to them for the kiss.
     { t: 432.4, cells: 2.3, hold: F([TABLE.x, 2.45]) },
     { t: 434.6, cells: 2.2, hold: F([TABLE.x, 2.46]) },
+    // Each way across the room the camera draws back as it goes: the two of them and the piano in one frame.
+    { t: 436.3, cells: 5.8, hold: F([-0.4, 1.25]) },
     { t: 438.0, cells: 3.4, hold: F([2.8, -0.4]) },
     { t: 441.6, cells: 3.1, hold: F([3.2, -0.35]) },
+    { t: 443.2, cells: 5.8, hold: F([-0.4, 1.25]) },
     { t: 444.9, cells: 1.9, hold: F([TABLE.x, 2.5]) },
     { t: 451.3, cells: 1.8, hold: F([TABLE.x, 2.5]) },
     // With him up to the keys, onto the last chord; the stillness.
@@ -273,8 +276,9 @@ export const finale = part<FinaleState>(
     { t: 466.9, cells: 4.6, hold: F([-10.3, 1.7]) },
     { t: 468.3, cells: 4.6, hold: F([-10.5, 1.7]) },
     { t: 469.8, cells: 7, hold: F([-2.5, 0.8]) },
-    { t: 471.3, cells: 4.4, hold: F([5.4, 0.25]) },
-    { t: 477.9, cells: 3.8, hold: F([5.2, 0.1]) },
+    // Him at the keys and the band's stands beside him in one frame, so the lamps come up in it and the count-in is to them.
+    { t: 471.3, cells: 5.3, hold: F([6.4, 0.65]) },
+    { t: 477.9, cells: 4.9, hold: F([6.2, 0.55]) },
     { t: 480.0, cells: 7, hold: F([3.6, -1.6]) },
   ],
 )
