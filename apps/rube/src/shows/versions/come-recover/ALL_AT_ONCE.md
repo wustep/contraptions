@@ -197,6 +197,19 @@ The notes went back to the builders who made each part, who still had their cont
   - the finale's push-in takes the lantern string whole or not at all, not by its tassels;
   - in the peak, the strand off the pulley meets the line wound round the shrinking bagel in one line, and after
     the release its free end carries its clothespin away rather than hanging as a rod in the dark.
+- **A second visual pass, for craft.** The laundromat had machines and no life: bare walls wherever the camera
+  looked up. It now has:
+  - a wall clock over the door's washer, at ten to two in the morning when the tubes come on, its minute hand
+    going round a minute a second. It is in the opening's wide shot and still there in the washer's glow under
+    the credits;
+  - a price board by the first bank, drawn in pictures (a shirt, a sock, a towel, and their prices in coins),
+    which the garland ride passes;
+  - a calendar over the party's gift box, red-headed with a fish for luck, one day ringed.
+  - All three are in stretches of wall nothing passes through, and are under the room's light, so they go dark
+    and come up with the tubes.
+  - The family has soft contact shadows on the floor through the finale, so the three of them sit on it.
+  - Raccacoonie's kitchen has a rail of tools along its back wall (ladles, a spatula, a wok, a strainer),
+    dim and swaying a little, so the dark behind the chef is a kitchen's far side and not a blank.
 
 ## End credits
 

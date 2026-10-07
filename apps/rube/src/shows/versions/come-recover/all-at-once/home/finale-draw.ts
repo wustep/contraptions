@@ -293,6 +293,20 @@ export function drawTripodFront(pen: Pen, t: number, shade: (hex: string, x: num
 
 /* ------------------------------------------------------------------ the flash */
 
+/** Their contact shadows on the floor, so the three of them sit on it, fading as one is thrown up off it. */
+export function drawContactShadows(pen: Pen, family: Pt[]): void {
+  const { p, k } = pen
+  p.noStroke()
+  for (const [bx, by] of family) {
+    // In the drum (up behind the glass) there is no floor under them.
+    if (by < -0.3) continue
+    const a = clamp(1 + by / 0.5)
+    if (a <= 0.01) continue
+    p.fill(alpha(p, HOME.night, 0.38 * a))
+    p.ellipse(bx * k, (FLOOR + 0.01) * k, (0.32 - 0.08 * (1 - a)) * k, 0.09 * k)
+  }
+}
+
 /** The family's shadows thrown on the washer by the flash, behind them (drawn before the balls). */
 export function drawFlashShadows(pen: Pen, t: number, family: Pt[]): void {
   const u = t - FLASH

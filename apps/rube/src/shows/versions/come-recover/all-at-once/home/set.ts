@@ -1142,6 +1142,106 @@ const TOP_BAGS: { x: number; color: string; size: number }[] = [
   { x: 15.6, color: HOME.rose, size: 0.55 },
 ]
 
+/**
+ * The things on the walls that say a family keeps this shop: a clock over the door's washer, a price board drawn in
+ * pictures by the first bank (the canvas sets no type), and a calendar over the party's gift box. Each is in a stretch of
+ * wall nothing passes through, and all are under the room's light.
+ */
+const CLOCK = { x: -1.9, y: -3.55, r: 0.27 }
+const PRICES = { x: 4.55, y: -2.95, w: 0.92, h: 0.78 }
+const CALENDAR = { x: 26.7, y: -3.05, w: 0.62, h: 0.82 }
+
+function nail(pen: Pen, x: number, y: number): void {
+  const { p, k, ink, w } = pen
+  solid(p, ink, w * 0.4, HOME.steelDark)
+  p.circle(x * k, y * k, 0.05 * k)
+}
+
+function wallClock(pen: Pen, t: number): void {
+  const { p, k, ink, w } = pen
+  const { x, y, r } = CLOCK
+  solid(p, ink, w, HOME.steelDark)
+  p.circle(x * k, y * k, 2 * (r + 0.05) * k)
+  solid(p, ink, w * 0.5, HOME.enamel)
+  p.circle(x * k, y * k, 2 * r * k)
+  outline(p, ink, w * 0.45)
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2
+    const r0 = i % 3 === 0 ? r * 0.72 : r * 0.82
+    p.line((x + Math.cos(a) * r0) * k, (y + Math.sin(a) * r0) * k, (x + Math.cos(a) * r * 0.9) * k, (y + Math.sin(a) * r * 0.9) * k)
+  }
+  // Ten to two in the morning when the tubes come on; the minutes go round with the show, a minute a second.
+  const minutes = 110 + t
+  const hand = (turn: number, len: number, wd: number, col: string) => {
+    const a = turn * Math.PI * 2 - Math.PI / 2
+    p.stroke(col)
+    p.strokeWeight(Math.max(1, wd * k))
+    p.line(x * k, y * k, (x + Math.cos(a) * len) * k, (y + Math.sin(a) * len) * k)
+  }
+  hand(minutes / 720, r * 0.5, 0.035, ink)
+  hand((minutes % 60) / 60, r * 0.74, 0.025, ink)
+  hand(Math.floor(t * 1) / 60, r * 0.8, 0.012, HOME.red)
+  solid(p, ink, w * 0.3, ink)
+  p.circle(x * k, y * k, 0.04 * k)
+}
+
+function priceBoard(pen: Pen): void {
+  const { p, k, ink, w } = pen
+  const { x, y, w: bw, h: bh } = PRICES
+  nail(pen, x, y - bh / 2 - 0.12)
+  outline(p, ink, w * 0.4)
+  p.line((x - 0.18) * k, (y - bh / 2) * k, x * k, (y - bh / 2 - 0.12) * k)
+  p.line((x + 0.18) * k, (y - bh / 2) * k, x * k, (y - bh / 2 - 0.12) * k)
+  solid(p, ink, w, HOME.wood)
+  p.rect(x * k, y * k, bw * k, bh * k, 0.04 * k)
+  solid(p, ink, w * 0.5, HOME.paper)
+  p.rect(x * k, y * k, (bw - 0.12) * k, (bh - 0.12) * k, 0.02 * k)
+  // A row a garment: its picture, a dotted line, and its price in coins.
+  const cols = [HOME.rose, HOME.denim, HOME.butter]
+  for (let i = 0; i < 3; i++) {
+    const ry = y - bh / 2 + 0.17 + i * 0.22
+    p.push()
+    p.translate((x - bw / 2 + 0.17) * k, ry * k)
+    garment(pen, i, 0.17, cols[i])
+    p.pop()
+    p.stroke(alpha(p, ink, 0.45))
+    p.strokeWeight(Math.max(1, w * 0.35))
+    for (let d = 0; d < 4; d++) p.point((x - bw / 2 + 0.33 + d * 0.07) * k, ry * k)
+    for (let c = 0; c <= i; c++) {
+      solid(p, ink, w * 0.3, HOME.gold)
+      p.circle((x + bw / 2 - 0.13 - c * 0.08) * k, ry * k, 0.07 * k)
+    }
+  }
+}
+
+function calendar(pen: Pen): void {
+  const { p, k, ink, w } = pen
+  const { x, y, w: cw, h: ch } = CALENDAR
+  nail(pen, x, y - ch / 2 + 0.05)
+  solid(p, ink, w * 0.7, HOME.paper)
+  p.rect(x * k, y * k, cw * k, ch * k, 0.02 * k)
+  // The month's red head, and a picture of a fish for luck.
+  solid(p, ink, w * 0.5, HOME.red)
+  p.rect(x * k, (y - ch / 2 + 0.16) * k, cw * k, 0.32 * k)
+  solid(p, ink, w * 0.35, HOME.gold)
+  p.ellipse(x * k, (y - ch / 2 + 0.16) * k, 0.24 * k, 0.11 * k)
+  p.triangle((x + 0.11) * k, (y - ch / 2 + 0.16) * k, (x + 0.2) * k, (y - ch / 2 + 0.1) * k, (x + 0.2) * k, (y - ch / 2 + 0.22) * k)
+  // The days, and one ringed.
+  p.stroke(alpha(p, ink, 0.5))
+  p.strokeWeight(Math.max(1, w * 0.3))
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 5; c++) {
+      const dx = x - cw / 2 + 0.1 + c * 0.105
+      const dy = y - ch / 2 + 0.42 + r * 0.1
+      p.line(dx * k, dy * k, (dx + 0.04) * k, dy * k)
+    }
+  }
+  p.noFill()
+  p.stroke(HOME.red)
+  p.strokeWeight(Math.max(1, w * 0.5))
+  p.circle((x - cw / 2 + 0.1 + 3 * 0.105 + 0.02) * k, (y - ch / 2 + 0.52) * k, 0.1 * k)
+}
+
 /** The washers that are running someone's washing all night. */
 const RUNNING = [2, 5]
 
@@ -1253,6 +1353,10 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     p.rect(((f.x0 - 1 + R0 - 0.3) / 2) * k, (FLOOR + 0.22) * k, (R0 - 0.3 - f.x0 + 1) * k, 0.44 * k)
   }
 
+  // On the walls.
+  if (see(CLOCK.x - 0.4, CLOCK.x + 0.4)) wallClock(pen, t)
+  if (see(PRICES.x - 0.6, PRICES.x + 0.6)) priceBoard(pen)
+  if (see(CALENDAR.x - 0.4, CALENDAR.x + 0.4)) calendar(pen)
   // The fixtures. The counter.
   if (see(COUNTER.x0, COUNTER.x1)) counterFront(pen)
   // The washers (all but the laundromat part's, the first).

@@ -3,7 +3,7 @@ import { box, carried, frame, part, type Company, type PartShot } from '../kit'
 import { LIGHTS, lightAt, penOf, shade, STREET, type Glow } from './set'
 import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, waymondAt, windowLight } from './finale-plan'
 import { HOME } from '../worlds'
-import { drawCamera, drawFlash, drawFlashShadows, drawLanternString, drawPhoto, drawSwitch, drawTripodFront, drawWasher, drawWasherDoor, drawWindowGlow, fireworkFloor, fireworkLight, fireworks, lightColor, stringGlows } from './finale-draw'
+import { drawCamera, drawContactShadows, drawFlash, drawFlashShadows, drawLanternString, drawPhoto, drawSwitch, drawTripodFront, drawWasher, drawWasherDoor, drawWindowGlow, fireworkFloor, fireworkLight, fireworks, lightColor, stringGlows } from './finale-draw'
 
 /**
  * HOME: through the washer's window, the family, the last hits, the lights out, and the credits over the dark
@@ -78,6 +78,7 @@ export const finale = part<FinaleState>(
       p.translate(-O[0] * c.k, -O[1] * c.k)
       drawSwitch(pen, t)
       drawWasher(pen, t)
+      drawContactShadows(pen, [evelynAt(t), joyAt(t), waymondAt(t)])
       drawFlashShadows(pen, t, [evelynAt(t), joyAt(t), waymondAt(t)])
       drawLanternString(pen, t)
       drawCamera(pen, t)
