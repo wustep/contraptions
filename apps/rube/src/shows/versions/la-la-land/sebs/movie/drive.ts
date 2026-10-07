@@ -227,9 +227,9 @@ export const drive = part<DriveState>(
     // Down the ramp with them, and along the street under its lamps.
     { t: 411.2, cells: 8.5, w: 0, off: [1.2, -0.6] },
     { t: 415.2, cells: 6.2, w: 0, off: [1.4, -0.7] },
-    { t: STOP, cells: 5.4, hold: [PARK + 2.2, STREET - 1.2] },
+    { t: STOP, cells: 5.4, hold: [PARK + 2.2, STREET - 1.75] },
     // Parked at the door, the sign, the two of them going in.
-    { t: 420.6, cells: 5.0, hold: [PARK + 2.3, STREET - 1.35] },
+    { t: 420.6, cells: 5.0, hold: [PARK + 2.3, STREET - 1.85] },
     { t: 422.9, cells: 4.4, hold: [DOOR_X - 0.9, STREET - 1.0] },
   ],
 )

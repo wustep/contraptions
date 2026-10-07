@@ -114,3 +114,10 @@ A pass over the frames, fixing what read wrong:
 - **The theatre's street.** Outside the theatre the frame was black above the pavement. Across the street there is now a row of buildings in the dark, a few windows lit, and a lamp at the kerb. The marquee's card, which was a red dot on a line and read as a pin, is now a rose, with petals and leaves.
 - **The club from the street.** The window high on the club's wall was a flat blue box. It is a window now: the room's rose stage light behind a half-drawn curtain, four panes and a sill. The door has panels and a brass knob.
 - **The count-in.** While the band's lamps come up and he nods the count-in (471.3 to 478), the band was a corner cut off at the bottom of the frame. The shot now holds him at the keys with the band's stands beside him.
+
+A second pass:
+
+- **Their reflections.** On painted Paris's wet quay and the stars' glass floor each ball's reflection was its colour as a thin wash, so Mia's yellow greyed into the blue stones. Each reflection is now its own colour, darkened toward the night and laid on more thickly, so hers reads as hers.
+- **The petals.** The red petals on the quay stayed on the floor after Paris flew out, and speckled the stars' clean glass. They go with the set.
+- **The deck over the street.** As the car pulls up at the club (417 to 421), the freeway deck overhead cut its cars off at the roofs along the top of the frame. The shot sits a little higher, so the cars on the deck are whole.
+- **The observatory.** On The End's swell the observatory lights on its ridge, but in the last wide shot it stood clipped at the frame's left edge. Its ridge is moved in, so it lights in the picture.

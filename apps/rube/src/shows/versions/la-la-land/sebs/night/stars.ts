@@ -140,6 +140,8 @@ function star(p: p5, k: number, x: number, y: number, s: Kindled, T: number, mir
 /* ------------------------------------------------------------------ the floor's reflections of them */
 
 /** A ball in the floor: upside down about the floor under it, dimmer; smeared long on wet cobbles, sharp on the glass. */
+/** The night the reflections are darkened toward. */
+const NIGHT_DEEP = '#16204A'
 function reflection(p: p5, k: number, ink: string, weight: number, color: string, at: Pt, ground: number, T: number): void {
   const y = 2 * ground - at[1]
   const high = ground - R - at[1]
@@ -151,7 +153,9 @@ function reflection(p: p5, k: number, ink: string, weight: number, color: string
   ctx.beginPath()
   ctx.rect((at[0] - 1) * k, ground * k, 2 * k, 30 * k)
   ctx.clip()
-  ctx.fillStyle = rgba(color, a)
+  // Its own colour, darkened toward the night, and laid on more thickly: a thin wash of yellow over the blue stones
+  // only greys them, and hers should read as hers.
+  ctx.fillStyle = rgba(mixHex(color, NIGHT_DEEP, 0.3), Math.min(0.7, a * 2.2))
   ctx.beginPath()
   ctx.ellipse(at[0] * k, (y + (stretch - 1) * R * 0.6) * k, R * k, R * stretch * k, 0, 0, Math.PI * 2)
   ctx.fill()

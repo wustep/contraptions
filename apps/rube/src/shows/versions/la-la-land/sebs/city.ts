@@ -97,7 +97,7 @@ const ridge = (x: number, far: boolean): number => {
 }
 
 /** The observatory's ridge: the near hills, left of the club. */
-const OBSERVATORY = -38
+const OBSERVATORY = -28
 
 /**
  * The End's orchestra arriving (its one clear onset), and the swell it climbs to. On the arrival two more searchlights
