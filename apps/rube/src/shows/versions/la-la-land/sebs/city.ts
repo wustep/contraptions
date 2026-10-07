@@ -266,12 +266,15 @@ export const city = scenery<CityState>({
       for (let j = 1; j <= b.n; j++) {
         // Lamps evenly spaced along the ground, so closer together on the screen the further off they are.
         const near = Math.pow(j / b.n, 1.25)
+        // They thin out before the street: a lamp near enough to be big would stand beside the club, not in the basin.
+        const fade = 1 - smooth(near, 0.68, 0.9)
+        if (fade <= 0.01) continue
         const dd = 0.2 + 0.6 * near
         const x = b.xFar + (b.xNear - b.xFar) * near + slide(dd)
         const y = HORIZON + (STREET - 0.6 - HORIZON) * Math.pow(near, 1.6) + lift(dd)
         if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1) continue
         const tw = 0.8 + 0.2 * Math.sin(t * 0.6 + j * 0.7 + b.ph)
-        ctx.fillStyle = rgba('#F7C779', (0.45 + 0.4 * near) * tw)
+        ctx.fillStyle = rgba('#F7C779', (0.45 + 0.4 * near) * tw * fade)
         ctx.beginPath()
         ctx.arc(x * k, y * k, Math.max(0.6, 0.045 * (0.5 + 1.5 * near) * k), 0, Math.PI * 2)
         ctx.fill()

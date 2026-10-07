@@ -273,8 +273,8 @@ export const finale = part<FinaleState>(
     ...closeOn(CUTS.nod, CUTS.out, F([keyRest(LAST_KEY)[0] - 0.05, -0.34])),
     { t: CUTS.out, cells: 7.4, hold: F([-6.6, 1.2]) },
     // After her to the door, out; the door swings shut. Back across the empty room to him, the band's lamps behind him.
-    { t: 466.9, cells: 4.6, hold: F([-10.3, 1.7]) },
-    { t: 468.3, cells: 4.6, hold: F([-10.5, 1.7]) },
+    { t: 466.9, cells: 4.6, hold: F([-10.6, 1.45]) },
+    { t: 468.3, cells: 4.6, hold: F([-10.8, 1.45]) },
     { t: 469.8, cells: 7, hold: F([-2.5, 0.8]) },
     // Him at the keys and the band's stands beside him in one frame, so the lamps come up in it and the count-in is to them.
     { t: 471.3, cells: 5.3, hold: F([6.4, 0.65]) },

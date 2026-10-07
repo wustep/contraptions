@@ -221,9 +221,9 @@ export const drive = part<DriveState>(
     { t: 401.4, cells: 3.8, hold: [-0.35, -0.25] },
     { t: 402.3, cells: 3.9, hold: [-0.3, -0.25] },
     { t: 404.6, cells: 6.2, hold: [1.3, -0.55] },
-    // The long silence: out wide, the line of lights along the high road, the ramp going down, the city.
-    { t: 407.6, cells: 14, hold: [6.0, 0.9] },
-    { t: PULL + 0.4, cells: 13.5, hold: [6.4, 1.0] },
+    // The long silence: out wide, the line of lights along the high road, the ramp going down, the city under the stars.
+    { t: 407.6, cells: 10.6, hold: [5.8, -0.1] },
+    { t: PULL + 0.4, cells: 10.2, hold: [6.2, 0.05] },
     // Down the ramp with them, and along the street under its lamps.
     { t: 411.2, cells: 8.5, w: 0, off: [1.2, -0.6] },
     { t: 415.2, cells: 6.2, w: 0, off: [1.4, -0.7] },
@@ -246,6 +246,13 @@ const TOWERS = Array.from({ length: 44 }, (_, i) => {
   return { x, w, h, lit }
 })
 
+/** The sky over it: stars, and the hills along the far side of the basin (both all but still as the camera goes). */
+const SKY_STARS = Array.from({ length: 320 }, (_, i) => ({ x: -40 + hash(i, 21) * 110, y: -11 + hash(i, 22) * 10.2, r: 0.02 + 0.035 * hash(i, 23) ** 2, a: 0.35 + 0.55 * hash(i, 24) }))
+const RIDGE: Pt[] = Array.from({ length: 401 }, (_, i) => {
+  const x = -40 + i * 0.3
+  return [x, -0.7 - 1.3 * Math.sin(x * 0.19 + 1.3) ** 2 - 0.45 * Math.sin(x * 0.53 + 0.4) ** 2]
+})
+
 function drawDrive(p: p5, t: number, c: Ctx): void {
   const { k, ink, weight } = c
   const w = weight
@@ -253,6 +260,22 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
   const line = rgba(ink, 0.3)
   // The night: dark overhead, a sodium haze low over the city.
   vgrad(p, k, fr.x0 - 1, fr.y0 - 1, fr.x1 + 1, fr.y1 + 1, [[0, rgba(D.asphalt, 0)], [Math.max(0.02, Math.min(0.98, (STREET - 1.5 - fr.y0) / (fr.y1 - fr.y0 + 2))), rgba(D.sodium, 0.14)], [1, rgba(D.asphalt, 0.6)]])
+  // The stars and the far hills, the sodium haze along their foot.
+  const far = fr.cx * 0.85
+  p.noStroke()
+  for (const st of SKY_STARS) {
+    const x = st.x + far
+    if (x < fr.x0 - 0.2 || x > fr.x1 + 0.2 || st.y < fr.y0 - 0.2 || st.y > fr.y1) continue
+    p.fill(alpha(p, D.head, st.a))
+    p.circle(x * k, st.y * k, 2 * st.r * k)
+  }
+  const hills = fr.cx * 0.7
+  p.fill(alpha(p, D.brick, 0.5))
+  p.beginShape()
+  p.vertex((RIDGE[0][0] + hills) * k, (STREET + 1) * k)
+  for (const [x, y] of RIDGE) p.vertex((x + hills) * k, y * k)
+  p.vertex((RIDGE[RIDGE.length - 1][0] + hills) * k, (STREET + 1) * k)
+  p.endShape(p.CLOSE)
   // The city, half as fast as the road.
   const par = 0.5
   const ox = fr.cx * par
@@ -265,8 +288,9 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
     p.fill(alpha(p, D.sodium, 0.55))
     for (const [lx, ly] of tw.lit) p.rect((x0 + lx) * k, (base - tw.h + ly) * k, 0.12 * k, 0.16 * k)
   }
-  // The street below, and the ground.
+  // The street below, and the ground under it falling away into the dark.
   shape(p, k, [[fr.x0 - 1, STREET], [fr.x1 + 1, STREET], [fr.x1 + 1, fr.y1 + 1], [fr.x0 - 1, fr.y1 + 1]], D.asphalt, null)
+  vgrad(p, k, fr.x0 - 1, STREET + 0.3, fr.x1 + 1, Math.max(STREET + 1.5, fr.y1 + 1), [[0, rgba(D.frame, 0)], [1, rgba(D.frame, 0.85)]])
   seg(p, k, [fr.x0 - 1, STREET], [fr.x1 + 1, STREET], line, w)
   // The freeway: its piers, its far rail, its deck.
   for (let x = Math.floor((fr.x0 - 2) / 6) * 6; x < fr.x1 + 2; x += 6) shape(p, k, [[x - 0.22, RD + 0.35], [x + 0.22, RD + 0.35], [x + 0.3, STREET], [x - 0.3, STREET]], rgba(D.brick, 0.9), line, w * 0.6)

@@ -121,3 +121,10 @@ A second pass:
 - **The petals.** The red petals on the quay stayed on the floor after Paris flew out, and speckled the stars' clean glass. They go with the set.
 - **The deck over the street.** As the car pulls up at the club (417 to 421), the freeway deck overhead cut its cars off at the roofs along the top of the frame. The shot sits a little higher, so the cars on the deck are whole.
 - **The observatory.** On The End's swell the observatory lights on its ridge, but in the last wide shot it stood clipped at the frame's left edge. Its ridge is moved in, so it lights in the picture.
+
+A third pass:
+
+- **The freeway, wide.** In the long silence before he pulls out of the line (406 to 410), the wide shot was a thin strip of cars between an empty black sky and a blank slab of street that filled the bottom third. The shot comes in closer and sits lower, so the street is a floor and not a slab. Over the city there are stars now, and the hills along the far side of the basin.
+- **The door.** As she goes out (466 to 468) the doorway was pushed to the frame's left edge and the neon arrow was cut off. The shot now sits on the door: the arrow is whole, she walks out of frame under it, and the door shuts in the middle of the picture. She is still out of frame when she goes.
+- **The boulevards up close.** The city's boulevard lamps run down to the street, so in close shots by the club's door the nearest of them were a row of large brown discs beside the awning. They fade out before the street.
+- **Hollywood's crest.** The lighter plateau where they stand was a flat rectangle that cut across the hill's outline. It is now a lit band that follows the curve of the crest.
