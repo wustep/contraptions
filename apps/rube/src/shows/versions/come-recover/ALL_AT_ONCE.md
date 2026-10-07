@@ -217,6 +217,14 @@ The notes went back to the builders who made each part, who still had their cont
   - Under the credits, the night goes on outside: twice (299.6 s and 317.4 s, between the tail's two accents) a
     car goes by in the street, right to left, and its headlights sweep across the shop through the glass, by way
     of the room's light map.
+- **A fourth pass, for the canyon.** On the long way down (220 to 241 s) the two stones shrank to specks against
+  cliff bands of their own tone, and at about 233 s were all but lost.
+  - Each stone now has a shadow on the ledge it is on, fading as it falls away from it, and never under a few
+    pixels across.
+  - Once a stone is only a few pixels across, a faint light of the sky's colour gathers round it, stronger the
+    smaller it is. The eye finds the two of them on the canyon's face without either being drawn bigger than it
+    is, and close up nothing changes.
+  - The share card (243.5 s) was rendered again and compared: it is unchanged.
 
 ## End credits
 
@@ -328,7 +336,7 @@ to 332.
 ## Known limits
 
 - In the widest shots of the pull (16 cells) and the canyon (about 23 cells) the balls are small. It is scale on
-  purpose, but it is small.
+  purpose; in the canyon a faint sky-coloured light round each stone keeps them findable.
 - At 64 and 144 panels, Evelyn in the mosaic is a red dot on each plank.
 - The photograph's picture is only legible large or under Zoom.
 - Only Chrome on macOS has been watched. The recording export has not been re-measured for this take.

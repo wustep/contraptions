@@ -122,6 +122,36 @@ export function paintStone(p: p5, k: number, weight: number, stone: Stone, x: nu
     }
     return [qx, qy]
   }
+  // Its shadow on the ledge under it, fading as it falls away from it. Never under a few pixels across, so in the
+  // canyon's widest shots, where the stone is a speck, there is still a mark of it on the rock it is on.
+  const below = ledges
+    .filter((l) => x >= l.a[0] && x <= l.b[0])
+    .map((l) => groundAt(l, x))
+    .filter((g) => g >= y - 0.2 * R)
+    .sort((a, b) => a - b)[0]
+  if (below !== undefined) {
+    const h = below - y - R
+    const a = Math.max(0, 1 - h / (4 * R))
+    if (a > 0.01) {
+      const px = Math.max(1.5 * R * k, 9)
+      ctx.fillStyle = rgba(ROCKS.stoneDeep, 0.38 * a)
+      ctx.beginPath()
+      ctx.ellipse(x * k, below * k, px * (1 - 0.3 * (1 - a)), Math.max(0.28 * R * k, 2.2), 0, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  // In the widest shots, where it is a few pixels, a faint light round it, the sky's, so the eye finds the two of
+  // them on the canyon's face without the stone being drawn any bigger than it is.
+  const tiny = 1 - (R * k) / 9
+  if (tiny > 0) {
+    const r = 15
+    const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r)
+    g.addColorStop(0, rgba(ROCKS.sky, 0.65 * tiny))
+    g.addColorStop(0.45, rgba(ROCKS.sky, 0.32 * tiny))
+    g.addColorStop(1, rgba(ROCKS.sky, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(x * k - r, y * k - r, 2 * r, 2 * r)
+  }
   const outline = stone.pts.map((q) => lie(world(q)))
   const trace = () => {
     ctx.beginPath()
