@@ -210,6 +210,13 @@ The notes went back to the builders who made each part, who still had their cont
   - The family has soft contact shadows on the floor through the finale, so the three of them sit on it.
   - Raccacoonie's kitchen has a rail of tools along its back wall (ladles, a spatula, a wok, a strainer),
     dim and swaying a little, so the dark behind the chef is a kitchen's far side and not a blank.
+- **A third pass, for motion and the tail.** The busiest stretches were watched at 10 fps (the press volley, the
+  dojo, the piano, the surf, kindness, the peak's fountain); their motion holds.
+  - The press's flashes lit the frame with a flat white sheet, so the dark under the carpet went a dead grey on
+    every volley. The wash now falls off from the gun that fired it.
+  - Under the credits, the night goes on outside: twice (299.6 s and 317.4 s, between the tail's two accents) a
+    car goes by in the street, right to left, and its headlights sweep across the shop through the glass, by way
+    of the room's light map.
 
 ## End credits
 

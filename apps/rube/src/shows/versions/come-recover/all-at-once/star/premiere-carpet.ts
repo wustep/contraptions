@@ -600,8 +600,8 @@ export function premiereOver(p: p5, c: Ctx, t: number): void {
     if (s < 0 || s > 0.8) continue
     const a = knock(s, 0.08)
     glow(p, X(fl.x), X(fl.y), X(4.5), STAR.flash, 0.4 * a, 0.2)
-    p.noStroke()
-    p.fill(255, 255, 255, 36 * a)
-    p.rect(X(f.cx), X(f.cy), X(f.x1 - f.x0 + 2), X(f.y1 - f.y0 + 2))
+    // The frame's flash: a wide wash of light falling off from the gun, not a flat sheet over the frame, so the
+    // dark under the carpet stays dark and the room is lit from where the flash went off.
+    glow(p, X(fl.x), X(fl.y), X(Math.max(f.x1 - f.x0, f.y1 - f.y0) * 0.9), '#FFFFFF', 0.2 * a, 0.45)
   }
 }

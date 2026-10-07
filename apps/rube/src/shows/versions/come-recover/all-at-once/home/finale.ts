@@ -1,4 +1,5 @@
-import type { Pt, Seg } from '../../../../../parts'
+import type p5 from 'p5'
+import { FLOOR, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { box, carried, frame, part, type Company, type PartShot } from '../kit'
 import { LIGHTS, lightAt, penOf, shade, STREET, type Glow } from './set'
 import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, waymondAt, windowLight } from './finale-plan'
@@ -58,6 +59,59 @@ install(LIGHTS.glows, 'finale-window', (t: number): Glow[] => {
   return out
 })
 install(STREET, 'finale-fireworks', fireworks)
+
+/*
+ * Under the credits, the night goes on outside: twice a car goes by in the street, right to left, and its
+ * headlights sweep across the shop through the glass. Between the tail's two accents, not on them.
+ */
+const CARS = [299.6, 317.4]
+const CAR_CROSS = 2.6
+const carAt = (t: number): { x: number; u: number } | null => {
+  for (const at of CARS) {
+    const u = (t - at) / CAR_CROSS
+    if (u >= 0 && u <= 1) return { x: -1.8 - 8.4 * u, u }
+  }
+  return null
+}
+install(STREET, 'finale-cars', (p: p5, k: number, t: number) => {
+  const car = carAt(t)
+  if (!car) return
+  const { x } = car
+  const road = FLOOR - 0.62
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The beam out ahead of it, low along the road.
+  const g = ctx.createLinearGradient((x - 0.55) * k, 0, (x - 2.6) * k, 0)
+  g.addColorStop(0, 'rgba(255, 244, 214, 0.55)')
+  g.addColorStop(1, 'rgba(255, 244, 214, 0)')
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo((x - 0.55) * k, (road - 0.2) * k)
+  ctx.lineTo((x - 2.6) * k, (road - 0.42) * k)
+  ctx.lineTo((x - 2.6) * k, (road + 0.02) * k)
+  ctx.lineTo((x - 0.55) * k, (road - 0.12) * k)
+  ctx.fill()
+  // The car: a dark shape against the far fronts, its cabin's glass, a wheel at each end, and its lamps.
+  p.noStroke()
+  p.fill(mixHex(HOME.night, HOME.steelDark, 0.15))
+  p.rect(x * k, (road - 0.17) * k, 1.1 * k, 0.24 * k, 0.07 * k)
+  p.rect((x + 0.06) * k, (road - 0.36) * k, 0.62 * k, 0.2 * k, 0.08 * k, 0.08 * k, 0, 0)
+  p.fill(mixHex(HOME.night, HOME.glassDeep, 0.35))
+  p.rect((x + 0.06) * k, (road - 0.35) * k, 0.5 * k, 0.12 * k, 0.05 * k)
+  p.fill(mixHex(HOME.night, HOME.steelDark, 0.05))
+  for (const wx of [-0.33, 0.35]) p.circle((x + wx) * k, (road - 0.04) * k, 0.18 * k)
+  p.fill('#FFF4D6')
+  p.ellipse((x - 0.53) * k, (road - 0.16) * k, 0.07 * k, 0.06 * k)
+  p.fill(HOME.red)
+  p.rect((x + 0.54) * k, (road - 0.17) * k, 0.04 * k, 0.07 * k)
+})
+install(LIGHTS.glows, 'finale-cars', (t: number): Glow[] => {
+  const car = carAt(t)
+  if (!car) return []
+  // The headlights thrown in through the window, travelling across the floor and the washer the other way.
+  const inside = -7.4 + 6.8 * car.u
+  const a = Math.sin(Math.PI * car.u)
+  return [{ x: inside, y: -0.9, r: 1.5, a: 0.32 * a, color: '#FFF1CF' }]
+})
 LIGHTS.neonOff = LIGHTS_OUT
 LIGHTS.lanternsOff = LIGHTS_OUT
 
