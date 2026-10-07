@@ -133,3 +133,8 @@ A fourth pass:
 
 - **The street in front of the club.** In the first and last wide shots the club stood on a blank black band. There is a road along the front now: asphalt, a dashed centre line, a near kerb, and the club's warm light lying on it. The same road shows outside the door as she leaves.
 - **The observatory's ridge.** In the last wide shot the observatory stood on the falling slope, so half of it hung in the sky. It stands on a terrace cut into the ridge.
+
+A fifth pass:
+
+- **Motion.** I rendered the whole show at tenths of a second and flagged every jump from one frame to the next. Each one was a planned cut (the irises, the curtains, the match cuts, the close shots at the door) or a planned flare (the house rising, the trumpet's lamp, the film running out).
+- **Lipton's windows.** While she crosses the room table by table (43 to 56), two thirds of the frame was bare wallpaper. The back wall has two tall windows now, between the tables and below the bulbs' swags. Snow falls past the night outside, lies on the outer ledge and frosts the lower corners, and a wreath with a red bow hangs on each.
