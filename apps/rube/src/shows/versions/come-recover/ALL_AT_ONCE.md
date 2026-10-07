@@ -225,6 +225,9 @@ The notes went back to the builders who made each part, who still had their cont
     smaller it is. The eye finds the two of them on the canyon's face without either being drawn bigger than it
     is, and close up nothing changes.
   - The share card (243.5 s) was rendered again and compared: it is unchanged.
+- **A fifth pass, for the photograph.** Its picture's glow was a bare disc. It is now the washer it leans on: the
+  enamel body, the window in its steel rim, glowing, and the three of them in front of it, eyes and all. As it
+  comes down it has a shadow on the floor, like the family beside it.
 
 ## End credits
 
@@ -338,5 +341,5 @@ to 332.
 - In the widest shots of the pull (16 cells) and the canyon (about 23 cells) the balls are small. It is scale on
   purpose; in the canyon a faint sky-coloured light round each stone keeps them findable.
 - At 64 and 144 panels, Evelyn in the mosaic is a red dot on each plank.
-- The photograph's picture is only legible large or under Zoom.
+- The photograph's picture is clearest large or under Zoom.
 - Only Chrome on macOS has been watched. The recording export has not been re-measured for this take.
