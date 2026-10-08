@@ -113,8 +113,8 @@ export const raccacoonie = part<Kitchen>(
       { t: rig.SPOON + 0.25, cells: 6.3, hold: [0.3, -1.25], w: 1 },
       // Round to the hat for the pocket, and in close for the raccoon.
       { t: 114.9, cells: 4.2, hold: [-1.0, -0.65], w: 1 },
-      { t: 115.9, cells: 2.8, hold: [-0.82, -0.05], w: 1 },
-      { t: 117.2, cells: 2.75, hold: [-0.78, -0.03], w: 1 },
+      { t: 115.9, cells: 2.95, hold: [-0.86, -0.3], w: 1 },
+      { t: 117.2, cells: 2.9, hold: [-0.82, -0.28], w: 1 },
       // Back a little for the egg and the tosses, and onto her for the flip.
       { t: rig.EGG_TOSS + 0.2, cells: 4.2, hold: [-0.45, -0.5], w: 1 },
       { t: rig.SPLAT + 0.2, cells: 4.25, hold: [-0.25, -0.5], w: 1 },

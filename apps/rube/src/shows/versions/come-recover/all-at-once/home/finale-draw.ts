@@ -293,6 +293,20 @@ export function drawTripodFront(pen: Pen, t: number, shade: (hex: string, x: num
 
 /* ------------------------------------------------------------------ the flash */
 
+/** Their contact shadows on the floor, so the three of them sit on it, fading as one is thrown up off it. */
+export function drawContactShadows(pen: Pen, family: Pt[]): void {
+  const { p, k } = pen
+  p.noStroke()
+  for (const [bx, by] of family) {
+    // In the drum (up behind the glass) there is no floor under them.
+    if (by < -0.3) continue
+    const a = clamp(1 + by / 0.5)
+    if (a <= 0.01) continue
+    p.fill(alpha(p, HOME.night, 0.38 * a))
+    p.ellipse(bx * k, (FLOOR + 0.01) * k, (0.32 - 0.08 * (1 - a)) * k, 0.09 * k)
+  }
+}
+
 /** The family's shadows thrown on the washer by the flash, behind them (drawn before the balls). */
 export function drawFlashShadows(pen: Pen, t: number, family: Pt[]): void {
   const u = t - FLASH
@@ -345,6 +359,14 @@ export function drawPhoto(pen: Pen, t: number): void {
   if (!ph) return
   const { p, k, ink, w } = pen
   const { w: W, h: H } = PHOTO
+  // Its shadow on the floor as it comes down to it, and where it leans.
+  const rise = FLOOR - (ph.at[1] + H / 2)
+  const sa = clamp(1 - rise / 0.5)
+  if (sa > 0.01) {
+    p.noStroke()
+    p.fill(alpha(p, HOME.night, 0.3 * sa))
+    p.ellipse((ph.at[0] + 0.03) * k, (FLOOR + 0.01) * k, (W + 0.06) * k, 0.07 * k)
+  }
   p.push()
   p.translate(ph.at[0] * k, ph.at[1] * k)
   p.rotate(ph.turn)
@@ -359,9 +381,14 @@ export function drawPhoto(pen: Pen, t: number): void {
   p.rect(0, py * k, pw * k, pw * k)
   if (ph.dev > 0.02) {
     const d = ph.dev
-    // The washer's window behind them, glowing.
+    // The washer behind them, its window glowing in its steel rim: the photograph is of the same washer it leans on.
+    p.fill(alpha(p, HOME.enamel, 0.85 * d))
+    p.rect(0, (py - 0.015) * k, 0.2 * k, (pw - 0.02) * k, 0.01 * k)
+    p.fill(alpha(p, HOME.steel, d))
+    p.circle(0, (py - 0.03) * k, 0.155 * k)
     p.fill(alpha(p, mixHex(HOME.light, HOME.gold, 0.4), d))
-    p.circle(0, (py - 0.03) * k, 0.13 * k)
+    p.circle(0, (py - 0.03) * k, 0.12 * k)
+    p.noStroke()
     // The three of them, eyes and all.
     const cols = [EVELYN, JOY, WAYMOND]
     cols.forEach((c, i) => {

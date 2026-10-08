@@ -1,9 +1,10 @@
-import type { Pt, Seg } from '../../../../../parts'
+import type p5 from 'p5'
+import { FLOOR, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { box, carried, frame, part, type Company, type PartShot } from '../kit'
 import { LIGHTS, lightAt, penOf, shade, STREET, type Glow } from './set'
 import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, waymondAt, windowLight } from './finale-plan'
 import { HOME } from '../worlds'
-import { drawCamera, drawFlash, drawFlashShadows, drawLanternString, drawPhoto, drawSwitch, drawTripodFront, drawWasher, drawWasherDoor, drawWindowGlow, fireworkFloor, fireworkLight, fireworks, lightColor, stringGlows } from './finale-draw'
+import { drawCamera, drawContactShadows, drawFlash, drawFlashShadows, drawLanternString, drawPhoto, drawSwitch, drawTripodFront, drawWasher, drawWasherDoor, drawWindowGlow, fireworkFloor, fireworkLight, fireworks, lightColor, stringGlows } from './finale-draw'
 
 /**
  * HOME: through the washer's window, the family, the last hits, the lights out, and the credits over the dark
@@ -58,6 +59,59 @@ install(LIGHTS.glows, 'finale-window', (t: number): Glow[] => {
   return out
 })
 install(STREET, 'finale-fireworks', fireworks)
+
+/*
+ * Under the credits, the night goes on outside: twice a car goes by in the street, right to left, and its
+ * headlights sweep across the shop through the glass. Between the tail's two accents, not on them.
+ */
+const CARS = [299.6, 317.4]
+const CAR_CROSS = 2.6
+const carAt = (t: number): { x: number; u: number } | null => {
+  for (const at of CARS) {
+    const u = (t - at) / CAR_CROSS
+    if (u >= 0 && u <= 1) return { x: -1.8 - 8.4 * u, u }
+  }
+  return null
+}
+install(STREET, 'finale-cars', (p: p5, k: number, t: number) => {
+  const car = carAt(t)
+  if (!car) return
+  const { x } = car
+  const road = FLOOR - 0.62
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The beam out ahead of it, low along the road.
+  const g = ctx.createLinearGradient((x - 0.55) * k, 0, (x - 2.6) * k, 0)
+  g.addColorStop(0, 'rgba(255, 244, 214, 0.55)')
+  g.addColorStop(1, 'rgba(255, 244, 214, 0)')
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo((x - 0.55) * k, (road - 0.2) * k)
+  ctx.lineTo((x - 2.6) * k, (road - 0.42) * k)
+  ctx.lineTo((x - 2.6) * k, (road + 0.02) * k)
+  ctx.lineTo((x - 0.55) * k, (road - 0.12) * k)
+  ctx.fill()
+  // The car: a dark shape against the far fronts, its cabin's glass, a wheel at each end, and its lamps.
+  p.noStroke()
+  p.fill(mixHex(HOME.night, HOME.steelDark, 0.15))
+  p.rect(x * k, (road - 0.17) * k, 1.1 * k, 0.24 * k, 0.07 * k)
+  p.rect((x + 0.06) * k, (road - 0.36) * k, 0.62 * k, 0.2 * k, 0.08 * k, 0.08 * k, 0, 0)
+  p.fill(mixHex(HOME.night, HOME.glassDeep, 0.35))
+  p.rect((x + 0.06) * k, (road - 0.35) * k, 0.5 * k, 0.12 * k, 0.05 * k)
+  p.fill(mixHex(HOME.night, HOME.steelDark, 0.05))
+  for (const wx of [-0.33, 0.35]) p.circle((x + wx) * k, (road - 0.04) * k, 0.18 * k)
+  p.fill('#FFF4D6')
+  p.ellipse((x - 0.53) * k, (road - 0.16) * k, 0.07 * k, 0.06 * k)
+  p.fill(HOME.red)
+  p.rect((x + 0.54) * k, (road - 0.17) * k, 0.04 * k, 0.07 * k)
+})
+install(LIGHTS.glows, 'finale-cars', (t: number): Glow[] => {
+  const car = carAt(t)
+  if (!car) return []
+  // The headlights thrown in through the window, travelling across the floor and the washer the other way.
+  const inside = -7.4 + 6.8 * car.u
+  const a = Math.sin(Math.PI * car.u)
+  return [{ x: inside, y: -0.9, r: 1.5, a: 0.32 * a, color: '#FFF1CF' }]
+})
 LIGHTS.neonOff = LIGHTS_OUT
 LIGHTS.lanternsOff = LIGHTS_OUT
 
@@ -78,6 +132,7 @@ export const finale = part<FinaleState>(
       p.translate(-O[0] * c.k, -O[1] * c.k)
       drawSwitch(pen, t)
       drawWasher(pen, t)
+      drawContactShadows(pen, [evelynAt(t), joyAt(t), waymondAt(t)])
       drawFlashShadows(pen, t, [evelynAt(t), joyAt(t), waymondAt(t)])
       drawLanternString(pen, t)
       drawCamera(pen, t)
@@ -148,8 +203,12 @@ export const finale = part<FinaleState>(
       // The door, the drop, and back to take in Waymond coming.
       { t: 269.7, cells: 3.1, hold: H(-2.05, -0.5), w: 1 },
       { t: 271.7, cells: 3.8, hold: H(-1.95, -0.72), w: 1 },
-      { t: 275.2, cells: 4.3, hold: H(-2.1, -1.0), w: 1 },
+      { t: 275.2, cells: 4.3, hold: H(-2.1, -1.3), w: 1 },
       // In, slowly, to the three of them together at the washer's foot, its window glowing behind them; and hold.
+      // The string of lanterns is whole in the frame or out of it: the push goes under it in half a second, not
+      // with their tassels hanging in at the top for two.
+      { t: 276.3, cells: 3.95, hold: H(-2.08, -1.22), w: 1 },
+      { t: 276.9, cells: 3.2, hold: H(-2.05, -0.7), w: 1 },
       { t: 279.0, cells: 2.6, hold: H(-2.03, -0.6), w: 1 },
       { t: 282.2, cells: 2.6, hold: H(-2.05, -0.6), w: 1 },
       // Out again with her, under the camera's tripod, to the switch under the window.
@@ -161,10 +220,11 @@ export const finale = part<FinaleState>(
       { t: 290.2, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
       { t: FLASH + 0.6, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
       { t: 293.2, cells: 3.9, hold: H(-3.45, -1.12), w: 1 },
-      // Then back, towards the washer's glow, for the lights going out.
-      { t: 294.6, cells: 5.15, hold: H(-4.62, -1.52), w: 1 },
+      // Then back, towards the washer's glow, for the lights going out. Both stay inside the shop's end wall: the
+      // storefront's glass is the frame's left edge, so the room is never seen cut off in the dark of the tail.
+      { t: 294.6, cells: 5.15, hold: H(-3.4, -1.52), w: 1 },
       // The rest: drawing back, very slowly, over the dark.
-      { t: END - 0.05, cells: 5.45, hold: H(-4.9, -1.66), w: 1 },
+      { t: END - 0.05, cells: 5.45, hold: H(-3.1, -1.66), w: 1 },
     ]
     return shots.filter((k) => k.t > slot.begin + 0.39 && k.t <= slot.end + 1e-6)
   },

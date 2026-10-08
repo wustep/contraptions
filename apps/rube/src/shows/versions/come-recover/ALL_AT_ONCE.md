@@ -175,6 +175,59 @@ The notes went back to the builders who made each part, who still had their cont
   - the ball draws out in a brief streak along its way through each jump;
   - the flickers before the jump into the dark were taken off, since the surf's collapse owns it;
   - the ground under the laundromat is drawn as earth, not a black band.
+- **A visual pass.** The whole show was rendered at 4 fps and around every jump at 20 fps, and what read wrong was
+  fixed:
+  - the tail's slow draw-back framed the shop's left end wall and the dark past it for 35 s of credits; it now stays
+    inside the room, with the storefront's glass as the frame's left edge, and the earth under the floor goes on
+    outside the walls;
+  - over the ceiling, the storey above is drawn in section, in the same tone as the earth under the floor, not as
+    a black band across the top of the bright party;
+  - the garland's last lantern hung over the big dryer, cut in half by its glass all through the tumble, and the
+    one before it hung inside the empty hanger's basket; both are set on, between where the hanger comes to rest
+    and the dryer's face;
+  - the theatre's front ended in a thin post onto the alley, like a flat; it now turns the corner in stone quoins
+    on a plinth;
+  - the alley's culvert pours into a puddle, with rings and spray, not into nothing;
+  - Raccacoonie's reach for the shrimp tail no longer crosses his face, and the close-up sits a little higher;
+  - the stray net of frames left on the wall after the great hit fades as it shrinks;
+  - in the mosaic, the hot-dog world's piano stands on legs, its keys over the seesaw's swing rather than
+    through it, and the laundromat's tube hangs from a ceiling;
+  - kindness's scissor arm keeps its lattice at full reach;
+  - the rocks' pull-back after the last pebble no longer loses the two stones to specks;
+  - the finale's push-in takes the lantern string whole or not at all, not by its tassels;
+  - in the peak, the strand off the pulley meets the line wound round the shrinking bagel in one line, and after
+    the release its free end carries its clothespin away rather than hanging as a rod in the dark.
+- **A second visual pass, for craft.** The laundromat had machines and no life: bare walls wherever the camera
+  looked up. It now has:
+  - a wall clock over the door's washer, at ten to two in the morning when the tubes come on, its minute hand
+    going round a minute a second. It is in the opening's wide shot and still there in the washer's glow under
+    the credits;
+  - a price board by the first bank, drawn in pictures (a shirt, a sock, a towel, and their prices in coins),
+    which the garland ride passes;
+  - a calendar over the party's gift box, red-headed with a fish for luck, one day ringed.
+  - All three are in stretches of wall nothing passes through, and are under the room's light, so they go dark
+    and come up with the tubes.
+  - The family has soft contact shadows on the floor through the finale, so the three of them sit on it.
+  - Raccacoonie's kitchen has a rail of tools along its back wall (ladles, a spatula, a wok, a strainer),
+    dim and swaying a little, so the dark behind the chef is a kitchen's far side and not a blank.
+- **A third pass, for motion and the tail.** The busiest stretches were watched at 10 fps (the press volley, the
+  dojo, the piano, the surf, kindness, the peak's fountain); their motion holds.
+  - The press's flashes lit the frame with a flat white sheet, so the dark under the carpet went a dead grey on
+    every volley. The wash now falls off from the gun that fired it.
+  - Under the credits, the night goes on outside: twice (299.6 s and 317.4 s, between the tail's two accents) a
+    car goes by in the street, right to left, and its headlights sweep across the shop through the glass, by way
+    of the room's light map.
+- **A fourth pass, for the canyon.** On the long way down (220 to 241 s) the two stones shrank to specks against
+  cliff bands of their own tone, and at about 233 s were all but lost.
+  - Each stone now has a shadow on the ledge it is on, fading as it falls away from it, and never under a few
+    pixels across.
+  - Once a stone is only a few pixels across, a faint light of the sky's colour gathers round it, stronger the
+    smaller it is. The eye finds the two of them on the canyon's face without either being drawn bigger than it
+    is, and close up nothing changes.
+  - The share card (243.5 s) was rendered again and compared: it is unchanged.
+- **A fifth pass, for the photograph.** Its picture's glow was a bare disc. It is now the washer it leans on: the
+  enamel body, the window in its steel rim, glowing, and the three of them in front of it, eyes and all. As it
+  comes down it has a shadow on the floor, like the family beside it.
 
 ## End credits
 
@@ -286,7 +339,7 @@ to 332.
 ## Known limits
 
 - In the widest shots of the pull (16 cells) and the canyon (about 23 cells) the balls are small. It is scale on
-  purpose, but it is small.
+  purpose; in the canyon a faint sky-coloured light round each stone keeps them findable.
 - At 64 and 144 panels, Evelyn in the mosaic is a red dot on each plank.
-- The photograph's picture is only legible large or under Zoom.
+- The photograph's picture is clearest large or under Zoom.
 - Only Chrome on macOS has been watched. The recording export has not been re-measured for this take.

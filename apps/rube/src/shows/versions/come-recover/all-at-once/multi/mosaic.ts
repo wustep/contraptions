@@ -614,7 +614,8 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
     room.draw(p, null, { k: c.k, t: time, since: 0, ink: LAUNDROMAT.ink, bg: LAUNDROMAT.bg, weight: c.weight, color: EVELYN, theme: LAUNDROMAT, spin: () => 0 })
     p.pop()
     // The net of frames closes on her and thins away.
-    const ga = Math.pow(sigma, 0.8)
+    // Fading as fast as it shrinks, so what is left of it never lies on the room as a stray grid.
+    const ga = Math.pow(sigma, 2)
     ctx.setTransform(F.d, 0, 0, F.d, 0, 0)
     if (ga > 0.01) {
       const [gx0, gy0] = place(X0 + (ia - 0.5 - g.ox) * pw, Y0 + (ja - 0.5 - g.oy) * ph)

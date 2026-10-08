@@ -143,8 +143,11 @@ const home: Skin = {
       for (let x = Math.floor(v.x0 / 0.3) * 0.3; x < v.x1; x += 0.3) line(pen, x, -2.1, x, 0, HOME.tileDeep, pen.lw * 0.7)
     }
     if (pen.lod <= 2) line(pen, v.x0, -2.1, v.x1, -2.1, HOME.tileDeep, pen.lw * 2)
-    // A tube overhead.
+    // A tube overhead, on its hangers from the ceiling: never a bar floating in the air.
     if (v.y0 < -2.9) {
+      rect(pen, v.x0 - 0.1, v.y0 - 0.1, v.x1 - v.x0 + 0.2, -3.42 - v.y0 + 0.1, mix(LAUNDROMAT.bg, HOME.steel, 0.35), 0)
+      if (pen.lod <= 2) line(pen, v.x0, -3.42, v.x1, -3.42, LAUNDROMAT.ink, pen.lw)
+      if (pen.lod <= 1) for (const hx of [0.2, 2.2]) line(pen, hx, -3.42, hx, -3.06, LAUNDROMAT.ink, pen.lw * 0.6)
       glow(pen, 1.2, -3.0, 1.7, HOME.light, 0.35)
       round(pen, -0.1, -3.06, 2.6, 0.12, 0.06, HOME.light, 0.8)
     }
@@ -269,19 +272,23 @@ const hotdog: Skin = {
   plank: HOTDOG.bun,
   fulcrum: HOTDOG.ketchup,
   back(pen, m, _v) {
-    // The piano that is played with the feet, behind the machine.
+    // The piano that is played with the feet, behind the machine: up on its legs, its keyboard over the plank's
+    // highest swing and the weight's head, so the seesaw works under the keys rather than through them.
     const x0 = -1.5
     const x1 = 1.5
-    rect(pen, x0, -1.55, x1 - x0, 1.55, HOTDOG.piano)
+    const kb = -1.32
+    rect(pen, x0 + 0.12, kb + 0.2, 0.12, -kb - 0.2, HOTDOG.piano)
+    rect(pen, x1 - 0.24, kb + 0.2, 0.12, -kb - 0.2, HOTDOG.piano)
+    rect(pen, x0, kb - 0.9, x1 - x0, 1.12, HOTDOG.piano)
     if (pen.lod <= 2) {
-      rect(pen, x0 - 0.08, -0.68, x1 - x0 + 0.16, 0.12, HOTDOG.piano, 0.8)
-      rect(pen, x0, -0.56, x1 - x0, 0.2, HOTDOG.ivory, pen.lod <= 1 ? 0.6 : 0)
+      rect(pen, x0 - 0.08, kb - 0.12, x1 - x0 + 0.16, 0.12, HOTDOG.piano, 0.8)
+      rect(pen, x0, kb, x1 - x0, 0.2, HOTDOG.ivory, pen.lod <= 1 ? 0.6 : 0)
       if (pen.lod <= 1) {
         const n = 16
         for (let i = 1; i < n; i++) {
           const x = x0 + ((x1 - x0) * i) / n
-          if (pen.lod === 0) line(pen, x, -0.56, x, -0.36, HOTDOG.piano, pen.lw * 0.6)
-          if ([1, 2, 4, 5, 6].includes(i % 7)) rect(pen, x - 0.035, -0.56, 0.07, 0.12, HOTDOG.piano, 0)
+          if (pen.lod === 0) line(pen, x, kb, x, kb + 0.2, HOTDOG.piano, pen.lw * 0.6)
+          if ([1, 2, 4, 5, 6].includes(i % 7)) rect(pen, x - 0.035, kb, 0.07, 0.12, HOTDOG.piano, 0)
         }
       }
       // A hand of hot dogs hangs over it, limp, and wobbles when the plank lands.

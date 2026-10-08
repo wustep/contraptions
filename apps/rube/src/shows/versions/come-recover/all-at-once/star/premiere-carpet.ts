@@ -322,9 +322,29 @@ function drawFacade(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
     p.fill(mixHex(FACADE_DEEP, STAR.carpetDeep, 0.3))
     p.triangle(X(cx - 0.12), X(CARPET - 2.76), X(cx + 0.24), X(CARPET - 3.12), X(cx + 0.43), X(CARPET - 2.76))
   }
-  // The corner of the building, where the carpet ends and the steps go down.
+  // The corner of the building, where the carpet ends and the steps go down: a stone corner bound in quoins, on a
+  // plinth, its alley face catching the rain light. It reads as the theatre turning the corner, not a set's edge.
+  const cw = 0.62
   solid(p, INK, weight, PILASTER)
-  p.rect(X(EDGE_X), X((top + CARPET) / 2), X(0.5), X(CARPET - top))
+  p.rect(X(EDGE_X), X((top + CARPET) / 2), X(cw), X(CARPET - top))
+  const quoin = mixHex(PILASTER, SILVER, 0.16)
+  const course = 0.46
+  for (let i = 0; ; i++) {
+    const y1 = CARPET - 0.42 - i * course
+    const y0 = y1 - course + 0.06
+    if (y1 < top) break
+    // Long and short in turn, bonded into the front.
+    const long = i % 2 === 0
+    solid(p, INK, weight * 0.5, quoin)
+    p.rect(X(EDGE_X + cw / 2 - (long ? 0.95 : 0.62) / 2), X((y0 + y1) / 2), X(long ? 0.95 : 0.62), X(y1 - y0))
+  }
+  // The alley face, the rain's cold light down its edge.
+  p.noStroke()
+  p.fill(rgbaHex(STAR.rain, 0.22))
+  p.rect(X(EDGE_X + cw / 2 - 0.05), X((top + CARPET) / 2), X(0.1), X(CARPET - top))
+  // The plinth.
+  solid(p, INK, weight, mixHex(PILASTER, NIGHT, 0.3))
+  p.rect(X(EDGE_X + 0.02), X(CARPET - 0.2), X(cw + 0.18), X(0.4))
 
   // The doors.
   const o = doorsOpen(t)
@@ -580,8 +600,8 @@ export function premiereOver(p: p5, c: Ctx, t: number): void {
     if (s < 0 || s > 0.8) continue
     const a = knock(s, 0.08)
     glow(p, X(fl.x), X(fl.y), X(4.5), STAR.flash, 0.4 * a, 0.2)
-    p.noStroke()
-    p.fill(255, 255, 255, 36 * a)
-    p.rect(X(f.cx), X(f.cy), X(f.x1 - f.x0 + 2), X(f.y1 - f.y0 + 2))
+    // The frame's flash: a wide wash of light falling off from the gun, not a flat sheet over the frame, so the
+    // dark under the carpet stays dark and the room is lit from where the flash went off.
+    glow(p, X(fl.x), X(fl.y), X(Math.max(f.x1 - f.x0, f.y1 - f.y0) * 0.9), '#FFFFFF', 0.2 * a, 0.45)
   }
 }

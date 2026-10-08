@@ -405,6 +405,24 @@ function drawGround(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
     p.vertex(X(MOUTH[0] + 0.1 + (0.3 + 0.5 * fl) * u), X(my + 0.12 + (LOWER - my - 0.12) * u * u))
   }
   p.endShape()
+  // Where it lands: a puddle on the lane, its shine, and rings going out from the fall, faster in the flood.
+  const lx = MOUTH[0] + 0.1 + 0.3 + 0.5 * fl
+  pool(p, X(lx + 0.15), X(LOWER + 0.03), X(1.1 + 0.4 * fl), X(0.1), STAR.rain, 0.22 + 0.12 * fl)
+  p.noFill()
+  for (let i = 0; i < 3; i++) {
+    const u = (t * (0.9 + 0.8 * fl) + i / 3) % 1
+    p.stroke(rgba(STAR.rain, 0.5 * (1 - u)))
+    p.strokeWeight(Math.max(1, weight * 0.6))
+    p.ellipse(X(lx), X(LOWER + 0.02), X(0.2 + 1.3 * u), X(0.05 + 0.1 * u))
+  }
+  // The spray off the fall, thrown up a little either side.
+  p.noStroke()
+  p.fill(rgba(STAR.rain, 0.5))
+  for (let i = 0; i < 6; i++) {
+    const u = (t * 2.3 + i * 0.37) % 1
+    const dir = i % 2 ? 1 : -1
+    p.circle(X(lx + dir * (0.08 + 0.3 * u) * (0.6 + 0.15 * i)), X(LOWER - 0.32 * u * (1 - u) * (1 + fl)), X(0.035))
+  }
 }
 
 /** The cover over the drain: an iron grate, hinged at its right edge, rocking and dropping open. */

@@ -194,8 +194,13 @@ export function seatAt(t: number): Pt {
   return [hx + Math.sin(a) * HANG, bar + Math.cos(a) * HANG - R - 0.02]
 }
 
-/** Where each lantern's knot is: the hook's x on the onset it opens on. */
-export const KNOTS: number[] = POPS.map((t) => hookX(t))
+/**
+ * Where each lantern's knot is: the hook's x on the onset it opens on. The last two are set a little on from it,
+ * between where the empty hanger comes to rest (about 6.5) and the big dryer's face (7.75), so neither hangs in the
+ * hanger's basket nor half behind the dryer's glass all through the tumble.
+ */
+const SET_ON: (number | null)[] = [null, null, null, 6.9, 7.47]
+export const KNOTS: number[] = POPS.map((t, i) => SET_ON[i] ?? hookX(t))
 
 /** Where lantern i hangs from at `t` (its knot on the wire, which moves as the hanger does), and its lantern's middle. */
 export function lanternAt(i: number, t: number): { knot: Pt; middle: Pt } {

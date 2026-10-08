@@ -82,7 +82,7 @@ export const WAYMOND_AT: Pt = [FINAL[0] + 2 * R + 0.022, TABLE.top - R]
 export const KARAOKE = { x0: 31.05, x1: 31.7, h: 0.45 }
 
 /** The arm: its wall mount, links, the claw's palm (from the tongs' end to where she sits in it). */
-export const ARM = { mount: [36.2, -3.75] as Pt, units: 6, link: 0.75, palm: 0.21 }
+export const ARM = { mount: [36.2, -3.75] as Pt, units: 7, link: 0.75, palm: 0.21 }
 
 
 /** The office desk with the taxes, against the far wall. */

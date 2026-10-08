@@ -243,9 +243,10 @@ export const ledge = part<State>(
     // Close on the two of them, still, and closer, the canyon open beyond the lip.
     { t: BEGIN + 0.9, cells: 3.0, hold: [0.2, -0.3], w: 0.9 },
     { t: PEBBLE_AT[2] - 0.5, cells: 2.45, hold: [0.3, -0.2] },
-    // The last pebble: the camera draws back to watch it go down, and down.
-    { t: fall(12.5), cells: 11, hold: [3.3, 3.05] },
-    { t: fall(14.5), cells: 10.6, hold: [3.15, 2.95] },
+    // The last pebble: the camera draws back a little and down the face to see it go, the two of them still on the
+    // lip at the top of the frame. A wider shot loses them both and the pebble to specks.
+    { t: fall(12.5), cells: 5.2, hold: [1.15, 0.85] },
+    { t: fall(14.5), cells: 5.0, hold: [1.05, 0.75] },
     // Then in, slowly, all through Joy's rocking and her lean out over the edge, and closer while she waits there.
     { t: ROCK_AT[0], cells: 4.6, hold: [0.75, 0.5] },
     { t: LEAN, cells: 3.6, hold: [0.34, 0.0] },

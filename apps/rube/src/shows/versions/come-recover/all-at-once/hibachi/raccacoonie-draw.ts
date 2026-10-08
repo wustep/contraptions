@@ -108,6 +108,40 @@ export function drawRoom(pen: Pen): void {
   p.fill(mixHex(BG, H.soy, 0.1))
   const SL = 0.5
   for (let i = Math.floor(f.x0 / SL) - 1; i < f.x1 / SL + 1; i++) p.rect(X(pen, i * SL + SL / 2), X(pen, (f.y0 - 1 + rig.TOP) / 2), X(pen, SL - 0.035), X(pen, rig.TOP - f.y0 + 1))
+  // A rail along it, high, hung with the kitchen's tools: ladles, a spatula, a wok, a strainer. Dim, the far side of
+  // the room, with the griddle's light catching their bellies.
+  const RAIL = rig.TOP - 3.35
+  const tool = mixHex(BG, H.steel, 0.22)
+  p.stroke(mixHex(BG, H.steel, 0.3))
+  p.strokeWeight(Math.max(1, X(pen, 0.05)))
+  p.line(X(pen, f.x0 - 1), X(pen, RAIL), X(pen, f.x1 + 1), X(pen, RAIL))
+  const GAP = 1.3
+  for (let i = Math.floor(f.x0 / GAP) - 1; i < f.x1 / GAP + 1; i++) {
+    const x = i * GAP + 0.35
+    const kind = ((i % 4) + 4) % 4
+    const sway = 0.03 * Math.sin(t * 0.9 + i * 1.7)
+    const hx = x + sway
+    p.stroke(tool)
+    p.strokeWeight(Math.max(1, X(pen, 0.035)))
+    p.noFill()
+    p.circle(X(pen, x), X(pen, RAIL + 0.05), X(pen, 0.08))
+    if (kind === 2) {
+      // The wok, on its handle's ring.
+      p.noStroke()
+      p.fill(tool)
+      p.arc(X(pen, hx), X(pen, RAIL + 0.42), X(pen, 0.78), X(pen, 0.62), 0, Math.PI, p.CHORD)
+      p.stroke(tool)
+      p.line(X(pen, x), X(pen, RAIL + 0.09), X(pen, hx), X(pen, RAIL + 0.42))
+      continue
+    }
+    const len = kind === 0 ? 0.62 : 0.7
+    p.line(X(pen, x), X(pen, RAIL + 0.09), X(pen, hx), X(pen, RAIL + 0.09 + len))
+    p.noStroke()
+    p.fill(tool)
+    if (kind === 0) p.ellipse(X(pen, hx), X(pen, RAIL + 0.15 + len), X(pen, 0.2), X(pen, 0.16))
+    else if (kind === 1) p.rect(X(pen, hx), X(pen, RAIL + 0.16 + len), X(pen, 0.17), X(pen, 0.2), X(pen, 0.02))
+    else p.circle(X(pen, hx), X(pen, RAIL + 0.2 + len), X(pen, 0.26))
+  }
   glow(pen, 0.2, rig.TOP + 0.1, 4.6, H.flame, 0.07 + 0.09 * level(t))
   const b = blaze(t)
   if (b > 0) glow(pen, rig.VX, rig.TOP - 1.4, 5.5, H.flame, 0.3 * b)
@@ -463,7 +497,8 @@ export function drawChef(pen: Pen): void {
       hand = [lerp(mouth[0] + 0.1, rest[0], u), lerp(mouth[1] + 0.03, rest[1] + 0.02, u)]
     }
     if (t >= REACH[1] && bites < 3) drawTail(pen, hand[0] - 0.02, hand[1] - 0.06, -1.2 + 0.15 * Math.sin(t * 8), 1 - bites * 0.28)
-    drawPaw(pen, [fx + 0.2, fy + 0.18], hand)
+    // From the side of his head, so the reach up into the pocket goes past his face rather than across it.
+    drawPaw(pen, [fx + 0.27, fy + 0.1], hand)
   }
   // His paw out with the egg, and the flick.
   if (t > rig.EGG_TOSS - 0.3 && t < rig.EGG_TOSS + 0.2) {
