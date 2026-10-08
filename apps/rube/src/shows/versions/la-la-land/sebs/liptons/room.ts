@@ -307,6 +307,67 @@ function wall(d: Draw, t: number): void {
   for (const x of TABLES) glow(p, d.k, x, TABLE.top - 0.4, 1.9, M.lamp, 0.16 * lampAt(x, t), 1, 1.25)
 }
 
+/** Two tall windows in the back wall, between the tables: the snowy night through them, a wreath on each. */
+const WINDOWS = [-8.8, -4.4]
+const WIN = { half: 0.72, top: -0.75, sill: 1.42 }
+function windows(d: Draw, t: number): void {
+  const { p, k, ink, w } = d
+  for (const cx of WINDOWS) {
+    const [x0, x1, y0, y1] = [cx - WIN.half, cx + WIN.half, WIN.top, WIN.sill]
+    // The night, deeper at the top, and the room's warmth on the glass low down.
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
+    g.addColorStop(0, mixHex(NIGHT, BG, 0.45))
+    g.addColorStop(1, NIGHT)
+    ctx.fillStyle = g
+    ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+    // Snow falling past outside, and lying on the outer ledge.
+    p.noStroke()
+    p.fill(alpha(p, SNOW, 0.5))
+    for (const fl of FLAKES) {
+      // Each window its own fall: the flakes' tile, shifted by where the window is.
+      const x = x0 + ((fl.x * 0.37 + cx * 1.37 + 0.18 * Math.sin(t * 0.7 + fl.ph)) % (x1 - x0) + (x1 - x0)) % (x1 - x0)
+      const y = y0 + (((fl.y * 0.6 + cx * 0.71 + fl.v * t) % (y1 - y0)) + (y1 - y0)) % (y1 - y0)
+      p.circle(x * k, y * k, 1.3 * fl.r * k)
+    }
+    p.fill(alpha(p, SNOW, 0.75))
+    poly(d, [[x0, y1], [x0 + 0.1, y1 - 0.1], [cx - 0.2, y1 - 0.14], [cx + 0.3, y1 - 0.09], [x1 - 0.08, y1 - 0.12], [x1, y1]])
+    // Frost in the lower corners.
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+    ctx.clip()
+    for (const x of [x0, x1]) glow(p, k, x, y1, 0.5, SNOW, 0.25)
+    ctx.restore()
+    // The sashes: frame, mullion, glazing bars; the sill.
+    outline(p, M.wood, w * 1.6)
+    box(d, x0, y0, x1, y1)
+    p.line(cx * k, y0 * k, cx * k, y1 * k)
+    p.strokeWeight(w)
+    for (const yy of [y0 + (y1 - y0) / 3, y0 + (2 * (y1 - y0)) / 3]) p.line(x0 * k, yy * k, x1 * k, yy * k)
+    solid(p, ink, w * 0.5, M.wood)
+    box(d, x0 - 0.12, y1, x1 + 0.12, y1 + 0.1)
+    // The wreath, hung on the middle of the window: a ring of pine, berries, a red bow at its foot.
+    const wy = y0 + (y1 - y0) * 0.36
+    const r = 0.26
+    p.noFill()
+    p.stroke(M.pine)
+    p.strokeWeight(0.13 * k)
+    p.circle(cx * k, wy * k, 2 * r * k)
+    p.noStroke()
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2
+      p.fill(i % 2 ? M.garland : M.pine)
+      p.circle((cx + Math.cos(a) * r) * k, (wy + Math.sin(a) * r) * k, 0.1 * k)
+    }
+    p.fill(M.shade)
+    for (const a of [0.6, 2.2, 3.9, 5.1]) p.circle((cx + Math.cos(a) * r) * k, (wy + Math.sin(a) * r) * k, 0.055 * k)
+    bow(d, cx, wy + r, 0.95)
+    // The lamps' glow lies on the glass too.
+    glow(p, k, cx, y1 - 0.2, 0.9, M.lamp, 0.06 * Math.max(...TABLES.map((x) => lampAt(x, t) * Math.exp(-Math.abs(x - cx) / 1.5))))
+  }
+}
+
 function garland(d: Draw, t: number): void {
   const { p, k, w } = d
   // Along the top of the wall, swagged from bow to bow.
@@ -781,6 +842,7 @@ export const liptonsRoom = scenery<null>({
     night(d, t)
     shell(d)
     wall(d, t)
+    windows(d, t)
     garland(d, t)
     stage(d)
     for (const x of TABLES) table(d, x, t)

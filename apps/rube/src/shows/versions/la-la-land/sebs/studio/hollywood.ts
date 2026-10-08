@@ -321,10 +321,18 @@ function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
     p.strokeWeight(Math.max(1, weight * 0.6))
     p.line(X(k, x0 + 0.15), X(k, y + W / 2), X(k, x1 - 0.15), X(k, y + W / 2))
   }
-  // The crest's plateau, a shade lighter where they stand.
+  // The crest's plateau, a shade lighter where they stand: a band just under the outline's own curve (the same
+  // Catmull-Rom span the hill is drawn with), thinning to nothing at each shoulder.
   p.noStroke()
   p.fill(mixHex(hill, M.flat, 0.18))
-  p.rect(X(k, CREST[0] + 0.1), X(k, YC + FLOOR), X(k, CREST[1] - CREST[0] - 0.2), X(k, 0.12))
+  const i1 = HILL.findIndex(([x]) => x === CREST[0])
+  const [P0, P1, P2, P3] = [HILL[i1 - 1], HILL[i1], HILL[i1 + 1], HILL[i1 + 2]]
+  const cr = (u: number, j: 0 | 1) =>
+    0.5 * (2 * P1[j] + (P2[j] - P0[j]) * u + (2 * P0[j] - 5 * P1[j] + 4 * P2[j] - P3[j]) * u * u + (3 * P1[j] - P0[j] - 3 * P2[j] + P3[j]) * u * u * u)
+  p.beginShape()
+  for (let j = 0; j <= 24; j++) p.vertex(X(k, cr(j / 24, 0)), X(k, cr(j / 24, 1) + 0.02))
+  for (let j = 24; j >= 0; j--) p.vertex(X(k, cr(j / 24, 0)), X(k, cr(j / 24, 1) + 0.02 + 0.14 * Math.sin((Math.PI * j) / 24)))
+  p.endShape(p.CLOSE)
   // The lamps on the road and the crest: posts first; their light after the bushes.
   for (const [x, y] of s.lamps) drawLampPost(p, c, t, x, y)
 }

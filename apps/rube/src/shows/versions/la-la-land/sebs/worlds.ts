@@ -183,6 +183,9 @@ export const DRIVE_MAT = {
   neonCore: '#CFE0FF',
   brick: '#3A2A3A',
   sodium: '#E9A94B',
+  rose: '#E07A93',
+  frame: '#1C1420',
+  sill: '#5B4554',
   car: ['#6F2B34', '#2F4C6E', '#8A8F99', '#3B5B45', '#C9B48A'],
 }
 

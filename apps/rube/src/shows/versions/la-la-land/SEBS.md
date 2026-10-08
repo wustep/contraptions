@@ -105,3 +105,36 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
   - `ShowVersion.director`, for the byline (since removed: the picker has no bylines);
   - the styles for both.
 - **Rebuilding the audio.** `sh scripts/shows/sebs-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/shows/sebs-onsets.py` measures it again. Neither needs to run unless the mix changes.
+
+## Visual polish
+
+A pass over the frames, fixing what read wrong:
+
+- **The piano and her table.** The camera crossed between the keys and Mia's table (21.8, 35.6, 438 and 444.9) as a long pan at close range, so for two or three seconds each time the frame held nothing but the piano's legs and the curtain, with Seb cut off at the top. Each crossing now draws back on the way, so the middle of the move is the room: him at the keys, her at her table.
+- **The theatre's street.** Outside the theatre the frame was black above the pavement. Across the street there is now a row of buildings in the dark, a few windows lit, and a lamp at the kerb. The marquee's card, which was a red dot on a line and read as a pin, is now a rose, with petals and leaves.
+- **The club from the street.** The window high on the club's wall was a flat blue box. It is a window now: the room's rose stage light behind a half-drawn curtain, four panes and a sill. The door has panels and a brass knob.
+- **The count-in.** While the band's lamps come up and he nods the count-in (471.3 to 478), the band was a corner cut off at the bottom of the frame. The shot now holds him at the keys with the band's stands beside him.
+
+A second pass:
+
+- **Their reflections.** On painted Paris's wet quay and the stars' glass floor each ball's reflection was its colour as a thin wash, so Mia's yellow greyed into the blue stones. Each reflection is now its own colour, darkened toward the night and laid on more thickly, so hers reads as hers.
+- **The petals.** The red petals on the quay stayed on the floor after Paris flew out, and speckled the stars' clean glass. They go with the set.
+- **The deck over the street.** As the car pulls up at the club (417 to 421), the freeway deck overhead cut its cars off at the roofs along the top of the frame. The shot sits a little higher, so the cars on the deck are whole.
+- **The observatory.** On The End's swell the observatory lights on its ridge, but in the last wide shot it stood clipped at the frame's left edge. Its ridge is moved in, so it lights in the picture.
+
+A third pass:
+
+- **The freeway, wide.** In the long silence before he pulls out of the line (406 to 410), the wide shot was a thin strip of cars between an empty black sky and a blank slab of street that filled the bottom third. The shot comes in closer and sits lower, so the street is a floor and not a slab. Over the city there are stars now, and the hills along the far side of the basin.
+- **The door.** As she goes out (466 to 468) the doorway was pushed to the frame's left edge and the neon arrow was cut off. The shot now sits on the door: the arrow is whole, she walks out of frame under it, and the door shuts in the middle of the picture. She is still out of frame when she goes.
+- **The boulevards up close.** The city's boulevard lamps run down to the street, so in close shots by the club's door the nearest of them were a row of large brown discs beside the awning. They fade out before the street.
+- **Hollywood's crest.** The lighter plateau where they stand was a flat rectangle that cut across the hill's outline. It is now a lit band that follows the curve of the crest.
+
+A fourth pass:
+
+- **The street in front of the club.** In the first and last wide shots the club stood on a blank black band. There is a road along the front now: asphalt, a dashed centre line, a near kerb, and the club's warm light lying on it. The same road shows outside the door as she leaves.
+- **The observatory's ridge.** In the last wide shot the observatory stood on the falling slope, so half of it hung in the sky. It stands on a terrace cut into the ridge.
+
+A fifth pass:
+
+- **Motion.** I rendered the whole show at tenths of a second and flagged every jump from one frame to the next. Each one was a planned cut (the irises, the curtains, the match cuts, the close shots at the door) or a planned flare (the house rising, the trumpet's lamp, the film running out).
+- **Lipton's windows.** While she crosses the room table by table (43 to 56), two thirds of the frame was bare wallpaper. The back wall has two tall windows now, between the tables and below the bulbs' swags. Snow falls past the night outside, lies on the outer ledge and frosts the lower corners, and a wreath with a red bow hangs on each.

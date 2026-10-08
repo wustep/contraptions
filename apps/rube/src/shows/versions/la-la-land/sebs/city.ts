@@ -97,7 +97,7 @@ const ridge = (x: number, far: boolean): number => {
 }
 
 /** The observatory's ridge: the near hills, left of the club. */
-const OBSERVATORY = -38
+const OBSERVATORY = -28
 
 /**
  * The End's orchestra arriving (its one clear onset), and the swell it climbs to. On the arrival two more searchlights
@@ -236,6 +236,15 @@ export const city = scenery<CityState>({
     if (ox > fr.x0 - 4 && ox < fr.x1 + 4) {
       const oy = HORIZON + lift(0.45) - ridge(OBSERVATORY, false) - 2.6 + 0.05
       ctx.fillStyle = HILL_NEAR
+      // The terrace it stands on, cut into the ridge and falling away down the slope, so none of it hangs in the air.
+      ctx.beginPath()
+      ctx.moveTo((ox - 3.4) * k, (oy + 2.2) * k)
+      ctx.quadraticCurveTo((ox - 2.2) * k, (oy + 0.05) * k, (ox - 1.5) * k, (oy + 0.02) * k)
+      ctx.lineTo((ox + 1.8) * k, (oy + 0.02) * k)
+      ctx.quadraticCurveTo((ox + 2.6) * k, (oy + 0.1) * k, (ox + 3.6) * k, (oy + 1.6) * k)
+      ctx.lineTo((ox + 3.6) * k, (oy + 2.2) * k)
+      ctx.closePath()
+      ctx.fill()
       ctx.fillRect((ox - 1.6) * k, (oy - 0.45) * k, 3.2 * k, 0.5 * k)
       ctx.beginPath()
       ctx.arc(ox * k, (oy - 0.45) * k, 0.62 * k, Math.PI, 0)
@@ -266,12 +275,15 @@ export const city = scenery<CityState>({
       for (let j = 1; j <= b.n; j++) {
         // Lamps evenly spaced along the ground, so closer together on the screen the further off they are.
         const near = Math.pow(j / b.n, 1.25)
+        // They thin out before the street: a lamp near enough to be big would stand beside the club, not in the basin.
+        const fade = 1 - smooth(near, 0.68, 0.9)
+        if (fade <= 0.01) continue
         const dd = 0.2 + 0.6 * near
         const x = b.xFar + (b.xNear - b.xFar) * near + slide(dd)
         const y = HORIZON + (STREET - 0.6 - HORIZON) * Math.pow(near, 1.6) + lift(dd)
         if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1) continue
         const tw = 0.8 + 0.2 * Math.sin(t * 0.6 + j * 0.7 + b.ph)
-        ctx.fillStyle = rgba('#F7C779', (0.45 + 0.4 * near) * tw)
+        ctx.fillStyle = rgba('#F7C779', (0.45 + 0.4 * near) * tw * fade)
         ctx.beginPath()
         ctx.arc(x * k, y * k, Math.max(0.6, 0.045 * (0.5 + 1.5 * near) * k), 0, Math.PI * 2)
         ctx.fill()

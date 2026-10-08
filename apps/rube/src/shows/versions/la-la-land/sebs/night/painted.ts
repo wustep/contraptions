@@ -686,7 +686,9 @@ const PETALS = Array.from({ length: 24 }, (_, i) => {
 
 function petals(p: p5, k: number, T: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const fade = 0.3 + 0.7 * lampLight(T)
+  // Dimmer as the lamps go; swept up with the set when Paris flies, so the stars' glass floor is clean.
+  const fade = (0.3 + 0.7 * lampLight(T)) * (1 - smooth(T, FLY_SET, FLY_SET + 2.5))
+  if (fade <= 0.001) return
   ctx.fillStyle = rgba(NIGHT_MAT.petal, 0.95 * fade)
   for (const q of PETALS) {
     let x = q.x

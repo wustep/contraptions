@@ -324,6 +324,24 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.stroke(ink)
   p.strokeWeight(weight * 0.8)
   p.line(X(fr.x0 - 1), X(R.floor), X(fr.x1 + 1), X(R.floor))
+  // The road along the front: asphalt, its centre line, the near kerb, and the club's light lying on it.
+  {
+    const r0 = R.floor + 0.22
+    const r1 = R.floor + 2.1
+    const mid = (r0 + r1) / 2
+    p.noStroke()
+    p.fill(mixHex(bg, M.lacquer, 0.32))
+    rect(fr.x0 - 1, r0, fr.x1 + 1, r1)
+    glow(p, k, (R.wallL0 + R.wallR1) / 2, r0 + 0.15, (R.wallR1 - R.wallL0) * 0.55, M.candle, 0.06 + 0.06 * Math.max(L.house, L.blaze), 1, 0.12)
+    glow(p, k, -15.2 + 0.4, r0 + 0.2, 1.6, M.candle, 0.1, 1, 0.3)
+    p.fill(rgba(M.brass, 0.22))
+    for (let x = Math.floor((fr.x0 - 1) / 1.6) * 1.6; x < fr.x1 + 1; x += 1.6) rect(x, mid - 0.025, x + 0.8, mid + 0.025)
+    p.fill(M.wall)
+    rect(fr.x0 - 1, r1, fr.x1 + 1, r1 + 0.18)
+    p.stroke(rgba(M.brass, 0.3))
+    p.strokeWeight(weight * 0.5)
+    p.line(X(fr.x0 - 1), X(r1), X(fr.x1 + 1), X(r1))
+  }
   // A streetlamp on the pavement, short of the door: sodium, the way the drive comes in.
   {
     const lx = -15.2

@@ -165,10 +165,15 @@ export const opening = part<OpeningState>(
     // ...to the piano as the phrase settles, and on in while the lights go down on it.
     { t: 12.3, cells: 4.3, hold: [2.75, -0.75] },
     { t: 17.6, cells: 3.15, hold: [2.95, -0.38] },
-    // Out to her table, and hold on her while he plays on.
-    { t: 21.8, cells: 1.95, hold: [-2.05, 2.36] },
+    { t: 19.3, cells: 3.3, hold: [2.85, -0.3] },
+    // Out to her table, and hold on her while he plays on. The move draws back on the way, so it crosses the room
+    // (him at the keys, her at her table) rather than the piano's legs.
+    { t: 20.75, cells: 5.6, hold: [-0.3, 1.25] },
+    { t: 22.4, cells: 1.95, hold: [-2.05, 2.36] },
     { t: 31.0, cells: 1.75, hold: [-2.12, 2.4] },
-    // Back to the keys, and the stage light closes on them.
+    // Back to the keys the same way, and the stage light closes on them.
+    { t: 33.0, cells: 5.6, hold: [-0.3, 1.25] },
+    { t: 34.7, cells: 3.0, hold: [2.95, -0.35] },
     { t: 35.6, cells: 3.0, hold: [2.95, -0.35] },
     { t: 39.4, cells: 2.8, hold: [3.0, -0.3] },
   ],

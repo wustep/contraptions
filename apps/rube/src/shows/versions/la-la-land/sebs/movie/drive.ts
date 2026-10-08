@@ -221,15 +221,15 @@ export const drive = part<DriveState>(
     { t: 401.4, cells: 3.8, hold: [-0.35, -0.25] },
     { t: 402.3, cells: 3.9, hold: [-0.3, -0.25] },
     { t: 404.6, cells: 6.2, hold: [1.3, -0.55] },
-    // The long silence: out wide, the line of lights along the high road, the ramp going down, the city.
-    { t: 407.6, cells: 14, hold: [6.0, 0.9] },
-    { t: PULL + 0.4, cells: 13.5, hold: [6.4, 1.0] },
+    // The long silence: out wide, the line of lights along the high road, the ramp going down, the city under the stars.
+    { t: 407.6, cells: 10.6, hold: [5.8, -0.1] },
+    { t: PULL + 0.4, cells: 10.2, hold: [6.2, 0.05] },
     // Down the ramp with them, and along the street under its lamps.
     { t: 411.2, cells: 8.5, w: 0, off: [1.2, -0.6] },
     { t: 415.2, cells: 6.2, w: 0, off: [1.4, -0.7] },
-    { t: STOP, cells: 5.4, hold: [PARK + 2.2, STREET - 1.2] },
+    { t: STOP, cells: 5.4, hold: [PARK + 2.2, STREET - 1.75] },
     // Parked at the door, the sign, the two of them going in.
-    { t: 420.6, cells: 5.0, hold: [PARK + 2.3, STREET - 1.35] },
+    { t: 420.6, cells: 5.0, hold: [PARK + 2.3, STREET - 1.85] },
     { t: 422.9, cells: 4.4, hold: [DOOR_X - 0.9, STREET - 1.0] },
   ],
 )
@@ -246,6 +246,13 @@ const TOWERS = Array.from({ length: 44 }, (_, i) => {
   return { x, w, h, lit }
 })
 
+/** The sky over it: stars, and the hills along the far side of the basin (both all but still as the camera goes). */
+const SKY_STARS = Array.from({ length: 320 }, (_, i) => ({ x: -40 + hash(i, 21) * 110, y: -11 + hash(i, 22) * 10.2, r: 0.02 + 0.035 * hash(i, 23) ** 2, a: 0.35 + 0.55 * hash(i, 24) }))
+const RIDGE: Pt[] = Array.from({ length: 401 }, (_, i) => {
+  const x = -40 + i * 0.3
+  return [x, -0.7 - 1.3 * Math.sin(x * 0.19 + 1.3) ** 2 - 0.45 * Math.sin(x * 0.53 + 0.4) ** 2]
+})
+
 function drawDrive(p: p5, t: number, c: Ctx): void {
   const { k, ink, weight } = c
   const w = weight
@@ -253,6 +260,22 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
   const line = rgba(ink, 0.3)
   // The night: dark overhead, a sodium haze low over the city.
   vgrad(p, k, fr.x0 - 1, fr.y0 - 1, fr.x1 + 1, fr.y1 + 1, [[0, rgba(D.asphalt, 0)], [Math.max(0.02, Math.min(0.98, (STREET - 1.5 - fr.y0) / (fr.y1 - fr.y0 + 2))), rgba(D.sodium, 0.14)], [1, rgba(D.asphalt, 0.6)]])
+  // The stars and the far hills, the sodium haze along their foot.
+  const far = fr.cx * 0.85
+  p.noStroke()
+  for (const st of SKY_STARS) {
+    const x = st.x + far
+    if (x < fr.x0 - 0.2 || x > fr.x1 + 0.2 || st.y < fr.y0 - 0.2 || st.y > fr.y1) continue
+    p.fill(alpha(p, D.head, st.a))
+    p.circle(x * k, st.y * k, 2 * st.r * k)
+  }
+  const hills = fr.cx * 0.7
+  p.fill(alpha(p, D.brick, 0.5))
+  p.beginShape()
+  p.vertex((RIDGE[0][0] + hills) * k, (STREET + 1) * k)
+  for (const [x, y] of RIDGE) p.vertex((x + hills) * k, y * k)
+  p.vertex((RIDGE[RIDGE.length - 1][0] + hills) * k, (STREET + 1) * k)
+  p.endShape(p.CLOSE)
   // The city, half as fast as the road.
   const par = 0.5
   const ox = fr.cx * par
@@ -265,8 +288,9 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
     p.fill(alpha(p, D.sodium, 0.55))
     for (const [lx, ly] of tw.lit) p.rect((x0 + lx) * k, (base - tw.h + ly) * k, 0.12 * k, 0.16 * k)
   }
-  // The street below, and the ground.
+  // The street below, and the ground under it falling away into the dark.
   shape(p, k, [[fr.x0 - 1, STREET], [fr.x1 + 1, STREET], [fr.x1 + 1, fr.y1 + 1], [fr.x0 - 1, fr.y1 + 1]], D.asphalt, null)
+  vgrad(p, k, fr.x0 - 1, STREET + 0.3, fr.x1 + 1, Math.max(STREET + 1.5, fr.y1 + 1), [[0, rgba(D.frame, 0)], [1, rgba(D.frame, 0.85)]])
   seg(p, k, [fr.x0 - 1, STREET], [fr.x1 + 1, STREET], line, w)
   // The freeway: its piers, its far rail, its deck.
   for (let x = Math.floor((fr.x0 - 2) / 6) * 6; x < fr.x1 + 2; x += 6) shape(p, k, [[x - 0.22, RD + 0.35], [x + 0.22, RD + 0.35], [x + 0.3, STREET], [x - 0.3, STREET]], rgba(D.brick, 0.9), line, w * 0.6)
@@ -403,8 +427,18 @@ function club(p: p5, k: number, ink: string, w: number, t: number, fr: { x0: num
   // The building: brick, and a window high up where the stage light shows.
   shape(p, k, [[WALL, WALK], [WALL + 12, WALK], [WALL + 12, top], [WALL, top]], D.brick, line, w)
   for (let y = WALK - 0.6; y > top; y -= 0.6) seg(p, k, [WALL + thick, y], [WALL + 12, y], rgba(ink, 0.06), w * 0.5)
-  box2(p, k, WALL + 1.5, WALK - 4.2, WALL + 3.2, WALK - 3.0, alpha(p, D.neon, 0.45), line, w * 0.8)
-  glow(p, k, WALL + 2.35, WALK - 3.6, 1.1, D.neon, 0.18)
+  // The window: the room's rose stage light behind a half-drawn curtain, four panes, a stone sill.
+  const [wx0, wy0, wx1, wy1] = [WALL + 1.5, WALK - 4.2, WALL + 3.2, WALK - 3.0]
+  glow(p, k, (wx0 + wx1) / 2, wy1 - 0.3, 1.3, D.rose, 0.16)
+  box2(p, k, wx0, wy0, wx1, wy1, alpha(p, D.rose, 0.55), null)
+  box2(p, k, wx0, (wy0 + wy1) / 2, wx1, wy1, alpha(p, D.sodium, 0.22), null)
+  shape(p, k, [[wx0, wy0], [wx0 + 0.45, wy0], [wx0 + 0.2, wy0 + 0.5], [wx0 + 0.12, wy1], [wx0, wy1]], D.car[0], null)
+  shape(p, k, [[wx1, wy0], [wx1 - 0.45, wy0], [wx1 - 0.2, wy0 + 0.5], [wx1 - 0.12, wy1], [wx1, wy1]], D.car[0], null)
+  const mull = D.frame
+  seg(p, k, [(wx0 + wx1) / 2, wy0], [(wx0 + wx1) / 2, wy1], mull, w * 1.6)
+  seg(p, k, [wx0, wy0 + 0.5], [wx1, wy0 + 0.5], mull, w * 1.6)
+  box2(p, k, wx0, wy0, wx1, wy1, null, mull, w * 2.4)
+  box2(p, k, wx0 - 0.12, wy1, wx1 + 0.12, wy1 + 0.1, D.sill, line, w * 0.8)
   // The doorway, lit from inside once the door opens; the door swung out onto the walk.
   const open = doorOpen(t)
   box2(p, k, WALL, DOOR_TOP, WALL + thick, WALK, alpha(p, D.asphalt, 1), line, w)
@@ -413,7 +447,20 @@ function club(p: p5, k: number, ink: string, w: number, t: number, fr: { x0: num
     glow(p, k, WALL - 0.2, WALK - 0.2, 1.1, D.sodium, 0.35 * open, 1, 0.4)
   }
   const dw = 0.62 * Math.cos(open * 1.3)
-  box2(p, k, WALL - (1 - Math.cos(open * 1.3)) * 0.02, DOOR_TOP + 0.02, WALL + Math.max(0.06, dw * (1 - open) + 0.05), WALK - 0.01, D.car[0], line, w * 0.8)
+  const dx0 = WALL - (1 - Math.cos(open * 1.3)) * 0.02
+  const dx1 = WALL + Math.max(0.06, dw * (1 - open) + 0.05)
+  box2(p, k, dx0, DOOR_TOP + 0.02, dx1, WALK - 0.01, D.car[0], line, w * 0.8)
+  // Two sunk panels and a brass knob, while the door is face on enough to show them.
+  const face = dx1 - dx0
+  if (face > 0.3) {
+    const m = face * 0.16
+    const mid = DOOR_TOP + (WALK - DOOR_TOP) * 0.42
+    box2(p, k, dx0 + m, DOOR_TOP + 0.14, dx1 - m, mid - 0.06, null, alpha(p, D.frame, 0.55), w * 0.8)
+    box2(p, k, dx0 + m, mid + 0.06, dx1 - m, WALK - 0.14, null, alpha(p, D.frame, 0.55), w * 0.8)
+    p.noStroke()
+    p.fill(D.sodium)
+    p.circle((dx1 - face * 0.14) * k, (mid + 0.02) * k, 0.07 * k)
+  }
   // The awning, and the neon over it.
   const a0 = WALL
   const a1 = WALL - 0.95
