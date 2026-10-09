@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 63 (latest)
+## Polish pass 64 (latest)
+
+No change to the show: the come-and-go test run under Zoom on a wide screen and on an upright phone, the two combinations pass 61 left out. Neither Brand nor Murph appears or vanishes in view. `check:shows` now tests Zoom's frame as well as the show's own, at both shapes, so every camera and screen shape the player offers is covered.
+
+## Polish pass 63
 
 No change to the show: the whole show swept on a wide (21:9) screen, every 4 s, which sees more world to each side of the 16:9 frame than any earlier sweep. Nowhere does the world stop short. The farm goes on past the house, the road past the dam, the base past the cattle grid; the station's hull and ring, and the plain to either side of Brand's camp under the credits, run on to the screen's edges.
 

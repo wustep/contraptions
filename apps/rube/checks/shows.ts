@@ -778,17 +778,19 @@ async function main(): Promise<void> {
         check('liftoff: on Edmunds\' planet, at the end, Cooper meets Amelia at her camp, close but not pressed together', closest >= 0.27 && closest <= 0.42, `closest ${closest.toFixed(3)}`)
         // A stage of another shape sees more world round the 16:9 frame: a wide (21:9) screen more to each side, a phone
         // held upright (390 × 844) nearly four frames' height. Coming and going is held to all of what they see.
+        // Under Zoom too, whose closer frame slides to keep Cooper.
         const seenAnywhere = (t: number, b: { x: number; y: number; scale?: number } | null) => {
           if (!b || (b.scale ?? 1) <= 0.02) return false
-          const f = perf.camera!(t)
-          const a = f.angle ?? 0
-          const dx = b.x - f.x
-          const dy = b.y - f.y
-          const x = Math.abs(dx * Math.cos(a) - dy * Math.sin(a))
-          const y = Math.abs(dx * Math.sin(a) + dy * Math.cos(a))
-          const wide = x < (f.cells * 21) / 18 + 0.2 && y < f.cells / 2 + 0.2
-          const tall = x < (f.cells * 8) / 9 + 0.2 && y < (f.cells / 2) * (844 / ((390 * 9) / 16)) + 0.2
-          return wide || tall
+          return [perf.camera!(t), zoomed(perf.camera!(t), 1.5)].some((f) => {
+            const a = f.angle ?? 0
+            const dx = b.x - f.x
+            const dy = b.y - f.y
+            const x = Math.abs(dx * Math.cos(a) - dy * Math.sin(a))
+            const y = Math.abs(dx * Math.sin(a) + dy * Math.cos(a))
+            const wide = x < (f.cells * 21) / 18 + 0.2 && y < f.cells / 2 + 0.2
+            const tall = x < (f.cells * 8) / 9 + 0.2 && y < (f.cells / 2) * (844 / ((390 * 9) / 16)) + 0.2
+            return wide || tall
+          })
         }
         // They never jump while they are drawn, and come and go (or are hidden and shown) only out of shot.
         const drawn = (g: { scale?: number } | null) => !!g && (g.scale ?? 1) > 0.02
@@ -811,7 +813,7 @@ async function main(): Promise<void> {
             gPrev = g
           }
           check(`liftoff: ${name} never jumps (no more than 0.04 cells a millisecond)`, gJump <= 0.04, `${gJump.toFixed(3)} at ${gAt.toFixed(3)} s`)
-          check(`liftoff: ${name} comes and goes only out of shot, on a wide screen and an upright phone too`, pops.length === 0, pops.slice(0, 8).join(', '))
+          check(`liftoff: ${name} comes and goes only out of shot, on a wide screen and an upright phone too, under Zoom or not`, pops.length === 0, pops.slice(0, 8).join(', '))
         }
       }
     }
