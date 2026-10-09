@@ -838,7 +838,8 @@ export function drawGlare(p: p5, c: Ctx, L: Light): void {
   const ctx = p.drawingContext as C2D
   const g = L.glare
   // The window's own light, white, spilling past its frame into the room.
-  soft(ctx, k, SUN[0], SUN[1] + 0.4, 7.5, 3.6, LAKE.fog, 0.85 * g * g, 0.35)
+  // Centred on the sun where its layer of the view shows it from here (the first frame's camera: where it is).
+  soft(ctx, k, viewX(f, 0.78, SUN[0]), SUN[1] + 0.4, 7.5, 3.6, LAKE.fog, 0.85 * g * g, 0.35)
   ctx.fillStyle = rgba(LAKE.fog, 0.55 * g * g * g)
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
 }

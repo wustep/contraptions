@@ -317,7 +317,8 @@ changed, in the order of the film, and then what runs through it:
 - **The sun's path in the floor** (212.3 → 251): the water far off is drawn with its own parallax, but the floor's
   reflection of the sun's path on it was placed in the room, so as the camera drew back the streak on the boards
   slid away from the glint it reflects (left of it in the held last frame, right of it at 214). It lies straight
-  under the glint now, wherever the camera is.
+  under the glint now, wherever the camera is. The window's glare as the sun comes through (7.3 → 8.9, and faintly
+  at the end) is centred on the sun where the view shows it too, not on its place in the room.
 - **The shadow under the bench** (the first frame and the last, and every scene at the window): a dark box under the
   slab with square ends, on the glass's foot and again in the floor's reflection. Its ends fade out within the
   slab's length now.
