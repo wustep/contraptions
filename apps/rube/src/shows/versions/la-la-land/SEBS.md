@@ -247,3 +247,7 @@ A twenty-sixth pass, at the other beats:
 
 - **The beats, at full size.** Her lifting her eyes at her table, his leap up beside her at the curtain call, the knock that rolls her down the beam to him, the dip under the wheeling sky and the touch, and the room at Lipton's lighting up after the kiss all read as they should, and are as they were.
 - **The ride across the ceiling.** While they ride the string of bulbs across Lipton's (78 to 86), the bottom two fifths of the frame was the piano's lid and case, cut off along the frame's foot: a great black shape in front of the ride. The shot is closer and a little higher now, so the frame is the two of them on the string, each bulb lighting beside them, and the garland over it; the lid is a sliver at the foot as they leave the tree, and then gone.
+
+A twenty-seventh pass, at how fast the camera moves:
+
+- **Speed.** I measured the camera's pan (in frame widths a second) and zoom every twentieth of a second, leaving out the covers and the cuts. No move goes faster than about half a frame a second, and the quickest are where the music moves: the bloom after the kiss, the drop into the red club, the glide with him from her table to the keys. The fastest was one I had added, the pull out from him at the keys to the room as David sits down beside her (455). It starts half a second sooner now, while he still holds the last chord, and goes at the pace of the others.
