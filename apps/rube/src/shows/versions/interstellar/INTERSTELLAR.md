@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 34 (latest)
+## Polish pass 35 (latest)
+
+No change to the show. Pass 9's frame-step audit sampled every 0.1 s, so a glitch one frame long could fall between its samples. The three universe switches were compared frame by frame at 60 fps instead, over a second round each. Inside the cloud (88.2 to 89.4 s), no frame changes more than 4% of the picture from the last. At the undock, the single 86% step at 207.48 s is the match cut. On the accent, the steps at 127.52, 127.58 and 127.63 s (11%, 45%, 61%) are the lamps striking: the room comes up, dips as one falters, and catches, as written ("one catches late").
+
+## Polish pass 34
 
 - **The share card** (`public/shows/interstellar/opus55.png`, at 240.4 s) is rendered again from this branch, by the call `scripts/shows/show-cards.mjs` makes (`window.shows.still(240.4, 1200, 630)`), so the picture a link unfurls with is what the show draws. It differed from the old card in 285 of 756,000 pixels, a few of pass 6's pebbles, and looks the same.
 
