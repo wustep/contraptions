@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 57 (latest)
+## Polish pass 58 (latest)
+
+No change to the show, and a check for the reunions. Zoom's focus is Cooper alone, but the two reunions are about two balls. Measured every 0.02 s, the one he meets stays whole and well inside both frames throughout. Murph in the far-side house (176.5 to 183 s) keeps at least 13% of the frame's height from the edge under Zoom, and 25% in the show's own frame. Brand at her camp (255.5 s to the music's end) keeps 13% under Zoom and 17% in the show's own. `check:shows` now holds each to 5% in both frames. Set to 20% for one run it failed at Murph's, so it can fail.
+
+## Polish pass 57
 
 No change to the show: what passes 53, 55 and 56's dense checks cost. They sample the camera every 0.02 s over the whole show, some for three balls. `check:shows` runs inside every `npm run build`, so it was timed twice on this branch (231 s, 201 s) and twice on `main` (233 s, 205 s). The difference is lost in the run-to-run noise: the new samples are arithmetic on the camera and the ball's path, and the suite's time goes elsewhere, the same on `main`.
 

@@ -662,6 +662,24 @@ async function main(): Promise<void> {
           if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (f.cells * 8) / 9 - BALL_R && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < f.cells / 2 - BALL_R)) ownMiss.push(t.toFixed(2))
         }
         check('liftoff: in the show\'s own frame Cooper\'s whole ball is in shot, but for the cage\'s climb and the whip through the sphere', ownMiss.length === 0, ownMiss.slice(0, 12).join(' '))
+        // The two reunions are about two balls, and Zoom's focus is Cooper alone: through each, the one he meets (Murph in
+        // the far-side house, Brand at her camp) is whole and well inside both the show's own frame and Zoom's.
+        const meetMiss: string[] = []
+        for (const [who, a, b] of [['murph', 176.5, 183], ['brand', 255.5, MIX_END]] as const) {
+          for (let t = a; t <= b; t += 0.02) {
+            const q = show[who](t)
+            if (!q) { meetMiss.push(`${who} gone ${t.toFixed(2)}`); continue }
+            for (const f of [perf.camera!(t), zoomed(perf.camera!(t), 1.5)]) {
+              const ang = f.angle ?? 0
+              const r = BALL_R * (q.scale ?? 1)
+              const dx = q.x - f.x
+              const dy = q.y - f.y
+              const room = Math.min((f.cells * 8) / 9 - r - Math.abs(dx * Math.cos(ang) - dy * Math.sin(ang)), f.cells / 2 - r - Math.abs(dx * Math.sin(ang) + dy * Math.cos(ang)))
+              if (room < 0.05 * f.cells) meetMiss.push(`${who} ${t.toFixed(2)}`)
+            }
+          }
+        }
+        check('liftoff: through each reunion the one Cooper meets is well inside the frame, in the show\'s own and under Zoom', meetMiss.length === 0, meetMiss.slice(0, 8).join(' '))
         // No ball hangs cut by the frame's edge: crossing it is a moment (a pan revealing Brand at her camp is the longest,
         // under half a second), never a ball parked half out of shot.
         const cutRuns: string[] = []
