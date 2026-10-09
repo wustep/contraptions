@@ -145,15 +145,16 @@ const HOPS: Pt[] = [
 ]
 
 /** Louise's lane, in the world. */
+const HOP_OUT = 0.38
 function louise(): Path {
   const seat = (t: number) => seatAt(t)
   const out = pulse(98)
   const lands = pulse(100)
   const path = new Path(seat(B0), B0)
   path.carry(seat, out)
-  // She hops out of the door and down onto the deck.
-  path.fly([path.at[0] + 0.5, ON_PAD], lands)
-  const vHop = 0.5 / (lands - out)
+  // She hops out of the door and down onto the deck: a short hop, so she is high in it as she passes Ian on her right.
+  path.fly([path.at[0] + HOP_OUT, ON_PAD], lands)
+  const vHop = HOP_OUT / (lands - out)
   // Along the deck and off its edge, into the bucket.
   const inBucket = bucketSeat(INTO_BUCKET)
   const fall = dropTime(inBucket[1] - ON_PAD)

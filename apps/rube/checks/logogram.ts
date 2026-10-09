@@ -119,6 +119,27 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
     }
     check('logogram: their eyes never snap (no more than 0.15 rad in a 120th of a second beyond their roll)', worst <= 0.15, `${worst.toFixed(3)} at ${worstAt.toFixed(3)} s`)
   }
+  // Two balls never pass into each other: Louise, Ian and Hannah keep their own room, at every 120th of a second.
+  {
+    let worst = 0
+    let worstAt = 0
+    for (let t = 0; t < perf.duration; t += 1 / 120) {
+      const balls = show.at(t).balls ?? []
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          const a = balls[i]
+          const b = balls[j]
+          if ((a.scale ?? 1) === 0 || (b.scale ?? 1) === 0) continue
+          const over = (R * (a.scale ?? 1) + R * (b.scale ?? 1) - Math.hypot(a.x - b.x, a.y - b.y)) / R
+          if (over > worst) {
+            worst = over
+            worstAt = t
+          }
+        }
+      }
+    }
+    check('logogram: no two balls ever pass into each other (overlap under 5% of a radius)', worst <= 0.05, `${worst.toFixed(3)} R at ${worstAt.toFixed(3)} s`)
+  }
 
   // Every strike lands on something the recording has: a pulse, or a measured onset.
   const within = (t: number) => onPulse(t, 0.03) || onOnset(t, 0.04)
