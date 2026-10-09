@@ -609,6 +609,10 @@ window.
     times as wide as high, the composed frame stands in its middle at full height, and the Sound button, centred low,
     covered the two of them at the altar in the opening shot. Where the world beside the frame has room (150 px or
     more), the button now stands there instead (`besideFrame` in `player.ts`, every show; an ultrawide screen too).
+  - *Theater* (every show, shuffled, one after another). Out: from 252 s the credits play out, Theater moves on to
+    the next show, Married Life's YouTube player is gone and the next one drives its own clock at 1x, with the sound
+    held or let in. In: arrived at after 18 skips through other shows, its music comes in with it and keeps time
+    from the first second. And on an ultrawide screen (2560 by 1080) the held Sound button stands beside the frame.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
