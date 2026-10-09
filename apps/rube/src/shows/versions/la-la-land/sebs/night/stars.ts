@@ -302,6 +302,27 @@ function drawProjector(p: p5, k: number, ink: string, weight: number, T: number,
 }
 
 /** Each star the melody lights is thrown from the high globe: a thread of light out to it that flares and goes. */
+/**
+ * What it throws: two broad soft cones of light from the high globe, opposite each other, turning with it as it turns
+ * (geared to their waltz), so the sky is swept as a lighthouse sweeps the sea: slowly while they float, fast in the
+ * whirl. Only the cones pointing up into the night are seen.
+ */
+function projectorBeams(p: p5, k: number, T: number): void {
+  const on = lamp(T)
+  if (on <= 0.01) return
+  const g = globeAt(T, 1)
+  const base = -Math.PI / 2 + spin(T) * 1.6
+  for (let i = 0; i < 2; i++) {
+    const a = base + i * Math.PI
+    const up = -Math.sin(a)
+    if (up <= 0.05) continue
+    const L = 11
+    const ex = g[0] + Math.cos(a) * L
+    const ey = g[1] + Math.sin(a) * L
+    beam(p, k, g[0], g[1], ex, ey, 0.18, 4.2, '#C9D8FF', 0.085 * on * Math.min(1, up * 2))
+  }
+}
+
 function throwStars(p: p5, k: number, T: number): void {
   const g = globeAt(T, 1)
   for (const q of KINDLED) {
@@ -349,6 +370,7 @@ export const stars = part<StarsState>(
       p.translate(-s.o[0] * k, -s.o[1] * k)
       // The projector in the glass, then itself, and the light it throws to each new star.
       drawProjector(p, k, c.ink, c.weight, T, true)
+      projectorBeams(p, k, T)
       drawProjector(p, k, c.ink, c.weight, T, false)
       throwStars(p, k, T)
       // The constellation they make: each star the melody lights is joined to the nearest of the stars already lit, the
@@ -418,10 +440,10 @@ export const stars = part<StarsState>(
       const q = centre(t)
       return here([q[0] + dx, q[1] + dy])
     }
-    /** Far out: the two of them and the machine low in the frame, the turning sky over them, a strip of the glass. */
+    /** Further out: the two of them and the machine low in the frame, the turning sky over them, a strip of the glass. */
     const high = (t: number): Pt => {
       const c = centre(t)
-      return here([(c[0] + PX) / 2, PBASE - 4.4])
+      return here([(c[0] + PX) / 2, PBASE - 2.8])
     }
     /** Halfway between the two of them and the projector they rise from: both in the picture. */
     const mid = (t: number, bias = 0.5): Pt => {
@@ -437,10 +459,10 @@ export const stars = part<StarsState>(
       { t: APEX - 0.4, cells: 5.4, hold: mid(APEX - 0.4, 0.45) },
       { t: 309.0, cells: 5.0, hold: mid(309.0, 0.4) },
       { t: 313.6, cells: 5.2, hold: mid(313.6, 0.4) },
-      // The scale of it: far out, the two of them small in the turning sky and its nebula, the machine, and all of it
-      // again in the glass.
-      { t: 316.8, cells: 11.5, hold: high(316.8) },
-      { t: 319.6, cells: 12.0, hold: high(319.6) },
+      // The scale of it: out, the two of them small in the turning sky and its nebula, the machine sweeping it, and all
+      // of it again in the glass.
+      { t: 316.8, cells: 8.0, hold: high(316.8) },
+      { t: 319.6, cells: 8.3, hold: high(319.6) },
       { t: 323.6, cells: 5.4, hold: mid(323.6, 0.4) },
       // (Held a beat, so the last star the melody lights is in the picture its second.)
       { t: 325.2, cells: 5.2, hold: mid(325.2, 0.35) },
