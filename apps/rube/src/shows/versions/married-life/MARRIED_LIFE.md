@@ -500,7 +500,9 @@ window.
     slopes; stillness; gaze, as a whole and beat by beat; strobing; the camera's acceleration; render cost; contrast;
     three fresh critics (frames, regressions, story) and a story re-watch; the notes against the code; the shared code
     against `origin/main`; the credits under Zoom; Overview; the exports, and a real video export; the console; the
-    player's speeds.
+    player's speeds; her face through the doctor's office and into the yard (up toward the coat before the news, then
+    turned away from him as she rolls away, and still turned away across the cut; kept as it is: a downcast look as
+    well would have to turn down and back up within three seconds to meet the cut without a snap).
   - *Considered and kept.* Ellie stands before the open front door's leaf at the tickets (past it she leaves the Zoom
     frame through the press's push-in). The balloon is hidden half a second at the bay's post, while he is too. The
     tilted car is not in front of the window's bar (a critic's false alarm, checked in the pixels). The climb is not
