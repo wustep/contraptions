@@ -476,6 +476,12 @@ window.
   (`zoomDropAt`, negative), the balloon whole and a tenth of the half height still under him. At the hospital's start
   it is cut too, but there is no room under them to move.
 
+- **Polish round 10 (Opus 5.5).** The lit room and the share card at full size read. At the cut into the hospital the
+  balloon's crown touched the frame's top, and under Zoom it was cut by up to half for three seconds, with no room
+  under the two of them to hold Zoom higher. Now he comes into the ward with it held close on a shorter string
+  (`GATHERS`), and lets it up as the camera opens and he reaches for the lamp, as he gathers it in at his own door:
+  whole in the frame, under Zoom too, from the cut.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
@@ -485,9 +491,6 @@ window.
   tree both times; a wide that held the summer place and them years later needs about 9.5 cells.
 - Under Zoom the frame must keep the two of them within a third of its height of its middle, so a close shot always
   shows a sixth of its height below their floor, and the dance keeps them low in the frame.
-- Under Zoom the balloon's top is cut for the first three seconds in the hospital (180.4 to 183.2 s): the two of them
-  are already at the foot of the Zoom frame there, so it cannot hold higher. Zoom holds the two of them, not the
-  balloon. (On the home steps, where it was cut too, Zoom now holds higher and keeps it whole.)
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Only Chrome on macOS has been watched. The YouTube cue's sync, Safari and a recording export have not been
   measured for this take.

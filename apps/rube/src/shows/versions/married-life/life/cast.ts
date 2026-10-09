@@ -65,12 +65,15 @@ export const LEANS: { t: number; amp: number; rise: number }[] = [
   { t: 226.203, amp: -0.06, rise: 0.55 },
 ]
 /**
- * Where he draws the string in short and lets it out again (show seconds): at home, as the latch gives, he gathers it
- * in so the balloon comes in under the lintel with him, before the door shuts behind him, and past the wall between
- * the door and the bay; he lets it out again in the bay, before he ties it to her chair. `string` is its gathered
- * length; it is taken in over [in0, in1] and let out over [out0, out1], quintic eased.
+ * Where he draws the string in short and lets it out again (show seconds). He comes into the ward with it held close
+ * (it is in at the cut already gathered), so it rides in the frame over him in the close on the cut, under Zoom too,
+ * and lets it up as the camera opens and he reaches for the lamp. At home, as the latch gives, he gathers it in so
+ * the balloon comes in under the lintel with him, before the door shuts behind him, and past the wall between the
+ * door and the bay; he lets it out again in the bay, before he ties it to her chair. `string` is its gathered length;
+ * it is taken in over [in0, in1] and let out over [out0, out1], quintic eased.
  */
 export const GATHERS: { in0: number; in1: number; out0: number; out1: number; string: number }[] = [
+  { in0: AT.hospital - 1.5, in1: AT.hospital - 1, out0: 181.3, out1: 183.0, string: 0.8 },
   { in0: 208.2, in1: 209.3, out0: 212.7, out1: 214.2, string: 0.3 },
 ]
 function stir(t: number): number {
