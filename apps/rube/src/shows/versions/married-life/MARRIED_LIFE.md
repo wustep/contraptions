@@ -572,7 +572,14 @@ window.
   tenth of a second, how far the frame must move (down, or across: `Framing.zoomSlide`, new) to keep them within 0.8
   of its half size, never further than the topmost of them or the balloon's crown allows; held half a second either
   side, smoothed, and capped by the allowance held the same way. Seven short stretches remain, the longest the ward
-  (balloon over, the two of them under, the Zoom frame full). It is built once, in about half a second.
+  (balloon over, the two of them under, the Zoom frame full). It is built once.
+
+- **Polish round 21 (Opus 5.5).** Zoom's hold, measured in the browser: building it stalled the start of playback by
+  560 to 830 ms (a 659 ms frame gap in headless Chromium, against about 120 ms without it). Nearly all of it was the
+  balloon, whose `balloonAt` averages sixty moments of its past on every call. The hold now bounds the crown instead,
+  straight up over the knot on its taut string (`stringAt`, now exported), which is never lower than where it is: the
+  same stretches and the same crown margins, built in a sixth of the time, and no stall left above the page's own
+  frames. Then the whole show watched under Zoom: the hold reads as framing, never as drift.
 
 ## Known limits
 

@@ -1,7 +1,7 @@
 import type { Framing } from '../../../registry'
 import { R } from '../../../../parts'
 import { BALLOON_SIZE } from './props/balloon'
-import { balloonAt, HALF } from './cast'
+import { anchorIn, BALLOON_FROM, HALF, stringAt } from './cast'
 import { DURATION } from './music'
 import type { LifeShow } from './show'
 
@@ -45,10 +45,13 @@ function needAt(show: LifeShow, f: Framing, t: number): Raw {
     left = Math.min(left, (x - r - f.x) / zw)
     right = Math.max(right, (x + r - f.x) / zw)
   }
-  const b = balloonAt(show, t)
-  if (b) {
+  // The balloon's crown, at the highest it can ride: straight up over its knot on its taut string. (Where it really is,
+  // `balloonAt`, lags over a second and a half of the past and costs sixty times as much; this bound is never lower.)
+  if (t >= BALLOON_FROM) {
     const [, wy] = show.where(t)
-    high = Math.min(high, (h.y + (b.at[1] - wy) - BALLOON_SIZE.ry - zy) / zh)
+    const [, ky] = anchorIn(show, t, show.owner(t))
+    const crown = h.y + (ky - wy) - stringAt(show, t) - 2 * BALLOON_SIZE.ry
+    high = Math.min(high, (crown - zy) / zh)
   }
   // Down (a positive drop moves the frame's middle down, so they rise in it) only as far as the top allows; and the
   // same across, only as far as the other side allows.

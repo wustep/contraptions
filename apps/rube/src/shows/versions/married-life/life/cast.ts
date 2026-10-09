@@ -314,7 +314,7 @@ export function ellieSpin(show: LifeShow, t: number): number {
  * over the second after the knot arrives (the balloon settling down to her) and let out again over 2.2 s after the
  * tie's span ends, so across the cut it rises back to its length. Quintic eases: no kick at either end.
  */
-function stringAt(show: LifeShow, t: number): number {
+export function stringAt(show: LifeShow, t: number): number {
   const ease = (u: number) => {
     const v = Math.max(0, Math.min(1, u))
     return v * v * v * (v * (v * 6 - 15) + 10)
