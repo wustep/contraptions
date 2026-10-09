@@ -115,6 +115,10 @@ async function main(): Promise<void> {
       /result !== 'blocked'/.test(join) && /soundHeld = true/.test(join) && /setMuted\(true\)/.test(join) && /armSound\(\)/.test(join) &&
       (player.match(/joinSound\(\)/g) ?? []).length >= 4 && (player.match(/void music\.play\(/g) ?? []).length === 2)
   }
+  // On a stage much wider than 16:9 the stage's button stands beside the composed frame, where there is room, not over
+  // its middle (on a phone on its side with the panel up, Sound hid Married Life's opening couple).
+  check('on a stage much wider than 16:9 the play button stands beside the composed frame',
+    /const besideFrame = new ResizeObserver/.test(player) && /bigPlay\.style\.left = side >= \d+ \?/.test(player) && /besideFrame\.disconnect\(\)/.test(player))
   // A YouTube cue started again from the top as it runs out is treated as run out, so the show carries on to its end
   // instead of freezing under the song heard again (found on Married Life's deployed preview); and `position` asks.
   check('a YouTube cue restarted at its end is run out, and nothing else is',

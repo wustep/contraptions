@@ -440,6 +440,16 @@ bigPlay.addEventListener('click', () => {
   void play()
 })
 stageRoot.append(bigPlay)
+// On a stage much wider than the show's 16:9 (a phone on its side with the panel up, an ultrawide screen) the composed
+// frame stands in the middle at full height, and the button, centred low, sat over whoever stands on its floor (Married
+// Life's opening couple, hidden behind Sound). Where the world beside the frame has room for it, it goes there.
+const besideFrame = new ResizeObserver(() => {
+  const w = stageRoot.clientWidth
+  const half = (stageRoot.clientHeight * 8) / 9
+  const side = w / 2 - half
+  bigPlay.style.left = side >= 150 ? `${w / 2 + half + side / 2}px` : ''
+})
+besideFrame.observe(stageRoot)
 
 // While a show loads, or when it would not, the stage says so: the panel says it too, but the panel starts hidden,
 // and a blank stage reads as broken. A failed load is tried again by a reload: the browser keeps a module that would
@@ -965,6 +975,7 @@ if (import.meta.env.DEV) {
 
   return () => {
     alive = false
+    besideFrame.disconnect()
     window.clearTimeout(warmTimer)
     releaseSound()
     shell.holdHandle(false)

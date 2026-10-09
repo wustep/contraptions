@@ -603,6 +603,12 @@ window.
     sound in (`joinSound` in `player.ts`) holds it again on a refusal, muted so YouTube still keeps the time, with the
     Sound button back (Chromium made to refuse the same way did the same before, and does the same after). Whether
     Safari itself, with a speaker and a person's press, refuses as headless WebKit does is not known.
+  - *An iPhone* (WebKit with Playwright's iPhone 15 Pro: touch, its screen, upright and on its side). A tap on Sound
+    is refused as on the desktop and the button is back within two seconds; speeds, taps on the stage and a seek to
+    the end behave; nothing is wider than the screen. Found: on its side with the panel up, the stage is about four
+    times as wide as high, the composed frame stands in its middle at full height, and the Sound button, centred low,
+    covered the two of them at the altar in the opening shot. Where the world beside the frame has room (150 px or
+    more), the button now stands there instead (`besideFrame` in `player.ts`, every show; an ultrawide screen too).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
