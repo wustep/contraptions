@@ -312,6 +312,13 @@ The notes went back to the builders who made each part, who still had their cont
   - After the match cut the close shot on the window now draws back, slowly, from 2.4 cells to about 2.75, so he is
     whole in the frame before he leaps the lever. The window is still the subject, and the jump's own framing is
     unchanged.
+- **A pass for the ending.** The premiere's run into the alley, the kitchen's eruption and the peak's first tug
+  were watched at 5 to 10 fps, and they hold.
+  - After the last card went (325.9 s) the room held fully lit to the final frame while the recording faded to
+    silence. The show cut off rather than ended.
+  - Now the room goes down into the dark with the music over its last five seconds. The washer's window, the light
+    the family rests in, is the last to go, the way the tubes went out at the last hit. The googly eyes go down with
+    the room, so no eye-whites float on the dark. The last card is not dimmed.
 
 ## End credits
 
@@ -329,8 +336,8 @@ clock, the lanterns and the family by the washer stay clear of the words. The ca
 | 314.8 | After | Everything Everywhere All at Once | a film by Daniels (2022) |
 | 320.8 | Drawn with | p5.js | |
 
-There is no title card. After p5.js's card goes (about 325.9 s), the room holds alone in the dark as the music fades
-to 332.
+There is no title card. After p5.js's card goes (about 325.9 s), the room goes down into the dark as the music fades
+to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `credits.ts`).
 
 ## What `check:shows` holds it to
 

@@ -1,6 +1,9 @@
+import type p5 from 'p5'
 import { clamp, easeInOutCubic } from '../../../../../../../src/core/ease'
 import type { TitleCard } from '../../../registry'
 import { frame, scenery } from './kit'
+import { mixHex } from '../../../../parts'
+import { PORT } from './home/finale-plan'
 import { CREDITS_AT, DURATION, HOME_HITS } from './music'
 import { EVELYN, JOY, WAYMOND } from './worlds'
 
@@ -107,6 +110,7 @@ export const credits = scenery<null>({
   name: 'credits',
   draw: () => {},
   over: (p, _s, c) => {
+    endDark(p, c.k, c.t)
     const bed = bedAt(c.t)
     if (bed <= 0.001) return
     const { k } = c
@@ -129,6 +133,39 @@ export const credits = scenery<null>({
     ctx.restore()
   },
 })
+
+/**
+ * The end: after the last card the recording fades to silence, and the room goes down into the dark with it. The
+ * washer's window, the light the family rests in, is the last to go. 0 is the room as it is; 1 is the dark.
+ */
+export const endDarkAt = (t: number): number => easeInOutCubic(clamp((t - (LAST_GONE + 0.5)) / (DURATION - 0.4 - (LAST_GONE + 0.5))))
+/** How far the window's own light has gone with it: later, so it outlasts the room. */
+const windowDarkAt = (t: number): number => easeInOutCubic(clamp((t - (LAST_GONE + 2.8)) / (DURATION - 0.2 - (LAST_GONE + 2.8))))
+
+/** A colour as the end's dark leaves it: for what draws over the dark (the googly eyes). */
+export const endShade = (hex: string, t: number): string => {
+  const d = endDarkAt(t)
+  return d <= 0 ? hex : mixHex(hex, '#040506', 0.96 * d)
+}
+
+/** The dark itself, over the whole frame, with a soft opening at the window that closes last. */
+function endDark(p: p5, k: number, t: number): void {
+  const d = endDarkAt(t)
+  if (d <= 0.001) return
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const a = 0.96 * d
+  const w = 0.96 * windowDarkAt(t)
+  const [px, py] = PORT
+  const g = ctx.createRadialGradient(px * k, py * k, 0, px * k, py * k, 1.7 * k)
+  g.addColorStop(0, `rgba(4, 5, 6, ${Math.max(w, a * 0.35)})`)
+  g.addColorStop(0.45, `rgba(4, 5, 6, ${Math.max(w, a * 0.7)})`)
+  g.addColorStop(1, `rgba(4, 5, 6, ${a})`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+  ctx.restore()
+}
 
 /** For the check: the credits come after the last hit, and the last has gone before the end. */
 export const CREDITS_OK = CREDITS_AT >= HOME_HITS[2] + 1.5 && LAST_GONE <= DURATION - 2

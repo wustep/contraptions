@@ -7,7 +7,7 @@ import { box, lay, standing, type Chain, type Link } from './kit'
 import { DURATION, JUMPS, ONSETS } from './music'
 import { MultiverseShow, type Flicker, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { EVELYN, type WorldKey } from './worlds'
-import { credits } from './credits'
+import { credits, endShade } from './credits'
 import { room, shade } from './home/set'
 import { laundromat } from './home/laundromat'
 import { dryer } from './home/dryer'
@@ -184,7 +184,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     const cells = new Map<string, Pt>()
     for (const leg of legs) if (leg.world === world) for (const placed of leg.placed) for (const c of placed.cells) cells.set(`${c[0]},${c[1]}`, c)
     const set = (sets[world] ??= { scenery: [], after: [] })
-    const state: EyesState = { show: null, specs, shade: world === 'home' ? shade : undefined }
+    // In the laundromat they are lit as the room is, and go down into the dark with it at the end.
+    const state: EyesState = { show: null, specs, shade: world === 'home' ? (hex, x, y, t) => endShade(shade(hex, x, y, t), t) : undefined }
     eyeStates.push(state)
     set.after.push(standing(eyePiece, 0, 0, [...cells.values()], state, DURATION) as Placed)
   }
