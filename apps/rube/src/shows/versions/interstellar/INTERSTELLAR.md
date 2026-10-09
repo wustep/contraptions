@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 14 (latest)
+## Polish pass 15 (latest)
+
+- **The kitchen under Murph's room** (`drawKitchen` in `earth/house.ts`). The first frames of the show, the dawn in Murph's room, had their lower 40% bare plaster: the kitchen below the room, left of the stairwell, where no ball goes, was drawn empty. It is furnished now: a shelf of jars and plates on the wall, a table under a hanging tin lamp with two chairs and a jug, and the tall clock. The clock stands where the station's museum will stand it (x 3.07 to 3.97) and is the same case. Here it only keeps time, the pendulum swinging a second a beat and the hands at twenty to six, before the museum makes it a machine in Act II. Its bob is a lens, not a disc, so nothing round in the kitchen can be taken for a ball. No ball's path or strike moved.
+
+## Polish pass 14
 
 A check of the YouTube cues against the mix the show was timed to, with no change to the show. Online the show plays two uploads, not the mix. Cornfield Chase plays from its start and fades out by 126.984 s. No Time for Caution plays from 103.76 s into its upload, at 126.5 s of the show, fading in over a second. `scripts/shows/liftoff-mix.sh` builds the mix from the same upload with the same numbers: trimmed at 103.76 s and delayed by 126.5 s. So online every strike lands where the mix has it. The one difference is level: YouTube cannot lift a video above its own volume, so the mix's +7 dB on the cue's quiet opening is not heard online (noted in `liftoff/index.ts`).
 
