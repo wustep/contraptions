@@ -281,6 +281,10 @@ each world, and changed:
 - **Overview in the dream** (68.9 to 213.7): Overview sees the whole stack the whole time, a hundred cells tall, where a
   ball is a pixel; he could be found only during the great wide. Whenever the frame is that far out on the dream he is
   now the same spark in his own colour, in whichever level he is.
+- **The van going by Mal** (82.3 to 82.8): the van had no underside, only its body and wheels, so as it pulled away past
+  her she showed through the gap between its sill and the road, a red ball between its wheels. It has a dark chassis
+  and its shadow on the wet road now, the wheels over it, until the floor goes soft (bar 23), so the three are still
+  seen to sink out through it.
 
 ## Inception nods
 
