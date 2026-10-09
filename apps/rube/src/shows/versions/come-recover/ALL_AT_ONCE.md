@@ -299,6 +299,12 @@ The notes went back to the builders who made each part, who still had their cont
   - The board no longer has receipts. Its cork is darker, it is a little smaller, and Joy's drawing is on yellow
     construction paper. Nothing on it is white paper, so every receipt in the storm reads as flying in front of it.
   - The drawing reads better in the two-shot of her visit too.
+- **A pass for the opening's first beat.** The canyon's hesitation, the alley's drain, the dojo, the piano and the
+  opening chord were watched at 10 fps, and their motion holds.
+  - In the cold open, Waymond setting the slumped bag back on its bottom (4.45 s) is the show's first beat, and it
+    happened at the frame's right edge, half cut off.
+  - The opening's wide shot now reaches a little further right, with the same left edge at the storefront. He and
+    the bag are inside the frame all through it.
 
 ## End credits
 
