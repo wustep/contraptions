@@ -81,7 +81,8 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   peach, a few clouds lit from under; the blue hour; the clouds come over and it rains from the third track, heaviest
   through Exhale; it eases, the glass stays wet a while, and by the last two tracks it is clear, with stars and the
   moon risen into the right-hand pane (and, late, a shooting star or two). Outside, the city's windows come on
-  through the dusk and go out one by one through the night, a few of them the cool flicker of a screen; a red light
+  through the dusk and go out one by one through the night, a few of them the cool flicker of a screen; one, close,
+  is a neighbour's, lit until a little before the end, where now and then someone crosses and a cat sits a while; a red light
   blinks on the tallest roof; now and then a plane crosses when the sky is clear. On the glass, beads gather where
   they land and a few run down in fits and starts.
 - **The fairy lights** come on bulb by bulb just after the lamp, breathe with the held sound, each at its own pace,
@@ -338,6 +339,19 @@ ball. The machine and its timing were right and are untouched; the room around i
 48. **Looked at and left:** the opening, the title, a drop; one move from the stair to the cup passes through a frame
     with half the cat's face at its edge (a move, not a held frame).
 49. The share card is regenerated (the curtain's draught had moved its hem).
+
+### The twelfth lofi pass
+
+50. **The city was windows and nobody in them.** One window across the street is now close enough to see into
+    (`neighbour`, `lamp/sky.ts`): someone else up late. Its light comes on in the dusk and goes out at 27:32, a little
+    before ours goes down; a thin curtain is drawn across its left. Six times through the night someone crosses
+    behind it, head and shoulders, a little bob in the step; once, at 15:15 in Exhale's heaviest rain, they stop at the
+    glass seven seconds to look out at it. Twice a cat walks along its sill, sits two or three minutes with its tail
+    tip going, and walks off, and the one who stops to look out does it beside the cat. All of it is played to the
+    camera, as the kitten's yawns are: each crossing, the look, and each of the cat's comings and goings is put at a
+    moment the frame holds that window for all of it, a few minutes apart (worked out once, from the camera, at load).
+51. **Zoom, looked at:** a closer crop round the same middle; the ball and each frame's subject stay in it, the cat's
+    body and the desk run off its foot. Left as it is.
 
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
