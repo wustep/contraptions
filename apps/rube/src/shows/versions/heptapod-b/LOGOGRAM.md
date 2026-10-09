@@ -264,6 +264,10 @@ strongest pulses held against what the picture does on them. What changed:
 - **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
   the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
   off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
+- **Her eye across the cuts**: every cut is a match cut on her, her place on the screen carried, but her eye (her
+  roll, counted from each place's own origin) jumped at the vision cuts and out of the push, as much as half a turn.
+  For a moment after a cut it now turns from where the last place left it to where this one has it. (Not at the
+  shaft's mouth, where the camera's roll is carried and the eye already holds.)
 - **Her eye in the chamber** (97.5 → 130.4): there her dot was only a roll mark, so as Abbott came out of the white,
   through the grand wide, on the touch and all through the first logogram it pointed wherever her roll left it,
   mostly at the floor. Wherever she is at rest she now looks: up at Abbott as he comes, up at the giants through the

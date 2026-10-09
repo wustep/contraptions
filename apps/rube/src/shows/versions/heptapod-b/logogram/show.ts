@@ -2,7 +2,7 @@ import { ballAt, laneAt, R, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
-import type { Company, Riders as PartRiders, Who } from './kit'
+import { ease, turnTo, type Company, type Riders as PartRiders, type Who } from './kit'
 import { HANNAH, HANNAH_ID, HANNAH_SCALE, IAN, IAN_ID, LOUISE, WORLDS, type WorldKey } from './worlds'
 
 /**
@@ -55,6 +55,9 @@ function boundsOf(pieces: Placed[]): Box {
   if (!Number.isFinite(b.x0)) return { x0: 0, y0: 0, x1: 1, y1: 1 }
   return b
 }
+
+/** How long her eye takes to come round after a cut, seconds. */
+const EYE_CARRY = 0.35
 
 export class LogogramShow extends Show {
   private readonly keys: WorldKey[]
@@ -157,7 +160,31 @@ export class LogogramShow extends Show {
     return [placed.col + placed.mirror * at.x, placed.row + at.y]
   }
 
+  /**
+   * Where the ball is at `t`, and how it looks. Every cut is a match cut on her, her place on the screen carried; her
+   * eye is carried too: for a moment after a cut it turns from where the last place left it to where this one has it,
+   * instead of jumping (her eye is her roll, and each place counts her roll from its own origin). Not at the shaft's
+   * mouth, where the camera's roll is carried into the new place and the eye already holds on the screen.
+   */
   override at(t: number): ShowPoint {
+    const time = this.clamp(t)
+    const i = this.owner(time)
+    const since = time - this.legs[i].from
+    if (i > 0 && since < EYE_CARRY && this.legs[i].world !== 'shell' && this.legs[i - 1].world !== 'shell') {
+      const before = this.heroSpin(this.point(this.legs[i].from - 1e-4))
+      const now = this.heroSpin(this.point(time))
+      return this.point(time, before + turnTo(before, now) * ease(since / EYE_CARRY))
+    }
+    return this.point(time)
+  }
+
+  /** Her eye in a point: as a rider set it, or her roll as the stage draws it. */
+  private heroSpin(here: ShowPoint): number {
+    const id = here.ball.id
+    return here.balls?.find((b) => b.id === id)?.spin ?? (here.x - (here.universe.pieces[0]?.col ?? 0)) / R
+  }
+
+  private point(t: number, eye?: number): ShowPoint {
     const time = this.clamp(t)
     const owner = this.owner(time)
     const universe = this.worlds[this.keys.indexOf(this.legs[owner].world)]
@@ -178,7 +205,7 @@ export class LogogramShow extends Show {
     const ride = this.riders.find((r) => r.leg === owner && time >= r.from && time < r.to)
     const world = this.legs[owner].world
     const company = [this.companion(time, 'ian', world), this.companion(time, 'hannah', world)].filter((b): b is ShowBall => !!b)
-    if (ride || company.length) {
+    if (ride || company.length || eye !== undefined) {
       const hero: ShowBall = {
         id: ball.id,
         x: here.x,
@@ -191,7 +218,8 @@ export class LogogramShow extends Show {
         // Her roll as the stage would draw it (`engine.ts`), so a rider that turns her eye can turn it from where it is.
         spin: (here.x - (universe.pieces[0]?.col ?? 0)) / R,
       }
-      const balls = ride ? ride.fn(time, hero) : null
+      let balls = ride ? ride.fn(time, hero) : null
+      if (eye !== undefined) balls = (balls ?? [hero]).map((b) => (b.id === hero.id ? { ...b, spin: eye } : b))
       here.balls = company.length ? [...(balls ?? [hero]), ...company] : balls ?? undefined
     }
     return here
