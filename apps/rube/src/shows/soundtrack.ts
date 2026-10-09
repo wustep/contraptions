@@ -1,5 +1,5 @@
 import type { SoundtrackSpec } from './registry'
-import { createYouTubeSoundtrack } from './youtube'
+import { createYouTubeSoundtrack, type YouTubeSoundtrack } from './youtube'
 
 /**
  * The music. One audio element for the page's life, handed a new recording
@@ -95,8 +95,11 @@ export interface ShowSoundtrack extends Soundtrack {
  * only: without a local `src`, a failed embed leaves the show silent.
  */
 export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtube'): ShowSoundtrack {
-  const file = createFileSoundtrack()
-  const tube = createYouTubeSoundtrack(host)
+  return combineSoundtracks(createFileSoundtrack(), createYouTubeSoundtrack(host), prefer)
+}
+
+/** The file and YouTube, as one: which plays, and handing over between them. Apart from the players, so a check can hand it stand-ins. */
+export function combineSoundtracks(file: Soundtrack, tube: YouTubeSoundtrack, prefer: MusicSource = 'youtube'): ShowSoundtrack {
   let spec: SoundtrackSpec | null = null
   let active: Soundtrack = file
   let fell = false

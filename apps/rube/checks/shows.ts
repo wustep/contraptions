@@ -14,6 +14,7 @@ import { SPEEDS, speedLabel } from '../../../src/ui/view'
 import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, sectionOf, shelves, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
 import { ranOut } from '../src/shows/youtube'
+import { combineSoundtracks } from '../src/shows/soundtrack'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
 import { GRID, strictTake, strikes } from '../src/shows/versions/metronome/metronome'
@@ -118,6 +119,45 @@ async function main(): Promise<void> {
     const timer = yt.slice(yt.indexOf('patience = window.setTimeout('), yt.indexOf("settleRefusal('blocked')", yt.indexOf('patience = window.setTimeout(')))
     check('a seek past the music while YouTube is starting is not read as a refusal',
       /const there = at\(shown\)\s*\n\s*if \(!there \|\| shown >= end\(there\)\) return settleRefusal\('playing'\)/.test(timer))
+  }
+  // Past YouTube's fastest (2x) with no file to take over, YouTube sits out: silent, and no say in the clock, so the
+  // show runs at the speed asked for on the wall; back at 2x or slower it comes in again where the show is. With a
+  // file, the file takes over, as before. Stand-in players record what they are told.
+  {
+    const fake = () => {
+      const log: string[] = []
+      let at = 0
+      let playing = false
+      return {
+        log,
+        load: () => {}, state: () => 'ready' as const, follow: (t: number) => { at = t },
+        position: () => (playing ? at : null),
+        play: async (t: number) => { log.push(`play ${t}`); at = t; playing = true; return 'playing' as const },
+        pause: () => { log.push('pause'); playing = false },
+        seek: (t: number) => { log.push(`seek ${t}`); at = t },
+        setSpeed: () => {}, setMuted: () => {}, onChange: () => {}, onPlayer: () => {}, report: () => null,
+      }
+    }
+    const file = fake()
+    const tube = fake()
+    const music = combineSoundtracks(file as never, tube as never)
+    music.load({ offset: 0, youtube: [{ id: 'x' }] } as never)
+    void music.play(60)
+    music.follow(61)
+    const before = music.position()
+    music.setSpeed(4)
+    const outPos = music.position()
+    const paused = tube.log.includes('pause')
+    music.follow(70)
+    tube.log.length = 0
+    music.setSpeed(1)
+    const backIn = tube.log.includes('seek 70') && tube.log.includes('play 70')
+    const withFile = combineSoundtracks(fake() as never, fake() as never)
+    withFile.load({ offset: 0, src: 'x.mp3', youtube: [{ id: 'x' }] } as never)
+    withFile.setSpeed(4)
+    check('past 2x with no file, YouTube sits out and the show keeps its speed; back at 2x it comes in where the show is',
+      before === 61 && outPos === null && paused && backIn && music.source() === 'youtube' && withFile.source() === 'file',
+      `before ${before}, at 4x ${outPos}, paused ${paused}, back in ${backIn}, with a file ${withFile.source()}`)
   }
   check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('zoomFrame(cam, FOLLOW_ZOOM)'))
   check('a work with one take has no take row to pick from', /work\.versions\.length < 2\) takeRow\.hidden = true/.test(player))
