@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 40 (latest)
+## Polish pass 41 (latest)
+
+No change to the show: the two YouTube cues in the live player. The music is two videos handed over at 126.5 s, and nothing had tested the hand-over live. On Voyage's page the show's clock and the music heard were read together after seeks and while playing. They agree to the hundredth of a second when playing within each cue (from 40 s and from 200 s), after seeking back across the hand-over (to 60 s), when playing straight through it (from 124 s to 128.2 s), and at 2× in both cues (two seconds of show a second). After the music (270 s) nothing is heard and the clock goes on through the silent credits, as it should.
+
+## Polish pass 40
 
 No change to the show: Voyage in Theater. `/theater/?show=interstellar&take=opus55` opens on Voyage ("Voyage · Theater · contraptions"), plays from the start with YouTube as the music (about 5 s heard after 6 s, so in step), draws the opening as the Shows page does, and pauses on a click to the stage, with no console errors of its own. Theater rewrites its address to `/theater/` once it starts, as it does for every show: that is Theater's, not Voyage's.
 
