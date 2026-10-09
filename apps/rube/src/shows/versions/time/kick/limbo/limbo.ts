@@ -475,7 +475,9 @@ function limboShots(_slot: Slot): PartShot[] {
     h(176.9, 4.4, [-1.3, 76.6]),
     h(178.3, 7.2, [0.2, 75.45]),
     h(Q.fischerKick + 0.35, 7.5, [0.9, 75.4]),
-    h(Q.stepOff, 7.1, [1.0, 75.3]),
+    // Fischer gone, in close on the two of them at the edge: her leap, and him a beat behind her.
+    h(Q.ariadneLeap - 0.2, 4.4, [0.95, 74.35]),
+    h(Q.stepOff, 6.1, [1.05, 74.85]),
     h(Q.kick, 8.6, [1.1, 76.5]),
     // The kick: the camera goes up with them, keeping them in the frame's upper third, at their speed into the dark.
     { t: Q.end, cells: 9, off: [0.25, 2.4], w: 0 },

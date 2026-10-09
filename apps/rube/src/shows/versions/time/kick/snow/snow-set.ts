@@ -513,7 +513,8 @@ function stepBand(): { rock: Pt[]; shade: Pt[]; shelves: Pt[][] } {
   const [lx, ly] = J1_LIP
   const top = ly + R
   const [jx, jy] = TRACK.j1Land
-  const foot = jy + R
+  // Its foot a little up the slope from the piste, a strip of snow between: they land and run under it, not across it.
+  const foot = jy + R - 0.26
   const rock: Pt[] = []
   const shade: Pt[] = []
   // The top edge from the right of the lip to the band's left end, slightly falling; the foot back along under it.

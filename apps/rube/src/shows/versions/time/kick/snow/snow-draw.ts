@@ -337,25 +337,35 @@ function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
   const from: Pt = [MAL_AT[0] + d[0] * (0.02 - kick), MAL_AT[1] + d[1] * (0.02 - kick) + 0.04]
   const muzzle: Pt = [MAL_AT[0] + d[0] * (0.68 - kick), MAL_AT[1] + d[1] * (0.68 - kick) + 0.04]
   if (!over) {
+    // A sniper's rifle in silhouette, laid out along the aim (s) and across it, up (h): the butt in her shoulder, the
+    // grip and the magazine under, the scope on its mounts over the receiver, the long barrel to the muzzle.
+    const n: Pt = [d[1], -d[0]]
+    const q = (s: number, h: number): [number, number] => [(from[0] + d[0] * s + n[0] * h) * k, (from[1] + d[1] * s + n[1] * h) * k]
+    const poly = (pts: [number, number][]): void => {
+      ctx.beginPath()
+      pts.forEach(([s, h], i) => (i ? ctx.lineTo(...q(s, h)) : ctx.moveTo(...q(s, h))))
+      ctx.closePath()
+      ctx.fill()
+    }
+    // The muzzle is where the flash comes out.
+    const len = 0.66
     ctx.save()
-    ctx.lineCap = 'round'
-    ctx.strokeStyle = SNOW.vault
-    ctx.lineWidth = Math.max(1, 0.05 * k)
-    ctx.beginPath()
-    ctx.moveTo(from[0] * k, from[1] * k)
-    ctx.lineTo(muzzle[0] * k, muzzle[1] * k)
-    ctx.stroke()
-    // The stock under her, and the scope on the barrel.
-    ctx.lineWidth = Math.max(1, 0.09 * k)
-    ctx.beginPath()
-    ctx.moveTo((from[0] - d[0] * 0.05) * k, (from[1] - d[1] * 0.05) * k)
-    ctx.lineTo((from[0] + d[0] * 0.22) * k, (from[1] + d[1] * 0.22) * k)
-    ctx.stroke()
-    ctx.lineWidth = Math.max(1, 0.035 * k)
-    ctx.beginPath()
-    ctx.moveTo((from[0] + d[0] * 0.24 + d[1] * 0.06) * k, (from[1] + d[1] * 0.24 - d[0] * 0.06) * k)
-    ctx.lineTo((from[0] + d[0] * 0.4 + d[1] * 0.06) * k, (from[1] + d[1] * 0.4 - d[0] * 0.06) * k)
-    ctx.stroke()
+    ctx.fillStyle = SNOW.vault
+    // The stock: deep at the butt, thinning to the wrist, the grip dropping under it.
+    poly([[-0.06, 0.035], [0.15, 0.03], [0.15, -0.012], [0.11, -0.02], [0.13, -0.075], [0.095, -0.075], [0.07, -0.025], [-0.06, -0.06]])
+    // The receiver, and the magazine under it.
+    poly([[0.14, 0.032], [0.34, 0.03], [0.34, -0.018], [0.14, -0.02]])
+    poly([[0.2, -0.015], [0.255, -0.015], [0.27, -0.085], [0.225, -0.085]])
+    // The barrel, thinning a little to the muzzle, and its brake.
+    poly([[0.33, 0.016], [len, 0.011], [len, -0.009], [0.33, -0.012]])
+    poly([[len - 0.045, 0.018], [len, 0.018], [len, -0.016], [len - 0.045, -0.016]])
+    // The scope on two mounts: its bell to the front, its eyepiece back over her cheek.
+    poly([[0.18, 0.03], [0.2, 0.03], [0.2, 0.06], [0.18, 0.06]])
+    poly([[0.29, 0.03], [0.31, 0.03], [0.31, 0.06], [0.29, 0.06]])
+    poly([[0.13, 0.06], [0.16, 0.052], [0.33, 0.052], [0.37, 0.045], [0.37, 0.105], [0.33, 0.098], [0.16, 0.098], [0.13, 0.09]])
+    // A glint on the scope's lens as she brings it up.
+    ctx.fillStyle = rgba(SNOW.flash, 0.55)
+    poly([[0.355, 0.055], [0.368, 0.053], [0.368, 0.097], [0.355, 0.095]])
     ctx.restore()
     return
   }

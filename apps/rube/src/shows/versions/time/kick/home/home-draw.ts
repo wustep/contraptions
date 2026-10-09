@@ -207,6 +207,30 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   const near = vgrad(ctx, k, FLOOR - 0.02, FLOOR + 2.2, [[0, mixHex(HOME.lawn, HOME.sun, 0.12), 1], [0.35, HOME.lawn, 1], [1, mixHex(HOME.lawnDark, HOME.tree, 0.45), 1]])
   fillBox(ctx, k, GARDEN.terrace, FLOOR, x1, f.y1 + 1, near)
   fillBox(ctx, k, x0, FLOOR, GARDEN.terrace, f.y1 + 1, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
+  // The terrace is laid stone: its courses widening as they come toward us, each slab's joint a half step from the
+  // course behind's.
+  {
+    const rows = [GARDEN.back, -0.17, FLOOR, FLOOR + 0.42, FLOOR + 1.0, FLOOR + 1.75, FLOOR + 2.7]
+    ctx.save()
+    ctx.strokeStyle = rgba(HOME.wallShade, 0.55)
+    ctx.lineWidth = Math.max(1, w * 0.35)
+    ctx.beginPath()
+    rows.forEach((y, i) => {
+      if (i > 0) {
+        ctx.moveTo(x0 * k, y * k)
+        ctx.lineTo(GARDEN.terrace * k, y * k)
+      }
+      const next = rows[i + 1]
+      if (next === undefined) return
+      const slab = 0.36 + 0.12 * i
+      for (let x = x0 + (i % 2 ? slab / 2 : slab); x < GARDEN.terrace - 0.08; x += slab) {
+        ctx.moveTo(x * k, y * k)
+        ctx.lineTo(x * k, next * k)
+      }
+    })
+    ctx.stroke()
+    ctx.restore()
+  }
   fillBox(ctx, k, GARDEN.terrace - 0.03, GARDEN.back, GARDEN.terrace + 0.03, f.y1 + 1, rgba(HOME.lawnDark, 0.35))
   tree(ctx, k, f, t, w)
   swing(ctx, k, t, w)

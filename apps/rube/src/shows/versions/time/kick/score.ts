@@ -5,7 +5,7 @@ import { black } from './credits'
 import { box, frame, lay, scenery, standing, type Chain, type Link } from './kit'
 import { DURATION, KICK, PEAK, SEAM, bar } from './music'
 import { FIRST, SEAMS } from './seams'
-import { sleep, SLEEP_CELLS } from './sleep'
+import { sleep, sparkInWides, SLEEP_CELLS } from './sleep'
 import { KickShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { ORIGIN } from './stack'
 import { COBB, type WorldKey } from './worlds'
@@ -221,6 +221,7 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   })
 
   const show = new KickShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
+  sparkInWides((t) => show.where(t), STACK_WIDES.map((w) => [w.from, w.to]))
 
   // The camera: one director per leg, each following the ball only inside its own leg, and each leg opening on
   // exactly the framing the last one closed on, carried by the cut: a match cut on Cobb. Inside a leg, at a seam

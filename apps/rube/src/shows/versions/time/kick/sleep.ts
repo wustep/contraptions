@@ -2,7 +2,7 @@ import type { Pt } from '../../../../parts'
 import { bloom, rgba } from './cast'
 import { box, frame, hash, scenery } from './kit'
 import { DOWN, SLEEP_BANDS, UP, type Crossing } from './stack'
-import { SLEEP } from './worlds'
+import { COBB, SLEEP } from './worlds'
 
 /**
  * The dark of sleep between two levels (the director's): a band of deep night under each level's ground and over the
@@ -19,6 +19,16 @@ const CROSSINGS: (Crossing & { up: boolean })[] = [
   ...Object.values(DOWN).map((c) => ({ ...c, up: false })),
   ...Object.values(UP).map((c) => ({ ...c, up: true })),
 ]
+
+/**
+ * Where he is, and when the camera is out on the whole stack at once (the director's great wides): `score.ts` hands
+ * them over once the show is laid. At that size a ball is a pixel, so he is drawn there as a spark in his own colour
+ * with the streak of his climb behind it, all the way up, not only where he crosses the dark.
+ */
+let wide: { where: (t: number) => Pt; spans: [number, number][] } | null = null
+export function sparkInWides(where: (t: number) => Pt, spans: [number, number][]): void {
+  wide = { where, spans }
+}
 
 export const sleep = scenery<null>({
   name: 'sleep',
@@ -69,6 +79,34 @@ export const sleep = scenery<null>({
       // frame so it is still found at a hundred cells.
       const far = Math.max(1, (f.y1 - f.y0) / 24)
       bloom(p, k, at, (cr.up ? 1.6 : 2.4) * (cr.up ? far : 1), SLEEP.mote, a * (cr.up ? Math.min(1.6, 0.8 + far * 0.2) : 1))
+    }
+    for (const [a, b] of wide?.spans ?? []) {
+      if (!wide || t < a || t > b) continue
+      const far = Math.max(1, (f.y1 - f.y0) / 24)
+      const at = wide.where(t)
+      // The streak: where he was over the last half second, thinning and fading back along his climb.
+      ctx.save()
+      ctx.lineCap = 'round'
+      for (let j = 0; j < 10; j++) {
+        const s0 = Math.max(a, t - j * 0.05)
+        const s1 = Math.max(a, t - (j + 1) * 0.05)
+        if (s1 >= s0) break
+        const p0 = wide.where(s0)
+        const p1 = wide.where(s1)
+        ctx.strokeStyle = rgba(SLEEP.mote, 0.5 * (1 - j / 10))
+        ctx.lineWidth = Math.max(1, 0.2 * far * k * (1 - j / 12))
+        ctx.beginPath()
+        ctx.moveTo(p0[0] * k, p0[1] * k)
+        ctx.lineTo(p1[0] * k, p1[1] * k)
+        ctx.stroke()
+      }
+      ctx.restore()
+      bloom(p, k, at, 1.5 * far, SLEEP.mote, 0.55)
+      bloom(p, k, at, 0.8 * far, COBB, 0.9)
+      ctx.fillStyle = COBB
+      ctx.beginPath()
+      ctx.arc(at[0] * k, at[1] * k, Math.max(2, 0.19 * far * k), 0, Math.PI * 2)
+      ctx.fill()
     }
   },
 })

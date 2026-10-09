@@ -248,6 +248,24 @@ because of it:
   piste above, and back.
 - **Bar 18**, the one chord nobody struck, is the plane's lamp dying as the blink shuts.
 
+## Polish rounds
+
+A later pass (Opus 5.5) watched the whole show again, a frame every two seconds and then every half second through
+each world, and changed:
+- **The great wide** (183.2 to 187.1): at a hundred cells a ball is a pixel, and the glow at the crossing was gone in a
+  quarter second, so the thrown ones could not be found for most of the shot. He is now a spark in his own colour all
+  the way up, a pale streak of his climb behind him, from the tower's roof through the dark into the fortress
+  (`sleep.ts`, `sparkInWides`).
+- **Limbo's roof** (180 to 183): the push, her leap and his step were specks in a frame of the whole tower. Once
+  Fischer is gone the camera comes in close on the two of them at the edge, and opens again as they fall to the kick.
+- **Mal's rifle** in the cut to her (143.3 to 145.6) was three strokes. It is a sniper's rifle in silhouette now:
+  butt, grip, magazine, scope on its mounts with a glint on its lens, the long barrel and its brake.
+- **The snow's rock step** (130 to 132): its foot sat over the piste, so after the jump they ran across the face of
+  the cliff. Its foot is a little up the slope now, a strip of snow between, and they run under it.
+- **Home's table** (248): he came up to the table's end through the near chair. The chair stands pulled out from the
+  table now, and he comes up beside it.
+- **Home's terrace** (252 to 265) was a blank pale slab between the house and the lawn: it is laid stone.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
