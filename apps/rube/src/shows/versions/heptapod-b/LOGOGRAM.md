@@ -255,9 +255,11 @@ cut, and close looks at whatever caught the eye. What changed:
   bank falling to the water at its right edge. The brow is further along the shore.
 - **The room for the credits**: the ceiling stood just over the window, so the coda's wide was a third dark ceiling,
   and the cast list straddled its soft edge. The room is tall now, the ceiling high over the glass on a clean line,
-  and the cards sit on quiet wall with a little more shade under them. Cream type on that pale wall was faint in its
+  and the cards sit on quiet wall. Cream type on that pale wall was faint in its
   fine print, so as the credits begin the room goes to dusk over seven seconds and stays there to the end, while the
-  window keeps its light: the words read, and the last of the day is out on the water.
+  window keeps its light: the words read, and the last of the day is out on the water. With the dusk doing the work, the soft
+  shade under the words is back to the faint one it was: stronger, it stood on the wall as a dark stain in a saved frame,
+  which has no words over it.
 - **Hannah's drawing**: low on the wall over her corner, at her height, a child's drawing is taped: the two of them
   by the water under a crayon sun, in pencil, holding hands, each with a dot for an eye, looking at each other
   (nothing but Louise is her colour, not even a drawing of her). It is paper, edged in pencil-grey, not framed in ink. It is in
