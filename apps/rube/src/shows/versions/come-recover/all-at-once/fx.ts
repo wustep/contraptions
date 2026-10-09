@@ -76,11 +76,16 @@ function bead(at: Where, t: number, arrive?: number): { x: number; y: number; hx
   let vx = flung ? 11 : 0
   let vy = 0
   let hx = 0
-  const pos = (s: number) => at(s) ?? at(t)!
-  for (let s = t0; s <= t + 1e-9; s += STEP) {
-    const a = pos(s - STEP)
-    const b = pos(s)
-    const c = pos(s + STEP)
+  const here = at(t)!
+  // Every sample the walk needs, looked up once: each step reads the one before it, its own and the one after.
+  const n = Math.max(0, Math.floor((t + 1e-9 - t0) / STEP))
+  const P: { x: number; y: number }[] = []
+  for (let i = -1; i <= n + 1; i++) P.push(at(t0 + i * STEP) ?? here)
+  for (let i = 0; i <= n; i++) {
+    const s = t0 + i * STEP
+    const a = P[i]
+    const b = P[i + 1]
+    const c = P[i + 2]
     // The ball's acceleration; a teleport (a jump) shows as a huge one, so it is ignored.
     let ax = (c.x - 2 * b.x + a.x) / (STEP * STEP)
     let ay = (c.y - 2 * b.y + a.y) / (STEP * STEP)

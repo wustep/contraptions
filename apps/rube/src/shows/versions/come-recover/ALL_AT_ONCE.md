@@ -412,6 +412,18 @@ The notes went back to the builders who made each part, who still had their cont
     two flickers from the dark kitchen into a bright world, and then a new world on every hit. It now has one
     flicker, and its stretch measures two at most. The jump into the piano also reaches three by quarters, but its
     swings are small, just over the threshold, between two bright worlds. It was kept.
+- **A pass for a slower machine.** No colour in the show's palette is saturated red (red at most about 65% of the
+  total), so the guideline's red-flash rule cannot trigger. Then the show was played in real Chrome with the CPU
+  throttled 4×, like a modest laptop. Most of it held 57–60 fps, but the peak fell to 24–34 and the credits to about
+  40. `origin/main` measured the same, so this was the show's own cost, not these passes'.
+  - A profile of the peak put a third of each frame in finding where a ball is. A carried lane is laid at sixty
+    segments a second, so the peak's is over a thousand. `laneAt` walks a lane from its start, and the googly eyes
+    ask where each ball was over the last 1.2 s, at 120 steps a second, three lookups a step.
+  - `show.ts` now finds the segment by halving, over cumulative times kept once per lane (`laneXY`). It hands that
+    one segment to `laneAt`, so the answer is the one `laneAt` gives. `fx.ts` looks each sample up once, not three
+    times. The shared `parts.ts` is untouched.
+  - Seventeen frames across the show, full of eyes and long lanes, are pixel for pixel what they were. Throttled 4×,
+    the peak now holds 58–60 fps and the credits 60.
 
 ## End credits
 

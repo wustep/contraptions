@@ -1,4 +1,4 @@
-import { ballAt, laneAt, type Pt } from '../../../../parts'
+import { ballAt, laneAt, type Lane, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
@@ -65,6 +65,48 @@ function boundsOf(pieces: Placed[]): Box {
   }
   if (!Number.isFinite(b.x0)) return { x0: 0, y0: 0, x1: 1, y1: 1 }
   return b
+}
+
+/**
+ * Where a lane has the ball at `t`: `laneAt`'s answer, found by halving rather than by walking the lane from its
+ * start. A carried lane is laid at sixty segments a second, so a long one (the peak's, the pull's) is a thousand and
+ * more, and the googly eyes ask where the balls were a thousand times a frame; walking them was most of a frame on a
+ * slow machine. The segment found is the same one `laneAt` would stop at, and it is handed to `laneAt` alone.
+ */
+interface Seek {
+  ends: number[]
+  singles: Lane[]
+}
+const SEEKS = new WeakMap<Lane, Seek>()
+function laneXY(lane: Lane, t: number): Pt {
+  if (lane.segs.length < 24) {
+    const p = laneAt(lane, t)
+    return [p.x, p.y]
+  }
+  let seek = SEEKS.get(lane)
+  if (!seek) {
+    const ends: number[] = []
+    let acc = 0
+    for (const seg of lane.segs) {
+      acc += seg.dur
+      ends.push(acc)
+    }
+    seek = { ends, singles: lane.segs.map((seg) => ({ segs: [seg], fire: 0 })) }
+    SEEKS.set(lane, seek)
+  }
+  const want = Math.max(0, t)
+  const { ends } = seek
+  // The first segment whose end is at or past `want`; the last if none is.
+  let lo = 0
+  let hi = ends.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (ends[mid] >= want) hi = mid
+    else lo = mid + 1
+  }
+  const seg = lane.segs[lo]
+  const p = laneAt(seek.singles[lo], want - (ends[lo] - seg.dur))
+  return [p.x, p.y]
 }
 
 export class MultiverseShow extends Show {
@@ -189,8 +231,8 @@ export class MultiverseShow extends Show {
   /** Where the ball is at `t`, in its own leg's cells. Cheap: what the camera samples. */
   where(t: number): Pt {
     const placed = this.holder(t)
-    const at = laneAt(placed.lane, this.clamp(t) - placed.start)
-    return [placed.col + placed.mirror * at.x, placed.row + at.y]
+    const [x, y] = laneXY(placed.lane, this.clamp(t) - placed.start)
+    return [placed.col + placed.mirror * x, placed.row + y]
   }
 
   override at(t: number): ShowPoint {
