@@ -787,17 +787,32 @@ export function drawSpray(p: p5, k: number, from: Pt, to: Pt, u: number, color =
   for (const [x, y] of left) p.vertex(x * k, y * k)
   for (let j = right.length - 1; j >= 0; j--) p.vertex(right[j][0] * k, right[j][1] * k)
   p.endShape(p.CLOSE)
-  // The head: a billow of soft overlapping clouds, opening as it slows.
+  // The head: a billow of soft overlapping clouds, opening as it slows: each dense at its middle and nothing at its
+  // edge, so the billow is one soft cloud, never a cluster of discs.
   const [hx, hy] = at(reach)
   const r = (0.06 + 0.22 * reach) * len * 0.5
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [cr, cg, cb] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))
+  const puff = (x: number, y: number, rx: number, ry: number, a: number) => {
+    if (a <= 0.004 || rx * k < 0.5) return
+    ctx.save()
+    ctx.translate(x * k, y * k)
+    ctx.scale(1, ry / rx)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+    g.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, ${a})`)
+    g.addColorStop(0.5, `rgba(${cr}, ${cg}, ${cb}, ${a * 0.7})`)
+    g.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`)
+    ctx.fillStyle = g
+    ctx.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
+    ctx.restore()
+  }
   for (let i = 0; i < 7; i++) {
     const a = (i / 7) * TAU + v * 1.3
     const off = r * (0.25 + 0.35 * reach)
-    p.fill(alpha(p, color, (0.16 + 0.06 * (i % 2)) * light * (0.5 + 0.5 * fade)))
-    p.ellipse((hx + Math.cos(a) * off) * k, (hy + Math.sin(a) * off) * k, r * (1.1 + 0.3 * Math.sin(i * 2.3)) * k, r * (0.9 + 0.3 * Math.cos(i * 1.7)) * k)
+    // Half-widths a little past the old discs', as a soft edge reaches further than a hard one.
+    puff(hx + Math.cos(a) * off, hy + Math.sin(a) * off, r * (1.1 + 0.3 * Math.sin(i * 2.3)) * 0.65, r * (0.9 + 0.3 * Math.cos(i * 1.7)) * 0.65, (0.24 + 0.08 * (i % 2)) * light * (0.5 + 0.5 * fade))
   }
-  p.fill(alpha(p, color, 0.35 * light * fade))
-  p.ellipse(hx * k, hy * k, r * 0.9 * k, r * 0.75 * k)
+  puff(hx, hy, r * 0.6, r * 0.5, 0.5 * light * fade)
   p.pop()
 }
 

@@ -306,6 +306,8 @@ changed, in the order of the film, and then what runs through it:
   fainter, so round the film's central image stood stepped outlines like a vector offset, not ink in water; and each
   tendril was laid over the ring, so where it left it the ink was doubly dark. The ring and its tendrils are filled
   as one body now, and the haze is a true blur round the whole of it. Real playback still holds 60 fps through the fog.
+  The jet that carries the ink to where a ring forms ended in a cluster of flat see-through discs, darker where they
+  overlapped; its billow is soft puffs now, one cloud.
 - **The shadow under the bench** (the first frame and the last, and every scene at the window): a dark box under the
   slab with square ends, on the glass's foot and again in the floor's reflection. Its ends fade out within the
   slab's length now.
