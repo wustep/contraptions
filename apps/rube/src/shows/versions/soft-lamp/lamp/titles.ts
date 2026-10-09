@@ -32,7 +32,7 @@ const CREDITS_AT: [number, number] = [0.785, 0.15]
 const creditsFrom = barTime(last, last.exit) + 2
 
 export const CARDS: Card[] = [
-  { at: 2.6, hold: 5.2, names: ['Soft Lamp'], notes: ['Lofi Girl · Best of lofi hip hop 2021'], title: true, pos: [0.74, 0.13] },
+  { at: 2.6, hold: 5.2, names: ['Soft Lamp'], notes: ['Lofi Girl · Best of lofi hip hop 2021'], title: true, pos: [0.745, 0.15] },
   // Each track's name as it starts (the first after the title has gone).
   ...TRACKS.map((tr): Card => ({
     at: tr.n === 0 ? 11.2 : tr.from + 1.2,
@@ -48,7 +48,7 @@ export const CARDS: Card[] = [
     hold: 4.6,
     role: 'Music',
     names: ['Lofi Girl'],
-    notes: ['Best of lofi hip hop 2021', `its first twelve tracks, ${TRACKS[0].title} to ${last.title}`],
+    notes: ['Best of lofi hip hop 2021', 'the first twelve tracks'],
     pos: CREDITS_AT,
   },
 ]

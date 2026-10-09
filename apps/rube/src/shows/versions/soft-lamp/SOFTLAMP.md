@@ -385,6 +385,15 @@ ball. The machine and its timing were right and are untouched; the room around i
     reads. Its wall was also darker than the building it is in (drawn after the haze over the roofs); it is drawn
     under the haze now, and the rain falls in front of it.
 
+### The sixteenth lofi pass
+
+57. **The words on a phone held upright.** The page keeps the type readable as a tall stage's picture shrinks, so
+    what clears its neighbours in landscape crowds them in portrait: the title's first letter sat on the fairy lights'
+    last bulb, and the Music card's last line ("its first twelve tracks, morning moon to Passing By") ran to the print's
+    edge. The title stands a fiftieth of the frame lower (and a touch right), clear of the string in both; the line is
+    "the first twelve tracks" (each track's name has had its own card by then), clear of the print in both. The
+    Directed-by card, the track cards and the landscape layout, checked, are as they were.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
