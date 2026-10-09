@@ -476,18 +476,21 @@ function book(ctx: Ctx, lw: number, b: Book, i: number, t: number): void {
   stroke(ctx, lw)
   // The middle one's ribbon, out of its pages at the left end, lying down onto the book under it.
   if (i === 1) {
+    // A flat silk ribbon, out of the pages and down, its end cut in a V where it lies on the book below.
+    const RW = 0.05
+    const yb = b.bottom - 0.004
     ctx.beginPath()
-    ctx.moveTo(b.x0 + 0.01, top + h * 0.45)
-    ctx.quadraticCurveTo(b.x0 - 0.07, top + h * 0.55, b.x0 - 0.05, b.bottom - 0.004)
-    ctx.lineTo(b.x0 - 0.1, b.bottom - 0.004)
-    ctx.lineCap = 'butt'
-    ctx.lineWidth = 0.028 + lw
-    ctx.strokeStyle = INK
-    ctx.stroke()
-    ctx.lineWidth = 0.028 - lw * 0.6
-    ctx.strokeStyle = lit('#5A2420', '#C8564A', l * 0.8 + 0.1)
-    ctx.stroke()
-    ctx.lineCap = 'round'
+    ctx.moveTo(b.x0 + 0.01, top + h * 0.38)
+    ctx.quadraticCurveTo(b.x0 - 0.08, top + h * 0.5, b.x0 - 0.06, yb - RW)
+    ctx.lineTo(b.x0 - 0.2, yb - RW)
+    ctx.lineTo(b.x0 - 0.17, yb - RW / 2)
+    ctx.lineTo(b.x0 - 0.2, yb)
+    ctx.lineTo(b.x0 - 0.06 + RW, yb)
+    ctx.quadraticCurveTo(b.x0 - 0.08 + RW, top + h * 0.6, b.x0 + 0.01, top + h * 0.38 + RW)
+    ctx.closePath()
+    ctx.fillStyle = lit('#5A2420', '#C8564A', l * 0.8 + 0.1)
+    ctx.fill()
+    stroke(ctx, lw * 0.6)
   }
   // Its top edge catches the lamp.
   ctx.fillStyle = rgba(lampColor(t), 0.5 * l)
@@ -570,6 +573,16 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   ctx.strokeStyle = lit(PAD, PAD_LIT, lightAt(a.x + 0.6, BAND_TOP) * lamp * 0.8)
   ctx.stroke()
   ctx.restore()
+  // The band's adjusting slider where it comes out of the yoke: a bright strip of it.
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(a.x - 0.2, a.y - 0.42, 0.42, 0.42)
+  ctx.clip()
+  band()
+  ctx.lineWidth = 0.05
+  ctx.strokeStyle = lit('#6E6A7E', '#E8D9C2', lightAt(a.x, a.y - 0.3) * lamp * 0.9 + 0.1)
+  ctx.stroke()
+  ctx.restore()
   // The far cup, on its edge: the shell away from us, the cushion toward the near cup.
   const fx = FAR_CUP.x
   const fw = FAR_CUP.halfW
@@ -605,6 +618,40 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   ctx.fillStyle = pg
   ctx.fill()
   stroke(ctx, lw)
+  // What says headphones: the shell's bright rim where the cushion sits in it, a round badge on its side, and the
+  // cushion's stitched seam.
+  const metal = (k: number) => lit('#6E6A7E', '#E8D9C2', Math.min(1, l * 0.9 + k))
+  const rimY = CUP.top + 0.155
+  ctx.beginPath()
+  ctx.moveTo(CUP.x - w + 0.04, rimY)
+  ctx.lineTo(CUP.x + w - 0.04, rimY)
+  ctx.lineWidth = 0.022
+  ctx.strokeStyle = metal(0.15)
+  ctx.stroke()
+  const bx = CUP.x + 0.02
+  const by = (rimY + 0) / 2 + 0.01
+  ctx.beginPath()
+  ctx.ellipse(bx, by, 0.07, 0.055, 0, 0, Math.PI * 2)
+  ctx.fillStyle = lit('#3A3448', '#8D86A0', l * 0.8)
+  ctx.fill()
+  ctx.lineWidth = lw * 0.6
+  ctx.strokeStyle = metal(0.15)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.ellipse(bx, by, 0.028, 0.022, 0, 0, Math.PI * 2)
+  ctx.fillStyle = metal(0.2)
+  ctx.fill()
+  ctx.save()
+  cushionPath(ctx, top)
+  ctx.clip()
+  ctx.setLineDash([0.025, 0.02])
+  ctx.beginPath()
+  ctx.moveTo(CUP.x - w + 0.05, rimY - 0.035)
+  ctx.lineTo(CUP.x + w - 0.05, rimY - 0.035)
+  ctx.lineWidth = lw * 0.5
+  ctx.strokeStyle = rgba(INK, 0.45)
+  ctx.stroke()
+  ctx.restore()
   // The lamp along the cushion's far shoulder.
   ctx.beginPath()
   ctx.moveTo(CUP.x + SHOULDER * 0.5, top + 0.02)

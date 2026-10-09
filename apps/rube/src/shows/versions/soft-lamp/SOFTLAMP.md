@@ -1012,9 +1012,18 @@ and asked for what a viewer would notice. Of its ten points, four were right and
 
 Not taken: the ball "floating" by the window (a frame mid-lob, the machine's flight); the mug "vanishing" (the
 refill, its hand out of a still); hold the wide frame four fifths of the time (the show is built on its looks; a
-question for Stephen, below); the moth's large shadow (a light that close throws one that large). Put to Stephen:
-whether the headphone cup reads as headphones in the close look, and the book's red ribbon, which the reviewer took
-for a stray wire.
+question for Stephen, below); the moth's large shadow (a light that close throws one that large). The headphone cup and the ribbon were then fixed (the sixtieth pass).
+
+### The sixtieth pass: headphones that read as headphones
+
+158. **The cup close's cup read as a cushion**, a pincushion or a loaf (the cold review, and on looking again, fairly):
+     the ball sat on a pillow, and the machine's whole idea (the listener's seat in the headphones) was lost in the look
+     the camera holds longest. The near cup now says what it is: a bright rim where the cushion sits in the shell, a
+     round badge on the shell's side, the cushion's stitched seam, and on the band, where it leaves the yoke, the bright
+     strip of its adjusting slider.
+159. **The book's ribbon read as a stray red wire.** It is a flat silk ribbon now, wider, out of the pages and lying on
+     the book below with its end cut in a V.
+160. Sixty frames a second in the cup close, as before; a scrub back is the same frame; the share card regenerated.
 
 **Subtracted:** twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
