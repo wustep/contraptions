@@ -622,6 +622,10 @@ The notes went back to the builders who made each part, who still had their cont
   than 0.6% of the frame changing, for three seconds or more, are under the credits (302.5–312.5, 313–317.3 and
   320.3–328.3 s). That is the intended rest, and the page's words fading over it are not even counted. Every other
   stretch keeps something moving, the rocks' silence and the hush included. Nothing was changed.
+- **A pass for the gentled machines.** Each of Jobu's jumpers, once given her eye, let its pupil hang loose. Now
+  each one, once its new eye has settled from its landing (0.9 s after), turns to watch her, wherever she goes,
+  to the end of the fight: the glove after the push it gave her, the trap after its toss, the mallet after its
+  scoop, and the arm as it cradles her. Kindness answered with fondness (`watching` in `kindness-draw.ts`).
 
 ## The looks
 

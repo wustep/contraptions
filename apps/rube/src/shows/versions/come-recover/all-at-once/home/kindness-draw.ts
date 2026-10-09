@@ -8,6 +8,7 @@ import {
   APPEAR,
   armAt,
   B,
+  ballAt,
   jawsAt,
   DESK,
   EYE_AT,
@@ -490,7 +491,7 @@ export function drawGlove(pen: Pen, t: number): void {
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.glove)
     const eye = gloveEye(t)
-    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing - (g.aim + Math.PI / 2) * 0.15, e.lift)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, watching(t, EYE_AT.glove, eye.at, e.swing - (g.aim + Math.PI / 2) * 0.15), e.lift)
   }
 }
 
@@ -564,7 +565,7 @@ export function drawTrap(pen: Pen, t: number): void {
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.trap)
     const eye = trapEye(t)
-    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing + j.sway * 1.5, e.lift)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, watching(t, EYE_AT.trap, eye.at, e.swing + j.sway * 1.5), e.lift)
   }
 }
 
@@ -614,7 +615,7 @@ export function drawHammer(pen: Pen, t: number): void {
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.hammer)
     const eye = hammerEye(t)
-    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing + phi * 0.8, e.lift)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, watching(t, EYE_AT.hammer, eye.at, e.swing + phi * 0.8), e.lift)
   }
 }
 
@@ -727,7 +728,7 @@ export function drawArm(pen: Pen, t: number): void {
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.claw)
     const eye = clawEye(t)
-    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing, e.lift)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, watching(t, EYE_AT.claw, eye.at, e.swing), e.lift)
   }
 }
 
@@ -737,6 +738,19 @@ export function clawEye(t: number): { at: Pt; r: number } {
   const up = g.a - Math.PI / 2
   const flip = Math.cos(g.a) < 0 ? -1 : 1
   return { at: [g.end[0] + Math.cos(g.a) * 0.03 + Math.cos(up) * 0.12 * flip, g.end[1] + Math.sin(g.a) * 0.03 + Math.sin(up) * 0.12 * flip], r: 0.1 }
+}
+
+/**
+ * A gentled machine's pupil, watching her: once its new eye has settled from its landing, it turns to her, wherever
+ * she goes, and keeps on her to the end of the fight. `base` is the pupil's own swing, which it eases out of.
+ */
+function watching(t: number, at: number, eye: Pt, base: number): number {
+  const u = t - at - 0.9
+  if (u <= 0) return base
+  const w = u >= 0.4 ? 1 : (u / 0.4) * (u / 0.4) * (3 - 2 * u / 0.4)
+  const [x, y] = ballAt(t)
+  const a = Math.atan2(y - eye[1], x - eye[0]) - Math.PI / 2
+  return base * (1 - w) + Math.atan2(Math.sin(a), Math.cos(a)) * w
 }
 
 /* ------------------------------------------------------------------ the eyes she gives them */
