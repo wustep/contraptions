@@ -298,10 +298,10 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
   ctx.closePath()
   ctx.fill()
   // Its soft folds where it falls over the side: each a wedge from a little below the top, widening to the hem, lit on
-  // its left and shaded on its right, blurred and kept inside the duvet, so a fold has no edge of its own.
+  // its left and shaded on its right, coming in from nothing at its top, kept inside the duvet: a fold has no edge of
+  // its own. (In slices, not under a blur filter, which is costly every frame.)
   ctx.save()
   ctx.clip()
-  ctx.filter = `blur(${Math.max(0.6, 0.025 * k).toFixed(1)}px)`
   for (const [x, w] of [[1.42, 0.09], [1.93, 0.11], [2.38, 0.08]] as const) {
     const y0 = top + 0.03
     const y1 = 0.01
@@ -312,15 +312,26 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
     g.addColorStop(0.75, rgba(HOUSE.night, 0.09))
     g.addColorStop(1, rgba(HOUSE.night, 0))
     ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo((x - w * 0.15) * k, y0 * k)
-    ctx.lineTo((x + w * 0.15) * k, y0 * k)
-    ctx.quadraticCurveTo((x + w * 0.6) * k, ((y0 + y1) / 2) * k, (x + w) * k, y1 * k)
-    ctx.lineTo((x - w) * k, y1 * k)
-    ctx.quadraticCurveTo((x - w * 0.6) * k, ((y0 + y1) / 2) * k, (x - w * 0.15) * k, y0 * k)
-    ctx.closePath()
-    ctx.fill()
+    const n = 8
+    for (let i = 0; i < n; i++) {
+      const ua = i / n
+      const ub = (i + 1) / n
+      const ya = y0 + (y1 - y0) * ua
+      const yb = y0 + (y1 - y0) * ub
+      // Its width down the fold: narrow at the top, eased out to full at the hem.
+      const wa = w * (0.15 + 0.85 * Math.sqrt(ua))
+      const wb = w * (0.15 + 0.85 * Math.sqrt(ub))
+      ctx.globalAlpha = Math.min(1, (ua + ub) / 2 / 0.45)
+      ctx.beginPath()
+      ctx.moveTo((x - wa) * k, ya * k)
+      ctx.lineTo((x + wa) * k, ya * k)
+      ctx.lineTo((x + wb) * k, yb * k)
+      ctx.lineTo((x - wb) * k, yb * k)
+      ctx.closePath()
+      ctx.fill()
+    }
   }
+  ctx.globalAlpha = 1
   ctx.restore()
   ctx.restore()
   void T

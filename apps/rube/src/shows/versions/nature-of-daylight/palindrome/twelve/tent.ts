@@ -171,9 +171,13 @@ function drawPhone(ctx: CanvasRenderingContext2D, k: number, t: number): void {
     g.addColorStop(0, rgba(TENT.keypad, awake * (0.16 + 0.12 * hit + 0.1 * calling)))
     g.addColorStop(1, rgba(TENT.keypad, 0))
     ctx.fillStyle = g
+    // Soft at its ends: nested, each a little wider and fainter (no blur filter, which is costly every frame).
     ctx.save()
-    ctx.filter = `blur(${Math.max(1, 0.04 * k).toFixed(1)}px)`
-    ctx.fillRect((KEYS[0] - 0.16) * k, (BASE_TOP - CAP - 0.16) * k, (CALL_X - KEYS[0] + 0.32) * k, 0.16 * k)
+    for (let j = 0; j < 8; j++) {
+      const out = 0.03 * j
+      ctx.globalAlpha = 0.125
+      ctx.fillRect((KEYS[0] - 0.1 - out) * k, (BASE_TOP - CAP - 0.16) * k, (CALL_X - KEYS[0] + 0.2 + 2 * out) * k, 0.16 * k)
+    }
     ctx.restore()
   }
   const key = (x: number, w: number, n: number) => {
@@ -184,10 +188,14 @@ function drawPhone(ctx: CanvasRenderingContext2D, k: number, t: number): void {
       g.addColorStop(0, rgba(TENT.keypad, awake * (0.3 + 0.45 * hit)))
       g.addColorStop(1, rgba(TENT.keypad, 0))
       ctx.fillStyle = g
-      // Soft at its sides as well as its top: with square sides it stood round her as a lit box.
+      // Soft at its sides as well as its top: with square sides it stood round her as a lit box. Nested bands, each
+      // wider and fainter, not a blur filter, which is costly every frame.
       ctx.save()
-      ctx.filter = `blur(${Math.max(1, 0.05 * k).toFixed(1)}px)`
-      ctx.fillRect((x - w / 2 - 0.02) * k, (BASE_TOP - CAP - 0.3) * k, (w + 0.04) * k, (0.3 + down) * k)
+      for (let j = 0; j < 10; j++) {
+        const half = w / 2 - 0.08 + 0.025 * j
+        ctx.globalAlpha = 0.1
+        ctx.fillRect((x - half) * k, (BASE_TOP - CAP - 0.3) * k, 2 * half * k, (0.3 + down) * k)
+      }
       ctx.restore()
     }
     const top = (BASE_TOP - CAP + down) * k

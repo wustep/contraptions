@@ -272,6 +272,15 @@ the sat phone, the ring closing, and the blast. Only one thing showed:
 - **The sat phone's struck key** threw its light up round her as a rectangle with square sides, a lit box she sat in
   on every press. Its sides are soft now, as is the backlight along the row, so it is light rising off the key.
 
+A ninth rendered frames at 2560 × 1440 and searched them for hairlines (a line a pixel wide whose neighbours on either
+side agree, running a long way): every one found was a drawn edge, a gradient's band or the fog's own dither. Then it
+timed the stage, frame by frame, against `main` in the same places:
+
+- **The cost of the softening.** The ball's reflections, the duvet's folds and the struck key's light were all made
+  soft in the passes above by a blur filter, which costs a great deal every frame: the lake house and the sat phone drew
+  a third to a half slower than `main`. Each is soft now by its own gradient, slices or nested bands, and draws as fast
+  as `main` does, looking the same.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

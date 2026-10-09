@@ -527,7 +527,7 @@ export function drawFloorLight(p: p5, k: number, T: number, shadows: Pt[][], bal
 /**
  * The balls given back by the polished floor too. The mirror copies only what is drawn before them, so the cradle
  * stood in the oak and Louise and Ian on it did not: each now has a dim soft reflection under it, as faint as the
- * mirror's and fading into the oak the same way. `balls` are each a ball's middle and its colour.
+ * mirror's and fading into the oak. `balls` are each a ball's middle and its colour.
  */
 export function drawBallMirror(p: p5, k: number, T: number, balls: [Pt, string][]): void {
   const ctx = p.drawingContext as Ctx
@@ -537,23 +537,19 @@ export function drawBallMirror(p: p5, k: number, T: number, balls: [Pt, string][
   const C = roomColors(L)
   const a = 0.17 + 0.1 * L.morn - 0.07 * L.night
   ctx.save()
-  ctx.filter = `blur(${Math.max(0.8, k * 0.02).toFixed(1)}px)`
+  // Soft by its gradient, not a blur filter (a filter is costly every frame): brightest just under the floor line, where
+  // the ball meets its reflection, fading down and out to nothing at its rim.
   for (const [[x, y], color] of balls) {
     const r = FLOOR - y
     const cy = FLOOR + r
-    const g = ctx.createLinearGradient(0, FLOOR * k, 0, (FLOOR + 2 * r) * k)
+    const g = ctx.createRadialGradient(x * k, (FLOOR + 0.35 * r) * k, 0, x * k, cy * k, r * 1.05 * k)
     g.addColorStop(0, rgba(mix(color, C.floorFar, 0.2), a))
-    g.addColorStop(1, rgba(mix(color, C.floorFar, 0.6), a * 0.15))
+    g.addColorStop(0.55, rgba(mix(color, C.floorFar, 0.4), a * 0.55))
+    g.addColorStop(1, rgba(mix(color, C.floorFar, 0.6), 0))
     ctx.fillStyle = g
     ctx.beginPath()
-    ctx.arc(x * k, cy * k, r * 0.97 * k, 0, Math.PI * 2)
+    ctx.arc(x * k, cy * k, r * 1.05 * k, 0, Math.PI * 2)
     ctx.fill()
-    // Its dark rim, given back faintest of all.
-    ctx.strokeStyle = rgba(HOUSE.night, a * 0.5)
-    ctx.lineWidth = Math.max(0.6, r * 0.12 * k)
-    ctx.beginPath()
-    ctx.arc(x * k, cy * k, r * 0.92 * k, 0, Math.PI)
-    ctx.stroke()
   }
   ctx.restore()
 }
