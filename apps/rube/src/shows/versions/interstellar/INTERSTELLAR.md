@@ -231,11 +231,15 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 100 (latest)
+## Polish pass 101 (latest)
+
+No change to the show: pass 100's proposed fix tested and withdrawn. Under Chrome's gesture-required autoplay policies the browser really did refuse the sound (the player fell back to playing muted with the sound held). The refused unmuted attempt reported the same states as a slow link: cued, unstarted, buffering, unstarted within a few milliseconds, then unstarted until the muted retry played at about 4 s. A refused embed blips through buffering too. So "count any buffering since the play" would take real refusals for a slow link, and before `PATIENCE` the two cannot be told apart by the deck's state. The only lever is a longer `PATIENCE`, which would make every real refusal, the common case, wait longer before falling back. The finding stays as it is, noted.
+
+## Polish pass 100
 
 No change to the show: evidence for pass 95's open finding, a slow start taken for an autoplay block. The YouTube decks' own state reports (their `infoDelivery` messages to the page) were logged through a throttled seek into No Time for Caution. Within 70 ms of the play, its deck went unstarted, buffering, unstarted. It then sat unstarted until 2.44 s, buffered, and was playing at 2.51 s. `PATIENCE` in `shows/youtube.ts` is 2.5 s, and at that moment it asks only whether the deck is buffering now. So on a slow link the outcome is a race decided by tens of milliseconds: this run started, pass 95's identical one was called refused.
 
-A possible fix, for whoever next works on `youtube.ts`: count a deck as slow, not refused, if it has reported buffering at any time since the play began, not only at the moment of the check. It is not made here, because it is unknown whether an embed the browser really refuses also blips through buffering. If it does, this would hide real autoplay blocks, which are the common case. That wants a test on real phones with autoplay refused.
+A possible fix, for whoever next works on `youtube.ts` (tested in pass 101 and withdrawn): count a deck as slow, not refused, if it has reported buffering at any time since the play began, not only at the moment of the check. It is not made here, because it is unknown whether an embed the browser really refuses also blips through buffering. If it does, this would hide real autoplay blocks, which are the common case. That wants a test on real phones with autoplay refused.
 
 ## Polish pass 99
 
