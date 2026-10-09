@@ -824,6 +824,23 @@ sees themselves in it.
      rate (60 a second in every look that shows them). A scrub back is the same frame. `check:shows` holds that they
      are seen in the dark glass while the lamp is on, not at dusk, and nearly gone when the lamp is down.
 
+### The forty-fifth pass: studying, in the window
+
+Last pass gave the person at the desk a reflection that bowed its head and did what the hand did. The streams it takes
+after are of someone at work: this pass makes the reflection that.
+
+123. **Writing.** Bowed over the work, their head goes along a line and back to the start of the next, every few
+     seconds, as anyone's does writing.
+124. **Thinking.** Now and then (about every other forty seconds, never while the hand is out) they stop: the hand
+     comes up with the pen's end against their lips, and they lift their head and look out at the night a few seconds,
+     then go back to it. Small, as everything in the glass is.
+125. **A stretch is catching.** At 26:55, a second after the kitten's late stretch on the desk, the one in the window
+     stretches too: elbows wide, hands together over the bun, a yawn; then back to the work. Played to the camera: the
+     window holds them all the while. The first drawing put the arms up in a tall pointed arch, a church window; they
+     bend at the elbows now.
+126. **Looked at:** the thinking at 4K, the stretch frame by frame, the frame rate (60 a second). A scrub back is the
+     same frame. `check:shows` holds the stretch: late, just after the kitten's, while they are seen.
+
 **Subtracted:** the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

@@ -2,16 +2,19 @@ import { rgba } from './canvas'
 import { GLASS } from './desk'
 import { REACHES, handAt, mugAt } from './hands'
 import { lensIn } from './lens'
+import { camera } from './camera'
+import { STRETCHES } from './cat'
 import { beatOf, drumsAt, smooth, trackAt } from './music'
 import { flashAt, shootAt } from './sky'
-import { lampAt, lampColor, skyAt } from './world'
+import { hash, lampAt, lampColor, skyAt } from './world'
 
 /**
  * Whoever sits at the desk, seen at last, the only way they could be: in the window. Once it is dark outside, the
  * glass is a mirror, and the lamp lights them in it, faint, behind the rain: hair up, the sage sweater the hand's sleeve
  * is, head bowed over their work, nodding a little with the drums. Their reflection does what the hand does: lifts the
  * mug to their face for a sip, looks up from the work at the finger drawing on the glass, and up when the lightning
- * goes or a star falls. They come with the lamp and go with it.
+ * goes or a star falls. Between, they write (the head going along the lines), and now and then stop with the pen at
+ * their lips to look out at the night; and once, late, just after the kitten has, they stretch. They come with the lamp and go with it.
  *
  * A reflection is light on the glass, never dark: it only adds. It sits in front of the camera, as anyone's own
  * reflection does, so it is in the pane only when the camera faces the window, and gone at the edge of the glass.
@@ -32,10 +35,49 @@ const HAIR = '#5A3A30'
 /** A small canvas the reflection is drawn into, laid over the glass soft: made once. */
 let pad: HTMLCanvasElement | null = null
 const RES = 96
-const BOX = { x0: -1.25, y0: -0.75, x1: 1.25, y1: 1.15 }
+const BOX = { x0: -1.25, y0: -1.0, x1: 1.25, y1: 1.15 }
 
 /** How strongly the window shows them: the lamp on them, and the dark outside (the dusk outshines a reflection). */
 export const reflectionSeen = (t: number): number => lampAt(t) * (1 - skyAt(t).dusk) ** 2 * smooth(t, 30, 90)
+
+/** Where the reflection is, across, with the camera at `x`. */
+const centreAt = (x: number): number => AT.x + FOLLOW * (x - HOME_X)
+
+/** How long their stretch takes: arms up over the head, a yawn, and down. */
+const REACH_UP = 5.5
+
+/**
+ * Their stretch: once, late, just after the kitten's (a stretch is catching), when the window shows them all the
+ * while. Worked out once, at load.
+ */
+export const HUMAN_STRETCH: number = (() => {
+  for (const s of [...STRETCHES].reverse()) {
+    if (s < 0) continue
+    const at = s + 7.5
+    let ok = true
+    for (let t = at - 0.5; t <= at + REACH_UP + 0.5 && ok; t += 0.5) {
+      const cx = centreAt(camera(t).x)
+      if (cx - 0.5 < GLASS.x0 || cx + 0.5 > GLASS.x1 || reflectionSeen(t) < 0.4) ok = false
+    }
+    if (ok) return at
+  }
+  return -100
+})()
+
+/**
+ * Thinking: now and then, between spells of writing, the pen comes up to their lips and they lift their head to look
+ * out at the night a few seconds, then go back to it. At most once in each forty seconds, never while the hand is out.
+ */
+function thinkAt(t: number): number {
+  const k = Math.floor(t / 40)
+  if (hash(k, 401) > 0.45) return 0
+  const at = k * 40 + 6 + hash(k, 402) * 22
+  const s = t - at
+  if (s < 0 || s > 8) return 0
+  if (REACHES.some((r) => r.at < at + 9 && r.at + r.dur > at - 1)) return 0
+  if (Math.abs(at - HUMAN_STRETCH) < 15) return 0
+  return smooth(s, 0, 1.2) * (1 - smooth(s, 6.6, 8))
+}
 
 /** How the person in the window is, at `t`: how strongly seen, where the head is turned, the mug, the reach. */
 function poseAt(t: number) {
@@ -51,7 +93,14 @@ function poseAt(t: number) {
   // Reaching up to draw on the glass, they look up from the work at what the finger does.
   const draw = REACHES.find((r) => r.kind === 'draw' && t > r.at && t < r.at + r.dur)
   const looking = draw ? handAt(t).a : 0
-  return { seen, bow: bow * (1 - looking), sip: m.e * (1 - m.gone) }
+  const think = thinkAt(t) * (1 - up)
+  const st = t - HUMAN_STRETCH
+  const stretch = st > 0 && st < REACH_UP ? smooth(st, 0, 1.4) * (1 - smooth(st, REACH_UP - 1.4, REACH_UP)) : 0
+  // Writing: the head goes along a line and back to the start of the next, every few seconds.
+  const line = (t / 3.3) % 1
+  const scan = 0.035 * (line < 0.85 ? line / 0.85 : 1 - (line - 0.85) / 0.15) - 0.017
+  const lifted = Math.max(looking, think, stretch)
+  return { seen, bow: bow * (1 - lifted), sip: m.e * (1 - m.gone), think, stretch, scan: scan * (1 - lifted) * (1 - up) }
 }
 
 /** The reflection, on the glass, after the night and before the window's frame. */
@@ -59,7 +108,7 @@ export function reflection(ctx: Ctx, t: number): void {
   const p = poseAt(t)
   if (p.seen < 0.02) return
   const lens = lensIn(ctx)
-  const cx = AT.x + FOLLOW * (lens.x - HOME_X)
+  const cx = centreAt(lens.x)
   const cy = AT.y
   // Mostly inside the glass, or not at all: no figure lurking at its edge.
   const inside = smooth(Math.min(cx - 0.45 - GLASS.x0, GLASS.x1 - (cx + 0.45)), -0.6, 0.1)
@@ -72,8 +121,8 @@ export function reflection(ctx: Ctx, t: number): void {
   g.setTransform(RES, 0, 0, RES, -BOX.x0 * RES, -BOX.y0 * RES)
   const warm = lampColor(t)
   // Bowed over the work, the face goes down and forward and more of the top of the head shows.
-  const hy = 0.07 * p.bow
-  const lean = 0.05 * p.bow
+  const hy = 0.07 * p.bow - 0.04 * p.stretch
+  const lean = 0.05 * p.bow + p.scan
   const hair = rgba(HAIR, 0.95)
   // The hair behind: falling to the shoulders either side of the face.
   g.fillStyle = hair
@@ -118,11 +167,11 @@ export function reflection(ctx: Ctx, t: number): void {
     const x = ex + lean
     const y = 0.04 + hy
     g.beginPath()
-    if (p.bow > 0.3) {
+    if (p.bow > 0.3 || p.stretch > 0.3) {
       g.moveTo(x - 0.03, y)
       g.quadraticCurveTo(x, y + 0.02, x + 0.03, y)
     } else {
-      g.arc(x, y, 0.014, 0, Math.PI * 2)
+      g.arc(x - 0.02 * p.think, y - 0.01 * p.think, 0.014, 0, Math.PI * 2)
     }
     g.stroke()
   }
@@ -157,6 +206,55 @@ export function reflection(ctx: Ctx, t: number): void {
     g.fillStyle = rgba(SKIN, 0.8)
     g.beginPath()
     g.ellipse(0.2, 0.3 + hy + (1 - p.sip) * 0.5, 0.07, 0.09, 0, 0, Math.PI * 2)
+    g.fill()
+    g.globalAlpha = 1
+  }
+  // Thinking: the hand up at the chin, the pen's end against the lip.
+  if (p.think > 0.02) {
+    const ty = 0.2 + hy + (1 - p.think) * 0.6
+    g.globalAlpha = p.think
+    g.strokeStyle = rgba(KNIT, 0.8)
+    g.lineWidth = 0.14
+    g.lineCap = 'round'
+    g.beginPath()
+    g.moveTo(0.45, 0.95)
+    g.lineTo(0.17 + lean, ty + 0.12)
+    g.stroke()
+    g.fillStyle = rgba(SKIN, 0.95)
+    g.beginPath()
+    g.ellipse(0.12 + lean, ty, 0.065, 0.075, 0.4, 0, Math.PI * 2)
+    g.fill()
+    g.strokeStyle = rgba(warm, 0.9)
+    g.lineWidth = 0.018
+    g.beginPath()
+    g.moveTo(0.1 + lean, ty - 0.02)
+    g.lineTo(0.03 + lean, ty - 0.13)
+    g.stroke()
+    g.globalAlpha = 1
+  }
+  // Their stretch: both arms up over the head, hands together at the top, a yawn.
+  if (p.stretch > 0.02) {
+    const k = p.stretch
+    g.globalAlpha = k
+    g.strokeStyle = rgba(KNIT, 0.7)
+    g.lineWidth = 0.14
+    g.lineCap = 'round'
+    g.lineJoin = 'round'
+    for (const side of [-1, 1]) {
+      g.beginPath()
+      // Shoulder up to a wide elbow beside the head, then the forearm in over the top of it.
+      g.moveTo(side * 0.48, 0.48)
+      g.lineTo(side * (0.48 + 0.04 * k), 0.48 - 0.6 * k)
+      g.lineTo(side * 0.1, 0.48 - 0.95 * k)
+      g.stroke()
+    }
+    g.fillStyle = rgba(SKIN, 0.95)
+    g.beginPath()
+    g.ellipse(0, 0.48 - 1.0 * k, 0.09, 0.07, 0, 0, Math.PI * 2)
+    g.fill()
+    g.fillStyle = rgba(HAIR, 0.9)
+    g.beginPath()
+    g.ellipse(lean, 0.12 + hy, 0.03, 0.04 * k, 0, 0, Math.PI * 2)
     g.fill()
     g.globalAlpha = 1
   }
