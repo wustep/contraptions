@@ -186,11 +186,11 @@ function drawCloud(ctx: Ctx, k: number, f: Frame, t: number): void {
   g.addColorStop(0.2, rgba(shade, 0.22))
   g.addColorStop(0.42, rgba(mix(shade, body, 0.35), 0.62))
   g.addColorStop(0.7, rgba(mix(shade, body, 0.6), 0.88))
-  g.addColorStop(1, rgba(body, 0.97))
+  g.addColorStop(1, rgba(body, 0.96))
+  // One fill, the deck's top held on above CLOUD_HIGH by the gradient itself: as two, a ramp up to it and a flat
+  // fill over it, their half-cell overlap was cloud laid twice, a bright line straight across the shell.
   ctx.fillStyle = g
-  ctx.fillRect((f.x0 - 1) * k, CLOUD_HIGH * k, (f.x1 - f.x0 + 2) * k, (CLOUD_LOW - CLOUD_HIGH) * k)
-  ctx.fillStyle = rgba(body, 0.96)
-  ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (CLOUD_HIGH - top + 0.5) * k)
+  ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (CLOUD_LOW - top) * k)
   drawHeave(ctx, k, t, true)
   // The daylight: a glow behind the cloud where the shell went in, then the cloud opening there and the sun through.
   if (d.glow > 0 || d.sun > 0) drawBreak(ctx, k, t)

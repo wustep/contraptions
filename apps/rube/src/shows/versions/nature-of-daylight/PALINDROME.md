@@ -358,6 +358,10 @@ One more thing showed:
   picture, and its shape stopped at a fixed point, below any 16:9 frame; a tall frame sees under that, so the slope
   turned into a sheer wall standing in the meadow. It goes on to the frame's edge now, laid under the ridge as it was
   and overlapping it, so the ridge's own pines are where they were: in 16:9 it is the same to the pixel.
+- **A line across the shell** (the tall frame, as it goes up at 311 to 319 s): the cloud deck's near veil was laid as
+  a ramp up to its top and a flat fill over it, overlapping by half a cell, so a thin band of it was cloud laid twice,
+  a bright line straight through the shell. It is one fill now. In 16:9 the line was above the frame; there the
+  difference is a level at most.
 
 ## Arrival nods
 
