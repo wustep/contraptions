@@ -217,10 +217,11 @@ export function hannahAt(t: number): { x: number; y: number; scale: number } | n
   const xStop = LAND_X + (vx * ROLL_OUT) / 2
   if (t < LANDS + ROLL_OUT) {
     // She lands bouncing, a child's landing: a small hop up off the grass as she runs on. (Rolled flat to a stop and
-    // left there, she read as thrown off the swing, lying still.)
+    // left there, she read as thrown off the swing, lying still.) Low, about her own height: four times it, caught in
+    // the air she hung against the lake, afloat on it.
     const s = t - LANDS
     const u = s / ROLL_OUT
-    return { x: LAND_X + vx * s - (vx * s * s) / (2 * ROLL_OUT), y: y - 0.32 * 4 * u * (1 - u), scale }
+    return { x: LAND_X + vx * s - (vx * s * s) / (2 * ROLL_OUT), y: y - 0.15 * 4 * u * (1 - u), scale }
   }
   const hop = BACK_ON - HOP_T
   // And straight back for the seat, running, there with a beat in hand to wait for it.

@@ -620,6 +620,19 @@ whole, the palindrome included. Three of their worst read as things they are not
   even strip, it read as a rod from the stand to her, a leash. It is a wedge now, deeper at its free end with a dark
   tread, and shorter, still under her as she rests on it but a ball's width short of where she ends.
 
+A fifty-sixth gave the show to a second fresh reader, after the fifty-fifth's changes. They had the story whole too, and
+read the soldier as a character hopping, as he is. Two of their notes read as things that are not:
+
+- **Hannah after her leap** (62 to 63 s) hopped four times her height as she landed, and a frame caught in the air
+  hung her against the lake: afloat on it, drowning, to a reader. The bounce is about her own height now: a child
+  landing at a run, on the grass by the water.
+- **The helicopter climbing away** (112 s) turned to fly off nose first by squeezing its side view to a sliver, and
+  mid-turn its body, skid and tail stood on end: a craft falling. It is never narrower than a third now, so it turns
+  as a helicopter seen nearly head-on, and flips its facing there in a frame.
+
+The reader's blank frame at the blast (223.5 s) is the flash's whitest instant, sampled; the room shows through it a
+tenth of a second either side. The fifty-fifth's changes were filmed at four frames a second and nothing jumps.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
