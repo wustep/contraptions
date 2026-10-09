@@ -752,27 +752,25 @@ function drawPistes(ctx: C2D, k: number, x0: number, x1: number): void {
   ctx.save()
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
-  for (const { path: pth, kind } of PISTES) {
-    const pts = pth.pts
-    const xs = pts.map((q) => q[0])
-    if (Math.max(...xs) < x0 - 1 || Math.min(...xs) > x1 + 1) continue
-    // The groove sits under the ball's path, on the snow.
-    const under = (i: number): Pt => {
-      const a = pts[Math.max(0, i - 1)]
-      const b = pts[Math.min(pts.length - 1, i + 1)]
-      const h = Math.atan2(b[1] - a[1], b[0] - a[0])
-      // The normal toward the snow: down the screen for a run left or right.
-      const n: Pt = [-Math.sin(h), Math.cos(h)]
-      const s = n[1] < 0 ? -1 : 1
-      return [pts[i][0] + n[0] * R * s, pts[i][1] + n[1] * R * s]
-    }
+  // Each kind is one path, stroked once: where one piste runs on into the next their ends overlap, and stroked apart
+  // the overlap showed as a darker blot.
+  for (const which of ['piste', 'branch'] as const) {
     ctx.beginPath()
-    for (let i = 0; i < pts.length; i++) {
-      const [x, y] = under(i)
-      if (i === 0) ctx.moveTo(x * k, y * k)
-      else ctx.lineTo(x * k, y * k)
+    for (const { path: pth, kind } of PISTES) {
+      if (kind !== which) continue
+      const pts = pth.pts
+      const xs = pts.map((q) => q[0])
+      if (Math.max(...xs) < x0 - 1 || Math.min(...xs) > x1 + 1) continue
+      // The groove sits under the ball's path, on the snow: straight down from it, so that round a hairpin's turn it
+      // follows the arc a ball's width lower rather than jumping from one side of the path to the other.
+      const under = (i: number): Pt => [pts[i][0], pts[i][1] + R]
+      for (let i = 0; i < pts.length; i++) {
+        const [x, y] = under(i)
+        if (i === 0) ctx.moveTo(x * k, y * k)
+        else ctx.lineTo(x * k, y * k)
+      }
     }
-    ctx.strokeStyle = rgba(SNOW.snowDeep, kind === 'piste' ? 0.34 : 0.26)
+    ctx.strokeStyle = rgba(SNOW.snowDeep, which === 'piste' ? 0.34 : 0.26)
     ctx.lineWidth = Math.max(1, 0.1 * k)
     ctx.stroke()
     ctx.strokeStyle = rgba(SNOW.snowShade, 0.9)

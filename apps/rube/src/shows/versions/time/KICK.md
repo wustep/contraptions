@@ -334,6 +334,10 @@ each world, and changed:
   the hairpin, each of them wore their skis over their head, the tips curled back the way they had come. The skis
   were laid along the path's heading, and a heading to the left turned them over; they are laid along its line now
   (`skiLine`, as the jumps already were), under them, tips forward.
+- **The hairpin's groove** (131.5 to 138.5): the groove the skis cut sat a ball's width off the path, on whichever
+  side was down for its heading, so where the hairpin stands upright it jumped from one side to the other, a step in
+  the turn. It lies straight down from the path now, the same arc a ball's width lower. And where one piste runs on
+  into the next, their round ends overlapped in a darker blot; each kind is stroked as one path now.
 
 ## Inception nods
 
