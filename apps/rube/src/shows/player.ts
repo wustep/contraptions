@@ -786,9 +786,22 @@ function renderWords(t: number): void {
     node.style.left = `${(W - fw) / 2 + c.at[0] * fw}px`
     const lift = c.lift ? c.lift * Math.max(0, (H - fh) / 2) : 0
     node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
-    const unit = Math.max((fh / 100) * (c.scale ?? 1), c.least ?? 0)
+    let unit = Math.max((fh / 100) * (c.scale ?? 1), c.least ?? 0)
     if (unit !== fh / 100) node.style.setProperty('--u', `${unit}px`)
     else node.style.removeProperty('--u')
+    // A card with a floor on its type, grown past the frame it was set for: never wider than the stage, and kept
+    // inside its edges. (Cards without one are as they were.)
+    if (c.least) {
+      const room = W * 0.94
+      const wide = node.offsetWidth
+      if (wide > room) {
+        unit *= room / wide
+        node.style.setProperty('--u', `${unit}px`)
+      }
+      const half = Math.min(node.offsetWidth, room) / 2
+      const x = (W - fw) / 2 + c.at[0] * fw
+      node.style.left = `${Math.max(W * 0.03 + half, Math.min(W * 0.97 - half, x))}px`
+    }
     node.style.opacity = c.light.toFixed(3)
     // Out of focus as it comes and goes: it comes into focus as it comes up.
     node.style.filter = c.light > 0.995 ? '' : `blur(${((1 - c.light) * fh * 0.012).toFixed(2)}px)`

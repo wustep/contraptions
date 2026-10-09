@@ -133,8 +133,9 @@ export interface TitleCard {
   scale?: number
   /**
    * Optional: the least the card's unit (a hundredth of the 16:9 frame, times `scale`) may be on the page, in CSS
-   * pixels, so words that must be read (subtitles) are still read on a small stage, a phone's. A saved video's
-   * frame is always large enough, so its painter does not need it.
+   * pixels, so words that must be read (subtitles) are still read on a small stage, a phone's. A card grown by it is
+   * never wider than the stage and is kept inside its edges. A saved video's frame is always large enough, so its
+   * painter does not need it.
    */
   least?: number
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
