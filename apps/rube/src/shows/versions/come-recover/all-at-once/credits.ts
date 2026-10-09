@@ -155,6 +155,8 @@ export const SUB_AT: [number, number] = [0.5, 0.855]
 const SUB_IN_BAR: [number, number] = [0.5, 0.884]
 /** The least a subtitle's type may be on the page, CSS pixels: on a phone held upright they are still read. */
 const SUB_LEAST = 13
+/** The least unit of the chapters and credits on the page, CSS pixels: so their fine print (a role, a note) is read on a phone. */
+const WORDS_LEAST = 4.2
 /**
  * Where a scene's subtitles sit: low, in the widescreen's lower bar in the alley, and at the taxes high on the plain
  * tile wall, as the close two-shot has the family along the frame's foot and nothing over the wall's left.
@@ -218,7 +220,8 @@ export function creditsAt(t: number): TitleCard[] {
   CHAPTERS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `all-at-once-chapter-${n}`, role: card.role, names: card.names, title: true, light, rise: rise * 0.5, at: card.pos, scale: card.scale })
+    // On a tall stage the first lifts into the dark over the room, clear of the bright washer it would grow across.
+    out.push({ key: `all-at-once-chapter-${n}`, role: card.role, names: card.names, title: true, light, rise: rise * 0.5, at: card.pos, scale: card.scale, least: WORDS_LEAST, lift: n === 0 ? 1.55 : undefined })
   })
   SUBTITLES.forEach((sub, n) => {
     const up = clamp((t - sub.at) / SUB_FADE)
@@ -238,7 +241,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `all-at-once-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT })
+    out.push({ key: `all-at-once-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, least: WORDS_LEAST })
   })
   return out
 }

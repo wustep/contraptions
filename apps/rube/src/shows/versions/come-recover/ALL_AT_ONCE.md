@@ -898,6 +898,12 @@ The notes went back to the builders who made each part, who still had their cont
   - Every stretch with words was then screenshotted on the real page together (the chapters, all six conversations,
     the credits). Joy's and the others' lines, in italic, which the page sets a little faded, were faint on the
     canyon; the soft dark under them is deeper now.
+- **The chapters and credits on a phone.** On an upright phone their fine print (*Part one*, each credit's role, the
+  cast's "as" lines, the notes) was 4–5 px high. They now set a floor of their own (`least`, 4.2 px a unit), and the
+  page keeps a card that grows past the stage's width inside it (a shared change: such a card is shrunk to fit and
+  kept within the edges). *Part one, Everything*, grown, would have crossed the bright washer, so on a tall stage it
+  lifts into the dark storey above the shop, as a title card. On a 1280×720 desktop nothing changes; at 960×540 the
+  chapters are a little larger, *Everywhere* still in its bar.
 
 ## The looks
 
@@ -1074,7 +1080,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   the breath on the long talus (about 9 cells), where a faint sky-coloured light round each stone keeps them findable.
 - At 64 and 144 panels, Evelyn in the mosaic is a red dot on each plank.
 - The photograph's picture, and the lives in the washer's window under the credits, are clearest large or under
-  Zoom; on a phone they show their colours, not the faces.
+  Zoom; on a phone they show their colours, not the faces. The words are kept readable there by a floor on their size.
 - On a tall stage (a phone held upright) the widescreen lives are a band across its middle, between deep bars,
   where the other lives fill the stage with more world round them.
 - Zoom is a closer look at Evelyn: Joy and Waymond are cropped by it at times, which is what it is for.
