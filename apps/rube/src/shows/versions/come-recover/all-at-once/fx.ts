@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { R, mixHex } from '../../../../parts'
+import { R, mixHex, type Pt } from '../../../../parts'
 import type { ShowBall } from '../../../../show'
 import { scenery } from './kit'
 import type { MultiverseShow } from './show'
@@ -34,17 +34,28 @@ export interface EyeSpec {
    * Spans when this eye watches Evelyn rather than only swinging with its ball: the pupil turns to her, easing in
    * and out over a quarter second at each end. Waymond's, as she is carried away from him down the alley's drain.
    */
-  gaze?: { from: number; to: number }[]
+  gaze?: Gaze[]
 }
 
-/** How far the eye is turned to its gaze at `t`, 0..1. */
-function gazeAt(spec: EyeSpec, t: number): number {
-  let w = 0
+/**
+ * A span of watching: from `from` to `to`, the eye looks at `at`: Evelyn (the default), Joy, or a point that may move
+ * (world cells, a function of show time).
+ */
+export interface Gaze {
+  from: number
+  to: number
+  at?: 'evelyn' | 'joy' | ((t: number) => Pt | null)
+}
+
+/** Which gaze holds the eye at `t`, and how far it is turned to it, 0..1. */
+function gazeAt(spec: EyeSpec, t: number): { g: Gaze; w: number } | null {
+  let best: { g: Gaze; w: number } | null = null
+  const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
   for (const g of spec.gaze ?? []) {
-    const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
-    w = Math.max(w, ease((t - g.from) / 0.25) * ease((g.to - t) / 0.25))
+    const w = ease((t - g.from) / 0.25) * ease((g.to - t) / 0.25)
+    if (w > (best?.w ?? 0)) best = { g, w }
   }
-  return w
+  return best
 }
 
 /** An arriving eye's size, `u` seconds after it lands: a slap, a squash past its size, a bounce, rest. */
@@ -281,11 +292,24 @@ export const eyes = () =>
           spec.arrive ? spec.from : undefined,
         )
         // Watching her: the pupil turned along the line to her, the eye leaning that way, its swing kept a little.
-        const w = spec.who === 'evelyn' ? 0 : gazeAt(spec, t)
-        if (w > 0.001) {
-          const h = show.at(t)
-          const dx = h.x - b.x
-          const dy = h.y - b.y
+        const held = gazeAt(spec, t)
+        const target = ((): Pt | null => {
+          if (!held || held.w <= 0.001) return null
+          const at = held.g.at ?? 'evelyn'
+          if (at === 'evelyn') {
+            const h = show.at(t)
+            return h.hidden ? null : [h.x, h.y]
+          }
+          if (at === 'joy') {
+            const j = show.joy(t)
+            return j ? [j.x, j.y] : null
+          }
+          return at(t)
+        })()
+        if (held && target) {
+          const w = held.w
+          const dx = target[0] - b.x
+          const dy = target[1] - b.y
           const n = Math.hypot(dx, dy) || 1
           const reach = 0.9
           look.x += (reach * (dx / n) + 0.15 * look.x - look.x) * w

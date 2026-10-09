@@ -468,6 +468,13 @@ The notes went back to the builders who made each part, who still had their cont
   his pupil turns along the line to her and follows her down the shaft and along the drain pipe, easing in and out.
   It is an optional `gaze` on an eye (`fx.ts`), used only here. Every other eye, and his everywhere else, swings as
   before.
+- **A pass for looks.** The gaze can now hold Evelyn, Joy, or a point that moves. Two more moments use it:
+  - In the opening, when Joy gives up and goes (27.4–30.3 s), Waymond's eye follows her across the shop and out of
+    the door, while her mother works on without looking up.
+  - The portrait. From Evelyn hurrying back beside Joy (290.4 s) through the flash, all three look into the lens.
+    Then, as the photograph comes out of the slot, flutters down and develops, all three eyes follow it down to the
+    floor. Before, their pupils hung where their bobbing left them, so the family photo had nobody looking at the
+    camera.
 
 ## End credits
 
@@ -545,7 +552,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - `worlds.ts`: the eight worlds' palettes and materials, and the family's colours.
   - `fx.ts`: the googly eyes, over every world. Each is a white disc with a pupil that is a heavy bead in a round
     cage, thrown by the ball's acceleration and settling. An eye can be given spans when it watches Evelyn instead
-    (Waymond's, in the alley). It is worked out afresh each frame from the ball's last
+    (Waymond's, in the alley), Joy, or a point (the camera's lens and the photograph, for the portrait). It is worked out afresh each frame from the ball's last
     second of path, so it scrubs true. In the laundromat the room's light shades it. An eye given during the show
     arrives: it slaps on oversized, squashes past its size and settles, and its pupil is flung round the rim. On the
     great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's

@@ -2,7 +2,7 @@ import type { BallState, Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
-import { eyes, type EyesState } from './fx'
+import { eyes, type EyesState, type Gaze } from './fx'
 import { box, lay, standing, type Chain, type Link } from './kit'
 import { DURATION, JUMPS, ONSETS } from './music'
 import { MultiverseShow, type Flicker, type Leg, type Riders, type Spans, type WorldSet } from './show'
@@ -24,6 +24,7 @@ import { kindness, KINDNESS_AT } from './home/kindness'
 import { ledge } from './rocks/ledge'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
+import { BACK, DEVELOPED, EJECT, onCamera, photoAt } from './home/finale-plan'
 
 /**
  * The whole show, in order: which world has the ball from when to when, and who has it inside each world. Every
@@ -178,12 +179,21 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
 
   // Every world's scenery, and the googly eyes over everything in every world.
   const sets = SETS()
+  // The family portrait: from her hurrying back beside Joy, all three look into the lens through the flash; then
+  // down at the photograph as it comes out and flutters to the floor, until it has developed.
+  const lens = onCamera(0.5, 0)
+  const PORTRAIT: Gaze[] = [
+    { from: BACK - 0.05, to: EJECT + 0.15, at: () => lens },
+    { from: EJECT + 0.15, to: DEVELOPED + 0.6, at: (t) => photoAt(t)?.at ?? null },
+  ]
   const specs = [
-    // In the alley he watches her go: from the cover giving under her until the jump out of that world.
-    { who: 'waymond' as const, from: 0, gaze: [{ from: DROP - 0.1, to: JUMPS.dojo }] },
-    { who: 'evelyn' as const, from: JUMPS.eye, arrive: true, burst: true },
+    // He watches Joy go out of the shop, and her mother not look up; in the alley he watches Evelyn go, from the cover
+    // giving under her until the jump out of that world; and for the portrait he looks into the lens, and then down
+    // at the photograph as it comes, as the others do.
+    { who: 'waymond' as const, from: 0, gaze: [{ from: 27.4, to: 30.3, at: 'joy' as const }, { from: DROP - 0.1, to: JUMPS.dojo }, ...PORTRAIT] },
+    { who: 'evelyn' as const, from: JUMPS.eye, arrive: true, burst: true, gaze: PORTRAIT },
     // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
-    { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 } },
+    { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 }, gaze: PORTRAIT },
   ]
   const eyePiece = eyes()
   const eyeStates: EyesState[] = []
