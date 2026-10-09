@@ -311,6 +311,9 @@ export const FOG2 = (() => {
       })
       hits.push(s.born, l.tc)
     }
+    // Once she has left it and it has closed, it draws back a little into the fog, so the ring she is going to is the
+    // one the eye goes to, not the one behind her.
+    ring.recede = Math.max(l.tx, s.close) + 0.2
     RINGS.push(ring)
     PATH.add({ t0: l.tc, t1: l.tx, at: (t) => onRing(ring, l.a(t), t), what: 'ride', ring })
     const next = FOG2[i + 1]

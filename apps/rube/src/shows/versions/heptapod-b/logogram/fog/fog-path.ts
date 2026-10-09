@@ -115,6 +115,8 @@ export interface Ring {
   /** When it begins to fade, and over how long (`FADE` if unset). */
   fade: number
   fadeFor?: number
+  /** When it draws back a little into the fog (left behind, the eye on the next): its ink to about half, over a second. */
+  recede?: number
   /** Its form once closed (0.7 .. 1: its tendrils coming out), by show time, where it has its own timing. */
   grow?: (t: number) => number
   /** Who wrote it, with which limb, and the spray's flight (show times; it lands at `born`). */

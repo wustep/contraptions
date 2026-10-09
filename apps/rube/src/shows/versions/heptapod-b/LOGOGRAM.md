@@ -278,6 +278,10 @@ changed, in the order of the film, and then what runs through it:
   a phone, whose stage is near square and sees far more floor, the reflection reaches the bottom of what it sees.
 - **The first vision in a wide window** (141): the live stage sees more world round its 16:9 there, and the lawn
   showed the bank falling to the water at its right edge. The brow is further along the shore.
+- **The ring behind her** (143 → 156): ring to ring, the one she had just left stayed the darkest, largest mass in
+  the frame as she went on to the next, pulling the eye back (a fresh critic's note). Once she has left a ring and it
+  has closed (its close a strike), it now draws back a little into the fog, its ink to about half, so the ring she is
+  going to leads.
 - **No stalk on her** (156): at the top of the ring written round her, one of its tendrils grew straight out of the
   ball, a stalk with a drop on it like an antenna. No tendril now grows where she sits on a ring: one near her draws
   back as she comes.

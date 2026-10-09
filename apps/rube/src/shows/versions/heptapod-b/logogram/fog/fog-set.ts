@@ -331,7 +331,8 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
   const dx = her[0] - ring.c[0]
   const dy = her[1] - ring.c[1]
   const clear = Math.abs(Math.hypot(dx, dy) - ring.r) < 0.6 ? Math.atan2(dy, dx) - ink.spin : undefined
-  const base = { r: ring.r, seed: ring.seed, t, spin: ink.spin, fade: ink.fade, color: FOG.ink, light: ring.light, marks, taper: ink.taper, clear }
+  const back = ring.recede === undefined ? 1 : 1 - 0.45 * sstep((t - ring.recede) / 1.0)
+  const base = { r: ring.r, seed: ring.seed, t, spin: ink.spin, fade: ink.fade, color: FOG.ink, light: ring.light * back, marks, taper: ink.taper, clear }
   p.push()
   p.translate(ring.c[0] * k, ring.c[1] * k)
   if (ring.key === 'G' && t < ring.closed) {
