@@ -1,5 +1,5 @@
 import { mixHex } from '../../../../parts'
-import { MELODY, PERIOD, PIECES, wrap } from './music'
+import { MELODY, PERIOD, PIECES, loudness, wrap } from './music'
 import { LENGTH, along, since } from './path'
 import { hash, osc, smooth, type Sky } from './world'
 
@@ -517,4 +517,81 @@ export function deepLight(): HTMLCanvasElement {
   }
   deep = c
   return c
+}
+
+// ---------------------------------------------------------------- the aurora
+
+/**
+ * The aurora over the first Gnossienne's night: it comes up once the sky is wholly dark, is fullest about the high
+ * phrases, and is gone before the moon rises; and it breathes with how full the music is.
+ */
+export const AURORA = { from: 258, full: 290, fade: 372, gone: 415 }
+
+export const auroraAt = (t: number): number => {
+  const u = wrap(t)
+  const there = smooth(u, AURORA.from, AURORA.full) * (1 - smooth(u, AURORA.fade, AURORA.gone))
+  return there > 0 ? there * (0.6 + 0.4 * loudness(t)) : 0
+}
+
+/** One column of the aurora's light, bottom bright to top nothing: drawn once and stretched. */
+let ray: HTMLCanvasElement | null = null
+function auroraRay(): HTMLCanvasElement {
+  if (ray) return ray
+  const c = document.createElement('canvas')
+  c.width = 1
+  c.height = 128
+  const g = c.getContext('2d')!
+  const grad = g.createLinearGradient(0, 0, 0, 128)
+  grad.addColorStop(0, 'rgba(176, 120, 226, 0)')
+  grad.addColorStop(0.4, 'rgba(150, 140, 226, 0.18)')
+  grad.addColorStop(0.72, 'rgba(110, 214, 210, 0.45)')
+  grad.addColorStop(0.94, 'rgba(146, 255, 186, 1)')
+  grad.addColorStop(1, 'rgba(146, 255, 186, 0)')
+  g.fillStyle = grad
+  g.fillRect(0, 0, 1, 128)
+  ray = c
+  return c
+}
+
+let sheet: HTMLCanvasElement | null = null
+let sheetAt = Number.NaN
+
+/**
+ * The aurora at `t`, as a picture `w` by `h` (a quarter of the frame's size: it is soft): three curtains, each a
+ * ribbon of rays hanging from a slow wave, folding and brightening along its length. `drift` is how far round the
+ * camera has come, cells, so the curtains go by a little as it travels. Kept for the moment it was drawn for.
+ */
+export function auroraSheet(t: number, w: number, h: number, drift: number): HTMLCanvasElement {
+  if (sheet && sheetAt === t && sheet.width === w && sheet.height === h) return sheet
+  if (!sheet || sheet.width !== w || sheet.height !== h) {
+    sheet = document.createElement('canvas')
+    sheet.width = w
+    sheet.height = h
+  }
+  const g = sheet.getContext('2d')!
+  g.clearRect(0, 0, w, h)
+  g.globalCompositeOperation = 'lighter'
+  // Slow: a third slower than the time it is.
+  const u = wrap(t) * 0.68
+  const src = auroraRay()
+  const strength = [0.5, 0.36, 0.26]
+  // A column every pixel of the quarter-sized sheet, up to four hundred across.
+  const step = Math.max(1, Math.round(w / 400))
+  for (let j = 0; j < 3; j++) {
+    for (let x = 0; x < w; x += step) {
+      const X = x / w + 0.006 * drift
+      const base = h * (0.34 + 0.08 * j) + h * 0.07 * Math.sin(2.1 * Math.PI * X + 0.06 * u + j) + h * 0.03 * Math.sin(5.3 * Math.PI * X - 0.1 * u + 2 * j)
+      const rays = (0.5 + 0.5 * Math.sin(13 * Math.PI * X + 0.19 * u + 3 * j)) ** 1.5 * (0.55 + 0.45 * Math.sin(31 * Math.PI * X - 0.15 * u + j))
+      const fold = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(1.7 * Math.PI * X + 0.045 * u + 1.3 * j))
+      const a = rays * fold * strength[j]
+      if (a < 0.01) continue
+      const tall = h * (0.16 + 0.12 * (0.5 + 0.5 * Math.sin(7 * Math.PI * X + 0.08 * u + j)))
+      g.globalAlpha = Math.min(1, a)
+      g.drawImage(src, x, base - tall, step + 0.5, tall + h * 0.02)
+    }
+  }
+  g.globalAlpha = 1
+  g.globalCompositeOperation = 'source-over'
+  sheetAt = t
+  return sheet
 }

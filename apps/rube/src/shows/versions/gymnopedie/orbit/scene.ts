@@ -5,7 +5,7 @@ import { LENGTH, RADIUS, along, ballLocal, crest, float, since, sink, stonesIn, 
 import { wideAt } from './camera'
 import {
   BANK, BANKS, BANKS_OF_MIST, CLOUDS, FIREFLIES, FIREFLY, FLOCKS, GULLS, HEAPS, MIST,
-  WHALE, bowAt, deepLight, cloudLight, cloudThere, dropAt, drawCloud, overcastAt, rainAt, ringAt, whaleAt, whaleShape, drawGull, firefliesOut, inLayer, layered, meteorAt, milkyWay, mistAt, wingsAt, type CloudLight,
+  WHALE, auroraAt, auroraSheet, bowAt, deepLight, cloudLight, cloudThere, dropAt, drawCloud, overcastAt, rainAt, ringAt, whaleAt, whaleShape, drawGull, firefliesOut, inLayer, layered, meteorAt, milkyWay, mistAt, wingsAt, type CloudLight,
 } from './air'
 import { alpha, hash, osc, polar, skyAt, smooth, type Sky } from './world'
 
@@ -209,6 +209,17 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
       ctx.arc(x, y, s, 0, Math.PI * 2)
       ctx.fill()
     }
+  }
+
+  // The aurora, over the first Gnossienne's night, among the stars.
+  const northern = auroraAt(c.t) * (1 - v.wide)
+  if (northern > 0.01) {
+    const sheet = auroraSheet(c.t, Math.ceil(W / 4), Math.ceil(H / 4), along(c.t))
+    ctx.save()
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.globalAlpha = Math.min(1, 0.62 * northern)
+    ctx.drawImage(sheet, 0, 0, W, H)
+    ctx.restore()
   }
 
   // A shooting star, on a high phrase's top note.
@@ -558,7 +569,7 @@ const MARBLE_SHADE = 0.22
  * A column, or a lintel on two: the Gymnopédie's stones, drawn from the front foot, `w` wide, top at `-h`. Slender,
  * with air between: a colonnade in the sea, not a wall.
  */
-function column(p: p5, k: number, w: number, h: number, day: Sky, weight: number, shine: number): void {
+function column(p: p5, k: number, w: number, h: number, day: Sky, weight: number, shine: number, sun: number): void {
   const K = (v: number) => v * k
   const stone = day.lit
   const shade = mixHex(day.lit, day.sea, MARBLE_SHADE)
@@ -570,16 +581,19 @@ function column(p: p5, k: number, w: number, h: number, day: Sky, weight: number
   const slabW = lintel ? w : Math.min(w, sw * 2.1)
   p.strokeWeight(weight)
   for (const x of shafts) {
-    // The shaft, into the sea: lit on the east, in shade on the west.
+    // The shaft, into the sea: lit on the sun's side and in shade on the other, the shade narrowing to noon and
+    // crossing over through the afternoon (`sun`, -1 west to 1 east).
     p.stroke(ink)
     p.fill(stone)
     p.rect(K(x), K(-h / 2 + 0.2), K(sw), K(h + 0.4))
     p.noStroke()
     p.fill(alpha(p, shade, 0.8))
-    p.rect(K(x - sw * 0.25), K(-h / 2 + 0.2), K(sw * 0.4), K(h + 0.4 - 0.02))
+    const shadeW = sw * (0.14 + 0.32 * Math.abs(sun))
+    p.rect(K(x - sun * (sw / 2 - shadeW / 2 - sw * 0.04)), K(-h / 2 + 0.2), K(shadeW), K(h + 0.4 - 0.02))
     p.stroke(alpha(p, ink, 0.28))
     p.strokeWeight(weight * 0.55)
-    p.line(K(x + sw * 0.16), K(-h + capH + 0.1), K(x + sw * 0.16), K(0.2))
+    const fluting = x + (sun >= 0 ? 1 : -1) * sw * 0.16
+    p.line(K(fluting), K(-h + capH + 0.1), K(fluting), K(0.2))
     p.strokeWeight(weight)
     // The capital: a cushion under the slab.
     p.stroke(ink)
@@ -699,6 +713,8 @@ const SEGMENT = [1.5, 1.3, 1.1]
  */
 function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: boolean): void {
   const k = c.k
+  // Which side the sun is on, for the columns' shade: from the east at dawn to the west at dusk.
+  const sun = Math.max(-1, Math.min(1, sunAngle(c.t) / 1.1))
   for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
     const w = stone.u1 - stone.u0
     // Too small to be anything but a mark.
@@ -713,7 +729,7 @@ function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: boolean): v
       atSea(p, k, u0)
       if (mirrored) p.scale(1, -1)
       if (stone.piece === 0) {
-        column(p, k, sw, h, day, c.weight, 0.7 * pulse(stone, c.t))
+        column(p, k, sw, h, day, c.weight, 0.7 * pulse(stone, c.t), sun)
       } else if (stone.piece === 1) {
         // Lit by the ball, and burning on behind it until dawn: Ariadne's thread in lamps.
         stele(p, k, sw, h, day, c.weight, lampLight(stone, c.t), j === 0)
@@ -840,6 +856,21 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     sheen.addColorStop(1, alpha(p, day.low, 0.42 * (1 - v.wide)).toString())
     ctx.fillStyle = sheen
     ctx.fill(water)
+  }
+  // The aurora given back by the water, faint, upside down about the horizon.
+  const northern = auroraAt(c.t) * (1 - v.wide)
+  if (northern > 0.01) {
+    const W = ctx.canvas.width
+    const H = ctx.canvas.height
+    const [, hy] = onCanvas(ctx, k, ...polar(along(c.t) + 0.55, 0))
+    const sheet = auroraSheet(c.t, Math.ceil(W / 4), Math.ceil(H / 4), along(c.t))
+    ctx.save()
+    ctx.clip(water)
+    ctx.setTransform(1, 0, 0, -1, 0, 2 * hy)
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.globalAlpha = Math.min(1, 0.3 * northern)
+    ctx.drawImage(sheet, 0, 0, W, H)
+    ctx.restore()
   }
   // The planet under the sea: deep water all the way down, lit a little from the side the sun is on.
   {

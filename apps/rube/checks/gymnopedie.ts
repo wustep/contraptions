@@ -10,7 +10,7 @@ import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../sr
 import { breath, cellsAt } from '../src/shows/versions/gymnopedie/orbit/camera'
 import { bloom, lampLight, moonAngle, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
-import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
+import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, auroraAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -150,6 +150,19 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
     rainFrom > G1.from && rainTo < G1.last && bowFrom > rainFrom + 10 && bowTo < GN1.from, `rain ${rainFrom.toFixed(0)}-${rainTo.toFixed(0)}, bow ${bowFrom.toFixed(0)}-${bowTo.toFixed(0)}`)
   check('gymnopedie: the whale passes once, under the third Gnossienne\'s pond', whaleFrom > GN3.from && whaleTo < GN3.last,
     `${whaleFrom.toFixed(0)}-${whaleTo.toFixed(0)}`)
+
+  let auroraFrom = Infinity
+  let auroraTo = -Infinity
+  let auroraDay = 0
+  for (let t = 0; t < PERIOD; t += 0.1) {
+    if (auroraAt(t) > 0) {
+      auroraFrom = Math.min(auroraFrom, t)
+      auroraTo = t
+      if (skyAt(t).night < 0.95) auroraDay++
+    }
+  }
+  check('gymnopedie: the aurora is the first Gnossienne\'s, in the full night only, gone before the moon rises',
+    auroraFrom > GN1.from && auroraTo < GN1.last && auroraDay === 0, `${auroraFrom.toFixed(0)}-${auroraTo.toFixed(0)}`)
 
   // The sun and the moon: each once round a period, seen from far off in space, so neither may jump, the seam included.
   const turn2 = (a: number) => Math.abs(a - 2 * Math.PI * Math.round(a / (2 * Math.PI)))

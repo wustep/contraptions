@@ -100,12 +100,14 @@ The planet has weather, at depths behind the stones (`air.ts`):
   horizon's colour under them at dawn and dusk, dim and edged silver under the moon. How much of the sky is cloud
   moves through the day (`coverAt`): most of it by day, thinning at night for the stars and the Milky Way, more again
   under the moon; a cloud gathers and thins as the cover comes over its share.
+- The sun lights the colonnade from its side of the sky: each column's shade is on its west face in the morning,
+  narrows to noon, and crosses to the east face through the afternoon.
 - Gulls by day, a few small flocks overtaking the ball along the colonnade, beating a while and gliding a while.
 - The Milky Way at night, turning with the stars; and a shooting star on the top note of each of the first
   Gnossienne's four high phrases and the third's two, a melody's peak answered in the sky.
 - Mist on the water at dawn, a little at dusk, and under the moon; fireflies over the pond in the third Gnossienne.
 
-Three things happen once a day:
+Four things happen once a day:
 
 - An afternoon shower over the Gymnopédie's second statement. The cloud gathers and greys from 138 s, the sky and the
   sea go grey with it and the sun pales behind it. A soft rain falls from 152 s, with each drop's ring spreading on the
@@ -115,6 +117,10 @@ Three things happen once a day:
 - At night the sea has its own light. A bass note's swell wakes it: the crest glows a cold green-blue as it runs, and
   the motes in the water under it light as it passes over them and go out behind it. So each bass note still sends
   out its two crests, now as two threads of light running away along the dark water.
+- An aurora over the first Gnossienne's night. It comes up once the sky is wholly dark (from 258 s), is fullest
+  about the high phrases, and is gone before the moon rises (by 415 s). Three soft curtains of green-to-violet rays
+  hang from slow waves, folding and brightening along their length; they breathe with how full the music is
+  (`loudness`), and the calm sea gives them back faintly (`auroraAt`, `auroraSheet`).
 - Under the moonlit pond in the third Gnossienne, once, a whale: a dark shape deep in the water, outlined in the sea's
   light. It swims the ball's way more slowly than the ball goes, so it passes back under it over a minute
   (`whaleAt`).
@@ -151,4 +157,5 @@ loudness come round with the period; every lamp is dark until the ball lights it
 flower opens as the ball comes and closes at dawn, across the seam; every layer of the air comes round with the
 period, and a shooting star falls only on a Gnossienne's top note, at night; there is one shower, in the
 Gymnopédie, with the bow after it and gone before the first Gnossienne; the whale passes once, under the third
-Gnossienne's pond; the sun and the moon go round without a jump, the seam included; the titles.
+Gnossienne's pond; the aurora is the first Gnossienne's, in the full night only; the sun and the moon go round
+without a jump, the seam included; the titles.
