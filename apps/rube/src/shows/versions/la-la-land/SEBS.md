@@ -166,3 +166,8 @@ A tenth pass, the last of this round of polish:
 
 - **Motion, again.** I rendered the whole show at tenths of a second again and flagged every jump from one frame to the next, after nine passes of camera changes. The only jumps are the planned ones: the match cut to the beach (358.5), the film running out (391.9), and the close shots cut against each other at the door (461 to 464.2).
 - **The city of stars' stars.** Over the city, at the start and in the last wide shot, the stars were sized in cells, so the wider the shot the smaller they got. In the last frame they were specks a fraction of a pixel across. They keep a floor now, scaled to the frame, so the sky is as starry wide as it is close. There are twice as many, and one in fifteen is a bright one with a soft halo and a four-point glint, the stars the projector lit earlier, over the city at the end.
+
+An eleventh pass:
+
+- **Footlights.** Once the colour comes into Hollywood, the stage face below the painted street goes to the dark of the house, and in the shots along the street it was a quarter of the frame with nothing in it. It is a stage, and the number is played to a house, so there are footlights along its lip now. They come on with the colour, the run going out from the door both ways a moment behind it, and their light falls warm down the dark face.
+- **Her walk at Lipton's.** While she crosses the room table by table (44 to 57), the shot was wide enough that she was a small ball at the foot of a wall, over a band of the floor's cut. It is closer and sits higher, so she is someone crossing a room, with the snowy windows whole above her.

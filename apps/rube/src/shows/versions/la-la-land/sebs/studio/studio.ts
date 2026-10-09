@@ -392,6 +392,21 @@ function drawFloor(p: p5, c: Ctx, t: number): void {
   p.line(X(k, x0), X(k, front), X(k, x1), X(k, front))
   p.stroke(rgba(ink, 0.35))
   p.line(X(k, x0), X(k, Y_BACK), X(k, x1), X(k, Y_BACK))
+  // Footlights along the lip: it is a stage, and the number is played to a house. They come on with the colour, the
+  // run going out from the door both ways a moment behind it, and their light falls warm down the dark face.
+  if (reach > 0) {
+    const step = 0.9
+    for (let x = Math.ceil((x0 + 0.2) / step) * step; x < x1 - 0.2; x += step) {
+      const on = smooth(reach - Math.abs(x - DOOR_X), 0.6, 2.2)
+      if (on <= 0.01) continue
+      glow(p, k, x, front + 0.08, 0.75, M.lamp, 0.22 * on, 1.1, 1.0)
+      solid(p, ink, weight * 0.45, mixHex(M.skyTop, ink, 0.4))
+      p.arc(X(k, x), X(k, front + 0.02), X(k, 0.3), X(k, 0.22), Math.PI, Math.PI * 2, p.CHORD)
+      p.noStroke()
+      p.fill(rgba(M.lamp, 0.35 + 0.6 * on))
+      p.ellipse(X(k, x), X(k, front + 0.01), X(k, 0.16), X(k, 0.07))
+    }
+  }
 }
 
 /** The fly battens overhead and the work lights on them: a sound stage's ceiling, gone once the cloth is down. */
