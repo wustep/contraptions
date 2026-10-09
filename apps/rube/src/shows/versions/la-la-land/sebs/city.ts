@@ -38,12 +38,14 @@ const LIGHT_COOL = '#DCE6FF'
 const PALM = '#0C0A18'
 
 /** The stars: positions in a tile of sky a hundred cells wide, sizes and twinkle phases. Fixed, so nothing shimmers by chance. */
-const STARS = Array.from({ length: 420 }, (_, i) => ({
+const STARS = Array.from({ length: 900 }, (_, i) => ({
   x: hash(i, 1, 7) * 140 - 70,
   y: -44 + hash(i, 2, 7) * 42,
   r: 0.02 + Math.pow(hash(i, 3, 7), 6) * 0.07,
   ph: hash(i, 4, 7) * Math.PI * 2,
   sp: 0.4 + hash(i, 5, 7) * 1.1,
+  /** One in fifteen or so is a bright one, with a halo and a glint: the city of stars has stars that read as stars. */
+  bright: hash(i, 6, 7) > 0.935,
 }))
 
 /** The basin's lights: depth 1 at the horizon, 0 at the street; far ones many and small. */
@@ -132,14 +134,34 @@ export const city = scenery<CityState>({
     ctx.save()
     const sx = slide(0.08)
     const sy = lift(0.08)
+    // A star's size is in cells, so in the widest shots it would shrink below a pixel: it keeps a floor, in pixels of a
+    // 540-line frame, so the sky is as starry wide as it is close.
+    const px = ((fr.y1 - fr.y0) * k) / 540
     for (const st of STARS) {
       const x = st.x + sx
       const y = st.y + sy
       if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1 || y > HORIZON - 3) continue
       const tw = 0.55 + 0.45 * Math.sin(t * st.sp + st.ph)
+      const r = Math.max(0.75 * px, st.r * k, st.bright ? 1.25 * px : 0)
+      if (st.bright) {
+        const halo = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * 5)
+        halo.addColorStop(0, rgba(LIGHT_COOL, 0.32 * tw))
+        halo.addColorStop(1, rgba(LIGHT_COOL, 0))
+        ctx.fillStyle = halo
+        ctx.fillRect(x * k - r * 5, y * k - r * 5, r * 10, r * 10)
+        ctx.strokeStyle = rgba(LIGHT_COOL, 0.45 * tw)
+        ctx.lineWidth = Math.max(0.5, 0.45 * px)
+        const g = r * (3 + 1.5 * tw)
+        ctx.beginPath()
+        ctx.moveTo(x * k - g, y * k)
+        ctx.lineTo(x * k + g, y * k)
+        ctx.moveTo(x * k, y * k - g)
+        ctx.lineTo(x * k, y * k + g)
+        ctx.stroke()
+      }
       ctx.fillStyle = rgba(LIGHT_COOL, 0.35 + 0.55 * tw)
       ctx.beginPath()
-      ctx.arc(x * k, y * k, Math.max(0.6, st.r * k), 0, Math.PI * 2)
+      ctx.arc(x * k, y * k, r, 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.restore()

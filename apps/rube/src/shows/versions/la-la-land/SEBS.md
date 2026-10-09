@@ -161,3 +161,8 @@ A ninth pass, at a larger frame:
 
 - **The cellar's floor.** Under the Paris club's bandstand (215 to 268) the bottom quarter of the frame was a flat black slab. There is a floor now: wine-dark boards with their joints staggered, a brass-lit lip, and the bulbs' and the band's warmth lying on them, fading into the black under the frame. In the trumpet's dark it stays dark, but for the spot's pool.
 - **The club's wainscot.** Behind the tables in the club the dado under its brass rail was a plain dark band, which in the close shots at her table was most of the wall. It is wainscot now, tall sunk panels like the stage's front.
+
+A tenth pass, the last of this round of polish:
+
+- **Motion, again.** I rendered the whole show at tenths of a second again and flagged every jump from one frame to the next, after nine passes of camera changes. The only jumps are the planned ones: the match cut to the beach (358.5), the film running out (391.9), and the close shots cut against each other at the door (461 to 464.2).
+- **The city of stars' stars.** Over the city, at the start and in the last wide shot, the stars were sized in cells, so the wider the shot the smaller they got. In the last frame they were specks a fraction of a pixel across. They keep a floor now, scaled to the frame, so the sky is as starry wide as it is close. There are twice as many, and one in fifteen is a bright one with a soft halo and a four-point glint, the stars the projector lit earlier, over the city at the end.
