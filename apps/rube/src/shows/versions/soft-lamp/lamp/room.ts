@@ -7,7 +7,9 @@ import { INK, hash, lampAt, lampColor, lightAt, lit, skyAt } from './world'
  * The rest of the room, for a stage that sees more than the desk (a phone held upright sees the whole wall, floor to
  * ceiling), and for the foot of every frame: the ceiling and a high shelf with books and a trailing pothos; and under
  * the desk, its apron, a pedestal of drawers with brass knobs that catch the lamp, a ukulele leaning on the wall, a crate of
- * records and a pair of slippers on the floor, and a rug.
+ * records, a school backpack and a pair of slippers on the floor, a rug, and a canvas tote hung from a hook on the wall
+ * under the apron's right drawer (so a phone held upright, looking at the cup or the lamp, sees under the desk's right half a bag
+ * someone carries, and not a void).
  *
  * All of it in the room's dark, lit by what spills: the lamp's warmth on what faces it, the window's violet on the rest.
  */
@@ -277,6 +279,7 @@ export function underDesk(ctx: Ctx, lw: number, t: number): void {
     // A ukulele leaning on the drawers, and the crate of records against the wall.
     ukulele(ctx, lw, PEDESTAL.x1 + 0.62, FLOOR, t)
     crate(ctx, lw, 0.3, FLOOR)
+    backpack(ctx, lw, 3.55, FLOOR, t)
     // The slippers, left by the chair that isn't there.
     for (const [sx, rot] of [[2.35, -0.05], [2.85, 0.08]] as const) {
       ctx.save()
@@ -333,6 +336,179 @@ export function underDesk(ctx: Ctx, lw: number, t: number): void {
     line(ctx, lw * 0.5, rgba(INK, 0.7))
     knob(ctx, lw, (x0 + x1) / 2, (APRON.y0 + APRON.y1) / 2, t)
   }
+  tote(ctx, lw, 2.65, t)
+}
+
+/** A canvas tote on a brass hook on the wall in the knee space: its handles over the hook, a moon printed on it, a notebook in it. */
+function tote(ctx: Ctx, lw: number, x: number, t: number): void {
+  const l = Math.min(1, 0.1 + lightAt(x, 1.2) * lampAt(t) * 0.6)
+  // Low enough to stay under the foot of the room's widest frame: only a phone held upright sees it.
+  const hook = 1.62
+  const top = hook + 0.5
+  const w = 0.5
+  const h = 1.2
+  // The notebook standing in it, its top over the bag's mouth.
+  ctx.beginPath()
+  ctx.rect(x - 0.3, top - 0.2, 0.36, 0.4)
+  ctx.fillStyle = lit('#20343A', '#3F6E78', l)
+  ctx.fill()
+  line(ctx, lw * 0.5)
+  // The handles, over the hook: the back one, then the bag, then the front one.
+  const handle = (dx: number) => {
+    ctx.beginPath()
+    ctx.moveTo(x - w * 0.55 + dx, top + 0.02)
+    ctx.quadraticCurveTo(x - 0.05 + dx, hook - 0.02, x + dx * 0.3, hook + 0.06)
+    ctx.quadraticCurveTo(x + 0.05 + dx, hook - 0.02, x + w * 0.55 + dx, top + 0.02)
+    ctx.lineWidth = 0.06
+    ctx.strokeStyle = INK
+    ctx.stroke()
+    ctx.lineWidth = 0.06 - lw * 1.4
+    ctx.strokeStyle = lit('#3A3438', '#8A7C6A', l * 0.9)
+    ctx.stroke()
+  }
+  handle(0.03)
+  // The bag, a little fuller at its foot where its weight sits.
+  ctx.beginPath()
+  ctx.moveTo(x - w, top)
+  ctx.lineTo(x + w, top)
+  ctx.quadraticCurveTo(x + w + 0.04, top + h * 0.7, x + w - 0.02, top + h)
+  ctx.lineTo(x - w + 0.02, top + h)
+  ctx.quadraticCurveTo(x - w - 0.04, top + h * 0.7, x - w, top)
+  ctx.closePath()
+  const g = ctx.createLinearGradient(x - w, 0, x + w, 0)
+  g.addColorStop(0, lit('#2C2830', '#7A6E60', l * 0.7))
+  g.addColorStop(1, lit('#342E36', '#998A74', l))
+  ctx.fillStyle = g
+  ctx.fill()
+  line(ctx, lw * 0.7)
+  // A fold across its middle, where it has been carried.
+  ctx.beginPath()
+  ctx.moveTo(x - w + 0.03, top + h * 0.42)
+  ctx.quadraticCurveTo(x, top + h * 0.46, x + w - 0.03, top + h * 0.4)
+  line(ctx, lw * 0.4, rgba(INK, 0.35))
+  // Its print: a crescent moon and two small stars, in a faded gold.
+  const gold = lit('#4A3E2C', '#B8955A', l)
+  const mx = x + 0.04
+  const my = top + h * 0.68
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(mx, my, 0.17, 0, Math.PI * 2)
+  ctx.clip()
+  ctx.beginPath()
+  ctx.rect(mx - 0.2, my - 0.2, 0.4, 0.4)
+  ctx.arc(mx + 0.08, my - 0.05, 0.14, 0, Math.PI * 2, true)
+  ctx.fillStyle = gold
+  ctx.fill('evenodd')
+  ctx.restore()
+  for (const [sx, sy, r] of [[x + 0.26, top + h * 0.56, 0.04], [x + 0.2, top + h * 0.84, 0.028]]) {
+    ctx.beginPath()
+    for (let k = 0; k < 8; k++) {
+      const a = (k * Math.PI) / 4
+      const rr = k % 2 ? r * 0.4 : r
+      ctx.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr)
+    }
+    ctx.closePath()
+    ctx.fill()
+  }
+  handle(-0.03)
+  // The hook, on its little plate on the wall.
+  ctx.beginPath()
+  ctx.rect(x - 0.035, hook - 0.12, 0.07, 0.12)
+  ctx.fillStyle = lit('#3A3030', '#8A6A44', l)
+  ctx.fill()
+  line(ctx, lw * 0.4)
+  ctx.beginPath()
+  ctx.arc(x, hook + 0.05, 0.05, Math.PI, Math.PI * 2.2)
+  ctx.lineWidth = 0.025
+  ctx.strokeStyle = lit('#5A4630', '#E6B86E', Math.min(1, l * 1.6))
+  ctx.stroke()
+}
+
+/** A school backpack set down against the wall, leaning a little: its flap, its front pocket, a charm on its zip. */
+function backpack(ctx: Ctx, lw: number, x0: number, floor: number, t: number): void {
+  const w = 1.5
+  const h = 2.3
+  const l = Math.min(1, 0.08 + lightAt(x0 + w / 2, 2) * lampAt(t) * 0.55)
+  ctx.save()
+  ctx.translate(x0, floor)
+  ctx.rotate(0.035)
+  // The haul loop at its top.
+  ctx.beginPath()
+  ctx.moveTo(w * 0.38, -h + 0.04)
+  ctx.quadraticCurveTo(w * 0.5, -h - 0.26, w * 0.62, -h + 0.04)
+  ctx.lineWidth = 0.05
+  ctx.strokeStyle = INK
+  ctx.stroke()
+  ctx.lineWidth = 0.05 - lw * 1.4
+  ctx.strokeStyle = lit('#2A2430', '#5A4A50', l)
+  ctx.stroke()
+  // The body: rounded at the top, square at the foot.
+  ctx.beginPath()
+  ctx.moveTo(0, 0)
+  ctx.lineTo(0.02, -h + 0.4)
+  ctx.quadraticCurveTo(0.04, -h, w * 0.5, -h)
+  ctx.quadraticCurveTo(w - 0.04, -h, w - 0.02, -h + 0.4)
+  ctx.lineTo(w, 0)
+  ctx.closePath()
+  const g = ctx.createLinearGradient(0, 0, w, 0)
+  g.addColorStop(0, lit('#232B2C', '#435E5C', l * 0.6))
+  g.addColorStop(1, lit('#283231', '#56746F', l))
+  ctx.fillStyle = g
+  ctx.fill()
+  line(ctx, lw * 0.7)
+  // The flap over its top, and its two straps down to buckles.
+  ctx.beginPath()
+  ctx.moveTo(0.03, -h + 0.42)
+  ctx.quadraticCurveTo(0.05, -h + 0.02, w * 0.5, -h + 0.02)
+  ctx.quadraticCurveTo(w - 0.05, -h + 0.02, w - 0.03, -h + 0.42)
+  ctx.quadraticCurveTo(w - 0.03, -h + 1.05, w * 0.5, -h + 1.1)
+  ctx.quadraticCurveTo(0.03, -h + 1.05, 0.03, -h + 0.42)
+  ctx.closePath()
+  ctx.fillStyle = lit('#212A2A', '#4C6A66', l)
+  ctx.fill()
+  line(ctx, lw * 0.6)
+  for (const sx of [w * 0.3, w * 0.7]) {
+    ctx.beginPath()
+    ctx.rect(sx - 0.05, -h + 0.75, 0.1, 0.55)
+    ctx.fillStyle = lit('#2E221E', '#6E4A34', l)
+    ctx.fill()
+    line(ctx, lw * 0.4)
+    ctx.beginPath()
+    ctx.rect(sx - 0.07, -h + 1.22, 0.14, 0.09)
+    ctx.fillStyle = lit('#4A3A26', '#D9B26A', l)
+    ctx.fill()
+    line(ctx, lw * 0.4)
+  }
+  // The front pocket, its zip, and a little star charm hanging off the zip's pull.
+  ctx.beginPath()
+  ctx.moveTo(0.14, -0.08)
+  ctx.lineTo(0.16, -1.0)
+  ctx.quadraticCurveTo(w * 0.5, -1.12, w - 0.16, -1.0)
+  ctx.lineTo(w - 0.14, -0.08)
+  ctx.closePath()
+  ctx.fillStyle = lit('#1F2828', '#47625E', l)
+  ctx.fill()
+  line(ctx, lw * 0.6)
+  ctx.beginPath()
+  ctx.moveTo(0.2, -0.92)
+  ctx.quadraticCurveTo(w * 0.5, -1.03, w - 0.2, -0.92)
+  line(ctx, lw * 0.4, rgba(INK, 0.6))
+  const px = w - 0.3
+  ctx.beginPath()
+  ctx.moveTo(px, -0.95)
+  ctx.lineTo(px, -0.74)
+  line(ctx, lw * 0.4)
+  ctx.beginPath()
+  for (let k = 0; k < 10; k++) {
+    const a = -Math.PI / 2 + (k * Math.PI) / 5
+    const rr = k % 2 ? 0.035 : 0.08
+    ctx.lineTo(px + Math.cos(a) * rr, -0.66 + Math.sin(a) * rr)
+  }
+  ctx.closePath()
+  ctx.fillStyle = lit('#5A4A30', '#F2C766', Math.min(1, l * 1.4))
+  ctx.fill()
+  line(ctx, lw * 0.4)
+  ctx.restore()
 }
 
 /** A brass knob, catching the lamp. */

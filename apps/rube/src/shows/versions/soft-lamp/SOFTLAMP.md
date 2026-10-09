@@ -324,6 +324,21 @@ ball. The machine and its timing were right and are untouched; the room around i
 46. **Looked at and left:** the track cards over the glass read cleanly; the rising moon crosses the sill frames' top
     edge only in passing; a moment of the cup close with the lamp's shade at its top is the camera mid-move.
 
+### The eleventh lofi pass
+
+47. **A phone held upright still saw a void**, under the desk's right half: in the cup close and the lamp's side,
+    the two looks that hold the camera longest, the bottom two fifths of a tall stage were flat dark, since everything
+    the third pass put under the desk (the drawers, the ukulele, the crate) stands under its left. Two things a student
+    leaves there (`lamp/room.ts`): a canvas tote with a faded gold moon printed on it and a notebook standing in it,
+    on a hook on the wall in the knee space, under the cup; and a backpack set down against the wall toward the lamp,
+    its flap strapped and buckled, a little star charm on its zip. Both in the room's dark, warmed only by the lamp's
+    spill. The tote first hung from the apron and its handles showed, cut, at the foot of the room's widest frame
+    (the show's first and last); it hangs a cell lower now, under that frame, seen only by a stage that is taller
+    than it is wide.
+48. **Looked at and left:** the opening, the title, a drop; one move from the stair to the cup passes through a frame
+    with half the cat's face at its edge (a move, not a held frame).
+49. The share card is regenerated (the curtain's draught had moved its hem).
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
