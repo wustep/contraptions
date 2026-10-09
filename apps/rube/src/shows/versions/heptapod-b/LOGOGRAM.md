@@ -118,7 +118,7 @@ The last flutter has rung away, the held tones have died, and the camera has dra
 `Performance.titles(t)` (a show's canvas sets no type): Directed by Claude Opus 5.5; With Louise Banks (the orange
 ball), Ian Donnelly (the blue ball), Hannah (the little peach ball), Abbott and Costello (heptapods); Music, Jóhann
 Jóhannsson, "Heptapod B", with Joan La Barbara, from the soundtrack (Deutsche Grammophon, 2016); After Arrival, a film
-by Denis Villeneuve, from Ted Chiang's "Story of Your Life"; Drawn with p5.js. There is no title card. After the last
+by Denis Villeneuve, from Ted Chiang's "Story of Your Life"; Drawn with p5.js. There is no title card. As the first card comes the room goes to dusk, the window still lit. After the last
 card the room holds to the end, 251 s.
 
 ## What check:shows holds
@@ -246,7 +246,9 @@ cut, and close looks at whatever caught the eye. What changed:
   bank falling to the water at its right edge. The brow is further along the shore.
 - **The room for the credits**: the ceiling stood just over the window, so the coda's wide was a third dark ceiling,
   and the cast list straddled its soft edge. The room is tall now, the ceiling high over the glass on a clean line,
-  and the cards sit on quiet wall with a little more shade under them.
+  and the cards sit on quiet wall with a little more shade under them. Cream type on that pale wall was faint in its
+  fine print, so as the credits begin the room goes to dusk over seven seconds and stays there to the end, while the
+  window keeps its light: the words read, and the last of the day is out on the water.
 - **Hannah's drawing**: low on the wall over her corner, at her height, a child's drawing is taped: the two of them
   by the water under a crayon sun, in pencil (nothing but Louise is her colour, not even a drawing of her). It is in
   the first frame and the last, and in the visions at the window.
