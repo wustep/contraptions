@@ -8,7 +8,7 @@ import { show } from '../src/shows/versions/gymnopedie/orbit'
 import { BASS, BREATHS, CHORDS, GRACES, MARGIN, MELODY, NOTES, PERIOD, PIECES, loudness } from '../src/shows/versions/gymnopedie/orbit/music'
 import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../src/shows/versions/gymnopedie/orbit/path'
 import { breath, cellsAt } from '../src/shows/versions/gymnopedie/orbit/camera'
-import { CADENCES, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
+import { CADENCES, PERCHED, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
 import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, auroraAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
@@ -173,6 +173,11 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   }
   check('gymnopedie: rays come from the sun only while it is low and up, at dawn and into the sunset', raysSeen > 0 && raysWrong === 0,
     `${raysSeen} moments, ${raysWrong} wrong`)
+
+  const perched = [...PERCHED.keys()].map((i) => STONES[i])
+  check('gymnopedie: gulls perch on the colonnade, each lifting off as the ball lands on its stone, on its note',
+    perched.length >= 12 && perched.every((s) => s.piece === 0 && MELODY.some((n) => n.t === s.touches[0])) &&
+    [...PERCHED.entries()].every(([i, g]) => g.at >= STONES[i].u0 && g.at <= STONES[i].u1), `${perched.length} gulls`)
 
   // Each piece's last note runs back along its way, and nothing else does.
   let offCue = 0

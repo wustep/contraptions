@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { R as BALL_R, mixHex, type Piece, type PieceCtx } from '../../../../parts'
 import { CHORDS, GRACES, MELODY, PERIOD, PIECES, loudness, wrap } from './music'
-import { LENGTH, RADIUS, along, ballLocal, crest, float, since, sink, stonesIn, swell, type Stone } from './path'
+import { LENGTH, RADIUS, STONES, along, ballLocal, crest, float, since, sink, stonesIn, swell, type Stone } from './path'
 import { wideAt } from './camera'
 import {
   BANK, BANKS, BANKS_OF_MIST, CLOUDS, FIREFLIES, FIREFLY, FLOCKS, GULLS, HEAPS, MIST,
@@ -820,6 +820,66 @@ function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
   }
 }
 
+/**
+ * Gulls perched on the colonnade, one on a stone here and there (towards a lintel's far end, or on a column's
+ * capital), most facing the way the ball comes. As the
+ * ball comes down on their stone they lift off, on its note, and fly on ahead of it, climbing and beating, until they
+ * are gone; and they are back on their perches before the ball comes round again.
+ */
+export const PERCHED = new Map<number, { at: number; face: number }>()
+for (const s of STONES) {
+  if (s.piece !== 0 || hash(s.index, 211) > 0.13) continue
+  const w = s.u1 - s.u0
+  // On a lintel, towards its far end; on a single column, on its capital.
+  const at = w > 0.62 ? s.u1 - 0.16 - 0.12 * hash(s.index, 212) : s.u0 + w / 2
+  PERCHED.set(s.index, { at, face: hash(s.index, 213) > 0.35 ? -1 : 1 })
+}
+
+/** Seconds since the gull on `stone` lifted off at `t`: negative while it is still on its perch. */
+const flown = (stone: Stone, t: number): number => since(t, stone.touches[0])
+
+/** A gull at rest, in its perch's frame (its feet at the origin, up the frame's up), `k` pixels a cell. */
+function perchedGull(p: p5, k: number, day: Sky, weight: number, face: number, t: number, seed: number): void {
+  const K = (v: number) => v * k
+  const ink = day.line
+  const white = mixHex('#F6F3EC', day.lit, 0.35)
+  const grey = mixHex('#C3C8CF', day.lit, 0.3)
+  // A turn of the head now and then.
+  const look = osc(t, 0.07 + 0.04 * hash(seed, 214), seed) > 0.6 ? -1 : 1
+  p.push()
+  p.scale(face, 1)
+  p.strokeWeight(weight * 0.8)
+  p.stroke(ink)
+  // Legs.
+  p.line(K(-0.015), 0, K(-0.02), K(-0.05))
+  p.line(K(0.02), 0, K(0.015), K(-0.05))
+  // Body, tail and the folded wing.
+  p.fill(white)
+  p.beginShape()
+  p.vertex(K(-0.17), K(-0.1))
+  p.quadraticVertex(K(-0.09), K(-0.05), K(0.04), K(-0.05))
+  p.quadraticVertex(K(0.12), K(-0.07), K(0.09), K(-0.13))
+  p.quadraticVertex(K(-0.02), K(-0.15), K(-0.17), K(-0.1))
+  p.endShape(p.CLOSE)
+  p.noStroke()
+  p.fill(grey)
+  p.beginShape()
+  p.vertex(K(-0.15), K(-0.105))
+  p.quadraticVertex(K(-0.04), K(-0.08), K(0.06), K(-0.12))
+  p.quadraticVertex(K(-0.03), K(-0.14), K(-0.16), K(-0.105))
+  p.endShape(p.CLOSE)
+  // Head and beak.
+  p.stroke(ink)
+  p.fill(white)
+  p.ellipse(K(0.1), K(-0.16), K(0.075), K(0.07))
+  p.noStroke()
+  p.fill('#E3A04B')
+  p.triangle(K(0.1 + 0.03 * look), K(-0.155), K(0.1 + 0.075 * look), K(-0.152), K(0.1 + 0.03 * look), K(-0.142))
+  p.fill(ink)
+  p.ellipse(K(0.1 + 0.015 * look), K(-0.168), K(0.014), K(0.014))
+  p.pop()
+}
+
 /** The longest a stone is drawn in one piece: longer, it is several, each standing square to the curve of the sea. */
 const SEGMENT = [1.5, 1.3, 1.1]
 
@@ -856,11 +916,54 @@ function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: boolean): v
       }
       p.pop()
     }
+    const perch = PERCHED.get(stone.index)
+    if (perch && flown(stone, c.t) < 0) {
+      p.push()
+      atSea(p, k, perch.at + shift)
+      if (mirrored) p.scale(1, -1)
+      p.translate(0, -k * h)
+      perchedGull(p, k, day, c.weight, perch.face, c.t, stone.index)
+      p.pop()
+    }
+  }
+}
+
+/** The gulls that have lifted off their perches, flying on ahead of the ball, climbing, until they are gone. */
+function flyingGulls(p: p5, c: PieceCtx, v: View, day: Sky): void {
+  const ctx = p.drawingContext as Ctx2D
+  const k = c.k
+  const m = ctx.getTransform()
+  const cell = Math.hypot(m.a, m.b) * k
+  const ink = mixHex(day.line, day.low, 0.15)
+  const white = mixHex('#F6F3EC', day.lit, 0.35)
+  for (const { stone, shift } of stonesIn(v.u0 - 8, v.u1)) {
+    const perch = PERCHED.get(stone.index)
+    if (!perch) continue
+    const s = flown(stone, c.t)
+    if (s < 0 || s > 8) continue
+    const h0 = stone.h - sink(stone, stone.touches[0])
+    const u = perch.at + shift + 0.5 * s + 0.12 * s * s
+    const h = h0 + 0.12 + 0.55 * s + 0.03 * s * s
+    // Hard at first, then easier: the beat slows as it climbs.
+    const beat = Math.sin(2 * Math.PI * (2.4 * s - 0.08 * s * s))
+    const a = smooth(s, 0, 0.15) * (1 - smooth(s, 5, 8))
+    const [x, y] = onCanvas(ctx, k, ...polar(u, h), m)
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, x, y)
+    // The same bird as on its perch: white wings, drawn in ink.
+    const size = cell * (0.2 - 0.06 * smooth(s, 0, 8))
+    const width = Math.max(1.5, cell * 0.03)
+    drawGull(ctx, size, beat, ink, a, width)
+    drawGull(ctx, size, beat, white, a, width * 0.5)
+    ctx.restore()
   }
 }
 
 export const stones = scenery<null>('stones', (p, _s, c) => {
-  drawStones(p, c, viewOf(p, c), weathered(c.t), false)
+  const v = viewOf(p, c)
+  const day = weathered(c.t)
+  drawStones(p, c, v, day, false)
+  flyingGulls(p, c, v, day)
 })
 
 // ---------------------------------------------------------------- the light on the water

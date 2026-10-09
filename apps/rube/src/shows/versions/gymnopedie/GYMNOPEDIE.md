@@ -114,6 +114,10 @@ The planet has weather, at depths behind the stones (`air.ts`):
   shower's cloud is over, so they come as it clears (`raysAt`).
 - The sun lights the colonnade from its side of the sky: each column's shade is on its west face in the morning,
   narrows to noon, and crosses to the east face through the afternoon.
+- Gulls perched on the colonnade, one on a stone here and there, at a lintel's far end or on a column's capital.
+  As the ball comes down on their stone they lift off on its note and fly on ahead of it, white wings beating and
+  then easier, climbing until they are gone; they are back on their perches, roosting, by the time the ball comes
+  round again. They are in the sea's reflection too (`PERCHED`).
 - Gulls by day, a few small flocks overtaking the ball along the colonnade, beating a while and gliding a while.
 - The Milky Way at night, turning with the stars; and a shooting star on the top note of each of the first
   Gnossienne's four high phrases and the third's two, a melody's peak answered in the sky.
@@ -185,6 +189,7 @@ loudness come round with the period; every lamp is dark until the ball lights it
 flower opens as the ball comes and closes at dawn, across the seam; every layer of the air comes round with the
 period, and a shooting star falls only on a Gnossienne's top note, at night; there is one shower, in the
 Gymnopédie, with the bow after it and gone before the first Gnossienne; the whale passes once, under the third
-Gnossienne's pond; rays come from the sun only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; the aurora is
+Gnossienne's pond; gulls perch on the colonnade and lift off as the ball lands on their stone, on its note; rays come from the sun
+only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; the aurora is
 the first Gnossienne's, in the full night only; the sun and the moon go round
 without a jump, the seam included; the titles.
