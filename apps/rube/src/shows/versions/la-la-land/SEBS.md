@@ -430,3 +430,7 @@ A sixty-second pass, the notes again:
 A sixty-third pass, the card held:
 
 - **A check for the card.** The share card had gone stale because nothing tied its moment to the show. `check:shows` now holds it: at the `still`, both of them are in the picture and looking at each other. It fails at the old still, 272.0, where their turn to each other had only begun, and at her table, where she is with David.
+
+A sixty-fourth pass, their eyes when they are close:
+
+- **Where they are side by side.** The check on their eyes holds nine moments. I measured every moment through the show when the two of them are in the picture and within a cell of each other, and listed where both look away. Three were moments the show already meant as tender. After the kiss at Lipton's they stand together while the room lights up, and their eyes rolled away as soon as the kiss's look let go; the look now holds until they go to the cup. And in the car, where she leans in to him in the jam's silences and again when they have stopped at the club, they looked away from each other as she did; now they look at each other. Nowhere in the show now do the two of them, close and in the picture, both look away from each other for long.

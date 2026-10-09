@@ -36,9 +36,10 @@ export interface Stage {
 /**
  * Where they look. A ball's mark turns with its rolling everywhere else; in these spans it is turned to look, eased
  * in from its rolling, held, and let go to roll again.
- * - `both`: each looks at the other. The kiss at Lipton's, the curtain call's touch, the roll down the beam to him,
+ * - `both`: each looks at the other. The kiss at Lipton's and the room lighting up after it, the curtain call's touch, the roll down the beam to him,
  *   the waltz from its first ONE to the touch among the stars, and the look and the nods at the door, so that her
- *   close shot looks across to him and his back to her. (The club's kiss is set by where they sit.)
+ *   close shot looks across to him and his back to her; and in the car, where she leans in to him. (The club's kiss is set by
+ *   where they sit.)
  * - `mia`: she alone looks: at her table at the start, up from David to the man at the piano.
  * - `seb`: he alone looks: at her, across the room at the start, as he finds her at her table, the what-if's first
  *   moment; and, once she has gone, back at the door she went out by (`at`, a fixed direction), before the count-in.
@@ -57,10 +58,14 @@ const LOOKS: Look[] = [
   // Up to the stage, clearly above David across the table: the man at the piano is only a little higher than him.
   { from: 25.0, to: 31.5, ease: [1.0, 0.9], who: 'mia', at: -0.87 },
   { from: 32.8, to: 35.2, ease: [0.6, 0.7], who: 'seb' },
-  touch(65.515),
+  // The kiss, and still eye to eye while the room lights up round them, until they go to the cup.
+  { from: 65.515, to: 69.4, ease: [0.7, 0.8], who: 'both' },
   touch(125.585),
   touch(266.008),
   { from: 272.625, to: 338.709 + 1.2, ease: [1.0, 0.8], who: 'both' },
+  // In the car: where she leans in to him in the jam's silences, and again when they have stopped at the club.
+  { from: 399.2, to: 404.6, ease: [0.6, 0.6], who: 'both' },
+  { from: 418.5, to: 421.4, ease: [0.6, 0.5], who: 'both' },
   { from: 461.0, to: 464.2, ease: [0.4, 0.5], who: 'both' },
   { from: 471.2, to: 472.8, ease: [0.5, 0.7], who: 'seb', at: Math.PI + 0.12 },
 ]
