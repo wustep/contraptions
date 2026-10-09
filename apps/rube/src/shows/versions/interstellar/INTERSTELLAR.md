@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 33 (latest)
+## Polish pass 34 (latest)
+
+- **The share card** (`public/shows/interstellar/opus55.png`, at 240.4 s) is rendered again from this branch, by the call `scripts/shows/show-cards.mjs` makes (`window.shows.still(240.4, 1200, 630)`), so the picture a link unfurls with is what the show draws. It differed from the old card in 285 of 756,000 pixels, a few of pass 6's pebbles, and looks the same.
+
+## Polish pass 33
 
 No change to the show. The working ring (139 to 155 s) and the ballpark (155 to 168 s) were checked at full size: the noria and its buckets, the stepped channel, the harvest tram tripping the corn bins, the louvres, the mitt catching him, the scoreboard and its clock, the pitching machine winding up, and the bat meeting him on the hit. With this, every stretch of the show has had a full-size look this round.
 
