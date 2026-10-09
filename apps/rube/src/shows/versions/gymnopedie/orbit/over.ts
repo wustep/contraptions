@@ -96,7 +96,8 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.restore()
   }
   // Rain, falling past the frame.
-  const rain = rainAt(c.t)
+  // In the air close by: not out in space, when the frame is the whole planet (in Overview).
+  const rain = rainAt(c.t) * (1 - v.wide)
   if (rain > 0.01) {
     const W = ctx.canvas.width
     const H = ctx.canvas.height
