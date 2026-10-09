@@ -1,5 +1,6 @@
 import { mixHex } from '../../../../parts'
-import { CLOCK, CURTAIN, NOTES, PRINT, ROD, WINDOW } from './desk'
+import { CLOCK, CUP, CURTAIN, NOTES, PRINT, ROD, WINDOW } from './desk'
+import { NODS } from './route'
 import { MUSIC_END, barTime, heldAt, smooth, trackAt } from './music'
 import { rgba, viewOf } from './canvas'
 import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, skyAt } from './world'
@@ -577,27 +578,62 @@ export function motes(ctx: Ctx, t: number): void {
   const warm = lampColor(t)
   ctx.save()
   ctx.globalCompositeOperation = 'lighter'
-  for (let i = 0; i < 34; i++) {
-    // Each drifts on its own slow loop round a home in the lamp's reach, and sinks a little and rises again.
-    const hx = MOUTH.x - 2.4 + hash(i, 161) * 3.6
-    const hy = MOUTH.y + 0.1 + hash(i, 162) * 2.0
+  const kicks = recentKicks(t)
+  for (let i = 0; i < 46; i++) {
+    // Each drifts on its own slow loop round a home in the lamp's reach, and sinks a little and rises again; the last
+    // dozen hang low round the headphones, in the air the cup moves.
+    const low = i >= 34
+    const hx = low ? CUP.x - 0.9 + hash(i, 161) * 1.9 : MOUTH.x - 2.4 + hash(i, 161) * 3.6
+    const hy = low ? CUP.top - 0.5 - hash(i, 162) * 0.8 : MOUTH.y + 0.1 + hash(i, 162) * 2.0
     const sp = 0.05 + hash(i, 163) * 0.08
     const x = hx + Math.sin(t * sp + hash(i, 164) * 6.3) * 0.5 + Math.sin(t * sp * 2.3 + i) * 0.12
-    const y = hy + Math.cos(t * sp * 0.8 + hash(i, 165) * 6.3) * 0.35 + Math.sin(t * 0.21 + i) * 0.05
+    let y = hy + Math.cos(t * sp * 0.8 + hash(i, 165) * 6.3) * 0.35 + Math.sin(t * 0.21 + i) * 0.05
+    // The cup plays the kick, and the air over it moves: each mote near it is pushed out and up a little on the beat,
+    // and drifts back. The nearer the cup, the more.
+    let px = 0
+    let py = 0
+    let stir = 0
+    for (const k of kicks) {
+      const dx = x - CUP.x
+      const dy = y - (CUP.top - 0.05)
+      const d = Math.hypot(dx, dy) || 1
+      const push = k.h * Math.exp(-d / 0.55) * (1 - Math.exp(-k.s / 0.05)) * Math.exp(-k.s / 0.45)
+      px += (dx / d) * push * 0.5
+      py += ((dy / d) * 0.5 - 0.6) * push
+      stir += push
+    }
+    const xx = x + px
+    y += py
     if (y > -0.05) continue
-    const l = lightAt(x, y)
-    const glint = 0.35 + 0.65 * Math.max(0, Math.sin(t * (0.8 + hash(i, 166) * 1.5) + i * 2.1)) ** 3
+    const l = lightAt(xx, y)
+    // Stirred, a mote turns and catches the light.
+    const glint = Math.min(1, 0.35 + 0.65 * Math.max(0, Math.sin(t * (0.8 + hash(i, 166) * 1.5) + i * 2.1)) ** 3 + stir * 6)
     const a = 0.42 * on * l * glint
     if (a < 0.02) continue
     const r = 0.007 + hash(i, 167) * 0.01
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 3)
+    const g = ctx.createRadialGradient(xx, y, 0, xx, y, r * 3)
     g.addColorStop(0, rgba(mixHex(warm, '#FFFFFF', 0.5), a))
     g.addColorStop(0.35, rgba(warm, a * 0.4))
     g.addColorStop(1, rgba(warm, 0))
     ctx.fillStyle = g
-    ctx.fillRect(x - r * 3, y - r * 3, r * 6, r * 6)
+    ctx.fillRect(xx - r * 3, y - r * 3, r * 6, r * 6)
   }
   ctx.restore()
+}
+
+/** The kicks the cup has played in the last second and a half: how hard (0 to 1), and how long ago. */
+const NOD_MAX = Math.max(1e-6, ...NODS.map((n) => n.h))
+function recentKicks(t: number): { h: number; s: number }[] {
+  const out: { h: number; s: number }[] = []
+  let lo = 0
+  let hi = NODS.length
+  while (lo < hi) {
+    const m = (lo + hi) >> 1
+    if (NODS[m].t <= t) lo = m + 1
+    else hi = m
+  }
+  for (let i = lo - 1; i >= 0 && t - NODS[i].t < 1.5; i--) out.push({ h: 0.2 * (NODS[i].h / NOD_MAX), s: t - NODS[i].t })
+  return out
 }
 
 /* ------------------------------------------------------------------ the clock */

@@ -872,6 +872,16 @@ both in Zoom, and the overview.
 131. **Thinking, they looked straight out at us.** When the one in the window stops with the pen at their lips, their
      head turns a little to the left now and their eyes go to the rain, not to the camera.
 
+### The forty-eighth pass: the air over the cup
+
+132. **The cup close is the look the camera holds longest** (about a sixth of the half hour), and the only things
+     moving in it were the ball's nod and the dust drifting in the lamp's light. The cup is a speaker: it plays the
+     kick. Now the air over it moves when it does. A dozen motes hang low round the headphones (above the cushion, never
+     specks on its front), and on every kick each mote near the cup is pushed out and up a little, catches the light as
+     it turns, and drifts back before the next: about fifteen pixels at the cup on a 1080p frame, less with distance,
+     as hard as the kick was struck. In a break, with no kick, the air is still. The first strength moved them seven
+     pixels at most, too little to read as the music.
+
 **Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
