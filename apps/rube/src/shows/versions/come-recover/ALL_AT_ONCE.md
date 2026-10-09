@@ -586,6 +586,12 @@ The notes went back to the builders who made each part, who still had their cont
   the long music credit (it wraps to two lines), the YouTube player (whose terms want it seen), the transport, the
   camera modes and the export all fit and read. On a phone the panel stacks under the stage, and the stage still
   holds each world's action. The panel is the site's own and was not changed.
+- **A pass for the share card.** The still a link unfurls with was 243.5 s, chosen before any of these passes: the two
+  of them small and off-centre in the hole, Joy without her eye yet. It is now 255.75 s. Both have their eyes and
+  look at each other, centred in the glowing hole, with everything the bagel swallowed bursting back out round them.
+  That is the story in one frame. `public/shows/come-recover/opus55-all-at-once.png` was rendered by
+  `scripts/shows/show-cards.mjs`. In the Shows page's four-up `public/shows/card.png`, only this show's quadrant was
+  replaced, so the other shows' cards are byte for byte as they were.
 
 ## The looks
 
