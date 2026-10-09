@@ -520,6 +520,16 @@ async function main(): Promise<void> {
         const said = LIFTOFF_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
         check('Interstellar: Directed by Stephen Wu, and under him Claude Opus 5.5',
           LIFTOFF_CARDS[0].role === 'Directed by' && LIFTOFF_CARDS[0].names.join('|') === 'Stephen Wu|Claude Opus 5.5')
+        // The bible's table of the cards is the cards: each row's start, role and names as credits.ts builds them, and no
+        // row besides (it drifted once, for months: pass 10).
+        {
+          const bible = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/INTERSTELLAR.md'), 'utf8')
+          const table = bible.slice(bible.indexOf('| Starts (s) | Role | Names | Fine print |')).split('\n\n')[0]
+          const rows = table.split('\n').slice(2).map((l) => l.split(' | ').slice(0, 3).join(' | '))
+          const want = LIFTOFF_CARDS.map((c) => `| ${c.at.toFixed(1)} | ${c.role ?? ''} | ${c.names.map((n) => (typeof n === 'string' ? n : `${n[0]}, ${n[1]}`)).join('; ')}`)
+          check('liftoff: the bible\'s table of the end credits is the cards, start, role and names', rows.length === want.length && want.every((w, i) => rows[i] === w),
+            want.filter((w, i) => rows[i] !== w).join(' / '))
+        }
         check('liftoff: end credits after the music, set by the page, ending on the camp alone (no title card), naming Stephen Wu, Opus 5.5, Joseph Cooper, Dr. Amelia Brand, Murph, TARS, p5.js, Hans Zimmer and both cues',
           CREDITS_OK && perf.titles === creditsAt && creditsAt(LIFTOFF_CARDS[0].at - 0.1).length === 0 && creditsAt(perf.duration).length === 0 && !/liftoff/i.test(said) &&
           ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Joseph Cooper', 'Dr. Amelia Brand', 'Murph', 'TARS', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar'].every((w) => said.includes(w)) &&

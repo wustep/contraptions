@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 79 (latest)
+## Polish pass 80 (latest)
+
+- **The credits table is held to the cards.** It had drifted from `credits.ts` for months before pass 10 caught it. `check:shows` now builds each row's start, role and names from `CARDS` and requires the table above to be exactly those rows, no more. A start time put back to the old 266.0, or the director's card back to one name, each makes it fail. (A first try ran past the table's end into the later tables, and is held to the table's own lines.) The fine print is left out of the comparison: the cards use curly quotes and the table straight ones.
+
+## Polish pass 79
 
 - **The bible's counts are held to the code.** After a dozen edits to show code since pass 27, the counts were measured again: 365 strikes (232 in Act I, 133 in Act II), and 121 of Act II's 129 beats, the same eight left unstruck. They had gone stale once without anyone noticing, so `check:shows` now computes them from `hits.ts` and requires the two lines of the list above to say exactly that. With either number edited it fails. (A first version matched the words anywhere, and passed with a wrong number because pass 27's dated section repeats them. It is held to the list's own lines.)
 
