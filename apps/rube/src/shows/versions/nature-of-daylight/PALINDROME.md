@@ -552,6 +552,10 @@ A forty-first checked the fortieth on every word, not one: all six arrive with t
 the read-back lights; and the whole language, 150 to 200 s at ten frames a second, has no frame unlike its
 neighbours. Nothing to change.
 
+A forty-second looked at what had changed since the twenty-fifth's look through the other cameras (Hannah's sizes, the
+ring into the gala, the phone's handset, her gold hand, the cards) in Zoom, in Overview and in a tall frame. All held.
+Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
