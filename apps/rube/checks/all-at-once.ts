@@ -2,6 +2,7 @@
  * The checks for Come Recover, All at Once: one ball through every world, on the recording's own onsets. Called by
  * `check-shows.ts` for that take.
  */
+import { R } from '../src/parts'
 import type { Performance } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/eeaao-onsets.json'
 import { STRIKES } from '../src/shows/versions/come-recover/all-at-once/hits'
@@ -102,6 +103,25 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
   }
   check('all at once: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+
+  // Joy and Waymond are in the frame or out of it, never left half cut by its edge for long: a moment going out of
+  // shot or with the camera on the move, but not a beat held with one of them sliced.
+  const sliced: string[] = []
+  for (const who of ['joy', 'waymond'] as const) {
+    let from = -1
+    for (let t = 0; t <= perf.duration + 0.05; t += 0.05) {
+      const b = t <= perf.duration ? (who === 'joy' ? show.joy(t) : show.waymond(t)) : null
+      const f = cam(t)
+      const m = b ? Math.min((f.cells * 16) / 9 / 2 - Math.abs(b.x - f.x), f.cells / 2 - Math.abs(b.y - f.y)) : Infinity
+      const cut = m < R && m > -R
+      if (cut && from < 0) from = t
+      if (!cut && from >= 0) {
+        if (t - from > 1.0) sliced.push(`${who} ${from.toFixed(2)}–${t.toFixed(2)}`)
+        from = -1
+      }
+    }
+  }
+  check('all at once: Joy and Waymond are never left cut by the frame\'s edge for more than a second', sliced.length === 0, sliced.join(', '))
 
   // The ball is never out of sight for long.
   let hidden = 0

@@ -533,8 +533,9 @@ function shotsFor(_slot: { begin: number; end: number }): PartShot[] {
     { t: 12.35, cells: 3.4, hold: [-0.9, -0.95] },
     // The throw, across to the counter; the receipts and the spike, the letter.
     { t: 13.3, cells: 3.9, hold: [0.55, -1.45] },
-    { t: 14.5, cells: 3.35, hold: [1.75, -1.55] },
-    { t: 18.3, cells: 3.3, hold: [1.05, -1.5] },
+    // Wide and low enough for the floor: Waymond watches the storm from it, whole, not cut by the bottom edge.
+    { t: 14.5, cells: 3.6, hold: [1.75, -1.32] },
+    { t: 18.3, cells: 3.5, hold: [1.05, -1.3] },
     // Out to the door as the bell goes; with Joy across the shop to her mother, and in close on the two of them, her
     // mother working above her, Waymond watching; out again after her as she goes.
     { t: 20.1, cells: 4.3, hold: [-0.42, -1.45] },

@@ -493,6 +493,15 @@ The notes went back to the builders who made each part, who still had their cont
   the screen.
   - In the last half second before it, the push-in's top edge sliced the luck card. The card hangs a little lower
     and smaller, whole to the cut and still clear of the cradle.
+- **A pass for edges, by measure.** The write-up's figures were checked against the show (434 strikes, as stated).
+  Joy's and Waymond's place in the frame was then measured every twentieth of a second through the whole show,
+  rather than looked for in stills.
+  - Through the receipt storm (14.45–17.15 s), Waymond, watching from the floor, was cut in half by the bottom edge
+    for 2.7 s. The storm's framing is now a touch wider and lower, so he and the floor are whole and the storm still
+    fills the frame above.
+  - Left as they are: Joy going out of the door (29 s), the camera rising with the throw to the hanger (31 s), and
+    the slow pull-back after the cut home (264 s). Each is under a second, with the camera or the family on the move.
+  - `check:shows` now holds Joy and Waymond to the same: never left cut by the frame's edge for more than a second.
 
 ## End credits
 
@@ -540,6 +549,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - The peak strikes at least 85% of the fall's beats from 247.7 to 264.1 s.
   - Home's last three hits are struck.
 - **The family:**
+  - Joy and Waymond are never left cut by the frame's edge for more than a second;
   - Joy and Waymond never jump;
   - each only comes and goes out of shot, or at a jump, when the whole world changes;
   - there are never two of anyone.
