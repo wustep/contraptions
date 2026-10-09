@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 30 (latest)
+## Polish pass 31 (latest)
+
+No change to the show. The pull request's description was rewritten to cover every round: a summary of how the show was audited and what changed, and a before/after table of fifteen stills (`origin/main` against this branch), Zoom, Overview and the phone frame among them. The share card (240.4 s) was checked against a fresh render again: 285 pixels of 756,000 differ, a few of pass 6's pebbles, so it is left as it is.
+
+## Polish pass 30
 
 No change to the show: "How it is built" and the audio notes checked against the code and the repository. `worlds.ts` has no `AGED`: the years' grey is `GREY`, and the two Murphs are `MURPH` and `MURPH_YOUNG`. The audio notes still described the show as playing the mix file, which #147 removed with Cornfield Chase's recording when copyrighted soundtracks became YouTube-only. They now say what plays (the two uploads, on the mix's numbers), what `check:shows` holds the soundtrack to, and what rebuilding the mix now needs.
 
