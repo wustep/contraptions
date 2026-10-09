@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 106 (latest)
+## Polish pass 107 (latest)
+
+No change to the show: Overview on an upright phone, the one pairing of view and screen not swept before. The farm, the dark and the station read. On Edmunds' planet, from 243 s to the end, Gargantua shows as a large pale disc with a gold line across it, and the sky past Saturn (215 to 229 s) as a dense speckle of stars. Both skies are drawn to the camera, not the world: the horizon at the eye's height, Gargantua at a share of the frame (`act2/edmunds.ts`, "drawn to a 6.8-cell frame"), the stars filling whatever frame there is. That is what makes the landing and the camp right in every real view. Overview frames the whole world with no eye in it, so these skies have nothing to stand on. Giving them an Overview of their own would mean rebuilding how those scenes are drawn, for a view meant to show the machine's layout, so it is left, noted.
+
+## Polish pass 106
 
 No change to the show. The pull request's description now names pass 103's change to the music online and pass 102's exception for the Sound button. Its test plan asks a reviewer to listen to the music's end, the one change made by numbers alone, since audio could not be heard here.
 
