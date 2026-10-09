@@ -728,8 +728,20 @@ export function drawSpoon(pen: Pen): void {
     const q = P(0.32, 0.06)
     drawTail(pen, q[0], q[1], tip - 0.25)
   } else if (t < rig.TAIL_IN) {
+    // In the shot's wide, a tail is a few pixels: its arc trails behind it, and it is drawn larger at the top of its
+    // flight, back to its own size as it drops into the pocket, so the throw that sets up the peek is seen.
+    const u = (t - rig.SPOON_DOWN) / rig.TAIL_FLY
+    const { p } = pen
+    p.noStroke()
+    for (let i = 8; i >= 1; i--) {
+      const s = t - i * 0.028
+      if (s < rig.SPOON_DOWN) continue
+      const [tx, ty] = tailFlight(s)
+      p.fill(alpha(p, mixHex(H.shrimp, H.flameHot, 0.4), 0.5 * (1 - i / 9)))
+      p.circle(X(pen, tx), X(pen, ty), X(pen, 0.07 * (1 - i / 11)))
+    }
     const [x, y, a] = tailFlight(t)
-    drawTail(pen, x, y, a)
+    drawTail(pen, x, y, a, 1 + 0.6 * Math.sin(Math.PI * Math.min(1, u)))
   }
 }
 

@@ -439,6 +439,14 @@ The notes went back to the builders who made each part, who still had their cont
   - The framing from 246.4 s now opens sooner and higher: the pulley, Waymond on it, his drop and catch, the line,
     and Evelyn and Joy in the hole below, all in one frame. It sits low enough that Zoom still keeps Evelyn and Joy
     in the hole, with Waymond on the line. Then it opens on out to the whole machine as before.
+- **A pass for the beats, by name.** Every beat the table above names was watched at its moment in the viewer's own
+  framing: the audit letter onto the spike, Joy's coming and going, the spotlight, the neon, the drain, the gong, the
+  mustard, the eruption, the beam on Joy, Joy's stone going over and Evelyn after her, the door of the washer and
+  Waymond's touch, the nestle, the switch, the flash. They read, but for one.
+  - The shrimp tail's flight from the spoon into the hat's pocket (113.85–114.6 s) sets up Raccacoonie's peek and
+    his meal. In the shot's wide it was a few pixels, all but unseen.
+  - It now trails a fading arc of itself, and is drawn larger at the top of its flight, back to its own size as it
+    drops into the pocket. The throw reads, and so does the peek it sets up.
 
 ## End credits
 
