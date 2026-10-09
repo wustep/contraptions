@@ -121,7 +121,8 @@ function fog(ctx: Ctx, t: number): void {
 /** Two scratch canvases for the soft city, kept between frames. */
 const scratch: HTMLCanvasElement[] = []
 function scratchOf(i: number, w: number, h: number): CanvasRenderingContext2D {
-  const c = (scratch[i] ??= document.createElement('canvas'))
+  // Made once at the most a soft frame needs (`soften` keeps under 720 on a side), so never resized mid-show.
+  const c = (scratch[i] ??= Object.assign(document.createElement('canvas'), { width: 736, height: 736 }))
   if (c.width < w || c.height < h) {
     c.width = Math.max(c.width, w)
     c.height = Math.max(c.height, h)

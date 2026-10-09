@@ -471,10 +471,23 @@ function shadow(ctx: Ctx, lw: number, t: number, p: Pose, m: { up: number; e: nu
   const dy = p.wrist.y - MOUTH.y
   const d = Math.hypot(dx, dy) || 1
   const off = { x: (dx / d) * 0.42, y: (dy / d) * 0.42 }
+  // Only round the hand and its sleeve (the sleeve fades within three cells of the wrist), not the whole picture; a
+  // carried mug grows toward the camera, so give it room.
+  const span = 3.4 * (m.up > 0.001 ? grow(m.e) : 1)
+  const x0 = Math.max(v.x0, p.wrist.x + off.x - span)
+  const x1 = Math.min(v.x1, p.wrist.x + off.x + span)
+  const y0 = Math.max(v.y0, p.wrist.y + off.y - span)
+  const y1 = Math.min(v.y1, p.wrist.y + off.y + span)
+  if (x1 <= x0 || y1 <= y0) return
   const res = 14
-  const w = Math.ceil((v.x1 - v.x0) * res)
-  const h = Math.ceil((v.y1 - v.y0) * res)
-  shade ??= document.createElement('canvas')
+  const w = Math.ceil((x1 - x0) * res)
+  const h = Math.ceil((y1 - y0) * res)
+  if (!shade) {
+    // Made once at the most it will need (a carried mug's hand at its largest), so it is never resized mid-show.
+    shade = document.createElement('canvas')
+    shade.width = 320
+    shade.height = 320
+  }
   if (shade.width < w || shade.height < h) {
     shade.width = Math.max(shade.width, w)
     shade.height = Math.max(shade.height, h)
@@ -483,16 +496,16 @@ function shadow(ctx: Ctx, lw: number, t: number, p: Pose, m: { up: number; e: nu
   g.setTransform(1, 0, 0, 1, 0, 0)
   // All of it, not just this frame's part: what is drawn past the part is sampled at its edge as it is laid back.
   g.clearRect(0, 0, shade.width, shade.height)
-  g.setTransform(res, 0, 0, res, (off.x - v.x0) * res, (off.y - v.y0) * res)
+  g.setTransform(res, 0, 0, res, (off.x - x0) * res, (off.y - y0) * res)
   if (m.up > 0.001) carry(g)
   hand(g, lw, t, p, true)
+  // Laid over as it is: the mask is black, so at `a` it darkens what is under it by `a`, as a shadow does (a multiply
+  // blend gives the same, and costs a frame's time).
   ctx.save()
   ctx.globalAlpha = a
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'high'
-  // Tinted the room's shadow colour: the mask is black, so a multiply over the room leaves it the room's own dark.
-  ctx.globalCompositeOperation = 'multiply'
-  ctx.drawImage(shade, 0, 0, w, h, v.x0, v.y0, w / res, h / res)
+  ctx.drawImage(shade, 0, 0, w, h, x0, y0, w / res, h / res)
   ctx.restore()
 }
 

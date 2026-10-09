@@ -189,17 +189,25 @@ export function mothShadow(ctx: Ctx, t: number): void {
   const sx = MOUTH.x + dx * k
   const sy = MOUTH.y + dy * k
   const s = SPAN * k
-  const beat = 0.5 + 0.5 * Math.abs(Math.sin(t * 41 + Math.sin(t * 7)))
-  ctx.save()
-  for (const side of [-1, 1]) {
-    const cx = sx + side * s * 0.25
-    const g = ctx.createRadialGradient(cx, sy, 0, cx, sy, s * 0.45)
-    g.addColorStop(0, `rgba(14, 9, 26, ${(a * (0.6 + 0.4 * beat)).toFixed(3)})`)
-    g.addColorStop(1, 'rgba(14, 9, 26, 0)')
-    ctx.fillStyle = g
+  const beat = Math.abs(Math.sin(t * 41 + Math.sin(t * 7)))
+  // A moth's shape, wings out, beating (they fold toward the body and open again), twice: a soft wide copy and a
+  // firmer one inside it, so it reads as a shadow thrown from close to a bulb, not as a smudge.
+  const shape = (g: number) => {
+    const open = 0.35 + 0.65 * beat
     ctx.beginPath()
-    ctx.ellipse(cx, sy, s * 0.45, s * 0.45 * (0.45 + 0.4 * beat), 0, 0, Math.PI * 2)
-    ctx.fill()
+    for (const side of [-1, 1]) {
+      ctx.moveTo(sx, sy - s * 0.12 * g)
+      ctx.quadraticCurveTo(sx + side * s * 0.55 * open * g, sy - s * 0.35 * g, sx + side * s * 0.5 * open * g, sy + s * 0.05 * g)
+      ctx.quadraticCurveTo(sx + side * s * 0.3 * open * g, sy + s * 0.3 * g, sx, sy + s * 0.12 * g)
+    }
+    ctx.ellipse(sx, sy, s * 0.06 * g, s * 0.22 * g, 0, 0, Math.PI * 2)
   }
+  ctx.save()
+  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.45).toFixed(3)})`
+  shape(1.25)
+  ctx.fill()
+  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.6).toFixed(3)})`
+  shape(1)
+  ctx.fill()
   ctx.restore()
 }

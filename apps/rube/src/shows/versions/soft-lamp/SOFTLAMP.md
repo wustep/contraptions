@@ -779,6 +779,25 @@ machine itself, whose drops and lobs are the show's backbone.
 114. **Looked at:** the moved moments, at full size; the rims at dusk, in the rain and in the moonlit end. A scrub back
      is the same frame. `check:shows` holds the rule: no reach, stretch or flash on a drop or a lob.
 
+### The forty-third pass: still light enough to leave on
+
+Seventeen passes since the frame rate was last measured (the soft city, the hand and its shadow, the trains, the moth,
+the window's rims), so it was measured again before anything else was added, in Chrome with its GPU, 1920 × 1080 at
+2× (a 3840 × 2160 canvas), a visible window, four seconds at each of a dozen moments, against this branch before those
+passes (a headless browser throttles its frames and measures nothing).
+
+115. **The hand cost a frame.** Everywhere else both were a steady 60 frames a second (the slowest frame 18.7 ms), but
+     whenever the hand was in, every few frames took 35 ms: dropped frames, through every reach. The hand's shadow was
+     drawn into a scratch canvas the size of the whole view and laid over the picture with a multiply blend, both every
+     frame. Now it is drawn only round the hand and its sleeve, and laid over plainly (black at the shadow's alpha
+     darkens exactly as the multiply did), and the scratch canvases are made once at the size they will need rather
+     than grown mid-show. Every reach holds 60 frames a second; the slowest frame anywhere measured is 19.8 ms.
+116. **The looks, audited full size**, each of the seven held frames in the dusk, the rain and the clear night. One
+     fault: the moth's shadow on the wall was a dark smudge, two soft blots that read as dirt on the paint. It is a
+     moth's shape now, wings out, opening and closing with its beat, a soft edge round a firmer middle.
+117. Considered and not built: a look up at the sky through the window in Daydream's break, the moon and the stars
+     filling the frame. The ball would leave the picture for twenty seconds, which the show has never done.
+
 **Subtracted:** the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
