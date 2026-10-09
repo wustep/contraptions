@@ -503,6 +503,14 @@ ball. The machine and its timing were right and are untouched; the room around i
     to y = -0.47 or lower; tried at -0.50, the 16:9 frame went bottom-heavy (the desk and its drawers a third of it,
     the sill against the top) and still touched the shade. Kept at -0.57.
 
+### The thirtieth lofi pass
+
+72. **A scrub back is still the same frame.** The show promises every part of it is a function of show time; the later
+    passes added things that move on their own (the curtain's draught, the neighbour's crossings and cat, the washes,
+    the tea tag, the scrim), so it was tested again: nine moments across the half hour (dusk, the rain, a track card,
+    the neighbour at the glass, a wash, past midnight, the end) rendered in order and again shuffled, compared pixel by
+    pixel: identical, every one. 24:55 to 26:00 (a lob, a walk, a drop) at a frame every 3.4 seconds: as it was.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
