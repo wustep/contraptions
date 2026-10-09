@@ -514,7 +514,8 @@ window.
     field covers the whole tall frame, no seam at the 16:9 edge); the balloon's crown; contact with floors and
     slopes; stillness; gaze, as a whole and beat by beat; strobing; the camera's acceleration; render cost; contrast;
     three fresh critics (frames, regressions, story) and a story re-watch; the notes against the code; the shared code
-    against `origin/main`; the credits under Zoom; Overview; the exports, and a real video export; the console; the
+    against `origin/main`; the credits under Zoom; Overview; the exports, and a real video export; the console; the full `npm run build` (every suite and the bundle; Vite's chunk-size
+    notice is `origin/main`'s too); the
     player's speeds; her face through the doctor's office and into the yard (up toward the coat before the news, then
     turned away from him as she rolls away, and still turned away across the cut; kept as it is: a downcast look as
     well would have to turn down and back up within three seconds to meet the cut without a snap).
