@@ -268,6 +268,13 @@ The notes went back to the builders who made each part, who still had their cont
     It is in the opening's wide shot and under the credits, where it sits over the finale's lantern string and
     answers the photograph the night ends by taking.
   - Both are drawn by the room (`set.ts`), under its light, so they go dark and come up with the tubes.
+- **Polish round 5, the kitchen's counter, and a sweep.** In the kitchen (106.7 to 121 s) the lower fifth of every shot
+  was the counter's face under the burners, a flat slate with a few seams.
+  - It now carries the griddle's heat, glowing down the steel and rising with the gas. A row of gas knobs, two to a
+    panel, sit over little windows of blue pilot flame that flicker. Their pointers turn up as the music swells.
+  - Along its foot, below most shots, is a red lacquered apron rail with a brass edge, where diners would sit.
+  - The mosaic was watched at full size at 4 and 16 panels. Its worlds read as their own, so nothing changed.
+  - Then the whole show was swept again every 3.3 s, for anything the five rounds broke. Nothing had.
 
 ## End credits
 

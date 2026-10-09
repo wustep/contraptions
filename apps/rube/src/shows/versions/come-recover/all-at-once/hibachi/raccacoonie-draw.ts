@@ -161,6 +161,60 @@ function tongue(pen: Pen, x: number, base: number, wd: number, h: number, lean: 
 }
 
 /** The griddle, the burners under it, and the counter down to the floor: one long teppan, out past the frame. */
+/** The counter's red lacquer: the apron rail a teppanyaki bar has along its front, where the diners would sit. */
+const LACQUER = '#8E2B22'
+
+/**
+ * The counter's face, under the burners: the griddle's heat glowing down the steel and dying away, a row of gas
+ * knobs each with its pilot lamp, brighter as the gas rises, and a red lacquered apron rail with a brass edge along
+ * the foot, so the bottom of the frame is a kitchen's counter and not a slab.
+ */
+function drawCounterFace(pen: Pen, x0: number, x1: number): void {
+  const { p, t } = pen
+  const top = rig.TOP + PLATE + SLOT + 0.07
+  const hot = Math.max(level(t), blaze(t))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The heat, down from the burners.
+  const g = ctx.createLinearGradient(0, X(pen, top), 0, X(pen, top + 0.9))
+  g.addColorStop(0, `rgba(${rgbOf(H.flame)}, ${0.12 + 0.12 * hot})`)
+  g.addColorStop(1, `rgba(${rgbOf(H.flame)}, 0)`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect(X(pen, x0), X(pen, top), X(pen, x1 - x0), X(pen, 0.9))
+  ctx.restore()
+  // The knobs: one a seam's panel, two to a panel, each over its little pilot window.
+  const ky = top + 0.36
+  for (let x = Math.floor(x0 / 1.6) * 1.6 + 0.3 + 0.8; x < x1; x += 1.6) {
+    for (const dx of [-0.26, 0.26]) {
+      const kx = x + dx
+      const n = Math.round(kx * 10)
+      // The pilot: a slot of blue flame, flickering.
+      const fl = 0.6 + 0.4 * Math.sin(t * (11 + 5 * hash(n, 4)) + hash(n, 5) * 6)
+      p.noStroke()
+      p.fill(mixHex(BG, H.steelDeep, 0.2))
+      p.rect(X(pen, kx - 0.07), X(pen, ky + 0.17), X(pen, 0.14), X(pen, 0.05), X(pen, 0.02))
+      p.fill(alpha(p, '#6FB7FF', (0.45 + 0.4 * hot) * fl))
+      p.rect(X(pen, kx - 0.05), X(pen, ky + 0.18), X(pen, 0.1), X(pen, 0.03), X(pen, 0.015))
+      // The knob: a steel dial on a dark bezel, its pointer turned up with the gas.
+      solid(p, pen.ink, pen.w * 0.5, mixHex(BG, H.steelDeep, 0.35))
+      p.circle(X(pen, kx), X(pen, ky), X(pen, 0.21))
+      solid(p, pen.ink, pen.w * 0.5, mixHex(H.steel, BG, 0.3))
+      p.circle(X(pen, kx), X(pen, ky), X(pen, 0.13))
+      const a = -Math.PI * 0.75 + Math.PI * (0.55 + 0.5 * hot) + 0.2 * (hash(n, 6) - 0.5)
+      p.stroke(pen.ink)
+      p.strokeWeight(Math.max(1, X(pen, 0.018)))
+      p.line(X(pen, kx), X(pen, ky), X(pen, kx + Math.cos(a) * 0.06), X(pen, ky + Math.sin(a) * 0.06))
+    }
+  }
+  // The apron rail, red lacquer with a brass edge on top and its own gloss.
+  const ry = FLOOR - 0.34
+  fillPoly(pen, [[x0, ry], [x1, ry], [x1, FLOOR], [x0, FLOOR]], LACQUER, pen.ink, pen.w * 0.7)
+  p.noStroke()
+  p.fill(alpha(p, '#FFFFFF', 0.12))
+  p.rect(X(pen, x0), X(pen, ry + 0.07), X(pen, x1 - x0), X(pen, 0.03))
+  bar(pen, [x0, ry - 0.02], [x1, ry - 0.02], 0.045, '#C9A04A', pen.ink, pen.w * 0.5)
+}
+
 export function drawCounter(pen: Pen): void {
   const { p, k, t } = pen
   const f = frame(p, k)
@@ -173,6 +227,7 @@ export function drawCounter(pen: Pen): void {
   p.strokeWeight(pen.w * 0.6)
   for (let x = Math.floor(x0 / 1.6) * 1.6 + 0.3; x < x1; x += 1.6) p.line(X(pen, x), X(pen, rig.TOP + PLATE + SLOT + 0.3), X(pen, x), X(pen, FLOOR - 0.3))
   bar(pen, [x0, rig.TOP + PLATE + SLOT + 0.035], [x1, rig.TOP + PLATE + SLOT + 0.035], 0.07, H.steelDeep, pen.ink, pen.w * 0.7)
+  drawCounterFace(pen, x0, x1)
   // The burner slot: dark, with the gas flames licking the plate's underside, higher when the music is.
   fillPoly(pen, [[x0, rig.TOP + PLATE], [x1, rig.TOP + PLATE], [x1, rig.TOP + PLATE + SLOT], [x0, rig.TOP + PLATE + SLOT]], BG, pen.ink, pen.w * 0.6)
   const hot = Math.max(level(t), blaze(t))
