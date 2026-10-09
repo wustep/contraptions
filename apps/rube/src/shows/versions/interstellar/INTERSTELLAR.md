@@ -183,7 +183,7 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 | 251.5 | 228 | Edmunds' planet | Touchdown on the cue's loudest bar. |
 | 252.5 | 229 to 232 | Brand's camp | The canopy swings open, the ramp slams down (230), and **Brand**, the blue ball, sets off from the cairn she built for Edmunds, across her camp toward him. The seat kicks him out over the nose (231), he rolls down the ramp and stops at the foot of the lamp, and on the last hit (232) the lamp lights. |
 | 255.5 to 262.7 | the stop | Cooper meets Amelia | The music stops dead. He rolls off the lamp's plate toward her, and **they meet under the lamp** on the next beat (256.49 s), easing into each other; the lamp swells once. They rest together while the camera draws back over the camp: the dome with its porthole lit, the flag, the cairn, her helmet set down on a rock. The sun's edge comes up behind the cairn. |
-| 261.4 to 291 | silence | the credits | Over the two of them at the camp at dawn, while the camera goes on drawing back and the sun clears the horizon (see below). |
+| 261.4 to 291 | silence | the credits | Over the two of them at the camp at dawn, while the camera goes on drawing back, the sun clears the horizon and the dawn wind lifts wisps of sand along the plain (see below). |
 
 Six Act II beats are still unstruck, on purpose:
 - **113:** the camera swoops back in from the whole ring to the house, and the move is the event. A mechanism small enough to fit the kitchen would not read at that distance.
@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 10 (latest)
+## Polish pass 11 (latest)
+
+- **The dawn wind along the plain** (from 261 s to the end, `drawDrift` in `act2/edmunds.ts`). The silent credits are the show's longest stretch with the least moving: the flag in the wind, the sun coming up, the slow draw-back, and a ground gone dead still once the landing's dust had settled. Now thin wisps of sand lift low off the plain as the music stops and drift the way the flag blows, lit gold by the sunrise. The far ones pass behind the camp; the near ones run along the ground in front of it, below Cooper and Brand, never across them or the cards. Each fades in and out over its own run, and the frame-step audit across the credits is unchanged (largest one-step change 1.7%, the credits' starlight), so none pops.
+
+## Polish pass 10
 
 Three audits that found nothing to fix in the picture, and one that found the bible out of date.
 
