@@ -9,7 +9,13 @@ import { keyX } from './club/geometry'
  * a moment; the notes of a phrase are strung together as a thread. At Lipton's it is what draws her across the room;
  * at Seb's, now, it is what she knows the theme by, and lifts her eyes to.
  */
-export function call(notes: { t: number; midi: number }[], her: (t: number) => Pt, color: string, size = 1): (p: p5, k: number, t: number) => void {
+/** A call's drawing, and its notes in flight (for the checks): where each is at `t`, how much of it is there, and where it is going. */
+export interface Call {
+  (p: p5, k: number, t: number): void
+  beads: (t: number) => { x: number; y: number; a: number; to: Pt; u: number; arrive: number }[]
+}
+
+export function call(notes: { t: number; midi: number }[], her: (t: number) => Pt, color: string, size = 1): Call {
   const beads = notes.map((n) => {
     const from: Pt = [keyX(n.midi), -0.72]
     const to = her(n.t)
@@ -29,7 +35,7 @@ export function call(notes: { t: number; midi: number }[], her: (t: number) => P
     const y = a1 * a1 * c.from[1] + 2 * a1 * e * my + e * e * (to[1] - 0.02) + 0.03 * Math.sin(s * 7 + c.t)
     return { x, y, a: Math.min(1, s / 0.08) * (1 - smooth(u, 0.78, 1)) }
   }
-  return (p, k, t) => {
+  const draw = (p: p5, k: number, t: number) => {
     const ctx = p.drawingContext as CanvasRenderingContext2D
     ctx.save()
     ctx.lineCap = 'round'
@@ -74,4 +80,14 @@ export function call(notes: { t: number; midi: number }[], her: (t: number) => P
       glow(p, k, mx, my, 0.45 * Math.max(0.6, size), color, 0.35 * warm)
     }
   }
+  return Object.assign(draw, {
+    beads: (t: number) => {
+      const out: { x: number; y: number; a: number; to: Pt; u: number; arrive: number }[] = []
+      for (const c of beads) {
+        const q = at(c, t)
+        if (q) out.push({ ...q, to: her(c.t + c.trip), u: (t - c.t) / c.trip, arrive: c.t + c.trip })
+      }
+      return out
+    },
+  })
 }

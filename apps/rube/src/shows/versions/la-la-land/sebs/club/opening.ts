@@ -145,7 +145,7 @@ const miaAtTable = (t: number): Pt => {
  * At Seb's, now, the theme reaches her where she sits: the notes he plays go out to her table in the club's cold
  * light, the first of them a breath before she lifts her eyes to the stage. She knows it.
  */
-const TABLE_CALL = call(MELODY.filter((n) => n.t > 21.6 && n.t < 30.6), miaAtTable, '#BCCDF0', 0.5)
+export const TABLE_CALL = call(MELODY.filter((n) => n.t > 21.6 && n.t < 30.6), miaAtTable, '#BCCDF0', 0.5)
 
 export const opening = part<OpeningState>(
   {

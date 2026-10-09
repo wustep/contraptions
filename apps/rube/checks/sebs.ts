@@ -18,6 +18,9 @@ import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
 import { DOOR, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
 import { HORIZON, THEIRS, THEIRS_AT } from '../src/shows/versions/la-la-land/sebs/city'
+import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
+import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
+import { HOUSE_SPAN, houseTop } from '../src/shows/versions/la-la-land/sebs/paris/jazz'
 import { HANDOFF, soloThreads } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -295,6 +298,43 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       }
     }
     check('sebs: the trumpet\'s solo is written in light, in the picture', solo.piece.name === 'trumpet' && lit > 2000 && seen / lit >= 0.85, `${seen}/${lit} seen`)
+  }
+  // His playing reaches her: at her table at the start and across Lipton's, every note that goes out from the keys
+  // arrives where she is, and the ones at her table are seen going to her.
+  {
+    const origin = show.holder(10)
+    const miss: string[] = []
+    let arrivals = 0
+    let seenAtTable = 0
+    for (const [name, c, a, b] of [['the table', TABLE_CALL, 21.6, 31.5], ['Lipton\'s', LIPTONS_CALL, 40, 63.5]] as const) {
+      for (let t = a; t < b; t += 0.05) {
+        for (const q of c.beads(t)) {
+          const wx = origin.col + q.x
+          const wy = origin.row + q.y
+          if (name === 'the table' && !covered(t) && inShot(t, { x: wx, y: wy })) seenAtTable++
+          if (q.u < 0.97) continue
+          arrivals++
+          const m = show.mia(q.arrive)
+          if (!m || Math.hypot(origin.col + q.to[0] - m.x, origin.row + q.to[1] - m.y) > 0.2 || Math.hypot(q.x - q.to[0], q.y - q.to[1]) > 0.2) miss.push(`${name} ${t.toFixed(2)}`)
+        }
+      }
+    }
+    check('sebs: his playing reaches her, at her table and across Lipton\'s', arrivals > 30 && miss.length === 0 && seenAtTable > 20, `${arrivals} arrivals, ${seenAtTable} seen at the table; ${miss.slice(0, 4).join(', ')}`)
+  }
+  // His club in Paris is full, and its house never covers the two of them: their heads stay above everyone's.
+  {
+    const under: string[] = []
+    for (let t = HOUSE_SPAN[0]; t < HOUSE_SPAN[1]; t += 0.1) {
+      if (covered(t)) continue
+      const f = cam(t)
+      const top = houseTop(f.y + f.cells / 2, f.cells)
+      const [sx, sy] = show.where(t)
+      const m = show.mia(t)
+      for (const [who, b] of [['Seb', { x: sx, y: sy }], ['Mia', m]] as const) {
+        if (b && inShot(t, b) && b.y + R > top) under.push(`${who} ${t.toFixed(1)}`)
+      }
+    }
+    check('sebs: the house in Paris never covers the two of them', under.length === 0, under.slice(0, 6).join(', '))
   }
   check('sebs: the story\'s beats are seen, everyone they are about in the picture', unseenBeats.length === 0, unseenBeats.join(', '))
   // The other road: the what-if read against what was. Each echo of him is seen, well inside the frame and mostly

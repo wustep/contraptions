@@ -46,6 +46,11 @@ const HOUSE = Array.from({ length: 30 }, (_, i) => ({
   table: i % 3 === 1,
 }))
 const BEATS = Array.from({ length: 120 }, (_, k) => paris(k)).filter((b) => b > LIGHTS && b < DARK[0])
+/** How high the house's heads reach, in a frame `fh` cells tall whose foot is at `y1`: everything of the story stays above it. */
+export const houseTop = (y1: number, fh: number): number => y1 + 0.01 * fh - (0.075 + 0.03 + 0.006) * 1.25 * 1.15 * fh
+const LIT_FROM = LIGHTS - 0.2
+export const HOUSE_SPAN: [number, number] = [LIT_FROM, 268.3]
+
 function drawHouse(p: p5, k: number, t: number): void {
   if (t < LIGHTS - 0.2 || t > 268.3) return
   const f = frame(p, k)

@@ -905,7 +905,7 @@ function festoon(d: Draw, t: number): void {
  * lifts off the strings over its key and goes out across the room to her (`call.ts`). Before she is in they go to
  * the door; as she nears the trips get shorter; on the hush the music stops, and so do they.
  */
-const drawCall = call(MELODY.filter((n) => n.t > 40.0 && n.t < AT.hush - 0.02), (t) => mia(t), LIPTONS_MAT.lamp)
+export const LIPTONS_CALL = call(MELODY.filter((n) => n.t > 40.0 && n.t < AT.hush - 0.02), (t) => mia(t), LIPTONS_MAT.lamp)
 
 /* ------------------------------------------------------------------ the room */
 
@@ -932,6 +932,6 @@ export const liptonsRoom = scenery<null>({
     void beam
   },
   over(p, _s, c) {
-    if (c.t > 39.9 && c.t < AT.hush + 4) drawCall(p, c.k, c.t)
+    if (c.t > 39.9 && c.t < AT.hush + 4) LIPTONS_CALL(p, c.k, c.t)
   },
 })
