@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 59 (latest)
+## Polish pass 60 (latest)
+
+No change to the show: pass 59's new landing looked at, not only measured. At 15.90 s Murph comes down just behind Cooper with their outlines meeting, a near bump, not her disc drawn into his. By 16.1 s he is on the first tread and she waits at the stairwell's top, a step behind, as written.
+
+## Polish pass 59
 
 - **Young Murph no longer lands in Cooper** (15.9 s). Every pair of balls was measured every 0.02 s for overlap. Twice, one disc ran into another. In NASA's bunker (71.1 to 71.2 s) Cooper rolls through the place Brand waits, but the bunker's wall hides both, as written. On the farm the other was seen: Murph, hopping off the foot of her bed, landed against Cooper as he dropped onto the first stair, 0.015 cells into him for a frame or two. She lands 0.04 cells further back now (`earth/house.ts`), and her path on from there is unchanged and continuous.
 - **A check for it.** `check:shows` now holds that no two balls are ever drawn into each other, the bunker excepted. With her old landing put back, it fails at 15.90 s.
