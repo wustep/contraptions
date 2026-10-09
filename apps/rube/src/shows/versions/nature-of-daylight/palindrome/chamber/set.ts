@@ -914,8 +914,8 @@ function fallenSuits(ctx: Ctx, k: number, t: number): void {
 export const CHARGE: Pt = [6.3, FLOOR]
 /**
  * The soldier who set the charge: a small dark ball, as everyone but the four of them is. At the cut it is at the charge;
- * on the next beat it nudges it and the charge's light comes on, armed; on the beat after it hops back over the two of
- * them and rolls away out of the chamber the way it came. Without it the charge was simply there, and the blast read as
+ * on the next beat it nudges it and the charge's light comes on, armed; on the beat after it rolls back past the two
+ * of them, behind them, and away out of the chamber the way it came. Without it the charge was simply there, and the blast read as
  * the heptapods' doing.
  */
 /** At the cast's own scale: smaller, with only a hairline of light on it, it read as a stray speck as it hopped. */
@@ -935,8 +935,10 @@ function soldierAt(t: number): Pt | null {
     return [SOLDIER_AT + 0.03 * Math.sin(Math.PI * Math.min(1, u * 1.6)), y]
   }
   if (t < HOP[1]) {
+    // Past them along the floor, behind them (they are drawn over him): hopping over them, a frame of him in the air
+    // read as a bubble rising, a balloon, not a man going.
     const u = (t - HOP[0]) / (HOP[1] - HOP[0])
-    return [SOLDIER_AT + (HOP_TO - SOLDIER_AT) * u, y - 0.55 * 4 * u * (1 - u)]
+    return [SOLDIER_AT + (HOP_TO - SOLDIER_AT) * (u * u * (3 - 2 * u)), y]
   }
   // Away down the chamber, gathering speed, and out through the door it came in by. (Stopped short of it, it went out
   // mid-floor, which Overview, seeing the whole chamber, showed as a pop.)

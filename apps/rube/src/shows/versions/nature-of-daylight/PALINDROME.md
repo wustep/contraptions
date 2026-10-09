@@ -741,6 +741,12 @@ longer. It was the halving: a suit split in two is not a suit taken off. It is l
 beside her standing empty, its window on nothing, the shape Ian still wears a little way off; then it is gone. Ian's
 goes the same way, off the close frame, seen in Overview.
 
+A seventieth gave the show to an eighth fresh reader. The olive drab read: they called him the soldier. But caught in
+the air as he hopped back over the two of them, he read as a bubble rising, a balloon. He rolls back past them along
+the floor now, behind them, and out the way he came. Their other notes stay: her hops along the sat phone's keys are
+the dialing; the leap's arc through the willow is the leaves she reaches; the swing's length and the white before the
+heptapods come are the cue's; Ian at the cut, as before.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
