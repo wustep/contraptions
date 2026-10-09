@@ -560,6 +560,10 @@ A forty-fifth ran the rest of what the site's build runs, which the rounds had n
 rube, builder, playground, premiere, clair) and the production build. All pass; the show's own chunk is 235 kB, the
 size warnings the build gives being the site's shared chunks. Nothing to change.
 
+A forty-sixth tested scrubbing, which nothing had: the live stage seeked to fifteen moments through the show forwards,
+then to the same moments backwards, the canvas compared. Every pair was the same to the pixel (and the canvas did redraw
+between moments), so the show is a function of its time alone, however it is reached. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
