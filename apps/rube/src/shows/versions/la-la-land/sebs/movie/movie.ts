@@ -452,6 +452,22 @@ function gateAt(t: number, fr: Rect): { g: Rect; v: Rect; img: Rect } {
 /** One frame of film is 1/18 s: what the flicker, the weave and the dust change on. */
 const frameOf = (t: number): number => Math.floor(t * 18)
 
+/**
+ * The gate's weave: the picture is never quite still in the gate. Frame by frame it shifts a hair, mostly up and down
+ * (the claw pulling the film down), with a slow drift under it, and it jumps as each splice goes through. As a part
+ * of the frame's height, for the camera to carry, so the balls in the film weave with it and the gate stays put. Only
+ * while the film fills the frame.
+ */
+export function filmWeave(t: number): [number, number] {
+  const on = smooth(t, GATE1, GATE1 + 0.4) * (1 - smooth(t, BACK0 - 0.3, BACK0))
+  if (on <= 0) return [0, 0]
+  const fi = frameOf(t)
+  const drift = 0.0025 * Math.sin(t * 1.7) + 0.0015 * Math.sin(t * 4.3 + 1)
+  const dy = (hash(fi, 61) - 0.5) * 0.0075 + drift + spliceJump(t) * 0.12
+  const dx = (hash(fi, 62) - 0.5) * 0.0028
+  return [dx * on, dy * on]
+}
+
 function drawFilm(p: p5, t: number, c: Ctx): void {
   const { k } = c
   const fr = frame(p, k)
@@ -487,10 +503,26 @@ function overFilm(p: p5, t: number, c: Ctx): void {
   if (shot === 3) overPool(p, t, c)
   if (shot === 5) overHome(p, t, c)
   // The film itself: its warm wash, its flicker, its weave, a speck of dust now and then, the gate's soft corners.
-  const weave = (hash(fi, 3) - 0.5) * 0.022 + spliceJump(t)
+  // (The picture weaves in the gate by the camera, `filmWeave`; the gate itself is still.)
+  const weave = 0
+  const full = smooth(t, GATE0, GATE1) * (1 - smooth(t, BACK0, BACK1))
+  // The stock: faded and warm, its blacks lifted, its whites gone to cream; the exposure breathing frame to frame.
   const flick = 0.07 + 0.035 * hash(fi, 5)
   ctx.fillStyle = rgba(M.warm, flick)
   ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  ctx.save()
+  ctx.globalCompositeOperation = 'multiply'
+  ctx.fillStyle = rgba(M.sepia, 0.12 + 0.04 * full)
+  ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  ctx.globalCompositeOperation = 'screen'
+  ctx.fillStyle = rgba(M.lift, 0.05)
+  ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  ctx.restore()
+  const breathe = (hash(fi, 6) - 0.5) * 0.07 + 0.025 * Math.sin(t * 2.1)
+  ctx.fillStyle = breathe > 0 ? rgba(M.beam, breathe * 0.6) : rgba(M.room, -breathe)
+  ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  grain(p, k, fi, g, 0.55 + 0.45 * full)
+  if (t < TAIL) scratch(p, k, t, v)
   const vx = (v.x0 + v.x1) / 2
   const vy = (v.y0 + v.y1) / 2 + weave
   const vw = v.x1 - v.x0
@@ -529,6 +561,83 @@ function overFilm(p: p5, t: number, c: Ctx): void {
   // Outside the gate: the room.
   const inside = g.x0 <= fr.x0 && g.y0 <= fr.y0 && g.x1 >= fr.x1 && g.y1 >= fr.y1
   if (!inside) drawRoom(p, t, c, fr, g, img)
+}
+
+/**
+ * The grain: a tile of noise made once, laid over the picture at a new offset every frame, so it crawls the way the
+ * silver in the stock does. Light and dark specks both, faint.
+ */
+let GRAIN: HTMLCanvasElement | null = null
+function grainTile(): HTMLCanvasElement | null {
+  if (GRAIN || typeof document === 'undefined') return GRAIN
+  const n = 192
+  const cv = document.createElement('canvas')
+  cv.width = n
+  cv.height = n
+  const g = cv.getContext('2d')
+  if (!g) return null
+  const img = g.createImageData(n, n)
+  for (let i = 0; i < n * n; i++) {
+    const v = hash(i, 71)
+    const light = v > 0.5
+    const a = Math.abs(v - 0.5) * 2
+    img.data[i * 4] = light ? 255 : 20
+    img.data[i * 4 + 1] = light ? 244 : 14
+    img.data[i * 4 + 2] = light ? 214 : 24
+    img.data[i * 4 + 3] = a > 0.55 ? Math.round((a - 0.55) * 2.2 * 255) : 0
+  }
+  g.putImageData(img, 0, 0)
+  GRAIN = cv
+  return cv
+}
+function grain(p: p5, k: number, fi: number, g: Rect, a: number): void {
+  const tile = grainTile()
+  if (!tile) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The grain is a size on the screen, not in cells: the stock's, whatever the shot.
+  const m = ctx.getTransform()
+  const scale = Math.hypot(m.a, m.b) || 1
+  const step = (1.6 * p.pixelDensity()) / scale
+  ctx.save()
+  ctx.globalAlpha = 0.17 * a
+  const ox = hash(fi, 72) * tile.width
+  const oy = hash(fi, 73) * tile.height
+  const pat = ctx.createPattern(tile, 'repeat')
+  if (pat) {
+    pat.setTransform(new DOMMatrix().translate(ox * step, oy * step).scale(step))
+    ctx.fillStyle = pat
+    ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  }
+  ctx.restore()
+}
+
+/**
+ * A scratch down the film: a fine bright line that runs for a stretch of a few seconds, wandering a little, and
+ * then is gone; a second, shorter one later. Where the emulsion is torn the light comes through.
+ */
+const SCRATCHES: [number, number, number][] = [
+  [352.6, 356.1, 0.71],
+  [366.2, 368.0, 0.23],
+  [383.4, 387.9, 0.58],
+]
+function scratch(p: p5, k: number, t: number, v: Rect): void {
+  for (const [a, b, at] of SCRATCHES) {
+    if (t < a || t > b) continue
+    const fi = frameOf(t)
+    const env = smooth(t, a, a + 0.15) * (1 - smooth(t, b - 0.25, b))
+    if (hash(fi, 81) < 0.15) continue
+    const w = v.x1 - v.x0
+    const x = v.x0 + w * (at + 0.004 * Math.sin(t * 3.1) + 0.0015 * (hash(fi, 82) - 0.5))
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.strokeStyle = rgba(M.beam, (0.32 + 0.2 * hash(fi, 83)) * env)
+    ctx.lineWidth = Math.max(1, k * 0.012)
+    ctx.beginPath()
+    ctx.moveTo(x * k, v.y0 * k)
+    ctx.lineTo((x + w * 0.002) * k, v.y1 * k)
+    ctx.stroke()
+    ctx.restore()
+  }
 }
 
 /** A splice's flash: bright on the frame of the cut, gone in two more. */

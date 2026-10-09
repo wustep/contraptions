@@ -23,7 +23,7 @@ import { jazz } from './paris/jazz'
 import { trumpet } from './paris/trumpet'
 import { painted } from './night/painted'
 import { stars } from './night/stars'
-import { movie } from './movie/movie'
+import { filmWeave, movie } from './movie/movie'
 import { drive } from './movie/drive'
 
 /**
@@ -166,6 +166,11 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
   ]
   const shots: Shot[] = [{ t: 0, cells: 5 }, ...dreamChain.shots, ...ending]
   const follow = director((t) => show.where(t), shots, DURATION)
-  const camera = (t: number): Framing => follow(t)
+  // In the home movie the picture weaves in the gate: the camera carries it, so the balls in the film weave too.
+  const camera = (t: number): Framing => {
+    const f = follow(t)
+    const [dx, dy] = filmWeave(t)
+    return dx || dy ? { ...f, x: f.x + dx * f.cells, y: f.y + dy * f.cells } : f
+  }
   return { show, camera, covers: coverList }
 }

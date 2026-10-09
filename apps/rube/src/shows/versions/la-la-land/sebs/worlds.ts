@@ -181,6 +181,9 @@ export const MOVIE_MAT = {
   /** The dark room the projector stands in. */
   room: '#141018',
   beam: '#FFF2D0',
+  /** The stock's fade: a warm multiply over the picture, and the haze that lifts its blacks. */
+  sepia: '#D9B88A',
+  lift: '#5A4430',
 }
 
 /** The drive, and the walk to the club: night, headlights, a blue neon arrow. */
