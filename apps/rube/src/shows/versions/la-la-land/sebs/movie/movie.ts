@@ -403,8 +403,8 @@ export const movie = part<MovieState>(
     { t: 355.0, cells: 4.8, hold: [-3.9, -1.75] },
     { t: 357.4, cells: 4.2, hold: [-4.1, -0.95] },
     // The beach.
-    { t: 359.4, cells: 4.4, hold: [-3.6, -0.95] },
-    { t: 363.3, cells: 4.4, hold: [-3.9, -0.95] },
+    { t: 359.4, cells: 3.6, hold: [-4.5, -0.8] },
+    { t: 363.3, cells: 3.6, hold: [-4.6, -0.8] },
     // The pool: wider for the bounces, and the dive.
     { t: 365.6, cells: 4.9, hold: [-2.7, -1.15] },
     { t: 368.2, cells: 5.8, hold: [-2.0, -1.55] },

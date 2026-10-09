@@ -69,8 +69,8 @@ export const jazz = part<JazzState>(
     { t: 222.6, cells: 3.55, hold: [4.75, 1.55] },
     // Up to the landing for her premiere, the band still in the corner of the frame on the way.
     { t: 224.0, cells: 5.8, hold: [1.4, 0.3] },
-    { t: FLASHES[0] + 0.1, cells: 4.3, hold: [-0.85, -0.45] },
-    { t: FLASHES[5], cells: 4.5, hold: [-0.2, -0.45] },
+    { t: FLASHES[0] + 0.1, cells: 4.3, hold: [0.1, -0.45] },
+    { t: FLASHES[5], cells: 4.5, hold: [0.3, -0.45] },
     // The balloons go, and she comes down to him.
     { t: BALLOONS + 0.5, cells: 6.0, hold: [1.7, 0.2] },
     { t: 230.0, cells: 5.8, hold: [2.5, 0.7] },

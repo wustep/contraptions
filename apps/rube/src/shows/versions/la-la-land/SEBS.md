@@ -176,3 +176,9 @@ A twelfth pass, at the machines in motion:
 
 - **Out of the jam.** Watched at a fifth of a second, his car did not pull out of the line so much as into the car ahead: the jam stood only half a cell apart, the ramp begins under that car's tail, and it falls away slowly, so for half a second the convertible drove level into the grey sedan's back. The deck has two lanes now, seen from a little above, with its top showing and a dashed line between them. The jam stands in the far lane, and pulling out he swings down into the near lane along the deck's edge, where the ramp leaves, so he passes in front of the sedan and down. The jam, his car until he pulls out, and the hand-off from the home movie are where they were.
 - The other machines (the cup up the tree and the counterweight, the theatre's lift and arbor, the globe and the biplane) read as machines at that rate, and are as they were.
+
+A thirteenth pass, at more machines in motion:
+
+- **Her premiere on the landing.** While the flash guns fire (225 to 228), the shot sat past the cellar's left wall, so a dark band of the wall's thickness ran down the left edge of the frame. It sits a cell to the right, so the frame is the vault from wall to stair: the door, the lamps on their scissor arms, the balloon net.
+- **The beach.** In the home movie's beach shot (359 to 364) the three of them sat in a strip across the middle of a frame of empty sand and sky. The shot is closer and centred on them: her, their son, the bucket and him, the sea behind them.
+- The audition's metronome, lamp and pen, the pool and its diving board, and the count-in into the band read as they should, and are as they were.
