@@ -91,6 +91,31 @@ One job to a voice, each answering its own notes from `satie-performance.json`:
   high the swells stand and how bright the light on the water is: calm in the Gymnopédie's long notes, fullest where the
   Gnossiennes run on.
 
+## The air and the water
+
+The planet has weather, at depths behind the stones (`air.ts`):
+
+- Clouds in two layers: a long, low bank on the horizon, far off, and cumulus over the stones, nearer. Each is lit
+  from wherever the sun or the moon is in the frame: white with a sky-blue shade by day, warm from the side and the
+  horizon's colour under them at dawn and dusk, dim and edged silver under the moon. How much of the sky is cloud
+  moves through the day (`coverAt`): most of it by day, thinning at night for the stars and the Milky Way, more again
+  under the moon; a cloud gathers and thins as the cover comes over its share.
+- Gulls by day, a few small flocks overtaking the ball along the colonnade, beating a while and gliding a while.
+- The Milky Way at night, turning with the stars; and a shooting star on the top note of each of the first
+  Gnossienne's four high phrases and the third's two, a melody's peak answered in the sky.
+- Mist on the water at dawn, a little at dusk, and under the moon; fireflies over the pond in the third Gnossienne.
+
+The sea gives it back: the stones, the lamps and the flowers are drawn again upside down from their feet, into a
+canvas of half the stage's resolution, faded with depth, and laid over the water row by row, each row shifted a little
+by a ripple that grows as it goes down. The sky's colour lies on the water under its surface. The reflection fades as
+the camera draws out, where it would only be a streak.
+
+Far things go by slower than near ones: a layer at depth `f` passes at `f` of the ball's pace (`layered`), so the bank
+on the horizon hardly moves while the stones come to the ball. For the loop, each layer's pattern repeats a whole
+number of times in `f` of the way round, and its wind carries it a whole number of repeats a period; so it comes round
+with the period like everything else. Anything in a layer fades towards the edge of its repeat (`inLayer`), so when the
+camera draws out wider than a repeat nothing jumps across the frame.
+
 ## Checks
 
 `check:shows` (`apps/rube/checks/gymnopedie.ts`): the picker entry, the credit, the three pieces in order; the loop
@@ -100,4 +125,5 @@ note's own attack and every melody note is one; the ball arrives on each stone a
 squashes on every landing and bounce and at no other time; every bass note sends out a swell; every chord note belongs
 to one heard chord; the camera breathes only on held melody notes, never jumps in or out, and its breath and the
 loudness come round with the period; every lamp is dark until the ball lights it and burns until dawn, and every
-flower opens as the ball comes and closes at dawn, across the seam; the titles.
+flower opens as the ball comes and closes at dawn, across the seam; every layer of the air comes round with the
+period, and a shooting star falls only on a Gnossienne's top note, at night; the titles.

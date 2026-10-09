@@ -10,6 +10,8 @@ import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../sr
 import { breath, cellsAt } from '../src/shows/versions/gymnopedie/orbit/camera'
 import { bloom, lampLight } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
+import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, coverAt, firefliesOut, layered, mistAt } from '../src/shows/versions/gymnopedie/orbit/air'
+import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -114,6 +116,22 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   const closed = flowers.filter((s) => !night(s, bloom))
   check('gymnopedie: every lamp is dark until the ball lights it, then burns until dawn, the seam included', lamps.length > 150 && unlit.length === 0, unlit.slice(0, 5).map((s) => s.index).join(', '))
   check('gymnopedie: every flower opens as the ball comes, and closes at dawn', flowers.length > 150 && closed.length === 0, closed.slice(0, 5).map((s) => s.index).join(', '))
+
+  // The air: clouds, gulls, mist and fireflies at their depths, all coming round with the period.
+  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY]
+  const roundAgain = layers.every((l) => [0, 3.3, 17.9, 40].every((x) => {
+    const a = layered(x, 0, l.f, l.span, l.wind)
+    const b = layered(x, PERIOD - 1e-7, l.f, l.span, l.wind)
+    const d = Math.abs(a - b)
+    return Math.min(d, l.span - d) < 1e-4
+  }))
+  check('gymnopedie: every layer of the air (the clouds, the gulls, the mist, the fireflies) comes round with the period',
+    roundAgain && [coverAt, mistAt, firefliesOut].every((f) => Math.abs(f(PERIOD - 1e-7) - f(0)) < 1e-4))
+  const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
+    const n = MELODY.find((m) => m.t === t)
+    return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5
+  })
+  check('gymnopedie: a shooting star falls only on a Gnossienne\'s top note, at night', meteorsOk, METEORS.map((t) => t.toFixed(1)).join(', '))
 
   check('gymnopedie: the planet is the one period round', STONES.every((s) => s.u0 < s.u1 && s.u0 >= -1 && s.u1 <= LENGTH + STONES[0].u0 + 1) && LENGTH > 200)
   check('gymnopedie: the notes are in order, on the period', NOTES.every((n, i) => n.t >= 0 && n.t < PERIOD && (i === 0 || n.t >= NOTES[i - 1].t)))

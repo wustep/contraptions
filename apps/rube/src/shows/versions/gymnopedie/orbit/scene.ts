@@ -3,6 +3,10 @@ import { R as BALL_R, mixHex, type Piece, type PieceCtx } from '../../../../part
 import { CHORDS, GRACES, MELODY, PERIOD, loudness, wrap } from './music'
 import { LENGTH, RADIUS, along, ballLocal, crest, float, since, sink, stonesIn, swell, type Stone } from './path'
 import { wideAt } from './camera'
+import {
+  BANK, BANKS, BANKS_OF_MIST, CLOUDS, FIREFLIES, FIREFLY, FLOCKS, GULLS, HEAPS, MIST,
+  cloudLight, cloudThere, drawCloud, drawGull, firefliesOut, inLayer, layered, meteorAt, milkyWay, mistAt, wingsAt, type CloudLight,
+} from './air'
 import { alpha, hash, osc, polar, skyAt, smooth, type Sky } from './world'
 
 /**
@@ -67,9 +71,8 @@ function viewOf(p: p5, c: PieceCtx): View {
   return { cells, wide, u0: u - half, u1: u + half }
 }
 
-/** Where a point of the world (cells) is on the canvas, in device pixels. */
-function onCanvas(ctx: Ctx2D, k: number, x: number, y: number): [number, number] {
-  const m = ctx.getTransform()
+/** Where a point of the world (cells) is on the canvas, in device pixels: through the canvas's transform, or `m`. */
+function onCanvas(ctx: Ctx2D, k: number, x: number, y: number, m: DOMMatrix = ctx.getTransform()): [number, number] {
   return [m.a * x * k + m.c * y * k + m.e, m.b * x * k + m.d * y * k + m.f]
 }
 
@@ -141,6 +144,24 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   // Stars: fixed to the sky, which turns with the planet (twice a period, as the sun and the moon do).
   const starLight = Math.max(day.night, v.wide) * 0.95
   if (starLight > 0.02) {
+    // The Milky Way behind them, across the sky.
+    const D = Math.hypot(W, H) * 1.6
+    ctx.save()
+    // Only over the sea: under its lowest point in the frame is water, or the planet.
+    if (v.wide < 0.01) {
+      let low = 0
+      for (let i = 0; i <= 12; i++) low = Math.max(low, onCanvas(ctx, c.k, ...polar(v.u0 + ((v.u1 - v.u0) * i) / 12, -0.3), m)[1])
+      ctx.beginPath()
+      ctx.rect(0, 0, W, Math.min(H, low))
+      ctx.clip()
+    }
+    ctx.translate(W / 2, H / 2)
+    ctx.rotate(roll * 2 + 0.55)
+    ctx.globalAlpha = starLight * 0.62
+    ctx.drawImage(milkyWay(), -D / 2, -D / 2, D, D)
+    ctx.restore()
+  }
+  if (starLight > 0.02) {
     const R0 = Math.hypot(W, H) * 0.75
     const turn = roll * 2
     for (let i = 0; i < 420; i++) {
@@ -160,6 +181,39 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
       ctx.arc(x, y, s, 0, Math.PI * 2)
       ctx.fill()
     }
+  }
+
+  // A shooting star, on a high phrase's top note.
+  const fall = meteorAt(c.t)
+  if (fall && day.night > 0.3 && v.wide < 0.5) {
+    const i = fall.i
+    // High in the sky, falling slant and short, clear of the stones.
+    const L = W * 0.26
+    const dir = hash(i, 133) > 0.5 ? 1 : -1
+    const a = 0.22 + 0.2 * hash(i, 134)
+    const sx = W * (dir > 0 ? 0.1 + 0.45 * hash(i, 131) : 0.45 + 0.45 * hash(i, 131))
+    const sy = H * (0.05 + 0.1 * hash(i, 132))
+    const q = 1 - (1 - fall.q) ** 2
+    const hx = sx + dir * Math.cos(a) * L * q
+    const hy2 = sy + Math.sin(a) * L * q
+    const tail = L * 0.32 * Math.min(1, q * 2.5)
+    const tx = hx - dir * Math.cos(a) * tail
+    const ty = hy2 - Math.sin(a) * tail
+    const light = fall.light * smooth(day.night, 0.3, 0.7) * smooth(hy - hy2, 0, H * 0.12)
+    const streak = ctx.createLinearGradient(tx, ty, hx, hy2)
+    streak.addColorStop(0, 'rgba(255, 246, 228, 0)')
+    streak.addColorStop(1, `rgba(255, 246, 228, ${light.toFixed(3)})`)
+    ctx.strokeStyle = streak
+    ctx.lineCap = 'round'
+    ctx.lineWidth = Math.max(1.5, H / 330)
+    ctx.beginPath()
+    ctx.moveTo(tx, ty)
+    ctx.lineTo(hx, hy2)
+    ctx.stroke()
+    ctx.fillStyle = `rgba(255, 250, 238, ${light.toFixed(3)})`
+    ctx.beginPath()
+    ctx.arc(hx, hy2, Math.max(1.5, H / 300), 0, Math.PI * 2)
+    ctx.fill()
   }
 
   // The sun and the moon, on arcs over the horizon; gone when the planet is small (they are its sky, not space's).
@@ -182,6 +236,10 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   body(moon, H * 0.03, '#F2EEE2', 'rgba(200, 214, 240, A)')
   ctx.restore()
 
+  // The clouds and the gulls, close: once the planet draws away they are too small to be anything.
+  const near = 1 - smooth(v.wide, 0, 0.3)
+  if (near > 0.01) air(p, c, v, day, sun, moon, near)
+
   // Wide: the air round the planet, lit the colour of its day.
   if (v.wide > 0.01) {
     const k = c.k
@@ -194,6 +252,77 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     ctx.fill()
   }
 })
+
+/**
+ * The clouds, far and near, and the gulls, in the world's frame: each at its place in its layer, standing on the
+ * curve of the sea, lit from the sun or the moon in the frame.
+ */
+function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near: number): void {
+  const ctx = p.drawingContext as Ctx2D
+  const k = c.k
+  const u = along(c.t)
+  const half = (v.u1 - v.u0) / 2
+  const low = smooth(Math.abs(sunAngle(c.t)), 0.75, 1.75)
+  const moonUp = smooth(1.9 - Math.abs(moonAngle(c.t)), 0, 0.5)
+  const light = cloudLight(day, low, moonUp)
+  // Lit from the sun by day and the moon by night; from overhead when neither is up.
+  const src = day.night < 0.5 ? (Math.abs(sun.angle) < 1.9 ? sun : null) : Math.abs(moon.angle) < 1.9 ? moon : null
+  const lightFrom = (x: number, y: number): [number, number] => {
+    if (!src) return [0, 1]
+    const dx = src.x - x
+    const dy = y - src.y
+    const n = Math.hypot(dx, dy) || 1
+    // Half towards it, half from above: a cloud is lit over its top whatever the sun's side.
+    const lx = (dx / n) * 0.7
+    const ly = (dy / n) * 0.7 + 0.5
+    const m = Math.hypot(lx, ly) || 1
+    return [lx / m, ly / m]
+  }
+  const hazy: CloudLight = {
+    lit: mixHex(light.lit, day.low, 0.5),
+    shade: mixHex(light.shade, day.low, 0.55),
+    under: mixHex(light.under, day.low, 0.6),
+    alpha: light.alpha,
+  }
+  const layer = (clouds: typeof CLOUDS, at: typeof BANK, tint: CloudLight, a: number, cover: boolean) => {
+    for (const cloud of clouds) {
+      const there = cover ? cloudThere(cloud, c.t) : 1
+      if (there < 0.01) continue
+      const d = layered(cloud.x, c.t, at.f, at.span, at.wind)
+      const edge = inLayer(d, at.span)
+      if (Math.abs(d) > half + cloud.w || edge < 0.01) continue
+      const [x, y] = onCanvas(ctx, k, ...polar(u + d, cloud.h + 0.4))
+      const [lx, ly] = lightFrom(x, y)
+      p.push()
+      atSea(p, k, u + d)
+      p.translate(0, -cloud.h * k)
+      drawCloud(ctx, k, cloud, tint, lx, ly, a * there * edge)
+      p.pop()
+    }
+  }
+  layer(BANKS, BANK, hazy, (0.6 - 0.28 * day.night) * near * light.alpha, false)
+  layer(CLOUDS, HEAPS, light, 0.92 * near * light.alpha, true)
+
+  // Gulls, by day, close.
+  const gulls = near * (1 - smooth(day.night, 0.12, 0.4)) * (1 - smooth(v.cells, 9, 14))
+  if (gulls > 0.01) {
+    const m = ctx.getTransform()
+    const cell = Math.hypot(m.a, m.b) * k
+    const ink = mixHex(day.line, day.low, 0.3)
+    ctx.save()
+    for (const g of FLOCKS) {
+      const d = layered(g.x, c.t, GULLS.f, GULLS.span, GULLS.wind) + 0.18 * osc(c.t, 0.03, g.seed)
+      const edge = inLayer(d, GULLS.span)
+      if (Math.abs(d) > half + 1 || edge < 0.01) continue
+      const { beat, glide } = wingsAt(g, c.t)
+      const h = g.h + 0.1 * osc(c.t, 0.05 + 0.03 * hash(g.seed, 85), g.seed) + 0.025 * beat * (1 - glide)
+      const [x, y] = onCanvas(ctx, k, ...polar(u + d, h), m)
+      ctx.setTransform(1, 0, 0, 1, x, y)
+      drawGull(ctx, g.size * cell, beat, ink, 0.75 * gulls * edge, Math.max(1, cell * 0.013))
+    }
+    ctx.restore()
+  }
+}
 
 // ---------------------------------------------------------------- the stones
 
@@ -311,7 +440,7 @@ function stele(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
   // The lamp: a small bowl at the front, where the ball lands.
   const lx = w > 0.42 ? 0.1 : w / 2
   p.fill(mixHex('#3A2C22', '#E9B866', lamp))
-  p.arc(K(lx), K(-h - 0.005), K(0.1), K(0.09), Math.PI, Math.PI * 2, p.CHORD)
+  p.arc(K(lx), K(-h - 0.005), K(0.1), K(0.09), Math.PI, Math.PI * 2, 'chord')
   if (lamp > 0.02) {
     const ctx = p.drawingContext as Ctx2D
     const r = K(0.14 + 0.6 * lamp)
@@ -387,10 +516,11 @@ function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
 /** The longest a stone is drawn in one piece: longer, it is several, each standing square to the curve of the sea. */
 const SEGMENT = [1.5, 1.3, 1.1]
 
-/** Every stone in the frame, in its piece's material. */
-export const stones = scenery<null>('stones', (p, _s, c) => {
-  const v = viewOf(p, c)
-  const day = skyAt(c.t)
+/**
+ * Every stone in the frame, in its piece's material, on `p` (the stage, or the sea's mirror). Mirrored, each is drawn
+ * upside down from its foot, as the still sea gives it back.
+ */
+function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: boolean): void {
   const k = c.k
   for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
     const w = stone.u1 - stone.u0
@@ -404,6 +534,7 @@ export const stones = scenery<null>('stones', (p, _s, c) => {
       const u0 = stone.u0 + shift + j * (sw + gap)
       p.push()
       atSea(p, k, u0)
+      if (mirrored) p.scale(1, -1)
       if (stone.piece === 0) {
         column(p, k, sw, h, day, c.weight, 0.7 * pulse(stone, c.t))
       } else if (stone.piece === 1) {
@@ -416,6 +547,10 @@ export const stones = scenery<null>('stones', (p, _s, c) => {
       p.pop()
     }
   }
+}
+
+export const stones = scenery<null>('stones', (p, _s, c) => {
+  drawStones(p, c, viewOf(p, c), skyAt(c.t), false)
 })
 
 // ---------------------------------------------------------------- the light on the water
@@ -499,23 +634,31 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
   const u1 = whole ? LENGTH : v.u1
   const n = whole ? 360 : 220
   // The sea: a band from its surface (with the swell) down, darkening with depth.
+  const water = new Path2D()
+  for (let i = 0; i <= n; i++) {
+    const u = u0 + ((u1 - u0) * i) / n
+    const [x, y] = polar(u, whole ? 0 : swell(u, c.t))
+    if (i === 0) water.moveTo(x * k, y * k)
+    else water.lineTo(x * k, y * k)
+  }
+  for (let i = n; i >= 0; i--) {
+    const [x, y] = polar(u0 + ((u1 - u0) * i) / n, -DEPTH)
+    water.lineTo(x * k, y * k)
+  }
+  water.closePath()
   const g = ctx.createRadialGradient(0, 0, (RADIUS - DEPTH) * k, 0, 0, RADIUS * k)
   g.addColorStop(0, day.deep)
   g.addColorStop(1, day.sea)
   ctx.fillStyle = g
-  ctx.beginPath()
-  for (let i = 0; i <= n; i++) {
-    const u = u0 + ((u1 - u0) * i) / n
-    const [x, y] = polar(u, whole ? 0 : swell(u, c.t))
-    if (i === 0) ctx.moveTo(x * k, y * k)
-    else ctx.lineTo(x * k, y * k)
+  ctx.fill(water)
+  // The sky's own colour on the water, under its surface, as a calm sea gives it back.
+  {
+    const sheen = ctx.createRadialGradient(0, 0, (RADIUS - 1.6) * k, 0, 0, RADIUS * k)
+    sheen.addColorStop(0, alpha(p, day.low, 0).toString())
+    sheen.addColorStop(1, alpha(p, day.low, 0.42 * (1 - v.wide)).toString())
+    ctx.fillStyle = sheen
+    ctx.fill(water)
   }
-  for (let i = n; i >= 0; i--) {
-    const [x, y] = polar(u0 + ((u1 - u0) * i) / n, -DEPTH)
-    ctx.lineTo(x * k, y * k)
-  }
-  ctx.closePath()
-  ctx.fill()
   // The planet under the sea: deep water all the way down, lit a little from the side the day is on.
   {
     const r = (RADIUS - DEPTH + 0.02) * k
@@ -541,35 +684,28 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
   }
 
   if (!whole) {
-    // Reflections: each stone a soft light going down into the water; a lit lamp a longer, warmer one, with its
-    // path of light on the water.
+    // Reflections: the stones upside down in the water, rippling, fading as they go down; a lit lamp a longer,
+    // warmer streak too, with its path of light on the water.
+    mirror(p, c, v, day, water)
     const ctx2 = p.drawingContext as Ctx2D
     for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
+      if (stone.piece !== 1) continue
+      const lit = lampLight(stone, c.t)
+      if (lit <= 0.02) continue
       const w = stone.u1 - stone.u0
-      const h = stone.h - sink(stone, c.t) + float(stone, c.t)
-      const lit = stone.piece === 1 ? lampLight(stone, c.t) : 0
+      const h = stone.h - sink(stone, c.t)
       p.push()
       atSea(p, k, stone.u0 + shift)
-      const col = stone.piece === 0 ? day.lit : stone.piece === 1 ? '#8D7A5E' : '#7FA894'
       const depth = h * 0.8 * k
-      const g = ctx2.createLinearGradient(0, 0, 0, depth)
-      g.addColorStop(0, alpha(p, col, 0.11).toString())
-      g.addColorStop(1, alpha(p, col, 0).toString())
-      ctx2.fillStyle = g
       const wob = 0.015 * osc(c.t, 0.4, stone.index)
-      // Under what stands in the water: the shafts, the posts, the stems; not the whole span.
-      const under = stone.piece === 2 ? [w / 2] : w > 0.55 ? [0.12, w - 0.12] : [w / 2]
-      for (const x of under) ctx2.fillRect(k * (wob + x - 0.07), k * 0.02, k * 0.14, depth)
-      if (lit > 0.02) {
-        const lg = ctx2.createLinearGradient(0, 0, 0, depth * 1.2)
-        lg.addColorStop(0, `rgba(242, 180, 90, ${(0.4 * lit).toFixed(3)})`)
-        lg.addColorStop(1, 'rgba(242, 180, 90, 0)')
-        ctx2.fillStyle = lg
-        const lx = w > 0.42 ? 0.1 : w / 2
-        ctx2.fillRect(k * (lx - 0.05 + wob), k * 0.02, k * 0.1, depth * 1.2)
-        p.translate(k * (lx + wob), 0)
-        waterLight(p, c, stone.u0 + shift + lx, lit, '255, 206, 132', 6, 0.05, stone.index)
-      }
+      const lg = ctx2.createLinearGradient(0, 0, 0, depth * 1.2)
+      lg.addColorStop(0, `rgba(242, 180, 90, ${(0.3 * lit).toFixed(3)})`)
+      lg.addColorStop(1, 'rgba(242, 180, 90, 0)')
+      ctx2.fillStyle = lg
+      const lx = w > 0.42 ? 0.1 : w / 2
+      ctx2.fillRect(k * (lx - 0.05 + wob), k * 0.02, k * 0.1, depth * 1.2)
+      p.translate(k * (lx + wob), 0)
+      waterLight(p, c, stone.u0 + shift + lx, lit, '255, 206, 132', 6, 0.05, stone.index)
       p.pop()
     }
     // The sun's and the moon's paths of light on the water, under them.
@@ -620,8 +756,102 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       ctx.stroke()
     }
     ctx.restore()
+    // Mist lying on the water: at dawn, a little at dusk, and under the moon.
+    const mist = mistAt(c.t) * (1 - v.wide)
+    if (mist > 0.01) {
+      const tint = mixHex(day.low, day.night > 0.5 ? '#B4C2DC' : '#FFFFFF', 0.35)
+      const [mr, mg, mb] = [1, 3, 5].map((i) => parseInt(tint.slice(i, i + 2), 16))
+      const half = (v.u1 - v.u0) / 2
+      const here = along(c.t)
+      for (const bank of BANKS_OF_MIST) {
+        const d = layered(bank.x, c.t, MIST.f, MIST.span, MIST.wind)
+        const edge = inLayer(d, MIST.span)
+        if (Math.abs(d) > half + bank.w / 2 || edge < 0.01) continue
+        p.push()
+        atSea(p, k, here + d)
+        ctx.translate(0, -bank.h * k)
+        ctx.scale((bank.w * k) / 2, (bank.th * k) / 2)
+        const m = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+        const a = 0.6 * mist * edge
+        m.addColorStop(0, `rgba(${mr}, ${mg}, ${mb}, ${a.toFixed(3)})`)
+        m.addColorStop(0.55, `rgba(${mr}, ${mg}, ${mb}, ${(a * 0.45).toFixed(3)})`)
+        m.addColorStop(1, `rgba(${mr}, ${mg}, ${mb}, 0)`)
+        ctx.fillStyle = m
+        ctx.fillRect(-1, -1, 2, 2)
+        p.pop()
+      }
+    }
   }
 })
+
+/** The sea's mirror: a canvas the size of the stage's, kept, that the stones are drawn into upside down. */
+let mirrored: { p: p5; g: p5.Graphics } | null = null
+
+/**
+ * The stones given back by the sea: drawn upside down from their feet into the mirror, faded with depth and cut to the
+ * water, and laid over the sea in rows, each shifted a little by the ripple, more the deeper it is.
+ */
+function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D): void {
+  const ctx = p.drawingContext as Ctx2D
+  const W = ctx.canvas.width
+  const H = ctx.canvas.height
+  // Less as the camera draws out: far off, a reflection is a streak, not a picture.
+  const strength = (0.34 + 0.16 * day.night) * (1 - v.wide) * (1 - 0.65 * smooth(Math.log(v.cells), Math.log(10), Math.log(28)))
+  if (strength < 0.01) return
+  // Where the water starts on the canvas, roughly: the highest point of its surface in the frame.
+  const k = c.k
+  let top = H
+  for (let i = 0; i <= 12; i++) {
+    const [, y] = onCanvas(ctx, k, ...polar(v.u0 + ((v.u1 - v.u0) * i) / 12, 0.25))
+    top = Math.min(top, y)
+  }
+  top = Math.max(0, Math.floor(top / 2) * 2)
+  if (top >= H) return
+  // At half the stage's resolution: the ripple softens it anyway.
+  const w = Math.ceil(W / 2)
+  const h = Math.ceil(H / 2)
+  if (!mirrored || mirrored.p !== p) {
+    const g = p.createGraphics(w, h)
+    g.pixelDensity(1)
+    mirrored = { p, g }
+  }
+  const g = mirrored.g
+  if (g.width !== w || g.height !== h) g.resizeCanvas(w, h)
+  const gp = g as unknown as p5
+  // The stage's drawing modes (`engine.ts`), which a canvas of its own does not have.
+  gp.rectMode(gp.CENTER)
+  gp.angleMode(gp.RADIANS)
+  gp.strokeCap(gp.ROUND)
+  gp.strokeJoin(gp.ROUND)
+  const gc = g.drawingContext as Ctx2D
+  gc.setTransform(1, 0, 0, 1, 0, 0)
+  gc.globalCompositeOperation = 'source-over'
+  gc.globalAlpha = 1
+  gc.clearRect(0, top / 2, w, h - top / 2)
+  gc.setTransform(new DOMMatrix([0.5, 0, 0, 0.5, 0, 0]).multiply(ctx.getTransform()))
+  drawStones(gp, c, v, day, true)
+  // Faded with depth, and nothing of it out of the water.
+  gc.globalCompositeOperation = 'destination-in'
+  const fade = gc.createRadialGradient(0, 0, (RADIUS - 2.2) * k, 0, 0, RADIUS * k)
+  fade.addColorStop(0, 'rgba(0, 0, 0, 0)')
+  fade.addColorStop(0.55, 'rgba(0, 0, 0, 0.18)')
+  fade.addColorStop(1, 'rgba(0, 0, 0, 1)')
+  gc.fillStyle = fade
+  gc.fill(water)
+  gc.globalCompositeOperation = 'source-over'
+  const src = (g as unknown as { elt: HTMLCanvasElement }).elt
+  const row = Math.max(2, Math.round(H / 240 / 2) * 2)
+  const amp = H / 1500
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalAlpha = strength
+  for (let y = top; y < H; y += row) {
+    const deep = (y - top) / H
+    const dx = amp * (0.5 + deep * 7) * (0.6 * osc(c.t, 0.42, (y / H) * 190) + 0.4 * osc(c.t, 0.27, -(y / H) * 311))
+    ctx.drawImage(src, 0, y / 2, w, row / 2, dx, y, w * 2, row)
+  }
+  ctx.restore()
+}
 
 // ---------------------------------------------------------------- over the ball
 
@@ -704,6 +934,35 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
       const r = H * (0.006 + 0.008 * light)
       ctx.globalAlpha = Math.min(1, afar * light * 1.3)
       ctx.drawImage(sprite, x - r, y - r, 2 * r, 2 * r)
+    }
+    ctx.restore()
+  }
+  // Fireflies over the pond, close: each wandering a little, blinking slowly on and off.
+  const flies = firefliesOut(c.t) * (1 - smooth(v.cells, 9, 16))
+  if (flies > 0.01) {
+    const sprite = haloSprite('255, 252, 220', '232, 246, 168', '190, 226, 120')
+    const m = ctx.getTransform()
+    const cell = Math.hypot(m.a, m.b) * k
+    const here = along(c.t)
+    const half = (v.u1 - v.u0) / 2
+    ctx.save()
+    for (const f of FIREFLIES) {
+      const d = layered(f.x, c.t, FIREFLY.f, FIREFLY.span, FIREFLY.wind) + 0.3 * osc(c.t, 0.035 + 0.03 * hash(f.seed, 141), f.seed)
+      const edge = inLayer(d, FIREFLY.span)
+      if (Math.abs(d) > half || edge < 0.01) continue
+      const h = f.h + 0.22 * osc(c.t, 0.05 + 0.04 * hash(f.seed, 142), f.seed * 1.3)
+      const blink = Math.max(0, osc(c.t, 0.08 + 0.07 * hash(f.seed, 143), f.seed * 2.7)) ** 1.5
+      const a = flies * edge * (0.25 + 0.75 * blink)
+      if (a < 0.02) continue
+      const [x, y] = onCanvas(ctx, k, ...polar(here + d, h), m)
+      const r = cell * (0.1 + 0.16 * blink)
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.globalAlpha = a
+      ctx.drawImage(sprite, x - r, y - r, 2 * r, 2 * r)
+      ctx.fillStyle = '#F6FBD2'
+      ctx.beginPath()
+      ctx.arc(x, y, Math.max(1, cell * 0.012), 0, Math.PI * 2)
+      ctx.fill()
     }
     ctx.restore()
   }
