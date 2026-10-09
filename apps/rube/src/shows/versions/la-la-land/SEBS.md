@@ -202,3 +202,8 @@ A seventeenth pass, at the ending as a viewer sees it:
 
 - **The beams cross.** These notes have always said the searchlights cross on The End's last chord, but they never did: the two near beams leaned in so little that they would have met some fifty cells up, far above the frame, and the two that come with the orchestra splayed out. Over the last five seconds every beam now swings onto one point in the sky over the club, and on the last chord (503.4) all four cross there in an X, and hold it to the end. On the page the last credit card stands just above the crossing as it comes.
 - The show on a phone (390 wide, the panel under the stage) and on a desktop page read as the frames do; the city, the club and both of them stay in the picture.
+
+An eighteenth pass:
+
+- **The top of the Hollywood number.** On the six accelerating hits (166.15 to 167.85), the climax of the number, the shot was out wide on the whole hill, so the two of them were specks at its crest and the sign a strip along the top; just before it (164) the sign was cut off at the frame's top edge. The camera now rises with them to the crest and holds the two of them there under the whole sign, the searchlights fanning up out of the hill and locking into place on each hit, and draws back to the whole hill only as its lamps go out one by one.
+- The opening, the city into the club and down to the keys, reads as it should, and is as it was.

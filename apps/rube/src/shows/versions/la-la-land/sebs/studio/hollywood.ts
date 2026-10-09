@@ -636,9 +636,11 @@ export const hollywood = part<HollyState>(
     // The hill, whole, rising with them.
     { t: beat(185.5), cells: 6.4, hold: [14.9, -2.6], w: 0.45 },
     { t: beat(197), cells: 5.9, hold: [15.0, -3.5], w: 0.4 },
-    { t: beat(207), cells: 6.8, hold: [15.0, -4.5], w: 0.5 },
-    // The crest and its fan of light, wide.
-    { t: FLOURISH[0] - 0.3, cells: 13, hold: [14.6, -5.7], w: 1 },
+    { t: beat(207), cells: 6.8, hold: [14.6, -6.2], w: 0.6 },
+    // The top of the number: the two of them on the crest under the whole sign, the searchlights fanning out of it on
+    // the six hits; then back to the whole hill as its lamps go out one by one.
+    { t: FLOURISH[0] - 0.3, cells: 6.9, hold: [13.7, -7.55], w: 1 },
+    { t: 168.9, cells: 7.2, hold: [13.8, -7.5], w: 1 },
     { t: OUT[0], cells: 13.4, hold: [14.6, -5.7], w: 1 },
     { t: MIA_TO, cells: 14, hold: [14.6, -5.8], w: 1 },
   ],
