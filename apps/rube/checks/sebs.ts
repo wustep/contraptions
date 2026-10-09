@@ -17,6 +17,7 @@ import { coverAt } from '../src/shows/versions/la-la-land/sebs/transitions'
 import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
 import { DOOR, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
+import { HANDOFF, soloThreads } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -277,6 +278,22 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       const b = w === 'seb' ? (([x, y]) => ({ x, y }))(show.where(t)) : show[w](t)
       if (!inShot(t, b)) unseenBeats.push(`${what} (${t}): ${w} out of the picture`)
     }
+  }
+  // The trumpet's solo is written in the air: its threads of light are in the picture while they are lit.
+  {
+    const solo = show.holder(250)
+    let lit = 0
+    let seen = 0
+    for (let t = 240; t < 267; t += 0.25) {
+      const f = cam(t)
+      for (const [x, y] of soloThreads(t)) {
+        const wx = solo.col + x - HANDOFF[0] - 0.5
+        const wy = solo.row + y - HANDOFF[1]
+        lit++
+        if (Math.abs(wx - f.x) < (f.cells * 16) / 9 / 2 && Math.abs(wy - f.y) < f.cells / 2) seen++
+      }
+    }
+    check('sebs: the trumpet\'s solo is written in light, in the picture', solo.piece.name === 'trumpet' && lit > 2000 && seen / lit >= 0.85, `${seen}/${lit} seen`)
   }
   check('sebs: the story\'s beats are seen, everyone they are about in the picture', unseenBeats.length === 0, unseenBeats.join(', '))
   // The other road: the what-if read against what was. Each echo of him is seen, well inside the frame and mostly

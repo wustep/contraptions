@@ -1276,6 +1276,7 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   glow(p, k, PIVOT[0], GROUND - 0.02, 1.0 + 0.2 * fl, M.spot, 0.3 * on1 * (1 + 0.9 * fl), 1.3, 0.28)
   glow(p, k, HORN[0] + 0.1, HORN[1] + 0.1, 0.9, M.spot, 0.18 * on1 * (1 + 1.2 * fl))
   drawMotes(p, k, t, on1)
+  drawSolo(p, k, t, on1)
   // The lamp itself: a black can in the crown, its lens lit.
   p.stroke(rgba(INK, 0.35))
   p.strokeWeight(Math.max(1, k * 0.02))
@@ -1287,6 +1288,111 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   p.fill(rgba(M.spot, Math.min(1, 0.5 + 0.5 * on1 + 0.3 * fl)))
   p.ellipse(0, S(0.09), S(0.2), S(0.05))
   p.pop()
+}
+
+/**
+ * The solo, written in the air. Each phrase the trumpet plays leaves the bell as a thread of warm light, set at the
+ * height of its notes as it goes out (the high ones higher), drifting off through the spot and up into the vault and
+ * fading, so the dark fills with the solo while she inches toward him: one thread a phrase, a bead on it where each
+ * note was tongued. The last phrase, the run to the top as she rolls down to him, goes highest.
+ */
+const SOLO_DT = 0.025
+/** The line's pitch at `s`: the measured one, eased over a few hundredths so it bends from note to note. */
+function sungAt(s: number): number {
+  let acc = 0
+  let n = 0
+  for (let j = -4; j <= 4; j++) {
+    const m = pitchAt(s + j * 0.02)
+    if (m) {
+      acc += m
+      n++
+    }
+  }
+  return n ? acc / n : 0
+}
+const SOLO_PHRASES: { s: number; m: number }[][] = (() => {
+  const out: { s: number; m: number }[][] = []
+  let cur: { s: number; m: number }[] = []
+  for (let s = AT.trumpet - 0.4; s < 268.3; s += SOLO_DT) {
+    const m = pitchAt(s) ? sungAt(s) : 0
+    if (m) cur.push({ s, m })
+    else if (cur.length) {
+      out.push(cur)
+      cur = []
+    }
+  }
+  if (cur.length) out.push(cur)
+  return out
+})()
+const SOLO_BEADS = SOLO_PITCH.filter(([ti, mi]) => mi > 0 && ti >= AT.trumpet - 0.4 && ti < 268.3)
+
+/** Where the bell's mouth is at show time `s`, as the trumpet holds it. */
+function mouthAt(s: number): Pt {
+  const a = bellLift(s)
+  const [u, v] = [0.68, 0.16]
+  return [HORN[0] + Math.cos(a) * u - Math.sin(a) * v, HORN[1] + Math.sin(a) * u + Math.cos(a) * v]
+}
+
+/** A note blown at `s` (pitch `m`), seen at `t`: where it has drifted to, and how much of it is left. */
+function threadAt(s: number, m: number, t: number): { x: number; y: number; a: number } {
+  const age = t - s
+  const [x0, y0] = mouthAt(s)
+  const out = 1 - Math.exp(-age / 1.3)
+  const x = x0 + 0.85 * out + 0.07 * age
+  const y = y0 - ((m - 70) / 16) * 0.38 * out - 0.045 * age + 0.03 * Math.sin(1.7 * age + s * 2.3)
+  const a = (1 - Math.exp(-age / 0.06)) * Math.exp(-age / 4.2)
+  return { x, y, a }
+}
+
+/** Every point of the solo's threads that is lit at `t` (more than a quarter there), in this frame: what the checks see. */
+export function soloThreads(t: number): Pt[] {
+  const out: Pt[] = []
+  for (const phrase of SOLO_PHRASES) for (const n of phrase) {
+    if (n.s > t) break
+    const q = threadAt(n.s, n.m, t)
+    if (q.a > 0.25) out.push([q.x, q.y])
+  }
+  return out
+}
+
+function drawSolo(p: p5, k: number, t: number, on1: number): void {
+  if (on1 <= 0.01 || t < AT.trumpet - 0.4) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  for (const phrase of SOLO_PHRASES) {
+    if (phrase[0].s > t) break
+    // Two passes: a soft wide haze, and the bright thread in it.
+    for (const [w, a0] of [[0.075, 0.1], [0.018, 0.75]] as const) {
+      ctx.lineWidth = w * k
+      let prev: { x: number; y: number; a: number } | null = null
+      for (const n of phrase) {
+        if (n.s > t) break
+        const q = threadAt(n.s, n.m, t)
+        if (prev && q.a > 0.01) {
+          ctx.strokeStyle = rgba(M.spot, a0 * on1 * Math.min(prev.a, q.a))
+          ctx.beginPath()
+          ctx.moveTo(prev.x * k, prev.y * k)
+          ctx.lineTo(q.x * k, q.y * k)
+          ctx.stroke()
+        }
+        prev = q
+      }
+    }
+  }
+  // The notes: a bead of light on the thread where each was tongued, bright as it leaves the bell.
+  for (const [ti, mi] of SOLO_BEADS) {
+    if (ti > t) break
+    const q = threadAt(ti, sungAt(ti) || mi, t)
+    if (q.a < 0.02) continue
+    const fresh = Math.exp(-(t - ti) / 0.35)
+    ctx.fillStyle = rgba(M.spot, on1 * q.a * (0.55 + 0.45 * fresh))
+    ctx.beginPath()
+    ctx.arc(q.x * k, q.y * k, (0.026 + 0.03 * fresh) * k, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
 }
 
 /** Dust in the spot's beam: a few motes turning slowly, each catching the light now and then. */
