@@ -893,6 +893,19 @@ both in Zoom, and the overview.
 134. **Asleep, the tail comes round.** As the kitten drowses at the end, its tail comes round the front of the loaf
      along the desk and its tip, a shade darker, tucks up under its chin: the last thing it does, settled for the night.
 
+### The fiftieth pass: left on
+
+135. **The whole half hour, played.** Frame rate had only ever been measured four seconds at a time. Played through
+     from the start in Chrome with its GPU at 1920 × 1080 on a 2× display, sampled every thirty seconds (two seconds of
+     frames each, and the script's memory): sixty frames a second throughout (the median frame 16.7 ms in every
+     sample), and memory flat, 24 to 30 MB from the first minute to the last, with nothing growing. A handful of samples
+     had a slow frame or two (one, at 15:02, a run of them); measured again there, and at the others, each was a steady
+     60 with the slowest frame 18.7 ms: the machine, not the show.
+136. **Safari's way.** A browser whose canvas cannot blur (Safari before version 18) draws the soft city by scaling it
+     down and up instead. That path had never been seen: forced on in Chrome, the soft frames (the sill walk at dusk,
+     the cup close in the rain, a train passing soft, the moth's night) look as the blurred ones do, the city soft and
+     its lights opened into discs. (The installed WebKit would not run under this Playwright.)
+
 **Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
