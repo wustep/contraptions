@@ -294,6 +294,9 @@ each world, and changed:
   frame's height at the cut to black, not a fifth.
 - **The front door** (244.8): it swung so deep into the hall that its foot came to rest on his crown as he came in
   under it. It swings shallower now, its foot low behind him.
+- **Mal out of the crowd** (57.5 to 61.3): her wine sank into the black of the projections, so she was seen only once
+  she was clear of them. The light off the stone now catches her edge, a pale rim, and she is seen coming out of them
+  (a third critic's note).
 
 ## Inception nods
 
