@@ -437,7 +437,8 @@ The notes went back to the builders who made each part, who still had their cont
     moment he chooses to be the weight that pulls Joy back. All of it happened in the frame's top-left corner, half
     off its edge, and the pulley itself came into frame only at 248.3, after the catch.
   - The framing from 246.4 s now opens sooner and higher: the pulley, Waymond on it, his drop and catch, the line,
-    and Evelyn and Joy in the hole below, all in one frame. Then it opens on out to the whole machine as before.
+    and Evelyn and Joy in the hole below, all in one frame. It sits low enough that Zoom still keeps Evelyn and Joy
+    in the hole, with Waymond on the line. Then it opens on out to the whole machine as before.
 
 ## End credits
 
