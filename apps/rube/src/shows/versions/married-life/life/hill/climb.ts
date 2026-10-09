@@ -6,7 +6,7 @@ import { CUT } from '../music'
 import { BASKET, drawBasket } from '../props/basket'
 import { CUTS } from '../seams'
 import { HILL, HOME, INK } from '../worlds'
-import { autumn, LANE_Y, ridge, ridgeSlope, STEP } from './hill'
+import { autumn, LANE_Y, ridge, ridgeSlope, seat, STEP } from './hill'
 
 /**
  * CLIMB (167.706 to 180.413): the same hill, years later, in autumn. A held note, and then the piano.
@@ -201,18 +201,18 @@ function carl(t: number): Pt {
   if (t < T.go) return [CLIMB_FROM, STEP.y]
   if (t < T.top) {
     const x = lerp(CLIMB_FROM, CLIMB_TO, CLIMB((t - T.go) / (T.top - T.go)))
-    return [x, ridge(x)]
+    return [x, seat(x)]
   }
-  if (t < T.jolt) return [CLIMB_TO, ridge(CLIMB_TO)]
+  if (t < T.jolt) return [CLIMB_TO, seat(CLIMB_TO)]
   if (t < T.fall) {
     const u = lift((t - T.jolt) / (T.fall - T.jolt))
     const x = lerp(CLIMB_TO, JOLT_TO, u)
-    return [x, ridge(x) - 4 * 0.05 * u * (1 - u)]
+    return [x, seat(x) - 4 * 0.05 * u * (1 - u)]
   }
   if (t < T.beside) {
     // Down the slope after her and onto the stone, as fast as he has gone in years, easing to a stop beside her.
     const x = JOLT_TO + RUN.at(t - T.fall)
-    return [x, ridge(x)]
+    return [x, seat(x)]
   }
   return [HIS_REST, STEP.y]
 }
@@ -275,7 +275,7 @@ function ellie(t: number): Pt {
     const u = lift((t - E.hop) / (E.onStep - E.hop))
     return [lerp(foot, TREAD, u), lerp(LANE_Y, STEP.y, u) - 4 * 0.13 * u * (1 - u)]
   }
-  const on = (x: number): Pt => [x, ridge(x)]
+  const on = (x: number): Pt => [x, seat(x)]
   if (t < E.on) return on(TREAD)
   if (t < E.rest) return on(lerp(TREAD, MID, tire((t - E.on) / (E.rest - E.on))))
   if (t < E.push) return on(MID)

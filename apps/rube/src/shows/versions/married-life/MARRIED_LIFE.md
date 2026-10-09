@@ -495,6 +495,12 @@ window.
   `tall`, `zoomDrop`). Noted, not done: the player has no reduced-motion setting; the toll's 1% blow is the only
   camera shake in this show.
 
+- **Polish round 12 (Opus 5.5).** A new lens: contact, the two of them against what they stand on. On the hill's
+  flank both sank a little into the slope (up to a tenth of R where it is steepest): the climb set their centres R
+  straight up from the drawn ground, which is right on the flat and short on a slope. Now `seat` in `hill/hill.ts`
+  rests them R along the ground's normal, so he stands and she rolls on it, as they do on every floor. Her sink as
+  she gives way is the slump the story asks for, and kept.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is

@@ -71,6 +71,16 @@ export function ridge(x: number): number {
   return LANE_Y
 }
 
+/**
+ * Where a ball's (or his square's) centre rests on the skyline at `x`: `ridge` is the drawn ground less R straight
+ * down, which on the flank sinks a ball a little into it (by up to a tenth of R where it is steepest); resting on it,
+ * its centre is R from the ground along the ground's normal, R times the secant of the slope straight up.
+ */
+export function seat(x: number): number {
+  const s = ridgeSlope(x)
+  return ridge(x) - R * (Math.hypot(1, s) - 1)
+}
+
 /** The skyline's slope (dy/dx, y down) at `x`: what a thing standing there leans with. */
 export function ridgeSlope(x: number): number {
   if (x <= CREST.x0) return -dropSlope(BACK.h, BACK.l, Math.min(1, (CREST.x0 - x) / BACK.l))
