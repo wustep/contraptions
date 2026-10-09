@@ -19,7 +19,7 @@ lesson in Paris; the plane and the job; the four levels of the dream, down and b
   to go through, and nothing else in the show is his colour.
 - **Mal**, his wife, is the wine ball (`#8E2C49`): in every dream he goes down into and never in waking life; the one who
   breaks the machines (the freight train in the rain, the shot in the snow); in limbo, his counterweight.
-- **Ariadne**, the architect, is the teal ball (`#3E9E98`): she folds Paris for him, and goes down every level with him,
+- **Ariadne**, the architect, is the teal ball (`#358C86`): she folds Paris for him, and goes down every level with him,
   and back up.
 - **Robert Fischer**, the mark, is the pale ball (`#AEB9C9`): taken down through the levels to his father's vault.
 - **James and Phillipa**, his children, are two small balls: in his memory only ever seen from behind, dark against the
@@ -315,6 +315,9 @@ each world, and changed:
   each stopped square at the water's edge, and the clear sea over them showed a box-shaped notch in the beach right
   where he washes up, the show's first frame. They cross-fade under the edge of the water now, and the beach runs
   down into the sea.
+- **Ariadne's teal** is a little deeper (`#3E9E98` to `#358C86`): under red-green colour blindness she and Fischer
+  were the closest pair of leads, told apart by lightness alone. The gap between them there is half as wide again
+  now, and she is still the same teal, as findable in the café, on the plane at night and in the vault.
 
 ## Inception nods
 
