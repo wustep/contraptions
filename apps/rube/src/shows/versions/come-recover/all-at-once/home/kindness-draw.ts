@@ -65,6 +65,115 @@ function poly(pen: Pen, pts: Pt[]): void {
 
 /* ------------------------------------------------------------------ the party: lanterns, table, steamers, karaoke */
 
+/** The party's wall: where it is dressed for the new year, over the table (room cells). */
+const DRESS = { x0: 29.7, x1: 36.0, swag: -4.2, dip: 0.32, scroll: { xs: [30.55, 34.55], top: -3.45, h: 1.38, w: 0.3 }, card: { x: 32.55, y: -2.95, r: 0.42 } }
+
+/**
+ * The wall over the party, dressed for the new year: crepe-paper festoons under the ceiling, red and gold by turns,
+ * a pair of red couplet scrolls flanking the table, their brushed lines in gold, and between them a red luck card
+ * hung on its point. It fills the pale wall the party stood under, and its paper stirs when the arm rushes past.
+ */
+export function drawPartyWall(pen: Pen, t: number): void {
+  const { p, k, ink, w } = pen
+  const { x0, x1, swag, dip } = DRESS
+  // The festoons: scallops of crepe paper from tack to tack, a red run over a gold one, each sagging and stirring.
+  const tacks = 7
+  const span = (x1 - x0) / tacks
+  for (const [hex, drop, off] of [
+    [HOME.gold, dip * 1.18, 0.5],
+    [HOME.red, dip, 0],
+  ] as const) {
+    for (let i = 0; i < tacks; i++) {
+      const a = x0 + (i + off) * span
+      const b = Math.min(x1, a + span)
+      if (b - a < span * 0.5) continue
+      const sag = drop * (1 + 0.06 * Math.sin(t * 1.7 + i * 1.3)) + 0.05 * Math.max(0, lanternSway(i % 2, t) * 4)
+      solid(p, ink, w * 0.5, hex)
+      p.beginShape()
+      for (let j = 0; j <= 12; j++) {
+        const u = j / 12
+        p.vertex((a + (b - a) * u) * k, (swag + sag * Math.sin(Math.PI * u)) * k)
+      }
+      for (let j = 12; j >= 0; j--) {
+        const u = j / 12
+        p.vertex((a + (b - a) * u) * k, (swag + (sag - 0.1) * Math.sin(Math.PI * u) + 0.02) * k)
+      }
+      p.endShape(p.CLOSE)
+      // The crepe's crinkle.
+      faint(pen, 0.25, w * 0.35)
+      for (let j = 1; j < 6; j++) {
+        const u = j / 6
+        const x = a + (b - a) * u
+        const y = swag + sag * Math.sin(Math.PI * u)
+        p.line(x * k, (y - 0.08) * k, x * k, (y - 0.01) * k)
+      }
+    }
+  }
+  // Each tack, a gold rosette.
+  solid(p, ink, w * 0.5, HOME.gold)
+  for (let i = 0; i <= tacks; i++) p.circle((x0 + i * span) * k, (swag + 0.01) * k, 0.12 * k)
+  // The couplets: red scrolls on their wooden rods, a column of gold strokes down each.
+  const sc = DRESS.scroll
+  sc.xs.forEach((x, i) => {
+    const lean = 0.012 * Math.sin(t * 1.1 + i * 2)
+    p.push()
+    p.translate(x * k, sc.top * k)
+    p.rotate(lean)
+    solid(p, ink, w * 0.7, HOME.red)
+    p.rect(0, (sc.h / 2) * k, sc.w * k, sc.h * k)
+    outline(p, HOME.gold, Math.max(1, w * 0.5))
+    p.rect(0, (sc.h / 2) * k, (sc.w - 0.07) * k, (sc.h - 0.07) * k)
+    solid(p, ink, w * 0.6, HOME.wood)
+    for (const y of [-0.02, sc.h + 0.02]) p.rect(0, y * k, (sc.w + 0.12) * k, 0.05 * k, 0.02 * k)
+    // The brushed lines: five marks a scroll, each a stroke or two, never the same twice.
+    p.noFill()
+    p.stroke(HOME.gold)
+    p.strokeWeight(Math.max(1, 0.028 * k))
+    for (let j = 0; j < 5; j++) {
+      const cy = 0.2 + j * 0.25
+      const h1 = hashKind(i * 7 + j)
+      const h2 = hashKind(i * 7 + j + 31)
+      p.line(-0.08 * k, (cy - 0.05 + 0.04 * h1) * k, 0.08 * k, (cy - 0.06 + 0.03 * h2) * k)
+      p.line((-0.02 + 0.05 * h2) * k, (cy - 0.09) * k, (0.0 + 0.04 * h1) * k, (cy + 0.07) * k)
+      if (h1 > 0.45) p.line(-0.07 * k, (cy + 0.05) * k, 0.07 * k, (cy + 0.04 + 0.02 * h2) * k)
+    }
+    p.pop()
+  })
+  // The luck card, hung on its point from a tack, swinging a hair: red, a gold border, a gold flower in its middle.
+  const cd = DRESS.card
+  const swing = 0.03 * Math.sin(t * 1.4) + 0.06 * lanternSway(0, t)
+  outline(p, ink, w * 0.4)
+  p.line(cd.x * k, (cd.y - cd.r - 0.22) * k, cd.x * k, (cd.y - cd.r) * k)
+  p.push()
+  p.translate(cd.x * k, (cd.y - cd.r) * k)
+  p.rotate(swing)
+  p.translate(0, cd.r * k)
+  p.rotate(Math.PI / 4)
+  const side = cd.r * Math.SQRT2
+  solid(p, ink, w * 0.8, HOME.red)
+  p.rect(0, 0, side * k, side * k)
+  outline(p, HOME.gold, Math.max(1, w * 0.6))
+  p.rect(0, 0, (side - 0.09) * k, (side - 0.09) * k)
+  p.rotate(-Math.PI / 4)
+  p.noStroke()
+  p.fill(HOME.gold)
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 - Math.PI / 2
+    p.circle(Math.cos(a) * 0.11 * k, Math.sin(a) * 0.11 * k, 0.13 * k)
+  }
+  p.fill(HOME.red)
+  p.circle(0, 0, 0.08 * k)
+  p.pop()
+  solid(p, ink, w * 0.5, HOME.gold)
+  p.circle(cd.x * k, (cd.y - cd.r - 0.22) * k, 0.07 * k)
+}
+
+/** A steady pseudo-random number in [0, 1) for the scrolls' strokes. */
+const hashKind = (n: number): number => {
+  const v = Math.sin(n * 127.1 + 311.7) * 43758.5453
+  return v - Math.floor(v)
+}
+
 /** The paper lanterns on their cords from the ceiling, each swinging about its hook in the ceiling. */
 export function drawLanterns(pen: Pen, t: number): void {
   const { p, k, ink, w } = pen

@@ -66,6 +66,8 @@ install(STREET, 'finale-fireworks', fireworks)
  */
 const CARS = [299.6, 317.4]
 const CAR_CROSS = 2.6
+/** The car's size against the far fronts. */
+const CAR_SCALE = 1.5
 const carAt = (t: number): { x: number; u: number } | null => {
   for (const at of CARS) {
     const u = (t - at) / CAR_CROSS
@@ -80,29 +82,38 @@ install(STREET, 'finale-cars', (p: p5, k: number, t: number) => {
   const road = FLOOR - 0.62
   const ctx = p.drawingContext as CanvasRenderingContext2D
   // The beam out ahead of it, low along the road.
-  const g = ctx.createLinearGradient((x - 0.55) * k, 0, (x - 2.6) * k, 0)
+  const nose = x - 0.55 * CAR_SCALE
+  const g = ctx.createLinearGradient(nose * k, 0, (nose - 2.4) * k, 0)
   g.addColorStop(0, 'rgba(255, 244, 214, 0.55)')
   g.addColorStop(1, 'rgba(255, 244, 214, 0)')
   ctx.fillStyle = g
   ctx.beginPath()
-  ctx.moveTo((x - 0.55) * k, (road - 0.2) * k)
-  ctx.lineTo((x - 2.6) * k, (road - 0.42) * k)
-  ctx.lineTo((x - 2.6) * k, (road + 0.02) * k)
-  ctx.lineTo((x - 0.55) * k, (road - 0.12) * k)
+  ctx.moveTo(nose * k, (road - 0.27) * k)
+  ctx.lineTo((nose - 2.4) * k, (road - 0.5) * k)
+  ctx.lineTo((nose - 2.4) * k, (road + 0.02) * k)
+  ctx.lineTo(nose * k, (road - 0.17) * k)
   ctx.fill()
-  // The car: a dark shape against the far fronts, its cabin's glass, a wheel at each end, and its lamps.
+  // The car: a dark shape against the far fronts, its cabin's glass, a wheel at each end, and its lamps. It is drawn
+  // at the far fronts' own scale, a car's length to their doorways, not a toy's.
+  const S = CAR_SCALE
+  const X = (dx: number) => (x + dx * S) * k
+  const Y = (dy: number) => (road + dy * S) * k
+  const L = (v: number) => v * S * k
   p.noStroke()
   p.fill(mixHex(HOME.night, HOME.steelDark, 0.15))
-  p.rect(x * k, (road - 0.17) * k, 1.1 * k, 0.24 * k, 0.07 * k)
-  p.rect((x + 0.06) * k, (road - 0.36) * k, 0.62 * k, 0.2 * k, 0.08 * k, 0.08 * k, 0, 0)
+  p.rect(X(0), Y(-0.17), L(1.1), L(0.24), L(0.07))
+  p.rect(X(0.06), Y(-0.36), L(0.62), L(0.2), L(0.08), L(0.08), 0, 0)
   p.fill(mixHex(HOME.night, HOME.glassDeep, 0.35))
-  p.rect((x + 0.06) * k, (road - 0.35) * k, 0.5 * k, 0.12 * k, 0.05 * k)
+  p.rect(X(0.06), Y(-0.35), L(0.5), L(0.12), L(0.05))
+  // The street's light along its roof.
+  p.fill(mixHex(HOME.night, HOME.steel, 0.3))
+  p.rect(X(0.06), Y(-0.455), L(0.5), L(0.02), L(0.01))
   p.fill(mixHex(HOME.night, HOME.steelDark, 0.05))
-  for (const wx of [-0.33, 0.35]) p.circle((x + wx) * k, (road - 0.04) * k, 0.18 * k)
+  for (const wx of [-0.33, 0.35]) p.circle(X(wx), Y(-0.04), L(0.18))
   p.fill('#FFF4D6')
-  p.ellipse((x - 0.53) * k, (road - 0.16) * k, 0.07 * k, 0.06 * k)
+  p.ellipse(X(-0.53), Y(-0.16), L(0.07), L(0.06))
   p.fill(HOME.red)
-  p.rect((x + 0.54) * k, (road - 0.17) * k, 0.04 * k, 0.07 * k)
+  p.rect(X(0.54), Y(-0.17), L(0.04), L(0.07))
 })
 install(LIGHTS.glows, 'finale-cars', (t: number): Glow[] => {
   const car = carAt(t)

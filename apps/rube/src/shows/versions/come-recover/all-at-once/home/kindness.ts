@@ -12,6 +12,7 @@ import {
   drawHammer,
   drawKaraoke,
   drawLanterns,
+  drawPartyWall,
   drawLid,
   drawSteamers,
   drawTable,
@@ -60,6 +61,7 @@ export const kindness = part<KindnessState>(
       p.push()
       p.translate(-O[0] * k, -O[1] * k)
       // The party and the office, as they have stood all day.
+      drawPartyWall(pen, t)
       drawDesk(pen)
       drawLanterns(pen, t)
       drawTable(pen)

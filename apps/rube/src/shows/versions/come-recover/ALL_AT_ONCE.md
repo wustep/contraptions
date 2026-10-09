@@ -239,6 +239,14 @@ The notes went back to the builders who made each part, who still had their cont
   - Under the premiere's carpet the street was a dead band of dark, a fifth of the frame for ten seconds. The carpet
     now lies to a stone kerb, and the street is wet. The pilasters' gold, the poster cases, the doors' light, the
     spotlight's pool and every flash of the press show in it as long smears.
+- **Polish round 2, the party and the street.** Every jump was watched again at 20 fps, and each holds its match cut.
+  - Kindness happens at the new year party, but over the table the wall was bare cream, with only two lanterns. It is
+    now dressed for the new year: red and gold crepe festoons hang under the ceiling from gold rosettes. A pair of red
+    couplet scrolls on wooden rods flank the table, brushed down in gold. Between them a red luck card hangs on its
+    point with a gold flower. The paper stirs, and stirs more when the arm rushes past (`drawPartyWall` in
+    `kindness-draw.ts`).
+  - The car that goes by under the credits was a toy beside the far fronts. It is half as big again, with the
+    street's light along its roof.
 
 ## End credits
 
