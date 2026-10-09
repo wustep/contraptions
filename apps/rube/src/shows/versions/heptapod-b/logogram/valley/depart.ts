@@ -97,8 +97,24 @@ function ianX(t: number): number {
 export const depart = part<DepartState>(
   {
     name: 'depart',
-    // The meadow, the light and the fog are the set's; the part draws nothing of its own.
-    draw: () => {},
+    // The meadow, the light and the fog are the set's; the part draws only the two of them grounded on the grass: a
+    // soft contact shadow under each (as the lake house has), deeper as the light comes through.
+    draw: (p, s, c) => {
+      const t = s.begin + c.t
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      const light = 0.5 + 0.5 * sm(t, 189, 193)
+      for (const x of [herAt(t)[0], -0.5 + ianX(t)]) {
+        ctx.save()
+        ctx.translate(x * c.k, (R + 0.01) * c.k)
+        ctx.scale(1, 0.22)
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 1.35 * c.k)
+        g.addColorStop(0, `rgba(40, 50, 38, ${0.32 * light})`)
+        g.addColorStop(1, 'rgba(40, 50, 38, 0)')
+        ctx.fillStyle = g
+        ctx.fillRect(-R * 1.4 * c.k, -R * 1.4 * c.k, R * 2.8 * c.k, R * 2.8 * c.k)
+        ctx.restore()
+      }
+    },
   },
   (slot) => {
     const dur = slot.end - slot.begin
