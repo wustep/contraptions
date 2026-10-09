@@ -363,6 +363,17 @@ One more thing showed:
   a bright line straight through the shell. It is one fill now. In 16:9 the line was above the frame; there the
   difference is a level at most.
 
+A nineteenth stopped hunting edges by eye: it filmed the show every four seconds at 16:9, far wider than it and 9:16
+tall, and had a script find every straight hard edge running a third of the frame or more in the wide and the tall
+that the 16:9 frame at the same moment did not have. Most were meant (the window's mullions, the tent's drapes, the
+shore). One was not:
+
+- **The treeline striped in a tall frame** (the reunion, 326 to 334 s): the sunlight fades in down the far slopes in
+  two dozen slices, each a little taller than its spacing, and under the light's blends every overlap was a strip lit
+  twice: a stack of thin lines across the trees. The slices lie on whole pixels now, each meeting the next exactly, as
+  the ones down the near floor already did; the cloud's shade beyond the light, faded in the same way, too. In 16:9
+  wides it takes out the fainter seams there as well.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

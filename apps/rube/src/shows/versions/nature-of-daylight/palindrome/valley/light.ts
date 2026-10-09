@@ -148,15 +148,21 @@ export function drawValleyShade(ctx: Ctx, k: number, f: View, t: number): void {
   ctx.save()
   ctx.globalCompositeOperation = 'multiply'
   ctx.fillStyle = g
-  // Fading in from the cloud down, in slices: no edge along its top.
+  // Fading in from the cloud down, in slices: no edge along its top. On whole pixels, each meeting the next exactly:
+  // overlapped, every seam was a strip shaded twice, a line.
   const band = 18
   const n = 18
+  const px = (y: number) => Math.round(y * k)
   for (let i = 0; i < n; i++) {
+    const ya = px(top + (band * i) / n)
+    const yb = px(top + (band * (i + 1)) / n)
+    if (yb <= ya) continue
     ctx.globalAlpha = (i + 0.5) / n
-    ctx.fillRect(x0 * k, (top + (band * i) / n) * k, (x1 - x0) * k, (band / n + 0.02) * k)
+    ctx.fillRect(x0 * k, ya, (x1 - x0) * k, yb - ya)
   }
   ctx.globalAlpha = 1
-  ctx.fillRect(x0 * k, (top + band) * k, (x1 - x0) * k, Math.max(0, bottom - top - band) * k)
+  const below = px(top + band)
+  ctx.fillRect(x0 * k, below, (x1 - x0) * k, Math.max(0, bottom * k - below))
   ctx.restore()
 }
 
@@ -193,21 +199,25 @@ export function drawSunWash(ctx: Ctx, k: number, f: View, t: number): void {
   // Each pass in slices whose strength rises over the first cells from its top, so it has no edge; below the far
   // line, in slices down the near floor, each with the edge where it lies at its depth.
   const band = far > 0.01 ? 6 * far : 0
+  // On whole pixels, each slice meeting the next exactly: under these blends an overlap or a gap is a line.
+  const px = (y: number) => Math.round(y * k)
   const pass = (op: GlobalCompositeOperation, style: (y: number) => CanvasGradient) => {
     ctx.globalCompositeOperation = op
     const n = band > 0 ? 24 : 0
     ctx.fillStyle = style(MEADOW)
+    // The fade in at its top too: overlapped, its seams striped the treeline in a tall frame.
     for (let i = 0; i < n; i++) {
+      const ya = px(top + (band * i) / n)
+      const yb = px(top + (band * (i + 1)) / n)
+      if (yb <= ya) continue
       ctx.globalAlpha = (i + 0.5) / n
-      ctx.fillRect(x0 * k, (top + (band * i) / n) * k, (x1 - x0) * k, (band / n + 0.02) * k)
+      ctx.fillRect(x0 * k, ya, (x1 - x0) * k, yb - ya)
     }
     ctx.globalAlpha = 1
     const from = top + band
     const to = top + h
     const upper = Math.min(to, Math.max(from, MEADOW))
-    // On whole pixels, each slice meeting the next exactly: under these blends an overlap or a gap is a line.
-    const px = (y: number) => Math.round(y * k)
-    if (upper > from) ctx.fillRect(x0 * k, from * k, (x1 - x0) * k, px(upper) - from * k)
+    if (upper > from) ctx.fillRect(x0 * k, px(from), (x1 - x0) * k, px(upper) - px(from))
     const m = 40
     for (let i = 0; i < m && to > upper; i++) {
       const ya = px(upper + ((to - upper) * i) / m)
