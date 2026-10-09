@@ -357,6 +357,10 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
         p.vertex((mx + (right[j][0] - mx) * grow) * k, (my + (right[j][1] - my) * grow) * k)
       }
       p.endShape(p.CLOSE)
+      // A blunt round tip: in a close frame the limb's end is seen, and it is never a square cut.
+      const e = left.length - 1
+      const tw = Math.hypot(left[e][0] - right[e][0], left[e][1] - right[e][1]) * grow
+      p.ellipse(((left[e][0] + right[e][0]) / 2) * k, ((left[e][1] + right[e][1]) / 2) * k, tw * k, tw * k)
     }
     // The palm: at the end of a reach the tip opens into seven fingers, flat against whatever it touches.
     if (reaching > 0.6 && (o.palm ?? 0) > 0.01) {
