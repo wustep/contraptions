@@ -23,6 +23,7 @@ import {
   kickTears,
   LIE_A,
   LIE_C,
+  skiLine,
   lerpAngle,
   MAL_AT,
   MAL_FROM,
@@ -204,7 +205,8 @@ const mixDark = () => SNOW.vault
 function drawSkis(ctx: C2D, c: Ctx, m: Motion, t: number, restX: number | null): void {
   const a = m.ski(t)
   if (a !== null && t >= m.phases[0].t1 - 0.02) {
-    skis(ctx, c, m.at(t), a, facing(m, t))
+    // A heading left is the same line as one right: skis lie under the ball whichever way the path runs.
+    skis(ctx, c, m.at(t), skiLine(a), facing(m, t))
     return
   }
   // Left where they lay down (when they have sunk out of them).

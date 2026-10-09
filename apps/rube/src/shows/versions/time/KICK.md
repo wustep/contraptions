@@ -330,6 +330,10 @@ each world, and changed:
   rode high in the frame; Zoom tightens on the same point, and under it he came through each slab on the frame's top
   edge, the three of them crowded under it all the way down. The camera now sits nearly on them, and under Zoom they
   fall through the middle of the picture.
+- **Their skis across the face** (126.5 to 134.5): running left across the face, over the fortress's roof and down
+  the hairpin, each of them wore their skis over their head, the tips curled back the way they had come. The skis
+  were laid along the path's heading, and a heading to the left turned them over; they are laid along its line now
+  (`skiLine`, as the jumps already were), under them, tips forward.
 
 ## Inception nods
 
