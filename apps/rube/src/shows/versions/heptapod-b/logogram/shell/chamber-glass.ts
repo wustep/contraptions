@@ -322,7 +322,8 @@ function drawSwell(p: p5, k: number, t: number): void {
   // The polished floor takes the light as a reflection: brightest at its edge, under the glass, so the two meet in one
   // white, and less down toward us, so the floor reads as a floor going white rather than a grey slab under the white.
   const top = GLASS_BOT
-  const g = ctx.createLinearGradient(0, top * k, 0, (top + 4) * k)
+  // Over as much floor as the frame shows (a tall window, a phone, sees far more of it than the 16:9 frame does).
+  const g = ctx.createLinearGradient(0, top * k, 0, Math.max(top + 4, f.y1) * k)
   g.addColorStop(0, rgba(SHELL.glow, Math.min(1, 1.5 * w)))
   g.addColorStop(0.35, rgba(SHELL.glow, Math.min(1, 1.05 * w)))
   g.addColorStop(1, rgba(SHELL.glow, Math.min(1, 0.85 * w ** 1.2)))

@@ -235,7 +235,8 @@ strongest pulses held against what the picture does on them. What changed:
 - **The last frame** (251): Hannah's span ended at the show's end exclusively, so the frame the player holds there
   had Louise alone on the bench. Hannah stays.
 - **The white-out from the glass** (130.4): the chamber's floor was whitened less than the air over it and stood as a
-  flat grey slab under a white room. It takes the light as a reflection now, one white with the glass at its edge.
+  flat grey slab under a white room. It takes the light as a reflection now, one white with the glass at its edge. On a phone,
+  whose stage is near square and sees far more floor, the reflection reaches the bottom of what it sees.
 - **The push** (160 → 185): Costello's feet stood just above the frame, so the ends of its other limbs showed as grey
   tabs along the top edge. It stands higher; only its pen comes into the picture. In the close frames its pen ended
   in a square cut: every limb's tip is round now.
