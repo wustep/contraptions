@@ -345,6 +345,40 @@ function drawLobby(g: Pen, f: View, t: number): void {
     lampShade(g, ls.at, ls.turn, 0.42)
     glow(g, ls.at, 1.4, 0.3, t)
   }
+  // The lift's landing: its walnut surround either side of the shaft, a sconce each side, the call buttons, and over
+  // them the floor dial, its needle following the cabin down the shaft.
+  if (seen(f, -3.6, 31.5, 3.6, 36)) {
+    for (const s of [-1, 1]) {
+      rect(g, s < 0 ? -1.36 : 1.1, 33.25, s < 0 ? -1.1 : 1.36, B.lobby, H.wood, g.ink, 0.6)
+      rect(g, s < 0 ? -1.42 : 1.1, 33.15, s < 0 ? -1.1 : 1.42, 33.27, H.brass, g.ink, 0.4)
+      sconce(g, s * 2.95, 33.2, t, 7 + (s > 0 ? 1 : 0))
+    }
+    rect(g, 1.62, 34.05, 1.8, 34.55, H.brass, g.ink, 0.4)
+    if (g.k > 6) for (const [q, lit] of [[34.2, false], [34.4, true]] as const) disc(g, [1.71, q], 0.045, lit ? H.lamp : H.wood)
+    const dc: Pt = [2.1, 32.55]
+    const dr = 0.36
+    const half = (r: number, fill: string, stroke: string | null): void => {
+      g.c.beginPath()
+      g.c.arc(dc[0] * g.k, dc[1] * g.k, r * g.k, Math.PI, 2 * Math.PI)
+      g.c.closePath()
+      g.c.fillStyle = fill
+      g.c.fill()
+      if (stroke) {
+        g.c.strokeStyle = stroke
+        g.c.lineWidth = g.w * 0.5
+        g.c.stroke()
+      }
+    }
+    half(dr, H.brass, g.ink)
+    half(dr * 0.84, H.glass, null)
+    // Its floors: the top on the right, the lobby on the left.
+    const swing = (u: number): number => lerp(1.15, -1.15, u)
+    const tip = (a: number, r: number): Pt => [dc[0] + Math.sin(a) * r, dc[1] - Math.cos(a) * r]
+    if (g.k > 6) for (const u of [0, 0.5, 1]) line(g, tip(swing(u), dr * 0.62), tip(swing(u), dr * 0.82), g.ink, 0.5)
+    const u = clamp01((cabinY(t) - B.top) / (B.lobby - B.top))
+    line(g, dc, tip(swing(u), dr * 0.74), g.ink, 0.8)
+    disc(g, dc, 0.05, H.brass)
+  }
   // Chandeliers: a brass ring of milk-glass cups on a chain, and a potted palm by the door.
   for (const [i, cx] of [-9.4, 4.9].entries()) {
     if (!seen(f, cx - 1, 29, cx + 1, 32)) continue

@@ -318,6 +318,10 @@ each world, and changed:
 - **Ariadne's teal** is a little deeper (`#3E9E98` to `#358C86`): under red-green colour blindness she and Fischer
   were the closest pair of leads, told apart by lightness alone. The gap between them there is half as wide again
   now, and she is still the same teal, as findable in the café, on the plane at night and in the vault.
+- **The lift in the lobby** (191.5 to 199.3): the lobby round the shaft, where the cabin with the sleepers rides down to
+  the slam, was bare pale wall from pilaster to pilaster. The lift has its landing there now: a walnut surround either
+  side of the shaft, a sconce each side, the call buttons, and over them a floor dial whose needle follows the cabin,
+  on the top floor until the blast and swinging over to the lobby as it falls.
 
 ## Inception nods
 
