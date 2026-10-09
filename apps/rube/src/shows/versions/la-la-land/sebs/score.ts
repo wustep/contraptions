@@ -91,6 +91,12 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
 
   const show0 = (): SebsShow => show
   const where = (t: number): Pt => show0().where(t)
+  /** Between him and her, where she is with him: the iris that closed on the two of them opens on the two of them. */
+  const between = (t: number): Pt => {
+    const h = where(t)
+    const m = show0().mia(t)
+    return m ? [(h[0] + m.x) / 2, (h[1] + m.y) / 2] : h
+  }
   const coverList: Cover[] = [
     // Seb's to Lipton's: the stage light closes down on the keys, and opens again on a warmer room.
     { kind: 'iris', down: [37.9, 39.35], up: [39.95, 41.9], from: (t) => [where(t)[0], where(t)[1] - 0.25], to: (t) => [where(t)[0], where(t)[1] - 0.25], r0: 1.1, r1: 1.1 },
@@ -106,13 +112,13 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
     // Paris at night to the club: through its red door, on the kick.
     { kind: 'black', down: [214.3, SWITCH.club - 0.02], up: [RED_LIFT + 0.02, 215.45], color: CLUB_MAT.red },
     // The trumpet to painted Paris: an iris, the old way.
-    { kind: 'iris', down: [267.3, 268.2], up: [IRIS_OPEN, 272.6], from: (t) => [where(t)[0] - 0.1, where(t)[1] - 0.05], to: where, r0: 0.55, r1: 0, snap: IRIS_SNAP },
+    { kind: 'iris', down: [267.3, 268.2], up: [IRIS_OPEN, 272.6], from: (t) => [where(t)[0] - 0.1, where(t)[1] - 0.05], to: between, r0: 0.55, r1: 0, snap: IRIS_SNAP },
     // The stars to the home movie.
     { kind: 'black', down: [338.9, 340.0], up: [341.2, 342.8] },
     // The home movie to the drive.
     { kind: 'black', down: [393.6, 395.0], up: [395.6, AT.drive] },
     // The street to the club: through the door.
-    { kind: 'black', down: [422.55, 423.3], up: [423.5, 424.8] },
+    { kind: 'black', down: [422.95, 423.35], up: [423.5, 424.8] },
   ]
   // The covers are drawn over each place by a lid that claims a cell every 4 across the whole place and round it, so
   // the stage (which only draws what has a cell in view, and never sees less than 8 cells across) always draws it.

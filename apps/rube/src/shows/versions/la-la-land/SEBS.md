@@ -327,3 +327,14 @@ A forty-third pass, at the second act:
 
 - **A reviewer on the second act.** A seventh cold reviewer took notes on 90 to 215. Three were right. On the six lamps of Hollywood's hill going out one by one (169.99 to 171.09), the dark had already begun (from 169.9), so they never visibly went out: everything dimmed together. The dark now waits for the last lamp, and so is shorter too. At the audition, while the pen signed, the camera went in on her and the desk and left his chair out of the picture: the signature had no one to see it, and his leap came from nowhere. It goes in less, and keeps his chair at the edge of the frame. And the burst into colour pulled out so far that for three seconds the two of them were specks; it pulls out less (12.5 cells, not 17).
 - Not taken: the rose's flight and landing would need new staging; a push in on her show would crop her window again; and the globe's hold is a matter of taste.
+
+A forty-fourth pass, at the third act:
+
+- **Two reviewers on the third act.** An eighth and a ninth cold reviewer took notes, one on Paris to the stars (213 to 341), one on the home movie and the drive (339 to 424). Six notes were right.
+- **Her premiere, with him in it.** While the flash guns fired on the landing, his see-saw was out of the picture, so when the net let go she came down to no one. The landing shots now hold two levels: her by the door above, his see-saw going in the corner below.
+- **The iris opens on both.** It closed on the two of them after the knock, but opened from a point on him alone; for a moment he had lost her. It opens between them now.
+- **Closer among the stars.** With the two of them drawn in close (the thirty-seventh pass), the wide view of the turning sky made them specks; it is a little less wide.
+- **The lamp goes out at home.** The camera began drawing back out of the screen two seconds before he put the lamp out, so the evening's ending happened small. It holds on the couch until the lamp is out (391.93), then draws back, and the film still runs out on its note.
+- **They reach the door.** At the end of the drive the dark began while they were still beside the car. It waits until they are under the arrow at the door.
+- **Closer on the pool's board,** so the bounces read.
+- Not taken: the waltz on the quay keeps its set, with its close passage through the curtsies; the touch among the stars keeps the projector in frame for its flare; the jam's wide is its long silence; the bucket was closed in on before.

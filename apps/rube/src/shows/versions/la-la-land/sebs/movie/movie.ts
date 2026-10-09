@@ -36,8 +36,8 @@ const END = 395.3
 /** The gate opens from the screen to the frame, and closes back to the screen at the end. */
 const GATE0 = 345.9
 const GATE1 = 347.5
-const BACK0 = 390.0
-const BACK1 = 392.9
+const BACK0 = 391.4
+const BACK1 = 393.05
 /** The splices, each on the note that makes it: the party, the beach, the pool, the field, home. */
 const CUTS = [349.89, 358.539, 364.275, 373.516, 381.887]
 /** The film's tail through the gate: bare light. */
@@ -418,18 +418,18 @@ export const movie = part<MovieState>(
     { t: 359.4, cells: 3.6, hold: [-4.5, -0.8] },
     { t: 363.3, cells: 3.6, hold: [-4.6, -0.8] },
     // The pool: wider for the bounces, and the dive.
-    { t: 365.6, cells: 4.9, hold: [-2.7, -1.15] },
-    { t: 368.2, cells: 5.8, hold: [-2.0, -1.55] },
+    { t: 365.6, cells: 4.5, hold: [-2.6, -1.1] },
+    { t: 368.2, cells: 5.2, hold: [-2.0, -1.45] },
     { t: SPLASH, cells: 5.4, hold: [-1.6, -1.05] },
     { t: 373.2, cells: 3.9, hold: [-2.4, -0.55] },
     // The field, along with them: the ground low in the frame, so it is the flowers and the hills over them, not a
     // meadow's worth of empty grass below.
     { t: 376.0, cells: 4.6, hold: [1.5, -1.0], w: 0.4, off: [0, -0.55] },
     { t: 380.4, cells: 4.4, hold: [4.2, -1.0], w: 0.5, off: [0, -0.55] },
-    // Home: on the couch; and out of the screen as the film runs out.
+    // Home: on the couch, held close until he has put the lamp out; then out of the screen as the film runs out.
     { t: 382.6, cells: 3.9, hold: [5.2, -0.62] },
     { t: BACK0, cells: 3.7, hold: [5.3, -0.62] },
-    { t: 392.8, cells: 11.5, hold: [0.3, -0.45] },
+    { t: 393.0, cells: 11.5, hold: [0.3, -0.45] },
     { t: 395.0, cells: 11.7, hold: [0.3, -0.45] },
   ],
 )
