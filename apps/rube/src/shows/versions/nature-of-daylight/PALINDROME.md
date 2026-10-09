@@ -564,6 +564,11 @@ A forty-sixth tested scrubbing, which nothing had: the live stage seeked to fift
 then to the same moments backwards, the canvas compared. Every pair was the same to the pixel (and the canvas did redraw
 between moments), so the show is a function of its time alone, however it is reached. Nothing to change.
 
+A forty-seventh checked the brief's two standing rules against the whole of this branch's difference from main: no
+audio file anywhere in it or tracked for the show; the music, its onsets, the version file and the cue's declaration
+(the label's upload, `rVN1B-tUpgs`, by YouTube) all untouched. The song is the song, heard from YouTube. Nothing to
+change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
