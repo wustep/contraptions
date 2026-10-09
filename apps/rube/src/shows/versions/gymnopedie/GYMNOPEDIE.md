@@ -157,7 +157,9 @@ Four things happen once a day:
 From far off, at the seam, the planet is a world in space. The sun and the moon each go once round it a period (the
 sun across the sky through the Gymnopédie and slowly round under the planet through the night; the moon up for the
 third Gnossienne, setting in the west at dawn, and round under the planet through the day), so when the camera draws
-out they are where they should be: the sun a small white disc with its glare, the moon a little world lit on its sun
+out they are where they should be. Each is one body through the zoom: as the planet draws away it travels from its
+place in the sky to its place in space (`bodies`), out of the frame and back into it as the frame widens, and only
+there takes on its look from space: the sun a small white disc with its glare, the moon a little world lit on its sun
 side, its phase. The planet is lit from the sun: its deep water paler on that side, its far side in shadow, and its
 air warm where the sun's light grazes it. At night the sea's light shows through its deep water from far off, motes in
 a band under the surface. Close, through the first Gnossienne, the ball carries a small warm glow of its own: the
@@ -225,6 +227,12 @@ sea's glow, the rain's rings, the reflections, the surface's light) went out or 
 between 25 and 33.5 cells, and the switch passes unseen. A long figure of the inner voice ran off the frame; each is
 now kept wholly in the picture, across and down. The columns' shade is taken from the sun's angle within a half-turn,
 so it cannot change sides at the seam; and the soft-light sprites are kept by all three of their colours.
+
+## Taken away
+
+The saved video was made end to end and read back: picture and sound (VP9 and Opus at 720p, played through once at
+4×), every titled moment painted in and readable, the weather, the aurora and the whale all there. The vertical
+"Shorts" frame and the tighter Zoom framing were looked at through the day too.
 
 ## Checks
 

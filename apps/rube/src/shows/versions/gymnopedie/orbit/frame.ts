@@ -109,24 +109,41 @@ export interface Body {
   sun: boolean
   /** How far from overhead, radians. */
   angle: number
+  /** Its radius on the canvas, device pixels. */
+  r: number
 }
 
 /** The sun and the moon at `t`, on their arcs over the horizon; they light nothing once the planet is small in the frame. */
 export function bodies(ctx: Ctx2D, c: PieceCtx, v: View, day: Sky): Body[] {
-  const [hx, hy] = onCanvas(ctx, c.k, ...polar(along(c.t) + 0.55, 0))
+  const m = ctx.getTransform()
+  const [hx, hy] = onCanvas(ctx, c.k, ...polar(along(c.t) + 0.55, 0), m)
   const reach = frameOf(ctx) * 0.62
-  // Only close: once the planet draws away they are its sky's, not the frame's.
-  const near = 1 - smooth(v.wide, 0, 0.25)
-  const at = (angle: number, light: number, sun: boolean): Body => ({
-    x: hx + Math.sin(angle) * reach * 1.25,
-    y: hy - Math.cos(angle) * reach,
-    light: Math.abs(angle) > 1.9 ? 0 : light,
-    sun,
-    angle,
-  })
+  // As the planet draws away each goes, not out, but to where it is in space round the planet (`inSpace`), so the
+  // sun of the sky and the sun of space are one sun travelling; and goes over to its look from space once there.
+  const travel = smooth(v.wide, 0, 0.3)
+  const near = 1 - smooth(v.wide, 0.3, 0.55)
+  const cell = Math.hypot(m.a, m.b) * c.k
+  const at = (angle: number, way: number, far: number, size: number, light: number, sun: boolean): Body => {
+    const [sx, sy] = onCanvas(ctx, c.k, Math.sin(way) * RADIUS * far, -Math.cos(way) * RADIUS * far, m)
+    return {
+      x: hx + Math.sin(angle) * reach * 1.25 + (sx - hx - Math.sin(angle) * reach * 1.25) * travel,
+      y: hy - Math.cos(angle) * reach + (sy - hy + Math.cos(angle) * reach) * travel,
+      light: Math.abs(angle) > 1.9 ? 0 : light,
+      sun,
+      angle,
+      r: frameOf(ctx) * (sun ? 0.045 : 0.03) * (1 - travel) + RADIUS * size * cell * travel,
+    }
+  }
   const veil = 1 - 0.8 * overcastAt(c.t)
-  return [at(sunAngle(c.t), near * veil * (1 - day.night * 0.8), true), at(moonAngle(c.t), near * day.night, false)]
+  return [
+    at(sunAngle(c.t), sunWay(c.t), SUN_FAR, 0.05, near * veil * (1 - day.night * 0.8), true),
+    at(moonAngle(c.t), moonWay(c.t), MOON_FAR, 0.055, near * day.night, false),
+  ]
 }
+
+/** How far from the planet's middle the sun and the moon are in space, in radii of the planet. */
+export const SUN_FAR = 1.85
+export const MOON_FAR = 1.5
 
 /** Which way the sun is from the planet's middle at `t`, radians clockwise from the world's up. */
 export const sunWay = (t: number): number => along(t) / RADIUS + sunAngle(t)

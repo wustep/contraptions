@@ -8,7 +8,7 @@ import {
 } from './air'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
-  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, sunAngle, moonAngle, type Body, bodies, sunWay, moonWay, AURORA_OVER,
+  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, sunAngle, moonAngle, type Body, bodies, sunWay, moonWay, AURORA_OVER, SUN_FAR, MOON_FAR,
 } from './frame'
 
 /**
@@ -201,8 +201,8 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     ctx.fill()
     ctx.globalAlpha = 1
   }
-  body(sun, F * 0.045, '#FFF1D6', 'rgba(255, 214, 160, A)')
-  body(moon, F * 0.03, '#F2EEE2', 'rgba(200, 214, 240, A)')
+  body(sun, sun.r, '#FFF1D6', 'rgba(255, 214, 160, A)')
+  body(moon, moon.r, '#F2EEE2', 'rgba(200, 214, 240, A)')
   ctx.restore()
 
   // The clouds and the gulls, close: once the planet draws away they are too small to be anything.
@@ -210,7 +210,7 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   if (near > 0.01) air(p, c, v, day, sun, moon, near)
 
   // Far off, the sun and the moon in space, where they are from the planet.
-  const afar = smooth(v.wide, 0.1, 0.55)
+  const afar = smooth(v.wide, 0.3, 0.55)
   if (afar > 0.01) inSpace(p, c, afar)
 
   // Rays from the low sun, at dawn and through the afternoon into the sunset; not under the shower's cloud, so they
@@ -244,8 +244,8 @@ function inSpace(p: p5, c: PieceCtx, light: number): void {
   const ctx = p.drawingContext as Ctx2D
   const k = c.k
   const sun = sunWay(c.t)
-  const sx = Math.sin(sun) * RADIUS * 1.85 * k
-  const sy = -Math.cos(sun) * RADIUS * 1.85 * k
+  const sx = Math.sin(sun) * RADIUS * SUN_FAR * k
+  const sy = -Math.cos(sun) * RADIUS * SUN_FAR * k
   const glare = ctx.createRadialGradient(sx, sy, 0, sx, sy, RADIUS * 0.9 * k)
   glare.addColorStop(0, `rgba(255, 240, 214, ${(0.7 * light).toFixed(3)})`)
   glare.addColorStop(0.06, `rgba(255, 220, 178, ${(0.32 * light).toFixed(3)})`)
@@ -260,8 +260,8 @@ function inSpace(p: p5, c: PieceCtx, light: number): void {
 
   const moon = moonWay(c.t)
   const mr = RADIUS * 0.055 * k
-  const mx = Math.sin(moon) * RADIUS * 1.5 * k
-  const my = -Math.cos(moon) * RADIUS * 1.5 * k
+  const mx = Math.sin(moon) * RADIUS * MOON_FAR * k
+  const my = -Math.cos(moon) * RADIUS * MOON_FAR * k
   const halo = ctx.createRadialGradient(mx, my, mr, mx, my, mr * 4)
   halo.addColorStop(0, `rgba(200, 214, 240, ${(0.16 * light).toFixed(3)})`)
   halo.addColorStop(1, 'rgba(200, 214, 240, 0)')
