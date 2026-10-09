@@ -48,11 +48,13 @@ page's credits and byline hooks.
 That shape gave the layout: the laundromat in the quiet, the jumps as it thickens, everything at once on the fight,
 the rocks in the silence, the pull back on the peak, and the credits over the tail.
 
-**The audio.**
-- It was fetched once from the official upload (provided to YouTube by Virgin Music Group for A24 Music) with
-  yt-dlp. Homebrew's yt-dlp got a 403; a current yt-dlp in a scratch venv worked.
-- `scripts/shows/eeaao-cue.sh` cuts it to 0 to 332 s, fading over the last nine seconds. That fade is the only edit, so
-  every onset is the recording's own.
+**The audio.** Playback is YouTube only.
+- The page embeds the official upload (provided to YouTube by Virgin Music Group for A24 Music) through YouTube's
+  privacy-enhanced player. It plays from its first second to 5:32, fading over the last nine seconds. No copy of the
+  recording is in the repository or the build (`ATTRIBUTION.txt`).
+- To measure it, the upload was once fetched privately with yt-dlp (Homebrew's got a 403; a current one in a scratch
+  venv worked) and cut the same way by `scripts/shows/eeaao-cue.sh`. That cut was the only edit, so every onset is
+  the recording's own. The cut file was then removed.
 
 **Its clock.** `scripts/shows/eeaao-onsets.py` measured the file once (numpy and ffmpeg) into
 `scripts/shows/plans/eeaao-onsets.json`:
@@ -570,6 +572,11 @@ The notes went back to the builders who made each part, who still had their cont
   was over 40 ms. Memory after a forced collection rose from 27 MB to 34 MB over the show. Played three times over
   its first 100 s, it rose 1 MB the first time and not at all after. That is caches filling as each stretch is first
   played, not a leak. Nothing was changed.
+- **A pass for the song.** Every audit used the dev's `?music=file` override, so the real page was checked. Opened
+  plainly, it reaches only for YouTube's privacy-enhanced embed of the official upload, and the music is ready. No
+  audio file is requested. The production build ships none of this recording (its audio files are other shows').
+  The write-up's account of the audio had still described a cut file as if the show played it. It now says that
+  playback is YouTube only, and that the scripts are for measuring.
 
 ## The looks
 
@@ -695,8 +702,9 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   (PR #88):
   - `Performance.titles` and the page's words layer, for the credits;
   - `Framing.angle`, the camera roll, which is unused here.
-- **Rebuilding the audio.** `sh scripts/shows/eeaao-cue.sh <fetched cue>` rebuilds the file, and
-  `python3 scripts/shows/eeaao-onsets.py` measures it again.
+- **Measuring the audio again.** For authoring only: `sh scripts/shows/eeaao-cue.sh <fetched cue>` cuts a private
+  copy, and `python3 scripts/shows/eeaao-onsets.py` measures it. The copy is not to be committed or shipped; the
+  show plays from YouTube.
 
 ## How it was made
 
