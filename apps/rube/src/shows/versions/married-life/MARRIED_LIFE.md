@@ -545,7 +545,10 @@ window.
     the covers. The yard's grey lifts from 90 s, with his walk out, instead of from 95. Re-watched by the same viewer:
     both land (the slump reads as "she can't go on", the ward takes it up naturally). Optional: dimming the
     autumn light from her fall, then tried and kept (`overcast` in `hill/climb.ts`): a cloud's shadow over the field,
-    dimming and cooling over two seconds from her fall and held to the cut, leading into the ward's dusk.
+    dimming and cooling over two seconds from her fall and held to the cut, leading into the ward's dusk. Re-watched:
+    felt as the light going out of the place, the two of them still clear; the cut into the brighter ward reads as a
+    change of place (its window's gold to night carries the fall of light on), so the overcast is not eased out before
+    it, which would undo the beat; 20% is the right strength (any more reads as a grade over the shot).
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
