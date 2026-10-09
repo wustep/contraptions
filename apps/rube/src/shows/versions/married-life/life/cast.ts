@@ -64,6 +64,15 @@ export const LEANS: { t: number; amp: number; rise: number }[] = [
   { t: 221.884, amp: -0.06, rise: 0.5 },
   { t: 226.203, amp: -0.06, rise: 0.55 },
 ]
+/**
+ * Where he draws the string in short and lets it out again (show seconds): at home, as the latch gives, he gathers it
+ * in so the balloon comes in under the lintel with him, before the door shuts behind him, and past the wall between
+ * the door and the bay; he lets it out again in the bay, before he ties it to her chair. `string` is its gathered
+ * length; it is taken in over [in0, in1] and let out over [out0, out1], quintic eased.
+ */
+export const GATHERS: { in0: number; in1: number; out0: number; out1: number; string: number }[] = [
+  { in0: 208.2, in1: 209.3, out0: 212.7, out1: 214.2, string: 0.3 },
+]
 function stir(t: number): number {
   let x = 0
   for (const s of STIRS) {
@@ -243,6 +252,11 @@ function stringAt(show: LifeShow, t: number): number {
     const into = ease((t - (tie.arrive - 0.1)) / 1.2)
     const out = t < tie.to ? 0 : ease((t - tie.to) / 2.2)
     L += (tie.string - BALLOON_SIZE.string) * into * (1 - out)
+  }
+  for (const g of GATHERS) {
+    const into = ease((t - g.in0) / (g.in1 - g.in0))
+    const out = ease((t - g.out0) / (g.out1 - g.out0))
+    L += (g.string - BALLOON_SIZE.string) * into * (1 - out)
   }
   return L
 }

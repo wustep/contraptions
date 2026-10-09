@@ -853,8 +853,8 @@ function drawCrestLight(p: p5, k: number, a: number): void {
   // A soft penumbra round the whole, then the two shafts crisp inside it, warmest at the glass.
   shaft(gTop, gFoot, 0.12, 0.05, 0.03)
   for (const [y0, y1] of [[gTop, bar - 0.035], [bar + 0.035, gFoot]]) {
-    shaft(y0, y1, 0.03, 0.08, 0.05)
-    shaft(y0, y1, 0, 0.15, 0.1)
+    shaft(y0, y1, 0.03, 0.1, 0.07)
+    shaft(y0, y1, 0, 0.21, 0.15)
   }
   // Where it lands: a warm glow on the wall low behind them (only the wall: the floor's cut edge stays dark).
   const mid = (CREST.from + CREST.to) / 2
@@ -875,12 +875,14 @@ function drawCrestLight(p: p5, k: number, a: number): void {
 /* ------------------------------------------------------------------ their wedding photograph */
 
 /**
- * Their wedding photograph on the hall's wall, above the chair rail over the open floor: the one the flash took at the
- * start, the same drawing that stands on the funeral's easel (church.ts `drawPhotograph`), smaller and without its
- * ribbon: a gilt frame, the sepia card, a square and a round one touching. The dance's crest is framed under it, so
- * at the loudest bar of the second waltz they dance under the day they married. Its middle, and the top of its frame.
+ * Their wedding photograph on the hall's wall, hung just under the chair rail over the open floor: the one the flash
+ * took at the start, the same drawing that stands on the funeral's easel (church.ts `drawPhotograph`), smaller and
+ * without its ribbon: a gilt frame, the sepia card, a square and a round one touching. The dance's crest is framed
+ * under it, so at the loudest bar of the second waltz they dance under the day they married: hung low and large
+ * enough to be read at the crest's close, a hand over his top, not a stamp at the frame's edge. Its middle, and the
+ * top of its frame.
  */
-const PHOTO = { x: 4.5, top: -1.335, s: 0.72 }
+const PHOTO = { x: 4.5, top: -0.87, s: 1.05 }
 function drawWeddingPhoto(p: p5, k: number, weight: number, age: number): void {
   const { x, top, s } = PHOTO
   const gold = mixHex(HOME.brass, '#B9A06A', age * 0.6)
@@ -1147,7 +1149,7 @@ export const ties = part<TiesState>(
       // The dance, on the swell: the camera goes in with it. On its first downbeat the gramophone is whole in the left
       // third, its record turning, the two of them meeting in front of it; then in, down the hall with them, to land
       // closest on the crest, 52's downbeat, as she rolls out from his side to arm's length: the two of them in the
-      // warm pool as it swells, under their wedding photograph (`PHOTO`, in the frame's upper third; the key a touch
+      // warm pool as it swells, under their wedding photograph (`PHOTO`, low over them in the frame's upper half; the key a touch
       // higher than `low` for it, which Zoom still allows). That close sits between the horn's mouth
       // (its rim reaches x 2.98) and the ticket press's hand lever (its grip 6.48), so neither is cut by the frame's
       // edges, and it holds them left of the middle, with the floor they are waltzing into ahead of them. It stays

@@ -200,7 +200,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   bar 51's third beat into bar 52's downbeat (156.75 to 157.5 s, the loudest of the second half; by bar 53 it is 8 to
   10 dB down). They dance in hold, and through the crest she rolls out along the floor to arm's length on
   52's downbeat, as the warm pool brightens and the camera, come in with the swell, is closest on the two of them
-  (1.9 cells) under their wedding photograph on the hall wall. The low evening sun through the front door's glass
+  (1.9 cells) under their wedding photograph on the hall wall, hung low under the chair rail and large enough to read
+  at the close: the two of them at arm's length under the picture of them touching. The low evening sun through the front door's glass
   lays two long warm shafts down the hall (the glass's cross bar splits it, so it reads as sun through a window): it gathers with the swell and falls full on the two of them on the crest, the
   light that fell on them at the kiss, and settles as the music falls away. She rolls back in by bar 53, and as they close into each other's arms on bar 55 it cranes out to the desk
   and her painting.
@@ -262,8 +263,10 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 - The church's steps become his own front steps: a match cut. The house is faded, the roof patched where the tree
   came through.
 - On the piano's notes he climbs the three steps, one careful step at a time, the camera close (3.5 cells) on the
-  steps, the door and the porch rail, the mailbox's faded handprints at the frame's edge. The latch; the door, and
-  the camera widens as he goes in. The bay's glass runs down to the room's floor, so he is seen whole through it,
+  steps, the door and the porch rail, the mailbox's faded handprints at the frame's edge. The latch; as it gives he
+  draws the balloon's string in short (`GATHERS` in `life/cast.ts`), so it comes in under the lintel with him before
+  the door shuts and passes the wall between the door and the bay at his side; the door, and the camera widens as he
+  goes in. In the bay he lets the string out again, before he ties it. The bay's glass runs down to the room's floor, so he is seen whole through it,
   and its middle light is one pane from head to floor, so no bar crosses the balloon over her chair. He ties the
   balloon to her chair, so it floats over the empty seat. He sits in his, with a slow settle, and leans to put the
   lamp on. Tied to her chair, the balloon leans the smallest way toward him on three of the piano's phrase notes
@@ -439,6 +442,14 @@ window.
   (at the toll's width it read as speckled plaster), and a deeper veil on the storey under the nursery (the props
   that poke up at the frame's foot are not under it). Considered and kept: the fix-up's wide from 31 to 36 s, where the
   two of them are small, because it is the house made new.
+
+- **Polish round 6 (Opus 5.5).** Contact sheets of the whole show, then stills at the moments that matter. At home
+  the balloon was lost for 1.5 s behind the wall between the door and the bay as he walked in, and the door shut
+  while it was still in the doorway: now he gathers the string in at the latch and lets it out in the bay, and it is
+  hidden only for the half second he is. The dance's crest was a bare wall with the photograph a stamp at its top
+  edge: the photograph is hung lower and larger, right over them, and the crest's two shafts are a little stronger.
+  Considered and kept: Ellie at the open front door stands before its leaf, not past it against the evening; past it
+  she would leave the Zoom frame at the cut into the hill.
 
 ## Known limits
 
