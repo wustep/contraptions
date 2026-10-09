@@ -526,6 +526,11 @@ lets her go at the cut, is carried across it into the gala: in the same place by
 on her), a ghost of it in light on the dark room, paling away over a second and a half. The gala comes out of what she
 is shown.
 
+A thirty-eighth checked the thirty-seventh cold: a fresh viewer, asked when the party was, saw the ring's ghost in the
+ballroom and read the gala as a future she is shown (where earlier readers had it as the next day), though not how far
+on. Its other notes were each meant (the small ring by her where the vision begins, the dusk as she knows, the push in
+on the call, the alarm lamp). Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
