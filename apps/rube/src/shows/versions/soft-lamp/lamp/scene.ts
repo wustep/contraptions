@@ -4,9 +4,10 @@ import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WI
 import { MUSIC_END, heldAt } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt, squashAt } from './route'
 import { cat } from './cat'
-import { bloom, clock, curtain, draughtAt, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
+import { bloom, clock, curtain, draughtAt, scrim, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
 import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
+import { titlesAt } from './titles'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { night } from './sky'
@@ -823,6 +824,8 @@ export const things = scenery<null>(
     bloom(ctx, c.t)
     motes(ctx, c.t)
     vignette(ctx)
+    // Under each track's now-playing line (not the title or the credits, which stand on the dark wall).
+    for (const card of titlesAt(c.t)) if (card.names.length === 1 && Array.isArray(card.names[0])) scrim(ctx, card.light, card.at)
     grain(ctx, c.t)
   }),
 )

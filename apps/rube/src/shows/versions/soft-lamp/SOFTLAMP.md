@@ -435,6 +435,14 @@ ball. The machine and its timing were right and are untouched; the room around i
     shorter handles: whole in the upright look, under the foot of the room's widest frame, and in the overview the
     notebook, the handles and the bag's top edge, which read as a bag.
 
+### The twenty-second lofi pass
+
+64. **The track names stood on the window's bars.** Each now-playing line sits over the glass, and the camera puts
+    the window's cream mullion or frame under it in most tracks: "Destination Unknown" had its D on the frame,
+    "Blooming Dales" its g on the mullion, cream on cream. While a track's card is up, the scene now lays a soft dark
+    wash under it (`scrim`, `lamp/decor.ts`), as a stream puts under its words, fading with the card; the bars go dim
+    beneath the type and every letter reads. The title and the credits stand on the dark wall and need none.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

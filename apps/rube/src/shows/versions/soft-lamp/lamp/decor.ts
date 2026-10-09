@@ -388,6 +388,32 @@ export function vignette(ctx: Ctx): void {
   ctx.restore()
 }
 
+/**
+ * Behind the now-playing line, while it is up: a soft dark wash across the top middle of the picture, as a stream puts
+ * under its words, so the cream type never stands on the window's cream bars. The type is the page's; this is only
+ * what it stands on. `light` is how far the card is up (0 to 1); `at` where its top middle sits in the 16:9 frame.
+ */
+export function scrim(ctx: Ctx, light: number, at: [number, number]): void {
+  if (light <= 0.001) return
+  const v = viewOf(ctx)
+  const w = v.x1 - v.x0
+  // The 16:9 box the card is placed in, middle of the stage.
+  const bh = (w * 9) / 16
+  const by0 = (v.y0 + v.y1) / 2 - bh / 2
+  const cx = v.x0 + w * at[0]
+  const cy = by0 + bh * (at[1] + 0.035)
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.scale(w * 0.3, bh * 0.07)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+  g.addColorStop(0, `rgba(14, 10, 30, ${(0.5 * light).toFixed(3)})`)
+  g.addColorStop(0.6, `rgba(14, 10, 30, ${(0.32 * light).toFixed(3)})`)
+  g.addColorStop(1, 'rgba(14, 10, 30, 0)')
+  ctx.fillStyle = g
+  ctx.fillRect(-1, -1, 2, 2)
+  ctx.restore()
+}
+
 /** A few tiles of film grain, made once, one shown at a time. */
 let tiles: CanvasPattern[] | null = null
 function grainTiles(ctx: Ctx): CanvasPattern[] {
