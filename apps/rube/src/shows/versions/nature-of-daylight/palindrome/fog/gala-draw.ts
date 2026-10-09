@@ -1,11 +1,12 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
-import { mix, rgba } from '../cast'
+import { drawInk, mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
 import { beats, level, SEAM } from '../music'
 import { GALA, TENT } from '../worlds'
 import { CALL_X, KEY_SPAN, KEY_W, KEYS, PHONE_BODY } from '../twelve/tent'
 import { NUMBER } from '../twelve/timeline'
+import { herAt as fogHerAt, SMALL, SMALL_TURN, smallBloom, smallC, smallPale, smallR, smallTendrils, smallU } from './plan'
 import {
   BOTTLE,
   bottleAngle,
@@ -24,6 +25,7 @@ import {
   tierFill,
   T_TOAST,
   T_TOUCH,
+  herAt,
 } from './gala-plan'
 
 /**
@@ -435,6 +437,7 @@ export function drawGala(p: p5, k: number, t: number): void {
   chandelier(ctx, k, f, 5.4, t, 2)
   crowd(ctx, k, f, t)
   haze(ctx, k, f, t)
+  carried(p, k, t)
   // The foreground floor's sheen, and the tower's light lying on it.
   const sheen = ctx.createLinearGradient(0, FLOOR_Y * k, 0, (FLOOR_Y + 1.5) * k)
   sheen.addColorStop(0, rgba(GALA.lightWarm, 0.1))
@@ -444,6 +447,32 @@ export function drawGala(p: p5, k: number, t: number): void {
   tower(ctx, k, t)
   stand(ctx, k, t)
   number(ctx, k, t)
+  p.pop()
+}
+
+/**
+ * The ring she was shown, carried across the cut into the gala: at the cut it is where it was, in the same place by
+ * her on the screen (the cut carries her and the camera together), and pales away over a second and a half. In the fog
+ * it is ink on white; here, on the dark room, a ghost of it in light. So the gala comes out of what she is shown, as the
+ * swing did, and reads as another thing she sees: years on, not the next day.
+ */
+function carried(p: p5, k: number, t: number): void {
+  const at = SEAM.gala
+  const fade = 1 - smooth(t, at, at + 1.6)
+  if (t < at || fade <= 0.001) return
+  const c = smallC(at)
+  const her0 = fogHerAt(at)
+  const here = herAt(at)
+  const x = here[0] + c[0] - her0[0]
+  const y = here[1] + c[1] - her0[1]
+  const ctx = p.drawingContext as Ctx
+  p.push()
+  p.translate(x * k, y * k)
+  p.rotate(SMALL_TURN)
+  ctx.save()
+  ctx.globalAlpha *= (1 - smallPale(at)) * 1.5 * fade
+  drawInk(p, k, 0, 0, smallR(at), SMALL, smallU(at), { tendrils: smallTendrils(at), bloom: smallBloom(at), color: mix(GALA.lightWarm, '#FFFFFF', 0.5) })
+  ctx.restore()
   p.pop()
 }
 
