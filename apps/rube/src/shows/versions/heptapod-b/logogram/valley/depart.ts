@@ -124,8 +124,8 @@ export const depart = part<DepartState>(
       exit: [0, 0],
       lane: { segs: lane, fire: DEPART - slot.begin },
       state: { begin: slot.begin },
-      riders: looks(LOUISE_LOOKS),
-      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: (t: number) => ({ x: -0.5 + ianX(t), y: 0, look: (roll: number) => lookFrom(IAN_LOOKS, t, roll) }) }],
+      riders: looks(LOUISE_LOOKS, (t) => herAt(t)[0]),
+      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: (t: number) => ({ x: -0.5 + ianX(t), y: 0, look: (roll: number) => lookFrom(IAN_LOOKS, t, roll, (u) => ianX(u)) }) }],
     }
   },
   (slot) => shotsFor(slot.end),

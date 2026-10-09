@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { ballAt, laneAt, laneTime, type BallChange, type BallState, type Lane, type Piece, type PieceCtx, type Pt, type Seg } from '../../../../parts'
+import { ballAt, laneAt, laneTime, R, type BallChange, type BallState, type Lane, type Piece, type PieceCtx, type Pt, type Seg } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { ShowBall } from '../../../../show'
 
@@ -69,20 +69,29 @@ export interface Look {
  * Her eye turned to look in the windows given, from where her roll has it and back to it (the show hands a rider her
  * roll as the stage draws it, as `spin`), each turn over about half a second. Outside them it rolls with her.
  */
-export function looks(list: Look[]): Riders {
+export function looks(list: Look[], xAt?: (t: number) => number): Riders {
   return (t, hero) => {
     const roll = hero.spin ?? 0
-    const spin = lookFrom(list, t, roll)
+    const spin = lookFrom(list, t, roll, xAt)
     return spin === null ? null : [{ ...hero, spin }]
   }
 }
-/** Where an eye points at `t` given where its roll has it: turned to the look in force, or null to leave it. */
-export function lookFrom(list: Look[], t: number, roll: number): number | null {
+/**
+ * Where an eye points at `t` given where its roll has it: turned to the look in force, or null to leave it. Given
+ * `xAt` (where the ball is, in any frame of its own, through the look), the way round is chosen once, from where its
+ * roll had the eye as the look began, and held: turned "the short way" at every frame instead, an eye rolling past
+ * the far side of its target would flip and snap half a turn.
+ */
+export function lookFrom(list: Look[], t: number, roll: number, xAt?: (t: number) => number): number | null {
   const look = list.find((l) => t > l.from && t < l.to + 0.4)
   if (!look) return null
   const w = ease((t - look.from) / 0.45) * (1 - ease((t - look.to) / 0.4))
   if (w <= 0) return null
-  return roll + w * turnTo(roll, look.at(t))
+  if (!xAt) return roll + w * turnTo(roll, look.at(t))
+  const from = roll - (xAt(t) - xAt(look.from)) / R
+  const aim = look.at(look.from)
+  const target = from + turnTo(from, aim) + turnTo(aim, look.at(t))
+  return roll + w * (target - roll)
 }
 
 /** Where they are: the ball's own fields but its id and, unless they have changed, its colour. */

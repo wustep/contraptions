@@ -140,6 +140,8 @@ card comes the room goes to dusk, the window still lit. After the last card the 
 - Hannah in the picture the whole of the first vision, running on the level, never near the bank;
 - Louise in the frame under Zoom and findable (never under 5.5 px across) outside the great wides; never hidden long;
 - Ian and Hannah where the story has them;
+- their eyes never snapping: beyond what the ball's own roll turns it, an eye turns no more than 0.15 rad in a
+  120th of a second, at cuts, at seams between parts, and where a look takes it from the roll or hands it back;
 - the end credits' words, and the onset file being this recording's.
 
 ## How it is built
@@ -267,6 +269,11 @@ strongest pulses held against what the picture does on them. What changed:
 - **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
   the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
   off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
+- **No eye ever snaps**: a 120 fps scan of every eye found five snaps of up to 2.8 rad, where a look or the carry
+  across a cut turned "the short way" toward its target and flipped as the rolling eye passed its far side (97.7,
+  139.7, 142.8, 166.4, 183.07), and a seam inside the shell (85.79) where the shaft's eyes handed to the chamber's.
+  The way round is now chosen once, as a look or a carry begins, and held; the carry also crosses seams between
+  parts, Ian's too. `check:shows` holds it from now on.
 - **Her eye across the cuts**: every cut is a match cut on her, her place on the screen carried, but her eye (her
   roll, counted from each place's own origin) jumped at the vision cuts and out of the push, as much as half a turn.
   For a moment after a cut it now turns from where the last place left it to where this one has it. (Not at the

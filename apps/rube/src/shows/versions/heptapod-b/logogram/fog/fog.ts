@@ -88,7 +88,7 @@ function stretch(i: number, name: string, shots: (slot: Slot, o: Pt, at: (t: num
         exit: [end[0] + 0.5, end[1]] as Pt,
         lane: { segs, fire: (first ?? slot.begin) - slot.begin },
         state: null,
-        riders: FOG_LOOKS[i].length ? looks(FOG_LOOKS[i]) : undefined,
+        riders: FOG_LOOKS[i].length ? looks(FOG_LOOKS[i], (t) => herAt(t)[0]) : undefined,
       }
     },
     (slot) => shots(slot, o, at),

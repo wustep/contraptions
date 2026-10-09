@@ -101,7 +101,7 @@ export const chamber = part<ChamberState>(
         who: 'ian',
         from: slot.begin,
         to: slot.end,
-        at: (t) => ({ x: IAN_PATH.x(t), y: 0, look: (roll) => lookFrom(IAN_LOOKS, t, roll) }),
+        at: (t) => ({ x: IAN_PATH.x(t), y: 0, look: (roll) => lookFrom(IAN_LOOKS, t, roll, (u) => IAN_PATH.x(u)) }),
       },
     ]
     return {
@@ -109,7 +109,7 @@ export const chamber = part<ChamberState>(
       exit: [X_LEAN + 0.5, 0] as Pt,
       lane: { segs: route(ways), fire: WAKE[0] - slot.begin },
       state: { begin: slot.begin },
-      riders: looks(LOOKS),
+      riders: looks(LOOKS, (t) => LOUISE_PATH.x(t)),
       company,
     }
   },

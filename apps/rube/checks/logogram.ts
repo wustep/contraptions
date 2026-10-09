@@ -82,6 +82,44 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
   check('logogram: inside a place the ball never jumps (no more than 0.04 cells a millisecond)', jump <= 0.04, `${jump.toFixed(3)} at ${jumpAt.toFixed(3)} s`)
   check('logogram: every cut is a match cut: on the screen the ball never jumps (no more than 1% of the frame a millisecond)', screen <= 0.01, `${screen.toFixed(4)} at ${screenAt.toFixed(3)} s`)
 
+  // Their eyes are how they act, and the eye a look turns is turned from the roll: it never snaps, at a cut, at a seam
+  // between parts, or where a look takes it from the roll or hands it back. Beyond what the ball's own roll turns it, an
+  // eye turns no more than 0.15 rad in a 120th of a second (the prologue's quickest glance is 0.13).
+  {
+    const wrap = (a: number) => {
+      const d = a % (2 * Math.PI)
+      return d > Math.PI ? d - 2 * Math.PI : d < -Math.PI ? d + 2 * Math.PI : d
+    }
+    const eyes = (t: number) => {
+      const h = show.at(t)
+      const col = h.universe.pieces[0]?.col ?? 0
+      const out = new Map<string, { s: number; x: number }>()
+      for (const b of h.balls ?? [{ id: h.ball.id, x: h.x, spin: undefined }]) out.set(String(b.id), { s: b.spin ?? (b.x - col) / R, x: b.x })
+      if (!out.has(String(h.ball.id))) out.set(String(h.ball.id), { s: (h.x - col) / R, x: h.x })
+      return { out, leg: show.owner(t) }
+    }
+    const dt = 1 / 120
+    let prev = eyes(0)
+    let worst = 0
+    let worstAt = 0
+    for (let t = dt; t < perf.duration; t += dt) {
+      const cur = eyes(t)
+      if (cur.leg === prev.leg) {
+        for (const [id, b] of cur.out) {
+          const a = prev.out.get(id)
+          if (!a) continue
+          const over = Math.abs(wrap(b.s - a.s)) - Math.abs((b.x - a.x) / R) * 1.6
+          if (over > worst) {
+            worst = over
+            worstAt = t
+          }
+        }
+      }
+      prev = cur
+    }
+    check('logogram: their eyes never snap (no more than 0.15 rad in a 120th of a second beyond their roll)', worst <= 0.15, `${worst.toFixed(3)} at ${worstAt.toFixed(3)} s`)
+  }
+
   // Every strike lands on something the recording has: a pulse, or a measured onset.
   const within = (t: number) => onPulse(t, 0.03) || onOnset(t, 0.04)
   const off: string[] = []
