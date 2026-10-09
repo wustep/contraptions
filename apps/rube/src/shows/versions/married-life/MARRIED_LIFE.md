@@ -591,6 +591,10 @@ window.
   (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
   Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
+- At 4x the show runs at 2x: YouTube's player plays no faster, the show's clock follows the music, and with the
+  mp3 out of the repo there is no file to fall to (`soundtrack.ts` keeps YouTube when there is none). Picture and
+  music stay in step; 0.25x to 2x are exact. Every YouTube-only show shares this; changing it (a silent 4x on the
+  wall clock, or no 4x without a file) is a choice for the player, not this show.
 - Only Chrome on macOS has been watched, and Safari has not been measured for this take. The YouTube cue has, on the
   deployed preview in Chromium (PR #163): it loads, plays, and drives the show's clock in real time (10 s of show in
   10 s), with no fallback; whether picture and sound feel in sync to a listener is still for a person to judge.
