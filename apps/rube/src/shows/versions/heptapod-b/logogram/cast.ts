@@ -632,25 +632,14 @@ export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
     outer.push([c * (mid + hw) * breathe, si * (mid + hw) * breathe])
     inner.push([c * (mid - hw) * breathe, si * (mid - hw) * breathe])
   }
-  p.push()
-  p.noStroke()
-  // Haze, then body: the soft edge of ink in water, then the ink.
-  const passes: [number, number][] = fade > 0 ? [[2.6 * spread, 0.05], [1.7 * spread, 0.1], [1, 0.9 - 0.4 * fade]] : [[2.4, 0.05], [1.6, 0.11], [1, 0.92]]
-  for (const [grow, a] of passes) {
-    p.fill(alpha(p, color, a * light))
-    p.beginShape()
-    for (let i = 0; i < outer.length; i++) {
-      const mx = (outer[i][0] + inner[i][0]) / 2
-      const my = (outer[i][1] + inner[i][1]) / 2
-      p.vertex((mx + (outer[i][0] - mx) * grow) * k, (my + (outer[i][1] - my) * grow) * k)
-    }
-    for (let i = inner.length - 1; i >= 0; i--) {
-      const mx = (outer[i][0] + inner[i][0]) / 2
-      const my = (outer[i][1] + inner[i][1]) / 2
-      p.vertex((mx + (inner[i][0] - mx) * grow) * k, (my + (inner[i][1] - my) * grow) * k)
-    }
-    p.endShape(p.CLOSE)
-  }
+  // The ring and its tendrils are one body of ink, filled at once: where a tendril leaves the ring there is no darker
+  // overlap. Its haze is a true blur round the whole of it (the soft edge of ink in water), never stepped outlines.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const m = ctx.getTransform()
+  const px = Math.hypot(m.a, m.b)
+  const body = (fade > 0 ? 0.9 - 0.4 * fade : 0.92) * light
+  const shapes: Pt[][] = [[...outer, ...inner.slice().reverse()]]
+  const drops: { x: number; y: number; rx: number; ry: number; a: number }[] = []
   // Tendrils: curling strokes off the ring, tapering, some ending in a drop.
   if (reach > 0.001) {
     s.tendrils.forEach((td, i) => {
@@ -677,33 +666,47 @@ export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
         left.push([x + tx * w, y + ty * w])
         right.push([x - tx * w, y - ty * w])
       }
-      for (const [g, a] of [[1.8, 0.1], [1, 0.9 - 0.4 * fade]] as const) {
-        p.fill(alpha(p, color, a * light))
-        p.beginShape()
-        for (let j = 0; j < left.length; j++) {
-          const mx = (left[j][0] + right[j][0]) / 2
-          const my = (left[j][1] + right[j][1]) / 2
-          p.vertex((mx + (left[j][0] - mx) * g) * k, (my + (left[j][1] - my) * g) * k)
-        }
-        for (let j = right.length - 1; j >= 0; j--) {
-          const mx = (left[j][0] + right[j][0]) / 2
-          const my = (left[j][1] + right[j][1]) / 2
-          p.vertex((mx + (right[j][0] - mx) * g) * k, (my + (right[j][1] - my) * g) * k)
-        }
-        p.endShape(p.CLOSE)
-      }
+      shapes.push([...left, ...right.slice().reverse()])
       if (td.drop && grow > 0.85) {
         const u = 1.12
         const rr = r0 + dir * len * u
         const aa = td.a + td.curl * (len / Math.max(0.1, o.r))
         // A drop: small, dark, never ball-sized (its width is a fraction of the ring's thickness).
         const d = Math.min(half * 0.9, R * 0.6) * spread
-        p.fill(alpha(p, color, (0.85 - 0.4 * fade) * light * smooth01((grow - 0.85) / 0.15)))
-        p.ellipse(Math.cos(aa + spin) * rr * breathe * k, Math.sin(aa + spin) * rr * breathe * k, d * 2 * k, d * 1.6 * k)
+        drops.push({ x: Math.cos(aa + spin) * rr * breathe, y: Math.sin(aa + spin) * rr * breathe, rx: d, ry: d * 0.8, a: (0.85 - 0.4 * fade) * light * smooth01((grow - 0.85) / 0.15) })
       }
     })
   }
-  p.pop()
+  const [cr, cg, cb] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))
+  ctx.save()
+  ctx.shadowOffsetX = 0
+  ctx.shadowOffsetY = 0
+  // As wide as the old outer haze reached past the ink's edge, and as faint.
+  ctx.shadowBlur = o.r * 0.16 * spread * k * px
+  ctx.shadowColor = `rgba(${cr}, ${cg}, ${cb}, ${0.6 * light})`
+  ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${body})`
+  ctx.beginPath()
+  for (const pts of shapes) {
+    // All the same way round, so where they overlap the ink is filled once (nonzero), never cut out.
+    let area = 0
+    for (let i = 0; i < pts.length; i++) {
+      const [x0, y0] = pts[i]
+      const [x1, y1] = pts[(i + 1) % pts.length]
+      area += x0 * y1 - x1 * y0
+    }
+    const seq = area < 0 ? pts.slice().reverse() : pts
+    seq.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+    ctx.closePath()
+  }
+  ctx.fill()
+  for (const d of drops) {
+    if (d.a <= 0.004) continue
+    ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${d.a})`
+    ctx.beginPath()
+    ctx.ellipse(d.x * k, d.y * k, d.rx * k, d.ry * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
 }
 
 /**

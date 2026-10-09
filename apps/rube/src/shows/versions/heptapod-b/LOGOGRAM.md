@@ -302,6 +302,10 @@ changed, in the order of the film, and then what runs through it:
 - **The light after the shell** (186.3 → 196.8): where the cloud opens the shafts of light were the floods' pale
   cream, so the reunion sat in a grey-olive wash (a fresh critic's note). They are sunlight now, warmed toward the
   camp lamps' gold and a little stronger: the first warmth the valley has, and the two of them meet in it.
+- **The ink's soft edge** (118 → 185, every logogram): its haze was two flat grey copies of the ring, each wider and
+  fainter, so round the film's central image stood stepped outlines like a vector offset, not ink in water; and each
+  tendril was laid over the ring, so where it left it the ink was doubly dark. The ring and its tendrils are filled
+  as one body now, and the haze is a true blur round the whole of it. Real playback still holds 60 fps through the fog.
 - **The shadow under the bench** (the first frame and the last, and every scene at the window): a dark box under the
   slab with square ends, on the glass's foot and again in the floor's reflection. Its ends fade out within the
   slab's length now.
