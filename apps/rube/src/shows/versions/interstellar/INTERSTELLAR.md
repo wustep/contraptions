@@ -205,13 +205,15 @@ The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a 
 
 | Starts (s) | Role | Names | Fine print |
 | ---: | --- | --- | --- |
-| 261.4 | Directed by | Stephen Wu | |
-| 266.0 | Machines, drawings and code | Claude Opus 5.5 | |
-| 270.7 | With | Joseph Cooper, the sand ball; Dr. Amelia Brand, the blue ball; Murph, the slate ball; TARS, four slabs of steel | |
-| 276.5 | Music | Hans Zimmer | "Cornfield Chase" and "No Time for Caution", from Interstellar (2014). The recordings are used here only for a private tech demo. |
-| 282.4 | Drawn with | p5.js | |
+| 261.4 | Directed by | Stephen Wu; Claude Opus 5.5 | |
+| 266.5 | Machines, drawings and code | Claude Opus 5.5 | |
+| 271.2 | With | Joseph Cooper, the sand ball; Dr. Amelia Brand, the blue ball; Murph, the slate ball, young and old; TARS, four slabs of steel | |
+| 277.0 | Music | Hans Zimmer | "Cornfield Chase" and "No Time for Caution", from Interstellar (2014) |
+| 282.9 | Drawn with | p5.js | |
 
-There is no title card. After p5.js's card goes (about 287 s), the camp holds alone at dawn to the end, 291 s.
+(Each card starts when the one before has gathered (1.4 s), held, and all but a quarter second of its going (0.95 s) is done: `credits.ts`.)
+
+There is no title card. After p5.js's card goes (about 287.5 s), the camp holds alone at dawn to the end, 291 s.
 
 **How it is built.**
 - The words are the page's, not the canvas's. A show's canvas refuses type (`shows/stage.ts`), so that a saved PNG carries no words. `Performance.titles(t)` is a new, optional hook in `shows/registry.ts`. The Shows page (`shows/main.ts`) sets whatever it returns over the composed 16:9 frame, in a serif, sized in hundredths of the frame's height. It fades and blurs each card by its `light`.
@@ -219,7 +221,16 @@ There is no title card. After p5.js's card goes (about 287 s), the camp holds al
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 9 (latest)
+## Polish pass 10 (latest)
+
+Three audits that found nothing to fix in the picture, and one that found the bible out of date.
+
+- **The credits as they are seen.** The page sets the cards' words over the canvas, so stills never show them. Screenshots of the page, seeked into the credits, show each card readable over the sky as the camera draws back (pass 4's slower draw-back has the first card come in while the frame is still close on the two of them; it clears the lamp). The table above had gone stale: the director's card has named Stephen Wu and Claude Opus 5.5 since #94, the cast card says "young and old" for Murph, the music card's fine print is only the cues and the film, and the times had drifted. It is corrected from `credits.ts`.
+- **Is Cooper seen.** Every 0.2 s the frame was sampled where Cooper should be, for his sand. Where it is missing he is meant to be out of sight or changed: the whips, inside the wormhole, the ghost, too small in the ring's reveal and the flight across the axis, inside the combine's works (under the 2.5 s the checks allow), and behind the noria's water.
+- **Camera keys close together.** Every pair of keys under 0.6 s apart that changes the framing by more than 8% is an authored move (the bunker's push-in, the ignition, the mass driver, the tesseract, Murph's room). No check was added: in numbers, last pass's stray keys look like these.
+- **Big frames.** Live, the canvas is drawn at the screen's pixel ratio, so stars and hairlines sized in pixels keep their look on a retina screen; saved video stops at 1080p.
+
+## Polish pass 9
 
 An audit of what changes between frames rather than what a frame looks like. Every tenth of a second, two frames a sixtieth of a second apart were rendered and compared. In that time ordinary motion moves almost nothing, so a large share of changed pixels, standing out against the samples round it, is a pop, a flicker or a snap. After that, the camera's fastest zooms and pans were listed over the whole show. Every one is an authored move (the tesseract's pull-back, the swoop from the ring to the door, the ignition, the whips through the sphere) except two, and both were the same fault: a camera key left too close to another, so a move that should take a second or more took a third of one.
 
