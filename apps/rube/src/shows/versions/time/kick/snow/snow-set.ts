@@ -179,7 +179,7 @@ function drawSet(p: p5, c: Ctx, t: number): void {
   drawValley(ctx, c, x0, x1, st)
   drawFortress(p, ctx, c, t, st)
   drawOutside(ctx, c, t)
-  drawSnowfall(ctx, k, f, st, false)
+  drawSnowfall(ctx, k, f, st, false, t < T.kick)
   ctx.restore()
 }
 
@@ -195,7 +195,7 @@ function drawSetOver(p: p5, c: Ctx, t: number): void {
   ctx.rect(x0 * k, TOP * k, (x1 - x0) * k, (BOTTOM - TOP) * k)
   ctx.clip()
   drawCollapseDust(ctx, c, t)
-  drawSnowfall(ctx, k, f, clock('snow', t), true)
+  drawSnowfall(ctx, k, f, clock('snow', t), true, t < T.kick)
   ctx.restore()
 }
 
@@ -1574,9 +1574,10 @@ function drawCollapseDust(ctx: C2D, c: Ctx, t: number): void {
 
 /**
  * The snow falling, on the snow's own clock (while he is in limbo it hangs in the air): flakes of many sizes, soft,
- * sparse, drifting; in `near` a few bigger ones out of focus, in front of everything.
+ * sparse, drifting; in `near` a few bigger ones out of focus, in front of everything. While the fortress stands
+ * (`indoors`), none falls in its ground floor: the antechamber, the vault and the footing under them are inside.
  */
-function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: number, near: boolean): void {
+function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: number, near: boolean, indoors: boolean): void {
   const S = 4
   const per = near ? (k > 70 ? 5 : k > 40 ? 2 : 1) : k < 8 ? 3 : 7
   const i0 = Math.floor((f.x0 - 1) / S)
@@ -1595,6 +1596,7 @@ function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: numb
         const drift = (((h1 * S + st * 0.12) % S) + S) % S
         const x = i * S + drift + Math.sin(st * (0.5 + h2) + h1 * 9) * 0.25
         const y = j * S + ((h2 * S + st * speed) % S)
+        if (indoors && x > FORT.x0 && x < FORT.x1 && y > FORT.ceil && y < FORT.foot + 1.5) continue
         const r = near ? 0.035 + 0.03 * h1 : 0.018 + 0.04 * h3 * h3
         const a = near ? 0.5 : 0.35 + 0.45 * h1
         if (r * k < 0.5 && !near) continue

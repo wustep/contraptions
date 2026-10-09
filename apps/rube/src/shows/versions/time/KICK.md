@@ -265,6 +265,8 @@ each world, and changed:
 - **Home's table** (248): he came up to the table's end through the near chair. The chair stands pulled out from the
   table now, and he comes up beside it.
 - **Home's terrace** (252 to 265) was a blank pale slab between the house and the lawn: it is laid stone.
+- **The vault** (185 to 190.9): the snow fell inside the sealed vault and the footing under it. While the fortress
+  stands, none falls in its ground floor; it falls again once the kick brings the building down.
 
 ## Inception nods
 
