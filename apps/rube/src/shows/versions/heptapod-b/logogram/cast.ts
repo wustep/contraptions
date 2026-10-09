@@ -440,21 +440,37 @@ export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase
   p.noStroke()
   p.fill(alpha(p, col, 0.97))
   p.translate(at[0] * k, at[1] * k)
-  p.circle(0, 0, r * 0.62 * k)
+  p.circle(0, 0, r * 0.7 * k)
+  // Seven fingers, each a living thing: a full root out of the palm, a long taper with a little curl of its own, and a
+  // soft round pad at its tip where it presses. A hand of seven, never a star of seven points.
+  const n = 10
   for (let i = 0; i < 7; i++) {
     const a = -Math.PI / 2 + (i / 7) * TAU + 0.03 * Math.sin(phase * 0.3 + i)
     const len = r * (0.92 + 0.08 * Math.sin(i * 2.1))
-    const w0 = r * 0.16
-    const w1 = r * 0.07
-    const ca = Math.cos(a)
-    const sa = Math.sin(a)
+    const curl = 0.16 * Math.sin(i * 1.7 + 0.6) + 0.04 * Math.sin(phase * 0.2 + i)
+    const w0 = r * 0.19
+    const w1 = r * 0.078
+    const left: Pt[] = []
+    const right: Pt[] = []
+    let tip: Pt = [0, 0]
+    for (let j = 0; j <= n; j++) {
+      const u = j / n
+      const d = r * 0.18 + (len - r * 0.18) * u
+      const ang = a + curl * u * u
+      const x = Math.cos(ang) * d
+      const y = Math.sin(ang) * d
+      // The side, across the finger's own direction (its spine's, curl and all).
+      const dir = a + 2 * curl * u
+      const w = w1 + (w0 - w1) * (1 - u) ** 1.1
+      left.push([x - Math.sin(dir) * w, y + Math.cos(dir) * w])
+      right.push([x + Math.sin(dir) * w, y - Math.cos(dir) * w])
+      tip = [x, y]
+    }
     p.beginShape()
-    p.vertex((ca * r * 0.2 - sa * w0) * k, (sa * r * 0.2 + ca * w0) * k)
-    p.vertex((ca * len - sa * w1) * k, (sa * len + ca * w1) * k)
-    p.vertex(ca * (len + w1) * k, sa * (len + w1) * k)
-    p.vertex((ca * len + sa * w1) * k, (sa * len - ca * w1) * k)
-    p.vertex((ca * r * 0.2 + sa * w0) * k, (sa * r * 0.2 - ca * w0) * k)
+    for (const [x, y] of left) p.vertex(x * k, y * k)
+    for (let j = right.length - 1; j >= 0; j--) p.vertex(right[j][0] * k, right[j][1] * k)
     p.endShape(p.CLOSE)
+    p.circle(tip[0] * k, tip[1] * k, w1 * 2.25 * k)
   }
   p.pop()
 }

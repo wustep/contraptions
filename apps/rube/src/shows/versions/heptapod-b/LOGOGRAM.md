@@ -238,6 +238,9 @@ cut, and close looks at whatever caught the eye. What changed:
 - **The heptapods** had a flat cut across the crown of the body, clipped acorns in every wide, and another across the
   hip, a hard trapezoid where the limbs leave it as Abbott comes out of the white. The crown is domed and the hip
   rounded, and the highest of the body is the most fogged, so the head goes up into the white.
+- **The palm** (118.700 → 133.573): its seven fingers were straight wedges to sharp points, a star or an asterisk
+  more than a hand, on the show's most looked-at image. Each finger now has a full root, a long taper with a little
+  curl of its own, and a soft round pad at its tip where it presses on the glass.
 - **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
   shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
 - **The glass asleep** (to 87.226): it waited at the end of the shaft as a mid-grey slab. It is all but the dark of the
