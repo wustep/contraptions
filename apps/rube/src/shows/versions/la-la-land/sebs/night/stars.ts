@@ -65,6 +65,12 @@ const inSky = (local: Pt, T: number): Pt => {
   return [POLE[0] + q[0], POLE[1] + q[1]]
 }
 
+/** The projector's place (see the machine of the night, below): its axis across, and where its feet stand on the glass, a
+ * little upstage of the line the two of them pushed off from. Here, because the stars are placed against the frame
+ * that holds both them and it. */
+const PX = 11.0
+const PBASE = -0.2
+
 /**
  * The notes' stars make a crown round the pole of the sky, which is where the
  * two of them are at the top of the swell. Each is placed by where the sky's
@@ -85,8 +91,11 @@ export const KINDLED: Kindled[] = (() => {
         const r = r0 + 0.12 * scatter(i, 200)
         const local = rot([r * Math.cos(a), r * Math.sin(a)], -skyAngle(DIP))
         const born = inSky(local, at)
-        // In the picture when lit: near them, and a little above the floor's edge.
-        let score = Math.min(3.1 - Math.abs(born[1] - c0[1]), 5.2 - Math.abs(born[0] - c0[0]))
+        // In the picture when lit: inside the frame the camera holds then, which sits between them and the projector
+        // (four tenths of the way down to it) and is about five cells tall, with a margin, and a little above the floor.
+        const fy = c0[1] + (PBASE - 0.95 - c0[1]) * 0.4
+        const fx = c0[0] + (PX - c0[0]) * 0.4
+        let score = Math.min(2.05 - Math.abs(born[1] - fy), 3.4 - Math.abs(born[0] - fx))
         for (let t = at; t < DARK[1]; t += 0.1) {
           const q = inSky(local, t)
           const m = centre(t)
@@ -176,9 +185,6 @@ function reflection(p: p5, k: number, ink: string, weight: number, color: string
  * lenses blur, stopped with them on the dip. The sky it throws is the sky that turns round them, and each star the
  * melody lights is thrown from one of its lenses.
  */
-const PX = 11.0
-/** Where its feet stand on the glass: a little upstage of the line the two of them pushed off from. */
-const PBASE = -0.2
 const AXIS = -0.52
 const HALF = 0.62
 const GLOBE_R = 0.27
