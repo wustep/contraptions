@@ -596,6 +596,8 @@ The notes went back to the builders who made each part, who still had their cont
   That is the story in one frame. `public/shows/come-recover/opus55-all-at-once.png` was rendered by
   `scripts/shows/show-cards.mjs`. In the Shows page's four-up `public/shows/card.png`, only this show's quadrant was
   replaced, so the other shows' cards are byte for byte as they were.
+  (In a later pass the four-up card's alt text in `shows/index.html` was brought up to the new picture as well:
+  "Everything's mother and daughter, googly-eyed, in the glowing hole of the everything bagel".)
 - **A pass for Evelyn's kindness.** She gave each of Jobu's jumpers her eye without looking at it. Now, as each eye
   leaves her (`GIFT_LOOKS` in `kindness-draw.ts`), she looks at the machine it goes to, from a breath before until
   it has landed: left to the glove's box, right to the trap, up to the mallet, up to the arm. The first waits until
