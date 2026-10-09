@@ -599,6 +599,10 @@ The notes went back to the builders who made each part, who still had their cont
 - **A pass for the end of the fight.** Waymond watched her all the way to him, but she did not look back. Now, as the
   arm sets her on the steamers and she steps down to him (from beat 140, 198.0 s), she looks at him. On the fight's
   last hit the two of them are looking at each other, before the silence of the rocks.
+- **A pass for the gaps in Evelyn's looks at Joy.** Two long stretches where she is fixed on her daughter had her eye
+  only swinging: the long way down the canyon (219.7–241.8 s) and the heave in the peak (247.3–254.9 s). Her looks at
+  Joy now run unbroken from the rocks' cut to the brink, and from the hole to Joy's eye. On the way down Joy is mostly
+  ahead and out of the shot, so Evelyn looks down the canyon after her. Both are seen for most of their span.
 
 ## The looks
 
@@ -617,10 +621,10 @@ looked at both there, and seen: its eye in the frame and big enough to read for 
 | 192.1–200.2 | Waymond | Evelyn | the empathy fight, all the way to him |
 | 191.7–195.5 | Evelyn | each jumper in turn | as she gives it her eye: the glove, the trap, the mallet, the arm |
 | 198.0–200.2 | Evelyn | Waymond | set down on the steamers, she steps down to him: on the last hit they look at each other |
-| 200.7–219.7 | Evelyn | Joy | the two stones in the silence; then down over the brink after hers |
-| 242.1–247.3 | Evelyn | Joy | holding her at the lip of the hole |
+| 200.7–241.8 | Evelyn | Joy | the two stones in the silence, over the brink after hers, and down the canyon after her |
+| 242.1–257.2 | Evelyn | Joy | holding her at the lip of the hole, heaving her back, and into her eyes once she has hers |
 | 247.9–249.6 | Waymond | Joy | on the line, the weight that pulls her back, until he is carried out of the frame |
-| 254.9–257.2 | Evelyn and Joy | each other | once Joy has her eye |
+| 255.3–257.2 | Joy | Evelyn | once she has her eye, looking back into her mother's |
 | 271.4–273.6 | Joy and Waymond | each other | he touches her at home: father and daughter |
 | 279.6–282.3 | Joy | Evelyn | she nestles against her mother |
 | 290.3–291.4 | all three | the camera's lens | the portrait |

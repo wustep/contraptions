@@ -219,15 +219,23 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
         SWELLED('evelyn'),
       ],
     },
-    // Evelyn looks at each of Jobu's jumpers as she gives it her eye, then at Waymond as she comes down to him. She looks at Joy: at her stone beside hers through the rocks' silence, and down over the brink as it goes;
-    // while she holds her at the lip of the hole, and
-    // into her eyes once Joy has hers.
+    // Evelyn looks at each of Jobu's jumpers as she gives it her eye, then at Waymond as she comes down to him. Then
+    // at Joy, all the way from the rocks to her eye: her stone beside hers in the silence, over the brink and down the
+    // canyon after her, at the lip of the hole, through the heave, and into her eyes once Joy has hers.
     {
       who: 'evelyn' as const,
       from: JUMPS.eye,
       arrive: true,
       burst: true,
-      gaze: [...GIFT_LOOKS, { from: fight(140), to: JUMPS.rocks, at: 'waymond' as const }, { from: JUMPS.rocks + 0.5, to: 219.7, at: 'joy' as const }, { from: JUMPS.brink + 0.3, to: 247.3, at: 'joy' as const }, { from: 254.9, to: 257.2, at: 'joy' as const }, ...PORTRAIT, DRUM, SWELLED('joy')],
+      gaze: [
+        ...GIFT_LOOKS,
+        { from: fight(140), to: JUMPS.rocks, at: 'waymond' as const },
+        { from: JUMPS.rocks + 0.5, to: JUMPS.brink, at: 'joy' as const },
+        { from: JUMPS.brink + 0.3, to: 257.2, at: 'joy' as const },
+        ...PORTRAIT,
+        DRUM,
+        SWELLED('joy'),
+      ],
     },
     // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
     { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 },
