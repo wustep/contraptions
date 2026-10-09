@@ -778,7 +778,8 @@ function drawStreak(p: p5, c: Ctx, T: number): void {
   const density = p.pixelDensity()
   const px = (2 * R * c.k) / density
   // Not over the far house in the last instant: by then the camera is in close anyway.
-  const f = clamp((18 - px) / 9) * (1 - smooth(T, WINDOW - 0.6, WINDOW - 0.25))
+  // (Faded in off the bat over a third of a second: on a phone he is already small at the hit, and it popped on.)
+  const f = clamp((18 - px) / 9) * smooth(T, HIT + 0.04, HIT + 0.38) * (1 - smooth(T, WINDOW - 0.6, WINDOW - 0.25))
   if (f <= 0) return
   const X = (v: number) => v * c.k
   {

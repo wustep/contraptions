@@ -659,7 +659,9 @@ async function main(): Promise<void> {
           const ballpark = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/liftoff/act2/ballpark.ts'), 'utf8')
           const streak = /function drawStreak[\s\S]*?\n}\n/.exec(ballpark)?.[0] ?? ''
           check('liftoff: the streak across the axis judges his size in CSS pixels and keeps a 9px halo round him on a phone',
-            streak.includes('const px = (2 * R * c.k) / density') && streak.includes('Math.max(R * c.k * 2.4, 9 * density)'))
+            streak.includes('const px = (2 * R * c.k) / density') && streak.includes('Math.max(R * c.k * 2.4, 9 * density)') &&
+            // and fades it in off the bat, since on a phone he is small already at the hit (it popped on: pass 72)
+            streak.includes('smooth(T, HIT + 0.04, HIT + 0.38)'))
         }
         // In the show's own frame, Cooper's whole ball is in shot every 0.02 s but for the two shots written to lose him:
         // the cage going up out of the top, and the whip through the sphere. (The swoop back from the ring's reveal once
