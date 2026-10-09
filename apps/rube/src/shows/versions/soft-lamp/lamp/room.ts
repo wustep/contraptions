@@ -342,11 +342,12 @@ export function underDesk(ctx: Ctx, lw: number, t: number): void {
 /** A canvas tote on a brass hook on the wall in the knee space: its handles over the hook, a moon printed on it, a notebook in it. */
 function tote(ctx: Ctx, lw: number, x: number, t: number): void {
   const l = Math.min(1, 0.1 + lightAt(x, 1.2) * lampAt(t) * 0.6)
-  // Low enough to stay under the foot of the room's widest frame: only a phone held upright sees it.
-  const hook = 1.62
-  const top = hook + 0.5
-  const w = 0.5
-  const h = 1.2
+  // Low enough to stay under the foot of the room's widest frame, and high enough to hang whole in a phone's upright
+  // look at the cup; the stage's overview sees the top of it, the notebook and the handles, a bag at the foot of it.
+  const hook = 1.6
+  const top = hook + 0.3
+  const w = 0.48
+  const h = 1.0
   // The notebook standing in it, its top over the bag's mouth.
   ctx.beginPath()
   ctx.rect(x - 0.3, top - 0.2, 0.36, 0.4)

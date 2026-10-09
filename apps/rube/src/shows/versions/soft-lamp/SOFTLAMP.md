@@ -427,6 +427,14 @@ ball. The machine and its timing were right and are untouched; the room around i
     while there is one, and dark only at night. The opening and the closing wide frames, looked at full size: nothing
     else.
 
+### The twenty-first lofi pass
+
+63. **The stage's overview, after the tote.** In a 16:9 overview the picture ends two cells under the desk, and the
+    tote's hook and handles stood at its foot alone, a bare triangle. Hung lower, clear of the overview, the bag fell
+    mostly out of a phone's upright look at the cup, where it is wanted; so it hangs a shade lower than before on
+    shorter handles: whole in the upright look, under the foot of the room's widest frame, and in the overview the
+    notebook, the handles and the bag's top edge, which read as a bag.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
