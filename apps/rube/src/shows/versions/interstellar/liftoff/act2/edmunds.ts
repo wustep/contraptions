@@ -829,7 +829,9 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
   // The plain: long drifts of sand, then stones, cracks and craters, at their depths.
   const rows: number[] = []
   for (let j = 0; j < 34; j++) rows.push(Math.pow(1.16, -j))
-  for (let j = 1; j < 10; j++) rows.push(Math.pow(1.16, j))
+  // Nearer than the camp, too, all the way to the bottom of the lowest, tallest frame: the camera sits low at the
+  // camp, and the rows used to stop at about four times the site's nearness, leaving the foreground bare.
+  for (let j = 1; j < 17; j++) rows.push(Math.pow(1.16, j))
   for (const s of rows) {
     const y = groundY(v, s)
     if (y < E + 0.025 || y > f.y1 + 0.4) continue
@@ -857,7 +859,7 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
     const b1 = f.cx + (f.x1 + 0.6 - f.cx) / s
     for (let i = Math.floor(b0 / step) - 1; i <= Math.ceil(b1 / step); i++) {
       const h = hash(i, j, 81)
-      if (h > (s > 1.05 ? 0.25 : 0.6)) continue
+      if (h > (s > 2.2 ? 0.2 : s > 1.05 ? 0.25 : 0.6)) continue
       const sj = s * (1 + 0.07 * (hash(i, j, 82) - 0.5))
       const gx = (i + hash(i, j, 83)) * step
       const x = groundX(v, gx, sj)
@@ -865,13 +867,16 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
       // The camp's ground is cleared.
       if (sj > 0.8 && sj < 1.35 && gx > LX - 2.2 && gx < CAIRN_X + 1.2) continue
       const kind = hash(i, j, 84)
-      if (kind < 0.42 && sj < 1.3) {
+      if (kind < 0.42 && (sj < 1.3 || sj > 1.6)) {
         // A stone: an upright lump, lit on the sunward side.
-        const w = (0.12 + 0.3 * hash(i, j, 85)) * sj
+        // In the foreground, pebbles in the ground's own shade, not boulders: they give the near ground its depth
+        // without standing up into the shot.
+        const fore = sj > 1.6
+        const w = fore ? (0.05 + 0.1 * hash(i, j, 85)) * Math.min(sj, 4) : (0.12 + 0.3 * hash(i, j, 85)) * sj
         if (w < 0.022) continue
-        const hh = w * (0.4 + 0.3 * hash(i, j, 86))
+        const hh = w * (fore ? 0.3 + 0.15 * hash(i, j, 86) : 0.4 + 0.3 * hash(i, j, 86))
         p.noStroke()
-        p.fill(ROCK)
+        p.fill(fore ? mixHex(ROCK, LAND_NEAR, 0.45) : ROCK)
         p.beginShape()
         p.vertex(X(x - w / 2), X(yy))
         p.quadraticVertex(X(x - w * 0.35), X(yy - hh), X(x + w * 0.05), X(yy - hh))

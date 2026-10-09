@@ -219,7 +219,13 @@ There is no title card. After p5.js's card goes (about 287 s), the camp holds al
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 5 (latest)
+## Polish pass 6 (latest)
+
+The show was swept again in a tall phone frame (9:16), which sees much more world above and below the 16:9 frame than a wide window does. The farm, the space set pieces and the station all hold up there. One thing did not:
+
+- **The near ground at the camp** (from 248 s to the end). The camera sits low at the camp, and the plain's stones, cracks and drifts stopped at about four times the landing site's nearness. In a tall frame, and along the bottom of a wide one, the near ground was a bare flat colour. The rows go on now to the bottom of the tallest frame. The near ones are pebbles and cracks in the ground's own shade, not boulders, so they give the foreground depth without standing up into the reunion's shot. The camp's cleared ground is kept.
+
+## Polish pass 5
 
 A second sweep, half a second off the first, then closer looks at the wormhole, the fall out of the tesseract, Miller and the busy stretches at full size.
 
