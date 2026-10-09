@@ -23,7 +23,7 @@ import { mosaic } from './multi/mosaic'
 import { kindness, KINDNESS_AT } from './home/kindness'
 import { GIFT_LOOKS } from './home/kindness-draw'
 import { ledge } from './rocks/ledge'
-import { film, LOOKS, type Look } from './film'
+import { film, IRISES, LOOKS, type Look, type Picture } from './film'
 import { drain, radiance } from './void/radiance'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
@@ -329,7 +329,8 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
   for (const [world, look] of Object.entries(LOOKS) as [WorldKey, Look][]) {
     const cells = new Map<string, Pt>()
     for (const leg of legs) if (leg.world === world) for (const placed of leg.placed) for (const c of placed.cells) cells.set(`${c[0]},${c[1]}`, c)
-    ;(sets[world] ??= { scenery: [], after: [] }).after.push(standing(film, 0, 0, [...cells.values()], { look, calm: isCalm }, DURATION) as Placed)
+    const picture: Picture = { look, calm: isCalm, irises: IRISES[world], where: (t) => show.where(t) }
+    ;(sets[world] ??= { scenery: [], after: [] }).after.push(standing(film, 0, 0, [...cells.values()], picture, DURATION) as Placed)
   }
 
   const show = new MultiverseShow(legs, sets, flickers, DURATION, riders, company.sort((a, b) => a.from - b.from), isCalm)

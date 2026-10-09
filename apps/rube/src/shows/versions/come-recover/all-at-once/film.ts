@@ -13,9 +13,12 @@ import type { WorldKey } from './worlds'
  *   dances a frame at a time, a scratch or two down the emulsion, dust, and a darker edge.
  *
  * - **The hot dog life** is a soft-focus romance: the full frame, its edges gone to a glowing pink haze as if the
- *   lens were gauzed, and a faint bloom over it.
+ *   lens were gauzed, and a faint bloom over it. It ends as an old romance does, the picture closing on her in a
+ *   heart.
+ * - **Raccacoonie** is a cartoon, drawn clean; it opens on her the way a cartoon does, in a round iris that blooms
+ *   out to the frame, and ends with the iris closing on her.
  *
- * The rest are left as they are: Raccacoonie is a cartoon already, the surf and everywhere at once a storm of pictures
+ * The rest are left as they are: the surf and everywhere at once a storm of pictures
  * of their own, Jobu's dark and the rocks plain. Back home, the picture is the plain full frame again.
  *
  * Drawn over everything in its world (after the eyes), against the frame as it is on the stage. The bars keep a band
@@ -26,10 +29,10 @@ import type { WorldKey } from './worlds'
  * the scratches and dust are left out.
  */
 
-export type Look = 'scope' | 'print' | 'dream' | 'tape' | 'tube'
+export type Look = 'scope' | 'print' | 'dream' | 'tape' | 'tube' | 'cartoon'
 
 /** The worlds that are pictures of their own, and which. */
-export const LOOKS: Partial<Record<WorldKey, Look>> = { premiere: 'scope', dojo: 'print', hotdog: 'dream' }
+export const LOOKS: Partial<Record<WorldKey, Look>> = { premiere: 'scope', dojo: 'print', hotdog: 'dream', hibachi: 'cartoon' }
 
 const SCOPE = 2.39
 /** Grain changes 24 times a second, as a film's frames do. */
@@ -212,6 +215,8 @@ function paintTape(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 export function paintPicture(ctx: CanvasRenderingContext2D, look: Look, x: number, y: number, w: number, h: number, t: number, calm: boolean, px: number, least = 0, lite = false): void {
   const { top, bottom } = look === 'scope' || look === 'print' ? band(w, h, least) : { top: 0, bottom: h }
   if (calm) t = 0
+  // A cartoon is drawn clean: its picture is only its irises (`IRISES`).
+  if (look === 'cartoon') return
   if (look === 'print') {
     // Faded and warm: the blacks lifted toward a brown, the whole a little yellowed.
     ctx.save()
@@ -281,11 +286,75 @@ export const prefersCalm = (): boolean => !!MOTION?.matches
 /** The look of each world as a panel of everywhere at once (by its skin's key), and as the surf flies through it. */
 export const PANEL_LOOKS: Record<string, Look> = { premiere: 'scope', alley: 'scope', dojo: 'print', hotdog: 'dream', karaoke: 'tape', irs: 'tube' }
 
+/* ------------------------------------------------------------------ irises */
+
+/** An iris: the picture closing on her, or opening from her, through a hole in the black. */
+export interface Iris {
+  /** Show seconds it starts and has finished. */
+  from: number
+  to: number
+  open: boolean
+  shape: 'round' | 'heart'
+  /** Its radius when shut on her, cells. */
+  small: number
+}
+
+/** The lives' irises: the romance closes on her in a heart; the cartoon opens on her and closes on her, round. */
+export const IRISES: Partial<Record<WorldKey, Iris[]>> = {
+  hotdog: [{ from: 105.85, to: 106.731, open: false, shape: 'heart', small: 1.35 }],
+  hibachi: [
+    { from: 106.731, to: 107.4, open: true, shape: 'round', small: 1.35 },
+    { from: 120.3, to: 120.953, open: false, shape: 'round', small: 1.1 },
+  ],
+}
+
+/** How far open an iris is at `t`, 0 shut on her to 1 the whole frame; null outside it. */
+export function irisAt(iris: Iris, t: number): number | null {
+  if (t < iris.from || t > iris.to) return null
+  const u = (t - iris.from) / (iris.to - iris.from)
+  // Opening: quick from her and slowing to the frame. Closing: slow from the frame, quickening onto her.
+  return iris.open ? 1 - (1 - u) ** 3 : 1 - u * u * u
+}
+
+/** A heart about (0, 0), `r` across its widest half, its middle where the ball is. */
+function heartPath(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
+  const n = 64
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * Math.PI * 2
+    const hx = 16 * Math.sin(a) ** 3
+    const hy = -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a))
+    const px = x + (hx / 16) * r
+    const py = y + ((hy + 2.5) / 16) * r
+    if (i === 0) ctx.moveTo(px, py)
+    else ctx.lineTo(px, py)
+  }
+  ctx.closePath()
+}
+
+/** The black round an iris's hole, over the whole frame (x, y, w, h), the hole at (cx, cy), all in pixels. */
+function paintIris(ctx: CanvasRenderingContext2D, iris: Iris, open: number, x: number, y: number, w: number, h: number, cx: number, cy: number, k: number): void {
+  // Wide open is past the frame's far corner from her.
+  const far = Math.max(Math.hypot(cx - x, cy - y), Math.hypot(cx - x - w, cy - y), Math.hypot(cx - x, cy - y - h), Math.hypot(cx - x - w, cy - y - h))
+  const big = iris.shape === 'heart' ? far * 1.5 : far * 1.05
+  const r = iris.small * k + (big - iris.small * k) * open
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(x - 2, y - 2, w + 4, h + 4)
+  if (iris.shape === 'heart') heartPath(ctx, cx, cy, r)
+  else ctx.arc(cx, cy, r, 0, Math.PI * 2, true)
+  ctx.fillStyle = '#000000'
+  ctx.fill('evenodd')
+  ctx.restore()
+}
+
 /** The picture a world is in, over everything in it. */
 export interface Picture {
   look: Look
   /** With reduced motion asked for, the grain holds still and the print shows no scratches or dust coming and going. */
   calm: () => boolean
+  /** Its irises, and where she is (its own cells), for them to close on. */
+  irises?: Iris[]
+  where?: (t: number) => [number, number]
 }
 
 export const film = scenery<Picture>({
@@ -298,5 +367,18 @@ export const film = scenery<Picture>({
     // One pixel of the stage, in this drawing's units (the canvas may be drawn at a scale).
     const px = Math.max(0.5, ((f.y1 - f.y0) * k) / 540)
     paintPicture(ctx, pic.look, f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k, c.t, pic.calm(), px)
+    for (const iris of pic.irises ?? []) {
+      const open = irisAt(iris, c.t)
+      if (open === null || !pic.where) continue
+      // On her, a little smoothed, so the hole rides with her and does not shake with every bounce.
+      let sx = 0
+      let sy = 0
+      for (let j = -3; j <= 3; j++) {
+        const [wx, wy] = pic.where(Math.max(iris.from, Math.min(iris.to, c.t + j * 0.03)))
+        sx += wx
+        sy += wy
+      }
+      paintIris(ctx, iris, open, f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k, (sx / 7) * k, (sy / 7) * k, k)
+    }
   },
 })

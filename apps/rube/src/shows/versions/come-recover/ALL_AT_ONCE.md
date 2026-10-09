@@ -106,7 +106,11 @@ The camera takes the show's nine biggest hits in the body: a push-in of about 4.
 `score.ts`). There are none in the rocks. The kung fu picture has its own camera: on the dojo's five hardest blows
 (the two big ricochets, both kicks and the gong) it crash-zooms, in 10–17% over a tenth of a second, holding on the
 blow and letting go (`CRASHES`). The movie star's lens flares, as a widescreen lens does: each press flash throws a
-long blue-white streak across the frame, and in the alley the streetlamp and the neon flare faintly.
+long blue-white streak across the frame, and in the alley the streetlamp and the neon flare faintly. The romance and the
+cartoon end their scenes as their pictures do: the hot dog life closes on her in a heart-shaped iris as the finger
+snaps (105.85 to the jump), and Raccacoonie's kitchen opens on her in a round iris that blooms out to the frame
+(106.73 to 107.4) and closes on her in one before the surf (120.3 to the jump). Each iris is centred on her, a little
+smoothed, so she is always in it.
 
 For a viewer whose system asks to reduce motion, the flickers, the punches and the crash zooms are left out (`CALM` in `score.ts`), and
 the old print's grain holds still, without its scratches and dust.
@@ -810,6 +814,11 @@ The notes went back to the builders who made each part, who still had their cont
   punch of its own, which the crash replaces). The movie star's widescreen lens flares: every press flash and gun
   throws a horizontal blue-white streak, and the alley's lamp and neon flare faintly (`flare` in
   `star/premiere-light.ts`). Under Zoom, in the dojo's band, no cut lasts as long as a second with the crashes in.
+- **A director's pass: the romance and the cartoon end their scenes in their own way.** The hot dog life's soft-focus
+  romance now closes on her in a heart, and Raccacoonie's clean cartoon picture opens on her in a round iris and
+  closes on her in one, as a cartoon ends (`IRISES` in `film.ts`). Each fills the frame with black round a hole that
+  rides on her, smoothed over a fifth of a second; each takes most of a second, once, so none of them flashes. The
+  flickers before the jump into the kitchen still show it whole.
 
 ## The looks
 
