@@ -222,8 +222,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
       ],
     },
     // Evelyn looks at each of Jobu's jumpers as she gives it her eye, then at Waymond as she comes down to him. Then
-    // at Joy, all the way from the rocks to her eye: her stone beside hers in the silence, over the brink and down the
-    // canyon after her, at the lip of the hole, through the heave, and into her eyes once Joy has hers.
+    // at Joy: her stone beside hers in the silence and over the brink after her; then from the lip of the hole, through
+    // the heave, and into her eyes once Joy has hers.
     {
       who: 'evelyn' as const,
       from: JUMPS.eye,
@@ -232,7 +232,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
       gaze: [
         ...GIFT_LOOKS,
         { from: fight(140), to: JUMPS.rocks, at: 'waymond' as const },
-        { from: JUMPS.rocks + 0.5, to: JUMPS.brink, at: 'joy' as const },
+        // Over the brink after her; then on the long way down her eye is her own again, jolted ledge by ledge.
+        { from: JUMPS.rocks + 0.5, to: 220.2, at: 'joy' as const },
         { from: JUMPS.brink + 0.3, to: 257.2, at: 'joy' as const },
         // Home, inside the washer's window: out at Waymond, waiting by the lever.
         { from: JUMPS.home + 0.3, to: T_DOOR + 0.5, at: 'waymond' as const },

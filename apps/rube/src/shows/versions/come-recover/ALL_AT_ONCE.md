@@ -606,6 +606,11 @@ The notes went back to the builders who made each part, who still had their cont
 - **A pass for the home-coming.** Through the washer's window, the family's first moment back in one place, nobody
   looked at anybody. Now, from inside the drum, Evelyn and Joy look out at Waymond waiting by the lever. He looks
   back at them through the glass until he leaps the lever to Joy, where his look at her takes over.
+- **A pass for restraint.** A googly eye's charm is its loose pupil, so the looks were measured for how much of each
+  eye's time they hold. From the rocks to the peak, Evelyn's eye was held 88% of the time. The canyon look (added a
+  pass before) aimed at a Joy mostly off-screen, while her stone drops ledge by ledge on the beats. It now ends as
+  she goes over after Joy, and down the canyon her pupil jolts on each landing again. That stretch is held 55% now.
+  Over the whole show the eyes are held 25–37% of the time, so the looks stay moments.
 
 ## The looks
 
@@ -624,7 +629,7 @@ looked at both there, and seen: its eye in the frame and big enough to read for 
 | 192.1–200.2 | Waymond | Evelyn | the empathy fight, all the way to him |
 | 191.7–195.5 | Evelyn | each jumper in turn | as she gives it her eye: the glove, the trap, the mallet, the arm |
 | 198.0–200.2 | Evelyn | Waymond | set down on the steamers, she steps down to him: on the last hit they look at each other |
-| 200.7–241.8 | Evelyn | Joy | the two stones in the silence, over the brink after hers, and down the canyon after her |
+| 200.7–220.2 | Evelyn | Joy | the two stones in the silence, and over the brink after hers |
 | 242.1–257.2 | Evelyn | Joy | holding her at the lip of the hole, heaving her back, and into her eyes once she has hers |
 | 247.9–249.6 | Waymond | Joy | on the line, the weight that pulls her back, until he is carried out of the frame |
 | 255.3–257.2 | Joy | Evelyn | once she has her eye, looking back into her mother's |
