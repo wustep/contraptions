@@ -494,6 +494,9 @@ flash (219.2), was not that:
   seconds now, in the wide before the cut in close: Abbott lifting its arm to write, up out of the close frame when the
   cut comes.
 
+A thirty-second ran that search over the whole show, 0 to 408 s at ten frames a second (4081 frames), not only the
+spans the story rounds had touched: no frame was unlike both its neighbours. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
