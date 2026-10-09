@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 19 (latest)
+## Polish pass 20 (latest)
+
+The contrast audit of pass 17, run for the other two balls, with no change to the show. Every half second, Brand's and Murph's fill against a ring of the picture just outside them. Where it is lowest, it is meant to be. Murph lies in her bed at dawn, a silhouette against the window. She hides in the truck's bed with only her crown over the side. She is a few pixels at the tower's foot in the liftoff's wide shot. Brand is inside the bunker. At full size each reads.
+
+## Polish pass 19
 
 - **The kitchen, shared with the museum.** Pass 15's kitchen is drawn in the museum replica too, where the replica's dumbwaiter cupboard (x 2.04) stands. The table's right-hand chair crowded the cupboard there. The table, its chairs and its lamp sit a quarter cell further left now, and the wall shelf is shorter, so that the lamp's shade no longer meets its end. Both kitchens, the farm's at dawn and the museum's, read without a clash.
 
