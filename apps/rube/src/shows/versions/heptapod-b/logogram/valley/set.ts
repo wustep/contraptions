@@ -847,6 +847,19 @@ function drawValley(p: p5, k: number, t: number, ink: string, weight: number): v
   ctx.lineTo((f.x1 + 1) * k, (f.y1 + 1) * k)
   ctx.closePath()
   ctx.fill()
+  // The near ridge's lower face, where its pour pools: close to, it is in the ground mist, paler toward its foot (as
+  // the cut in on the flare sees its flank). From the wide the mist is too thin to tell, and the foot meets the meadow.
+  const pooled = 0.6 * (1 - sm(cells, 40, 90))
+  if (pooled > 0.01 && f.x0 < -44 && f.y1 > MEADOW - 20) {
+    ctx.save()
+    ctx.clip()
+    const pool = ctx.createLinearGradient(0, (MEADOW - 20) * k, 0, MEADOW * k)
+    pool.addColorStop(0, `rgba(${rgbOf(VALLEY.fog)}, 0)`)
+    pool.addColorStop(1, `rgba(${rgbOf(VALLEY.fog)}, ${pooled})`)
+    ctx.fillStyle = pool
+    ctx.fillRect((f.x0 - 1) * k, (MEADOW - 20) * k, (Math.min(f.x1 + 1, -40) - f.x0 + 1) * k, 20 * k)
+    ctx.restore()
+  }
   if (f.y1 > MEADOW) {
     ctx.fillStyle = VALLEY.meadow
     ctx.fillRect((f.x0 - 1) * k, MEADOW * k, (f.x1 - f.x0 + 2) * k, (f.y1 - MEADOW + 1) * k)
