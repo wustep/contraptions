@@ -141,6 +141,7 @@ card comes the room goes to dusk, the window still lit. After the last card the 
 - Louise in the frame under Zoom and findable (never under 5.5 px across) outside the great wides; never hidden long;
 - Ian and Hannah where the story has them;
 - no two balls ever passing into each other;
+- in the lake house, no ball sinking into the floor or the bench, nor through the bench's corners;
 - their eyes never snapping: beyond what the ball's own roll turns it, an eye turns no more than 0.15 rad in a
   120th of a second, at cuts, at seams between parts, and where a look takes it from the roll or hands it back;
 - the end credits' words, and the onset file being this recording's.
