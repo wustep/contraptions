@@ -358,7 +358,9 @@ function mug(ctx: Ctx, lw: number, t: number): void {
 function steam(ctx: Ctx, t: number): void {
   const strength = warmth(t) * (0.3 + 0.7 * heldAt(t))
   const top = -MUG.h - 0.02
-  const rise = 0.8 + 0.5 * strength
+  // Under the sill: it rises to just short of the sill's underside and is gone there, not up across its front.
+  const room = top - (SILL.y + SILL.thick + 0.12)
+  const rise = room * (0.75 + 0.25 * strength)
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
   for (let w = 0; w < 3; w++) {
@@ -372,12 +374,12 @@ function steam(ctx: Ctx, t: number): void {
     for (let i = 0; i <= n; i++) {
       const u = i / n
       const y = top - u * rise
-      const x = x0 + Math.sin(u * 5 - phase * 2 + w) * (0.03 + 0.15 * u * u) + 0.08 * u * Math.sin(phase * 0.3 + w)
+      const x = x0 + Math.sin(u * 6 - phase * 2 + w) * (0.03 + 0.12 * u * u) + 0.06 * u * Math.sin(phase * 0.3 + w)
       if (i === 0) ctx.moveTo(x, y)
       else ctx.lineTo(x, y)
     }
     for (const [width, share] of [[0.16, 0.45], [0.07, 1]] as const) {
-      const a = strength * 0.19 * breath * share
+      const a = strength * 0.3 * breath * share
       const g = ctx.createLinearGradient(0, top, 0, top - rise)
       g.addColorStop(0, rgba(CREAM, 0))
       g.addColorStop(0.2, rgba(CREAM, a))

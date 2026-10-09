@@ -411,6 +411,14 @@ ball. The machine and its timing were right and are untouched; the room around i
     the cushion. And the lamp's spring was a zigzag a sixth of a cell off the arm, joined to nothing: a scribble in the
     air. It runs close beside the thin rod now, hooked onto it at both ends.
 
+### The nineteenth lofi pass
+
+61. **The steam, full size, was all but gone**, and went where steam cannot. It is the held sound (the pad and the
+    keys) in the window's and the room's looks, and at mid-show it was a ghost; and the mug stands under the sill with
+    two thirds of a cell over it, while the wisps rose a cell and more, up across the sill's front. They are half again
+    as strong now, curl a little tighter, and rise to just short of the sill's underside and are gone there. The
+    window, the room in a break and the stair, looked at full size: nothing else.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
