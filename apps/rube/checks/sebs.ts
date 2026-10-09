@@ -16,11 +16,12 @@ import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/la-la-land/s
 import { coverAt } from '../src/shows/versions/la-la-land/sebs/transitions'
 import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
-import { DOOR, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
+import { DOOR, DOOR_SHUT, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
 import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs/piano-figure'
 import { HORIZON, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
 import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
+import { DREAM_CALL, lastNoteAt } from '../src/shows/versions/la-la-land/sebs/club/finale'
 import { HOUSE_SPAN, houseTop } from '../src/shows/versions/la-la-land/sebs/paris/jazz'
 import { HANDOFF, soloThreads } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
 
@@ -320,7 +321,24 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
         }
       }
     }
-    check('sebs: his playing reaches her, at her table and across Lipton\'s', arrivals > 30 && miss.length === 0 && seenAtTable > 20, `${arrivals} arrivals, ${seenAtTable} seen at the table; ${miss.slice(0, 4).join(', ')}`)
+    // In the dream's last room the piano's own notes reach her too, every one that lands before the dream drains
+    // (the room stands with its door at the finale's origin, and the piano's frame is the room's).
+    const fin = show.holder(440)
+    let dreamArrivals = 0
+    for (let t = 432.4; t < 451.45; t += 0.05) {
+      for (const q of DREAM_CALL.beads(t)) {
+        if (q.u < 0.97 || q.arrive > 451.45) continue
+        dreamArrivals++
+        const m = show.mia(q.arrive)
+        if (!m || Math.hypot(fin.col + q.to[0] - DOOR[0] - m.x, fin.row + q.to[1] - DOOR[1] - m.y) > 0.2) miss.push(`the dream ${t.toFixed(2)}`)
+      }
+    }
+    // And the last, after she has gone: it reaches the door as it shuts, and goes out there.
+    const atDoor = lastNoteAt(DOOR_SHUT - 0.001)
+    const shut = lastNoteAt(DOOR_SHUT + 0.001)
+    const lastOk = !!atDoor && !!shut && Math.hypot(atDoor.x - shut.x, atDoor.y - shut.y) < 0.05 && Math.abs(shut.x - ROOM.wallL1) < 0.3 && !lastNoteAt(DOOR_SHUT + 0.7)
+    check('sebs: his playing reaches her, at her table, across Lipton\'s and in the dream, and the last of it the door as it shuts', arrivals > 30 && dreamArrivals > 10 && miss.length === 0 && seenAtTable > 20 && lastOk,
+      `${arrivals} + ${dreamArrivals} arrivals, ${seenAtTable} seen at the table, last at the door ${lastOk}; ${miss.slice(0, 4).join(', ')}`)
   }
   // His club in Paris is full, and its house never covers the two of them: their heads stay above everyone's.
   {
