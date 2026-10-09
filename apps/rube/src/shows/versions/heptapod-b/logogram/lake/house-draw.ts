@@ -88,6 +88,12 @@ function depth(p: p5, k: number, f: Frame, ref: { x: number; y: number; cells: n
   p.pop()
 }
 
+/** Where a point `x` of a layer `d` of the way to the horizon (see `depth`) is seen, in the room's own cells. */
+function viewX(f: Frame, d: number, x: number): number {
+  const m = (f.y1 - f.y0) / VIEW_CAM.cells
+  return d * (f.cx - m * VIEW_CAM.x) + (1 - d + d * m) * x
+}
+
 /**
  * Firs along `top(x)`: spires, each about three and a half times as tall as it is wide, in stands that rise and thin
  * along the line (never a comb). Filled down to `base`.
@@ -490,7 +496,7 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
     [1, shade(LAKE.floorDark, Math.min(1, dim * 0.9 + 0.15)), 1],
   ])
   // The window in the boards: each pane's light drawn down the polish and fading, the mullions dark between; the
-  // sun's path on the water again under it.
+  // sun's path on the water again under it (straight under where the water, far off, shows it from here).
   const refl = mixHex(LAKE.glass, LAKE.dawn, 0.4)
   const pane = (WIN.x1 - WIN.x0) / 4
   for (let i = 0; i < 4; i++) {
@@ -503,7 +509,7 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
     ])
     soft(ctx, k, (a + b) / 2, ROOM.wall + 0.08, pane * 0.5, 0.5, refl, 0.16 * lit)
   }
-  if (L.path > 0.02) soft(ctx, k, SUN[0], ROOM.wall + 0.45, 0.32, 0.85, LAKE.fog, 0.3 * L.path + 0.1 * L.glare)
+  if (L.path > 0.02) soft(ctx, k, viewX(f, 0.5, SUN[0]), ROOM.wall + 0.45, 0.32, 0.85, LAKE.fog, 0.3 * L.path + 0.1 * L.glare)
 
   // The window's frame: head, sill, jambs and the slim mullions.
   const mull = shade(LAKE.mullion, dim * 0.3)

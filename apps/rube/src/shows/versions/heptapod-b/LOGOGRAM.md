@@ -314,6 +314,10 @@ changed, in the order of the film, and then what runs through it:
 - **The shaft's lit lips** (66 → 85.8): the glow along the floor's and the ribs' edges fell off into the stone in six
   steps; it falls off smoothly now, and the light on each rib across the far wall is a soft ridge, not three stacked
   bars. The shell's vapour as it goes is soft puffs too, not flat discs.
+- **The sun's path in the floor** (212.3 → 251): the water far off is drawn with its own parallax, but the floor's
+  reflection of the sun's path on it was placed in the room, so as the camera drew back the streak on the boards
+  slid away from the glint it reflects (left of it in the held last frame, right of it at 214). It lies straight
+  under the glint now, wherever the camera is.
 - **The shadow under the bench** (the first frame and the last, and every scene at the window): a dark box under the
   slab with square ends, on the glass's foot and again in the floor's reflection. Its ends fade out within the
   slab's length now.
