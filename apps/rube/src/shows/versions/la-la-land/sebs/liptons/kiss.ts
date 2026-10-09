@@ -119,11 +119,14 @@ export const kiss = part<null>(
       // The stage light opens on the keys where the opening left them, and draws back to the room: the door, the piano.
       [39.9, 2.8, [3.0, -0.3]],
       [42.7, 12.5, [-4.6, -0.6]],
-      // Her walk, table by table, the piano coming into the right of the frame: close enough that she is someone
-      // crossing a room, with the windows and their snow over her and little of the floor's cut below.
+      // Her walk, table by table: close enough that she is someone crossing a room, with the windows and their snow over
+      // her. Then, from halfway, him at the keys at the right of the frame and her at the left, so it is him she is
+      // drawn across the room to, and the frame closes on the two of them as she nears.
       [45.6, 5.5, [-8.0, 1.4]],
-      [50.5, 5.4, [-5.2, 1.4]],
-      [55.2, 5.3, [-2.4, 1.2]],
+      [48.0, 5.5, [-7.0, 1.4]],
+      [50.5, 6.4, [-2.1, 1.4]],
+      [53.0, 5.9, [-1.75, 1.35]],
+      [55.2, 5.6, [-1.25, 1.3]],
       // The stage: he runs up the keys, she runs along under them.
       [57.8, 5.4, [1.2, 1.1]],
       [61.5, 4.6, [4.3, 0.9]],

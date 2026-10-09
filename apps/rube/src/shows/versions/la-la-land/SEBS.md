@@ -212,3 +212,8 @@ A nineteenth pass:
 
 - **Him watching her audition.** While the casting table answers her (183 to 190), the camera went in on the table and his chair slid off the frame's left edge, so for six and a half seconds of her audition he was not in the picture at all, and his leap from the chair came out of nowhere. The shots are a little wider now and hold the chair, her stage and the table in one frame, so he is seen watching her the whole time the lamp finds her; the camera goes in on her and the pen only for its signature (187.5 to 189.5), and is out again for his leap.
 - The white studio before the burst reads as the bare sound stage it is meant to be, and is as it was.
+
+A twentieth pass, by measure:
+
+- **Who is in the picture, measured.** I measured, every tenth of a second, where each of the two balls stands against the camera's frame, and listed every uncovered stretch of more than a second that either is out of it. Almost all are the film's own grammar: the camera finds her in the audience while he plays, he runs the theatre from the street while she is behind the curtain, the piano plays itself in the dream's club, the camera follows her out of the door.
+- **What she is drawn to.** One was not. While she crosses Lipton's table by table (44 to 56) he was out of the picture for twelve seconds, so it was a walk across a room toward nothing. Her entrance stays hers, close on her under the windows; from halfway (50) the shot holds him at the keys at the right and her at the left, and closes on the two of them as she nears. He is out of the picture for six seconds now, all of them her coming in.
