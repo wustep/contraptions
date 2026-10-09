@@ -28,8 +28,10 @@ const BASE_TOP = -0.18
 /** Its digit keys and its call key, along its top (tent cells): each a little wider than she is, so it shows under her. */
 export const KEYS = [0.5, 0.8, 1.1, 1.4, 1.7, 2.0]
 export const CALL_X = 2.3
-const KEY_W = 0.27
+export const KEY_W = 0.27
 const CAP = 0.075
+/** The keys' tops and their feet, tent cells: what the gala's ghost of the keypad draws (where she is, the cut on her). */
+export const KEY_SPAN: [number, number] = [BASE_TOP - CAP, BASE_TOP]
 const SINK = 0.03
 /** Where a ball sits on a pressed key. */
 export const ON_KEY = BASE_TOP - CAP + SINK - R

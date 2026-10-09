@@ -2,8 +2,10 @@ import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
-import { level } from '../music'
-import { GALA } from '../worlds'
+import { beats, level, SEAM } from '../music'
+import { GALA, SHANG } from '../worlds'
+import { CALL_X, KEY_SPAN, KEY_W, KEYS } from '../twelve/tent'
+import { NUMBER } from '../twelve/timeline'
 import {
   BOTTLE,
   bottleAngle,
@@ -21,6 +23,7 @@ import {
   TIERS,
   tierFill,
   T_TOAST,
+  T_TOUCH,
 } from './gala-plan'
 
 /**
@@ -440,5 +443,47 @@ export function drawGala(p: p5, k: number, t: number): void {
   ctx.fillRect((f.x0 - 1) * k, FLOOR_Y * k, (f.x1 - f.x0 + 2) * k, 1.5 * k)
   tower(ctx, k, t)
   stand(ctx, k, t)
+  number(ctx, k, t)
   p.pop()
+}
+
+/**
+ * What he tells her: his number, which she will dial. After the whisper a ghost of the sat phone's keys comes up beside
+ * them, on her right where he is, just where the keys stand in the tent after the cut (the cut carries her and the
+ * camera together, so the same place on the screen), and its keys light one a beat in the order she will press them;
+ * on the cut the real keys are there, and she dials the same keys in the same order. Without it nothing passed between
+ * them at the touch, and "the number he gave her" could not be read.
+ */
+/** The beats between the whisper and the cut: a digit on each. */
+const GHOST_BEATS = beats(T_TOUCH + 0.4, SEAM.call - 0.4)
+function number(ctx: Ctx, k: number, t: number): void {
+  const up = smooth(t, T_TOUCH + 0.25, T_TOUCH + 0.85)
+  if (up <= 0.001) return
+  const [hx, hy] = HER_END
+  const [top, foot] = KEY_SPAN
+  const key = (x: number, lit: number) => {
+    const x0 = (hx + x - KEY_W / 2) * k
+    const y0 = (hy + top) * k
+    const w = KEY_W * k
+    const h = (foot - top) * k
+    if (lit > 0.01) {
+      const g = ctx.createRadialGradient(x0 + w / 2, y0 + h / 2, 0, x0 + w / 2, y0 + h / 2, KEY_W * 1.3 * k)
+      g.addColorStop(0, rgba(SHANG, 0.45 * lit * up))
+      g.addColorStop(1, rgba(SHANG, 0))
+      ctx.fillStyle = g
+      ctx.fillRect(x0 - KEY_W * 1.3 * k + w / 2, y0 - KEY_W * 1.3 * k + h / 2, KEY_W * 2.6 * k, KEY_W * 2.6 * k)
+    }
+    ctx.fillStyle = rgba(mix(SHANG, '#FFFFFF', 0.25 + 0.35 * lit), (0.16 + 0.6 * lit) * up)
+    ctx.fillRect(x0 + 0.02 * k, y0, w - 0.04 * k, h)
+  }
+  // Each of the first digits on its beat, as he speaks: a flare, then held lit.
+  const litOf = (digit: number) => {
+    let v = 0
+    GHOST_BEATS.forEach((bt, n) => {
+      if (NUMBER[n] === digit && t >= bt) v = Math.max(v, 0.55 + 0.45 * Math.exp(-(t - bt) / 0.35))
+    })
+    return v
+  }
+  KEYS.forEach((x, digit) => key(x, litOf(digit)))
+  key(CALL_X, 0)
 }
