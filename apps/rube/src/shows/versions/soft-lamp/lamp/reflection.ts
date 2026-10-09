@@ -122,7 +122,8 @@ export function reflection(ctx: Ctx, t: number): void {
   const warm = lampColor(t)
   // Bowed over the work, the face goes down and forward and more of the top of the head shows.
   const hy = 0.07 * p.bow - 0.04 * p.stretch
-  const lean = 0.05 * p.bow + p.scan
+  // Thinking, the head turns a little toward the rain on the left, the eyes after it.
+  const lean = 0.05 * p.bow + p.scan - 0.035 * p.think
   const hair = rgba(HAIR, 0.95)
   // The hair behind: falling to the shoulders either side of the face.
   g.fillStyle = hair
@@ -171,7 +172,7 @@ export function reflection(ctx: Ctx, t: number): void {
       g.moveTo(x - 0.03, y)
       g.quadraticCurveTo(x, y + 0.02, x + 0.03, y)
     } else {
-      g.arc(x - 0.02 * p.think, y - 0.01 * p.think, 0.014, 0, Math.PI * 2)
+      g.arc(x - 0.045 * p.think, y - 0.012 * p.think, 0.014, 0, Math.PI * 2)
     }
     g.stroke()
   }

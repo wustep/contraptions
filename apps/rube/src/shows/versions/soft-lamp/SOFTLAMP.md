@@ -858,7 +858,21 @@ both in Zoom, and the overview.
      stands where the hidden camera faces, and the hand, at the end of its reach, goes out through the room's dark
      under the desk (the overview is not the desk's point of view; nothing can come from where the person sits there).
 
-**Subtracted:** the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
+### The forty-seventh pass: beads that are lenses
+
+129. **The near lights, built and taken out.** The show's depth is all behind the glass; nothing stood between the
+     camera and the desk. A swag of the fairy lights' string hung near the camera, across the top corners, far out of
+     focus: warm discs that slid against the camera's moves. Looked at, they were flat polka dots pasted on the lit wall
+     (only the one over the dark window read as a light out of focus), and the corners were better clean.
+130. **The beads on the glass were flat lavender dots**, through the rain, which is most of the half hour, in most of the
+     frames. A bead on a night window is a lens: it shows the night upside down. Each bead larger than a fleck now does:
+     the lit street below in its top half, warm as the city's windows are (and as many of them as are on), the sky
+     above in its bottom half, a dark edge low on it where it bends the light away, and the lamp's highlight. The
+     flecks are as they were. Still sixty frames a second in the heaviest rain.
+131. **Thinking, they looked straight out at us.** When the one in the window stops with the pen at their lips, their
+     head turns a little to the left now and their eyes go to the rain, not to the camera.
+
+**Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
 

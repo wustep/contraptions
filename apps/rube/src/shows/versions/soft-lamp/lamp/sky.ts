@@ -1016,6 +1016,9 @@ const smoothStep = (x: number, a: number, b: number): number => {
  * somewhere else. As the rain eases they stop landing, and those on the glass dry where they are.
  */
 function drops(ctx: Ctx, t: number, rain: number): void {
+  // What the beads show, upside down: how lit the street is (the city's windows on through the night), and the sky.
+  const lights = smooth(t, 20, 140) * (1 - 0.4 * smooth(nightAt(t), 0.7, 1))
+  const skyTop = mixHex(skyAt(t).top, '#C9CCF2', 0.35)
   // The glass stays wet a while after the rain: how many beads there are follows the rain a minute behind.
   const wet = wetAt(t)
   const count = 150 * wet
@@ -1056,10 +1059,26 @@ function drops(ctx: Ctx, t: number, rain: number): void {
     }
     if (size < 0.004) continue
     const warm = Math.max(0, Math.min(1, (x - GLASS.x0) / W))
-    ctx.fillStyle = rgba(mixHex('#8790BE', '#C69A86', warm * 0.55), 0.32 * alpha)
     ctx.beginPath()
     ctx.ellipse(x, y, size * 0.82, size, 0, 0, Math.PI * 2)
-    ctx.fill()
+    if (size > 0.014) {
+      // A bead is a lens: it shows the night upside down, the lit street below in its top half (warm, as the city's
+      // windows are) and the sky above in its bottom half, and a dark edge where it bends the light away.
+      const lens = ctx.createLinearGradient(0, y - size, 0, y + size)
+      lens.addColorStop(0, rgba(mixHex('#9C88B8', '#F0A86E', lights), (0.3 + 0.25 * lights) * alpha))
+      lens.addColorStop(0.45, rgba(mixHex('#8790BE', '#C69A86', warm * 0.55), 0.22 * alpha))
+      lens.addColorStop(1, rgba(skyTop, 0.38 * alpha))
+      ctx.fillStyle = lens
+      ctx.fill()
+      ctx.beginPath()
+      ctx.ellipse(x, y, size * 0.82, size, 0, Math.PI * 0.12, Math.PI * 0.88)
+      ctx.strokeStyle = rgba('#17132A', 0.35 * alpha)
+      ctx.lineWidth = size * 0.2
+      ctx.stroke()
+    } else {
+      ctx.fillStyle = rgba(mixHex('#8790BE', '#C69A86', warm * 0.55), 0.32 * alpha)
+      ctx.fill()
+    }
     if (size > 0.02) {
       ctx.fillStyle = rgba(mixHex('#D3D7F5', '#F4C799', warm), 0.5 * alpha)
       ctx.beginPath()
