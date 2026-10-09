@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 39 (latest)
+## Polish pass 40 (latest)
+
+No change to the show: Voyage in Theater. `/theater/?show=interstellar&take=opus55` opens on Voyage ("Voyage · Theater · contraptions"), plays from the start with YouTube as the music (about 5 s heard after 6 s, so in step), draws the opening as the Shows page does, and pauses on a click to the stage, with no console errors of its own. Theater rewrites its address to `/theater/` once it starts, as it does for every show: that is Theater's, not Voyage's.
+
+## Polish pass 39
 
 No change to the show: what a shared link shows. Both built pages, `/shows/interstellar/` and `/shows/interstellar/opus55/`, carry the same title ("Voyage · contraptions"), the version file's `about` as their description and Open Graph and Twitter text, one canonical address (the work's page), and the card at 1200 × 630. The card the build ships is byte for byte the one pass 34 rendered.
 
