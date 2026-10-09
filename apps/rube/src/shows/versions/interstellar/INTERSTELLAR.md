@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 32 (latest)
+## Polish pass 33 (latest)
+
+No change to the show. The working ring (139 to 155 s) and the ballpark (155 to 168 s) were checked at full size: the noria and its buckets, the stepped channel, the harvest tram tripping the corn bins, the louvres, the mitt catching him, the scoreboard and its clock, the pitching machine winding up, and the bat meeting him on the hit. With this, every stretch of the show has had a full-size look this round.
+
+## Polish pass 32
 
 No change to the show. Miller's water world (104 to 113 s) and the Gargantua slingshot (113 to 118 s) were checked at full size: the landed Ranger, the buoys and TARS cartwheeling, with their reflections; Brand's ring in orbit; the wave rising out of the "mountains" and hiding the horizon's line behind it as it should; TARS swallowed; the two turns round the hole on the tether.
 
