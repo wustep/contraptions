@@ -306,6 +306,10 @@ export function lightAt(T: number): Light {
     const u = ss(T, SEAM.home, SEAM.home + 2.4)
     return light(0, 1, 0, 0, 0.45 + 0.55 * u, 0.3)
   }
+  // The choice: the morning carries across the cut to the cradle, and cools to the blue hour over the pull-back, so the
+  // circle closes on the first frame's light by the last attack.
+  const u = ss(T, BEGIN + 1.5, LAST - 1)
+  if (u < 1) return light(u, 1 - u, 0, 0, 1 - u, 0.3 + 0.55 * u)
   return FIRST_LIGHT
 }
 

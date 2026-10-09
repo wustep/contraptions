@@ -83,7 +83,7 @@ agree without seeing each other.
 - **The white-out** (231.039): the blast's dust in the chamber, lit by the broken glass, swells to white, and the fog
   beyond the glass comes out of it.
 - **The circle.** The last cut opens close on the cradle, baby Hannah in it; from the last B-flat the camera draws back,
-  the opening's push in played backwards, and arrives on the first frame on the last attack (371.931): the lake house
+  the opening's push in played backwards, the morning cooling to the blue hour as it goes, and arrives on the first frame on the last attack (371.931): the lake house
   at dawn, Louise beside the cradle. It holds there to the end.
 
 ## In order
@@ -106,7 +106,7 @@ Times are show seconds; chord *n* is the *n*th change of harmony.
 | 266.124 | chord 71 | the gala | Years on, out of the ring she was shown, its ghost paling over the room: an evening reception, champagne light, knots of dark guests. She rolls onto a brass pouring stand and a champagne tower fills a tier a beat; the room raises its glasses (272.869); **Shang** crosses to her, leans in and they touch: the whisper (274.802), and a ghost of the sat phone's keys comes up beside them, lighting the first of his number. |
 | 277.647 | chord 74 | the command tent | The sat phone, the red lamp burning. She hops key to key on the beats, the number he gave her; the dead ring on 283.458; the call key on **288.554, the loudest bars**: the call goes up the cable, China's screen rises red, and **the dominoes stand again, backwards**, one a beat, the last to fall the first to rise, the camera drawing back until **the ring closes whole in the wide on the loudest bar (303.827)**, the lamp going out; pulses running both ways round it. |
 | 311.293 | chord 84 | Montana | Morning. The lift's deck comes down; **the shell goes up the way it came down**, into the cloud, **gone as the high violins stop (318.711)**. The hush: the cloud churning where it went. **322.606: the cloud breaks over the left ridge and the low sun rakes across the valley**, its light sweeping along the floor to her on 326.258; Ian comes to her across the light; **they touch (330.170)**, close, and hold. |
-| 334.031 | chord 90 | the lake house | Home, in the morning light: Louise and Ian by the window, close, the empty cradle beside them. She rolls into him (337.850); they turn to the cradle (341.618) and go to it (345.490). **349.495: a cut close on the cradle, baby Hannah in it**, Louise rocking it: they chose her. She rocks it on the last chords, fainter and fainter; from the last B-flat the camera draws back, the opening's push in played backwards, and arrives on the first frame on the last attack (371.931). The credits in the silence over the wall above the window. |
+| 334.031 | chord 90 | the lake house | Home, in the morning light: Louise and Ian by the window, close, the empty cradle beside them. She rolls into him (337.850); they turn to the cradle (341.618) and go to it (345.490). **349.495: a cut close on the cradle, baby Hannah in it**, Louise rocking it: they chose her, in the same morning light. She rocks it on the last chords, fainter and fainter; from the last B-flat the camera draws back, the opening's push in played backwards, and arrives on the first frame on the last attack (371.931). The credits in the silence over the wall above the window. |
 
 ## End credits
 
@@ -574,6 +574,13 @@ holds from the cradle to the cradle, and nothing new showed. And it settled a qu
 thirty-eighth, whether the gala needed a sign of how many years on it is. It does not. The story turns on the gala being
 a future she is shown, and since the ring carries her into it, that reads; how far on does not change what she does
 with it, and any sign of years would be a new thing in the room. Nothing to change.
+
+A forty-ninth built one way to fix the ending's cut (349.495), which a cold reader had called the worst moment in the
+film: from the warm room with Ian to a cold close-up of the cradle, the colour, the framing and Ian all changing at
+once. A fiftieth took it. The morning now carries across the cut to the cradle, and cools to the blue hour over the
+pull-back (from a second and a half after the cut to a second before the last attack). So the cut changes only the
+framing and Ian, and the cold of the first frame is something the room grows back into. From the last attack on, every
+frame is unchanged by this.
 
 ## Arrival nods
 
