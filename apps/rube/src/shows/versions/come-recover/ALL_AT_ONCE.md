@@ -544,6 +544,10 @@ The notes went back to the builders who made each part, who still had their cont
   looks; the entries for `fx.ts`, `credits.ts`, `show.ts` and `score.ts` say what they now do; and Known limits
   names two trade-offs taken on purpose, Zoom's crop of Joy and Waymond and the credits' line over the string under
   Zoom.
+- **A pass for the whole build.** `npm run build` was run: the typecheck, every check suite (3,064 checks) and the
+  production build. It passes. The show's own chunk loads only when it is opened. It is 390 KB (143 KB gzipped)
+  against `origin/main`'s 376 KB (138 KB), so every pass together added 5.4 KB on the wire. Vite's warning about
+  chunks over 500 KB is for other parts of the site.
 
 ## The looks
 
