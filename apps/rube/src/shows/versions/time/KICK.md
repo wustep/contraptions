@@ -300,6 +300,9 @@ each world, and changed:
 - **Going under in the snow** (150 to 152): the apron at the gate was snow all the way down, so as the floor went soft
   under Cobb and Ariadne they seemed to fall through white air beside the fortress. Under its snow cap the apron is now
   cut rock, darker as it goes down, and they are seen to sink into the mountain (a fourth critic's note).
+- **The earth under the house** (244.8 to the end): in a tall frame (a phone held upright, a Short) the cut ground
+  under the floor is near half the picture, and it was one flat brown, under the top's last shot too. It lies in
+  soft bands now, darker going down, a few stones in it, and the footings go down under the walls in laid stone.
 
 ## Inception nods
 

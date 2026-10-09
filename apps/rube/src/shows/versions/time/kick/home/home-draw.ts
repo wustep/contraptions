@@ -301,6 +301,7 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   const foot = FLOOR + HOUSE.slab
   // The ground under everything, cut: warm, darkening as it goes down.
   shape(ctx, k, box(fx0, FLOOR, ex1, f.y1 + 1), vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]), INK, w * 0.8)
+  ground(ctx, k, f, w, foot)
   // The roof: its section, eave to eave, and the loft inside it.
   const e = HOUSE.eave
   const mid = (fx0 + ex1) / 2
@@ -340,6 +341,62 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   // The thresholds.
   for (const [a, b] of [[fx0, fx1], [ex0, ex1]]) fillBox(ctx, k, a, HOUSE.back, b, FLOOR, mixHex(STONE, HOME.floorShade, 0.25))
   line(ctx, k, [fx0, FLOOR], [ex1, FLOOR], INK, w * 0.8)
+}
+
+/**
+ * The earth under the house, cut: in a tall frame it is near half the picture, so it is not a blank. The footings go
+ * down under the two walls in laid stone; the earth lies in soft bands, darker as it goes down, a few stones in it.
+ */
+function ground(ctx: C2D, k: number, f: Frame, w: number, foot: number): void {
+  const [fx0, fx1] = HOUSE.front
+  const [ex0, ex1] = HOUSE.end
+  const bottom = f.y1 + 1
+  if (bottom <= foot) return
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(fx0 * k, foot * k, (ex1 - fx0) * k, (bottom - foot) * k)
+  ctx.clip()
+  // The bands: each a little darker, their tops wandering gently.
+  const bands = [0.55, 1.35, 2.4, 3.8]
+  bands.forEach((d, i) => {
+    ctx.beginPath()
+    ctx.moveTo(fx0 * k, bottom * k)
+    for (let x = fx0; x <= ex1 + 0.2; x += 0.2) ctx.lineTo(x * k, (foot + d + 0.07 * Math.sin(x * 1.3 + i * 2.1) + 0.04 * Math.sin(x * 3.1 + i)) * k)
+    ctx.lineTo(ex1 * k, bottom * k)
+    ctx.closePath()
+    ctx.fillStyle = rgba(mixHex(HOME.floorShade, INK, 0.35), 0.1 + 0.03 * i)
+    ctx.fill()
+  })
+  // Stones in the earth, a few to a cell, flattened as stones lie.
+  ctx.fillStyle = rgba(mixHex(STONE, HOME.floorShade, 0.55), 0.42)
+  for (let i = Math.floor(fx0); i < ex1; i++)
+    for (let j = 0; j < 6; j++) {
+      const [x, y] = [i + hash(i, j, 41), foot + 0.35 + j * 0.7 + 0.5 * hash(i, j, 42)]
+      if (y > bottom || hash(i, j, 43) < 0.45) continue
+      const r = 0.035 + 0.05 * hash(i, j, 44)
+      ctx.beginPath()
+      ctx.ellipse(x * k, y * k, r * 1.5 * k, r * k, (hash(i, j, 45) - 0.5) * 0.6, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  // The footings, a little wider than their walls, in courses of stone.
+  const depth = 1.1
+  for (const [a, b] of [[fx0, fx1 + 0.12], [ex0 - 0.12, ex1]]) {
+    shape(ctx, k, box(a, foot, b, foot + depth), mixHex(STONE, HOME.floorShade, 0.45), INK, w * 0.6)
+    ctx.strokeStyle = rgba(INK, 0.35)
+    ctx.lineWidth = Math.max(1, w * 0.35)
+    ctx.beginPath()
+    for (let r = 0, y = foot; y < foot + depth - 0.01; r++, y += depth / 4) {
+      if (r) {
+        ctx.moveTo(a * k, y * k)
+        ctx.lineTo(b * k, y * k)
+      }
+      const x = a + (b - a) * (r % 2 ? 0.35 : 0.65)
+      ctx.moveTo(x * k, y * k)
+      ctx.lineTo(x * k, (y + depth / 4) * k)
+    }
+    ctx.stroke()
+  }
+  ctx.restore()
 }
 
 /** A window in the hall's back wall, onto the side of the garden: sky and leaves, and its light on the sill. */
