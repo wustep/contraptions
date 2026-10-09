@@ -275,6 +275,9 @@ each world, and changed:
   air over the booth's front. It shuts on the slope now, slides off its edge, and drops to him.
 - **The cloud deck under the plane** (213.7 to 223): in a tall frame (a phone held upright, a Short) its body was one
   flat grey wash under the wings. It has deeper billows now, their tops lit, the lower ones in shade.
+- **The reunion under Zoom** (255 to 265): Zoom tightens on the same point as the director's camera, and the garden's
+  framings held the three of them so low that under Zoom they sat on the frame's foot, cut by it. Those framings sit a
+  little lower on the lawn now: in Follow they are still in the lower third, and under Zoom they stand clear of the edge.
 
 ## Inception nods
 
