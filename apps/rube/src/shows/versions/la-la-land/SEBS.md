@@ -395,3 +395,8 @@ A fifty-fifth pass:
 
 - **A sweep, and a ranking.** After the passes of reframing, the full build and a jump scan of the whole show were clean, and a fresh reviewer found nothing broken. Of what it ranked, two were taken. On the burst into colour, the wide still left the two of them specks; it comes in further (9 cells, from 12.5) and lower, on them and the bushes and the kick-line. The sign's cards leave this frame, and come into it again at the crest. And on the birthday in the home movie, where half the frame was grass under the family, the shots come in and sit higher, so the high chair, the cake, their son and the two of them are twice the size, with the balloons still going up out of the top.
 - Not taken: the four quick close shots at the door are cut on the music, as in the film; her close shot is in the doorway, with David beyond the wall; and the door shuts in the frame's left third, in sight.
+
+A fifty-sixth pass:
+
+- **The constellation, untangled.** A fresh reviewer found the constellation I had drawn (the fifty-first pass) never formed: joining each star to the one lit just before it, with the stars spread round by the golden angle, drew long lines that crossed the sky and each other. Each star the melody lights is now joined to the nearest of the stars already lit, so the eleven grow, note by note, into one branching figure of short lines round the two of them, none across another.
+- Not taken: the ride on the bulbs, closed in on the pass before, and the band's shot, piano on one side and band on the other.

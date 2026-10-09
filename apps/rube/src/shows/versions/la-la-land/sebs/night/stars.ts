@@ -313,6 +313,18 @@ function throwStars(p: p5, k: number, T: number): void {
   }
 }
 
+/** For each star after the first, the star it is joined to: the nearest of those lit before it (the sky turns them all
+ * together, so the nearest in its own frame is the nearest in the picture). */
+const JOIN: number[] = KINDLED.map((q, i) => {
+  let best = 0
+  let bd = Infinity
+  for (let j = 0; j < i; j++) {
+    const d = Math.hypot(q.local[0] - KINDLED[j].local[0], q.local[1] - KINDLED[j].local[1])
+    if (d < bd) { bd = d; best = j }
+  }
+  return best
+})
+
 /* ------------------------------------------------------------------ the part */
 
 /** The set taking up on its lines (twice), the push off the floor, a star on each of the melody's notes, the dip, the touch. */
@@ -339,8 +351,9 @@ export const stars = part<StarsState>(
       drawProjector(p, k, c.ink, c.weight, T, true)
       drawProjector(p, k, c.ink, c.weight, T, false)
       throwStars(p, k, T)
-      // The constellation they make: each star the melody lights is joined to the one lit before it, the line drawing
-      // out from the old star to the new as it lights, so the sky gathers a figure round them as the waltz goes on.
+      // The constellation they make: each star the melody lights is joined to the nearest of the stars already lit, the
+      // line drawing out from it to the new one as it lights, so the sky gathers one branching figure round them as
+      // the waltz goes on, its lines short and none across another.
       // It turns with the sky, and goes with the projector's lamps when the lights go.
       {
         const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -352,7 +365,7 @@ export const stars = part<StarsState>(
           const q = KINDLED[i]
           const u = smooth(T, q.at, q.at + 0.7)
           if (u <= 0 || fade <= 0) continue
-          const [x0, y0] = inSky(KINDLED[i - 1].local, T)
+          const [x0, y0] = inSky(KINDLED[JOIN[i]].local, T)
           const [x1, y1] = inSky(q.local, T)
           ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.22 * fade)
           ctx.beginPath()
