@@ -1,6 +1,7 @@
 import { sweepAt } from './decor'
 import { CAT } from './desk'
-import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt } from './music'
+import { catInViewAt } from './camera'
+import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
 import { LANDINGS, LAPS, ballAt } from './route'
 import { rgba } from './sky'
 import { hash, lampAt, lightAt, lit } from './world'
@@ -57,8 +58,10 @@ function ballGaze(t: number, lag: number): { x: number; y: number } {
  * How far it is lost in the music, 0 (watching) to 1 (eyes shut, nodding along): through the groove, while the ball
  * sits in the cup, a phrase (eight bars) at a time, each phrase its own choice; eased in and out over a beat and a bit.
  */
-function vibing(n: number, phrase: number): number {
-  return hash(n, phrase, 97) < 0.5 ? 1 : 0
+function vibing(tr: Track, phrase: number): number {
+  // It plays to the camera: likelier to be lost in it through a phrase the camera spends looking at it.
+  const mid = barTime(tr, tr.entry + phrase * 8 + 4)
+  return hash(tr.n, phrase, 97) < (catInViewAt(mid) ? 0.8 : 0.25) ? 1 : 0
 }
 export function vibeAt(t: number): number {
   const tr = trackAt(t)
@@ -67,8 +70,8 @@ export function vibeAt(t: number): number {
   if (!lap || t < lap.cup + 4 * tr.period || (lap.lob !== null && t > lap.lob - 4 * tr.period) || !grooving(tr, bar)) return 0
   const phrase = Math.floor((bar - tr.entry) / 8)
   const start = barTime(tr, tr.entry + phrase * 8)
-  const was = phrase > 0 ? vibing(tr.n, phrase - 1) : 0
-  const now = vibing(tr.n, phrase)
+  const was = phrase > 0 ? vibing(tr, phrase - 1) : 0
+  const now = vibing(tr, phrase)
   // Into it and out of it gently, and out of it again ahead of the lob, or a break.
   const v = was + (now - was) * smooth(t, start, start + 1.5 * tr.period)
   const nextBar = barTime(tr, bar + 1)
@@ -78,16 +81,16 @@ export function vibeAt(t: number): number {
 }
 
 /**
- * Its yawns: a few through the night, more of them late, each a good three seconds, while the ball sits and the cat is
- * not lost in the music.
+ * Its yawns: a few through the night, more of them late, each a good three seconds, while the ball sits and the camera
+ * is on it (a yawn comes over a nod, too).
  */
 export const YAWNS: number[] = [2, 4, 6, 8, 9, 10].map((n) => {
   const lap = LAPS[n]
   const tr = TRACKS[n]
-  // A while after the ball has settled, in a phrase it spends watching.
-  for (let k = 0; k < 12; k++) {
+  // A while after the ball has settled, while the camera is on it.
+  for (let k = 0; k < 40; k++) {
     const at = lap.cup + 10 + k * 4 * tr.period + hash(n, k, 99) * 2
-    if (vibeAt(at) < 0.01 && vibeAt(at + 3.2) < 0.01 && (lap.lob === null || at + 4 < lap.lob - 8 * tr.period)) return at
+    if (catInViewAt(at) && catInViewAt(at + 3.2) && (lap.lob === null || at + 4 < lap.lob - 8 * tr.period)) return at
   }
   return -100
 })

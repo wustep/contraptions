@@ -118,8 +118,9 @@ interface Bulb {
 /** Where the string hangs: swags between hooks, sagging as far as each says. */
 const SWAGS: [number, number, number, number, number][] = [
   // x0, y0, x1, y1, sag
-  [WINDOW.x0 + 0.05, WINDOW.y0 + 0.08, WINDOW.mullion, WINDOW.y0 + 0.08, 1.05],
-  [WINDOW.mullion, WINDOW.y0 + 0.08, WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 0.85],
+  // Deep enough to hang into the room's frames as a drape, not glows cut off by their top edge.
+  [WINDOW.x0 + 0.05, WINDOW.y0 + 0.08, WINDOW.mullion, WINDOW.y0 + 0.08, 1.45],
+  [WINDOW.mullion, WINDOW.y0 + 0.08, WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 1.25],
   [WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 2.75, -4.95, 0.45],
 ]
 /** A point along a swag, `u` 0 to 1: a parabola from hook to hook, `sag` below the chord at its middle. */

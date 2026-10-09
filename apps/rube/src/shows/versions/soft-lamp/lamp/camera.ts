@@ -1,5 +1,5 @@
 import type { Framing } from '../../../registry'
-import { SILL } from './desk'
+import { PROPS, SILL } from './desk'
 import { TRACKS, barTime } from './music'
 import { LAPS, ballAt } from './route'
 
@@ -139,6 +139,22 @@ export function camera(t: number): Framing {
     lc += (Math.log(a.cells) - Math.log(p.cells)) * f
   }
   return { x, y, cells: Math.exp(lc) }
+}
+
+/**
+ * Whether the camera's frame from `t` on (the aim it is settling into) shows the cat whole: so the cat can play to
+ * the camera, saving its nodding along and its yawns for when someone is looking.
+ */
+export function catInViewAt(t: number): boolean {
+  let a = AIMS[0]
+  for (const aim of AIMS) {
+    if (aim.t > t) break
+    a = aim
+  }
+  const [x0, y0, x1, y1] = PROPS.cat
+  const hw = (a.cells * 16) / 9 / 2
+  const hh = a.cells / 2
+  return x0 >= a.x - hw && x1 <= a.x + hw && y0 >= a.y - hh && y1 <= a.y + hh
 }
 
 export { AIMS }
