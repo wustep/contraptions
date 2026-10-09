@@ -828,6 +828,19 @@ The notes went back to the builders who made each part, who still had their cont
   Everywhere* set in the premiere's lower widescreen bar as a film sets a title in its letterbox, and *Part three, All
   at Once* in the dark before the laundromat comes up round her. `check:shows` holds the three to their names and
   their parts (692 checks).
+- **An audit across the modes, after the director's passes.** The pictures, irises, crash zooms, chapters, beams and
+  ribbons were each checked where they change what a viewer sees:
+  - **Zoom:** the whole show swept at 48 frames; every world reads and she is in every frame.
+  - **The saved video:** its frames paint the page's words themselves (`shows/words.ts`), and that painter ignored a
+    card's `scale` and `plain`, which the page honours. A saved video would have set *Everywhere* at 1.6 times its
+    size, out of the widescreen bar it is set in. It now sizes and colours cards as the page does (a fix in the
+    shared file, which Boléro's and Soft Lamp's scaled credits needed too). A painted frame of each chapter and of
+    the first credit was compared with the page's.
+  - **Reduced motion:** rendered with the preference emulated, the dojo has no crash zoom and the print's grain holds
+    still; the irises, as cuts, stay.
+  - **Safari's engine:** nine frames of the new work (the bars, the print, the haze, the heart iris, the tape, the
+    pull's ribbons, everywhere at once, the radiance, the lives in the window) rendered in WebKit as in Chrome. Its
+    one failed request is the analytics' debug script, not the show.
 
 ## The looks
 
