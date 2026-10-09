@@ -256,3 +256,7 @@ A twenty-eighth pass, at what the music does that nothing answers:
 
 - **The strong onsets.** I listed every strong onset in the measured file that has no strike near it. Most are off-beat accents inside the dream's 128 bpm, where the show strikes the beats instead, and inside dense passages whose neighbours are struck. One stood out: the high D at 261.248 in the trumpet's solo, as strong as the peak that follows it (262.072), with nothing on it. The solo's high accents set the open cymbal shivering at the edge of the spot, and that two-note climb is its high accent; it now shivers on both notes.
 - **A ghost, left alone.** The other was a strong spike at 14.338 in the opening's rest. I first had the house lights drop on it, but the show's check, which holds the opening's intro against the mix's amplitude, knows it for a ghost: nothing new sounds there. A light snapping on silence would be wrong, so it is as it was.
+
+A twenty-ninth pass, an addition and not a fix:
+
+- **The way they came.** The globe is the film's own device, the old studio picture's travel montage, and that device has its dotted line across the map. It has one now: from the moment the engine catches, a dashed line is inked on the globe under the plane's path, growing behind it from Los Angeles over Denver and New York and across the Atlantic to Paris, and it stays on the map after the plane has flown off it toward the tower. It is in dark ink, so it reads on sea and on land alike and the red stays the club's door's.

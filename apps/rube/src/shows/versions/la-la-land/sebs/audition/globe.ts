@@ -399,6 +399,23 @@ function drawGlobe(p: p5, k: number, t: number, spin: number): void {
   }
   for (const poly of LAND) shape(poly, M.parchment, M.land)
   for (const poly of SEAS) shape(poly, M.sea, M.land)
+  // The way it has come, inked on the map behind it the way an old picture shows a journey: a dashed line from Los
+  // Angeles under the plane's path, growing as it flies, over Denver and New York and across the Atlantic to Paris.
+  {
+    const j = journey(Math.min(t, OVER_PARIS))[0]
+    if (j > 0.002) {
+      const lonAt = (u: number) => LA[0] + (PARIS_LL[0] - LA[0]) * u
+      const n = Math.max(2, Math.ceil(j * 90))
+      p.noFill()
+      p.stroke(rgba(M.night, 0.7 * smooth(t, CATCH, CATCH + 0.6)))
+      p.strokeWeight(Math.max(1, 0.03 * k))
+      ctx.save()
+      ctx.setLineDash([0.07 * k, 0.06 * k])
+      ctx.lineCap = 'round'
+      line(Array.from({ length: n + 1 }, (_, i) => place(lonAt((j * i) / n), latOf((j * i) / n)[0])))
+      ctx.restore()
+    }
+  }
   // The cities: a pinpoint each once it is lit, and a short flare as it lights.
   for (const c of CITIES) {
     const q = place(c.at[0], c.at[1])
