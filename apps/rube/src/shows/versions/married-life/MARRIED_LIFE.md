@@ -577,6 +577,10 @@ window.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Only Chrome on macOS has been watched, and Safari has not been measured for this take. The YouTube cue has, on the
   deployed preview in Chromium (PR #163): it loads, plays, and drives the show's clock in real time (10 s of show in
-  10 s), with no fallback; whether picture and sound feel in sync to a listener is still for a person to judge. A
+  10 s), with no fallback; whether picture and sound feel in sync to a listener is still for a person to judge.
+  A full play there found that, at times, YouTube started the video again from the top as it ran out, a moment before
+  the cue's end: the picture froze at 4:10 under the song heard again, and the credits' last eight seconds never
+  came. `youtube.ts` now treats a time gone back more than two seconds near the end as the cue run out (forced in a
+  test: before, frozen; after, the wall carries the show to 4:18 and YouTube is paused). A
   recording export has (headless Chromium, PR #163): it runs the whole 258 s with the credits painted in, silent (no
   `src`); at 1080p headless rendered 15 frames a second, a software limit, not measured on a machine with a GPU.

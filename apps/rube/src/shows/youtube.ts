@@ -501,6 +501,15 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       if (!d || !d.player || !d.running || d.early) return null
       // A cue that has run out, or been stopped at its end, has nothing to say: the wall carries the show on.
       if (d.state === ENDED) return null
+      // A video that ran out just short of the cue's end can be started again from the top by YouTube: its time jumps
+      // back to the beginning while the show stands a moment before `end`, which is never then reached, so nothing
+      // stops it, the picture holds (below) and the music is heard again from the start. Near the end, a time that has
+      // gone back more than two seconds can only be that: the cue has run out, and the wall carries the show on.
+      const raw = d.cue.at + d.player.getCurrentTime() - d.cue.from
+      if (shown >= end(d) - 1 && raw < shown - 2) {
+        stop(d)
+        return null
+      }
       const moving = d.state === PLAYING
       const heard = d.cue.at + (d.ear.hear(d.player.getCurrentTime(), moving, d.player.getPlaybackRate() || speed, performance.now()) - d.cue.from)
       // Never behind what was shown: a player that starts late holds the picture until it catches up.
