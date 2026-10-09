@@ -420,8 +420,9 @@ export const hospital = part<HospitalState>(
   },
   (slot) => [
     // From the hill's close framing (`CUTS.hospital`), out and over to the lamp as he reaches for it, and up, so the
-    // balloon over him comes whole into the frame (its string is long while he holds it: Zoom wants about 3.35 cells
-    // with the frame's middle near a cell over them). Then he gives it to her, tied short, and it comes down to float
+    // balloon over him comes whole into the frame (he comes in with its string gathered short, `GATHERS`, and lets it
+    // up as he reaches for the lamp; let out, Zoom wants about 3.35 cells with the frame's middle near a cell over
+    // them). Then he gives it to her, tied short, and it comes down to float
     // just over her; the camera comes in with it to the two of them, closing on her roll toward him (185.655, the
     // film's touch) and his answer, the balloon whole over them under Zoom, and stays a moment.
     { t: CLICK, cells: 3.3, hold: [O + 0.02, -0.93], w: 1 },

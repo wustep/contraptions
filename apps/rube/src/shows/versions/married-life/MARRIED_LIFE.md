@@ -75,8 +75,10 @@ bass, on the one); Ellie, round, answers on the first pah.
   she waits he shuffles two nervous steps along the altar step and back. The camera reveals the whole church and its
   bell once (landing on his startled hop, 3.45), comes in on the organ, carries past the couple to the pews, and
   closes on the two of them for the kiss, low in the frame under the lower half of the east window. As the march slows they turn to each other a step on each of its slowing
-  notes (15.41, 15.95, 16.81, 17.21): she rolls closer and rises onto her toes, his lean grows.
-- **The kiss is on waltz bar 1 (17.76)**, the last of the gap closed, held through the bar, with the organ's great
+  notes (15.41, 15.95, 16.81, 17.21): she rolls closer and rises onto her toes, his lean grows, and she looks up into
+  his face.
+- **The kiss is on waltz bar 1 (17.76)**, her last step meeting his lean (he does not step in too: their outlines
+  touch, not overlap), held through the bar, with the organ's great
   chord, a warm shaft from the east window's glass on them and a second flash from off frame, a warm wash that leaves
   them seen. The bell peals on the next three downbeats. From the kiss
   the camera pulls out over those three bars and comes to rest on bar 4's peal (20.89), the whole nave in, the bell
@@ -175,7 +177,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   on a sprung knuckle at the mantle's end; under it a tin hopper feeds **a chute** down the wall to a slot, and what
   goes down the chute is gone, paid out of the house. Life breaks it open three times:
   - the tyre of their car (a round family car), seen through the window in a still frame with the jar on the mantle
-    in it (the hubcap flies); she pushes the jar
+    in it (the drive set high in the glass so the flat tyre is seen flat above the sill, the hubcap a ringed disc that
+    flies); she pushes the jar
     over in its cradle, the coins run down the chute and out, and the cradle's spring sets it back on its feet,
     slowly. Paid for, the car drives off out of the window;
   - Carl's leg: the refill's stroke shakes the pendant lamp and it sputters out (lit, it throws a soft warm cone down
@@ -200,8 +203,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 - **The dance**, on the swell of the second waltz: side by side, she at his right, rising on every downbeat and
   swaying on the two and three, across the open floor from the gramophone toward her painting. The swell crests from
   bar 51's third beat into bar 52's downbeat (156.75 to 157.5 s, the loudest of the second half; by bar 53 it is 8 to
-  10 dB down). They dance in hold, and through the crest she rolls out along the floor to arm's length on
-  52's downbeat, as the warm pool brightens and the camera, come in with the swell, is closest on the two of them
+  10 dB down). They dance in hold, her face on him throughout, and through the crest she rolls out along the floor
+  to arm's length on 52's downbeat, still looking at him, as a dancer spots her partner, as the warm pool brightens and the camera, come in with the swell, is closest on the two of them
   (1.9 cells) under their wedding photograph on the hall wall, hung low under the chair rail and large enough to read
   at the close: the two of them at arm's length under the picture of them touching. The low evening sun through the front door's glass
   lays two long warm shafts down the hall (the glass's cross bar splits it, so it reads as sun through a window): it gathers with the swell and falls full on the two of them on the crest, the
@@ -230,19 +233,24 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   strike is the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays
   there. He does not stop: he hurries down after her, faster than he has gone in years, the camera in close with
   them (2.4 to 1.9 cells, the basket left out of the frame), and eases to rest beside her on the stone. He leans to
-  her; she answers with the smallest roll toward him.
+  her; she answers with the smallest roll toward him, her face turning from the sky to him, and looking at him
+  across the cut into the ward.
 
 ### The hospital (180.41 to 189.45 s): the clinic
 
-- Her bed is at his chair's height; his chair's back is low and brown, so the old grey Carl stands clear of it
-  against the pale wall. He has brought her the balloon. The sky in the window goes gold, rose, violet, night. He
-  tips to pull the lamp on (182.43). Then he leans to her and gives her the balloon: at the full of his lean the
-  string passes from his corner to her, arriving on 184.88, tied short, and the balloon settles to float just over
-  her. On 185.66 she rolls the smallest way toward him, and he answers with a lean that arrives on the
-  next strong note (186.53): her gesture and his each have their note. The camera opens a little from the
-  cut in (2.7 cells) as he reaches for the lamp and holds the long-strung balloon whole over him (3.3 cells), then
-  comes in with the balloon as it settles, to 2.7 cells on her touch and his answer, the balloon whole under Zoom
-  too; then it begins to leave her, one slow draw back through the cut into the empty church.
+- Her bed is at his chair's height and her length, its foot a cell past her; she lies in it, the blanket over her
+  lower third, the sheet turned down at her and a mound where she lies (`drawCovers`, in front of her, dimmed with
+  the ward). His chair's back is low and brown, so the old grey Carl stands clear of it against the pale wall. He has
+  brought her the balloon, and comes in with it held close on a short string, letting it up as he reaches for the
+  lamp. The sky in the window goes gold, rose, violet, night. He tips to pull the lamp on (182.43). Then he leans to
+  her and gives her the balloon: at the full of his lean the string passes from his corner to her, arriving on
+  184.88, tied short, and the balloon settles to float just over her. She looks up at it, then round to him. On
+  185.66 she rolls the smallest way toward him, and he answers with a lean that arrives on the next strong note
+  (186.53): her gesture and his each have their note. The camera opens a little from the cut in (2.7 cells) as he
+  reaches for the lamp and the balloon rises whole over him (3.3 cells), then comes in and down onto the two of them
+  as it settles, to 2.7 cells on her touch and his answer, the two of them two thirds down the frame (Zoom keeps its
+  own, higher hold there, `hospitalZoomDrop`, so the balloon stays whole in it); then it begins to leave her, one
+  slow draw back through the cut into the empty church.
 
 ### The funeral (189.45 to 201.94 s): the church, empty
 
@@ -616,6 +624,13 @@ window.
   (`anchorCached` in `cast.ts`), exact by construction (a frame at the bedside renders pixel for pixel the same).
   This show's checks take 6 s, and the whole suite 153 s instead of 249; each frame's balloon is cheaper too.
 
+- **Polish round 26 (Opus 5.5).** The notes audited against the show, scene by scene where these rounds changed it:
+  the kiss (no step in on his lean; her face up to his), the tyre (seen flat), the dance (her face on him through
+  the turn-out), the fieldstone (her face turning to him), the ward (her bed her length, the covers, the gathered
+  string, the lower framing) were still described as before; and a known limit described a Zoom rule the hold
+  replaced. Each is rewritten, the real Zoom limits listed (the nursery, the ward, the crown's sliver on the steps),
+  and the ward's camera comment told of the gathered string.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
@@ -623,8 +638,10 @@ window.
 - The tree stands in a different place on the hill in each season (left of the crest in summer, at the top of the
   path in autumn). Only one season is ever on screen, and each is framed from a different side, so it reads as their
   tree both times; a wide that held the summer place and them years later needs about 9.5 cells.
-- Under Zoom the frame must keep the two of them within a third of its height of its middle, so a close shot always
-  shows a sixth of its height below their floor, and the dance keeps them low in the frame.
+- Under Zoom (`zoom.ts`) the two of them are held off the frame's edges, but in two places the staging fills the Zoom
+  frame and they come near an edge for a few seconds: the nursery (him at the winch, her on the cradle, nine tenths
+  of its width apart) and the ward (the balloon over them, the two of them under it). On the home steps, as he starts
+  up (203.9 s), the balloon's crown is cut by a sliver under Zoom (0.07 of the half height).
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Only Chrome on macOS has been watched. The YouTube cue's sync, Safari and a recording export have not been
   measured for this take.
