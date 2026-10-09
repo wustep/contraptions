@@ -212,6 +212,7 @@ function fillRect(d: Draw, x0: number, y0: number, x1: number, y1: number, color
 function night(d: Draw, t: number): void {
   const f = frame(d.p, d.k)
   fillRect(d, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, NIGHT)
+  street(d, t)
   // Snow, falling slowly past the building; none inside it.
   const { p, k } = d
   p.noStroke()
@@ -227,6 +228,68 @@ function night(d: Draw, t: number): void {
       }
     }
   }
+}
+
+/**
+ * The street outside the door, where they go out into the snow: across it, a low row of houses with snow on their
+ * roofs and a few windows lit; on the pavement short of the door, a lamp, its light lying on the snow.
+ */
+function street(d: Draw, t: number): void {
+  const { p, k, ink, w } = d
+  const f = frame(p, k)
+  const x1 = ROOM.wallL0 - 0.02
+  if (f.x0 > x1) return
+  const far = mixHex(NIGHT, CUT, 0.35)
+  const roofs: [number, number, number][] = []
+  for (let x = x1 - 0.4, i = 0; x > Math.max(-40, f.x0 - 4); i++) {
+    const wd = 1.6 + 1.2 * hash(i, 1, 31)
+    roofs.push([x - wd, x, 1.0 - 0.7 * hash(i, 2, 31)])
+    x -= wd + 0.05
+  }
+  for (const [a, b, top] of roofs) {
+    p.noStroke()
+    p.fill(far)
+    p.beginShape()
+    p.vertex(a * k, ROOM.floor * k)
+    p.vertex(a * k, top * k)
+    p.vertex(((a + b) / 2) * k, (top - 0.45) * k)
+    p.vertex(b * k, top * k)
+    p.vertex(b * k, ROOM.floor * k)
+    p.endShape(p.CLOSE)
+    // Snow along the roof's two slopes.
+    p.stroke(alpha(p, SNOW, 0.7))
+    p.strokeWeight(0.06 * k)
+    p.line(a * k, top * k, ((a + b) / 2) * k, (top - 0.45) * k)
+    p.line(((a + b) / 2) * k, (top - 0.45) * k, b * k, top * k)
+    // A few windows lit, warm.
+    p.noStroke()
+    for (let j = 0; j < 3; j++) {
+      for (let r = 0; r < 2; r++) {
+        if (hash(Math.round(a * 10) + j, r, 37) < 0.55) continue
+        const wx = a + 0.3 + j * ((b - a - 0.6) / 2.2)
+        const wy = top + 0.3 + r * 0.55
+        if (wy > ROOM.floor - 0.5) continue
+        p.fill(alpha(p, M.lamp, 0.55))
+        p.rect((wx - 0.07) * k, wy * k, 0.14 * k, 0.2 * k)
+      }
+    }
+  }
+  // The lamp on the pavement, its pool on the snow.
+  const lx = ROOM.wallL0 - 3.1
+  const top = 0.55
+  glow(p, k, lx, ROOM.floor, 1.6, M.lamp, 0.22, 1.5, 0.35)
+  glow(p, k, lx, top - 0.05, 1.0, M.lamp, 0.3 + 0.03 * Math.sin(t * 1.7))
+  // The post, a lantern on it, snow on the lantern's cap.
+  solid(p, ink, w * 0.6, CUT)
+  poly(d, [[lx - 0.035, top + 0.2], [lx + 0.035, top + 0.2], [lx + 0.05, ROOM.floor], [lx - 0.05, ROOM.floor]])
+  poly(d, [[lx - 0.1, ROOM.floor - 0.12], [lx + 0.1, ROOM.floor - 0.12], [lx + 0.12, ROOM.floor], [lx - 0.12, ROOM.floor]])
+  solid(p, ink, w * 0.5, M.lamp)
+  poly(d, [[lx - 0.14, top - 0.12], [lx + 0.14, top - 0.12], [lx + 0.09, top + 0.2], [lx - 0.09, top + 0.2]])
+  solid(p, ink, w * 0.5, CUT)
+  poly(d, [[lx - 0.2, top - 0.12], [lx, top - 0.26], [lx + 0.2, top - 0.12]])
+  p.noStroke()
+  p.fill(SNOW)
+  poly(d, [[lx - 0.19, top - 0.14], [lx, top - 0.29], [lx + 0.19, top - 0.14], [lx, top - 0.22]])
 }
 
 function shell(d: Draw): void {

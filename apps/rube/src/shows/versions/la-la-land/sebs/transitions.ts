@@ -82,12 +82,18 @@ function drawCover(p: p5, k: number, c: Cover, f: number, t: number): void {
     if (closing && c.snap !== undefined && t >= c.down[1]) r = c.r0 * (1 - smooth(t, c.snap, c.snap + SNAP_TIME))
     // A soft lip a fifth of a cell wide (a stage light's edge), or less on a small opening.
     const lip = Math.min(0.2, r * 0.3)
-    const g = ctx.createRadialGradient(at[0] * k, at[1] * k, Math.max(0, r - lip) * k, at[0] * k, at[1] * k, (r + 0.02) * k)
     const dark = c.color ?? '#000000'
-    g.addColorStop(0, rgba(dark, 0))
-    g.addColorStop(1, rgba(dark, 1))
-    ctx.fillStyle = g
-    ctx.fillRect(X0, Y0, W, H)
+    if (r * k < 0.5) {
+      // Shut: all dark. (A gradient's hair of an edge would leave a speck of the world showing through.)
+      ctx.fillStyle = dark
+      ctx.fillRect(X0, Y0, W, H)
+    } else {
+      const g = ctx.createRadialGradient(at[0] * k, at[1] * k, Math.max(0, r - lip) * k, at[0] * k, at[1] * k, (r + 0.02) * k)
+      g.addColorStop(0, rgba(dark, 0))
+      g.addColorStop(1, rgba(dark, 1))
+      ctx.fillStyle = g
+      ctx.fillRect(X0, Y0, W, H)
+    }
   } else {
     // Two halves of velvet, each its own set of folds, meeting in the middle when f is 1.
     const half = (fr.x1 - fr.x0) / 2 + pad

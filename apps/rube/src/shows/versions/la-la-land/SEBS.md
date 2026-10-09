@@ -187,3 +187,9 @@ A fourteenth pass:
 
 - **The ovation and the curtain calls.** From the moment he springs to his feet (about 119) to the house going to white, her window, the whole of her show's set, was cut off at the top of the frame, though the shots of the show itself hold it whole. Those shots now have the window whole above the two of them: him in the front row as the house rises behind him, then beside her at the stage's edge for the bows, until the curtain comes in.
 - **After the dive.** Once he has come up out of the pool (373 to 376) the shot was wide on an empty sky, the three of them small along its foot. It comes in on them: her on the deck, him and their son in the water.
+
+A fifteenth pass, at the changes of place:
+
+- **The iris, shut.** Between the trumpet and painted Paris, the iris shuts on the second knock and holds the dark until the choir (268.7 to 269.7). Shut, it still left a speck of the world showing through at its centre, a point of light that sat in a different place in each frame. Shut is all dark now; it opens from nothing on the choir's entrance.
+- **The street outside Lipton's.** Where they go out of the door into the snow (87 to 90), and where she comes in at the start, half the frame was flat night with snow falling through it. There is a street there now: across it a low row of houses with snow on their roofs and a few windows lit, and on the pavement a lamp with snow on its cap and its light on the snow, all behind the falling snow.
+- The other covers (the stage light closing on the keys, the velvet curtain, the red door, the dark into the home movie and out of it, through the door into the club) read as they should, and are as they were.
