@@ -671,6 +671,11 @@ frame altogether. Overview takes in the shell's lower half now, from its middle 
 so it hangs over the camp in the frame and comes down into it; not the whole of it, at whose size the camp would be
 specks. The default camera is unchanged to the pixel.
 
+A sixty-second gave Zoom, the last of the three cameras, the whole show at a frame every three seconds: it held, her
+out of it only in the great wides of the shell's going and the daylight, as the check allows. And the tent and the
+valley in Overview in a tall frame, after the sixtieth and the sixty-first widened them: the ring whole over the
+table, the shell whole over the meadow, neither cut. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
