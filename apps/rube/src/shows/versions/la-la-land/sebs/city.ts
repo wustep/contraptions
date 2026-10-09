@@ -1,9 +1,11 @@
+import type p5 from 'p5'
 import type { Pt } from '../../../../parts'
 import { frame, glow, hash, knock, rgba, scenery, smooth } from './kit'
 import { AT, END_AT, level } from './music'
 import { NIGHT_MAT, SEBS_MAT } from './worlds'
 import { JOIN, KINDLED } from './night/stars'
 import { DIP, skyAngle } from './night/painted-waltz'
+import { keyX } from './club/geometry'
 
 /**
  * The city of stars round Seb's: what the camera comes in from at the start
@@ -132,8 +134,58 @@ const easeInOut = (u: number): number => u * u * (3 - 2 * u)
 export const SWELL = END_AT + 32.268
 export const CITY_HITS = [SWELL]
 
+/**
+ * And the stars of theirs are his notes: from the swell, each rises from the keys as he plays with the band, a bead of
+ * gold up out of the club and over the city into the sky, and where it comes to rest it is that star, which comes
+ * out as it arrives. (The sky slides with the camera less than the city does, so each bead is carried from the
+ * keys, where it is in the world, to its star, where it is in the sky.)
+ */
+const RISE = 2.4
+function drawRising(p: p5, k: number, t: number, fr: { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number }): void {
+  if (t < THEIRS_AT[0] - RISE || t > THEIRS_AT[THEIRS_AT.length - 1] + 0.05) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const px = ((fr.y1 - fr.y0) * k) / 540
+  const sx = fr.cx * 0.92
+  const sy = (fr.cy - HORIZON) * 0.92 * 0.35
+  const beadAt = (i: number, at: number): Pt | null => {
+    const s = at - (THEIRS_AT[i] - RISE)
+    if (s < 0 || s > RISE) return null
+    const u = s / RISE
+    const e = u * u * (3 - 2 * u)
+    const from: Pt = [keyX(70 + Math.floor(hash(i, 9) * 14)), -0.35]
+    const to: Pt = [THEIRS[i].x + sx, THEIRS[i].y + sy]
+    const bow = (hash(i, 10) - 0.5) * 6
+    return [from[0] + (to[0] - from[0]) * e + bow * Math.sin(Math.PI * e), from[1] + (to[1] - from[1]) * e]
+  }
+  for (let i = 0; i < THEIRS.length; i++) {
+    const q = beadAt(i, t)
+    if (!q) continue
+    const r = Math.max(2.6 * px, 0.08 * k)
+    for (let j = 1; j <= 12; j++) {
+      const b = beadAt(i, t - j * 0.035)
+      if (!b) break
+      ctx.fillStyle = rgba(NIGHT_MAT.star, 0.45 * (1 - j / 13))
+      ctx.beginPath()
+      ctx.arc(b[0] * k, b[1] * k, r * (1 - j * 0.06), 0, Math.PI * 2)
+      ctx.fill()
+    }
+    const halo = ctx.createRadialGradient(q[0] * k, q[1] * k, 0, q[0] * k, q[1] * k, r * 6)
+    halo.addColorStop(0, rgba(NIGHT_MAT.star, 0.7))
+    halo.addColorStop(1, rgba(NIGHT_MAT.star, 0))
+    ctx.fillStyle = halo
+    ctx.fillRect(q[0] * k - r * 6, q[1] * k - r * 6, r * 12, r * 12)
+    ctx.fillStyle = rgba('#FFF6DA', 1)
+    ctx.beginPath()
+    ctx.arc(q[0] * k, q[1] * k, r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
 export const city = scenery<CityState>({
   name: 'city',
+  over(p, s, c) {
+    if (s.end) drawRising(p, c.k, c.t, frame(p, c.k))
+  },
   draw(p, s, c) {
     const k = c.k
     const t = c.t
