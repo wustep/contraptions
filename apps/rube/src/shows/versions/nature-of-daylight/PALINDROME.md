@@ -691,6 +691,12 @@ a fifth of a second, with no source, so any frame of it was empty. It burns from
 heart, its light thrown down the chamber over a lighter wash of the whole frame, the rail, the floor and the two of
 them seen through it as they are thrown.
 
+A sixty-fifth took the note every one of the four fresh readers had given on the ring carried into the gala (266 s),
+the fourth after the fifty-seventh had shortened it: a stray layer, a wreath over the guests, a double exposure. It
+was not its length but its standing in the room at its size. It holds a moment where it was at the cut now, then is
+drawn in to her as it pales, shrinking and losing its tendrils, and is gone into her a second on: the vision gathered
+back into the one who saw it, not a thing left in the ballroom.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
