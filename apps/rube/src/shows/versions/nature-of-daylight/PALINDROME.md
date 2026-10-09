@@ -228,6 +228,15 @@ And a third:
 - **The slot** opened as a T: the cut in the belly opened full width while the throat under it opened from a line in
   its middle. The throat is the full width now and comes up out of the dark as the doors part.
 
+A fourth looked at the joins and at other screens: every cut between places just before, on and just after it; the
+credits as the page sets them; and the show on a phone, whose taller frame sees more world above and below.
+
+- **The daylight on a phone**: the sunlight's edge stood straight up the near meadow, a vertical band from the far line
+  to the bottom of the frame. It slants with depth now, as a cloud's shadow lies on ground going away from us, so it
+  has come less far nearer the camera.
+- **The cast card** ran its last line, Abbott and Costello, down to within a few pixels of the window's top rail. It
+  sits higher now and clears it.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

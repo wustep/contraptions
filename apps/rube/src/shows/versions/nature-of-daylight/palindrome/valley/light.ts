@@ -185,24 +185,41 @@ export function drawSunWash(ctx: Ctx, k: number, f: View, t: number): void {
   // On the valley floor and what stands on it; seen from away, fading in up the foot of the slopes.
   const top = Math.max(f.y0 - 1, MEADOW - 0.05 - 7 * far)
   const h = Math.max(f.y1, top) + 1 - top
-  const lit = (x: number) => sunAt(t, x)
+  // The shadow's edge on the floor slants with depth, as it would lying on ground going away from us: nearer, it has
+  // come less far. Seen from a tall frame (a phone's), a straight edge stood up the near meadow as a band.
+  const SKEW = 0.45
+  const lit = (x: number, y = MEADOW) => sunAt(t, x + SKEW * Math.max(0, y - MEADOW))
   ctx.save()
-  // Each pass in slices whose strength rises over the first cells from its top, so it has no edge.
+  // Each pass in slices whose strength rises over the first cells from its top, so it has no edge; below the far
+  // line, in slices down the near floor, each with the edge where it lies at its depth.
   const band = far > 0.01 ? 6 * far : 0
-  const pass = (op: GlobalCompositeOperation, style: CanvasGradient) => {
+  const pass = (op: GlobalCompositeOperation, style: (y: number) => CanvasGradient) => {
     ctx.globalCompositeOperation = op
-    ctx.fillStyle = style
     const n = band > 0 ? 24 : 0
+    ctx.fillStyle = style(MEADOW)
     for (let i = 0; i < n; i++) {
       ctx.globalAlpha = (i + 0.5) / n
       ctx.fillRect(x0 * k, (top + (band * i) / n) * k, (x1 - x0) * k, (band / n + 0.02) * k)
     }
     ctx.globalAlpha = 1
-    ctx.fillRect(x0 * k, (top + band) * k, (x1 - x0) * k, Math.max(0, h - band) * k)
+    const from = top + band
+    const to = top + h
+    const upper = Math.min(to, Math.max(from, MEADOW))
+    // On whole pixels, each slice meeting the next exactly: under these blends an overlap or a gap is a line.
+    const px = (y: number) => Math.round(y * k)
+    if (upper > from) ctx.fillRect(x0 * k, from * k, (x1 - x0) * k, px(upper) - from * k)
+    const m = 40
+    for (let i = 0; i < m && to > upper; i++) {
+      const ya = px(upper + ((to - upper) * i) / m)
+      const yb = px(upper + ((to - upper) * (i + 1)) / m)
+      if (yb <= ya) continue
+      ctx.fillStyle = style((ya + yb) / 2 / k)
+      ctx.fillRect(x0 * k, ya, (x1 - x0) * k, yb - ya)
+    }
   }
-  pass('soft-light', across(ctx, k, x0, x1, mix(VALLEY.lamp, VALLEY.grass, 0.4), (x) => 0.85 * lit(x)))
-  pass('screen', across(ctx, k, x0, x1, VALLEY.floodlight, (x) => 0.13 * lit(x)))
-  pass('multiply', across(ctx, k, x0, x1, mix(VALLEY.ridge, VALLEY.cloudShade, 0.35), (x) => 0.55 * d.sun * (1 - lit(x) / Math.max(0.001, d.sun))))
+  pass('soft-light', (y) => across(ctx, k, x0, x1, mix(VALLEY.lamp, VALLEY.grass, 0.4), (x) => 0.85 * lit(x, y)))
+  pass('screen', (y) => across(ctx, k, x0, x1, VALLEY.floodlight, (x) => 0.13 * lit(x, y)))
+  pass('multiply', (y) => across(ctx, k, x0, x1, mix(VALLEY.ridge, VALLEY.cloudShade, 0.35), (x) => 0.55 * d.sun * (1 - lit(x, y) / Math.max(0.001, d.sun))))
   const close = clamp01((24 - (f.y1 - f.y0)) / 14)
   if (close > 0.01) {
     // Close, the floor toward us a little deeper at the frame's foot.
