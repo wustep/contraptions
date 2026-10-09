@@ -5,7 +5,7 @@
 import type { Performance, Version } from '../src/shows/registry'
 import type { ShowBall } from '../src/show'
 import { R } from '../src/parts'
-import { KINDLED, inSky } from '../src/shows/versions/la-la-land/sebs/night/stars'
+import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, KINDLED, inSky } from '../src/shows/versions/la-la-land/sebs/night/stars'
 import { sebAt } from '../src/shows/versions/la-la-land/sebs/night/painted-waltz'
 import { OUT as HOLLY_OUT } from '../src/shows/versions/la-la-land/sebs/studio/hollywood'
 import { show as sebsShow, covers as sebsCovers } from '../src/shows/versions/la-la-land/sebs'
@@ -17,7 +17,8 @@ import { coverAt } from '../src/shows/versions/la-la-land/sebs/transitions'
 import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
 import { DOOR, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
-import { HORIZON, THEIRS, THEIRS_AT } from '../src/shows/versions/la-la-land/sebs/city'
+import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs/piano-figure'
+import { HORIZON, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
 import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
 import { HOUSE_SPAN, houseTop } from '../src/shows/versions/la-la-land/sebs/paris/jazz'
@@ -427,6 +428,30 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       })
     }
     check('sebs: their constellation comes out over the city of stars, in the picture', THEIRS.length === KINDLED.length && out.length === 0, out.slice(0, 6).join(', '))
+  }
+  // The piano the planetarium draws round them at the dip, and again round their stars over the city at the end: whole
+  // in the picture while it is drawn, both times: every point of its outline.
+  {
+    const corners = (c: [number, number], size: number, turn: number) => FIGURE_OUTLINE.map(([u, v]) =>
+      [c[0] + (u * Math.cos(turn) - v * Math.sin(turn)) * size, c[1] + (u * Math.sin(turn) + v * Math.cos(turn)) * size] as [number, number])
+    const cut: string[] = []
+    for (let T = 337.2; T < 338.85; T += 0.1) {
+      const [wx, wy] = show.where(T)
+      const [nx, ny] = sebAt(T)
+      const f = cam(T)
+      for (const [x, y] of corners(FIGURE_AT(), FIGURE_SIZE, FIGURE_TURN)) {
+        if (Math.abs(x + wx - nx - f.x) > (f.cells * 16) / 9 / 2 || Math.abs(y + wy - ny - f.y) > f.cells / 2) { cut.push(`the dip ${T.toFixed(1)}`); break }
+      }
+    }
+    for (let t = THEIRS_AT[THEIRS_AT.length - 1] + 1.5; t <= DURATION; t += 0.2) {
+      const f = cam(t)
+      const cx = f.x - piano[0]
+      const cy = f.y - piano[1]
+      for (const [x, y] of corners(THEIRS_FIGURE.at, THEIRS_FIGURE.size, THEIRS_FIGURE.turn)) {
+        if (Math.abs(x + cx * 0.92 - cx) > (f.cells * 16) / 9 / 2 - 0.3 || Math.abs(y + (cy - HORIZON) * 0.92 * 0.35 - cy) > f.cells / 2 - 0.3) { cut.push(`the city ${t.toFixed(1)}`); break }
+      }
+    }
+    check('sebs: the piano drawn in the stars is whole in the picture, at the dip and over the city', cut.length === 0, cut.slice(0, 5).join(', '))
   }
   // The last frame: the whole city, wide.
   const endCam = cam(perf.duration)
