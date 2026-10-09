@@ -225,6 +225,8 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 
 A regression pass after passes 4 to 12, with no change to the show. The whole show was swept again on new frames (every 1.5 s, offset from the earlier sweeps). The motion audit (camera and Cooper's place on the screen at 60 fps) and the frame-step audit were re-run against their first results. The motion numbers are the same as pass 4's. The frame-step spikes are the same set less the two that pass 9 fixed. The largest, at 235.7 s, is the far side's iris opening as written (`revealAt`, an accelerating t^2.2 over 0.6 s): every frame of it is continuous.
 
+The saved video was checked too, as the exporter paints it (`paintShow`, then `wordPainter` with the credits): at 1080p and in the 9:16 Shorts letterbox the cards sit where the page sets them, inside the 16:9 picture.
+
 ## Polish pass 12
 
 Two more audits came back clean. A **stillness audit** compared frames half a second apart all through the show: the only still run is the camp held alone after the last card, 287.5 s to the end, as written. A **render-cost audit** timed `paintShow` at 1280 × 720, frame by frame, taking the fastest of three paints so pauses drop out: median 1.4 ms, 99% under 4 ms, the slowest 8.2 ms at the tesseract's pull-back, all well inside a 60 fps frame.
