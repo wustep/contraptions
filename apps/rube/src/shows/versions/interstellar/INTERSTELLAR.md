@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 66 (latest)
+## Polish pass 67 (latest)
+
+No change to the show: how big Cooper is on the screen. His radius was measured at 1080p every 0.05 s. It is under 6px for more than a second only in the two whole-ring shots, which are written as the world bigger than him: the ring's reveal (133.9 to 136.3 s, down to 3.1px) and the pull-out as he flies across the axis (166.0 to 167.8 s, down to 4.1px). In the flight he trails a gold streak across the pale sky that the eye finds at once. In the reveal he is at the house's door at the ring's foot, where the shot sends the eye.
+
+## Polish pass 66
 
 No change to the show. The pull request's description had said that nothing in the picture changed after its stills were taken (pass 31, at `ae4fd1ae`), which passes 53 to 61 made untrue. Its table is rendered again, `origin/main` against this branch at `5b347875`, with rows added for Murph's landing (15.9 s), the swoop back from the ring (136.8 s) and Murph at her doorway (190.2 s): 18 pairs. Its summary now names those changes and the new checks. A wide-screen row for Murph's entrance was tried and left out: a pop happens in an instant, so the stills before and after look the same.
 
