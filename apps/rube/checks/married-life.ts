@@ -12,6 +12,8 @@ import { CARL, ELLIE, ELLIE_ID, carlAt, ellieAt } from '../src/shows/versions/ma
 import { BALLOON_FROM, balloonAt, ellieSpin, HALF, LEANS, lookOf, STIRS } from '../src/shows/versions/married-life/life/cast'
 import { BALLOON_SIZE } from '../src/shows/versions/married-life/life/props/balloon'
 import { ridge, STEP } from '../src/shows/versions/married-life/life/hill/hill'
+import { INSIDE_SPAN } from '../src/shows/versions/married-life/life/inside/inside'
+import { INSIDE_AT } from '../src/shows/versions/married-life/life/score'
 import { JOLTS } from '../src/shows/versions/married-life/life/score'
 import { FUN } from '../src/shows/versions/married-life/life/church/church'
 import { ALONE } from '../src/shows/versions/married-life/life/house/front-plan'
@@ -182,6 +184,27 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     }
   }
   check('married life: no wide shot lingers (over 6 cells for at most 2.5 s, but for the named reveals)', wide.length === 0, wide.slice(0, 6).join('; '))
+
+  // A phone held upright (as tall as 9:21) sees far above and beside the composed frame (`stage.ts`, `perf.tall`):
+  // wherever the house's inside is on, that whole stage is inside the sky and earth the set paints round it, so the
+  // storm's wide has no edge in its sky.
+  const ARM = 16 / 9
+  const bare: string[] = []
+  for (const [from, to] of [[CUT.nursery, CUT.doctor], [CUT.yard, CUT.climb]]) {
+    for (let t = from; t < to; t += 0.05) {
+      const f = cam(t)
+      const high = f.cells * ARM * (21 / 9)
+      const extra = high - f.cells
+      const top = f.y - f.cells / 2 - (perf.tall ?? 0.5) * extra - INSIDE_AT[1]
+      const foot = top + high
+      const side = (f.cells * ARM) / 2
+      const x = f.x - INSIDE_AT[0]
+      if (top < INSIDE_SPAN[2] || foot > INSIDE_SPAN[3] || x - side < INSIDE_SPAN[0] || x + side > INSIDE_SPAN[1]) {
+        bare.push(`${t.toFixed(2)} (top ${top.toFixed(1)}, foot ${foot.toFixed(1)})`)
+      }
+    }
+  }
+  check('married life: a phone held upright sees no edge to the house\'s sky, not even at the storm', bare.length === 0, bare.slice(0, 4).join(', '))
 
   // Ellie: with him from the wedding to the hospital, never after; she never jumps in a place, and comes and goes
   // only out of shot or at a cut. At the kiss she touches him.

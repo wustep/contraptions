@@ -61,8 +61,9 @@ export const INSIDE = {
   ] as [number, number, number, number][],
 }
 
-/** How far round the house its sky and earth are painted: [x0, x1, y0, y1] from its origin. */
-const SPAN = [-70, 70, -40, 30]
+/** How far round the house its sky and earth are painted: [x0, x1, y0, y1] from its origin. High enough for a phone
+ * held upright at the storm, the widest look at the house, which sees far above the roof (held by `check:shows`). */
+export const INSIDE_SPAN = [-70, 70, -160, 30]
 
 /** The cells the set claims, [x0, y0, x1, y1] from its origin. */
 export const INSIDE_BOX: [number, number, number, number] = [-18, -13, 27, 3]
@@ -100,10 +101,10 @@ export const inside = scenery<null>({
 
     // The sky, wherever the frame shows it over the yard and the roof, and the earth under everything: only round
     // the house, so a wide look at the whole world (Overview) still sees the street side and the rest.
-    const X0 = Math.max(f.x0, SPAN[0])
-    const X1 = Math.min(f.x1, SPAN[1])
-    const Y0 = Math.max(f.y0, SPAN[2])
-    const Y1 = Math.min(f.y1, SPAN[3])
+    const X0 = Math.max(f.x0, INSIDE_SPAN[0])
+    const X1 = Math.min(f.x1, INSIDE_SPAN[1])
+    const Y0 = Math.max(f.y0, INSIDE_SPAN[2])
+    const Y1 = Math.min(f.y1, INSIDE_SPAN[3])
     if (X1 > X0 && Y1 > Y0) {
       p.noStroke()
       p.fill(skyAt(t))

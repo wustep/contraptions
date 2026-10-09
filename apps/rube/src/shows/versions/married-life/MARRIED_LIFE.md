@@ -364,6 +364,8 @@ window.
   as wide as high.
 - **The hill's hurry:** while he runs flat out (175.0 to 176.2 s) he keeps moving toward her on screen, at least 3% of
   the frame's width a second, under Zoom too.
+- **A phone held upright:** wherever the house's inside is on, a stage as tall as 9:21 sees only the sky and earth
+  the set paints round it (`INSIDE_SPAN`), even at the storm's wide.
 - **The credits:** after he has sat down and gone before the end, set by the page, opening on Directed by Claude
   Opus 5.5 and naming Carl and Ellie Fredricksen, Michael Giacchino, Married Life, Up, Pete Docter and p5.js.
 
@@ -578,6 +580,11 @@ window.
     and with the mp3 out of the repo there is no file to fall to). Now, past 2x with no file, YouTube sits out:
     silent, no say in the clock, which runs at 4x on the wall; back at 2x or slower it comes in where the picture is
     (`sittingOut` in `soundtrack.ts`; every YouTube-only show gains it).
+  - *A phone held upright* (contact sheets at 9:19.5, and a scan of every second for full-width edges in the top of
+    the frame). At the storm's wide the house's sky stopped 40 cells above it and a flat grey band showed over it,
+    the rain falling across the join; the set now paints 160 cells up (`INSIDE_SPAN`), and a check holds a 9:21
+    stage inside it. The scan's other edges are floors, ceilings and the autumn hill's cloud bands, wider than an
+    upright frame, which read as strata.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
