@@ -508,6 +508,10 @@ from the swing to the bed, and her death as a child's. The ladder is wider now (
 young woman at 0.92) and she grows through every season of the swing, to the leap: a child, then a girl nearly her
 mother's height, then a young woman nearly her size.
 
+A thirty-fifth checked Hannah at her new sizes everywhere her size enters the machine: the cut into the swing, her
+reach into the leaves, the leap, the bounce and the hop back onto the seat, the cut to the bed, and the vision; and
+searched the whole swing at ten frames a second for a frame unlike its neighbours. All held. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
