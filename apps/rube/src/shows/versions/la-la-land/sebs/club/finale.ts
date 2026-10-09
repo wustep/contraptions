@@ -1,5 +1,5 @@
 import { laneAt, mixHex, R, type Pt } from '../../../../../parts'
-import { box, part, route, type Company, type PartShot, type Way } from '../kit'
+import { box, glow, part, rgba, route, type Company, type PartShot, type Way } from '../kit'
 import { AT, notes as measured } from '../music'
 import { hop } from '../physics'
 import { SEBS_MAT } from '../worlds'
@@ -281,7 +281,30 @@ const PLAN = plan(BEGIN)
  * rose: the notes the piano plays by itself go out to her table. When the dream drains on the last chord, the notes
  * still in the air go out before they reach her. (Her place in the piano's frame is the room's.)
  */
-const DREAM_CALL = (() => {
+/**
+ * The last of it: as The End comes in and she goes, one note he plays goes after her across the empty room to the
+ * door, high over the tables, and arrives as the door shuts on its note. It goes out against the shut door in a
+ * small flare. His music follows her as far as the door. (Room frame, which is the piano's.)
+ */
+const LAST_NOTE = (() => {
+  const n = measured(463.95, 464.9, 0.1).find((m) => m.midi !== null)
+  const t0 = n?.t ?? 464.27
+  return { t0, from: keyRest(fold(n?.midi ?? LAST_KEY)), to: [ROOM.wallL1 + 0.12, 2.42] as Pt }
+})()
+export function lastNoteAt(t: number): { x: number; y: number; a: number; flare: number } | null {
+  const { t0, from, to } = LAST_NOTE
+  if (t < t0 || t > DOOR_SHUT + 0.6) return null
+  if (t >= DOOR_SHUT) {
+    const s = t - DOOR_SHUT
+    return { x: to[0], y: to[1], a: Math.max(0, 1 - s / 0.6), flare: Math.exp(-s / 0.15) }
+  }
+  const u = (t - t0) / (DOOR_SHUT - t0)
+  const e = u * (0.6 + 0.4 * u)
+  const lift = 2.2
+  return { x: from[0] + (to[0] - from[0]) * e, y: from[1] - 0.7 + (to[1] - from[1] + 0.7) * e - lift * 4 * e * (1 - e), a: Math.min(1, (t - t0) / 0.1), flare: 0 }
+}
+
+export const DREAM_CALL = (() => {
   const notes: { t: number; midi: number }[] = []
   for (const n of measured(432.4, 451.2, 0.1)) {
     if (n.midi === null) continue
@@ -314,6 +337,27 @@ export const finale = part<FinaleState>(
     },
     over(p, s, c) {
       const t = c.t + s.begin
+      const last = lastNoteAt(t)
+      if (last) {
+        const [ox, oy] = F([0, 0])
+        const k = c.k
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        const x = last.x + ox
+        const y = last.y + oy
+        for (let i = 1; i <= 8 && last.flare === 0; i++) {
+          const b = lastNoteAt(t - i * 0.04)
+          if (!b) break
+          ctx.fillStyle = rgba('#BCCDF0', 0.3 * (1 - i / 9))
+          ctx.beginPath()
+          ctx.arc((b.x + ox) * k, (b.y + oy) * k, 0.032 * (1 - i * 0.06) * k, 0, Math.PI * 2)
+          ctx.fill()
+        }
+        glow(p, k, x, y, 0.3 + 0.5 * last.flare, '#BCCDF0', (0.55 + 0.4 * last.flare) * last.a)
+        ctx.fillStyle = rgba('#F2F6FF', 0.95 * last.a)
+        ctx.beginPath()
+        ctx.arc(x * k, y * k, 0.045 * k, 0, Math.PI * 2)
+        ctx.fill()
+      }
       if (t < 432.4 || t > 454.5) return
       const drain = 1 - Math.max(0, Math.min(1, (t - 451.45) / 0.7))
       if (drain <= 0) return
