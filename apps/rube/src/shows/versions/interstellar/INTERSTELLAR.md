@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 87 (latest)
+## Polish pass 88 (latest)
+
+No change to the show: what it costs to load. Everything heavy is behind `load()`, so the show's code arrives as its own chunk when it is opened. In the production build that chunk is 354 KB, 134 KB gzipped, in the middle of the shows' chunks (the largest is 197 KB gzipped). This round grew it by 3 KB gzipped (2%) over `main`: the kitchen, Saturn's weather, the halos.
+
+## Polish pass 87
 
 No change to the show: memory over a long session (Theater plays shows back to back, and a page can stay open). The whole show was painted five times over at 30 fps, and the JS heap measured after each pass with garbage collected first: 18.8 MB at the start, then 25.7, 26.9, 27.1, 26.6 and 26.9 MB. About 8 MB is warmed up once, and after that it holds level and moves both ways. Nothing leaks.
 
