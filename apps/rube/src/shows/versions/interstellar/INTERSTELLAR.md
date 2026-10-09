@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 47 (latest)
+## Polish pass 48 (latest)
+
+No change to the show: pass 47's claim checked. Pass 47 said that sliding a credit card back onto the stage moves only a card that would cross the edge. Every show's credits were sampled each second at 1440 × 900 and at a narrower 1024 × 700 (374 and 376 card samples): none is pinned at the 8px margin, so none was moved, and desktop credits sit where they did.
+
+## Polish pass 47
 
 - **Credits kept on the stage.** Pass 45's 9px floor is in the shared stylesheet, so every show's credits were checked on an upright phone: each card's edges against the screen's at every half second a card is up. Only Merry-Go-Round's cast card spilled over, 13px off the left edge at 310 s: the larger notes made it wider (206 to 331px), and it is centred near the frame's left. The player now slides a card in, just enough to keep an 8px margin, when it would cross the stage's edge (`renderWords` in `shows/player.ts`); a card that fits stays where it was. No show's card leaves the screen now. On a phone that card's notes now run over the castle; before, they sat beside it at about 5px and could not be read.
 
