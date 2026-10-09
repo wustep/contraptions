@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 95 (latest)
+## Polish pass 96 (latest)
+
+No change to the show: whether the stall note could show while a viewer holds the scrubber still, which would blame the music for the viewer's own hand. It cannot. Any move of the scrubber pauses the show first (`pause()` in its input handler), so it is not playing. A press on the handle without a move pins nothing, and the show plays on with its clock moving. The arrow keys pause as well.
+
+## Polish pass 95
 
 No change to the show: Voyage on a slow link (400 ms latency, 1.6 Mbps), opened fresh from the production build, and its stage watched from the first moment. It loads in about 4 s and plays. When the music falls behind, the clock holds and the stage says "Waiting for the music…", as pass 89 meant. Two findings are left as they are:
 
