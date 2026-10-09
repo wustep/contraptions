@@ -1,5 +1,5 @@
 import { mixHex } from '../../../../parts'
-import { CURTAIN, NOTES, PRINT, ROD, WINDOW } from './desk'
+import { CLOCK, CURTAIN, NOTES, PRINT, ROD, WINDOW } from './desk'
 import { MUSIC_END, heldAt, smooth } from './music'
 import { rgba } from './sky'
 import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, skyAt } from './world'
@@ -542,4 +542,81 @@ export function motes(ctx: Ctx, t: number): void {
     ctx.fillRect(x - r * 3, y - r * 3, r * 6, r * 6)
   }
   ctx.restore()
+}
+
+/* ------------------------------------------------------------------ the clock */
+
+/** The show starts at 11:41 at night, by the clock on the wall. */
+const CLOCK_START = (23 * 60 + 41) * 60 + 12
+
+/**
+ * The clock: it keeps the show's own time from 11:41 at night, so midnight passes in the eighth track. Its second hand
+ * ticks, each second a small step with a settle in it, as a quartz hand does: the one thing in the room that moves
+ * on the second.
+ */
+export function clock(ctx: Ctx, lw: number, t: number): void {
+  const { x, y, r } = CLOCK
+  const lamp = lampAt(t)
+  const l = Math.min(1, lightAt(x, y, 1) * lamp * 1.5 + 0.12)
+  const dim = (c: string) => lit(mixHex(c, '#1E1A30', 0.65), c, l)
+  // Its shadow on the wall, and its rim and face.
+  ctx.fillStyle = rgba('#120E1C', 0.35)
+  ctx.beginPath()
+  ctx.arc(x + 0.03, y + 0.04, r + 0.02, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(x, y, r, 0, Math.PI * 2)
+  ctx.fillStyle = dim('#3E6E78')
+  ctx.fill()
+  ctx.strokeStyle = INK
+  ctx.lineWidth = lw
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.arc(x, y, r - 0.035, 0, Math.PI * 2)
+  ctx.fillStyle = dim('#EFE6D2')
+  ctx.fill()
+  ctx.lineWidth = lw * 0.5
+  ctx.stroke()
+  // The hours' marks.
+  ctx.strokeStyle = rgba(INK, 0.7)
+  for (let h = 0; h < 12; h++) {
+    const a = (h / 12) * Math.PI * 2
+    const r0 = h % 3 === 0 ? r - 0.085 : r - 0.065
+    ctx.lineWidth = h % 3 === 0 ? 0.016 : 0.008
+    ctx.beginPath()
+    ctx.moveTo(x + Math.sin(a) * r0, y - Math.cos(a) * r0)
+    ctx.lineTo(x + Math.sin(a) * (r - 0.05), y - Math.cos(a) * (r - 0.05))
+    ctx.stroke()
+  }
+  const now = CLOCK_START + t
+  const whole = Math.floor(now)
+  const f = now - whole
+  // A tick: the step in the first tenth of the second, a little past and back.
+  const step = f < 0.12 ? 1 + Math.sin((f / 0.12) * Math.PI) * 0.08 - (1 - f / 0.12) * (1 - f / 0.12) : 1
+  const sec = ((whole % 60) - 1 + Math.min(1, step)) / 60
+  const min = (now % 3600) / 3600
+  const hour = (now % 43200) / 43200
+  const hand = (u: number, len: number, w: number, color: string) => {
+    const a = u * Math.PI * 2
+    ctx.beginPath()
+    ctx.moveTo(x - Math.sin(a) * len * 0.18, y + Math.cos(a) * len * 0.18)
+    ctx.lineTo(x + Math.sin(a) * len, y - Math.cos(a) * len)
+    ctx.strokeStyle = color
+    ctx.lineWidth = w
+    ctx.stroke()
+  }
+  ctx.lineCap = 'round'
+  hand(hour, r * 0.5, 0.024, INK)
+  hand(min, r * 0.74, 0.016, INK)
+  hand(sec, r * 0.8, 0.007, '#C9534A')
+  ctx.beginPath()
+  ctx.arc(x, y, 0.016, 0, Math.PI * 2)
+  ctx.fillStyle = '#C9534A'
+  ctx.fill()
+  // The glass's sheen.
+  ctx.strokeStyle = rgba('#FFFFFF', 0.18)
+  ctx.lineWidth = 0.014
+  ctx.beginPath()
+  ctx.arc(x, y, r - 0.07, Math.PI * 1.1, Math.PI * 1.45)
+  ctx.stroke()
 }

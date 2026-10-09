@@ -4,7 +4,7 @@ import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WI
 import { MUSIC_END, heldAt } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt } from './route'
 import { cat } from './cat'
-import { bloom, curtain, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
+import { bloom, clock, curtain, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
 import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
 import { cable, walkman } from './walkman'
@@ -683,6 +683,7 @@ export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) 
   hanger(ctx, lw, c.t)
   print(ctx, lw, c.t)
   notes(ctx, lw, c.t)
+  clock(ctx, lw, c.t)
   headlights(ctx, c.t)
   night(ctx, c.t)
   frame(ctx, lw, c.t)

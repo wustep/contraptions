@@ -250,14 +250,27 @@ ball. The machine and its timing were right and are untouched; the room around i
 30. **The cat ignored the headlights.** It looks up and follows them across the wall while they pass, then goes back
     to the ball.
 
+### The fifth lofi pass
+
+31. **Is it too much to leave on?** Measured in Chrome with its GPU at 1920 × 1080 on a 2× display (a 3840 × 2160
+    canvas): a steady 60 frames a second at dusk, in the rain and at the end, the slowest frame in a hundred under
+    21 ms; the script's own share of a frame is a fraction of a per cent. (A headless browser rasterising in software
+    runs it at a fraction of that, and runs other shows erratically too: not a measure of what a viewer sees.)
+32. **The track's artists were fine print** over the busiest part of the frame, the lit city through the rain. Each
+    track now comes up as a stream's now-playing line: its name and its artists on one baseline, the artists in gold.
+33. **A clock on the wall**, under the fairy lights between the window and the lamp. It keeps the show's own time from
+    11:41 at night, so midnight passes in Exhale, and its second hand ticks with the small settle of a quartz hand: the
+    one thing in the room that moves on the second. Sized to the gap between two held frames' edges, so every frame
+    shows it whole or not at all.
+
 **Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
 
 ## Judgment calls for Stephen
 
-- **Track cards.** Each track's name comes up for a few seconds as it begins, as a stream shows what is playing. It is
-  twelve cards in half an hour; they could go.
+- **Track cards.** Each track's name and artists come up for a few seconds as it begins, on one line, as a stream
+  shows what is playing. It is twelve cards in half an hour; they could go.
 - **A lap a track.** The round is the same twelve times; what changes is the track (its tempo, its kick, its breaks,
   its lob's height), the weather, the lamp's warmth, the night outside and the camera's order. The alternative was a
   new mechanism per track, which the brief ruled out as a gag every few minutes.

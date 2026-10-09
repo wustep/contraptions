@@ -101,6 +101,9 @@ export const WALKMAN = { x0: -3.8, x1: -3.16, h: 0.46 }
 
 /** What is pinned to the wall between the window and the lamp, under the lamp's light: polaroids and notes. */
 export const NOTES = { x0: 1.0, x1: 2.62, y0: -3.02, y1: -2.08 }
+/** A small round clock on the wall between the window and the lamp, under the fairy lights: its middle and radius. */
+export const CLOCK = { x: 1.6, y: -4.03, r: 0.175 }
+
 /** A small framed print on the wall right of the lamp, seen from the room's wide frame. */
 export const PRINT = { x0: 6.1, x1: 6.92, y0: -4.62, y1: -3.48 }
 
@@ -123,4 +126,5 @@ export const PROPS: Record<string, [number, number, number, number]> = {
   notes: [NOTES.x0, NOTES.y0, NOTES.x1, NOTES.y1],
   walkman: [WALKMAN.x0 - 0.02, -WALKMAN.h - 0.07, WALKMAN.x1 + 0.03, 0],
   print: [PRINT.x0, PRINT.y0, PRINT.x1, PRINT.y1],
+  clock: [CLOCK.x - CLOCK.r - 0.03, CLOCK.y - CLOCK.r - 0.03, CLOCK.x + CLOCK.r + 0.05, CLOCK.y + CLOCK.r + 0.05],
 }

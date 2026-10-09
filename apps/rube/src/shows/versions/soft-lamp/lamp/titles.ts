@@ -12,7 +12,7 @@ export interface Card {
   at: number
   hold: number
   role?: string
-  names: string[]
+  names: (string | [string, string])[]
   notes?: string[]
   title?: boolean
   /** Where its top middle sits, as shares of the frame. */
@@ -32,10 +32,10 @@ export const CARDS: Card[] = [
   ...TRACKS.map((tr): Card => ({
     at: tr.n === 0 ? 11.2 : tr.from + 1.2,
     hold: 3.4,
-    names: [tr.title],
-    notes: [tr.artists],
-    pos: [0.5, 0.07],
-    scale: 0.72,
+    // As a stream's now-playing line: the track and its artists on one baseline, the artists in gold.
+    names: [[tr.title, tr.artists]],
+    pos: [0.5, 0.06],
+    scale: 0.95,
   })),
   { at: creditsFrom, hold: 3.6, role: 'Directed by', names: ['Stephen Wu', 'Claude Opus 5.5'], notes: ['drawn with p5.js'], pos: [0.74, 0.1] },
   {
