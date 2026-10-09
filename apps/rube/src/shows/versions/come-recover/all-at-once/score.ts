@@ -97,9 +97,9 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
  * is safe for a viewer sensitive to flashing. Two and the cut stay under it.
  */
 export const FLICKERS_A_JUMP = 2
-function flickersBefore(leg: number, at: number, lead = 0.9): Flicker[] {
+function flickersBefore(leg: number, at: number, n = FLICKERS_A_JUMP, lead = 0.9): Flicker[] {
   const near = ONSETS.filter((o) => o.t > at - lead && o.t < at - 0.12 && o.s >= 0.3).map((o) => o.t + 0.06)
-  const times = near.length >= 2 ? near.slice(-FLICKERS_A_JUMP) : [at - 0.3, at - 0.14]
+  const times = (near.length >= 2 ? near : [at - 0.3, at - 0.14]).slice(-n)
   return times.map((t, i) => ({ from: t, to: Math.min(t + 0.045 + 0.02 * i, at - 0.02), leg })).filter((f) => f.to - f.from > 0.03)
 }
 
@@ -163,7 +163,9 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
   const flickers: Flicker[] = []
   legs.forEach((leg, i) => {
     if (i === 0 || leg.key === 'premiere' || leg.key === 'pull' || leg.key === 'kindness' || leg.key === 'rocks') return
-    flickers.push(...flickersBefore(i, leg.from))
+    // Into the surf, one: the dark kitchen into a bright world, and then a new world on every hit, which is
+    // flashing enough on its own. Measured by quarters of the frame, two there came to the three a second.
+    flickers.push(...flickersBefore(i, leg.from, leg.key === 'surf' ? 1 : FLICKERS_A_JUMP))
   })
 
   const riders: Riders = []

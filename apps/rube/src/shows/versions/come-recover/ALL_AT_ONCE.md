@@ -79,7 +79,7 @@ Before most jumps the next world bleeds through for a frame or two, the way the 
 - The stage shows the next leg's world, with the ball carried into it by the jump's own offset.
 - Each flicker starts 60 ms after an onset, so the leg going out is seen striking it first.
 - There are two before a jump, on the last two onsets before it, so with the cut a jump stays under three flashes a
-  second.
+  second. Into the surf there is one: its own run of worlds, a new one on every hit, is flashing enough.
 - Four jumps have none:
   - the first, which builds in the dryer's own glass instead;
   - the jump into the dark, where the surf's worlds collapse into her on their own;
@@ -407,6 +407,11 @@ The notes went back to the builders who made each part, who still had their cont
   - Each jump now has two flickers, on the last two onsets before it, and every jump measures at most two flashes a
     second. The bleed-through still comes just before each cut. `check:shows` holds it to at most two flickers a
     jump.
+  - Measured again by quarters of the frame, any 2×2 block of a 4×4 grid, since a flash need cover only a quarter of
+    the view. Nearly everything stayed at two and a half a second or less. The jump into the surf reached three:
+    two flickers from the dark kitchen into a bright world, and then a new world on every hit. It now has one
+    flicker, and its stretch measures two at most. The jump into the piano also reaches three by quarters, but its
+    swings are small, just over the threshold, between two bright worlds. It was kept.
 
 ## End credits
 
