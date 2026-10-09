@@ -247,13 +247,23 @@ The notes went back to the builders who made each part, who still had their cont
     `kindness-draw.ts`).
   - The car that goes by under the credits was a toy beside the far fronts. It is half as big again, with the
     street's light along its roof.
+- **Polish round 3, the peak's line and the credits.** The world-jumps were watched at full size: the alley, the
+  dojo, the piano, the kitchen, the surf's worlds, the peak and the portrait.
+  - In the peak, after the release, the line's free end fell with Waymond as a dead-straight stroke with its
+    clothespin on top. With the camera rising, it hung in frame for a second like a stick standing up out of the
+    dark. Now it streams loose, whipping most at its free end with the pin swinging, and runs away below in about
+    half a second.
+  - The credits stood top-centre, across the clock, the door's bell and the lantern string. They now stand left of
+    middle, over the storefront's dark glass and the night street, like film credits over night. The clock, the
+    lanterns and the family by the washer are clear of them. It fits at phone width too.
 
 ## End credits
 
 The credits come after the last hit, over the quiet tail of the cue, while the family rests in the dark by the washer's
 glow. A card comes into focus, holds and goes out of focus as the next comes. The words are the page's
 (`Performance.titles(t)`, as in Liftoff): a show's canvas sets no type, so a saved PNG has none; a saved video has them painted in (`shows/words.ts`).
-The canvas lays only a soft dark under them. The cards are:
+The canvas lays only a soft dark under them. They stand left of middle, over the storefront's dark glass, so the
+clock, the lanterns and the family by the washer stay clear of the words. The cards are:
 
 | Starts (s) | Role | Names | Fine print |
 | ---: | --- | --- | --- |

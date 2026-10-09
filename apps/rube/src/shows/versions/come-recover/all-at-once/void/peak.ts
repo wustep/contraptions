@@ -360,10 +360,24 @@ export const peak = part<PeakState>(
       }
       // After the release its end goes over the pulley and away down with him.
       const gone = T - RELEASE - 0.4
-      const top = gone > 0 ? P[1] + (waymondY(T) - waymondY(RELEASE + 0.4)) : P[1]
-      if (slack <= 0.004) strokePath(p, c, [[wx, top], [wx, wy]], ROPE_W, true)
-      // Its end, with the clothespin still tied on: the line's end going away with him, not a rod in the dark.
-      if (slack <= 0.004 && gone > 0) drawPin(p, c, wx, top - 0.05, -Math.PI / 2, 1)
+      // Loose, the end runs away faster than he falls, a whip of line gone into the dark below in half a second.
+      const top = gone > 0 ? P[1] + (waymondY(T) - waymondY(RELEASE + 0.4)) + 16 * gone * gone : P[1]
+      if (slack <= 0.004 && gone <= 0) strokePath(p, c, [[wx, top], [wx, wy]], ROPE_W, true)
+      // Its end, with the clothespin still tied on: the line's end going away with him, not a rod in the dark. Loose
+      // now, it streams in the air it falls through, whipping most at its free end, and the pin swings with it.
+      if (slack <= 0.004 && gone > 0) {
+        const pts: Pt[] = []
+        const n = 28
+        const amp = 0.24 * Math.min(1, gone / 0.15)
+        const wave = (v: number) => amp * (1 - v) ** 2 * Math.sin(T * 11 + v * 9) + 0.05 * (1 - v) ** 3 * Math.sin(T * 23)
+        for (let i = 0; i <= n; i++) {
+          const v = i / n
+          pts.push([wx + wave(v), top + (wy - top) * v])
+        }
+        strokePath(p, c, pts, ROPE_W, true)
+        const dx = (wave(0.04) - wave(0)) / (0.04 * Math.max(0.01, wy - top))
+        drawPin(p, c, wx + wave(0), top - 0.05, -Math.PI / 2 - Math.atan(dx), 1)
+      }
       const travel = waymondY(T) - waymondY(T_IN)
       drawPulley(p, c, P, -travel / RP, f.y0 - 1)
 

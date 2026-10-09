@@ -72,8 +72,11 @@ export const LAST_GONE = (() => {
   return last.at + FORM + last.hold + GO
 })()
 
-/** Where a card's top middle sits, as shares of the 16:9 frame: high in the middle, over the dark. */
-const AT: [number, number] = [0.5, 0.12]
+/**
+ * Where a card's top middle sits, as shares of the 16:9 frame: over the storefront's dark glass, the night outside,
+ * clear of the clock, the lanterns and the family.
+ */
+const AT: [number, number] = [0.3, 0.2]
 
 /** How far up a card is at `t` (0..1), and how far it still has to settle (hundredths of the frame). */
 function lightOf(card: Card, t: number): { light: number; rise: number } {
