@@ -109,10 +109,12 @@ export const LOOKS: { from: number; to: number; ease: number; at: number | ((sho
   // The kiss: from the march's slowing steps as they turn to each other, at him (up into his face, not at his middle),
   // easing off as she sets out down the aisle (18.6), so it never lets go at speed.
   { from: 15.2, to: 19.0, ease: 0.6, at: towardHim },
-  // On the fieldstone, spent, she looks down, toward the ground on his side; her answer to his lean is her face turning
-  // to him with her smallest roll (178.8 to 179.5), and it holds across the match cut into the ward until she looks up
-  // at the balloon he has brought.
-  { from: 176.2, to: CUT.hospital + 1.0, ease: 0.7, at: (show, t) => turnTo(2.1, towardHim(show, t), (t - 178.6) / 0.7) },
+  // From the moment she gives way (174.672, `climb.ts`), spent, she looks down, toward the ground on his side, and her
+  // face does not roll as she goes back down the flank (`spot`): she slides back limp, not a ball rolling (a fresh
+  // viewer read the rolling as the two of them sliding down for fun). Held on the fieldstone; her answer to his lean is
+  // her face turning to him with her smallest roll (178.8 to 179.5), and it holds across the match cut into the ward
+  // until she looks up at the balloon he has brought.
+  { from: 174.5, to: CUT.hospital + 1.0, ease: 0.45, spot: true, at: (show, t) => turnTo(2.1, towardHim(show, t), (t - 178.6) / 0.7) },
 ]
 /** The angle from her to a little above his middle (his face, as far as a square has one), on the screen. */
 function towardHim(show: LifeShow, t: number): number {

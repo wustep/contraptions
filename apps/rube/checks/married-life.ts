@@ -469,6 +469,19 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     if (d - o > snap) { snap = d - o; snapAt = t }
   }
   check('married life: her face never snaps round (at most 0.15 rad a frame faster than her own roll)', snap <= 0.15, `${snap.toFixed(3)} at ${snapAt.toFixed(2)} s`)
+  // As she gives way and goes back down the flank to the stone, she slides limp, face down; her face does not roll with
+  // her (a fresh viewer read the roll as the two of them sliding down for fun). From a little after the give to rest:
+  // her roll turns well over a radian, her face less than a fifth of one.
+  {
+    let face = 0
+    let roll = 0
+    for (let t = 174.95; t < 176.9; t += 1 / 60) {
+      face += Math.abs(wrap(drawn(t + 1 / 60) - drawn(t)))
+      roll += Math.abs(wrap(ellieSpin(show, t + 1 / 60) - ellieSpin(show, t)))
+    }
+    check('married life: as she gives way she slides back limp, her face down, not rolling', roll > 1 && face < 0.2,
+      `her roll ${roll.toFixed(2)} rad, her face ${face.toFixed(2)} rad`)
+  }
 
   // On the hill's flank they rest on the slope, not in it (`seat`): their outline never cuts into the drawn ground by
   // more than a twentieth of R, until she gives way (her slump is the story's).

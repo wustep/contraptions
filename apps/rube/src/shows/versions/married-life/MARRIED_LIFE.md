@@ -232,8 +232,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   steep flank toward it; he nearly gets there, and she never does. (In summer the tree stands left of the crest where
   they lie; seen from the lane years later, it stands where the climb can reach it.)
 - Close on them (2.8 cells), she climbs after him, tires, rests, pushes on and stalls. **On 174.67 she gives way**:
-  she sinks, and rolls back the short way she climbed onto the fieldstone's worn top, and is still, slumped (lower,
-  wider: `slumpOf`), her face turned down, spent; and a cloud comes over the field (`overcast`). No bounce. The
+  she sinks, and slides back limp the short way she climbed onto the fieldstone's worn top, her face down and not
+  rolling with her (a ball that rolls back reads as play), and is still, slumped (lower, wider: `slumpOf`), spent; and a cloud comes over the field (`overcast`). No bounce. The
   strike is the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays
   there, and its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets
   to give her, lying on the slope as he passes. Stopped by his lurch for a frozen beat, he hurries down after her,
@@ -636,6 +636,14 @@ window.
     window. Now a card may ask for a least unit (`least`), and only this show's do; every show's cards checked on a
     phone at every second still fit the screen. A colour barcode of the show (a column a half second) found the arc
     whole: no jump of light or colour inside a scene but the storm's.
+  - *A fresh story critic* (contact sheets in order, the story written back beat by beat first). It told the whole arc
+    back right. Taken, its first note: on the hill her give-way read as the two of them sliding back down, the picnic
+    gone wrong, not as her failing; her face rolled with her down the flank (nine radians), like a ball at play. Now
+    from the give her face is held down (`LOOKS`, `spot`) and she slides back limp, slumping as she goes, into the
+    fieldstone's look; checked: her face turns under a fifth of a radian while her roll would turn it more than one.
+    Considered and kept: the yard's long push of the book and the short pop-up (the walk is one walk on the music);
+    the three takings of the jar (the premise's machine); her death told by the ward's light going (understatement);
+    the ties' wheel and the slow homecoming (the years, and mourning).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
