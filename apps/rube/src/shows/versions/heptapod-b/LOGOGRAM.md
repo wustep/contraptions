@@ -270,6 +270,10 @@ strongest pulses held against what the picture does on them. What changed:
 - **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
   the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
   off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
+- **Hannah's spring onto the bench** (3.7, 211.9): a sweep for balls sinking into the room's floor and bench found
+  her passing through the slab's corner as she came up onto it, in the prologue and on the coda's strongest note:
+  gravity's arc alone, in so short a hop, was still rising as she landed. Her spring rises over the end now and comes
+  down onto it, on the same pulses.
 - **No two balls pass into each other**: a 120 fps sweep found two: Louise hopping out of the helicopter's door
   through Ian on her right (23.6; her hop is shorter now, so she is high as she passes him), and Ian, a pulse behind
   her over the shaft's third rib, rolling into her before her hop (83.0; he hops it a pulse later). `check:shows`

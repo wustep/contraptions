@@ -145,10 +145,11 @@ class Walk {
     return this
   }
   /** A hop at the speed she has (horizontal), landing `dy` lower (negative: up) at `until`: a parabola under G. */
-  hop(until: number, dy = 0): this {
+  /** A hop: off now, down at `until`, `dy` lower (negative: up); `lift` raises its arc above gravity's own. */
+  hop(until: number, dy = 0, lift = 0): this {
     const T = until - this.t
     const to: Pt = [this.p[0] + this.v * T, this.p[1] + dy]
-    this.segs.push({ from: this.p, to, dur: T, arc: (G * T * T) / 8 })
+    this.segs.push({ from: this.p, to, dur: T, arc: (G * T * T) / 8 + lift })
     this.p = to
     this.t = until
     return this
@@ -201,7 +202,9 @@ function toMother(start: number, o: { go: number; skips?: number[]; run?: number
     const v = (2 * d - vSpring * (T - T1)) / T
     w.roll(o.go + T1, v).roll(o.spring, vSpring)
   }
-  w.hop(o.land, BENCH_Y - FLOOR_Y).roll(o.touch, vTouch)
+  // Up onto the bench: a spring, rising over its end and coming down onto it (gravity's arc alone in so short a hop
+  // would still be rising as she lands, and she would pass through the slab's corner on the way up).
+  w.hop(o.land, BENCH_Y - FLOOR_Y, 0.16).roll(o.touch, vTouch)
   // The touch: she rebounds a little, softly, and comes to rest beside her.
   const back = o.back ?? 0.22
   const settle = o.touch + (2 * (touchX - SETTLE_X)) / back
