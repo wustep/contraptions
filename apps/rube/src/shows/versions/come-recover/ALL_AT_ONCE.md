@@ -617,6 +617,11 @@ The notes went back to the builders who made each part, who still had their cont
   her go round the drum, their pupils turned to her, easing in as she lands and out as the door bursts. The room
   takes a target through `BAG_WATCH` in `set.ts`, which the score sets to her. By about 45 s the camera has pushed
   in past them, and the worlds in the bays take over.
+- **A pass for stillness, by measure.** The whole show was rendered at 4 fps and measured for how much of the frame
+  changes from one quarter second to the next, to find stretches where attention can slip. The only ones with less
+  than 0.6% of the frame changing, for three seconds or more, are under the credits (302.5–312.5, 313–317.3 and
+  320.3–328.3 s). That is the intended rest, and the page's words fading over it are not even counted. Every other
+  stretch keeps something moving, the rocks' silence and the hush included. Nothing was changed.
 
 ## The looks
 
