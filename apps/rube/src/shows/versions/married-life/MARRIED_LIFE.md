@@ -590,6 +590,10 @@ window.
     away from the cuts the only jumps are the wedding photograph's flash, the two lightning strikes and the lamp
     coming on at home, each on purpose. The share card (47.3 s) is pixel for pixel what the show draws now. The
     credits on a phone, upright and on its side: set in the sky, clear of the house.
+  - *Determinism.* 120 times across the show drawn going forward, going back and in a shuffled order: every pixel
+    the same, so a scrub, a seek or a jump draws what play would. And the live stage, after playing a stretch, paused
+    and sought to 15 times, against `still` at the same times: every pixel the same, so the audits' stills are what a
+    viewer sees.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
