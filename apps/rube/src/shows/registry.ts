@@ -27,6 +27,51 @@ export interface Framing {
    * or in Overview, the world is square to the frame.
    */
   angle?: number
+  /**
+   * What the shot is about, in cells. Zoom sits closer about the same middle, and a shot composed for the wide frame
+   * can leave its subject at the edge of the closer one, or past it (the two of them in the rocket's window, at the
+   * top of a frame whose foot holds the tower). Given a focus, Zoom moves over the least it must to keep it well
+   * inside (`zoomed`). Left out, Zoom keeps the middle.
+   */
+  focus?: [number, number]
+}
+
+/** How far inside the Zoom frame's edges a focus is kept, as a share of the frame's height. */
+const FOCUS_MARGIN = 0.2
+/** The width of the soft knee either side of that margin, as a share of the frame's height. */
+const FOCUS_KNEE = 0.08
+
+/**
+ * The Zoom frame for `cam`, `by` times closer: the same middle, unless the camera names a focus that would sit nearer
+ * an edge than FOCUS_MARGIN, in which case the frame slides over (along the picture's own axes, so a rolled camera
+ * slides square to its screen) by just enough. It is continuous in the camera and the focus: no jumps.
+ */
+export function zoomed(cam: Framing, by: number): Framing {
+  const cells = cam.cells / by
+  const { focus, ...rest } = cam
+  if (!focus) return { ...rest, cells }
+  const a = cam.angle ?? 0
+  const cs = Math.cos(a)
+  const sn = Math.sin(a)
+  const dx = focus[0] - cam.x
+  const dy = focus[1] - cam.y
+  // The focus on the screen, from the middle, in cells.
+  const sx = dx * cs - dy * sn
+  const sy = dx * sn + dy * cs
+  const limX = Math.max(0, (cells * 8) / 9 - FOCUS_MARGIN * cells)
+  const limY = Math.max(0, cells / 2 - FOCUS_MARGIN * cells)
+  // How far past a limit, with a soft knee either side of it, so the frame takes hold of the focus gradually and its
+  // speed never jumps: nothing short of lim - knee, the overshoot itself past lim + knee, a parabola between.
+  const knee = FOCUS_KNEE * cells
+  const past = (v: number, lim: number): number => {
+    const x = Math.abs(v) - lim
+    const e = x <= -knee ? 0 : x >= knee ? x : ((x + knee) * (x + knee)) / (4 * knee)
+    return Math.sign(v) * e
+  }
+  const ex = past(sx, limX)
+  const ey = past(sy, limY)
+  // Back from the screen's axes to the world's.
+  return { ...rest, cells, x: cam.x + ex * cs + ey * sn, y: cam.y - ex * sn + ey * cs }
 }
 
 export interface SoundtrackSpec {

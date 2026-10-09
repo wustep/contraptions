@@ -11,12 +11,13 @@ import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
-import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, sectionOf, shelves, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
+import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, sectionOf, shelves, versionPath, zoomed, type Performance, type ShowVersion } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
 import { GRID, strictTake, strikes } from '../src/shows/versions/metronome/metronome'
 import { Show } from '../src/show'
+import { R as BALL_R } from '../src/parts'
 import type { StockShow } from '../src/shows/stock/show'
 import cornfieldOnsets from '../../../scripts/shows/plans/cornfield-opus55-onsets.json'
 import { checkAllAtOnce } from './all-at-once'
@@ -29,7 +30,7 @@ import { KISS_AT, ROOM } from '../src/shows/versions/la-la-land/epilogue/room'
 import { MIA as MIA_HEX, HUSBAND as HUSBAND_HEX } from '../src/shows/versions/la-la-land/epilogue/worlds'
 import type { EpilogueShow } from '../src/shows/versions/la-la-land/epilogue/show'
 import { STRIKES } from '../src/shows/versions/interstellar/liftoff/hits'
-import { SWITCH } from '../src/shows/versions/interstellar/liftoff/score'
+import { SWITCH, ZOOM_FREE as LIFTOFF_ZOOM_FREE } from '../src/shows/versions/interstellar/liftoff/score'
 import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from '../src/shows/versions/interstellar/liftoff/music'
 import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/interstellar/liftoff/credits'
 import { FALL_NOTES, GHOST_REST } from '../src/shows/versions/interstellar/liftoff/earth/house'
@@ -103,7 +104,18 @@ async function main(): Promise<void> {
   const soundtrack = readFileSync(join(process.cwd(), 'apps/rube/src/shows/soundtrack.ts'), 'utf8')
   check('a file play waits for canplay, as YouTube waits for its players', soundtrack.includes('status === \'loading\'') && soundtrack.includes('waiting.push') && soundtrack.includes('deep link'))
   check('a deep link with the sound held keeps a Sound button on the stage, and lights the panel\'s', player.includes("soundHeld ? 'Sound'") && /musicBtn\.classList\.toggle\('held', hasMusic && soundHeld\)/.test(player))
-  check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('cam.cells / FOLLOW_ZOOM'))
+  check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('zoomed(cam, FOLLOW_ZOOM)'))
+  {
+    const plain = zoomed({ x: 3, y: -2, cells: 9 }, 1.5)
+    const kept = zoomed({ x: 0, y: 0, cells: 9, focus: [0.5, 0.4] }, 1.5)
+    const far = zoomed({ x: 0, y: 0, cells: 9, focus: [0, -4.4] }, 1.5)
+    const rolled = zoomed({ x: 0, y: 0, cells: 9, angle: Math.PI / 2, focus: [0, -6] }, 1.5)
+    check('Zoom keeps the middle, or slides just enough to keep a named focus well inside the closer frame',
+      plain.x === 3 && plain.y === -2 && plain.cells === 6 && kept.x === 0 && kept.y === 0 && !('focus' in kept) &&
+      far.x === 0 && Math.abs(far.y - (-4.4 + 6 * 0.3)) < 1e-9 && Math.abs(rolled.y - (-6 + 6 * (8 / 9 - 0.2))) < 1e-9 && Math.abs(rolled.x) < 1e-9 &&
+      // and it takes hold of the focus gradually: no step in where the frame is as the focus crosses the margin.
+      Array.from({ length: 200 }, (_, i) => zoomed({ x: 0, y: 0, cells: 9, focus: [0, -1 - i * 0.01] }, 1.5).y).every((y, i, a) => i === 0 || Math.abs(y - a[i - 1]) <= 0.0100001))
+  }
   check('a work with one take has no take row to pick from', /work\.versions\.length < 2\) takeRow\.hidden = true/.test(player))
   check('no take has a byline in the panel', !/byline/.test(player) && !/director/.test(player))
   check('Z toggles Zoom and O toggles Overview', /case 'z':/.test(player) && /case 'o':/.test(player) && player.includes('Zoom in on the action (Z)') && player.includes('Zoom out to the whole world (O)'))
@@ -624,19 +636,21 @@ async function main(): Promise<void> {
         // Under Zoom (1.5 times closer) Cooper stays in the frame, but for three shots that are about something bigger
         // than him: the cage going up out of the top while Murph is kept back at the tower's foot, the whip through
         // the sphere, and the pull-back from the replica to the whole ring.
-        const zoomAway: [number, number][] = [[74.9, 77.3], [103.7, 104.3], [130.4, 137.2]]
+        // Zoom's framing is the stage's own (`zoomed`), which slides to keep the camera's focus, Cooper, inside: so he
+        // is held to more than his centre being in: his whole ball, and as much again round it, inside every edge.
         const zoomMiss: string[] = []
         for (let t = 0; t <= MIX_END; t += 0.1) {
-          if (zoomAway.some(([a, b]) => t > a && t < b)) continue
-          const f = perf.camera!(t)
+          if (LIFTOFF_ZOOM_FREE.some(([a, b]) => t > a - 0.5 && t < b + 0.5)) continue
+          const f = zoomed(perf.camera!(t), 1.5)
           const a = f.angle ?? 0
           const [hx, hy] = show.where(t)
           const dx = hx - f.x
           const dy = hy - f.y
-          const zc = f.cells / 1.5
-          if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (zc * 8) / 9 && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < zc / 2)) zoomMiss.push(t.toFixed(1))
+          const zc = f.cells
+          const edge = 2 * BALL_R
+          if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (zc * 8) / 9 - edge && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < zc / 2 - edge)) zoomMiss.push(t.toFixed(1))
         }
-        check('liftoff: under Zoom Cooper is in the frame, but for the cage\'s climb, the whip through the sphere and the ring\'s reveal', zoomMiss.length === 0, zoomMiss.join(' '))
+        check('liftoff: under Zoom Cooper\'s whole ball is well inside the frame, but for the cage\'s climb, the whip through the sphere and the ring\'s reveal', zoomMiss.length === 0, zoomMiss.join(' '))
         // Out of the wormhole's far mouth the whip hands over to the Ranger: the camera does not stop dead while it flies.
         let slowest = Infinity
         for (let t = cue(213) - 0.3; t < cue(213) + 0.6; t += 1 / 60) {

@@ -128,7 +128,7 @@ The music is the only clock.
   - the end credits: after the music has stopped, set by the page, and naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues;
   - the stage is in the station from the accent, and outside from the undock;
   - the camera's roll: square everywhere but the far side, a third of a turn through the reunion, square again by the hub and the cut;
-  - under Zoom, Cooper in the frame every tenth of a second to the music's end, but for the cage's climb (75 to 77 s), the whip through the sphere (103.8 s) and the ring's reveal (130.5 to 137 s);
+  - under Zoom (with its slide to keep Cooper, `Framing.focus`), Cooper's whole ball and as much again round it inside the frame every tenth of a second to the music's end, but for the cage's climb (75 to 77 s), the whip through the sphere (103.8 s) and the ring's reveal (130.5 to 137 s);
   - the whip out of the wormhole never stopping while the Ranger flies;
   - Brand (the blue ball):
     - she is out of shot on the farm and through the drive (twelve sample times, 1 to 60 s);
@@ -219,7 +219,15 @@ There is no title card. After p5.js's card goes (about 287 s), the camp holds al
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 6 (latest)
+## Polish pass 7 (latest)
+
+Every pass before this looked at the show's own camera. This one swept it under **Zoom**, the player's closer follow (1.5 times nearer, about the same middle).
+
+- **Zoom keeps its subject** (`Framing.focus`, `zoomed` in `shows/registry.ts`). The shots are composed for the wide frame, and some left Cooper on the closer frame's edge or past it. The worst was the countdown (77.5 to 86.5 s): the wide shot holds the window at its top and Murph at the tower's foot at its bottom, and under Zoom the window, with the two of them in it, was cut by the top edge. A camera can now name what a shot is about. Zoom then slides over, along the picture's own axes so a rolled camera works too, by the least it must to keep that point a fifth of the frame inside every edge. A soft knee lets it take hold gradually. Voyage names Cooper, smoothed over about a second as the follow camera smooths him, except in the three shots that are about more than him (the cage's climb, the whip through the sphere, the ring's reveal), with half-second eases in and out. The wide frame is unchanged, and shows that name no focus are unchanged.
+- **Measured.** The nearest Cooper comes to a Zoom edge went from 3.7% of the frame's height (at 229.95 s) to 12%. The camera's motion under Zoom is as smooth as before: the worst velocity jumps are the same authored whips, and 179 frames cross the small threshold where 164 did. A first version, which locked the frame to Cooper's raw position, jolted at every strike (2.27 at the bat's hit); the smoothing and the knee took that out.
+- **Checks.** `zoomed` is tested on its own: the middle kept, a focus held at the margin, a rolled camera, no step as a focus crosses the margin. Liftoff's Zoom check uses the stage's own framing and holds Cooper's whole ball, and as much again round it, inside every edge, where it used to ask only that his centre be in.
+
+## Polish pass 6
 
 The show was swept again in a tall phone frame (9:16), which sees much more world above and below the 16:9 frame than a wide window does. The farm, the space set pieces and the station all hold up there. One thing did not:
 

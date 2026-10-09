@@ -194,9 +194,38 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   // Where a part asks for nothing, the camera follows at a middle distance.
   if (!shots.some((s) => s.t > beat(86))) shots.push({ t: DURATION, cells: 5 })
   const follow = director((t) => show.where(t) as Pt, shots, DURATION)
-  const camera = (t: number): Framing => ({ ...follow(t), angle: rollAt(t) })
+  const smoothed = (t: number): Pt => {
+    let x = 0
+    let y = 0
+    let sum = 0
+    for (let j = -8; j <= 8; j++) {
+      const wj = 1 - Math.abs(j) / 9
+      const [px, py] = show.where(Math.max(0, Math.min(DURATION, t + j * 0.05)))
+      x += px * wj
+      y += py * wj
+      sum += wj
+    }
+    return [x / sum, y / sum]
+  }
+  const camera = (t: number): Framing => {
+    const f = follow(t)
+    // Zoom's focus is Cooper: the shots are composed for the wide frame, and under Zoom some left him on its edge or
+    // past it (the two of them in the rocket's window, over a frame that holds the tower's foot). Not in the three
+    // shots that are about more than him, and eased in and out of those so Zoom never jumps.
+    const w = ZOOM_FREE.reduce((m, [a, b]) => m * (1 - smooth(t, a - 0.5, a) * (1 - smooth(t, b, b + 0.5))), 1)
+    // (Where he has been and is about to be, over about a second, as the follow camera smooths him: a frame locked to
+    // his own jolts would jolt with every strike.)
+    const [hx, hy] = smoothed(t)
+    return { ...f, angle: rollAt(t), focus: [f.x + (hx - f.x) * w, f.y + (hy - f.y) * w] }
+  }
   return { show, camera }
 }
+
+/**
+ * Under Zoom, the shots that are bigger than Cooper: the cage going up out of the top while Murph is kept back at the
+ * tower's foot, the whip through the sphere, and the pull-back from the replica to the whole ring.
+ */
+export const ZOOM_FREE: [number, number][] = [[74.9, 77.3], [103.7, 104.3], [130.4, 137.2]]
 
 /**
  * The camera's roll on Cooper Station. The station is drawn end-on and its "down" is outward, so a house on the

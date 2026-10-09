@@ -119,7 +119,9 @@ first second to its last.
   top to bottom. A stage of another shape sees more world round that frame,
   never less of it; a saved file is exactly it. Overview overrides framing
   with Machine's fit of the current world's bounds. Zoom sits closer on the
-  follow camera. Each turns the other off. They affect live viewing
+  follow camera, about the same middle; a camera that names a `focus` (what
+  the shot is about) has Zoom slide over just enough to keep it well inside
+  (`zoomed` in `../registry.ts`), as Voyage does for Cooper. Each turns the other off. They affect live viewing
   and export without changing the music clock.
 - **A label's upload can play the music instead of the file.** Add
   `youtube: [{ id }]` to the soundtrack and the page embeds that video in
