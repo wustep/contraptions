@@ -219,9 +219,11 @@ const CLUMPS: Clump[] = (() => {
     [54.5, -7.6, 1.4], [56.4, -8.1, 1.6], [58.3, -7.6, 1.4], [60.1, -7.4, 1.2], [62.0, -7.0, 1.1], [63.6, -6.3, 0.95],
     [52.9, -6.6, 1.1], [51.6, -7.2, 0.95], [53.4, -5.5, 0.9], [52.3, -5.4, 0.75],
     // Along the swing's limb and over its lowered end.
-    [61.7, -5.85, 0.8], [62.95, -5.45, 0.75], [63.95, -4.7, 0.62], [57.9, -6.25, 0.85], [59.7, -6.45, 0.85], [56.6, -6.0, 0.7],
-    // Low on the limb itself, where the frame sees them.
-    [57.3, -5.55, 0.5], [58.7, -5.6, 0.45], [61.9, -5.3, 0.5], [62.95, -4.95, 0.46], [63.55, -4.25, 0.4]
+    [61.7, -5.85, 0.8], [62.95, -5.45, 0.75], [57.9, -6.25, 0.85], [59.7, -6.45, 0.85], [56.6, -6.0, 0.7],
+    // Low on the limb itself, where the frame sees them. None out at the bend over its lowered end: the swing's close
+    // frame draws back past it, and a clump cut by the frame's top there, solid among the sprays' single leaves, read
+    // as a blob, a glitch.
+    [57.3, -5.55, 0.5], [58.7, -5.6, 0.45], [61.9, -5.3, 0.5]
   ]
   return spots.map(([x, y, r], i) => {
     const lobes: [number, number, number][] = [[0, -0.1 * r, 0.5 * r], [-0.3 * r, 0.05 * r, 0.42 * r], [0.3 * r, 0.05 * r, 0.42 * r]]

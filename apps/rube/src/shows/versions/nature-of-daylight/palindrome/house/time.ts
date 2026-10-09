@@ -388,14 +388,15 @@ export const ianLook = (T: number): number => Math.PI + 0.35 - (Math.PI + 0.6) *
  */
 export const IAN_STAYS_X = 1.85
 const IAN_TURNS = BEGIN + 1.5
-const IAN_LOOKS_BACK = BEGIN + 2.5
-export const IAN_GOES = BEGIN + 3.4
+const IAN_LOOKS_BACK = BEGIN + 2.4
+export const IAN_GOES = BEGIN + 4.0
 const IAN_PACE = 1.05
 const IAN_UP = 1.1
 /** Where he is (world x) from the cut on; past the room's whole frame by IAN_GONE. */
 export function ianAfter(T: number): number {
-  // A half step away as he turns, then still.
-  const step = 0.08 * s5((T - IAN_TURNS) / 0.6)
+  // A half step away as he turns, then still; and as he looks back, a lean back toward her, held a second, before he
+  // goes. (The look alone, his mark turning, was too slight to see as a pause.)
+  const step = 0.1 * s5((T - IAN_TURNS) / 0.6) - 0.06 * (s5((T - IAN_LOOKS_BACK) / 0.4) - s5((T - IAN_GOES + 0.45) / 0.45))
   const u = T - IAN_GOES
   if (u <= 0) return IAN_STAYS_X + step
   const d = u < IAN_UP ? (IAN_PACE * u * u) / (2 * IAN_UP) : IAN_PACE * (u - IAN_UP / 2)

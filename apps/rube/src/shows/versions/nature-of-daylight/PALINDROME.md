@@ -783,6 +783,13 @@ no beat before it, as if deleted. He stays on her right now, as he was, beyond t
 turns away a half step, stands, looks back at her, and goes out of the room on the right. The last frame is the first
 as before, to the same measure.
 
+A seventy-sixth gave the show to an eleventh fresh reader: she takes up the watch again, they said, and Ian goes
+back to his own life. Two things they could not see. His look back, his mark turning for under a second, was too
+slight to read as a pause: he leans back toward her now as he looks, and holds it a second before he goes. And the
+green blob at the top of the willow (62 s), which three readers have called a glitch: the swing's close frame draws
+back past the limb's bend, and the clumps of leaves out there, solid among the sprays' single leaves and cut by the
+frame's top, read as a blob. There are none at the bend now; the crown in the wide is as full as it was.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
