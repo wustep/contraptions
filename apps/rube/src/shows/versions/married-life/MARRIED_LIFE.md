@@ -664,6 +664,13 @@ window.
   his lean to her picture arrives on the piano's note at 192.569; on the hill the first ticket slips out on the fall's
   strike and the second on the next onset (174.916). 258 strikes in all.
 
+- **Polish round 31 (Opus 5.5).** The share card still matches the show at 47.3 s pixel for pixel (checked, since her
+  gaze's blending changed after it was made). Then the shared code this PR touched, reviewed against `origin/main` for
+  the other shows: with `tall` and the Zoom offsets left out, every stage, card and export is as before. One hazard:
+  the arithmetic from a framing to Zoom's frame was written out four times (the stage, and three of this show's
+  checks), so a change to one could leave the checks measuring something other than what is drawn. It is one helper
+  now, `zoomFrame` in `registry.ts`, used by all four; the stage's contract check asserts it instead of the old text.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is

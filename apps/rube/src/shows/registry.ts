@@ -40,6 +40,21 @@ export interface Framing {
   zoomSlide?: number
 }
 
+/**
+ * Zoom's frame for a framing: `zoom` times as close, round its middle moved by `zoomDrop` and `zoomSlide` (shares of
+ * the Zoom frame's half height and half width). The stage draws with it, and checks that hold a show to Zoom measure
+ * with it, so the two can never disagree.
+ */
+export function zoomFrame(f: Framing, zoom: number): Framing {
+  const cells = f.cells / zoom
+  return {
+    ...f,
+    cells,
+    x: f.x + ((f.zoomSlide ?? 0) * cells * 16) / 9 / 2,
+    y: f.y + ((f.zoomDrop ?? 0) * cells) / 2,
+  }
+}
+
 export interface SoundtrackSpec {
   /**
    * Optional local recording URL. Import the file and Vite gives it one: `import src from './take.mp3'`.

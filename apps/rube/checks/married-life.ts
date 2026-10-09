@@ -2,7 +2,7 @@
  * The checks for Married Life (`versions/married-life/opus55.show.ts`), run by `check:shows`. Kept in their own
  * file: what the show promises is its own.
  */
-import type { Performance, Version } from '../src/shows/registry'
+import { zoomFrame as zoomOf, type Performance, type Version } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/married-life-onsets.json'
 import { STRIKES } from '../src/shows/versions/married-life/life/hits'
 import { AT, BEATS, CUT, DURATION, ONSETS, PIANO, RECORDING, SEAM } from '../src/shows/versions/married-life/life/music'
@@ -137,10 +137,8 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   // to be seen: his whole square and her whole ball, not only their middles.
   const zoomed = (t: number, x: number, y: number, r: number) => {
     const f = cam(t)
-    const cells = f.cells / 1.5
-    const fy = f.y + ((f.zoomDrop ?? 0) * cells) / 2
-    const fx = f.x + ((f.zoomSlide ?? 0) * cells * 16) / 9 / 2
-    return Math.max((Math.abs(x - fx) + r) / ((cells * 16) / 9 / 2), (Math.abs(y - fy) + r) / (cells / 2))
+    const z = zoomOf(f, 1.5)
+    return Math.max((Math.abs(x - z.x) + r) / ((z.cells * 16) / 9 / 2), (Math.abs(y - z.y) + r) / (z.cells / 2))
   }
   const outOfZoom: string[] = []
   const herOutOfZoom: string[] = []
@@ -296,9 +294,9 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   // the half height) under Zoom.
   const zoomFrame = (t: number) => {
     const f = cam(t)
-    const zh = f.cells / 1.5 / 2
-    const zw = (zh * 16) / 9
-    return { zh, zw, zy: f.y + (f.zoomDrop ?? 0) * zh, zx: f.x + (f.zoomSlide ?? 0) * zw }
+    const z = zoomOf(f, 1.5)
+    const zh = z.cells / 2
+    return { zh, zw: (zh * 16) / 9, zy: z.y, zx: z.x }
   }
   let edgeRun = 0
   let edgeFrom = 0
@@ -341,10 +339,8 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     const cutTimes: number[] = Object.values(CUT)
     const at = (t: number) => {
       const f = cam(t)
-      const cells = zoomed ? f.cells / 1.5 : f.cells
-      const x = zoomed ? f.x + ((f.zoomSlide ?? 0) * cells * 16) / 9 / 2 : f.x
-      const y = zoomed ? f.y + ((f.zoomDrop ?? 0) * cells) / 2 : f.y
-      return { x, y, L: Math.log(cells), cells }
+      const z = zoomed ? zoomOf(f, 1.5) : f
+      return { x: z.x, y: z.y, L: Math.log(z.cells), cells: z.cells }
     }
     let worst = 0
     let worstAt = 0
