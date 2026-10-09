@@ -517,7 +517,9 @@ window.
     tab (simulated: no frames and `document.hidden` for 10 s; YouTube plays on and the picture is in step at once
     on return), and hidden across the music's end with timers throttled to once a second: the show runs on to
     4:18 and YouTube stays quiet, also with its restart forced while hidden: with nothing asking the show, YouTube's
-    own time showed it paused at its start within a second, so the player's background timer catches it; the balloon's crown; contact with floors and
+    own time showed it paused at its start within a second, so the player's background timer catches it; the
+    keyboard with YouTube on (Space plays and pauses with the music in step; Z and O toggle Zoom and Overview while it
+    plays, the music undisturbed); the balloon's crown; contact with floors and
     slopes; stillness; gaze, as a whole and beat by beat; strobing; the camera's acceleration; render cost; contrast;
     three fresh critics (frames, regressions, story) and a story re-watch; the notes against the code; the shared code
     against `origin/main`; the credits under Zoom; Overview; the exports, and a real video export; the console; the full `npm run build` (every suite and the bundle; Vite's chunk-size
