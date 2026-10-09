@@ -915,6 +915,13 @@ The notes went back to the builders who made each part, who still had their cont
 - **Considered and left:** a last drift of the washer's window to another life after the credits, as the film's
   Evelyn drifts and comes back. The window already shows the red carpet last at 308.9 s, so it would have repeated a
   beat rather than added one.
+- **A director's pass: kindness, up close.** The great hit's turn, the film's thesis, was shot at 4 to 6.3 cells:
+  Evelyn about 10 px, and the eyes she gives each jumper specks. The camera now comes in on each kindness (2.6 to
+  3.1 cells), framed between her and the jumper so her eye is seen to fly to it and land: the glove's punch going
+  soft, the trap's bite a toss, the mallet's blow a scoop. It opens out for the lob under the ceiling (4.3 to 4.7
+  cells, keyed from the throw, so she is never at the frame's top), comes in again on the claw, holds the cradle as
+  a two-shot with Waymond watching across the table, and closes to 2.2 cells as she steps down to him. Under Zoom her
+  worst is 0.88 of the half-frame.
 
 ## The looks
 

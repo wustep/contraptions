@@ -123,25 +123,30 @@ export const kindness = part<KindnessState>(
   (slot) => {
     const H = (x: number, y: number): Pt => toPart([x, y])
     const shots: PartShot[] = [
-      // Out of the calm she lands in to the whole of it: her, Jobu's jumpers between, and Waymond waiting at the far
-      // end of the party table (he gave her the eye).
-      // A little left of the middle, so under Zoom she and the gift box are inside the frame, not at its edge.
-      { t: 191.95, cells: 5.2, hold: H(29.7, -1.22), w: 1 },
-      // Then with her to the trap, the mallet coming into the top of the frame.
-      { t: B(127), cells: 4.0, hold: H(28.5, -0.9), w: 1 },
-      // Back as the mallet cocks and she goes up, to see it swing.
-      { t: B(129), cells: 4.9, hold: H(29.0, -1.6), w: 1 },
-      { t: B(130), cells: 5.4, hold: H(29.9, -1.95), w: 1 },
-      // Up with her to the top of the lob, the ceiling in the frame.
-      { t: B(131), cells: 5.95, hold: H(31.35, -2.38), w: 1 },
-      // The lob, the arm, the catch: the whole corner.
-      { t: B(133), cells: 6.3, hold: H(31.4, -2.2), w: 1 },
-      // Then in, slowly, on the cradle and on Waymond waiting, the gentled machines swaying behind.
-      { t: B(137), cells: 5.0, hold: H(31.75, -1.9), w: 1 },
-      // In to the steps and to Waymond, and to rest.
-      { t: B(141), cells: 4.2, hold: H(32.6, -1.72), w: 1 },
-      { t: B(144), cells: 3.4, hold: H(33.55, -1.47), w: 1 },
-      { t: slot.end, cells: 3.2, hold: H(FINAL[0] + 0.28, FINAL[1] - 0.3), w: 1 },
+      // Out of the calm she lands in, a breath on the whole corner: her, Jobu's jumpers between, and Waymond waiting at
+      // the far end of the party table (he gave her the eye).
+      { t: B(124), cells: 4.2, hold: H(28.4, -1.05), w: 1 },
+      // Then in on each kindness, close enough that the eye she gives is seen to fly from her to it and land.
+      // The glove: it punches, the eye lands, the punch goes soft.
+      { t: B(125), cells: 2.7, hold: H(26.95, -0.62), w: 1 },
+      { t: B(126), cells: 2.8, hold: H(27.7, -0.55), w: 1 },
+      // The trap: it snaps, the eye lands, the bite is a toss.
+      { t: B(128), cells: 2.6, hold: H(28.85, -0.5), w: 1 },
+      // The mallet: the eye lands as it swings, and the blow is a scoop.
+      { t: B(129.6), cells: 3.0, hold: H(29.7, -1.6), w: 1 },
+      { t: B(130), cells: 3.1, hold: H(30.0, -1.85), w: 1 },
+      // The lob under the ceiling: back, to see the whole arc.
+      { t: B(130.7), cells: 4.3, hold: H(30.8, -2.75), w: 1 },
+      { t: B(131.5), cells: 4.7, hold: H(31.3, -2.75), w: 1 },
+      // The claw: it grabs her, the eye lands, the grab is a cradle.
+      { t: B(133), cells: 3.0, hold: H(32.75, -2.15), w: 1 },
+      // The cradle, and Waymond watching her across the table: the two of them in one frame.
+      { t: B(135), cells: 2.9, hold: H(32.95, -1.65), w: 1 },
+      { t: B(139), cells: 2.75, hold: H(32.9, -1.6), w: 1 },
+      // Down the steps to him, and to rest beside him.
+      { t: B(141), cells: 2.5, hold: H(32.95, -1.45), w: 1 },
+      { t: B(144), cells: 2.3, hold: H(33.45, -1.25), w: 1 },
+      { t: slot.end, cells: 2.2, hold: H(FINAL[0] + 0.2, FINAL[1] - 0.22), w: 1 },
     ]
     return shots.filter((s) => s.t > slot.begin + 0.39 && s.t <= slot.end + 1e-6)
   },
