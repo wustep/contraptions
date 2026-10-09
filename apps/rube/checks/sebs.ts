@@ -283,6 +283,14 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
   const toShadow = sebsCovers.find((c) => c.kind === 'black' && c.down[0] > 168 && c.down[0] < SWITCH.shadow)
   check('sebs: Hollywood\'s lamps go out before the dark comes', !!toShadow && HOLLY_OUT.every((t) => coverAt(toShadow, t) < 0.05))
   check('sebs: the credits come up in the open sky over the club', creditClear > 0, `clearance ${creditClear.toFixed(3)} of the frame at ${creditWorst}`)
+  // The share card is the show's own frame at its `still`: the two of them in it, and looking at each other.
+  {
+    const t = version.still ?? -1
+    const { seb, mia } = eyes(t)
+    const ok = !!seb && !!mia && inShot(t, seb) && inShot(t, mia) &&
+      aim(seb.spin, Math.atan2(mia.y - seb.y, mia.x - seb.x)) <= Math.PI / 6 && aim(mia.spin, Math.atan2(seb.y - mia.y, seb.x - mia.x)) <= Math.PI / 6
+    check('sebs: the share card shows the two of them, looking at each other', ok, `still ${t}`)
+  }
   check('sebs: they look at each other where the story says (the touches, the waltz, the door), she to the stage, he to her', looks.length === 0, looks.join(', '))
 
   // The last frame: the whole city, wide.

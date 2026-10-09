@@ -89,6 +89,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - no one passes through anyone where it can be seen (two balls drawn closer than nine tenths of their widths summed);
 - the story's beats are seen: at nineteen of them, from her eyes lifting at her table to his count-in, everyone the beat is about is in the picture;
 - Hollywood's hill lamps go out before the dark comes;
+- the share card, the show's frame at its `still`, has the two of them in it, looking at each other;
 - the credits come up in the open sky over the club: while a card is up, the roof's line is below its last line;
 - every star the melody lights among the stars is lit in the picture, with a margin, for the second after it lights;
 - they look at each other where the story says, to within 30°: at the kiss at Lipton's, the curtain call, the roll down the beam, in the waltz, at the touch among the stars, and at the look and the nod at the door; she lifts her eyes to the stage at her table, and he finds her across the room;
@@ -425,3 +426,7 @@ A sixty-first pass, the show's card:
 A sixty-second pass, the notes again:
 
 - **The table of places, caught up.** The table at the top of these notes says what happens in each place, and the passes since the fortieth had changed what happens in five of them without it saying so. It does now: his eye finding her across the room at the start; her window coming up with the music, his cheering and her hops in the ovation; their eyes on each other through the waltz; the constellation the stars join into round them, and how close they float; her cheering him on at the pool.
+
+A sixty-third pass, the card held:
+
+- **A check for the card.** The share card had gone stale because nothing tied its moment to the show. `check:shows` now holds it: at the `still`, both of them are in the picture and looking at each other. It fails at the old still, 272.0, where their turn to each other had only begun, and at her table, where she is with David.
