@@ -657,6 +657,14 @@ looked at both there, and seen: its eye in the frame and big enough to read for 
 | 305.4–307.6 | all three | the drum | its slow half-turn under the credits |
 | 312.5–315.2 | all three | one another | the window's swell under the credits |
 
+Two other kinds of eye watch her too, drawn by the room and the kindness part rather than as the family's gazes, so
+the checks above do not cover them:
+
+- **Waymond's googly-eyed laundry bags** on the washers either side of the big dryer watch her go round the drum
+  (34.6–57.9 s; `BAG_WATCH` in `set.ts`, set by the score). They ease in and out like the family's looks.
+- **Jobu's jumpers**, once given her eye, watch her from 0.9 s after it lands to the end of the fight (`watching` in
+  `kindness-draw.ts`). Their pupils turn to her while the machines go on waving, bobbing and swaying.
+
 ## End credits
 
 The credits come after the last hit, over the quiet tail of the cue, while the family rests in the dark by the washer's
