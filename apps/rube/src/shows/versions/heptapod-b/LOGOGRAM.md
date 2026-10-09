@@ -272,7 +272,9 @@ strongest pulses held against what the picture does on them. What changed:
   at it until it lets her go, and on the great ring's close (183.182) she looks up through it to where the two
   halves meet over her, hers and Costello's, held to the cut; before, she looked down into the ink. Ian too, in
   the chamber, wherever he is stopped: up at Abbott as he hesitates, up at the giants through the wide, and on her
-  as she goes into the white. (The show
+  as she goes into the white. In the valley: both up at the slot as it opens over them (36.4) and through the floods'
+  answer; on the meadow she looks up to where the shell went, then at Ian as he comes, and from the touch at him and a
+  little up, as her eye stands when the lake house opens on the first frame; he, at her side, at her. (The show
   hands each rider her roll as the stage would draw it, so the eye turns from where it is; elsewhere every frame is
   unchanged.)
 - **The second vision's loss** (156.177 → 160.015): Hannah leaves level along the bench, so Louise's gaze barely

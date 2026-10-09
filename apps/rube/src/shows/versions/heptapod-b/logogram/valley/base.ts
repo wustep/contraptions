@@ -1,6 +1,6 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { laneAt, R } from '../../../../../parts'
-import { box, carried, frame, part, type PartShot } from '../kit'
+import { box, carried, frame, lookFrom, looks, part, type Look, type PartShot } from '../kit'
 import { BURST1, pulse, SEAM } from '../music'
 import { G, dropTime } from '../physics'
 import { SEAMS } from '../seams'
@@ -254,6 +254,14 @@ export const BASE_HITS: number[] = [
   pulse(179),
 ].sort((a, b) => a - b)
 
+/**
+ * Where they look, stopped under the belly: up at the slot as it opens over them in its six steps, and holding there
+ * as the floods answer, until they set off for the lift. Elsewhere their eyes roll with them.
+ */
+const UP_AT_SLOT = -Math.PI / 2 + 0.15
+const LOUISE_LOOKS: Look[] = [{ from: 36.0, to: 39.5, at: () => UP_AT_SLOT }]
+const IAN_LOOKS: Look[] = [{ from: 37.75, to: 39.85, at: () => UP_AT_SLOT }]
+
 export const base = part<BaseState>(
   {
     name: 'base',
@@ -299,6 +307,7 @@ export const base = part<BaseState>(
       exit,
       lane: { segs: L.segs, fire: INTO_BUCKET - begin },
       state: { begin },
+      riders: looks(LOUISE_LOOKS),
       company: [
         {
           who: 'ian',
@@ -306,7 +315,7 @@ export const base = part<BaseState>(
           to: slot.end,
           at: (t: number) => {
             const q = laneAt(ianLane, t - begin)
-            return { x: q.x, y: q.y }
+            return { x: q.x, y: q.y, look: (roll: number) => lookFrom(IAN_LOOKS, t, roll) }
           },
         },
       ],

@@ -1,5 +1,5 @@
 import { R, type Pt } from '../../../../../parts'
-import { box, carried, part, type PartShot } from '../kit'
+import { box, carried, ease, lookFrom, looks, part, turnTo, type Look, type PartShot } from '../kit'
 import { pulse } from '../music'
 import { SEAMS } from '../seams'
 import { MEADOW } from './geo'
@@ -43,6 +43,23 @@ export const DEPART_HITS: number[] = [DEPART, IAN_GO, CUT_IN, TOUCH]
 const leanAt = (t: number): number => 0.035 * Math.sin(Math.PI * sm(t, TOUCH - 0.5, TOUCH + 0.9))
 /** From the touch on he stays against her, coming with her as she settles back: they end the meadow together. */
 const AGAINST = 2 * R + 0.006
+
+/**
+ * Where they look on the meadow: she up and back to where the shell went, as it lifts and goes and the light comes
+ * through; then at Ian as he comes to her, and from the touch on at him and a little up, which is how her eye stands
+ * as the lake house opens on the first frame. He, once he is at her side, at her.
+ */
+const LOUISE_LOOKS: Look[] = [
+  {
+    from: 185.6,
+    to: Infinity,
+    at: (t) => {
+      const toIan = -2.0 + turnTo(-2.0, -0.15) * ease((t - 192.7) / 0.6)
+      return toIan + turnTo(toIan, -0.55) * ease((t - TOUCH) / 0.5)
+    },
+  },
+]
+const IAN_LOOKS: Look[] = [{ from: TOUCH + 0.05, to: Infinity, at: () => Math.PI - 0.35 }]
 
 /** Her, in the part's frame at show time `t`: still, but for a look up as the shell lifts, and a lean to him. */
 function herAt(t: number): Pt {
@@ -91,7 +108,8 @@ export const depart = part<DepartState>(
       exit: [0, 0],
       lane: { segs: lane, fire: DEPART - slot.begin },
       state: { begin: slot.begin },
-      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: (t: number) => ({ x: -0.5 + ianX(t), y: 0 }) }],
+      riders: looks(LOUISE_LOOKS),
+      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: (t: number) => ({ x: -0.5 + ianX(t), y: 0, look: (roll: number) => lookFrom(IAN_LOOKS, t, roll) }) }],
     }
   },
   (slot) => shotsFor(slot.end),
