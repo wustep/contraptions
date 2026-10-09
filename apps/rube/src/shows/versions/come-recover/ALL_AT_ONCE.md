@@ -887,4 +887,5 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - The reduced-motion preference is followed live, and the page's Save PNG and Save video paint from the same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
   for a file would take a change to the shared stage and recorder, and that viewer has asked for the calmer show.
 - Only Chrome on macOS has been watched playing. Twelve key frames were rendered in WebKit (Safari's engine, 26.6) as
-  well, and match Chrome's, with no errors. The recording export has not been re-measured for this take.
+  well, and match Chrome's, with no errors. Firefox has not been tried: its engine would not start in the sandbox the
+  passes ran in. The recording export has not been re-measured for this take.
