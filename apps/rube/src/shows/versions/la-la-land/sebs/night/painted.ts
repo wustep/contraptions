@@ -5,6 +5,7 @@ import { box, carried, frame, glow, knock, part, rgba, smooth, type PartShot } f
 import { NIGHT_MAT } from '../worlds'
 import {
   barPhase,
+  BARS,
   CART_X,
   centre,
   CHIME_HITS,
@@ -12,7 +13,9 @@ import {
   CURTSY_HITS,
   FLY_SET,
   FLY_SKY,
+  groundUnder,
   LAMPS,
+  LIFT,
   MIA_SPAN,
   miaAt,
   NIGHT_FROM,
@@ -720,6 +723,54 @@ interface PaintedState {
   begin: number
 }
 
+/**
+ * Their steps on the wet quay. A waltz is three steps a bar, and on the wet stones each one leaves a ripple of the
+ * lamps' gold spreading out under whoever stepped, the ONE of each bar the strongest, both of them together; the
+ * two and the three, him and then her. The rings spread and thin as they go round, so the floor carries a trail of
+ * where they have turned. They stop as the two of them lift off the floor among the stars.
+ */
+const STEPS: { t: number; who: 'seb' | 'mia' | 'both'; s: number }[] = (() => {
+  const out: { t: number; who: 'seb' | 'mia' | 'both'; s: number }[] = []
+  for (let i = 0; i + 1 < BARS.length; i++) {
+    const a = BARS[i]
+    const b = BARS[i + 1]
+    if (a < WALTZ - 0.01 || a >= LIFT - 0.3) continue
+    out.push({ t: a, who: 'both', s: 1 })
+    out.push({ t: a + (b - a) / 3, who: 'seb', s: 0.55 })
+    out.push({ t: a + (2 * (b - a)) / 3, who: 'mia', s: 0.55 })
+  }
+  return out
+})()
+const RIPPLE = 1.7
+function ripples(p: p5, k: number, T: number): void {
+  if (T < WALTZ - 0.05 || T > LIFT + RIPPLE) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  for (const st of STEPS) {
+    const age = T - st.t
+    if (age < 0 || age > RIPPLE) continue
+    for (const who of st.who === 'both' ? (['seb', 'mia'] as const) : [st.who]) {
+      if (who === 'mia' && (st.t < MIA_SPAN[0] || st.t >= MIA_SPAN[1])) continue
+      const at = who === 'seb' ? sebAt(st.t) : miaAt(st.t)
+      const y = groundUnder(st.t, who)
+      // Out under the ball where it stepped; two rings, the second a beat behind the first.
+      for (const [lag, w] of [[0, 1], [0.18, 0.55]] as const) {
+        const v = (age - lag) / (RIPPLE - lag)
+        if (v <= 0) continue
+        const r = 0.1 + 1.25 * Math.sqrt(v) * (0.7 + 0.3 * st.s)
+        const a = st.s * w * 0.9 * (1 - v) ** 1.4 * lampLight(T) ** 0.5
+        if (a < 0.01) continue
+        ctx.strokeStyle = rgba(NIGHT_MAT.gold, a)
+        ctx.lineWidth = Math.max(1.2, 0.03 * k * (1 - 0.5 * v))
+        ctx.beginPath()
+        ctx.ellipse(at[0] * k, (y + 0.02) * k, r * k, r * 0.26 * k, 0, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+    }
+  }
+  ctx.restore()
+}
+
 export const painted = part<PaintedState>(
   {
     name: 'painted',
@@ -734,6 +785,7 @@ export const painted = part<PaintedState>(
       farBank(p, k, T)
       drawFloor(p, k, T, SET)
       petals(p, k, T)
+      ripples(p, k, T)
       if (lift(T, 2) < 14) {
         for (const x of LAMPS) lamp(p, k, c.ink, c.weight, T, x)
         UMBRELLAS.forEach((u, i) => umbrella(p, k, c.ink, c.weight, T, u, i))
