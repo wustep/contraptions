@@ -83,12 +83,31 @@ export const GATHERS: { in0: number; in1: number; out0: number; out1: number; st
  * smoothed), so at the crest, held at arm's length, she is looking at him, not at the floor. Eased in and out over
  * `ease` seconds at the span's ends.
  */
-export const LOOKS: { from: number; to: number; ease: number; at: number }[] = [
-  // On the blanket, up at the clouds the engine builds (up, and a little toward the shapes), carried just across the
-  // cut onto the mobile until she rolls off to the cradle.
-  { from: CUT.hill + 0.6, to: CUT.nursery + 0.6, ease: 0.9, at: -1.35 },
+export const LOOKS: { from: number; to: number; ease: number; at: number | ((show: LifeShow, t: number) => number) }[] = [
+  // In her armchair at the new bay, at him as he comes in and sits, a little above his middle (not at her lap, as the
+  // roll had it); then, across the cut onto the blanket, turning up to the clouds the engine builds (up, and a little
+  // toward the shapes), carried just across the next cut onto the mobile until she rolls off to the cradle. One span,
+  // its target turning, so her face never drops back to her roll between the two.
+  {
+    from: bar('waltz', 27) + 0.2,
+    to: CUT.nursery + 0.6,
+    ease: 0.9,
+    at: (show, t) => turnTo(towardHim(show, t), -1.35, (t - CUT.hill - 0.3) / 1.2),
+  },
   { from: bar('jar', 39), to: bar('jar', 56), ease: 0.8, at: -2.3 },
 ]
+/** The angle from her to a little above his middle (his face, as far as a square has one), on the screen. */
+function towardHim(show: LifeShow, t: number): number {
+  const e = show.ellie(t)
+  const c = show.at(t)
+  return e ? Math.atan2(c.y - 0.12 - e.y, c.x - e.x) : 0
+}
+/** From angle `a` to angle `b` the short way round, `u` of the way (0..1, eased). */
+function turnTo(a: number, b: number, u: number): number {
+  const v = Math.max(0, Math.min(1, u))
+  const d = b - a
+  return a + (d - 2 * Math.PI * Math.round(d / (2 * Math.PI))) * v * v * (3 - 2 * v)
+}
 export function lookOf(show: LifeShow, t: number, own: number): number {
   for (const l of LOOKS) {
     if (t <= l.from || t >= l.to) continue
@@ -106,7 +125,7 @@ export function lookOf(show: LifeShow, t: number, own: number): number {
     }
     const still = 1 - Math.min(1, v / 2)
     const w = edge * edge * (3 - 2 * edge) * still * still * (3 - 2 * still)
-    const d = l.at - own
+    const d = (typeof l.at === 'number' ? l.at : l.at(show, t)) - own
     return own + w * (d - 2 * Math.PI * Math.round(d / (2 * Math.PI)))
   }
   return own

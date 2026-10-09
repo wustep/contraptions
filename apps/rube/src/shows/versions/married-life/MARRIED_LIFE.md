@@ -106,7 +106,7 @@ bass, on the one); Ellie, round, answers on the first pah.
   20, so the box stands clear on its post; she springs back to it off the cart's tail. She leaps over him, landing
   on 23's two (40.77, the strongest attack of the phrase and the first waltz's second-loudest swell), and leads up the
   steps; he follows a bar behind. On the soft bars 29 to 31 they sit in the two armchairs at the bay
-  window.
+  window, she looking at him (down at him as he crosses in front of her chair, then over at him in his).
 
 ### The clouds (49.64 to 63.25 s): the hill
 
@@ -528,6 +528,13 @@ window.
   face is turned up to the clouds, carried just across the cut onto the mobile. The look's speed is sampled inside
   the place she is in, since her cells change at a cut. Still left: Carl small at the cart's handle in the fix-up's
   reveal.
+
+- **Polish round 16 (Opus 5.5).** Her gaze audited through the whole show from the numbers: every stretch where she
+  is still and her face points down, judged against the story. Kept: her handprint on the mailbox, the yard (turned
+  away from him), and the stall on the climb before she gives way. Changed: in her armchair at the new bay she looked
+  at her lap for five seconds, the share card's moment; now she looks at him, following where he is (`towardHim`), and
+  across the cut onto the blanket her look turns up to the clouds in one span, so it never drops back between them.
+  The share card is made again at 47.3 s.
 
 ## Known limits
 
