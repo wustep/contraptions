@@ -1,10 +1,10 @@
-import { R as BALL_R } from '../../../../parts'
+import { R as BALL_R, type PieceCtx } from '../../../../parts'
 import { GRACES, MELODY } from './music'
-import { along, ballLocal, float, since, sink, stonesIn } from './path'
+import { RADIUS, along, ballLocal, float, since, sink, squash, stonesIn } from './path'
 import { titlesAt } from './titles'
-import { FIREFLIES, FIREFLY, dropAt, rainAt, firefliesOut, inLayer, layered } from './air'
+import { FIREFLIES, FIREFLY, dropAt, rainAt, firefliesOut, inLayer, layered, overcastAt } from './air'
 import { hash, osc, polar, smooth } from './world'
-import { scenery, type Ctx2D, viewOf, frameOf, onCanvas, lamplighter, haloSprite } from './frame'
+import { scenery, type Ctx2D, viewOf, frameOf, onCanvas, lamplighter, haloSprite, sunAngle, moonAngle, weathered } from './frame'
 import { lampLight, bloom, cadenceFronts, cadence, SEGMENT } from './stones'
 
 // ---------------------------------------------------------------- over the ball
@@ -192,6 +192,9 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     }
     ctx.restore()
   }
+  // The ball in the light it is in: shaded on the side away from the sun by day, or the moon by night, with a rim of
+  // the light on its lit side; through the first Gnossienne, lit by its own flame, all round.
+  if (v.wide < 0.5) shadeBall(ctx, c)
   // Wide: a light round the ball, so the eye can find it on the small planet.
   if (v.wide > 0.02) {
     const b = ballLocal(c.t)
@@ -209,3 +212,46 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.restore()
   }
 })
+
+/**
+ * The ball, lit: the stage draws it a flat disc, so over it, clipped to its outline as the stage drew it (squashed as
+ * it lands), a shade across it from the side the light comes from, and a thin rim of that light.
+ */
+function shadeBall(ctx: Ctx2D, c: PieceCtx): void {
+  const t = c.t
+  const day = weathered(t)
+  const sun = sunAngle(t)
+  const moon = moonAngle(t)
+  const sunUp = smooth(1.8 - Math.abs(sun), 0, 0.3) * (1 - day.night)
+  const moonUp = smooth(1.85 - Math.abs(moon), 0, 0.3) * day.night
+  const flame = lamplighter(t)
+  const by = sunUp >= moonUp ? sun : moon
+  const strength = Math.max(sunUp, moonUp) * (1 - 0.5 * overcastAt(t)) * (1 - flame)
+  if (strength < 0.02) return
+  const k = c.k
+  const b = ballLocal(t)
+  const q = squash(t)
+  const [x, y] = polar(b.u, b.h - BALL_R * q)
+  const rx = BALL_R * k * (1 + q)
+  const ry = BALL_R * k * (1 - q)
+  // The light's way in the ball's frame: `by` is from overhead, east (the ball's way) positive.
+  const lx = Math.sin(by)
+  const ly = -Math.cos(by)
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.rotate(b.u / RADIUS)
+  ctx.beginPath()
+  ctx.ellipse(0, 0, rx * 0.97, ry * 0.97, 0, 0, Math.PI * 2)
+  ctx.clip()
+  // A sphere's light: brightest a little in from its lit edge, darkening round to the far side.
+  const r = Math.max(rx, ry)
+  const g = ctx.createRadialGradient(lx * r * 0.42, ly * r * 0.42, 0, lx * r * 0.2, ly * r * 0.2, r * 1.45)
+  const lit = sunUp >= moonUp ? '255, 238, 204' : '220, 230, 248'
+  g.addColorStop(0, `rgba(${lit}, ${(0.28 * strength).toFixed(3)})`)
+  g.addColorStop(0.4, `rgba(${lit}, 0)`)
+  g.addColorStop(0.62, 'rgba(40, 44, 70, 0)')
+  g.addColorStop(1, `rgba(40, 44, 70, ${(0.34 * strength).toFixed(3)})`)
+  ctx.fillStyle = g
+  ctx.fillRect(-rx, -ry, 2 * rx, 2 * ry)
+  ctx.restore()
+}

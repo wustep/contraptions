@@ -58,6 +58,14 @@ third Gnossienne under the moon, lotus leaves on stems, floating, the long ones 
 when the ball comes. Between the pieces the camera goes out over the curve of the planet to the sun going down, the
 lamps, the moon.
 
+## The ball, in its light
+
+The stage draws the ball a flat disc. Over it, clipped to its outline as the stage drew it (squashed as it lands), it
+is lit as a sphere by whatever light it is in: from the sun's side by day, warm low in the morning and the evening,
+pale from overhead at noon; from the moon's under the moon; and through the first Gnossienne by its own flame, all
+round (`shadeBall`). Under it, the stone's face darkens softly where it touches, by day, and thins as it leaves; and
+through the first Gnossienne the flame lays a warm pool there instead (`underBall`).
+
 ## The cadences
 
 Each piece's last note runs back along the way the ball came (`CADENCES`): a slow wave of light going back through

@@ -1,10 +1,10 @@
 import type p5 from 'p5'
-import { mixHex, type PieceCtx } from '../../../../parts'
+import { R as BALL_R, mixHex, type PieceCtx } from '../../../../parts'
 import { PERIOD, PIECES, wrap } from './music'
-import { LENGTH, STONES, along, float, since, sink, stonesIn, type Stone } from './path'
+import { LENGTH, STONES, along, ballLocal, float, since, sink, squash, stonesIn, type Stone } from './path'
 import { drawGull } from './air'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
-import { scenery, type Ctx2D, type View, viewOf, onCanvas, atSea, weathered, sunAngle } from './frame'
+import { scenery, type Ctx2D, type View, viewOf, onCanvas, atSea, weathered, sunAngle, lamplighter } from './frame'
 
 // ---------------------------------------------------------------- the stones
 
@@ -383,9 +383,63 @@ function flyingGulls(p: p5, c: PieceCtx, v: View, day: Sky): void {
   }
 }
 
+/**
+ * Where the ball touches down: a soft shadow on the stone under it, by day, as it rides, thinning as it leaves and
+ * growing back as it comes down; and through the first Gnossienne, the flame it carries lays a warm pool on the beam
+ * instead.
+ */
+function underBall(p: p5, c: PieceCtx, day: Sky): void {
+  const ctx = p.drawingContext as Ctx2D
+  const k = c.k
+  const b = ballLocal(c.t)
+  const bottom = b.h - BALL_R * (1 + squash(c.t))
+  const flame = lamplighter(c.t)
+  const shade = 1 - day.night
+  if (shade < 0.02 && flame < 0.02) return
+  const i = b.stone
+  for (const s of [STONES[i], STONES[(i + 1) % STONES.length]]) {
+    // The stone it is over, this time round or the next.
+    let shift = Math.round((b.u - (s.u0 + s.u1) / 2) / LENGTH) * LENGTH
+    if (b.u < s.u0 + shift - 0.05 || b.u > s.u1 + shift + 0.05) continue
+    const top = s.h - sink(s, c.t) + float(s, c.t)
+    const gap = Math.max(0, bottom - top)
+    const near = 1 - smooth(gap, 0, 0.7)
+    if (near < 0.02) continue
+    p.push()
+    atSea(p, k, b.u)
+    const r = BALL_R * k * (1.7 - 0.4 * near)
+    ctx.translate(0, -top * k)
+    // Seen from the side, only on the stone's face under where it touches, not in the air beside it.
+    ctx.beginPath()
+    ctx.rect(-r * 3, 0, r * 6, r * 3)
+    ctx.clip()
+    ctx.scale(1, 0.45)
+    if (shade > 0.02) {
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+      g.addColorStop(0, `rgba(24, 26, 42, ${(0.34 * shade * near).toFixed(3)})`)
+      g.addColorStop(0.5, `rgba(24, 26, 42, ${(0.2 * shade * near).toFixed(3)})`)
+      g.addColorStop(1, 'rgba(24, 26, 42, 0)')
+      ctx.fillStyle = g
+      ctx.fillRect(-r, -r, 2 * r, 2 * r)
+    }
+    if (flame > 0.02) {
+      const R = r * 2.2
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R)
+      g.addColorStop(0, `rgba(255, 206, 130, ${(0.35 * flame * near).toFixed(3)})`)
+      g.addColorStop(1, 'rgba(255, 206, 130, 0)')
+      ctx.globalCompositeOperation = 'lighter'
+      ctx.fillStyle = g
+      ctx.fillRect(-R, -R, 2 * R, 2 * R)
+      ctx.globalCompositeOperation = 'source-over'
+    }
+    p.pop()
+  }
+}
+
 export const stones = scenery<null>('stones', (p, _s, c) => {
   const v = viewOf(p, c)
   const day = weathered(c.t)
   drawStones(p, c, v, day, false)
+  if (v.wide < 0.5) underBall(p, c, day)
   flyingGulls(p, c, v, day)
 })
