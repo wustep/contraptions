@@ -205,6 +205,32 @@ function plan(begin: number) {
   david.push(...walk(GO - 0.2, 466.6, -13.05, -16.0, 0, -1.4))
   david.push({ at: GONE, p: [-16.0 - 1.4 * (GONE - 466.6), FLOOR_Y] })
 
+  /* -------------------------------------------- the real one, at the keys */
+  // In the dream he sits with her and the piano plays itself; but in the room as it is he is at the piano, playing
+  // their theme. So he is there too, as an echo: the other road, hopping the keys as they go down. On the last chord
+  // the one from her table lands on the key where the echo is, and it goes into him: he is where he really was.
+  const E0 = 432.3
+  const theme: Note[] = []
+  for (const pr of selves) {
+    if (pr.at < E0 + 0.35) continue
+    const prev = tune[theme.length - 1]
+    if (prev && pr.at - prev.t < 0.24) continue
+    theme.push({ t: pr.at, midi: pr.midi, s: pr.s })
+  }
+  theme.push({ t: AT.last, midi: LAST_KEY, s: 0.4 })
+  const atKeys = { at: 0, p: restOn(theme[0].midi) }
+  const keysLane = { segs: route(play(atKeys, theme, E0).ways), fire: 0 }
+  const realOne = {
+    from: E0,
+    to: AT.last + 0.7,
+    at: (t: number) => {
+      const q = laneAt(keysLane, t - E0)
+      const [x, y] = F([q.x, q.y])
+      const a = Math.max(0, Math.min(1, (t - E0) / 0.7))
+      return { x, y, a, spin: -Math.PI / 2 + 0.25, gone: Math.max(0, Math.min(1, (t - AT.last + 0.04) / 0.6)) }
+    },
+  }
+
   /* -------------------------------------------- the dream, left in his seat */
   // As he goes from her side the dream stays a moment where he was: an echo of him at her table, leaning in to her,
   // paling while David comes back across the room, and coming apart as David sits down in it.
@@ -229,7 +255,7 @@ function plan(begin: number) {
   hits.push(DOOR_SHUT, BAND_LAMPS)
 
   const ways = seb.map((w) => ({ ...w, at: w.at - begin, p: F(w.p) }))
-  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, echo, hits: [...new Set(hits)].sort((a, b) => a - b) }
+  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, echoes: [realOne, echo], hits: [...new Set(hits)].sort((a, b) => a - b) }
 }
 
 const PLAN = plan(BEGIN)
@@ -261,7 +287,7 @@ export const finale = part<FinaleState>(
       lane: { segs: route(pl.ways), fire: AT.last - slot.begin },
       state: { begin: slot.begin, keys: pl.keys },
       company: pl.company,
-      echoes: [pl.echo],
+      echoes: pl.echoes,
     }
   },
   (): PartShot[] => [

@@ -298,7 +298,7 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
   }
   check('sebs: the story\'s beats are seen, everyone they are about in the picture', unseenBeats.length === 0, unseenBeats.join(', '))
   // The other road: the what-if read against what was. Each echo of him is seen, well inside the frame and mostly
-  // there, at the moment it is for; and there are only these, in the four places the story turns.
+  // there, at the moment it is for; and there are only these, in the places the story turns.
   {
     const inside = (t: number, b: { x: number; y: number }) => {
       if (covered(t)) return false
@@ -309,6 +309,7 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       [33.6, 'as he finds her, the what-if leaves him for her table'],
       [62.75, 'at Lipton\'s, the one who walked out knocks past her'],
       [198.4, 'he stays in Los Angeles as the plane goes'],
+      [440.5, 'in the dream\'s last room, the real one plays the piano that plays itself'],
       [455.45, 'David sits down in the dream\'s place at her table'],
     ]
     const unseenRoads: string[] = []
@@ -323,7 +324,8 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       if (is && !was) spans++
       was = is
     }
-    check('sebs: the other road is seen where the story turns, and only there', unseenRoads.length === 0 && spans === roads.length && show.echoList.length === roads.length,
+    // (Waking, the real one at the keys and the dream at her table are both there a moment: one span between them.)
+    check('sebs: the other road is seen where the story turns, and only there', unseenRoads.length === 0 && spans === roads.length - 1 && show.echoList.length === roads.length,
       `${unseenRoads.join(', ')}; ${spans} spans`)
     // In the hush, the one who walked out knocks her as he goes by: she rocks from it, and looks after him.
     const before = show.mia(62.55)
