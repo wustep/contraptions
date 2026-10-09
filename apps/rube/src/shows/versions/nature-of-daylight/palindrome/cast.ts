@@ -289,28 +289,32 @@ function drawPalm(ctx: Ctx, c: Pt, r: number, open: number, angle: number, color
   const n = 7
   const spread = 0.3 + 0.7 * open
   ctx.fillStyle = color
+  // The pad a little longer than it is wide, along the limb, so the hand has a heel behind its fingers.
   ctx.beginPath()
-  ctx.ellipse(c[0], c[1], r * 0.5, r * 0.44, angle, 0, Math.PI * 2)
+  ctx.ellipse(c[0], c[1], r * 0.52, r * 0.42, angle, 0, Math.PI * 2)
   ctx.fill()
+  const fx = Math.cos(angle)
+  const fy = Math.sin(angle)
   for (let i = 0; i < n; i++) {
-    // Fanned over the front of the pad, not all round it: the limb comes into the hand from behind, where there are
-    // no fingers, so it reads as a hand pressed flat and never as a star. The middle ones longest, the outer ones
-    // shorter and splayed a little wider.
+    // Fanned from the front of the pad over a hand's width, not round it: with the fan wider than a right angle on
+    // each side, seven fingers read as a star at any size. The middle ones longest, the outer ones shorter and splayed
+    // a little wider, each from its own knuckle along the pad's front edge.
     const side = (i - (n - 1) / 2) / ((n - 1) / 2)
-    const a = angle + side * Math.PI * 0.6 * spread * (1 + 0.08 * Math.abs(side))
-    const len = r * (0.66 + 0.34 * Math.cos(side * 1.25)) * (0.5 + 0.5 * open)
-    const w0 = r * (0.36 - 0.06 * Math.abs(side))
-    const w1 = r * (0.19 - 0.03 * Math.abs(side))
+    const a = angle + side * Math.PI * 0.34 * spread * (1 + 0.18 * Math.abs(side))
+    const len = r * (0.62 + 0.38 * Math.cos(side * 1.2)) * (0.5 + 0.5 * open)
+    const w0 = r * (0.26 - 0.05 * Math.abs(side))
+    const w1 = r * (0.16 - 0.03 * Math.abs(side))
     const ux = Math.cos(a)
     const uy = Math.sin(a)
     const nx = -uy
     const ny = ux
-    const tip: Pt = [c[0] + ux * len, c[1] + uy * len]
+    const knuckle: Pt = [c[0] + fx * r * 0.12 - fy * side * r * 0.2, c[1] + fy * r * 0.12 + fx * side * r * 0.2]
+    const tip: Pt = [knuckle[0] + ux * len, knuckle[1] + uy * len]
     ctx.beginPath()
-    ctx.moveTo(c[0] + nx * w0 * 0.5, c[1] + ny * w0 * 0.5)
+    ctx.moveTo(knuckle[0] + nx * w0 * 0.5, knuckle[1] + ny * w0 * 0.5)
     ctx.lineTo(tip[0] + nx * w1 * 0.5, tip[1] + ny * w1 * 0.5)
     ctx.arc(tip[0], tip[1], w1 * 0.5, a + Math.PI / 2, a - Math.PI / 2, true)
-    ctx.lineTo(c[0] - nx * w0 * 0.5, c[1] - ny * w0 * 0.5)
+    ctx.lineTo(knuckle[0] - nx * w0 * 0.5, knuckle[1] - ny * w0 * 0.5)
     ctx.closePath()
     ctx.fill()
     // The finger's pad: a little fuller at the tip.

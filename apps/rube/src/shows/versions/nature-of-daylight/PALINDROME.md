@@ -295,6 +295,15 @@ they agree with each other (a thing popping in or out for a frame): only two, bo
 beat in the chamber, 219.2, and the set flickering on with the news, 98.6). It watched the page's console through a
 sweep of the show and through Overview and Zoom: no error and no warning. Nothing to change.
 
+A twelfth looked at the whole show again cold, from contact sheets of every place, then full size where it looked
+wrong. One thing had come back:
+
+- **The palm** was still a star. The fix in the first round fanned the seven fingers over the front of the pad, but
+  over more than a right angle each side, so the hand on the glass (149.171) and Abbott's slam (214.657) spread
+  fingers round two thirds of the pad: a cog, an asterisk with a gap. They fan over a hand's width now, each from its
+  own knuckle along the front of a pad a little longer than it is wide, so the hand pressed to the glass beside her is
+  a hand, and so is the slam.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
