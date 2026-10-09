@@ -193,6 +193,20 @@ critic who had not seen the brief watched the whole film cold and ranked its wor
   choosing; Louise and Ian stay together and turn to the cradle, and the last shot draws back to the first frame as
   the opening pushed in.
 
+A later polish round, from a fresh contact sheet of every place and close frames where it looked wrong:
+
+- **The fallen screens** hung over at nearly 50 degrees in one flat tone and read as black diamonds, huge in the sat
+  phone's close shots. They hang crooked at 30 degrees now, their frames catch the room's light along the top, and
+  each dead screen still holds a ghost of its shell: the world goes dark, but the shell is still there.
+- **The palm** still spread its fingers all the way round the pad, an asterisk. The seven fingers fan over the front
+  of the pad now, the middle ones longest, and the limb comes in from behind where there are none.
+- **The daylight**: the edge of the cloud's shadow swept the floor as one hard vertical line. It is a broad soft edge
+  now. The shafts start out of the break's glow, not at rounded ends below it.
+- **The slot's light** under the belly was one hard-edged cone, and its edge showed as a line across the sky when she
+  rides the deck back down (311 s). It is feathered now.
+- **The gala's guests** floated in the air above the floor. Each has a soft shadow and a dim reflection on the
+  polished floor now, so they stand in the room.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

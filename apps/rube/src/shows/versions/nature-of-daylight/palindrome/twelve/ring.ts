@@ -34,7 +34,7 @@ const LW = 0.25
 const ROPE = 0.13
 const SAG = 0.75
 /** How far a fallen screen hangs over on its corner (radians, clockwise). */
-const STOP = 0.85
+const STOP = 0.52
 
 const RING = inkRing(12)
 /** The ring's radius at an angle, as a share of RM: a logogram's ring, but only a little out of true (it is a rig). */
@@ -212,6 +212,21 @@ function drawPanel(p: p5, k: number, i: number, t: number, th: number, on: numbe
     sh.addColorStop(1, rgba(TENT.screenOn, 0))
     ctx.fillStyle = sh
     ctx.fillRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
+    // The shell still there in the dead glass, a ghost of the last picture: the world gone dark, not the shell.
+    ctx.fillStyle = rgba(mix(TENT.screenOff, TENT.screenOn, 0.5), 0.35 * dead)
+    ctx.beginPath()
+    ctx.ellipse((FR + GW / 2) * k, (-PH + FR + GH * 0.42) * k, GH * 0.13 * k, GH * 0.27 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+    // Its frame catching the room's light along the top and the side toward the lamp, so it reads as a set, not a slab.
+    ctx.strokeStyle = rgba(mix(TENT.canvasLit, TENT.screenOn, 0.3), 0.45 * dead)
+    ctx.lineWidth = Math.max(1, 0.03 * k)
+    ctx.beginPath()
+    ctx.moveTo(0.02 * k, -0.02 * k)
+    ctx.lineTo(0.02 * k, (-PH + 0.02) * k)
+    ctx.lineTo((PW - 0.02) * k, (-PH + 0.02) * k)
+    ctx.stroke()
+    ctx.strokeStyle = rgba('#000000', 0.35 * dead)
+    ctx.strokeRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
   }
   const red = redCast(i, t)
   if (red > 0.01) {

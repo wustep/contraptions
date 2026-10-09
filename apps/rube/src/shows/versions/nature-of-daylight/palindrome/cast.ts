@@ -287,13 +287,17 @@ function drawPalm(ctx: Ctx, c: Pt, r: number, open: number, angle: number, color
   const spread = 0.3 + 0.7 * open
   ctx.fillStyle = color
   ctx.beginPath()
-  ctx.ellipse(c[0], c[1], r * 0.44, r * 0.4, angle, 0, Math.PI * 2)
+  ctx.ellipse(c[0], c[1], r * 0.5, r * 0.44, angle, 0, Math.PI * 2)
   ctx.fill()
   for (let i = 0; i < n; i++) {
-    const a = angle + (i - (n - 1) / 2) * ((Math.PI * 1.55) / (n - 1)) * spread
-    const len = r * (0.82 + 0.18 * Math.cos((i - 3) * 0.55)) * (0.5 + 0.5 * open)
-    const w0 = r * 0.34
-    const w1 = r * 0.21
+    // Fanned over the front of the pad, not all round it: the limb comes into the hand from behind, where there are
+    // no fingers, so it reads as a hand pressed flat and never as a star. The middle ones longest, the outer ones
+    // shorter and splayed a little wider.
+    const side = (i - (n - 1) / 2) / ((n - 1) / 2)
+    const a = angle + side * Math.PI * 0.6 * spread * (1 + 0.08 * Math.abs(side))
+    const len = r * (0.66 + 0.34 * Math.cos(side * 1.25)) * (0.5 + 0.5 * open)
+    const w0 = r * (0.36 - 0.06 * Math.abs(side))
+    const w1 = r * (0.19 - 0.03 * Math.abs(side))
     const ux = Math.cos(a)
     const uy = Math.sin(a)
     const nx = -uy

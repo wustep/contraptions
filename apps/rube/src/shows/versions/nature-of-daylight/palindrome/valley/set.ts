@@ -789,17 +789,22 @@ function drawSpill(ctx: Ctx, k: number, t: number): void {
   const w0 = SLOT_W * 0.45
   ctx.save()
   ctx.globalCompositeOperation = 'screen'
-  const g = ctx.createLinearGradient(0, belly * k, 0, MEADOW * k)
-  g.addColorStop(0, rgba(SHELL.fogLit, 0.2 * a))
-  g.addColorStop(1, rgba(SHELL.fogLit, 0.04 * a))
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo((SHELL_X - w0) * k, belly * k)
-  ctx.lineTo((SHELL_X + w0) * k, belly * k)
-  ctx.lineTo((SHELL_X + 2.4) * k, (MEADOW + 0.2) * k)
-  ctx.lineTo((SHELL_X - 2.4) * k, (MEADOW + 0.2) * k)
-  ctx.closePath()
-  ctx.fill()
+  // Feathered: nested cones, faint at the widest, so the light has no edge in the air.
+  const n = 5
+  for (let j = 0; j < n; j++) {
+    const wide = 1.35 - (0.75 * j) / (n - 1)
+    const g = ctx.createLinearGradient(0, belly * k, 0, MEADOW * k)
+    g.addColorStop(0, rgba(SHELL.fogLit, (0.2 * a) / n))
+    g.addColorStop(1, rgba(SHELL.fogLit, (0.04 * a) / n))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo((SHELL_X - w0 * wide) * k, belly * k)
+    ctx.lineTo((SHELL_X + w0 * wide) * k, belly * k)
+    ctx.lineTo((SHELL_X + 2.4 * wide) * k, (MEADOW + 0.2) * k)
+    ctx.lineTo((SHELL_X - 2.4 * wide) * k, (MEADOW + 0.2) * k)
+    ctx.closePath()
+    ctx.fill()
+  }
   blob(ctx, k, SHELL_X, MEADOW + 0.1, 5.5, 0.8, SHELL.fogLit, 0.26 * a, 0.3)
   ctx.restore()
 }

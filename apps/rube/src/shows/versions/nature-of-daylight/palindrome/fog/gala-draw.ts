@@ -166,6 +166,21 @@ function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
     if (x < f.x0 - 1 || x > f.x1 + 1) continue
     // Deeper, the more of the room's haze on it (the far ones well into it); and more again for the whisper.
     const haze = (1 - g.d) * 1.45 + 0.35 * h
+    // Standing on the polished floor, not hung on the wall: a soft shadow under each, and its dim reflection.
+    const foot = y + r * 0.96
+    ctx.save()
+    ctx.translate(x * k, foot * k)
+    ctx.scale(1, 0.22)
+    const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.35 * k)
+    sg.addColorStop(0, rgba(body, 0.5 * (1 - Math.min(0.85, haze))))
+    sg.addColorStop(1, rgba(body, 0))
+    ctx.fillStyle = sg
+    ctx.fillRect(-r * 1.35 * k, -r * 1.35 * k, 2.7 * r * k, 2.7 * r * k)
+    ctx.restore()
+    ctx.fillStyle = rgba(mix(body, GALA.roomLit, Math.min(0.85, haze)), 0.18)
+    ctx.beginPath()
+    ctx.ellipse(x * k, (foot + r * 0.55) * k, r * 0.8 * k, r * 0.5 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
     ctx.fillStyle = mix(body, GALA.roomLit, Math.min(0.85, haze))
     ctx.beginPath()
     ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)

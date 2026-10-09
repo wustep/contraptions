@@ -39,7 +39,8 @@ function glow(ctx: Ctx, k: number, x: number, y: number, rx: number, ry: number,
 export function sunAt(t: number, x: number): number {
   const d = daylight(t)
   if (d.sun <= 0) return 0
-  const soft = 4 + 0.06 * Math.max(0, d.edge - SUN_BREAK[0])
+  // A cloud's shadow has a broad soft edge on the ground, never a line: wide from the start, wider as it races off.
+  const soft = 9 + 0.12 * Math.max(0, d.edge - SUN_BREAK[0])
   return d.sun * clamp01((d.edge - x) / soft + 0.5)
 }
 
@@ -353,7 +354,9 @@ export function drawRays(ctx: Ctx, k: number, t: number, far = 1): void {
       const w1 = r.w * wide
       const share = 1 / n
       const g = ctx.createLinearGradient(xa * k, ya * k, xb * k, yb * k)
-      g.addColorStop(0, rgba(VALLEY.floodlight, 0.85 * a * share))
+      // Out of the break's own glow, so a shaft has no end up there: it comes on over its first stretch.
+      g.addColorStop(0, rgba(VALLEY.floodlight, 0))
+      g.addColorStop(0.18, rgba(VALLEY.floodlight, 0.85 * a * share))
       g.addColorStop(0.55, rgba(VALLEY.floodlight, 0.5 * a * share))
       g.addColorStop(1, rgba(VALLEY.lamp, 0.26 * a * share))
       ctx.fillStyle = g
