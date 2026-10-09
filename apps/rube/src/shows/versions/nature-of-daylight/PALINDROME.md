@@ -712,6 +712,18 @@ Ian gone at the cut to the cradle, which this reader too took for a slip, stays 
 fifty-third left it: the last frame is the first, which has no Ian, and to roll him off before it would read as his
 leaving her.
 
+A sixty-seventh gave the show to a sixth fresh reader. The seam, the hand and the ring passed without a word. Their
+worst was the leap off the swing again: thrown off it, an accident. Four of six fresh readers have now stumbled there,
+and the sixtieth, the fifty-sixth and this one's director all thought the leap itself fine; what came after it was
+not. Landed, she rolled to a stop and lay there most of a second, then eased back over three: a child lying where
+she fell. She is running now a moment after she lands: up to pace in a quarter of a second, on at it, skipping, there
+by the seat a couple of seconds before it comes back, waiting as her mother steadies it.
+
+Their other notes stay as they were left: the soldier is the one who sets the charge; the white between the blast
+and the fog is the white-out, the cut's own cover; the empty valley is the shells' going, the great wide the cue's
+loudest bars are given to; the suit's halves on the floor are what it means to be out of it; and Ian at the cut, as
+the sixty-sixth said.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

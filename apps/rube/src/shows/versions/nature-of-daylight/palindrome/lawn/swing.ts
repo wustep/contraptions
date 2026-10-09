@@ -228,8 +228,17 @@ export function hannahAt(t: number): { x: number; y: number; scale: number } | n
   const back0 = LANDS + ROLL_OUT + 0.12
   const back1 = hop - 1.3
   if (t < hop) {
-    const u = smooth(t, back0, back1)
-    return { x: xStop + (HOP_FROM_X - xStop) * u, y, scale }
+    // Running, not eased back: up to pace in a quarter of a second, on at it, skipping as a child runs, and waiting by
+    // the seat for it. (Eased out of a stop over three seconds, she lay where she landed most of a second first, and
+    // the leap read as a child thrown from the swing.)
+    const T = Math.min(2.6, back1 - back0)
+    const a = 0.25
+    const d = Math.max(0, Math.min(T, t - back0))
+    const v = 1 / (T - a)
+    const u = d < a ? (v * d * d) / (2 * a) : d > T - a ? 1 - (v * (T - d) ** 2) / (2 * a) : v * (d - a / 2)
+    const running = d > 0 && d < T ? 1 : 0
+    const skip = running * 0.06 * Math.abs(Math.sin((Math.PI * d) / 0.34))
+    return { x: xStop + (HOP_FROM_X - xStop) * u, y: y - skip, scale }
   }
   // The hop onto the seat: a parabola from the grass in front of it onto it, landing on the chord.
   const [x1, y1] = seatedAt(BACK_ON)
