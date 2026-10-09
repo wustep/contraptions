@@ -338,3 +338,8 @@ A forty-fourth pass, at the third act:
 - **They reach the door.** At the end of the drive the dark began while they were still beside the car. It waits until they are under the arrow at the door.
 - **Closer on the pool's board,** so the bounces read.
 - Not taken: the waltz on the quay keeps its set, with its close passage through the curtsies; the touch among the stars keeps the projector in frame for its flare; the jam's wide is its long silence; the bucket was closed in on before.
+
+A forty-fifth pass, for errors:
+
+- **A continuity check.** After so many passes I swept the show for regressions (jumps, presence, camera speed, the full build, all clean) and had a reviewer look only for errors the edits might have made. It found one of mine: when I moved her goodbye to the doorway, she got down from her stool just as David rolled past below it, and he went straight through her (457.6). She now waits on her stool until he has gone by, then gets down behind him; the closest they come is 0.30 cells, while he passes under her stool.
+- **Every pair, measured.** That error had slipped past every pass, so I measured every pair of balls against each other through the whole show, every hundredth of a second. One more turned up, in the original: on the walk of fame, at the burst into colour, the two of them leapfrogged with both always in the air, and once a beat one passed straight through the other (144.8 to 147.7). It is a true leapfrog now: she waits on her star while he vaults over her, then a short hop of one beat to the next, landing on the beat she always did. No two balls overlap anywhere in the show now, but under the red door's cover, where nothing is seen.

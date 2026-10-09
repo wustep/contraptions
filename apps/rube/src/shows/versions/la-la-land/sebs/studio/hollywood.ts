@@ -113,8 +113,8 @@ const MIA_BUSH = SEB_BUSH.map((k) => k + 2)
 
 type Build = { segs: Seg[]; last: Way }
 const start = (at: number, p: Pt): Build => ({ segs: [], last: { at, p } })
-function hopTo(b: Build, p: Pt, at: number): void {
-  const w = hop(b.last, p, at)
+function hopTo(b: Build, p: Pt, at: number, g?: number): void {
+  const w = hop(b.last, p, at, g)
   b.segs.push({ from: b.last.p, to: p, dur: at - b.last.at, arc: w.arc })
   b.last = { at, p }
 }
@@ -163,7 +163,12 @@ function miaPath(): Build {
   // Stopped a step behind him when the colour comes; onto the trap as it resets, and out on the next beat.
   const b = start(0, [MIA_AT_BURST, 0])
   rollTo(b, TRAP, t(166), { ease: 'inout' })
-  for (let i = 0; i < 4; i++) hopTo(b, [STARS[2 * i + 1].x, 0], t(168 + 2 * i))
+  // Leapfrog: she waits on her star while he vaults over her, then a short hop of one beat to the next, landing on its
+  // star as he goes over the one ahead. While he is over her she is on the ground, and they never pass through each other.
+  for (let i = 0; i < 4; i++) {
+    rollTo(b, b.last.p, t(167 + 2 * i))
+    hopTo(b, [STARS[2 * i + 1].x, 0], t(168 + 2 * i))
+  }
   // Along the front of the kick-line: on at the pace she landed with, stopping to watch him go up the toes, then after him.
   const x0 = STARS[7].x
   const along = monotone([

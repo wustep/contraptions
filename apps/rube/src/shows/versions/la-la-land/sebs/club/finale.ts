@@ -181,11 +181,11 @@ function plan(begin: number) {
   miaWays.push(hold(miaWays, KISS - 0.55), ease(KISS, [MIA_SEAT[0] + 0.074, SEAT_Y - 0.045]))
   // He goes, and she settles back on her stool.
   miaWays.push(hold(miaWays, LEAVE + 0.3), ease(452.8, MIA_SEAT))
-  // A breath while David gets up; then down, and after him across the room to the door, where she stops in the
-  // doorway and turns back, as in the film.
+  // A breath while David gets up and goes by below her stool; then down, behind him, and after him across the room to
+  // the door, where she stops in the doorway and turns back, as in the film. (Down any sooner, she is in his way.)
   const stop = DOORWAY
-  miaWays.push(hold(miaWays, 457.25), ease(457.7, [-2.78, FLOOR_Y], 0.05))
-  miaWays.push(...walk(457.7, 461.2, -2.78, stop, 0, 0))
+  miaWays.push(hold(miaWays, 457.8), ease(458.2, [-2.78, FLOOR_Y], 0.05))
+  miaWays.push(...walk(458.2, 461.2, -2.78, stop, 0, 0))
   miaWays.push(hold(miaWays, 461.45), ease(TURN, [stop + 0.05, FLOOR_Y]))
   // (Her nod is a dip: see `nodded`.) The End: to the door, out through it, and away up the street.
   // She lingers a moment as David steps off ahead of her, then follows him out, walking on up the street.
