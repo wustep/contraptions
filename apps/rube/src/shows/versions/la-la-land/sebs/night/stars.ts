@@ -60,7 +60,8 @@ interface Kindled {
 }
 
 const rot = (q: Pt, a: number): Pt => [q[0] * Math.cos(a) - q[1] * Math.sin(a), q[0] * Math.sin(a) + q[1] * Math.cos(a)]
-const inSky = (local: Pt, T: number): Pt => {
+/** A star of the sky's own turning frame at `T`, in the NIGHT frame (the waltz's). */
+export const inSky = (local: Pt, T: number): Pt => {
   const q = rot(local, skyAngle(T))
   return [POLE[0] + q[0], POLE[1] + q[1]]
 }
@@ -399,7 +400,7 @@ export const stars = part<StarsState>(
       { t: 313.6, cells: 5.2, hold: mid(313.6, 0.4) },
       // The scale of it: the two of them in the turning sky, the machine, and all of it again in the glass.
       { t: 316.6, cells: 6.3, hold: both(316.6) },
-      { t: 319.4, cells: 6.1, hold: both(319.4) },
+      { t: 319.4, cells: 6.6, hold: both(319.4) },
       { t: 323.6, cells: 5.2, hold: mid(323.6, 0.4) },
       // Close, in the quiet: the two of them low in the frame and the open sky over them, the machine out of it below.
       { t: QUIET[0] + 1.2, cells: 4.1, hold: on(QUIET[0] + 1.2, -1.2) },

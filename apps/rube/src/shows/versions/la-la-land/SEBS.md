@@ -87,6 +87,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - on the last chord he is back on the keys of his own piano, and she is gone by the band;
 - Mia, David and the son never jump where they can be seen, and come and go only out of shot or under a cover;
 - no one passes through anyone where it can be seen (two balls drawn closer than nine tenths of their widths summed);
+- every star the melody lights among the stars is lit in the picture, with a margin, for the second after it lights;
 - they look at each other where the story says, to within 30°: at the kiss at Lipton's, the curtain call, the roll down the beam, in the waltz, at the touch among the stars, and at the look and the nod at the door; she lifts her eyes to the stage at her table, and he finds her across the room;
 - it ends on the city of stars, wide.
 
@@ -353,3 +354,7 @@ A forty-sixth pass, to keep it so:
 A forty-seventh pass, to keep it so, again:
 
 - **A check for their eyes.** Where they look is told by a list of timed looks in `show.ts`, and a change of timing anywhere could quietly turn an eye away at the moment it matters. So `check:shows` now holds nine of them: at each touch, in the waltz, and at the look and the nod at the door, each one's eye is on the other, to within 30°; at her table she has lifted her eyes to the stage; across the room he has found her. With the looks taken out, it fails on all nine, by name.
+
+A forty-eighth pass, a check that caught me:
+
+- **A check for the stars.** The eleven stars the projector throws were placed (the twenty-second pass) to light inside the camera's frame, but the frame there has moved since. So `check:shows` now holds that every one lights in the picture, with a margin, for the second after it lights. Its first run failed: the star at 321.91 lit at the very top edge, because I had narrowed the wide view there (the forty-fourth pass) after the stars were placed against the wider one. That view gives back a little of its width (6.6 cells, not 6.1; it was 7.3), and all eleven are in the picture again.

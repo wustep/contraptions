@@ -5,6 +5,8 @@
 import type { Performance, Version } from '../src/shows/registry'
 import type { ShowBall } from '../src/show'
 import { R } from '../src/parts'
+import { KINDLED, inSky } from '../src/shows/versions/la-la-land/sebs/night/stars'
+import { sebAt } from '../src/shows/versions/la-la-land/sebs/night/painted-waltz'
 import { show as sebsShow, covers as sebsCovers } from '../src/shows/versions/la-la-land/sebs'
 import { SWITCH } from '../src/shows/versions/la-la-land/sebs/score'
 import { AT, DURATION, END_AT, MIX_END, NOTES, dream, paris, combStrength, dreamBeat, parisBeat } from '../src/shows/versions/la-la-land/sebs/music'
@@ -226,6 +228,23 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
   }
   { const { seb, mia } = eyes(28); if (!mia || aim(mia.spin, -0.87) > Math.PI / 6) looks.push('she lifts her eyes to the stage (28)'); void seb }
   { const { seb, mia } = eyes(34); if (!seb || !mia || aim(seb.spin, Math.atan2(mia.y - seb.y, mia.x - seb.x)) > Math.PI / 6) looks.push('he finds her across the room (34)') }
+  // Each star the melody lights is thrown from the projector on a thread of light, and must light where it is seen: in
+  // the frame, with a margin, as it lights and for the second after. (Placed by a rule once too loose, five of eleven
+  // lit off the picture, their threads running out of it to nothing.)
+  const unseen: string[] = []
+  for (const q of KINDLED) {
+    for (const dt of [0, 0.5, 1.0]) {
+      const T = q.at + dt
+      const [lx, ly] = inSky(q.local, T)
+      const [wx, wy] = show.where(T)
+      const [nx, ny] = sebAt(T)
+      const f = cam(T)
+      const x = lx + wx - nx
+      const y = ly + wy - ny
+      if (Math.abs(x - f.x) > 0.95 * ((f.cells * 16) / 9 / 2) || Math.abs(y - f.y) > 0.95 * (f.cells / 2)) { unseen.push(`${q.at.toFixed(2)}+${dt}`); break }
+    }
+  }
+  check('sebs: every star the melody lights is lit in the picture', KINDLED.length === 11 && unseen.length === 0, unseen.join(', '))
   check('sebs: they look at each other where the story says (the touches, the waltz, the door), she to the stage, he to her', looks.length === 0, looks.join(', '))
 
   // The last frame: the whole city, wide.
