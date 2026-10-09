@@ -1256,6 +1256,64 @@ function corkboard(pen: Pen): void {
   pin(pen, L + 0.33 - 0.005, T + 0.13, HOME.red)
 }
 
+/**
+ * What is in the ground under the shop, seen in the cut: stones bedded in the earth, a water main along the whole
+ * length, and the laundromat's own drain line under its washers, a trap and a drop up to each one. On a wide stage it
+ * is a strip at the frame's foot; on a phone's squarer stage it is a quarter of the frame, and it reads as ground a
+ * family's shop stands on rather than a blank band. All of it is in the earth's own tones, quiet under the room.
+ */
+function underground(pen: Pen, x0: number, x1: number, top: number, deep: number): void {
+  const { p, k, ink, w } = pen
+  const earth = mixHex(HOME.floor, HOME.night, 0.62)
+  // Stones: a few to a cell, flat-ish, lighter and darker than the earth, never two the same.
+  p.noStroke()
+  for (let cx = Math.floor(x0); cx <= Math.ceil(x1); cx++) {
+    for (let j = 0; j < 3; j++) {
+      const hx = hash(cx, j, 71)
+      const hy = hash(cx, j, 72)
+      const hs = hash(cx, j, 73)
+      const x = cx + hx
+      const y = top + 0.35 + hy * (deep - 0.45)
+      const r = 0.05 + 0.09 * hs
+      p.fill(mixHex(earth, hs > 0.5 ? HOME.floor : HOME.night, 0.16 + 0.12 * hx))
+      p.ellipse(x * k, y * k, 2 * r * k * (1.2 + 0.5 * hy), 2 * r * k)
+    }
+  }
+  const pipe = mixHex(earth, HOME.steelDark, 0.55)
+  const lip = mixHex(earth, HOME.steel, 0.45)
+  // The water main, the whole length of the shop, low in the ground.
+  const mainY = top + deep * 0.62
+  solid(p, mixHex(ink, earth, 0.5), w * 0.5, pipe)
+  p.rect(((x0 + x1) / 2) * k, mainY * k, (x1 - x0) * k, 0.13 * k)
+  p.noStroke()
+  p.fill(lip)
+  for (let x = Math.ceil(x0 / 2.4) * 2.4; x < x1; x += 2.4) p.rect(x * k, mainY * k, 0.07 * k, 0.19 * k, 0.015 * k)
+  // The drain: under the washers, falling gently toward the street, a trap and a drop up to each one.
+  const d0 = WASHERS[0].x - 0.6
+  const d1 = WASHERS[WASHERS.length - 1].x + 0.3
+  if (d1 < x0 || d0 > x1) return
+  const dy = (x: number) => top + 0.42 + 0.012 * (d1 - x)
+  solid(p, mixHex(ink, earth, 0.5), w * 0.5, pipe)
+  p.beginShape()
+  p.vertex(d0 * k, (dy(d0) - 0.06) * k)
+  p.vertex(d1 * k, (dy(d1) - 0.06) * k)
+  p.vertex(d1 * k, (dy(d1) + 0.06) * k)
+  p.vertex(d0 * k, (dy(d0) + 0.06) * k)
+  p.endShape(p.CLOSE)
+  for (const wa of WASHERS) {
+    const x = wa.x + 0.35
+    if (x < x0 - 0.5 || x > x1 + 0.5) continue
+    // The drop through the slab, and its U-trap.
+    solid(p, mixHex(ink, earth, 0.5), w * 0.45, pipe)
+    p.rect(x * k, ((FLOOR + 0.44 + dy(x) - 0.2) / 2) * k, 0.07 * k, (dy(x) - 0.2 - FLOOR - 0.44) * k)
+    p.noFill()
+    p.stroke(pipe)
+    p.strokeWeight(Math.max(1, 0.07 * k))
+    p.arc((x + 0.08) * k, (dy(x) - 0.2) * k, 0.16 * k, 0.2 * k, 0, Math.PI)
+    p.line((x + 0.16) * k, (dy(x) - 0.2) * k, (x + 0.16) * k, (dy(x) - 0.05) * k)
+  }
+}
+
 function shelf(pen: Pen, t: number): void {
   const { p, k, ink, w } = pen
   const { x0, x1, y } = SHELF
@@ -1492,6 +1550,7 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
         if (y > f.y1 + 0.5) break
         p.line(gx0 * k, y * k, gx1 * k, y * k)
       }
+      underground(pen, gx0, gx1, top, deep)
     }
   }
   solid(p, ink, w, HOME.floor)

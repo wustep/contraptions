@@ -332,6 +332,15 @@ The notes went back to the builders who made each part, who still had their cont
   - The card now hangs between the two scrolls, over the table's left end, left of the arm's whole reach. It is
     clear of the lattice and of her all through the cradle, and whole in the frame on the fight's last hit. The
     lattice crossing the right scroll was kept: it reads as an arm in front of a wall hanging.
+- **A pass at phone width.** The taxes, the dense mosaic and the peak's fountain were watched at 3 to 4 fps, and
+  hold. Key moments were then watched on a 390 px-wide phone, where the stage is nearly square and the camera sees
+  more above and below.
+  - In the laundromat, the earth cut under the floor filled about a quarter of the phone's frame as a flat grey band,
+    even on the great hit.
+  - It now has what is in the ground under a shop. Stones are bedded in the earth, and a water main runs the length
+    of the shop. Under the washers is the laundromat's own drain line, falling gently toward the street, with a drop
+    and a U-trap up to each washer. It is all in the earth's own tones (`underground` in `set.ts`). On a wide stage
+    it is a quiet strip at the frame's foot.
 
 ## End credits
 
