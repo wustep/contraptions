@@ -184,8 +184,8 @@ function plan(begin: number) {
   // A breath while David gets up and goes by below her stool; then down, behind him, and after him across the room to
   // the door, where she stops in the doorway and turns back, as in the film. (Down any sooner, she is in his way.)
   const stop = DOORWAY
-  miaWays.push(hold(miaWays, 457.8), ease(458.2, [-2.78, FLOOR_Y], 0.05))
-  miaWays.push(...walk(458.2, 461.2, -2.78, stop, 0, 0))
+  miaWays.push(hold(miaWays, 458.3), ease(458.7, [-2.78, FLOOR_Y], 0.05))
+  miaWays.push(...walk(458.7, 461.2, -2.78, stop, 0, 0))
   miaWays.push(hold(miaWays, 461.45), ease(TURN, [stop + 0.05, FLOOR_Y]))
   // (Her nod is a dip: see `nodded`.) The End: to the door, out through it, and away up the street.
   // She lingers a moment as David steps off ahead of her, then follows him out, walking on up the street.
@@ -199,8 +199,9 @@ function plan(begin: number) {
   david.push(ease(452.3, [-9.95, FLOOR_Y], 0.05))
   david.push(...walk(452.3, 454.9, -9.95, -1.8, 0, 0))
   david.push(hold(david, 455.0), ease(455.45, SIDE_SEAT, 0.08))
-  david.push(hold(david, 456.45), ease(456.9, [-1.8, FLOOR_Y], 0.04))
-  david.push(...walk(456.9, 460.9, -1.8, -13.05, 0, 0))
+  // Down on the far side of his stool, and off already walking, so he goes by under hers in a moment, not a pause.
+  david.push(hold(david, 456.45), ease(456.9, [-1.6, FLOOR_Y], 0.04))
+  david.push(...walk(456.9, 460.9, -1.6, -13.05, -2.2, 0))
   david.push(hold(david, GO - 0.2))
   david.push(...walk(GO - 0.2, 466.6, -13.05, -16.0, 0, -1.4))
   david.push({ at: GONE, p: [-16.0 - 1.4 * (GONE - 466.6), FLOOR_Y] })
