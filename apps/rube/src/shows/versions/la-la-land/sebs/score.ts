@@ -145,8 +145,11 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
 
   // The end: from the band (the finale's last key is by 480) the camera draws back out of the club, up over its roof,
   // to the whole city of stars, one move that carries its speed, and settles as The End's last chord rings.
+  // The roof is in the lower half of the frame from the first card on, so the credits come up in the sky over it and
+  // not across its lines.
   const ending: Shot[] = [
-    { t: 488, cells: 16, hold: [piano1[0] + 2.6, piano1[1] - 3.0] },
+    { t: 483.6, cells: 12, hold: [piano1[0] + 2.8, piano1[1] - 5.2] },
+    { t: 488, cells: 16, hold: [piano1[0] + 2.6, piano1[1] - 5.0] },
     { t: 496, cells: 30, hold: [piano1[0] + 3, piano1[1] - 9] },
     { t: 503.4, cells: 44, hold: [piano1[0] + 3, piano1[1] - 15] },
     { t: DURATION, cells: 46, hold: [piano1[0] + 3, piano1[1] - 16] },

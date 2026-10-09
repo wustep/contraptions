@@ -32,7 +32,7 @@ const GO = 0.95
 const OVERLAP = 0.25
 
 /** The first card: once the camera is out over the roof and the sky has room. */
-export const CREDITS_AT = AT.band + 2.9
+export const CREDITS_AT = AT.band + 4.0
 
 const script: Omit<Card, 'at'>[] = [
   { hold: 3.4, role: 'Directed by', names: ['Claude Opus 5.5'], notes: ['Machines, drawings and code'] },
