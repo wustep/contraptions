@@ -283,6 +283,11 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   const afar = smooth(v.wide, 0.1, 0.55)
   if (afar > 0.01) inSpace(p, c, afar)
 
+  // Rays from the low sun, at dawn and through the afternoon into the sunset; not under the shower's cloud, so they
+  // come as it clears.
+  const rays = raysAt(c.t) * near
+  if (rays > 0.01 && sun.light > 0.01) sunRays(ctx, c, v, sun, rays)
+
   // The bow, opposite the sun, as the shower clears.
   // Close: drawn back over the planet the bow would only be a stripe across the sky.
   const bow = bowAt(c.t) * near * (1 - smooth(v.cells, 9, 17))
@@ -361,6 +366,57 @@ function inSpace(p: p5, c: PieceCtx, light: number): void {
     ctx.beginPath()
     ctx.arc(x * mr, y * mr, r * mr, 0, Math.PI * 2)
     ctx.fill()
+  }
+  ctx.restore()
+}
+
+/** How much the low sun's rays show at `t`, 0 to 1. */
+export function raysAt(t: number): number {
+  const a = Math.abs(sunAngle(t))
+  if (wrap(t) > 230) return 0
+  return smooth(a, 0.8, 1.2) * (1 - smooth(a, 1.68, 1.84)) * (1 - overcastAt(t))
+}
+
+/**
+ * Crepuscular rays: soft wedges of warm light fanning from the sun across the sky, each breathing slowly, with
+ * darker gaps between; behind the stones, which stand in front of them.
+ */
+function sunRays(ctx: Ctx2D, c: PieceCtx, v: View, sun: Body, light: number): void {
+  const W = ctx.canvas.width
+  const H = ctx.canvas.height
+  const m = ctx.getTransform()
+  let low = 0
+  for (let i = 0; i <= 12; i++) low = Math.max(low, onCanvas(ctx, c.k, ...polar(v.u0 + ((v.u1 - v.u0) * i) / 12, 0), m)[1])
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.beginPath()
+  ctx.rect(0, 0, W, Math.min(H, low))
+  ctx.clip()
+  ctx.globalCompositeOperation = 'lighter'
+  const reach = Math.hypot(W, H) * 1.1
+  const glow = ctx.createRadialGradient(sun.x, sun.y, H * 0.06, sun.x, sun.y, reach)
+  glow.addColorStop(0, 'rgba(255, 226, 180, 0)')
+  glow.addColorStop(0.04, 'rgba(255, 226, 180, 0.4)')
+  glow.addColorStop(0.18, 'rgba(255, 214, 166, 0.14)')
+  glow.addColorStop(0.55, 'rgba(255, 214, 166, 0.03)')
+  glow.addColorStop(1, 'rgba(255, 214, 166, 0)')
+  ctx.fillStyle = glow
+  const N = 16
+  for (let i = 0; i < N; i++) {
+    const a = (2 * Math.PI * (i + 0.6 * hash(i, 201))) / N + 0.05 * osc(c.t, 0.008, i)
+    const half = 0.025 + 0.05 * hash(i, 202)
+    const breathe = 0.5 + 0.5 * osc(c.t, 0.035 + 0.03 * hash(i, 203), i * 2.3)
+    const alpha = light * (0.035 + 0.06 * breathe) * (0.5 + 0.5 * hash(i, 204))
+    if (alpha < 0.004) continue
+    // Feathered: three wedges, each narrower, so the ray is brightest down its middle and has no edge.
+    ctx.globalAlpha = alpha
+    for (const f of [1, 0.62, 0.3]) {
+      ctx.beginPath()
+      ctx.moveTo(sun.x, sun.y)
+      ctx.arc(sun.x, sun.y, reach, a - half * f, a + half * f)
+      ctx.closePath()
+      ctx.fill()
+    }
   }
   ctx.restore()
 }

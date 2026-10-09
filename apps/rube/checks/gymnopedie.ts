@@ -8,7 +8,7 @@ import { show } from '../src/shows/versions/gymnopedie/orbit'
 import { BASS, BREATHS, CHORDS, GRACES, MARGIN, MELODY, NOTES, PERIOD, PIECES, loudness } from '../src/shows/versions/gymnopedie/orbit/music'
 import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../src/shows/versions/gymnopedie/orbit/path'
 import { breath, cellsAt } from '../src/shows/versions/gymnopedie/orbit/camera'
-import { CADENCES, bloom, cadenceFronts, lampLight, moonAngle, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
+import { CADENCES, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
 import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, auroraAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
@@ -163,6 +163,16 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   }
   check('gymnopedie: the aurora is the first Gnossienne\'s, in the full night only, gone before the moon rises',
     auroraFrom > GN1.from && auroraTo < GN1.last && auroraDay === 0, `${auroraFrom.toFixed(0)}-${auroraTo.toFixed(0)}`)
+
+  let raysWrong = 0
+  let raysSeen = 0
+  for (let t = 0; t < PERIOD; t += 0.1) {
+    if (raysAt(t) <= 0) continue
+    raysSeen++
+    if (Math.abs(sunAngle(t)) < 0.8 || Math.abs(sunAngle(t)) > 1.84 || t > G1.end + 20) raysWrong++
+  }
+  check('gymnopedie: rays come from the sun only while it is low and up, at dawn and into the sunset', raysSeen > 0 && raysWrong === 0,
+    `${raysSeen} moments, ${raysWrong} wrong`)
 
   // Each piece's last note runs back along its way, and nothing else does.
   let offCue = 0

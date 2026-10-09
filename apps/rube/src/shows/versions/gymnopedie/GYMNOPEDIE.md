@@ -109,6 +109,9 @@ The planet has weather, at depths behind the stones (`air.ts`):
   horizon's colour under them at dawn and dusk, dim and edged silver under the moon. How much of the sky is cloud
   moves through the day (`coverAt`): most of it by day, thinning at night for the stars and the Milky Way, more again
   under the moon; a cloud gathers and thins as the cover comes over its share.
+- Rays from the low sun: at dawn through the morning's mist, and through the afternoon into the sunset, soft
+  feathered wedges of warm light fanning across the sky behind the columns, each breathing slowly; held back while the
+  shower's cloud is over, so they come as it clears (`raysAt`).
 - The sun lights the colonnade from its side of the sky: each column's shade is on its west face in the morning,
   narrows to noon, and crosses to the east face through the afternoon.
 - Gulls by day, a few small flocks overtaking the ball along the colonnade, beating a while and gliding a while.
@@ -154,6 +157,12 @@ number of times in `f` of the way round, and its wind carries it a whole number 
 with the period like everything else. Anything in a layer fades towards the edge of its repeat (`inLayer`), so when the
 camera draws out wider than a repeat nothing jumps across the frame.
 
+## Motion
+
+Audited in motion as well as in stills: the whole period, ten frames a second, measured frame to frame for anything
+that jumps against the motion round it (a layer wrapping, a cloud gathering, a light coming on). Nothing does; the
+largest changes are the ball's quick hops after long notes, and the camera's.
+
 ## Checks
 
 `check:shows` (`apps/rube/checks/gymnopedie.ts`): the picker entry, the credit, the three pieces in order; the loop
@@ -166,6 +175,6 @@ loudness come round with the period; every lamp is dark until the ball lights it
 flower opens as the ball comes and closes at dawn, across the seam; every layer of the air comes round with the
 period, and a shooting star falls only on a Gnossienne's top note, at night; there is one shower, in the
 Gymnopédie, with the bow after it and gone before the first Gnossienne; the whale passes once, under the third
-Gnossienne's pond; a wave of light runs back along each piece's way from its last note, and only then; the aurora is
+Gnossienne's pond; rays come from the sun only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; the aurora is
 the first Gnossienne's, in the full night only; the sun and the moon go round
 without a jump, the seam included; the titles.
