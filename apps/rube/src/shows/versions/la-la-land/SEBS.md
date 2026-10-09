@@ -312,3 +312,8 @@ A thirty-ninth pass:
 A fortieth pass, at the notes themselves:
 
 - **These notes, checked.** After so many passes I checked this file against the show. The struck bars still match (41 of the dream's 45, 28 of the Paris club's 33), but the strike count was 570, stale before these passes began; it is 567. The table of places now says the two things these passes changed in what happens, not only in how it is shot: the route inked on the globe, and the cut, on waking, to the kiss's two-shot with David in the seat.
+
+A forty-first pass, at the last act:
+
+- **A reviewer on the last act.** A fifth cold reviewer took notes on 423 to 510 as the final act of a film. Two were right. His close shots at the door were wider than hers, so his look and his nod were a few pixels against her clear dip; they are as close as hers now. And after the door shut his last beats, the look back at the door and the count-in nods, played on a dot in a medium-wide shot: the camera now comes close on him at the keys, the band's first lamp-lit stand beside him, his eye on the door as it arrives (471.2 to 472.8), and closer for the count-in, before it draws back on the band's first hit.
+- Not taken: the piano playing itself is the dream's own image, his glide back to the keys is the dream draining, and a band of players or a beam kept clear of one credit would be new staging for little.

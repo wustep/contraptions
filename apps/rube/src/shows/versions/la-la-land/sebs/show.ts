@@ -62,7 +62,7 @@ const LOOKS: Look[] = [
   touch(266.008),
   { from: 272.625, to: 338.709 + 1.2, ease: [1.0, 0.8], who: 'both' },
   { from: 461.0, to: 464.2, ease: [0.4, 0.5], who: 'both' },
-  { from: 470.3, to: 471.9, ease: [0.5, 0.7], who: 'seb', at: Math.PI + 0.12 },
+  { from: 471.2, to: 472.8, ease: [0.5, 0.7], who: 'seb', at: Math.PI + 0.12 },
 ]
 /** The look in force at `t`, and how far it has turned to it. */
 function lookAt(t: number): { look: Look; w: number } | null {
