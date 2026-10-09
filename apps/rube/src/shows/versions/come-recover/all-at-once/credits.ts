@@ -117,9 +117,12 @@ export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
  * Low in the frame, a soft dark under them keeps them readable on the pale canyon and the bagel's seeds
  * (`subtitleBed`).
  *
+ * - **Home**, at the washer's foot, the three of them together: he asks what he asked in the alley, and this time she
+ *   can.
+ *
  * Each comes on a note the scene already moves on, and goes before the next.
  */
-export type Scene = 'alley' | 'hush' | 'rocks'
+export type Scene = 'alley' | 'hush' | 'rocks' | 'home'
 export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 'joy' | 'waymond'; scene: Scene }[] = [
   { at: 74.2, to: 76.3, line: 'I don’t know where I am.', who: 'evelyn', scene: 'alley' },
   { at: 77.1, to: 79.3, line: 'Here. With me. Stay a little.', who: 'waymond', scene: 'alley' },
@@ -135,6 +138,9 @@ export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 
   { at: 219.5, to: 222.0, line: 'I’m coming.', who: 'evelyn', scene: 'rocks' },
   { at: 226.7, to: 229.4, line: 'You came all this way.', who: 'joy', scene: 'rocks' },
   { at: 229.8, to: 232.6, line: 'Where else would I be?', who: 'evelyn', scene: 'rocks' },
+  // Home: he asks what he asked in the alley, and this time she can.
+  { at: 276.2, to: 278.8, line: 'Stay a little?', who: 'waymond', scene: 'home' },
+  { at: 279.6, to: 282.2, line: 'I’m staying.', who: 'evelyn', scene: 'home' },
 ]
 /** Where the subtitles sit, as shares of the 16:9 frame (their top middle): low, or in the widescreen's lower bar. */
 export const SUB_AT: [number, number] = [0.5, 0.855]
