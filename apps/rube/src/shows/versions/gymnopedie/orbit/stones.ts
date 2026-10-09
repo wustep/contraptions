@@ -1,16 +1,33 @@
 import type p5 from 'p5'
 import { R as BALL_R, mixHex, type PieceCtx } from '../../../../parts'
 import { PERIOD, PIECES, wrap } from './music'
-import { LENGTH, STONES, along, ballLocal, float, since, sink, squash, stonesIn, type Stone } from './path'
+import { LENGTH, RADIUS, STONES, along, ballLocal, float, since, sink, squash, stonesIn, type Stone } from './path'
 import { drawGull } from './air'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
-import { scenery, type Ctx2D, type View, viewOf, onCanvas, atSea, weathered, sunAngle, lamplighter } from './frame'
+import { scenery, type Ctx2D, type View, viewOf, onCanvas, atSea, weathered, sunAngle, sunWay, lamplighter } from './frame'
 
 // ---------------------------------------------------------------- the stones
 
-/** Show time dawn puts out what the night lit: each lamp goes out, and each flower closes, at its own moment in here. */
-const DAWN_FROM = 7
-const DAWN_TO = 34
+/**
+ * The dawn puts out what the night lit, coming round the planet from the sun's side: in the wide shot at the top of the
+ * period, as the title comes up, each lamp goes out and each flower closes as the day reaches it, so the night's ring of
+ * light is seen to end. `DAWN_FROM` is when it starts, on the side facing the sun, and `DAWN_SWEEP` how long it takes
+ * to come round to the far side; each goes in `DAWN_GOING`.
+ */
+export const DAWN_FROM = 1.6
+const DAWN_SWEEP = 6.4
+const DAWN_GOING = 2.2
+
+/** Which way the dawn comes from: the sun's way from the planet's middle as the sweep begins. */
+let dawnWay: number | null = null
+
+/** When the dawn reaches `stone`: soonest on the side facing the sun, last on the far side. */
+export function dawnAt(stone: Stone): number {
+  dawnWay ??= sunWay(DAWN_FROM + DAWN_SWEEP / 2)
+  const a = (stone.u0 + stone.u1) / 2 / RADIUS - dawnWay
+  const off = Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) / Math.PI
+  return DAWN_FROM + off * DAWN_SWEEP + 0.35 * hash(stone.index, 7)
+}
 
 /**
  * The night's hold on `stone` at `t`: how long ago the ball came to it (seconds), and how much of the night is still
@@ -22,8 +39,8 @@ function tonight(stone: Stone, t: number): { age: number; left: number } | null 
   const u = wrap(t)
   const at = stone.touches[0]
   if (u >= at) return { age: u - at, left: 1 }
-  const out = DAWN_FROM + hash(stone.index, 7) * (DAWN_TO - DAWN_FROM - 6)
-  const left = 1 - smooth(u, out, out + 6)
+  const out = dawnAt(stone)
+  const left = 1 - smooth(u, out, out + DAWN_GOING)
   return left > 0 ? { age: u + PERIOD - at, left } : null
 }
 

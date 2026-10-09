@@ -82,7 +82,9 @@ every stone it comes down on, and under the moon it opens the flowers; what it d
 the lamps burn and the flowers are open, and ahead of it the lamps are dark and the flowers are buds. From far off the
 lamps are a thread of lights over the curve of the planet (the wide between the Gnossiennes), and at the seam the
 whole planet is ringed with them and, fainter, with the flowers: the night's way round, and dark on the day's side.
-Then dawn comes round, the lamps go out one by one and the flowers close (7 to 34 s), and the ball sets off again.
+Then dawn comes round: in the wide shot, as the title comes up, the lamps go out and the flowers close in a sweep
+round the planet from the sun's side to the far side (1.6 to about 10 s, `dawnAt`), so the night's ring of light is
+seen to end; and the camera goes down to the ball as it sets off again.
 
 ## The music, answered
 
