@@ -4,6 +4,7 @@ import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
 import { box, lay, standing } from './kit'
 import { echoes } from './echo'
+import { lens } from './lens'
 import { AT, DURATION, dream } from './music'
 import { SebsShow, type Stage } from './show'
 import { covers, IRIS_OPEN, IRIS_SNAP, RED_LIFT, type Cover } from './transitions'
@@ -129,8 +130,10 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
     return standing(covers, 0, 0, box(x0 - 24, y0 - 24, x1 + 24, y1 + 24, 4), { covers: coverList }, DURATION)
   }
   // The other road, over each place and under its cover: the same cells the lid claims, so it is drawn wherever it is.
+  // The lens over the whole picture, under the covers.
+  const lensOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: lens, state: null })
   const echoOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: echoes, state: { at: (t: number) => show0().echoes(t) } })
-  const stage = (world: typeof SEBS, from: number, chain: Placed[], scenery: Placed[] = []): Stage => ({ world, theme: world.themes[0], scenery, chain, after: [echoOver([...chain, ...scenery]), lidOver([...chain, ...scenery])], from })
+  const stage = (world: typeof SEBS, from: number, chain: Placed[], scenery: Placed[] = []): Stage => ({ world, theme: world.themes[0], scenery, chain, after: [echoOver([...chain, ...scenery]), lensOver([...chain, ...scenery]), lidOver([...chain, ...scenery])], from })
 
   const stages: Stage[] = [
     stage(SEBS, 0, [pOpening], [
