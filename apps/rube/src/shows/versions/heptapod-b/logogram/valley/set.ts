@@ -193,13 +193,16 @@ function drawFarCamp(ctx: CanvasRenderingContext2D, k: number, f: F, air: string
   const s = 1 / FAR_D
   const y0 = floorOf(FAR_D) + sy + 0.1 * s
   if (y0 - 8 * s > f.y1 || y0 < f.y0) return
-  const low = Math.min(0.9, lowHaze(f.cy) * Math.min(1, (1 - 1 / FAR_D) * 1.25))
+  // It stands on the valley floor in front of the near hills, small with distance: so it is hazed a little less than
+  // the hill behind it, never more (paler than the land behind, it read as pale boxes floating on the hill).
+  const behind = LAYERS[LAYERS.length - 1].d
+  const low = 0.85 * Math.min(0.9, lowHaze(f.cy) * Math.min(1, (1 - 1 / behind) * 1.25))
   // Seen only from down on the meadow (from the air it is specks, and hidden by the shell).
   const seen = sm(f.cy, -24, -10)
   if (seen <= 0.01) return
   ctx.save()
   ctx.globalAlpha *= seen
-  ctx.fillStyle = mixHex(mixHex(VALLEY.ridge, VALLEY.oliveDark, 0.6), air, 0.25 + low * 0.45)
+  ctx.fillStyle = mixHex(mixHex(VALLEY.ridge, VALLEY.oliveDark, 0.6), air, 0.12 + low)
   for (const it of FAR_CAMP) {
     const x0 = it.x + sx
     if (x0 + 9 * s < f.x0 || x0 > f.x1) continue
@@ -239,7 +242,7 @@ function drawFarCamp(ctx: CanvasRenderingContext2D, k: number, f: F, air: string
     // A tent's roof and a truck's canvas catch the sky: a paler band, so they read as things and not as blocks.
     if (it.kind !== 'tower') {
       const body: string = String(ctx.fillStyle)
-      ctx.fillStyle = mixHex(body, air, 0.35)
+      ctx.fillStyle = mixHex(body, air, 0.2)
       ctx.beginPath()
       if (it.kind === 'tent') {
         ctx.moveTo(X(0.06), Y(1.25))

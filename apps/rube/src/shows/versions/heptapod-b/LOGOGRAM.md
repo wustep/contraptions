@@ -246,6 +246,9 @@ cut, and close looks at whatever caught the eye. What changed:
   curl of its own, and a soft round pad at its tip where it presses on the glass.
 - **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
   shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
+- **The far camp** (24 → 62, 194): the tents and trucks up the valley were hazed as if far off but stand in front of
+  the near hills, so they were paler than the land behind them, pale boxes floating on the hill. They are hazed a
+  little less than that hill now, and their roofs catch only a hint of the sky: a camp in the fog.
 - **The glass asleep** (to 87.226): it waited at the end of the shaft as a mid-grey slab. It is all but the dark of the
   room now, a pane only just told from the wall, so its two steps wake it out of the dark.
 - **The first vision in a wide window**: the live stage sees more world round its 16:9 there, and the lawn showed the
