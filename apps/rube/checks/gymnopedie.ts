@@ -8,7 +8,7 @@ import { show } from '../src/shows/versions/gymnopedie/orbit'
 import { BASS, BREATHS, CHORDS, GRACES, MARGIN, MELODY, NOTES, PERIOD, PIECES, loudness } from '../src/shows/versions/gymnopedie/orbit/music'
 import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../src/shows/versions/gymnopedie/orbit/path'
 import { breath, cellsAt, wideAt } from '../src/shows/versions/gymnopedie/orbit/camera'
-import { CADENCES, CLOSE, PERCHED, dawnAt, leafRings, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
+import { CADENCES, CLOSE, DAWN_GOING, PERCHED, dawnAt, leafRings, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
 import { BANK, FIGURES, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, lanternAt, BOATS, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
@@ -115,12 +115,13 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   const unlit = lamps.filter((s) => !night(s, lampLight))
   const closed = flowers.filter((s) => !night(s, bloom))
   check('gymnopedie: every lamp is dark until the ball lights it, then burns until dawn, the seam included', lamps.length > 150 && unlit.length === 0, unlit.slice(0, 5).map((s) => s.index).join(', '))
-  // The dawn comes round from the sun's side, in the wide shot: the lamps facing the sun go out before the far ones.
+  // The dawn comes round from the sun's side, in the wide shot: the lamps facing the sun go out before the far ones, all of it while the planet is still the picture.
   const nightLights = [...lamps, ...flowers]
-  const wideAtDawn = nightLights.every((s) => dawnAt(s) + 2.2 <= 12) && cellsAt(4) > 100
+  // Every light is out while the planet is still most of the picture (the camera not yet gone down to the ball).
+  const wideAtDawn = nightLights.every((s) => wideAt(cellsAt(dawnAt(s) + DAWN_GOING)) > 0.7)
   const order = [...lamps].sort((a, b) => dawnAt(a) - dawnAt(b))
   check('gymnopedie: the dawn puts the night out in a sweep round the planet, while the camera is out',
-    wideAtDawn && dawnAt(order[0]) < dawnAt(order[order.length - 1]) - 4, `${dawnAt(order[0]).toFixed(1)}-${dawnAt(order[order.length - 1]).toFixed(1)} s`)
+    wideAtDawn && dawnAt(order[0]) < dawnAt(order[order.length - 1]) - 2, `${dawnAt(order[0]).toFixed(1)}-${dawnAt(order[order.length - 1]).toFixed(1)} s`)
   check('gymnopedie: every flower opens as the ball comes, and closes at dawn', flowers.length > 150 && closed.length === 0, closed.slice(0, 5).map((s) => s.index).join(', '))
 
   // The air: clouds, gulls, mist and fireflies at their depths, all coming round with the period.

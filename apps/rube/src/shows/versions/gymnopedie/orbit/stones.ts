@@ -14,9 +14,9 @@ import { scenery, type Ctx2D, type View, viewOf, onCanvas, atSea, weathered, sun
  * light is seen to end. `DAWN_FROM` is when it starts, on the side facing the sun, and `DAWN_SWEEP` how long it takes
  * to come round to the far side; each goes in `DAWN_GOING`.
  */
-export const DAWN_FROM = 1.6
-const DAWN_SWEEP = 6.4
-const DAWN_GOING = 2.2
+export const DAWN_FROM = 1
+const DAWN_SWEEP = 2.8
+export const DAWN_GOING = 1.3
 
 /** Which way the dawn comes from: the sun's way from the planet's middle as the sweep begins. */
 let dawnWay: number | null = null
@@ -339,13 +339,14 @@ export function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: bool
   // Across a short band of sizes the two are crossed, so nothing the silhouettes leave out (a perched gull, a lamp's
   // flame, an open flower) goes in a frame.
   const ctx = p.drawingContext as Ctx2D
-  const m = ctx.getTransform()
-  const px = Math.hypot(m.a, m.b) * k
-  if (px < FAR_PX) return farStones(ctx, c, v, day, mirrored)
-  const whole = smooth(px, FAR_PX, FAR_PX * 1.6)
+  // By how far out the camera is, as the far lights (`over.ts`) are, so they are wholly up before the flames go, on
+  // any size of canvas. The silhouettes stay whole underneath as the full drawing comes in over them, and go only once
+  // it is nearly whole, so no stone is seen through.
+  if (v.cells > FAR_CELLS[1]) return farStones(ctx, c, v, day, mirrored)
+  const whole = 1 - smooth(v.cells, FAR_CELLS[0], FAR_CELLS[1])
   const alpha = ctx.globalAlpha
   if (whole < 1) {
-    ctx.globalAlpha = alpha * (1 - whole)
+    ctx.globalAlpha = alpha * (1 - smooth(whole, 0.6, 1))
     farStones(ctx, c, v, day, mirrored)
     ctx.globalAlpha = alpha * whole
   }
@@ -387,8 +388,8 @@ export function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: bool
   ctx.globalAlpha = alpha
 }
 
-/** Device pixels a cell under which the stones are drawn as silhouettes. */
-export const FAR_PX = 20
+/** Cells top to bottom of the picture from which the stones are drawn as silhouettes (from the second; crossed between). */
+export const FAR_CELLS = [34, 54]
 /** How much of a far column's colour is its lit stone, the rest its outline. */
 const MARBLE_FAR = 0.35
 

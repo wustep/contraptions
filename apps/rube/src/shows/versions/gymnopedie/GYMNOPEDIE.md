@@ -83,7 +83,7 @@ the lamps burn and the flowers are open, and ahead of it the lamps are dark and 
 lamps are a thread of lights over the curve of the planet (the wide between the Gnossiennes), and at the seam the
 whole planet is ringed with them and, fainter, with the flowers: the night's way round, and dark on the day's side.
 Then dawn comes round: in the wide shot, as the title comes up, the lamps go out and the flowers close in a sweep
-round the planet from the sun's side to the far side (1.6 to about 10 s, `dawnAt`), so the night's ring of light is
+round the planet from the sun's side to the far side (1 to about 5.5 s, while the planet is still the picture; `dawnAt`), so the night's ring of light is
 seen to end; and the camera goes down to the ball as it sets off again.
 
 ## The music, answered
@@ -222,8 +222,9 @@ costs, with Chrome's CPU slowed four times (a stand-in for a phone), the close s
 inside 60 frames a second; but the wide shot at the seam, which draws every stone on the planet, cost 26 ms, over it,
 on the shot that opens the loop and carries the title. Far off, where a cell is a few pixels, each stone is now drawn as
 its silhouette in its colours, batched into a handful of strokes (`farStones`): the same picture at that size, and the
-seam now costs 3 to 7 ms, a quarter of what it did before any of this pass. Across a band of sizes the full drawing and
-the silhouettes are crossed, so nothing they leave out goes in a frame. The sea's mirror draws its stones the same way,
+seam now costs 3 to 7 ms, a quarter of what it did before any of this pass. Across a band of the camera's distances (34 to 54 cells, the
+same measure the far-off lights fade in by, so they are up first on any canvas) the full drawing comes in over the
+silhouettes, which stay whole underneath until it is nearly whole, so no stone is ever seen through. The sea's mirror draws its stones the same way,
 since its ripple and fade leave no more of them than that.
 
 ## Where things are
