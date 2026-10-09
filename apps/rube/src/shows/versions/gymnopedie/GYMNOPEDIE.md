@@ -72,8 +72,8 @@ Each piece's last note runs back along the way the ball came (`CADENCES`): a slo
 the piece's stones as the camera draws out. After the Gymnopédie it is a glint running back along the columns' tops in
 the sunset; after the first Gnossienne, a flare running back through the lamps over the wide between the pieces; and
 after the third, faster, a light running back round the whole planet through the flowers and then the lamps, the
-night's way once more, seen from afar as the period comes round and the title comes up, just before the dawn puts
-them out.
+night's way once more, seen from afar as the period comes round and the title comes up. It is the night's light, so it shines only where a
+lamp still burns or a flower is still open: it goes out where it meets the dawn coming round the other way.
 
 ## The story
 

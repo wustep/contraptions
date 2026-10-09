@@ -168,7 +168,10 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.globalCompositeOperation = 'lighter'
-    ctx.globalAlpha = Math.min(1, 0.9 * front.light)
+    // It is the night's light running back: it shines only where a lamp still burns or a flower is still open, and so
+    // goes out where it meets the dawn coming round the other way.
+    const still = stone.piece === 1 ? Math.min(1, lampLight(stone, c.t) / 0.5) : stone.piece === 2 ? bloom(stone, c.t) : 1
+    ctx.globalAlpha = Math.min(1, 0.9 * front.light * still)
     ctx.drawImage(sprite, x - r, y - r, 2 * r, 2 * r)
     ctx.restore()
   }
