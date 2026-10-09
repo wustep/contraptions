@@ -133,6 +133,9 @@ function plan0(begin: number) {
 }
 const PLAN = plan0(0)
 
+/** Every note of the melody he plays, show seconds and pitch, the run up to the hush included: what Lipton's sees go out to her. */
+export const MELODY: { t: number; midi: number }[] = [...theme(0.5, FLOURISH).melody, ...RUN.map(([t, midi]) => ({ t, midi }))]
+
 export const opening = part<OpeningState>(
   {
     name: 'opening',

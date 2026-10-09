@@ -3,6 +3,9 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, beam, frame, glow, hash, knock, rgba, ring, scenery, smooth } from '../kit'
 import { LIPTONS_INK, LIPTONS_MAT } from '../worlds'
+import { AT } from '../music'
+import { MELODY } from '../club/opening'
+import { keyX } from '../club/geometry'
 import {
   BELL,
   BULBS,
@@ -895,6 +898,83 @@ function festoon(d: Draw, t: number): void {
   p.circle(hx * k, hy * k, 0.07 * k)
 }
 
+/* ------------------------------------------------------------------ the music, across the room to her */
+
+/**
+ * What draws her across the room: his playing. From the moment the light opens on Lipton's, each note of the melody
+ * lifts off the strings over its key as a bead of warm light and goes out across the room to her, in an arc over the
+ * tables, to where she will be when it gets there, and goes into her. Before she is in, they go to the door. She moves
+ * on the phrases after them; as she nears the trips get shorter, and in the run up the keys they are all but on her.
+ * On the hush the music stops, and so do they.
+ */
+const CALL = MELODY.filter((n) => n.t > 40.0 && n.t < AT.hush - 0.02).map((n) => {
+  const from: Pt = [keyX(n.midi), -0.72]
+  const her = mia(n.t)
+  const dist = Math.hypot(her[0] - from[0], her[1] - from[1])
+  const trip = Math.max(0.7, Math.min(3.6, dist / 3.4))
+  return { t: n.t, from, trip, lift: 0.9 + 0.11 * dist }
+})
+function callAt(c: (typeof CALL)[number], t: number): { x: number; y: number; a: number } | null {
+  const s = t - c.t
+  if (s < 0 || s > c.trip) return null
+  const u = s / c.trip
+  const e = 1 - (1 - u) ** 1.7
+  const to = mia(c.t + c.trip)
+  const mx = (c.from[0] + to[0]) / 2
+  const my = Math.min(c.from[1], to[1]) - c.lift
+  const a1 = 1 - e
+  const x = a1 * a1 * c.from[0] + 2 * a1 * e * mx + e * e * to[0]
+  const y = a1 * a1 * c.from[1] + 2 * a1 * e * my + e * e * (to[1] - 0.02) + 0.03 * Math.sin(s * 7 + c.t)
+  const a = Math.min(1, s / 0.08) * (1 - smooth(u, 0.78, 1))
+  return { x, y, a }
+}
+function drawCall(p: p5, k: number, t: number): void {
+  if (t < 40 || t > AT.hush + 4) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The phrase as a thread: each note in flight joined to the one before it, so it is a line of music reaching her.
+  ctx.lineCap = 'round'
+  for (let i = 1; i < CALL.length; i++) {
+    if (CALL[i].t - CALL[i - 1].t > 0.8) continue
+    const a = callAt(CALL[i - 1], t)
+    const b = callAt(CALL[i], t)
+    if (!a || !b) continue
+    ctx.strokeStyle = rgba(LIPTONS_MAT.lamp, 0.32 * Math.min(a.a, b.a))
+    ctx.lineWidth = 0.014 * k
+    ctx.beginPath()
+    ctx.moveTo(a.x * k, a.y * k)
+    ctx.lineTo(b.x * k, b.y * k)
+    ctx.stroke()
+  }
+  for (const c of CALL) {
+    const q = callAt(c, t)
+    if (!q) continue
+    // A short wake behind it.
+    for (let i = 1; i <= 4; i++) {
+      const b = callAt(c, t - i * 0.035)
+      if (!b) break
+      ctx.fillStyle = rgba(LIPTONS_MAT.lamp, 0.22 * b.a * (1 - i / 5))
+      ctx.beginPath()
+      ctx.arc(b.x * k, b.y * k, 0.03 * (1 - i * 0.12) * k, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    glow(p, k, q.x, q.y, 0.28, LIPTONS_MAT.lamp, 0.55 * q.a)
+    ctx.fillStyle = rgba('#FFF4D6', 0.95 * q.a)
+    ctx.beginPath()
+    ctx.arc(q.x * k, q.y * k, 0.045 * k, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // Where they reach her, a warmth on her that lingers a moment.
+  let warm = 0
+  for (const c of CALL) {
+    const s = t - (c.t + c.trip * 0.85)
+    if (s > 0 && s < 1.2) warm = Math.max(warm, Math.exp(-s / 0.4))
+  }
+  if (warm > 0.02) {
+    const [mx, my] = mia(t)
+    glow(p, k, mx, my, 0.45, LIPTONS_MAT.lamp, 0.35 * warm)
+  }
+}
+
 /* ------------------------------------------------------------------ the room */
 
 export const liptonsRoom = scenery<null>({
@@ -918,5 +998,8 @@ export const liptonsRoom = scenery<null>({
     void R
     void ON_FLOOR
     void beam
+  },
+  over(p, _s, c) {
+    drawCall(p, c.k, c.t)
   },
 })
