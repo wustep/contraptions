@@ -692,7 +692,7 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   const wx1 = Math.min(s.edge - 0.1, f.x1 + 1)
   if (wx1 > f.x0 - 1) {
     // Each wall starts where it has height: a wall of no height would be a bare line along its foot, across the bank.
-    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 0.6), x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1] })
+    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 0.6), x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1], rise: 2.6 })
     cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 1.4), x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1] })
   }
   // The bank the corn track runs along, the same earth as the track's, sloping down to the road.

@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 111 (latest)
+## Polish pass 112 (latest)
+
+The tall corn across the road from the truck (29 to 54 s) began with a cliff. A field wall's ends come up out of nothing over 1.2 cells (`cornWall`'s taper), which is a gentle swell on the channel's 1.55-cell corn. On the truck's far wall, 2.6 cells tall, it was a slope of about 65°: a slanted cut edge standing behind the truck like a cardboard flat as it rolls in, and the same drop at the dam behind the cab. `cornWall` now takes the length of that rise (`rise`, 1.2 as before by default), and the tall wall rises over its own height, 2.6 cells. It now reads as a field coming up from the ground, and at the dam it falls away behind the cab. Every other wall is untouched, and the share card (240.4 s) is on Edmunds' planet.
+
+## Polish pass 111
 
 No change to the show: Overview on a desktop, swept whole for the first time since pass 108 changed its skies. The farm, the station and the camp read. Saturn's sky keeps its stars at this size, as it should, since a cell is over 3 px. Three more drawings are made to the camera and show it here:
 - Miller's sea, from 104 to 112 s. Its horizon is at the eye, so the world under it is an empty blue-grey.
