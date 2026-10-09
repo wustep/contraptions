@@ -221,7 +221,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 15 (latest)
+## Polish pass 16 (latest)
+
+A measure of emptiness over the whole show: each second's frame split in sixteen, counting the squares with almost no detail. Only one stretch came out mostly empty: the skim over Saturn (225 to 226 s), where the planet's face was a dozen broad bands of flat colour.
+
+- **Weather on Saturn** (`drawSaturn` in `act2/undock.ts`). Fine streaks now run along its latitudes from the southern bands to the pole. They are a little wavy, in the bands' own amber and hull, and barely there. When the Ranger skims a few cells of the limb the face reads as cloud tops, and toward the pole, which leans toward us, they close into soft rings as Saturn's polar bands do. Seen whole, in Overview, it is a banded planet rather than a striped ball.
+
+## Polish pass 15
 
 - **The kitchen under Murph's room** (`drawKitchen` in `earth/house.ts`). The first frames of the show, the dawn in Murph's room, had their lower 40% bare plaster: the kitchen below the room, left of the stairwell, where no ball goes, was drawn empty. It is furnished now: a shelf of jars and plates on the wall, a table under a hanging tin lamp with two chairs and a jug, and the tall clock. The clock stands where the station's museum will stand it (x 3.07 to 3.97) and is the same case. Here it only keeps time, the pendulum swinging a second a beat and the hands at twenty to six, before the museum makes it a machine in Act II. Its bob is a lens, not a disc, so nothing round in the kitchen can be taken for a ball. No ball's path or strike moved.
 

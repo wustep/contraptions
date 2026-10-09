@@ -692,6 +692,25 @@ function drawSaturn(p: p5, c: Ctx, f: Frame): void {
     ctx.closePath()
     ctx.fill()
   }
+  // Finer weather within the bands: thin streaks along the latitudes, a little wavy, in the bands' own two tones and
+  // barely there, so the face reads as cloud tops when the Ranger skims it rather than as flat paint.
+  ctx.lineWidth = Math.max(1, X(0.05))
+  for (let j = 0; j < 54; j++) {
+    const phi = (-62 + j * 2.75 + (hash(j, 41) - 0.5) * 1.6) * deg
+    const amp = 0.04 + 0.08 * hash(j, 42)
+    const freq = 0.6 + 0.9 * hash(j, 43)
+    const ph = hash(j, 44) * TAU
+    ctx.strokeStyle = rgba(j % 3 ? DARK.amber : DARK.hull, 0.06 + 0.1 * hash(j, 45))
+    ctx.beginPath()
+    const n = 90
+    for (let i = 0; i <= n; i++) {
+      const u = -SAT_R + (2 * SAT_R * i) / n
+      const y = lat(u, phi) + amp * Math.sin(u * freq + ph)
+      if (i === 0) ctx.moveTo(X(u), X(y))
+      else ctx.lineTo(X(u), X(y))
+    }
+    ctx.stroke()
+  }
   // The rings' shadow, cast down across the southern bands.
   ctx.fillStyle = 'rgba(11, 15, 29, 0.5)'
   ctx.beginPath()
