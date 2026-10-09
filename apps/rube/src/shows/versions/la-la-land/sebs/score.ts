@@ -112,7 +112,7 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
     // The audition to the globe.
     { kind: 'black', down: [195.1, 195.85], up: [196.15, 197.4] },
     // Paris at night to the club: through its red door, on the kick.
-    { kind: 'black', down: [214.3, SWITCH.club - 0.02], up: [RED_LIFT + 0.02, 215.45], color: CLUB_MAT.red },
+    { kind: 'door', down: [214.3, SWITCH.club - 0.02], up: [RED_LIFT + 0.02, 215.45], color: CLUB_MAT.red, deep: CLUB_MAT.redDeep, brass: CLUB_MAT.brass },
     // The trumpet to painted Paris: an iris, the old way.
     { kind: 'iris', down: [267.3, 268.2], up: [IRIS_OPEN, 272.6], from: (t) => [where(t)[0] - 0.1, where(t)[1] - 0.05], to: between, r0: 0.55, r1: 0, snap: IRIS_SNAP },
     // The stars to the home movie.

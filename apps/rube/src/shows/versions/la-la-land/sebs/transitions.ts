@@ -20,6 +20,11 @@ export type Cover =
    * that last small circle of light until `snap`, when it shuts on the hit.
    */
   | { kind: 'iris'; down: [number, number]; up: [number, number]; from: (t: number) => Pt; to: (t: number) => Pt; r0: number; r1: number; color?: string; snap?: number }
+  /**
+   * A door passing the lens: a red leaf, panelled, its brass knob at its leading edge, sweeps across the frame from
+   * the left until it fills it, and sweeps on off the right to show the next place. Through his club's door in Paris.
+   */
+  | { kind: 'door'; down: [number, number]; up: [number, number]; color: string; deep: string; brass: string }
   /** Velvet, drawn in from both sides and parted again. */
   | { kind: 'curtain'; down: [number, number]; up: [number, number]; color: string; deep: string; gold: string }
 
@@ -94,6 +99,58 @@ function drawCover(p: p5, k: number, c: Cover, f: number, t: number): void {
       ctx.fillStyle = g
       ctx.fillRect(X0, Y0, W, H)
     }
+  } else if (c.kind === 'door') {
+    // One leaf, as wide as the frame, carried across it left to right: in until it fills it, then on and off.
+    const x0 = fr.x0 - pad
+    const w = fr.x1 - fr.x0 + 2 * pad
+    const closing = t <= c.up[0]
+    const L = closing ? x0 - w + f * w : x0 + (1 - f) * w
+    const R = L + w
+    const top = fr.y0
+    const h = fr.y1 - fr.y0
+    // The shadow it throws just ahead of itself on what it has not yet covered.
+    const sh = ctx.createLinearGradient(R * k, 0, (R + 0.6) * k, 0)
+    sh.addColorStop(0, rgba('#000000', 0.45))
+    sh.addColorStop(1, rgba('#000000', 0))
+    ctx.fillStyle = sh
+    ctx.fillRect(R * k, Y0, 0.6 * k, H)
+    ctx.fillStyle = c.color
+    ctx.fillRect(L * k, Y0, w * k, H)
+    // Its panels: two tall sunk frames, a shade deeper, with a light bevel on their upper-left edges.
+    for (const [a, b] of [[0.1, 0.44], [0.54, 0.9]]) {
+      const px0 = L + 0.2 * w
+      const pw = 0.6 * w
+      const py0 = top + a * h
+      const ph = (b - a) * h
+      ctx.fillStyle = rgba(c.deep, 0.55)
+      ctx.fillRect(px0 * k, py0 * k, pw * k, ph * k)
+      ctx.strokeStyle = rgba('#FFFFFF', 0.12)
+      ctx.lineWidth = Math.max(1, 0.02 * h * k * 0.1)
+      ctx.beginPath()
+      ctx.moveTo(px0 * k, (py0 + ph) * k)
+      ctx.lineTo(px0 * k, py0 * k)
+      ctx.lineTo((px0 + pw) * k, py0 * k)
+      ctx.stroke()
+      ctx.strokeStyle = rgba(c.deep, 0.9)
+      ctx.beginPath()
+      ctx.moveTo((px0 + pw) * k, py0 * k)
+      ctx.lineTo((px0 + pw) * k, (py0 + ph) * k)
+      ctx.lineTo(px0 * k, (py0 + ph) * k)
+      ctx.stroke()
+    }
+    // The leading edge, and the knob on it.
+    ctx.fillStyle = rgba(c.deep, 0.8)
+    ctx.fillRect((R - 0.012 * w) * k, Y0, 0.012 * w * k, H)
+    const kx = R - 0.07 * w
+    const ky = top + 0.5 * h
+    ctx.fillStyle = c.brass
+    ctx.beginPath()
+    ctx.arc(kx * k, ky * k, 0.022 * h * k, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.fillStyle = rgba('#FFFFFF', 0.35)
+    ctx.beginPath()
+    ctx.arc((kx - 0.006 * h) * k, (ky - 0.007 * h) * k, 0.008 * h * k, 0, Math.PI * 2)
+    ctx.fill()
   } else {
     // Two halves of velvet, each its own set of folds, meeting in the middle when f is 1.
     const half = (fr.x1 - fr.x0) / 2 + pad
