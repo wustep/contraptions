@@ -326,7 +326,12 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
   const ink = inkAt(ring, t)
   if (!ink) return
   const marks = marksAt(ring, t)
-  const base = { r: ring.r, seed: ring.seed, t, spin: ink.spin, fade: ink.fade, color: FOG.ink, light: ring.light, marks, taper: ink.taper }
+  // Where she is on it, when she is on it (or all but): so no tendril grows out of her.
+  const her = herAt(t)
+  const dx = her[0] - ring.c[0]
+  const dy = her[1] - ring.c[1]
+  const clear = Math.abs(Math.hypot(dx, dy) - ring.r) < 0.6 ? Math.atan2(dy, dx) - ink.spin : undefined
+  const base = { r: ring.r, seed: ring.seed, t, spin: ink.spin, fade: ink.fade, color: FOG.ink, light: ring.light, marks, taper: ink.taper, clear }
   p.push()
   p.translate(ring.c[0] * k, ring.c[1] * k)
   if (ring.key === 'G' && t < ring.closed) {

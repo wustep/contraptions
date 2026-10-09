@@ -246,6 +246,9 @@ strongest pulses held against what the picture does on them. What changed:
 - **A heptapod deepest in the fog** went by paling toward the fog's white, which is whiter than the fog field in its
   greyer places, so as Abbott came up in the push (170) its far limbs stood out as white ghost legs. Past a point it
   goes by fading now, and comes out of the fog darker than it, a shape in fog.
+- **No stalk on her** (156): at the top of the ring written round her, one of its tendrils grew straight out of the
+  ball, a stalk with a drop on it like an antenna. No tendril now grows where she sits on a ring: one near her draws
+  back as she comes.
 - **The halves meeting** (183.182, the climax): the two halves' round ends ran together well before the close, so
   from about 181.8 the great ring read as closed, and on the pulse only two hairline seams went. A fresh critic,
   shown the push at four frames a second, caught it. Each half's tail is held a little short of the other's pen while

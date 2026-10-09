@@ -506,6 +506,11 @@ export interface LogogramOpts {
   marks?: { a: number; size: number; width: number; grow?: number }[]
   /** Optional (the fog builder's): radians over which a forming end tapers (0.5 if unset). */
   taper?: number
+  /**
+   * Optional (the director's): where a ball sits on the ring (in its own turn, like `start`). No tendril grows out of
+   * her: one near her draws back as she comes, so none ever reads as a stalk on the ball.
+   */
+  clear?: number
 }
 
 interface Blot {
@@ -638,7 +643,8 @@ export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
   if (reach > 0.001) {
     s.tendrils.forEach((td, i) => {
       if (!inArc(td.a)) return
-      const grow = smooth01((reach - i * 0.06) / 0.7)
+      const away = o.clear === undefined ? 1 : smooth01((angDist(td.a, o.clear) - 0.22) / 0.3)
+      const grow = smooth01((reach - i * 0.06) / 0.7) * away
       if (grow <= 0.001) return
       const { mid, half } = logogramAt(o, td.a)
       const dir = td.inward ? -1 : 1
