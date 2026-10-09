@@ -565,6 +565,11 @@ The notes went back to the builders who made each part, who still had their cont
 - **A pass for the meeting in the alley.** Waymond watched her go down the drain, but not come to him. Now from
   71.0 s, as she floats down the steps in the rain, his eye is on her. He watches her arrive and the moment they
   share, and his look runs on unbroken as the drain takes her.
+- **A pass for one long playthrough.** The whole show was played straight through, once, in real time, in real
+  Chrome with the GPU (1440×810 at 2×). All 19,885 frames ran at a flat 60 fps. The worst frame was 20 ms, and none
+  was over 40 ms. Memory after a forced collection rose from 27 MB to 34 MB over the show. Played three times over
+  its first 100 s, it rose 1 MB the first time and not at all after. That is caches filling as each stretch is first
+  played, not a leak. Nothing was changed.
 
 ## The looks
 
