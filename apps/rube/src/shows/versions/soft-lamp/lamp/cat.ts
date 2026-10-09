@@ -33,8 +33,51 @@ const EYE = '#C8D27A'
 
 /** When it falls asleep: once the last track's drums have gone. */
 const LAST = TRACKS[TRACKS.length - 1]
-const SLEEP_FROM = barTime(LAST, LAST.exit) + 3
-export const sleepAt = (t: number): number => smooth(t, SLEEP_FROM, SLEEP_FROM + 9)
+/**
+ * The climb: once the last track's drums have gone and the ball sits in the cup for good, the sill is the kitten's. It
+ * gets up, walks to the books, hops onto the top one and up onto the sill (the ball's stair, the other way), turns,
+ * walks along the sill under the window, turns round as a cat does before it lies down, settles, looks up at the moon,
+ * and sleeps there. Seconds from `CLIMB`.
+ */
+export const CLIMB = barTime(LAST, LAST.exit) + 7
+const C_CX = (CAT.x0 + CAT.chest) / 2
+const SILL_DX = 1.58
+const SIT_DX = -0.7
+const MOON_AT = { x: -0.84, y: -5.0 }
+
+/** Where it is on its way up: offset, facing (scale across, 1 right, -1 left), on its feet, reaching, walking. */
+export function climbAt(t: number): { dx: number; dy: number; face: number; up: number; out: number; walk: number; phase: number; look: { x: number; y: number }; lookK: number } {
+  const s = t - CLIMB
+  const none = { dx: 0, dy: 0, face: 1, up: 0, out: 0, walk: 0, phase: 0, look: { x: 0, y: 0 }, lookK: 0 }
+  if (s <= 0) return none
+  const lerp = (a: number, b: number, u: number) => a + (b - a) * u
+  const ease = (a: number, b: number) => smooth(s, a, b)
+  const arc = (a: number, b: number, h: number) => (s > a && s < b ? -h * Math.sin((Math.PI * (s - a)) / (b - a)) : 0)
+  // Across, and up.
+  let dx = lerp(0, 0.78, ease(0.8, 2.6))
+  dx = lerp(dx, 2.12, ease(2.8, 3.6))
+  dx = lerp(dx, SILL_DX, ease(5.0, 5.8))
+  dx = lerp(dx, SIT_DX, ease(6.0, 8.4))
+  let dy = lerp(0, -0.92, ease(2.8, 3.6))
+  dy = lerp(dy, -1.42, ease(5.0, 5.8))
+  dy += arc(2.8, 3.6, 0.3) + arc(5.0, 5.8, 0.25)
+  // Turning: across through nothing, a cat turning round in place, seen side on.
+  const turn = (a: number, b: number) => Math.cos(Math.PI * ease(a, b))
+  let face = turn(4.0, 4.7)
+  if (s > 8.6) face = -turn(8.6, 9.4)
+  face = Math.sign(face || 1) * Math.max(0.25, Math.abs(face))
+  const up = ease(0, 0.8) * (1 - ease(9.4, 10.2))
+  const out = 0.45 * (Math.max(0, -arc(2.8, 3.6, 1)) + Math.max(0, -arc(5.0, 5.8, 1)))
+  const walk = Math.max(ease(0.8, 1.1) * (1 - ease(2.3, 2.6)), ease(6.0, 6.3) * (1 - ease(8.1, 8.4)))
+  // Where it looks: ahead, the way it goes; then, settled, up at the moon.
+  const ahead = { x: C_CX + dx + Math.sign(face) * 2, y: dy - 0.5 }
+  const moon = ease(10.2, 10.8)
+  const look = { x: ahead.x + (MOON_AT.x - ahead.x) * moon, y: ahead.y + (MOON_AT.y - ahead.y) * moon }
+  return { dx, dy, face, up, out, walk, phase: s * 9, look, lookK: ease(0.3, 0.8) }
+}
+
+const SLEEP_FROM = CLIMB + 13.3
+export const sleepAt = (t: number): number => smooth(t, SLEEP_FROM, SLEEP_FROM + 6)
 
 /** Where the Walkman is, for its glance at a new track. */
 const WALKMAN_AT = { x: (WALKMAN.x0 + WALKMAN.x1) / 2, y: -WALKMAN.h / 2 }
@@ -54,7 +97,7 @@ export function newTrackAt(t: number): number {
 }
 
 /** Once, asleep, it dreams: an ear and the tip of its tail twitch, twice, and are still. */
-const DREAM = SLEEP_FROM + 13
+const DREAM = SLEEP_FROM + 6.5
 function dreamAt(t: number): number {
   let d = 0
   for (const at of [DREAM, DREAM + 0.7]) {
@@ -88,7 +131,10 @@ function gaze(t: number, lag: number): { x: number; y: number } {
   // A hand coming in: it watches that, mostly.
   const h = handAt(t - 0.25)
   const hk = 0.8 * h.a
-  return { x: f0.x + (h.x - f0.x) * hk, y: f0.y + (h.y - f0.y) * hk }
+  const g1 = { x: f0.x + (h.x - f0.x) * hk, y: f0.y + (h.y - f0.y) * hk }
+  // On its way to the sill, where it is going; then the moon.
+  const c = climbAt(t)
+  return { x: g1.x + (c.look.x - g1.x) * c.lookK, y: g1.y + (c.look.y - g1.y) * c.lookK }
 }
 
 /** How taken it is with the moth, 0 to 1: for spells of half a minute or so, while the moth flies. */
@@ -311,10 +357,35 @@ function flickAt(t: number): number {
 }
 
 export function cat(ctx: Ctx, lw: number, t: number): void {
+  const c = climbAt(t)
+  if (c.dx === 0 && c.dy === 0 && c.face === 1) return catAt(ctx, lw, t, c)
+  // Moved: the same drawing, carried, and turned about its middle. On the sill, its own soft shadow under it.
+  ctx.save()
+  ctx.translate(c.dx + C_CX, c.dy)
+  if (c.dy < -1.3) {
+    const g = ctx.createRadialGradient(0, 0, 0.05, 0, 0, 0.6)
+    g.addColorStop(0, 'rgba(14, 9, 26, 0.35)')
+    g.addColorStop(1, 'rgba(14, 9, 26, 0)')
+    ctx.fillStyle = g
+    ctx.save()
+    ctx.scale(1, 0.12)
+    ctx.fillRect(-0.6, -0.6, 1.2, 1.2)
+    ctx.restore()
+  }
+  ctx.scale(c.face, 1)
+  ctx.translate(-C_CX, 0)
+  catAt(ctx, lw, t, c)
+  ctx.restore()
+}
+
+/** Whether, and how far, it has left its place on the desk: for its shadows there (`shade.ts`). */
+export const awayAt = (t: number): number => smooth(t, CLIMB + 0.8, CLIMB + 1.6)
+
+function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): void {
   const lamp = lampAt(t)
   const sleep = sleepAt(t)
   const breath = Math.sin((2 * Math.PI * t) / (3.4 + sleep * 1.4))
-  const l = Math.min(1, lightAt(CAT.chest, -0.4) * lamp * 1.6 + 0.12)
+  const l = Math.min(1, lightAt(CAT.chest + c.dx, -0.4 + c.dy) * lamp * 1.6 + 0.12)
   const fur = (k = 1) => lit(FUR, FUR_LIT, l * k)
   const { x0, chest, top } = CAT
 
@@ -325,7 +396,10 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - handAt(t).a) * (1 - mothKeen(t))
   // Stretching: up on its feet, the body lifted and tipped forward (chest down, rear up) about its rear, and longer;
   // the head down and forward with it, the eyes shut in a yawn.
-  const st = stretchAt(t)
+  const s0 = stretchAt(t)
+  const st = { up: Math.max(s0.up, c.up), out: Math.max(s0.out, c.out), yawn: s0.yawn }
+  // Walking, the legs go by turns.
+  const step = (i: number) => c.walk * 0.07 * Math.sin(c.phase + i * Math.PI)
   const L = 0.27 * st.up
   const tipF = 0.17 * st.out
   const long = 1 + 0.14 * st.out
@@ -379,13 +453,13 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
       ctx.lineWidth = lw * 0.7
       ctx.stroke()
     }
-    for (const [hx, k] of [[x0 + 0.42, 0.45], [x0 + 0.24, 0.6]] as const) {
+    for (const [i, [hx, k]] of ([[x0 + 0.42, 0.45], [x0 + 0.24, 0.6]] as const).entries()) {
       const hip = T(hx, -0.08)
-      leg(hip, { x: hip.x - 0.02, y: -0.005 }, 0.15, k)
+      leg(hip, { x: hip.x - 0.02 + step(i), y: -0.005 }, 0.15, k)
     }
-    for (const [fx, k, ahead] of [[chest - 0.06, 0.7, 0.04], [chest - 0.2, 0.95, 0]] as const) {
+    for (const [i, [fx, k, ahead]] of ([[chest - 0.06, 0.7, 0.04], [chest - 0.2, 0.95, 0]] as const).entries()) {
       const sh = T(fx, -0.08)
-      leg(sh, { x: sh.x + (0.42 + ahead) * st.out + 0.02, y: -0.005 }, 0.13, k)
+      leg(sh, { x: sh.x + (0.42 + ahead) * st.out + 0.02 + step(i + 1), y: -0.005 }, 0.13, k)
     }
   }
 
@@ -489,7 +563,9 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   const over = Math.max(0, wash.paw - 1)
   const hx0 = CAT.head.x
   const hy0 = CAT.head.y - 0.025 * pet + 0.26 * sleep + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn + wash.k * (0.03 + 0.02 * wash.lick + 0.02 * over)
-  const look = gaze(t, 0.22)
+  // Its gaze, in its own frame: carried and turned as it is.
+  const gz = gaze(t, 0.22)
+  const look = { x: C_CX + (gz.x - c.dx - C_CX) * Math.sign(c.face), y: gz.y - c.dy }
   const dx = look.x - hx0
   const dy = look.y - hy0
   const d = Math.hypot(dx, dy) || 1

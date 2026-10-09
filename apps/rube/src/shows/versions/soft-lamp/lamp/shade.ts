@@ -1,4 +1,5 @@
 import { liftAt } from './hands'
+import { awayAt } from './cat'
 import { BOOKS, CAT, CUP, FAR_CUP, GLASS, LAMP, MUG, R, SILL, WALKMAN } from './desk'
 import { ballAt, hollowY } from './route'
 import { MOUTH, lampAt } from './world'
@@ -41,7 +42,7 @@ export function contacts(ctx: Ctx, t: number): void {
     // x middle, half width, y
     [MUG.x, (MUG.halfW + 0.05) * (liftAt(t) > 0.02 ? 0 : 1), 0],
     [(WALKMAN.x0 + WALKMAN.x1) / 2, (WALKMAN.x1 - WALKMAN.x0) / 2 + 0.05, 0],
-    [(CAT.x0 + CAT.chest) / 2, (CAT.chest - CAT.x0) / 2 + 0.08, 0],
+    [(CAT.x0 + CAT.chest) / 2, ((CAT.chest - CAT.x0) / 2 + 0.08) * (awayAt(t) > 0.5 ? 0 : 1), 0],
     [(BOOKS[2].x0 + BOOKS[2].x1) / 2, (BOOKS[2].x1 - BOOKS[2].x0) / 2 + 0.06, 0],
     [CUP.x, CUP.halfW + 0.05, 0],
     [FAR_CUP.x, FAR_CUP.halfW + 0.08, 0],
@@ -114,7 +115,8 @@ export function wallShadows(ctx: Ctx, t: number): void {
   }
   if (liftAt(t) <= 0.02) cast(MUG.x, rect(MUG.x - MUG.halfW, -MUG.h, MUG.x + MUG.halfW, 0), 0.4)
   cast(WALKMAN.x1, rect(WALKMAN.x0, -WALKMAN.h, WALKMAN.x1, 0), 0.4)
-  cast(CAT.chest, () => {
+  // (Not once it has gone up to the sill.)
+  if (awayAt(t) < 0.5) cast(CAT.chest, () => {
     ctx.beginPath()
     ctx.ellipse((CAT.x0 + CAT.chest) / 2, -0.25, (CAT.chest - CAT.x0) / 2, 0.36, 0, 0, Math.PI * 2)
     ctx.moveTo(CAT.head.x + 0.25, CAT.head.y)

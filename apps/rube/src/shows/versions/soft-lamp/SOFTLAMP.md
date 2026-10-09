@@ -101,7 +101,7 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   choice, it either keeps watching or shuts its eyes in the content arch and nods along on the beat, the tip of its
   tail swaying a bar at a time; it comes out of it ahead of a break and ahead of the lob, to watch. Four times, watching,
   it washes: a paw licked and drawn over its ear. When the last
-  track's drums leave, it puts its head down and sleeps. Twice it gets up and stretches, front out long and rear up,
+  track's drums leave, it climbs the books to the sill and sleeps there, under the moon. Twice it gets up and stretches, front out long and rear up,
   with a yawn, and settles back down.
 - **Someone** is at the desk, where the camera is: never seen but for a hand in a sweater's sleeve. It turns the lamp
   on as the show opens and down as it ends; between, it takes a sip, scratches the kitten under its chin, rests round
@@ -922,6 +922,25 @@ both in Zoom, and the overview.
      little forward and it glances down at the Walkman a moment or two, then goes back to the ball. Eleven times in the
      half hour, each in a frame that shows it (the sill walk's, where the camera is between tracks); a flash of
      lightning, at 12:29, takes its eye instead.
+
+### The fifty-third pass: up to the window
+
+140. **The kitten climbs to the sill to sleep** (`climbAt`, `lamp/cat.ts`). In the streams this takes after, the cat
+     sits at the window. Here it never left its place on the desk, because the ball has the sill, and the camera, the
+     hand and the checks were all built round where the kitten lies. But in the last track the ball goes down into the
+     cup and stays, and the camera draws back to the whole room: the sill is free, and everything is in view. So, from
+     29:57, over some thirteen seconds: it gets up, walks along the desk to the books, hops up onto the top one, turns,
+     hops up onto the sill (the ball's stair, the other way), walks along the sill under the window, its tail up,
+     turns round as a cat does before it lies down, settles into its loaf, looks up at the moon as the hand turns the
+     lamp down, and falls asleep there, its tail round its front; it dreams once. The last picture is the kitten
+     asleep on the sill under the full moon.
+141. **How.** The cat is drawn as it always was, carried and turned about its middle (a turn is the body narrowing
+     to nothing side on and opening the other way); its stretch's legs carry it, now stepping by turns as it walks; its
+     gaze goes where it is going, then to the moon. Its shadows on the desk go when it does, and on the sill it has its
+     own. Its place on the desk, which the frames, the hand and the checks all use, is unchanged.
+142. **Looked at:** the whole climb at 0.8 s a frame, full size and at 4K (the walk, the hops, the turns, the look up,
+     the sleep); an upright phone; sixty frames a second through it. A scrub back is the same frame. `check:shows`
+     holds it: on the sill at the end, clear of the pot, after the ball is in the cup for good, with the room in frame.
 
 **Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);

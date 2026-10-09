@@ -7,7 +7,7 @@ import { sectionOf } from '../src/shows/registry'
 import plan from '../../../scripts/shows/plans/soft-lamp-onsets.json'
 import { DURATION, show } from '../src/shows/versions/soft-lamp/lamp'
 import { AIMS, catInViewAt } from '../src/shows/versions/soft-lamp/lamp/camera'
-import { BOOKS, CONTACT, CUP, ON_SILL, PROPS, R, SILL } from '../src/shows/versions/soft-lamp/lamp/desk'
+import { BOOKS, CAT, CONTACT, CUP, ON_SILL, POT, PROPS, R, SILL } from '../src/shows/versions/soft-lamp/lamp/desk'
 import { MUSIC_END, TRACKS, YOUTUBE, barTime, kickAt } from '../src/shows/versions/soft-lamp/lamp/music'
 import { LANDINGS, LAPS, LEGS, NODS, ballAt, hollowY, legAt, machineBusy } from '../src/shows/versions/soft-lamp/lamp/route'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/soft-lamp/lamp/titles'
@@ -17,7 +17,7 @@ import { rainAt } from '../src/shows/versions/soft-lamp/lamp/world'
 import { HUMAN_STRETCH, reflectionSeen } from '../src/shows/versions/soft-lamp/lamp/reflection'
 import { MOTH_IN, mothAt } from '../src/shows/versions/soft-lamp/lamp/moth'
 import { REACHES, REFILL, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
-import { STRETCHES, WASHES, YAWNS } from '../src/shows/versions/soft-lamp/lamp/cat'
+import { CLIMB, STRETCHES, WASHES, YAWNS, climbAt } from '../src/shows/versions/soft-lamp/lamp/cat'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -229,6 +229,14 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
 
   check('soft lamp: once, late, just after the kitten stretches, the one in the window stretches too',
     HUMAN_STRETCH > 1300 && STRETCHES.some((t) => HUMAN_STRETCH - t > 6.8 && HUMAN_STRETCH - t < 10) && reflectionSeen(HUMAN_STRETCH) > 0.4, `${HUMAN_STRETCH}`)
+
+  // At the end it climbs to the sill (the ball's stair, the other way) and sleeps there, under the window, clear of the
+  // plant pot, once the ball is in the cup for good and the camera is on the whole room.
+  const endC = climbAt(DURATION)
+  const sillCat = [CAT.x0 + endC.dx, CAT.chest + endC.dx]
+  check('soft lamp: at the end the kitten climbs to the sill and sleeps there, clear of the pot, the ball in the cup',
+    near(endC.dy, -1.42, 0.01) && sillCat[0] > POT.x + POT.halfW + 0.05 && sillCat[1] < SILL.x1 && CLIMB > LAPS[LAPS.length - 1].cup + 10 &&
+    perf.camera!(CLIMB).cells > 6.5, `${sillCat.map((x) => x.toFixed(2)).join('..')}`)
 
   // The kitten gets up and stretches twice, each whole in the frame, clear of its other moments and the hand.
   check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns, washes and the hand',
