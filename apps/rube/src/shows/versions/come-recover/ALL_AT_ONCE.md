@@ -577,6 +577,11 @@ The notes went back to the builders who made each part, who still had their cont
   audio file is requested. The production build ships none of this recording (its audio files are other shows').
   The write-up's account of the audio had still described a cut file as if the show played it. It now says that
   playback is YouTube only, and that the scripts are for measuring.
+- **A pass for the sync with YouTube.** The strikes are timed to the recording within 40 ms, which holds only if the
+  page keeps the show in step with the player. Played on the real page with YouTube's audio, the show's clock was
+  within ±1 ms of the player's own time: from the start, after two seeks, and through 60 s of the peak. The music is
+  the clock. What this cannot measure is the device's audio output latency, which is the same for any web player.
+  Nothing was changed.
 
 ## The looks
 
