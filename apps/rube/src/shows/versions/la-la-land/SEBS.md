@@ -227,3 +227,8 @@ A twenty-first pass, by measure, that changed nothing:
 A twenty-second pass, at whether each machine's gesture is seen:
 
 - **The stars it throws.** Each of the eleven stars the melody lights is thrown from the projector's high globe on a thread of light. Measured against the camera's frame, five of the eleven were lit outside the picture, four above it and one past its edge, so on those notes a thread ran out of the frame to nothing. The stars were placed to be "in the picture near them" by a rule three cells up and down, but the frame there is five cells tall and sits between them and the projector. They are now placed against that frame, and all eleven light inside it: on every note a thread runs from the globe to a star that flares where it can be seen. They still make a crown round the two of them at the dip.
+
+A twenty-third pass:
+
+- **Every strike, seen.** I listed every strike that lands while he is out of the picture and the stage is not covered. Each is either his own note at the keys heard under a shot of her (her table at the start, her walk at Lipton's), or a machine that is itself in the shot: the piano playing itself, the door shutting, the casting table's pen, the flash guns at her premiere. Nothing strikes unseen that should be seen.
+- **The field of flowers.** Through the field (376 to 381) the shot follows him, and it settled low: the hill line ran across the middle of the frame and the lower half was plain grass. The shot sits higher now, so the ground is the lower third and the flowers stand against the hills and the warm sky.

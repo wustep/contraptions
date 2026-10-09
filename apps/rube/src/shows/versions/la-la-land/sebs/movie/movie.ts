@@ -410,9 +410,10 @@ export const movie = part<MovieState>(
     { t: 368.2, cells: 5.8, hold: [-2.0, -1.55] },
     { t: SPLASH, cells: 5.4, hold: [-1.6, -1.05] },
     { t: 373.2, cells: 3.9, hold: [-2.4, -0.55] },
-    // The field, along with them.
-    { t: 376.0, cells: 4.6, hold: [1.5, -0.6], w: 0.4 },
-    { t: 380.4, cells: 4.4, hold: [4.2, -0.6], w: 0.5 },
+    // The field, along with them: the ground low in the frame, so it is the flowers and the hills over them, not a
+    // meadow's worth of empty grass below.
+    { t: 376.0, cells: 4.6, hold: [1.5, -1.0], w: 0.4, off: [0, -0.55] },
+    { t: 380.4, cells: 4.4, hold: [4.2, -1.0], w: 0.5, off: [0, -0.55] },
     // Home: on the couch; and out of the screen as the film runs out.
     { t: 382.6, cells: 3.9, hold: [5.2, -0.62] },
     { t: BACK0, cells: 3.7, hold: [5.3, -0.62] },
