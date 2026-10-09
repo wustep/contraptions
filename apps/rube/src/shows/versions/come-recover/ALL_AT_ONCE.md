@@ -707,6 +707,10 @@ The notes went back to the builders who made each part, who still had their cont
   6.1 KB gzipped over `origin/main` in all. The machine was heavily loaded by other work at the time. The shows'
   checks took 638 s on the clock, but only 272 s of processor time, of which this show's own checks are about 7 s.
   So the slowness was the load, not this show.
+- **A regression sweep after the reviews.** The three code reviews changed visible things: the tear, the street past
+  the wall, the credits' place and the looks' handovers. So the whole show was swept again at the viewer's framing, a
+  frame every 2 s. Every world reads, the credits sit whole over the night glass, and the end goes down to dark.
+  Nothing had regressed, and nothing was changed.
 
 ## The looks
 
