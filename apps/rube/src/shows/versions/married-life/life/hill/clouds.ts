@@ -874,7 +874,7 @@ const NEAR = { from: bar('waltz', 33) + 0.15, to: bar('waltz', 34) + 0.2, x: CAR
  * with a small lean, and she looks back up at it before the cut, so the match onto the mobile carries her upward look
  * (`LOOKS` in `cast.ts` turns her face; his lean is this part's pose). What they want, decided between them.
  */
-export const GLANCE = { to: START.down + 0.05, answer: START.down + 0.2, back: END - 0.2 }
+export const GLANCE = { to: START.down, answer: START.down + 0.15, back: END - 0.05 }
 /** When she rolls the rest of the way to him: after his start, to the cut. */
 const ROLL = { from: START.down + 0.2, to: END - 0.12 }
 
@@ -939,7 +939,7 @@ export const clouds = part<CloudsState>(
         to: END,
         at: (t) => ({
           squash: 0.1 * Math.exp(-(t - START.down) / 0.12) * Math.max(0, Math.cos((t - START.down) * 9)),
-          tilt: 0.1 * smooth(t, GLANCE.answer, GLANCE.answer + 0.35) * (1 - smooth(t, GLANCE.back - 0.1, END - 0.12)),
+          tilt: 0.1 * smooth(t, GLANCE.answer, GLANCE.answer + 0.35) * (1 - smooth(t, GLANCE.back - 0.45, END - 0.08)),
         }),
       },
     ]

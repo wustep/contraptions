@@ -407,10 +407,10 @@ function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
   if (!land) return out
   // Out of the downhill side of its mouth.
   const mx = land.x + Math.sin(land.tilt) * BASKET.h * 0.6 + BASKET.w * 0.35
-  for (const [delay, reach, spin] of [[0.08, 0.42, -0.9], [0.26, 0.68, 0.7]] as [number, number, number][]) {
+  for (const [delay, reach, spin] of [[0.08, 0.3, -0.9], [0.22, 0.5, 0.7]] as [number, number, number][]) {
     const s = t - T.fall - delay
     if (s <= 0) continue
-    const u = 1 - Math.exp(-s / 0.32)
+    const u = 1 - Math.exp(-s / 0.22)
     const x = mx + reach * u
     const lie = Math.atan(ridgeSlope(x))
     const y = ridge(x) + R - 0.03 - 0.1 * Math.exp(-s / 0.12)

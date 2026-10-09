@@ -651,6 +651,13 @@ window.
   The wedding photograph on the funeral's easel took a hint of their colours; its copy over the dance had not, though
   the notes call it the same picture: now it has too, and over the dance it reads as the two of them.
 
+- **Polish round 29 (Opus 5.5).** The story critic re-watched its three beats after the changes: the funeral and the
+  tickets land; the glance under the baby only partly, too short to catch at the show's framing. She now turns to him
+  as his start ends and holds about a second (from about 0.6), looking up again for the cut; his lean answers and is
+  let down over a third of a second (moving the glance's end had left it a snap before the cut, caught by measuring).
+  The tickets come to rest sooner, while he is still moving, so they no longer seem to follow him down. Zoom cuts the
+  baby's head there, a limit now listed. The PR's stale screenshots were re-taken.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
@@ -661,7 +668,9 @@ window.
 - Under Zoom (`zoom.ts`) the two of them are held off the frame's edges, but in two places the staging fills the Zoom
   frame and they come near an edge for a few seconds: the nursery (him at the winch, her on the cradle, nine tenths
   of its width apart) and the ward (the balloon over them, the two of them under it). On the home steps, as he starts
-  up (203.9 s), the balloon's crown is cut by a sliver under Zoom (0.07 of the half height).
+  up (203.9 s), the balloon's crown is cut by a sliver under Zoom (0.07 of the half height). Under the baby cloud
+  (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
+  Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Only Chrome on macOS has been watched. The YouTube cue's sync, Safari and a recording export have not been
   measured for this take.

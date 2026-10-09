@@ -96,7 +96,7 @@ export const LOOKS: { from: number; to: number; ease: number; at: number | ((sho
     at: (show, t) => {
       const up = turnTo(towardHim(show, t), -1.35, (t - CUT.hill - 0.3) / 1.2)
       // At the baby, to him and back up (`GLANCE`, in the clouds part).
-      const toHim = Math.min((t - GLANCE.to) / 0.4, (GLANCE.back - t) / 0.35)
+      const toHim = Math.min((t - GLANCE.to) / 0.35, (GLANCE.back - t) / 0.3)
       return toHim > 0 ? turnTo(up, towardHim(show, t), toHim) : up
     },
   },
