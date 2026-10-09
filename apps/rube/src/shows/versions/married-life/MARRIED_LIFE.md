@@ -613,6 +613,13 @@ window.
     the next show, Married Life's YouTube player is gone and the next one drives its own clock at 1x, with the sound
     held or let in. In: arrived at after 18 skips through other shows, its music comes in with it and keeps time
     from the first second. And on an ultrawide screen (2560 by 1080) the held Sound button stands beside the frame.
+  - *A fresh frame critic* (told nothing of the rounds; six dense sheets and close stills). Taken: as he comes in
+    at home (211.3 to 213 s) the balloon showed a slit of blue between the bay's corner post and the wall beside it
+    (the wall began 0.03 cells right of the post), so it read as sliced, not hidden; the wall now meets the post.
+    Kept: at the door (209 to 211 s) the jamb is the line indoors begins, and he and the balloon pass behind it
+    together while what is still outside stays in front of the wall, the rule of the whole homecoming; at 200.67 s
+    he is mid step down from the church's floor (0.22 cells a step); at 91.7 s the book is in front of the screen
+    door's frame as he carries it out through it.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
