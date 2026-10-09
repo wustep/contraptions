@@ -14,6 +14,8 @@ import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/soft-lamp/lamp
 import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/lens'
 import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
 import { rainAt } from '../src/shows/versions/soft-lamp/lamp/world'
+import { REACHES, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
+import { WASHES, YAWNS } from '../src/shows/versions/soft-lamp/lamp/cat'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -183,6 +185,23 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     m.lightning.length === 3 && m.lightning.every((t) => rainAt(t) >= 0.68 && catInViewAt(t)) &&
     m.shooting.length >= 2 && m.shooting.every(inFocus) && m.crossings.length >= 6 && m.crossings.every(([t]) => inFocus(t)) &&
     m.crossings.every(([t]) => m.lightning.every((f) => t < f - 10 || t > f + 10)), JSON.stringify(m))
+
+  // Someone at the desk: a sip early, hands round the mug in the rain, the kitten scratched twice, and the lamp turned
+  // down at the end; each while the camera holds what the hand reaches for, and none over the cat's own moments.
+  const kinds = REACHES.map((r) => r.kind).join(' ')
+  const heldFor = (r: (typeof REACHES)[number]) => {
+    const box = r.kind === 'pet' ? PROPS.cat : r.kind === 'lamp' ? PROPS['lamp base'] : PROPS.mug
+    for (let s = r.at; s <= r.at + r.dur; s += 0.5) {
+      const c = perf.camera!(s)
+      const hw = (c.cells * 16) / 9 / 2
+      const hh = c.cells / 2
+      if (box[0] < c.x - hw || box[2] > c.x + hw || box[1] < c.y - hh || box[3] > c.y + hh) return false
+    }
+    return true
+  }
+  check('soft lamp: a hand reaches in for a sip, round the mug, to the kitten twice, and to the lamp at the end, each in frame, clear of the yawns and washes',
+    kinds === 'sip pet cup pet lamp' && REACHES.every(heldFor) && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
+    [...YAWNS, ...WASHES].every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
 
   // The words.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names, ...(c.notes ?? [])].join(' ')).join(' | ')

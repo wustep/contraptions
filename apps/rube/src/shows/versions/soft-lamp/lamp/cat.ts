@@ -1,5 +1,6 @@
 import { sweepAt } from './decor'
 import { MOMENTS, flashAt, shootAt } from './sky'
+import { REACHES, handAt, petAt } from './hands'
 import { CAT } from './desk'
 import { catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
@@ -46,7 +47,11 @@ function gaze(t: number, lag: number): { x: number; y: number } {
   const st = shootAt(t - 0.3)
   const s = { x: g.x + (st.x - g.x) * st.a, y: g.y + (st.y - g.y) * st.a }
   const fl = flashAt(t)
-  return { x: s.x + (fl.x - s.x) * fl.look, y: s.y + (fl.y - s.y) * fl.look }
+  const f = { x: s.x + (fl.x - s.x) * fl.look, y: s.y + (fl.y - s.y) * fl.look }
+  // A hand coming in: it watches that, mostly.
+  const h = handAt(t - 0.25)
+  const hk = 0.8 * h.a
+  return { x: f.x + (h.x - f.x) * hk, y: f.y + (h.y - f.y) * hk }
 }
 
 function ballGaze(t: number, lag: number): { x: number; y: number } {
@@ -99,6 +104,7 @@ export const YAWNS: number[] = [2, 4, 6, 8, 9, 10].map((n) => {
   // A while after the ball has settled, while the camera is on it.
   for (let k = 0; k < 40; k++) {
     const at = lap.cup + 10 + k * 4 * tr.period + hash(n, k, 99) * 2
+    if (REACHES.some((r) => at > r.at - 5 && at < r.at + r.dur + 3)) continue
     if (catInViewAt(at) && catInViewAt(at + 3.2) && (lap.lob === null || at + 4 < lap.lob - 8 * tr.period)) return at
   }
   return -100
@@ -125,6 +131,7 @@ export const WASHES: number[] = [1, 3, 5, 7].map((n) => {
     if (lap.lob !== null && at + WASH + 2 > lap.lob - 8 * tr.period) break
     if (!catInViewAt(at) || !catInViewAt(at + WASH)) continue
     if (YAWNS.some((y) => Math.abs(y - at) < WASH + 6)) continue
+    if (REACHES.some((r) => at > r.at - WASH - 4 && at < r.at + r.dur + 4)) continue
     let still = true
     for (let s = at - 1; s <= at + WASH + 1; s += 0.5) if (vibeAt(s) > 0.02 || sweepAt(s).a > 0.02) still = false
     if (still) return at
@@ -198,7 +205,9 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
 
   // Its tail, curled round the front of it, the tip lifting and settling.
   // A shooting star, or lightning, brings it out of the music to look, and it goes back in after.
-  const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look)
+  // A scratch under the chin: it shuts its eyes and leans into the hand.
+  const pet = petAt(t) * (1 - sleepAt(t))
+  const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - handAt(t).a)
   const yawn = yawnAt(t) * (1 - sleep)
   const tr = trackAt(t)
   // The tip lifts and settles on its own, or, nodding along, sways a bar at a time.
@@ -278,19 +287,19 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   const wash = washAt(t)
   const over = Math.max(0, wash.paw - 1)
   const hx0 = CAT.head.x
-  const hy0 = CAT.head.y + 0.26 * sleep + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn + wash.k * (0.03 + 0.02 * wash.lick + 0.02 * over)
+  const hy0 = CAT.head.y - 0.025 * pet + 0.26 * sleep + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn + wash.k * (0.03 + 0.02 * wash.lick + 0.02 * over)
   const look = gaze(t, 0.22)
   const dx = look.x - hx0
   const dy = look.y - hy0
   const d = Math.hypot(dx, dy) || 1
   const awake = 1 - sleep
-  const watch = awake * (1 - vibe) * (1 - yawn) * (1 - wash.k)
+  const watch = awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet)
   const lx = (dx / d) * watch
   const ly = (dy / d) * watch + 0.25 * vibe * awake
   const hx = hx0 + lx * 0.035
   const hy = hy0 + ly * 0.02
   const tilt = lx * 0.12 - ly * 0.06 - yawn * 0.12 + sleep * 0.3 + vibe * awake * 0.08 * Math.sin((Math.PI * beatOf(tr, t)) / 2) +
-    wash.k * (0.1 + 0.22 * over)
+    wash.k * (0.1 + 0.22 * over) + pet * (0.2 + 0.03 * Math.sin(t * 2.2))
   ctx.save()
   ctx.translate(hx, hy)
   ctx.rotate(tilt)
@@ -301,7 +310,7 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   for (const side of [-1, 1]) {
     ctx.save()
     ctx.translate(side * 0.14, -0.13)
-    ctx.rotate(side * 0.25 + (side > 0 ? flick * 0.35 : 0) - side * sleep * 0.25 + side * yawn * 0.3)
+    ctx.rotate(side * 0.25 + (side > 0 ? flick * 0.35 : 0) - side * sleep * 0.25 + side * yawn * 0.3 + side * pet * 0.2)
     ctx.beginPath()
     ctx.moveTo(-0.085, 0.04)
     ctx.quadraticCurveTo(-0.04, -0.12, 0.0, -0.16)
@@ -346,8 +355,8 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
 
   // The eyes: round and open as it watches; the upper lid comes down over them to blink, so a blink caught halfway is
   // sleepy, never cross; shut in the content arch while it nods along, and shut soft as it sleeps or yawns.
-  const open = Math.max(0, (1 - blinkAt(t)) * awake * (1 - vibe) * (1 - yawn) * (1 - wash.k))
-  const happy = vibe > 0.5 && sleep < 0.5 && yawn < 0.3 && wash.k < 0.3
+  const open = Math.max(0, (1 - blinkAt(t)) * awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet))
+  const happy = (vibe > 0.5 || pet > 0.5) && sleep < 0.5 && yawn < 0.3 && wash.k < 0.3
   const px = lx * 0.022
   const py = ly * 0.016
   const RXE = 0.058

@@ -9,6 +9,7 @@ import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
 import { camera } from './camera'
 import { titlesAt } from './titles'
+import { hands, knob, sipAt } from './hands'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { flashRoom, night } from './sky'
@@ -811,17 +812,23 @@ export const things = scenery<null>(
     contacts(ctx, c.t)
     cable(ctx, lw)
     walkman(ctx, lw, c.t)
-    mug(ctx, lw, c.t)
-    steam(ctx, c.t)
+    // Unless someone has it up for a sip (`hands.ts` draws it then, on its way).
+    if (sipAt(c.t) <= 0.001) {
+      mug(ctx, lw, c.t)
+      steam(ctx, c.t)
+    }
     cat(ctx, lw, c.t)
     BOOKS.forEach((b, i) => book(ctx, lw, b, i, c.t))
     headphones(ctx, lw, c.t)
     lamp(ctx, lw, c.t)
+    knob(ctx, lw, c.t)
     ballShadow(ctx, c.t)
   }),
   (p, _s, c) => inCells(p, c, (ctx, lw) => {
     ballShine(ctx, lw, c.t)
     lip(ctx, lw, c.t)
+    // Someone's hand, now and then, in front of it all.
+    hands(ctx, lw, c.t, (g) => mug(g, lw, c.t))
     bloom(ctx, c.t)
     motes(ctx, c.t)
     flashRoom(ctx, c.t)

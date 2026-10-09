@@ -1,3 +1,4 @@
+import { sipAt } from './hands'
 import { BOOKS, CAT, CUP, FAR_CUP, GLASS, LAMP, MUG, R, SILL, WALKMAN } from './desk'
 import { ballAt, hollowY } from './route'
 import { MOUTH, lampAt } from './world'
@@ -38,7 +39,7 @@ function fromLamp(x: number, t: number): { lean: number; a: number } {
 export function contacts(ctx: Ctx, t: number): void {
   const feet: [number, number, number][] = [
     // x middle, half width, y
-    [MUG.x, MUG.halfW + 0.05, 0],
+    [MUG.x, (MUG.halfW + 0.05) * (sipAt(t) > 0.02 ? 0 : 1), 0],
     [(WALKMAN.x0 + WALKMAN.x1) / 2, (WALKMAN.x1 - WALKMAN.x0) / 2 + 0.05, 0],
     [(CAT.x0 + CAT.chest) / 2, (CAT.chest - CAT.x0) / 2 + 0.08, 0],
     [(BOOKS[2].x0 + BOOKS[2].x1) / 2, (BOOKS[2].x1 - BOOKS[2].x0) / 2 + 0.06, 0],
@@ -47,6 +48,7 @@ export function contacts(ctx: Ctx, t: number): void {
     [LAMP.base.x, LAMP.base.w / 2 + 0.06, 0],
   ]
   for (const [x, w, y] of feet) {
+    if (w <= 0) continue
     const s = fromLamp(x, t)
     pool(ctx, x, y, w * (1 + Math.abs(s.lean)), 0.07, s.a * 0.85, s.lean)
   }
@@ -110,7 +112,7 @@ export function wallShadows(ctx: Ctx, t: number): void {
     ctx.beginPath()
     ctx.rect(x0, y0, x1 - x0, y1 - y0)
   }
-  cast(MUG.x, rect(MUG.x - MUG.halfW, -MUG.h, MUG.x + MUG.halfW, 0), 0.4)
+  if (sipAt(t) <= 0.02) cast(MUG.x, rect(MUG.x - MUG.halfW, -MUG.h, MUG.x + MUG.halfW, 0), 0.4)
   cast(WALKMAN.x1, rect(WALKMAN.x0, -WALKMAN.h, WALKMAN.x1, 0), 0.4)
   cast(CAT.chest, () => {
     ctx.beginPath()
