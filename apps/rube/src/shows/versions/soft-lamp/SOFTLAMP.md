@@ -80,7 +80,7 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
 - **The window** is the evening, and the half hour's clock (`lamp/sky.ts`). It opens on the last of a dusk, violet over
   peach, a few clouds lit from under; the blue hour; the clouds come over and it rains from the third track, heaviest
   through Exhale; it eases, the glass stays wet a while, and by the last two tracks it is clear, with stars and the
-  moon risen into the right-hand pane (and, late, a shooting star or two). Outside, the city's windows come on
+  moon risen into the right-hand pane (and, late, two shooting stars, which the cat looks up at). Outside, the city's windows come on
   through the dusk and go out one by one through the night, a few of them the cool flicker of a screen; one, close,
   is a neighbour's, lit until a little before the end, where now and then someone crosses and a cat sits a while; a red light
   blinks on the tallest roof; now and then a plane crosses when the sky is clear. On the glass, beads gather where
@@ -510,6 +510,17 @@ ball. The machine and its timing were right and are untouched; the room around i
     the tea tag, the scrim), so it was tested again: nine moments across the half hour (dusk, the rain, a track card,
     the neighbour at the glass, a wash, past midnight, the end) rendered in order and again shuffled, compared pixel by
     pixel: identical, every one. 24:55 to 26:00 (a lob, a walk, a drop) at a frame every 3.4 seconds: as it was.
+
+### The thirty-first lofi pass
+
+73. **The shooting stars were never seen.** Of the four, three crossed with the camera elsewhere: their streak ran
+    along the very top of the glass, above every frame but the room's widest, and one was under 60% cloud. Their streak
+    is now lower, in the upper sky the window's look and the room's frame both show, still above the roofs, and they are
+    played to the camera as the neighbour's moments are (`SHOOTS`, `lamp/sky.ts`): late, in a clear sky, each at a
+    moment the frame holds the whole streak and the cat, minutes apart. That leaves two, at 26:37 in Daydream and 29:10
+    in Passing By. **The cat looks up at them** (`shootAt`): its eyes go to the streak a moment behind, as they go to the
+    headlights, and stay a couple of seconds on where it vanished; if it was nodding along, eyes shut, the star brings
+    it out to look, and it goes back in after.
 
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);

@@ -1,4 +1,5 @@
 import { sweepAt } from './decor'
+import { shootAt } from './sky'
 import { CAT } from './desk'
 import { catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
@@ -32,12 +33,17 @@ const LAST = TRACKS[TRACKS.length - 1]
 const SLEEP_FROM = barTime(LAST, LAST.exit) + 3
 export const sleepAt = (t: number): number => smooth(t, SLEEP_FROM, SLEEP_FROM + 9)
 
-/** Where it is looking: the ball, a little behind (its eyes lead its head); or, while a car's lights cross the wall, those. */
+/**
+ * Where it is looking: the ball, a little behind (its eyes lead its head); or, while a car's lights cross the wall,
+ * those; or, late in the night, a shooting star through the window, and where it went.
+ */
 function gaze(t: number, lag: number): { x: number; y: number } {
   const ball = ballGaze(t, lag)
   const sw = sweepAt(t - 0.35)
   const k = Math.min(1, sw.a * 1.6)
-  return { x: ball.x + (sw.x - ball.x) * k, y: ball.y + (sw.y - ball.y) * k }
+  const g = { x: ball.x + (sw.x - ball.x) * k, y: ball.y + (sw.y - ball.y) * k }
+  const st = shootAt(t - 0.3)
+  return { x: g.x + (st.x - g.x) * st.a, y: g.y + (st.y - g.y) * st.a }
 }
 
 function ballGaze(t: number, lag: number): { x: number; y: number } {
@@ -184,7 +190,8 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   const { x0, chest, top } = CAT
 
   // Its tail, curled round the front of it, the tip lifting and settling.
-  const vibe = vibeAt(t)
+  // A shooting star brings it out of the music to look, and it goes back in after.
+  const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a)
   const yawn = yawnAt(t) * (1 - sleep)
   const tr = trackAt(t)
   // The tip lifts and settles on its own, or, nodding along, sways a bar at a time.

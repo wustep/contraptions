@@ -1,6 +1,6 @@
 import { mixHex } from '../../../../parts'
 import { rgba } from './canvas'
-import { camera } from './camera'
+import { camera, catInViewAt } from './camera'
 import { GLASS } from './desk'
 import { smooth } from './music'
 import { cloudAt, hash, lampAt, nightAt, rainAt, skyAt } from './world'
@@ -51,6 +51,57 @@ export function night(ctx: Ctx, t: number): void {
   ctx.restore()
 }
 
+/** How long a shooting star takes to cross, seconds. */
+const SHOOT = 0.9
+/** Where a shooting star that starts at `at` is, `u` of the way along its streak. */
+function shootPath(at: number, u: number): { x: number; y: number } {
+  // In the sky the window's look and the room's frame show (not the glass's very top, above both), over the roofs.
+  return { x: GLASS.x0 + 0.4 + (at % 7) * 0.25 + u * 1.3, y: GLASS.y0 + 1.2 + (at % 3) * 0.15 + u * 0.55 }
+}
+
+/**
+ * When the shooting stars cross: three, late, in a clear sky, played to the camera as the cat's moments are, each at a
+ * moment the frame holds both the whole of its streak and the cat (so the cat can be seen to look up at it), a few
+ * minutes apart, the last before the cat goes to sleep. Worked out once, at load.
+ */
+const SHOOTS: number[] = (() => {
+  const out: number[] = []
+  const seen = (at: number) => {
+    for (const u of [0, 1]) {
+      const p = shootPath(at, u)
+      for (const s of [at, at + SHOOT]) {
+        const c = camera(s)
+        const hh = c.cells / 2
+        const hw = (hh * 16) / 9
+        if (Math.abs(p.x - 0.25 - c.x) > hw - 0.1 || Math.abs(p.y - c.y) > hh - 0.1) return false
+      }
+    }
+    return true
+  }
+  for (let at = 1300; at < 1786 && out.length < 3; at += 1) {
+    if (out.length && at < out[out.length - 1] + 120) continue
+    if (nightAt(at) < 0.6 || cloudAt(at) > 0.35) continue
+    if (!catInViewAt(at) || !catInViewAt(at + 3) || !seen(at)) continue
+    out.push(at)
+  }
+  return out
+})()
+
+/**
+ * Where a shooting star went, for the cat to look at: from the moment it starts until a couple of seconds after it has
+ * gone (a cat stares at where a thing vanished), with how much it has the cat's eye (0 to 1).
+ */
+export function shootAt(t: number): { x: number; y: number; a: number } {
+  for (const at of SHOOTS) {
+    const s = t - at
+    if (s < 0 || s > SHOOT + 2.4) continue
+    const p = shootPath(at, Math.min(1, s / SHOOT))
+    const a = smooth(s, 0, 0.25) * (1 - smooth(s, SHOOT + 1.4, SHOOT + 2.4))
+    return { x: p.x, y: p.y, a }
+  }
+  return { x: 0, y: 0, a: 0 }
+}
+
 /** How dark the sky is for stars: none at dusk, all of them by the blue hour's end. */
 const darkAt = (t: number): number => smooth(nightAt(t), 0.06, 0.22)
 
@@ -68,13 +119,11 @@ function stars(ctx: Ctx, t: number, cloud: number): void {
     ctx.fill()
   }
   // Late in the night, in the clear, a shooting star now and then.
-  const n = nightAt(t)
-  for (const at of [1452, 1618, 1731, 1790]) {
+  for (const at of SHOOTS) {
     const s = t - at
-    if (s < 0 || s > 0.9 || n < 0.6) continue
-    const u = s / 0.9
-    const x = GLASS.x0 + 0.4 + (at % 7) * 0.25 + u * 1.3
-    const y = GLASS.y0 + 0.3 + (at % 3) * 0.15 + u * 0.55
+    if (s < 0 || s > SHOOT) continue
+    const u = s / SHOOT
+    const { x, y } = shootPath(at, u)
     const g = ctx.createLinearGradient(x, y, x - 0.5, y - 0.21)
     const a = a0 * Math.sin(Math.PI * u)
     g.addColorStop(0, rgba('#FFFFFF', a))
