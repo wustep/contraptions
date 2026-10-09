@@ -314,7 +314,9 @@ export const SEGMENT = [1.5, 1.3, 1.1]
 export function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: boolean): void {
   const k = c.k
   // Which side the sun is on, for the columns' shade: from the east at dawn to the west at dusk.
-  const sun = Math.max(-1, Math.min(1, sunAngle(c.t) / 1.1))
+  // (Taken into a half-turn either way first: through the night the angle runs on round under the planet.)
+  const a = Math.atan2(Math.sin(sunAngle(c.t)), Math.cos(sunAngle(c.t)))
+  const sun = Math.max(-1, Math.min(1, a / 1.1))
   for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
     const w = stone.u1 - stone.u0
     // Too small to be anything but a mark.

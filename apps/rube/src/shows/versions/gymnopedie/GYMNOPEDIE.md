@@ -217,6 +217,15 @@ Milky Way steps back while the aurora is up (one band of light in the sky at a t
 at night, so it is not a grey mass behind the pond's leaves; and the air is kept clear round the ball, a cloud that
 comes over it thinning away (by where the ball keeps to over a few seconds, so a cloud does not breathe with its hops).
 
+## A review
+
+The branch was read through by a second pair of eyes for real bugs, and they were fixed: as the camera crossed the
+point where the sea is drawn whole (about 34 cells, at 7.5 s and 628.5 s), everything drawn only close (the mist, the
+sea's glow, the rain's rings, the reflections, the surface's light) went out or came on in one frame; it now fades
+between 25 and 33.5 cells, and the switch passes unseen. A long figure of the inner voice ran off the frame; each is
+now kept wholly in the picture, across and down. The columns' shade is taken from the sun's angle within a half-turn,
+so it cannot change sides at the seam; and the soft-light sprites are kept by all three of their colours.
+
 ## Checks
 
 `check:shows` (`apps/rube/checks/gymnopedie.ts`): the picker entry, the credit, the three pieces in order; the loop

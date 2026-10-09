@@ -106,20 +106,23 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
       const stars = figureAt(f, c.t)
       if (!stars?.length) continue
       // Clear of the moon: a figure that would be drawn over it, or in its light, is drawn on the other side.
-      const span = (f.notes.length - 1) * F * 0.085
+      // Its stars' steps, and so how wide it is: it is kept wholly in the frame.
+      const steps = f.notes.map((_, i) => (i ? F * (0.07 + 0.03 * hash(i, f.from, 224)) : 0))
+      const offsets = steps.map((_, i) => steps.slice(0, i + 1).reduce((a, b) => a + b, 0))
+      const span = offsets[offsets.length - 1]
       let left = (W - fw) / 2 + f.x * fw
       // Decided once for the figure, from where the moon is through it, so a figure never jumps sides as it is drawn.
       const [mx0] = onCanvas(ctx, c.k, ...polar(along(c.t) + 0.55, 0), m)
       const moonX = (t: number) => mx0 + Math.sin(moonAngle(t)) * F * 0.62 * 1.25
       const moonOver = [f.from, (f.from + f.to) / 2, f.to + 5].some((t) => Math.abs(moonAngle(t)) < 1.9 && Math.abs(left + span / 2 - moonX(t)) < F * 0.4)
       if (moonOver) left = (W - fw) / 2 + (1 - f.x) * fw - span
-      const at = (i: number): [number, number] => {
-        const n = f.notes[i]
-        return [
-          left + i * F * (0.07 + 0.03 * hash(i, f.from, 224)),
-          hy - F * f.y - (n.p - f.low) * F * 0.016 - f.lean * i * F * 0.012,
-        ]
-      }
+      left = Math.max((W - fw) / 2 + F * 0.04, Math.min((W + fw) / 2 - span - F * 0.04, left))
+      const rise = (i: number) => (f.notes[i].p - f.low) * F * 0.016 + f.lean * i * F * 0.012
+      // And its highest star kept a little under the top of the picture: a figure that climbs far is hung lower.
+      let base = hy - F * f.y
+      const highest = Math.max(...f.notes.map((_, i) => rise(i)))
+      base = Math.max(base, (H - F) / 2 + F * 0.07 + highest)
+      const at = (i: number): [number, number] => [left + offsets[i], base - rise(i)]
       ctx.lineCap = 'round'
       ctx.lineWidth = Math.max(1, F / 900)
       for (const s of stars) {

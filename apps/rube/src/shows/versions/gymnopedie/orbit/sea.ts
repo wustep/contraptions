@@ -239,10 +239,15 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     p.pop()
   }
 
-  if (!whole) {
+  // What is drawn only close (the reflections, the surface's light, the sea's glow, the rain's rings, the mist) is gone
+  // before the camera is out far enough to draw the whole planet, so nothing of it goes out in one frame at the switch.
+  const close = 1 - smooth(Math.log(v.cells), Math.log(CLOSE[0]), Math.log(CLOSE[1]))
+  if (!whole && close > 0.005) {
+    ctx.save()
+    ctx.globalAlpha = close
     // Reflections: the stones upside down in the water, rippling, fading as they go down; a lit lamp a longer,
     // warmer streak too, with its path of light on the water.
-    mirror(p, c, v, day, water)
+    mirror(p, c, v, day, water, close)
     const ctx2 = p.drawingContext as Ctx2D
     for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
       if (stone.piece !== 1) continue
@@ -388,8 +393,12 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
         p.pop()
       }
     }
+    ctx.restore()
   }
 })
+
+/** Cells from which the things drawn only close begin to fade, and by which they are gone. */
+export const CLOSE = [25, 33.5]
 
 /**
  * The sea's mirror: a canvas half the size of the stage's, kept, that the stones are drawn into upside down. One to a
@@ -402,7 +411,7 @@ const mirrors = new WeakMap<p5, p5.Graphics>()
  * The stones given back by the sea: drawn upside down from their feet into the mirror, faded with depth and cut to the
  * water, and laid over the sea in rows, each shifted a little by the ripple, more the deeper it is.
  */
-function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D): void {
+function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D, close: number): void {
   const ctx = p.drawingContext as Ctx2D
   const W = ctx.canvas.width
   const H = ctx.canvas.height
@@ -478,7 +487,7 @@ function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D): void {
   const amp = F / 1500
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.globalAlpha = strength
+  ctx.globalAlpha = strength * close
   for (let y = top; y < H; y += row) {
     const deep = Math.min(0.6, (y - top) / F)
     const dx = amp * (0.5 + deep * 7) * (0.6 * osc(c.t, 0.42, (y / F) * 190) + 0.4 * osc(c.t, 0.27, -(y / F) * 311))

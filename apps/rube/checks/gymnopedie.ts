@@ -7,8 +7,8 @@ import { Transport } from '../src/shows/clock'
 import { show } from '../src/shows/versions/gymnopedie/orbit'
 import { BASS, BREATHS, CHORDS, GRACES, MARGIN, MELODY, NOTES, PERIOD, PIECES, loudness } from '../src/shows/versions/gymnopedie/orbit/music'
 import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../src/shows/versions/gymnopedie/orbit/path'
-import { breath, cellsAt } from '../src/shows/versions/gymnopedie/orbit/camera'
-import { CADENCES, PERCHED, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
+import { breath, cellsAt, wideAt } from '../src/shows/versions/gymnopedie/orbit/camera'
+import { CADENCES, CLOSE, PERCHED, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
 import { BANK, FIGURES, FIREFLY, GULLS, HEAPS, METEORS, MIST, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
@@ -201,6 +201,10 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: the inner voice draws constellations, a star lit on each of its notes, at night',
     lit.length === inners.length && inners.every((n) => lit.includes(n)) && onCue && FIGURES.every((f) => f.notes[0].piece > 0),
     `${FIGURES.length} figures of ${inners.length} notes`)
+
+  // The sea is drawn whole once the planet starts to be small in the frame; what is drawn only close is gone by then.
+  check('gymnopedie: what the sea draws only close has faded before it is drawn whole, so nothing goes out in a frame',
+    wideAt(CLOSE[1]) <= 0.001 && CLOSE[0] < CLOSE[1], `wide ${wideAt(CLOSE[1]).toFixed(4)} at ${CLOSE[1]} cells`)
 
   // The sun and the moon: each once round a period, seen from far off in space, so neither may jump, the seam included.
   const turn2 = (a: number) => Math.abs(a - 2 * Math.PI * Math.round(a / (2 * Math.PI)))

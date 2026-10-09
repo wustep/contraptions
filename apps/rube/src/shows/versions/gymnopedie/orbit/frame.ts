@@ -145,7 +145,7 @@ export const lamplighter = (t: number): number => {
 /** A soft round light, drawn once and stamped: a lamp, or an open flower, seen from far off. */
 const halos = new Map<string, HTMLCanvasElement>()
 export function haloSprite(core: string, mid: string, edge: string): HTMLCanvasElement {
-  const key = core + mid
+  const key = [core, mid, edge].join('|')
   const got = halos.get(key)
   if (got) return got
   const c = document.createElement('canvas')
