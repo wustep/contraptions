@@ -588,6 +588,11 @@ the saucer the third round took away. The deck's underside now darkens broadly o
 and the edge's billows are softer and fuller in it, so the tear is a gap in the overcast and the shafts come out from
 under the cloud. Checked in Zoom, in Overview and in a tall frame.
 
+A fifty-second looked close at the hands. When Abbott strikes the glass over the charge (215 to 218 s) its hand was
+a small pad on the end of an arm thicker than it, with seven thin fingers spread off it: a burst of spokes off a stick,
+not a hand. The hand there is bigger now, and every palm's fingers are thicker and its pad a little fuller, so the palm
+she meets (149 s) and the hands in the fog read as hands too.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

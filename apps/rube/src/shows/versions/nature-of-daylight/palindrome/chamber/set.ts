@@ -78,6 +78,8 @@ export const PALM_R = 0.4
 export const PALM: Pt = [FAR + 0.36, -0.02]
 /** Where Abbott strikes the glass in the bomb. */
 const SLAM: Pt = [FAR + 0.95, -1.5]
+/** Its hand there, bigger than the palm she met, so it stands out from the arm behind it as a hand. */
+const SLAM_R = 0.7
 
 /** A ring made jagged: Abbott's frantic writing. */
 const jagged = (base: Ring): Ring => ({
@@ -100,8 +102,8 @@ function gripsOf(who: Writer): Grip[] {
     out.push({ t0: T.palm, t1: T.palm + 2.3, to: PALM, open: 1, lead: 0.77, palm: PALM_R })
     const w = ring(WEAPON.seed)
     out.push({ t0: WEAPON.born, t1: WEAPON.born + 1.3, to: inkAt(w, WEAPON.c[0], WEAPON.c[1], WEAPON.R, w.start), open: 0, lead: 0.5, palm: PALM_R })
-    out.push({ t0: T.slam, t1: T.slam + 0.45, to: SLAM, open: 1, lead: 0.32, palm: 0.55 })
-    out.push({ t0: T.slam + 1.3, t1: T.slam + 1.9, to: [SLAM[0] + 0.2, SLAM[1] - 1.1], open: 1, lead: 0.3, palm: 0.55 })
+    out.push({ t0: T.slam, t1: T.slam + 0.45, to: SLAM, open: 1, lead: 0.32, palm: SLAM_R })
+    out.push({ t0: T.slam + 1.3, t1: T.slam + 1.9, to: [SLAM[0] + 0.2, SLAM[1] - 1.1], open: 1, lead: 0.3, palm: SLAM_R })
     FRANTIC.bursts.forEach((bt, i) => {
       const a = FRANTIC_RING.start + (i % 2 === 0 ? 1 : -1) * (0.4 + i * 0.7)
       // The first from where the slam left it: the arm raised over two seconds, in the wide before the cut in close, so
