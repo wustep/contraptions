@@ -266,7 +266,7 @@ export const along = (lane: Lane, t0: number, t: number): Pt => {
  * down to the water is further on than the picture ever goes. Hannah runs ahead along it, skipping, and never near
  * the edge: the vision is a child at play and her mother after her, nothing else.
  */
-export const BROW = 7.6
+export const BROW = 11.5
 const BANK = { drop: 2.35, run: 3.45 }
 const smooth01 = (u: number) => {
   const v = Math.max(0, Math.min(1, u))
