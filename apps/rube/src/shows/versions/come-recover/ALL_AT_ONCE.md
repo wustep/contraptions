@@ -603,6 +603,9 @@ The notes went back to the builders who made each part, who still had their cont
   only swinging: the long way down the canyon (219.7–241.8 s) and the heave in the peak (247.3–254.9 s). Her looks at
   Joy now run unbroken from the rocks' cut to the brink, and from the hole to Joy's eye. On the way down Joy is mostly
   ahead and out of the shot, so Evelyn looks down the canyon after her. Both are seen for most of their span.
+- **A pass for the home-coming.** Through the washer's window, the family's first moment back in one place, nobody
+  looked at anybody. Now, from inside the drum, Evelyn and Joy look out at Waymond waiting by the lever. He looks
+  back at them through the glass until he leaps the lever to Joy, where his look at her takes over.
 
 ## The looks
 
@@ -625,6 +628,8 @@ looked at both there, and seen: its eye in the frame and big enough to read for 
 | 242.1–257.2 | Evelyn | Joy | holding her at the lip of the hole, heaving her back, and into her eyes once she has hers |
 | 247.9–249.6 | Waymond | Joy | on the line, the weight that pulls her back, until he is carried out of the frame |
 | 255.3–257.2 | Joy | Evelyn | once she has her eye, looking back into her mother's |
+| 264.4–268.9 | Evelyn and Joy | Waymond | from inside the washer's window, out at him waiting by the lever |
+| 264.4–271.5 | Waymond | Evelyn | back at them through the glass, until he leaps the lever |
 | 271.4–273.6 | Joy and Waymond | each other | he touches her at home: father and daughter |
 | 279.6–282.3 | Joy | Evelyn | she nestles against her mother |
 | 290.3–291.4 | all three | the camera's lens | the portrait |

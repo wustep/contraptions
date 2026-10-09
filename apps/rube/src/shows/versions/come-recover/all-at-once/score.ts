@@ -25,7 +25,7 @@ import { GIFT_LOOKS } from './home/kindness-draw'
 import { ledge } from './rocks/ledge'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
-import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, TURN_OVER, W_TOUCH } from './home/finale-plan'
+import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, T_DOOR, TURN_OVER, W_TOUCH } from './home/finale-plan'
 
 /**
  * The whole show, in order: which world has the ball from when to when, and who has it inside each world. Every
@@ -213,6 +213,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
         // On the line in the peak, the weight that pulls her back: he watches Joy, from his catch until he is carried
         // down out of the frame.
         { from: 247.9, to: 249.6, at: 'joy' as const },
+        // Home, through the washer's window: he watches her, until he leaps the lever to Joy.
+        { from: JUMPS.home + 0.3, to: W_TOUCH - 0.2 },
         { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'joy' as const },
         ...PORTRAIT,
         DRUM,
@@ -232,6 +234,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
         { from: fight(140), to: JUMPS.rocks, at: 'waymond' as const },
         { from: JUMPS.rocks + 0.5, to: JUMPS.brink, at: 'joy' as const },
         { from: JUMPS.brink + 0.3, to: 257.2, at: 'joy' as const },
+        // Home, inside the washer's window: out at Waymond, waiting by the lever.
+        { from: JUMPS.home + 0.3, to: T_DOOR + 0.5, at: 'waymond' as const },
         ...PORTRAIT,
         DRUM,
         SWELLED('joy'),
@@ -240,7 +244,7 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
     { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 },
       // Once its fling has settled, her new eye looks into her mother's; and at home she looks up at her as she nestles.
-      gaze: [{ from: 255.3, to: 257.2, at: 'evelyn' as const }, { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'waymond' as const }, { from: 279.6, to: 282.3, at: 'evelyn' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
+      gaze: [{ from: 255.3, to: 257.2, at: 'evelyn' as const }, { from: JUMPS.home + 0.3, to: T_DOOR + 0.5, at: 'waymond' as const }, { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'waymond' as const }, { from: 279.6, to: 282.3, at: 'evelyn' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
   ]
   const eyePiece = eyes()
   const eyeStates: EyesState[] = []
