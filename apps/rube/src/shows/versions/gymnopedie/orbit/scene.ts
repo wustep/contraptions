@@ -27,6 +27,6 @@
 
 export { sky, raysAt } from './sky'
 export { stones, lampLight, bloom, CADENCES, cadenceFronts, PERCHED } from './stones'
-export { sea, CLOSE } from './sea'
+export { sea, CLOSE, leafRings } from './sea'
 export { glints } from './over'
 export { sunAngle, moonAngle } from './frame'

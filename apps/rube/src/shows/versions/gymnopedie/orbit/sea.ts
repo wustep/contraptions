@@ -347,6 +347,30 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       }
     }
     ctx.restore()
+    // The pond answers the ball: each time it comes down on a leaf, rings go out on the water from the leaf's stem, as
+    // wide and as clear as the note was played, and smooth away.
+    ctx.save()
+    // Only on the water, under its surface: a ring is seen as an ellipse lying on it.
+    ctx.clip(water)
+    for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
+      if (stone.piece !== 2) continue
+      const at = (stone.u0 + stone.u1) / 2 + shift
+      for (let j = 0; j < stone.touches.length; j++) {
+        if (j > 0 && !stone.bounced[j]) continue
+        const r = leafRings(stone.touches[j], stone.weight[j], c.t)
+        for (const ring of r) {
+          const [x, y] = polar(at, swell(at, c.t) - 0.04 - ring.r * 0.16)
+          ctx.save()
+          ctx.lineWidth = Math.max(1, c.weight * 0.9)
+          ctx.strokeStyle = `rgba(${fr}, ${fg}, ${fb}, ${ring.a.toFixed(3)})`
+          ctx.beginPath()
+          ctx.ellipse(x * k, y * k, ring.r * k, ring.r * k * 0.16, at / RADIUS, 0, Math.PI * 2)
+          ctx.stroke()
+          ctx.restore()
+        }
+      }
+    }
+    ctx.restore()
     // Rain: each drop's ring spreading on the water.
     const rain = rainAt(c.t)
     if (rain > 0.01) {
@@ -494,4 +518,22 @@ function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D, close: num
     ctx.drawImage(src, 0, y / 2, w, row / 2, dx, y, w * 2, row)
   }
   ctx.restore()
+}
+
+/**
+ * The rings a landing on a leaf sends out at `t`: up to three, a fifth of a second apart, spreading at about a cell a
+ * second and fading over three; as wide and as clear as the note was played (`weight`, a middling touch 1).
+ */
+export function leafRings(touch: number, weight: number, t: number): { r: number; a: number }[] {
+  const s = since(t, touch)
+  if (s < 0 || s > 3.6) return []
+  const out: { r: number; a: number }[] = []
+  for (let i = 0; i < 3; i++) {
+    const q = s - i * 0.22
+    if (q <= 0) continue
+    const r = 0.1 + 0.55 * Math.sqrt(q) * (0.8 + 0.3 * weight)
+    const a = 0.32 * Math.min(1, weight) * (1 - i * 0.28) * smooth(q, 0, 0.08) * (1 - smooth(q, 0.6, 3))
+    if (a > 0.01) out.push({ r, a })
+  }
+  return out
 }

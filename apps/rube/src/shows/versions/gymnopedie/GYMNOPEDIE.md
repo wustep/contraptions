@@ -96,6 +96,9 @@ One job to a voice, each answering its own notes from `satie-performance.json`:
 - The chords: the light on the water. Under the sun, under each lit lamp and under the moon lies a path of short
   strokes of light on the sea, and each chord (its rolled notes heard as one) sets a different few of them flashing, as
   hard as it was played, dying over half a second (`waterLight`).
+- The melody on the pond: in the third Gnossienne each landing and bounce on a leaf sends two or three soft rings out
+  on the water from its stem, as wide and as clear as the note was played, smoothing away over three seconds
+  (`leafRings`).
 - A grace note: a spark where the ball is about to land, a breath before it does; in the first Gnossienne, at the
   lamp's wick, which then catches.
 - The phrasing: the camera. It drifts out on a held note, more on a longer one, and in again as the next phrase
