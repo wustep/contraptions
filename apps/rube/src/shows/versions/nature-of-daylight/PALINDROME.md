@@ -582,6 +582,12 @@ pull-back (from a second and a half after the cut to a second before the last at
 framing and Ian, and the cold of the first frame is something the room grows back into. From the last attack on, every
 frame is unchanged by this.
 
+A fifty-first watched the whole show at a frame a second. One thing stood out: at the daylight (323 to 326 s) the
+cloud's torn edge over the break was a single dark streak hung alone in a pale sky, the shafts under it: near enough to
+the saucer the third round took away. The deck's underside now darkens broadly over the break, deepest toward the edge,
+and the edge's billows are softer and fuller in it, so the tear is a gap in the overcast and the shafts come out from
+under the cloud. Checked in Zoom, in Overview and in a tall frame.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

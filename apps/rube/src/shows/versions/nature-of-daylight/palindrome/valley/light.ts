@@ -92,6 +92,10 @@ export function drawBreak(ctx: Ctx, k: number, t: number): void {
     glow(ctx, k, bx, by + ry * 0.2, rx * 0.7, ry * 0.7, SHELL.screen, 0.55 * open, 0.2)
     // The cloud's torn edge above the break: heavy billows, dark, their undersides lit from below by the low sun.
     const heavy = mix(VALLEY.cloudShade, VALLEY.steelDark, 0.45)
+    // The deck's underside over it, darkening broadly toward the edge, so the edge is the cloud's and not one dark
+    // streak hung alone in a pale sky.
+    ctx.globalCompositeOperation = 'source-over'
+    glow(ctx, k, bx + rx * 0.2, by - ry * 2.4, rx * 3.6, ry * 3.4, heavy, 0.5 * open, 0.3)
     const n = 14
     for (let i = 0; i < n; i++) {
       const u = (i + 0.5) / n
@@ -100,9 +104,9 @@ export function drawBreak(ctx: Ctx, k: number, t: number): void {
       const arch = 1 - (2 * u - 1) ** 2
       const y = by - ry * (0.7 + 0.25 * arch + 0.6 * (hash(i, 58, 3) - 0.5)) - 1.2
       const brx = rx * (0.2 + 0.1 * hash(i, 58, 2)) + 2.2
-      const bry = ry * 0.34 + 1.4
+      const bry = ry * 0.5 + 1.8
       ctx.globalCompositeOperation = 'source-over'
-      glow(ctx, k, x, y, brx, bry, heavy, 0.72 * open, 0.55)
+      glow(ctx, k, x, y, brx, bry, heavy, 0.5 * open, 0.4)
       ctx.globalCompositeOperation = 'screen'
       glow(ctx, k, x + brx * 0.1, y + bry * 0.55, brx * 0.8, bry * 0.35, VALLEY.floodlight, 0.7 * open, 0.35)
     }
