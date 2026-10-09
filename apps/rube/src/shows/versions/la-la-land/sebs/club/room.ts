@@ -366,6 +366,15 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.stroke(rgba(M.brass, 0.5))
   p.strokeWeight(weight * 0.5)
   p.line(X(R.wallL1), X(2.0), X(R.stageX0), X(2.0))
+  // The dado is wainscot: tall sunk panels under the rail, the same joinery as the stage's front.
+  p.noFill()
+  p.strokeWeight(weight * 0.4)
+  for (let x = R.wallL1 + 0.15; x + 1.0 < R.stageX0 - 0.1; x += 1.18) {
+    p.stroke(rgba(M.lacquer, 0.5))
+    rect(x, 2.14, x + 1.0, R.floor - 0.12, 0.02)
+    p.stroke(rgba(M.brass, 0.14))
+    p.line(X(x + 0.03), X(2.145), X(x + 0.97), X(2.145))
+  }
   vband(p, k, R.wallL1, R.ceil, R.wallR0, R.ceil + 1.6, [[0, rgba(M.deep, 0.75)], [1, rgba(M.deep, 0)]])
   if (L.rose > 0.005) glow(p, k, (R.wallL1 + R.wallR0) / 2, 0.6, 12, M.rose, 0.2 * L.rose, 1.4, 0.75)
 

@@ -156,3 +156,8 @@ An eighth pass:
 
 - **The waltz, close.** For the whole of painted Paris (272 to 298) the shot sat high and wide on the set, so the waltz itself was two specks at the bottom of the frame. Through the umbrellas' curtsies (282.3 to 289.4) the camera now comes in on the two of them turning, with their reflections under them on the wet stones, the umbrellas dipping behind, and the lamps whole. It is keyed on the centre they turn about, so it travels with them without swinging round after either one, and goes back out on the third curtsy toward the clock's midnight.
 - **Her window.** The window that is her show's whole set was cropped by the top of the frame through her show. The close shots have a little more room, so the window is whole above her and he is whole below.
+
+A ninth pass, at a larger frame:
+
+- **The cellar's floor.** Under the Paris club's bandstand (215 to 268) the bottom quarter of the frame was a flat black slab. There is a floor now: wine-dark boards with their joints staggered, a brass-lit lip, and the bulbs' and the band's warmth lying on them, fading into the black under the frame. In the trumpet's dark it stays dark, but for the spot's pool.
+- **The club's wainscot.** Behind the tables in the club the dado under its brass rail was a plain dark band, which in the close shots at her table was most of the wall. It is wainscot now, tall sunk panels like the stage's front.

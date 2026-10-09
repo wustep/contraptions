@@ -621,11 +621,36 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
   const band = smooth(t, SOLO[0][0] - 0.05, SOLO[0][0] + 0.1) * (1 - smooth(t, DARK[0], DARK[1]))
   if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND - 1.1, 3.2, M.bulb, band * (0.1 + 0.08 * level(t)), 1.2, 0.8)
 
-  // The floor.
+  // The floor: old boards, wine-dark, the room's light lying on them and dying into the black under the frame.
   p.noStroke()
   p.fill(M.black)
   p.rect(S(WALL_L - 30), S(GROUND), S(WALL_R - WALL_L + 60), S(20))
-  p.stroke(edge)
+  {
+    const deck = 0.8
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createLinearGradient(0, S(GROUND), 0, S(GROUND + deck))
+    g.addColorStop(0, mixHex(stone, M.redDeep, 0.35))
+    g.addColorStop(1, M.black)
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect(S(WALL_L), S(GROUND), S(WALL_R - WALL_L), S(deck))
+    ctx.restore()
+    // The boards' ends: a staggered joint every so often, fading with the light as the deck goes down.
+    p.strokeWeight(lw * 0.6)
+    for (let x = WALL_L + 0.35, i = 0; x < WALL_R - 0.1; x += 0.62, i++) {
+      const o = (i % 2) * 0.31
+      p.stroke(rgba(INK, 0.09 + 0.09 * L))
+      p.line(S(x + o), S(GROUND + 0.04), S(x + o), S(GROUND + 0.16))
+      p.stroke(rgba(INK, 0.06 + 0.06 * L))
+      p.line(S(x + 0.31 - o), S(GROUND + 0.2), S(x + 0.31 - o), S(GROUND + 0.36))
+      p.stroke(rgba(INK, 0.03 + 0.03 * L))
+      p.line(S(x + o), S(GROUND + 0.4), S(x + o), S(GROUND + 0.6))
+    }
+    // The bulbs' and the band's warmth on the boards.
+    glow(p, k, (WALL_L + WALL_R) / 2, GROUND + 0.05, 5.5, M.bulb, 0.06 + 0.06 * L, 1.4, 0.12)
+    if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND + 0.06, 2.4, M.bulb, band * 0.14, 1.3, 0.12)
+  }
+  p.stroke(rgba(M.brass, 0.18 + 0.2 * L))
   p.strokeWeight(lw)
   p.line(S(WALL_L), S(GROUND), S(WALL_R), S(GROUND))
 
