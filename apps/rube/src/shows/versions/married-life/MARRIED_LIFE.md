@@ -575,6 +575,8 @@ window.
   (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
   Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
-- Only Chrome on macOS has been watched. The YouTube cue's sync and Safari have not been measured for this take. A
+- Only Chrome on macOS has been watched, and Safari has not been measured for this take. The YouTube cue has, on the
+  deployed preview in Chromium (PR #163): it loads, plays, and drives the show's clock in real time (10 s of show in
+  10 s), with no fallback; whether picture and sound feel in sync to a listener is still for a person to judge. A
   recording export has (headless Chromium, PR #163): it runs the whole 258 s with the credits painted in, silent (no
   `src`); at 1080p headless rendered 15 frames a second, a software limit, not measured on a machine with a GPU.
