@@ -38,13 +38,13 @@ export interface EyeSpec {
 }
 
 /**
- * A span of watching: from `from` to `to`, the eye looks at `at`: Evelyn (the default), Joy, or a point that may move
+ * A span of watching: from `from` to `to`, the eye looks at `at`: Evelyn (the default), Joy, Waymond, or a point that may move
  * (world cells, a function of show time).
  */
 export interface Gaze {
   from: number
   to: number
-  at?: 'evelyn' | 'joy' | ((t: number) => Pt | null)
+  at?: 'evelyn' | 'joy' | 'waymond' | ((t: number) => Pt | null)
 }
 
 /** Which gaze holds the eye at `t`, and how far it is turned to it, 0..1. */
@@ -300,8 +300,8 @@ export const eyes = () =>
             const h = show.at(t)
             return h.hidden ? null : [h.x, h.y]
           }
-          if (at === 'joy') {
-            const j = show.joy(t)
+          if (at === 'joy' || at === 'waymond') {
+            const j = at === 'joy' ? show.joy(t) : show.waymond(t)
             return j ? [j.x, j.y] : null
           }
           return at(t)

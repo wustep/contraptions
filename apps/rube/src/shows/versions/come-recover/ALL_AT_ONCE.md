@@ -525,6 +525,8 @@ The notes went back to the builders who made each part, who still had their cont
   - As the empty drum gives its slow half-turn (305.40 s), all three look up at it.
   - On the window's swell (312.59 s), they look at one another: Evelyn and Joy at each other, Waymond at her.
   - Each glance lasts about two seconds and eases back.
+- **A pass for father and daughter.** Joy and Waymond never once looked at each other. Now, as he leaps the foot
+  lever and touches her at home (271.4–273.6 s), they do. The gaze can now hold Waymond too.
 
 ## End credits
 
@@ -603,7 +605,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - `worlds.ts`: the eight worlds' palettes and materials, and the family's colours.
   - `fx.ts`: the googly eyes, over every world. Each is a white disc with a pupil that is a heavy bead in a round
     cage, thrown by the ball's acceleration and settling. An eye can be given spans when it watches Evelyn instead
-    (Waymond's, in the alley), Joy, or a point (the camera's lens and the photograph, for the portrait). It is worked out afresh each frame from the ball's last
+    (Waymond's, in the alley), Joy, Waymond, or a point (the camera's lens and the photograph, for the portrait). It is worked out afresh each frame from the ball's last
     second of path, so it scrubs true. In the laundromat the room's light shades it. An eye given during the show
     arrives: it slaps on oversized, squashes past its size and settles, and its pupil is flung round the rim. On the
     great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's

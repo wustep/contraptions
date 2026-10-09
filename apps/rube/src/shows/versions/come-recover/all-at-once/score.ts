@@ -24,7 +24,7 @@ import { kindness, KINDNESS_AT } from './home/kindness'
 import { ledge } from './rocks/ledge'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
-import { BACK, DEVELOPED, EJECT, onCamera, photoAt, PORT, SWELL, TURN_OVER } from './home/finale-plan'
+import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, TURN_OVER, W_TOUCH } from './home/finale-plan'
 
 /**
  * The whole show, in order: which world has the ball from when to when, and who has it inside each world. Every
@@ -191,12 +191,13 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     { from: EJECT + 0.15, to: DEVELOPED + 0.6, at: (t) => photoAt(t)?.at ?? null },
   ]
   const specs = [
+    // He and Joy look at each other as he touches her at home, the one look between father and daughter.
     // He watches Joy go out of the shop, and her mother not look up; in the alley he watches Evelyn go, from the cover
     // giving under her until the jump out of that world; and for the portrait he looks into the lens, and then down
     // at the photograph as it comes, as the others do.
     // Through the empathy fight he watches her, from her landing alone with the eye he gave her to her coming down
     // the steamers to him.
-    { who: 'waymond' as const, from: 0, gaze: [{ from: 27.4, to: 30.3, at: 'joy' as const }, { from: DROP - 0.1, to: JUMPS.dojo }, { from: 192.1, to: JUMPS.rocks }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
+    { who: 'waymond' as const, from: 0, gaze: [{ from: 27.4, to: 30.3, at: 'joy' as const }, { from: DROP - 0.1, to: JUMPS.dojo }, { from: 192.1, to: JUMPS.rocks }, { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'joy' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
     // Evelyn looks after Joy: down over the brink as her stone goes, while she holds her at the lip of the hole, and
     // into her eyes once Joy has hers.
     {
@@ -209,7 +210,7 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
     { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 },
       // Once its fling has settled, her new eye looks into her mother's; and at home she looks up at her as she nestles.
-      gaze: [{ from: 255.3, to: 257.2, at: 'evelyn' as const }, { from: 279.6, to: 282.3, at: 'evelyn' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
+      gaze: [{ from: 255.3, to: 257.2, at: 'evelyn' as const }, { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'waymond' as const }, { from: 279.6, to: 282.3, at: 'evelyn' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
   ]
   const eyePiece = eyes()
   const eyeStates: EyesState[] = []
