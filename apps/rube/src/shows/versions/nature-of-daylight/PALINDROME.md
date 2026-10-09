@@ -665,6 +665,12 @@ cells of the parts her path runs through, and in the tent those all lie along th
 the bottom of the ring, and never the twelve screens, the world, that are the place. The ring whole is in its frame
 now, as the tree is on the lawn; the other cameras are unchanged to the pixel.
 
+A sixty-first went on from the sixtieth's tent to the valley in Overview, which had the same fault: framed by her parts
+round the lift and the camp, it had the shell off its top corner, and its coming down and its going up out of the
+frame altogether. Overview takes in the shell's lower half now, from its middle to the meadow either side of its axis,
+so it hangs over the camp in the frame and comes down into it; not the whole of it, at whose size the camp would be
+specks. The default camera is unchanged to the pixel.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

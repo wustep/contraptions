@@ -5,6 +5,7 @@ import type { Universe } from '../../../../universe'
 import type { Company, Riders as PartRiders, Who } from './kit'
 import { LAWN_TREE } from './lawn/set'
 import { TENT_RING } from './twelve/ring'
+import { VALLEY_SHELL } from './valley/geo'
 import { HANNAH, HANNAH_AGE, HANNAH_ID, IAN, IAN_ID, LOUISE, SHANG, SHANG_ID, WORLDS, type WorldKey } from './worlds'
 
 /**
@@ -89,8 +90,9 @@ export class PalindromeShow extends Show {
       const set = sets[key] ?? { scenery: [], after: [] }
       const chain = legs.filter((l) => l.world === key).flatMap((l) => l.placed)
       const bounds = boundsOf(chain)
-      // In the tent the ring is the place: the twelve screens stand over the table, above any part.
-      if (key === 'tent') Object.assign(bounds, { x0: Math.min(bounds.x0, TENT_RING.x0), y0: Math.min(bounds.y0, TENT_RING.y0), x1: Math.max(bounds.x1, TENT_RING.x1), y1: Math.max(bounds.y1, TENT_RING.y1) })
+      // In the tent the ring is the place, and in the valley the shell: each stands over her parts.
+      const over = key === 'tent' ? TENT_RING : key === 'valley' ? VALLEY_SHELL : null
+      if (over) Object.assign(bounds, { x0: Math.min(bounds.x0, over.x0), y0: Math.min(bounds.y0, over.y0), x1: Math.max(bounds.x1, over.x1), y1: Math.max(bounds.y1, over.y1) })
       const world = WORLDS[key]
       return {
         index,

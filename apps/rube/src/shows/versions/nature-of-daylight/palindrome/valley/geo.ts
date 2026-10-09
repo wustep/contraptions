@@ -52,6 +52,13 @@ export function shellSeen(t: number): number {
   return 1 - smooth(t, RELEASE - 3.4, RELEASE)
 }
 
+/**
+ * The shell for Overview: its lower half at rest, from its middle to the meadow, either side of its axis. (Framed by
+ * her parts alone, round the lift and the camp, Overview had the shell off its top corner, and its coming and going out
+ * of the frame altogether.) Its lower half, not all of it: whole, at its size, the camp would be specks under it.
+ */
+export const VALLEY_SHELL = { x0: SHELL_X - 0.27 * SHELL_H, y0: REST_CY - 0.05 * SHELL_H, x1: SHELL_X + 0.27 * SHELL_H, y1: MEADOW }
+
 /* ------------------------------------------------------------------ the cloud */
 
 /** The cloud deck: clear under CLOUD_LOW, thickening up to all but solid at CLOUD_HIGH (the television's picture). */
