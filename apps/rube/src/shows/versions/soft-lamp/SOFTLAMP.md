@@ -953,6 +953,16 @@ both in Zoom, and the overview.
 144. **They watch the kitten go.** As the kitten climbs to the sill at the end, the one in the window looks up from
      the work and down to it; on the sill the kitten walks across the glass in front of them.
 
+### The fifty-fifth pass: it wakes with the lamp
+
+145. **The show opens on the kitten asleep**, curled in its loaf on the desk in the dusk's dark, tail round its front,
+     the way it ends asleep on the sill. As the hand turns the lamp on with the first chord, it stirs: its eyes open,
+     heavy-lidded, its head comes up, its tail draws back along the desk, and a moment later it yawns, and the night
+     has begun. The two ends of the half hour are now one gesture each way: the lamp on and the kitten waking, the lamp
+     down and the kitten asleep under the moon.
+146. **The tail, fixed on the way.** Coming round, and going back, it faded in and out where it lay: a ghost of a tail
+     across the desk for a second. It slides now, its tip drawn along from its rear to under its chin, and back.
+
 **Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

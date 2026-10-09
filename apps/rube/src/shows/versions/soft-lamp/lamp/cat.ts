@@ -8,7 +8,7 @@ import { camera, catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
 import { LANDINGS, LAPS, ballAt, machineBusy } from './route'
 import { rgba } from './canvas'
-import { hash, lampAt, lightAt, lit } from './world'
+import { LAMP_ON, hash, lampAt, lightAt, lit } from './world'
 
 /**
  * The cat: a ginger kitten loafed on the desk between the mug and the books, under the sill, its face to the room.
@@ -77,7 +77,13 @@ export function climbAt(t: number): { dx: number; dy: number; face: number; up: 
 }
 
 const SLEEP_FROM = CLIMB + 13.3
-export const sleepAt = (t: number): number => smooth(t, SLEEP_FROM, SLEEP_FROM + 6)
+/**
+ * How asleep it is: at the start too, curled in the dark before the lamp, until the lamp comes on and it wakes; and
+ * at the end, on the sill.
+ */
+export const sleepAt = (t: number): number => Math.max(1 - smooth(t, LAMP_ON + 0.6, LAMP_ON + 3.0), smooth(t, SLEEP_FROM, SLEEP_FROM + 6))
+/** Waking, it yawns, as the first chord rings out. */
+const WAKE_YAWN = LAMP_ON + 3.3
 
 /** Where the Walkman is, for its glance at a new track. */
 const WALKMAN_AT = { x: (WALKMAN.x0 + WALKMAN.x1) / 2, y: -WALKMAN.h / 2 }
@@ -199,7 +205,7 @@ export const YAWNS: number[] = [2, 4, 6, 8, 9, 10].map((n) => {
   return -100
 })
 export function yawnAt(t: number): number {
-  for (const at of YAWNS) {
+  for (const at of [WAKE_YAWN, ...YAWNS]) {
     const s = (t - at) / 3.2
     if (s >= 0 && s <= 1) return Math.min(1, 2.2 * Math.sin(Math.PI * s) ** 2)
   }
@@ -532,13 +538,15 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   // Asleep, its tail comes round the front of it, along the desk, and its tip tucks up under its chin.
   const wrap = smooth(sleep, 0.3, 1)
   if (wrap > 0.01) {
+    // It comes round (and, waking, goes back) along the desk: its tip from its rear to under its chin.
     const len = wrap
     const from = { x: x0 + 0.1, y: -0.05 }
-    const c1 = { x: x0 + 0.35, y: 0.0 }
-    const c2 = { x: chest - 0.45, y: 0.0 }
-    const end = { x: chest - 0.25 + 0.27 * len, y: -0.06 - 0.1 * len - 0.04 * Math.abs(dreamAt(t - 0.15)) }
+    const reach = x0 + 0.3 + (chest + 0.02 - x0 - 0.3) * len
+    const c1 = { x: x0 + 0.1 + (reach - x0 - 0.1) * 0.35, y: 0.0 }
+    const c2 = { x: x0 + 0.1 + (reach - x0 - 0.1) * 0.75, y: 0.0 }
+    const end = { x: reach, y: -0.06 - 0.1 * len - 0.04 * Math.abs(dreamAt(t - 0.15)) }
     ctx.save()
-    ctx.globalAlpha = Math.min(1, wrap * 2)
+    ctx.globalAlpha = smooth(wrap, 0, 0.12)
     ctx.beginPath()
     ctx.moveTo(from.x, from.y)
     ctx.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, end.x, end.y)
