@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 107 (latest)
+## Polish pass 108 (latest)
+
+Pass 107's two Overview faults on an upright phone, found cheaper than it feared. Gargantua's pale disc was one line: the white rim round the dark had a floor of 0.8 px set inside the scaling that keeps Gargantua's size on the screen (`far`), so the floor was scaled too. On an upright phone that made the rim about 2.8 px. In Overview it made a ring wide enough to cover the dark. The floor is now 0.8 px on the screen (`0.8 / far`). The speckle was the stars: each is a few pixels at any scale, laid on a grid of world cells, so in Overview, at about 2 px a cell, they packed solid. Both skies (`space/sky.ts`, `act2/edmunds.ts`) now let their stars go below 3 px a cell. The widest real shot on a 320 px phone is near 4. A sweep of the whole show, normal at 960×540, 390×844 and 320×568 and Zoom at 390×844, is pixel for pixel what it was. The one change outside Overview is the rim on an upright phone, now about 1.3 px, in proportion as it is on a desktop.
+
+## Polish pass 107
 
 No change to the show: Overview on an upright phone, the one pairing of view and screen not swept before. The farm, the dark and the station read. On Edmunds' planet, from 243 s to the end, Gargantua shows as a large pale disc with a gold line across it, and the sky past Saturn (215 to 229 s) as a dense speckle of stars. Both skies are drawn to the camera, not the world: the horizon at the eye's height, Gargantua at a share of the frame (`act2/edmunds.ts`, "drawn to a 6.8-cell frame"), the stars filling whatever frame there is. That is what makes the landing and the camp right in every real view. Overview frames the whole world with no eye in it, so these skies have nothing to stand on. Giving them an Overview of their own would mean rebuilding how those scenes are drawn, for a view meant to show the machine's layout, so it is left, noted.
 

@@ -675,6 +675,8 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   // Stars, going out toward the band, and a little with the dawn.
   p.noStroke()
   const cell = 1.25
+  // A star is a few pixels at any scale: below 3 px a cell (Overview), they would be a solid speckle, so they go.
+  const sparse = smooth(k, 2.1, 3)
   const ox = f.cx * 0.97
   const oy = f.cy * 0.97
   for (let i = Math.floor((f.x0 - ox) / cell) - 1; i <= Math.ceil((f.x1 - ox) / cell); i++) {
@@ -682,7 +684,7 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
       if (hash(i, j, 61) > 0.42) continue
       const x = ox + (i + hash(i, j, 62)) * cell
       const y = oy + (j + hash(i, j, 63)) * cell
-      const a = smooth(E - y, 1.3, 4.6) * (1 - 0.35 * dawn) * (0.35 + 0.65 * hash(i, j, 64)) * (0.8 + 0.2 * Math.sin(T * 1.4 + i * 2.3 + j))
+      const a = sparse * smooth(E - y, 1.3, 4.6) * (1 - 0.35 * dawn) * (0.35 + 0.65 * hash(i, j, 64)) * (0.8 + 0.2 * Math.sin(T * 1.4 + i * 2.3 + j))
       if (a <= 0.03) continue
       p.fill(alpha(p, STAR, a))
       p.circle(X(x), X(y), 1.1 + 1.5 * hash(i, j, 65))
@@ -746,7 +748,8 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   ctx2.arc(0, 0, X(r), 0, TAU)
   ctx2.fill()
   ctx2.strokeStyle = rgba(WHITE, 0.75)
-  ctx2.lineWidth = Math.max(0.8, X(0.012))
+  // At least 0.8 px on the screen, not 0.8 px scaled by far: Overview and an upright phone draw it far larger.
+  ctx2.lineWidth = Math.max(0.8 / far, X(0.012))
   ctx2.beginPath()
   ctx2.arc(0, 0, X(r * 1.015), 0, TAU)
   ctx2.stroke()
