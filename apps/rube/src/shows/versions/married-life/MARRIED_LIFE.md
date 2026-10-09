@@ -500,7 +500,8 @@ window.
   - *Checks.* His square and her ball never overlapping; Zoom's margins, the crown under Zoom, Zoom's gentleness, her face at each beat and never snapping, and
     resting on the slope; the fragile ones proved by undoing their fix. `anchorCached` made the suite 96 s faster.
   - *Lenses tried*, so a later pass can choose a new one: contact sheets; full-size stills; frame differencing for
-    pops; each cut before and after; Zoom; a phone upright, and with Zoom; the balloon's crown; contact with floors and
+    pops (repeated after the motion and camera work: the same fifteen spikes, all cuts, the flash, the lightning and
+    the lamp); each cut before and after; Zoom; a phone upright, and with Zoom; the balloon's crown; contact with floors and
     slopes; stillness; gaze, as a whole and beat by beat; strobing; the camera's acceleration; render cost; contrast;
     three fresh critics (frames, regressions, story) and a story re-watch; the notes against the code; the shared code
     against `origin/main`; the credits under Zoom; Overview; the exports, and a real video export; the console; the
