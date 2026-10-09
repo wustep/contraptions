@@ -2,7 +2,7 @@ import { mixHex } from '../../../../parts'
 import { rgba } from './canvas'
 import { camera, catInViewAt } from './camera'
 import { GLASS } from './desk'
-import { smooth } from './music'
+import { MUSIC_END, smooth } from './music'
 import { cloudAt, hash, lampAt, nightAt, rainAt, skyAt } from './world'
 
 /**
@@ -167,9 +167,10 @@ function moon(ctx: Ctx, t: number, cloud: number): void {
 /** Birds going home across the dusk: two small flocks, one under the title and one as the first track ends, wings beating, then gliding. */
 function birds(ctx: Ctx, t: number, dusk: number): void {
   if (dusk < 0.2) return
-  for (const [at, y0, n] of [[4, -4.25, 5], [98, -3.75, 3]] as const) {
+  // The first under the title, across while the opening's wide frame holds (the camera comes down to the sill from
+  // nine seconds, and the dusk over the roofs is above that frame); the second slower, as the first track ends.
+  for (const [at, y0, n, dur] of [[1.2, -4.25, 5, 10], [98, -3.75, 3, 26]] as const) {
     const s = t - at
-    const dur = 26
     if (s < 0 || s > dur) continue
     const u = s / dur
     for (let i = 0; i < n; i++) {
@@ -194,29 +195,61 @@ function birds(ctx: Ctx, t: number, dusk: number): void {
 }
 
 /** Now and then a plane, high and slow, its strobe blinking: only seen when the sky is clear enough. */
-function plane(ctx: Ctx, t: number, cloud: number): void {
-  const EVERY = 173
-  const k = Math.floor(t / EVERY)
-  const s = t - k * EVERY - 20
-  const dur = 34
-  if (s < 0 || s > dur) return
-  const a = Math.max(0, 1 - cloud * 1.3) * (0.5 + 0.5 * darkAt(t) + 0.3 * (1 - darkAt(t)))
-  if (a <= 0.02) return
-  const dir = hash(k, 71) < 0.5 ? 1 : -1
-  const u = s / dur
+/** How long a plane takes to cross the window, seconds. */
+const FLY = 34
+/** Where a plane that sets off at `at` is, `u` of the way across, and which way it goes. */
+function flight(at: number, u: number): { x: number; y: number; dir: number } {
+  const dir = hash(at, 71) < 0.5 ? 1 : -1
   const x = dir > 0 ? GLASS.x0 - 0.2 + u * (W + 0.4) : GLASS.x1 + 0.2 - u * (W + 0.4)
-  const y = GLASS.y0 + 0.35 + hash(k, 72) * 1.2 - u * 0.25
-  ctx.fillStyle = rgba('#FF6B6B', 0.75 * a)
-  ctx.beginPath()
-  ctx.arc(x, y, 0.012, 0, Math.PI * 2)
-  ctx.fill()
-  const strobe = (s % 1.3) < 0.09 ? 1 : 0
-  if (strobe) {
-    const g = ctx.createRadialGradient(x + 0.03 * dir, y, 0, x + 0.03 * dir, y, 0.07)
-    g.addColorStop(0, rgba('#FFFFFF', a))
-    g.addColorStop(1, rgba('#FFFFFF', 0))
-    ctx.fillStyle = g
-    ctx.fillRect(x - 0.1, y - 0.1, 0.2, 0.2)
+  // Low over the roofs, in the sky the window's look and the room's frame show.
+  return { x, y: GLASS.y0 + 1.45 + hash(at, 72) * 0.35 - u * 0.15, dir }
+}
+
+/**
+ * When a plane crosses: in a clear sky only, and played to the camera as the shooting stars are, at moments the frame
+ * holds most of its crossing, a few minutes apart. Worked out once, at load.
+ */
+const FLIGHTS: number[] = (() => {
+  const out: number[] = []
+  for (let at = 15; at < MUSIC_END - FLY && out.length < 5; at += 1) {
+    if (out.length && at < out[out.length - 1] + 150) continue
+    let seen = 0
+    let clear = true
+    for (let s = 0; s <= FLY; s += 1) {
+      if (cloudAt(at + s) > 0.3) {
+        clear = false
+        break
+      }
+      const p = flight(at, s / FLY)
+      const c = camera(at + s)
+      const hh = c.cells / 2
+      const hw = (hh * 16) / 9
+      if (Math.abs(p.x - c.x) < hw - 0.1 && Math.abs(p.y - c.y) < hh - 0.1 && p.x > GLASS.x0 && p.x < GLASS.x1) seen++
+    }
+    if (clear && seen >= 0.7 * (FLY + 1)) out.push(at)
+  }
+  return out
+})()
+
+function plane(ctx: Ctx, t: number, cloud: number): void {
+  for (const at of FLIGHTS) {
+    const s = t - at
+    if (s < 0 || s > FLY) continue
+    const a = Math.max(0, 1 - cloud * 1.3) * (0.5 + 0.5 * darkAt(t) + 0.3 * (1 - darkAt(t)))
+    if (a <= 0.02) return
+    const { x, y, dir } = flight(at, s / FLY)
+    ctx.fillStyle = rgba('#FF6B6B', 0.75 * a)
+    ctx.beginPath()
+    ctx.arc(x, y, 0.012, 0, Math.PI * 2)
+    ctx.fill()
+    const strobe = (s % 1.3) < 0.09 ? 1 : 0
+    if (strobe) {
+      const g = ctx.createRadialGradient(x + 0.03 * dir, y, 0, x + 0.03 * dir, y, 0.07)
+      g.addColorStop(0, rgba('#FFFFFF', a))
+      g.addColorStop(1, rgba('#FFFFFF', 0))
+      ctx.fillStyle = g
+      ctx.fillRect(x - 0.1, y - 0.1, 0.2, 0.2)
+    }
   }
 }
 

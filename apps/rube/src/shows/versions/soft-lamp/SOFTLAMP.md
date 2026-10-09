@@ -522,6 +522,17 @@ ball. The machine and its timing were right and are untouched; the room around i
     headlights, and stay a couple of seconds on where it vanished; if it was nodding along, eyes shut, the star brings
     it out to look, and it goes back in after.
 
+### The thirty-second lofi pass
+
+74. **The sky's other moments, against the camera.** The shooting stars were not the only thing out of sight. Of the
+    five planes that crossed a clear sky, three were never on screen and the other two only partly (they flew at the
+    glass's very top, above the frames); and the flock of birds under the title was only a fifth seen, still crossing
+    slowly when the camera came down to the sill, whose frame stops below them. The planes fly lower now, just over the
+    roofs, and are played to the camera (`FLIGHTS`): clear sky, seven tenths or more of the crossing in frame, minutes
+    apart. Two land, at 1:02 in the dusk and 26:27 at night; a third that would fit was left out, as it would cross
+    with the shooting star at 29:10. The title's flock crosses faster, inside the opening's wide frame; the second,
+    as the first track ends, was four fifths seen already and is as it was.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
