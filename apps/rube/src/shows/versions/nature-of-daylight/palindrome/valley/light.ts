@@ -187,7 +187,7 @@ export function drawSunWash(ctx: Ctx, k: number, f: View, t: number): void {
   const h = Math.max(f.y1, top) + 1 - top
   // The shadow's edge on the floor slants with depth, as it would lying on ground going away from us: nearer, it has
   // come less far. Seen from a tall frame (a phone's), a straight edge stood up the near meadow as a band.
-  const SKEW = 0.45
+  const SKEW = 1.4
   const lit = (x: number, y = MEADOW) => sunAt(t, x + SKEW * Math.max(0, y - MEADOW))
   ctx.save()
   // Each pass in slices whose strength rises over the first cells from its top, so it has no edge; below the far

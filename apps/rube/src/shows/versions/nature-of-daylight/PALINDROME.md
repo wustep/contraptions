@@ -281,6 +281,15 @@ timed the stage, frame by frame, against `main` in the same places:
   a third to a half slower than `main`. Each is soft now by its own gradient, slices or nested bands, and draws as fast
   as `main` does, looking the same.
 
+A tenth filmed `main` and this branch side by side, a frame a second through the whole show, and measured where they
+differ: every difference was in a place a pass above meant to change (the slot, the palm, the fallen screens, the sat
+phone, the sky after the shell and the daylight), and nowhere else, so nothing was broken by the way. One thing the
+comparison showed:
+
+- **The daylight's edge, seen from away**, still stood nearly upright on the near floor: the slant given it for the
+  phone was too slight for the wide. It slants more steeply now, as a cloud's shadow lies on ground going away, in
+  both; where the light reaches her on the far line is unchanged.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
