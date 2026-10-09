@@ -1319,8 +1319,57 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
   }
 }
 
+/**
+ * The ovation: after the first rose, more come, thrown from all over the house on its claps, each up through the light
+ * and down onto the stage, until by the curtain the boards round her are strewn with them. Each lands clear of the two
+ * of them, and lies where it fell.
+ */
+const ROSE_TRIP = 0.85
+/* (A rose's spin is in half turns, a whole number of them and a hair, so it comes down lying flat on the boards.) */
+const THROWN = (() => {
+  const out: { t: number; from: Pt; to: Pt; spin: number }[] = []
+  const slots: number[] = []
+  for (let x = ARCH0 + 0.75; x < ARCH1 - 0.7; x += 0.19) slots.push(x)
+  const used: number[] = [16.52]
+  let n = 0
+  for (const c of CLAPS) {
+    if (c < BOW1 + 0.35 || c > CURTAIN_IN[0] - 0.4 || n >= 22) continue
+    const land = c + ROSE_TRIP
+    // Clear of her where she is when it lands, and of him once he is up on the stage beside her.
+    const her = miaAt(land).x
+    const free = slots.filter((x) => Math.abs(x - her) > 0.42 && (land < LEAP || Math.abs(x - LAND_X) > 0.45) && (land < TOUCH || Math.abs(x - MEET_X) > 0.45) && used.every((u) => Math.abs(u - x) > 0.17))
+    if (!free.length) continue
+    const x = free[Math.floor(hash(n, 81) * free.length)]
+    used.push(x)
+    const r = Math.floor(hash(n, 82) * 4)
+    let i = Math.floor(hash(n, 83) * PER_ROW)
+    if (r === 0 && i === HIS) i = (i + 3) % PER_ROW
+    out.push({ t: c, from: [seatX(r, i), ROW_Y[r] - HIGH - 0.03], to: [x, FLOOR - 0.045], spin: (hash(n, 84) > 0.5 ? 1 : -1) * (2 + Math.floor(3 * hash(n, 85))) + 0.04 * (hash(n, 86) - 0.5) })
+    n++
+  }
+  return out
+})()
+function thrownAt(r: (typeof THROWN)[number], t: number): { x: number; y: number; a: number } | null {
+  const s = t - r.t
+  if (s < 0) return null
+  if (s < ROSE_TRIP) {
+    const u = s / ROSE_TRIP
+    const arc = (ROSE_G * 1.4 * ROSE_TRIP * ROSE_TRIP) / 8 + 0.6
+    return { x: lerp(r.from[0], r.to[0], u), y: lerp(r.from[1], r.to[1], u) - arc * 4 * u * (1 - u), a: r.spin * u * Math.PI }
+  }
+  const k = s - ROSE_TRIP
+  return { x: r.to[0], y: r.to[1] - 0.04 * Math.max(0, Math.sin(Math.min(Math.PI, k * 9))) * Math.exp(-k / 0.1), a: r.spin * Math.PI }
+}
+
 function drawRose(p: p5, k: number, ink: string, weight: number, t: number): void {
-  const r = roseAt(t)
+  for (const th of THROWN) {
+    const q = thrownAt(th, t)
+    if (q) roseShape(p, k, ink, weight, q)
+  }
+  roseShape(p, k, ink, weight, roseAt(t))
+}
+
+function roseShape(p: p5, k: number, ink: string, weight: number, r: { x: number; y: number; a: number }): void {
   p.push()
   p.translate(r.x * k, r.y * k)
   p.rotate(r.a)
