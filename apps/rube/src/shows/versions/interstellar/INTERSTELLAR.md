@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 45 (latest)
+## Polish pass 46 (latest)
+
+No change to the show: a phone held sideways (844 × 390). The page gives the stage the whole screen, with the panel behind its handle. The opening, the louvres (150 s) and the cast card all read; the cast notes come out at about 10px, above pass 45's 9px floor.
+
+## Polish pass 45
 
 - **The credits on a phone.** The page sizes the credits in hundredths of the 16:9 frame's height. On a phone held upright (390 × 844) that frame is about 220px tall, so the cast card's notes ("the sand ball"…) and the music card's fine print came out at about 4px, too small to read. The small lines, the role, a cast line's "as" and the notes, now keep at least 9px (`src/ui/styles.css`). The floor only applies when the frame is under about 545px tall, so desktop credits and saved videos (`words.ts`) are unchanged, and the cast card still fits a phone's width.
 
