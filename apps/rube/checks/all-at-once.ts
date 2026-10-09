@@ -106,22 +106,26 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
 
   // Joy and Waymond are in the frame or out of it, never left half cut by its edge for long: a moment going out of
   // shot or with the camera on the move, but not a beat held with one of them sliced.
+  // Evelyn is held to it under Zoom too, where her centre alone in the frame (the check above) would let her sit
+  // half off its edge.
   const sliced: string[] = []
-  for (const who of ['joy', 'waymond'] as const) {
+  for (const [who, zoom] of [['joy', 1], ['waymond', 1], ['evelyn', 1.5]] as const) {
     let from = -1
     for (let t = 0; t <= perf.duration + 0.05; t += 0.05) {
-      const b = t <= perf.duration ? (who === 'joy' ? show.joy(t) : show.waymond(t)) : null
+      const h = who === 'evelyn' && t <= perf.duration ? show.at(t) : null
+      const b = t > perf.duration ? null : who === 'evelyn' ? (h!.hidden || h!.scale < 0.3 ? null : h) : who === 'joy' ? show.joy(t) : show.waymond(t)
       const f = cam(t)
-      const m = b ? Math.min((f.cells * 16) / 9 / 2 - Math.abs(b.x - f.x), f.cells / 2 - Math.abs(b.y - f.y)) : Infinity
+      const c = f.cells / zoom
+      const m = b ? Math.min((c * 16) / 9 / 2 - Math.abs(b.x - f.x), c / 2 - Math.abs(b.y - f.y)) : Infinity
       const cut = m < R && m > -R
       if (cut && from < 0) from = t
       if (!cut && from >= 0) {
-        if (t - from > 1.0) sliced.push(`${who} ${from.toFixed(2)}–${t.toFixed(2)}`)
+        if (t - from > 1.0) sliced.push(`${who}${zoom > 1 ? ' (Zoom)' : ''} ${from.toFixed(2)}–${t.toFixed(2)}`)
         from = -1
       }
     }
   }
-  check('all at once: Joy and Waymond are never left cut by the frame\'s edge for more than a second', sliced.length === 0, sliced.join(', '))
+  check('all at once: Joy and Waymond, and Evelyn under Zoom, are never left cut by the frame\'s edge for more than a second', sliced.length === 0, sliced.join(', '))
 
   // The ball is never out of sight for long.
   let hidden = 0

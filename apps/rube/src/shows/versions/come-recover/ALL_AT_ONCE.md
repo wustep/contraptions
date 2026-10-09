@@ -502,6 +502,17 @@ The notes went back to the builders who made each part, who still had their cont
   - Left as they are: Joy going out of the door (29 s), the camera rising with the throw to the hanger (31 s), and
     the slow pull-back after the cut home (264 s). Each is under a second, with the camera or the family on the move.
   - `check:shows` now holds Joy and Waymond to the same: never left cut by the frame's edge for more than a second.
+- **A pass for edges under Zoom.** The same measure was run under Zoom, for all three. Evelyn's check had only kept
+  her centre in Zoom's frame, so she could sit half off its edge and pass.
+  - During Raccacoonie's peek (114.75–117.75 s), Zoom's bottom edge cut Evelyn in half on the counter for three
+    seconds. The two framings there sit a little lower. Under Zoom she is whole below his face, and the normal view
+    still has his face whole.
+  - In the hush at home (275.45–276.45 s), Zoom cut all three at the bottom. The framing there sits a little lower,
+    and in the normal view the lantern string is still whole or out of the frame.
+  - Joy and Waymond under Zoom were left: Zoom is a closer look at Evelyn, and the others cropped by it is what it
+    is for.
+  - `check:shows` now holds Evelyn under Zoom to the same as the others: never left cut by its edge for more than a
+    second.
 
 ## End credits
 
@@ -549,7 +560,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - The peak strikes at least 85% of the fall's beats from 247.7 to 264.1 s.
   - Home's last three hits are struck.
 - **The family:**
-  - Joy and Waymond are never left cut by the frame's edge for more than a second;
+  - Joy and Waymond, and Evelyn under Zoom, are never left cut by the frame's edge for more than a second;
   - Joy and Waymond never jump;
   - each only comes and goes out of shot, or at a jump, when the whole world changes;
   - there are never two of anyone.

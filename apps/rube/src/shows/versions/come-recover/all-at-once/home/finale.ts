@@ -216,11 +216,11 @@ export const finale = part<FinaleState>(
       // The door, the drop, and back to take in Waymond coming.
       { t: 269.7, cells: 3.1, hold: H(-2.05, -0.5), w: 1 },
       { t: 271.7, cells: 3.8, hold: H(-1.95, -0.72), w: 1 },
-      { t: 275.2, cells: 4.3, hold: H(-2.1, -1.3), w: 1 },
+      { t: 275.2, cells: 4.3, hold: H(-2.1, -1.12), w: 1 },
       // In, slowly, to the three of them together at the washer's foot, its window glowing behind them; and hold.
       // The string of lanterns is whole in the frame or out of it: the push goes under it in half a second, not
       // with their tassels hanging in at the top for two.
-      { t: 276.3, cells: 3.95, hold: H(-2.08, -1.22), w: 1 },
+      { t: 276.3, cells: 3.95, hold: H(-2.08, -1.06), w: 1 },
       { t: 276.9, cells: 3.2, hold: H(-2.05, -0.7), w: 1 },
       { t: 279.0, cells: 2.6, hold: H(-2.03, -0.6), w: 1 },
       { t: 282.2, cells: 2.6, hold: H(-2.05, -0.6), w: 1 },
