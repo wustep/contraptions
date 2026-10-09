@@ -513,6 +513,13 @@ The notes went back to the builders who made each part, who still had their cont
     is for.
   - `check:shows` now holds Evelyn under Zoom to the same as the others: never left cut by its edge for more than a
     second.
+- **A pass for the camera's motion, and the family's spacing, by measure.** Neither found anything to change.
+  - The camera's on-screen pan and zoom speed was measured every sixtieth of a second within each world, for sudden
+    changes. Every large one is by design: the camera carried into the next world for a pre-jump flicker, and the
+    ten zoom punches on the biggest hits. The rest are under a quarter of a frame-height a second, where it follows
+    a ball being batted about in the premiere and the dojo.
+  - The three balls' spacing was measured every fiftieth of a second. They never draw into each other but for two
+    frames at 247.5 s, as Evelyn heaves back on Joy, by 0.15 of a radius (about 2 px).
 
 ## End credits
 
