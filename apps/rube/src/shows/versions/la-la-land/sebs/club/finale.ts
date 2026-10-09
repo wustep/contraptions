@@ -3,6 +3,7 @@ import { box, part, route, type Company, type PartShot, type Way } from '../kit'
 import { AT, notes as measured } from '../music'
 import { hop } from '../physics'
 import { SEBS_MAT } from '../worlds'
+import { call } from '../call'
 import { fold, keyRest } from './geometry'
 import { DOWN, drawPiano, heldOn, keysOf, play, restOn, type Note, type Press } from './piano'
 import { BAND, BAND_LAMPS, DOOR, DOOR_SHUT, lightsAt, MIA_SEAT, ROOM, SEAT, SIDE_SEAT, TABLE } from './room'
@@ -275,6 +276,25 @@ function plan(begin: number) {
 
 const PLAN = plan(BEGIN)
 
+/**
+ * In the dream's last room the theme reaches her where she sits, as it did at the start, but warm with the dream's
+ * rose: the notes the piano plays by itself go out to her table. When the dream drains on the last chord, the notes
+ * still in the air go out before they reach her. (Her place in the piano's frame is the room's.)
+ */
+const DREAM_CALL = (() => {
+  const notes: { t: number; midi: number }[] = []
+  for (const n of measured(432.4, 451.2, 0.1)) {
+    if (n.midi === null) continue
+    if (notes.length && n.t - notes[notes.length - 1].t < 0.28) continue
+    notes.push({ t: n.t, midi: fold(n.midi) })
+  }
+  const her = PLAN.company[0]
+  return call(notes, (t) => {
+    const m = her.at(t)
+    return m ? [m.x + DOOR[0], m.y + DOOR[1]] : [MIA_SEAT[0], MIA_SEAT[1]]
+  }, '#FFD39A', 0.8)
+})()
+
 interface FinaleState {
   begin: number
   keys: ReturnType<typeof keysOf>
@@ -290,6 +310,20 @@ export const finale = part<FinaleState>(
       p.push()
       p.translate(ox * c.k, oy * c.k)
       drawPiano(p, c.k, c.ink, c.weight, t, s.keys, { color: mixHex(L.stage, SEBS_MAT.candle, 0.45 * L.blaze), lit: 1 })
+      p.pop()
+    },
+    over(p, s, c) {
+      const t = c.t + s.begin
+      if (t < 432.4 || t > 454.5) return
+      const drain = 1 - Math.max(0, Math.min(1, (t - 451.45) / 0.7))
+      if (drain <= 0) return
+      const [ox, oy] = F([0, 0])
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      p.push()
+      p.translate(ox * c.k, oy * c.k)
+      ctx.globalAlpha = drain
+      DREAM_CALL(p, c.k, t)
+      ctx.globalAlpha = 1
       p.pop()
     },
   },
