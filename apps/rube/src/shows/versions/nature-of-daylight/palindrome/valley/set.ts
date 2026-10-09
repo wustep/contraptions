@@ -216,17 +216,19 @@ function drawHeave(ctx: Ctx, k: number, t: number, front: boolean): void {
     const gx = SHELL_X - 1
     const gy = -54
     // Heavier as it gathers: the cloud there thick and dark underneath, the light behind it.
-    const heavy = mix(shade, VALLEY.steelDark, 0.25 + 0.2 * u)
-    blob(ctx, k, gx, gy - 2 + 2 * u, 27 - 5 * u, 8, heavy, (0.45 + 0.2 * u) * a, 0.35)
-    for (let i = 0; i < 6; i++) {
-      const turn = (i % 2 ? 1 : -1) * s * (0.28 + 0.06 * i)
-      const ang = i * 1.05 + turn
-      const r = (15 - 6 * u) * (0.55 + 0.45 * hash(i, 97, 1))
+    // Only a little darker than the deck round it, and many soft billows run together, so it is weather and never a
+    // thing: no lens, no single dark disc in the sky.
+    const heavy = mix(shade, VALLEY.steelDark, 0.08 + 0.1 * u)
+    blob(ctx, k, gx, gy - 2 + 2 * u, 34 - 5 * u, 10, heavy, (0.22 + 0.12 * u) * a, 0.2)
+    for (let i = 0; i < 12; i++) {
+      const turn = (i % 2 ? 1 : -1) * s * (0.2 + 0.04 * (i % 6))
+      const ang = i * 0.53 + 0.7 * hash(i, 97, 3) + turn
+      const r = (17 - 6 * u) * (0.45 + 0.55 * hash(i, 97, 1))
       const x = gx + Math.cos(ang) * r * 1.5
-      const y = gy - 3 + Math.sin(ang) * r * 0.32 + 1.5 * u
-      const size = 9 + 5 * hash(i, 97, 2)
-      blob(ctx, k, x, y + 1.6, size * 1.05, 3.6, heavy, 0.6 * a, 0.3)
-      blob(ctx, k, x, y - 0.6, size * 0.9, 2.6, mix(body, heavy, 0.25 + 0.35 * u), 0.7 * a, 0.4)
+      const y = gy - 3 + Math.sin(ang) * r * 0.42 + 1.5 * u
+      const size = 8 + 8 * hash(i, 97, 2)
+      blob(ctx, k, x, y + 1.4, size * 1.1, 4.6 + 1.6 * hash(i, 97, 4), heavy, 0.28 * a, 0.2)
+      blob(ctx, k, x + 0.8, y - 0.8, size * 0.95, 3.8 + 1.4 * hash(i, 97, 5), mix(body, heavy, 0.15 + 0.2 * u), 0.4 * a, 0.25)
     }
     return
   }
@@ -722,12 +724,14 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
     ctx.fillStyle = g
     ctx.beginPath()
     const r = Math.min(0.3, w / 2)
-    // The throat opens with the doors: from its middle outward.
-    const hw = (w / 2) * doors
+    // The throat the full width of the slot cut above it, coming up out of the dark as the doors part: opened from
+    // its middle it stood narrow under the wide cut, a T.
+    const hw = w / 2
+    ctx.globalAlpha *= doors
     ctx.moveTo((cx - hw) * k, (foot + 0.02) * k)
     ctx.lineTo((cx - hw) * k, (belly - 0.1 - r) * k)
-    ctx.quadraticCurveTo((cx - hw) * k, (belly - 0.08) * k, (cx - hw + r * doors) * k, (belly - 0.08) * k)
-    ctx.lineTo((cx + hw - r * doors) * k, (belly - 0.08) * k)
+    ctx.quadraticCurveTo((cx - hw) * k, (belly - 0.08) * k, (cx - hw + r) * k, (belly - 0.08) * k)
+    ctx.lineTo((cx + hw - r) * k, (belly - 0.08) * k)
     ctx.quadraticCurveTo((cx + hw) * k, (belly - 0.08) * k, (cx + hw) * k, (belly - 0.1 - r) * k)
     ctx.lineTo((cx + hw) * k, (foot + 0.02) * k)
     ctx.closePath()

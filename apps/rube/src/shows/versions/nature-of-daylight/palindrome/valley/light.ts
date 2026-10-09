@@ -49,7 +49,8 @@ function breakAt(t: number): { open: number; rx: number; ry: number } {
   if (t < G.sun) return { open: 0, rx: 0, ry: 0 }
   const open = 1 - Math.pow(1 - clamp01((t - G.sun) / 2.2), 2.4)
   const rx = (4 + 20 * open) * (1 + 0.35 * smooth(t, G.sun + 2.2, G.end))
-  return { open, rx, ry: rx * 0.36 }
+  // A long low tear along the ridge, never a round hole: a saucer is what a round bright hole over beams reads as.
+  return { open, rx: rx * 1.3, ry: rx * 0.2 }
 }
 
 /**
@@ -85,16 +86,19 @@ export function drawBreak(ctx: Ctx, k: number, t: number): void {
   glow(ctx, k, bx, by + 1, 22, 6, VALLEY.lamp, 0.22 * d.glow * (1 - open), 0.3)
   if (open > 0.001) {
     // The light through the veil.
-    glow(ctx, k, bx, by, rx * 1.2, ry * 1.3, VALLEY.floodlight, 0.9 * open, 0.5)
-    glow(ctx, k, bx, by - ry * 0.1, rx * 0.6, ry * 0.6, SHELL.screen, 0.8 * open, 0.5)
+    // Bleeding out into the cloud round it, brightest low along the tear and with no rim of its own.
+    glow(ctx, k, bx + rx * 0.2, by + ry * 0.6, rx * 2.2, ry * 3.2, VALLEY.lamp, 0.22 * open, 0.1)
+    glow(ctx, k, bx, by, rx * 1.3, ry * 1.6, VALLEY.floodlight, 0.6 * open, 0.15)
+    glow(ctx, k, bx, by + ry * 0.2, rx * 0.7, ry * 0.7, SHELL.screen, 0.55 * open, 0.2)
     // The cloud's torn edge above the break: heavy billows, dark, their undersides lit from below by the low sun.
     const heavy = mix(VALLEY.cloudShade, VALLEY.steelDark, 0.45)
-    const n = 9
+    const n = 14
     for (let i = 0; i < n; i++) {
       const u = (i + 0.5) / n
-      const x = bx + (u - 0.5) * 2.3 * rx * (1.05 + 0.1 * hash(i, 58, 1))
+      const x = bx + (u - 0.5) * 2.6 * rx * (1.05 + 0.1 * hash(i, 58, 1))
+      // A ragged edge, a little higher over the middle of the tear, not a dome.
       const arch = 1 - (2 * u - 1) ** 2
-      const y = by - ry * (0.55 + 0.55 * arch) - 1.2
+      const y = by - ry * (0.7 + 0.25 * arch + 0.6 * (hash(i, 58, 3) - 0.5)) - 1.2
       const brx = rx * (0.2 + 0.1 * hash(i, 58, 2)) + 2.2
       const bry = ry * 0.34 + 1.4
       ctx.globalCompositeOperation = 'source-over'
@@ -336,7 +340,8 @@ export function drawRays(ctx: Ctx, k: number, t: number, far = 1): void {
   for (let i = 0; i < rays.length; i++) {
     const r = rays[i]
     const sway = 0.5 * Math.sin(t * 0.3 + i * 1.7)
-    const xa = bx + r.from * rx
+    // From all along the tear, so the shafts fan out of the cloud's edge rather than falling from one bright spot.
+    const xa = bx + (r.from - 0.25) * rx * 1.7
     const ya = by + ry * 0.25 + 1 + r.dy
     // Landing along the floor between the ridge's foot and the light's edge.
     const xb = bx + 22 + (reach - bx - 22) * r.to + sway

@@ -218,6 +218,16 @@ And one more round after it:
 - **The treeline at the reunion** was outlined in a hard cream line. The light through the crowns is a soft glow into
   them now.
 
+And a third:
+
+- **The sky after the shell has gone** read as flying saucers. The cloud churning where it went was a few dark lens
+  shapes, and the break over the left ridge was a round bright hole under a domed dark edge, its shafts falling
+  together from one spot: a tractor beam again. The churn is many soft billows, only a little darker than the deck,
+  so it reads as weather. The break is a long low tear with a ragged edge, its light bleeding out into the cloud with
+  no rim, and the shafts fan out from all along it.
+- **The slot** opened as a T: the cut in the belly opened full width while the throat under it opened from a line in
+  its middle. The throat is the full width now and comes up out of the dark as the doors part.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
