@@ -62,6 +62,25 @@ export function shellHalf(u: number): number {
 }
 
 /**
+ * A soft puff of `hex` at (x, y) cells, `rx` by `ry`: dense at its middle and nothing at its edge, so puffs that
+ * overlap make one cloud, never a cluster of discs.
+ */
+function softPuff(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, rx: number, ry: number, hex: string, a: number): void {
+  if (a <= 0.004 || rx * k < 0.5 || ry * k < 0.3) return
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.scale(1, ry / rx)
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+  grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${a})`)
+  grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${a * 0.7})`)
+  grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+  ctx.fillStyle = grad
+  ctx.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
+  ctx.restore()
+}
+
+/**
  * The shell, hanging: its belly's lowest point at the origin, its top `h` cells up. A smooth dark stone of a thing,
  * lens-thin, its left edge catching the sky, faint strata across its face, and the slot in its belly when it opens.
  */
@@ -171,9 +190,8 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
       const x = x0 + side * life * w * 0.25
       const y = y0 - life * h * 0.35
       const r = (2 + 5 * hash(i, 5, 31)) * (0.6 + life)
-      p.noStroke()
-      p.fill(alpha(p, mixHex(VALLEY.cloud, air, 0.3), 0.55 * Math.sin(Math.PI * life)))
-      p.ellipse(x * k, y * k, r * 2 * k, r * 1.3 * k)
+      // A little wider than the old flat puffs, as a soft edge reaches further than a hard one.
+      softPuff(p.drawingContext as CanvasRenderingContext2D, k, x, y, r * 1.25, r * 0.8, mixHex(VALLEY.cloud, air, 0.3), 0.7 * Math.sin(Math.PI * life))
     }
   }
 }
@@ -792,20 +810,7 @@ export function drawSpray(p: p5, k: number, from: Pt, to: Pt, u: number, color =
   const [hx, hy] = at(reach)
   const r = (0.06 + 0.22 * reach) * len * 0.5
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const [cr, cg, cb] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))
-  const puff = (x: number, y: number, rx: number, ry: number, a: number) => {
-    if (a <= 0.004 || rx * k < 0.5) return
-    ctx.save()
-    ctx.translate(x * k, y * k)
-    ctx.scale(1, ry / rx)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
-    g.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, ${a})`)
-    g.addColorStop(0.5, `rgba(${cr}, ${cg}, ${cb}, ${a * 0.7})`)
-    g.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`)
-    ctx.fillStyle = g
-    ctx.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
-    ctx.restore()
-  }
+  const puff = (x: number, y: number, rx: number, ry: number, a: number) => softPuff(ctx, k, x, y, rx, ry, color, a)
   for (let i = 0; i < 7; i++) {
     const a = (i / 7) * TAU + v * 1.3
     const off = r * (0.25 + 0.35 * reach)

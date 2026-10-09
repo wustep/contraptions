@@ -213,6 +213,19 @@ function tunnelPath(ctx: CanvasRenderingContext2D, k: number, xa: number, xb: nu
  * A lit lip along a face that runs along x: bands laid into the stone from the face (`into` +1 down, -1 up), each a
  * little deeper and fainter, lit along their length by `light`. No line: the light fades into the stone.
  */
+/**
+ * A lit lip's depths into the stone, deepest first, and each layer's share of its light: the old six steps' profile
+ * (1, 0.7, 0.46, 0.28, 0.15, 0.07 of its depth) spread over many thin layers, so its glow falls off with no steps.
+ */
+const LIP_STEPS = [1, 0.7, 0.46, 0.28, 0.15, 0.07, 0]
+const LIP_N = 24
+const LIP_LAYERS = Array.from({ length: LIP_N }, (_, i) => {
+  const r = ((i + 0.5) * (LIP_STEPS.length - 1)) / LIP_N
+  const j = Math.floor(r)
+  return LIP_STEPS[j] + (LIP_STEPS[j + 1] - LIP_STEPS[j]) * (r - j)
+})
+const LIP_SHARE = (LIP_STEPS.length - 1) / LIP_N
+
 function lipX(ctx: CanvasRenderingContext2D, k: number, xa: number, xb: number, face: (x: number) => number, into: number, depth: number, light: (x: number) => number): void {
   if (xb - xa < 0.05) return
   const step = Math.max(0.1, (xb - xa) / 110)
@@ -221,10 +234,9 @@ function lipX(ctx: CanvasRenderingContext2D, k: number, xa: number, xb: number, 
   xs.push(xb)
   const ls = xs.map((x) => clamp01(light(x)))
   if (Math.max(...ls) < 0.02) return
-  const layers = [1, 0.7, 0.46, 0.28, 0.15, 0.07]
-  for (const d of layers) {
+  for (const d of LIP_LAYERS) {
     const g = ctx.createLinearGradient(xa * k, 0, xb * k, 0)
-    xs.forEach((x, i) => g.addColorStop((x - xa) / (xb - xa), `rgba(${LIP}, ${0.16 * ls[i]})`))
+    xs.forEach((x, i) => g.addColorStop((x - xa) / (xb - xa), `rgba(${LIP}, ${0.16 * LIP_SHARE * ls[i]})`))
     ctx.fillStyle = g
     ctx.beginPath()
     xs.forEach((x, i) => (i ? ctx.lineTo(x * k, face(x) * k) : ctx.moveTo(x * k, face(x) * k)))
@@ -240,9 +252,9 @@ function lipY(ctx: CanvasRenderingContext2D, k: number, ya: number, yb: number, 
   const ls: number[] = []
   for (let i = 0; i <= n; i++) ls.push(clamp01(light(ya + ((yb - ya) * i) / n)))
   if (Math.max(...ls) < 0.02) return
-  for (const d of [1, 0.7, 0.46, 0.28, 0.15, 0.07]) {
+  for (const d of LIP_LAYERS) {
     const g = ctx.createLinearGradient(0, ya * k, 0, yb * k)
-    ls.forEach((l, i) => g.addColorStop(i / n, `rgba(${LIP}, ${0.13 * l})`))
+    ls.forEach((l, i) => g.addColorStop(i / n, `rgba(${LIP}, ${0.13 * LIP_SHARE * l})`))
     ctx.fillStyle = g
     const w = depth * d
     ctx.fillRect(Math.min(x, x + into * w) * k, ya * k, w * k, (yb - ya) * k)

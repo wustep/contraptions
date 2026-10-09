@@ -308,6 +308,11 @@ changed, in the order of the film, and then what runs through it:
   as one body now, and the haze is a true blur round the whole of it. Real playback still holds 60 fps through the fog.
   The jet that carries the ink to where a ring forms ended in a cluster of flat see-through discs, darker where they
   overlapped; its billow is soft puffs now, one cloud.
+- **Her half of the great ring** (168 → 183.2): the blot pressed on each hard pulse was narrow, so her half's edge
+  was a row of notches, a serrated spine next to Costello's clean arc (a fresh critic read it as a lizard). The
+  blots are wider and a little shallower now, so they run together into a brushstroke that swells under her pulses.
+- **The shaft's lit lips** (66 → 85.8): the glow along the floor's and the ribs' edges fell off into the stone in six
+  steps; it falls off smoothly now. The shell's vapour as it goes is soft puffs too, not flat discs.
 - **The shadow under the bench** (the first frame and the last, and every scene at the window): a dark box under the
   slab with square ends, on the glass's foot and again in the floor's reflection. Its ends fade out within the
   slab's length now.
