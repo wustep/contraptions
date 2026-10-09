@@ -289,6 +289,11 @@ comes out under a card while it is up. On a phone held
 upright the stage shows more sky than the 16:9 box, and the cards go up into it (`TitleCard.lift`, a share of the
 extra height, used only by this show).
 
+**On a phone held upright** the extra picture goes mostly above the frame (`Performance.tall`, 0.85 of it, used only
+by this show): every set stands on a floor or the ground, with sky, a roof or the storey above over it and only earth
+under it, so a tall stage shows the church's spire, the house's roof and the hill's sky, not a slab of ground. The
+cards go with the picture.
+
 **No balloon coda.** The montage ends with Carl alone in the house. What the film does next, the house lifting on
 balloons, belongs to other music. The show ends where the montage ends: two chairs, one empty, the lamp in the
 window.
@@ -450,6 +455,12 @@ window.
   edge: the photograph is hung lower and larger, right over them, and the crest's two shafts are a little stronger.
   Considered and kept: Ellie at the open front door stands before its leaf, not past it against the evening; past it
   she would leave the Zoom frame at the cut into the hill.
+
+- **Polish round 7 (Opus 5.5).** Denser sheets of the fix-up, the jar, the climb and the funeral found nothing new
+  to fix; portrait stills at a phone's shape did. The stage set the 16:9 frame in the middle of a tall one, so half a
+  phone's screen was flat ground under the floor line and the action sat in its top third. `Performance.tall` lets a
+  show say how much of the extra goes above; this one sends most of it up, into the sky, the roofs and the storey
+  above, and the credits move with the picture.
 
 ## Known limits
 

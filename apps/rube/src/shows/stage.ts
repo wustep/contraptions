@@ -75,13 +75,16 @@ export function paintShow(
   const here = perf.show.at(time)
   const cam = perf.camera?.(time) ?? followCamera(perf.show, time, here)
   // Zoom is a tighter follow. Overview is the whole world and wins if both are asked.
-  const follow = zoom && !overview ? { ...cam, cells: cam.cells / FOLLOW_ZOOM } : cam
+  let follow = zoom && !overview ? { ...cam, cells: cam.cells / FOLLOW_ZOOM } : cam
   const x = dest?.x ?? 0
   const y = dest?.y ?? 0
   const W = dest?.w ?? p.width
   const H = dest?.h ?? p.height
   // The composed frame is always whole: a stage wider or taller than 16:9 sees more world around it, never less of it.
   const k = Math.min(W / ASPECT, H) / follow.cells
+  // A stage taller than 16:9 sets the composed frame where the show says (`Performance.tall`), not always midway.
+  const below = overview || perf.tall === undefined ? 0 : (perf.tall - 0.5) * Math.max(0, H - W / ASPECT)
+  if (below) follow = { ...follow, y: follow.y - below / k }
   const full = overview ? overviewCamera(here.universe.bounds, W, H) : null
   drawWorld(p, perf.show, time, here, full ?? follow, full?.scale ?? k, { x, y, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
 }

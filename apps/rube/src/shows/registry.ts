@@ -87,6 +87,12 @@ export interface Performance {
   camera?(t: number): Framing
   /** Whether the show's cuts are drawn at `t`: the iris at a portal, the fade up from ink. Left out, they are. */
   cuts?(t: number): boolean
+  /**
+   * In a stage taller than 16:9 (a phone held upright), what share of the extra picture lies above the composed 16:9
+   * frame: for a show whose sets stand on a floor or the ground, with sky, roof or an upper storey over them and only
+   * ground under them. The title cards go with the picture. Left out, half: the frame in the middle.
+   */
+  tall?: number
   /** The music. Left out, the show is silent and runs on the wall clock. */
   soundtrack?: SoundtrackSpec
   /**
