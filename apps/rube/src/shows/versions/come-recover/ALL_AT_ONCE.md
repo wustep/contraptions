@@ -256,6 +256,18 @@ The notes went back to the builders who made each part, who still had their cont
   - The credits stood top-centre, across the clock, the door's bell and the lantern string. They now stand left of
     middle, over the storefront's dark glass and the night street, like film credits over night. The clock, the
     lanterns and the family by the washer are clear of them. It fits at phone width too.
+- **Polish round 4, the shop's walls in the opening.** The opening was watched at the viewer's own framing, not the
+  share card's wider one. Through Joy's visit and the taxes (19.8 to 30.6) the top third of the two-shot was bare
+  cream wall.
+  - Over the counter's far end, where the taxes are done, a corkboard: two receipts pinned up, a red envelope, and a
+    crayon drawing Joy made when she was small, the three of them in their own colours under a sun. It hangs over
+    her mother at the adding machine all through the visit she does not look up from. It sits clear of the throw up
+    to the hanger, which leaves from the counter's near end.
+  - High between the door's washer and the counter, a shelf: a white lucky cat waving its paw, a money plant
+    trailing over the edge, and between them an old framed photograph of the three of them by the shop's window.
+    It is in the opening's wide shot and under the credits, where it sits over the finale's lantern string and
+    answers the photograph the night ends by taking.
+  - Both are drawn by the room (`set.ts`), under its light, so they go dark and come up with the tubes.
 
 ## End credits
 

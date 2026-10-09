@@ -6,7 +6,7 @@ import { alpha, frame, hash, knock, scenery, smooth } from '../kit'
 import { GREAT, HOME_HITS, home } from '../music'
 import { HOME_CIRCLE } from '../seams'
 import { KNOTS, WIRE_A, WIRE_B, lanternAt } from './set-garland'
-import { EYE_PUPIL, EYE_WHITE, HOME, LAUNDROMAT } from '../worlds'
+import { EVELYN, EYE_PUPIL, EYE_WHITE, HOME, JOY, LAUNDROMAT, WAYMOND } from '../worlds'
 
 /**
  * The Wang family laundromat: the room every home leg happens in, and the canonical drawings of its fixtures.
@@ -1150,6 +1150,19 @@ const TOP_BAGS: { x: number; color: string; size: number }[] = [
 const CLOCK = { x: -1.9, y: -3.55, r: 0.27 }
 const PRICES = { x: 4.55, y: -2.95, w: 0.92, h: 0.78 }
 const CALENDAR = { x: 26.7, y: -3.05, w: 0.62, h: 0.82 }
+/**
+ * A shelf high between the door's washer and the counter, over the finale's lantern string and clear of the throw up
+ * to the hanger: a lucky cat waving on it, a money plant trailing over its edge, and between them an old photograph
+ * of the three of them in its frame, the one the night ends by taking again.
+ */
+const SHELF = { x0: -1.3, x1: -0.14, y: -3.12 }
+const PHOTO = { x: -0.67, w: 0.4, h: 0.33 }
+/**
+ * A corkboard over the counter's far end, where the taxes are done, low enough to be in the two-shot of Joy's visit
+ * and clear of the throw up to the hanger at the counter's near end: receipts pinned up, a red envelope, and a crayon
+ * drawing Joy made when she was small, the three of them in a row under a sun.
+ */
+const CORK = { x: 2.02, y: -2.3, w: 1.12, h: 0.6 }
 
 function nail(pen: Pen, x: number, y: number): void {
   const { p, k, ink, w } = pen
@@ -1183,6 +1196,159 @@ function wallClock(pen: Pen, t: number): void {
   hand(Math.floor(t * 1) / 60, r * 0.8, 0.012, HOME.red)
   solid(p, ink, w * 0.3, ink)
   p.circle(x * k, y * k, 0.04 * k)
+}
+
+function pin(pen: Pen, x: number, y: number, col: string): void {
+  const { p, k, ink, w } = pen
+  solid(p, ink, w * 0.35, col)
+  p.circle(x * k, y * k, 0.06 * k)
+}
+
+function corkboard(pen: Pen): void {
+  const { p, k, ink, w } = pen
+  const { x, y, w: bw, h: bh } = CORK
+  solid(p, ink, w, HOME.wood)
+  p.rect(x * k, y * k, bw * k, bh * k, 0.03 * k)
+  solid(p, ink, w * 0.4, mixHex(HOME.wood, HOME.butter, 0.45))
+  p.rect(x * k, y * k, (bw - 0.1) * k, (bh - 0.1) * k)
+  const L = x - bw / 2
+  const T = y - bh / 2
+  // Receipts, long and curling a little, pinned at their tops.
+  const receipt = (cx: number, top: number, len: number, lean: number) => {
+    p.push()
+    p.translate(cx * k, top * k)
+    p.rotate(lean)
+    solid(p, ink, w * 0.35, HOME.paper)
+    p.rect(0, (len / 2) * k, 0.15 * k, len * k)
+    outline(p, mixHex(HOME.paper, ink, 0.35), Math.max(1, w * 0.3))
+    for (let i = 1; i < len / 0.06; i++) p.line(-0.045 * k, (i * 0.06) * k, (0.02 + 0.025 * ((i * 7) % 3)) * k, (i * 0.06) * k)
+    p.pop()
+    pin(pen, cx, top + 0.03, HOME.red)
+  }
+  receipt(L + 0.16, T + 0.08, 0.36, -0.06)
+  receipt(L + 0.32, T + 0.1, 0.28, 0.08)
+  // The red envelope, tucked in at an angle, a gold mark on it.
+  p.push()
+  p.translate((L + 0.88) * k, (T + 0.36) * k)
+  p.rotate(0.12)
+  solid(p, ink, w * 0.4, HOME.red)
+  p.rect(0, 0, 0.17 * k, 0.26 * k, 0.01 * k)
+  solid(p, ink, w * 0.3, HOME.gold)
+  p.circle(0, -0.02 * k, 0.07 * k)
+  p.pop()
+  // Joy's drawing: a sheet of paper, a little crooked, three round faces in crayon in their own colours, a sun.
+  p.push()
+  p.translate((L + 0.6) * k, (T + 0.27) * k)
+  p.rotate(-0.07)
+  solid(p, ink, w * 0.35, HOME.paper)
+  p.rect(0, 0, 0.42 * k, 0.32 * k)
+  p.noFill()
+  p.strokeWeight(Math.max(1, 0.018 * k))
+  p.stroke(HOME.butter)
+  p.circle(0.14 * k, -0.09 * k, 0.07 * k)
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2
+    p.line((0.14 + Math.cos(a) * 0.05) * k, (-0.09 + Math.sin(a) * 0.05) * k, (0.14 + Math.cos(a) * 0.075) * k, (-0.09 + Math.sin(a) * 0.075) * k)
+  }
+  ;[EVELYN, JOY, WAYMOND].forEach((col, i) => {
+    const fx = -0.12 + 0.1 * i
+    const r = i === 1 ? 0.03 : 0.038
+    p.stroke(col)
+    p.circle(fx * k, 0.04 * k, 2 * r * k)
+    // A crayon smile and a body line.
+    p.arc(fx * k, 0.045 * k, r * k, r * 0.7 * k, 0.2, Math.PI - 0.2)
+    p.line(fx * k, (0.04 + r) * k, fx * k, (0.12) * k)
+  })
+  // The ground they stand on, a green scribble.
+  p.stroke('#5E9E62')
+  p.line(-0.18 * k, 0.13 * k, 0.18 * k, 0.125 * k)
+  p.pop()
+  pin(pen, L + 0.6 - 0.005, T + 0.12, HOME.gold)
+}
+
+function shelf(pen: Pen, t: number): void {
+  const { p, k, ink, w } = pen
+  const { x0, x1, y } = SHELF
+  // The old photograph, stood on the shelf in its frame, leaning a little: the three of them, younger, in front of the
+  // shop's window.
+  const ph = PHOTO
+  p.push()
+  p.translate(ph.x * k, (y - ph.h / 2) * k)
+  p.rotate(-0.05)
+  solid(p, ink, w * 0.8, HOME.wood)
+  p.rect(0, 0, ph.w * k, ph.h * k, 0.02 * k)
+  solid(p, ink, w * 0.4, mixHex(HOME.paper, HOME.butter, 0.35))
+  p.rect(0, 0, (ph.w - 0.1) * k, (ph.h - 0.1) * k)
+  // Faded: the window's circle behind them, and the three in a row.
+  p.noStroke()
+  p.fill(mixHex(HOME.glass, HOME.paper, 0.45))
+  p.circle(0, -0.02 * k, 0.2 * k)
+  ;[EVELYN, JOY, WAYMOND].forEach((col, i) => {
+    p.fill(mixHex(col, HOME.paper, 0.35))
+    p.circle((-0.11 + 0.11 * i) * k, 0.07 * k, (i === 1 ? 0.07 : 0.085) * k)
+  })
+  p.pop()
+  // The shelf on its two brackets.
+  solid(p, ink, w * 0.5, HOME.steelDark)
+  for (const bx of [x0 + 0.18, x1 - 0.18]) {
+    p.triangle(bx * k, y * k, (bx + 0.001) * k, (y + 0.22) * k, (bx + 0.14) * k, y * k)
+  }
+  solid(p, ink, w * 0.8, HOME.wood)
+  p.rect(((x0 + x1) / 2) * k, (y + 0.035) * k, (x1 - x0) * k, 0.07 * k, 0.015 * k)
+  // The money plant in its pot, trailing over the edge, a leaf a hand.
+  const px = x1 - 0.22
+  solid(p, ink, w * 0.5, mixHex(HOME.red, HOME.wood, 0.4))
+  p.beginShape()
+  p.vertex((px - 0.11) * k, (y - 0.2) * k)
+  p.vertex((px + 0.11) * k, (y - 0.2) * k)
+  p.vertex((px + 0.08) * k, y * k)
+  p.vertex((px - 0.08) * k, y * k)
+  p.endShape(p.CLOSE)
+  const leaf = mixHex(HOME.tileDeep, '#3F7A4E', 0.6)
+  outline(p, mixHex(leaf, ink, 0.3), Math.max(1, w * 0.4))
+  p.noFill()
+  p.beginShape()
+  for (let i = 0; i <= 10; i++) {
+    const u = i / 10
+    p.vertex((px + 0.1 + 0.06 * Math.sin(u * 3)) * k, (y - 0.18 + 0.4 * u) * k)
+  }
+  p.endShape()
+  solid(p, mixHex(leaf, ink, 0.3), w * 0.35, leaf)
+  for (let i = 0; i < 5; i++) {
+    const u = i / 4
+    const lx = px + 0.1 + 0.06 * Math.sin(u * 3) + (i % 2 === 0 ? 0.045 : -0.045)
+    const ly = y - 0.16 + 0.38 * u
+    p.ellipse(lx * k, ly * k, 0.09 * k, 0.065 * k)
+  }
+  for (const [lx, ly] of [[-0.06, -0.3], [0.02, -0.34], [-0.1, -0.24], [0.08, -0.26]] as const) p.ellipse((px + lx) * k, (y + ly) * k, 0.1 * k, 0.07 * k)
+  // The lucky cat: white, a red collar and a gold bell, one paw up and waving, a beat every second and a third.
+  const cx = x0 + 0.26
+  const base = y
+  solid(p, ink, w * 0.6, HOME.enamel)
+  p.ellipse(cx * k, (base - 0.13) * k, 0.26 * k, 0.26 * k)
+  p.circle(cx * k, (base - 0.34) * k, 0.24 * k)
+  // Ears.
+  p.triangle((cx - 0.11) * k, (base - 0.4) * k, (cx - 0.07) * k, (base - 0.5) * k, (cx - 0.02) * k, (base - 0.44) * k)
+  p.triangle((cx + 0.11) * k, (base - 0.4) * k, (cx + 0.07) * k, (base - 0.5) * k, (cx + 0.02) * k, (base - 0.44) * k)
+  // The waving paw, on its shoulder.
+  const wave = 0.5 * Math.sin(t * Math.PI * 1.5)
+  p.push()
+  p.translate((cx + 0.1) * k, (base - 0.2) * k)
+  p.rotate(-0.25 + wave * 0.6)
+  solid(p, ink, w * 0.5, HOME.enamel)
+  p.ellipse(0, -0.1 * k, 0.08 * k, 0.2 * k)
+  p.pop()
+  // Its face: two shut, smiling eyes and a nose; the collar and bell.
+  outline(p, ink, w * 0.45)
+  p.arc((cx - 0.045) * k, (base - 0.35) * k, 0.05 * k, 0.04 * k, Math.PI, Math.PI * 2)
+  p.arc((cx + 0.045) * k, (base - 0.35) * k, 0.05 * k, 0.04 * k, Math.PI, Math.PI * 2)
+  p.noStroke()
+  p.fill(HOME.rose)
+  p.circle(cx * k, (base - 0.31) * k, 0.025 * k)
+  solid(p, ink, w * 0.4, HOME.red)
+  p.rect(cx * k, (base - 0.235) * k, 0.16 * k, 0.03 * k, 0.015 * k)
+  solid(p, ink, w * 0.4, HOME.gold)
+  p.circle(cx * k, (base - 0.205) * k, 0.045 * k)
 }
 
 function priceBoard(pen: Pen): void {
@@ -1357,6 +1523,8 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
   if (see(CLOCK.x - 0.4, CLOCK.x + 0.4)) wallClock(pen, t)
   if (see(PRICES.x - 0.6, PRICES.x + 0.6)) priceBoard(pen)
   if (see(CALENDAR.x - 0.4, CALENDAR.x + 0.4)) calendar(pen)
+  if (see(SHELF.x0 - 0.3, SHELF.x1 + 0.3)) shelf(pen, t)
+  if (see(CORK.x - CORK.w, CORK.x + CORK.w)) corkboard(pen)
   // The fixtures. The counter.
   if (see(COUNTER.x0, COUNTER.x1)) counterFront(pen)
   // The washers (all but the laundromat part's, the first).
