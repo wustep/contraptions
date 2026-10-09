@@ -71,17 +71,26 @@ export interface Look {
  */
 export function looks(list: Look[]): Riders {
   return (t, hero) => {
-    const look = list.find((l) => t > l.from && t < l.to + 0.4)
-    if (!look) return null
-    const w = ease((t - look.from) / 0.45) * (1 - ease((t - look.to) / 0.4))
-    if (w <= 0) return null
     const roll = hero.spin ?? 0
-    return [{ ...hero, spin: roll + w * turnTo(roll, look.at(t)) }]
+    const spin = lookFrom(list, t, roll)
+    return spin === null ? null : [{ ...hero, spin }]
   }
+}
+/** Where an eye points at `t` given where its roll has it: turned to the look in force, or null to leave it. */
+export function lookFrom(list: Look[], t: number, roll: number): number | null {
+  const look = list.find((l) => t > l.from && t < l.to + 0.4)
+  if (!look) return null
+  const w = ease((t - look.from) / 0.45) * (1 - ease((t - look.to) / 0.4))
+  if (w <= 0) return null
+  return roll + w * turnTo(roll, look.at(t))
 }
 
 /** Where they are: the ball's own fields but its id and, unless they have changed, its colour. */
-export type Companion = Omit<ShowBall, 'id' | 'color'> & { color?: string }
+export type Companion = Omit<ShowBall, 'id' | 'color'> & {
+  color?: string
+  /** Where they look, given where their roll has their eye (the show knows the roll): a companion's acting. */
+  look?: (roll: number) => number | null
+}
 
 /** Who keeps the hero company. */
 export type Who = 'ian' | 'hannah'

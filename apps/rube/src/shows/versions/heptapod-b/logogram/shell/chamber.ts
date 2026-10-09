@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { box, ease, looks, part, route, turnTo, type Company, type Look, type PartShot } from '../kit'
+import { box, ease, lookFrom, looks, part, route, turnTo, type Company, type Look, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import { drawChamber } from './chamber-glass'
 import { FOOTFALLS } from './chamber-heptapods'
@@ -48,6 +48,15 @@ const LOOKS: Look[] = [
   { from: 105.2, to: SET_OFF - 0.2, at: (t) => AT_GIANT + turnTo(AT_GIANT, AT_PALM) * ease((t - LIMB_DOWN) / 2.2) },
   { from: OPENS + 0.55, to: Infinity, at: (t) => AT_PALM + turnTo(AT_PALM, AT_RING) * ease((t - (SPRAY + 0.1)) / 0.6) },
 ]
+/**
+ * Ian's eye, wherever he is stopped: up at Abbott as he hesitates for it, up at the giants through the wide and down
+ * the limb as it comes to her, and from when he comes forward again, on her, going into the white.
+ */
+const IAN_LOOKS: Look[] = [
+  { from: 97.9, to: 101.55, at: () => AT_GIANT },
+  { from: 106.8, to: 119.5, at: (t) => AT_GIANT + turnTo(AT_GIANT, -0.35) * ease((t - LIMB_DOWN) / 2.2) },
+  { from: 129.25, to: Infinity, at: () => -0.3 },
+]
 
 /** Every strike: the glass's two wakings, the seen footfalls, the limb leaving the floor, the palm opening, the touch, the spray, the ink coming in, the ring's surges, its closing and its tendrils. */
 export const CHAMBER_HITS: number[] = [...new Set([...WAKE, ...FOOTFALLS.map((f) => f.at), OPENS, PALM, SPRAY, INK_IN, ...SURGES, CLOSE, REACH])].sort((a, b) => a - b)
@@ -64,7 +73,7 @@ export const chamber = part<ChamberState>(
         who: 'ian',
         from: slot.begin,
         to: slot.end,
-        at: (t) => ({ x: IAN_PATH.x(t), y: 0 }),
+        at: (t) => ({ x: IAN_PATH.x(t), y: 0, look: (roll) => lookFrom(IAN_LOOKS, t, roll) }),
       },
     ]
     return {

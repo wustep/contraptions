@@ -210,8 +210,13 @@ export class LogogramShow extends Show {
   private companion(t: number, who: Who, world: WorldKey): ShowBall | null {
     const time = this.clamp(t)
     const span = this.company.find((s) => s.who === who && s.world === world && time >= s.from && time < s.to)
-    const b = span?.at(time)
-    if (!b) return null
+    const got = span?.at(time)
+    if (!got) return null
+    const { look, ...rest } = got
+    const universe = this.worlds[this.keys.indexOf(world)]
+    // Their eye: the roll the stage would draw, turned where they look.
+    const spun = look ? look((rest.x - (universe?.pieces[0]?.col ?? 0)) / R) : null
+    const b = spun === null ? rest : { ...rest, spin: spun }
     return who === 'ian' ? { ...b, id: IAN_ID, color: b.color ?? IAN } : { scale: HANNAH_SCALE, ...b, id: HANNAH_ID, color: b.color ?? HANNAH }
   }
 }
