@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 23 (latest)
+## Polish pass 24 (latest)
+
+No change to the show. The launch (84 to 93 s) was checked at full size: the ignition's billow over the pad, the tower falling away, the cloud deck from under and over, staging, and the turn into orbit.
+
+## Polish pass 23
 
 No change to the show. The climb up the spoke, the docking bay and the match cut outside (184 to 209 s) were checked at full size. Across the cut (207.45 to 207.55 s) the Ranger keeps its heading, nose to the port, and its place and size on the screen, while the bay turns to the dark round it.
 
