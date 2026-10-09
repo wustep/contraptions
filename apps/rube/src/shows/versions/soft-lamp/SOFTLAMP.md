@@ -394,6 +394,15 @@ ball. The machine and its timing were right and are untouched; the room around i
     "the first twelve tracks" (each track's name has had its own card by then), clear of the print in both. The
     Directed-by card, the track cards and the landscape layout, checked, are as they were.
 
+### The seventeenth lofi pass
+
+58. **The books' labels were blank**, and the books fill most of the cup close, the frame the camera holds longest:
+    three pale rectangles that read as placeholders. Each label now has its title written on it by hand, a line and
+    a shorter one, faint and uneven; and the middle book's ribbon hangs out of its pages at the left end and lies on
+    the book under it, clear of the ball's way down the right.
+59. **The checks, honestly:** the last three passes' full runs of the suite never started. They were queued to wait
+    until no other run of it was going on the machine, and other worktrees' runs kept them waiting. Run directly now.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

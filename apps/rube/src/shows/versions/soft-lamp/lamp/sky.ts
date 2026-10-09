@@ -330,8 +330,6 @@ const { PASSES, SITS } = (() => {
   return { PASSES: passes, SITS: sits }
 })()
 
-export const NEIGHBOUR = { passes: PASSES, sits: SITS }
-
 function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
   const { x0, x1, y0, y1 } = FLAT
   const w = x1 - x0

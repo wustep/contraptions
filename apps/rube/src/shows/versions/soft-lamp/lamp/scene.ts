@@ -10,7 +10,7 @@ import { ballShadow, contacts, wallShadows } from './shade'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { night } from './sky'
-import { CREAM, INK, MOUTH, lampAt, lampColor, lightAt, lit, skyAt } from './world'
+import { CREAM, INK, MOUTH, hash, lampAt, lampColor, lightAt, lit, skyAt } from './world'
 
 /**
  * Everything but the ball, each a drawing told show time, in cells (the drawing is scaled so a unit is a cell).
@@ -422,11 +422,41 @@ function book(ctx: Ctx, lw: number, b: Book, i: number, t: number): void {
   ctx.fillRect(b.x0 + 0.1, top + 0.03, 0.03, h - 0.06)
   ctx.fillRect(b.x1 - 0.13, top + 0.03, 0.03, h - 0.06)
   const lx = b.x0 + (b.x1 - b.x0) * 0.42
-  roundRect(ctx, lx, top + h * 0.3, Math.min(0.42, (b.x1 - b.x0) * 0.3), h * 0.4, 0.015)
+  const lwid = Math.min(0.42, (b.x1 - b.x0) * 0.3)
+  roundRect(ctx, lx, top + h * 0.3, lwid, h * 0.4, 0.015)
   ctx.fillStyle = rgba(mixHex(b.cover, '#EFE4CE', 0.6), 0.45 + 0.3 * l)
   ctx.fill()
+  // Its title, written on the label by hand: a line and a shorter one, faint.
+  ctx.strokeStyle = rgba(INK, 0.3 + 0.15 * l)
+  ctx.lineWidth = lw * 0.45
+  for (const [k, len] of [[0, 0.7 + 0.2 * hash(i, 41)], [1, 0.35 + 0.25 * hash(i, 43)]] as const) {
+    const y = top + h * (0.43 + k * 0.15)
+    ctx.beginPath()
+    for (let u = 0; u <= 1.0001; u += 0.05) {
+      const x = lx + lwid * (0.14 + 0.72 * len * u)
+      const yy = y + (Math.sin(u * 11 + i * 3 + k) * 0.6 + Math.sin(u * 4.3 + i + k * 2) * 0.4) * 0.0045
+      if (u === 0) ctx.moveTo(x, yy)
+      else ctx.lineTo(x, yy)
+    }
+    ctx.stroke()
+  }
   roundRect(ctx, b.x0, top, b.x1 - b.x0, h, 0.03)
   stroke(ctx, lw)
+  // The middle one's ribbon, out of its pages at the left end, lying down onto the book under it.
+  if (i === 1) {
+    ctx.beginPath()
+    ctx.moveTo(b.x0 + 0.01, top + h * 0.45)
+    ctx.quadraticCurveTo(b.x0 - 0.07, top + h * 0.55, b.x0 - 0.05, b.bottom - 0.004)
+    ctx.lineTo(b.x0 - 0.1, b.bottom - 0.004)
+    ctx.lineCap = 'butt'
+    ctx.lineWidth = 0.028 + lw
+    ctx.strokeStyle = INK
+    ctx.stroke()
+    ctx.lineWidth = 0.028 - lw * 0.6
+    ctx.strokeStyle = lit('#5A2420', '#C8564A', l * 0.8 + 0.1)
+    ctx.stroke()
+    ctx.lineCap = 'round'
+  }
   // Its top edge catches the lamp.
   ctx.fillStyle = rgba(lampColor(t), 0.5 * l)
   ctx.fillRect(b.x0 + 0.05, top, b.x1 - b.x0 - 0.08, 0.02)
