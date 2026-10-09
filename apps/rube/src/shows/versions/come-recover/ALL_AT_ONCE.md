@@ -556,6 +556,9 @@ The notes went back to the builders who made each part, who still had their cont
   720p stage. All but one were seen for 81–100% of their span. Waymond's on the line was seen 11%, from his catch
   until he goes down out of the frame. It now ends there. `check:shows` holds every look to being seen for at least
   half its span.
+- **A regression sweep.** After the looks, the camera changes and the new dressing, the whole show was swept again in
+  the viewer's framing, a frame every 2 s. Every world reads, the dressing stays out of the action, the credits sit
+  over the night glass, and the end goes down to dark. Nothing had regressed, and nothing was changed.
 
 ## The looks
 
