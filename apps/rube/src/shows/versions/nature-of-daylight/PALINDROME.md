@@ -548,6 +548,10 @@ readers had now both seen:
 - **A blank card** came up on the rail by the slot before each word reached it, and hung there empty for a beat. It
   comes up as the word reaches it now.
 
+A forty-first checked the fortieth on every word, not one: all six arrive with their cards, the last fills the row,
+the read-back lights; and the whole language, 150 to 200 s at ten frames a second, has no frame unlike its
+neighbours. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
