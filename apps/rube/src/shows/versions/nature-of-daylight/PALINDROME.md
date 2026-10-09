@@ -640,6 +640,11 @@ prop. It is drawn in the room, and over its second and a half the camera's draw-
 among the guests. It pales away in a second now: whole at the cut, where the carry is, and gone before the room has
 drawn back round it.
 
+A fifty-eighth took the last of the fresh readers' notes that read as something it is not: China's screen, the first
+to come back with Shang on the line (290 to 292 s), filled flat red over its dead glass, and read as a blank screen,
+an error. Its picture comes up now under the red, the shell over its valley as on every screen, washed in his colour
+and edged in it, and settles to its own as it locks home.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

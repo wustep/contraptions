@@ -230,12 +230,17 @@ function drawPanel(p: p5, k: number, i: number, t: number, th: number, on: numbe
   }
   const red = redCast(i, t)
   if (red > 0.01) {
-    // China's screen, with Shang on the line: a red light up out of it before its own picture.
+    // China's screen, with Shang on the line: its picture up in a red light before it settles to its own. (A flat red
+    // over the dead glass read as a blank screen, an error, not a place coming back.)
+    if (red > on) drawScreen(p, k, FR, -PH + FR, GW, GH, { on: red, place: PLACES[i], t, glow: 0, bezel: TENT.frame })
     const g = ctx.createLinearGradient(0, 0, 0, -PH * k)
-    g.addColorStop(0, rgba(SHANG, 0.85 * red))
-    g.addColorStop(1, rgba(mix(SHANG, TENT.screenOn, 0.35), 0.75 * red))
+    g.addColorStop(0, rgba(SHANG, 0.55 * red))
+    g.addColorStop(1, rgba(mix(SHANG, TENT.screenOn, 0.35), 0.35 * red))
     ctx.fillStyle = g
     ctx.fillRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
+    ctx.strokeStyle = rgba(SHANG, 0.9 * red)
+    ctx.lineWidth = Math.max(1.5, 0.04 * k)
+    ctx.strokeRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
   }
   const flash = screenFlash(i, t)
   if (flash > 0.01) {
