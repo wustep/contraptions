@@ -508,8 +508,9 @@ export const gargantua = part<GargState>(
       { t: OPEN0, cells: 3.0, off: [0.05, 0.45], w: 0 },
       // Down with him out of the tesseract, to the room at night, a little wide, the bed and the window. While he lies
       // awake the camera comes in on him, slowly, the whole of the decay, and arrives on the framing Act II opens on.
+      // (One move, from the pillow to the end of the cue: a key at WAKE + 0.8 had been left behind when the wake moved
+      // later, and squeezed the whole push into the last third of a second.)
       { t: IN_BED + 0.15, cells: ROOM_CELLS + 0.5, hold: roomPt([ROOM_HOLD[0] - 0.08, ROOM_HOLD[1] + 0.12]), w: 1 },
-      { t: WAKE + 0.8, cells: ROOM_CELLS + 0.46, hold: roomPt([ROOM_HOLD[0] - 0.07, ROOM_HOLD[1] + 0.11]), w: 1 },
       { t: ACT1_END, cells: ROOM_CELLS, hold: roomPt(ROOM_HOLD), w: 1 },
     ]
     return shots

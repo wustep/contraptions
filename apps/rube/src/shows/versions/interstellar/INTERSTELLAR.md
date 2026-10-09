@@ -219,7 +219,14 @@ There is no title card. After p5.js's card goes (about 287 s), the camp holds al
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 8 (latest)
+## Polish pass 9 (latest)
+
+An audit of what changes between frames rather than what a frame looks like. Every tenth of a second, two frames a sixtieth of a second apart were rendered and compared. In that time ordinary motion moves almost nothing, so a large share of changed pixels, standing out against the samples round it, is a pop, a flicker or a snap. After that, the camera's fastest zooms and pans were listed over the whole show. Every one is an authored move (the tesseract's pull-back, the swoop from the ring to the door, the ignition, the whips through the sphere) except two, and both were the same fault: a camera key left too close to another, so a move that should take a second or more took a third of one.
+
+- **The push-in in the bedroom** (125.8 to 127 s). It is meant to come in on him slowly, the whole of the decay. A key at `WAKE + 0.8` (126.62 s) had stayed where it was when the wake moved later, so the whole push, nearly half a cell, was squeezed into the last 0.36 s before the accent: in one frame step every outline in the room moved. That key is gone, and the push is one move from the pillow to the end of the cue. Its fastest is 0.57 cells a second, where it was 1.6. The share of the frame changing in one step went from 4.7% to 0.4%.
+- **The channel** (26.6 to 27.6 s). The yard's last key (4.2 cells) and the score's key for the channel (3.6 cells) stood three tenths of a second apart, so as he plunged in the camera punched in and straight back out. The channel's framing is at 27.5 s now and a little less close (3.9 cells), so it settles on him in the water as the bank carries him, and opens out for the truck.
+
+## Polish pass 8
 
 The show swept in **Overview** (the O key), which frames the whole of the world that is up at once. Two things were left standing that the show's own camera never looks at, but Overview did:
 

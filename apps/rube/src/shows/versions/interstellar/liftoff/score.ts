@@ -178,7 +178,9 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     { t: 15.5, cells: 3.3, w: 0.35, hold: [4.4, -2.3] },
     { t: 17.2, cells: 3.8, w: 0 },
     { t: 20.6, cells: 4.4, off: [0.7, -0.55] },
-    { t: 26.9, cells: 3.6, off: [0.6, -0.5] },
+    // In a little on him in the water, settling as the bank carries him, rather than a punch in and straight out (the
+    // yard's last key is three tenths of a second before 26.9, where this key stood).
+    { t: 27.5, cells: 3.9, off: [0.6, -0.5] },
     { t: 28.4, cells: 5.2, off: [1.6, -0.2] },
     // He is at the wheel from here: the cab a little left of centre, the road (and the drone) ahead of it.
     { t: 31, cells: 4.6, off: [0.8, -0.45] },
