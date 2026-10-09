@@ -190,10 +190,22 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     // He watches Joy go out of the shop, and her mother not look up; in the alley he watches Evelyn go, from the cover
     // giving under her until the jump out of that world; and for the portrait he looks into the lens, and then down
     // at the photograph as it comes, as the others do.
-    { who: 'waymond' as const, from: 0, gaze: [{ from: 27.4, to: 30.3, at: 'joy' as const }, { from: DROP - 0.1, to: JUMPS.dojo }, ...PORTRAIT] },
-    { who: 'evelyn' as const, from: JUMPS.eye, arrive: true, burst: true, gaze: PORTRAIT },
+    // Through the empathy fight he watches her, from her landing alone with the eye he gave her to her coming down
+    // the steamers to him.
+    { who: 'waymond' as const, from: 0, gaze: [{ from: 27.4, to: 30.3, at: 'joy' as const }, { from: DROP - 0.1, to: JUMPS.dojo }, { from: 192.1, to: JUMPS.rocks }, ...PORTRAIT] },
+    // Evelyn looks after Joy: down over the brink as her stone goes, while she holds her at the lip of the hole, and
+    // into her eyes once Joy has hers.
+    {
+      who: 'evelyn' as const,
+      from: JUMPS.eye,
+      arrive: true,
+      burst: true,
+      gaze: [{ from: 213.8, to: 219.7, at: 'joy' as const }, { from: JUMPS.brink + 0.3, to: 247.3, at: 'joy' as const }, { from: 254.9, to: 257.2, at: 'joy' as const }, ...PORTRAIT],
+    },
     // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
-    { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 }, gaze: PORTRAIT },
+    { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 },
+      // Once its fling has settled, her new eye looks into her mother's; and at home she looks up at her as she nestles.
+      gaze: [{ from: 255.3, to: 257.2, at: 'evelyn' as const }, { from: 279.6, to: 282.3, at: 'evelyn' as const }, ...PORTRAIT] },
   ]
   const eyePiece = eyes()
   const eyeStates: EyesState[] = []

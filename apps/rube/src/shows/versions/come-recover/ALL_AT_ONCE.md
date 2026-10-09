@@ -475,6 +475,13 @@ The notes went back to the builders who made each part, who still had their cont
     Then, as the photograph comes out of the slot, flutters down and develops, all three eyes follow it down to the
     floor. Before, their pupils hung where their bobbing left them, so the family photo had nobody looking at the
     camera.
+- **A pass for the looks between them.** The same gaze carries the story's other looks:
+  - Through the empathy fight (192–200 s), Waymond, who gave her the eye, watches her the whole way to him.
+  - At the brink (213.8–219.7 s), as Joy's stone goes over, Evelyn's eye follows it down over the edge while she
+    flinches and then goes after her.
+  - In the bagel's hole (from 242 s), as she holds Joy at the lip, she looks at her.
+  - Once Joy's eye has settled (255.3 s), mother and daughter look at each other.
+  - At home, as Joy nestles against her (279.6 s), Joy looks up at her mother.
 
 ## End credits
 
