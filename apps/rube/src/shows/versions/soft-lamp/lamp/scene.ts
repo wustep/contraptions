@@ -11,7 +11,7 @@ import { camera } from './camera'
 import { titlesAt } from './titles'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
-import { night } from './sky'
+import { flashRoom, night } from './sky'
 import { CREAM, INK, MOUTH, hash, lampAt, lampColor, lightAt, lit, skyAt } from './world'
 
 /**
@@ -824,6 +824,7 @@ export const things = scenery<null>(
     lip(ctx, lw, c.t)
     bloom(ctx, c.t)
     motes(ctx, c.t)
+    flashRoom(ctx, c.t)
     vignette(ctx)
     // Under each track's now-playing line (not the title or the credits, which stand on the dark wall).
     for (const card of titlesAt(c.t)) if (card.names.length === 1 && Array.isArray(card.names[0])) scrim(ctx, card.light, card.at, camera(c.t).cells)

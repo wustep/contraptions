@@ -80,7 +80,9 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
 - **The window** is the evening, and the half hour's clock (`lamp/sky.ts`). It opens on the last of a dusk, violet over
   peach, a few clouds lit from under; the blue hour; the clouds come over and it rains from the third track, heaviest
   through Exhale; it eases, the glass stays wet a while, and by the last two tracks it is clear, with stars and the
-  moon risen into the right-hand pane (and, late, two shooting stars, which the cat looks up at). Outside, the city's windows come on
+  moon risen into the right-hand pane (and, late, two shooting stars, which the cat looks up at). In the heaviest rain,
+  lightning far off lights the clouds three times. What is past the glass has depth: it moves against the bars as the
+  camera moves, and goes soft, its lights opening into discs, when the camera is close at the desk (`lamp/lens.ts`). Outside, the city's windows come on
   through the dusk and go out one by one through the night, a few of them the cool flicker of a screen; one, close,
   is a neighbour's, lit until a little before the end, where now and then someone crosses and a cat sits a while; a red light
   blinks on the tallest roof; now and then a plane crosses when the sky is clear. On the glass, beads gather where
@@ -552,6 +554,45 @@ ball. The machine and its timing were right and are untouched; the room around i
     no kicks, so it stops nodding and only sways in the cup. (The fairy lights' wave runs too, but that frame does not
     see the string.)
 
+### The thirty-fifth pass: depth through the glass
+
+The passes before this one had plateaued: each added a small thing to a room that was already full. Stepping back, the
+one thing every frame shared was that it was flat. The window, the show's clock and the frame's largest picture, was
+a painted backdrop on the wall: when the camera moved, the city moved with the bars, and close to the desk it was as
+sharp as the books. This pass makes the window deep, and gives the storm the one moment it was missing.
+
+77. **The city has depth** (`lamp/lens.ts`). What is out past the glass is drawn in layers, each at its depth: the
+    near roofs and the neighbour's window, the far roofs, the clouds and the plane, the stars and the moon. Each layer
+    moves with the camera by its depth, so when the camera follows the ball along the sill, the near roofs slide
+    behind the bars, the far ones less, and the moon hardly moves against the frame. A push in is partly the operator
+    stepping closer, so close to the desk the far layers grow a little less than the room does. Every layer sits
+    exactly where it was drawn in the window's look over the desk, the frame they were composed in. The street runs on
+    past the window's edges (the old skyline kept, more of it built to either side), so a move never shows its end.
+78. **The camera focuses on what it looks at.** In the room's frames and the window's the city is sharp. Following the
+    ball along the sill, the city goes soft behind it; at the desk it is softer still, and its lit windows open into
+    discs of light. The beads on the glass stay in focus and the rain is nearly so, as when a lens focuses on a wet
+    window. The discs are the lights' own (a bright one stays bright, a star's spreads to nothing) and add where they
+    overlap. The soft city is drawn small, blurred and laid back over the glass. It costs no more than a sharp frame,
+    and a browser whose canvas cannot blur scales it down and up instead.
+79. **The window's moments, against the new depth.** Every moment played to the camera (the neighbour's crossings and
+    their cat, the shooting stars, the planes) is worked out where it is through the glass from that frame, and must
+    be in focus there as well as in the frame. All of them still land: seven crossings, the look out at the rain, two
+    visits from the cat, two shooting stars, and three planes. The depth let in a third plane, late in Passing By, a quarter
+    minute after its shooting star. The moon is kept clear of the top of the frame in the closing wide shot.
+80. **Lightning, far off.** The heaviest rain, Blooming Dales into Exhale, was the longest stretch with nothing
+    happening in the sky. Three times in it (12:29, 13:59, 15:31), the clouds over the city light from inside for a
+    moment: a flicker of two or three pulses, the roofs black against it, a cool light into the room, and gone. There
+    is no bolt and no thunder; the music is the sound. Each is played to the camera like the sky's other moments, with
+    the window and the cat in the frame and clear of a car's lights. The cat's ear flicks and it looks up at where the
+    light was, as it does at a shooting star; if it was nodding along, the flash brings it out of it. The neighbour's
+    crossings keep clear of the flashes, but their one long look out at the rain comes seventeen seconds after the last.
+81. **The glass mists at its foot** while it is wet: a pale breath along the bottom of each pane, thicker in the
+    corners, gone as the glass dries.
+82. **Looked at:** the whole half hour at 24 moments; the sill walk at dusk frame by frame (the parallax); each flash;
+    the closing wide frame; an upright phone. `check:shows` now also holds the lens (sharp in the window's look and the
+    room's, soft at the cup, every layer where it was drawn) and the window's moments (three flashes in the heaviest
+    rain with the cat in view; the shooting stars and the crossings in focus, clear of the flashes).
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
@@ -572,6 +613,10 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
   built floor to ceiling and the live upright stage already fills a phone with it. A per-show choice to fill the Short
   (as the live stage does, seeing more world, never less) would make a better Short here; it is a change to the shared
   stage, so it is not in this PR.
+- **The focus.** How soft the city goes at the desk is one number (`blurOf`, `lamp/lens.ts`), and how far the layers
+  move is one per layer (`DEPTH`, `lamp/sky.ts`). Both are set to be felt on a move rather than seen in a still.
+- **The lightning.** Three far-off flashes, no bolt. They could be fewer, or gone; they are the only sudden light in
+  the half hour.
 - **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.
 
 ## Checks

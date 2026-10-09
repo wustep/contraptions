@@ -1,5 +1,5 @@
 import { sweepAt } from './decor'
-import { shootAt } from './sky'
+import { MOMENTS, flashAt, shootAt } from './sky'
 import { CAT } from './desk'
 import { catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
@@ -35,7 +35,8 @@ export const sleepAt = (t: number): number => smooth(t, SLEEP_FROM, SLEEP_FROM +
 
 /**
  * Where it is looking: the ball, a little behind (its eyes lead its head); or, while a car's lights cross the wall,
- * those; or, late in the night, a shooting star through the window, and where it went.
+ * those; or a flash of lightning in the clouds; or, late in the night, a shooting star through the window, and where it
+ * went.
  */
 function gaze(t: number, lag: number): { x: number; y: number } {
   const ball = ballGaze(t, lag)
@@ -43,7 +44,9 @@ function gaze(t: number, lag: number): { x: number; y: number } {
   const k = Math.min(1, sw.a * 1.6)
   const g = { x: ball.x + (sw.x - ball.x) * k, y: ball.y + (sw.y - ball.y) * k }
   const st = shootAt(t - 0.3)
-  return { x: g.x + (st.x - g.x) * st.a, y: g.y + (st.y - g.y) * st.a }
+  const s = { x: g.x + (st.x - g.x) * st.a, y: g.y + (st.y - g.y) * st.a }
+  const fl = flashAt(t)
+  return { x: s.x + (fl.x - s.x) * fl.look, y: s.y + (fl.y - s.y) * fl.look }
 }
 
 function ballGaze(t: number, lag: number): { x: number; y: number } {
@@ -168,9 +171,13 @@ function blinkAt(t: number): number {
   return Math.sin((Math.PI * s) / d) ** (slow ? 1 : 2)
 }
 
-/** An ear flick, after the ball knocks the pot or lands on the sill. */
+/** An ear flick, after the ball knocks the pot or lands on the sill, or at a flash of lightning. */
 function flickAt(t: number): number {
   let f = 0
+  for (const at of MOMENTS.lightning) {
+    const s = t - at - 0.2
+    if (s >= 0 && s < 2) f += Math.exp(-s / 0.25) * Math.sin(s * 26)
+  }
   for (let i = LANDINGS.length - 1; i >= 0; i--) {
     const l = LANDINGS[i]
     const s = t - l.t - 0.08
@@ -190,8 +197,8 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   const { x0, chest, top } = CAT
 
   // Its tail, curled round the front of it, the tip lifting and settling.
-  // A shooting star brings it out of the music to look, and it goes back in after.
-  const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a)
+  // A shooting star, or lightning, brings it out of the music to look, and it goes back in after.
+  const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look)
   const yawn = yawnAt(t) * (1 - sleep)
   const tr = trackAt(t)
   // The tip lifts and settles on its own, or, nodding along, sways a bar at a time.

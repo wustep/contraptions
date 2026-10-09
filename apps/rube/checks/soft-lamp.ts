@@ -6,11 +6,14 @@ import type { Performance, Version } from '../src/shows/registry'
 import { sectionOf } from '../src/shows/registry'
 import plan from '../../../scripts/shows/plans/soft-lamp-onsets.json'
 import { DURATION, show } from '../src/shows/versions/soft-lamp/lamp'
-import { AIMS } from '../src/shows/versions/soft-lamp/lamp/camera'
+import { AIMS, catInViewAt } from '../src/shows/versions/soft-lamp/lamp/camera'
 import { BOOKS, CONTACT, CUP, ON_SILL, PROPS, R, SILL } from '../src/shows/versions/soft-lamp/lamp/desk'
 import { MUSIC_END, TRACKS, YOUTUBE, barTime, kickAt } from '../src/shows/versions/soft-lamp/lamp/music'
 import { LANDINGS, LAPS, LEGS, NODS, ballAt, hollowY, legAt } from '../src/shows/versions/soft-lamp/lamp/route'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/soft-lamp/lamp/titles'
+import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/lens'
+import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
+import { rainAt } from '../src/shows/versions/soft-lamp/lamp/world'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -166,6 +169,20 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     if (Math.abs(b.x - c.x) > hw - R || Math.abs(b.y - c.y) > hh - R) lost++
   }
   check('soft lamp: the ball is in the frame all the time, and in Zoom\'s closer frame 99.5% of it', lost / seen < 0.005, `${((lost / seen) * 100).toFixed(2)}% out`)
+
+  // Through the glass: what moves there at its depth, sharp in the frames that look at it and soft at the desk; and the
+  // window's moments, each played to a frame that holds it in focus.
+  const sharp = [0, 0.21].map((x) => blurOf({ x, y: -1.9, size: 4.9 }))
+  const close = blurOf({ x: 1.75, y: -0.57, size: 2.45 })
+  const still = layerOf({ x: 0.21, y: -1.9, size: 4.9 }, 0.55)
+  check('soft lamp: the city sharp in the window\'s look and the room\'s, soft at the cup, and every layer where it was drawn in the window\'s look',
+    sharp.every((b) => b < 0.005) && close > 0.07 && still.s === 1 && near(still.ox, 0) && near(still.oy, 0), `soft ${close.toFixed(3)}`)
+  const m = MOMENTS
+  const inFocus = (t: number) => blurOf(lensOf(perf.camera!(t))) <= 0.02
+  check('soft lamp: lightning three times in the heaviest rain, the cat in view; the shooting stars and the neighbour\'s crossings in focus',
+    m.lightning.length === 3 && m.lightning.every((t) => rainAt(t) >= 0.68 && catInViewAt(t)) &&
+    m.shooting.length >= 2 && m.shooting.every(inFocus) && m.crossings.length >= 6 && m.crossings.every(([t]) => inFocus(t)) &&
+    m.crossings.every(([t]) => m.lightning.every((f) => t < f - 10 || t > f + 10)), JSON.stringify(m))
 
   // The words.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names, ...(c.notes ?? [])].join(' ')).join(' | ')
