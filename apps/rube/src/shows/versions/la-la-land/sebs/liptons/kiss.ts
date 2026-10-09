@@ -141,7 +141,7 @@ export const kiss = part<null>(
       [65.85, 3.15, [6.2, 2.42]],
       // The bloom, one move: back off the kiss and up as the room's lights come on out both ways, across to the
       // tables as their lamps flare, wide on the whole lit room while still drifting, and on round to the tree.
-      [66.5, 6.2, [3.4, 0.6]],
+      [66.5, 6.2, [3.9, 0.9]],
       [67.25, 11.8, [-0.3, -0.8]],
       [68.6, 13.0, [2.2, -1.05]],
       // To the tree, and up it with the cup.

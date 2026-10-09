@@ -409,3 +409,7 @@ A fifty-eighth pass:
 
 - **The kiss, in the middle.** A fresh reviewer found nothing broken, and of what it ranked one was taken: the kiss at Lipton's still met low in the frame, under the piano's legs. The shot on it now sits lower, so they touch in the middle of the picture between the piano's leg and the tree, with the stage's lip and the floor below them.
 - Not taken: the look at the door is in the close shots cut against each other just before, and the pan across the empty bar after she has gone is the room without her; her premiere keeps him in the frame with her, which a check now holds.
+
+A fifty-ninth pass:
+
+- **The bloom, at the show's pace.** Lowering the kiss's shot (the pass before) made the camera's move back off it, as the room lights up, the fastest in the show (0.59 frame widths a second). The move's first stop is a little nearer the kiss now, and it peaks at 0.45, with the tables' lamps still flaring in the picture. Swept again after it: the full build passes, no move in the show is faster than 0.53 frame widths a second, and the only jumps are the planned ones.
