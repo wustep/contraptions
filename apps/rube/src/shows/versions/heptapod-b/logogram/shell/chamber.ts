@@ -1,7 +1,9 @@
-import type { Pt } from '../../../../../parts'
+import type p5 from 'p5'
+import { FLOOR, R, type Pt } from '../../../../../parts'
+import { IAN, LOUISE } from '../worlds'
 import { box, ease, lookFrom, looks, part, route, turnTo, type Company, type Look, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
-import { drawChamber } from './chamber-glass'
+import { drawChamber, glassLight, swellAt } from './chamber-glass'
 import { FOOTFALLS } from './chamber-heptapods'
 import { ABBOTT_SEEN, CLOSE, IAN_PATH, IN, INK_IN, LOUISE_PATH, OPENS, OUT, PALM, REACH, SET_OFF, SPRAY, SURGES, WAKE, X_LEAN, X_PALM, X_REST } from './chamber-path'
 
@@ -61,10 +63,36 @@ const IAN_LOOKS: Look[] = [
 /** Every strike: the glass's two wakings, the seen footfalls, the limb leaving the floor, the palm opening, the touch, the spray, the ink coming in, the ring's surges, its closing and its tendrils. */
 export const CHAMBER_HITS: number[] = [...new Set([...WAKE, ...FOOTFALLS.map((f) => f.at), OPENS, PALM, SPRAY, INK_IN, ...SURGES, CLOSE, REACH])].sort((a, b) => a - b)
 
+/**
+ * The two of them in the polished floor: each a faint reflection under it, lit by the glass behind them, fading down
+ * into the floor's dark, and gone in the white. (A shadow would not show on this floor; the reflection grounds them.)
+ */
+function drawReflections(p: p5, k: number, t: number): void {
+  const lit = Math.min(1, glassLight(t)) * (1 - swellAt(t))
+  if (lit <= 0.02) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  for (const [x, color] of [[LOUISE_PATH.x(t), LOUISE], [IAN_PATH.x(t), IAN]] as const) {
+    const cy = 2 * FLOOR
+    const n = parseInt(color.slice(1), 16)
+    const rgb = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+    const g = ctx.createLinearGradient(0, FLOOR * k, 0, (FLOOR + 2 * R) * k)
+    g.addColorStop(0, `rgba(${rgb}, ${0.3 * lit})`)
+    g.addColorStop(1, `rgba(${rgb}, 0)`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.ellipse(x * k, cy * k, R * k, R * 0.85 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
 export const chamber = part<ChamberState>(
   {
     name: 'chamber',
-    draw: (p, s, c) => drawChamber(p, c.k, s.begin + c.t),
+    draw: (p, s, c) => {
+      const t = s.begin + c.t
+      drawChamber(p, c.k, t)
+      drawReflections(p, c.k, t)
+    },
   },
   (slot) => {
     const ways = LOUISE_PATH.ways(slot.begin)

@@ -259,6 +259,9 @@ strongest pulses held against what the picture does on them. What changed:
 - **The palm** (118.700 → 133.573): its seven fingers were straight wedges to sharp points, a star or an asterisk
   more than a hand, on the show's most looked-at image. Each finger now has a full root, a long taper with a little
   curl of its own, and a soft round pad at its tip where it presses on the glass.
+- **Reflections in the chamber floor** (87.2 → 130.4): the two of them stood on the polished floor with nothing under
+  them, and a shadow would not show on it. Each now has a faint reflection in it, lit by the glass behind them,
+  fading into the floor's dark, gone in the white.
 - **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
   shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
 - **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
