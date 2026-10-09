@@ -309,7 +309,22 @@ ball. The machine and its timing were right and are untouched; the room around i
     would cost the books or give the frame to the drawers); the sill walk, a moving frame, passes the polaroids and the
     headphones at its edges.
 
-**Subtracted:** the light cone; the ball's ink mark; the pages turning on each track (considered and not built: the page is the notebook's
+### The tenth lofi pass
+
+44. **The curtain was the one soft thing in the room that never moved.** Its loose fall below the tie now stirs in the
+    draught off the window (`draughtAt`, `lamp/decor.ts`), the same cold the plant on the sill already stirs in: two
+    slow swells that never line up over a slower gusting, the window's side caught first and the wall's side a beat
+    behind, the hem lifting a little as it goes. A twentieth of a cell on a still evening, twice that while it rains:
+    something alive at the frame's left edge in the window's looks and the room's, never enough to draw the eye from
+    the ball.
+45. **A cup of pencils by the lamp's foot**, the desk's one nod to someone writing, was built and taken out. The only
+    room for it in the lamp's pool is the 0.74 cells between the far cup and the lamp's foot, and three held frames'
+    edges fall there (the room's at 4.54, the window's at 4.57, the stair's at 4.92): what is left is too narrow for
+    anything to stand whole in. Moving the room's frame to make space cost Zoom the ball 1.6% of the time.
+46. **Looked at and left:** the track cards over the glass read cleanly; the rising moon crosses the sill frames' top
+    edge only in passing; a moment of the cup close with the lamp's shade at its top is the camera mid-move.
+
+**Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
 

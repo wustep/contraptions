@@ -7,7 +7,8 @@ import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, sky
 /**
  * What makes the room a room someone lives in, and the picture's finish.
  *
- * - The curtain, tied back on the window's left, on its rod.
+ * - The curtain, tied back on the window's left, on its rod, its loose fall stirring in the draught off the window
+ *   (the one the plant on the sill feels), more while it rains.
  * - The fairy lights strung across the top of the window in two swags and along the wall: they come on, bulb by bulb,
  *   just after the lamp, and breathe with the held sound (the pad and the keys), each at its own pace; in a track's
  *   break, when the drums drop out, a slow wave runs along them.
@@ -20,21 +21,37 @@ type Ctx = CanvasRenderingContext2D
 
 /* ------------------------------------------------------------------ the curtain */
 
+/**
+ * How far the curtain's hem is blown from where it hangs at `t` (cells, out into the room, so negative): a draught off
+ * the cold glass, two slow swells that never line up and a slower gusting under them, twice as strong in the rain.
+ */
+export function draughtAt(t: number): number {
+  const wave = 0.6 * Math.sin(t * 0.53) + 0.4 * Math.sin(t * 1.21 + 1.3)
+  const gust = 0.65 + 0.35 * Math.sin(t * 0.097 + 0.8)
+  const strength = 0.45 + 0.55 * rainAt(t)
+  return -0.11 * strength * gust * (0.5 + 0.5 * wave)
+}
+
 export function curtain(ctx: Ctx, lw: number, t: number): void {
   const sky = skyAt(t)
   const lamp = lampAt(t)
   const { x0, x1, tie, hem } = CURTAIN
   const top = ROD.y + 0.06
   const waist = { x0: x0 + 0.08, x1: x0 + 0.5 }
+  // Below the tie it is loose, and the draught takes it: more the further down, the hem lifting a little as it goes.
+  const d = draughtAt(t)
+  const lift = Math.abs(d) * 0.25
+  // The window's side of it is caught first, the wall's side follows a beat behind.
+  const dw = draughtAt(t - 0.5)
   // Gathered at the rod, drawn in at the tie, falling loose below it.
   const shape = () => {
     ctx.beginPath()
     ctx.moveTo(x0, top)
     ctx.lineTo(x1, top)
     ctx.bezierCurveTo(x1 - 0.05, top + 1.2, waist.x1 + 0.1, tie - 0.6, waist.x1, tie)
-    ctx.bezierCurveTo(waist.x1 + 0.05, tie + 0.5, x0 + 0.68, hem - 0.2, x0 + 0.72, hem)
-    ctx.quadraticCurveTo(x0 + 0.36, hem + 0.06, x0 - 0.02, hem)
-    ctx.bezierCurveTo(x0 + 0.02, tie + 0.4, waist.x0 - 0.04, tie + 0.1, waist.x0, tie)
+    ctx.bezierCurveTo(waist.x1 + 0.05 + d * 0.35, tie + 0.5, x0 + 0.68 + d * 0.85, hem - 0.2 - lift * 0.5, x0 + 0.72 + d, hem - lift)
+    ctx.quadraticCurveTo(x0 + 0.36 + (d + dw) / 2, hem + 0.06 - lift * 0.6, x0 - 0.02 + dw * 0.8, hem - lift * 0.3)
+    ctx.bezierCurveTo(x0 + 0.02 + dw * 0.5, tie + 0.4, waist.x0 - 0.04, tie + 0.1, waist.x0, tie)
     ctx.bezierCurveTo(waist.x0 - 0.05, tie - 0.8, x0 - 0.02, top + 1, x0, top)
     ctx.closePath()
   }
@@ -64,11 +81,12 @@ export function curtain(ctx: Ctx, lw: number, t: number): void {
   for (let i = 1; i < 5; i++) {
     const a = x0 + ((x1 - x0) * i) / 5
     const b = waist.x0 + ((waist.x1 - waist.x0) * i) / 5
-    const c = x0 + 0.72 * (i / 5)
+    const u = i / 5
+    const c = x0 + 0.72 * u + dw * 0.8 + (d - dw * 0.8) * u
     ctx.beginPath()
     ctx.moveTo(a, top)
     ctx.quadraticCurveTo((a + b) / 2, (top + tie) / 2 + 0.3, b, tie)
-    ctx.quadraticCurveTo((b + c) / 2 - 0.02, (tie + hem) / 2, c, hem)
+    ctx.quadraticCurveTo((b + c) / 2 - 0.02, (tie + hem) / 2, c, hem - lift * (0.3 + 0.7 * u))
     ctx.stroke()
   }
   ctx.restore()
