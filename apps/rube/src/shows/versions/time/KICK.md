@@ -341,6 +341,10 @@ each world, and changed:
 - **The van's sliding door** (70.5 to 89): it opened from just behind the cab back over the rear wheel, so the open
   doorway was cut down through the wheel's arch and its edge sliced the tyre. The door is between the wheels now, as
   a van's is, and Ariadne's place on the bench is a little forward, so with the door shut all three sit in its window.
+- **Across the face under Zoom** (127.5 to 133.5): running left over the fortress's roof and on to the hairpin, the
+  camera led them by two cells, and Fischer, at the back, was a cell or two behind Cobb; Zoom tightens on the same
+  point, and under it he rode off the right edge for four seconds. The camera leads them by half as much now, closer
+  still after the rock step, and under Zoom all three stay in the picture, the hairpin still coming in ahead of them.
 
 ## Inception nods
 
