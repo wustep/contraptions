@@ -622,7 +622,7 @@ function drawHouseLight(ctx: Ctx, k: number, f: Frame, L: Look): void {
 }
 
 /** The lawn: the flat by the swing, running on toward the water, and the bank up to the terrace behind. */
-function drawLawn(ctx: Ctx, k: number, f: Frame, L: Look): void {
+function drawLawn(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
   const x0 = Math.min(44, Math.floor(f.x0) - 2)
   const x1 = Math.max(76, Math.ceil(f.x1) + 2)
   const bottom = Math.max(4, f.y1 + 2)
@@ -662,6 +662,53 @@ function drawLawn(ctx: Ctx, k: number, f: Frame, L: Look): void {
     ctx.lineTo((x + 0.1) * k, (y - h * 0.7) * k)
   }
   ctx.stroke()
+  drawTurf(ctx, k, f, L, t)
+}
+
+/**
+ * The lawn toward us, which was one flat green: a scatter of grass in rows that open out as they come nearer (the
+ * ground seen a little from above), leaning with the air off the lake. Sparse and low in contrast: the ground, not a
+ * thing to look at.
+ */
+function drawTurf(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
+  if (f.y1 < R + 0.2) return
+  const dark = rgba(mix(L.grassDark, HOUSE.night, 0.15), 0.28)
+  const pale = rgba(mix(L.grass, HOUSE.linen, 0.25 + 0.4 * L.snow), 0.3)
+  const darkPath = new Path2D()
+  const palePath = new Path2D()
+  let y = R + 0.16
+  let j = 0
+  ctx.save()
+  ctx.lineCap = 'round'
+  while (y < f.y1 + 0.3 && j < 50) {
+    const depth = Math.min(3, y - R)
+    const dx = 0.2 + 0.16 * depth
+    const size = 0.05 + 0.06 * depth
+    for (let i = Math.floor(f.x0 / dx) - 1; i <= Math.ceil(f.x1 / dx) + 1; i++) {
+      if (hash(i, j, 61) > 0.42) continue
+      const x = i * dx + (hash(i, j, 62) - 0.5) * dx
+      const by = y + (hash(i, j, 63) - 0.5) * 0.06
+      // Only on the lawn's face, never up over the bank's top edge.
+      if (by < surface(x) + 0.1) continue
+      const h = size * (0.6 + 0.8 * hash(i, j, 64))
+      const lean = 0.25 * Math.sin(t * 0.6 + x * 0.45 + j) + 0.1
+      const path = hash(i, j, 65) > 0.55 ? palePath : darkPath
+      for (let b = 0; b < 2; b++) {
+        const bx = x + (b - 0.5) * h * 0.3
+        const bl = lean + (b - 0.5) * 0.6
+        path.moveTo(bx * k, by * k)
+        path.quadraticCurveTo((bx + bl * h * 0.35) * k, (by - h * 0.6) * k, (bx + bl * h) * k, (by - h) * k)
+      }
+    }
+    y += 0.14 + 0.1 * depth
+    j++
+  }
+  ctx.lineWidth = Math.max(0.6, 0.02 * k)
+  ctx.strokeStyle = dark
+  ctx.stroke(darkPath)
+  ctx.strokeStyle = pale
+  ctx.stroke(palePath)
+  ctx.restore()
 }
 
 function drawCanopy(ctx: Ctx, k: number, L: Look, wind: number, back: boolean): void {
@@ -876,7 +923,7 @@ export function lawnDraw(p: p5, k: number, t: number): void {
   ctx.save()
   drawSky(ctx, k, f, L, t)
   drawFarShore(ctx, k, f, L, t)
-  drawLawn(ctx, k, f, L)
+  drawLawn(ctx, k, f, L, t)
   drawHouseLight(ctx, k, f, L)
   drawShadows(ctx, k, t, L)
   drawTree(ctx, k, L, t)

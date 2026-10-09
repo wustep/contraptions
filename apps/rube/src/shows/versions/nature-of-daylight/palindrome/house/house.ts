@@ -3,9 +3,9 @@ import { mix } from '../cast'
 import { box, part, scenery, type Company, type Part, type PartShot, type Slot } from '../kit'
 import { HALF, LAST, SEAM, SWELL, TONIC } from '../music'
 import type { ShellSpot } from '../seams'
-import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME } from '../worlds'
+import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME, IAN, LOUISE } from '../worlds'
 import { CLOCK_HULL, CRADLE_HULL, BED_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawTV, drawTVGlow, tvShell } from './props'
-import { drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
+import { drawBallMirror, drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
 import {
   EMPTY_DX,
   NEAR,
@@ -99,6 +99,8 @@ export const houseSet = scenery<null>({
     }
     if (era === 'news') drawTV(p, k, T, L)
     drawMirror(p, k, T)
+    // Louise first, then Ian when he is here: the same order `balls` has them in.
+    drawBallMirror(p, k, T, balls.map((b, i) => [b, i === 0 ? LOUISE : IAN] as [Pt, string]))
     drawFloorLight(p, k, T, shadows, balls)
     if (era === 'news') drawTVGlow(p, k, T)
     drawVignette(p, k, T)

@@ -237,6 +237,17 @@ credits as the page sets them; and the show on a phone, whose taller frame sees 
 - **The cast card** ran its last line, Abbott and Costello, down to within a few pixels of the window's top rail. It
   sits higher now and clears it.
 
+A fifth filmed the whole show at four frames a second and ranked every change from one frame to the next away from
+the cuts between places. Each large one was a cut inside a place (wide to close, on a strike) or a moment meant to
+jump (the blast, the white-out, the ring closing, the light reaching her), so the motion is clean. Then full-size frames
+of the props seen small until now:
+
+- **The lawn toward us** was one flat green under the swing, the only bare ground in the show. It has a sparse, low
+  scatter of grass now, in rows that open out as they come nearer, leaning a little in the air off the lake, and
+  frosted in the winter.
+- **The lake house's floor** gave back the cradle, the bed and the television but not Louise or Ian, since the mirror
+  copies only what is drawn before the balls. Each has a dim reflection under it now, as faint as the cradle's.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
