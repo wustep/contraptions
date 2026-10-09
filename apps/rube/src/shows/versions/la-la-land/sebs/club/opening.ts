@@ -5,7 +5,7 @@ import { LIPTONS_MAT, SEBS_MAT } from '../worlds'
 import { HUSH_KEY, OPENING_END, PIANO } from './geometry'
 import { drawPiano, heldOn, keysOf, play, PIANO_CELLS, type Keys, type Note, type Press } from './piano'
 import { house, MIA_SEAT, SIDE_SEAT } from './room'
-import { call } from '../call'
+import { call, rising } from '../call'
 
 /**
  * The opening: Seb's, now, and he is playing. The camera comes in from the city at night through the club's lit
@@ -145,6 +145,8 @@ const miaAtTable = (t: number): Pt => {
  * At Seb's, now, the theme reaches her where she sits: the notes he plays go out to her table in the club's cold
  * light, the first of them a breath before she lifts her eyes to the stage. She knows it.
  */
+/** Before it reaches her: from his first note the theme rises off the strings into the dark of the club. */
+const RISING = rising(MELODY.filter((n) => n.t < 21.6), '#BCCDF0', 1.5, 4.2)
 export const TABLE_CALL = call(MELODY.filter((n) => n.t > 21.6 && n.t < 30.6), miaAtTable, '#BCCDF0', 0.68)
 
 export const opening = part<OpeningState>(
@@ -161,6 +163,7 @@ export const opening = part<OpeningState>(
     },
     over(p, s, c) {
       const t = c.t + s.begin
+      if (c.theme.name !== 'liptons' && t < 25) RISING(p, c.k, t)
       if (c.theme.name !== 'liptons' && t > 21.6 && t < 34.5) TABLE_CALL(p, c.k, t)
     },
   },
