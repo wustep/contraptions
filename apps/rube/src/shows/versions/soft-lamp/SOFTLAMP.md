@@ -548,8 +548,9 @@ ball. The machine and its timing were right and are untouched; the room around i
     Every break runs twelve to twenty-six seconds, room enough for that, but Breathtaking's is 5.3 (two bars of its
     half-time groove), and the rig needs some six seconds to settle a move: the camera went out and straight back in
     within eight, the busiest move in the half hour, passing a frame with half the cat at its edge on the way. A
-    break under eight seconds now leaves the camera where it is (the lamp's side, the ball swaying in the cup); the
-    fairy lights' wave still answers it.
+    break under eight seconds now leaves the camera where it is (here the lamp's side), and the break shows in the ball:
+    no kicks, so it stops nodding and only sways in the cup. (The fairy lights' wave runs too, but that frame does not
+    see the string.)
 
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
