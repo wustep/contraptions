@@ -106,7 +106,7 @@ Times are show seconds; pulse *k* is `pulse(k)`, and a strength in brackets is h
 
 - **Ian** rides beside her in the helicopter, waits at the deck's edge while the engine starts, follows her across the
   plank, stands on the lift's deck with her, lands a pulse behind her when gravity turns, hesitates when Abbott appears,
-  and stays back from the glass: he does not go through. At the end he comes to her across the meadow.
+  and stays back from the glass, watching her go: he does not go through. At the end he comes to her across the meadow.
 - **Hannah** is at the lake house only: across the room at the first frame, running on the grass, older and leaning on
   her, absent at the window in the rain, and across the room again at the end, coming to her on the last flutter.
 - The check holds them to it: Ian never at the lake house nor beyond the glass, Hannah only at the lake house, neither
@@ -254,6 +254,10 @@ strongest pulses held against what the picture does on them. What changed:
 - **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
   the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
   off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
+- **Ian at the glass** (126 → 130.4): he backed off out of shot while the first logogram was written and stayed out,
+  so she went into the white with no one there, and the reunion on the meadow had nothing to answer. A fresh
+  critic's notes caught it. Once the ring has closed he comes forward again, a step behind her at the edge of the
+  light, and is in the picture as the glass goes white. He still never goes to the glass.
 - **The reunion** (195.344): Ian came to a stop a sliver from her, and as her lean to him eased back a gap opened
   between them, so the meadow ended on the two of them drifting apart. He meets her on the touch now and stays
   against her as she settles back to her mark (which the circle's first frame needs): they end it together.
