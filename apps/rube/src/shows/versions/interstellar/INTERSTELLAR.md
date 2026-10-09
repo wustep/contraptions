@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 91 (latest)
+## Polish pass 92 (latest)
+
+No change to the show. The pull request's description lists pass 89's stall note among the changes to shared code (it is every show's), and has a short performance note from passes 84 to 88. Its images and the rest are kept.
+
+## Polish pass 91
 
 No change to the show: pass 89's note looked at, during a simulated drop on desktop and on an upright phone. It is the stage note's small dark pill, low and centred, and reads over the pale station and the dark sky alike. It covers a little of the picture, but only while the picture is frozen anyway. On the farm (a seek to 40 s) it did not show, rightly: that stretch was already buffered, and the music played on through the cut.
 
