@@ -211,6 +211,9 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.fill()
     ctx.restore()
   }
+  // Last, over everything: the frame's corners a little in shade, so the eye goes to its middle, where the ball is,
+  // and the many things in the picture sit together as one.
+  vignette(ctx)
 })
 
 /**
@@ -253,5 +256,23 @@ function shadeBall(ctx: Ctx2D, c: PieceCtx): void {
   g.addColorStop(1, `rgba(40, 44, 70, ${(0.34 * strength).toFixed(3)})`)
   ctx.fillStyle = g
   ctx.fillRect(-rx, -ry, 2 * rx, 2 * ry)
+  ctx.restore()
+}
+
+/** How dark the frame's corners are, at their darkest. */
+export const VIGNETTE = 0.18
+
+/** A soft darkening towards the frame's corners, as a lens gives, over the whole picture. */
+function vignette(ctx: Ctx2D): void {
+  const W = ctx.canvas.width
+  const H = ctx.canvas.height
+  const r = Math.hypot(W, H) / 2
+  ctx.save()
+  ctx.setTransform(W / (2 * r), 0, 0, H / (2 * r), W / 2, H / 2)
+  const g = ctx.createRadialGradient(0, 0, r * 0.62, 0, 0, r * 1.02)
+  g.addColorStop(0, 'rgba(8, 10, 22, 0)')
+  g.addColorStop(1, `rgba(8, 10, 22, ${VIGNETTE})`)
+  ctx.fillStyle = g
+  ctx.fillRect(-r, -r, 2 * r, 2 * r)
   ctx.restore()
 }

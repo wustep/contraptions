@@ -236,6 +236,12 @@ layers; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over th
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 
+## The frame
+
+Over everything, last, the frame's corners are a little in shade (`VIGNETTE`, 18% at the corners, nothing over the
+middle), as a lens gives: the eye goes to the middle, where the ball is, and the many things in the picture sit
+together as one.
+
 ## An edit
 
 After the weather came in, the busiest moments were looked at again for things that compete, and pulled back: the
