@@ -260,3 +260,9 @@ A twenty-eighth pass, at what the music does that nothing answers:
 A twenty-ninth pass, an addition and not a fix:
 
 - **The way they came.** The globe is the film's own device, the old studio picture's travel montage, and that device has its dotted line across the map. It has one now: from the moment the engine catches, a dashed line is inked on the globe under the plane's path, growing behind it from Los Angeles over Denver and New York and across the Atlantic to Paris, and it stays on the map after the plane has flown off it toward the tower. It is in dark ink, so it reads on sea and on land alike and the red stays the club's door's.
+
+A thirtieth pass, with another pair of eyes:
+
+- **A cold review.** I had a second reviewer look at the whole show with no notes, and weighed what it found. Some of it was already so (the trumpet solo has its slow push-in; the projector throws a thread to each star) or undid a choice made on purpose (her window whole in the theatre), and one was not so in the frames (the two of them at the dream club's door read clearly). Two were right.
+- **The kiss, held.** At Lipton's the camera started back the moment they touched, so the kiss itself was gone small into the corner in half a second. It holds on them through the touch now, a third of a second more, and then opens out on the room lighting up, a little quicker, so the first tables still flare in the picture.
+- **Her walk to the door.** After the close shots of the look and the nod, the camera went out wide on the whole room, and her going was a small yellow ball crossing the foot of the frame. It goes out less far: she is someone walking to a door, with David waiting at it on the left, and she still leaves the frame under the arrow.

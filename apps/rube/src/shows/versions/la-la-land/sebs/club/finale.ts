@@ -274,7 +274,8 @@ export const finale = part<FinaleState>(
     ...closeOn(CUTS.him, CUTS.smile, F([keyRest(LAST_KEY)[0] - 0.05, -0.34])),
     ...closeOn(CUTS.smile, CUTS.nod, F([-4.939, FLOOR_Y - 0.12]), 1.55),
     ...closeOn(CUTS.nod, CUTS.out, F([keyRest(LAST_KEY)[0] - 0.05, -0.34])),
-    { t: CUTS.out, cells: 7.4, hold: F([-6.6, 1.2]) },
+    // Out to her going: close enough that she is someone walking to a door, with David waiting at it on the left.
+    { t: CUTS.out, cells: 5.4, hold: F([-8.8, 1.55]) },
     // After her to the door, out; the door swings shut. Back across the empty room to him, the band's lamps behind him.
     { t: 466.9, cells: 4.6, hold: F([-10.6, 1.45]) },
     { t: 468.3, cells: 4.6, hold: F([-10.8, 1.45]) },
