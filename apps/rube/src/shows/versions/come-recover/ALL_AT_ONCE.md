@@ -702,6 +702,11 @@ The notes went back to the builders who made each part, who still had their cont
     hand-written ease uses the kit's `smooth`. The end's dark is one set of stops, used by both the dark and the eyes.
   - Frames are pixel for pixel as before except the scrolls' brush strokes.
   - Left as it is: making `laneAt` itself fast belongs in the shared `parts.ts`, which this PR does not touch.
+- **A pass for the full build, after the reviews.** `npm run build` passes again: the typecheck, all 3,066 checks
+  (one more, the reduced-motion check), and the production bundle. The show's chunk is 392.3 KB (144.1 KB gzipped),
+  6.1 KB gzipped over `origin/main` in all. The machine was heavily loaded by other work at the time. The shows'
+  checks took 638 s on the clock, but only 272 s of processor time, of which this show's own checks are about 7 s.
+  So the slowness was the load, not this show.
 
 ## The looks
 
