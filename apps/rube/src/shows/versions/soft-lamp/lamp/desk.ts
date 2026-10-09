@@ -93,6 +93,12 @@ export const MUG = { x: -2.35, halfW: 0.3, h: 0.64 }
  */
 export const CAT = { x0: -1.78, chest: -0.76, top: -0.6, head: { x: -0.84, y: -0.66 } }
 
+/**
+ * A Walkman standing on the desk left of the mug, the headphones' cable running to it along the desk: what is playing.
+ * Its left edge, right edge and height.
+ */
+export const WALKMAN = { x0: -3.8, x1: -3.16, h: 0.46 }
+
 /** What is pinned to the wall between the window and the lamp, under the lamp's light: polaroids and notes. */
 export const NOTES = { x0: 1.0, x1: 2.62, y0: -3.02, y1: -2.08 }
 /** A small framed print on the wall right of the lamp, seen from the room's wide frame. */
@@ -115,5 +121,6 @@ export const PROPS: Record<string, [number, number, number, number]> = {
   shade: [LAMP.hinge.x - 0.45, LAMP.hinge.y - 0.2, LAMP.hinge.x + 0.1, -1.95],
   cat: [CAT.x0 - 0.04, -1.1, CAT.head.x + 0.34, 0],
   notes: [NOTES.x0, NOTES.y0, NOTES.x1, NOTES.y1],
+  walkman: [WALKMAN.x0 - 0.02, -WALKMAN.h - 0.07, WALKMAN.x1 + 0.03, 0],
   print: [PRINT.x0, PRINT.y0, PRINT.x1, PRINT.y1],
 }

@@ -1,4 +1,4 @@
-import { BOOKS, CAT, CUP, FAR_CUP, GLASS, LAMP, MUG, R, SILL } from './desk'
+import { BOOKS, CAT, CUP, FAR_CUP, GLASS, LAMP, MUG, R, SILL, WALKMAN } from './desk'
 import { ballAt, hollowY } from './route'
 import { MOUTH, lampAt } from './world'
 
@@ -39,6 +39,7 @@ export function contacts(ctx: Ctx, t: number): void {
   const feet: [number, number, number][] = [
     // x middle, half width, y
     [MUG.x, MUG.halfW + 0.05, 0],
+    [(WALKMAN.x0 + WALKMAN.x1) / 2, (WALKMAN.x1 - WALKMAN.x0) / 2 + 0.05, 0],
     [(CAT.x0 + CAT.chest) / 2, (CAT.chest - CAT.x0) / 2 + 0.08, 0],
     [(BOOKS[2].x0 + BOOKS[2].x1) / 2, (BOOKS[2].x1 - BOOKS[2].x0) / 2 + 0.06, 0],
     [CUP.x, CUP.halfW + 0.05, 0],
@@ -110,6 +111,7 @@ export function wallShadows(ctx: Ctx, t: number): void {
     ctx.rect(x0, y0, x1 - x0, y1 - y0)
   }
   cast(MUG.x, rect(MUG.x - MUG.halfW, -MUG.h, MUG.x + MUG.halfW, 0), 0.4)
+  cast(WALKMAN.x1, rect(WALKMAN.x0, -WALKMAN.h, WALKMAN.x1, 0), 0.4)
   cast(CAT.chest, () => {
     ctx.beginPath()
     ctx.ellipse((CAT.x0 + CAT.chest) / 2, -0.25, (CAT.chest - CAT.x0) / 2, 0.36, 0, 0, Math.PI * 2)

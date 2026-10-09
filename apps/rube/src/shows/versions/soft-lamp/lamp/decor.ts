@@ -428,6 +428,19 @@ export const SWEEPS: number[] = (() => {
 })()
 const SWEEP_DUR = 4.2
 
+/** Where the sweep is on the wall at `t` and how bright, 0 to 1 (for the cat, who looks). */
+export function sweepAt(t: number): { x: number; y: number; a: number } {
+  let i = SWEEPS.length - 1
+  while (i >= 0 && SWEEPS[i] > t) i--
+  const dark = smooth(t, 120, 300)
+  if (i < 0 || dark <= 0) return { x: 0, y: 0, a: 0 }
+  const s = (t - SWEEPS[i]) / SWEEP_DUR
+  if (s < 0 || s > 1) return { x: 0, y: 0, a: 0 }
+  const dir = hash(i, 152) < 0.5 ? 1 : -1
+  const u = dir > 0 ? s : 1 - s
+  return { x: WINDOW.x1 + 0.15 + u * 7.4, y: -2.6, a: dark * Math.sin(Math.PI * s) }
+}
+
 export function headlights(ctx: Ctx, t: number): void {
   const dark = smooth(t, 120, 300)
   let i = SWEEPS.length - 1

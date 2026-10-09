@@ -7,6 +7,7 @@ import { cat } from './cat'
 import { bloom, curtain, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
 import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
+import { cable, walkman } from './walkman'
 import { night, rgba } from './sky'
 import { CREAM, INK, MOUTH, lampAt, lampColor, lightAt, lit, skyAt } from './world'
 
@@ -696,6 +697,8 @@ export const things = scenery<null>(
   'things',
   (p, _s, c) => inCells(p, c, (ctx, lw) => {
     contacts(ctx, c.t)
+    cable(ctx, lw)
+    walkman(ctx, lw, c.t)
     mug(ctx, lw, c.t)
     steam(ctx, c.t)
     cat(ctx, lw, c.t)

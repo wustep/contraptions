@@ -1,3 +1,4 @@
+import { sweepAt } from './decor'
 import { CAT } from './desk'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt } from './music'
 import { LANDINGS, LAPS, ballAt } from './route'
@@ -30,8 +31,15 @@ const LAST = TRACKS[TRACKS.length - 1]
 const SLEEP_FROM = barTime(LAST, LAST.exit) + 3
 export const sleepAt = (t: number): number => smooth(t, SLEEP_FROM, SLEEP_FROM + 9)
 
-/** Where it is looking: the ball, a little behind (its eyes lead its head). */
+/** Where it is looking: the ball, a little behind (its eyes lead its head); or, while a car's lights cross the wall, those. */
 function gaze(t: number, lag: number): { x: number; y: number } {
+  const ball = ballGaze(t, lag)
+  const sw = sweepAt(t - 0.35)
+  const k = Math.min(1, sw.a * 1.6)
+  return { x: ball.x + (sw.x - ball.x) * k, y: ball.y + (sw.y - ball.y) * k }
+}
+
+function ballGaze(t: number, lag: number): { x: number; y: number } {
   let x = 0
   let y = 0
   let w = 0

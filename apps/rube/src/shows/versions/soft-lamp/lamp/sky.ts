@@ -37,6 +37,7 @@ export function night(ctx: Ctx, t: number): void {
   ctx.fillRect(GLASS.x0, GLASS.y0, W, H)
   stars(ctx, t, cloud)
   moon(ctx, t, cloud)
+  birds(ctx, t, sky.dusk)
   plane(ctx, t, cloud)
   clouds(ctx, t, cloud, sky)
   city(ctx, t, sky)
@@ -113,6 +114,35 @@ function moon(ctx: Ctx, t: number, cloud: number): void {
     ctx.beginPath()
     ctx.arc(x + dx, y + dy, r, 0, Math.PI * 2)
     ctx.fill()
+  }
+}
+
+/** Birds going home across the dusk: two small flocks, one under the title and one as the first track ends, wings beating, then gliding. */
+function birds(ctx: Ctx, t: number, dusk: number): void {
+  if (dusk < 0.2) return
+  for (const [at, y0, n] of [[4, -4.25, 5], [98, -3.75, 3]] as const) {
+    const s = t - at
+    const dur = 26
+    if (s < 0 || s > dur) continue
+    const u = s / dur
+    for (let i = 0; i < n; i++) {
+      // A loose V: each a little behind and to one side of the one ahead, and each its own beat.
+      const back = i * 0.16
+      const side = (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.09
+      const x = GLASS.x0 - 0.4 + u * (W + 0.8) - back
+      const y = y0 + side + Math.sin(s * 0.9 + i) * 0.03 - u * 0.35
+      const beat = Math.sin(s * (7 + i * 0.6) + i * 1.7)
+      const glide = (Math.floor(s / 2.2 + i * 0.3) % 2) === 1
+      const wing = glide ? 0.15 : 0.35 * beat
+      const span = 0.07
+      ctx.beginPath()
+      ctx.moveTo(x - span, y - wing * span)
+      ctx.quadraticCurveTo(x - span * 0.4, y - 0.02 - wing * span * 0.3, x, y)
+      ctx.quadraticCurveTo(x + span * 0.4, y - 0.02 - wing * span * 0.3, x + span, y - wing * span)
+      ctx.strokeStyle = rgba('#2A2140', 0.85 * Math.min(1, dusk * 1.5))
+      ctx.lineWidth = 0.013
+      ctx.stroke()
+    }
   }
 }
 

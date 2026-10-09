@@ -89,7 +89,8 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
 - **The mug**'s steam is the held sound, the pad and the keys under each track: three soft wisps, fuller as it swells,
   thinner through the night as the tea cools.
 - **The books** are the stair down.
-- **The headphones**' near cup is the listener's seat: the cup plays the kick, and the ball nods to it.
+- **The headphones**' near cup is the listener's seat: the cup plays the kick, and the ball nods to it. Their cable
+  runs along the desk to the Walkman, whose reels are the half hour's progress.
 - **The plant pot** is the stop the ball comes back off, and it rocks when it does.
 - **The cat** is the audience (`lamp/cat.ts`). Its head and eyes follow the ball, a little behind, as a cat's do: up
   at the sill over its head, round to the stair beside it, into the cup. It blinks, now and then slowly. An ear flicks
@@ -235,6 +236,19 @@ ball. The machine and its timing were right and are untouched; the room around i
     their knobs.
 27. **The steam was all but invisible**; it is half again as strong. The red light on the roof across the street was
     a blob close up; it is a point with a small glow.
+
+### The fourth lofi pass
+
+28. **The sill's frames, a large share of the half hour, had an empty end of desk** left of the mug. A Walkman stands
+    there now (`lamp/walkman.ts`), the headphones' cable running to it along the desk behind everything: what is
+    playing. Through its window the cassette turns, the tape going from one reel to the other over the half hour (a
+    clock you can see); its play key is down while the music plays and comes up when it stops; its little light
+    flickers with the music's loudness. The cable is back (it was subtracted in the first round, when it went
+    nowhere); it now has somewhere to go.
+29. **The dusk had no life in it.** Two small flocks of birds cross it, one under the title, one as the first track
+    ends, beating and gliding.
+30. **The cat ignored the headlights.** It looks up and follows them across the wall while they pass, then goes back
+    to the ball.
 
 **Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones; a drinking bird that would have lifted the ball (a character, and a gag);
