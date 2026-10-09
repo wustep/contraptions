@@ -131,6 +131,12 @@ export interface TitleCard {
   lift?: number
   /** Optional: the card's type this many times its usual size (unset: 1, every show's credits as they were). */
   scale?: number
+  /**
+   * Optional: the least the card's unit (a hundredth of the 16:9 frame, times `scale`) may be on the page, in CSS
+   * pixels, so words that must be read (subtitles) are still read on a small stage, a phone's. A saved video's
+   * frame is always large enough, so its painter does not need it.
+   */
+  least?: number
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
 }
