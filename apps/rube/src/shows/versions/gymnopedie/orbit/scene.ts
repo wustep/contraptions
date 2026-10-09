@@ -1,11 +1,11 @@
 import type p5 from 'p5'
 import { R as BALL_R, mixHex, type Piece, type PieceCtx } from '../../../../parts'
-import { CHORDS, GRACES, MELODY, PERIOD, loudness, wrap } from './music'
+import { CHORDS, GRACES, MELODY, PERIOD, PIECES, loudness, wrap } from './music'
 import { LENGTH, RADIUS, along, ballLocal, crest, float, since, sink, stonesIn, swell, type Stone } from './path'
 import { wideAt } from './camera'
 import {
   BANK, BANKS, BANKS_OF_MIST, CLOUDS, FIREFLIES, FIREFLY, FLOCKS, GULLS, HEAPS, MIST,
-  WHALE, bowAt, cloudLight, cloudThere, dropAt, drawCloud, overcastAt, rainAt, ringAt, whaleAt, whaleShape, drawGull, firefliesOut, inLayer, layered, meteorAt, milkyWay, mistAt, wingsAt, type CloudLight,
+  WHALE, bowAt, deepLight, cloudLight, cloudThere, dropAt, drawCloud, overcastAt, rainAt, ringAt, whaleAt, whaleShape, drawGull, firefliesOut, inLayer, layered, meteorAt, milkyWay, mistAt, wingsAt, type CloudLight,
 } from './air'
 import { alpha, hash, osc, polar, skyAt, smooth, type Sky } from './world'
 
@@ -102,8 +102,19 @@ function weathered(t: number): Sky {
 }
 
 /** The sun and the moon: how far from overhead, radians (east positive), at show time `t`; beyond ±1.75 they are down. */
-const sunAngle = (t: number): number => 1.82 - (3.64 * wrap(t)) / 222
-const moonAngle = (t: number): number => (wrap(t) < 430 ? 3 : 1.8 - (3.6 * (wrap(t) - 430)) / (PERIOD - 430))
+/**
+ * Each goes once round the planet a period, east to west, so that from far off it is always somewhere in space: the
+ * sun crosses the sky through the Gymnopédie and goes slowly round under the planet through the night; the moon rises
+ * for the third Gnossienne, sets in the west at dawn, and goes round under the planet through the day.
+ */
+export const sunAngle = (t: number): number => {
+  const u = wrap(t)
+  return u < 222 ? 1.82 - (3.64 * u) / 222 : -1.82 - ((2 * Math.PI - 3.64) * (u - 222)) / (PERIOD - 222)
+}
+export const moonAngle = (t: number): number => {
+  const u = wrap(t)
+  return u >= 430 ? 1.8 - (3.6 * (u - 430)) / (PERIOD - 430) : -1.8 - ((2 * Math.PI - 3.6) * u) / 430
+}
 
 /** The sun or the moon in the frame: where it is on the canvas (device pixels), and how much it lights. */
 interface Body {
@@ -257,6 +268,10 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   const near = 1 - smooth(v.wide, 0, 0.3)
   if (near > 0.01) air(p, c, v, day, sun, moon, near)
 
+  // Far off, the sun and the moon in space, where they are from the planet.
+  const afar = smooth(v.wide, 0.1, 0.55)
+  if (afar > 0.01) inSpace(p, c, afar)
+
   // The bow, opposite the sun, as the shower clears.
   // Close: drawn back over the planet the bow would only be a stripe across the sky.
   const bow = bowAt(c.t) * near * (1 - smooth(v.cells, 9, 17))
@@ -274,6 +289,70 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     ctx.fill()
   }
 })
+
+/** Which way the sun is from the planet's middle at `t`, radians clockwise from the world's up. */
+const sunWay = (t: number): number => along(t) / RADIUS + sunAngle(t)
+const moonWay = (t: number): number => along(t) / RADIUS + moonAngle(t)
+
+/**
+ * The sun and the moon as the planet's neighbours in space, seen once it is small in the frame: the sun a small white
+ * disc with its glare, the moon a little world lit on the side towards the sun.
+ */
+function inSpace(p: p5, c: PieceCtx, light: number): void {
+  const ctx = p.drawingContext as Ctx2D
+  const k = c.k
+  const sun = sunWay(c.t)
+  const sx = Math.sin(sun) * RADIUS * 1.85 * k
+  const sy = -Math.cos(sun) * RADIUS * 1.85 * k
+  const glare = ctx.createRadialGradient(sx, sy, 0, sx, sy, RADIUS * 0.9 * k)
+  glare.addColorStop(0, `rgba(255, 240, 214, ${(0.7 * light).toFixed(3)})`)
+  glare.addColorStop(0.06, `rgba(255, 220, 178, ${(0.32 * light).toFixed(3)})`)
+  glare.addColorStop(0.3, `rgba(255, 206, 160, ${(0.08 * light).toFixed(3)})`)
+  glare.addColorStop(1, 'rgba(255, 206, 160, 0)')
+  ctx.fillStyle = glare
+  ctx.fillRect(sx - RADIUS * 0.9 * k, sy - RADIUS * 0.9 * k, RADIUS * 1.8 * k, RADIUS * 1.8 * k)
+  ctx.fillStyle = `rgba(255, 250, 236, ${light.toFixed(3)})`
+  ctx.beginPath()
+  ctx.arc(sx, sy, RADIUS * 0.05 * k, 0, Math.PI * 2)
+  ctx.fill()
+
+  const moon = moonWay(c.t)
+  const mr = RADIUS * 0.055 * k
+  const mx = Math.sin(moon) * RADIUS * 1.5 * k
+  const my = -Math.cos(moon) * RADIUS * 1.5 * k
+  const halo = ctx.createRadialGradient(mx, my, mr, mx, my, mr * 4)
+  halo.addColorStop(0, `rgba(200, 214, 240, ${(0.16 * light).toFixed(3)})`)
+  halo.addColorStop(1, 'rgba(200, 214, 240, 0)')
+  ctx.fillStyle = halo
+  ctx.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8)
+  ctx.save()
+  ctx.globalAlpha = light
+  ctx.fillStyle = '#1A2034'
+  ctx.beginPath()
+  ctx.arc(mx, my, mr, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.clip()
+  // Its lit half, towards the sun: a disc pushed towards the sun and squeezed as the moon goes round, its phase.
+  const toSun = Math.atan2(sy - my, sx - mx)
+  ctx.translate(mx, my)
+  ctx.rotate(toSun)
+  const face = ctx.createRadialGradient(mr * 0.5, 0, 0, mr * 0.35, 0, mr * 1.1)
+  face.addColorStop(0, '#F1EEE4')
+  face.addColorStop(0.75, '#D9D6CC')
+  face.addColorStop(1, '#A9A9A6')
+  ctx.fillStyle = face
+  ctx.beginPath()
+  ctx.ellipse(mr * 0.35, 0, mr * 1.05, mr * 1.05, 0, 0, Math.PI * 2)
+  ctx.fill()
+  // Its seas, faint.
+  ctx.fillStyle = 'rgba(120, 124, 136, 0.18)'
+  for (const [x, y, r] of [[0.1, -0.3, 0.32], [-0.25, 0.25, 0.24], [0.35, 0.3, 0.18]]) {
+    ctx.beginPath()
+    ctx.arc(x * mr, y * mr, r * mr, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
 
 /** The bow's colours, outside in. */
 const SPECTRUM = ['236, 120, 116', '240, 170, 104', '238, 220, 128', '146, 204, 140', '120, 166, 220', '160, 132, 210']
@@ -762,27 +841,64 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     ctx.fillStyle = sheen
     ctx.fill(water)
   }
-  // The planet under the sea: deep water all the way down, lit a little from the side the day is on.
+  // The planet under the sea: deep water all the way down, lit a little from the side the sun is on.
   {
     const r = (RADIUS - DEPTH + 0.02) * k
-    const core = ctx.createRadialGradient(-0.35 * r, -0.45 * r, r * 0.1, 0, 0, r)
-    core.addColorStop(0, mixHex(day.sea, day.deep, 0.55))
+    const sun = sunWay(c.t)
+    const [ox, oy] = [Math.sin(sun) * 0.5 * r, -Math.cos(sun) * 0.5 * r]
+    const core = ctx.createRadialGradient(ox, oy, r * 0.1, 0, 0, r * 1.05)
+    core.addColorStop(0, mixHex(day.sea, day.deep, 0.5))
     core.addColorStop(1, day.deep)
     ctx.fillStyle = core
     ctx.beginPath()
     ctx.arc(0, 0, r, 0, Math.PI * 2)
     ctx.fill()
+    // Far off, at night: the sea's own light all through the deep water, turning with the planet.
+    const far = smooth(Math.log(v.cells), Math.log(22), Math.log(70)) * smooth(day.night, 0.3, 0.8)
+    if (far > 0.01) {
+      ctx.save()
+      ctx.globalAlpha = far * (0.8 + 0.2 * osc(c.t, 0.02))
+      const R = RADIUS * k
+      ctx.beginPath()
+      ctx.arc(0, 0, R, 0, Math.PI * 2)
+      ctx.clip()
+      ctx.drawImage(deepLight(), -R, -R, 2 * R, 2 * R)
+      ctx.restore()
+    }
+    // And its far side from the sun in shadow, once it is small enough to be a world.
+    const shade = smooth(v.wide, 0.1, 0.6)
+    if (shade > 0.01) {
+      const R = RADIUS * k
+      const night = ctx.createLinearGradient(Math.sin(sun) * R, -Math.cos(sun) * R, -Math.sin(sun) * R, Math.cos(sun) * R)
+      night.addColorStop(0, 'rgba(3, 5, 12, 0)')
+      night.addColorStop(0.45, 'rgba(3, 5, 12, 0)')
+      night.addColorStop(1, `rgba(3, 5, 12, ${(0.5 * shade).toFixed(3)})`)
+      ctx.fillStyle = night
+      ctx.beginPath()
+      ctx.arc(0, 0, R + 0.05 * k, 0, Math.PI * 2)
+      ctx.fill()
+    }
   }
 
-  // Wide: the planet's limb lit on the ball's side, where its day is, fading round to the far side's dark.
+  // Wide: the planet's limb lit on the ball's side, where its day is, fading round to the far side's dark; and warm
+  // where the sun's light grazes its air, the dawn coming round.
   if (v.wide > 0.01) {
     const face = along(c.t) / RADIUS - Math.PI / 2
     p.noFill()
     for (let i = 0; i < 6; i++) {
       const spread = 1.5 - i * 0.2
-      p.stroke(alpha(p, mixHex(day.low, '#FFF1DA', 0.3), (0.12 + i * 0.06) * v.wide))
+      p.stroke(alpha(p, mixHex(day.low, '#FFF1DA', 0.3), (0.08 + i * 0.045) * v.wide))
       p.strokeWeight(Math.max(1, (6 - i) * 1.4))
       p.arc(0, 0, RADIUS * 2 * k, RADIUS * 2 * k, face - spread, face + spread)
+    }
+    const sunFace = sunWay(c.t) - Math.PI / 2
+    const warm = mixHex(day.low, '#FFC48E', 0.65)
+    const px = Math.max(1, ctx.canvas.height / 720)
+    for (let i = 0; i < 7; i++) {
+      const spread = 1.1 - i * 0.14
+      p.stroke(alpha(p, warm, (0.05 + i * 0.05) * smooth(v.wide, 0.1, 0.55)))
+      p.strokeWeight((8 - i) * 1.6 * px)
+      p.arc(0, 0, RADIUS * 2 * k, RADIUS * 2 * k, sunFace - spread, sunFace + spread)
     }
   }
 
@@ -1060,6 +1176,13 @@ const SPARKS = GRACES.map((g) => {
   return { t: g.t, u: b.u, h: b.h - BALL_R }
 })
 
+/** How much the ball carries its flame at `t`: from dusk, as the first Gnossienne begins, until it ends. */
+const [, GN1_PIECE] = PIECES
+const lamplighter = (t: number): number => {
+  const u = wrap(t)
+  return smooth(u, GN1_PIECE.from - 3, GN1_PIECE.from + 3) * (1 - smooth(u, GN1_PIECE.last - 2, GN1_PIECE.end + 2))
+}
+
 /** A soft round light, drawn once and stamped: a lamp, or an open flower, seen from far off. */
 const halos = new Map<string, HTMLCanvasElement>()
 function haloSprite(core: string, mid: string, edge: string): HTMLCanvasElement {
@@ -1182,6 +1305,23 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
       ctx.arc(x, y, Math.max(1, cell * 0.012), 0, Math.PI * 2)
       ctx.fill()
     }
+    ctx.restore()
+  }
+  // The lamplighter's own light: through the first Gnossienne the ball carries a small warm glow, the flame it lights
+  // the lamps with, breathing a little.
+  const flame = lamplighter(c.t) * (1 - v.wide)
+  if (flame > 0.01) {
+    const b = ballLocal(c.t)
+    const [x, y] = polar(b.u, b.h)
+    const r = k * (0.55 + 0.05 * osc(c.t, 0.31))
+    const g = ctx.createRadialGradient(x * k, y * k, k * BALL_R * 0.8, x * k, y * k, r)
+    g.addColorStop(0, `rgba(255, 210, 140, ${(0.3 * flame).toFixed(3)})`)
+    g.addColorStop(0.35, `rgba(255, 190, 110, ${(0.1 * flame).toFixed(3)})`)
+    g.addColorStop(1, 'rgba(255, 190, 110, 0)')
+    ctx.save()
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.fillStyle = g
+    ctx.fillRect(x * k - r, y * k - r, 2 * r, 2 * r)
     ctx.restore()
   }
   // Wide: a light round the ball, so the eye can find it on the small planet.

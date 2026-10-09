@@ -8,7 +8,7 @@ import { show } from '../src/shows/versions/gymnopedie/orbit'
 import { BASS, BREATHS, CHORDS, GRACES, MARGIN, MELODY, NOTES, PERIOD, PIECES, loudness } from '../src/shows/versions/gymnopedie/orbit/music'
 import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../src/shows/versions/gymnopedie/orbit/path'
 import { breath, cellsAt } from '../src/shows/versions/gymnopedie/orbit/camera'
-import { bloom, lampLight } from '../src/shows/versions/gymnopedie/orbit/scene'
+import { bloom, lampLight, moonAngle, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
 import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
@@ -150,6 +150,15 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
     rainFrom > G1.from && rainTo < G1.last && bowFrom > rainFrom + 10 && bowTo < GN1.from, `rain ${rainFrom.toFixed(0)}-${rainTo.toFixed(0)}, bow ${bowFrom.toFixed(0)}-${bowTo.toFixed(0)}`)
   check('gymnopedie: the whale passes once, under the third Gnossienne\'s pond', whaleFrom > GN3.from && whaleTo < GN3.last,
     `${whaleFrom.toFixed(0)}-${whaleTo.toFixed(0)}`)
+
+  // The sun and the moon: each once round a period, seen from far off in space, so neither may jump, the seam included.
+  const turn2 = (a: number) => Math.abs(a - 2 * Math.PI * Math.round(a / (2 * Math.PI)))
+  let skyJump = 0
+  for (let t = 0; t <= PERIOD; t += 0.05) {
+    for (const f of [sunAngle, moonAngle]) skyJump = Math.max(skyJump, turn2(f(t + 0.05) - f(t)))
+  }
+  check('gymnopedie: the sun and the moon go round without a jump, the seam included', skyJump < 0.01 &&
+    turn2(sunAngle(PERIOD - 1e-7) - sunAngle(0)) < 1e-4 && turn2(moonAngle(PERIOD - 1e-7) - moonAngle(0)) < 1e-4, skyJump.toFixed(4))
 
   check('gymnopedie: the planet is the one period round', STONES.every((s) => s.u0 < s.u1 && s.u0 >= -1 && s.u1 <= LENGTH + STONES[0].u0 + 1) && LENGTH > 200)
   check('gymnopedie: the notes are in order, on the period', NOTES.every((n, i) => n.t >= 0 && n.t < PERIOD && (i === 0 || n.t >= NOTES[i - 1].t)))

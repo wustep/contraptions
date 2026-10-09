@@ -119,6 +119,15 @@ Three things happen once a day:
   light. It swims the ball's way more slowly than the ball goes, so it passes back under it over a minute
   (`whaleAt`).
 
+From far off, at the seam, the planet is a world in space. The sun and the moon each go once round it a period (the
+sun across the sky through the Gymnopédie and slowly round under the planet through the night; the moon up for the
+third Gnossienne, setting in the west at dawn, and round under the planet through the day), so when the camera draws
+out they are where they should be: the sun a small white disc with its glare, the moon a little world lit on its sun
+side, its phase. The planet is lit from the sun: its deep water paler on that side, its far side in shadow, and its
+air warm where the sun's light grazes it. At night the sea's light shows through its deep water from far off, motes in
+a band under the surface. Close, through the first Gnossienne, the ball carries a small warm glow of its own: the
+flame it lights the lamps with.
+
 The sea gives it back: the stones, the lamps and the flowers are drawn again upside down from their feet, into a
 canvas of half the stage's resolution, faded with depth, and laid over the water row by row, each row shifted a little
 by a ripple that grows as it goes down. The sky's colour lies on the water under its surface. The reflection fades as
@@ -142,4 +151,4 @@ loudness come round with the period; every lamp is dark until the ball lights it
 flower opens as the ball comes and closes at dawn, across the seam; every layer of the air comes round with the
 period, and a shooting star falls only on a Gnossienne's top note, at night; there is one shower, in the
 Gymnopédie, with the bow after it and gone before the first Gnossienne; the whale passes once, under the third
-Gnossienne's pond; the titles.
+Gnossienne's pond; the sun and the moon go round without a jump, the seam included; the titles.

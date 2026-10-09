@@ -468,3 +468,53 @@ export function whaleShape(k: number, beat: number): { body: [number, number][];
   ]
   return { body, flukes, fin }
 }
+
+// ---------------------------------------------------------------- the sea's light, seen from afar
+
+/**
+ * The planet's deep water from far off at night: motes of the sea's own light in a band under its surface, crowded
+ * near the top and thinning with depth. Drawn once, square, the planet's disc in its middle filling it; it turns with the
+ * planet.
+ */
+let deep: HTMLCanvasElement | null = null
+export function deepLight(): HTMLCanvasElement {
+  if (deep) return deep
+  const S = 2048
+  const c = document.createElement('canvas')
+  c.width = S
+  c.height = S
+  const g = c.getContext('2d')!
+  const R = S / 2
+  // A haze of it under the surface, all round.
+  const haze = g.createRadialGradient(R, R, R * 0.55, R, R, R)
+  haze.addColorStop(0, 'rgba(90, 200, 196, 0)')
+  haze.addColorStop(0.75, 'rgba(90, 200, 196, 0)')
+  haze.addColorStop(0.95, 'rgba(90, 200, 196, 0.09)')
+  haze.addColorStop(1, 'rgba(90, 200, 196, 0)')
+  g.fillStyle = haze
+  g.fillRect(0, 0, S, S)
+  for (let i = 0; i < 2600; i++) {
+    const depth = hash(i, 191) ** 1.8
+    const r = R * (0.975 - 0.2 * depth)
+    const a = hash(i, 192) * Math.PI * 2
+    const x = R + Math.cos(a) * r
+    const y = R + Math.sin(a) * r
+    const light = (0.2 + 0.8 * hash(i, 193) ** 3) * (1 - 0.9 * depth)
+    const big = hash(i, 194) > 0.985
+    const size = big ? 3 + 3 * hash(i, 195) : 1 + 1.4 * hash(i, 195)
+    if (big) {
+      const glow = g.createRadialGradient(x, y, 0, x, y, size * 3)
+      glow.addColorStop(0, `rgba(150, 240, 226, ${(0.5 * light).toFixed(3)})`)
+      glow.addColorStop(1, 'rgba(150, 240, 226, 0)')
+      g.fillStyle = glow
+      g.fillRect(x - size * 3, y - size * 3, size * 6, size * 6)
+    } else {
+      g.fillStyle = `rgba(140, 236, 222, ${light.toFixed(3)})`
+      g.beginPath()
+      g.arc(x, y, size, 0, Math.PI * 2)
+      g.fill()
+    }
+  }
+  deep = c
+  return c
+}
