@@ -516,6 +516,18 @@ async function main(): Promise<void> {
           !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.includes('No Time for Caution') &&
           !!perf.soundtrack?.credit?.includes('Interstellar') && !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
+        // Online the music is two uploads, cued on the mix the show was timed to (liftoff-mix.sh): Cornfield Chase to the
+        // end of its trim, then No Time for Caution from the same point in its upload, at the show time the mix delays it
+        // to. Kept in two files, they are held to each other, or every Act II strike would be off the music online.
+        {
+          const mix = readFileSync(join(process.cwd(), 'scripts/shows/liftoff-mix.sh'), 'utf8')
+          const trims = [...mix.matchAll(/atrim=([\d.]+):([\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])])
+          const delay = Number(/adelay=(\d+)\|/.exec(mix)?.[1] ?? NaN) / 1000
+          const [cf, nt] = perf.soundtrack?.youtube ?? []
+          check('liftoff: the YouTube cues are the mix\'s numbers (Cornfield Chase\'s end, No Time for Caution\'s start and its place in the show)',
+            trims.length === 2 && !!cf && !!nt && near(cf.until ?? NaN, trims[0][1]) && near(nt.from ?? NaN, trims[1][0]) && near(nt.at ?? NaN, delay),
+            JSON.stringify({ trims, delay, cues: perf.soundtrack?.youtube }))
+        }
         // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.
         const said = LIFTOFF_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
         check('Interstellar: Directed by Stephen Wu, and under him Claude Opus 5.5',

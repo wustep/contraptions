@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 80 (latest)
+## Polish pass 81 (latest)
+
+- **The YouTube cues are held to the mix.** Pass 14 checked by hand that the uploads are cued on the mix's numbers. Those numbers live in two files, `liftoff/index.ts` (what plays) and `scripts/shows/liftoff-mix.sh` (what the show was timed to), and if they parted every Act II strike would be off the music online. `check:shows` now reads the script's two trims and its delay, and holds Cornfield Chase's `until`, No Time for Caution's `from` and its `at` to them. Each of the three, nudged in `index.ts`, makes it fail.
+
+## Polish pass 80
 
 - **The credits table is held to the cards.** It had drifted from `credits.ts` for months before pass 10 caught it. `check:shows` now builds each row's start, role and names from `CARDS` and requires the table above to be exactly those rows, no more. A start time put back to the old 266.0, or the director's card back to one name, each makes it fail. (A first try ran past the table's end into the later tables, and is held to the table's own lines.) The fine print is left out of the comparison: the cards use curly quotes and the table straight ones.
 
