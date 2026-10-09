@@ -778,8 +778,8 @@ export const painted = part<PaintedState>(
       { t: slot.begin, cells: 4.3, hold: [-0.6, -1.0] },
       { t: WALTZ - 0.3, cells: 4.6, hold: c(WALTZ, -1.0, -0.1) },
       // Out, as the orchestra comes in, to the quay and the umbrellas opening along it.
-      { t: 276.2, cells: 6.0, hold: c(276.2, -1.45, 0.4) },
-      { t: 279.4, cells: 6.3, hold: c(279.4, -1.6, 0.4) },
+      { t: 276.2, cells: 5.0, hold: c(276.2, -1.15, 0.35) },
+      { t: 279.4, cells: 5.1, hold: c(279.4, -1.2, 0.35) },
       // In to the waltz itself through the curtsies: the two of them turning, their reflections under them on the wet
       // stones, the umbrellas dipping behind. Keyed every phrase or so on the centre they turn about, so it travels with
       // them and does not follow either one round.

@@ -386,3 +386,7 @@ A fifty-third pass, the ranking again:
 
 - **Closer where it was still small.** A fresh ranking of the weakest stretches found three that were still too wide for what happens in them. The ride on the bulbs across Lipton's and down the garland, the joy after the kiss, comes in (about 4 cells over the swags, 5 down the garland, from 5 and 6). The walk to the door follows her closer and lower, so the two of them are in the picture's lower third and not on its bottom edge, with the doorway and the arrow over them. And on the couch at home the camera pushes slowly in on the three of them before he puts the lamp out.
 - Not taken: her entrance at Lipton's, already looked at three times.
+
+A fifty-fourth pass:
+
+- **The waltz, closer while the umbrellas open.** The last ranking's runner-up was the waltz on the quay, where the two of them are small under its lamps, umbrellas and clock. While the umbrellas open behind them (276 to 281) the shot comes in from 6 cells to 5 and sits lower; the umbrellas stand at the quay's edge just over the two of them, so they stay whole in the picture with the pair larger under them. The clock's shots keep their width, so its bell is in the picture when it strikes midnight.
