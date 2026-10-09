@@ -297,7 +297,19 @@ ball. The machine and its timing were right and are untouched; the room around i
 41. **Two small helpers were copied into three files.** The view's extent and the colour-at-an-alpha now live once, in
     `lamp/canvas.ts`; the frames drawn before and after are pixel for pixel the same.
 
-**Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
+### The ninth lofi pass
+
+42. **The ball was an eye.** The stage marks every ball with an ink dot to show it rolling; here the ball sits still in
+    the cup for most of each track, large in the close frames, beside a cat with round eyes, and the dot on its side
+    read as a pupil: a googly eye staring out of the headphones. The ball is now drawn without it (a rider with no mark,
+    `lamp/show.ts`) and the scene shades it (`ballShine`, `lamp/scene.ts`), under the cushion's lip: a matt ping-pong
+    ball with a soft shine toward the lamp and a dusk on its far side, the shine turning upward, the window's way, along
+    the sill. A faint printed stamp, a short pale dash that turns as it rolls, keeps the walk a roll and not a slide.
+43. **Looked at and left:** the cup close keeps the sill's corner in its top left (the lob's landing, and clearing it
+    would cost the books or give the frame to the drawers); the sill walk, a moving frame, passes the polaroids and the
+    headphones at its edges.
+
+**Subtracted:** the light cone; the ball's ink mark; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
 

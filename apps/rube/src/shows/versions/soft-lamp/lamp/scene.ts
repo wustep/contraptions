@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
 import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WINDOW, type Book } from './desk'
 import { MUSIC_END, heldAt } from './music'
-import { LANDINGS, NODS, SHOULDER, ballAt } from './route'
+import { LANDINGS, NODS, SHOULDER, ballAt, squashAt } from './route'
 import { cat } from './cat'
 import { bloom, clock, curtain, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
 import { ceiling, hanger, highShelf, underDesk } from './room'
@@ -20,7 +20,7 @@ import { CREAM, INK, MOUTH, lampAt, lampColor, lightAt, lit, skyAt } from './wor
  *   (`decor.ts`), the sill, and the plant pot on it.
  * - The desk, its edge lit under the lamp; the mug, and its steam; the cat (`cat.ts`); the stair of books; the
  *   headphones; the lamp.
- * - Over the ball: the cushion's near lip, so the ball sits in the cup rather than on it; then the lamp's bloom, the
+ * - Over the ball: its shading from the lamp's side; the cushion's near lip, so the ball sits in the cup rather than on it; then the lamp's bloom, the
  *   vignette and the grain.
  *
  * One job to a thing. The window is the evening: dusk, the clouds, the rain heaviest through the middle of the night,
@@ -531,6 +531,61 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   ctx.stroke()
 }
 
+/**
+ * The ball's shading, over it and under the cushion's lip: a ping-pong ball's matt roundness, a soft shine on the side
+ * toward the lamp and a dusk on the side away, the shine fading out along the sill where the window is the light.
+ */
+function ballShine(ctx: Ctx, lw: number, t: number): void {
+  const b = ballAt(t)
+  const q = squashAt(t)
+  const y = b.y + R * q
+  const rx = R * (1 + q) - lw * 0.5
+  const ry = R * (1 - q) - lw * 0.5
+  if (rx <= 0 || ry <= 0) return
+  const l = lightAt(b.x, b.y) * lampAt(t)
+  // Toward the lamp's mouth in its light; straight up, the window's way, out of it.
+  const dx = MOUTH.x - b.x
+  const dy = MOUTH.y - b.y
+  const d = Math.hypot(dx, dy) || 1
+  const w = Math.min(1, l * 1.6)
+  let ux = (dx / d) * w
+  let uy = (dy / d) * w - (1 - w)
+  const u = Math.hypot(ux, uy) || 1
+  ux /= u
+  uy /= u
+  ctx.save()
+  ctx.beginPath()
+  ctx.ellipse(b.x, y, rx, ry, 0, 0, Math.PI * 2)
+  ctx.clip()
+  // The maker's stamp, faint, turning as it rolls (the stage's turn: a cell of travel is 1/R radians, clockwise
+  // going right), so the walk along the sill is a roll and not a slide.
+  const spin = b.x / R
+  const sx = b.x + Math.cos(spin) * R * 0.5
+  const sy = y + Math.sin(spin) * R * 0.5 * (1 - q)
+  ctx.beginPath()
+  ctx.moveTo(sx - Math.sin(spin) * R * 0.22, sy + Math.cos(spin) * R * 0.22)
+  ctx.lineTo(sx + Math.sin(spin) * R * 0.22, sy - Math.cos(spin) * R * 0.22)
+  ctx.lineWidth = lw * 0.7
+  ctx.strokeStyle = rgba('#B0703E', 0.32)
+  ctx.stroke()
+  // The far side in its own shadow.
+  const shade = ctx.createRadialGradient(b.x + ux * R * 0.35, y + uy * R * 0.35, R * 0.2, b.x + ux * R * 0.35, y + uy * R * 0.35, R * 1.5)
+  shade.addColorStop(0, rgba('#5A4A6A', 0))
+  shade.addColorStop(0.55, rgba('#5A4A6A', 0.12))
+  shade.addColorStop(1, rgba('#3A2E4A', 0.42))
+  ctx.fillStyle = shade
+  ctx.fillRect(b.x - R * 1.5, y - R * 1.5, R * 3, R * 3)
+  // The shine, small and soft: a matt ball, not a glass one.
+  const hx = b.x + ux * R * 0.42
+  const hy = y + uy * R * 0.42
+  const shine = ctx.createRadialGradient(hx, hy, 0, hx, hy, R * 0.42)
+  shine.addColorStop(0, rgba('#FFF8EA', 0.25 + 0.55 * l))
+  shine.addColorStop(1, rgba('#FFF8EA', 0))
+  ctx.fillStyle = shine
+  ctx.fillRect(hx - R, hy - R, R * 2, R * 2)
+  ctx.restore()
+}
+
 /** The cushion's near lip, over the ball: the ball sits down in the hollow, not on top of it. */
 function lip(ctx: Ctx, lw: number, t: number): void {
   const b = ballAt(t)
@@ -697,6 +752,7 @@ export const things = scenery<null>(
     ballShadow(ctx, c.t)
   }),
   (p, _s, c) => inCells(p, c, (ctx, lw) => {
+    ballShine(ctx, lw, c.t)
     lip(ctx, lw, c.t)
     bloom(ctx, c.t)
     motes(ctx, c.t)
