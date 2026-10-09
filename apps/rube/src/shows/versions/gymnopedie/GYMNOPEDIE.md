@@ -189,6 +189,21 @@ the same as before any of the weather; 10 at the seam, where every stone is draw
 canvas of its own, which stays on the GPU so long as nothing reads the stage's canvas back (nothing does; a probe that
 does would make every mirror row a readback, which is what a first measurement here mistook for the show being slow).
 
+## Where things are
+
+`orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
+the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the aurora, the whale) and their
+layers; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+`frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
+`scene.ts` is their index.
+
+## An edit
+
+After the weather came in, the busiest moments were looked at again for things that compete, and pulled back: the
+Milky Way steps back while the aurora is up (one band of light in the sky at a time); the far bank of cloud is thinner
+at night, so it is not a grey mass behind the pond's leaves; and the air is kept clear round the ball, a cloud that
+comes over it thinning away (by where the ball keeps to over a few seconds, so a cloud does not breathe with its hops).
+
 ## Checks
 
 `check:shows` (`apps/rube/checks/gymnopedie.ts`): the picker entry, the credit, the three pieces in order; the loop
