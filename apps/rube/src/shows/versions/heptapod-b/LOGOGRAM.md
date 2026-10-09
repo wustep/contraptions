@@ -223,6 +223,29 @@ notes, then scrub, fix the worst, re-scrub. What changed, by beat:
 - **The coda**: a six-second draw back as the held tones die, and the credits in the silence after (219.6; the show
   is 251 s).
 
+## Polish rounds
+
+A third director's pass (Claude Opus 5.5): the whole film at a frame a second, dense sheets either side of every
+cut, and close looks at whatever caught the eye. What changed:
+
+- **The last frame** (251): Hannah's span ended at the show's end exclusively, so the frame the player holds there
+  had Louise alone on the bench. Hannah stays.
+- **The white-out from the glass** (130.4): the chamber's floor was whitened less than the air over it and stood as a
+  flat grey slab under a white room. It takes the light as a reflection now, one white with the glass at its edge.
+- **The push** (160 → 185): Costello's feet stood just above the frame, so the ends of its other limbs showed as grey
+  tabs along the top edge. It stands higher; only its pen comes into the picture. In the close frames its pen ended
+  in a square cut: every limb's tip is round now.
+- **The heptapods** had a flat cut across the crown of the body, clipped acorns in every wide. The crown is domed,
+  and the highest of the body is the most fogged, so the head goes up into the white.
+- **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
+  shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
+- **The room for the credits**: the ceiling stood just over the window, so the coda's wide was a third dark ceiling,
+  and the cast list straddled its soft edge. The room is tall now, the ceiling high over the glass on a clean line,
+  and the cards sit on quiet wall with a little more shade under them.
+- **Hannah's drawing**: low on the wall over her corner, at her height, a child's drawing is taped: the two of them
+  by the water under a crayon sun, in pencil (nothing but Louise is her colour, not even a drawing of her). It is in
+  the first frame and the last, and in the visions at the window.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
