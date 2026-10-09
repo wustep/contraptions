@@ -221,7 +221,15 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 17 (latest)
+## Polish pass 18 (latest)
+
+An audit of the round-things rule, run on the code rather than found by eye: every disc drawn at about a ball's size (0.16 to 0.34 cells across), with its colour and where it stands. Most are tin, denim or faint hull, away from the balls. At full size the catapult's gold pivot reads as a spoked ratchet wheel and the ballpark's light-tower lamps as a bank of four in a panel. One remained:
+
+- **The museum clock's bob** (`act2/replica.ts`, 131 to 136 s). A round brass disc swinging just under Cooper while he rides the clock's weight. It is a lens now, as the farmhouse clock's bob is since pass 15, so the two clocks match and the only round thing in the case is him.
+
+(The replica draws Act I's house, so pass 15's kitchen, its shelf, table, lamp and chairs, is in the museum too, as a rebuilt farmhouse's kitchen should be. The replica's own clock stands exactly over the farmhouse one.)
+
+## Polish pass 17
 
 A contrast audit: every half second, Cooper's fill against a ring of the picture just outside him. On the farm the two are close throughout, as meant (sand on dust-coloured paper: he reads by his ink edge and his warmth), and the frames where they come closest still read. The audit's frames showed something else:
 
