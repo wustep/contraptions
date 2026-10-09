@@ -430,6 +430,14 @@ The notes went back to the builders who made each part, who still had their cont
     a colour and brightness, and it was left.
   - The hush (128–133 s), nearly black in every sweep, was watched again at full size. The seeds drift at their
     depths and the rim comes up out of the dark, the quiet the music asks for, and it was kept.
+- **A pass for Waymond's catch.** The story's beats were looked at for whether each one lands. The photograph, small
+  in its Known limit, reads at normal size, about 70 px across, the glowing window and the three eyes clear.
+  Waymond's catch did not land.
+  - In the peak he sits on the pulley, steps off it (about 247.4 s) and catches the line taut (247.9). It is the
+    moment he chooses to be the weight that pulls Joy back. All of it happened in the frame's top-left corner, half
+    off its edge, and the pulley itself came into frame only at 248.3, after the catch.
+  - The framing from 246.4 s now opens sooner and higher: the pulley, Waymond on it, his drop and catch, the line,
+    and Evelyn and Joy in the hole below, all in one frame. Then it opens on out to the whole machine as before.
 
 ## End credits
 

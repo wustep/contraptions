@@ -559,12 +559,14 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     // The catch: close on the two of them at the lip.
     { t: 243.6, cells: 3.4, hold: H([-0.05, catchY]), w: 0.9 },
     { t: 245.4, cells: 3.1, hold: H([-0.05, catchY]), w: 0.9 },
-    // Back, as Waymond comes down, to the whole machine: pulley, line, rim, the two of them in the hole.
-    { t: 246.4, cells: 5.4, hold: H([-1.4, -0.3]) },
+    // Back, as Waymond comes down, to the whole machine: pulley, line, rim, the two of them in the hole. High and
+    // wide enough that the pulley he sits on, his hop off it and his catch of the line are all inside the frame,
+    // with the two of them in the hole below: the moment he chooses to be the weight is seen whole.
+    { t: 246.4, cells: 7.0, hold: H([-2.0, -1.9]) },
     // Waymond caught by the line, and the tug: the line, his catch and the two of them in one frame.
-    { t: 247.3, cells: 5.3, hold: H([-1.9, -0.5]) },
-    { t: 247.62, cells: 5.0, hold: H([-1.7, -0.35]) },
-    { t: 247.85, cells: 5.1, hold: H([-1.7, -0.4]) },
+    { t: 247.3, cells: 7.7, hold: H([-2.2, -2.25]) },
+    { t: 247.62, cells: 7.5, hold: H([-2.1, -2.15]) },
+    { t: 247.85, cells: 7.7, hold: H([-1.9, -2.05]) },
     // Open to the whole machine as the bagel turns back: pulley, Waymond going down, the line, the rim, the hole.
     { t: 248.6, cells: 8.2, hold: H([-1.4, -1.4]) },
     { t: 249.8, cells: 8.2, hold: H([-1.5, -1.5]) },
