@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 67 (latest)
+## Polish pass 68 (latest)
+
+- **Cooper findable across the axis on a phone** (`drawStreak` in `act2/ballpark.ts`, 164.9 to 174.1 s). On a phone held upright the 16:9 picture is about 220 CSS pixels tall, a fifth of 1080p's. In the flight across the axis Cooper's radius there falls under 2.5px for 9 seconds, down to 0.8px. The streak meant to mark him judged "small" in canvas pixels, which on a phone's dense screen are three to a CSS pixel, so it held back exactly where he was smallest. It now judges in CSS pixels. Where he is a speck, a soft warm halo is drawn round him, never under 9 CSS pixels, and the streak keeps a width he can be seen by. At 1080p, where he is bigger, the halo is faint and the shot looks as it did. (The ring's reveal, 132.9 to 136.7 s, is as small on a phone, but there he sits at the house's door, where the shot sends the eye, and is left.)
+
+## Polish pass 67
 
 No change to the show: how big Cooper is on the screen. His radius was measured at 1080p every 0.05 s. It is under 6px for more than a second only in the two whole-ring shots, which are written as the world bigger than him: the ring's reveal (133.9 to 136.3 s, down to 3.1px) and the pull-out as he flies across the axis (166.0 to 167.8 s, down to 4.1px). In the flight he trails a gold streak across the pale sky that the eye finds at once. In the reveal he is at the house's door at the ring's foot, where the shot sends the eye.
 

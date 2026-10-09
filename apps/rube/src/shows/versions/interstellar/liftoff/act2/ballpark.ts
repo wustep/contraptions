@@ -766,15 +766,34 @@ function drawPark(p: p5, s: BallparkState, c: Ctx): void {
 
 /**
  * Pulled right back, the ball is a speck: it trails a short streak of its
- * own colour, which fades as the camera comes in and it is big again.
+ * own colour, which fades as the camera comes in and it is big again. How
+ * small it is is judged on the screen, in CSS pixels, not in the canvas's
+ * (on a phone's dense screen those are three to one, and the streak held
+ * back where the ball was smallest). Where it is a speck it also carries a
+ * soft warm halo, never under 9px across the screen, so a phone held upright,
+ * whose frame is a fifth of 1080p's, can find it across the whole ring.
  */
 function drawStreak(p: p5, c: Ctx, T: number): void {
   if (T <= HIT + 0.04 || T >= WINDOW) return
-  const px = 2 * R * c.k
+  const density = p.pixelDensity()
+  const px = (2 * R * c.k) / density
   // Not over the far house in the last instant: by then the camera is in close anyway.
   const f = clamp((18 - px) / 9) * (1 - smooth(T, WINDOW - 0.6, WINDOW - 0.25))
   if (f <= 0) return
   const X = (v: number) => v * c.k
+  {
+    const [hx, hy] = flightAt(T)
+    const r = Math.max(R * c.k * 2.4, 9 * density)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createRadialGradient(X(hx), X(hy), 0, X(hx), X(hy), r)
+    g.addColorStop(0, alpha(p, BALL, 0.5 * f).toString())
+    g.addColorStop(0.45, alpha(p, BALL, 0.2 * f).toString())
+    g.addColorStop(1, alpha(p, BALL, 0).toString())
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(X(hx), X(hy), r, 0, Math.PI * 2)
+    ctx.fill()
+  }
   const n = 16
   const span = 0.55
   for (let i = n; i >= 1; i--) {
@@ -785,7 +804,7 @@ function drawStreak(p: p5, c: Ctx, T: number): void {
     const b = flightAt(t1)
     const u = 1 - (i - 0.5) / n
     p.stroke(alpha(p, BALL, f * 0.6 * u))
-    p.strokeWeight(Math.max(2, px * 0.9) * (0.35 + 0.65 * u))
+    p.strokeWeight(Math.max(2 * density, R * c.k * 1.8) * (0.35 + 0.65 * u))
     p.line(X(a[0]), X(a[1]), X(b[0]), X(b[1]))
   }
 }
