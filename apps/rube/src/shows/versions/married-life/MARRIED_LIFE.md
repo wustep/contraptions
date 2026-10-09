@@ -83,7 +83,8 @@ bass, on the one); Ellie, round, answers on the first pah.
   them seen. The bell peals on the next three downbeats. From the kiss
   the camera pulls out over those three bars and comes to rest on bar 4's peal (20.89), the whole nave in, the bell
   swinging whole in its tower; then it runs on after them at that distance, never coming back in. They run down the
-  aisle, the doors fly open as Ellie reaches them, and they run out under the bell at 1.6 cells a second.
+  aisle, the doors fly open as Ellie reaches them, and they run out under the bell at 1.6 cells a second, he leaning
+  into the run with half his kiss lean and skipping a little onto each of the waltz's downbeats, upright for the cut.
 
 ### The fix-up (21.58 to 49.64 s): the house, from the street
 
@@ -105,9 +106,9 @@ bass, on the one); Ellie, round, answers on the first pah.
 - **The mailbox.** Her handprint (a round palm) goes on bar 21, his (a square palm) on bar 22: two small hands,
   fingers up, thumbs reaching toward each other, in the box's own paint pressed darker, so they never read as two
   more of them. He has let the cart go as the mast folded, and it has rolled on past the box alone and braked on bar
-  20, so the box stands clear on its post; she springs back to it off the cart's tail. She leaps over him, landing
-  on 23's two (40.77, the strongest attack of the phrase and the first waltz's second-loudest swell), and leads up the
-  steps; he follows a bar behind. On the soft bars 29 to 31 they sit in the two armchairs at the bay
+  20, so the box stands clear on its post; she springs back to it off the cart's tail. She gathers, wide, and leaps
+  over him, drawn out along her flight (`leapShape`), landing wide on 23's two (40.77, the strongest attack of the
+  phrase and the first waltz's second-loudest swell), and leads up the steps; he follows a bar behind. On the soft bars 29 to 31 they sit in the two armchairs at the bay
   window, she looking at him (down at him as he crosses in front of her chair, then over at him in his).
 
 ### The clouds (49.64 to 63.25 s): the hill
@@ -169,7 +170,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   the back door on bar 3, and as he goes past the bookcase the book slides back off his top onto its shelf, on bar 4.
   It is one walk from the stump to his seesaw.
 - **The jar.** A seesaw stands in front of the fireplace. Carl hops on his end on each downbeat (taking off on the
-  third beat before it, the waltz's pickup), and the cup end
+  third beat before it, the waltz's pickup, when the plank, held half down under his weight since the stroke, kicks
+  up and throws him), and the cup end
   throws a handful of five coins over the room, spreading and closing up again, turning and catching the light, into
   the jar's slot on the mantle on the next downbeat; each handful puts a visible notch of brass in the glass, the jar
   clinks in its cradle, and Ellie on the ladder counts each one in: up off her tread as it drops into the slot, down
@@ -230,13 +232,16 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   steep flank toward it; he nearly gets there, and she never does. (In summer the tree stands left of the crest where
   they lie; seen from the lane years later, it stands where the climb can reach it.)
 - Close on them (2.8 cells), she climbs after him, tires, rests, pushes on and stalls. **On 174.67 she gives way**:
-  she sinks, and rolls back the short way she climbed onto the fieldstone's worn top, and is still. No bounce. The
+  she sinks, and rolls back the short way she climbed onto the fieldstone's worn top, and is still, slumped (lower,
+  wider: `slumpOf`), her face turned down, spent; and a cloud comes over the field (`overcast`). No bounce. The
   strike is the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays
   there, and its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets
-  to give her, lying on the slope as he passes. He does not stop: he hurries down after her, faster than he has gone in years, the camera in close with
-  them (2.4 to 1.9 cells, the basket left out of the frame), and eases to rest beside her on the stone. He leans to
-  her; she answers with the smallest roll toward him, her face turning from the sky to him, and looking at him
-  across the cut into the ward.
+  to give her, lying on the slope as he passes. Stopped by his lurch for a frozen beat, he hurries down after her,
+  faster than he has gone in years, leaning into it with a stride (`RUN`), the camera hanging back so he is seen to
+  cross the frame to her, in close with them (2.4 to 1.9 cells, the basket left out of the frame), and eases onto the
+  stone beside her just as she comes to rest. He leans to her; she answers with the smallest roll toward him, lifting
+  only partly out of her slump, her face turning to him, and looking at him across the cut into the ward, where the
+  slump eases out under the covers.
 
 ### The hospital (180.41 to 189.45 s): the clinic
 
@@ -265,8 +270,9 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   empty, arriving as he reaches the floor.
 - As the morning comes up he lets himself down off the pew, forward to its edge and down its front in one even move
   (under half a cell a second, the seat twice his height), onto the floor on 192.05; there he turns to her picture and
-  leans to it, slowly, the lean he gave her in the office and at her bedside, and holds it; then he walks the aisle at an old man's pace (about
-  half a cell a second) into the porch, where the bell's rope hangs. As it is pulled the camera rises
+  leans to it, the lean he gave her in the office and at her bedside, taking over from the lean he got down with,
+  deepening on the piano's note (192.57) and held; then he walks the aisle at an old man's pace (about 0.65 cells a
+  second), his top lingering toward her as he goes, into the porch, where the bell's rope hangs. As it is pulled the camera rises
   and widens with it, and **the bell tolls once, on the cue's strongest onset (197.71)**, the whole empty church in
   the frame from the organ to the steps, and the toll is felt through all of it: the organ's pipes ring gold with it, as they went on every note
   of the march, and fade as the bell dies away; the balloon swings aside on its string and sways back; he starts; and
@@ -284,7 +290,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   the door shuts and passes the wall between the door and the bay at his side; the door, and the camera widens as he
   goes in. In the bay he lets the string out again, before he ties it. The bay's glass runs down to the room's floor, so he is seen whole through it,
   and its middle light is one pane from head to floor, so no bar crosses the balloon over her chair. He ties the
-  balloon to her chair, so it floats over the empty seat. He sits in his, with a slow settle, and leans to put the
+  balloon to her chair, so it floats over the empty seat. He climbs into his, as onto the steps, and settles heavily,
+  and leans to put the
   lamp on. Tied to her chair, the balloon leans the smallest way toward him on three of the piano's phrase notes
   (219.70, 221.88, 226.20), easing over and back: her last gesture at her bedside was the same.
 - The camera pushes in slowly on the two chairs through the sit, and holds the lit room for a phrase of the piano,
