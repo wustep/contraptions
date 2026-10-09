@@ -116,6 +116,7 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     return who === 'joy' ? show.joy(t) : show.waymond(t)
   }
   const deadLooks: string[] = []
+  const unseenLooks: string[] = []
   let looks = 0
   for (const spec of eyes) {
     for (const g of spec.gaze ?? []) {
@@ -129,9 +130,20 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
         if (t >= spec.from && ballOf(spec.who, t) && target) live++
       }
       if (live < n * 0.9) deadLooks.push(`${spec.who} ${g.from.toFixed(2)} (${Math.round((100 * live) / n)}%)`)
+      // And seen: its eye in the frame of the show's own camera, and big enough to read, for at least half of it.
+      let seen = 0
+      for (let t = g.from; t <= g.to; t += 0.05) {
+        const b = t >= spec.from ? (ballOf(spec.who, t) as { x: number; y: number; scale?: number } | null) : null
+        if (!b) continue
+        const f = cam(t)
+        const inside = Math.abs(b.x - f.x) < (f.cells * 16) / 9 / 2 - R && Math.abs(b.y - f.y) < f.cells / 2 - R
+        if (inside && 2 * 0.6 * R * (b.scale ?? 1) * (720 / f.cells) >= 7) seen++
+      }
+      if (seen < n * 0.5) unseenLooks.push(`${spec.who} ${g.from.toFixed(2)} (${Math.round((100 * seen) / n)}%)`)
     }
   }
   check('all at once: every look is live, the one looking and the one looked at both there', deadLooks.length === 0 && looks >= 20, `${looks} looks; ${deadLooks.join(', ')}`)
+  check('all at once: every look is seen, its eye in the frame and big enough to read for at least half of it', unseenLooks.length === 0, unseenLooks.join(', '))
 
   // Joy and Waymond are in the frame or out of it, never left half cut by its edge for long: a moment going out of
   // shot or with the camera on the move, but not a beat held with one of them sliced.

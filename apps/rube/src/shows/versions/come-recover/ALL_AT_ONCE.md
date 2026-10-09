@@ -549,15 +549,20 @@ The notes went back to the builders who made each part, who still had their cont
   against `origin/main`'s 376 KB (138 KB), so every pass together added 5.4 KB on the wire. Vite's warning about
   chunks over 500 KB is for other parts of the site.
 - **A pass for Waymond on the line.** In the peak he catches the line and drops as the weight that pulls Joy back out
-  of the bagel, but his eye only swung with his fall. Now from his catch (247.9 s) until the line runs out, he
-  watches Joy. Once the camera opens out he goes down out of the frame, so the look shows as he takes her weight.
+  of the bagel, but his eye only swung with his fall. Now from his catch (247.9 s) he watches Joy, until he is
+  carried down out of the frame (249.6 s).
+- **A pass for whether the looks are seen.** The looks check only asked that the one looking and the one looked at
+  exist. Each look was measured for how much of it is seen: its eye inside the frame and at least 7 px across on a
+  720p stage. All but one were seen for 81–100% of their span. Waymond's on the line was seen 11%, from his catch
+  until he goes down out of the frame. It now ends there. `check:shows` holds every look to being seen for at least
+  half its span.
 
 ## The looks
 
 The googly eyes swing with their balls, but at the story's turns they look at someone. Each look eases in and out
 over a quarter second, and looks that overlap blend, so the eye sweeps from one to the next. They are listed in
 `score.ts` as each eye's `gaze` (`fx.ts`). `check:shows` holds every one of them live, the one looking and the one
-looked at both there.
+looked at both there, and seen: its eye in the frame and big enough to read for at least half of it.
 
 | Time (s) | Who looks | At | The moment |
 | ---: | --- | --- | --- |
@@ -568,7 +573,7 @@ looked at both there.
 | 192.1–200.2 | Waymond | Evelyn | the empathy fight, all the way to him |
 | 200.7–219.7 | Evelyn | Joy | the two stones in the silence; then down over the brink after hers |
 | 242.1–247.3 | Evelyn | Joy | holding her at the lip of the hole |
-| 247.9–260.6 | Waymond | Joy | on the line, the weight that pulls her back, until it runs out |
+| 247.9–249.6 | Waymond | Joy | on the line, the weight that pulls her back, until he is carried out of the frame |
 | 254.9–257.2 | Evelyn and Joy | each other | once Joy has her eye |
 | 271.4–273.6 | Joy and Waymond | each other | he touches her at home: father and daughter |
 | 279.6–282.3 | Joy | Evelyn | she nestles against her mother |
@@ -628,8 +633,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - each only comes and goes out of shot, or at a jump, when the whole world changes;
   - there are never two of anyone.
 - **The googly eyes:** Evelyn's comes on the fight's beat 123, the great hit. Joy's comes after the brink and before
-  home. Every look is live: the one looking and the one looked at are both there for nearly all of its span (see *The
-  looks*).
+  home. Every look is live (the one looking and the one looked at both there for nearly all of its span) and seen (its
+  eye in the frame and big enough to read for at least half of it); see *The looks*.
 - **The end credits:**
   - after the last hit, and gone before the end;
   - set by the page;
