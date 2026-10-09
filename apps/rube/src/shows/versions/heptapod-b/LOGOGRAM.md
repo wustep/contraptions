@@ -302,6 +302,14 @@ changed, in the order of the film, and then what runs through it:
 - **The light after the shell** (186.3 → 196.8): where the cloud opens the shafts of light were the floods' pale
   cream, so the reunion sat in a grey-olive wash (a fresh critic's note). They are sunlight now, warmed toward the
   camp lamps' gold and a little stronger: the first warmth the valley has, and the two of them meet in it.
+- **The engine catching** (27.55 → 28.5): each cough and the catch was one ball of smoke that left the stack at once
+  and floated off on its own, like a smudge on the lens, and the running engine's puffs were too faint to see. Each
+  is a short burst out of the stack's mouth now, rising steadily as it drifts back, and the running puffs show.
+- **The heptapods as one creature** (89 → 156): each part was drawn a little see-through and each limb's soft edge
+  lay over whatever had been drawn before it, so limbs showed through the body and each other, pale rims crossed
+  them, and the front limb's round root sat on the body like a disc stuck to it. Every soft edge goes under now,
+  every part is solid, and the body covers all the limbs' roots: the front limb comes out from under its hip. The
+  palm is solid too, so the limb's end and the fingers' pads no longer show through it.
 - **The valley's beams** (36 → 65, 186.3 → 196.8): the floods, the slot's fall of light and the sunlight through the
   opened cloud were each a hard-edged wedge with a fainter one round it. In the wides that passed, but pushed in on
   the lift's start and on the reunion each beam was a quarter of the frame across and showed as panes of tinted

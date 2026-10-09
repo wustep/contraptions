@@ -146,7 +146,7 @@ const PUFFS: { t: number; size: number; dark: number }[] = [
   { t: COUGHS[0], size: 1.0, dark: 1.3 },
   { t: COUGHS[1], size: 1.3, dark: 1.4 },
   { t: CATCH, size: 1.8, dark: 1.5 },
-  ...RUN_PULSES.map((p) => ({ t: p.t, size: 0.35 + 0.55 * Math.min(1.4, p.g), dark: 0.25 })),
+  ...RUN_PULSES.map((p) => ({ t: p.t, size: 0.35 + 0.55 * Math.min(1.4, p.g), dark: 0.7 })),
 ]
 const PUFF_TIMES = PUFFS.map((p) => p.t)
 
@@ -360,16 +360,22 @@ export function drawStarter(p: p5, k: number, t: number, { ink, weight }: Ink): 
       lobe(p.drawingContext as CanvasRenderingContext2D, k, x + side * (0.2 + 0.7 * Math.sqrt(u)) * size, MEADOW - 0.1 - 0.25 * u, r, r * 0.6, dust, 0.45 * (1 - u) * (1 - u), 0.4)
     }
   }
-  // The exhaust: soft puffs rising off the stack and drifting back, the coughs dark.
+  // The exhaust: soft puffs rising off the stack and drifting back, the coughs dark. Each is a short burst out of the
+  // stack, not one ball of smoke leaving it: the cloud is seen to come from the stack.
   const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const pf of PUFFS) {
-    const age = t - pf.t
-    if (age < 0 || age > 2.2) continue
     if (pf.t > t + 0.01) break
-    const u = age / 2.2
     const col = rgbOf(mixHex(VALLEY.fog, mixHex(VALLEY.steelDark, ink, 0.4), Math.min(1, 0.45 * pf.dark)))
-    const r = (0.16 + 0.5 * Math.sqrt(u)) * pf.size
-    lobe(ctx, k, STACK_X - 0.9 * age - 0.1, STACK_TOP - 0.22 - 1.1 * Math.sqrt(age) * pf.size, r, r * 0.8, col, Math.min(0.85, 0.42 * pf.dark) * (1 - u) * (1 - u), 0.45)
+    const burst = pf.dark > 1 ? 5 : 2
+    for (let n = 0; n < burst; n++) {
+      const age = t - pf.t - n * 0.07
+      if (age < 0 || age > 2.2) continue
+      const u = age / 2.2
+      const tail = 1 - 0.16 * n
+      const r = (0.16 + 0.5 * Math.sqrt(u)) * pf.size * tail
+      // Out of the stack's mouth, rising steadily as it drifts back.
+      lobe(ctx, k, STACK_X - 0.9 * age - 0.1, STACK_TOP - 0.6 * r - 0.75 * age * Math.sqrt(pf.size), r, r * 0.8, col, Math.min(0.85, 0.42 * pf.dark) * (1 - u) * (1 - u) * tail, 0.45)
+    }
   }
 }
 
