@@ -357,6 +357,9 @@ each world, and changed:
   was gone (Cobb for a quarter second, by a sweep of every quarter second for his colour). Out on the pavement they are
   on the near side of the van, in front of its body: they are seen against the rear quarter now until they land on
   the bench through the door.
+- **Fischer's taxi pulling away** (71.9 to 72.7): it eased off the kerb at about Cobb's pace, so for most of a second
+  he and Fischer rolled along right over its two wheels and read as its wheels (a fresh critic's note). It pulls out
+  briskly now, clear of them in a third of a second, and waits in the queue at the bridge for the train.
 
 ## Inception nods
 

@@ -233,7 +233,9 @@ export const TAXI_QUEUE = -38
 const T_TAXI_IN = 68.0
 const TAXI_RUN = 8
 const T_TAXI_GO = T_HIT + 0.1
-const T_TAXI_Q = T_CAR1 - 0.2
+// It pulls out briskly, as a cab does once its fare is out: slow off the kerb, it rode along behind Cobb with its wheels
+// under him and Fischer. It waits in the queue from there.
+const T_TAXI_Q = Math.min(T_CAR1 - 0.2, T_TAXI_GO + 1.6)
 export function taxiX(te: number): number {
   if (te < T_TAXI_IN) return TAXI_STOP - TAXI_RUN - ((2 * TAXI_RUN) / (T_TAXI_STOP - T_TAXI_IN)) * (T_TAXI_IN - te)
   if (te < T_TAXI_STOP) {
