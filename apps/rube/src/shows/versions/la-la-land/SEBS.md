@@ -413,3 +413,7 @@ A fifty-eighth pass:
 A fifty-ninth pass:
 
 - **The bloom, at the show's pace.** Lowering the kiss's shot (the pass before) made the camera's move back off it, as the room lights up, the fastest in the show (0.59 frame widths a second). The move's first stop is a little nearer the kiss now, and it peaks at 0.45, with the tables' lamps still flaring in the picture. Swept again after it: the full build passes, no move in the show is faster than 0.53 frame widths a second, and the only jumps are the planned ones.
+
+A sixtieth pass, the picture against the music:
+
+- **Where the picture is still and the music loud.** I measured the picture's motion against the recording's loudness through the whole show, every two seconds. Where the picture is busy and the music quiet, it is the camera moving in a hush, as meant. Where the music is loud and the picture still, there were two stretches. The float among the stars is calm by design. But the six accelerating hits that top the Hollywood number (166 to 168), the loudest of it, played on a frame held still since the eighteenth pass, only the searchlights swinging. The camera now pushes in on the two of them across the six hits, so the frame closes on them meeting on the crest, the fan of light full and the sign blazing, as the music does.
