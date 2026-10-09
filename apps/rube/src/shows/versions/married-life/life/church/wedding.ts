@@ -102,8 +102,11 @@ const TOWARD: [number, number][] = [
 const HER_ROLL = [0.02, 0.015, 0.02, 0.025]
 const HER_RISE = [0.035, 0.03, 0.025, 0.01]
 const HIS_LEAN = [0.035, 0.035, 0.04, 0.04]
-/** He closes the last of the gap with her on the kiss, and runs from there. */
-const KISS_STEP = 0.02
+/**
+ * How far he steps in on the kiss, and runs from there: none, now. His lean (0.15 rad by the kiss) already brings his
+ * upper corner to her; a step as well pressed his corner over her ball, one squashed shape instead of a kiss.
+ */
+const KISS_STEP = 0
 const toward = (T: number, amounts: number[]): number => TOWARD.reduce((v, [a, b], i) => v + amounts[i] * ease(T, a, b), 0)
 /** A breath in on each step: up from rest to 1 a fifth of a second after its onset, and a long damped settle. */
 const breathIn = (T: number): number =>

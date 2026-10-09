@@ -3,6 +3,7 @@ import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, part, type Companion, type Ctx, type Pose } from '../kit'
 import { CLINIC, HOME, INK } from '../worlds'
 import { CUTS } from '../seams'
+import { CUT } from '../music'
 import { CEIL, drawVisitorChair, FLOOR, hexA, lean, SEAT, tube, W_IN, W_OUT, WARD, WARD_APART, wardDusk, WINDOW } from './clinic'
 
 /**
@@ -56,8 +57,11 @@ const TABLE = { x0: -0.9, x1: -0.3, top: 0.0 }
 const LAMP = { x: -0.58, bottom: -0.47, top: -0.76, wb: 0.46, wt: 0.3 }
 const CHAIN: Pt = [LAMP.x + 0.15, LAMP.bottom + 0.02]
 const CHAIN_L = 0.3
-/** The bed: from behind his chair to its foot; the mattress's top; her pillow. */
-const BED = { x0: -0.12, x1: 2.72, top: 0.21 }
+/**
+ * The bed: from behind his chair to its foot; the mattress's top; her pillow. Her length, not a grown-up's: the foot
+ * about a cell past her, so the mound under the covers is plainly her and the bed is not long and empty past her.
+ */
+const BED = { x0: -0.12, x1: 1.5, top: 0.21 }
 const PILLOW = { x0: 0.1, x1: 0.9 }
 
 /* ------------------------------------------------------------------ the two of them */
@@ -321,10 +325,10 @@ function drawCovers(p: p5, k: number, weight: number, ex: number, dim: number): 
   const hang = top + 0.24
   // The top edge, from her far side to the foot: across her, over the mound of her, down to the mattress.
   const edge = (p: p5, dy: number) => {
-    p.vertex(b0 * k, (0.075 + dy) * k)
-    p.bezierVertex((b0 + 0.07) * k, (0.055 + dy) * k, (ex - 0.04) * k, (0.045 + dy) * k, (ex + 0.06) * k, (0.045 + dy) * k)
-    p.bezierVertex((ex + 0.2) * k, (0.045 + dy) * k, (ex + 0.3) * k, (0.03 + dy) * k, (ex + 0.45) * k, (0.04 + dy) * k)
-    p.bezierVertex((ex + 0.7) * k, (0.06 + dy) * k, (ex + 0.85) * k, (top - 0.04 + dy) * k, (ex + 1.1) * k, (top - 0.035 + dy) * k)
+    p.vertex(b0 * k, (0.09 + dy) * k)
+    p.bezierVertex((b0 + 0.07) * k, (0.07 + dy) * k, (ex - 0.04) * k, (0.06 + dy) * k, (ex + 0.06) * k, (0.06 + dy) * k)
+    p.bezierVertex((ex + 0.16) * k, (0.06 + dy) * k, (ex + 0.22) * k, (0.05 + dy) * k, (ex + 0.32) * k, (0.06 + dy) * k)
+    p.bezierVertex((ex + 0.48) * k, (0.08 + dy) * k, (ex + 0.56) * k, (top - 0.04 + dy) * k, (ex + 0.72) * k, (top - 0.035 + dy) * k)
   }
   p.push()
   p.stroke(INK)
@@ -334,21 +338,35 @@ function drawCovers(p: p5, k: number, weight: number, ex: number, dim: number): 
   edge(p, 0)
   p.vertex((x1 - 0.2) * k, (top - 0.03) * k)
   p.vertex((x1 - 0.2) * k, hang * k)
-  p.bezierVertex((x1 - 0.7) * k, (hang + 0.03) * k, (b0 + 0.4) * k, (hang + 0.01) * k, (b0 + 0.02) * k, hang * k)
-  p.bezierVertex((b0 - 0.03) * k, (hang - 0.09) * k, (b0 - 0.03) * k, 0.12 * k, b0 * k, 0.075 * k)
+  p.bezierVertex((x1 - 0.45) * k, (hang + 0.025) * k, (b0 + 0.3) * k, (hang + 0.01) * k, (b0 + 0.02) * k, hang * k)
+  p.bezierVertex((b0 - 0.03) * k, (hang - 0.09) * k, (b0 - 0.03) * k, 0.13 * k, b0 * k, 0.09 * k)
   p.endShape(p.CLOSE)
   // The sheet turned down over the blanket's top, across her and over the mound.
   p.fill(sheet)
   p.strokeWeight(weight * 0.7)
   p.beginShape()
-  p.vertex(b0 * k, 0.075 * k)
-  p.bezierVertex((b0 + 0.07) * k, 0.055 * k, (ex - 0.04) * k, 0.045 * k, (ex + 0.06) * k, 0.045 * k)
-  p.bezierVertex((ex + 0.2) * k, 0.045 * k, (ex + 0.3) * k, 0.03 * k, (ex + 0.45) * k, 0.04 * k)
-  p.vertex((ex + 0.45) * k, 0.1 * k)
-  p.bezierVertex((ex + 0.3) * k, 0.09 * k, (ex + 0.2) * k, 0.105 * k, (ex + 0.06) * k, 0.105 * k)
-  p.bezierVertex((ex - 0.04) * k, 0.105 * k, (b0 + 0.06) * k, 0.115 * k, (b0 - 0.005) * k, 0.135 * k)
+  p.vertex(b0 * k, 0.09 * k)
+  p.bezierVertex((b0 + 0.07) * k, 0.07 * k, (ex - 0.04) * k, 0.06 * k, (ex + 0.06) * k, 0.06 * k)
+  p.bezierVertex((ex + 0.16) * k, 0.06 * k, (ex + 0.22) * k, 0.05 * k, (ex + 0.32) * k, 0.06 * k)
+  p.vertex((ex + 0.32) * k, 0.115 * k)
+  p.bezierVertex((ex + 0.22) * k, 0.105 * k, (ex + 0.16) * k, 0.12 * k, (ex + 0.06) * k, 0.12 * k)
+  p.bezierVertex((ex - 0.04) * k, 0.12 * k, (b0 + 0.06) * k, 0.13 * k, (b0 - 0.005) * k, 0.15 * k)
   p.endShape(p.CLOSE)
   p.pop()
+}
+
+/**
+ * Under Zoom, the hold through her touch and his answer (`Framing.zoomDrop`, negative: above the frame's middle): the
+ * show's frame comes down onto the two of them there, and Zoom, half as close again, would then lose the balloon over
+ * them; it keeps the hold it had (a cell and a half over the floor), easing in with the camera's move and out with the
+ * draw back to the cut.
+ */
+export function hospitalZoomDrop(T: number): number {
+  const ease = (a: number, b: number) => {
+    const u = clamp01((T - a) / (b - a))
+    return u * u * (3 - 2 * u)
+  }
+  return -0.19 * ease(HAND.to, TOUCH + 0.6) * (1 - ease(187.1, CUT.funeral))
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -408,8 +426,10 @@ export const hospital = part<HospitalState>(
     // film's touch) and his answer, the balloon whole over them under Zoom, and stays a moment.
     { t: CLICK, cells: 3.3, hold: [O + 0.02, -0.93], w: 1 },
     { t: HAND.to, cells: 3.36, hold: [O + 0.4, -0.97], w: 1 },
-    { t: TOUCH + 0.6, cells: 2.7, hold: [O + 0.36, -0.63], w: 1 },
-    { t: 187.1, cells: 2.67, hold: [O + 0.35, -0.62], w: 1 },
+    // The touch and his answer sit two thirds down the frame, not on its foot under a wall (the balloon is tied short
+    // to her now, so the frame can come down onto them); Zoom keeps its own, higher hold (`hospitalZoomDrop`).
+    { t: TOUCH + 0.6, cells: 2.7, hold: [O + 0.36, -0.45], w: 1 },
+    { t: 187.1, cells: 2.67, hold: [O + 0.35, -0.45], w: 1 },
     // Then, as she is still again, the leaving starts: one slow draw back, unbroken, through the cut to the church
     // (`CUTS.funeral`) and on into it. The balloon whole over her; across the cut it is his again, and drifts back over
     // him in the empty church as its string is let out.

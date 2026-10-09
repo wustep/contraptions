@@ -546,6 +546,16 @@ window.
   dance are two spans, and in the dance she spots him through the turn-out instead of letting her roll take her face.
   No look now turns faster than an ordinary brisk turn.
 
+- **Polish round 18 (Opus 5.5).** A second fresh critic, told what the recent rounds changed so as to look for
+  regressions there too; each note checked against the frames. Taken: her bed was a grown-up's, long and empty past
+  her under the covers, which these two have no bodies for; it is her length now, the foot a cell past her, the mound
+  plainly her, and the covers a little lower on her. Her touch and his answer sat on the frame's foot under a wall; the
+  frame comes down onto them there (two thirds down), the balloon being tied short to her, and Zoom keeps its old hold
+  (`hospitalZoomDrop`). On the blanket she lies closer (0.42 from him, then 0.36 at the baby). At the kiss his step in
+  pressed his leaning corner over her ball; he no longer steps, and their outlines just meet. Not taken: the tilted car
+  in front of the window's bar (the pixels show the bar drawn across it), and the balloon's half second at the bay's
+  post (round 6's, while he is hidden too).
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is

@@ -1,6 +1,7 @@
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { zoomDropAt } from './house/alone'
+import { hospitalZoomDrop } from './clinic/hospital'
 import { DURATION } from './music'
 import { compose } from './score'
 
@@ -11,10 +12,10 @@ export { show }
 export const performance: Performance = {
   show,
   duration: DURATION,
-  // Under Zoom the credits' draw-back holds a little low, so the lit window stays whole over the porch.
+  // Under Zoom: higher through her touch at her bedside, and a little low through the credits' draw-back.
   camera: (t) => {
     const f = camera(t)
-    const drop = zoomDropAt(t)
+    const drop = zoomDropAt(t) + hospitalZoomDrop(t)
     return drop ? { ...f, zoomDrop: drop } : f
   },
   // No portal anywhere: every change of place is a match cut on Carl.
