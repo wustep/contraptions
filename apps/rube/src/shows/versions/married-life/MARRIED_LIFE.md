@@ -620,6 +620,14 @@ window.
     together while what is still outside stays in front of the wall, the rule of the whole homecoming; at 200.67 s
     he is mid step down from the church's floor (0.22 cells a step); at 91.7 s the book is in front of the screen
     door's frame as he carries it out through it.
+  - *Slivers*, after the post's gap: every 0.2 s through the wedding, the fix-up and from the ward to the credits,
+    a scan for strips of her coral or the balloon's blue three pixels wide or less and ten or more tall (what the
+    gap showed). Found only edges past a bar the thing is behind (the door's jamb, a mullion, the bay's post as the
+    balloon comes into the bay) and the edges of the orange guests in the pews: no gap left.
+  - *A fresh Zoom critic* (the first under Zoom). Nothing severe; kept: the balloon hidden for a moment as he goes
+    from the door behind the wall into the bay, and Ellie the same at the fix-up's door (43.0 to 43.2 s), as above;
+    on the hill under Zoom the basket he drops leaves the top of the frame as the camera follows the two of them down
+    (174.5 to 175.2 s), the tickets it spills staying in; in the show's own frame it is whole.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
