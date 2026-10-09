@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 82 (latest)
+## Polish pass 83 (latest)
+
+No change to the show. The pull request's description now names passes 79 to 81's guards: the YouTube cues held to the mix script, and the bible's strike counts and credits table held to the code. Its images and the rest are kept.
+
+## Polish pass 82
 
 No change to the show: a regression sweep after passes 53 to 72 changed the picture. The whole show was swept at 16:9 every 1.5 s, offset from earlier sweeps, and nothing has broken. The recent changes sit well among their neighbours: the swoop back to the house (136.9 s), Murph at her doorway as the lift climbs (183.4 to 184.9 s), and the streak across the axis (168 to 172 s).
 
