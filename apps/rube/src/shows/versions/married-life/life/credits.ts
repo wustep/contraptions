@@ -84,6 +84,13 @@ function lightOf(card: Card, t: number): { light: number; rise: number } {
   return { light: easeInOutCubic(up) * (1 - easeInOutCubic(down)), rise: (1 - easeInOutCubic(up)) * 0.8 }
 }
 
+/**
+ * The least unit of the cards' type, in pixels: on a phone held upright the frame is about 220px high, and at a
+ * hundredth of it the roles were 4px and the cast's lines 9; at this they read (a role 8.6px, a name 25), and the
+ * widest card, the cast, is still under three quarters of the screen. On any larger stage it does nothing.
+ */
+const LEAST = 4.5
+
 /** The cards up at `t`, for the page to set (`Performance.titles`). */
 export function creditsAt(t: number): TitleCard[] {
   if (t < CREDITS_AT) return []
@@ -91,7 +98,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `married-life-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, lift: LIFT })
+    out.push({ key: `married-life-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, lift: LIFT, least: LEAST })
   })
   return out
 }

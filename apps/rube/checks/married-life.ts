@@ -2,6 +2,8 @@
  * The checks for Married Life (`versions/married-life/opus55.show.ts`), run by `check:shows`. Kept in their own
  * file: what the show promises is its own.
  */
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { zoomFrame as zoomOf, type Performance, type Version } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/married-life-onsets.json'
 import { STRIKES } from '../src/shows/versions/married-life/life/hits'
@@ -309,6 +311,15 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && CARDS.filter((c) => c.role === 'Directed by').length === 1 &&
     ['Claude Opus 5.5', 'Carl Fredricksen', 'Ellie Fredricksen', 'Michael Giacchino', 'Married Life', 'Up', 'Pete Docter', 'p5.js'].every((w) => said.includes(w)) &&
     !/Stephen Wu|tech demo/i.test(said), said)
+  // On a phone held upright the frame is about 220px high, and at a hundredth of it the roles were 4px: every card
+  // keeps a least unit (`least`), and the player and a video's painter both honour it.
+  {
+    const cards = CARDS.flatMap((c) => creditsAt(c.at + 2))
+    const src = (f: string) => readFileSync(join(process.cwd(), `apps/rube/src/shows/${f}`), 'utf8')
+    check('married life: the credits keep a readable size on a phone held upright',
+      cards.length >= CARDS.length && cards.every((c) => (c.least ?? 0) >= 4) &&
+      /Math\.max\(fh \/ 100, c\.least \?\? 0\)/.test(src('player.ts')) && /Math\.max\(u, c\.least \?\? 0\)/.test(src('words.ts')))
+  }
 
   // Under Zoom the two of them keep off the frame's edges, not only inside it (Zoom's own hold, `zoom.ts`): neither is
   // within an eighth of its half size of an edge for 2.5 s or more, except where the staging fills the Zoom frame: the

@@ -174,6 +174,12 @@ export interface TitleCard {
   lift?: number
   /** Optional: the card's type this many times its usual size (unset: 1, every show's credits as they were). */
   scale?: number
+  /**
+   * Optional: the least its unit may be, in pixels (a hundredth of the frame's height, before `scale`): for a card that
+   * must stay readable on a small stage, a phone held upright, where the frame is about 220px high and a role line
+   * would be 4px. Unset: no least, every show's credits as they were.
+   */
+  least?: number
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
 }

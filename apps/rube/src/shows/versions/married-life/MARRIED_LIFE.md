@@ -310,7 +310,9 @@ Up (2009); **After** Up, a film by Pete Docter, co-directed by Bob Peterson, Pix
 back past the roof by then, so every card lies over the sky; the canvas puts nothing under the words, and no star
 comes out under a card while it is up. On a phone held
 upright the stage shows more sky than the 16:9 box, and the cards go up into it (`TitleCard.lift`, a share of the
-extra height, used only by this show).
+extra height, used only by this show). There the frame is about 220px high, and at a hundredth of it the roles were
+4px and the cast's lines 9: the cards keep a least unit of 4.5px (`TitleCard.least`, also only this show's), so a
+role reads at 8.6px and a name at 25, and the widest card, the cast, is under three quarters of the screen.
 
 **On a phone held upright** the extra picture goes mostly above the frame (`Performance.tall`, 0.85 of it, used only
 by this show): every set stands on a floor or the ground, with sky, a roof or the storey above over it and only earth
@@ -628,6 +630,12 @@ window.
     from the door behind the wall into the bay, and Ellie the same at the fix-up's door (43.0 to 43.2 s), as above;
     on the hill under Zoom the basket he drops leaves the top of the frame as the camera follows the two of them down
     (174.5 to 175.2 s), the tickets it spills staying in; in the show's own frame it is whole.
+  - *The credits on a phone*, measured: upright, the roles were 4px, the notes under 4 and the cast's lines 9. Floors
+    for every show's credits were tried first and taken back: two other shows' cards are set off the middle, so on
+    a phone they ran off the screen, and slid back on they covered Merry-Go-Round's castle and crowded Soft Lamp's
+    window. Now a card may ask for a least unit (`least`), and only this show's do; every show's cards checked on a
+    phone at every second still fit the screen. A colour barcode of the show (a column a half second) found the arc
+    whole: no jump of light or colour inside a scene but the storm's.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
