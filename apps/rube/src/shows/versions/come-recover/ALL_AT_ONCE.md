@@ -565,6 +565,22 @@ The notes went back to the builders who made each part, who still had their cont
   saw the full-motion show. `compose(calm)` now takes the mode, defaulting to the viewer's. `check:shows` builds both
   and holds the calm one to no flickers, no punch on the great hit, and every jump at the same moment. It was
   confirmed to fail when the punch ignores the mode.
+- **A pass for a code review.** The branch's code was reviewed for correctness. Five findings were in this show's own
+  code and were fixed:
+  - At the very end the googly eyes went dark at the room's rate, while the window's light still lit the balls they
+    sit on, so the eyes vanished before the faces. `endShade` now darkens with the same falloff round the window as
+    the room's dark.
+  - Reduced motion was read once, so turning it on mid-show did nothing until a reload. It now follows the setting
+    live: the punch reads it each frame, and the show skips the flickers while it is set (a `quiet` on
+    `MultiverseShow`).
+  - The binary search was used by `where()` but not `at()`, which the stage, the eyes' targets and the bags all call.
+    Both now use it (`seek` in `show.ts`). Seventeen frames are pixel for pixel as before.
+  - A burst cut the balls' discs out with one even-odd path, which lets the overlap of two discs back in. Each disc
+    is now clipped out on its own.
+  - `BAG_WATCH` was rebound by every `compose()`, so a later one (in the checks or a tool) took the bags over. The
+    first, the viewer's, now keeps it.
+  - Five more findings were in shared code that this branch does not touch (the player, the shell and the engine),
+    and were left to their owners.
 - **A pass for Waymond on the line.** In the peak he catches the line and drops as the weight that pulls Joy back out
   of the bagel, but his eye only swung with his fall. Now from his catch (247.9 s) he watches Joy, until he is
   carried down out of the frame (249.6 s).
@@ -807,7 +823,6 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - Zoom is a closer look at Evelyn: Joy and Waymond are cropped by it at times, which is what it is for.
 - Under Zoom, the credits' longest line crosses the near end of the lantern string. The words are set by the page,
   the same in every mode.
-- The reduced-motion preference is read when the show loads, and the page's Save PNG and Save video paint from the
-  same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
+- The reduced-motion preference is followed live, and the page's Save PNG and Save video paint from the same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
   for a file would take a change to the shared stage and recorder, and that viewer has asked for the calmer show.
 - Only Chrome on macOS has been watched. The recording export has not been re-measured for this take.

@@ -144,10 +144,24 @@ export const endDarkAt = (t: number): number => easeInOutCubic(clamp((t - (LAST_
 /** How far the window's own light has gone with it: later, so it outlasts the room. */
 const windowDarkAt = (t: number): number => easeInOutCubic(clamp((t - (LAST_GONE + 2.8)) / (DURATION - 0.2 - (LAST_GONE + 2.8))))
 
-/** A colour as the end's dark leaves it: for what draws over the dark (the googly eyes). */
-export const endShade = (hex: string, t: number): string => {
-  const d = endDarkAt(t)
-  return d <= 0 ? hex : mixHex(hex, '#040506', 0.96 * d)
+/**
+ * How dark the end's dark is at (x, y) in the room at `t`, 0..0.96: the same falloff `endDark` paints, open round the
+ * washer's window until its own light goes, so what is drawn over it (the googly eyes) goes down with what it sits on.
+ */
+function endDarkHere(t: number, x: number, y: number): number {
+  const a = 0.96 * endDarkAt(t)
+  if (a <= 0) return 0
+  const w = 0.96 * windowDarkAt(t)
+  const u = Math.min(1, Math.hypot(x - PORT[0], y - PORT[1]) / 1.7)
+  const c0 = Math.max(w, a * 0.35)
+  const c1 = Math.max(w, a * 0.7)
+  return u < 0.45 ? c0 + (c1 - c0) * (u / 0.45) : c1 + (a - c1) * ((u - 0.45) / 0.55)
+}
+
+/** A colour as the end's dark leaves it at (x, y): for what draws over the dark (the googly eyes). */
+export const endShade = (hex: string, t: number, x: number, y: number): string => {
+  const d = endDarkHere(t, x, y)
+  return d <= 0 ? hex : mixHex(hex, '#040506', d)
 }
 
 /** The dark itself, over the whole frame, with a soft opening at the window that closes last. */

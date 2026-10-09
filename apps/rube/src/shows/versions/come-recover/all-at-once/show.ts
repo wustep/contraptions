@@ -1,4 +1,4 @@
-import { ballAt, laneAt, type Lane, type Pt } from '../../../../parts'
+import { ballAt, laneAt, type Lane, type LanePoint, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
@@ -78,24 +78,21 @@ interface Seek {
   singles: Lane[]
 }
 const SEEKS = new WeakMap<Lane, Seek>()
-function laneXY(lane: Lane, t: number): Pt {
-  if (lane.segs.length < 24) {
-    const p = laneAt(lane, t)
-    return [p.x, p.y]
-  }
-  let seek = SEEKS.get(lane)
-  if (!seek) {
+function seek(lane: Lane, t: number): LanePoint {
+  if (lane.segs.length < 24) return laneAt(lane, t)
+  let found = SEEKS.get(lane)
+  if (!found) {
     const ends: number[] = []
     let acc = 0
     for (const seg of lane.segs) {
       acc += seg.dur
       ends.push(acc)
     }
-    seek = { ends, singles: lane.segs.map((seg) => ({ segs: [seg], fire: 0 })) }
-    SEEKS.set(lane, seek)
+    found = { ends, singles: lane.segs.map((seg) => ({ segs: [seg], fire: 0 })) }
+    SEEKS.set(lane, found)
   }
   const want = Math.max(0, t)
-  const { ends } = seek
+  const { ends } = found
   // The first segment whose end is at or past `want`; the last if none is.
   let lo = 0
   let hi = ends.length - 1
@@ -104,9 +101,9 @@ function laneXY(lane: Lane, t: number): Pt {
     if (ends[mid] >= want) hi = mid
     else lo = mid + 1
   }
-  const seg = lane.segs[lo]
-  const p = laneAt(seek.singles[lo], want - (ends[lo] - seg.dur))
-  return [p.x, p.y]
+  // `laneAt` on the one segment, with its index put back as the whole lane's.
+  const p = laneAt(found.singles[lo], want - (ends[lo] - lane.segs[lo].dur))
+  return { ...p, seg: lo }
 }
 
 export class MultiverseShow extends Show {
@@ -127,6 +124,8 @@ export class MultiverseShow extends Show {
     readonly duration: number,
     private readonly riders: Riders = [],
     private readonly company: Spans = [],
+    /** While this says so, the flickers are left out: the viewer has asked to reduce motion. */
+    private readonly quiet: () => boolean = () => false,
   ) {
     super('all-at-once')
     this.keys = [...new Set(legs.map((l) => l.world))]
@@ -172,7 +171,7 @@ export class MultiverseShow extends Show {
   /** The leg whose world is on the stage at `t`: the owner's, or the next one's (or the last one's) in a flicker. */
   presented(t: number): number {
     const time = this.clamp(t)
-    const f = this.flickers.find((x) => time >= x.from && time < x.to)
+    const f = this.quiet() ? undefined : this.flickers.find((x) => time >= x.from && time < x.to)
     return f ? f.leg : this.owner(time)
   }
 
@@ -231,8 +230,8 @@ export class MultiverseShow extends Show {
   /** Where the ball is at `t`, in its own leg's cells. Cheap: what the camera samples. */
   where(t: number): Pt {
     const placed = this.holder(t)
-    const [x, y] = laneXY(placed.lane, this.clamp(t) - placed.start)
-    return [placed.col + placed.mirror * x, placed.row + y]
+    const at = seek(placed.lane, this.clamp(t) - placed.start)
+    return [placed.col + placed.mirror * at.x, placed.row + at.y]
   }
 
   override at(t: number): ShowPoint {
@@ -243,7 +242,7 @@ export class MultiverseShow extends Show {
     const universe = this.legWorlds[shown]
     const placed = this.holder(time)
     const into = time - placed.start
-    const point = laneAt(placed.lane, into)
+    const point = seek(placed.lane, into)
     const ball = ballAt(placed.ballIn, placed.changes, into)
     const here: ShowPoint = {
       ...point,

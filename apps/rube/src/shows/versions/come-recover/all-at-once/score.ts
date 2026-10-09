@@ -125,13 +125,19 @@ const PUNCHES: [number, number][] = [
 /**
  * A viewer who has asked their system to reduce motion is spared the two jolts that carry no story: the next world
  * flickering through before a jump (which is also the show's flashing), and the camera's punch on the big hits. The
- * cuts themselves, and everything else, are as for anyone. Read once, in the browser; in the checks there is no
- * preference, so they see the show as it is made.
+ * cuts themselves, and everything else, are as for anyone. It follows the setting live, so turning it on mid-show
+ * takes effect at once. In the checks there is no preference, so they see the show as made, and `compose(true)`
+ * builds the calm one to check.
  */
-export const CALM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+const MOTION = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null
+/** The viewer's preference now: it follows a change made while the page is open. */
+let calmNow = !!MOTION?.matches
+MOTION?.addEventListener?.('change', (e) => {
+  calmNow = e.matches
+})
 
-function punch(t: number, calm: boolean): number {
-  if (calm) return 0
+function punch(t: number, calm: () => boolean): number {
+  if (calm()) return 0
   let v = 0
   for (const [at, s] of PUNCHES) {
     const u = t - at
@@ -141,8 +147,11 @@ function punch(t: number, calm: boolean): number {
   return v
 }
 
-/** The show, composed. `calm` is the reduced-motion version; it defaults to the viewer's own preference. */
-export function compose(calm = CALM): { show: MultiverseShow; camera: (t: number) => Framing; eyes: EyeSpec[] } {
+/**
+ * The show, composed. `calm` fixes the reduced-motion version (true) or the show as made (false); left out, it follows
+ * the viewer's own preference, live.
+ */
+export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: number) => Framing; eyes: EyeSpec[] } {
   const plans = PLAN()
   const chains: Chain[] = []
   let ball: BallState = { color: EVELYN, ghost: false, id: 0 }
@@ -178,7 +187,7 @@ export function compose(calm = CALM): { show: MultiverseShow; camera: (t: number
     if (i === 0 || leg.key === 'premiere' || leg.key === 'pull' || leg.key === 'kindness' || leg.key === 'rocks') return
     // Into the surf, one: the dark kitchen into a bright world, and then a new world on every hit, which is
     // flashing enough on its own. Measured by quarters of the frame, two there came to the three a second.
-    if (!calm) flickers.push(...flickersBefore(i, leg.from, leg.key === 'surf' ? 1 : FLICKERS_A_JUMP))
+    if (calm !== true) flickers.push(...flickersBefore(i, leg.from, leg.key === 'surf' ? 1 : FLICKERS_A_JUMP))
   })
 
   const riders: Riders = []
@@ -266,15 +275,18 @@ export function compose(calm = CALM): { show: MultiverseShow; camera: (t: number
     for (const leg of legs) if (leg.world === world) for (const placed of leg.placed) for (const c of placed.cells) cells.set(`${c[0]},${c[1]}`, c)
     const set = (sets[world] ??= { scenery: [], after: [] })
     // In the laundromat they are lit as the room is, and go down into the dark with it at the end.
-    const state: EyesState = { show: null, specs, shade: world === 'home' ? (hex, x, y, t) => endShade(shade(hex, x, y, t), t) : undefined }
+    const state: EyesState = { show: null, specs, shade: world === 'home' ? (hex, x, y, t) => endShade(shade(hex, x, y, t), t, x, y) : undefined }
     eyeStates.push(state)
     set.after.push(standing(eyePiece, 0, 0, [...cells.values()], state, DURATION) as Placed)
   }
 
-  const show = new MultiverseShow(legs, sets, flickers, DURATION, riders, company.sort((a, b) => a.from - b.from))
+  const isCalm = calm === undefined ? () => calmNow : () => calm
+  const show = new MultiverseShow(legs, sets, flickers, DURATION, riders, company.sort((a, b) => a.from - b.from), isCalm)
   for (const state of eyeStates) state.show = show
-  // While she tumbles in the big dryer, the googly-eyed bags on the washers either side watch her go round.
-  BAG_WATCH.at = (t) => {
+  // While she tumbles in the big dryer, the googly-eyed bags on the washers either side watch her go round. The room is
+  // one for every composed show, so the first to be composed (the viewer's) keeps it; a later one, in the checks or a
+  // tool, does not take it over.
+  if (!BAG_WATCH.at) BAG_WATCH.at = (t) => {
     const from = 34.6
     const to = JUMPS.premiere - 0.05
     if (t < from || t > to) return null
@@ -305,7 +317,7 @@ export function compose(calm = CALM): { show: MultiverseShow; camera: (t: number
     const owner = show.owner(t)
     const f = cams[owner](t)
     const [ox, oy] = show.offset(t)
-    return { ...f, x: f.x + ox, y: f.y + oy, cells: f.cells * (1 - punch(t, calm)) }
+    return { ...f, x: f.x + ox, y: f.y + oy, cells: f.cells * (1 - punch(t, isCalm)) }
   }
   return { show, camera, eyes: specs }
 }

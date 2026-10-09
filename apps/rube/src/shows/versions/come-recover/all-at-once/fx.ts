@@ -167,16 +167,15 @@ function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: str
   const cx = x * k
   const cy = y * k
   ctx.save()
-  // Not over the ball: its own disc is cut out of everything the burst lays down.
-  ctx.beginPath()
-  ctx.rect(cx - R * 40 * k, cy - R * 40 * k, R * 80 * k, R * 80 * k)
-  ctx.arc(cx, cy, R * 1.02 * k, 0, Math.PI * 2, true)
-  // Nor over anyone beside her: every other ball wearing an eye is cut out of it too.
-  for (const o of others) {
-    ctx.moveTo((o.x + R * 1.02) * k, o.y * k)
-    ctx.arc(o.x * k, o.y * k, R * 1.02 * k, 0, Math.PI * 2, true)
+  // Not over the ball: its own disc is cut out of everything the burst lays down. Nor over anyone beside her: every
+  // other ball wearing an eye is cut out too. One clip a disc, each the frame less that disc, so where two discs
+  // overlap the overlap stays cut out (one even-odd path would let it back in).
+  for (const d of [{ x, y }, ...others]) {
+    ctx.beginPath()
+    ctx.rect(cx - R * 40 * k, cy - R * 40 * k, R * 80 * k, R * 80 * k)
+    ctx.arc(d.x * k, d.y * k, R * 1.02 * k, 0, Math.PI * 2, true)
+    ctx.clip('evenodd')
   }
-  ctx.clip('evenodd')
   // Rays: a sunburst of long and short wedges thrown out from her, turning a little as they fade.
   const reach = 1 - Math.exp(-u / 0.09)
   const ra = 0.5 * strength * (1 - u / BURST) ** 1.3
