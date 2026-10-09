@@ -465,6 +465,13 @@ two before had said the heptapods. Two things it and Overview showed:
 - **The soldier's exit** stopped mid-floor, which Overview, seeing the whole chamber, showed as a pop. It rolls on out
   through the door it came in by, into the doorway's dark.
 
+A twenty-eighth took the note two cold readers had given: Hannah's going was too small to see.
+
+- **Hannah goes** (93.9 to 96.6 s): the camera was still wide on the clock while she paled into the pillow, and came
+  in only after, on the empty bed: she went small under the clock, and a viewer could take it for her slipping under
+  the covers. The clock is whole for its last tick on the swell; then the camera comes in on her, close while she goes,
+  and holds on the pillow empty.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
