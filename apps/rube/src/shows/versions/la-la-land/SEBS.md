@@ -232,3 +232,8 @@ A twenty-third pass:
 
 - **Every strike, seen.** I listed every strike that lands while he is out of the picture and the stage is not covered. Each is either his own note at the keys heard under a shot of her (her table at the start, her walk at Lipton's), or a machine that is itself in the shot: the piano playing itself, the door shutting, the casting table's pen, the flash guns at her premiere. Nothing strikes unseen that should be seen.
 - **The field of flowers.** Through the field (376 to 381) the shot follows him, and it settled low: the hill line ran across the middle of the frame and the lower half was plain grass. The shot sits higher now, so the ground is the lower third and the flowers stand against the hills and the warm sky.
+
+A twenty-fourth pass, by measure, that changed nothing:
+
+- **Empty bands.** Several earlier passes each found a flat band across the top or bottom of the picture (a slab of stage, a black floor, a meadow of grass). Measured over the whole show every half second, no uncovered stretch of two seconds or more has more than a quarter of the frame flat at its top or bottom, but for the dark over the globe as it fades in.
+- **Seeing them against what is behind them.** Measured at every half second, each ball's light against the ring of the picture just outside it is lowest where the colours are near in lightness but not in hue: him, blue, on the home movie's teal couch, and her, yellow, in the audition's cream spotlight and the white studio. In the frames both read clearly, by their hue and their outline.
