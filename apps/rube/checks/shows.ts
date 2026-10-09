@@ -653,6 +653,14 @@ async function main(): Promise<void> {
         // Under Zoom (1.5 times closer) Cooper stays in the frame, but for three shots that are about something bigger
         // than him: the cage going up out of the top while Murph is kept back at the tower's foot, the whip through
         // the sphere, and the pull-back from the replica to the whole ring.
+        // Across the axis, on a phone, he is a speck of under a CSS pixel: the streak that marks him judges his size on the
+        // screen (canvas pixels over the density), and keeps a halo of at least 9 CSS pixels round him (pass 68).
+        {
+          const ballpark = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/liftoff/act2/ballpark.ts'), 'utf8')
+          const streak = /function drawStreak[\s\S]*?\n}\n/.exec(ballpark)?.[0] ?? ''
+          check('liftoff: the streak across the axis judges his size in CSS pixels and keeps a 9px halo round him on a phone',
+            streak.includes('const px = (2 * R * c.k) / density') && streak.includes('Math.max(R * c.k * 2.4, 9 * density)'))
+        }
         // In the show's own frame, Cooper's whole ball is in shot every 0.02 s but for the two shots written to lose him:
         // the cage going up out of the top, and the whip through the sphere. (The swoop back from the ring's reveal once
         // shut ahead of coming down and lost him under the bottom edge for most of a second.)

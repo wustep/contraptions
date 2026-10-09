@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 69 (latest)
+## Polish pass 70 (latest)
+
+- **A guard for pass 68.** The streak's fix is drawing code, which `check:shows` cannot run, so it reads the source, as it does for the player's wording. It holds `drawStreak` to judging his size in CSS pixels (over the canvas's density) and to a halo of at least 9 CSS pixels. With the size test put back in canvas pixels it fails; the file was restored.
+
+## Polish pass 69
 
 No change to the show: Brand's and Murph's size on an upright phone, as pass 68 measured Cooper's. Each one's radius in CSS pixels was measured every 0.05 s while in shot. Only one stretch is under 2px for more than a second: old Murph at 166.1 to 168.0 s (down to 0.84px), in her far-side house during the whole-ring pull-out. The shot is about Cooper's flight toward her, and she is the shot's subject only from 176 s, when the camera is in close. Brand in orbit over Miller stays above 2px throughout.
 
