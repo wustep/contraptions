@@ -406,7 +406,7 @@ export function doodle(ctx: Ctx, t: number): void {
     ctx.strokeStyle = rgba('#DCD8F6', 0.16 * vis)
     ctx.lineWidth = 0.064
     ctx.stroke()
-    ctx.strokeStyle = rgba('#14122A', 0.6 * vis)
+    ctx.strokeStyle = rgba('#14122A', 0.36 * vis)
     ctx.lineWidth = 0.04
     ctx.stroke()
   }

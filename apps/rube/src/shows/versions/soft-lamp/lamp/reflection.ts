@@ -267,7 +267,7 @@ export function reflection(ctx: Ctx, t: number): void {
   ctx.clip()
   // Light on the glass: it only adds.
   ctx.globalCompositeOperation = 'screen'
-  ctx.globalAlpha = 0.36 * a
+  ctx.globalAlpha = 0.26 * a
   ctx.imageSmoothingEnabled = true
   ctx.drawImage(pad, cx + BOX.x0, cy + BOX.y0, BOX.x1 - BOX.x0, BOX.y1 - BOX.y0)
   ctx.restore()

@@ -997,6 +997,25 @@ least each time:
      at 18:53, the tea away at 22:07 and back at 24:35). `check:shows` holds the hand's reaches in any order between the
      lamp's two, and five or more crossings.
 
+### The fifty-ninth pass: a cold review
+
+After fifty-eight passes by one director, forty frames across the half hour were given to a reviewer with no context
+and asked for what a viewer would notice. Of its ten points, four were right and are fixed:
+
+154. **The headlights were the window's shape on the window's own wall**, bars and raindrops in it: light that wall
+     could never get. The sweep is a soft, shapeless wash now, brightest high on the wall as light coming off the
+     ceiling, and it still moves across, and the cat still follows it.
+155. **The kitten seemed to stare at the camera** in the window's looks: it was looking at the ball on the sill above
+     it, but its pupils moved too little to say so. They travel further now; its gaze reads.
+156. **The reflection was too present**, a figure behind the rain on first look: a quarter less strong now.
+157. **The face in the mist read as an ink sticker**: its cleared line is softer, as fog wiped by a finger.
+
+Not taken: the ball "floating" by the window (a frame mid-lob, the machine's flight); the mug "vanishing" (the
+refill, its hand out of a still); hold the wide frame four fifths of the time (the show is built on its looks; a
+question for Stephen, below); the moth's large shadow (a light that close throws one that large). Put to Stephen:
+whether the headphone cup reads as headphones in the close look, and the book's red ribbon, which the reviewer took
+for a stray wire.
+
 **Subtracted:** twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
@@ -1029,6 +1048,9 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
   Its spells of the kitten's attention take a little from its nodding along late in the night.
 - **The lightning.** Three far-off flashes, no bolt. They could be fewer, or gone; they are the only sudden light in
   the half hour.
+- **The camera.** A cold reviewer's one big suggestion was to hold the wide room most of the time and let the small
+  moments happen in it, rather than moving between the closer looks. It would be calmer, and the machine smaller in
+  the frame; the closer looks are where the cat, the hand and the cup are seen. Left as built.
 - **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.
 
 ## Checks

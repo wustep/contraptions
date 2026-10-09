@@ -655,8 +655,8 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   // sleepy, never cross; shut in the content arch while it nods along, and shut soft as it sleeps or yawns.
   const open = Math.max(0, (1 - blinkAt(t)) * awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet))
   const happy = (vibe > 0.5 || pet > 0.5) && sleep < 0.5 && yawn < 0.3 && wash.k < 0.3
-  const px = lx * 0.022
-  const py = ly * 0.016
+  const px = lx * 0.03
+  const py = ly * 0.026
   const RXE = 0.058
   const RYE = 0.054
   for (const side of [-1, 1]) {

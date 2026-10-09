@@ -520,51 +520,18 @@ export function headlights(ctx: Ctx, t: number): void {
   ctx.rect(WINDOW.x1, top - 1, 9, bottom - top + 1)
   ctx.clip()
   ctx.globalCompositeOperation = 'screen'
-  const quad = (x0: number, x1: number) => {
-    ctx.beginPath()
-    ctx.moveTo(x0 + skew, top)
-    ctx.lineTo(x1 + skew, top)
-    ctx.lineTo(x1, bottom)
-    ctx.lineTo(x0, bottom)
-    ctx.closePath()
-  }
-  const g = ctx.createLinearGradient(x - 0.3, 0, x + w + 0.3, 0)
-  g.addColorStop(0, 'rgba(200, 212, 255, 0)')
-  g.addColorStop(0.2, `rgba(200, 212, 255, ${a.toFixed(3)})`)
-  g.addColorStop(0.8, `rgba(200, 212, 255, ${a.toFixed(3)})`)
+  // A soft, shapeless wash: the car's light comes in through the window and off the ceiling, so what reaches this wall
+  // is diffuse, brightest high up and fading down it. (Once it was the window's shape with its bars and drops in it,
+  // which this wall, the window's own, could never be lit with.)
+  const cx = x + w / 2 + skew * 0.5
+  ctx.translate(cx, top)
+  ctx.scale(1.4, 4.6)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+  g.addColorStop(0, `rgba(200, 212, 255, ${(a * 1.3).toFixed(3)})`)
+  g.addColorStop(0.55, `rgba(200, 212, 255, ${(a * 0.6).toFixed(3)})`)
   g.addColorStop(1, 'rgba(200, 212, 255, 0)')
   ctx.fillStyle = g
-  quad(x - 0.3, x + w + 0.3)
-  ctx.fill()
-  ctx.restore()
-  // The window's bars, as darker lines through it; and, in the rain, the drops.
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect(WINDOW.x1, top - 1, 9, bottom - top + 1)
-  ctx.clip()
-  quad(x - 0.3, x + w + 0.3)
-  ctx.clip()
-  ctx.strokeStyle = `rgba(20, 16, 36, ${(a * 1.6).toFixed(3)})`
-  ctx.lineWidth = 0.07
-  ctx.beginPath()
-  const mid = x + w / 2
-  ctx.moveTo(mid + skew, top)
-  ctx.lineTo(mid, bottom)
-  const ty = -3.2
-  ctx.moveTo(x - 0.3 + skew * ((ty - bottom) / (top - bottom)), ty)
-  ctx.lineTo(x + w + 0.3 + skew * ((ty - bottom) / (top - bottom)), ty)
-  ctx.stroke()
-  const rain = rainAt(t)
-  if (rain > 0.1) {
-    ctx.fillStyle = `rgba(20, 16, 36, ${(a * 1.4 * rain).toFixed(3)})`
-    for (let k = 0; k < 40; k++) {
-      const fy = top + hash(k, i, 153) * (bottom - top)
-      const fx = x + hash(k, i, 154) * w + skew * ((fy - bottom) / (top - bottom))
-      ctx.beginPath()
-      ctx.arc(fx, fy, 0.02 + hash(k, i, 155) * 0.025, 0, Math.PI * 2)
-      ctx.fill()
-    }
-  }
+  ctx.fillRect(-1, -1, 2, 2)
   ctx.restore()
 }
 
