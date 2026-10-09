@@ -434,7 +434,7 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     const v = (1 - Math.cos(a)) / 2
     const side = Math.sin(a) >= 0 ? 1 : -1
     // A domed crown and a rounded hip (never a flat cut across either end), fullest a third of the way down.
-    const profile = Math.pow(Math.sin(Math.PI * Math.min(1, v * 0.988 + 0.012)), 0.55) * (1 - 0.32 * v * v)
+    const profile = Math.pow(Math.sin(Math.PI * v), 0.55) * (1 - 0.32 * v * v)
     const half = bw * profile * (1 + 0.04 * Math.sin(5 * v + who * 2 + (side > 0 ? 0 : 1.3)))
     const x = side * half + Math.sin(lean) * (1 - v) * bodyH * 0.35
     const y = top + bodyH * v
@@ -471,22 +471,28 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
   ctx.fillStyle = crown
   ctx.fillRect((-bw * 1.6 - bodyH * 0.4) * k, top * k, (bw * 3.2 + bodyH * 0.8) * k, bodyH * 0.45 * k)
   ctx.restore()
-  // Folds: two or three long soft darker bands down the trunk, and the crown a shade lighter where the light is.
+  // Folds: three long soft darker bands down the trunk, blurred and fading out at both ends (never lines that stop
+  // square), kept inside the body.
   const fold = mixHex(col, '#000000', 0.12 * (1 - fog))
+  const folds: Pt[][] = []
   for (let f = 0; f < 3; f++) {
     const fx = (-0.45 + 0.42 * f + 0.06 * who) * bw
-    p.fill(alpha(p, fold, 0.35))
-    p.beginShape()
-    for (let j = 0; j <= 12; j++) {
-      const v = 0.15 + 0.75 * (j / 12)
-      p.vertex((fx + Math.sin(lean) * (1 - v) * bodyH * 0.35 - bw * 0.035 * Math.sin(Math.PI * v)) * k, (top + bodyH * v) * k)
-    }
-    for (let j = 12; j >= 0; j--) {
-      const v = 0.15 + 0.75 * (j / 12)
-      p.vertex((fx + Math.sin(lean) * (1 - v) * bodyH * 0.35 + bw * 0.035 * Math.sin(Math.PI * v)) * k, (top + bodyH * v) * k)
-    }
-    p.endShape(p.CLOSE)
+    const edge = (sgn: number): Pt[] =>
+      Array.from({ length: 13 }, (_, j) => {
+        const u = j / 12
+        const v = 0.15 + 0.75 * u
+        const w = bw * 0.06 * Math.sin(Math.PI * u)
+        return [fx + Math.sin(lean) * (1 - v) * bodyH * 0.35 + sgn * w, top + bodyH * v]
+      })
+    folds.push([...edge(-1), ...edge(1).reverse()])
   }
+  ctx.save()
+  ctx.beginPath()
+  bodyPts.forEach(([x, y], j) => (j ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  ctx.closePath()
+  ctx.clip()
+  softSilhouette(ctx, k, folds, [], fold, 0.35, bw * 0.08)
+  ctx.restore()
   // The palm: at the end of a reach the tip opens into seven fingers, flat against whatever it touches.
   limbs.forEach((g, n) => {
     if (g.reaching > 0.6 && (o.palm ?? 0) > 0.01) drawPalm(p, k, g.tip, 0.1 * h * (o.palm ?? 0), g.col, t + order[n])

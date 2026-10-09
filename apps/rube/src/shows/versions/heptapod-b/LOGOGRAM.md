@@ -390,7 +390,10 @@ changed, in the order of the film, and then what runs through it:
   it, so the eye turns from where it is; elsewhere every frame is unchanged.)
 - **The heptapods** had a flat cut across the crown of the body, clipped acorns in every wide, and another across the
   hip, a hard trapezoid where the limbs leave it as Abbott comes out of the white. The crown is domed and the hip
-  rounded, and the highest of the body is the most fogged, so the head goes up into the white.
+  rounded, and the highest of the body is the most fogged, so the head goes up into the white. (A later round found
+  the crown still cut flat, a third of the body wide, where the chamber's wide shows it whole (108 → 115): the
+  profile never came to a point. It does now. The folds down the trunk were hairlines that stopped square at both
+  ends, like scratches; they are soft bands now, fading out at their ends.)
 - **A heptapod deepest in the fog** went by paling toward the fog's white, which is whiter than the fog field in its
   greyer places, so as Abbott came up in the push (170) its far limbs stood out as white ghost legs. Past a point it
   goes by fading now, and comes out of the fog darker than it, a shape in fog.
