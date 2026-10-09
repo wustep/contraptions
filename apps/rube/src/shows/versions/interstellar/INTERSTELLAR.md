@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 77 (latest)
+## Polish pass 78 (latest)
+
+No change to the show: the frame-step audit run under Zoom, which had moved three times (passes 7, 53, 55) without one. Beside the written spikes, four stood out: 75.3, 125.4, 162.9 and 240.5 s. At 240.5 s a retro burn flares on the Ranger, as scored. The other three are pans, and the Zoom camera's worst jolt within half a second of each is 0.08 to 0.12, the size of an ordinary move against the whips' 0.42. They show as spikes only because Zoom's closer frame turns a pan into more changed pixels.
+
+## Polish pass 77
 
 No change to the show: pass 68's flight halo seen in Overview, where Cooper is small throughout and so the streak and halo are on for the whole flight. He reads as a small gold comet crossing the ring (166 to 174 s), the one thing moving in a still frame. The halo is faint at that scale and leaves no stray glow.
 
