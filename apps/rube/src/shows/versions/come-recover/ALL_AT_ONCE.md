@@ -540,6 +540,10 @@ The notes went back to the builders who made each part, who still had their cont
 - **A pass for the looks, together.** All twenty-four looks were checked: each is live, the one looking and the one
   looked at both on the stage, for 99–100% of its span. `check:shows` now holds them to it, and a section above,
   *The looks*, lists them in one table.
+- **A pass for the write-up.** Its reference sections were checked against the code. The check list now names the
+  looks; the entries for `fx.ts`, `credits.ts`, `show.ts` and `score.ts` say what they now do; and Known limits
+  names two trade-offs taken on purpose, Zoom's crop of Joy and Waymond and the credits' line over the string under
+  Zoom.
 
 ## The looks
 
@@ -616,7 +620,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - each only comes and goes out of shot, or at a jump, when the whole world changes;
   - there are never two of anyone.
 - **The googly eyes:** Evelyn's comes on the fight's beat 123, the great hit. Joy's comes after the brink and before
-  home.
+  home. Every look is live: the one looking and the one looked at are both there for nearly all of its span (see *The
+  looks*).
 - **The end credits:**
   - after the last hit, and gone before the end;
   - set by the page;
@@ -630,10 +635,11 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   weight is behind `load()`.
 - **The show:** `.../come-recover/all-at-once/`.
   - `show.ts`: the `MultiverseShow` (legs, jumps, flickers, the family's spans, and each leg's own bounds for
-    Overview).
+    Overview). It finds where the ball is on a long lane by halving, which is what lets the eyes' many lookups run
+    on a slow machine.
   - `score.ts`: the order of the legs and parts, their entry cells, the flickers and the camera. Each leg has its own
     director, and each opens on the framing the last one closed on, carried by the jump. It also holds the zoom
-    punches.
+    punches and every eye's looks.
   - `kit.ts`: the part contract. It is Liftoff's: `Slot` and `Built`, timed `route` and `carried` lanes, `lay`,
     `frame`, and the p5 fill-cache guard. `physics.ts` adds `throwFor` and `launch` for flights handed across a
     jump. `camera.ts` is Liftoff's director.
@@ -641,13 +647,14 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - `seams.ts`: what the ball is doing at each jump.
   - `worlds.ts`: the eight worlds' palettes and materials, and the family's colours.
   - `fx.ts`: the googly eyes, over every world. Each is a white disc with a pupil that is a heavy bead in a round
-    cage, thrown by the ball's acceleration and settling. An eye can be given spans when it watches Evelyn instead
-    (Waymond's, in the alley), Joy, Waymond, or a point (the camera's lens and the photograph, for the portrait). It is worked out afresh each frame from the ball's last
-    second of path, so it scrubs true. In the laundromat the room's light shades it. An eye given during the show
+    cage, thrown by the ball's acceleration and settling. It is worked out afresh each frame from the ball's last
+    second of path, so it scrubs true. An eye can also be given looks: spans when its pupil turns to Evelyn, Joy,
+    Waymond or a point (`gaze`, listed under *The looks*). In the laundromat the room's light shades it. An eye given during the show
     arrives: it slaps on oversized, squashes past its size and settles, and its pupil is flung round the rim. On the
     great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's
     comes with a smaller, softer burst in her violet.
-  - `credits.ts`: the cards, and the soft dark under them.
+  - `credits.ts`: the cards, the soft dark under them, and the room's fade to dark with the music after the last
+    card, the washer's window last.
   - `hits.ts`: every strike, gathered for the check.
 - **The parts:** one folder a world.
   - `home/`: `set.ts` is the room and its fixtures, with a light map that the tubes, lanterns, washer glow and
@@ -684,4 +691,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   purpose; in the canyon a faint sky-coloured light round each stone keeps them findable.
 - At 64 and 144 panels, Evelyn in the mosaic is a red dot on each plank.
 - The photograph's picture is clearest large or under Zoom; on a phone it shows its colours, not the faces.
+- Zoom is a closer look at Evelyn: Joy and Waymond are cropped by it at times, which is what it is for.
+- Under Zoom, the credits' longest line crosses the near end of the lantern string. The words are set by the page,
+  the same in every mode.
 - Only Chrome on macOS has been watched. The recording export has not been re-measured for this take.
