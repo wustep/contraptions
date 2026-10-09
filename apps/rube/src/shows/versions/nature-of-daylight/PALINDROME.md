@@ -457,6 +457,14 @@ A twenty-sixth took the blast on, since everyone but the four of them is already
   and its red light comes on, armed; on the beat after it hops back over the two of them and rolls away down the
   chamber into the dark. The charge is now plainly ours, and the blast with it.
 
+A twenty-seventh checked the soldier cold: a fresh viewer, asked only who caused the blast, said a soldier, where
+two before had said the heptapods. Two things it and Overview showed:
+
+- **The charge's light** was a dull red from the cut, so it was armed before the soldier touched it. It is dark glass
+  until the nudge now, and its coming on is the arming.
+- **The soldier's exit** stopped mid-floor, which Overview, seeing the whole chamber, showed as a pop. It rolls on out
+  through the door it came in by, into the doorway's dark.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

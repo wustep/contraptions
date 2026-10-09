@@ -887,7 +887,7 @@ const SOLDIER_AT = CHARGE[0] - 0.22 - SOLDIER_R - 0.03
 const ARM = 215.65
 const HOP: [number, number] = [216.0, 216.625]
 const HOP_TO = 4.55
-const GONE_BY = 218.4
+const GONE_BY = 219.0
 function soldierAt(t: number): Pt | null {
   if (t < T.bomb || t > GONE_BY) return null
   const y = FLOOR - SOLDIER_R
@@ -901,14 +901,20 @@ function soldierAt(t: number): Pt | null {
     const u = (t - HOP[0]) / (HOP[1] - HOP[0])
     return [SOLDIER_AT + (HOP_TO - SOLDIER_AT) * u, y - 0.55 * 4 * u * (1 - u)]
   }
-  // Away down the chamber, gathering speed, into the dark.
+  // Away down the chamber, gathering speed, and out through the door it came in by. (Stopped short of it, it went out
+  // mid-floor, which Overview, seeing the whole chamber, showed as a pop.)
   const u = (t - HOP[1]) / (GONE_BY - HOP[1])
-  return [HOP_TO - 4.5 * u * u, y]
+  return [HOP_TO - (HOP_TO - (JAMB - 0.9)) * u * u, y]
 }
 function soldier(ctx: Ctx, k: number, t: number): void {
   const at = soldierAt(t)
   if (!at) return
   const [x, y] = at
+  // Into the doorway's dark.
+  const seen = 1 - smooth(x, JAMB + 0.1, JAMB - 0.7)
+  if (seen <= 0.01) return
+  ctx.save()
+  ctx.globalAlpha *= seen
   ctx.fillStyle = mix(SHELL.dark, '#000000', 0.35)
   ctx.beginPath()
   ctx.arc(x * k, y * k, SOLDIER_R * k, 0, Math.PI * 2)
@@ -919,6 +925,7 @@ function soldier(ctx: Ctx, k: number, t: number): void {
   ctx.beginPath()
   ctx.arc(x * k, y * k, SOLDIER_R * k, Math.PI * 1.1, Math.PI * 1.9)
   ctx.stroke()
+  ctx.restore()
 }
 
 function charge(ctx: Ctx, k: number, t: number): void {
@@ -955,7 +962,9 @@ function charge(ctx: Ctx, k: number, t: number): void {
     ctx.fillRect(-0.55 * k, -0.55 * k, 1.1 * k, 1.1 * k)
     ctx.restore()
   }
-  ctx.fillStyle = mix(mix(SHELL.dark, SHANG, 0.45), mix(SHANG, '#FFFFFF', 0.25), Math.max(on, armed))
+  // Dark glass until the soldier arms it, so its coming on is the arming. (Dull red from the cut, it was armed already.)
+  const lens = t >= BLINKS[0] - 0.3 ? mix(SHELL.dark, SHANG, 0.45) : mix(SHELL.dark, SHELL.wallLit, 0.15)
+  ctx.fillStyle = mix(lens, mix(SHANG, '#FFFFFF', 0.25), Math.max(on, armed))
   ctx.fillRect(lx - 0.08 * k, ly - 0.04 * k, 0.16 * k, 0.08 * k)
 }
 /** The charge's light: on each beat from the one after the slam to the blast. */
