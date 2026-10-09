@@ -54,11 +54,11 @@ const COUNT = [0, 1, 2, 3].map((i) => BAND - 0.4515 * (4 - i))
 /** Where the two of them go out of shot, and are let go. */
 const GONE = 467.55
 
-/** Her nod: the ball dips, squashed a little on the floor, and comes back up. */
+/** Her nod: the ball dips, squashed on the floor, and comes back up; deep enough to read in her close shot. */
 function nodded([x, y]: Pt, t: number) {
-  const u = (t - NOD_MIA) / 0.55
+  const u = (t - NOD_MIA) / 0.58
   const n = u <= 0 || u >= 1 ? 0 : Math.sin(Math.PI * Math.pow(u, 0.7))
-  return n ? { x, y: y + R * 0.13 * n, stretch: 1 - 0.13 * n, angle: Math.PI / 2 } : { x, y }
+  return n ? { x, y: y + R * 0.3 * n, stretch: 1 - 0.3 * n, angle: Math.PI / 2 } : { x, y }
 }
 
 /** A close shot held on `at` from `a` to `b`: a cut in (the key a frame after the last one), a slow push, and out at `b`. */
@@ -149,8 +149,8 @@ function plan(begin: number) {
   // He looks up at her, a small turn on the key; the nod.
   const looked = plus(held, -0.05)
   seb.push(hold(seb, LOOK[0]), ease(LOOK[1], looked))
-  // A nod, for a ball on a key: a small lift and back, settling softly.
-  seb.push(hold(seb, NOD), { at: NOD + 0.22, p: plus(looked, 0, -0.05), ease: 'out' }, ease(NOD + 0.62, looked))
+  // A nod, for a ball on a key: a lift and back, settling softly; enough to read in his close shot.
+  seb.push(hold(seb, NOD), { at: NOD + 0.22, p: plus(looked, 0, -0.13), ease: 'out' }, ease(NOD + 0.62, looked))
   // The count-in: four nods, onto the band.
   for (const c of COUNT) seb.push(hold(seb, c - 0.1), { at: c, p: plus(looked, 0, -0.04), ease: 'out' }, ease(c + 0.22, looked))
   seb.push(hold(seb, BAND - 0.2), { at: BAND - 0.15, p: plus(restOn(LAST_KEY), -0.05), ease: 'in' })
