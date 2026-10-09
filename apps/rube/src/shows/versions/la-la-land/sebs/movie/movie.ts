@@ -1337,7 +1337,8 @@ function overPool(p: p5, t: number, c: Ctx): void {
   const water = waterAt(t)
   const fr = frame(p, k)
   const x1 = fr.x1 + 1
-  p.fill(alpha(p, M.pool, 0.55))
+  // The water in front of whoever is in it: thin enough that he and the boy keep their colours under it.
+  p.fill(alpha(p, M.pool, 0.34))
   p.noStroke()
   p.beginShape()
   for (let x = POOL_X0 + 0.04; x <= x1; x += 0.12) p.vertex(x * k, (WATER + water(x)) * k)
