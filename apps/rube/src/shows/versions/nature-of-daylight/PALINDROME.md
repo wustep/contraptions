@@ -676,6 +676,15 @@ out of it only in the great wides of the shell's going and the daylight, as the 
 valley in Overview in a tall frame, after the sixtieth and the sixty-first widened them: the ring whole over the
 table, the shell whole over the meadow, neither cut. Nothing to change.
 
+A sixty-third gave the show to a fourth fresh reader. They had the story, the ring of screens and the suits as they
+are drawn aside. Two things read as what they are not:
+
+- **The lift folded** (313 to 314 s, and at the camp before it rises) read as a coil spring, as the third reader had
+  also said: with pins only at the arms' crossings, its light and dark arms folded flat into one zigzag. Every joint
+  at the arms' ends is pinned now, so folded or raised it is linked arms, a lift's stack.
+- **The hand raised over her** (148 s), after the camera's cut there, hung half over the frame's top, a smudge at its
+  edge. It is raised a little lower now, whole in the frame, still well over her.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

@@ -631,6 +631,21 @@ function drawLift(ctx: Ctx, k: number, t: number): void {
     const ym = y0 - (i + 0.5) * hs
     ctx.fillRect((x - 0.035) * k, (ym - 0.035) * k, 0.07 * k, 0.07 * k)
   }
+  // The pins at the arms' ends, where each stage joins the next: linked arms, so folded flat it is a lift's stack and
+  // not a coil. (With pins only at the crossings, the light and dark arms folded into one zigzag, a spring.)
+  for (let i = 0; i <= n; i++) {
+    const yj = y0 - i * hs
+    for (const xj of [xl, xr]) {
+      ctx.fillStyle = mix(steelDark, VALLEY.shellDark, 0.55)
+      ctx.beginPath()
+      ctx.arc(xj * k, yj * k, Math.max(1.2, 0.07 * k), 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = steel
+      ctx.beginPath()
+      ctx.arc(xj * k, yj * k, Math.max(0.5, 0.03 * k), 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
   // The ram: from the base up to the second stage's crossing.
   const ramTop: Pt = [x + 0.02, y0 - 1.5 * hs]
   const ramFoot: Pt = [x - w * 0.36, y0 - 0.02]

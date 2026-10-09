@@ -100,7 +100,7 @@ function gripsOf(who: Writer): Grip[] {
     // The hand comes: raised over her as she goes to the glass, then down onto it, where she is. Raised in the close
     // frame and slowly, so it is seen there: raised to just above the frame's top in a second, it swept up through
     // the close as a limb with a knot on it and was gone.
-    out.push({ t0: T.palm - 1.25, t1: T.palm - 0.77, to: [9.2, -1.85], open: 0.6, lead: 1.8, palm: PALM_R })
+    out.push({ t0: T.palm - 1.25, t1: T.palm - 0.77, to: [9.2, -1.6], open: 0.6, lead: 1.8, palm: PALM_R })
     out.push({ t0: T.palm, t1: T.palm + 2.3, to: PALM, open: 1, lead: 0.77, palm: PALM_R })
     const w = ring(WEAPON.seed)
     out.push({ t0: WEAPON.born, t1: WEAPON.born + 1.3, to: inkAt(w, WEAPON.c[0], WEAPON.c[1], WEAPON.R, w.start), open: 0, lead: 0.5, palm: PALM_R })
