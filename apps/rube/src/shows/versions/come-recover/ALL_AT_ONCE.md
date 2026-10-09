@@ -150,7 +150,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 200.16 | the drop | the rocks | Silence. Two stones on a ledge over a vast canyon, lumpy and flat-bottomed, the colour drained out of them: Evelyn's with her eye, Joy's beside it, where Waymond was. Pebbles fall from the lip and take forever to land. Joy's stone teeters forward on its flat underside (207.56, 208.36) and rolls out to the brink (209.96). On 213.96, the strongest note in the quiet, it goes over. Evelyn rolls to where she was (214.76), flinches back (216.36), and goes after her (219.56). |
 | 220 to 241.8 | a soft swell | the rocks | The long way down, on the beats, ledge by ledge. The camera goes over the brink after her and stays close, the wall's strata going up past. On a bench halfway down Joy is waiting, and Evelyn comes to rest against her (226.56) in a close two-shot, looking at her: where the stones touch, each one's colour comes back first and spreads over it. Joy goes on (227.76) and the camera goes down the gorge with them, Joy a bound ahead. On the long talus it draws back for a breath, the canyon most of the frame and the two of them small on the scree, then comes in again for the last bounds. At the bottom a dark ring lies in the sand: the bagel. Joy drops into it, and on 241.76 Evelyn follows. |
 | 241.76 | a breath | the dark | They fall into the bagel's hole. Joy is drawn up into its dark, shrinking and dimming, and Evelyn holds her at the lip. |
-| 247.35 | the peak | the dark | A line comes down from a pulley high above: Waymond's. He drops as the counterweight, and on every beat the line turns the bagel backwards, a ratchet kick of the whole crust. On 118½ Evelyn heaves back, and on 122 Joy pops out of the dark. From 123 everything the bagel swallowed bursts back out of the hole, one thing a beat, last in first out, each with a googly eye, and a spray of seeds goes out on every eighth. On 136 an eye rises out of the hole and lands on Joy. The bagel shrinks as it gives, until its hole is exactly a washer's window, and the hole fills with glass light. |
+| 247.35 | the peak | the dark | A line comes down from a pulley high above: Waymond's. He drops as the counterweight, and on every beat the line turns the bagel backwards, a ratchet kick of the whole crust. On 118½ Evelyn heaves back, and on 122 Joy pops out of the dark. From 123 everything the bagel swallowed bursts back out of the hole, one thing a beat, last in first out, each with a googly eye, and a spray of seeds goes out on every eighth. On 136 an eye rises out of the hole and lands on Joy. The bagel shrinks as it gives, until its hole is exactly a washer's window, and the hole fills with glass light. As each thing comes out, a beam of its own life's colour shoots from the hole and stays: the carpet's red and gold, the dojo's lacquer, the hot dog's pink and mustard, the griddle's flame, the canyon's sand, the laundromat's lantern gold. Beat by beat the dark fills, until the bagel stands black in a radiance of every life she has been, wheeling slowly as it turns back. As it closes into the window, the radiance draws in and dims. |
 | 264.14 | the peak's end | home | Through the window: they are inside the drum of the washer by the door, where the morning started. The cycle ends, the door swings open (268.39), and they drop out. Waymond leaps the foot lever and touches Joy, and the touch runs through to Evelyn. |
 | 275.2 | a hush | home | The camera closes slowly on the three of them together at the washer's foot, the window's glow behind them, and holds. Joy nestles against her mother on a soft note (279.84). |
 | 282.2 | home's pulse | home | The family portrait. A wooden box camera with a bellows stands on a tripod by the door, facing them. Joy and Waymond straighten up on two small hops. Evelyn rolls to a foot switch under the window and presses it on 286.20: a string of lanterns over the family lights one a beat, and the camera draws back to take in the whole portrait. The self-timer's red lamp blinks faster and faster while she hurries back beside Joy (290.38). |
@@ -785,6 +785,15 @@ The notes went back to the builders who made each part, who still had their cont
     A panel drawn at the skins' finest detail (34 px a cell or more, so the first splits on a large stage) keeps the
     whole look.
   - The checks' band for widescreen now covers the surf's glimpses of the movie star's and the dojo's lives.
+- **A director's pass: the dark fills with every colour.** The peak is the loudest passage of the cue, and it was the
+  darkest picture in the show: the black bagel in the black, the same frame for 17 s. Now everything the bagel gives
+  back comes out with a beam of its life's colour behind it (`void/radiance.ts`, by `THING_WORLD`), round the whole
+  circle a golden step apart, so the radiance fills on every side and not only where things are thrown. Each beam
+  flares as it comes and settles to a glow that stays, and they wheel with a fifth of the bagel's turn. When the line
+  runs out they draw in and dim, and the hole's window light takes over for the cut home.
+  - They rise one a beat, each a narrow share of the frame, so the frame's light never swings as a flash does.
+  - Measured in Chrome at 1440×810: in the peak's close shots (252 s) the beams reached far past the frame and cost
+    14 ms a frame. They are clipped to the frame now, and every stretch of the peak is at 16.5–16.8 ms.
 
 ## The looks
 
@@ -929,7 +938,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
     fireworks drive. The parts are `laundromat`, `dryer`, `kindness` and `finale`.
   - `star/premiere`, `dojo/dummies`, `hotdog/fingers`, `hibachi/raccacoonie`, `rocks/ledge`.
   - `multi/`: `skins.ts` is thirteen worlds as skins for one seesaw. Parts: `surf`, `mosaic`.
-  - `void/`: `bagel.ts` is the everything bagel, driven by the pull and then by the peak, plus the drawings of the
+  - `void/`: `radiance.ts` is the peak's beams of every life's colour, behind the bagel. `bagel.ts` is the everything bagel, driven by the pull and then by the peak, plus the drawings of the
     things it swallows. Parts: `pull`, `peak`.
 - **The shared files.** The hooks in `registry.ts`, `main.ts`, `styles.css` and `engine.ts` came in with Liftoff
   (PR #88):

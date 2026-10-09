@@ -24,6 +24,7 @@ import { kindness, KINDNESS_AT } from './home/kindness'
 import { GIFT_LOOKS } from './home/kindness-draw'
 import { ledge } from './rocks/ledge'
 import { film, LOOKS, type Look } from './film'
+import { radiance } from './void/radiance'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
 import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './home/finale-lives'
@@ -89,7 +90,14 @@ const SETS = (roomState: RoomState): Partial<Record<WorldKey, WorldSet>> => ({
     after: [standing(credits, 0, 0, box(-12, -8, 44, 4, 2), null, DURATION)],
   },
   // Jobu's bagel, where the pull draws everything in and the peak spins it all back out.
-  void: { scenery: [standing(bagel, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION)], after: [] },
+  // Behind it, in the peak, the radiance of every life it gives back.
+  void: {
+    scenery: [
+      standing(radiance, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
+      standing(bagel, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
+    ],
+    after: [],
+  },
 })
 
 /**
