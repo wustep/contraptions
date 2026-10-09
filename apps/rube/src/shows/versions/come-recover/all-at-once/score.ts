@@ -205,6 +205,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
         { from: 20.3, to: 23.95, at: 'joy' as const },
         { from: 23.7, to: 27.65 },
         { from: 27.4, to: 30.3, at: 'joy' as const },
+        // In the alley: as she comes down the steps to him in the rain and they meet, and on as the drain takes her.
+        { from: 71.0, to: DROP, at: 'evelyn' as const },
         { from: DROP - 0.1, to: JUMPS.dojo },
         { from: 192.1, to: JUMPS.rocks },
         // On the line in the peak, the weight that pulls her back: he watches Joy, from his catch until he is carried

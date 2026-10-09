@@ -562,6 +562,9 @@ The notes went back to the builders who made each part, who still had their cont
 - **A pass for the hush.** In every sweep the hush (128–133 s) was a near-black frame with one red dot. On a desktop
   screen it could read as a stalled show. The seeds and salt drifting at three depths are now about half again as
   bright, so the fall reads as depth and motion, and the frame stays dark: still the quiet the music asks for.
+- **A pass for the meeting in the alley.** Waymond watched her go down the drain, but not come to him. Now from
+  71.0 s, as she floats down the steps in the rain, his eye is on her. He watches her arrive and the moment they
+  share, and his look runs on unbroken as the drain takes her.
 
 ## The looks
 
@@ -575,6 +578,7 @@ looked at both there, and seen: its eye in the frame and big enough to read for 
 | 20.3–23.9 | Waymond | Joy | she comes in on the bell and crosses to her mother |
 | 23.7–27.6 | Waymond | Evelyn | her mother at the keys, not looking up |
 | 27.4–30.3 | Waymond | Joy | she gives up and goes |
+| 71.0–82.1 | Waymond | Evelyn | she comes down the steps to him in the rain, and they meet |
 | 82.0–86.3 | Waymond | Evelyn | the drain carries her away from him |
 | 192.1–200.2 | Waymond | Evelyn | the empathy fight, all the way to him |
 | 200.7–219.7 | Evelyn | Joy | the two stones in the silence; then down over the brink after hers |
