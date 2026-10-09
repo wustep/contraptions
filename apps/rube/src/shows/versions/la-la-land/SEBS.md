@@ -242,3 +242,8 @@ A twenty-fifth pass, at the two moments the whole show is for:
 
 - **Her close shots at the door.** In the film the goodbye is told in close shots cut against each other: she turns back, he looks up, she smiles, he nods. His were close (the ball on the keys, the piano round it) but hers were not: she was small and low among empty chairs over a third of the frame of dark floor. Hers are as close as his now, the ball large in the middle of the picture with the chairs and the candle-lit table round her, so the turn and the smile carry as his look and nod do.
 - **The kiss.** The shot on the kiss at her table (445 to 451) comes a little closer, so the two of them and the candle between them are more of the picture.
+
+A twenty-sixth pass, at the other beats:
+
+- **The beats, at full size.** Her lifting her eyes at her table, his leap up beside her at the curtain call, the knock that rolls her down the beam to him, the dip under the wheeling sky and the touch, and the room at Lipton's lighting up after the kiss all read as they should, and are as they were.
+- **The ride across the ceiling.** While they ride the string of bulbs across Lipton's (78 to 86), the bottom two fifths of the frame was the piano's lid and case, cut off along the frame's foot: a great black shape in front of the ride. The shot is closer and a little higher now, so the frame is the two of them on the string, each bulb lighting beside them, and the garland over it; the lid is a sliver at the foot as they leave the tree, and then gone.

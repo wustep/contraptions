@@ -145,13 +145,14 @@ export const kiss = part<null>(
       [70.8, 6.5, [8.4, 1.3]],
       [73.6, 7.6, [7.6, -0.8]],
       [76.6, 7.2, [8.1, -2.8]],
-      // Across the room on the bulbs: close, a little ahead of them, so each bulb is seen lighting beside them.
-      [T.tip, 6.2, [7.7, -3.5]],
-      [(T.swags[0] + T.swags[1]) / 2, 6.0, [5.0, -3.3]],
-      [(T.swags[1] + T.swags[2]) / 2, 5.9, [0.2, -2.8]],
-      [(T.swags[2] + T.swags[3]) / 2, 5.9, [-4.65, -2.1]],
-      [(T.swags[3] + T.swags[4]) / 2, 6.0, [-9.5, -1.3]],
-      [T.swags[4], 6.2, [-11.3, -0.9]],
+      // Across the room on the bulbs: close, a little ahead of them, so each bulb is seen lighting beside them, and high
+      // enough that the frame is them, the string and the garland over it, not the piano's lid cut off along its foot.
+      [T.tip, 5.0, [7.7, -3.95]],
+      [(T.swags[0] + T.swags[1]) / 2, 4.9, [5.0, -3.75]],
+      [(T.swags[1] + T.swags[2]) / 2, 4.9, [0.2, -3.25]],
+      [(T.swags[2] + T.swags[3]) / 2, 4.9, [-4.65, -2.5]],
+      [(T.swags[3] + T.swags[4]) / 2, 5.2, [-9.5, -1.6]],
+      [T.swags[4], 5.6, [-11.3, -1.1]],
       // Down the garland, out of the door.
       [87.2, 6.3, [-12.4, 0.9]],
       [88.6, 6, [-14.1, 1.35]],
