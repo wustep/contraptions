@@ -331,8 +331,10 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
   p.translate(ring.c[0] * k, ring.c[1] * k)
   if (ring.key === 'G' && t < ring.closed) {
     // The great ring, as it is written: her half from her pen at its bottom, Costello's from its pen at its top,
-    // each the same ink turned half a turn from the other.
-    const lo = ring.lo(t)
+    // each the same ink turned half a turn from the other. Each half's tail is held a little short of the other's pen
+    // (the inks' round ends would otherwise run together a second and more early, and the ring read closed before it
+    // is), and on the close the tails run into the gaps: the halves meet on 183.182, seen to.
+    const lo = ring.lo(t) + JOIN_GAP * (1 - sstep((t - (ring.closed - JOIN_RUN)) / JOIN_RUN))
     const hi = ring.hi(t)
     const half = Math.max(0, (hi - lo) / 2)
     const form = 0.7 * (0.5 - Math.sin(Math.asin(1 - 2 * Math.min(1, half / Math.PI)) / 3)) * 0.9999
@@ -346,6 +348,10 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
 }
 
 /* ------------------------------------------------------------------ the set */
+
+/** How far short of the other half's pen each half's tail is held while the great ring is written, and how long its run into the gap on the close takes. */
+const JOIN_GAP = 0.35
+const JOIN_RUN = 0.18
 
 /** The fog's standing drawing, for the whole show (it is only ever on the stage while she is beyond the glass). */
 export function drawFog(p: p5, k: number, t: number): void {

@@ -246,6 +246,10 @@ strongest pulses held against what the picture does on them. What changed:
 - **A heptapod deepest in the fog** went by paling toward the fog's white, which is whiter than the fog field in its
   greyer places, so as Abbott came up in the push (170) its far limbs stood out as white ghost legs. Past a point it
   goes by fading now, and comes out of the fog darker than it, a shape in fog.
+- **The halves meeting** (183.182, the climax): the two halves' round ends ran together well before the close, so
+  from about 181.8 the great ring read as closed, and on the pulse only two hairline seams went. A fresh critic,
+  shown the push at four frames a second, caught it. Each half's tail is held a little short of the other's pen while
+  it is written, and on the close the tails run into the gaps: the halves are seen to meet on the pulse.
 - **The crescent under the push** (170.3 → 176.7): meant to hang under the great ring as it begins and then go into
   the white, it lingered dark through the wide frame on the great ring, cut by the frame's bottom edge just under her,
   and only faded after 173. A second fresh critic caught it. It now goes into the white by 170.3, before that frame.
