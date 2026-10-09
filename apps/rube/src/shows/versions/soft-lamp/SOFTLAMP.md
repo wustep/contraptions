@@ -963,6 +963,14 @@ both in Zoom, and the overview.
 146. **The tail, fixed on the way.** Coming round, and going back, it faded in and out where it lay: a ghost of a tail
      across the desk for a second. It slides now, its tip drawn along from its rear to under its chin, and back.
 
+### The fifty-sixth pass: every five seconds, again
+
+147. **The whole half hour, a frame every five seconds**, after six passes changed it (the mist, the far cup's snare,
+     the kitten's glance at each new track, its climb to the sill, its waking with the lamp): 364 frames, looked at in
+     grids, and the moments that looked odd small (the one in the window stretching, the end) at full size. Nothing out
+     of place. The share card, regenerated (the dust by the far cup, the window's rims); kept at its dusk still, which
+     is warmer than the end's, where the hand is reaching for the lamp.
+
 **Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
