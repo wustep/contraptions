@@ -467,6 +467,86 @@ function drawGrid(p: p5, c: Ctx, t: number): void {
     p.rect(X(k, x + 0.55), X(k, y + 0.04), X(k, 0.26), X(k, 0.2), X(k, 0.04))
     beam(p, k, x + 0.68, y + 0.24, x + 0.95, Y_BACK - 0.4, 0.2, 1.5, M.flat, 0.35)
   }
+  // The specials: a lamp on the pipe over each cut-out, dark until its cut-out stands, then struck on with a flash and
+  // left burning warm on it. The set is lit as it builds.
+  for (const cut of CUTS) {
+    const lx = cut.x + 0.25
+    const since = t - cut.at
+    const on = since < 0 ? 0 : 0.75 + 0.25 * Math.exp(-since / 0.35)
+    const flash = since < 0 ? 0 : Math.exp(-since / 0.12)
+    p.stroke(mixHex(M.shadow, ink, 0.5))
+    p.strokeWeight(Math.max(1, weight * 0.6))
+    p.line(X(k, lx), X(k, y), X(k, lx), X(k, y + 0.16))
+    if (on > 0) beam(p, k, lx, y + 0.38, cut.x, HINGE - 0.1, 0.16, 1.9, M.lamp, 0.2 * on + 0.25 * flash)
+    p.push()
+    p.translate(X(k, lx), X(k, y + 0.24))
+    p.rotate(Math.atan2(HINGE - y, cut.x - lx) - Math.PI / 2)
+    solid(p, ink, weight * 0.6, mixHex(M.shadow, ink, 0.55))
+    p.rect(X(k, -0.12), X(k, -0.1), X(k, 0.24), X(k, 0.24), X(k, 0.05))
+    p.noStroke()
+    p.fill(on > 0 ? mixHex(M.lamp, M.flat, 0.5 * flash) : mixHex(M.shadow, ink, 0.3))
+    p.ellipse(0, X(k, 0.15), X(k, 0.2), X(k, 0.06))
+    p.pop()
+    if (flash > 0.02) glow(p, k, lx, y + 0.4, 0.6, M.lamp, 0.5 * flash)
+  }
+}
+
+/**
+ * The studio's camera: an old blimped camera on a pedestal by the door's flat, its two magazine reels up top. It is
+ * shooting them: from the moment the white lifts its red light is on, and its lens turns to follow him along the
+ * floor. The cloth comes down over it with everything else of the studio.
+ */
+const CAM: [number, number] = [9.55, Y_BACK]
+function drawCamera(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const body = mixHex(M.shadow, ink, 0.62)
+  const metal = mixHex(M.shadow, ink, 0.4)
+  const [cx, foot] = CAM
+  const head = foot - 1.55
+  // The pedestal: a column on a three-wheeled base.
+  solid(p, ink, weight * 0.7, metal)
+  p.rect(X(k, cx - 0.06), X(k, head + 0.15), X(k, 0.12), X(k, foot - head - 0.3))
+  p.rect(X(k, cx - 0.42), X(k, foot - 0.2), X(k, 0.84), X(k, 0.08), X(k, 0.03))
+  for (const dx of [-0.36, 0, 0.36]) {
+    solid(p, ink, weight * 0.6, body)
+    p.circle(X(k, cx + dx), X(k, foot - 0.06), X(k, 0.12))
+  }
+  // The head, turned to him.
+  const tx = sebX(t)
+  const aim = Math.max(-0.5, Math.min(0.35, Math.atan2(-0.15 - head, tx - cx))) + Math.PI
+  p.push()
+  p.translate(X(k, cx), X(k, head))
+  p.rotate(aim)
+  // (Drawn facing +x, then turned round to face back along the floor toward him.)
+  solid(p, ink, weight * 0.8, body)
+  p.rect(X(k, -0.35), X(k, -0.22), X(k, 0.7), X(k, 0.42), X(k, 0.06))
+  solid(p, ink, weight * 0.7, metal)
+  p.rect(X(k, 0.35), X(k, -0.12), X(k, 0.24), X(k, 0.22), X(k, 0.02))
+  solid(p, ink, weight * 0.7, body)
+  p.rect(X(k, 0.59), X(k, -0.15), X(k, 0.08), X(k, 0.28), X(k, 0.02))
+  // The reels, turning as it runs.
+  const run = smooth(t, BEGIN + 0.6, BEGIN + 1.2)
+  for (const [rx, r] of [[-0.18, 0.2], [0.17, 0.2]] as const) {
+    solid(p, ink, weight * 0.7, body)
+    p.circle(X(k, rx), X(k, -0.22 - r), X(k, 2 * r))
+    p.stroke(metal)
+    p.strokeWeight(Math.max(1, weight * 0.6))
+    const a = t * 3.2 * run
+    for (let j = 0; j < 3; j++) {
+      const th = a + (j * Math.PI * 2) / 3
+      p.line(X(k, rx), X(k, -0.22 - r), X(k, rx + Math.cos(th) * r * 0.75), X(k, -0.22 - r + Math.sin(th) * r * 0.75))
+    }
+  }
+  p.pop()
+  // Its red light, on while it runs.
+  const tally = run * (0.85 + 0.15 * Math.sin(t * 5))
+  if (tally > 0.01) {
+    glow(p, k, cx + 0.02, head - 0.33, 0.28, M.door, 0.55 * tally)
+    p.noStroke()
+    p.fill(mixHex(mixHex(M.shadow, ink, 0.4), M.door, tally))
+    p.circle(X(k, cx + 0.02), X(k, head - 0.33), X(k, 0.08))
+  }
 }
 
 /* ------------------------------------------------------------------ the cut-outs */
@@ -623,6 +703,7 @@ function drawStudio(p: p5, s: StudioState, c: Ctx): void {
   p.ellipseMode(p.CENTER)
   drawGrid(p, c, t)
   drawFlats(p, c, t)
+  drawCamera(p, c, t)
   drawCloth(p, c, t)
   drawFloor(p, c, t)
   drawSpill(p, c, t)
