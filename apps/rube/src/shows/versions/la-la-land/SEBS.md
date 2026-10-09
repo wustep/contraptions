@@ -381,3 +381,8 @@ A fifty-first pass, at the weakest stretches:
 A fifty-second pass, the runners-up:
 
 - **Closing on them at Lipton's.** The last reviewer's runners-up were the crossing at Lipton's, where the two of them were small, and the shot at her table. While she crosses the room he is at the keys at one side of the frame and she at the other, and there is no room to come in; but from 56.5 the distance between them closes, and now the frame closes with it (to 4.7 cells from 5.6) and holds there into the hush, both of them in the picture throughout. At her table the push-in as she lifts her eyes goes a little further (1.32 cells).
+
+A fifty-third pass, the ranking again:
+
+- **Closer where it was still small.** A fresh ranking of the weakest stretches found three that were still too wide for what happens in them. The ride on the bulbs across Lipton's and down the garland, the joy after the kiss, comes in (about 4 cells over the swags, 5 down the garland, from 5 and 6). The walk to the door follows her closer and lower, so the two of them are in the picture's lower third and not on its bottom edge, with the doorway and the arrow over them. And on the couch at home the camera pushes slowly in on the three of them before he puts the lamp out.
+- Not taken: her entrance at Lipton's, already looked at three times.

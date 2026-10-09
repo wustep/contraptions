@@ -426,9 +426,9 @@ export const movie = part<MovieState>(
     // meadow's worth of empty grass below.
     { t: 376.0, cells: 4.6, hold: [1.5, -1.0], w: 0.4, off: [0, -0.55] },
     { t: 380.4, cells: 4.4, hold: [4.2, -1.0], w: 0.5, off: [0, -0.55] },
-    // Home: on the couch, held close until he has put the lamp out; then out of the screen as the film runs out.
+    // Home: on the couch, pushing slowly in on the three of them, held close until he has put the lamp out; then out of the screen as the film runs out.
     { t: 382.6, cells: 3.9, hold: [5.2, -0.62] },
-    { t: BACK0, cells: 3.7, hold: [5.3, -0.62] },
+    { t: BACK0, cells: 3.2, hold: [5.3, -0.6] },
     { t: 393.0, cells: 11.5, hold: [0.3, -0.45] },
     { t: 395.0, cells: 11.7, hold: [0.3, -0.45] },
   ],

@@ -153,15 +153,15 @@ export const kiss = part<null>(
       [T.tip, 5.0, [7.7, -3.95]],
       // Held on the star while the cup tips them out onto the string; then along it with them.
       [T.tip + 0.55, 5.0, [7.65, -3.95]],
-      [(T.swags[0] + T.swags[1]) / 2, 4.9, [5.0, -3.75]],
-      [(T.swags[1] + T.swags[2]) / 2, 4.9, [0.2, -3.25]],
-      [(T.swags[2] + T.swags[3]) / 2, 4.9, [-4.65, -2.5]],
-      [(T.swags[3] + T.swags[4]) / 2, 5.2, [-9.5, -1.6]],
-      [T.swags[4], 5.6, [-11.3, -1.1]],
+      [(T.swags[0] + T.swags[1]) / 2, 4.1, [5.0, -3.75]],
+      [(T.swags[1] + T.swags[2]) / 2, 4.0, [0.2, -3.3]],
+      [(T.swags[2] + T.swags[3]) / 2, 4.0, [-4.65, -2.55]],
+      [(T.swags[3] + T.swags[4]) / 2, 4.3, [-9.5, -1.65]],
+      [T.swags[4], 4.7, [-11.3, -1.1]],
       // Down the garland, out of the door.
-      [87.2, 6.3, [-12.4, 0.9]],
-      [88.6, 6, [-14.1, 1.35]],
-      [90.0, 6, [-14.6, 1.4]],
+      [87.2, 5.1, [-12.4, 1.1]],
+      [88.6, 5.0, [-14.1, 1.45]],
+      [90.0, 5.0, [-14.6, 1.5]],
     ]
     return keys.map(([t, cells, hold]): PartShot => ({ t, cells, hold: toK(hold) }))
   },
