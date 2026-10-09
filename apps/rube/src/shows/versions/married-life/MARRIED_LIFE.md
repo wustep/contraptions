@@ -594,6 +594,12 @@ window.
   outside what the show measures today, and two were proved by undoing their fix (both failed). Writing them found the
   nursery is a second place the staging fills the Zoom frame (the two of them nine tenths of its width apart).
 
+- **Polish round 23 (Opus 5.5).** Two lenses not tried before, nothing to change. A phone held upright with Zoom on
+  (the tall shift and Zoom's hold together, until now looked at only one at a time): both of them in the frame
+  throughout, the sky and the roofs over them. And contrast: each of them against the background just outside their
+  outline, once a second: the lowest ratios (Carl's blue on the maroon armchair, Ellie's greyed coral on the autumn
+  hill) are brightness alone; the ink outline and the hue carry every one, and her greying is the years, as meant.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
