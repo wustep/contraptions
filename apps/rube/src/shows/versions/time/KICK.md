@@ -285,6 +285,9 @@ each world, and changed:
   her she showed through the gap between its sill and the road, a red ball between its wheels. It has a dark chassis
   and its shadow on the wet road now, the wheels over it, until the floor goes soft (bar 23), so the three are still
   seen to sink out through it.
+- **Mal's shot landing** (145.15 to 146.8): on the cut back from her, Fischer was already half under the floor, and
+  nothing said he had been hit. The shot strikes now: a white flash where he stands, a ring out across the floor and a
+  spray of snow thrown up off it, still settling as the camera comes back to him (a fresh critic's note).
 
 ## Inception nods
 
