@@ -214,6 +214,26 @@ function tunnelPath(ctx: CanvasRenderingContext2D, k: number, xa: number, xb: nu
  * little deeper and fainter, lit along their length by `light`. No line: the light fades into the stone.
  */
 /**
+ * A rib's light across it, widest first: [width, alpha, shift]. The old three bars' profile (1.7, 1.0 and 0.45 wide)
+ * spread over many thin ones with the same light in all, so a rib is a soft ridge, never a stack of bars.
+ */
+const RIB_STEPS: [number, number, number][] = [[1.7, 0.3, -0.08], [1.0, 0.5, -0.04], [0.45, 0.8, 0]]
+const RIB_LAYERS: [number, number, number][] = (() => {
+  const n = 12
+  const out: [number, number, number][] = []
+  for (let i = 0; i < n; i++) {
+    const r = (i / (n - 1)) * (RIB_STEPS.length - 1)
+    const j = Math.min(RIB_STEPS.length - 2, Math.floor(r))
+    const f = r - j
+    const [a, b] = [RIB_STEPS[j], RIB_STEPS[j + 1]]
+    out.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f])
+  }
+  // The same light in all as the three bars had.
+  const sum = out.reduce((s, l) => s + l[1], 0)
+  return out.map(([w, a, d]) => [w, (a * 1.6) / sum, d])
+})()
+
+/**
  * A lit lip's depths into the stone, deepest first, and each layer's share of its light: the old six steps' profile
  * (1, 0.7, 0.46, 0.28, 0.15, 0.07 of its depth) spread over many thin layers, so its glow falls off with no steps.
  */
@@ -386,7 +406,7 @@ function drawAirLight(p: p5, c: Ctx, t: number, xa: number, xb: number): void {
     const lit: number[] = []
     for (let j = 0; j <= n; j++) lit.push(clamp01(lightAt(r.x, y0 + ((y1 - y0) * j) / n, t, 0.3)))
     if (Math.max(...lit) < 0.04) continue
-    for (const [wm, am, dx] of [[1.7, 0.3, -0.08], [1.0, 0.5, -0.04], [0.45, 0.8, 0]] as const) {
+    for (const [wm, am, dx] of RIB_LAYERS) {
       const g = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
       lit.forEach((l, j) => g.addColorStop(j / n, `rgba(${rgb(WARM)}, ${0.24 * am * l * l})`))
       ctx.fillStyle = g

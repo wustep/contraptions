@@ -312,7 +312,8 @@ changed, in the order of the film, and then what runs through it:
   was a row of notches, a serrated spine next to Costello's clean arc (a fresh critic read it as a lizard). The
   blots are wider and a little shallower now, so they run together into a brushstroke that swells under her pulses.
 - **The shaft's lit lips** (66 → 85.8): the glow along the floor's and the ribs' edges fell off into the stone in six
-  steps; it falls off smoothly now. The shell's vapour as it goes is soft puffs too, not flat discs.
+  steps; it falls off smoothly now, and the light on each rib across the far wall is a soft ridge, not three stacked
+  bars. The shell's vapour as it goes is soft puffs too, not flat discs.
 - **The shadow under the bench** (the first frame and the last, and every scene at the window): a dark box under the
   slab with square ends, on the glass's foot and again in the floor's reflection. Its ends fade out within the
   slab's length now.
