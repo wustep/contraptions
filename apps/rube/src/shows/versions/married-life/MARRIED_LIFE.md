@@ -480,241 +480,35 @@ window.
   that poke up at the frame's foot are not under it). Considered and kept: the fix-up's wide from 31 to 36 s, where the
   two of them are small, because it is the house made new.
 
-- **Polish round 6 (Opus 5.5).** Contact sheets of the whole show, then stills at the moments that matter. At home
-  the balloon was lost for 1.5 s behind the wall between the door and the bay as he walked in, and the door shut
-  while it was still in the doorway: now he gathers the string in at the latch and lets it out in the bay, and it is
-  hidden only for the half second he is. The dance's crest was a bare wall with the photograph a stamp at its top
-  edge: the photograph is hung lower and larger, right over them, and the crest's two shafts are a little stronger.
-  Considered and kept: Ellie at the open front door stands before its leaf, not past it against the evening; past it
-  she would leave the Zoom frame at the cut into the hill.
-
-- **Polish round 7 (Opus 5.5).** Denser sheets of the fix-up, the jar, the climb and the funeral found nothing new
-  to fix; portrait stills at a phone's shape did. The stage set the 16:9 frame in the middle of a tall one, so half a
-  phone's screen was flat ground under the floor line and the action sat in its top third. `Performance.tall` lets a
-  show say how much of the extra goes above; this one sends most of it up, into the sky, the roofs and the storey
-  above, and the credits move with the picture.
-
-- **Polish round 8 (Opus 5.5).** The whole show filmed at 10 fps and differenced frame to frame: every jump is a
-  cut, the flash, the storm's lightning or the lamp; nothing pops. Then the whole show under Zoom: through the
-  credits' draw-back the house, kept low under the sky for the cards, sank off the Zoom frame's foot, the lit window
-  cut from 233 s and the porch gone. Now Zoom holds a quarter of its half height lower from the lit room's draw-back
-  on (`Framing.zoomDrop`, `zoomDropAt` in `house/alone.ts`), so under Zoom the house stays whole with him in the lit
-  window to the end; the show's own frame is unchanged.
-
-- **Polish round 9 (Opus 5.5).** Each cut seen frame by frame at full size (before and after): nothing the two of
-  them carry, and no light, pops across one. The clouds, the jar's three breaks and the storm at full size read.
-  Then the balloon's crown measured against the Zoom frame through every second it is up: on the home steps it lost up
-  to half the balloon off the top for five seconds. Zoom now holds higher there, a step at a time with him
-  (`zoomDropAt`, negative), the balloon whole and a tenth of the half height still under him. At the hospital's start
-  it is cut too, but there is no room under them to move.
-
-- **Polish round 10 (Opus 5.5).** The lit room and the share card at full size read. At the cut into the hospital the
-  balloon's crown touched the frame's top, and under Zoom it was cut by up to half for three seconds, with no room
-  under the two of them to hold Zoom higher. Now he comes into the ward with it held close on a shorter string
-  (`GATHERS`), and lets it up as the camera opens and he reaches for the lamp, as he gathers it in at his own door:
-  whole in the frame, under Zoom too, from the cut.
-
-- **Polish round 11 (Opus 5.5).** The first and last seconds densely, the fix-up's cart and the ticket press, the
-  nursery, the doctor's office and the yard at full size: nothing to fix. Ellie at the open front door was weighed
-  again: past the leaf, against the evening, she leaves the Zoom frame through the whole push-in on the press (164.5
-  to 167 s), not only at the cut, so she stays before it. The build notes now name this PR's mechanisms (`GATHERS`,
-  `tall`, `zoomDrop`). Noted, not done: the player has no reduced-motion setting; the toll's 1% blow is the only
-  camera shake in this show.
-
-- **Polish round 12 (Opus 5.5).** A new lens: contact, the two of them against what they stand on. On the hill's
-  flank both sank a little into the slope (up to a tenth of R where it is steepest): the climb set their centres R
-  straight up from the drawn ground, which is right on the flat and short on a slope. Now `seat` in `hill/hill.ts`
-  rests them R along the ground's normal, so he stands and she rolls on it, as they do on every floor. Her sink as
-  she gives way is the slump the story asks for, and kept.
-
-- **Polish round 13 (Opus 5.5).** Contact carried through the show under Zoom: the armchairs, the office chairs,
-  the stump, the ladder's tread, the seesaw, the mantle, the fieldstone, the bed and his chair, the pew, the steps,
-  his chair at home; each rests where it should. Then stillness from the 10 fps scan: the only near-still stretches
-  are the falls held pouring (56 to 58 s) and the credits' last twelve seconds after the music rings out, both as
-  meant. Nothing to change in the picture. Lenses tried so far, for the next pass: contact sheets, full-size stills,
-  frame differencing for pops, each cut before and after, Zoom, a phone held upright, the balloon's crown against
-  the frame, contact, stillness.
-
-- **Polish round 14 (Opus 5.5).** A fresh critic watched the whole show through stills, with the notes in hand, and
-  ranked five notes; each was checked against the frames before it was taken. Taken: at her bedside she sat on a bare
-  mattress with the blanket bunched over the empty foot of the bed, so she did not read as ill; the blanket is now
-  drawn in front of her (`drawCovers`, dimmed with the ward), up over her lower third, the sheet turned down at her
-  and a mound where she lies. Her one dot, her face, looked at the floor through the tie mornings and at the crest;
-  now, still or swaying, she looks at him there (`LOOKS` in `cast.ts`), and rolling, her dot rolls. The flat tyre was
-  lost behind the window's sill under its dust: the drive and the car sit higher in the glass, so the tyre is seen
-  flat, and the hubcap is twice the size, a ringed disc seen to fly. Left: Carl small at the cart's handle in the
-  fix-up's reveal (a restaging of the rig), and the two of them lying apart on the blanket under the clouds (it moves
-  her place at the match cut into the nursery).
-
-- **Polish round 15 (Opus 5.5).** One of round 14's two notes left, taken up: on the blanket they lay as far apart as
-  the armchairs, and her dot looked at the grass (down and right) the whole time the engine built the airship, her
-  falls and the baby. Now she rolls in close over bar 33 and lies by him, as in the film, and while she lies still her
-  face is turned up to the clouds, carried just across the cut onto the mobile. The look's speed is sampled inside
-  the place she is in, since her cells change at a cut. Still left: Carl small at the cart's handle in the fix-up's
-  reveal.
-
-- **Polish round 16 (Opus 5.5).** Her gaze audited through the whole show from the numbers: every stretch where she
-  is still and her face points down, judged against the story. Kept: her handprint on the mailbox, the yard (turned
-  away from him), and the stall on the climb before she gives way. Changed: in her armchair at the new bay she looked
-  at her lap for five seconds, the share card's moment; now she looks at him, following where he is (`towardHim`), and
-  across the cut onto the blanket her look turns up to the clouds in one span, so it never drops back between them.
-  The share card is made again at 47.3 s.
-
-- **Polish round 17 (Opus 5.5).** Her gaze measured against where the story needs it at each beat. Already right: up
-  at the balloon he brings her, then round to him through her touch; the doctor's coat before the news. Changed: at
-  the kiss she looked at his middle, now up into his face; on the fieldstone her answer to his lean is her face turning
-  to him with her smallest roll, held across the match cut into the ward. Then the looks' motion was scanned frame by
-  frame through the show, which found a snap from round 14: as her roll passed the far side of where she was to look,
-  the short way round flipped, half a turn in a frame (154.6 s), and a whip on the crest itself (157.4 s). Now the
-  roll's hand-off blends as directions and each span's fade turns the short way at rest; the tie mornings and the
-  dance are two spans, and in the dance she spots him through the turn-out instead of letting her roll take her face.
-  No look now turns faster than an ordinary brisk turn.
-
-- **Polish round 18 (Opus 5.5).** A second fresh critic, told what the recent rounds changed so as to look for
-  regressions there too; each note checked against the frames. Taken: her bed was a grown-up's, long and empty past
-  her under the covers, which these two have no bodies for; it is her length now, the foot a cell past her, the mound
-  plainly her, and the covers a little lower on her. Her touch and his answer sat on the frame's foot under a wall; the
-  frame comes down onto them there (two thirds down), the balloon being tied short to her, and Zoom keeps its old hold
-  (`hospitalZoomDrop`). On the blanket she lies closer (0.42 from him, then 0.36 at the baby). At the kiss his step in
-  pressed his leaning corner over her ball; he no longer steps, and their outlines just meet. Not taken: the tilted car
-  in front of the window's bar (the pixels show the bar drawn across it), and the balloon's half second at the bay's
-  post (round 6's, while he is hidden too).
-
-- **Polish round 19 (Opus 5.5).** The critics' last open note, Carl small at the fix-up's cart, measured: at 1× it
-  is the reveal's scale, as meant, and the handle barely touches his corner; under Zoom, though, he stood on the
-  frame's very foot for fifteen seconds (0.89 to 0.98 of its half height under the middle), with room over the two of
-  them. Zoom now holds 0.22 lower from the cut to the old house until the camera comes in at the mailbox
-  (`fixupZoomDrop`): he is at most 0.77 down, the lawn and the street under him, the hammer and the house front still
-  in. The show's own frame is unchanged.
-
-- **Polish round 20 (Opus 5.5).** Last round's cart was one case of a general gap: the Zoom check holds the two of
-  them inside the frame, not off its edge. Scanned through the whole show, 22 stretches of a second or more had one
-  of them within an eighth of the Zoom frame's edge, among them Carl cut at the nursery's winch and at the ticket
-  press, and Ellie cut on the fieldstone. Rather than hand holds part by part, Zoom now has its own (`zoom.ts`): each
-  tenth of a second, how far the frame must move (down, or across: `Framing.zoomSlide`, new) to keep them within 0.8
-  of its half size, never further than the topmost of them or the balloon's crown allows; held half a second either
-  side, smoothed, and capped by the allowance held the same way. Seven short stretches remain, the longest the ward
-  (balloon over, the two of them under, the Zoom frame full). It is built once.
-
-- **Polish round 21 (Opus 5.5).** Zoom's hold, measured in the browser: building it stalled the start of playback by
-  560 to 830 ms (a 659 ms frame gap in headless Chromium, against about 120 ms without it). Nearly all of it was the
-  balloon, whose `balloonAt` averages sixty moments of its past on every call. The hold now bounds the crown instead,
-  straight up over the knot on its taut string (`stringAt`, now exported), which is never lower than where it is: the
-  same stretches and the same crown margins, built in a sixth of the time, and no stall left above the page's own
-  frames. Then the whole show watched under Zoom: the hold reads as framing, never as drift.
-
-- **Polish round 22 (Opus 5.5).** Each frame's render cost timed through the show: the slow outliers moved between
-  runs and came on `origin/main` too, so they are headless Chromium's, not the show's. Then guards: the recent rounds'
-  fixes (Zoom's margins, the balloon's crown under Zoom, her face at each beat and never snapping, resting on the
-  slope) had no check, so a later edit could undo them unseen; each is now in `check:shows`, its threshold just
-  outside what the show measures today, and two were proved by undoing their fix (both failed). Writing them found the
-  nursery is a second place the staging fills the Zoom frame (the two of them nine tenths of its width apart).
-
-- **Polish round 23 (Opus 5.5).** Two lenses not tried before, nothing to change. A phone held upright with Zoom on
-  (the tall shift and Zoom's hold together, until now looked at only one at a time): both of them in the frame
-  throughout, the sky and the roofs over them. And contrast: each of them against the background just outside their
-  outline, once a second: the lowest ratios (Carl's blue on the maroon armchair, Ellie's greyed coral on the autumn
-  hill) are brightness alone; the ink outline and the hue carry every one, and her greying is the years, as meant.
-
-- **Polish round 24 (Opus 5.5).** The camera's motion, the nearest thing to real speed without a viewer: its change of
-  speed sixty times a second, pan and zoom, cuts and the toll aside. The show's own is gentle (its sharpest 1.6 frame
-  heights a second squared, in the tyre's push in). Under Zoom it spiked to 33, every tenth of a second: Zoom's hold
-  (round 20) was read in straight lines between its samples, so the frame's speed changed at each, a small judder,
-  and smoothed over too short a window. Now it is smoothed twice and read along a Catmull-Rom curve: its sharpest 2.3,
-  at the show's own sharpest moment, as a frame half as close again should be; the margins and the crown hold as
-  before. A check holds it to twice the show's, and fails if the straight lines come back.
-
-- **Polish round 25 (Opus 5.5).** The checks' cost, since `check:shows` runs inside `npm run build` and the recent
-  rounds added scans to it: those cost about 3 s together; the balloon's jump scan alone was 40 s of this show's 49,
-  a sixth of the whole suite, each of its samples averaging 61 knot positions over again. The balloon's lag averages
-  them on a fixed grid, so consecutive moments share all but one or two; they are now remembered per show
-  (`anchorCached` in `cast.ts`), exact by construction (a frame at the bedside renders pixel for pixel the same).
-  This show's checks take 6 s, and the whole suite 153 s instead of 249; each frame's balloon is cheaper too.
-
-- **Polish round 26 (Opus 5.5).** The notes audited against the show, scene by scene where these rounds changed it:
-  the kiss (no step in on his lean; her face up to his), the tyre (seen flat), the dance (her face on him through
-  the turn-out), the fieldstone (her face turning to him), the ward (her bed her length, the covers, the gathered
-  string, the lower framing) were still described as before; and a known limit described a Zoom rule the hold
-  replaced. Each is rewritten, the real Zoom limits listed (the nursery, the ward, the crown's sliver on the steps),
-  and the ward's camera comment told of the gathered string.
-
-- **Polish round 27 (Opus 5.5).** A third critic, briefed only on story and feeling against the film's montage; it
-  found the wedding, the fix-up, the yard, the jar, the ties, the tickets, the ward and the ending all land, and three
-  beats that fall short, all taken. The funeral: her photograph was a dull card that never registered and he never
-  turned to it, the only hard beat with no gesture from him; now it is larger, faintly coloured as on their wedding
-  day and warmed by the dawn, and on the floor he leans to it before he walks (the aisle a touch quicker, 0.65 cells a
-  second, the toll unmoved). The baby cloud: the look between them was missing; now she turns to him and he leans to
-  her, and she looks back up for the match onto the mobile. The hill: the tickets, set up as his surprise, dropped out
-  of the story at the fall; now they spill from the basket as it lands and lie on the slope as he hurries down.
-
-- **Polish round 28 (Opus 5.5).** Last round's changes audited closely. The spilled tickets slid across Carl and were
-  drawn in front of him for a third of a second as they came out (clearest under Zoom); they lie on the ground, so they
-  are drawn behind the two of them now, in the part's own layer with the fieldstone, and he passes in front of them.
-  The wedding photograph on the funeral's easel took a hint of their colours; its copy over the dance had not, though
-  the notes call it the same picture: now it has too, and over the dance it reads as the two of them.
-
-- **Polish round 29 (Opus 5.5).** The story critic re-watched its three beats after the changes: the funeral and the
-  tickets land; the glance under the baby only partly, too short to catch at the show's framing. She now turns to him
-  as his start ends and holds about a second (from about 0.6), looking up again for the cut; his lean answers and is
-  let down over a third of a second (moving the glance's end had left it a snap before the cut, caught by measuring).
-  The tickets come to rest sooner, while he is still moving, so they no longer seem to follow him down. Zoom cuts the
-  baby's head there, a limit now listed. The PR's stale screenshots were re-taken.
-
-- **Polish round 30 (Opus 5.5).** The gestures these rounds added were timed by eye, not to the music. Now each is
-  on a note and a registered strike, so the music check holds it: under the baby cloud her turn to him completes on bar
-  44's downbeat (it already did) and his answering lean arrives on the strongest note between (62.305); at the funeral
-  his lean to her picture arrives on the piano's note at 192.569; on the hill the first ticket slips out on the fall's
-  strike and the second on the next onset (174.916). 258 strikes in all.
-
-- **Polish round 31 (Opus 5.5).** The share card still matches the show at 47.3 s pixel for pixel (checked, since her
-  gaze's blending changed after it was made). Then the shared code this PR touched, reviewed against `origin/main` for
-  the other shows: with `tall` and the Zoom offsets left out, every stage, card and export is as before. One hazard:
-  the arithmetic from a framing to Zoom's frame was written out four times (the stage, and three of this show's
-  checks), so a change to one could leave the checks measuring something other than what is drawn. It is one helper
-  now, `zoomFrame` in `registry.ts`, used by all four; the stage's contract check asserts it instead of the old text.
-
-- **Polish round 32 (Opus 5.5).** The credits with Zoom on, a combination not looked at before: on the page, the first
-  two cards (Directed by, the cast) lay over the roof and chimney, Zoom still a cell and a half closer on a house that
-  filled the frame; no hold fits both the cards over it and the lit window under them. The credits are composed for
-  the show's own frame, and Zoom's closeness on the two of them is moot once the cards begin, so Zoom now eases back
-  to the show's own frame over the three seconds before the first card (`Framing.zoomFull`, new, read in
-  `zoomFrame`); every card lies over the sky, under Zoom as without it.
-
-- **Polish round 33 (Opus 5.5).** Overview, the player's third view, never looked at: the church and the hill showed
-  well, but the house's world holds the street and the doll's house far apart, and the clinic's the office and the
-  ward, so Overview, framing the whole world, showed mostly empty ground with two small sets in it. A show may now say
-  what Overview frames (`Performance.overview`, new, optional; left out, the whole world, as every other show); this
-  one frames the place in play, its leg's parts (`LifeShow.place`), so every scene shows whole at a glance.
-
-- **Polish round 34 (Opus 5.5).** The exports read against this PR's framing: Shorts letterboxes the 16:9 picture
-  (so `tall` and the credits' lift never apply there), PNG and video are plain 16:9, and every export records in the
-  viewer's current view (Zoom, with its holds and its ease out before the credits; Overview, with the place in play),
-  through the same `paintShow`. With no `src` (the mp3 is out of the repo) a video export records the picture silently.
-  A real export in headless Chromium was started to measure it and stopped before it finished, so the recording is
-  still unmeasured (as the limit below says). No change to the show.
-
-- **Polish round 35 (Opus 5.5).** A full sweep of the whole show in contact sheets, the first since the early rounds,
-  for regressions from all that came after: none. Every change reads in its place (the photograph over the dance and
-  on the easel, her bed and covers, the tickets lying in the frame's corner as he rests beside her, the credits over
-  the night sky). The headless export was not run again (it needs about five unbroken minutes); the recording is still
-  unmeasured.
-
-- **Polish round 36 (Opus 5.5).** A real "Save video" export, run to the end in headless Chromium and read back:
-  a 1920 by 1080 VP9 WebM, 110 MB, one video stream and no audio (the show has no `src`, so it records silently, as
-  meant); played through it reaches 258.06 s, and frames sampled on the way show the wedding, the book, the crest
-  with the photograph, the bedside, and the credit cards painted over the house to the last. Its header carries no
-  duration and no seek index (a MediaRecorder file), so seeking in it lands near its start; it plays through
-  correctly. Headless rendered 15 frames a second at 1080p, software rendering's limit.
-
-- **Polish round 37 (Opus 5.5).** The browser console, never read: the real page stepped through all 258 s every
-  half second, a third of it each in Follow, Zoom and Overview, then played: no error or warning at all. Safari was to
-  be measured in Playwright's WebKit, but the cached WebKit build does not match this Playwright's protocol (it hung
-  on launch), and fetching the matching one (`npx playwright install webkit`) was left for the user to approve; Safari
-  is still unmeasured.
-
-- **Polish round 38 (Opus 5.5).** The player's speeds, with the time-keyed pieces these rounds added (Zoom's hold,
-  her gaze, the balloon's remembered knot) in mind: the real page at 0.5, 2 and 4 times, with and without Zoom,
-  advanced exactly 1.5, 6 and 12 s in 3 s, stopped cleanly at the end, and logged nothing. No change to the show.
+- **Polish rounds 6 to 38 (Opus 5.5, one director, PR #163).** Rounds of audit and fix, each logged in that PR's
+  description and in git; what they left, by area (the scenes above describe the show as it now is):
+  - *Story and staging.* At the funeral her photograph is larger, hand-tinted with their blue and coral (as is its
+    copy over the dance), warmed by the dawn, and he leans to it before he walks. Under the baby cloud they look at
+    each other (`GLANCE`); on the blanket she lies close, looking up. The tickets spill on the hill. Her bed is her
+    size, the covers over her (`drawCovers`). Her face is steered where the story needs it and never snaps (`LOOKS`,
+    `lookOf`). The balloon is carried short through doors and into the ward (`GATHERS`); the flat tyre is seen flat;
+    at the kiss he no longer steps in on his lean; on the hill's slope they rest on it, not in it (`seat`). The new
+    gestures are on measured notes and registered strikes.
+  - *Framing.* On a phone held upright the extra picture goes above (`Performance.tall`). Zoom has the parts' holds
+    (`zoomDropAt`, `hospitalZoomDrop`, `fixupZoomDrop`) and its own (`zoom.ts`: off the edges, the crown kept,
+    smoothed twice and read along a curve), eases back to the show's frame for the credits (`zoomFullAt`), all read
+    through `zoomFrame` in `registry.ts`. Overview frames the place in play (`Performance.overview`, `LifeShow.place`).
+  - *Checks.* Zoom's margins, the crown under Zoom, Zoom's gentleness, her face at each beat and never snapping, and
+    resting on the slope; the fragile ones proved by undoing their fix. `anchorCached` made the suite 96 s faster.
+  - *Lenses tried*, so a later pass can choose a new one: contact sheets; full-size stills; frame differencing for
+    pops; each cut before and after; Zoom; a phone upright, and with Zoom; the balloon's crown; contact with floors and
+    slopes; stillness; gaze, as a whole and beat by beat; strobing; the camera's acceleration; render cost; contrast;
+    three fresh critics (frames, regressions, story) and a story re-watch; the notes against the code; the shared code
+    against `origin/main`; the credits under Zoom; Overview; the exports, and a real video export; the console; the
+    player's speeds.
+  - *Considered and kept.* Ellie stands before the open front door's leaf at the tickets (past it she leaves the Zoom
+    frame through the press's push-in). The balloon is hidden half a second at the bay's post, while he is too. The
+    tilted car is not in front of the window's bar (a critic's false alarm, checked in the pixels). The climb is not
+    restaged so he finds her far below. At the funeral he does not step toward the easel before his lean (the aisle's
+    pace allows no more). The aisle is 0.65 cells a second, from 0.58, to keep the toll on its note. Render-cost
+    outliers are headless Chromium's, not the show's.
+  - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
+    YouTube cue's sync at real speed.
 
 ## Known limits
 
@@ -731,5 +525,5 @@ window.
   Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Only Chrome on macOS has been watched. The YouTube cue's sync and Safari have not been measured for this take. A
-  recording export has (round 36, headless Chromium): it runs the whole 258 s with the credits painted in, silent (no
+  recording export has (headless Chromium, PR #163): it runs the whole 258 s with the credits painted in, silent (no
   `src`); at 1080p headless rendered 15 frames a second, a software limit, not measured on a machine with a GPU.
