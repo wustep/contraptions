@@ -881,41 +881,30 @@ function wornSuits(ctx: Ctx, k: number, t: number): void {
   }
 }
 
-/** A suit off: its halves fall away either side and lie there. */
+/**
+ * A suit off: lifted off her whole and set down beside her, standing empty, its window on nothing, the shape the other
+ * one still wears; then gone. (Split in two halves that fell away, it read to every fresh eye as something else: wings
+ * opening, an egg hatching, a pair of bowls on the floor.)
+ */
 function fallenSuits(ctx: Ctx, k: number, t: number): void {
   if (t > T.out + 1) return
   for (const who of ['louise', 'ian'] as const) {
     const u = suitOf(who, t)
     if (u <= 0) continue
+    const gone = smooth(u, 2.2, 3.0)
+    if (gone >= 1) continue
     const when = who === 'louise' ? T.suit : T.ianSuit
     const at = who === 'louise' ? louiseAt(when) : ianAt(when)
     if (!at) continue
     const light = 0.5 + 0.5 * lightAt(at[0], t)
-    for (const side of [-1, 1] as const) {
-      // Open a crack, then fall outward about its outer foot, a little bounce, and lie still.
-      const crack = 0.035 * smooth(u, 0, 0.12)
-      const fall = Math.min(1, Math.max(0, u - 0.1) ** 2 * 5.5)
-      const bounce = u > 0.53 ? 0.1 * Math.exp(-(u - 0.53) / 0.18) * Math.abs(Math.sin((u - 0.53) * 16)) : 0
-      const ang = side * (Math.PI / 2) * (fall - bounce)
-      const slide = side * (crack + 0.16 * smooth(u, 0.3, 1.4))
-      // Lying there a while, an empty husk on the floor, before they go: gone as they landed, a frame of them was only
-      // ever two halves in the air, and read as wings opening, not a suit taken off.
-      const gone = smooth(u, 1.6, 2.4)
-      if (gone >= 1) continue
-      ctx.save()
-      // They go down into the floor as they fade, so nothing is left lying there after.
-      ctx.beginPath()
-      ctx.rect((at[0] - 2) * k, (FLOOR - 2) * k, 4 * k, 2 * k)
-      ctx.clip()
-      ctx.translate((at[0] + slide + side * SUIT.w * 0.5) * k, (FLOOR + 0.3 * gone) * k)
-      ctx.rotate(ang)
-      ctx.translate(-side * SUIT.w * 0.5 * k, 0)
-      suitPath(ctx, k, side)
-      ctx.globalAlpha *= 1 - gone
-      ctx.fillStyle = mix(SHELL.dark, SHELL.suit, light * (side < 0 ? 0.75 : 1))
-      ctx.fill()
-      ctx.restore()
-    }
+    // Up off her, then across and down onto the floor a little behind her, toward where they came in.
+    const up = 0.16 * (smooth(u, 0, 0.3) - smooth(u, 0.35, 0.8))
+    const aside = -0.36 * smooth(u, 0.3, 0.8)
+    ctx.save()
+    ctx.globalAlpha *= 1 - gone
+    ctx.translate((at[0] + aside) * k, (FLOOR + at[1] - up) * k)
+    suitAt(ctx, k, light)
+    ctx.restore()
   }
 }
 

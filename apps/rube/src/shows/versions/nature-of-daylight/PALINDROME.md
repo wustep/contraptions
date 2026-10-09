@@ -735,6 +735,12 @@ shared with readers before them:
   season's leaves passed their share, and the lone one at the limb's bend came into the top of the frame so as the
   camera drew back. Each clump grows in from its buds now.
 
+A sixty-ninth took the suit coming off (145.6 s), which four fresh readers had each taken for something else: wings
+opening, an egg hatching, an eggshell, a pair of bowls on the floor. The sixty-sixth had only let its halves lie
+longer. It was the halving: a suit split in two is not a suit taken off. It is lifted off her whole now, and set down
+beside her standing empty, its window on nothing, the shape Ian still wears a little way off; then it is gone. Ian's
+goes the same way, off the close frame, seen in Overview.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
