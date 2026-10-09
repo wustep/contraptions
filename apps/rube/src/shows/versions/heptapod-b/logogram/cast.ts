@@ -255,6 +255,42 @@ export function heptapodTip(o: HeptapodOpts, i: number): Pt {
 }
 
 /**
+ * A soft edge round a silhouette (`shapes`, polygons in cells, and `dots`, circles [x, y, r]): its blur alone, `blur`
+ * cells wide in `color` at `a`, the shape itself never painted (it is drawn far off the canvas and only its shadow
+ * brought back), so it can go under translucent parts without darkening them.
+ */
+function softSilhouette(ctx: CanvasRenderingContext2D, k: number, shapes: Pt[][], dots: [number, number, number][], color: string, a: number, blur: number): void {
+  if (a <= 0.004 || blur * k < 0.5) return
+  const m = ctx.getTransform()
+  const px = Math.hypot(m.a, m.b)
+  const off = 30000
+  const inv = m.inverse()
+  const [ux, uy] = [inv.a * off, inv.b * off]
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))
+  ctx.save()
+  ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${a})`
+  ctx.shadowBlur = blur * k * px
+  ctx.shadowOffsetX = off
+  ctx.shadowOffsetY = 0
+  ctx.fillStyle = '#000'
+  ctx.beginPath()
+  for (const pts of shapes) {
+    // All the same way round, so the union is filled once (nonzero).
+    let area = 0
+    for (let i = 0; i < pts.length; i++) area += pts[i][0] * pts[(i + 1) % pts.length][1] - pts[(i + 1) % pts.length][0] * pts[i][1]
+    const seq = area < 0 ? pts.slice().reverse() : pts
+    seq.forEach(([x, y], i) => (i ? ctx.lineTo(x * k - ux, y * k - uy) : ctx.moveTo(x * k - ux, y * k - uy)))
+    ctx.closePath()
+  }
+  for (const [x, y, rr] of dots) {
+    ctx.moveTo((x + rr) * k - ux, y * k - uy)
+    ctx.arc(x * k - ux, y * k - uy, rr * k, 0, Math.PI * 2)
+  }
+  ctx.fill()
+  ctx.restore()
+}
+
+/**
  * A heptapod standing in fog, its origin on the floor under its body: a tall trunk of a body, seven limbs arching
  * down from under it to the floor like the fingers of a hand stood on its fingertips. Uninked: a shape in the fog,
  * its back limbs paler than its front ones, its edges softened by the air. The limbs sway on slow clocks of their own.
@@ -367,11 +403,6 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     const tw = Math.hypot(left[e][0] - right[e][0], left[e][1] - right[e][1]) * grow
     p.ellipse(((left[e][0] + right[e][0]) / 2) * k, ((left[e][1] + right[e][1]) / 2) * k, tw * k, tw * k)
   }
-  // The soft edges: each limb a little wider and faint, under everything solid.
-  for (const g of limbs) {
-    p.fill(alpha(p, g.col, 0.16))
-    outline(g, 1.4)
-  }
   // The body: a tall trunk, rounded at the crown, fullest a third of the way down, drawing in to the hip where the
   // limbs leave it; a little lean, and a few soft folds down it.
   const col = colorAt(0.1)
@@ -390,11 +421,13 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     const y = top + bodyH * v
     bodyPts.push([x, y])
   }
-  p.fill(alpha(p, col, 0.16))
-  p.beginShape()
-  const midY = top + bodyH / 2
-  for (const [x, y] of bodyPts) p.vertex(x * 1.14 * k, (midY + (y - midY) * 1.05) * k)
-  p.endShape(p.CLOSE)
+  // The soft edge: one true blur round the whole of it, limbs and body together, under everything solid (never a
+  // fainter copy of each part, whose edges would stand as outlines).
+  const tips = limbs.map((g): [number, number, number] => {
+    const e = g.left.length - 1
+    return [(g.left[e][0] + g.right[e][0]) / 2, (g.left[e][1] + g.right[e][1]) / 2, Math.hypot(g.left[e][0] - g.right[e][0], g.left[e][1] - g.right[e][1]) / 2]
+  })
+  softSilhouette(ctx, k, [...limbs.map((g) => [...g.left, ...g.right.slice().reverse()]), bodyPts], tips, col, 0.4, 0.035 * h)
   // The limbs, solid, back to front, each with its root rounded inside where the body will be.
   for (const g of limbs) {
     p.fill(g.col)

@@ -317,6 +317,9 @@ changed, in the order of the film, and then what runs through it:
   them, and the front limb's round root sat on the body like a disc stuck to it. Every soft edge goes under now,
   every part is solid, and the body covers all the limbs' roots: the front limb comes out from under its hip. The
   palm is solid too, so the limb's end and the fingers' pads no longer show through it.
+  Their soft edge was still a fainter, wider copy of each limb and of the body, which stood as outlines round them;
+  it is one true blur round the whole silhouette now, drawn as a shadow alone so a heptapod deep in the fog is no
+  darker for it.
 - **The valley's beams** (36 → 65, 186.3 → 196.8): the floods, the slot's fall of light and the sunlight through the
   opened cloud were each a hard-edged wedge with a fainter one round it. In the wides that passed, but pushed in on
   the lift's start and on the reunion each beam was a quarter of the frame across and showed as panes of tinted
