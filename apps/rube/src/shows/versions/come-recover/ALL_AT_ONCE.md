@@ -137,7 +137,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 120.95 | six big hits | the surf | One long flight, and a new world on every hit: a piñata party, a sign spinner on a street corner, the IRS office with its trophies, karaoke under a mirror ball, then a canyon, held, where two stones sit on a ledge in the foreground, faintly vermilion and faintly violet: the rocks, before we know them. Then flashes of every world she came through, backwards, and black. |
 | 127.66 | two hits | the surf's end | Out of the black, every world she flew through comes back at her as slivers, clamps into a ring round her with a flash (127.66), spins, and collapses into her, down to a point (127.79). |
 | 127.79 | the hush | the dark | She drifts down through the dark, seeds and salt passing at three depths, a sliver of colossal rim catching light below. On 133.79 a beam finds Joy, sitting still on the crown of the everything bagel. On 135.64 the whole bagel is lit, and the camera draws back until Joy is tiny on it. |
-| 142 | the pulse | the pull | Everything drifts in on slow spirals and goes over the lip on the beats, one thing a beat: a coat hanger, a sock, a trophy, a dog. Each time the well's violet glow flares and the bagel throbs, hardest on the loudest beats, with dust kicked off the lip. Evelyn is drawn in on a decaying orbit, a step closer each bar. The camera rides the orbit with her, close, the crust streaming past and things going over the lip beside her, with a warm catch-light under her. On beat 56 the lip brakes her to the brink, and in the held break Joy watches from the crown. On 165.62 she tips in. |
+| 142 | the pulse | the pull | Everything drifts in on slow spirals and goes over the lip on the beats, one thing a beat: a coat hanger, a sock, a trophy, a dog. Each time the well's violet glow flares and the bagel throbs, hardest on the loudest beats, with dust kicked off the lip. Evelyn is drawn in on a decaying orbit, a step closer each bar. The camera rides the orbit with her, close, the crust streaming past and things going over the lip beside her, with a warm catch-light under her. On beat 56 the lip brakes her to the brink, and in the held break Joy watches from the crown. On 165.62 she tips in. Each thing trails a ribbon of its own life's colour along its spiral for its last second, and as it goes over the lip the ribbon is drawn in after it and a ring of that colour flares round the lip and goes out: thing by thing the dark takes her colours, which the peak gives back. |
 
 ### All at Once (165.6 s to the end)
 
@@ -794,6 +794,14 @@ The notes went back to the builders who made each part, who still had their cont
   - They rise one a beat, each a narrow share of the frame, so the frame's light never swings as a flash does.
   - Measured in Chrome at 1440×810: in the peak's close shots (252 s) the beams reached far past the frame and cost
     14 ms a frame. They are clipped to the frame now, and every stretch of the peak is at 16.5–16.8 ms.
+- **A director's pass: the dark takes her colours first.** The peak's radiance gives back every life's colour, but
+  nothing had shown them being taken. Now in the pull each thing trails a ribbon of its life's colour for its last
+  second, which is drawn into the hole after it, and a ring of that colour flares round the lip and goes out
+  (`drain` in `void/radiance.ts`). The ribbons are in each life's first colour, never the carpet's or the dojo's red,
+  which beside Evelyn read as her own trail; the peak's beams keep both. Their pieces meet butt-ended, as round ends
+  overlapping beaded them. The pull holds 16–17 ms a frame with them.
+  - A whole-show sheet of 80 frames, after this and the passes before it: every world reads, and nothing has
+    regressed.
 
 ## The looks
 
@@ -938,7 +946,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
     fireworks drive. The parts are `laundromat`, `dryer`, `kindness` and `finale`.
   - `star/premiere`, `dojo/dummies`, `hotdog/fingers`, `hibachi/raccacoonie`, `rocks/ledge`.
   - `multi/`: `skins.ts` is thirteen worlds as skins for one seesaw. Parts: `surf`, `mosaic`.
-  - `void/`: `radiance.ts` is the peak's beams of every life's colour, behind the bagel. `bagel.ts` is the everything bagel, driven by the pull and then by the peak, plus the drawings of the
+  - `void/`: `radiance.ts` is the pull's ribbons of colour drawn into the hole, over the bagel, and the peak's beams
+    of every life's colour given back, behind it. `bagel.ts` is the everything bagel, driven by the pull and then by the peak, plus the drawings of the
     things it swallows. Parts: `pull`, `peak`.
 - **The shared files.** The hooks in `registry.ts`, `main.ts`, `styles.css` and `engine.ts` came in with Liftoff
   (PR #88):

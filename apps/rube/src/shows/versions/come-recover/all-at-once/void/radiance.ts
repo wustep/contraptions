@@ -1,11 +1,17 @@
 import { mixHex } from '../../../../../parts'
 import { frame, scenery } from '../kit'
 import { DOJO, HIBACHI, HOME, HOTDOG, ROCKS, STAR, VOID } from '../worlds'
-import { BAGEL, bagelPose, THING_WORLD } from './bagel'
+import { BAGEL, bagelPose, inward, SWALLOWED, THING_WORLD } from './bagel'
 import { GIVEN, RELEASE, T_OUT, turnAt } from './peakClock'
 
 /**
- * The dark fills with every colour.
+ * The dark takes her colours, and gives them back.
+ *
+ * In the pull, each thing the bagel swallows trails a ribbon of its own life's colour along its spiral for its last
+ * second, and as it goes over the lip the ribbon is drawn in after it, and a ring of that colour flares round the lip
+ * and goes out (`drain`). Thing by thing the dark takes every colour she had.
+ *
+ * Then the dark fills with every colour.
  *
  * The peak is the loudest passage of the cue, and it was the darkest picture in the show: the black bagel in the
  * black. Now, as the bagel gives back everything it swallowed, each thing comes out of the hole with a beam of its
@@ -24,8 +30,8 @@ import { GIVEN, RELEASE, T_OUT, turnAt } from './peakClock'
 
 const COLOUR: Record<string, string[]> = {
   laundromat: [HOME.gold, mixHex(HOME.tile, HOME.gold, 0.25)],
-  premiere: [STAR.carpet, STAR.gold],
-  dojo: [DOJO.lacquer, DOJO.gold],
+  premiere: [STAR.gold, STAR.carpet],
+  dojo: [DOJO.wood, DOJO.lacquer],
   hotdog: ['#F59AB0', HOTDOG.mustard],
   hibachi: [HIBACHI.flame, HIBACHI.flameHot],
   rocks: [ROCKS.canyon, ROCKS.sand],
@@ -40,11 +46,15 @@ interface Beam {
   half: number
 }
 
+const colourOf = (thing: keyof typeof THING_WORLD, i: number): string => {
+  const set = COLOUR[THING_WORLD[thing]] ?? COLOUR.laundromat
+  return set[i % set.length]
+}
+
 const BEAMS: Beam[] = GIVEN.map((g, i) => {
-  const set = COLOUR[THING_WORLD[g.thing]] ?? COLOUR.laundromat
   // Round the whole circle, a golden step each, so the radiance fills all the way round and not only the side things
   // are thrown to.
-  return { at: g.at, dir: -Math.PI / 2 + i * 2.399963, color: set[i % set.length], half: 0.075 + 0.05 * ((i * 0.618) % 1) }
+  return { at: g.at, dir: -Math.PI / 2 + i * 2.399963, color: colourOf(g.thing, i), half: 0.075 + 0.05 * ((i * 0.618) % 1) }
 })
 const FROM = BEAMS.length ? BEAMS[0].at - 0.1 : Infinity
 
@@ -111,6 +121,70 @@ export const radiance = scenery<null>({
       g.addColorStop(1, rgba(VOID.glow, 0))
       ctx.fillStyle = g
       ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
+    }
+    ctx.restore()
+  },
+})
+
+/* ------------------------------------------------------------------ the pull: the colours taken */
+
+/** How long before the lip a thing's ribbon shows, and how long after it the ribbon and the ring take to go. */
+const TAIL = 1.1
+const GONE = 0.6
+/** How much of its way behind it the ribbon is, seconds. */
+const LENGTH = 0.85
+
+// Each in its life's first colour: never the carpet's red, which beside her would read as her own trail.
+const DRAINS = SWALLOWED.map((sw, i) => ({ i, at: sw.at, color: colourOf(sw.thing, 0), s: sw.s }))
+
+export const drain = scenery<null>({
+  name: 'drain',
+  draw: (p, _s, c) => {
+    const t = c.t
+    const near = DRAINS.filter((d) => t > d.at - TAIL && t < d.at + GONE)
+    if (!near.length) return
+    const pose = bagelPose(t)
+    const k = c.k
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const S = pose.scale
+    const at = (q: [number, number]): [number, number] => [(pose.dx + q[0] * S) * k, (pose.dy + q[1] * S) * k]
+    ctx.save()
+    // Butt ends, so the ribbon's pieces meet without beading where round ends would overlap.
+    ctx.lineCap = 'butt'
+    ctx.lineJoin = 'round'
+    ctx.globalCompositeOperation = 'screen'
+    for (const d of near) {
+      const x = d.at - t
+      // Coming: it fades up over its last second. Gone: drawn in after it, fading.
+      const a = x > 0 ? ss((TAIL - x) / 0.4) : Math.exp(x / 0.18)
+      // The ribbon: its way from `head` (where it is now, or the lip and down once over) back `LENGTH` seconds, the
+      // back of it drawn in toward the head once it has gone over.
+      const head = x
+      const tail = x + LENGTH * (x > 0 ? 1 : Math.max(0, 1 + x / 0.35))
+      const n = 18
+      let prev = at(inward(d.i, head))
+      for (let j = 1; j <= n; j++) {
+        const u = head + ((tail - head) * j) / n
+        const q = at(inward(d.i, u))
+        const fade = 1 - j / n
+        ctx.strokeStyle = rgba(d.color, 0.75 * a * fade)
+        ctx.lineWidth = Math.max(1, (0.05 + 0.13 * fade) * k * S * (0.7 + 0.3 * d.s))
+        ctx.beginPath()
+        ctx.moveTo(prev[0], prev[1])
+        ctx.lineTo(q[0], q[1])
+        ctx.stroke()
+        prev = q
+      }
+      // The ring round the lip as it goes in: its colour, flaring and going out.
+      if (x <= 0) {
+        const r = BAGEL.hole * S * k
+        const [cx, cy] = at([0, 0])
+        ctx.strokeStyle = rgba(d.color, 0.55 * Math.exp(x / 0.22) * Math.min(1, -x / 0.04 + 0.2))
+        ctx.lineWidth = Math.max(1.5, 0.12 * k * S)
+        ctx.beginPath()
+        ctx.arc(cx, cy, r * (1 - 0.12 * ss(-x / GONE)), 0, Math.PI * 2)
+        ctx.stroke()
+      }
     }
     ctx.restore()
   },
