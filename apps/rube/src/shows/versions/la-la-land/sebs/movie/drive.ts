@@ -226,10 +226,11 @@ export const drive = part<DriveState>(
     // The jam, from beside them: the next cars ahead, the wave coming back down the line.
     { t: BEGIN, cells: 6.4, hold: [1.2, -0.55] },
     { t: 398.9, cells: 6.2, hold: [1.0, -0.5] },
-    // In the silence, in on the two of them.
-    { t: 401.4, cells: 3.8, hold: [-0.35, -0.25] },
-    { t: 402.3, cells: 3.9, hold: [-0.3, -0.25] },
-    { t: 404.6, cells: 6.2, hold: [1.3, -0.55] },
+    // In the silence between the waves, close on the two of them in his car, her leaning in to him, the city and the
+    // river of lights going by behind them; out again as the wave comes back down the line to them.
+    { t: 400.3, cells: 2.6, hold: [-0.55, -0.42] },
+    { t: 403.9, cells: 2.45, hold: [-0.5, -0.42] },
+    { t: 405.3, cells: 6.2, hold: [1.3, -0.55] },
     // The long silence: out wide, the line of lights along the high road, the ramp going down, the city under the stars.
     { t: 407.6, cells: 10.6, hold: [5.8, -0.1] },
     { t: PULL + 0.4, cells: 10.2, hold: [6.2, 0.05] },

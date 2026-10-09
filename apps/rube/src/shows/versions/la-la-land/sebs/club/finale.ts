@@ -319,7 +319,7 @@ export const finale = part<FinaleState>(
     // He goes ahead to the door and out onto the pavement; she follows him across the room and stops in the doorway.
     // Then close shots, cut against each other: her turn back from the doorway, his look, her smile, his nod. Then out
     // to her going.
-    { t: 459.4, cells: 5.4, hold: F([-6.8, 2.1]) },
+    { t: 459.4, cells: 5.4, hold: F([-8.1, 1.85]) },
     { t: CUTS.her - 0.02, cells: 4.8, hold: F([-11.0, 2.1]) },
     // Hers as close as his: she fills her shot as he and the keys fill his.
     ...closeOn(CUTS.her, CUTS.him, F([DOORWAY + 0.05, FLOOR_Y - 0.12]), 1.55),
