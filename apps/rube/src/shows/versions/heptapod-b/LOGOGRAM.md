@@ -324,6 +324,9 @@ changed, in the order of the film, and then what runs through it:
   the camera bowed off the line between them and came back: at the glass, a quarter-cell bob just as the glass first
   fills the frame (a fresh critic, at two frames a second). A hold key takes its partner's offset now, as a follow
   key takes its partner's hold; the moves run straight.
+  A scan of the whole camera path for jolts away from the cuts found one more: into the push (166.243) the moving cut
+  carries her sideways drift, and a key half a second later held her square, so the pan stopped dead at 166.7 (the
+  crescent dropping out of the frame in a lurch). That key is gone; the drift runs straight on into her rise.
 - **The shadow under the bench** (the first frame and the last, and every scene at the window): a dark box under the
   slab with square ends, on the glass's foot and again in the floor's reflection. Its ends fade out within the
   slab's length now.

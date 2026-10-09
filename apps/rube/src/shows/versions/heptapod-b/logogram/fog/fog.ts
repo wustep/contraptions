@@ -158,7 +158,7 @@ export const fog4 = stretch(3, 'fog4', (slot, o, at) => {
   const c = local(o, GREAT.ring.c)
   const end = at(slot.end)
   return [
-    { t: 166.7, cells: 4.3, hold: [at(166.7)[0] + 0.6, at(166.7)[1] - 0.9], w: 1 },
+    // From the cut it carries her sideways drift straight on into the rise (a key at 166.7 stopped that pan dead).
     { t: 167.5, cells: 4.9, hold: [at(167.5)[0] + 0.5, at(167.5)[1] - 1.25], w: 1 },
     // Stopped at the top of her rise, where the ink begins under her; then back through the first hard run to the
     // whole of the ring the two pens will write, hers at the bottom and Costello's limb on the top, and held on it
