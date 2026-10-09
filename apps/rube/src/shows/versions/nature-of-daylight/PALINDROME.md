@@ -248,6 +248,16 @@ of the props seen small until now:
 - **The lake house's floor** gave back the cradle, the bed and the television but not Louise or Ian, since the mirror
   copies only what is drawn before the balls. Each has a dim reflection under it now, as faint as the cradle's.
 
+A sixth watched it through the player's other two cameras, Overview (the whole world) and Zoom (close on the action):
+
+- **The lake house in Overview** was not there. The house and the lawn are one world, and the lawn paints its sky and
+  grass across the whole frame; the show's own camera never has the lawn in shot while she is indoors, but Overview
+  has both, so the lawn's meadow and tree covered the room, Louise and the cradle, with its edge a hard line across the
+  floor. The lawn draws only while a lawn leg has her now, so the house is seen.
+- **The duvet's folds**, seen in Zoom, were soft boxes with square tops, smudges more than cloth. Each is a blurred wedge
+  now, from just under the top of the duvet widening to its hem, kept inside it; and the blanket over Hannah runs down
+  into the duvet and its turned-down edge tapers away, where both had stopped in a small step.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

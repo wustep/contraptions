@@ -297,17 +297,31 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
   ctx.bezierCurveTo(0.98 * k, -0.06 * k, 0.98 * k, (top + 0.04) * k, 1.0 * k, (top + 0.012) * k)
   ctx.closePath()
   ctx.fill()
-  // Its soft folds where it falls over the side: broad shadows, no lines.
+  // Its soft folds where it falls over the side: each a wedge from a little below the top, widening to the hem, lit on
+  // its left and shaded on its right, blurred and kept inside the duvet, so a fold has no edge of its own.
+  ctx.save()
+  ctx.clip()
+  ctx.filter = `blur(${Math.max(0.6, 0.025 * k).toFixed(1)}px)`
   for (const [x, w] of [[1.42, 0.09], [1.93, 0.11], [2.38, 0.08]] as const) {
+    const y0 = top + 0.03
+    const y1 = 0.01
     const g = ctx.createLinearGradient((x - w) * k, 0, (x + w) * k, 0)
     g.addColorStop(0, rgba(HOUSE.linen, 0))
-    g.addColorStop(0.3, rgba(HOUSE.linen, 0.16))
-    g.addColorStop(0.5, rgba(HOUSE.night, 0.02))
-    g.addColorStop(0.7, rgba(HOUSE.night, 0.1))
+    g.addColorStop(0.35, rgba(HOUSE.linen, 0.14))
+    g.addColorStop(0.55, rgba(HOUSE.night, 0.03))
+    g.addColorStop(0.75, rgba(HOUSE.night, 0.09))
     g.addColorStop(1, rgba(HOUSE.night, 0))
     ctx.fillStyle = g
-    ctx.fillRect((x - w) * k, (top + 0.04) * k, 2 * w * k, (-top - 0.05) * k)
+    ctx.beginPath()
+    ctx.moveTo((x - w * 0.15) * k, y0 * k)
+    ctx.lineTo((x + w * 0.15) * k, y0 * k)
+    ctx.quadraticCurveTo((x + w * 0.6) * k, ((y0 + y1) / 2) * k, (x + w) * k, y1 * k)
+    ctx.lineTo((x - w) * k, y1 * k)
+    ctx.quadraticCurveTo((x - w * 0.6) * k, ((y0 + y1) / 2) * k, (x - w * 0.15) * k, y0 * k)
+    ctx.closePath()
+    ctx.fill()
   }
+  ctx.restore()
   ctx.restore()
   void T
 }
@@ -328,16 +342,16 @@ export function drawBedOver(p: p5, k: number, T: number, L: Light): void {
   ctx.moveTo((cx - r * 1.25) * k, (BED.mattress + 0.01) * k)
   ctx.bezierCurveTo((cx - r * 1.2) * k, (top + 0.02) * k, (cx - r * 0.6) * k, top * k, (cx + r * 0.1) * k, top * k)
   // Its tail runs down into the duvet's own line, one sheet, no step where it ends.
-  ctx.bezierCurveTo((cx + r * 1.2) * k, top * k, 1.3 * k, (BED.mattress - 0.03) * k, 1.85 * k, (BED.mattress - 0.012) * k)
-  ctx.lineTo(1.85 * k, (BED.mattress + 0.02) * k)
+  ctx.bezierCurveTo((cx + r * 1.2) * k, top * k, 1.3 * k, (BED.mattress - 0.03) * k, 2.0 * k, (BED.mattress + 0.012) * k)
+  ctx.lineTo(2.0 * k, (BED.mattress + 0.03) * k)
   ctx.closePath()
   ctx.fill()
   ctx.fillStyle = fold
   ctx.beginPath()
   ctx.moveTo((cx - r * 1.22) * k, (top + 0.035) * k)
   ctx.bezierCurveTo((cx - r * 1.1) * k, (top + 0.006) * k, (cx - r * 0.5) * k, (top - 0.004) * k, (cx + r * 0.1) * k, (top - 0.004) * k)
-  ctx.bezierCurveTo((cx + r * 0.9) * k, (top - 0.004) * k, (cx + r * 1.4) * k, (top + 0.01) * k, (cx + r * 1.9) * k, (top + 0.03) * k)
-  ctx.lineTo((cx + r * 1.9) * k, (top + 0.055) * k)
+  // Tapering away to nothing at its end, not stopping square.
+  ctx.bezierCurveTo((cx + r * 0.9) * k, (top - 0.004) * k, (cx + r * 1.4) * k, (top + 0.01) * k, (cx + r * 2.3) * k, (top + 0.045) * k)
   ctx.bezierCurveTo((cx + r * 1.2) * k, (top + 0.04) * k, (cx - r * 0.5) * k, (top + 0.035) * k, (cx - r * 1.1) * k, (top + 0.06) * k)
   ctx.closePath()
   ctx.fill()

@@ -3,6 +3,7 @@ import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { mix, rgba } from '../cast'
 import { frame, hash } from '../kit'
+import { SEAM } from '../music'
 import { HOUSE, SHELL } from '../worlds'
 import { BRUSHES, hannahAt, louiseAt, PIVOT, SEAT_T, SEAT_W, seatAt, surface } from './swing'
 
@@ -916,7 +917,15 @@ function drawSwing(ctx: Ctx, k: number, t: number, near: boolean): void {
 
 /* ------------------------------------------------------------------ the set */
 
+/**
+ * Whether the lawn is the place on the stage. The lawn and the lake house are one world, and the lawn paints its sky
+ * and grass across the whole frame; seen from away (the Overview camera has the house and the lawn in one frame) it
+ * would paint over the room while she is in it. So it draws only while a lawn leg has her: the swing and what she sees.
+ */
+const onLawn = (t: number): boolean => (t >= SEAM.swing && t < SEAM.bed) || (t >= SEAM.sees && t < SEAM.fog2)
+
 export function lawnDraw(p: p5, k: number, t: number): void {
+  if (!onLawn(t)) return
   const ctx = p.drawingContext as Ctx
   const f = frame(p, k)
   const L = lookAt(t)
@@ -934,6 +943,7 @@ export function lawnDraw(p: p5, k: number, t: number): void {
 }
 
 export function lawnOver(p: p5, k: number, t: number): void {
+  if (!onLawn(t)) return
   const ctx = p.drawingContext as Ctx
   ctx.save()
   drawSwing(ctx, k, t, true)
