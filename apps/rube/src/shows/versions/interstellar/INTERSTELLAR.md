@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 98 (latest)
+## Polish pass 99 (latest)
+
+No change to the show. This bible now has about a hundred dated passes, each renumbered by hand: the old one's "latest" marker taken off, the new one put on top. Read through, they ran newest first, 98 down to 3, with no gap, no repeat and one marked latest. `check:shows` now holds them to that, so a slip in the record (two marked latest, a number missed) fails the build.
+
+## Polish pass 98
 
 No change to the show: leaving the tab and coming back, as a phone does. The page was frozen for 6 s mid-show (Chrome's page lifecycle, `frozen` then `active`). YouTube's player, in its own frame, played on through it. On return the picture was where the music was from the first frame back (148.07 s and 148.07 s), stayed in step after, and the stall note did not show.
 

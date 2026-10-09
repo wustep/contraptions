@@ -591,6 +591,15 @@ async function main(): Promise<void> {
         for (let k = 104; k <= 232; k++) beats2.push(cue(k))
         const struck2 = beats2.filter((t) => act2.some((s) => Math.abs(s - t) <= 0.03))
         check('liftoff: in Act II, nearly every beat of the organ is struck', struck2.length >= beats2.length * 0.85, `${struck2.length}/${beats2.length}`)
+        // The bible's dated passes are renumbered by hand each time: newest first, no gap, no repeat, one marked latest.
+        {
+          const bible = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/INTERSTELLAR.md'), 'utf8')
+          const heads = [...bible.matchAll(/^## Polish pass (\d+)( \(latest\))?$/gm)]
+          const ns = heads.map((m) => Number(m[1]))
+          check('liftoff: the bible\'s polish passes run newest first, without a gap or a repeat, the newest alone marked latest',
+            ns.length > 0 && ns.every((n, i) => i === 0 || n === ns[i - 1] - 1) && heads.filter((m) => m[2]).length === 1 && !!heads[0][2],
+            ns.slice(0, 6).join(' '))
+        }
         // The bible's figures are the code's: they went stale once, unnoticed, so they are read and held to it.
         {
           const bible = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/INTERSTELLAR.md'), 'utf8')
