@@ -353,6 +353,8 @@ window.
   within 20°); never turning more than 0.15 rad a frame faster than her own roll.
 - **The flank:** neither cuts into the hill's slope by more than a twentieth of R, until she gives way.
 - **Contact:** his square and her ball never overlap by more than 0.02 cells while she is with him.
+- **The slump:** on the fieldstone, before her answer, she is drawn at most 92% of her height and at least 1.2 times
+  as wide as high.
 - **The hill's hurry:** while he runs flat out (175.0 to 176.2 s) he keeps moving toward her on screen, at least 3% of
   the frame's width a second, under Zoom too.
 - **The credits:** after he has sat down and gone before the end, set by the page, opening on Directed by Claude
@@ -540,7 +542,9 @@ window.
     nothing jars; strongest the bedside to the lit house, weakest the grey yard. Taken: on the fieldstone she lay
     round and upright, eye up, like someone sat down for a breather; she now slumps (`slumpOf`: lower, wider), looks
     down, spent, lifts only partly to answer him, and the ward takes the slump up across the cut and lets it go under
-    the covers. The yard's grey lifts from 90 s, with his walk out, instead of from 95.
+    the covers. The yard's grey lifts from 90 s, with his walk out, instead of from 95. Re-watched by the same viewer:
+    both land (the slump reads as "she can't go on", the ward takes it up naturally). Kept, optional: dimming the
+    autumn light from her fall.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 

@@ -395,6 +395,17 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
       slowest >= 0.03, `${(slowest * 100).toFixed(1)}% of the width a second at ${slowestAt.toFixed(2)} s`)
   }
 
+  // On the fieldstone, given way, she lies slumped, not round like a ball at rest: from 176.8 to 178.7 s, before her
+  // answer, drawn at most 92% of her height and at least 1.2 times as wide as high.
+  let slumpWorst = ''
+  for (let t = 176.8; t <= 178.7; t += 0.05) {
+    const e = show.ellie(t)
+    const h = e?.scale ?? 1
+    const w = h * (e?.stretch ?? 1)
+    if (!e || h > 0.92 || w / h < 1.2) { slumpWorst = `${t.toFixed(2)} s: height ${h.toFixed(3)}, width ${(w / h).toFixed(2)} times it`; break }
+  }
+  check('married life: on the fieldstone she lies slumped, not round', slumpWorst === '', slumpWorst)
+
   // Her face, the dot, is steered where the story needs it (`LOOKS`): at him for the kiss, at the crest of the dance and
   // on the fieldstone; up at the clouds on the blanket; at him in her armchair. And it never turns faster than her own
   // roll would turn it, beyond a brisk turn (0.15 rad in a 60 fps frame more than her roll): no snap.
