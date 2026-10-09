@@ -560,6 +560,7 @@ The notes went back to the builders who made each part, who still had their cont
   the ten biggest hits. The cuts and everything else are as for anyone. It is read in the browser when the show is
   built, so the checks, share cards and everyone else see the show as made. Tested with Chrome's emulated
   preference: 13 flickers become none, and the great hit's frame follows its own move without the push-in.
+  Its one side effect, on files saved by such a viewer, is under Known limits.
 - **A pass for Waymond on the line.** In the peak he catches the line and drops as the weight that pulls Joy back out
   of the bagel, but his eye only swung with his fall. Now from his catch (247.9 s) he watches Joy, until he is
   carried down out of the frame (249.6 s).
@@ -801,4 +802,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - Zoom is a closer look at Evelyn: Joy and Waymond are cropped by it at times, which is what it is for.
 - Under Zoom, the credits' longest line crosses the near end of the lantern string. The words are set by the page,
   the same in every mode.
+- The reduced-motion preference is read when the show loads, and the page's Save PNG and Save video paint from the
+  same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
+  for a file would take a change to the shared stage and recorder, and that viewer has asked for the calmer show.
 - Only Chrome on macOS has been watched. The recording export has not been re-measured for this take.
