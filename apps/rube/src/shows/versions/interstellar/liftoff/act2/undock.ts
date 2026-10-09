@@ -628,14 +628,25 @@ function drawSaturn(p: p5, c: Ctx, f: Frame): void {
     p.pop()
   }
   rings(false)
-  // A thin haze of light round the day side's limb.
-  const haze = ctx.createRadialGradient(X(sx), X(sy), X(SAT_R - 0.05), X(sx), X(sy), X(SAT_R + 0.9))
-  haze.addColorStop(0, `rgba(${GOLD_RGB}, 0.45)`)
-  haze.addColorStop(1, `rgba(${GOLD_RGB}, 0)`)
-  ctx.fillStyle = haze
-  ctx.beginPath()
-  ctx.arc(X(sx), X(sy), X(SAT_R + 0.9), 0, TAU)
-  ctx.fill()
+  // A thin haze of light round the limb: thinning outward, full on the day side and all but gone round the night
+  // side, so no gold rim runs on past the terminator into the dark.
+  const toSun = Math.atan2(SUN[1], SUN[0])
+  // In rings fine enough not to step: each its own flat alpha, edge to edge.
+  const HAZE = 30
+  for (let i = 0; i < HAZE; i++) {
+    const a = 0.45 * (1 - i / HAZE) ** 2
+    const g = ctx.createConicGradient(toSun, X(sx), X(sy))
+    g.addColorStop(0, `rgba(${GOLD_RGB}, ${a})`)
+    g.addColorStop(0.25, `rgba(${GOLD_RGB}, ${a * 0.6})`)
+    g.addColorStop(0.5, `rgba(${GOLD_RGB}, ${a * 0.06})`)
+    g.addColorStop(0.75, `rgba(${GOLD_RGB}, ${a * 0.6})`)
+    g.addColorStop(1, `rgba(${GOLD_RGB}, ${a})`)
+    ctx.strokeStyle = g
+    ctx.lineWidth = X(0.031)
+    ctx.beginPath()
+    ctx.arc(X(sx), X(sy), X(SAT_R + 0.03 + i * 0.03), 0, TAU)
+    ctx.stroke()
+  }
   // The globe, and its bands: each a strip between two latitudes, bowed as the pole leans toward us.
   solid(p, ink, weight, DARK.gold)
   p.circle(X(sx), X(sy), X(SAT_R * 2))
@@ -667,7 +678,8 @@ function drawSaturn(p: p5, c: Ctx, f: Frame): void {
   for (const [p1, p2, fill, a] of bands) {
     ctx.fillStyle = rgba(fill, a)
     ctx.beginPath()
-    const n = 28
+    // Fine enough that the bands stay curves when the Ranger skims a few cells of the limb.
+    const n = 180
     for (let i = 0; i <= n; i++) {
       const u = -SAT_R + (2 * SAT_R * i) / n
       if (i === 0) ctx.moveTo(X(u), X(lat(u, p1 * deg)))
@@ -683,29 +695,33 @@ function drawSaturn(p: p5, c: Ctx, f: Frame): void {
   // The rings' shadow, cast down across the southern bands.
   ctx.fillStyle = 'rgba(11, 15, 29, 0.5)'
   ctx.beginPath()
-  for (let i = 0; i <= 28; i++) {
-    const u = -SAT_R + (2 * SAT_R * i) / 28
+  for (let i = 0; i <= 180; i++) {
+    const u = -SAT_R + (2 * SAT_R * i) / 180
     const v = lat(u, -9 * deg)
     if (i === 0) ctx.moveTo(X(u), X(v))
     else ctx.lineTo(X(u), X(v))
   }
-  for (let i = 28; i >= 0; i--) {
-    const u = -SAT_R + (2 * SAT_R * i) / 28
+  for (let i = 180; i >= 0; i--) {
+    const u = -SAT_R + (2 * SAT_R * i) / 180
     ctx.lineTo(X(u), X(lat(u, -12.5 * deg)))
   }
   ctx.closePath()
   ctx.fill()
   p.pop()
-  // Night: the globe less a disc shifted toward the sun.
+  // Night: the globe less a disc shifted toward the sun, its terminator a soft dusk a cell or two wide rather than a
+  // cut, and never quite as dark as the sky, so the night side still reads as the planet's.
   p.push()
   ctx.beginPath()
   ctx.arc(X(sx), X(sy), X(SAT_R), 0, TAU)
   ctx.clip()
-  ctx.beginPath()
-  ctx.arc(X(sx), X(sy), X(SAT_R + 0.2), 0, TAU)
-  ctx.arc(X(sx + SUN[0] * SAT_R * 0.42), X(sy + SUN[1] * SAT_R * 0.42), X(SAT_R * 1.02), 0, TAU, true)
-  ctx.fillStyle = 'rgba(11, 15, 29, 0.9)'
-  ctx.fill('evenodd')
+  const lx = sx + SUN[0] * SAT_R * 0.42
+  const ly = sy + SUN[1] * SAT_R * 0.42
+  const dusk = ctx.createRadialGradient(X(lx), X(ly), X(SAT_R * 0.9), X(lx), X(ly), X(SAT_R * 1.16))
+  dusk.addColorStop(0, 'rgba(11, 15, 29, 0)')
+  dusk.addColorStop(0.45, 'rgba(11, 15, 29, 0.42)')
+  dusk.addColorStop(1, 'rgba(11, 15, 29, 0.8)')
+  ctx.fillStyle = dusk
+  ctx.fillRect(X(sx - SAT_R - 1), X(sy - SAT_R - 1), X(2 * SAT_R + 2), X(2 * SAT_R + 2))
   p.pop()
   outline(p, ink, weight)
   p.circle(X(sx), X(sy), X(SAT_R * 2))

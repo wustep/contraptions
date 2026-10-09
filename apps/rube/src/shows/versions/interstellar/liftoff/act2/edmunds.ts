@@ -537,10 +537,10 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     { t: CAMP_MEET - 0.35, cells: 3.7, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.9], w: 0.95 },
     { t: CAMP_MEET + 0.55, cells: 2.9, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
     { t: 259.7, cells: 2.75, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
-    { t: 262.0, cells: END_CELLS, hold: END_HOLD },
-    { t: MIX_END, cells: END_CELLS + 0.25, hold: [END_HOLD[0] + 0.05, END_HOLD[1] - 0.08] },
-    // Under the credits the camera goes on drawing back, slower, and up a little into the sky they are written in.
-    { t: DURATION, cells: END_CELLS + 0.75, hold: [END_HOLD[0] + 0.1, END_HOLD[1] - 0.3] },
+    // The draw-back is unhurried: eight seconds out to the whole camp as the first cards come, and it never stops,
+    // going on, slower, under the rest of the credits and up a little into the sky they are written in.
+    { t: 267.5, cells: END_CELLS, hold: END_HOLD },
+    { t: DURATION, cells: END_CELLS + 1.1, hold: [END_HOLD[0] + 0.1, END_HOLD[1] - 0.4] },
   ]
 }
 
@@ -683,7 +683,8 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   const rise = smooth(T, LAMP, MIX_END) + smooth(T, MIX_END, DURATION)
   glow(p, X(sx), X(E + 0.1), X(3.6 + 0.8 * dawn), DARK.gold, 0.36 + 0.22 * dawn)
   glow(p, X(sx), X(E), X(1.1), VOID.ink, 0.16 + 0.3 * rise)
-  const sy = E + 0.3 - 0.21 * rise
+  // Its edge by the music's end, and clear of the horizon by the end of the credits.
+  const sy = E + 0.3 - 0.2 * Math.min(1, rise) - 0.42 * Math.max(0, rise - 1)
   if (sy - 0.26 < E) {
     glow(p, X(sx), X(E - 0.02), X(0.8), DARK.gold, 0.55 * rise)
     p.noStroke()
@@ -1854,8 +1855,9 @@ function drawCamp(p: p5, c: Ctx, v: View, T: number): void {
   // The lamp: a mast on a tripod, a plate at its foot for the ball, a rod up to the switch, the lamp at the top.
   const lever = T >= LAMP ? 1 : 0
   outline(p, ink, weight * 0.8)
+  // (Its near foot comes down behind where he rests, so nothing pokes into the light between the two of them.)
   p.line(X(MAST_X - 0.28), X(G), X(MAST_X), X(G - 0.42))
-  p.line(X(MAST_X + 0.3), X(G), X(MAST_X), X(G - 0.42))
+  p.line(X(MAST_X + 0.17), X(G), X(MAST_X), X(G - 0.42))
   solid(p, ink, weight * 0.8, DARK.slate)
   p.rect(X(MAST_X), X((G + LAMP_Y) / 2), X(0.07), X(G - LAMP_Y))
   // The rod, and the switch arm at its top: down when lit.
