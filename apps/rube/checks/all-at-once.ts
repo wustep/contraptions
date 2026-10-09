@@ -7,7 +7,7 @@ import type { Performance } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/eeaao-onsets.json'
 import { STRIKES } from '../src/shows/versions/come-recover/all-at-once/hits'
 import { COMBS, CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall, fight } from '../src/shows/versions/come-recover/all-at-once/music'
-import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/come-recover/all-at-once/credits'
+import { CARDS, CHAPTERS, CREDITS_OK, creditsAt, goneAt } from '../src/shows/versions/come-recover/all-at-once/credits'
 import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/peak'
 import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
 import { keepIn, keepOf } from '../src/shows/versions/come-recover/all-at-once/film'
@@ -229,6 +229,13 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   // The googly eyes: Evelyn is given hers on the great hit, and Joy hers as she is pulled back.
   check('all at once: the googly eye comes on the great hit, beat 123 of the fight', near(JUMPS.eye, 191.216) && Math.abs(fight(123) - JUMPS.eye) < 0.03)
   check('all at once: Joy is given her eye while her mother pulls her back, after the brink and before home', JOY_EYE > JUMPS.brink && JOY_EYE < JUMPS.home)
+
+  // The film's three chapters, which are the show's three parts: each named as it begins, and gone well before the next.
+  const starts = [0, JUMPS.premiere, JUMPS.mosaic]
+  check('all at once: the chapters, Everything, Everywhere and All at Once, each as its part begins and gone long before the next',
+    CHAPTERS.map((c) => c.names.join()).join('|') === 'Everything|Everywhere|All at Once' &&
+    CHAPTERS.every((c, i) => c.at >= starts[i] && c.at < starts[i] + 1 && goneAt(c) < (starts[i + 1] ?? JUMPS.eye) - 5) &&
+    creditsAt(CHAPTERS[1].at + 2).length === 1 && creditsAt(JUMPS.eye).length === 0)
 
   // The end credits: words the page sets over the dark room after the last hit, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')

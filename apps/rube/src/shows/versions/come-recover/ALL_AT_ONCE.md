@@ -21,7 +21,10 @@ It is one ball on one path through many worlds.
 Evelyn is given her googly eye on the cue's great hit (191.2 s), when she chooses kindness. Joy is given hers on the
 peak, as her mother pulls her back (254.5 s).
 
-The film's three parts are the show's:
+The film's three parts are the show's, and each is named by a chapter card as it begins, as the film's are: the page
+sets them in its own face, as it does the credits (`CHAPTERS` in `credits.ts`). *Everything* comes up over the
+storefront's dark glass in the opening's wide shot, *Everywhere* in the premiere's lower widescreen bar, and *All at
+Once* in the dark she breaks through into.
 
 1. **Everything** (0 to 58 s): the Wang family laundromat at night.
 2. **Everywhere** (58 to 166 s): verse-jumps through her other lives, to Jobu and the everything bagel.
@@ -819,6 +822,12 @@ The notes went back to the builders who made each part, who still had their cont
   closes on her in one, as a cartoon ends (`IRISES` in `film.ts`). Each fills the frame with black round a hole that
   rides on her, smoothed over a fifth of a second; each takes most of a second, once, so none of them flashes. The
   flickers before the jump into the kitchen still show it whole.
+- **A director's pass: the chapters.** The show is built on the film's three parts, but nothing told the viewer so.
+  Now each is named as it begins, as the film names its chapters: *Part one, Everything* over the storefront's dark
+  glass as the tubes come on (it was moved in off the bright wall and a light sign in the door), *Part two,
+  Everywhere* set in the premiere's lower widescreen bar as a film sets a title in its letterbox, and *Part three, All
+  at Once* in the dark before the laundromat comes up round her. `check:shows` holds the three to their names and
+  their parts (692 checks).
 
 ## The looks
 

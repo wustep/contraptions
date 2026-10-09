@@ -4,7 +4,7 @@ import type { TitleCard } from '../../../registry'
 import { frame, scenery } from './kit'
 import { mixHex } from '../../../../parts'
 import { PORT } from './home/finale-plan'
-import { CREDITS_AT, DURATION, HOME_HITS } from './music'
+import { CREDITS_AT, DURATION, HOME_HITS, JUMPS } from './music'
 import { EVELYN, JOY, WAYMOND } from './worlds'
 
 /**
@@ -90,10 +90,30 @@ function lightOf(card: Card, t: number): { light: number; rise: number } {
   return { light: easeInOutCubic(up) * (1 - down), rise: (1 - easeInOutCubic(up)) * 0.8 }
 }
 
-/** The cards up at `t`, for the page to set (`Performance.titles`). */
+/**
+ * The film's three chapters, which are the show's three parts, each named as it begins: Everything over the
+ * storefront's dark glass in the opening's wide shot, as the tubes come on; Everywhere in the premiere's lower
+ * widescreen bar, as a film sets a title in its letterbox; All at Once in the dark she breaks through into, before the
+ * laundromat comes up round her. Set by the page as the credits are, in its own face.
+ */
+export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
+  { at: 0.6, hold: 3.6, role: 'Part one', names: ['Everything'], pos: [0.122, 0.5], scale: 0.66 },
+  { at: JUMPS.premiere + 0.5, hold: 2.6, role: 'Part two', names: ['Everywhere'], pos: [0.5, 0.878], scale: 0.62 },
+  { at: JUMPS.mosaic + 0.35, hold: 2.4, role: 'Part three', names: ['All at Once'], pos: [0.5, 0.6], scale: 0.85 },
+]
+
+/** The cards up at `t`, for the page to set (`Performance.titles`): the chapters as they begin, and the credits. */
+/** When a card has gone, show seconds. */
+export const goneAt = (card: Card): number => card.at + FORM + card.hold + GO
+
 export function creditsAt(t: number): TitleCard[] {
-  if (t < CREDITS_AT) return []
   const out: TitleCard[] = []
+  CHAPTERS.forEach((card, n) => {
+    const { light, rise } = lightOf(card, t)
+    if (light <= 0.001) return
+    out.push({ key: `all-at-once-chapter-${n}`, role: card.role, names: card.names, title: true, light, rise: rise * 0.5, at: card.pos, scale: card.scale })
+  })
+  if (t < CREDITS_AT) return out
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
