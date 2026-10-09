@@ -66,10 +66,10 @@ export const home = part<null>(
     on(HOLD, 2.55, [7.76, -0.55]),
     // The camera leaves them, back in through the glass doors to the table, and does not stop: from the first of the
     // top's chords it pushes in on it, slowly and all the way to the last chord, where the top fills a fifth of the
-    // frame's height, a little below its middle.
+    // frame's height and more, a little below its middle.
     on(TICKS[0], 2.5, [TOP_AT[0] + 0.4, TOP_AT[1] - 0.44]),
     on(TICKS[1], 1.92, [TOP_AT[0] + 0.2, TOP_AT[1] - 0.37]),
-    on(TICKS[2], 1.45, [TOP_AT[0] + 0.1, TOP_AT[1] - 0.3]),
+    on(TICKS[2], 1.2, [TOP_AT[0] + 0.08, TOP_AT[1] - 0.26]),
   ],
 )
 

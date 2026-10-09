@@ -288,6 +288,12 @@ each world, and changed:
 - **Mal's shot landing** (145.15 to 146.8): on the cut back from her, Fischer was already half under the floor, and
   nothing said he had been hit. The shot strikes now: a white flash where he stands, a ring out across the floor and a
   spray of snow thrown up off it, still settling as the camera comes back to him (a fresh critic's note).
+- **The reunion's hold** (259.4 to 262.5): come to him, the children sat still for three seconds before the embrace.
+  They cannot keep still now: little hops on the beats, by turns, landing on the beat (a second critic's note).
+- **The top at the last chord** (270.8 to 274.6): the push in goes on further, so the top stands a quarter of the
+  frame's height at the cut to black, not a fifth.
+- **The front door** (244.8): it swung so deep into the hall that its foot came to rest on his crown as he came in
+  under it. It swings shallower now, its foot low behind him.
 
 ## Inception nods
 

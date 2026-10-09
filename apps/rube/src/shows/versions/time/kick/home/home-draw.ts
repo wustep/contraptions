@@ -402,9 +402,8 @@ function sunOnFloor(ctx: C2D, k: number): void {
 /* ------------------------------------------------------------------ the things in it */
 
 /** A door leaf swinging about a hinge at the doorway's far side: `phi` 0 shut (in the doorway), π/2 back flat. */
-function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number, fill: string, w: number, glass: boolean): void {
+function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number, fill: string, w: number, glass: boolean, depth = 0.33): void {
   const s = Math.sin(phi)
-  const depth = 0.33
   const hb = HOUSE.back
   const fb = FLOOR - depth * (1 - Math.cos(phi))
   const A: Pt = [hx, hb]
@@ -556,7 +555,9 @@ export function drawHome(p: p5, c: Ctx): void {
   porch(ctx, k, f, t, w)
   house(ctx, k, f, t, w)
   // Inside: the front door back against the wall, the counter, the chairs, the table and the top.
-  leaf(ctx, k, HOUSE.front[1] - 0.08, 1.15, 2.42, frontDoor(t), DOORWOOD, w * 0.8, false)
+  // The front door swings back less deep into the hall, so its foot stays low behind him as he comes in under it,
+  // and not on his crown.
+  leaf(ctx, k, HOUSE.front[1] - 0.08, 1.15, 2.42, frontDoor(t), DOORWOOD, w * 0.8, false, 0.18)
   counter(ctx, k, w)
   for (const c of CHAIRS) chair(ctx, k, w, c)
   table(ctx, k, w)

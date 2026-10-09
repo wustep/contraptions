@@ -242,6 +242,21 @@ export function kidX(i: number, t: number): number {
   return x
 }
 
+/**
+ * Come to him, they cannot keep still: between bar 68 and the embrace each gives little hops on the beats, by turns
+ * (the elder on the first and third, the younger on the second), a few hundredths of a cell, landing on the beat.
+ */
+const HOP_H = 0.07
+const HOP_T = 0.3
+const HOPS: number[][] = [[beat(4 * 68 + 1), beat(4 * 68 + 3)], [beat(4 * 68 + 2)]]
+function hop(i: number, t: number): number {
+  for (const at of HOPS[i]) {
+    const u = (t - (at - HOP_T)) / HOP_T
+    if (u > 0 && u < 1) return 4 * HOP_H * u * (1 - u)
+  }
+  return 0
+}
+
 /** The warm rim the sun puts round them while they are dark against it. */
 export const RIM = mixHex(HOME.sun, HOME.floor, 0.32)
 
@@ -257,7 +272,7 @@ export function kids(t: number): ShowBall[] {
     return {
       id: KID_ID + i,
       x: kidX(i, t),
-      y: KID_Y,
+      y: KID_Y - hop(i, t),
       color: mixHex(KID_DARK, KIDS[i], e),
       rim: mixHex(RIM, HOME_THEME.ink, r * r * (3 - 2 * r)),
       scale: KID_SCALE,
