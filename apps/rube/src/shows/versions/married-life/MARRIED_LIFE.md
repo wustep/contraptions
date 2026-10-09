@@ -594,8 +594,16 @@ window.
     the same, so a scrub, a seek or a jump draws what play would. And the live stage, after playing a stretch, paused
     and sought to 15 times, against `still` at the same times: every pixel the same, so the audits' stills are what a
     viewer sees.
-  - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
-    YouTube cue's sync at real speed.
+  - *WebKit* (Playwright's WebKit 26.6, Safari's engine, headless). The picture: 17 frames across the show against
+    Chromium's, at most 0.12% of pixels apart (edge smoothing). The player on the deployed preview: the show starts
+    on its own with the sound held and the Sound button up, Space lets it in, the arrows step and pause, Space plays
+    on, Home goes to the top, nothing in the console. Found: WebKit refuses sound to the YouTube player for a press
+    made on the page (the player says it plays, its time stands still), and the player dropped that answer: the
+    Sound button went, the show ran on silent on the wall, with nothing left to press. Now every way of letting the
+    sound in (`joinSound` in `player.ts`) holds it again on a refusal, muted so YouTube still keeps the time, with the
+    Sound button back (Chromium made to refuse the same way did the same before, and does the same after). Whether
+    Safari itself, with a speaker and a person's press, refuses as headless WebKit does is not known.
+  - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
 
@@ -611,7 +619,8 @@ window.
   (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
   Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
-- Only Chrome on macOS has been watched, and Safari has not been measured for this take. The YouTube cue has, on the
+- Only Chrome on macOS has been watched; Safari's engine has been measured headless (above), Safari itself not. The
+  YouTube cue has, on the
   deployed preview in Chromium (PR #163): it loads, plays, and drives the show's clock in real time (10 s of show in
   10 s), with no fallback; whether picture and sound feel in sync to a listener is still for a person to judge.
   A full play there found that, at times, YouTube started the video again from the top as it ran out, a moment before

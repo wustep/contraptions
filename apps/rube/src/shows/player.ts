@@ -256,9 +256,6 @@ async function playLinked(): Promise<void> {
 /** The sound is held. The next gesture starts it where the picture is, and a control whose job is the sound keeps that job. */
 function armSound(): void {
   releaseSound()
-  const join = () => {
-    if (transport && perf?.soundtrack) void music.play(transport.now())
-  }
   const unlock = (e: Event) => {
     const key = e instanceof KeyboardEvent ? e.key : ''
     const musicControl = (e.target instanceof Element && !!e.target.closest('button.music')) || key === 'm' || key === 'M'
@@ -274,7 +271,7 @@ function armSound(): void {
       e.preventDefault()
       e.stopImmediatePropagation()
     }
-    join()
+    joinSound()
   }
   releaseSound = () => {
     window.removeEventListener('pointerdown', unlock, true)
@@ -282,6 +279,23 @@ function armSound(): void {
   }
   window.addEventListener('pointerdown', unlock, true)
   window.addEventListener('keydown', unlock, true)
+}
+
+/**
+ * The held sound let in where the picture is. A browser can refuse it even for a gesture (WebKit refuses sound to a
+ * YouTube player for a press made on the page, not on the player): then the sound is held again, muted so the music
+ * still keeps the time, and the Sound button is back for another try, rather than a press that did nothing.
+ */
+function joinSound(): void {
+  if (!transport || !perf?.soundtrack) return
+  const mine = generation
+  void music.play(transport.now()).then((result) => {
+    if (result !== 'blocked' || !alive || mine !== generation || !transport?.playing || muted) return
+    soundHeld = true
+    setMuted(true)
+    void music.play(transport.now())
+    armSound()
+  })
 }
 
 function setOverview(on: boolean): void {
@@ -420,7 +434,7 @@ bigPlay.addEventListener('click', () => {
     soundHeld = false
     joinedAt = performance.now()
     setMuted(false)
-    if (transport && perf?.soundtrack) void music.play(transport.now())
+    joinSound()
     return
   }
   void play()
@@ -489,7 +503,7 @@ musicBtn.addEventListener('click', () => {
   }
   soundHeld = false
   setMuted(false)
-  if (transport && perf?.soundtrack) void music.play(transport.now())
+  joinSound()
 })
 const restartBtn = el('button', { type: 'button', class: 'tbtn', title: 'Back to the top of the show (Home)', 'aria-label': 'Restart' }, [icon(ICON.restart)])
 restartBtn.addEventListener('click', () => seek(0))
@@ -863,7 +877,7 @@ const onKey = (e: KeyboardEvent) => {
       if (soundHeld) {
         soundHeld = false
         setMuted(false)
-        if (transport) void music.play(transport.now())
+        joinSound()
         break
       }
       setMuted(!muted)

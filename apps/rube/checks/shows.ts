@@ -105,6 +105,16 @@ async function main(): Promise<void> {
   const soundtrack = readFileSync(join(process.cwd(), 'apps/rube/src/shows/soundtrack.ts'), 'utf8')
   check('a file play waits for canplay, as YouTube waits for its players', soundtrack.includes('status === \'loading\'') && soundtrack.includes('waiting.push') && soundtrack.includes('deep link'))
   check('a deep link with the sound held keeps a Sound button on the stage, and lights the panel\'s', player.includes("soundHeld ? 'Sound'") && /musicBtn\.classList\.toggle\('held', hasMusic && soundHeld\)/.test(player))
+  // A press that lets the held sound in can still be refused (WebKit refuses sound to a YouTube player for a press made
+  // on the page): every way in (the Sound button, a click or key anywhere, the music control, M) goes through
+  // `joinSound`, which on a refusal holds the sound again, muted, with the Sound button back. Before, the button went
+  // and the show ran on silent, with nothing to press.
+  {
+    const join = player.slice(player.indexOf('function joinSound('), player.indexOf('\n}\n', player.indexOf('function joinSound(')))
+    check('a refused Sound press holds the sound again and brings the Sound button back',
+      /result !== 'blocked'/.test(join) && /soundHeld = true/.test(join) && /setMuted\(true\)/.test(join) && /armSound\(\)/.test(join) &&
+      (player.match(/joinSound\(\)/g) ?? []).length >= 4 && (player.match(/void music\.play\(/g) ?? []).length === 2)
+  }
   // A YouTube cue started again from the top as it runs out is treated as run out, so the show carries on to its end
   // instead of freezing under the song heard again (found on Married Life's deployed preview); and `position` asks.
   check('a YouTube cue restarted at its end is run out, and nothing else is',
