@@ -283,3 +283,7 @@ A thirty-third pass, at stillness, measured:
 A thirty-fourth pass, at where they look:
 
 - **Their eyes.** Each ball's mark is its eye. At the club the seats are set so that the marks say something: at the dream's kiss they face each other, and at the door he looks up. Everywhere else a mark turns with the ball's rolling, wherever that leaves it, and at three of their four other touches it left them looking away from each other: at the kiss at Lipton's, on the roll down the beam to him, and at the touch among the stars. Around each of those touches, and the curtain call's, each one's mark now turns from its rolling to the other, a little before they meet, holds through the touch, and is let go to roll again.
+
+A thirty-fifth pass, at where they look, again:
+
+- **The waltz, eye to eye.** Through the waltz on the quay and up among the stars (272.6 to 338.7) they turn round each other for over a minute, but each one's eye rolled with its travel, so they looked past each other more often than at each other. From the waltz's first ONE they now look at each other the whole way, as dancers do, into the touch at its end. Elsewhere where they share the picture without touching, the rolling already says the right thing: he looks to her stage from his chair at the audition, and to her in the Paris club.

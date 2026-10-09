@@ -40,6 +40,8 @@ export interface Stage {
  * club's kiss and the look at the door are set by where they sit.)
  */
 const GAZE = [65.515, 125.585, 266.008, 338.709]
+/** And the waltz, from its first ONE to the touch among the stars: they turn round each other, eye to eye, as dancers do. */
+const WALTZ_GAZE: [number, number] = [272.625, 338.709]
 function gazeAt(t: number): number {
   let w = 0
   for (const g of GAZE) {
@@ -47,6 +49,8 @@ function gazeAt(t: number): number {
     const u = s < -0.7 ? 0 : s < 0 ? 1 - (s / -0.7) ** 2 : s < 1.2 ? 1 : s < 2.0 ? 1 - ((s - 1.2) / 0.8) ** 2 : 0
     w = Math.max(w, Math.max(0, u))
   }
+  const [a, b] = WALTZ_GAZE
+  if (t > a - 1.0 && t <= b) w = Math.max(w, t < a ? 1 - ((a - t) / 1.0) ** 2 : 1)
   return w
 }
 /** From `a` toward `b` by `w`, the short way round. */
