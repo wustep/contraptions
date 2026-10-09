@@ -747,6 +747,13 @@ the floor now, behind them, and out the way he came. Their other notes stay: her
 the dialing; the leap's arc through the willow is the leaves she reaches; the swing's length and the white before the
 heptapods come are the cue's; Ian at the cut, as before.
 
+A seventy-first looked at the fiftieth to the seventieth together, the whole show at a frame every two seconds and
+again in a tall frame every three: the warm ending, the overcast break, the hands, the slower limbs, the soldier in
+olive rolling out, the pedal, the lower bounce and the run back, the turning helicopter, the gathered gold ring,
+China's red picture, the waking white, the pinned lift, the blast from the charge, the seam's glow, the suit lifted
+off whole, the willow's clumps grown in. They sit together; nothing new showed. And the circle still closes as it
+did: the last frame against the first differs exactly as it did before the fiftieth. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
