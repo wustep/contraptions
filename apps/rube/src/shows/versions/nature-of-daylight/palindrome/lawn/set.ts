@@ -236,6 +236,14 @@ const CLUMPS: Clump[] = (() => {
   })
 })()
 
+/** The tree whole, crown and trunk, in world cells: what Overview must take in on the lawn besides the swing. */
+export const LAWN_TREE = {
+  x0: Math.min(TRUNK_X - 1.1, ...CLUMPS.map((c) => c.x - c.r)),
+  y0: Math.min(...CLUMPS.map((c) => c.y - c.r)),
+  x1: Math.max(...CLUMPS.map((c) => c.x + c.r)),
+  y1: Math.max(...CLUMPS.map((c) => c.y + c.r)),
+}
+
 /** The hanging leafy twigs at the limb's end, which she reaches at the front of her arc: rest positions. */
 interface Spray {
   base: Pt

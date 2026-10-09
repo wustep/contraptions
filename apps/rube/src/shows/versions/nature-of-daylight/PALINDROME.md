@@ -332,6 +332,17 @@ twice and kept: the jagged ring runs half across Abbott's body, black on dark, w
 the writing limb's closed hand is a little rounder than the limb, a fist. On a phone the credits' fine print is very
 small, but cards are sized by the page, for every show, not by this one.
 
+A sixteenth looked at the share card (unchanged since it was picked, and nothing at its moment has changed since) and
+watched the whole show again through Overview, which the sixth had last seen before the palm, the limb's leaves and
+"weapon" changed:
+
+- **The lake house in Overview** was a thin strip in the corner of an empty frame. Overview frames a place by its
+  bounds, and the house's were the house and the lawn together; since the sixth pass the lawn draws only while she is
+  on it, so indoors three quarters of the frame was bare wall and floor with the room tiny at the left, and on the lawn
+  the swing was small under a crown cut off by the top of the frame. Each room is framed by its own legs now: indoors,
+  the room fills the frame, cradle, bed and clock; on the lawn, the whole tree through the year, the crown taken in.
+  The show's own camera reads none of this, and its frames are the same to the pixel.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
