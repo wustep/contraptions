@@ -338,6 +338,9 @@ each world, and changed:
   side was down for its heading, so where the hairpin stands upright it jumped from one side to the other, a step in
   the turn. It lies straight down from the path now, the same arc a ball's width lower. And where one piste runs on
   into the next, their round ends overlapped in a darker blot; each kind is stroked as one path now.
+- **The van's sliding door** (70.5 to 89): it opened from just behind the cab back over the rear wheel, so the open
+  doorway was cut down through the wheel's arch and its edge sliced the tyre. The door is between the wheels now, as
+  a van's is, and Ariadne's place on the bench is a little forward, so with the door shut all three sit in its window.
 
 ## Inception nods
 

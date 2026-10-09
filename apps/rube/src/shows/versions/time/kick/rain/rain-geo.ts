@@ -115,12 +115,12 @@ export const VAN_PARK = -42.1
 export const WHEEL_U = 0.85
 export const WHEEL_R = 0.19
 /** The bench along the bay: where each sits (van cells, u along from the centre, v down from it, to the ball's centre). */
-export const SEAT_U = { ariadne: -0.55, cobb: 0, fischer: 0.55 } as const
+export const SEAT_U = { ariadne: -0.38, cobb: 0, fischer: 0.55 } as const
 export const SEAT_V = -0.08
 /** Where they come down on the bench, in through the sliding door. */
 const BENCH_IN = -0.3
-/** The sliding door's opening (u), and the bay's floor (v). */
-export const DOOR_U: Pt = [-0.86, 0.28]
+/** The sliding door's opening (u), clear of the rear wheel's arch, and the bay's floor (v). */
+export const DOOR_U: Pt = [-0.58, 0.28]
 export const FLOOR_V = 0.42
 
 /** A point of the van (u along, v down, from its centre) in the world, for a pose. */
