@@ -577,14 +577,15 @@ function drawCeiling(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
  */
 function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, open: number): void {
   if (open <= 0.02) return
-  const light = rgbOf(VALLEY.floodlight)
+  // Sunlight, not the floods' cream: warm, the first warmth the valley has had (the reunion is in it).
+  const light = rgbOf(mixHex(VALLEY.floodlight, VALLEY.lamp, 0.5))
   const top = -132
   const len = MEADOW - top
   const lean = 0.1
   for (let j = 0; j < 6; j++) {
     const x = SHELL_X - 22 + j * 10 + 3 * Math.sin(t * 0.05 + j) + (hash(j, 2, 43) - 0.5) * 4
     const w = 2.6 + 3.2 * hash(j, 1, 43)
-    const a = (0.11 + 0.08 * hash(j, 3, 43)) * sm(open, 0.05 + j * 0.06, 0.45 + j * 0.06)
+    const a = (0.14 + 0.09 * hash(j, 3, 43)) * sm(open, 0.05 + j * 0.06, 0.45 + j * 0.06)
     if (a <= 0.004) continue
     const foot = x + len * lean
     if (Math.max(x, foot) + w * 4 < f.x0 || Math.min(x, foot) - w * 3 > f.x1) continue

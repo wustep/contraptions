@@ -299,6 +299,9 @@ changed, in the order of the film, and then what runs through it:
   from about 181.8 the great ring read as closed, and on the pulse only two hairline seams went. A fresh critic,
   shown the push at four frames a second, caught it. Each half's tail is held a little short of the other's pen while
   it is written, and on the close the tails run into the gaps: the halves are seen to meet on the pulse.
+- **The light after the shell** (186.3 → 196.8): where the cloud opens the shafts of light were the floods' pale
+  cream, so the reunion sat in a grey-olive wash (a fresh critic's note). They are sunlight now, warmed toward the
+  camp lamps' gold and a little stronger: the first warmth the valley has, and the two of them meet in it.
 - **The reunion** (195.344): Ian came to a stop a sliver from her, and as her lean to him eased back a gap opened
   between them, so the meadow ended on the two of them drifting apart. He meets her on the touch now and stays against
   her as she settles back to her mark (which the circle's first frame needs): they end it together. They are grounded
