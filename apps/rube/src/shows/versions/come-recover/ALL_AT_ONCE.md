@@ -554,33 +554,6 @@ The notes went back to the builders who made each part, who still had their cont
   chunks over 500 KB is for other parts of the site.
   Run again after the looks, the bags and the machines: it still passes (3,065 checks, one of them new), and the
   chunk is 391.5 KB (143.7 KB gzipped), 5.7 KB gzipped over `origin/main` in all.
-- **A pass for reduced motion.** The site honoured `prefers-reduced-motion` only in its menus. The show now does too
-  (`CALM` in `score.ts`). A viewer who asks their system to reduce motion is spared the two jolts that carry no
-  story: the next world flickering through before each jump (also the show's flashing), and the camera's punch on
-  the ten biggest hits. The cuts and everything else are as for anyone. It is read in the browser when the show is
-  built, so the checks, share cards and everyone else see the show as made. Tested with Chrome's emulated
-  preference: 13 flickers become none, and the great hit's frame follows its own move without the push-in.
-  Its one side effect, on files saved by such a viewer, is under Known limits.
-- **A pass for testing the calm version.** The checks run in Node, where there is no preference, so they only ever
-  saw the full-motion show. `compose(calm)` now takes the mode, defaulting to the viewer's. `check:shows` builds both
-  and holds the calm one to no flickers, no punch on the great hit, and every jump at the same moment. It was
-  confirmed to fail when the punch ignores the mode.
-- **A pass for a code review.** The branch's code was reviewed for correctness. Five findings were in this show's own
-  code and were fixed:
-  - At the very end the googly eyes went dark at the room's rate, while the window's light still lit the balls they
-    sit on, so the eyes vanished before the faces. `endShade` now darkens with the same falloff round the window as
-    the room's dark.
-  - Reduced motion was read once, so turning it on mid-show did nothing until a reload. It now follows the setting
-    live: the punch reads it each frame, and the show skips the flickers while it is set (a `quiet` on
-    `MultiverseShow`).
-  - The binary search was used by `where()` but not `at()`, which the stage, the eyes' targets and the bags all call.
-    Both now use it (`seek` in `show.ts`). Seventeen frames are pixel for pixel as before.
-  - A burst cut the balls' discs out with one even-odd path, which lets the overlap of two discs back in. Each disc
-    is now clipped out on its own.
-  - `BAG_WATCH` was rebound by every `compose()`, so a later one (in the checks or a tool) took the bags over. The
-    first, the viewer's, now keeps it.
-  - Five more findings were in shared code that this branch does not touch (the player, the shell and the engine),
-    and were left to their owners.
 - **A pass for Waymond on the line.** In the peak he catches the line and drops as the weight that pulls Joy back out
   of the bagel, but his eye only swung with his fall. Now from his catch (247.9 s) he watches Joy, until he is
   carried down out of the frame (249.6 s).
@@ -658,10 +631,66 @@ The notes went back to the builders who made each part, who still had their cont
   to the end of the fight: the glove after the push it gave her, the trap after its toss, the mallet after its
   scoop, and the arm as it cradles her. Kindness answered with fondness (`watching` in `kindness-draw.ts`).
 
+- **A pass for reduced motion.** The site honoured `prefers-reduced-motion` only in its menus. The show now does too
+  (`CALM` in `score.ts`). A viewer who asks their system to reduce motion is spared the two jolts that carry no
+  story: the next world flickering through before each jump (also the show's flashing), and the camera's punch on
+  the ten biggest hits. The cuts and everything else are as for anyone. It is read in the browser when the show is
+  built, so the checks, share cards and everyone else see the show as made. Tested with Chrome's emulated
+  preference: 13 flickers become none, and the great hit's frame follows its own move without the push-in.
+  Its one side effect, on files saved by such a viewer, is under Known limits.
+- **A pass for testing the calm version.** The checks run in Node, where there is no preference, so they only ever
+  saw the full-motion show. `compose(calm)` now takes the mode, defaulting to the viewer's. `check:shows` builds both
+  and holds the calm one to no flickers, no punch on the great hit, and every jump at the same moment. It was
+  confirmed to fail when the punch ignores the mode.
+- **A pass for a code review.** The branch's code was reviewed for correctness. Five findings were in this show's own
+  code and were fixed:
+  - At the very end the googly eyes went dark at the room's rate, while the window's light still lit the balls they
+    sit on, so the eyes vanished before the faces. `endShade` now darkens with the same falloff round the window as
+    the room's dark.
+  - Reduced motion was read once, so turning it on mid-show did nothing until a reload. It now follows the setting
+    live: the punch reads it each frame, and the show skips the flickers while it is set (a `quiet` on
+    `MultiverseShow`).
+  - The binary search was used by `where()` but not `at()`, which the stage, the eyes' targets and the bags all call.
+    Both now use it (`seek` in `show.ts`). Seventeen frames are pixel for pixel as before.
+  - A burst cut the balls' discs out with one even-odd path, which lets the overlap of two discs back in. Each disc
+    is now clipped out on its own.
+  - `BAG_WATCH` was rebound by every `compose()`, so a later one (in the checks or a tool) took the bags over. The
+    first, the viewer's, now keeps it.
+  - Five more findings were in shared code that this branch does not touch (the player, the shell and the engine),
+    and were left to their owners.
+- **A second code review, of the PR alone.** Ten findings came back, each checked first.
+  - **Looks let go at handovers.** Each look eased out as the next eased in, so where one ended as the next began,
+    the hold dipped to nothing and the eyes flopped loose for a moment (at the portrait's lens-to-photograph
+    handover among others). Looks that meet now make one run, eased only at its ends, and the eye hands from one
+    target to the next. A look on its own is as it was.
+  - **The street's colours had shifted.** Putting the further fronts ahead of the original five in one list
+    renumbered them, which changed the original block's tones and lit windows in every view through the glass. Each
+    keeps its old number now, and the storefront matches `origin/main` again.
+  - **The mosaic's first tear snapped** on a wider stage. The home panel now shrinks from the whole stage to its
+    place in step with the tear.
+  - **A machine's pupil could turn the long way round** as it began to watch her. The turn is now the short way.
+  - **The rope's free end** is no longer drawn once it has run down past Waymond. It was already out of the frame by
+    then.
+  - Tidying: the bags' target is looked up once a frame, not once a bag; the check reuses a composed show; and
+    `drawCounter` has its doc comment back.
+  - Left, with reasons. In a saved 1080p video the credits' long title starts about 35 px in from the left edge, so
+    it is tight but whole. `BAG_WATCH` keeps the first composed show, which in the page is the one playing. The
+    eases written out in three places are each one line.
+- **A pass for unintended changes.** The street's colours had shifted without anyone meaning them to, so frames were
+  compared with `origin/main` where nothing was meant to change. That covered twenty frames of the dojo, the piano,
+  the surf, the mosaic after its first tear, and the pull, and all twenty are pixel for pixel the same. In the
+  worlds that were changed, each difference falls where it was meant to:
+  - the alley: Waymond's eye, and at its first frame the premiere's kerb under the carpet's corner;
+  - the kitchen: the counter's face, and the whole frame where its camera moved;
+  - the rocks: Evelyn's eye.
+  - This log had also gone out of order (three entries placed early) and was missing the second review's entry. Both
+    are put right.
+
 ## The looks
 
 The googly eyes swing with their balls, but at the story's turns they look at someone. Each look eases in and out
-over a quarter second, and looks that overlap blend, so the eye sweeps from one to the next. They are listed in
+over a quarter second. Looks that meet or overlap make one run, eased only at its ends, so the eye hands from one
+target to the next without letting go. They are listed in
 `score.ts` as each eye's `gaze` (`fx.ts`). `check:shows` holds every one of them live, the one looking and the one
 looked at both there, and seen: its eye in the frame and big enough to read for at least half of it.
 
