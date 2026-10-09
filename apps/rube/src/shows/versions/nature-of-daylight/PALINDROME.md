@@ -569,6 +569,12 @@ audio file anywhere in it or tracked for the show; the music, its onsets, the ve
 (the label's upload, `rVN1B-tUpgs`, by YouTube) all untouched. The song is the song, heard from YouTube. Nothing to
 change.
 
+A forty-eighth watched the whole show through again, a frame every three seconds, after the run of story rounds: it
+holds from the cradle to the cradle, and nothing new showed. And it settled a question left open since the
+thirty-eighth, whether the gala needed a sign of how many years on it is. It does not. The story turns on the gala being
+a future she is shown, and since the ring carries her into it, that reads; how far on does not change what she does
+with it, and any sign of years would be a new thing in the room. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
