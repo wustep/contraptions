@@ -143,7 +143,7 @@ function carlPose(T: number): { tilt: number; squash: number } {
   // To her picture (it is to his left, where they stood): a slow lean that takes over from his getting-down lean,
   // full on its note and held; his base sets off first and his top lets go of her over the first steps (drag).
   const handOver = -0.13 * smooth(T, DOWN - 0.3, DOWN + 0.3)
-  const further = -0.035 * smooth(T, DOWN + 0.2, TO_HER_FULL)
+  const further = -0.07 * smooth(T, TO_HER_FULL - 0.3, TO_HER_FULL)
   const toHer = (handOver + further) * (1 - smooth(T, WALK, WALK + 0.6))
   return { tilt: forward + toHer + stoop + up + bow, squash }
 }

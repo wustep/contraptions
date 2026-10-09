@@ -164,7 +164,8 @@ export function plankAt(t: number): number {
   // him instead of lifting him like a feather.
   const slam = latest(SLAMS, t + 1e-9)
   const half = 0.5 * rise(s - TOUCHDOWN - 0.04, 0.15)
-  const rest = 0.5 * rise(t - leaveAfter(slam), 0.12)
+  // The kick starts a moment before he leaves, so his end is already rising under him: it throws him.
+  const rest = 0.5 * rise(t - (leaveAfter(slam) - 0.05), 0.12)
   return FIRED + (COCKED - FIRED) * (half + rest)
 }
 

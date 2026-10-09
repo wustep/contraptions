@@ -161,7 +161,12 @@ const carlRun = aisle(HIS_RUN, ALTAR_CARL + KISS_STEP, CUT_CARL, 0.77, 0.5)
 const ellieRun = aisle(HER_RUN, ALTAR_ELLIE - 0.08, CUT_ELLIE, 0.9, 0.5)
 
 function carl(T: number): Pt {
-  if (T >= HIS_RUN) return [carlRun(T), 0]
+  if (T >= HIS_RUN) {
+    // A small bound before each downbeat of the run, landing into its squash: a run with a spring in it.
+    let y = 0
+    for (const b of RUN_BEATS) if (T > b - 0.2 && T < b) y -= 0.045 * Math.sin((Math.PI * (T - (b - 0.2))) / 0.2)
+    return [carlRun(T), y]
+  }
   // The shuffle away and back; then pushed a little way along by her bump, and back to his place.
   let x = ALTAR_CARL - 0.06 * ease(T, BUMP, CARL_HOPS[2][1]) + 0.06 * ease(T, 13.3, 14.6) + KISS_STEP * ease(T, TOWARD[3][0], KISS)
   for (const [a, b] of SHUFFLE_OUT) x -= STEP * ease(T, a, b)

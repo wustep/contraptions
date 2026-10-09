@@ -165,11 +165,13 @@ const JOLT_TO = CLIMB_TO + 0.08
 const RUN = (() => {
   // The same ends as ever: from the jolt's landing, beside her on 177.3; the burst is to a top speed well over the old
   // one, so he is seen to gain on her while she is still rolling.
+  // Front-loaded: a short burst to its peak, held only a moment, then a long ease onto the stone, so most of the gap
+  // closes while she is still rolling (the camera follows him, so it is the gap that shows his speed).
   const hold = 0.18
-  const ta = 0.3
-  const td = 1.0
+  const ta = 0.25
+  const tc = 0.25
   const span = T.beside - T.fall
-  const tc = span - hold - ta - td
+  const td = span - hold - ta - tc
   const d = HIS_REST - JOLT_TO
   const vp = d / (ta / 2 + tc + td / 2)
   /** The integral of a smoothstep from 0 to `u`. */

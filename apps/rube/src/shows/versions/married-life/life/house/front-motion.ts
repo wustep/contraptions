@@ -30,15 +30,16 @@ export function flight(T: number, t0: number, p0: Pt, t1: number, p1: Pt, g = G_
 
 /**
  * An old man's step up, from `p0` at `t0` to `p1` at `t1` (its landing exactly there, so it stays
- * on its note): he lifts himself first and shifts across once the lift is under way, the body in its order, with no
- * arc over the tread: a climb, not a hop. The rise is eased out and done by six tenths of the way; the shift across
- * starts a quarter of the way and is eased at both ends.
+ * on its note): he lifts himself as he starts across, up and over the tread's nose, the lift a little ahead of the
+ * shift, with no arc above the tread: a climb, not a hop. The rise is eased at both ends (no pop off the ground) and
+ * done by seven tenths of the way; the shift across starts a tenth of the way and is eased at both ends, so he is
+ * never hanging beside the tread over nothing.
  */
 export function climbUp(T: number, t0: number, p0: Pt, t1: number, p1: Pt): Pt {
   const u = clamp01((T - t0) / (t1 - t0))
-  const r = Math.min(1, u / 0.6)
-  const rise = 1 - (1 - r) * (1 - r)
-  const a = clamp01((u - 0.25) / 0.75)
+  const r = Math.min(1, u / 0.7)
+  const rise = r * r * (3 - 2 * r)
+  const a = clamp01((u - 0.1) / 0.9)
   const across = a * a * (3 - 2 * a)
   return [p0[0] + (p1[0] - p0[0]) * across, p0[1] + (p1[1] - p0[1]) * rise]
 }

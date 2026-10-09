@@ -517,7 +517,11 @@ window.
     hill, a frozen beat on the strike and a burst to twice his old speed, gaining on her as she rolls, leaning into
     it with a stride's bob (`RUN`); his run down the aisle, half his kiss lean kept as a lean into the run and a
     bounce on each downbeat, upright again before the cut; the seesaw rising only half way under his weight and the
-    rest as he takes off, so the reset launches him (`leaveAfter`).
+    rest as he takes off, so the reset launches him (`leaveAfter`). The critic re-watched all six: the funeral lean and
+    the leap move well; the first climb popped up and hovered beside the tread (a regression), now a rise eased at
+    both ends with the shift across from a tenth of the way, up and over the nose; the hill's catch-up front-loaded
+    so it is seen while she rolls; a small bound before each downbeat of the aisle run; the seesaw's kick a moment
+    before he leaves, so it throws him; the funeral lean deepened on its note so the arrival is felt.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
