@@ -5,6 +5,7 @@ import { MUSIC_END, heldAt } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt } from './route'
 import { cat } from './cat'
 import { bloom, curtain, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
+import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
 import { night, rgba } from './sky'
 import { CREAM, INK, MOUTH, lampAt, lampColor, lightAt, lit, skyAt } from './world'
@@ -262,9 +263,8 @@ function pot(ctx: Ctx, lw: number, t: number): void {
 function desk(ctx: Ctx, lw: number, t: number): void {
   const v = viewOf(ctx)
   const lamp = lampAt(t)
-  // Under the desk: the room's dark.
-  ctx.fillStyle = '#16121F'
-  ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, v.y1 - DESK.y + 1)
+  // Under the desk: the drawers, the floor, the rug (`room.ts`).
+  underDesk(ctx, lw, t)
   // Its front edge, lit along under the lamp.
   const g = ctx.createLinearGradient(v.x0, 0, v.x1, 0)
   const n = 10
@@ -367,7 +367,7 @@ function steam(ctx: Ctx, t: number): void {
       else ctx.lineTo(x, y)
     }
     for (const [width, share] of [[0.16, 0.45], [0.07, 1]] as const) {
-      const a = strength * 0.12 * breath * share
+      const a = strength * 0.19 * breath * share
       const g = ctx.createLinearGradient(0, top, 0, top - rise)
       g.addColorStop(0, rgba(CREAM, 0))
       g.addColorStop(0.2, rgba(CREAM, a))
@@ -677,6 +677,9 @@ function lamp(ctx: Ctx, lw: number, t: number): void {
 
 export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) => {
   wall(ctx, c.t)
+  ceiling(ctx, lw, c.t)
+  highShelf(ctx, lw, c.t)
+  hanger(ctx, lw, c.t)
   print(ctx, lw, c.t)
   notes(ctx, lw, c.t)
   headlights(ctx, c.t)

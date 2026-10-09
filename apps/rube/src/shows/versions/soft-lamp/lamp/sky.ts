@@ -221,8 +221,9 @@ function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }): void {
   }
   // The red light on the tallest roof: on a little over half a second in every two.
   const blink = Math.max(0, Math.sin((t * Math.PI) / 1.1)) ** 3
-  const g = ctx.createRadialGradient(tallest.x, tallest.y - 0.03, 0, tallest.x, tallest.y - 0.03, 0.12)
-  g.addColorStop(0, rgba('#FF5A4E', 0.85 * blink))
+  const g = ctx.createRadialGradient(tallest.x, tallest.y - 0.03, 0, tallest.x, tallest.y - 0.03, 0.08)
+  g.addColorStop(0, rgba('#FF5A4E', 0.9 * blink))
+  g.addColorStop(0.3, rgba('#FF5A4E', 0.35 * blink))
   g.addColorStop(1, rgba('#FF5A4E', 0))
   ctx.fillStyle = g
   ctx.fillRect(tallest.x - 0.15, tallest.y - 0.2, 0.3, 0.3)

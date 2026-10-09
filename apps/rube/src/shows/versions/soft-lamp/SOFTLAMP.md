@@ -224,6 +224,18 @@ ball. The machine and its timing were right and are untouched; the room around i
     across the wall: the window's shape with its bars in it, pale and cool, freckled with the drops when it rains.
 24. **The cat yawns**, six times through the night, more of them late, in phrases it spends watching.
 
+### The third lofi pass
+
+25. **A phone held upright saw a void.** A tall stage sees the whole wall, and below the desk was one flat dark, three
+    fifths of the picture. The room is built out (`lamp/room.ts`): under the desk, its apron with a wide drawer, a
+    pedestal of drawers, brass knobs that catch the lamp, a ukulele leaning on the drawers, a crate of records, a rug
+    and a pair of slippers on the floor; above, a high shelf of books with a pothos trailing off it, a macramé hanger
+    in the corner, the ceiling and its moulding.
+26. **The foot of every 16:9 frame was the same flat dark band.** It is now the desk's apron, its drawer fronts and
+    their knobs.
+27. **The steam was all but invisible**; it is half again as strong. The red light on the roof across the street was
+    a blob close up; it is a point with a small glow.
+
 **Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones; a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
