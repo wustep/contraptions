@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 103 (latest)
+## Polish pass 104 (latest)
+
+No change to the show. The online cues' fades were checked against the mix's, and they match. Cornfield Chase fades out over the second before its 126.984 s end, as the mix fades it from 125.98 s for 1.0 s. No Time for Caution fades in over its first second, as the mix fades it in from its trim's start for 1.0 s. Pass 81's check now holds the fades to the mix as well as the start, place and end, so the cues match the mix in every number the mix sets. Halving the fade-in made it fail.
+
+## Polish pass 103
 
 - **Online, the music now ends where the mix does.** Watching the stall note across the music's end, the music heard ran on past it. No Time for Caution's upload is 246.28 s long, and the mix the show was timed to cuts it at 240 s, at 262.74 s of the show. The YouTube cue had no `until`, so online the upload's last 6.28 s played into the credits, 262.74 to 269.0 s, which are meant to run in silence. The cue now ends at `MIX_END` with a hard cut, as the mix does (`liftoff/index.ts`). The music heard stops at 262.78 s, and the clock runs on through the credits with no stall note. Pass 81's check holds this end to the mix's trim too, and fails without it.
 

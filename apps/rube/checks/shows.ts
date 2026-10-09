@@ -529,10 +529,16 @@ async function main(): Promise<void> {
           const trims = [...mix.matchAll(/atrim=([\d.]+):([\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])])
           const delay = Number(/adelay=(\d+)\|/.exec(mix)?.[1] ?? NaN) / 1000
           const [cf, nt] = perf.soundtrack?.youtube ?? []
-          check('liftoff: the YouTube cues are the mix\'s numbers (Cornfield Chase\'s end, No Time for Caution\'s start, its place in the show and its end)',
+          const fade = (dir: string) => { const m = new RegExp(`afade=t=${dir}:st=([\\d.]+):d=([\\d.]+)`).exec(mix); return m ? { st: Number(m[1]), d: Number(m[2]) } : null }
+          const fadeOut = fade('out')
+          const fadeIn = fade('in')
+          check('liftoff: the YouTube cues are the mix\'s numbers (Cornfield Chase\'s end, No Time for Caution\'s start, its place in the show and its end, and both fades)',
             trims.length === 2 && !!cf && !!nt && near(cf.until ?? NaN, trims[0][1]) && near(nt.from ?? NaN, trims[1][0]) && near(nt.at ?? NaN, delay) &&
             // and ends where the mix cuts it, not at the upload's own end 6 s later, in the silent credits (pass 103)
-            near(nt.until ?? NaN, delay + trims[1][1] - trims[1][0], 0.01),
+            near(nt.until ?? NaN, delay + trims[1][1] - trims[1][0], 0.01) &&
+            // and fades as the mix does: Cornfield Chase out over its last second, No Time for Caution in over a beat
+            fadeOut !== null && fadeIn !== null && near(cf.fadeOut ?? NaN, fadeOut.d, 0.01) && near((cf.until ?? NaN) - (cf.fadeOut ?? NaN), fadeOut.st, 0.01) &&
+            near(nt.fadeIn ?? NaN, fadeIn.d, 0.01) && near(fadeIn.st, 0, 0.01),
             JSON.stringify({ trims, delay, cues: perf.soundtrack?.youtube }))
         }
         // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.
