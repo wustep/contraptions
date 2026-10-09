@@ -712,6 +712,10 @@ window.
   on launch), and fetching the matching one (`npx playwright install webkit`) was left for the user to approve; Safari
   is still unmeasured.
 
+- **Polish round 38 (Opus 5.5).** The player's speeds, with the time-keyed pieces these rounds added (Zoom's hold,
+  her gaze, the balloon's remembered knot) in mind: the real page at 0.5, 2 and 4 times, with and without Zoom,
+  advanced exactly 1.5, 6 and 12 s in 3 s, stopped cleanly at the end, and logged nothing. No change to the show.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
