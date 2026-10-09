@@ -527,13 +527,17 @@ export const mosaic = part<MosaicState>(
 function shotsFor(begin: number, rest: Pt, O: Pt): PartShot[] {
   const mid: Pt = [O[0] + SCENE_MID[0], O[1] + SCENE_MID[1]]
   const calm: Pt = [rest[0], rest[1] - 0.3]
+  // As the net closes the frame settles with her, low, so the great hit lands on the room and not on the ground
+  // under it: the floor near the bottom, the wall over her.
+  const low: Pt = [rest[0], rest[1] - 0.72]
   return [
     { t: begin + 0.5, cells: 4, off: [0, 0.35] },
     { t: B(68), cells: 4, off: [0, 0.45] },
     { t: B(71), cells: 4, hold: mid, w: 1 },
     { t: B(116), cells: 4, hold: mid, w: 1 },
     { t: B(119), cells: 3.2, hold: calm, w: 1 },
-    { t: END, cells: 3.2, hold: calm, w: 1 },
+    { t: B(121.5), cells: 3.2, hold: calm, w: 1 },
+    { t: END, cells: 3.2, hold: low, w: 1 },
   ]
 }
 

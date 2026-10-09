@@ -228,6 +228,17 @@ The notes went back to the builders who made each part, who still had their cont
 - **A fifth pass, for the photograph.** Its picture's glow was a bare disc. It is now the washer it leans on: the
   enamel body, the window in its steel rim, glowing, and the three of them in front of it, eyes and all. As it
   comes down it has a shadow on the floor, like the family beside it.
+- **Polish round 1, the great hit and the premiere's foot.** The show was watched at 1 fps and at full size around
+  its turning points.
+  - The great hit (191.22) landed on a frame whose lower third was the flat earth under the floor: the mosaic's last
+    calm held her high. As the net closes (from 121½) the frame now settles with her, low, so she lands with the
+    floor near the bottom of the frame and the wall over her.
+  - Her burst of light was a soft disc that read as a smudge on the pale tile. It is now a sunburst: fourteen rays
+    thrown out from her, white-hot at her and gold to their ends, turning slightly as they fade, with a gold ring going
+    out across the room on the hit. It lasts a little over a second.
+  - Under the premiere's carpet the street was a dead band of dark, a fifth of the frame for ten seconds. The carpet
+    now lies to a stone kerb, and the street is wet. The pilasters' gold, the poster cases, the doors' light, the
+    spotlight's pool and every flash of the press show in it as long smears.
 
 ## End credits
 

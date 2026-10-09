@@ -120,27 +120,67 @@ function bead(at: Where, t: number, arrive?: number): { x: number; y: number; hx
  * the ball and fades, clear of the ball itself so its colour stays its own.
  */
 function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: string) => string): void {
-  if (u < 0 || u > 0.7) return
+  if (u < 0 || u > BURST) return
   const grow = 1 - Math.exp(-u / 0.12)
-  const outer = R * (2.4 + 7 * grow)
-  const a = 0.8 * (1 - u / 0.7) ** 1.5
+  const outer = R * (2.6 + 9 * grow)
+  const a = 0.85 * (1 - u / BURST) ** 1.6
   const ctx = p.drawingContext as CanvasRenderingContext2D
   // Lantern gold: it has to show on the laundromat's pale tile as well as in the dark.
   const warm = lit('#FFC95A')
   const rgb = [1, 3, 5].map((i) => parseInt(warm.slice(i, i + 2), 16)).join(', ')
-  const g = ctx.createRadialGradient(x * k, y * k, R * 1.05 * k, x * k, y * k, outer * k)
-  g.addColorStop(0, `rgba(${rgb}, ${a})`)
-  g.addColorStop(0.35, `rgba(${rgb}, ${a * 0.45})`)
-  g.addColorStop(1, `rgba(${rgb}, 0)`)
+  const core = lit('#FFF1C4')
+  const rgbCore = [1, 3, 5].map((i) => parseInt(core.slice(i, i + 2), 16)).join(', ')
+  const cx = x * k
+  const cy = y * k
   ctx.save()
+  // Not over the ball: its own disc is cut out of everything the burst lays down.
+  ctx.beginPath()
+  ctx.rect(cx - R * 40 * k, cy - R * 40 * k, R * 80 * k, R * 80 * k)
+  ctx.arc(cx, cy, R * 1.02 * k, 0, Math.PI * 2, true)
+  ctx.clip('evenodd')
+  // Rays: a sunburst of long and short wedges thrown out from her, turning a little as they fade.
+  const reach = 1 - Math.exp(-u / 0.09)
+  const ra = 0.5 * (1 - u / BURST) ** 1.3
+  const spin = 0.35 * u
+  for (let i = 0; i < RAYS; i++) {
+    const long = i % 2 === 0
+    const len = R * (long ? 15 : 9.5) * reach
+    const half = (long ? 0.075 : 0.055) * Math.PI
+    const th = (i / RAYS) * Math.PI * 2 + spin + 0.13
+    const g = ctx.createRadialGradient(cx, cy, R * 1.4 * k, cx, cy, len * k)
+    g.addColorStop(0, `rgba(${rgb}, ${ra})`)
+    g.addColorStop(1, `rgba(${rgb}, 0)`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo(cx + Math.cos(th) * R * 1.4 * k, cy + Math.sin(th) * R * 1.4 * k)
+    ctx.arc(cx, cy, len * k, th - half, th + half)
+    ctx.closePath()
+    ctx.fill()
+  }
+  // The glow, white-hot at her and gold out to its edge.
+  const g = ctx.createRadialGradient(cx, cy, R * 1.05 * k, cx, cy, outer * k)
+  g.addColorStop(0, `rgba(${rgbCore}, ${a})`)
+  g.addColorStop(0.3, `rgba(${rgb}, ${a * 0.55})`)
+  g.addColorStop(1, `rgba(${rgb}, 0)`)
   ctx.fillStyle = g
   ctx.beginPath()
-  ctx.arc(x * k, y * k, outer * k, 0, Math.PI * 2)
-  // Not over the ball: its own disc is cut out of the light.
-  ctx.arc(x * k, y * k, R * 1.02 * k, 0, Math.PI * 2, true)
+  ctx.arc(cx, cy, outer * k, 0, Math.PI * 2)
   ctx.fill()
+  // A ring of light goes out from her on the hit, thinning as it goes.
+  const ru = u / 0.55
+  if (ru < 1) {
+    const rr = R * (1.6 + 17 * (1 - (1 - ru) ** 2.4))
+    ctx.strokeStyle = `rgba(${rgb}, ${0.9 * (1 - ru) ** 1.4})`
+    ctx.lineWidth = Math.max(1, R * 0.55 * (1 - ru) * k)
+    ctx.beginPath()
+    ctx.arc(cx, cy, rr * k, 0, Math.PI * 2)
+    ctx.stroke()
+  }
   ctx.restore()
 }
+/** How long the great hit's burst lasts, and how many rays it throws. */
+const BURST = 1.15
+const RAYS = 14
 
 /** One googly eye on a ball at (x, y) in the piece's cells, `r` its radius in cells. */
 export function googly(p: p5, k: number, ink: string, weight: number, x: number, y: number, look: { x: number; y: number; hx: number }, scale = 1, lit: (hex: string) => string = (h) => h): void {
