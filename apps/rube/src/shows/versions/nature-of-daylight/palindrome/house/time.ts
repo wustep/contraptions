@@ -42,7 +42,7 @@ export const ERA = {
   home: [SEAM.home, 409] as const,
 }
 /** The last scene's chords before the cut: the two of them turn to the empty cradle (TURN) and step toward it (NEAR);
- * then the cut onto the cradle at dawn, the baby in it (BEGIN), where Ian leaves the picture. */
+ * then the cut onto the cradle at dawn, the baby in it (BEGIN), Ian on her other side until he goes (`ianAfter`). */
 export const TURN = 341.618
 export const NEAR = 345.49
 export const BEGIN = 349.495
@@ -378,6 +378,27 @@ export function ianX(T: number): number {
   return IAN_X + give + steps(T - 0.08, 0.14)
 }
 export const ianLook = (T: number): number => Math.PI + 0.35 - (Math.PI + 0.6) * ss(T, TURN - 0.1, TURN + 1.2)
+/**
+ * Ian after the cut to the cradle: on her other side (the cradle stands where he stood), with her as she rocks it on the
+ * chord; then he turns and goes, out of the frame on her left and away out of the room, before the camera draws back,
+ * so the last frame is the first and has no Ian. In the film he leaves her; cut away at the cut, as he was, eight fresh
+ * readers in nine took his going for a slip.
+ */
+export const IAN_STAYS_X = -0.4
+export const IAN_GOES = BEGIN + 1.6
+const IAN_PACE = 1.05
+const IAN_UP = 1.1
+/** Where he is (world x) from the cut on; past the room's whole frame by IAN_GONE. */
+export function ianAfter(T: number): number {
+  const u = T - IAN_GOES
+  if (u <= 0) return IAN_STAYS_X
+  const d = u < IAN_UP ? (IAN_PACE * u * u) / (2 * IAN_UP) : IAN_PACE * (u - IAN_UP / 2)
+  return IAN_STAYS_X - d
+}
+export const IAN_GONE = IAN_GOES + 16 / IAN_PACE + IAN_UP / 2
+/** He looks at her and the cradle, then round the way he goes. */
+export const ianAfterLook = (T: number): number => -0.25 + (Math.PI + 0.25) * ss(T, IAN_GOES - 0.5, IAN_GOES + 0.3)
+
 export function homeX(T: number): number {
   if (T < BEGIN - 0.5) return HOME_X + 0.095 * s5((T - (HUG_T - 0.55)) / 0.9) + steps(T)
   // From her last step she is drawn back just as far as her first push on the cradle wants: the push takes it on.

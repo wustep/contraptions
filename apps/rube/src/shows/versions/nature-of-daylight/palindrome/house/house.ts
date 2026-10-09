@@ -11,6 +11,9 @@ import {
   NEAR,
   TURN,
   ianLook,
+  ianAfter,
+  ianAfterLook,
+  IAN_GONE,
   BEGIN,
   BEDSIDE_X,
   CLOCK_STRIKES,
@@ -299,6 +302,12 @@ export const home: Part<HouseState> = part<HouseState>(
         from: slot.begin,
         to: BEGIN,
         at: (t) => ({ x: ianX(t) - o[0], y: -o[1], spin: ianLook(t) }),
+      },
+      {
+        who: 'ian',
+        from: BEGIN,
+        to: IAN_GONE,
+        at: (t) => ({ x: ianAfter(t) - o[0], y: -o[1], spin: ianAfterLook(t) }),
       },
       {
         who: 'hannah',
