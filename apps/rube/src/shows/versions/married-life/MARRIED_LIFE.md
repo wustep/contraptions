@@ -706,6 +706,12 @@ window.
   duration and no seek index (a MediaRecorder file), so seeking in it lands near its start; it plays through
   correctly. Headless rendered 15 frames a second at 1080p, software rendering's limit.
 
+- **Polish round 37 (Opus 5.5).** The browser console, never read: the real page stepped through all 258 s every
+  half second, a third of it each in Follow, Zoom and Overview, then played: no error or warning at all. Safari was to
+  be measured in Playwright's WebKit, but the cached WebKit build does not match this Playwright's protocol (it hung
+  on launch), and fetching the matching one (`npx playwright install webkit`) was left for the user to approve; Safari
+  is still unmeasured.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
