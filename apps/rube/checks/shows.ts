@@ -110,6 +110,15 @@ async function main(): Promise<void> {
     ranOut(250.5, 250.53, 0.4) && ranOut(250.2, 250.53, 3) &&
     !ranOut(250.5, 250.53, 250.45) && !ranOut(200, 250.53, 0.4) && !ranOut(250.5, 250.53, 249.2) && !ranOut(100, 250.53, 99.6) &&
     /if \(ranOut\(shown, end\(d\),/.test(readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.ts'), 'utf8')))
+  // Waiting to hear whether YouTube was let start, a seek past the music's end (or between cues) stops the player, so
+  // it never starts: before calling that a refusal, the wait asks again where the show is (else the show was put back
+  // where play was pressed, and stopped).
+  {
+    const yt = readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.ts'), 'utf8')
+    const timer = yt.slice(yt.indexOf('patience = window.setTimeout('), yt.indexOf("settleRefusal('blocked')", yt.indexOf('patience = window.setTimeout(')))
+    check('a seek past the music while YouTube is starting is not read as a refusal',
+      /const there = at\(shown\)\s*\n\s*if \(!there \|\| shown >= end\(there\)\) return settleRefusal\('playing'\)/.test(timer))
+  }
   check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('zoomFrame(cam, FOLLOW_ZOOM)'))
   check('a work with one take has no take row to pick from', /work\.versions\.length < 2\) takeRow\.hidden = true/.test(player))
   check('no take has a byline in the panel', !/byline/.test(player) && !/director/.test(player))
