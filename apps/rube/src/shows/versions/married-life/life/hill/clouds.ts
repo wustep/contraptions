@@ -869,6 +869,12 @@ const START = { up: beat('waltz', 43, 3) - 0.26, down: beat('waltz', 43, 3) }
  * airship builds, and lies there by him, as in the film, under all the clouds; the last of the way after his start.
  */
 const NEAR = { from: bar('waltz', 33) + 0.15, to: bar('waltz', 34) + 0.2, x: CARL[0] + 0.42 }
+/**
+ * The baby whole over them, they look at each other: after his start she turns her face from it to him, he answers
+ * with a small lean, and she looks back up at it before the cut, so the match onto the mobile carries her upward look
+ * (`LOOKS` in `cast.ts` turns her face; his lean is this part's pose). What they want, decided between them.
+ */
+export const GLANCE = { to: START.down + 0.05, answer: START.down + 0.2, back: END - 0.2 }
 /** When she rolls the rest of the way to him: after his start, to the cut. */
 const ROLL = { from: START.down + 0.2, to: END - 0.12 }
 
@@ -925,11 +931,16 @@ export const clouds = part<CloudsState>(
       { at: slot.end - slot.begin, p: CARL },
     ]
     const company: Company[] = [{ from: slot.begin, to: slot.end, at: (t) => ellieAt(t) }]
+    // His start at the baby; then, as she turns from it to him, his answer: a small lean to her (she is at his right),
+    // held, and upright again before the cut, so nothing of it carries into the nursery.
     const pose: Pose[] = [
       {
         from: START.down,
-        to: START.down + 0.8,
-        at: (t) => ({ squash: 0.1 * Math.exp(-(t - START.down) / 0.12) * Math.max(0, Math.cos((t - START.down) * 9)) }),
+        to: END,
+        at: (t) => ({
+          squash: 0.1 * Math.exp(-(t - START.down) / 0.12) * Math.max(0, Math.cos((t - START.down) * 9)),
+          tilt: 0.1 * smooth(t, GLANCE.answer, GLANCE.answer + 0.35) * (1 - smooth(t, GLANCE.back - 0.1, END - 0.12)),
+        }),
       },
     ]
     return {

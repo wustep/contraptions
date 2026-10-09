@@ -7,6 +7,7 @@ import { carlAt, INK } from './worlds'
 import { drawBalloon, BALLOON_SIZE } from './props/balloon'
 import { drawBowTie } from './inside/ties-tie'
 import { FUN } from './church/church'
+import { GLANCE } from './hill/clouds'
 
 /**
  * The two of them, drawn (the stage draws no ball in this show: `LifeShow.at` hands it none).
@@ -92,7 +93,12 @@ export const LOOKS: { from: number; to: number; ease: number; at: number | ((sho
     from: bar('waltz', 27) + 0.2,
     to: CUT.nursery + 0.6,
     ease: 0.9,
-    at: (show, t) => turnTo(towardHim(show, t), -1.35, (t - CUT.hill - 0.3) / 1.2),
+    at: (show, t) => {
+      const up = turnTo(towardHim(show, t), -1.35, (t - CUT.hill - 0.3) / 1.2)
+      // At the baby, to him and back up (`GLANCE`, in the clouds part).
+      const toHim = Math.min((t - GLANCE.to) / 0.4, (GLANCE.back - t) / 0.35)
+      return toHim > 0 ? turnTo(up, towardHim(show, t), toHim) : up
+    },
   },
   // The five mornings, while she knots his ties: faded out as she knots the bow tie, before she rolls to the lever.
   { from: bar('jar', 39), to: bar('jar', 48) + 0.4, ease: 0.8, at: -2.3 },

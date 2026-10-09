@@ -4,6 +4,7 @@ import { HALF } from '../cast'
 import { alpha, box, carried, part, smooth, type Company, type Pose } from '../kit'
 import { CUT } from '../music'
 import { BASKET, drawBasket } from '../props/basket'
+import { drawTicket } from '../inside/ties-set'
 import { CUTS } from '../seams'
 import { HILL, HOME, INK } from '../worlds'
 import { autumn, LANE_Y, ridge, ridgeSlope, seat, STEP } from './hill'
@@ -394,6 +395,30 @@ function basketAt(t: number): { x: number; y: number; tilt: number; open: number
   return { x: cx + Math.cos(a) * half, y: cy + Math.sin(a) * half, tilt: a, open: Math.max(0, Math.min(1.1, open)) }
 }
 
+/**
+ * The tickets, his surprise, spilling out as the basket lands askew on the strike (`T.fall`, its lid jolted open): two
+ * of them slip from its mouth and slide away down the straw toward the two of them, one after the other, and lie on
+ * the slope as he hurries down to her, in the frame for his first second. What the fall interrupted is seen: he was
+ * about to give them to her. Each ticket's middle and its turn, in the hill's cells.
+ */
+function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
+  const out: { x: number; y: number; angle: number }[] = []
+  const land = basketAt(T.fall + 0.02)
+  if (!land) return out
+  // Out of the downhill side of its mouth.
+  const mx = land.x + Math.sin(land.tilt) * BASKET.h * 0.6 + BASKET.w * 0.35
+  for (const [delay, reach, spin] of [[0.08, 0.42, -0.9], [0.26, 0.68, 0.7]] as [number, number, number][]) {
+    const s = t - T.fall - delay
+    if (s <= 0) continue
+    const u = 1 - Math.exp(-s / 0.32)
+    const x = mx + reach * u
+    const lie = Math.atan(ridgeSlope(x))
+    const y = ridge(x) + R - 0.03 - 0.1 * Math.exp(-s / 0.12)
+    out.push({ x, y, angle: lie + spin * (1 - u) * (1 - u) })
+  }
+  return out
+}
+
 /* ------------------------------------------------------------------ the part */
 
 export interface ClimbState {
@@ -411,6 +436,10 @@ export const climb = part<ClimbState>(
       if (!b) return
       const [x, y] = L(b.x, b.y)
       drawBasket(p, c.k, c.weight, x, y, { tilt: b.tilt, open: b.open })
+      for (const tk of ticketsAt(t)) {
+        const [tx, ty] = L(tk.x, tk.y)
+        drawTicket(p, c.k, c.weight, tx, ty, tk.angle)
+      }
     },
   },
   (slot) => {

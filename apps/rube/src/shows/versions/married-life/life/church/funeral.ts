@@ -35,15 +35,19 @@ export const FUNERAL_AT: Pt = [SEATED[0] + 0.5, SEATED[1]]
  * He leans forward to get up as the grey morning comes up, and lets himself down off the seat to the floor (landing on
  * the phrase's strong onset, 192.052). An old man: the seat is twice his height above the floor, so he takes it at
  * under half a cell a second, all the way from the seat's edge to the floor; then the whole of the walk slowly (under
- * 0.6 cells a second in the aisle, about 0.65 at most out of the doors, slower than he climbed the hill), so he goes
- * early.
+ * 0.65 cells a second in the aisle after his pause at her picture, about as much out of the doors, slower than he
+ * climbed the hill), so he goes early.
  */
 const LEAN = 190.1
 /** He starts to slide forward off the seat (after the lean has begun), and is on the floor on DOWN. */
 const MOVE = 190.3
 const DOWN = 192.052
-/** He walks from the pew to the porch under the tower, and stands there. */
-const WALK = 192.2
+/**
+ * On the floor he turns to her picture on the easel and leans to it, slowly, the lean he gave her in the office and at
+ * her bedside, and holds it; then he straightens and walks from the pew to the porch under the tower, and stands there.
+ */
+const TO_HER = DOWN + 0.15
+const WALK = 192.7
 const HALT = 197.5
 /** Where he stops: in the porch, the rope a step to his right and his balloon clear of it. */
 const PORCH = CH.tower[0] + 0.25
@@ -55,7 +59,7 @@ const OUT = 198.05
 const STOOD: Pt = [SEATED[0] - 0.2, 0]
 
 /** Down the aisle at an even, slow pace (about half a cell a second), easing from rest and to rest. */
-const aisle = pchip([WALK, 193.0, 194.9, 196.8, HALT], [STOOD[0], STOOD[0] + 0.21, STOOD[0] + 1.2, PORCH - 0.23, PORCH], 0, 0)
+const aisle = pchip([WALK, 193.4, 195.1, 196.85, HALT], [STOOD[0], STOOD[0] + 0.21, STOOD[0] + 1.2, PORCH - 0.23, PORCH], 0, 0)
 /** Out through the doors and down, at the same even pace (the steps' foot is fixed: `CUTS.home`), at rest there. */
 const out = pchip([OUT, 198.55, 199.9, 201.05, CUT.home], [PORCH, PORCH + 0.19, PORCH + 1.07, PORCH + 1.84, FOOT[0]], 0, 0)
 
@@ -134,7 +138,9 @@ function carlPose(T: number): { tilt: number; squash: number } {
   const up = -0.17 * ease(T, TOLL + 0.02, TOLL + 0.6) * (1 - ease(T, ANSWER + 0.05, OUT + 0.45))
   const bow = 0.07 * smooth(T, OUT - 0.2, OUT + 0.4) * (1 - smooth(T, 201.3, CUT.home - 0.05))
   const squash = slump + 0.05 * knock(T - DOWN, 0.2) * (T >= DOWN ? 1 : 0) + 0.045 * knock(T - TOLL, 0.22) * (T >= TOLL ? 1 : 0)
-  return { tilt: forward + stoop + up + bow, squash }
+  // To her picture (it is to his left, where they stood): a slow lean, held, and up again as he sets off.
+  const toHer = -0.12 * smooth(T, TO_HER, TO_HER + 0.45) * (1 - smooth(T, WALK - 0.3, WALK + 0.15))
+  return { tilt: forward + toHer + stoop + up + bow, squash }
 }
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */

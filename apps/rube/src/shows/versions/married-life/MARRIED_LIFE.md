@@ -122,8 +122,9 @@ bass, on the one); Ellie, round, answers on the first pah.
   up where they land; the camera holds it whole, pouring, through bar 40, and then a gust takes it off. Bars 39 to 44 build **a
   baby**, sitting up in a cushion of cloud, one leg out, an arm reaching, whole over the two of them and placed where
   the mobile will be at the match cut. As far apart as the armchairs at the cut, she rolls in close to him over bar
-  33 and lies by him under all of it, her face turned up to the sky (`LOOKS`); he starts at the baby; she rolls the
-  last of the way. The camera stays at most 5.5 cells.
+  33 and lies by him under all of it, her face turned up to the sky (`LOOKS`); he starts at the baby, she turns her
+  face from it to him, he answers with a small lean to her, and she looks back up at it for the cut (`GLANCE`): what
+  they want, decided between them. She rolls the last of the way. The camera stays at most 5.5 cells.
 
 ### The nursery (63.25 to 73.46 s): the house, inside, upstairs
 
@@ -231,7 +232,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 - Close on them (2.8 cells), she climbs after him, tires, rests, pushes on and stalls. **On 174.67 she gives way**:
   she sinks, and rolls back the short way she climbed onto the fieldstone's worn top, and is still. No bounce. The
   strike is the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays
-  there. He does not stop: he hurries down after her, faster than he has gone in years, the camera in close with
+  there, and its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets
+  to give her, lying on the slope as he passes. He does not stop: he hurries down after her, faster than he has gone in years, the camera in close with
   them (2.4 to 1.9 cells, the basket left out of the frame), and eases to rest beside her on the stone. He leans to
   her; she answers with the smallest roll toward him, her face turning from the sky to him, and looking at him
   across the cut into the ward.
@@ -256,11 +258,14 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 
 - The same church, empty. It opens under the hospital's night, dim and blue, the glass dark, and the grey morning
   comes up over it in three seconds, the one pale beam and its dust last. Carl sits alone in the front pew, the
-  wedding photograph on an easel where they stood. Across the cut the balloon is his again: it holds its place and
+  wedding photograph on an easel where they stood: a third larger than the hall's, the two of them in it with a hint
+  of the blue and coral they were that day, and a soft warm light gathering on it as the morning comes, the one warm
+  thing at the altar end. Across the cut the balloon is his again: it holds its place and
   rises back over him as its string is let out. She is gone. The camera drifts slowly across the dawn to the wedding kiss's framing, now
   empty, arriving as he reaches the floor.
 - As the morning comes up he lets himself down off the pew, forward to its edge and down its front in one even move
-  (under half a cell a second, the seat twice his height), onto the floor on 192.05, and walks the aisle at an old man's pace (about
+  (under half a cell a second, the seat twice his height), onto the floor on 192.05; there he turns to her picture and
+  leans to it, slowly, the lean he gave her in the office and at her bedside, and holds it; then he walks the aisle at an old man's pace (about
   half a cell a second) into the porch, where the bell's rope hangs. As it is pulled the camera rises
   and widens with it, and **the bell tolls once, on the cue's strongest onset (197.71)**, the whole empty church in
   the frame from the organ to the steps, and the toll is felt through all of it: the organ's pipes ring gold with it, as they went on every note
@@ -630,6 +635,15 @@ window.
   string, the lower framing) were still described as before; and a known limit described a Zoom rule the hold
   replaced. Each is rewritten, the real Zoom limits listed (the nursery, the ward, the crown's sliver on the steps),
   and the ward's camera comment told of the gathered string.
+
+- **Polish round 27 (Opus 5.5).** A third critic, briefed only on story and feeling against the film's montage; it
+  found the wedding, the fix-up, the yard, the jar, the ties, the tickets, the ward and the ending all land, and three
+  beats that fall short, all taken. The funeral: her photograph was a dull card that never registered and he never
+  turned to it, the only hard beat with no gesture from him; now it is larger, faintly coloured as on their wedding
+  day and warmed by the dawn, and on the floor he leans to it before he walks (the aisle a touch quicker, 0.65 cells a
+  second, the toll unmoved). The baby cloud: the look between them was missing; now she turns to him and he leans to
+  her, and she looks back up for the match onto the mobile. The hill: the tickets, set up as his surprise, dropped out
+  of the story at the fall; now they spill from the basket as it lands and lie on the slope as he hurries down.
 
 ## Known limits
 

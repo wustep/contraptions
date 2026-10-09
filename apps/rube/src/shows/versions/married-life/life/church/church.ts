@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, frame, hash, knock, scenery, smooth } from '../kit'
 import { AT, bar, beat, beatsIn } from '../music'
-import { CHURCH, CLINIC, HILL, HOME, INK } from '../worlds'
+import { CARL, CHURCH, CLINIC, ELLIE, HILL, HOME, INK } from '../worlds'
 
 /**
  * The church (the church builder's set): a small white chapel cut open down its length, like the house, seen from the
@@ -775,40 +775,61 @@ function drawAltar(p: p5, k: number, c: Paint, weight: number, t: number): void 
 
 /**
  * The wedding photograph on an easel where they stood, at the funeral (the flash at the start of the show took it):
- * in sepia, a square and a round one, touching. A black ribbon across its corner.
+ * in sepia, a square and a round one, touching, each with a hint of the colour they were that day (his young blue,
+ * her coral), so it reads as them and as the picture the show opened on, not as a sign. A black ribbon across its
+ * corner. As the grey morning comes up, a soft warm light gathers on it, the one warm thing at the altar end: she is
+ * there, in the picture. Drawn a third larger than the hall's copy, so it holds the frame from the pew.
  */
-function drawPhotograph(p: p5, k: number, c: Paint, weight: number): void {
+const PHOTO_S = 1.3
+function drawPhotograph(p: p5, k: number, c: Paint, weight: number, t: number): void {
   const x = (ALTAR_CARL + ALTAR_ELLIE) / 2
   const foot = CH.floor
-  const top = -1.25
+  const s = PHOTO_S
+  const top = -1.25 - 0.48 * (s - 1)
+  const mid = top + 0.24 * s
+  // The morning's warmth on it, behind the frame: a soft glow on the wall round the picture.
+  const warm = beamUp(t)
+  if (warm > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createRadialGradient(x * k, mid * k, 0.1 * k, x * k, mid * k, 0.75 * k)
+    g.addColorStop(0, `rgba(255, 226, 170, ${0.38 * warm})`)
+    g.addColorStop(1, 'rgba(255, 226, 170, 0)')
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect((x - 0.8) * k, (mid - 0.8) * k, 1.6 * k, 1.6 * k)
+    ctx.restore()
+  }
   p.stroke(alpha(p, INK, 0.9))
   p.strokeWeight(weight * 0.6)
   p.line((x - 0.22) * k, foot * k, (x - 0.02) * k, (top - 0.06) * k)
   p.line((x + 0.22) * k, foot * k, (x + 0.02) * k, (top - 0.06) * k)
   p.line((x + 0.05) * k, foot * k, (x + 0.01) * k, (top + 0.1) * k)
   p.fill(c.timber)
-  box2(p, k, x - 0.28, top + 0.48, x + 0.28, top + 0.52)
+  box2(p, k, x - 0.28 * s, top + 0.48 * s, x + 0.28 * s, top + 0.52 * s)
   p.strokeWeight(weight * 0.8)
   p.fill(c.gold)
-  box2(p, k, x - 0.26, top, x + 0.26, top + 0.48, 0.01)
+  box2(p, k, x - 0.26 * s, top, x + 0.26 * s, top + 0.48 * s, 0.01)
   p.noStroke()
-  p.fill(mixHex(HOME.paper, HOME.wood, 0.35))
-  box2(p, k, x - 0.21, top + 0.05, x + 0.21, top + 0.43)
+  const sepia = mixHex(HOME.paper, HOME.wood, 0.3)
+  p.fill(mixHex(sepia, '#FFE6B0', 0.25 * warm))
+  box2(p, k, x - 0.21 * s, top + 0.05 * s, x + 0.21 * s, top + 0.43 * s)
   p.fill(alpha(p, mixHex(HOME.wood, INK, 0.2), 0.45))
-  box2(p, k, x - 0.21, top + 0.34, x + 0.21, top + 0.43)
-  p.fill(mixHex(HOME.wood, INK, 0.4))
+  box2(p, k, x - 0.21 * s, top + 0.34 * s, x + 0.21 * s, top + 0.43 * s)
+  const figure = mixHex(HOME.wood, INK, 0.35)
+  p.fill(mixHex(figure, CARL, 0.45))
   p.push()
-  p.translate((x - 0.05) * k, (top + 0.29) * k)
+  p.translate((x - 0.05 * s) * k, (top + 0.29 * s) * k)
   p.rotate(0.14)
-  box2(p, k, -0.045, -0.045, 0.045, 0.045, 0.01)
+  box2(p, k, -0.045 * s, -0.045 * s, 0.045 * s, 0.045 * s, 0.01)
   p.pop()
-  p.circle((x + 0.042) * k, (top + 0.29) * k, 0.09 * k)
+  p.fill(mixHex(figure, ELLIE, 0.5))
+  p.circle((x + 0.042 * s) * k, (top + 0.29 * s) * k, 0.09 * s * k)
   p.fill(alpha(p, INK, 0.92))
   poly(p, k, [
-    [x + 0.1, top],
-    [x + 0.19, top],
-    [x + 0.26, top + 0.07],
-    [x + 0.26, top + 0.16],
+    [x + 0.1 * s, top],
+    [x + 0.19 * s, top],
+    [x + 0.26 * s, top + 0.07 * s],
+    [x + 0.26 * s, top + 0.16 * s],
   ])
 }
 
@@ -1325,7 +1346,7 @@ export const churchSet = scenery<null>({
     drawLight(p, k, c, t)
     drawOrgan(p, k, c, weight, t)
     drawAltar(p, k, c, weight, t)
-    if (c.g) drawPhotograph(p, k, c, weight)
+    if (c.g) drawPhotograph(p, k, c, weight, t)
     for (const x of CH.pews) pewAt(p, k, c, weight, x)
     drawFolk(p, k, t)
     drawPetals(p, k, t, false)
