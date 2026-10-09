@@ -561,6 +561,10 @@ The notes went back to the builders who made each part, who still had their cont
   built, so the checks, share cards and everyone else see the show as made. Tested with Chrome's emulated
   preference: 13 flickers become none, and the great hit's frame follows its own move without the push-in.
   Its one side effect, on files saved by such a viewer, is under Known limits.
+- **A pass for testing the calm version.** The checks run in Node, where there is no preference, so they only ever
+  saw the full-motion show. `compose(calm)` now takes the mode, defaulting to the viewer's. `check:shows` builds both
+  and holds the calm one to no flickers, no punch on the great hit, and every jump at the same moment. It was
+  confirmed to fail when the punch ignores the mode.
 - **A pass for Waymond on the line.** In the peak he catches the line and drops as the weight that pulls Joy back out
   of the bagel, but his eye only swung with his fall. Now from his catch (247.9 s) he watches Joy, until he is
   carried down out of the frame (249.6 s).
@@ -709,6 +713,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - Every jump is on a clear onset. The drop into the rocks is the exception: it comes on the silence after the
     fight's last hit, the fall's beat 0.
 - **No portals, and no cuts drawn.**
+- **Reduced motion:** the calm version has no flickers and no punch, and the same jumps.
 - **Flickers:** only in the second before a jump, each a frame or three, and no more than two before any jump, so a
   jump never flashes more than three times a second.
 - **The ball:**

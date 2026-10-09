@@ -128,10 +128,10 @@ const PUNCHES: [number, number][] = [
  * cuts themselves, and everything else, are as for anyone. Read once, in the browser; in the checks there is no
  * preference, so they see the show as it is made.
  */
-const CALM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+export const CALM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
-function punch(t: number): number {
-  if (CALM) return 0
+function punch(t: number, calm: boolean): number {
+  if (calm) return 0
   let v = 0
   for (const [at, s] of PUNCHES) {
     const u = t - at
@@ -141,7 +141,8 @@ function punch(t: number): number {
   return v
 }
 
-export function compose(): { show: MultiverseShow; camera: (t: number) => Framing; eyes: EyeSpec[] } {
+/** The show, composed. `calm` is the reduced-motion version; it defaults to the viewer's own preference. */
+export function compose(calm = CALM): { show: MultiverseShow; camera: (t: number) => Framing; eyes: EyeSpec[] } {
   const plans = PLAN()
   const chains: Chain[] = []
   let ball: BallState = { color: EVELYN, ghost: false, id: 0 }
@@ -177,7 +178,7 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     if (i === 0 || leg.key === 'premiere' || leg.key === 'pull' || leg.key === 'kindness' || leg.key === 'rocks') return
     // Into the surf, one: the dark kitchen into a bright world, and then a new world on every hit, which is
     // flashing enough on its own. Measured by quarters of the frame, two there came to the three a second.
-    if (!CALM) flickers.push(...flickersBefore(i, leg.from, leg.key === 'surf' ? 1 : FLICKERS_A_JUMP))
+    if (!calm) flickers.push(...flickersBefore(i, leg.from, leg.key === 'surf' ? 1 : FLICKERS_A_JUMP))
   })
 
   const riders: Riders = []
@@ -304,7 +305,7 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     const owner = show.owner(t)
     const f = cams[owner](t)
     const [ox, oy] = show.offset(t)
-    return { ...f, x: f.x + ox, y: f.y + oy, cells: f.cells * (1 - punch(t)) }
+    return { ...f, x: f.x + ox, y: f.y + oy, cells: f.cells * (1 - punch(t, calm)) }
   }
   return { show, camera, eyes: specs }
 }

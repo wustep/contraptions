@@ -105,6 +105,15 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   }
   check('all at once: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
 
+  // For a viewer who asks to reduce motion: no flickers, and no punch on the great hit, with the world and the story
+  // otherwise the same, every jump at the same moment.
+  const calm = compose(true)
+  const made = compose(false)
+  check('all at once: with reduced motion, no flickers and no zoom punch, and the same jumps',
+    calm.show.flickers.length === 0 && made.show.flickers.length > 0 &&
+    Math.abs(calm.camera(JUMPS.eye + 0.08).cells - made.camera(JUMPS.eye + 0.08).cells) > 0.05 &&
+    calm.show.legs.every((l, i) => l.from === made.show.legs[i].from))
+
   // The looks: every gaze is live, its eye's ball and the one it looks at both there for nearly all of its span, so
   // none of them is quietly doing nothing.
   const { eyes } = compose()
