@@ -54,8 +54,10 @@ function line(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number
 /** One card, whole, at full light: its top middle at (cx, y). */
 function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number, u: number): void {
   const glow = u * 1.4
+  // A plain card (over a light sky) sets its role and "as" lines in its own cream, as the page does.
+  const accent = c.plain ? INK : GOLD
   if (c.role) {
-    y += line(ctx, c.role.toUpperCase(), cx, y, { size: u * 1.9, weight: 600, spacing: 0.34 }, LEADING, GOLD, 0)
+    y += line(ctx, c.role.toUpperCase(), cx, y, { size: u * 1.9, weight: 600, spacing: 0.34 }, LEADING, accent, 0)
     y += u * 1.6
   }
   let after: 'name' | 'cast' | null = null
@@ -82,7 +84,7 @@ function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number
     if (n[2]) x += as.size * (0.78 + 0.45)
     font(ctx, as)
     ctx.textAlign = 'left'
-    ctx.fillStyle = GOLD
+    ctx.fillStyle = accent
     ctx.shadowColor = 'transparent'
     ctx.fillText(n[1], x, base)
     y += 1.42 * who.size
@@ -143,7 +145,8 @@ export function wordPainter(w: number, h: number, dx = 0, dy = 0): (into: Canvas
     for (const c of cards) {
       if (c.light <= 0) continue
       ctx.clearRect(0, 0, w, h)
-      card(ctx, c, c.at[0] * w, (c.at[1] + (c.rise ?? 0) / 100) * h, u)
+      // A card's `scale` sizes its type, as the page sets it (its unit is the frame's hundredth times the scale).
+      card(ctx, c, c.at[0] * w, (c.at[1] + (c.rise ?? 0) / 100) * h, u * (c.scale ?? 1))
       into.save()
       into.setTransform(1, 0, 0, 1, 0, 0)
       into.globalAlpha = Math.min(1, c.light)
