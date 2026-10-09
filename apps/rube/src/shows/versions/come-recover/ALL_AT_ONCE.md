@@ -447,6 +447,12 @@ The notes went back to the builders who made each part, who still had their cont
     his meal. In the shot's wide it was a few pixels, all but unseen.
   - It now trails a fading arc of itself, and is drawn larger at the top of its flight, back to its own size as it
     drops into the pocket. The throw reads, and so does the peek it sets up.
+- **A pass for the beats on a phone.** The same beats were watched on a 390 px-wide phone, where everything is about
+  a quarter of its desktop size. They hold, Waymond's catch and Joy's eye included, but for the finale's payoff.
+  - The photograph was about 19 px across on a phone, a blank card.
+  - The print is now 1.4 times the size, an instant photo's proportion beside balls this big. It rests a little
+    further left, still leaning on the washer's edge, clear of the tripod's leg and of Evelyn. It reads on a desktop
+    as the glowing window with the three of them in it. On a phone its colours show.
 
 ## End credits
 
@@ -564,5 +570,5 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - In the widest shots of the pull (16 cells) and the canyon (about 23 cells) the balls are small. It is scale on
   purpose; in the canyon a faint sky-coloured light round each stone keeps them findable.
 - At 64 and 144 panels, Evelyn in the mosaic is a red dot on each plank.
-- The photograph's picture is clearest large or under Zoom.
+- The photograph's picture is clearest large or under Zoom; on a phone it shows its colours, not the faces.
 - Only Chrome on macOS has been watched. The recording export has not been re-measured for this take.
