@@ -9,6 +9,7 @@ import { STRIKES } from '../src/shows/versions/come-recover/all-at-once/hits'
 import { COMBS, CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall, fight } from '../src/shows/versions/come-recover/all-at-once/music'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/come-recover/all-at-once/credits'
 import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/peak'
+import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
 import type { MultiverseShow } from '../src/shows/versions/come-recover/all-at-once/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -103,6 +104,34 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
   }
   check('all at once: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+
+  // The looks: every gaze is live, its eye's ball and the one it looks at both there for nearly all of its span, so
+  // none of them is quietly doing nothing.
+  const { eyes } = compose()
+  const ballOf = (who: 'evelyn' | 'joy' | 'waymond', t: number): unknown => {
+    if (who === 'evelyn') {
+      const h = show.at(t)
+      return h.hidden || h.scale <= 0.3 ? null : h
+    }
+    return who === 'joy' ? show.joy(t) : show.waymond(t)
+  }
+  const deadLooks: string[] = []
+  let looks = 0
+  for (const spec of eyes) {
+    for (const g of spec.gaze ?? []) {
+      looks++
+      let n = 0
+      let live = 0
+      for (let t = g.from; t <= g.to; t += 0.05) {
+        n++
+        const at = g.at ?? 'evelyn'
+        const target = typeof at === 'function' ? at(t) : ballOf(at, t)
+        if (t >= spec.from && ballOf(spec.who, t) && target) live++
+      }
+      if (live < n * 0.9) deadLooks.push(`${spec.who} ${g.from.toFixed(2)} (${Math.round((100 * live) / n)}%)`)
+    }
+  }
+  check('all at once: every look is live, the one looking and the one looked at both there', deadLooks.length === 0 && looks >= 20, `${looks} looks; ${deadLooks.join(', ')}`)
 
   // Joy and Waymond are in the frame or out of it, never left half cut by its edge for long: a moment going out of
   // shot or with the camera on the move, but not a beat held with one of them sliced.

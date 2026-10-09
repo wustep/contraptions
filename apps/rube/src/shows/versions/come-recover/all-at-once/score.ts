@@ -2,7 +2,7 @@ import type { BallState, Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
-import { eyes, type EyesState, type Gaze } from './fx'
+import { eyes, type EyeSpec, type EyesState, type Gaze } from './fx'
 import { box, lay, standing, type Chain, type Link } from './kit'
 import { DURATION, JUMPS, ONSETS } from './music'
 import { MultiverseShow, type Flicker, type Leg, type Riders, type Spans, type WorldSet } from './show'
@@ -131,7 +131,7 @@ function punch(t: number): number {
   return v
 }
 
-export function compose(): { show: MultiverseShow; camera: (t: number) => Framing } {
+export function compose(): { show: MultiverseShow; camera: (t: number) => Framing; eyes: EyeSpec[] } {
   const plans = PLAN()
   const chains: Chain[] = []
   let ball: BallState = { color: EVELYN, ghost: false, id: 0 }
@@ -190,7 +190,7 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     { from: BACK - 0.05, to: EJECT + 0.15, at: () => lens },
     { from: EJECT + 0.15, to: DEVELOPED + 0.6, at: (t) => photoAt(t)?.at ?? null },
   ]
-  const specs = [
+  const specs: EyeSpec[] = [
     // He and Joy look at each other as he touches her at home, the one look between father and daughter.
     // In the opening he watches it all: Joy coming in on the bell and across to her mother, her mother at the keys not
     // looking up, and Joy going out again; in the alley he watches Evelyn go, from the cover
@@ -268,5 +268,5 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     const [ox, oy] = show.offset(t)
     return { ...f, x: f.x + ox, y: f.y + oy, cells: f.cells * (1 - punch(t)) }
   }
-  return { show, camera }
+  return { show, camera, eyes: specs }
 }
