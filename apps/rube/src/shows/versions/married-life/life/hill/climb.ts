@@ -428,7 +428,16 @@ export interface ClimbState {
 export const climb = part<ClimbState>(
   {
     name: 'climb',
-    draw: (p: p5, s, c) => drawStone(p, c.k, c.weight, s.begin + c.t),
+    draw: (p: p5, s, c) => {
+      const t = s.begin + c.t
+      drawStone(p, c.k, c.weight, t)
+      // The spilled tickets lie on the ground, behind the two of them: he passes in front of them as he hurries down.
+      if (c.t < -0.001 || c.t > END - BEGIN + 2) return
+      for (const tk of ticketsAt(t)) {
+        const [tx, ty] = L(tk.x, tk.y)
+        drawTicket(p, c.k, c.weight, tx, ty, tk.angle)
+      }
+    },
     over: (p: p5, s, c) => {
       const t = s.begin + c.t
       if (c.t < -0.001 || c.t > END - BEGIN + 2) return
@@ -436,10 +445,6 @@ export const climb = part<ClimbState>(
       if (!b) return
       const [x, y] = L(b.x, b.y)
       drawBasket(p, c.k, c.weight, x, y, { tilt: b.tilt, open: b.open })
-      for (const tk of ticketsAt(t)) {
-        const [tx, ty] = L(tk.x, tk.y)
-        drawTicket(p, c.k, c.weight, tx, ty, tk.angle)
-      }
     },
   },
   (slot) => {

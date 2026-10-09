@@ -645,6 +645,12 @@ window.
   her, and she looks back up for the match onto the mobile. The hill: the tickets, set up as his surprise, dropped out
   of the story at the fall; now they spill from the basket as it lands and lie on the slope as he hurries down.
 
+- **Polish round 28 (Opus 5.5).** Last round's changes audited closely. The spilled tickets slid across Carl and were
+  drawn in front of him for a third of a second as they came out (clearest under Zoom); they lie on the ground, so they
+  are drawn behind the two of them now, in the part's own layer with the fieldstone, and he passes in front of them.
+  The wedding photograph on the funeral's easel took a hint of their colours; its copy over the dance had not, though
+  the notes call it the same picture: now it has too, and over the dance it reads as the two of them.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is

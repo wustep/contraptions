@@ -4,7 +4,7 @@ import { alpha, box, carried, part, smooth, type Companion, type Ctx, type PartS
 import { AGE, AT, bar, beat, SEAM } from '../music'
 import { G_EARTH } from '../physics'
 import { BOW_FROM, HALF } from '../cast'
-import { CHURCH, HOME, INK } from '../worlds'
+import { CARL, CHURCH, ELLIE, HOME, INK } from '../worlds'
 import { BASKET, drawBasket } from '../props/basket'
 import { CUTS } from '../seams'
 import { DESK, DOOR, drawDesk, drawDoor, drawDusk, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, MACHINE, PEDAL, WHEEL } from './ties-set'
@@ -903,13 +903,16 @@ function drawWeddingPhoto(p: p5, k: number, weight: number, age: number): void {
   r(x - 0.21 * s, top + 0.05 * s, x + 0.21 * s, top + 0.43 * s)
   p.fill(alpha(p, mixHex(HOME.wood, INK, 0.2), 0.45))
   r(x - 0.21 * s, top + 0.34 * s, x + 0.21 * s, top + 0.43 * s)
-  // The two of them, touching, standing on it: his square a little tipped towards her.
-  p.fill(mixHex(HOME.wood, INK, 0.4))
+  // The two of them, touching, standing on it: his square a little tipped towards her; each with the hint of the
+  // colour they were that day, as on the funeral's easel (church.ts `drawPhotograph`): the same picture.
+  const figure = mixHex(HOME.wood, INK, 0.35)
+  p.fill(mixHex(figure, CARL, 0.45))
   p.push()
   p.translate((x - 0.05 * s) * k, (top + 0.29 * s) * k)
   p.rotate(0.14)
   p.rect(-0.045 * s * k, -0.045 * s * k, 0.09 * s * k, 0.09 * s * k, 0.01 * s * k)
   p.pop()
+  p.fill(mixHex(figure, ELLIE, 0.5))
   p.circle((x + 0.042 * s) * k, (top + 0.29 * s) * k, 0.09 * s * k)
   p.pop()
 }
