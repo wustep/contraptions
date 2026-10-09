@@ -302,6 +302,11 @@ changed, in the order of the film, and then what runs through it:
 - **The light after the shell** (186.3 → 196.8): where the cloud opens the shafts of light were the floods' pale
   cream, so the reunion sat in a grey-olive wash (a fresh critic's note). They are sunlight now, warmed toward the
   camp lamps' gold and a little stronger: the first warmth the valley has, and the two of them meet in it.
+- **The valley's beams** (36 → 65, 186.3 → 196.8): the floods, the slot's fall of light and the sunlight through the
+  opened cloud were each a hard-edged wedge with a fainter one round it. In the wides that passed, but pushed in on
+  the lift's start and on the reunion each beam was a quarter of the frame across and showed as panes of tinted
+  glass, a cold stripe between two of them. They are soft across now, dense along the middle and nothing at the edge,
+  from one sprite each set onto the beam; the sunlight's foot still lies level on the meadow.
 - **The reunion** (195.344): Ian came to a stop a sliver from her, and as her lean to him eased back a gap opened
   between them, so the meadow ended on the two of them drifting apart. He meets her on the touch now and stays against
   her as she settles back to her mark (which the circle's first frame needs): they end it together. They are grounded

@@ -6,7 +6,7 @@ import { PULSES, pulse } from '../music'
 import { VALLEY } from '../worlds'
 import { PAD } from './camp'
 import { BELLY, MEADOW, SHELL_X } from './geo'
-import { clamp01, lobe, rgbOf, sm } from './set-air'
+import { clamp01, lobe, rgbOf, sm, softBeam } from './set-air'
 import { openAt } from './set'
 
 /**
@@ -245,30 +245,13 @@ export function drawLight(p: p5, k: number, t: number): void {
   })
 }
 
+/** Along a flood's beam: brightest at the lamp, fading up through the fog to the belly. */
+const floodAlong = (v: number): number => (v < 0.6 ? 1 - (0.55 * v) / 0.6 : 0.45 - (0.3 * (v - 0.6)) / 0.4)
+
 /** A soft beam of light from `a` to `b`, `w0` wide at its source and `w1` at its end, fading along it. */
 function beam(ctx: CanvasRenderingContext2D, k: number, a: Pt, b: Pt, w0: number, w1: number, rgb: string, al: number): void {
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  const L = Math.hypot(dx, dy)
-  const nx = -dy / L
-  const ny = dx / L
-  const g = ctx.createLinearGradient(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-  g.addColorStop(0, `rgba(${rgb}, ${al})`)
-  g.addColorStop(0.6, `rgba(${rgb}, ${al * 0.45})`)
-  g.addColorStop(1, `rgba(${rgb}, ${al * 0.15})`)
-  ctx.fillStyle = g
-  // Two passes, a wide faint one and the core, so its edges are soft.
-  for (const [s, f] of [[1.8, 0.45], [1, 1]] as const) {
-    ctx.globalAlpha *= f
-    ctx.beginPath()
-    ctx.moveTo((a[0] + (nx * w0 * s) / 2) * k, (a[1] + (ny * w0 * s) / 2) * k)
-    ctx.lineTo((b[0] + (nx * w1 * s) / 2) * k, (b[1] + (ny * w1 * s) / 2) * k)
-    ctx.lineTo((b[0] - (nx * w1 * s) / 2) * k, (b[1] - (ny * w1 * s) / 2) * k)
-    ctx.lineTo((a[0] - (nx * w0 * s) / 2) * k, (a[1] - (ny * w0 * s) / 2) * k)
-    ctx.closePath()
-    ctx.fill()
-    ctx.globalAlpha /= f
-  }
+  // Its whole soft width takes in what was its faint outer pass.
+  softBeam(ctx, k, a, b, w0 * 1.8, w1 * 1.8, rgb, al * 1.4, 'flood', floodAlong)
 }
 
 /** A floodlight's head (its lens), and the point on the belly it looks at. */

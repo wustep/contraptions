@@ -6,7 +6,7 @@ import { BURST1, pulse } from '../music'
 import { VALLEY } from '../worlds'
 import { CAMP_PROPS, drawPad, drawRoad, PAD } from './camp'
 import { BELLY, MEADOW, SHELL_H, SHELL_W, SHELL_X, SLOT_W } from './geo'
-import { band, clamp01, fbm, lerp, lobe, lobeR, rgbOf, sm, vnoise } from './set-air'
+import { band, clamp01, fbm, lerp, lobe, lobeR, rgbOf, sm, softBeam, vnoise } from './set-air'
 
 /**
  * The valley's standing set (the valley builder's; the lift part plays in it): Montana under low cloud.
@@ -571,6 +571,9 @@ function drawCeiling(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
   }
 }
 
+/** Down a shaft: on out of the cloud over its first fifth, then a little fainter at its foot. */
+const shaftAlong = (v: number): number => (v < 0.2 ? sm(v, 0, 0.2) : 1 - 0.15 * ((v - 0.2) / 0.8))
+
 /**
  * The light coming through where the cloud has opened over where the shell was: long soft shafts, leaning a little,
  * falling through the air onto the meadow under it, and pooling there on the grass.
@@ -588,23 +591,10 @@ function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, o
     const a = (0.14 + 0.09 * hash(j, 3, 43)) * sm(open, 0.05 + j * 0.06, 0.45 + j * 0.06)
     if (a <= 0.004) continue
     const foot = x + len * lean
-    if (Math.max(x, foot) + w * 4 < f.x0 || Math.min(x, foot) - w * 3 > f.x1) continue
-    const g2 = ctx.createLinearGradient(0, top * k, 0, MEADOW * k)
-    g2.addColorStop(0, `rgba(${light}, 0)`)
-    g2.addColorStop(0.2, `rgba(${light}, ${a})`)
-    g2.addColorStop(1, `rgba(${light}, ${a * 0.85})`)
-    ctx.fillStyle = g2
-    for (const [grow, al] of [[2.2, 0.35], [1, 1]] as const) {
-      ctx.globalAlpha *= al
-      ctx.beginPath()
-      ctx.moveTo((x - w * grow) * k, top * k)
-      ctx.lineTo((x + w * grow) * k, top * k)
-      ctx.lineTo((foot + w * 1.6 * grow) * k, MEADOW * k)
-      ctx.lineTo((foot - w * 1.2 * grow) * k, MEADOW * k)
-      ctx.closePath()
-      ctx.fill()
-      ctx.globalAlpha /= al
-    }
+    // Its whole soft width: as wide as its old halo was, a little narrower up at the cloud.
+    const span = w * 5.6
+    if (Math.max(x, foot) + span / 2 < f.x0 || Math.min(x, foot) - span / 2 > f.x1) continue
+    softBeam(ctx, k, [x, top], [foot, MEADOW], span * 0.72, span, light, a * 3, 'shaft', shaftAlong, true)
     // Where it falls, the grass is lit.
     lobe(ctx, k, foot + w * 0.2, MEADOW - 0.1, w * 2.4, 0.55, light, a * 2.2, 0.45)
   }
@@ -629,6 +619,10 @@ function drawCrown(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, op
   }
 }
 
+/** Down the slot's fall of light, steady and in a step's flash. */
+const slotAlong = (v: number): number => (v < 0.55 ? 1 - (0.6 * v) / 0.55 : 0.4 - (0.233 * (v - 0.55)) / 0.45)
+const slotFlashAlong = (v: number): number => (v < 0.55 ? 1 - (0.6 * v) / 0.55 : 0.4 * (1 - (v - 0.55) / 0.45))
+
 /**
  * The slot's light, once it opens: a bloom at its mouth, a soft fall of light down to the meadow (brighter for a
  * moment on each of its six steps), the belly lit round it and a pool of it on the grass. Gone as the shell goes.
@@ -644,22 +638,14 @@ function drawSlotLight(ctx: CanvasRenderingContext2D, k: number, f: F, t: number
   let flash = 0
   for (const at of BURST1) if (t >= at) flash = Math.max(flash, Math.exp(-(t - at) / 0.14))
   const sw = SLOT_W * slot
-  const fall = ctx.createLinearGradient(0, y0 * k, 0, MEADOW * k)
-  fall.addColorStop(0, `rgba(${light}, ${(0.3 + 0.45 * flash) * a})`)
-  fall.addColorStop(0.55, `rgba(${light}, ${(0.12 + 0.18 * flash) * a})`)
-  fall.addColorStop(1, `rgba(${light}, ${0.05 * a})`)
-  ctx.fillStyle = fall
-  for (const [grow, al] of [[1.9, 0.45], [1, 1]] as const) {
-    ctx.globalAlpha *= al
-    ctx.beginPath()
-    ctx.moveTo((SHELL_X - (sw / 2) * grow) * k, y0 * k)
-    ctx.lineTo((SHELL_X + (sw / 2) * grow) * k, y0 * k)
-    ctx.lineTo((SHELL_X + (sw * 1.7 + 1.5) * grow) * k, MEADOW * k)
-    ctx.lineTo((SHELL_X - (sw * 1.7 + 1.5) * grow) * k, MEADOW * k)
-    ctx.closePath()
-    ctx.fill()
-    ctx.globalAlpha /= al
-  }
+  // The fall: steady, and brighter near the mouth for a moment on each step. Its whole soft width takes in what was
+  // its faint outer pass.
+  const top: Pt = [SHELL_X, y0]
+  const foot: Pt = [SHELL_X, MEADOW]
+  const w0 = sw * 1.9
+  const w1 = (sw * 3.4 + 3) * 1.9
+  softBeam(ctx, k, top, foot, w0, w1, light, 0.3 * 1.7 * a, 'slot', slotAlong, true)
+  softBeam(ctx, k, top, foot, w0, w1, light, 0.45 * 1.7 * flash * a, 'slotFlash', slotFlashAlong, true)
   // The bloom at its mouth, the belly lit round it, the pool on the meadow.
   lobe(ctx, k, SHELL_X, y0 + 0.2, sw * 0.9 + 0.8, 0.9, light, (0.55 + 0.6 * flash) * a, 0.3)
   lobe(ctx, k, SHELL_X, y0 - 0.4, sw * 1.6 + 2.5, 1.1, light, 0.16 * a, 0.4)
