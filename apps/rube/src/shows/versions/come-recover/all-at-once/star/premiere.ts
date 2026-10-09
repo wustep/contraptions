@@ -3,6 +3,7 @@ import { box, carried, part, route, type Company, type PartShot, type Slot, type
 import { G, hop, throwFor } from '../physics'
 import { SEAMS } from '../seams'
 import { alleyOver, drawAlley } from './premiere-alley'
+import { prefersCalm } from '../film'
 import { drawPremiere, premiereOver, spotOnHer } from './premiere-carpet'
 import * as C from './premiere-clock'
 
@@ -47,7 +48,7 @@ export const premiere = part<PremiereState>(
     over: (p, s, c) => {
       const t = c.t + s.begin
       premiereOver(p, c, t)
-      alleyOver(p, c, t)
+      alleyOver(p, c, t, prefersCalm())
     },
   },
   (slot) => build(slot),

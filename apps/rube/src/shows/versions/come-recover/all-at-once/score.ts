@@ -24,6 +24,7 @@ import { kindness, KINDNESS_AT } from './home/kindness'
 import { GIFT_LOOKS } from './home/kindness-draw'
 import { ledge } from './rocks/ledge'
 import { film, IRISES, LOOKS, type Look, type Picture } from './film'
+import { STEP_RATE, stepPrint } from './star/premiere-alley'
 import { drain, radiance } from './void/radiance'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
@@ -330,6 +331,17 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     const cells = new Map<string, Pt>()
     for (const leg of legs) if (leg.world === world) for (const placed of leg.placed) for (const c of placed.cells) cells.set(`${c[0]},${c[1]}`, c)
     const picture: Picture = { look, calm: isCalm, irises: IRISES[world], where: (t) => show.where(t) }
+    // The movie star's alley is step-printed where she floats down to him and where the drain takes her from him.
+    if (world === 'premiere')
+      picture.steps = {
+        at: stepPrint,
+        rate: STEP_RATE,
+        who: (t) => {
+          const [x, y] = show.where(t)
+          const w = show.waymond(t)
+          return [{ x, y, color: EVELYN }, ...(w ? [{ x: w.x, y: w.y, color: w.color }] : [])]
+        },
+      }
     ;(sets[world] ??= { scenery: [], after: [] }).after.push(standing(film, 0, 0, [...cells.values()], picture, DURATION) as Placed)
   }
 

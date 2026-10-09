@@ -1,3 +1,4 @@
+import { R } from '../../../../parts'
 import { frame, hash, scenery } from './kit'
 import type { WorldKey } from './worlds'
 
@@ -355,6 +356,38 @@ export interface Picture {
   /** Its irises, and where she is (its own cells), for them to close on. */
   irises?: Iris[]
   where?: (t: number) => [number, number]
+  /**
+   * Step-printing (the movie star's alley): how much of it there is at `t`, its steps a second, and who leaves
+   * stepped ghosts (their places at a moment, in the world's cells, and their colours).
+   */
+  steps?: { at: (t: number) => number; rate: number; who: (t: number) => { x: number; y: number; color: string }[] }
+}
+
+/**
+ * The stepped ghosts: each one held at the step it is on and the two before it, fading behind her, so what moves
+ * goes in stuttering streaks while the ball itself, and everything it strikes, keeps real time.
+ */
+function paintGhosts(ctx: CanvasRenderingContext2D, steps: NonNullable<Picture['steps']>, t: number, k: number): void {
+  const amount = steps.at(t)
+  if (amount <= 0.001) return
+  const held = Math.floor(t * steps.rate) / steps.rate
+  const now = steps.who(t)
+  ctx.save()
+  for (const [back, a] of [[0, 0.42], [1, 0.24], [2, 0.11]] as const) {
+    steps.who(held - back / steps.rate).forEach((g, i) => {
+      // Only where it has moved from: a ghost on its own ball (him waiting, still) would only veil it.
+      const here = now[i]
+      const moved = here ? Math.hypot(g.x - here.x, g.y - here.y) / (1.6 * R) : 1
+      const shown = Math.min(1, moved) ** 2
+      if (shown <= 0.01) return
+      const c = parseInt(g.color.slice(1), 16)
+      ctx.fillStyle = `rgba(${(c >> 16) & 255}, ${(c >> 8) & 255}, ${c & 255}, ${a * amount * shown})`
+      ctx.beginPath()
+      ctx.arc(g.x * k, g.y * k, R * k * 1.04, 0, Math.PI * 2)
+      ctx.fill()
+    })
+  }
+  ctx.restore()
 }
 
 export const film = scenery<Picture>({
@@ -366,6 +399,7 @@ export const film = scenery<Picture>({
     const k = c.k
     // One pixel of the stage, in this drawing's units (the canvas may be drawn at a scale).
     const px = Math.max(0.5, ((f.y1 - f.y0) * k) / 540)
+    if (pic.steps && !pic.calm()) paintGhosts(ctx, pic.steps, c.t, k)
     paintPicture(ctx, pic.look, f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k, c.t, pic.calm(), px)
     for (const iris of pic.irises ?? []) {
       const open = irisAt(iris, c.t)

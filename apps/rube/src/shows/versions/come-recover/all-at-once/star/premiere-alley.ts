@@ -23,6 +23,7 @@ import {
   STEPS,
   STEP_LAND,
   TERRACE_R,
+  TOUCH,
   WATER,
   WAYMOND_X,
   alleyTime,
@@ -496,12 +497,42 @@ function drawSplashes(p: p5, c: Ctx, t: number): void {
   }
 }
 
-function drawRain(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void {
-  const on = smooth(t, 68.95, 69.85)
+/**
+ * Step-printing, as Wong Kar-wai's pictures have it and the film's movie-star life borrows: the picture held at eight
+ * steps a second, each step smeared into the next, so what moves goes in stuttering streaks. While she floats down the
+ * steps to him, and again as the drain carries her away from him; it comes out sharp, in real time, for the touch.
+ * How much of it there is at `t`, 0 to 1 (`STEP_PRINT`). Nothing that strikes is moved: the rain is drawn at the held
+ * step with two fading echoes of the steps before it, and the two of them leave stepped ghosts (`film.ts`).
+ */
+export const STEP_RATE = 8
+export const STEP_PRINT: [number, number, number, number][] = [
+  [70.6, 71.4, TOUCH - 0.7, TOUCH - 0.15],
+  [DROP + 0.05, DROP + 0.45, SPLASH + 1.3, SPLASH + 2.0],
+]
+export function stepPrint(t: number): number {
+  let v = 0
+  for (const [a, b, c, d] of STEP_PRINT) v = Math.max(v, smooth(t, a, b) * (1 - smooth(t, c, d)))
+  return v
+}
+
+function drawRain(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>, calm = false): void {
+  const step = calm ? 0 : stepPrint(t)
+  if (step <= 0.001) return rainAt(p, c, t, t, f, 1)
+  // The held step, and the two before it fading behind it; the running rain fades out under them.
+  const held = Math.floor(t * STEP_RATE) / STEP_RATE
+  if (step < 0.999) rainAt(p, c, t, t, f, 1 - step)
+  rainAt(p, c, t, held, f, step)
+  rainAt(p, c, t, held - 1 / STEP_RATE, f, 0.45 * step)
+  rainAt(p, c, t, held - 2 / STEP_RATE, f, 0.2 * step)
+}
+
+/** The rain at show time `at` (its drops where they were then), lit as the alley is at `t`, at `alpha`. */
+function rainAt(p: p5, c: Ctx, t: number, at: number, f: ReturnType<typeof frame>, alpha: number): void {
+  const on = smooth(at, 68.95, 69.85) * alpha
   if (on <= 0) return
   const X = (v: number) => v * c.k
-  const tau = alleyTime(t)
-  const rate = timeRate(t)
+  const tau = alleyTime(at)
+  const rate = timeRate(at)
   const len = 0.06 + 0.3 * rate
   const period = 6
   const x0 = Math.max(f.x0 - 0.5, EDGE_X - 6)
@@ -511,7 +542,7 @@ function drawRain(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void {
   for (let j = Math.floor(x0 / gap); j <= Math.ceil((f.x1 + 0.5) / gap); j++) {
     for (let d = 0; d < 2; d++) {
       // Each column's drops have their own place in the tile and their own pace, and some start late.
-      if (hash(j, d, 41) > on) continue
+      if (hash(j, d, 41) > smooth(at, 68.95, 69.85)) continue
       const x = j * gap + hash(j, d, 21) * gap
       const phase = hash(j, d, 11) * period + 11 * tau * (0.85 + 0.3 * hash(j, d, 31))
       let y = (((phase % period) + period) % period) + Math.floor((f.y0 - 1) / period) * period
@@ -543,7 +574,7 @@ export function drawAlley(p: p5, c: Ctx, t: number, her: Pt | null): void {
 }
 
 /** In front of the ball: the race's water over her, the splashes, and the rain. */
-export function alleyOver(p: p5, c: Ctx, t: number): void {
+export function alleyOver(p: p5, c: Ctx, t: number, calm = false): void {
   const f = frame(p, c.k)
   if (f.x1 < EDGE_X - 6) return
   const X = (v: number) => v * c.k
@@ -562,5 +593,5 @@ export function alleyOver(p: p5, c: Ctx, t: number): void {
     }
   }
   drawSplashes(p, c, t)
-  drawRain(p, c, t, f)
+  drawRain(p, c, t, f, calm)
 }

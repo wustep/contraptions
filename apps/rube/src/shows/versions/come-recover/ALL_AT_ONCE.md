@@ -109,13 +109,18 @@ The camera takes the show's nine biggest hits in the body: a push-in of about 4.
 `score.ts`). There are none in the rocks. The kung fu picture has its own camera: on the dojo's five hardest blows
 (the two big ricochets, both kicks and the gong) it crash-zooms, in 10–17% over a tenth of a second, holding on the
 blow and letting go (`CRASHES`). The movie star's lens flares, as a widescreen lens does: each press flash throws a
-long blue-white streak across the frame, and in the alley the streetlamp and the neon flare faintly. The romance and the
+long blue-white streak across the frame, and in the alley the streetlamp and the neon flare faintly. The alley, the film's
+"in another life", is step-printed as Wong Kar-wai's pictures are (the film's movie-star life borrows from them): while
+she floats down the steps to Waymond, and again as the drain takes her from him, the picture goes at eight steps a
+second, smeared. The rain falls in held steps with two fading echoes, and she and Waymond leave stepped ghosts where
+they have moved from; it comes out sharp, in real time, for the touch. Nothing that strikes is moved: the ball and
+every part keep real time. The romance and the
 cartoon end their scenes as their pictures do: the hot dog life closes on her in a heart-shaped iris as the finger
 snaps (105.85 to the jump), and Raccacoonie's kitchen opens on her in a round iris that blooms out to the frame
 (106.73 to 107.4) and closes on her in one before the surf (120.3 to the jump). Each iris is centred on her, a little
 smoothed, so she is always in it.
 
-For a viewer whose system asks to reduce motion, the flickers, the punches and the crash zooms are left out (`CALM` in `score.ts`), and
+For a viewer whose system asks to reduce motion, the flickers, the punches, the crash zooms and the alley's step-printing are left out (`CALM` in `score.ts`), and
 the old print's grain holds still, without its scratches and dust.
 
 ## In order
@@ -841,6 +846,14 @@ The notes went back to the builders who made each part, who still had their cont
   - **Safari's engine:** nine frames of the new work (the bars, the print, the haze, the heart iris, the tape, the
     pull's ribbons, everywhere at once, the radiance, the lives in the window) rendered in WebKit as in Chrome. Its
     one failed request is the analytics' debug script, not the show.
+- **A director's pass: the alley step-printed.** The movie star's life borrows from Wong Kar-wai, and his signature,
+  step-printing, was missing from the alley it borrows him for. Now the descent to Waymond (70.6 to 76.3) and the
+  drain taking her (82.2 to 85.0) are held at eight steps a second and smeared: the rain is drawn at the held step and
+  the two before it, fading (`stepPrint` in `star/premiere-alley.ts`), and the two of them leave stepped ghosts behind
+  them (`paintGhosts` in `film.ts`). A ghost shows only where its ball has moved from, so Waymond, waiting still, is
+  not veiled. All of it is worked out from the show's clock, so a scrubbed frame is the frame that played; the ball
+  and everything it strikes keep real time. Measured in Chrome at 1440×810, the alley holds 16.6–16.8 ms a frame with
+  the rain drawn three times over.
 
 ## The looks
 
