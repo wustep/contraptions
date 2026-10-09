@@ -490,6 +490,17 @@ ball. The machine and its timing were right and are untouched; the room around i
     upright, and the live upright stage shows all of it; its Short does not. Changing that is the stage's policy, not
     this show's, so it is left as it is and put to Stephen below.
 
+### The twenty-eighth lofi pass
+
+71. **Other screens' shapes.** Every held frame is solved for 16:9; the live stage on any other shape sees more room
+    round the same frame (taller screens more above and below, wider ones more to the sides), so a frame's edges move.
+    Swept every held frame at 16:10, 3:2, 4:3 and 21:9. The 16:10 laptop, the likeliest screen to leave this on, had
+    one cut: the cup close's taller frame showed a sliver of the lamp's lit rim at its top, in all thirteen of its
+    holds. That frame sits 0.07 of a cell lower now (its middle at y = -0.57): 16:10 is clean, 3:2 loses its cut notes
+    too, and 16:9 and Zoom are as they were. Left: 4:3 cuts the clock and the shade in a few looks, and 21:9 shows half
+    the cat at the cup close's left edge (no one cup frame can keep the cat out at 16:9 and whole at 21:9 without
+    cutting the books); both rarer screens, and the check stays on 16:9.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

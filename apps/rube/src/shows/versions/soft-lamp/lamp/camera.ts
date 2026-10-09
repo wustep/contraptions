@@ -40,8 +40,9 @@ const STAIR = { x: 1.45, y: -1.3, cells: 3.9 }
  * its own order, so no two tracks are framed alike, and none is a new idea: the same four looks at the same desk.
  */
 const GROOVE = [
-  // The cup, close: the ball in its seat, the stair's foot, the band rising out of frame.
-  { x: 1.75, y: -0.64, cells: 2.45 },
+  // The cup, close: the ball in its seat, the stair's foot, the band rising out of frame. Low enough that a 16:10
+  // laptop's taller frame round the same middle still keeps the lamp's shade above its top.
+  { x: 1.75, y: -0.57, cells: 2.45 },
   // The desk under the lamp: the cat, books, cup, band, the shade whole over them. Low enough that Zoom's closer
   // frame about the same middle still has the cup whole under the ball.
   { x: 2.0, y: -1.3, cells: 4.5 },
