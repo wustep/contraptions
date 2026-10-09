@@ -217,3 +217,9 @@ A twentieth pass, by measure:
 
 - **Who is in the picture, measured.** I measured, every tenth of a second, where each of the two balls stands against the camera's frame, and listed every uncovered stretch of more than a second that either is out of it. Almost all are the film's own grammar: the camera finds her in the audience while he plays, he runs the theatre from the street while she is behind the curtain, the piano plays itself in the dream's club, the camera follows her out of the door.
 - **What she is drawn to.** One was not. While she crosses Lipton's table by table (44 to 56) he was out of the picture for twelve seconds, so it was a walk across a room toward nothing. Her entrance stays hers, close on her under the windows; from halfway (50) the shot holds him at the keys at the right and her at the left, and closes on the two of them as she nears. He is out of the picture for six seconds now, all of them her coming in.
+
+A twenty-first pass, by measure, that changed nothing:
+
+- **How big they are.** Every uncovered stretch where the frame is wide enough to make the balls small (more than 8.5 cells tall for more than a second and a half) is an establishing shot, the longest five seconds: the city at the start and the end, the room at Lipton's lighting up, the burst into colour, the projector, the freeway in its silence.
+- **Where nothing moves.** Rendered at tenths of a second, the picture is nearly still for more than two seconds only twice, both on quiet music and both meant: her lifting her eyes at her table (28 to 31) and the trumpet's first breath in the dark (242 to 245).
+- With the jumps, the covers and who is in the picture measured in earlier passes, the show holds up on every measure I have. No change.
