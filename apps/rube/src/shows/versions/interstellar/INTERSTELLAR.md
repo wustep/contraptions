@@ -224,7 +224,15 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 60 (latest)
+## Polish pass 61 (latest)
+
+The check that Brand and Murph only come and go out of shot samples every millisecond, but against the 16:9 frame alone. A stage of another shape sees more world round that frame, so the same test was run with Zoom's frame, a wide (21:9) screen's and an upright phone's (390 × 844).
+
+- **Young Murph no longer appears out of nothing on a wide screen.** She came into being just past the 16:9 frame's side, where a 21:9 screen sees, twice: in the channel (29.8 s) and at the base's track (68.26 s). Each entrance now has a lead-in at the speed she enters with (`earth/truck.ts`, one second; `earth/gate.ts`, two, since there the camera keeps pace), so she rolls in from past the edge of even a wide screen. Her motion from the old entrance on is unchanged.
+- **Old Murph stays in her house until the cut outside** (`MURPH_GONE` in `act2/ballpark.ts`, now the undock). Her span ended at 188.5 s, once the house had left the 16:9 frame below the climbing car. A phone still saw her go. More than that, in the ordinary 16:9 frame the house swings back into the bottom of the shot as the camera turns square (about 189.8 s), and her doorway was empty. She is there now, at her threshold by the chair, watching the car go. One check had asserted the empty doorway (Murph absent at 190 s). It now asserts she is in shot then, and on the station holds her to being out of shot rather than gone.
+- **The check sees what any stage sees.** "Comes and goes only out of shot" now tests a wide screen's width and an upright phone's height besides the 16:9 frame. With the base's old entrance put back, it fails at 68.259 s.
+
+## Polish pass 60
 
 No change to the show: pass 59's new landing looked at, not only measured. At 15.90 s Murph comes down just behind Cooper with their outlines meeting, a near bump, not her disc drawn into his. By 16.1 s he is on the first tread and she waits at the stairwell's top, a step behind, as written.
 

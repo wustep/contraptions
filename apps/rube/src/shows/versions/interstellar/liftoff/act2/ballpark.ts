@@ -3,7 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, carried, hash, knock, part, smooth, type Company, type Ctx, type PartShot } from '../kit'
-import { cue } from '../music'
+import { cue, UNDOCK } from '../music'
 import { BALL, DUST, MURPH } from '../worlds'
 import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
 
@@ -100,8 +100,12 @@ const NUDGE = cue(158)
 const OUT = cue(159)
 /** The hub's brake comes off and the car goes up through the attic. */
 const LIFT_GO = cue(160)
-/** Murph's span ends here, the car well up the spoke and the house out of the frame below it. */
-const MURPH_GONE = cue(165)
+/**
+ * Murph's span ends with the station itself, on the undock's cut outside. It used to end once the house had left the
+ * 16:9 frame below the climbing car, but a taller screen (a phone held upright) still sees the house then, and she went
+ * out of her doorway as if switched off. She stays at the threshold, where the car left her.
+ */
+const MURPH_GONE = UNDOCK
 const xy = (q: Pt): { x: number; y: number } => ({ x: q[0], y: q[1] })
 
 /** The trapdoor comes down on its stop. */

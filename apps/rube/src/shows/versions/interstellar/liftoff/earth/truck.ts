@@ -582,12 +582,16 @@ function murphTruck(s: TruckState, edge: number, t: number): Companion {
   const flume = -MR + R
   let q: Pt
   if (t < M_WAIT) {
-    // Down the flume after him, easing to a stop short of its end.
+    // Down the flume after him, easing to a stop short of its end. Before that, a second rolling in at the speed she
+    // enters it with, from out past the edge of even a wide (21:9) screen, so she never appears out of nothing there.
     const T = M_WAIT - (M_WAIT - 2.2)
-    const u = clamp((t - (M_WAIT - 2.2)) / T)
     const x0 = edge - 3.9
     const x1 = edge - 0.32
-    q = [x0 + (x1 - x0) * (1 - (1 - u) * (1 - u)), flume]
+    if (t < M_WAIT - 2.2) q = [x0 - ((2 * (x1 - x0)) / T) * (M_WAIT - 2.2 - t), flume]
+    else {
+      const u = clamp((t - (M_WAIT - 2.2)) / T)
+      q = [x0 + (x1 - x0) * (1 - (1 - u) * (1 - u)), flume]
+    }
   } else if (t < M_GO) q = [edge - 0.32, flume]
   else if (t < M_LANDS) {
     // Over the end and down into the bed by the tailgate.
@@ -674,7 +678,7 @@ export const truck = part<TruckState>(
       lane: { segs, fire: at(DROP) },
       state: s,
       // Murph, from up the flume behind him to the truck left at the dam, out of the frame.
-      company: [{ from: M_WAIT - 2.2, to: MURPH_TRUCK_END, who: 'murph', at: (t) => murphTruck(s, edge, t) }],
+      company: [{ from: M_WAIT - 3.2, to: MURPH_TRUCK_END, who: 'murph', at: (t) => murphTruck(s, edge, t) }],
     }
   },
 )

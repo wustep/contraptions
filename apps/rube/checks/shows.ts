@@ -627,13 +627,18 @@ async function main(): Promise<void> {
         const atCamp = [LIFTOFF_CAMP_MEET + 0.5, MIX_END - 0.5, 270, LIFTOFF_END - 0.5]
         const station = [177, 178.5, 179.25, 180.5]
         const brandAway = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, ...station, 190, 215]
-        const murphAway = [60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
+        // (Not 190: as the lift climbs and the camera turns back, the far-side house comes back into the bottom of the
+        // frame, and she is in it, at her threshold, watching the car go.)
+        const murphAway = [60, 100, 130, 140, 150, 215, 250, 260, 280]
         const murphYoung = [0, 3, 6, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 68.8, 69.6, 74, 75.3, 78]
         const miss: string[] = []
         for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
         for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)
         for (const t of station) if (!inShot(t, show.murph(t))) miss.push(`Murph not in shot ${t}`)
-        for (const t of murphAway) if (show.murph(t)) miss.push(`Murph at ${t}`)
+        // On the station she stays at her threshold until the cut outside (so no screen sees her switched off), so there
+        // she is held to being out of shot; anywhere else, to not being there at all.
+        for (const t of murphAway) if (t > ACT2 && t < UNDOCK ? inShot(t, show.murph(t)) : show.murph(t)) miss.push(`Murph at ${t}`)
+        if (!inShot(190, show.murph(190))) miss.push('Murph not at her threshold at 190')
         for (const t of murphYoung) {
           const m = show.murph(t)
           if (!inShot(t, m)) miss.push(`young Murph not in shot ${t}`)
@@ -771,6 +776,20 @@ async function main(): Promise<void> {
         }
         // They meet close, with a little light between them: not pressed together.
         check('liftoff: on Edmunds\' planet, at the end, Cooper meets Amelia at her camp, close but not pressed together', closest >= 0.27 && closest <= 0.42, `closest ${closest.toFixed(3)}`)
+        // A stage of another shape sees more world round the 16:9 frame: a wide (21:9) screen more to each side, a phone
+        // held upright (390 × 844) nearly four frames' height. Coming and going is held to all of what they see.
+        const seenAnywhere = (t: number, b: { x: number; y: number; scale?: number } | null) => {
+          if (!b || (b.scale ?? 1) <= 0.02) return false
+          const f = perf.camera!(t)
+          const a = f.angle ?? 0
+          const dx = b.x - f.x
+          const dy = b.y - f.y
+          const x = Math.abs(dx * Math.cos(a) - dy * Math.sin(a))
+          const y = Math.abs(dx * Math.sin(a) + dy * Math.cos(a))
+          const wide = x < (f.cells * 21) / 18 + 0.2 && y < f.cells / 2 + 0.2
+          const tall = x < (f.cells * 8) / 9 + 0.2 && y < (f.cells / 2) * (844 / ((390 * 9) / 16)) + 0.2
+          return wide || tall
+        }
         // They never jump while they are drawn, and come and go (or are hidden and shown) only out of shot.
         const drawn = (g: { scale?: number } | null) => !!g && (g.scale ?? 1) > 0.02
         for (const [name, of] of [['Brand', (t: number) => show.brand(t)], ['Murph', (t: number) => show.murph(t)]] as const) {
@@ -785,14 +804,14 @@ async function main(): Promise<void> {
               if (d > gJump) { gJump = d; gAt = t }
             }
             // Out of nothing (or out of hidden, all at once) where the camera can see: a pop. Likewise into nothing.
-            if (!gPrev && inShot(t, g)) pops.push(`in at ${t.toFixed(3)}`)
-            else if (gPrev && !g && inShot(t - 0.001, gPrev)) pops.push(`out at ${t.toFixed(3)}`)
+            if (!gPrev && seenAnywhere(t, g)) pops.push(`in at ${t.toFixed(3)}`)
+            else if (gPrev && !g && seenAnywhere(t - 0.001, gPrev)) pops.push(`out at ${t.toFixed(3)}`)
             else if (gPrev && g && !drawn(gPrev) && (g.scale ?? 1) > 0.3 && inShot(t, g)) pops.push(`shown at ${t.toFixed(3)}`)
             else if (gPrev && g && drawn(gPrev) && (gPrev.scale ?? 1) > 0.3 && !drawn(g) && inShot(t - 0.001, gPrev)) pops.push(`hidden at ${t.toFixed(3)}`)
             gPrev = g
           }
           check(`liftoff: ${name} never jumps (no more than 0.04 cells a millisecond)`, gJump <= 0.04, `${gJump.toFixed(3)} at ${gAt.toFixed(3)} s`)
-          check(`liftoff: ${name} comes and goes only out of shot`, pops.length === 0, pops.slice(0, 8).join(', '))
+          check(`liftoff: ${name} comes and goes only out of shot, on a wide screen and an upright phone too`, pops.length === 0, pops.slice(0, 8).join(', '))
         }
       }
     }
