@@ -304,6 +304,16 @@ wrong. One thing had come back:
   own knuckle along the front of a pad a little longer than it is wide, so the hand pressed to the glass beside her is
   a hand, and so is the slam.
 
+A thirteenth went where the twelfth had only skimmed (the camp, the chamber's first minute, the tent, the vision, the
+lift coming down), stepped through the new palm opening and closing, and watched the whole show again in Zoom, where
+the props are seen large. All of it held but one thing:
+
+- **The tree in the spring** (61.7 to 64 s, as the camera draws back with Hannah's leap): the crown fills again clump
+  by clump at random, the clumps along the swing's limb among them, so the one clump that had come back hung alone at
+  the limb's bend, a green puff on a bare limb whose sprays were already in leaf. The leaves along the limb come and go
+  together now, as its sprays do, and lead up into the crown above the frame. They are never in shot when they come or
+  go, so nothing pops.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

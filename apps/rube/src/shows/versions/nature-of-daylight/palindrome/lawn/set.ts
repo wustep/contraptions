@@ -210,6 +210,8 @@ interface Clump {
   lobes: [number, number, number][]
   need: number
 }
+/** The clumps from here on are along the swing's limb, not in the crown. */
+const LIMB_CLUMPS = 16
 const CLUMPS: Clump[] = (() => {
   const spots: [number, number, number][] = [
     // The crown.
@@ -228,7 +230,9 @@ const CLUMPS: Clump[] = (() => {
       const rr = r * (0.2 + 0.14 * hash(i, j, 42))
       lobes.push([Math.cos(a) * r * (0.78 - rr / r * 0.6), Math.sin(a) * r * (0.5 - rr / r * 0.4), rr])
     }
-    return { x, y, r, lobes, need: 0.12 + 0.82 * hash(i, 9, 1) }
+    // The crown fills and thins clump by clump; the leaves along the swing's limb come and go together, as its
+    // hanging sprays do, or in the spring one clump of them hangs alone at the limb's bend when the frame draws back.
+    return { x, y, r, lobes, need: i >= LIMB_CLUMPS ? 0.12 : 0.12 + 0.82 * hash(i, 9, 1) }
   })
 })()
 
