@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 31 (latest)
+## Polish pass 32 (latest)
+
+No change to the show. Miller's water world (104 to 113 s) and the Gargantua slingshot (113 to 118 s) were checked at full size: the landed Ranger, the buoys and TARS cartwheeling, with their reflections; Brand's ring in orbit; the wave rising out of the "mountains" and hiding the horizon's line behind it as it should; TARS swallowed; the two turns round the hole on the tether.
+
+## Polish pass 31
 
 No change to the show. The pull request's description was rewritten to cover every round: a summary of how the show was audited and what changed, and a before/after table of fifteen stills (`origin/main` against this branch), Zoom, Overview and the phone frame among them. The share card (240.4 s) was checked against a fresh render again: 285 pixels of 756,000 differ, a few of pass 6's pebbles, so it is left as it is.
 
