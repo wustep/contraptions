@@ -60,18 +60,19 @@ function ianX(t: number): number {
   const to = AGAINST + leanAt(TOUCH)
   if (t <= IAN_GO) return from
   if (t >= TOUCH) return AGAINST + leanAt(t)
-  // Off from rest on the pulse (quickly up to pace), a steady roll, and a long easing into her side: speed rising
-  // over the first `a` of it, even, then falling away to nothing (as (1 - w)^2) over the last `b`.
+  // Off from rest on the pulse (quickly up to pace), a steady roll, and a short braking into her side: speed rising
+  // over the first `a` of it, even, then falling steadily to nothing over the last `b`, so the gap is still seen
+  // closing up to the touch (a long soft ease had it shut to the eye half a second early).
   const u = (t - IAN_GO) / (TOUCH - IAN_GO)
   const a = 0.14
-  const b = 0.45
-  const vmax = 1 / (a / 2 + 1 - a - b + b / 3)
+  const b = 0.2
+  const vmax = 1 / (a / 2 + 1 - a - b + b / 2)
   let s: number
   if (u < a) s = (vmax * u * u) / (2 * a)
   else if (u < 1 - b) s = vmax * (a / 2 + (u - a))
   else {
     const w = (u - (1 - b)) / b
-    s = vmax * (a / 2 + (1 - a - b) + (b * (1 - (1 - w) ** 3)) / 3)
+    s = vmax * (a / 2 + (1 - a - b) + (b * (1 - (1 - w) ** 2)) / 2)
   }
   return from + (to - from) * Math.min(1, s)
 }

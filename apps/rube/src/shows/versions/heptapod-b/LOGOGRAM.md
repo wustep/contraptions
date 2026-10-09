@@ -285,7 +285,8 @@ strongest pulses held against what the picture does on them. What changed:
   light, and is in the picture as the glass goes white. He still never goes to the glass.
 - **The reunion** (195.344): Ian came to a stop a sliver from her, and as her lean to him eased back a gap opened
   between them, so the meadow ended on the two of them drifting apart. He meets her on the touch now and stays
-  against her as she settles back to her mark (which the circle's first frame needs): they end it together.
+  against her as she settles back to her mark (which the circle's first frame needs): they end it together. His braking
+  is short and steady, so the gap is still seen closing into the touch, not shut to the eye half a second early.
 - **The touch at the end** (212.312, the coda's loudest note): the sun came through the fog after it over seconds, a
   soft fade on the strongest note there is. Now the sun catches the water on the touch itself, quick as it caught it
   on the prologue's first pulse, and goes on coming through after: the circle closes on the same light it opened on.
