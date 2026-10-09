@@ -785,7 +785,10 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 /* A show's end credits: the page's words over the frame, since the canvas
    sets none. Placed and faded by the player (`renderWords`); sized in --u, a
    hundredth of the composed frame's height, so they sit the same at any size.
-   Light ink on the show's own sky; a serif, for the credits of a film. */
+   Light ink on the show's own sky; a serif, for the credits of a film. The
+   small lines (the role, a cast line's "as", the notes) keep at least 9px, so
+   a phone's short frame does not shrink them out of reading; that floor only
+   bites under a frame about 545px tall. A saved video paints its own (words.ts). */
 .stage-words { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
 .stage-words .card {
   position: absolute;
@@ -798,7 +801,7 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   will-change: opacity, filter;
 }
 .stage-words .role {
-  font-size: calc(var(--u) * 1.9);
+  font-size: max(9px, calc(var(--u) * 1.9));
   font-weight: 600;
   letter-spacing: 0.34em;
   text-transform: uppercase;
@@ -817,7 +820,7 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   line-height: 1.42;
 }
 .stage-words .cast .who { text-align: right; }
-.stage-words .cast .as { text-align: left; font-style: italic; font-size: 0.62em; color: #D9A441; text-shadow: none; }
+.stage-words .cast .as { text-align: left; font-style: italic; font-size: max(9px, 0.62em); color: #D9A441; text-shadow: none; }
 /* The ball they are: a small disc with the show's ink edge, sitting on the line. The panel's `.swatch` (padding and a
    2px border) would make it 18px on any stage; here it is 0.78em whole, its gold ring a share of the card's unit, as
    a saved video paints it (words.ts). */
@@ -836,10 +839,10 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .stage-words .cast .swatch.slab { border-radius: 0.1em; }
 /* A card over a light sky (`TitleCard.plain`): its role and "as" lines in the card's cream, not gold. */
 .stage-words .card.plain .role, .stage-words .card.plain .cast .as { color: #ECE5D3; }
-.stage-words .note { font-size: calc(var(--u) * 1.95); font-style: italic; opacity: 0.8; margin-top: calc(var(--u) * 0.9); }
+.stage-words .note { font-size: max(9px, calc(var(--u) * 1.95)); font-style: italic; opacity: 0.8; margin-top: calc(var(--u) * 0.9); }
 .stage-words .card .name + .note { margin-top: calc(var(--u) * 1.6); }
-.stage-words .note.fine { font-size: calc(var(--u) * 1.65); opacity: 0.58; margin-top: calc(var(--u) * 1.4); }
-.stage-words .title .note { font-style: normal; letter-spacing: 0.12em; font-size: calc(var(--u) * 2.1); }
+.stage-words .note.fine { font-size: max(9px, calc(var(--u) * 1.65)); opacity: 0.58; margin-top: calc(var(--u) * 1.4); }
+.stage-words .title .note { font-style: normal; letter-spacing: 0.12em; font-size: max(9px, calc(var(--u) * 2.1)); }
 
 /* The frame a video is recorded from, standing over the stage while it is
    made. It is built at the size of the file, not of the stage, so this is

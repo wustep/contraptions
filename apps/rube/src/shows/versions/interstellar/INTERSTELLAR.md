@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 44 (latest)
+## Polish pass 45 (latest)
+
+- **The credits on a phone.** The page sizes the credits in hundredths of the 16:9 frame's height. On a phone held upright (390 × 844) that frame is about 220px tall, so the cast card's notes ("the sand ball"…) and the music card's fine print came out at about 4px, too small to read. The small lines, the role, a cast line's "as" and the notes, now keep at least 9px (`src/ui/styles.css`). The floor only applies when the frame is under about 545px tall, so desktop credits and saved videos (`words.ts`) are unchanged, and the cast card still fits a phone's width.
+
+## Polish pass 44
 
 No change to the show: the side panel read line by line on Voyage's page. It has the title, the credit naming both cues, the YouTube player, the transport (4:51), Overview, Follow and Zoom, Theater, and Export, all as they should be. The credit line links Cornfield Chase's upload only: the soundtrack has one `href`, and the embedded player shows No Time for Caution's own upload while that cue plays. Linking both would change the shared soundtrack format for one show, so it is left.
 
