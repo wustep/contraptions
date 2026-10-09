@@ -171,7 +171,10 @@ function drawPhone(ctx: CanvasRenderingContext2D, k: number, t: number): void {
     g.addColorStop(0, rgba(TENT.keypad, awake * (0.16 + 0.12 * hit + 0.1 * calling)))
     g.addColorStop(1, rgba(TENT.keypad, 0))
     ctx.fillStyle = g
+    ctx.save()
+    ctx.filter = `blur(${Math.max(1, 0.04 * k).toFixed(1)}px)`
     ctx.fillRect((KEYS[0] - 0.16) * k, (BASE_TOP - CAP - 0.16) * k, (CALL_X - KEYS[0] + 0.32) * k, 0.16 * k)
+    ctx.restore()
   }
   const key = (x: number, w: number, n: number) => {
     const down = n === under ? SINK : 0
@@ -181,7 +184,11 @@ function drawPhone(ctx: CanvasRenderingContext2D, k: number, t: number): void {
       g.addColorStop(0, rgba(TENT.keypad, awake * (0.3 + 0.45 * hit)))
       g.addColorStop(1, rgba(TENT.keypad, 0))
       ctx.fillStyle = g
-      ctx.fillRect((x - w / 2 - 0.04) * k, (BASE_TOP - CAP - 0.3) * k, (w + 0.08) * k, (0.3 + down) * k)
+      // Soft at its sides as well as its top: with square sides it stood round her as a lit box.
+      ctx.save()
+      ctx.filter = `blur(${Math.max(1, 0.05 * k).toFixed(1)}px)`
+      ctx.fillRect((x - w / 2 - 0.02) * k, (BASE_TOP - CAP - 0.3) * k, (w + 0.04) * k, (0.3 + down) * k)
+      ctx.restore()
     }
     const top = (BASE_TOP - CAP + down) * k
     const h = (CAP - down) * k + 1

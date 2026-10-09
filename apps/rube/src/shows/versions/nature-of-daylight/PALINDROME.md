@@ -266,6 +266,12 @@ A seventh looked full size at the heptapods, which until then had only been seen
   goes as one shape.
 - **Costello's pointing limb** in the fog, its hand closed, stopped square: a stump. Its end is rounded over now.
 
+An eighth went full size through what was left: the clock, the news at night, the helicopter and the camp, the tent,
+the sat phone, the ring closing, and the blast. Only one thing showed:
+
+- **The sat phone's struck key** threw its light up round her as a rectangle with square sides, a lit box she sat in
+  on every press. Its sides are soft now, as is the backlight along the row, so it is light rising off the key.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
