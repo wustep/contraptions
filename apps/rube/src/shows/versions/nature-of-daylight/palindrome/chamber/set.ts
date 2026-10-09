@@ -181,9 +181,20 @@ export function drawChamberOver(p: p5, k: number, t: number): void {
   pour(ctx, k, t, f)
   const fl = flashAt(t)
   if (fl > 0.002) {
-    // The blast: the whole frame white for an instant, burning from the charge.
-    ctx.fillStyle = rgba(SHELL.glow, 0.97 * fl)
+    // The blast: burning from the charge, white at its heart and its light thrown down the whole chamber, the room seen
+    // through it. (One even white over the frame, the instant had no source: a frame of it read as a blank, a failed
+    // render, to every fresh eye.)
+    ctx.fillStyle = rgba(SHELL.glow, 0.5 * fl)
     ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+    const [cx, cy] = [CHARGE[0] * k, (CHARGE[1] - 0.15) * k]
+    const r = (2 + 9 * Math.min(1, (t - T.blast) / 0.15)) * k
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+    g.addColorStop(0, rgba('#FFFFFF', fl))
+    g.addColorStop(0.12, rgba('#FFFFFF', 0.95 * fl))
+    g.addColorStop(0.45, rgba(SHELL.glow, 0.7 * fl))
+    g.addColorStop(1, rgba(SHELL.glow, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
   }
   // The white coming in through the broken glass, over everything, whitening the dust into the veil.
   const flood = smooth(t, T.flood - 0.4, T.fog)

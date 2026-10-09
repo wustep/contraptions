@@ -685,6 +685,12 @@ are drawn aside. Two things read as what they are not:
 - **The hand raised over her** (148 s), after the camera's cut there, hung half over the frame's top, a smudge at its
   edge. It is raised a little lower now, whole in the frame, still well over her.
 
+A sixty-fourth took the note three of the four fresh readers had given apart: the blast (223.4 s) read as a blank, a
+failed render, a dirty lens. At ten frames a second it was so: the flash was one even white over the whole frame for
+a fifth of a second, with no source, so any frame of it was empty. It burns from the charge now: white-hot at its
+heart, its light thrown down the chamber over a lighter wash of the whole frame, the rail, the floor and the two of
+them seen through it as they are thrown.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
