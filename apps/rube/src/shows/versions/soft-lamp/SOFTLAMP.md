@@ -4,8 +4,9 @@
 **Ambient** shelf beside Gymnopédie.
 
 Half an hour of Lofi Girl's *Best of lofi hip hop 2021*, its first twelve tracks, round a small machine on a study desk
-by a rainy window at night. It is music to study to, and the picture is meant to be left on: one room, one lamp, one
-ball, and a small round it makes once a track.
+by a window, from dusk into a rainy night. It is music to study to, and the picture is meant to be left on, in the
+manner of the streams it plays: one room, one lamp, one ball and a small round it makes once a track, and a cat
+watching it.
 
 ## The music
 
@@ -62,11 +63,13 @@ outro into the breath before the next.
 
 ## The desk
 
-Left to right: the window over the desk, and on its sill a plant in a clay pot; a mug under the sill; three books
+Left to right: a curtain tied back, and the window over the desk with fairy lights strung across its top; on its sill
+a plant in a clay pot; a mug under the sill, and beside it a ginger kitten loafed on the desk; three books
 stacked into a stair that steps down to the right, under the sill's right end; the headphones set down on the desk, the
 near cup lying on its back, cushion up, the band arching over to the far cup standing on its edge; and over it all,
-from the right, an architect's lamp, its shade turned down onto the books and the cup. The ball is a ping-pong ball, so
-a cell is about 15 cm and everything is its real size.
+from the right, an architect's lamp, its shade turned down onto the books and the cup. On the wall between the window
+and the lamp, polaroids and notes pinned up in the lamp's light; on the far wall, a small print. The ball is a
+ping-pong ball, so a cell is about 15 cm and everything is its real size (the cat is a kitten).
 
 **One job to a thing.**
 
@@ -74,19 +77,33 @@ a cell is about 15 cm and everything is its real size.
   second and a half as the first track's first chord sounds, breathes a few per cent with the held sound, is a shade
   warmer or paler for each track (eased across the breath between them), and goes down to a glow as the last track
   rings out. Its pool is the frame's brightest place, and the ball is brightest in it.
-- **The window** is the weather. The rain is lighter at the start of the night, heaviest through its middle (Exhale),
-  lighter by the end, a little different each track. Outside, the city's lit windows go out one by one through the
-  half hour. On the glass, beads gather where they land and a few run down in fits and starts.
+- **The window** is the evening, and the half hour's clock (`lamp/sky.ts`). It opens on the last of a dusk, violet over
+  peach, a few clouds lit from under; the blue hour; the clouds come over and it rains from the third track, heaviest
+  through Exhale; it eases, the glass stays wet a while, and by the last two tracks it is clear, with stars and the
+  moon risen into the right-hand pane (and, late, a shooting star or two). Outside, the city's windows come on
+  through the dusk and go out one by one through the night, a few of them the cool flicker of a screen; a red light
+  blinks on the tallest roof; now and then a plane crosses when the sky is clear. On the glass, beads gather where
+  they land and a few run down in fits and starts.
+- **The fairy lights** come on bulb by bulb just after the lamp, breathe with the held sound, each at its own pace,
+  and go down to a low glow by the moon at the end.
 - **The mug**'s steam is the held sound, the pad and the keys under each track: three soft wisps, fuller as it swells,
   thinner through the night as the tea cools.
 - **The books** are the stair down.
 - **The headphones**' near cup is the listener's seat: the cup plays the kick, and the ball nods to it.
 - **The plant pot** is the stop the ball comes back off, and it rocks when it does.
+- **The cat** is the audience (`lamp/cat.ts`). Its head and eyes follow the ball, a little behind, as a cat's do: up
+  at the sill over its head, round to the stair beside it, into the cup. It blinks, now and then slowly. An ear flicks
+  when the ball knocks the pot or lands on the sill. Through the groove, a phrase at a time and each phrase its own
+  choice, it either keeps watching or shuts its eyes in the content arch and nods along on the beat, the tip of its
+  tail swaying a bar at a time; it comes out of it ahead of a break and ahead of the lob, to watch. When the last
+  track's drums leave, it puts its head down and sleeps.
 
 **The design system.** One ink for every line, the ball's included, at the ball's weight (structure at full weight,
-detail at half or less, decoration hardly at all). Two colours and the neutrals: the lamp's amber (the light, the wood,
-the clay, the one warm book) and the rain's blue-grey (the night, the glass, the one cool book, the plant), over a cool
-near-black room and a cream. Unlit things are dark; the lamp is what makes anything light.
+detail at half or less, decoration hardly at all). Two lights and the room between them, as a lofi room is lit: the
+lamp's peach-amber (the light, the wood, the clay, the cat, the warm books, the fairy lights) and the window's
+violet-to-blue (the sky, the wall round it, the curtain, the glass), over an indigo room and a cream. Unlit things are
+dusky, not black: the room is lit by the window too. The finish is the streams': the lamp's bloom, a soft vignette, and
+a film's grain changing a dozen times a second.
 
 ## The lap
 
@@ -126,7 +143,7 @@ resting at the sill's end); the stair, a bar and a half before each drop; and th
 bars) at a time, four looks at the same desk, each track taking them in its own order:
 
 - the cup, close: the ball in its seat, the stair's foot, the band rising out of frame;
-- the desk under the lamp: books, cup, band and the whole lamp over them;
+- the desk under the lamp: the cat, books, cup, band and the whole lamp over them;
 - the window over the desk: the rain, the plant and the mug, and the machine small under the lamp;
 - the lamp's side: the shade, the band's arch, the cup under the light.
 
@@ -176,6 +193,23 @@ What each round of scrubbing found, worst first, and what changed:
     The bottom book is thicker (the stair's risers stay even) and the cup lies in front of its corner: the ball tips
     off and drops into the hollow on beat three.
 
+### The lofi pass
+
+The room was plain: a brown-black box with a window, every frame nearly the same two colours, nothing alive but the
+ball. The machine and its timing were right and are untouched; the room around it is rebuilt.
+
+14. **The palette was one dark.** Now an indigo room lit by two lights, the window's violet and the lamp's peach, the
+    way the streams light theirs; unlit things are dusky rather than black.
+15. **The window did one thing all half hour.** It is now the evening: dusk to night, clouds, the rain's arc, the
+    clearing, the moon. Twelve tracks, one sky going past.
+16. **Nothing in the room was alive.** The cat watches the ball and listens to the music, the fairy lights breathe,
+    the city's windows come and go, a plane goes over. All of it a function of show time, so a scrub is exact.
+17. **Nobody lived there.** The curtain, the fairy lights, the polaroids and notes, the print, the grain on the desk's
+    edge, the mug's colour.
+18. **The picture was clean in a way the streams are not.** The bloom, the vignette and the grain.
+19. **Two frames sliced the cat** (the stair and the desk under the lamp): both re-solved, wider by a little, and the
+    cat and the notes are in the check's list of things a held frame shows whole.
+
 **Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones; a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
@@ -187,8 +221,11 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
 - **A lap a track.** The round is the same twelve times; what changes is the track (its tempo, its kick, its breaks,
   its lob's height), the weather, the lamp's warmth, the night outside and the camera's order. The alternative was a
   new mechanism per track, which the brief ruled out as a gag every few minutes.
-- **The end.** The ball stays in the cup and the lamp goes down to a glow, rather than going out: the window is the
-  last light.
+- **The end.** The ball stays in the cup, the cat sleeps, and the lamp goes down to a glow, rather than going out: the
+  moon and the fairy lights' low glow are the last light.
+- **The cat.** It is the one character, and a kitten for the desk's scale. It nods along in about half the groove's
+  phrases (chosen per phrase, not per track); fewer would read as a cat that watches, more as a gag.
+- **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.
 
 ## Checks
 

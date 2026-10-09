@@ -5,29 +5,29 @@ import { LAMP } from './desk'
 import { MUSIC_END, TRACKS, heldAt, smooth, trackAt } from './music'
 
 /**
- * The room's palette and its light. Two colours and the neutrals: the lamp's amber (the light, the wood, the clay,
- * the one warm book) and the rain's blue-grey (the night, the glass, the one cool book, the plant), over a warm dark
- * and a cream. One ink for every line, the ball's too.
+ * The room's palette and its light: a lofi room. Two lights and the room between them: the lamp's peach-amber (the
+ * light, the wood, the clay, the cat, the warm books) and the window's dusk-to-night violet and blue (the sky, the
+ * wall, the curtain, the glass), over an indigo dark and a cream. One ink for every line, the ball's too.
  */
 
-export const INK = '#17141A'
+export const INK = '#1A1526'
 export const CREAM = '#EFE4CE'
 export const BALL = '#F1E6CF'
 
 export const THEME: Theme = {
   name: 'soft-lamp',
   label: 'Soft Lamp',
-  bg: '#1E1917',
+  bg: '#24223B',
   ink: INK,
-  colors: [BALL, CREAM, '#E7B872', '#5E6E7C'],
+  colors: [BALL, CREAM, '#F2B57A', '#6F6A9E'],
   weight: 0.62,
-  note: 'A desk by a rainy window at night, under one lamp.',
+  note: 'A desk by a window from dusk into a rainy night, under one lamp, with a cat.',
 }
 
 export const WORLD: World = {
   name: 'soft-lamp',
   label: 'Soft Lamp',
-  note: 'A study desk by a rainy window at night: the sill, three books, the headphones, the lamp.',
+  note: 'A study desk by a window from dusk into a rainy night: the sill, three books, the headphones, the lamp, the cat.',
   themes: [THEME],
   backdrops: ['plain'],
   pieces: [],
@@ -35,8 +35,8 @@ export const WORLD: World = {
 }
 
 /** The lamp's light, as warm as it is at its brightest, and the dark it falls off into. */
-export const AMBER = '#EDBE7C'
-export const AMBER_DEEP = '#C9894E'
+export const AMBER = '#F6C185'
+export const AMBER_DEEP = '#E58A57'
 
 /** The shade's mouth: where the light comes from (a little down the shade from the hinge, toward the aim). */
 export const MOUTH = (() => {
@@ -96,20 +96,51 @@ export function warmthAt(t: number): number {
 export const lampColor = (t: number): string => mixHex(AMBER, AMBER_DEEP, warmthAt(t) * 0.55)
 
 /**
- * The rain, 0 to 1: light at the start of the night, heavy through its middle, easing off by the end. Keyed to the
- * tracks (each its own weather), eased across the breaths between them.
+ * The weather, a night's worth over the half hour, keyed to the tracks (each its own) and eased across the breaths
+ * between them. A clear dusk with a few clouds lit from under; the clouds coming over; rain from the third track,
+ * heaviest through Exhale; easing off; and clear again by the last two, with the moon up.
  */
-const RAIN = [0.3, 0.38, 0.5, 0.46, 0.62, 0.74, 0.86, 0.7, 0.8, 0.6, 0.46, 0.32]
-export function rainAt(t: number): number {
+const RAIN = [0, 0.06, 0.3, 0.42, 0.6, 0.72, 0.86, 0.7, 0.52, 0.28, 0.04, 0]
+const CLOUD = [0.3, 0.5, 0.8, 0.85, 0.9, 0.95, 1, 0.95, 0.85, 0.6, 0.3, 0.18]
+
+function perTrack(table: number[], t: number, lead: number, lag: number): number {
   const tr = trackAt(t)
   const next = TRACKS[tr.n + 1]
-  const here = RAIN[tr.n]
-  const v = next ? here + (RAIN[tr.n + 1] - here) * smooth(t, tr.to - 10, next.from + 6) : here
-  return v * (1 - 0.5 * smooth(t, MUSIC_END - 8, MUSIC_END + 6))
+  const here = table[tr.n]
+  return next ? here + (table[tr.n + 1] - here) * smooth(t, tr.to - lead, next.from + lag) : here
 }
+
+/** The rain, 0 to 1. */
+export const rainAt = (t: number): number => perTrack(RAIN, t, 14, 8)
+
+/** How much of the sky the cloud covers, 0 to 1: it comes over ahead of the rain and clears after it. */
+export const cloudAt = (t: number): number => perTrack(CLOUD, t, 24, 14)
 
 /** How far into the night it is, 0 to 1, over the whole show. */
 export const nightAt = (t: number): number => Math.max(0, Math.min(1, t / (MUSIC_END + 6)))
+
+/**
+ * The sky's colours at `t` (its top, its middle, and down at the roofs), from the last of a lofi dusk (violet over
+ * peach) through the blue hour into night, the low sky always a little violet with the city's light.
+ */
+const SKY: [number, string, string, string][] = [
+  [0, '#4A4683', '#A06C9F', '#F2A37F'],
+  [0.05, '#363570', '#7C5A93', '#D88584'],
+  [0.12, '#242752', '#4A3F74', '#7E5684'],
+  [0.24, '#181C3C', '#2A2B57', '#463B69'],
+  [1, '#131733', '#1F2449', '#36345F'],
+]
+export function skyAt(t: number): { top: string; mid: string; low: string; dusk: number } {
+  const u = nightAt(t)
+  let i = 0
+  while (i + 2 < SKY.length && u > SKY[i + 1][0]) i++
+  const [u0, ...a] = SKY[i]
+  const [u1, ...b] = SKY[i + 1]
+  const f = smooth(u, u0, u1)
+  const grey = cloudAt(t) * 0.45
+  const mix = (k: number) => mixHex(mixHex(a[k], b[k], f), '#363A55', grey * (k === 2 ? 0.5 : 1))
+  return { top: mix(0), mid: mix(1), low: mix(2), dusk: 1 - smooth(u, 0, 0.16) }
+}
 
 /** A cheap stable hash, 0 to 1. */
 export const hash = (a: number, b = 0, s = 0): number => {

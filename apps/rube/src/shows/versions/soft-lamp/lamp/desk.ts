@@ -20,6 +20,13 @@ export const DESK = { y: 0, face: 0.28, x0: -12, x1: 12 }
 /** The window's outer frame, and the one bar across it and the one up it. */
 export const WINDOW = { x0: -3.5, x1: 0.62, y0: -5.5, y1: -1.42, frame: 0.16, mullion: -1.44, transom: -3.55 }
 
+/** The glass: inside the frame. */
+export const GLASS = { x0: WINDOW.x0 + WINDOW.frame, x1: WINDOW.x1 - WINDOW.frame, y0: WINDOW.y0 + WINDOW.frame, y1: WINDOW.y1 - 0.12 }
+
+/** The curtain rod over the window, and the one curtain, tied back on the window's left. */
+export const ROD = { y: -5.78, x0: -4.4, x1: 1.05 }
+export const CURTAIN = { x0: -4.3, x1: -3.2, tie: -3.05, hem: -1.72 }
+
 /** The sill: its top, and how far it runs either side of the frame. The ball tips off its right end. */
 export const SILL = { y: -1.42, x0: -3.78, x1: 0.9, thick: 0.1 }
 /** The ball's height on the sill (its middle). */
@@ -40,9 +47,9 @@ export interface Book {
  * thick one, so its top stands a little over the cup's cushion and the last step is a drop into the seat.
  */
 export const BOOKS: Book[] = [
-  { x0: 0.34, x1: 1.4, top: -0.92, bottom: -0.66, cover: '#4B5B6B', pages: '#D9CDB5' },
-  { x0: 0.2, x1: 1.86, top: -0.66, bottom: -0.4, cover: '#7A4A37', pages: '#DCD0B8' },
-  { x0: 0.06, x1: 2.3, top: -0.4, bottom: 0, cover: '#6E6150', pages: '#E3D8C2' },
+  { x0: 0.34, x1: 1.4, top: -0.92, bottom: -0.66, cover: '#3F6E78', pages: '#D9CDB5' },
+  { x0: 0.2, x1: 1.86, top: -0.66, bottom: -0.4, cover: '#A4533C', pages: '#DCD0B8' },
+  { x0: 0.06, x1: 2.3, top: -0.4, bottom: 0, cover: '#B68A44', pages: '#E3D8C2' },
 ]
 
 /**
@@ -80,6 +87,17 @@ export const CONTACT = POT.x + POT.halfW * 0.86 + R
 /** The mug: its middle, half width, height. It stands under the sill, left of the books. */
 export const MUG = { x: -2.35, halfW: 0.3, h: 0.64 }
 
+/**
+ * The cat: a ginger kitten loafed on the desk between the mug and the books, under the sill, facing the stair. It
+ * watches the ball. Its body from `x0` (its rear) to its chest, and its head's middle.
+ */
+export const CAT = { x0: -1.78, chest: -0.76, top: -0.6, head: { x: -0.84, y: -0.66 } }
+
+/** What is pinned to the wall between the window and the lamp, under the lamp's light: polaroids and notes. */
+export const NOTES = { x0: 1.0, x1: 2.62, y0: -3.02, y1: -2.08 }
+/** A small framed print on the wall right of the lamp, seen from the room's wide frame. */
+export const PRINT = { x0: 6.1, x1: 6.92, y0: -4.62, y1: -3.48 }
+
 /** The ball's gravity, cells a second a second: a soft, slow world, but every drop a real drop. */
 export const G = 4.6
 
@@ -95,4 +113,7 @@ export const PROPS: Record<string, [number, number, number, number]> = {
   'far cup': [FAR_CUP.x - FAR_CUP.halfW - 0.05, -FAR_CUP.h, FAR_CUP.x + FAR_CUP.halfW, 0],
   'lamp base': [LAMP.base.x - LAMP.base.w / 2, -0.2, LAMP.base.x + LAMP.base.w / 2, 0],
   shade: [LAMP.hinge.x - 0.45, LAMP.hinge.y - 0.2, LAMP.hinge.x + 0.1, -1.95],
+  cat: [CAT.x0 - 0.04, -1.1, CAT.head.x + 0.34, 0],
+  notes: [NOTES.x0, NOTES.y0, NOTES.x1, NOTES.y1],
+  print: [PRINT.x0, PRINT.y0, PRINT.x1, PRINT.y1],
 }

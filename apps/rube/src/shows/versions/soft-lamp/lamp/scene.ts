@@ -1,22 +1,28 @@
 import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
-import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, LAMP, MUG, POT, R, SILL, WINDOW, type Book } from './desk'
+import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WINDOW, type Book } from './desk'
 import { MUSIC_END, heldAt } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt } from './route'
-import { CREAM, INK, MOUTH, hash, lampAt, lampColor, lightAt, lit, nightAt, rainAt } from './world'
+import { cat } from './cat'
+import { bloom, curtain, fairyGlowAt, fairyLights, grain, notes, print, vignette } from './decor'
+import { night, rgba } from './sky'
+import { CREAM, INK, MOUTH, lampAt, lampColor, lightAt, lit, skyAt } from './world'
 
 /**
  * Everything but the ball, each a drawing told show time, in cells (the drawing is scaled so a unit is a cell).
  *
- * - The room: the wall, warm where the lamp reaches it; the window, and through it the night, the city, the rain
- *   falling, and on the glass the drops, a few of them running; the frame, the sill, and the plant pot on it.
- * - The desk, its edge lit under the lamp; the mug, and its steam; the stair of books; the headphones; the lamp.
- * - Over the ball: the cushion's near lip, so the ball sits in the cup rather than on it.
+ * - The room: the indigo wall, violet by the window and warm where the lamp reaches it; the print and the pinned
+ *   polaroids; the window, and through it the evening (`sky.ts`); the frame, the curtain, the fairy lights
+ *   (`decor.ts`), the sill, and the plant pot on it.
+ * - The desk, its edge lit under the lamp; the mug, and its steam; the cat (`cat.ts`); the stair of books; the
+ *   headphones; the lamp.
+ * - Over the ball: the cushion's near lip, so the ball sits in the cup rather than on it; then the lamp's bloom, the
+ *   vignette and the grain.
  *
- * One job to a thing. The rain is the weather: heavier through the middle of the night, lighter at its ends, a little
- * different for each track. The steam is the held sound, the pad and the keys, and thins as the tea cools through the
- * night. The lamp is only the light. The cup plays the kick, and the ball nods to it. The pot is what the ball comes
- * back off, and it rocks when it does.
+ * One job to a thing. The window is the evening: dusk, the clouds, the rain heaviest through the middle of the night,
+ * then clear with the moon up. The steam is the held sound, the pad and the keys, and thins as the tea cools through
+ * the night; the fairy lights breathe with it. The lamp is only the light. The cup plays the kick, and the ball nods
+ * to it. The pot is what the ball comes back off, and it rocks when it does. The cat is the audience.
  */
 
 type Ctx = CanvasRenderingContext2D
@@ -54,10 +60,6 @@ function viewOf(ctx: Ctx): { x0: number; y0: number; x1: number; y1: number } {
   }
 }
 
-const rgba = (hex: string, a: number): string => {
-  const n = parseInt(hex.slice(1), 16)
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`
-}
 
 function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: number): void {
   const q = Math.min(r, w / 2, h / 2)
@@ -82,165 +84,47 @@ function stroke(ctx: Ctx, lw: number, color = INK): void {
 
 /* ------------------------------------------------------------------ the room */
 
-const WALL = '#161417'
-const WALL_LIT = '#7B5636'
-const NIGHT_TOP = '#161D29'
-const NIGHT_LOW = '#26303F'
-const CITY = '#121823'
-const CITY_FAR = '#1B2230'
-const RAIN = '#A3B2C2'
-const FRAME = '#8E8576'
-const FRAME_LIT = '#E3D3B6'
-
-/** The glass: inside the frame. */
-const GLASS = { x0: WINDOW.x0 + WINDOW.frame, x1: WINDOW.x1 - WINDOW.frame, y0: WINDOW.y0 + WINDOW.frame, y1: WINDOW.y1 - 0.12 }
+const WALL = '#2A2742'
+const WALL_LOW = '#231F38'
+const WALL_LIT = '#C27450'
+const FRAME = '#8A7F8E'
+const FRAME_LIT = '#F0D6B4'
 /** The sash bars, half their width. */
 const BAR = 0.045
 
 function wall(ctx: Ctx, t: number): void {
   const v = viewOf(ctx)
   const lamp = lampAt(t)
-  ctx.fillStyle = WALL
+  const sky = skyAt(t)
+  const wg = ctx.createLinearGradient(0, -6, 0, 0)
+  wg.addColorStop(0, mixHex(WALL, '#3A3058', sky.dusk * 0.5))
+  wg.addColorStop(1, WALL_LOW)
+  ctx.fillStyle = wg
   ctx.fillRect(v.x0 - 1, v.y0 - 1, v.x1 - v.x0 + 2, DESK.y - v.y0 + 1)
-  // The lamp's light on the wall: a soft round of it behind the books and the cup, warmest low down.
-  const g = ctx.createRadialGradient(LAMP.pool.x + 0.1, -0.15, 0.05, LAMP.pool.x + 0.1, -0.7, 3.3)
+  // The window's light on the wall round it: the sky's colour, strong at dusk, faint at night.
+  const cx = (WINDOW.x0 + WINDOW.x1) / 2
+  const cy = (WINDOW.y0 + WINDOW.y1) / 2
+  const w = ctx.createRadialGradient(cx, cy + 0.6, 0.5, cx, cy + 0.6, 4.6)
+  w.addColorStop(0, rgba(sky.low, 0.22 + 0.28 * sky.dusk))
+  w.addColorStop(1, rgba(sky.low, 0))
+  ctx.fillStyle = w
+  ctx.fillRect(v.x0 - 1, v.y0 - 1, v.x1 - v.x0 + 2, DESK.y - v.y0 + 1)
+  // The fairy lights' warmth along the wall over the window.
+  const f = fairyGlowAt(t)
+  const fg = ctx.createRadialGradient(cx, WINDOW.y0 + 0.4, 0.2, cx, WINDOW.y0 + 0.4, 3.2)
+  fg.addColorStop(0, rgba('#FFC890', 0.13 * f))
+  fg.addColorStop(1, rgba('#FFC890', 0))
+  ctx.fillStyle = fg
+  ctx.fillRect(v.x0 - 1, v.y0 - 1, v.x1 - v.x0 + 2, DESK.y - v.y0 + 1)
+  // The lamp's light on the wall: a warm round of it behind the books and the cup, warmest low down.
+  const g = ctx.createRadialGradient(LAMP.pool.x + 0.1, -0.15, 0.05, LAMP.pool.x + 0.1, -0.7, 3.8)
   const warm = lampColor(t)
-  g.addColorStop(0, rgba(mixHex(WALL_LIT, warm, 0.4), 0.92 * lamp))
+  g.addColorStop(0, rgba(mixHex(WALL_LIT, warm, 0.45), 0.9 * lamp))
   g.addColorStop(0.3, rgba(WALL_LIT, 0.5 * lamp))
-  g.addColorStop(0.65, rgba(mixHex(WALL_LIT, WALL, 0.5), 0.18 * lamp))
+  g.addColorStop(0.65, rgba(mixHex(WALL_LIT, '#6A3F5A', 0.5), 0.2 * lamp))
   g.addColorStop(1, rgba(WALL, 0))
   ctx.fillStyle = g
   ctx.fillRect(v.x0 - 1, v.y0 - 1, v.x1 - v.x0 + 2, DESK.y - v.y0 + 1)
-}
-
-/** The night through the glass: the sky, the city low in it with its lit windows going out, the rain falling. */
-function night(ctx: Ctx, t: number): void {
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect(GLASS.x0, GLASS.y0, GLASS.x1 - GLASS.x0, GLASS.y1 - GLASS.y0)
-  ctx.clip()
-  const g = ctx.createLinearGradient(0, GLASS.y0, 0, GLASS.y1)
-  g.addColorStop(0, NIGHT_TOP)
-  g.addColorStop(1, NIGHT_LOW)
-  ctx.fillStyle = g
-  ctx.fillRect(GLASS.x0, GLASS.y0, GLASS.x1 - GLASS.x0, GLASS.y1 - GLASS.y0)
-  // Two rows of buildings, the far one paler, low in the pane: the city is below the window, across the street.
-  const n = nightAt(t)
-  for (const [row, color, base, tall] of [[0, CITY_FAR, -1.9, 1.1], [1, CITY, -1.35, 0.85]] as const) {
-    let x = GLASS.x0 - 0.3
-    let i = 0
-    while (x < GLASS.x1 + 0.3) {
-      const w = 0.45 + hash(i, row, 7) * 0.7
-      const h = 0.25 + hash(i, row, 11) * tall
-      ctx.fillStyle = color
-      ctx.fillRect(x, base - h, w, h + 2)
-      // Its windows: a few lit, warm and dim; each goes out at its own time through the night.
-      const cols = Math.max(1, Math.floor(w / 0.16))
-      const rows = Math.max(1, Math.floor(h / 0.17))
-      for (let a = 0; a < cols; a++) {
-        for (let b = 0; b < rows; b++) {
-          const key = hash(i * 31 + a, b + row * 17, 3)
-          if (key > 0.2) continue
-          const out = 0.15 + hash(i * 31 + a, b + row * 17, 5) * 1.1
-          if (n > out) continue
-          const fade = Math.min(1, (out - n) * 30)
-          ctx.fillStyle = rgba(row ? '#C9934F' : '#A67C4E', (row ? 0.55 : 0.32) * fade)
-          ctx.fillRect(x + 0.06 + a * 0.16, base - h + 0.08 + b * 0.17, 0.06, 0.07)
-        }
-      }
-      x += w + 0.02 + hash(i, row, 13) * 0.12
-      i++
-    }
-  }
-  // The rain falling past: thin, faint, fast, slanting a little with the wind. As many as the weather has.
-  const rain = rainAt(t)
-  const count = 30 + 110 * rain
-  ctx.lineWidth = 0.012
-  ctx.lineCap = 'round'
-  const H = GLASS.y1 - GLASS.y0 + 0.6
-  for (let i = 0; i < 140; i++) {
-    const a = Math.min(1, count - i)
-    if (a <= 0) break
-    const speed = 6.2 + hash(i, 1) * 2.4
-    const len = 0.28 + hash(i, 2) * 0.3
-    const y = GLASS.y0 - 0.3 + ((hash(i, 3) * H + t * speed) % H)
-    const x = GLASS.x0 + hash(i, 4) * (GLASS.x1 - GLASS.x0 + 0.6) - 0.3 - (y - GLASS.y0) * 0.1
-    ctx.strokeStyle = rgba(RAIN, (0.07 + 0.08 * hash(i, 5)) * a)
-    ctx.beginPath()
-    ctx.moveTo(x, y)
-    ctx.lineTo(x - len * 0.1, y - len)
-    ctx.stroke()
-  }
-  drops(ctx, t, rain)
-  ctx.restore()
-}
-
-/**
- * The drops on the glass. Each bead gathers where it lands, sits, and some go: a bead's life is its own length, and at
- * its end it runs down the pane in fits and starts, leaving a faint wet line, and is gone; then it lands again
- * somewhere else. Nothing here is kept from frame to frame: every bead is where its own life puts it at `t`.
- */
-function drops(ctx: Ctx, t: number, rain: number): void {
-  const count = 30 + 110 * rain
-  const W = GLASS.x1 - GLASS.x0
-  const Hh = GLASS.y1 - GLASS.y0
-  for (let i = 0; i < 190; i++) {
-    const a = Math.min(1, count - i)
-    if (a <= 0) break
-    const life = 26 + hash(i, 21) * 40
-    const u = (t + hash(i, 22) * life) / life
-    const k = Math.floor(u)
-    const f = u - k
-    const x0 = GLASS.x0 + 0.04 + hash(i, k, 23) * (W - 0.08)
-    const y0 = GLASS.y0 + 0.1 + hash(i, k, 24) * (Hh - 0.2)
-    const r = 0.012 + hash(i, k, 25) ** 2 * 0.03
-    const runs = hash(i, k, 26) < 0.3 && r > 0.02
-    // It gathers over its first two seconds.
-    let size = r * Math.min(1, (f * life) / 2)
-    let y = y0
-    let x = x0
-    let alpha = a
-    if (runs) {
-      // The last quarter of its life it runs: three stops on the way, as a drop does, and fades at the bottom.
-      const run = Math.max(0, (f - 0.72) / 0.28)
-      if (run > 0) {
-        const n = 3
-        const s = run - Math.sin(2 * Math.PI * n * run) / (2 * Math.PI * n)
-        const dist = Math.min(Hh - (y0 - GLASS.y0), 0.9 + hash(i, k, 27) * 1.8)
-        y = y0 + s * dist
-        x = x0 + Math.sin(s * 5 + i) * 0.02
-        size *= 1 - 0.3 * run
-        alpha *= 1 - smoothStep(run, 0.8, 1)
-        // The wet line it leaves.
-        ctx.strokeStyle = rgba('#5C6B7E', 0.35 * alpha)
-        ctx.lineWidth = size * 0.9
-        ctx.beginPath()
-        ctx.moveTo(x0, y0)
-        ctx.lineTo(x, y)
-        ctx.stroke()
-      }
-    } else {
-      alpha *= 1 - smoothStep(f, 0.92, 1)
-    }
-    if (size < 0.004) continue
-    // A bead of water: a soft pale bead, and in the bigger ones a point of light, warm on the lamp's side.
-    const warm = Math.max(0, Math.min(1, (x - GLASS.x0) / W))
-    ctx.fillStyle = rgba(mixHex('#7D8EA1', '#A08A6C', warm * 0.5), 0.3 * alpha)
-    ctx.beginPath()
-    ctx.ellipse(x, y, size * 0.82, size, 0, 0, Math.PI * 2)
-    ctx.fill()
-    if (size > 0.02) {
-      ctx.fillStyle = rgba(mixHex('#B4C0CC', '#E4C191', warm), 0.45 * alpha)
-      ctx.beginPath()
-      ctx.arc(x + size * 0.25, y - size * 0.4, size * 0.22, 0, Math.PI * 2)
-      ctx.fill()
-    }
-  }
-}
-
-const smoothStep = (x: number, a: number, b: number): number => {
-  const u = Math.max(0, Math.min(1, (x - a) / (b - a)))
-  return u * u * (3 - 2 * u)
 }
 
 /** The window's frame, its bars, and the sill. */
@@ -296,7 +180,7 @@ function frame(ctx: Ctx, lw: number, t: number): void {
   const g = ctx.createLinearGradient(sx0, 0, sx1, 0)
   for (let i = 0; i <= 6; i++) {
     const x = sx0 + ((sx1 - sx0) * i) / 6
-    g.addColorStop(i / 6, lit('#8C8273', FRAME_LIT, lightAt(x, SILL.y, 1) * lamp))
+    g.addColorStop(i / 6, lit('#8E8296', FRAME_LIT, lightAt(x, SILL.y, 1) * lamp))
   }
   ctx.fillStyle = g
   ctx.fill()
@@ -304,7 +188,7 @@ function frame(ctx: Ctx, lw: number, t: number): void {
   // The apron under it, set back.
   ctx.beginPath()
   ctx.rect(x0 + 0.06, SILL.y + SILL.thick, x1 - x0 - 0.12, 0.1)
-  ctx.fillStyle = mixHex(WALL, '#6E6457', 0.45)
+  ctx.fillStyle = mixHex(WALL, '#6E6480', 0.45)
   ctx.fill()
   stroke(ctx, lw * 0.6)
 }
@@ -337,11 +221,11 @@ function pot(ctx: Ctx, lw: number, t: number): void {
   ctx.rotate(rock)
   ctx.translate(-pivot, -base)
   // The plant: a few long leaves, dark against the glass, stirring very slightly in the cold off the window.
-  const leaves: [number, number, number][] = [[-0.55, 0.62, 0], [-0.2, 0.78, 1], [0.12, 0.7, 2], [0.42, 0.56, 3], [0.7, 0.44, 4]]
+  const leaves: [number, number, number][] = [[-0.75, 0.5, 0], [-0.45, 0.66, 1], [-0.2, 0.8, 2], [0.05, 0.74, 3], [0.3, 0.62, 4], [0.55, 0.52, 5], [0.85, 0.42, 6]]
   const stir = rock * 2.5
   for (const [ang, len, i] of leaves) {
     const a = ang + 0.04 * Math.sin(t * 0.37 + i * 1.7) + stir * (0.6 + i * 0.1)
-    const sx = x + (i - 2) * 0.05
+    const sx = x + (i - 3) * 0.035
     const sy = base - h + 0.04
     const tx = sx + Math.sin(a) * len
     const ty = sy - Math.cos(a) * len
@@ -351,7 +235,7 @@ function pot(ctx: Ctx, lw: number, t: number): void {
     ctx.moveTo(sx, sy)
     ctx.quadraticCurveTo((sx + tx) / 2 + nx, (sy + ty) / 2 + ny, tx, ty)
     ctx.quadraticCurveTo((sx + tx) / 2 - nx * 0.4, (sy + ty) / 2 - ny * 0.4, sx, sy)
-    ctx.fillStyle = lit('#2E3A3B', '#586A61', lightAt(tx, ty, 1) * lamp)
+    ctx.fillStyle = lit(i % 2 ? '#2F4A45' : '#355A4A', i % 2 ? '#5F8F6E' : '#79A86B', Math.min(1, lightAt(tx, ty, 1) * lamp + 0.15))
     ctx.fill()
     stroke(ctx, lw * 0.6)
   }
@@ -362,11 +246,11 @@ function pot(ctx: Ctx, lw: number, t: number): void {
   ctx.lineTo(x + halfW * 0.78, base)
   ctx.lineTo(x - halfW * 0.78, base)
   ctx.closePath()
-  ctx.fillStyle = lit('#6C3F2F', '#B9755A', lightAt(x, base - h / 2, 1) * lamp)
+  ctx.fillStyle = lit('#7A4636', '#D07E5E', Math.min(1, lightAt(x, base - h / 2, 1) * lamp + 0.12))
   ctx.fill()
   stroke(ctx, lw)
   roundRect(ctx, x - halfW - 0.03, base - h, halfW * 2 + 0.06, 0.12, 0.02)
-  ctx.fillStyle = lit('#7A4735', '#C8866A', lightAt(x, base - h, 1) * lamp)
+  ctx.fillStyle = lit('#8A5240', '#E0946E', Math.min(1, lightAt(x, base - h, 1) * lamp + 0.12))
   ctx.fill()
   stroke(ctx, lw)
   ctx.restore()
@@ -378,17 +262,30 @@ function desk(ctx: Ctx, lw: number, t: number): void {
   const v = viewOf(ctx)
   const lamp = lampAt(t)
   // Under the desk: the room's dark.
-  ctx.fillStyle = '#0D0B0C'
+  ctx.fillStyle = '#16121F'
   ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, v.y1 - DESK.y + 1)
   // Its front edge, lit along under the lamp.
   const g = ctx.createLinearGradient(v.x0, 0, v.x1, 0)
   const n = 10
   for (let i = 0; i <= n; i++) {
     const x = v.x0 + ((v.x1 - v.x0) * i) / n
-    g.addColorStop(i / n, lit('#1C1715', mixHex('#9A6B45', lampColor(t), 0.25), lightAt(x, 0.1) * lamp))
+    g.addColorStop(i / n, lit('#3A2733', mixHex('#B47148', lampColor(t), 0.25), lightAt(x, 0.1) * lamp))
   }
   ctx.fillStyle = g
   ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, DESK.face)
+  // The wood's grain along its edge, faint.
+  ctx.strokeStyle = rgba('#2A1A22', 0.28)
+  ctx.lineWidth = 0.012
+  for (let i = 0; i < 4; i++) {
+    const y = DESK.y + 0.06 + i * 0.055
+    ctx.beginPath()
+    for (let x = Math.floor(v.x0) - 1; x <= v.x1 + 1; x += 0.25) {
+      const yy = y + Math.sin(x * (0.7 + i * 0.23) + i * 2) * 0.012
+      if (x === Math.floor(v.x0) - 1) ctx.moveTo(x, yy)
+      else ctx.lineTo(x, yy)
+    }
+    ctx.stroke()
+  }
   // The top's edge catches the light: a thin bright line along it where the lamp is.
   const e = ctx.createLinearGradient(v.x0, 0, v.x1, 0)
   for (let i = 0; i <= n; i++) {
@@ -425,14 +322,14 @@ function mug(ctx: Ctx, lw: number, t: number): void {
   ctx.strokeStyle = INK
   ctx.stroke()
   ctx.lineWidth = 0.075 - lw * 2
-  ctx.strokeStyle = lit('#5E5750', CREAM, l * 0.5)
+  ctx.strokeStyle = lit('#5A4058', '#D79A9C', l * 0.5)
   ctx.stroke()
   // The body: cream, lit from the right.
   roundRect(ctx, x0, top, halfW * 2, h, 0.06)
   const g = ctx.createLinearGradient(x0, 0, x1, 0)
-  g.addColorStop(0, lit('#4F4943', '#CFC3AE', l * 0.4))
-  g.addColorStop(0.65, lit('#6E665C', CREAM, l))
-  g.addColorStop(1, lit('#665E55', '#F7EBD3', l))
+  g.addColorStop(0, lit('#5A4058', '#D79A9C', l * 0.4))
+  g.addColorStop(0.65, lit('#7A5470', '#EBB0AA', l))
+  g.addColorStop(1, lit('#6E4C66', '#F6C6BA', l))
   ctx.fillStyle = g
   ctx.fill()
   stroke(ctx, lw)
@@ -547,10 +444,10 @@ function cushion(t: number): number {
   return d
 }
 
-const SHELL = '#252429'
-const SHELL_LIT = '#5E5955'
-const PAD = '#3A3740'
-const PAD_LIT = '#8A7F75'
+const SHELL = '#2A2638'
+const SHELL_LIT = '#7A6A80'
+const PAD = '#3F3548'
+const PAD_LIT = '#B08A86'
 
 /** The near cup's cushion, from the side: a soft pad with rounded shoulders and a hollow between them. */
 function cushionPath(ctx: Ctx, top: number): void {
@@ -671,8 +568,8 @@ function lip(ctx: Ctx, lw: number, t: number): void {
 
 /* ------------------------------------------------------------------ the lamp */
 
-const METAL = '#232226'
-const METAL_LIT = '#877A6E'
+const METAL = '#24363C'
+const METAL_LIT = '#7FA39C'
 
 function lamp(ctx: Ctx, lw: number, t: number): void {
   const on = lampAt(t)
@@ -779,8 +676,12 @@ function lamp(ctx: Ctx, lw: number, t: number): void {
 
 export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) => {
   wall(ctx, c.t)
+  print(ctx, lw, c.t)
+  notes(ctx, lw, c.t)
   night(ctx, c.t)
   frame(ctx, lw, c.t)
+  curtain(ctx, lw, c.t)
+  fairyLights(ctx, lw, c.t)
   pot(ctx, lw, c.t)
   desk(ctx, lw, c.t)
 }))
@@ -790,9 +691,15 @@ export const things = scenery<null>(
   (p, _s, c) => inCells(p, c, (ctx, lw) => {
     mug(ctx, lw, c.t)
     steam(ctx, c.t)
+    cat(ctx, lw, c.t)
     BOOKS.forEach((b, i) => book(ctx, lw, b, i, c.t))
     headphones(ctx, lw, c.t)
     lamp(ctx, lw, c.t)
   }),
-  (p, _s, c) => inCells(p, c, (ctx, lw) => lip(ctx, lw, c.t)),
+  (p, _s, c) => inCells(p, c, (ctx, lw) => {
+    lip(ctx, lw, c.t)
+    bloom(ctx, c.t)
+    vignette(ctx)
+    grain(ctx, c.t)
+  }),
 )

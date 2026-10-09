@@ -32,8 +32,8 @@ const W = 1.3
 const WIDE = { x: 0.9, y: -2.2, cells: 7.0 }
 /** The lower window and the whole machine: what a lob needs, and what a break draws back to. */
 const ROOM = { x: -0.17, y: -1.95, cells: 5.3 }
-/** The stair and the cup, with the sill's end over them. */
-const STAIR = { x: 1.5, y: -1.3, cells: 3.5 }
+/** The stair and the cup, with the sill's end over them, and the cat watching from beside the books. */
+const STAIR = { x: 1.45, y: -1.3, cells: 3.9 }
 
 /**
  * Where the camera sits with the listener through a groove, a phrase (eight bars) at a time. Each track takes them in
@@ -42,8 +42,8 @@ const STAIR = { x: 1.5, y: -1.3, cells: 3.5 }
 const GROOVE = [
   // The cup, close: the ball in its seat, the stair's foot, the band rising out of frame.
   { x: 1.75, y: -0.64, cells: 2.45 },
-  // The desk under the lamp: books, cup, band, the shade whole over them.
-  { x: 2.15, y: -1.55, cells: 4.2 },
+  // The desk under the lamp: the cat, books, cup, band, the shade whole over them.
+  { x: 2.0, y: -1.55, cells: 4.5 },
   // The window over the desk: the rain, the plant and the mug, and the stair and the cup small under the lamp.
   { x: 0.21, y: -1.9, cells: 4.9 },
   // From the lamp's side: the shade, the band's arch, the cup under the light.

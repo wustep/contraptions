@@ -1,0 +1,410 @@
+import { mixHex } from '../../../../parts'
+import { CURTAIN, NOTES, PRINT, ROD, WINDOW } from './desk'
+import { MUSIC_END, heldAt, smooth } from './music'
+import { rgba } from './sky'
+import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, skyAt } from './world'
+
+/**
+ * What makes the room a room someone lives in, and the picture's finish.
+ *
+ * - The curtain, tied back on the window's left, on its rod.
+ * - The fairy lights strung across the top of the window in two swags and along the wall: they come on, bulb by bulb,
+ *   just after the lamp, and breathe with the held sound (the pad and the keys), each at its own pace.
+ * - Polaroids and notes pinned to the wall in the lamp's light; a small print on the far wall.
+ * - Over everything: the lamp's bloom, a vignette, and a film's grain, so the picture has the soft, worn finish of the
+ *   streams it is in the manner of.
+ */
+
+type Ctx = CanvasRenderingContext2D
+
+/* ------------------------------------------------------------------ the curtain */
+
+export function curtain(ctx: Ctx, lw: number, t: number): void {
+  const sky = skyAt(t)
+  const lamp = lampAt(t)
+  const { x0, x1, tie, hem } = CURTAIN
+  const top = ROD.y + 0.06
+  const waist = { x0: x0 + 0.08, x1: x0 + 0.5 }
+  // Gathered at the rod, drawn in at the tie, falling loose below it.
+  const shape = () => {
+    ctx.beginPath()
+    ctx.moveTo(x0, top)
+    ctx.lineTo(x1, top)
+    ctx.bezierCurveTo(x1 - 0.05, top + 1.2, waist.x1 + 0.1, tie - 0.6, waist.x1, tie)
+    ctx.bezierCurveTo(waist.x1 + 0.05, tie + 0.5, x0 + 0.68, hem - 0.2, x0 + 0.72, hem)
+    ctx.quadraticCurveTo(x0 + 0.36, hem + 0.06, x0 - 0.02, hem)
+    ctx.bezierCurveTo(x0 + 0.02, tie + 0.4, waist.x0 - 0.04, tie + 0.1, waist.x0, tie)
+    ctx.bezierCurveTo(waist.x0 - 0.05, tie - 0.8, x0 - 0.02, top + 1, x0, top)
+    ctx.closePath()
+  }
+  shape()
+  const base = mixHex('#4E3A5E', '#7A5378', sky.dusk * 0.6)
+  const l = lightAt(x1, -2.5, 1) * lamp
+  const g = ctx.createLinearGradient(x0, 0, x1, 0)
+  // Its folds: light and shade across it, the edge toward the window lit by the sky.
+  const folds = 9
+  for (let i = 0; i <= folds; i++) {
+    const u = i / folds
+    const fold = 0.5 + 0.5 * Math.cos(u * Math.PI * 2 * 3.2)
+    const c = mixHex(mixHex(base, '#2A2140', 0.45 * fold), mixHex(sky.low, '#F2B57A', l), 0.12 + 0.28 * u * u)
+    g.addColorStop(u, c)
+  }
+  ctx.fillStyle = g
+  ctx.fill()
+  ctx.strokeStyle = INK
+  ctx.lineWidth = lw
+  ctx.stroke()
+  // The fold lines, faint.
+  ctx.save()
+  shape()
+  ctx.clip()
+  ctx.strokeStyle = rgba('#1E1830', 0.35)
+  ctx.lineWidth = lw * 0.5
+  for (let i = 1; i < 5; i++) {
+    const a = x0 + ((x1 - x0) * i) / 5
+    const b = waist.x0 + ((waist.x1 - waist.x0) * i) / 5
+    const c = x0 + 0.72 * (i / 5)
+    ctx.beginPath()
+    ctx.moveTo(a, top)
+    ctx.quadraticCurveTo((a + b) / 2, (top + tie) / 2 + 0.3, b, tie)
+    ctx.quadraticCurveTo((b + c) / 2 - 0.02, (tie + hem) / 2, c, hem)
+    ctx.stroke()
+  }
+  ctx.restore()
+  // The tie: a band round its waist.
+  ctx.beginPath()
+  ctx.ellipse((waist.x0 + waist.x1) / 2, tie, (waist.x1 - waist.x0) / 2 + 0.04, 0.05, 0, 0, Math.PI * 2)
+  ctx.fillStyle = mixHex('#B07A5A', '#E2A76F', l)
+  ctx.fill()
+  ctx.stroke()
+  // The rod, over the window and past it, and its ends.
+  ctx.beginPath()
+  ctx.moveTo(ROD.x0, ROD.y)
+  ctx.lineTo(ROD.x1, ROD.y)
+  ctx.lineWidth = 0.06
+  ctx.strokeStyle = INK
+  ctx.stroke()
+  ctx.lineWidth = 0.06 - lw * 2
+  ctx.strokeStyle = mixHex('#5C4A3C', '#B98A5C', lightAt(ROD.x1, ROD.y, 1) * lamp)
+  ctx.stroke()
+  for (const x of [ROD.x0, ROD.x1]) {
+    ctx.beginPath()
+    ctx.arc(x, ROD.y, 0.06, 0, Math.PI * 2)
+    ctx.fillStyle = '#6E5A48'
+    ctx.fill()
+    ctx.lineWidth = lw
+    ctx.strokeStyle = INK
+    ctx.stroke()
+  }
+  // Its rings on the rod.
+  for (let i = 0; i < 6; i++) {
+    const x = x0 + 0.06 + i * ((x1 - x0 - 0.12) / 5)
+    ctx.beginPath()
+    ctx.ellipse(x, ROD.y + 0.02, 0.04, 0.06, 0, 0, Math.PI * 2)
+    ctx.lineWidth = lw * 0.6
+    ctx.stroke()
+  }
+}
+
+/* ------------------------------------------------------------------ the fairy lights */
+
+interface Bulb {
+  x: number
+  y: number
+  i: number
+  color: string
+}
+
+/** Where the string hangs: swags between hooks, sagging as far as each says. */
+const SWAGS: [number, number, number, number, number][] = [
+  // x0, y0, x1, y1, sag
+  [WINDOW.x0 + 0.05, WINDOW.y0 + 0.08, WINDOW.mullion, WINDOW.y0 + 0.08, 1.05],
+  [WINDOW.mullion, WINDOW.y0 + 0.08, WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 0.85],
+  [WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 2.75, -4.95, 0.45],
+]
+/** A point along a swag, `u` 0 to 1: a parabola from hook to hook, `sag` below the chord at its middle. */
+function swagAt(s: [number, number, number, number, number], u: number): { x: number; y: number } {
+  const [x0, y0, x1, y1, sag] = s
+  return { x: x0 + (x1 - x0) * u, y: y0 + (y1 - y0) * u + 4 * sag * u * (1 - u) }
+}
+
+const COLORS = ['#FFD9A0', '#FFC27E', '#FFB0A0', '#FFE7BC', '#FFC27E']
+const BULBS: Bulb[] = (() => {
+  const out: Bulb[] = []
+  let i = 0
+  for (const s of SWAGS) {
+    const len = Math.hypot(s[2] - s[0], s[3] - s[1]) + s[4] * 1.4
+    const n = Math.round(len / 0.3)
+    for (let j = 1; j < n; j++) {
+      const p = swagAt(s, j / n)
+      out.push({ x: p.x, y: p.y, i, color: COLORS[i % COLORS.length] })
+      i++
+    }
+  }
+  return out
+})()
+
+/** When the lights come on: bulb by bulb along the string, a moment after the lamp. */
+const LIGHTS_ON = LAMP_ON + 2.4
+
+/** How bright bulb `b` is at `t`, 0 to 1. */
+function bulbAt(b: Bulb, t: number): number {
+  const on = smooth(t, LIGHTS_ON + b.i * 0.07, LIGHTS_ON + b.i * 0.07 + 0.35)
+  // A flicker as each catches.
+  const catching = t > LIGHTS_ON + b.i * 0.07 && t < LIGHTS_ON + b.i * 0.07 + 0.35 ? 0.6 + 0.4 * Math.sin(t * 90 + b.i) : 1
+  // They go down last, after the lamp, from the far end back, to a low glow by the moon.
+  const off = 1 - 0.6 * smooth(t, MUSIC_END + 1 + (BULBS.length - b.i) * 0.05, MUSIC_END + 2.2 + (BULBS.length - b.i) * 0.05)
+  const breathe = 0.62 + 0.26 * heldAt(t) + 0.12 * Math.sin(t * (0.35 + hash(b.i, 41) * 0.5) + hash(b.i, 42) * 6.3)
+  return on * catching * off * breathe
+}
+
+export function fairyLights(ctx: Ctx, lw: number, t: number): void {
+  // The wire.
+  ctx.strokeStyle = rgba('#141020', 0.9)
+  ctx.lineWidth = lw * 0.45
+  for (const s of SWAGS) {
+    ctx.beginPath()
+    for (let j = 0; j <= 24; j++) {
+      const p = swagAt(s, j / 24)
+      if (j === 0) ctx.moveTo(p.x, p.y)
+      else ctx.lineTo(p.x, p.y)
+    }
+    ctx.stroke()
+  }
+  // The bulbs, each with its glow.
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  for (const b of BULBS) {
+    const a = bulbAt(b, t)
+    if (a < 0.01) continue
+    const g = ctx.createRadialGradient(b.x, b.y + 0.03, 0, b.x, b.y + 0.03, 0.32)
+    g.addColorStop(0, rgba(b.color, 0.42 * a))
+    g.addColorStop(0.35, rgba(b.color, 0.12 * a))
+    g.addColorStop(1, rgba(b.color, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(b.x - 0.35, b.y - 0.32, 0.7, 0.7)
+  }
+  ctx.restore()
+  for (const b of BULBS) {
+    const a = bulbAt(b, t)
+    ctx.beginPath()
+    ctx.ellipse(b.x, b.y + 0.035, 0.022, 0.032, 0, 0, Math.PI * 2)
+    ctx.fillStyle = mixHex('#5A4A44', mixHex(b.color, '#FFFFFF', 0.4), a)
+    ctx.fill()
+    ctx.fillStyle = '#1D1826'
+    ctx.fillRect(b.x - 0.012, b.y - 0.006, 0.024, 0.016)
+  }
+}
+
+/** How much light the fairy lights give the wall under them, 0 to 1 (for the wall's own glow). */
+export const fairyGlowAt = (t: number): number => (BULBS.length ? bulbAt(BULBS[Math.floor(BULBS.length / 2)], t) : 0)
+
+/* ------------------------------------------------------------------ the wall */
+
+/** Polaroids and notes, pinned up between the window and the lamp. */
+export function notes(ctx: Ctx, lw: number, t: number): void {
+  const lamp = lampAt(t)
+  const pieces: { x: number; y: number; w: number; h: number; rot: number; kind: 'photo' | 'note'; tint: string; art: string }[] = [
+    { x: NOTES.x0 + 0.04, y: NOTES.y0 + 0.08, w: 0.42, h: 0.5, rot: -0.08, kind: 'photo', tint: '#F09A7C', art: '#5B4A86' },
+    { x: NOTES.x0 + 0.52, y: NOTES.y0 + 0.02, w: 0.42, h: 0.5, rot: 0.06, kind: 'photo', tint: '#7FB6C9', art: '#2F5A6E' },
+    { x: NOTES.x0 + 1.06, y: NOTES.y0 + 0.14, w: 0.34, h: 0.34, rot: -0.04, kind: 'note', tint: '#E9C46A', art: '' },
+    { x: NOTES.x0 + 0.36, y: NOTES.y0 + 0.6, w: 0.3, h: 0.3, rot: 0.1, kind: 'note', tint: '#E89AAE', art: '' },
+    { x: NOTES.x0 + 0.86, y: NOTES.y0 + 0.5, w: 0.42, h: 0.38, rot: -0.05, kind: 'photo', tint: '#B9A0D9', art: '#E5A86E' },
+  ]
+  for (const p of pieces) {
+    const cx = p.x + p.w / 2
+    const cy = p.y + p.h / 2
+    const l = Math.min(1, lightAt(cx, cy, 1) * lamp * 1.25)
+    const dim = (c: string) => lit(mixHex(c, '#1E1A30', 0.72), c, l)
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.rotate(p.rot)
+    // Its shadow on the wall.
+    ctx.fillStyle = rgba('#120E1C', 0.35 * (0.3 + l))
+    ctx.fillRect(-p.w / 2 + 0.025, -p.h / 2 + 0.03, p.w, p.h)
+    ctx.fillStyle = dim(p.kind === 'photo' ? '#EEE6D6' : p.tint)
+    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h)
+    ctx.strokeStyle = INK
+    ctx.lineWidth = lw * 0.6
+    ctx.strokeRect(-p.w / 2, -p.h / 2, p.w, p.h)
+    if (p.kind === 'photo') {
+      // A small picture: a sky over a horizon, the sun or the moon in it.
+      const iw = p.w - 0.07
+      const ih = p.h - 0.16
+      const ix = -iw / 2
+      const iy = -p.h / 2 + 0.035
+      const g = ctx.createLinearGradient(0, iy, 0, iy + ih)
+      g.addColorStop(0, dim(p.art))
+      g.addColorStop(1, dim(p.tint))
+      ctx.fillStyle = g
+      ctx.fillRect(ix, iy, iw, ih)
+      ctx.fillStyle = dim(mixHex(p.art, '#1A1626', 0.5))
+      ctx.beginPath()
+      ctx.moveTo(ix, iy + ih)
+      ctx.lineTo(ix, iy + ih * 0.72)
+      ctx.quadraticCurveTo(ix + iw * 0.35, iy + ih * 0.55, ix + iw * 0.6, iy + ih * 0.7)
+      ctx.quadraticCurveTo(ix + iw * 0.8, iy + ih * 0.78, ix + iw, iy + ih * 0.66)
+      ctx.lineTo(ix + iw, iy + ih)
+      ctx.fill()
+      ctx.fillStyle = dim('#FFF0D0')
+      ctx.beginPath()
+      ctx.arc(ix + iw * 0.68, iy + ih * 0.35, 0.035, 0, Math.PI * 2)
+      ctx.fill()
+    } else {
+      // A few lines of writing, as marks.
+      ctx.strokeStyle = rgba('#3A2E3E', 0.45)
+      ctx.lineWidth = 0.012
+      for (let k = 0; k < 3; k++) {
+        ctx.beginPath()
+        ctx.moveTo(-p.w / 2 + 0.05, -p.h / 2 + 0.09 + k * 0.07)
+        ctx.lineTo(p.w / 2 - 0.05 - (k === 2 ? 0.1 : 0), -p.h / 2 + 0.09 + k * 0.07)
+        ctx.stroke()
+      }
+    }
+    // The pin.
+    ctx.beginPath()
+    ctx.arc(0, -p.h / 2 + 0.03, 0.022, 0, Math.PI * 2)
+    ctx.fillStyle = dim(p.kind === 'photo' ? '#D9605A' : '#5A8FA8')
+    ctx.fill()
+    ctx.restore()
+  }
+}
+
+/** A small framed print on the far wall: a wave under a low sun, in the room's two colours. */
+export function print(ctx: Ctx, lw: number, t: number): void {
+  const lamp = lampAt(t)
+  const { x0, x1, y0, y1 } = PRINT
+  const l = Math.min(1, lightAt((x0 + x1) / 2, (y0 + y1) / 2, 1) * lamp * 1.5 + 0.08)
+  const dim = (c: string) => lit(mixHex(c, '#1E1A30', 0.7), c, l)
+  ctx.fillStyle = rgba('#120E1C', 0.4)
+  ctx.fillRect(x0 + 0.04, y0 + 0.05, x1 - x0, y1 - y0)
+  ctx.fillStyle = dim('#3A2A22')
+  ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
+  ctx.strokeStyle = INK
+  ctx.lineWidth = lw
+  ctx.strokeRect(x0, y0, x1 - x0, y1 - y0)
+  const m = 0.1
+  const ix0 = x0 + m
+  const iy0 = y0 + m
+  const iw = x1 - x0 - 2 * m
+  const ih = y1 - y0 - 2 * m
+  ctx.fillStyle = dim('#EDE2CC')
+  ctx.fillRect(ix0, iy0, iw, ih)
+  const pad = 0.07
+  const g = ctx.createLinearGradient(0, iy0 + pad, 0, iy0 + ih - pad)
+  g.addColorStop(0, dim('#6D5D9E'))
+  g.addColorStop(0.6, dim('#E59A86'))
+  g.addColorStop(1, dim('#F2C38A'))
+  ctx.fillStyle = g
+  ctx.fillRect(ix0 + pad, iy0 + pad, iw - 2 * pad, ih - 2 * pad)
+  ctx.fillStyle = dim('#FFE2B0')
+  ctx.beginPath()
+  ctx.arc(ix0 + iw * 0.5, iy0 + ih * 0.58, 0.11, Math.PI, 0)
+  ctx.fill()
+  ctx.fillStyle = dim('#3E4E86')
+  ctx.beginPath()
+  ctx.moveTo(ix0 + pad, iy0 + ih - pad)
+  ctx.lineTo(ix0 + pad, iy0 + ih * 0.62)
+  for (let k = 0; k <= 8; k++) {
+    const u = k / 8
+    ctx.lineTo(ix0 + pad + u * (iw - 2 * pad), iy0 + ih * 0.62 + Math.sin(u * Math.PI * 3) * 0.025)
+  }
+  ctx.lineTo(ix0 + iw - pad, iy0 + ih - pad)
+  ctx.fill()
+  ctx.strokeStyle = rgba(INK, 0.6)
+  ctx.lineWidth = lw * 0.5
+  ctx.strokeRect(ix0 + pad, iy0 + pad, iw - 2 * pad, ih - 2 * pad)
+}
+
+/* ------------------------------------------------------------------ the finish */
+
+/** The lamp's bloom: the bulb seen through the air, soft, over everything near it. */
+export function bloom(ctx: Ctx, t: number): void {
+  const on = lampAt(t)
+  if (on < 0.02) return
+  const warm = lampColor(t)
+  const x = MOUTH.x + MOUTH.ux * 0.12
+  const y = MOUTH.y + MOUTH.uy * 0.12
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  const g = ctx.createRadialGradient(x, y, 0, x, y, 1.6)
+  g.addColorStop(0, rgba(warm, 0.3 * on))
+  g.addColorStop(0.25, rgba(warm, 0.08 * on))
+  g.addColorStop(1, rgba(warm, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(x - 1.7, y - 1.7, 3.4, 3.4)
+  ctx.restore()
+}
+
+/** The view, in cells, of the canvas under the current transform. */
+function viewOf(ctx: Ctx): { x0: number; y0: number; x1: number; y1: number } {
+  const m = ctx.getTransform().inverse()
+  const c = ctx.canvas
+  const pts = [new DOMPoint(0, 0), new DOMPoint(c.width, 0), new DOMPoint(0, c.height), new DOMPoint(c.width, c.height)].map((q) => m.transformPoint(q))
+  return {
+    x0: Math.min(...pts.map((q) => q.x)),
+    x1: Math.max(...pts.map((q) => q.x)),
+    y0: Math.min(...pts.map((q) => q.y)),
+    y1: Math.max(...pts.map((q) => q.y)),
+  }
+}
+
+/** The vignette: the frame's corners a little darker and cooler, so the eye rests in the middle where the lamp is. */
+export function vignette(ctx: Ctx): void {
+  const v = viewOf(ctx)
+  const cx = (v.x0 + v.x1) / 2
+  const cy = (v.y0 + v.y1) / 2
+  const r = Math.hypot(v.x1 - v.x0, v.y1 - v.y0) / 2
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.scale(1, (v.y1 - v.y0) / (v.x1 - v.x0) * 1.5)
+  const g = ctx.createRadialGradient(0, 0, r * 0.45, 0, 0, r * 1.02)
+  g.addColorStop(0, 'rgba(14, 10, 30, 0)')
+  g.addColorStop(1, 'rgba(14, 10, 30, 0.5)')
+  ctx.fillStyle = g
+  ctx.fillRect(-r * 1.1, -r * 1.1 / ((v.y1 - v.y0) / (v.x1 - v.x0) * 1.5), r * 2.2, (r * 2.2) / ((v.y1 - v.y0) / (v.x1 - v.x0) * 1.5))
+  ctx.restore()
+}
+
+/** A few tiles of film grain, made once, one shown at a time. */
+let tiles: CanvasPattern[] | null = null
+function grainTiles(ctx: Ctx): CanvasPattern[] {
+  if (tiles) return tiles
+  tiles = []
+  for (let n = 0; n < 6; n++) {
+    const c = document.createElement('canvas')
+    c.width = 160
+    c.height = 160
+    const g = c.getContext('2d')!
+    const img = g.createImageData(160, 160)
+    for (let i = 0; i < 160 * 160; i++) {
+      const v = hash(i, n, 131)
+      const on = v < 0.5
+      const s = on ? 255 : 0
+      img.data[i * 4] = s
+      img.data[i * 4 + 1] = s
+      img.data[i * 4 + 2] = s
+      img.data[i * 4 + 3] = Math.floor(hash(i, n, 137) * 26)
+    }
+    g.putImageData(img, 0, 0)
+    tiles.push(ctx.createPattern(c, 'repeat')!)
+  }
+  return tiles
+}
+
+/** The grain: a different tile a dozen times a second, over the whole frame, in the canvas's own pixels. */
+export function grain(ctx: Ctx, t: number): void {
+  if (typeof document === 'undefined') return
+  const all = grainTiles(ctx)
+  const k = Math.floor(t * 12)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  const ox = Math.floor(hash(k, 1, 141) * 160)
+  const oy = Math.floor(hash(k, 2, 141) * 160)
+  ctx.translate(ox, oy)
+  ctx.fillStyle = all[k % all.length]
+  ctx.globalAlpha = 0.55
+  ctx.fillRect(-ox, -oy, ctx.canvas.width, ctx.canvas.height)
+  ctx.restore()
+}
+
