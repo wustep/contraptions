@@ -85,7 +85,7 @@ export function paintShow(
   // A stage taller than 16:9 sets the composed frame where the show says (`Performance.tall`), not always midway.
   const below = overview || perf.tall === undefined ? 0 : (perf.tall - 0.5) * Math.max(0, H - W / ASPECT)
   if (below) follow = { ...follow, y: follow.y - below / k }
-  const full = overview ? overviewCamera(here.universe.bounds, W, H) : null
+  const full = overview ? overviewCamera(perf.overview?.(time) ?? here.universe.bounds, W, H) : null
   drawWorld(p, perf.show, time, here, full ?? follow, full?.scale ?? k, { x, y, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
 }
 

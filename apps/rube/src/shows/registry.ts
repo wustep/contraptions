@@ -1,3 +1,4 @@
+import type { Box } from '../plan'
 import type { Show } from '../show'
 
 /**
@@ -118,6 +119,11 @@ export interface Performance {
   camera?(t: number): Framing
   /** Whether the show's cuts are drawn at `t`: the iris at a portal, the fade up from ink. Left out, they are. */
   cuts?(t: number): boolean
+  /**
+   * The box Overview frames at `t`, in the world's cells: for a show whose worlds hold several sets far apart (the
+   * place in play, not the whole world, most of it empty between them). Left out, the whole world.
+   */
+  overview?(t: number): Box
   /**
    * In a stage taller than 16:9 (a phone held upright), what share of the extra picture lies above the composed 16:9
    * frame: for a show whose sets stand on a floor or the ground, with sky, roof or an upper storey over them and only

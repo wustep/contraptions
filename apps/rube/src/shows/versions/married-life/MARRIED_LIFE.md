@@ -680,6 +680,12 @@ window.
   to the show's own frame over the three seconds before the first card (`Framing.zoomFull`, new, read in
   `zoomFrame`); every card lies over the sky, under Zoom as without it.
 
+- **Polish round 33 (Opus 5.5).** Overview, the player's third view, never looked at: the church and the hill showed
+  well, but the house's world holds the street and the doll's house far apart, and the clinic's the office and the
+  ward, so Overview, framing the whole world, showed mostly empty ground with two small sets in it. A show may now say
+  what Overview frames (`Performance.overview`, new, optional; left out, the whole world, as every other show); this
+  one frames the place in play, its leg's parts (`LifeShow.place`), so every scene shows whole at a glance.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is

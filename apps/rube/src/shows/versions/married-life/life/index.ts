@@ -33,6 +33,9 @@ export const performance: Performance = {
   camera: framed,
   // No portal anywhere: every change of place is a match cut on Carl.
   cuts: () => false,
+  // Overview frames the place in play: the house's world holds the street and the doll's house far apart, the clinic's
+  // the office and the ward, and the whole of either is mostly the empty ground between them.
+  overview: (t) => show.place(t),
   // Every set stands on a floor or the ground, with sky, a roof or the storey above over it and only earth under it:
   // on a phone held upright most of the extra picture goes above the frame, not a slab of ground below it.
   tall: 0.85,
