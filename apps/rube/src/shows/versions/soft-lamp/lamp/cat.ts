@@ -13,7 +13,7 @@ import { hash, lampAt, lightAt, lit } from './world'
  * cat's do (along the sill over its head, down the stair beside it, into the cup); it blinks, and now and then slowly,
  * the way a cat says it is content; an ear flicks when the ball knocks the pot. And through a groove, a phrase at a
  * time, it either keeps watching or shuts its eyes and nods along on the beat, its tail tip swaying with it, as anyone
- * listening does. It breathes. When the last track's drums leave it puts its head down and sleeps, as the ball does in
+ * listening does. It breathes. Now and then, watching, it washes: a paw licked and drawn over an ear. When the last track's drums leave it puts its head down and sleeps, as the ball does in
  * the cup.
  *
  * Every part of it is a function of show time, so a scrub back is the same cat.
@@ -100,6 +100,47 @@ export function yawnAt(t: number): number {
     if (s >= 0 && s <= 1) return Math.min(1, 2.2 * Math.sin(Math.PI * s) ** 2)
   }
   return 0
+}
+
+/** How long a wash takes: the paw up to its chin, four licks, the paw over its ear, and down. */
+const WASH = 6
+/**
+ * Its washes: four through the night, each in a phrase it spends watching rather than nodding along, while the ball
+ * sits and the camera is on it all the while, clear of its yawns and of the lob.
+ */
+export const WASHES: number[] = [1, 3, 5, 7].map((n) => {
+  const lap = LAPS[n]
+  const tr = TRACKS[n]
+  for (let k = 0; k < 60; k++) {
+    const at = lap.cup + 14 + k * 2 * tr.period + hash(n, k, 131) * 1.5
+    if (lap.lob !== null && at + WASH + 2 > lap.lob - 8 * tr.period) break
+    if (!catInViewAt(at) || !catInViewAt(at + WASH)) continue
+    if (YAWNS.some((y) => Math.abs(y - at) < WASH + 6)) continue
+    let still = true
+    for (let s = at - 1; s <= at + WASH + 1; s += 0.5) if (vibeAt(s) > 0.02 || sweepAt(s).a > 0.02) still = false
+    if (still) return at
+  }
+  return -100
+})
+
+/**
+ * Where a wash is at `t`: how far into it (0, none, to 1) the cat is (`k`, eased in and out), where its paw is (`paw`,
+ * 0 tucked, 1 at its chin, 2 over its ear), and how far out its tongue is (`lick`).
+ */
+export function washAt(t: number): { k: number; paw: number; lick: number } {
+  for (const at of WASHES) {
+    const s = t - at
+    if (s < 0 || s > WASH) continue
+    const k = smooth(s, 0, 0.6) * (1 - smooth(s, WASH - 0.7, WASH))
+    let paw: number
+    if (s < 0.8) paw = smooth(s, 0, 0.8)
+    else if (s < 3.8) paw = 1 - 0.12 * Math.abs(Math.sin(((s - 0.8) / 3) * Math.PI * 4))
+    else if (s < 5.2) paw = 1 + Math.sin(((s - 3.8) / 1.4) * Math.PI)
+    else paw = 1 - smooth(s, 5.2, WASH)
+    const lick = s > 0.8 && s < 3.8 ? Math.max(0, Math.sin(((s - 0.8) / 3) * Math.PI * 4)) ** 2 : 0
+    return { k, paw, lick }
+  }
+  return { k: 0, paw: 0, lick: 0 }
 }
 
 /** Its nod along, 0 to 1, deepest just after each beat. */
@@ -218,20 +259,24 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   ctx.stroke()
   ctx.restore()
 
-  // The head: it turns to the ball, and when it sleeps it comes down onto its paws.
+  // The head: it turns to the ball, and when it sleeps it comes down onto its paws; washing, it dips to the paw with
+  // each lick, and leans into it as the paw goes over its ear.
+  const wash = washAt(t)
+  const over = Math.max(0, wash.paw - 1)
   const hx0 = CAT.head.x
-  const hy0 = CAT.head.y + 0.26 * sleep + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn
+  const hy0 = CAT.head.y + 0.26 * sleep + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn + wash.k * (0.03 + 0.02 * wash.lick + 0.02 * over)
   const look = gaze(t, 0.22)
   const dx = look.x - hx0
   const dy = look.y - hy0
   const d = Math.hypot(dx, dy) || 1
   const awake = 1 - sleep
-  const watch = awake * (1 - vibe) * (1 - yawn)
+  const watch = awake * (1 - vibe) * (1 - yawn) * (1 - wash.k)
   const lx = (dx / d) * watch
   const ly = (dy / d) * watch + 0.25 * vibe * awake
   const hx = hx0 + lx * 0.035
   const hy = hy0 + ly * 0.02
-  const tilt = lx * 0.12 - ly * 0.06 - yawn * 0.12 + sleep * 0.3 + vibe * awake * 0.08 * Math.sin((Math.PI * beatOf(tr, t)) / 2)
+  const tilt = lx * 0.12 - ly * 0.06 - yawn * 0.12 + sleep * 0.3 + vibe * awake * 0.08 * Math.sin((Math.PI * beatOf(tr, t)) / 2) +
+    wash.k * (0.1 + 0.22 * over)
   ctx.save()
   ctx.translate(hx, hy)
   ctx.rotate(tilt)
@@ -287,8 +332,8 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
 
   // The eyes: round and open as it watches; the upper lid comes down over them to blink, so a blink caught halfway is
   // sleepy, never cross; shut in the content arch while it nods along, and shut soft as it sleeps or yawns.
-  const open = Math.max(0, (1 - blinkAt(t)) * awake * (1 - vibe) * (1 - yawn))
-  const happy = vibe > 0.5 && sleep < 0.5 && yawn < 0.3
+  const open = Math.max(0, (1 - blinkAt(t)) * awake * (1 - vibe) * (1 - yawn) * (1 - wash.k))
+  const happy = vibe > 0.5 && sleep < 0.5 && yawn < 0.3 && wash.k < 0.3
   const px = lx * 0.022
   const py = ly * 0.016
   const RXE = 0.058
@@ -391,6 +436,16 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
     ctx.lineWidth = lw * 0.5
     ctx.stroke()
   }
+  // Washing: the tip of its tongue, out to the paw with each lick.
+  if (wash.lick > 0.15) {
+    ctx.beginPath()
+    ctx.ellipse(0.012, 0.112 + 0.012 * wash.lick, 0.018, 0.012 + 0.012 * wash.lick, 0, 0, Math.PI * 2)
+    ctx.fillStyle = '#D9727C'
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(26, 21, 38, 0.8)'
+    ctx.lineWidth = lw * 0.4
+    ctx.stroke()
+  }
   // Whiskers, faint.
   ctx.strokeStyle = rgba('#F3E6D2', 0.35)
   ctx.lineWidth = 0.008
@@ -403,4 +458,33 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
     }
   }
   ctx.restore()
+
+  // Washing: the near foreleg, up from its chest to its chin, then over its ear, the paw's pad toward its face.
+  if (wash.k > 0.01 && wash.paw > 0.02) {
+    const p = Math.min(1, wash.paw)
+    // From the shoulder, under its ruff: only the forearm shows, bent up to the face.
+    const from = { x: chest - 0.1, y: -0.24 }
+    const chin = { x: hx + 0.085, y: hy + 0.15 }
+    const ear = { x: hx + 0.2, y: hy - 0.02 }
+    const rest = { x: chest - 0.08, y: -0.08 }
+    const px = rest.x + (chin.x - rest.x) * p + (ear.x - chin.x) * over
+    const py = rest.y + (chin.y - rest.y) * p + (ear.y - chin.y) * over
+    ctx.lineCap = 'round'
+    ctx.beginPath()
+    ctx.moveTo(from.x, from.y)
+    // Round the outside of its cheek as it goes over the ear, not across its face.
+    ctx.quadraticCurveTo(from.x + 0.07 + over * 0.2, (from.y + py) / 2 + 0.03, px, py)
+    ctx.lineWidth = 0.085
+    ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+    ctx.stroke()
+    ctx.lineWidth = 0.085 - lw * 2
+    ctx.strokeStyle = lit('#B49276', CREAM_FUR, l)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.ellipse(px, py, 0.055, 0.045, -0.5 - over * 0.6, 0, Math.PI * 2)
+    ctx.fillStyle = lit('#B49276', CREAM_FUR, l)
+    ctx.fill()
+    ctx.lineWidth = lw * 0.7
+    ctx.stroke()
+  }
 }

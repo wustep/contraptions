@@ -97,7 +97,8 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   at the sill over its head, round to the stair beside it, into the cup. It blinks, now and then slowly. An ear flicks
   when the ball knocks the pot or lands on the sill. Through the groove, a phrase at a time and each phrase its own
   choice, it either keeps watching or shuts its eyes in the content arch and nods along on the beat, the tip of its
-  tail swaying a bar at a time; it comes out of it ahead of a break and ahead of the lob, to watch. When the last
+  tail swaying a bar at a time; it comes out of it ahead of a break and ahead of the lob, to watch. Four times, watching,
+  it washes: a paw licked and drawn over its ear. When the last
   track's drums leave, it puts its head down and sleeps.
 
 **The design system.** One ink for every line, the ball's included, at the ball's weight (structure at full weight,
@@ -352,6 +353,19 @@ ball. The machine and its timing were right and are untouched; the room around i
     moment the frame holds that window for all of it, a few minutes apart (worked out once, from the camera, at load).
 51. **Zoom, looked at:** a closer crop round the same middle; the ball and each frame's subject stay in it, the cat's
     body and the desk run off its foot. Left as it is.
+
+### The thirteenth lofi pass
+
+52. **The kitten never washed**, the most cat thing there is. Now, four times through the night (3:07, 8:43, 13:50,
+    19:11), it does (`washAt`, `lamp/cat.ts`): over six seconds its near forearm comes up from under its ruff to its
+    mouth, four licks, its head dipping to the paw and the tip of its tongue out with each, then the paw goes up round
+    the outside of its cheek and over its ear as it leans into it, and back down, its eyes softly shut throughout. Like
+    its yawns, played to the camera: each in a phrase it spends watching rather than nodding along, the frame on it the
+    whole six seconds, clear of its yawns, the lob and the headlights. The first drawing grew the leg from the desk, a
+    stick from the floor to its face, and wiped across the face rather than behind the ear; the leg now starts at the
+    shoulder and goes round the cheek.
+53. **The end, looked at:** the last track, the credits, the lamp and the fairy lights going down, the cat asleep, the
+    neighbour's window dark after its light goes out. Left as it is.
 
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
