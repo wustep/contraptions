@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, laneAt, mixHex, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { beam, box, carried, glow, knock, part, rgba, ring, smooth, type Ctx, type Way } from '../kit'
+import { beam, box, carried, glow, hash, knock, part, rgba, ring, smooth, type Ctx, type Way } from '../kit'
 import { dream, snap } from '../music'
 import { G, hop } from '../physics'
 import { STUDIO_MAT as M } from '../worlds'
@@ -239,7 +239,7 @@ function drawSign(p: p5, c: Ctx, t: number): void {
     p.translate(X(k, b.x), X(k, b.y + dy))
     p.rotate(b.tilt)
     p.noStroke()
-    p.fill(mixHex(mixHex(M.sign, M.hill, 0.42), M.sign, Math.min(1, lift)))
+    p.fill(mixHex(mixHex(M.sign, M.mountain, 0.42), M.sign, Math.min(1, lift)))
     p.rect(X(k, -b.w / 2), X(k, -b.h), X(k, b.w), X(k, b.h))
     p.pop()
   })
@@ -289,15 +289,72 @@ const HILL: Pt[] = (() => {
   return pts
 })()
 
+/** Where the hill's left and right outlines are at height `y` (between the floor and the crest). */
+function hillSpan(y: number): [number, number] {
+  const side = (pts: Pt[]) => {
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const [x0, y0] = pts[i]
+      const [x1, y1] = pts[i + 1]
+      if ((y <= y0 && y >= y1) || (y >= y0 && y <= y1)) return x0 + ((x1 - x0) * (y - y0)) / (y1 - y0 || 1)
+    }
+    return pts[0][0]
+  }
+  const i = HILL.findIndex(([x]) => x === CREST[1])
+  return [side(HILL.slice(0, i)), side(HILL.slice(i))]
+}
+/** Scrub on the hill: dabs scattered over its face, clear of the road's stretches. */
+const SCRUB: [number, number, number][] = (() => {
+  const out: [number, number, number][] = []
+  for (let i = 0; i < 70 && out.length < 34; i++) {
+    const y = FLOOR - 0.15 + (YC + FLOOR + 0.5 - FLOOR) * hash(i, 41)
+    const [a, b] = hillSpan(y)
+    const x = a + 0.2 + (b - a - 0.4) * hash(i, 42)
+    if (ROAD.some(([x0, x1, ry]) => x > x0 - 0.3 && x < x1 + 0.3 && Math.abs(y - ry - 0.08) < 0.32)) continue
+    out.push([x, y, 0.06 + 0.06 * hash(i, 43)])
+  }
+  return out
+})()
+
 function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
   const { k, ink, weight } = c
-  const hill = paint(15, t, M.hill)
+  // The near hill stands in its own shadow against the sunset: deep indigo at its foot, a little lighter toward the
+  // crest, and a rim of the sun's coral along the side and the crest that face it.
+  const hill = paint(15, t, M.hillLit)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const outlineHill = () => {
+    p.beginShape()
+    p.curveVertex(X(k, HILL[0][0]), X(k, HILL[0][1]))
+    for (const [x, y] of HILL) p.curveVertex(X(k, x), X(k, y))
+    p.curveVertex(X(k, HILL[HILL.length - 1][0]), X(k, HILL[HILL.length - 1][1]))
+    p.endShape(p.CLOSE)
+  }
   solid(p, ink, weight, hill)
-  p.beginShape()
-  p.curveVertex(X(k, HILL[0][0]), X(k, HILL[0][1]))
-  for (const [x, y] of HILL) p.curveVertex(X(k, x), X(k, y))
-  p.curveVertex(X(k, HILL[HILL.length - 1][0]), X(k, HILL[HILL.length - 1][1]))
-  p.endShape(p.CLOSE)
+  const shade = ctx.createLinearGradient(0, X(k, YC + FLOOR), 0, X(k, FLOOR))
+  shade.addColorStop(0, hill)
+  shade.addColorStop(1, paint(15, t, M.hillDeep))
+  ctx.fillStyle = shade
+  outlineHill()
+  // The rim: the crest and the sunward (right) flank, a soft line of coral just inside the outline.
+  const rim = paintAt(15, t)
+  if (rim > 0.02) {
+    p.noFill()
+    p.stroke(rgba(M.skyCoral, 0.75 * rim))
+    p.strokeWeight(X(k, 0.05))
+    p.beginShape()
+    const lit = HILL.slice(HILL.findIndex(([x]) => x === CREST[0]) - 1, HILL.length - 1)
+    p.curveVertex(X(k, lit[0][0] + 0.04), X(k, lit[0][1] + 0.05))
+    for (const [x, y] of lit) p.curveVertex(X(k, x - (x > CREST[1] ? 0.05 : 0)), X(k, y + 0.05))
+    p.curveVertex(X(k, lit[lit.length - 1][0] - 0.05), X(k, lit[lit.length - 1][1]))
+    p.endShape()
+    // Scrub on the slopes, dabbed in, catching a little of the light on its upper edge.
+    p.noStroke()
+    for (const [x, y, r] of SCRUB) {
+      p.fill(rgba(M.hillDeep, 0.55 * rim))
+      p.ellipse(X(k, x), X(k, y), X(k, r * 2.2), X(k, r * 1.3))
+      p.fill(rgba(M.ridge, 0.35 * rim))
+      p.ellipse(X(k, x + r * 0.15), X(k, y - r * 0.35), X(k, r * 1.4), X(k, r * 0.5))
+    }
+  }
   // The road: its hairpins first (up the face behind the bushes), then the stretches, blue, a pale line down each.
   const road = paint(15, t, M.road)
   const edge = mixHex(road, ink, 0.35)

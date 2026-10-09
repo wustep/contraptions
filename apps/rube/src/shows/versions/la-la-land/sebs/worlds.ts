@@ -98,10 +98,20 @@ export const STUDIO_MAT = {
   /** The painted sky of the Hollywood number: violet to rose. */
   skyTop: '#4B2E86',
   skyLow: '#E0689A',
+  /** The magic hour, painted: indigo overhead, through magenta and coral, to gold on the horizon. */
+  skyHigh: '#271C58',
+  skyMid: '#B4478D',
+  skyCoral: '#EE7A5E',
+  horizon: '#F6BE6A',
+  /** The far ridge in the sunset's haze, the sign's mountain at dusk, and the near hill in its own shadow. */
+  ridge: '#B65C8C',
+  mountain: '#5E3378',
+  hillLit: '#463178',
+  hillDeep: '#211843',
   bush: '#E9C53A',
   bushShade: '#C99E22',
   palm: '#3E7B57',
-  road: '#3F57B8',
+  road: '#4C7BE6',
   star: '#F4D35E',
   lamp: '#FFE7A8',
   hill: '#8A5AA8',

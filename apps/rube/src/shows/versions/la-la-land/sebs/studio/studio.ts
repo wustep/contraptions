@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, mixHex, type Pt } from '../../../../../parts'
-import { beam, box, carried, frame, glow, part, rgba, ring, smooth, type Companion, type Ctx } from '../kit'
+import { beam, box, carried, frame, glow, hash, part, rgba, ring, smooth, type Companion, type Ctx } from '../kit'
 import { AT, snap } from '../music'
 import { STUDIO_MAT as M } from '../worlds'
 
@@ -82,6 +82,20 @@ const MOUNTAIN: Pt[] = [
 const RIDGE: Pt[] = [
   [-10, -5.2], [-6, -6.8], [-2, -7.6], [2, -8.8], [6, -9.3], [9, -8.6], [24, -8.2], [28, -9.6], [32, -10.3], [36, -9.1], [40, -8.2], [44, -7.4],
 ].map(([x, y]) => [H(x), y])
+/** Lights in the houses low on the mountain, a few dabs of gold (Hollywood frame, landed). */
+const DUSK_LIGHTS: [number, number, number][] = Array.from({ length: 46 }, (_, i): [number, number, number] => {
+  const x = -8 + 50 * hash(i, 51)
+  // Under the mountain's line where it is, and in its lower part.
+  let top = -3.6
+  for (let j = 0; j + 1 < MOUNTAIN.length; j++) {
+    const [ax, ay] = MOUNTAIN[j]
+    const [bx, by] = MOUNTAIN[j + 1]
+    if (H(x) >= ax && H(x) <= bx) top = ay + ((by - ay) * (H(x) - ax)) / (bx - ax)
+  }
+  const y = Math.max(top + 1.2, -1.7 - 2.6 * hash(i, 52) ** 1.6)
+  return [H(x), y, 0.06 + 0.05 * hash(i, 53)]
+}).filter(([, y]) => y < -1.5)
+
 /** The cloth's painted clouds: long banks low and high in the sky, each a few flat lobes (Hollywood frame, landed). */
 const CLOUDS: { x: number; y: number; fill: string; lobes: [number, number, number, number][] }[] = [
   { x: 1.5, y: -12.6, fill: mixHex(M.skyTop, M.skyLow, 0.55), lobes: [[0, 0, 2.6, 0.32], [1.6, -0.25, 1.5, 0.3], [-1.4, 0.1, 1.2, 0.22]] },
@@ -278,17 +292,21 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   if (x1 <= x0 || bottom <= y0) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
-  // The painted sky: violet overhead to rose at the horizon.
-  const g = ctx.createLinearGradient(0, X(k, -14 + dy), 0, X(k, -1.5 + dy))
-  g.addColorStop(0, M.skyTop)
-  g.addColorStop(0.5, mixHex(M.skyTop, M.skyLow, 0.42))
-  g.addColorStop(1, M.skyLow)
+  // The painted sky at the magic hour: indigo overhead, violet, magenta, coral, and gold along the horizon, laid
+  // on in bands the way a scenic painter does it, so every height the camera climbs to has its own colour.
+  const g = ctx.createLinearGradient(0, X(k, -17 + dy), 0, X(k, -1.2 + dy))
+  g.addColorStop(0, M.skyHigh)
+  g.addColorStop(0.3, M.skyTop)
+  g.addColorStop(0.55, M.skyMid)
+  g.addColorStop(0.78, M.skyCoral)
+  g.addColorStop(1, M.horizon)
   ctx.fillStyle = g
   ctx.fillRect(X(k, x0), X(k, y0), X(k, x1 - x0), X(k, bottom - y0))
   ctx.restore()
   // The painted sun, going down behind the far ridge: a flat disc of pale gold, the hour the film is named for.
+  glow(p, k, H(21.8), -9.4 + dy, 7.5, M.horizon, 0.45)
   p.noStroke()
-  p.fill(mixHex(M.bush, M.skyLow, 0.35))
+  p.fill(mixHex(M.bush, M.skyCoral, 0.35))
   p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 4.4))
   p.fill(mixHex(M.bush, M.flat, 0.45))
   p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 3.3))
@@ -307,13 +325,38 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
     p.vertex(X(k, pts[pts.length - 1][0]), X(k, bottom))
     p.endShape(p.CLOSE)
   }
-  ridge(RIDGE, mixHex(M.hill, M.skyLow, 0.5))
-  ridge(MOUNTAIN, mixHex(M.hill, M.skyTop, 0.5))
+  ridge(RIDGE, M.ridge)
+  // The mountain: warmer high up, where the sunset catches it, deepening toward its foot; painted, so its shading is
+  // a few soft bands following its shape, and the first lights of the houses on it coming on at dusk.
+  const mg = ctx.createLinearGradient(0, X(k, -11.9 + dy), 0, X(k, bottom))
+  mg.addColorStop(0, mixHex(M.mountain, M.skyMid, 0.42))
+  mg.addColorStop(0.45, M.mountain)
+  mg.addColorStop(1, mixHex(M.mountain, M.hillDeep, 0.55))
+  p.fill(M.mountain)
+  ctx.fillStyle = mg
+  p.beginShape()
+  p.vertex(X(k, MOUNTAIN[0][0]), X(k, bottom))
+  for (const [x, y] of MOUNTAIN) p.vertex(X(k, x), X(k, y + dy))
+  p.vertex(X(k, MOUNTAIN[MOUNTAIN.length - 1][0]), X(k, bottom))
+  p.endShape(p.CLOSE)
+  p.noFill()
+  for (const [down, a] of [[1.1, 0.22], [2.6, 0.16], [4.4, 0.12]] as const) {
+    p.stroke(rgba(M.skyMid, a))
+    p.strokeWeight(X(k, 0.09))
+    p.beginShape()
+    for (const [x, y] of MOUNTAIN) p.curveVertex(X(k, x), X(k, Math.min(bottom - 0.4, y + dy + down * (1 + 0.15 * Math.sin(x * 0.7)))))
+    p.endShape()
+  }
+  p.noStroke()
+  for (const [x, y, r] of DUSK_LIGHTS) {
+    p.fill(rgba(M.horizon, 0.75))
+    p.circle(X(k, x), X(k, y + dy), X(k, r))
+  }
   // A soft band of rose light low on the cloth, behind the set: the painted sunset.
   ctx.save()
   const band = ctx.createLinearGradient(0, X(k, -3.4 + dy), 0, X(k, bottom))
-  band.addColorStop(0, rgba(M.skyLow, 0))
-  band.addColorStop(1, rgba(M.skyLow, 0.55))
+  band.addColorStop(0, rgba(M.skyCoral, 0))
+  band.addColorStop(1, rgba(M.horizon, 0.5))
   ctx.fillStyle = band
   ctx.fillRect(X(k, x0), X(k, -3.4 + dy), X(k, x1 - x0), X(k, bottom + 3.4 - dy))
   ctx.restore()
@@ -323,7 +366,7 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
     p.translate(X(k, H(b.x)), X(k, b.y + dy))
     p.rotate(b.tilt)
     p.noStroke()
-    p.fill(mixHex(M.sign, M.hill, 0.42))
+    p.fill(mixHex(M.sign, M.mountain, 0.42))
     p.rect(X(k, -b.w / 2), X(k, -b.h), X(k, b.w), X(k, b.h))
     p.pop()
   }
