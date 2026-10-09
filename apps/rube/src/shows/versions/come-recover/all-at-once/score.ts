@@ -7,7 +7,7 @@ import { box, lay, smooth, standing, type Chain, type Link } from './kit'
 import { DURATION, JUMPS, ONSETS, fight } from './music'
 import { MultiverseShow, type Flicker, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { EVELYN, type WorldKey } from './worlds'
-import { credits, endShade } from './credits'
+import { credits, endShade, subtitleBed } from './credits'
 import { room, ROOM, shade, TUBES, type RoomState } from './home/set'
 import { laundromat } from './home/laundromat'
 import { dryer } from './home/dryer'
@@ -322,6 +322,13 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     const state: EyesState = { show: null, specs, shade: world === 'home' ? (hex, x, y, t) => endShade(shade(hex, x, y, t), t, x, y) : undefined }
     eyeStates.push(state)
     set.after.push(standing(eyePiece, 0, 0, [...cells.values()], state, DURATION) as Placed)
+  }
+
+  // Under the subtitles low in the frame, in the hush and the rocks, a soft dark (`credits.ts`).
+  for (const world of ['void', 'rocks'] as WorldKey[]) {
+    const cells = new Map<string, Pt>()
+    for (const leg of legs) if (leg.world === world) for (const placed of leg.placed) for (const c of placed.cells) cells.set(`${c[0]},${c[1]}`, c)
+    ;(sets[world] ??= { scenery: [], after: [] }).after.push(standing(subtitleBed, 0, 0, [...cells.values()], null, DURATION) as Placed)
   }
 
   // Every life its own picture: the movie star's in widescreen, the kung fu picture an old print (`film.ts`). Over

@@ -237,10 +237,12 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     CHAPTERS.every((c, i) => c.at >= starts[i] && c.at < starts[i] + 1 && goneAt(c) < (starts[i + 1] ?? JUMPS.eye) - 5) &&
     creditsAt(CHAPTERS[1].at + 2).length === 1 && creditsAt(JUMPS.eye).length === 0)
 
-  // The rocks speak in subtitles, as the film's do: only in the canyon, one at a time, none as Joy goes over.
-  check('all at once: the rocks\' subtitles are in the canyon only, one at a time, and silent as Joy goes over',
-    SUBTITLES.length >= 6 && SUBTITLES.every((sub, i) => sub.at > JUMPS.rocks && sub.to < JUMPS.brink && sub.to > sub.at + 1 && (i === 0 || sub.at >= SUBTITLES[i - 1].to)) &&
-    SUBTITLES.every((sub) => sub.to < 213.96 - 0.2 || sub.at > 213.96 + 1.5) && SUBTITLES.some((s) => s.who === 'joy') && SUBTITLES.some((s) => s.who === 'evelyn'))
+  // The show's three conversations in subtitles: each line in its own scene, one at a time, none over a jump, and
+  // nothing said as Joy goes over the brink.
+  const scenes: Record<string, [number, number]> = { alley: [JUMPS.premiere, JUMPS.dojo], hush: [JUMPS.void, JUMPS.mosaic], rocks: [JUMPS.rocks, JUMPS.brink] }
+  check('all at once: subtitles in the alley, the hush and the rocks only, one at a time, and silent as Joy goes over',
+    SUBTITLES.length >= 12 && SUBTITLES.every((sub, i) => sub.at > scenes[sub.scene][0] + 0.5 && sub.to < scenes[sub.scene][1] - 0.2 && sub.to > sub.at + 1 && (i === 0 || sub.at >= SUBTITLES[i - 1].to)) &&
+    SUBTITLES.every((sub) => sub.to < 213.96 - 0.2 || sub.at > 213.96 + 1.5) && ['alley', 'hush', 'rocks'].every((sc) => SUBTITLES.some((s) => s.scene === sc)))
 
   // The end credits: words the page sets over the dark room after the last hit, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')

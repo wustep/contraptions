@@ -104,31 +104,77 @@ export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
 
 /** The cards up at `t`, for the page to set (`Performance.titles`): the chapters as they begin, and the credits. */
 /**
- * The rocks speak in subtitles, as the film's two stones do: no voices, only plain words under them in the silence.
- * The lines are this show's own. Each comes on a note the stones already move on, and goes before the next: Joy's as
- * she teeters and leans out over the brink; nothing as she goes over; Evelyn's as she flinches back and as she goes
- * after her; and on the bench far below, the two of them, as their colour starts to come back. Evelyn's are in
- * roman and Joy's in italic, so who speaks is told without a name; a soft dark under them keeps them readable on the
- * pale canyon (`ledge.ts`).
+ * The show's three conversations, in subtitles: no voices, only plain words low in the frame. The lines are this
+ * show's own, not the film's. Evelyn's are in roman and the other's in italic, so who speaks is told without a name.
+ *
+ * - **The alley** (the film's "in another life"): as she comes down to Waymond, and before the drain takes her from
+ *   him. Set in the widescreen's lower bar, as a Wong Kar-wai picture is subtitled.
+ * - **The hush**: the beam finds Joy waiting on the bagel, and she speaks first.
+ * - **The rocks**, as the film's two stones do: Joy's as she teeters and leans out over the brink; nothing as she goes
+ *   over; Evelyn's as she flinches back and as she goes after her; and on the bench far below, the two of them, as
+ *   their colour starts to come back.
+ *
+ * Low in the frame, a soft dark under them keeps them readable on the pale canyon and the bagel's seeds
+ * (`subtitleBed`).
+ *
+ * Each comes on a note the scene already moves on, and goes before the next.
  */
-export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 'joy' }[] = [
-  { at: 201.4, to: 204.4, line: 'Where are we?', who: 'evelyn' },
-  { at: 205.0, to: 208.2, line: 'Somewhere nothing ever happened.', who: 'joy' },
-  { at: 208.5, to: 211.6, line: 'It is quiet here. Nothing has to mean anything.', who: 'joy' },
-  { at: 212.0, to: 213.7, line: 'You don’t have to follow me.', who: 'joy' },
-  { at: 216.4, to: 218.4, line: 'Joy —', who: 'evelyn' },
-  { at: 219.5, to: 222.0, line: 'I’m coming.', who: 'evelyn' },
-  { at: 226.7, to: 229.4, line: 'You came all this way.', who: 'joy' },
-  { at: 229.8, to: 232.6, line: 'Where else would I be?', who: 'evelyn' },
+export type Scene = 'alley' | 'hush' | 'rocks'
+export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 'joy' | 'waymond'; scene: Scene }[] = [
+  { at: 74.2, to: 76.3, line: 'I don’t know where I am.', who: 'evelyn', scene: 'alley' },
+  { at: 77.1, to: 79.3, line: 'Here. With me. Stay a little.', who: 'waymond', scene: 'alley' },
+  { at: 79.6, to: 81.9, line: 'I can’t.', who: 'evelyn', scene: 'alley' },
+  { at: 134.2, to: 136.4, line: 'There you are.', who: 'joy', scene: 'hush' },
+  { at: 136.8, to: 139.0, line: 'Joy? What is this place?', who: 'evelyn', scene: 'hush' },
+  { at: 139.3, to: 141.8, line: 'Everything. All of it, at once.', who: 'joy', scene: 'hush' },
+  { at: 201.4, to: 204.4, line: 'Where are we?', who: 'evelyn', scene: 'rocks' },
+  { at: 205.0, to: 208.2, line: 'Somewhere nothing ever happened.', who: 'joy', scene: 'rocks' },
+  { at: 208.5, to: 211.6, line: 'It is quiet here. Nothing has to mean anything.', who: 'joy', scene: 'rocks' },
+  { at: 212.0, to: 213.7, line: 'You don’t have to follow me.', who: 'joy', scene: 'rocks' },
+  { at: 216.4, to: 218.4, line: 'Joy —', who: 'evelyn', scene: 'rocks' },
+  { at: 219.5, to: 222.0, line: 'I’m coming.', who: 'evelyn', scene: 'rocks' },
+  { at: 226.7, to: 229.4, line: 'You came all this way.', who: 'joy', scene: 'rocks' },
+  { at: 229.8, to: 232.6, line: 'Where else would I be?', who: 'evelyn', scene: 'rocks' },
 ]
-/** Where the subtitles sit, as shares of the 16:9 frame (their top middle). */
+/** Where the subtitles sit, as shares of the 16:9 frame (their top middle): low, or in the widescreen's lower bar. */
 export const SUB_AT: [number, number] = [0.5, 0.855]
-/** How far up the subtitle is at `t`, 0 to 1: for the soft dark under it. */
+const SUB_IN_BAR: [number, number] = [0.5, 0.884]
+/** How far up a subtitle low in the frame (not in a widescreen bar) is at `t`, 0 to 1: for the soft dark under it. */
 export function subtitleLight(t: number): number {
   let v = 0
-  for (const sub of SUBTITLES) v = Math.max(v, clamp((t - sub.at) / SUB_FADE) * (1 - clamp((t - (sub.to - SUB_FADE)) / SUB_FADE)))
+  for (const sub of SUBTITLES) if (sub.scene !== 'alley') v = Math.max(v, clamp((t - sub.at) / SUB_FADE) * (1 - clamp((t - (sub.to - SUB_FADE)) / SUB_FADE)))
   return v
 }
+
+/** The soft dark low in the frame under a subtitle, so its cream reads on the pale canyon or the bagel's seeds. */
+export const subtitleBed = scenery<null>({
+  name: 'subtitle bed',
+  draw: () => {},
+  over: (p, _s, c) => {
+    const sub = subtitleLight(c.t)
+    if (sub <= 0.001) return
+    const { k } = c
+    const f = frame(p, k)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const w = f.x1 - f.x0
+    const h = f.y1 - f.y0
+    // The 16:9 box the words are set in, inside a frame that may be wider or taller.
+    const bh = Math.min(h, (w * 9) / 16)
+    const cy = (f.y0 + (h - bh) / 2 + bh * (SUB_AT[1] + 0.022)) * k
+    const cx = (f.x0 + w * SUB_AT[0]) * k
+    const rx = Math.min(w, (bh * 16) / 9) * 0.34 * k
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.scale(1, 0.16)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
+    g.addColorStop(0, `rgba(30, 24, 20, ${0.5 * sub})`)
+    g.addColorStop(0.6, `rgba(30, 24, 20, ${0.3 * sub})`)
+    g.addColorStop(1, 'rgba(30, 24, 20, 0)')
+    ctx.fillStyle = g
+    ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
+    ctx.restore()
+  },
+})
 const SUB_FADE = 0.28
 
 /** When a card has gone, show seconds. */
@@ -146,12 +192,13 @@ export function creditsAt(t: number): TitleCard[] {
     const down = clamp((t - (sub.to - SUB_FADE)) / SUB_FADE)
     const light = up * (1 - down)
     if (light <= 0.001) return
-    // Plain under the picture, as a subtitle is: small, cream, low in the frame. Evelyn's in roman; Joy's in italic
-    // (the card's note), so who is speaking is told without a name.
+    // Plain under the picture, as a subtitle is: small, cream, low in the frame. Evelyn's in roman; the other's in
+    // italic (the card's note), so who is speaking is told without a name.
+    const at = sub.scene === 'alley' ? SUB_IN_BAR : SUB_AT
     const card: TitleCard =
       sub.who === 'evelyn'
-        ? { key: `all-at-once-subtitle-${n}`, names: [sub.line], plain: true, light, rise: 0, at: SUB_AT, scale: 0.62 }
-        : { key: `all-at-once-subtitle-${n}`, names: [], notes: [sub.line], plain: true, light, rise: 0, at: [SUB_AT[0], SUB_AT[1] + 0.006], scale: 1.75 }
+        ? { key: `all-at-once-subtitle-${n}`, names: [sub.line], plain: true, light, rise: 0, at, scale: 0.62 }
+        : { key: `all-at-once-subtitle-${n}`, names: [], notes: [sub.line], plain: true, light, rise: 0, at: [at[0], at[1] + 0.006], scale: 1.75 }
     out.push(card)
   })
   if (t < CREDITS_AT) return out
