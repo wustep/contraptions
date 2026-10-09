@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 70 (latest)
+## Polish pass 71 (latest)
+
+No change to the show. The pull request's summary now names pass 68's change on a phone (Cooper findable in the flight across the axis) and its guard. Its table, which shows desktop stills, needs nothing new: pass 68 leaves 1080p as it was.
+
+## Polish pass 70
 
 - **A guard for pass 68.** The streak's fix is drawing code, which `check:shows` cannot run, so it reads the source, as it does for the player's wording. It holds `drawStreak` to judging his size in CSS pixels (over the canvas's density) and to a halo of at least 9 CSS pixels. With the size test put back in canvas pixels it fails; the file was restored.
 
