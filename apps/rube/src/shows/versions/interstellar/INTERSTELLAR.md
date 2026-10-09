@@ -231,7 +231,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 112 (latest)
+## Polish pass 113 (latest)
+
+No change to the show: the rest of it at 1280×720, frame by frame, the way pass 112 found the cliff of corn. That covered the combine to the launch (55 to 87 s), the station (131 to 163 s), the far-side house to the Ranger's release (177 to 209 s), and Saturn to the camp (213 to 256 s). Two things looked like faults and are not:
+- The thin white bar beside the Ranger at 244 s is the drogue's hatch cover, thrown off as the chute comes out (243.5 s). It tumbles away left.
+- The rounded shapes along the horizon at 245 s are the mesas' flared talus (`act2/edmunds.ts`), not the sky band's edge.
+
+## Polish pass 112
 
 The tall corn across the road from the truck (29 to 54 s) began with a cliff. A field wall's ends come up out of nothing over 1.2 cells (`cornWall`'s taper), which is a gentle swell on the channel's 1.55-cell corn. On the truck's far wall, 2.6 cells tall, it was a slope of about 65°: a slanted cut edge standing behind the truck like a cardboard flat as it rolls in, and the same drop at the dam behind the cab. `cornWall` now takes the length of that rise (`rise`, 1.2 as before by default), and the tall wall rises over its own height, 2.6 cells. It now reads as a field coming up from the ground, and at the dam it falls away behind the cab. Every other wall is untouched, and the share card (240.4 s) is on Edmunds' planet.
 
