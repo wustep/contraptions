@@ -364,7 +364,8 @@ export interface Picture {
 }
 
 /**
- * The stepped ghosts: each one held at the step it is on and the two before it, fading behind her, so what moves
+ * The stepped ghosts: each one held at the step it is on, and a step and a half and three steps before it, fading
+ * behind her, so what moves
  * goes in stuttering streaks while the ball itself, and everything it strikes, keeps real time.
  */
 function paintGhosts(ctx: CanvasRenderingContext2D, steps: NonNullable<Picture['steps']>, t: number, k: number): void {
@@ -373,11 +374,11 @@ function paintGhosts(ctx: CanvasRenderingContext2D, steps: NonNullable<Picture['
   const held = Math.floor(t * steps.rate) / steps.rate
   const now = steps.who(t)
   ctx.save()
-  for (const [back, a] of [[0, 0.42], [1, 0.24], [2, 0.11]] as const) {
+  for (const [back, a] of [[0, 0.4], [1.5, 0.26], [3, 0.14]] as const) {
     steps.who(held - back / steps.rate).forEach((g, i) => {
       // Only where it has moved from: a ghost on its own ball (him waiting, still) would only veil it.
       const here = now[i]
-      const moved = here ? Math.hypot(g.x - here.x, g.y - here.y) / (1.6 * R) : 1
+      const moved = here ? Math.hypot(g.x - here.x, g.y - here.y) / (0.7 * R) : 1
       const shown = Math.min(1, moved) ** 2
       if (shown <= 0.01) return
       const c = parseInt(g.color.slice(1), 16)

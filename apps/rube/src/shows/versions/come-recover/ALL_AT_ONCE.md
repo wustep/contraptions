@@ -111,7 +111,7 @@ The camera takes the show's nine biggest hits in the body: a push-in of about 4.
 blow and letting go (`CRASHES`). The movie star's lens flares, as a widescreen lens does: each press flash throws a
 long blue-white streak across the frame, and in the alley the streetlamp and the neon flare faintly. The alley, the film's
 "in another life", is step-printed as Wong Kar-wai's pictures are (the film's movie-star life borrows from them): while
-she floats down the steps to Waymond, and again as the drain takes her from him, the picture goes at eight steps a
+she floats down the steps to Waymond, and again as the drain takes her from him, the picture goes at six steps a
 second, smeared. The rain falls in held steps with two fading echoes, and she and Waymond leave stepped ghosts where
 they have moved from; it comes out sharp, in real time, for the touch. Nothing that strikes is moved: the ball and
 every part keep real time. The romance and the
@@ -848,12 +848,20 @@ The notes went back to the builders who made each part, who still had their cont
     one failed request is the analytics' debug script, not the show.
 - **A director's pass: the alley step-printed.** The movie star's life borrows from Wong Kar-wai, and his signature,
   step-printing, was missing from the alley it borrows him for. Now the descent to Waymond (70.6 to 76.3) and the
-  drain taking her (82.2 to 85.0) are held at eight steps a second and smeared: the rain is drawn at the held step and
+  drain taking her (82.2 to 85.0) are held at six steps a second and smeared: the rain is drawn at the held step and
   the two before it, fading (`stepPrint` in `star/premiere-alley.ts`), and the two of them leave stepped ghosts behind
   them (`paintGhosts` in `film.ts`). A ghost shows only where its ball has moved from, so Waymond, waiting still, is
   not veiled. All of it is worked out from the show's clock, so a scrubbed frame is the frame that played; the ball
   and everything it strikes keep real time. Measured in Chrome at 1440×810, the alley holds 16.6–16.8 ms a frame with
   the rain drawn three times over.
+- **The alley's step-printing, watched in motion, and the first glimpses of the lives.**
+  - A filmstrip at 30 fps through the descent showed the step-printing all but unseen: she floats slowly, the camera
+    rides with her, and her ghosts were only an eighth of a second behind her, where they were faded out as not having
+    moved. The steps are now six a second, the ghosts a step and a half and three steps behind (to half a second),
+    and a ghost fades only where it is within 0.7 of a radius of its ball. Her trail down the steps and her held steps
+    down the drain's shaft now read; Waymond, waiting still, is still clear.
+  - The big dryer's glass, where the lives are first seen (46 to 57 s), now shows each in its picture's colour: the
+    dojo's wedge an old print, the hot dogs' soft. Not the bars: in a wedge of the drum they read as black chunks.
 
 ## The looks
 

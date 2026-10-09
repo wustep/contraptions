@@ -498,13 +498,13 @@ function drawSplashes(p: p5, c: Ctx, t: number): void {
 }
 
 /**
- * Step-printing, as Wong Kar-wai's pictures have it and the film's movie-star life borrows: the picture held at eight
+ * Step-printing, as Wong Kar-wai's pictures have it and the film's movie-star life borrows: the picture held at six
  * steps a second, each step smeared into the next, so what moves goes in stuttering streaks. While she floats down the
  * steps to him, and again as the drain carries her away from him; it comes out sharp, in real time, for the touch.
  * How much of it there is at `t`, 0 to 1 (`STEP_PRINT`). Nothing that strikes is moved: the rain is drawn at the held
  * step with two fading echoes of the steps before it, and the two of them leave stepped ghosts (`film.ts`).
  */
-export const STEP_RATE = 8
+export const STEP_RATE = 6
 export const STEP_PRINT: [number, number, number, number][] = [
   [70.6, 71.4, TOUCH - 0.7, TOUCH - 0.15],
   [DROP + 0.05, DROP + 0.45, SPLASH + 1.3, SPLASH + 2.0],
