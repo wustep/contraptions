@@ -798,6 +798,32 @@ passes (a headless browser throttles its frames and measures nothing).
 117. Considered and not built: a look up at the sky through the window in Daydream's break, the moon and the stars
      filling the frame. The ball would leave the picture for twenty seconds, which the show has never done.
 
+### The forty-fourth pass: the one at the desk, in the window
+
+The streams this show takes after are a person at a desk. Here, for six passes, the person was a hand and a sleeve,
+never seen: the camera is where they sit. But at night a window is a mirror, and whoever sits at a desk facing one
+sees themselves in it.
+
+118. **Their reflection** (`lamp/reflection.ts`). Once it is dark outside and the lamp is on them, they are in the
+     glass, faint, behind the rain: hair up in a bun, a fringe, the sage sweater the hand's sleeve is, head bowed over
+     the work with the lids lowered, nodding a little with the drums. It is light on the glass and only adds (a
+     reflection never darkens what is behind it), so the city, the neighbour's window and the rain all show through.
+119. **It does what the hand does.** At the sip, the mug comes up to their lips in the glass as the real one comes up
+     out of the picture; when the finger draws on the pane, they look up from the work at it; they look up at the
+     lightning and at a falling star; they come with the lamp after the dusk has gone, and as the lamp is turned down at
+     the end they fade with it, the last of them going as the light does.
+120. **Where it is.** One's own reflection is in front of one, so it moves with the camera, nearly all the way: it is in
+     the right-hand pane when the camera faces the window, slides across the glass with the sill walk, and is gone when
+     the camera looks at the lamp. It is never shown half out at the glass's edge, a figure lurking there; mostly in, or
+     not at all.
+121. **Drawn three times.** The first was a head floating over a dome of sweater, too faint to find; the second read as
+     a person but stood as a pale block over the neighbour's window, and a reflected arm reaching to meet the drawing
+     finger was a beam of light (taken out; they look up instead). Now: a neck and sloping shoulders, the sweater fading
+     down into the dark (the desk below throws nothing back), at about a third of the light it could have.
+122. **Looked at:** full size and at 4K, in the rain, at the sip, at a flash, in the clear night, at the end; the frame
+     rate (60 a second in every look that shows them). A scrub back is the same frame. `check:shows` holds that they
+     are seen in the dark glass while the lamp is on, not at dusk, and nearly gone when the lamp is down.
+
 **Subtracted:** the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
@@ -823,6 +849,8 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
 - **The hand.** Someone at the desk, never seen but for a hand and a sleeve, eight times: the lamp on, a sip, a chin
   scratch, hands round the mug, a face drawn in the mist, the mug away and back, the lamp down. It could be fewer (the lamp's two
   and the refill alone would still say someone is there). The sweater's colour is one constant (`KNIT`, `lamp/hands.ts`).
+- **The reflection.** The one person in the show, seen only in the window, faint. It is the boldest addition; its
+  strength is one number (`globalAlpha`, `lamp/reflection.ts`), and it could go entirely and leave the hand alone.
 - **The moth.** The room's only living thing besides the kitten (and the hand), for the last seven minutes.
   Its spells of the kitten's attention take a little from its nodding along late in the night.
 - **The lightning.** Three far-off flashes, no bolt. They could be fewer, or gone; they are the only sudden light in

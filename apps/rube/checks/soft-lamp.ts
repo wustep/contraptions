@@ -14,6 +14,7 @@ import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/soft-lamp/lamp
 import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/lens'
 import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
 import { rainAt } from '../src/shows/versions/soft-lamp/lamp/world'
+import { reflectionSeen } from '../src/shows/versions/soft-lamp/lamp/reflection'
 import { MOTH_IN, mothAt } from '../src/shows/versions/soft-lamp/lamp/moth'
 import { REACHES, REFILL, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
 import { STRETCHES, WASHES, YAWNS } from '../src/shows/versions/soft-lamp/lamp/cat'
@@ -221,6 +222,10 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     ...m.lightning.filter((t) => machineBusy(t, t + 3.2)).map((t) => `lightning ${t}`),
   ]
   check('soft lamp: nothing crowds the machine: no reach, stretch or flash on a drop or a lob', crowding.length === 0, crowding.join(', '))
+
+  check('soft lamp: whoever is at the desk is seen in the dark glass while the lamp is on, never at dusk nor once it is down',
+    reflectionSeen(10) < 0.01 && reflectionSeen(1100) > 0.5 && reflectionSeen(1600) > 0.5 && reflectionSeen(DURATION) < 0.25,
+    [10, 1100, 1600, DURATION].map((t) => reflectionSeen(t).toFixed(2)).join(' '))
 
   // The kitten gets up and stretches twice, each whole in the frame, clear of its other moments and the hand.
   check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns, washes and the hand',
