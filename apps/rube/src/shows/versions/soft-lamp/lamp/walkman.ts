@@ -111,12 +111,21 @@ export function walkman(ctx: Ctx, lw: number, t: number): void {
   const p = progress(t)
   const cy = (wy0 + 0.07 + wy1) / 2 + 0.01
   const tt = Math.min(t, MUSIC_END)
-  const reels: [number, number][] = [[wx0 + 0.11, 0.03 + 0.055 * (1 - p)], [wx1 - 0.11, 0.03 + 0.055 * p]]
+  // Wound by area, as tape is: from the bare hub to a full reel, its radius the root of what is on it, so the start
+  // and the end are plainly a full reel and an empty one, and the half hour reads at a glance.
+  const HUB = 0.026
+  const FULL = 0.07
+  const wound = (share: number) => Math.sqrt(HUB * HUB + (FULL * FULL - HUB * HUB) * share)
+  const reels: [number, number][] = [[wx0 + 0.11, wound(1 - p)], [wx1 - 0.11, wound(p)]]
   for (const [rx, rr] of reels) {
     ctx.beginPath()
     ctx.arc(rx, cy, rr, 0, Math.PI * 2)
-    ctx.fillStyle = shell('#7A4A30')
+    ctx.fillStyle = shell('#6A3E28')
     ctx.fill()
+    // The pack's edge, catching a little light.
+    ctx.strokeStyle = rgba('#C98A5E', 0.35 * l)
+    ctx.lineWidth = 0.006
+    ctx.stroke()
     ctx.beginPath()
     ctx.arc(rx, cy, 0.024, 0, Math.PI * 2)
     ctx.fillStyle = shell('#E8DCC4')

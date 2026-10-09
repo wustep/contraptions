@@ -443,6 +443,15 @@ ball. The machine and its timing were right and are untouched; the room around i
     wash under it (`scrim`, `lamp/decor.ts`), as a stream puts under its words, fading with the card; the bars go dim
     beneath the type and every letter reads. The title and the credits stand on the dark wall and need none.
 
+### The twenty-third lofi pass
+
+65. **The Walkman's clock did not read.** Its reels were meant to show the half hour, the tape going from one to the
+    other, but their radii ran linearly over a narrow range, so at three fifths of the way they were 0.052 and 0.063
+    of a cell: the same size to the eye. They are wound by area now, as tape is, from the bare hub to a full reel (the
+    radius the root of what is on it), with a faint edge to the pack: a full reel and an empty one at the start and
+    the end, and plainly the right one fuller from the middle on. The headlights' sweeps and the small props (the
+    clock, the Walkman's outline beside the mug's), looked at large: as they were.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
