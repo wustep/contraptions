@@ -699,7 +699,9 @@ function sync(): void {
   )
 
   // The stage's own word while there is no show on it.
-  stageNote.hidden = !current || !(loading || failed || stalled)
+  // (Not while the browser holds the sound: then the stage's own Sound button says what is wanted, and the note sat on it.)
+  const waiting = stalled && !soundHeld
+  stageNote.hidden = !current || !(loading || failed || waiting)
   stageNote.classList.toggle('bad', !!failed)
   stageNoteText.textContent = failed
     ? `${current?.title ?? 'This show'} would not load.`

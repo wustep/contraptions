@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 101 (latest)
+## Polish pass 102 (latest)
+
+- **The stall note no longer covers the Sound button.** Pass 101's numbers showed that on a browser refusing sound, which is most phones on a link, the picture waits a few seconds at the start while the player learns it is refused and retries muted. In that wait pass 89's note said "Waiting for the music…", and once the sound was held it was drawn right over the stage's yellow Sound button, the one thing the viewer had to tap. It now gives way while the sound is held (`shows/player.ts`): before the refusal is known it says it is waiting, which is true, and from then the Sound button stands alone. The guard holds the exception, and fails without it.
+
+## Polish pass 101
 
 No change to the show: pass 100's proposed fix tested and withdrawn. Under Chrome's gesture-required autoplay policies the browser really did refuse the sound (the player fell back to playing muted with the sound held). The refused unmuted attempt reported the same states as a slow link: cued, unstarted, buffering, unstarted within a few milliseconds, then unstarted until the muted retry played at about 4 s. A refused embed blips through buffering too. So "count any buffering since the play" would take real refusals for a slow link, and before `PATIENCE` the two cannot be told apart by the deck's state. The only lever is a longer `PATIENCE`, which would make every real refusal, the common case, wait longer before falling back. The finding stays as it is, noted.
 
