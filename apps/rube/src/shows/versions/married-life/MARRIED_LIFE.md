@@ -353,6 +353,8 @@ window.
   within 20°); never turning more than 0.15 rad a frame faster than her own roll.
 - **The flank:** neither cuts into the hill's slope by more than a twentieth of R, until she gives way.
 - **Contact:** his square and her ball never overlap by more than 0.02 cells while she is with him.
+- **The hill's hurry:** while he runs flat out (175.0 to 176.2 s) he keeps moving toward her on screen, at least 3% of
+  the frame's width a second, under Zoom too.
 - **The credits:** after he has sat down and gone before the end, set by the page, opening on Directed by Claude
   Opus 5.5 and naming Carl and Ellie Fredricksen, Michael Giacchino, Married Life, Up, Pete Docter and p5.js.
 
@@ -531,7 +533,8 @@ window.
     is stronger; and the camera lags his run (a key at 175.9, `LAG_X`), so he crosses a fifth of the frame toward her
     while he runs flat out, and it settles on the two of them as he eases onto the stone. (A first lag caught up at his
     own speed mid-run and stood him still on screen for 0.3 s, read as hesitating: measure on-screen speed, not only
-    its sign.)
+    its sign.) Re-watched: a dash, then an arrival, in the show's frame and under Zoom. Kept: under Zoom, while the
+    frame hangs back (about 175.7 to 176.4), Ellie and the stone sit near its right edge for under a second.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 

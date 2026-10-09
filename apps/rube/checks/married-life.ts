@@ -377,6 +377,24 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   }
   check('married life: his square and her ball never overlap (by more than 0.02 cells)', overlap <= 0.02, `${overlap.toFixed(3)} at ${overlapAt.toFixed(2)} s`)
 
+  // On the hill his hurry down to her shows on screen: while he runs flat out (175.0 to 176.2 s) he keeps moving toward
+  // her in the frame, at least 3% of its width a second, under Zoom too; a camera that catches up at his own speed
+  // stands him still mid-run, and that reads as hesitating.
+  for (const zoomed of [false, true]) {
+    const across = (t: number) => {
+      const z = zoomed ? zoomOf(cam(t), 1.5) : cam(t)
+      return (show.at(t).x - z.x) / ((z.cells * 16) / 9)
+    }
+    let slowest = Infinity
+    let slowestAt = 0
+    for (let t = 175.0; t <= 176.2; t += 0.02) {
+      const v = (across(t + 0.02) - across(t)) / 0.02
+      if (v < slowest) { slowest = v; slowestAt = t }
+    }
+    check(`married life: on the hill he keeps moving toward her on screen while he runs${zoomed ? ', under Zoom' : ''}`,
+      slowest >= 0.03, `${(slowest * 100).toFixed(1)}% of the width a second at ${slowestAt.toFixed(2)} s`)
+  }
+
   // Her face, the dot, is steered where the story needs it (`LOOKS`): at him for the kiss, at the crest of the dance and
   // on the fieldstone; up at the clouds on the blanket; at him in her armchair. And it never turns faster than her own
   // roll would turn it, beyond a brisk turn (0.15 rad in a 60 fps frame more than her roll): no snap.
