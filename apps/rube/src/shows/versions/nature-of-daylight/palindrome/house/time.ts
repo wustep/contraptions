@@ -381,8 +381,8 @@ export const ianLook = (T: number): number => Math.PI + 0.35 - (Math.PI + 0.6) *
 /**
  * Ian after the cut to the cradle: on her other side (the cradle stands where he stood), with her as she rocks it on the
  * chord; then he turns and goes, out of the frame on her left and away out of the room, before the camera draws back,
- * so the last frame is the first and has no Ian. In the film he leaves her; cut away at the cut, as he was, eight fresh
- * readers in nine took his going for a slip.
+ * so the last frame is the first and has no Ian. In the film he leaves her; cut away at the cut, as he was, four fresh
+ * readers in nine (every one of the last five but one) took his going for a slip.
  */
 export const IAN_STAYS_X = -0.4
 export const IAN_GOES = BEGIN + 1.6

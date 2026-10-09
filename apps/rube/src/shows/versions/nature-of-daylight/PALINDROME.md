@@ -770,7 +770,7 @@ stumbled on him: to be seen bringing the charge he would need room to push it in
 second before he arms it, the two of them at his side. He stays as the seventieth left him. Nothing to change.
 
 A seventy-fourth took the one note that outlasted every round: Ian cut away at the cut to the cradle (349.5 s), which
-eight fresh readers in nine took for a slip. It had been left for the director's word since the forty-ninth; as with
+four fresh readers in nine (four of the last five) took for a slip. It had been left for the director's word since the forty-ninth; as with
 the ending's light at the fiftieth, none came, and the director took it. In the film he leaves her. He is with her now
 as the cradle shot opens, on her other side (the cradle stands where he stood), while she rocks it on the chord; then
 he turns and goes, out of the close frame on her left and on out of the room, gone before the camera draws back. In
