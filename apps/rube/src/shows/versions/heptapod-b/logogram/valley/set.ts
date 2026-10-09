@@ -571,9 +571,6 @@ function drawCeiling(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
   }
 }
 
-/** Down a shaft: on out of the cloud over its first fifth, then a little fainter at its foot. */
-const shaftAlong = (v: number): number => (v < 0.2 ? sm(v, 0, 0.2) : 1 - 0.15 * ((v - 0.2) / 0.8))
-
 /**
  * The light coming through where the cloud has opened over where the shell was: long soft shafts, leaning a little,
  * falling through the air onto the meadow under it, and pooling there on the grass.
@@ -585,16 +582,38 @@ function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, o
   const top = -132
   const len = MEADOW - top
   const lean = 0.1
+  // Drawn with gradients straight onto the picture, worked out at every pixel: pushed in close on the reunion each
+  // shaft spans most of the frame, and a stretched sprite (or a layer of its own, its faint edges kept in eight bits)
+  // showed hairline stripes of colour there. Its top fifth, where it comes on out of the cloud, is cut in thin slices
+  // each a little stronger, in the cloud where no step can be seen.
+  const view = ctx.getTransform()
+  const ON = 0.2
+  const SLICES = 14
   for (let j = 0; j < 6; j++) {
     const x = SHELL_X - 22 + j * 10 + 3 * Math.sin(t * 0.05 + j) + (hash(j, 2, 43) - 0.5) * 4
     const w = 2.6 + 3.2 * hash(j, 1, 43)
     const a = (0.14 + 0.09 * hash(j, 3, 43)) * sm(open, 0.05 + j * 0.06, 0.45 + j * 0.06)
     if (a <= 0.004) continue
     const foot = x + len * lean
-    // Its whole soft width: as wide as its old halo was, a little narrower up at the cloud.
+    // Its whole soft width: as wide as its old halo was.
     const span = w * 5.6
     if (Math.max(x, foot) + span / 2 < f.x0 || Math.min(x, foot) - span / 2 > f.x1) continue
-    softBeam(ctx, k, [x, top], [foot, MEADOW], span * 0.72, span, light, a * 2.3, 'shaft', shaftAlong, true)
+    ctx.save()
+    // Its own frame: across it along x, down it along y, leaning with it; level at its top and at the grass.
+    ctx.setTransform(view.multiply(new DOMMatrix([1, 0, lean, 1, x * k, top * k])))
+    const g = ctx.createLinearGradient((-span / 2) * k, 0, (span / 2) * k, 0)
+    const peak = Math.min(1, a * 2.3)
+    for (let i = 0; i <= 16; i++) {
+      const u = Math.abs(i / 16 - 0.5) * 2
+      g.addColorStop(i / 16, `rgba(${light}, ${peak * (1 - u * u) ** 1.5})`)
+    }
+    ctx.fillStyle = g
+    ctx.fillRect((-span / 2) * k, ON * len * k, span * k, (1 - ON) * len * k)
+    for (let i = 0; i < SLICES; i++) {
+      ctx.globalAlpha = sm((i + 0.5) / SLICES, 0, 1)
+      ctx.fillRect((-span / 2) * k, ((ON * len * i) / SLICES) * k, span * k, ((ON * len) / SLICES) * k + 0.5)
+    }
+    ctx.restore()
     // Where it falls, the grass is lit.
     lobe(ctx, k, foot + w * 0.2, MEADOW - 0.1, w * 2.4, 0.55, light, a * 2.2, 0.45)
   }

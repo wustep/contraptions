@@ -337,7 +337,9 @@ changed, in the order of the film, and then what runs through it:
   opened cloud were each a hard-edged wedge with a fainter one round it. In the wides that passed, but pushed in on
   the lift's start and on the reunion each beam was a quarter of the frame across and showed as panes of tinted
   glass, a cold stripe between two of them. They are soft across now, dense along the middle and nothing at the edge,
-  from one sprite each set onto the beam; the sunlight's foot still lies level on the meadow.
+  from one sprite each set onto the beam; the sunlight's foot still lies level on the meadow. The sunlight's shafts
+  are drawn with gradients straight onto the picture instead: pushed in on the reunion each spans most of the frame,
+  and the stretched sprite's texels showed there as hairline stripes of colour over the whole background.
   The floods' beams fade out at their ends now too (they were cut square where they meet the belly, a hard line on
   its dark), and the mast lamps' fans of light down over the camp are soft, not flat triangles.
 - **The lamp's beam in the shaft** (69 → 85.8): fourteen stacked cones, each ending in a hard edge, so in the dark
