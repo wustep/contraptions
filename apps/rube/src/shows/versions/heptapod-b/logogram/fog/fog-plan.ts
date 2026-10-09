@@ -522,7 +522,8 @@ export const GREAT = (() => {
     const p = PULSES.find((q) => Math.abs(q.t - at) < 1e-6)
     const s = p ? p.g : 1
     const scale = (0.45 + 0.55 * sstep((at - t0) / 3.2)) * (at > 181.5 ? 0.45 : 1)
-    return { a: ownRaw(at), size: (0.022 + 0.03 * clamp01((s - 0.8) / 0.5)) * scale, width: 0.055, at }
+    // Wide enough that neighbouring blots run into one swell of ink, never a row of notches along its edge.
+    return { a: ownRaw(at), size: (0.022 + 0.03 * clamp01((s - 0.8) / 0.5)) * scale * 0.72, width: 0.12, at }
   })
   const probe = blank('G', 310, G_R, spin, { marks })
   const rho = rideR(probe, her(t0), t0)
