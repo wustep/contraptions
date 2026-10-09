@@ -87,6 +87,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - on the last chord he is back on the keys of his own piano, and she is gone by the band;
 - Mia, David and the son never jump where they can be seen, and come and go only out of shot or under a cover;
 - no one passes through anyone where it can be seen (two balls drawn closer than nine tenths of their widths summed);
+- they look at each other where the story says, to within 30°: at the kiss at Lipton's, the curtain call, the roll down the beam, in the waltz, at the touch among the stars, and at the look and the nod at the door; she lifts her eyes to the stage at her table, and he finds her across the room;
 - it ends on the city of stars, wide.
 
 ## How it is built
@@ -348,3 +349,7 @@ A forty-fifth pass, for errors:
 A forty-sixth pass, to keep it so:
 
 - **A check for it.** Two balls drawn through each other got past every pass that looked at frames, and was found only by measuring every pair. So `check:shows` now holds it: no two balls closer than nine tenths of their widths summed, anywhere they can be seen, every hundredth of a second through the show. A touch, a width apart, is allowed. I put the old leapfrog back to see it fail, and it named the crossings at 144.81 and 145.26; with the fix, it passes.
+
+A forty-seventh pass, to keep it so, again:
+
+- **A check for their eyes.** Where they look is told by a list of timed looks in `show.ts`, and a change of timing anywhere could quietly turn an eye away at the moment it matters. So `check:shows` now holds nine of them: at each touch, in the waltz, and at the look and the nod at the door, each one's eye is on the other, to within 30°; at her table she has lifted her eyes to the stage; across the room he has found her. With the looks taken out, it fails on all nine, by name.

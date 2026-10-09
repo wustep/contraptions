@@ -207,6 +207,26 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     }
   }
   check('sebs: no one passes through anyone where it can be seen', through.length === 0, through.join(', '))
+  // Where they look. A ball's mark is its eye; at these moments it must say what the story says, to within 30°.
+  const eyes = (t: number) => {
+    const balls = show.at(t).balls ?? []
+    return { seb: balls.find((b) => b.id === 0), mia: balls.find((b) => b.id === show.mia(t)?.id) }
+  }
+  const aim = (spin: number | null | undefined, want: number) => (spin == null ? Infinity : Math.abs(Math.atan2(Math.sin(spin - want), Math.cos(spin - want))))
+  const looks: string[] = []
+  const mutual: [number, string][] = [
+    [65.6, 'the kiss at Lipton\'s'], [125.7, 'the curtain call'], [266.2, 'the roll down the beam'], [284.0, 'the waltz'],
+    [338.8, 'the touch among the stars'], [462.3, 'the look at the door'], [463.8, 'the nod at the door'],
+  ]
+  for (const [t, what] of mutual) {
+    const { seb, mia } = eyes(t)
+    if (!seb || !mia) { looks.push(`${what}: one of them is missing`); continue }
+    const toMia = Math.atan2(mia.y - seb.y, mia.x - seb.x)
+    if (aim(seb.spin, toMia) > Math.PI / 6 || aim(mia.spin, toMia + Math.PI) > Math.PI / 6) looks.push(`${what} (${t})`)
+  }
+  { const { seb, mia } = eyes(28); if (!mia || aim(mia.spin, -0.87) > Math.PI / 6) looks.push('she lifts her eyes to the stage (28)'); void seb }
+  { const { seb, mia } = eyes(34); if (!seb || !mia || aim(seb.spin, Math.atan2(mia.y - seb.y, mia.x - seb.x)) > Math.PI / 6) looks.push('he finds her across the room (34)') }
+  check('sebs: they look at each other where the story says (the touches, the waltz, the door), she to the stage, he to her', looks.length === 0, looks.join(', '))
 
   // The last frame: the whole city, wide.
   const endCam = cam(perf.duration)
