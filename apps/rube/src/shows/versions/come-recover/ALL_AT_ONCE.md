@@ -711,6 +711,9 @@ The notes went back to the builders who made each part, who still had their cont
   the wall, the credits' place and the looks' handovers. So the whole show was swept again at the viewer's framing, a
   frame every 2 s. Every world reads, the credits sit whole over the night glass, and the end goes down to dark.
   Nothing had regressed, and nothing was changed.
+- **A pass for Safari.** Twelve key frames were rendered in WebKit, Safari's engine (26.6, in a throwaway install),
+  and compared with Chrome: the great hit's sunburst, Joy's violet burst, the bursts' clipping, the end's dark and
+  the reduced-motion listener. They match, apart from the edges of type and lines, and the page reports no errors.
 
 ## The looks
 
@@ -881,4 +884,5 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   the same in every mode.
 - The reduced-motion preference is followed live, and the page's Save PNG and Save video paint from the same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
   for a file would take a change to the shared stage and recorder, and that viewer has asked for the calmer show.
-- Only Chrome on macOS has been watched. The recording export has not been re-measured for this take.
+- Only Chrome on macOS has been watched playing. Twelve key frames were rendered in WebKit (Safari's engine, 26.6) as
+  well, and match Chrome's, with no errors. The recording export has not been re-measured for this take.
