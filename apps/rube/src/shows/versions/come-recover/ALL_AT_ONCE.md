@@ -78,6 +78,8 @@ the rocks in the silence, the pull back on the peak, and the credits over the ta
 Before most jumps the next world bleeds through for a frame or two, the way the film's jumps do.
 - The stage shows the next leg's world, with the ball carried into it by the jump's own offset.
 - Each flicker starts 60 ms after an onset, so the leg going out is seen striking it first.
+- There are two before a jump, on the last two onsets before it, so with the cut a jump stays under three flashes a
+  second.
 - Four jumps have none:
   - the first, which builds in the dryer's own glass instead;
   - the jump into the dark, where the surf's worlds collapse into her on their own;
@@ -392,6 +394,19 @@ The notes went back to the builders who made each part, who still had their cont
     (about 170.8 s), the mosaic drew its one panel as a 16:9 box, with the dark down both sides of a wider stage.
     Before the first tear there are no neighbours, so that one panel is now the whole stage (and the whole of a
     phone's squarer one). On the tear the sides become the neighbouring worlds, as before. The 16:9 view is unchanged.
+- **A pass for colour vision and flashing.**
+  - The family was checked under simulated protanopia, deuteranopia and tritanopia. The three stay distinct in each:
+    olive, blue and grey for the first two, and red, grey and teal for the third. Waymond's eye, there from the
+    first frame, sets him apart too. Nothing was changed.
+  - The bright stretches were measured at 30 fps, as the frame's mean relative luminance. The press volley, the
+    surf, the great hit and the portrait's flash are each at most two flashes a second.
+  - The pre-jump flickers were not. Three flickers and the cut made seven swings of the whole frame's light in about
+    half a second. Between a bright world and a dark one (the kitchen into the surf, the dark into the mosaic, the
+    canyon into the bagel, the bagel into home), that was three to three and a half flashes in a second, at or over
+    the three a second that is safe for a viewer sensitive to flashing.
+  - Each jump now has two flickers, on the last two onsets before it, and every jump measures at most two flashes a
+    second. The bleed-through still comes just before each cut. `check:shows` holds it to at most two flickers a
+    jump.
 
 ## End credits
 
@@ -426,7 +441,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - Every jump is on a clear onset. The drop into the rocks is the exception: it comes on the silence after the
     fight's last hit, the fall's beat 0.
 - **No portals, and no cuts drawn.**
-- **Flickers:** only in the second before a jump, each a frame or three.
+- **Flickers:** only in the second before a jump, each a frame or three, and no more than two before any jump, so a
+  jump never flashes more than three times a second.
 - **The ball:**
   - inside a world it never jumps;
   - at every jump it holds its place on the screen, within 1% of the frame a millisecond: every jump is a match cut;

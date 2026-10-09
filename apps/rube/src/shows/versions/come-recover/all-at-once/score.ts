@@ -89,12 +89,17 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
 
 /**
  * The flickers before a jump: the next world shows through for a frame or two just after the onsets before it, the
- * way a jump starts to bleed through in the film. Up to three, each a little longer than the last. Each starts 60 ms
+ * way a jump starts to bleed through in the film. Two, the second a little longer than the first. Each starts 60 ms
  * after its onset, so the leg going out is seen striking it first.
+ *
+ * Two, not more: with the jump itself, each flicker is a swing of the whole frame's light, and between a bright world
+ * and a dark one three flickers and the cut made three and a half flashes in a second, past the three a second that
+ * is safe for a viewer sensitive to flashing. Two and the cut stay under it.
  */
+export const FLICKERS_A_JUMP = 2
 function flickersBefore(leg: number, at: number, lead = 0.9): Flicker[] {
   const near = ONSETS.filter((o) => o.t > at - lead && o.t < at - 0.12 && o.s >= 0.3).map((o) => o.t + 0.06)
-  const times = near.length >= 2 ? near.slice(-3) : [at - 0.55, at - 0.3, at - 0.14]
+  const times = near.length >= 2 ? near.slice(-FLICKERS_A_JUMP) : [at - 0.3, at - 0.14]
   return times.map((t, i) => ({ from: t, to: Math.min(t + 0.045 + 0.02 * i, at - 0.02), leg })).filter((f) => f.to - f.from > 0.03)
 }
 
