@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 55 (latest)
+## Polish pass 56 (latest)
+
+No change to the show, and a new check. A ball leaving the frame is sometimes written; a ball hanging half off the frame's edge reads as a framing mistake. All three balls were measured every 0.02 s in the show's own frame for stretches cut by the edge. The only one longer than 0.3 s is Brand at 249.3 to 249.74 s, which is the pan bringing her camp into frame as the Ranger comes down: she slides in from the right edge and is whole by 249.75 s. That is an entrance, and it is left. `check:shows` now holds that no ball (Cooper, Brand or Murph, scaled) is cut by the edge for more than 0.6 s. With the limit lowered to 0.3 s for one run it caught that pan, so it can fail.
+
+## Polish pass 55
 
 - **The swoop back from the ring's reveal keeps him in shot** (136.4 to 137.1 s). Nothing checked that Cooper stays in the show's own frame. Measured every 0.02 s, he leaves it three times. Two are written to: the cage going up out of the top, and the whip through the sphere. The third was not: the swoop back in from the whole ring to the front door closed in faster than it came down, so for 0.76 s its bottom edge cut through the kitchen floor he was crossing, and he was below it, by up to 2.3 cells. Two keys (`act2/replica.ts`, on 113 and 113½) now bring the frame down sooner. The swoop comes in with the whole house and its floor in frame, he stays in view going to the turnstile, and the pan where it lands is smoother (0.15 to 0.10). The swoop's start, its end and the whole-ring shot are unchanged. The zoom's own acceleration where the swoop begins rose to 0.22, below the tesseract's authored 0.31. Under Zoom, the frames over the small jolt threshold fell from 193 to 173.
 - **A check for it.** `check:shows` now holds his whole ball inside the show's own frame every 0.02 s, but for the cage's climb and the whip. With the old keys put back, it fails at the old gap.

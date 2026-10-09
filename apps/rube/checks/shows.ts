@@ -662,6 +662,34 @@ async function main(): Promise<void> {
           if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (f.cells * 8) / 9 - BALL_R && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < f.cells / 2 - BALL_R)) ownMiss.push(t.toFixed(2))
         }
         check('liftoff: in the show\'s own frame Cooper\'s whole ball is in shot, but for the cage\'s climb and the whip through the sphere', ownMiss.length === 0, ownMiss.slice(0, 12).join(' '))
+        // No ball hangs cut by the frame's edge: crossing it is a moment (a pan revealing Brand at her camp is the longest,
+        // under half a second), never a ball parked half out of shot.
+        const cutRuns: string[] = []
+        for (const who of ['cooper', 'brand', 'murph'] as const) {
+          let from = -1
+          for (let t = 0; t <= MIX_END + 0.02; t += 0.02) {
+            const f = perf.camera!(t)
+            const a = f.angle ?? 0
+            const q = who === 'cooper' ? { x: show.where(t)[0], y: show.where(t)[1], scale: 1 } : show[who](t)
+            let cut = false
+            if (q && t <= MIX_END) {
+              const r = BALL_R * (q.scale ?? 1)
+              const dx = q.x - f.x
+              const dy = q.y - f.y
+              const sx = Math.abs(dx * Math.cos(a) - dy * Math.sin(a))
+              const sy = Math.abs(dx * Math.sin(a) + dy * Math.cos(a))
+              const hx = (f.cells * 8) / 9
+              const hy = f.cells / 2
+              cut = !(sx < hx - r && sy < hy - r) && !(sx > hx + r || sy > hy + r)
+            }
+            if (cut && from < 0) from = t
+            if (!cut && from >= 0) {
+              if (t - from > 0.6) cutRuns.push(`${who} ${from.toFixed(2)}-${t.toFixed(2)}`)
+              from = -1
+            }
+          }
+        }
+        check('liftoff: no ball hangs cut by the frame\'s edge for more than 0.6 s', cutRuns.length === 0, cutRuns.join(', '))
         // Zoom's framing is the stage's own (`zoomed`), which slides to keep the camera's focus, Cooper, inside: so he
         // is held to more than his centre being in: his whole ball, and as much again round it, inside every edge.
         const zoomMiss: string[] = []
