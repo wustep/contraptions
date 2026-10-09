@@ -420,6 +420,11 @@ export const stars = part<StarsState>(
     }
     /** The pair and their reflection both: held on the floor's line between them. */
     const both = (t: number): Pt => here([(centre(t)[0] + PX) / 2, -0.6])
+    /** Far out: the two of them and the machine low in the frame, the turning sky over them, a strip of the glass. */
+    const high = (t: number): Pt => {
+      const c = centre(t)
+      return here([(c[0] + PX) / 2, PBASE - 4.4])
+    }
     /** Halfway between the two of them and the projector they rise from: both in the picture. */
     const mid = (t: number, bias = 0.5): Pt => {
       const c = centre(t)
@@ -434,15 +439,18 @@ export const stars = part<StarsState>(
       { t: APEX - 0.4, cells: 5.4, hold: mid(APEX - 0.4, 0.45) },
       { t: 309.0, cells: 5.0, hold: mid(309.0, 0.4) },
       { t: 313.6, cells: 5.2, hold: mid(313.6, 0.4) },
-      // The scale of it: the two of them in the turning sky, the machine, and all of it again in the glass.
-      { t: 316.6, cells: 6.3, hold: both(316.6) },
-      { t: 319.4, cells: 6.6, hold: both(319.4) },
-      { t: 323.6, cells: 5.2, hold: mid(323.6, 0.4) },
-      // Close, in the quiet: the two of them low in the frame and the open sky over them, the machine out of it below.
-      { t: QUIET[0] + 1.2, cells: 4.1, hold: on(QUIET[0] + 1.2, -1.2) },
-      { t: QUIET[1], cells: 4.2, hold: on(QUIET[1], -1.2) },
+      // The scale of it: far out, the two of them small in the turning sky and its nebula, the machine, and all of it
+      // again in the glass.
+      { t: 316.8, cells: 11.5, hold: high(316.8) },
+      { t: 319.6, cells: 12.0, hold: high(319.6) },
+      { t: 323.6, cells: 5.4, hold: mid(323.6, 0.4) },
+      // (Held a beat, so the last star the melody lights is in the picture its second.)
+      { t: 325.2, cells: 5.2, hold: mid(325.2, 0.35) },
+      // And close, in the quiet: the two of them in each other's arms, filling the frame, with the open sky round them.
+      { t: QUIET[0] + 1.2, cells: 2.5, hold: on(QUIET[0] + 1.2, -0.6) },
+      { t: QUIET[1], cells: 2.35, hold: on(QUIET[1], -0.6) },
       // The swell: out to the whole wheel of the sky round them, the projector whirling under them.
-      { t: 334.4, cells: 7.8, hold: mid(334.4, 0.45) },
+      { t: 334.4, cells: 9.5, hold: mid(334.4, 0.45) },
       { t: DIP, cells: 6.2, hold: mid(DIP, 0.35) },
       // In on the held dip, and on the touch, the projector whole under them: its lamps flare on the touch and go out.
       { t: LAST, cells: 5.0, hold: mid(LAST, 0.4) },
