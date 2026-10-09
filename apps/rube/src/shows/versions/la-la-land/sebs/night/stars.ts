@@ -418,8 +418,6 @@ export const stars = part<StarsState>(
       const q = centre(t)
       return here([q[0] + dx, q[1] + dy])
     }
-    /** The pair and their reflection both: held on the floor's line between them. */
-    const both = (t: number): Pt => here([(centre(t)[0] + PX) / 2, -0.6])
     /** Far out: the two of them and the machine low in the frame, the turning sky over them, a strip of the glass. */
     const high = (t: number): Pt => {
       const c = centre(t)
