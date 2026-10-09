@@ -319,6 +319,12 @@ The notes went back to the builders who made each part, who still had their cont
   - Now the room goes down into the dark with the music over its last five seconds. The washer's window, the light
     the family rests in, is the last to go, the way the tubes went out at the last hit. The googly eyes go down with
     the room, so no eye-whites float on the dark. The last card is not dimmed.
+- **A pass for the switch.** The dryer's tumble, the mosaic's first splits and the portrait's setup were watched at
+  3 to 4 fps, and their motion holds.
+  - As Evelyn pressed the foot switch (284.8 to 287.5 s) and the string lit a lantern a beat, its last lantern and
+    its anchor were cut by the frame's right edge. A third of the frame was the storefront's dark glass.
+  - The two framings there now hold further right and a little higher. The whole string is in, anchor to anchor,
+    over the family, with her at the switch and the camera on its tripod between them.
 
 ## End credits
 

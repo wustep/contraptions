@@ -225,8 +225,10 @@ export const finale = part<FinaleState>(
       { t: 279.0, cells: 2.6, hold: H(-2.03, -0.6), w: 1 },
       { t: 282.2, cells: 2.6, hold: H(-2.05, -0.6), w: 1 },
       // Out again with her, under the camera's tripod, to the switch under the window.
-      { t: 284.8, cells: 3.75, hold: H(-4.35, -1.02), w: 1 },
-      { t: 286.2, cells: 3.75, hold: H(-4.4, -1.02), w: 1 },
+      // Her and the switch, and the whole string over the family as it lights a lantern a beat: its far end and
+      // its anchor in the frame, not cut by the right edge, and less of the night glass on the left.
+      { t: 284.8, cells: 3.75, hold: H(-3.5, -1.2), w: 1 },
+      { t: 286.2, cells: 3.75, hold: H(-3.45, -1.2), w: 1 },
       // She presses it: back and right, the string of lanterns lighting over the family one a beat.
       { t: 287.8, cells: 4.25, hold: H(-3.55, -1.25), w: 1 },
       // And settle on the portrait: the door's glass, the camera, the family under the lanterns.
