@@ -289,7 +289,19 @@ const MIA_KEYS: Key[] = [
 function miaAt(t: number): Pt {
   if (t >= CUTS[3]) return fieldFollow(t, -3.55, 4.62, 373.75, 0.78, R)
   const [x, y] = trackAt(MIA_KEYS, t)
-  return [x + rockAt(t), y]
+  return [x + rockAt(t), y - cheerAt(t)]
+}
+
+/** On the deck she bounces with him as he bounces higher on the board, and hops when he goes in. */
+function cheerAt(t: number): number {
+  let h = 0
+  for (const l of LANDS) {
+    const u = (t - l) / 0.24
+    if (u > 0 && u < 1) h = Math.max(h, 0.07 * Math.sin(Math.PI * u))
+  }
+  const u = (t - SPLASH) / 0.34
+  if (u > 0 && u < 1) h = Math.max(h, 0.14 * Math.sin(Math.PI * u))
+  return h
 }
 
 /** Her hand on the pram's handle, rocking it, until he is nearly home. */

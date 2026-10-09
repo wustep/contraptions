@@ -275,3 +275,7 @@ A thirty-first pass, with a reviewer watching motion:
 A thirty-second pass:
 
 - **The ovation, felt.** The reviewer's last point was fair: through the ovation, the moment her show was for, both of them stood still. Measured, she was motionless for six seconds (113 to 119) and he for eight and a half (116 to 124.75), while the whole house rose round them. The held breath before it stays still, as it should. When the house stands for her row by row, she gives a little hop of joy on each row's rise, and he, on his feet in the front row, bounces on the house's claps until the music softens and she turns to beckon him up.
+
+A thirty-third pass, at stillness, measured:
+
+- **Who stands still, and when.** I listed every uncovered stretch of three seconds or more where either of them is in the picture and does not move. Nearly all are meant: a held chord at the keys, the balance on the trumpet's beam, the jam, the silence after the last chord, him watching her audition, her eyes at her table, the boy asleep on the couch. One was not: at the pool she stood on the deck for seven seconds while he bounced higher and higher on the board for the family. She bounces with him now on each of his landings, and hops when he goes in.
