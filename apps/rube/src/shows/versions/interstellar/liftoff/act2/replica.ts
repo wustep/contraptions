@@ -400,7 +400,10 @@ export const replica = part<ReplicaState>(
     // The whole ring.
     { t: cue(112), cells: 46, hold: toL(AX), w: 1 },
     { t: cue(112.45), cells: 46, hold: toL(AX), w: 1 },
-    // Back in, to the front door.
+    // Back in, to the front door. The frame comes down faster than it closes in, so its foot stays below the kitchen
+    // floor he crosses (it had shut ahead of coming down, and lost him under the bottom edge for most of a second).
+    { t: cue(113), cells: 17, hold: toL([5.5, -7.5]), w: 1 },
+    { t: cue(113.5), cells: 8.5, hold: toL([7, -2.8]), w: 1 },
     { t: cue(114), cells: 5, hold: toL([8.6, -0.55]), w: 1 },
     { t: cue(115.6), cells: 5, hold: toL([10.2, -0.8]), w: 0.6 },
   ],

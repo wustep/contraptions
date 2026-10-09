@@ -648,6 +648,20 @@ async function main(): Promise<void> {
         // Under Zoom (1.5 times closer) Cooper stays in the frame, but for three shots that are about something bigger
         // than him: the cage going up out of the top while Murph is kept back at the tower's foot, the whip through
         // the sphere, and the pull-back from the replica to the whole ring.
+        // In the show's own frame, Cooper's whole ball is in shot every 0.02 s but for the two shots written to lose him:
+        // the cage going up out of the top, and the whip through the sphere. (The swoop back from the ring's reveal once
+        // shut ahead of coming down and lost him under the bottom edge for most of a second.)
+        const ownMiss: string[] = []
+        for (let t = 0; t <= MIX_END; t += 0.02) {
+          if (([[74.9, 77.3], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
+          const f = perf.camera!(t)
+          const a = f.angle ?? 0
+          const [hx, hy] = show.where(t)
+          const dx = hx - f.x
+          const dy = hy - f.y
+          if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (f.cells * 8) / 9 - BALL_R && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < f.cells / 2 - BALL_R)) ownMiss.push(t.toFixed(2))
+        }
+        check('liftoff: in the show\'s own frame Cooper\'s whole ball is in shot, but for the cage\'s climb and the whip through the sphere', ownMiss.length === 0, ownMiss.slice(0, 12).join(' '))
         // Zoom's framing is the stage's own (`zoomed`), which slides to keep the camera's focus, Cooper, inside: so he
         // is held to more than his centre being in: his whole ball, and as much again round it, inside every edge.
         const zoomMiss: string[] = []
