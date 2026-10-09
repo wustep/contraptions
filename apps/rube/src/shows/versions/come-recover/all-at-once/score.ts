@@ -198,15 +198,30 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     // at the photograph as it comes, as the others do.
     // Through the empathy fight he watches her, from her landing alone with the eye he gave her to her coming down
     // the steamers to him.
-    { who: 'waymond' as const, from: 0, gaze: [{ from: 20.3, to: 23.95, at: 'joy' as const }, { from: 23.7, to: 27.65 }, { from: 27.4, to: 30.3, at: 'joy' as const }, { from: DROP - 0.1, to: JUMPS.dojo }, { from: 192.1, to: JUMPS.rocks }, { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'joy' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
-    // Evelyn looks after Joy: down over the brink as her stone goes, while she holds her at the lip of the hole, and
+    {
+      who: 'waymond' as const,
+      from: 0,
+      gaze: [
+        { from: 20.3, to: 23.95, at: 'joy' as const },
+        { from: 23.7, to: 27.65 },
+        { from: 27.4, to: 30.3, at: 'joy' as const },
+        { from: DROP - 0.1, to: JUMPS.dojo },
+        { from: 192.1, to: JUMPS.rocks },
+        { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'joy' as const },
+        ...PORTRAIT,
+        DRUM,
+        SWELLED('evelyn'),
+      ],
+    },
+    // Evelyn looks at Joy: at her stone beside hers through the rocks' silence, and down over the brink as it goes;
+    // while she holds her at the lip of the hole, and
     // into her eyes once Joy has hers.
     {
       who: 'evelyn' as const,
       from: JUMPS.eye,
       arrive: true,
       burst: true,
-      gaze: [{ from: 213.8, to: 219.7, at: 'joy' as const }, { from: JUMPS.brink + 0.3, to: 247.3, at: 'joy' as const }, { from: 254.9, to: 257.2, at: 'joy' as const }, ...PORTRAIT, DRUM, SWELLED('joy')],
+      gaze: [{ from: JUMPS.rocks + 0.5, to: 219.7, at: 'joy' as const }, { from: JUMPS.brink + 0.3, to: 247.3, at: 'joy' as const }, { from: 254.9, to: 257.2, at: 'joy' as const }, ...PORTRAIT, DRUM, SWELLED('joy')],
     },
     // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
     { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 },

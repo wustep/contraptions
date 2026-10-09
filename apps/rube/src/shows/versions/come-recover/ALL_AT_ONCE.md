@@ -478,7 +478,7 @@ The notes went back to the builders who made each part, who still had their cont
 - **A pass for the looks between them.** The same gaze carries the story's other looks:
   - Through the empathy fight (192–200 s), Waymond, who gave her the eye, watches her the whole way to him.
   - At the brink (213.8–219.7 s), as Joy's stone goes over, Evelyn's eye follows it down over the edge while she
-    flinches and then goes after her.
+    flinches and then goes after her (from a later pass she looks at Joy's stone through the whole silence before).
   - In the bagel's hole (from 242 s), as she holds Joy at the lip, she looks at her.
   - Once Joy's eye has settled (255.3 s), mother and daughter look at each other.
   - At home, as Joy nestles against her (279.6 s), Joy looks up at her mother.
@@ -533,6 +533,10 @@ The notes went back to the builders who made each part, who still had their cont
   - then Joy going out again, as before.
   - Gazes that overlap now blend by how far each has eased in, so one look hands over to the next in a smooth sweep
     rather than a snap at the midpoint. A gaze on its own is as it was.
+- **A pass for the rocks' silence.** In the film the rocks are the one quiet talk between mother and daughter, two
+  stones side by side. Evelyn's stone wore her eye but stared at nothing until Joy's went over. Now from the cut
+  (200.7 s) she looks at Joy's stone beside her through the whole silence, and her look follows it down over the
+  brink as before.
 
 ## End credits
 
