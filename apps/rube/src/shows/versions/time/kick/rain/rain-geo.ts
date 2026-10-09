@@ -230,7 +230,7 @@ export const TAXI_STOP = -44.0
 export const TAXI_LEN = 2.2
 export const TAXI_SEAT: Pt = [-0.27, -0.8]
 export const TAXI_QUEUE = -38
-const T_TAXI_IN = 68.0
+const T_TAXI_IN = 69.0
 const TAXI_RUN = 8
 const T_TAXI_GO = T_HIT + 0.1
 // It pulls out briskly, as a cab does once its fare is out: slow off the kerb, it rode along behind Cobb with its wheels
