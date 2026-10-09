@@ -1278,7 +1278,8 @@ function murphHouse(t: number): Pt {
   const onQuilt = BED.top - 0.035 - MR
   const foot: Pt = [BED.x1 - 0.2, onQuilt]
   const floorY = UP - MR
-  const down: Pt = [BED.x1 + 0.22, floorY]
+  // (Landing a little short of the stairwell, so her disc never runs into his as he drops onto the first tread.)
+  const down: Pt = [BED.x1 + 0.18, floorY]
   if (t < M_WAKES) return onPillow
   if (t < M_UP) {
     // Woken with a start: up off the pillow a little and down; a stir this way and that; then she leans toward the

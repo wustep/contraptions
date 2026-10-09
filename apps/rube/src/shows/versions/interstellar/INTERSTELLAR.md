@@ -224,7 +224,12 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 58 (latest)
+## Polish pass 59 (latest)
+
+- **Young Murph no longer lands in Cooper** (15.9 s). Every pair of balls was measured every 0.02 s for overlap. Twice, one disc ran into another. In NASA's bunker (71.1 to 71.2 s) Cooper rolls through the place Brand waits, but the bunker's wall hides both, as written. On the farm the other was seen: Murph, hopping off the foot of her bed, landed against Cooper as he dropped onto the first stair, 0.015 cells into him for a frame or two. She lands 0.04 cells further back now (`earth/house.ts`), and her path on from there is unchanged and continuous.
+- **A check for it.** `check:shows` now holds that no two balls are ever drawn into each other, the bunker excepted. With her old landing put back, it fails at 15.90 s.
+
+## Polish pass 58
 
 No change to the show, and a check for the reunions. Zoom's focus is Cooper alone, but the two reunions are about two balls. Measured every 0.02 s, the one he meets stays whole and well inside both frames throughout. Murph in the far-side house (176.5 to 183 s) keeps at least 13% of the frame's height from the edge under Zoom, and 25% in the show's own frame. Brand at her camp (255.5 s to the music's end) keeps 13% under Zoom and 17% in the show's own. `check:shows` now holds each to 5% in both frames. Set to 20% for one run it failed at Murph's, so it can fail.
 

@@ -662,6 +662,20 @@ async function main(): Promise<void> {
           if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (f.cells * 8) / 9 - BALL_R && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < f.cells / 2 - BALL_R)) ownMiss.push(t.toFixed(2))
         }
         check('liftoff: in the show\'s own frame Cooper\'s whole ball is in shot, but for the cage\'s climb and the whip through the sphere', ownMiss.length === 0, ownMiss.slice(0, 12).join(' '))
+        // Two balls are never drawn into each other: they come close (the meetings), never overlap. The one exception is in
+        // NASA's bunker, where he rolls through the place Brand waits while the bunker's wall hides both.
+        const overlaps: string[] = []
+        for (let t = 0; t <= LIFTOFF_END; t += 0.02) {
+          if (t > 70.9 && t < 71.4) continue
+          const bs = show.at(t).balls ?? []
+          for (let i = 0; i < bs.length; i++) {
+            for (let j = i + 1; j < bs.length; j++) {
+              const reach = BALL_R * ((bs[i].scale ?? 1) + (bs[j].scale ?? 1))
+              if (Math.hypot(bs[i].x - bs[j].x, bs[i].y - bs[j].y) < reach - 0.002) overlaps.push(`${t.toFixed(2)} ${bs[i].id ?? 0}/${bs[j].id ?? 0}`)
+            }
+          }
+        }
+        check('liftoff: no two balls are ever drawn into each other (but behind the bunker\'s wall)', overlaps.length === 0, overlaps.slice(0, 8).join(', '))
         // The two reunions are about two balls, and Zoom's focus is Cooper alone: through each, the one he meets (Murph in
         // the far-side house, Brand at her camp) is whole and well inside both the show's own frame and Zoom's.
         const meetMiss: string[] = []
