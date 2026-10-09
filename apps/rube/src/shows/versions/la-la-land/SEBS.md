@@ -89,6 +89,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - no one passes through anyone where it can be seen (two balls drawn closer than nine tenths of their widths summed);
 - the story's beats are seen: at nineteen of them, from her eyes lifting at her table to his count-in, everyone the beat is about is in the picture;
 - Hollywood's hill lamps go out before the dark comes;
+- close and in the picture, the two of them never both look away from each other for long;
 - the share card, the show's frame at its `still`, has the two of them in it, looking at each other;
 - the credits come up in the open sky over the club: while a card is up, the roof's line is below its last line;
 - every star the melody lights among the stars is lit in the picture, with a margin, for the second after it lights;
@@ -434,3 +435,7 @@ A sixty-third pass, the card held:
 A sixty-fourth pass, their eyes when they are close:
 
 - **Where they are side by side.** The check on their eyes holds nine moments. I measured every moment through the show when the two of them are in the picture and within a cell of each other, and listed where both look away. Three were moments the show already meant as tender. After the kiss at Lipton's they stand together while the room lights up, and their eyes rolled away as soon as the kiss's look let go; the look now holds until they go to the cup. And in the car, where she leans in to him in the jam's silences and again when they have stopped at the club, they looked away from each other as she did; now they look at each other. Nowhere in the show now do the two of them, close and in the picture, both look away from each other for long.
+
+A sixty-fifth pass, the look held, and one more found:
+
+- **A check for it.** The pass before found three close moments where both looked away and mended them; `check:shows` now holds it through the whole show: wherever the two of them are close and in the picture, they never both look away from each other for a second and a half or more. Its first run found one more, which my own measure had passed over by counting the iris as dark: as the iris opens on painted Paris (269.8 to 271.8) the two of them are in its circle, and looked away from each other until the waltz began. The waltz's look now begins as the iris opens, so it opens on the two of them looking at each other.

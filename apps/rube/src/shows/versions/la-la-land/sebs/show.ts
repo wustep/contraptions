@@ -62,7 +62,7 @@ const LOOKS: Look[] = [
   { from: 65.515, to: 69.4, ease: [0.7, 0.8], who: 'both' },
   touch(125.585),
   touch(266.008),
-  { from: 272.625, to: 338.709 + 1.2, ease: [1.0, 0.8], who: 'both' },
+  { from: 269.9, to: 338.709 + 1.2, ease: [0.3, 0.8], who: 'both' },
   // In the car: where she leans in to him in the jam's silences, and again when they have stopped at the club.
   { from: 399.2, to: 404.6, ease: [0.6, 0.6], who: 'both' },
   { from: 418.5, to: 421.4, ease: [0.6, 0.5], who: 'both' },

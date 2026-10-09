@@ -291,6 +291,28 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       aim(seb.spin, Math.atan2(mia.y - seb.y, mia.x - seb.x)) <= Math.PI / 6 && aim(mia.spin, Math.atan2(seb.y - mia.y, seb.x - mia.x)) <= Math.PI / 6
     check('sebs: the share card shows the two of them, looking at each other', ok, `still ${t}`)
   }
+  // Wherever they are close and in the picture, they do not both look away from each other for long. (A ball's mark
+  // turns with its rolling unless a look sets it; it once left them looking away in the car as she leaned in to him.)
+  {
+    const away: string[] = []
+    let from = -1
+    for (let t = 0; t <= DURATION; t += 0.05) {
+      let both = false
+      if (!covered(t)) {
+        const at = show.at(t)
+        const seb = (at.balls ?? []).find((b) => b.id === 0)
+        const mia = (at.balls ?? []).find((b) => b.id === show.mia(t)?.id)
+        if (seb && mia && inShot(t, seb) && inShot(t, mia) && Math.hypot(seb.x - mia.x, seb.y - mia.y) < 1) {
+          const col = at.universe.pieces[0]?.col ?? 0
+          const to = Math.atan2(mia.y - seb.y, mia.x - seb.x)
+          both = aim(seb.spin ?? (seb.x - col) / R, to) > Math.PI / 2 && aim(mia.spin ?? (mia.x - col) / R, to + Math.PI) > Math.PI / 2
+        }
+      }
+      if (both && from < 0) from = t
+      if (!both && from >= 0) { if (t - from >= 1.5) away.push(`${from.toFixed(1)} to ${t.toFixed(1)}`); from = -1 }
+    }
+    check('sebs: close and in the picture, they never both look away from each other for long', away.length === 0, away.join(', '))
+  }
   check('sebs: they look at each other where the story says (the touches, the waltz, the door), she to the stage, he to her', looks.length === 0, looks.join(', '))
 
   // The last frame: the whole city, wide.
