@@ -1,24 +1,35 @@
-import type { Performance } from '../../../registry'
+import type { Framing, Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { zoomDropAt } from './house/alone'
 import { hospitalZoomDrop } from './clinic/hospital'
 import { fixupZoomDrop } from './house/fixup'
 import { DURATION } from './music'
 import { compose } from './score'
+import { zoomHold } from './zoom'
 
 const { show, camera } = compose()
 
 export { show }
 
+/** The parts' own holds under Zoom. */
+function held(t: number): Framing {
+  const f = camera(t)
+  const drop = zoomDropAt(t) + hospitalZoomDrop(t) + fixupZoomDrop(t)
+  return drop ? { ...f, zoomDrop: drop } : f
+}
+function framed(t: number): Framing {
+  const f = held(t)
+  const z = zoomHold(show, held, t)
+  if (!z.drop && !z.slide) return f
+  return { ...f, zoomDrop: (f.zoomDrop ?? 0) + z.drop, zoomSlide: z.slide }
+}
+
 export const performance: Performance = {
   show,
   duration: DURATION,
-  // Under Zoom: lower while he pushes the cart, higher through her touch at her bedside, lower through the credits.
-  camera: (t) => {
-    const f = camera(t)
-    const drop = zoomDropAt(t) + hospitalZoomDrop(t) + fixupZoomDrop(t)
-    return drop ? { ...f, zoomDrop: drop } : f
-  },
+  // Under Zoom: the parts' own holds (lower while he pushes the cart, higher through her touch at her bedside, lower
+  // through the credits), and Zoom's own (`zoom.ts`), which keeps the two of them off the Zoom frame's edges.
+  camera: framed,
   // No portal anywhere: every change of place is a match cut on Carl.
   cuts: () => false,
   // Every set stands on a floor or the ground, with sky, a roof or the storey above over it and only earth under it:

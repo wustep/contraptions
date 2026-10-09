@@ -33,6 +33,11 @@ export interface Framing {
    * high over him), which a tighter frame round the same middle would cut. Left out, Zoom holds the middle.
    */
   zoomDrop?: number
+  /**
+   * Under Zoom, how far right of the frame's middle Zoom holds, as a share of the Zoom frame's half width (negative:
+   * left of it). Left out, Zoom holds the middle.
+   */
+  zoomSlide?: number
 }
 
 export interface SoundtrackSpec {

@@ -355,7 +355,9 @@ window.
   - `index.ts`: the performance. Two framing hints the stage reads, both used only by this show: `tall` (on a phone
     held upright, 0.85 of the extra picture goes above the frame) and, on the camera's framing, `zoomDrop` (where
     Zoom holds off the frame's middle: higher on the home steps, lower through the credits; `zoomDropAt` in
-    `house/alone.ts`, `hospitalZoomDrop` in `clinic/hospital.ts`, `fixupZoomDrop` in `house/fixup.ts`).
+    `house/alone.ts`, `hospitalZoomDrop` in `clinic/hospital.ts`, `fixupZoomDrop` in `house/fixup.ts`), and on top of
+    those Zoom's own hold, `zoom.ts`: worked out once for the whole show, it keeps the two of them off the Zoom frame's
+    edges (`zoomDrop` and `zoomSlide`) without pushing the topmost of them or the balloon's crown out.
 - **The places and their parts**, one builder each:
   - `church/`: `church.ts` (the set, in two lights), `wedding.ts`, `funeral.ts`.
   - `house/`: `front.ts` (the street side), `front-house.ts` (the house drawn old, new, faded, at dusk),
@@ -562,6 +564,15 @@ window.
   them. Zoom now holds 0.22 lower from the cut to the old house until the camera comes in at the mailbox
   (`fixupZoomDrop`): he is at most 0.77 down, the lawn and the street under him, the hammer and the house front still
   in. The show's own frame is unchanged.
+
+- **Polish round 20 (Opus 5.5).** Last round's cart was one case of a general gap: the Zoom check holds the two of
+  them inside the frame, not off its edge. Scanned through the whole show, 22 stretches of a second or more had one
+  of them within an eighth of the Zoom frame's edge, among them Carl cut at the nursery's winch and at the ticket
+  press, and Ellie cut on the fieldstone. Rather than hand holds part by part, Zoom now has its own (`zoom.ts`): each
+  tenth of a second, how far the frame must move (down, or across: `Framing.zoomSlide`, new) to keep them within 0.8
+  of its half size, never further than the topmost of them or the balloon's crown allows; held half a second either
+  side, smoothed, and capped by the allowance held the same way. Seven short stretches remain, the longest the ward
+  (balloon over, the two of them under, the Zoom frame full). It is built once, in about half a second.
 
 ## Known limits
 
