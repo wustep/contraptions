@@ -877,6 +877,10 @@ The notes went back to the builders who made each part, who still had their cont
   the bagel. Evelyn is always in roman and the other in italic. The rocks' soft dark is now one piece
   (`subtitleBed` in `credits.ts`) under the hush's lines too, where the middle one sat over the bagel's seeds. The
   check now holds every line to its own scene, one at a time, none over a jump. The lines are the show's own.
+- **The subtitles on a phone.** On an upright phone the 16:9 frame the page sets words in is about 220 px tall, and
+  the subtitles came out 7 px high, unreadable. A card can now set the least its type may be on the page
+  (`TitleCard.least`, a shared addition the page honours); the subtitles are never under 13 px, and the soft dark
+  under them grows and centres to match. The alley's still sit in its bar. On a desktop nothing changes.
 
 ## The looks
 

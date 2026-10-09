@@ -139,6 +139,8 @@ export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 
 /** Where the subtitles sit, as shares of the 16:9 frame (their top middle): low, or in the widescreen's lower bar. */
 export const SUB_AT: [number, number] = [0.5, 0.855]
 const SUB_IN_BAR: [number, number] = [0.5, 0.884]
+/** The least a subtitle's type may be on the page, CSS pixels: on a phone held upright they are still read. */
+const SUB_LEAST = 13
 /** How far up a subtitle low in the frame (not in a widescreen bar) is at `t`, 0 to 1: for the soft dark under it. */
 export function subtitleLight(t: number): number {
   let v = 0
@@ -160,12 +162,15 @@ export const subtitleBed = scenery<null>({
     const h = f.y1 - f.y0
     // The 16:9 box the words are set in, inside a frame that may be wider or taller.
     const bh = Math.min(h, (w * 9) / 16)
-    const cy = (f.y0 + (h - bh) / 2 + bh * (SUB_AT[1] + 0.022)) * k
+    // On the words' middle: their top is where `SUB_AT` puts it, and they are at least SUB_LEAST tall.
+    const cy = (f.y0 + (h - bh) / 2 + bh * SUB_AT[1]) * k + Math.max(bh * 0.022 * k, SUB_LEAST * 0.8)
     const cx = (f.x0 + w * SUB_AT[0]) * k
-    const rx = Math.min(w, (bh * 16) / 9) * 0.34 * k
+    const rx = Math.max(Math.min(w, (bh * 16) / 9) * 0.34 * k, 170)
+    // As tall as the words are, however small the stage (they never go under SUB_LEAST on the page).
+    const ry = Math.max(rx * 0.16, SUB_LEAST * 1.9)
     ctx.save()
     ctx.translate(cx, cy)
-    ctx.scale(1, 0.16)
+    ctx.scale(1, ry / rx)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
     g.addColorStop(0, `rgba(30, 24, 20, ${0.5 * sub})`)
     g.addColorStop(0.6, `rgba(30, 24, 20, ${0.3 * sub})`)
@@ -197,8 +202,8 @@ export function creditsAt(t: number): TitleCard[] {
     const at = sub.scene === 'alley' ? SUB_IN_BAR : SUB_AT
     const card: TitleCard =
       sub.who === 'evelyn'
-        ? { key: `all-at-once-subtitle-${n}`, names: [sub.line], plain: true, light, rise: 0, at, scale: 0.62 }
-        : { key: `all-at-once-subtitle-${n}`, names: [], notes: [sub.line], plain: true, light, rise: 0, at: [at[0], at[1] + 0.006], scale: 1.75 }
+        ? { key: `all-at-once-subtitle-${n}`, names: [sub.line], plain: true, light, rise: 0, at, scale: 0.62, least: SUB_LEAST / 5.6 }
+        : { key: `all-at-once-subtitle-${n}`, names: [], notes: [sub.line], plain: true, light, rise: 0, at: [at[0], at[1] + 0.006], scale: 1.75, least: SUB_LEAST / 1.95 }
     out.push(card)
   })
   if (t < CREDITS_AT) return out
