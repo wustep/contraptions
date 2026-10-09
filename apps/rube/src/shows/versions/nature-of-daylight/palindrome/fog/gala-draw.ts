@@ -468,12 +468,13 @@ function number(ctx: Ctx, k: number, t: number): void {
     const h = (foot - top) * k
     if (lit > 0.01) {
       const g = ctx.createRadialGradient(x0 + w / 2, y0 + h / 2, 0, x0 + w / 2, y0 + h / 2, KEY_W * 1.3 * k)
-      g.addColorStop(0, rgba(TENT.keypad, 0.45 * lit * up))
+      g.addColorStop(0, rgba(TENT.keypad, 0.75 * lit * up))
       g.addColorStop(1, rgba(TENT.keypad, 0))
       ctx.fillStyle = g
       ctx.fillRect(x0 - KEY_W * 1.3 * k + w / 2, y0 - KEY_W * 1.3 * k + h / 2, KEY_W * 2.6 * k, KEY_W * 2.6 * k)
     }
-    ctx.fillStyle = rgba(mix(TENT.keypad, '#FFFFFF', 0.15 + 0.35 * lit), (0.16 + 0.6 * lit) * up)
+    // Bright enough, lit, to catch at speed: fainter, the hand-off was easy to miss.
+    ctx.fillStyle = rgba(mix(TENT.keypad, '#FFFFFF', 0.15 + 0.45 * lit), (0.2 + 0.8 * lit) * up)
     ctx.fillRect(x0 + 0.02 * k, y0, w - 0.04 * k, h)
   }
   // Each of the first digits on its beat, as he speaks: a flare, then held lit.

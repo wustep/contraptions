@@ -481,6 +481,10 @@ did not, and each was made plainer:
   rising into view. It comes out of the blast as dark as it was at the glass, and only pales as it sinks.
 - **The soldier** was dark on the dark floor. Its rim of the chamber's light is brighter, and it is a little larger.
 
+A thirtieth checked the twenty-ninth cold. The blast was now the black ball's doing to a fresh eye (sure, mostly), and
+the party's keys and the console's read as the same keys, a code he gave her. The one thing still easy to miss was the
+ghost's keys lighting, which carries the hand-off: they are brighter when lit now, a glow that catches at speed.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
