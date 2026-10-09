@@ -140,7 +140,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 282.2 | home's pulse | home | The family portrait. A wooden box camera with a bellows stands on a tripod by the door, facing them. Joy and Waymond straighten up on two small hops. Evelyn rolls to a foot switch under the window and presses it on 286.20: a string of lanterns over the family lights one a beat, and the camera draws back to take in the whole portrait. The self-timer's red lamp blinks faster and faster while she hurries back beside Joy (290.38). |
 | 290.99 | the last great hit | home | The flash: the bulb bursts, the room washes white from the camera's side with their shadows thrown on the washer, and a firework fills the door's glass with gold. The photograph ejects (291.20), flutters down like a leaf and props itself against the washer beside them (292.77). It develops by 293.01: the glowing washer window with the three of them in it, eyes and all. |
 | 295.01 | the last hit | home | The tubes go out in the reverse order of the opening, and the neon with them. The three of them rest in the washer window's warm glow. |
-| 297 to 328 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes. On the tail's two soft accents the empty drum gives a slow half-turn (305.40) and the window's light swells once (312.59). |
+| 297 to 328 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes. On the tail's two soft accents the empty drum gives a slow half-turn (305.40), and the three look up at it; the window's light swells once (312.59), and they look at one another. |
 
 ## The polish pass
 
@@ -520,6 +520,11 @@ The notes went back to the builders who made each part, who still had their cont
     a ball being batted about in the premiere and the dojo.
   - The three balls' spacing was measured every fiftieth of a second. They never draw into each other but for two
     frames at 247.5 s, as Evelyn heaves back on Joy, by 0.15 of a radius (about 2 px).
+- **A pass for the tail.** The credits are thirty-five seconds of the family at rest, and the music gives them two
+  soft accents that the family did not answer. Now they do, with a glance each:
+  - As the empty drum gives its slow half-turn (305.40 s), all three look up at it.
+  - On the window's swell (312.59 s), they look at one another: Evelyn and Joy at each other, Waymond at her.
+  - Each glance lasts about two seconds and eases back.
 
 ## End credits
 
