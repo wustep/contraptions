@@ -324,6 +324,14 @@ set still reaches the frame's edges. One thing showed:
   blot, bends a little and tapers to its point, with the rings' own bleed round it, and its barbs are hooks thrown
   back off it that taper the same way. It is as heavy and as sharp as it was, and strikes the glass where it did.
 
+A fifteenth went through the rest of the marks they make, full size (Abbott's jagged ring before the blast, the blast
+and the dust after it, the ink in the fog and in the vision), the sat phone and the twelve places on its screens,
+then a whole contact sheet a second and a half off the twelfth's so every frame in it was new, and last the end
+credits as the page sets them, every card, on a desktop and on a phone. Nothing to change. Two things were looked at
+twice and kept: the jagged ring runs half across Abbott's body, black on dark, which in its panic reads as meant; and
+the writing limb's closed hand is a little rounder than the limb, a fist. On a phone the credits' fine print is very
+small, but cards are sized by the page, for every show, not by this one.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
