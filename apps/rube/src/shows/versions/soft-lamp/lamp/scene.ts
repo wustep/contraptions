@@ -4,7 +4,7 @@ import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WI
 import { MUSIC_END, heldAt } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt, squashAt } from './route'
 import { cat } from './cat'
-import { bloom, clock, curtain, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
+import { bloom, clock, curtain, draughtAt, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
 import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
 import { cable, walkman } from './walkman'
@@ -328,6 +328,27 @@ function mug(ctx: Ctx, lw: number, t: number): void {
   ctx.moveTo(x0 + 0.03, top + 0.05)
   ctx.lineTo(x1 - 0.03, top + 0.05)
   stroke(ctx, lw * 0.55, rgba(INK, 0.6))
+  // The tea bag's string over the rim and down its front, and its paper tag, stirring a little in the draught off the
+  // window that moves the curtain.
+  const sway = -draughtAt(t) * 1.4
+  const knot = { x: x + 0.08, y: top + 0.01 }
+  const tag = { x: knot.x + 0.04 + sway * 0.12, y: top + 0.27 }
+  ctx.beginPath()
+  ctx.moveTo(knot.x, knot.y)
+  ctx.quadraticCurveTo(knot.x + 0.035, top + 0.14, tag.x, tag.y - 0.055)
+  stroke(ctx, lw * 0.35, rgba('#EDE2CC', 0.45 + 0.4 * l))
+  ctx.save()
+  ctx.translate(tag.x, tag.y - 0.055)
+  ctx.rotate(0.08 + sway)
+  roundRect(ctx, -0.045, 0, 0.09, 0.11, 0.01)
+  ctx.fillStyle = lit('#8A7C78', '#F2E6D2', l)
+  ctx.fill()
+  stroke(ctx, lw * 0.5)
+  ctx.beginPath()
+  ctx.moveTo(-0.025, 0.065)
+  ctx.lineTo(0.025, 0.065)
+  stroke(ctx, lw * 0.35, rgba('#B0703E', 0.55))
+  ctx.restore()
 }
 
 /**

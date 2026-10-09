@@ -367,6 +367,15 @@ ball. The machine and its timing were right and are untouched; the room around i
 53. **The end, looked at:** the last track, the credits, the lamp and the fairy lights going down, the cat asleep, the
     neighbour's window dark after its light goes out. Left as it is.
 
+### The fourteenth lofi pass
+
+54. **The tea was a plain pink cylinder.** A tea bag's string now hangs over the mug's rim and down its front to a
+    small paper tag, and the tag stirs a little in the draught off the window, the same air that moves the curtain and
+    the plant: a lived-in thing, and one more that breathes with the room. Inside the mug's outline, so no frame moves.
+55. **A break and the highest lob, looked at:** Magical Connection's break draws back to the room with the fairy
+    lights across its top and the wave along them; Stargazing's lob, the slowest track's and so the highest, peaks
+    inside the room's frame. Left as they are.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
