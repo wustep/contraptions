@@ -343,6 +343,14 @@ watched the whole show again through Overview, which the sixth had last seen bef
   the room fills the frame, cradle, bed and clock; on the lawn, the whole tree through the year, the crown taken in.
   The show's own camera reads none of this, and its frames are the same to the pixel.
 
+A seventeenth watched the whole show again in a frame 9:16 tall (a phone held upright, or the export's Shorts), which
+the fourth had last seen before most of these passes. All of it held but one thing:
+
+- **The white beyond the glass in a tall frame** (129 to 231 s): the fog the heptapods stand in, low in front of them,
+  was a band that stopped three cells under the floor's line, and a tall frame sees under it, so the white ended in a
+  hard line across it two thirds of the way down, a flat grey below. It runs on to the frame's foot now. In 16:9 it is
+  the same to the pixel.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

@@ -236,12 +236,13 @@ function beyond(p: p5, ctx: Ctx, k: number, t: number, f: Frame, wake: number): 
     heptapod(p, ctx, k, t, costello(t), 2, 'costello', wake, SHELL.heptapod)
     heptapod(p, ctx, k, t, abbott(t), 1, 'abbott', wake, SHELL.heptapodDark)
   }
-  // Fog in front of them, low: they stand in it.
+  // Fog in front of them, low: they stand in it. It holds its last on down to the frame's foot, which a frame taller
+  // than 16:9 sees: stopped three cells down, its edge was a hard line across the white.
   const low = ctx.createLinearGradient(0, 0.25 * k, 0, 3 * k)
   low.addColorStop(0, rgba(SHELL.glow, 0))
   low.addColorStop(1, rgba(SHELL.glow, 0.85 * wake))
   ctx.fillStyle = low
-  ctx.fillRect(x0, 0.25 * k, x1 - x0, 3 * k)
+  ctx.fillRect(x0, 0.25 * k, x1 - x0, Math.max(3 * k, y1 - 0.25 * k))
   // Their ink, on the glass: what is being written, and what is waiting to be read.
   for (const l of LOGOS) {
     if (t < l.born || t >= l.slotIn) continue
