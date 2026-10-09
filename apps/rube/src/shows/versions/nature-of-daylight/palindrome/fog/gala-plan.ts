@@ -58,7 +58,9 @@ export function tierFill(i: number, t: number): number {
 }
 
 /** The stand: a slender post by the table, the bottle's cradle over the tower, the pedal at its foot. */
-export const PEDAL = { hinge: -1.15, end: -0.72, lift: 0.07 }
+// Its free end still under her as she rests on it, and a ball's width short of where she ends beside him, so it never
+// touches her side after (it ended against her, and read as a rod from the stand to her).
+export const PEDAL = { hinge: -1.15, end: -0.8, lift: 0.07 }
 /** The bottle turns in its cradle about this point: at rest leaning back, pouring tipped over the top coupe. */
 const POUR = (-40 * Math.PI) / 180
 const MOUTH: Pt = [TABLE.x, TABLE.top - TIERS * COUPE.h - 0.25]

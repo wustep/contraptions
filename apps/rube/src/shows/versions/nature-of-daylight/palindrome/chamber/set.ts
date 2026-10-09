@@ -97,8 +97,10 @@ function gripsOf(who: Writer): Grip[] {
     out.push({ t0: l.born, t1: l.born + l.form, to: inkAt(rg, l.c[0], l.c[1], l.R, rg.start), open: 0, lead: Math.min(0.9, 0.35 + l.form * 0.3), palm: PALM_R })
   }
   if (who === 'abbott') {
-    // The hand comes: raised over her as she goes to the glass, then down onto it, where she is.
-    out.push({ t0: T.palm - 1.25, t1: T.palm - 0.77, to: [9.3, -2.7], open: 0.45, lead: 1.2, palm: PALM_R })
+    // The hand comes: raised over her as she goes to the glass, then down onto it, where she is. Raised in the close
+    // frame and slowly, so it is seen there: raised to just above the frame's top in a second, it swept up through
+    // the close as a limb with a knot on it and was gone.
+    out.push({ t0: T.palm - 1.25, t1: T.palm - 0.77, to: [9.2, -1.85], open: 0.6, lead: 1.8, palm: PALM_R })
     out.push({ t0: T.palm, t1: T.palm + 2.3, to: PALM, open: 1, lead: 0.77, palm: PALM_R })
     const w = ring(WEAPON.seed)
     out.push({ t0: WEAPON.born, t1: WEAPON.born + 1.3, to: inkAt(w, WEAPON.c[0], WEAPON.c[1], WEAPON.R, w.start), open: 0, lead: 0.5, palm: PALM_R })
@@ -894,7 +896,8 @@ export const CHARGE: Pt = [6.3, FLOOR]
  * them and rolls away out of the chamber the way it came. Without it the charge was simply there, and the blast read as
  * the heptapods' doing.
  */
-const SOLDIER_R = 0.11
+/** At the cast's own scale: smaller, with only a hairline of light on it, it read as a stray speck as it hopped. */
+const SOLDIER_R = 0.13
 const SOLDIER_AT = CHARGE[0] - 0.22 - SOLDIER_R - 0.03
 const ARM = 215.65
 const HOP: [number, number] = [216.0, 216.625]
@@ -927,15 +930,31 @@ function soldier(ctx: Ctx, k: number, t: number): void {
   if (seen <= 0.01) return
   ctx.save()
   ctx.globalAlpha *= seen
-  ctx.fillStyle = mix(SHELL.dark, '#000000', 0.35)
+  // Its shadow on the floor, fading as it leaves the floor in the hop, so it is a ball in the room.
+  const lift = Math.max(0, FLOOR - SOLDIER_R - y)
+  const sh = 0.45 * Math.max(0, 1 - lift / 0.5)
+  if (sh > 0.01) {
+    ctx.fillStyle = rgba('#000000', sh)
+    ctx.beginPath()
+    ctx.ellipse(x * k, FLOOR * k, SOLDIER_R * k * (1.1 + lift), SOLDIER_R * k * 0.22, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.fillStyle = mix(SHELL.dark, SHELL.wallLit, 0.1)
   ctx.beginPath()
   ctx.arc(x * k, y * k, SOLDIER_R * k, 0, Math.PI * 2)
   ctx.fill()
-  // The chamber's cold light along its top, so it reads against the dark wall.
-  ctx.strokeStyle = rgba(SHELL.wallLit, 0.9)
-  ctx.lineWidth = Math.max(1, 0.02 * k)
+  // A quiet ring of the room's light all round it, as the cast's balls have theirs, but grey: a ball, not a hole.
+  ctx.strokeStyle = rgba(SHELL.wallLit, 0.45)
+  ctx.lineWidth = Math.max(1, 0.022 * k)
   ctx.beginPath()
-  ctx.arc(x * k, y * k, SOLDIER_R * k, Math.PI * 1.1, Math.PI * 1.9)
+  ctx.arc(x * k, y * k, SOLDIER_R * k - ctx.lineWidth / 2, 0, Math.PI * 2)
+  ctx.stroke()
+  // The chamber's cold light along its top and round the side toward the glass, so it reads as a ball against the
+  // dark wall.
+  ctx.strokeStyle = rgba(mix(SHELL.wallLit, '#ffffff', 0.4), 0.95)
+  ctx.lineWidth = Math.max(1.2, 0.03 * k)
+  ctx.beginPath()
+  ctx.arc(x * k, y * k, SOLDIER_R * k - ctx.lineWidth / 2, Math.PI * 1.15, Math.PI * 2.3)
   ctx.stroke()
   ctx.restore()
 }

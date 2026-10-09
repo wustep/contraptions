@@ -379,13 +379,25 @@ function stand(ctx: Ctx, k: number, t: number): void {
   ctx.fillRect((POST.x - 0.025) * k, POST.top * k, 0.05 * k, (FLOOR_Y - POST.top) * k)
   ctx.fillRect((POST.x - 0.12) * k, (FLOOR_Y - 0.03) * k, 0.24 * k, 0.03 * k)
   ctx.fillRect(BOTTLE.c[0] * k, (POST.top - 0.02) * k, (POST.x - BOTTLE.c[0]) * k, 0.04 * k)
-  // The pedal: a brass plate hinged at the post's foot, its free end raised, pressed flat under her.
+  // The pedal: a brass plate hinged at the post's foot, its free end raised, pressed flat under her. A wedge, deeper at
+  // its free end with a dark tread on it: drawn as a thin even strip, once she had rolled off it, it read as a rod
+  // from the stand to her side, a leash.
   const lift = PEDAL.lift * (1 - pedalDown(t))
+  const len = PEDAL.end - PEDAL.hinge
   ctx.save()
   ctx.translate(PEDAL.hinge * k, FLOOR_Y * k)
-  ctx.rotate(-Math.atan2(lift, PEDAL.end - PEDAL.hinge))
+  ctx.rotate(-Math.atan2(lift, len))
   ctx.fillStyle = brass
-  ctx.fillRect(0, -0.035 * k, (PEDAL.end - PEDAL.hinge) * k, 0.035 * k)
+  ctx.beginPath()
+  ctx.moveTo(0, 0)
+  ctx.lineTo(0, -0.03 * k)
+  ctx.lineTo(len * k, -0.06 * k)
+  ctx.quadraticCurveTo((len + 0.02) * k, -0.06 * k, (len + 0.02) * k, -0.03 * k)
+  ctx.lineTo((len + 0.02) * k, 0)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = dark
+  ctx.fillRect(len * 0.45 * k, -0.065 * k, len * 0.5 * k, 0.018 * k)
   ctx.restore()
   // The bottle in its cradle, turning about its middle: dark glass, a pale foil at its neck.
   const a = bottleAngle(t)

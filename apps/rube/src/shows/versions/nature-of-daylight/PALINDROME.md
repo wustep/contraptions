@@ -606,6 +606,20 @@ the noise everywhere (the same untouched moment counted 18 and 8 on two runs). A
 alone, at the start, mid-show and in the credits, on a desktop and on a phone: the cast card centred over the wall,
 clear of the window, nothing clipped. Nothing to change.
 
+A fifty-fifth gave the whole show, a frame a second, to a fresh reader who had not seen the brief. They had the story
+whole, the palindrome included. Three of their worst read as things they are not:
+
+- **The soldier** (216 s), hopping back over the two of them, read as a stray speck: a ball smaller than everyone's,
+  near black on the dark wall, a hairline of light on it. It is at the cast's own scale now, with a quiet grey ring
+  round it, the glass's light along its top and side, and its shadow on the floor: one of the room's dark balls, not
+  a hole in the picture.
+- **The hand raised over her** (147 to 148 s) swept up through the close frame in half a second, to just over its top:
+  a knot on the limb, then gone. It is raised into the frame now, and slowly, so it hangs over her before it comes
+  down onto the glass.
+- **The pedal** at the gala, once she had rolled off it to Shang, rose again with its tip against her side: a thin
+  even strip, it read as a rod from the stand to her, a leash. It is a wedge now, deeper at its free end with a dark
+  tread, and shorter, still under her as she rests on it but a ball's width short of where she ends.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
