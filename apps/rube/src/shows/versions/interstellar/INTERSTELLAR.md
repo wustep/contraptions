@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 51 (latest)
+## Polish pass 52 (latest)
+
+No change to the show. Pass 51 broke two of its guards on purpose but not the silent-export one, which reads its line with a pattern. Both of its parts were broken now: a weaker warning on the button, and the note after saving put back to "picture and music". The check failed each time, and the file was restored. Guards for Voyage's own picture fixes (the cloud deck and the far mouth in Overview, the ditch, the one Ranger) were weighed and left: they live in drawing code that needs a canvas, which `check:shows` does not have, and the frame audits cover them.
+
+## Polish pass 51
 
 - **Guards for the other shared changes.** `check:shows` now holds, as it holds the player's keys, by reading the source: the failed-soundtrack wording and the silent-export warning before and after saving (`shows/player.ts`, passes 42 and 43), and the credits' 9px floor on each of its five small lines (`src/ui/styles.css`, pass 45). Each was broken on purpose once to see the check fail, then restored.
 
