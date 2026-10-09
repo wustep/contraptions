@@ -754,6 +754,14 @@ China's red picture, the waking white, the pinned lift, the blast from the charg
 off whole, the willow's clumps grown in. They sit together; nothing new showed. And the circle still closes as it
 did: the last frame against the first differs exactly as it did before the fiftieth. Nothing to change.
 
+A seventy-second gave the show to a ninth fresh reader: they had it whole, Arrival named, the soldier tied to the
+charge. One note three readers in nine have given: her half cut by the frame's corner as the camera goes into the
+television (100.6 s). It stays. The push ends with the news's picture filling the frame, three cells and more to her
+right, so she must leave it, and to leave a frame is to cross its edge; she does it in a third of a second in the dark
+foreground, and a frame a second catches it. To move her to stay in would move where she is across the match cut
+into the valley. Their others stay as they were left: the frantic ring is meant jagged; the valley's long empty hold
+is the shells' going on the loudest bars. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
