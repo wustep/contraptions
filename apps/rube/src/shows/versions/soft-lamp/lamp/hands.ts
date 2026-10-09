@@ -180,9 +180,12 @@ export const REFILL = (() => {
 const grow = (e: number): number => 1 + 2.2 * e * e
 
 /** Where a point on the mug (or the hand on it) is, on its way. */
-function carried(m: { up: number; e: number; gone: number }, x: number, y: number): { x: number; y: number } {
+function carried(m: { up: number; e: number; gone: number }, x: number, y: number, foot = 0.55): { x: number; y: number } {
   const g = grow(m.e)
-  return { x: MUG.x + (x - MUG.x) * g + 0.6 * m.e + 0.5 * m.gone, y: y * g - 0.25 * m.up + 2.6 * m.e + 4 * m.gone }
+  // At the lips, the mug's rim stands just above the foot of the picture, whatever its shape: a phone held upright
+  // sees far below the desk, and the mug must still go out at its foot, not hang over the drawers.
+  const lips = foot - 0.25 + MUG.h * grow(1) + 0.25
+  return { x: MUG.x + (x - MUG.x) * g + 0.6 * m.e + 0.5 * m.gone, y: y * g - 0.25 * m.up + lips * m.e + (foot - 0.55 + 4) * m.gone }
 }
 
 /** How far the lamp's knob is turned, 0 (up) to 1 (down to a glow): turned up as the lamp comes on, down as it goes. */
@@ -438,8 +441,9 @@ export function hands(ctx: Ctx, lw: number, t: number, mug: (ctx: Ctx) => void):
   if (!p) return
   // Carrying the mug, for a sip or away, both come toward the camera: drawn here, in front of everything.
   const m = mugAt(t)
+  const foot = viewOf(ctx).y1
   const carry = (g: Ctx) => {
-    const o = carried(m, 0, 0)
+    const o = carried(m, 0, 0, foot)
     g.translate(o.x, o.y)
     g.scale(grow(m.e), grow(m.e))
   }

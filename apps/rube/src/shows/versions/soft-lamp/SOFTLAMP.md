@@ -841,6 +841,23 @@ after are of someone at work: this pass makes the reflection that.
 126. **Looked at:** the thinking at 4K, the stretch frame by frame, the frame rate (60 a second). A scrub back is the
      same frame. `check:shows` holds the stretch: late, just after the kitten's, while they are seen.
 
+### The forty-sixth pass: every screen, after the people came in
+
+Six passes added things (the hand's new reaches, the face in the mist, the trains, the moth, the rims, the reflection)
+and were looked at in the composed 16:9 frame. The show is left on on phones and laptops, in Zoom and in the overview,
+so the live stage was captured at each new moment on a phone held upright (430 × 932), a 16:10 laptop (1440 × 900),
+both in Zoom, and the overview.
+
+127. **The sip on a phone.** A phone held upright sees two cells and more below the desk, and the mug, carried "toward
+     the camera, out at the frame's foot", stopped where a 16:9 frame's foot is: on the phone it hung, huge, in the
+     middle of the picture over the drawers, a hand holding a giant mug in the dark under the desk. The mug's way to
+     the lips is now measured to the foot of whatever frame is showing, so on every screen its rim stands just over the
+     bottom edge while they drink, and taking it away carries it on out of any of them. The 16:9 frame is as it was.
+128. **Looked at and left:** the hand's sleeve on a phone, fading into the dark under the desk; the reflection and the
+     moth in Zoom's closer frame (the city soft behind them, as at the cup close); the overview, where the reflection
+     stands where the hidden camera faces, and the hand, at the end of its reach, goes out through the room's dark
+     under the desk (the overview is not the desk's point of view; nothing can come from where the person sits there).
+
 **Subtracted:** the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
