@@ -2,10 +2,11 @@ import { sweepAt } from './decor'
 import { MOMENTS, flashAt, shootAt } from './sky'
 import { REACHES, handAt, petAt } from './hands'
 import { mothAt } from './moth'
+import { rimAt } from './rim'
 import { CAT } from './desk'
 import { camera, catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
-import { LANDINGS, LAPS, ballAt } from './route'
+import { LANDINGS, LAPS, ballAt, machineBusy } from './route'
 import { rgba } from './canvas'
 import { hash, lampAt, lightAt, lit } from './world'
 
@@ -115,7 +116,7 @@ export const YAWNS: number[] = [2, 4, 6, 8, 9, 10].map((n) => {
   // A while after the ball has settled, while the camera is on it.
   for (let k = 0; k < 40; k++) {
     const at = lap.cup + 10 + k * 4 * tr.period + hash(n, k, 99) * 2
-    if (REACHES.some((r) => at > r.at - 5 && at < r.at + r.dur + 3)) continue
+    if (REACHES.some((r) => at > r.at - 8 && at < r.at + r.dur + 10)) continue
     if (catInViewAt(at) && catInViewAt(at + 3.2) && (lap.lob === null || at + 4 < lap.lob - 8 * tr.period)) return at
   }
   return -100
@@ -134,7 +135,16 @@ const WASH = 6
  * Its washes: four through the night, each in a phrase it spends watching rather than nodding along, while the ball
  * sits and the camera is on it all the while, clear of its yawns and of the lob.
  */
-export const WASHES: number[] = [1, 3, 5, 7].map((n) => {
+export const WASHES: number[] = [[1, 2], [3, 4], [5, 6], [7, 8]].map((tracks) => {
+  for (const n of tracks) {
+    const at = washIn(n)
+    if (at > 0) return at
+  }
+  return -100
+})
+
+/** The first moment in track `n` a wash fits, or -100. */
+function washIn(n: number): number {
   const lap = LAPS[n]
   const tr = TRACKS[n]
   for (let k = 0; k < 60; k++) {
@@ -148,7 +158,7 @@ export const WASHES: number[] = [1, 3, 5, 7].map((n) => {
     if (still) return at
   }
   return -100
-})
+}
 
 /**
  * Where a wash is at `t`: how far into it (0, none, to 1) the cat is (`k`, eased in and out), where its paw is (`paw`,
@@ -207,7 +217,8 @@ function stretchIn(n: number): number {
     if (lap.lob !== null && at + STRETCH + 2 > lap.lob - 8 * tr.period) break
     if ([...YAWNS, ...WASHES].some((m) => m > at - 10 && m < at + STRETCH + 6)) continue
     if (REACHES.some((r) => r.at < at + STRETCH + 6 && r.at + r.dur > at - 6)) continue
-    if (sky.some((m) => m > at - 6 && m < at + STRETCH + 6)) continue
+    if (sky.some((m) => m > at - 12 && m < at + STRETCH + 10)) continue
+    if (machineBusy(at, at + STRETCH)) continue
     if (!held(at - 1, at + STRETCH + 1)) continue
     let still = true
     for (let s = at - 1; s <= at + STRETCH + 1; s += 0.5) if (vibeAt(s) > 0.02 || sweepAt(s).a > 0.02) still = false
@@ -385,8 +396,9 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
     ctx.quadraticCurveTo(sx + 0.06, top + 0.12, sx + 0.02, top + 0.24)
     ctx.stroke()
   }
-  // The window's cool light along its back.
-  ctx.strokeStyle = rgba('#A8A8E6', 0.22)
+  // The window's light along its back (`rim.ts`): peach at dusk, cool at night, pale under the moon.
+  const rim = rimAt(t)
+  ctx.strokeStyle = rgba(rim.color, 0.55 * rim.a)
   ctx.lineWidth = 0.05
   ctx.beginPath()
   ctx.moveTo(x0 + 0.05, top + 0.12)
@@ -471,6 +483,15 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
   ctx.lineWidth = lw
   ctx.stroke()
+  // The window's light over the top of its head.
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  ctx.beginPath()
+  ctx.ellipse(0, 0, RX - lw * 1.4, RY - lw * 1.4, 0, Math.PI * 1.08, Math.PI * 1.92)
+  ctx.strokeStyle = rgba(rim.color, 0.45 * rim.a)
+  ctx.lineWidth = lw * 1.4
+  ctx.stroke()
+  ctx.restore()
   // Its forehead's stripes, and the cream of its muzzle.
   ctx.strokeStyle = rgba(FUR_DARK, 0.6)
   ctx.lineWidth = 0.03

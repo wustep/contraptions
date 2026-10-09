@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
-import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WINDOW, type Book } from './desk'
+import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WALKMAN, WINDOW, type Book } from './desk'
 import { MUSIC_END, heldAt } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt, squashAt } from './route'
 import { cat } from './cat'
@@ -11,6 +11,7 @@ import { camera } from './camera'
 import { titlesAt } from './titles'
 import { REFILL, doodle, hands, knob, liftAt } from './hands'
 import { moth, mothShadow } from './moth'
+import { rimAt, rimLine } from './rim'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { flashRoom, night } from './sky'
@@ -207,6 +208,7 @@ function potRock(t: number): number {
 function pot(ctx: Ctx, lw: number, t: number): void {
   const lamp = lampAt(t)
   const rock = potRock(t)
+  const rim = rimAt(t)
   const { x, halfW, h } = POT
   const base = SILL.y
   ctx.save()
@@ -233,6 +235,13 @@ function pot(ctx: Ctx, lw: number, t: number): void {
     ctx.fillStyle = lit(i % 2 ? '#2F4A45' : '#355A4A', i % 2 ? '#5F8F6E' : '#79A86B', Math.min(1, lightAt(tx, ty, 1) * lamp + 0.15))
     ctx.fill()
     stroke(ctx, lw * 0.6)
+    // Against the glass, the window's light round its edge.
+    ctx.save()
+    ctx.globalCompositeOperation = 'screen'
+    ctx.strokeStyle = rgba(rim.color, rim.a * 0.45)
+    ctx.lineWidth = lw * 0.9
+    ctx.stroke()
+    ctx.restore()
   }
   // The pot: clay, a rim, tapering to its foot.
   ctx.beginPath()
@@ -248,7 +257,19 @@ function pot(ctx: Ctx, lw: number, t: number): void {
   ctx.fillStyle = lit('#8A5240', '#E0946E', Math.min(1, lightAt(x, base - h, 1) * lamp + 0.12))
   ctx.fill()
   stroke(ctx, lw)
+  rimLine(ctx, lw, t, [{ x: x - halfW, y: base - h + lw * 1.4 }, { x: x + halfW, y: base - h + lw * 1.4 }])
   ctx.restore()
+}
+
+/**
+ * The window's light along the tops of the things standing in front of it (`rim.ts`): the books, the mug, the
+ * Walkman. (By the lamp, the headphones are past its reach.) The kitten's is its own (`cat.ts`), and the pot's and the plant's are drawn with them.
+ */
+function windowRims(ctx: Ctx, lw: number, t: number): void {
+  const at = (x0: number, x1: number, y: number) => [{ x: x0, y: y + lw * 1.4 }, { x: x1, y: y + lw * 1.4 }]
+  BOOKS.forEach((b, i) => rimLine(ctx, lw, t, at(b.x0 + 0.04, b.x1 - 0.04, b.top + pressed(i, t))))
+  if (liftAt(t) <= 0.001) rimLine(ctx, lw, t, at(MUG.x - MUG.halfW + 0.05, MUG.x + MUG.halfW - 0.05, -MUG.h))
+  rimLine(ctx, lw, t, at(WALKMAN.x0 + 0.05, WALKMAN.x1 - 0.05, -WALKMAN.h), 0.8)
 }
 
 /* ------------------------------------------------------------------ the desk */
@@ -833,6 +854,7 @@ export const things = scenery<null>(
     headphones(ctx, lw, c.t)
     lamp(ctx, lw, c.t)
     knob(ctx, lw, c.t)
+    windowRims(ctx, lw, c.t)
     ballShadow(ctx, c.t)
   }),
   (p, _s, c) => inCells(p, c, (ctx, lw) => {

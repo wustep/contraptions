@@ -9,7 +9,7 @@ import { DURATION, show } from '../src/shows/versions/soft-lamp/lamp'
 import { AIMS, catInViewAt } from '../src/shows/versions/soft-lamp/lamp/camera'
 import { BOOKS, CONTACT, CUP, ON_SILL, PROPS, R, SILL } from '../src/shows/versions/soft-lamp/lamp/desk'
 import { MUSIC_END, TRACKS, YOUTUBE, barTime, kickAt } from '../src/shows/versions/soft-lamp/lamp/music'
-import { LANDINGS, LAPS, LEGS, NODS, ballAt, hollowY, legAt } from '../src/shows/versions/soft-lamp/lamp/route'
+import { LANDINGS, LAPS, LEGS, NODS, ballAt, hollowY, legAt, machineBusy } from '../src/shows/versions/soft-lamp/lamp/route'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/soft-lamp/lamp/titles'
 import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/lens'
 import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
@@ -213,6 +213,14 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
   check('soft lamp: a moth comes to the lamp as the rain thins, and is on the moonlit glass at the end',
     MOTH_IN > 1300 && MOTH_IN < MUSIC_END - 240 && rainAt(MOTH_IN) < 0.3 && mothAt(MOTH_IN - 1).a === 0 && mothAt(1700).a === 1 &&
     mothAt(DURATION).glass === 1 && mothAt(DURATION).fly === 0, `${MOTH_IN}`)
+
+  // The machine's drops and lobs are the show's backbone: the hand, the stretches and the lightning keep clear of them.
+  const crowding = [
+    ...REACHES.filter((r) => r.kind !== 'on' && r.kind !== 'lamp').filter((r) => machineBusy(r.at, r.at + r.dur)).map((r) => `hand ${r.kind} ${r.at}`),
+    ...STRETCHES.filter((t) => machineBusy(t, t + 6.8)).map((t) => `stretch ${t.toFixed(0)}`),
+    ...m.lightning.filter((t) => machineBusy(t, t + 3.2)).map((t) => `lightning ${t}`),
+  ]
+  check('soft lamp: nothing crowds the machine: no reach, stretch or flash on a drop or a lob', crowding.length === 0, crowding.join(', '))
 
   // The kitten gets up and stretches twice, each whole in the frame, clear of its other moments and the hand.
   check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns, washes and the hand',

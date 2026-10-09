@@ -753,6 +753,32 @@ alive in the room. The lamp, the show's one light, had never drawn anything to i
      is the same frame. `check:shows` holds its coming (as the rain thins, well before the end) and its place on the
      moonlit glass at the last.
 
+### The forty-second pass: room to breathe, and the window's light
+
+Eight passes had each added a moment. Laid out on one timeline, the half hour had sixty things in it that draw the
+eye, about two a minute, which is fine for a piece to leave on; but some landed on top of each other, and some on the
+machine itself, whose drops and lobs are the show's backbone.
+
+111. **The timeline, audited.** The worst: the hand began scratching the kitten one second after the 9:35 lob; the sip
+     ended as a lob began; at 15:31 to 16:13 a flash, a drop, the neighbour's long look, hands round the mug and a yawn
+     came in forty-two seconds; a stretch four seconds after a shooting star. Now nothing that draws the eye lands on
+     the machine (`machineBusy`, `lamp/route.ts`, used by the hand, the stretches, the lightning and the neighbour's
+     comings and goings), the stretches keep further from the sky's moments, and the yawns further from the hand.
+112. **What moved:** the sip to 5:47; the chin scratch to 10:36; the hands round the mug to 14:03, four seconds after a
+     flash, as anyone reaches for something warm when the storm comes close (a hand may follow a flash now, and may
+     share the night with someone across the street, at the other end of the frame); the third flash to 15:52; the
+     stretches a few seconds later (11:20, 26:47). The face in the mist (19:00), the tea's refill (22:07, 24:35), all
+     six yawns and four washes, and everything in the sky still land. What is left close together is a window moment
+     beside a desk moment, the eye's two places, rarely both at once.
+113. **The window's light on the room** (`lamp/rim.ts`). Everything on the desk stands in front of the window, and had
+     never been lit by it. Now the window backlights them: a thin rim of its light along each thing's top, the books,
+     the mug's rim, the Walkman, the pot's rim and the plant's leaves against the glass, the kitten's back and the top
+     of its head. Peach in the dusk, the night's blue after, paler and brighter under the moon in a clear sky; strongest
+     under the window and gone by the lamp. When the lamp is turned down at the end it is the room's light: the desk
+     moonlit, the kitten asleep in it.
+114. **Looked at:** the moved moments, at full size; the rims at dusk, in the rain and in the moonlit end. A scrub back
+     is the same frame. `check:shows` holds the rule: no reach, stretch or flash on a drop or a lob.
+
 **Subtracted:** the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

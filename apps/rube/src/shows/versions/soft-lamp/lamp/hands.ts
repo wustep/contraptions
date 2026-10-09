@@ -3,7 +3,7 @@ import { rgba, viewOf } from './canvas'
 import { sweepAt } from './decor'
 import { CAT, GLASS, LAMP, MUG } from './desk'
 import { MUSIC_END, smooth } from './music'
-import { ballAt } from './route'
+import { ballAt, machineBusy } from './route'
 import { MOMENTS, wetAt } from './sky'
 import { INK, LAMP_ON, MOUTH, hash, lampAt, lightAt, lit, rainAt } from './world'
 
@@ -70,9 +70,13 @@ function held(box: [number, number, number, number], t0: number, t1: number): bo
  */
 export const REACHES: Reach[] = (() => {
   const out: Reach[] = []
-  const busy = (t: number, d: number) =>
-    [...MOMENTS.lightning, ...MOMENTS.shooting, ...MOMENTS.crossings.map(([c]) => c)].some((m) => m > t - 8 && m < t + d + 6) ||
+  const busy = (t: number, d: number, kind?: Kind) =>
+    // (Hands round the mug, at the desk's dark end, may share the night with someone across the street.)
+    [...MOMENTS.shooting, ...(kind === 'cup' ? [] : MOMENTS.crossings.map(([c]) => c))].some((m) => m > t - 8 && m < t + d + 6) ||
+    // After a flash, a hand may come for the warm mug: what anyone does as the storm comes closer.
+    MOMENTS.lightning.some((m) => m > t - 3.5 && m < t + d + 6) ||
     out.some((r) => Math.abs(r.at - t) < 90) ||
+    machineBusy(t, t + d) ||
     (() => {
       for (let s = t - 2; s <= t + d + 2; s += 0.5) if (sweepAt(s).a > 0.01) return true
       return false
@@ -80,7 +84,7 @@ export const REACHES: Reach[] = (() => {
   const find = (kind: Kind, from: number, to: number, ok: (t: number) => boolean = () => true) => {
     const d = DUR[kind]
     for (let t = from; t < to; t += 1) {
-      if (ok(t) && !busy(t, d) && held(BOX[kind], t - 1, t + d + 1)) {
+      if (ok(t) && !busy(t, d, kind) && held(BOX[kind], t - 1, t + d + 1)) {
         out.push({ kind, at: t, dur: d })
         return
       }
@@ -90,8 +94,6 @@ export const REACHES: Reach[] = (() => {
   out.push({ kind: 'on', at: 0.1, dur: DUR.on })
   // A sip while the tea is hot: in the second track.
   find('sip', 160, 420)
-  // Hands round the mug, in the heaviest of the rain.
-  find('cup', 600, 1250, (t) => rainAt(t) > 0.65)
   // The kitten, once in the rain.
   find('pet', 560, 900)
   // A face drawn in the mist on the glass, in the heaviest of the rain: it stays, and goes as the glass dries.
@@ -106,6 +108,8 @@ export const REACHES: Reach[] = (() => {
     }
     return true
   })
+  // Hands round the mug, in the heaviest of the rain.
+  find('cup', 560, 1300, (t) => rainAt(t) > 0.55)
   // About midnight, the tea gone cold: the mug taken away, and a few minutes later brought back hot, the camera holding
   // the desk each time (in between, the desk stands empty by the cat).
   find('away', 1100, 1450)

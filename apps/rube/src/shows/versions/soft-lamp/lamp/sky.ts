@@ -5,6 +5,7 @@ import { GLASS, WINDOW } from './desk'
 import { MUSIC_END, smooth } from './music'
 import { blurOf, inLayer, layerOf, lensIn, lensOf, onWall, type Lens } from './lens'
 import { sweepAt } from './decor'
+import { machineBusy } from './route'
 import { cloudAt, hash, lampAt, nightAt, rainAt, skyAt } from './world'
 
 /**
@@ -290,7 +291,7 @@ const FLASHES: number[] = (() => {
   const out: number[] = []
   for (let at = 300; at < MUSIC_END - 60 && out.length < 3; at += 1) {
     if (out.length && at < out[out.length - 1] + 90) continue
-    if (rainAt(at) < 0.68 || cloudAt(at) < 0.8) continue
+    if (rainAt(at) < 0.68 || cloudAt(at) < 0.8 || machineBusy(at, at + FLASH_LOOK)) continue
     if (!catInViewAt(at) || !catInViewAt(at + FLASH_LOOK)) continue
     let ok = true
     for (let s = at - 2; s <= at + FLASH_LOOK + 1 && ok; s += 0.5) {
@@ -836,7 +837,7 @@ const { PASSES, SITS } = (() => {
   const passes: [number, 1 | -1, number][] = []
   let last = -Infinity
   for (let t = FLAT_ON + 120; t < FLAT_OFF - 30 && passes.length < 6; t += 1) {
-    if (t - last < 210 || nearFlash(t) || !flatSeen(t, WALK + 1)) continue
+    if (t - last < 210 || nearFlash(t) || machineBusy(t, t + WALK, 4) || !flatSeen(t, WALK + 1)) continue
     passes.push([t, passes.length % 2 ? -1 : 1, 0])
     last = t
   }
@@ -845,7 +846,7 @@ const { PASSES, SITS } = (() => {
   let bestRain = 0.4
   for (let t = FLAT_ON + 120; t < FLAT_OFF - 30; t += 1) {
     const r = rainAt(t)
-    if (r <= bestRain || nearFlash(t) || passes.some(([p]) => Math.abs(p - t) < 60) || !flatSeen(t, WALK + LOOK + 1)) continue
+    if (r <= bestRain || nearFlash(t) || machineBusy(t, t + WALK + LOOK, 4) || passes.some(([p]) => Math.abs(p - t) < 60) || !flatSeen(t, WALK + LOOK + 1)) continue
     best = t
     bestRain = r
   }
@@ -855,9 +856,9 @@ const { PASSES, SITS } = (() => {
   const sits: [number, number][] = []
   for (let t = 520; t < FLAT_OFF - 200 && sits.length < 2; t += 1) {
     if (sits.length && t < sits[sits.length - 1][1] + 240) continue
-    if (passes.some(([p]) => Math.abs(p - t) < 15) || !flatSeen(t, CAT_WALK + 1)) continue
+    if (passes.some(([p]) => Math.abs(p - t) < 15) || machineBusy(t, t + CAT_WALK, 4) || !flatSeen(t, CAT_WALK + 1)) continue
     for (let u = t + 120; u < t + 260; u += 1) {
-      if (!passes.some(([p]) => Math.abs(p - u) < 15) && flatSeen(u - CAT_WALK - 1, CAT_WALK + 1)) {
+      if (!passes.some(([p]) => Math.abs(p - u) < 15) && !machineBusy(u - CAT_WALK, u, 4) && flatSeen(u - CAT_WALK - 1, CAT_WALK + 1)) {
         sits.push([t, u])
         break
       }

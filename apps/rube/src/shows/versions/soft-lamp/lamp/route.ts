@@ -69,6 +69,14 @@ export interface Lap {
 }
 export const LAPS: Lap[] = []
 
+/**
+ * Whether the machine has one of its moments (the drop and the stair, the lob and its landing) within `pad` seconds of
+ * `t0` to `t1`. They are the show's backbone: the room's other moments keep clear of them.
+ */
+export function machineBusy(t0: number, t1: number, pad = 6): boolean {
+  return LAPS.some((l) => (l.tip - pad < t1 && l.cup + pad > t0) || (l.lob !== null && l.lob - pad < t1 && (l.land ?? l.lob) + 1 + pad > t0))
+}
+
 /* ------------------------------------------------------------------ pieces of way */
 
 /** The speed a ball rolls off an edge at: a slow roll, so it tips over the corner rather than being thrown. */
