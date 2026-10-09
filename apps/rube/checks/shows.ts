@@ -124,6 +124,9 @@ async function main(): Promise<void> {
     player.includes('The soundtrack would not load, so the show runs silent') &&
     player.includes('It is silent: the music plays from YouTube, which a recording cannot take.') &&
     /perf\?\.soundtrack\?\.src \? 'picture and music' : perf\?\.soundtrack \? 'the picture, silent/.test(player))
+  // Music that stops coming mid-show holds the picture with it; the stage says it is waiting rather than freezing silent.
+  check('a show whose music stalls says so on the stage',
+    /const STALL_MS = \d+/.test(player) && player.includes("'Waiting for the music…'") && player.includes('loading || failed || stalled'))
   check('a credit card stays where it is when it fits, slides in to a margin when it would cross an edge, and centres when it cannot fit',
     placeCard(200, 100, 400) === 200 && placeCard(30, 100, 400) === 58 && placeCard(390, 100, 400) === 342 &&
     placeCard(152, 331, 390) === 173.5 && placeCard(100, 390, 390) === 195 && placeCard(58, 100, 400) === 58)

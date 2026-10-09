@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 88 (latest)
+## Polish pass 89 (latest)
+
+- **A stall says so.** The connection was cut mid-show, the way a phone loses signal, by blocking YouTube's video servers after a seek. The player did the right thing for time: the music is the clock, so the picture held at 150 s with the music and resumed with it, in step, when the connection came back. But for those seconds the stage was a frozen frame with nothing on it, which reads as broken. Now, when a show is playing and its clock has not moved for 1.5 s, the stage's own note (the one that says a show is loading) says "Waiting for the music…" until it moves again (`shows/player.ts`, for every show and either source). Fifteen seconds of normal play never showed it, and nor did a pause. `check:shows` guards it.
+
+## Polish pass 88
 
 No change to the show: what it costs to load. Everything heavy is behind `load()`, so the show's code arrives as its own chunk when it is opened. In the production build that chunk is 354 KB, 134 KB gzipped, in the middle of the shows' chunks (the largest is 197 KB gzipped). This round grew it by 3 KB gzipped (2%) over `main`: the kitchen, Saturn's weather, the halos.
 

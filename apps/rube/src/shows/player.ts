@@ -699,9 +699,13 @@ function sync(): void {
   )
 
   // The stage's own word while there is no show on it.
-  stageNote.hidden = !current || !(loading || failed)
+  stageNote.hidden = !current || !(loading || failed || stalled)
   stageNote.classList.toggle('bad', !!failed)
-  stageNoteText.textContent = failed ? `${current?.title ?? 'This show'} would not load.` : `Loading ${current?.title ?? 'the show'}…`
+  stageNoteText.textContent = failed
+    ? `${current?.title ?? 'This show'} would not load.`
+    : loading
+      ? `Loading ${current?.title ?? 'the show'}…`
+      : 'Waiting for the music…'
   retryBtn.hidden = !failed
 
   // The stage's own play button: at the top, at the end, where the browser is waiting for a press,
@@ -801,12 +805,31 @@ function renderWords(t: number): void {
 let lastTime = ''
 /** Where the clock was on the frame before, so a loop coming round its seam is seen as a pass. */
 let lastT = 0
+/**
+ * The music is the clock, so music that stops coming (a connection lost mid-show, YouTube buffering) holds the
+ * picture with it. Playing, and the clock still for this long, the stage says it is waiting: a frozen picture with
+ * nothing on it reads as broken. `stallT` and `stallSince` are where the clock last stood and since when.
+ */
+const STALL_MS = 1500
+let stallT = -1
+let stallSince = 0
+let stalled = false
 let raf = 0
 function tick(): void {
   if (!alive) return
   if (transport) {
     const t = transport.now()
     music.follow(t)
+    const still = transport.playing && t === stallT
+    if (!still) {
+      stallT = t
+      stallSince = performance.now()
+    }
+    const nowStalled = still && performance.now() - stallSince > STALL_MS
+    if (nowStalled !== stalled) {
+      stalled = nowStalled
+      sync()
+    }
     // Played through: at the end, or, for a loop, round its seam (a seek resets `lastT`, so a jump back is not one).
     const through = transport.playing && (transport.loop ? t < lastT - transport.duration / 2 : t >= transport.duration)
     lastT = t
