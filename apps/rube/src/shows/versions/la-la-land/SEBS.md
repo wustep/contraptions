@@ -138,3 +138,10 @@ A fifth pass:
 
 - **Motion.** I rendered the whole show at tenths of a second and flagged every jump from one frame to the next. Each one was a planned cut (the irises, the curtains, the match cuts, the close shots at the door) or a planned flare (the house rising, the trumpet's lamp, the film running out).
 - **Lipton's windows.** While she crosses the room table by table (43 to 56), two thirds of the frame was bare wallpaper. The back wall has two tall windows now, between the tables and below the bulbs' swags. Snow falls past the night outside, lies on the outer ledge and frosts the lower corners, and a wreath with a red bow hangs on each.
+
+A sixth pass:
+
+- **Into the audition.** Between Hollywood and the audition the screen was black for three and a half seconds (171.4 to 174.8) while the music went on. The screen now begins to light on the low note at 173.07. He walks in and climbs onto his chair in the dark before it, and she is already on her mark, so the screen comes up on both of them in place.
+- **The quiet among the stars.** In the close shot through the waltz's quiet (327 to 331), the projector was a half-cut globe in the frame's bottom corner. The shot sits higher: the two of them low in the frame, open sky above them, and the machine below and out of the frame.
+- **The touch, and the lamps.** On the waltz's last note the projector's lamps flare and then go out a beat before the dark, but the shot was close on the pair and cut the projector off at the frame's edge. The shot now holds the pair and the whole projector, so the flare and the lamps going out are both in the picture.
+- **David at her table.** After the last chord David comes back and sits beside her (455.5 to 456.5), but the camera stayed on Seb, so they were never seen together before they left. The shot now goes out to the room as he sits: Seb at the keys and the two of them at her table, in one frame.

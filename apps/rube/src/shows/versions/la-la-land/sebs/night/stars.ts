@@ -395,15 +395,15 @@ export const stars = part<StarsState>(
       { t: 316.6, cells: 7.6, hold: both(316.6) },
       { t: 319.4, cells: 7.3, hold: both(319.4) },
       { t: 323.6, cells: 5.2, hold: mid(323.6, 0.4) },
-      // Close, in the quiet.
-      { t: QUIET[0] + 1.2, cells: 4.1, hold: on(QUIET[0] + 1.2, -0.45) },
-      { t: QUIET[1], cells: 4.2, hold: on(QUIET[1], -0.45) },
+      // Close, in the quiet: the two of them low in the frame and the open sky over them, the machine out of it below.
+      { t: QUIET[0] + 1.2, cells: 4.1, hold: on(QUIET[0] + 1.2, -1.2) },
+      { t: QUIET[1], cells: 4.2, hold: on(QUIET[1], -1.2) },
       // The swell: out to the whole wheel of the sky round them, the projector whirling under them.
       { t: 334.4, cells: 7.8, hold: mid(334.4, 0.45) },
       { t: DIP, cells: 6.2, hold: mid(DIP, 0.35) },
-      // In on the held dip, and on the touch.
-      { t: LAST, cells: 4.8, hold: on(LAST, 0.1) },
-      { t: DARK[1], cells: 4.6, hold: on(DARK[1], 0.1) },
+      // In on the held dip, and on the touch, the projector whole under them: its lamps flare on the touch and go out.
+      { t: LAST, cells: 5.0, hold: mid(LAST, 0.4) },
+      { t: DARK[1], cells: 4.8, hold: mid(DARK[1], 0.4) },
     ]
   },
 )

@@ -98,8 +98,8 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
     { kind: 'curtain', down: [dream(49), dream(50.5)], up: [dream(51.5), dream(53)], color: THEATRE_MAT.velvet, deep: THEATRE_MAT.velvetDeep, gold: THEATRE_MAT.gold },
     // The theatre to the studio: the house goes to white.
     { kind: 'black', down: [SWITCH.studio - 0.5, SWITCH.studio], up: [SWITCH.studio, SWITCH.studio + 1.05], color: STUDIO_MAT.paper },
-    // Hollywood to the audition: the lights go out, and a screen lights from behind.
-    { kind: 'black', down: [169.9, 171.4], up: [174.8, 176.6] },
+    // Hollywood to the audition: the lights go out, and a screen lights from behind, beginning on the low note.
+    { kind: 'black', down: [169.9, 171.4], up: [173.07, 175.88] },
     // The audition to the globe.
     { kind: 'black', down: [195.1, 195.85], up: [196.15, 197.4] },
     // Paris at night to the club: through its red door, on the kick.

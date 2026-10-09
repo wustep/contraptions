@@ -58,8 +58,8 @@ const TOUCH = 191.437
 const BOW = 193.132
 /** The flood: from the build's first strong onset to its crest. */
 const FLOOD: [number, number] = [190.659, 194.9]
-/** The lights go (the cover, 195.1 → 195.85); Mia is ours until the cover is full. */
-const MIA_FROM = 174.5
+/** She is on her mark in the dark before the screen comes up (173.07); the lights go (the cover, 195.1 → 195.85), and she is ours until the cover is full. */
+const MIA_FROM = 172.3
 const MIA_TO = 195.85
 
 export const SHADOW_HITS = [...new Set([SPOT, TAP, SIT, ...TICKS, ...LAMP, ...PEN, LAND, BOW])].sort((a, b) => a - b)
@@ -650,8 +650,9 @@ export const shadow = part<ShadowState>(
     const at = (t: number) => t - slot.begin
     const T = slot.end - slot.begin
     // In the dark: in along the floor, up onto the seat.
-    const ways: Way[] = [{ at: 0, p: [-0.5, 0] }, { at: at(173.6), p: [0.25, 0], ease: 'out' }]
-    ways.push(hop(ways[1], SEAT, at(174.25)))
+    const ways: Way[] = [{ at: 0, p: [-0.5, 0] }, { at: at(172.45), p: [0.25, 0], ease: 'out' }]
+    // On the seat on the low note the screen begins to light on.
+    ways.push(hop(ways[1], SEAT, at(173.07)))
     ways.push(
       { at: at(TAP - 0.26), p: SEAT },
       // Up to the rod's tip, touching it at the top of the reach, and back down onto the seat.

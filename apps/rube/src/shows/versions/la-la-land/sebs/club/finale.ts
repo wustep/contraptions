@@ -262,9 +262,11 @@ export const finale = part<FinaleState>(
     // With him up to the keys, onto the last chord; the stillness.
     { t: 452.6, cells: 4.2, hold: F([1.2, 0.9]) },
     { t: 453.9, cells: 3.2, hold: F([4.3, -0.3]) },
-    { t: 456.4, cells: 3.0, hold: F([4.4, -0.3]) },
-    // Out to the two of them: David goes ahead to the door; she stops among the tables. Then close shots, cut against
-    // each other: her turn, his look, her smile, his nod. Then out to her going.
+    { t: 455.0, cells: 3.1, hold: F([4.35, -0.3]) },
+    // Out to the room as David sits down beside her at her table: the three of them in one frame. He goes ahead to the
+    // door; she stops among the tables. Then close shots, cut against each other: her turn, his look, her smile, his
+    // nod. Then out to her going.
+    { t: 456.5, cells: 6.4, hold: F([-0.3, 1.55]) },
     { t: 459.4, cells: 7.2, hold: F([-0.15, 1.2]) },
     { t: CUTS.her - 0.02, cells: 7.2, hold: F([-0.15, 1.2]) },
     ...closeOn(CUTS.her, CUTS.him, F([-4.939, FLOOR_Y - 0.32])),
