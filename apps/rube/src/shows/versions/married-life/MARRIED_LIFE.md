@@ -309,7 +309,8 @@ window.
   waltz's downbeats (bars 3 and 37). No portal, and no cut drawn.
 - **Carl:** in a place he never jumps. At every cut he holds his place on the screen (within 1% of the frame a
   millisecond). He is never hidden for more than 2.5 s. The stage draws no ball: the cast draws the two of them.
-- **Zoom and distance:** under Zoom (1.5× closer) his whole square and her whole ball stay in the frame. No shot wider
+- **Zoom and distance:** under Zoom (1.5× closer, held off the middle by `zoomDrop` where the camera says) his whole
+  square and her whole ball stay in the frame. No shot wider
   than 6 cells lasts more than 2.5 s, except five named reveals, each held to its window and its widest: bar 4's peal
   and the run out to the old house (the bell whole, up to 6.6 cells), the house made new (the machine as tall as it),
   the storm (the whole house and its tree, up to 17.6 cells), the one toll, and the credits (up to 27.5 cells). The
@@ -343,11 +344,16 @@ window.
   - `cast.ts`: Carl (a rounded square that slides and leans with the slope), Ellie (a ball), their trails, the bow
     tie and the balloon, drawn in every world between the parts' drawings and their fronts; the years' bearing
     (`bearingOfAge`) under every part's pose; the balloon's ties (`show.ties`: to her at the bedside, to her chair
-    at the end), what stirs it (`STIRS`: the toll and its answer) and its leans toward him at home (`LEANS`).
+    at the end), what stirs it (`STIRS`: the toll and its answer), its leans toward him at home (`LEANS`), and where
+    he holds its string short (`GATHERS`: into the ward, and through his own door).
   - `music.ts`: the measured clock (`BEATS`, `bar`, `beat`, `onsets`, `AT`, `CUT`, `SEAM`) and `AGE`.
   - `kit.ts`: the part contract, Liftoff's and Epilogue's: `part`, `route`, `hop`, `carried`, `lay`, `frame`, and the
     p5 fill-cache guard. `worlds.ts` holds the palettes and the cast's colours.
   - `credits.ts`, and `hits.ts` (every strike, gathered for the check).
+  - `index.ts`: the performance. Two framing hints the stage reads, both used only by this show: `tall` (on a phone
+    held upright, 0.85 of the extra picture goes above the frame) and, on the camera's framing, `zoomDrop` (where
+    Zoom holds off the frame's middle: higher on the home steps, lower through the credits; `zoomDropAt` in
+    `house/alone.ts`).
 - **The places and their parts**, one builder each:
   - `church/`: `church.ts` (the set, in two lights), `wedding.ts`, `funeral.ts`.
   - `house/`: `front.ts` (the street side), `front-house.ts` (the house drawn old, new, faded, at dusk),
@@ -481,6 +487,13 @@ window.
   under the two of them to hold Zoom higher. Now he comes into the ward with it held close on a shorter string
   (`GATHERS`), and lets it up as the camera opens and he reaches for the lamp, as he gathers it in at his own door:
   whole in the frame, under Zoom too, from the cut.
+
+- **Polish round 11 (Opus 5.5).** The first and last seconds densely, the fix-up's cart and the ticket press, the
+  nursery, the doctor's office and the yard at full size: nothing to fix. Ellie at the open front door was weighed
+  again: past the leaf, against the evening, she leaves the Zoom frame through the whole push-in on the press (164.5
+  to 167 s), not only at the cut, so she stays before it. The build notes now name this PR's mechanisms (`GATHERS`,
+  `tall`, `zoomDrop`). Noted, not done: the player has no reduced-motion setting; the toll's 1% blow is the only
+  camera shake in this show.
 
 ## Known limits
 
