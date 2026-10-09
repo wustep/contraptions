@@ -301,11 +301,17 @@ function drawSwell(p: p5, k: number, t: number): void {
   const f = frame(p, k)
   // From the glass: the light fills the air over the floor first, and the floor close behind it (never a dark slab
   // left standing in the white).
-  const g = ctx.createLinearGradient(0, (GLASS_BOT - 0.4) * k, 0, (GLASS_BOT + 3) * k)
-  g.addColorStop(0, rgba(SHELL.glow, 0.6 * w))
-  g.addColorStop(1, rgba(SHELL.glow, 0.85 * w ** 1.5))
+  ctx.fillStyle = rgba(SHELL.glow, 0.6 * w)
+  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (GLASS_BOT - f.y0 + 1) * k)
+  // The polished floor takes the light as a reflection: brightest at its edge, under the glass, so the two meet in one
+  // white, and less down toward us, so the floor reads as a floor going white rather than a grey slab under the white.
+  const top = GLASS_BOT
+  const g = ctx.createLinearGradient(0, top * k, 0, (top + 4) * k)
+  g.addColorStop(0, rgba(SHELL.glow, Math.min(1, 1.5 * w)))
+  g.addColorStop(0.35, rgba(SHELL.glow, Math.min(1, 1.05 * w)))
+  g.addColorStop(1, rgba(SHELL.glow, Math.min(1, 0.85 * w ** 1.2)))
   ctx.fillStyle = g
-  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+  ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, Math.max(1, f.y1 + 1 - top) * k)
 }
 
 /** The whole chamber at show time `t`. */
