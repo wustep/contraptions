@@ -10,6 +10,7 @@ import { COMBS, CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall, fight } from '../s
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/come-recover/all-at-once/credits'
 import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/peak'
 import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
+import { keepIn } from '../src/shows/versions/come-recover/all-at-once/film'
 import type { MultiverseShow } from '../src/shows/versions/come-recover/all-at-once/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -93,6 +94,10 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   check('all at once: the peak strikes nearly every beat (247.7 to 264.1 s)', peak.n >= peak.of * 0.85, `${peak.n}/${peak.of}`)
   check('all at once: home\'s last three hits are struck', HOME_HITS.every((h) => all.some((s) => Math.abs(s - h) <= 0.03)))
 
+  // How much of the frame's height is picture at `t`: the lives in a picture of their own are in widescreen, between
+  // bars (`film.ts`), and what must be seen is held to the band between them.
+  const keep = (t: number): number => keepIn(show.legs[show.owner(t)].world)
+
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
   const outOfZoom: string[] = []
   for (let t = 0; t <= perf.duration; t += 0.05) {
@@ -100,7 +105,7 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     if (h.hidden || h.scale < 0.3) continue
     const f = cam(t)
     const cells = f.cells / 1.5
-    const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / (cells / 2))
+    const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / ((cells * keep(t)) / 2))
     if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
   }
   check('all at once: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
@@ -145,7 +150,7 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
         const b = t >= spec.from ? (ballOf(spec.who, t) as { x: number; y: number; scale?: number } | null) : null
         if (!b) continue
         const f = cam(t)
-        const inside = Math.abs(b.x - f.x) < (f.cells * 16) / 9 / 2 - R && Math.abs(b.y - f.y) < f.cells / 2 - R
+        const inside = Math.abs(b.x - f.x) < (f.cells * 16) / 9 / 2 - R && Math.abs(b.y - f.y) < (f.cells * keep(t)) / 2 - R
         if (inside && 2 * 0.6 * R * (b.scale ?? 1) * (720 / f.cells) >= 7) seen++
       }
       if (seen < n * 0.5) unseenLooks.push(`${spec.who} ${g.from.toFixed(2)} (${Math.round((100 * seen) / n)}%)`)
@@ -166,7 +171,7 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
       const b = t > perf.duration ? null : who === 'evelyn' ? (h!.hidden || h!.scale < 0.3 ? null : h) : who === 'joy' ? show.joy(t) : show.waymond(t)
       const f = cam(t)
       const c = f.cells / zoom
-      const m = b ? Math.min((c * 16) / 9 / 2 - Math.abs(b.x - f.x), c / 2 - Math.abs(b.y - f.y)) : Infinity
+      const m = b ? Math.min((c * 16) / 9 / 2 - Math.abs(b.x - f.x), (c * keep(t)) / 2 - Math.abs(b.y - f.y)) : Infinity
       const cut = m < R && m > -R
       if (cut && from < 0) from = t
       if (!cut && from >= 0) {

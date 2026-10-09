@@ -23,6 +23,7 @@ import { mosaic } from './multi/mosaic'
 import { kindness, KINDNESS_AT } from './home/kindness'
 import { GIFT_LOOKS } from './home/kindness-draw'
 import { ledge } from './rocks/ledge'
+import { film, LOOKS, type Look } from './film'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
 import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './home/finale-lives'
@@ -290,7 +291,15 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     set.after.push(standing(eyePiece, 0, 0, [...cells.values()], state, DURATION) as Placed)
   }
 
+  // Every life its own picture: the movie star's in widescreen, the kung fu picture an old print (`film.ts`). Over
+  // the eyes, so they are in the picture too.
   const isCalm = calm === undefined ? () => calmNow : () => calm
+  for (const [world, look] of Object.entries(LOOKS) as [WorldKey, Look][]) {
+    const cells = new Map<string, Pt>()
+    for (const leg of legs) if (leg.world === world) for (const placed of leg.placed) for (const c of placed.cells) cells.set(`${c[0]},${c[1]}`, c)
+    ;(sets[world] ??= { scenery: [], after: [] }).after.push(standing(film, 0, 0, [...cells.values()], { look, calm: isCalm }, DURATION) as Placed)
+  }
+
   const show = new MultiverseShow(legs, sets, flickers, DURATION, riders, company.sort((a, b) => a.from - b.from), isCalm)
   for (const state of eyeStates) state.show = show
   // While she tumbles in the big dryer, the googly-eyed bags on the washers either side watch her go round: this

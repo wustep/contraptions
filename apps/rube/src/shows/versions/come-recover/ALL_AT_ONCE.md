@@ -91,10 +91,18 @@ Before most jumps the next world bleeds through for a frame or two, the way the 
 Through every jump she is moving at, the ball draws out along its way for a few frames, most at the cut itself, as if
 it went through something.
 
+Every life is its own picture (`film.ts`), so a jump changes the film as well as the world. At home the show is the
+plain full frame. The movie star's life (the premiere and the alley) is in widescreen, 2.39:1 between black bars,
+with a soft vignette and fine grain. The kung fu picture (the dojo) is an old print in scope: faded warm, blacks
+lifted, heavy grain that changes 24 times a second, a scratch down the emulsion and dust. The hot dog life is a
+soft-focus romance, its edges gone to a glowing pink haze. A flicker before a jump shows the next life in its own
+picture. Raccacoonie, the surf, everywhere at once, Jobu's dark and the rocks are left as they are.
+
 The camera takes the show's ten biggest hits in the body: a push-in of about 4.5% that eases back (`PUNCHES` in
 `score.ts`). There are none in the rocks.
 
-For a viewer whose system asks to reduce motion, the flickers and the punches are left out (`CALM` in `score.ts`).
+For a viewer whose system asks to reduce motion, the flickers and the punches are left out (`CALM` in `score.ts`), and
+the old print's grain holds still, without its scratches and dust.
 
 ## In order
 
@@ -743,6 +751,23 @@ The notes went back to the builders who made each part, who still had their cont
     family look up at the window all through them. Each comes and goes over three quarters of a second, and the
     carpet's far flashbulb glints slowly, so nothing in the window flashes. After the carpet the glass is its own
     light again, and on the swell they look at one another.
+- **A director's pass: every life its own picture.** Every world was drawn in the same clean full frame, so a jump
+  changed the set but never the film. Now the lives are pictures of their own kinds (`film.ts`): the movie star's in
+  widescreen, the kung fu picture an old scope print, the hot dog life a soft-focus romance, and home the plain full
+  frame. Coming home from the dojo's bars into the hot dog life's open frame, and from everywhere at once into the
+  laundromat, the picture opens up.
+  - The bars hid what the old framings left at the frame's edges. The checks for Zoom, for the family cut at the edge
+    and for the looks being seen now measure against the band between the bars. Under Zoom they found Evelyn out of
+    it for 6 s in the alley and on the carpet, because the camera stood well above her. The premiere's and the
+    alley's framings now keep her nearer the band's middle, with the carpet and the alley's floor low in it. Two of
+    the dojo's held shots follow her a little more as the kick sends her up to the gong. Under Zoom no cut by the
+    band lasts as long as a second.
+  - Nothing in the pictures flashes. The print's brightness does not flicker, and its grain is fine and dim. With
+    reduced motion asked for, the grain holds still and the scratches and dust are left out.
+  - Seen and kept: the jumps into each picture and out of it, the flickers (each shows the next life in its own
+    picture), Overview (where the bars stay, as the picture's own), Zoom, and ultrawide (a stage wider than 2.39:1
+    has no bars). On a tall phone stage the widescreen lives are a band across its middle, as a widescreen film is on
+    a phone, with black above and below where the full frame showed more world (see Known limits).
 
 ## The looks
 
@@ -829,6 +854,9 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - at every jump it holds its place on the screen, within 1% of the frame a millisecond: every jump is a match cut;
   - it is never hidden for more than 2.5 s;
   - under Zoom (1.5× closer) it never leaves the frame.
+- **The pictures.** In the lives in widescreen the frame is the band between the bars: the checks for the ball under
+  Zoom, for the family cut by the frame's edge and for the looks being seen all measure against it there (`keepIn`
+  in `film.ts`).
 - **Every strike lands on the recording.** 434 strikes, each within 40 ms of a measured onset or 30 ms of a comb's
   beat or eighth.
   - Everywhere-at-once and the kindness after it strike at least 85% of the fight's beats from 170.8 to 199.6 s.
@@ -874,6 +902,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
     great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's
     comes with a smaller, softer burst in her violet.
   - `home/finale-lives.ts`: the lives in the washer's window under the credits.
+  - `film.ts`: the picture each life is in: widescreen, the old print, the soft-focus romance.
   - `credits.ts`: the cards, the soft dark under them, and the room's fade to dark with the music after the last
     card, the washer's window last.
   - `hits.ts`: every strike, gathered for the check.
@@ -914,6 +943,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - At 64 and 144 panels, Evelyn in the mosaic is a red dot on each plank.
 - The photograph's picture, and the lives in the washer's window under the credits, are clearest large or under
   Zoom; on a phone they show their colours, not the faces.
+- On a tall stage (a phone held upright) the widescreen lives are a band across its middle, between deep bars,
+  where the other lives fill the stage with more world round them.
 - Zoom is a closer look at Evelyn: Joy and Waymond are cropped by it at times, which is what it is for.
 - Under Zoom, the credits' longest line crosses the near end of the lantern string. The words are set by the page,
   the same in every mode.

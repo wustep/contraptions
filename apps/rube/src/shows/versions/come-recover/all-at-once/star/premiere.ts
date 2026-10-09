@@ -109,32 +109,34 @@ function build(slot: Slot) {
 
 /* ------------------------------------------------------------------ the camera */
 
+// The movie star's life is in widescreen (`film.ts`): the frames keep her well inside the band between the bars,
+// even under Zoom, with the carpet and the alley's floor low in it.
 function shots(slot: Slot): PartShot[] {
   const two: Pt = [(C.MEET_X + C.WAYMOND_X) / 2, C.YL]
   return [
     // Out of the dryer's close framing, pulling back as she comes down into the flashes.
     { t: slot.begin + 0.45, cells: 3.1, off: [0.4, -0.35] },
-    { t: C.BOUNCE + 0.18, cells: 4.3, off: [0.9, -0.9] },
+    { t: C.BOUNCE + 0.18, cells: 4.3, off: [0.9, -0.8] },
     // Wide and high: the spotlight on the marquee, hunting, swings down out of the dark onto her; and in again.
-    { t: 60.3, cells: 8.2, off: [3.6, -2.3] },
-    { t: C.SPOT, cells: 7.2, off: [3.1, -1.85] },
-    { t: C.VOLLEY + 0.05, cells: 5.0, off: [2.3, -1.1] },
-    { t: 62.6, cells: 4.8, off: [1.6, -1.1] },
+    { t: 60.3, cells: 8.2, off: [3.6, -1.55] },
+    { t: C.SPOT, cells: 7.2, off: [3.1, -1.35] },
+    { t: C.VOLLEY + 0.05, cells: 5.0, off: [2.3, -0.9] },
+    { t: 62.6, cells: 4.8, off: [1.6, -0.85] },
     // Leading her down the carpet so the posts are seen going ahead of her.
-    { t: C.RUN1[0], cells: 4.6, off: [1.7, -0.8] },
-    { t: 64.6, cells: 4.7, off: [1.2, -0.9] },
+    { t: C.RUN1[0], cells: 4.6, off: [1.7, -0.75] },
+    { t: 64.6, cells: 4.7, off: [1.2, -0.8] },
     // The doors beside her as they burst.
-    { t: C.DOORS_WIDE, cells: 4.8, off: [0.6, -1.4] },
-    { t: C.RUN2[2], cells: 4.8, off: [1.5, -0.85] },
+    { t: C.DOORS_WIDE, cells: 4.8, off: [0.6, -0.85] },
+    { t: C.RUN2[2], cells: 4.8, off: [1.5, -0.8] },
     { t: 68.3, cells: 6.0, off: [1.8, -0.8] },
     // Round the corner and down: the alley opens, wide, as the rain begins, and follows her down.
     { t: 69.4, cells: 7.0, hold: [C.EDGE_X + 2.6, 0.9], w: 0.7 },
     { t: 70.8, cells: 7.6, hold: [C.EDGE_X + 3.6, 0.7], w: 1 },
     { t: 73.2, cells: 6.4, hold: [C.EDGE_X + 4.2, 1.5], w: 1 },
     // In on the two of them as she comes to him, and slowly closer through the stillness.
-    { t: C.STEPS[5] + 0.5, cells: 5.2, hold: [two[0] - 0.3, two[1] - 1.2], w: 1 },
-    { t: C.TOUCH, cells: 4.2, hold: [two[0] + 0.3, two[1] - 1.0], w: 1 },
-    { t: 80.8, cells: 2.9, hold: [two[0] + 0.1, two[1] - 0.55], w: 1 },
+    { t: C.STEPS[5] + 0.5, cells: 5.2, hold: [two[0] - 0.3, two[1] - 0.8], w: 1 },
+    { t: C.TOUCH, cells: 4.2, hold: [two[0] + 0.3, two[1] - 0.65], w: 1 },
+    { t: 80.8, cells: 2.9, hold: [two[0] + 0.1, two[1] - 0.4], w: 1 },
     // Back a little as the cover rocks; back further as it gives, to hold him above and her falling below.
     { t: C.RATTLE[3], cells: 3.5, hold: [two[0], two[1] - 0.4], w: 1 },
     { t: 82.6, cells: 4.8, hold: [two[0] + 0.4, two[1] + 0.9], w: 1 },
