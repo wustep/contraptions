@@ -355,7 +355,7 @@ window.
   - `index.ts`: the performance. Two framing hints the stage reads, both used only by this show: `tall` (on a phone
     held upright, 0.85 of the extra picture goes above the frame) and, on the camera's framing, `zoomDrop` (where
     Zoom holds off the frame's middle: higher on the home steps, lower through the credits; `zoomDropAt` in
-    `house/alone.ts`).
+    `house/alone.ts`, `hospitalZoomDrop` in `clinic/hospital.ts`, `fixupZoomDrop` in `house/fixup.ts`).
 - **The places and their parts**, one builder each:
   - `church/`: `church.ts` (the set, in two lights), `wedding.ts`, `funeral.ts`.
   - `house/`: `front.ts` (the street side), `front-house.ts` (the house drawn old, new, faded, at dusk),
@@ -555,6 +555,13 @@ window.
   pressed his leaning corner over her ball; he no longer steps, and their outlines just meet. Not taken: the tilted car
   in front of the window's bar (the pixels show the bar drawn across it), and the balloon's half second at the bay's
   post (round 6's, while he is hidden too).
+
+- **Polish round 19 (Opus 5.5).** The critics' last open note, Carl small at the fix-up's cart, measured: at 1× it
+  is the reveal's scale, as meant, and the handle barely touches his corner; under Zoom, though, he stood on the
+  frame's very foot for fifteen seconds (0.89 to 0.98 of its half height under the middle), with room over the two of
+  them. Zoom now holds 0.22 lower from the cut to the old house until the camera comes in at the mailbox
+  (`fixupZoomDrop`): he is at most 0.77 down, the lawn and the street under him, the hammer and the house front still
+  in. The show's own frame is unchanged.
 
 ## Known limits
 
