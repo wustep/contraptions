@@ -609,6 +609,13 @@ window.
   at the show's own sharpest moment, as a frame half as close again should be; the margins and the crown hold as
   before. A check holds it to twice the show's, and fails if the straight lines come back.
 
+- **Polish round 25 (Opus 5.5).** The checks' cost, since `check:shows` runs inside `npm run build` and the recent
+  rounds added scans to it: those cost about 3 s together; the balloon's jump scan alone was 40 s of this show's 49,
+  a sixth of the whole suite, each of its samples averaging 61 knot positions over again. The balloon's lag averages
+  them on a fixed grid, so consecutive moments share all but one or two; they are now remembered per show
+  (`anchorCached` in `cast.ts`), exact by construction (a frame at the bedside renders pixel for pixel the same).
+  This show's checks take 6 s, and the whole suite 153 s instead of 249; each frame's balloon is cheaper too.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is

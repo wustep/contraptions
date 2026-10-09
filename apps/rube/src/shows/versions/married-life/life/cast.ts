@@ -357,6 +357,22 @@ export function balloonAt(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway
   return b
 }
 
+/**
+ * Where the knot is at `s`, in leg `leg`'s cells, remembered: the balloon's lag averages sixty of these on a fixed grid,
+ * and one moment's grid is the last one's but for a sample or two, so each is worked out once (a frame's balloon was
+ * 122 of them, now two or three; `check:shows`'s balloon scan forty seconds, now one). `anchorIn` is a function of
+ * the show alone, so what is remembered never goes stale; a new show starts a new memory.
+ */
+const knots = new WeakMap<LifeShow, Map<string, Pt>>()
+function anchorCached(show: LifeShow, s: number, leg: number): Pt {
+  let m = knots.get(show)
+  if (!m) knots.set(show, (m = new Map()))
+  const key = `${leg}:${s.toFixed(6)}`
+  let p = m.get(key)
+  if (!p) m.set(key, (p = anchorIn(show, s, leg)))
+  return p
+}
+
 /** Where the balloon rides at `t` on its string from where it is tied, lagging where it is tied in the still air. */
 function riding(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway: number } | null {
   if (t < BALLOON_FROM) return null
@@ -373,7 +389,7 @@ function riding(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway: number }
     let w = 0
     for (let i = 0; i <= 60; i++) {
       const s = Math.max(BALLOON_FROM, g - i * D)
-      const [px, py] = anchorIn(show, s, leg)
+      const [px, py] = anchorCached(show, s, leg)
       const wi = Math.exp(-(i * D) / 0.4)
       ax += (px + rest[0]) * wi
       ay += (py + rest[1]) * wi
