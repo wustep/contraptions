@@ -379,8 +379,8 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     // v: 0 at the crown, 1 at the hip, round the right side and back up the left.
     const v = (1 - Math.cos(a)) / 2
     const side = Math.sin(a) >= 0 ? 1 : -1
-    // A domed crown (never a flat cut across the top), fullest a third of the way down.
-    const profile = Math.pow(Math.sin(Math.PI * Math.min(1, v * 0.94 + 0.012)), 0.55) * (1 - 0.32 * v * v)
+    // A domed crown and a rounded hip (never a flat cut across either end), fullest a third of the way down.
+    const profile = Math.pow(Math.sin(Math.PI * Math.min(1, v * 0.988 + 0.012)), 0.55) * (1 - 0.32 * v * v)
     const half = bw * profile * (1 + 0.04 * Math.sin(5 * v + who * 2 + (side > 0 ? 0 : 1.3)))
     const x = side * half + Math.sin(lean) * (1 - v) * bodyH * 0.35
     const y = top + bodyH * v

@@ -235,8 +235,9 @@ cut, and close looks at whatever caught the eye. What changed:
 - **The push** (160 → 185): Costello's feet stood just above the frame, so the ends of its other limbs showed as grey
   tabs along the top edge. It stands higher; only its pen comes into the picture. In the close frames its pen ended
   in a square cut: every limb's tip is round now.
-- **The heptapods** had a flat cut across the crown of the body, clipped acorns in every wide. The crown is domed,
-  and the highest of the body is the most fogged, so the head goes up into the white.
+- **The heptapods** had a flat cut across the crown of the body, clipped acorns in every wide, and another across the
+  hip, a hard trapezoid where the limbs leave it as Abbott comes out of the white. The crown is domed and the hip
+  rounded, and the highest of the body is the most fogged, so the head goes up into the white.
 - **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
   shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
 - **The room for the credits**: the ceiling stood just over the window, so the coda's wide was a third dark ceiling,
