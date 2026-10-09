@@ -3,7 +3,7 @@ import type { Pt } from '../../../../../parts'
 import { mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
 import { beats, level, SEAM } from '../music'
-import { GALA, SHANG } from '../worlds'
+import { GALA, TENT } from '../worlds'
 import { CALL_X, KEY_SPAN, KEY_W, KEYS } from '../twelve/tent'
 import { NUMBER } from '../twelve/timeline'
 import {
@@ -449,7 +449,7 @@ export function drawGala(p: p5, k: number, t: number): void {
 
 /**
  * What he tells her: his number, which she will dial. After the whisper a ghost of the sat phone's keys comes up beside
- * them, on her right where he is, just where the keys stand in the tent after the cut (the cut carries her and the
+ * them, on her right where he is, lit the keys' own green (in his red it read as warning lights, the bomb's colour), just where the keys stand in the tent after the cut (the cut carries her and the
  * camera together, so the same place on the screen), and its keys light one a beat in the order she will press them;
  * on the cut the real keys are there, and she dials the same keys in the same order. Without it nothing passed between
  * them at the touch, and "the number he gave her" could not be read.
@@ -468,12 +468,12 @@ function number(ctx: Ctx, k: number, t: number): void {
     const h = (foot - top) * k
     if (lit > 0.01) {
       const g = ctx.createRadialGradient(x0 + w / 2, y0 + h / 2, 0, x0 + w / 2, y0 + h / 2, KEY_W * 1.3 * k)
-      g.addColorStop(0, rgba(SHANG, 0.45 * lit * up))
-      g.addColorStop(1, rgba(SHANG, 0))
+      g.addColorStop(0, rgba(TENT.keypad, 0.45 * lit * up))
+      g.addColorStop(1, rgba(TENT.keypad, 0))
       ctx.fillStyle = g
       ctx.fillRect(x0 - KEY_W * 1.3 * k + w / 2, y0 - KEY_W * 1.3 * k + h / 2, KEY_W * 2.6 * k, KEY_W * 2.6 * k)
     }
-    ctx.fillStyle = rgba(mix(SHANG, '#FFFFFF', 0.25 + 0.35 * lit), (0.16 + 0.6 * lit) * up)
+    ctx.fillStyle = rgba(mix(TENT.keypad, '#FFFFFF', 0.15 + 0.35 * lit), (0.16 + 0.6 * lit) * up)
     ctx.fillRect(x0 + 0.02 * k, y0, w - 0.04 * k, h)
   }
   // Each of the first digits on its beat, as he speaks: a flare, then held lit.

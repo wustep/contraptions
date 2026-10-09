@@ -437,13 +437,19 @@ A twenty-fourth took up the hinge the story critic had named: nothing passed bet
 "the number he gave her" could not be read, and the call was her pressing buttons.
 
 - **His number** (274.8 to 278.6 s): after the whisper a faint ghost of the sat phone's keys comes up beside them, in
-  his red, on her right where he stands, and its keys light one a beat in the order she will press them. The cut to the
+  the keys' own green, on her right where he stands, and its keys light one a beat in the order she will press them. The cut to the
   tent is a match cut on her, the camera carried with her, so the ghost stands in the same place on the screen as the
   real keys after the cut: they take its place, and she presses the same keys in the same order. No new sign, and no
   words: the keypad itself, before she has it.
 
 The critic's other idea, the gala coming up inside a small ring as the swing vision does, would rebuild the cut into
 the gala, and is left for Stephen.
+
+A twenty-fifth checked the spans the last four rounds changed through Zoom, Overview and a tall frame (nothing broken),
+and gave a fresh critic the story cold again. The ghost of the keypad, drawn in Shang's red, read as warning lights:
+the bomb's colour, and nothing like the real keys' green. It is drawn in the keys' green now, the same object either
+side of the cut. The blast still reads to a cold eye as the heptapods' attack, the charge being already there when
+the scene opens; showing it come from our side needs a soldier to bring it in, which is left for Stephen.
 
 ## Arrival nods
 
