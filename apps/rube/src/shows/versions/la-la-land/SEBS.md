@@ -145,3 +145,9 @@ A sixth pass:
 - **The quiet among the stars.** In the close shot through the waltz's quiet (327 to 331), the projector was a half-cut globe in the frame's bottom corner. The shot sits higher: the two of them low in the frame, open sky above them, and the machine below and out of the frame.
 - **The touch, and the lamps.** On the waltz's last note the projector's lamps flare and then go out a beat before the dark, but the shot was close on the pair and cut the projector off at the frame's edge. The shot now holds the pair and the whole projector, so the flare and the lamps going out are both in the picture.
 - **David at her table.** After the last chord David comes back and sits beside her (455.5 to 456.5), but the camera stayed on Seb, so they were never seen together before they left. The shot now goes out to the room as he sits: Seb at the keys and the two of them at her table, in one frame.
+
+A seventh pass:
+
+- **The kiss at Lipton's.** The closest shot, held as they touch on 65.515, was aimed above them, so the kiss happened in the bottom corner of the frame under the piano's legs. The shot is now centred on the two of them, between the piano's end and the tree.
+- **Her show.** In the close shots of her one-woman show (108 to 114) he was cut in half at the bottom edge of the frame. The shots draw back a little and sit lower, so he is whole among the front row's backs, watching her.
+- **The stage's front.** In the close shots at her table, at the start and again in the dream, the stage beside them was a blank brown slab filling a third of the frame. Its front is panelled now: inset frames a shade darker, each with a fine brass bead.

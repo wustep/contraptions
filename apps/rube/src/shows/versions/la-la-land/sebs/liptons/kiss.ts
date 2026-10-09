@@ -129,8 +129,9 @@ export const kiss = part<null>(
       // The hush: in, slowly, on the piano's end.
       [62.3, 4.6, [5.4, 0.7]],
       [64.2, 4.2, [5.85, 1.05]],
-      // Closest, and stillest, a breath before they touch; as they touch it starts back.
-      [65.3, 3.4, [6.15, 1.75]],
+      // Closest, and stillest, a breath before they touch, the two of them in the middle of the picture under the
+      // piano's end; as they touch it starts back.
+      [65.3, 3.2, [6.2, 2.15]],
       // The bloom, one move: back off the kiss and up as the room's lights come on out both ways, across to the
       // tables as their lamps flare, wide on the whole lit room while still drifting, and on round to the tree.
       [66.4, 8.0, [1.9, -0.1]],

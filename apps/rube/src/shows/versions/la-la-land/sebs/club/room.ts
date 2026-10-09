@@ -515,6 +515,20 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.stroke(rgba(M.brass, 0.85))
   p.strokeWeight(weight * 0.55)
   p.line(X(sx0 + 0.02), X(R.stage + 0.02), X(R.wallR0), X(R.stage + 0.02))
+  // Its front is panelled, so it reads as joinery and not a slab beside her table: inset frames a shade darker, each
+  // with a fine brass bead along its top where the light catches it.
+  for (let x = sx0 + 0.12; x + 0.6 < R.wallR0 - 0.08; x += 0.74) {
+    p.noStroke()
+    p.fill(rgba(M.lacquer, 0.22))
+    rect(x, R.stage + 0.11, x + 0.6, R.floor - 0.09, 0.015)
+    p.noFill()
+    p.stroke(rgba(M.lacquer, 0.55))
+    p.strokeWeight(weight * 0.4)
+    rect(x, R.stage + 0.11, x + 0.6, R.floor - 0.09, 0.015)
+    p.stroke(rgba(M.brass, 0.32))
+    p.strokeWeight(weight * 0.35)
+    p.line(X(x + 0.02), X(R.stage + 0.115), X(x + 0.58), X(R.stage + 0.115))
+  }
   glow(p, k, 2.7, R.stage, 3.0, L.stage, 0.22 * L.stageA, 1.2, 0.14)
 
   // The band's things, idle: the bass on its side, the kit, a stool, the stands with their clip lamps.
