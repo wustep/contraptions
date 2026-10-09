@@ -15,7 +15,7 @@ import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/la-la-land/s
 import { coverAt } from '../src/shows/versions/la-la-land/sebs/transitions'
 import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
-import { DOOR } from '../src/shows/versions/la-la-land/sebs/club/room'
+import { DOOR, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -245,6 +245,21 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     }
   }
   check('sebs: every star the melody lights is lit in the picture', KINDLED.length === 11 && unseen.length === 0, unseen.join(', '))
+  // The credits come up in open sky over the club, not across its roof and pelmet: while a card is up, the roof's line
+  // is below the card's last line. (The first card once came up inside the club, on the pelmet's scallops.)
+  const roofY = piano[1] + ROOM.roof
+  let creditClear = Infinity
+  let creditWorst = ''
+  for (let t = CARDS[0].at; t <= DURATION; t += 0.1) {
+    const cards = creditsAt(t).filter((c) => c.light > 0.05)
+    for (const c of cards) {
+      const f = cam(t)
+      const roofAt = (roofY - (f.y - f.cells / 2)) / f.cells
+      const bottom = (c.at?.[1] ?? 0.16) + (c.names.length > 2 ? 0.27 : 0.13)
+      if (roofAt - bottom < creditClear) { creditClear = roofAt - bottom; creditWorst = `${t.toFixed(1)} s` }
+    }
+  }
+  check('sebs: the credits come up in the open sky over the club', creditClear > 0, `clearance ${creditClear.toFixed(3)} of the frame at ${creditWorst}`)
   check('sebs: they look at each other where the story says (the touches, the waltz, the door), she to the stage, he to her', looks.length === 0, looks.join(', '))
 
   // The last frame: the whole city, wide.
