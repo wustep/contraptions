@@ -342,6 +342,8 @@ changed, in the order of the film, and then what runs through it:
   and the stretched sprite's texels showed there as hairline stripes of colour over the whole background.
   The floods' beams fade out at their ends now too (they were cut square where they meet the belly, a hard line on
   its dark), and the mast lamps' fans of light down over the camp are soft, not flat triangles.
+  Under the slot the shell drew a spill of its own over the valley's soft fall: a pale trapezoid with straight sides,
+  which stood out as the edges of a pane on the lift's close (54). It is a soft beam too now.
 - **The lamp's beam in the shaft** (69 → 85.8): fourteen stacked cones, each ending in a hard edge, so in the dark
   the beam showed as a fan of stepped bands. It is one soft cone now, from the same kind of sprite as the valley's
   beams, still coming to a point at the lens.

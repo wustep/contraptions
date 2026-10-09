@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../parts'
 import { alpha, hash } from './kit'
+import { softBeam } from './valley/set-air'
 import { FOG, SHELL, VALLEY } from './worlds'
 
 /**
@@ -80,6 +81,9 @@ function softPuff(ctx: CanvasRenderingContext2D, k: number, x: number, y: number
   ctx.restore()
 }
 
+/** Down the slot's spill: brightest at the mouth, gone 14 cells down. */
+const spillAlong = (v: number): number => 1 - v
+
 /**
  * The shell, hanging: its belly's lowest point at the origin, its top `h` cells up. A smooth dark stone of a thing,
  * lens-thin, its left edge catching the sky, faint strata across its face, and the slot in its belly when it opens.
@@ -155,17 +159,8 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
   if (slot > 0.001 && vanish < 0.3) {
     const sw = (o.slotW ?? 2.6) * slot
     const sd = 0.9
-    const spill = ctx.createLinearGradient(0, 0, 0, 14 * k)
-    spill.addColorStop(0, `rgba(243,241,230,${0.22 * slot * (1 - haze)})`)
-    spill.addColorStop(1, 'rgba(243,241,230,0)')
-    ctx.fillStyle = spill
-    ctx.beginPath()
-    ctx.moveTo(-sw * 0.5 * k, 0)
-    ctx.lineTo(sw * 0.5 * k, 0)
-    ctx.lineTo(sw * 1.6 * k, 14 * k)
-    ctx.lineTo(-sw * 1.6 * k, 14 * k)
-    ctx.closePath()
-    ctx.fill()
+    // Soft across, as the valley's own fall of light under it is: never a pane with straight sides.
+    softBeam(ctx, k, [0, 0], [0, 14], sw * 1.3, sw * 3.8, '243, 241, 230', 0.45 * slot * (1 - haze), 'spill', spillAlong, true)
     // The mouth itself is cut into the hull: clipped to its outline, so nothing of it hangs below the round belly.
     ctx.save()
     ctx.clip(hull)
