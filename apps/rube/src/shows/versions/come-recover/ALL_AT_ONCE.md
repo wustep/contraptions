@@ -459,6 +459,10 @@ The notes went back to the builders who made each part, who still had their cont
   - Each eye now carries the great hit's lantern gold as it flies: a soft light round it and a fading gold trail
     along its arc. It swells a little in mid-flight and lands at its own size. The kindness is seen passing from her
     to each machine, in the light she chose it in.
+- **A pass for the beats in motion.** The pull was stepped through at 10 fps. Each thing goes over the lip on its
+  beat, down into the hole (the spatula at 152.0 s). The alley's parting (82–86 s) was watched at full size: Waymond
+  stays on the shut cover in the lamplight while she is carried away down the drain below. Both land, and nothing
+  was changed.
 
 ## End credits
 
