@@ -344,7 +344,11 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
     const hi = ring.hi(t)
     const half = Math.max(0, (hi - lo) / 2)
     const form = 0.7 * (0.5 - Math.sin(Math.asin(1 - 2 * Math.min(1, half / Math.PI)) / 3)) * 0.9999
-    const taper = Math.min(ring.taper, Math.max(0.015, 0.3 * (TAU - 4 * half)))
+    // Each half's leading end runs out to a point over as much of the ink ahead of her pen as there is (never under
+    // her, where she rides it at its full thickness), so it reads as ink running, not a blunt cut.
+    const ahead = hi - (GREAT.her(t) - GREAT.spin(t))
+    const lead = Math.min(LEAD_TAPER, Math.max(ring.taper, 0.8 * ahead))
+    const taper = Math.min(lead, Math.max(0.015, 0.3 * (TAU - 4 * half)))
     drawLogogram(p, k, { ...base, start: (lo + hi) / 2, form, taper })
     drawLogogram(p, k, { ...base, start: (lo + hi) / 2 - Math.PI, form, taper })
   } else {
@@ -358,6 +362,8 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
 /** How far short of the other half's pen each half's tail is held while the great ring is written, and how long its run into the gap on the close takes. */
 const JOIN_GAP = 0.35
 const JOIN_RUN = 0.18
+/** The most a half of the great ring's forming ends taper over, radians (as other rings' do). */
+const LEAD_TAPER = 0.4
 
 /** The fog's standing drawing, for the whole show (it is only ever on the stage while she is beyond the glass). */
 export function drawFog(p: p5, k: number, t: number): void {
