@@ -208,9 +208,11 @@ export const finale = part<FinaleState>(
   (slot) => {
     const H = (x: number, y: number): Pt => toPart([x, y])
     const shots: PartShot[] = [
-      // Close on the window, as the peak left it: the drum turns them.
+      // Close on the window, as the peak left it: the drum turns them. Then back a little, slowly, to take in
+      // Waymond waiting by the lever, whole and not cut by the frame's edge, before he leaps it.
       { t: slot.begin + 0.6, cells: 2.4, hold: H(PORT[0], PORT[1] + 0.02), w: 1 },
-      { t: 268.2, cells: 2.55, hold: H(PORT[0] + 0.04, PORT[1] + 0.08), w: 1 },
+      { t: slot.begin + 1.9, cells: 2.72, hold: H(PORT[0] + 0.04, PORT[1] + 0.02), w: 1 },
+      { t: 268.2, cells: 2.78, hold: H(PORT[0] + 0.1, PORT[1] + 0.06), w: 1 },
       // The door, the drop, and back to take in Waymond coming.
       { t: 269.7, cells: 3.1, hold: H(-2.05, -0.5), w: 1 },
       { t: 271.7, cells: 3.8, hold: H(-1.95, -0.72), w: 1 },

@@ -305,6 +305,13 @@ The notes went back to the builders who made each part, who still had their cont
     happened at the frame's right edge, half cut off.
   - The opening's wide shot now reaches a little further right, with the same left edge at the storefront. He and
     the bag are inside the frame all through it.
+- **A pass for Waymond at the washer.** The crescendo's card-flips into the great hit and the washer's door home
+  were watched at 10 to 16 fps.
+  - Through the end of the cycle (264 to 268.4 s), Waymond waits by the foot lever for them to come out, and he sat
+    at the frame's right edge, cut in half for four seconds.
+  - After the match cut the close shot on the window now draws back, slowly, from 2.4 cells to about 2.75, so he is
+    whole in the frame before he leaps the lever. The window is still the subject, and the jump's own framing is
+    unchanged.
 
 ## End credits
 
