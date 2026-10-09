@@ -375,7 +375,8 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     // v: 0 at the crown, 1 at the hip, round the right side and back up the left.
     const v = (1 - Math.cos(a)) / 2
     const side = Math.sin(a) >= 0 ? 1 : -1
-    const profile = Math.pow(Math.sin(Math.PI * Math.min(1, v * 0.92 + 0.04)), 0.62) * (1 - 0.32 * v * v)
+    // A domed crown (never a flat cut across the top), fullest a third of the way down.
+    const profile = Math.pow(Math.sin(Math.PI * Math.min(1, v * 0.94 + 0.012)), 0.55) * (1 - 0.32 * v * v)
     const half = bw * profile * (1 + 0.04 * Math.sin(5 * v + who * 2 + (side > 0 ? 0 : 1.3)))
     const x = side * half + Math.sin(lean) * (1 - v) * bodyH * 0.35
     const y = top + bodyH * v
@@ -390,6 +391,20 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
   p.beginShape()
   for (const [x, y] of bodyPts) p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
+  // The crown going up into the air: what is highest is the most fogged, so the head is lost in the white rather than
+  // ending on a line.
+  ctx.save()
+  ctx.beginPath()
+  bodyPts.forEach(([x, y], j) => (j ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  ctx.closePath()
+  ctx.clip()
+  const [ar, ag, ab] = [1, 3, 5].map((i) => parseInt(air.slice(i, i + 2), 16))
+  const crown = ctx.createLinearGradient(0, top * k, 0, (top + bodyH * 0.45) * k)
+  crown.addColorStop(0, `rgba(${ar}, ${ag}, ${ab}, ${0.5 * (1 - fog)})`)
+  crown.addColorStop(1, `rgba(${ar}, ${ag}, ${ab}, 0)`)
+  ctx.fillStyle = crown
+  ctx.fillRect((-bw * 1.6 - bodyH * 0.4) * k, top * k, (bw * 3.2 + bodyH * 0.8) * k, bodyH * 0.45 * k)
+  ctx.restore()
   // Folds: two or three long soft darker bands down the trunk, and the crown a shade lighter where the light is.
   const fold = mixHex(col, '#000000', 0.12 * (1 - fog))
   for (let f = 0; f < 3; f++) {
