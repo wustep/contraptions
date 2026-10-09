@@ -424,6 +424,12 @@ The notes went back to the builders who made each part, who still had their cont
     times. The shared `parts.ts` is untouched.
   - Seventeen frames across the show, full of eyes and long lanes, are pixel for pixel what they were. Throttled 4×,
     the peak now holds 58–60 fps and the credits 60.
+  - The whole show was then swept throttled 4×, two seconds every eight. Every sample holds 56–60 fps; the softest
+    are the kitchen's eruption (114 s, 57) and the peak (250 s, 56.5). Throttled 6×, the heaviest stretches hold
+    58–60 except the peak, at 48–51. What is left there is the bagel's thousand seeds, already batched into one path
+    a colour and brightness, and it was left.
+  - The hush (128–133 s), nearly black in every sweep, was watched again at full size. The seeds drift at their
+    depths and the rim comes up out of the dark, the quiet the music asks for, and it was kept.
 
 ## End credits
 
