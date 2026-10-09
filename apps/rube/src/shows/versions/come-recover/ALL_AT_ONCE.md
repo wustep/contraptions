@@ -135,7 +135,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 0 | the chord | The Wang family laundromat at night, a lit box on a dark street, with a red neon washer in the window. On the chord's eight onsets the fluorescent tubes blink and catch, the one over Evelyn first. In the silence Waymond sets a slumped, googly-eyed laundry bag back on its bottom. |
 | 7.93 | the entry | She rolls onto the foot lever of the washer by the door. Four quarters drop from the coin column on the next four onsets, and the washer fills, spins up and walks toward the lever. |
 | 12.79 | the great hit | The washer jumps and slams onto the lever, and she is thrown across the shop into a heap of receipts. The receipts storm up and come down onto the spike, the audit letter last (16.78). |
-| 19.8 to 30 | the soft run | The taxes: she works the adding machine's long keyboard, rolling to a key on the long gaps and bouncing key to key on the quick notes, twenty strokes. On each one the crank ratchets, and the tape curls down the counter's end into loops on the floor. Joy comes in on the door's bell (20.19), crosses the shop, and stops right below her mother (23.74), leaning up toward her. Her mother does not look up. Joy turns and goes on the bell (29.37), and Waymond edges after her. |
+| 19.8 to 30 | the soft run | The taxes: she works the adding machine's long keyboard, rolling to a key on the long gaps and bouncing key to key on the quick notes, twenty strokes. On each one the crank ratchets, and the tape curls down the counter's end into loops on the floor. Joy comes in on the door's bell (20.19), crosses the shop, and stops right below her mother (23.74), leaning up toward her. Her mother does not look up. Joy turns and goes on the bell (29.37), and Waymond edges after her. Subtitled, high on the tile wall: *Mom? Can I —* (hers, in italic) / *Not now, Joy.* |
 | 30.65 | two accents | The crank slams to the total and throws her into the lantern hanger's basket (31.46). It rides the garland, and a lantern pops open on each onset. |
 | 34.33 | the breath | The hanger hits its stop and tips her into the big dryer. For twenty-three seconds of swells she tumbles in the drum, which turns with the music's loudness. The camera pushes in until its window fills the frame. From 46 s other worlds show in the drum's bays: a red carpet's flashbulb, a dojo's lacquer, hot dogs, a raccoon's mask, the bagel's black. |
 | 57.95 | the first jump | The door bursts, and she flies out through the circle into the flashbulbs. |
@@ -885,6 +885,12 @@ The notes went back to the builders who made each part, who still had their cont
   the three of them together at the washer's foot, he asks again, and she answers *I'm staying.* A fourth
   conversation, two lines, and the subtitles' arc: the only lines the show says twice. The soft dark is under them in
   the laundromat too. The check holds them to home, before the credits.
+- **A director's pass: the wound the conversations answer.** The subtitles had answers and no question. Now, at the
+  taxes, Joy comes to her mother and says *Mom? Can I —*, and her mother, not looking up, says *Not now, Joy.*
+  Everything said after answers it: Joy's *There you are.* in the hush, her mother's *Where else would I be?* on the
+  bench, and *I'm staying.* at home. The close two-shot has the family along the frame's foot, where the words covered
+  Joy and the counter's red, so this scene's subtitles sit high on the plain tile wall, left of the corkboard, and the
+  soft dark follows each scene's place. The check holds every line to its scene, the taxes now one of five.
 
 ## The looks
 

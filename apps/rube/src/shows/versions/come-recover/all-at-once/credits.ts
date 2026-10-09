@@ -107,6 +107,7 @@ export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
  * The show's three conversations, in subtitles: no voices, only plain words low in the frame. The lines are this
  * show's own, not the film's. Evelyn's are in roman and the other's in italic, so who speaks is told without a name.
  *
+ * - **The taxes**: Joy comes to her mother at the adding machine, and is sent away. Everything after answers it.
  * - **The alley** (the film's "in another life"): as she comes down to Waymond, and before the drain takes her from
  *   him. Set in the widescreen's lower bar, as a Wong Kar-wai picture is subtitled.
  * - **The hush**: the beam finds Joy waiting on the bagel, and she speaks first.
@@ -122,8 +123,11 @@ export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
  *
  * Each comes on a note the scene already moves on, and goes before the next.
  */
-export type Scene = 'alley' | 'hush' | 'rocks' | 'home'
+export type Scene = 'taxes' | 'alley' | 'hush' | 'rocks' | 'home'
 export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 'joy' | 'waymond'; scene: Scene }[] = [
+  // The taxes: Joy stops below her mother at the adding machine, and her mother does not look up.
+  { at: 24.0, to: 26.2, line: 'Mom? Can I —', who: 'joy', scene: 'taxes' },
+  { at: 26.6, to: 28.9, line: 'Not now, Joy.', who: 'evelyn', scene: 'taxes' },
   { at: 74.2, to: 76.3, line: 'I don’t know where I am.', who: 'evelyn', scene: 'alley' },
   { at: 77.1, to: 79.3, line: 'Here. With me. Stay a little.', who: 'waymond', scene: 'alley' },
   { at: 79.6, to: 81.9, line: 'I can’t.', who: 'evelyn', scene: 'alley' },
@@ -147,11 +151,24 @@ export const SUB_AT: [number, number] = [0.5, 0.855]
 const SUB_IN_BAR: [number, number] = [0.5, 0.884]
 /** The least a subtitle's type may be on the page, CSS pixels: on a phone held upright they are still read. */
 const SUB_LEAST = 13
-/** How far up a subtitle low in the frame (not in a widescreen bar) is at `t`, 0 to 1: for the soft dark under it. */
+/**
+ * Where a scene's subtitles sit: low, in the widescreen's lower bar in the alley, and at the taxes high on the plain
+ * tile wall, as the close two-shot has the family along the frame's foot and nothing over the wall's left.
+ */
+const subAt = (scene: Scene): [number, number] => (scene === 'alley' ? SUB_IN_BAR : scene === 'taxes' ? [0.27, 0.05] : SUB_AT)
+
+/** The subtitle up at `t` that has a soft dark under it (not in a widescreen bar): how far up, and where. */
 export function subtitleLight(t: number): number {
-  let v = 0
-  for (const sub of SUBTITLES) if (sub.scene !== 'alley') v = Math.max(v, clamp((t - sub.at) / SUB_FADE) * (1 - clamp((t - (sub.to - SUB_FADE)) / SUB_FADE)))
-  return v
+  return subtitleBedAt(t).light
+}
+function subtitleBedAt(t: number): { light: number; at: [number, number] } {
+  let best = { light: 0, at: SUB_AT }
+  for (const sub of SUBTITLES) {
+    if (sub.scene === 'alley') continue
+    const light = clamp((t - sub.at) / SUB_FADE) * (1 - clamp((t - (sub.to - SUB_FADE)) / SUB_FADE))
+    if (light > best.light) best = { light, at: subAt(sub.scene) }
+  }
+  return best
 }
 
 /** The soft dark low in the frame under a subtitle, so its cream reads on the pale canyon or the bagel's seeds. */
@@ -159,7 +176,7 @@ export const subtitleBed = scenery<null>({
   name: 'subtitle bed',
   draw: () => {},
   over: (p, _s, c) => {
-    const sub = subtitleLight(c.t)
+    const { light: sub, at: where } = subtitleBedAt(c.t)
     if (sub <= 0.001) return
     const { k } = c
     const f = frame(p, k)
@@ -169,9 +186,9 @@ export const subtitleBed = scenery<null>({
     // The 16:9 box the words are set in, inside a frame that may be wider or taller.
     const bh = Math.min(h, (w * 9) / 16)
     // On the words' middle: their top is where `SUB_AT` puts it, and they are at least SUB_LEAST tall.
-    const cy = (f.y0 + (h - bh) / 2 + bh * SUB_AT[1]) * k + Math.max(bh * 0.022 * k, SUB_LEAST * 0.8)
-    const cx = (f.x0 + w * SUB_AT[0]) * k
-    const rx = Math.max(Math.min(w, (bh * 16) / 9) * 0.34 * k, 170)
+    const cy = (f.y0 + (h - bh) / 2 + bh * where[1]) * k + Math.max(bh * 0.022 * k, SUB_LEAST * 0.8)
+    const cx = (f.x0 + w * where[0]) * k
+    const rx = Math.max(Math.min(w, (bh * 16) / 9) * (where === SUB_AT ? 0.34 : 0.24) * k, 170)
     // As tall as the words are, however small the stage (they never go under SUB_LEAST on the page).
     const ry = Math.max(rx * 0.16, SUB_LEAST * 1.9)
     ctx.save()
@@ -205,7 +222,7 @@ export function creditsAt(t: number): TitleCard[] {
     if (light <= 0.001) return
     // Plain under the picture, as a subtitle is: small, cream, low in the frame. Evelyn's in roman; the other's in
     // italic (the card's note), so who is speaking is told without a name.
-    const at = sub.scene === 'alley' ? SUB_IN_BAR : SUB_AT
+    const at = subAt(sub.scene)
     const card: TitleCard =
       sub.who === 'evelyn'
         ? { key: `all-at-once-subtitle-${n}`, names: [sub.line], plain: true, light, rise: 0, at, scale: 0.62, least: SUB_LEAST / 5.6 }
