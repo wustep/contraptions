@@ -400,3 +400,7 @@ A fifty-sixth pass:
 
 - **The constellation, untangled.** A fresh reviewer found the constellation I had drawn (the fifty-first pass) never formed: joining each star to the one lit just before it, with the stars spread round by the golden angle, drew long lines that crossed the sky and each other. Each star the melody lights is now joined to the nearest of the stars already lit, so the eleven grow, note by note, into one branching figure of short lines round the two of them, none across another.
 - Not taken: the ride on the bulbs, closed in on the pass before, and the band's shot, piano on one side and band on the other.
+
+A fifty-seventh pass:
+
+- **The band, balanced.** Two reviewers in a row found the count-in's shot badly composed: coming close on him for his last look (the forty-first pass), I had left the piano against the frame's left edge and the band cut along the bottom, and then the pass after only half mended it. The shot now holds the piano on the left with its legs and pedals in, the whole bandstand on the right (the bass, the drums, both lamp-lit stands), and him at the keys between them, still near enough that his look back at the door and his nods to the band read.

@@ -288,11 +288,11 @@ export const finale = part<FinaleState>(
     { t: 466.9, cells: 4.6, hold: F([-10.6, 1.45]) },
     { t: 468.3, cells: 4.6, hold: F([-10.8, 1.45]) },
     { t: 469.8, cells: 7, hold: F([-2.5, 0.8]) },
-    // Him at the keys, near, and the band's stands and instruments beside him, whole, so the lamps come up in the frame as he looks back
+    // Him at the keys and the whole bandstand beside him, the piano left of centre and the band right of it, so the lamps come up in the frame as he looks back
     // at the door; and closer still on him for the count-in, his nods to the band.
-    { t: 472.0, cells: 4.4, hold: F([6.9, 0.85]) },
-    { t: 475.6, cells: 4.1, hold: F([6.7, 0.75]) },
-    { t: 477.9, cells: 4.0, hold: F([6.65, 0.7]) },
+    { t: 472.0, cells: 5.4, hold: F([6.35, 0.8]) },
+    { t: 475.6, cells: 5.2, hold: F([6.35, 0.75]) },
+    { t: 477.9, cells: 5.1, hold: F([6.35, 0.72]) },
     { t: 480.0, cells: 7, hold: F([3.6, -1.6]) },
   ],
 )
