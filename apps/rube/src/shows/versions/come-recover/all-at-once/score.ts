@@ -122,7 +122,16 @@ const PUNCHES: [number, number][] = [
   [248.949, 0.8],
   [290.992, 0.9],
 ]
+/**
+ * A viewer who has asked their system to reduce motion is spared the two jolts that carry no story: the next world
+ * flickering through before a jump (which is also the show's flashing), and the camera's punch on the big hits. The
+ * cuts themselves, and everything else, are as for anyone. Read once, in the browser; in the checks there is no
+ * preference, so they see the show as it is made.
+ */
+const CALM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
 function punch(t: number): number {
+  if (CALM) return 0
   let v = 0
   for (const [at, s] of PUNCHES) {
     const u = t - at
@@ -168,7 +177,7 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     if (i === 0 || leg.key === 'premiere' || leg.key === 'pull' || leg.key === 'kindness' || leg.key === 'rocks') return
     // Into the surf, one: the dark kitchen into a bright world, and then a new world on every hit, which is
     // flashing enough on its own. Measured by quarters of the frame, two there came to the three a second.
-    flickers.push(...flickersBefore(i, leg.from, leg.key === 'surf' ? 1 : FLICKERS_A_JUMP))
+    if (!CALM) flickers.push(...flickersBefore(i, leg.from, leg.key === 'surf' ? 1 : FLICKERS_A_JUMP))
   })
 
   const riders: Riders = []

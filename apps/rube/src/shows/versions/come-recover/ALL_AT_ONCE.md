@@ -94,6 +94,8 @@ it went through something.
 The camera takes the show's ten biggest hits in the body: a push-in of about 4.5% that eases back (`PUNCHES` in
 `score.ts`). There are none in the rocks.
 
+For a viewer whose system asks to reduce motion, the flickers and the punches are left out (`CALM` in `score.ts`).
+
 ## In order
 
 Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall's `fall(k)` (200 to 266 s) and home's
@@ -552,6 +554,12 @@ The notes went back to the builders who made each part, who still had their cont
   chunks over 500 KB is for other parts of the site.
   Run again after the looks, the bags and the machines: it still passes (3,065 checks, one of them new), and the
   chunk is 391.5 KB (143.7 KB gzipped), 5.7 KB gzipped over `origin/main` in all.
+- **A pass for reduced motion.** The site honoured `prefers-reduced-motion` only in its menus. The show now does too
+  (`CALM` in `score.ts`). A viewer who asks their system to reduce motion is spared the two jolts that carry no
+  story: the next world flickering through before each jump (also the show's flashing), and the camera's punch on
+  the ten biggest hits. The cuts and everything else are as for anyone. It is read in the browser when the show is
+  built, so the checks, share cards and everyone else see the show as made. Tested with Chrome's emulated
+  preference: 13 flickers become none, and the great hit's frame follows its own move without the push-in.
 - **A pass for Waymond on the line.** In the peak he catches the line and drops as the weight that pulls Joy back out
   of the bagel, but his eye only swung with his fall. Now from his catch (247.9 s) he watches Joy, until he is
   carried down out of the frame (249.6 s).
