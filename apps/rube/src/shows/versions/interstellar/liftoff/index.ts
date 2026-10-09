@@ -1,5 +1,5 @@
 import type { Performance } from '../../../registry'
-import { DURATION } from './music'
+import { DURATION, MIX_END } from './music'
 import { compose } from './score'
 import { creditsAt } from './credits'
 
@@ -24,7 +24,8 @@ export const performance: Performance = {
     // above its own level, so the mix's +7 dB on the cue's quiet opening is not here: the organ comes in as recorded.
     youtube: [
       { id: 'JuSsvM8B4Jc', until: 126.984, fadeOut: 1 },
-      { id: 'kpK4cDk2bRs', at: 126.5, from: 103.76, fadeIn: 1 },
+      // To the mix's end (it trims the upload at 240 s): the upload runs 6 s past it, into the credits, which are silent.
+      { id: 'kpK4cDk2bRs', at: 126.5, from: 103.76, until: MIX_END, fadeIn: 1 },
     ],
   },
 }

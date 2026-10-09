@@ -529,8 +529,10 @@ async function main(): Promise<void> {
           const trims = [...mix.matchAll(/atrim=([\d.]+):([\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])])
           const delay = Number(/adelay=(\d+)\|/.exec(mix)?.[1] ?? NaN) / 1000
           const [cf, nt] = perf.soundtrack?.youtube ?? []
-          check('liftoff: the YouTube cues are the mix\'s numbers (Cornfield Chase\'s end, No Time for Caution\'s start and its place in the show)',
-            trims.length === 2 && !!cf && !!nt && near(cf.until ?? NaN, trims[0][1]) && near(nt.from ?? NaN, trims[1][0]) && near(nt.at ?? NaN, delay),
+          check('liftoff: the YouTube cues are the mix\'s numbers (Cornfield Chase\'s end, No Time for Caution\'s start, its place in the show and its end)',
+            trims.length === 2 && !!cf && !!nt && near(cf.until ?? NaN, trims[0][1]) && near(nt.from ?? NaN, trims[1][0]) && near(nt.at ?? NaN, delay) &&
+            // and ends where the mix cuts it, not at the upload's own end 6 s later, in the silent credits (pass 103)
+            near(nt.until ?? NaN, delay + trims[1][1] - trims[1][0], 0.01),
             JSON.stringify({ trims, delay, cues: perf.soundtrack?.youtube }))
         }
         // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.

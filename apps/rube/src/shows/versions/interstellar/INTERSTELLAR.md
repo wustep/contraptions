@@ -102,7 +102,7 @@ Every change of scene is scored and continuous. No cue or strike was moved for a
   - Cornfield Chase plays whole and untouched from its first sample, so Act I keeps the clock it was timed to. It fades out over its last second, to 126.98 s.
   - No Time for Caution comes in 103.76 s into the cue, one beat before its bar-26 accent, fading up over that beat. The accent lands at 127.507 s of the show, and the cue runs to its end, 262.74 s.
 - Starting at bar 26 skips the cue's first 1:44. What is left is the two-minute build to the peak, which is the part a machine can drive.
-- The repository keeps no copy of either recording, nor of the mix, since #147 made copyrighted soundtracks YouTube-only. The show plays the two official uploads as two cues (`liftoff/index.ts`), with the mix's numbers: Cornfield Chase from its start, faded out by 126.98 s, and No Time for Caution from 103.76 s into its upload at 126.5 s of the show, faded in over a beat. So every strike lands online where it lands in the mix. The one difference is level: YouTube cannot play a video above its own volume, so the mix's lift on the cue's quiet opening is not heard.
+- The repository keeps no copy of either recording, nor of the mix, since #147 made copyrighted soundtracks YouTube-only. The show plays the two official uploads as two cues (`liftoff/index.ts`), with the mix's numbers: Cornfield Chase from its start, faded out by 126.98 s, and No Time for Caution from 103.76 s into its upload at 126.5 s of the show, faded in over a beat, and cut at the mix's end (262.741 s; the upload runs 6 s longer). So every strike lands online where it lands in the mix. The one difference is level: YouTube cannot play a video above its own volume, so the mix's lift on the cue's quiet opening is not heard.
 
 **Its clock.**
 - `scripts/shows/liftoff-ntfc-onsets.py` measured the mix once (numpy and ffmpeg) into `scripts/shows/plans/liftoff-ntfc-onsets.json`.
@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 102 (latest)
+## Polish pass 103 (latest)
+
+- **Online, the music now ends where the mix does.** Watching the stall note across the music's end, the music heard ran on past it. No Time for Caution's upload is 246.28 s long, and the mix the show was timed to cuts it at 240 s, at 262.74 s of the show. The YouTube cue had no `until`, so online the upload's last 6.28 s played into the credits, 262.74 to 269.0 s, which are meant to run in silence. The cue now ends at `MIX_END` with a hard cut, as the mix does (`liftoff/index.ts`). The music heard stops at 262.78 s, and the clock runs on through the credits with no stall note. Pass 81's check holds this end to the mix's trim too, and fails without it.
+
+## Polish pass 102
 
 - **The stall note no longer covers the Sound button.** Pass 101's numbers showed that on a browser refusing sound, which is most phones on a link, the picture waits a few seconds at the start while the player learns it is refused and retries muted. In that wait pass 89's note said "Waiting for the music…", and once the sound was held it was drawn right over the stage's yellow Sound button, the one thing the viewer had to tap. It now gives way while the sound is held (`shows/player.ts`): before the refusal is known it says it is waiting, which is true, and from then the Sound button stands alone. The guard holds the exception, and fails without it.
 
