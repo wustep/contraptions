@@ -86,6 +86,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - they kiss at Lipton's and again in the club (close, not pressed);
 - on the last chord he is back on the keys of his own piano, and she is gone by the band;
 - Mia, David and the son never jump where they can be seen, and come and go only out of shot or under a cover;
+- no one passes through anyone where it can be seen (two balls drawn closer than nine tenths of their widths summed);
 - it ends on the city of stars, wide.
 
 ## How it is built
@@ -343,3 +344,7 @@ A forty-fifth pass, for errors:
 
 - **A continuity check.** After so many passes I swept the show for regressions (jumps, presence, camera speed, the full build, all clean) and had a reviewer look only for errors the edits might have made. It found one of mine: when I moved her goodbye to the doorway, she got down from her stool just as David rolled past below it, and he went straight through her (457.6). She now waits on her stool until he has gone by, then gets down behind him; the closest they come is 0.30 cells, while he passes under her stool.
 - **Every pair, measured.** That error had slipped past every pass, so I measured every pair of balls against each other through the whole show, every hundredth of a second. One more turned up, in the original: on the walk of fame, at the burst into colour, the two of them leapfrogged with both always in the air, and once a beat one passed straight through the other (144.8 to 147.7). It is a true leapfrog now: she waits on her star while he vaults over her, then a short hop of one beat to the next, landing on the beat she always did. No two balls overlap anywhere in the show now, but under the red door's cover, where nothing is seen.
+
+A forty-sixth pass, to keep it so:
+
+- **A check for it.** Two balls drawn through each other got past every pass that looked at frames, and was found only by measuring every pair. So `check:shows` now holds it: no two balls closer than nine tenths of their widths summed, anywhere they can be seen, every hundredth of a second through the show. A touch, a width apart, is allowed. I put the old leapfrog back to see it fail, and it named the crossings at 144.81 and 145.26; with the fix, it passes.

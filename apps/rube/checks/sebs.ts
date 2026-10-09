@@ -4,6 +4,7 @@
  */
 import type { Performance, Version } from '../src/shows/registry'
 import type { ShowBall } from '../src/show'
+import { R } from '../src/parts'
 import { show as sebsShow, covers as sebsCovers } from '../src/shows/versions/la-la-land/sebs'
 import { SWITCH } from '../src/shows/versions/la-la-land/sebs/score'
 import { AT, DURATION, END_AT, MIX_END, NOTES, dream, paris, combStrength, dreamBeat, parisBeat } from '../src/shows/versions/la-la-land/sebs/music'
@@ -189,6 +190,23 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
   }
   const crowd = [5, 65.5, 150, 250, 365, 440, 460].map((t) => show.at(t).balls ?? [])
   check('sebs: every ball on the stage is someone, once', crowd.every((b) => new Set(b.map((x) => x.id)).size === b.length && b.length <= 4))
+  // No one passes through anyone where it can be seen: two balls drawn closer than nine tenths of their widths summed
+  // are drawn into each other. A touch is a width apart, and so allowed. (A leapfrog with both always in the air, and
+  // a walk-out that crossed a seat being left, once did this; nothing that only looks at one ball at a time finds it.)
+  const through: string[] = []
+  for (let t = 0; t <= DURATION && through.length < 6; t += 0.01) {
+    if (covered(t)) continue
+    const [sx, sy] = show.where(t)
+    const balls: { who: string; x: number; y: number; r: number }[] = inShot(t, { x: sx, y: sy }) ? [{ who: 'Seb', x: sx, y: sy, r: R }] : []
+    for (const [who, b] of [['Mia', show.mia(t)], ['David', show.david(t)], ['their son', show.son(t)]] as const) {
+      if (b && (b.scale ?? 1) > 0.05 && inShot(t, b)) balls.push({ who, x: b.x, y: b.y, r: R * (b.scale ?? 1) })
+    }
+    for (let i = 0; i < balls.length; i++) for (let j = i + 1; j < balls.length; j++) {
+      const [a, c] = [balls[i], balls[j]]
+      if (Math.hypot(a.x - c.x, a.y - c.y) < 0.9 * (a.r + c.r)) through.push(`${a.who} and ${c.who} at ${t.toFixed(2)}`)
+    }
+  }
+  check('sebs: no one passes through anyone where it can be seen', through.length === 0, through.join(', '))
 
   // The last frame: the whole city, wide.
   const endCam = cam(perf.duration)
