@@ -1,6 +1,6 @@
 import { mixHex } from '../../../../parts'
 import { DESK } from './desk'
-import { rgba } from './sky'
+import { rgba, viewOf } from './canvas'
 import { INK, hash, lampAt, lampColor, lightAt, lit, skyAt } from './world'
 
 /**
@@ -23,17 +23,6 @@ const PEDESTAL = { x0: -4.7, x1: -2.5 }
 /** The high shelf over the desk, right of the window. */
 const SHELF = { x0: 1.35, x1: 4.35, y: -6.55 }
 
-function viewOf(ctx: Ctx): { x0: number; y0: number; x1: number; y1: number } {
-  const m = ctx.getTransform().inverse()
-  const c = ctx.canvas
-  const pts = [new DOMPoint(0, 0), new DOMPoint(c.width, 0), new DOMPoint(0, c.height), new DOMPoint(c.width, c.height)].map((q) => m.transformPoint(q))
-  return {
-    x0: Math.min(...pts.map((q) => q.x)),
-    x1: Math.max(...pts.map((q) => q.x)),
-    y0: Math.min(...pts.map((q) => q.y)),
-    y1: Math.max(...pts.map((q) => q.y)),
-  }
-}
 
 function line(ctx: Ctx, lw: number, color = INK): void {
   ctx.strokeStyle = color

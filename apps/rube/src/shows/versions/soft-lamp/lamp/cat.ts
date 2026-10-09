@@ -3,7 +3,7 @@ import { CAT } from './desk'
 import { catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
 import { LANDINGS, LAPS, ballAt } from './route'
-import { rgba } from './sky'
+import { rgba } from './canvas'
 import { hash, lampAt, lightAt, lit } from './world'
 
 /**

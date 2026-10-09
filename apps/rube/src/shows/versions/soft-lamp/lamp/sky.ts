@@ -1,4 +1,5 @@
 import { mixHex } from '../../../../parts'
+import { rgba } from './canvas'
 import { GLASS } from './desk'
 import { smooth } from './music'
 import { cloudAt, hash, lampAt, nightAt, rainAt, skyAt } from './world'
@@ -13,10 +14,6 @@ import { cloudAt, hash, lampAt, nightAt, rainAt, skyAt } from './world'
 
 type Ctx = CanvasRenderingContext2D
 
-export const rgba = (hex: string, a: number): string => {
-  const n = parseInt(hex.slice(1), 16)
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`
-}
 
 const W = GLASS.x1 - GLASS.x0
 const H = GLASS.y1 - GLASS.y0

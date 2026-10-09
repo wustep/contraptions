@@ -286,6 +286,17 @@ ball. The machine and its timing were right and are untouched; the room around i
 38. **The breaks went unanswered** but for the camera drawing back. Now, when a track's drums drop out, a slow wave
     runs along the fairy lights, and the room's frame the camera has drawn back to has them draped across its top.
 
+### The eighth lofi pass
+
+39. **The credits stood in the fairy lights.** The string ran through "Directed by" and "Music", and the clock sat
+    against the names. They stand further right and a little lower now, on the dark wall between the string's end, the
+    clock and the print, over the lamp's arm, clear of all of them.
+40. **The frames' shares, measured** over the half hour: the desk under the lamp 18%, the cup close 16%, the lamp's side
+    14%, following the ball along the sill 14%, the window 13%, the room 12%, the stair 8%, the sill's end 4%, the
+    room's widest 2%. No look outstays the others; left as it is.
+41. **Two small helpers were copied into three files.** The view's extent and the colour-at-an-alpha now live once, in
+    `lamp/canvas.ts`; the frames drawn before and after are pixel for pixel the same.
+
 **Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

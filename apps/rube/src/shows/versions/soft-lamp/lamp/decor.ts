@@ -1,7 +1,7 @@
 import { mixHex } from '../../../../parts'
 import { CLOCK, CURTAIN, NOTES, PRINT, ROD, WINDOW } from './desk'
 import { MUSIC_END, barTime, heldAt, smooth, trackAt } from './music'
-import { rgba } from './sky'
+import { rgba, viewOf } from './canvas'
 import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, skyAt } from './world'
 
 /**
@@ -352,18 +352,6 @@ export function bloom(ctx: Ctx, t: number): void {
   ctx.restore()
 }
 
-/** The view, in cells, of the canvas under the current transform. */
-function viewOf(ctx: Ctx): { x0: number; y0: number; x1: number; y1: number } {
-  const m = ctx.getTransform().inverse()
-  const c = ctx.canvas
-  const pts = [new DOMPoint(0, 0), new DOMPoint(c.width, 0), new DOMPoint(0, c.height), new DOMPoint(c.width, c.height)].map((q) => m.transformPoint(q))
-  return {
-    x0: Math.min(...pts.map((q) => q.x)),
-    x1: Math.max(...pts.map((q) => q.x)),
-    y0: Math.min(...pts.map((q) => q.y)),
-    y1: Math.max(...pts.map((q) => q.y)),
-  }
-}
 
 /** The vignette: the frame's corners a little darker and cooler, so the eye rests in the middle where the lamp is. */
 export function vignette(ctx: Ctx): void {

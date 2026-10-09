@@ -8,7 +8,8 @@ import { bloom, clock, curtain, fairyGlowAt, fairyLights, grain, headlights, mot
 import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
 import { cable, walkman } from './walkman'
-import { night, rgba } from './sky'
+import { rgba, viewOf } from './canvas'
+import { night } from './sky'
 import { CREAM, INK, MOUTH, lampAt, lampColor, lightAt, lit, skyAt } from './world'
 
 /**
@@ -49,19 +50,6 @@ function inCells(p: p5, c: PieceCtx, fn: (ctx: Ctx, lw: number) => void): void {
   ctx.restore()
 }
 
-/** The part of the world (cells) the canvas shows, in the drawing's current transform. */
-function viewOf(ctx: Ctx): { x0: number; y0: number; x1: number; y1: number } {
-  const m = ctx.getTransform().inverse()
-  const W = ctx.canvas.width
-  const H = ctx.canvas.height
-  const pts = [new DOMPoint(0, 0), new DOMPoint(W, 0), new DOMPoint(0, H), new DOMPoint(W, H)].map((q) => m.transformPoint(q))
-  return {
-    x0: Math.min(...pts.map((q) => q.x)),
-    x1: Math.max(...pts.map((q) => q.x)),
-    y0: Math.min(...pts.map((q) => q.y)),
-    y1: Math.max(...pts.map((q) => q.y)),
-  }
-}
 
 
 function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: number): void {

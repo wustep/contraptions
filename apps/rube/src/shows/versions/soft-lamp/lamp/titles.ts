@@ -24,6 +24,11 @@ const FORM = 1.8
 const GO = 1.6
 
 const last = TRACKS[TRACKS.length - 1]
+/**
+ * Where the credits stand in the room's wide frame: on the dark wall right of the fairy lights' last swag and the
+ * clock, over the lamp's arm, short of the print.
+ */
+const CREDITS_AT: [number, number] = [0.785, 0.15]
 const creditsFrom = barTime(last, last.exit) + 2
 
 export const CARDS: Card[] = [
@@ -37,14 +42,14 @@ export const CARDS: Card[] = [
     pos: [0.5, 0.06],
     scale: 0.95,
   })),
-  { at: creditsFrom, hold: 3.6, role: 'Directed by', names: ['Stephen Wu', 'Claude Opus 5.5'], notes: ['drawn with p5.js'], pos: [0.74, 0.1] },
+  { at: creditsFrom, hold: 3.6, role: 'Directed by', names: ['Stephen Wu', 'Claude Opus 5.5'], notes: ['drawn with p5.js'], pos: CREDITS_AT },
   {
     at: creditsFrom + FORM + 3.6 + GO - 0.2,
     hold: 4.6,
     role: 'Music',
     names: ['Lofi Girl'],
     notes: ['Best of lofi hip hop 2021', `its first twelve tracks, ${TRACKS[0].title} to ${last.title}`],
-    pos: [0.74, 0.1],
+    pos: CREDITS_AT,
   },
 ]
 

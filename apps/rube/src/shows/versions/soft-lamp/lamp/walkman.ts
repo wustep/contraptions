@@ -1,7 +1,7 @@
 import { mixHex } from '../../../../parts'
 import { CUP, WALKMAN } from './desk'
 import { MUSIC_END, rmsAt } from './music'
-import { rgba } from './sky'
+import { rgba } from './canvas'
 import { INK, LAMP_ON, lampAt, lightAt, lit } from './world'
 
 /**
