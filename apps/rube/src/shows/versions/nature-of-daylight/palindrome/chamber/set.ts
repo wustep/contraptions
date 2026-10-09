@@ -154,6 +154,7 @@ export function drawChamber(p: p5, k: number, t: number): void {
   drawRail(p, ctx, k, t)
   fallenSuits(ctx, k, t)
   charge(ctx, k, t)
+  soldier(ctx, k, t)
   shards(ctx, k, t)
   ctx.restore()
 }
@@ -875,6 +876,51 @@ function fallenSuits(ctx: Ctx, k: number, t: number): void {
 
 /** The soldiers' charge, on the floor between them and the glass. */
 export const CHARGE: Pt = [6.3, FLOOR]
+/**
+ * The soldier who set the charge: a small dark ball, as everyone but the four of them is. At the cut it is at the charge;
+ * on the next beat it nudges it and the charge's light comes on, armed; on the beat after it hops back over the two of
+ * them and rolls away out of the chamber the way it came. Without it the charge was simply there, and the blast read as
+ * the heptapods' doing.
+ */
+const SOLDIER_R = 0.1
+const SOLDIER_AT = CHARGE[0] - 0.22 - SOLDIER_R - 0.03
+const ARM = 215.65
+const HOP: [number, number] = [216.0, 216.625]
+const HOP_TO = 4.55
+const GONE_BY = 218.4
+function soldierAt(t: number): Pt | null {
+  if (t < T.bomb || t > GONE_BY) return null
+  const y = FLOOR - SOLDIER_R
+  if (t < ARM - 0.25) return [SOLDIER_AT - 0.02 * Math.sin((t - T.bomb) * 5), y]
+  // The nudge: in against the charge on the beat, and back.
+  if (t < HOP[0]) {
+    const u = (t - (ARM - 0.25)) / (HOP[0] - (ARM - 0.25))
+    return [SOLDIER_AT + 0.03 * Math.sin(Math.PI * Math.min(1, u * 1.6)), y]
+  }
+  if (t < HOP[1]) {
+    const u = (t - HOP[0]) / (HOP[1] - HOP[0])
+    return [SOLDIER_AT + (HOP_TO - SOLDIER_AT) * u, y - 0.55 * 4 * u * (1 - u)]
+  }
+  // Away down the chamber, gathering speed, into the dark.
+  const u = (t - HOP[1]) / (GONE_BY - HOP[1])
+  return [HOP_TO - 4.5 * u * u, y]
+}
+function soldier(ctx: Ctx, k: number, t: number): void {
+  const at = soldierAt(t)
+  if (!at) return
+  const [x, y] = at
+  ctx.fillStyle = mix(SHELL.dark, '#000000', 0.35)
+  ctx.beginPath()
+  ctx.arc(x * k, y * k, SOLDIER_R * k, 0, Math.PI * 2)
+  ctx.fill()
+  // The chamber's cold light along its top, so it reads against the dark wall.
+  ctx.strokeStyle = rgba(SHELL.wallLit, 0.55)
+  ctx.lineWidth = Math.max(1, 0.012 * k)
+  ctx.beginPath()
+  ctx.arc(x * k, y * k, SOLDIER_R * k, Math.PI * 1.1, Math.PI * 1.9)
+  ctx.stroke()
+}
+
 function charge(ctx: Ctx, k: number, t: number): void {
   if (t < T.bomb - 1 || t >= T.blast) return
   const [x, y] = CHARGE
