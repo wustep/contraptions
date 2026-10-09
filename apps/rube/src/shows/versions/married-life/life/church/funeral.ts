@@ -145,7 +145,9 @@ function carlPose(T: number): { tilt: number; squash: number } {
   const handOver = -0.13 * smooth(T, DOWN - 0.3, DOWN + 0.3)
   const further = -0.07 * smooth(T, TO_HER_FULL - 0.3, TO_HER_FULL)
   const toHer = (handOver + further) * (1 - smooth(T, WALK, WALK + 0.6))
-  return { tilt: forward + toHer + stoop + up + bow, squash }
+  // The bow comes from his body too: a small settle as it arrives.
+  const bowed = 0.03 * smooth(T, TO_HER_FULL - 0.3, TO_HER_FULL) * (1 - smooth(T, WALK, WALK + 0.4))
+  return { tilt: forward + toHer + stoop + up + bow, squash: squash + bowed }
 }
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */

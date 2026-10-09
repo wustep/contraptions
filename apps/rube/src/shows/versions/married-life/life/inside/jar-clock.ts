@@ -165,7 +165,8 @@ export function plankAt(t: number): number {
   const slam = latest(SLAMS, t + 1e-9)
   const half = 0.5 * rise(s - TOUCHDOWN - 0.04, 0.15)
   // The kick starts a moment before he leaves, so his end is already rising under him: it throws him.
-  const rest = 0.5 * rise(t - (leaveAfter(slam) - 0.05), 0.12)
+  const k = clamp01((t - (leaveAfter(slam) - 0.1)) / 0.12)
+  const rest = 0.5 * (1 - (1 - k) ** 3)
   return FIRED + (COCKED - FIRED) * (half + rest)
 }
 

@@ -167,11 +167,14 @@ const RUN = (() => {
   // one, so he is seen to gain on her while she is still rolling.
   // Front-loaded: a short burst to its peak, held only a moment, then a long ease onto the stone, so most of the gap
   // closes while she is still rolling (the camera follows him, so it is the gap that shows his speed).
+  // Flat out the whole way, a short ease, and on the stone just as she comes to rest (`E.settle`), then still beside
+  // her until his lean: stillness reads, creeping does not; and he never runs into her as she settles.
   const hold = 0.18
   const ta = 0.25
-  const tc = 0.25
+  const td = 0.55
+  const still = T.beside - (E.settle + 0.05)
   const span = T.beside - T.fall
-  const td = span - hold - ta - tc
+  const tc = span - hold - ta - td - still
   const d = HIS_REST - JOLT_TO
   const vp = d / (ta / 2 + tc + td / 2)
   /** The integral of a smoothstep from 0 to `u`. */

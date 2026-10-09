@@ -521,7 +521,11 @@ window.
     the leap move well; the first climb popped up and hovered beside the tread (a regression), now a rise eased at
     both ends with the shift across from a tenth of the way, up and over the nose; the hill's catch-up front-loaded
     so it is seen while she rolls; a small bound before each downbeat of the aisle run; the seesaw's kick a moment
-    before he leaves, so it throws him; the funeral lean deepened on its note so the arrival is felt.
+    before he leaves, so it throws him; the funeral lean deepened on its note so the arrival is felt. A third re-watch:
+    the steps, the chair, the aisle and the funeral bow move well; the hill now runs flat out and arrives as she
+    comes to rest (it had crept for 1.4 s, then, front-loaded, it ran into her as she settled), still beside her to
+    his lean; the seesaw's kick is fast at its start and begins 0.1 s before he leaves, so the plank carries him off;
+    the bow has a small settle in it.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
