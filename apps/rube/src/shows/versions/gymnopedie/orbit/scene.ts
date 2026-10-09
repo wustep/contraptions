@@ -47,7 +47,7 @@ type Ctx2D = CanvasRenderingContext2D
 
 /** The frame on the canvas as the drawing sees it: its height in cells, and the ball's way round it. */
 interface View {
-  /** Cells top to bottom of the canvas. */
+  /** Cells top to bottom of the framed picture (`frameOf`). */
   cells: number
   /** 0 close, 1 when the whole planet is the picture. */
   wide: number
@@ -60,9 +60,11 @@ function viewOf(p: p5, c: PieceCtx): View {
   const ctx = p.drawingContext as Ctx2D
   const m = ctx.getTransform()
   const d = p.pixelDensity()
-  // Cells per canvas height: the transform's scale is device pixels a pixel of the drawing, and k pixels a cell.
+  // Cells per picture height: the transform's scale is device pixels a pixel of the drawing, and k pixels a cell.
   const scale = Math.hypot(m.a, m.b) / d
-  const cells = p.height / (c.k * scale)
+  // Of the framed picture, not the canvas: on a phone held upright the camera frames the same cells across a canvas
+  // with more sky and sea round them, and is no further out.
+  const cells = frameOf(ctx) / d / (c.k * scale)
   const wide = wideAt(cells)
   const u = along(c.t)
   // Once the frame has begun to slide from the ball to the planet's middle, the ball's neighbourhood is no longer
@@ -70,6 +72,14 @@ function viewOf(p: p5, c: PieceCtx): View {
   const half = wide > 0.001 ? LENGTH / 2 : (Math.hypot(p.width, p.height) / (c.k * scale)) * 0.62 + 1.5
   return { cells, wide, u0: u - half, u1: u + half }
 }
+
+/**
+ * How tall the picture is that the camera frames, device pixels: the canvas's height, or on a canvas narrower than
+ * 16:9 (a phone held upright), the height of the 16:9 picture across its width, with more sky and sea round it. What
+ * the sky's own things (the sun and the moon, the bow, the aurora, the rays) are sized by, so they keep their place
+ * over the horizon.
+ */
+const frameOf = (ctx: Ctx2D): number => Math.min(ctx.canvas.height, (ctx.canvas.width * 9) / 16)
 
 /** Where a point of the world (cells) is on the canvas, in device pixels: through the canvas's transform, or `m`. */
 function onCanvas(ctx: Ctx2D, k: number, x: number, y: number, m: DOMMatrix = ctx.getTransform()): [number, number] {
@@ -128,9 +138,8 @@ interface Body {
 
 /** The sun and the moon at `t`, on their arcs over the horizon; they light nothing once the planet is small in the frame. */
 function bodies(ctx: Ctx2D, c: PieceCtx, v: View, day: Sky): Body[] {
-  const H = ctx.canvas.height
   const [hx, hy] = onCanvas(ctx, c.k, ...polar(along(c.t) + 0.55, 0))
-  const reach = H * 0.62
+  const reach = frameOf(ctx) * 0.62
   // Only close: once the planet draws away they are its sky's, not the frame's.
   const near = 1 - smooth(v.wide, 0, 0.25)
   const at = (angle: number, light: number, sun: boolean): Body => ({
@@ -150,6 +159,7 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   const day = weathered(c.t)
   const W = ctx.canvas.width
   const H = ctx.canvas.height
+  const F = frameOf(ctx)
   // The horizon on the canvas: the sea under the frame's middle.
   const u = along(c.t)
   const [, hy] = onCanvas(ctx, c.k, ...polar(u + 0.55, 0))
@@ -199,7 +209,7 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
       const y = H / 2 + Math.sin(a) * r
       if (x < -4 || x > W + 4 || y < -4 || y > H + 4) continue
       // Stars only in the sky: over the horizon, fading into its haze.
-      const over = v.wide > 0.5 ? 1 : smooth(hy - y, 0, H * 0.25)
+      const over = v.wide > 0.5 ? 1 : smooth(hy - y, 0, F * 0.25)
       const tw = 0.7 + 0.3 * osc(c.t, 0.13 + hash(i, 3) * 0.3, i)
       const a2 = starLight * over * tw * (0.25 + 0.75 * hash(i, 4))
       if (a2 < 0.02) continue
@@ -214,11 +224,11 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   // The aurora, over the first Gnossienne's night, among the stars.
   const northern = auroraAt(c.t) * (1 - v.wide)
   if (northern > 0.01) {
-    const sheet = auroraSheet(c.t, Math.ceil(W / 4), Math.ceil(H / 4), along(c.t))
+    const sheet = auroraSheet(c.t, Math.ceil(W / 4), Math.ceil(F / 4), along(c.t))
     ctx.save()
     ctx.globalCompositeOperation = 'lighter'
     ctx.globalAlpha = Math.min(1, 0.62 * northern)
-    ctx.drawImage(sheet, 0, 0, W, H)
+    ctx.drawImage(sheet, 0, hy - AURORA_OVER * F, W, F)
     ctx.restore()
   }
 
@@ -231,27 +241,27 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     const dir = hash(i, 133) > 0.5 ? 1 : -1
     const a = 0.22 + 0.2 * hash(i, 134)
     const sx = W * (dir > 0 ? 0.1 + 0.45 * hash(i, 131) : 0.45 + 0.45 * hash(i, 131))
-    const sy = H * (0.05 + 0.1 * hash(i, 132))
+    const sy = hy - AURORA_OVER * F + F * (0.05 + 0.1 * hash(i, 132))
     const q = 1 - (1 - fall.q) ** 2
     const hx = sx + dir * Math.cos(a) * L * q
     const hy2 = sy + Math.sin(a) * L * q
     const tail = L * 0.32 * Math.min(1, q * 2.5)
     const tx = hx - dir * Math.cos(a) * tail
     const ty = hy2 - Math.sin(a) * tail
-    const light = fall.light * smooth(day.night, 0.3, 0.7) * smooth(hy - hy2, 0, H * 0.12)
+    const light = fall.light * smooth(day.night, 0.3, 0.7) * smooth(hy - hy2, 0, F * 0.12)
     const streak = ctx.createLinearGradient(tx, ty, hx, hy2)
     streak.addColorStop(0, 'rgba(255, 246, 228, 0)')
     streak.addColorStop(1, `rgba(255, 246, 228, ${light.toFixed(3)})`)
     ctx.strokeStyle = streak
     ctx.lineCap = 'round'
-    ctx.lineWidth = Math.max(1.5, H / 330)
+    ctx.lineWidth = Math.max(1.5, F / 330)
     ctx.beginPath()
     ctx.moveTo(tx, ty)
     ctx.lineTo(hx, hy2)
     ctx.stroke()
     ctx.fillStyle = `rgba(255, 250, 238, ${light.toFixed(3)})`
     ctx.beginPath()
-    ctx.arc(hx, hy2, Math.max(1.5, H / 300), 0, Math.PI * 2)
+    ctx.arc(hx, hy2, Math.max(1.5, F / 300), 0, Math.PI * 2)
     ctx.fill()
   }
 
@@ -271,8 +281,8 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     ctx.fill()
     ctx.globalAlpha = 1
   }
-  body(sun, H * 0.045, '#FFF1D6', 'rgba(255, 214, 160, A)')
-  body(moon, H * 0.03, '#F2EEE2', 'rgba(200, 214, 240, A)')
+  body(sun, F * 0.045, '#FFF1D6', 'rgba(255, 214, 160, A)')
+  body(moon, F * 0.03, '#F2EEE2', 'rgba(200, 214, 240, A)')
   ctx.restore()
 
   // The clouds and the gulls, close: once the planet draws away they are too small to be anything.
@@ -394,7 +404,7 @@ function sunRays(ctx: Ctx2D, c: PieceCtx, v: View, sun: Body, light: number): vo
   ctx.clip()
   ctx.globalCompositeOperation = 'lighter'
   const reach = Math.hypot(W, H) * 1.1
-  const glow = ctx.createRadialGradient(sun.x, sun.y, H * 0.06, sun.x, sun.y, reach)
+  const glow = ctx.createRadialGradient(sun.x, sun.y, frameOf(ctx) * 0.06, sun.x, sun.y, reach)
   glow.addColorStop(0, 'rgba(255, 226, 180, 0)')
   glow.addColorStop(0.04, 'rgba(255, 226, 180, 0.4)')
   glow.addColorStop(0.18, 'rgba(255, 214, 166, 0.14)')
@@ -421,6 +431,9 @@ function sunRays(ctx: Ctx2D, c: PieceCtx, v: View, sun: Body, light: number): vo
   ctx.restore()
 }
 
+/** How far over the horizon the aurora's sheet reaches, in heights of the framed picture. */
+const AURORA_OVER = 0.78
+
 /** The bow's colours, outside in. */
 const SPECTRUM = ['236, 120, 116', '240, 170, 104', '238, 220, 128', '146, 204, 140', '120, 166, 220', '160, 132, 210']
 
@@ -436,7 +449,8 @@ function rainbow(ctx: Ctx2D, c: PieceCtx, v: View, sun: Body, light: number, hy:
   const [hx] = onCanvas(ctx, c.k, ...polar(along(c.t) + 0.55, 0))
   const cx = 2 * hx - sun.x
   const cy = hy + (hy - sun.y)
-  const R = H * 0.78
+  const F = frameOf(ctx)
+  const R = F * 0.78
   let low = 0
   for (let i = 0; i <= 12; i++) low = Math.max(low, onCanvas(ctx, c.k, ...polar(v.u0 + ((v.u1 - v.u0) * i) / 12, 0), m)[1])
   ctx.save()
@@ -473,7 +487,7 @@ function rainbow(ctx: Ctx2D, c: PieceCtx, v: View, sun: Body, light: number, hy:
   for (let i = 0; i < SLICES; i++) {
     const y0 = top + ((bottom - top) * i) / SLICES
     const y1 = top + ((bottom - top) * (i + 1)) / SLICES
-    const rise = smooth(hy - (y0 + y1) / 2, 0, H * 0.32)
+    const rise = smooth(hy - (y0 + y1) / 2, 0, F * 0.32)
     if (rise < 0.01) continue
     ctx.save()
     ctx.beginPath()
@@ -964,15 +978,15 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
   const northern = auroraAt(c.t) * (1 - v.wide)
   if (northern > 0.01) {
     const W = ctx.canvas.width
-    const H = ctx.canvas.height
     const [, hy] = onCanvas(ctx, k, ...polar(along(c.t) + 0.55, 0))
-    const sheet = auroraSheet(c.t, Math.ceil(W / 4), Math.ceil(H / 4), along(c.t))
+    const F = frameOf(ctx)
+    const sheet = auroraSheet(c.t, Math.ceil(W / 4), Math.ceil(F / 4), along(c.t))
     ctx.save()
     ctx.clip(water)
     ctx.setTransform(1, 0, 0, -1, 0, 2 * hy)
     ctx.globalCompositeOperation = 'lighter'
     ctx.globalAlpha = Math.min(1, 0.3 * northern)
-    ctx.drawImage(sheet, 0, 0, W, H)
+    ctx.drawImage(sheet, 0, hy - AURORA_OVER * F, W, F)
     ctx.restore()
   }
   // The planet under the sea: deep water all the way down, lit a little from the side the sun is on.
@@ -1027,7 +1041,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     }
     const sunFace = sunWay(c.t) - Math.PI / 2
     const warm = mixHex(day.low, '#FFC48E', 0.65)
-    const px = Math.max(1, ctx.canvas.height / 720)
+    const px = Math.max(1, frameOf(ctx) / 720)
     for (let i = 0; i < 7; i++) {
       const spread = 1.1 - i * 0.14
       p.stroke(alpha(p, warm, (0.05 + i * 0.05) * smooth(v.wide, 0.1, 0.55)))
@@ -1285,14 +1299,15 @@ function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D): void {
   gc.fill(water)
   gc.globalCompositeOperation = 'source-over'
   const src = (g as unknown as { elt: HTMLCanvasElement }).elt
-  const row = Math.max(2, Math.round(H / 240 / 2) * 2)
-  const amp = H / 1500
+  const F = frameOf(ctx)
+  const row = Math.max(2, Math.round(F / 240 / 2) * 2)
+  const amp = F / 1500
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.globalAlpha = strength
   for (let y = top; y < H; y += row) {
-    const deep = (y - top) / H
-    const dx = amp * (0.5 + deep * 7) * (0.6 * osc(c.t, 0.42, (y / H) * 190) + 0.4 * osc(c.t, 0.27, -(y / H) * 311))
+    const deep = Math.min(0.6, (y - top) / F)
+    const dx = amp * (0.5 + deep * 7) * (0.6 * osc(c.t, 0.42, (y / F) * 190) + 0.4 * osc(c.t, 0.27, -(y / F) * 311))
     ctx.drawImage(src, 0, y / 2, w, row / 2, dx, y, w * 2, row)
   }
   ctx.restore()
@@ -1363,7 +1378,7 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
   if (afar > 0.01) {
     const lamp = haloSprite('255, 236, 196', '255, 214, 150', '242, 170, 80')
     const flower = haloSprite('250, 236, 238', '240, 204, 212', '214, 170, 196')
-    const H = ctx.canvas.height
+    const F = frameOf(ctx)
     const spots: [number, number, number, HTMLCanvasElement][] = []
     for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
       if (stone.piece === 1) {
@@ -1384,7 +1399,7 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     for (const [x, y, light, sprite] of spots) {
-      const r = H * (0.006 + 0.008 * light)
+      const r = F * (0.006 + 0.008 * light)
       ctx.globalAlpha = Math.min(1, afar * light * 1.3)
       ctx.drawImage(sprite, x - r, y - r, 2 * r, 2 * r)
     }
@@ -1395,11 +1410,11 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
   if (rain > 0.01) {
     const W = ctx.canvas.width
     const H = ctx.canvas.height
-    const len = H * 0.04
+    const len = frameOf(ctx) * 0.04
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.lineCap = 'round'
-    ctx.lineWidth = Math.max(1, H / 900)
+    ctx.lineWidth = Math.max(1, frameOf(ctx) / 900)
     ctx.strokeStyle = `rgba(226, 232, 242, ${(0.28 * rain).toFixed(3)})`
     ctx.beginPath()
     const count = Math.round(260 * rain)
@@ -1448,7 +1463,6 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     const near = stonesIn(front.u - 0.6, front.u + 0.6)
     if (!near.length) continue
     const { stone, shift } = near[0]
-    const H = ctx.canvas.height
     const m = ctx.getTransform()
     const cell = Math.hypot(m.a, m.b) * k
     const at = front.u - shift
@@ -1459,7 +1473,7 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
       : stone.piece === 1
         ? haloSprite('255, 240, 204', '255, 214, 150', '242, 170, 80')
         : haloSprite('255, 248, 232', '255, 226, 186', '255, 196, 150')
-    const r = Math.max(H * 0.03, cell * 0.9)
+    const r = Math.max(frameOf(ctx) * 0.03, cell * 0.9)
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.globalCompositeOperation = 'lighter'

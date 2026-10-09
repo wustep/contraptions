@@ -157,6 +157,16 @@ number of times in `f` of the way round, and its wind carries it a whole number 
 with the period like everything else. Anything in a layer fades towards the edge of its repeat (`inLayer`), so when the
 camera draws out wider than a repeat nothing jumps across the frame.
 
+## Any screen
+
+The camera frames a 16:9 picture. On a canvas narrower than that (a phone held upright, a tablet) the stage shows the
+same picture across its width with more sky and sea round it. So the sky's things are sized and placed by the framed
+picture's height, hung from the horizon, not by the canvas's (`frameOf`): the sun and the moon keep their arcs over the
+horizon rather than climbing out of sight, the bow stays a bow, the aurora hangs over the stones rather than
+stretching to the top of the screen, and a shooting star falls over the scene. How far out the camera is is measured
+the same way, so nothing that fades as the camera draws out (the gulls, the fireflies, the bow, the reflections) takes
+an upright phone for a wide shot. Audited at 16:9, 21:9, 4:3 and an upright phone.
+
 ## Motion
 
 Audited in motion as well as in stills: the whole period, ten frames a second, measured frame to frame for anything
