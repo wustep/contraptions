@@ -392,7 +392,7 @@ export function vignette(ctx: Ctx): void {
  * Behind the now-playing line, while it is up: a soft dark wash across the top middle of the picture, as a stream puts
  * under its words, so the cream type never stands on the window's cream bars. The type is the page's; this is only
  * what it stands on. `light` is how far the card is up (0 to 1); `at` where its top middle sits in the 16:9 frame.
- * Live and in a recording, in Follow and in Zoom; not in the overview, where the page shows no words.
+ * Live and in a recording, in Follow and in Zoom; not in the overview, nor in a still, which show no words.
  */
 export function scrim(ctx: Ctx, light: number, at: [number, number], frame: number): void {
   if (light <= 0.001) return
@@ -403,6 +403,10 @@ export function scrim(ctx: Ctx, light: number, at: [number, number], frame: numb
   // The stage's overview (the whole room, far wider than the camera's frame `frame`, in cells top to bottom) shows no
   // words, so nothing to stand them on.
   if (bh > frame * 1.3) return
+  // Nor in a still (a saved picture, a share card): the stage paints a still with no words, in a frame of its own
+  // that is never shown; a video's frame is shown, and has the words painted over it.
+  const holder = (ctx.canvas as HTMLCanvasElement).closest?.('.show-frame') as HTMLElement | null
+  if (holder?.hidden) return
   const by0 = (v.y0 + v.y1) / 2 - bh / 2
   const cx = v.x0 + w * at[0]
   const cy = by0 + bh * (at[1] + 0.035)

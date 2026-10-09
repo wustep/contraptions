@@ -471,6 +471,15 @@ ball. The machine and its timing were right and are untouched; the room around i
     moving from run to run (noise). A CPU profile puts the scene's own drawing at a tenth of a per cent or less per
     function. Nothing to take back. The drop and the stair frame by frame, and a yawn, full size: as they were.
 
+### The twenty-sixth lofi pass
+
+68. **The scrim in a saved picture.** The stage paints a still (Save PNG, the share card) with no words, but the wash
+    under the now-playing line was drawn into it whenever a track's card was up: a picture saved in the first seconds
+    of a track had a dark band across the glass, standing under nothing. A still is painted in a frame of its own that
+    is never shown, and a video's is shown with the words painted over it; the wash now keeps to the shown ones. Seen:
+    a still at Destination Unknown's card is clean, and the live page keeps its wash under the name. A video keeps it
+    too, by the stage's code (its frame is shown); not recorded here.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
