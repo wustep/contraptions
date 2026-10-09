@@ -267,11 +267,11 @@ ball. The machine and its timing were right and are untouched; the room around i
 
 34. **Motion, frame by frame**: the drop, the lob's landing and the pot, a turn of the cat's mood, each at a tenth of
     a second, show nothing popping or jumping.
-35. **The cat's best moments were mostly off camera.** Its nodding along was chosen by chance, a phrase at a time, and
-    the camera often spent those phrases on the cup close, which cannot show the cat; three of its six yawns fell
-    there too. Now it plays to the camera (`catInViewAt` in `lamp/camera.ts`): it is likelier to be lost in the music
+35. **Half the cat's best moments were off camera.** Its nodding along was chosen by chance, a phrase at a time, and
+    half of it (nearly five of its ten minutes) fell while the camera was on the cup close or the lamp, which cannot
+    show the cat; three of its six yawns did too. Now it plays to the camera (`catInViewAt` in `lamp/camera.ts`): it is likelier to be lost in the music
     through a phrase the camera spends on it, less likely otherwise, and it yawns only in view (a yawn comes over a
-    nod). Of its eleven minutes nodding along, seven and a half are seen; all six yawns are.
+    nod). Of its eleven minutes nodding along, seven and a half are now seen (two thirds); all six yawns are.
 36. **The fairy lights were glows cut off by the top of the room's frames**, their bulbs just out of it. The two swags
     across the window hang lower, so those frames have the string draped across their top, bulbs and all.
 
