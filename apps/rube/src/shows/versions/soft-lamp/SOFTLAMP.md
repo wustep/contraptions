@@ -259,7 +259,7 @@ ball. The machine and its timing were right and are untouched; the room around i
 32. **The track's artists were fine print** over the busiest part of the frame, the lit city through the rain. Each
     track now comes up as a stream's now-playing line: its name and its artists on one baseline, the artists in gold.
 33. **A clock on the wall**, under the fairy lights between the window and the lamp. It keeps the show's own time from
-    11:41 at night, so midnight passes in Exhale, and its second hand ticks with the small settle of a quartz hand: the
+    11:41 at night, so midnight passes in Stargazing, and its second hand ticks with the small settle of a quartz hand: the
     one thing in the room that moves on the second. Sized to the gap between two held frames' edges, so every frame
     shows it whole or not at all.
 
