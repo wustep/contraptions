@@ -499,7 +499,9 @@ ball. The machine and its timing were right and are untouched; the room around i
     holds. That frame sits 0.07 of a cell lower now (its middle at y = -0.57): 16:10 is clean, 3:2 loses its cut notes
     too, and 16:9 and Zoom are as they were. Left: 4:3 cuts the clock and the shade in a few looks, and 21:9 shows half
     the cat at the cup close's left edge (no one cup frame can keep the cat out at 16:9 and whole at 21:9 without
-    cutting the books); both rarer screens, and the check stays on 16:9.
+    cutting the books); both rarer screens, and the check stays on 16:9. Clearing 3:2's shade too would take the cup close down
+    to y = -0.47 or lower; tried at -0.50, the 16:9 frame went bottom-heavy (the desk and its drawers a third of it,
+    the sill against the top) and still touched the shade. Kept at -0.57.
 
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
