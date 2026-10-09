@@ -550,6 +550,8 @@ The notes went back to the builders who made each part, who still had their cont
   production build. It passes. The show's own chunk loads only when it is opened. It is 390 KB (143 KB gzipped)
   against `origin/main`'s 376 KB (138 KB), so every pass together added 5.4 KB on the wire. Vite's warning about
   chunks over 500 KB is for other parts of the site.
+  Run again after the looks, the bags and the machines: it still passes (3,065 checks, one of them new), and the
+  chunk is 391.5 KB (143.7 KB gzipped), 5.7 KB gzipped over `origin/main` in all.
 - **A pass for Waymond on the line.** In the peak he catches the line and drops as the weight that pulls Joy back out
   of the bagel, but his eye only swung with his fall. Now from his catch (247.9 s) he watches Joy, until he is
   carried down out of the frame (249.6 s).
