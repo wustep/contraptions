@@ -513,9 +513,11 @@ window.
   - *Motion* (a motion critic, from filmstrips at 12 to 24 frames a second). Taken: his lean to her picture held and
     let go with drag as he walks (it had been a wobble that never held); Ellie's leap at the mailbox gathered, drawn
     out along its flight and landing wide on its note (`leapShape`); old Carl climbing his steps and his chair as a
-    climb (`climbUp`), with a gather before each step and a heavier settle. Open for a later pass: his hurry down the
-    hill (no contrast of a frozen beat and a burst), his upright skate down the aisle after the kiss, and the seesaw
-    lifting him on its reset.
+    climb (`climbUp`), with a gather before each step and a heavier settle. Then the other three: his hurry down the
+    hill, a frozen beat on the strike and a burst to twice his old speed, gaining on her as she rolls, leaning into
+    it with a stride's bob (`RUN`); his run down the aisle, half his kiss lean kept as a lean into the run and a
+    bounce on each downbeat, upright again before the cut; the seesaw rising only half way under his weight and the
+    rest as he takes off, so the reset launches him (`leaveAfter`).
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 

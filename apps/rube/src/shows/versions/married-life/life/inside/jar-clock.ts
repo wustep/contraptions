@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { ONSETS, SEAM, beat } from '../music'
+import { ONSETS, SEAM, beat, beatsIn } from '../music'
 
 /**
  * The living room's clock and its geometry (the jar builder's): every time the room keeps, every place in it, and the
@@ -159,7 +159,24 @@ export function plankAt(t: number): number {
   if (!Number.isFinite(s)) return COCKED
   // His weight drives it down from the moment he lands on it, gathering, until it thumps the floor on the beat.
   if (s < TOUCHDOWN) { const u = s / TOUCHDOWN; return COCKED + (FIRED - COCKED) * (0.55 * u + 0.45 * u * u) }
-  return FIRED + (COCKED - FIRED) * rise(s - TOUCHDOWN - 0.04, 0.11)
+  // The counterweight takes it back up, but his weight is still on it: half way, and the rest as he leaves it (on the
+  // next stroke's pickup, when he takes off for it; after a run's last stroke, a moment later), so the reset launches
+  // him instead of lifting him like a feather.
+  const slam = latest(SLAMS, t + 1e-9)
+  const half = 0.5 * rise(s - TOUCHDOWN - 0.04, 0.15)
+  const rest = 0.5 * rise(t - leaveAfter(slam), 0.12)
+  return FIRED + (COCKED - FIRED) * (half + rest)
+}
+
+/** When he leaves the plank after the stroke at `slam`: the next stroke's pickup (beat 3 of the bar before it), if the
+ * strokes go on bar by bar; else 0.7 s after. */
+function leaveAfter(slam: number): number {
+  const next = SLAMS.find((x) => x > slam + 0.01)
+  if (next !== undefined && next - slam < 1.3) {
+    const three = beatsIn(next - 0.6, next).filter((b) => b.pos === 3)
+    if (three.length) return three[three.length - 1].t
+  }
+  return slam + 0.7
 }
 
 /** A point on the plank at `d` along it from the axle, raised `up` off its centre line (its top is 0.035 up). */

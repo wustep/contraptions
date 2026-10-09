@@ -159,30 +159,32 @@ const CLIMB_TO = STEP.x0 - 1.6
 const JOLT_TO = CLIMB_TO + 0.08
 
 /**
- * His run down to her: from the jolt's landing (moving already, `RUN.v0`), gathering to his top speed, holding it,
- * and easing to rest beside her; a velocity that rises and falls by smoothsteps, so it never kicks. Horizontal
- * cells/s; on the flank that is about 0.9 along the ground at its fastest.
+ * His run down to her: stopped by his lurch's landing for a frozen beat, then a burst to his top speed, held, and eased
+ * to rest beside her; a velocity that rises and falls by smoothsteps, so it never kicks. Horizontal cells/s.
  */
 const RUN = (() => {
-  const v0 = (2 * (JOLT_TO - CLIMB_TO)) / (T.fall - T.jolt)
-  const ta = 0.45
-  const td = 1.2
+  // The same ends as ever: from the jolt's landing, beside her on 177.3; the burst is to a top speed well over the old
+  // one, so he is seen to gain on her while she is still rolling.
+  const hold = 0.18
+  const ta = 0.3
+  const td = 1.0
   const span = T.beside - T.fall
-  const tc = span - ta - td
+  const tc = span - hold - ta - td
   const d = HIS_REST - JOLT_TO
-  const vp = (d - (v0 * ta) / 2) / (ta / 2 + tc + td / 2)
+  const vp = d / (ta / 2 + tc + td / 2)
   /** The integral of a smoothstep from 0 to `u`. */
   const I = (u: number) => u * u * u - (u * u * u * u) / 2
   const at = (tau: number): number => {
-    if (tau <= 0) return 0
-    if (tau < ta) return v0 * tau + (vp - v0) * ta * I(tau / ta)
-    const a = v0 * ta + ((vp - v0) * ta) / 2
-    if (tau < ta + tc) return a + vp * (tau - ta)
+    const t = tau - hold
+    if (t <= 0) return 0
+    if (t < ta) return vp * ta * I(t / ta)
+    const a = (vp * ta) / 2
+    if (t < ta + tc) return a + vp * (t - ta)
     const b = a + vp * tc
-    const u = Math.min(1, (tau - ta - tc) / td)
+    const u = Math.min(1, (t - ta - tc) / td)
     return b + vp * td * (u - I(u))
   }
-  return { v0, vp, at }
+  return { vp, at }
 })()
 
 /** Carl in the hill's cells at show time `t`. */
@@ -247,7 +249,18 @@ function bearing(t: number): { tilt: number; squash: number } {
   tilt += 0.1 * smooth(t, T.top, T.top + 0.35) * (1 - smooth(t, T.fall, T.fall + 0.5))
   // Beside her, he leans to her; after her answer he straightens, upright for the cut (his chair's side is upright).
   tilt += 0.12 * smooth(t, T.lean, T.beside + 0.45) * (1 - smooth(t, T.rise, END - 0.05))
+  // Hurrying down to her: a lean into the run with his speed, and a stride's bob while he goes.
+  if (t > T.fall && t < T.beside) {
+    const v = (carl(t + 0.02)[0] - carl(t - 0.02)[0]) / 0.04
+    const pace = Math.max(0, Math.min(1, v / RUN.vp))
+    tilt += 0.1 * pace
+  }
   let squash = 0
+  if (t > T.fall && t < T.beside) {
+    const v = (carl(t + 0.02)[0] - carl(t - 0.02)[0]) / 0.04
+    const pace = Math.max(0, Math.min(1, v / RUN.vp))
+    squash += 0.03 * pace * Math.abs(Math.sin(Math.PI * 3 * (t - T.fall)))
+  }
   for (const at of [T.onStep, T.fall]) {
     const ago = t - at
     if (ago >= 0 && ago < 0.8) squash += 0.1 * Math.exp(-ago / 0.12) * Math.max(0, Math.cos(ago * 9))

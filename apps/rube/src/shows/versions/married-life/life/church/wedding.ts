@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import type { Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, smooth, type Companion, type Ctx } from '../kit'
-import { CUT } from '../music'
+import { bar, CUT } from '../music'
 import { CUTS } from '../seams'
 import { CHURCH, HOME, INK } from '../worlds'
 import { ALTAR_CARL, ALTAR_ELLIE, bounce, box2, CH, CHURCH_BOX, drawPetals, ease, lift, paint, poly, rankLight, WED } from './church'
@@ -126,6 +126,8 @@ const rise = (T: number): number => (toward(T, HER_RISE) + 0.018 * breathIn(T)) 
  */
 const HER_RUN = 18.483
 const HIS_RUN = 18.663
+/** The waltz's downbeats as he runs down the aisle (bars 2 to 4). */
+const RUN_BEATS = [bar('waltz', 2), bar('waltz', 3), bar('waltz', 4)]
 const DOORS = 21.223
 /** Where the two are at the cut, world x, running 1.6 cells a second: he in the doorway, she out on the landing. */
 const CUT_CARL = CH.tower[1] - CH.wall / 2
@@ -207,8 +209,11 @@ function carlPose(T: number): { tilt: number; squash: number } {
   }
   // Stepped away, he looks back at the pews; he stops looking as he steps back in.
   const glance = 0.07 * smooth(T, 6.1, 6.6) * (1 - smooth(T, 7.3, 7.85))
-  // His lean toward her, growing a step on each of the slowing march's onsets into the kiss; straightened as he runs.
-  const lean = toward(T, HIS_LEAN) * (1 - ease(T, HER_RUN - 0.07, HIS_RUN + 0.35))
+  // His lean toward her, growing a step on each of the slowing march's onsets into the kiss; as he runs, half of it is
+  // kept as a lean into the run (toward the doors, as she is), let go before the cut so he is upright across it.
+  const lean = toward(T, HIS_LEAN) * (1 - 0.5 * ease(T, HER_RUN - 0.07, HIS_RUN + 0.35)) * (1 - ease(T, 20.95, 21.45))
+  // Running out, a bounce on each of the waltz's downbeats: young, glad.
+  for (const b of RUN_BEATS) squash += 0.06 * (T >= b ? knock(T - b, 0.13) : 0)
   // Each step of it a small settle as it lands.
   for (const [, b] of TOWARD) squash += 0.025 * (T < b ? ease(T, b - 0.12, b) : knock(T - b, 0.16))
   return { tilt: step + glance + lean, squash }
