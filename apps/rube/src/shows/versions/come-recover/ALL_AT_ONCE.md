@@ -259,8 +259,8 @@ The notes went back to the builders who made each part, who still had their cont
 - **Polish round 4, the shop's walls in the opening.** The opening was watched at the viewer's own framing, not the
   share card's wider one. Through Joy's visit and the taxes (19.8 to 30.6) the top third of the two-shot was bare
   cream wall.
-  - Over the counter's far end, where the taxes are done, a corkboard: two receipts pinned up, a red envelope, and a
-    crayon drawing Joy made when she was small, the three of them in their own colours under a sun. It hangs over
+  - Over the counter's far end, where the taxes are done, a corkboard: a red envelope, and a crayon drawing Joy made
+    when she was small, the three of them in their own colours under a sun. It hangs over
     her mother at the adding machine all through the visit she does not look up from. It sits clear of the throw up
     to the hanger, which leaves from the counter's near end.
   - High between the door's washer and the counter (higher still after a later pass), a shelf: a white lucky cat waving its paw, a money plant
@@ -293,6 +293,12 @@ The notes went back to the builders who made each part, who still had their cont
     mother's gold one. It answers the great hit without outdoing it.
   - Every burst is now drawn under every eye, and each burst has every eye-wearing ball cut out of it. Joy's light,
     beside her mother, no longer veils Evelyn's face or tints her vermilion.
+- **A pass for the receipt storm.** The washer's slam, the storm and the portrait's flash were watched at 10 fps.
+  The storm (13.7 to 16.7 s) goes up right across the corkboard over the counter, and the receipts pinned on the
+  board made the flying ones look pinned too.
+  - The board no longer has receipts. Its cork is darker, it is a little smaller, and Joy's drawing is on yellow
+    construction paper. Nothing on it is white paper, so every receipt in the storm reads as flying in front of it.
+  - The drawing reads better in the two-shot of her visit too.
 
 ## End credits
 

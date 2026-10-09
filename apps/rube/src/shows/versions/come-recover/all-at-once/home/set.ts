@@ -1161,10 +1161,12 @@ const SHELF = { x0: -1.3, x1: -0.14, y: -3.7 }
 const PHOTO = { x: -0.67, w: 0.4, h: 0.33 }
 /**
  * A corkboard over the counter's far end, where the taxes are done, low enough to be in the two-shot of Joy's visit
- * and clear of the throw up to the hanger at the counter's near end: receipts pinned up, a red envelope, and a crayon
- * drawing Joy made when she was small, the three of them in a row under a sun.
+ * and clear of the throw up to the hanger at the counter's near end: a red envelope, and a crayon drawing Joy made
+ * when she was small, the three of them in a row under a sun. The receipt storm goes up across it, so nothing on it
+ * is white paper: the drawing is on yellow construction paper and the cork is dark, and a flying receipt never reads
+ * as one pinned there.
  */
-const CORK = { x: 2.02, y: -2.3, w: 1.12, h: 0.6 }
+const CORK = { x: 2.02, y: -2.3, w: 0.92, h: 0.56 }
 
 function nail(pen: Pen, x: number, y: number): void {
   const { p, k, ink, w } = pen
@@ -1211,27 +1213,13 @@ function corkboard(pen: Pen): void {
   const { x, y, w: bw, h: bh } = CORK
   solid(p, ink, w, HOME.wood)
   p.rect(x * k, y * k, bw * k, bh * k, 0.03 * k)
-  solid(p, ink, w * 0.4, mixHex(HOME.wood, HOME.butter, 0.45))
+  solid(p, ink, w * 0.4, mixHex(HOME.wood, HOME.night, 0.2))
   p.rect(x * k, y * k, (bw - 0.1) * k, (bh - 0.1) * k)
   const L = x - bw / 2
   const T = y - bh / 2
-  // Receipts, long and curling a little, pinned at their tops.
-  const receipt = (cx: number, top: number, len: number, lean: number) => {
-    p.push()
-    p.translate(cx * k, top * k)
-    p.rotate(lean)
-    solid(p, ink, w * 0.35, HOME.paper)
-    p.rect(0, (len / 2) * k, 0.15 * k, len * k)
-    outline(p, mixHex(HOME.paper, ink, 0.35), Math.max(1, w * 0.3))
-    for (let i = 1; i < len / 0.06; i++) p.line(-0.045 * k, (i * 0.06) * k, (0.02 + 0.025 * ((i * 7) % 3)) * k, (i * 0.06) * k)
-    p.pop()
-    pin(pen, cx, top + 0.03, HOME.red)
-  }
-  receipt(L + 0.16, T + 0.08, 0.36, -0.06)
-  receipt(L + 0.32, T + 0.1, 0.28, 0.08)
   // The red envelope, tucked in at an angle, a gold mark on it.
   p.push()
-  p.translate((L + 0.88) * k, (T + 0.36) * k)
+  p.translate((L + 0.72) * k, (T + 0.3) * k)
   p.rotate(0.12)
   solid(p, ink, w * 0.4, HOME.red)
   p.rect(0, 0, 0.17 * k, 0.26 * k, 0.01 * k)
@@ -1240,9 +1228,9 @@ function corkboard(pen: Pen): void {
   p.pop()
   // Joy's drawing: a sheet of paper, a little crooked, three round faces in crayon in their own colours, a sun.
   p.push()
-  p.translate((L + 0.6) * k, (T + 0.27) * k)
+  p.translate((L + 0.33) * k, (T + 0.28) * k)
   p.rotate(-0.07)
-  solid(p, ink, w * 0.35, HOME.paper)
+  solid(p, ink, w * 0.35, mixHex(HOME.butter, HOME.paper, 0.35))
   p.rect(0, 0, 0.42 * k, 0.32 * k)
   p.noFill()
   p.strokeWeight(Math.max(1, 0.018 * k))
@@ -1265,7 +1253,7 @@ function corkboard(pen: Pen): void {
   p.stroke('#5E9E62')
   p.line(-0.18 * k, 0.13 * k, 0.18 * k, 0.125 * k)
   p.pop()
-  pin(pen, L + 0.6 - 0.005, T + 0.12, HOME.gold)
+  pin(pen, L + 0.33 - 0.005, T + 0.13, HOME.red)
 }
 
 function shelf(pen: Pen, t: number): void {
