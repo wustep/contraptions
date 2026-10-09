@@ -258,6 +258,14 @@ A sixth watched it through the player's other two cameras, Overview (the whole w
   now, from just under the top of the duvet widening to its hem, kept inside it; and the blanket over Hannah runs down
   into the duvet and its turned-down edge tapers away, where both had stopped in a small step.
 
+A seventh looked full size at the heptapods, which until then had only been seen small:
+
+- **Abbott and Costello fading** (out of the white at the glass, and paling away in the fog) were drawn straight at the
+  fade, so every limb laid over the body or over another limb doubled up: darker patches and seams showed through the
+  ghost of a heptapod. A faded heptapod is drawn whole on a layer of its own and laid down at the fade, so it comes and
+  goes as one shape.
+- **Costello's pointing limb** in the fog, its hand closed, stopped square: a stump. Its end is rounded over now.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

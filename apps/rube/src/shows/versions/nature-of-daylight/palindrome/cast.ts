@@ -328,6 +328,37 @@ function drawPalm(ctx: Ctx, c: Pt, r: number, open: number, angle: number, color
  */
 export function drawHeptapod(p: p5, k: number, x: number, y: number, s: number, o: HeptapodLook = {}): void {
   const ctx = ctxOf(p)
+  const alpha = ctx.globalAlpha
+  if (alpha >= 0.995 || alpha <= 0.002) {
+    if (alpha > 0.002) heptapodOn(ctx, k, x, y, s, o)
+    return
+  }
+  // Faded (coming out of the fog, going into it), it fades as one shape: drawn whole at full strength on a layer of
+  // its own, then laid down at the fade. Drawn straight at the fade, every limb over the body and over another limb
+  // doubled up, and the seams showed through it.
+  const layer = layerFor(ctx.canvas.width, ctx.canvas.height)
+  const lc = layer.getContext('2d')!
+  lc.setTransform(1, 0, 0, 1, 0, 0)
+  lc.clearRect(0, 0, layer.width, layer.height)
+  lc.setTransform(ctx.getTransform())
+  lc.globalAlpha = 1
+  lc.globalCompositeOperation = 'source-over'
+  heptapodOn(lc, k, x, y, s, o)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.drawImage(layer, 0, 0)
+  ctx.restore()
+}
+
+let layer: HTMLCanvasElement | null = null
+function layerFor(w: number, h: number): HTMLCanvasElement {
+  if (!layer) layer = document.createElement('canvas')
+  if (layer.width !== w) layer.width = w
+  if (layer.height !== h) layer.height = h
+  return layer
+}
+
+function heptapodOn(ctx: Ctx, k: number, x: number, y: number, s: number, o: HeptapodLook): void {
   const fogC = o.fogColor ?? FOG.white
   const base = o.color ?? FOG.heptapod
   const depth = clamp01(o.fog ?? 0.35)
@@ -376,6 +407,11 @@ export function drawHeptapod(p: p5, k: number, x: number, y: number, s: number, 
     ctx.fillStyle = g
     ctx.fill()
     const open = clamp01(o.reach.open ?? 0)
+    // Its end rounded over, a closed hand: with no palm open it stopped square, a stump.
+    ctx.fillStyle = mix(col(0), fogC, 0.08)
+    ctx.beginPath()
+    ctx.arc(tip[0], tip[1], S * 0.045 * 0.62, 0, Math.PI * 2)
+    ctx.fill()
     if (open > 0.01) {
       const ang = Math.atan2(tip[1] - from[1], tip[0] - from[0])
       drawPalm(ctx, tip, (o.reach.palm ?? s * 0.15) * k, open, ang, col(0))
