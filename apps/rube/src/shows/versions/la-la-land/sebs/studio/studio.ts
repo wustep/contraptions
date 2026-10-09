@@ -96,6 +96,33 @@ const DUSK_LIGHTS: [number, number, number][] = Array.from({ length: 46 }, (_, i
   return [H(x), y, 0.06 + 0.05 * hash(i, 53)]
 }).filter(([, y]) => y < -1.5)
 
+/** Palms along the foot of the painted mountain (Hollywood frame): where each stands, how tall, its lean. */
+const PALMS = Array.from({ length: 22 }, (_, i) => ({ x: -9 + i * 2.45 + 0.9 * (hash(i, 55) - 0.5), h: 1.6 + 1.1 * hash(i, 56), lean: (hash(i, 57) - 0.5) * 0.25 }))
+/** A palm painted flat: a thin curving trunk and a burst of fronds. */
+function paintedPalm(p: p5, k: number, x: number, foot: number, h: number, lean: number, fill: string): void {
+  const tx = x + lean * h
+  const ty = foot - h
+  p.noFill()
+  p.stroke(fill)
+  p.strokeWeight(Math.max(1, X(k, 0.07)))
+  p.beginShape()
+  p.vertex(X(k, x), X(k, foot))
+  p.quadraticVertex(X(k, x + lean * h * 0.3), X(k, foot - h * 0.55), X(k, tx), X(k, ty))
+  p.endShape()
+  p.strokeWeight(Math.max(1, X(k, 0.05)))
+  for (let j = 0; j < 7; j++) {
+    const a = -Math.PI / 2 + (j - 3) * 0.48
+    const L = 0.55 + 0.12 * Math.cos(j * 1.3)
+    const ex = tx + Math.cos(a) * L
+    const ey = ty + Math.sin(a) * L * 0.6 + 0.2 * Math.abs(j - 3) * 0.12
+    p.beginShape()
+    p.vertex(X(k, tx), X(k, ty))
+    p.quadraticVertex(X(k, tx + Math.cos(a) * L * 0.5), X(k, ty + Math.sin(a) * L * 0.5 - 0.12), X(k, ex), X(k, ey + 0.15))
+    p.endShape()
+  }
+  p.noStroke()
+}
+
 /** The cloth's painted clouds: long banks low and high in the sky, each a few flat lobes (Hollywood frame, landed). */
 const CLOUDS: { x: number; y: number; fill: string; lobes: [number, number, number, number][] }[] = [
   { x: 1.5, y: -12.6, fill: mixHex(M.skyTop, M.skyLow, 0.55), lobes: [[0, 0, 2.6, 0.32], [1.6, -0.25, 1.5, 0.3], [-1.4, 0.1, 1.2, 0.22]] },
@@ -347,6 +374,34 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
     for (const [x, y] of MOUNTAIN) p.curveVertex(X(k, x), X(k, Math.min(bottom - 0.4, y + dy + down * (1 + 0.15 * Math.sin(x * 0.7)))))
     p.endShape()
   }
+  // The observatory on the far ridge, catching the last of the sun: a long low building, a dome at each end and the
+  // great one in the middle. Painted flat, a shade darker than the ridge, its domes rimmed with the sunset.
+  {
+    const ox = H(4.6)
+    let oy = -8.9
+    for (let j = 0; j + 1 < RIDGE.length; j++) {
+      const [ax, ay] = RIDGE[j]
+      const [bx, by] = RIDGE[j + 1]
+      if (ox >= ax && ox <= bx) oy = ay + ((by - ay) * (ox - ax)) / (bx - ax)
+    }
+    const base = oy + dy + 0.05
+    const wall = mixHex(M.ridge, M.mountain, 0.55)
+    p.noStroke()
+    p.fill(wall)
+    p.rect(X(k, ox - 1.5), X(k, base - 0.42), X(k, 3.0), X(k, 0.47))
+    for (const [dx, r] of [[-1.2, 0.26], [1.2, 0.26], [0, 0.5]] as const) {
+      p.fill(wall)
+      p.rect(X(k, ox + dx - r * 0.75), X(k, base - 0.42 - (dx ? 0.18 : 0.3)), X(k, r * 1.5), X(k, dx ? 0.18 : 0.3))
+      p.arc(X(k, ox + dx), X(k, base - 0.42 - (dx ? 0.18 : 0.3)), X(k, r * 1.7), X(k, r * 1.7), Math.PI, Math.PI * 2)
+      p.noFill()
+      p.stroke(rgba(M.horizon, 0.55))
+      p.strokeWeight(Math.max(1, X(k, 0.035)))
+      p.arc(X(k, ox + dx), X(k, base - 0.42 - (dx ? 0.18 : 0.3)), X(k, r * 1.7), X(k, r * 1.7), Math.PI * 1.15, Math.PI * 1.85)
+      p.noStroke()
+    }
+  }
+  // A row of palms at the mountain's foot, painted dark against the glow: the city the number is in.
+  for (const pm of PALMS) paintedPalm(p, k, H(pm.x), -1.55 + dy, pm.h, pm.lean, mixHex(M.hillDeep, M.mountain, 0.35))
   p.noStroke()
   for (const [x, y, r] of DUSK_LIGHTS) {
     p.fill(rgba(M.horizon, 0.75))
