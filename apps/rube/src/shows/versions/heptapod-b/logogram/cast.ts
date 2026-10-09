@@ -276,7 +276,9 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
   const bw = (0.17 + 0.02 * who) * h
   const colorAt = (depth: number) => mixHex(base, air, Math.min(1, fog + depth * 0.35 * (1 - fog)))
   ctx.save()
-  ctx.globalAlpha *= light
+  // Deepest in the fog it goes by fading, not by paling further: its colour is the air's at the fog's whitest, and
+  // against fog that is greyer in places it would stand out as white limbs, a ghost brighter than what it is in.
+  ctx.globalAlpha *= light * Math.min(1, (1 - fog) / 0.15)
   p.push()
   p.noStroke()
   // Limbs first, the back ones before the front, then the body over their roots, then the front limb over the body.
