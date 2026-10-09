@@ -497,6 +497,11 @@ flash (219.2), was not that:
 A thirty-second ran that search over the whole show, 0 to 408 s at ten frames a second (4081 frames), not only the
 spans the story rounds had touched: no frame was unlike both its neighbours. Nothing to change.
 
+A thirty-third timed the stage again, as the ninth had, since the story rounds had added things drawn every frame (the
+soldier, the ghost of the phone and its glows, the charge's larger glow, Abbott's longer reach): the live stage played
+at seventeen moments under a fourfold CPU throttle, against the twentieth round's commit, frames a second counted, and
+again at the reunion and the window room. Within the noise everywhere. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
