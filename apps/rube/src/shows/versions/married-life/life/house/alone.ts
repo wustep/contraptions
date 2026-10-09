@@ -155,7 +155,16 @@ function middleAt(cells: number): Pt {
  */
 export function zoomDropAt(T: number): number {
   const steps = (0.33 * ramp(T, 203.8, 205.0) + 0.17 * ramp(T, A.up[2], ALONE.steps[2])) * (1 - ramp(T, 208.4, 209.4))
-  return 0.25 * ramp(T, 226.5, 230.5) - steps
+  return 0.25 * ramp(T, 226.5, 230.5) * zoomFullAt(T) - steps
+}
+
+/**
+ * The credits are set over the show's own frame's sky; under Zoom, still a cell and a half closer, the house filled
+ * the frame and the first cards lay over its roof and chimney (236 to 241 s). So Zoom eases back to the show's own
+ * frame before the first card (`Framing.zoomFull`), and its low hold with it.
+ */
+export function zoomFullAt(T: number): number {
+  return 1 - ramp(T, CREDITS_AT - 3.2, CREDITS_AT - 0.2)
 }
 
 /**

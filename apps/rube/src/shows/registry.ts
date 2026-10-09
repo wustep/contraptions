@@ -38,15 +38,20 @@ export interface Framing {
    * left of it). Left out, Zoom holds the middle.
    */
   zoomSlide?: number
+  /**
+   * Under Zoom, how much of Zoom's closeness applies, 0 to 1: for a stretch composed for the show's own frame (credits
+   * set over its sky), where Zoom eases back to it. Left out, all of it.
+   */
+  zoomFull?: number
 }
 
 /**
- * Zoom's frame for a framing: `zoom` times as close, round its middle moved by `zoomDrop` and `zoomSlide` (shares of
- * the Zoom frame's half height and half width). The stage draws with it, and checks that hold a show to Zoom measure
+ * Zoom's frame for a framing: `zoom` times as close (or less, by `zoomFull`), round its middle moved by `zoomDrop` and
+ * `zoomSlide` (shares of the Zoom frame's half height and half width). The stage draws with it, and checks that hold a show to Zoom measure
  * with it, so the two can never disagree.
  */
 export function zoomFrame(f: Framing, zoom: number): Framing {
-  const cells = f.cells / zoom
+  const cells = f.cells / (1 + (zoom - 1) * Math.max(0, Math.min(1, f.zoomFull ?? 1)))
   return {
     ...f,
     cells,

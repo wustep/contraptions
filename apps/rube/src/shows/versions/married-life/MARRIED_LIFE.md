@@ -377,7 +377,9 @@ window.
     Zoom holds off the frame's middle: higher on the home steps, lower through the credits; `zoomDropAt` in
     `house/alone.ts`, `hospitalZoomDrop` in `clinic/hospital.ts`, `fixupZoomDrop` in `house/fixup.ts`), and on top of
     those Zoom's own hold, `zoom.ts`: worked out once for the whole show, it keeps the two of them off the Zoom frame's
-    edges (`zoomDrop` and `zoomSlide`) without pushing the topmost of them or the balloon's crown out.
+    edges (`zoomDrop` and `zoomSlide`) without pushing the topmost of them or the balloon's crown out. Before the
+    credits Zoom eases back to the show's own frame (`zoomFull`, `zoomFullAt` in `house/alone.ts`), which the cards
+    are set over. Each is read through `zoomFrame` in `registry.ts`, by the stage and the checks alike.
 - **The places and their parts**, one builder each:
   - `church/`: `church.ts` (the set, in two lights), `wedding.ts`, `funeral.ts`.
   - `house/`: `front.ts` (the street side), `front-house.ts` (the house drawn old, new, faded, at dusk),
@@ -670,6 +672,13 @@ window.
   the arithmetic from a framing to Zoom's frame was written out four times (the stage, and three of this show's
   checks), so a change to one could leave the checks measuring something other than what is drawn. It is one helper
   now, `zoomFrame` in `registry.ts`, used by all four; the stage's contract check asserts it instead of the old text.
+
+- **Polish round 32 (Opus 5.5).** The credits with Zoom on, a combination not looked at before: on the page, the first
+  two cards (Directed by, the cast) lay over the roof and chimney, Zoom still a cell and a half closer on a house that
+  filled the frame; no hold fits both the cards over it and the lit window under them. The credits are composed for
+  the show's own frame, and Zoom's closeness on the two of them is moot once the cards begin, so Zoom now eases back
+  to the show's own frame over the three seconds before the first card (`Framing.zoomFull`, new, read in
+  `zoomFrame`); every card lies over the sky, under Zoom as without it.
 
 ## Known limits
 

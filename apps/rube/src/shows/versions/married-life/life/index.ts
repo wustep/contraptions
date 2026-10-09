@@ -1,6 +1,6 @@
 import type { Framing, Performance } from '../../../registry'
 import { creditsAt } from './credits'
-import { zoomDropAt } from './house/alone'
+import { zoomDropAt, zoomFullAt } from './house/alone'
 import { hospitalZoomDrop } from './clinic/hospital'
 import { fixupZoomDrop } from './house/fixup'
 import { DURATION } from './music'
@@ -15,7 +15,8 @@ export { show }
 function held(t: number): Framing {
   const f = camera(t)
   const drop = zoomDropAt(t) + hospitalZoomDrop(t) + fixupZoomDrop(t)
-  return drop ? { ...f, zoomDrop: drop } : f
+  const full = zoomFullAt(t)
+  return drop || full < 1 ? { ...f, ...(drop ? { zoomDrop: drop } : {}), ...(full < 1 ? { zoomFull: full } : {}) } : f
 }
 function framed(t: number): Framing {
   const f = held(t)

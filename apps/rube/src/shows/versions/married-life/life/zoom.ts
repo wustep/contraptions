@@ -1,4 +1,4 @@
-import type { Framing } from '../../../registry'
+import { zoomFrame, type Framing } from '../../../registry'
 import { R } from '../../../../parts'
 import { BALLOON_SIZE } from './props/balloon'
 import { anchorIn, BALLOON_FROM, HALF, stringAt } from './cast'
@@ -26,9 +26,10 @@ type Need = { drop: number; slide: number }
 type Raw = Need & { capDown: number; capLeft: number; capRight: number }
 
 function needAt(show: LifeShow, f: Framing, t: number): Raw {
-  const zh = f.cells / 1.5 / 2
+  const z = zoomFrame(f, 1.5)
+  const zh = z.cells / 2
   const zw = (zh * 16) / 9
-  const zy = f.y + (f.zoomDrop ?? 0) * zh
+  const zy = z.y
   const h = show.at(t)
   const e = show.ellie(t)
   const bodies: [number, number, number][] = []
