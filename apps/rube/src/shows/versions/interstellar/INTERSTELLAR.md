@@ -13,7 +13,9 @@ Open it at `/shows/interstellar/`. In the Shows picker it is its own work, **Voy
 A Rube Goldberg machine plays two cues back to back, 4:23 of music, and then 28 s of end credits in silence over the last scene: 4:51 in all. Three balls tell the story, as the film does.
 - **Joseph Cooper is the sand ball** (`#F0C987`): the thread. He has the farm, he drives the truck, and he makes every machine go.
 - **Dr. Amelia Brand is the blue ball** (`#1F5E98`): NASA's. She joins him at the base and rides with him to the ring in orbit, where they are parted, and she waits while he is on Miller. At the very end he finds her at her camp on Edmunds' planet, and they meet.
-- **Murph, old, is the slate ball** (`#7C8C9C`): Cooper's daughter. On Cooper Station he finds her in the far-side house, a lifetime older than he is. She comes to him, and she sends him on, to Brand.
+- **Murph is the slate ball**: Cooper's daughter.
+  - As a child (`#8FA8C4`, a lighter, bluer slate, and smaller) she is on the farm. She is in her bed under the window from the first frame, comes down the stairs after him, stows away in the truck's bed, and follows him to the base, where TARS keeps her back at the tower's foot as the rocket goes.
+  - Old (`#7C8C9C`), on Cooper Station, he finds her in the far-side house, a lifetime older than he is. She comes to him, and she sends him on, to Brand.
 
 Every world is new for this take, and there are no portals. A rocket carries them from Earth to the dark in Act I. A scored cut on the second cue's first accent opens Act II.
 
@@ -35,7 +37,7 @@ Every part is new: the pieces, the worlds, the palettes, the sky, and the camera
 The film's ending has two reunions, and so does the show. On Cooper Station, Cooper meets his daughter, old Murph. Then, on Edmunds' planet, he finds Brand. The roles are locked:
 - **Cooper (sand)** has the farm and drives, and every mechanism's beat is his.
 - **Brand (blue)** is NASA's and joins him later. She is blue the whole show.
-- **Murph (slate)** is his daughter, old, and appears only on the station.
+- **Murph (slate)** is his daughter: a child on the farm and at the base, old on the station, and nowhere else.
 
 **How the company moves.**
 - He makes things go.
@@ -217,7 +219,18 @@ There is no title card. After p5.js's card goes (about 287 s), the camp holds al
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 3 (latest)
+## Polish pass 4 (latest)
+
+The whole show was swept a second at a time, then the weak stretches frame by frame, and the camera and Cooper's place on the screen were measured at 60 fps for kinks. The jolts that turned up are all strikes or hidden; these are what the frames showed.
+
+- **Saturn's night side** (226.5 to 227.5 s). It was a hard black wedge, darker than space, with the gold glow round the limb running on beside it. The terminator is a soft dusk now, never quite as dark as the sky. The glow thins outward in fine rings and fades round the night side. The bands are drawn fine enough to stay curves when the Ranger skims a few cells of the limb, where they had read as facets.
+- **The ditch** (47 s). It was fitted between the front wheel's takeoff and the rear wheel's landing. The truck flies less than its wheelbase (about 1.3 cells against 1.87), so that stretch does not exist, and the ditch came out inside out: a pot standing on the road, with its glints out on the dirt. It is a shallow cut with sloped sides under the truck's middle at the top of the jump. No strike moved.
+- **Weather in Cooper Station** (`act2/interior.ts`). Seven fair-weather clouds hang in the station's air. Their flat bases face the land under them and their tops face the axis. They are inked once round the outside, with lit tops and shaded bases, and they drift slowly round with the air, clear of the spokes. The climb under the louvres (150 to 152 s) and the flight across the axis (169 to 173 s) had been frames of empty haze. Now they have something to measure the air by, and the flight goes past clouds.
+- **The draw-back under the credits.** From the two of them under the lamp to the whole camp took about a second (260.8 to 262.1 s), and then the frame held still for 29 s. Now it takes eight seconds (259.7 to 267.5 s), as the first cards come, and goes on, slower, to the end, up a little into the sky the cards are written in. The credits are set in the screen's place, so they do not move with it.
+- **The sun clears the horizon.** It shows its edge by the music's end, as before, and is wholly up by the last frame, where it had stopped a little past half.
+- **The lamp's near foot** came down between Cooper and Brand, a stroke in the light between them. It comes down behind him now.
+
+## Polish pass 3
 
 - **The countdown.** The push in on the two of them in the window runs on to the ignition (83.76 s) and turns there. Before, it stopped at 83.1 s and the camera was already pulling back before the pedal came in.
 - **The whip out of the wormhole** lands on the Ranger, not on the mouth. It used to stop dead at 236.5 s with the ship still going about 4 cells a second, then start after it.
