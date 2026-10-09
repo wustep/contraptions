@@ -254,6 +254,9 @@ strongest pulses held against what the picture does on them. What changed:
 - **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
   the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
   off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
+- **The lift's start** (43.758): she comes to rest on the deck and the engine catches under her, but nothing showed
+  her arrival as the cause, and the camp machine seemed to end before the lift began. The power unit now has the
+  generator's run lamp, dark until that pulse and lit on it: the same signal the machine's first engine gave at 28.021.
 - **Ian at the glass** (126 → 130.4): he backed off out of shot while the first logogram was written and stayed out,
   so she went into the white with no one there, and the reunion on the meadow had nothing to answer. A fresh
   critic's notes caught it. Once the ring has closed he comes forward again, a step behind her at the edge of the
