@@ -281,7 +281,9 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
   ctx.globalAlpha *= light * Math.min(1, (1 - fog) / 0.15)
   p.push()
   p.noStroke()
-  // Limbs first, the back ones before the front, then the body over their roots, then the front limb over the body.
+  // One creature, not layers: every soft edge first (so none lies over another part), then the limbs solid, the back
+  // ones before the front, then the body over all their roots (the front limb comes out from under its hip, never a
+  // disc stuck on it), its folds, and last any palm.
   const order = [0, 2, 4, 6, 1, 5, 3]
   const limb = (i: number) => {
     const d = DEPTH[i]
@@ -341,35 +343,35 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
       reaching > 0 && o.reachFog !== undefined
         ? mixHex(base, air, Math.min(1, fog + (clamp01(o.reachFog) - fog) * reaching + d * 0.35 * (1 - fog)))
         : mixHex(base, air, Math.min(1, standing + d * 0.35 * (1 - standing)))
-    // Its root, rounded, so the front limb (drawn over the body) never shows a square end.
-    p.fill(alpha(p, col, 0.95))
-    p.ellipse(root[0] * k, root[1] * k, w0 * 2.05 * k, w0 * 2.05 * k)
-    // A soft edge: the same shape a little wider and faint under it, then the limb.
-    for (const [grow, a] of [[1.4, 0.16], [1, 0.95]] as const) {
-      p.fill(alpha(p, col, a))
-      p.beginShape()
-      for (let j = 0; j < left.length; j++) {
-        const mx = (left[j][0] + right[j][0]) / 2
-        const my = (left[j][1] + right[j][1]) / 2
-        p.vertex((mx + (left[j][0] - mx) * grow) * k, (my + (left[j][1] - my) * grow) * k)
-      }
-      for (let j = right.length - 1; j >= 0; j--) {
-        const mx = (left[j][0] + right[j][0]) / 2
-        const my = (left[j][1] + right[j][1]) / 2
-        p.vertex((mx + (right[j][0] - mx) * grow) * k, (my + (right[j][1] - my) * grow) * k)
-      }
-      p.endShape(p.CLOSE)
-      // A blunt round tip: in a close frame the limb's end is seen, and it is never a square cut.
-      const e = left.length - 1
-      const tw = Math.hypot(left[e][0] - right[e][0], left[e][1] - right[e][1]) * grow
-      p.ellipse(((left[e][0] + right[e][0]) / 2) * k, ((left[e][1] + right[e][1]) / 2) * k, tw * k, tw * k)
-    }
-    // The palm: at the end of a reach the tip opens into seven fingers, flat against whatever it touches.
-    if (reaching > 0.6 && (o.palm ?? 0) > 0.01) {
-      drawPalm(p, k, tip, 0.1 * h * (o.palm ?? 0), col, t + i)
-    }
+    return { left, right, col, root, w0, tip, reaching }
   }
-  for (const i of order.slice(0, 6)) limb(i)
+  const limbs = order.map(limb)
+  type LimbShape = (typeof limbs)[number]
+  // The limb's outline at `grow` times its width, and its blunt round tip: in a close frame the limb's end is seen,
+  // and it is never a square cut.
+  const outline = (g: LimbShape, grow: number) => {
+    const { left, right } = g
+    p.beginShape()
+    for (let j = 0; j < left.length; j++) {
+      const mx = (left[j][0] + right[j][0]) / 2
+      const my = (left[j][1] + right[j][1]) / 2
+      p.vertex((mx + (left[j][0] - mx) * grow) * k, (my + (left[j][1] - my) * grow) * k)
+    }
+    for (let j = right.length - 1; j >= 0; j--) {
+      const mx = (left[j][0] + right[j][0]) / 2
+      const my = (left[j][1] + right[j][1]) / 2
+      p.vertex((mx + (right[j][0] - mx) * grow) * k, (my + (right[j][1] - my) * grow) * k)
+    }
+    p.endShape(p.CLOSE)
+    const e = left.length - 1
+    const tw = Math.hypot(left[e][0] - right[e][0], left[e][1] - right[e][1]) * grow
+    p.ellipse(((left[e][0] + right[e][0]) / 2) * k, ((left[e][1] + right[e][1]) / 2) * k, tw * k, tw * k)
+  }
+  // The soft edges: each limb a little wider and faint, under everything solid.
+  for (const g of limbs) {
+    p.fill(alpha(p, g.col, 0.16))
+    outline(g, 1.4)
+  }
   // The body: a tall trunk, rounded at the crown, fullest a third of the way down, drawing in to the hip where the
   // limbs leave it; a little lean, and a few soft folds down it.
   const col = colorAt(0.1)
@@ -393,7 +395,13 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
   const midY = top + bodyH / 2
   for (const [x, y] of bodyPts) p.vertex(x * 1.14 * k, (midY + (y - midY) * 1.05) * k)
   p.endShape(p.CLOSE)
-  p.fill(alpha(p, col, 0.97))
+  // The limbs, solid, back to front, each with its root rounded inside where the body will be.
+  for (const g of limbs) {
+    p.fill(g.col)
+    p.ellipse(g.root[0] * k, g.root[1] * k, g.w0 * 2.05 * k, g.w0 * 2.05 * k)
+    outline(g, 1)
+  }
+  p.fill(col)
   p.beginShape()
   for (const [x, y] of bodyPts) p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
@@ -427,8 +435,11 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     }
     p.endShape(p.CLOSE)
   }
+  // The palm: at the end of a reach the tip opens into seven fingers, flat against whatever it touches.
+  limbs.forEach((g, n) => {
+    if (g.reaching > 0.6 && (o.palm ?? 0) > 0.01) drawPalm(p, k, g.tip, 0.1 * h * (o.palm ?? 0), g.col, t + order[n])
+  })
   p.pop()
-  limb(order[6])
   ctx.restore()
 }
 
@@ -440,7 +451,8 @@ export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase
   if (r * k < 1) return
   p.push()
   p.noStroke()
-  p.fill(alpha(p, col, 0.97))
+  // Solid: one hand, its fingers, pads and the limb's end under it never showing through each other.
+  p.fill(col)
   p.translate(at[0] * k, at[1] * k)
   p.circle(0, 0, r * 0.7 * k)
   // Seven fingers, each a living thing: a full root out of the palm, a long taper with a little curl of its own, and a
