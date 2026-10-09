@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 85 (latest)
+## Polish pass 86 (latest)
+
+No change to the show: the whole show CPU-profiled at phone size, after passes 84 and 85 each found colour parsing in a per-frame loop. About 90% of the time is the canvas's own work: fill 41%, stroke 39%, then save and restore and the transforms. The show's script barely shows. Colour parsing is now about 1.5% in all, and no single function of its own reaches 1%. There is nothing left there worth the risk of a change.
+
+## Polish pass 85
 
 - **The fall's gold threads build their gradients from a precomputed RGB** (`space/gargantua.ts`), as pass 84 did the halo. Sixteen a frame, each parsing two p5 colours. At phone size the fall out of the tesseract goes from 7.85 to 7.35 ms at the median and 13.0 to 10.9 ms at worst. The frame is pixel for pixel the same.
 - **Where the rest of the fall's time goes.** A CPU profile at phone size puts two thirds of it in the canvas filling large shapes, and 14% in stroking: rasterizing the rooms, the dark and the vignette over a 1170 × 2532 canvas, not the show's own script. The headless browser used here rasterizes in software, and a phone's browser draws canvas on the GPU, so this overstates it. Cutting it would mean redrawing the tesseract in fewer, smaller layers: a large change for an uncertain gain, so it is left.
