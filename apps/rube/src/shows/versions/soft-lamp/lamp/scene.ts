@@ -9,7 +9,7 @@ import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
 import { camera } from './camera'
 import { titlesAt } from './titles'
-import { REFILL, hands, knob, liftAt } from './hands'
+import { REFILL, doodle, hands, knob, liftAt } from './hands'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { flashRoom, night } from './sky'
@@ -802,6 +802,7 @@ export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) 
   clock(ctx, lw, c.t)
   headlights(ctx, c.t)
   night(ctx, c.t)
+  doodle(ctx, c.t)
   frame(ctx, lw, c.t)
   curtain(ctx, lw, c.t)
   fairyLights(ctx, lw, c.t)

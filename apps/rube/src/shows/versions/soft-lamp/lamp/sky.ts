@@ -94,7 +94,7 @@ export function night(ctx: Ctx, t: number): void {
 }
 
 /** How wet the glass is: the rain, and for a minute or two after it, as the beads stay. */
-const wetAt = (t: number): number => Math.max(rainAt(t), rainAt(t - 40) * 0.8, rainAt(t - 80) * 0.5)
+export const wetAt = (t: number): number => Math.max(rainAt(t), rainAt(t - 40) * 0.8, rainAt(t - 80) * 0.5)
 
 /**
  * The glass misting at its foot while it is wet, the warm room against the cold: a pale breath along the bottom of

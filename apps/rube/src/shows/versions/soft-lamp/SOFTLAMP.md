@@ -104,8 +104,9 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   track's drums leave, it puts its head down and sleeps. Twice it gets up and stretches, front out long and rear up,
   with a yawn, and settles back down.
 - **Someone** is at the desk, where the camera is: never seen but for a hand in a sweater's sleeve. It turns the lamp
-  on as the show opens and down as it ends; between, it takes a sip, scratches the kitten under its chin twice, rests
-  round the mug in the rain, and about midnight takes the cold tea away and brings it back hot (`lamp/hands.ts`).
+  on as the show opens and down as it ends; between, it takes a sip, scratches the kitten under its chin, rests round
+  the mug in the rain, draws a face in the mist on the glass, and a little after midnight takes the cold tea away and
+  brings it back hot (`lamp/hands.ts`).
 
 **The design system.** One ink for every line, the ball's included, at the ball's weight (structure at full weight,
 detail at half or less, decoration hardly at all). Two lights and the room between them, as a lofi room is lit: the
@@ -705,7 +706,32 @@ remembered by in the streams' and the anime's own cities is a train going across
      train sharp across the window's look at full size, soft across the sill walk at dusk, its spark. `check:shows`
      holds the trains (four or more, minutes apart, from the dusk to a little after midnight).
 
-**Subtracted:** the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
+### The fortieth pass: a face in the mist
+
+The rain is the half hour's middle and its longest weather, and the glass has misted at its foot since the
+thirty-fifth pass. A face drawn with a fingertip in a misted window on a rainy night is a small thing everyone has
+done. Here it is also a clock: drawn in the rain, gone when the glass dries.
+
+101. **The drawing** (`doodle`, `lamp/hands.ts`). At 19:00, late in Stargazing's rain, the hand reaches up to the lower
+     left pane above the mug, one finger out and the others curled, and draws a kitten's face in the mist: the round of
+     its head, two ears, two eyes, a small mouth, the line coming clear behind the fingertip over five seconds. The mist
+     is a little thicker there, as where someone has breathed on the glass. A few seconds after, three drips run down a
+     little way from its lowest points and stop. The kitten watches the finger.
+102. **It stays, and goes.** The face is on the glass, so it is sharp in every frame and stays where it is as the city
+     moves behind it. The rain runs past it through the rest of the wet night; once the glass is half dry after the
+     rain (23:12) it fades out over two and a half minutes, and the clear night has none.
+103. **Played to the camera**, and to the machine: the camera holds the pane and the hand's way to it all but still the
+     whole time, and the ball is sitting in the cup. The first try drew it during Exhale's lob, and the ball, landing
+     on the sill, rolled behind the arm; the face was also too small and faint to find, so it is larger, its cleared line
+     darker, and its mist a little thicker.
+104. **Fewer reaches, not more.** With the drawing, the hand came nine times, and the late night bunched up: a shooting
+     star, the mug brought back and the kitten's stretch within half a minute. The second chin scratch is gone (one is
+     enough), and the tea's refill moves: taken away at 22:07, a little after midnight on the clock, and back hot at
+     24:35. The stretches are where they were (11:13, 26:42), and the cat's yawns and washes all still land.
+105. **Looked at:** the drawing at full size, at a frame a second and on an upright phone; the face in the rain; its
+     fading. A scrub back is the same frame. `check:shows` holds the reaches in their new order, the drawing in the rain.
+
+**Subtracted:** the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
 
@@ -727,8 +753,8 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
   stage, so it is not in this PR.
 - **The focus.** How soft the city goes at the desk is one number (`blurOf`, `lamp/lens.ts`), and how far the layers
   move is one per layer (`DEPTH`, `lamp/sky.ts`). Both are set to be felt on a move rather than seen in a still.
-- **The hand.** Someone at the desk, never seen but for a hand and a sleeve, eight times: the lamp on, a sip, two
-  chin scratches, hands round the mug, the mug away and back, the lamp down. It could be fewer (the lamp's two
+- **The hand.** Someone at the desk, never seen but for a hand and a sleeve, eight times: the lamp on, a sip, a chin
+  scratch, hands round the mug, a face drawn in the mist, the mug away and back, the lamp down. It could be fewer (the lamp's two
   and the refill alone would still say someone is there). The sweater's colour is one constant (`KNIT`, `lamp/hands.ts`).
 - **The lightning.** Three far-off flashes, no bolt. They could be fewer, or gone; they are the only sudden light in
   the half hour.

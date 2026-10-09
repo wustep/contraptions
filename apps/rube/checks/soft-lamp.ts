@@ -186,12 +186,12 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     m.shooting.length >= 2 && m.shooting.every(inFocus) && m.crossings.length >= 6 && m.crossings.every(([t]) => inFocus(t)) &&
     m.crossings.every(([t]) => m.lightning.every((f) => t < f - 10 || t > f + 10)), JSON.stringify(m))
 
-  // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched twice, hands round the mug in
-  // the rain, the mug taken away about midnight and brought back hot, and the lamp turned down at the end; each while
-  // the camera holds what the hand reaches for, and none over the cat's own moments.
+  // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched, hands round the mug in the
+  // rain, a face drawn in the mist on the glass, the mug taken away after midnight and brought back hot, and the lamp
+  // turned down at the end; each while the camera holds what the hand reaches for, and none over the cat's own moments.
   const kinds = REACHES.map((r) => r.kind).join(' ')
   const heldFor = (r: (typeof REACHES)[number]) => {
-    const box = r.kind === 'pet' ? PROPS.cat : r.kind === 'lamp' || r.kind === 'on' ? PROPS['lamp base'] : PROPS.mug
+    const box = r.kind === 'pet' ? PROPS.cat : r.kind === 'lamp' || r.kind === 'on' ? PROPS['lamp base'] : r.kind === 'draw' ? [-3.0, -2.45, -1.8, 0.25] : PROPS.mug
     for (let s = r.at; s <= r.at + r.dur; s += 0.5) {
       const c = perf.camera!(s)
       const hw = (c.cells * 16) / 9 / 2
@@ -200,8 +200,8 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     }
     return true
   }
-  check('soft lamp: a hand turns the lamp on, takes a sip, scratches the kitten twice, warms itself on the mug, refills it about midnight, and turns the lamp down, each in frame, clear of the yawns and washes',
-    kinds === 'on sip pet cup away back pet lamp' && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
+  check('soft lamp: a hand turns the lamp on, takes a sip, scratches the kitten, warms itself on the mug, draws in the mist, refills the tea after midnight, and turns the lamp down, each in frame, clear of the yawns and washes',
+    kinds === 'on sip pet cup draw away back lamp' && REACHES.filter((r) => r.kind === 'draw').every((r) => rainAt(r.at) > 0.55) && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
     REFILL > 1140 && REFILL < MUSIC_END - 300 &&
     [...YAWNS, ...WASHES].every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
 

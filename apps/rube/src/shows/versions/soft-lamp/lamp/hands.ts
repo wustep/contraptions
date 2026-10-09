@@ -1,9 +1,10 @@
 import { camera } from './camera'
 import { rgba, viewOf } from './canvas'
 import { sweepAt } from './decor'
-import { CAT, LAMP, MUG } from './desk'
+import { CAT, GLASS, LAMP, MUG } from './desk'
 import { MUSIC_END, smooth } from './music'
-import { MOMENTS } from './sky'
+import { ballAt } from './route'
+import { MOMENTS, wetAt } from './sky'
 import { INK, LAMP_ON, MOUTH, hash, lampAt, lightAt, lit, rainAt } from './world'
 
 /**
@@ -20,7 +21,7 @@ import { INK, LAMP_ON, MOUTH, hash, lampAt, lightAt, lit, rainAt } from './world
 
 type Ctx = CanvasRenderingContext2D
 
-type Kind = 'on' | 'sip' | 'cup' | 'pet' | 'away' | 'back' | 'lamp'
+type Kind = 'on' | 'sip' | 'cup' | 'pet' | 'draw' | 'away' | 'back' | 'lamp'
 
 interface Reach {
   kind: Kind
@@ -30,7 +31,7 @@ interface Reach {
 }
 
 /** How long each takes, seconds, in and out included. */
-const DUR: Record<Kind, number> = { on: 5.6, sip: 11, cup: 13, pet: 9, away: 6, back: 6, lamp: 10 }
+const DUR: Record<Kind, number> = { on: 5.6, sip: 11, cup: 13, pet: 9, draw: 9.5, away: 6, back: 6, lamp: 10 }
 /** How long the hand takes to come in, and to go. */
 const IN = 1.5
 const OUT = 1.3
@@ -46,6 +47,7 @@ const BOX: Record<Kind, [number, number, number, number]> = {
   back: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
   cup: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
   pet: [CAT.x0, -1.1, CAT.head.x + 0.75, 0.25],
+  draw: [-3.0, -2.45, -1.8, 0.25],
   lamp: [LAMP.base.x - 0.4, -0.45, LAMP.base.x + 0.7, 0.2],
 }
 
@@ -92,13 +94,23 @@ export const REACHES: Reach[] = (() => {
   find('cup', 600, 1250, (t) => rainAt(t) > 0.65)
   // The kitten, once in the rain.
   find('pet', 560, 900)
+  // A face drawn in the mist on the glass, in the heaviest of the rain: it stays, and goes as the glass dries.
+  // The ball sits in the cup the while (its walk along the sill would pass behind the arm), and the camera all but
+  // holds still.
+  find('draw', 740, 1250, (t) => {
+    if (rainAt(t) < 0.55) return false
+    const c0 = camera(t - 1)
+    for (let s = t - 1; s <= t + DUR.draw + 1; s += 0.5) {
+      const c = camera(s)
+      if (ballAt(s).x < 1.6 || Math.abs(c.x - c0.x) + Math.abs(c.y - c0.y) > 0.35) return false
+    }
+    return true
+  })
   // About midnight, the tea gone cold: the mug taken away, and a few minutes later brought back hot, the camera holding
   // the desk each time (in between, the desk stands empty by the cat).
-  find('away', 1100, 1300)
+  find('away', 1100, 1450)
   const away = out.find((r) => r.kind === 'away')
   if (away) find('back', away.at + 120, away.at + 420)
-  // And the kitten again, late in the clear night.
-  find('pet', 1260, 1660)
   // The lamp, turned down as the last track rings out: the knob turns as the light goes (`lampAt`).
   out.push({ kind: 'lamp', at: MUSIC_END - 3.6, dur: DUR.lamp })
   return out.sort((a, b) => a.at - b.at)
@@ -237,6 +249,16 @@ function poseAt(t: number): Pose | null {
     thumb = 1
     tip = { x: MUG.x + MUG.halfW - 0.02, y: -MUG.h * 0.48 }
     reach = PALM.len + 0.3 * 0.62
+  } else if (r.kind === 'draw') {
+    // One finger out, the others curled, its tip tracing the face in the mist (`DOODLE`): a little up and to the right
+    // of straight, the forearm down past the mug.
+    side = -1
+    angle = 0.12
+    arm = 3.3
+    curl = [0, 0.88, 0.92, 0.95]
+    thumb = 1
+    tip = drawTip(s)
+    reach = 0
   } else {
     // The lamp's knob, between finger and thumb, turned as the light comes up, or goes down.
     side = 1
@@ -249,12 +271,156 @@ function poseAt(t: number): Pose | null {
     reach = PALM.len + 0.3 * 0.75
   }
   const d = dir(angle)
-  const rest = { x: tip.x - d.x * reach, y: tip.y - d.y * reach }
+  // Drawing, the point is the first finger's tip, off the hand's middle: the wrist is where that finger's tip lands.
+  const index = r.kind === 'draw' ? fingerTip(side, angle) : { x: d.x * reach, y: d.y * reach }
+  const rest = { x: tip.x - index.x, y: tip.y - index.y }
   // In, and out, along the forearm, from beyond the frame's foot.
   const a = dir(arm)
   const away = 3.2 * (1 - k)
   const wrist = { x: rest.x + a.x * away, y: rest.y + a.y * away }
   return { r, s, k, side, wrist, angle, arm, curl, thumb, pinch, tip: { x: tip.x + a.x * away, y: tip.y + a.y * away } }
+}
+
+/** Where the first finger's tip is from the wrist, straight out, for a hand turned `angle` (`hand` draws it so). */
+function fingerTip(side: 1 | -1, angle: number): { x: number; y: number } {
+  const f = FINGERS[0]
+  const by = -PALM.len + 0.04
+  const lx = side * (f.x + f.x * 0.25 * f.len)
+  const ly = by - f.len
+  return { x: lx * Math.cos(angle) - ly * Math.sin(angle), y: lx * Math.sin(angle) + ly * Math.cos(angle) }
+}
+
+/**
+ * The face drawn in the mist: a kitten's, a circle, two ears, two eyes and a small mouth, on the lower left pane above
+ * the mug, where the glass mists thickest. Strokes in the order a finger draws them.
+ */
+const FACE = { x: -2.42, y: -2.2, r: 0.21 }
+const DOODLE: { x: number; y: number }[][] = (() => {
+  const { x, y, r } = FACE
+  const at = (dx: number, dy: number) => ({ x: x + dx, y: y + dy })
+  const head = Array.from({ length: 33 }, (_, i) => {
+    const a = Math.PI * 0.6 + (i / 32) * Math.PI * 2
+    return at(Math.cos(a) * r, Math.sin(a) * r * 0.92)
+  })
+  return [
+    head,
+    [at(-0.17, -0.1), at(-0.15, -0.35), at(-0.045, -0.195)],
+    [at(0.045, -0.195), at(0.15, -0.35), at(0.17, -0.1)],
+    [at(-0.075, -0.045), at(-0.073, 0.0)],
+    [at(0.075, -0.045), at(0.073, 0.0)],
+    [at(-0.06, 0.07), at(-0.03, 0.1), at(0, 0.07), at(0.03, 0.1), at(0.06, 0.07)],
+  ]
+})()
+/** How long each stroke is, and all of them, cells. */
+const STROKE_LEN = DOODLE.map((st) => st.reduce((n, p, i) => (i ? n + Math.hypot(p.x - st[i - 1].x, p.y - st[i - 1].y) : 0), 0))
+const DOODLE_LEN = STROKE_LEN.reduce((a, b) => a + b, 0)
+/** When the finger draws: from a moment after it reaches the glass, for five seconds. */
+const DRAW_FROM = 1.7
+const DRAW_FOR = 5.4
+
+/** When the face starts to go: once the glass is half dry after the rain; it is gone two and a half minutes later. */
+const DRIES = (() => {
+  const r = REACHES.find((x) => x.kind === 'draw')
+  if (!r) return Infinity
+  for (let t = r.at + 20; t < MUSIC_END; t += 1) if (wetAt(t) < 0.5) return t
+  return MUSIC_END
+})()
+
+/** How much of the face is drawn, cells along its strokes, `s` seconds into the reach. */
+const drawnAt = (s: number): number => DOODLE_LEN * smooth(s, DRAW_FROM, DRAW_FROM + DRAW_FOR) ** 1
+
+/** A point `len` along the face's strokes. */
+function along(len: number): { x: number; y: number } {
+  let left = Math.max(0, Math.min(DOODLE_LEN, len))
+  for (let i = 0; i < DOODLE.length; i++) {
+    if (left <= STROKE_LEN[i] || i === DOODLE.length - 1) {
+      const st = DOODLE[i]
+      for (let j = 1; j < st.length; j++) {
+        const seg = Math.hypot(st[j].x - st[j - 1].x, st[j].y - st[j - 1].y)
+        if (left <= seg || j === st.length - 1) {
+          const u = Math.min(1, left / (seg || 1))
+          return { x: st[j - 1].x + (st[j].x - st[j - 1].x) * u, y: st[j - 1].y + (st[j].y - st[j - 1].y) * u }
+        }
+        left -= seg
+      }
+    }
+    left -= STROKE_LEN[i]
+  }
+  return DOODLE[0][0]
+}
+
+/** Where the drawing fingertip is: at the face's start as it arrives, along the strokes as it draws, then off. */
+function drawTip(s: number): { x: number; y: number } {
+  return along(drawnAt(s))
+}
+
+/**
+ * The face on the glass: the mist cleared where the finger went, so the night shows through a little clearer, and a
+ * few drips run down from its lowest points a while after. It stays while the glass is wet, rain running over it, and
+ * goes as the glass dries. Drawn on the glass, after the night and before the window's frame.
+ */
+export function doodle(ctx: Ctx, t: number): void {
+  const r = REACHES.find((x) => x.kind === 'draw')
+  if (!r || t < r.at + DRAW_FROM) return
+  const vis = 1 - smooth(t, DRIES, DRIES + 150)
+  if (vis <= 0.01) return
+  const len = drawnAt(t - r.at)
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(GLASS.x0, GLASS.y0, GLASS.x1 - GLASS.x0, GLASS.y1 - GLASS.y0)
+  ctx.clip()
+  // The mist it is drawn in, a little thicker there, as where someone has breathed on the glass.
+  const m = ctx.createRadialGradient(FACE.x, FACE.y, 0.05, FACE.x, FACE.y, 0.6)
+  m.addColorStop(0, rgba('#B9B3DA', 0.2 * vis))
+  m.addColorStop(1, rgba('#B9B3DA', 0))
+  ctx.fillStyle = m
+  ctx.fillRect(FACE.x - 0.6, FACE.y - 0.6, 1.2, 1.2)
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  let left = len
+  for (let i = 0; i < DOODLE.length && left > 0; i++) {
+    const st = DOODLE[i]
+    ctx.beginPath()
+    ctx.moveTo(st[0].x, st[0].y)
+    let used = 0
+    for (let j = 1; j < st.length; j++) {
+      const seg = Math.hypot(st[j].x - st[j - 1].x, st[j].y - st[j - 1].y)
+      if (used + seg <= left) ctx.lineTo(st[j].x, st[j].y)
+      else {
+        const u = (left - used) / seg
+        ctx.lineTo(st[j - 1].x + (st[j].x - st[j - 1].x) * u, st[j - 1].y + (st[j].y - st[j - 1].y) * u)
+        used = left
+        break
+      }
+      used += seg
+    }
+    left -= STROKE_LEN[i]
+    // Clear glass where the finger went: the night darker and plainer through it, with a faint wet edge.
+    ctx.strokeStyle = rgba('#DCD8F6', 0.16 * vis)
+    ctx.lineWidth = 0.064
+    ctx.stroke()
+    ctx.strokeStyle = rgba('#14122A', 0.6 * vis)
+    ctx.lineWidth = 0.04
+    ctx.stroke()
+  }
+  // Drips from its lowest points, a while after it is drawn, each running down a little way and stopping.
+  const since = t - (r.at + DRAW_FROM + DRAW_FOR)
+  for (const [k, p] of [[0, { x: FACE.x - 0.05, y: FACE.y + FACE.r * 0.92 }], [1, { x: FACE.x + 0.1, y: FACE.y + FACE.r * 0.7 }], [2, { x: FACE.x - 0.13, y: FACE.y - 0.08 }]] as const) {
+    const d0 = 1.5 + k * 3.5
+    const run = smooth(since, d0, d0 + 6) * (0.12 + 0.12 * hash(k, 231))
+    if (run <= 0.002) continue
+    ctx.beginPath()
+    ctx.moveTo(p.x, p.y)
+    ctx.lineTo(p.x + 0.004, p.y + run)
+    ctx.strokeStyle = rgba('#16142C', 0.32 * vis)
+    ctx.lineWidth = 0.018
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(p.x + 0.004, p.y + run, 0.014, 0, Math.PI * 2)
+    ctx.fillStyle = rgba('#C9C6EA', 0.4 * vis)
+    ctx.fill()
+  }
+  ctx.restore()
 }
 
 const SKIN = '#9A6352'
