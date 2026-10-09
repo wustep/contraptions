@@ -5,6 +5,7 @@ import { LIPTONS_MAT, SEBS_MAT } from '../worlds'
 import { HUSH_KEY, OPENING_END, PIANO } from './geometry'
 import { drawPiano, heldOn, keysOf, play, PIANO_CELLS, type Keys, type Note, type Press } from './piano'
 import { house, MIA_SEAT, SIDE_SEAT } from './room'
+import { call } from '../call'
 
 /**
  * The opening: Seb's, now, and he is playing. The camera comes in from the city at night through the club's lit
@@ -116,9 +117,8 @@ function plan0(begin: number) {
       to: COMPANY_TO,
       who: 'mia',
       at: (t) => {
-        const u = Math.max(0, Math.min(1, (t - TURN[0]) / (TURN[1] - TURN[0])))
         // She rolls back a hair on her seat, and her eyes come up to the stage.
-        return still([MIA_SEAT[0] - 0.058 * (u * u * (3 - 2 * u)), MIA_SEAT[1]])
+        return still(miaAtTable(t))
       },
     },
     { from: 0, to: COMPANY_TO, who: 'david', at: () => still(SIDE_SEAT) },
@@ -136,6 +136,17 @@ const PLAN = plan0(0)
 /** Every note of the melody he plays, show seconds and pitch, the run up to the hush included: what Lipton's sees go out to her. */
 export const MELODY: { t: number; midi: number }[] = [...theme(0.5, FLOURISH).melody, ...RUN.map(([t, midi]) => ({ t, midi }))]
 
+/** Where she sits at her table at the start, rolling back a hair as she lifts her eyes (the company's own place). */
+const miaAtTable = (t: number): Pt => {
+  const u = Math.max(0, Math.min(1, (t - TURN[0]) / (TURN[1] - TURN[0])))
+  return [MIA_SEAT[0] - 0.058 * (u * u * (3 - 2 * u)), MIA_SEAT[1]]
+}
+/**
+ * At Seb's, now, the theme reaches her where she sits: the notes he plays go out to her table in the club's cold
+ * light, the first of them a breath before she lifts her eyes to the stage. She knows it.
+ */
+const TABLE_CALL = call(MELODY.filter((n) => n.t > 21.6 && n.t < 30.6), miaAtTable, '#BCCDF0', 0.5)
+
 export const opening = part<OpeningState>(
   {
     name: 'opening',
@@ -147,6 +158,10 @@ export const opening = part<OpeningState>(
       const cold = mixHex(SEBS_MAT.blue, SEBS_MAT.ivory, 0.38)
       const light = liptons ? { color: LIPTONS_MAT.lamp, lit: 1 } : { color: mixHex(cold, SEBS_MAT.candle, 0.45 * (house(t, false) - 0.12)), lit: 1 }
       drawPiano(p, c.k, c.ink, c.weight, t, s.keys, light)
+    },
+    over(p, s, c) {
+      const t = c.t + s.begin
+      if (c.theme.name !== 'liptons' && t > 21.6 && t < 34.5) TABLE_CALL(p, c.k, t)
     },
   },
   (slot) => {
