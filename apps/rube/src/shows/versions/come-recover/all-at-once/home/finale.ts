@@ -226,15 +226,16 @@ export const finale = part<FinaleState>(
       { t: 282.2, cells: 2.6, hold: H(-2.05, -0.6), w: 1 },
       // Out again with her, under the camera's tripod, to the switch under the window.
       // Her and the switch, and the whole string over the family as it lights a lantern a beat: its far end and
-      // its anchor in the frame, not cut by the right edge, and less of the night glass on the left.
-      { t: 284.8, cells: 3.75, hold: H(-3.5, -1.2), w: 1 },
-      { t: 286.2, cells: 3.75, hold: H(-3.45, -1.2), w: 1 },
+      // its anchor in the frame, not cut by the right edge, and less of the night glass on the left. Held low enough
+      // that Zoom (the same middle, 1.5 times closer) keeps a strip of floor under them rather than its bottom edge on it.
+      { t: 284.8, cells: 3.85, hold: H(-3.5, -0.95), w: 1 },
+      { t: 286.2, cells: 3.85, hold: H(-3.45, -0.95), w: 1 },
       // She presses it: back and right, the string of lanterns lighting over the family one a beat.
-      { t: 287.8, cells: 4.25, hold: H(-3.55, -1.25), w: 1 },
+      { t: 287.8, cells: 4.25, hold: H(-3.55, -1.1), w: 1 },
       // And settle on the portrait: the door's glass, the camera, the family under the lanterns.
-      { t: 290.2, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
-      { t: FLASH + 0.6, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
-      { t: 293.2, cells: 3.9, hold: H(-3.45, -1.12), w: 1 },
+      { t: 290.2, cells: 3.85, hold: H(-3.5, -0.95), w: 1 },
+      { t: FLASH + 0.6, cells: 3.85, hold: H(-3.5, -0.95), w: 1 },
+      { t: 293.2, cells: 3.9, hold: H(-3.45, -0.96), w: 1 },
       // Then back, towards the washer's glow, for the lights going out. Both stay inside the shop's end wall: the
       // storefront's glass is the frame's left edge, so the room is never seen cut off in the dark of the tail.
       { t: 294.6, cells: 5.15, hold: H(-3.4, -1.52), w: 1 },

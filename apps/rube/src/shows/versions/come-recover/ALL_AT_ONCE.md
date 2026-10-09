@@ -341,6 +341,13 @@ The notes went back to the builders who made each part, who still had their cont
     of the shop. Under the washers is the laundromat's own drain line, falling gently toward the street, with a drop
     and a U-trap up to each washer. It is all in the earth's own tones (`underground` in `set.ts`). On a wide stage
     it is a quiet strip at the frame's foot.
+- **A pass for Zoom.** The other worlds held at the phone's square frame. Then key moments were watched under Zoom
+  (the viewer's Z, the same middle 1.5 times closer).
+  - Through the switch and the portrait (284.8 to 294 s), Zoom's bottom edge fell on the floor line, so the family
+    and Evelyn at the switch sat on the frame's edge, cut in half. The photograph propped by the washer was cut off
+    too.
+  - Those holds now sit a little lower. Under Zoom a strip of floor shows under the three of them and the
+    photograph. The normal frame still holds the lantern string whole, anchor to anchor.
 
 ## End credits
 
