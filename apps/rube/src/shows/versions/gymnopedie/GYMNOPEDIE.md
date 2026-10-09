@@ -212,6 +212,17 @@ the same as before any of the weather; 10 at the seam, where every stone is draw
 canvas of its own, which stays on the GPU so long as nothing reads the stage's canvas back (nothing does; a probe that
 does would make every mirror row a readback, which is what a first measurement here mistook for the show being slow).
 
+## On a slower machine
+
+A piece to leave on will run on machines slower than the one it was made on. Measured by what each frame's drawing
+costs, with Chrome's CPU slowed four times (a stand-in for a phone), the close shots cost 5 to 11 ms a frame and stay
+inside 60 frames a second; but the wide shot at the seam, which draws every stone on the planet, cost 26 ms, over it,
+on the shot that opens the loop and carries the title. Far off, where a cell is a few pixels, each stone is now drawn as
+its silhouette in its colours, batched into a handful of strokes (`farStones`): the same picture at that size, and the
+seam now costs 3 to 7 ms, a quarter of what it did before any of this pass. Across a band of sizes the full drawing and
+the silhouettes are crossed, so nothing they leave out goes in a frame. The sea's mirror draws its stones the same way,
+since its ripple and fade leave no more of them than that.
+
 ## Where things are
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`

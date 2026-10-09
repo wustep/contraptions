@@ -317,6 +317,21 @@ export function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: bool
   // (Taken into a half-turn either way first: through the night the angle runs on round under the planet.)
   const a = Math.atan2(Math.sin(sunAngle(c.t)), Math.cos(sunAngle(c.t)))
   const sun = Math.max(-1, Math.min(1, a / 1.1))
+  // Far off, where a cell is a few pixels, each stone is drawn as its silhouette, in its colours, all in a few strokes:
+  // the same picture at that size, for a fraction of the work (the wide shot at the seam draws every stone there is).
+  // Across a short band of sizes the two are crossed, so nothing the silhouettes leave out (a perched gull, a lamp's
+  // flame, an open flower) goes in a frame.
+  const ctx = p.drawingContext as Ctx2D
+  const m = ctx.getTransform()
+  const px = Math.hypot(m.a, m.b) * k
+  if (px < FAR_PX) return farStones(ctx, c, v, day, mirrored)
+  const whole = smooth(px, FAR_PX, FAR_PX * 1.6)
+  const alpha = ctx.globalAlpha
+  if (whole < 1) {
+    ctx.globalAlpha = alpha * (1 - whole)
+    farStones(ctx, c, v, day, mirrored)
+    ctx.globalAlpha = alpha * whole
+  }
   for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
     const w = stone.u1 - stone.u0
     // Too small to be anything but a mark.
@@ -352,6 +367,70 @@ export function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: bool
       p.pop()
     }
   }
+  ctx.globalAlpha = alpha
+}
+
+/** Device pixels a cell under which the stones are drawn as silhouettes. */
+export const FAR_PX = 20
+/** How much of a far column's colour is its lit stone, the rest its outline. */
+const MARBLE_FAR = 0.35
+
+/**
+ * The stones as silhouettes, far off, and in the sea's mirror (where the water's ripple and fade leave no more of
+ * them than this): shafts, posts and stems as strokes, slabs, beams and leaves along their tops. */
+export function farStones(ctx: Ctx2D, c: PieceCtx, v: View, day: Sky, mirrored: boolean, marble = MARBLE_FAR): void {
+  const k = c.k
+  const cell = Math.hypot(ctx.getTransform().a, ctx.getTransform().b) * k
+  const px = (n: number) => Math.max(0.8, n * cell) / (cell / k)
+  const flip = mirrored ? -1 : 1
+  const at = (u: number, h: number): [number, number] => {
+    const [x, y] = polar(u, h * flip)
+    return [x * k, y * k]
+  }
+  const lit = new Path2D()
+  const post = new Path2D()
+  const beam = new Path2D()
+  const stem = new Path2D()
+  const leaf = new Path2D()
+  const line = (path: Path2D, u0: number, h0: number, u1: number, h1: number) => {
+    const [x0, y0] = at(u0, h0)
+    const [x1, y1] = at(u1, h1)
+    path.moveTo(x0, y0)
+    path.lineTo(x1, y1)
+  }
+  for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
+    const w = stone.u1 - stone.u0
+    if (w * k < 1.5 && v.wide > 0.9) continue
+    const h = stone.h - sink(stone, c.t) + float(stone, c.t)
+    const u0 = stone.u0 + shift
+    if (stone.piece === 0) {
+      for (const x of w > 0.62 ? [0.14, w - 0.14] : [w / 2]) {
+        line(lit, u0 + x, -0.2, u0 + x, h)
+      }
+      line(lit, u0 + (w > 0.62 ? 0 : w / 2 - 0.12), h, u0 + (w > 0.62 ? w : w / 2 + 0.12), h)
+    } else if (stone.piece === 1) {
+      for (const x of w > 0.42 ? [0.09, w - 0.09] : [w / 2]) line(post, u0 + x, -0.2, u0 + x, h)
+      line(beam, u0 + (w > 0.42 ? 0 : w / 2 - 0.1), h + 0.03, u0 + (w > 0.42 ? w : w / 2 + 0.1), h + 0.03)
+    } else {
+      line(stem, u0 + w / 2, -0.3, u0 + w / 2, h)
+      line(leaf, u0, h + 0.02, u0 + w, h + 0.02)
+    }
+  }
+  ctx.save()
+  ctx.lineCap = 'round'
+  const stroke = (path: Path2D, colour: string, width: number) => {
+    ctx.strokeStyle = colour
+    ctx.lineWidth = width
+    ctx.stroke(path)
+  }
+  // At this size a column is mostly its ink outline, with a little of its lit stone in the middle.
+  stroke(lit, mixHex(day.line, day.lit, marble), px(0.12))
+  // A post reads by its outline at night, when the outline is pale, and by its body by day.
+  stroke(post, mixHex(mixHex('#23283C', day.lit, 0.2), day.line, 0.6), px(0.1))
+  stroke(beam, mixHex('#6E5232', '#C99C5C', 0.6), px(0.07))
+  stroke(stem, mixHex('#4F7466', day.sea, 0.3), px(0.03))
+  stroke(leaf, mixHex('#5E8C77', day.lit, 0.25), px(0.07))
+  ctx.restore()
 }
 
 /** The gulls that have lifted off their perches, flying on ahead of the ball, climbing, until they are gone. */

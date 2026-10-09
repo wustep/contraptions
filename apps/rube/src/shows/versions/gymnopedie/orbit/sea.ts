@@ -9,7 +9,7 @@ import { BALL, alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
   scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, bodies, sunWay, AURORA_OVER, lamplighter,
 } from './frame'
-import { lampLight, drawStones } from './stones'
+import { lampLight, farStones } from './stones'
 
 // ---------------------------------------------------------------- the light on the water
 
@@ -473,7 +473,7 @@ function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D, close: num
   gc.globalAlpha = 1
   gc.clearRect(0, top / 2, w, h - top / 2)
   gc.setTransform(new DOMMatrix([0.5, 0, 0, 0.5, 0, 0]).multiply(ctx.getTransform()))
-  drawStones(gp, c, v, day, true)
+  farStones(gc, c, v, day, true, 0.8)
   // And the ball, upside down under itself, with its flame through the first Gnossienne.
   {
     const b = ballLocal(c.t)
