@@ -69,6 +69,28 @@ export function vibeAt(t: number): number {
   return v * (1 - breakAhead) * (1 - lobAhead) * Math.min(1, (t - lap.cup - 4 * tr.period) / 2)
 }
 
+/**
+ * Its yawns: a few through the night, more of them late, each a good three seconds, while the ball sits and the cat is
+ * not lost in the music.
+ */
+export const YAWNS: number[] = [2, 4, 6, 8, 9, 10].map((n) => {
+  const lap = LAPS[n]
+  const tr = TRACKS[n]
+  // A while after the ball has settled, in a phrase it spends watching.
+  for (let k = 0; k < 12; k++) {
+    const at = lap.cup + 10 + k * 4 * tr.period + hash(n, k, 99) * 2
+    if (vibeAt(at) < 0.01 && vibeAt(at + 3.2) < 0.01 && (lap.lob === null || at + 4 < lap.lob - 8 * tr.period)) return at
+  }
+  return -100
+})
+export function yawnAt(t: number): number {
+  for (const at of YAWNS) {
+    const s = (t - at) / 3.2
+    if (s >= 0 && s <= 1) return Math.min(1, 2.2 * Math.sin(Math.PI * s) ** 2)
+  }
+  return 0
+}
+
 /** Its nod along, 0 to 1, deepest just after each beat. */
 function nodAt(t: number): number {
   const tr = trackAt(t)
@@ -111,6 +133,7 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
 
   // Its tail, curled round the front of it, the tip lifting and settling.
   const vibe = vibeAt(t)
+  const yawn = yawnAt(t) * (1 - sleep)
   const tr = trackAt(t)
   // The tip lifts and settles on its own, or, nodding along, sways a bar at a time.
   const idle = 0.5 + 0.5 * Math.sin(t * 0.9 + Math.sin(t * 0.31) * 2)
@@ -186,18 +209,18 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
 
   // The head: it turns to the ball, and when it sleeps it comes down onto its paws.
   const hx0 = CAT.head.x
-  const hy0 = CAT.head.y + 0.26 * sleep + 0.006 * breath + 0.028 * vibe * nodAt(t)
+  const hy0 = CAT.head.y + 0.26 * sleep + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn
   const look = gaze(t, 0.22)
   const dx = look.x - hx0
   const dy = look.y - hy0
   const d = Math.hypot(dx, dy) || 1
   const awake = 1 - sleep
-  const watch = awake * (1 - vibe)
+  const watch = awake * (1 - vibe) * (1 - yawn)
   const lx = (dx / d) * watch
   const ly = (dy / d) * watch + 0.25 * vibe * awake
   const hx = hx0 + lx * 0.035
   const hy = hy0 + ly * 0.02
-  const tilt = lx * 0.12 - ly * 0.06 + sleep * 0.3 + vibe * awake * 0.08 * Math.sin((Math.PI * beatOf(tr, t)) / 2)
+  const tilt = lx * 0.12 - ly * 0.06 - yawn * 0.12 + sleep * 0.3 + vibe * awake * 0.08 * Math.sin((Math.PI * beatOf(tr, t)) / 2)
   ctx.save()
   ctx.translate(hx, hy)
   ctx.rotate(tilt)
@@ -208,7 +231,7 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   for (const side of [-1, 1]) {
     ctx.save()
     ctx.translate(side * 0.14, -0.13)
-    ctx.rotate(side * 0.25 + (side > 0 ? flick * 0.35 : 0) - side * sleep * 0.25)
+    ctx.rotate(side * 0.25 + (side > 0 ? flick * 0.35 : 0) - side * sleep * 0.25 + side * yawn * 0.3)
     ctx.beginPath()
     ctx.moveTo(-0.085, 0.04)
     ctx.quadraticCurveTo(-0.04, -0.12, 0.0, -0.16)
@@ -251,21 +274,25 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   ctx.fillStyle = lit('#A88A70', CREAM_FUR, l)
   ctx.fill()
 
-  // The eyes: open as wide as it is interested, heavy while the ball sits, shut to blink and to sleep.
-  const open = Math.max(0, (1 - blinkAt(t)) * awake * (1 - vibe))
-  const happy = vibe > 0.5 && sleep < 0.5
+  // The eyes: round and open as it watches; the upper lid comes down over them to blink, so a blink caught halfway is
+  // sleepy, never cross; shut in the content arch while it nods along, and shut soft as it sleeps or yawns.
+  const open = Math.max(0, (1 - blinkAt(t)) * awake * (1 - vibe) * (1 - yawn))
+  const happy = vibe > 0.5 && sleep < 0.5 && yawn < 0.3
   const px = lx * 0.022
   const py = ly * 0.016
+  const RXE = 0.058
+  const RYE = 0.054
   for (const side of [-1, 1]) {
     const ex = side * 0.095
     const ey = -0.01
-    if (open > 0.08) {
+    if (open > 0.12) {
+      const lidY = ey - RYE + 2 * RYE * (1 - open) * 0.9
       ctx.save()
       ctx.beginPath()
-      ctx.ellipse(ex, ey, 0.058, 0.054 * open, 0, 0, Math.PI * 2)
+      ctx.ellipse(ex, ey, RXE, RYE, 0, 0, Math.PI * 2)
       ctx.clip()
       ctx.fillStyle = EYE
-      ctx.fillRect(ex - 0.06, ey - 0.06, 0.12, 0.12)
+      ctx.fillRect(ex - 0.07, ey - 0.07, 0.14, 0.14)
       // Wide pupils in the dark.
       ctx.fillStyle = '#16121F'
       ctx.beginPath()
@@ -276,21 +303,63 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
       ctx.beginPath()
       ctx.arc(ex + px + 0.012, ey + py - 0.016, 0.009, 0, Math.PI * 2)
       ctx.fill()
+      // The lid, as far down as it is.
+      const lid = () => {
+        ctx.beginPath()
+        ctx.moveTo(ex - 0.08, ey - 0.08)
+        ctx.lineTo(ex + 0.08, ey - 0.08)
+        ctx.lineTo(ex + 0.08, lidY)
+        ctx.quadraticCurveTo(ex, lidY + 0.03 * (1 - open), ex - 0.08, lidY)
+        ctx.closePath()
+      }
+      if (open < 0.97) {
+        lid()
+        ctx.fillStyle = fur(0.5 + 0.5 * ((ex + RX) / (2 * RX)))
+        ctx.fill()
+        ctx.beginPath()
+        ctx.moveTo(ex - 0.08, lidY)
+        ctx.quadraticCurveTo(ex, lidY + 0.03 * (1 - open), ex + 0.08, lidY)
+        ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+        ctx.lineWidth = lw * 0.8
+        ctx.stroke()
+      }
       ctx.restore()
-      // The upper lid's line.
+      // The eye's upper line.
       ctx.beginPath()
-      ctx.ellipse(ex, ey, 0.058, 0.054 * open, 0, Math.PI, Math.PI * 2)
+      ctx.ellipse(ex, ey, RXE, RYE, 0, Math.PI, Math.PI * 2)
       ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
       ctx.lineWidth = lw * 0.8
       ctx.stroke()
     } else {
-      // Shut: a soft downward curve asleep or blinking; nodding along, the content arch of a smile.
+      // Shut: a soft downward curve asleep, blinking or yawning; nodding along, the content arch of a smile.
       ctx.beginPath()
       ctx.moveTo(ex - 0.045, ey + (happy ? 0.012 : -0.002))
       ctx.quadraticCurveTo(ex, ey + (happy ? -0.03 : 0.028), ex + 0.045, ey + (happy ? 0.012 : -0.002))
       ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
       ctx.lineWidth = lw * 0.8
       ctx.stroke()
+    }
+  }
+  // A yawn: the mouth wide, the pink of it, two small teeth.
+  if (yawn > 0.05) {
+    ctx.beginPath()
+    ctx.ellipse(0, 0.1 + 0.03 * yawn, 0.045 + 0.01 * yawn, 0.065 * yawn, 0, 0, Math.PI * 2)
+    ctx.fillStyle = '#4A1E2A'
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+    ctx.lineWidth = lw * 0.6
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.ellipse(0, 0.1 + 0.03 * yawn + 0.035 * yawn, 0.03, 0.022 * yawn, 0, 0, Math.PI * 2)
+    ctx.fillStyle = '#D9727C'
+    ctx.fill()
+    ctx.fillStyle = '#F6EEE0'
+    for (const side of [-1, 1]) {
+      ctx.beginPath()
+      ctx.moveTo(side * 0.03, 0.1 + 0.03 * yawn - 0.065 * yawn + 0.004)
+      ctx.lineTo(side * 0.022, 0.1 + 0.03 * yawn - 0.065 * yawn + 0.024 * yawn)
+      ctx.lineTo(side * 0.014, 0.1 + 0.03 * yawn - 0.065 * yawn + 0.008)
+      ctx.fill()
     }
   }
   // Nose and mouth.
@@ -301,14 +370,16 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   ctx.closePath()
   ctx.fillStyle = '#D9877E'
   ctx.fill()
-  ctx.beginPath()
-  ctx.moveTo(0, 0.075)
-  ctx.quadraticCurveTo(-0.01, 0.105, -0.035, 0.1)
-  ctx.moveTo(0, 0.075)
-  ctx.quadraticCurveTo(0.01, 0.105, 0.035, 0.1)
-  ctx.strokeStyle = 'rgba(26, 21, 38, 0.8)'
-  ctx.lineWidth = lw * 0.5
-  ctx.stroke()
+  if (yawn < 0.3) {
+    ctx.beginPath()
+    ctx.moveTo(0, 0.075)
+    ctx.quadraticCurveTo(-0.01, 0.105, -0.035, 0.1)
+    ctx.moveTo(0, 0.075)
+    ctx.quadraticCurveTo(0.01, 0.105, 0.035, 0.1)
+    ctx.strokeStyle = 'rgba(26, 21, 38, 0.8)'
+    ctx.lineWidth = lw * 0.5
+    ctx.stroke()
+  }
   // Whiskers, faint.
   ctx.strokeStyle = rgba('#F3E6D2', 0.35)
   ctx.lineWidth = 0.008

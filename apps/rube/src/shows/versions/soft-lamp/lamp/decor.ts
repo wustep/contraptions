@@ -2,7 +2,7 @@ import { mixHex } from '../../../../parts'
 import { CURTAIN, NOTES, PRINT, ROD, WINDOW } from './desk'
 import { MUSIC_END, heldAt, smooth } from './music'
 import { rgba } from './sky'
-import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, skyAt } from './world'
+import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, skyAt } from './world'
 
 /**
  * What makes the room a room someone lives in, and the picture's finish.
@@ -408,3 +408,125 @@ export function grain(ctx: Ctx, t: number): void {
   ctx.restore()
 }
 
+
+/* ------------------------------------------------------------------ the street */
+
+/**
+ * Now and then at night a car goes by below, and its lights come up through the window and sweep across the wall:
+ * the window's own shape, its bars in it, pale and cool, moving over the wall and the things pinned to it in a few
+ * seconds and gone. In the rain it is freckled with the drops on the glass. Each at its own time, roughly every minute
+ * and a half once it is dark.
+ */
+export const SWEEPS: number[] = (() => {
+  const out: number[] = []
+  let at = 160
+  for (let k = 0; at < MUSIC_END - 20; k++) {
+    out.push(at)
+    at += 70 + hash(k, 151) * 60
+  }
+  return out
+})()
+const SWEEP_DUR = 4.2
+
+export function headlights(ctx: Ctx, t: number): void {
+  const dark = smooth(t, 120, 300)
+  let i = SWEEPS.length - 1
+  while (i >= 0 && SWEEPS[i] > t) i--
+  if (i < 0 || dark <= 0) return
+  const s = (t - SWEEPS[i]) / SWEEP_DUR
+  if (s > 1) return
+  // Leftward or rightward, as the car goes.
+  const dir = hash(i, 152) < 0.5 ? 1 : -1
+  const u = dir > 0 ? s : 1 - s
+  const x = WINDOW.x1 - 0.6 + u * 7.4
+  const a = 0.13 * dark * Math.sin(Math.PI * s) ** 1.5
+  const w = 1.5
+  const skew = 0.9 * dir
+  const top = -5.6
+  const bottom = 0
+  ctx.save()
+  // Only on the wall: not on the window, not below the desk.
+  ctx.beginPath()
+  ctx.rect(WINDOW.x1, top - 1, 9, bottom - top + 1)
+  ctx.clip()
+  ctx.globalCompositeOperation = 'screen'
+  const quad = (x0: number, x1: number) => {
+    ctx.beginPath()
+    ctx.moveTo(x0 + skew, top)
+    ctx.lineTo(x1 + skew, top)
+    ctx.lineTo(x1, bottom)
+    ctx.lineTo(x0, bottom)
+    ctx.closePath()
+  }
+  const g = ctx.createLinearGradient(x - 0.3, 0, x + w + 0.3, 0)
+  g.addColorStop(0, 'rgba(200, 212, 255, 0)')
+  g.addColorStop(0.2, `rgba(200, 212, 255, ${a.toFixed(3)})`)
+  g.addColorStop(0.8, `rgba(200, 212, 255, ${a.toFixed(3)})`)
+  g.addColorStop(1, 'rgba(200, 212, 255, 0)')
+  ctx.fillStyle = g
+  quad(x - 0.3, x + w + 0.3)
+  ctx.fill()
+  ctx.restore()
+  // The window's bars, as darker lines through it; and, in the rain, the drops.
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(WINDOW.x1, top - 1, 9, bottom - top + 1)
+  ctx.clip()
+  quad(x - 0.3, x + w + 0.3)
+  ctx.clip()
+  ctx.strokeStyle = `rgba(20, 16, 36, ${(a * 1.6).toFixed(3)})`
+  ctx.lineWidth = 0.07
+  ctx.beginPath()
+  const mid = x + w / 2
+  ctx.moveTo(mid + skew, top)
+  ctx.lineTo(mid, bottom)
+  const ty = -3.2
+  ctx.moveTo(x - 0.3 + skew * ((ty - bottom) / (top - bottom)), ty)
+  ctx.lineTo(x + w + 0.3 + skew * ((ty - bottom) / (top - bottom)), ty)
+  ctx.stroke()
+  const rain = rainAt(t)
+  if (rain > 0.1) {
+    ctx.fillStyle = `rgba(20, 16, 36, ${(a * 1.4 * rain).toFixed(3)})`
+    for (let k = 0; k < 40; k++) {
+      const fy = top + hash(k, i, 153) * (bottom - top)
+      const fx = x + hash(k, i, 154) * w + skew * ((fy - bottom) / (top - bottom))
+      ctx.beginPath()
+      ctx.arc(fx, fy, 0.02 + hash(k, i, 155) * 0.025, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  ctx.restore()
+}
+
+/**
+ * Dust in the lamp's light: a few motes drifting slowly where the light is, each catching it as it turns, gone where
+ * the light is not. The one thing in the frame that moves when nothing else does.
+ */
+export function motes(ctx: Ctx, t: number): void {
+  const on = lampAt(t)
+  if (on < 0.05) return
+  const warm = lampColor(t)
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  for (let i = 0; i < 34; i++) {
+    // Each drifts on its own slow loop round a home in the lamp's reach, and sinks a little and rises again.
+    const hx = MOUTH.x - 2.4 + hash(i, 161) * 3.6
+    const hy = MOUTH.y + 0.1 + hash(i, 162) * 2.0
+    const sp = 0.05 + hash(i, 163) * 0.08
+    const x = hx + Math.sin(t * sp + hash(i, 164) * 6.3) * 0.5 + Math.sin(t * sp * 2.3 + i) * 0.12
+    const y = hy + Math.cos(t * sp * 0.8 + hash(i, 165) * 6.3) * 0.35 + Math.sin(t * 0.21 + i) * 0.05
+    if (y > -0.05) continue
+    const l = lightAt(x, y)
+    const glint = 0.35 + 0.65 * Math.max(0, Math.sin(t * (0.8 + hash(i, 166) * 1.5) + i * 2.1)) ** 3
+    const a = 0.42 * on * l * glint
+    if (a < 0.02) continue
+    const r = 0.007 + hash(i, 167) * 0.01
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 3)
+    g.addColorStop(0, rgba(mixHex(warm, '#FFFFFF', 0.5), a))
+    g.addColorStop(0.35, rgba(warm, a * 0.4))
+    g.addColorStop(1, rgba(warm, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(x - r * 3, y - r * 3, r * 6, r * 6)
+  }
+  ctx.restore()
+}

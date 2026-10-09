@@ -4,7 +4,8 @@ import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WI
 import { MUSIC_END, heldAt } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt } from './route'
 import { cat } from './cat'
-import { bloom, curtain, fairyGlowAt, fairyLights, grain, notes, print, vignette } from './decor'
+import { bloom, curtain, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
+import { ballShadow, contacts, wallShadows } from './shade'
 import { night, rgba } from './sky'
 import { CREAM, INK, MOUTH, lampAt, lampColor, lightAt, lit, skyAt } from './world'
 
@@ -678,27 +679,32 @@ export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) 
   wall(ctx, c.t)
   print(ctx, lw, c.t)
   notes(ctx, lw, c.t)
+  headlights(ctx, c.t)
   night(ctx, c.t)
   frame(ctx, lw, c.t)
   curtain(ctx, lw, c.t)
   fairyLights(ctx, lw, c.t)
   pot(ctx, lw, c.t)
   desk(ctx, lw, c.t)
+  wallShadows(ctx, c.t)
 }))
 
 export const things = scenery<null>(
   'things',
   (p, _s, c) => inCells(p, c, (ctx, lw) => {
+    contacts(ctx, c.t)
     mug(ctx, lw, c.t)
     steam(ctx, c.t)
     cat(ctx, lw, c.t)
     BOOKS.forEach((b, i) => book(ctx, lw, b, i, c.t))
     headphones(ctx, lw, c.t)
     lamp(ctx, lw, c.t)
+    ballShadow(ctx, c.t)
   }),
   (p, _s, c) => inCells(p, c, (ctx, lw) => {
     lip(ctx, lw, c.t)
     bloom(ctx, c.t)
+    motes(ctx, c.t)
     vignette(ctx)
     grain(ctx, c.t)
   }),

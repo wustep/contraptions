@@ -210,6 +210,20 @@ ball. The machine and its timing were right and are untouched; the room around i
 19. **Two frames sliced the cat** (the stair and the desk under the lamp): both re-solved, wider by a little, and the
     cat and the notes are in the check's list of things a held frame shows whole.
 
+### The second lofi pass
+
+20. **Nothing was standing on anything.** Every thing on the desk now has a soft shadow at its foot and one thrown
+    onto the wall behind it, away from the lamp (`lamp/shade.ts`); the ball has both, its wall shadow following it
+    (behind the books when it is, never on the glass) and the one under it small and dark as it sits, wider and fainter
+    as it rises, so every nod and step is read twice.
+21. **The close look at the cup was a bare orange wall** for a sixth of the half hour. The shadows give it depth, and
+    dust drifts in the lamp's light, glinting as it turns: the one thing that moves when nothing else does.
+22. **A blink caught halfway read as a scowl** (the eye was squashed top and bottom). The upper lid now comes down over
+    the eye, so a half blink is sleepy.
+23. **The room did not know the street was there.** Now and then at night a car goes by below and its lights sweep
+    across the wall: the window's shape with its bars in it, pale and cool, freckled with the drops when it rains.
+24. **The cat yawns**, six times through the night, more of them late, in phrases it spends watching.
+
 **Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones; a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
@@ -225,6 +239,7 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
   moon and the fairy lights' low glow are the last light.
 - **The cat.** It is the one character, and a kitten for the desk's scale. It nods along in about half the groove's
   phrases (chosen per phrase, not per track); fewer would read as a cat that watches, more as a gag.
+- **The headlights.** Roughly every minute and a half once it is dark, four seconds each; they could be rarer.
 - **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.
 
 ## Checks
