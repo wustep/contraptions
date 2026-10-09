@@ -8,7 +8,7 @@ import { show } from '../src/shows/versions/gymnopedie/orbit'
 import { BASS, BREATHS, CHORDS, GRACES, MARGIN, MELODY, NOTES, PERIOD, PIECES, loudness } from '../src/shows/versions/gymnopedie/orbit/music'
 import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../src/shows/versions/gymnopedie/orbit/path'
 import { breath, cellsAt } from '../src/shows/versions/gymnopedie/orbit/camera'
-import { bloom, lampLight, moonAngle, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
+import { CADENCES, bloom, cadenceFronts, lampLight, moonAngle, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
 import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, auroraAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
@@ -163,6 +163,17 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   }
   check('gymnopedie: the aurora is the first Gnossienne\'s, in the full night only, gone before the moon rises',
     auroraFrom > GN1.from && auroraTo < GN1.last && auroraDay === 0, `${auroraFrom.toFixed(0)}-${auroraTo.toFixed(0)}`)
+
+  // Each piece's last note runs back along its way, and nothing else does.
+  let offCue = 0
+  let seen = 0
+  for (let t = 0; t < PERIOD; t += 0.1) {
+    if (!cadenceFronts(t).length) continue
+    seen++
+    if (!CADENCES.some((c) => { const d = (t - c.t + PERIOD) % PERIOD; return d >= 0 && d <= c.lasts })) offCue++
+  }
+  check('gymnopedie: a wave of light runs back along each piece\'s way from its last note, and only then',
+    offCue === 0 && seen > 0 && CADENCES.length === 3 && CADENCES.every((c, i) => c.t === PIECES[i].last), `${seen} moments, ${offCue} off cue`)
 
   // The sun and the moon: each once round a period, seen from far off in space, so neither may jump, the seam included.
   const turn2 = (a: number) => Math.abs(a - 2 * Math.PI * Math.round(a / (2 * Math.PI)))

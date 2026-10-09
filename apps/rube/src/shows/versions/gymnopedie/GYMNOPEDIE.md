@@ -58,6 +58,15 @@ third Gnossienne under the moon, lotus leaves on stems, floating, the long ones 
 when the ball comes. Between the pieces the camera goes out over the curve of the planet to the sun going down, the
 lamps, the moon.
 
+## The cadences
+
+Each piece's last note runs back along the way the ball came (`CADENCES`): a slow wave of light going back through
+the piece's stones as the camera draws out. After the Gymnopédie it is a glint running back along the columns' tops in
+the sunset; after the first Gnossienne, a flare running back through the lamps over the wide between the pieces; and
+after the third, faster, a light running back round the whole planet through the flowers and then the lamps, the
+night's way once more, seen from afar as the period comes round and the title comes up, just before the dawn puts
+them out.
+
 ## The story
 
 A lamplighter's round, one day long. By day the ball walks the colonnade under the sun. At dusk it lights a lamp on
@@ -157,5 +166,6 @@ loudness come round with the period; every lamp is dark until the ball lights it
 flower opens as the ball comes and closes at dawn, across the seam; every layer of the air comes round with the
 period, and a shooting star falls only on a Gnossienne's top note, at night; there is one shower, in the
 Gymnopédie, with the bow after it and gone before the first Gnossienne; the whale passes once, under the third
-Gnossienne's pond; the aurora is the first Gnossienne's, in the full night only; the sun and the moon go round
+Gnossienne's pond; a wave of light runs back along each piece's way from its last note, and only then; the aurora is
+the first Gnossienne's, in the full night only; the sun and the moon go round
 without a jump, the seam included; the titles.

@@ -136,10 +136,11 @@ export function cloudLight(day: Sky, low: number, moon: number, overcast = 0): C
   const sunLit = mixHex(mixHex('#FFFDF7', '#FFCF9E', low), '#D3D6DD', 0.7 * overcast)
   const lit = mixHex(sunLit, mixHex('#3E4668', '#C3CEE2', moon), n)
   const dayShade = mixHex(mixHex(mixHex(day.top, day.low, 0.5), '#FFFFFF', 0.45), sunLit, 0.15)
-  const nightShade = mixHex(mixHex(day.top, day.low, 0.4), '#2A3256', 0.3)
+  const nightShade = mixHex(mixHex(day.top, day.low, 0.5), '#39426A', 0.3)
   const shade = mixHex(mixHex(dayShade, '#8E95A6', 0.75 * overcast), nightShade, n)
   const under = mixHex(mixHex(shade, day.low, 0.3 + 0.5 * low), shade, n)
-  return { lit, shade, under, alpha: 0.95 - 0.35 * n }
+  // Thinner at night, so the stars, the Milky Way and the aurora show through them.
+  return { lit, shade, under, alpha: 0.95 - 0.5 * n }
 }
 
 /**

@@ -552,6 +552,52 @@ export function bloom(stone: Stone, t: number): number {
   return night ? night.left * smooth(night.age, 0, 2.2) : 0
 }
 
+/**
+ * Each piece's last note runs back along the way the ball came: a slow wave of light going back through the piece's
+ * stones as the camera draws out, a glint along the columns' tops in the sunset, a flare through the lamps, and,
+ * after the third Gnossienne, round the whole planet through the flowers and then the lamps: the night's way, once
+ * more, as the period comes round.
+ */
+export const CADENCES = PIECES.map((piece, i) => ({
+  t: piece.last,
+  u: along(piece.last),
+  pieces: i === 2 ? [1, 2] : [i],
+  /** How far back its way goes: to where the first of its pieces began. */
+  way: along(piece.last) - along(PIECES[i === 2 ? 1 : i].from),
+  /** Cells a second it runs back, how wide it is, and how long it lasts. */
+  speed: [3, 3.4, 40][i],
+  width: [1.6, 1.6, 7][i],
+  lasts: [10, 10, 14][i],
+}))
+
+/** Where each cadence's wave is at `t`: cells along, and how bright; for those running now. */
+export function cadenceFronts(t: number): { u: number; light: number }[] {
+  const out: { u: number; light: number }[] = []
+  for (const c of CADENCES) {
+    const s = since(t, c.t)
+    if (s < 0 || s > c.lasts) continue
+    const back = c.speed * s
+    const light = smooth(s, 0, 0.6) * (1 - smooth(s, c.lasts * 0.55, c.lasts)) * (1 - smooth(back, c.way - c.width, c.way))
+    if (light > 0.01) out.push({ u: c.u - back, light })
+  }
+  return out
+}
+
+/** How much of a cadence's wave is on `stone` at `t`, 0 to 1. */
+export function cadence(stone: Stone, t: number): number {
+  let out = 0
+  for (const c of CADENCES) {
+    if (!c.pieces.includes(stone.piece)) continue
+    const s = since(t, c.t)
+    if (s < 0 || s > c.lasts) continue
+    let back = (c.u - (stone.u0 + stone.u1) / 2) % LENGTH
+    if (back < 0) back += LENGTH
+    const d = back - c.speed * s
+    out = Math.max(out, Math.exp(-((d / c.width) ** 2)) * (1 - smooth(s, c.lasts * 0.55, c.lasts)))
+  }
+  return out
+}
+
 /** A restrike's pulse: the chord striking the held note's key again, answered by the stone. */
 function pulse(stone: Stone, t: number): number {
   let out = 0
@@ -651,7 +697,7 @@ function stele(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
 }
 
 /** A lotus leaf on its stem: the third Gnossienne's stones. `open` is how far its flower has opened, if it has one. */
-function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number, sway: number, open: number, flower: boolean): void {
+function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number, sway: number, open: number, flower: boolean, wave = 0): void {
   const K = (v: number) => v * k
   const leaf = mixHex('#5E8C77', day.lit, 0.25)
   const ink = alpha(p, day.line, 0.75)
@@ -680,10 +726,10 @@ function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
   const fy = -h - 0.02
   if (open > 0.02) {
     const ctx = p.drawingContext as Ctx2D
-    const r = K(0.34)
+    const r = K(0.34 * (1 + 0.5 * wave))
     const cy = K(fy - 0.09)
     const g = ctx.createRadialGradient(K(fx), cy, 0, K(fx), cy, r)
-    g.addColorStop(0, `rgba(246, 226, 232, ${(0.22 * open).toFixed(3)})`)
+    g.addColorStop(0, `rgba(246, 226, 232, ${(0.22 * open + 0.3 * wave * open).toFixed(3)})`)
     g.addColorStop(1, 'rgba(246, 226, 232, 0)')
     ctx.save()
     ctx.fillStyle = g
@@ -729,13 +775,14 @@ function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: boolean): v
       atSea(p, k, u0)
       if (mirrored) p.scale(1, -1)
       if (stone.piece === 0) {
-        column(p, k, sw, h, day, c.weight, 0.7 * pulse(stone, c.t), sun)
+        column(p, k, sw, h, day, c.weight, Math.min(1, 0.7 * pulse(stone, c.t) + cadence(stone, c.t)), sun)
       } else if (stone.piece === 1) {
         // Lit by the ball, and burning on behind it until dawn: Ariadne's thread in lamps.
-        stele(p, k, sw, h, day, c.weight, lampLight(stone, c.t), j === 0)
+        const lit = lampLight(stone, c.t)
+        stele(p, k, sw, h, day, c.weight, lit > 0 ? Math.min(1, lit + 0.45 * cadence(stone, c.t)) : 0, j === 0)
       } else {
         const sway = 0.03 * osc(c.t, 0.11, stone.index + j)
-        lotus(p, k, sw, h, day, c.weight, sway, bloom(stone, c.t), j === n - 1 && w > 0.9)
+        lotus(p, k, sw, h, day, c.weight, sway, bloom(stone, c.t), j === n - 1 && w > 0.9, cadence(stone, c.t))
       }
       p.pop()
     }
@@ -1264,8 +1311,9 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     const spots: [number, number, number, HTMLCanvasElement][] = []
     for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
       if (stone.piece === 1) {
-        const light = lampLight(stone, c.t)
-        if (light < 0.02) continue
+        const burning = lampLight(stone, c.t)
+        if (burning < 0.02) continue
+        const light = burning + 0.7 * cadence(stone, c.t)
         const [x, y] = onCanvas(ctx, k, ...polar(stone.u0 + shift + 0.1, stone.h - sink(stone, c.t) + 0.08))
         spots.push([x, y, light, lamp])
       } else if (stone.piece === 2 && stone.u1 - stone.u0 > 0.9) {
@@ -1274,7 +1322,7 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
         const w = stone.u1 - stone.u0
         const fx = w - Math.min(0.24, (w / Math.ceil(w / SEGMENT[2])) * 0.25)
         const [x, y] = onCanvas(ctx, k, ...polar(stone.u0 + shift + fx, stone.h + float(stone, c.t) + 0.05))
-        spots.push([x, y, 0.55 * open, flower])
+        spots.push([x, y, open * (0.55 + 0.8 * cadence(stone, c.t)), flower])
       }
     }
     ctx.save()
@@ -1336,6 +1384,31 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
       ctx.arc(x, y, Math.max(1, cell * 0.012), 0, Math.PI * 2)
       ctx.fill()
     }
+    ctx.restore()
+  }
+  // A cadence's wave, running back along the way: its front a soft light over the stones it is passing, gold over the
+  // lamps, pink over the flowers, warm over the columns in the sunset.
+  for (const front of cadenceFronts(c.t)) {
+    const near = stonesIn(front.u - 0.6, front.u + 0.6)
+    if (!near.length) continue
+    const { stone, shift } = near[0]
+    const H = ctx.canvas.height
+    const m = ctx.getTransform()
+    const cell = Math.hypot(m.a, m.b) * k
+    const at = front.u - shift
+    const h = stone.h - sink(stone, c.t) + float(stone, c.t) + 0.1
+    const [x, y] = onCanvas(ctx, k, ...polar(at + shift, h))
+    const sprite = stone.piece === 2
+      ? haloSprite('255, 244, 246', '244, 206, 218', '220, 170, 200')
+      : stone.piece === 1
+        ? haloSprite('255, 240, 204', '255, 214, 150', '242, 170, 80')
+        : haloSprite('255, 248, 232', '255, 226, 186', '255, 196, 150')
+    const r = Math.max(H * 0.03, cell * 0.9)
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.globalAlpha = Math.min(1, 0.9 * front.light)
+    ctx.drawImage(sprite, x - r, y - r, 2 * r, 2 * r)
     ctx.restore()
   }
   // The lamplighter's own light: through the first Gnossienne the ball carries a small warm glow, the flame it lights
