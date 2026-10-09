@@ -652,7 +652,20 @@ function bench(p: p5, c: Ctx, dim: number): void {
   p.rectMode(p.CORNER)
   // Under it, in its shadow, the glass's foot and the floor.
   const ctx = p.drawingContext as C2D
-  band(ctx, k, BENCH.x0, BENCH.x1, BENCH.top + BENCH.slab, ROOM.floor, [[0, LAKE.night, 0.28], [1, LAKE.night, 0.12]])
+  // Its ends fade out within the slab's length, so the shadow is never a dark box with square corners.
+  const fade = 0.14
+  const n = 10
+  const under: [number, string, number][] = [[0, LAKE.night, 0.28], [1, LAKE.night, 0.12]]
+  band(ctx, k, BENCH.x0 + fade, BENCH.x1 - fade, BENCH.top + BENCH.slab, ROOM.floor, under)
+  for (let i = 0; i < n; i++) {
+    const a = (i + 0.5) / n
+    ctx.save()
+    ctx.globalAlpha *= a * a * (3 - 2 * a)
+    const w = fade / n
+    band(ctx, k, BENCH.x0 + i * w, BENCH.x0 + (i + 1) * w, BENCH.top + BENCH.slab, ROOM.floor, under)
+    band(ctx, k, BENCH.x1 - (i + 1) * w, BENCH.x1 - i * w, BENCH.top + BENCH.slab, ROOM.floor, under)
+    ctx.restore()
+  }
   soft(ctx, k, (BENCH.x0 + BENCH.x1) / 2, ROOM.floor + 0.01, (BENCH.x1 - BENCH.x0) * 0.6, 0.06, LAKE.night, 0.3)
   solid(p, ink, weight, shade(LAKE.floorDark, dim * 0.75))
   for (const x of [BENCH.x0 + 0.16, BENCH.x1 - 0.16 - BENCH.leg]) p.rect(X(x), X(BENCH.top + BENCH.slab - 0.01), X(BENCH.leg), X(ROOM.floor - BENCH.top - BENCH.slab + 0.01))

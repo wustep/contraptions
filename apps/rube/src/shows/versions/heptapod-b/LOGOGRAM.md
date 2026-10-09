@@ -302,6 +302,9 @@ changed, in the order of the film, and then what runs through it:
 - **The light after the shell** (186.3 → 196.8): where the cloud opens the shafts of light were the floods' pale
   cream, so the reunion sat in a grey-olive wash (a fresh critic's note). They are sunlight now, warmed toward the
   camp lamps' gold and a little stronger: the first warmth the valley has, and the two of them meet in it.
+- **The shadow under the bench** (the first frame and the last, and every scene at the window): a dark box under the
+  slab with square ends, on the glass's foot and again in the floor's reflection. Its ends fade out within the
+  slab's length now.
 - **The engine catching** (27.55 → 28.5): each cough and the catch was one ball of smoke that left the stack at once
   and floated off on its own, like a smudge on the lens, and the running engine's puffs were too faint to see. Each
   is a short burst out of the stack's mouth now, rising steadily as it drifts back, and the running puffs show.
