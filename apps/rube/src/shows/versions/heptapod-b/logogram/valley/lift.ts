@@ -449,6 +449,8 @@ const BAND_LO = MEAD - 7
 /** The moment the deck tears free of the fog: the lift's burst's hardest pulse. */
 const TEAR = pulse(228)
 const FOGGY = rgbOf(VALLEY.fog)
+/** The torn fog's underside, in its own shadow: what gives it a shape against a sky as pale as it is. */
+const FOG_UNDER = rgbOf(mixHex(VALLEY.cloudShade, VALLEY.ridge, 0.25))
 
 /** The fog the deck drags up through the band with it: where each lobe sits on the deck, its size and weight. */
 const CLING: { x: number; y: number; rx: number; ry: number; a: number }[] = [
@@ -487,15 +489,18 @@ function drawCling(p: p5, k: number, t: number): void {
   const since = torn ? t - TEAR : 0
   // Flung up on the surge and spent at once; then drifting apart and sinking, and thinning away.
   const up = torn ? 0.8 * (1 - Math.exp(-since / 0.12)) - 0.16 * since : 0
-  const fade = torn ? (0.18 * Math.exp(-since / 0.8) + 0.82 * Math.exp(-since / 0.11)) * (1 - smoothUp(since, 1.8, 3.4)) : 1
+  const fade = torn ? (0.5 * Math.exp(-since / 0.75) + 0.5 * Math.exp(-since / 0.22)) * (1 - smoothUp(since, 1.8, 3.4)) : 1
   CLING.forEach((l, i) => {
     const swirl = 0.08 * Math.sin(t * 0.9 + i * 1.7)
-    const out = torn ? (l.x - CX) * 0.45 * (1 - Math.exp(-since / 0.2)) : 0
+    const out = torn ? (l.x - CX) * 0.8 * (1 - Math.exp(-since / 0.3)) : 0
     const x = l.x + swirl + out
     const trail = l.ry > l.rx
     const y = -rise + l.y + 0.05 * Math.sin(t * 1.3 + i) - (trail ? -0.4 * since : up)
     const grow = 1 + (torn ? 0.6 * (1 - Math.exp(-since / 0.6)) : 0)
-    lobe(ctx, k, x, y, l.rx * grow, l.ry * grow, FOGGY, 0.62 * l.a * depth * fade)
+    const a = 0.62 * l.a * depth * fade
+    // Torn off, it is fog against sky: its underside in shadow, its top lit, so it reads as thrown.
+    if (torn && !trail) lobe(ctx, k, x, y + l.ry * grow * 0.32, l.rx * grow * 0.92, l.ry * grow * 0.8, FOG_UNDER, a * 0.75)
+    lobe(ctx, k, x, y, l.rx * grow, l.ry * grow, FOGGY, a)
   })
 }
 

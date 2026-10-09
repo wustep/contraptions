@@ -246,6 +246,9 @@ cut, and close looks at whatever caught the eye. What changed:
   curl of its own, and a soft round pad at its tip where it presses on the glass.
 - **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
   shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
+- **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
+  the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
+  off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
 - **The reunion** (195.344): Ian came to a stop a sliver from her, and as her lean to him eased back a gap opened
   between them, so the meadow ended on the two of them drifting apart. He meets her on the touch now and stays
   against her as she settles back to her mark (which the circle's first frame needs): they end it together.
