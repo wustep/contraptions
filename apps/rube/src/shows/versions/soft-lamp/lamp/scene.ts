@@ -9,7 +9,7 @@ import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
 import { camera } from './camera'
 import { titlesAt } from './titles'
-import { hands, knob, sipAt } from './hands'
+import { REFILL, hands, knob, liftAt } from './hands'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { flashRoom, night } from './sky'
@@ -297,8 +297,12 @@ function desk(ctx: Ctx, lw: number, t: number): void {
 
 /* ------------------------------------------------------------------ the mug */
 
-/** How hot the tea still is, 1 to about a third, over the night. */
-const warmth = (t: number): number => 1 - 0.62 * Math.min(1, t / MUSIC_END)
+/**
+ * How hot the tea still is: 1, cooling to under half by about midnight, when someone takes the mug away and brings it
+ * back hot (`REFILL`, `hands.ts`); that cools again toward the end.
+ */
+const warmth = (t: number): number =>
+  t < REFILL ? 1 - 0.62 * Math.min(1, t / MUSIC_END) : 1 - 0.45 * Math.min(1, (t - REFILL) / (MUSIC_END - REFILL))
 
 function mug(ctx: Ctx, lw: number, t: number): void {
   const lamp = lampAt(t)
@@ -812,10 +816,14 @@ export const things = scenery<null>(
     contacts(ctx, c.t)
     cable(ctx, lw)
     walkman(ctx, lw, c.t)
-    // Unless someone has it up for a sip (`hands.ts` draws it then, on its way).
-    if (sipAt(c.t) <= 0.001) {
-      mug(ctx, lw, c.t)
+    // Unless someone has it up (`hands.ts` draws it then, on its way); its steam stays a moment where it was.
+    const up = liftAt(c.t)
+    if (up <= 0.001) mug(ctx, lw, c.t)
+    if (up < 0.999) {
+      ctx.save()
+      ctx.globalAlpha = 1 - up
       steam(ctx, c.t)
+      ctx.restore()
     }
     cat(ctx, lw, c.t)
     BOOKS.forEach((b, i) => book(ctx, lw, b, i, c.t))

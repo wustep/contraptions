@@ -1,10 +1,10 @@
 import { camera } from './camera'
-import { rgba } from './canvas'
+import { rgba, viewOf } from './canvas'
 import { sweepAt } from './decor'
 import { CAT, LAMP, MUG } from './desk'
 import { MUSIC_END, smooth } from './music'
 import { MOMENTS } from './sky'
-import { INK, hash, lampAt, lightAt, lit, rainAt } from './world'
+import { INK, LAMP_ON, MOUTH, hash, lampAt, lightAt, lit, rainAt } from './world'
 
 /**
  * Someone at the desk. The show never shows who: the camera is where they sit, and what is seen of them is a hand in
@@ -20,7 +20,7 @@ import { INK, hash, lampAt, lightAt, lit, rainAt } from './world'
 
 type Ctx = CanvasRenderingContext2D
 
-type Kind = 'sip' | 'cup' | 'pet' | 'lamp'
+type Kind = 'on' | 'sip' | 'cup' | 'pet' | 'away' | 'back' | 'lamp'
 
 interface Reach {
   kind: Kind
@@ -30,17 +30,20 @@ interface Reach {
 }
 
 /** How long each takes, seconds, in and out included. */
-const DUR: Record<Kind, number> = { sip: 11, cup: 13, pet: 9, lamp: 10 }
+const DUR: Record<Kind, number> = { on: 5.6, sip: 11, cup: 13, pet: 9, away: 6, back: 6, lamp: 10 }
 /** How long the hand takes to come in, and to go. */
 const IN = 1.5
 const OUT = 1.3
 
-/** The knob on the lamp's base, on the front of its dome: what turns the lamp down. */
+/** The knob on the lamp's base, on the front of its dome: what turns the lamp on, and down. */
 export const KNOB = { x: LAMP.base.x + 0.17, y: -0.085, r: 0.042 }
 
 /** What the camera must hold the whole time for each reach: the thing reached for, and the hand on it. */
 const BOX: Record<Kind, [number, number, number, number]> = {
+  on: [LAMP.base.x - 0.4, -0.45, LAMP.base.x + 0.7, 0.2],
   sip: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
+  away: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
+  back: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
   cup: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
   pet: [CAT.x0, -1.1, CAT.head.x + 0.75, 0.25],
   lamp: [LAMP.base.x - 0.4, -0.45, LAMP.base.x + 0.7, 0.2],
@@ -81,13 +84,21 @@ export const REACHES: Reach[] = (() => {
       }
     }
   }
+  // The lamp, turned on as the first chord sounds (`lampAt`): the hand is on its way in as the show opens.
+  out.push({ kind: 'on', at: 0.1, dur: DUR.on })
   // A sip while the tea is hot: in the second track.
   find('sip', 160, 420)
   // Hands round the mug, in the heaviest of the rain.
   find('cup', 600, 1250, (t) => rainAt(t) > 0.65)
-  // The kitten, twice, well apart: once in the rain, once late in the clear night.
+  // The kitten, once in the rain.
   find('pet', 560, 900)
-  find('pet', 1200, 1660)
+  // About midnight, the tea gone cold: the mug taken away, and a few minutes later brought back hot, the camera holding
+  // the desk each time (in between, the desk stands empty by the cat).
+  find('away', 1100, 1300)
+  const away = out.find((r) => r.kind === 'away')
+  if (away) find('back', away.at + 120, away.at + 420)
+  // And the kitten again, late in the clear night.
+  find('pet', 1260, 1660)
   // The lamp, turned down as the last track rings out: the knob turns as the light goes (`lampAt`).
   out.push({ kind: 'lamp', at: MUSIC_END - 3.6, dur: DUR.lamp })
   return out.sort((a, b) => a.at - b.at)
@@ -98,7 +109,8 @@ function reachAt(t: number): { r: Reach; k: number; s: number } | null {
   for (const r of REACHES) {
     const s = t - r.at
     if (s < 0 || s > r.dur) continue
-    const k = smooth(s, 0, IN) * (1 - smooth(s, r.dur - OUT, r.dur))
+    // Carrying the mug off, or back, the hand goes or comes with it, not along its arm.
+    const k = (r.kind === 'back' ? 1 : smooth(s, 0, IN)) * (r.kind === 'away' ? 1 : 1 - smooth(s, r.dur - OUT, r.dur))
     return { r, k, s }
   }
   return null
@@ -115,40 +127,50 @@ export function petAt(t: number): number {
 export function handAt(t: number): { x: number; y: number; a: number } {
   const p = poseAt(t)
   if (!p) return { x: 0, y: 0, a: 0 }
-  const up = p.r.kind === 'sip' ? sipAt(t) : 0
-  const e = p.r.kind === 'sip' ? travelAt(t) : 0
-  const at = sipped(up, e, p.tip.x, p.tip.y)
-  return { x: at.x, y: at.y, a: p.k * (1 - e) }
+  const m = mugAt(t)
+  const at = carried(m, p.tip.x, p.tip.y)
+  return { x: at.x, y: at.y, a: p.k * (1 - m.e) }
 }
 
 /**
- * How far the mug is off the desk for a sip, 0 (standing) to 1 (at someone's lips, out of the picture): lifted after
- * the hand has it, held a few seconds, and set back down before the hand lets go.
+ * Where the mug is: `up`, lifted off the desk (0 standing, 1 lifted); `e`, how far toward someone's lips (it grows as
+ * it comes toward the camera, and leaves the picture at its foot); `gone`, carried on past them, away to be refilled.
+ * A sip lifts it, holds it a few seconds and sets it back down before the hand lets go. About midnight it is taken
+ * away, and brought back the same way a little later.
  */
-export function sipAt(t: number): number {
+export function mugAt(t: number): { up: number; e: number; gone: number } {
+  const between = REACHES.find((r) => r.kind === 'away')
+  const back = REACHES.find((r) => r.kind === 'back')
+  if (between && back && t > between.at + between.dur && t < back.at) return { up: 1, e: 1, gone: 1 }
   const h = reachAt(t)
-  if (!h || h.r.kind !== 'sip') return 0
-  return smooth(h.s, 2.0, 2.6) * (1 - smooth(h.s, 8.5, 9.1))
+  if (!h) return { up: 0, e: 0, gone: 0 }
+  const s = h.s
+  if (h.r.kind === 'sip') return { up: smooth(s, 2.0, 2.6) * (1 - smooth(s, 8.5, 9.1)), e: smooth(s, 2.4, 4.3) * (1 - smooth(s, 6.7, 8.7)), gone: 0 }
+  if (h.r.kind === 'away') return { up: smooth(s, 2.0, 2.6), e: smooth(s, 2.4, 4.3), gone: smooth(s, 3.9, 5.8) }
+  if (h.r.kind === 'back') return { up: 1 - smooth(s, 3.4, 4.0), e: 1 - smooth(s, 1.5, 3.4), gone: 1 - smooth(s, 0, 1.8) }
+  return { up: 0, e: 0, gone: 0 }
 }
 
-/** How far toward the lips it has gone (after it is lifted off the desk, and back before it is set down). */
-function travelAt(t: number): number {
-  const h = reachAt(t)
-  if (!h || h.r.kind !== 'sip') return 0
-  return smooth(h.s, 2.4, 4.3) * (1 - smooth(h.s, 6.7, 8.7))
+/** Whether the mug is anywhere but standing on the desk: `scene.ts` leaves it (and its steam and shadows) to this file. */
+export const liftAt = (t: number): number => mugAt(t).up
+
+/** When the mug comes back hot: the steam is fresh from here (`scene.ts`), and cools again to the end. */
+export const REFILL = (() => {
+  const back = REACHES.find((r) => r.kind === 'back')
+  return back ? back.at + 4 : Infinity
+})()
+
+/** How big the mug is drawn, as it comes toward the camera. */
+const grow = (e: number): number => 1 + 2.2 * e * e
+
+/** Where a point on the mug (or the hand on it) is, on its way. */
+function carried(m: { up: number; e: number; gone: number }, x: number, y: number): { x: number; y: number } {
+  const g = grow(m.e)
+  return { x: MUG.x + (x - MUG.x) * g + 0.6 * m.e + 0.5 * m.gone, y: y * g - 0.25 * m.up + 2.6 * m.e + 4 * m.gone }
 }
 
-/**
- * Where a point on the mug (or the hand on it) is: lifted off the desk (`up`), then `e` of the way to the lips, toward
- * the camera, so it grows as it comes and leaves the picture at its foot, where someone sitting at the desk would be.
- */
-function sipped(up: number, e: number, x: number, y: number): { x: number; y: number } {
-  const g = 1 + 2.2 * e * e
-  return { x: MUG.x + (x - MUG.x) * g + 0.6 * e, y: y * g - 0.25 * up + 2.6 * e }
-}
-
-/** How far the lamp's knob is turned, 0 (up) to 1 (down to a glow): it turns as the lamp goes down. */
-export const knobAt = (t: number): number => smooth(t, MUSIC_END - 1.5, MUSIC_END + 4.5)
+/** How far the lamp's knob is turned, 0 (up) to 1 (down to a glow): turned up as the lamp comes on, down as it goes. */
+export const knobAt = (t: number): number => 1 - smooth(t, LAMP_ON - 0.1, LAMP_ON + 1.5) + smooth(t, MUSIC_END - 1.5, MUSIC_END + 4.5)
 
 interface Pose {
   r: Reach
@@ -204,7 +226,7 @@ function poseAt(t: number): Pose | null {
     const at = { x: CAT.head.x + 0.1, y: CAT.head.y + 0.16 }
     tip = { x: at.x + d.x * 0.015 * sc, y: at.y + d.y * 0.015 * sc }
     reach = PALM.len + 0.3 * (1 - 0.5 * 0.4)
-  } else if (r.kind === 'cup' || r.kind === 'sip') {
+  } else if (r.kind === 'cup' || r.kind === 'sip' || r.kind === 'away' || r.kind === 'back') {
     // Round the mug's front, the fingers wrapped round its far side: for the warmth, now and then a finger tapping;
     // or to take it up for a sip (`sipAt`), the grip a little firmer.
     side = -1
@@ -216,7 +238,7 @@ function poseAt(t: number): Pose | null {
     tip = { x: MUG.x + MUG.halfW - 0.02, y: -MUG.h * 0.48 }
     reach = PALM.len + 0.3 * 0.62
   } else {
-    // The lamp's knob, between finger and thumb, turned as the light goes down.
+    // The lamp's knob, between finger and thumb, turned as the light comes up, or goes down.
     side = 1
     angle = -0.35 + 0.35 * knobAt(t)
     arm = 2.6
@@ -244,15 +266,17 @@ const KNIT_LIT = '#9FB49B'
 export function hands(ctx: Ctx, lw: number, t: number, mug: (ctx: Ctx) => void): void {
   const p = poseAt(t)
   if (!p) return
-  // Taking a sip, the mug comes too, and both come toward the camera: drawn here, in front of everything.
-  const up = sipAt(t)
-  if (p.r.kind === 'sip' && up > 0.001) {
-    const e = travelAt(t)
+  // Carrying the mug, for a sip or away, both come toward the camera: drawn here, in front of everything.
+  const m = mugAt(t)
+  const carry = (g: Ctx) => {
+    const o = carried(m, 0, 0)
+    g.translate(o.x, o.y)
+    g.scale(grow(m.e), grow(m.e))
+  }
+  shadow(ctx, lw, t, p, m, carry)
+  if (m.up > 0.001) {
     ctx.save()
-    const o = sipped(up, e, 0, 0)
-    const g = 1 + 2.2 * e * e
-    ctx.translate(o.x, o.y)
-    ctx.scale(g, g)
+    carry(ctx)
     mug(ctx)
     hand(ctx, lw, t, p)
     ctx.restore()
@@ -261,10 +285,51 @@ export function hands(ctx: Ctx, lw: number, t: number, mug: (ctx: Ctx) => void):
   hand(ctx, lw, t, p)
 }
 
-function hand(ctx: Ctx, lw: number, t: number, p: Pose): void {
+/** The scratch canvas the hand's shadow is drawn small in, kept between frames. */
+let shade: HTMLCanvasElement | null = null
+
+/**
+ * The hand's shadow from the lamp: thrown away from the shade onto whatever is behind it (the kitten, the mug, the
+ * desk, the wall), soft, as a hand held well in front of things throws one. Drawn small and laid back over the
+ * picture, so it is soft for nothing. Gone as the mug is carried toward the camera, out of the lamp's light.
+ */
+function shadow(ctx: Ctx, lw: number, t: number, p: Pose, m: { up: number; e: number }, carry: (g: Ctx) => void): void {
+  const a = 0.32 * lampAt(t) * (1 - m.e) * p.k
+  if (a < 0.01) return
+  const v = viewOf(ctx)
+  const dx = p.wrist.x - MOUTH.x
+  const dy = p.wrist.y - MOUTH.y
+  const d = Math.hypot(dx, dy) || 1
+  const off = { x: (dx / d) * 0.42, y: (dy / d) * 0.42 }
+  const res = 14
+  const w = Math.ceil((v.x1 - v.x0) * res)
+  const h = Math.ceil((v.y1 - v.y0) * res)
+  shade ??= document.createElement('canvas')
+  if (shade.width < w || shade.height < h) {
+    shade.width = Math.max(shade.width, w)
+    shade.height = Math.max(shade.height, h)
+  }
+  const g = shade.getContext('2d') as Ctx
+  g.setTransform(1, 0, 0, 1, 0, 0)
+  // All of it, not just this frame's part: what is drawn past the part is sampled at its edge as it is laid back.
+  g.clearRect(0, 0, shade.width, shade.height)
+  g.setTransform(res, 0, 0, res, (off.x - v.x0) * res, (off.y - v.y0) * res)
+  if (m.up > 0.001) carry(g)
+  hand(g, lw, t, p, true)
+  ctx.save()
+  ctx.globalAlpha = a
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  // Tinted the room's shadow colour: the mask is black, so a multiply over the room leaves it the room's own dark.
+  ctx.globalCompositeOperation = 'multiply'
+  ctx.drawImage(shade, 0, 0, w, h, v.x0, v.y0, w / res, h / res)
+  ctx.restore()
+}
+
+function hand(ctx: Ctx, lw: number, t: number, p: Pose, shape = false): void {
   const lamp = lampAt(t)
   // Nearer the lamp than the desk's far end, and never in the dark: the hand is lit as much as the room lets it be.
-  const l = Math.min(1, lightAt(p.wrist.x, p.wrist.y - 0.2) * lamp * 1.2 + 0.42 * Math.max(0.35, lamp))
+  const l = Math.min(1, lightAt(p.wrist.x, p.wrist.y - 0.2) * lamp * 1.2 + 0.42 * Math.max(0.65, lamp))
   const skin = lit(SKIN, SKIN_LIT, l)
   const knit = lit(KNIT, KNIT_LIT, l * 0.85)
   ctx.save()
@@ -346,6 +411,21 @@ function hand(ctx: Ctx, lw: number, t: number, p: Pose): void {
       })
     }
     ctx.restore()
+  }
+  if (shape) {
+    // Only its outline's whole shape, for its shadow: the hand, and the sleeve as it fades.
+    handDraw('ink')
+    ctx.translate(p.wrist.x, p.wrist.y)
+    ctx.rotate(p.arm)
+    ctx.translate(0, -0.02)
+    sleeve()
+    const g = ctx.createLinearGradient(0, -0.9, 0, -2.6)
+    g.addColorStop(0, 'rgba(0, 0, 0, 1)')
+    g.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    ctx.fillStyle = g
+    ctx.fill()
+    ctx.restore()
+    return
   }
   handDraw('ink')
   handDraw('fill')

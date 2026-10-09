@@ -102,9 +102,9 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   tail swaying a bar at a time; it comes out of it ahead of a break and ahead of the lob, to watch. Four times, watching,
   it washes: a paw licked and drawn over its ear. When the last
   track's drums leave, it puts its head down and sleeps.
-- **Someone** is at the desk, where the camera is: never seen but for a hand in a sweater's sleeve, five times through
-  the night, for a sip, round the mug, to scratch the kitten under its chin, and at the end to turn the lamp down
-  (`lamp/hands.ts`).
+- **Someone** is at the desk, where the camera is: never seen but for a hand in a sweater's sleeve. It turns the lamp
+  on as the show opens and down as it ends; between, it takes a sip, scratches the kitten under its chin twice, rests
+  round the mug in the rain, and about midnight takes the cold tea away and brings it back hot (`lamp/hands.ts`).
 
 **The design system.** One ink for every line, the ball's included, at the ball's weight (structure at full weight,
 detail at half or less, decoration hardly at all). Two lights and the room between them, as a lofi room is lit: the
@@ -630,6 +630,33 @@ sleeve, reaching in from the camera's side now and then, as anyone at a desk doe
     `check:shows` now holds the reaches: the five in order, each with its prop in frame throughout, the knob turning
     with the light, and the cat's yawns and washes all landing clear of the hand.
 
+### The thirty-seventh pass: an evening, not five gestures
+
+Last pass's hand came five times, each a gesture on its own. This pass gives the person an evening with a shape:
+they come in and put the light on, their tea goes cold and they make more, and the shadow of their hand falls in the
+lamp's light like anything else in the room.
+
+88. **Bookends.** The show opened with the lamp coming on by itself. Now, as it opens, a hand is already on its way to
+    the lamp's knob, turns it up as the first chord sounds, and the light comes up under its fingers; at the end the
+    same hand turns it down. The knob turns with the light both ways (`knobAt`).
+89. **The tea goes cold, and is made again.** The steam has always been the held sound, thinning as the tea cooled
+    through the night. Now, at 19:00 (the clock just past midnight), the hand takes the cold mug away: lifted, brought
+    toward the camera, and on out of the picture. The desk stands empty by the cat for three minutes. At 22:07 the mug is brought back the same way, set down and let go, and its steam is full
+    again. It cools from there to the end, more slowly. Each trip is played to a frame that holds the mug, a few
+    minutes apart.
+90. **The hand in the light.** The hand now throws a soft shadow from the lamp, away from the shade, onto whatever is
+    behind it: the kitten's chest and the desk under a chin scratch, faint by the mug at the desk's dark end. It is
+    drawn small and laid back over the picture, and it fades as the mug is carried out of the light. In the dark
+    opening, before the lamp, the hand is lit by the dusk and the fairy lights and never goes black.
+91. **Fixed on the way:** the mug's steam vanished in one frame as it was lifted and came back in one as it was set
+    down; it now fades with the lift. And a scrub back was off by one level in the frame's last row of pixels after a
+    reach: the scratch canvases (the hand's shadow, the soft city) were cleared only where the frame drew, and
+    smoothing read the stale row past it as each was laid back. They are cleared whole now; five moments rendered in
+    two orders are identical.
+92. **Looked at:** the opening's first five seconds, the mug's trip away and back, the empty desk, the shadow under a
+    scratch, the end. `check:shows` now holds all eight reaches in order (the lamp turned on and down; the mug taken
+    away about midnight and back hot, well before the end).
+
 **Subtracted:** the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
@@ -652,8 +679,9 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
   stage, so it is not in this PR.
 - **The focus.** How soft the city goes at the desk is one number (`blurOf`, `lamp/lens.ts`), and how far the layers
   move is one per layer (`DEPTH`, `lamp/sky.ts`). Both are set to be felt on a move rather than seen in a still.
-- **The hand.** Someone at the desk, never seen but for a hand and a sleeve, five times. It could be fewer (the sip
-  and the lamp alone would still say someone is there). The sweater's colour is one constant (`KNIT`, `lamp/hands.ts`).
+- **The hand.** Someone at the desk, never seen but for a hand and a sleeve, eight times: the lamp on, a sip, two
+  chin scratches, hands round the mug, the mug away and back, the lamp down. It could be fewer (the lamp's two
+  and the refill alone would still say someone is there). The sweater's colour is one constant (`KNIT`, `lamp/hands.ts`).
 - **The lightning.** Three far-off flashes, no bolt. They could be fewer, or gone; they are the only sudden light in
   the half hour.
 - **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.

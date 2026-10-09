@@ -127,7 +127,8 @@ function scratchOf(i: number, w: number, h: number): CanvasRenderingContext2D {
   }
   const g = c.getContext('2d') as CanvasRenderingContext2D
   g.setTransform(1, 0, 0, 1, 0, 0)
-  g.clearRect(0, 0, w, h)
+  // All of it, not just this frame's part: what is past the part is sampled at its edge as it is laid back.
+  g.clearRect(0, 0, c.width, c.height)
   return g
 }
 /** Whether this browser's canvas blurs (Safari's did not until lately); without it, the soft city is scaled down and up. */
