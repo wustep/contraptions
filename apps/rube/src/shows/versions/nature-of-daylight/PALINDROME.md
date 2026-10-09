@@ -512,6 +512,14 @@ A thirty-fifth checked Hannah at her new sizes everywhere her size enters the ma
 reach into the leaves, the leap, the bounce and the hop back onto the seat, the cut to the bed, and the vision; and
 searched the whole swing at ten frames a second for a frame unlike its neighbours. All held. Nothing to change.
 
+A thirty-sixth gave a fresh cinematographer the frames for composition and light alone. What it ranked weakest was
+each a choice the show is built on and was kept: the white at the white-out's cut (231, which the check holds white);
+the red of China's screen rising and of the alarm lamp (Shang's red, the story's); the empty valley in the hush after
+the shell has gone (319); the ring whole in the wide on the loudest bar with her small at its foot (297 to 307), the
+camera coming back in to her by 309. Its two crops were looked at full size and are not faults: the card at 157 hangs
+by the slot at the glass, where every word comes in, and the lift's deck at 313 is just above a two-second shot before
+the cut to the wide. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
