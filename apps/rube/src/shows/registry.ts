@@ -36,6 +36,16 @@ export interface Framing {
   focus?: [number, number]
 }
 
+/**
+ * Where a credit card centred at `cx` (px) and `width` wide goes on a stage `stage` wide: where it is, unless it would
+ * come nearer an edge than `margin`, in which case it slides in just far enough; centred, if it cannot fit at all.
+ */
+export function placeCard(cx: number, width: number, stage: number, margin = 8): number {
+  const half = width / 2
+  if (width > stage - 2 * margin) return stage / 2
+  return Math.min(Math.max(cx, margin + half), stage - margin - half)
+}
+
 /** How far inside the Zoom frame's edges a focus is kept, as a share of the frame's height. */
 const FOCUS_MARGIN = 0.2
 /** The width of the soft knee either side of that margin, as a share of the frame's height. */

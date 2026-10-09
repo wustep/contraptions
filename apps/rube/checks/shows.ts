@@ -11,7 +11,7 @@ import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
-import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, sectionOf, shelves, versionPath, zoomed, type Performance, type ShowVersion } from '../src/shows/registry'
+import { RENAMED_TAKES, performanceProblems, pickVersion, placeCard, readShows, sectionOf, shelves, versionPath, zoomed, type Performance, type ShowVersion } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
@@ -118,6 +118,9 @@ async function main(): Promise<void> {
   }
   check('a work with one take has no take row to pick from', /work\.versions\.length < 2\) takeRow\.hidden = true/.test(player))
   check('no take has a byline in the panel', !/byline/.test(player) && !/director/.test(player))
+  check('a credit card stays where it is when it fits, slides in to a margin when it would cross an edge, and centres when it cannot fit',
+    placeCard(200, 100, 400) === 200 && placeCard(30, 100, 400) === 58 && placeCard(390, 100, 400) === 342 &&
+    placeCard(152, 331, 390) === 173.5 && placeCard(100, 390, 390) === 195 && placeCard(58, 100, 400) === 58)
   check('Z toggles Zoom and O toggles Overview', /case 'z':/.test(player) && /case 'o':/.test(player) && player.includes('Zoom in on the action (Z)') && player.includes('Zoom out to the whole world (O)'))
 
   /* ------------------------------------------------------------------ the registry */

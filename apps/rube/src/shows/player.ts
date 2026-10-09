@@ -4,7 +4,7 @@ import { createListbox } from '../../../../src/ui/listbox'
 import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
 import { recordingFormat } from './record'
-import { performanceProblems, pickVersion, shelves, type Performance, type TitleCard, type Version } from './registry'
+import { performanceProblems, pickVersion, placeCard, shelves, type Performance, type TitleCard, type Version } from './registry'
 import { showCard as shareCard, showFromPath, showPath } from './share'
 import { createSoundtrack, prefetchSoundtrack } from './soundtrack'
 import './youtube.css'
@@ -787,10 +787,7 @@ function renderWords(t: number): void {
     }
     // Centred on its place, but kept on the stage: on a phone's short frame the small lines' 9px floor (styles.css) can
     // widen a card past the edge, so it slides in just far enough to keep a margin. A card that fits is where it was.
-    const margin = 8
-    const half = node.offsetWidth / 2
-    const cx = (W - fw) / 2 + c.at[0] * fw
-    node.style.left = `${half * 2 > W - 2 * margin ? W / 2 : Math.min(Math.max(cx, margin + half), W - margin - half)}px`
+    node.style.left = `${placeCard((W - fw) / 2 + c.at[0] * fw, node.offsetWidth, W)}px`
     const lift = c.lift ? c.lift * Math.max(0, (H - fh) / 2) : 0
     node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
     if (c.scale && c.scale !== 1) node.style.setProperty('--u', `${(fh / 100) * c.scale}px`)
