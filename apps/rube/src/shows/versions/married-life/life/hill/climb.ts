@@ -374,6 +374,9 @@ function drawStone(p: p5, k: number, weight: number, t: number): void {
 
 /* ------------------------------------------------------------------ the basket */
 
+/** How far the camera has panned by 175.9, his full-speed run under way. */
+const LAG_X = 7.5
+
 const THROW = T.jolt + 0.02
 /** Where the basket lands, up the path behind him, and how it sits there. */
 const BASKET_X = CLIMB_TO - 0.36
@@ -521,10 +524,9 @@ export const climb = part<ClimbState>(
       // left behind up the path; on the stone as he reaches her; and the two of them and nothing else.
       { t: 174.0, cells: 2.4, hold: h(7.0, 1.47) },
       { t: E.give, cells: 2.2, hold: h(7.22, 1.58) },
-      // The camera is caught by his burst: it lags him for half a second after his frozen beat, so his speed shows as
-      // he crosses the frame toward her, and catches up by 175.6.
-      { t: 175.2, cells: 2.15, hold: h(7.4, 1.62) },
-      { t: 175.6, cells: 2.1, hold: h(7.72, 1.74) },
+      // The camera is caught by his burst: it lags him while he runs flat out, so he keeps moving forward on screen
+      // toward her, and settles on the two of them as he eases onto the stone (an arrival, never a stall).
+      { t: 175.9, cells: 2.1, hold: h(LAG_X, 1.72) },
       { t: T.beside, cells: 2.0, hold: h(8.5, 1.86) },
       { t: 179.0, cells: 1.9, hold: h(8.55, 1.88) },
       // A breath out for the cut (`CUTS.hospital`), wide enough for the balloon on the far side and over to her side,
