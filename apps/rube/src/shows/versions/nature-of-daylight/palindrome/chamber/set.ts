@@ -882,7 +882,7 @@ export const CHARGE: Pt = [6.3, FLOOR]
  * them and rolls away out of the chamber the way it came. Without it the charge was simply there, and the blast read as
  * the heptapods' doing.
  */
-const SOLDIER_R = 0.1
+const SOLDIER_R = 0.11
 const SOLDIER_AT = CHARGE[0] - 0.22 - SOLDIER_R - 0.03
 const ARM = 215.65
 const HOP: [number, number] = [216.0, 216.625]
@@ -920,8 +920,8 @@ function soldier(ctx: Ctx, k: number, t: number): void {
   ctx.arc(x * k, y * k, SOLDIER_R * k, 0, Math.PI * 2)
   ctx.fill()
   // The chamber's cold light along its top, so it reads against the dark wall.
-  ctx.strokeStyle = rgba(SHELL.wallLit, 0.55)
-  ctx.lineWidth = Math.max(1, 0.012 * k)
+  ctx.strokeStyle = rgba(SHELL.wallLit, 0.9)
+  ctx.lineWidth = Math.max(1, 0.02 * k)
   ctx.beginPath()
   ctx.arc(x * k, y * k, SOLDIER_R * k, Math.PI * 1.1, Math.PI * 1.9)
   ctx.stroke()

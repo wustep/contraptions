@@ -32,6 +32,8 @@ export const KEY_W = 0.27
 const CAP = 0.075
 /** The keys' tops and their feet, tent cells: what the gala's ghost of the keypad draws (where she is, the cut on her). */
 export const KEY_SPAN: [number, number] = [BASE_TOP - CAP, BASE_TOP]
+/** The phone's body, its ends and its foot, tent cells: the ghost draws it too, so it reads as the phone. */
+export const PHONE_BODY = { x0: BASE[0], x1: BASE[1], top: BASE_TOP, foot: TOP }
 const SINK = 0.03
 /** Where a ball sits on a pressed key. */
 export const ON_KEY = BASE_TOP - CAP + SINK - R

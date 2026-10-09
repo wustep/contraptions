@@ -472,6 +472,15 @@ A twenty-eighth took the note two cold readers had given: Hannah's going was too
   the covers. The clock is whole for its last tick on the swell; then the camera comes in on her, close while she goes,
   and holds on the pillow empty.
 
+A twenty-ninth gave the whole show to a third fresh story reader. Hannah's going now read at once. Three things still
+did not, and each was made plainer:
+
+- **The ghost of his number** read as floating lights. The phone's dark body is under its keys now, faint, edged in
+  their green: the sat phone itself, before she has it.
+- **Abbott in the fog** came up out of the white and darkened before paling, so it read as a new, smaller heptapod
+  rising into view. It comes out of the blast as dark as it was at the glass, and only pales as it sinks.
+- **The soldier** was dark on the dark floor. Its rim of the chamber's light is brighter, and it is a little larger.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

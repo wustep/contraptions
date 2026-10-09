@@ -4,7 +4,7 @@ import { mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
 import { beats, level, SEAM } from '../music'
 import { GALA, TENT } from '../worlds'
-import { CALL_X, KEY_SPAN, KEY_W, KEYS } from '../twelve/tent'
+import { CALL_X, KEY_SPAN, KEY_W, KEYS, PHONE_BODY } from '../twelve/tent'
 import { NUMBER } from '../twelve/timeline'
 import {
   BOTTLE,
@@ -484,6 +484,16 @@ function number(ctx: Ctx, k: number, t: number): void {
     })
     return v
   }
+  // The phone's body under its keys, faint, with the keys' light along its edge: keys floating alone read as lights.
+  const bx0 = (hx + PHONE_BODY.x0) * k
+  const bx1 = (hx + PHONE_BODY.x1) * k
+  const by0 = (hy + PHONE_BODY.top) * k
+  const by1 = (hy + PHONE_BODY.foot) * k
+  ctx.fillStyle = rgba(mix(GALA.roomLit, '#000000', 0.7), 0.5 * up)
+  ctx.fillRect(bx0, by0, bx1 - bx0, by1 - by0)
+  ctx.strokeStyle = rgba(TENT.keypad, 0.35 * up)
+  ctx.lineWidth = Math.max(1, 0.012 * k)
+  ctx.strokeRect(bx0, by0, bx1 - bx0, by1 - by0)
   KEYS.forEach((x, digit) => key(x, litOf(digit)))
   key(CALL_X, 0)
 }

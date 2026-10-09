@@ -337,7 +337,9 @@ const ABBOTT_D = 0.3
 export const ABBOTT = { at: [WIDE_C[0] - 3.4 / ABBOTT_D, WIDE_C[1] + 2.5 / ABBOTT_D] as Pt, s: 11, seed: 1, depth: ABBOTT_D }
 // Sunk well down and paled all the way into the white by the time she lands: sinking a little and staying grey, it read
 // as a second heptapod standing off, not as Abbott dying.
-export const abbottFog = (t: number): number => 1 - 0.5 * smooth(t, T_TOUCH + 1.3, T_S2 - 0.8) + 0.5 * smooth(t, T_S2 - 0.5, T_LAND)
+// Out of the blast as dark as it was at the glass, so it reads as Abbott: coming up out of the white first, it read as a
+// new, smaller heptapod rising into view.
+export const abbottFog = (t: number): number => 0.5 + 0.5 * smooth(t, T_S2 - 0.5, T_LAND)
 export const abbottSink = (t: number): number => 4.2 * smooth(t, T_S2 - 2, T_OUT + 1)
 
 /* ------------------------------------------------------------------ the camera, in world cells */
