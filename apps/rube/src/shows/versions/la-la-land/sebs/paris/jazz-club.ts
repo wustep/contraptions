@@ -142,8 +142,9 @@ const INCH: [number, number, number][] = [
   [253.25, 254.3, 0.335],
   [258.2, 259.4, 0.265],
 ]
-/** The solo's two high accents: the hi-hat's open cymbal, at the edge of the spot, shivers. */
-export const SHIVER = [on(241.325), on(262.072)]
+/** The solo's high accents: the hi-hat's open cymbal, at the edge of the spot, shivers. Its first, and the two-note climb
+ * near its end (the high D, then the peak). */
+export const SHIVER = [on(241.325), on(261.248), on(262.072)]
 /** Its biggest (the F the solo comes back in on, every valve up): the spot's lamp flares. */
 export const FLARE = on(246.549)
 
