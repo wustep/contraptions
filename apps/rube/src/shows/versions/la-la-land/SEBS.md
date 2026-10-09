@@ -72,7 +72,7 @@ Each place is its own universe; the stage changes place only under a cover, draw
 | 133.35 | the theatre → the studio | The house goes to white. |
 | 172 | Hollywood → the audition | Dark; a screen lights from behind. |
 | 196 | the audition → the globe | Dark. |
-| 214.88 | Paris at night → the club | Red, through the door, on the kick. |
+| 214.88 | Paris at night → the club | His club's red door passing the lens: a panelled leaf with its brass knob sweeps across until it fills the frame on the kick, and sweeps on to show the cellar. |
 | 269 | the trumpet → painted Paris | An iris, closing on the two of them and opening on the next scene. |
 | 340.5 | the stars → the home movie | Dark. |
 | 395.3 | the home movie → the drive | Dark, as the film runs out. |
@@ -94,6 +94,8 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - they kiss at Lipton's and again in the club (close, not pressed);
 - the trumpet's solo is written in light, in the picture: at least 85% of its lit threads are in the frame;
 - their constellation comes out over the city of stars, every star of it in the picture from when it comes out to the last frame;
+- his playing reaches her: every note that goes out from the keys at her table and across Lipton's arrives where she will be, and the ones at her table are seen;
+- the house in Paris never covers the two of them;
 - the other road is seen where the story turns, and only there: each of the six echoes well inside the frame, mostly there, at its moment; and in the hush she rocks from the knock and looks after the one who walked out;
 - on the last chord he is back on the keys of his own piano, and she is gone by the band;
 - Mia, David and the son never jump where they can be seen, and come and go only out of shot or under a cover;
