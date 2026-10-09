@@ -26,7 +26,7 @@ import type { WorldKey } from './worlds'
  * the scratches and dust are left out.
  */
 
-export type Look = 'scope' | 'print' | 'dream'
+export type Look = 'scope' | 'print' | 'dream' | 'tape' | 'tube'
 
 /** The worlds that are pictures of their own, and which. */
 export const LOOKS: Partial<Record<WorldKey, Look>> = { premiere: 'scope', dojo: 'print', hotdog: 'dream' }
@@ -59,9 +59,9 @@ function grain(): HTMLCanvasElement | null {
   return c
 }
 
-/** The bars' band in pixels, top and bottom, for a frame `w` × `h` pixels. */
-export const band = (w: number, h: number): { top: number; bottom: number } => {
-  const keep = Math.min(h, w / SCOPE)
+/** The bars' band in pixels, top and bottom, for a frame `w` × `h` pixels, keeping at least `least` of its height. */
+export const band = (w: number, h: number, least = 0): { top: number; bottom: number } => {
+  const keep = Math.min(h, Math.max(least * h, w / SCOPE))
   const bar = (h - keep) / 2
   return { top: bar, bottom: h - bar }
 }
@@ -69,7 +69,8 @@ export const band = (w: number, h: number): { top: number; bottom: number } => {
 /** The share of a 16:9 frame's height the scope band keeps: for the checks, and for framing what must be seen. */
 export const SCOPE_KEEP = 16 / 9 / SCOPE
 /** How much of a 16:9 frame's height is picture in `world`. */
-export const keepIn = (world: WorldKey): number => (LOOKS[world] === 'scope' || LOOKS[world] === 'print' ? SCOPE_KEEP : 1)
+export const keepOf = (look: Look | undefined): number => (look === 'scope' || look === 'print' ? SCOPE_KEEP : 1)
+export const keepIn = (world: WorldKey): number => keepOf(LOOKS[world])
 
 function paintGrain(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, t: number, strength: number, scale: number): void {
   const tile = grain()
@@ -147,6 +148,139 @@ function paintWear(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.restore()
 }
 
+/** Scanlines: a tile one line dark in three, made once. */
+let linesTile: HTMLCanvasElement | null = null
+function scanlines(): HTMLCanvasElement | null {
+  if (linesTile || typeof document === 'undefined') return linesTile
+  const c = document.createElement('canvas')
+  c.width = 1
+  c.height = 3
+  const g = c.getContext('2d')
+  if (!g) return null
+  g.fillStyle = 'rgba(0, 0, 0, 0.22)'
+  g.fillRect(0, 2, 1, 1)
+  linesTile = c
+  return c
+}
+
+/** A VHS tape's wear: scanlines, a soft bloom, and the tracking band rolling slowly down it. */
+function paintTape(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, t: number, calm: boolean, px: number, lite: boolean): void {
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  ctx.fillStyle = 'rgba(46, 24, 70, 0.16)'
+  ctx.fillRect(x, y, w, h)
+  ctx.restore()
+  const tile = scanlines()
+  if (tile) {
+    const pattern = ctx.createPattern(tile, 'repeat')
+    if (pattern) {
+      pattern.setTransform(new DOMMatrix([px, 0, 0, px, x, y]))
+      ctx.fillStyle = pattern
+      ctx.fillRect(x, y, w, h)
+    }
+  }
+  if (lite) return
+  paintGrain(ctx, x, y, w, h, t, 0.14, px)
+  if (!calm) {
+    // The tracking band: a soft lighter streak of noise a twentieth of the picture tall, rolling down every 8 s.
+    const u = ((t / 8) % 1) * 1.3 - 0.15
+    const by = y + u * h
+    const bh = h * 0.05
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x, by, w, bh)
+    ctx.clip()
+    paintGrain(ctx, x, by, w, bh, t + 0.5, 0.5, px * 0.8)
+    const g = ctx.createLinearGradient(0, by, 0, by + bh)
+    g.addColorStop(0, 'rgba(255, 255, 255, 0)')
+    g.addColorStop(0.5, 'rgba(255, 255, 255, 0.12)')
+    g.addColorStop(1, 'rgba(255, 255, 255, 0)')
+    ctx.fillStyle = g
+    ctx.fillRect(x, by, w, bh)
+    ctx.restore()
+  }
+  paintVignette(ctx, x, y, w, h, 0.38)
+}
+
+/**
+ * A look painted into the rectangle (x, y, w, h), in the drawing's current units, over what is already there: the
+ * whole frame of a world, or one panel of everywhere at once. `px` is one pixel of the stage in those units; `t` is
+ * the show's clock, held still when `calm`. A panel narrower than widescreen keeps at least `least` of its height
+ * between its bars, so a tall one is not all bars. A `lite` picture, for the many small panels of everywhere at once,
+ * is only its grade and its bars (and the tape's scanlines): no grain, wear or vignette, which cost too much a panel.
+ */
+export function paintPicture(ctx: CanvasRenderingContext2D, look: Look, x: number, y: number, w: number, h: number, t: number, calm: boolean, px: number, least = 0, lite = false): void {
+  const { top, bottom } = look === 'scope' || look === 'print' ? band(w, h, least) : { top: 0, bottom: h }
+  if (calm) t = 0
+  if (look === 'print') {
+    // Faded and warm: the blacks lifted toward a brown, the whole a little yellowed.
+    ctx.save()
+    ctx.globalCompositeOperation = 'multiply'
+    ctx.fillStyle = 'rgba(236, 214, 178, 0.55)'
+    ctx.fillRect(x, y, w, h)
+    ctx.globalCompositeOperation = 'screen'
+    ctx.fillStyle = 'rgba(52, 32, 18, 0.5)'
+    ctx.fillRect(x, y, w, h)
+    ctx.restore()
+    if (!lite) {
+      paintGrain(ctx, x, y + top, w, bottom - top, t, 0.3, px * 1.4)
+      if (!calm) paintWear(ctx, x, y + top, w, bottom - top, t, px)
+      paintVignette(ctx, x, y + top, w, bottom - top, 0.5, true)
+    }
+  } else if (look === 'dream') {
+    // A faint bloom over all of it, and the edges gone soft into a glowing haze.
+    ctx.save()
+    ctx.globalCompositeOperation = 'screen'
+    ctx.fillStyle = 'rgba(255, 228, 232, 0.08)'
+    ctx.fillRect(x, y, w, h)
+    ctx.restore()
+    ctx.save()
+    ctx.translate(x + w / 2, y + h / 2)
+    ctx.scale(1, h / w)
+    const g = ctx.createRadialGradient(0, 0, 0.3 * w, 0, 0, 0.66 * w)
+    g.addColorStop(0, 'rgba(255, 236, 238, 0)')
+    g.addColorStop(0.6, 'rgba(255, 236, 238, 0.32)')
+    g.addColorStop(1, 'rgba(255, 244, 245, 0.78)')
+    ctx.fillStyle = g
+    ctx.fillRect(-w / 2, -w / 2, w, w)
+    ctx.restore()
+  } else if (look === 'tape') {
+    paintTape(ctx, x, y, w, h, t, calm, px, lite)
+  } else if (look === 'tube') {
+    // Under office tubes: everything gone a little green and flat.
+    ctx.save()
+    ctx.globalCompositeOperation = 'multiply'
+    ctx.fillStyle = 'rgba(208, 236, 214, 0.6)'
+    ctx.fillRect(x, y, w, h)
+    ctx.globalCompositeOperation = 'screen'
+    ctx.fillStyle = 'rgba(24, 38, 30, 0.35)'
+    ctx.fillRect(x, y, w, h)
+    ctx.restore()
+    if (!lite) paintVignette(ctx, x, y, w, h, 0.22)
+  } else if (!lite) {
+    paintGrain(ctx, x, y + top, w, bottom - top, t, 0.12, px * 1.1)
+    paintVignette(ctx, x, y + top, w, bottom - top, 0.32)
+  }
+  if (top > 0.5 * px) {
+    ctx.fillStyle = '#000000'
+    ctx.fillRect(x - px, y - px, w + 2 * px, top + px)
+    ctx.fillRect(x - px, y + bottom, w + 2 * px, h - bottom + px)
+  }
+}
+
+/** One pixel of the stage in the drawing's current units: from the canvas's transform. */
+export function pixelOf(ctx: CanvasRenderingContext2D): number {
+  const m = ctx.getTransform()
+  return 1 / Math.max(1e-6, Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)))
+}
+
+/** Whether the viewer asks for reduced motion, now: for the pictures drawn inside other parts (the panels). */
+const MOTION = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null
+export const prefersCalm = (): boolean => !!MOTION?.matches
+
+/** The look of each world as a panel of everywhere at once (by its skin's key), and as the surf flies through it. */
+export const PANEL_LOOKS: Record<string, Look> = { premiere: 'scope', alley: 'scope', dojo: 'print', hotdog: 'dream', karaoke: 'tape', irs: 'tube' }
+
 /** The picture a world is in, over everything in it. */
 export interface Picture {
   look: Look
@@ -158,57 +292,11 @@ export const film = scenery<Picture>({
   name: 'film',
   draw: () => {},
   over: (p, pic, c) => {
-    const look = pic.look
     const ctx = p.drawingContext as CanvasRenderingContext2D
     const f = frame(p, c.k)
     const k = c.k
-    const x = f.x0 * k
-    const y = f.y0 * k
-    const w = (f.x1 - f.x0) * k
-    const h = (f.y1 - f.y0) * k
     // One pixel of the stage, in this drawing's units (the canvas may be drawn at a scale).
-    const px = Math.max(0.5, h / 540)
-    const { top, bottom } = look === 'dream' ? { top: 0, bottom: h } : band(w, h)
-    const calm = pic.calm()
-    const t = calm ? 0 : c.t
-    if (look === 'print') {
-      // Faded and warm: the blacks lifted toward a brown, the whole a little yellowed.
-      ctx.save()
-      ctx.globalCompositeOperation = 'multiply'
-      ctx.fillStyle = 'rgba(236, 214, 178, 0.55)'
-      ctx.fillRect(x, y, w, h)
-      ctx.globalCompositeOperation = 'screen'
-      ctx.fillStyle = 'rgba(52, 32, 18, 0.5)'
-      ctx.fillRect(x, y, w, h)
-      ctx.restore()
-      paintGrain(ctx, x, y + top, w, bottom - top, t, 0.3, px * 1.4)
-      if (!calm) paintWear(ctx, x, y + top, w, bottom - top, t, px)
-      paintVignette(ctx, x, y + top, w, bottom - top, 0.5, true)
-    } else if (look === 'dream') {
-      // A faint bloom over all of it, and the edges gone soft into a glowing haze.
-      ctx.save()
-      ctx.globalCompositeOperation = 'screen'
-      ctx.fillStyle = 'rgba(255, 228, 232, 0.08)'
-      ctx.fillRect(x, y, w, h)
-      ctx.restore()
-      ctx.save()
-      ctx.translate(x + w / 2, y + h / 2)
-      ctx.scale(1, h / w)
-      const g = ctx.createRadialGradient(0, 0, 0.3 * w, 0, 0, 0.66 * w)
-      g.addColorStop(0, 'rgba(255, 236, 238, 0)')
-      g.addColorStop(0.6, 'rgba(255, 236, 238, 0.32)')
-      g.addColorStop(1, 'rgba(255, 244, 245, 0.78)')
-      ctx.fillStyle = g
-      ctx.fillRect(-w / 2, -w / 2, w, w)
-      ctx.restore()
-    } else {
-      paintGrain(ctx, x, y + top, w, bottom - top, t, 0.12, px * 1.1)
-      paintVignette(ctx, x, y + top, w, bottom - top, 0.32)
-    }
-    if (top > 0.5) {
-      ctx.fillStyle = '#000000'
-      ctx.fillRect(x - 2, y - 2, w + 4, top + 2)
-      ctx.fillRect(x - 2, y + bottom, w + 4, h - bottom + 2)
-    }
+    const px = Math.max(0.5, ((f.y1 - f.y0) * k) / 540)
+    paintPicture(ctx, pic.look, f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k, c.t, pic.calm(), px)
   },
 })

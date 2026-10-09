@@ -3,6 +3,7 @@ import { mixHex } from '../../../../../parts'
 import { DOJO, DOJO_THEME, EVELYN, HIBACHI, HIBACHI_THEME, HOTDOG, HOTDOG_THEME, JOY, PREMIERE, ROCKS, STAR, VOID, VOID_THEME, WAYMOND } from '../worlds'
 import { CREDITS_AT } from '../music'
 import { SWELL } from './finale-plan'
+import { PANEL_LOOKS, paintPicture, pixelOf, prefersCalm } from '../film'
 
 /**
  * Every life, once more, in the washer's window.
@@ -298,6 +299,9 @@ export function drawLives(ctx: Ctx, k: number, cx: number, cy: number, rCells: n
     ctx.save()
     ctx.globalAlpha = 0.88 * s.a * strength
     paintLife(ctx, s.life, r, s.u, t)
+    // Each in the picture it was in (`film.ts`): the carpet between bars, the dojo an old print, the piano soft.
+    const look = PANEL_LOOKS[s.life]
+    if (look) paintPicture(ctx, look, -r, -r, 2 * r, 2 * r, t, prefersCalm(), pixelOf(ctx), 0.62)
     ctx.restore()
   }
   // The glass's own light over them, and its curve: darker at the rim.

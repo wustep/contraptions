@@ -96,7 +96,11 @@ plain full frame. The movie star's life (the premiere and the alley) is in wides
 with a soft vignette and fine grain. The kung fu picture (the dojo) is an old print in scope: faded warm, blacks
 lifted, heavy grain that changes 24 times a second, a scratch down the emulsion and dust. The hot dog life is a
 soft-focus romance, its edges gone to a glowing pink haze. A flicker before a jump shows the next life in its own
-picture. Raccacoonie, the surf, everywhere at once, Jobu's dark and the rocks are left as they are.
+picture. The surf's new worlds have pictures too: the IRS office is under green office tubes, and karaoke is a VHS
+tape, with scanlines and a tracking band rolling down it. Everywhere at once is a wall of every kind of film at once:
+each panel is in its life's picture, and on the great hit every panel flips to the laundromat's plain frame. Even the
+lives in the washer's window under the credits are in theirs. Raccacoonie, Jobu's dark and the rocks are left as
+they are.
 
 The camera takes the show's ten biggest hits in the body: a push-in of about 4.5% that eases back (`PUNCHES` in
 `score.ts`). There are none in the rocks.
@@ -140,7 +144,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | Time | Music | World | What happens |
 | ---: | --- | --- | --- |
 | 165.62 | a hit, then a swell | everywhere | She breaks through into the dark in a violet flare, seeds flung out round her, and falls slowly past them, and the laundromat comes up round her, its tubes flickering on. On `fight(72)` she lands on a seesaw and the frame tears into two panels: home and the premiere. |
-| 170.8 to 190 | the pumping pulse | everywhere | The frame splits into 4 panels on beat 76, 9 on 88, 16 on 96, 36 on 104 and 64 on 112. Each panel is another world with her in it, the same seesaw in its own materials: 13 worlds, no two neighbours alike. She and the weight trade throws on every beat. |
+| 170.8 to 190 | the pumping pulse | everywhere | The frame splits into 4 panels on beat 76, 9 on 88, 16 on 96, 36 on 104 and 64 on 112. Each panel is another world with her in it, the same seesaw in its own materials: 13 worlds, no two neighbours alike, each in its own kind of picture (widescreen, an old print, a soft-focus haze, a VHS tape, office tubes). She and the weight trade throws on every beat. |
 | 190 to 191.2 | the crescendo | everywhere | The wall crowds to 144 panels, and the seesaw throws her high. On 121½ every panel flips like a card to another world. On 122 they all flip to the same place, the laundromat, and on 122½ the net of frames snaps shut round her. |
 | 191.22 | the great hit | home | She lands alone, home, at the party, and the googly eye slaps onto her in a burst of warm light, its pupil whirling round before it settles. Jobu's jumpers are in the room, each rearing at her in turn: a boxing glove on a spring out of a gift box (125), a steel trap (128), a mallet from the ceiling (130), a scissor arm (133). On each one's beat a copy of her own eye flies off her and lands on it, and its blow turns gentle: a nudge, a squeeze, a scoop, a cradle. The arm sets her on the dumpling steamers, and she steps down one a beat to the table, touching Waymond on the fight's last hit (199.61). |
 | 200.16 | the drop | the rocks | Silence. Two stones on a ledge over a vast canyon, lumpy and flat-bottomed, the colour drained out of them: Evelyn's with her eye, Joy's beside it, where Waymond was. Pebbles fall from the lip and take forever to land. Joy's stone teeters forward on its flat underside (207.56, 208.36) and rolls out to the brink (209.96). On 213.96, the strongest note in the quiet, it goes over. Evelyn rolls to where she was (214.76), flinches back (216.36), and goes after her (219.56). |
@@ -768,6 +772,18 @@ The notes went back to the builders who made each part, who still had their cont
     picture), Overview (where the bars stay, as the picture's own), Zoom, and ultrawide (a stage wider than 2.39:1
     has no bars). On a tall phone stage the widescreen lives are a band across its middle, as a widescreen film is on
     a phone, with black above and below where the full frame showed more world (see Known limits).
+- **A director's pass: every film at once.** The pictures were only the lives' own legs, so everywhere at once, the
+  climax, was still a wall of one kind of picture. Now each panel carries its life's look: the movie star's carpet and
+  alley between bars, the dojo an old print, the piano in its haze. The surf's new worlds gain looks of their own
+  (karaoke a VHS tape with a tracking band, the IRS office green under its tubes), and the surf's glimpses of the
+  lives carry theirs too. On the great hit every panel flips to the laundromat's plain frame, and the net snaps shut.
+  - In a tall panel (the two-way split at 170.8 s) the bars took half the height; a panel keeps at least 60% of it
+    between its bars.
+  - Measured in Chrome at 1440×810, scrubbing a frame at a time: with a look in every panel the 16- to 64-panel walls
+    took 23–27 ms a frame, against 16–17 ms without. So the many small panels get a light version (the grade, the
+    bars and the tape's scanlines, without grain, wear or vignette), and the walls are back at 16–17 ms, as before.
+    The 2- and 4-panel splits keep the whole look.
+  - The checks' band for widescreen now covers the surf's glimpses of the movie star's and the dojo's lives.
 
 ## The looks
 
@@ -902,7 +918,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
     great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's
     comes with a smaller, softer burst in her violet.
   - `home/finale-lives.ts`: the lives in the washer's window under the credits.
-  - `film.ts`: the picture each life is in: widescreen, the old print, the soft-focus romance.
+  - `film.ts`: the picture each life is in (widescreen, the old print, the soft-focus romance, the tape, the office
+    tubes), painted over a world's whole frame, a panel of everywhere at once, the surf, or the washer's window.
   - `credits.ts`: the cards, the soft dark under them, and the room's fade to dark with the music after the last
     card, the washer's window last.
   - `hits.ts`: every strike, gathered for the check.

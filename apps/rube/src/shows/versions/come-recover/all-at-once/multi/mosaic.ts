@@ -6,6 +6,7 @@ import { DURATION, fight, JUMPS, strength } from '../music'
 import { EVELYN, LAUNDROMAT, MULTI_THEME, VOID, VOID_THEME } from '../worlds'
 import { room } from '../home/set'
 import { KINDNESS_AT } from '../home/kindness'
+import { PANEL_LOOKS, paintPicture, pixelOf, prefersCalm } from '../film'
 import { backdrop, HP, LE, LW, PL, SKINS, skinAt, TH, TILT, WEDGE, type Moment, type Skin, type View } from './skins'
 import { at, circle, glow, hash, lodFor, mix, poly, rect, rgba, type Pen } from './skins-pen'
 
@@ -429,6 +430,9 @@ function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: n
   // In the dark her ring is the dark's own ink, as it was in the bagel.
   evelyn(pen, mc.e, back, dark > 0 ? mix(skin.ink, VOID_THEME.ink, dark) : skin.ink)
   if (skin.front && dark < 0.5) skin.front(pen, mc.m, v)
+  // Every panel is the picture its life is in: a wall of every kind of film at once (`film.ts`).
+  const look = PANEL_LOOKS[skin.key]
+  if (look && dark < 0.5) paintPicture(ctx, look, v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0, mc.m.t + hash(Math.round(b.cx), Math.round(b.cy), 7), prefersCalm(), pixelOf(ctx), 0.6, pen.lod >= 1)
   ctx.restore()
 }
 

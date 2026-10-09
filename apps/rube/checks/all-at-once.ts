@@ -10,7 +10,8 @@ import { COMBS, CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall, fight } from '../s
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/come-recover/all-at-once/credits'
 import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/peak'
 import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
-import { keepIn } from '../src/shows/versions/come-recover/all-at-once/film'
+import { keepIn, keepOf } from '../src/shows/versions/come-recover/all-at-once/film'
+import { surfLookAt } from '../src/shows/versions/come-recover/all-at-once/multi/surf'
 import type { MultiverseShow } from '../src/shows/versions/come-recover/all-at-once/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -95,8 +96,8 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   check('all at once: home\'s last three hits are struck', HOME_HITS.every((h) => all.some((s) => Math.abs(s - h) <= 0.03)))
 
   // How much of the frame's height is picture at `t`: the lives in a picture of their own are in widescreen, between
-  // bars (`film.ts`), and what must be seen is held to the band between them.
-  const keep = (t: number): number => keepIn(show.legs[show.owner(t)].world)
+  // bars (`film.ts`), as are the surf's glimpses of them, and what must be seen is held to the band between them.
+  const keep = (t: number): number => Math.min(keepIn(show.legs[show.owner(t)].world), keepOf(surfLookAt(t)))
 
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
   const outOfZoom: string[] = []
