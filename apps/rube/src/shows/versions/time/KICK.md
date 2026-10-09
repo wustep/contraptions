@@ -303,6 +303,10 @@ each world, and changed:
 - **The earth under the house** (244.8 to the end): in a tall frame (a phone held upright, a Short) the cut ground
   under the floor is near half the picture, and it was one flat brown, under the top's last shot too. It lies in
   soft bands now, darker going down, a few stones in it, and the footings go down under the walls in laid stone.
+- **Off the rock step** (129.9 to 131.4): the band runs across the face toward us, so the jump flies in front of it, but
+  nothing said so: each of them sat on its top edge and then seemed to sink down through the rock to its foot. Each
+  throws a shadow on the band behind it now, a little east of them and lower, furthest off and softest at the top of
+  the air, closing up on them as they come down, so they are seen to fly in front of the face.
 
 ## Inception nods
 

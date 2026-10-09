@@ -6,8 +6,13 @@ import { level } from '../music'
 import { BAND, clock } from '../stack'
 import { PLANE, SNOW } from '../worlds'
 import {
+  A_SHIFT,
+  ARIADNE_SNOW,
   CASE_X,
   clamp01,
+  COBB,
+  F_SHIFT,
+  FISCHER_SNOW,
   CREVASSE,
   doorAt,
   DROP,
@@ -174,6 +179,7 @@ function drawSet(p: p5, c: Ctx, t: number): void {
   drawSky(ctx, k, x0, x1)
   drawFar(ctx, k, f)
   drawFace(ctx, c, x0, x1)
+  drawStepShadows(ctx, k, t)
   drawPistes(ctx, k, x0, x1)
   drawFeatures(ctx, c, t)
   drawValley(ctx, c, x0, x1, st)
@@ -533,6 +539,45 @@ function stepBand(): { rock: Pt[]; shade: Pt[]; shelves: Pt[][] } {
   return { rock, shade, shelves }
 }
 const STEP = stepBand()
+/**
+ * Off the rock step they fly in front of the band, down across its face, and without more it looks as if they sink
+ * through the rock. Each throws a shadow on the band behind it (the low sun is west, so a little east of them and
+ * lower), further off and softer at the top of the air, where they are furthest out from the face; it closes up on
+ * them as they come down to its foot. Only on the rock: the flight is seen to be in front of it.
+ */
+function drawStepShadows(ctx: C2D, k: number, t: number): void {
+  const fly = T.j1Land - T.j1
+  const riders: [typeof COBB, number][] = [
+    [ARIADNE_SNOW, -A_SHIFT],
+    [COBB, 0],
+    [FISCHER_SNOW, F_SHIFT],
+  ]
+  let any = false
+  for (const [, shift] of riders) if (t > T.j1 + shift && t < T.j1Land + shift) any = true
+  if (!any) return
+  ctx.save()
+  path(ctx, STEP.rock, k)
+  ctx.clip()
+  for (const [m, shift] of riders) {
+    const u = (t - T.j1 - shift) / fly
+    if (u <= 0 || u >= 1) continue
+    const [x, y] = m.at(t)
+    // Out from the face most at the top of the air; the shadow fades in off the lip and out onto the landing.
+    const out = Math.sin(Math.PI * u)
+    const a = 0.55 * Math.min(1, u / 0.12, (1 - u) / 0.12) * (1 - 0.35 * out)
+    const [sx, sy] = [x + 0.12 + 0.38 * out, y + 0.1 + 0.22 * out]
+    const r = R * (1.1 + 0.6 * out)
+    const g = ctx.createRadialGradient(sx * k, sy * k, 0, sx * k, sy * k, r * 1.6 * k)
+    g.addColorStop(0, rgba(SNOW.rockDark, a))
+    g.addColorStop(0.55, rgba(SNOW.rockDark, a * 0.8))
+    g.addColorStop(1, rgba(SNOW.rockDark, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.ellipse(sx * k, sy * k, r * 1.6 * k, r * 1.25 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
 /** The ledge over the gate: a rock wall with snow on its top, the apron in front of it. */
 const LEDGE_WALL: Pt[] = [
   [LEDGE.from - 0.3, LEDGE.y + R + 0.12],
