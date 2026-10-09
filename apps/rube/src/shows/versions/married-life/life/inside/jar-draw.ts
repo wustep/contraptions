@@ -105,6 +105,11 @@ function weather(p: p5, k: number, T: number, [x0, x1, y0, y1]: number[], seed: 
   }
 }
 
+/** How far up the glass the drive and the car sit, so the wheels clear the window's sill and frame. */
+const DRIVE_UP = 0.14
+/** The hubcap's width: as big as the hub it comes off and then some, so it is seen to fly. */
+const HUBCAP_D = 0.17
+
 /** The drive through the left-hand window: a hedge, the drive, their car; the tyre that blows, and the hubcap. */
 function driveway(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
@@ -122,8 +127,12 @@ function driveway(p: p5, c: Ctx, T: number): void {
     for (let i = 0; i <= 12; i++) p.vertex(x(x0 - 0.2 + i * 0.24), x(-1.5 - 0.06 * Math.abs(Math.sin(i * 1.9))))
     p.vertex(x(x1 + 0.2), x(y1))
     p.endShape(p.CLOSE)
+    // The lawn, the drive and all on it sit a little up the glass, so the car's wheels clear the sill and frame: the
+    // tyre that goes flat is seen flat, not lost behind the sill under its dust.
+    p.push()
+    p.translate(0, x(-DRIVE_UP))
     p.fill(mixHex(HOME.grass, '#A7BC90', 0.3))
-    p.rect(x(x0), x(-1.3), x(x1 - x0), x(0.36))
+    p.rect(x(x0), x(-1.3), x(x1 - x0), x(0.5))
     p.fill(HOME.stone)
     p.rect(x(x0), x(-1.07), x(x1 - x0), x(0.14))
 
@@ -208,8 +217,11 @@ function driveway(p: p5, c: Ctx, T: number): void {
       p.stroke(alpha(p, INK, 0.8))
       p.strokeWeight(weight * 0.5)
       p.fill(HOME.trim)
-      p.ellipse(x(hx), x(hy), x(0.09), x(0.09 * Math.abs(Math.cos(tilt)) + 0.02))
+      p.ellipse(x(hx), x(hy), x(HUBCAP_D), x(HUBCAP_D * Math.abs(Math.cos(tilt)) + 0.02))
+      p.noFill()
+      p.ellipse(x(hx), x(hy), x(HUBCAP_D * 0.5), x(HUBCAP_D * 0.5 * Math.abs(Math.cos(tilt)) + 0.01))
     }
+    p.pop()
     // Seen through glass.
     p.noStroke()
     p.fill(alpha(p, '#FFFFFF', 0.1))

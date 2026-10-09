@@ -76,6 +76,35 @@ export const GATHERS: { in0: number; in1: number; out0: number; out1: number; st
   { in0: AT.hospital - 1.5, in1: AT.hospital - 1, out0: 181.3, out1: 183.0, string: 0.8 },
   { in0: 208.2, in1: 209.3, out0: 212.7, out1: 214.2, string: 0.3 },
 ]
+/**
+ * Where her one dot, her face, looks at him while she is still: the five mornings at the tie wheel and the dance, from
+ * the first tie to the picture lamp, she at his right, so up and to her left (`at`, the dot's angle on the screen, y
+ * down). Rolling, her dot rolls with her, as everywhere; it comes round to him as she comes to rest (by her speed,
+ * smoothed), so at the crest, held at arm's length, she is looking at him, not at the floor. Eased in and out over
+ * `ease` seconds at the span's ends.
+ */
+export const LOOKS: { from: number; to: number; ease: number; at: number }[] = [
+  { from: bar('jar', 39), to: bar('jar', 56), ease: 0.8, at: -2.3 },
+]
+function lookOf(show: LifeShow, t: number, own: number): number {
+  for (const l of LOOKS) {
+    if (t <= l.from || t >= l.to) continue
+    const edge = Math.min(1, (t - l.from) / l.ease, (l.to - t) / l.ease)
+    // Her speed, smoothed over a third of a second: still or swaying, she looks at him; rolling at two cells a second
+    // or more, her dot rolls with her.
+    let v = 0
+    for (const dt of [-0.15, -0.05, 0.05, 0.15]) {
+      const a = show.ellie(t + dt - 0.05)
+      const b = show.ellie(t + dt + 0.05)
+      if (a && b) v += Math.abs(b.x - a.x) / 0.1 / 4
+    }
+    const still = 1 - Math.min(1, v / 2)
+    const w = edge * edge * (3 - 2 * edge) * still * still * (3 - 2 * still)
+    const d = l.at - own
+    return own + w * (d - 2 * Math.PI * Math.round(d / (2 * Math.PI)))
+  }
+  return own
+}
 function stir(t: number): number {
   let x = 0
   for (const s of STIRS) {
@@ -372,7 +401,7 @@ export const cast = scenery<CastState>({
           p.pop()
         },
       )
-      const spin = ellieSpin(show, t)
+      const spin = lookOf(show, t, ellieSpin(show, t))
       const size = ellie.scale ?? 1
       // Settled a little onto the floor with the years: flattened on the vertical about her bottom, under whatever
       // squash or stretch a part gives her.

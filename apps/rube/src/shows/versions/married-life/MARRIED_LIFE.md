@@ -509,6 +509,17 @@ window.
   frame differencing for pops, each cut before and after, Zoom, a phone held upright, the balloon's crown against
   the frame, contact, stillness.
 
+- **Polish round 14 (Opus 5.5).** A fresh critic watched the whole show through stills, with the notes in hand, and
+  ranked five notes; each was checked against the frames before it was taken. Taken: at her bedside she sat on a bare
+  mattress with the blanket bunched over the empty foot of the bed, so she did not read as ill; the blanket is now
+  drawn in front of her (`drawCovers`, dimmed with the ward), up over her lower third, the sheet turned down at her
+  and a mound where she lies. Her one dot, her face, looked at the floor through the tie mornings and at the crest;
+  now, still or swaying, she looks at him there (`LOOKS` in `cast.ts`), and rolling, her dot rolls. The flat tyre was
+  lost behind the window's sill under its dust: the drive and the car sit higher in the glass, so the tyre is seen
+  flat, and the hubcap is twice the size, a ringed disc seen to fly. Left: Carl small at the cart's handle in the
+  fix-up's reveal (a restaging of the rig), and the two of them lying apart on the blanket under the clouds (it moves
+  her place at the match cut into the nursery).
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is

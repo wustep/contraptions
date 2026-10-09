@@ -172,10 +172,9 @@ function drawLamp(p: p5, k: number, weight: number, T: number): void {
   p.pop()
 }
 
-/** His chair, and the bed beside it: steel, a mattress, her pillow pressed where she lies, the blanket, the rails. */
+/** His chair, and the bed beside it: steel, a mattress, her pillow pressed where she lies, the rails (the blanket is in front of her: `drawCovers`). */
 function drawBed(p: p5, k: number, weight: number, ex: number, dim: number): void {
   const sheet = mixHex(CLINIC.sheet, CLINIC.steel, 0.08)
-  const blanket = mixHex(mixHex(CLINIC.wall, HOME.sky, 0.35), CLINIC.sheet, 0.25)
   const frameSteel = mixHex(CLINIC.steel, CLINIC.sheet, 0.3)
   const { x0, x1, top } = BED
   p.push()
@@ -229,24 +228,6 @@ function drawBed(p: p5, k: number, weight: number, ex: number, dim: number): voi
     p.vertex(x * k, pillowTop(x) * k)
   }
   p.bezierVertex((q1 + 0.04) * k, (pillowTop(q1) - 0.02) * k, (q1 + 0.05) * k, (top - 0.01) * k, q1 * k, (top + 0.005) * k)
-  p.endShape(p.CLOSE)
-  // The blanket, from her side to the foot, hanging over the mattress's near side; the sheet turned down over it.
-  const b0 = ex + 0.155
-  p.fill(blanket)
-  p.beginShape()
-  p.vertex(b0 * k, (top - 0.035) * k)
-  p.bezierVertex((b0 + 0.3) * k, (top - 0.05) * k, (x1 - 0.6) * k, (top - 0.04) * k, (x1 - 0.2) * k, (top - 0.03) * k)
-  p.vertex((x1 - 0.2) * k, (top + 0.24) * k)
-  p.bezierVertex((x1 - 0.7) * k, (top + 0.27) * k, (b0 + 0.4) * k, (top + 0.25) * k, (b0 + 0.02) * k, (top + 0.24) * k)
-  p.bezierVertex((b0 - 0.03) * k, (top + 0.15) * k, (b0 - 0.03) * k, (top + 0.02) * k, b0 * k, (top - 0.035) * k)
-  p.endShape(p.CLOSE)
-  p.fill(sheet)
-  p.beginShape()
-  p.vertex(b0 * k, (top - 0.035) * k)
-  p.bezierVertex((b0 + 0.08) * k, (top - 0.045) * k, (b0 + 0.18) * k, (top - 0.045) * k, (b0 + 0.24) * k, (top - 0.04) * k)
-  p.bezierVertex((b0 + 0.26) * k, (top + 0.05) * k, (b0 + 0.25) * k, (top + 0.14) * k, (b0 + 0.27) * k, (top + 0.245) * k)
-  p.vertex((b0 + 0.02) * k, (top + 0.24) * k)
-  p.bezierVertex((b0 - 0.03) * k, (top + 0.15) * k, (b0 - 0.03) * k, (top + 0.02) * k, b0 * k, (top - 0.035) * k)
   p.endShape(p.CLOSE)
   // A clipboard on the foot rail: her chart, its page a blank light.
   p.stroke(INK)
@@ -318,6 +299,58 @@ function pool(p: p5, c: Ctx, T: number): void {
   ctx.restore()
 }
 
+/** A colour as the ward's dusk leaves it (`dusk`'s multiply, worked out here for what is drawn in front of the cast). */
+function dimmed(hex: string, dim: number): string {
+  const a = 0.5 * dim
+  const m = mixHex(HOME.night, CLINIC.steel, 0.35)
+  const ch = (h: string, i: number) => parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16)
+  const out = [0, 1, 2].map((i) => Math.round(ch(hex, i) * (1 - a + (a * ch(m, i)) / 255)))
+  return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`
+}
+
+/**
+ * Her covers, in front of her: she is in the bed, not on it. The blanket comes up over the lower third of her from just
+ * on her far side, a soft mound where she lies under it, and down to the foot, hanging over the mattress's near side;
+ * the sheet turned down over its top edge. It starts clear of his chair at his fullest lean, so it never covers him.
+ */
+function drawCovers(p: p5, k: number, weight: number, ex: number, dim: number): void {
+  const blanket = dimmed(mixHex(mixHex(CLINIC.wall, HOME.sky, 0.35), CLINIC.sheet, 0.25), dim)
+  const sheet = dimmed(mixHex(CLINIC.sheet, CLINIC.steel, 0.08), dim)
+  const { x1, top } = BED
+  const b0 = ex - 0.16
+  const hang = top + 0.24
+  // The top edge, from her far side to the foot: across her, over the mound of her, down to the mattress.
+  const edge = (p: p5, dy: number) => {
+    p.vertex(b0 * k, (0.075 + dy) * k)
+    p.bezierVertex((b0 + 0.07) * k, (0.055 + dy) * k, (ex - 0.04) * k, (0.045 + dy) * k, (ex + 0.06) * k, (0.045 + dy) * k)
+    p.bezierVertex((ex + 0.2) * k, (0.045 + dy) * k, (ex + 0.3) * k, (0.03 + dy) * k, (ex + 0.45) * k, (0.04 + dy) * k)
+    p.bezierVertex((ex + 0.7) * k, (0.06 + dy) * k, (ex + 0.85) * k, (top - 0.04 + dy) * k, (ex + 1.1) * k, (top - 0.035 + dy) * k)
+  }
+  p.push()
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.85)
+  p.fill(blanket)
+  p.beginShape()
+  edge(p, 0)
+  p.vertex((x1 - 0.2) * k, (top - 0.03) * k)
+  p.vertex((x1 - 0.2) * k, hang * k)
+  p.bezierVertex((x1 - 0.7) * k, (hang + 0.03) * k, (b0 + 0.4) * k, (hang + 0.01) * k, (b0 + 0.02) * k, hang * k)
+  p.bezierVertex((b0 - 0.03) * k, (hang - 0.09) * k, (b0 - 0.03) * k, 0.12 * k, b0 * k, 0.075 * k)
+  p.endShape(p.CLOSE)
+  // The sheet turned down over the blanket's top, across her and over the mound.
+  p.fill(sheet)
+  p.strokeWeight(weight * 0.7)
+  p.beginShape()
+  p.vertex(b0 * k, 0.075 * k)
+  p.bezierVertex((b0 + 0.07) * k, 0.055 * k, (ex - 0.04) * k, 0.045 * k, (ex + 0.06) * k, 0.045 * k)
+  p.bezierVertex((ex + 0.2) * k, 0.045 * k, (ex + 0.3) * k, 0.03 * k, (ex + 0.45) * k, 0.04 * k)
+  p.vertex((ex + 0.45) * k, 0.1 * k)
+  p.bezierVertex((ex + 0.3) * k, 0.09 * k, (ex + 0.2) * k, 0.105 * k, (ex + 0.06) * k, 0.105 * k)
+  p.bezierVertex((ex - 0.04) * k, 0.105 * k, (b0 + 0.06) * k, 0.115 * k, (b0 - 0.005) * k, 0.135 * k)
+  p.endShape(p.CLOSE)
+  p.pop()
+}
+
 /* ------------------------------------------------------------------ the part */
 
 interface HospitalState {
@@ -340,7 +373,15 @@ export const hospital = part<HospitalState>(
       p.pop()
       dusk(p, c, T)
     },
-    over: (p, s, c) => pool(p, c, c.t + s.begin),
+    over: (p, s, c) => {
+      const T = c.t + s.begin
+      const [ex] = herAt(Math.max(W_IN, Math.min(W_OUT, T)))
+      p.push()
+      p.translate(O * c.k, 0)
+      drawCovers(p, c.k, c.weight, ex, wardDusk(T).dim)
+      p.pop()
+      pool(p, c, T)
+    },
   },
   (slot) => {
     const dur = slot.end - slot.begin
