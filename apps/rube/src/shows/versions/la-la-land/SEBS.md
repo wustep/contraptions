@@ -171,3 +171,8 @@ An eleventh pass:
 
 - **Footlights.** Once the colour comes into Hollywood, the stage face below the painted street goes to the dark of the house, and in the shots along the street it was a quarter of the frame with nothing in it. It is a stage, and the number is played to a house, so there are footlights along its lip now. They come on with the colour, the run going out from the door both ways a moment behind it, and their light falls warm down the dark face.
 - **Her walk at Lipton's.** While she crosses the room table by table (44 to 57), the shot was wide enough that she was a small ball at the foot of a wall, over a band of the floor's cut. It is closer and sits higher, so she is someone crossing a room, with the snowy windows whole above her.
+
+A twelfth pass, at the machines in motion:
+
+- **Out of the jam.** Watched at a fifth of a second, his car did not pull out of the line so much as into the car ahead: the jam stood only half a cell apart, the ramp begins under that car's tail, and it falls away slowly, so for half a second the convertible drove level into the grey sedan's back. The deck has two lanes now, seen from a little above, with its top showing and a dashed line between them. The jam stands in the far lane, and pulling out he swings down into the near lane along the deck's edge, where the ramp leaves, so he passes in front of the sedan and down. The jam, his car until he pulls out, and the hand-off from the home movie are where they were.
+- The other machines (the cup up the tree and the counterweight, the theatre's lift and arbor, the globe and the biplane) read as machines at that rate, and are as they were.

@@ -47,6 +47,15 @@ export const DRIVE_HITS = [...P1, ...P2, PULL, ...JOINTS, ...LAMPS, STOP, NEON, 
 
 const RD = 0.52
 const STREET = RD + 3.4
+/**
+ * The deck has two lanes, seen from a little above: the jam stands in the far one (its road is RD), and the near one
+ * runs along the deck's edge, this much lower, where the exit ramp leaves. Pulling out, he swings down into the near
+ * lane, so he passes in front of the car ahead and not into it.
+ */
+const FAR = 0.13
+const EDGE = RD + FAR
+const TOP = 0.24
+const laneAt = (t: number): number => -FAR * (1 - smooth(t, PULL + 0.05, PULL + 0.75))
 /** The car: its length, its wheels (from the rear bumper), the beltline; where each of them sits on the bench. */
 const LEN = 2.3
 const WB: [number, number] = [0.45, 1.85]
@@ -109,7 +118,7 @@ const rearAt = (t: number): number => X0 + inched(0, t) + driven(t)
 /** The exit ramp: it leaves the deck just ahead of where they wait and comes down to the street. */
 const RAMP0 = rearAt(PULL) + LEN + 0.3
 const RAMP1 = RAMP0 + 11
-const roadAt = (x: number): number => RD + (STREET - RD) * smooth(x, RAMP0, RAMP1)
+const roadAt = (x: number): number => EDGE + (STREET - EDGE) * smooth(x, RAMP0, RAMP1)
 
 /** Where they stop, the kerb, and the club's door: its wall's outer face and the threshold (a ball's centre on it). */
 const PARK = rearAt(STOP + 1)
@@ -142,7 +151,7 @@ function poseAt(t: number): Pose {
   if (go > 0) a -= 0.03 * (1 - Math.exp(-go / 0.15)) * Math.exp(-go / 0.5)
   // Each joint of the ramp: a knock up through the springs.
   for (const j of JOINTS) lift += 0.04 * ring(t - j, 2.6, 0.16)
-  return { x: x + WB[0], y: yb - lift, a }
+  return { x: x + WB[0], y: yb - lift + laneAt(t), a }
 }
 
 /** A point of their car's body (u from the rear bumper, v up from the road) at t. */
@@ -293,12 +302,17 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
   vgrad(p, k, fr.x0 - 1, STREET + 0.3, fr.x1 + 1, Math.max(STREET + 1.5, fr.y1 + 1), [[0, rgba(D.frame, 0)], [1, rgba(D.frame, 0.85)]])
   seg(p, k, [fr.x0 - 1, STREET], [fr.x1 + 1, STREET], line, w)
   // The freeway: its piers, its far rail, its deck.
-  for (let x = Math.floor((fr.x0 - 2) / 6) * 6; x < fr.x1 + 2; x += 6) shape(p, k, [[x - 0.22, RD + 0.35], [x + 0.22, RD + 0.35], [x + 0.3, STREET], [x - 0.3, STREET]], rgba(D.brick, 0.9), line, w * 0.6)
-  seg(p, k, [fr.x0 - 1, RD - 0.5], [fr.x1 + 1, RD - 0.5], rgba(ink, 0.18), w * 0.8)
-  for (let x = Math.floor(fr.x0); x < fr.x1 + 1; x += 1) seg(p, k, [x, RD - 0.5], [x, RD], rgba(ink, 0.1), w * 0.5)
-  shape(p, k, [[fr.x0 - 1, RD], [fr.x1 + 1, RD], [fr.x1 + 1, RD + 0.35], [fr.x0 - 1, RD + 0.35]], D.asphalt, line, w)
+  for (let x = Math.floor((fr.x0 - 2) / 6) * 6; x < fr.x1 + 2; x += 6) shape(p, k, [[x - 0.22, EDGE + 0.35], [x + 0.22, EDGE + 0.35], [x + 0.3, STREET], [x - 0.3, STREET]], rgba(D.brick, 0.9), line, w * 0.6)
+  seg(p, k, [fr.x0 - 1, EDGE - TOP - 0.5], [fr.x1 + 1, EDGE - TOP - 0.5], rgba(ink, 0.18), w * 0.8)
+  for (let x = Math.floor(fr.x0); x < fr.x1 + 1; x += 1) seg(p, k, [x, EDGE - TOP - 0.5], [x, EDGE - TOP], rgba(ink, 0.1), w * 0.5)
+  // The deck's top, its two lanes and the dashes between them; then its edge.
+  shape(p, k, [[fr.x0 - 1, EDGE - TOP], [fr.x1 + 1, EDGE - TOP], [fr.x1 + 1, EDGE], [fr.x0 - 1, EDGE]], D.asphalt, null)
+  vgrad(p, k, fr.x0 - 1, EDGE - TOP, fr.x1 + 1, EDGE, [[0, rgba(D.frame, 0.35)], [1, rgba(D.frame, 0)]])
+  for (let x = Math.floor(fr.x0 - 1); x < fr.x1 + 1; x += 1.2) seg(p, k, [x, RD + 0.06], [x + 0.5, RD + 0.06], rgba(ink, 0.12), w * 0.5)
+  seg(p, k, [fr.x0 - 1, EDGE - TOP], [fr.x1 + 1, EDGE - TOP], rgba(ink, 0.15), w * 0.6)
+  shape(p, k, [[fr.x0 - 1, EDGE], [fr.x1 + 1, EDGE], [fr.x1 + 1, EDGE + 0.35], [fr.x0 - 1, EDGE + 0.35]], D.asphalt, line, w)
   // The freeway's tall lamps, and their pools on the deck.
-  for (let x = Math.floor((fr.x0 - 3) / 7) * 7 + 3; x < fr.x1 + 3; x += 7) sodium(p, k, ink, w, x, RD, 2.6, 1)
+  for (let x = Math.floor((fr.x0 - 3) / 7) * 7 + 3; x < fr.x1 + 3; x += 7) sodium(p, k, ink, w, x, EDGE - TOP, 2.6, 1)
   // The line of cars: headlamps on the car ahead's tail, tails flaring as each stops.
   for (const i of CARS) {
     const x = X0 + i * GAP + inched(i, t)
