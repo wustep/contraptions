@@ -594,7 +594,7 @@ function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, o
     // Its whole soft width: as wide as its old halo was, a little narrower up at the cloud.
     const span = w * 5.6
     if (Math.max(x, foot) + span / 2 < f.x0 || Math.min(x, foot) - span / 2 > f.x1) continue
-    softBeam(ctx, k, [x, top], [foot, MEADOW], span * 0.72, span, light, a * 3, 'shaft', shaftAlong, true)
+    softBeam(ctx, k, [x, top], [foot, MEADOW], span * 0.72, span, light, a * 2.3, 'shaft', shaftAlong, true)
     // Where it falls, the grass is lit.
     lobe(ctx, k, foot + w * 0.2, MEADOW - 0.1, w * 2.4, 0.55, light, a * 2.2, 0.45)
   }
