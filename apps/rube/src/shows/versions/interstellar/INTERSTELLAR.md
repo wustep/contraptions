@@ -231,7 +231,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 99 (latest)
+## Polish pass 100 (latest)
+
+No change to the show: evidence for pass 95's open finding, a slow start taken for an autoplay block. The YouTube decks' own state reports (their `infoDelivery` messages to the page) were logged through a throttled seek into No Time for Caution. Within 70 ms of the play, its deck went unstarted, buffering, unstarted. It then sat unstarted until 2.44 s, buffered, and was playing at 2.51 s. `PATIENCE` in `shows/youtube.ts` is 2.5 s, and at that moment it asks only whether the deck is buffering now. So on a slow link the outcome is a race decided by tens of milliseconds: this run started, pass 95's identical one was called refused.
+
+A possible fix, for whoever next works on `youtube.ts`: count a deck as slow, not refused, if it has reported buffering at any time since the play began, not only at the moment of the check. It is not made here, because it is unknown whether an embed the browser really refuses also blips through buffering. If it does, this would hide real autoplay blocks, which are the common case. That wants a test on real phones with autoplay refused.
+
+## Polish pass 99
 
 No change to the show. This bible now has about a hundred dated passes, each renumbered by hand: the old one's "latest" marker taken off, the new one put on top. Read through, they ran newest first, 98 down to 3, with no gap, no repeat and one marked latest. `check:shows` now holds them to that, so a slip in the record (two marked latest, a number missed) fails the build.
 
