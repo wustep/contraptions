@@ -9,7 +9,9 @@ import { AT, BEATS, CUT, DURATION, ONSETS, PIANO, RECORDING, SEAM } from '../src
 import { CARDS, CREDITS_AT, CREDITS_OK, creditsAt } from '../src/shows/versions/married-life/life/credits'
 import { CUTS } from '../src/shows/versions/married-life/life/seams'
 import { CARL, ELLIE, ELLIE_ID, carlAt, ellieAt } from '../src/shows/versions/married-life/life/worlds'
-import { BALLOON_FROM, balloonAt, HALF, LEANS, STIRS } from '../src/shows/versions/married-life/life/cast'
+import { BALLOON_FROM, balloonAt, ellieSpin, HALF, LEANS, lookOf, STIRS } from '../src/shows/versions/married-life/life/cast'
+import { BALLOON_SIZE } from '../src/shows/versions/married-life/life/props/balloon'
+import { ridge, STEP } from '../src/shows/versions/married-life/life/hill/hill'
 import { JOLTS } from '../src/shows/versions/married-life/life/score'
 import { FUN } from '../src/shows/versions/married-life/life/church/church'
 import { ALONE } from '../src/shows/versions/married-life/life/house/front-plan'
@@ -286,4 +288,100 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && CARDS.filter((c) => c.role === 'Directed by').length === 1 &&
     ['Claude Opus 5.5', 'Carl Fredricksen', 'Ellie Fredricksen', 'Michael Giacchino', 'Married Life', 'Up', 'Pete Docter', 'p5.js'].every((w) => said.includes(w)) &&
     !/Stephen Wu|tech demo/i.test(said), said)
+
+  // Under Zoom the two of them keep off the frame's edges, not only inside it (Zoom's own hold, `zoom.ts`): neither is
+  // within an eighth of its half size of an edge for 2.5 s or more, except where the staging fills the Zoom frame: the
+  // nursery, him at the winch and her on the cradle nine tenths of its width apart, and the ward, the balloon over them
+  // and the two of them under it. And the balloon's crown is never cut by more than a sliver (0.08 of
+  // the half height) under Zoom.
+  const zoomFrame = (t: number) => {
+    const f = cam(t)
+    const zh = f.cells / 1.5 / 2
+    const zw = (zh * 16) / 9
+    return { zh, zw, zy: f.y + (f.zoomDrop ?? 0) * zh, zx: f.x + (f.zoomSlide ?? 0) * zw }
+  }
+  let edgeRun = 0
+  let edgeFrom = 0
+  let edgeWorst = 0
+  let edgeWorstAt = ''
+  let crown = Infinity
+  let crownAt = 0
+  for (let t = 0; t <= perf.duration; t += 0.05) {
+    const { zh, zw, zy, zx } = zoomFrame(t)
+    const h = show.at(t)
+    const e = show.ellie(t)
+    let worst = 0
+    const bodies: [number, number, number][] = []
+    if (!h.hidden && h.scale >= 0.3) bodies.push([h.x, h.y, HALF * h.scale])
+    if (e && (e.scale ?? 1) >= 0.3) bodies.push([e.x, e.y, R * (e.scale ?? 1)])
+    for (const [x, y, r] of bodies) worst = Math.max(worst, (y + r - zy) / zh, (zy - y + r) / zh, (x + r - zx) / zw, (zx - x + r) / zw)
+    const full = (t >= 64.5 && t <= 69.5) || (t >= CUT.hospital - 0.3 && t <= 186.0)
+    if (worst > 0.88 && !full) {
+      if (edgeRun === 0) edgeFrom = t
+      edgeRun += 0.05
+      if (edgeRun > edgeWorst) { edgeWorst = edgeRun; edgeWorstAt = `${edgeFrom.toFixed(2)} s` }
+    } else edgeRun = 0
+    const b = balloonAt(show, t)
+    if (b) {
+      const [, wy] = show.where(t)
+      const c = (h.y + (b.at[1] - wy) - BALLOON_SIZE.ry - (zy - zh)) / zh
+      if (c < crown) { crown = c; crownAt = t }
+    }
+  }
+  check('married life: under Zoom the two of them keep off the frame\'s edges (never within an eighth of an edge for 2.5 s, but in the nursery and the ward, where they fill it)',
+    edgeWorst < 2.5, `longest ${edgeWorst.toFixed(2)} s from ${edgeWorstAt}`)
+  check('married life: under Zoom the balloon\'s crown is never cut by more than a sliver (0.08 of the half height)',
+    crown >= -0.08, `${crown.toFixed(3)} at ${crownAt.toFixed(2)} s`)
+
+  // Her face, the dot, is steered where the story needs it (`LOOKS`): at him for the kiss, at the crest of the dance and
+  // on the fieldstone; up at the clouds on the blanket; at him in her armchair. And it never turns faster than her own
+  // roll would turn it, beyond a brisk turn (0.15 rad in a 60 fps frame more than her roll): no snap.
+  const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
+  const drawn = (t: number) => lookOf(show, t, ellieSpin(show, t))
+  const toHim = (t: number) => {
+    const e = show.ellie(t)!
+    const c = show.at(t)
+    return Math.atan2(c.y - 0.12 - e.y, c.x - e.x)
+  }
+  const beats: [string, number, () => number][] = [
+    ['the kiss', 17.9, () => toHim(17.9)],
+    ['her armchair', 47.3, () => toHim(47.3)],
+    ['the clouds', 56, () => -1.35],
+    ['the crest', 157.5, () => toHim(157.5)],
+    ['the fieldstone', 179.6, () => toHim(179.6)],
+  ]
+  const offs = beats.map(([n, t, at]) => [n, Math.abs(wrap(drawn(t) - at()))] as [string, number])
+  check('married life: her face looks where the story needs it (at him at the kiss, in her armchair, at the crest and on the fieldstone; up at the clouds)',
+    offs.every(([, d]) => d < 0.35), offs.map(([n, d]) => `${n} ${((d * 180) / Math.PI).toFixed(0)}°`).join(', '))
+  let snap = 0
+  let snapAt = 0
+  for (let t = 0; t <= CUT.funeral; t += 1 / 120) {
+    if (!show.ellie(t) || !show.ellie(t + 1 / 60)) continue
+    const d = Math.abs(wrap(drawn(t + 1 / 60) - drawn(t)))
+    const o = Math.abs(wrap(ellieSpin(show, t + 1 / 60) - ellieSpin(show, t)))
+    if (d - o > snap) { snap = d - o; snapAt = t }
+  }
+  check('married life: her face never snaps round (at most 0.15 rad a frame faster than her own roll)', snap <= 0.15, `${snap.toFixed(3)} at ${snapAt.toFixed(2)} s`)
+
+  // On the hill's flank they rest on the slope, not in it (`seat`): their outline never cuts into the drawn ground by
+  // more than a twentieth of R, until she gives way (her slump is the story's).
+  const sink = (cx: number, cy: number) => {
+    let best = Infinity
+    for (let x = cx - 1; x <= Math.min(cx + 1, STEP.x0); x += 0.004) best = Math.min(best, Math.hypot(x - cx, ridge(x) + R - cy))
+    return best / R - 1
+  }
+  let flank = 0
+  let flankAt = 0
+  for (let t = CUT.climb; t <= 174.3; t += 0.05) {
+    const [cx, cy] = show.where(t)
+    const h = show.at(t)
+    const e = show.ellie(t)
+    if (cx < STEP.x0 - 0.2) { const s = sink(cx, cy); if (s < flank) { flank = s; flankAt = t } }
+    if (e) {
+      const ex = e.x - h.x + cx
+      const ey = e.y - h.y + cy
+      if (ex < STEP.x0 - 0.2) { const s = sink(ex, ey); if (s < flank) { flank = s; flankAt = t } }
+    }
+  }
+  check('married life: on the hill\'s flank they rest on the slope, not in it (until she gives way)', flank >= -0.05, `${flank.toFixed(3)} R at ${flankAt.toFixed(2)} s`)
 }

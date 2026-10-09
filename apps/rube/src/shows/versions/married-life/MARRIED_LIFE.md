@@ -331,6 +331,12 @@ window.
   it to the cut; it is his again from the church to the end; and it never jumps in a place.
 - **The toll:** the frame takes a blow only there (at most 1.5% of its height); the balloon is stirred only by the toll
   and its answer; at home it leans only on the piano's own notes, after he sits and before the credits.
+- **Zoom's margins:** neither of them within an eighth of the Zoom frame's edge for 2.5 s or more, except where the
+  staging fills it (the nursery, nine tenths of its width apart; the ward, the balloon over them); the balloon's crown
+  never cut by more than 0.08 of its half height.
+- **Her face:** at him at the kiss, in her armchair, at the crest and on the fieldstone, and up at the clouds (each
+  within 20°); never turning more than 0.15 rad a frame faster than her own roll.
+- **The flank:** neither cuts into the hill's slope by more than a twentieth of R, until she gives way.
 - **The credits:** after he has sat down and gone before the end, set by the page, opening on Directed by Claude
   Opus 5.5 and naming Carl and Ellie Fredricksen, Michael Giacchino, Married Life, Up, Pete Docter and p5.js.
 
@@ -580,6 +586,13 @@ window.
   straight up over the knot on its taut string (`stringAt`, now exported), which is never lower than where it is: the
   same stretches and the same crown margins, built in a sixth of the time, and no stall left above the page's own
   frames. Then the whole show watched under Zoom: the hold reads as framing, never as drift.
+
+- **Polish round 22 (Opus 5.5).** Each frame's render cost timed through the show: the slow outliers moved between
+  runs and came on `origin/main` too, so they are headless Chromium's, not the show's. Then guards: the recent rounds'
+  fixes (Zoom's margins, the balloon's crown under Zoom, her face at each beat and never snapping, resting on the
+  slope) had no check, so a later edit could undo them unseen; each is now in `check:shows`, its threshold just
+  outside what the show measures today, and two were proved by undoing their fix (both failed). Writing them found the
+  nursery is a second place the staging fills the Zoom frame (the two of them nine tenths of its width apart).
 
 ## Known limits
 
