@@ -246,6 +246,9 @@ strongest pulses held against what the picture does on them. What changed:
 - **A heptapod deepest in the fog** went by paling toward the fog's white, which is whiter than the fog field in its
   greyer places, so as Abbott came up in the push (170) its far limbs stood out as white ghost legs. Past a point it
   goes by fading now, and comes out of the fog darker than it, a shape in fog.
+- **The crescent under the push** (170.3 → 176.7): meant to hang under the great ring as it begins and then go into
+  the white, it lingered dark through the wide frame on the great ring, cut by the frame's bottom edge just under her,
+  and only faded after 173. A second fresh critic caught it. It now goes into the white by 170.3, before that frame.
 - **The palm** (118.700 → 133.573): its seven fingers were straight wedges to sharp points, a star or an asterisk
   more than a hand, on the show's most looked-at image. Each finger now has a full root, a long taper with a little
   curl of its own, and a soft round pad at its tip where it presses on the glass.

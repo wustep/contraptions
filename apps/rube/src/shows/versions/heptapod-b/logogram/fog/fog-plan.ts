@@ -399,9 +399,10 @@ export const FOG34 = (() => {
     born: 157.2,
     closed: F4.closeW,
     whole: F4.closeW + 2.5,
-    // It hangs under the great ring as that begins, then goes back into the white, so the great ring is written alone.
-    fade: F4.closeW + 0.8,
-    fadeFor: 3.5,
+    // It hangs under the great ring as that begins, then goes back into the white, so the great ring is written alone:
+    // gone before the frame goes back to the whole of the great ring (170.3), where it would sit cut by its bottom edge.
+    fade: F4.top + 0.35,
+    fadeFor: 1.8,
     lo: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 - 0.1], [F4.stop + 0.3, alpha0 - 0.1], [F4.closeW, alpha0 + L - TAU]]),
     hi: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 + L], [F4.stop + 0.3, alpha0 + L], [F4.closeW, alpha0 + L]]),
     by: { who: 'costello', limb: 2, t0: 156.5 },
