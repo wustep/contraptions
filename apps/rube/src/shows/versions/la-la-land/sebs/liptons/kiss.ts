@@ -149,6 +149,8 @@ export const kiss = part<null>(
       // Across the room on the bulbs: close, a little ahead of them, so each bulb is seen lighting beside them, and high
       // enough that the frame is them, the string and the garland over it, not the piano's lid cut off along its foot.
       [T.tip, 5.0, [7.7, -3.95]],
+      // Held on the star while the cup tips them out onto the string; then along it with them.
+      [T.tip + 0.55, 5.0, [7.65, -3.95]],
       [(T.swags[0] + T.swags[1]) / 2, 4.9, [5.0, -3.75]],
       [(T.swags[1] + T.swags[2]) / 2, 4.9, [0.2, -3.25]],
       [(T.swags[2] + T.swags[3]) / 2, 4.9, [-4.65, -2.5]],

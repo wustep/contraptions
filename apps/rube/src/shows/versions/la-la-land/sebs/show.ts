@@ -56,7 +56,7 @@ const touch = (t: number): Look => ({ from: t, to: t + 1.2, ease: [0.7, 0.8], wh
 const LOOKS: Look[] = [
   // Up to the stage, clearly above David across the table: the man at the piano is only a little higher than him.
   { from: 25.0, to: 31.5, ease: [1.0, 0.9], who: 'mia', at: -0.87 },
-  { from: 32.6, to: 35.0, ease: [0.5, 0.7], who: 'seb' },
+  { from: 32.8, to: 35.2, ease: [0.6, 0.7], who: 'seb' },
   touch(65.515),
   touch(125.585),
   touch(266.008),

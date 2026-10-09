@@ -170,11 +170,14 @@ export const opening = part<OpeningState>(
     // (him at the keys, her at her table) rather than the piano's legs.
     { t: 20.75, cells: 5.6, hold: [-0.3, 1.25] },
     { t: 22.4, cells: 1.95, hold: [-2.05, 2.36] },
-    { t: 31.0, cells: 1.75, hold: [-2.12, 2.4] },
-    // Back to the keys the same way, and the stage light closes on them.
+    // In, slowly, as she lifts her eyes to the stage.
+    { t: 25.0, cells: 1.92, hold: [-2.06, 2.37] },
+    { t: 31.0, cells: 1.5, hold: [-2.14, 2.42] },
+    // Back to the room the same way, the two of them in one frame, and held while his eye finds her across it; then in
+    // to the keys, and the stage light closes on them.
     { t: 33.0, cells: 5.6, hold: [-0.3, 1.25] },
-    { t: 34.7, cells: 3.0, hold: [2.95, -0.35] },
-    { t: 35.6, cells: 3.0, hold: [2.95, -0.35] },
+    { t: 34.6, cells: 5.5, hold: [-0.25, 1.2] },
+    { t: 36.0, cells: 3.0, hold: [2.95, -0.35] },
     { t: 39.4, cells: 2.8, hold: [3.0, -0.3] },
   ],
 )

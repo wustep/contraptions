@@ -317,3 +317,8 @@ A forty-first pass, at the last act:
 
 - **A reviewer on the last act.** A fifth cold reviewer took notes on 423 to 510 as the final act of a film. Two were right. His close shots at the door were wider than hers, so his look and his nod were a few pixels against her clear dip; they are as close as hers now. And after the door shut his last beats, the look back at the door and the count-in nods, played on a dot in a medium-wide shot: the camera now comes close on him at the keys, the band's first lamp-lit stand beside him, his eye on the door as it arrives (471.2 to 472.8), and closer for the count-in, before it draws back on the band's first hit.
 - Not taken: the piano playing itself is the dream's own image, his glide back to the keys is the dream draining, and a band of players or a beam kept clear of one credit would be new staging for little.
+
+A forty-second pass, at the first act:
+
+- **A reviewer on the first act.** A sixth cold reviewer took notes on 0 to 90. Three were right. At her table the shot held still for nine seconds, so her eyes lifting to the stage were a few pixels; it now pushes in slowly as she looks up. His eye found her across the room just as the camera pushed in to the keys and cut her out of the picture, so his look had no one to land on; the two-shot of the room now holds until it has (34.6), then goes in to the keys before the stage light closes. And at Lipton's the camera panned on along the bulbs while the cup was tipping them out, so the tip and the landing ran together; it holds on the star through the tip, and goes along the string once they are on it.
+- Not taken: her entrance and her crossing at Lipton's, already closed in on twice; the entrance is the room revealed as the light opens.
