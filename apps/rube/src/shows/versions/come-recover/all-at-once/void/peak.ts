@@ -576,7 +576,8 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     { t: 252.4, cells: 5.0, off: [-0.3, -0.5] },
     { t: 253.6, cells: 3.4, off: [0.1, -0.3] },
     { t: 254.55, cells: 3.0, off: [0.12, -0.25] },
-    { t: 255.3, cells: 3.3, off: [0.1, -0.3] },
+    // Held close a breath after the eye lands, so the two of them are seen to look at each other.
+    { t: 256.0, cells: 3.25, off: [0.1, -0.3] },
     // Back out on the fountain.
     { t: 256.6, cells: 8.6, off: [0.3, -1.6] },
     { t: 259.4, cells: 8.8, off: [0.2, -1.5] },

@@ -315,6 +315,12 @@ export const eyes = () =>
           look.x += (reach * (dx / n) + 0.15 * look.x - look.x) * w
           look.y += (reach * (dy / n) + 0.15 * look.y - look.y) * w
           look.hx += (Math.max(-1, Math.min(1, dx / n)) - look.hx) * w
+          // Never past the rim of its cage.
+          const m = Math.hypot(look.x, look.y)
+          if (m > 1) {
+            look.x /= m
+            look.y /= m
+          }
         }
         const shade = s.shade
         const lit = shade ? (hex: string) => shade(hex, b!.x, b!.y, t) : (hex: string) => hex

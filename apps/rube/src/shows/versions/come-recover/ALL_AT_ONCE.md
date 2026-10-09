@@ -482,6 +482,12 @@ The notes went back to the builders who made each part, who still had their cont
   - In the bagel's hole (from 242 s), as she holds Joy at the lip, she looks at her.
   - Once Joy's eye has settled (255.3 s), mother and daughter look at each other.
   - At home, as Joy nestles against her (279.6 s), Joy looks up at her mother.
+- **A pass for the looks in motion.** Every gaze was followed through its span from the show's own positions, and
+  the closest one was stepped at 7 fps. They ease on and off without snapping or fluttering, and each target is in
+  the frame until its span ends.
+  - A watching pupil could sit up to 5% past its eye's rim. It is now held inside it.
+  - Mother and daughter's look (from 255.3 s) began as the camera pulled back to the fountain, so it showed for
+    about a third of a second. The close on them now holds to 256.0 s, then opens out.
 
 ## End credits
 
