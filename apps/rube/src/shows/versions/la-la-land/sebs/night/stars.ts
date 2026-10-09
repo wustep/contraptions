@@ -339,6 +339,29 @@ export const stars = part<StarsState>(
       drawProjector(p, k, c.ink, c.weight, T, true)
       drawProjector(p, k, c.ink, c.weight, T, false)
       throwStars(p, k, T)
+      // The constellation they make: each star the melody lights is joined to the one lit before it, the line drawing
+      // out from the old star to the new as it lights, so the sky gathers a figure round them as the waltz goes on.
+      // It turns with the sky, and goes with the projector's lamps when the lights go.
+      {
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        const fade = 1 - smooth(T, DARK[0], DARK[0] + 0.6)
+        ctx.save()
+        ctx.lineCap = 'round'
+        ctx.lineWidth = Math.max(0.6, 0.014 * k)
+        for (let i = 1; i < KINDLED.length; i++) {
+          const q = KINDLED[i]
+          const u = smooth(T, q.at, q.at + 0.7)
+          if (u <= 0 || fade <= 0) continue
+          const [x0, y0] = inSky(KINDLED[i - 1].local, T)
+          const [x1, y1] = inSky(q.local, T)
+          ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.22 * fade)
+          ctx.beginPath()
+          ctx.moveTo(x0 * k, y0 * k)
+          ctx.lineTo((x0 + (x1 - x0) * u) * k, (y0 + (y1 - y0) * u) * k)
+          ctx.stroke()
+        }
+        ctx.restore()
+      }
       // The lit stars, and theirs in the floor.
       for (const q of KINDLED) {
         if (T < q.at) continue

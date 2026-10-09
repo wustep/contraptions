@@ -369,3 +369,11 @@ A forty-ninth pass, one more check:
 A fiftieth pass, the framing held:
 
 - **A check for the beats.** Most of what these passes did was framing: getting everyone a moment is about into the picture at that moment. `check:shows` now holds nineteen such beats, from her eyes lifting at her table and his finding her, through the kiss, the ovation, the pen he sees sign, her premiere, the roll, the waltz, the touch, the pool and the dream's kiss, to the waking, her turn and nod and his look and nod at the door, and the count-in. With the audition as it was, it fails on the pen. And it holds that Hollywood's lamps go out before the dark comes, which fails on the covers as they were.
+
+A fifty-first pass, at the weakest stretches:
+
+- **A reviewer on what is weakest now.** A last cold reviewer ranked the weakest stretches of the show as it stands. Three were taken.
+- **The band, whole.** The count-in (472 to 478) was my own doing: coming close on him for his last look, I had cut the piano at the frame's edge and the band off along its foot. The shot sits wider and lower now, his look and nods still readable, with the bass, the drums and both lamp-lit stands whole beside him.
+- **A constellation.** Among the stars (301 to 326) the picture reset to the same place every few seconds while the melody lit star after star. Now each star the melody lights is joined to the one before by a faint line, drawn out from the old star to the new as it lights, and over the waltz the eleven gather into a figure round the two of them that turns with the sky and goes out with the projector's lamps.
+- **Her window, with the music.** Through her show the window, all her set, now takes its light from the music as well as the stage lights, and the music builds through her show: the window comes up like a dawn behind her, phrase on phrase, and holds for the ovation.
+- Not taken: a push in on the audition, which was widened on purpose to keep his chair in the picture.

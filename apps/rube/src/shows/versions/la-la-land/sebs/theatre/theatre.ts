@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, mixHex, type Pt } from '../../../../../parts'
 import { alpha, beam, box, carried, frame, glow, knock, lastOf, part, rgba, ring, route, type Companion, type Ctx, type PartShot, type Way } from '../kit'
-import { DREAM_PERIOD, dream, notes, snap } from '../music'
+import { DREAM_PERIOD, dream, level, notes, snap } from '../music'
 import { G, hop } from '../physics'
 import { THEATRE_INK, THEATRE_MAT as M } from '../worlds'
 
@@ -565,10 +565,15 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
   // Behind the arch: the stage's back wall, dark velvet, and her window flown in against it.
   p.fill(mixHex(bg, M.velvetDeep, 0.55))
   rrect(p, k, ARCH0, ARCH_TOP, ARCH1, FLOOR)
-  if (stage > 0.01) {
-    glow(p, k, MID, -1.9, 3.6, M.bulb, 0.22 * Math.min(1, stage), 1.25, 0.85)
+  // While she plays, her window's light breathes with the music: up as a phrase swells, down in its rests, so the set
+  // plays with her. Steady again for the ovation.
+  const playing = Math.min(1, (t - THUD) / 1.2) * (1 - Math.min(1, Math.max(0, (t - SPRING + 0.8) / 0.8)))
+  const breath = t > THUD && t < SPRING ? 1 + 0.45 * (level(t) - 0.55) * Math.max(0, playing) : 1
+  const lit = stage * breath
+  if (lit > 0.01) {
+    glow(p, k, MID, -1.9, 3.6, M.bulb, 0.22 * Math.min(1.3, lit), 1.25, 0.85)
   }
-  drawWindow(p, k, ink, weight, stage)
+  drawWindow(p, k, ink, weight, lit)
 
   // The spot's pool on the stage floor (under the curtain as it rises), and on the curtain once it is in behind them.
   const spot = spotAt(t)
