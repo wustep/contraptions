@@ -693,6 +693,12 @@ window.
   A real export in headless Chromium was started to measure it and stopped before it finished, so the recording is
   still unmeasured (as the limit below says). No change to the show.
 
+- **Polish round 35 (Opus 5.5).** A full sweep of the whole show in contact sheets, the first since the early rounds,
+  for regressions from all that came after: none. Every change reads in its place (the photograph over the dance and
+  on the easel, her bed and covers, the tickets lying in the frame's corner as he rests beside her, the credits over
+  the night sky). The headless export was not run again (it needs about five unbroken minutes); the recording is still
+  unmeasured.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
