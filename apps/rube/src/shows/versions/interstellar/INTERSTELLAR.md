@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 81 (latest)
+## Polish pass 82 (latest)
+
+No change to the show: a regression sweep after passes 53 to 72 changed the picture. The whole show was swept at 16:9 every 1.5 s, offset from earlier sweeps, and nothing has broken. The recent changes sit well among their neighbours: the swoop back to the house (136.9 s), Murph at her doorway as the lift climbs (183.4 to 184.9 s), and the streak across the axis (168 to 172 s).
+
+## Polish pass 81
 
 - **The YouTube cues are held to the mix.** Pass 14 checked by hand that the uploads are cued on the mix's numbers. Those numbers live in two files, `liftoff/index.ts` (what plays) and `scripts/shows/liftoff-mix.sh` (what the show was timed to), and if they parted every Act II strike would be off the music online. `check:shows` now reads the script's two trims and its delay, and holds Cornfield Chase's `until`, No Time for Caution's `from` and its `at` to them. Each of the three, nudged in `index.ts`, makes it fail.
 
