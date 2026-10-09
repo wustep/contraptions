@@ -469,6 +469,13 @@ window.
   on (`Framing.zoomDrop`, `zoomDropAt` in `house/alone.ts`), so under Zoom the house stays whole with him in the lit
   window to the end; the show's own frame is unchanged.
 
+- **Polish round 9 (Opus 5.5).** Each cut seen frame by frame at full size (before and after): nothing the two of
+  them carry, and no light, pops across one. The clouds, the jar's three breaks and the storm at full size read.
+  Then the balloon's crown measured against the Zoom frame through every second it is up: on the home steps it lost up
+  to half the balloon off the top for five seconds. Zoom now holds higher there, a step at a time with him
+  (`zoomDropAt`, negative), the balloon whole and a tenth of the half height still under him. At the hospital's start
+  it is cut too, but there is no room under them to move.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
@@ -478,9 +485,9 @@ window.
   tree both times; a wide that held the summer place and them years later needs about 9.5 cells.
 - Under Zoom the frame must keep the two of them within a third of its height of its middle, so a close shot always
   shows a sixth of its height below their floor, and the dance keeps them low in the frame.
-- Under Zoom the balloon's top is cut on the home steps (about 205.5 to 208.4 s): a 3.5-cell close under Zoom is 2.33
-  cells, and his feet to the balloon's crown on its 1.3-cell string is about as much. Zoom holds the two of them, not
-  the balloon.
+- Under Zoom the balloon's top is cut for the first three seconds in the hospital (180.4 to 183.2 s): the two of them
+  are already at the foot of the Zoom frame there, so it cannot hold higher. Zoom holds the two of them, not the
+  balloon. (On the home steps, where it was cut too, Zoom now holds higher and keeps it whole.)
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Only Chrome on macOS has been watched. The YouTube cue's sync, Safari and a recording export have not been
   measured for this take.

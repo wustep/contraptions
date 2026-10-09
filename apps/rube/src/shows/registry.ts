@@ -28,9 +28,9 @@ export interface Framing {
    */
   angle?: number
   /**
-   * Under Zoom, how far below the frame's middle Zoom holds, as a share of the Zoom frame's half height: for a wide
-   * shot that keeps its subject low under a sky (credits over it), whose subject a tighter frame round the same middle
-   * would cut. Left out, Zoom holds the middle.
+   * Under Zoom, how far below the frame's middle Zoom holds, as a share of the Zoom frame's half height (negative:
+   * above it): for a shot whose subject sits low or high in the frame (a house under a sky for the credits, a balloon
+   * high over him), which a tighter frame round the same middle would cut. Left out, Zoom holds the middle.
    */
   zoomDrop?: number
 }

@@ -143,13 +143,19 @@ function middleAt(cells: number): Pt {
   return [OUT[0][1], OUT[0][2]]
 }
 /**
- * Under Zoom (half as close again round the same middle) the draw-back's house, kept low under the sky for the
- * credits, would sink off the frame's foot: the porch and the lit window cut, then gone. So once it has opened past
- * the lit room, Zoom holds a quarter of its half height lower (`Framing.zoomDrop`): the porch's foot stays inside
- * the Zoom frame to the end, him in the lit window over it. The show's own frame is unchanged.
+ * Where Zoom (half as close again round the same middle) holds off the frame's middle (`Framing.zoomDrop`; the show's
+ * own frame is unchanged):
+ * - On the steps it holds higher, rising with him a step at a time: the close on the steps keeps him low, and under
+ *   Zoom the balloon over him on its long string lost its crown off the frame's top (up to half the balloon, 203.8 to
+ *   208.7). A third of its half height while he climbs the first two, half for the top one and the latch, with a
+ *   tenth of the half height left under him; let down again as he goes in.
+ * - From the lit room's draw-back it holds a quarter lower: the house, kept low under the sky for the credits, would
+ *   sink off the frame's foot (the porch and the lit window cut, then gone); the porch's foot stays inside the Zoom
+ *   frame to the end, him in the lit window over it.
  */
 export function zoomDropAt(T: number): number {
-  return 0.25 * ramp(T, 226.5, 230.5)
+  const steps = (0.33 * ramp(T, 203.8, 205.0) + 0.17 * ramp(T, A.up[2], ALONE.steps[2])) * (1 - ramp(T, 208.4, 209.4))
+  return 0.25 * ramp(T, 226.5, 230.5) - steps
 }
 
 /**
