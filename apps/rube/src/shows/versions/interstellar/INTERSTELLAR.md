@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 105 (latest)
+## Polish pass 106 (latest)
+
+No change to the show. The pull request's description now names pass 103's change to the music online and pass 102's exception for the Sound button. Its test plan asks a reviewer to listen to the music's end, the one change made by numbers alone, since audio could not be heard here.
+
+## Polish pass 105
 
 No change to the show: whether pass 103's fault (an online cue with no end, playing past what its mix trims) is in any other show. It is not. Every other YouTube show plays one upload whole, with nothing trimmed, so running to the video's end is right. The one other show with a mix script and a second cue, Epilogue's Seb's take (`la-la-land/sebs`), plays its second recording whole too: `sebs-mix.sh` delays it to 464 s with no trim, as its cue does. Voyage was alone in trimming a recording its cue played whole.
 
