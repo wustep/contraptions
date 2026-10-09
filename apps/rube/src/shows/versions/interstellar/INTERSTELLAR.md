@@ -231,7 +231,16 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 110 (latest)
+## Polish pass 111 (latest)
+
+No change to the show: Overview on a desktop, swept whole for the first time since pass 108 changed its skies. The farm, the station and the camp read. Saturn's sky keeps its stars at this size, as it should, since a cell is over 3 px. Three more drawings are made to the camera and show it here:
+- Miller's sea, from 104 to 112 s. Its horizon is at the eye, so the world under it is an empty blue-grey.
+- The tesseract at 122 s, a small cross alone in the dark.
+- At 236 s, the far side opening through the sphere at the end of the whip. It is sized to fill the camera's frame, so in Overview it grows over Saturn.
+
+Each lasts only as long as its scene. As in pass 107, they are left, noted. Overview is for the layout, and giving these an Overview of their own would mean redrawing them.
+
+## Polish pass 110
 
 No change to the show. Three looks not taken before:
 - The whole show on a short, wide canvas (844×340, a landscape phone under the player's bar). Nothing is lost. Gargantua over Edmunds' planet sits lower in the sky, near the horizon, since it keeps its share of a shorter frame, but stays clear of the mesas.
