@@ -1174,6 +1174,8 @@ const fallPace = (T: number): number => {
   return u <= 0 || u >= 1 ? 0 : (12 * u * (1 - u) * (1 - u)) / (16 / 9)
 }
 
+/** The gold as "r, g, b", once: the threads are sixteen gradients a frame, and two p5 colours parsed for each cost the fall its frame rate on a phone. */
+const GOLD_RGB = [1, 3, 5].map((i) => parseInt(DARK.gold.slice(i, i + 2), 16)).join(', ')
 /** The lattice's lines going past him as he falls: a few thin gold threads, streaming up the frame, longer the faster he goes. */
 function drawStreaks(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
   const pace = fallPace(T) * (1 - smooth(T, CLOSE + 0.9, CLOSE + 1.3))
@@ -1195,8 +1197,8 @@ function drawStreaks(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): voi
     const len = 0.3 + 1.5 * pace * (0.6 + 0.4 * hash(i, 64))
     const a = Math.min(1, 0.6 * pace * (0.5 + 0.5 * hash(i, 65)))
     const g = ctx.createLinearGradient(0, X(y), 0, X(y + len))
-    g.addColorStop(0, alpha(p, DARK.gold, a).toString())
-    g.addColorStop(1, alpha(p, DARK.gold, 0).toString())
+    g.addColorStop(0, `rgba(${GOLD_RGB}, ${a})`)
+    g.addColorStop(1, `rgba(${GOLD_RGB}, 0)`)
     ctx.strokeStyle = g
     ctx.lineWidth = Math.max(1, k * (0.012 + 0.01 * hash(i, 66)))
     ctx.beginPath()
