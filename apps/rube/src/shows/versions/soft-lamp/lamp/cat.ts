@@ -3,7 +3,7 @@ import { MOMENTS, flashAt, shootAt } from './sky'
 import { REACHES, handAt, petAt } from './hands'
 import { mothAt } from './moth'
 import { rimAt } from './rim'
-import { CAT } from './desk'
+import { CAT, WALKMAN } from './desk'
 import { camera, catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
 import { LANDINGS, LAPS, ballAt, machineBusy } from './route'
@@ -36,6 +36,23 @@ const LAST = TRACKS[TRACKS.length - 1]
 const SLEEP_FROM = barTime(LAST, LAST.exit) + 3
 export const sleepAt = (t: number): number => smooth(t, SLEEP_FROM, SLEEP_FROM + 9)
 
+/** Where the Walkman is, for its glance at a new track. */
+const WALKMAN_AT = { x: (WALKMAN.x0 + WALKMAN.x1) / 2, y: -WALKMAN.h / 2 }
+
+/**
+ * A new track: as each one after the first begins, out of the breath between, the kitten hears it, its ears come up
+ * and forward and it glances at the Walkman a moment or two, then goes back to the ball. 0 to 1.
+ */
+export function newTrackAt(t: number): number {
+  for (const tr of TRACKS) {
+    if (tr.n === 0) continue
+    const s = t - tr.from - 0.25
+    if (s < 0 || s > 3.4) continue
+    return smooth(s, 0, 0.35) * (1 - smooth(s, 2.2, 3.4))
+  }
+  return 0
+}
+
 /** Once, asleep, it dreams: an ear and the tip of its tail twitch, twice, and are still. */
 const DREAM = SLEEP_FROM + 13
 function dreamAt(t: number): number {
@@ -53,7 +70,10 @@ function dreamAt(t: number): number {
  * went.
  */
 function gaze(t: number, lag: number): { x: number; y: number } {
-  const ball = ballGaze(t, lag)
+  const b0 = ballGaze(t, lag)
+  // A new track: a glance at the Walkman it is coming from.
+  const n = newTrackAt(t)
+  const ball = { x: b0.x + (WALKMAN_AT.x - b0.x) * 0.85 * n, y: b0.y + (WALKMAN_AT.y - b0.y) * 0.85 * n }
   const sw = sweepAt(t - 0.35)
   const k = Math.min(1, sw.a * 1.6)
   const g = { x: ball.x + (sw.x - ball.x) * k, y: ball.y + (sw.y - ball.y) * k }
@@ -490,10 +510,12 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   const RY = 0.215
   // The ears, the near one flicking.
   const flick = flickAt(t) * awake + dreamAt(t) * sleep
+  const perk = newTrackAt(t) * awake * (1 - yawn) * (1 - wash.k)
   for (const side of [-1, 1]) {
     ctx.save()
     ctx.translate(side * 0.14, -0.13)
-    ctx.rotate(side * 0.25 + (side > 0 ? flick * 0.35 : 0) - side * sleep * 0.25 + side * yawn * 0.3 + side * pet * 0.2)
+    // Hearing a new track, both ears come up and turn a little forward.
+    ctx.rotate(side * 0.25 + (side > 0 ? flick * 0.35 : 0) - side * sleep * 0.25 + side * yawn * 0.3 + side * pet * 0.2 - side * 0.14 * perk)
     ctx.beginPath()
     ctx.moveTo(-0.085, 0.04)
     ctx.quadraticCurveTo(-0.04, -0.12, 0.0, -0.16)
