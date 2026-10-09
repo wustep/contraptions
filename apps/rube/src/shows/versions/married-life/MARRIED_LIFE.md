@@ -333,7 +333,8 @@ window.
   and its answer; at home it leans only on the piano's own notes, after he sits and before the credits.
 - **Zoom's margins:** neither of them within an eighth of the Zoom frame's edge for 2.5 s or more, except where the
   staging fills it (the nursery, nine tenths of its width apart; the ward, the balloon over them); the balloon's crown
-  never cut by more than 0.08 of its half height.
+  never cut by more than 0.08 of its half height; and the frame's sharpest change of speed under Zoom at most twice
+  the show's own.
 - **Her face:** at him at the kiss, in her armchair, at the crest and on the fieldstone, and up at the clouds (each
   within 20°); never turning more than 0.15 rad a frame faster than her own roll.
 - **The flank:** neither cuts into the hill's slope by more than a twentieth of R, until she gives way.
@@ -599,6 +600,14 @@ window.
   throughout, the sky and the roofs over them. And contrast: each of them against the background just outside their
   outline, once a second: the lowest ratios (Carl's blue on the maroon armchair, Ellie's greyed coral on the autumn
   hill) are brightness alone; the ink outline and the hue carry every one, and her greying is the years, as meant.
+
+- **Polish round 24 (Opus 5.5).** The camera's motion, the nearest thing to real speed without a viewer: its change of
+  speed sixty times a second, pan and zoom, cuts and the toll aside. The show's own is gentle (its sharpest 1.6 frame
+  heights a second squared, in the tyre's push in). Under Zoom it spiked to 33, every tenth of a second: Zoom's hold
+  (round 20) was read in straight lines between its samples, so the frame's speed changed at each, a small judder,
+  and smoothed over too short a window. Now it is smoothed twice and read along a Catmull-Rom curve: its sharpest 2.3,
+  at the show's own sharpest moment, as a frame half as close again should be; the margins and the crown hold as
+  before. A check holds it to twice the show's, and fails if the straight lines come back.
 
 ## Known limits
 

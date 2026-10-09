@@ -333,6 +333,36 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   check('married life: under Zoom the balloon\'s crown is never cut by more than a sliver (0.08 of the half height)',
     crown >= -0.08, `${crown.toFixed(3)} at ${crownAt.toFixed(2)} s`)
 
+  // Zoom's hold moves as gently as the camera's own move: the frame's sharpest change of speed under Zoom (pan in frame
+  // heights and zoom in log units, a second squared, at 60 fps, cuts and the toll's blow aside) is at most twice the
+  // show's own. Straight lines between the hold's samples once made it twenty times (a judder each tenth of a second).
+  const sharpest = (zoomed: boolean) => {
+    const dt = 1 / 60
+    const cutTimes: number[] = Object.values(CUT)
+    const at = (t: number) => {
+      const f = cam(t)
+      const cells = zoomed ? f.cells / 1.5 : f.cells
+      const x = zoomed ? f.x + ((f.zoomSlide ?? 0) * cells * 16) / 9 / 2 : f.x
+      const y = zoomed ? f.y + ((f.zoomDrop ?? 0) * cells) / 2 : f.y
+      return { x, y, L: Math.log(cells), cells }
+    }
+    let worst = 0
+    let worstAt = 0
+    for (let t = 2 * dt; t < perf.duration - 2 * dt; t += dt) {
+      if (cutTimes.some((c) => Math.abs(t - c) < 0.05) || JOLTS.some((j) => t > j.t - 0.05 && t < j.t + 1.5)) continue
+      const a = at(t - dt)
+      const b = at(t)
+      const c = at(t + dt)
+      const v = Math.hypot((c.x - 2 * b.x + a.x) / b.cells, (c.y - 2 * b.y + a.y) / b.cells, c.L - 2 * b.L + a.L) / dt / dt
+      if (v > worst) { worst = v; worstAt = t }
+    }
+    return [worst, worstAt]
+  }
+  const [own, ownAt] = sharpest(false)
+  const [inZoom, inZoomAt] = sharpest(true)
+  check('married life: under Zoom the frame moves as gently as the show\'s own (its sharpest change of speed at most twice the show\'s)',
+    inZoom <= 2 * own, `Zoom ${inZoom.toFixed(2)} at ${inZoomAt.toFixed(2)} s; the show's ${own.toFixed(2)} at ${ownAt.toFixed(2)} s`)
+
   // Her face, the dot, is steered where the story needs it (`LOOKS`): at him for the kiss, at the crest of the dance and
   // on the fieldstone; up at the clouds on the blanket; at him in her armchair. And it never turns faster than her own
   // roll would turn it, beyond a brisk turn (0.15 rad in a 60 fps frame more than her roll): no snap.

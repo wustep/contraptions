@@ -12,7 +12,8 @@ import type { LifeShow } from './show'
  * `MARGIN` of the Zoom frame's half height (and half width) of its middle where the frame can give it, never pushing
  * the topmost of them, or the balloon's crown, past `CEIL` of it. It is added on top of a part's own hold
  * (`Framing.zoomDrop`), sampled every tenth of a second, its need held over half a second either side and smoothed, so
- * it moves as a slow camera would and never twitches with a hop. The show's own frame is unchanged.
+ * it moves as a slow camera would and never twitches with a hop: smoothed twice, and read along a curve. The show's
+ * own frame is unchanged.
  */
 const MARGIN = 0.8
 const CEIL = 0.92
@@ -110,7 +111,7 @@ function build(show: LifeShow, camera: (t: number) => Framing): Need[] {
     }
     return { drop: d / w, slide: s / w }
   })
-  return smooth.map((v, i) => {
+  const capped = smooth.map((v, i) => {
     let d = 0
     let l = 0
     let r = 0
@@ -125,14 +126,36 @@ function build(show: LifeShow, camera: (t: number) => Framing): Need[] {
     }
     return { drop: Math.min(v.drop, d / w), slide: Math.max(-l / w, Math.min(r / w, v.slide)) }
   })
+  // Smoothed once more, after the cap: a triangle twice over is near a bell, so the camera's speed under Zoom changes
+  // as gently as its own move does (the cap is wide enough that this never takes it past an allowance; the crown's
+  // check holds it to that).
+  return capped.map((_, i) => {
+    let d = 0
+    let s = 0
+    let w = 0
+    for (let j = -SMOOTH; j <= SMOOTH; j++) {
+      const k = Math.max(0, Math.min(n - 1, i + j))
+      const wi = SMOOTH + 1 - Math.abs(j)
+      d += capped[k].drop * wi
+      s += capped[k].slide * wi
+      w += wi
+    }
+    return { drop: d / w, slide: s / w }
+  })
 }
 
 /** Zoom's own hold at `t`, on top of the framing `f` a part asked for. */
 export function zoomHold(show: LifeShow, camera: (t: number) => Framing, t: number): Need {
   if (!table) table = build(show, camera)
-  const u = Math.max(0, Math.min(table.length - 1, t / STEP))
-  const i = Math.floor(u)
-  const j = Math.min(table.length - 1, i + 1)
+  // A Catmull-Rom curve through the samples, not straight lines between them: straight lines change the camera's speed
+  // abruptly at every tenth of a second, a small judder under Zoom.
+  const T = table
+  const u = Math.max(0, Math.min(T.length - 1, t / STEP))
+  const i = Math.min(T.length - 2, Math.floor(u))
   const a = u - i
-  return { drop: table[i].drop + (table[j].drop - table[i].drop) * a, slide: table[i].slide + (table[j].slide - table[i].slide) * a }
+  const at = (k: number) => T[Math.max(0, Math.min(T.length - 1, k))]
+  const cr = (p0: number, p1: number, p2: number, p3: number) =>
+    p1 + 0.5 * a * (p2 - p0 + a * (2 * p0 - 5 * p1 + 4 * p2 - p3 + a * (3 * (p1 - p2) + p3 - p0)))
+  const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)]
+  return { drop: cr(p0.drop, p1.drop, p2.drop, p3.drop), slide: cr(p0.slide, p1.slide, p2.slide, p3.slide) }
 }
