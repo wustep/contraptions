@@ -686,6 +686,13 @@ window.
   what Overview frames (`Performance.overview`, new, optional; left out, the whole world, as every other show); this
   one frames the place in play, its leg's parts (`LifeShow.place`), so every scene shows whole at a glance.
 
+- **Polish round 34 (Opus 5.5).** The exports read against this PR's framing: Shorts letterboxes the 16:9 picture
+  (so `tall` and the credits' lift never apply there), PNG and video are plain 16:9, and every export records in the
+  viewer's current view (Zoom, with its holds and its ease out before the credits; Overview, with the place in play),
+  through the same `paintShow`. With no `src` (the mp3 is out of the repo) a video export records the picture silently.
+  A real export in headless Chromium was started to measure it and stopped before it finished, so the recording is
+  still unmeasured (as the limit below says). No change to the show.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
