@@ -1143,6 +1143,12 @@ function frontDoor(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the room */
 
+/**
+ * What the googly-eyed bags on the washers watch, if anything: a point in the room at show time `t`, or null. The
+ * score sets it to Evelyn while she tumbles in the big dryer, so the shop's eyes follow her round the drum.
+ */
+export const BAG_WATCH: { at: ((t: number) => { p: Pt; w: number } | null) | null } = { at: null }
+
 /** The idle washers' laundry bags on top, and how they sit. */
 const TOP_BAGS: { x: number; color: string; size: number }[] = [
   { x: 5.45, color: HOME.rose, size: 0.62 },
@@ -1634,7 +1640,15 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     if (!see(b.x - 0.5, b.x + 0.5)) continue
     const near = clamp(1 - Math.abs(b.x - WASHERS[0].x) / 10)
     const hop = Math.max(0, j) * 0.08 * near
-    bag(pen, b.x, WASHER.top - hop, { color: b.color, size: b.size, swing: 0.8 * j * near, lift: clamp(j * 1.5) * near })
+    // Watching her, when there is someone to watch: the pupils turned along the line to her.
+    const seen = BAG_WATCH.at?.(t) ?? null
+    let swing = 0.8 * j * near
+    if (seen) {
+      // How far it is turned to her (`w`, eased in and out), its pupils drawn the short way round.
+      const a = Math.atan2(seen.p[1] - (WASHER.top - 0.3 * b.size), seen.p[0] - b.x) - Math.PI / 2
+      swing += Math.atan2(Math.sin(a), Math.cos(a)) * seen.w
+    }
+    bag(pen, b.x, WASHER.top - hop, { color: b.color, size: b.size, swing, lift: clamp(j * 1.5) * near })
   }
   // The tubes, over all of it.
   TUBES.forEach((tb, i) => {

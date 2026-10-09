@@ -611,6 +611,12 @@ The notes went back to the builders who made each part, who still had their cont
   pass before) aimed at a Joy mostly off-screen, while her stone drops ledge by ledge on the beats. It now ends as
   she goes over after Joy, and down the canyon her pupil jolts on each landing again. That stretch is held 55% now.
   Over the whole show the eyes are held 25–37% of the time, so the looks stay moments.
+- **A pass for the dryer's audience.** The dryer was the longest stretch with the least in it. From 34 s to 46 s,
+  before the other worlds show in its bays, it was a ball and laundry going round. Evelyn has no eye yet and
+  Waymond is out of the shot, but Waymond's googly-eyed laundry bags sit on the washers either side. Now they watch
+  her go round the drum, their pupils turned to her, easing in as she lands and out as the door bursts. The room
+  takes a target through `BAG_WATCH` in `set.ts`, which the score sets to her. By about 45 s the camera has pushed
+  in past them, and the worlds in the bays take over.
 
 ## The looks
 

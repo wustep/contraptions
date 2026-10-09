@@ -8,7 +8,7 @@ import { DURATION, JUMPS, ONSETS, fight } from './music'
 import { MultiverseShow, type Flicker, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { EVELYN, type WorldKey } from './worlds'
 import { credits, endShade } from './credits'
-import { room, shade } from './home/set'
+import { BAG_WATCH, room, shade } from './home/set'
 import { laundromat } from './home/laundromat'
 import { dryer } from './home/dryer'
 import { premiere } from './star/premiere'
@@ -263,6 +263,16 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
 
   const show = new MultiverseShow(legs, sets, flickers, DURATION, riders, company.sort((a, b) => a.from - b.from))
   for (const state of eyeStates) state.show = show
+  // While she tumbles in the big dryer, the googly-eyed bags on the washers either side watch her go round.
+  BAG_WATCH.at = (t) => {
+    const from = 34.6
+    const to = JUMPS.premiere - 0.05
+    if (t < from || t > to) return null
+    const h = show.at(t)
+    if (h.hidden) return null
+    const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
+    return { p: [h.x, h.y], w: ease((t - from) / 0.25) * ease((to - t) / 0.25) }
+  }
 
   // The camera: one director per leg, each following the ball only inside its own leg, and each leg opening on
   // exactly the framing the last one closed on, carried by the jump: a match cut on the ball.
