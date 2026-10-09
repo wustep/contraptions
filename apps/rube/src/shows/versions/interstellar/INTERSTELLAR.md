@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 72 (latest)
+## Polish pass 73 (latest)
+
+No change to the show: the phone streak's other end looked at on an upright phone. Coming down to the far side (174 to 175.5 s), it trails him through the poplar and the round tree, his written path, and has faded by 175.3 s, before he reaches the roof. Nothing of it lies over the house as he crashes in.
+
+## Polish pass 72
 
 - **The phone streak no longer pops on at the hit** (163.54 s). Pass 68's fix judged his size in CSS pixels, so on an upright phone he is already small at the bat's hit, and the streak and halo, which switch on just after it, jumped from nothing to 85% in one frame (a third of that under Zoom). Before pass 68 that could not happen: in canvas pixels he was large at the hit. They now fade in over a third of a second off the bat (`drawStreak`, `act2/ballpark.ts`). On desktop nothing changes, since he is big there and the streak stays off. The guard from pass 70 now holds the fade-in too, and fails without it.
 
