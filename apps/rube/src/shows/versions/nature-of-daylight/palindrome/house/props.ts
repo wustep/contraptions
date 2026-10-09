@@ -312,7 +312,9 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
     g.addColorStop(0.75, rgba(HOUSE.night, 0.09))
     g.addColorStop(1, rgba(HOUSE.night, 0))
     ctx.fillStyle = g
-    const n = 8
+    // Fine enough that its coming in from nothing is a ramp, not steps: in eight, the first slices' strength jumped by
+    // a quarter at a time, bands across the top of every fold.
+    const n = 24
     for (let i = 0; i < n; i++) {
       const ua = i / n
       const ub = (i + 1) / n

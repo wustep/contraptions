@@ -374,6 +374,14 @@ shore). One was not:
   the ones down the near floor already did; the cloud's shade beyond the light, faded in the same way, too. In 16:9
   wides it takes out the fainter seams there as well.
 
+A twentieth went looking in the code, not the frames, for what the nineteenth found: soft things built of slices,
+where a slice's edge can show. The other slicings were sound (the struck key's nested bands, the light's radial
+glows, the treeline's narrow rims) but for one:
+
+- **The duvet's folds** (72 to 98 s, seen close in Zoom): each fold comes in from nothing at its top over eight slices,
+  so its first slices stepped up a quarter of its strength at a time: bands across the top of every fold. It comes in
+  over twenty-four now, a ramp.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
