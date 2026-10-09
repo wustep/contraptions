@@ -679,7 +679,9 @@ function sync(): void {
       : muted
         ? 'Turn the music on (M)'
         : 'Turn the music off (M). The show keeps its time; a saved video keeps its music.'
-    : 'This version has no soundtrack'
+    : perf?.soundtrack
+      ? 'The soundtrack would not load, so the show runs silent'
+      : 'This version has no soundtrack'
   say(
     transportNote,
     perf?.soundtrack && music.state() === 'failed'

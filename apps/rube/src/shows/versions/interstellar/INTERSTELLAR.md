@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 41 (latest)
+## Polish pass 42 (latest)
+
+- **When YouTube cannot play.** Since #147 Voyage has no file to fall back on, so with YouTube blocked (a content blocker, a network, a region) it has no music at all. Tested by blocking YouTube's hosts: the show still loads and plays, silent, on the wall clock, and the panel says so ("The soundtrack would not load. The show runs silent, on the wall clock."). But the music button, disabled, said "This version has no soundtrack", which is not true of a show whose soundtrack failed. It now says "The soundtrack would not load, so the show runs silent" (`shows/player.ts`). A show with no soundtrack keeps the old words, and normal playback is unchanged.
+
+## Polish pass 41
 
 No change to the show: the two YouTube cues in the live player. The music is two videos handed over at 126.5 s, and nothing had tested the hand-over live. On Voyage's page the show's clock and the music heard were read together after seeks and while playing. They agree to the hundredth of a second when playing within each cue (from 40 s and from 200 s), after seeking back across the hand-over (to 60 s), when playing straight through it (from 124 s to 128.2 s), and at 2× in both cues (two seconds of show a second). After the music (270 s) nothing is heard and the clock goes on through the silent credits, as it should.
 
