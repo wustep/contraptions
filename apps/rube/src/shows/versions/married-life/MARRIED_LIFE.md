@@ -462,6 +462,13 @@ window.
   show say how much of the extra goes above; this one sends most of it up, into the sky, the roofs and the storey
   above, and the credits move with the picture.
 
+- **Polish round 8 (Opus 5.5).** The whole show filmed at 10 fps and differenced frame to frame: every jump is a
+  cut, the flash, the storm's lightning or the lamp; nothing pops. Then the whole show under Zoom: through the
+  credits' draw-back the house, kept low under the sky for the cards, sank off the Zoom frame's foot, the lit window
+  cut from 233 s and the porch gone. Now Zoom holds a quarter of its half height lower from the lit room's draw-back
+  on (`Framing.zoomDrop`, `zoomDropAt` in `house/alone.ts`), so under Zoom the house stays whole with him in the lit
+  window to the end; the show's own frame is unchanged.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is

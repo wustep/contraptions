@@ -3,7 +3,7 @@ import { canvasOf, downloadBlob } from '../../../../src/core/capture'
 import { drawWorld, drawingModes, followCamera, setupCanvas } from '../engine'
 import { overviewCamera } from '../overview'
 import { recordShow } from './record'
-import type { Performance } from './registry'
+import type { Framing, Performance } from './registry'
 import { wordPainter } from './words'
 
 /**
@@ -73,9 +73,9 @@ export function paintShow(
 ): void {
   const time = Math.max(0, Math.min(perf.duration, t))
   const here = perf.show.at(time)
-  const cam = perf.camera?.(time) ?? followCamera(perf.show, time, here)
+  const cam: Framing = perf.camera?.(time) ?? followCamera(perf.show, time, here)
   // Zoom is a tighter follow. Overview is the whole world and wins if both are asked.
-  let follow = zoom && !overview ? { ...cam, cells: cam.cells / FOLLOW_ZOOM } : cam
+  let follow = zoom && !overview ? { ...cam, cells: cam.cells / FOLLOW_ZOOM, y: cam.y + ((cam.zoomDrop ?? 0) * cam.cells) / FOLLOW_ZOOM / 2 } : cam
   const x = dest?.x ?? 0
   const y = dest?.y ?? 0
   const W = dest?.w ?? p.width

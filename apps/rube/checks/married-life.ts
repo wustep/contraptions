@@ -136,7 +136,8 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   const zoomed = (t: number, x: number, y: number, r: number) => {
     const f = cam(t)
     const cells = f.cells / 1.5
-    return Math.max((Math.abs(x - f.x) + r) / ((cells * 16) / 9 / 2), (Math.abs(y - f.y) + r) / (cells / 2))
+    const fy = f.y + ((f.zoomDrop ?? 0) * cells) / 2
+    return Math.max((Math.abs(x - f.x) + r) / ((cells * 16) / 9 / 2), (Math.abs(y - fy) + r) / (cells / 2))
   }
   const outOfZoom: string[] = []
   const herOutOfZoom: string[] = []

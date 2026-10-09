@@ -143,6 +143,16 @@ function middleAt(cells: number): Pt {
   return [OUT[0][1], OUT[0][2]]
 }
 /**
+ * Under Zoom (half as close again round the same middle) the draw-back's house, kept low under the sky for the
+ * credits, would sink off the frame's foot: the porch and the lit window cut, then gone. So once it has opened past
+ * the lit room, Zoom holds a quarter of its half height lower (`Framing.zoomDrop`): the porch's foot stays inside
+ * the Zoom frame to the end, him in the lit window over it. The show's own frame is unchanged.
+ */
+export function zoomDropAt(T: number): number {
+  return 0.25 * ramp(T, 226.5, 230.5)
+}
+
+/**
  * From the lit room, one draw back without a stop: from rest (a Hermite in log cells) past the roof by the first card
  * (`CREDITS_AT`, 12.6 cells), so every card comes over the sky; then an even draw back (the same share of the frame
  * each second, so it never slows to a park) to 27 cells at the end: the house small under the stars. Its fastest is

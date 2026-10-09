@@ -27,6 +27,12 @@ export interface Framing {
    * or in Overview, the world is square to the frame.
    */
   angle?: number
+  /**
+   * Under Zoom, how far below the frame's middle Zoom holds, as a share of the Zoom frame's half height: for a wide
+   * shot that keeps its subject low under a sky (credits over it), whose subject a tighter frame round the same middle
+   * would cut. Left out, Zoom holds the middle.
+   */
+  zoomDrop?: number
 }
 
 export interface SoundtrackSpec {
