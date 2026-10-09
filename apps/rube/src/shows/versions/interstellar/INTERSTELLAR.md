@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 37 (latest)
+## Polish pass 38 (latest)
+
+No change to the show: the live page's console. Voyage's own page (`/shows/interstellar/`) was loaded, seeked through the whole show and played in Follow, Zoom and Overview, collecting every warning, error and failed request. It loads with YouTube as the music's source and nothing failed. None of what the console says is Voyage's. The YouTube embed brings cross-origin messages, aborted video requests on each seek, and its permission and GPU probes (`web-share`, `compute-pressure`, a GL "ReadPixels" stall, "No available adapters"): Everything, the other YouTube show, logs the same, and Gymnopédie, played from a file, none of them. The analytics script is blocked only in dev. The show reads no pixels while it plays; the only pixel read in its code is `toBlob`, for saved stills.
+
+## Polish pass 37
 
 - **Rebuilding the mix works again** (`scripts/shows/liftoff-mix.sh`). It read Cornfield Chase from a file #147 deleted, so it failed with a bare ffmpeg error and could only be used by recreating that file at that exact path. It now takes Cornfield Chase as an optional second argument, keeping the old path as its default, and names any missing file before ffmpeg runs. Its header gives the commands to fetch both recordings from the uploads the show plays, and says the mix is for measuring and is not committed. Tested on every error path and, run from another directory with both files given, as far as ffmpeg (which this machine does not have, so no mix was built).
 
