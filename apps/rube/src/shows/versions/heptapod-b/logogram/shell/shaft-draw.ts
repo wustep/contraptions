@@ -399,7 +399,10 @@ function drawLips(p: p5, c: Ctx, t: number, xa: number, xb: number, ya: number, 
     const s = slope(floorY, x)
     const toMouth = Math.max(0.25, Math.min(2.5, 1 - 3.5 * s))
     const toFar = Math.max(0.25, Math.min(2.5, 1 + 3.5 * s))
-    return 0.08 + 1.25 * mouthLight(x, floorY(x) - 0.06, t) * toMouth + farLight(x, t) * toFar
+    // Dying away over the last cells to the opening, so the shaft's floor runs on into the chamber's dark floor
+    // rather than stopping on a cut.
+    const out = clamp01((X_END - x) / 1.6)
+    return (0.08 + 1.25 * mouthLight(x, floorY(x) - 0.06, t) * toMouth + farLight(x, t) * toFar) * out * (2 - out)
   })
   // The ceiling, a little dimmer; its rounded lip at the opening catching the chamber's light.
   lipX(ctx, k, x0, x1, ceilY, -1, 0.3, (x) => {

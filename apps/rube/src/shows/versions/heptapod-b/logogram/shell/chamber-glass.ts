@@ -199,6 +199,15 @@ function drawRoom(p: p5, k: number, g: number): void {
   ctx.fillStyle = SHELL.dark
   if (f.y0 < CEIL) ctx.fillRect(Math.max(WALL_X, f.x0 - 1) * k, (f.y0 - 1) * k, (Math.min(WALL_X1, f.x1 + 1) - Math.max(WALL_X, f.x0 - 1)) * k, (CEIL - f.y0 + 1) * k)
   if (f.x1 > WALL_X1) ctx.fillRect(WALL_X1 * k, (f.y0 - 1) * k, (f.x1 - WALL_X1 + 1) * k, (GLASS_BOT - f.y0 + 1) * k)
+  // The far corner: the wall darkens into it as the glass's light falls off, so the room turns there rather than
+  // ending on a cut.
+  if (f.x1 > WALL_X1 - 2.5) {
+    const corner = ctx.createLinearGradient((WALL_X1 - 2.5) * k, 0, WALL_X1 * k, 0)
+    corner.addColorStop(0, rgba(SHELL.dark, 0))
+    corner.addColorStop(1, rgba(SHELL.dark, 0.9))
+    ctx.fillStyle = corner
+    ctx.fillRect((WALL_X1 - 2.5) * k, (f.y0 - 1) * k, 2.5 * k, (GLASS_BOT - f.y0 + 1) * k)
+  }
 }
 
 /** The glass: its lit fog, the two of them in it, their ink; its edges soft. */
