@@ -585,6 +585,11 @@ window.
     the rain falling across the join; the set now paints 160 cells up (`INSIDE_SPAN`), and a check holds a 9:21
     stage inside it. The scan's other edges are floors, ceilings and the autumn hill's cloud bands, wider than an
     upright frame, which read as strata.
+  - *Lenses that found nothing.* A phone on its side (about 21:9, every second scanned for full-height edges: only
+    walls, door frames, the coat stand and the porch posts). Motion, every frame at 30 fps diffed against the last:
+    away from the cuts the only jumps are the wedding photograph's flash, the two lightning strikes and the lamp
+    coming on at home, each on purpose. The share card (47.3 s) is pixel for pixel what the show draws now. The
+    credits on a phone, upright and on its side: set in the sky, clear of the house.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
