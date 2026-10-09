@@ -297,3 +297,10 @@ A thirty-sixth pass, with a reviewer who knows the film:
 A thirty-seventh pass:
 
 - **In each other's arms.** The fan's last point, taken: among the stars, the most intimate dance of the film, they floated nearly two ball-widths apart, wider than they had danced on the cobbles, and touched only at the end. Afloat they are now a ball's width apart, closer than on the quay; in the quiet they nearly touch; and the top of the swell opens them only a little, for the whirl to read. The centre they turn round, and so the camera, the stars they light and every strike, are as they were.
+
+A thirty-eighth pass, with a viewer who has not seen the film:
+
+- **A regression sweep first.** After passes that moved the choreography, the whole show again at tenths of a second: the only jumps are the planned cuts. The full build passes.
+- **She sees him.** A fourth cold reviewer, one who had never seen the film, could not tell that anything set the dream off: at her table her eye stayed on David the whole time. The man at the piano is only a little higher than David from where she sits, so looking at him read as looking at David. She now lifts her eyes clearly up to the stage (25 to 31.5) and holds them there; then, as the camera draws back, his eye finds her.
+- **The look at the door, connected.** Her close shots in the doorway had her eye pointing down, so her turn back read as a shrug, and the cut between their close shots never joined their eyes. Through the look and the nods (461 to 464.2) she now looks back across the room to him, and he to her.
+- Not taken: Hollywood is meant to be painted and abstract, the trumpet's stillness is the solo's, and a dissolve from him to David in the seat at the waking is a bigger change of staging.

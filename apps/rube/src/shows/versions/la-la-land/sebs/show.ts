@@ -37,8 +37,9 @@ export interface Stage {
  * Where they look. A ball's mark turns with its rolling everywhere else; in these spans it is turned to look, eased
  * in from its rolling, held, and let go to roll again.
  * - `both`: each looks at the other. The kiss at Lipton's, the curtain call's touch, the roll down the beam to him,
- *   and the waltz from its first ONE to the touch among the stars. (The club's kiss and the look and nod at the door
- *   are set by where they sit and stand.)
+ *   the waltz from its first ONE to the touch among the stars, and the look and the nods at the door, so that her
+ *   close shot looks across to him and his back to her. (The club's kiss is set by where they sit.)
+ * - `mia`: she alone looks: at her table at the start, up from David to the man at the piano.
  * - `seb`: he alone looks: at her, across the room at the start, as he finds her at her table, the what-if's first
  *   moment; and, once she has gone, back at the door she went out by (`at`, a fixed direction), before the count-in.
  */
@@ -47,17 +48,20 @@ interface Look {
   to: number
   /** How long it takes to turn to look, and to let go. */
   ease: [number, number]
-  who: 'both' | 'seb'
+  who: 'both' | 'seb' | 'mia'
   /** A fixed direction to look (radians, on the screen), rather than at her. */
   at?: number
 }
 const touch = (t: number): Look => ({ from: t, to: t + 1.2, ease: [0.7, 0.8], who: 'both' })
 const LOOKS: Look[] = [
+  // Up to the stage, clearly above David across the table: the man at the piano is only a little higher than him.
+  { from: 25.0, to: 31.5, ease: [1.0, 0.9], who: 'mia', at: -0.87 },
   { from: 32.6, to: 35.0, ease: [0.5, 0.7], who: 'seb' },
   touch(65.515),
   touch(125.585),
   touch(266.008),
   { from: 272.625, to: 338.709 + 1.2, ease: [1.0, 0.8], who: 'both' },
+  { from: 461.0, to: 464.2, ease: [0.4, 0.5], who: 'both' },
   { from: 470.3, to: 471.9, ease: [0.5, 0.7], who: 'seb', at: Math.PI + 0.12 },
 ]
 /** The look in force at `t`, and how far it has turned to it. */
@@ -201,11 +205,13 @@ export class SebsShow extends Show {
       if (look) {
         const col = universe.pieces[0]?.col ?? 0
         const { look: l, w } = look
-        if (l.at !== undefined) hero.spin = turn((hero.x - col) / R, l.at, w)
-        else if (mia) {
+        if (l.at !== undefined) {
+          if (l.who === 'mia' && mia) mia.spin = turn((mia.x - col) / R, l.at, w)
+          else if (l.who !== 'mia') hero.spin = turn((hero.x - col) / R, l.at, w)
+        } else if (mia) {
           const toMia = Math.atan2(mia.y - hero.y, mia.x - hero.x)
-          hero.spin = turn((hero.x - col) / R, toMia, w)
-          if (l.who === 'both') mia.spin = turn((mia.x - col) / R, toMia + Math.PI, w)
+          if (l.who !== 'mia') hero.spin = turn((hero.x - col) / R, toMia, w)
+          if (l.who !== 'seb') mia.spin = turn((mia.x - col) / R, toMia + Math.PI, w)
         }
       }
       here.balls = [hero, ...company]
