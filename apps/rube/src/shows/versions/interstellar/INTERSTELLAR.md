@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 104 (latest)
+## Polish pass 105 (latest)
+
+No change to the show: whether pass 103's fault (an online cue with no end, playing past what its mix trims) is in any other show. It is not. Every other YouTube show plays one upload whole, with nothing trimmed, so running to the video's end is right. The one other show with a mix script and a second cue, Epilogue's Seb's take (`la-la-land/sebs`), plays its second recording whole too: `sebs-mix.sh` delays it to 464 s with no trim, as its cue does. Voyage was alone in trimming a recording its cue played whole.
+
+## Polish pass 104
 
 No change to the show. The online cues' fades were checked against the mix's, and they match. Cornfield Chase fades out over the second before its 126.984 s end, as the mix fades it from 125.98 s for 1.0 s. No Time for Caution fades in over its first second, as the mix fades it in from its trim's start for 1.0 s. Pass 81's check now holds the fades to the mix as well as the start, place and end, so the cues match the mix in every number the mix sets. Halving the fade-in made it fail.
 
