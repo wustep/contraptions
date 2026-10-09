@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 12 (latest)
+## Polish pass 13 (latest)
+
+A regression pass after passes 4 to 12, with no change to the show. The whole show was swept again on new frames (every 1.5 s, offset from the earlier sweeps). The motion audit (camera and Cooper's place on the screen at 60 fps) and the frame-step audit were re-run against their first results. The motion numbers are the same as pass 4's. The frame-step spikes are the same set less the two that pass 9 fixed. The largest, at 235.7 s, is the far side's iris opening as written (`revealAt`, an accelerating t^2.2 over 0.6 s): every frame of it is continuous.
+
+## Polish pass 12
 
 Two more audits came back clean. A **stillness audit** compared frames half a second apart all through the show: the only still run is the camp held alone after the last card, 287.5 s to the end, as written. A **render-cost audit** timed `paintShow` at 1280 × 720, frame by frame, taking the fastest of three paints so pauses drop out: median 1.4 ms, 99% under 4 ms, the slowest 8.2 ms at the tesseract's pull-back, all well inside a 60 fps frame.
 
