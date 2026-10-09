@@ -532,7 +532,7 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
  * pencil and one crayon, the sun's: nothing in the picture but Louise is her colour, not even a drawing of her.
  */
 function drawing(p: p5, c: Ctx, dim: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const ctx = p.drawingContext as C2D
   const { x, y, w, h, tilt } = DRAWING
   const paper = shade('#F3F0E6', dim * 0.8)
@@ -545,7 +545,8 @@ function drawing(p: p5, c: Ctx, dim: number): void {
   ctx.fillRect((-w / 2 - 0.012) * k, (-h / 2 + 0.018) * k, w * k, h * k)
   p.push()
   p.rectMode(p.CORNER)
-  solid(p, ink, weight * 0.5, paper)
+  // Paper, not a frame: a fine pencil-grey edge, no ink line round it.
+  solid(p, mixHex(paper, pencil, 0.35), Math.max(0.6, weight * 0.25), paper)
   p.rect(-w * 0.5 * k, -h * 0.5 * k, w * k, h * k)
   // The tape at its two top corners.
   p.noStroke()
@@ -583,8 +584,9 @@ function drawing(p: p5, c: Ctx, dim: number): void {
   p.endShape()
   const big = 0.06
   const small = 0.035
-  const bx = -w * 0.16
-  const hx = w * 0.06
+  // Apart, so the line of their joined hands is there to see between them.
+  const bx = -w * 0.2
+  const hx = w * 0.11
   // A child's round: a little wobble, and not quite closed.
   const round = (cx: number, cy: number, r: number, seed: number) => {
     p.beginShape()
@@ -598,6 +600,11 @@ function drawing(p: p5, c: Ctx, dim: number): void {
   round(bx, ground - big, big, 0.4)
   round(hx, ground - small, small, 2.1)
   p.line((bx + big * 0.95) * k, (ground - big * 0.9) * k, (hx - small * 0.95) * k, (ground - small * 1.1) * k)
+  // An eye each, a pencil dot, as every one of them has: the two of them looking at each other.
+  p.noStroke()
+  p.fill(pencil)
+  p.circle((bx + big * 0.4) * k, (ground - big * 1.15) * k, Math.max(1.2, 0.012 * k))
+  p.circle((hx - small * 0.35) * k, (ground - small * 1.2) * k, Math.max(1, 0.009 * k))
   p.pop()
   ctx.restore()
 }

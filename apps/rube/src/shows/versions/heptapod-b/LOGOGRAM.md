@@ -256,7 +256,8 @@ cut, and close looks at whatever caught the eye. What changed:
   fine print, so as the credits begin the room goes to dusk over seven seconds and stays there to the end, while the
   window keeps its light: the words read, and the last of the day is out on the water.
 - **Hannah's drawing**: low on the wall over her corner, at her height, a child's drawing is taped: the two of them
-  by the water under a crayon sun, in pencil (nothing but Louise is her colour, not even a drawing of her). It is in
+  by the water under a crayon sun, in pencil, holding hands, each with a dot for an eye, looking at each other
+  (nothing but Louise is her colour, not even a drawing of her). It is paper, edged in pencil-grey, not framed in ink. It is in
   the first frame and the last, and in the visions at the window.
 
 ## Arrival nods
