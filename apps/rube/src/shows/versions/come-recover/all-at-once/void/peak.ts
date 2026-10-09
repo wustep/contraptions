@@ -498,6 +498,20 @@ export const peak = part<PeakState>(
         const u = (T - EYE_UP) / (EYE_ON - EYE_UP)
         const sc = e.grow * (1 + 0.5 * (1 - u))
         const spinLook = { x: Math.sin(u * 9), y: Math.cos(u * 9), hx: 0 }
+        // A soft light round it as it comes up out of the dark, so it reads as given and carried, not a fleck.
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        const gx = ex * k
+        const gy = (ey + 0.3 * R * sc) * k
+        const gr = R * (2.2 + 1.6 * sc) * k
+        const halo = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr)
+        const ga = 0.55 * Math.min(1, u / 0.2)
+        halo.addColorStop(0, `rgba(226, 214, 250, ${ga})`)
+        halo.addColorStop(0.4, `rgba(201, 178, 242, ${ga * 0.35})`)
+        halo.addColorStop(1, 'rgba(201, 178, 242, 0)')
+        ctx.save()
+        ctx.fillStyle = halo
+        ctx.fillRect(gx - gr, gy - gr, 2 * gr, 2 * gr)
+        ctx.restore()
         googly(p, k, ink, weight, ex, ey + 0.3 * R * sc, spinLook, sc)
       }
     },

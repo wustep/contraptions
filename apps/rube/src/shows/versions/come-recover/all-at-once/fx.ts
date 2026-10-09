@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { R } from '../../../../parts'
+import { R, mixHex } from '../../../../parts'
 import type { ShowBall } from '../../../../show'
 import { scenery } from './kit'
 import type { MultiverseShow } from './show'
@@ -25,8 +25,11 @@ export interface EyeSpec {
    * its size with an overshoot, and its pupil is flung round the rim and settles.
    */
   arrive?: boolean
-  /** With the arrival, a burst of warm light behind the ball: the great hit. */
-  burst?: boolean
+  /**
+   * With the arrival, a burst of light behind the ball: lantern gold and full size on the great hit; a colour and a
+   * smaller size of its own for Joy's, so hers answers her mother's without outdoing it.
+   */
+  burst?: boolean | { color: string; size: number; strength: number }
 }
 
 /** An arriving eye's size, `u` seconds after it lands: a slap, a squash past its size, a bounce, rest. */
@@ -119,16 +122,16 @@ function bead(at: Where, t: number, arrive?: number): { x: number; y: number; hx
  * The burst of light behind a ball on the great hit, `u` seconds after it: warm light that swells out from round
  * the ball and fades, clear of the ball itself so its colour stays its own.
  */
-function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: string) => string): void {
+function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: string) => string, color = '#FFC95A', size = 1, strength = 1, others: { x: number; y: number }[] = []): void {
   if (u < 0 || u > BURST) return
   const grow = 1 - Math.exp(-u / 0.12)
-  const outer = R * (2.6 + 9 * grow)
-  const a = 0.85 * (1 - u / BURST) ** 1.6
+  const outer = R * (2.6 + 9 * size * grow)
+  const a = 0.85 * strength * (1 - u / BURST) ** 1.6
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  // Lantern gold: it has to show on the laundromat's pale tile as well as in the dark.
-  const warm = lit('#FFC95A')
+  // Lantern gold by default: it has to show on the laundromat's pale tile as well as in the dark.
+  const warm = lit(color)
   const rgb = [1, 3, 5].map((i) => parseInt(warm.slice(i, i + 2), 16)).join(', ')
-  const core = lit('#FFF1C4')
+  const core = lit(mixHex(color, '#FFFFFF', 0.75))
   const rgbCore = [1, 3, 5].map((i) => parseInt(core.slice(i, i + 2), 16)).join(', ')
   const cx = x * k
   const cy = y * k
@@ -137,14 +140,19 @@ function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: str
   ctx.beginPath()
   ctx.rect(cx - R * 40 * k, cy - R * 40 * k, R * 80 * k, R * 80 * k)
   ctx.arc(cx, cy, R * 1.02 * k, 0, Math.PI * 2, true)
+  // Nor over anyone beside her: every other ball wearing an eye is cut out of it too.
+  for (const o of others) {
+    ctx.moveTo((o.x + R * 1.02) * k, o.y * k)
+    ctx.arc(o.x * k, o.y * k, R * 1.02 * k, 0, Math.PI * 2, true)
+  }
   ctx.clip('evenodd')
   // Rays: a sunburst of long and short wedges thrown out from her, turning a little as they fade.
   const reach = 1 - Math.exp(-u / 0.09)
-  const ra = 0.5 * (1 - u / BURST) ** 1.3
+  const ra = 0.5 * strength * (1 - u / BURST) ** 1.3
   const spin = 0.35 * u
   for (let i = 0; i < RAYS; i++) {
     const long = i % 2 === 0
-    const len = R * (long ? 15 : 9.5) * reach
+    const len = R * (long ? 15 : 9.5) * size * reach
     const half = (long ? 0.075 : 0.055) * Math.PI
     const th = (i / RAYS) * Math.PI * 2 + spin + 0.13
     const g = ctx.createRadialGradient(cx, cy, R * 1.4 * k, cx, cy, len * k)
@@ -169,9 +177,9 @@ function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: str
   // A ring of light goes out from her on the hit, thinning as it goes.
   const ru = u / 0.55
   if (ru < 1) {
-    const rr = R * (1.6 + 17 * (1 - (1 - ru) ** 2.4))
-    ctx.strokeStyle = `rgba(${rgb}, ${0.9 * (1 - ru) ** 1.4})`
-    ctx.lineWidth = Math.max(1, R * 0.55 * (1 - ru) * k)
+    const rr = R * (1.6 + 17 * size * (1 - (1 - ru) ** 2.4))
+    ctx.strokeStyle = `rgba(${rgb}, ${0.9 * strength * (1 - ru) ** 1.4})`
+    ctx.lineWidth = Math.max(1, R * 0.55 * size * (1 - ru) * k)
     ctx.beginPath()
     ctx.arc(cx, cy, rr * k, 0, Math.PI * 2)
     ctx.stroke()
@@ -219,6 +227,10 @@ export const eyes = () =>
       const show = s.show
       if (!show) return
       const t = c.t
+      // Every burst goes down first and every eye over them, so one ball's light never veils another's face.
+      const bursts: ((all: { x: number; y: number }[]) => void)[] = []
+      const here: { x: number; y: number }[] = []
+      const drawn: (() => void)[] = []
       for (const spec of s.specs) {
         if (t < spec.from) continue
         // Where the ball is: cheap enough to sample a hundred times a frame.
@@ -250,9 +262,18 @@ export const eyes = () =>
         )
         const shade = s.shade
         const lit = shade ? (hex: string) => shade(hex, b!.x, b!.y, t) : (hex: string) => hex
-        if (spec.burst) burst(p, c.k, b.x, b.y, t - spec.from, lit)
+        const at = { x: b.x, y: b.y }
+        here.push(at)
+        if (spec.burst === true) bursts.push((all) => burst(p, c.k, at.x, at.y, t - spec.from, lit, undefined, undefined, undefined, all.filter((o) => o !== at)))
+        else if (spec.burst) {
+          const { color, size, strength } = spec.burst
+          bursts.push((all) => burst(p, c.k, at.x, at.y, t - spec.from, lit, color, size, strength, all.filter((o) => o !== at)))
+        }
         const size = spec.arrive && t - spec.from < 1 ? pop(t - spec.from) : 1
-        googly(p, c.k, c.ink, c.weight, b.x, b.y, look, (b.scale ?? 1) * size, lit)
+        const sc = (b.scale ?? 1) * size
+        drawn.push(() => googly(p, c.k, c.ink, c.weight, at.x, at.y, look, sc, lit))
       }
+      for (const f of bursts) f(here)
+      for (const f of drawn) f()
     },
   })

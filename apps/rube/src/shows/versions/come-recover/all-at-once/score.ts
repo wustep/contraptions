@@ -173,7 +173,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
   const specs = [
     { who: 'waymond' as const, from: 0 },
     { who: 'evelyn' as const, from: JUMPS.eye, arrive: true, burst: true },
-    { who: 'joy' as const, from: JOY_EYE, arrive: true },
+    // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
+    { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 } },
   ]
   const eyePiece = eyes()
   const eyeStates: EyesState[] = []

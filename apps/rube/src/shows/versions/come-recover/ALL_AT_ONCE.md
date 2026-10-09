@@ -285,6 +285,14 @@ The notes went back to the builders who made each part, who still had their cont
     across it, vermilion on red.
   - Seen and kept: the canyon floor and its bagel, the peak's opening, the photograph, the dojo's gong, and the
     hush. In the hush the two of them are specks on purpose (see Known limits).
+- **A pass for Joy's eye.** The surf, its collapse and the peak were watched at 10 fps. The show's second turning
+  point, Joy's eye (254.5 s), was its quietest moment. The eye came up out of the hole as a white fleck against
+  the scattering seeds, and landed with only the slap.
+  - It now rises in a soft violet light of its own, so it reads as something given and carried up to her.
+  - It lands with a burst, in her violet lifted toward white, about three-fifths the size and strength of her
+    mother's gold one. It answers the great hit without outdoing it.
+  - Every burst is now drawn under every eye, and each burst has every eye-wearing ball cut out of it. Joy's light,
+    beside her mother, no longer veils Evelyn's face or tints her vermilion.
 
 ## End credits
 
@@ -362,7 +370,8 @@ to 332.
     cage, thrown by the ball's acceleration and settling. It is worked out afresh each frame from the ball's last
     second of path, so it scrubs true. In the laundromat the room's light shades it. An eye given during the show
     arrives: it slaps on oversized, squashes past its size and settles, and its pupil is flung round the rim. On the
-    great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show.
+    great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's
+    comes with a smaller, softer burst in her violet.
   - `credits.ts`: the cards, and the soft dark under them.
   - `hits.ts`: every strike, gathered for the check.
 - **The parts:** one folder a world.
