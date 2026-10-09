@@ -207,3 +207,8 @@ An eighteenth pass:
 
 - **The top of the Hollywood number.** On the six accelerating hits (166.15 to 167.85), the climax of the number, the shot was out wide on the whole hill, so the two of them were specks at its crest and the sign a strip along the top; just before it (164) the sign was cut off at the frame's top edge. The camera now rises with them to the crest and holds the two of them there under the whole sign, the searchlights fanning up out of the hill and locking into place on each hit, and draws back to the whole hill only as its lamps go out one by one.
 - The opening, the city into the club and down to the keys, reads as it should, and is as it was.
+
+A nineteenth pass:
+
+- **Him watching her audition.** While the casting table answers her (183 to 190), the camera went in on the table and his chair slid off the frame's left edge, so for six and a half seconds of her audition he was not in the picture at all, and his leap from the chair came out of nowhere. The shots are a little wider now and hold the chair, her stage and the table in one frame, so he is seen watching her the whole time the lamp finds her; the camera goes in on her and the pen only for its signature (187.5 to 189.5), and is out again for his leap.
+- The white studio before the burst reads as the bare sound stage it is meant to be, and is as it was.

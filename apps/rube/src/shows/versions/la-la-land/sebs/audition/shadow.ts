@@ -685,11 +685,12 @@ export const shadow = part<ShadowState>(
     // The silence: her and him, and the metronome between them.
     { t: 178.9, cells: 4.0, hold: [2.6, -1.3] },
     { t: 180.7, cells: 4.0, hold: [2.7, -1.3] },
-    // The table answers her.
-    { t: 183.2, cells: 5.0, hold: [5.3, -1.6] },
-    { t: 186.2, cells: 4.6, hold: [5.8, -1.45] },
-    { t: 187.9, cells: 4.0, hold: [6.5, -1.35] },
-    { t: 189.2, cells: 4.0, hold: [6.6, -1.35] },
+    // The table answers her, and he watches from his chair: the three of them, chair, stage and table, in one frame.
+    { t: 183.2, cells: 5.4, hold: [5.05, -1.6] },
+    { t: 186.9, cells: 5.4, hold: [5.1, -1.6] },
+    // In, briefly, on her and the pen as it signs.
+    { t: 188.3, cells: 4.4, hold: [6.0, -1.4] },
+    { t: 189.4, cells: 4.4, hold: [6.05, -1.4] },
     // He leaps; the flood; the two of them in it.
     { t: 190.3, cells: 5.6, hold: [4.3, -1.6] },
     { t: 192.0, cells: 5.0, hold: [3.95, -1.45] },
