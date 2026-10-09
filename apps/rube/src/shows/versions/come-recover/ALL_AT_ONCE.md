@@ -488,6 +488,11 @@ The notes went back to the builders who made each part, who still had their cont
   - A watching pupil could sit up to 5% past its eye's rim. It is now held inside it.
   - Mother and daughter's look (from 255.3 s) began as the camera pulled back to the fountain, so it showed for
     about a third of a second. The close on them now holds to 256.0 s, then opens out.
+- **A pass for the cut into the rocks.** Stepped at 10 fps, the clean cut on the silence (200.16 s) is a true match
+  cut. Evelyn and Waymond side by side on the table become her stone and Joy's on the ledge, in the same place on
+  the screen.
+  - In the last half second before it, the push-in's top edge sliced the luck card. The card hangs a little lower
+    and smaller, whole to the cut and still clear of the cradle.
 
 ## End credits
 
