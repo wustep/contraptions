@@ -864,14 +864,19 @@ function drawBlanket(p: p5, k: number, weight: number): void {
 const HOP = { up: beat('waltz', 37, 3), down: bar('waltz', 38) }
 /** His start when the baby has its head: a small lift, down on the waltz. */
 const START = { up: beat('waltz', 43, 3) - 0.26, down: beat('waltz', 43, 3) }
-/** When she rolls to him: after his start, to the cut. */
+/**
+ * She comes in close: as far apart as the armchairs at the cut, she rolls most of the way to him over bar 33, as the
+ * airship builds, and lies there by him, as in the film, under all the clouds; the last of the way after his start.
+ */
+const NEAR = { from: bar('waltz', 33) + 0.15, to: bar('waltz', 34) + 0.2, x: CARL[0] + 0.5 }
+/** When she rolls the rest of the way to him: after his start, to the cut. */
 const ROLL = { from: START.down + 0.2, to: END - 0.12 }
 
 /** She leans toward the falls as they pour: a little way right on the grass, and back. */
 const LEAN = { from: bar('waltz', 40), mid: bar('waltz', 40) + 0.7, to: bar('waltz', 41) + 0.4 }
 
 function ellieAt(t: number): { x: number; y: number } {
-  let x = ELLIE_FROM
+  let x = ELLIE_FROM + (NEAR.x - ELLIE_FROM) * smooth(t, NEAR.from, NEAR.to)
   let y = 0
   if (t > LEAN.from && t < LEAN.to) x += 0.07 * (t < LEAN.mid ? smooth(t, LEAN.from, LEAN.mid) : 1 - smooth(t, LEAN.mid, LEAN.to))
   if (t >= HOP.up && t <= HOP.down) {
@@ -880,7 +885,7 @@ function ellieAt(t: number): { x: number; y: number } {
   }
   if (t > ROLL.from) {
     const u = smooth(t, ROLL.from, ROLL.to)
-    x = ELLIE_FROM + (ELLIE_TO - ELLIE_FROM) * u
+    x = NEAR.x + (ELLIE_TO - NEAR.x) * u
   }
   return { x, y }
 }

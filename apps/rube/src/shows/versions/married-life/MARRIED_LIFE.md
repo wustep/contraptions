@@ -119,7 +119,9 @@ bass, on the one); Ellie, round, answers on the first pah.
   top, lit on the left and in shadow on the right. On bar 39 three falls pour off the lip into the mist, which curls
   up where they land; the camera holds it whole, pouring, through bar 40, and then a gust takes it off. Bars 39 to 44 build **a
   baby**, sitting up in a cushion of cloud, one leg out, an arm reaching, whole over the two of them and placed where
-  the mobile will be at the match cut. He starts; she rolls close. The camera stays at most 5.5 cells.
+  the mobile will be at the match cut. As far apart as the armchairs at the cut, she rolls in close to him over bar
+  33 and lies by him under all of it, her face turned up to the sky (`LOOKS`); he starts at the baby; she rolls the
+  last of the way. The camera stays at most 5.5 cells.
 
 ### The nursery (63.25 to 73.46 s): the house, inside, upstairs
 
@@ -519,6 +521,13 @@ window.
   flat, and the hubcap is twice the size, a ringed disc seen to fly. Left: Carl small at the cart's handle in the
   fix-up's reveal (a restaging of the rig), and the two of them lying apart on the blanket under the clouds (it moves
   her place at the match cut into the nursery).
+
+- **Polish round 15 (Opus 5.5).** One of round 14's two notes left, taken up: on the blanket they lay as far apart as
+  the armchairs, and her dot looked at the grass (down and right) the whole time the engine built the airship, her
+  falls and the baby. Now she rolls in close over bar 33 and lies by him, as in the film, and while she lies still her
+  face is turned up to the clouds, carried just across the cut onto the mobile. The look's speed is sampled inside
+  the place she is in, since her cells change at a cut. Still left: Carl small at the cart's handle in the fix-up's
+  reveal.
 
 ## Known limits
 

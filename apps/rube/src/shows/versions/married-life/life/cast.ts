@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { ball, R, type Pt } from '../../../../parts'
 import { alpha, scenery } from './kit'
-import { AGE, AT, bar } from './music'
+import { AGE, AT, bar, CUT } from './music'
 import type { LifeShow } from './show'
 import { carlAt, INK } from './worlds'
 import { drawBalloon, BALLOON_SIZE } from './props/balloon'
@@ -77,25 +77,31 @@ export const GATHERS: { in0: number; in1: number; out0: number; out1: number; st
   { in0: 208.2, in1: 209.3, out0: 212.7, out1: 214.2, string: 0.3 },
 ]
 /**
- * Where her one dot, her face, looks at him while she is still: the five mornings at the tie wheel and the dance, from
- * the first tie to the picture lamp, she at his right, so up and to her left (`at`, the dot's angle on the screen, y
- * down). Rolling, her dot rolls with her, as everywhere; it comes round to him as she comes to rest (by her speed,
+ * Where her one dot, her face, looks while she is still: up at the clouds on the hill; and at him through the five
+ * mornings at the tie wheel and the dance, from the first tie to the picture lamp, she at his right, so up and to her
+ * left (`at`, the dot's angle on the screen, y down). Rolling, her dot rolls with her, as everywhere; it comes round to him as she comes to rest (by her speed,
  * smoothed), so at the crest, held at arm's length, she is looking at him, not at the floor. Eased in and out over
  * `ease` seconds at the span's ends.
  */
 export const LOOKS: { from: number; to: number; ease: number; at: number }[] = [
+  // On the blanket, up at the clouds the engine builds (up, and a little toward the shapes), carried just across the
+  // cut onto the mobile until she rolls off to the cradle.
+  { from: CUT.hill + 0.6, to: CUT.nursery + 0.6, ease: 0.9, at: -1.35 },
   { from: bar('jar', 39), to: bar('jar', 56), ease: 0.8, at: -2.3 },
 ]
-function lookOf(show: LifeShow, t: number, own: number): number {
+export function lookOf(show: LifeShow, t: number, own: number): number {
   for (const l of LOOKS) {
     if (t <= l.from || t >= l.to) continue
     const edge = Math.min(1, (t - l.from) / l.ease, (l.to - t) / l.ease)
     // Her speed, smoothed over a third of a second: still or swaying, she looks at him; rolling at two cells a second
     // or more, her dot rolls with her.
+    // Sampled inside the place she is in: her cells change at a cut, which is no speed.
+    const leg = show.legs[show.owner(t)]
+    const at = (s: number) => show.ellie(Math.max(leg.from + 1e-4, Math.min(leg.to - 1e-4, s)))
     let v = 0
     for (const dt of [-0.15, -0.05, 0.05, 0.15]) {
-      const a = show.ellie(t + dt - 0.05)
-      const b = show.ellie(t + dt + 0.05)
+      const a = at(t + dt - 0.05)
+      const b = at(t + dt + 0.05)
       if (a && b) v += Math.abs(b.x - a.x) / 0.1 / 4
     }
     const still = 1 - Math.min(1, v / 2)
