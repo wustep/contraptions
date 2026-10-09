@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 53 (latest)
+## Polish pass 54 (latest)
+
+No change to the show: pass 53's Zoom change looked at, not only measured. Zoom was rendered across the end of each long window. In the cage's climb (76.4 to 77.7 s) it keeps the rocket's window as the cage arrives, and from 77.3 s both balls sit in it, framed. At the end of the ring's reveal (136.3 to 137.7 s) it comes back down from the ring and the house as the swoop settles, and from 137.0 s Cooper is in frame, by the clock's door and then the turnstile.
+
+## Polish pass 53
 
 The pull request's whole diff against `main` was read for leftovers: 23 files, all accounted for, no debug output, scratch paths or loosened tests, and `main` has not moved. One weakness did turn up.
 
