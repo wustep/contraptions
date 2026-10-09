@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 61 (latest)
+## Polish pass 62 (latest)
+
+No change to the show: pass 61's lead-ins for young Murph looked at on a wide (21:9) screen, the one that can see them. In the channel she comes along the water by the pump behind Cooper (29.7 s), off the screen's edge before that. At the base she rolls along the ground at the fence's foot (67.8 s), off the edge before that. Both have ground under them.
+
+## Polish pass 61
 
 The check that Brand and Murph only come and go out of shot samples every millisecond, but against the 16:9 frame alone. A stage of another shape sees more world round that frame, so the same test was run with Zoom's frame, a wide (21:9) screen's and an upright phone's (390 × 844).
 
