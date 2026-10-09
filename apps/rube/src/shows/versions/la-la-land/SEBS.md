@@ -271,3 +271,7 @@ A thirty-first pass, with a reviewer watching motion:
 
 - **The nod, seen.** A second cold reviewer watched each scene in motion. Its sharpest point: in the goodbye's close shots, cut against each other on the music, neither nod could be seen. Her dip was a fiftieth of a cell and his lift a twentieth, a few pixels even that close. Hers is a real dip now, squashed on the floor and back, and his a lift off the key and down; the cuts stay on the music, as in the film.
 - Not taken, from the same review: the umbrellas open behind them by design, the projector's quiet is the waltz's rest, the sign is cards because the show draws no letters, and her walk at Lipton's was already closed in on. Her one-woman show holding still for long stretches is fair, and bigger than a polish.
+
+A thirty-second pass:
+
+- **The ovation, felt.** The reviewer's last point was fair: through the ovation, the moment her show was for, both of them stood still. Measured, she was motionless for six seconds (113 to 119) and he for eight and a half (116 to 124.75), while the whole house rose round them. The held breath before it stays still, as it should. When the house stands for her row by row, she gives a little hop of joy on each row's rise, and he, on his feet in the front row, bounces on the house's claps until the music softens and she turns to beckon him up.

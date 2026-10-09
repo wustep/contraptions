@@ -285,8 +285,14 @@ function miaAt(t: number): Companion {
   // A breath as the lights come up on her; the bows.
   const b = Math.max(bow(t - BOW1, 0.34), bow(t - BOW2, 0.22), bow(t - BOW3, 0.3))
   const lift = 0.025 * Math.sin(Math.PI * clamp01((t - THUD) / 0.9))
+  // As the house rises for her, row by row, a little hop of joy on each.
+  let joy = 0
+  for (const r of ROWS) {
+    const u = (t - r) / 0.26
+    if (u > 0 && u < 1) joy = Math.max(joy, 0.12 * Math.sin(Math.PI * u))
+  }
   const stretch = 1 - 0.18 * b
-  return { x, y: y - lift + R * (1 - stretch), stretch, angle: Math.PI / 2 }
+  return { x, y: y - lift - joy + R * (1 - stretch), stretch, angle: Math.PI / 2 }
 }
 
 /* ------------------------------------------------------------------ light */
@@ -389,6 +395,15 @@ export const theatre = part<TheatreState>(
     const sat: Way = { at: at(SPRING), p: [SEAT_X, SEATED_Y] }
     // On his feet on the downbeat.
     const up = hop(sat, [SEAT_X, STAND_Y], at(SPRING) + 0.3)
+    // Standing, cheering her: a small bounce landing on the house's claps, until he goes up to her.
+    const cheer: Way[] = []
+    let lastC = SPRING + 0.3
+    for (const c of CLAPS) {
+      if (c < SPRING + 0.75 || c > LEAP - 0.6 || c - lastC < 0.42) continue
+      const rest: Way = { at: at(c) - 0.2, p: [SEAT_X, STAND_Y] }
+      cheer.push(rest, hop(rest, [SEAT_X, STAND_Y], at(c), G * 1.6))
+      lastC = c
+    }
     const stand: Way = { at: at(LEAP), p: [SEAT_X, STAND_Y] }
     // Up onto the stage beside her.
     const land = hop(stand, [LAND_X, 0], at(LAND))
@@ -396,7 +411,7 @@ export const theatre = part<TheatreState>(
     const nod0: Way = { at: at(BOW3) - 0.08, p: [LAND_X, 0] }
     const nod1: Way = { ...hop(nod0, [LAND_X, 0], at(BOW3) + 0.14, G * 0.5) }
     const end: Way = { at: T, p: [LAND_X, 0] }
-    segs.push(...route([o0, o1, lip, seat, sat, up, stand, land, nod0, nod1, end]))
+    segs.push(...route([o0, o1, lip, seat, sat, up, ...cheer, stand, land, nod0, nod1, end]))
 
     const seats: TheatreState['seats'] = []
     for (let r = 0; r < ROW_Y.length; r++) {
