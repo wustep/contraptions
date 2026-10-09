@@ -315,7 +315,7 @@ function throwStars(p: p5, k: number, T: number): void {
 
 /** For each star after the first, the star it is joined to: the nearest of those lit before it (the sky turns them all
  * together, so the nearest in its own frame is the nearest in the picture). */
-const JOIN: number[] = KINDLED.map((q, i) => {
+export const JOIN: number[] = KINDLED.map((q, i) => {
   let best = 0
   let bd = Infinity
   for (let j = 0; j < i; j++) {

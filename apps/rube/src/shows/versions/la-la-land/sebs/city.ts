@@ -1,7 +1,9 @@
 import type { Pt } from '../../../../parts'
 import { frame, glow, hash, knock, rgba, scenery, smooth } from './kit'
 import { AT, END_AT, level } from './music'
-import { SEBS_MAT } from './worlds'
+import { NIGHT_MAT, SEBS_MAT } from './worlds'
+import { JOIN, KINDLED } from './night/stars'
+import { DIP, skyAngle } from './night/painted-waltz'
 
 /**
  * The city of stars round Seb's: what the camera comes in from at the start
@@ -25,7 +27,7 @@ export interface CityState {
  * little above, receding: its lights are dense and small at the horizon and fewer and larger toward the street.
  */
 const STREET = 3.1
-const HORIZON = -6
+export const HORIZON = -6
 
 const SKY_TOP = '#07061A'
 const SKY_MID = '#1B1540'
@@ -61,6 +63,23 @@ const LIGHTS = Array.from({ length: 1400 }, (_, i) => {
     big: hash(i, 5, 11) > 0.93,
   }
 })
+
+/**
+ * Theirs: the constellation the melody lit round the two of them among the stars, as it stood at the dip, found
+ * again in the sky over the city at the end. On The End's swell its stars come out one by one in the order they
+ * were lit, each joined to the one it was joined to then, in the night's gold among the city's cool stars: high on
+ * the right, clear of the credits. In the piano's frame.
+ */
+export const THEIRS = (() => {
+  const a = skyAngle(DIP)
+  const scale = 2.15
+  const pts = KINDLED.map((q) => [q.local[0] * Math.cos(a) - q.local[1] * Math.sin(a), q.local[0] * Math.sin(a) + q.local[1] * Math.cos(a)] as Pt)
+  const cx = pts.reduce((s, q) => s + q[0], 0) / pts.length
+  const cy = pts.reduce((s, q) => s + q[1], 0) / pts.length
+  return pts.map(([x, y], i) => ({ x: 21.5 + (x - cx) * scale, y: -25.5 + (y - cy) * scale, size: KINDLED[i].size, join: i ? JOIN[i] : -1 }))
+})()
+/** When each of theirs comes out: one by one from a beat after the swell. */
+export const THEIRS_AT = THEIRS.map((_, i) => END_AT + 32.268 + 2.3 + i * 0.42)
 
 /** Boulevards: lines of brighter lamps running from the street to a point on the horizon, how a city at night shows its depth. */
 const VANISH = 6
@@ -167,6 +186,50 @@ export const city = scenery<CityState>({
       ctx.beginPath()
       ctx.arc(x * k, y * k, r, 0, Math.PI * 2)
       ctx.fill()
+    }
+    if (s.end && t > THEIRS_AT[0] - 0.1) {
+      // Theirs, coming out over the city: each star with a flare as it comes, then the line back to its neighbour.
+      const at = (i: number): Pt => [THEIRS[i].x + sx, THEIRS[i].y + sy]
+      ctx.lineCap = 'round'
+      for (let i = 1; i < THEIRS.length; i++) {
+        const u = smooth(t, THEIRS_AT[i] + 0.1, THEIRS_AT[i] + 0.9)
+        if (u <= 0) continue
+        const [x0, y0] = at(THEIRS[i].join)
+        const [x1, y1] = at(i)
+        ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.3 * u)
+        ctx.lineWidth = Math.max(0.6, 0.8 * px)
+        ctx.beginPath()
+        ctx.moveTo(x0 * k, y0 * k)
+        ctx.lineTo((x0 + (x1 - x0) * u) * k, (y0 + (y1 - y0) * u) * k)
+        ctx.stroke()
+      }
+      THEIRS.forEach((q, i) => {
+        const since = t - THEIRS_AT[i]
+        if (since < 0) return
+        const [x, y] = at(i)
+        const on = smooth(since, 0, 0.12)
+        const flare = knock(since, 0.5)
+        const tw = 0.85 + 0.15 * Math.sin(t * 1.3 + i * 2.1)
+        const r = Math.max(1.6 * px, 0.06 * k) * (0.75 + 0.25 * (q.size / 0.036)) * (1 + 0.8 * flare)
+        const halo = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * 6)
+        halo.addColorStop(0, rgba(NIGHT_MAT.star, (0.4 + 0.35 * flare) * on * tw))
+        halo.addColorStop(1, rgba(NIGHT_MAT.star, 0))
+        ctx.fillStyle = halo
+        ctx.fillRect(x * k - r * 6, y * k - r * 6, r * 12, r * 12)
+        ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.55 * on * tw)
+        ctx.lineWidth = Math.max(0.6, 0.55 * px)
+        const g = r * (3.2 + 2 * flare)
+        ctx.beginPath()
+        ctx.moveTo(x * k - g, y * k)
+        ctx.lineTo(x * k + g, y * k)
+        ctx.moveTo(x * k, y * k - g)
+        ctx.lineTo(x * k, y * k + g)
+        ctx.stroke()
+        ctx.fillStyle = rgba('#FFF6DA', on)
+        ctx.beginPath()
+        ctx.arc(x * k, y * k, r, 0, Math.PI * 2)
+        ctx.fill()
+      })
     }
     ctx.restore()
 

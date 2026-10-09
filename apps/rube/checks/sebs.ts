@@ -17,6 +17,7 @@ import { coverAt } from '../src/shows/versions/la-la-land/sebs/transitions'
 import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
 import { DOOR, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
+import { HORIZON, THEIRS, THEIRS_AT } from '../src/shows/versions/la-la-land/sebs/city'
 import { HANDOFF, soloThreads } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -367,6 +368,23 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
   }
   check('sebs: they look at each other where the story says (the touches, the waltz, the door), she to the stage, he to her', looks.length === 0, looks.join(', '))
 
+  // Their constellation comes out in the sky over the city at the end, and every star of it is in the picture from
+  // the moment it comes out to the last frame. (The sky slides with the camera by nine tenths of the way, `city.ts`.)
+  {
+    const out: string[] = []
+    for (let t = THEIRS_AT[0]; t <= DURATION; t += 0.1) {
+      const f = cam(t)
+      const cx = f.x - piano[0]
+      const cy = f.y - piano[1]
+      THEIRS.forEach((q, i) => {
+        if (t < THEIRS_AT[i]) return
+        const x = q.x + cx * 0.92 - cx
+        const y = q.y + (cy - HORIZON) * 0.92 * 0.35 - cy
+        if (Math.abs(x) > (f.cells * 16) / 9 / 2 - 0.5 || Math.abs(y) > f.cells / 2 - 0.5) out.push(`${i} at ${t.toFixed(1)}`)
+      })
+    }
+    check('sebs: their constellation comes out over the city of stars, in the picture', THEIRS.length === KINDLED.length && out.length === 0, out.slice(0, 6).join(', '))
+  }
   // The last frame: the whole city, wide.
   const endCam = cam(perf.duration)
   check('sebs: it ends on the city of stars, wide', endCam.cells >= 30 && Math.abs(endCam.x - piano[0]) < endCam.cells)
