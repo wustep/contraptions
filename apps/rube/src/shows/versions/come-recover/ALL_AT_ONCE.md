@@ -548,6 +548,9 @@ The notes went back to the builders who made each part, who still had their cont
   production build. It passes. The show's own chunk loads only when it is opened. It is 390 KB (143 KB gzipped)
   against `origin/main`'s 376 KB (138 KB), so every pass together added 5.4 KB on the wire. Vite's warning about
   chunks over 500 KB is for other parts of the site.
+- **A pass for Waymond on the line.** In the peak he catches the line and drops as the weight that pulls Joy back out
+  of the bagel, but his eye only swung with his fall. Now from his catch (247.9 s) until the line runs out, he
+  watches Joy. Once the camera opens out he goes down out of the frame, so the look shows as he takes her weight.
 
 ## The looks
 
@@ -565,6 +568,7 @@ looked at both there.
 | 192.1–200.2 | Waymond | Evelyn | the empathy fight, all the way to him |
 | 200.7–219.7 | Evelyn | Joy | the two stones in the silence; then down over the brink after hers |
 | 242.1–247.3 | Evelyn | Joy | holding her at the lip of the hole |
+| 247.9–260.6 | Waymond | Joy | on the line, the weight that pulls her back, until it runs out |
 | 254.9–257.2 | Evelyn and Joy | each other | once Joy has her eye |
 | 271.4–273.6 | Joy and Waymond | each other | he touches her at home: father and daughter |
 | 279.6–282.3 | Joy | Evelyn | she nestles against her mother |

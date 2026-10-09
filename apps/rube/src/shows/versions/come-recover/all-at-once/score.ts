@@ -23,6 +23,7 @@ import { mosaic } from './multi/mosaic'
 import { kindness, KINDNESS_AT } from './home/kindness'
 import { ledge } from './rocks/ledge'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
+import { RELEASE } from './void/peakClock'
 import { finale, FINALE_AT } from './home/finale'
 import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, TURN_OVER, W_TOUCH } from './home/finale-plan'
 
@@ -207,6 +208,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
         { from: 27.4, to: 30.3, at: 'joy' as const },
         { from: DROP - 0.1, to: JUMPS.dojo },
         { from: 192.1, to: JUMPS.rocks },
+        // On the line in the peak, the weight that pulls her back: he watches Joy, from his catch until the line runs out.
+        { from: 247.9, to: RELEASE, at: 'joy' as const },
         { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'joy' as const },
         ...PORTRAIT,
         DRUM,
