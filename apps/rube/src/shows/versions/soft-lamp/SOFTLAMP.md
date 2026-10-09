@@ -419,6 +419,14 @@ ball. The machine and its timing were right and are untouched; the room around i
     as strong now, curl a little tighter, and rise to just short of the sill's underside and are gone there. The
     window, the room in a break and the stair, looked at full size: nothing else.
 
+### The twentieth lofi pass
+
+62. **A black hole in the first frame.** Before the neighbour's light comes on (at 0:38), their window was a near
+    black box with a near black frame, in a building the dusk had made a soft violet, with no other dark window like it
+    in the city: the opening's one hard dark, set in its skyline. Unlit, it is glass now, holding a little of the dusk
+    while there is one, and dark only at night. The opening and the closing wide frames, looked at full size: nothing
+    else.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

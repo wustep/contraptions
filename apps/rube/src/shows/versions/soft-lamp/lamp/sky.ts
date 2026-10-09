@@ -338,14 +338,16 @@ function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
   // The wall round it, so the city's small windows keep clear of it, and its frame.
   ctx.fillStyle = mixHex('#17162C', '#2A2445', sky.dusk)
   ctx.fillRect(x0 - 0.06, y0 - 0.06, w + 0.12, h + 0.1)
-  ctx.fillStyle = rgba('#0E0C1C', 0.9)
+  // Its frame, and unlit, the glass: dim, holding a little of the dusk while there is one, dark only at night.
+  const unlit = (night: string, dusk: string) => mixHex(night, dusk, sky.dusk)
+  ctx.fillStyle = rgba(unlit('#0E0C1C', '#2A2444'), 0.9)
   ctx.fillRect(x0 - 0.015, y0 - 0.015, w + 0.03, h + 0.03)
   // The room inside: dark, or lit by a lamp somewhere on its right; a low, deep amber, so it sits among the city's
   // lights and never outshines the ball (bright enough that what crosses it reads).
   const room = ctx.createRadialGradient(x1 - 0.06, y0 + h * 0.55, 0.02, x1 - 0.06, y0 + h * 0.55, w * 1.1)
-  room.addColorStop(0, mixHex('#1C1830', '#D9985C', on))
-  room.addColorStop(0.6, mixHex('#1A162C', '#A86640', on))
-  room.addColorStop(1, mixHex('#16142A', '#5E3430', on))
+  room.addColorStop(0, mixHex(unlit('#1C1830', '#4A3E62'), '#D9985C', on))
+  room.addColorStop(0.6, mixHex(unlit('#1A162C', '#433858'), '#A86640', on))
+  room.addColorStop(1, mixHex(unlit('#16142A', '#3A3050'), '#5E3430', on))
   ctx.fillStyle = room
   ctx.fillRect(x0, y0, w, h)
   if (on > 0) {
@@ -438,7 +440,7 @@ function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
     ctx.fillRect(x0 - 0.5, y0 - 0.5, w + 1, h + 1)
   }
   // The mullion across it, and its sill.
-  ctx.fillStyle = rgba('#0E0C1C', 0.9)
+  ctx.fillStyle = rgba(unlit('#0E0C1C', '#2A2444'), 0.9)
   ctx.fillRect((x0 + x1) / 2 - 0.007, y0, 0.014, h)
   ctx.fillStyle = mixHex('#2A2445', '#4A4060', sky.dusk)
   ctx.fillRect(x0 - 0.03, y1, w + 0.06, 0.022)
