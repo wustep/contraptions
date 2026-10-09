@@ -356,6 +356,16 @@ The notes went back to the builders who made each part, who still had their cont
     Waymond at the table's far end stays in the normal frame.
   - Under Zoom, the credits' longest line still crosses the lantern string's near end. The words are set by the
     page, the same in every mode, and this was left.
+- **A pass for Overview.** Overview (the viewer's O) frames a world's bounds, and the show kept them per world. Two
+  worlds are each visited twice, far apart: the surf and the mosaic share one world, and the dark and the peak
+  another. So their Overview framed both visits at once.
+  - The surf's worlds were small vignettes in a huge field of their colour, the ball lost in it. The dark and the
+    peak showed the bagel as a speck in the black.
+  - Each leg now hands the stage its world with that leg's own bounds (`legWorlds` in `show.ts`), one object a leg,
+    so what compares worlds (the trails) still can. The home legs keep the whole shop, the room every one of them
+    happens in.
+  - In Overview the surf's worlds now fill the frame, and the pull and the peak frame the bagel large. The normal
+    view and Zoom are unchanged.
 
 ## End credits
 
@@ -419,7 +429,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - **The version file:** `apps/rube/src/shows/versions/come-recover/opus55-all-at-once.show.ts`. Everything with
   weight is behind `load()`.
 - **The show:** `.../come-recover/all-at-once/`.
-  - `show.ts`: the `MultiverseShow` (legs, jumps, flickers, the family's spans).
+  - `show.ts`: the `MultiverseShow` (legs, jumps, flickers, the family's spans, and each leg's own bounds for
+    Overview).
   - `score.ts`: the order of the legs and parts, their entry cells, the flickers and the camera. Each leg has its own
     director, and each opens on the framing the last one closed on, carried by the jump. It also holds the zoom
     punches.

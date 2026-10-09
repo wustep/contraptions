@@ -70,6 +70,13 @@ function boundsOf(pieces: Placed[]): Box {
 export class MultiverseShow extends Show {
   private readonly keys: WorldKey[]
   private readonly worlds: Universe[]
+  /**
+   * Each leg's world as the stage is handed it: the world itself, with the leg's own bounds. Overview (the viewer's
+   * O) frames a world's bounds, and a world that two legs share far apart (the surf and the mosaic, the dark and the
+   * peak) would otherwise frame both, a vignette lost in a field of its colour. The home legs keep the whole shop,
+   * which is the room every one of them happens in. One object a leg, so what compares worlds (trails) still can.
+   */
+  private readonly legWorlds: Universe[]
 
   constructor(
     readonly legs: Leg[],
@@ -99,6 +106,12 @@ export class MultiverseShow extends Show {
         bounds,
         journey: duration,
       }
+    })
+    this.legWorlds = legs.map((leg) => {
+      const world = this.worlds[this.keys.indexOf(leg.world)]
+      if (leg.world === 'home') return world
+      const bounds = boundsOf(leg.placed)
+      return { ...world, box: bounds, bounds }
     })
   }
 
@@ -185,7 +198,7 @@ export class MultiverseShow extends Show {
     const owner = this.owner(time)
     const shown = this.presented(time)
     const [ox, oy] = this.shift(owner, shown)
-    const universe = this.worlds[this.keys.indexOf(this.legs[shown].world)]
+    const universe = this.legWorlds[shown]
     const placed = this.holder(time)
     const into = time - placed.start
     const point = laneAt(placed.lane, into)
