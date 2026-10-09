@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 96 (latest)
+## Polish pass 97 (latest)
+
+No change to the show: the stall note while a video is saved. A recording plays the show through on a frame of its own, and the player's transport stays paused the whole time, so the stage's "Waiting for the music…" does not show over it, nor after it is stopped. Started from the panel's Save video, watched for 4 s, stopped.
+
+## Polish pass 96
 
 No change to the show: whether the stall note could show while a viewer holds the scrubber still, which would blame the music for the viewer's own hand. It cannot. Any move of the scrubber pauses the show first (`pause()` in its input handler), so it is not playing. A press on the handle without a move pins nothing, and the show plays on with its clock moving. The arrow keys pause as well.
 
