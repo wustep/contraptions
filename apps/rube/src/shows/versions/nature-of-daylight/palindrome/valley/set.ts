@@ -280,7 +280,10 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
     drawFarShafts(ctx, k, f, t)
     silhouette(ctx, k, f, (x) => MEADOW - treeline(x), MEADOW + 0.5, tg)
     const close = 1 - smooth(f.y1 - f.y0, 10, 30)
-    if (d.sun > 0.01 && close > 0.01) rim(ctx, k, f, (x) => MEADOW - treeline(x), 0.04, rgba(VALLEY.floodlight, 0.75 * d.sun * close))
+    if (d.sun > 0.01 && close > 0.01) {
+      // Light through the leaves at the crowns' edge, soft into them: a glow, not a drawn line.
+      for (const [w, a] of [[0.025, 0.32], [0.07, 0.2], [0.16, 0.1]] as const) rim(ctx, k, f, (x) => MEADOW - treeline(x), w, rgba(VALLEY.floodlight, a * d.sun * close))
+    }
   }
   // The meadow toward us: pale in the haze at the valley floor, darker nearer, with the shadows of the cloud on it.
   if (f.y1 > MEADOW) {

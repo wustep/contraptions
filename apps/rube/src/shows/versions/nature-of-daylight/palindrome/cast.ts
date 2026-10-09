@@ -68,10 +68,13 @@ export interface ShellLook {
 /** Half its width at `v` from top (-1) to bottom (1), as a share of its height: a stone stood on its edge, fuller low. */
 const shellHalf = (v: number): number => 0.245 * Math.pow(Math.max(0, 1 - v * v), 0.56) * (1 + 0.09 * v) * (1 - 0.06 * Math.max(0, -v) ** 2)
 
-/** The shell's outline, centre (cx, cy) and height h, in pixels: 72 points round, leaning a hair to its right. */
+/**
+ * The shell's outline, centre (cx, cy) and height h, in pixels, leaning a hair to its right: 72 points round at most
+ * sizes, more when it fills the frame over the camp, so its belly never shows a facet.
+ */
 function shellPath(ctx: Ctx, cx: number, cy: number, h: number): void {
   ctx.beginPath()
-  const n = 72
+  const n = Math.min(720, Math.max(72, 4 * Math.round(h / 12)))
   for (let i = 0; i <= n; i++) {
     const a = (i / n) * Math.PI * 2
     const v = -Math.cos(a)

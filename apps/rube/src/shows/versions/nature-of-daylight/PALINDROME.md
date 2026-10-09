@@ -207,6 +207,17 @@ A later polish round, from a fresh contact sheet of every place and close frames
 - **The gala's guests** floated in the air above the floor. Each has a soft shadow and a dim reflection on the
   polished floor now, so they stand in the room.
 
+And one more round after it:
+
+- **The bed** was a bare plank, and its duvet was the lake's grey-blue, so against the window it read as a smudge,
+  its folds as blur, with a step where the blanket over her ended. Its linen is warm now, standing against the glass;
+  the folds have a lit side and a shaded side; the blanket runs down into the duvet; and an oak headboard and a lower
+  foot make it the cradle grown up.
+- **The shell's outline** was 72 straight segments at any size, so when its belly fills the frame over the camp the
+  facets showed. It takes more points the bigger it is drawn.
+- **The treeline at the reunion** was outlined in a hard cream line. The light through the crowns is a soft glow into
+  them now.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

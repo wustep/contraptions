@@ -240,6 +240,19 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
   const linen = mix(mix(HOUSE.linenShade, HOUSE.linen, 0.35 + 0.5 * L.amb), HOUSE.night, 0.15 * (1 - L.amb))
   const linenShade = mix(linen, HOUSE.linenShade, 0.6)
   ctx.save()
+  // The head and the foot: oak boards rounded over at the top, the head the taller, so the bed is the cradle grown
+  // up, its hood become a headboard. Their tops catch the window's light.
+  for (const [x0, x1, top] of [[BED.x0 - 0.03, BED.x0 + 0.05, -0.5], [BED.x1 - 0.05, BED.x1 + 0.03, -0.31]] as const) {
+    ctx.fillStyle = W.body
+    roundRect(ctx, k, x0, top, x1 - x0, FLOOR - top, 0.035)
+    ctx.fill()
+    ctx.strokeStyle = rgba(W.rim, W.rimA)
+    ctx.lineWidth = Math.max(1, 0.012 * k)
+    ctx.beginPath()
+    ctx.moveTo((x0 + 0.012) * k, (top + 0.03) * k)
+    ctx.quadraticCurveTo((x0 + 0.012) * k, (top + 0.006) * k, ((x0 + x1) / 2) * k, (top + 0.006) * k)
+    ctx.stroke()
+  }
   // Legs and the oak frame.
   ctx.fillStyle = W.shade
   path(ctx, k, [[BED.x0 + 0.05, FLOOR], [BED.x0 + 0.12, FLOOR], [BED.x0 + 0.12, 0.02], [BED.x0 + 0.05, 0.02]])
@@ -264,7 +277,8 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
   ctx.closePath()
   ctx.fill()
   // The duvet over the rest of the bed, hanging down over its side and its foot in soft folds.
-  const duvet = mix(mix(HOUSE.linen, HOUSE.lakeLight, 0.5), HOUSE.night, 0.28 * (1 - L.amb))
+  // Warm linen, never the lake's grey-blue behind it, so the bed stands against the window.
+  const duvet = mix(mix(HOUSE.linen, HOUSE.dusk, 0.32), HOUSE.night, 0.22 * (1 - L.amb))
   const dg = ctx.createLinearGradient(0, (BED.mattress - 0.05) * k, 0, 0.02 * k)
   dg.addColorStop(0, mix(duvet, HOUSE.fog, 0.25))
   dg.addColorStop(0.35, duvet)
@@ -284,10 +298,12 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
   ctx.closePath()
   ctx.fill()
   // Its soft folds where it falls over the side: broad shadows, no lines.
-  for (const [x, w] of [[1.42, 0.16], [1.93, 0.2], [2.38, 0.14]] as const) {
+  for (const [x, w] of [[1.42, 0.09], [1.93, 0.11], [2.38, 0.08]] as const) {
     const g = ctx.createLinearGradient((x - w) * k, 0, (x + w) * k, 0)
-    g.addColorStop(0, rgba(HOUSE.night, 0))
-    g.addColorStop(0.5, rgba(HOUSE.night, 0.08))
+    g.addColorStop(0, rgba(HOUSE.linen, 0))
+    g.addColorStop(0.3, rgba(HOUSE.linen, 0.16))
+    g.addColorStop(0.5, rgba(HOUSE.night, 0.02))
+    g.addColorStop(0.7, rgba(HOUSE.night, 0.1))
     g.addColorStop(1, rgba(HOUSE.night, 0))
     ctx.fillStyle = g
     ctx.fillRect((x - w) * k, (top + 0.04) * k, 2 * w * k, (-top - 0.05) * k)
@@ -300,8 +316,8 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
 export function drawBedOver(p: p5, k: number, T: number, L: Light): void {
   const ctx = p.drawingContext as Ctx
   const gone = ss(T, GONE[0] + 0.6, GONE[1] + 0.4)
-  const blanket = mix(mix(HOUSE.linen, HOUSE.lakeLight, 0.55), HOUSE.night, 0.3 * (1 - L.amb))
-  const fold = mix(mix(HOUSE.linen, HOUSE.fog, 0.3), HOUSE.night, 0.22 * (1 - L.amb))
+  const blanket = mix(mix(HOUSE.linen, HOUSE.dusk, 0.32), HOUSE.night, 0.22 * (1 - L.amb))
+  const fold = mix(mix(HOUSE.linen, HOUSE.fog, 0.3), HOUSE.night, 0.18 * (1 - L.amb))
   const r = R * HANNAH_AGE.young
   const cx = PATIENT[0]
   // The mound over her lower half, and the fold along its top.
@@ -311,8 +327,9 @@ export function drawBedOver(p: p5, k: number, T: number, L: Light): void {
   ctx.beginPath()
   ctx.moveTo((cx - r * 1.25) * k, (BED.mattress + 0.01) * k)
   ctx.bezierCurveTo((cx - r * 1.2) * k, (top + 0.02) * k, (cx - r * 0.6) * k, top * k, (cx + r * 0.1) * k, top * k)
-  ctx.bezierCurveTo((cx + r * 1.2) * k, top * k, 1.28 * k, (BED.mattress - 0.03) * k, 1.6 * k, (BED.mattress - 0.03) * k)
-  ctx.lineTo(1.6 * k, (BED.mattress + 0.02) * k)
+  // Its tail runs down into the duvet's own line, one sheet, no step where it ends.
+  ctx.bezierCurveTo((cx + r * 1.2) * k, top * k, 1.3 * k, (BED.mattress - 0.03) * k, 1.85 * k, (BED.mattress - 0.012) * k)
+  ctx.lineTo(1.85 * k, (BED.mattress + 0.02) * k)
   ctx.closePath()
   ctx.fill()
   ctx.fillStyle = fold
