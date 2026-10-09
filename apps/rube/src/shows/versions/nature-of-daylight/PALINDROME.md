@@ -541,6 +541,13 @@ Hannah's growing and the ring into the gala had all landed. Most read; three thi
   answer read apart.
 - **Abbott** still read as present. It is all the way into the white three seconds sooner, before she lands.
 
+A fortieth checked the thirty-ninth cold: her gold hand read as hers learning their script, her joined rings as her
+question and the barbed ring as their answer, and the phone she was shown as the one she uses. One thing two cold
+readers had now both seen:
+
+- **A blank card** came up on the rail by the slot before each word reached it, and hung there empty for a beat. It
+  comes up as the word reaches it now.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

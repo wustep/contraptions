@@ -18,7 +18,8 @@ type Ctx = CanvasRenderingContext2D
 /** Where a word's card hangs on the rail at `t`, how it swings on its hook (radians), how far it has appeared. */
 export function cardOf(l: Logo, t: number): { x: number; swing: number; show: number } | null {
   const arrive = l.slotIn + INTO
-  const appear = l.slotIn + INTO * 0.6
+  // The card comes up as the word reaches it, not before: up early, it hung blank on the rail for a beat, a glitch.
+  const appear = l.slotIn + INTO * 0.9
   if (t < appear) return null
   const show = smooth(t, appear, arrive)
   let x = WAIT
