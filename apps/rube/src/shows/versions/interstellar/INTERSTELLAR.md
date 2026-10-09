@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 90 (latest)
+## Polish pass 91 (latest)
+
+No change to the show: pass 89's note looked at, during a simulated drop on desktop and on an upright phone. It is the stage note's small dark pill, low and centred, and reads over the pale station and the dark sky alike. It covers a little of the picture, but only while the picture is frozen anyway. On the farm (a seek to 40 s) it did not show, rightly: that stretch was already buffered, and the music played on through the cut.
+
+## Polish pass 90
 
 No change to the show. Pass 89's guard shown to fail: with the stall left out of the stage note's condition, `check:shows` fails, and the file was restored. One case was not tested there: a browser holding the sound on a deep link until a tap. Headless Chrome lets the muted player autoplay even under a gesture-required policy, so it could not be reproduced. `playLinked` in `shows/player.ts` keeps the picture going while the sound is held, with the music muted or on the wall clock, so the clock moves and the "waiting" note cannot show over the tap prompt.
 
