@@ -10,7 +10,7 @@ import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../sr
 import { breath, cellsAt } from '../src/shows/versions/gymnopedie/orbit/camera'
 import { bloom, lampLight } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
-import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, coverAt, firefliesOut, layered, mistAt } from '../src/shows/versions/gymnopedie/orbit/air'
+import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -132,6 +132,24 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5
   })
   check('gymnopedie: a shooting star falls only on a Gnossienne\'s top note, at night', meteorsOk, METEORS.map((t) => t.toFixed(1)).join(', '))
+
+  // The weather's one shower, the bow after it, and the whale.
+  let rainFrom = Infinity
+  let rainTo = -Infinity
+  let bowFrom = Infinity
+  let bowTo = -Infinity
+  let whaleFrom = Infinity
+  let whaleTo = -Infinity
+  for (let t = 0; t < PERIOD; t += 0.1) {
+    if (rainAt(t) > 0) { rainFrom = Math.min(rainFrom, t); rainTo = t }
+    if (bowAt(t) > 0) { bowFrom = Math.min(bowFrom, t); bowTo = t }
+    if (whaleAt(t)) { whaleFrom = Math.min(whaleFrom, t); whaleTo = t }
+  }
+  const [G1, GN1, GN3] = PIECES
+  check('gymnopedie: one shower, in the Gymnopédie, and the bow after it, gone before the first Gnossienne',
+    rainFrom > G1.from && rainTo < G1.last && bowFrom > rainFrom + 10 && bowTo < GN1.from, `rain ${rainFrom.toFixed(0)}-${rainTo.toFixed(0)}, bow ${bowFrom.toFixed(0)}-${bowTo.toFixed(0)}`)
+  check('gymnopedie: the whale passes once, under the third Gnossienne\'s pond', whaleFrom > GN3.from && whaleTo < GN3.last,
+    `${whaleFrom.toFixed(0)}-${whaleTo.toFixed(0)}`)
 
   check('gymnopedie: the planet is the one period round', STONES.every((s) => s.u0 < s.u1 && s.u0 >= -1 && s.u1 <= LENGTH + STONES[0].u0 + 1) && LENGTH > 200)
   check('gymnopedie: the notes are in order, on the period', NOTES.every((n, i) => n.t >= 0 && n.t < PERIOD && (i === 0 || n.t >= NOTES[i - 1].t)))

@@ -92,7 +92,10 @@ export const CLOUDS: Cloud[] = Array.from({ length: 26 }, (_, i) => {
 const COVER: [number, number][] = [
   [0, 0.7],
   [60, 0.85],
-  [170, 0.7],
+  [128, 0.7],
+  [152, 1],
+  [172, 1],
+  [190, 0.75],
   [212, 0.9],
   [262, 0.42],
   [440, 0.35],
@@ -127,13 +130,14 @@ export interface CloudLight {
  * horizon's colour under them; at night dim, edged silver where the moon is up. `low` is how low the sun is, 0 high to
  * 1 on the horizon; `moon`, how much moon there is.
  */
-export function cloudLight(day: Sky, low: number, moon: number): CloudLight {
+export function cloudLight(day: Sky, low: number, moon: number, overcast = 0): CloudLight {
   const n = day.night
-  const sunLit = mixHex('#FFFDF7', '#FFCF9E', low)
+  // Rain cloud is grey through, lit only a little paler on top.
+  const sunLit = mixHex(mixHex('#FFFDF7', '#FFCF9E', low), '#D3D6DD', 0.7 * overcast)
   const lit = mixHex(sunLit, mixHex('#3E4668', '#C3CEE2', moon), n)
   const dayShade = mixHex(mixHex(mixHex(day.top, day.low, 0.5), '#FFFFFF', 0.45), sunLit, 0.15)
   const nightShade = mixHex(mixHex(day.top, day.low, 0.4), '#2A3256', 0.3)
-  const shade = mixHex(dayShade, nightShade, n)
+  const shade = mixHex(mixHex(dayShade, '#8E95A6', 0.75 * overcast), nightShade, n)
   const under = mixHex(mixHex(shade, day.low, 0.3 + 0.5 * low), shade, n)
   return { lit, shade, under, alpha: 0.95 - 0.35 * n }
 }
@@ -362,4 +366,105 @@ export const FIREFLIES = Array.from({ length: 26 }, (_, i) => ({
 export const firefliesOut = (t: number): number => {
   const u = wrap(t)
   return smooth(u, PIECES[2].from - 2, PIECES[2].from + 14) * (1 - smooth(u, PERIOD - 14, PERIOD - 1))
+}
+
+// ---------------------------------------------------------------- the shower, and the bow
+
+/**
+ * An afternoon shower over the Gymnopédie's second statement: the cloud gathers, a soft rain falls on the sea, and it
+ * clears for the last bars, leaving a bow opposite the low sun over the colonnade, which lingers into the dusk.
+ */
+const SHOWER = { gather: 138, from: 152, to: 174, clear: 182 }
+const BOW = { from: 174, full: 186, fade: 196, gone: 208 }
+
+/** How hard it is raining at `t`, 0 to 1. */
+export const rainAt = (t: number): number => {
+  const u = wrap(t)
+  return smooth(u, SHOWER.from - 4, SHOWER.from + 4) * (1 - smooth(u, SHOWER.to - 3, SHOWER.clear))
+}
+
+/** How overcast it is at `t`, 0 to 1: the cloud before and after the rain itself. */
+export const overcastAt = (t: number): number => {
+  const u = wrap(t)
+  return smooth(u, SHOWER.gather, SHOWER.from) * (1 - smooth(u, SHOWER.to, SHOWER.clear + 6))
+}
+
+/** How much of the bow there is at `t`, 0 to 1. */
+export const bowAt = (t: number): number => {
+  const u = wrap(t)
+  return smooth(u, BOW.from, BOW.full) * (1 - smooth(u, BOW.fade, BOW.gone))
+}
+
+/** A raindrop's streak: where it is in the frame (0..1 across, 0..1 down) at `t`. Each falls a whole number of times a period. */
+export function dropAt(i: number, t: number): { x: number; y: number } {
+  const n = Math.round(PERIOD / (0.55 + 0.25 * hash(i, 151)))
+  const f = (n * wrap(t)) / PERIOD + hash(i, 152)
+  const fall = f - Math.floor(f)
+  const turn = Math.floor(f)
+  return { x: hash(i, turn, 153), y: fall }
+}
+
+/** A drop's ring on the water: which landing it is on, how far through its spread (0..1), and where (0..1 along). */
+export function ringAt(i: number, t: number): { q: number; x: number; d: number } {
+  const n = Math.round(PERIOD / (1.1 + 0.6 * hash(i, 161)))
+  const f = (n * wrap(t)) / PERIOD + hash(i, 162)
+  const turn = Math.floor(f)
+  return { q: f - turn, x: hash(i, turn, 163), d: hash(i, turn, 164) }
+}
+
+// ---------------------------------------------------------------- under the pond
+
+/**
+ * A whale, once, under the moonlit pond in the third Gnossienne: a dark shape deep in the water, its outline lit by
+ * the sea's own light, swimming the ball's way more slowly than the ball goes, so that it passes back under it.
+ */
+export const WHALE = { from: 510, to: 568, depth: 1.5, length: 4.4 }
+
+/** Where the whale is at `t`: cells from the ball's place (it comes in on the right and leaves on the left), and how much of it there is; or null. */
+export function whaleAt(t: number): { d: number; there: number; beat: number } | null {
+  const u = wrap(t)
+  if (u < WHALE.from || u > WHALE.to) return null
+  const q = (u - WHALE.from) / (WHALE.to - WHALE.from)
+  return {
+    d: 9 - 18 * q,
+    there: smooth(q, 0, 0.15) * (1 - smooth(q, 0.85, 1)),
+    beat: osc(t, 0.16),
+  }
+}
+
+/**
+ * The whale's outline in its own frame, `k` pixels a cell, nose at +x, back up (negative y), its tail beating by
+ * `beat` (-1..1): points round its body, then its flukes.
+ */
+export function whaleShape(k: number, beat: number): { body: [number, number][]; flukes: [number, number][]; fin: [number, number][] } {
+  const L = WHALE.length
+  const top: [number, number][] = []
+  const under: [number, number][] = []
+  const N = 36
+  // How far the tail end is bent at `s` along (0 the flukes, 1 the nose).
+  const bend = (s: number) => beat * 0.2 * Math.max(0, 0.5 - s) ** 2 * 4
+  for (let i = 0; i <= N; i++) {
+    const s = i / N
+    // A slim tail stock thickening to the body, and a blunt, rounded head.
+    const g = s < 0.6 ? 0.03 + 0.29 * smooth(s, 0, 0.6) ** 0.8 : 0.32 * Math.sqrt(Math.max(0, 1 - ((s - 0.6) / 0.4) ** 2.2))
+    const x = (s - 0.6) * L
+    top.push([x * k, (-g * 0.85 + bend(s)) * k])
+    under.push([x * k, (g * 1.05 + bend(s)) * k])
+  }
+  const body = [...top, ...under.reverse()]
+  const tx = -0.6 * L
+  const ty = bend(0)
+  const flukes: [number, number][] = [
+    [(tx + 0.05) * k, ty * k],
+    [(tx - 0.42) * k, (ty - 0.36 + 0.14 * beat) * k],
+    [(tx - 0.26) * k, (ty - 0.02) * k],
+    [(tx - 0.42) * k, (ty + 0.34 + 0.14 * beat) * k],
+  ]
+  // A long pectoral fin under the front of the body, swept back.
+  const fin: [number, number][] = [
+    [0.55 * k, 0.22 * k],
+    [-0.15 * k, (0.62 + 0.04 * beat) * k],
+    [0.2 * k, 0.28 * k],
+  ]
+  return { body, flukes, fin }
 }

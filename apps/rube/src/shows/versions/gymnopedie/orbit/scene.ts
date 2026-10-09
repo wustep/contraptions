@@ -5,7 +5,7 @@ import { LENGTH, RADIUS, along, ballLocal, crest, float, since, sink, stonesIn, 
 import { wideAt } from './camera'
 import {
   BANK, BANKS, BANKS_OF_MIST, CLOUDS, FIREFLIES, FIREFLY, FLOCKS, GULLS, HEAPS, MIST,
-  cloudLight, cloudThere, drawCloud, drawGull, firefliesOut, inLayer, layered, meteorAt, milkyWay, mistAt, wingsAt, type CloudLight,
+  WHALE, bowAt, cloudLight, cloudThere, dropAt, drawCloud, overcastAt, rainAt, ringAt, whaleAt, whaleShape, drawGull, firefliesOut, inLayer, layered, meteorAt, milkyWay, mistAt, wingsAt, type CloudLight,
 } from './air'
 import { alpha, hash, osc, polar, skyAt, smooth, type Sky } from './world'
 
@@ -85,6 +85,22 @@ function atSea(p: p5, k: number, u: number): void {
 
 // ---------------------------------------------------------------- the sky
 
+/** The day's colours at `t` under its weather: greyer and dimmer while the shower's cloud is over. */
+function weathered(t: number): Sky {
+  const day = skyAt(t)
+  const o = overcastAt(t)
+  if (o < 0.001) return day
+  const grey = (hex: string, g: string, a: number) => mixHex(hex, g, a * o)
+  return {
+    ...day,
+    top: grey(day.top, '#8A93A3', 0.55),
+    low: grey(day.low, '#C4C3C2', 0.5),
+    sea: grey(day.sea, '#55626D', 0.4),
+    deep: grey(day.deep, '#24303A', 0.3),
+    lit: grey(day.lit, '#D9D6D0', 0.3),
+  }
+}
+
 /** The sun and the moon: how far from overhead, radians (east positive), at show time `t`; beyond ±1.75 they are down. */
 const sunAngle = (t: number): number => 1.82 - (3.64 * wrap(t)) / 222
 const moonAngle = (t: number): number => (wrap(t) < 430 ? 3 : 1.8 - (3.6 * (wrap(t) - 430)) / (PERIOD - 430))
@@ -113,13 +129,14 @@ function bodies(ctx: Ctx2D, c: PieceCtx, v: View, day: Sky): Body[] {
     sun,
     angle,
   })
-  return [at(sunAngle(c.t), near * (1 - day.night * 0.8), true), at(moonAngle(c.t), near * day.night, false)]
+  const veil = 1 - 0.8 * overcastAt(c.t)
+  return [at(sunAngle(c.t), near * veil * (1 - day.night * 0.8), true), at(moonAngle(c.t), near * day.night, false)]
 }
 
 export const sky = scenery<null>('sky', (p, _s, c) => {
   const ctx = p.drawingContext as Ctx2D
   const v = viewOf(p, c)
-  const day = skyAt(c.t)
+  const day = weathered(c.t)
   const W = ctx.canvas.width
   const H = ctx.canvas.height
   // The horizon on the canvas: the sea under the frame's middle.
@@ -240,6 +257,11 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   const near = 1 - smooth(v.wide, 0, 0.3)
   if (near > 0.01) air(p, c, v, day, sun, moon, near)
 
+  // The bow, opposite the sun, as the shower clears.
+  // Close: drawn back over the planet the bow would only be a stripe across the sky.
+  const bow = bowAt(c.t) * near * (1 - smooth(v.cells, 9, 17))
+  if (bow > 0.01) rainbow(ctx, c, v, sun, bow, hy)
+
   // Wide: the air round the planet, lit the colour of its day.
   if (v.wide > 0.01) {
     const k = c.k
@@ -253,18 +275,90 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   }
 })
 
+/** The bow's colours, outside in. */
+const SPECTRUM = ['236, 120, 116', '240, 170, 104', '238, 220, 128', '146, 204, 140', '120, 166, 220', '160, 132, 210']
+
+/**
+ * A rainbow round the point opposite the sun, below the horizon as far as the sun is above it: soft bands, brighter
+ * sky inside, a faint second bow outside with its colours turned round, fading to nothing at its feet. It is in the
+ * sky, at no distance, so it keeps its size in the frame however far the camera draws out.
+ */
+function rainbow(ctx: Ctx2D, c: PieceCtx, v: View, sun: Body, light: number, hy: number): void {
+  const W = ctx.canvas.width
+  const H = ctx.canvas.height
+  const m = ctx.getTransform()
+  const [hx] = onCanvas(ctx, c.k, ...polar(along(c.t) + 0.55, 0))
+  const cx = 2 * hx - sun.x
+  const cy = hy + (hy - sun.y)
+  const R = H * 0.78
+  let low = 0
+  for (let i = 0; i <= 12; i++) low = Math.max(low, onCanvas(ctx, c.k, ...polar(v.u0 + ((v.u1 - v.u0) * i) / 12, 0), m)[1])
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.beginPath()
+  ctx.rect(0, 0, W, Math.min(H, low))
+  ctx.clip()
+  // The sky inside the bow is lighter.
+  const inner = ctx.createRadialGradient(cx, cy, R * 0.55, cx, cy, R * 0.99)
+  inner.addColorStop(0, 'rgba(255, 252, 244, 0)')
+  inner.addColorStop(1, `rgba(255, 252, 244, ${(0.07 * light).toFixed(3)})`)
+  ctx.fillStyle = inner
+  ctx.beginPath()
+  ctx.arc(cx, cy, R * 0.99, 0, Math.PI * 2)
+  ctx.fill()
+  // Each bow is one soft ring, its colours a radial gradient across it; faded towards its feet in thin slices.
+  const ring = (r: number, width: number, a: number, outIn: string[]) => {
+    const g = ctx.createRadialGradient(cx, cy, r - width, cx, cy, r)
+    g.addColorStop(0, `rgba(${outIn[outIn.length - 1]}, 0)`)
+    outIn
+      .slice()
+      .reverse()
+      .forEach((rgb, j) => g.addColorStop(0.12 + (0.76 * j) / (outIn.length - 1), `rgba(${rgb}, ${a.toFixed(3)})`))
+    g.addColorStop(1, `rgba(${outIn[0]}, 0)`)
+    return g
+  }
+  const bows: [number, number, number, string[]][] = [
+    [R, R * 0.1, 0.17, SPECTRUM],
+    [R * 1.2, R * 0.11, 0.07, [...SPECTRUM].reverse()],
+  ]
+  const top = Math.max(0, cy - R * 1.21)
+  const SLICES = 36
+  const bottom = Math.min(H, low)
+  for (let i = 0; i < SLICES; i++) {
+    const y0 = top + ((bottom - top) * i) / SLICES
+    const y1 = top + ((bottom - top) * (i + 1)) / SLICES
+    const rise = smooth(hy - (y0 + y1) / 2, 0, H * 0.32)
+    if (rise < 0.01) continue
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(0, y0, W, y1 - y0 + 0.5)
+    ctx.clip()
+    ctx.globalAlpha = light * rise
+    for (const [r, width, a, colours] of bows) {
+      ctx.fillStyle = ring(r, width, a, colours)
+      ctx.beginPath()
+      ctx.arc(cx, cy, r, 0, Math.PI * 2)
+      ctx.arc(cx, cy, r - width, 0, Math.PI * 2, true)
+      ctx.fill()
+    }
+    ctx.restore()
+  }
+  ctx.restore()
+}
+
 /**
  * The clouds, far and near, and the gulls, in the world's frame: each at its place in its layer, standing on the
  * curve of the sea, lit from the sun or the moon in the frame.
  */
 function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near: number): void {
   const ctx = p.drawingContext as Ctx2D
+  const H = ctx.canvas.height
   const k = c.k
   const u = along(c.t)
   const half = (v.u1 - v.u0) / 2
   const low = smooth(Math.abs(sunAngle(c.t)), 0.75, 1.75)
   const moonUp = smooth(1.9 - Math.abs(moonAngle(c.t)), 0, 0.5)
-  const light = cloudLight(day, low, moonUp)
+  const light = cloudLight(day, low, moonUp, overcastAt(c.t))
   // Lit from the sun by day and the moon by night; from overhead when neither is up.
   const src = day.night < 0.5 ? (Math.abs(sun.angle) < 1.9 ? sun : null) : Math.abs(moon.angle) < 1.9 ? moon : null
   const lightFrom = (x: number, y: number): [number, number] => {
@@ -292,11 +386,15 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
       const edge = inLayer(d, at.span)
       if (Math.abs(d) > half + cloud.w || edge < 0.01) continue
       const [x, y] = onCanvas(ctx, k, ...polar(u + d, cloud.h + 0.4))
+      // A cloud whose foot is up at the frame's top edge would show only a flat sliver of its underside.
+      const [, foot] = onCanvas(ctx, k, ...polar(u + d, cloud.h))
+      const shown = smooth(foot, H * 0.14, H * 0.3)
+      if (shown < 0.01) continue
       const [lx, ly] = lightFrom(x, y)
       p.push()
       atSea(p, k, u + d)
       p.translate(0, -cloud.h * k)
-      drawCloud(ctx, k, cloud, tint, lx, ly, a * there * edge)
+      drawCloud(ctx, k, cloud, tint, lx, ly, a * there * edge * shown)
       p.pop()
     }
   }
@@ -550,7 +648,7 @@ function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: boolean): v
 }
 
 export const stones = scenery<null>('stones', (p, _s, c) => {
-  drawStones(p, c, viewOf(p, c), skyAt(c.t), false)
+  drawStones(p, c, viewOf(p, c), weathered(c.t), false)
 })
 
 // ---------------------------------------------------------------- the light on the water
@@ -624,10 +722,15 @@ function waterLight(p: p5, c: PieceCtx, u: number, light: number, rgb: string, r
 
 const DEPTH = 5
 
+/** The sea's own light at night, woken by the swell. */
+const GLOW = '120, 228, 214'
+const GLOW_RGB = [120, 228, 214]
+const mixRgb = (a: number[], b: number[], f: number): string => a.map((x, i) => Math.round(x + (b[i] - x) * f)).join(', ')
+
 export const sea = scenery<null>('sea', (p, _s, c) => {
   const ctx = p.drawingContext as Ctx2D
   const v = viewOf(p, c)
-  const day = skyAt(c.t)
+  const day = weathered(c.t)
   const k = c.k
   const whole = v.u1 - v.u0 >= LENGTH * 0.95
   const u0 = whole ? 0 : v.u0
@@ -681,6 +784,47 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       p.strokeWeight(Math.max(1, (6 - i) * 1.4))
       p.arc(0, 0, RADIUS * 2 * k, RADIUS * 2 * k, face - spread, face + spread)
     }
+  }
+
+  // The whale, deep under the pond, before anything on the water is drawn over it.
+  const whale = whaleAt(c.t)
+  if (whale && !whole && whale.there > 0.01) {
+    const u = along(c.t) + whale.d
+    const { body, flukes, fin } = whaleShape(k, whale.beat)
+    const m = ctx.getTransform()
+    const cell = Math.hypot(m.a, m.b) * k
+    p.push()
+    atSea(p, k, u)
+    ctx.translate(0, WHALE.depth * k)
+    // Swimming the ball's way, nose ahead, rising and sinking a little with its stroke.
+    ctx.translate(0, 0.06 * whale.beat * k)
+    const shape = new Path2D()
+    body.forEach(([x, y], i) => (i ? shape.lineTo(x, y) : shape.moveTo(x, y)))
+    shape.closePath()
+    const tail = new Path2D()
+    flukes.forEach(([x, y], i) => (i ? tail.lineTo(x, y) : tail.moveTo(x, y)))
+    tail.closePath()
+    fin.forEach(([x, y], i) => (i ? tail.lineTo(x, y) : tail.moveTo(x, y)))
+    tail.closePath()
+    // Soft-edged, as a shape seen through deep water: a wider, fainter pass under the body itself.
+    const dark = mixHex(day.deep, '#03060E', 0.45)
+    ctx.lineJoin = 'round'
+    ctx.strokeStyle = alpha(p, dark, 0.14 * whale.there).toString()
+    ctx.lineWidth = cell * 0.12
+    ctx.stroke(shape)
+    ctx.fillStyle = alpha(p, dark, 0.36 * whale.there).toString()
+    ctx.fill(shape)
+    ctx.fill(tail)
+    // Its outline in the sea's light: motes along its back and belly, flickering.
+    for (let i = 0; i < body.length; i += 2) {
+      const [x, y] = body[i]
+      const a = whale.there * (0.18 + 0.22 * Math.max(0, osc(c.t, 0.21 + 0.05 * hash(i, 181), i * 1.7)))
+      ctx.fillStyle = `rgba(${GLOW}, ${a.toFixed(3)})`
+      ctx.beginPath()
+      ctx.arc(x, y, Math.max(0.8, cell * 0.009), 0, Math.PI * 2)
+      ctx.fill()
+    }
+    p.pop()
   }
 
   if (!whole) {
@@ -742,6 +886,9 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     ctx.lineWidth = Math.max(1, c.weight * 1.25)
     const foam = mixHex(day.low, '#FFF7EA', 0.6)
     const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(foam.slice(i, i + 2), 16))
+    // At night the swell wakes the sea's light: the crest glows a cold green-blue as it runs.
+    const glow = smooth(day.night, 0.4, 0.9)
+    const cell = Math.hypot(ctx.getTransform().a, ctx.getTransform().b) * k
     for (let i = 0; i < n; i++) {
       const ua = u0 + ((u1 - u0) * i) / n
       const ub = u0 + ((u1 - u0) * (i + 1)) / n
@@ -749,13 +896,61 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       if (lift < 0.04) continue
       const [xa, ya] = polar(ua, swell(ua, c.t))
       const [xb, yb] = polar(ub, swell(ub, c.t))
-      ctx.strokeStyle = `rgba(${fr}, ${fg}, ${fb}, ${(0.75 * lift).toFixed(3)})`
+      if (glow > 0.01) {
+        ctx.strokeStyle = `rgba(${GLOW}, ${(0.16 * lift * glow).toFixed(3)})`
+        ctx.lineWidth = Math.max(3, cell * 0.09)
+        ctx.beginPath()
+        ctx.moveTo(xa * k, ya * k)
+        ctx.lineTo(xb * k, yb * k)
+        ctx.stroke()
+        ctx.lineWidth = Math.max(1, c.weight * 1.25)
+      }
+      ctx.strokeStyle = glow > 0.01
+        ? `rgba(${mixRgb([fr, fg, fb], GLOW_RGB, 0.6 * glow)}, ${(0.75 * lift).toFixed(3)})`
+        : `rgba(${fr}, ${fg}, ${fb}, ${(0.75 * lift).toFixed(3)})`
       ctx.beginPath()
       ctx.moveTo(xa * k, ya * k)
       ctx.lineTo(xb * k, yb * k)
       ctx.stroke()
     }
+    // And under it, the motes in the water light as the crest passes over them, and go out behind it.
+    if (glow > 0.01) {
+      const STEP = 0.11
+      for (let j = Math.floor(v.u0 / STEP); j * STEP < v.u1; j++) {
+        const u = (j + hash(j, 171)) * STEP
+        const lit = crest(u, c.t)
+        if (lit < 0.05) continue
+        const depth = 0.04 + 0.55 * hash(j, 172) ** 1.6
+        const a = glow * lit * (1 - depth) * 0.85
+        const [x, y] = polar(u, swell(u, c.t) - depth)
+        ctx.fillStyle = `rgba(${GLOW}, ${a.toFixed(3)})`
+        ctx.beginPath()
+        ctx.arc(x * k, y * k, Math.max(0.8, cell * (0.008 + 0.01 * hash(j, 173))), 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
     ctx.restore()
+    // Rain: each drop's ring spreading on the water.
+    const rain = rainAt(c.t)
+    if (rain > 0.01) {
+      const span = v.u1 - v.u0
+      ctx.save()
+      ctx.lineWidth = Math.max(1, c.weight * 0.8)
+      for (let i = 0; i < 70; i++) {
+        const r = ringAt(i, c.t)
+        const u = v.u0 + r.x * span
+        const depth = 0.03 + 0.45 * r.d ** 1.5
+        const size = (0.04 + 0.2 * r.q) * (1 - 0.5 * depth)
+        const a = rain * (1 - r.q) ** 1.5 * (0.55 - 0.6 * depth)
+        if (a < 0.02) continue
+        const [x, y] = polar(u, swell(u, c.t) - depth)
+        ctx.strokeStyle = `rgba(${fr}, ${fg}, ${fb}, ${a.toFixed(3)})`
+        ctx.beginPath()
+        ctx.ellipse(x * k, y * k, size * k, size * k * 0.2, u / RADIUS, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+      ctx.restore()
+    }
     // Mist lying on the water: at dawn, a little at dusk, and under the moon.
     const mist = mistAt(c.t) * (1 - v.wide)
     if (mist > 0.01) {
@@ -935,6 +1130,29 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
       ctx.globalAlpha = Math.min(1, afar * light * 1.3)
       ctx.drawImage(sprite, x - r, y - r, 2 * r, 2 * r)
     }
+    ctx.restore()
+  }
+  // Rain, falling past the frame.
+  const rain = rainAt(c.t)
+  if (rain > 0.01) {
+    const W = ctx.canvas.width
+    const H = ctx.canvas.height
+    const len = H * 0.04
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.lineCap = 'round'
+    ctx.lineWidth = Math.max(1, H / 900)
+    ctx.strokeStyle = `rgba(226, 232, 242, ${(0.28 * rain).toFixed(3)})`
+    ctx.beginPath()
+    const count = Math.round(260 * rain)
+    for (let i = 0; i < count; i++) {
+      const d = dropAt(i, c.t)
+      const x = d.x * (W + len) - len * 0.2
+      const y = d.y * (H + len) - len
+      ctx.moveTo(x, y)
+      ctx.lineTo(x - len * 0.18, y + len)
+    }
+    ctx.stroke()
     ctx.restore()
   }
   // Fireflies over the pond, close: each wandering a little, blinking slowly on and off.

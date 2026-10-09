@@ -105,6 +105,20 @@ The planet has weather, at depths behind the stones (`air.ts`):
   Gnossienne's four high phrases and the third's two, a melody's peak answered in the sky.
 - Mist on the water at dawn, a little at dusk, and under the moon; fireflies over the pond in the third Gnossienne.
 
+Three things happen once a day:
+
+- An afternoon shower over the Gymnopédie's second statement. The cloud gathers and greys from 138 s, the sky and the
+  sea go grey with it and the sun pales behind it. A soft rain falls from 152 s, with each drop's ring spreading on the
+  water, and stops by 182 s. As it clears, a bow stands opposite the low sun for the piece's last bars: a pale
+  watercolour band, a fainter second bow outside it with its colours turned round, and lighter sky inside. It fades
+  as the camera draws back into the dusk (`rainAt`, `overcastAt`, `bowAt`).
+- At night the sea has its own light. A bass note's swell wakes it: the crest glows a cold green-blue as it runs, and
+  the motes in the water under it light as it passes over them and go out behind it. So each bass note still sends
+  out its two crests, now as two threads of light running away along the dark water.
+- Under the moonlit pond in the third Gnossienne, once, a whale: a dark shape deep in the water, outlined in the sea's
+  light. It swims the ball's way more slowly than the ball goes, so it passes back under it over a minute
+  (`whaleAt`).
+
 The sea gives it back: the stones, the lamps and the flowers are drawn again upside down from their feet, into a
 canvas of half the stage's resolution, faded with depth, and laid over the water row by row, each row shifted a little
 by a ripple that grows as it goes down. The sky's colour lies on the water under its surface. The reflection fades as
@@ -126,4 +140,6 @@ squashes on every landing and bounce and at no other time; every bass note sends
 to one heard chord; the camera breathes only on held melody notes, never jumps in or out, and its breath and the
 loudness come round with the period; every lamp is dark until the ball lights it and burns until dawn, and every
 flower opens as the ball comes and closes at dawn, across the seam; every layer of the air comes round with the
-period, and a shooting star falls only on a Gnossienne's top note, at night; the titles.
+period, and a shooting star falls only on a Gnossienne's top note, at night; there is one shower, in the
+Gymnopédie, with the bow after it and gone before the first Gnossienne; the whale passes once, under the third
+Gnossienne's pond; the titles.
