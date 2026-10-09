@@ -574,6 +574,10 @@ window.
     the ticket press (read briefly as a slot machine), the engine on the hill. Taken: his bandage, a sliver, now a
     taller band with its wraps crossing it. Considered and not taken: making the jar's losses literal, which would
     restage the show's central machine.
+  - *Speeds with YouTube.* 0.25x to 2x exact; 4x ran at 2x (YouTube plays no faster, the show follows the music,
+    and with the mp3 out of the repo there is no file to fall to). Now, past 2x with no file, YouTube sits out:
+    silent, no say in the clock, which runs at 4x on the wall; back at 2x or slower it comes in where the picture is
+    (`sittingOut` in `soundtrack.ts`; every YouTube-only show gains it).
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
@@ -591,10 +595,6 @@ window.
   (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
   Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
-- At 4x the show runs at 2x: YouTube's player plays no faster, the show's clock follows the music, and with the
-  mp3 out of the repo there is no file to fall to (`soundtrack.ts` keeps YouTube when there is none). Picture and
-  music stay in step; 0.25x to 2x are exact. Every YouTube-only show shares this; changing it (a silent 4x on the
-  wall clock, or no 4x without a file) is a choice for the player, not this show.
 - Only Chrome on macOS has been watched, and Safari has not been measured for this take. The YouTube cue has, on the
   deployed preview in Chromium (PR #163): it loads, plays, and drives the show's clock in real time (10 s of show in
   10 s), with no fallback; whether picture and sound feel in sync to a listener is still for a person to judge.
