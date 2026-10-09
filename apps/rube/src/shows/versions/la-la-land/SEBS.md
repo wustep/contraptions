@@ -151,3 +151,8 @@ A seventh pass:
 - **The kiss at Lipton's.** The closest shot, held as they touch on 65.515, was aimed above them, so the kiss happened in the bottom corner of the frame under the piano's legs. The shot is now centred on the two of them, between the piano's end and the tree.
 - **Her show.** In the close shots of her one-woman show (108 to 114) he was cut in half at the bottom edge of the frame. The shots draw back a little and sit lower, so he is whole among the front row's backs, watching her.
 - **The stage's front.** In the close shots at her table, at the start and again in the dream, the stage beside them was a blank brown slab filling a third of the frame. Its front is panelled now: inset frames a shade darker, each with a fine brass bead.
+
+An eighth pass:
+
+- **The waltz, close.** For the whole of painted Paris (272 to 298) the shot sat high and wide on the set, so the waltz itself was two specks at the bottom of the frame. Through the umbrellas' curtsies (282.3 to 289.4) the camera now comes in on the two of them turning, with their reflections under them on the wet stones, the umbrellas dipping behind, and the lamps whole. It is keyed on the centre they turn about, so it travels with them without swinging round after either one, and goes back out on the third curtsy toward the clock's midnight.
+- **Her window.** The window that is her show's whole set was cropped by the top of the frame through her show. The close shots have a little more room, so the window is whole above her and he is whole below.

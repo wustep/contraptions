@@ -430,12 +430,12 @@ export const theatre = part<TheatreState>(
     // He hops off the arbor, round the arch, and into his seat.
     { t: SEAT + 0.2, cells: 5.3, hold: [15.5, -0.3] },
     // Her show: in on her in the spot, the house cut to the front row's backs, and him whole among them along the foot
-    // of the frame.
-    { t: SHOW[0].t1, cells: 4.5, hold: [16.3, -0.6] },
-    { t: SHOW[1].t1, cells: 4.35, hold: [16.05, -0.62] },
-    { t: SHOW[2].t1, cells: 4.25, hold: [16.15, -0.62] },
+    // of the frame; her window whole over her.
+    { t: SHOW[0].t1, cells: 5.0, hold: [16.3, -0.78] },
+    { t: SHOW[1].t1, cells: 4.85, hold: [16.05, -0.8] },
+    { t: SHOW[2].t1, cells: 4.75, hold: [16.15, -0.8] },
     // The lead-in bar: the house holds its breath; back a little, to him.
-    { t: 114.9, cells: 4.4, hold: [15.8, -0.45] },
+    { t: 114.9, cells: 4.9, hold: [15.8, -0.62] },
     { t: SPRING, cells: 5.2, hold: [15.9, 0.0] },
     { t: ROWS[3], cells: 7.0, hold: [16.1, -0.3] },
     { t: BOW1, cells: 5.8, hold: [16.1, -0.25] },

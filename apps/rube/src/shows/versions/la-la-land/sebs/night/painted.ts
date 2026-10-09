@@ -780,7 +780,14 @@ export const painted = part<PaintedState>(
       // Out, as the orchestra comes in, to the quay and the umbrellas opening along it.
       { t: 276.2, cells: 6.0, hold: c(276.2, -1.45, 0.4) },
       { t: 279.4, cells: 6.3, hold: c(279.4, -1.6, 0.4) },
-      { t: 286.5, cells: 6.6, hold: c(286.5, -1.8, 0.6) },
+      // In to the waltz itself through the curtsies: the two of them turning, their reflections under them on the wet
+      // stones, the umbrellas dipping behind. Keyed every phrase or so on the centre they turn about, so it travels with
+      // them and does not follow either one round.
+      { t: CURTSY_HITS[0], cells: 4.3, hold: c(CURTSY_HITS[0], -0.9, 0.15) },
+      { t: 284.4, cells: 4.2, hold: c(284.4, -0.88, 0.15) },
+      { t: CURTSY_HITS[1], cells: 4.2, hold: c(CURTSY_HITS[1], -0.88, 0.15) },
+      // Back out on the next curtsy, toward the clock.
+      { t: CURTSY_HITS[2], cells: 5.6, hold: c(CURTSY_HITS[2], -1.35, 0.5) },
       // The clock: its bell at the top of the frame, the two of them under it.
       { t: MIDNIGHT - 0.5, cells: 6.2, hold: [CLOCK_X - 0.1, -1.62] },
       { t: RELEASE - 0.3, cells: 6.6, hold: [CLOCK_X + 0.4, -1.85] },
