@@ -558,6 +558,12 @@ window.
     felt as the light going out of the place, the two of them still clear; the cut into the brighter ward reads as a
     change of place (its window's gold to night carries the fall of light on), so the overcast is not eased out before
     it, which would undo the beat; 20% is the right strength (any more reads as a grade over the shot).
+  - *A viewer who has never seen Up* (a fifth critic, told nothing of the film): the whole arc reads from the
+    picture alone, the wedding to him alone at the end. Its confusions were mostly the machines, which are the
+    premise: the jar's mechanism (that each mishap costs coins), the doctor's office (no one there), the tie wheel,
+    the ticket press (read briefly as a slot machine), the engine on the hill. Taken: his bandage, a sliver, now a
+    taller band with its wraps crossing it. Considered and not taken: making the jar's losses literal, which would
+    restage the show's central machine.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
