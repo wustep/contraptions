@@ -98,10 +98,11 @@ Every change of scene is scored and continuous. No cue or strike was moved for a
 
 **The audio.**
 - The cue was fetched once with yt-dlp and ffmpeg from WaterTower Music's official upload. It is not kept: `scripts/shows/liftoff-mix.sh` takes it as fetched.
-- The show plays one file, `apps/rube/src/shows/versions/interstellar/interstellar-liftoff-mix-demo.mp3`, built by `scripts/shows/liftoff-mix.sh`:
+- The show was timed to one mix, built by `scripts/shows/liftoff-mix.sh`:
   - Cornfield Chase plays whole and untouched from its first sample, so Act I keeps the clock it was timed to. It fades out over its last second, to 126.98 s.
   - No Time for Caution comes in 103.76 s into the cue, one beat before its bar-26 accent, fading up over that beat. The accent lands at 127.507 s of the show, and the cue runs to its end, 262.74 s.
 - Starting at bar 26 skips the cue's first 1:44. What is left is the two-minute build to the peak, which is the part a machine can drive.
+- The repository keeps no copy of either recording, nor of the mix, since #147 made copyrighted soundtracks YouTube-only. The show plays the two official uploads as two cues (`liftoff/index.ts`), with the mix's numbers: Cornfield Chase from its start, faded out by 126.98 s, and No Time for Caution from 103.76 s into its upload at 126.5 s of the show, faded in over a beat. So every strike lands online where it lands in the mix. The one difference is level: YouTube cannot play a video above its own volume, so the mix's lift on the cue's quiet opening is not heard.
 
 **Its clock.**
 - `scripts/shows/liftoff-ntfc-onsets.py` measured the mix once (numpy and ffmpeg) into `scripts/shows/plans/liftoff-ntfc-onsets.json`.
@@ -124,7 +125,7 @@ The music is the only clock.
   - more than 90% of Act I's beats from the drop to the last hit struck, and 121 of Act II's 129 beats;
   - the ball never jumps, through every change of world and every cut;
   - the ball is never hidden longer than 2.5 s;
-  - the mix, its length and its demo credit;
+  - the soundtrack: YouTube only (no file), its first cue Cornfield Chase from zero, the music's length (262.741 s), and its credit to Hans Zimmer, both cues and Interstellar;
   - the end credits: after the music has stopped, set by the page, and naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues;
   - the stage is in the station from the accent, and outside from the undock;
   - the camera's roll: square everywhere but the far side, a third of a turn through the reunion, square again by the hub and the cut;
@@ -223,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 29 (latest)
+## Polish pass 30 (latest)
+
+No change to the show: "How it is built" and the audio notes checked against the code and the repository. `worlds.ts` has no `AGED`: the years' grey is `GREY`, and the two Murphs are `MURPH` and `MURPH_YOUNG`. The audio notes still described the show as playing the mix file, which #147 removed with Cornfield Chase's recording when copyrighted soundtracks became YouTube-only. They now say what plays (the two uploads, on the mix's numbers), what `check:shows` holds the soundtrack to, and what rebuilding the mix now needs.
+
+## Polish pass 29
 
 No change to the show: the farm and the chase (0 to 84 s) checked against the code. Their strike times hold (the gate's, the gantry's and the rocket's checked beat for beat), but for Brand's first appearance, at 71.6 s (beat 114½) where it said 71.4. And young Murph, in the cast since #92, was in none of the Act I table's rows. Her part is written into them now, from `earth/house.ts`, `earth/truck.ts` and `earth/gate.ts`: she wakes on the first book, follows him downstairs a step behind, stows away in the truck's bed, trails him to the base, and is kept back by TARS at the tower's foot, which shields her from the ignition.
 
@@ -588,11 +593,11 @@ These are visual and mechanical only. There are no stills, no text, and no audio
   - `camera.ts`: authored camera keys.
   - `music.ts`: both combs, the mix's length, and the Act II landmarks (`ACT2`, `UNDOCK`, `PEAK`, `FINAL`).
   - `hits.ts`: every strike, gathered for the check.
-  - `worlds.ts`: the palettes, `BALL` (Cooper's sand), `BRAND` (Brand's blue) and `AGED` (her after the years, slate).
+  - `worlds.ts`: the palettes, `BALL` (Cooper's sand), `BRAND` (Brand's blue), `GREY` (what the years do to a colour: her blue in orbit is mixed toward it), `MURPH` (old Murph's slate) and `MURPH_YOUNG` (young Murph's lighter slate, drawn at `MURPH_SMALL`).
 - **The parts.** They live in `earth/`, `rocket.ts`, `space/` and `act2/`, one file per set piece.
   - `act2/station.ts` has the station's geometry: the ring, its axis, standing things upright on it.
   - `act2/interior.ts` draws the ring round the parts.
   - `earth/truck.ts` exports the pickup's drawing, so the same truck appears at the dam, the gate and the tower.
 - **The camera's roll.** `Framing.angle` (optional, in `shows/registry.ts`) turns the picture about its middle. The engine (`drawWorld`) rotates after the backdrop and chooses pieces from the box round the turned view. `kit.frame()` takes the canvas's corners back through the turned transform, so skies and culling still cover the frame. Liftoff's roll curve is `rollAt` in `score.ts`; no other show sets an angle.
 - **Checks.** `apps/rube/checks/shows.ts` has a Liftoff block, run by `npm run check:shows`.
-- **Rebuilding the audio.** `sh scripts/shows/liftoff-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/shows/liftoff-ntfc-onsets.py` measures it again. Neither needs to run unless the mix changes.
+- **Rebuilding the audio.** `sh scripts/shows/liftoff-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/shows/liftoff-ntfc-onsets.py` measures it again. Neither needs to run unless the mix changes. Neither source is kept in the repository any more (#147): Cornfield Chase has to be fetched first to the path the script reads (`apps/rube/src/shows/versions/cornfield-chase/cornfield-chase-zimmer.mp3`), and No Time for Caution is given to it as its argument. If the mix changes, the YouTube cues in `liftoff/index.ts` change with it.
