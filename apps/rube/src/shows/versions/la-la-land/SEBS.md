@@ -417,3 +417,7 @@ A fifty-ninth pass:
 A sixtieth pass, the picture against the music:
 
 - **Where the picture is still and the music loud.** I measured the picture's motion against the recording's loudness through the whole show, every two seconds. Where the picture is busy and the music quiet, it is the camera moving in a hush, as meant. Where the music is loud and the picture still, there were two stretches. The float among the stars is calm by design. But the six accelerating hits that top the Hollywood number (166 to 168), the loudest of it, played on a frame held still since the eighteenth pass, only the searchlights swinging. The camera now pushes in on the two of them across the six hits, so the frame closes on them meeting on the crest, the fan of light full and the sign blazing, as the music does.
+
+A sixty-first pass, the show's card:
+
+- **Its picture.** The picture a link to the show unfurls with (`public/shows/la-la-land/opus5-5.png`, taken at the show's `still`) had been made before these passes, so it no longer matched the show: in it the two of them looked past each other on the quay. And at its moment, 272.0, their turn to each other had only begun and every umbrella was furled. The still is now 273.1, just past the waltz's first ONE: the first umbrella open behind them, the lamp, and the two of them on the wet quay looking at each other. Only this take's card was made again; the Shows page's own card uses another take's.
