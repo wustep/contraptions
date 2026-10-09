@@ -409,7 +409,7 @@ export const movie = part<MovieState>(
     { t: 365.6, cells: 4.9, hold: [-2.7, -1.15] },
     { t: 368.2, cells: 5.8, hold: [-2.0, -1.55] },
     { t: SPLASH, cells: 5.4, hold: [-1.6, -1.05] },
-    { t: 373.2, cells: 4.6, hold: [-1.9, -0.75] },
+    { t: 373.2, cells: 3.9, hold: [-2.4, -0.55] },
     // The field, along with them.
     { t: 376.0, cells: 4.6, hold: [1.5, -0.6], w: 0.4 },
     { t: 380.4, cells: 4.4, hold: [4.2, -0.6], w: 0.5 },

@@ -182,3 +182,8 @@ A thirteenth pass, at more machines in motion:
 - **Her premiere on the landing.** While the flash guns fire (225 to 228), the shot sat past the cellar's left wall, so a dark band of the wall's thickness ran down the left edge of the frame. It sits a cell to the right, so the frame is the vault from wall to stair: the door, the lamps on their scissor arms, the balloon net.
 - **The beach.** In the home movie's beach shot (359 to 364) the three of them sat in a strip across the middle of a frame of empty sand and sky. The shot is closer and centred on them: her, their son, the bucket and him, the sea behind them.
 - The audition's metronome, lamp and pen, the pool and its diving board, and the count-in into the band read as they should, and are as they were.
+
+A fourteenth pass:
+
+- **The ovation and the curtain calls.** From the moment he springs to his feet (about 119) to the house going to white, her window, the whole of her show's set, was cut off at the top of the frame, though the shots of the show itself hold it whole. Those shots now have the window whole above the two of them: him in the front row as the house rises behind him, then beside her at the stage's edge for the bows, until the curtain comes in.
+- **After the dive.** Once he has come up out of the pool (373 to 376) the shot was wide on an empty sky, the three of them small along its foot. It comes in on them: her on the deck, him and their son in the water.

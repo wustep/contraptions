@@ -436,15 +436,15 @@ export const theatre = part<TheatreState>(
     { t: SHOW[2].t1, cells: 4.75, hold: [16.15, -0.8] },
     // The lead-in bar: the house holds its breath; back a little, to him.
     { t: 114.9, cells: 4.9, hold: [15.8, -0.62] },
-    { t: SPRING, cells: 5.2, hold: [15.9, 0.0] },
+    { t: SPRING, cells: 5.6, hold: [15.9, -0.35] },
     { t: ROWS[3], cells: 7.0, hold: [16.1, -0.3] },
-    { t: BOW1, cells: 5.8, hold: [16.1, -0.25] },
-    // The curtain calls: close on the two of them at the stage's edge.
-    { t: BOW2 + 0.3, cells: 4.7, hold: [15.95, -0.35] },
-    { t: LAND, cells: 4.5, hold: [15.8, -0.3] },
-    { t: CURTAIN_IN[1], cells: 4.5, hold: [15.8, -0.55] },
-    { t: BOW3, cells: 4.3, hold: [15.8, -0.45] },
-    { t: WHITE, cells: 4.5, hold: [15.8, -0.5] },
+    { t: BOW1, cells: 6.0, hold: [16.1, -0.3] },
+    // The curtain calls: close on the two of them at the stage's edge, her window whole over them.
+    { t: BOW2 + 0.3, cells: 5.0, hold: [15.95, -0.75] },
+    { t: LAND, cells: 4.9, hold: [15.8, -0.75] },
+    { t: CURTAIN_IN[1], cells: 4.8, hold: [15.8, -0.8] },
+    { t: BOW3, cells: 4.7, hold: [15.8, -0.85] },
+    { t: WHITE, cells: 4.8, hold: [15.8, -0.8] },
   ],
 )
 
