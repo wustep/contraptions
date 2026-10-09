@@ -773,6 +773,8 @@ function drawPark(p: p5, s: BallparkState, c: Ctx): void {
  * soft warm halo, never under 9px across the screen, so a phone held upright,
  * whose frame is a fifth of 1080p's, can find it across the whole ring.
  */
+/** His sand as "r, g, b", once: the halo is drawn every frame of the flight, and a p5 colour parsed thrice a frame cost a millisecond on a phone's canvas. */
+const BALL_RGB = [1, 3, 5].map((i) => parseInt(BALL.slice(i, i + 2), 16)).join(', ')
 function drawStreak(p: p5, c: Ctx, T: number): void {
   if (T <= HIT + 0.04 || T >= WINDOW) return
   const density = p.pixelDensity()
@@ -787,9 +789,9 @@ function drawStreak(p: p5, c: Ctx, T: number): void {
     const r = Math.max(R * c.k * 2.4, 9 * density)
     const ctx = p.drawingContext as CanvasRenderingContext2D
     const g = ctx.createRadialGradient(X(hx), X(hy), 0, X(hx), X(hy), r)
-    g.addColorStop(0, alpha(p, BALL, 0.5 * f).toString())
-    g.addColorStop(0.45, alpha(p, BALL, 0.2 * f).toString())
-    g.addColorStop(1, alpha(p, BALL, 0).toString())
+    g.addColorStop(0, `rgba(${BALL_RGB}, ${0.5 * f})`)
+    g.addColorStop(0.45, `rgba(${BALL_RGB}, ${0.2 * f})`)
+    g.addColorStop(1, `rgba(${BALL_RGB}, 0)`)
     ctx.fillStyle = g
     ctx.beginPath()
     ctx.arc(X(hx), X(hy), r, 0, Math.PI * 2)

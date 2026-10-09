@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 83 (latest)
+## Polish pass 84 (latest)
+
+- **What the show costs a phone.** Pass 12's render-cost audit was at 1280 × 720; an upright phone draws 1170 × 2532. There, `paintShow` takes 1.9 ms at the median and 99% of frames under 5.9 ms, the slowest 11.4 ms at the tesseract letting go, as on desktop. The second-slowest stretch was new to that list: the flight's end across the axis (172 to 174 s). Timed against the code before it, pass 68's halo had added about 1.2 ms there (4.4 to 5.6 ms at the median at 174 s), since it built its gradient from three p5 colours parsed every frame. It is built from the sand's RGB computed once now. It is back to 4.4 ms, and the frame is pixel for pixel the same.
+
+## Polish pass 83
 
 No change to the show. The pull request's description now names passes 79 to 81's guards: the YouTube cues held to the mix script, and the bible's strike counts and credits table held to the code. Its images and the rest are kept.
 
