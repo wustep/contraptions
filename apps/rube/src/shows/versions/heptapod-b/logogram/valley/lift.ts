@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { drawDeck, shellHalf } from '../cast'
-import { box, carried, hash, knock, lastOf, part, type Ctx } from '../kit'
+import { box, carried, hash, knock, lastOf, lookFrom, looks, part, type Ctx, type Look } from '../kit'
 import { pulse, SEAM } from '../music'
 import { VALLEY } from '../worlds'
 import { LIFT_AT, LIFT_EXIT, SHELL_H, SHELL_W, SHELL_X, SLOT_W } from './geo'
@@ -530,6 +530,13 @@ function overLift(p: p5, s: LiftState, c: Ctx): void {
   drawCling(p, k, t)
 }
 
+/**
+ * Where they look, riding the deck up: up at the belly they are rising to, through the fog, out of it and through the
+ * look up at its dome, and back to their rolls before the cut into the shaft (where her eye already holds on the
+ * screen across the camera's quarter turn).
+ */
+const LOOKS: Look[] = [{ from: 47.0, to: SEAM.shaft - 0.6, at: () => -Math.PI / 2 + 0.1 }]
+
 export const lift = part<LiftState>(
   {
     name: 'lift',
@@ -547,7 +554,8 @@ export const lift = part<LiftState>(
       exit: LIFT_EXIT,
       lane: { segs, fire: 0 },
       state: { begin: slot.begin },
-      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: (t) => ({ x: ianX(t), y: -riseAt(t) }) }],
+      riders: looks(LOOKS),
+      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: (t) => ({ x: ianX(t), y: -riseAt(t), look: (roll: number) => lookFrom(LOOKS, t, roll) }) }],
     }
   },
   (slot) => {

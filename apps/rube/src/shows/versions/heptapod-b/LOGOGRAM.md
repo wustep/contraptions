@@ -280,7 +280,7 @@ strongest pulses held against what the picture does on them. What changed:
   halves meet over her, hers and Costello's, held to the cut; before, she looked down into the ink. Ian too, in
   the chamber, wherever he is stopped: up at Abbott as he hesitates, up at the giants through the wide, and on her
   as she goes into the white. In the valley: both up at the slot as it opens over them (36.4) and through the floods'
-  answer; on the meadow she looks up to where the shell went, then at Ian as he comes, and from the touch at him and a
+  answer; riding the lift, up at the belly they rise to, through the fog and the look up at its dome; on the meadow she looks up to where the shell went, then at Ian as he comes, and from the touch at him and a
   little up, as her eye stands when the lake house opens on the first frame; he, at her side, at her. (The show
   hands each rider her roll as the stage would draw it, so the eye turns from where it is; elsewhere every frame is
   unchanged.)
