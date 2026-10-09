@@ -69,12 +69,14 @@ const beams = new Map<string, HTMLCanvasElement>()
  */
 export function softBeam(ctx: CanvasRenderingContext2D, k: number, a: readonly [number, number], b: readonly [number, number], w0: number, w1: number, rgb: string, al: number, kind: string, along: (v: number) => number, level = false): void {
   if (al <= 0.004) return
-  const W = 64
+  const W = 256
   const H = 128
   const wide = Math.max(w0, w1)
-  // Its taper to a 32nd, so a beam that opens or narrows makes a few sprites, not one a frame.
-  const q0 = Math.max(1, Math.round((w0 / wide) * 32)) / 32
-  const q1 = Math.max(1, Math.round((w1 / wide) * 32)) / 32
+  // Its taper in eighths of a doubling (fine near a point, coarse near its full width), so a beam that opens or
+  // narrows makes a few sprites, not one a frame.
+  const q = (w: number) => 2 ** (Math.round(Math.log2(Math.max(1 / 256, w / wide)) * 8) / 8)
+  const q0 = q(w0)
+  const q1 = q(w1)
   const key = `${kind}|${rgb}|${q0}|${q1}`
   let sprite = beams.get(key)
   if (!sprite) {

@@ -315,6 +315,9 @@ changed, in the order of the film, and then what runs through it:
   the lift's start and on the reunion each beam was a quarter of the frame across and showed as panes of tinted
   glass, a cold stripe between two of them. They are soft across now, dense along the middle and nothing at the edge,
   from one sprite each set onto the beam; the sunlight's foot still lies level on the meadow.
+- **The lamp's beam in the shaft** (69 → 85.8): fourteen stacked cones, each ending in a hard edge, so in the dark
+  the beam showed as a fan of stepped bands. It is one soft cone now, from the same kind of sprite as the valley's
+  beams, still coming to a point at the lens.
 - **The reunion** (195.344): Ian came to a stop a sliver from her, and as her lean to him eased back a gap opened
   between them, so the meadow ended on the two of them drifting apart. He meets her on the touch now and stays against
   her as she settles back to her mark (which the circle's first frame needs): they end it together. They are grounded

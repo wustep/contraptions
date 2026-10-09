@@ -3,6 +3,7 @@ import { mixHex, R, type Pt } from '../../../../../parts'
 import { DECK_LAMP_LENS, drawDeck } from '../cast'
 import { alpha, frame, hash, type Ctx } from '../kit'
 import { level, pulse } from '../music'
+import { softBeam } from '../valley/set-air'
 import { SHELL, VALLEY } from '../worlds'
 import {
   DECK,
@@ -106,6 +107,8 @@ export function floodLens(t: number): { at: Pt; dir: Pt } {
   return { at: [deckX(t) + DECK_LAMP_LENS.up, DECK[1] - DECK_LAMP_LENS.back], dir: [Math.cos(a), Math.sin(a)] }
 }
 const BEAM_HALF = 0.3
+/** Along the lamp's beam: bright at the lens, gone by its far end. */
+const lampAlong = (v: number): number => (v < 0.25 ? 1 - (1.8 * v) : v < 0.6 ? 0.55 - (0.35 * (v - 0.25)) / 0.35 : 0.2 * (1 - (v - 0.6) / 0.4))
 const BEAM_LEN = 17
 /** The lift's top stage's height at the cut (the valley side's, measured): it opens on as the deck rises. */
 const TOP_STAGE = 1.28
@@ -563,31 +566,9 @@ export function drawDeckRig(p: p5, c: Ctx, t: number): void {
     ctx.save()
     tunnelPath(ctx, k, f.x0 - 1, f.x1 + 1)
     ctx.clip()
-    const nx = -dir[1]
-    const ny = dir[0]
-    // Many thin cones, each a little wider and fainter: a beam with a bright core and soft edges, no bands.
-    const LAYERS = 14
-    for (let j = 0; j < LAYERS; j++) {
-      const spread = 0.15 + (1.75 * j) / (LAYERS - 1)
-      const a = 0.036 * Math.exp(-((spread / 1.25) ** 2))
-      const w0 = 0.1 * Math.min(1, spread)
-      const w1 = BEAM_LEN * Math.tan(BEAM_HALF * spread)
-      const far: Pt = [at[0] + dir[0] * BEAM_LEN, at[1] + dir[1] * BEAM_LEN]
-      const g = ctx.createLinearGradient(at[0] * k, at[1] * k, far[0] * k, far[1] * k)
-      const c0 = rgb(WARM)
-      g.addColorStop(0, `rgba(${c0}, ${a * on})`)
-      g.addColorStop(0.25, `rgba(${c0}, ${a * 0.55 * on})`)
-      g.addColorStop(0.6, `rgba(${c0}, ${a * 0.2 * on})`)
-      g.addColorStop(1, `rgba(${c0}, 0)`)
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.moveTo((at[0] + nx * w0) * k, (at[1] + ny * w0) * k)
-      ctx.lineTo((far[0] + nx * w1) * k, (far[1] + ny * w1) * k)
-      ctx.lineTo((far[0] - nx * w1) * k, (far[1] - ny * w1) * k)
-      ctx.lineTo((at[0] - nx * w0) * k, (at[1] - ny * w0) * k)
-      ctx.closePath()
-      ctx.fill()
-    }
+    // One soft cone: a bright core, nothing at its edges, never a band where one layer of it ends.
+    const far: Pt = [at[0] + dir[0] * BEAM_LEN, at[1] + dir[1] * BEAM_LEN]
+    softBeam(ctx, k, at, far, 0.2, 2 * BEAM_LEN * Math.tan(BEAM_HALF * 1.6), rgb(WARM), 0.22 * on, 'shaftLamp', lampAlong)
     ctx.restore()
   }
 }
