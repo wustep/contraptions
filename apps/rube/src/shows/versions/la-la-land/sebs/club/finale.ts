@@ -267,10 +267,14 @@ export const finale = part<FinaleState>(
     { t: 452.6, cells: 4.2, hold: F([1.2, 0.9]) },
     { t: 453.9, cells: 3.2, hold: F([4.3, -0.3]) },
     { t: 454.45, cells: 3.15, hold: F([4.35, -0.3]) },
-    // Out to the room as David sits down beside her at her table: the three of them in one frame. He goes ahead to the
-    // door and out onto the pavement; she follows him across the room and stops in the doorway. Then close shots, cut
-    // against each other: her turn back from the doorway, his look, her smile, his nod. Then out to her going.
-    { t: 456.5, cells: 6.4, hold: F([-0.3, 1.55]) },
+    { t: 455.36, cells: 3.1, hold: F([4.36, -0.3]) },
+    // Cut, as David sits down in the seat beside her: the dream's kiss's own close two-shot at her table, and it is
+    // David in Seb's seat. The dream is over. Then out with her as she follows David to the door.
+    { t: 455.38, cells: 1.6, hold: F([TABLE.x, 2.58]) },
+    { t: 456.55, cells: 1.6, hold: F([TABLE.x, 2.58]) },
+    // He goes ahead to the door and out onto the pavement; she follows him across the room and stops in the doorway.
+    // Then close shots, cut against each other: her turn back from the doorway, his look, her smile, his nod. Then out
+    // to her going.
     { t: 459.4, cells: 7.0, hold: F([-7.4, 1.2]) },
     { t: CUTS.her - 0.02, cells: 6.8, hold: F([-9.6, 1.2]) },
     // Hers as close as his: she fills her shot as he and the keys fill his.
