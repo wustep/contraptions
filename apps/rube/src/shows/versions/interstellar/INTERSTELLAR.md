@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 78 (latest)
+## Polish pass 79 (latest)
+
+- **The bible's counts are held to the code.** After a dozen edits to show code since pass 27, the counts were measured again: 365 strikes (232 in Act I, 133 in Act II), and 121 of Act II's 129 beats, the same eight left unstruck. They had gone stale once without anyone noticing, so `check:shows` now computes them from `hits.ts` and requires the two lines of the list above to say exactly that. With either number edited it fails. (A first version matched the words anywhere, and passed with a wrong number because pass 27's dated section repeats them. It is held to the list's own lines.)
+
+## Polish pass 78
 
 No change to the show: the frame-step audit run under Zoom, which had moved three times (passes 7, 53, 55) without one. Beside the written spikes, four stood out: 75.3, 125.4, 162.9 and 240.5 s. At 240.5 s a retro burn flares on the Ranger, as scored. The other three are pans, and the Zoom camera's worst jolt within half a second of each is 0.08 to 0.12, the size of an ordinary move against the whips' 0.42. They show as spikes only because Zoom's closer frame turns a pan into more changed pixels.
 

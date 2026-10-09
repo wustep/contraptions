@@ -566,6 +566,16 @@ async function main(): Promise<void> {
         for (let k = 104; k <= 232; k++) beats2.push(cue(k))
         const struck2 = beats2.filter((t) => act2.some((s) => Math.abs(s - t) <= 0.03))
         check('liftoff: in Act II, nearly every beat of the organ is struck', struck2.length >= beats2.length * 0.85, `${struck2.length}/${beats2.length}`)
+        // The bible's figures are the code's: they went stale once, unnoticed, so they are read and held to it.
+        {
+          const bible = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/INTERSTELLAR.md'), 'utf8')
+          const actI = [...Object.values(STRIKES.piano), ...Object.values(STRIKES.organ), ...Object.values(STRIKES.comb)].flat().length
+          const actII = Object.values(STRIKES.cue2).flat().length
+          // (The exact lines of its list of what the checks hold, not words a dated section might repeat.)
+          const said = `  - ${actI + actII} strikes (${actI} in Act I, ${actII} in Act II), every one on a measured onset;`
+          const beatsSaid = `and ${struck2.length} of Act II's ${beats2.length} beats;\n`
+          check('liftoff: the bible\'s strike and beat counts are the code\'s', bible.includes(said) && bible.includes(beatsSaid), `code says "${said}" and "${beatsSaid}"`)
+        }
         const chase = Object.values(STRIKES.comb).flat()
         const beats: number[] = []
         for (let b = 68; b <= 191; b++) beats.push(chaseBeat(b))
