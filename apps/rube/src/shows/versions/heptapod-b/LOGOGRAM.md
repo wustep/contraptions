@@ -319,6 +319,11 @@ changed, in the order of the film, and then what runs through it:
   slid away from the glint it reflects (left of it in the held last frame, right of it at 214). It lies straight
   under the glint now, wherever the camera is. The window's glare as the sun comes through (7.3 → 8.9, and faintly
   at the end) is centred on the sun where the view shows it too, not on its place in the room.
+- **The camera between a hold and a follow** (the glass at 89.6 → 91.4, and a dozen moves like it): a hold key has
+  no offset, so across a move to a follow key the follow's offset rose from nothing while the weight eased over, and
+  the camera bowed off the line between them and came back: at the glass, a quarter-cell bob just as the glass first
+  fills the frame (a fresh critic, at two frames a second). A hold key takes its partner's offset now, as a follow
+  key takes its partner's hold; the moves run straight.
 - **The shadow under the bench** (the first frame and the last, and every scene at the window): a dark box under the
   slab with square ends, on the glass's foot and again in the floor's reflection. Its ends fade out within the
   slab's length now.

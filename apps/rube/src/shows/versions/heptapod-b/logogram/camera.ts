@@ -100,8 +100,12 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
   // The zoom goes in even steps of scale, not of cells: a pull-back from one cell to ten opens as evenly as it closes.
   const cellsAt = ends((a, b) => [Math.log(a.cells), Math.log(b.cells)])
   const wAt = ends((a, b) => [weight(a), weight(b)])
-  const offX = ends((a, b) => [(a.off ?? [0, 0])[0], (b.off ?? [0, 0])[0]])
-  const offY = ends((a, b) => [(a.off ?? [0, 0])[1], (b.off ?? [0, 0])[1]])
+  // A key with no offset takes its partner's, as one with no hold does: a hold key ignores its offset at its own
+  // time, and an offset rising from nothing across a move from a hold to a follow bowed the camera off the line
+  // between the two (a bob of a quarter-cell at the glass, 89.6 to 91.4).
+  const offOf = (a: Shot, b: Shot): Pt => a.off ?? (a.hold && (a.w ?? 1) >= 1 ? b.off : undefined) ?? [0, 0]
+  const offX = ends((a, b) => [offOf(a, b)[0], offOf(b, a)[0]])
+  const offY = ends((a, b) => [offOf(a, b)[1], offOf(b, a)[1]])
   // A follow key's hold is where the follow has the camera at that key, so a move between a follow and a hold goes
   // from where the camera is to where it is going, and carries its speed on through the next key instead of
   // stopping on it.
