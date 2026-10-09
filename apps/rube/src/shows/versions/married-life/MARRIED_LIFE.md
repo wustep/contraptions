@@ -501,6 +501,14 @@ window.
   rests them R along the ground's normal, so he stands and she rolls on it, as they do on every floor. Her sink as
   she gives way is the slump the story asks for, and kept.
 
+- **Polish round 13 (Opus 5.5).** Contact carried through the show under Zoom: the armchairs, the office chairs,
+  the stump, the ladder's tread, the seesaw, the mantle, the fieldstone, the bed and his chair, the pew, the steps,
+  his chair at home; each rests where it should. Then stillness from the 10 fps scan: the only near-still stretches
+  are the falls held pouring (56 to 58 s) and the credits' last twelve seconds after the music rings out, both as
+  meant. Nothing to change in the picture. Lenses tried so far, for the next pass: contact sheets, full-size stills,
+  frame differencing for pops, each cut before and after, Zoom, a phone held upright, the balloon's crown against
+  the frame, contact, stillness.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
