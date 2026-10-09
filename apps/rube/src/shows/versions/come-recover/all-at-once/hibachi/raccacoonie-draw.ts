@@ -160,7 +160,6 @@ function tongue(pen: Pen, x: number, base: number, wd: number, h: number, lean: 
   p.endShape(p.CLOSE)
 }
 
-/** The griddle, the burners under it, and the counter down to the floor: one long teppan, out past the frame. */
 /** The counter's red lacquer: the apron rail a teppanyaki bar has along its front, where the diners would sit. */
 const LACQUER = '#8E2B22'
 
@@ -215,6 +214,7 @@ function drawCounterFace(pen: Pen, x0: number, x1: number): void {
   bar(pen, [x0, ry - 0.02], [x1, ry - 0.02], 0.045, '#C9A04A', pen.ink, pen.w * 0.5)
 }
 
+/** The griddle, the burners under it, and the counter down to the floor: one long teppan, out past the frame. */
 export function drawCounter(pen: Pen): void {
   const { p, k, t } = pen
   const f = frame(p, k)

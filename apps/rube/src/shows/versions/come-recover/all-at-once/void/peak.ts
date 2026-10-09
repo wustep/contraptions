@@ -365,7 +365,8 @@ export const peak = part<PeakState>(
       if (slack <= 0.004 && gone <= 0) strokePath(p, c, [[wx, top], [wx, wy]], ROPE_W, true)
       // Its end, with the clothespin still tied on: the line's end going away with him, not a rod in the dark. Loose
       // now, it streams in the air it falls through, whipping most at its free end, and the pin swings with it.
-      if (slack <= 0.004 && gone > 0) {
+      // Once its end has run down to him the line has paid out: nothing is left to draw.
+      if (slack <= 0.004 && gone > 0 && top < wy - 0.02) {
         const pts: Pt[] = []
         const n = 28
         const amp = 0.24 * Math.min(1, gone / 0.15)

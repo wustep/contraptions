@@ -116,7 +116,7 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
 
   // The looks: every gaze is live, its eye's ball and the one it looks at both there for nearly all of its span, so
   // none of them is quietly doing nothing.
-  const { eyes } = compose()
+  const { eyes } = made
   const ballOf = (who: 'evelyn' | 'joy' | 'waymond', t: number): unknown => {
     if (who === 'evelyn') {
       const h = show.at(t)

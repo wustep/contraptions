@@ -653,8 +653,13 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
       const [cx, cy] = place(X0 + (i - g.ox) * pw, Y0 + (j - g.oy) * ph)
       // Before the first tear there is one panel and no neighbours: it is the whole stage, not a 16:9 box in the
       // middle of a wider one with the dark down its sides.
-      const alone = split <= 0
-      const b: Box = alone ? { cx, cy, w: 2 * Math.max(cx, W - cx) + 2, h: 2 * Math.max(cy, H - cy) + 2 } : { cx, cy, w: (pw - gut) * flip.w, h: ph - gut }
+      // As the first tear opens (`split` 0 to 1) the home panel shrinks from the whole stage to its 16:9 place in step,
+      // rather than snapping to it on the tear's first frame.
+      const own: Box = { cx, cy, w: (pw - gut) * flip.w, h: ph - gut }
+      const whole = i === 0 && j === 0 && split < 1
+      const b: Box = whole
+        ? { cx, cy, w: own.w + (2 * Math.max(cx, W - cx) + 2 - own.w) * (1 - split), h: own.h + (2 * Math.max(cy, H - cy) + 2 - own.h) * (1 - split) }
+        : own
       if (cx + b.w / 2 < 0 || cx - b.w / 2 > W || cy + b.h / 2 < 0 || cy - b.h / 2 > H) continue
       if (b.w < 0.5 || b.h < 0.4) continue
       const home = i === 0 && j === 0 && flip.n === 0

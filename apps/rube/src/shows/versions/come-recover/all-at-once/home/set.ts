@@ -937,9 +937,12 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
   // The block across the street: building fronts in two night tones, each with a grid of windows, a few lit warm.
   // Further left the block goes on, past the shop's end wall, for a frame wide enough to look out past it.
   const fronts: [number, number, number][] = [...FAR_FRONTS, [-9.6, -8.2, -3.9], [-8.2, -6.9, -3.3], [-6.9, -5.6, -4.2], [-5.6, -4.3, -3.6], [-4.3, -2.9, -4.0]]
-  fronts.forEach(([a0, a1, roof], i) => {
+  fronts.forEach(([a0, a1, roof], at) => {
     if (a1 < x0 || a0 > x1) return
-    p.fill(mixHex(HOME.night, HOME.steelDark, i % 2 ? 0.22 : 0.34))
+    // Each front's own number, the original block's 0 to 4 as they always were, so its tones and lit windows are
+    // unchanged; the fronts further left count back from there.
+    const i = at - FAR_FRONTS.length
+    p.fill(mixHex(HOME.night, HOME.steelDark, Math.abs(i) % 2 ? 0.22 : 0.34))
     p.rect(((a0 + a1) / 2) * k, ((roof + FLOOR - 0.6) / 2) * k, (a1 - a0) * k, (FLOOR - 0.6 - roof) * k)
     p.fill(mixHex(HOME.night, HOME.steelDark, 0.5))
     p.rect(((a0 + a1) / 2) * k, roof * k, (a1 - a0 + 0.06) * k, 0.08 * k)
@@ -1636,12 +1639,12 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     stool(pen, 25.4)
   }
   // Laundry bags waiting on the washers, googly-eyed (Waymond's work): they hop on the great hit.
+  // Watching her, when there is someone to watch: the pupils turned along the line to her.
+  const seen = BAG_WATCH.at?.(t) ?? null
   for (const b of TOP_BAGS) {
     if (!see(b.x - 0.5, b.x + 0.5)) continue
     const near = clamp(1 - Math.abs(b.x - WASHERS[0].x) / 10)
     const hop = Math.max(0, j) * 0.08 * near
-    // Watching her, when there is someone to watch: the pupils turned along the line to her.
-    const seen = BAG_WATCH.at?.(t) ?? null
     let swing = 0.8 * j * near
     if (seen) {
       // How far it is turned to her (`w`, eased in and out), its pupils drawn the short way round.

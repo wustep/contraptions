@@ -750,7 +750,9 @@ function watching(t: number, at: number, eye: Pt, base: number): number {
   const w = u >= 0.4 ? 1 : (u / 0.4) * (u / 0.4) * (3 - 2 * u / 0.4)
   const [x, y] = ballAt(t)
   const a = Math.atan2(y - eye[1], x - eye[0]) - Math.PI / 2
-  return base * (1 - w) + Math.atan2(Math.sin(a), Math.cos(a)) * w
+  // The short way round from its own swing to her.
+  const d = Math.atan2(Math.sin(a - base), Math.cos(a - base))
+  return base + d * w
 }
 
 /* ------------------------------------------------------------------ the eyes she gives them */

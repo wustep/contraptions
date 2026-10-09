@@ -47,15 +47,35 @@ export interface Gaze {
   at?: 'evelyn' | 'joy' | 'waymond' | ((t: number) => Pt | null)
 }
 
-/** Every gaze holding the eye at `t`, and how far each has eased in, 0..1. */
-function gazesAt(spec: EyeSpec, t: number): { g: Gaze; w: number }[] {
+/**
+ * The looks holding the eye at `t`: how firmly it is held (`hold`, 0..1), and each look's share of where it points.
+ * Looks that meet or overlap make one run: the eye eases in at the run's start and out at its end only, and in between
+ * hands over from one target to the next, so a handover never lets go of the look (two eased ends meeting would).
+ * A look on its own is eased in and out over a quarter second, as it always was.
+ */
+function gazesAt(spec: EyeSpec, t: number): { hold: number; parts: { g: Gaze; w: number }[] } {
   const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
-  const out: { g: Gaze; w: number }[] = []
-  for (const g of spec.gaze ?? []) {
-    const w = ease((t - g.from) / 0.25) * ease((g.to - t) / 0.25)
-    if (w > 0.001) out.push({ g, w })
+  const spans = [...(spec.gaze ?? [])].sort((a, b) => a.from - b.from)
+  let hold = 0
+  let run: { from: number; to: number } | null = null
+  for (const g of spans) {
+    if (run && g.from <= run.to + 0.05) run.to = Math.max(run.to, g.to)
+    else {
+      if (run && t >= run.from && t <= run.to) break
+      run = { from: g.from, to: g.to }
+    }
   }
-  return out
+  if (run && t >= run.from && t <= run.to) hold = ease((t - run.from) / 0.25) * ease((run.to - t) / 0.25)
+  const parts: { g: Gaze; w: number }[] = []
+  if (hold > 0.001) {
+    for (const g of spans) {
+      if (t < g.from || t > g.to) continue
+      // Its share: eased in and out over a quarter second, never quite nothing while it holds, so at the instant of a
+      // handover the two looks share the eye rather than neither having it.
+      parts.push({ g, w: Math.max(1e-3, ease((t - g.from) / 0.25) * ease((g.to - t) / 0.25)) })
+    }
+  }
+  return { hold, parts }
 }
 
 /** An arriving eye's size, `u` seconds after it lands: a slap, a squash past its size, a bounce, rest. */
@@ -309,7 +329,8 @@ export const eyes = () =>
         let gx = 0
         let gy = 0
         let gw = 0
-        for (const { g, w } of gazesAt(spec, t)) {
+        const held = gazesAt(spec, t)
+        for (const { g, w } of held.parts) {
           const target = targetOf(g, t)
           if (!target) continue
           const dx = target[0] - b.x
@@ -319,8 +340,8 @@ export const eyes = () =>
           gy += (w * dy) / n
           gw += w
         }
-        if (gw > 0.001) {
-          const w = Math.min(1, gw)
+        if (gw > 0 && held.hold > 0.001) {
+          const w = held.hold
           const n = Math.hypot(gx, gy) || 1
           const ux = gx / n
           const uy = gy / n
