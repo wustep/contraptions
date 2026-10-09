@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 93 (latest)
+## Polish pass 94 (latest)
+
+No change to the show: the stall note at a show's first play, which pass 93 did not reach (its shows were already warm). The stage note was recorded every 0.1 s. Opening Voyage fresh, it said "Loading Voyage…" for 0.2 s and then nothing, the clock starting at once. In Theater, from the end of Gymnopédie into the next show, it said "Loading Kick…" for 0.2 s and then nothing. On a slow connection, where YouTube took over 1.5 s to start, it would say "Waiting for the music…", which would be true.
+
+## Polish pass 93
 
 No change to the show: pass 89's stall note, which is every show's, tried on all of them. Each of the 21 takes in the picker played 10 s from 5 s (16 from YouTube, 5 from a file). The "Waiting for the music…" note never showed, and each clock ran on to about 14.5 s. No take gives a false stall.
 
