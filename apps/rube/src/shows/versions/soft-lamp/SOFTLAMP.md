@@ -533,6 +533,14 @@ ball. The machine and its timing were right and are untouched; the room around i
     with the shooting star at 29:10. The title's flock crosses faster, inside the opening's wide frame; the second,
     as the first track ends, was four fifths seen already and is as it was.
 
+### The thirty-third lofi pass
+
+75. **The headlights, against the camera, left as they are.** Measured the same way as the sky's moments: of the
+    seventeen sweeps, fourteen put some of their bright middle on screen (seven and a half sweeps' worth in all), and
+    three never cross the frame. A sweep is a wide wash moving across the whole wall, so passing into and out of a
+    frame is what it should do, and the three unseen fall while the cat is in view and turns to follow a light just
+    off frame, which reads as a cat hearing a car. Played to the camera, they would be staged; not done.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
