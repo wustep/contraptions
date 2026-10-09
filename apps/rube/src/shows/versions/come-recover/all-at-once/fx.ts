@@ -30,6 +30,21 @@ export interface EyeSpec {
    * smaller size of its own for Joy's, so hers answers her mother's without outdoing it.
    */
   burst?: boolean | { color: string; size: number; strength: number }
+  /**
+   * Spans when this eye watches Evelyn rather than only swinging with its ball: the pupil turns to her, easing in
+   * and out over a quarter second at each end. Waymond's, as she is carried away from him down the alley's drain.
+   */
+  gaze?: { from: number; to: number }[]
+}
+
+/** How far the eye is turned to its gaze at `t`, 0..1. */
+function gazeAt(spec: EyeSpec, t: number): number {
+  let w = 0
+  for (const g of spec.gaze ?? []) {
+    const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
+    w = Math.max(w, ease((t - g.from) / 0.25) * ease((g.to - t) / 0.25))
+  }
+  return w
 }
 
 /** An arriving eye's size, `u` seconds after it lands: a slap, a squash past its size, a bounce, rest. */
@@ -265,6 +280,18 @@ export const eyes = () =>
           t,
           spec.arrive ? spec.from : undefined,
         )
+        // Watching her: the pupil turned along the line to her, the eye leaning that way, its swing kept a little.
+        const w = spec.who === 'evelyn' ? 0 : gazeAt(spec, t)
+        if (w > 0.001) {
+          const h = show.at(t)
+          const dx = h.x - b.x
+          const dy = h.y - b.y
+          const n = Math.hypot(dx, dy) || 1
+          const reach = 0.9
+          look.x += (reach * (dx / n) + 0.15 * look.x - look.x) * w
+          look.y += (reach * (dy / n) + 0.15 * look.y - look.y) * w
+          look.hx += (Math.max(-1, Math.min(1, dx / n)) - look.hx) * w
+        }
         const shade = s.shade
         const lit = shade ? (hex: string) => shade(hex, b!.x, b!.y, t) : (hex: string) => hex
         const at = { x: b.x, y: b.y }

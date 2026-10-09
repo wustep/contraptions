@@ -463,6 +463,11 @@ The notes went back to the builders who made each part, who still had their cont
   beat, down into the hole (the spatula at 152.0 s). The alley's parting (82–86 s) was watched at full size: Waymond
   stays on the shut cover in the lamplight while she is carried away down the drain below. Both land, and nothing
   was changed.
+- **A pass for Waymond's look.** In that parting his eye only swung with his own motion, so he stared off while she
+  was carried away. Now he watches her go. From the cover giving under her (82.0 s) to the jump out of the alley,
+  his pupil turns along the line to her and follows her down the shaft and along the drain pipe, easing in and out.
+  It is an optional `gaze` on an eye (`fx.ts`), used only here. Every other eye, and his everywhere else, swings as
+  before.
 
 ## End credits
 
@@ -539,7 +544,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - `seams.ts`: what the ball is doing at each jump.
   - `worlds.ts`: the eight worlds' palettes and materials, and the family's colours.
   - `fx.ts`: the googly eyes, over every world. Each is a white disc with a pupil that is a heavy bead in a round
-    cage, thrown by the ball's acceleration and settling. It is worked out afresh each frame from the ball's last
+    cage, thrown by the ball's acceleration and settling. An eye can be given spans when it watches Evelyn instead
+    (Waymond's, in the alley). It is worked out afresh each frame from the ball's last
     second of path, so it scrubs true. In the laundromat the room's light shades it. An eye given during the show
     arrives: it slaps on oversized, squashes past its size and settles, and its pupil is flung round the rim. On the
     great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's

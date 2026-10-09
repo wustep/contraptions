@@ -12,6 +12,7 @@ import { room, shade } from './home/set'
 import { laundromat } from './home/laundromat'
 import { dryer } from './home/dryer'
 import { premiere } from './star/premiere'
+import { DROP } from './star/premiere-clock'
 import { dummies } from './dojo/dummies'
 import { fingers } from './hotdog/fingers'
 import { raccacoonie } from './hibachi/raccacoonie'
@@ -178,7 +179,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
   // Every world's scenery, and the googly eyes over everything in every world.
   const sets = SETS()
   const specs = [
-    { who: 'waymond' as const, from: 0 },
+    // In the alley he watches her go: from the cover giving under her until the jump out of that world.
+    { who: 'waymond' as const, from: 0, gaze: [{ from: DROP - 0.1, to: JUMPS.dojo }] },
     { who: 'evelyn' as const, from: JUMPS.eye, arrive: true, burst: true },
     // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
     { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 } },
