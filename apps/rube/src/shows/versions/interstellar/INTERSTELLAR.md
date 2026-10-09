@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 21 (latest)
+## Polish pass 22 (latest)
+
+No change to the show. Passes 15 to 21's kitchen was checked in the tall 9:16 frame, which sees all of it: at dawn, by day at 6 s, and in the museum, it reads whole, with its floor and the footing under it. The tesseract (119 to 124 s) was checked at full size: each room hides the ones behind it, and the threads run along the board. The light-blue disc on Murph's top shelf seen from behind is young Murph asleep on her pillow, through the case (`space/gargantua.ts`).
+
+## Polish pass 21
 
 - **The opening's bottom edge.** Pass 15's kitchen stood two chairs at the table, and their backs rose into the first frames' bottom edge: cut off there, they were two bare posts. They are stools now, low enough to stay under that edge, and the jug on the table is a low bowl for the same reason. The museum's kitchen has the same stools.
 
