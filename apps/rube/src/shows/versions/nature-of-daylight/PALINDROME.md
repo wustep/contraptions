@@ -762,6 +762,13 @@ foreground, and a frame a second catches it. To move her to stay in would move w
 into the valley. Their others stay as they were left: the frantic ring is meant jagged; the valley's long empty hold
 is the shells' going on the loudest bars. Nothing to change.
 
+A seventy-third ran the whole of what the site's build runs again, as the forty-fifth had, since the fiftieth to the
+seventy-second had changed drawing in nine files and run only the show's own check: every suite (check, rube,
+builder, playground, shows, premiere, clair) and the production build pass; the show's chunk is 237 kB, two more than
+the forty-fifth found, well under the limit. And it weighed the soldier once more, five readers in nine having
+stumbled on him: to be seen bringing the charge he would need room to push it in, and there is none; the cut opens a
+second before he arms it, the two of them at his side. He stays as the seventieth left him. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
