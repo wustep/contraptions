@@ -1,6 +1,6 @@
 import { R as BALL_R, type PieceCtx } from '../../../../parts'
 import { GRACES, MELODY } from './music'
-import { RADIUS, along, ballLocal, float, since, sink, squash, stonesIn } from './path'
+import { LENGTH, RADIUS, STONES, along, ballLocal, float, since, sink, squash, stonesIn } from './path'
 import { titlesAt } from './titles'
 import { FIREFLIES, FIREFLY, dropAt, rainAt, firefliesOut, inLayer, layered, overcastAt } from './air'
 import { hash, osc, polar, smooth } from './world'
@@ -13,10 +13,20 @@ import { lampLight, bloom, cadenceFronts, cadence, SEGMENT } from './stones'
  * A grace note's spark: the grace leans on the melody note after it, a breath ahead of it, and strikes a light
  * where the ball is about to come down on that note, a lamp's wick in the first Gnossienne.
  */
-const SPARKS = GRACES.map((g) => {
+export const SPARKS = GRACES.map((g) => {
   const on = MELODY.find((n) => n.t > g.t) ?? MELODY[0]
   const b = ballLocal(on.t)
-  return { t: g.t, u: b.u, h: b.h - BALL_R }
+  const stone = STONES[b.stone]
+  if (stone.piece === 1) {
+    // At the wick of the lamp on the front of the beam, which the ball's landing then lights; clear of the ball.
+    const w = stone.u1 - stone.u0
+    const n = Math.max(1, Math.ceil(w / SEGMENT[1]))
+    const sw = (w - 0.07 * (n - 1)) / n
+    const lx = sw > 0.42 ? 0.1 : sw / 2
+    const back = Math.round((b.u - (stone.u0 + stone.u1) / 2) / LENGTH) * LENGTH
+    return { t: g.t, u: stone.u0 + back + lx, h: stone.h + 0.1, wick: true }
+  }
+  return { t: g.t, u: b.u, h: b.h - BALL_R, wick: false }
 })
 
 export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
@@ -27,16 +37,30 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
   for (const g of SPARKS) {
     const s = since(c.t, g.t)
     if (s < 0 || s > 0.7) continue
-    const a = (1 - Math.exp(-s / 0.012)) * Math.exp(-s / 0.2)
+    const a = (1 - Math.exp(-s / 0.012)) * Math.exp(-s / 0.22)
     const [x, y] = polar(g.u, g.h)
     ctx.save()
-    const r = k * (0.08 + 0.12 * Math.min(1, s / 0.25))
+    // A soft glow, wider than the ball coming down on it, so it shows round it.
+    const r = k * (0.2 + 0.25 * Math.min(1, s / 0.25))
     const glow = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r)
     glow.addColorStop(0, `rgba(255, 246, 220, ${(0.95 * a).toFixed(3)})`)
     glow.addColorStop(0.3, `rgba(255, 214, 150, ${(0.5 * a).toFixed(3)})`)
     glow.addColorStop(1, 'rgba(255, 214, 150, 0)')
     ctx.fillStyle = glow
     ctx.fillRect(x * k - r, y * k - r, 2 * r, 2 * r)
+    // And a twinkle: four short rays, turning a little as they go.
+    const len = k * (0.16 + 0.22 * Math.min(1, s / 0.15)) * a
+    ctx.translate(x * k, y * k)
+    ctx.rotate(g.u / RADIUS + 0.4 * s)
+    ctx.strokeStyle = `rgba(255, 250, 232, ${(0.9 * a).toFixed(3)})`
+    ctx.lineWidth = Math.max(1, k * 0.012)
+    ctx.lineCap = 'round'
+    ctx.beginPath()
+    ctx.moveTo(-len, 0)
+    ctx.lineTo(len, 0)
+    ctx.moveTo(0, -len)
+    ctx.lineTo(0, len)
+    ctx.stroke()
     ctx.restore()
   }
   // Far off: the lamps the ball has lit tonight, a thread of lights round the planet, and after them, fainter, the

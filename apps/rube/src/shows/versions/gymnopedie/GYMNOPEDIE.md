@@ -101,8 +101,9 @@ One job to a voice, each answering its own notes from `satie-performance.json`:
 - The melody on the pond: in the third Gnossienne each landing and bounce on a leaf sends two or three soft rings out
   on the water from its stem, as wide and as clear as the note was played, smoothing away over three seconds
   (`leafRings`).
-- A grace note: a spark where the ball is about to land, a breath before it does; in the first Gnossienne, at the
-  lamp's wick, which then catches.
+- A grace note: a spark where the ball is about to land, a breath (75 ms) before it does; in the first Gnossienne, at
+  the lamp's wick, which then catches. Since the ball comes down right on it, the spark is a small four-point twinkle
+  and glow wider than the ball, drawn over it, so it is seen round the ball as it lands (`SPARKS`).
 - The phrasing: the camera. It drifts out on a held note, more on a longer one, and in again as the next phrase
   begins, following the melody like a slow spring, so a run of quick notes stays close and a run of long ones eases
   back (`breath`). Its keys shape each piece: close as the first Gnossienne climbs to its top note, back over the thread
