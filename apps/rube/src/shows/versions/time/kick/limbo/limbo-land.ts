@@ -530,8 +530,26 @@ export function drawGround(pen: Pen, f: Frame): void {
     pts.push([hi, sandY(hi)])
     wash(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + th])], col, a)
   }
-  band(-200, WATERLINE, SEABED_TOP, 1, 0.45)
-  band(WATERLINE, 200, LIMBO.sand, 1, 0.34)
+  // The seabed's skin and the sand's cross-fade under the water's edge, so the shore runs down into the sea and is
+  // not cut off square at the waterline (the sea over it is clear enough to show a square end).
+  const M = 0.35
+  const fade = (x0: number, x1: number, col: string, th: number, a0: number, a1: number) => {
+    const lo = Math.max(xa, x0)
+    const hi = Math.min(xb, x1)
+    if (hi <= lo) return
+    const pts: Pt[] = []
+    for (let x = lo; x <= hi + 1e-9; x += Math.min(step, 0.05)) pts.push([x, sandY(x)])
+    pts.push([hi, sandY(hi)])
+    hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + th])], x0, x1, [
+      [0, col, a0],
+      [1, col, a1],
+    ])
+  }
+  band(-200, WATERLINE - M + 0.06, SEABED_TOP, 1, 0.45)
+  fade(WATERLINE - M, WATERLINE + M, SEABED_TOP, 0.45, 1, 0)
+  band(WATERLINE + M - 0.06, 200, LIMBO.sand, 1, 0.34)
+  fade(WATERLINE - M, WATERLINE + M, LIMBO.sand, 0.34, 0, 1)
+  fade(WATERLINE - M - 0.1, WATERLINE - 0.1, LIMBO.sandWet, 0.36, 0, 0.9)
   {
     const lo = Math.max(xa, WATERLINE - 0.1)
     const hi = Math.min(xb, -3.6)

@@ -311,6 +311,10 @@ each world, and changed:
   so the son coming to his father's bed went by as a passing shot (a fifth critic's note). The lamp over the bed is
   warmer now, and as the door rolls aside its light spills out across the floor to the sill where Fischer stops, the
   first warm light he has stood in the whole dream, Cobb and Ariadne at its edge. It goes out with the kick.
+- **Limbo's shore at the waterline** (0 to 7, 155 to 163): the seabed's skin, the sand's and the wet sand's sheen
+  each stopped square at the water's edge, and the clear sea over them showed a box-shaped notch in the beach right
+  where he washes up, the show's first frame. They cross-fade under the edge of the water now, and the beach runs
+  down into the sea.
 
 ## Inception nods
 
