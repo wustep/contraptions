@@ -514,7 +514,7 @@ window.
     field covers the whole tall frame, no seam at the 16:9 edge); an ultrawide 21:9 stage, with and
     without Zoom (the sets run on past their walls into sky and floor, no voids; Zoom's vertical framing is 16:9's), and
     a 4:3 tablet; a 2x (high-DPI) screen (the stage's canvas at full density, line weights in proportion); a hidden
-    tab (simulated: no frames and \`document.hidden\` for 10 s; YouTube plays on and the picture is in step at once
+    tab (simulated: no frames and `document.hidden` for 10 s; YouTube plays on and the picture is in step at once
     on return; a real background tab's throttled timers were not reproduced headless); the balloon's crown; contact with floors and
     slopes; stillness; gaze, as a whole and beat by beat; strobing; the camera's acceleration; render cost; contrast;
     three fresh critics (frames, regressions, story) and a story re-watch; the notes against the code; the shared code
