@@ -314,14 +314,16 @@ function weapon(p: p5, ctx: Ctx, k: number, t: number): void {
     ctx.closePath()
   }
   const dir: Pt = [dx, dy]
-  const CURL = -0.08
+  // Bent like a thorn: straight, out of a ring, it read as the handle of a magnifying glass.
+  const CURL = -0.2
   const w0 = WEAPON.R * rg.w(ang) * 2.3
   const from: Pt = [root[0] - dx * w0 * 0.3, root[1] - dy * w0 * 0.3]
   const reach = len + w0 * 0.3
   // Barbs thrown back off it and hooked: it is hard all over.
   const barbs = [
-    { at: 0.45, side: 1, l: 0.42 },
-    { at: 0.62, side: -1, l: 0.3 },
+    { at: 0.4, side: 1, l: 0.55 },
+    { at: 0.62, side: -1, l: 0.42 },
+    { at: 0.8, side: 1, l: 0.3 },
   ].map((b) => {
     const bdx = dx * -0.55 - dy * b.side
     const bdy = dy * -0.55 + dx * b.side

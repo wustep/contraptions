@@ -382,6 +382,24 @@ glows, the treeline's narrow rims) but for one:
   so its first slices stepped up a quarter of its strength at a time: bands across the top of every fold. It comes in
   over twenty-four now, a ramp.
 
+A twenty-first handed the whole show, as contact sheets a frame every two seconds and a way to film any moment full
+size, to a critic who had seen none of this work, and asked for what was worst, ranked. Its two worst were the ending
+(the cut in close on the cradle, cold after the warm room, and the long hold on the small first frame), which is the
+circle the show is built on and is left as it is for Stephen to rule on. Of the rest:
+
+- **The sat phone** (283 to 289 s) cut out to the dead ring on the chord and back to her two seconds later: close, wide,
+  close, the busiest cutting in the piece. The cut out to the ring stays; from it the camera comes in to her in one
+  move as she dials the last of the number, lowering as it comes so she is in even Zoom's frame, and arrives on the
+  call key.
+- **The reunion** (326 to 334 s) framed them as dots on the treeline with two thirds of the picture grass. They are low
+  in the frame now with the light coming down over them as he crosses to her, and at the touch the cut comes in closer
+  on the two of them, breathing back out to the cut home.
+- **"Weapon"** (199 s), a ring with one straight spike out of it, read as a magnifying glass. The spike bends like a
+  thorn now and carries three barbs.
+
+Its others were looked at and kept: the shell going up into the cloud is pale because it is in the cloud; the glass is
+grey for a second before the white wakes behind it; Hannah's going is framed as it was meant.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

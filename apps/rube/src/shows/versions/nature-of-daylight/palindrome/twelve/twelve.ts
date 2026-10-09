@@ -114,11 +114,12 @@ export const call = part<{ begin: number }>(
       // In close on her and the keys, so each hop reads as a key pressed, the one lit screen over her;
       key(at, slot.begin + 1.6, CLOSE, keys),
       key(at, PRESSES[5] - 0.25, CLOSE, [keys[0] + 0.08, keys[1]]),
-      // on the chord, a cut to what she is calling for: the ring dead, only Montana lit;
+      // on the chord, a cut to what she is calling for: the ring dead, only Montana lit; held a beat,
       key(at, PRESSES[5], 14, [0.3, -4.2], { cut: true }),
-      key(at, PRESSES[7] - 0.15, 13.2, [0.3, -4.05]),
-      // and back to her on the keys for the last of the number and the call key.
-      key(at, PRESSES[7], CLOSE, [keys[0] + 0.2, keys[1]], { cut: true }),
+      // and then in to her, all the way, as she dials the last of the number, arriving on the call key: lowering as it
+      // comes, so she stays in even Zoom's tighter frame. (It cut back to her two seconds after the cut out: close,
+      // wide, close, the busiest cutting in the piece.)
+      key(at, PRESSES[7], 10, [(0.3 + keys[0]) / 2, -2.9]),
       key(at, CALL_KEY, CLOSE, [keys[0] + 0.42, keys[1]]),
       // On the call, close still: her at the phone, Montana, China's screen coming up red and standing, the next
       // coming up the right side; opening out as the ring stands again round it,
