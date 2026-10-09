@@ -279,6 +279,41 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     }
   }
   check('sebs: the story\'s beats are seen, everyone they are about in the picture', unseenBeats.length === 0, unseenBeats.join(', '))
+  // The other road: the what-if read against what was. Each echo of him is seen, well inside the frame and mostly
+  // there, at the moment it is for; and there are only these, in the four places the story turns.
+  {
+    const inside = (t: number, b: { x: number; y: number }) => {
+      if (covered(t)) return false
+      const f = cam(t)
+      return Math.abs(b.x - f.x) < (f.cells * 16) / 9 / 2 - 0.3 && Math.abs(b.y - f.y) < f.cells / 2 - 0.3
+    }
+    const roads: [number, string][] = [
+      [33.6, 'as he finds her, the what-if leaves him for her table'],
+      [62.75, 'at Lipton\'s, the one who walked out knocks past her'],
+      [198.4, 'he stays in Los Angeles as the plane goes'],
+      [455.45, 'David sits down in the dream\'s place at her table'],
+    ]
+    const unseenRoads: string[] = []
+    for (const [t, what] of roads) {
+      const e = show.echoes(t)
+      if (e.length !== 1 || e[0].a < 0.5 || !inside(t, e[0])) unseenRoads.push(`${what} (${t})`)
+    }
+    let spans = 0
+    let was = false
+    for (let t = 0; t <= DURATION; t += 0.05) {
+      const is = show.echoes(t).length > 0
+      if (is && !was) spans++
+      was = is
+    }
+    check('sebs: the other road is seen where the story turns, and only there', unseenRoads.length === 0 && spans === roads.length && show.echoList.length === roads.length,
+      `${unseenRoads.join(', ')}; ${spans} spans`)
+    // In the hush, the one who walked out knocks her as he goes by: she rocks from it, and looks after him.
+    const before = show.mia(62.55)
+    const after = show.mia(62.8)
+    const look = show.at(63.1).balls?.find((b) => b.id === show.mia(63.1)?.id)
+    check('sebs: she feels the knock in the hush, and looks after the one who walked out',
+      !!before && !!after && after.x - before.x > 0.03 && !!look && Math.cos((look.spin ?? 0) - Math.PI) > Math.cos(Math.PI / 6))
+  }
   // Hollywood's hill lamps go out one by one, and only then the dark comes: each goes out in the open.
   const toShadow = sebsCovers.find((c) => c.kind === 'black' && c.down[0] > 168 && c.down[0] < SWITCH.shadow)
   check('sebs: Hollywood\'s lamps go out before the dark comes', !!toShadow && HOLLY_OUT.every((t) => coverAt(toShadow, t) < 0.05))

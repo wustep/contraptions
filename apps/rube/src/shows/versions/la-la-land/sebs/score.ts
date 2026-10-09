@@ -3,6 +3,7 @@ import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
 import { box, lay, standing } from './kit'
+import { echoes } from './echo'
 import { AT, DURATION, dream } from './music'
 import { SebsShow, type Stage } from './show'
 import { covers, IRIS_OPEN, IRIS_SNAP, RED_LIFT, type Cover } from './transitions'
@@ -127,7 +128,9 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
     for (const q of pieces) for (const [c, r] of q.cells) { x0 = Math.min(x0, c); y0 = Math.min(y0, r); x1 = Math.max(x1, c); y1 = Math.max(y1, r) }
     return standing(covers, 0, 0, box(x0 - 24, y0 - 24, x1 + 24, y1 + 24, 4), { covers: coverList }, DURATION)
   }
-  const stage = (world: typeof SEBS, from: number, chain: Placed[], scenery: Placed[] = []): Stage => ({ world, theme: world.themes[0], scenery, chain, after: [lidOver([...chain, ...scenery])], from })
+  // The other road, over each place and under its cover: the same cells the lid claims, so it is drawn wherever it is.
+  const echoOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: echoes, state: { at: (t: number) => show0().echoes(t) } })
+  const stage = (world: typeof SEBS, from: number, chain: Placed[], scenery: Placed[] = []): Stage => ({ world, theme: world.themes[0], scenery, chain, after: [echoOver([...chain, ...scenery]), lidOver([...chain, ...scenery])], from })
 
   const stages: Stage[] = [
     stage(SEBS, 0, [pOpening], [
@@ -148,7 +151,7 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
       standing(clubRoom, piano1[0], piano1[1], around(piano1, -14, -9, 14, 3), { end: true }, DURATION),
     ]),
   ]
-  const show = new SebsShow(stages, DURATION, [...dreamChain.company].sort((a, b) => a.from - b.from))
+  const show = new SebsShow(stages, DURATION, [...dreamChain.company].sort((a, b) => a.from - b.from), dreamChain.echoes)
 
   // The end: from the band (the finale's last key is by 480) the camera draws back out of the club, up over its roof,
   // to the whole city of stars, one move that carries its speed, and settles as The End's last chord rings.

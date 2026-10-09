@@ -1,7 +1,7 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { beam, box, carried, frame, part, rgba, type PartShot } from '../kit'
 import { LIPTONS_MAT } from '../worlds'
-import { bloomFront, K0, KISS_MIA, KISS_SEB, mia, seb, T } from './kiss-plan'
+import { bloomFront, echo, ECHO_T, K0, KISS_MIA, KISS_SEB, mia, seb, T } from './kiss-plan'
 import { cupFront } from './room'
 
 /**
@@ -108,6 +108,18 @@ export const kiss = part<null>(
           at: (t) => {
             const [x, y] = toK(mia(t))
             return { x, y, angle: 0 }
+          },
+        },
+      ],
+      echoes: [
+        {
+          from: ECHO_T.from,
+          to: ECHO_T.fade[1],
+          at: (t) => {
+            const e = echo(t)
+            if (!e) return null
+            const [x, y] = toK(e.p)
+            return { x, y, a: e.a, spin: e.spin }
           },
         },
       ],

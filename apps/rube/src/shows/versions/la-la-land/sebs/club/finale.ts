@@ -205,6 +205,21 @@ function plan(begin: number) {
   david.push(...walk(GO - 0.2, 466.6, -13.05, -16.0, 0, -1.4))
   david.push({ at: GONE, p: [-16.0 - 1.4 * (GONE - 466.6), FLOOR_Y] })
 
+  /* -------------------------------------------- the dream, left in his seat */
+  // As he goes from her side the dream stays a moment where he was: an echo of him at her table, leaning in to her,
+  // paling while David comes back across the room, and coming apart as David sits down in it.
+  const kissed: Pt = [SIDE_SEAT[0] - 0.074, SEAT_Y - 0.045]
+  const echo = {
+    from: LEAVE - 0.05,
+    to: 456.4,
+    at: (t: number) => {
+      const lean = 1 - Math.max(0, Math.min(1, (t - 453.2) / 1.6))
+      const [x, y] = F([kissed[0] + (SIDE_SEAT[0] - kissed[0]) * (1 - lean), kissed[1] + (SIDE_SEAT[1] - kissed[1]) * (1 - lean)])
+      const a = Math.min(1, (t - LEAVE + 0.05) / 0.45) * (1 - 0.35 * Math.max(0, Math.min(1, (t - 452.5) / 2.5)))
+      return { x, y, a, spin: Math.PI, gone: Math.max(0, Math.min(1, (t - 455.32) / 1.05)) }
+    },
+  }
+
   const miaAt = track(miaWays)
   const davidAt = track(david)
   const company: Company[] = [
@@ -214,7 +229,7 @@ function plan(begin: number) {
   hits.push(DOOR_SHUT, BAND_LAMPS)
 
   const ways = seb.map((w) => ({ ...w, at: w.at - begin, p: F(w.p) }))
-  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, hits: [...new Set(hits)].sort((a, b) => a - b) }
+  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, echo, hits: [...new Set(hits)].sort((a, b) => a - b) }
 }
 
 const PLAN = plan(BEGIN)
@@ -246,6 +261,7 @@ export const finale = part<FinaleState>(
       lane: { segs: route(pl.ways), fire: AT.last - slot.begin },
       state: { begin: slot.begin, keys: pl.keys },
       company: pl.company,
+      echoes: [pl.echo],
     }
   },
   (): PartShot[] => [
@@ -264,7 +280,8 @@ export const finale = part<FinaleState>(
     { t: 444.9, cells: 1.65, hold: F([TABLE.x, 2.58]) },
     { t: 451.3, cells: 1.55, hold: F([TABLE.x, 2.58]) },
     // With him up to the keys, onto the last chord; the stillness.
-    { t: 452.6, cells: 4.2, hold: F([1.2, 0.9]) },
+    // Wide enough to keep her table, and the echo of him left at it, in the frame as he goes.
+    { t: 452.6, cells: 4.6, hold: F([0.9, 1.05]) },
     { t: 453.9, cells: 3.2, hold: F([4.3, -0.3]) },
     { t: 454.45, cells: 3.15, hold: F([4.35, -0.3]) },
     { t: 455.36, cells: 3.1, hold: F([4.36, -0.3]) },

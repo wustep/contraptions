@@ -810,6 +810,29 @@ interface GlobeState {
   tower: { x: number; y: number; ph: number }[]
 }
 
+/**
+ * The way it went: she went to Paris, and he stayed. As the engine catches, an echo of him gets down out of the rear
+ * seat onto Los Angeles, and stays there on the map, looking after the plane, while the globe turns it away to the
+ * west and the plane goes on east with the two of them.
+ */
+const ECHO = { from: 197.05, down: [CATCH + 0.05, CATCH + 0.5] as [number, number], fade: [201.4, 202.9] as [number, number] }
+function echoAt(t: number): { p: Pt; a: number; spin: number } | null {
+  if (t < ECHO.from || t > ECHO.fade[1]) return null
+  const spin = spinAt(journey(Math.min(t, OVER_PARIS))[0])
+  // Standing on the city, a ball's radius off the map.
+  const [lx, ly, lz] = proj(surf(LA[1] * DEG, LA[0] * DEG - spin, RG + R))
+  const plane = sebSeat(t)
+  let p: Pt
+  if (t < ECHO.down[0]) p = sebSeat(t)
+  else if (t < ECHO.down[1]) {
+    const u = (t - ECHO.down[0]) / (ECHO.down[1] - ECHO.down[0])
+    const a = sebSeat(ECHO.down[0])
+    p = [a[0] + (lx - a[0]) * u, a[1] + (ly - a[1]) * u - 0.28 * 4 * u * (1 - u)]
+  } else p = [lx, ly]
+  const a = smooth(t, ECHO.from, ECHO.from + 0.35) * (1 - smooth(t, ECHO.fade[0], ECHO.fade[1])) * smooth(lz, 0.15, 0.6)
+  return { p, a, spin: Math.atan2(plane[1] - p[1], plane[0] - p[0]) }
+}
+
 /** The part's frame is globe space moved so that his seat, when the part begins, is (-0.5, 0). */
 const SEAT0 = sebSeat(BEGIN)
 const OFF: Pt = [-0.5 - SEAT0[0], -SEAT0[1]]
@@ -885,6 +908,18 @@ export const globe = part<GlobeState>(
       lane: { segs, fire: at(CATCH) },
       state: { houses, tower: buildTower() },
       company: [{ from: MIA_FROM, to: MIA_TO, who: 'mia', at: mia }],
+      echoes: [
+        {
+          from: ECHO.from,
+          to: ECHO.fade[1],
+          at: (t) => {
+            const e = echoAt(t)
+            if (!e) return null
+            const [x, y] = fr(e.p)
+            return { x, y, a: e.a, spin: e.spin }
+          },
+        },
+      ],
     }
   },
   (): PartShot[] => {

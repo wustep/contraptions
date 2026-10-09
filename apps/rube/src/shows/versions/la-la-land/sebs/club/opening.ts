@@ -1,8 +1,8 @@
-import { mixHex, type Pt } from '../../../../../parts'
+import { laneAt, mixHex, type Pt } from '../../../../../parts'
 import { box, part, route, type Companion, type Company, type PartShot, type Way } from '../kit'
 import { AT, notes as measured } from '../music'
 import { LIPTONS_MAT, SEBS_MAT } from '../worlds'
-import { HUSH_KEY, OPENING_END } from './geometry'
+import { HUSH_KEY, OPENING_END, PIANO } from './geometry'
 import { drawPiano, heldOn, keysOf, play, PIANO_CELLS, type Keys, type Note, type Press } from './piano'
 import { house, MIA_SEAT, SIDE_SEAT } from './room'
 
@@ -149,12 +149,37 @@ export const opening = part<OpeningState>(
   (slot) => {
     const plan = slot.begin === 0 ? PLAN : plan0(slot.begin)
     const [x0, y0, x1, y1] = PIANO_CELLS
+    const lane = { segs: route(plan.ways), fire: plan.fire - slot.begin }
+    // The what-if, as it begins: while he plays on and finds her across the room, an echo of him comes away from the
+    // keys, over the case's end and out toward her table, slower as it goes, and comes apart before it gets there.
+    // The dream starts from that.
+    const E = { from: 32.95, to: 34.85, gone: [34.05, 34.8] as [number, number] }
+    const start = laneAt(lane, E.from - slot.begin)
+    // Up out of the keys, over the case's end, and sinking toward her table: a cubic, eased so it slows as it goes.
+    const P: Pt[] = [[start.x, start.y], [start.x - 1.2, -0.35], [PIANO.caseX0 - 0.7, -0.75], [MIA_SEAT[0] + 1.05, MIA_SEAT[1] - 1.15]]
+    const bez = (u: number): Pt => {
+      const a = 1 - u
+      const w = [a * a * a, 3 * a * a * u, 3 * a * u * u, u * u * u]
+      return [w.reduce((s, c, i) => s + c * P[i][0], 0), w.reduce((s, c, i) => s + c * P[i][1], 0)]
+    }
+    const echo = {
+      from: E.from,
+      to: E.to,
+      at: (t: number) => {
+        const u = Math.max(0, Math.min(1, (t - E.from) / (E.gone[1] - E.from)))
+        const [x, y] = bez(1 - (1 - u) ** 2)
+        const a = Math.min(1, (t - E.from) / 0.35)
+        const gone = Math.max(0, Math.min(1, (t - E.gone[0]) / (E.gone[1] - E.gone[0])))
+        return { x, y, a, spin: Math.atan2(MIA_SEAT[1] - y, MIA_SEAT[0] - x), gone }
+      },
+    }
     return {
       cells: box(x0, y0, x1, y1),
       exit: [OPENING_END[0] + 0.5, OPENING_END[1]],
-      lane: { segs: route(plan.ways), fire: plan.fire - slot.begin },
+      lane,
       state: { begin: slot.begin, keys: plan.keys },
       company: plan.company,
+      echoes: [echo],
     }
   },
   (): PartShot[] => [

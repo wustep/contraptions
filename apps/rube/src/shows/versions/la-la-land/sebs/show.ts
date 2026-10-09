@@ -4,7 +4,7 @@ import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
 import type { World } from '../../../../worlds'
 import type { Theme } from '../../../../../../../src/core/themes'
-import type { Company, Who } from './kit'
+import type { Company, Echo, EchoBall, Who } from './kit'
 import { DAVID, DAVID_ID, MIA, MIA_ID, SEB, SON, SON_ID, SON_SCALE } from './worlds'
 
 /**
@@ -59,6 +59,8 @@ const LOOKS: Look[] = [
   { from: 25.0, to: 31.5, ease: [1.0, 0.9], who: 'mia', at: -0.87 },
   { from: 32.8, to: 35.2, ease: [0.6, 0.7], who: 'seb' },
   // The kiss, and still eye to eye while the room lights up round them, until they go to the cup.
+  // In the hush she looks after the echo of him going (the way it went), and then up, as he comes down to her.
+  { from: 62.7, to: 63.55, ease: [0.22, 0.7], who: 'mia', at: Math.PI },
   { from: 65.515, to: 69.4, ease: [0.7, 0.8], who: 'both' },
   touch(125.585),
   touch(266.008),
@@ -107,7 +109,7 @@ export class SebsShow extends Show {
   /** Every part of the thread, in order of time, whichever universe it was laid in. */
   private readonly thread: Placed[]
 
-  constructor(stages: Stage[], readonly duration: number, private readonly company: Company[] = []) {
+  constructor(stages: Stage[], readonly duration: number, private readonly company: Company[] = [], readonly echoList: Echo[] = []) {
     super('sebs')
     this.stages = stages
     this.worlds = stages.map((s, index) => {
@@ -237,6 +239,17 @@ export class SebsShow extends Show {
   /** Their son at `t` (only in the home movie), or null. */
   son(t: number): ShowBall | null {
     return this.companion(t, 'son')
+  }
+
+  /** The other road at `t`: every echo there is, in world cells, each with its place in the list as `id`. */
+  echoes(t: number): (EchoBall & { id: number })[] {
+    const out: (EchoBall & { id: number })[] = []
+    this.echoList.forEach((e, id) => {
+      if (t < e.from || t >= e.to) return
+      const b = e.at(t)
+      if (b && b.a > 0) out.push({ ...b, id })
+    })
+    return out
   }
 
   companion(t: number, who: Who): ShowBall | null {

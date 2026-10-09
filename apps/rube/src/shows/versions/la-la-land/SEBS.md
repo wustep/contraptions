@@ -16,6 +16,12 @@ The Epilogue is the film's "what if": Sebastian, at the piano in his own club fi
 - **David is the grey ball** (`#8E8579`), her husband. He is only in the real club, at the start and the end, never in the dream.
 - **Their son is the small green ball** (`#72AE5E`, yellow and blue together). He is only in the home movie.
 
+**The other road.** The Epilogue is a "what if", and a what-if only reads against what was. So where the story turns, the other way it went is in the picture too, for a few seconds: an *echo* of Seb, pale where he is blue, its rim dashed and crawling, flickering like old film and leaving a short wake. It is no one's ball: nothing touches it, and it comes apart into motes when it is done (`echo.ts`). There are four:
+- **As he finds her (33 to 35).** While he plays on, a what-if of him comes away from the keys, out over the piano's end toward her table, and comes apart before it gets there. The dream starts from that.
+- **The hush at Lipton's (61.8 to 64.4).** As the orchestra drops out, the one who really walked out that night comes off the top key ahead of him, knocks her shoulder going by (she rocks, and looks after him), and rolls away into the dark toward the door. Behind him the one who stays lifts off the key and comes down to her for the kiss.
+- **The globe (197 to 203).** As the engine catches, an echo of him gets down out of the plane onto Los Angeles and stays there, looking after it, while the globe turns him away west and the plane takes the two of them east. She went to Paris; he stayed.
+- **Waking (451.5 to 456.4).** Now it is the dream that is the other road: as he goes from her side to the keys, the dream's him stays leaning in at her table, paling, and comes apart as David sits down in it.
+
 Every piece is new, and so is every place. Nothing is drawn from Machine's worlds, from the other takes, or from Liftoff. What is shared with Liftoff is the kit's pattern (parts built to timed slots, company balls, an authored camera) and the Shows infra it added (see *How it is built*).
 
 ## The places, in order
@@ -84,6 +90,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - the kiss and the last chord are struck;
 - Mia in shot through the dream, David only in the room as it is, their son only in the home movie, each in their colour, the son small;
 - they kiss at Lipton's and again in the club (close, not pressed);
+- the other road is seen where the story turns, and only there: each of the four echoes well inside the frame, mostly there, at its moment; and in the hush she rocks from the knock and looks after the one who walked out;
 - on the last chord he is back on the keys of his own piano, and she is gone by the band;
 - Mia, David and the son never jump where they can be seen, and come and go only out of shot or under a cover;
 - no one passes through anyone where it can be seen (two balls drawn closer than nine tenths of their widths summed);
@@ -100,7 +107,8 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 
 - **The version file:** `apps/rube/src/shows/versions/la-la-land/opus5-5.show.ts`. Everything with weight is behind `load()`.
 - **The show:** `.../la-la-land/sebs/`.
-  - `kit.ts`: the part contract (`Slot`, `Built`, `Company`), timed `route` and `carried` lanes, `lay()` with seam checks, and drawing helpers (`frame`, `glow`, `beam`, `ring`).
+  - `echo.ts`: the other road, drawn over each place and under its cover; the parts say where (`Built.echoes`) and the show keeps them (`SebsShow.echoes`).
+  - `kit.ts`: the part contract (`Slot`, `Built`, `Company`, `Echo`), timed `route` and `carried` lanes, `lay()` with seam checks, and drawing helpers (`frame`, `glow`, `beam`, `ring`).
   - `show.ts`: a `Show` with eleven universes on one clock, and the company merged in.
   - `score.ts`: the order, the seams, the covers, the end's pull-back.
   - `camera.ts`: the director, a monotone cubic through the parts' keys.

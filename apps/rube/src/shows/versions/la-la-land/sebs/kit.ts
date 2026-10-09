@@ -41,6 +41,30 @@ export interface Built<S> {
    * out of sight, and only while out of shot.
    */
   company?: Company[]
+  /** The other road: where the story went, or would have gone, beside the one this part plays. In the part's frame. */
+  echoes?: Echo[]
+}
+
+/**
+ * An echo: Seb as the story went the other way, drawn pale and dashed and flickering like old film over the one
+ * that is. In the dream it is what really happened (he walks out of Lipton's past her; he stays behind when she
+ * flies to Paris); once the dream is over, it is the dream (his place at her table, empty of him, until David
+ * sits in it). It is no one's ball: nothing touches it and it touches nothing, and it is drawn over the room.
+ */
+export interface Echo {
+  from: number
+  to: number
+  /** Where it is (`a` how much of it is there, 0..1; `gone` how far it has dissolved), or null. */
+  at: (t: number) => EchoBall | null
+}
+export interface EchoBall {
+  x: number
+  y: number
+  a: number
+  /** Where its mark sits (radians, on the screen): which way it looks. Absent, no mark. */
+  spin?: number
+  /** 0 whole, 1 dissolved into motes. */
+  gone?: number
 }
 
 /** Where one of them is: the ball's own fields but its id and, unless it has changed, its colour. */
@@ -186,6 +210,8 @@ export interface Chain {
   shots: { t: number; cells: number; hold?: Pt; w?: number; off?: Pt }[]
   /** The parts' spans of the company, in world cells. */
   company: Company[]
+  /** The parts' echoes, in world cells. */
+  echoes: Echo[]
   /** Where the next link would enter, and when: for a chain carried on in another universe. */
   next: { col: number; row: number; begin: number; ball: BallState }
 }
@@ -201,6 +227,7 @@ export function lay(start: { col: number; row: number; begin: number; ball: Ball
   const placed: Placed[] = []
   const shots: Chain['shots'] = []
   const company: Company[] = []
+  const echoes: Echo[] = []
   for (const link of links) {
     const slot: Slot = { begin, end: link.end, hits: link.hits ?? [] }
     const built = link.part.build(slot)
@@ -229,13 +256,18 @@ export function lay(start: { col: number; row: number; begin: number; ball: Ball
       const oy = row
       company.push({ from: s.from, to: s.to, who: s.who, at: (t) => { const b = s.at(t); return b ? { ...b, x: b.x + ox, y: b.y + oy } : null } })
     }
+    for (const e of built.echoes ?? []) {
+      const ox = col
+      const oy = row
+      echoes.push({ from: e.from, to: e.to, at: (t) => { const b = e.at(t); return b ? { ...b, x: b.x + ox, y: b.y + oy } : null } })
+    }
     for (const k of link.part.shots?.(slot, built) ?? []) shots.push({ ...k, hold: k.hold ? [col + k.hold[0], row + k.hold[1]] : undefined })
     ball = ballAt(ball, changes, span)
     col += built.exit[0]
     row += built.exit[1]
     begin = link.end
   }
-  return { placed, shots, company, next: { col, row, begin, ball } }
+  return { placed, shots, company, echoes, next: { col, row, begin, ball } }
 }
 
 /** A drawing that stands for the whole show at `col, row`, claiming `cells` (absolute). It is told show time. */
