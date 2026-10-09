@@ -1,4 +1,4 @@
-import { ballAt, laneAt, type Pt } from '../../../../parts'
+import { ballAt, laneAt, R, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
@@ -188,6 +188,8 @@ export class LogogramShow extends Show {
         scale: point.hidden ? 0 : point.scale,
         stretch: here.stretch,
         angle: here.angle,
+        // Her roll as the stage would draw it (`engine.ts`), so a rider that turns her eye can turn it from where it is.
+        spin: (here.x - (universe.pieces[0]?.col ?? 0)) / R,
       }
       const balls = ride ? ride.fn(time, hero) : null
       here.balls = company.length ? [...(balls ?? [hero]), ...company] : balls ?? undefined

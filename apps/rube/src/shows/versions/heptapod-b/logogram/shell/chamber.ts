@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { box, part, route, type Company, type PartShot } from '../kit'
+import { box, part, route, type Company, type PartShot, type Riders } from '../kit'
 import { SEAMS } from '../seams'
 import { drawChamber } from './chamber-glass'
 import { FOOTFALLS } from './chamber-heptapods'
@@ -31,6 +31,31 @@ interface ChamberState {
   begin: number
 }
 
+/** The shortest turn from angle `a` to `b`. */
+const turnTo = (a: number, b: number): number => {
+  const d = (b - a) % (2 * Math.PI)
+  return d > Math.PI ? d - 2 * Math.PI : d < -Math.PI ? d + 2 * Math.PI : d
+}
+const ease = (u: number): number => {
+  const v = Math.max(0, Math.min(1, u))
+  return v * v * (3 - 2 * v)
+}
+/** Where she looks at the glass: up at the palm as it comes down to her, and then up and over to the ring as it is written. */
+const AT_PALM = -Math.PI / 2 + 0.12
+const AT_RING = -0.55
+const LOOK_UP = OPENS + 0.55
+const lookAt = (t: number): number => AT_PALM + turnTo(AT_PALM, AT_RING) * ease((t - (SPRAY + 0.1)) / 0.6)
+/**
+ * Her eye at the glass. Until the palm comes down to her it rolls with her; then it looks: up at the palm through the
+ * touch (the show's first contact, never at her feet), and over to the logogram as it is written, into the white.
+ */
+const looking: Riders = (t, hero) => {
+  const w = ease((t - LOOK_UP) / 0.4)
+  if (w <= 0) return null
+  const roll = hero.spin ?? 0
+  return [{ ...hero, spin: roll + w * turnTo(roll, lookAt(t)) }]
+}
+
 /** Every strike: the glass's two wakings, the seen footfalls, the limb leaving the floor, the palm opening, the touch, the spray, the ink coming in, the ring's surges, its closing and its tendrils. */
 export const CHAMBER_HITS: number[] = [...new Set([...WAKE, ...FOOTFALLS.map((f) => f.at), OPENS, PALM, SPRAY, INK_IN, ...SURGES, CLOSE, REACH])].sort((a, b) => a - b)
 
@@ -54,6 +79,7 @@ export const chamber = part<ChamberState>(
       exit: [X_LEAN + 0.5, 0] as Pt,
       lane: { segs: route(ways), fire: WAKE[0] - slot.begin },
       state: { begin: slot.begin },
+      riders: looking,
       company,
     }
   },
