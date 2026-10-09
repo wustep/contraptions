@@ -221,7 +221,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 16 (latest)
+## Polish pass 17 (latest)
+
+A contrast audit: every half second, Cooper's fill against a ring of the picture just outside him. On the farm the two are close throughout, as meant (sand on dust-coloured paper: he reads by his ink edge and his warmth), and the frames where they come closest still read. The audit's frames showed something else:
+
+- **The gantry's lamps** (`earth/gantry.ts`, 70 to 88 s). Ten round discs up the tower's side, almost a ball's size and a sand colour, lighting gold one an eighth as the cage climbs past them with Cooper and Brand in it. They broke the show's rule, kept since the polish round, that nothing round stands where a ball could be. Each is now a caged bulkhead lamp on its bracket, a squared housing with its guard bars. Its timing is the same: lit as the cage passes, out one a beat in the countdown.
+
+## Polish pass 16
 
 A measure of emptiness over the whole show: each second's frame split in sixteen, counting the squares with almost no detail. Only one stretch came out mostly empty: the skim over Saturn (225 to 226 s), where the planet's face was a dozen broad bands of flat colour.
 
