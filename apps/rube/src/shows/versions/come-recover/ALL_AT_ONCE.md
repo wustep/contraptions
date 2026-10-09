@@ -904,6 +904,17 @@ The notes went back to the builders who made each part, who still had their cont
   kept within the edges). *Part one, Everything*, grown, would have crossed the bright washer, so on a tall stage it
   lifts into the dark storey above the shop, as a title card. On a 1280×720 desktop nothing changes; at 960×540 the
   chapters are a little larger, *Everywhere* still in its bar.
+- **A pass for frame time, after the director's passes.** They added drawing all through the show (the pictures,
+  irises, crash zooms, beams, ribbons, step-printing, the lives in the window), so the whole show was played at 1×
+  in real Chrome at 1440×810 on a 2× display: 19,816 frames, a mean of 16.7 ms (59.9 fps), but with ten frames over
+  33 ms, the worst 150 ms, on a machine at a load of 10 to 20 from other work. To tell the show from the machine, the
+  four heaviest stretches (the dryer's glimpses, the surf, everywhere at once, the peak's radiance) were played
+  alternately in this branch and in the show as it was before the director's passes (`7f5f9dd3`, in a scratch
+  worktree), twice each. Both hold 16.7 ms a frame, with the odd 20 to 48 ms frame in either as the load moves: no
+  regression. The spikes did not come back in either once the load fell.
+- **Considered and left:** a last drift of the washer's window to another life after the credits, as the film's
+  Evelyn drifts and comes back. The window already shows the red carpet last at 308.9 s, so it would have repeated a
+  beat rather than added one.
 
 ## The looks
 
