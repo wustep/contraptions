@@ -275,6 +275,17 @@ ball. The machine and its timing were right and are untouched; the room around i
 36. **The fairy lights were glows cut off by the top of the room's frames**, their bulbs just out of it. The two swags
     across the window hang lower, so those frames have the string draped across their top, bulbs and all.
 
+### The seventh lofi pass
+
+37. **The stage's other ways of looking.** Overview (the whole world) is the whole room, floor to ceiling, and needs
+    nothing. Zoom (the same middle, half again closer) had the ball jammed against the frame's foot in two of the
+    groove's looks, the cup cut away under it: the desk under the lamp and the lamp's side were framed higher than
+    they needed. Both now sit lower (their middles at y = -1.3), which keeps every prop in them whole in the ordinary
+    frame and gives Zoom the ball with the cushion under it (the cup whole, in the first). The window over the desk
+    cannot move without cutting the clock, and the room's frame is for breaks and lobs; they stay.
+38. **The breaks went unanswered** but for the camera drawing back. Now, when a track's drums drop out, a slow wave
+    runs along the fairy lights, and the room's frame the camera has drawn back to has them draped across its top.
+
 **Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

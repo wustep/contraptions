@@ -1,6 +1,6 @@
 import { mixHex } from '../../../../parts'
 import { CLOCK, CURTAIN, NOTES, PRINT, ROD, WINDOW } from './desk'
-import { MUSIC_END, heldAt, smooth } from './music'
+import { MUSIC_END, barTime, heldAt, smooth, trackAt } from './music'
 import { rgba } from './sky'
 import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, skyAt } from './world'
 
@@ -9,7 +9,8 @@ import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, sky
  *
  * - The curtain, tied back on the window's left, on its rod.
  * - The fairy lights strung across the top of the window in two swags and along the wall: they come on, bulb by bulb,
- *   just after the lamp, and breathe with the held sound (the pad and the keys), each at its own pace.
+ *   just after the lamp, and breathe with the held sound (the pad and the keys), each at its own pace; in a track's
+ *   break, when the drums drop out, a slow wave runs along them.
  * - Polaroids and notes pinned to the wall in the lamp's light; a small print on the far wall.
  * - Over everything: the lamp's bloom, a vignette, and a film's grain, so the picture has the soft, worn finish of the
  *   streams it is in the manner of.
@@ -145,6 +146,18 @@ const BULBS: Bulb[] = (() => {
   return out
 })()
 
+/** How far into a break the music is, 0 to 1: the bars between two of a track's runs of drums, eased in and out. */
+export function breakAt(t: number): number {
+  const tr = trackAt(t)
+  let v = 0
+  for (let i = 0; i + 1 < tr.runs.length; i++) {
+    const a = barTime(tr, tr.runs[i].to)
+    const b = barTime(tr, tr.runs[i + 1].from)
+    v = Math.max(v, smooth(t, a - tr.period, a + tr.period) * (1 - smooth(t, b - tr.period, b)))
+  }
+  return v
+}
+
 /** When the lights come on: bulb by bulb along the string, a moment after the lamp. */
 const LIGHTS_ON = LAMP_ON + 2.4
 
@@ -156,7 +169,9 @@ function bulbAt(b: Bulb, t: number): number {
   // They go down last, after the lamp, from the far end back, to a low glow by the moon.
   const off = 1 - 0.6 * smooth(t, MUSIC_END + 1 + (BULBS.length - b.i) * 0.05, MUSIC_END + 2.2 + (BULBS.length - b.i) * 0.05)
   const breathe = 0.62 + 0.26 * heldAt(t) + 0.12 * Math.sin(t * (0.35 + hash(b.i, 41) * 0.5) + hash(b.i, 42) * 6.3)
-  return on * catching * off * breathe
+  // In a break, when the drums drop out and the music opens up, a slow wave runs along the string.
+  const wave = 0.28 * breakAt(t) * Math.sin(2 * Math.PI * (t / 3.2 - b.i / 14))
+  return on * catching * off * Math.max(0.15, breathe + wave)
 }
 
 export function fairyLights(ctx: Ctx, lw: number, t: number): void {

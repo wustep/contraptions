@@ -42,12 +42,13 @@ const STAIR = { x: 1.45, y: -1.3, cells: 3.9 }
 const GROOVE = [
   // The cup, close: the ball in its seat, the stair's foot, the band rising out of frame.
   { x: 1.75, y: -0.64, cells: 2.45 },
-  // The desk under the lamp: the cat, books, cup, band, the shade whole over them.
-  { x: 2.0, y: -1.55, cells: 4.5 },
+  // The desk under the lamp: the cat, books, cup, band, the shade whole over them. Low enough that Zoom's closer
+  // frame about the same middle still has the cup whole under the ball.
+  { x: 2.0, y: -1.3, cells: 4.5 },
   // The window over the desk: the rain, the plant and the mug, and the stair and the cup small under the lamp.
   { x: 0.21, y: -1.9, cells: 4.9 },
-  // From the lamp's side: the shade, the band's arch, the cup under the light.
-  { x: 3.0, y: -1.45, cells: 3.7 },
+  // From the lamp's side: the shade, the band's arch, the cup under the light (low, for Zoom, as the last).
+  { x: 3.0, y: -1.3, cells: 3.7 },
 ]
 /** The order each track takes them in (indices into GROOVE), the first being where it settles after the stair. */
 const ORDERS = [
