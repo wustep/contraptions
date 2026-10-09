@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 13 (latest)
+## Polish pass 14 (latest)
+
+A check of the YouTube cues against the mix the show was timed to, with no change to the show. Online the show plays two uploads, not the mix. Cornfield Chase plays from its start and fades out by 126.984 s. No Time for Caution plays from 103.76 s into its upload, at 126.5 s of the show, fading in over a second. `scripts/shows/liftoff-mix.sh` builds the mix from the same upload with the same numbers: trimmed at 103.76 s and delayed by 126.5 s. So online every strike lands where the mix has it. The one difference is level: YouTube cannot lift a video above its own volume, so the mix's +7 dB on the cue's quiet opening is not heard online (noted in `liftoff/index.ts`).
+
+## Polish pass 13
 
 A regression pass after passes 4 to 12, with no change to the show. The whole show was swept again on new frames (every 1.5 s, offset from the earlier sweeps). The motion audit (camera and Cooper's place on the screen at 60 fps) and the frame-step audit were re-run against their first results. The motion numbers are the same as pass 4's. The frame-step spikes are the same set less the two that pass 9 fixed. The largest, at 235.7 s, is the far side's iris opening as written (`revealAt`, an accelerating t^2.2 over 0.6 s): every frame of it is continuous.
 
