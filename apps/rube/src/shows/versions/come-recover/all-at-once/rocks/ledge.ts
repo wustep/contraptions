@@ -6,7 +6,7 @@ import { G } from '../physics'
 import { EVELYN, JOY, ROCKS } from '../worlds'
 import { buildLand, INK, paintCloud, paintRing, paintSky, paintSlices, paintWall, type Land } from './ledgeLand'
 import { PEBBLE_LANDS, pebbleAt, pebbleWays, type Pebble, type PebbleWay } from './ledgePebbles'
-import { EVELYN_ROCK, JOY_ROCK, paintStone } from './ledgeStones'
+import { EVELYN_ROCK, JOY_ROCK, paintStone, type Flush } from './ledgeStones'
 import {
   BEGIN,
   E_BALK,
@@ -46,11 +46,11 @@ import {
  * and does not stop: over the corner as Joy went, dropping on 219.56. Each of those is on a note, and each note is
  * also one of Joy's landings far below, out of sight: Evelyn's way down is Joy's own, fourteen beats later.
  *
- * The long way down: the camera draws back and back as she comes down the wall, ledge by ledge, until the two of
- * them are small against the canyon. Joy is waiting on a bench halfway down. Evelyn comes to rest against her
- * (226.56), and as they touch their colour starts to come back. Joy goes on (227.76), and Evelyn goes with her, a
- * beat behind, landing where Joy landed, down the gorge on the soft beats of the swell, the long scree, and the last
- * steps to the floor. At the bottom is a dark ring lying in the sand: the bagel. Joy drops into it on 241.35, and
+ * The long way down: the camera goes over after her and stays close as she comes down the wall, ledge by ledge.
+ * Joy is waiting on a bench halfway down. Evelyn comes to rest against her (226.56), close, and where they touch
+ * their colour comes back first, spreading over each stone from there. Joy goes on (227.76), and Evelyn goes with
+ * her, a beat behind, landing where Joy landed, down the gorge on the soft beats of the swell; on the long scree the
+ * camera draws back once to show how far down they are, and comes in again for the last steps to the floor. At the bottom is a dark ring lying in the sand: the bagel. Joy drops into it on 241.35, and
  * Evelyn after her on 241.755, the jump.
  */
 
@@ -63,6 +63,22 @@ const GRIT = mixHex(ROCKS.stoneDeep, ROCKS.canyonShade, 0.4)
 const DUST = mixHex(ROCKS.sand, ROCKS.far, 0.5)
 
 const recovered = (t: number): number => Math.max(0, Math.min(1, (t - RECOVER[0]) / (RECOVER[1] - RECOVER[0])))
+
+/**
+ * Where they touch, their colour comes back first. From the meeting, a round of each one's own colour spreads out
+ * from the side that touched (fixed on the stone, so it rolls on with it), over the rest of the stone, ahead of the
+ * slow return of the whole.
+ */
+function flushOf(side: 1 | -1, turnAtMeet: number, color: string, t: number): Flush | undefined {
+  const s = t - MEET
+  if (s <= 0) return undefined
+  const u = 1 - Math.exp(-s / 0.6)
+  const c = Math.cos(-turnAtMeet)
+  const n = Math.sin(-turnAtMeet)
+  // The touching side, in the stone's own frame: out to its edge and a little in.
+  const at: Pt = [side * 0.95 * c, side * 0.95 * n]
+  return { at, r: 0.5 + 2.6 * u, color, alpha: Math.min(1, s / 0.2) * (1 - recovered(t)) }
+}
 
 /* ------------------------------------------------------------------ the pebbles */
 
@@ -199,11 +215,17 @@ export const ledge = part<State>(
       const seen = (x: number, y: number) => x > f.x0 - 0.5 && x < f.x1 + 0.5 && y > f.y0 - 0.5 && y < f.y1 + 0.5
       // The two of them as stones, over their balls: Joy, then Evelyn (whose eye goes on after all of this).
       const [jx, jy] = wayAt(s.plan.joy, show)
-      if (show < END + 1e-6 && seen(jx, jy)) paintStone(p, k, weight, JOY_ROCK, jx, jy, joyTilt(show) || (jx - JOY_SEAT) / R, mixHex(JOY_STONE, JOY, recovered(show)), s.plan.ledges)
+      const [mjx] = wayAt(s.plan.joy, MEET)
+      const [mex] = wayAt(s.plan.evelyn, MEET)
+      if (show < END + 1e-6 && seen(jx, jy)) {
+        const flush = flushOf(-1, (mjx - JOY_SEAT) / R, JOY, show)
+        paintStone(p, k, weight, JOY_ROCK, jx, jy, joyTilt(show) || (jx - JOY_SEAT) / R, mixHex(JOY_STONE, JOY, recovered(show)), s.plan.ledges, flush)
+      }
       if (s.lane && s.changes && c.t >= 0) {
         const at = laneAt(s.lane, c.t)
         const color = ballAt({ color: c.color, ghost: false, id: 0 }, s.changes, c.t).color
-        if (!at.hidden && seen(at.x, at.y)) paintStone(p, k, weight, EVELYN_ROCK, at.x, at.y, (at.x - EVELYN_SEAT) / R, color, s.plan.ledges)
+        const flush = flushOf(1, (mex - EVELYN_SEAT) / R, EVELYN, show)
+        if (!at.hidden && seen(at.x, at.y)) paintStone(p, k, weight, EVELYN_ROCK, at.x, at.y, (at.x - EVELYN_SEAT) / R, color, s.plan.ledges, flush)
       }
       // The ring's near half over them, so what falls in goes down behind its lip.
       paintRing(p, k, f, s.land, weight * 0.9, true, show, weight)
@@ -255,21 +277,30 @@ export const ledge = part<State>(
     { t: E_LEAN, cells: 2.8, hold: [0.14, -0.14] },
     { t: E_BALK, cells: 2.8, hold: [0.12, -0.15] },
     { t: E_GO - 0.6, cells: 2.65, hold: [0.2, -0.1] },
-    // The long way down: after her, drawing back, the canyon opening on the right.
-    { t: fall(50.5), cells: 5.6, hold: [1.9, 3.3], w: 0.5 },
-    { t: fall(55), cells: 8.2, hold: [5.4, 6.4], w: 0.55 },
-    { t: fall(60), cells: 10.5, hold: [9.6, 10.4], w: 0.7 },
-    // Down to the bench, to Joy.
-    { t: fall(66), cells: 9.2, hold: [12.2, 13.6], w: 0.9 },
-    // A still moment with the two of them together.
-    { t: fall(68.5), cells: 9.0, hold: [12.3, 13.6], w: 0.9 },
-    // And on down the gorge together, back and back until they are small against it.
-    { t: fall(73), cells: 16, hold: [16.5, 18], w: 0.85 },
-    { t: fall(82), cells: 22.5, hold: [22, 23.5], w: 0.88 },
-    { t: fall(90), cells: 23.5, hold: [24.5, 26], w: 0.9 },
-    // In on the ring as they come down to it.
-    { t: fall(98), cells: 12.5, hold: [29, 30.8], w: 0.75 },
-    { t: END, cells: 7, hold: [31.2, 33.4], w: 0.6 },
+    // The long way down, with her: the camera goes over the brink after her and stays close, ledge by ledge, the
+    // wall's strata going up past, a little room left below her for where she is going.
+    { t: fall(49.6), cells: 3.3, hold: [0.7, 1.4], w: 0.45, off: [0.2, 0.5] },
+    { t: fall(52), cells: 3.6, off: [0.3, 0.3] },
+    { t: fall(58), cells: 3.8, off: [0.45, 0.25] },
+    // The long drop to the bench, and Joy waiting on it, coming up into the frame below her.
+    { t: fall(62), cells: 4.8, off: [0.45, 0.15] },
+    { t: fall(63.4), cells: 5.6, hold: [10.2, 13.6], w: 0.55 },
+    // She comes to rest against her: in close on the two of them, touching, as their colour starts to come back.
+    { t: fall(64.6), cells: 2.9, hold: [10.62, 15.12], w: 0.75 },
+    { t: MEET, cells: 2.25, hold: [10.66, 15.1] },
+    { t: ON, cells: 2.05, hold: [10.7, 15.1] },
+    // Joy goes on, and the camera goes down the gorge with the two of them, Joy a bound ahead.
+    { t: fall(71.2), cells: 3.0, hold: [11.4, 15.3], w: 0.55, off: [0.5, 0.5] },
+    { t: fall(74.5), cells: 4.3, off: [0.55, 0.55] },
+    { t: fall(80.5), cells: 4.6, off: [0.6, 0.45] },
+    // On the long talus, a breath: back, until the canyon is most of the frame and they are small in it, but still
+    // the two of them, side by side on the scree.
+    { t: fall(86.5), cells: 8.2, hold: [21.2, 24.2], w: 0.8 },
+    { t: fall(90.5), cells: 8.8, hold: [22.6, 25.0], w: 0.85 },
+    // Then in again for the last bounds, and down to the ring with them.
+    { t: fall(95), cells: 5.0, hold: [26.4, 29.3], w: 0.25, off: [0.5, 0.35] },
+    { t: fall(99.5), cells: 4.8, hold: [29.2, 32.2], w: 0.4, off: [0.3, 0.2] },
+    { t: END, cells: 4.4, hold: [31.25, 33.75], w: 0.8 },
   ],
 )
 

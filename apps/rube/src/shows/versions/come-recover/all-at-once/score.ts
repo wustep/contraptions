@@ -258,8 +258,10 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
       gaze: [
         ...GIFT_LOOKS,
         { from: fight(140), to: JUMPS.rocks, at: 'waymond' as const },
-        // Over the brink after her; then on the long way down her eye is her own again, jolted ledge by ledge.
+        // Over the brink after her; then on the long way down her eye is her own again, jolted ledge by ledge, but for
+        // the bench, where she comes down to Joy and rests against her: there she looks at her.
         { from: JUMPS.rocks + 0.5, to: 220.2, at: 'joy' as const },
+        { from: 225.95, to: 228.4, at: 'joy' as const },
         { from: JUMPS.brink + 0.3, to: 257.2, at: 'joy' as const },
         // Home, inside the washer's window: out at Waymond, waiting by the lever.
         { from: JUMPS.home + 0.3, to: T_DOOR + 0.5, at: 'waymond' as const },
