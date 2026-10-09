@@ -537,6 +537,33 @@ The notes went back to the builders who made each part, who still had their cont
   stones side by side. Evelyn's stone wore her eye but stared at nothing until Joy's went over. Now from the cut
   (200.7 s) she looks at Joy's stone beside her through the whole silence, and her look follows it down over the
   brink as before.
+- **A pass for the looks, together.** All twenty-four looks were checked: each is live, the one looking and the one
+  looked at both on the stage, for 99–100% of its span. `check:shows` now holds them to it, and a section above,
+  *The looks*, lists them in one table.
+
+## The looks
+
+The googly eyes swing with their balls, but at the story's turns they look at someone. Each look eases in and out
+over a quarter second, and looks that overlap blend, so the eye sweeps from one to the next. They are listed in
+`score.ts` as each eye's `gaze` (`fx.ts`). `check:shows` holds every one of them live, the one looking and the one
+looked at both there.
+
+| Time (s) | Who looks | At | The moment |
+| ---: | --- | --- | --- |
+| 20.3–23.9 | Waymond | Joy | she comes in on the bell and crosses to her mother |
+| 23.7–27.6 | Waymond | Evelyn | her mother at the keys, not looking up |
+| 27.4–30.3 | Waymond | Joy | she gives up and goes |
+| 82.0–86.3 | Waymond | Evelyn | the drain carries her away from him |
+| 192.1–200.2 | Waymond | Evelyn | the empathy fight, all the way to him |
+| 200.7–219.7 | Evelyn | Joy | the two stones in the silence; then down over the brink after hers |
+| 242.1–247.3 | Evelyn | Joy | holding her at the lip of the hole |
+| 254.9–257.2 | Evelyn and Joy | each other | once Joy has her eye |
+| 271.4–273.6 | Joy and Waymond | each other | he touches her at home: father and daughter |
+| 279.6–282.3 | Joy | Evelyn | she nestles against her mother |
+| 290.3–291.4 | all three | the camera's lens | the portrait |
+| 291.4–293.6 | all three | the photograph | it ejects, falls and develops |
+| 305.4–307.6 | all three | the drum | its slow half-turn under the credits |
+| 312.5–315.2 | all three | one another | the window's swell under the credits |
 
 ## End credits
 
