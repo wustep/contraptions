@@ -118,6 +118,12 @@ async function main(): Promise<void> {
   }
   check('a work with one take has no take row to pick from', /work\.versions\.length < 2\) takeRow\.hidden = true/.test(player))
   check('no take has a byline in the panel', !/byline/.test(player) && !/director/.test(player))
+  // A show whose music fails, or whose music is YouTube's alone, says so: the button does not claim there is no
+  // soundtrack, Save video warns that its file will be silent, and the note after saving does not say "picture and music".
+  check('a failed soundtrack is called failed, and a YouTube-only show\'s saved video is called silent before and after',
+    player.includes('The soundtrack would not load, so the show runs silent') &&
+    player.includes('It is silent: the music plays from YouTube, which a recording cannot take.') &&
+    /perf\?\.soundtrack\?\.src \? 'picture and music' : perf\?\.soundtrack \? 'the picture, silent/.test(player))
   check('a credit card stays where it is when it fits, slides in to a margin when it would cross an edge, and centres when it cannot fit',
     placeCard(200, 100, 400) === 200 && placeCard(30, 100, 400) === 58 && placeCard(390, 100, 400) === 342 &&
     placeCard(152, 331, 390) === 173.5 && placeCard(100, 390, 390) === 195 && placeCard(58, 100, 400) === 58)
@@ -204,6 +210,9 @@ async function main(): Promise<void> {
 
   // Credits live are the page's DOM; a video has them painted into its frame (`words.ts`). The two are one look.
   const css = readFileSync(join(process.cwd(), 'src/ui/styles.css'), 'utf8')
+  // The end credits' small lines keep 9px on a phone's short frame (sized in --u alone they fell to about 4px).
+  check('the end credits\' small lines keep at least 9px',
+    ['.stage-words .role {\n  font-size: max(9px,', '.stage-words .cast .as { text-align: left; font-style: italic; font-size: max(9px,', '.stage-words .note { font-size: max(9px,', '.stage-words .note.fine { font-size: max(9px,', 'letter-spacing: 0.12em; font-size: max(9px,'].every((rule) => css.includes(rule)))
   const words = readFileSync(join(process.cwd(), 'apps/rube/src/shows/words.ts'), 'utf8')
   const stageSrc = readFileSync(join(process.cwd(), 'apps/rube/src/shows/stage.ts'), 'utf8')
   const cardFace = /\.stage-words \.card \{[^}]*font-family: ([^;]+);/.exec(css)?.[1]

@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 50 (latest)
+## Polish pass 51 (latest)
+
+- **Guards for the other shared changes.** `check:shows` now holds, as it holds the player's keys, by reading the source: the failed-soundtrack wording and the silent-export warning before and after saving (`shows/player.ts`, passes 42 and 43), and the credits' 9px floor on each of its five small lines (`src/ui/styles.css`, pass 45). Each was broken on purpose once to see the check fail, then restored.
+
+## Polish pass 50
 
 - **A test for keeping credit cards on the stage.** Pass 47's slide-in was arithmetic inside the player's DOM code, which `check:shows` cannot reach, so a later edit could break it and only a phone would show it. It is a pure function now, `placeCard` in `shows/registry.ts` beside `zoomed`, which the player calls, and `check:shows` tests it: a card that fits stays put, one near either edge slides in to the 8px margin, one wider than the stage is centred, and Merry-Go-Round's real case (331px wide, centred at 152 on a 390px phone) lands at 173.5. In the live page that card still sits 8px in.
 
