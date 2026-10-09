@@ -1182,16 +1182,28 @@ function drawStreaks(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): voi
   const H = f.y1 - f.y0
   const W = f.x1 - f.x0
   const run = (T - CLOSE) * 5.5
-  p.strokeCap(p.ROUND)
-  for (let i = 0; i < 9; i++) {
-    const x = f.x0 + W * (0.1 + 0.8 * hash(i, 61))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.lineCap = 'round'
+  // Each thread is bright at its leading (upper) end and fades back along its length, so it reads as going past, not
+  // as a scratch on the frame.
+  for (let i = 0; i < 16; i++) {
+    const x = f.x0 + W * (0.06 + 0.88 * hash(i, 61))
     if (Math.abs(x - f.cx) < 0.22) continue
     const y = f.y1 + 0.5 - ((run * (0.7 + 0.6 * hash(i, 62)) + hash(i, 63) * (H + 1)) % (H + 1))
-    const len = 0.25 + 1.1 * pace * (0.6 + 0.4 * hash(i, 64))
-    p.stroke(alpha(p, DARK.gold, 0.32 * pace * (0.5 + 0.5 * hash(i, 65))))
-    p.strokeWeight(Math.max(0.7, k * 0.012))
-    p.line(X(x), X(y), X(x), X(y + len))
+    const len = 0.3 + 1.5 * pace * (0.6 + 0.4 * hash(i, 64))
+    const a = Math.min(1, 0.6 * pace * (0.5 + 0.5 * hash(i, 65)))
+    const g = ctx.createLinearGradient(0, X(y), 0, X(y + len))
+    g.addColorStop(0, alpha(p, DARK.gold, a).toString())
+    g.addColorStop(1, alpha(p, DARK.gold, 0).toString())
+    ctx.strokeStyle = g
+    ctx.lineWidth = Math.max(1, k * (0.012 + 0.01 * hash(i, 66)))
+    ctx.beginPath()
+    ctx.moveTo(X(x), X(y))
+    ctx.lineTo(X(x), X(y + len))
+    ctx.stroke()
   }
+  ctx.restore()
 }
 
 /** The warm light he drifts toward through the dark: small and far, then near; the room opens out of it. */

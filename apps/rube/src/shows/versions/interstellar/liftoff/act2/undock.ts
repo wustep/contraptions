@@ -1155,18 +1155,24 @@ function drawRanger(p: p5, c: Ctx, t: number, q: Pose): void {
   ctx.clip('evenodd')
   rangerBody(p, c, t, q, false)
   p.pop()
-  // What is in: the same, seen through the glass, shrinking toward the centre.
+  // What is in: the same, seen through the glass, shrinking into it. While the ship straddles the rim it shrinks
+  // about the point where it goes in, so what is in stays joined to what is still out (shrunk about the centre, the
+  // front half came away from the tail and showed as a second, smaller ship). Once the tail is in, the point it
+  // shrinks toward slides on to the centre, where the far side opens.
   const sigma = 1 - 0.88 * smooth(t, CONTACT, END + 0.1)
   const fade = 1 - smooth(t, END - 0.1, END + 0.4)
   if (fade <= 0) return
+  const toCentre = smooth(t, CROSS + 0.55, END)
+  const px = sx - RS * DIR_IN[0] * (1 - toCentre)
+  const py = sy - RS * DIR_IN[1] * (1 - toCentre)
   p.push()
   ctx.beginPath()
   ctx.arc(X(sx), X(sy), X(RS), 0, TAU)
   ctx.clip()
   ctx.globalAlpha = fade
-  p.translate(X(sx), X(sy))
+  p.translate(X(px), X(py))
   p.scale(sigma)
-  p.translate(-X(sx), -X(sy))
+  p.translate(-X(px), -X(py))
   rangerBody(p, c, t, q, t >= CROSS)
   p.pop()
 }
