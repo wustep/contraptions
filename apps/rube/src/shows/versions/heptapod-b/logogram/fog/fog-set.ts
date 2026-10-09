@@ -150,7 +150,9 @@ const behind = (t: number, d: number, off: Pt): Pt => {
 const costelloHigh = (() => {
   const g = GREAT.ring
   const x = mono([[130, 7.5], [139.6, 8.2], [159.9, g.c[0] + 1.2], [186, g.c[0] + 1.6]])
-  const y = mono([[130, -4.6], [139.6, -4.8], [159.9, g.c[1] - g.r - 1.8], [186, g.c[1] - g.r - 1.6]])
+  // Over the great ring its feet stand clear above the frame: only its pen comes down into the picture, never the
+  // ends of its other limbs as stubs along the top edge.
+  const y = mono([[130, -4.6], [139.6, -4.8], [159.9, g.c[1] - g.r - 2.6], [186, g.c[1] - g.r - 2.6]])
   return (t: number): Pt => [x(t), y(t)]
 })()
 const COSTELLO_H = 16
