@@ -528,7 +528,8 @@ window.
     his lean; the seesaw's kick is fast at its start and begins 0.1 s before he leaves, so the plank carries him off;
     the bow has a small settle in it. A fourth: the seesaw throws him; the hill arrives cleanly but reads as a
     determined pace more than a dash (she rolls back at nearly his speed, and the camera follows him), so his stride
-    is stronger; a camera lag after the frozen beat would show his speed better and is left for a later pass.
+    is stronger; and the camera lags his burst by half a second (a key at 175.2), so he crosses a tenth of the frame
+    toward her before it catches up, never sliding backward on screen as it does.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
