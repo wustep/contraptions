@@ -3,7 +3,7 @@ import type { Pt } from '../../../../../parts'
 import { drawInk, mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
 import { beats, level, SEAM } from '../music'
-import { GALA, TENT } from '../worlds'
+import { GALA, LOUISE, TENT } from '../worlds'
 import { CALL_X, drawHandset, KEY_SPAN, KEY_W, KEYS, PHONE_BODY } from '../twelve/tent'
 import { NUMBER } from '../twelve/timeline'
 import { herAt as fogHerAt, SMALL, SMALL_TURN, smallBloom, smallC, smallPale, smallR, smallTendrils, smallU } from './plan'
@@ -477,8 +477,9 @@ function carried(p: p5, k: number, t: number): void {
   const c = smallC(at)
   const her0 = fogHerAt(at)
   const here = herAt(at)
-  // Drawn in to her as it pales: a moment where it was, then gathered into her. (Left at its size over the room as it
-  // paled, every fresh eye took it for a thing in the ballroom, a wreath, a layer left showing.)
+  // Drawn in to her as it pales: a moment where it was, then gathered into her, and in her own gold, so it is hers
+  // going into her. (Left at its size over the room as it paled, every fresh eye took it for a thing in the ballroom, a
+  // wreath, a layer left showing; in a pale grey, even gathering, still a wreath.)
   const into = smooth(t, at + 0.05, at + 0.7)
   const now = herAt(t)
   const x = here[0] + c[0] - her0[0] + (now[0] - (here[0] + c[0] - her0[0])) * into
@@ -489,7 +490,7 @@ function carried(p: p5, k: number, t: number): void {
   p.rotate(SMALL_TURN)
   ctx.save()
   ctx.globalAlpha *= (1 - smallPale(at)) * 1.5 * fade
-  drawInk(p, k, 0, 0, smallR(at) * (1 - 0.88 * into), SMALL, smallU(at), { tendrils: smallTendrils(at) * (1 - into), bloom: smallBloom(at), color: mix(GALA.lightWarm, '#FFFFFF', 0.5) })
+  drawInk(p, k, 0, 0, smallR(at) * (1 - 0.88 * into), SMALL, smallU(at), { tendrils: smallTendrils(at) * (1 - into), bloom: smallBloom(at), color: mix(LOUISE, GALA.lightWarm, 0.35) })
   ctx.restore()
   p.pop()
 }

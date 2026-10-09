@@ -728,29 +728,33 @@ function drawCanopy(ctx: Ctx, k: number, L: Look, wind: number, back: boolean): 
   const d = L.density
   if (d < 0.01) return
   const on = CLUMPS.filter((c) => c.need <= d + 1e-3)
+  // Each clump grows in from its buds as the leaves come, rather than being there whole the moment they pass its
+  // share: whole at once, the lone clump at the limb's bend popped into the top of the frame in the spring and stayed,
+  // a stray green blob.
+  const g = (c: Clump) => 0.25 + 0.75 * Math.min(1, (d - c.need) / 0.15)
   if (back) {
     // The shade under the crown.
     ctx.fillStyle = L.leafDark
     ctx.beginPath()
-    for (const c of on) lobesPath(ctx, k, c, c.r * 0.12 + wind * 0.5, c.r * 0.12, 1.02)
+    for (const c of on) lobesPath(ctx, k, c, c.r * 0.12 + wind * 0.5, c.r * 0.12, 1.02 * g(c))
     ctx.fill()
     return
   }
   ctx.fillStyle = L.leaf
   ctx.beginPath()
-  for (const c of on) lobesPath(ctx, k, c, wind, 0, 0.9)
+  for (const c of on) lobesPath(ctx, k, c, wind, 0, 0.9 * g(c))
   ctx.fill()
   // The light on each clump's upper side: the clump lit, less itself moved down and along.
   for (const c of on) {
     ctx.save()
     ctx.beginPath()
-    lobesPath(ctx, k, c, wind, 0, 0.9)
+    lobesPath(ctx, k, c, wind, 0, 0.9 * g(c))
     ctx.clip()
     ctx.fillStyle = L.leafLight
     ctx.fillRect((c.x - c.r * 2) * k, (c.y - c.r * 2) * k, c.r * 4 * k, c.r * 4 * k)
     ctx.fillStyle = L.leaf
     ctx.beginPath()
-    lobesPath(ctx, k, c, wind + c.r * 0.16, c.r * 0.2, 0.9)
+    lobesPath(ctx, k, c, wind + c.r * 0.16, c.r * 0.2, 0.9 * g(c))
     ctx.fill()
     ctx.restore()
   }

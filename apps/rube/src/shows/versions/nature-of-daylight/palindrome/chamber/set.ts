@@ -972,7 +972,9 @@ function soldier(ctx: Ctx, k: number, t: number): void {
     ctx.ellipse(x * k, FLOOR * k, SOLDIER_R * k * (1.1 + lift), SOLDIER_R * k * 0.22, 0, 0, Math.PI * 2)
     ctx.fill()
   }
-  ctx.fillStyle = mix(SHELL.dark, SHELL.wallLit, 0.1)
+  // In the army's olive drab, the camp's own colour (the helicopter's, the trucks'): a soldier, not one of the cast.
+  // (Near black with their rim and at their size, four fresh readers in seven took it for a third character.)
+  ctx.fillStyle = mix(VALLEY.olive, SHELL.dark, 0.25)
   ctx.beginPath()
   ctx.arc(x * k, y * k, SOLDIER_R * k, 0, Math.PI * 2)
   ctx.fill()

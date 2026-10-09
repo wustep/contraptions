@@ -723,6 +723,18 @@ and the fog is the white-out, the cut's own cover; the empty valley is the shell
 loudest bars are given to; the suit's halves on the floor are what it means to be out of it; and Ian at the cut, as
 the sixty-sixth said.
 
+A sixty-eighth gave the show to a seventh fresh reader. Hannah's run back from the leap read whole. Three notes they
+shared with readers before them:
+
+- **The soldier** (216 s) was, to four readers of seven, a third character: at the cast's size and with their rim
+  since the fifty-fifth, near black, nothing said soldier. He is in the army's olive drab now, the helicopter's and
+  the trucks' colour.
+- **The ring into the gala**, gathering into her since the sixty-fifth, was still a grey wreath where a frame caught
+  it. It is in her own gold now, so it is hers going into her.
+- **A green blob** at the top of the willow in the spring (61 s): the clumps of leaves came in whole the moment the
+  season's leaves passed their share, and the lone one at the limb's bend came into the top of the frame so as the
+  camera drew back. Each clump grows in from its buds now.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
