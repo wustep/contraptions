@@ -327,9 +327,9 @@ each world, and changed:
   now, their joints in it, on a bed of crushed stone, and under that the earth lies in soft bands, darker going down,
   a few stones in it, as under the house.
 - **Down through the hotel's floors under Zoom** (117.5 to 121.8): the camera sat well below them as they fell, so they
-  rode high in the frame; Zoom tightens on the same point, and under it he was on the frame's top edge going through
-  the slabs, Ariadne and Fischer out of it above. The camera now sits nearly on them, and under Zoom all three are in
-  the picture, him near its middle.
+  rode high in the frame; Zoom tightens on the same point, and under it he came through each slab on the frame's top
+  edge, the three of them crowded under it all the way down. The camera now sits nearly on them, and under Zoom they
+  fall through the middle of the picture.
 
 ## Inception nods
 
