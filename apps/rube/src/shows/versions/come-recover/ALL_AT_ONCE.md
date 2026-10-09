@@ -586,6 +586,9 @@ The notes went back to the builders who made each part, who still had their cont
   within ±1 ms of the player's own time: from the start, after two seeks, and through 60 s of the peak. The music is
   the clock. What this cannot measure is the device's audio output latency, which is the same for any web player.
   Nothing was changed.
+  Later measured at the panel's other speeds too: at 0.5× within ±3 ms and at 2× within ±19 ms, from the start and
+  after seeks. Once, at 0.5×, YouTube's player failed to load after a seek and the show ran on without it. It did
+  not happen again in two reruns, and the page's soundtrack code is shared, not this show's.
 - **A pass for the panel.** The panel beside the show was looked at open, on a desktop and on a phone. The title,
   the long music credit (it wraps to two lines), the YouTube player (whose terms want it seen), the transport, the
   camera modes and the export all fit and read. On a phone the panel stacks under the stage, and the stage still
