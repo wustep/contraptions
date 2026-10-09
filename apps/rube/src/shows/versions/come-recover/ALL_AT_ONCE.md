@@ -782,7 +782,8 @@ The notes went back to the builders who made each part, who still had their cont
   - Measured in Chrome at 1440×810, scrubbing a frame at a time: with a look in every panel the 16- to 64-panel walls
     took 23–27 ms a frame, against 16–17 ms without. So the many small panels get a light version (the grade, the
     bars and the tape's scanlines, without grain, wear or vignette), and the walls are back at 16–17 ms, as before.
-    The 2- and 4-panel splits keep the whole look.
+    A panel drawn at the skins' finest detail (34 px a cell or more, so the first splits on a large stage) keeps the
+    whole look.
   - The checks' band for widescreen now covers the surf's glimpses of the movie star's and the dojo's lives.
 
 ## The looks
