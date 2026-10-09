@@ -543,8 +543,9 @@ window.
     round and upright, eye up, like someone sat down for a breather; she now slumps (`slumpOf`: lower, wider), looks
     down, spent, lifts only partly to answer him, and the ward takes the slump up across the cut and lets it go under
     the covers. The yard's grey lifts from 90 s, with his walk out, instead of from 95. Re-watched by the same viewer:
-    both land (the slump reads as "she can't go on", the ward takes it up naturally). Kept, optional: dimming the
-    autumn light from her fall.
+    both land (the slump reads as "she can't go on", the ward takes it up naturally). Optional: dimming the
+    autumn light from her fall, then tried and kept (`overcast` in `hill/climb.ts`): a cloud's shadow over the field,
+    dimming and cooling over two seconds from her fall and held to the cut, leading into the ward's dusk.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 

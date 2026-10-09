@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { HALF } from '../cast'
-import { alpha, box, carried, part, smooth, type Company, type Pose } from '../kit'
+import { alpha, box, carried, frame, part, smooth, type Company, type Pose } from '../kit'
 import { CUT } from '../music'
 import { BASKET, drawBasket } from '../props/basket'
 import { drawTicket } from '../inside/ties-set'
@@ -451,6 +451,22 @@ function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
   return out
 }
 
+/**
+ * A cloud over the field from her fall: the autumn light dims and cools over two seconds as she gives way, and stays
+ * so to the cut, leading into the ward's dusk. Over everything, the two of them too, as a cloud's shadow is.
+ */
+function overcast(p: p5, k: number, t: number): void {
+  const a = 0.2 * smooth(t, T.fall, T.fall + 2)
+  if (a <= 0.002) return
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.globalCompositeOperation = 'multiply'
+  ctx.fillStyle = `rgba(118, 128, 150, ${a})`
+  ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
+  ctx.restore()
+}
+
 /* ------------------------------------------------------------------ the part */
 
 export interface ClimbState {
@@ -477,6 +493,7 @@ export const climb = part<ClimbState>(
       if (!b) return
       const [x, y] = L(b.x, b.y)
       drawBasket(p, c.k, c.weight, x, y, { tilt: b.tilt, open: b.open })
+      overcast(p, c.k, t)
     },
   },
   (slot) => {
