@@ -1,7 +1,6 @@
 import { R as BALL_R, type PieceCtx } from '../../../../parts'
 import { GRACES, MELODY } from './music'
 import { LENGTH, RADIUS, STONES, along, ballLocal, float, since, sink, squash, stonesIn } from './path'
-import { titlesAt } from './titles'
 import { FIREFLIES, FIREFLY, dropAt, rainAt, firefliesOut, inLayer, layered, overcastAt } from './air'
 import { hash, osc, polar, smooth } from './world'
 import { scenery, type Ctx2D, viewOf, frameOf, onCanvas, lamplighter, haloSprite, sunAngle, moonAngle, weathered } from './frame'
@@ -190,33 +189,6 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.globalCompositeOperation = 'lighter'
     ctx.fillStyle = g
     ctx.fillRect(x * k - r, y * k - r, 2 * r, 2 * r)
-    ctx.restore()
-  }
-  // Under each card of words while it is up, a soft veil of the dark, so the page's words read over the bright limb
-  // and the ring of lamps they come over, as a film's titles are shaded; it comes and goes with its card.
-  const cards = titlesAt(c.t)
-  if (cards.length) {
-    const W = ctx.canvas.width
-    const H = ctx.canvas.height
-    const fw = Math.min(W, (H * 16) / 9)
-    const fh = (fw * 9) / 16
-    ctx.save()
-    ctx.setTransform(1, 0, 0, 1, 0, 0)
-    for (const card of cards) {
-      const tall = fh * (0.035 + (card.title ? 0.09 : 0.065) * card.names.length + 0.032 * (card.notes?.length ?? 0) + (card.role ? 0.03 : 0))
-      const x = (W - fw) / 2 + card.at[0] * fw
-      const y = (H - fh) / 2 + card.at[1] * fh + tall / 2
-      const rx = fw * 0.38
-      const ry = tall * 0.85 + fh * 0.06
-      ctx.setTransform(rx, 0, 0, ry, x, y)
-      const veil = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
-      const a = 0.3 * card.light
-      veil.addColorStop(0, `rgba(5, 7, 16, ${a.toFixed(3)})`)
-      veil.addColorStop(0.55, `rgba(5, 7, 16, ${(a * 0.6).toFixed(3)})`)
-      veil.addColorStop(1, 'rgba(5, 7, 16, 0)')
-      ctx.fillStyle = veil
-      ctx.fillRect(-1, -1, 2, 2)
-    }
     ctx.restore()
   }
   // The ball in the light it is in: shaded on the side away from the sun by day, or the moon by night, with a rim of

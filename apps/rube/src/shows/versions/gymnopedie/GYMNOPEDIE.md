@@ -200,9 +200,10 @@ an upright phone for a wide shot. Audited at 16:9, 21:9, 4:3 and an upright phon
 ## The words
 
 The page sets the titles over the stage, and they come over busy places: the title and the credits over the planet's
-lit limb and its ring of lamps, the Gnossiennes' names over the sunset's rays and the cadence. So under each card, while
-it is up, the canvas lays a soft veil of the dark (a wide ellipse, a third as dark as the night at its middle), as a
-film's titles are shaded; it comes and goes with its card.
+lit limb and its ring of lamps, the Gnossiennes' names over the sunset's rays and the cadence. So each card is shaded,
+as a film's titles are: a soft oval of the dark round its words (`shade` on the card), drawn with the words wherever
+they are drawn (the page, and a saved video's frames) and nowhere else, so a still saved from the canvas alone has no
+veil without words in it.
 
 ## Motion
 

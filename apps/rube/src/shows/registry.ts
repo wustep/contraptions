@@ -133,6 +133,11 @@ export interface TitleCard {
   scale?: number
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
+  /**
+   * Optional: a soft veil of the dark round its words, this strong at its middle (0 to 1), for a card over a bright or
+   * busy picture. Drawn with the words, wherever they are drawn (the page, and a video's frames), and nowhere else.
+   */
+  shade?: number
 }
 
 /** What a `.show.ts` file exports as its default. */
