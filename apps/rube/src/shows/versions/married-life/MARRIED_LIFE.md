@@ -277,7 +277,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 
 - The church's steps become his own front steps: a match cut. The house is faded, the roof patched where the tree
   came through.
-- On the piano's notes he climbs the three steps, one careful step at a time, the camera close (3.5 cells) on the
+- On the piano's notes he climbs the three steps, one careful step at a time (gathering himself, lifting, then
+  shifting onto the tread: a climb, not a hop, `climbUp`), the camera close (3.5 cells) on the
   steps, the door and the porch rail, the mailbox's faded handprints at the frame's edge. The latch; as it gives he
   draws the balloon's string in short (`GATHERS` in `life/cast.ts`), so it comes in under the lintel with him before
   the door shuts and passes the wall between the door and the bay at his side; the door, and the camera widens as he
@@ -509,6 +510,12 @@ window.
     restaged so he finds her far below. At the funeral he does not step toward the easel before his lean (the aisle's
     pace allows no more). The aisle is 0.65 cells a second, from 0.58, to keep the toll on its note. Render-cost
     outliers are headless Chromium's, not the show's.
+  - *Motion* (a motion critic, from filmstrips at 12 to 24 frames a second). Taken: his lean to her picture held and
+    let go with drag as he walks (it had been a wobble that never held); Ellie's leap at the mailbox gathered, drawn
+    out along its flight and landing wide on its note (`leapShape`); old Carl climbing his steps and his chair as a
+    climb (`climbUp`), with a gather before each step and a heavier settle. Open for a later pass: his hurry down the
+    hill (no contrast of a frozen beat and a burst), his upright skate down the aisle after the kiss, and the seesaw
+    lifting him on its reset.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 

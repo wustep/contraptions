@@ -46,8 +46,9 @@ const DOWN = 192.052
  * On the floor he turns to her picture on the easel and leans to it, slowly, the lean he gave her in the office and at
  * her bedside, and holds it; then he straightens and walks from the pew to the porch under the tower, and stands there.
  */
-// His lean is full 0.45 s after it starts: it arrives on the piano's note at 192.569.
-const TO_HER = 192.569 - 0.45
+// His lean to her picture: it takes over from the lean he gets down with, over the same window that one lets go (so he
+// never straightens between them), and leans a little further to her, arriving on the piano's note at 192.569.
+const TO_HER_FULL = 192.569
 const WALK = 192.7
 const HALT = 197.5
 /** Where he stops: in the porch, the rope a step to his right and his balloon clear of it. */
@@ -139,13 +140,16 @@ function carlPose(T: number): { tilt: number; squash: number } {
   const up = -0.17 * ease(T, TOLL + 0.02, TOLL + 0.6) * (1 - ease(T, ANSWER + 0.05, OUT + 0.45))
   const bow = 0.07 * smooth(T, OUT - 0.2, OUT + 0.4) * (1 - smooth(T, 201.3, CUT.home - 0.05))
   const squash = slump + 0.05 * knock(T - DOWN, 0.2) * (T >= DOWN ? 1 : 0) + 0.045 * knock(T - TOLL, 0.22) * (T >= TOLL ? 1 : 0)
-  // To her picture (it is to his left, where they stood): a slow lean, held, and up again as he sets off.
-  const toHer = -0.12 * smooth(T, TO_HER, TO_HER + 0.45) * (1 - smooth(T, WALK - 0.3, WALK + 0.15))
+  // To her picture (it is to his left, where they stood): a slow lean that takes over from his getting-down lean,
+  // full on its note and held; his base sets off first and his top lets go of her over the first steps (drag).
+  const handOver = -0.13 * smooth(T, DOWN - 0.3, DOWN + 0.3)
+  const further = -0.035 * smooth(T, DOWN + 0.2, TO_HER_FULL)
+  const toHer = (handOver + further) * (1 - smooth(T, WALK, WALK + 0.6))
   return { tilt: forward + toHer + stoop + up + bow, squash }
 }
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
-export const FUNERAL_HITS: number[] = [DOWN, TO_HER + 0.45, TOLL, ANSWER]
+export const FUNERAL_HITS: number[] = [DOWN, TO_HER_FULL, TOLL, ANSWER]
 
 interface FuneralState {
   begin: number
