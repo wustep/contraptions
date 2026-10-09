@@ -942,6 +942,17 @@ both in Zoom, and the overview.
      the sleep); an upright phone; sixty frames a second through it. A scrub back is the same frame. `check:shows`
      holds it: on the sill at the end, clear of the pot, after the ball is in the cup for good, with the room in frame.
 
+### The fifty-fourth pass: both ears
+
+143. **The far cup plays the snare.** The near cup has played the kick since the first pass, and since the
+     forty-eighth the air over it moves when it does. Headphones have two: the far one, standing on its edge by the
+     lamp, now plays the snare, and the dust in the light under the band's arch, beside it, lifts and glints on each
+     crack (two and four, or three in the half-time tracks), as hard as it is struck, and drifts back. Left ear the
+     kick, right ear the snare. First placed round the far cup itself, at the lamp pool's edge, the motes caught no
+     light and could not be seen; they hang on its lit side, under the arch, now.
+144. **They watch the kitten go.** As the kitten climbs to the sill at the end, the one in the window looks up from
+     the work and down to it; on the sill the kitten walks across the glass in front of them.
+
 **Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

@@ -1,7 +1,7 @@
 import { mixHex } from '../../../../parts'
-import { CLOCK, CUP, CURTAIN, NOTES, PRINT, ROD, WINDOW } from './desk'
+import { CLOCK, CUP, CURTAIN, FAR_CUP, NOTES, PRINT, ROD, WINDOW } from './desk'
 import { NODS } from './route'
-import { MUSIC_END, barTime, heldAt, smooth, trackAt } from './music'
+import { MUSIC_END, TRACKS, barTime, heldAt, smooth, snareAt, trackAt } from './music'
 import { rgba, viewOf } from './canvas'
 import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, skyAt } from './world'
 
@@ -578,13 +578,15 @@ export function motes(ctx: Ctx, t: number): void {
   const warm = lampColor(t)
   ctx.save()
   ctx.globalCompositeOperation = 'lighter'
-  const kicks = recentKicks(t)
-  for (let i = 0; i < 46; i++) {
-    // Each drifts on its own slow loop round a home in the lamp's reach, and sinks a little and rises again; the last
-    // dozen hang low round the headphones, in the air the cup moves.
-    const low = i >= 34
-    const hx = low ? CUP.x - 0.9 + hash(i, 161) * 1.9 : MOUTH.x - 2.4 + hash(i, 161) * 3.6
-    const hy = low ? CUP.top - 0.5 - hash(i, 162) * 0.8 : MOUTH.y + 0.1 + hash(i, 162) * 2.0
+  const kicks = recent(NODS_AT, t)
+  const cracks = recent(SNARES, t)
+  for (let i = 0; i < 54; i++) {
+    // Each drifts on its own slow loop round a home in the lamp's reach, and sinks a little and rises again; a dozen
+    // hang low round the near cup, in the air it moves, and eight by the far cup, in the air it moves.
+    const low = i >= 34 && i < 46
+    const far = i >= 46
+    const hx = far ? FAR_CUP.x - 0.95 + hash(i, 161) * 0.8 : low ? CUP.x - 0.9 + hash(i, 161) * 1.9 : MOUTH.x - 2.4 + hash(i, 161) * 3.6
+    const hy = far ? -FAR_CUP.h * 0.6 - hash(i, 162) * 0.8 : low ? CUP.top - 0.5 - hash(i, 162) * 0.8 : MOUTH.y + 0.1 + hash(i, 162) * 2.0
     const sp = 0.05 + hash(i, 163) * 0.08
     const x = hx + Math.sin(t * sp + hash(i, 164) * 6.3) * 0.5 + Math.sin(t * sp * 2.3 + i) * 0.12
     let y = hy + Math.cos(t * sp * 0.8 + hash(i, 165) * 6.3) * 0.35 + Math.sin(t * 0.21 + i) * 0.05
@@ -593,9 +595,10 @@ export function motes(ctx: Ctx, t: number): void {
     let px = 0
     let py = 0
     let stir = 0
-    for (const k of kicks) {
-      const dx = x - CUP.x
-      const dy = y - (CUP.top - 0.05)
+    // The near cup plays the kick, the far cup (standing on its edge, its cushion toward the near one) the snare.
+    for (const [list, sx, sy] of [[kicks, CUP.x, CUP.top - 0.05], [cracks, FAR_CUP.x - FAR_CUP.halfW, -FAR_CUP.h / 2]] as const) for (const k of list) {
+      const dx = x - sx
+      const dy = y - sy
       const d = Math.hypot(dx, dy) || 1
       const push = k.h * Math.exp(-d / 0.55) * (1 - Math.exp(-k.s / 0.05)) * Math.exp(-k.s / 0.45)
       px += (dx / d) * push * 0.5
@@ -605,7 +608,7 @@ export function motes(ctx: Ctx, t: number): void {
     const xx = x + px
     y += py
     if (y > -0.05) continue
-    const l = lightAt(xx, y)
+    const l = far ? Math.max(0.45, lightAt(xx, y)) : lightAt(xx, y)
     // Stirred, a mote turns and catches the light.
     const glint = Math.min(1, 0.35 + 0.65 * Math.max(0, Math.sin(t * (0.8 + hash(i, 166) * 1.5) + i * 2.1)) ** 3 + stir * 6)
     const a = 0.42 * on * l * glint
@@ -621,18 +624,36 @@ export function motes(ctx: Ctx, t: number): void {
   ctx.restore()
 }
 
-/** The kicks the cup has played in the last second and a half: how hard (0 to 1), and how long ago. */
+/** The beats the cups play: the kicks the near cup nods the ball on, and the snare the far cup plays, each how hard. */
 const NOD_MAX = Math.max(1e-6, ...NODS.map((n) => n.h))
-function recentKicks(t: number): { h: number; s: number }[] {
+const NODS_AT = NODS.map((n) => ({ t: n.t, h: n.h / NOD_MAX }))
+const SNARES: { t: number; h: number }[] = (() => {
+  const out: { t: number; h: number }[] = []
+  for (const tr of TRACKS) {
+    for (const run of tr.runs) {
+      for (let i = run.from; i < run.to; i++) {
+        for (let q = 0; q < 4; q++) {
+          const g = barTime(tr, i, q)
+          const k = snareAt(tr, g)
+          if (k >= 0.45) out.push({ t: g, h: Math.min(1, k) })
+        }
+      }
+    }
+  }
+  return out.sort((a, b) => a.t - b.t)
+})()
+
+/** Of `beats`, those in the last second and a half: how hard each pushes the air (cells), and how long ago. */
+function recent(beats: { t: number; h: number }[], t: number): { h: number; s: number }[] {
   const out: { h: number; s: number }[] = []
   let lo = 0
-  let hi = NODS.length
+  let hi = beats.length
   while (lo < hi) {
     const m = (lo + hi) >> 1
-    if (NODS[m].t <= t) lo = m + 1
+    if (beats[m].t <= t) lo = m + 1
     else hi = m
   }
-  for (let i = lo - 1; i >= 0 && t - NODS[i].t < 1.5; i--) out.push({ h: 0.2 * (NODS[i].h / NOD_MAX), s: t - NODS[i].t })
+  for (let i = lo - 1; i >= 0 && t - beats[i].t < 1.5; i--) out.push({ h: 0.2 * beats[i].h, s: t - beats[i].t })
   return out
 }
 

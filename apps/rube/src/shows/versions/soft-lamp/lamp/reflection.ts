@@ -3,7 +3,7 @@ import { GLASS } from './desk'
 import { REACHES, handAt, mugAt } from './hands'
 import { lensIn } from './lens'
 import { camera } from './camera'
-import { STRETCHES } from './cat'
+import { CLIMB, STRETCHES } from './cat'
 import { beatOf, drumsAt, smooth, trackAt } from './music'
 import { flashAt, shootAt } from './sky'
 import { hash, lampAt, lampColor, skyAt } from './world'
@@ -93,14 +93,16 @@ function poseAt(t: number) {
   // Reaching up to draw on the glass, they look up from the work at what the finger does.
   const draw = REACHES.find((r) => r.kind === 'draw' && t > r.at && t < r.at + r.dur)
   const looking = draw ? handAt(t).a : 0
-  const think = thinkAt(t) * (1 - up)
+  // At the end, they look up from the work and down to the left, at the kitten climbing to the sill.
+  const kitten = smooth(t, CLIMB + 1.5, CLIMB + 2.5) * (1 - smooth(t, CLIMB + 10.5, CLIMB + 11.5))
+  const think = thinkAt(t) * (1 - up) * (1 - kitten)
   const st = t - HUMAN_STRETCH
   const stretch = st > 0 && st < REACH_UP ? smooth(st, 0, 1.4) * (1 - smooth(st, REACH_UP - 1.4, REACH_UP)) : 0
   // Writing: the head goes along a line and back to the start of the next, every few seconds.
   const line = (t / 3.3) % 1
   const scan = 0.035 * (line < 0.85 ? line / 0.85 : 1 - (line - 0.85) / 0.15) - 0.017
-  const lifted = Math.max(looking, think, stretch)
-  return { seen, bow: bow * (1 - lifted), sip: m.e * (1 - m.gone), think, stretch, scan: scan * (1 - lifted) * (1 - up) }
+  const lifted = Math.max(looking, think, stretch, kitten)
+  return { seen, bow: bow * (1 - lifted), sip: m.e * (1 - m.gone), think, stretch, scan: scan * (1 - lifted) * (1 - up), kitten }
 }
 
 /** The reflection, on the glass, after the night and before the window's frame. */
@@ -123,7 +125,7 @@ export function reflection(ctx: Ctx, t: number): void {
   // Bowed over the work, the face goes down and forward and more of the top of the head shows.
   const hy = 0.07 * p.bow - 0.04 * p.stretch
   // Thinking, the head turns a little toward the rain on the left, the eyes after it.
-  const lean = 0.05 * p.bow + p.scan - 0.035 * p.think
+  const lean = 0.05 * p.bow + p.scan - 0.035 * p.think - 0.05 * p.kitten
   const hair = rgba(HAIR, 0.95)
   // The hair behind: falling to the shoulders either side of the face.
   g.fillStyle = hair
@@ -172,7 +174,7 @@ export function reflection(ctx: Ctx, t: number): void {
       g.moveTo(x - 0.03, y)
       g.quadraticCurveTo(x, y + 0.02, x + 0.03, y)
     } else {
-      g.arc(x - 0.045 * p.think, y - 0.012 * p.think, 0.014, 0, Math.PI * 2)
+      g.arc(x - 0.045 * p.think - 0.05 * p.kitten, y - 0.012 * p.think + 0.012 * p.kitten, 0.014, 0, Math.PI * 2)
     }
     g.stroke()
   }
