@@ -254,6 +254,9 @@ strongest pulses held against what the picture does on them. What changed:
 - **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
   the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
   off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
+- **The second vision's loss** (156.177 → 160.015): Hannah leaves level along the bench, so Louise's gaze barely
+  moved as she went, and at the end still looked out across the floor: nothing in the picture took the loss. She
+  watches her to the bench's end now, and once Hannah is out of the room her eye goes down, bowed, held into the cut.
 - **The lift's start** (43.758): she comes to rest on the deck and the engine catches under her, but nothing showed
   her arrival as the cause, and the camp machine seemed to end before the lift began. The power unit now has the
   generator's run lamp, dark until that pulse and lit on it: the same signal the machine's first engine gave at 28.021.

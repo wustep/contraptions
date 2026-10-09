@@ -393,9 +393,10 @@ export const LOUISE_GAZE = {
     { at: PRO.look, to: OUT, dur: 0.9 },
   ]),
   v2: gaze(SCENES.v2.begin, -0.1, [
-    // Watching her go, and then down, alone.
-    { at: V2.go + 0.3, to: 0.12, dur: 1.4 },
-    { at: SCENES.v2.end - 0.75, to: 0.75, dur: 0.7 },
+    // Watching her go, to the bench's end and over it; and once she is out of the room, down, bowed, alone, held into
+    // the cut.
+    { at: V2.go + 0.3, to: 0.2, dur: 1.4 },
+    { at: SCENES.v2.end - 0.8, to: 1.38, dur: 0.6 },
   ]),
   v3: gaze(SCENES.v3.begin, -0.85, []),
   // This time she looks at her daughter first (turning to her with a small roll), and watches her come.
