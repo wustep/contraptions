@@ -36,6 +36,17 @@ const LAST = TRACKS[TRACKS.length - 1]
 const SLEEP_FROM = barTime(LAST, LAST.exit) + 3
 export const sleepAt = (t: number): number => smooth(t, SLEEP_FROM, SLEEP_FROM + 9)
 
+/** Once, asleep, it dreams: an ear and the tip of its tail twitch, twice, and are still. */
+const DREAM = SLEEP_FROM + 13
+function dreamAt(t: number): number {
+  let d = 0
+  for (const at of [DREAM, DREAM + 0.7]) {
+    const s = t - at
+    if (s > 0 && s < 1.2) d += Math.exp(-s / 0.18) * Math.sin(s * 34)
+  }
+  return d
+}
+
 /**
  * Where it is looking: the ball, a little behind (its eyes lead its head); or, while a car's lights cross the wall,
  * those; or a flash of lightning in the clouds; or, late in the night, a shooting star through the window, and where it
@@ -431,7 +442,7 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
     const from = { x: x0 + 0.1, y: -0.05 }
     const c1 = { x: x0 + 0.35, y: 0.0 }
     const c2 = { x: chest - 0.45, y: 0.0 }
-    const end = { x: chest - 0.25 + 0.27 * len, y: -0.06 - 0.1 * len }
+    const end = { x: chest - 0.25 + 0.27 * len, y: -0.06 - 0.1 * len - 0.04 * Math.abs(dreamAt(t - 0.15)) }
     ctx.save()
     ctx.globalAlpha = Math.min(1, wrap * 2)
     ctx.beginPath()
@@ -478,7 +489,7 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   const RX = 0.25
   const RY = 0.215
   // The ears, the near one flicking.
-  const flick = flickAt(t) * awake
+  const flick = flickAt(t) * awake + dreamAt(t) * sleep
   for (const side of [-1, 1]) {
     ctx.save()
     ctx.translate(side * 0.14, -0.13)

@@ -906,6 +906,15 @@ both in Zoom, and the overview.
      the cup close in the rain, a train passing soft, the moth's night) look as the blurred ones do, the city soft and
      its lights opened into discs. (The installed WebKit would not run under this Playwright.)
 
+### The fifty-first pass: mist after the rain, and a dream
+
+137. **Mist after the rain** (`mistAt`, `lamp/sky.ts`). The window's evening went from rain to clear as the rain thinned,
+     nothing between. Now, as it stops (from 23:00), a low mist gathers over the wet city: long soft banks drifting
+     slowly between the far roofs and the near, a thinner one over the near roofs, lavender, lit warm from under by the
+     city's windows; thickest about 25:00 to 26:40, and lifted by 28:40, before the moon is high. Each bank at its
+     depth, so it slides with the city as the camera moves, and goes soft with it.
+138. **The kitten dreams.** Asleep at the end, once (30:06), an ear and the tip of its tail twitch, twice, and are still.
+
 **Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

@@ -715,14 +715,52 @@ function train(ctx: Ctx, t: number, sky: { dusk: number }, sink: Sink): void {
   }
 }
 
+/**
+ * How much mist lies over the city: it gathers as the rain thins after the storm, lies low over the wet roofs, lit from
+ * under by the city's windows, and lifts as the night clears, before the moon is high.
+ */
+export const mistAt = (t: number): number => smooth(t, 1380, 1500) * (1 - smooth(t, 1600, 1720))
+
+/** A bank of mist at `y`: long soft drifts, each its own, sliding slowly along, `k` of the strength. */
+function mist(ctx: Ctx, t: number, y: number, k: number, bank: number): void {
+  const m = mistAt(t) * k
+  if (m < 0.01) return
+  const span = W + 8
+  for (let i = 0; i < 6; i++) {
+    const w = 1.6 + hash(i, bank, 241) * 1.8
+    const x = GLASS.x0 - 4 + ((hash(i, bank, 242) * span + t * (0.025 + 0.015 * hash(i, bank, 243)) * (bank ? -1 : 1)) % span + span) % span
+    const h = 0.18 + 0.12 * hash(i, bank, 244)
+    const yy = y - 0.1 * hash(i, bank, 245)
+    ctx.save()
+    ctx.translate(x, yy)
+    ctx.scale(w, h)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+    g.addColorStop(0, rgba('#A99BC8', 0.32 * m))
+    g.addColorStop(0.5, rgba('#8E84B4', 0.16 * m))
+    g.addColorStop(1, rgba('#8E84B4', 0))
+    ctx.fillStyle = g
+    ctx.fillRect(-1, -1, 2, 2)
+    ctx.restore()
+  }
+  // Lit from under, where the city's windows are: a faint warmth along its foot.
+  const glow = ctx.createLinearGradient(0, y - 0.3, 0, y + 0.25)
+  glow.addColorStop(0, rgba('#E2A27E', 0))
+  glow.addColorStop(1, rgba('#E2A27E', 0.09 * m))
+  ctx.fillStyle = glow
+  ctx.fillRect(GLASS.x0 - 4, y - 0.3, W + 8, 0.55)
+}
+
 function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }, lens: Lens, sink: (p: number) => Sink): void {
   const n = nightAt(t)
   const far = mixHex('#2B2850', '#463E6E', sky.dusk)
   const near = mixHex('#17162C', '#2A2445', sky.dusk)
   let tallest = { x: 0, y: 0 }
   for (const [row, color, base, tall] of [[0, far, -1.9, 1.15], [1, near, -1.35, 0.85]] as const) {
-    // Between the far roofs and the near: the elevated line, and its trains.
-    if (row === 1) inLayer(ctx, lens, DEPTH.train, () => train(ctx, t, sky, sink(DEPTH.train)))
+    // Between the far roofs and the near: the mist after the rain, and the elevated line, and its trains.
+    if (row === 1) {
+      inLayer(ctx, lens, DEPTH.far, () => mist(ctx, t, -2.0, 0.9, 0))
+      inLayer(ctx, lens, DEPTH.train, () => train(ctx, t, sky, sink(DEPTH.train)))
+    }
     const p = row ? DEPTH.near : DEPTH.far
     const lights = sink(p)
     // The street runs on past the window's edges, for when the camera's moves slide it along behind them.
@@ -790,6 +828,8 @@ function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }, lens: Len
       ctx.fillRect(tallest.x - 0.15, tallest.y - 0.2, 0.3, 0.3)
     })
   }
+  // And a thinner bank over the near roofs, in front of them.
+  inLayer(ctx, lens, DEPTH.near, () => mist(ctx, t, -1.45, 0.55, 1))
   inLayer(ctx, lens, DEPTH.near, () => {
     // The neighbour's window, before the glow, so the haze over the roofs lies over its wall as over the rest.
     neighbour(ctx, t, sky)
