@@ -146,7 +146,7 @@ export const BRUSHES: { t: number; depth: number }[] = [...SWING_KEYS, ...SEES_K
 
 /** Her size: a child at the swing's start, a girl by the second voice; a young woman in what Louise sees. */
 export const hannahScale = (t: number): number =>
-  t < 150 ? HANNAH_AGE.child + (HANNAH_AGE.girl - HANNAH_AGE.child) * smooth(t, 26.5, 40.5) : HANNAH_AGE.young
+  t < 150 ? HANNAH_AGE.child + (HANNAH_AGE.girl - HANNAH_AGE.child) * smooth(t, 26.5, 61) : HANNAH_AGE.young
 
 const dir = (a: number): Pt => [Math.sin(a), Math.cos(a)]
 const tan = (a: number): Pt => [Math.cos(a), -Math.sin(a)]

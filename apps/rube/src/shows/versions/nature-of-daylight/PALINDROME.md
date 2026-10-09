@@ -502,6 +502,12 @@ soldier, the ghost of the phone and its glows, the charge's larger glow, Abbott'
 at seventeen moments under a fourfold CPU throttle, against the twentieth round's commit, frames a second counted, and
 again at the reunion and the window room. Within the noise everywhere. Nothing to change.
 
+A thirty-fourth took a note two cold readers had given: Hannah never seemed to grow. She grew from 0.58 to 0.72 of
+Louise's size, all in fourteen seconds early on the swing, and was 0.86 in the bed, so she read as the same small ball
+from the swing to the bed, and her death as a child's. The ladder is wider now (a small child at 0.5, a girl at 0.8, a
+young woman at 0.92) and she grows through every season of the swing, to the leap: a child, then a girl nearly her
+mother's height, then a young woman nearly her size.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
