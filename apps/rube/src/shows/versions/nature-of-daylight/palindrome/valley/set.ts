@@ -713,7 +713,7 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
   const belly = cy + s.h / 2
   const foot = belly - 0.035 * s.h
   const w = SLOT_W
-  const doors = smooth(slot.open, 0.12, 0.45)
+  const doors = smooth(slot.open, 0.12, 0.8)
   if (doors > 0.01) {
     const tall = 0.045 * s.h * slot.open
     ctx.save()
@@ -766,10 +766,12 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
       ctx.restore()
     }
     ctx.restore()
-  } else if (slot.light > 0.01 && slot.open > 0.001) {
-    // A crack of light at the doors' seam, before they part: a thin bright line, soft at its ends.
+  }
+  if (slot.light > 0.01 && slot.open > 0.001 && doors < 0.99) {
+    // A crack of light at the doors' seam, before they part: a thin bright line, soft at its ends. It goes as the
+    // throat comes, handing over to it: put out the moment the throat began, the seam went dark between them.
     ctx.save()
-    ctx.globalAlpha *= seen
+    ctx.globalAlpha *= seen * (1 - doors)
     ctx.globalCompositeOperation = 'screen'
     const sy = foot - 0.03
     const lw = w * (0.35 + 0.65 * smooth(slot.open, 0, 0.1))
@@ -792,7 +794,7 @@ function drawSpill(ctx: Ctx, k: number, t: number): void {
   const s = shellAt(t)
   if (slot.light <= 0.01 || slot.open < 0.05) return
   const belly = s.c[1] + s.h / 2
-  const a = slot.light * shellSeen(t) * smooth(slot.open, 0.05, 0.5)
+  const a = slot.light * shellSeen(t) * smooth(slot.open, 0.05, 0.7)
   const w0 = SLOT_W * 0.45
   ctx.save()
   ctx.globalCompositeOperation = 'screen'

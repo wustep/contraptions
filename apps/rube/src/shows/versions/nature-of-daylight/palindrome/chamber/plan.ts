@@ -279,11 +279,17 @@ function ianContactWays(): Way[] {
   w.push(at(b(154.059), TOUCH - 0.59, 'inout'))
   w.push(at(T.first + 1.55, TOUCH - 0.59))
   w.push(at(T.first + 3.55, IAN_HOME, 'inout'))
-  // Behind her board while she works the machine, drifting a little.
-  w.push(at(b(166.615), IAN_HOME - 0.1, 'inout'))
-  w.push(at(b(174.428), IAN_HOME + 0.02, 'inout'))
-  w.push(at(b(182.149), IAN_HOME - 0.1, 'inout'))
-  w.push(at(b(189.005), IAN_HOME, 'inout'))
+  // While she works the machine he reads what it brings them: as each word is sent down the rail he rolls with it,
+  // and is under it on the beat it lands. (Behind her board, drifting a tenth of a cell, he and she read as parked
+  // through the longest stretch of the film: her trips from plate to glass are a cell.) The fourth hangs over her
+  // plate, so he stops short of it; on the fifth he goes back along the row ahead of her, for she reads it back.
+  for (const l of LOGOS) {
+    if (l.release === null || l.row > 3) continue
+    w.push(at(l.release, w[w.length - 1].p[0]))
+    w.push(at(l.land, Math.min(ROW[l.row], PLATE - 0.5), 'inout'))
+  }
+  w.push(at(BOARDS[5].t, w[w.length - 1].p[0]))
+  w.push(at(T.readback - 0.3, IAN_HOME, 'inout'))
   // After "weapon": he comes to her side.
   w.push(at(T.weapon + 0.4, IAN_HOME))
   w.push(at(T.weapon + 2.6, REST + IAN_BY, 'inout'))

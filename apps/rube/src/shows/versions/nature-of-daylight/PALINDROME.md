@@ -400,6 +400,21 @@ circle the show is built on and is left as it is for Stephen to rule on. Of the 
 Its others were looked at and kept: the shell going up into the cloud is pale because it is in the cloud; the glass is
 grey for a second before the white wakes behind it; Hannah's going is framed as it was meant.
 
+A twenty-second gave a second cold critic only motion and timing, with the measured beats and chords and bursts of
+frames at up to twenty a second. Every strike and cut it checked was on the music. What it found was stillness:
+
+- **The language** (155 to 197 s, the longest stretch of the film): her trips from plate to glass are under a cell,
+  and Ian drifted a tenth of a cell behind her board, so the two of them read as parked for forty seconds. Ian reads
+  what the machine brings them now: as each word is sent down the rail he rolls with it and is under it on the beat it
+  lands; the fourth hangs over her plate, so he stops short of it, and on the fifth he goes back along the row ahead of
+  her, for she reads it back.
+- **The slot** (121.754) popped rather than opened: its doors were four tenths open in a sixth of a second and the
+  throat's light came on at once. They part from the crack over a second now, eased both ways, and the crack's light
+  stays lit as they part, handing over to the throat's.
+
+Kept: the stillness by Hannah's bed (a vigil) and at the glass in the suits (awe); the push in on her as she goes and
+the pull back to the news, whose framing the cut needs; the rest of the window room, which belongs to the ending.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

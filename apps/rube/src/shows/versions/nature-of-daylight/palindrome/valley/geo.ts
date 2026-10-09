@@ -261,7 +261,10 @@ export function slotAt(t: number): { open: number; light: number } {
   }
   if (t < G.shut) {
     const s = t - A.open
-    const open = 0.1 + 0.9 * (1 - Math.pow(1 - clamp01(s / 1.1), 3))
+    // The doors part from the crack over a second and more, eased both ways: eased out only, it was four tenths open
+    // in a sixth of a second, and the throat's light came on at once, a pop rather than an opening.
+    const u = clamp01(s / 1.2)
+    const open = 0.1 + 0.9 * u * u * (3 - 2 * u)
     // A flare as it opens, then the steady light; fading as they go up into it, to the dark inside.
     const flare = 0.4 * Math.exp(-s / 0.6)
     // The morning after, it has been open all night: its light pale in the grey.
