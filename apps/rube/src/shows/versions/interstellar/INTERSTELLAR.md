@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 62 (latest)
+## Polish pass 63 (latest)
+
+No change to the show: the whole show swept on a wide (21:9) screen, every 4 s, which sees more world to each side of the 16:9 frame than any earlier sweep. Nowhere does the world stop short. The farm goes on past the house, the road past the dam, the base past the cattle grid; the station's hull and ring, and the plain to either side of Brand's camp under the credits, run on to the screen's edges.
+
+## Polish pass 62
 
 No change to the show: pass 61's lead-ins for young Murph looked at on a wide (21:9) screen, the one that can see them. In the channel she comes along the water by the pump behind Cooper (29.7 s), off the screen's edge before that. At the base she rolls along the ground at the fence's foot (67.8 s), off the edge before that. Both have ground under them.
 
