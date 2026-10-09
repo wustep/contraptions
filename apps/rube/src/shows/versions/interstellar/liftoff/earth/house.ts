@@ -47,8 +47,9 @@ const CK_MID = (CK_L + CK_R) / 2
 const CK_HOOD_TOP = -1.64
 const CK_HOOD_BOT = -1.2
 const CK_TRUNK_BOT = -0.08
-const TABLE_X0 = 0.25
-const TABLE_X1 = 1.85
+// (Clear of the museum's dumbwaiter cupboard at x 2.04, which the replica stands in this same kitchen in Act II.)
+const TABLE_X0 = 0.0
+const TABLE_X1 = 1.6
 const TABLE_TOP = -0.5
 function drawKitchen(p: p5, c: Ctx): void {
   const { k, ink, weight: w } = c
@@ -58,10 +59,10 @@ function drawKitchen(p: p5, c: Ctx): void {
   // A shelf on the wall by the back door, high: jars of what the farm put up, a tin, plates stood on edge.
   const sy = -1.2
   solid(p, ink, w, DUST.wood)
-  R4(-0.75, sy, 0.75, sy + 0.05)
+  R4(-0.8, sy, 0.42, sy + 0.05)
   outline(p, ink, w * 0.6)
-  for (const x of [-0.6, 0.6]) p.line(X(x), X(sy + 0.05), X(x - 0.08), X(sy + 0.2))
-  const jars: [number, number, number, string][] = [[-0.66, 0.13, 0.2, DUST.corn], [-0.47, 0.11, 0.15, DUST.rust], [-0.31, 0.13, 0.22, DUST.sage], [0.33, 0.16, 0.18, DUST.tin]]
+  for (const x of [-0.65, 0.3]) p.line(X(x), X(sy + 0.05), X(x - 0.08), X(sy + 0.2))
+  const jars: [number, number, number, string][] = [[-0.66, 0.13, 0.2, DUST.corn], [-0.47, 0.11, 0.15, DUST.rust], [-0.31, 0.13, 0.22, DUST.sage], [0.2, 0.16, 0.18, DUST.tin]]
   for (const [x, jw, jh, fill] of jars) {
     solid(p, ink, w * 0.7, mixHex(fill, DUST.bone, 0.2))
     R4(x, sy - jh, x + jw, sy)
@@ -69,7 +70,7 @@ function drawKitchen(p: p5, c: Ctx): void {
     R4(x - 0.01, sy - jh - 0.035, x + jw + 0.01, sy - jh)
   }
   solid(p, ink, w * 0.6, DUST.bone)
-  for (const x of [-0.08, 0.04, 0.16]) R4(x, sy - 0.28, x + 0.05, sy)
+  for (const x of [-0.14, -0.04, 0.06]) R4(x, sy - 0.28, x + 0.05, sy)
 
   // The lamp over the table, on its flex: a tin cone, its mouth down.
   const lx = (TABLE_X0 + TABLE_X1) / 2

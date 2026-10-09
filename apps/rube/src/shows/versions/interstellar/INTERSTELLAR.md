@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 18 (latest)
+## Polish pass 19 (latest)
+
+- **The kitchen, shared with the museum.** Pass 15's kitchen is drawn in the museum replica too, where the replica's dumbwaiter cupboard (x 2.04) stands. The table's right-hand chair crowded the cupboard there. The table, its chairs and its lamp sit a quarter cell further left now, and the wall shelf is shorter, so that the lamp's shade no longer meets its end. Both kitchens, the farm's at dawn and the museum's, read without a clash.
+
+## Polish pass 18
 
 An audit of the round-things rule, run on the code rather than found by eye: every disc drawn at about a ball's size (0.16 to 0.34 cells across), with its colour and where it stands. Most are tin, denim or faint hull, away from the balls. At full size the catapult's gold pivot reads as a spoked ratchet wheel and the ballpark's light-tower lamps as a bank of four in a panel. One remained:
 
