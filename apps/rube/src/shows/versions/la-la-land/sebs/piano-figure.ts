@@ -8,7 +8,7 @@ import { rgba } from './kit'
  * straight side on the left, the tail at the top, the bentside curving in on the right), drawn on from the keyboard's
  * left corner round to its right as `draw` goes from 0 to 1, and then the keys.
  */
-const OUTLINE: Pt[] = (() => {
+export const OUTLINE: Pt[] = (() => {
   const pts: Pt[] = [[-0.5, 0.62], [-0.5, -0.5]]
   // The tail: round over the top.
   for (let j = 1; j <= 10; j++) {
@@ -30,7 +30,7 @@ const OUTLINE: Pt[] = (() => {
 })()
 
 /** Draw the figure centred on `at` (cells), `size` cells across, turned by `angle`, `draw` of the way on, at `a`. */
-export function drawPianoFigure(p: p5, k: number, at: Pt, size: number, angle: number, draw: number, a: number, color: string): void {
+export function drawPianoFigure(p: p5, k: number, at: Pt, size: number, angle: number, draw: number, a: number, color: string, minPx = 0): void {
   if (a <= 0.01 || draw <= 0) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const P = ([x, y]: Pt): Pt => {
@@ -44,7 +44,7 @@ export function drawPianoFigure(p: p5, k: number, at: Pt, size: number, angle: n
   // A soft haze along the line, and the line in it.
   for (const [w, al] of [[0.07, 0.18], [0.018, 0.85]] as const) {
     ctx.strokeStyle = rgba(color, al * a)
-    ctx.lineWidth = w * k
+    ctx.lineWidth = Math.max(w * k, minPx * (w / 0.018))
     ctx.beginPath()
     const n = Math.max(2, Math.ceil(OUTLINE.length * Math.min(1, draw)))
     OUTLINE.slice(0, n).forEach((q, i) => {
@@ -58,7 +58,7 @@ export function drawPianoFigure(p: p5, k: number, at: Pt, size: number, angle: n
   const keys = Math.max(0, Math.min(1, (draw - 1) / 0.4))
   if (keys > 0) {
     ctx.strokeStyle = rgba(color, 0.7 * a)
-    ctx.lineWidth = 0.014 * k
+    ctx.lineWidth = Math.max(0.014 * k, minPx * 0.8)
     const m = 14
     for (let i = 1; i < m; i++) {
       if (i / m > keys) break

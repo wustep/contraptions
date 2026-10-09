@@ -3,8 +3,9 @@ import type { Pt } from '../../../../parts'
 import { frame, glow, hash, knock, rgba, scenery, smooth } from './kit'
 import { AT, END_AT, level } from './music'
 import { NIGHT_MAT, SEBS_MAT } from './worlds'
-import { JOIN, KINDLED } from './night/stars'
-import { DIP, skyAngle } from './night/painted-waltz'
+import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, JOIN, KINDLED } from './night/stars'
+import { drawPianoFigure } from './piano-figure'
+import { DIP, POLE, skyAngle } from './night/painted-waltz'
 import { keyX } from './club/geometry'
 
 /**
@@ -72,14 +73,23 @@ const LIGHTS = Array.from({ length: 1400 }, (_, i) => {
  * were lit, each joined to the one it was joined to then, in the night's gold among the city's cool stars: high on
  * the right, clear of the credits. In the piano's frame.
  */
-export const THEIRS = (() => {
+const THEIRS_SCALE = 2.15
+const THEIRS_PTS = (() => {
   const a = skyAngle(DIP)
-  const scale = 2.15
-  const pts = KINDLED.map((q) => [q.local[0] * Math.cos(a) - q.local[1] * Math.sin(a), q.local[0] * Math.sin(a) + q.local[1] * Math.cos(a)] as Pt)
-  const cx = pts.reduce((s, q) => s + q[0], 0) / pts.length
-  const cy = pts.reduce((s, q) => s + q[1], 0) / pts.length
-  return pts.map(([x, y], i) => ({ x: 21.5 + (x - cx) * scale, y: -25.5 + (y - cy) * scale, size: KINDLED[i].size, join: i ? JOIN[i] : -1 }))
+  return KINDLED.map((q) => [q.local[0] * Math.cos(a) - q.local[1] * Math.sin(a), q.local[0] * Math.sin(a) + q.local[1] * Math.cos(a)] as Pt)
 })()
+const THEIRS_C: Pt = [THEIRS_PTS.reduce((s, q) => s + q[0], 0) / THEIRS_PTS.length, THEIRS_PTS.reduce((s, q) => s + q[1], 0) / THEIRS_PTS.length]
+export const THEIRS = THEIRS_PTS.map(([x, y], i) => ({ x: 21.5 + (x - THEIRS_C[0]) * THEIRS_SCALE, y: -25.5 + (y - THEIRS_C[1]) * THEIRS_SCALE, size: KINDLED[i].size, join: i ? JOIN[i] : -1 }))
+/**
+ * And the figure the planetarium drew round them at the dip, the grand piano, found again round their stars over the
+ * city: where it stood against them then, as big against them as it was. It draws on once the last of his notes has
+ * come to rest, and holds to the end.
+ */
+export const THEIRS_FIGURE = {
+  at: [21.5 + (FIGURE_AT()[0] - POLE[0] - THEIRS_C[0]) * THEIRS_SCALE, -25.5 + (FIGURE_AT()[1] - POLE[1] - THEIRS_C[1]) * THEIRS_SCALE] as Pt,
+  size: FIGURE_SIZE * THEIRS_SCALE,
+  turn: FIGURE_TURN,
+}
 /** When each of theirs comes out: one by one from a beat after the swell. */
 export const THEIRS_AT = THEIRS.map((_, i) => END_AT + 32.268 + 2.3 + i * 0.42)
 
@@ -282,6 +292,12 @@ export const city = scenery<CityState>({
         ctx.arc(x * k, y * k, r, 0, Math.PI * 2)
         ctx.fill()
       })
+      const last = THEIRS_AT[THEIRS_AT.length - 1]
+      const fd = smooth(t, last + 0.5, last + 3.2) * 1.4
+      if (fd > 0) {
+        const [fx, fy] = THEIRS_FIGURE.at
+        drawPianoFigure(p, k, [fx + sx, fy + sy], THEIRS_FIGURE.size, THEIRS_FIGURE.turn, fd, smooth(t, last + 0.4, last + 1.2), NIGHT_MAT.gold, 1.3 * px)
+      }
     }
     ctx.restore()
 
