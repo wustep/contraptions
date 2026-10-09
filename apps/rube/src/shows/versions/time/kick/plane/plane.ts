@@ -206,8 +206,8 @@ function wakingShots(slot: Slot): PartShot[] {
     hold(at, LET_GO + 0.3, 3.45, [0.05, -0.3]),
     hold(at, LID + 0.2, 3.2, [-0.2, -0.16]),
     // Across the aisle to Fischer as he stirs, and the sun he lets in.
-    hold(at, STIR + 0.3, 3.6, [1.55, -0.36]),
-    hold(at, SHADE + 0.35, 3.95, [1.4, -0.36]),
+    hold(at, STIR + 0.3, 3.6, [1.35, -0.36]),
+    hold(at, SHADE + 0.35, 3.95, [1.2, -0.36]),
     // Out: the whole plane in the morning sky, going down through the cloud; the gear; the runway coming up; the touch.
     hold(at, SHADE + 1.25, 5.3, [1.1, -0.25]),
     hold(at, GEAR - 0.45, 11.0, [-0.45, 0.95]),
