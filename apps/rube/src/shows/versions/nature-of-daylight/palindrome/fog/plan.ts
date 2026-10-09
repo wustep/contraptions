@@ -339,7 +339,7 @@ export const ABBOTT = { at: [WIDE_C[0] - 3.4 / ABBOTT_D, WIDE_C[1] + 2.5 / ABBOT
 // as a second heptapod standing off, not as Abbott dying.
 // Out of the blast as dark as it was at the glass, so it reads as Abbott: coming up out of the white first, it read as a
 // new, smaller heptapod rising into view.
-export const abbottFog = (t: number): number => 0.5 + 0.5 * smooth(t, T_S2 - 0.5, T_LAND)
+export const abbottFog = (t: number): number => 0.5 + 0.5 * smooth(t, T_S2 - 0.5, T_LAND - 3.2)
 export const abbottSink = (t: number): number => 4.2 * smooth(t, T_S2 - 2, T_OUT + 1)
 
 /* ------------------------------------------------------------------ the camera, in world cells */

@@ -86,11 +86,11 @@ function rounded(ctx: CanvasRenderingContext2D, x: number, y: number, w: number,
 }
 
 /** The handset lying on its back on the table, off the hook: a handle between the mouthpiece and the earpiece cups. */
-function drawHandset(ctx: CanvasRenderingContext2D, k: number): void {
+export function drawHandset(ctx: CanvasRenderingContext2D, k: number, fill: string = TENT.phone, rim = true): void {
   const [a, b] = HANDSET
   const cup = 0.24
   const floor = TOP * k
-  ctx.fillStyle = TENT.phone
+  ctx.fillStyle = fill
   // The handle, bowed up between the cups.
   ctx.beginPath()
   ctx.moveTo((a + cup * 0.6) * k, floor - 0.13 * k)
@@ -104,6 +104,7 @@ function drawHandset(ctx: CanvasRenderingContext2D, k: number): void {
   ctx.fill()
   rounded(ctx, (b - cup * 1.1) * k, floor - 0.19 * k, cup * 1.1 * k, 0.19 * k, 0.08 * k)
   ctx.fill()
+  if (!rim) return
   ctx.fillStyle = rgba(TENT.canvasLit, 0.6)
   ctx.fillRect((a + 0.03) * k, floor - 0.17 * k, (cup - 0.06) * k, Math.max(1, 0.02 * k))
   ctx.fillRect((b - cup * 1.1 + 0.03) * k, floor - 0.19 * k, (cup * 1.1 - 0.06) * k, Math.max(1, 0.02 * k))

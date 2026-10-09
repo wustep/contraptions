@@ -531,6 +531,16 @@ ballroom and read the gala as a future she is shown (where earlier readers had i
 on. Its other notes were each meant (the small ring by her where the vision begins, the dusk as she knows, the push in
 on the call, the alarm lamp). Nothing to change.
 
+A thirty-ninth gave the whole show to a fourth fresh story reader, the first since the soldier, the phone's ghost,
+Hannah's growing and the ring into the gala had all landed. Most read; three things were made plainer:
+
+- **The ghost of his number** read as a bar counter. Its handset lies beside it now, off the hook, as it does in the
+  tent.
+- **Her question** (the joined rings on her board, 192.789) read as one more of theirs: her board was written in the
+  same near-black as their ink. Her own hand is her gold now, deepened to read on the white, so her question and their
+  answer read apart.
+- **Abbott** still read as present. It is all the way into the white three seconds sooner, before she lands.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

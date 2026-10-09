@@ -4,7 +4,7 @@ import { drawInk, mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
 import { beats, level, SEAM } from '../music'
 import { GALA, TENT } from '../worlds'
-import { CALL_X, KEY_SPAN, KEY_W, KEYS, PHONE_BODY } from '../twelve/tent'
+import { CALL_X, drawHandset, KEY_SPAN, KEY_W, KEYS, PHONE_BODY } from '../twelve/tent'
 import { NUMBER } from '../twelve/timeline'
 import { herAt as fogHerAt, SMALL, SMALL_TURN, smallBloom, smallC, smallPale, smallR, smallTendrils, smallU } from './plan'
 import {
@@ -524,6 +524,11 @@ function number(ctx: Ctx, k: number, t: number): void {
   ctx.strokeStyle = rgba(TENT.keypad, 0.35 * up)
   ctx.lineWidth = Math.max(1, 0.012 * k)
   ctx.strokeRect(bx0, by0, bx1 - bx0, by1 - by0)
+  // And its handset beside it, off the hook, as it lies in the tent: without it the ghost read as a bar counter.
+  ctx.save()
+  ctx.translate(hx * k, hy * k)
+  drawHandset(ctx, k, rgba(mix(GALA.roomLit, '#000000', 0.7), 0.5 * up), false)
+  ctx.restore()
   KEYS.forEach((x, digit) => key(x, litOf(digit)))
   key(CALL_X, 0)
 }

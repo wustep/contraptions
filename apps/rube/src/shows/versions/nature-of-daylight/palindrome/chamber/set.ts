@@ -4,7 +4,7 @@ import { drawHeptapod, drawInk, inkAt, inkRing, mix, rgba, type Ring } from '../
 import { ring } from './ink'
 import { drawRail } from './words'
 import { frame, hash } from '../kit'
-import { SHANG, SHELL, VALLEY } from '../worlds'
+import { LOUISE, SHANG, SHELL, VALLEY } from '../worlds'
 import {
   BOARD,
   BOARDS,
@@ -733,7 +733,9 @@ function marks(p: p5, ctx: Ctx, k: number, t: number, cy: number, light: number)
   BOARDS.forEach((bd, i) => {
     if (bd.t - 1.2 <= t) n = i
   })
-  const ink = mix(SHELL.board, SHELL.marker, 0.25 + 0.75 * light)
+  // Her own hand, in her gold, deepened to read on the white: theirs is black ink, so her question and their answer
+  // read apart. (In the same near-black, the joined rings of her question read as one more of theirs.)
+  const ink = mix(SHELL.board, mix(LOUISE, '#3A2A10', 0.45), 0.25 + 0.75 * light)
   ctx.strokeStyle = ink
   ctx.lineWidth = 0.028 * k
   ctx.lineCap = 'round'
