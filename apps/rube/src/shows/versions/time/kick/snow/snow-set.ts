@@ -911,6 +911,29 @@ function drawValley(ctx: C2D, c: Ctx, x0: number, x1: number, st: number): void 
     k,
     rgba(SNOW.snowShade, 0.7),
   )
+  // Under its snow the apron is ground, cut as the knoll beside it is: rock, darker as it goes down, so whoever sinks
+  // through the apron's floor is seen to go into the mountain and not through white air.
+  {
+    const apron: Pt[] = [
+      [LEDGE.lip - 2.4, FLOOR_Y],
+      [GATE_X + 0.05, FLOOR_Y],
+      [GATE_X + 0.05, FORT.foot + 0.4],
+      [GATE_X - 1.6, VALLEY_Y - 0.3],
+      [LEDGE.lip - 4.8, VALLEY_Y - 0.3],
+      [LEDGE.lip - 3.4, FLOOR_Y + 1.3],
+    ]
+    ctx.save()
+    path(ctx, apron, k)
+    ctx.clip()
+    const top = FLOOR_Y + 0.6
+    const cg = ctx.createLinearGradient(0, top * k, 0, (VALLEY_Y - 0.3) * k)
+    cg.addColorStop(0, mixHex(SNOW.snowDeep, SNOW.rock, 0.5))
+    cg.addColorStop(0.3, SNOW.rock)
+    cg.addColorStop(1, SNOW.rockDark)
+    ctx.fillStyle = cg
+    ctx.fillRect((LEDGE.lip - 5) * k, top * k, (GATE_X - LEDGE.lip + 5.2) * k, (VALLEY_Y - top) * k)
+    ctx.restore()
+  }
   // Near pines in the valley, swaying a little on the snow's clock, and some on the face's foot.
   for (let i = Math.floor(x0 / 1.3); i <= Math.ceil(x1 / 1.3); i += lod) {
     const x = i * 1.3 + hash(i, 5, 43) * 0.9

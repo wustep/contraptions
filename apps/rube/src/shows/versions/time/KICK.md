@@ -297,6 +297,9 @@ each world, and changed:
 - **Mal out of the crowd** (57.5 to 61.3): her wine sank into the black of the projections, so she was seen only once
   she was clear of them. The light off the stone now catches her edge, a pale rim, and she is seen coming out of them
   (a third critic's note).
+- **Going under in the snow** (150 to 152): the apron at the gate was snow all the way down, so as the floor went soft
+  under Cobb and Ariadne they seemed to fall through white air beside the fortress. Under its snow cap the apron is now
+  cut rock, darker as it goes down, and they are seen to sink into the mountain (a fourth critic's note).
 
 ## Inception nods
 
