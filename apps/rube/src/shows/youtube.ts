@@ -399,6 +399,11 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       const wait = () => {
         patience = window.setTimeout(() => {
           if (pending !== resolve) return
+          // Sought since past where any cue is heard (beyond its music's end, or between cues): there is nothing to
+          // start, so nothing was refused, as when play is pressed there (above). Without this, a seek past the end
+          // while it waited read as a refusal, and the show was put back where play was pressed and stopped.
+          const there = at(shown)
+          if (!there || shown >= end(there)) return settleRefusal('playing')
           // Slow to come, not refused: give it longer.
           if (d.state === BUFFERING && performance.now() - began < PATIENCE_BUFFERING) return wait()
           // It never started: the browser is holding it for a gesture.
