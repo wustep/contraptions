@@ -374,6 +374,11 @@ The notes went back to the builders who made each part, who still had their cont
     normal view the film's title ran onto the first lantern. The cards now stand a little higher and further left,
     over the storefront's glass and above the string, and still fit at phone width. Under Zoom the longest line
     still crosses the string's near end.
+- **A pass for the saved video.** The whole show was swept again every 2.5 s, and the credits were rendered as a
+  saved 1080p video paints them (`shows/words.ts`): they sit where the page's do.
+  - Behind the names, the window's unlit red neon washer showed through the soft dark, a ring under "Evelyn, Joy,
+    Waymond". The dark under the cards is now a little deeper at its heart and a little narrower. The neon recedes
+    under the words, and the lanterns and the family keep their light.
 
 ## End credits
 

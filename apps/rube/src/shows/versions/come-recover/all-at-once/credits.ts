@@ -120,13 +120,15 @@ export const credits = scenery<null>({
     const h = f.y1 - f.y0
     const cx = (f.x0 + w * AT[0]) * k
     const cy = (f.y0 + h * (AT[1] + 0.13)) * k
-    const rx = w * 0.36 * k
+    // Deep enough at its heart that what is behind the names (the window's unlit neon) recedes under them, and no
+    // wider than the words, so the lanterns and the family keep their light.
+    const rx = w * 0.3 * k
     ctx.save()
     ctx.translate(cx, cy)
-    ctx.scale(1, 0.42)
+    ctx.scale(1, 0.5)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(8, 10, 12, ${0.55 * bed})`)
-    g.addColorStop(0.6, `rgba(8, 10, 12, ${0.3 * bed})`)
+    g.addColorStop(0, `rgba(8, 10, 12, ${0.7 * bed})`)
+    g.addColorStop(0.55, `rgba(8, 10, 12, ${0.42 * bed})`)
     g.addColorStop(1, 'rgba(8, 10, 12, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
