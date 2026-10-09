@@ -376,6 +376,15 @@ ball. The machine and its timing were right and are untouched; the room around i
     lights across its top and the wave along them; Stargazing's lob, the slowest track's and so the highest, peaks
     inside the room's frame. Left as they are.
 
+### The fifteenth lofi pass
+
+56. **The neighbour's window outshone the ball.** Looked at across the half hour, after four passes of additions, it
+    was the brightest warm thing in nearly every frame with the window in it, and at the edge of the lamp's looks it
+    drew the eye off the ball. Its room is now a lower, deeper amber, its halo less than half what it was and its
+    curtain fainter: it sits among the city's lights, at about the polaroids' brightness, and what crosses it still
+    reads. Its wall was also darker than the building it is in (drawn after the haze over the roofs); it is drawn
+    under the haze now, and the rain falls in front of it.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

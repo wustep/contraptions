@@ -39,7 +39,6 @@ export function night(ctx: Ctx, t: number): void {
   plane(ctx, t, cloud)
   clouds(ctx, t, cloud, sky)
   city(ctx, t, sky)
-  neighbour(ctx, t, sky)
   rain(ctx, t)
   drops(ctx, t, rainAt(t))
   // The room in the glass: the lamp's warmth caught faintly in the pane nearest it.
@@ -256,6 +255,8 @@ function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }): void {
   g.addColorStop(1, rgba('#FF5A4E', 0))
   ctx.fillStyle = g
   ctx.fillRect(tallest.x - 0.15, tallest.y - 0.2, 0.3, 0.3)
+  // The neighbour's window, before the glow, so the haze over the roofs lies over its wall as over the rest.
+  neighbour(ctx, t, sky)
   // The city's glow over the roofs.
   const glow = ctx.createLinearGradient(0, GLASS.y1 - 2.1, 0, GLASS.y1)
   glow.addColorStop(0, rgba('#B7779A', 0))
@@ -341,11 +342,12 @@ function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
   ctx.fillRect(x0 - 0.06, y0 - 0.06, w + 0.12, h + 0.1)
   ctx.fillStyle = rgba('#0E0C1C', 0.9)
   ctx.fillRect(x0 - 0.015, y0 - 0.015, w + 0.03, h + 0.03)
-  // The room inside: dark, or lit by a lamp somewhere on its right.
+  // The room inside: dark, or lit by a lamp somewhere on its right; a low, deep amber, so it sits among the city's
+  // lights and never outshines the ball (bright enough that what crosses it reads).
   const room = ctx.createRadialGradient(x1 - 0.06, y0 + h * 0.55, 0.02, x1 - 0.06, y0 + h * 0.55, w * 1.1)
-  room.addColorStop(0, mixHex('#1C1830', '#F6C27E', on))
-  room.addColorStop(0.6, mixHex('#1A162C', '#D98A55', on))
-  room.addColorStop(1, mixHex('#16142A', '#8A4A3A', on))
+  room.addColorStop(0, mixHex('#1C1830', '#D9985C', on))
+  room.addColorStop(0.6, mixHex('#1A162C', '#A86640', on))
+  room.addColorStop(1, mixHex('#16142A', '#5E3430', on))
   ctx.fillStyle = room
   ctx.fillRect(x0, y0, w, h)
   if (on > 0) {
@@ -419,8 +421,8 @@ function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
     }
     // The curtain across its left, thin, lit through.
     const c = ctx.createLinearGradient(x0, 0, x0 + w * 0.34, 0)
-    c.addColorStop(0, rgba('#F2D3B0', 0.55 * on))
-    c.addColorStop(1, rgba('#F2D3B0', 0.25 * on))
+    c.addColorStop(0, rgba('#E8C4A0', 0.4 * on))
+    c.addColorStop(1, rgba('#E8C4A0', 0.18 * on))
     ctx.fillStyle = c
     ctx.beginPath()
     ctx.moveTo(x0, y0)
@@ -432,7 +434,7 @@ function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
     ctx.restore()
     // Its light, a little out onto the wet night.
     const halo = ctx.createRadialGradient((x0 + x1) / 2, (y0 + y1) / 2, 0.05, (x0 + x1) / 2, (y0 + y1) / 2, 0.45)
-    halo.addColorStop(0, rgba('#F2B36E', 0.12 * on))
+    halo.addColorStop(0, rgba('#F2B36E', 0.05 * on))
     halo.addColorStop(1, rgba('#F2B36E', 0))
     ctx.fillStyle = halo
     ctx.fillRect(x0 - 0.5, y0 - 0.5, w + 1, h + 1)
