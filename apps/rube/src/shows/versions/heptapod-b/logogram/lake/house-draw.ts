@@ -6,6 +6,7 @@ import { LAKE } from '../worlds'
 import {
   BENCH,
   BROW,
+  DRAWING,
   HORIZON,
   LAMP,
   MULLIONS,
@@ -472,6 +473,14 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
     [1, wall, 1],
   ])
   soft(ctx, k, cx, ROOM.ceiling, (WIN.x1 - WIN.x0) * 0.6, 0.9, LAKE.wall, 0.1 * lit * (1 - dim * 0.5))
+  // Where the wall meets it, a clean line, and the soft shadow of the ceiling's edge on the wall under it.
+  band(ctx, k, fx0, fx1, ROOM.ceiling, ROOM.ceiling + 0.35, [[0, LAKE.night, 0.1 * (1 - dim * 0.5)], [1, LAKE.night, 0]])
+  p.stroke(ink)
+  p.strokeWeight(weight * 0.7)
+  p.line(X(fx0), X(ROOM.ceiling), X(fx1), X(ROOM.ceiling))
+  p.noStroke()
+
+  drawing(p, c, dim)
 
   // The floor: pale oak going away from us, dimmer near.
   const floor = shade(LAKE.floor, dim * 0.9)
@@ -515,6 +524,82 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
   lamp(p, c, dim, L)
   bench(p, c, dim)
   shadows(ctx, k, balls, dim)
+}
+
+/**
+ * Hannah's drawing, taped low on the wall over her corner: the two of them by the lake, under a sun. A child's hand: a
+ * wobbly round for her mother and a small one for herself, joined by their hands, on the line of the water. In
+ * pencil and one crayon, the sun's: nothing in the picture but Louise is her colour, not even a drawing of her.
+ */
+function drawing(p: p5, c: Ctx, dim: number): void {
+  const { k, ink, weight } = c
+  const ctx = p.drawingContext as C2D
+  const { x, y, w, h, tilt } = DRAWING
+  const paper = shade('#F3F0E6', dim * 0.8)
+  const pencil = shade('#5C5F63', dim * 0.4)
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.rotate(tilt)
+  // Its shadow on the wall, the window's light being to its right.
+  ctx.fillStyle = rgba(LAKE.night, 0.12 + 0.06 * dim)
+  ctx.fillRect((-w / 2 - 0.012) * k, (-h / 2 + 0.018) * k, w * k, h * k)
+  p.push()
+  p.rectMode(p.CORNER)
+  solid(p, ink, weight * 0.5, paper)
+  p.rect(-w * 0.5 * k, -h * 0.5 * k, w * k, h * k)
+  // The tape at its two top corners.
+  p.noStroke()
+  p.fill(shade('#E6DFC8', dim * 0.75))
+  for (const s of [-1, 1]) {
+    p.push()
+    p.translate(s * w * 0.44 * k, -h * 0.5 * k)
+    p.rotate(s * 0.5)
+    p.rect(-0.04 * k, -0.014 * k, 0.08 * k, 0.028 * k)
+    p.pop()
+  }
+  // The sun, in crayon: a yellow round and its rays, up in the corner.
+  const sun = shade('#E8C65A', dim * 0.6)
+  p.stroke(sun)
+  p.strokeWeight(Math.max(1, 0.012 * k))
+  const sx = w * 0.3
+  const sy = -h * 0.24
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2 + 0.3
+    p.line((sx + Math.cos(a) * 0.045) * k, (sy + Math.sin(a) * 0.045) * k, (sx + Math.cos(a) * 0.07) * k, (sy + Math.sin(a) * 0.07) * k)
+  }
+  p.noStroke()
+  p.fill(sun)
+  p.circle(sx * k, sy * k, 0.064 * k)
+  // In pencil: the water's line, the two of them on it, and their joined hands.
+  p.noFill()
+  p.stroke(pencil)
+  p.strokeWeight(Math.max(0.8, 0.007 * k))
+  const ground = h * 0.3
+  p.beginShape()
+  for (let i = 0; i <= 8; i++) {
+    const u = i / 8
+    p.vertex((-w * 0.42 + u * w * 0.84) * k, (ground + 0.008 * Math.sin(u * 13)) * k)
+  }
+  p.endShape()
+  const big = 0.06
+  const small = 0.035
+  const bx = -w * 0.16
+  const hx = w * 0.06
+  // A child's round: a little wobble, and not quite closed.
+  const round = (cx: number, cy: number, r: number, seed: number) => {
+    p.beginShape()
+    for (let i = 0; i <= 14; i++) {
+      const a = (i / 14) * Math.PI * 2.08 + seed
+      const rr = r * (1 + 0.08 * Math.sin(a * 3 + seed * 5))
+      p.vertex((cx + Math.cos(a) * rr) * k, (cy + Math.sin(a) * rr) * k)
+    }
+    p.endShape()
+  }
+  round(bx, ground - big, big, 0.4)
+  round(hx, ground - small, small, 2.1)
+  p.line((bx + big * 0.95) * k, (ground - big * 0.9) * k, (hx - small * 0.95) * k, (ground - small * 1.1) * k)
+  p.pop()
+  ctx.restore()
 }
 
 /** The floor lamp by the window's left end: a slim stem, a heavy foot, a linen drum. Never lit. */

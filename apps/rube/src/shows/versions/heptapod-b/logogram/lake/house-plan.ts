@@ -9,7 +9,7 @@ import { HANNAH_OLDER, HANNAH_SCALE } from '../worlds'
  *
  * The room is the lake's origin: the prologue, the second and third visions and the end all start Louise at
  * (-0.5, 0), on the low bench under the long window's left end. The floor is lower than the bench by `BENCH.h`, and
- * the window is the room's back wall, floor to nearly the ceiling: the lake is beyond it, into the screen. The first
+ * the window is most of the room's back wall, from the floor up: the lake is beyond it, into the screen. The first
  * vision is outdoors, on the lawn, at `V1_AT` (a place of its own: the set draws the lawn while it is on).
  */
 
@@ -26,12 +26,13 @@ export const SEAT: Pt = [-0.5, 0]
 
 /**
  * The floor where a ball rolls on it (its centre at `floor - r`), a little in front of the wall; the wall's foot, a
- * little further back up the floor (where the lamp stands); and the ceiling's line.
+ * little further back up the floor (where the lamp stands); and the ceiling's line, high over the glass: the room is
+ * tall, and the end's credits are set on the quiet wall between them.
  */
-export const ROOM = { floor: FLOOR + 0.3, wall: FLOOR + 0.24, ceiling: -3.25 }
+export const ROOM = { floor: FLOOR + 0.3, wall: FLOOR + 0.24, ceiling: -5.3 }
 /** The low bench under the window: its top is Louise's rail (y = FLOOR), its ends, its slab's thickness. */
 export const BENCH = { x0: -1.0, x1: 2.3, top: FLOOR, slab: 0.075, leg: 0.13 }
-/** The long window: the glass from floor to nearly the ceiling, four tall panes. */
+/** The long window: the glass from the floor most of the way up the wall, four tall panes. */
 export const WIN = { x0: -1.25, x1: 6.05, top: -2.62, sill: ROOM.wall - 0.05 }
 export const MULLIONS = [1, 2, 3].map((i) => WIN.x0 + (i * (WIN.x1 - WIN.x0)) / 4)
 /** The floor lamp beside the window's left end (never lit). */
@@ -41,6 +42,9 @@ export const HORIZON = -0.74
 export const SUN: Pt = [1.55, -1.02]
 /** The camera the view is drawn for (the show's first frame): far things move less than it (`house-draw.ts`). */
 export const VIEW_CAM = { x: SEAT[0] + 1.3, y: SEAT[1] - 1.0, cells: 4.8 }
+
+/** Her drawing, taped low on the wall over her corner, at her height: its middle, its size, and its tilt. */
+export const DRAWING = { x: -2.82, y: -0.72, w: 0.46, h: 0.34, tilt: -0.06 }
 
 /** Hannah's corner of the floor, across the room: where she is at the first frame (and at the end's). */
 export const HANNAH_HOME = -2.36
