@@ -596,6 +596,9 @@ The notes went back to the builders who made each part, who still had their cont
   leaves her (`GIFT_LOOKS` in `kindness-draw.ts`), she looks at the machine it goes to, from a breath before until
   it has landed: left to the glove's box, right to the trap, up to the mallet, up to the arm. The first waits until
   her own new eye has had its fling.
+- **A pass for the end of the fight.** Waymond watched her all the way to him, but she did not look back. Now, as the
+  arm sets her on the steamers and she steps down to him (from beat 140, 198.0 s), she looks at him. On the fight's
+  last hit the two of them are looking at each other, before the silence of the rocks.
 
 ## The looks
 
@@ -613,6 +616,7 @@ looked at both there, and seen: its eye in the frame and big enough to read for 
 | 82.0–86.3 | Waymond | Evelyn | the drain carries her away from him |
 | 192.1–200.2 | Waymond | Evelyn | the empathy fight, all the way to him |
 | 191.7–195.5 | Evelyn | each jumper in turn | as she gives it her eye: the glove, the trap, the mallet, the arm |
+| 198.0–200.2 | Evelyn | Waymond | set down on the steamers, she steps down to him: on the last hit they look at each other |
 | 200.7–219.7 | Evelyn | Joy | the two stones in the silence; then down over the brink after hers |
 | 242.1–247.3 | Evelyn | Joy | holding her at the lip of the hole |
 | 247.9–249.6 | Waymond | Joy | on the line, the weight that pulls her back, until he is carried out of the frame |
