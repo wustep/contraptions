@@ -475,7 +475,8 @@ const CLING: { x: number; y: number; rx: number; ry: number; a: number }[] = [
 /**
  * Going up through the band, the deck drags its fog up with it: it gathers round the plate and the rail as they go
  * into the band, thickest in its middle, veiling the two of them; on 54.509 the deck surges clear of it, and the fog
- * it carried tears off, flung up a little and out, thinning fast, and what is left sinks back into the band.
+ * it carried tears off, flung up a little and out, shadowed underneath against the sky, thinning over half a second,
+ * and what is left sinks back into the band.
  */
 function drawCling(p: p5, k: number, t: number): void {
   if (t < 51 || t > TEAR + 3.5) return
@@ -487,7 +488,8 @@ function drawCling(p: p5, k: number, t: number): void {
   const depth = smoothUp(-rise + R, BAND_LO - 0.35, BAND_LO - 1.3)
   if (depth <= 0.01) return
   const since = torn ? t - TEAR : 0
-  // Flung up on the surge and spent at once; then drifting apart and sinking, and thinning away.
+  // Flung up on the surge and spent at once; spreading off the deck and thinning over half a second; then what is left
+  // drifts apart, sinks, and thins away.
   const up = torn ? 0.8 * (1 - Math.exp(-since / 0.12)) - 0.16 * since : 0
   const fade = torn ? (0.5 * Math.exp(-since / 0.75) + 0.5 * Math.exp(-since / 0.22)) * (1 - smoothUp(since, 1.8, 3.4)) : 1
   CLING.forEach((l, i) => {

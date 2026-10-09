@@ -14,7 +14,8 @@ import { sm } from './set-air'
  * its crown down, the cloud opening over the valley and the light coming through, the fog lifting off the meadow
  * (the set draws all of it by show time). Ian, far off across the meadow, sets off toward her on 190.822. On 192.238 the
  * camera cuts back in to the two of them; he comes to her side and meets her as she leans to him on the touch
- * (195.344), and stays against her as she settles. The camera comes in on them, the sky where the shell was, to the framing the lake house opens on.
+ * (195.344), and stays against her as she settles. The camera comes in on them, the sky where the shell was, to the
+ * framing the lake house opens on.
  *
  * Ian comes from the camp on her right: the seam into the lake house has him beside her on her right, and in a
  * picture seen side on he cannot come from her left and end up there.
@@ -38,12 +39,12 @@ const IAN_FROM = 22.2
 /** Every strike: the shell lifts (and the cut to the wide), Ian sets off, the cut back in, the touch. */
 export const DEPART_HITS: number[] = [DEPART, IAN_GO, CUT_IN, TOUCH]
 
-/** Her, in the part's frame at show time `t`: still, but for a look up as the shell lifts, and a lean to him. */
 /** Her lean to him round the touch: in as he comes, and back to her mark (the circle's first frame is hers there). */
 const leanAt = (t: number): number => 0.035 * Math.sin(Math.PI * sm(t, TOUCH - 0.5, TOUCH + 0.9))
 /** From the touch on he stays against her, coming with her as she settles back: they end the meadow together. */
 const AGAINST = 2 * R + 0.006
 
+/** Her, in the part's frame at show time `t`: still, but for a look up as the shell lifts, and a lean to him. */
 function herAt(t: number): Pt {
   const look = t > DEPART ? -0.05 * Math.sin(Math.PI * Math.min(1, (t - DEPART) / 1.6)) * Math.exp(-Math.max(0, t - DEPART - 0.8) / 0.6) : 0
   const lean = leanAt(t)
@@ -53,7 +54,7 @@ function herAt(t: number): Pt {
   return [-0.5 + look + lean + glance, 0]
 }
 
-/** Ian's x from her (frame cells) at `t`: waiting, then rolling to her side, easing to a stop at the touch. */
+/** Ian's x from her (frame cells) at `t`: waiting, rolling to her side, easing into her on the touch, then with her. */
 function ianX(t: number): number {
   const from = IAN_FROM - AFTER_AT[0] + 0.5
   const to = AGAINST + leanAt(TOUCH)
