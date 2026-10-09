@@ -1,4 +1,4 @@
-import { ballAt, laneAt, type Pt } from '../../../../parts'
+import { ballAt, laneAt, R, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
@@ -31,6 +31,28 @@ export interface Stage {
   after?: Placed[]
   /** Show time from which this universe is on the stage. */
   from: number
+}
+
+/**
+ * The touches where they look at each other: a ball's mark turns with its rolling everywhere else, but here each
+ * one's mark is turned to the other a little before they meet, held through the touch, and let go to roll again.
+ * The kiss at Lipton's, the touch at the curtain call, the roll down the beam to him, the touch among the stars. (The
+ * club's kiss and the look at the door are set by where they sit.)
+ */
+const GAZE = [65.515, 125.585, 266.008, 338.709]
+function gazeAt(t: number): number {
+  let w = 0
+  for (const g of GAZE) {
+    const s = t - g
+    const u = s < -0.7 ? 0 : s < 0 ? 1 - (s / -0.7) ** 2 : s < 1.2 ? 1 : s < 2.0 ? 1 - ((s - 1.2) / 0.8) ** 2 : 0
+    w = Math.max(w, Math.max(0, u))
+  }
+  return w
+}
+/** From `a` toward `b` by `w`, the short way round. */
+function turn(a: number, b: number, w: number): number {
+  const d = Math.atan2(Math.sin(b - a), Math.cos(b - a))
+  return a + d * w
 }
 
 const IDS: Record<Who, number> = { mia: MIA_ID, david: DAVID_ID, son: SON_ID }
@@ -151,6 +173,15 @@ export class SebsShow extends Show {
         scale: point.hidden ? 0 : point.scale,
         stretch: point.stretch,
         angle: point.angle,
+      }
+      // Where they look at each other, each one's mark is turned from its rolling to face the other.
+      const w = gazeAt(time)
+      const mia = company.find((b) => b.id === MIA_ID)
+      if (w > 0 && mia) {
+        const col = universe.pieces[0]?.col ?? 0
+        const toMia = Math.atan2(mia.y - hero.y, mia.x - hero.x)
+        hero.spin = turn((hero.x - col) / R, toMia, w)
+        mia.spin = turn((mia.x - col) / R, toMia + Math.PI, w)
       }
       here.balls = [hero, ...company]
     }

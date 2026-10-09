@@ -279,3 +279,7 @@ A thirty-second pass:
 A thirty-third pass, at stillness, measured:
 
 - **Who stands still, and when.** I listed every uncovered stretch of three seconds or more where either of them is in the picture and does not move. Nearly all are meant: a held chord at the keys, the balance on the trumpet's beam, the jam, the silence after the last chord, him watching her audition, her eyes at her table, the boy asleep on the couch. One was not: at the pool she stood on the deck for seven seconds while he bounced higher and higher on the board for the family. She bounces with him now on each of his landings, and hops when he goes in.
+
+A thirty-fourth pass, at where they look:
+
+- **Their eyes.** Each ball's mark is its eye. At the club the seats are set so that the marks say something: at the dream's kiss they face each other, and at the door he looks up. Everywhere else a mark turns with the ball's rolling, wherever that leaves it, and at three of their four other touches it left them looking away from each other: at the kiss at Lipton's, on the roll down the beam to him, and at the touch among the stars. Around each of those touches, and the curtain call's, each one's mark now turns from its rolling to the other, a little before they meet, holds through the touch, and is let go to roll again.
