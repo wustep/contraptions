@@ -578,7 +578,7 @@ videoBtn.addEventListener('click', () => {
       videoBtn.textContent = `Stop · ${Math.round(done * 100)}%`
     })
     .then(
-      (saved) => say(exportNote, saved ? `Saved: picture and music${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
+      (saved) => say(exportNote, saved ? `Saved: ${perf?.soundtrack?.src ? 'picture and music' : perf?.soundtrack ? 'the picture, silent (the music is YouTube’s)' : 'the picture'}${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
       (err) => {
         console.error(err)
         say(exportNote, err instanceof Error ? err.message : String(err), 'bad')
@@ -724,7 +724,7 @@ function sync(): void {
   videoBtn.title = busy
     ? 'Stop the recording. No file is kept.'
     : canRecord
-      ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.`
+      ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.${perf?.soundtrack && !perf.soundtrack.src ? ' It is silent: the music plays from YouTube, which a recording cannot take.' : ''}`
       : 'Video export needs a browser that can record the canvas.'
 }
 
