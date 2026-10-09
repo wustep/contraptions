@@ -325,6 +325,13 @@ The notes went back to the builders who made each part, who still had their cont
     its anchor were cut by the frame's right edge. A third of the frame was the storefront's dark glass.
   - The two framings there now hold further right and a little higher. The whole string is in, anchor to anchor,
     over the family, with her at the switch and the camera on its tripod between them.
+- **A pass for the cradle.** The hush, the pull, the rocks' first silence and kindness were watched at 3 to 6 fps.
+  The rocks' wide shot as Joy's stone teeters is a deliberate wide, the stones clear on the ledge, and was kept.
+  - Through the cradle (194.8 to 198.6 s) the scissor arm's lattice ran straight across the party's luck card, with
+    Evelyn, red on red, carried just under it, so the arm, the card and the ball read as one tangle.
+  - The card now hangs between the two scrolls, over the table's left end, left of the arm's whole reach. It is
+    clear of the lattice and of her all through the cradle, and whole in the frame on the fight's last hit. The
+    lattice crossing the right scroll was kept: it reads as an arm in front of a wall hanging.
 
 ## End credits
 

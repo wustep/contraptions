@@ -66,7 +66,7 @@ function poly(pen: Pen, pts: Pt[]): void {
 /* ------------------------------------------------------------------ the party: lanterns, table, steamers, karaoke */
 
 /** The party's wall: where it is dressed for the new year, over the table (room cells). */
-const DRESS = { x0: 29.7, x1: 36.0, swag: -4.2, dip: 0.32, scroll: { xs: [30.55, 34.55], top: -3.45, h: 1.38, w: 0.3 }, card: { x: 33.4, y: -2.6, r: 0.38 } }
+const DRESS = { x0: 29.7, x1: 36.0, swag: -4.2, dip: 0.32, scroll: { xs: [30.55, 34.55], top: -3.45, h: 1.38, w: 0.3 }, card: { x: 31.5, y: -2.62, r: 0.34 } }
 
 /**
  * The wall over the party, dressed for the new year: crepe-paper festoons under the ceiling, red and gold by turns,
