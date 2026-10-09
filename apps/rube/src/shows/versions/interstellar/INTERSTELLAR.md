@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 20 (latest)
+## Polish pass 21 (latest)
+
+- **The opening's bottom edge.** Pass 15's kitchen stood two chairs at the table, and their backs rose into the first frames' bottom edge: cut off there, they were two bare posts. They are stools now, low enough to stay under that edge, and the jug on the table is a low bowl for the same reason. The museum's kitchen has the same stools.
+
+## Polish pass 20
 
 The contrast audit of pass 17, run for the other two balls, with no change to the show. Every half second, Brand's and Murph's fill against a ring of the picture just outside them. Where it is lowest, it is meant to be. Murph lies in her bed at dawn, a silhouette against the window. She hides in the truck's bed with only her crown over the side. She is a few pixels at the tower's foot in the liftoff's wide shot. Brand is inside the bunker. At full size each reads.
 
@@ -251,7 +255,7 @@ A measure of emptiness over the whole show: each second's frame split in sixteen
 
 ## Polish pass 15
 
-- **The kitchen under Murph's room** (`drawKitchen` in `earth/house.ts`). The first frames of the show, the dawn in Murph's room, had their lower 40% bare plaster: the kitchen below the room, left of the stairwell, where no ball goes, was drawn empty. It is furnished now: a shelf of jars and plates on the wall, a table under a hanging tin lamp with two chairs and a jug, and the tall clock. The clock stands where the station's museum will stand it (x 3.07 to 3.97) and is the same case. Here it only keeps time, the pendulum swinging a second a beat and the hands at twenty to six, before the museum makes it a machine in Act II. Its bob is a lens, not a disc, so nothing round in the kitchen can be taken for a ball. No ball's path or strike moved.
+- **The kitchen under Murph's room** (`drawKitchen` in `earth/house.ts`). The first frames of the show, the dawn in Murph's room, had their lower 40% bare plaster: the kitchen below the room, left of the stairwell, where no ball goes, was drawn empty. It is furnished now: a shelf of jars and plates on the wall, a table under a hanging tin lamp with two stools (pass 21; first chairs) and a bowl, and the tall clock. The clock stands where the station's museum will stand it (x 3.07 to 3.97) and is the same case. Here it only keeps time, the pendulum swinging a second a beat and the hands at twenty to six, before the museum makes it a machine in Act II. Its bob is a lens, not a disc, so nothing round in the kitchen can be taken for a ball. No ball's path or strike moved.
 
 ## Polish pass 14
 

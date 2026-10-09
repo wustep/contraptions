@@ -36,7 +36,7 @@ const DOOR_TOP = -1.02
 /* ------------------------------------------------------------------ the kitchen */
 
 /**
- * The kitchen under Murph's room, left of the stairwell, where no ball goes: a table and two chairs under a hanging
+ * The kitchen under Murph's room, left of the stairwell, where no ball goes: a table and two stools under a hanging
  * lamp, and the tall clock that the station's museum will rebuild as a machine (`act2/replica.ts`), standing where it
  * will stand there and keeping time: its pendulum swings a second a beat, its hands at dawn. The bob is a lens, not a
  * disc, so nothing round in here can be taken for a ball.
@@ -85,19 +85,20 @@ function drawKitchen(p: p5, c: Ctx): void {
   for (const x of [TABLE_X0 + 0.1, TABLE_X1 - 0.16]) R4(x, TABLE_TOP + 0.13, x + 0.06, DOWN)
   solid(p, ink, w * 0.6, mixHex(DUST.bone, DUST.teal, 0.25))
   R4(lx - 0.35, TABLE_TOP - 0.012, lx + 0.35, TABLE_TOP + 0.03)
-  // A jug on the cloth.
+  // A low bowl on the cloth (low, so it stays under the opening frame's edge).
   solid(p, ink, w * 0.7, DUST.denim)
-  p.quad(X(lx - 0.07), X(TABLE_TOP - 0.2), X(lx + 0.05), X(TABLE_TOP - 0.2), X(lx + 0.08), X(TABLE_TOP - 0.01), X(lx - 0.09), X(TABLE_TOP - 0.01))
-  // The chairs, one each end, ladder-backs facing in.
-  for (const [x, side] of [[TABLE_X0 - 0.05, -1], [TABLE_X1 + 0.05, 1]] as const) {
-    const seat = -0.36
-    const back = x + side * 0.28
+  p.quad(X(lx - 0.13), X(TABLE_TOP - 0.07), X(lx + 0.13), X(TABLE_TOP - 0.07), X(lx + 0.08), X(TABLE_TOP - 0.01), X(lx - 0.08), X(TABLE_TOP - 0.01))
+  // Two stools, one each end: low, so that nothing stands up out of the table's line into the bottom of the opening's
+  // frame (chair backs there were cut off by its edge into two bare posts).
+  for (const x of [TABLE_X0 - 0.22, TABLE_X1 + 0.22]) {
+    const seat = -0.3
+    outline(p, ink, w * 0.9)
+    p.line(X(x - 0.08), X(seat + 0.04), X(x - 0.13), X(DOWN))
+    p.line(X(x + 0.08), X(seat + 0.04), X(x + 0.13), X(DOWN))
+    p.line(X(x), X(seat + 0.04), X(x), X(DOWN))
+    p.line(X(x - 0.1), X(-0.13), X(x + 0.1), X(-0.13))
     solid(p, ink, w, DUST.wood)
-    R4(Math.min(x, back), seat, Math.max(x, back), seat + 0.05)
-    R4(back - 0.03, -0.92, back + 0.03, DOWN)
-    R4(x - 0.03, seat + 0.05, x + 0.03, DOWN)
-    outline(p, ink, w * 0.7)
-    for (const y of [-0.82, -0.68, -0.54]) p.line(X(back), X(y), X(back - side * 0.02), X(y))
+    R4(x - 0.14, seat, x + 0.14, seat + 0.05)
   }
   // The tall clock: base and trunk, the glass, the pendulum, the hood and its face.
   const case_ = mixHex(DUST.wood, DUST.rust, 0.25)
