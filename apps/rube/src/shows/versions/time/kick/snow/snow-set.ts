@@ -1375,6 +1375,14 @@ function drawVaultFace(p: p5, ctx: C2D, c: Ctx, t: number): void {
   ctx.fillStyle = SNOW.vault
   ctx.fill()
   drawDoor(ctx, c, [cx, dy], r, turn, d.wheel, d.bolts)
+  // The lamp's warmth out through the open doorway, across the antechamber's floor to the son at its sill: the
+  // first warm light he has stood in, the whole dream. It goes out with the kick.
+  const warm = d.roll * (t < T.kick ? 1 : 0)
+  if (warm > 0.003) {
+    pool(p, k, [dx - 0.25, fl - 0.04], 2.1, 0.32, SNOW.pinwheel, 0.34 * warm)
+    pool(p, k, [dx - 0.1, fl - 0.04], 1.0, 0.18, mixHex(SNOW.pinwheel, SNOW.flash, 0.4), 0.3 * warm)
+    bloom(p, k, [dx, dy + 0.35 * r], 1.6 * r, SNOW.pinwheel, 0.12 * warm)
+  }
 }
 
 function drawDoor(ctx: C2D, c: Ctx, [cx, cy]: Pt, r: number, turn: number, wheel: number, bolts: number): void {
@@ -1446,7 +1454,7 @@ function drawVaultInside(p: p5, ctx: C2D, c: Ctx, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect((dx - r) * k, (dy - r) * k, 2 * r * k, 2 * r * k)
   // The lamp's light down on the bed: the one warm light in the fortress.
-  pool(p, k, [dx + 0.2, fl - 0.55], 1.0, 0.35, SNOW.pinwheel, 0.25)
+  pool(p, k, [dx + 0.2, fl - 0.55], 1.1, 0.45, SNOW.pinwheel, 0.42)
   bloom(p, k, [dx + 0.1, dy - r + 0.1], 0.9, SNOW.flash, 0.3)
   // The bed: legs, the mattress, the sheet over him, the pillow at the right, by the bedside and its pinwheel.
   const bx0 = dx - 0.75

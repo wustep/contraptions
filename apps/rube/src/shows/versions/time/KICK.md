@@ -307,6 +307,10 @@ each world, and changed:
   nothing said so: each of them sat on its top edge and then seemed to sink down through the rock to its foot. Each
   throws a shadow on the band behind it now, a little east of them and lower, furthest off and softest at the top of
   the air, closing up on them as they come down, so they are seen to fly in front of the face.
+- **The vault opens** (188.3 to 190.9): the bed and the pinwheel were lit in the same cold grey as the antechamber,
+  so the son coming to his father's bed went by as a passing shot (a fifth critic's note). The lamp over the bed is
+  warmer now, and as the door rolls aside its light spills out across the floor to the sill where Fischer stops, the
+  first warm light he has stood in the whole dream, Cobb and Ariadne at its edge. It goes out with the kick.
 
 ## Inception nods
 
