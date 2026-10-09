@@ -70,7 +70,7 @@ export const HUMAN_STRETCH: number = (() => {
  */
 function thinkAt(t: number): number {
   const k = Math.floor(t / 40)
-  if (hash(k, 401) > 0.45) return 0
+  if (hash(k, 401) > 0.18) return 0
   const at = k * 40 + 6 + hash(k, 402) * 22
   const s = t - at
   if (s < 0 || s > 8) return 0

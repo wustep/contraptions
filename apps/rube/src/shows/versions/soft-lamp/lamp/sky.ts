@@ -612,8 +612,8 @@ function trainAt(at: number, t: number): { front: number; dir: 1 | -1 } {
  */
 const TRAINS: number[] = (() => {
   const out: number[] = []
-  for (let at = 150; at < 1450 && out.length < 6; at += 1) {
-    if (out.length && at < out[out.length - 1] + 170) continue
+  for (let at = 150; at < 1450 && out.length < 4; at += 1) {
+    if (out.length && at < out[out.length - 1] + 260) continue
     if ([...FLIGHTS].some((f) => Math.abs(f - at) < 40)) continue
     let seen = 0
     let crossing = 0
@@ -871,7 +871,7 @@ function flatSeen(t: number, dur: number): boolean {
 }
 
 /** Whether `t` is near a flash of lightning: what happens across the street keeps clear of the storm's moments. */
-const nearFlash = (t: number): boolean => FLASHES.some((f) => t > f - 10 && t < f + FLASH_LOOK + 8)
+const nearFlash = (t: number): boolean => FLASHES.some((f) => t > f - 15 && t < f + FLASH_LOOK + 8)
 
 const WALK = 3.6
 const LOOK = 7
@@ -885,7 +885,7 @@ const CAT_WALK = 2.4
 const { PASSES, SITS } = (() => {
   const passes: [number, 1 | -1, number][] = []
   let last = -Infinity
-  for (let t = FLAT_ON + 120; t < FLAT_OFF - 30 && passes.length < 6; t += 1) {
+  for (let t = FLAT_ON + 120; t < FLAT_OFF - 30 && passes.length < 4; t += 1) {
     if (t - last < 210 || nearFlash(t) || machineBusy(t, t + WALK, 4) || !flatSeen(t, WALK + 1)) continue
     passes.push([t, passes.length % 2 ? -1 : 1, 0])
     last = t

@@ -979,7 +979,26 @@ both in Zoom, and the overview.
      in front of the glass, which takes no shadow. Faint, as the cat is far from the lamp; a thing to be right rather
      than to be seen.
 
-**Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
+### The fifty-eighth pass: the director's cut
+
+Twenty passes added things, each looked at alone and each tasteful alone. Counted together, the half hour had 116
+moments that draw the eye, 3.8 a minute, nearly twice what it had when the pacing was last audited (forty-second
+pass); a piece to leave on wants room more than incident. So this pass takes away, from what repeats most and means
+least each time:
+
+149. **Thinking pauses**, the one in the window stopping with the pen at their lips: from 24 to 8. Seldom, they read as
+     a thought; every minute and a bit, they read as a loop.
+150. **Trains:** from six to four, further apart (2:30, 7:04, 11:24, 15:45).
+151. **The neighbour's crossings:** from six to four, and the long look out at the rain, kept.
+152. **Headlights on the wall:** from seventeen to twelve, two to three minutes apart.
+153. What stays: everything that is the music's (the drops, the lobs, the kitten's glance at each new track) and every
+     one-off (the lightning, the stars, the planes, the hand's reaches, the kitten's stretches, climb and waking).
+     Ninety-one moments now, three a minute. Everything still lands, re-scheduled round the gaps (the face in the mist
+     at 18:53, the tea away at 22:07 and back at 24:35). `check:shows` holds the hand's reaches in any order between the
+     lamp's two, and five or more crossings.
+
+**Subtracted:** twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
+headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
 

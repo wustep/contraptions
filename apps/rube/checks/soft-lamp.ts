@@ -185,7 +185,7 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
   const inFocus = (t: number) => blurOf(lensOf(perf.camera!(t))) <= 0.02
   check('soft lamp: lightning three times in the heaviest rain, the cat in view; the shooting stars and the neighbour\'s crossings in focus',
     m.lightning.length === 3 && m.lightning.every((t) => rainAt(t) >= 0.68 && catInViewAt(t)) &&
-    m.shooting.length >= 2 && m.shooting.every(inFocus) && m.crossings.length >= 6 && m.crossings.every(([t]) => inFocus(t)) &&
+    m.shooting.length >= 2 && m.shooting.every(inFocus) && m.crossings.length >= 5 && m.crossings.every(([t]) => inFocus(t)) &&
     m.crossings.every(([t]) => m.lightning.every((f) => t < f - 10 || t > f + 10)), JSON.stringify(m))
 
   // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched, hands round the mug in the
@@ -203,7 +203,7 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     return true
   }
   check('soft lamp: a hand turns the lamp on, takes a sip, scratches the kitten, warms itself on the mug, draws in the mist, refills the tea after midnight, and turns the lamp down, each in frame, clear of the yawns and washes',
-    kinds === 'on sip pet cup draw away back lamp' && REACHES.filter((r) => r.kind === 'draw').every((r) => rainAt(r.at) > 0.55) && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
+    [...REACHES.map((r) => r.kind)].sort().join(' ') === 'away back cup draw lamp on pet sip' && kinds.startsWith('on sip pet') && kinds.endsWith('away back lamp') && REACHES.filter((r) => r.kind === 'draw').every((r) => rainAt(r.at) > 0.55) && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
     REFILL > 1140 && REFILL < MUSIC_END - 300 &&
     [...YAWNS, ...WASHES].every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
 

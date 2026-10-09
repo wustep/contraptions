@@ -479,7 +479,7 @@ export const SWEEPS: number[] = (() => {
   let at = 160
   for (let k = 0; at < MUSIC_END - 20; k++) {
     out.push(at)
-    at += 70 + hash(k, 151) * 60
+    at += 110 + hash(k, 151) * 70
   }
   return out
 })()
