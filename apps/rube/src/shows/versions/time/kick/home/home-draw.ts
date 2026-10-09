@@ -136,7 +136,9 @@ function farTrees(ctx: C2D, k: number, f: Frame, d: number, base: number, h: num
   ctx.save()
   ctx.translate(ox * k, oy * k)
   ctx.fillStyle = color
-  ctx.fillRect(x0 * k, (base - h * 0.35) * k, (x1 - x0) * k, (h * 0.35 + 0.4) * k)
+  // Its body runs well down behind the wall: the layer rides up with the camera (most under Zoom), and a body that
+  // stopped just under its base showed a strip of sky between it and the wall's top.
+  ctx.fillRect(x0 * k, (base - h * 0.35) * k, (x1 - x0) * k, (h * 0.35 + 3) * k)
   const step = 0.3
   for (let i = Math.floor(x0 / step) - 3; i <= Math.ceil(x1 / step) + 3; i++) {
     const r1 = hash(i, seed, 1)

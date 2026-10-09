@@ -360,6 +360,14 @@ each world, and changed:
 - **Fischer's taxi pulling away** (71.9 to 72.7): it eased off the kerb at about Cobb's pace, so for most of a second
   he and Fischer rolled along right over its two wheels and read as its wheels (a fresh critic's note). It pulls out
   briskly now, clear of them in a third of a second, and waits in the queue at the bridge for the train.
+- **Fischer's taxi coming in** (69.2 to 70.4): it slowed to the kerb right behind Ariadne and Cobb, so for most of a
+  second they sat along its sill between its wheels, a car with four wheels in a row (a critic's note under Zoom). It
+  comes in later and quicker now, past them in half a second, to the same stop on the same beat.
+- **The cage up the shaft, under Zoom** (177 to 177.6): the camera held low on the flat as the cage rose, and under
+  Zoom he went half out of the frame's top. It starts up with him sooner, and under Zoom he stays in the picture.
+- **The far trees over home's wall, under Zoom** (251 to 265): their layer rides up with the camera, most under Zoom,
+  and its body stopped just under its base, so a strip of sky showed between the trees and the wall's top. Its body
+  runs down behind the wall now.
 
 ## Inception nods
 
