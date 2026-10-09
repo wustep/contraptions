@@ -599,6 +599,13 @@ few frames, a flash, as the frantic writing's first reach once did. A limb draws
 nine-tenths, so it is seen going; the other thirty-two frames this touches (each limb lingering a moment longer by the
 ring it wrote) were each looked at, and none carries into a cut.
 
+A fifty-fourth looked at what the fiftieth to the fifty-third had changed through other eyes. The whole show in a
+tall frame, a frame every three seconds: the warm ending, the overcast over the break, the hands and the limbs all
+hold. The stage timed under a fourfold CPU throttle at the places they touched, each against round 48's drawing: within
+the noise everywhere (the same untouched moment counted 18 and 8 on two runs). And the page itself, not the canvas
+alone, at the start, mid-show and in the credits, on a desktop and on a phone: the cast card centred over the wall,
+clear of the window, nothing clipped. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
