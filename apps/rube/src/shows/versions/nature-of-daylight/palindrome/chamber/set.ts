@@ -114,6 +114,11 @@ function gripsOf(who: Writer): Grip[] {
   }
   return out.sort((a, b) => a.t0 - b.t0)
 }
+/**
+ * How long a limb takes to draw back after it writes, when nothing follows soon. Eased both ways, a limb drawn back in
+ * under a second swept out of a close frame in a few frames, a flash, as the frantic writing's first reach once did.
+ */
+const WITHDRAW = 1.5
 function keysOf(grips: Grip[]): Key[] {
   const keys: Key[] = []
   grips.forEach((g, i) => {
@@ -122,7 +127,7 @@ function keysOf(grips: Grip[]): Key[] {
     if (!last || last.u === 0) keys.push({ t: g.t0 - g.lead, u: 0, to: g.to, open: 0, palm: g.palm })
     keys.push({ t: g.t0, u: 1, to: g.to, open: g.open, palm: g.palm })
     keys.push({ t: g.t1, u: 1, to: g.to, open: g.open, palm: g.palm })
-    if (!next || next.t0 - next.lead - g.t1 > 0.9) keys.push({ t: g.t1 + 0.9, u: 0, to: g.to, open: 0, palm: g.palm })
+    if (!next || next.t0 - next.lead - g.t1 > WITHDRAW) keys.push({ t: g.t1 + WITHDRAW, u: 0, to: g.to, open: 0, palm: g.palm })
   })
   return keys
 }

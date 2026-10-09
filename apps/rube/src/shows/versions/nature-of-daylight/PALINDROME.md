@@ -593,6 +593,12 @@ a small pad on the end of an arm thicker than it, with seven thin fingers spread
 not a hand. The hand there is bigger now, and every palm's fingers are thicker and its pad a little fuller, so the palm
 she meets (149 s) and the hands in the fog read as hands too.
 
+A fifty-third filmed the whole show at four frames a second and ranked every change from one frame to the next against
+its neighbours. Past the cuts, one stood out: at 163 s Costello's limb, done writing, swept out of the close frame in a
+few frames, a flash, as the frantic writing's first reach once did. A limb draws back over a second and a half now, not
+nine-tenths, so it is seen going; the other thirty-two frames this touches (each limb lingering a moment longer by the
+ring it wrote) were each looked at, and none carries into a cut.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
