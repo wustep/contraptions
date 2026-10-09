@@ -756,6 +756,8 @@ const GIVEN: { at: number; target: (t: number) => { at: Pt; r: number } }[] = [
  * `over`). Her eye (`fx.ts`) is centred on her ball, its white 0.6 of her radius.
  */
 export function drawGivenEyes(pen: Pen, t: number, her: (t: number) => Pt): void {
+  const { p, k } = pen
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const g of GIVEN) {
     const u = t - (g.at - FLIGHT)
     if (u < 0 || u >= FLIGHT) continue
@@ -763,13 +765,35 @@ export function drawGivenEyes(pen: Pen, t: number, her: (t: number) => Pt): void
     const from = her(g.at - FLIGHT)
     const to = g.target(g.at).at
     const d = Math.hypot(to[0] - from[0], to[1] - from[1])
-    const f = 1 - (1 - s) * (1 - s) * (1 - 0.4 * s)
-    const lift = (0.1 + 0.35 * d) * 4 * s * (1 - s)
-    const x = from[0] + (to[0] - from[0]) * f
-    const y = from[1] + (to[1] - from[1]) * f - lift
-    // Peeled off hers at her eye's size, it swells to the machine's as it goes.
+    const at = (s: number): Pt => {
+      const f = 1 - (1 - s) * (1 - s) * (1 - 0.4 * s)
+      const lift = (0.1 + 0.35 * d) * 4 * s * (1 - s)
+      return [from[0] + (to[0] - from[0]) * f, from[1] + (to[1] - from[1]) * f - lift]
+    }
+    const [x, y] = at(s)
+    // Peeled off hers at her eye's size, it swells to the machine's as it goes, and a little past it in mid-flight,
+    // so on the pale tile the gift is seen going.
     const r0 = 0.6 * R
-    const r = (r0 + (g.target(g.at).r - r0) * s) * (0.7 + 0.3 * Math.min(1, s / 0.2))
+    const swell = 1 + 0.45 * Math.sin(Math.PI * s)
+    const r = (r0 + (g.target(g.at).r - r0) * s) * (0.7 + 0.3 * Math.min(1, s / 0.2)) * swell
+    // It carries the great hit's lantern gold with it: a trail of its arc, and a soft light round it.
+    const fade = Math.sin(Math.PI * Math.min(1, s * 1.15))
+    p.noStroke()
+    for (let i = 7; i >= 1; i--) {
+      const q = s - i * 0.035
+      if (q < 0) continue
+      const [tx, ty] = at(q)
+      p.fill(alpha(p, HOME.gold, 0.55 * fade * (1 - i / 8)))
+      p.circle(tx * k, ty * k, r * 1.1 * (1 - i / 10) * k)
+    }
+    const gr = r * 3.2 * k
+    const glowG = ctx.createRadialGradient(x * k, y * k, r * 0.8 * k, x * k, y * k, gr)
+    glowG.addColorStop(0, `rgba(255, 201, 90, ${0.55 * fade})`)
+    glowG.addColorStop(1, 'rgba(255, 201, 90, 0)')
+    ctx.save()
+    ctx.fillStyle = glowG
+    ctx.fillRect(x * k - gr, y * k - gr, 2 * gr, 2 * gr)
+    ctx.restore()
     propEye(pen, x, y, r, s * Math.PI * 2.6 + 0.5 * Math.sin(s * 19), 0.7 * Math.sin(Math.PI * s))
   }
 }

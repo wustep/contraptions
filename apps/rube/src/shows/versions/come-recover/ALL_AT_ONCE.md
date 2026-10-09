@@ -453,6 +453,12 @@ The notes went back to the builders who made each part, who still had their cont
   - The print is now 1.4 times the size, an instant photo's proportion beside balls this big. It rests a little
     further left, still leaning on the washer's edge, clear of the tripod's leg and of Evelyn. It reads on a desktop
     as the glowing window with the three of them in it. On a phone its colours show.
+- **A pass for the gifts.** The heart of kindness is that each jumper is given a copy of Evelyn's own eye, and its
+  blow turns gentle. The jumpers read wearing their eyes, but the gifts themselves, stepped through at 10 fps, were
+  white specks crossing the pale tile, all but unseen.
+  - Each eye now carries the great hit's lantern gold as it flies: a soft light round it and a fading gold trail
+    along its arc. It swells a little in mid-flight and lands at its own size. The kindness is seen passing from her
+    to each machine, in the light she chose it in.
 
 ## End credits
 
