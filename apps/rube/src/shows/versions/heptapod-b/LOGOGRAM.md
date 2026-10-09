@@ -254,9 +254,11 @@ strongest pulses held against what the picture does on them. What changed:
 - **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
   the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
   off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
-- **Her eye at the glass** (119.25 → 130.4): in the chamber her dot was only a roll mark, so on the touch and all
-  through the first logogram it pointed wherever her roll left it: at the floor. As the palm comes down to her she
-  now looks up at it, and as the ink comes in, up and over to the ring being written, into the white. (The show
+- **Her eye in the chamber** (97.5 → 130.4): there her dot was only a roll mark, so as Abbott came out of the white,
+  through the grand wide, on the touch and all through the first logogram it pointed wherever her roll left it,
+  mostly at the floor. Wherever she is at rest she now looks: up at Abbott as he comes, up at the giants through the
+  wide and down the limb as it comes to her, up at the palm on the touch, and over to the ring being written, into
+  the white. On her rolls her eye rolls with her. (The show
   hands each rider her roll as the stage would draw it, so the eye turns from where it is; elsewhere every frame is
   unchanged.)
 - **The second vision's loss** (156.177 → 160.015): Hannah leaves level along the bench, so Louise's gaze barely

@@ -3,7 +3,7 @@ import { box, part, route, type Company, type PartShot, type Riders } from '../k
 import { SEAMS } from '../seams'
 import { drawChamber } from './chamber-glass'
 import { FOOTFALLS } from './chamber-heptapods'
-import { CLOSE, IAN_PATH, IN, INK_IN, LOUISE_PATH, OPENS, OUT, PALM, REACH, SPRAY, SURGES, WAKE, X_LEAN, X_PALM, X_REST } from './chamber-path'
+import { ABBOTT_SEEN, CLOSE, IAN_PATH, IN, INK_IN, LOUISE_PATH, OPENS, OUT, PALM, REACH, SET_OFF, SPRAY, SURGES, WAKE, X_LEAN, X_PALM, X_REST } from './chamber-path'
 
 /**
  * The chamber (85.786 → 130.409): the chamber builder's. First contact.
@@ -40,20 +40,31 @@ const ease = (u: number): number => {
   const v = Math.max(0, Math.min(1, u))
   return v * v * (3 - 2 * v)
 }
-/** Where she looks at the glass: up at the palm as it comes down to her, and then up and over to the ring as it is written. */
+/** Where she looks: up at a giant over the glass, up at the palm, and up and over to the ring as it is written. */
+const AT_GIANT = -1.0
 const AT_PALM = -Math.PI / 2 + 0.12
 const AT_RING = -0.55
-const LOOK_UP = OPENS + 0.55
-const lookAt = (t: number): number => AT_PALM + turnTo(AT_PALM, AT_RING) * ease((t - (SPRAY + 0.1)) / 0.6)
+/** Following the limb as it comes down out of the giants to her. */
+const LIMB_DOWN = 115.4
 /**
- * Her eye at the glass. Until the palm comes down to her it rolls with her; then it looks: up at the palm through the
- * touch (the show's first contact, never at her feet), and over to the logogram as it is written, into the white.
+ * When she looks rather than rolls, and at what. Only while she is at rest (or all but), so her eye never slides on a
+ * rolling ball: stopped as Abbott comes out of the white; at the glass's foot through the grand wide, the giants over
+ * her and then the limb coming down; and from the palm's opening through the touch and the writing, into the white.
+ * Between them, and on the rolls, her eye rolls with her.
  */
+const LOOKS: { from: number; to: number; at: (t: number) => number }[] = [
+  { from: ABBOTT_SEEN + 0.3, to: 99.25, at: () => AT_GIANT },
+  { from: 105.2, to: SET_OFF - 0.2, at: (t) => AT_GIANT + turnTo(AT_GIANT, AT_PALM) * ease((t - LIMB_DOWN) / 2.2) },
+  { from: OPENS + 0.55, to: Infinity, at: (t) => AT_PALM + turnTo(AT_PALM, AT_RING) * ease((t - (SPRAY + 0.1)) / 0.6) },
+]
+/** Her eye: rolling with her, and turned to look in the windows above, from where it is and back to it. */
 const looking: Riders = (t, hero) => {
-  const w = ease((t - LOOK_UP) / 0.4)
+  const look = LOOKS.find((l) => t > l.from && t < l.to + 0.4)
+  if (!look) return null
+  const w = ease((t - look.from) / 0.45) * (1 - ease((t - look.to) / 0.4))
   if (w <= 0) return null
   const roll = hero.spin ?? 0
-  return [{ ...hero, spin: roll + w * turnTo(roll, lookAt(t)) }]
+  return [{ ...hero, spin: roll + w * turnTo(roll, look.at(t)) }]
 }
 
 /** Every strike: the glass's two wakings, the seen footfalls, the limb leaving the floor, the palm opening, the touch, the spray, the ink coming in, the ring's surges, its closing and its tendrils. */
