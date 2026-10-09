@@ -46,7 +46,8 @@ const DOWN = 192.052
  * On the floor he turns to her picture on the easel and leans to it, slowly, the lean he gave her in the office and at
  * her bedside, and holds it; then he straightens and walks from the pew to the porch under the tower, and stands there.
  */
-const TO_HER = DOWN + 0.15
+// His lean is full 0.45 s after it starts: it arrives on the piano's note at 192.569.
+const TO_HER = 192.569 - 0.45
 const WALK = 192.7
 const HALT = 197.5
 /** Where he stops: in the porch, the rope a step to his right and his balloon clear of it. */
@@ -144,7 +145,7 @@ function carlPose(T: number): { tilt: number; squash: number } {
 }
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
-export const FUNERAL_HITS: number[] = [DOWN, TOLL, ANSWER]
+export const FUNERAL_HITS: number[] = [DOWN, TO_HER + 0.45, TOLL, ANSWER]
 
 interface FuneralState {
   begin: number

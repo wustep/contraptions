@@ -59,7 +59,7 @@ the credits over the house.
 
 ## In order
 
-Every scene has one hero mechanism that does something real on the music. There are 254 strikes in all, each on a
+Every scene has one hero mechanism that does something real on the music. There are 258 strikes in all, each on a
 measured beat or onset. In the waltzes the two of them play the bar between them: Carl, square, keeps the oom (the
 bass, on the one); Ellie, round, answers on the first pah.
 
@@ -657,6 +657,12 @@ window.
   let down over a third of a second (moving the glance's end had left it a snap before the cut, caught by measuring).
   The tickets come to rest sooner, while he is still moving, so they no longer seem to follow him down. Zoom cuts the
   baby's head there, a limit now listed. The PR's stale screenshots were re-taken.
+
+- **Polish round 30 (Opus 5.5).** The gestures these rounds added were timed by eye, not to the music. Now each is
+  on a note and a registered strike, so the music check holds it: under the baby cloud her turn to him completes on bar
+  44's downbeat (it already did) and his answering lean arrives on the strongest note between (62.305); at the funeral
+  his lean to her picture arrives on the piano's note at 192.569; on the hill the first ticket slips out on the fall's
+  strike and the second on the next onset (174.916). 258 strikes in all.
 
 ## Known limits
 

@@ -407,7 +407,8 @@ function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
   if (!land) return out
   // Out of the downhill side of its mouth.
   const mx = land.x + Math.sin(land.tilt) * BASKET.h * 0.6 + BASKET.w * 0.35
-  for (const [delay, reach, spin] of [[0.08, 0.3, -0.9], [0.22, 0.5, 0.7]] as [number, number, number][]) {
+  // The first slips out on the strike itself; the second on the next onset (174.916).
+  for (const [delay, reach, spin] of [[0.08, 0.3, -0.9], [174.916 - T.fall, 0.5, 0.7]] as [number, number, number][]) {
     const s = t - T.fall - delay
     if (s <= 0) continue
     const u = 1 - Math.exp(-s / 0.22)
@@ -513,4 +514,4 @@ export const climb = part<ClimbState>(
 )
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
-export const CLIMB_HITS: number[] = [T.onStep, E.onStep, T.fall, T.tip]
+export const CLIMB_HITS: number[] = [T.onStep, E.onStep, T.fall, T.tip, 174.916].sort((a, b) => a - b)

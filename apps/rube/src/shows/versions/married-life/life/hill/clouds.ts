@@ -874,7 +874,9 @@ const NEAR = { from: bar('waltz', 33) + 0.15, to: bar('waltz', 34) + 0.2, x: CAR
  * with a small lean, and she looks back up at it before the cut, so the match onto the mobile carries her upward look
  * (`LOOKS` in `cast.ts` turns her face; his lean is this part's pose). What they want, decided between them.
  */
-export const GLANCE = { to: START.down, answer: START.down + 0.15, back: END - 0.05 }
+// Her turn to him completes on bar 44's downbeat (her turn takes 0.35 s, from his start), and his lean arrives on the
+// strongest note between (62.305), the gesture and its answer each on their note.
+export const GLANCE = { to: START.down, answer: 62.305 - 0.35, back: END - 0.05 }
 /** When she rolls the rest of the way to him: after his start, to the cut. */
 const ROLL = { from: START.down + 0.2, to: END - 0.12 }
 
@@ -972,4 +974,4 @@ export const clouds = part<CloudsState>(
 )
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music): every chuff, one a bar, and the double; and his start, down on a beat. */
-export const CLOUDS_HITS: number[] = [...PUFFS.map((p) => p.t0), START.down].sort((a, b) => a - b)
+export const CLOUDS_HITS: number[] = [...PUFFS.map((p) => p.t0), START.down, GLANCE.answer + 0.35].sort((a, b) => a - b)
