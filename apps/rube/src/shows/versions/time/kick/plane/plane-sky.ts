@@ -172,15 +172,59 @@ function drawGroundFar(pen: Pen, t: number, f: Frame): void {
     const ht = 0.25 + 0.7 * h * h
     box(pen, i * 0.9, gy - ht, i * 0.9 + w, gy + 0.05, `${mixHex(haze, PLANE.window, 0.3)}99`, 0)
   }
-  // The runway's concrete, and the earth under it (cut away): flat, to the frame's foot.
+  // The runway's concrete, and the ground under it, cut away to the frame's foot. In a tall frame that is near half
+  // the picture, so it is not one flat grey: the slabs and their joints, a bed of crushed stone, then the earth in
+  // soft bands, darker going down, a few stones in it.
   const concrete = mixHex(PLANE.hull, PLANE.caseDark, 0.45)
-  box(pen, x0, gy, x1, Math.max(gy + 0.6, f.y1 + 1), mixHex(concrete, PLANE.dawn, 0.12), 0)
+  const bottom = Math.max(gy + 1, f.y1 + 1)
+  box(pen, x0, gy, x1, gy + 0.6, mixHex(concrete, PLANE.dawn, 0.12), 0)
   vwash(pen, x0, x1, gy, gy + 0.12, [
     [0, HOME.sun, 0.35],
     [1, HOME.sun, 0],
   ])
-  box(pen, x0, gy + 0.55, x1, Math.max(gy + 1, f.y1 + 1), mixHex(mixHex(concrete, PLANE.caseDark, 0.2), PLANE.dawn, 0.12), 0)
+  for (let x = Math.ceil(x0 / 2.4) * 2.4; x < x1; x += 2.4) line(pen, [x, gy + 0.12], [x, gy + 0.55], rgba(PLANE.night, 0.16), 0.5)
+  const bed = mixHex(mixHex(concrete, PLANE.caseDark, 0.35), PLANE.dawn, 0.1)
+  box(pen, x0, gy + 0.55, x1, Math.min(bottom, gy + 1.0), bed, 0)
+  const { ctx, k } = pen
+  ctx.fillStyle = rgba(mixHex(PLANE.caseDark, PLANE.night, 0.3), 0.35)
+  for (let i = Math.floor(x0 / 0.3); i <= x1 / 0.3; i++)
+    for (let j = 0; j < 2; j++) {
+      const x = (i + hash(i, j, 61)) * 0.3
+      const y = gy + 0.62 + 0.3 * j + 0.08 * hash(i, j, 62)
+      const r = 0.018 + 0.022 * hash(i, j, 63)
+      ctx.fillRect((x - r) * k, (y - r * 0.7) * k, 2 * r * k, 1.4 * r * k)
+    }
+  if (bottom > gy + 1.0) {
+    const top = gy + 1.0
+    const soil = mixHex(mixHex(HOME.floorShade, PLANE.caseDark, 0.4), PLANE.dawn, 0.2)
+    vwash(pen, x0, x1, top, bottom, [
+      [0, soil, 1],
+      [clamp01(3 / (bottom - top)), mixHex(soil, PLANE.night, 0.22), 1],
+      [1, mixHex(soil, PLANE.night, 0.22), 1],
+    ])
+    ;[0.6, 1.5, 2.7, 4.2, 5.9, 7.9, 10.2].forEach((d, i) => {
+      if (top + d > bottom) return
+      ctx.beginPath()
+      ctx.moveTo(x0 * k, bottom * k)
+      for (let x = x0; x <= x1 + 0.2; x += 0.25) ctx.lineTo(x * k, (top + d + 0.07 * Math.sin(x * 1.1 + i * 2.1) + 0.04 * Math.sin(x * 2.9 + i)) * k)
+      ctx.lineTo(x1 * k, bottom * k)
+      ctx.closePath()
+      ctx.fillStyle = rgba(mixHex(soil, PLANE.night, 0.5), 0.1 + 0.02 * i)
+      ctx.fill()
+    })
+    ctx.fillStyle = rgba(mixHex(PLANE.caseDark, soil, 0.4), 0.45)
+    for (let i = Math.floor(x0); i < x1; i++)
+      for (let j = 0; j < 15; j++) {
+        const [x, y] = [i + hash(i, j, 71), top + 0.3 + j * 0.7 + 0.5 * hash(i, j, 72)]
+        if (y > bottom || hash(i, j, 73) < 0.5) continue
+        const r = 0.035 + 0.05 * hash(i, j, 74)
+        ctx.beginPath()
+        ctx.ellipse(x * k, y * k, r * 1.5 * k, r * k, (hash(i, j, 75) - 0.5) * 0.6, 0, Math.PI * 2)
+        ctx.fill()
+      }
+  }
   line(pen, [x0, gy + 0.55], [x1, gy + 0.55], rgba(PLANE.night, 0.25), 0.6)
+  line(pen, [x0, gy + 1.0], [x1, gy + 1.0], rgba(PLANE.night, 0.18), 0.5)
 }
 
 /* ------------------------------------------------------------------ the airframe, behind the section */

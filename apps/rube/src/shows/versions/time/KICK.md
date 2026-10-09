@@ -322,6 +322,10 @@ each world, and changed:
   the slam, was bare pale wall from pilaster to pilaster. The lift has its landing there now: a walnut surround either
   side of the shaft, a sconce each side, the call buttons, and over them a floor dial whose needle follows the cabin,
   on the top floor until the blast and swinging over to the lobby as it falls.
+- **The ground under the runway** (223 to 244): in a tall frame (a phone held upright, a Short) the cut ground under
+  the runway is near half the picture as the plane comes in, and it was two flat greys. The runway is laid in slabs
+  now, their joints in it, on a bed of crushed stone, and under that the earth lies in soft bands, darker going down,
+  a few stones in it, as under the house.
 
 ## Inception nods
 
