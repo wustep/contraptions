@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, mixHex, type Pt } from '../../../../../parts'
-import { alpha, beam, box, carried, frame, glow, knock, lastOf, part, rgba, ring, route, type Companion, type Ctx, type PartShot, type Way } from '../kit'
+import { alpha, beam, box, carried, frame, glow, hash, knock, lastOf, part, rgba, ring, route, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { DREAM_PERIOD, dream, level, notes, snap } from '../music'
 import { G, hop } from '../physics'
 import { THEATRE_INK, THEATRE_MAT as M } from '../worlds'
@@ -573,7 +573,7 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
   if (lit > 0.01) {
     glow(p, k, MID, -1.9, 3.6, M.bulb, 0.22 * Math.min(1.3, lit), 1.25, 0.85)
   }
-  drawWindow(p, k, ink, weight, lit)
+  drawWindow(p, k, ink, weight, lit, t)
 
   // The spot's pool on the stage floor (under the curtain as it rises), and on the curtain once it is in behind them.
   const spot = spotAt(t)
@@ -870,7 +870,41 @@ function drawDoor(p: p5, k: number, ink: string, weight: number, t: number): voi
 }
 
 /** Her window, flown in against the back wall: the set of her show. Dark until the stage lights come up on it. */
-function drawWindow(p: p5, k: number, ink: string, weight: number, stage: number): void {
+/**
+ * What her window looks out on: the day of her show, told while she plays it. Before she begins, the warm light of
+ * the stage. Then dawn on her roll, a blue sky with its clouds on her leap, dusk as she hops home, and night, a moon
+ * and stars, while the house holds its breath; when the house rises for her it goes to the stage's warm light again,
+ * brighter. Each change is a breath of crossfade, on her moves.
+ */
+interface View {
+  top: string
+  low: string
+  sun: number
+  clouds: number
+  night: number
+  /** How fully the panes show a sky (the stage's warm light is only half up in them). */
+  sky: number
+}
+const VIEWS: [number, View][] = [
+  [0, { top: M.bulb, low: M.spot, sun: 0, clouds: 0, night: 0, sky: 0 }],
+  [SHOW[0].t0, { top: '#E7A2B6', low: '#FFD69C', sun: 1, clouds: 0, night: 0, sky: 1 }],
+  [SHOW[1].t0, { top: '#78AEE6', low: '#D5EAF6', sun: 0, clouds: 1, night: 0, sky: 1 }],
+  [SHOW[2].t0, { top: '#5B3D88', low: '#F0885A', sun: 0.6, clouds: 0, night: 0, sky: 1 }],
+  [SHOW[2].t1 + 0.45, { top: '#121A44', low: '#2C3B78', sun: 0, clouds: 0, night: 1, sky: 1 }],
+  [SPRING, { top: M.bulb, low: M.spot, sun: 0, clouds: 0, night: 0, sky: 0 }],
+]
+function viewAt(t: number): View {
+  let i = 0
+  while (i + 1 < VIEWS.length && t >= VIEWS[i + 1][0]) i++
+  const [t0, a] = VIEWS[i]
+  const prev = VIEWS[Math.max(0, i - 1)][1]
+  const f = i === 0 ? 1 : Math.min(1, Math.max(0, (t - t0) / 0.6))
+  const u = f * f * (3 - 2 * f)
+  const mix = (x: number, y: number) => x + (y - x) * u
+  return { top: mixHex(prev.top, a.top, u), low: mixHex(prev.low, a.low, u), sun: mix(prev.sun, a.sun), clouds: mix(prev.clouds, a.clouds), night: mix(prev.night, a.night), sky: mix(prev.sky, a.sky) }
+}
+
+function drawWindow(p: p5, k: number, ink: string, weight: number, stage: number, t: number): void {
   const bg = THEATRE_INK.bg
   const x0 = MID - 0.85
   const x1 = MID + 0.85
@@ -886,11 +920,60 @@ function drawWindow(p: p5, k: number, ink: string, weight: number, stage: number
   rrect(p, k, x0, y0, x1, y1)
   p.noStroke()
   const ctx = p.drawingContext as CanvasRenderingContext2D
+  const v = viewAt(t)
+  const dark = mixHex(bg, M.velvetDeep, 0.6)
   const g = ctx.createLinearGradient(0, (y0 + 0.12) * k, 0, (y1 - 0.12) * k)
-  g.addColorStop(0, mixHex(mixHex(bg, M.velvetDeep, 0.6), M.bulb, lit * 0.55))
-  g.addColorStop(1, mixHex(mixHex(bg, M.velvetDeep, 0.6), M.spot, lit * 0.9))
+  g.addColorStop(0, mixHex(dark, v.top, lit * (0.55 + 0.4 * v.sky)))
+  g.addColorStop(1, mixHex(dark, v.low, lit * 0.9))
   ctx.fillStyle = g
-  ctx.fillRect((x0 + 0.12) * k, (y0 + 0.12) * k, (x1 - x0 - 0.24) * k, (y1 - y0 - 0.24) * k)
+  const px0 = x0 + 0.12
+  const py0 = y0 + 0.12
+  const pw = x1 - x0 - 0.24
+  const ph = y1 - y0 - 0.24
+  ctx.fillRect(px0 * k, py0 * k, pw * k, ph * k)
+  // The view's sun, clouds, moon and stars, inside the panes.
+  if (lit > 0.05 && (v.sun > 0.01 || v.clouds > 0.01 || v.night > 0.01)) {
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(px0 * k, py0 * k, pw * k, ph * k)
+    ctx.clip()
+    if (v.sun > 0.01) {
+      glow(p, k, MID + 0.3, py0 + ph * 0.78, 0.6, '#FFE6A8', 0.6 * v.sun * lit)
+      ctx.fillStyle = rgba('#FFF0C8', 0.95 * v.sun * lit)
+      ctx.beginPath()
+      ctx.arc((MID + 0.3) * k, (py0 + ph * 0.8) * k, 0.2 * k, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    if (v.clouds > 0.01) {
+      ctx.fillStyle = rgba('#FFFFFF', 0.85 * v.clouds * lit)
+      for (const [cx, cy, rx] of [[MID - 0.35, py0 + ph * 0.3, 0.32], [MID + 0.4, py0 + ph * 0.55, 0.26]] as const) {
+        ctx.beginPath()
+        ctx.ellipse(cx * k, cy * k, rx * k, rx * 0.36 * k, 0, 0, Math.PI * 2)
+        ctx.ellipse((cx + rx * 0.45) * k, (cy - rx * 0.18) * k, rx * 0.55 * k, rx * 0.35 * k, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    if (v.night > 0.01) {
+      ctx.fillStyle = rgba('#F4EEDC', 0.95 * v.night * lit)
+      ctx.beginPath()
+      ctx.arc((MID - 0.35) * k, (py0 + ph * 0.28) * k, 0.16 * k, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = mixHex(v.top, v.low, 0.2)
+      ctx.beginPath()
+      ctx.arc((MID - 0.29) * k, (py0 + ph * 0.25) * k, 0.14 * k, 0, Math.PI * 2)
+      ctx.fill()
+      for (let i = 0; i < 14; i++) {
+        const sx = px0 + pw * hash(i, 61)
+        const sy = py0 + ph * 0.75 * hash(i, 62)
+        const tw = 0.6 + 0.4 * Math.sin(t * 3 + i * 1.7)
+        ctx.fillStyle = rgba('#FFFFFF', 0.85 * v.night * lit * tw)
+        ctx.beginPath()
+        ctx.arc(sx * k, sy * k, (0.018 + 0.014 * hash(i, 63)) * k, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    ctx.restore()
+  }
   outline(p, mixHex(bg, M.boards, 0.6 + 0.4 * lit), weight * 1.1)
   p.line(MID * k, (y0 + 0.12) * k, MID * k, (y1 - 0.12) * k)
   p.line((x0 + 0.12) * k, ((y0 + y1) / 2) * k, (x1 - 0.12) * k, ((y0 + y1) / 2) * k)
