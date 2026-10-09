@@ -30,7 +30,7 @@ import { KISS_AT, ROOM } from '../src/shows/versions/la-la-land/epilogue/room'
 import { MIA as MIA_HEX, HUSBAND as HUSBAND_HEX } from '../src/shows/versions/la-la-land/epilogue/worlds'
 import type { EpilogueShow } from '../src/shows/versions/la-la-land/epilogue/show'
 import { STRIKES } from '../src/shows/versions/interstellar/liftoff/hits'
-import { SWITCH, ZOOM_FREE as LIFTOFF_ZOOM_FREE } from '../src/shows/versions/interstellar/liftoff/score'
+import { SWITCH, ZOOM_FREE as LIFTOFF_ZOOM_FREE, zoomFreeSpan } from '../src/shows/versions/interstellar/liftoff/score'
 import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from '../src/shows/versions/interstellar/liftoff/music'
 import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/interstellar/liftoff/credits'
 import { FALL_NOTES, GHOST_REST } from '../src/shows/versions/interstellar/liftoff/earth/house'
@@ -651,8 +651,8 @@ async function main(): Promise<void> {
         // Zoom's framing is the stage's own (`zoomed`), which slides to keep the camera's focus, Cooper, inside: so he
         // is held to more than his centre being in: his whole ball, and as much again round it, inside every edge.
         const zoomMiss: string[] = []
-        for (let t = 0; t <= MIX_END; t += 0.1) {
-          if (LIFTOFF_ZOOM_FREE.some(([a, b]) => t > a - 0.5 && t < b + 0.5)) continue
+        for (let t = 0; t <= MIX_END; t += 0.02) {
+          if (LIFTOFF_ZOOM_FREE.map(zoomFreeSpan).some(([a, b]) => t > a && t < b)) continue
           const f = zoomed(perf.camera!(t), 1.5)
           const a = f.angle ?? 0
           const [hx, hy] = show.where(t)

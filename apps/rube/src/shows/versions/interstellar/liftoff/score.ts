@@ -216,7 +216,13 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     // Zoom's focus is Cooper: the shots are composed for the wide frame, and under Zoom some left him on its edge or
     // past it (the two of them in the rocket's window, over a frame that holds the tower's foot). Not in the three
     // shots that are about more than him, and eased in and out of those so Zoom never jumps.
-    const w = ZOOM_FREE.reduce((m, [a, b]) => m * (1 - smooth(t, a - 0.5, a) * (1 - smooth(t, b, b + 0.5))), 1)
+    const w = ZOOM_FREE.reduce((m, [a, b]) => {
+      const [lo, hi] = zoomFreeSpan([a, b])
+      const e = (hi - lo - (b - a)) / 2 || Math.min(1, (b - a) / 3)
+      // A long window eases inside itself, so Zoom has him again by its end; a short one (the whip) eases just outside,
+      // since easing inside it would pull the frame across his jump from one world to the next.
+      return lo < a ? m * (1 - smooth(t, a - e, a) * (1 - smooth(t, b, b + e))) : m * (1 - smooth(t, a, a + e) * (1 - smooth(t, b - e, b)))
+    }, 1)
     // (Where he has been and is about to be, over about a second, as the follow camera smooths him: a frame locked to
     // his own jolts would jolt with every strike.)
     const [hx, hy] = smoothed(t)
@@ -230,6 +236,8 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
  * tower's foot, the whip through the sphere, and the pull-back from the replica to the whole ring.
  */
 export const ZOOM_FREE: [number, number][] = [[74.9, 77.3], [103.7, 104.3], [130.4, 137.2]]
+/** The stretch a Zoom-free shot really takes, with its eases: itself if it is long, half a second more each side if it is short. */
+export const zoomFreeSpan = ([a, b]: [number, number]): [number, number] => (b - a >= 2 ? [a, b] : [a - 0.5, b + 0.5])
 
 /**
  * The camera's roll on Cooper Station. The station is drawn end-on and its "down" is outward, so a house on the

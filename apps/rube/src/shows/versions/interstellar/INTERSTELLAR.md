@@ -224,7 +224,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 52 (latest)
+## Polish pass 53 (latest)
+
+The pull request's whole diff against `main` was read for leftovers: 23 files, all accounted for, no debug output, scratch paths or loosened tests, and `main` has not moved. One weakness did turn up.
+
+- **Zoom loses Cooper after the ring's reveal** (137.2 to 137.7 s). Pass 7's rewrite of the Zoom check made it stricter, his whole ball and a margin rather than his centre, but it widened the three Zoom-free windows by the half-second eases either side and checked nothing there. In five of those six half-seconds his centre stays inside. Just after the ring's reveal it went 7.6% of the frame's height out. That was not pass 7's doing (Zoom without a focus loses him there too), and the old check, sampling every 0.1 s, missed it. Now a long Zoom-free window (the cage's climb, the ring's reveal) eases inside itself, its length a third of the window and at most a second, so Zoom has him again by its end. The whip, only 0.6 s, eases just outside as before: easing inside it pulled the frame across his jump from one world to the next (a 4.8 jolt). The rule is one function, `zoomFreeSpan` in `score.ts`, shared by the camera and the check. The check is exact at the long windows' edges now and samples every 0.02 s. His centre stays at least 12% of the frame inside in every half-second round the windows. The worst Zoom camera jolt is still the authored whip (0.42), and 193 frames cross the small threshold, against 179.
+
+## Polish pass 52
 
 No change to the show. Pass 51 broke two of its guards on purpose but not the silent-export one, which reads its line with a pattern. Both of its parts were broken now: a weaker warning on the button, and the note after saving put back to "picture and music". The check failed each time, and the file was restored. Guards for Voyage's own picture fixes (the cloud deck and the far mouth in Overview, the ditch, the one Ranger) were weighed and left: they live in drawing code that needs a canvas, which `check:shows` does not have, and the frame audits cover them.
 
