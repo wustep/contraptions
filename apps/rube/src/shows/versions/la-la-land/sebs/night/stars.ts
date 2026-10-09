@@ -26,6 +26,7 @@ import {
   UPSTAGE,
 } from './painted-waltz'
 import { lampLight } from './stars-sky'
+import { drawPianoFigure } from '../piano-figure'
 
 /**
  * The stars: the painted Paris flies out, and they are alone on a dark floor
@@ -346,6 +347,11 @@ export const JOIN: number[] = KINDLED.map((q, i) => {
   return best
 })
 
+/** The figure: centred a little above them at the dip, so they are inside it, its keyboard below them. */
+export const FIGURE_SIZE = 2.25
+export const FIGURE_TURN = -0.12
+export const FIGURE_AT = (): Pt => [POLE[0] + 0.1, POLE[1] + 0.5]
+
 /* ------------------------------------------------------------------ the part */
 
 /** The set taking up on its lines (twice), the push off the floor, a star on each of the melody's notes, the dip, the touch. */
@@ -396,6 +402,14 @@ export const stars = part<StarsState>(
           ctx.stroke()
         }
         ctx.restore()
+      }
+      // At the top of the swell, as the sky stops with them, the planetarium draws the figure its stars make, as a
+      // planetarium does: in fine gold line round the two of them, a grand piano. Held through the touch; it goes with
+      // the lamps.
+      {
+        const draw = smooth(T, DIP - 1.6, DIP + 0.9) * 1.4
+        const a = smooth(T, DIP - 1.6, DIP - 0.8) * (1 - smooth(T, DARK[0], DARK[0] + 0.5))
+        drawPianoFigure(p, k, FIGURE_AT(), FIGURE_SIZE, FIGURE_TURN, draw, a, NIGHT_MAT.gold)
       }
       // The lit stars, and theirs in the floor.
       for (const q of KINDLED) {
