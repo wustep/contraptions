@@ -461,6 +461,16 @@ ball. The machine and its timing were right and are untouched; the room around i
     which paints its cards into the picture). The first fifteen seconds, frame by frame (the lamp warming on, the
     bulbs coming up, the title, the camera settling onto the sill), looked at: as they were.
 
+### The twenty-fifth lofi pass
+
+67. **Still light enough to leave on?** Seventeen passes since the fifth measured it, every one adding to the room
+    (the curtain's draught, the tote and the backpack, the neighbour's window, the washes, the tea tag, the scrim),
+    measured again the same way: Chrome with its GPU, 1920 × 1080 at 2× (a 3840 × 2160 canvas), this branch against
+    the commit before those passes, each at dusk, the first rain, the heaviest rain, past midnight and the end. Both a
+    steady 60 frames a second at every moment, the slowest frame in twenty 18 to 25 ms in both, the worst moment
+    moving from run to run (noise). A CPU profile puts the scene's own drawing at a tenth of a per cent or less per
+    function. Nothing to take back. The drop and the stair frame by frame, and a yawn, full size: as they were.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
