@@ -657,6 +657,14 @@ tied the soldier to the blast as he is meant to be. Two new things read as what 
 
 Every span the late rounds touched was filmed again at four frames a second: nothing jumps but the cuts.
 
+A sixtieth looked at the leap off the swing (58 to 70 s) at two frames a second, since each fresh reader had stumbled
+on some frame of it: it reads whole in motion, a leap from the front of the arc through the leaves, a landing, a run
+back while she catches the empty seat, a hop on; nothing to change past the fifty-sixth's lower bounce. Then the whole
+show through Overview, the camera these rounds had not used: it held but in the tent. Overview frames a place by the
+cells of the parts her path runs through, and in the tent those all lie along the table, so it framed the table and
+the bottom of the ring, and never the twelve screens, the world, that are the place. The ring whole is in its frame
+now, as the tree is on the lawn; the other cameras are unchanged to the pixel.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

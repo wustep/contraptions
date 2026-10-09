@@ -49,6 +49,15 @@ export const mountAt = (i: number): Pt => ringAt(angleOf(i))
 /** The ring's top, for framing: the top of the screen at twelve o'clock. */
 export const RING_TOP = mountAt(6)[1] - PH
 
+/**
+ * The ring whole, its screens on it, in world cells: what Overview must take in in the tent besides the table. (Framed
+ * by her parts alone, all along the table, Overview saw the bottom of the ring and not the world it is.)
+ */
+export const TENT_RING = (() => {
+  const xs = Array.from({ length: 12 }, (_, i) => mountAt(i)[0])
+  return { x0: Math.min(...xs) - PW, y0: RING_TOP - 0.3, x1: Math.max(...xs) + PW, y1: MONTANA[1] }
+})()
+
 /** A link's band: points along the ring from a0 to a1, each with its width. */
 function band(a0: number, a1: number, widen: number, n = 28, taper = 0): { outer: Pt[]; inner: Pt[] } {
   const outer: Pt[] = []
