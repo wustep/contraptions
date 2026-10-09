@@ -219,7 +219,7 @@ function tunnelPath(ctx: CanvasRenderingContext2D, k: number, xa: number, xb: nu
  */
 const RIB_STEPS: [number, number, number][] = [[1.7, 0.3, -0.08], [1.0, 0.5, -0.04], [0.45, 0.8, 0]]
 const RIB_LAYERS: [number, number, number][] = (() => {
-  const n = 12
+  const n = 6
   const out: [number, number, number][] = []
   for (let i = 0; i < n; i++) {
     const r = (i / (n - 1)) * (RIB_STEPS.length - 1)
@@ -238,7 +238,7 @@ const RIB_LAYERS: [number, number, number][] = (() => {
  * (1, 0.7, 0.46, 0.28, 0.15, 0.07 of its depth) spread over many thin layers, so its glow falls off with no steps.
  */
 const LIP_STEPS = [1, 0.7, 0.46, 0.28, 0.15, 0.07, 0]
-const LIP_N = 24
+const LIP_N = 12
 const LIP_LAYERS = Array.from({ length: LIP_N }, (_, i) => {
   const r = ((i + 0.5) * (LIP_STEPS.length - 1)) / LIP_N
   const j = Math.floor(r)
