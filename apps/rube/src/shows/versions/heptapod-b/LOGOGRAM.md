@@ -240,6 +240,10 @@ cut, and close looks at whatever caught the eye. What changed:
   rounded, and the highest of the body is the most fogged, so the head goes up into the white.
 - **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
   shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
+- **The glass asleep** (to 87.226): it waited at the end of the shaft as a mid-grey slab. It is all but the dark of the
+  room now, a pane only just told from the wall, so its two steps wake it out of the dark.
+- **The first vision in a wide window**: the live stage sees more world round its 16:9 there, and the lawn showed the
+  bank falling to the water at its right edge. The brow is further along the shore.
 - **The room for the credits**: the ceiling stood just over the window, so the coda's wide was a third dark ceiling,
   and the cast list straddled its soft edge. The room is tall now, the ceiling high over the glass on a clean line,
   and the cards sit on quiet wall with a little more shade under them.

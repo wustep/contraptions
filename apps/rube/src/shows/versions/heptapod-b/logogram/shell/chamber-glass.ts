@@ -268,6 +268,13 @@ function drawGlass(p: p5, k: number, t: number, g: number, wash: number): void {
     ctx.fillStyle = eg
     ctx.fillRect(x * k, y * k, w * k, h * k)
   }
+  // Before it wakes it is all but the dark of the room: a pane only just told from the wall, so it wakes out of the
+  // dark rather than being a grey slab waiting at the end of the shaft.
+  const asleep = 0.6 * Math.max(0, 1 - g / 0.33)
+  if (asleep > 0.004) {
+    ctx.fillStyle = rgba(SHELL.dark, asleep)
+    ctx.fillRect(X0 * k, Y0 * k, (X1 - X0) * k, (Y1 - Y0) * k)
+  }
   ctx.restore()
 }
 
