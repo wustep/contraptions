@@ -150,7 +150,8 @@ bars) at a time, four looks at the same desk, each track taking them in its own 
 - the window over the desk: the rain, the plant and the mug, and the machine small under the lamp;
 - the lamp's side: the shade, the band's arch, the cup under the light.
 
-A break draws back to the room, and so does the bar before each lob, so the whole arc is in the frame.
+A break draws back to the room (one long enough for the move to settle), and so does the bar before each lob, so the
+whole arc is in the frame.
 
 Every held frame is composed: each prop in it whole and clear of the frame's edges by a tenth of a cell, or not in it
 at all (the props stand across the desk with few gaps between them, so each frame is solved for edges that fall in
@@ -540,6 +541,15 @@ ball. The machine and its timing were right and are untouched; the room around i
     three never cross the frame. A sweep is a wide wash moving across the whole wall, so passing into and out of a
     frame is what it should do, and the three unseen fall while the cat is in view and turns to follow a light just
     off frame, which reads as a cat hearing a car. Played to the camera, they would be staged; not done.
+
+### The thirty-fourth lofi pass
+
+76. **The shortest break was a lurch.** Each break draws the camera back to the room and in again as the drums return.
+    Every break runs twelve to twenty-six seconds, room enough for that, but Breathtaking's is 5.3 (two bars of its
+    half-time groove), and the rig needs some six seconds to settle a move: the camera went out and straight back in
+    within eight, the busiest move in the half hour, passing a frame with half the cat at its edge on the way. A
+    break under eight seconds now leaves the camera where it is (the lamp's side, the ball swaying in the cup); the
+    fairy lights' wave still answers it.
 
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);

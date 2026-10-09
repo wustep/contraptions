@@ -101,8 +101,11 @@ function plan(): void {
       phrase++
       at(start - 0.5 * bar, GROOVE[order[phrase % order.length]])
     }
-    // A break: out to the room, and back in as the drums return, to the look the phrase after it would have.
+    // A break: out to the room, and back in as the drums return, to the look the phrase after it would have. Not for a
+    // break too short for the move to settle (the rig needs some six seconds): out and straight back in is a lurch,
+    // not a breath, so through those the camera stays where it is.
     for (const b of breaks) {
+      if (b.to - b.from < 8) continue
       at(b.from - 0.25 * bar, ROOM)
       phrase++
       at(b.to - 0.75 * bar, GROOVE[order[phrase % order.length]])
