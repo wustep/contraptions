@@ -424,6 +424,34 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   ctx.stroke()
   ctx.restore()
 
+  // Asleep, its tail comes round the front of it, along the desk, and its tip tucks up under its chin.
+  const wrap = smooth(sleep, 0.3, 1)
+  if (wrap > 0.01) {
+    const len = wrap
+    const from = { x: x0 + 0.1, y: -0.05 }
+    const c1 = { x: x0 + 0.35, y: 0.0 }
+    const c2 = { x: chest - 0.45, y: 0.0 }
+    const end = { x: chest - 0.25 + 0.27 * len, y: -0.06 - 0.1 * len }
+    ctx.save()
+    ctx.globalAlpha = Math.min(1, wrap * 2)
+    ctx.beginPath()
+    ctx.moveTo(from.x, from.y)
+    ctx.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, end.x, end.y)
+    ctx.lineCap = 'round'
+    ctx.lineWidth = 0.12
+    ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+    ctx.stroke()
+    ctx.lineWidth = 0.12 - lw * 2
+    ctx.strokeStyle = fur(0.85)
+    ctx.stroke()
+    // Its tip a shade darker, as a ginger's is.
+    ctx.beginPath()
+    ctx.arc(end.x, end.y, 0.06 - lw, 0, Math.PI * 2)
+    ctx.fillStyle = lit(FUR_DARK, FUR, l)
+    ctx.fill()
+    ctx.restore()
+  }
+
   // The head: it turns to the ball, and when it sleeps it comes down onto its paws; washing, it dips to the paw with
   // each lick, and leans into it as the paw goes over its ear.
   const wash = washAt(t)

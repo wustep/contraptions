@@ -32,6 +32,8 @@ interface Light {
   y: number
   /** Half its size. */
   r: number
+  /** Half how much longer than tall it is, for a long light (a lit train car): opens into a capsule. */
+  w?: number
   color: string
   a: number
   p: number
@@ -200,7 +202,8 @@ function bokeh(ctx: Ctx, lens: Lens, lights: Light[], blur: number): void {
     if (a < 0.01) continue
     // Square while it is still a lit window, round as it opens.
     const round = r * smooth(open / size, 0.4, 1)
-    roundRect(ctx, at.x - r, at.y - r, 2 * r, 2 * r, round)
+    const hw = r + (l.w ?? 0) * layerOf(lens, l.p).s
+    roundRect(ctx, at.x - hw, at.y - r, 2 * hw, 2 * r, round)
     ctx.fillStyle = rgba(l.color, a * 0.8)
     ctx.fill()
     ctx.strokeStyle = rgba(l.color, a * 0.35)
@@ -654,13 +657,18 @@ function train(ctx: Ctx, t: number, sky: { dusk: number }, sink: Sink): void {
         ctx.fillStyle = glow
         ctx.fillRect(x0 - 0.03, TRACK_Y - BODY - 0.08, CAR + 0.06, BODY + 0.12)
       }
+      // Out of focus (this layer is blurred), a car's row of windows is one warm band, softened into a glow.
+      if (sink) {
+        ctx.fillStyle = rgba('#F4C88A', 0.7 * (0.8 + 0.2 * n))
+        ctx.fillRect(x0 + 0.035, TRACK_Y - BODY + 0.014, CAR - 0.07, 0.045)
+      }
       // Its windows, lit, a few with someone's shape against them.
       for (let w = 0; w < 7; w++) {
         const wx = x0 + 0.04 + w * 0.066
         const k = hash(at, c * 7 + w, 213)
         const color = k < 0.25 ? '#CFE0FF' : '#F6E4BC'
         const a = (0.82 + 0.18 * hash(at, c * 7 + w, 214)) * (0.8 + 0.2 * n)
-        if (sink) sink.list.push({ x: wx + 0.022, y: TRACK_Y - BODY + 0.035, r: 0.022, color, a, p: sink.p })
+        if (sink) continue
         else {
           ctx.fillStyle = rgba(color, a)
           ctx.fillRect(wx, TRACK_Y - BODY + 0.017, 0.045, 0.035)

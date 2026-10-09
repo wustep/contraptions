@@ -882,6 +882,17 @@ both in Zoom, and the overview.
      as hard as the kick was struck. In a break, with no kick, the air is still. The first strength moved them seven
      pixels at most, too little to read as the music.
 
+### The forty-ninth pass: every five seconds
+
+133. **The whole half hour, a frame every five seconds** (364 frames, in grids): a dozen passes of additions, looked at
+     together for the first time at that density. One fault, three times (2:38, 15:18, 18:08): a train crossing while
+     the city was soft was a row of small evenly spaced beads, a dotted rule drawn across the glass at the sill's
+     height. Out of focus now, each car's lit windows are one warm band softened with the rest of the city, a train of
+     glows; in focus it is as it was. Nothing else: the moments keep apart, no frame is crowded, the ball is in every
+     one.
+134. **Asleep, the tail comes round.** As the kitten drowses at the end, its tail comes round the front of the loaf
+     along the desk and its tip, a shade darker, tucks up under its chin: the last thing it does, settled for the night.
+
 **Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
