@@ -231,7 +231,17 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 108 (latest)
+## Polish pass 109 (latest)
+
+No change to the show. This pass audited it fresh, normal and Zoom, every 6 s, and took a closer look at four places that stood out on a contact sheet. Each holds up:
+- the gathered stars in the sky under the credits (266 to 296 s), which are the credits' own starlight (`credits.ts`), each card formed out of them;
+- the empty land at 236 s, the far side's sky held for about 0.2 s at the end of the whip before the far mouth slides in from the right, whole and without a pop;
+- the sky with only the ball in it from 169 to 172 s, which is the long fall to the house, the empty frame being the distance;
+- the fade up on the bedroom over the first seconds.
+
+The characters' colours were checked for colour-blind viewers. The pairs that share a scene differ in luminance or along the blue–yellow axis that red–green colour blindness keeps: Cooper's sand and Brand's blue at 4.3:1, Brand's and old Murph's slate at 2.0:1.
+
+## Polish pass 108
 
 Pass 107's two Overview faults on an upright phone, found cheaper than it feared. Gargantua's pale disc was one line: the white rim round the dark had a floor of 0.8 px set inside the scaling that keeps Gargantua's size on the screen (`far`), so the floor was scaled too. On an upright phone that made the rim about 2.8 px. In Overview it made a ring wide enough to cover the dark. The floor is now 0.8 px on the screen (`0.8 / far`). The speckle was the stars: each is a few pixels at any scale, laid on a grid of world cells, so in Overview, at about 2 px a cell, they packed solid. Both skies (`space/sky.ts`, `act2/edmunds.ts`) now let their stars go below 3 px a cell. The widest real shot on a 320 px phone is near 4. A sweep of the whole show, normal at 960×540, 390×844 and 320×568 and Zoom at 390×844, is pixel for pixel what it was. The one change outside Overview is the rim on an upright phone, now about 1.3 px, in proportion as it is on a desktop.
 
