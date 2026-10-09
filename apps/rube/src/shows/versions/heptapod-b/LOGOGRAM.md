@@ -230,51 +230,107 @@ notes, then scrub, fix the worst, re-scrub. What changed, by beat:
 
 ## Polish rounds
 
-Fourteen further rounds by the director (Claude Opus 5.5), each a different way of looking: the whole film at a frame
-a second and at the half and quarter between, dense sheets either side of every cut, full-size and 4K frames, the
-live stage in tall and ultrawide windows, Zoom and Overview, a phone, the share card, a saved video's painted credits
-(1080p and Shorts), a 15 fps motion pass for anything popping, jumping or held dead, and every strike and the cue's
-strongest pulses held against what the picture does on them. What changed:
+Forty-odd further rounds by the director (Claude Opus 5.5), each a different way of looking. The picture: the whole
+film at a frame a second and at the half, quarter and three-quarter between; dense sheets either side of every cut;
+full-size and 4K frames; the live stage in tall and ultrawide windows, Zoom, Overview and a phone; the share card; a
+saved video's painted credits (1080p and Shorts). The motion: a 15 fps pass for anything popping, jumping or held
+dead, and the cue's strongest pulses and every strike held against what the picture does on them. Fresh critics who
+had never seen the film, on whole-film sheets and then four frames a second of each sequence. The acting: where every
+eye looks at every still moment. Sweeps at 120 fps for eyes that snap, balls that pass into each other or into the
+room's floor and bench (now held by `check:shows`). Render cost, the full build, and regression gates between. What
+changed, in the order of the film, and then what runs through it:
 
-- **The last frame** (251): Hannah's span ended at the show's end exclusively, so the frame the player holds there
-  had Louise alone on the bench. Hannah stays.
+- **Hannah's drawing** (0, 196.8 → 251): low on the wall over her corner, at her height, a child's drawing is taped:
+  the two of them by the water under a crayon sun, in pencil, holding hands, each with a dot for an eye, looking at
+  each other (nothing but Louise is her colour, not even a drawing of her). It is paper, edged in pencil-grey, not
+  framed in ink. It is in the first frame and the last, and in the visions at the window.
+- **Hannah's spring onto the bench** (3.7, 211.9): a sweep for balls sinking into the room's floor and bench found
+  her passing through the slab's corner as she came up onto it, in the prologue and on the coda's strongest note:
+  gravity's arc alone, in so short a hop, was still rising as she landed. Her spring rises over the end now and comes
+  down onto it, on the same pulses.
+- **The far camp** (24 → 62, 194): the tents and trucks up the valley were hazed as if far off but stand in front of
+  the near hills, so they were paler than the land behind them, pale boxes floating on the hill. They are hazed a
+  little less than that hill now, and their roofs catch only a hint of the sky: a camp in the fog.
+- **The lift's start** (43.758): she comes to rest on the deck and the engine catches under her, but nothing showed
+  her arrival as the cause, and the camp machine seemed to end before the lift began. The power unit now has the
+  generator's run lamp, dark until that pulse and lit on it: the same signal the machine's first engine gave at
+  28.021.
+- **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
+  the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
+  off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
+- **The chamber** (85.8 → 112): its far wall ended on a hard cut to black in the grand wide; it darkens into its
+  corner. At the shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies
+  away instead.
+- **Reflections in the chamber floor** (87.2 → 130.4): the two of them stood on the polished floor with nothing under
+  them, and a shadow would not show on it. Each now has a faint reflection in it, lit by the glass behind them,
+  fading into the floor's dark, gone in the white.
+- **The glass asleep** (to 87.226): it waited at the end of the shaft as a mid-grey slab. It is all but the dark of
+  the room now, a pane only just told from the wall, so its two steps wake it out of the dark.
+- **The palm** (118.700 → 133.573): its seven fingers were straight wedges to sharp points, a star or an asterisk
+  more than a hand, on the show's most looked-at image. Each finger now has a full root, a long taper with a little
+  curl of its own, and a soft round pad at its tip where it presses on the glass.
+- **Ian at the glass** (126 → 130.4): he backed off out of shot while the first logogram was written and stayed out,
+  so she went into the white with no one there, and the reunion on the meadow had nothing to answer. A fresh
+  critic's notes caught it. Once the ring has closed he comes forward again, a step behind her at the edge of the
+  light, and is in the picture as the glass goes white. He still never goes to the glass.
 - **The white-out from the glass** (130.4): the chamber's floor was whitened less than the air over it and stood as a
-  flat grey slab under a white room. It takes the light as a reflection now, one white with the glass at its edge. On a phone,
-  whose stage is near square and sees far more floor, the reflection reaches the bottom of what it sees.
+  flat grey slab under a white room. It takes the light as a reflection now, one white with the glass at its edge. On
+  a phone, whose stage is near square and sees far more floor, the reflection reaches the bottom of what it sees.
+- **The first vision in a wide window** (141): the live stage sees more world round its 16:9 there, and the lawn
+  showed the bank falling to the water at its right edge. The brow is further along the shore.
+- **No stalk on her** (156): at the top of the ring written round her, one of its tendrils grew straight out of the
+  ball, a stalk with a drop on it like an antenna. No tendril now grows where she sits on a ring: one near her draws
+  back as she comes.
+- **The second vision's loss** (156.177 → 160.015): Hannah leaves level along the bench, so Louise's gaze barely
+  moved as she went, and at the end still looked out across the floor: nothing in the picture took the loss. She
+  watches her to the bench's end now, and once Hannah is out of the room her eye goes down, bowed, held into the cut.
 - **The push** (160 → 185): Costello's feet stood just above the frame, so the ends of its other limbs showed as grey
   tabs along the top edge. It stands higher; only its pen comes into the picture. In the close frames its pen ended
   in a square cut: every limb's tip is round now.
+- **The crescent under the push** (170.3 → 176.7): meant to hang under the great ring as it begins and then go into
+  the white, it lingered dark through the wide frame on the great ring, cut by the frame's bottom edge just under her,
+  and only faded after 173. A second fresh critic caught it. It now goes into the white by 170.3, before that frame.
+- **The halves meeting** (183.182, the climax): the two halves' round ends ran together well before the close, so
+  from about 181.8 the great ring read as closed, and on the pulse only two hairline seams went. A fresh critic,
+  shown the push at four frames a second, caught it. Each half's tail is held a little short of the other's pen while
+  it is written, and on the close the tails run into the gaps: the halves are seen to meet on the pulse.
+- **The reunion** (195.344): Ian came to a stop a sliver from her, and as her lean to him eased back a gap opened
+  between them, so the meadow ended on the two of them drifting apart. He meets her on the touch now and stays against
+  her as she settles back to her mark (which the circle's first frame needs): they end it together. They are grounded
+  on the grass by soft contact shadows, as the lake house grounds its balls, deeper as the light comes. His braking is
+  short and steady, so the gap is still seen closing into the touch, not shut to the eye half a second early.
+- **The touch at the end** (212.312, the coda's loudest note): the sun came through the fog after it over seconds, a
+  soft fade on the strongest note there is. Now the sun catches the water on the touch itself, quick as it caught it
+  on the prologue's first pulse, and goes on coming through after: the circle closes on the same light it opened on.
+- **The room for the credits** (219.6 → 251): the ceiling stood just over the window, so the coda's wide was a third
+  dark ceiling, and the cast list straddled its soft edge. The room is tall now, the ceiling high over the glass on a
+  clean line, and the cards sit on quiet wall. Cream type on that pale wall was faint in its fine print, so as the
+  credits begin the room goes to dusk over seven seconds and stays there to the end, while the window keeps its light:
+  the words read, and the last of the day is out on the water. With the dusk doing the work, the soft shade under the
+  words is back to the faint one it was: stronger, it stood on the wall as a dark stain in a saved frame, which has no
+  words over it.
+- **The last frame** (251): Hannah's span ended at the show's end exclusively, so the frame the player holds there
+  had Louise alone on the bench. Hannah stays.
+- **Where they look**: in the chamber (97.5 → 130.4) her dot was only a roll mark, so as Abbott came out of the white,
+  through the grand wide, on the touch and all through the first logogram it pointed wherever her roll left it, mostly
+  at the floor. Wherever she is at rest she now looks: up at Abbott as he comes, up at the giants through the wide and
+  down the limb as it comes to her, up at the palm on the touch, and over to the ring being written, into the white.
+  On her rolls her eye rolls with her. Beyond the glass the same: in the cup of Abbott's palm she looks up at it until
+  it lets her go, and on the great ring's close (183.182) she looks up through it to where the two halves meet over
+  her, hers and Costello's, held to the cut; before, she looked down into the ink. Ian too, in the chamber, wherever
+  he is stopped: up at Abbott as he hesitates, up at the giants through the wide, and on her as she goes into the
+  white. In the valley: both up at the slot as it opens over them (36.4) and through the floods' answer; riding the
+  lift, up at the belly they rise to, through the fog and the look up at its dome; in the shaft's mouth, once she has
+  pressed the switch, both up the shaft the way the beam goes, until they leap; on the meadow she looks up to where
+  the shell went, then at Ian as he comes, and from the touch at him and a little up, as her eye stands when the lake
+  house opens on the first frame; he, at her side, at her. (The show hands each rider her roll as the stage would draw
+  it, so the eye turns from where it is; elsewhere every frame is unchanged.)
 - **The heptapods** had a flat cut across the crown of the body, clipped acorns in every wide, and another across the
   hip, a hard trapezoid where the limbs leave it as Abbott comes out of the white. The crown is domed and the hip
   rounded, and the highest of the body is the most fogged, so the head goes up into the white.
 - **A heptapod deepest in the fog** went by paling toward the fog's white, which is whiter than the fog field in its
   greyer places, so as Abbott came up in the push (170) its far limbs stood out as white ghost legs. Past a point it
   goes by fading now, and comes out of the fog darker than it, a shape in fog.
-- **No stalk on her** (156): at the top of the ring written round her, one of its tendrils grew straight out of the
-  ball, a stalk with a drop on it like an antenna. No tendril now grows where she sits on a ring: one near her draws
-  back as she comes.
-- **The halves meeting** (183.182, the climax): the two halves' round ends ran together well before the close, so
-  from about 181.8 the great ring read as closed, and on the pulse only two hairline seams went. A fresh critic,
-  shown the push at four frames a second, caught it. Each half's tail is held a little short of the other's pen while
-  it is written, and on the close the tails run into the gaps: the halves are seen to meet on the pulse.
-- **The crescent under the push** (170.3 → 176.7): meant to hang under the great ring as it begins and then go into
-  the white, it lingered dark through the wide frame on the great ring, cut by the frame's bottom edge just under her,
-  and only faded after 173. A second fresh critic caught it. It now goes into the white by 170.3, before that frame.
-- **The palm** (118.700 → 133.573): its seven fingers were straight wedges to sharp points, a star or an asterisk
-  more than a hand, on the show's most looked-at image. Each finger now has a full root, a long taper with a little
-  curl of its own, and a soft round pad at its tip where it presses on the glass.
-- **Reflections in the chamber floor** (87.2 → 130.4): the two of them stood on the polished floor with nothing under
-  them, and a shadow would not show on it. Each now has a faint reflection in it, lit by the glass behind them,
-  fading into the floor's dark, gone in the white.
-- **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
-  shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
-- **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
-  the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
-  off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
-- **Hannah's spring onto the bench** (3.7, 211.9): a sweep for balls sinking into the room's floor and bench found
-  her passing through the slab's corner as she came up onto it, in the prologue and on the coda's strongest note:
-  gravity's arc alone, in so short a hop, was still rising as she landed. Her spring rises over the end now and comes
-  down onto it, on the same pulses.
 - **No two balls pass into each other**: a 120 fps sweep found two: Louise hopping out of the helicopter's door
   through Ian on her right (23.6; her hop is shorter now, so she is high as she passes him), and Ian, a pulse behind
   her over the shaft's third rib, rolling into her before her hop (83.0; he hops it a pulse later). `check:shows`
@@ -288,56 +344,6 @@ strongest pulses held against what the picture does on them. What changed:
   roll, counted from each place's own origin) jumped at the vision cuts and out of the push, as much as half a turn.
   For a moment after a cut it now turns from where the last place left it to where this one has it. (Not at the
   shaft's mouth, where the camera's roll is carried and the eye already holds.)
-- **Her eye in the chamber** (97.5 → 130.4): there her dot was only a roll mark, so as Abbott came out of the white,
-  through the grand wide, on the touch and all through the first logogram it pointed wherever her roll left it,
-  mostly at the floor. Wherever she is at rest she now looks: up at Abbott as he comes, up at the giants through the
-  wide and down the limb as it comes to her, up at the palm on the touch, and over to the ring being written, into
-  the white. On her rolls her eye rolls with her. Beyond the glass the same: in the cup of Abbott's palm she looks up
-  at it until it lets her go, and on the great ring's close (183.182) she looks up through it to where the two
-  halves meet over her, hers and Costello's, held to the cut; before, she looked down into the ink. Ian too, in
-  the chamber, wherever he is stopped: up at Abbott as he hesitates, up at the giants through the wide, and on her
-  as she goes into the white. In the valley: both up at the slot as it opens over them (36.4) and through the floods'
-  answer; riding the lift, up at the belly they rise to, through the fog and the look up at its dome; in the
-  shaft's mouth, once she has pressed the switch, both up the shaft the way the beam goes, until they leap; on the meadow she looks up to where the shell went, then at Ian as he comes, and from the touch at him and a
-  little up, as her eye stands when the lake house opens on the first frame; he, at her side, at her. (The show
-  hands each rider her roll as the stage would draw it, so the eye turns from where it is; elsewhere every frame is
-  unchanged.)
-- **The second vision's loss** (156.177 → 160.015): Hannah leaves level along the bench, so Louise's gaze barely
-  moved as she went, and at the end still looked out across the floor: nothing in the picture took the loss. She
-  watches her to the bench's end now, and once Hannah is out of the room her eye goes down, bowed, held into the cut.
-- **The lift's start** (43.758): she comes to rest on the deck and the engine catches under her, but nothing showed
-  her arrival as the cause, and the camp machine seemed to end before the lift began. The power unit now has the
-  generator's run lamp, dark until that pulse and lit on it: the same signal the machine's first engine gave at 28.021.
-- **Ian at the glass** (126 → 130.4): he backed off out of shot while the first logogram was written and stayed out,
-  so she went into the white with no one there, and the reunion on the meadow had nothing to answer. A fresh
-  critic's notes caught it. Once the ring has closed he comes forward again, a step behind her at the edge of the
-  light, and is in the picture as the glass goes white. He still never goes to the glass.
-- **The reunion** (195.344): Ian came to a stop a sliver from her, and as her lean to him eased back a gap opened
-  between them, so the meadow ended on the two of them drifting apart. He meets her on the touch now and stays
-  against her as she settles back to her mark (which the circle's first frame needs): they end it together. They are
-  grounded on the grass by soft contact shadows, as the lake house grounds its balls, deeper as the light comes. His braking
-  is short and steady, so the gap is still seen closing into the touch, not shut to the eye half a second early.
-- **The touch at the end** (212.312, the coda's loudest note): the sun came through the fog after it over seconds, a
-  soft fade on the strongest note there is. Now the sun catches the water on the touch itself, quick as it caught it
-  on the prologue's first pulse, and goes on coming through after: the circle closes on the same light it opened on.
-- **The far camp** (24 → 62, 194): the tents and trucks up the valley were hazed as if far off but stand in front of
-  the near hills, so they were paler than the land behind them, pale boxes floating on the hill. They are hazed a
-  little less than that hill now, and their roofs catch only a hint of the sky: a camp in the fog.
-- **The glass asleep** (to 87.226): it waited at the end of the shaft as a mid-grey slab. It is all but the dark of the
-  room now, a pane only just told from the wall, so its two steps wake it out of the dark.
-- **The first vision in a wide window**: the live stage sees more world round its 16:9 there, and the lawn showed the
-  bank falling to the water at its right edge. The brow is further along the shore.
-- **The room for the credits**: the ceiling stood just over the window, so the coda's wide was a third dark ceiling,
-  and the cast list straddled its soft edge. The room is tall now, the ceiling high over the glass on a clean line,
-  and the cards sit on quiet wall. Cream type on that pale wall was faint in its fine print, so as the credits begin
-  the room goes to dusk over seven seconds and stays there to the end, while the window keeps its light: the words
-  read, and the last of the day is out on the water. With the dusk doing the work, the soft shade under the words is
-  back to the faint one it was: stronger, it stood on the wall as a dark stain in a saved frame, which has no words
-  over it.
-- **Hannah's drawing**: low on the wall over her corner, at her height, a child's drawing is taped: the two of them by
-  the water under a crayon sun, in pencil, holding hands, each with a dot for an eye, looking at each other (nothing
-  but Louise is her colour, not even a drawing of her). It is paper, edged in pencil-grey, not framed in ink. It is in
-  the first frame and the last, and in the visions at the window.
 
 ## Arrival nods
 
