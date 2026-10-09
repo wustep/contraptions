@@ -129,7 +129,12 @@ The music is the only clock.
   - the end credits: after the music has stopped, set by the page, and naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues;
   - the stage is in the station from the accent, and outside from the undock;
   - the camera's roll: square everywhere but the far side, a third of a turn through the reunion, square again by the hub and the cut;
-  - under Zoom (with its slide to keep Cooper, `Framing.focus`), Cooper's whole ball and as much again round it inside the frame every tenth of a second to the music's end, but for the cage's climb (75 to 77 s), the whip through the sphere (103.8 s) and the ring's reveal (130.5 to 137 s);
+  - in the show's own frame, Cooper's whole ball in shot every 0.02 s to the music's end, but for the cage's climb (74.9 to 77.3 s) and the whip through the sphere (103.7 to 104.3 s);
+  - under Zoom (with its slide to keep Cooper, `Framing.focus`), Cooper's whole ball and as much again round it inside the frame every 0.02 s, but for the three shots that are about more than him (the cage's climb, the whip, the ring's reveal at 130.4 to 137.2 s; `zoomFreeSpan` in `score.ts` gives each with its eases);
+  - no ball (Cooper, Brand or Murph) cut by the frame's edge for more than 0.6 s, and no two balls drawn into each other, but behind the bunker's wall (71.1 to 71.2 s);
+  - through each reunion, the one he meets (Murph, 176.5 to 183 s; Brand, 255.5 s to the music's end) at least 5% of the frame inside, in the show's own frame and under Zoom;
+  - the push-in on him in bed and the settle in the channel as slow moves (fastest zoom under 0.3 and 0.6, log cells a second);
+  - on a phone, the streak across the axis judging his size in CSS pixels, keeping a halo of at least 9 CSS pixels, and fading in off the bat (read from the source);
   - the whip out of the wormhole never stopping while the Ranger flies;
   - Brand (the blue ball):
     - she is out of shot on the farm and through the drive (twelve sample times, 1 to 60 s);
@@ -140,6 +145,8 @@ The music is the only clock.
     - she never jumps;
     - she only comes and goes out of shot;
     - where she is, there are exactly two balls with two ids, and never more.
+  - Murph (the slate ball): a child on the farm and at the base, old on the station; at her threshold as the lift climbs (190 s) and out of shot at the other sample times; never jumping;
+  - Brand and Murph both come and go only out of shot, tested every millisecond against the 16:9 frame, a wide (21:9) screen, an upright phone (390 × 844), and Zoom's frame at each.
 
 ## Act I, in order
 
@@ -224,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 74 (latest)
+## Polish pass 75 (latest)
+
+No change to the show. The list above of what `check:shows` holds the show to had not followed this round's checks: it now names the show's own frame, the cut edges and overlaps, the reunions, the slow moves and the phone streak, and says how Zoom and coming and going are tested now. It was read against the checks' own names in `checks/shows.ts`.
+
+## Polish pass 74
 
 No change to the show: pass 9's frame-step audit run again at an upright phone's shape (390 × 844), where everything sized to the screen crosses its thresholds at other moments. The spikes are the same set as on desktop, all written: the ignition (84 s), the whip through the sphere (104.2 s), the tesseract's moves (118 to 125 s), the station's lamps striking (127.5 s) and the far side opening (235.7 s). There is nothing phone-only, and nothing at the bat's hit (163.5 s), where pass 72 took a pop out.
 
