@@ -237,3 +237,8 @@ A twenty-fourth pass, by measure, that changed nothing:
 
 - **Empty bands.** Several earlier passes each found a flat band across the top or bottom of the picture (a slab of stage, a black floor, a meadow of grass). Measured over the whole show every half second, no uncovered stretch of two seconds or more has more than a quarter of the frame flat at its top or bottom, but for the dark over the globe as it fades in.
 - **Seeing them against what is behind them.** Measured at every half second, each ball's light against the ring of the picture just outside it is lowest where the colours are near in lightness but not in hue: him, blue, on the home movie's teal couch, and her, yellow, in the audition's cream spotlight and the white studio. In the frames both read clearly, by their hue and their outline.
+
+A twenty-fifth pass, at the two moments the whole show is for:
+
+- **Her close shots at the door.** In the film the goodbye is told in close shots cut against each other: she turns back, he looks up, she smiles, he nods. His were close (the ball on the keys, the piano round it) but hers were not: she was small and low among empty chairs over a third of the frame of dark floor. Hers are as close as his now, the ball large in the middle of the picture with the chairs and the candle-lit table round her, so the turn and the smile carry as his look and nod do.
+- **The kiss.** The shot on the kiss at her table (445 to 451) comes a little closer, so the two of them and the candle between them are more of the picture.

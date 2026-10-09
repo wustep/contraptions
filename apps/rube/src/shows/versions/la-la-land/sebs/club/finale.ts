@@ -62,10 +62,10 @@ function nodded([x, y]: Pt, t: number) {
 }
 
 /** A close shot held on `at` from `a` to `b`: a cut in (the key a frame after the last one), a slow push, and out at `b`. */
-function closeOn(a: number, b: number, at: Pt): { t: number; cells: number; hold: Pt }[] {
+function closeOn(a: number, b: number, at: Pt, cells = 2.5): { t: number; cells: number; hold: Pt }[] {
   return [
-    { t: a, cells: 2.5, hold: at },
-    { t: b - 0.02, cells: 2.3, hold: at },
+    { t: a, cells, hold: at },
+    { t: b - 0.02, cells: cells * 0.92, hold: at },
   ]
 }
 
@@ -257,8 +257,8 @@ export const finale = part<FinaleState>(
     { t: 438.0, cells: 3.4, hold: F([2.8, -0.4]) },
     { t: 441.6, cells: 3.1, hold: F([3.2, -0.35]) },
     { t: 443.2, cells: 5.8, hold: F([-0.4, 1.25]) },
-    { t: 444.9, cells: 1.9, hold: F([TABLE.x, 2.5]) },
-    { t: 451.3, cells: 1.8, hold: F([TABLE.x, 2.5]) },
+    { t: 444.9, cells: 1.65, hold: F([TABLE.x, 2.58]) },
+    { t: 451.3, cells: 1.55, hold: F([TABLE.x, 2.58]) },
     // With him up to the keys, onto the last chord; the stillness.
     { t: 452.6, cells: 4.2, hold: F([1.2, 0.9]) },
     { t: 453.9, cells: 3.2, hold: F([4.3, -0.3]) },
@@ -269,9 +269,10 @@ export const finale = part<FinaleState>(
     { t: 456.5, cells: 6.4, hold: F([-0.3, 1.55]) },
     { t: 459.4, cells: 7.2, hold: F([-0.15, 1.2]) },
     { t: CUTS.her - 0.02, cells: 7.2, hold: F([-0.15, 1.2]) },
-    ...closeOn(CUTS.her, CUTS.him, F([-4.939, FLOOR_Y - 0.32])),
+    // Hers as close as his: she fills her shot as he and the keys fill his.
+    ...closeOn(CUTS.her, CUTS.him, F([-4.939, FLOOR_Y - 0.12]), 1.55),
     ...closeOn(CUTS.him, CUTS.smile, F([keyRest(LAST_KEY)[0] - 0.05, -0.34])),
-    ...closeOn(CUTS.smile, CUTS.nod, F([-4.939, FLOOR_Y - 0.32])),
+    ...closeOn(CUTS.smile, CUTS.nod, F([-4.939, FLOOR_Y - 0.12]), 1.55),
     ...closeOn(CUTS.nod, CUTS.out, F([keyRest(LAST_KEY)[0] - 0.05, -0.34])),
     { t: CUTS.out, cells: 7.4, hold: F([-6.6, 1.2]) },
     // After her to the door, out; the door swings shut. Back across the empty room to him, the band's lamps behind him.
