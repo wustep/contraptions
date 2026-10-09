@@ -7,7 +7,7 @@ import type { Performance } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/eeaao-onsets.json'
 import { STRIKES } from '../src/shows/versions/come-recover/all-at-once/hits'
 import { COMBS, CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall, fight } from '../src/shows/versions/come-recover/all-at-once/music'
-import { CARDS, CHAPTERS, CREDITS_OK, creditsAt, goneAt } from '../src/shows/versions/come-recover/all-at-once/credits'
+import { CARDS, CHAPTERS, CREDITS_OK, SUBTITLES, creditsAt, goneAt } from '../src/shows/versions/come-recover/all-at-once/credits'
 import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/peak'
 import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
 import { keepIn, keepOf } from '../src/shows/versions/come-recover/all-at-once/film'
@@ -236,6 +236,11 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     CHAPTERS.map((c) => c.names.join()).join('|') === 'Everything|Everywhere|All at Once' &&
     CHAPTERS.every((c, i) => c.at >= starts[i] && c.at < starts[i] + 1 && goneAt(c) < (starts[i + 1] ?? JUMPS.eye) - 5) &&
     creditsAt(CHAPTERS[1].at + 2).length === 1 && creditsAt(JUMPS.eye).length === 0)
+
+  // The rocks speak in subtitles, as the film's do: only in the canyon, one at a time, none as Joy goes over.
+  check('all at once: the rocks\' subtitles are in the canyon only, one at a time, and silent as Joy goes over',
+    SUBTITLES.length >= 6 && SUBTITLES.every((sub, i) => sub.at > JUMPS.rocks && sub.to < JUMPS.brink && sub.to > sub.at + 1 && (i === 0 || sub.at >= SUBTITLES[i - 1].to)) &&
+    SUBTITLES.every((sub) => sub.to < 213.96 - 0.2 || sub.at > 213.96 + 1.5) && SUBTITLES.some((s) => s.who === 'joy') && SUBTITLES.some((s) => s.who === 'evelyn'))
 
   // The end credits: words the page sets over the dark room after the last hit, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')

@@ -103,6 +103,34 @@ export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
 ]
 
 /** The cards up at `t`, for the page to set (`Performance.titles`): the chapters as they begin, and the credits. */
+/**
+ * The rocks speak in subtitles, as the film's two stones do: no voices, only plain words under them in the silence.
+ * The lines are this show's own. Each comes on a note the stones already move on, and goes before the next: Joy's as
+ * she teeters and leans out over the brink; nothing as she goes over; Evelyn's as she flinches back and as she goes
+ * after her; and on the bench far below, the two of them, as their colour starts to come back. Evelyn's are in
+ * roman and Joy's in italic, so who speaks is told without a name; a soft dark under them keeps them readable on the
+ * pale canyon (`ledge.ts`).
+ */
+export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 'joy' }[] = [
+  { at: 201.4, to: 204.4, line: 'Where are we?', who: 'evelyn' },
+  { at: 205.0, to: 208.2, line: 'Somewhere nothing ever happened.', who: 'joy' },
+  { at: 208.5, to: 211.6, line: 'It is quiet here. Nothing has to mean anything.', who: 'joy' },
+  { at: 212.0, to: 213.7, line: 'You don’t have to follow me.', who: 'joy' },
+  { at: 216.4, to: 218.4, line: 'Joy —', who: 'evelyn' },
+  { at: 219.5, to: 222.0, line: 'I’m coming.', who: 'evelyn' },
+  { at: 226.7, to: 229.4, line: 'You came all this way.', who: 'joy' },
+  { at: 229.8, to: 232.6, line: 'Where else would I be?', who: 'evelyn' },
+]
+/** Where the subtitles sit, as shares of the 16:9 frame (their top middle). */
+export const SUB_AT: [number, number] = [0.5, 0.855]
+/** How far up the subtitle is at `t`, 0 to 1: for the soft dark under it. */
+export function subtitleLight(t: number): number {
+  let v = 0
+  for (const sub of SUBTITLES) v = Math.max(v, clamp((t - sub.at) / SUB_FADE) * (1 - clamp((t - (sub.to - SUB_FADE)) / SUB_FADE)))
+  return v
+}
+const SUB_FADE = 0.28
+
 /** When a card has gone, show seconds. */
 export const goneAt = (card: Card): number => card.at + FORM + card.hold + GO
 
@@ -112,6 +140,19 @@ export function creditsAt(t: number): TitleCard[] {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
     out.push({ key: `all-at-once-chapter-${n}`, role: card.role, names: card.names, title: true, light, rise: rise * 0.5, at: card.pos, scale: card.scale })
+  })
+  SUBTITLES.forEach((sub, n) => {
+    const up = clamp((t - sub.at) / SUB_FADE)
+    const down = clamp((t - (sub.to - SUB_FADE)) / SUB_FADE)
+    const light = up * (1 - down)
+    if (light <= 0.001) return
+    // Plain under the picture, as a subtitle is: small, cream, low in the frame. Evelyn's in roman; Joy's in italic
+    // (the card's note), so who is speaking is told without a name.
+    const card: TitleCard =
+      sub.who === 'evelyn'
+        ? { key: `all-at-once-subtitle-${n}`, names: [sub.line], plain: true, light, rise: 0, at: SUB_AT, scale: 0.62 }
+        : { key: `all-at-once-subtitle-${n}`, names: [], notes: [sub.line], plain: true, light, rise: 0, at: [SUB_AT[0], SUB_AT[1] + 0.006], scale: 1.75 }
+    out.push(card)
   })
   if (t < CREDITS_AT) return out
   CARDS.forEach((card, n) => {

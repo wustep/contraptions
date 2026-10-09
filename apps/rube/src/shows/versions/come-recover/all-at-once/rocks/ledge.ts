@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { ballAt, laneAt, mixHex, R, type BallChange, type Lane, type Pt } from '../../../../../parts'
 import { box, frame, hash, part, type PartShot } from '../kit'
 import { fall } from '../music'
+import { SUB_AT, subtitleLight } from '../credits'
 import { G } from '../physics'
 import { EVELYN, JOY, ROCKS } from '../worlds'
 import { buildLand, INK, paintCloud, paintRing, paintSky, paintSlices, paintWall, type Land } from './ledgeLand'
@@ -229,6 +230,29 @@ export const ledge = part<State>(
       }
       // The ring's near half over them, so what falls in goes down behind its lip.
       paintRing(p, k, f, s.land, weight * 0.9, true, show, weight)
+      // A soft dark low in the frame while a subtitle is up (`SUBTITLES` in `credits.ts`), so its cream reads on the
+      // pale stone and sky.
+      const sub = subtitleLight(show)
+      if (sub > 0.001) {
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        const w = f.x1 - f.x0
+        const h = f.y1 - f.y0
+        // The 16:9 box the words are set in, inside a frame that may be wider or taller.
+        const bh = Math.min(h, (w * 9) / 16)
+        const cy = (f.y0 + (h - bh) / 2 + bh * (SUB_AT[1] + 0.022)) * k
+        const cx = (f.x0 + w * SUB_AT[0]) * k
+        const rx = Math.min(w, (bh * 16) / 9) * 0.34 * k
+        ctx.save()
+        ctx.translate(cx, cy)
+        ctx.scale(1, 0.16)
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
+        g.addColorStop(0, `rgba(40, 32, 24, ${0.5 * sub})`)
+        g.addColorStop(0.6, `rgba(40, 32, 24, ${0.3 * sub})`)
+        g.addColorStop(1, 'rgba(40, 32, 24, 0)')
+        ctx.fillStyle = g
+        ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
+        ctx.restore()
+      }
     },
   },
   (slot) => {
