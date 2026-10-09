@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 43 (latest)
+## Polish pass 44 (latest)
+
+No change to the show: the side panel read line by line on Voyage's page. It has the title, the credit naming both cues, the YouTube player, the transport (4:51), Overview, Follow and Zoom, Theater, and Export, all as they should be. The credit line links Cornfield Chase's upload only: the soundtrack has one `href`, and the embedded player shows No Time for Caution's own upload while that cue plays. Linking both would change the shared soundtrack format for one show, so it is left.
+
+## Polish pass 43
 
 - **A saved video says it is silent.** A video records the soundtrack's file, and since #147 Voyage has none (its music is YouTube's, which a recording cannot take), so Save video makes a silent file. The button never said so, and the note after saving said "Saved: picture and music" for every show. The button now adds "It is silent: the music plays from YouTube, which a recording cannot take." The note says "Saved: the picture, silent (the music is YouTube's)" where there is no file, "the picture" where there is no soundtrack at all, and "picture and music" only where there is one (`shows/player.ts`). Shows with a file (Gymnopédie checked) are unchanged.
 
