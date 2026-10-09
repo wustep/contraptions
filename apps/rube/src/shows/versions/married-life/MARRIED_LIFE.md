@@ -536,6 +536,11 @@ window.
     own speed mid-run and stood him still on screen for 0.3 s, read as hesitating: measure on-screen speed, not only
     its sign.) Re-watched: a dash, then an arrival, in the show's frame and under Zoom. Kept: under Zoom, while the
     frame hangs back (about 175.7 to 176.4), Ellie and the stone sit near its right edge for under a second.
+  - *A first-time viewer* (a fourth critic, told nothing of the changes): the show holds together, the arc builds,
+    nothing jars; strongest the bedside to the lit house, weakest the grey yard. Taken: on the fieldstone she lay
+    round and upright, eye up, like someone sat down for a breather; she now slumps (`slumpOf`: lower, wider), looks
+    down, spent, lifts only partly to answer him, and the ward takes the slump up across the cut and lets it go under
+    the covers. The yard's grey lifts from 90 s, with his walk out, instead of from 95.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 

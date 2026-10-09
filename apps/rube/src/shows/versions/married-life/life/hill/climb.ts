@@ -120,6 +120,16 @@ const giveX = (t: number) => {
 }
 /** How far she has sunk (0 upright, 1 slumped): at once as she gives way, then held. */
 const sunk = (t: number) => smooth(t, E.give - 0.06, E.give + 0.42)
+/**
+ * How she lies, given way: lower and wider, slumped onto what she lies on (her bottom stays on it), clearly not a ball
+ * at rest; her answer to his lean lifts her only partly out of it, an effort. Null before she gives way. The ward
+ * takes this up across the cut and lets it go under the covers (`hospital.ts`).
+ */
+export function slumpOf(t: number): { scale: number; stretch: number } | null {
+  const s = sunk(t) * (1 - 0.35 * smooth(t, E.answer, E.answered))
+  if (s <= 0) return null
+  return { scale: 1 - 0.1 * s, stretch: 1 + 0.26 * s }
+}
 
 /* ------------------------------------------------------------------ Carl */
 
@@ -486,11 +496,9 @@ export const climb = part<ClimbState>(
         at: (t) => {
           const [x, y] = ellie(t)
           const [lx, ly] = L(x, y)
-          // Given way: a little lower and wider, slumped onto what she lies on (her bottom stays on it).
-          const s = sunk(t)
-          if (s <= 0) return { x: lx, y: ly }
-          const scale = 1 - 0.07 * s
-          return { x: lx, y: ly + R * (1 - scale), scale, stretch: 1 + 0.16 * s, angle: Math.atan(ridgeSlope(x)) }
+          const slump = slumpOf(t)
+          if (!slump) return { x: lx, y: ly }
+          return { x: lx, y: ly + R * (1 - slump.scale), ...slump, angle: Math.atan(ridgeSlope(x)) }
         },
       },
     ]

@@ -1,9 +1,10 @@
 import type p5 from 'p5'
-import { mixHex, type Pt } from '../../../../../parts'
+import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, part, type Companion, type Ctx, type Pose } from '../kit'
 import { CLINIC, HOME, INK } from '../worlds'
 import { CUTS } from '../seams'
 import { CUT } from '../music'
+import { slumpOf } from '../hill/climb'
 import { CEIL, drawVisitorChair, FLOOR, hexA, lean, SEAT, tube, W_IN, W_OUT, WARD, WARD_APART, wardDusk, WINDOW } from './clinic'
 
 /**
@@ -404,9 +405,14 @@ export const hospital = part<HospitalState>(
   (slot) => {
     const dur = slot.end - slot.begin
     const lane = carried((t) => { const [x, y] = carlAt(slot.begin + t); return [O + x, y] }, 0, dur, Math.max(1, Math.round(dur / 0.04)))
+    // Slumped as she lay on the hill, across the cut, and settling round under the covers over its first second.
+    const slumped = slumpOf(CUT.hospital - 1e-3)
     const her = (T: number): Companion => {
       const [x, y] = herAt(T)
-      return { x: O + x, y }
+      const left = slumped ? 1 - inout((T - CUT.hospital) / 1.2) : 0
+      if (left <= 0 || !slumped) return { x: O + x, y }
+      const scale = 1 - (1 - slumped.scale) * left
+      return { x: O + x, y: y + R * (1 - scale), scale, stretch: 1 + (slumped.stretch - 1) * left }
     }
     const pose: Pose[] = [{ from: slot.begin, to: slot.end, at: (T) => ({ tilt: tilt(T) }) }]
     return {
