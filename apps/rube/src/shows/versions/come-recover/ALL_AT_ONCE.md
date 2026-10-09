@@ -589,6 +589,10 @@ The notes went back to the builders who made each part, who still had their cont
   Later measured at the panel's other speeds too: at 0.5× within ±3 ms and at 2× within ±19 ms, from the start and
   after seeks. Once, at 0.5×, YouTube's player failed to load after a seek and the show ran on without it. It did
   not happen again in two reruns, and the page's soundtrack code is shared, not this show's.
+- **A pass for the cold open.** The first eight seconds were the one stretch where Waymond, the only one with an
+  eye yet, looked at nothing. Now he looks up at the tubes as they blink and catch over him, left then right. He looks
+  down at the slumped bag as he rights it, then at Evelyn before she sets the washer going. The show's first seconds
+  introduce him as the one who notices. All four looks are checked at full size and seen 80–100% of their span.
 - **A pass for the panel.** The panel beside the show was looked at open, on a desktop and on a phone. The title,
   the long music credit (it wraps to two lines), the YouTube player (whose terms want it seen), the transport, the
   camera modes and the export all fit and read. On a phone the panel stacks under the stage, and the stage still
@@ -730,6 +734,9 @@ looked at both there, and seen: its eye in the frame and big enough to read for 
 
 | Time (s) | Who looks | At | The moment |
 | ---: | --- | --- | --- |
+| 0.5–2.3 | Waymond | the tubes | up at each as it blinks and catches over him, left then right |
+| 3.9–5.1 | Waymond | the slumped bag | as he sets it back on its bottom |
+| 6.3–8.3 | Waymond | Evelyn | before she sets the first machine going |
 | 20.3–23.9 | Waymond | Joy | she comes in on the bell and crosses to her mother |
 | 23.7–27.6 | Waymond | Evelyn | her mother at the keys, not looking up |
 | 27.4–30.3 | Waymond | Joy | she gives up and goes |

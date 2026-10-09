@@ -1,4 +1,4 @@
-import type { BallState, Pt } from '../../../../parts'
+import { FLOOR, type BallState, type Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
@@ -8,7 +8,7 @@ import { DURATION, JUMPS, ONSETS, fight } from './music'
 import { MultiverseShow, type Flicker, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { EVELYN, type WorldKey } from './worlds'
 import { credits, endShade } from './credits'
-import { room, shade, type RoomState } from './home/set'
+import { room, ROOM, shade, TUBES, type RoomState } from './home/set'
 import { laundromat } from './home/laundromat'
 import { dryer } from './home/dryer'
 import { premiere } from './star/premiere'
@@ -223,6 +223,12 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
       who: 'waymond' as const,
       from: 0,
       gaze: [
+        // The cold open: up at the tubes as they blink and catch over him, the one at his left and then the one at his
+        // right; down at the slumped bag as he sets it on its bottom; and at her, before she sets the machine going.
+        { from: 0.45, to: 1.35, at: () => [TUBES[1].x, ROOM.ceiling + 0.35] },
+        { from: 1.2, to: 2.3, at: () => [TUBES[2].x, ROOM.ceiling + 0.35] },
+        { from: 3.9, to: 5.1, at: () => [3.12, FLOOR - 0.3] },
+        { from: 6.3, to: 8.3 },
         { from: 20.3, to: 23.95, at: 'joy' as const },
         { from: 23.7, to: 27.65 },
         { from: 27.4, to: 30.3, at: 'joy' as const },
