@@ -231,7 +231,14 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 94 (latest)
+## Polish pass 95 (latest)
+
+No change to the show: Voyage on a slow link (400 ms latency, 1.6 Mbps), opened fresh from the production build, and its stage watched from the first moment. It loads in about 4 s and plays. When the music falls behind, the clock holds and the stage says "Waiting for the music…", as pass 89 meant. Two findings are left as they are:
+
+- **A slow start reads as an autoplay block.** Seeking into a part of No Time for Caution not yet fetched, with the link throttled, the YouTube deck was still unstarted (not yet "buffering") after `PATIENCE` (2.5 s, `shows/youtube.ts`). The player took that as the browser refusing to play, stopped, and asked for a press. On a slow link that is the wrong reason. But it is the shared player's judgement of real autoplay blocks, which are far more common, and the test is DevTools throttling with a scripted play, not a phone on a bad signal. It is noted here for whoever next works on `youtube.ts`.
+- **Stutter.** On the slowest stretches the clock moved in short bursts, each pause under 1.5 s, so no note showed while the picture jerked. Holding the note until the music ran steadily for a second was tried. It was taken out because it could not be shown to change what was seen.
+
+## Polish pass 94
 
 No change to the show: the stall note at a show's first play, which pass 93 did not reach (its shows were already warm). The stage note was recorded every 0.1 s. Opening Voyage fresh, it said "Loading Voyage…" for 0.2 s and then nothing, the clock starting at once. In Theater, from the end of Gymnopédie into the next show, it said "Loading Kick…" for 0.2 s and then nothing. On a slow connection, where YouTube took over 1.5 s to start, it would say "Waiting for the music…", which would be true.
 
