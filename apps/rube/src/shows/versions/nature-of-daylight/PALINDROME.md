@@ -713,9 +713,8 @@ fifty-third left it: the last frame is the first, which has no Ian, and to roll 
 leaving her.
 
 A sixty-seventh gave the show to a sixth fresh reader. The seam, the hand and the ring passed without a word. Their
-worst was the leap off the swing again: thrown off it, an accident. Four of six fresh readers have now stumbled there,
-and the sixtieth, the fifty-sixth and this one's director all thought the leap itself fine; what came after it was
-not. Landed, she rolled to a stop and lay there most of a second, then eased back over three: a child lying where
+worst was the leap off the swing again: thrown off it, an accident. Four of six fresh readers have now stumbled there.
+The leap itself is fine, as the sixtieth found; what came after it was not. Landed, she rolled to a stop and lay there most of a second, then eased back over three: a child lying where
 she fell. She is running now a moment after she lands: up to pace in a quarter of a second, on at it, skipping, there
 by the seat a couple of seconds before it comes back, waiting as her mother steadies it.
 
