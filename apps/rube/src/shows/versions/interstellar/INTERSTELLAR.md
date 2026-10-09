@@ -219,7 +219,14 @@ There is no title card. After p5.js's card goes (about 287 s), the camp holds al
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 4 (latest)
+## Polish pass 5 (latest)
+
+A second sweep, half a second off the first, then closer looks at the wormhole, the fall out of the tesseract, Miller and the busy stretches at full size.
+
+- **One Ranger into the wormhole** (234.2 to 235.1 s). The part of the ship inside the glass was shrunk about the sphere's centre while the part outside was not, so the front came away from the tail and showed as a second, smaller ship beside it. While it straddles the rim it now shrinks about the point where it goes in, so it stays joined to its tail. Once the tail is in, it slides on to the centre, where the far side opens.
+- **Gold threads through the fall** (124.6 to 125.4 s). The threads going past the ghost were hairlines at a third opacity, so the fall read as an empty dark frame. There are more of them, a little thicker, bright at the leading end and fading back along their length.
+
+## Polish pass 4
 
 The whole show was swept a second at a time, then the weak stretches frame by frame, and the camera and Cooper's place on the screen were measured at 60 fps for kinks. The jolts that turned up are all strikes or hidden; these are what the frames showed.
 
