@@ -699,6 +699,13 @@ window.
   the night sky). The headless export was not run again (it needs about five unbroken minutes); the recording is still
   unmeasured.
 
+- **Polish round 36 (Opus 5.5).** A real "Save video" export, run to the end in headless Chromium and read back:
+  a 1920 by 1080 VP9 WebM, 110 MB, one video stream and no audio (the show has no `src`, so it records silently, as
+  meant); played through it reaches 258.06 s, and frames sampled on the way show the wedding, the book, the crest
+  with the photograph, the bedside, and the credit cards painted over the house to the last. Its header carries no
+  duration and no seek index (a MediaRecorder file), so seeking in it lands near its start; it plays through
+  correctly. Headless rendered 15 frames a second at 1080p, software rendering's limit.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
@@ -713,5 +720,6 @@ window.
   (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
   Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
-- Only Chrome on macOS has been watched. The YouTube cue's sync, Safari and a recording export have not been
-  measured for this take.
+- Only Chrome on macOS has been watched. The YouTube cue's sync and Safari have not been measured for this take. A
+  recording export has (round 36, headless Chromium): it runs the whole 258 s with the credits painted in, silent (no
+  `src`); at 1080p headless rendered 15 frames a second, a software limit, not measured on a machine with a GPU.
