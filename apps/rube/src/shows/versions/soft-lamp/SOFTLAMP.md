@@ -251,7 +251,7 @@ ball. The machine and its timing were right and are untouched; the room around i
     to the ball.
 
 **Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
-second job); a cable from the headphones; a drinking bird that would have lifted the ball (a character, and a gag);
+second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
 
 ## Judgment calls for Stephen
