@@ -971,6 +971,14 @@ both in Zoom, and the overview.
      of place. The share card, regenerated (the dust by the far cup, the window's rims); kept at its dusk still, which
      is warmer than the end's, where the hand is reaching for the lamp.
 
+### The fifty-seventh pass: its shadow goes with it
+
+148. **The kitten's shadow on the wall stayed behind.** Since it learned to stand (the stretches) and to climb (the
+     end), its soft shadow on the wall kept the shape and place of the loaf lying on the desk. It goes with it now:
+     lifted as it stands, along the desk and up the books as it climbs, turned with it, and gone once it is on the sill,
+     in front of the glass, which takes no shadow. Faint, as the cat is far from the lamp; a thing to be right rather
+     than to be seen.
+
 **Subtracted:** the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

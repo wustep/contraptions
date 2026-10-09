@@ -1,5 +1,5 @@
 import { liftAt } from './hands'
-import { awayAt } from './cat'
+import { awayAt, climbAt, stretchAt } from './cat'
 import { BOOKS, CAT, CUP, FAR_CUP, GLASS, LAMP, MUG, R, SILL, WALKMAN } from './desk'
 import { ballAt, hollowY } from './route'
 import { MOUTH, lampAt } from './world'
@@ -115,13 +115,21 @@ export function wallShadows(ctx: Ctx, t: number): void {
   }
   if (liftAt(t) <= 0.02) cast(MUG.x, rect(MUG.x - MUG.halfW, -MUG.h, MUG.x + MUG.halfW, 0), 0.4)
   cast(WALKMAN.x1, rect(WALKMAN.x0, -WALKMAN.h, WALKMAN.x1, 0), 0.4)
-  // (Not once it has gone up to the sill.)
-  if (awayAt(t) < 0.5) cast(CAT.chest, () => {
-    ctx.beginPath()
-    ctx.ellipse((CAT.x0 + CAT.chest) / 2, -0.25, (CAT.chest - CAT.x0) / 2, 0.36, 0, 0, Math.PI * 2)
-    ctx.moveTo(CAT.head.x + 0.25, CAT.head.y)
-    ctx.arc(CAT.head.x, CAT.head.y, 0.25, 0, Math.PI * 2)
-  }, 0.4)
+  // The cat's, going with it as it gets up and climbs to the sill (and lifted as it stands); not once it is on the
+  // sill, in front of the glass, which takes no shadow.
+  const c = climbAt(t)
+  const st = stretchAt(t)
+  if (c.dy > -1.3) {
+    const cx = (CAT.x0 + CAT.chest) / 2
+    const lift = 0.27 * Math.max(c.up, st.up)
+    const headX = cx + (CAT.head.x - cx) * Math.sign(c.face)
+    cast(CAT.chest + c.dx, () => {
+      ctx.beginPath()
+      ctx.ellipse(cx + c.dx, -0.25 + c.dy - lift, (CAT.chest - CAT.x0) / 2, 0.36, 0, 0, Math.PI * 2)
+      ctx.moveTo(headX + c.dx + 0.25, CAT.head.y + c.dy - lift)
+      ctx.arc(headX + c.dx, CAT.head.y + c.dy - lift, 0.25, 0, Math.PI * 2)
+    }, 0.4)
+  }
   for (const b of BOOKS) cast((b.x0 + b.x1) / 2, rect(b.x0, b.top, b.x1, b.bottom), 0.45)
   cast(CUP.x, rect(CUP.x - CUP.halfW, CUP.top, CUP.x + CUP.halfW, 0), 0.4)
   cast(FAR_CUP.x, rect(FAR_CUP.x - FAR_CUP.halfW, -FAR_CUP.h, FAR_CUP.x + FAR_CUP.halfW, 0), 0.35)
