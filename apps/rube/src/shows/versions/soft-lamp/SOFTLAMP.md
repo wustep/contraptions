@@ -480,6 +480,16 @@ ball. The machine and its timing were right and are untouched; the room around i
     a still at Destination Unknown's card is clean, and the live page keeps its wash under the name. A video keeps it
     too, by the stage's code (its frame is shown); not recorded here.
 
+### The twenty-seventh lofi pass
+
+69. **The recordings, seen.** Last pass's claim that a video keeps the wash under the track names was the stage's code,
+    not a recording. Now recorded: a 1080p video and a Short, each stopped at the first track's card, have "morning
+    moon" painted into the frame with the wash under it.
+70. **A Short is seven tenths black bars.** The stage letterboxes every show's Short (the 16:9 picture, black above
+    and below), on purpose: shows are composed for 16:9. This one's room is built floor to ceiling for a stage held
+    upright, and the live upright stage shows all of it; its Short does not. Changing that is the stage's policy, not
+    this show's, so it is left as it is and put to Stephen below.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
@@ -496,6 +506,10 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
 - **The cat.** It is the one character, and a kitten for the desk's scale. It nods along in about half the groove's
   phrases (chosen per phrase, not per track); fewer would read as a cat that watches, more as a gag.
 - **The headlights.** Roughly every minute and a half once it is dark, four seconds each; they could be rarer.
+- **Its Short.** The stage letterboxes every show's 9:16 Short, so this one's is 70% black bars, though its room is
+  built floor to ceiling and the live upright stage already fills a phone with it. A per-show choice to fill the Short
+  (as the live stage does, seeing more world, never less) would make a better Short here; it is a change to the shared
+  stage, so it is not in this PR.
 - **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.
 
 ## Checks
