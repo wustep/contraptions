@@ -751,6 +751,16 @@ const GIVEN: { at: number; target: (t: number) => { at: Pt; r: number } }[] = [
 ]
 
 /**
+ * Where she looks as she gives each eye: at the machine it goes to, from a breath before until it has landed. The
+ * glove's waits until her own new eye has had its fling. Room cells, which are the kindness leg's world cells.
+ */
+export const GIFT_LOOKS: { from: number; to: number; at: (t: number) => Pt }[] = GIVEN.map((g, i) => ({
+  from: i === 0 ? g.at - 0.3 : g.at - 0.5,
+  to: g.at + 0.3,
+  at: (t: number) => g.target(t).at,
+}))
+
+/**
  * The eyes she gives: on each machine's beat a copy of her own googly eye pops off hers, flies in a quick arc,
  * turning, its pupil flapping round, and slaps onto the machine as it touches her. Drawn over her (the part's
  * `over`). Her eye (`fx.ts`) is centred on her ball, its white 0.6 of her radius.
