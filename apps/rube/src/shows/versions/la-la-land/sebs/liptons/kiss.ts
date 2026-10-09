@@ -127,8 +127,10 @@ export const kiss = part<null>(
       [50.5, 6.4, [-2.1, 1.4]],
       [53.0, 5.9, [-1.75, 1.35]],
       [55.2, 5.6, [-1.25, 1.3]],
+      // Closing on the two of them as the distance between them closes.
+      [56.6, 4.7, [0.35, 1.2]],
       // The stage: he runs up the keys, she runs along under them.
-      [57.8, 5.4, [1.2, 1.1]],
+      [57.8, 4.8, [1.0, 1.15]],
       [61.5, 4.6, [4.3, 0.9]],
       // The hush: in, slowly, on the piano's end.
       [62.3, 4.6, [5.4, 0.7]],

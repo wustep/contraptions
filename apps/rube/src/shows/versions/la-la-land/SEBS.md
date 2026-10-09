@@ -377,3 +377,7 @@ A fifty-first pass, at the weakest stretches:
 - **A constellation.** Among the stars (301 to 326) the picture reset to the same place every few seconds while the melody lit star after star. Now each star the melody lights is joined to the one before by a faint line, drawn out from the old star to the new as it lights, and over the waltz the eleven gather into a figure round the two of them that turns with the sky and goes out with the projector's lamps.
 - **Her window, with the music.** Through her show the window, all her set, now takes its light from the music as well as the stage lights, and the music builds through her show: the window comes up like a dawn behind her, phrase on phrase, and holds for the ovation.
 - Not taken: a push in on the audition, which was widened on purpose to keep his chair in the picture.
+
+A fifty-second pass, the runners-up:
+
+- **Closing on them at Lipton's.** The last reviewer's runners-up were the crossing at Lipton's, where the two of them were small, and the shot at her table. While she crosses the room he is at the keys at one side of the frame and she at the other, and there is no room to come in; but from 56.5 the distance between them closes, and now the frame closes with it (to 4.7 cells from 5.6) and holds there into the hush, both of them in the picture throughout. At her table the push-in as she lifts her eyes goes a little further (1.32 cells).
