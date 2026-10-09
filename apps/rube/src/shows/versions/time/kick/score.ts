@@ -221,7 +221,7 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   })
 
   const show = new KickShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
-  sparkInWides((t) => show.where(t), STACK_WIDES.map((w) => [w.from, w.to]))
+  sparkInWides((t) => show.where(t), STACK_WIDES.map((w) => [w.from, w.to]), legs.filter((l) => l.world === 'dream').map((l) => [l.from, l.to]))
 
   // The camera: one director per leg, each following the ball only inside its own leg, and each leg opening on
   // exactly the framing the last one closed on, carried by the cut: a match cut on Cobb. Inside a leg, at a seam

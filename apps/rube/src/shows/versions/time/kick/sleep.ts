@@ -23,11 +23,14 @@ const CROSSINGS: (Crossing & { up: boolean })[] = [
 /**
  * Where he is, and when the camera is out on the whole stack at once (the director's great wides): `score.ts` hands
  * them over once the show is laid. At that size a ball is a pixel, so he is drawn there as a spark in his own colour
- * with the streak of his climb behind it, all the way up, not only where he crosses the dark.
+ * with the streak of his climb behind it, all the way up, not only where he crosses the dark. So too whenever the
+ * frame is out that far on the dream (`dream`, his legs in it; Overview sees the whole stack the whole time).
  */
-let wide: { where: (t: number) => Pt; spans: [number, number][] } | null = null
-export function sparkInWides(where: (t: number) => Pt, spans: [number, number][]): void {
-  wide = { where, spans }
+let wide: { where: (t: number) => Pt; spans: [number, number][]; dream: [number, number][] } | null = null
+/** How tall a frame (cells) is far enough out on the stack for him to be drawn as a spark. */
+const FAR_OUT = 40
+export function sparkInWides(where: (t: number) => Pt, spans: [number, number][], dream: [number, number][]): void {
+  wide = { where, spans, dream }
 }
 
 export const sleep = scenery<null>({
@@ -80,7 +83,9 @@ export const sleep = scenery<null>({
       const far = Math.max(1, (f.y1 - f.y0) / 24)
       bloom(p, k, at, (cr.up ? 1.6 : 2.4) * (cr.up ? far : 1), SLEEP.mote, a * (cr.up ? Math.min(1.6, 0.8 + far * 0.2) : 1))
     }
-    for (const [a, b] of wide?.spans ?? []) {
+    const out = f.y1 - f.y0 >= FAR_OUT
+    const span = wide?.spans.find(([a, b]) => t >= a && t <= b) ?? (out ? wide?.dream.find(([a, b]) => t >= a && t <= b) : undefined)
+    for (const [a, b] of span ? [span] : []) {
       if (!wide || t < a || t > b) continue
       const far = Math.max(1, (f.y1 - f.y0) / 24)
       const at = wide.where(t)

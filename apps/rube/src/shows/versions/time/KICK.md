@@ -278,6 +278,9 @@ each world, and changed:
 - **The reunion under Zoom** (255 to 265): Zoom tightens on the same point as the director's camera, and the garden's
   framings held the three of them so low that under Zoom they sat on the frame's foot, cut by it. Those framings sit a
   little lower on the lawn now: in Follow they are still in the lower third, and under Zoom they stand clear of the edge.
+- **Overview in the dream** (68.9 to 213.7): Overview sees the whole stack the whole time, a hundred cells tall, where a
+  ball is a pixel; he could be found only during the great wide. Whenever the frame is that far out on the dream he is
+  now the same spark in his own colour, in whichever level he is.
 
 ## Inception nods
 
