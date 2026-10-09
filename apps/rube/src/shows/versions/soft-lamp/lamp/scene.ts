@@ -656,7 +656,12 @@ function lip(ctx: Ctx, lw: number, t: number): void {
   ctx.lineTo(x + s * 0.62, top + 0.12)
   ctx.lineTo(x - s * 0.62, top + 0.12)
   ctx.closePath()
-  ctx.fillStyle = lit(PAD, PAD_LIT, lightAt(x, -0.15) * lamp)
+  // The cushion's own shading, top to foot, so the lip is the cushion and not a patch on it.
+  const l = lightAt(CUP.x, -0.15) * lamp
+  const pg = ctx.createLinearGradient(0, top, 0, CUP.top + 0.17)
+  pg.addColorStop(0, lit(PAD, PAD_LIT, l))
+  pg.addColorStop(1, lit(PAD, PAD_LIT, l * 0.5))
+  ctx.fillStyle = pg
   ctx.fill()
   edge()
   stroke(ctx, lw * 0.8)
@@ -701,17 +706,25 @@ function lamp(ctx: Ctx, lw: number, t: number): void {
   // The arms, each a stout rod and a thin one beside it, and the spring along the lower.
   rod(foot.x + 0.1, foot.y, elbow.x + 0.08, elbow.y + 0.06, 0.04)
   rod(foot.x - 0.03, foot.y, elbow.x - 0.03, elbow.y, 0.1)
+  // The spring, close beside the thin rod and hooked onto it at both ends.
+  const thin = (u: number) => ({ x: foot.x + 0.1 + (elbow.x + 0.08 - foot.x - 0.1) * u, y: foot.y + (elbow.y + 0.06 - foot.y) * u })
+  const p0 = thin(0.2)
+  const p1 = thin(0.55)
+  const off = 0.075
+  const sx0 = p0.x + off
+  const sy0 = p0.y - 0.06
+  const sx1 = p1.x + off
+  const sy1 = p1.y + 0.06
+  const coils = 12
   ctx.beginPath()
-  const sx0 = foot.x + (elbow.x - foot.x) * 0.2 + 0.16
-  const sy0 = foot.y + (elbow.y - foot.y) * 0.2
-  const sx1 = foot.x + (elbow.x - foot.x) * 0.55 + 0.16
-  const sy1 = foot.y + (elbow.y - foot.y) * 0.55
-  const coils = 9
-  ctx.moveTo(sx0, sy0)
+  ctx.moveTo(p0.x, p0.y)
+  ctx.lineTo(sx0, sy0)
   for (let i = 1; i <= coils * 2; i++) {
     const u = i / (coils * 2)
-    ctx.lineTo(sx0 + (sx1 - sx0) * u + (i % 2 ? 0.035 : -0.035), sy0 + (sy1 - sy0) * u)
+    ctx.lineTo(sx0 + (sx1 - sx0) * u + (i % 2 ? 0.026 : -0.026), sy0 + (sy1 - sy0) * u)
   }
+  ctx.lineTo(sx1, sy1)
+  ctx.lineTo(p1.x, p1.y)
   stroke(ctx, lw * 0.45, rgba(INK, 0.8))
   rod(elbow.x - 0.02, elbow.y + 0.09, hinge.x + 0.03, hinge.y + 0.08, 0.04)
   rod(elbow.x, elbow.y - 0.02, hinge.x, hinge.y - 0.02, 0.1)

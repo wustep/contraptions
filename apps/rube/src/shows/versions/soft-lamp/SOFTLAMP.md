@@ -403,6 +403,14 @@ ball. The machine and its timing were right and are untouched; the room around i
 59. **The checks, honestly:** the last three passes' full runs of the suite never started. They were queued to wait
     until no other run of it was going on the machine, and other worktrees' runs kept them waiting. Run directly now.
 
+### The eighteenth lofi pass
+
+60. **Two drawing faults, seen only full size**, both in the looks the camera holds longest. The cushion's near lip,
+    drawn over the ball so it sits down in the hollow, was one flat colour on a cushion shaded top to foot: a pale
+    rectangle on the cup's front under the ball through every groove. It takes the cushion's own shading now and is
+    the cushion. And the lamp's spring was a zigzag a sixth of a cell off the arm, joined to nothing: a scribble in the
+    air. It runs close beside the thin rod now, hooked onto it at both ends.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
