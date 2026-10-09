@@ -200,6 +200,18 @@ export interface YouTubeSoundtrack extends Soundtrack {
   onPlayer(fn: (playing: boolean) => void): void
 }
 
+/**
+ * Whether a cue has run out and been started again from the top by YouTube: a video that runs out just short of the
+ * cue's end can be, and its time then jumps back to the beginning while the show stands a moment before `end`, which
+ * is never then reached, so nothing would stop it: the picture would hold (a reported time is never behind what was
+ * shown) and the music be heard again from the start. Near the end (`shown` within a second of `end`), a time gone
+ * back more than two seconds behind what was shown can only be that; a viewer's seek moves `shown` with it, and a
+ * late start lags by tenths. All in seconds of show.
+ */
+export function ranOut(shown: number, end: number, raw: number): boolean {
+  return shown >= end - 1 && raw < shown - 2
+}
+
 /** YouTube's players for a show's soundtrack, drawn into `host`, which the page puts where it can be seen. */
 export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
   let decks: Deck[] = []
@@ -501,12 +513,8 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       if (!d || !d.player || !d.running || d.early) return null
       // A cue that has run out, or been stopped at its end, has nothing to say: the wall carries the show on.
       if (d.state === ENDED) return null
-      // A video that ran out just short of the cue's end can be started again from the top by YouTube: its time jumps
-      // back to the beginning while the show stands a moment before `end`, which is never then reached, so nothing
-      // stops it, the picture holds (below) and the music is heard again from the start. Near the end, a time that has
-      // gone back more than two seconds can only be that: the cue has run out, and the wall carries the show on.
-      const raw = d.cue.at + d.player.getCurrentTime() - d.cue.from
-      if (shown >= end(d) - 1 && raw < shown - 2) {
+      // A cue that YouTube has started again from the top as it ran out (`ranOut`): the wall carries the show on.
+      if (ranOut(shown, end(d), d.cue.at + d.player.getCurrentTime() - d.cue.from)) {
         stop(d)
         return null
       }

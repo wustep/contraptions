@@ -13,6 +13,7 @@ import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
 import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, sectionOf, shelves, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
+import { ranOut } from '../src/shows/youtube'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
 import { GRID, strictTake, strikes } from '../src/shows/versions/metronome/metronome'
@@ -103,6 +104,12 @@ async function main(): Promise<void> {
   const soundtrack = readFileSync(join(process.cwd(), 'apps/rube/src/shows/soundtrack.ts'), 'utf8')
   check('a file play waits for canplay, as YouTube waits for its players', soundtrack.includes('status === \'loading\'') && soundtrack.includes('waiting.push') && soundtrack.includes('deep link'))
   check('a deep link with the sound held keeps a Sound button on the stage, and lights the panel\'s', player.includes("soundHeld ? 'Sound'") && /musicBtn\.classList\.toggle\('held', hasMusic && soundHeld\)/.test(player))
+  // A YouTube cue started again from the top as it runs out is treated as run out, so the show carries on to its end
+  // instead of freezing under the song heard again (found on Married Life's deployed preview); and `position` asks.
+  check('a YouTube cue restarted at its end is run out, and nothing else is',
+    ranOut(250.5, 250.53, 0.4) && ranOut(250.2, 250.53, 3) &&
+    !ranOut(250.5, 250.53, 250.45) && !ranOut(200, 250.53, 0.4) && !ranOut(250.5, 250.53, 249.2) && !ranOut(100, 250.53, 99.6) &&
+    /if \(ranOut\(shown, end\(d\),/.test(readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.ts'), 'utf8')))
   check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('zoomFrame(cam, FOLLOW_ZOOM)'))
   check('a work with one take has no take row to pick from', /work\.versions\.length < 2\) takeRow\.hidden = true/.test(player))
   check('no take has a byline in the panel', !/byline/.test(player) && !/director/.test(player))
