@@ -37,7 +37,7 @@ const onset = (t: number) => snap(t, 0.02)?.t ?? t
 const FLOURISH = [166.15, 166.487, 166.847, 167.114, 167.462, 167.845].map(onset)
 const BUTTON = FLOURISH[5]
 /** The lamps going out, one by one, into the blackout. */
-const OUT = [169.993, 170.539, 170.841, 171.085].map(onset)
+export const OUT = [169.993, 170.539, 170.841, 171.085].map(onset)
 /** Mia is ours until the dark is whole. */
 const MIA_TO = 171.96
 

@@ -7,6 +7,7 @@ import type { ShowBall } from '../src/show'
 import { R } from '../src/parts'
 import { KINDLED, inSky } from '../src/shows/versions/la-la-land/sebs/night/stars'
 import { sebAt } from '../src/shows/versions/la-la-land/sebs/night/painted-waltz'
+import { OUT as HOLLY_OUT } from '../src/shows/versions/la-la-land/sebs/studio/hollywood'
 import { show as sebsShow, covers as sebsCovers } from '../src/shows/versions/la-la-land/sebs'
 import { SWITCH } from '../src/shows/versions/la-la-land/sebs/score'
 import { AT, DURATION, END_AT, MIX_END, NOTES, dream, paris, combStrength, dreamBeat, parisBeat } from '../src/shows/versions/la-la-land/sebs/music'
@@ -259,6 +260,28 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       if (roofAt - bottom < creditClear) { creditClear = roofAt - bottom; creditWorst = `${t.toFixed(1)} s` }
     }
   }
+  // The story's beats are seen: at each, everyone it is about is in the picture.
+  const beats: [number, string, ('seb' | 'mia' | 'david')[]][] = [
+    [28, 'she lifts her eyes to him', ['mia', 'david']], [34, 'he finds her across the room', ['seb', 'mia']],
+    [52, 'she crosses the room to him', ['seb', 'mia']], [65.6, 'the kiss at Lipton\'s', ['seb', 'mia']],
+    [118, 'the ovation', ['seb', 'mia']], [125.7, 'the curtain call', ['seb', 'mia']],
+    [188.5, 'the pen signs, and he sees it', ['seb', 'mia']], [226, 'her premiere, and him', ['seb', 'mia']],
+    [266.2, 'the roll down the beam', ['seb', 'mia']], [285, 'the waltz', ['seb', 'mia']], [338.8, 'the touch among the stars', ['seb', 'mia']],
+    [368.5, 'the pool, and her cheering', ['seb', 'mia']], [450.1, 'the kiss in the club', ['seb', 'mia']],
+    [455.7, 'waking: David in the seat', ['mia', 'david']], [461.5, 'she turns back from the door', ['mia']],
+    [462.3, 'he looks up', ['seb']], [463.0, 'she nods', ['mia']], [463.8, 'he nods', ['seb']], [476.3, 'the count-in', ['seb']],
+  ]
+  const unseenBeats: string[] = []
+  for (const [t, what, who] of beats) {
+    for (const w of who) {
+      const b = w === 'seb' ? (([x, y]) => ({ x, y }))(show.where(t)) : show[w](t)
+      if (!inShot(t, b)) unseenBeats.push(`${what} (${t}): ${w} out of the picture`)
+    }
+  }
+  check('sebs: the story\'s beats are seen, everyone they are about in the picture', unseenBeats.length === 0, unseenBeats.join(', '))
+  // Hollywood's hill lamps go out one by one, and only then the dark comes: each goes out in the open.
+  const toShadow = sebsCovers.find((c) => c.kind === 'black' && c.down[0] > 168 && c.down[0] < SWITCH.shadow)
+  check('sebs: Hollywood\'s lamps go out before the dark comes', !!toShadow && HOLLY_OUT.every((t) => coverAt(toShadow, t) < 0.05))
   check('sebs: the credits come up in the open sky over the club', creditClear > 0, `clearance ${creditClear.toFixed(3)} of the frame at ${creditWorst}`)
   check('sebs: they look at each other where the story says (the touches, the waltz, the door), she to the stage, he to her', looks.length === 0, looks.join(', '))
 

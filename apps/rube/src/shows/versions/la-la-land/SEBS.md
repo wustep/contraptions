@@ -87,6 +87,8 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - on the last chord he is back on the keys of his own piano, and she is gone by the band;
 - Mia, David and the son never jump where they can be seen, and come and go only out of shot or under a cover;
 - no one passes through anyone where it can be seen (two balls drawn closer than nine tenths of their widths summed);
+- the story's beats are seen: at nineteen of them, from her eyes lifting at her table to his count-in, everyone the beat is about is in the picture;
+- Hollywood's hill lamps go out before the dark comes;
 - the credits come up in the open sky over the club: while a card is up, the roof's line is below its last line;
 - every star the melody lights among the stars is lit in the picture, with a margin, for the second after it lights;
 - they look at each other where the story says, to within 30°: at the kiss at Lipton's, the curtain call, the roll down the beam, in the waltz, at the touch among the stars, and at the look and the nod at the door; she lifts her eyes to the stage at her table, and he finds her across the room;
@@ -363,3 +365,7 @@ A forty-eighth pass, a check that caught me:
 A forty-ninth pass, one more check:
 
 - **A check for the credits.** The credits come up in the open sky over the club only because the camera's pull-back (in `score.ts`) and the first card's time (in `credits.ts`) agree; a change to either could put a card back across the roof. So `check:shows` now holds it: while any card is up, the club's roof is below the card's last line. On the ending as it was before the sixteenth pass it fails, at 481.4, and now it passes.
+
+A fiftieth pass, the framing held:
+
+- **A check for the beats.** Most of what these passes did was framing: getting everyone a moment is about into the picture at that moment. `check:shows` now holds nineteen such beats, from her eyes lifting at her table and his finding her, through the kiss, the ovation, the pen he sees sign, her premiere, the roll, the waltz, the touch, the pool and the dream's kiss, to the waking, her turn and nod and his look and nod at the door, and the count-in. With the audition as it was, it fails on the pen. And it holds that Hollywood's lamps go out before the dark comes, which fails on the covers as they were.
