@@ -233,6 +233,26 @@ function beyond(p: p5, ctx: Ctx, k: number, t: number, f: Frame, wake: number): 
   dawn.addColorStop(1, rgba(SHELL.dark, 0))
   ctx.fillStyle = dawn
   ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
+  // While it is still waking, within the close frame too: the height held darker, and the light coming up low by the
+  // glass first, a glow with a place in the fog. (Mixed down toward the dark evenly, the half-woken white was one flat
+  // grey slab beside the glass, like an unpainted panel.)
+  const waking = clamp01(wake * 2.5) * clamp01(1 - wake)
+  if (waking > 0.01) {
+    const up = ctx.createLinearGradient(0, -4 * k, 0, 0.5 * k)
+    up.addColorStop(0, rgba(SHELL.dark, 0.45 * waking))
+    up.addColorStop(1, rgba(SHELL.dark, 0))
+    ctx.fillStyle = up
+    ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
+    const gx = (FAR + 1.2) * k
+    const gy = 0.3 * k
+    const gr = 5 * k
+    const glow = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr)
+    glow.addColorStop(0, rgba(SHELL.glow, 0.5 * waking))
+    glow.addColorStop(0.5, rgba(SHELL.fogLit, 0.18 * waking))
+    glow.addColorStop(1, rgba(SHELL.fogLit, 0))
+    ctx.fillStyle = glow
+    ctx.fillRect(gx - gr, gy - gr, 2 * gr, 2 * gr)
+  }
   for (let i = 0; i < 6; i++) {
     const by = (-8.5 + i * 1.9 + 0.5 * Math.sin(t * 0.07 + i * 1.7)) * k
     const h = (1.1 + 0.6 * hash(i, 3, 5)) * k

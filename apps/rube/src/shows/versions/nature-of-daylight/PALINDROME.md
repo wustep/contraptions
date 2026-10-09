@@ -645,6 +645,18 @@ to come back with Shang on the line (290 to 292 s), filled flat red over its dea
 an error. Its picture comes up now under the red, the shell over its valley as on every screen, washed in his colour
 and edged in it, and settles to its own as it locks home.
 
+A fifty-ninth gave the show to a third fresh reader, after the fifty-fifth to the fifty-eighth. They had the story, and
+tied the soldier to the blast as he is meant to be. Two new things read as what they are not:
+
+- **The lift's hose** (311 to 314 s), thick and near black on top of the grass, ran from the lift to her and not to the
+  pale pedal under her: a leash again. It is thin now and down in the grass, the grass's own dark, and runs into a
+  housing the pedal is hinged on, a box with its top catching the light.
+- **The white, waking** (133 to 135.5 s), was mixed down toward the dark evenly, and beside the glass it was one flat
+  grey slab, an unpainted panel. While it wakes the height is held darker and the light comes up low by the glass
+  first, a glow with a place in the fog.
+
+Every span the late rounds touched was filmed again at four frames a second: nothing jumps but the cuts.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

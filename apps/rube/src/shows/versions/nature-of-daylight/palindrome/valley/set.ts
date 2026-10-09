@@ -669,17 +669,21 @@ function drawLift(ctx: Ctx, k: number, t: number): void {
     ctx.fillStyle = steelDark
     ctx.fillRect((hx - 0.045) * k, (hy - 0.045) * k, 0.09 * k, 0.09 * k)
   }
-  // The hose along the grass to the pedal, and the pedal.
-  ctx.strokeStyle = mix(VALLEY.shellDark, VALLEY.oliveDark, 0.4)
-  ctx.lineWidth = Math.max(0.8, 0.045 * k)
+  // The hose along the grass to the pedal's housing, and the pedal. Thin and down in the grass, the grass's own dark:
+  // thick and near black on top of it, it ran to her and not to the pedal under her, a leash.
+  ctx.strokeStyle = mix(VALLEY.oliveDark, VALLEY.shellDark, 0.25)
+  ctx.lineWidth = Math.max(0.8, 0.028 * k)
   ctx.beginPath()
-  ctx.moveTo((x + LIFT.baseHalf) * k, (MEADOW - 0.08) * k)
-  ctx.bezierCurveTo((x + LIFT.baseHalf + 0.6) * k, (MEADOW + 0.02) * k, (PEDAL.x1 - 0.2) * k, (MEADOW + 0.02) * k, (PEDAL.x1 + 0.05) * k, (MEADOW - 0.04) * k)
+  ctx.moveTo((x + LIFT.baseHalf) * k, (MEADOW - 0.06) * k)
+  ctx.bezierCurveTo((x + LIFT.baseHalf + 0.6) * k, (MEADOW + 0.04) * k, (PEDAL.x1 - 0.2) * k, (MEADOW + 0.04) * k, (PEDAL.x1 + 0.1) * k, (MEADOW - 0.03) * k)
   ctx.stroke()
   const press = pedalAt(t)
   const endY = MEADOW - 0.05 - PEDAL.rise * (1 - press)
+  // The housing the pedal is hinged on and the hose goes into: a box, its top catching the light.
   ctx.fillStyle = steelDark
-  ctx.fillRect((PEDAL.x1 - 0.08) * k, (MEADOW - 0.08) * k, 0.2 * k, 0.08 * k)
+  ctx.fillRect((PEDAL.x1 - 0.08) * k, (MEADOW - 0.13) * k, 0.28 * k, 0.13 * k)
+  ctx.fillStyle = steel
+  ctx.fillRect((PEDAL.x1 - 0.08) * k, (MEADOW - 0.13) * k, 0.28 * k, Math.max(1, 0.025 * k))
   ctx.fillStyle = steel
   ctx.beginPath()
   ctx.moveTo(PEDAL.x1 * k, (MEADOW - 0.05) * k)
