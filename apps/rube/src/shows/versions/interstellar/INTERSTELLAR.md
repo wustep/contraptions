@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 75 (latest)
+## Polish pass 76 (latest)
+
+No change to the show, and an idea tried and taken out. On an upright phone Cooper is 0.6 CSS pixels in the ring's reveal (133 to 136.7 s), so pass 68's halo was tried there too, in the replica, under him and only where he is a speck (1080p never drew it). It sat on him, checked with a marker at full size, but a warm glow does not show against the station's pale interior. All that read was its lower edge spilling onto the dark below the hull: a stray glow under the house, not a mark on him. In the flight the halo works because he is alone against open sky. A stronger mark would pull the eye in a shot meant to show the whole ring, so the reveal is left as it was, on a phone too.
+
+## Polish pass 75
 
 No change to the show. The list above of what `check:shows` holds the show to had not followed this round's checks: it now names the show's own frame, the cut edges and overlaps, the reunions, the slow moves and the phone streak, and says how Zoom and coming and going are tested now. It was read against the checks' own names in `checks/shows.ts`.
 
