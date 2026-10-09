@@ -4,7 +4,7 @@ import { wrap } from './music'
 import { RADIUS, along, ballLocal } from './path'
 import {
   BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, auroraAt, auroraSheet, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, milkyWay, wingsAt, type CloudLight,
-  FIGURES, figureAt,
+  FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat,
 } from './air'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
@@ -485,6 +485,26 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
   }
   layer(BANKS, BANK, hazy, (0.6 - 0.4 * day.night) * near * light.alpha, false)
   layer(CLOUDS, HEAPS, light, 0.92 * near * light.alpha, true)
+
+  // Sailboats far out on the water by day, sitting into the sea (its surface is drawn over their hulls' feet).
+  const boats = near * boatsOut(c.t)
+  if (boats > 0.01) {
+    const toward = Math.max(-1, Math.min(1, Math.sin(sunAngle(c.t)) * 2))
+    const sail = mixHex('#FBF6EC', day.lit, 0.3)
+    const shade = mixHex(mixHex('#C9CFD8', day.low, 0.3), day.top, 0.15)
+    const hull = mixHex(day.line, day.sea, 0.35)
+    for (const b of BOATS) {
+      const d = layered(b.x, c.t, SAILS.f, SAILS.span, SAILS.wind)
+      const edge = inLayer(d, SAILS.span)
+      if (Math.abs(d) > half + 1 || edge < 0.01) continue
+      p.push()
+      atSea(p, k, u + d)
+      // Riding the sea's slow breath, low on the horizon.
+      ctx.translate(0, k * (0.03 - 0.02 * osc(c.t, 0.09, b.seed * 2)))
+      drawBoat(ctx, k, b.size, toward, osc(c.t, 0.12, b.seed), sail, shade, hull, 0.85 * boats * edge)
+      p.pop()
+    }
+  }
 
   // Gulls, by day, close.
   const gulls = near * (1 - smooth(day.night, 0.12, 0.4)) * (1 - smooth(v.cells, 9, 14))

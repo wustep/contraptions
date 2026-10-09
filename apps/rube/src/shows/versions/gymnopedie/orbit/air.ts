@@ -658,3 +658,59 @@ export function figureAt(f: Figure, t: number): { i: number; light: number; line
   })
   return out
 }
+
+// ---------------------------------------------------------------- boats
+
+/**
+ * Sailboats far out by day: a layer of their own, far, beating home against the ball's way, so that each crosses the
+ * frame slowly, in half a minute or so. (Sailing the ball's way they would keep pace with the parallax, and stand still
+ * off the frame's edge.)
+ */
+export const SAILS = { f: 0.3, span: repeatOf(0.3, 1), wind: 1 }
+
+export const BOATS = Array.from({ length: 8 }, (_, i) => ({
+  x: ((i + 0.5 * hash(i, 231)) * SAILS.span) / 8,
+  size: 0.32 + 0.14 * hash(i, 232),
+  seed: i,
+}))
+
+/** How much the boats are out at `t`: from mid-morning, in from the shower's haze, home before dusk. */
+export const boatsOut = (t: number): number => {
+  const u = wrap(t)
+  return smooth(u, 40, 60) * (1 - smooth(u, 180, 200)) * (1 - 0.85 * overcastAt(t))
+}
+
+/**
+ * One sailboat, its waterline's middle at the origin, up the frame's up, `k` pixels a cell: a low dark hull and a
+ * tall white sail, lit on the side towards `lit` (-1 west to 1 east), leaning a little with its rocking.
+ */
+export function drawBoat(ctx: CanvasRenderingContext2D, k: number, size: number, lit: number, rock: number, sail: string, shade: string, hull: string, alpha: number): void {
+  const K = (v: number) => v * k * size
+  ctx.save()
+  ctx.globalAlpha = alpha
+  ctx.rotate(rock * 0.05)
+  ctx.fillStyle = hull
+  ctx.beginPath()
+  ctx.moveTo(K(-0.5), K(-0.1))
+  ctx.lineTo(K(0.55), K(-0.1))
+  ctx.lineTo(K(0.38), K(0.06))
+  ctx.lineTo(K(-0.4), K(0.06))
+  ctx.closePath()
+  ctx.fill()
+  // The mast, the mainsail behind it and the jib before.
+  ctx.fillStyle = lit >= 0 ? sail : shade
+  ctx.beginPath()
+  ctx.moveTo(K(0.02), K(-1.25))
+  ctx.lineTo(K(0.02), K(-0.16))
+  ctx.lineTo(K(-0.42), K(-0.16))
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = lit >= 0 ? shade : sail
+  ctx.beginPath()
+  ctx.moveTo(K(0.07), K(-1.1))
+  ctx.lineTo(K(0.07), K(-0.2))
+  ctx.lineTo(K(0.42), K(-0.2))
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}

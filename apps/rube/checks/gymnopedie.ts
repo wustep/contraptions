@@ -10,7 +10,7 @@ import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../sr
 import { breath, cellsAt, wideAt } from '../src/shows/versions/gymnopedie/orbit/camera'
 import { CADENCES, CLOSE, PERCHED, leafRings, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
-import { BANK, FIGURES, FIREFLY, GULLS, HEAPS, METEORS, MIST, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
+import { BANK, FIGURES, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -118,15 +118,15 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: every flower opens as the ball comes, and closes at dawn', flowers.length > 150 && closed.length === 0, closed.slice(0, 5).map((s) => s.index).join(', '))
 
   // The air: clouds, gulls, mist and fireflies at their depths, all coming round with the period.
-  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY]
+  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY, SAILS]
   const roundAgain = layers.every((l) => [0, 3.3, 17.9, 40].every((x) => {
     const a = layered(x, 0, l.f, l.span, l.wind)
     const b = layered(x, PERIOD - 1e-7, l.f, l.span, l.wind)
     const d = Math.abs(a - b)
     return Math.min(d, l.span - d) < 1e-4
   }))
-  check('gymnopedie: every layer of the air (the clouds, the gulls, the mist, the fireflies) comes round with the period',
-    roundAgain && [coverAt, mistAt, firefliesOut].every((f) => Math.abs(f(PERIOD - 1e-7) - f(0)) < 1e-4))
+  check('gymnopedie: every layer of the air (the clouds, the gulls, the mist, the fireflies, the boats) comes round with the period',
+    roundAgain && [coverAt, mistAt, firefliesOut, boatsOut].every((f) => Math.abs(f(PERIOD - 1e-7) - f(0)) < 1e-4))
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5
