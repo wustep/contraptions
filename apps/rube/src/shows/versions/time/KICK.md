@@ -348,6 +348,10 @@ each world, and changed:
 - **Fischer stirs, under Zoom** (219 to 221): the camera crosses the aisle to him as he wakes and lets the sun in, and
   it held a little too far over; Zoom tightens on the same point, and under it Ariadne was cut in half by the left
   edge for a second and a half. It holds a fifth of a cell less far over now, and under Zoom both rows are whole.
+- **Overview in Paris** (30.9 to 61.3): Overview frames Paris whole, the city a strip across a great sky, and he was
+  a speck in it (two pixels across in a wide frame, nothing at all in a tall one) for thirty seconds. Whenever he
+  would be drawn five pixels across or less there, he is the same spark in his own colour the dream gives him
+  (`sleep.ts`, `beacon`). The director's camera and Zoom are never out that far, and draw him as before.
 
 ## Inception nods
 

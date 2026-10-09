@@ -1,4 +1,4 @@
-import type { Pt } from '../../../../parts'
+import { R, type Pt } from '../../../../parts'
 import { bloom, rgba } from './cast'
 import { box, frame, hash, scenery } from './kit'
 import { DOWN, SLEEP_BANDS, UP, type Crossing } from './stack'
@@ -26,11 +26,11 @@ const CROSSINGS: (Crossing & { up: boolean })[] = [
  * with the streak of his climb behind it, all the way up, not only where he crosses the dark. So too whenever the
  * frame is out that far on the dream (`dream`, his legs in it; Overview sees the whole stack the whole time).
  */
-let wide: { where: (t: number) => Pt; spans: [number, number][]; dream: [number, number][] } | null = null
+let wide: { where: (t: number) => Pt; spans: [number, number][]; dream: [number, number][]; awake: [number, number][] } | null = null
 /** How tall a frame (cells) is far enough out on the stack for him to be drawn as a spark. */
 const FAR_OUT = 40
-export function sparkInWides(where: (t: number) => Pt, spans: [number, number][], dream: [number, number][]): void {
-  wide = { where, spans, dream }
+export function sparkInWides(where: (t: number) => Pt, spans: [number, number][], dream: [number, number][], awake: [number, number][] = []): void {
+  wide = { where, spans, dream, awake }
 }
 
 export const sleep = scenery<null>({
@@ -118,3 +118,26 @@ export const sleep = scenery<null>({
 
 /** The cells the dark claims: enough of every band, across the whole width a level may be seen at. */
 export const SLEEP_CELLS: Pt[] = SLEEP_BANDS.flatMap((b) => box(-70, b.top - 2, 80, b.bottom + 2, 3))
+
+/**
+ * Paris seen whole (Overview, the more so in a tall frame): the city is a strip across a great sky and he is a speck in
+ * it, five pixels across or less. Whenever the frame is out that far, he is the same spark in
+ * his own colour there too (`awake`, his legs out of the dream that need it), so he can be found.
+ */
+export const beacon = scenery<null>({
+  name: 'beacon',
+  draw: (p, _s, c) => {
+    const { k, t } = c
+    if (!wide || R * k >= 2.5) return
+    if (!wide.awake.some(([a, b]) => t >= a && t <= b)) return
+    const f = frame(p, k)
+    const far = Math.max(1, (f.y1 - f.y0) / 24)
+    const at = wide.where(t)
+    bloom(p, k, at, 0.8 * far, COBB, 0.7)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.fillStyle = COBB
+    ctx.beginPath()
+    ctx.arc(at[0] * k, at[1] * k, Math.max(2, 0.19 * far * k), 0, Math.PI * 2)
+    ctx.fill()
+  },
+})
