@@ -333,6 +333,8 @@ changed, in the order of the film, and then what runs through it:
   the lift's start and on the reunion each beam was a quarter of the frame across and showed as panes of tinted
   glass, a cold stripe between two of them. They are soft across now, dense along the middle and nothing at the edge,
   from one sprite each set onto the beam; the sunlight's foot still lies level on the meadow.
+  The floods' beams fade out at their ends now too (they were cut square where they meet the belly, a hard line on
+  its dark), and the mast lamps' fans of light down over the camp are soft, not flat triangles.
 - **The lamp's beam in the shaft** (69 → 85.8): fourteen stacked cones, each ending in a hard edge, so in the dark
   the beam showed as a fan of stepped bands. It is one soft cone now, from the same kind of sprite as the valley's
   beams, still coming to a point at the lens.

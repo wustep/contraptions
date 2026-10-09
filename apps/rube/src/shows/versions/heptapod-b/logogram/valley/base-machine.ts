@@ -209,17 +209,8 @@ export function drawLight(p: p5, k: number, t: number): void {
     const flare = Math.exp(-Math.max(0, t - LAMPS[i]) / 0.25)
     lobe(ctx, k, x, y, 1.6 + 2.6 * inFog + 1.2 * flare, 1.2 + 1.3 * inFog + 0.8 * flare, lamp, (0.42 + 0.3 * flare) * on * (1 + 0.6 * inFog), 0.2)
     lobe(ctx, k, x, y, 0.45, 0.4, warm, 0.8 * Math.min(1, on), 0.3)
-    // A soft fan of light down and out over the camp.
-    const g = ctx.createLinearGradient(x * k, y * k, (x + side * 2) * k, (y + 3) * k)
-    g.addColorStop(0, `rgba(${lamp}, ${0.18 * on})`)
-    g.addColorStop(1, `rgba(${lamp}, 0)`)
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(x * k, (y - 0.1) * k)
-    ctx.lineTo((x + side * 3.2) * k, (y + 2.2) * k)
-    ctx.lineTo((x + side * 1.2) * k, (y + 3.4) * k)
-    ctx.closePath()
-    ctx.fill()
+    // A soft fan of light down and out over the camp: soft across, gone at its end, never a pane's edge.
+    softBeam(ctx, k, [x, y], [x + side * 2.4, y + 3], 0.15, 2.6, lamp, 0.42 * on, 'lampFan', fanAlong)
   })
   // The head's bank: four lamps looking up at the belly, their light a long soft wedge to it.
   const head = lampAt(t, HEAD)
@@ -245,8 +236,12 @@ export function drawLight(p: p5, k: number, t: number): void {
   })
 }
 
-/** Along a flood's beam: brightest at the lamp, fading up through the fog to the belly. */
-const floodAlong = (v: number): number => (v < 0.6 ? 1 - (0.55 * v) / 0.6 : 0.45 - (0.3 * (v - 0.6)) / 0.4)
+/** Down a mast lamp's fan: bright at the lamp, gone where it reaches. */
+const fanAlong = (v: number): number => (1 - v) ** 1.2
+
+/** Along a flood's beam: brightest at the lamp, fading up through the fog to the belly, and gone at its end (the pool
+ * on the belly is its own), so its end is never a hard line across it. */
+const floodAlong = (v: number): number => (v < 0.6 ? 1 - (0.55 * v) / 0.6 : 0.45 - (0.3 * (v - 0.6)) / 0.4) * (1 - sm(v, 0.82, 1))
 
 /** A soft beam of light from `a` to `b`, `w0` wide at its source and `w1` at its end, fading along it. */
 function beam(ctx: CanvasRenderingContext2D, k: number, a: Pt, b: Pt, w0: number, w1: number, rgb: string, al: number): void {
