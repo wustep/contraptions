@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 68 (latest)
+## Polish pass 69 (latest)
+
+No change to the show: Brand's and Murph's size on an upright phone, as pass 68 measured Cooper's. Each one's radius in CSS pixels was measured every 0.05 s while in shot. Only one stretch is under 2px for more than a second: old Murph at 166.1 to 168.0 s (down to 0.84px), in her far-side house during the whole-ring pull-out. The shot is about Cooper's flight toward her, and she is the shot's subject only from 176 s, when the camera is in close. Brand in orbit over Miller stays above 2px throughout.
+
+## Polish pass 68
 
 - **Cooper findable across the axis on a phone** (`drawStreak` in `act2/ballpark.ts`, 164.9 to 174.1 s). On a phone held upright the 16:9 picture is about 220 CSS pixels tall, a fifth of 1080p's. In the flight across the axis Cooper's radius there falls under 2.5px for 9 seconds, down to 0.8px. The streak meant to mark him judged "small" in canvas pixels, which on a phone's dense screen are three to a CSS pixel, so it held back exactly where he was smallest. It now judges in CSS pixels. Where he is a speck, a soft warm halo is drawn round him, never under 9 CSS pixels, and the streak keeps a width he can be seen by. At 1080p, where he is bigger, the halo is faint and the shot looks as it did. (The ring's reveal, 132.9 to 136.7 s, is as small on a phone, but there he sits at the house's door, where the shot sends the eye, and is left.)
 
