@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { R, mixHex, type Pt } from '../../../../parts'
 import type { ShowBall } from '../../../../show'
-import { scenery } from './kit'
+import { scenery, smooth } from './kit'
 import type { MultiverseShow } from './show'
 import { EYE_PUPIL, EYE_WHITE } from './worlds'
 
@@ -54,25 +54,24 @@ export interface Gaze {
  * A look on its own is eased in and out over a quarter second, as it always was.
  */
 function gazesAt(spec: EyeSpec, t: number): { hold: number; parts: { g: Gaze; w: number }[] } {
-  const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
   const spans = [...(spec.gaze ?? [])].sort((a, b) => a.from - b.from)
   let hold = 0
   let run: { from: number; to: number } | null = null
   for (const g of spans) {
-    if (run && g.from <= run.to + 0.05) run.to = Math.max(run.to, g.to)
+    if (run && g.from <= run.to) run.to = Math.max(run.to, g.to)
     else {
       if (run && t >= run.from && t <= run.to) break
       run = { from: g.from, to: g.to }
     }
   }
-  if (run && t >= run.from && t <= run.to) hold = ease((t - run.from) / 0.25) * ease((run.to - t) / 0.25)
+  if (run && t >= run.from && t <= run.to) hold = smooth(t, run.from, run.from + 0.25) * (1 - smooth(t, run.to - 0.25, run.to))
   const parts: { g: Gaze; w: number }[] = []
   if (hold > 0.001) {
     for (const g of spans) {
       if (t < g.from || t > g.to) continue
       // Its share: eased in and out over a quarter second, never quite nothing while it holds, so at the instant of a
       // handover the two looks share the eye rather than neither having it.
-      parts.push({ g, w: Math.max(1e-3, ease((t - g.from) / 0.25) * ease((g.to - t) / 0.25)) })
+      parts.push({ g, w: Math.max(1e-3, smooth(t, g.from, g.from + 0.25) * (1 - smooth(t, g.to - 0.25, g.to))) })
     }
   }
   return { hold, parts }
@@ -117,6 +116,8 @@ function bead(at: Where, t: number, arrive?: number): { x: number; y: number; hx
   const flung = arrive !== undefined && arrive > t0
   if (flung) t0 = arrive
   while (t0 < t && !ok(t0)) t0 += 0.05
+  // Not seen at all in the window (just after a jump, or an eye arriving): it hangs at rest, no step taken.
+  if (t0 > t + 1e-9) return { x: 0, y: flung ? -1 : 1, hx: 0 }
   let px = 0
   let py = flung ? -1 : 1
   let vx = flung ? 11 : 0

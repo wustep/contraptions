@@ -979,24 +979,29 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
   p.rect((lx + 0.18) * k, -3.1 * k, 0.4 * k, 0.05 * k)
   p.fill(HOME.light)
   p.ellipse((lx + 0.36) * k, -3.02 * k, 0.22 * k, 0.08 * k)
-  // A string of new year lanterns across the street, small and far, on their line.
-  p.noFill()
-  p.stroke(alpha(p, HOME.steelDark, 0.9))
-  p.strokeWeight(Math.max(1, k * 0.01))
-  p.beginShape()
-  for (let i = 0; i <= 16; i++) {
-    const sx = -9.4 + (i / 16) * 6.4
-    p.vertex(sx * k, (-3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI)) * k)
-  }
-  p.endShape()
-  p.noStroke()
-  for (let i = 0; i < 6; i++) {
-    const sx = -8.9 + i * 1.08
-    const sy = -3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI) + 0.1
-    p.fill(alpha(p, HOME.red, 0.85))
-    p.ellipse(sx * k, sy * k, 0.17 * k, 0.14 * k)
-    p.fill(alpha(p, HOME.gold, 0.7))
-    p.rect(sx * k, (sy - 0.075) * k, 0.07 * k, 0.025 * k)
+  // Strings of new year lanterns across the street, small and far, on their line: the one seen through the glass, and
+  // more spans of it on down the street to the left, so a wide frame never sees it end in the air.
+  for (let span = 0; span < 4; span++) {
+    const off = -6.4 * span
+    if (-3.0 + off < x0 || -9.4 + off > x1) continue
+    p.noFill()
+    p.stroke(alpha(p, HOME.steelDark, 0.9))
+    p.strokeWeight(Math.max(1, k * 0.01))
+    p.beginShape()
+    for (let i = 0; i <= 16; i++) {
+      const sx = -9.4 + (i / 16) * 6.4
+      p.vertex((sx + off) * k, (-3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI)) * k)
+    }
+    p.endShape()
+    p.noStroke()
+    for (let i = 0; i < 6; i++) {
+      const sx = -8.9 + i * 1.08
+      const sy = -3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI) + 0.1
+      p.fill(alpha(p, HOME.red, 0.85))
+      p.ellipse((sx + off) * k, sy * k, 0.17 * k, 0.14 * k)
+      p.fill(alpha(p, HOME.gold, 0.7))
+      p.rect((sx + off) * k, (sy - 0.075) * k, 0.07 * k, 0.025 * k)
+    }
   }
   for (const f of STREET) f(pen.p, k, t)
 }
@@ -1147,10 +1152,13 @@ function frontDoor(pen: Pen, t: number): void {
 /* ------------------------------------------------------------------ the room */
 
 /**
- * What the googly-eyed bags on the washers watch, if anything: a point in the room at show time `t`, or null. The
- * score sets it to Evelyn while she tumbles in the big dryer, so the shop's eyes follow her round the drum.
+ * The room's own state, one a composed show: what the googly-eyed bags on the washers watch, if anything, as a point in
+ * the room at show time `t` and how far they are turned to it. The score fills it once its show exists, so the bags
+ * follow her round the big dryer.
  */
-export const BAG_WATCH: { at: ((t: number) => { p: Pt; w: number } | null) | null } = { at: null }
+export interface RoomState {
+  watch: ((t: number) => { p: Pt; w: number } | null) | null
+}
 
 /** The idle washers' laundry bags on top, and how they sit. */
 const TOP_BAGS: { x: number; color: string; size: number }[] = [
@@ -1479,7 +1487,7 @@ const RUNNING = [2, 5]
 /** The great hit shakes the room: everything loose hops, and settles. */
 const jolt = (t: number): number => knock(t - GREAT, 0.12) * Math.sin(Math.max(0, t - GREAT) * 38)
 
-function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; y1: number }): void {
+function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; y1: number }, state: RoomState | null = null): void {
   const { p, k, ink, w } = pen
   const R0 = ROOM.x0
   const R1 = ROOM.x1
@@ -1640,7 +1648,7 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
   }
   // Laundry bags waiting on the washers, googly-eyed (Waymond's work): they hop on the great hit.
   // Watching her, when there is someone to watch: the pupils turned along the line to her.
-  const seen = BAG_WATCH.at?.(t) ?? null
+  const seen = state?.watch?.(t) ?? null
   for (const b of TOP_BAGS) {
     if (!see(b.x - 0.5, b.x + 0.5)) continue
     const near = clamp(1 - Math.abs(b.x - WASHERS[0].x) / 10)
@@ -1725,11 +1733,11 @@ function lightMap(p: p5, k: number, t: number): void {
  * The room: scenery drawn from show time. Its `draw` is the shop and every idle fixture in it; its `over` is the
  * light, over every part's `draw` and the balls.
  */
-export const room = scenery<null>({
+export const room = scenery<RoomState | null>({
   name: 'room',
-  draw: (p, _s, c) => {
+  draw: (p, s, c) => {
     const f = frame(p, c.k)
-    drawRoom(penOf(p, c), c.t, f)
+    drawRoom(penOf(p, c), c.t, f, s)
   },
   over: (p, _s, c) => {
     const f = frame(p, c.k)

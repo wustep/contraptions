@@ -685,6 +685,23 @@ The notes went back to the builders who made each part, who still had their cont
   - the rocks: Evelyn's eye.
   - This log had also gone out of order (three entries placed early) and was missing the second review's entry. Both
     are put right.
+- **A third code review, of the PR.** Ten findings came back. Each was checked against the show first.
+  - **The mosaic's first tear opened on one side.** While the home panel was still oversized, panels on its right
+    were drawn over it and panels on its left under it. It is now drawn first, and neighbours on every side come in
+    over it.
+  - **On an ultrawide stage, the car under the credits vanished** past the shop's end wall, where the street now
+    shows. It drives on out of the frame now. The lantern string across the street runs on in more spans, so it
+    never ends in the air.
+  - **The credits' long title** started about 35 px from the left edge of a 1920 px frame, so a wider fallback font
+    could clip it. The cards stand at 30% of the width now, which doubles that margin and still clears the lantern
+    string.
+  - **The bags' target** had been a module-global, kept by the first composed show. It is now the room's own
+    state (`RoomState`), one per composed show and filled by that show's score, the way the eyes get their show.
+  - **Smaller things.** A pupil whose history begins after `t` hangs at rest rather than taking a step. Looks merge
+    into a run only when they touch or overlap, not across a gap. The scrolls use the kit's `hash`, and every
+    hand-written ease uses the kit's `smooth`. The end's dark is one set of stops, used by both the dark and the eyes.
+  - Frames are pixel for pixel as before except the scrolls' brush strokes.
+  - Left as it is: making `laneAt` itself fast belongs in the shared `parts.ts`, which this PR does not touch.
 
 ## The looks
 
@@ -721,7 +738,8 @@ Two other kinds of eye watch her too, drawn by the room and the kindness part ra
 the checks above do not cover them:
 
 - **Waymond's googly-eyed laundry bags** on the washers either side of the big dryer watch her go round the drum
-  (34.6–57.9 s; `BAG_WATCH` in `set.ts`, set by the score). They ease in and out like the family's looks.
+  (34.6–57.9 s; each composed show's `RoomState` in `set.ts`, filled by the score). They ease in and out like the
+  family's looks.
 - **Jobu's jumpers**, once given her eye, watch her from 0.9 s after it lands to the end of the fight (`watching` in
   `kindness-draw.ts`). Their pupils turn to her while the machines go on waving, bobbing and swaying.
 

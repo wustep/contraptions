@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, mixHex, type Pt } from '../../../../../parts'
-import { alpha } from '../kit'
+import { alpha, hash, smooth } from '../kit'
 import { HOME } from '../worlds'
 import { lantern, propEye, ROOM, table, type Pen } from './set'
 import {
@@ -132,8 +132,8 @@ export function drawPartyWall(pen: Pen, t: number): void {
     p.strokeWeight(Math.max(1, 0.028 * k))
     for (let j = 0; j < 5; j++) {
       const cy = 0.2 + j * 0.25
-      const h1 = hashKind(i * 7 + j)
-      const h2 = hashKind(i * 7 + j + 31)
+      const h1 = hash(i, j, 31)
+      const h2 = hash(i, j, 37)
       p.line(-0.08 * k, (cy - 0.05 + 0.04 * h1) * k, 0.08 * k, (cy - 0.06 + 0.03 * h2) * k)
       p.line((-0.02 + 0.05 * h2) * k, (cy - 0.09) * k, (0.0 + 0.04 * h1) * k, (cy + 0.07) * k)
       if (h1 > 0.45) p.line(-0.07 * k, (cy + 0.05) * k, 0.07 * k, (cy + 0.04 + 0.02 * h2) * k)
@@ -167,12 +167,6 @@ export function drawPartyWall(pen: Pen, t: number): void {
   p.pop()
   solid(p, ink, w * 0.5, HOME.gold)
   p.circle(cd.x * k, (cd.y - cd.r - 0.42) * k, 0.07 * k)
-}
-
-/** A steady pseudo-random number in [0, 1) for the scrolls' strokes. */
-const hashKind = (n: number): number => {
-  const v = Math.sin(n * 127.1 + 311.7) * 43758.5453
-  return v - Math.floor(v)
 }
 
 /** The paper lanterns on their cords from the ceiling, each swinging about its hook in the ceiling. */
@@ -747,7 +741,7 @@ export function clawEye(t: number): { at: Pt; r: number } {
 function watching(t: number, at: number, eye: Pt, base: number): number {
   const u = t - at - 0.9
   if (u <= 0) return base
-  const w = u >= 0.4 ? 1 : (u / 0.4) * (u / 0.4) * (3 - 2 * u / 0.4)
+  const w = smooth(u, 0, 0.4)
   const [x, y] = ballAt(t)
   const a = Math.atan2(y - eye[1], x - eye[0]) - Math.PI / 2
   // The short way round from its own swing to her.

@@ -648,15 +648,16 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
   ctx.setTransform(F.d, 0, 0, F.d, 0, 0)
   ctx.fillStyle = MULTI_THEME.bg
   ctx.fillRect(0, 0, W, H)
-  for (let j = ja; j <= jb; j++) {
+  // Before the first tear there is one panel and no neighbours: it is the whole stage, not a 16:9 box in the middle of
+  // a wider one with the dark down its sides. As the first tear opens (`split` 0 to 1) the home panel shrinks to its
+  // 16:9 place in step, rather than snapping to it. While it is still oversized it is drawn first, so the neighbours
+  // on every side come in over it and the tear opens evenly.
+  for (const first of [true, false]) for (let j = ja; j <= jb; j++) {
     for (let i = ia; i <= ib; i++) {
-      const [cx, cy] = place(X0 + (i - g.ox) * pw, Y0 + (j - g.oy) * ph)
-      // Before the first tear there is one panel and no neighbours: it is the whole stage, not a 16:9 box in the
-      // middle of a wider one with the dark down its sides.
-      // As the first tear opens (`split` 0 to 1) the home panel shrinks from the whole stage to its 16:9 place in step,
-      // rather than snapping to it on the tear's first frame.
-      const own: Box = { cx, cy, w: (pw - gut) * flip.w, h: ph - gut }
       const whole = i === 0 && j === 0 && split < 1
+      if (whole !== first) continue
+      const [cx, cy] = place(X0 + (i - g.ox) * pw, Y0 + (j - g.oy) * ph)
+      const own: Box = { cx, cy, w: (pw - gut) * flip.w, h: ph - gut }
       const b: Box = whole
         ? { cx, cy, w: own.w + (2 * Math.max(cx, W - cx) + 2 - own.w) * (1 - split), h: own.h + (2 * Math.max(cy, H - cy) + 2 - own.h) * (1 - split) }
         : own

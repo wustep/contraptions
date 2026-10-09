@@ -79,7 +79,7 @@ export const LAST_GONE = (() => {
  * Where a card's top middle sits, as shares of the 16:9 frame: over the storefront's dark glass, the night outside,
  * clear of the clock, the lanterns and the family.
  */
-const AT: [number, number] = [0.27, 0.12]
+const AT: [number, number] = [0.3, 0.12]
 
 /** How far up a card is at `t` (0..1), and how far it still has to settle (hundredths of the frame). */
 function lightOf(card: Card, t: number): { light: number; rise: number } {
@@ -144,18 +144,24 @@ export const endDarkAt = (t: number): number => easeInOutCubic(clamp((t - (LAST_
 /** How far the window's own light has gone with it: later, so it outlasts the room. */
 const windowDarkAt = (t: number): number => easeInOutCubic(clamp((t - (LAST_GONE + 2.8)) / (DURATION - 0.2 - (LAST_GONE + 2.8))))
 
-/**
- * How dark the end's dark is at (x, y) in the room at `t`, 0..0.96: the same falloff `endDark` paints, open round the
- * washer's window until its own light goes, so what is drawn over it (the googly eyes) goes down with what it sits on.
- */
-function endDarkHere(t: number, x: number, y: number): number {
+/** The end's dark as stops from the window's centre out (`at` shares of `END_REACH`): one falloff, for both the dark itself and what goes down with it. */
+const END_REACH = 1.7
+function endStops(t: number): { at: number; a: number }[] {
   const a = 0.96 * endDarkAt(t)
-  if (a <= 0) return 0
   const w = 0.96 * windowDarkAt(t)
-  const u = Math.min(1, Math.hypot(x - PORT[0], y - PORT[1]) / 1.7)
-  const c0 = Math.max(w, a * 0.35)
-  const c1 = Math.max(w, a * 0.7)
-  return u < 0.45 ? c0 + (c1 - c0) * (u / 0.45) : c1 + (a - c1) * ((u - 0.45) / 0.55)
+  return [
+    { at: 0, a: Math.max(w, a * 0.35) },
+    { at: 0.45, a: Math.max(w, a * 0.7) },
+    { at: 1, a },
+  ]
+}
+/** How dark the end's dark is at (x, y) at `t`, so what is drawn over it (the googly eyes) goes down with what it sits on. */
+function endDarkHere(t: number, x: number, y: number): number {
+  if (endDarkAt(t) <= 0) return 0
+  const u = Math.min(1, Math.hypot(x - PORT[0], y - PORT[1]) / END_REACH)
+  const st = endStops(t)
+  const n = u < st[1].at ? 0 : 1
+  return st[n].a + (st[n + 1].a - st[n].a) * ((u - st[n].at) / (st[n + 1].at - st[n].at))
 }
 
 /** A colour as the end's dark leaves it at (x, y): for what draws over the dark (the googly eyes). */
@@ -170,13 +176,9 @@ function endDark(p: p5, k: number, t: number): void {
   if (d <= 0.001) return
   const f = frame(p, k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const a = 0.96 * d
-  const w = 0.96 * windowDarkAt(t)
   const [px, py] = PORT
-  const g = ctx.createRadialGradient(px * k, py * k, 0, px * k, py * k, 1.7 * k)
-  g.addColorStop(0, `rgba(4, 5, 6, ${Math.max(w, a * 0.35)})`)
-  g.addColorStop(0.45, `rgba(4, 5, 6, ${Math.max(w, a * 0.7)})`)
-  g.addColorStop(1, `rgba(4, 5, 6, ${a})`)
+  const g = ctx.createRadialGradient(px * k, py * k, 0, px * k, py * k, END_REACH * k)
+  for (const s of endStops(t)) g.addColorStop(s.at, `rgba(4, 5, 6, ${s.a})`)
   ctx.save()
   ctx.fillStyle = g
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)

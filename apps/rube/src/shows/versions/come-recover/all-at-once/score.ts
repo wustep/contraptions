@@ -3,12 +3,12 @@ import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
 import { eyes, type EyeSpec, type EyesState, type Gaze } from './fx'
-import { box, lay, standing, type Chain, type Link } from './kit'
+import { box, lay, smooth, standing, type Chain, type Link } from './kit'
 import { DURATION, JUMPS, ONSETS, fight } from './music'
 import { MultiverseShow, type Flicker, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { EVELYN, type WorldKey } from './worlds'
 import { credits, endShade } from './credits'
-import { BAG_WATCH, room, shade } from './home/set'
+import { room, shade, type RoomState } from './home/set'
 import { laundromat } from './home/laundromat'
 import { dryer } from './home/dryer'
 import { premiere } from './star/premiere'
@@ -79,10 +79,10 @@ const PLAN = (): LegPlan[] => [
 ]
 
 /** The world-wide scenery of each world: skies, rooms, weather. Parts fill these as they are built. */
-const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
+const SETS = (roomState: RoomState): Partial<Record<WorldKey, WorldSet>> => ({
   // The laundromat: one room, its walls, fixtures and lights, which every home leg happens in.
   home: {
-    scenery: [standing(room, 0, 0, box(-12, -8, 44, 4, 2), null, DURATION)],
+    scenery: [standing(room, 0, 0, box(-12, -8, 44, 4, 2), roomState, DURATION)],
     // The dark under the end credits' words.
     after: [standing(credits, 0, 0, box(-12, -8, 44, 4, 2), null, DURATION)],
   },
@@ -198,7 +198,8 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
   })
 
   // Every world's scenery, and the googly eyes over everything in every world.
-  const sets = SETS()
+  const roomState: RoomState = { watch: null }
+  const sets = SETS(roomState)
   // The family portrait: from her hurrying back beside Joy, all three look into the lens through the flash; then
   // down at the photograph as it comes out and flutters to the floor, until it has developed.
   const lens = onCamera(0.5, 0)
@@ -283,17 +284,15 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
   const isCalm = calm === undefined ? () => calmNow : () => calm
   const show = new MultiverseShow(legs, sets, flickers, DURATION, riders, company.sort((a, b) => a.from - b.from), isCalm)
   for (const state of eyeStates) state.show = show
-  // While she tumbles in the big dryer, the googly-eyed bags on the washers either side watch her go round. The room is
-  // one for every composed show, so the first to be composed (the viewer's) keeps it; a later one, in the checks or a
-  // tool, does not take it over.
-  if (!BAG_WATCH.at) BAG_WATCH.at = (t) => {
+  // While she tumbles in the big dryer, the googly-eyed bags on the washers either side watch her go round: this
+  // show's own room, so another composed show (in the checks, a tool) has its own.
+  roomState.watch = (t) => {
     const from = 34.6
     const to = JUMPS.premiere - 0.05
     if (t < from || t > to) return null
     const h = show.at(t)
     if (h.hidden) return null
-    const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
-    return { p: [h.x, h.y], w: ease((t - from) / 0.25) * ease((to - t) / 0.25) }
+    return { p: [h.x, h.y], w: smooth(t, from, from + 0.25) * (1 - smooth(t, to - 0.25, to)) }
   }
 
   // The camera: one director per leg, each following the ball only inside its own leg, and each leg opening on

@@ -70,8 +70,10 @@ const CAR_CROSS = 2.6
 const CAR_SCALE = 1.5
 const carAt = (t: number): { x: number; u: number } | null => {
   for (const at of CARS) {
+    // Past the glass (u 1) it drives on down the street beyond the shop's end wall, for a frame wide enough to see it,
+    // and out of any frame before it stops being drawn.
     const u = (t - at) / CAR_CROSS
-    if (u >= 0 && u <= 1) return { x: -1.8 - 8.4 * u, u }
+    if (u >= 0 && u <= 3) return { x: -1.8 - 8.4 * u, u }
   }
   return null
 }
@@ -119,6 +121,7 @@ install(LIGHTS.glows, 'finale-cars', (t: number): Glow[] => {
   const car = carAt(t)
   if (!car) return []
   // The headlights thrown in through the window, travelling across the floor and the washer the other way.
+  if (car.u > 1) return []
   const inside = -7.4 + 6.8 * car.u
   const a = Math.sin(Math.PI * car.u)
   return [{ x: inside, y: -0.9, r: 1.5, a: 0.32 * a, color: '#FFF1CF' }]
