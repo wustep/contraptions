@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 35 (latest)
+## Polish pass 36 (latest)
+
+No change to the show, and one idea weighed and left. During the descent over Edmunds' planet (238 to 248 s) the frame is sky and empty plain. A sign of Brand's camp from the air would set up the reunion. But the camp is at the landing site, under the falling ship and below the frame's bottom edge until the camera levels out (about 246.5 s), not on the horizon where a far light could show. Signalling it earlier would take a beacon reaching up out of frame, and the scored light at the camp is the lamp on the last hit (232): a beacon before it would spend that light early. The descent stays as it is, and the camp comes up into view as he levels out.
+
+## Polish pass 35
 
 No change to the show. Pass 9's frame-step audit sampled every 0.1 s, so a glitch one frame long could fall between its samples. The three universe switches were compared frame by frame at 60 fps instead, over a second round each. Inside the cloud (88.2 to 89.4 s), no frame changes more than 4% of the picture from the last. At the undock, the single 86% step at 207.48 s is the match cut. On the accent, the steps at 127.52, 127.58 and 127.63 s (11%, 45%, 61%) are the lamps striking: the room comes up, dips as one falters, and catches, as written ("one catches late").
 
