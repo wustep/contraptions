@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 38 (latest)
+## Polish pass 39 (latest)
+
+No change to the show: what a shared link shows. Both built pages, `/shows/interstellar/` and `/shows/interstellar/opus55/`, carry the same title ("Voyage · contraptions"), the version file's `about` as their description and Open Graph and Twitter text, one canonical address (the work's page), and the card at 1200 × 630. The card the build ships is byte for byte the one pass 34 rendered.
+
+## Polish pass 38
 
 No change to the show: the live page's console. Voyage's own page (`/shows/interstellar/`) was loaded, seeked through the whole show and played in Follow, Zoom and Overview, collecting every warning, error and failed request. It loads with YouTube as the music's source and nothing failed. None of what the console says is Voyage's. The YouTube embed brings cross-origin messages, aborted video requests on each seek, and its permission and GPU probes (`web-share`, `compute-pressure`, a GL "ReadPixels" stall, "No available adapters"): Everything, the other YouTube show, logs the same, and Gymnopédie, played from a file, none of them. The analytics script is blocked only in dev. The show reads no pixels while it plays; the only pixel read in its code is `toBlob`, for saved stills.
 
