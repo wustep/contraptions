@@ -651,7 +651,10 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
   for (let j = ja; j <= jb; j++) {
     for (let i = ia; i <= ib; i++) {
       const [cx, cy] = place(X0 + (i - g.ox) * pw, Y0 + (j - g.oy) * ph)
-      const b: Box = { cx, cy, w: (pw - gut) * flip.w, h: ph - gut }
+      // Before the first tear there is one panel and no neighbours: it is the whole stage, not a 16:9 box in the
+      // middle of a wider one with the dark down its sides.
+      const alone = split <= 0
+      const b: Box = alone ? { cx, cy, w: 2 * Math.max(cx, W - cx) + 2, h: 2 * Math.max(cy, H - cy) + 2 } : { cx, cy, w: (pw - gut) * flip.w, h: ph - gut }
       if (cx + b.w / 2 < 0 || cx - b.w / 2 > W || cy + b.h / 2 < 0 || cy - b.h / 2 > H) continue
       if (b.w < 0.5 || b.h < 0.4) continue
       const home = i === 0 && j === 0 && flip.n === 0

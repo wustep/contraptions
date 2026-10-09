@@ -388,6 +388,10 @@ The notes went back to the builders who made each part, who still had their cont
     to the left in their own widths and heights, their lit windows, and the far lantern string. Past the wall it is
     the night street, not a void, and a car passing under the credits drives on out past the wall. On a 16:9 stage
     and on a phone nothing changes.
+  - The whole show was then swept at 21:9 every 4 s. From the break into the dark (165.6 s) to the first tear
+    (about 170.8 s), the mosaic drew its one panel as a 16:9 box, with the dark down both sides of a wider stage.
+    Before the first tear there are no neighbours, so that one panel is now the whole stage (and the whole of a
+    phone's squarer one). On the tear the sides become the neighbouring worlds, as before. The 16:9 view is unchanged.
 
 ## End credits
 
