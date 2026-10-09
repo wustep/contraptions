@@ -582,6 +582,10 @@ The notes went back to the builders who made each part, who still had their cont
   within ±1 ms of the player's own time: from the start, after two seeks, and through 60 s of the peak. The music is
   the clock. What this cannot measure is the device's audio output latency, which is the same for any web player.
   Nothing was changed.
+- **A pass for the panel.** The panel beside the show was looked at open, on a desktop and on a phone. The title,
+  the long music credit (it wraps to two lines), the YouTube player (whose terms want it seen), the transport, the
+  camera modes and the export all fit and read. On a phone the panel stacks under the stage, and the stage still
+  holds each world's action. The panel is the site's own and was not changed.
 
 ## The looks
 
