@@ -78,12 +78,12 @@ export const GATHERS: { in0: number; in1: number; out0: number; out1: number; st
 ]
 /**
  * Where her one dot, her face, looks while she is still: up at the clouds on the hill; and at him through the five
- * mornings at the tie wheel and the dance, from the first tie to the picture lamp, she at his right, so up and to her
+ * mornings at the tie wheel and the dance (spotting him through it), she at his right, so up and to her
  * left (`at`, the dot's angle on the screen, y down). Rolling, her dot rolls with her, as everywhere; it comes round to him as she comes to rest (by her speed,
  * smoothed), so at the crest, held at arm's length, she is looking at him, not at the floor. Eased in and out over
  * `ease` seconds at the span's ends.
  */
-export const LOOKS: { from: number; to: number; ease: number; at: number | ((show: LifeShow, t: number) => number) }[] = [
+export const LOOKS: { from: number; to: number; ease: number; at: number | ((show: LifeShow, t: number) => number); spot?: boolean }[] = [
   // In her armchair at the new bay, at him as he comes in and sits, a little above his middle (not at her lap, as the
   // roll had it); then, across the cut onto the blanket, turning up to the clouds the engine builds (up, and a little
   // toward the shapes), carried just across the next cut onto the mobile until she rolls off to the cradle. One span,
@@ -94,7 +94,18 @@ export const LOOKS: { from: number; to: number; ease: number; at: number | ((sho
     ease: 0.9,
     at: (show, t) => turnTo(towardHim(show, t), -1.35, (t - CUT.hill - 0.3) / 1.2),
   },
-  { from: bar('jar', 39), to: bar('jar', 56), ease: 0.8, at: -2.3 },
+  // The five mornings, while she knots his ties: faded out as she knots the bow tie, before she rolls to the lever.
+  { from: bar('jar', 39), to: bar('jar', 48) + 0.4, ease: 0.8, at: -2.3 },
+  // The dance, from its first downbeat (she arrives at rest) to the embrace: her face stays on him all through it, the
+  // turn-out at the crest too, as a dancer turning out keeps her eyes on her partner (`spot`: her roll does not take
+  // it back); faded out while she is still held in the embrace, before she sets off for the door.
+  { from: bar('jar', 51) - 0.2, to: bar('jar', 55) + 0.3, ease: 0.6, at: towardHim, spot: true },
+  // The kiss: from the march's slowing steps as they turn to each other, at him (up into his face, not at his middle),
+  // easing off as she sets out down the aisle (18.6), so it never lets go at speed.
+  { from: 15.2, to: 19.0, ease: 0.6, at: towardHim },
+  // On the fieldstone, spent, she looks up; her answer to his lean is her face turning to him with her smallest roll
+  // (178.8 to 179.5), and it holds across the match cut into the ward until she looks up at the balloon he has brought.
+  { from: 178.6, to: CUT.hospital + 1.0, ease: 0.7, at: towardHim },
 ]
 /** The angle from her to a little above his middle (his face, as far as a square has one), on the screen. */
 function towardHim(show: LifeShow, t: number): number {
@@ -112,8 +123,8 @@ export function lookOf(show: LifeShow, t: number, own: number): number {
   for (const l of LOOKS) {
     if (t <= l.from || t >= l.to) continue
     const edge = Math.min(1, (t - l.from) / l.ease, (l.to - t) / l.ease)
-    // Her speed, smoothed over a third of a second: still or swaying, she looks at him; rolling at two cells a second
-    // or more, her dot rolls with her.
+    // Her speed, smoothed over a third of a second: still or swaying (under 0.3 cells a second), she looks; rolling at
+    // 1.2 or more, her dot rolls with her; a short hand-off between, so the blend is seldom near half.
     // Sampled inside the place she is in: her cells change at a cut, which is no speed.
     const leg = show.legs[show.owner(t)]
     const at = (s: number) => show.ellie(Math.max(leg.from + 1e-4, Math.min(leg.to - 1e-4, s)))
@@ -123,10 +134,15 @@ export function lookOf(show: LifeShow, t: number, own: number): number {
       const b = at(t + dt + 0.05)
       if (a && b) v += Math.abs(b.x - a.x) / 0.1 / 4
     }
-    const still = 1 - Math.min(1, v / 2)
-    const w = edge * edge * (3 - 2 * edge) * still * still * (3 - 2 * still)
-    const d = (typeof l.at === 'number' ? l.at : l.at(show, t)) - own
-    return own + w * (d - 2 * Math.PI * Math.round(d / (2 * Math.PI)))
+    const still = l.spot ? 1 : 1 - Math.max(0, Math.min(1, (v - 0.3) / 0.9))
+    const target = typeof l.at === 'number' ? l.at : l.at(show, t)
+    // The span's own fade in and out is timed for when she is at rest, so it turns her face evenly the short way round
+    // (as directions, a fade between near opposites would whip through the middle). Her roll's hand-off, which comes
+    // while she rolls, is blended as directions: as angles, the short way round flips sides as her roll passes the far
+    // side of where she is to look, a half-turn snap while the blend is partway.
+    const faced = turnTo(own, target, edge)
+    const w = still * still * (3 - 2 * still)
+    return Math.atan2((1 - w) * Math.sin(own) + w * Math.sin(faced), (1 - w) * Math.cos(own) + w * Math.cos(faced))
   }
   return own
 }

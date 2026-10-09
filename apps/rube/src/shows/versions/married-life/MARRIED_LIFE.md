@@ -536,6 +536,16 @@ window.
   across the cut onto the blanket her look turns up to the clouds in one span, so it never drops back between them.
   The share card is made again at 47.3 s.
 
+- **Polish round 17 (Opus 5.5).** Her gaze measured against where the story needs it at each beat. Already right: up
+  at the balloon he brings her, then round to him through her touch; the doctor's coat before the news. Changed: at
+  the kiss she looked at his middle, now up into his face; on the fieldstone her answer to his lean is her face turning
+  to him with her smallest roll, held across the match cut into the ward. Then the looks' motion was scanned frame by
+  frame through the show, which found a snap from round 14: as her roll passed the far side of where she was to look,
+  the short way round flipped, half a turn in a frame (154.6 s), and a whip on the crest itself (157.4 s). Now the
+  roll's hand-off blends as directions and each span's fade turns the short way at rest; the tie mornings and the
+  dance are two spans, and in the dance she spots him through the turn-out instead of letting her roll take her face.
+  No look now turns faster than an ordinary brisk turn.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
