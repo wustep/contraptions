@@ -10,7 +10,7 @@ import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../sr
 import { breath, cellsAt } from '../src/shows/versions/gymnopedie/orbit/camera'
 import { CADENCES, PERCHED, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
-import { BANK, FIREFLY, GULLS, HEAPS, METEORS, MIST, auroraAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
+import { BANK, FIGURES, FIREFLY, GULLS, HEAPS, METEORS, MIST, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -189,6 +189,18 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   }
   check('gymnopedie: a wave of light runs back along each piece\'s way from its last note, and only then',
     offCue === 0 && seen > 0 && CADENCES.length === 3 && CADENCES.every((c, i) => c.t === PIECES[i].last), `${seen} moments, ${offCue} off cue`)
+
+  // The inner voice draws constellations: every inner note lights a star as it sounds, and no star is lit by anything else.
+  const inners = NOTES.filter((n) => n.r === 'inner')
+  const lit = FIGURES.flatMap((f) => f.notes)
+  const onCue = FIGURES.every((f) => f.notes.every((n, i) => {
+    const before = figureAt(f, n.t - 0.05)?.find((s) => s.i === i)
+    const after = figureAt(f, n.t + 0.2)?.find((s) => s.i === i)
+    return !before && !!after && after.light > 0.3
+  }))
+  check('gymnopedie: the inner voice draws constellations, a star lit on each of its notes, at night',
+    lit.length === inners.length && inners.every((n) => lit.includes(n)) && onCue && FIGURES.every((f) => f.notes[0].piece > 0),
+    `${FIGURES.length} figures of ${inners.length} notes`)
 
   // The sun and the moon: each once round a period, seen from far off in space, so neither may jump, the seam included.
   const turn2 = (a: number) => Math.abs(a - 2 * Math.PI * Math.round(a / (2 * Math.PI)))

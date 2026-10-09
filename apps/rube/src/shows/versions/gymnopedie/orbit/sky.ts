@@ -4,6 +4,7 @@ import { wrap } from './music'
 import { RADIUS, along, ballLocal } from './path'
 import {
   BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, auroraAt, auroraSheet, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, milkyWay, wingsAt, type CloudLight,
+  FIGURES, figureAt,
 } from './air'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
@@ -95,6 +96,57 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     ctx.globalAlpha = Math.min(1, 0.62 * northern)
     ctx.drawImage(sheet, 0, hy - AURORA_OVER * F, W, F)
     ctx.restore()
+  }
+
+  // The inner voice's constellations: a star for each of its notes as it sounds, a faint line drawn to it from the last.
+  const starry = smooth(day.night, 0.6, 0.9) * (1 - v.wide)
+  if (starry > 0.01) {
+    const fw = Math.min(W, (F * 16) / 9)
+    for (const f of FIGURES) {
+      const stars = figureAt(f, c.t)
+      if (!stars?.length) continue
+      // Clear of the moon: a figure that would be drawn over it, or in its light, is drawn on the other side.
+      const span = (f.notes.length - 1) * F * 0.085
+      let left = (W - fw) / 2 + f.x * fw
+      // Decided once for the figure, from where the moon is through it, so a figure never jumps sides as it is drawn.
+      const [mx0] = onCanvas(ctx, c.k, ...polar(along(c.t) + 0.55, 0), m)
+      const moonX = (t: number) => mx0 + Math.sin(moonAngle(t)) * F * 0.62 * 1.25
+      const moonOver = [f.from, (f.from + f.to) / 2, f.to + 5].some((t) => Math.abs(moonAngle(t)) < 1.9 && Math.abs(left + span / 2 - moonX(t)) < F * 0.4)
+      if (moonOver) left = (W - fw) / 2 + (1 - f.x) * fw - span
+      const at = (i: number): [number, number] => {
+        const n = f.notes[i]
+        return [
+          left + i * F * (0.07 + 0.03 * hash(i, f.from, 224)),
+          hy - F * f.y - (n.p - f.low) * F * 0.016 - f.lean * i * F * 0.012,
+        ]
+      }
+      ctx.lineCap = 'round'
+      ctx.lineWidth = Math.max(1, F / 900)
+      for (const s of stars) {
+        if (s.i === 0 || s.line < 0.01) continue
+        const [x0, y0] = at(s.i - 1)
+        const [x1, y1] = at(s.i)
+        ctx.strokeStyle = `rgba(214, 226, 255, ${(0.2 * starry * s.line).toFixed(3)})`
+        ctx.beginPath()
+        ctx.moveTo(x0, y0)
+        ctx.lineTo(x0 + (x1 - x0) * s.line, y0 + (y1 - y0) * s.line)
+        ctx.stroke()
+      }
+      for (const s of stars) {
+        const [x, y] = at(s.i)
+        const a = starry * s.light
+        const r = F * (0.008 + 0.01 * s.light)
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, r)
+        glow.addColorStop(0, `rgba(236, 242, 255, ${(0.55 * a).toFixed(3)})`)
+        glow.addColorStop(1, 'rgba(236, 242, 255, 0)')
+        ctx.fillStyle = glow
+        ctx.fillRect(x - r, y - r, 2 * r, 2 * r)
+        ctx.fillStyle = `rgba(248, 250, 255, ${Math.min(1, 1.2 * a).toFixed(3)})`
+        ctx.beginPath()
+        ctx.arc(x, y, Math.max(1.2, F / 420), 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
   }
 
   // A shooting star, on a high phrase's top note.

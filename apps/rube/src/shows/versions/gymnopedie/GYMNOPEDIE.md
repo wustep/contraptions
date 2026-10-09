@@ -103,6 +103,11 @@ One job to a voice, each answering its own notes from `satie-performance.json`:
   back (`breath`). Its keys shape each piece: close as the first Gnossienne climbs to its top note, back over the thread
   of lamps as it comes down; lower over the pond in the third, where the water and the moon's path are more of the
   picture.
+- The inner voice: the stars. The Gnossiennes' quiet counter-line in the middle of the chords comes in figures of a
+  few notes a breath apart, and each figure draws a constellation high in the night sky: a star brightening as each
+  note sounds (higher for a higher note, a step along each time, flaring as hard as it was played), a faint line drawn
+  to it from the last, the whole figure lingering a few seconds after its last note and going back into the sky. Clear
+  of the moon, decided once for each figure; in the dusk, before the sky is dark enough, not drawn (`FIGURES`).
 - Loudness: the render's own level barely moves (a soft, pedalled piano), so the show answers how full the music is,
   worked out from the notes (every note's weight, dying away, smoothed over a few seconds; `loudness`). It sets how
   high the swells stand and how bright the light on the water is: calm in the Gymnopédie's long notes, fullest where the
@@ -225,6 +230,6 @@ flower opens as the ball comes and closes at dawn, across the seam; every layer 
 period, and a shooting star falls only on a Gnossienne's top note, at night; there is one shower, in the
 Gymnopédie, with the bow after it and gone before the first Gnossienne; the whale passes once, under the third
 Gnossienne's pond; gulls perch on the colonnade and lift off as the ball lands on their stone, on its note; rays come from the sun
-only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; the aurora is
-the first Gnossienne's, in the full night only; the sun and the moon go round
+only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; every inner note lights a star of
+a constellation, at night; the aurora is the first Gnossienne's, in the full night only; the sun and the moon go round
 without a jump, the seam included; the titles.

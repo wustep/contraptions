@@ -1,5 +1,5 @@
 import { mixHex } from '../../../../parts'
-import { MELODY, PERIOD, PIECES, loudness, wrap } from './music'
+import { MELODY, NOTES, PERIOD, PIECES, loudness, wrap, type Note } from './music'
 import { LENGTH, along, since } from './path'
 import { hash, osc, smooth, type Sky } from './world'
 
@@ -595,4 +595,66 @@ export function auroraSheet(t: number, w: number, h: number, drift: number): HTM
   g.globalCompositeOperation = 'source-over'
   sheetAt = t
   return sheet
+}
+
+// ---------------------------------------------------------------- the inner voice's constellations
+
+/**
+ * The inner voice, the Gnossiennes' quiet counter-line in the middle of the chords, draws in the night sky: each of
+ * its figures (its notes a breath or so apart) a constellation, a star brightening as each note sounds, higher for a
+ * higher note and a step along, a faint line drawn to it from the last; the whole figure lingering a while after its
+ * last note, and going back into the sky.
+ */
+export interface Figure {
+  notes: Note[]
+  /** Its first note's attack, and its last's. */
+  from: number
+  to: number
+  /** Where it is in the sky: across the frame (0..1), and how high its lowest note is over the horizon, in frames. */
+  x: number
+  y: number
+  /** Its notes' lowest pitch, and which way it leans as it goes. */
+  low: number
+  lean: number
+}
+
+export const FIGURES: Figure[] = (() => {
+  const inner = NOTES.filter((n) => n.r === 'inner')
+  const out: Figure[] = []
+  for (const n of inner) {
+    const last = out[out.length - 1]
+    if (last && n.t - last.to < 2.4) {
+      last.notes.push(n)
+      last.to = n.t
+    } else out.push({ notes: [n], from: n.t, to: n.t, x: 0, y: 0, low: 0, lean: 0 })
+  }
+  out.forEach((f, i) => {
+    f.low = Math.min(...f.notes.map((n) => n.p))
+    // Away from the middle, where the ball is, and alternating sides, so one figure is not drawn over the last.
+    f.x = (i % 2 ? 0.58 : 0.1) + 0.22 * hash(i, 221)
+    f.y = 0.5 + 0.12 * hash(i, 222)
+    f.lean = hash(i, 223) > 0.5 ? 1 : -1
+  })
+  return out
+})()
+
+/** How long a figure's stars stay after its last note, and how long they take to go. */
+const LINGER = 2.5
+const FADE = 3
+
+/** A figure's stars at `t`: where each is (its index in the figure) and how bright; and how much of each line to it. */
+export function figureAt(f: Figure, t: number): { i: number; light: number; line: number }[] | null {
+  const u = wrap(t)
+  if (u < f.from - 0.1 || u > f.to + LINGER + FADE) return null
+  const going = 1 - smooth(u, f.to + LINGER, f.to + LINGER + FADE)
+  const out: { i: number; light: number; line: number }[] = []
+  f.notes.forEach((n, i) => {
+    const s = u - n.t
+    if (s < 0) return
+    // Each star flares as its note sounds, as hard as it was played, and settles to a steady light.
+    const flare = (n.v / 40) * Math.exp(-s / 0.6)
+    const light = going * smooth(s, 0, 0.12) * (0.5 + 0.5 * Math.min(1, flare))
+    out.push({ i, light, line: going * smooth(s, 0, 0.45) })
+  })
+  return out
 }
