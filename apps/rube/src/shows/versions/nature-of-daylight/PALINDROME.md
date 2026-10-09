@@ -415,6 +415,24 @@ frames at up to twenty a second. Every strike and cut it checked was on the musi
 Kept: the stillness by Hannah's bed (a vigil) and at the glass in the suits (awe); the push in on her as she goes and
 the pull back to the news, whose framing the cut needs; the rest of the window room, which belongs to the ending.
 
+A twenty-third gave a third cold critic the story: told only who the balls are, it wrote down what it thought happened
+from the frames, then read the table above and said where the two parted. Most of it read; where it did not:
+
+- **The blast** (214 to 231 s) read as the heptapods' attack, and as Ian killed. The charge was a small dark box with
+  a dim keypad-green light, so the only thing acting on the screen was Abbott slamming the glass and writing its jagged
+  ring; and Ian, thrown further than her, rolled out of the frame by himself and was not seen again until the meadow.
+  The charge is larger now and its light the red of the alarm lamp in the command tent, never quite out between the
+  beats: the soldiers', and danger. Ian is thrown as she is, a little beyond her, and lies in the frame by her, down,
+  not gone, until the white takes the place.
+- **Hannah's leap** (61 to 68 s) read as her thrown off the swing: she rolled flat to a stop on the far grass and lay
+  there four seconds before she started back. She lands bouncing now, and runs straight back for the seat, there with
+  a beat in hand to wait for it.
+- **Abbott dying** in the fog (231 to 249 s) read as a second heptapod standing off. It sinks well down now and pales
+  all the way into the white by the time she lands.
+
+Its larger ideas were noted, not taken: a rhyme of lights from Shang's whisper to the keys she dials, so "the number
+he gave her" reads; the gala coming up inside a small ring, as the swing vision does, so it reads as shown to her.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

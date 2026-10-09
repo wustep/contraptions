@@ -335,8 +335,9 @@ function ianBombWays(): Way[] {
   w.push(at(T.slam + 0.36, x0 - 0.16, 'out'))
   w.push(at(T.slam + 1.7, x0 - 0.1, 'inout'))
   w.push(at(T.blast, x0 - 0.1))
-  // Further: he lands in the frame, and rolls on out of it by himself.
-  thrown(w, x0 - 0.1, T.blast, [-6, -4.6], [-3.2, -1.8], T.shard + 0.25)
+  // Thrown as she is, a little beyond her: he lands in the frame and comes to rest there, down, not gone. (Thrown
+  // further, he rolled out of the frame by himself, and from then to the meadow he read as killed.)
+  thrown(w, x0 - 0.1, T.blast, [-4.6, -4.2], [-2.2, -1.4], T.shard + 0.25)
   w.push(at(T.fog, w[w.length - 1].p[0]))
   return w
 }

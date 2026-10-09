@@ -4,7 +4,7 @@ import { drawHeptapod, drawInk, inkAt, inkRing, mix, rgba, type Ring } from '../
 import { ring } from './ink'
 import { drawRail } from './words'
 import { frame, hash } from '../kit'
-import { SHELL, TENT, VALLEY } from '../worlds'
+import { SHANG, SHELL, VALLEY } from '../worlds'
 import {
   BOARD,
   BOARDS,
@@ -880,32 +880,37 @@ function charge(ctx: Ctx, k: number, t: number): void {
   const [x, y] = CHARGE
   const light = lightAt(x, t)
   ctx.fillStyle = mix(SHELL.dark, SHELL.heptapodDark, 0.8)
-  ctx.fillRect((x - 0.19) * k, (y - 0.2) * k, 0.38 * k, 0.2 * k)
+  ctx.fillRect((x - 0.22) * k, (y - 0.24) * k, 0.44 * k, 0.24 * k)
   // Its light's post.
-  ctx.fillRect((x + 0.005) * k, (y - 0.25) * k, 0.03 * k, 0.06 * k)
+  ctx.fillRect((x + 0.005) * k, (y - 0.3) * k, 0.03 * k, 0.07 * k)
   ctx.fillStyle = rgba(SHELL.wallLit, 0.5 * light)
-  ctx.fillRect((x - 0.19) * k, (y - 0.2) * k, 0.38 * k, 0.03 * k)
-  // One bright light on it, flashing on each beat.
+  ctx.fillRect((x - 0.22) * k, (y - 0.24) * k, 0.44 * k, 0.03 * k)
+  // One bright light on it, flashing on each beat: the red of the alarm lamp in the command tent, so it reads as
+  // theirs and as danger. (A dim keypad green, it read as nothing, and the blast as the heptapods' doing.) Never quite
+  // out between the beats.
   let on = 0
   for (const bt of BLINKS) {
     const u = t - bt
-    if (u >= 0 && u < 0.3) on = Math.max(on, 1 - u / 0.3)
+    if (u >= 0 && u < 0.45) on = Math.max(on, 1 - u / 0.45)
   }
+  const armed = t >= BLINKS[0] - 0.3 ? 0.25 : 0
   const lx = (x + 0.02) * k
-  const ly = (y - 0.25) * k
-  if (on > 0.01) {
+  const ly = (y - 0.3) * k
+  const glowA = Math.max(on, armed * 0.4)
+  if (glowA > 0.01) {
     ctx.save()
     ctx.translate(lx, ly)
-    ctx.scale(1.8, 1)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.3 * k)
-    g.addColorStop(0, rgba(TENT.keypad, 0.5 * on))
-    g.addColorStop(1, rgba(TENT.keypad, 0))
+    ctx.scale(1.6, 1)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.55 * k)
+    g.addColorStop(0, rgba(SHANG, 0.7 * glowA))
+    g.addColorStop(0.3, rgba(SHANG, 0.25 * glowA))
+    g.addColorStop(1, rgba(SHANG, 0))
     ctx.fillStyle = g
-    ctx.fillRect(-0.3 * k, -0.3 * k, 0.6 * k, 0.6 * k)
+    ctx.fillRect(-0.55 * k, -0.55 * k, 1.1 * k, 1.1 * k)
     ctx.restore()
   }
-  ctx.fillStyle = mix(SHELL.dark, TENT.keypad, 0.3 + 0.7 * on)
-  ctx.fillRect(lx - 0.07 * k, ly - 0.035 * k, 0.14 * k, 0.07 * k)
+  ctx.fillStyle = mix(mix(SHELL.dark, SHANG, 0.45), mix(SHANG, '#FFFFFF', 0.25), Math.max(on, armed))
+  ctx.fillRect(lx - 0.08 * k, ly - 0.04 * k, 0.16 * k, 0.08 * k)
 }
 /** The charge's light: on each beat from the one after the slam to the blast. */
 export const BLINKS: number[] = [215.65, 216.625, 217.513, 218.424, 219.417, 220.375, 221.362, 222.348]

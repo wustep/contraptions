@@ -216,12 +216,16 @@ export function hannahAt(t: number): { x: number; y: number; scale: number } | n
   const vx = leapV()[0]
   const xStop = LAND_X + (vx * ROLL_OUT) / 2
   if (t < LANDS + ROLL_OUT) {
+    // She lands bouncing, a child's landing: a small hop up off the grass as she runs on. (Rolled flat to a stop and
+    // left there, she read as thrown off the swing, lying still.)
     const s = t - LANDS
-    return { x: LAND_X + vx * s - (vx * s * s) / (2 * ROLL_OUT), y, scale }
+    const u = s / ROLL_OUT
+    return { x: LAND_X + vx * s - (vx * s * s) / (2 * ROLL_OUT), y: y - 0.32 * 4 * u * (1 - u), scale }
   }
   const hop = BACK_ON - HOP_T
-  const back0 = LANDS + ROLL_OUT + 0.35
-  const back1 = hop - 0.3
+  // And straight back for the seat, running, there with a beat in hand to wait for it.
+  const back0 = LANDS + ROLL_OUT + 0.12
+  const back1 = hop - 1.3
   if (t < hop) {
     const u = smooth(t, back0, back1)
     return { x: xStop + (HOP_FROM_X - xStop) * u, y, scale }
