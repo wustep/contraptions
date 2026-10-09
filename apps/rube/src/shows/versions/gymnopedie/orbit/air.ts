@@ -562,6 +562,12 @@ let sheetAt = Number.NaN
  * ribbon of rays hanging from a slow wave, folding and brightening along its length. `drift` is how far round the
  * camera has come, cells, so the curtains go by a little as it travels. Kept for the moment it was drawn for.
  */
+/** The aurora's sheet for a picture `W` by `F` device pixels: a quarter of its size, and never over 480 across. */
+export function auroraSize(W: number, F: number): [number, number] {
+  const w = Math.min(Math.ceil(W / 4), 480)
+  return [w, Math.ceil((w * F) / W)]
+}
+
 export function auroraSheet(t: number, w: number, h: number, drift: number): HTMLCanvasElement {
   if (sheet && sheetAt === t && sheet.width === w && sheet.height === h) return sheet
   if (!sheet || sheet.width !== w || sheet.height !== h) {
@@ -576,8 +582,8 @@ export function auroraSheet(t: number, w: number, h: number, drift: number): HTM
   const u = wrap(t) * 0.68
   const src = auroraRay()
   const strength = [0.5, 0.36, 0.26]
-  // A column every pixel of the quarter-sized sheet, up to four hundred across.
-  const step = Math.max(1, Math.round(w / 400))
+  // A column to a pixel of the sheet (`auroraSize` keeps it narrow enough for that to be cheap).
+  const step = 1
   for (let j = 0; j < 3; j++) {
     for (let x = 0; x < w; x += step) {
       const X = x / w + 0.006 * drift

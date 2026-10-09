@@ -3,7 +3,7 @@ import { R as BALL_R, mixHex, type PieceCtx } from '../../../../parts'
 import { CHORDS, loudness } from './music'
 import { LENGTH, RADIUS, along, ballLocal, crest, since, sink, squash, stonesIn, swell } from './path'
 import {
-  BANKS_OF_MIST, MIST, WHALE, auroraAt, auroraSheet, deepLight, rainAt, ringAt, whaleAt, whaleShape, inLayer, layered, mistAt,
+  BANKS_OF_MIST, MIST, WHALE, auroraAt, auroraSheet, auroraSize, deepLight, rainAt, ringAt, whaleAt, whaleShape, inLayer, layered, mistAt,
 } from './air'
 import { BALL, alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
@@ -128,7 +128,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     const W = ctx.canvas.width
     const [, hy] = onCanvas(ctx, k, ...polar(along(c.t) + 0.55, 0))
     const F = frameOf(ctx)
-    const sheet = auroraSheet(c.t, Math.ceil(W / 4), Math.ceil(F / 4), along(c.t))
+    const sheet = auroraSheet(c.t, ...auroraSize(W, F), along(c.t))
     ctx.save()
     ctx.clip(water)
     ctx.setTransform(1, 0, 0, -1, 0, 2 * hy)

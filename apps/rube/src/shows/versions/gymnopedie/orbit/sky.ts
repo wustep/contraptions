@@ -3,7 +3,7 @@ import { mixHex, type PieceCtx } from '../../../../parts'
 import { wrap } from './music'
 import { RADIUS, along, ballLocal } from './path'
 import {
-  BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, auroraAt, auroraSheet, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, milkyWay, wingsAt, type CloudLight,
+  BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, auroraAt, auroraSheet, auroraSize, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, milkyWay, wingsAt, type CloudLight,
   FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat, lanternAt,
 } from './air'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
@@ -90,7 +90,7 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   // The aurora, over the first Gnossienne's night, among the stars.
   const northern = auroraAt(c.t) * (1 - v.wide)
   if (northern > 0.01) {
-    const sheet = auroraSheet(c.t, Math.ceil(W / 4), Math.ceil(F / 4), along(c.t))
+    const sheet = auroraSheet(c.t, ...auroraSize(W, F), along(c.t))
     ctx.save()
     ctx.globalCompositeOperation = 'lighter'
     ctx.globalAlpha = Math.min(1, 0.62 * northern)
