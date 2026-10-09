@@ -150,7 +150,7 @@ air warm where the sun's light grazes it. At night the sea's light shows through
 a band under the surface. Close, through the first Gnossienne, the ball carries a small warm glow of its own: the
 flame it lights the lamps with.
 
-The sea gives it back: the stones, the lamps and the flowers are drawn again upside down from their feet, into a
+The sea gives it back: the stones, the lamps, the flowers, the perched gulls and the ball (with its flame) are drawn again upside down from their feet, into a
 canvas of half the stage's resolution, faded with depth, and laid over the water row by row, each row shifted a little
 by a ripple that grows as it goes down. The sky's colour lies on the water under its surface. The reflection fades as
 the camera draws out, where it would only be a streak.
@@ -171,11 +171,23 @@ stretching to the top of the screen, and a shooting star falls over the scene. H
 the same way, so nothing that fades as the camera draws out (the gulls, the fireflies, the bow, the reflections) takes
 an upright phone for a wide shot. Audited at 16:9, 21:9, 4:3 and an upright phone.
 
+## The words
+
+The page sets the titles over the stage, and they come over busy places: the title and the credits over the planet's
+lit limb and its ring of lamps, the Gnossiennes' names over the sunset's rays and the cadence. So under each card, while
+it is up, the canvas lays a soft veil of the dark (a wide ellipse, a third as dark as the night at its middle), as a
+film's titles are shaded; it comes and goes with its card.
+
 ## Motion
 
 Audited in motion as well as in stills: the whole period, ten frames a second, measured frame to frame for anything
 that jumps against the motion round it (a layer wrapping, a cloud gathering, a light coming on). Nothing does; the
 largest changes are the ball's quick hops after long notes, and the camera's.
+
+And timed on the GPU (Chrome, Metal, 2880 × 1800): about 4 to 5 ms a frame through the day, the night and the pond,
+the same as before any of the weather; 10 at the seam, where every stone is drawn. The sea's mirror is drawn from a
+canvas of its own, which stays on the GPU so long as nothing reads the stage's canvas back (nothing does; a probe that
+does would make every mirror row a readback, which is what a first measurement here mistook for the show being slow).
 
 ## Checks
 

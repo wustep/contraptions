@@ -1,13 +1,14 @@
 import type p5 from 'p5'
 import { R as BALL_R, mixHex, type Piece, type PieceCtx } from '../../../../parts'
 import { CHORDS, GRACES, MELODY, PERIOD, PIECES, loudness, wrap } from './music'
-import { LENGTH, RADIUS, STONES, along, ballLocal, crest, float, since, sink, stonesIn, swell, type Stone } from './path'
+import { LENGTH, RADIUS, STONES, along, ballLocal, crest, float, since, sink, squash, stonesIn, swell, type Stone } from './path'
 import { wideAt } from './camera'
+import { titlesAt } from './titles'
 import {
   BANK, BANKS, BANKS_OF_MIST, CLOUDS, FIREFLIES, FIREFLY, FLOCKS, GULLS, HEAPS, MIST,
   WHALE, auroraAt, auroraSheet, bowAt, deepLight, cloudLight, cloudThere, dropAt, drawCloud, overcastAt, rainAt, ringAt, whaleAt, whaleShape, drawGull, firefliesOut, inLayer, layered, meteorAt, milkyWay, mistAt, wingsAt, type CloudLight,
 } from './air'
-import { alpha, hash, osc, polar, skyAt, smooth, type Sky } from './world'
+import { BALL, alpha, hash, osc, polar, skyAt, smooth, type Sky } from './world'
 
 /**
  * Everything on the planet but the ball, each a drawing told show time.
@@ -1346,8 +1347,12 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
   }
 })
 
-/** The sea's mirror: a canvas the size of the stage's, kept, that the stones are drawn into upside down. */
-let mirrored: { p: p5; g: p5.Graphics } | null = null
+/**
+ * The sea's mirror: a canvas half the size of the stage's, kept, that the stones are drawn into upside down. One to a
+ * sketch: the stage's own, and each frame a still or a video is made in, which takes its own with it when it goes; so
+ * making a still never leaves the stage's behind.
+ */
+const mirrors = new WeakMap<p5, p5.Graphics>()
 
 /**
  * The stones given back by the sea: drawn upside down from their feet into the mirror, faded with depth and cut to the
@@ -1372,12 +1377,12 @@ function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D): void {
   // At half the stage's resolution: the ripple softens it anyway.
   const w = Math.ceil(W / 2)
   const h = Math.ceil(H / 2)
-  if (!mirrored || mirrored.p !== p) {
-    const g = p.createGraphics(w, h)
+  let g = mirrors.get(p)
+  if (!g) {
+    g = p.createGraphics(w, h)
     g.pixelDensity(1)
-    mirrored = { p, g }
+    mirrors.set(p, g)
   }
-  const g = mirrored.g
   if (g.width !== w || g.height !== h) g.resizeCanvas(w, h)
   const gp = g as unknown as p5
   // The stage's drawing modes (`engine.ts`), which a canvas of its own does not have.
@@ -1392,6 +1397,28 @@ function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D): void {
   gc.clearRect(0, top / 2, w, h - top / 2)
   gc.setTransform(new DOMMatrix([0.5, 0, 0, 0.5, 0, 0]).multiply(ctx.getTransform()))
   drawStones(gp, c, v, day, true)
+  // And the ball, upside down under itself, with its flame through the first Gnossienne.
+  {
+    const b = ballLocal(c.t)
+    const lift = b.h - BALL_R * squash(c.t)
+    const [x, y] = polar(b.u, -lift)
+    const flame = lamplighter(c.t)
+    if (flame > 0.01) {
+      const r = k * 0.55
+      const g = gc.createRadialGradient(x * k, y * k, k * BALL_R * 0.8, x * k, y * k, r)
+      g.addColorStop(0, `rgba(255, 210, 140, ${(0.35 * flame).toFixed(3)})`)
+      g.addColorStop(1, 'rgba(255, 190, 110, 0)')
+      gc.fillStyle = g
+      gc.fillRect(x * k - r, y * k - r, 2 * r, 2 * r)
+    }
+    gc.fillStyle = BALL
+    gc.strokeStyle = day.line
+    gc.lineWidth = c.weight
+    gc.beginPath()
+    gc.arc(x * k, y * k, BALL_R * k, 0, Math.PI * 2)
+    gc.fill()
+    gc.stroke()
+  }
   // Faded with depth, and nothing of it out of the water.
   gc.globalCompositeOperation = 'destination-in'
   const fade = gc.createRadialGradient(0, 0, (RADIUS - 2.2) * k, 0, 0, RADIUS * k)
@@ -1599,6 +1626,33 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.globalCompositeOperation = 'lighter'
     ctx.fillStyle = g
     ctx.fillRect(x * k - r, y * k - r, 2 * r, 2 * r)
+    ctx.restore()
+  }
+  // Under each card of words while it is up, a soft veil of the dark, so the page's words read over the bright limb
+  // and the ring of lamps they come over, as a film's titles are shaded; it comes and goes with its card.
+  const cards = titlesAt(c.t)
+  if (cards.length) {
+    const W = ctx.canvas.width
+    const H = ctx.canvas.height
+    const fw = Math.min(W, (H * 16) / 9)
+    const fh = (fw * 9) / 16
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    for (const card of cards) {
+      const tall = fh * (0.035 + (card.title ? 0.09 : 0.065) * card.names.length + 0.032 * (card.notes?.length ?? 0) + (card.role ? 0.03 : 0))
+      const x = (W - fw) / 2 + card.at[0] * fw
+      const y = (H - fh) / 2 + card.at[1] * fh + tall / 2
+      const rx = fw * 0.38
+      const ry = tall * 0.85 + fh * 0.06
+      ctx.setTransform(rx, 0, 0, ry, x, y)
+      const veil = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+      const a = 0.3 * card.light
+      veil.addColorStop(0, `rgba(5, 7, 16, ${a.toFixed(3)})`)
+      veil.addColorStop(0.55, `rgba(5, 7, 16, ${(a * 0.6).toFixed(3)})`)
+      veil.addColorStop(1, 'rgba(5, 7, 16, 0)')
+      ctx.fillStyle = veil
+      ctx.fillRect(-1, -1, 2, 2)
+    }
     ctx.restore()
   }
   // Wide: a light round the ball, so the eye can find it on the small planet.
