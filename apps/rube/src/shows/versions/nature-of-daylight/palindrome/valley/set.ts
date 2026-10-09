@@ -923,14 +923,19 @@ export function drawValleyOver(p: p5, k: number, t: number): void {
     g.addColorStop(0, lit(mix(VALLEY.hill, VALLEY.oliveDark, 0.5), t))
     g.addColorStop(0.5, mix(VALLEY.oliveDark, VALLEY.shellDark, 0.3))
     g.addColorStop(1, mix(VALLEY.oliveDark, VALLEY.shellDark, 0.55))
-    silhouette(ctx, k, f, (x) => {
+    const line = (x: number) => {
       const y = nearRidge(x)
       // Pines along its line: a ragged edge of tops, of every height.
       const i = Math.floor(x * 1.5)
       const fx = x * 1.5 - i
       const tree = 0.5 + 1.3 * hash(i, 91, 1) * hash(i, 91, 2)
       return y - tree * (1 - Math.abs(fx - 0.5) * 2)
-    }, Math.max(f.y1, 40) + 2, g, -40)
+    }
+    // Its line falls away to the left of -40, below any 16:9 frame, but a frame taller than 16:9 sees it fall: cut off
+    // there, its end stood up as a sheer wall in the meadow. So it goes on to the frame's edge, laid under the ridge as
+    // it always was and overlapping it a little, so the two are one shape and the ridge's own pines do not move.
+    if (f.x0 - 1 < -40) silhouette(ctx, k, f, line, Math.max(f.y1, 40) + 2, g, -Infinity, -39.5)
+    silhouette(ctx, k, f, line, Math.max(f.y1, 40) + 2, g, -40)
     void d
   }
   ctx.restore()

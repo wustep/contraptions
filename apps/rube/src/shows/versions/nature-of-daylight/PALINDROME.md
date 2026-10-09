@@ -351,6 +351,14 @@ the fourth had last seen before most of these passes. All of it held but one thi
   hard line across it two thirds of the way down, a flat grey below. It runs on to the frame's foot now. In 16:9 it is
   the same to the pixel.
 
+An eighteenth went through every place in the tall frame again, full size, where the seventeenth had seen them small.
+One more thing showed:
+
+- **The near ridge in a tall frame** (102 to 111 s, and 311 to 334 s): its line falls away to the left down the
+  picture, and its shape stopped at a fixed point, below any 16:9 frame; a tall frame sees under that, so the slope
+  turned into a sheer wall standing in the meadow. It goes on to the frame's edge now, laid under the ridge as it was
+  and overlapping it, so the ridge's own pines are where they were: in 16:9 it is the same to the pixel.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
