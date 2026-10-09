@@ -359,6 +359,24 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   check('married life: under Zoom the frame moves as gently as the show\'s own (its sharpest change of speed at most twice the show\'s)',
     inZoom <= 2 * own, `Zoom ${inZoom.toFixed(2)} at ${inZoomAt.toFixed(2)} s; the show's ${own.toFixed(2)} at ${ownAt.toFixed(2)} s`)
 
+  // His square and her ball never overlap (by more than 0.02 cells), anywhere she is with him: touching at the kiss,
+  // never pressed into one shape (a step on top of his lean once pressed his corner over her there).
+  let overlap = 0
+  let overlapAt = 0
+  for (let t = 0; t <= CUT.funeral; t += 0.01) {
+    const e = show.ellie(t)
+    const h = show.at(t)
+    if (!e || h.hidden) continue
+    const tilt = show.pose(t)?.tilt ?? 0
+    const dx = e.x - h.x
+    const dy = e.y - h.y
+    const lx = Math.cos(-tilt) * dx - Math.sin(-tilt) * dy
+    const ly = Math.sin(-tilt) * dx + Math.cos(-tilt) * dy
+    const gap = Math.hypot(Math.max(Math.abs(lx) - HALF, 0), Math.max(Math.abs(ly) - HALF, 0)) - R * (e.scale ?? 1)
+    if (-gap > overlap) { overlap = -gap; overlapAt = t }
+  }
+  check('married life: his square and her ball never overlap (by more than 0.02 cells)', overlap <= 0.02, `${overlap.toFixed(3)} at ${overlapAt.toFixed(2)} s`)
+
   // Her face, the dot, is steered where the story needs it (`LOOKS`): at him for the kiss, at the crest of the dance and
   // on the fieldstone; up at the clouds on the blanket; at him in her armchair. And it never turns faster than her own
   // roll would turn it, beyond a brisk turn (0.15 rad in a 60 fps frame more than her roll): no snap.

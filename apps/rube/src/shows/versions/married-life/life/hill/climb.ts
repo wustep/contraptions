@@ -264,7 +264,7 @@ function bearing(t: number): { tilt: number; squash: number } {
   if (t > T.fall && t < T.beside) {
     const v = (carl(t + 0.02)[0] - carl(t - 0.02)[0]) / 0.04
     const pace = Math.max(0, Math.min(1, v / RUN.vp))
-    squash += 0.03 * pace * Math.abs(Math.sin(Math.PI * 3 * (t - T.fall)))
+    squash += 0.05 * pace * Math.abs(Math.sin(Math.PI * 3.5 * (t - T.fall)))
   }
   for (const at of [T.onStep, T.fall]) {
     const ago = t - at

@@ -352,6 +352,7 @@ window.
 - **Her face:** at him at the kiss, in her armchair, at the crest and on the fieldstone, and up at the clouds (each
   within 20°); never turning more than 0.15 rad a frame faster than her own roll.
 - **The flank:** neither cuts into the hill's slope by more than a twentieth of R, until she gives way.
+- **Contact:** his square and her ball never overlap by more than 0.02 cells while she is with him.
 - **The credits:** after he has sat down and gone before the end, set by the page, opening on Directed by Claude
   Opus 5.5 and naming Carl and Ellie Fredricksen, Michael Giacchino, Married Life, Up, Pete Docter and p5.js.
 
@@ -494,7 +495,7 @@ window.
     (`zoomDropAt`, `hospitalZoomDrop`, `fixupZoomDrop`) and its own (`zoom.ts`: off the edges, the crown kept,
     smoothed twice and read along a curve), eases back to the show's frame for the credits (`zoomFullAt`), all read
     through `zoomFrame` in `registry.ts`. Overview frames the place in play (`Performance.overview`, `LifeShow.place`).
-  - *Checks.* Zoom's margins, the crown under Zoom, Zoom's gentleness, her face at each beat and never snapping, and
+  - *Checks.* His square and her ball never overlapping; Zoom's margins, the crown under Zoom, Zoom's gentleness, her face at each beat and never snapping, and
     resting on the slope; the fragile ones proved by undoing their fix. `anchorCached` made the suite 96 s faster.
   - *Lenses tried*, so a later pass can choose a new one: contact sheets; full-size stills; frame differencing for
     pops; each cut before and after; Zoom; a phone upright, and with Zoom; the balloon's crown; contact with floors and
@@ -525,7 +526,9 @@ window.
     the steps, the chair, the aisle and the funeral bow move well; the hill now runs flat out and arrives as she
     comes to rest (it had crept for 1.4 s, then, front-loaded, it ran into her as she settled), still beside her to
     his lean; the seesaw's kick is fast at its start and begins 0.1 s before he leaves, so the plank carries him off;
-    the bow has a small settle in it.
+    the bow has a small settle in it. A fourth: the seesaw throws him; the hill arrives cleanly but reads as a
+    determined pace more than a dash (she rolls back at nearly his speed, and the camera follows him), so his stride
+    is stronger; a camera lag after the frozen beat would show his speed better and is left for a later pass.
   - *Not measured.* Safari (Playwright's cached WebKit does not match; fetching it was left for approval) and the
     YouTube cue's sync at real speed.
 
