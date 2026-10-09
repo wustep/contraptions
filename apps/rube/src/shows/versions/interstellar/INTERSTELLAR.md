@@ -231,7 +231,14 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 109 (latest)
+## Polish pass 110 (latest)
+
+No change to the show. Three looks not taken before:
+- The whole show on a short, wide canvas (844×340, a landscape phone under the player's bar). Nothing is lost. Gargantua over Edmunds' planet sits lower in the sky, near the horizon, since it keeps its share of a shorter frame, but stays clear of the mesas.
+- The ball's long fall (168 to 172 s) on an upright phone. The whole station is in the frame and the ball's streak reads.
+- Miller's planet and the swing past Gargantua (100 to 115 s) at full size. Gargantua comes in from the top right with the pan rather than appearing, and the ring fades as it should.
+
+## Polish pass 109
 
 No change to the show. This pass audited it fresh, normal and Zoom, every 6 s, and took a closer look at four places that stood out on a contact sheet. Each holds up:
 - the gathered stars in the sky under the credits (266 to 296 s), which are the credits' own starlight (`credits.ts`), each card formed out of them;
