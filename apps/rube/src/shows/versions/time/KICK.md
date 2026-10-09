@@ -267,6 +267,10 @@ each world, and changed:
 - **Home's terrace** (252 to 265) was a blank pale slab between the house and the lawn: it is laid stone.
 - **The vault** (185 to 190.9): the snow fell inside the sealed vault and the footing under it. While the fortress
   stands, none falls in its ground floor; it falls again once the kick brings the building down.
+- **Mal at the train** (75 to 76): the headlamp's catch on her was a thin rim, briefly. Its light now spills down off
+  the wet street onto her for longer, a warm pool round her and a brighter rim.
+- **The children in his memory** stood stock-still in limbo's garden while home's shift their weight at play. They
+  play in the memory too, the same two movements on the same clock, so the gardens rhyme in motion as in layout.
 
 ## Inception nods
 

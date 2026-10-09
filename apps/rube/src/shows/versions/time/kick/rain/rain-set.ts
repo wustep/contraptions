@@ -103,15 +103,17 @@ function malLit(P: Pen, t: number): void {
   // Inside the cone at her height?
   const cy = b.from[1] + (b.to[1] - b.from[1]) * s
   const half = (b.w0 + (b.w1 - b.w0) * s) / 2
-  // (The beam is soft: its light spreads half as wide again as its core.)
-  const inside = sm((half * 1.5 - Math.abs(my - cy)) / 0.5)
-  const lit = inside * Math.pow(1 - s, 0.6) * sm(s / 0.06) * b.a
+  // (The beam is soft: its light spreads well past its core, and off the wet street up onto her.)
+  const inside = sm((half * 2.2 + 0.35 - Math.abs(my - cy)) / 0.6)
+  const lit = inside * Math.pow(1 - s, 0.5) * sm(s / 0.06) * b.a
   if (lit < 0.01) return
   const { ctx, k } = P
-  bloom(P.p, k, [mx + 0.1, my - 0.05], 0.75, RAIN.lamp, 0.6 * lit)
+  // A pool of the lamp's light on the wet pavement round her, and on her.
+  bloom(P.p, k, [mx + 0.25, my + 0.08], 1.3, RAIN.lamp, 0.45 * lit)
+  bloom(P.p, k, [mx + 0.1, my - 0.05], 0.75, RAIN.lamp, 0.85 * lit)
   ctx.save()
-  ctx.strokeStyle = rgba(RAIN.windowLit, Math.min(1, 1.6 * lit))
-  ctx.lineWidth = Math.max(1.2, 0.05 * k)
+  ctx.strokeStyle = rgba(RAIN.windowLit, Math.min(1, 2.2 * lit))
+  ctx.lineWidth = Math.max(1.6, 0.07 * k)
   ctx.lineCap = 'round'
   ctx.beginPath()
   ctx.arc(mx * k, my * k, 0.115 * k, -1.1, 1.1)
