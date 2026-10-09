@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 22 (latest)
+## Polish pass 23 (latest)
+
+No change to the show. The climb up the spoke, the docking bay and the match cut outside (184 to 209 s) were checked at full size. Across the cut (207.45 to 207.55 s) the Ranger keeps its heading, nose to the port, and its place and size on the screen, while the bay turns to the dark round it.
+
+## Polish pass 22
 
 No change to the show. Passes 15 to 21's kitchen was checked in the tall 9:16 frame, which sees all of it: at dawn, by day at 6 s, and in the museum, it reads whole, with its floor and the footing under it. The tesseract (119 to 124 s) was checked at full size: each room hides the ones behind it, and the threads run along the board. The light-blue disc on Murph's top shelf seen from behind is young Murph asleep on her pillow, through the case (`space/gargantua.ts`).
 
