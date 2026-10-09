@@ -114,6 +114,14 @@ export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
   ]
 })
 
+/** How much of a long flight's framing is anchored to where she lands. */
+const LEAD = 0.3
+/** The framing a follow would have as she lands at `tc`: her landing point, and the follow's offset. */
+const landing = (at: (t: number) => Pt, tc: number, off: Pt): Pt => {
+  const p = at(tc)
+  return [p[0] + off[0], p[1] + off[1]]
+}
+
 export const fog2 = stretch(1, 'fog2', (slot, _o, at) => {
   const top = at(slot.end)
   return [
@@ -121,8 +129,11 @@ export const fog2 = stretch(1, 'fog2', (slot, _o, at) => {
     // Wide for the long arcs, leading her, so the ring written for her is seen whole, before she comes down into it,
     // and the one she leaves is still there behind her.
     { t: 145.0, cells: 8.0, off: [1.9, -0.4], w: 0 },
-    { t: 147.7, cells: 8.8, off: [2.2, -0.3], w: 0 },
-    { t: 150.4, cells: 8.8, off: [2.2, -0.4], w: 0 },
+    // In the long flights the frame is anchored a little to where she will land (the ring written for her), so she is
+    // seen to travel across it toward the ring instead of holding one place on the screen against the fog.
+    { t: 147.7, cells: 8.8, off: [2.2, -0.3], hold: landing(at, 149.728, [2.2, -0.3]), w: LEAD },
+    { t: 149.728, cells: 8.8, off: [2.2, -0.35], hold: landing(at, 149.728, [2.2, -0.35]), w: LEAD },
+    { t: 150.8, cells: 8.8, off: [2.2, -0.4], hold: landing(at, 153.316, [2.2, -0.4]), w: LEAD },
     { t: 152.4, cells: 8.2, off: [1.6, -0.4], w: 0 },
     { t: 153.2, cells: 7.2, off: [0.6, -0.45], w: 0 },
     // The toss: the frame goes up with her and waits at the top of the ring written round her.

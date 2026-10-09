@@ -281,7 +281,8 @@ changed, in the order of the film, and then what runs through it:
 - **The ring behind her** (143 → 156): ring to ring, the one she had just left stayed the darkest, largest mass in
   the frame as she went on to the next, pulling the eye back (a fresh critic's note). Once she has left a ring and it
   has closed (its close a strike), it now draws back a little into the fog, its ink to about half, so the ring she is
-  going to leads.
+  going to leads. And in the two long flights the frame is anchored a little to where she will land, so she is seen
+  to travel across it toward the next ring instead of holding one place against the fog.
 - **No stalk on her** (156): at the top of the ring written round her, one of its tendrils grew straight out of the
   ball, a stalk with a drop on it like an antenna. No tendril now grows where she sits on a ring: one near her draws
   back as she comes.
