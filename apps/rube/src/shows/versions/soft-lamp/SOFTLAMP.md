@@ -452,6 +452,15 @@ ball. The machine and its timing were right and are untouched; the room around i
     the end, and plainly the right one fuller from the middle on. The headlights' sweeps and the small props (the
     clock, the Walkman's outline beside the mug's), looked at large: as they were.
 
+### The twenty-fourth lofi pass
+
+66. **The scrim without its words.** The page shows no cards in the stage's overview, but last pass's wash under the
+    now-playing line was drawn there anyway: a dark smudge across the top of the whole room, standing under nothing.
+    The scene cannot be told it is in the overview, but it can see it: the picture is then far wider than the
+    camera's frame, so the wash keeps to the frames the words are shown in (Follow, Zoom, upright, and a recording,
+    which paints its cards into the picture). The first fifteen seconds, frame by frame (the lamp warming on, the
+    bulbs coming up, the title, the camera settling onto the sill), looked at: as they were.
+
 **Subtracted:** the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

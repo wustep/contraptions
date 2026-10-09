@@ -7,6 +7,7 @@ import { cat } from './cat'
 import { bloom, clock, curtain, draughtAt, scrim, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
 import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
+import { camera } from './camera'
 import { titlesAt } from './titles'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
@@ -825,7 +826,7 @@ export const things = scenery<null>(
     motes(ctx, c.t)
     vignette(ctx)
     // Under each track's now-playing line (not the title or the credits, which stand on the dark wall).
-    for (const card of titlesAt(c.t)) if (card.names.length === 1 && Array.isArray(card.names[0])) scrim(ctx, card.light, card.at)
+    for (const card of titlesAt(c.t)) if (card.names.length === 1 && Array.isArray(card.names[0])) scrim(ctx, card.light, card.at, camera(c.t).cells)
     grain(ctx, c.t)
   }),
 )
