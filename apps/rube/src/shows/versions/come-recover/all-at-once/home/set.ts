@@ -1151,11 +1151,13 @@ const CLOCK = { x: -1.9, y: -3.55, r: 0.27 }
 const PRICES = { x: 4.55, y: -2.95, w: 0.92, h: 0.78 }
 const CALENDAR = { x: 26.7, y: -3.05, w: 0.62, h: 0.82 }
 /**
- * A shelf high between the door's washer and the counter, over the finale's lantern string and clear of the throw up
- * to the hanger: a lucky cat waving on it, a money plant trailing over its edge, and between them an old photograph
- * of the three of them in its frame, the one the night ends by taking again.
+ * A shelf high between the door's washer and the counter, up under the tubes where a shop keeps its luck: a lucky cat
+ * waving on it, a money plant trailing over its edge, and between them an old photograph of the three of them in its
+ * frame, the one the night ends by taking again. It is in the wide shots (the opening, the credits) and above the
+ * finale's close ones, whose top edge would otherwise cut the cat's head off; it is clear of the throw up to the
+ * hanger.
  */
-const SHELF = { x0: -1.3, x1: -0.14, y: -3.12 }
+const SHELF = { x0: -1.3, x1: -0.14, y: -3.7 }
 const PHOTO = { x: -0.67, w: 0.4, h: 0.33 }
 /**
  * A corkboard over the counter's far end, where the taxes are done, low enough to be in the two-shot of Joy's visit

@@ -66,7 +66,7 @@ function poly(pen: Pen, pts: Pt[]): void {
 /* ------------------------------------------------------------------ the party: lanterns, table, steamers, karaoke */
 
 /** The party's wall: where it is dressed for the new year, over the table (room cells). */
-const DRESS = { x0: 29.7, x1: 36.0, swag: -4.2, dip: 0.32, scroll: { xs: [30.55, 34.55], top: -3.45, h: 1.38, w: 0.3 }, card: { x: 32.55, y: -2.95, r: 0.42 } }
+const DRESS = { x0: 29.7, x1: 36.0, swag: -4.2, dip: 0.32, scroll: { xs: [30.55, 34.55], top: -3.45, h: 1.38, w: 0.3 }, card: { x: 33.4, y: -2.6, r: 0.38 } }
 
 /**
  * The wall over the party, dressed for the new year: crepe-paper festoons under the ceiling, red and gold by turns,
@@ -143,7 +143,7 @@ export function drawPartyWall(pen: Pen, t: number): void {
   const cd = DRESS.card
   const swing = 0.03 * Math.sin(t * 1.4) + 0.06 * lanternSway(0, t)
   outline(p, ink, w * 0.4)
-  p.line(cd.x * k, (cd.y - cd.r - 0.22) * k, cd.x * k, (cd.y - cd.r) * k)
+  p.line(cd.x * k, (cd.y - cd.r - 0.6) * k, cd.x * k, (cd.y - cd.r) * k)
   p.push()
   p.translate(cd.x * k, (cd.y - cd.r) * k)
   p.rotate(swing)
@@ -165,7 +165,7 @@ export function drawPartyWall(pen: Pen, t: number): void {
   p.circle(0, 0, 0.08 * k)
   p.pop()
   solid(p, ink, w * 0.5, HOME.gold)
-  p.circle(cd.x * k, (cd.y - cd.r - 0.22) * k, 0.07 * k)
+  p.circle(cd.x * k, (cd.y - cd.r - 0.6) * k, 0.07 * k)
 }
 
 /** A steady pseudo-random number in [0, 1) for the scrolls' strokes. */

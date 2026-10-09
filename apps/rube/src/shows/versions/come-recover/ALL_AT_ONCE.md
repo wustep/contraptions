@@ -263,7 +263,7 @@ The notes went back to the builders who made each part, who still had their cont
     crayon drawing Joy made when she was small, the three of them in their own colours under a sun. It hangs over
     her mother at the adding machine all through the visit she does not look up from. It sits clear of the throw up
     to the hanger, which leaves from the counter's near end.
-  - High between the door's washer and the counter, a shelf: a white lucky cat waving its paw, a money plant
+  - High between the door's washer and the counter (higher still after a later pass), a shelf: a white lucky cat waving its paw, a money plant
     trailing over the edge, and between them an old framed photograph of the three of them by the shop's window.
     It is in the opening's wide shot and under the credits, where it sits over the finale's lantern string and
     answers the photograph the night ends by taking.
@@ -275,6 +275,16 @@ The notes went back to the builders who made each part, who still had their cont
   - Along its foot, below most shots, is a red lacquered apron rail with a brass edge, where diners would sit.
   - The mosaic was watched at full size at 4 and 16 panels. Its worlds read as their own, so nothing changed.
   - Then the whole show was swept again every 3.3 s, for anything the five rounds broke. Nothing had.
+- **A further pass, for frame edges.** The close framings were checked for what their edges cut. Two of the cuts
+  were of things added in these rounds.
+  - In the finale's close shots (275 s, 293 s) the frame's top edge cut the new shelf: the lucky cat lost its head
+    and the photograph its top. The shelf now hangs higher, up under the tubes, where a shop keeps its luck. It is
+    still in the opening's wide shot and under the credits, and above every close framing of the finale.
+  - On the fight's last hit (199.6 s) the top of the frame sliced the party's luck card in half. It now hangs lower
+    on a longer cord, whole in that frame. It hangs a little to the right, so she no longer rides the arm's cradle
+    across it, vermilion on red.
+  - Seen and kept: the canyon floor and its bagel, the peak's opening, the photograph, the dojo's gong, and the
+    hush. In the hush the two of them are specks on purpose (see Known limits).
 
 ## End credits
 
