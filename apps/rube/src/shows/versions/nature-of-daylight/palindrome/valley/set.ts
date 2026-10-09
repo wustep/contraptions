@@ -801,8 +801,18 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
     lg.addColorStop(1, rgba(SHELL.glow, 0))
     ctx.fillStyle = lg
     ctx.fillRect((cx - lw / 2) * k, (sy - 0.035) * k, lw * k, 0.07 * k)
-    ctx.fillStyle = rgba(SHELL.fogLit, 0.18 * slot.light)
-    ctx.fillRect((cx - lw / 2) * k, (sy - 0.18) * k, lw * k, 0.36 * k)
+    // Its light on the hull round it, soft all round: a flat pale block behind the line, with edges of its own, read
+    // as something stuck on the hull, a scratch, not light coming through a seam.
+    ctx.save()
+    ctx.translate(cx * k, sy * k)
+    ctx.scale(1, 0.32)
+    const hr = lw * 0.85 * k
+    const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, hr)
+    halo.addColorStop(0, rgba(SHELL.fogLit, 0.3 * slot.light))
+    halo.addColorStop(1, rgba(SHELL.fogLit, 0))
+    ctx.fillStyle = halo
+    ctx.fillRect(-hr, -hr, 2 * hr, 2 * hr)
+    ctx.restore()
     ctx.restore()
   }
 }

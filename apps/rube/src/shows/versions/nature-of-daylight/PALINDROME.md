@@ -697,6 +697,21 @@ was not its length but its standing in the room at its size. It holds a moment w
 drawn in to her as it pales, shrinking and losing its tendrils, and is gone into her a second on: the vision gathered
 back into the one who saw it, not a thing left in the ballroom.
 
+A sixty-sixth gave the show to a fifth fresh reader. The lift and the blast, reworked for the readers before, passed
+without a word. Four things still read as what they are not, each now seen by two readers or more:
+
+- **The seam of light in the belly** (121 s), a bright line over a flat pale block, read as a scratch on the hull.
+  Its light round it is a soft oval glow now, no edges: a seam with light coming through.
+- **Her suit coming off** (145.6 s) split into halves in the air and was gone as they landed, so a frame of it was
+  only ever two wings opening. The halves lie on the floor a second and a half now, an empty husk, before they go.
+- **The hand raised over her** (147.5 s) was half closed, a blot on the limb. It is open as it is raised now: a hand.
+- **The ring into the gala** was still at its size half a second after the cut. It gathers into her within the first
+  three quarters of a second now, so it is never a thing standing in the ballroom.
+
+Ian gone at the cut to the cradle, which this reader too took for a slip, stays as the forty-ninth and the
+fifty-third left it: the last frame is the first, which has no Ian, and to roll him off before it would read as his
+leaving her.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

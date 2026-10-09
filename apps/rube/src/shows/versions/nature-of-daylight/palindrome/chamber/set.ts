@@ -100,7 +100,7 @@ function gripsOf(who: Writer): Grip[] {
     // The hand comes: raised over her as she goes to the glass, then down onto it, where she is. Raised in the close
     // frame and slowly, so it is seen there: raised to just above the frame's top in a second, it swept up through
     // the close as a limb with a knot on it and was gone.
-    out.push({ t0: T.palm - 1.25, t1: T.palm - 0.77, to: [9.2, -1.6], open: 0.6, lead: 1.8, palm: PALM_R })
+    out.push({ t0: T.palm - 1.25, t1: T.palm - 0.77, to: [9.2, -1.6], open: 0.9, lead: 1.8, palm: PALM_R })
     out.push({ t0: T.palm, t1: T.palm + 2.3, to: PALM, open: 1, lead: 0.77, palm: PALM_R })
     const w = ring(WEAPON.seed)
     out.push({ t0: WEAPON.born, t1: WEAPON.born + 1.3, to: inkAt(w, WEAPON.c[0], WEAPON.c[1], WEAPON.R, w.start), open: 0, lead: 0.5, palm: PALM_R })
@@ -898,10 +898,12 @@ function fallenSuits(ctx: Ctx, k: number, t: number): void {
       const bounce = u > 0.53 ? 0.1 * Math.exp(-(u - 0.53) / 0.18) * Math.abs(Math.sin((u - 0.53) * 16)) : 0
       const ang = side * (Math.PI / 2) * (fall - bounce)
       const slide = side * (crack + 0.16 * smooth(u, 0.3, 1.4))
-      const gone = smooth(u, 0.45, 0.95)
+      // Lying there a while, an empty husk on the floor, before they go: gone as they landed, a frame of them was only
+      // ever two halves in the air, and read as wings opening, not a suit taken off.
+      const gone = smooth(u, 1.6, 2.4)
       if (gone >= 1) continue
       ctx.save()
-      // They go down into the floor as they fade: nothing is left lying there.
+      // They go down into the floor as they fade, so nothing is left lying there after.
       ctx.beginPath()
       ctx.rect((at[0] - 2) * k, (FLOOR - 2) * k, 4 * k, 2 * k)
       ctx.clip()
