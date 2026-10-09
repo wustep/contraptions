@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 73 (latest)
+## Polish pass 74 (latest)
+
+No change to the show: pass 9's frame-step audit run again at an upright phone's shape (390 × 844), where everything sized to the screen crosses its thresholds at other moments. The spikes are the same set as on desktop, all written: the ignition (84 s), the whip through the sphere (104.2 s), the tesseract's moves (118 to 125 s), the station's lamps striking (127.5 s) and the far side opening (235.7 s). There is nothing phone-only, and nothing at the bat's hit (163.5 s), where pass 72 took a pop out.
+
+## Polish pass 73
 
 No change to the show: the phone streak's other end looked at on an upright phone. Coming down to the far side (174 to 175.5 s), it trails him through the poplar and the round tree, his written path, and has faded by 175.3 s, before he reaches the roof. Nothing of it lies over the house as he crashes in.
 
