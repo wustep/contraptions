@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 113 (latest)
+## Polish pass 114 (latest)
+
+Pass 112's corn made a fault of its own, at the far end. The tall wall fell to the dam over 2.6 cells, but the shorter green wall in front still fell over 1.2. From 51 to 53 s the tall wall's top came down beside the green one's, a cell or less away, and crossed it: a doubled, scribbled edge just behind the cab. Pass 112 looked at 53 s, where the cab hides most of it, and missed it. `cornWall`'s `rise` now takes one length for each end. The tall wall comes up over 2.6 cells, as pass 112 made it, and ends over 1.2, as both walls did before, so at the dam the two drop together, the tall one behind. The rise at 30 s is unchanged.
+
+## Polish pass 113
 
 No change to the show: the rest of it at 1280×720, frame by frame, the way pass 112 found the cliff of corn. That covered the combine to the launch (55 to 87 s), the station (131 to 163 s), the far-side house to the Ranger's release (177 to 209 s), and Saturn to the camp (213 to 256 s). Two things looked like faults and are not:
 - The thin white bar beside the Ranger at 244 s is the drogue's hatch cover, thrown off as the chute comes out (243.5 s). It tumbles away left.

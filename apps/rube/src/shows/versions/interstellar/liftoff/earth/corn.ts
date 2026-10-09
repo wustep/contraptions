@@ -121,14 +121,15 @@ export function leafTip(s: Stalk, i: number): [number, number] {
  * it. The field reads as a field without a thousand leaves to look at; only
  * the stalks the ball or the truck touches are drawn stalk by stalk.
  */
-export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0: number; x1: number; foot: number; h: number; t: number; fill: string; seed: number; tassels?: boolean; alpha?: number; taper?: [number, number]; rise?: number }): void {
+export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0: number; x1: number; foot: number; h: number; t: number; fill: string; seed: number; tassels?: boolean; alpha?: number; taper?: [number, number]; rise?: number | [number, number] }): void {
   const step = 0.2
   const X = (x: number) => x * k
   const i0 = Math.floor(o.x0 / step) - 1
   const i1 = Math.ceil(o.x1 / step) + 1
-  // Where the field starts and stops, it comes up out of nothing over a cell or so (`rise`) rather than ending in a wall.
-  const rise = o.rise ?? 1.2
-  const edge = (x: number) => (o.taper ? Math.min(1, Math.max(0, (x - o.taper[0]) / rise), Math.max(0, (o.taper[1] - x) / rise)) : 1)
+  // Where the field starts and stops, it comes up out of nothing over a cell or so (`rise`, or one for each end) rather
+  // than ending in a wall.
+  const [up, down] = typeof o.rise === 'number' ? [o.rise, o.rise] : (o.rise ?? [1.2, 1.2])
+  const edge = (x: number) => (o.taper ? Math.min(1, Math.max(0, (x - o.taper[0]) / up), Math.max(0, (o.taper[1] - x) / down)) : 1)
   const top = (i: number) => {
     const x = i * step
     const sway = Math.sin(o.t * 0.9 + x * 0.55) * 0.05
