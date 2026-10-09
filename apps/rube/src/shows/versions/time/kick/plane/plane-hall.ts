@@ -249,8 +249,8 @@ function stampAt(t: number): Pt {
 }
 
 /**
- * His passport: up from him onto the slope as he comes to the booth, shut; it opens; stamped; it goes back down to
- * him, open still (the mark on it), shutting as it goes behind him.
+ * His passport: up from him onto the slope as he comes to the booth, shut; it opens; stamped; it shuts on the slope
+ * and goes back down to him.
  */
 function passportAt(t: number): { at: Pt; open: number } | null {
   const on: Pt = [SLOPE_MID, (SLOPE.bottom + SLOPE.top) / 2]
@@ -264,11 +264,14 @@ function passportAt(t: number): { at: Pt; open: number } | null {
     const h = him()
     return { at: [lerp(h[0], on[0], u), lerp(h[1], on[1], u) - 0.12 * Math.sin(u * Math.PI)], open: 0 }
   }
-  const open = sm(t, AT_BOOTH + 0.3, AT_BOOTH + 0.65) * (1 - sm(t, CLEAR - 0.2, CLEAR))
-  if (t < CLEAR - 0.4) return { at: on, open }
-  const u = sm(t, CLEAR - 0.4, CLEAR)
+  // Shut on the slope before it goes; then off the slope's edge toward him, and only then down to him, so it never
+  // hangs open in the air over the counter's front.
+  const open = sm(t, AT_BOOTH + 0.3, AT_BOOTH + 0.65) * (1 - sm(t, CLEAR - 0.55, CLEAR - 0.35))
+  if (t < CLEAR - 0.35) return { at: on, open }
+  const ux = sm(t, CLEAR - 0.35, CLEAR - 0.12)
+  const uy = sm(t, CLEAR - 0.2, CLEAR)
   const h = him()
-  return { at: [lerp(on[0], h[0], u), lerp(on[1], h[1], u) - 0.08 * Math.sin(u * Math.PI)], open }
+  return { at: [lerp(on[0], h[0], ux), lerp(on[1], h[1], uy) - 0.05 * Math.sin(ux * Math.PI)], open }
 }
 
 const INK_MARK = mixHex(PLANE.window, PLANE.night, 0.25)

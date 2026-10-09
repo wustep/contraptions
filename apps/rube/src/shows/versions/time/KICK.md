@@ -271,6 +271,10 @@ each world, and changed:
   the wet street onto her for longer, a warm pool round her and a brighter rim.
 - **The children in his memory** stood stock-still in limbo's garden while home's shift their weight at play. They
   play in the memory too, the same two movements on the same clock, so the gardens rhyme in motion as in layout.
+- **The passport** (241): stamped, it went back to him open, on a straight line that left its pages hanging in the
+  air over the booth's front. It shuts on the slope now, slides off its edge, and drops to him.
+- **The cloud deck under the plane** (213.7 to 223): in a tall frame (a phone held upright, a Short) its body was one
+  flat grey wash under the wings. It has deeper billows now, their tops lit, the lower ones in shade.
 
 ## Inception nods
 

@@ -89,8 +89,23 @@ function drawCloudDeck(pen: Pen, t: number, f: Frame): void {
     [0.55, body, 0.98],
     [1, shade, day ? 0.9 : 0.95],
   ])
-  // Heaps along the top: many sizes, their tops caught by the light; drifting a little on the show's clock.
   const drift = t * 0.05
+  // Its body is not one flat grey: deeper billows in it, each rounded top a little lit, the lower ones in shade.
+  for (let row = 0; row < 4; row++) {
+    const y = top + 1.3 + row * 1.05
+    if (y - 1 > f.y1 || y + 1 < f.y0) continue
+    const s = 1.1 + 0.25 * row
+    const off = drift * (0.6 - 0.1 * row)
+    for (let i = Math.floor((x0 - off) / s) - 2; i <= Math.ceil((x1 - off) / s) + 2; i++) {
+      const h = hash(i, 20 + row, 5)
+      const x = i * s + off + (hash(i, 30 + row, 5) - 0.5) * 0.6
+      const r = 0.6 + 0.7 * h
+      const deep = row / 3
+      puff(pen, [x, y + r * 0.2], r, r * 0.5, mixHex(body, shade, 0.35 + 0.5 * deep), 0.35)
+      puff(pen, [x - r * 0.12, y - r * 0.08], r * 0.65, r * 0.26, mixHex(body, lit, 0.5 - 0.35 * deep), 0.22)
+    }
+  }
+  // Heaps along the top: many sizes, their tops caught by the light; drifting a little on the show's clock.
   const step = 0.55
   for (let i = Math.floor((x0 - drift) / step) - 2; i <= Math.ceil((x1 - drift) / step) + 2; i++) {
     const h = hash(i, 3, 5)
