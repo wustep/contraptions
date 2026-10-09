@@ -278,7 +278,8 @@ const DARK = '#0A090C'
  * Seeds and crumbs adrift in the dark at three depths, so the hush has depth and slow motion before anything is lit:
  * the far ones slide by slowly as the camera follows her, the near ones quickly, all sinking very slowly toward the
  * bagel. Each depth is one pattern repeated every `tile` cells and moving as a whole, so nothing pops as it drifts.
- * The two far depths are behind the bagel (kept off its disc); the near one is in front.
+ * The two far depths are behind the bagel (kept off its disc); the near one is in front. Bright enough that on a
+ * desktop screen the fall reads as depth and motion, not as a stalled black frame, and still a hush.
  */
 interface DustLayer {
   depth: number
@@ -290,9 +291,9 @@ interface DustLayer {
   behind: boolean
 }
 const DUST: DustLayer[] = [
-  { depth: 0.32, tile: 12, n: 64, size: 0.05, a: 0.2, seed: 1, behind: true },
-  { depth: 0.66, tile: 12, n: 34, size: 0.09, a: 0.26, seed: 2, behind: true },
-  { depth: 1.4, tile: 14, n: 11, size: 0.2, a: 0.19, seed: 3, behind: false },
+  { depth: 0.32, tile: 12, n: 64, size: 0.05, a: 0.3, seed: 1, behind: true },
+  { depth: 0.66, tile: 12, n: 34, size: 0.09, a: 0.4, seed: 2, behind: true },
+  { depth: 1.4, tile: 14, n: 11, size: 0.2, a: 0.3, seed: 3, behind: false },
 ]
 /** Where the dark sinks to: toward the bagel, down and to the right of where she comes in. */
 const SINK: Pt = [0.8, 0.6]

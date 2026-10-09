@@ -559,6 +559,9 @@ The notes went back to the builders who made each part, who still had their cont
 - **A regression sweep.** After the looks, the camera changes and the new dressing, the whole show was swept again in
   the viewer's framing, a frame every 2 s. Every world reads, the dressing stays out of the action, the credits sit
   over the night glass, and the end goes down to dark. Nothing had regressed, and nothing was changed.
+- **A pass for the hush.** In every sweep the hush (128–133 s) was a near-black frame with one red dot. On a desktop
+  screen it could read as a stalled show. The seeds and salt drifting at three depths are now about half again as
+  bright, so the fall reads as depth and motion, and the frame stays dark: still the quiet the music asks for.
 
 ## The looks
 
