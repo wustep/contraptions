@@ -633,6 +633,13 @@ read the soldier as a character hopping, as he is. Two of their notes read as th
 The reader's blank frame at the blast (223.5 s) is the flash's whitest instant, sampled; the room shows through it a
 tenth of a second either side. The fifty-fifth's changes were filmed at four frames a second and nothing jumps.
 
+A fifty-seventh looked close, at full size, at the places the late rounds had not: the dawn room, the swing's
+seasons, the bed and the clock, the news, the shell's coming and its going. All held. And it took a note both fresh
+readers had given apart, unprompted: the ring carried into the gala sat in the ballroom like a great pale hoop, a
+prop. It is drawn in the room, and over its second and a half the camera's draw-back shrank it down onto the floor
+among the guests. It pales away in a second now: whole at the cut, where the carry is, and gone before the room has
+drawn back round it.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

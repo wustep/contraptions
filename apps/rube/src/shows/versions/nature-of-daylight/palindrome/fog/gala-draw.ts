@@ -464,13 +464,15 @@ export function drawGala(p: p5, k: number, t: number): void {
 
 /**
  * The ring she was shown, carried across the cut into the gala: at the cut it is where it was, in the same place by
- * her on the screen (the cut carries her and the camera together), and pales away over a second and a half. In the fog
- * it is ink on white; here, on the dark room, a ghost of it in light. So the gala comes out of what she is shown, as the
- * swing did, and reads as another thing she sees: years on, not the next day.
+ * her on the screen (the cut carries her and the camera together), and pales away in a second. In the fog it is ink
+ * on white; here, on the dark room, a ghost of it in light. So the gala comes out of what she is shown, as the swing
+ * did, and reads as another thing she sees: years on, not the next day. Gone before the camera has drawn back far: it is
+ * drawn in the room, and over a second and a half the draw-back shrank it onto the floor among the guests, a pale hoop
+ * standing in the ballroom, a prop.
  */
 function carried(p: p5, k: number, t: number): void {
   const at = SEAM.gala
-  const fade = 1 - smooth(t, at, at + 1.6)
+  const fade = 1 - smooth(t, at, at + 1.0)
   if (t < at || fade <= 0.001) return
   const c = smallC(at)
   const her0 = fogHerAt(at)
