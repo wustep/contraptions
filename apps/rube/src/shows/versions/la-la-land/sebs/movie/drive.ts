@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import type { Pt, Seg } from '../../../../../parts'
+import { mixHex, type Pt, type Seg } from '../../../../../parts'
 import { neonArrow, ROOM } from '../club/room'
 import { alpha, box, carried, frame, glow, hash, knock, part, ring, rgba, smooth, type Ctx, type PartShot } from '../kit'
 import { DRIVE_MAT as D } from '../worlds'
@@ -250,8 +250,11 @@ const TOWERS = Array.from({ length: 44 }, (_, i) => {
   const x = -30 + i * 1.9 + hash(i, 1) * 1.2
   const w = 1.1 + 1.6 * hash(i, 2)
   const h = 2.5 + 7 * hash(i, 3) * hash(i, 4) + 1.5 * hash(i, 5)
-  const lit: Pt[] = []
-  for (let cx = 0.2; cx < w - 0.15; cx += 0.36) for (let cy = 0.4; cy < h - 0.2; cy += 0.5) if (hash(i * 97 + Math.round(cx * 10), Math.round(cy * 10), 7) < 0.2) lit.push([cx, cy])
+  const lit: [number, number, number][] = []
+  for (let cx = 0.2; cx < w - 0.15; cx += 0.36) for (let cy = 0.4; cy < h - 0.2; cy += 0.5) {
+    const v = hash(i * 97 + Math.round(cx * 10), Math.round(cy * 10), 7)
+    if (v < 0.3) lit.push([cx, cy, v < 0.07 ? 1 : 0])
+  }
   return { x, w, h, lit }
 })
 
@@ -267,8 +270,17 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
   const w = weight
   const fr = frame(p, k)
   const line = rgba(ink, 0.3)
-  // The night: dark overhead, a sodium haze low over the city.
-  vgrad(p, k, fr.x0 - 1, fr.y0 - 1, fr.x1 + 1, fr.y1 + 1, [[0, rgba(D.asphalt, 0)], [Math.max(0.02, Math.min(0.98, (STREET - 1.5 - fr.y0) / (fr.y1 - fr.y0 + 2))), rgba(D.sodium, 0.14)], [1, rgba(D.asphalt, 0.6)]])
+  // The night: deep overhead, indigo lower, and the city's own glow on the haze over the basin.
+  {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createLinearGradient(0, -10 * k, 0, (STREET - 0.5) * k)
+    g.addColorStop(0, D.night)
+    g.addColorStop(0.5, D.dusk)
+    g.addColorStop(0.85, D.glowLow)
+    g.addColorStop(1, mixHex(D.glowLow, D.sodium, 0.35))
+    ctx.fillStyle = g
+    ctx.fillRect((fr.x0 - 1) * k, (fr.y0 - 1) * k, (fr.x1 - fr.x0 + 2) * k, (fr.y1 - fr.y0 + 2) * k)
+  }
   // The stars and the far hills, the sodium haze along their foot.
   const far = fr.cx * 0.85
   p.noStroke()
@@ -289,14 +301,38 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
   const par = 0.5
   const ox = fr.cx * par
   const base = STREET + 0.8
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const tw of TOWERS) {
     const x0 = tw.x + ox
     if (x0 > fr.x1 + 1 || x0 + tw.w < fr.x0 - 1) continue
-    shape(p, k, [[x0, base], [x0 + tw.w, base], [x0 + tw.w, base - tw.h], [x0, base - tw.h]], D.brick, null)
+    // Cool in the dark, its top catching the haze's warmth; a fine light edge along its roof.
+    const g = ctx.createLinearGradient(0, (base - tw.h) * k, 0, (base - tw.h + 2.5) * k)
+    g.addColorStop(0, D.towerTop)
+    g.addColorStop(1, D.tower)
     p.noStroke()
-    p.fill(alpha(p, D.sodium, 0.55))
-    for (const [lx, ly] of tw.lit) p.rect((x0 + lx) * k, (base - tw.h + ly) * k, 0.12 * k, 0.16 * k)
+    p.fill(D.tower)
+    ctx.fillStyle = g
+    // (This drawing's rects are centred.)
+    p.rect((x0 + tw.w / 2) * k, (base - tw.h / 2) * k, tw.w * k, tw.h * k)
+    p.stroke(rgba(D.sodium, 0.22))
+    p.strokeWeight(Math.max(1, w * 0.5))
+    p.line(x0 * k, (base - tw.h) * k, (x0 + tw.w) * k, (base - tw.h) * k)
+    p.noStroke()
+    for (const [lx, ly, cool] of tw.lit) {
+      p.fill(cool ? alpha(p, D.white, 0.5) : alpha(p, D.sodium, 0.7))
+      p.rect((x0 + lx) * k, (base - tw.h + ly) * k, 0.12 * k, 0.16 * k)
+    }
+    // A red light on the tallest roofs, blinking slowly, each in its own time.
+    if (tw.h > 6.5) {
+      const on = Math.sin(t * 2.2 + tw.x) > 0.55 ? 1 : 0.15
+      glow(p, k, x0 + tw.w / 2, base - tw.h - 0.12, 0.35, D.beacon, 0.5 * on)
+      p.fill(alpha(p, D.beacon, 0.4 + 0.6 * on))
+      p.circle((x0 + tw.w / 2) * k, (base - tw.h - 0.12) * k, 0.09 * k)
+    }
   }
+  // Across the basin, another freeway, and it is moving: a river of tail lights going one way and headlights the
+  // other, as far as the eye goes, under and beyond their jam.
+  river(p, k, t, fr, ox)
   // The street below, and the ground under it falling away into the dark.
   shape(p, k, [[fr.x0 - 1, STREET], [fr.x1 + 1, STREET], [fr.x1 + 1, fr.y1 + 1], [fr.x0 - 1, fr.y1 + 1]], D.asphalt, null)
   vgrad(p, k, fr.x0 - 1, STREET + 0.3, fr.x1 + 1, Math.max(STREET + 1.5, fr.y1 + 1), [[0, rgba(D.frame, 0)], [1, rgba(D.frame, 0.85)]])
@@ -331,6 +367,33 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
   // Their car: the body drawn over them while they sit in it (see `over`), behind them once they are out.
   carBody(p, c, t, false)
   if (t >= OUT) carBody(p, c, t, true)
+}
+
+/** The far freeway: its height on the picture, and its two streams' cars (where each starts, its gap, its speed). */
+const RIVER_Y = 1.75
+const STREAMS = [
+  { y: RIVER_Y - 0.05, v: -1.15, color: D.tail, cars: Array.from({ length: 90 }, (_, i) => -40 + i * 1.05 + 0.6 * hash(i, 91)) },
+  { y: RIVER_Y + 0.05, v: 1.35, color: D.head, cars: Array.from({ length: 90 }, (_, i) => -40 + i * 1.1 + 0.7 * hash(i, 92)) },
+]
+function river(p: p5, k: number, t: number, fr: { x0: number; x1: number; y0: number; y1: number }, ox: number): void {
+  if (RIVER_Y < fr.y0 - 1 || RIVER_Y > fr.y1 + 1) return
+  // Its deck, a thin dark line with a glow along it.
+  glow(p, k, fr.x0 + (fr.x1 - fr.x0) / 2, RIVER_Y, (fr.x1 - fr.x0) * 0.7, D.sodium, 0.06, 1, 0.04)
+  p.noStroke()
+  p.fill(alpha(p, D.frame, 0.85))
+  p.rect((fr.x0 - 1) * k, (RIVER_Y + 0.1) * k, (fr.x1 - fr.x0 + 2) * k, 0.07 * k)
+  const span = 95
+  for (const st of STREAMS) {
+    for (const c0 of st.cars) {
+      let x = c0 + st.v * (t - BEGIN)
+      x = ((((x + 40) % span) + span) % span) - 40 + ox
+      if (x < fr.x0 - 0.3 || x > fr.x1 + 0.3) continue
+      p.fill(alpha(p, st.color, 0.22))
+      p.ellipse(x * k, st.y * k, 0.34 * k, 0.13 * k)
+      p.fill(alpha(p, st.color, 0.95))
+      p.ellipse(x * k, st.y * k, 0.12 * k, 0.06 * k)
+    }
+  }
 }
 
 /** A tall sodium lamp at x, standing on `foot`, its head `h` up, its pool of orange on the road. */
@@ -382,7 +445,8 @@ function sedan(p: p5, k: number, ink: string, w: number, x: number, i: number, t
     p.strokeWeight(w * 0.6)
     p.circle(X(u) * k, -WR * k, 2 * WR * k)
   }
-  // Tail and head.
+  // Tail and head; the brake light lying red on the deck behind it.
+  glow(p, k, X(-0.25), 0.04, 0.7, D.tail, 0.22 * brake, 1.4, 0.22)
   glow(p, k, X(0.02), -0.36, 0.45, D.tail, 0.45 * brake)
   box2(p, k, X(-0.02), -0.42, X(0.08), -0.3, brake > 0.6 ? D.tail : alpha(p, D.tail, 0.6), null)
   box2(p, k, X(LEN - 0.08), -0.36, X(LEN + 0.02), -0.26, D.head, null)

@@ -200,6 +200,15 @@ export const DRIVE_MAT = {
   frame: '#1C1420',
   sill: '#5B4554',
   car: ['#6F2B34', '#2F4C6E', '#8A8F99', '#3B5B45', '#C9B48A'],
+  /** The night over the basin: deep overhead, and the city's own glow low on it. */
+  night: '#070A1E',
+  dusk: '#1A1840',
+  glowLow: '#5A3346',
+  /** The towers, cool in the dark, a little lighter where the haze catches their tops; a cool window. */
+  tower: '#1F1C3A',
+  towerTop: '#3B2F52',
+  white: '#DCE6FF',
+  beacon: '#FF4A3D',
 }
 
 export const SEBS: World = world('sebs', "Seb's", 'The club, now.', SEBS_INK)
