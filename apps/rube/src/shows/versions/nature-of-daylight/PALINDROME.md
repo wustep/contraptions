@@ -314,6 +314,16 @@ the props are seen large. All of it held but one thing:
   together now, as its sprays do, and lead up into the crown above the frame. They are never in shot when they come or
   go, so nothing pops.
 
+A fourteenth looked full size at what it had only seen in sheets lately (the clock and Hannah's going, the news at
+night, the fog, the gala in the wide, coming home), and at the whole show in a window far wider than 16:9, where every
+set still reaches the frame's edges. One thing showed:
+
+- **"Weapon"** (196.795 to the cut): the spike flung out of the ring at her was a cut-out, a straight-sided black
+  triangle with a square root standing off the ring's far side and two needle barbs, where every other thing they
+  write is brushed ink. It is a stroke of their ink now: it starts inside the ring's band and leaves it as a heavy
+  blot, bends a little and tapers to its point, with the rings' own bleed round it, and its barbs are hooks thrown
+  back off it that taper the same way. It is as heavy and as sharp as it was, and strikes the glass where it did.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

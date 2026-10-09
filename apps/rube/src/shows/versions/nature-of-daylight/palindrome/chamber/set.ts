@@ -285,33 +285,55 @@ function weapon(p: p5, ctx: Ctx, k: number, t: number): void {
   const dy = Math.sin(ang)
   const root = inkAt(rg, WEAPON.c[0], WEAPON.c[1], WEAPON.R, ang)
   const len = (Math.hypot(WEAPON_HIT[0] - root[0], WEAPON_HIT[1] - root[1]) + 0.3) * fling
-  const tip: Pt = [root[0] + dx * len, root[1] + dy * len]
-  const nx = -dy
-  const ny = dx
-  const w = 0.17
-  ctx.beginPath()
-  ctx.moveTo((root[0] + nx * w - dx * 0.2) * k, (root[1] + ny * w - dy * 0.2) * k)
-  ctx.lineTo(tip[0] * k, tip[1] * k)
-  ctx.lineTo((root[0] - nx * w - dx * 0.2) * k, (root[1] - ny * w - dy * 0.2) * k)
-  ctx.closePath()
-  ctx.fillStyle = rgba(SHELL.ink, 0.97)
-  ctx.fill()
-  // A barb thrown back off it, and a second, shorter spike: it is hard all over.
-  const barb = (at: number, side: number, l: number) => {
-    const bx = root[0] + dx * len * at
-    const by = root[1] + dy * len * at
-    const bdx = dx * -0.55 + nx * side
-    const bdy = dy * -0.55 + ny * side
-    const bl = Math.hypot(bdx, bdy)
-    ctx.beginPath()
-    ctx.moveTo((bx + nx * 0.05) * k, (by + ny * 0.05) * k)
-    ctx.lineTo((bx + (bdx / bl) * l * fling) * k, (by + (bdy / bl) * l * fling) * k)
-    ctx.lineTo((bx - nx * 0.05 + dx * 0.12) * k, (by - ny * 0.05 + dy * 0.12) * k)
+  // A stroke of their ink, not a cut-out: it starts inside the ring's band and leaves it as a heavy blot (so it grows
+  // out of the ring, with no stub standing off its far side), bends a little, and tapers to a point, with the rings'
+  // own bleed round it. Every stroke turns the same way round, so the spike and its barbs fill as one shape.
+  const centre = (from: Pt, dir: Pt, l: number, curl: number, q: number): Pt => [
+    from[0] + dir[0] * l * q - dir[1] * curl * l * q * q,
+    from[1] + dir[1] * l * q + dir[0] * curl * l * q * q,
+  ]
+  const stroke = (from: Pt, dir: Pt, l: number, curl: number, w: number) => {
+    const m = 20
+    const left: Pt[] = []
+    const right: Pt[] = []
+    for (let i = 0; i <= m; i++) {
+      const q = i / m
+      const [cx, cy] = centre(from, dir, l, curl, q)
+      const tx = dir[0] - dir[1] * curl * 2 * q
+      const ty = dir[1] + dir[0] * curl * 2 * q
+      const tl = Math.hypot(tx, ty) || 1
+      // Full at the root, a little swell just out of it, and a long taper to the point.
+      const hw = (w * Math.pow(1 - q, 0.85) * (1 + 0.18 * Math.exp(-((q - 0.12) ** 2) / 0.006))) / 2
+      left.push([(cx - (ty / tl) * hw) * k, (cy + (tx / tl) * hw) * k])
+      right.push([(cx + (ty / tl) * hw) * k, (cy - (tx / tl) * hw) * k])
+    }
+    ctx.moveTo(left[0][0], left[0][1])
+    for (const q of left) ctx.lineTo(q[0], q[1])
+    for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i][0], right[i][1])
     ctx.closePath()
+  }
+  const dir: Pt = [dx, dy]
+  const CURL = -0.08
+  const w0 = WEAPON.R * rg.w(ang) * 2.3
+  const from: Pt = [root[0] - dx * w0 * 0.3, root[1] - dy * w0 * 0.3]
+  const reach = len + w0 * 0.3
+  // Barbs thrown back off it and hooked: it is hard all over.
+  const barbs = [
+    { at: 0.45, side: 1, l: 0.42 },
+    { at: 0.62, side: -1, l: 0.3 },
+  ].map((b) => {
+    const bdx = dx * -0.55 - dy * b.side
+    const bdy = dy * -0.55 + dx * b.side
+    const bl = Math.hypot(bdx, bdy)
+    return { from: centre(from, dir, reach, CURL, b.at), dir: [bdx / bl, bdy / bl] as Pt, l: b.l * fling, curl: 0.3 * b.side, w: w0 * 0.75 * Math.pow(1 - b.at, 0.85) }
+  })
+  for (const [widen, alpha] of [[1.9, 0.12], [1.35, 0.22], [1, 0.97]] as const) {
+    ctx.beginPath()
+    stroke(from, dir, reach, CURL, w0 * widen)
+    for (const b of barbs) stroke(b.from, b.dir, b.l, b.curl, b.w * widen)
+    ctx.fillStyle = rgba(SHELL.ink, alpha)
     ctx.fill()
   }
-  barb(0.45, 1, 0.42)
-  barb(0.62, -1, 0.3)
 }
 
 /** Abbott's jagged writing before the blast: it grows in bursts, on the beats. */
