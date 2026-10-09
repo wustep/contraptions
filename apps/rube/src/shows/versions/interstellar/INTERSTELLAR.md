@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 48 (latest)
+## Polish pass 49 (latest)
+
+No change to the show. The pull request's description now has a section for the changes in shared code, which touch every show: Zoom's focus, the failed-soundtrack wording, the silent-export warning, and the credits on phones (the 9px floor and the slide back onto the stage), with Merry-Go-Round's trade-off. Its images and table are kept.
+
+## Polish pass 48
 
 No change to the show: pass 47's claim checked. Pass 47 said that sliding a credit card back onto the stage moves only a card that would cross the edge. Every show's credits were sampled each second at 1440 × 900 and at a narrower 1024 × 700 (374 and 376 card samples): none is pinned at the 8px margin, so none was moved, and desktop credits sit where they did.
 
