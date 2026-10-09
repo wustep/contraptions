@@ -111,7 +111,8 @@ export function softBeam(ctx: CanvasRenderingContext2D, k: number, a: readonly [
   ctx.save()
   ctx.globalAlpha *= Math.min(1, al)
   ctx.imageSmoothingEnabled = true
-  ctx.imageSmoothingQuality = 'high'
+  // Bilinear: the sprite is only ever stretched, where 'high' looks no different and costs far more.
+  ctx.imageSmoothingQuality = 'low'
   // The sprite's across onto the beam's normal, its down onto the line from `a` to `b`.
   ctx.transform((nx * wide * k) / W, (ny * wide * k) / W, (dx * k) / H, (dy * k) / H, (a[0] - (nx * wide) / 2) * k, (a[1] - (ny * wide) / 2) * k)
   ctx.drawImage(sprite, 0, 0)
