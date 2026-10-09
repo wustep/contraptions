@@ -232,6 +232,20 @@ function plan(begin: number) {
     },
   }
 
+  /* -------------------------------------------- beside her, as she smiles at him */
+  // The last of the other road, and the briefest: in her close shot, as she smiles back at him across the silent room,
+  // the one she would have gone home with is there at her side a moment, turned to her; and as the picture cuts to his
+  // nod it comes apart.
+  const besideHer = {
+    from: CUTS.smile,
+    to: CUTS.nod + 0.02,
+    at: (t: number) => {
+      const [x, y] = F([DOORWAY + 0.05 + 2 * R + 0.035, FLOOR_Y])
+      const a = Math.min(1, (t - CUTS.smile) / 0.22)
+      return { x, y, a, spin: Math.PI, gone: Math.max(0, Math.min(1, (t - (CUTS.nod - 0.32)) / 0.32)) }
+    },
+  }
+
   /* -------------------------------------------- the dream, left in his seat */
   // As he goes from her side the dream stays a moment where he was: an echo of him at her table, leaning in to her,
   // paling while David comes back across the room, and coming apart as David sits down in it.
@@ -256,7 +270,7 @@ function plan(begin: number) {
   hits.push(DOOR_SHUT, BAND_LAMPS)
 
   const ways = seb.map((w) => ({ ...w, at: w.at - begin, p: F(w.p) }))
-  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, echoes: [realOne, echo], hits: [...new Set(hits)].sort((a, b) => a - b) }
+  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, echoes: [realOne, echo, besideHer], hits: [...new Set(hits)].sort((a, b) => a - b) }
 }
 
 const PLAN = plan(BEGIN)

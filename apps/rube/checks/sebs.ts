@@ -311,6 +311,7 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       [198.4, 'he stays in Los Angeles as the plane goes'],
       [440.5, 'in the dream\'s last room, the real one plays the piano that plays itself'],
       [455.45, 'David sits down in the dream\'s place at her table'],
+      [463.05, 'beside her in the doorway as she smiles at him'],
     ]
     const unseenRoads: string[] = []
     for (const [t, what] of roads) {
