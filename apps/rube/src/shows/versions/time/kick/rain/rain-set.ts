@@ -1,11 +1,11 @@
 import type p5 from 'p5'
-import type { Pt } from '../../../../../parts'
+import { R, type Pt } from '../../../../../parts'
 import { box, frame, scenery, type Ctx } from '../kit'
 import { BAND, SPLASH } from '../stack'
 import { bloom, rgba } from '../cast'
 import { RAIN } from '../worlds'
 import { deckFace, drawBridge, drawCity, drawLampLight, drawRailing, drawStreet, seen, type Pen, type View } from './rain-city'
-import { MAL_AT, MAL_FROM, MAL_TO, eff, sm, vanPose } from './rain-geo'
+import { MAL_AT, MAL_FROM, MAL_TO, T_A_IN, T_C_IN, T_F_IN, T_TAXI_DOOR, ariadneRain, cobbRain, eff, fischerRain, sm, vanPose } from './rain-geo'
 import { drawSpray, drawTraffic, drawTrain, trainBeam } from './rain-traffic'
 import { drawVanBack, drawVanFront } from './rain-van'
 import { drawRain, drawSplash, drawTicks, overRiver } from './rain-water'
@@ -24,6 +24,13 @@ const vanSeen = (f: View, t: number): boolean => {
   const v = vanPose(t)
   return seen(f, v.x - 4.5, v.x + 5.5, v.y - 1.6, v.y + 1.6)
 }
+
+/** Each of them while outside the van (until they land on its bench): where, and when. */
+const OUTSIDE: [(t: number) => Pt, number, number][] = [
+  [fischerRain, T_TAXI_DOOR, T_F_IN],
+  [cobbRain, T_TAXI_DOOR, T_C_IN],
+  [ariadneRain, T_TAXI_DOOR, T_A_IN],
+]
 
 export const rainSet = scenery<null>({
   name: 'rain-set',
@@ -80,7 +87,24 @@ export const rainSet = scenery<null>({
     const P = pen(p, c)
     const t = c.t
     p.push()
-    if (vanSeen(f, t)) drawVanFront(p, c.k, c.ink, c.weight, vanPose(t), t)
+    if (vanSeen(f, t)) {
+      // Out on the pavement they are on the near side of the van, in front of its body: hopping in from behind it,
+      // each is seen against the rear quarter until they are through the door and on the bench.
+      const ctx = P.ctx
+      const near = OUTSIDE.filter(([, from, to]) => t > from && t < to).map(([at]) => at(t))
+      ctx.save()
+      if (near.length) {
+        ctx.beginPath()
+        ctx.rect((f.x0 - 1) * c.k, (f.y0 - 1) * c.k, (f.x1 - f.x0 + 2) * c.k, (f.y1 - f.y0 + 2) * c.k)
+        for (const [x, y] of near) {
+          ctx.moveTo((x + R + 0.03) * c.k, y * c.k)
+          ctx.arc(x * c.k, y * c.k, (R + 0.03) * c.k + 1, 0, Math.PI * 2)
+        }
+        ctx.clip('evenodd')
+      }
+      drawVanFront(p, c.k, c.ink, c.weight, vanPose(t), t)
+      ctx.restore()
+    }
     if (seen(f, -31, 0.5, -0.2, 0.6)) deckFace(P)
     malLit(P, t)
     overRiver(P, f, t)

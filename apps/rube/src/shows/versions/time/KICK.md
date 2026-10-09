@@ -352,6 +352,11 @@ each world, and changed:
   a speck in it (two pixels across in a wide frame, nothing at all in a tall one) for thirty seconds. Whenever he
   would be drawn five pixels across or less there, he is the same spark in his own colour the dream gives him
   (`sleep.ts`, `beacon`). The director's camera and Zoom are never out that far, and draw him as before.
+- **Hopping into the van** (72.3 to 74.2): round 35 moved the sliding door forward, between the wheels, and each of
+  them hops in from the pavement behind the van, so each went behind its rear quarter for the middle of the hop and
+  was gone (Cobb for a quarter second, by a sweep of every quarter second for his colour). Out on the pavement they are
+  on the near side of the van, in front of its body: they are seen against the rear quarter now until they land on
+  the bench through the door.
 
 ## Inception nods
 
