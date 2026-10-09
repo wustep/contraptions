@@ -731,6 +731,28 @@ done. Here it is also a clock: drawn in the rain, gone when the glass dries.
 105. **Looked at:** the drawing at full size, at a frame a second and on an upright phone; the face in the rain; its
      fading. A scrub back is the same frame. `check:shows` holds the reaches in their new order, the drawing in the rain.
 
+### The forty-first pass: a moth to the lamp
+
+After the rain, the last third of the night had the clear sky, the moon and the shooting stars, but nothing small
+alive in the room. The lamp, the show's one light, had never drawn anything to it.
+
+106. **A moth** (`lamp/moth.ts`), come in as the rain thins after the storm (23:22). It flies down to the lamp and
+     circles the light in loose, uneven loops, wider and narrower, close round the bulb and out, its wings a pale blur
+     too quick to see; every minute or so it settles on the shade's upper outside, wings folded into a little roof, for
+     a while. About three centimetres across, warm in the bulb's light, with the room's ink round its wings.
+107. **Its shadow.** So near the bulb, the lamp throws it several times its size across the wall and the desk, soft,
+     along the line from the bulb through the moth, sweeping as it loops and fluttering as its wings beat: the lofi
+     picture of a moth at a lamp.
+108. **The kitten and the moth.** For spells of half a minute or so while it flies, the kitten's eyes go to it, and if
+     it was nodding along it stops to watch (a cat cannot leave a moth be). The first drawing let the music win, and the
+     kitten went on nodding with its eyes shut while the moth flew over it.
+109. **The end.** As the hand turns the lamp down, the moth leaves the dimming light and flies up and across to the
+     window, and settles on the glass in the right-hand pane under the moon, pale in the moonlight, as the show ends.
+     First placed among the fairy lights' bulbs, and dark, it was lost; it sits just under the string now, moonlit.
+110. **Looked at:** its loops and rests at full size; the shadow on the wall; the kitten watching; the end. A scrub back
+     is the same frame. `check:shows` holds its coming (as the rain thins, well before the end) and its place on the
+     moonlit glass at the last.
+
 **Subtracted:** the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
@@ -756,6 +778,8 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
 - **The hand.** Someone at the desk, never seen but for a hand and a sleeve, eight times: the lamp on, a sip, a chin
   scratch, hands round the mug, a face drawn in the mist, the mug away and back, the lamp down. It could be fewer (the lamp's two
   and the refill alone would still say someone is there). The sweater's colour is one constant (`KNIT`, `lamp/hands.ts`).
+- **The moth.** The room's only living thing besides the kitten (and the hand), for the last seven minutes.
+  Its spells of the kitten's attention take a little from its nodding along late in the night.
 - **The lightning.** Three far-off flashes, no bolt. They could be fewer, or gone; they are the only sudden light in
   the half hour.
 - **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.

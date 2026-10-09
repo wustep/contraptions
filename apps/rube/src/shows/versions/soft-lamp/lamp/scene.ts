@@ -10,6 +10,7 @@ import { ballShadow, contacts, wallShadows } from './shade'
 import { camera } from './camera'
 import { titlesAt } from './titles'
 import { REFILL, doodle, hands, knob, liftAt } from './hands'
+import { moth, mothShadow } from './moth'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { flashRoom, night } from './sky'
@@ -809,6 +810,7 @@ export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) 
   pot(ctx, lw, c.t)
   desk(ctx, lw, c.t)
   wallShadows(ctx, c.t)
+  mothShadow(ctx, c.t)
 }))
 
 export const things = scenery<null>(
@@ -837,6 +839,7 @@ export const things = scenery<null>(
     ballShine(ctx, lw, c.t)
     lip(ctx, lw, c.t)
     // Someone's hand, now and then, in front of it all.
+    moth(ctx, lw, c.t)
     hands(ctx, lw, c.t, (g) => mug(g, lw, c.t))
     bloom(ctx, c.t)
     motes(ctx, c.t)

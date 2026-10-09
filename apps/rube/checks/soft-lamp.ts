@@ -14,6 +14,7 @@ import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/soft-lamp/lamp
 import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/lens'
 import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
 import { rainAt } from '../src/shows/versions/soft-lamp/lamp/world'
+import { MOTH_IN, mothAt } from '../src/shows/versions/soft-lamp/lamp/moth'
 import { REACHES, REFILL, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
 import { STRETCHES, WASHES, YAWNS } from '../src/shows/versions/soft-lamp/lamp/cat'
 
@@ -208,6 +209,10 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
   check('soft lamp: trains cross the city a few times, minutes apart, from the dusk to a little after midnight',
     m.trains.length >= 4 && m.trains.every((t, i) => i === 0 || t - m.trains[i - 1] >= 170) && m.trains[m.trains.length - 1] < 1450,
     m.trains.join(' '))
+
+  check('soft lamp: a moth comes to the lamp as the rain thins, and is on the moonlit glass at the end',
+    MOTH_IN > 1300 && MOTH_IN < MUSIC_END - 240 && rainAt(MOTH_IN) < 0.3 && mothAt(MOTH_IN - 1).a === 0 && mothAt(1700).a === 1 &&
+    mothAt(DURATION).glass === 1 && mothAt(DURATION).fly === 0, `${MOTH_IN}`)
 
   // The kitten gets up and stretches twice, each whole in the frame, clear of its other moments and the hand.
   check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns, washes and the hand',

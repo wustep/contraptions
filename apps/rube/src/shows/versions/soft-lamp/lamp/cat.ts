@@ -1,6 +1,7 @@
 import { sweepAt } from './decor'
 import { MOMENTS, flashAt, shootAt } from './sky'
 import { REACHES, handAt, petAt } from './hands'
+import { mothAt } from './moth'
 import { CAT } from './desk'
 import { camera, catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
@@ -48,10 +49,20 @@ function gaze(t: number, lag: number): { x: number; y: number } {
   const s = { x: g.x + (st.x - g.x) * st.a, y: g.y + (st.y - g.y) * st.a }
   const fl = flashAt(t)
   const f = { x: s.x + (fl.x - s.x) * fl.look, y: s.y + (fl.y - s.y) * fl.look }
+  // The moth, when it flies: now and then, a while at a time, its eyes go to it (a cat cannot leave a moth be).
+  const m = mothAt(t - 0.2)
+  const keen = mothKeen(t)
+  const f0 = { x: f.x + (m.x - f.x) * keen, y: f.y + (m.y - f.y) * keen }
   // A hand coming in: it watches that, mostly.
   const h = handAt(t - 0.25)
   const hk = 0.8 * h.a
-  return { x: f.x + (h.x - f.x) * hk, y: f.y + (h.y - f.y) * hk }
+  return { x: f0.x + (h.x - f0.x) * hk, y: f0.y + (h.y - f0.y) * hk }
+}
+
+/** How taken it is with the moth, 0 to 1: for spells of half a minute or so, while the moth flies. */
+function mothKeen(t: number): number {
+  const m = mothAt(t - 0.2)
+  return m.a * m.fly * (1 - m.glass) * smooth(Math.sin(t * 0.21) + Math.sin(t * 0.13 + 1), 0.6, 1.1)
 }
 
 function ballGaze(t: number, lag: number): { x: number; y: number } {
@@ -269,7 +280,7 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   // A shooting star, or lightning, brings it out of the music to look, and it goes back in after.
   // A scratch under the chin: it shuts its eyes and leans into the hand.
   const pet = petAt(t) * (1 - sleepAt(t))
-  const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - handAt(t).a)
+  const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - handAt(t).a) * (1 - mothKeen(t))
   // Stretching: up on its feet, the body lifted and tipped forward (chest down, rear up) about its rear, and longer;
   // the head down and forward with it, the eyes shut in a yawn.
   const st = stretchAt(t)
