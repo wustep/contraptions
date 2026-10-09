@@ -42,7 +42,7 @@ export const ERA = {
   home: [SEAM.home, 409] as const,
 }
 /** The last scene's chords before the cut: the two of them turn to the empty cradle (TURN) and step toward it (NEAR);
- * then the cut onto the cradle at dawn, the baby in it (BEGIN), Ian on her other side until he goes (`ianAfter`). */
+ * then the cut onto the cradle at dawn, the baby in it (BEGIN), Ian beyond it on her right until he goes (`ianAfter`). */
 export const TURN = 341.618
 export const NEAR = 345.49
 export const BEGIN = 349.495
@@ -379,25 +379,37 @@ export function ianX(T: number): number {
 }
 export const ianLook = (T: number): number => Math.PI + 0.35 - (Math.PI + 0.6) * ss(T, TURN - 0.1, TURN + 1.2)
 /**
- * Ian after the cut to the cradle: on her other side (the cradle stands where he stood), with her as she rocks it on the
- * chord; then he turns and goes, out of the frame on her left and away out of the room, before the camera draws back,
- * so the last frame is the first and has no Ian. In the film he leaves her; cut away at the cut, as he was, four fresh
- * readers in nine (every one of the last five but one) took his going for a slip.
+ * Ian after the cut to the cradle: on her right still, as he was, the cradle between them now (it stands where he
+ * stood), with her as she rocks it on the chord. Then he turns away, stands a moment, looks back at her, and goes, out
+ * of the frame on the right and on out of the room, before the camera draws back, so the last frame is the first and
+ * has no Ian. In the film he leaves her. Cut away at the cut, as he was, four fresh readers in nine (four of the last
+ * five) took his going for a slip; put on her left across it, he swapped sides and read as a slip again, and gone
+ * without a beat, as deleted.
  */
-export const IAN_STAYS_X = -0.4
-export const IAN_GOES = BEGIN + 1.6
+export const IAN_STAYS_X = 1.85
+const IAN_TURNS = BEGIN + 1.5
+const IAN_LOOKS_BACK = BEGIN + 2.5
+export const IAN_GOES = BEGIN + 3.4
 const IAN_PACE = 1.05
 const IAN_UP = 1.1
 /** Where he is (world x) from the cut on; past the room's whole frame by IAN_GONE. */
 export function ianAfter(T: number): number {
+  // A half step away as he turns, then still.
+  const step = 0.08 * s5((T - IAN_TURNS) / 0.6)
   const u = T - IAN_GOES
-  if (u <= 0) return IAN_STAYS_X
+  if (u <= 0) return IAN_STAYS_X + step
   const d = u < IAN_UP ? (IAN_PACE * u * u) / (2 * IAN_UP) : IAN_PACE * (u - IAN_UP / 2)
-  return IAN_STAYS_X - d
+  return IAN_STAYS_X + step + d
 }
 export const IAN_GONE = IAN_GOES + 16 / IAN_PACE + IAN_UP / 2
-/** He looks at her and the cradle, then round the way he goes. */
-export const ianAfterLook = (T: number): number => -0.25 + (Math.PI + 0.25) * ss(T, IAN_GOES - 0.5, IAN_GOES + 0.3)
+/** He looks at her and the cradle (on his left); turns away to the right; looks back at her; turns and goes. */
+const AT_HER = Math.PI + 0.25
+const AWAY = -0.15
+export const ianAfterLook = (T: number): number =>
+  AT_HER +
+  (AWAY - AT_HER) * ss(T, IAN_TURNS, IAN_TURNS + 0.5) +
+  (AT_HER - AWAY) * ss(T, IAN_LOOKS_BACK, IAN_LOOKS_BACK + 0.35) +
+  (AWAY - AT_HER) * ss(T, IAN_GOES - 0.35, IAN_GOES)
 
 export function homeX(T: number): number {
   if (T < BEGIN - 0.5) return HOME_X + 0.095 * s5((T - (HUG_T - 0.55)) / 0.9) + steps(T)
