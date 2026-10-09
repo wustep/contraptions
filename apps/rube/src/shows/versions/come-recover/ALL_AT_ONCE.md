@@ -136,7 +136,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 190 to 191.2 | the crescendo | everywhere | The wall crowds to 144 panels, and the seesaw throws her high. On 121½ every panel flips like a card to another world. On 122 they all flip to the same place, the laundromat, and on 122½ the net of frames snaps shut round her. |
 | 191.22 | the great hit | home | She lands alone, home, at the party, and the googly eye slaps onto her in a burst of warm light, its pupil whirling round before it settles. Jobu's jumpers are in the room, each rearing at her in turn: a boxing glove on a spring out of a gift box (125), a steel trap (128), a mallet from the ceiling (130), a scissor arm (133). On each one's beat a copy of her own eye flies off her and lands on it, and its blow turns gentle: a nudge, a squeeze, a scoop, a cradle. The arm sets her on the dumpling steamers, and she steps down one a beat to the table, touching Waymond on the fight's last hit (199.61). |
 | 200.16 | the drop | the rocks | Silence. Two stones on a ledge over a vast canyon, lumpy and flat-bottomed, the colour drained out of them: Evelyn's with her eye, Joy's beside it, where Waymond was. Pebbles fall from the lip and take forever to land. Joy's stone teeters forward on its flat underside (207.56, 208.36) and rolls out to the brink (209.96). On 213.96, the strongest note in the quiet, it goes over. Evelyn rolls to where she was (214.76), flinches back (216.36), and goes after her (219.56). |
-| 220 to 241.8 | a soft swell | the rocks | The long way down, on the beats, ledge by ledge, the camera drawing back until they are specks against the canyon. At the bottom a dark ring lies in the sand: the bagel. Joy drops into it, and on 241.76 Evelyn follows. |
+| 220 to 241.8 | a soft swell | the rocks | The long way down, on the beats, ledge by ledge. The camera goes over the brink after her and stays close, the wall's strata going up past. On a bench halfway down Joy is waiting, and Evelyn comes to rest against her (226.56) in a close two-shot, looking at her: where the stones touch, each one's colour comes back first and spreads over it. Joy goes on (227.76) and the camera goes down the gorge with them, Joy a bound ahead. On the long talus it draws back for a breath, the canyon most of the frame and the two of them small on the scree, then comes in again for the last bounds. At the bottom a dark ring lies in the sand: the bagel. Joy drops into it, and on 241.76 Evelyn follows. |
 | 241.76 | a breath | the dark | They fall into the bagel's hole. Joy is drawn up into its dark, shrinking and dimming, and Evelyn holds her at the lip. |
 | 247.35 | the peak | the dark | A line comes down from a pulley high above: Waymond's. He drops as the counterweight, and on every beat the line turns the bagel backwards, a ratchet kick of the whole crust. On 118½ Evelyn heaves back, and on 122 Joy pops out of the dark. From 123 everything the bagel swallowed bursts back out of the hole, one thing a beat, last in first out, each with a googly eye, and a spray of seeds goes out on every eighth. On 136 an eye rises out of the hole and lands on Joy. The bagel shrinks as it gives, until its hole is exactly a washer's window, and the hole fills with glass light. |
 | 264.14 | the peak's end | home | Through the window: they are inside the drum of the washer by the door, where the morning started. The cycle ends, the door swings open (268.39), and they drop out. Waymond leaps the foot lever and touches Joy, and the touch runs through to Evelyn. |
@@ -144,7 +144,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 282.2 | home's pulse | home | The family portrait. A wooden box camera with a bellows stands on a tripod by the door, facing them. Joy and Waymond straighten up on two small hops. Evelyn rolls to a foot switch under the window and presses it on 286.20: a string of lanterns over the family lights one a beat, and the camera draws back to take in the whole portrait. The self-timer's red lamp blinks faster and faster while she hurries back beside Joy (290.38). |
 | 290.99 | the last great hit | home | The flash: the bulb bursts, the room washes white from the camera's side with their shadows thrown on the washer, and a firework fills the door's glass with gold. The photograph ejects (291.20), flutters down like a leaf and props itself against the washer beside them (292.77). It develops by 293.01: the glowing washer window with the three of them in it, eyes and all. |
 | 295.01 | the last hit | home | The tubes go out in the reverse order of the opening, and the neon with them. The three of them rest in the washer window's warm glow. |
-| 297 to 328 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes. On the tail's two soft accents the empty drum gives a slow half-turn (305.40), and the three look up at it; the window's light swells once (312.59), and they look at one another. |
+| 297 to 328 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes. The dryer's window opened the multiverse; the washer's closes it. In its lit glass the lives she went through come back once, in the order back home, about two seconds each: the bagel, the rocks, Raccacoonie's kitchen, the hot dog piano, the dojo, the red carpet. In each the three of them are there together, small, eyes and all (on the rocks, three stones on the ledge where there were two). The three look up at the window all through them, and the empty drum gives a slow half-turn among them (305.40). Then the glass is only its own warm light; it swells once (312.59), and they look at one another: of all of them, this one. |
 
 ## The polish pass
 
@@ -723,6 +723,26 @@ The notes went back to the builders who made each part, who still had their cont
 - **A pass for Safari.** Twelve key frames were rendered in WebKit, Safari's engine (26.6, in a throwaway install),
   and compared with Chrome: the great hit's sunburst, Joy's violet burst, the bursts' clipping, the end's dark and
   the reduced-motion listener. They match, apart from the edges of type and lines, and the page reports no errors.
+- **A director's pass: the long way down, and every life in the window.** Small passes had stopped finding much, so
+  the show was watched whole again for what it most lacked, and two things were rebuilt.
+  - **The rocks' long way down** (219.6 to 241.8 s) is the film's most moving scene, and it was the show's emptiest
+    stretch: the camera drew back to 23 cells and held there, so for twenty seconds the two of them were specks on a
+    beige canyon, and their meeting on the bench, the moment their colour starts to come back, was two dots
+    touching. Now the camera goes over the brink after her and stays close, 3.3 to 4.8 cells, down the wall, the
+    long drop and the gorge, with room below her for where she is going. The meeting is a close two-shot (2.25
+    cells, pushing in to 2.05), and Evelyn looks at Joy through it. Where the stones touch, each one's own colour
+    comes back first: a round of it spreads over the stone from the touching side, turning with the stone as it
+    rolls, ahead of the slow return of the whole (`flushOf` in `ledge.ts`). The canyon's scale is kept for one
+    breath, on the long talus (about 9 cells), and the camera comes in again for the last bounds and the ring.
+    `check:shows` caught Evelyn leaving the Zoom frame for 0.1 s in a bound at 239.2 s; the framing there was
+    eased, and the worst is now 0.94 of the half-frame.
+  - **The tail** was thirty seconds of a still room under the credits. The show opened the multiverse in a window,
+    the big dryer's, at 46 s; now a window closes it. In the washer's lit glass the lives she went through come back
+    once, in the order back home, with the three of them together in each (`home/finale-lives.ts`): the bagel's
+    crown, three stones on the ledge, the griddle under the toque, the piano's keys, the dojo, the red carpet. The
+    family look up at the window all through them. Each comes and goes over three quarters of a second, and the
+    carpet's far flashbulb glints slowly, so nothing in the window flashes. After the carpet the glass is its own
+    light again, and on the swell they look at one another.
 
 ## The looks
 
@@ -746,6 +766,7 @@ looked at both there, and seen: its eye in the frame and big enough to read for 
 | 191.7–195.5 | Evelyn | each jumper in turn | as she gives it her eye: the glove, the trap, the mallet, the arm |
 | 198.0–200.2 | Evelyn | Waymond | set down on the steamers, she steps down to him: on the last hit they look at each other |
 | 200.7–220.2 | Evelyn | Joy | the two stones in the silence, and over the brink after hers |
+| 225.9–228.4 | Evelyn | Joy | down on the bench, she rolls up against her and rests there |
 | 242.1–257.2 | Evelyn | Joy | holding her at the lip of the hole, heaving her back, and into her eyes once she has hers |
 | 247.9–249.6 | Waymond | Joy | on the line, the weight that pulls her back, until he is carried out of the frame |
 | 255.3–257.2 | Joy | Evelyn | once she has her eye, looking back into her mother's |
@@ -755,7 +776,7 @@ looked at both there, and seen: its eye in the frame and big enough to read for 
 | 279.6–282.3 | Joy | Evelyn | she nestles against her mother |
 | 290.3–291.4 | all three | the camera's lens | the portrait |
 | 291.4–293.6 | all three | the photograph | it ejects, falls and develops |
-| 305.4–307.6 | all three | the drum | its slow half-turn under the credits |
+| 298.9–311.4 | all three | the washer's window | their other lives passing through it under the credits, and the drum's half-turn among them |
 | 312.5–315.2 | all three | one another | the window's swell under the credits |
 
 Two other kinds of eye watch her too, drawn by the room and the kindness part rather than as the family's gazes, so
@@ -852,6 +873,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
     arrives: it slaps on oversized, squashes past its size and settles, and its pupil is flung round the rim. On the
     great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's
     comes with a smaller, softer burst in her violet.
+  - `home/finale-lives.ts`: the lives in the washer's window under the credits.
   - `credits.ts`: the cards, the soft dark under them, and the room's fade to dark with the music after the last
     card, the washer's window last.
   - `hits.ts`: every strike, gathered for the check.
@@ -887,10 +909,11 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 
 ## Known limits
 
-- In the widest shots of the pull (16 cells) and the canyon (about 23 cells) the balls are small. It is scale on
-  purpose; in the canyon a faint sky-coloured light round each stone keeps them findable.
+- In the widest shots of the pull (16 cells) the balls are small. It is scale on purpose. The canyon's widest is now
+  the breath on the long talus (about 9 cells), where a faint sky-coloured light round each stone keeps them findable.
 - At 64 and 144 panels, Evelyn in the mosaic is a red dot on each plank.
-- The photograph's picture is clearest large or under Zoom; on a phone it shows its colours, not the faces.
+- The photograph's picture, and the lives in the washer's window under the credits, are clearest large or under
+  Zoom; on a phone they show their colours, not the faces.
 - Zoom is a closer look at Evelyn: Joy and Waymond are cropped by it at times, which is what it is for.
 - Under Zoom, the credits' longest line crosses the near end of the lantern string. The words are set by the page,
   the same in every mode.

@@ -25,7 +25,8 @@ import { GIFT_LOOKS } from './home/kindness-draw'
 import { ledge } from './rocks/ledge'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
-import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, T_DOOR, TURN_OVER, W_TOUCH } from './home/finale-plan'
+import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './home/finale-lives'
+import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, T_DOOR, W_TOUCH } from './home/finale-plan'
 
 /**
  * The whole show, in order: which world has the ball from when to when, and who has it inside each world. Every
@@ -203,9 +204,9 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
   // The family portrait: from her hurrying back beside Joy, all three look into the lens through the flash; then
   // down at the photograph as it comes out and flutters to the floor, until it has developed.
   const lens = onCamera(0.5, 0)
-  // Under the credits, on the tail's two soft accents: all three look up as the empty drum turns over, and on the
-  // window's swell they look at one another, Waymond at her.
-  const DRUM: Gaze = { from: TURN_OVER - 0.05, to: TURN_OVER + 2.2, at: () => PORT }
+  // Under the credits: all three look up at the washer's window while their other lives pass through it (the empty
+  // drum turning over among them), and on the window's swell they look at one another, Waymond at her.
+  const DRUM: Gaze = { from: LIVES_FIRST + 0.35, to: LIVES_OUT - 0.2, at: () => PORT }
   const SWELLED = (at: 'evelyn' | 'joy'): Gaze => ({ from: SWELL - 0.05, to: SWELL + 2.6, at })
   const PORTRAIT: Gaze[] = [
     { from: BACK - 0.05, to: EJECT + 0.15, at: () => lens },
