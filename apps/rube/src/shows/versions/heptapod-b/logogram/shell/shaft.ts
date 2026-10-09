@@ -1,5 +1,5 @@
 import type { Pt, Seg } from '../../../../../parts'
-import { box, carried, part, type Company, type PartShot } from '../kit'
+import { box, carried, lookFrom, part, type Company, type Look, type PartShot } from '../kit'
 import { TURN } from '../music'
 import { drawDeckOver, drawDeckRig, drawDust, drawMist, drawMistFront, drawPuffs, drawStone } from './shaft-draw'
 import {
@@ -121,6 +121,13 @@ function lane(slot: { begin: number; end: number }): Seg[] {
   return segs
 }
 
+/**
+ * Where they look on the deck in the mouth: once she has pressed the switch, up the shaft the way the beam goes (along
+ * its length, which the camera's quarter turn shows as up), into the dark it lights, until they leap; then the eyes
+ * roll with them again.
+ */
+const UP_SHAFT: Look[] = [{ from: T_SWITCH + 0.1, to: T_LEAP - 0.1, at: () => 0 }]
+
 export const shaft = part<ShaftState>(
   {
     name: 'shaft',
@@ -147,7 +154,7 @@ export const shaft = part<ShaftState>(
         to: slot.end,
         at: (t) => {
           const [x, y] = ianAt(t)
-          return { x, y, spin: ianSpin(t) }
+          return { x, y, spin: lookFrom(UP_SHAFT, t, ianSpin(t)) ?? ianSpin(t) }
         },
       },
     ]
@@ -157,7 +164,7 @@ export const shaft = part<ShaftState>(
       lane: { segs, fire: T_STOP - slot.begin },
       state: { begin: slot.begin },
       company,
-      riders: (t, hero) => [{ ...hero, spin: louiseSpin(t) }],
+      riders: (t, hero) => [{ ...hero, spin: lookFrom(UP_SHAFT, t, louiseSpin(t)) ?? louiseSpin(t) }],
     }
   },
   (slot) => {
