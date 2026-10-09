@@ -238,9 +238,10 @@ export const finale = part<FinaleState>(
       { t: 293.2, cells: 3.9, hold: H(-3.45, -0.96), w: 1 },
       // Then back, towards the washer's glow, for the lights going out. Both stay inside the shop's end wall: the
       // storefront's glass is the frame's left edge, so the room is never seen cut off in the dark of the tail.
-      { t: 294.6, cells: 5.15, hold: H(-3.4, -1.52), w: 1 },
-      // The rest: drawing back, very slowly, over the dark.
-      { t: END - 0.05, cells: 5.45, hold: H(-3.1, -1.66), w: 1 },
+      { t: 294.6, cells: 5.15, hold: H(-3.4, -1.38), w: 1 },
+      // The rest: drawing back, very slowly, over the dark. Low enough that Zoom keeps the family whole on a strip of
+      // floor, and high enough that the frame still takes in the lucky cat's shelf.
+      { t: END - 0.05, cells: 5.45, hold: H(-3.1, -1.5), w: 1 },
     ]
     return shots.filter((k) => k.t > slot.begin + 0.39 && k.t <= slot.end + 1e-6)
   },

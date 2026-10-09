@@ -348,6 +348,14 @@ The notes went back to the builders who made each part, who still had their cont
     too.
   - Those holds now sit a little lower. Under Zoom a strip of floor shows under the three of them and the
     photograph. The normal frame still holds the lantern string whole, anchor to anchor.
+  - The whole show was then swept under Zoom every 4 s. Under the credits (294.6 s to the end) the family sat on
+    Zoom's bottom edge, cut in half, for the whole tail. The tail's framing now holds a little lower. Zoom keeps the
+    three of them whole on a strip of floor, and the normal frame still takes in the clock and the lucky cat's
+    shelf.
+  - On the great hit's first wide (192 s), Evelyn landed at Zoom's left edge. It is held a little further left, and
+    Waymond at the table's far end stays in the normal frame.
+  - Under Zoom, the credits' longest line still crosses the lantern string's near end. The words are set by the
+    page, the same in every mode, and this was left.
 
 ## End credits
 

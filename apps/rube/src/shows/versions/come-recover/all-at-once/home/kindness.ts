@@ -125,7 +125,8 @@ export const kindness = part<KindnessState>(
     const shots: PartShot[] = [
       // Out of the calm she lands in to the whole of it: her, Jobu's jumpers between, and Waymond waiting at the far
       // end of the party table (he gave her the eye).
-      { t: 191.95, cells: 5.2, hold: H(30.05, -1.22), w: 1 },
+      // A little left of the middle, so under Zoom she and the gift box are inside the frame, not at its edge.
+      { t: 191.95, cells: 5.2, hold: H(29.7, -1.22), w: 1 },
       // Then with her to the trap, the mallet coming into the top of the frame.
       { t: B(127), cells: 4.0, hold: H(28.5, -0.9), w: 1 },
       // Back as the mallet cocks and she goes up, to see it swing.
