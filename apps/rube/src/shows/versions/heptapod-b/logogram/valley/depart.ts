@@ -1,4 +1,4 @@
-import type { Pt } from '../../../../../parts'
+import { R, type Pt } from '../../../../../parts'
 import { box, carried, part, type PartShot } from '../kit'
 import { pulse } from '../music'
 import { SEAMS } from '../seams'
@@ -13,8 +13,8 @@ import { sm } from './set-air'
  * On 186.288 the shell lifts (a cut to the wide to see it go): it rises slowly into the cloud and goes to vapour from
  * its crown down, the cloud opening over the valley and the light coming through, the fog lifting off the meadow
  * (the set draws all of it by show time). Ian, far off across the meadow, sets off toward her on 190.822. On 192.238 the
- * camera cuts back in to the two of them; he comes to her side and stops, touching, a sliver of space between them
- * (195.344). The camera comes in on them, the sky where the shell was, to the framing the lake house opens on.
+ * camera cuts back in to the two of them; he comes to her side and meets her as she leans to him on the touch
+ * (195.344), and stays against her as she settles. The camera comes in on them, the sky where the shell was, to the framing the lake house opens on.
  *
  * Ian comes from the camp on her right: the seam into the lake house has him beside her on her right, and in a
  * picture seen side on he cannot come from her left and end up there.
@@ -32,17 +32,21 @@ const TOUCH = pulse(818)
 export const CUT_IN = pulse(805)
 /** Her glance up, between the cut in and his reaching her. */
 const GLANCE = 193.0
-/** Where Ian waits, far off across the meadow, and where he comes to. */
+/** Where Ian waits, far off across the meadow. */
 const IAN_FROM = 22.2
-const IAN_TO = 0.36
 
 /** Every strike: the shell lifts (and the cut to the wide), Ian sets off, the cut back in, the touch. */
 export const DEPART_HITS: number[] = [DEPART, IAN_GO, CUT_IN, TOUCH]
 
 /** Her, in the part's frame at show time `t`: still, but for a look up as the shell lifts, and a lean to him. */
+/** Her lean to him round the touch: in as he comes, and back to her mark (the circle's first frame is hers there). */
+const leanAt = (t: number): number => 0.035 * Math.sin(Math.PI * sm(t, TOUCH - 0.5, TOUCH + 0.9))
+/** From the touch on he stays against her, coming with her as she settles back: they end the meadow together. */
+const AGAINST = 2 * R + 0.006
+
 function herAt(t: number): Pt {
   const look = t > DEPART ? -0.05 * Math.sin(Math.PI * Math.min(1, (t - DEPART) / 1.6)) * Math.exp(-Math.max(0, t - DEPART - 0.8) / 0.6) : 0
-  const lean = 0.035 * Math.sin(Math.PI * sm(t, TOUCH - 0.5, TOUCH + 0.9))
+  const lean = leanAt(t)
   // A glance up to where it went (back and up to her left), before he reaches her.
   const g = Math.max(0, Math.min(1, (t - GLANCE) / 1.7))
   const glance = -0.07 * Math.sin(Math.PI * g) ** 2
@@ -52,9 +56,9 @@ function herAt(t: number): Pt {
 /** Ian's x from her (frame cells) at `t`: waiting, then rolling to her side, easing to a stop at the touch. */
 function ianX(t: number): number {
   const from = IAN_FROM - AFTER_AT[0] + 0.5
-  const to = IAN_TO
+  const to = AGAINST + leanAt(TOUCH)
   if (t <= IAN_GO) return from
-  if (t >= TOUCH) return to
+  if (t >= TOUCH) return AGAINST + leanAt(t)
   // Off from rest on the pulse (quickly up to pace), a steady roll, and a long easing into her side: speed rising
   // over the first `a` of it, even, then falling away to nothing (as (1 - w)^2) over the last `b`.
   const u = (t - IAN_GO) / (TOUCH - IAN_GO)

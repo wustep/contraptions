@@ -99,7 +99,7 @@ Times are show seconds; pulse *k* is `pulse(k)`, and a strength in brackets is h
 | 160.015 | | the fog | A crescent carries her once round. |
 | 163.126 | the hardest pulse after 8.911 (1.48) | the lake house | The window at dusk, the rain running on the panes, a drop landing on each hard pulse with a glint; Louise alone on the bench. |
 | 166.243 | the push | the fog | **She writes.** Flung up out of the crescent, she comes to the top of her rise where the great ring begins under her (168.136), and the frame goes back to the whole of it, both pens in it, by 170.3. It turns; she is its pen at its bottom, and Costello's front limb the pen at its top; each writes half. She works it like a ball in a turning drum: the ink carries her up the rising wall to a hang, and the first hard pulse of each group flicks her off (170.051, 173.383, and the biggest ride, from 30° up the wall, on 179.368), so she swings back down through the rest, a blot pressed where she is on every one of the push's 21 hard pulses. **The halves meet on 183.182 (1.26)** with her still at the bottom, and the frame holds the whole of it to the cut while the tendrils fling out and the ring's turn slows to rest. |
-| 185.330 | the pulse thins | the valley | The meadow after, wide, Ian waiting by the trucks. The shell rises into the cloud and goes; the cloud opens, the light comes down, the fog lifts. From the cut back in (192.238) one push in on her where the first frame has her; Ian comes to her across the meadow, and they touch (195.344). |
+| 185.330 | the pulse thins | the valley | The meadow after, wide, Ian waiting by the trucks. The shell rises into the cloud and goes; the cloud opens, the light comes down, the fog lifts. From the cut back in (192.238) one push in on her where the first frame has her; Ian comes to her across the meadow, and they touch (195.344) and stay together. |
 | 196.783 | the last clear pulse | the lake house | The first frame again. The held tones die. On the last flutter Hannah sets off (208.631), skips, dashes, springs and lands in the prologue's rhythm, and touches her on **212.312 (3.7)**. The sun comes through the fog on the water; as the held tones die the camera draws back, slowly, to the whole window by 219.3, the two of them small in it, for the credits in the silence over the wall above it. |
 
 ## The company
@@ -246,6 +246,9 @@ cut, and close looks at whatever caught the eye. What changed:
   curl of its own, and a soft round pad at its tip where it presses on the glass.
 - **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
   shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
+- **The reunion** (195.344): Ian came to a stop a sliver from her, and as her lean to him eased back a gap opened
+  between them, so the meadow ended on the two of them drifting apart. He meets her on the touch now and stays
+  against her as she settles back to her mark (which the circle's first frame needs): they end it together.
 - **The touch at the end** (212.312, the coda's loudest note): the sun came through the fog after it over seconds, a
   soft fade on the strongest note there is. Now the sun catches the water on the touch itself, quick as it caught it
   on the prologue's first pulse, and goes on coming through after: the circle closes on the same light it opened on.
