@@ -556,6 +556,10 @@ A forty-second looked at what had changed since the twenty-fifth's look through 
 ring into the gala, the phone's handset, her gold hand, the cards) in Zoom, in Overview and in a tall frame. All held.
 Nothing to change.
 
+A forty-fifth ran the rest of what the site's build runs, which the rounds had not: every other check suite (check,
+rube, builder, playground, premiere, clair) and the production build. All pass; the show's own chunk is 235 kB, the
+size warnings the build gives being the site's shared chunks. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
