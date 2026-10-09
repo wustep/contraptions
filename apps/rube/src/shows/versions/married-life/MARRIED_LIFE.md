@@ -515,7 +515,9 @@ window.
     without Zoom (the sets run on past their walls into sky and floor, no voids; Zoom's vertical framing is 16:9's), and
     a 4:3 tablet; a 2x (high-DPI) screen (the stage's canvas at full density, line weights in proportion); a hidden
     tab (simulated: no frames and `document.hidden` for 10 s; YouTube plays on and the picture is in step at once
-    on return; a real background tab's throttled timers were not reproduced headless); the balloon's crown; contact with floors and
+    on return), and hidden across the music's end with timers throttled to once a second: the show runs on to
+    4:18 and YouTube stays quiet, also with its restart forced while hidden (the probe's own reads, every 5 s, may
+    help the fix fire there); the balloon's crown; contact with floors and
     slopes; stillness; gaze, as a whole and beat by beat; strobing; the camera's acceleration; render cost; contrast;
     three fresh critics (frames, regressions, story) and a story re-watch; the notes against the code; the shared code
     against `origin/main`; the credits under Zoom; Overview; the exports, and a real video export; the console; the full `npm run build` (every suite and the bundle; Vite's chunk-size
