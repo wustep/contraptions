@@ -1,3 +1,4 @@
+import type { Pt } from '../../../../parts'
 import { frame, glow, hash, knock, rgba, scenery, smooth } from './kit'
 import { AT, END_AT, level } from './music'
 import { SEBS_MAT } from './worlds'
@@ -100,6 +101,9 @@ const ridge = (x: number, far: boolean): number => {
 
 /** The observatory's ridge: the near hills, left of the club. */
 const OBSERVATORY = -28
+/** Where the searchlights cross on the last chord: across from the beams' bases, and this high above them. */
+const CROSS: Pt = [-4, 20]
+const easeInOut = (u: number): number => u * u * (3 - 2 * u)
 
 /**
  * The End's orchestra arriving (its one clear onset), and the swell it climbs to. On the arrival two more searchlights
@@ -181,9 +185,12 @@ export const city = scenery<CityState>({
       const sweep = s.end
         ? 0.32 * Math.sin((t - AT.band) * 0.23 + i * 2.2) * (1 - smooth(t, last - 5, last)) + side * 0.16 * smooth(t, last - 5, last)
         : 0.3 * Math.sin(t * 0.21 + i * 2.2)
-      const lean = side * (late ? 0.34 + 1.1 * (1 - arrive) : 0.22) + sweep
+      const free = side * (late ? 0.34 + 1.1 * (1 - arrive) : 0.22) + sweep
       const bx = base + slide(0.3)
       const by = HORIZON + 1 + lift(0.3)
+      // On The End's last chord every beam swings onto one point in the sky over the city, and they cross there and hold.
+      const cross = s.end ? easeInOut(smooth(t, last - 5, last)) : 0
+      const lean = cross > 0 ? free + (Math.atan2(CROSS[0] + slide(0.3) - bx, CROSS[1]) - free) * cross : free
       const len = 60
       const tipX = bx + Math.sin(lean) * len
       const tipY = by - Math.cos(lean) * len

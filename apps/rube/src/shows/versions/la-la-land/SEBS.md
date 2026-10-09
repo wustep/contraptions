@@ -197,3 +197,8 @@ A fifteenth pass, at the changes of place:
 A sixteenth pass, at the page and not only the canvas:
 
 - **The credits in the sky.** The credits are set by the page over the picture, so the canvas stills of every earlier pass never showed them. On the page, the first card came up while the camera was still inside the club, so "Directed by" lay across the pelmet's bright scallops and could hardly be read, and the cast list after it ran across the club's roof and pelmet lines, with a line struck through David and their son. The pull-back now starts as the band blazes and has the roof in the lower half of the frame by 483.6, and the first card waits a second more for it: every card comes up in the open sky over the club, as the credits meant to.
+
+A seventeenth pass, at the ending as a viewer sees it:
+
+- **The beams cross.** These notes have always said the searchlights cross on The End's last chord, but they never did: the two near beams leaned in so little that they would have met some fifty cells up, far above the frame, and the two that come with the orchestra splayed out. Over the last five seconds every beam now swings onto one point in the sky over the club, and on the last chord (503.4) all four cross there in an X, and hold it to the end. On the page the last credit card stands just above the crossing as it comes.
+- The show on a phone (390 wide, the panel under the stage) and on a desktop page read as the frames do; the city, the club and both of them stay in the picture.
