@@ -134,9 +134,14 @@ function reachAt(t: number): { r: Reach; k: number; s: number } | null {
 
 /** How far the kitten is in a chin scratch, 0 to 1: for `cat.ts`, which shuts its eyes and leans into it. */
 export function petAt(t: number): number {
-  const h = reachAt(t)
-  if (!h || h.r.kind !== 'pet') return 0
-  return smooth(h.s, IN - 0.2, IN + 0.6) * (1 - smooth(h.s, h.r.dur - OUT - 0.4, h.r.dur - OUT + 0.4))
+  // It goes on enjoying it a moment after the hand has gone: its eyes open slowly, last.
+  for (const r of REACHES) {
+    if (r.kind !== 'pet') continue
+    const s = t - r.at
+    if (s < 0 || s > r.dur + 0.6) continue
+    return smooth(s, IN - 0.2, IN + 0.6) * (1 - smooth(s, r.dur - OUT - 0.2, r.dur + 0.6))
+  }
+  return 0
 }
 
 /** Where the hand's fingertips are, and how much it is there: for the cat to glance at. */
@@ -161,7 +166,8 @@ export function mugAt(t: number): { up: number; e: number; gone: number } {
   const h = reachAt(t)
   if (!h) return { up: 0, e: 0, gone: 0 }
   const s = h.s
-  if (h.r.kind === 'sip') return { up: smooth(s, 2.0, 2.6) * (1 - smooth(s, 8.5, 9.1)), e: smooth(s, 2.4, 4.3) * (1 - smooth(s, 6.7, 8.7)), gone: 0 }
+  // (At the lips a moment and a half: long enough to drink, not so long the picture waits on it.)
+  if (h.r.kind === 'sip') return { up: smooth(s, 2.0, 2.6) * (1 - smooth(s, 8.5, 9.1)), e: smooth(s, 2.4, 4.1) * (1 - smooth(s, 5.6, 8.0)), gone: 0 }
   if (h.r.kind === 'away') return { up: smooth(s, 2.0, 2.6), e: smooth(s, 2.4, 4.3), gone: smooth(s, 3.9, 5.8) }
   if (h.r.kind === 'back') return { up: 1 - smooth(s, 3.4, 4.0), e: 1 - smooth(s, 1.5, 3.4), gone: 1 - smooth(s, 0, 1.8) }
   return { up: 0, e: 0, gone: 0 }
@@ -242,7 +248,7 @@ function poseAt(t: number): Pose | null {
     curl = [0.35 + 0.2 * sc, 0.35 - 0.2 * sc, 0.4 + 0.2 * sc, 0.5]
     thumb = 0.6
     const d = dir(angle)
-    const at = { x: CAT.head.x + 0.1, y: CAT.head.y + 0.16 }
+    const at = { x: CAT.head.x + 0.1, y: CAT.head.y + 0.21 }
     tip = { x: at.x + d.x * 0.015 * sc, y: at.y + d.y * 0.015 * sc }
     reach = PALM.len + 0.3 * (1 - 0.5 * 0.4)
   } else if (r.kind === 'cup' || r.kind === 'sip' || r.kind === 'away' || r.kind === 'back') {

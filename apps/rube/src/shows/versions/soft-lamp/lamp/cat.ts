@@ -63,10 +63,14 @@ export function climbAt(t: number): { dx: number; dy: number; face: number; up: 
   dy += arc(2.8, 3.6, 0.3) + arc(5.0, 5.8, 0.25)
   // Turning: across through nothing, a cat turning round in place, seen side on.
   const turn = (a: number, b: number) => Math.cos(Math.PI * ease(a, b))
-  let face = turn(4.0, 4.7)
-  if (s > 8.6) face = -turn(8.6, 9.4)
+  let face = turn(4.0, 4.35)
+  if (s > 8.6) face = -turn(8.6, 8.95)
   face = Math.sign(face || 1) * Math.max(0.25, Math.abs(face))
-  const up = ease(0, 0.8) * (1 - ease(9.4, 10.2))
+  // Before each hop it gathers itself, low on its haunches, and it lands with a give in its legs.
+  const gather = (a: number) => smooth(s, a - 0.35, a - 0.05) * (1 - smooth(s, a - 0.05, a + 0.08))
+  const give = (b: number) => (s > b && s < b + 0.35 ? Math.sin((Math.PI * (s - b)) / 0.35) : 0)
+  const crouch = Math.max(gather(2.8), gather(5.0), 0.6 * give(3.6), 0.6 * give(5.8))
+  const up = ease(0, 0.8) * (1 - ease(9.4, 10.2)) * (1 - 0.5 * crouch)
   const out = 0.45 * (Math.max(0, -arc(2.8, 3.6, 1)) + Math.max(0, -arc(5.0, 5.8, 1)))
   const walk = Math.max(ease(0.8, 1.1) * (1 - ease(2.3, 2.6)), ease(6.0, 6.3) * (1 - ease(8.1, 8.4)))
   // Where it looks: ahead, the way it goes; then, settled, up at the moon.
@@ -319,7 +323,7 @@ export function stretchAt(t: number): { up: number; out: number; yawn: number } 
     const s = t - at
     if (s < 0 || s > STRETCH) continue
     const up = smooth(s, 0.2, 1.3) * (1 - smooth(s, 5.4, 6.7))
-    const out = smooth(s, 1.3, 2.7) * (1 - smooth(s, 4.2, 5.4))
+    const out = smooth(s, 1.3, 2.6) * (1 - smooth(s, 3.7, 5.0))
     const yawn = Math.min(1, 2 * Math.max(0, Math.sin(Math.PI * Math.max(0, Math.min(1, (s - 1.9) / 2.2)))) ** 2)
     return { up, out, yawn }
   }

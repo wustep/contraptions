@@ -1025,6 +1025,25 @@ question for Stephen, below); the moth's large shadow (a light that close throws
      the book below with its end cut in a V.
 160. Sixty frames a second in the cup close, as before; a scrub back is the same frame; the share card regenerated.
 
+### The sixty-first pass: a cold review of the motion
+
+Stills hide motion, so a second reviewer with no context was given nine strips of twenty consecutive frames each,
+through the moments that move: the drop, the lob, the nod, the sip, a chin scratch, a stretch, a wash, the climb, the
+tea brought back. Taken:
+
+161. **The climb's hops had no gathering.** The kitten stood, then was on the books. Before each hop it now gathers
+     itself low on its haunches for a third of a second, and lands with a give in its legs; and it turns round twice
+     as fast, so the side-on moment of the turn is a blink, not a cut-out.
+162. **The scratch ended in a snap**: the hand gone and the kitten wide-eyed in one step. The kitten goes on
+     enjoying it after the hand has left, its eyes opening slowly, last; and the fingers are under its chin now, not
+     over its muzzle.
+163. **The sip and the stretch held too long.** The mug stays at someone's lips a second and a half, not two and a
+     half; the kitten's stretch holds a second, not a second and a half.
+
+Not taken: the stair's slow even steps and the nod's size, which are the machine's timing to the music, checked
+against it; the sip's mug going out of the picture (it goes to someone's lips, under the frame); the lob's launch (the
+ball crouches into the cushion before, on the kick).
+
 **Subtracted:** twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
