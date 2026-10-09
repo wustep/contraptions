@@ -527,6 +527,12 @@ The notes went back to the builders who made each part, who still had their cont
   - Each glance lasts about two seconds and eases back.
 - **A pass for father and daughter.** Joy and Waymond never once looked at each other. Now, as he leaps the foot
   lever and touches her at home (271.4–273.6 s), they do. The gaze can now hold Waymond too.
+- **A pass for the opening's witness.** Waymond now watches the whole of Joy's visit:
+  - Joy coming in on the bell and across the shop to her mother (20.3–23.9 s);
+  - then up at her mother at the keys, who does not look up (23.7–27.6 s);
+  - then Joy going out again, as before.
+  - Gazes that overlap now blend by how far each has eased in, so one look hands over to the next in a smooth sweep
+    rather than a snap at the midpoint. A gaze on its own is as it was.
 
 ## End credits
 

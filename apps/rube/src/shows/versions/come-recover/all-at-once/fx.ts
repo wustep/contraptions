@@ -47,15 +47,15 @@ export interface Gaze {
   at?: 'evelyn' | 'joy' | 'waymond' | ((t: number) => Pt | null)
 }
 
-/** Which gaze holds the eye at `t`, and how far it is turned to it, 0..1. */
-function gazeAt(spec: EyeSpec, t: number): { g: Gaze; w: number } | null {
-  let best: { g: Gaze; w: number } | null = null
+/** Every gaze holding the eye at `t`, and how far each has eased in, 0..1. */
+function gazesAt(spec: EyeSpec, t: number): { g: Gaze; w: number }[] {
   const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
+  const out: { g: Gaze; w: number }[] = []
   for (const g of spec.gaze ?? []) {
     const w = ease((t - g.from) / 0.25) * ease((g.to - t) / 0.25)
-    if (w > (best?.w ?? 0)) best = { g, w }
+    if (w > 0.001) out.push({ g, w })
   }
-  return best
+  return out
 }
 
 /** An arriving eye's size, `u` seconds after it lands: a slap, a squash past its size, a bounce, rest. */
@@ -258,6 +258,19 @@ export const eyes = () =>
       const show = s.show
       if (!show) return
       const t = c.t
+      // Where a gaze's target is now, in the world on the stage; null when it is not to be seen.
+      const targetOf = (g: Gaze, time: number): Pt | null => {
+        const at = g.at ?? 'evelyn'
+        if (at === 'evelyn') {
+          const h = show.at(time)
+          return h.hidden ? null : [h.x, h.y]
+        }
+        if (at === 'joy' || at === 'waymond') {
+          const j = at === 'joy' ? show.joy(time) : show.waymond(time)
+          return j ? [j.x, j.y] : null
+        }
+        return at(time)
+      }
       // Every burst goes down first and every eye over them, so one ball's light never veils another's face.
       const bursts: ((all: { x: number; y: number }[]) => void)[] = []
       const here: { x: number; y: number }[] = []
@@ -292,29 +305,30 @@ export const eyes = () =>
           spec.arrive ? spec.from : undefined,
         )
         // Watching her: the pupil turned along the line to her, the eye leaning that way, its swing kept a little.
-        const held = gazeAt(spec, t)
-        const target = ((): Pt | null => {
-          if (!held || held.w <= 0.001) return null
-          const at = held.g.at ?? 'evelyn'
-          if (at === 'evelyn') {
-            const h = show.at(t)
-            return h.hidden ? null : [h.x, h.y]
-          }
-          if (at === 'joy' || at === 'waymond') {
-            const j = at === 'joy' ? show.joy(t) : show.waymond(t)
-            return j ? [j.x, j.y] : null
-          }
-          return at(t)
-        })()
-        if (held && target) {
-          const w = held.w
+        // Every gaze that holds the eye now, each by how far it has eased in: their directions blended by those
+        // weights, so one look hands over to the next without the pupil snapping between them.
+        let gx = 0
+        let gy = 0
+        let gw = 0
+        for (const { g, w } of gazesAt(spec, t)) {
+          const target = targetOf(g, t)
+          if (!target) continue
           const dx = target[0] - b.x
           const dy = target[1] - b.y
           const n = Math.hypot(dx, dy) || 1
+          gx += (w * dx) / n
+          gy += (w * dy) / n
+          gw += w
+        }
+        if (gw > 0.001) {
+          const w = Math.min(1, gw)
+          const n = Math.hypot(gx, gy) || 1
+          const ux = gx / n
+          const uy = gy / n
           const reach = 0.9
-          look.x += (reach * (dx / n) + 0.15 * look.x - look.x) * w
-          look.y += (reach * (dy / n) + 0.15 * look.y - look.y) * w
-          look.hx += (Math.max(-1, Math.min(1, dx / n)) - look.hx) * w
+          look.x += (reach * ux + 0.15 * look.x - look.x) * w
+          look.y += (reach * uy + 0.15 * look.y - look.y) * w
+          look.hx += (Math.max(-1, Math.min(1, ux)) - look.hx) * w
           // Never past the rim of its cage.
           const m = Math.hypot(look.x, look.y)
           if (m > 1) {

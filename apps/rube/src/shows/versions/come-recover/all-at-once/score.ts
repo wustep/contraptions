@@ -192,12 +192,13 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
   ]
   const specs = [
     // He and Joy look at each other as he touches her at home, the one look between father and daughter.
-    // He watches Joy go out of the shop, and her mother not look up; in the alley he watches Evelyn go, from the cover
+    // In the opening he watches it all: Joy coming in on the bell and across to her mother, her mother at the keys not
+    // looking up, and Joy going out again; in the alley he watches Evelyn go, from the cover
     // giving under her until the jump out of that world; and for the portrait he looks into the lens, and then down
     // at the photograph as it comes, as the others do.
     // Through the empathy fight he watches her, from her landing alone with the eye he gave her to her coming down
     // the steamers to him.
-    { who: 'waymond' as const, from: 0, gaze: [{ from: 27.4, to: 30.3, at: 'joy' as const }, { from: DROP - 0.1, to: JUMPS.dojo }, { from: 192.1, to: JUMPS.rocks }, { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'joy' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
+    { who: 'waymond' as const, from: 0, gaze: [{ from: 20.3, to: 23.95, at: 'joy' as const }, { from: 23.7, to: 27.65 }, { from: 27.4, to: 30.3, at: 'joy' as const }, { from: DROP - 0.1, to: JUMPS.dojo }, { from: 192.1, to: JUMPS.rocks }, { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'joy' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
     // Evelyn looks after Joy: down over the brink as her stone goes, while she holds her at the lip of the hole, and
     // into her eyes once Joy has hers.
     {
