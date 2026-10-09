@@ -118,12 +118,13 @@ export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
  * Low in the frame, a soft dark under them keeps them readable on the pale canyon and the bagel's seeds
  * (`subtitleBed`).
  *
+ * - **The peak**: once Joy has her eye, her mother says to her what Waymond said to her in the alley.
  * - **Home**, at the washer's foot, the three of them together: he asks what he asked in the alley, and this time she
  *   can.
  *
  * Each comes on a note the scene already moves on, and goes before the next.
  */
-export type Scene = 'taxes' | 'alley' | 'hush' | 'rocks' | 'home'
+export type Scene = 'taxes' | 'alley' | 'hush' | 'rocks' | 'peak' | 'home'
 export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 'joy' | 'waymond'; scene: Scene }[] = [
   // The taxes: Joy stops below her mother at the adding machine, and her mother does not look up.
   { at: 24.0, to: 26.2, line: 'Mom? Can I —', who: 'joy', scene: 'taxes' },
@@ -142,6 +143,9 @@ export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 
   { at: 219.5, to: 222.0, line: 'I’m coming.', who: 'evelyn', scene: 'rocks' },
   { at: 226.7, to: 229.4, line: 'You came all this way.', who: 'joy', scene: 'rocks' },
   { at: 229.8, to: 232.6, line: 'Where else would I be?', who: 'evelyn', scene: 'rocks' },
+  // The peak: Joy has her eye, and her mother says to her what Waymond said to her in the alley. (After the share
+  // card's frame, 255.75, so the card is as it was.)
+  { at: 255.8, to: 258.4, line: 'Here. With me.', who: 'evelyn', scene: 'peak' },
   // Home: he asks what he asked in the alley, and this time she can.
   { at: 276.2, to: 278.8, line: 'Stay a little?', who: 'waymond', scene: 'home' },
   { at: 279.6, to: 282.2, line: 'I’m staying.', who: 'evelyn', scene: 'home' },
@@ -161,12 +165,13 @@ const subAt = (scene: Scene): [number, number] => (scene === 'alley' ? SUB_IN_BA
 export function subtitleLight(t: number): number {
   return subtitleBedAt(t).light
 }
-function subtitleBedAt(t: number): { light: number; at: [number, number] } {
-  let best = { light: 0, at: SUB_AT }
+function subtitleBedAt(t: number): { light: number; at: [number, number]; deep: number } {
+  let best = { light: 0, at: SUB_AT, deep: 1 }
   for (const sub of SUBTITLES) {
     if (sub.scene === 'alley') continue
     const light = clamp((t - sub.at) / SUB_FADE) * (1 - clamp((t - (sub.to - SUB_FADE)) / SUB_FADE))
-    if (light > best.light) best = { light, at: subAt(sub.scene) }
+    // Under the other's lines (italic, which the page sets a little faded) the dark is deeper.
+    if (light > best.light) best = { light, at: subAt(sub.scene), deep: sub.who === 'evelyn' ? 1 : 1.3 }
   }
   return best
 }
@@ -176,7 +181,7 @@ export const subtitleBed = scenery<null>({
   name: 'subtitle bed',
   draw: () => {},
   over: (p, _s, c) => {
-    const { light: sub, at: where } = subtitleBedAt(c.t)
+    const { light: sub, at: where, deep } = subtitleBedAt(c.t)
     if (sub <= 0.001) return
     const { k } = c
     const f = frame(p, k)
@@ -195,8 +200,8 @@ export const subtitleBed = scenery<null>({
     ctx.translate(cx, cy)
     ctx.scale(1, ry / rx)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(30, 24, 20, ${0.5 * sub})`)
-    g.addColorStop(0.6, `rgba(30, 24, 20, ${0.3 * sub})`)
+    g.addColorStop(0, `rgba(30, 24, 20, ${0.5 * deep * sub})`)
+    g.addColorStop(0.6, `rgba(30, 24, 20, ${0.3 * deep * sub})`)
     g.addColorStop(1, 'rgba(30, 24, 20, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
