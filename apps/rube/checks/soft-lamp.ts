@@ -205,6 +205,10 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     REFILL > 1140 && REFILL < MUSIC_END - 300 &&
     [...YAWNS, ...WASHES].every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
 
+  check('soft lamp: trains cross the city a few times, minutes apart, from the dusk to a little after midnight',
+    m.trains.length >= 4 && m.trains.every((t, i) => i === 0 || t - m.trains[i - 1] >= 170) && m.trains[m.trains.length - 1] < 1450,
+    m.trains.join(' '))
+
   // The kitten gets up and stretches twice, each whole in the frame, clear of its other moments and the hand.
   check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns, washes and the hand',
     STRETCHES.length === 2 && STRETCHES.every((t) => t > 0) && STRETCHES[0] < 900 && STRETCHES[1] > 1300 &&

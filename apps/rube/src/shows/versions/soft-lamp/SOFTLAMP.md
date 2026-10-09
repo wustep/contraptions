@@ -683,6 +683,28 @@ which no cat lying on a desk for half an hour fails to do.
     nothing pops; the tail passes behind the body as it swings up, as a tail does). `check:shows` holds the two
     stretches (one early, one late, in frame, clear of everything else the cat does and of the hand).
 
+### The thirty-ninth pass: the last trains
+
+The window, the frame's largest picture, had depth after the thirty-fifth pass: near roofs, far roofs, the sky. But
+nothing moved through the city except the planes, which keep above it. The picture this kind of rainy night is
+remembered by in the streams' and the anime's own cities is a train going across it, far off, lit.
+
+97. **An elevated line across the city** (`train`, `lamp/sky.ts`), in its own layer between the far roofs and the
+    near ones: a dark deck on piers, seen between the near buildings, lost behind the tall ones. Six times between the
+    dusk (2:30) and a little after midnight (18:01), a few minutes apart, a five-car train goes along it, slow (about
+    eleven seconds from one side of the run to the other), its windows a string of light, warm with a few cooler,
+    here and there someone's shape against one, a faint glow round the cars and a headlight ahead. Once in each
+    crossing its pantograph throws a blink of blue-white off the wire, twice, the way the overhead line does in the
+    rain. No sound; the music is the sound.
+98. **At its depth.** It slides behind the bars at the train's own depth as the camera moves, and when the city goes
+    soft at the desk its windows open into discs of light like the rest: a string of bokeh drawn across the city.
+    Each run is played to the camera: the window held, in focus, while its front crosses the glass, clear of the planes.
+99. **Fixed on the way:** the first windows were dull, the light colour at half strength over the dark body, pale grey
+    paper rather than light; they are nearly full strength now, with the glow round the car.
+100. **Looked at:** the whole half hour at 24 moments again (after four passes of additions, nothing out of place); a
+     train sharp across the window's look at full size, soft across the sill walk at dusk, its spark. `check:shows`
+     holds the trains (four or more, minutes apart, from the dusk to a little after midnight).
+
 **Subtracted:** the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

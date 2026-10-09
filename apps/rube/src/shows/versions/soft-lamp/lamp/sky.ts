@@ -40,7 +40,7 @@ interface Light {
 type Sink = { p: number; list: Light[] } | null
 
 /** How deep each layer is (0 the glass, 1 the sky): `lens.ts`. */
-const DEPTH = { sky: 0.55, clouds: 0.5, plane: 0.45, birds: 0.35, far: 0.4, near: 0.3, rain: 0.12 }
+const DEPTH = { sky: 0.55, clouds: 0.5, plane: 0.45, birds: 0.35, far: 0.4, train: 0.36, near: 0.3, rain: 0.12 }
 
 /** The night through the glass, clipped to it. */
 export function night(ctx: Ctx, t: number): void {
@@ -575,12 +575,144 @@ function clouds(ctx: Ctx, t: number, cover: number, sky: { top: string; mid: str
  * dusk and go out, one by one, through the night; a few are the cool flicker of a screen. On the tallest roof a red
  * light blinks.
  */
+/**
+ * The train: an elevated line runs across the city between the far roofs and the near ones, and a few times through
+ * the night a train goes along it, its lit windows a string of light, seen over the low roofs and lost behind the
+ * tall ones. Now and then its pantograph throws a small blue spark off the wire. Slow, and silent: the music is the
+ * sound. In its own layer, so it slides behind the bars at its depth, and opens into discs of light when the city is
+ * soft.
+ */
+const TRACK_Y = -1.93
+/** Its cars: how many, each one's length and the gap between, and its height. */
+const CARS = 5
+const CAR = 0.52
+const COUPLING = 0.025
+const BODY = 0.085
+/** How fast it goes, cells a second at its depth, and how far its run is (well past the window either side). */
+const TRAIN_V = 0.95
+const RUN = { x0: GLASS.x0 - 3.4, x1: GLASS.x1 + 3.4 }
+const TRAIN_DUR = (RUN.x1 - RUN.x0 + CARS * (CAR + COUPLING)) / TRAIN_V
+
+/** Where a train that set off at `at` has its front, and which way it is going. */
+function trainAt(at: number, t: number): { front: number; dir: 1 | -1 } {
+  const dir: 1 | -1 = hash(at, 211) < 0.5 ? 1 : -1
+  const run = (t - at) * TRAIN_V
+  return { front: dir > 0 ? RUN.x0 + run : RUN.x1 - run, dir }
+}
+
+/**
+ * When the trains run: from once the city's lights are coming on, a few minutes apart, the last of them a little
+ * after midnight; each while the frame holds the window, in focus, for most of the time its front is crossing the
+ * glass. Worked out once, at load.
+ */
+const TRAINS: number[] = (() => {
+  const out: number[] = []
+  for (let at = 150; at < 1450 && out.length < 6; at += 1) {
+    if (out.length && at < out[out.length - 1] + 170) continue
+    if ([...FLIGHTS].some((f) => Math.abs(f - at) < 40)) continue
+    let seen = 0
+    let crossing = 0
+    for (let s = 0; s <= TRAIN_DUR; s += 0.5) {
+      const c = camera(at + s)
+      const lens = lensOf(c)
+      const q = onWall(lens, DEPTH.train, trainAt(at, at + s).front, TRACK_Y)
+      if (q.x < GLASS.x0 || q.x > GLASS.x1) continue
+      crossing++
+      const hh = c.cells / 2
+      const hw = (hh * 16) / 9
+      if (blurOf(lens) < 0.045 && Math.abs(q.x - c.x) < hw - 0.1 && Math.abs(q.y - c.y) < hh - 0.1) seen++
+    }
+    if (crossing > 4 && seen >= 0.8 * crossing) out.push(at)
+  }
+  return out
+})()
+
+/** The line, always there (a dark rail on its piers), and any train on it, at `t`. In the train's layer. */
+function train(ctx: Ctx, t: number, sky: { dusk: number }, sink: Sink): void {
+  const dark = mixHex('#1E1C36', '#3A3460', sky.dusk)
+  // The viaduct: a deck, and piers down into the near roofs.
+  ctx.fillStyle = dark
+  ctx.fillRect(RUN.x0 - 2, TRACK_Y, RUN.x1 - RUN.x0 + 4, 0.045)
+  for (let x = RUN.x0 - 2 + 0.35; x < RUN.x1 + 2; x += 0.9) ctx.fillRect(x, TRACK_Y + 0.04, 0.04, 0.6)
+  for (const at of TRAINS) {
+    const s = t - at
+    if (s < 0 || s > TRAIN_DUR) continue
+    const { front, dir } = trainAt(at, t)
+    const n = nightAt(t)
+    for (let c = 0; c < CARS; c++) {
+      const x0 = dir > 0 ? front - (c + 1) * CAR - c * COUPLING : front + c * (CAR + COUPLING)
+      ctx.fillStyle = dark
+      ctx.fillRect(x0, TRACK_Y - BODY, CAR, BODY)
+      // The light of its windows on the air round the car.
+      if (!sink) {
+        const glow = ctx.createLinearGradient(0, TRACK_Y - BODY - 0.08, 0, TRACK_Y + 0.04)
+        glow.addColorStop(0, rgba('#F6E4BC', 0))
+        glow.addColorStop(0.5, rgba('#F6E4BC', 0.13))
+        glow.addColorStop(1, rgba('#F6E4BC', 0))
+        ctx.fillStyle = glow
+        ctx.fillRect(x0 - 0.03, TRACK_Y - BODY - 0.08, CAR + 0.06, BODY + 0.12)
+      }
+      // Its windows, lit, a few with someone's shape against them.
+      for (let w = 0; w < 7; w++) {
+        const wx = x0 + 0.04 + w * 0.066
+        const k = hash(at, c * 7 + w, 213)
+        const color = k < 0.25 ? '#CFE0FF' : '#F6E4BC'
+        const a = (0.82 + 0.18 * hash(at, c * 7 + w, 214)) * (0.8 + 0.2 * n)
+        if (sink) sink.list.push({ x: wx + 0.022, y: TRACK_Y - BODY + 0.035, r: 0.022, color, a, p: sink.p })
+        else {
+          ctx.fillStyle = rgba(color, a)
+          ctx.fillRect(wx, TRACK_Y - BODY + 0.017, 0.045, 0.035)
+          if (k > 0.85) {
+            ctx.fillStyle = rgba('#1E1C36', 0.7)
+            ctx.fillRect(wx + 0.012, TRACK_Y - BODY + 0.027, 0.02, 0.025)
+          }
+        }
+      }
+    }
+    // The headlight, and its light on the rail ahead.
+    const hx = front
+    const hy = TRACK_Y - 0.03
+    if (sink) sink.list.push({ x: hx, y: hy, r: 0.03, color: '#FFF3D6', a: 0.9, p: sink.p })
+    else {
+      const g = ctx.createRadialGradient(hx, hy, 0, hx, hy, 0.16)
+      g.addColorStop(0, rgba('#FFF3D6', 0.85))
+      g.addColorStop(1, rgba('#FFF3D6', 0))
+      ctx.fillStyle = g
+      ctx.fillRect(hx - 0.16, hy - 0.16, 0.32, 0.32)
+    }
+    // Once in a crossing, a spark off the wire over one of the cars: a blink of blue-white.
+    const at2 = TRAIN_DUR * (0.35 + 0.3 * hash(at, 215))
+    const flash = Math.max(0, 1 - Math.abs(s - at2) / 0.09) * (s > at2 - 0.09 && s < at2 + 0.09 ? 1 : 0)
+    const flash2 = Math.max(0, 1 - Math.abs(s - at2 - 0.22) / 0.06)
+    const f = Math.max(flash, 0.7 * flash2)
+    if (f > 0.01) {
+      const car = Math.floor(hash(at, 216) * CARS)
+      const sx = dir > 0 ? front - car * (CAR + COUPLING) - CAR * 0.5 : front + car * (CAR + COUPLING) + CAR * 0.5
+      const sy = TRACK_Y - BODY - 0.06
+      if (sink) sink.list.push({ x: sx, y: sy, r: 0.05, color: '#BFD8FF', a: f, p: sink.p })
+      else {
+        ctx.save()
+        ctx.globalCompositeOperation = 'screen'
+        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 0.45)
+        g.addColorStop(0, rgba('#E8F2FF', 0.95 * f))
+        g.addColorStop(0.15, rgba('#9CC2FF', 0.5 * f))
+        g.addColorStop(1, rgba('#7FA6FF', 0))
+        ctx.fillStyle = g
+        ctx.fillRect(sx - 0.45, sy - 0.45, 0.9, 0.9)
+        ctx.restore()
+      }
+    }
+  }
+}
+
 function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }, lens: Lens, sink: (p: number) => Sink): void {
   const n = nightAt(t)
   const far = mixHex('#2B2850', '#463E6E', sky.dusk)
   const near = mixHex('#17162C', '#2A2445', sky.dusk)
   let tallest = { x: 0, y: 0 }
   for (const [row, color, base, tall] of [[0, far, -1.9, 1.15], [1, near, -1.35, 0.85]] as const) {
+    // Between the far roofs and the near: the elevated line, and its trains.
+    if (row === 1) inLayer(ctx, lens, DEPTH.train, () => train(ctx, t, sky, sink(DEPTH.train)))
     const p = row ? DEPTH.near : DEPTH.far
     const lights = sink(p)
     // The street runs on past the window's edges, for when the camera's moves slide it along behind them.
@@ -936,4 +1068,4 @@ function drops(ctx: Ctx, t: number, rain: number): void {
 }
 
 /** The window's moments played to the camera, for the report and the check. */
-export const MOMENTS = { lightning: FLASHES, shooting: SHOOTS, planes: FLIGHTS, crossings: PASSES, cat: SITS }
+export const MOMENTS = { trains: TRAINS, lightning: FLASHES, shooting: SHOOTS, planes: FLIGHTS, crossings: PASSES, cat: SITS }
