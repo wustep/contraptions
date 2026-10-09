@@ -104,7 +104,10 @@ function gripsOf(who: Writer): Grip[] {
     out.push({ t0: T.slam + 1.3, t1: T.slam + 1.9, to: [SLAM[0] + 0.2, SLAM[1] - 1.1], open: 1, lead: 0.3, palm: 0.55 })
     FRANTIC.bursts.forEach((bt, i) => {
       const a = FRANTIC_RING.start + (i % 2 === 0 ? 1 : -1) * (0.4 + i * 0.7)
-      out.push({ t0: bt, t1: bt + 0.45, to: inkAt(FRANTIC_RING, FRANTIC.c[0], FRANTIC.c[1], FRANTIC.R, a), open: 0, lead: 0.28, palm: PALM_R })
+      // The first from where the slam left it: the arm raised over two seconds, in the wide before the cut in close, so
+      // it is up out of the close frame when the cut comes. (Swept up in a quarter of a second, it flashed through the
+      // close frame as a limb for three frames.) The rest follow on from it, already up.
+      out.push({ t0: bt, t1: bt + 0.45, to: inkAt(FRANTIC_RING, FRANTIC.c[0], FRANTIC.c[1], FRANTIC.R, a), open: 0, lead: i === 0 ? 2.0 : 0.28, palm: PALM_R })
     })
   }
   return out.sort((a, b) => a.t0 - b.t0)

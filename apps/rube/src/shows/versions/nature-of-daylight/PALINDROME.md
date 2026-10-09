@@ -485,6 +485,15 @@ A thirtieth checked the twenty-ninth cold. The blast was now the black ball's do
 the party's keys and the console's read as the same keys, a code he gave her. The one thing still easy to miss was the
 ghost's keys lighting, which carries the hand-off: they are brighter when lit now, a glow that catches at speed.
 
+A thirty-first ran the eleventh's search again (a frame unlike both its neighbours) at ten frames a second over every
+span the story rounds had changed. One frame in thirteen hundred, the very one the eleventh had passed as the charge's
+flash (219.2), was not that:
+
+- **Abbott's writing arm** (218 to 219.4 s) rose from where the slam left it to the jagged ring in a quarter of a
+  second, so in the close frame on the two of them it flashed through as a limb for three frames. It rises over two
+  seconds now, in the wide before the cut in close: Abbott lifting its arm to write, up out of the close frame when the
+  cut comes.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
