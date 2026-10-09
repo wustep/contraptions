@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
 import { R, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, part, smooth, type Ctx, type PartShot } from '../kit'
+import { alpha, box, carried, frame, hash, knock, lensedArc, lensRim, part, smooth, type Ctx, type PartShot } from '../kit'
 import { cue, UNDOCK } from '../music'
 import { BALL, DARK } from '../worlds'
 
@@ -779,12 +779,10 @@ function drawSphere(p: p5, c: Ctx, t: number, f: Frame, q: Pose): void {
       p.fill(alpha(p, ink, bright * 0.85))
       p.circle(X(sx + Math.cos(a) * r), X(sy + Math.sin(a) * r), Math.max(1.2, X(0.028) * (0.6 + bright)))
     } else {
-      p.noFill()
-      p.stroke(alpha(p, ink, bright * 0.75))
-      p.strokeWeight(Math.max(1, X(0.02)))
-      p.arc(X(sx), X(sy), X(r * 2), X(r * 2), a, a + len)
+      lensedArc(p, X(sx), X(sy), X(r), a, len, ink, bright * 0.8, Math.max(1, X(0.024)))
     }
   }
+  lensRim(ctx, X(sx), X(sy), X(RS), '236, 229, 211', 0.13)
   // The touch: rings running out over its face from where the nose went in.
   const face = Math.atan2(-DIR_IN[1], -DIR_IN[0])
   const cp: Pt = [sx + Math.cos(face) * RS, sy + Math.sin(face) * RS]

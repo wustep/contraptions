@@ -312,6 +312,37 @@ export function alpha(p: p5, hex: string, a: number): p5.Color {
   return c
 }
 
+/**
+ * A star smeared round the rim of a wormhole's glass by its lensing: an arc of light, not a dash. It is brightest and
+ * widest at its middle and runs out to nothing at both ends, so many of them round the rim read as light bent round
+ * the glass, not as a ring hatched in short strokes. In pixels: `cx`, `cy`, `r` are the arc's, `a` where it starts, `len`
+ * its sweep (radians), `w` its width at the middle; `hex` and `peak` its colour and alpha at the middle.
+ */
+export function lensedArc(p: p5, cx: number, cy: number, r: number, a: number, len: number, hex: string, peak: number, w: number): void {
+  const N = 9
+  p.noFill()
+  p.strokeCap(p.ROUND)
+  for (let i = 0; i < N; i++) {
+    const m = Math.sin((Math.PI * (i + 0.5)) / N)
+    p.stroke(alpha(p, hex, peak * m ** 1.4))
+    p.strokeWeight(Math.max(0.6, w * (0.35 + 0.65 * m)))
+    p.arc(cx, cy, 2 * r, 2 * r, a + (len * i) / N, a + (len * (i + 1)) / N)
+  }
+}
+
+/** The light the lensing gathers just inside a wormhole's rim: a soft band, nothing at the band's inner edge. In pixels; `rgb` is "r, g, b". */
+export function lensRim(ctx: CanvasRenderingContext2D, cx: number, cy: number, R: number, rgb: string, a: number): void {
+  const g = ctx.createRadialGradient(cx, cy, R * 0.8, cx, cy, R)
+  g.addColorStop(0, `rgba(${rgb}, 0)`)
+  g.addColorStop(0.75, `rgba(${rgb}, ${a * 0.55})`)
+  g.addColorStop(1, `rgba(${rgb}, ${a})`)
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(cx, cy, R, 0, Math.PI * 2)
+  ctx.arc(cx, cy, R * 0.8, Math.PI * 2, 0, true)
+  ctx.fill()
+}
+
 /** A stable hash in [0, 1) for scattering stars and stalks by index. */
 export const hash = (a: number, b = 0, s = 0): number => {
   let h = (a * 374761393 + b * 668265263 + s * 1013904223) | 0

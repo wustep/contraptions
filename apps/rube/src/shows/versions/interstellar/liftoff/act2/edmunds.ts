@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { laneAt, mixHex, puff, R, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
+import { alpha, box, carried, frame, hash, knock, lastOf, lensedArc, lensRim, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
@@ -959,12 +959,10 @@ function drawMouth(p: p5, c: Ctx, T: number): void {
       p.fill(alpha(p, STAR, b * 0.8))
       p.circle(X(mx + Math.cos(a) * r), X(my + Math.sin(a) * r), Math.max(1.1, X(0.022) * (0.6 + b)))
     } else {
-      p.noFill()
-      p.stroke(alpha(p, STAR, b * 0.7))
-      p.strokeWeight(Math.max(1, X(0.016)))
-      p.arc(X(mx), X(my), X(r * 2), X(r * 2), a, a + len)
+      lensedArc(p, X(mx), X(my), X(r), a, len, STAR, b * 0.75, Math.max(1, X(0.02)))
     }
   }
+  lensRim(ctx, X(mx), X(my), X(RM), '244, 238, 223', 0.13)
   // Saturn, small and bent, low in the glass.
   const sx = mx - 0.55
   const sy = my + 0.62

@@ -221,7 +221,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 11 (latest)
+## Polish pass 12 (latest)
+
+Two more audits came back clean. A **stillness audit** compared frames half a second apart all through the show: the only still run is the camp held alone after the last card, 287.5 s to the end, as written. A **render-cost audit** timed `paintShow` at 1280 × 720, frame by frame, taking the fastest of three paints so pauses drop out: median 1.4 ms, 99% under 4 ms, the slowest 8.2 ms at the tesseract's pull-back, all well inside a 60 fps frame.
+
+- **The wormholes' lensed stars** (the sphere in Act I, 100 to 104 s; the sphere in Act II, 228 to 235 s; its far mouth at Edmunds' planet, 235.5 to 239 s). The stars near the rim are smeared round it by the lensing, which is right. But each was an even white dash with blunt ends, so the rim of every sphere read as hatched in short strokes, a scribbled ring (the closed #148 had said so). Each smear is light now (`lensedArc` in `kit.ts`): brightest and widest at its middle, running out to nothing at both ends. A soft band of the light the lensing gathers (`lensRim`) sits just inside the rim, so the sphere reads as glass. The three spheres share both drawings.
+
+## Polish pass 11
 
 - **The dawn wind along the plain** (from 261 s to the end, `drawDrift` in `act2/edmunds.ts`). The silent credits are the show's longest stretch with the least moving: the flag in the wind, the sun coming up, the slow draw-back, and a ground gone dead still once the landing's dust had settled. Now thin wisps of sand lift low off the plain as the music stops and drift the way the flag blows, lit gold by the sunrise. The far ones pass behind the camp; the near ones run along the ground in front of it, below Cooper and Brand, never across them or the cards. Each fades in and out over its own run, and the frame-step audit across the credits is unchanged (largest one-step change 1.7%, the credits' starlight), so none pops.
 
