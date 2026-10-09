@@ -246,6 +246,9 @@ cut, and close looks at whatever caught the eye. What changed:
   curl of its own, and a soft round pad at its tip where it presses on the glass.
 - **The chamber**: its far wall ended on a hard cut to black in the grand wide; it darkens into its corner. At the
   shaft's end its lit, ribbed floor stopped on a cut against the chamber's dark floor; its light dies away instead.
+- **The touch at the end** (212.312, the coda's loudest note): the sun came through the fog after it over seconds, a
+  soft fade on the strongest note there is. Now the sun catches the water on the touch itself, quick as it caught it
+  on the prologue's first pulse, and goes on coming through after: the circle closes on the same light it opened on.
 - **The far camp** (24 → 62, 194): the tents and trucks up the valley were hazed as if far off but stand in front of
   the near hills, so they were paler than the land behind them, pale boxes floating on the hill. They are hazed a
   little less than that hill now, and their roofs catch only a hint of the sky: a camp in the fog.

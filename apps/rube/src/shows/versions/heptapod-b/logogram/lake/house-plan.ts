@@ -482,7 +482,9 @@ function endLight(t: number): Light {
   const tau = t - SCENES.end.begin
   if (tau <= 0) return prologueLight(0)
   const first = prologueLight(0)
-  const sun = rise(t, END.touch, 2.6) * sm(t, END.touch, END.touch + 0.6)
+  // On the touch the sun catches the water at once, as it did on the prologue's first pulse (the circle closing on
+  // the loudest note of the coda), and goes on coming through the fog after it.
+  const sun = 0.42 * rise(t, END.touch, 0.16) + 0.58 * rise(t, END.touch, 2.6) * sm(t, END.touch, END.touch + 0.6)
   const dawn = sm(t, SCENES.end.begin + 0.4, END.go + 0.4)
   return {
     kind: 'dawn',
