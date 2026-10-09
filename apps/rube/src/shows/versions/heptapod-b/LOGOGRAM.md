@@ -100,7 +100,7 @@ Times are show seconds; pulse *k* is `pulse(k)`, and a strength in brackets is h
 | 163.126 | the hardest pulse after 8.911 (1.48) | the lake house | The window at dusk, the rain running on the panes, a drop landing on each hard pulse with a glint; Louise alone on the bench. |
 | 166.243 | the push | the fog | **She writes.** Flung up out of the crescent, she comes to the top of her rise where the great ring begins under her (168.136), and the frame goes back to the whole of it, both pens in it, by 170.3. It turns; she is its pen at its bottom, and Costello's front limb the pen at its top; each writes half. She works it like a ball in a turning drum: the ink carries her up the rising wall to a hang, and the first hard pulse of each group flicks her off (170.051, 173.383, and the biggest ride, from 30° up the wall, on 179.368), so she swings back down through the rest, a blot pressed where she is on every one of the push's 21 hard pulses. **The halves meet on 183.182 (1.26)** with her still at the bottom, and the frame holds the whole of it to the cut while the tendrils fling out and the ring's turn slows to rest. |
 | 185.330 | the pulse thins | the valley | The meadow after, wide, Ian waiting by the trucks. The shell rises into the cloud and goes; the cloud opens, the light comes down, the fog lifts. From the cut back in (192.238) one push in on her where the first frame has her; Ian comes to her across the meadow, and they touch (195.344) and stay together. |
-| 196.783 | the last clear pulse | the lake house | The first frame again. The held tones die. On the last flutter Hannah sets off (208.631), skips, dashes, springs and lands in the prologue's rhythm, and touches her on **212.312 (3.7)**. The sun comes through the fog on the water; as the held tones die the camera draws back, slowly, to the whole window by 219.3, the two of them small in it, for the credits in the silence over the wall above it. |
+| 196.783 | the last clear pulse | the lake house | The first frame again. The held tones die. On the last flutter Hannah sets off (208.631), skips, dashes, springs and lands in the prologue's rhythm, and touches her on **212.312 (3.7)**. On the touch the sun catches the water, as it did on the first pulse, and comes on through the fog; as the held tones die the camera draws back, slowly, to the whole window by 219.3, the two of them small in it, for the credits in the silence over the wall above it. |
 
 ## The company
 
@@ -114,12 +114,13 @@ Times are show seconds; pulse *k* is `pulse(k)`, and a strength in brackets is h
 
 ## End credits
 
-The last flutter has rung away, the held tones have died, and the camera has drawn back to the whole window (219.3 s). From 219.6 s, in the silence, over the wall above it the credits come, a card at a time, set by the page from
+The last flutter has rung away, the held tones have died, and the camera has drawn back to the whole window (219.3 s).
+From 219.6 s, in the silence, over the wall above it the credits come, a card at a time, set by the page from
 `Performance.titles(t)` (a show's canvas sets no type): Directed by Claude Opus 5.5; With Louise Banks (the orange
 ball), Ian Donnelly (the blue ball), Hannah (the little peach ball), Abbott and Costello (heptapods); Music, Jóhann
 Jóhannsson, "Heptapod B", with Joan La Barbara, from the soundtrack (Deutsche Grammophon, 2016); After Arrival, a film
-by Denis Villeneuve, from Ted Chiang's "Story of Your Life"; Drawn with p5.js. There is no title card. As the first card comes the room goes to dusk, the window still lit. After the last
-card the room holds to the end, 251 s.
+by Denis Villeneuve, from Ted Chiang's "Story of Your Life"; Drawn with p5.js. There is no title card. As the first
+card comes the room goes to dusk, the window still lit. After the last card the room holds to the end, 251 s.
 
 ## What check:shows holds
 
@@ -225,8 +226,11 @@ notes, then scrub, fix the worst, re-scrub. What changed, by beat:
 
 ## Polish rounds
 
-A third director's pass (Claude Opus 5.5): the whole film at a frame a second, dense sheets either side of every
-cut, and close looks at whatever caught the eye. What changed:
+Fourteen further rounds by the director (Claude Opus 5.5), each a different way of looking: the whole film at a frame
+a second and at the half and quarter between, dense sheets either side of every cut, full-size and 4K frames, the
+live stage in tall and ultrawide windows, Zoom and Overview, a phone, the share card, a saved video's painted credits
+(1080p and Shorts), a 15 fps motion pass for anything popping, jumping or held dead, and every strike and the cue's
+strongest pulses held against what the picture does on them. What changed:
 
 - **The last frame** (251): Hannah's span ended at the show's end exclusively, so the frame the player holds there
   had Louise alone on the bench. Hannah stays.
@@ -264,14 +268,14 @@ cut, and close looks at whatever caught the eye. What changed:
   bank falling to the water at its right edge. The brow is further along the shore.
 - **The room for the credits**: the ceiling stood just over the window, so the coda's wide was a third dark ceiling,
   and the cast list straddled its soft edge. The room is tall now, the ceiling high over the glass on a clean line,
-  and the cards sit on quiet wall. Cream type on that pale wall was faint in its
-  fine print, so as the credits begin the room goes to dusk over seven seconds and stays there to the end, while the
-  window keeps its light: the words read, and the last of the day is out on the water. With the dusk doing the work, the soft
-  shade under the words is back to the faint one it was: stronger, it stood on the wall as a dark stain in a saved frame,
-  which has no words over it.
-- **Hannah's drawing**: low on the wall over her corner, at her height, a child's drawing is taped: the two of them
-  by the water under a crayon sun, in pencil, holding hands, each with a dot for an eye, looking at each other
-  (nothing but Louise is her colour, not even a drawing of her). It is paper, edged in pencil-grey, not framed in ink. It is in
+  and the cards sit on quiet wall. Cream type on that pale wall was faint in its fine print, so as the credits begin
+  the room goes to dusk over seven seconds and stays there to the end, while the window keeps its light: the words
+  read, and the last of the day is out on the water. With the dusk doing the work, the soft shade under the words is
+  back to the faint one it was: stronger, it stood on the wall as a dark stain in a saved frame, which has no words
+  over it.
+- **Hannah's drawing**: low on the wall over her corner, at her height, a child's drawing is taped: the two of them by
+  the water under a crayon sun, in pencil, holding hands, each with a dot for an eye, looking at each other (nothing
+  but Louise is her colour, not even a drawing of her). It is paper, edged in pencil-grey, not framed in ink. It is in
   the first frame and the last, and in the visions at the window.
 
 ## Arrival nods
