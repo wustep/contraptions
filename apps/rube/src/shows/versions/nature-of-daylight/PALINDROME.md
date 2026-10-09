@@ -290,6 +290,11 @@ comparison showed:
   phone was too slight for the wide. It slants more steeply now, as a cloud's shadow lies on ground going away, in
   both; where the light reaches her on the far line is unchanged.
 
+An eleventh filmed the whole show at ten frames a second and looked for a frame unlike both its neighbours while
+they agree with each other (a thing popping in or out for a frame): only two, both meant (the charge's flash on a
+beat in the chamber, 219.2, and the set flickering on with the news, 98.6). It watched the page's console through a
+sweep of the show and through Overview and Zoom: no error and no warning. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
