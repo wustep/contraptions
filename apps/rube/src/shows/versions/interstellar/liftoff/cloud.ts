@@ -26,6 +26,8 @@ export interface CloudState {
   /** The rocket's base and lean, in world cells, and its length: its shadow in the cloud is drawn from this. */
   rocket: (t: number) => { base: [number, number]; lean: number }
   length: number
+  /** Show time from which the deck is not drawn: nothing after it looks back down at it. */
+  gone: number
 }
 
 export const WHITE = '#F1EDE3'
@@ -82,6 +84,9 @@ export const cloud = scenery<CloudState>({
   draw: () => {},
   over: (p: p5, s, c) => {
     const { k, t, ink, weight } = c
+    // Once the whip to Miller has gone (s.gone) nothing looks back down at the deck: it stops being drawn, so the
+    // whole dark (Overview's view of it) has no white bar laid across Miller, Gargantua and the tesseract.
+    if (t >= s.gone) return
     const f = frame(p, k)
     const X = (x: number) => x * k
     const near = f.y1 > s.deck - DEPTH - 1.5 && f.y0 < s.deck + DEPTH + 1

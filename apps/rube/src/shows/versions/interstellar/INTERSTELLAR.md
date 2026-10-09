@@ -219,7 +219,16 @@ There is no title card. After p5.js's card goes (about 287 s), the camp holds al
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 7 (latest)
+## Polish pass 8 (latest)
+
+The show swept in **Overview** (the O key), which frames the whole of the world that is up at once. Two things were left standing that the show's own camera never looks at, but Overview did:
+
+- **The cloud deck after the whip** (104 to 127 s). The deck is the seam between the farm and the dark, drawn in both, and it went on being drawn after nothing looked at it again: in Overview, a white bar across the whole dark, under Miller, Gargantua and the tesseract. It stops half a second after the whip through the sphere to Miller (beat 166, `CLOUD_GONE` in `score.ts`).
+- **The wormhole's far mouth at Edmunds' planet** (from 236.5 s to the end). It stayed open on the horizon, a dark sphere left by the camp, all through the landing and the credits. It closes behind the Ranger now, shrinking to nothing over two seconds, from 237.7 s, once the camera has gone on with the ship and it is out of the frame.
+
+The show's own frames are unchanged by both. The share card (240.4 s) differs from a fresh render in 285 pixels, a few of pass 6's pebbles, and is left as it is.
+
+## Polish pass 7
 
 Every pass before this looked at the show's own camera. This one swept it under **Zoom**, the player's closer follow (1.5 times nearer, about the same middle).
 

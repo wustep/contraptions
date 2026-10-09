@@ -605,7 +605,17 @@ function drawAll(p: p5, s: EdmundsState, c: Ctx): void {
   }
   drawSky(p, c, v, T)
   drawLand(p, c, v, T)
-  drawMouth(p, c, T)
+  // The far mouth closes behind the Ranger once the camera has gone on with it (by OUT + 1 it is out of the frame):
+  // it shrinks to nothing over two seconds, so the planet's sky is its own for the landing and the camp.
+  const shut = 1 - smooth(T, OUT + 1.2, OUT + 3.2)
+  if (shut > 0.005) {
+    p.push()
+    p.translate(X(MOUTH[0]), X(MOUTH[1]))
+    p.scale(shut)
+    p.translate(-X(MOUTH[0]), -X(MOUTH[1]))
+    drawMouth(p, c, T)
+    p.pop()
+  }
   drawShield(p, c, T)
   drawChute(p, c, T)
   drawCamp(p, c, v, T)

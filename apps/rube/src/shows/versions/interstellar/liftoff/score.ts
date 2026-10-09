@@ -48,6 +48,8 @@ import { credits } from './credits'
  *   b180    Gargantua (a slingshot, two turns), the tesseract, the last hit on beat 191, the watch, the fall into bed
  */
 
+/** The deck stops being drawn half a second after the whip through the sphere to Miller (beat 166): nothing after it looks back down at it. */
+const CLOUD_GONE = beat(166) + 0.5
 /** Show time at which the rocket is inside the cloud and the stage changes universe. */
 export const SWITCH = PUNCH
 
@@ -123,7 +125,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     const { base, lean } = rocketPose(t)
     return { base: [lift.col + base[0], lift.row + base[1]] as [number, number], lean }
   }
-  const deckCloud = standing(cloud, 0, 0, all, { deck, punch: SWITCH, rocket: pose, length: ROCKET_LENGTH }, DURATION)
+  const deckCloud = standing(cloud, 0, 0, all, { deck, punch: SWITCH, rocket: pose, length: ROCKET_LENGTH, gone: CLOUD_GONE }, DURATION)
   const chainOf = (placed: Placed[]) => placed
   const show = new LiftoffShow(
     [
