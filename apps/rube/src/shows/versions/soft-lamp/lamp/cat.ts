@@ -2,7 +2,7 @@ import { sweepAt } from './decor'
 import { MOMENTS, flashAt, shootAt } from './sky'
 import { REACHES, handAt, petAt } from './hands'
 import { CAT } from './desk'
-import { catInViewAt } from './camera'
+import { camera, catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
 import { LANDINGS, LAPS, ballAt } from './route'
 import { rgba } from './canvas'
@@ -159,6 +159,68 @@ export function washAt(t: number): { k: number; paw: number; lick: number } {
   return { k: 0, paw: 0, lick: 0 }
 }
 
+/** How long a stretch takes: up onto its feet, the front stretched out long with a yawn, and back down. */
+const STRETCH = 6.8
+/** Everything a stretch reaches to: the cat's box, and its front paws out along the desk toward the books. */
+const STRETCH_BOX: [number, number, number, number] = [CAT.x0 - 0.3, -1.25, CAT.chest + 0.6, 0.05]
+/**
+ * Its stretches: twice through the night, as a cat does now and then after lying still a long while, each in a phrase
+ * it spends watching (never nodding along), while the camera holds the whole of it, the paws stretched out included;
+ * clear of its yawns and washes, the hand, the lob, a car's lights and the sky's moments.
+ */
+export const STRETCHES: number[] = [[3, 4, 5], [8, 9, 10]].map((tracks) => {
+  for (const n of tracks) {
+    const at = stretchIn(n)
+    if (at > 0) return at
+  }
+  return -100
+})
+
+/** The first moment in track `n` a stretch fits, or -100. */
+function stretchIn(n: number): number {
+  const lap = LAPS[n]
+  const tr = TRACKS[n]
+  const [bx0, by0, bx1, by1] = STRETCH_BOX
+  const held = (from: number, to: number) => {
+    for (let s = from; s <= to; s += 0.5) {
+      const c = camera(s)
+      const hh = c.cells / 2
+      const hw = (hh * 16) / 9
+      if (bx0 < c.x - hw + 0.1 || bx1 > c.x + hw - 0.1 || by0 < c.y - hh + 0.1 || by1 > c.y + hh) return false
+    }
+    return true
+  }
+  const sky = [...MOMENTS.lightning, ...MOMENTS.shooting]
+  for (let k = 0; k < 80; k++) {
+    const at = lap.cup + 12 + k * 2 * tr.period + hash(n, k, 151) * 1.5
+    if (lap.lob !== null && at + STRETCH + 2 > lap.lob - 8 * tr.period) break
+    if ([...YAWNS, ...WASHES].some((m) => m > at - 10 && m < at + STRETCH + 6)) continue
+    if (REACHES.some((r) => r.at < at + STRETCH + 6 && r.at + r.dur > at - 6)) continue
+    if (sky.some((m) => m > at - 6 && m < at + STRETCH + 6)) continue
+    if (!held(at - 1, at + STRETCH + 1)) continue
+    let still = true
+    for (let s = at - 1; s <= at + STRETCH + 1; s += 0.5) if (vibeAt(s) > 0.02 || sweepAt(s).a > 0.02) still = false
+    if (still) return at
+  }
+  return -100
+}
+
+/**
+ * Where a stretch is at `t`: how far up onto its feet (`up`), how far its front is stretched out along the desk, chest
+ * down and rear up (`out`), and the yawn that comes with it at full stretch (`yawn`).
+ */
+export function stretchAt(t: number): { up: number; out: number; yawn: number } {
+  for (const at of STRETCHES) {
+    const s = t - at
+    if (s < 0 || s > STRETCH) continue
+    const up = smooth(s, 0.2, 1.3) * (1 - smooth(s, 5.4, 6.7))
+    const out = smooth(s, 1.3, 2.7) * (1 - smooth(s, 4.2, 5.4))
+    const yawn = Math.min(1, 2 * Math.max(0, Math.sin(Math.PI * Math.max(0, Math.min(1, (s - 1.9) / 2.2)))) ** 2)
+    return { up, out, yawn }
+  }
+  return { up: 0, out: 0, yawn: 0 }
+}
+
 /** Its nod along, 0 to 1, deepest just after each beat. */
 function nodAt(t: number): number {
   const tr = trackAt(t)
@@ -208,16 +270,34 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   // A scratch under the chin: it shuts its eyes and leans into the hand.
   const pet = petAt(t) * (1 - sleepAt(t))
   const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - handAt(t).a)
-  const yawn = yawnAt(t) * (1 - sleep)
+  // Stretching: up on its feet, the body lifted and tipped forward (chest down, rear up) about its rear, and longer;
+  // the head down and forward with it, the eyes shut in a yawn.
+  const st = stretchAt(t)
+  const L = 0.27 * st.up
+  const tipF = 0.17 * st.out
+  const long = 1 + 0.14 * st.out
+  const REAR = x0 + 0.12
+  const T = (x: number, y: number) => {
+    const u = (x - REAR) * long
+    return { x: REAR + u * Math.cos(tipF) - y * Math.sin(tipF), y: u * Math.sin(tipF) + y * Math.cos(tipF) - L }
+  }
+  const yawn = Math.max(yawnAt(t), st.yawn) * (1 - sleep)
   const tr = trackAt(t)
   // The tip lifts and settles on its own, or, nodding along, sways a bar at a time.
   const idle = 0.5 + 0.5 * Math.sin(t * 0.9 + Math.sin(t * 0.31) * 2)
   const sway = 0.5 + 0.5 * Math.sin((Math.PI * beatOf(tr, t)) / 2)
   const lift = (idle * (1 - vibe) + sway * vibe) * (1 - sleep)
   const tip = { x: chest - 0.2, y: -0.11 - 0.12 * lift }
+  // Stretching, it goes up behind it instead, a question mark, its tip curling.
+  const mix = (a: { x: number; y: number }, b: { x: number; y: number }) => ({ x: a.x + (b.x - a.x) * st.up, y: a.y + (b.y - a.y) * st.up })
+  const curl = Math.sin(t * 2.4) * 0.04
+  const t0 = mix({ x: x0 + 0.08, y: -0.08 }, T(x0 + 0.02, -0.22))
+  const t1 = mix({ x: x0 + 0.2, y: 0.02 }, T(x0 - 0.22, -0.4))
+  const t2 = mix({ x: chest - 0.55, y: 0.0 }, { x: x0 - 0.3, y: -0.82 - L })
+  const t3 = mix(tip, { x: x0 - 0.08 + curl, y: -1.02 - L })
   ctx.beginPath()
-  ctx.moveTo(x0 + 0.08, -0.08)
-  ctx.bezierCurveTo(x0 + 0.2, 0.02, chest - 0.55, 0.0, tip.x, tip.y)
+  ctx.moveTo(t0.x, t0.y)
+  ctx.bezierCurveTo(t1.x, t1.y, t2.x, t2.y, t3.x, t3.y)
   ctx.lineWidth = 0.13
   ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
   ctx.stroke()
@@ -225,16 +305,54 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   ctx.strokeStyle = fur(0.8)
   ctx.stroke()
 
-  // The body: a loaf, breathing.
+  // Its legs, when it is up: the hind pair straight down under its rear, the fore pair under its chest, stretched out
+  // along the desk at full stretch, the near of each pair a shade lighter.
+  if (st.up > 0.01) {
+    const leg = (from: { x: number; y: number }, to: { x: number; y: number }, w: number, k: number) => {
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(from.x, from.y)
+      ctx.lineTo(to.x, to.y)
+      ctx.lineWidth = w
+      ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+      ctx.stroke()
+      ctx.lineWidth = w - lw * 2
+      ctx.strokeStyle = fur(k)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.ellipse(to.x + 0.02, to.y - 0.025, 0.055, 0.03, 0, 0, Math.PI * 2)
+      ctx.fillStyle = lit('#B49276', CREAM_FUR, l * k)
+      ctx.fill()
+      ctx.lineWidth = lw * 0.7
+      ctx.stroke()
+    }
+    for (const [hx, k] of [[x0 + 0.42, 0.45], [x0 + 0.24, 0.6]] as const) {
+      const hip = T(hx, -0.08)
+      leg(hip, { x: hip.x - 0.02, y: -0.005 }, 0.15, k)
+    }
+    for (const [fx, k, ahead] of [[chest - 0.06, 0.7, 0.04], [chest - 0.2, 0.95, 0]] as const) {
+      const sh = T(fx, -0.08)
+      leg(sh, { x: sh.x + (0.42 + ahead) * st.out + 0.02, y: -0.005 }, 0.13, k)
+    }
+  }
+
+  // The body: a loaf, breathing; up on its feet, lifted and tipped as it stretches.
   ctx.save()
-  ctx.translate(0, 0)
+  ctx.translate(REAR, -L)
+  ctx.rotate(tipF)
+  ctx.scale(long, 1)
+  ctx.translate(-REAR, 0)
   ctx.scale(1, 1 + 0.018 * breath)
+  // Lying, its underside is the desk; up on its feet, a belly, rounded up at either end.
+  const lifted = smooth(st.up, 0, 0.3)
   const body = () => {
+    const rb = -0.09 * lifted
     ctx.beginPath()
-    ctx.moveTo(x0 + 0.06, 0)
-    ctx.bezierCurveTo(x0 - 0.06, -0.14, x0 - 0.02, top + 0.02, x0 + 0.3, top)
+    ctx.moveTo(x0 + 0.06 + 0.06 * lifted, rb)
+    ctx.bezierCurveTo(x0 - 0.06, -0.14 + rb, x0 - 0.02, top + 0.02, x0 + 0.3, top)
     ctx.bezierCurveTo(x0 + 0.62, top - 0.04, chest - 0.12, top - 0.02, chest, -0.38)
-    ctx.bezierCurveTo(chest + 0.07, -0.25, chest + 0.06, -0.06, chest - 0.02, 0)
+    ctx.bezierCurveTo(chest + 0.07, -0.25, chest + 0.06, -0.06 + rb, chest - 0.02 - 0.08 * lifted, rb)
+    ctx.quadraticCurveTo((x0 + chest) / 2, 0.035 * lifted, x0 + 0.06 + 0.06 * lifted, rb)
     ctx.closePath()
   }
   body()
@@ -273,7 +391,8 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   ctx.ellipse(chest - 0.08, -0.34, 0.15, 0.22, -0.15, 0, Math.PI * 2)
   ctx.fillStyle = lit('#A88A70', CREAM_FUR, l * 0.9)
   ctx.fill()
-  // The paws, tucked under its chest.
+  // The paws, tucked under its chest (until it is up on them).
+  ctx.globalAlpha = 1 - smooth(st.up, 0, 0.25)
   ctx.beginPath()
   ctx.ellipse(chest - 0.13, -0.045, 0.1, 0.05, 0, 0, Math.PI * 2)
   ctx.fillStyle = lit('#B49276', CREAM_FUR, l)
@@ -296,10 +415,12 @@ export function cat(ctx: Ctx, lw: number, t: number): void {
   const watch = awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet)
   const lx = (dx / d) * watch
   const ly = (dy / d) * watch + 0.25 * vibe * awake
-  const hx = hx0 + lx * 0.035
-  const hy = hy0 + ly * 0.02
+  // With the body as it stretches: down and forward, over its outstretched paws.
+  const carried = T(hx0, hy0 + 0.02)
+  const hx = carried.x + lx * 0.035 + 0.12 * st.out
+  const hy = carried.y - 0.02 + ly * 0.02 + 0.1 * st.out
   const tilt = lx * 0.12 - ly * 0.06 - yawn * 0.12 + sleep * 0.3 + vibe * awake * 0.08 * Math.sin((Math.PI * beatOf(tr, t)) / 2) +
-    wash.k * (0.1 + 0.22 * over) + pet * (0.2 + 0.03 * Math.sin(t * 2.2))
+    wash.k * (0.1 + 0.22 * over) + pet * (0.2 + 0.03 * Math.sin(t * 2.2)) + tipF * 0.6
   ctx.save()
   ctx.translate(hx, hy)
   ctx.rotate(tilt)

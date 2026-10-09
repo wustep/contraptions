@@ -15,7 +15,7 @@ import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/le
 import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
 import { rainAt } from '../src/shows/versions/soft-lamp/lamp/world'
 import { REACHES, REFILL, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
-import { WASHES, YAWNS } from '../src/shows/versions/soft-lamp/lamp/cat'
+import { STRETCHES, WASHES, YAWNS } from '../src/shows/versions/soft-lamp/lamp/cat'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -204,6 +204,12 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     kinds === 'on sip pet cup away back pet lamp' && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
     REFILL > 1140 && REFILL < MUSIC_END - 300 &&
     [...YAWNS, ...WASHES].every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
+
+  // The kitten gets up and stretches twice, each whole in the frame, clear of its other moments and the hand.
+  check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns, washes and the hand',
+    STRETCHES.length === 2 && STRETCHES.every((t) => t > 0) && STRETCHES[0] < 900 && STRETCHES[1] > 1300 &&
+    STRETCHES.every((t) => catInViewAt(t) && catInViewAt(t + 6.8) && [...YAWNS, ...WASHES].every((m) => m < t - 3.2 || m > t + 7) &&
+      REACHES.every((r) => r.at > t + 7 || r.at + r.dur < t)), STRETCHES.map((t) => t.toFixed(0)).join(' '))
 
   // The words.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names, ...(c.notes ?? [])].join(' ')).join(' | ')

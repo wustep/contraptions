@@ -101,7 +101,8 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   choice, it either keeps watching or shuts its eyes in the content arch and nods along on the beat, the tip of its
   tail swaying a bar at a time; it comes out of it ahead of a break and ahead of the lob, to watch. Four times, watching,
   it washes: a paw licked and drawn over its ear. When the last
-  track's drums leave, it puts its head down and sleeps.
+  track's drums leave, it puts its head down and sleeps. Twice it gets up and stretches, front out long and rear up,
+  with a yawn, and settles back down.
 - **Someone** is at the desk, where the camera is: never seen but for a hand in a sweater's sleeve. It turns the lamp
   on as the show opens and down as it ends; between, it takes a sip, scratches the kitten under its chin twice, rests
   round the mug in the rain, and about midnight takes the cold tea away and brings it back hot (`lamp/hands.ts`).
@@ -656,6 +657,31 @@ lamp's light like anything else in the room.
 92. **Looked at:** the opening's first five seconds, the mug's trip away and back, the empty desk, the shadow under a
     scratch, the end. `check:shows` now holds all eight reaches in order (the lamp turned on and down; the mug taken
     away about midnight and back hot, well before the end).
+
+### The thirty-eighth pass: the kitten gets up
+
+Two passes went into the person at the desk; a third would start to make them the show. The other character had
+never moved: for half an hour the kitten was a loaf. It watched, nodded, yawned, washed and slept, and never got up,
+which no cat lying on a desk for half an hour fails to do.
+
+93. **It stretches, twice** (`stretchAt`, `lamp/cat.ts`): at 11:13 in Magical Connection, and at 26:42 in Daydream, a
+    few seconds after it has looked up at a shooting star. Over seven seconds it gets up onto its feet, its belly lifting
+    off the desk and its tail going up behind it in a question mark; it stretches its front out long along the desk,
+    chest down, rear up, and yawns, eyes shut, at full stretch; then it stands again, and settles back down into its
+    loaf, the tail coming round its front.
+94. **How it is drawn.** The loaf is the same drawing, lifted and tipped forward about its rear and drawn a little
+    longer, so the stripes, the ruff and the light along its back all come with it; up on its feet, its underside is a
+    belly rounded up at either end, not the desk's straight line. Four legs: the hind pair straight down under its rear,
+    the fore pair under its chest, reaching out along the desk at full stretch, the near of each pair a shade lighter,
+    each with a pad of a paw. The head comes down and forward with the body, over the outstretched paws. The first
+    drawing stood it on thin short legs under a flat-bottomed loaf, a box on stilts; the legs are longer and sturdier
+    and the belly rounds now.
+95. **Played to the camera**, like its washes: each in a phrase it spends watching, never nodding along, while the
+    camera holds the whole of it with its paws stretched out toward the books, clear of its yawns and washes, the hand,
+    the lob, a car's lights and the sky's moments.
+96. **Looked at:** both stretches at full size, the first at 0.4 seconds a frame (up, the stretch, the yawn, down:
+    nothing pops; the tail passes behind the body as it swings up, as a tail does). `check:shows` holds the two
+    stretches (one early, one late, in frame, clear of everything else the cat does and of the hand).
 
 **Subtracted:** the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
