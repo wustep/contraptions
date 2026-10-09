@@ -411,9 +411,9 @@ export const movie = part<MovieState>(
     { t: 347.3, cells: 4.9, hold: [-3.0, -1.05] },
     { t: 349.6, cells: 4.3, hold: [-4.2, -1.0] },
     // The party; up with the balloons a little; back down for the candle.
-    { t: 352.2, cells: 4.3, hold: [-4.25, -1.1] },
-    { t: 355.0, cells: 4.8, hold: [-3.9, -1.75] },
-    { t: 357.4, cells: 4.2, hold: [-4.1, -0.95] },
+    { t: 352.2, cells: 3.5, hold: [-4.3, -1.3] },
+    { t: 355.0, cells: 4.3, hold: [-3.95, -1.85] },
+    { t: 357.4, cells: 3.6, hold: [-4.2, -1.25] },
     // The beach.
     { t: 359.4, cells: 3.6, hold: [-4.5, -0.8] },
     { t: 363.3, cells: 3.6, hold: [-4.6, -0.8] },

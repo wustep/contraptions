@@ -390,3 +390,8 @@ A fifty-third pass, the ranking again:
 A fifty-fourth pass:
 
 - **The waltz, closer while the umbrellas open.** The last ranking's runner-up was the waltz on the quay, where the two of them are small under its lamps, umbrellas and clock. While the umbrellas open behind them (276 to 281) the shot comes in from 6 cells to 5 and sits lower; the umbrellas stand at the quay's edge just over the two of them, so they stay whole in the picture with the pair larger under them. The clock's shots keep their width, so its bell is in the picture when it strikes midnight.
+
+A fifty-fifth pass:
+
+- **A sweep, and a ranking.** After the passes of reframing, the full build and a jump scan of the whole show were clean, and a fresh reviewer found nothing broken. Of what it ranked, two were taken. On the burst into colour, the wide still left the two of them specks; it comes in further (9 cells, from 12.5) and lower, on them and the bushes and the kick-line. The sign's cards leave this frame, and come into it again at the crest. And on the birthday in the home movie, where half the frame was grass under the family, the shots come in and sit higher, so the high chair, the cake, their son and the two of them are twice the size, with the balloons still going up out of the top.
+- Not taken: the four quick close shots at the door are cut on the music, as in the film; her close shot is in the doorway, with David beyond the wall; and the door shuts in the frame's left third, in sight.

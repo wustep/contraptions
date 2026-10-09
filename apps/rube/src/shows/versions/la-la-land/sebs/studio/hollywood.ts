@@ -633,8 +633,8 @@ export const hollywood = part<HollyState>(
     // The burst, close by the door; then back, all the way, to the whole painted set as the sign lights.
     { t: BURST - 0.04, cells: 5.4, off: [0.35, -1.35], w: 0 },
     { t: BURST + 0.45, cells: 6.2, off: [0.6, -1.5], w: 0 },
-    { t: beat(170), cells: 12.5, hold: [8.5, -4.3], w: 1 },
-    { t: beat(174.5), cells: 12.5, hold: [8.7, -4.3], w: 1 },
+    { t: beat(170), cells: 9.0, hold: [6.8, -2.9], w: 1 },
+    { t: beat(174.5), cells: 8.6, hold: [7.4, -2.6], w: 1 },
     // In on the kick-line.
     { t: beat(176.5), cells: 6.4, hold: [9.2, -1.25], w: 0.85 },
     { t: beat(181.5), cells: 6.6, hold: [10.4, -1.3], w: 0.85 },
