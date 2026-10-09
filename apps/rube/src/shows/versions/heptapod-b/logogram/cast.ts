@@ -166,8 +166,14 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
     ctx.clip(hull)
     ctx.fillStyle = mixHex(VALLEY.slot, air, haze * 0.6)
     ctx.fillRect(-sw * 0.5 * k, -sd * k, sw * k, (sd + 0.05) * k)
-    ctx.fillStyle = `rgba(243,241,230,${0.5 * slot * (1 - haze)})`
-    ctx.fillRect(-sw * 0.5 * k, -sd * 0.35 * k, sw * k, sd * 0.12 * k)
+    // The light caught on its far lip: a soft band, not a bar with edges.
+    const lip = 0.5 * slot * (1 - haze)
+    const lg = ctx.createLinearGradient(0, -sd * 0.6 * k, 0, -sd * 0.02 * k)
+    lg.addColorStop(0, 'rgba(243,241,230,0)')
+    lg.addColorStop(0.55, `rgba(243,241,230,${lip})`)
+    lg.addColorStop(1, 'rgba(243,241,230,0)')
+    ctx.fillStyle = lg
+    ctx.fillRect(-sw * 0.5 * k, -sd * 0.6 * k, sw * k, sd * 0.58 * k)
     ctx.restore()
   }
   ctx.restore()
