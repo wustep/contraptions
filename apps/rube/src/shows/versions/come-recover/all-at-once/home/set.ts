@@ -916,6 +916,18 @@ export function tube(pen: Pen, x: number, level: number): void {
 /** Where the neon washer hangs in the window. */
 const NEON_AT: Pt = [-5.72, -2.55]
 
+/** The block across the street, on past the shop's end wall to the left: fronts of their own widths and heights. */
+const FAR_FRONTS: [number, number, number][] = (() => {
+  const out: [number, number, number][] = []
+  let a1 = -9.6
+  for (let i = 0; i < 9; i++) {
+    const a0 = a1 - (1.2 + 0.5 * hash(i, 1, 57))
+    out.unshift([a0, a1, -3.2 - 1.2 * hash(i, 2, 57)])
+    a1 = a0
+  }
+  return out
+})()
+
 function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: number): void {
   const { p, k } = pen
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -923,14 +935,10 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
   p.fill(NIGHT)
   p.rect(((x0 + x1) / 2) * k, ((y0 + y1) / 2) * k, (x1 - x0) * k, (y1 - y0) * k)
   // The block across the street: building fronts in two night tones, each with a grid of windows, a few lit warm.
-  const fronts: [number, number, number][] = [
-    [-9.6, -8.2, -3.9],
-    [-8.2, -6.9, -3.3],
-    [-6.9, -5.6, -4.2],
-    [-5.6, -4.3, -3.6],
-    [-4.3, -2.9, -4.0],
-  ]
+  // Further left the block goes on, past the shop's end wall, for a frame wide enough to look out past it.
+  const fronts: [number, number, number][] = [...FAR_FRONTS, [-9.6, -8.2, -3.9], [-8.2, -6.9, -3.3], [-6.9, -5.6, -4.2], [-5.6, -4.3, -3.6], [-4.3, -2.9, -4.0]]
   fronts.forEach(([a0, a1, roof], i) => {
+    if (a1 < x0 || a0 > x1) return
     p.fill(mixHex(HOME.night, HOME.steelDark, i % 2 ? 0.22 : 0.34))
     p.rect(((a0 + a1) / 2) * k, ((roof + FLOOR - 0.6) / 2) * k, (a1 - a0) * k, (FLOOR - 0.6 - roof) * k)
     p.fill(mixHex(HOME.night, HOME.steelDark, 0.5))
@@ -1561,8 +1569,16 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     solid(p, ink, w, SECTION)
     p.rect(((a + b) / 2) * k, ((C - 0.4 + FLOOR + 0.44) / 2) * k, (b - a) * k, (FLOOR + 0.44 - C + 0.4) * k)
   }
-  // The pavement outside the storefront's end, where the frame looks past it.
+  // Outside the storefront's end, where the frame looks past it: the street the window looks onto, going on, and its
+  // pavement. On a wide stage (an ultrawide screen, the credits' draw-back) it is the night street, not a dark slab.
   if (f.x0 < R0 - 0.3) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect((f.x0 - 1) * k, (f.y0 - 1) * k, (R0 - 0.3 - f.x0 + 1) * k, (FLOOR + 0.44 - f.y0 + 1) * k)
+    ctx.clip()
+    street(pen, t, f.x0 - 1, R0 - 0.3, f.y0 - 1, FLOOR + 0.44)
+    ctx.restore()
     p.noStroke()
     p.fill(mixHex(HOME.night, HOME.steelDark, 0.45))
     p.rect(((f.x0 - 1 + R0 - 0.3) / 2) * k, (FLOOR + 0.22) * k, (R0 - 0.3 - f.x0 + 1) * k, 0.44 * k)

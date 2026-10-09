@@ -379,6 +379,15 @@ The notes went back to the builders who made each part, who still had their cont
   - Behind the names, the window's unlit red neon washer showed through the soft dark, a ring under "Evelyn, Joy,
     Waymond". The dark under the cards is now a little deeper at its heart and a little narrower. The neon recedes
     under the words, and the lanterns and the family keep their light.
+- **A pass for an ultrawide stage.** The share card was rendered again and is pixel for pixel the committed one,
+  and every pre-jump flicker was watched at full size. Then the show was swept on a 21:9 stage, where the frame
+  sees more world at the sides.
+  - Under the credits, and in the cold open, the frame looked past the shop's left end wall onto a flat slab of
+    dark.
+  - The street the window looks onto now carries on past the wall: the block across the way, its fronts going on
+    to the left in their own widths and heights, their lit windows, and the far lantern string. Past the wall it is
+    the night street, not a void, and a car passing under the credits drives on out past the wall. On a 16:9 stage
+    and on a phone nothing changes.
 
 ## End credits
 
