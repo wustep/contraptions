@@ -345,9 +345,9 @@ each world, and changed:
   camera led them by two cells, and Fischer, at the back, was a cell or two behind Cobb; Zoom tightens on the same
   point, and under it he rode off the right edge for four seconds. The camera leads them by half as much now, closer
   still after the rock step, and under Zoom all three stay in the picture, the hairpin still coming in ahead of them.
-- **Fischer stirs, under Zoom** (219 to 222): the camera crosses the aisle to him as he wakes and lets the sun in, and
+- **Fischer stirs, under Zoom** (219 to 221): the camera crosses the aisle to him as he wakes and lets the sun in, and
   it held a little too far over; Zoom tightens on the same point, and under it Ariadne was cut in half by the left
-  edge for three seconds. It holds a fifth of a cell less far over now, and under Zoom both rows are whole.
+  edge for a second and a half. It holds a fifth of a cell less far over now, and under Zoom both rows are whole.
 
 ## Inception nods
 
