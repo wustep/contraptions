@@ -224,7 +224,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 56 (latest)
+## Polish pass 57 (latest)
+
+No change to the show: what passes 53, 55 and 56's dense checks cost. They sample the camera every 0.02 s over the whole show, some for three balls. `check:shows` runs inside every `npm run build`, so it was timed twice on this branch (231 s, 201 s) and twice on `main` (233 s, 205 s). The difference is lost in the run-to-run noise: the new samples are arithmetic on the camera and the ball's path, and the suite's time goes elsewhere, the same on `main`.
+
+## Polish pass 56
 
 No change to the show, and a new check. A ball leaving the frame is sometimes written; a ball hanging half off the frame's edge reads as a framing mistake. All three balls were measured every 0.02 s in the show's own frame for stretches cut by the edge. The only one longer than 0.3 s is Brand at 249.3 to 249.74 s, which is the pan bringing her camp into frame as the Ranger comes down: she slides in from the right edge and is whole by 249.75 s. That is an entrance, and it is left. `check:shows` now holds that no ball (Cooper, Brand or Murph, scaled) is cut by the edge for more than 0.6 s. With the limit lowered to 0.3 s for one run it caught that pan, so it can fail.
 
