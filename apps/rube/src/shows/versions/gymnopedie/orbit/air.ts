@@ -674,10 +674,19 @@ export const BOATS = Array.from({ length: 8 }, (_, i) => ({
   seed: i,
 }))
 
-/** How much the boats are out at `t`: from mid-morning, in from the shower's haze, home before dusk. */
+/**
+ * How much the boats are out at `t`: from mid-morning, in from the shower's haze, and on into the dusk, going home
+ * into the dark as the first Gnossienne gets under way.
+ */
 export const boatsOut = (t: number): number => {
   const u = wrap(t)
-  return smooth(u, 40, 60) * (1 - smooth(u, 180, 200)) * (1 - 0.85 * overcastAt(t))
+  return smooth(u, 40, 60) * (1 - smooth(u, 226, 246)) * (1 - 0.85 * overcastAt(t))
+}
+
+/** How bright the boats' masthead lanterns are at `t`: lit one by one as the colonnade's lamps are, at dusk. */
+export const lanternAt = (seed: number, t: number): number => {
+  const at = PIECES[1].from - 4 + 9 * hash(seed, 233)
+  return smooth(wrap(t), at, at + 1.5)
 }
 
 /**

@@ -10,7 +10,7 @@ import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../sr
 import { breath, cellsAt, wideAt } from '../src/shows/versions/gymnopedie/orbit/camera'
 import { CADENCES, CLOSE, PERCHED, leafRings, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
-import { BANK, FIGURES, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
+import { BANK, FIGURES, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, lanternAt, BOATS, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -205,6 +205,10 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   // The sea is drawn whole once the planet starts to be small in the frame; what is drawn only close is gone by then.
   check('gymnopedie: what the sea draws only close has faded before it is drawn whole, so nothing goes out in a frame',
     wideAt(CLOSE[1]) <= 0.001 && CLOSE[0] < CLOSE[1], `wide ${wideAt(CLOSE[1]).toFixed(4)} at ${CLOSE[1]} cells`)
+
+  const lanternsOk = BOATS.every((b) => lanternAt(b.seed, PIECES[0].last) === 0 && lanternAt(b.seed, PIECES[1].from + 7) === 1 &&
+    Math.abs(lanternAt(b.seed, PERIOD - 1e-7) * boatsOut(PERIOD - 1e-7) - lanternAt(b.seed, 0) * boatsOut(0)) < 1e-6)
+  check('gymnopedie: the boats light their lanterns at dusk, as the first Gnossienne begins, and are home by night', lanternsOk && boatsOut(260) === 0)
 
   // The pond answers the ball: rings on the water from every landing and bounce on a leaf, after it and not before.
   const leaves = STONES.filter((s) => s.piece === 2)

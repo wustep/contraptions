@@ -4,7 +4,7 @@ import { wrap } from './music'
 import { RADIUS, along, ballLocal } from './path'
 import {
   BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, auroraAt, auroraSheet, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, milkyWay, wingsAt, type CloudLight,
-  FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat,
+  FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat, lanternAt,
 } from './air'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
@@ -490,8 +490,10 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
   const boats = near * boatsOut(c.t)
   if (boats > 0.01) {
     const toward = Math.max(-1, Math.min(1, Math.sin(sunAngle(c.t)) * 2))
-    const sail = mixHex('#FBF6EC', day.lit, 0.3)
-    const shade = mixHex(mixHex('#C9CFD8', day.low, 0.3), day.top, 0.15)
+    // Dimming with the dusk to the sky's own colours, so the lantern is what is seen.
+    const dusk = mixHex(day.top, day.low, 0.45)
+    const sail = mixHex(mixHex('#FBF6EC', day.lit, 0.3), dusk, 0.7 * day.night)
+    const shade = mixHex(mixHex(mixHex('#C9CFD8', day.low, 0.3), day.top, 0.15), dusk, 0.8 * day.night)
     const hull = mixHex(day.line, day.sea, 0.35)
     for (const b of BOATS) {
       const d = layered(b.x, c.t, SAILS.f, SAILS.span, SAILS.wind)
@@ -501,7 +503,22 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
       atSea(p, k, u + d)
       // Riding the sea's slow breath, low on the horizon.
       ctx.translate(0, k * (0.03 - 0.02 * osc(c.t, 0.09, b.seed * 2)))
-      drawBoat(ctx, k, b.size, toward, osc(c.t, 0.12, b.seed), sail, shade, hull, 0.85 * boats * edge)
+      const rock = osc(c.t, 0.12, b.seed)
+      drawBoat(ctx, k, b.size, toward, rock, sail, shade, hull, 0.85 * boats * edge)
+      // At dusk its lantern, at the masthead, lit as the lamps are lit; a little unsteady, as a flame is.
+      const lantern = lanternAt(b.seed, c.t) * boats * edge
+      if (lantern > 0.01) {
+        ctx.rotate(rock * 0.05)
+        const y = -1.28 * b.size * k
+        const r = k * b.size * 0.45
+        const a = lantern * (0.9 + 0.1 * osc(c.t, 0.4, b.seed * 3))
+        const g = ctx.createRadialGradient(0, y, 0, 0, y, r)
+        g.addColorStop(0, `rgba(255, 226, 160, ${a.toFixed(3)})`)
+        g.addColorStop(0.18, `rgba(255, 196, 110, ${(0.45 * a).toFixed(3)})`)
+        g.addColorStop(1, 'rgba(255, 190, 100, 0)')
+        ctx.fillStyle = g
+        ctx.fillRect(-r, y - r, 2 * r, 2 * r)
+      }
       p.pop()
     }
   }

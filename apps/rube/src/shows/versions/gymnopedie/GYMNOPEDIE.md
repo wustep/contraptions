@@ -130,7 +130,9 @@ The planet has weather, at depths behind the stones (`air.ts`):
   shower's cloud is over, so they come as it clears (`raysAt`).
 - The sun lights the colonnade from its side of the sky: each column's shade is on its west face in the morning,
   narrows to noon, and crosses to the east face through the afternoon.
-- Sailboats far out on the horizon from mid-morning until before dusk, hidden in the shower's haze: small sloops
+- Sailboats far out on the horizon from mid-morning on into the dusk, hidden in the shower's haze, each lighting a
+  lantern at its masthead as the colonnade's lamps are lit, its sails dimming into the dusk, and going home into the
+  dark as the first Gnossienne gets under way (`lanternAt`): small sloops
   sitting low in the water, the sail on the sun's side lit, beating home against the ball's way, so each crosses the
   frame slowly in half a minute or so (`SAILS`, `BOATS`).
 - Gulls perched on the colonnade, one on a stone here and there, at a lintel's far end or on a column's capital.
