@@ -659,6 +659,16 @@ async function main(): Promise<void> {
           slowest = Math.min(slowest, (Math.hypot(b.x - a.x, b.y - a.y) * 60) / b.cells)
         }
         check('liftoff: the whip out of the wormhole goes on with the Ranger, with no stop', slowest > 0.5, `${slowest.toFixed(2)} frames/s`)
+        // Two slow moves that a stray camera key once squeezed into a third of a second: the push-in on him in bed through
+        // the decay, and the settle on him in the channel. Neither zooms faster than this (log of cells, per second).
+        const zoomRate = (a: number, b: number): number => {
+          let worst = 0
+          for (let t = a; t < b; t += 1 / 60) worst = Math.max(worst, Math.abs(Math.log(perf.camera!(t + 1 / 60).cells / perf.camera!(t).cells)) * 60)
+          return worst
+        }
+        const pushInBed = zoomRate(125.9, 126.98)
+        const settleInChannel = zoomRate(26.5, 28.0)
+        check('liftoff: the push-in in bed and the settle in the channel are slow moves, not snaps', pushInBed < 0.3 && settleInChannel < 0.6, `bed ${pushInBed.toFixed(2)}, channel ${settleInChannel.toFixed(2)}`)
         const young = show.brand(inOrbit[0])
         const old = show.brand(inOrbit[2])
         check('liftoff: up in orbit Brand\'s blue dims with the years, and she is her own blue again at the end',

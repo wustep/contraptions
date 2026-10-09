@@ -221,7 +221,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 25 (latest)
+## Polish pass 26 (latest)
+
+- **A guard for pass 9's two camera fixes** (`checks/shows.ts`). A stray key had squeezed two slow moves into a third of a second: the push-in on him in bed through the decay, and the settle on him in the channel. Nothing in a still frame shows that, so a later edit could bring it back unseen. `check:shows` now holds both to slow moves. The fastest zoom (log of cells per second) must stay under 0.3 in bed and under 0.6 in the channel. They are 0.22 and 0.48 now, where they were about 0.8 each before the fix.
+
+## Polish pass 25
 
 No change to the show: a photosensitivity check. Each frame's mean relative luminance was measured at 30 fps from the first frame to the last. A flash in WCAG's sense is a pair of opposing changes of 10% or more, with the darker state under 80%, and the limit is three in any second. The show has 18 such changes in all, each a single cut or dawn: the light in Murph's room, the cloud's white-out and the dark above it, the tesseract letting go, the lamps striking in the station, the ring's reveal and the swoop back, the flight across the axis, the lift, and the cut outside. The most in any one second is three, at 127.57 s, the station's lamps striking with one catching late: one and a half flashes, under the limit.
 
