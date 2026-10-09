@@ -123,7 +123,6 @@ function flickersBefore(leg: number, at: number, n = FLICKERS_A_JUMP, lead = 0.9
  */
 const PUNCHES: [number, number][] = [
   [12.794, 1],
-  [95.422, 0.6],
   [97.152, 0.7],
   [106.731, 0.6],
   [112.71, 0.9],
@@ -147,6 +146,21 @@ MOTION?.addEventListener?.('change', (e) => {
   calmNow = e.matches
 })
 
+/**
+ * The kung fu picture's own camera: crash zooms. On the dojo's hardest blows (the two big ricochets, both kicks, and
+ * the gong, which had a punch of its own) the camera snaps in, holds on the blow, and lets go, as a Shaw Brothers
+ * picture does: [show seconds, how far in].
+ */
+const CRASHES: [number, number][] = [
+  [88.468, 0.1],
+  [89.652, 0.12],
+  [93.031, 0.1],
+  [94.877, 0.12],
+  [95.422, 0.17],
+]
+const CRASH_IN = 0.09
+const CRASH_HOLD = 0.3
+
 function punch(t: number, calm: () => boolean): number {
   if (calm()) return 0
   let v = 0
@@ -155,7 +169,16 @@ function punch(t: number, calm: () => boolean): number {
     if (u < 0 || u > 1.5) continue
     v += 0.045 * s * (1 - Math.exp(-u / 0.018)) * Math.exp(-u / 0.32)
   }
-  return v
+  // A crash zoom: in fast, eased at both ends, held, and out slower; the next one takes over from wherever it is.
+  let c = 0
+  for (const [at, s] of CRASHES) {
+    const u = t - at
+    if (u < 0 || u > 2) continue
+    const x = Math.min(1, u / CRASH_IN)
+    const rise = x * x * (3 - 2 * x)
+    c = Math.max(c, s * rise * (u < CRASH_HOLD ? 1 : Math.exp(-(u - CRASH_HOLD) / 0.32)))
+  }
+  return v + c
 }
 
 /**

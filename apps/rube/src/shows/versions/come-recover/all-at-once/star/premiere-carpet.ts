@@ -22,7 +22,7 @@ import {
   carpetX,
   flightIn,
 } from './premiere-clock'
-import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, glint, glow, pool, rgba as rgbaHex, smear } from './premiere-light'
+import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, flare, glint, glow, pool, rgba as rgbaHex, smear } from './premiere-light'
 
 /** The kerb the carpet is laid to: stone, a shade up from the wet street. */
 const KERB = mixHex(STREET, SILVER, 0.1)
@@ -646,11 +646,20 @@ export function premiereOver(p: p5, c: Ctx, t: number): void {
   const f = frame(p, c.k)
   if (f.x0 > EDGE_X + 2) return
   const X = (v: number) => v * c.k
+  // Each gun the press fires, as it pops: a shorter streak from its reflector.
+  for (const s of PRESS) {
+    const { pop } = flashOf(s, t)
+    if (pop <= 0.02) continue
+    const [rx, ry] = reflectorOf(s)
+    flare(p, X(rx), X(ry), X(3.2), X(0.05), 0.55 * pop)
+  }
   for (const fl of FLASHES) {
     const s = t - fl.t
     if (s < 0 || s > 0.8) continue
     const a = knock(s, 0.08)
     glow(p, X(fl.x), X(fl.y), X(4.5), STAR.flash, 0.4 * a, 0.2)
+    // The widescreen lens's flare: a streak across the frame from the gun.
+    flare(p, X(fl.x), X(fl.y), X(Math.max(6, (f.x1 - f.x0) * 0.75)), X(0.07), 0.7 * a)
     // The frame's flash: a wide wash of light falling off from the gun, not a flat sheet over the frame, so the
     // dark under the carpet stays dark and the room is lit from where the flash went off.
     glow(p, X(fl.x), X(fl.y), X(Math.max(f.x1 - f.x0, f.y1 - f.y0) * 0.9), '#FFFFFF', 0.2 * a, 0.45)

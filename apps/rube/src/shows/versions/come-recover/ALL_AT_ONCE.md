@@ -102,10 +102,13 @@ each panel is in its life's picture, and on the great hit every panel flips to t
 lives in the washer's window under the credits are in theirs. Raccacoonie, Jobu's dark and the rocks are left as
 they are.
 
-The camera takes the show's ten biggest hits in the body: a push-in of about 4.5% that eases back (`PUNCHES` in
-`score.ts`). There are none in the rocks.
+The camera takes the show's nine biggest hits in the body: a push-in of about 4.5% that eases back (`PUNCHES` in
+`score.ts`). There are none in the rocks. The kung fu picture has its own camera: on the dojo's five hardest blows
+(the two big ricochets, both kicks and the gong) it crash-zooms, in 10–17% over a tenth of a second, holding on the
+blow and letting go (`CRASHES`). The movie star's lens flares, as a widescreen lens does: each press flash throws a
+long blue-white streak across the frame, and in the alley the streetlamp and the neon flare faintly.
 
-For a viewer whose system asks to reduce motion, the flickers and the punches are left out (`CALM` in `score.ts`), and
+For a viewer whose system asks to reduce motion, the flickers, the punches and the crash zooms are left out (`CALM` in `score.ts`), and
 the old print's grain holds still, without its scratches and dust.
 
 ## In order
@@ -802,6 +805,11 @@ The notes went back to the builders who made each part, who still had their cont
   overlapping beaded them. The pull holds 16–17 ms a frame with them.
   - A whole-show sheet of 80 frames, after this and the passes before it: every world reads, and nothing has
     regressed.
+- **A director's pass: each picture its own camera.** The lives had their own looks but one camera. Now the kung fu
+  picture crash-zooms on its five hardest blows, as a Shaw Brothers picture does, the gong's the deepest (it had a
+  punch of its own, which the crash replaces). The movie star's widescreen lens flares: every press flash and gun
+  throws a horizontal blue-white streak, and the alley's lamp and neon flare faintly (`flare` in
+  `star/premiere-light.ts`). Under Zoom, in the dojo's band, no cut lasts as long as a second with the crashes in.
 
 ## The looks
 

@@ -134,3 +134,31 @@ export function glint(p: p5, x: number, y: number, r: number, hex: string, a: nu
   }
   ctx.restore()
 }
+
+/** The blue-white of an anamorphic lens's flare. */
+export const FLARE = '#BFD8FF'
+
+/**
+ * An anamorphic flare: the long horizontal streak a widescreen lens throws from a bright light, through (x, y)
+ * (pixels), `reach` either side, `h` thick at its heart, at `a`. The movie star's life is shot in widescreen
+ * (`film.ts`), so its lights flare the way that lens does.
+ */
+export function flare(p: p5, x: number, y: number, reach: number, h: number, a: number, hex = FLARE): void {
+  if (a <= 0.004 || reach <= 1) return
+  const ctx = ctxOf(p)
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  for (const [th, k] of [[h * 3.2, 0.35], [h, 1]] as const) {
+    const g = ctx.createLinearGradient(x - reach, 0, x + reach, 0)
+    g.addColorStop(0, rgba(hex, 0))
+    g.addColorStop(0.4, rgba(hex, 0.35 * a * k))
+    g.addColorStop(0.5, rgba(hex, a * k))
+    g.addColorStop(0.6, rgba(hex, 0.35 * a * k))
+    g.addColorStop(1, rgba(hex, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.ellipse(x, y, reach, Math.max(0.5, th / 2), 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}

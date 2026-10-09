@@ -31,7 +31,7 @@ import {
   timeRate,
   waymondAt,
 } from './premiere-clock'
-import { INK, IRON, NIGHT, STONE, STONE_DEEP, STREET, WALL, WALL_FAR, WET, glow, pool, rgba, smear } from './premiere-light'
+import { INK, IRON, NIGHT, STONE, STONE_DEEP, STREET, WALL, WALL_FAR, WET, flare, glow, pool, rgba, smear } from './premiere-light'
 
 /**
  * The alley behind the theatre, in the rain: the film's "in another life", lit like In the Mood for Love.
@@ -204,6 +204,7 @@ function drawNeon(p: p5, c: Ctx, b: number): void {
   const w = 0.92
   const h = 1.0
   if (b > 0.01) glow(p, X(nx), X(ny), X(2.4), STAR.neonPink, 0.3 * b, 0.25)
+  if (b > 0.01) flare(p, X(nx), X(ny), X(2.2), X(0.04), 0.22 * b, STAR.neonPink)
   // Its chains to the window's head.
   outline(p, mixHex(INK, NIGHT, 0.5), weight * 0.5)
   p.line(X(nx - 0.35), X(WIN.y0), X(nx - 0.35), X(ny - h / 2))
@@ -260,6 +261,8 @@ function drawLamp(p: p5, c: Ctx): void {
   ctx.closePath()
   ctx.fill()
   glow(p, X(lx), X(ly + 0.1), X(1.1), STAR.spot, 0.55)
+  // In widescreen the lamp flares as that lens has it: a faint streak through the rain.
+  flare(p, X(lx), X(ly + 0.1), X(2.8), X(0.045), 0.3)
   // The post: a fluted foot, a column, and its crook.
   solid(p, INK, weight, IRON)
   p.rect(X(POST_X), X(LANDING - 0.25), X(0.3), X(0.5), X(0.04))
