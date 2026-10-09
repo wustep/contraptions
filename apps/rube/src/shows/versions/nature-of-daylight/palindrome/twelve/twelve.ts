@@ -75,8 +75,9 @@ export const dark = part<{ begin: number }>(
 
 /**
  * The call (277.647 → 311.293). Louise on the table, the sat phone on her right where Shang was. It wakes on the
- * chord; she hops along its keys, one a beat, the number he gave her (the camera in close on the keys, and cut away on
- * 283.458 to the ring dead but for Montana, and back on 285.495), and on 288.554 lands on the call key: the call goes
+ * chord; she hops along its keys, one a beat, the number he gave her (the camera in close on the keys, cut away on
+ * 283.458 to the ring dead but for Montana, and coming back in to her in one move as she dials the last of it), and on
+ * 288.554 lands on the call key: the call goes
  * up the cable into Montana, and the ring stands again, backwards, round to the loudest bar. She stays on the key, the
  * line open, while the signal goes round the closed ring.
  */

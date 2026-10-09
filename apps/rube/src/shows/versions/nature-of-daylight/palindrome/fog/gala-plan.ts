@@ -5,7 +5,8 @@ import { SEAM, beats, chords } from '../music'
 /**
  * The gala, years on, as a plan (gala world cells, y down; the floor's top at y = R, so a ball on it has y = 0).
  *
- *   266.124  at rest in the room, in champagne light, beside the tower of coupes and its pouring stand.
+ *   266.124  at rest in the room, in champagne light, beside the tower of coupes and its pouring stand; the ring she
+ *            was shown carried in with her, its ghost paling over the room.
  *   267.012  she rolls onto the stand's pedal: the bottle over the tower tips and pours.
  *   267.964  the top coupe brims and runs over into the tier below...
  *   268.968  ...the second tier brims...
@@ -13,7 +14,8 @@ import { SEAM, beats, chords } from '../music'
  *   270.878  ...the fourth: the tower full, alight tier by tier; the bottle runs dry.
  *   272.869  she rolls off the pedal and goes to him (the bottle rights itself); the room raises its glasses; he
  *            comes on to her.
- *   274.802  he leans in and they touch: he tells her (his number, his wife's last words: a whisper is a touch).
+ *   274.802  he leans in and they touch: he tells her (his number, his wife's last words: a whisper is a touch), and a
+ *            ghost of the sat phone comes up beside them, lighting the first of his number.
  *   277.647  at rest, Shang on her right at [0.34, 0]. (The tent: the call.)
  */
 

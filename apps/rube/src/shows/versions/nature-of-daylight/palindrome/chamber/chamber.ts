@@ -9,7 +9,8 @@ import { BOARDS, FRANTIC, LOGOS, REST, T, TOUCHES, WAYS, ianAt, laneOf, louiseAt
  * the heptapods come out of the white, she tries with her board, takes off her suit and goes to the glass alone, and
  * a palm of seven fingers meets her there; then the language as a machine, her board and their rings back and forth
  * on the chords, every ring she reads lifting over the glass to hang lit in the dark above her, until "weapon". And the
- * bomb: the charge at the foot of the glass, Abbott's warning, the blast, the glass broken, the white coming in.
+ * bomb: a soldier arming the charge at the foot of the glass and leaving, Abbott's warning, the blast, the two of them
+ *   thrown down the chamber, the glass broken, the white coming in.
  *
  * The drawing is one set by show time (`set.ts`); the clock and the geometry are in `plan.ts`.
  */
