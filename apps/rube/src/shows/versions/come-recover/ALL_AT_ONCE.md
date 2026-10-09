@@ -354,8 +354,8 @@ The notes went back to the builders who made each part, who still had their cont
     shelf.
   - On the great hit's first wide (192 s), Evelyn landed at Zoom's left edge. It is held a little further left, and
     Waymond at the table's far end stays in the normal frame.
-  - Under Zoom, the credits' longest line still crosses the lantern string's near end. The words are set by the
-    page, the same in every mode, and this was left.
+  - Under Zoom, the credits' longest line crosses the lantern string's near end. The words are set by the page,
+    the same in every mode, and this was left.
 - **A pass for Overview.** Overview (the viewer's O) frames a world's bounds, and the show kept them per world. Two
   worlds are each visited twice, far apart: the surf and the mosaic share one world, and the dark and the peak
   another. So their Overview framed both visits at once.
@@ -366,6 +366,14 @@ The notes went back to the builders who made each part, who still had their cont
     happens in.
   - In Overview the surf's worlds now fill the frame, and the pull and the peak frame the bagel large. The normal
     view and Zoom are unchanged.
+- **A pass for performance, and the credits.** After all the passes' drawing (the party wall, the bursts, the
+  underground, the knobs, the end's dark), the heavy stretches were measured as before: 1440×810 on a 2× display,
+  real Chrome with the GPU, against `origin/main` in fresh browsers, three runs each. Both hold 59–60 fps, with the
+  same occasional 30–40 ms frame. Nothing regressed.
+  - The tail's lower framing (for Zoom, above) had brought the lantern string down into the credits' band. In the
+    normal view the film's title ran onto the first lantern. The cards now stand a little higher and further left,
+    over the storefront's glass and above the string, and still fit at phone width. Under Zoom the longest line
+    still crosses the string's near end.
 
 ## End credits
 
