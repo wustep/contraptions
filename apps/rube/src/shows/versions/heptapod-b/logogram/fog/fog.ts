@@ -1,9 +1,9 @@
 import type { Pt, Seg } from '../../../../../parts'
-import { box, carried, part, scenery, type PartShot, type Slot } from '../kit'
+import { box, carried, looks, part, scenery, type Look, type PartShot, type Slot } from '../kit'
 import { SEAM } from '../music'
 import { SEAMS } from '../seams'
 import { drawFog, FOG_EXTENT } from './fog-set'
-import { FOG_STRIKES, GREAT, herAt, PATH, RINGS } from './fog-plan'
+import { F4, FOG1, FOG_STRIKES, GREAT, herAt, PATH, RINGS } from './fog-plan'
 
 /**
  * Beyond the glass (the fog builder's): the fog's standing set, and the four stretches of Louise in it between the
@@ -58,6 +58,20 @@ function lane(slot: Slot, o: Pt): { segs: Seg[]; end: Pt; lo: Pt; hi: Pt } {
   return { segs, end: fn(span), lo, hi }
 }
 
+/**
+ * Where she looks, the two times it matters in the fog (elsewhere she is riding the ink and her eye rolls with her):
+ * up at Abbott, in the cup of its palm beyond the glass, until it lets her go; and on the great ring's close, up
+ * through it to where the two halves meet over her, hers and Costello's, held to the cut.
+ */
+const AT_ABBOTT = -2.0
+const UP = -Math.PI / 2
+const FOG_LOOKS: Look[][] = [
+  [{ from: SEAM.fog1 - 1, to: FOG1.release - 0.15, at: () => AT_ABBOTT }],
+  [],
+  [],
+  [{ from: F4.close - 0.2, to: Infinity, at: () => UP }],
+]
+
 function stretch(i: number, name: string, shots: (slot: Slot, o: Pt, at: (t: number) => Pt) => PartShot[]) {
   const o = FOG_AT[i]
   const at = (t: number): Pt => {
@@ -74,6 +88,7 @@ function stretch(i: number, name: string, shots: (slot: Slot, o: Pt, at: (t: num
         exit: [end[0] + 0.5, end[1]] as Pt,
         lane: { segs, fire: (first ?? slot.begin) - slot.begin },
         state: null,
+        riders: FOG_LOOKS[i].length ? looks(FOG_LOOKS[i]) : undefined,
       }
     },
     (slot) => shots(slot, o, at),

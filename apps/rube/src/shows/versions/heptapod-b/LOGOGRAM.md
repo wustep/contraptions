@@ -258,7 +258,9 @@ strongest pulses held against what the picture does on them. What changed:
   through the grand wide, on the touch and all through the first logogram it pointed wherever her roll left it,
   mostly at the floor. Wherever she is at rest she now looks: up at Abbott as he comes, up at the giants through the
   wide and down the limb as it comes to her, up at the palm on the touch, and over to the ring being written, into
-  the white. On her rolls her eye rolls with her. (The show
+  the white. On her rolls her eye rolls with her. Beyond the glass the same: in the cup of Abbott's palm she looks up
+  at it until it lets her go, and on the great ring's close (183.182) she looks up through it to where the two
+  halves meet over her, hers and Costello's, held to the cut; before, she looked down into the ink. (The show
   hands each rider her roll as the stage would draw it, so the eye turns from where it is; elsewhere every frame is
   unchanged.)
 - **The second vision's loss** (156.177 → 160.015): Hannah leaves level along the bench, so Louise's gaze barely

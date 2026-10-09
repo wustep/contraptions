@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { box, part, route, type Company, type PartShot, type Riders } from '../kit'
+import { box, ease, looks, part, route, turnTo, type Company, type Look, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import { drawChamber } from './chamber-glass'
 import { FOOTFALLS } from './chamber-heptapods'
@@ -31,15 +31,6 @@ interface ChamberState {
   begin: number
 }
 
-/** The shortest turn from angle `a` to `b`. */
-const turnTo = (a: number, b: number): number => {
-  const d = (b - a) % (2 * Math.PI)
-  return d > Math.PI ? d - 2 * Math.PI : d < -Math.PI ? d + 2 * Math.PI : d
-}
-const ease = (u: number): number => {
-  const v = Math.max(0, Math.min(1, u))
-  return v * v * (3 - 2 * v)
-}
 /** Where she looks: up at a giant over the glass, up at the palm, and up and over to the ring as it is written. */
 const AT_GIANT = -1.0
 const AT_PALM = -Math.PI / 2 + 0.12
@@ -52,20 +43,11 @@ const LIMB_DOWN = 115.4
  * her and then the limb coming down; and from the palm's opening through the touch and the writing, into the white.
  * Between them, and on the rolls, her eye rolls with her.
  */
-const LOOKS: { from: number; to: number; at: (t: number) => number }[] = [
+const LOOKS: Look[] = [
   { from: ABBOTT_SEEN + 0.3, to: 99.25, at: () => AT_GIANT },
   { from: 105.2, to: SET_OFF - 0.2, at: (t) => AT_GIANT + turnTo(AT_GIANT, AT_PALM) * ease((t - LIMB_DOWN) / 2.2) },
   { from: OPENS + 0.55, to: Infinity, at: (t) => AT_PALM + turnTo(AT_PALM, AT_RING) * ease((t - (SPRAY + 0.1)) / 0.6) },
 ]
-/** Her eye: rolling with her, and turned to look in the windows above, from where it is and back to it. */
-const looking: Riders = (t, hero) => {
-  const look = LOOKS.find((l) => t > l.from && t < l.to + 0.4)
-  if (!look) return null
-  const w = ease((t - look.from) / 0.45) * (1 - ease((t - look.to) / 0.4))
-  if (w <= 0) return null
-  const roll = hero.spin ?? 0
-  return [{ ...hero, spin: roll + w * turnTo(roll, look.at(t)) }]
-}
 
 /** Every strike: the glass's two wakings, the seen footfalls, the limb leaving the floor, the palm opening, the touch, the spray, the ink coming in, the ring's surges, its closing and its tendrils. */
 export const CHAMBER_HITS: number[] = [...new Set([...WAKE, ...FOOTFALLS.map((f) => f.at), OPENS, PALM, SPRAY, INK_IN, ...SURGES, CLOSE, REACH])].sort((a, b) => a - b)
@@ -90,7 +72,7 @@ export const chamber = part<ChamberState>(
       exit: [X_LEAN + 0.5, 0] as Pt,
       lane: { segs: route(ways), fire: WAKE[0] - slot.begin },
       state: { begin: slot.begin },
-      riders: looking,
+      riders: looks(LOOKS),
       company,
     }
   },

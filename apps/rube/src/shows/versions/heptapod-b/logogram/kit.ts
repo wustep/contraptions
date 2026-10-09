@@ -49,6 +49,37 @@ export interface Built<S> {
 /** See `Built.riders`. */
 export type Riders = (t: number, hero: ShowBall) => ShowBall[] | null
 
+/** The shortest turn from angle `a` to `b`. */
+export const turnTo = (a: number, b: number): number => {
+  const d = (b - a) % (2 * Math.PI)
+  return d > Math.PI ? d - 2 * Math.PI : d < -Math.PI ? d + 2 * Math.PI : d
+}
+/** 0 before, 1 after, smooth between: `u` from 0 to 1. */
+export const ease = (u: number): number => {
+  const v = Math.max(0, Math.min(1, u))
+  return v * v * (3 - 2 * v)
+}
+/** A window in which the hero looks at something, rather than her eye rolling with her: from, to, and where. */
+export interface Look {
+  from: number
+  to: number
+  at: (t: number) => number
+}
+/**
+ * Her eye turned to look in the windows given, from where her roll has it and back to it (the show hands a rider her
+ * roll as the stage draws it, as `spin`), each turn over about half a second. Outside them it rolls with her.
+ */
+export function looks(list: Look[]): Riders {
+  return (t, hero) => {
+    const look = list.find((l) => t > l.from && t < l.to + 0.4)
+    if (!look) return null
+    const w = ease((t - look.from) / 0.45) * (1 - ease((t - look.to) / 0.4))
+    if (w <= 0) return null
+    const roll = hero.spin ?? 0
+    return [{ ...hero, spin: roll + w * turnTo(roll, look.at(t)) }]
+  }
+}
+
 /** Where they are: the ball's own fields but its id and, unless they have changed, its colour. */
 export type Companion = Omit<ShowBall, 'id' | 'color'> & { color?: string }
 
