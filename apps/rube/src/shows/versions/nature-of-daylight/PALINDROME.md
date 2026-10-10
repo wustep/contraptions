@@ -910,6 +910,9 @@ no audio file anywhere in the branch's difference from main, none tracked for th
 the music, the cue's declaration (the label's upload, `rVN1B-tUpgs`, by YouTube) and the attribution all untouched.
 Every changed file is the show's drawing, staging and notes. Nothing to change.
 
+A hundredth watched the whole show through once more, a frame every three seconds: it holds from the cradle to the
+cradle, and nothing new showed. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
