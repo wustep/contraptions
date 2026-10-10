@@ -410,6 +410,9 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       const wait = () => {
         patience = window.setTimeout(() => {
           if (pending !== resolve) return
+          // Playing all along, with no news of it: asked to play while already playing (a held sound brought in, still
+          // running muted), WebKit sends no state change, and the wait would call it refused and hold it again (pass 145).
+          if (d.player?.getPlayerState() === PLAYING) return settleRefusal('playing')
           // Slow to come, not refused: give it longer.
           if (d.state === BUFFERING && performance.now() - began < PATIENCE_BUFFERING) return wait()
           // It never started: the browser is holding it for a gesture.

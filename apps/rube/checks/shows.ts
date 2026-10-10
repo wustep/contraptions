@@ -144,6 +144,10 @@ async function main(): Promise<void> {
     const yt = readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.ts'), 'utf8')
     // WebKit lets a player sound only if it was played inside a gesture; a later cue first played by the timer was
     // stopped at its entry, and the show stood waiting there for good (pass 143). Each is warmed in the press, once.
+    // A held sound brought in while its cue already runs muted gets no state change in WebKit: the wait must look at the
+    // player before calling it refused, or the sound is held again two seconds after the tap, every time (pass 145).
+    check('the wait for a play looks at the player before calling it refused',
+      /if \(pending !== resolve\) return\s*\/\/[^\n]*\n[^\n]*\n\s*if \(d\.player\?\.getPlayerState\(\) === PLAYING\) return settleRefusal\('playing'\)/.test(yt))
     check('every later YouTube cue is warmed inside the viewer\'s press, once, so WebKit lets it sound at its entry',
       /function begin\(\): Promise<PlayResult> \{\s*arrange\(shown\)[\s\S]{0,700}if \(!x\.blessed && x\.ready && x\.cue\.at > shown && !x\.running && x\.warm !== 'on'\) \{\s*x\.blessed = true\s*warmUp\(x\)/.test(yt) &&
       yt.includes("blessed: false, ear: listener()"))
