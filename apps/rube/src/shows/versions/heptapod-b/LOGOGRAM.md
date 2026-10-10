@@ -425,6 +425,11 @@ changed, in the order of the film, and then what runs through it:
   she sat over the thin of its tip: the tip runs on past her. As the great ring began she floated over its first
   stroke (168.6 → 170.3), its tail's taper reaching under her: the taper is held to the ink on both sides of her. And
   one long jet ended in a square block inside its own cloud (153.35): the stream ends round.
+- **Her contact with the ink, measured**: every frame she rides ink in the fog, at 10 fps, the gap from her ball to the
+  nearest ink. She came off the first fog ring's tapered end for the last quarter second before it flings her (143.4
+  → 143.68, up to 10 px): its end runs on past her now. And the great ring's first stroke came in beside her with a
+  square end (168.4), its tail held back from the first moment: it is held only near the close. She is on the ink in
+  every frame now but the single frames she lands in.
 
 ## Arrival nods
 
