@@ -740,6 +740,10 @@ window.
     183 s) and nothing leading: her (90% sure), "she can't manage the climb", a health problem not an accident (85%);
     the turn on 174.6 as he leaves the basket and the tickets to go to her. So the third viewer's "him too old" was the
     one-a-second sheet's. Not readable at that scale: whether she collapses or rolls back tired; either carries it.
+  - *The doctor's office, re-watched* by a fifth viewer who has never seen Up (the baby cloud to the yard, three or four
+    frames a second, nothing leading): there about the baby, and bad news (80% sure); which news open (lost, or can't
+    have one), as the film leaves it. Her sinking read plainly; his lean to her (8°) did not ("I can't tell whether
+    he's leaning toward her or just still"), and his reach to her is half the beat: now 14°, clear at both framings.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
