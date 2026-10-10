@@ -275,16 +275,27 @@ export function drawAirframe(pen: Pen, t: number, f: Frame): void {
     const lower: Pt[] = []
     // From under the hull (at the wing's height it is about 1.45 wide), so the root meets the body and no sky shows
     // between them.
-    for (let d = 1.2; d <= 34; d += 1) {
+    // From well inside the hull, and clipped to outside its outline: the hull is cut through and the wing stands behind
+    // it, so its root goes in under the ring (started at a fixed span, it showed a gap or lay over the ring, ending
+    // square, the hull's edge curving fast so low down).
+    const root = 0.6
+    for (let d = root; d <= 34; d += 1) {
       const thick = 0.34 * (1 - d / 44)
       const fl = flexAt(t, d)
       pts.push([cx + s * d, wingY(d) + fl + dy])
       lower.push([cx + s * d, wingY(d) + fl + thick + dy])
     }
-    const xs = [cx + s * 1.2, cx + s * 34]
+    const xs = [cx + s * root, cx + s * 34]
     if (Math.max(...xs) < f.x0 - 1 || Math.min(...xs) > f.x1 + 1) continue
+    const { ctx, k } = pen
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect((f.x0 - 2) * k, (f.y0 - 2) * k, (f.x1 - f.x0 + 4) * k, (f.y1 - f.y0 + 4) * k)
+    ctx.arc(cx * k, (CAB.cy + dy) * k, (CAB.rOut - 0.02) * k, 0, Math.PI * 2)
+    ctx.clip('evenodd')
     shape(pen, [...pts, ...lower.reverse()], skin, 0.7)
     polyline(pen, lower.map(([x, y]) => [x, y - 0.06] as Pt), under, 1.6)
+    ctx.restore()
   }
   // The main gear: under the body and the wings, behind the nose gear; swung down with it.
   const down = gearDown(t)
