@@ -19,6 +19,7 @@ import {
   SUN_AT,
   SWING,
   memory,
+  Q,
   TOP_OF_SKY,
   TREE,
   UPRUSH,
@@ -472,6 +473,45 @@ export function surface(x: number, t: number): number {
 /** Where the sea's surface meets the sand (the swash aside), for drawing the water only as far as it goes. */
 const SHORE_END = WATERLINE + 0.9
 
+/**
+ * The return (from the dive on): pieces of the city they built, fallen into the sea, afloat off the shore he washes up
+ * on, so the circle back to the show's first frame is the same place, but further gone (two viewers new to it read the
+ * close return as the opening replayed). Slabs of concrete with their window holes, tilted, riding the swell, half under.
+ */
+const WRECKAGE: [number, number, number, number][] = [
+  // x, width, height, tilt
+  [-9.1, 0.8, 0.3, -0.18],
+  [-10.7, 1.2, 0.4, 0.12],
+  [-12.6, 0.8, 0.3, -0.3],
+]
+function drawWreckage(pen: Pen, t: number, xa: number, xb: number): void {
+  if (t < Q.under) return
+  const ctx = pen.p.drawingContext as CanvasRenderingContext2D
+  const { k } = pen
+  WRECKAGE.forEach(([x, w, h, tilt], i) => {
+    if (x + w < xa || x - w > xb) return
+    const y = surface(x, t) + 0.06
+    const turn = tilt + 0.06 * Math.sin(t * 1.3 + i * 2)
+    ctx.save()
+    ctx.translate(x * k, y * k)
+    ctx.rotate(turn)
+    // Its face, lit along its top, and its window holes; its lower part under the water.
+    ctx.fillStyle = mixHex(LIMBO.concrete, LIMBO.sky, 0.15)
+    ctx.fillRect((-w / 2) * k, -h * k, w * k, h * 1.7 * k)
+    ctx.fillStyle = mixHex(LIMBO.concrete, LIMBO.foam, 0.4)
+    ctx.fillRect((-w / 2) * k, -h * k, w * k, 0.05 * k)
+    ctx.fillStyle = mixHex(LIMBO.concreteDark, SLEEP.mid, 0.3)
+    for (let q = 0; q < Math.floor(w / 0.24); q++) ctx.fillRect((-w / 2 + 0.08 + q * 0.24) * k, (-h + 0.1) * k, 0.12 * k, 0.12 * k)
+    ctx.strokeStyle = pen.ink
+    ctx.lineWidth = Math.max(1, pen.w * 0.6)
+    ctx.strokeRect((-w / 2) * k, -h * k, w * k, h * 1.7 * k)
+    ctx.restore()
+    // The sea over its foot, and the foam where it breaks round it.
+    soft(pen, x, y + 0.12, w * 0.75, 0.14, mixHex(NEAR_SEA, LIMBO.seaDeep, 0.3), 0.95)
+    soft(pen, x, y + 0.02, w * 0.7, 0.07, LIMBO.foam, 0.55)
+  })
+}
+
 export function drawSea(pen: Pen, t: number, f: Frame): void {
   if (f.x0 > SHORE_END || f.y0 > BOTTOM || f.y1 < SEA - 2) return
   const xa = f.x0 - 1
@@ -495,6 +535,7 @@ export function drawSea(pen: Pen, t: number, f: Frame): void {
   ])
   const glint: Pt[] = [...top, ...top.slice().reverse().map(([x, y]): Pt => [x, y + 0.035])]
   wash(pen, glint, LIMBO.foam, 0.45)
+  drawWreckage(pen, t, xa, xb)
   // Foam on the breakers' crests as they rise to break.
   for (const tk of WAVES) {
     const ahead = tk - t

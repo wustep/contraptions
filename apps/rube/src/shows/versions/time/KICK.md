@@ -433,6 +433,10 @@ each world, and changed:
   second cold critic read the spurts as his own ski spray), so he rides into the spray (behind him, the last of the three, it fell off a
   tight frame): a dark pock and a spray in the snow's blue shade (white on white was lost). Never a hit: Mal's shot,
   four seconds later, is the one that lands.
+- **The wreckage off the shore** (from the dive, 156.6 on): the return to limbo's beach is the show's first frame
+  again, on purpose, and two viewers new to it read it as the opening replayed. Pieces of the city they built are
+  afloat off the shore now, slabs of concrete with their window holes, tilted, riding the swell half under, so the
+  circle comes back to the same place, further gone. The opening is unchanged.
 
 ## Inception nods
 
