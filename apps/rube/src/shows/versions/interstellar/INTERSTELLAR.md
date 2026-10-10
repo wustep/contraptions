@@ -231,7 +231,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 131 (latest)
+## Polish pass 132 (latest)
+
+No change to the show: the online music at the player's other speeds, read as in passes 130 and 131. At 2× and at 0.5× YouTube follows (`getPlaybackRate` 2 and 0.5) and the active video stays in step to the hundredth, through steady play and through the hand-over at both speeds. Two small things, neither heard:
+- A change of speed sets the waiting second video going for a moment, muted (volume 0) and from wherever it was cued, before it pauses again.
+- At 2× Cornfield Chase pauses at 126.60 of its video rather than 126.96, but its fade has already brought it to volume 3, so nothing is cut off.
+
+## Polish pass 131
 
 No change to the show: the online music under a viewer's hands, read through both embedded players as in pass 130.
 - Played from 0, the show holds at 0.00 while Cornfield Chase buffers, then runs with it, the video's position equal to the show's to the hundredth.
