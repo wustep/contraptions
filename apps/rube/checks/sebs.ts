@@ -18,6 +18,7 @@ import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
 import { DOOR, DOOR_SHUT, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
 import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs/piano-figure'
+import { muted } from '../src/shows/versions/la-la-land/sebs/lens'
 import { HORIZON, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
 import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
@@ -485,6 +486,13 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       }
     }
     check('sebs: the piano drawn in the stars is whole in the picture, at the dip and over the city', cut.length === 0, cut.slice(0, 5).join(', '))
+  }
+  // The grade: the room as it is muted, the dream in full colour all through, and the colour back at the last frame.
+  {
+    let dreamMuted = 0
+    for (let t = 41; t < 451.4; t += 0.5) dreamMuted = Math.max(dreamMuted, muted(t))
+    check('sebs: the room as it is muted, the dream in full colour, the colour back for the stars',
+      muted(10) > 0.99 && muted(30) > 0.99 && dreamMuted === 0 && muted(460) > 0.99 && muted(480) > 0.99 && muted(DURATION) < 0.01, `dream muted ${dreamMuted}`)
   }
   // The last frame: the whole city, wide.
   const endCam = cam(perf.duration)

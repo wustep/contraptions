@@ -115,7 +115,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - **The version file:** `apps/rube/src/shows/versions/la-la-land/opus5-5.show.ts`. Everything with weight is behind `load()`.
 - **The show:** `.../la-la-land/sebs/`.
   - `call.ts`: his playing made visible: rising into the dark at the start, then reaching her, at Seb's and at Lipton's.
-  - `lens.ts`: the lens the whole picture is seen through (a little fall-off at the corners, a fine grain), but for the home movie, which has its own stock.
+  - `lens.ts`: the lens the whole picture is seen through (a little fall-off at the corners, a fine grain), but for the home movie, which has its own stock; and the grade: the room as it is muted and colder, the dream in full colour, with the colour coming in at Lipton's, draining at the waking, and brought back by The End's swell.
   - `echo.ts`: the other road, drawn over each place and under its cover; the parts say where (`Built.echoes`) and the show keeps them (`SebsShow.echoes`).
   - `kit.ts`: the part contract (`Slot`, `Built`, `Company`, `Echo`), timed `route` and `carried` lanes, `lay()` with seam checks, and drawing helpers (`frame`, `glow`, `beam`, `ring`).
   - `show.ts`: a `Show` with eleven universes on one clock, and the company merged in.
