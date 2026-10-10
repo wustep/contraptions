@@ -98,7 +98,8 @@ function plan(): void {
     const endGroove = lap.lob ?? barTime(tr, tr.exit)
     const breaks = tr.runs.slice(1).map((r, i) => ({ from: barTime(tr, tr.runs[i].to), to: barTime(tr, r.from) }))
     let phrase = 0
-    for (let i = tr.entry + 2 + 8; ; i += 8) {
+    // A look holds two phrases (sixteen bars): fewer moves, the room still for longer.
+    for (let i = tr.entry + 2 + 16; ; i += 16) {
       const start = barTime(tr, i)
       if (start > endGroove - 2 * bar) break
       // Not in a break, nor just before or after one: the break has its own frames.

@@ -174,7 +174,7 @@ function ballGaze(t: number, lag: number): { x: number; y: number } {
 function vibing(tr: Track, phrase: number): number {
   // It plays to the camera: likelier to be lost in it through a phrase the camera spends looking at it.
   const mid = barTime(tr, tr.entry + phrase * 8 + 4)
-  return hash(tr.n, phrase, 97) < (catInViewAt(mid) ? 0.8 : 0.25) ? 1 : 0
+  return hash(tr.n, phrase, 97) < (catInViewAt(mid) ? 0.62 : 0.25) ? 1 : 0
 }
 export function vibeAt(t: number): number {
   const tr = trackAt(t)
@@ -220,10 +220,10 @@ export function yawnAt(t: number): number {
 /** How long a wash takes: the paw up to its chin, four licks, the paw over its ear, and down. */
 const WASH = 6
 /**
- * Its washes: four through the night, each in a phrase it spends watching rather than nodding along, while the ball
+ * Its washes: four through the night (if it was nodding along, it stops to wash), while the ball
  * sits and the camera is on it all the while, clear of its yawns and of the lob.
  */
-export const WASHES: number[] = [[1, 2], [3, 4], [5, 6], [7, 8]].map((tracks) => {
+export const WASHES: number[] = [[1, 2], [3, 4, 2, 6], [5, 6], [7, 8]].map((tracks) => {
   for (const n of tracks) {
     const at = washIn(n)
     if (at > 0) return at
@@ -241,8 +241,9 @@ function washIn(n: number): number {
     if (!catInViewAt(at) || !catInViewAt(at + WASH)) continue
     if (YAWNS.some((y) => Math.abs(y - at) < WASH + 6)) continue
     if (REACHES.some((r) => at > r.at - WASH - 4 && at < r.at + r.dur + 4)) continue
+    // (If it was nodding along, it stops to wash: `cat` takes the wash over the nod.)
     let still = true
-    for (let s = at - 1; s <= at + WASH + 1; s += 0.5) if (vibeAt(s) > 0.02 || sweepAt(s).a > 0.02) still = false
+    for (let s = at - 1; s <= at + WASH + 1; s += 0.5) if (sweepAt(s).a > 0.02) still = false
     if (still) return at
   }
   return -100
@@ -271,13 +272,13 @@ export function washAt(t: number): { k: number; paw: number; lick: number } {
 /** How long a stretch takes: up onto its feet, the front stretched out long with a yawn, and back down. */
 const STRETCH = 6.8
 /** Everything a stretch reaches to: the cat's box, and its front paws out along the desk toward the books. */
-const STRETCH_BOX: [number, number, number, number] = [CAT.x0 - 0.3, -1.25, CAT.chest + 0.6, 0.05]
+const STRETCH_BOX: [number, number, number, number] = [CAT.x0 - 0.08, -1.25, CAT.chest + 0.6, 0.05]
 /**
  * Its stretches: twice through the night, as a cat does now and then after lying still a long while, each in a phrase
  * it spends watching (never nodding along), while the camera holds the whole of it, the paws stretched out included;
  * clear of its yawns and washes, the hand, the lob, a car's lights and the sky's moments.
  */
-export const STRETCHES: number[] = [[3, 4, 5, 2, 6], [8, 9, 10]].map((tracks) => {
+export const STRETCHES: number[] = [[3, 4, 5, 2, 6, 1], [9, 10, 8]].map((tracks) => {
   for (const n of tracks) {
     const at = stretchIn(n)
     if (at > 0) return at
@@ -308,8 +309,9 @@ function stretchIn(n: number): number {
     if (sky.some((m) => m > at - 12 && m < at + STRETCH + 10)) continue
     if (machineBusy(at, at + STRETCH)) continue
     if (!held(at - 1, at + STRETCH + 1)) continue
+    // (Nodding along, it stops to stretch: `cat` takes the stretch over the nod.)
     let still = true
-    for (let s = at - 1; s <= at + STRETCH + 1; s += 0.5) if (vibeAt(s) > 0.02 || sweepAt(s).a > 0.02) still = false
+    for (let s = at - 1; s <= at + STRETCH + 1; s += 0.5) if (sweepAt(s).a > 0.02) still = false
     if (still) return at
   }
   return -100
@@ -404,7 +406,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   // A shooting star, or lightning, brings it out of the music to look, and it goes back in after.
   // A scratch under the chin: it shuts its eyes and leans into the hand.
   const pet = petAt(t) * (1 - sleepAt(t))
-  const vibe = vibeAt(t) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - handAt(t).a) * (1 - mothKeen(t))
+  const vibe = vibeAt(t) * (1 - washAt(t).k) * (1 - smooth(stretchAt(t).up, 0, 0.3)) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - handAt(t).a) * (1 - mothKeen(t))
   // Stretching: up on its feet, the body lifted and tipped forward (chest down, rear up) about its rear, and longer;
   // the head down and forward with it, the eyes shut in a yawn.
   const s0 = stretchAt(t)
@@ -430,9 +432,9 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const mix = (a: { x: number; y: number }, b: { x: number; y: number }) => ({ x: a.x + (b.x - a.x) * st.up, y: a.y + (b.y - a.y) * st.up })
   const curl = Math.sin(t * 2.4) * 0.04
   const t0 = mix({ x: x0 + 0.08, y: -0.08 }, T(x0 + 0.02, -0.22))
-  const t1 = mix({ x: x0 + 0.2, y: 0.02 }, T(x0 - 0.22, -0.4))
-  const t2 = mix({ x: chest - 0.55, y: 0.0 }, { x: x0 - 0.3, y: -0.82 - L })
-  const t3 = mix(tip, { x: x0 - 0.08 + curl, y: -1.02 - L })
+  const t1 = mix({ x: x0 + 0.2, y: 0.02 }, T(x0 - 0.1, -0.4))
+  const t2 = mix({ x: chest - 0.55, y: 0.0 }, { x: x0 - 0.12, y: -0.85 - L })
+  const t3 = mix(tip, { x: x0 + 0.02 + curl, y: -1.02 - L })
   ctx.beginPath()
   ctx.moveTo(t0.x, t0.y)
   ctx.bezierCurveTo(t1.x, t1.y, t2.x, t2.y, t3.x, t3.y)

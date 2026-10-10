@@ -228,7 +228,7 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     [10, 1100, 1600, DURATION].map((t) => reflectionSeen(t).toFixed(2)).join(' '))
 
   check('soft lamp: once, late, just after the kitten stretches, the one in the window stretches too',
-    HUMAN_STRETCH > 1300 && STRETCHES.some((t) => HUMAN_STRETCH - t > 6.8 && HUMAN_STRETCH - t < 10) && reflectionSeen(HUMAN_STRETCH) > 0.4, `${HUMAN_STRETCH}`)
+    HUMAN_STRETCH > 1300 && STRETCHES.some((t) => HUMAN_STRETCH - t > 6.8 && HUMAN_STRETCH - t < 30) && reflectionSeen(HUMAN_STRETCH) > 0.4, `${HUMAN_STRETCH}`)
 
   // At the end it climbs to the sill (the ball's stair, the other way) and sleeps there, under the window, clear of the
   // plant pot, once the ball is in the cup for good and the camera is on the whole room.

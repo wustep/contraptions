@@ -10,7 +10,7 @@ import { ballShadow, contacts, wallShadows } from './shade'
 import { camera } from './camera'
 import { titlesAt } from './titles'
 import { REFILL, doodle, hands, knob, liftAt } from './hands'
-import { moth, mothShadow } from './moth'
+import { moth } from './moth'
 import { rimAt, rimLine } from './rim'
 import { reflection } from './reflection'
 import { cable, walkman } from './walkman'
@@ -404,7 +404,7 @@ function steam(ctx: Ctx, t: number): void {
     for (let i = 0; i <= n; i++) {
       const u = i / n
       const y = top - u * rise
-      const x = x0 + Math.sin(u * 6 - phase * 2 + w) * (0.03 + 0.12 * u * u) + 0.06 * u * Math.sin(phase * 0.3 + w)
+      const x = x0 + Math.sin(u * 6 - phase * 2 + w) * (0.03 + 0.06 * u * u) + 0.06 * u * Math.sin(phase * 0.3 + w)
       if (i === 0) ctx.moveTo(x, y)
       else ctx.lineTo(x, y)
     }
@@ -573,16 +573,6 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   ctx.strokeStyle = lit(PAD, PAD_LIT, lightAt(a.x + 0.6, BAND_TOP) * lamp * 0.8)
   ctx.stroke()
   ctx.restore()
-  // The band's adjusting slider where it comes out of the yoke: a bright strip of it.
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect(a.x - 0.2, a.y - 0.42, 0.42, 0.42)
-  ctx.clip()
-  band()
-  ctx.lineWidth = 0.05
-  ctx.strokeStyle = lit('#6E6A7E', '#E8D9C2', lightAt(a.x, a.y - 0.3) * lamp * 0.9 + 0.1)
-  ctx.stroke()
-  ctx.restore()
   // The far cup, on its edge: the shell away from us, the cushion toward the near cup.
   const fx = FAR_CUP.x
   const fw = FAR_CUP.halfW
@@ -618,7 +608,7 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   ctx.fillStyle = pg
   ctx.fill()
   stroke(ctx, lw)
-  // What says headphones: the shell's bright rim where the cushion sits in it, a round badge on its side, and the
+  // What says headphones: the shell's bright rim where the cushion sits in it, a small badge on its side, and the
   // cushion's stitched seam.
   const metal = (k: number) => lit('#6E6A7E', '#E8D9C2', Math.min(1, l * 0.9 + k))
   const rimY = CUP.top + 0.155
@@ -631,14 +621,7 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   const bx = CUP.x + 0.02
   const by = (rimY + 0) / 2 + 0.01
   ctx.beginPath()
-  ctx.ellipse(bx, by, 0.07, 0.055, 0, 0, Math.PI * 2)
-  ctx.fillStyle = lit('#3A3448', '#8D86A0', l * 0.8)
-  ctx.fill()
-  ctx.lineWidth = lw * 0.6
-  ctx.strokeStyle = metal(0.15)
-  ctx.stroke()
-  ctx.beginPath()
-  ctx.ellipse(bx, by, 0.028, 0.022, 0, 0, Math.PI * 2)
+  ctx.ellipse(bx, by, 0.022, 0.018, 0, 0, Math.PI * 2)
   ctx.fillStyle = metal(0.2)
   ctx.fill()
   ctx.save()
@@ -880,7 +863,6 @@ export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) 
   pot(ctx, lw, c.t)
   desk(ctx, lw, c.t)
   wallShadows(ctx, c.t)
-  mothShadow(ctx, c.t)
 }))
 
 export const things = scenery<null>(

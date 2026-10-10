@@ -1081,7 +1081,29 @@ the desk (the stage's own policy, centring the composed frame; the room is built
      21:25, the kitten's stretches at 6:03 and 21:38 (the first now looks from the second track on, the check takes
      "late" as after 20:00). A yawn that landed on a flash of lightning keeps clear of the flashes now.
 
-**Subtracted:** twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
+### The sixty-fifth pass: a fourth cold review, and stillness
+
+A fourth reviewer with no context, on forty new frames after the camera's rebalance. What it found that three before it
+had found too is taken, firmly:
+
+171. **The camera was still too restless** (the fourth to say so): a new look every phrase. A look now holds two
+     phrases, sixteen bars, about forty seconds: nineteen fewer moves in the half hour. Everything played to the camera
+     was worked out again and lands (some of it now at new times: the sip 4:32, the scratch 10:44, hands round the mug
+     14:12, the face in the mist 19:13, the tea away 22:06 and back 24:35, the stretches 11:01 and 26:24, the one in the
+     window's 26:51). To make room, the kitten now stops nodding along to wash or to stretch (it had to wait for a phrase
+     it spent watching), and their stretch follows the kitten's within half a minute, not within ten seconds.
+172. **The moth's shadow, flagged a fourth time**, is gone. The moth stays.
+173. **The headphones' "eye" and "second lamp neck"**: the badge on the cup is a small dot, and the band's bright slider
+     strip, which made the band read as a gooseneck beside the real lamp, is gone.
+174. **The face in the mist read as a toothy grin** with its drips: no drips now, a smaller mouth.
+175. **The moon shone through the rain**: it is behind the cloud until the rain has gone.
+176. **The steam crossed itself into letters**: its wisps sway half as wide as they rise, nearly parallel.
+177. **Too much dust**: a fifth fewer motes in the lamp's light, the ones by the cups as they were.
+
+Not taken: the cat's half-lidded eyes (a taste), the mug away for its refill.
+
+**Subtracted:** the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
+twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.

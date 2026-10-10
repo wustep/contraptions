@@ -42,7 +42,8 @@ export const KNOB = { x: LAMP.base.x + 0.17, y: -0.085, r: 0.042 }
 /** What the camera must hold the whole time for each reach: the thing reached for, and the hand on it. */
 const BOX: Record<Kind, [number, number, number, number]> = {
   on: [LAMP.base.x - 0.4, -0.45, LAMP.base.x + 0.7, 0.2],
-  sip: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
+  // (The sip's hand comes up from the frame's foot, so the desk's front edge may be the frame's foot.)
+  sip: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.1],
   away: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
   back: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
   cup: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
@@ -72,7 +73,11 @@ export const REACHES: Reach[] = (() => {
   const out: Reach[] = []
   const busy = (t: number, d: number, kind?: Kind) =>
     // (Hands round the mug, at the desk's dark end, may share the night with someone across the street.)
-    [...MOMENTS.shooting, ...(kind === 'cup' ? [] : MOMENTS.crossings.map(([c]) => c))].some((m) => m > t - 8 && m < t + d + 6) ||
+    [...MOMENTS.shooting].some((m) => m > t - 8 && m < t + d + 6) ||
+    (kind !== 'cup' &&
+      [...MOMENTS.crossings.map(([c, , stop]) => [c, c + 3.6 + stop]), ...MOMENTS.cat.flatMap(([a, b]) => [[a, a + 2.4], [b - 2.4, b]])].some(
+        ([a, b]) => a < t + d + 12 && b > t - 12,
+      )) ||
     // After a flash, a hand may come for the warm mug: what anyone does as the storm comes closer.
     MOMENTS.lightning.some((m) => m > t - 3.5 && m < t + d + 6) ||
     out.some((r) => Math.abs(r.at - t) < 90) ||
@@ -93,7 +98,7 @@ export const REACHES: Reach[] = (() => {
   // The lamp, turned on as the first chord sounds (`lampAt`): the hand is on its way in as the show opens.
   out.push({ kind: 'on', at: 0.1, dur: DUR.on })
   // A sip while the tea is hot: in the second track.
-  find('sip', 160, 420)
+  find('sip', 160, 560)
   // The kitten, once in the rain.
   find('pet', 560, 900)
   // A face drawn in the mist on the glass, in the heaviest of the rain: it stays, and goes as the glass dries.
@@ -323,7 +328,7 @@ const DOODLE: { x: number; y: number }[][] = (() => {
     [at(0.045, -0.195), at(0.15, -0.35), at(0.17, -0.1)],
     [at(-0.075, -0.045), at(-0.073, 0.0)],
     [at(0.075, -0.045), at(0.073, 0.0)],
-    [at(-0.06, 0.07), at(-0.03, 0.1), at(0, 0.07), at(0.03, 0.1), at(0.06, 0.07)],
+    [at(-0.045, 0.075), at(-0.022, 0.095), at(0, 0.08), at(0.022, 0.095), at(0.045, 0.075)],
   ]
 })()
 /** How long each stroke is, and all of them, cells. */
@@ -370,8 +375,7 @@ function drawTip(s: number): { x: number; y: number } {
 }
 
 /**
- * The face on the glass: the mist cleared where the finger went, so the night shows through a little clearer, and a
- * few drips run down from its lowest points a while after. It stays while the glass is wet, rain running over it, and
+ * The face on the glass: the mist cleared where the finger went, so the night shows through a little clearer. It stays while the glass is wet, rain running over it, and
  * goes as the glass dries. Drawn on the glass, after the night and before the window's frame.
  */
 export function doodle(ctx: Ctx, t: number): void {
@@ -417,23 +421,6 @@ export function doodle(ctx: Ctx, t: number): void {
     ctx.strokeStyle = rgba('#14122A', 0.36 * vis)
     ctx.lineWidth = 0.04
     ctx.stroke()
-  }
-  // Drips from its lowest points, a while after it is drawn, each running down a little way and stopping.
-  const since = t - (r.at + DRAW_FROM + DRAW_FOR)
-  for (const [k, p] of [[0, { x: FACE.x - 0.05, y: FACE.y + FACE.r * 0.92 }], [1, { x: FACE.x + 0.1, y: FACE.y + FACE.r * 0.7 }], [2, { x: FACE.x - 0.13, y: FACE.y - 0.08 }]] as const) {
-    const d0 = 1.5 + k * 3.5
-    const run = smooth(since, d0, d0 + 6) * (0.12 + 0.12 * hash(k, 231))
-    if (run <= 0.002) continue
-    ctx.beginPath()
-    ctx.moveTo(p.x, p.y)
-    ctx.lineTo(p.x + 0.004, p.y + run)
-    ctx.strokeStyle = rgba('#16142C', 0.32 * vis)
-    ctx.lineWidth = 0.018
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.arc(p.x + 0.004, p.y + run, 0.014, 0, Math.PI * 2)
-    ctx.fillStyle = rgba('#C9C6EA', 0.4 * vis)
-    ctx.fill()
   }
   ctx.restore()
 }

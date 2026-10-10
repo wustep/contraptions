@@ -47,19 +47,21 @@ const centreAt = (x: number): number => AT.x + FOLLOW * (x - HOME_X)
 const REACH_UP = 5.5
 
 /**
- * Their stretch: once, late, just after the kitten's (a stretch is catching), when the window shows them all the
- * while. Worked out once, at load.
+ * Their stretch: once, late, a moment after the kitten's (a stretch is catching), when the window shows them all
+ * the while. Worked out once, at load.
  */
 export const HUMAN_STRETCH: number = (() => {
   for (const s of [...STRETCHES].reverse()) {
     if (s < 0) continue
-    const at = s + 7.5
-    let ok = true
-    for (let t = at - 0.5; t <= at + REACH_UP + 0.5 && ok; t += 0.5) {
-      const cx = centreAt(camera(t).x)
-      if (cx - 0.5 < GLASS.x0 || cx + 0.5 > GLASS.x1 || reflectionSeen(t) < 0.4) ok = false
+    // A moment after the kitten's, the first the window holds them all the while.
+    for (let at = s + 7.5; at < s + 30; at += 0.5) {
+      let ok = true
+      for (let t = at - 0.5; t <= at + REACH_UP + 0.5 && ok; t += 0.5) {
+        const cx = centreAt(camera(t).x)
+        if (cx - 0.5 < GLASS.x0 || cx + 0.5 > GLASS.x1 || reflectionSeen(t) < 0.4) ok = false
+      }
+      if (ok) return at
     }
-    if (ok) return at
   }
   return -100
 })()

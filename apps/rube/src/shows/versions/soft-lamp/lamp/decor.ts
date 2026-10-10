@@ -547,11 +547,11 @@ export function motes(ctx: Ctx, t: number): void {
   ctx.globalCompositeOperation = 'lighter'
   const kicks = recent(NODS_AT, t)
   const cracks = recent(SNARES, t)
-  for (let i = 0; i < 54; i++) {
+  for (let i = 0; i < 42; i++) {
     // Each drifts on its own slow loop round a home in the lamp's reach, and sinks a little and rises again; a dozen
     // hang low round the near cup, in the air it moves, and eight by the far cup, in the air it moves.
-    const low = i >= 34 && i < 46
-    const far = i >= 46
+    const low = i >= 22 && i < 34
+    const far = i >= 34
     const hx = far ? FAR_CUP.x - 0.95 + hash(i, 161) * 0.8 : low ? CUP.x - 0.9 + hash(i, 161) * 1.9 : MOUTH.x - 2.4 + hash(i, 161) * 3.6
     const hy = far ? -FAR_CUP.h * 0.6 - hash(i, 162) * 0.8 : low ? CUP.top - 0.5 - hash(i, 162) * 0.8 : MOUTH.y + 0.1 + hash(i, 162) * 2.0
     const sp = 0.05 + hash(i, 163) * 0.08

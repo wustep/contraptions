@@ -427,7 +427,8 @@ function moon(ctx: Ctx, t: number, cloud: number, lens: Lens): void {
   const at = onWall(lens, DEPTH.sky, GLASS.x1 - 0.55 - u * 0.75, GLASS.y1 - 1.6 - u * 2.0)
   const x = at.x
   const y = Math.max(GLASS.y0 + 0.24, at.y)
-  const a = up * (1 - 0.82 * cloud)
+  // Not through the rain: behind the cloud until the rain has gone.
+  const a = up * (1 - 0.82 * cloud) * (1 - smooth(rainAt(t), 0.04, 0.25))
   const halo = ctx.createRadialGradient(x, y, 0.15, x, y, 1.2)
   halo.addColorStop(0, rgba('#E9E3FF', 0.32 * a))
   halo.addColorStop(0.4, rgba('#B4B3E8', 0.1 * a))

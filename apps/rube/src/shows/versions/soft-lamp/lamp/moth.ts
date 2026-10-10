@@ -7,8 +7,7 @@ import { INK, MOUTH, hash, lampAt, lampColor, lit, rainAt } from './world'
 /**
  * A moth, come in once the rain has stopped, to the lamp: the one small thing alive in the room through the clear
  * last part of the night. It circles the light in loose, uneven loops, close round the bulb and out again, and now and
- * then settles on the outside of the shade a while, its wings folded. Being so near the bulb, the lamp throws its
- * shadow big and soft across the wall behind, fluttering. The kitten watches it when it flies. And when the lamp is
+ * then settles on the outside of the shade a while, its wings folded. The kitten watches it when it flies. And when the lamp is
  * turned down at the end, it leaves the light and goes to the moonlit window, and is there on the glass as the show
  * ends.
  *
@@ -167,50 +166,4 @@ export function moth(ctx: Ctx, lw: number, t: number): void {
     ctx.fillStyle = g
     ctx.fillRect(m.x - SPAN, m.y - SPAN, SPAN * 2, SPAN * 2)
   }
-}
-
-/**
- * Its shadow on the wall: the lamp, so close, throws it several times its size, soft, along the line from the bulb
- * through the moth, so it sweeps the wall as the moth loops and flutters as its wings do. Only while it is in the light
- * and the lamp is up. Drawn on the wall, behind everything on the desk.
- */
-export function mothShadow(ctx: Ctx, t: number): void {
-  const m = mothAt(t)
-  const lamp = lampAt(t)
-  if (m.a <= 0.01 || lamp < 0.3 || m.glass > 0.5) return
-  const dx = m.x - MOUTH.x
-  const dy = m.y - MOUTH.y
-  const d = Math.hypot(dx, dy)
-  // Only what the bulb lights: in front of the shade's mouth, not behind it.
-  const ahead = (dx * U.x + dy * U.y) / (d || 1)
-  const k = 2.4
-  const a = 0.38 * m.a * lamp * smooth(ahead, -0.2, 0.3) * Math.max(0.35, 1 - d / 1.4) * (1 - 0.6 * restAt(t))
-  if (a < 0.01) return
-  const sx = MOUTH.x + dx * k
-  const sy = MOUTH.y + dy * k
-  const s = SPAN * k
-  const beat = Math.abs(Math.sin(t * 41 + Math.sin(t * 7)))
-  // A moth's shape, wings out, beating (they fold toward the body and open again), twice: a soft wide copy and a
-  // firmer one inside it, so it reads as a shadow thrown from close to a bulb, not as a smudge.
-  const shape = (g: number) => {
-    const open = 0.35 + 0.65 * beat
-    ctx.beginPath()
-    for (const side of [-1, 1]) {
-      ctx.moveTo(sx, sy - s * 0.12 * g)
-      ctx.quadraticCurveTo(sx + side * s * 0.55 * open * g, sy - s * 0.35 * g, sx + side * s * 0.5 * open * g, sy + s * 0.05 * g)
-      ctx.quadraticCurveTo(sx + side * s * 0.3 * open * g, sy + s * 0.3 * g, sx, sy + s * 0.12 * g)
-    }
-    ctx.ellipse(sx, sy, s * 0.06 * g, s * 0.22 * g, 0, 0, Math.PI * 2)
-  }
-  ctx.save()
-  // Soft: three spreads of it, faint to firmer, so its edge is a blur, not a cut-out.
-  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.18).toFixed(3)})`
-  shape(1.5)
-  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.22).toFixed(3)})`
-  shape(1.25)
-  ctx.fill()
-  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.28).toFixed(3)})`
-  shape(1)
-  ctx.fill()
-  ctx.restore()
 }
