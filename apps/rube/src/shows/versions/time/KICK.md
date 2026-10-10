@@ -452,6 +452,10 @@ each world, and changed:
 - **The mirror's shards** (53.6 to 56): a bright one was blank white with a hairline edge, and against the pale
   facades the biggest read as a flat cut-out. A bright face is the sky in the glass now, and every shard has a firm
   edge.
+- **The street's far side** (69 to 86): the street was a flat band with the building fronts down to its top line,
+  but the traffic and the train run in the middle of it, set back from the near kerb, so the taxi, the waiting cars
+  and the wrecks stood a little up the facades, in the air (a critic's note under Zoom). The street has its far side
+  now, wet asphalt from a far kerb at the buildings' feet, and they stand on it.
 
 ## Inception nods
 

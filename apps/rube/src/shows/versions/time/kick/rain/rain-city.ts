@@ -223,6 +223,8 @@ function hazeBand(pen: Pen, f: View, y0: number, y1: number, color: string, a0: 
 }
 
 /** The street's buildings, the shop and its awning, the ground and the quays, the lamps' posts. */
+/** The far kerb, at the buildings' feet. */
+const FAR_KERB = -0.26
 export function drawStreet(pen: Pen, f: View, te: number): void {
   const { p, k, ink, w, ctx } = pen
   // The ground under the street, the quays and the far bank, and the river's bed: dark earth down to the band's
@@ -287,6 +289,23 @@ export function drawStreet(pen: Pen, f: View, te: number): void {
   }
   // The shop: its window lit (the one warm light of the street), its door, its awning over the pavement.
   if (seen(f, AWNING.x0 - 1, AWNING.x1 + 1, -3, 0.6)) shop(pen, te)
+  // The street's far side: wet asphalt from the far kerb at the buildings' feet to the near one. The traffic and the
+  // train run in the middle of the street, set back from the near kerb, and without it they stood a little up the
+  // facades, in the air (a critic's note under Zoom).
+  for (const [a, b] of [[-1e9, QUAY_L], [QUAY_R, 1e9]] as const) {
+    if (!seen(f, a, b, FAR_KERB, 0)) continue
+    const x0 = Math.max(a, f.x0 - 1)
+    const x1 = Math.min(b, f.x1 + 1)
+    const g = ctx.createLinearGradient(0, FAR_KERB * k, 0, 0)
+    g.addColorStop(0, mixHex(RAIN.streetWet, RAIN.street, 0.75))
+    g.addColorStop(1, RAIN.streetWet)
+    ctx.fillStyle = g
+    ctx.fillRect(x0 * k, FAR_KERB * k, (x1 - x0) * k, -FAR_KERB * k)
+    p.stroke(rgba(RAIN.kerb, 0.55))
+    p.strokeWeight(Math.max(1, 0.035 * k))
+    p.line(x0 * k, FAR_KERB * k, x1 * k, FAR_KERB * k)
+    p.noStroke()
+  }
   // The lamps' posts and heads.
   for (const x of LAMPS) {
     const onBridge = x > QUAY_L && x < 0
