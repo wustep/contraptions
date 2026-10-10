@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 120 (latest)
+## Polish pass 121 (latest)
+
+No change to the show: Saturn, 214 to 230.5 s every 1.5 s, and the undocking, 212.5 to 215 s every half-second, at 1280×720. The faint grey discs above and below the Ranger's tail at 213 to 214 s are its thrusters' puffs thinning after each pulse, not a fault. The probes, the planet's limb, the rings and the sphere at 230 s all read.
+
+## Polish pass 120
 
 No change to the show: the landing at the camp, 248 to 253.5 s in half-seconds, and the canopy's opening at 252 s in twentieths, at 1280×720. The spent drogue drifts up out of the top of the frame. The Ranger comes down on its jets, its legs out, with dust under it, and sets down. The canopy hinges back over about 0.35 s rather than jumping open, and Cooper is up in the seat as it clears.
 
