@@ -202,6 +202,10 @@ anti-aliasing at nine moments through the day (every set-piece drawn, the title 
 canvas at density 2 matches a still of the same device size at 47 of 48 moments across the loop, the 48th (the wide
 shot) to within sub-pixel smoothing of the far stones; and 480 × 270, 1280 × 720 and 3840 × 2160 are the same picture
 at three sizes.
+On Apple's devices too, in WebKit with their own screens: an iPhone 15 (density 3, portrait, the stage above the
+panel) and an iPad Pro 11 in landscape (density 2) each match a still of the same device size across the whole loop
+(48 moments), the wide shot to within sub-pixel smoothing. Minimum widths drawn under the world's transform are in
+device pixels (`devicePx`), so a phone's density does not thicken them.
 
 ## The words
 
