@@ -183,7 +183,7 @@ export function mothShadow(ctx: Ctx, t: number): void {
   const d = Math.hypot(dx, dy)
   // Only what the bulb lights: in front of the shade's mouth, not behind it.
   const ahead = (dx * U.x + dy * U.y) / (d || 1)
-  const k = 3.4
+  const k = 2.4
   const a = 0.38 * m.a * lamp * smooth(ahead, -0.2, 0.3) * Math.max(0.35, 1 - d / 1.4) * (1 - 0.6 * restAt(t))
   if (a < 0.01) return
   const sx = MOUTH.x + dx * k
@@ -203,10 +203,13 @@ export function mothShadow(ctx: Ctx, t: number): void {
     ctx.ellipse(sx, sy, s * 0.06 * g, s * 0.22 * g, 0, 0, Math.PI * 2)
   }
   ctx.save()
-  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.45).toFixed(3)})`
+  // Soft: three spreads of it, faint to firmer, so its edge is a blur, not a cut-out.
+  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.18).toFixed(3)})`
+  shape(1.5)
+  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.22).toFixed(3)})`
   shape(1.25)
   ctx.fill()
-  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.6).toFixed(3)})`
+  ctx.fillStyle = `rgba(14, 9, 26, ${(a * 0.28).toFixed(3)})`
   shape(1)
   ctx.fill()
   ctx.restore()

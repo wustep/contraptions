@@ -1054,6 +1054,21 @@ ball crouches into the cushion before, on the kick).
 166. Looked at and left: the tail rising behind it as it gets up (at a frame every 0.12 s it comes up continuously from
      behind its rear, quickly: a strip at 0.37 s a frame had skipped it).
 
+### The sixty-third pass: a cold review on a phone
+
+A third reviewer with no context looked at twenty-four frames of the live stage on a phone held upright. Taken:
+
+167. **The hand at the lamp came up out of the dark under the desk.** On a stage taller than it is wide the frame's
+     foot is far below the desk, and the hand, reaching from there for the lamp's knob, rose out of the drawers. It comes
+     from the right now, at about the desk's height, an arm resting along the desk reaching over, on every shape of
+     screen; the knob turns under its fingers as before.
+168. **The moth's shadow, flagged a third time**, still read as a stain. It is nearer the moth's size (thrown from
+     closer), and drawn as three faint spreads, so its edge is a blur and it is half as dark.
+
+Not taken, and put to Stephen: in the closer looks the kitten is out of frame (the cup close and the lamp's side are
+composed without it; the cat plays to the frames that hold it), and a stage taller than 16:9 sees a dark band under
+the desk (the stage's own policy, centring the composed frame; the room is built down to the floor to fill it).
+
 **Subtracted:** twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);

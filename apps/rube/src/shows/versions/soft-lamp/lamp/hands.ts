@@ -274,9 +274,11 @@ function poseAt(t: number): Pose | null {
     reach = 0
   } else {
     // The lamp's knob, between finger and thumb, turned as the light comes up, or goes down.
+    // From the right, at about the desk's height, as an arm resting along the desk reaches over to it (from below,
+    // a frame taller than wide showed it coming up out of the dark under the desk).
     side = 1
-    angle = -0.35 + 0.35 * knobAt(t)
-    arm = 2.6
+    angle = -1.15 + 0.3 * knobAt(t)
+    arm = 1.8
     curl = [0.25, 0.7, 0.75, 0.8]
     thumb = 0
     pinch = 1
