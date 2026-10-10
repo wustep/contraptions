@@ -102,6 +102,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - David looks at her at her table, and the swap there is seen: the dream's him greyed, and her looking at it;
 - the room as it is is muted, the dream in full colour all through, and the colour back by the last frame;
 - at her show the empty house shows through only in the lead-in, and is full again when he springs up;
+- at the audition the gold star from the signed paper settles over her, in the picture;
 - his music rising out of the club with the band never runs through a credit card;
 - the piano drawn in the stars is whole in the picture, at the dip and over the city;
 - the piano grows with their waltz, a share for each star lit, and the way out of the dream closes on him at the keys like the way in;
