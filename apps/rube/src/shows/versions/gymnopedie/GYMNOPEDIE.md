@@ -138,9 +138,9 @@ The planet has weather, at depths behind the stones (`air.ts`):
   dark as the first Gnossienne gets under way (`lanternAt`): small sloops
   sitting low in the water, the sail on the sun's side lit, beating home against the ball's way, so each crosses the
   frame slowly in half a minute or so (`SAILS`, `BOATS`).
-- Gulls perched on the colonnade, one on a stone here and there, at a lintel's far end or on a column's capital.
-  As the ball comes down on their stone they lift off on its note and fly on ahead of it, white wings beating and
-  then easier, climbing until they are gone; they are back on their perches, roosting, by the time the ball comes
+- Gulls perched on the colonnade, at the far end of a long stone (a held note) here and there, fifteen in all.
+  As the ball comes down on their stone they lift off on its note, startled up first and then away ahead of it,
+  white wings beating and then easier, climbing until they are gone, well clear of the ball; they are back on their perches, roosting, by the time the ball comes
   round again. They are in the sea's reflection too (`PERCHED`).
 - Gulls by day, a few small flocks overtaking the ball along the colonnade, beating a while and gliding a while.
 - A sun-glint on the Gymnopédie's top note (the F♯ its melody climbs to six times): as the ball lands on it a soft

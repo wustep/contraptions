@@ -262,19 +262,21 @@ function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
 }
 
 /**
- * Gulls perched on the colonnade, one on a stone here and there (towards a lintel's far end, or on a column's
- * capital), most facing the way the ball comes. As the
+ * Gulls perched on the colonnade, one at the far end of a long stone here and there, most facing the way the ball
+ * comes. As the
  * ball comes down on their stone they lift off, on its note, and fly on ahead of it, climbing and beating, until they
  * are gone; and they are back on their perches before the ball comes round again.
  */
 export const PERCHED = new Map<number, { at: number; face: number }>()
 for (const s of STONES) {
-  if (s.piece !== 0 || hash(s.index, 211) > 0.13) continue
-  const w = s.u1 - s.u0
-  // On a lintel, towards its far end; on a single column, on its capital.
-  const at = w > 0.62 ? s.u1 - 0.16 - 0.12 * hash(s.index, 212) : s.u0 + w / 2
-  PERCHED.set(s.index, { at, face: hash(s.index, 213) > 0.35 ? -1 : 1 })
+  // Only on a long stone (a held note), at its far end: the ball comes down well away from the gull, which is up and
+  // gone before the ball rolls along to where it sat.
+  if (s.piece !== 0 || s.u1 - s.u0 < 1.1 || hash(s.index, 211) > 0.6) continue
+  PERCHED.set(s.index, { at: s.u1 - 0.18, face: hash(s.index, 213) > 0.35 ? -1 : 1 })
 }
+
+/** Where a gull is `s` seconds after it lifts off, from its perch: cells along, and up. Startled up first, then away. */
+export const gullFlight = (s: number): [number, number] => [0.15 * s + 0.3 * s * s, 0.12 + 1.3 * s - 0.12 * s * s]
 
 /** Seconds since the gull on `stone` lifted off at `t`: negative while it is still on its perch. */
 const flown = (stone: Stone, t: number): number => since(t, stone.touches[0])
@@ -465,8 +467,9 @@ function flyingGulls(p: p5, c: PieceCtx, v: View, day: Sky): void {
     const s = flown(stone, c.t)
     if (s < 0 || s > 8) continue
     const h0 = stone.h - sink(stone, stone.touches[0])
-    const u = perch.at + shift + 0.5 * s + 0.12 * s * s
-    const h = h0 + 0.12 + 0.55 * s + 0.03 * s * s
+    const [du, dh] = gullFlight(s)
+    const u = perch.at + shift + du
+    const h = h0 + dh
     // Hard at first, then easier: the beat slows as it climbs.
     const beat = Math.sin(2 * Math.PI * (2.4 * s - 0.08 * s * s))
     const a = smooth(s, 0, 0.15) * (1 - smooth(s, 5, 8))

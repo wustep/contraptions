@@ -8,7 +8,7 @@ import { show } from '../src/shows/versions/gymnopedie/orbit'
 import { BASS, BREATHS, CHORDS, GRACES, MARGIN, MELODY, NOTES, PERIOD, PIECES, loudness } from '../src/shows/versions/gymnopedie/orbit/music'
 import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../src/shows/versions/gymnopedie/orbit/path'
 import { breath, cellsAt, wideAt } from '../src/shows/versions/gymnopedie/orbit/camera'
-import { CADENCES, CLOSE, DAWN_GOING, SUN_GLINTS, PERCHED, dawnAt, leafRings, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
+import { CADENCES, CLOSE, DAWN_GOING, SUN_GLINTS, gullFlight, PERCHED, dawnAt, leafRings, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
 import { BANK, BREAK, FIGURES, overcastAt, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, lanternAt, BOATS, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
@@ -185,6 +185,22 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: gulls perch on the colonnade, each lifting off as the ball lands on its stone, on its note',
     perched.length >= 12 && perched.every((s) => s.piece === 0 && MELODY.some((n) => n.t === s.touches[0])) &&
     [...PERCHED.entries()].every(([i, g]) => g.at >= STONES[i].u0 && g.at <= STONES[i].u1), `${perched.length} gulls`)
+
+  // No gull is landed on or flown into: the ball keeps clear of each, on its perch and as it lifts and goes.
+  let gullClear = Infinity
+  for (const [i, g] of PERCHED) {
+    const st = STONES[i]
+    const t0 = st.touches[0]
+    for (let s = -0.5; s <= 3; s += 0.02) {
+      const [du, dh] = s < 0 ? [0, 0.12] : gullFlight(s)
+      const gu = g.at + du
+      const gh = st.h + dh
+      const b = ballLocal(t0 + s)
+      const bu = b.u - Math.round((b.u - gu) / LENGTH) * LENGTH
+      gullClear = Math.min(gullClear, Math.hypot(Math.max(0, Math.abs(gu - bu) - 0.17), gh - b.h))
+    }
+  }
+  check('gymnopedie: the ball never lands on a perched gull or flies into one as it goes', gullClear > 0.3, `${gullClear.toFixed(2)} cells at the closest`)
 
   // Each piece's last note runs back along its way, and nothing else does.
   let offCue = 0
