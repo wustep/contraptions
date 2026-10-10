@@ -136,7 +136,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 0 | the chord | The Wang family laundromat at night, a lit box on a dark street, with a red neon washer in the window. On the chord's eight onsets the fluorescent tubes blink and catch, the one over Evelyn first. In the silence Waymond sets a slumped, googly-eyed laundry bag back on its bottom. |
+| 0 | the chord | The night of every life's lit window, the ring of them the show ends on, with a dark box in its hole, and the title, *Everything*, over all of them. On the chord's eight onsets the box's fluorescent tubes blink and catch: the Wang family laundromat, a lit box among the lit windows. From 1.5 the camera falls in toward it, the windows streaming out past the frame's edges, the shop coming up out of the night, then the street round it, until (6.2) it is the laundromat at night with a red neon washer in its window. On the way in Waymond sets a slumped, googly-eyed laundry bag back on its bottom. |
 | 7.93 | the entry | She rolls onto the foot lever of the washer by the door. Four quarters drop from the coin column on the next four onsets, and the washer fills, spins up and walks toward the lever. |
 | 12.79 | the great hit | The washer jumps and slams onto the lever, and she is thrown across the shop into a heap of receipts. The receipts storm up and come down onto the spike, the audit letter last (16.78). |
 | 19.8 to 30 | the soft run | The taxes: she works the adding machine's long keyboard, rolling to a key on the long gaps and bouncing key to key on the quick notes, twenty strokes. On each one the crank ratchets, and the tape curls down the counter's end into loops on the floor. Joy comes in on the door's bell (20.19), crosses the shop, and stops right below her mother (23.74), leaning up toward her. Her mother does not look up. Joy turns and goes on the bell (29.37), and Waymond edges after her. Subtitled, high on the tile wall: *Mom? Can I —* (hers, in italic) / *Not now, Joy.* |
@@ -864,6 +864,19 @@ watched whole between them. Their order is in git; here they are by what they di
     lasts longer. Joy's burst at the peak is the same shape at her smaller size and keeps its old length, so the
     share card (255.75 s, just after it) is pixel for pixel the committed one.
   - The dive drew faster than the unchanged wall before it (33 against 14 fps at 4× throttle on a loaded machine).
+- **The opening is the ending, the other way.** The show opened on the laundromat; now it opens where it ends, in
+  the night of every life's lit window gathered in a ring, the title over them, and the tubes catching on the chord
+  light the box in the ring's hole: then the camera falls in to the shop (`OPEN_FROM` to `OPEN_TO` in
+  `home/multitude.ts`). Of all of them, this one, at both ends.
+  - The stage's camera is held at 150 cells (not 36, as at the end), so the lit box falling in is the shop itself;
+    beyond that it is a soft light the shape of its front. The night is cut round the shop's box, so the street and
+    the ground come up round it only when the fall is close.
+  - Every part in the laundromat, not only the room, now leaves itself undrawn while the night covers it (seen from
+    150 cells every one is in the frame): the night held 38 to 43 fps at 4× throttle on a loaded machine, as an
+    ordinary scene did (36 to 39). The fall itself dips to about 25 for its second and a half.
+  - Waymond's looks up at the tubes and at the bag were in the night now, too small to be seen; they are gone, and
+    the audio description says the windows instead (*Lit windows in the night. One of them: the Wang family
+    laundromat.*), with him named as Evelyn rolls in. For reduced motion the show opens on the laundromat, as before.
 - **The subtitles' shade.** The soft dark under a subtitle was an ellipse floating mid-frame, which on the rocks' pale
   canyon read as a smudge of dirt. It is now the frame's whole foot in shade, eased up to just over the words (at the
   taxes, its top, down to just under them), as a film's lower frame is under its subtitles.
