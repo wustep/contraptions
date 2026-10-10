@@ -84,8 +84,6 @@ function carlPose(T: number): { tilt?: number; squash?: number } {
   // Each step placed with a small settle; a gathering before he lifts himself into his chair.
   let settle = 0
   for (const t of ALONE.steps) if (T > t) settle += 0.06 * Math.exp(-(T - t) / 0.18)
-  // He gathers himself before each step up: a small crouch, and a lean into it.
-  for (const t of A.up) settle += 0.05 * crouch(T, t, 0.15)
   settle += 0.07 * crouch(T, A.toMine[1], 0.3)
   // Catching his breath on the second step.
   const breath = ramp(T, ALONE.steps[1], ALONE.steps[1] + 0.5) * (1 - ramp(T, A.up[2] - 0.4, A.up[2]))

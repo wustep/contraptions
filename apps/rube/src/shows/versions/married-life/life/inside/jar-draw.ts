@@ -7,7 +7,7 @@ import { drawChairs } from '../props/chairs'
 import { drawJar } from '../props/jar'
 import { INSIDE } from './inside'
 import {
-  AXLE, BOX, CHAIRS_X, CHUTE, CHUTE_LEN, COIN_GAP, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, JAR_H, JAR_W, LAMP, LAMP_OUT, LADDER, LANDS, MANTLE, POURS, SLAMS,
+  AXLE, BOX, CHAIRS_X, CHUTE, CHUTE_LEN, COIN_GAP, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, JAR_H, JAR_W, LAMP, LADDER, LANDS, MANTLE, POURS, SLAMS,
   SLOT, TREE, TYRE, carAt, clamp01, cupAt, fillAt, jarAt, jarBase, jarMouth, ladderAt, lampAt, onPlank, plankAt, smoothstep, stormAt,
   sunAt,
 } from './jar-clock'
@@ -329,17 +329,6 @@ function lamp(p: p5, c: Ctx, T: number): void {
   if (lit > 0.5) {
     p.fill(alpha(p, '#FFFBEA', lit))
     p.ellipse(0, x(0.215), x(0.05), x(0.04))
-  }
-  // As it blows: a thin wisp of smoke off the bulb, rising and fading over a second.
-  const since = T - LAMP_OUT
-  if (since > 0 && since < 1.1) {
-    const u = since / 1.1
-    for (let i = 0; i < 3; i++) {
-      const v = Math.max(0, u - i * 0.12)
-      if (v <= 0) continue
-      p.fill(alpha(p, '#8F8A82', 0.55 * (1 - v)))
-      p.ellipse(x(0.04 * Math.sin(v * 7 + i)), x(0.22 + 0.06 - 0.5 * v), x(0.05 + 0.08 * v), x(0.05 + 0.08 * v))
-    }
   }
   // The shade: a cream bell.
   p.stroke(alpha(p, INK, 0.9))

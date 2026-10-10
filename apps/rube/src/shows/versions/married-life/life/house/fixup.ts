@@ -113,30 +113,6 @@ const BOUNCES: [number, number][] = BLOWS.filter((b) => b > beat('waltz', 5, 3) 
   if (!two) throw new Error(`married life: fixup: no two after the blow at ${b}`)
   return [b, two.t]
 })
-/**
- * Her leap over him at the mailbox, given weight: she gathers (wider) for a tenth of a second before she springs,
- * draws out along her flight as she leaves and as she comes down, and lands wide on the phrase's strongest attack,
- * settling round again as she rolls on. `stretch` is her width (her height stays), `angle` turns it to her path.
- */
-function leapShape(T: number): { stretch?: number; angle?: number } {
-  const { leap, leapLand } = E
-  if (T < leap - 0.1 || T > leapLand + 0.2) return {}
-  if (T < leap) {
-    const u = (T - (leap - 0.1)) / 0.1
-    return { stretch: 1 + 0.15 * Math.sin((Math.PI / 2) * u) }
-  }
-  if (T < leapLand) {
-    // Drawn out along her path near either end of the flight, round at its top.
-    const edge = Math.max(0, 1 - Math.min(T - leap, leapLand - T) / 0.12)
-    const a = ellie(T - 0.01)
-    const b = ellie(T + 0.01)
-    const along = Math.atan2(b[1] - a[1], b[0] - a[0])
-    return { stretch: 1 - 0.12 * edge, angle: along - Math.PI / 2 }
-  }
-  const s = T - leapLand
-  return { stretch: 1 + 0.22 * Math.exp(-s / 0.07) * Math.max(0, Math.cos(s * 9)) }
-}
-
 /** Her running start: a little quicker than him, into her leap onto the cart. */
 const eRun = (T: number) => XE + CUTS.house.ellie![0] + V_IN * (T - T0) + 0.45 * (T - T0) ** 2
 /** On the deck: the settle after her landing, the rock back when he shoves, the hop for joy past the house. */
@@ -309,7 +285,7 @@ export const fixup = part<FixupState>(
     const exit: Pt = [end[0] - FIXUP_AT[0] + 0.5, end[1] - FIXUP_AT[1]]
     const company = (T: number): Companion => {
       const [x, y] = ellie(T)
-      return { x: x - FIXUP_AT[0], y: y - FIXUP_AT[1], ...leapShape(T) }
+      return { x: x - FIXUP_AT[0], y: y - FIXUP_AT[1] }
     }
     const pose: Pose[] = [{ from: slot.begin, to: slot.end, at: carlPose }]
     return {

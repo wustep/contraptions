@@ -86,7 +86,7 @@ bass, on the one); Ellie, round, answers on the first pah.
   the camera pulls out over those three bars and comes to rest on bar 4's peal (20.89), the whole nave in, the bell
   swinging whole in its tower; then it runs on after them at that distance, never coming back in. They run down the
   aisle, the doors fly open as Ellie reaches them, and they run out under the bell at 1.6 cells a second, he leaning
-  into the run with half his kiss lean and skipping a little onto each of the waltz's downbeats, upright for the cut.
+  into the run with half his kiss lean, upright for the cut.
 
 ### The fix-up (21.58 to 49.64 s): the house, from the street
 
@@ -108,8 +108,8 @@ bass, on the one); Ellie, round, answers on the first pah.
 - **The mailbox.** Her handprint (a round palm) goes on bar 21, his (a square palm) on bar 22: two small hands,
   fingers up, thumbs reaching toward each other, in the box's own paint pressed darker, so they never read as two
   more of them. He has let the cart go as the mast folded, and it has rolled on past the box alone and braked on bar
-  20, so the box stands clear on its post; she springs back to it off the cart's tail. She gathers, wide, and leaps
-  over him, drawn out along her flight (`leapShape`), landing wide on 23's two (40.77, the strongest attack of the
+  20, so the box stands clear on its post; she springs back to it off the cart's tail. She leaps
+  over him, landing on 23's two (40.77, the strongest attack of the
   phrase and the first waltz's second-loudest swell), and leads up the steps; he follows a bar behind. On the soft bars 29 to 31 they sit in the two armchairs at the bay
   window, she looking at him (down at him as he crosses in front of her chair, then over at him in his).
 
@@ -188,7 +188,7 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
     over in its cradle, the coins run down the chute and out, and the cradle's spring sets it back on its feet,
     slowly. Paid for, the car drives off out of the window;
   - Carl's leg: the refill's stroke shakes the pendant lamp and it sputters out (lit, a bright bulb throws a warm cone
-    down the wall; out, it is dark and a wisp of smoke rises off it; drawn half as big again, so his reason to climb is
+    down the wall; out, it is dark; drawn half as big again, so his reason to climb is
     seen, and under Zoom the frame eases out to hold it); the camera looks up with him as he climbs the ladder to it, the ladder kicks under the lamp, he falls
     (the camera in close), and her
     touch wraps a bandage round his foot; she pours the jar out again;
@@ -239,13 +239,13 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 - Close on them (2.8 cells), she climbs after him, tires, rests, pushes on and stalls. **On 174.67 she gives way**:
   she sinks, and slides back limp the short way she climbed onto the fieldstone's worn top, her face down and not
   rolling with her (a ball that rolls back reads as play), down in a little over a second and a half, and is still,
-  slumped (lower, wider: `slumpOf`), spent; and a cloud comes over the field (`overcast`). No bounce. The strike is
+  slumped (lower, wider: `slumpOf`), spent. No bounce. The strike is
   the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays there, and
   its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets to give
   her, lying on the slope as he passes. Struck, he straightens up out of the slope's lean and stands still for most
   of a second, watching her go, so she is seen
   to fall first; then on the next strong note (175.409, the one the basket tips over on) he bolts down after her, faster than he has gone in years, up out of the slope's lean and
-  into the run, bounding a little each stride (`RUN`, `runTilt`: tilted with the slope, a square going downhill
+  into the run (`RUN`, `runTilt`: tilted with the slope, a square going downhill
   read as tumbling), the camera hanging back so he is seen to cross the frame to her, in close with them (2.4 to 1.9
   cells, the basket left out of the frame), and comes onto the stone beside her three quarters of a second after she
   has come to rest, so for a moment she lies there alone. He leans to her; she answers with the smallest roll toward him, lifting
@@ -292,7 +292,7 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 
 - The church's steps become his own front steps: a match cut. The house is faded, the roof patched where the tree
   came through.
-- On the piano's notes he climbs the three steps, one careful step at a time (gathering himself, lifting, then
+- On the piano's notes he climbs the three steps, one careful step at a time (lifting, then
   shifting onto the tread: a climb, not a hop, `climbUp`), the camera close (3.5 cells) on the
   steps, the door and the porch rail, the mailbox's faded handprints at the frame's edge. The latch; as it gives he
   draws the balloon's string in short (`GATHERS` in `life/cast.ts`), so it comes in under the lintel with him before
@@ -890,6 +890,14 @@ window.
   - *Reflow at 320 px* (WCAG 1.4.10): no sideways scroll with the panel closed (the stage fills it) or open (the panel
     becomes a sheet under the picture); nothing past the right edge.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
+
+- **Subtraction pass (Opus 5.5, PR #163).** A director's pass over what the polish rounds added, cutting what
+  decorated a beat without telling it: the skip onto each downbeat of the aisle run; Ellie's squash and stretch over
+  the mailbox (`leapShape`); old Carl's crouch before each of his steps (the climb itself, `climbUp`, is kept); the
+  bob and squash of each stride on the hill (his struck stillness and upright run are kept); the cloud over the field
+  from her fall (`overcast`; the ward's dusk carries the light's fall); and the smoke off the blown bulb (the bigger
+  lamp, bright then dark, is kept). No strike was among them; `check:shows` passes, and contact sheets of each cut and
+  of the whole show show nothing broken.
 
 ## Known limits
 

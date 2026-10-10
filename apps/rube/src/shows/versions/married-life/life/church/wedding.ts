@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import type { Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, smooth, type Companion, type Ctx } from '../kit'
-import { bar, CUT } from '../music'
+import { CUT } from '../music'
 import { CUTS } from '../seams'
 import { CHURCH, HOME, INK } from '../worlds'
 import { ALTAR_CARL, ALTAR_ELLIE, bounce, box2, CH, CHURCH_BOX, drawPetals, ease, lift, paint, poly, rankLight, WED } from './church'
@@ -126,8 +126,6 @@ const rise = (T: number): number => (toward(T, HER_RISE) + 0.018 * breathIn(T)) 
  */
 const HER_RUN = 18.483
 const HIS_RUN = 18.663
-/** The waltz's downbeats as he runs down the aisle (bars 2 to 4). */
-const RUN_BEATS = [bar('waltz', 2), bar('waltz', 3), bar('waltz', 4)]
 const DOORS = 21.223
 /** Where the two are at the cut, world x, running 1.6 cells a second: he in the doorway, she out on the landing. */
 const CUT_CARL = CH.tower[1] - CH.wall / 2
@@ -161,12 +159,7 @@ const carlRun = aisle(HIS_RUN, ALTAR_CARL + KISS_STEP, CUT_CARL, 0.77, 0.5)
 const ellieRun = aisle(HER_RUN, ALTAR_ELLIE - 0.08, CUT_ELLIE, 0.9, 0.5)
 
 function carl(T: number): Pt {
-  if (T >= HIS_RUN) {
-    // A small bound before each downbeat of the run, landing into its squash: a run with a spring in it.
-    let y = 0
-    for (const b of RUN_BEATS) if (T > b - 0.2 && T < b) y -= 0.045 * Math.sin((Math.PI * (T - (b - 0.2))) / 0.2)
-    return [carlRun(T), y]
-  }
+  if (T >= HIS_RUN) return [carlRun(T), 0]
   // The shuffle away and back; then pushed a little way along by her bump, and back to his place.
   let x = ALTAR_CARL - 0.06 * ease(T, BUMP, CARL_HOPS[2][1]) + 0.06 * ease(T, 13.3, 14.6) + KISS_STEP * ease(T, TOWARD[3][0], KISS)
   for (const [a, b] of SHUFFLE_OUT) x -= STEP * ease(T, a, b)
@@ -217,8 +210,6 @@ function carlPose(T: number): { tilt: number; squash: number } {
   // His lean toward her, growing a step on each of the slowing march's onsets into the kiss; as he runs, half of it is
   // kept as a lean into the run (toward the doors, as she is), let go before the cut so he is upright across it.
   const lean = toward(T, HIS_LEAN) * (1 - 0.5 * ease(T, HER_RUN - 0.07, HIS_RUN + 0.35)) * (1 - ease(T, 20.95, 21.45))
-  // Running out, a bounce on each of the waltz's downbeats: young, glad.
-  for (const b of RUN_BEATS) squash += 0.06 * (T >= b ? knock(T - b, 0.13) : 0)
   // Each step of it a small settle as it lands.
   for (const [, b] of TOWARD) squash += 0.025 * (T < b ? ease(T, b - 0.12, b) : knock(T - b, 0.16))
   return { tilt: step + glance + lean, squash }

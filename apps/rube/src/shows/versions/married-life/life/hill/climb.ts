@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { HALF } from '../cast'
-import { alpha, box, carried, frame, part, smooth, type Company, type Pose } from '../kit'
+import { alpha, box, carried, part, smooth, type Company, type Pose } from '../kit'
 import { CUT } from '../music'
 import { BASKET, drawBasket } from '../props/basket'
 import { drawTicket } from '../inside/ties-set'
@@ -236,11 +236,10 @@ function carl(t: number): Pt {
   if (t < T.beside) {
     // Down the slope after her and onto the stone, as fast as he has gone in years, easing to a stop beside her.
     const x = JOLT_TO + RUN.at(t - T.fall)
-    const pace = runPace(t)
-    // Running, he stands up out of the slope's lean (`runTilt`) on his downhill corner, and bounds a little with each
-    // stride: a runner, not a block tumbling down after her.
+    // Running, he stands up out of the slope's lean (`runTilt`) on his downhill corner: a runner, not a block tumbling
+    // down after her.
     const upright = stand(x, runTilt(t, x)) - stand(x, groundTilt(x))
-    return [x, seat(x) + upright - 0.04 * pace * Math.abs(Math.sin(Math.PI * 3.5 * (t - T.fall)))]
+    return [x, seat(x) + upright]
   }
   return [HIS_REST, STEP.y]
 }
@@ -310,11 +309,6 @@ function bearing(t: number): { tilt: number; squash: number } {
   // Hurrying down to her: up out of the slope's lean and into the run with his speed (`runTilt`).
   if (t > T.fall && t < T.beside) tilt += runTilt(t, x) - groundTilt(x)
   let squash = 0
-  if (t > T.fall && t < T.beside) {
-    const v = (carl(t + 0.02)[0] - carl(t - 0.02)[0]) / 0.04
-    const pace = Math.max(0, Math.min(1, v / RUN.vp))
-    squash += 0.05 * pace * Math.abs(Math.sin(Math.PI * 3.5 * (t - T.fall)))
-  }
   for (const at of [T.onStep, T.fall]) {
     const ago = t - at
     if (ago >= 0 && ago < 0.8) squash += 0.1 * Math.exp(-ago / 0.12) * Math.max(0, Math.cos(ago * 9))
@@ -490,22 +484,6 @@ function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
   return out
 }
 
-/**
- * A cloud over the field from her fall: the autumn light dims and cools over two seconds as she gives way, and stays
- * so to the cut, leading into the ward's dusk. Over everything, the two of them too, as a cloud's shadow is.
- */
-function overcast(p: p5, k: number, t: number): void {
-  const a = 0.2 * smooth(t, T.fall, T.fall + 2)
-  if (a <= 0.002) return
-  const f = frame(p, k)
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
-  ctx.globalCompositeOperation = 'multiply'
-  ctx.fillStyle = `rgba(118, 128, 150, ${a})`
-  ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
-  ctx.restore()
-}
-
 /* ------------------------------------------------------------------ the part */
 
 export interface ClimbState {
@@ -532,7 +510,6 @@ export const climb = part<ClimbState>(
       if (!b) return
       const [x, y] = L(b.x, b.y)
       drawBasket(p, c.k, c.weight, x, y, { tilt: b.tilt, open: b.open })
-      overcast(p, c.k, t)
     },
   },
   (slot) => {
