@@ -1,9 +1,10 @@
 import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
-import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WALKMAN, WINDOW, type Book } from './desk'
+import { BAND_TOP, BOOKS, CAT, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, PROPS, R, SILL, WALKMAN, WINDOW, type Book } from './desk'
 import { MUSIC_END, heldAt, smooth } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt, squashAt } from './route'
-import { cat } from './cat'
+import { cat, climbAt } from './cat'
+import { formed, plaster } from './form'
 import { bloom, clock, farPress, curtain, draughtAt, scrim, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
 import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
@@ -128,6 +129,8 @@ function wall(ctx: Ctx, t: number): void {
   g.addColorStop(1, rgba(WALL, 0))
   ctx.fillStyle = g
   ctx.fillRect(v.x0 - 1, v.y0 - 1, v.x1 - v.x0 + 2, DESK.y - v.y0 + 1)
+  // The plaster: an uneven, painted tone over all of it.
+  plaster(ctx, v.x0 - 1, v.y0 - 1, v.x1 + 1, DESK.y, 0.24)
 }
 
 /** The window's frame, its bars, and the sill. */
@@ -295,11 +298,39 @@ function desk(ctx: Ctx, lw: number, t: number): void {
   }
   ctx.fillStyle = g
   ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, DESK.face)
-  // The wood's grain along its edge, faint.
+  // Its top, seen a little from above, running back to the wall: darker where it meets the wall, its front lip a
+  // narrow face of its own; and on it, the lamp's pool, an oval of light lying on the wood round where the shade looks.
+  const LIP = DESK.y + DESK.face * 0.7
+  const back = ctx.createLinearGradient(0, DESK.y, 0, LIP)
+  back.addColorStop(0, 'rgba(14, 9, 24, 0.5)')
+  back.addColorStop(0.35, 'rgba(14, 9, 24, 0.12)')
+  back.addColorStop(1, 'rgba(14, 9, 24, 0)')
+  ctx.fillStyle = back
+  ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, LIP - DESK.y)
+  ctx.fillStyle = 'rgba(14, 9, 24, 0.28)'
+  ctx.fillRect(v.x0 - 1, LIP, v.x1 - v.x0 + 2, DESK.y + DESK.face - LIP)
+  if (lamp > 0.01) {
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, LIP - DESK.y)
+    ctx.clip()
+    ctx.translate(LAMP.aim.x + 0.15, DESK.y + (LIP - DESK.y) * 0.5)
+    ctx.scale(LAMP.pool.half * 0.95, (LIP - DESK.y) * 0.95)
+    const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+    const warm = lampColor(t)
+    pool.addColorStop(0, rgba(mixHex(warm, '#FFF0D8', 0.35), 0.5 * lamp))
+    pool.addColorStop(0.55, rgba(warm, 0.3 * lamp))
+    pool.addColorStop(1, rgba(warm, 0))
+    ctx.globalCompositeOperation = 'screen'
+    ctx.fillStyle = pool
+    ctx.fillRect(-1, -1, 2, 2)
+    ctx.restore()
+  }
+  // The wood's grain along its top, faint.
   ctx.strokeStyle = rgba('#2A1A22', 0.28)
   ctx.lineWidth = 0.012
-  for (let i = 0; i < 4; i++) {
-    const y = DESK.y + 0.06 + i * 0.055
+  for (let i = 0; i < 3; i++) {
+    const y = DESK.y + 0.045 + i * 0.05
     ctx.beginPath()
     for (let x = Math.floor(v.x0) - 1; x <= v.x1 + 1; x += 0.25) {
       const yy = y + Math.sin(x * (0.7 + i * 0.23) + i * 2) * 0.012
@@ -308,17 +339,23 @@ function desk(ctx: Ctx, lw: number, t: number): void {
     }
     ctx.stroke()
   }
-  // The top's edge catches the light: a thin bright line along it where the lamp is.
+  // The top's front edge catches the light: a thin bright line along it where the lamp is.
   const e = ctx.createLinearGradient(v.x0, 0, v.x1, 0)
   for (let i = 0; i <= n; i++) {
     const x = v.x0 + ((v.x1 - v.x0) * i) / n
     e.addColorStop(i / n, rgba(lampColor(t), 0.75 * lightAt(x, 0) * lamp))
   }
   ctx.fillStyle = e
-  ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, 0.035)
+  ctx.fillRect(v.x0 - 1, LIP - 0.03, v.x1 - v.x0 + 2, 0.03)
   ctx.beginPath()
   ctx.moveTo(v.x0 - 1, DESK.y)
   ctx.lineTo(v.x1 + 1, DESK.y)
+  stroke(ctx, lw * 0.5, rgba(INK, 0.6))
+  ctx.beginPath()
+  ctx.moveTo(v.x0 - 1, LIP)
+  ctx.lineTo(v.x1 + 1, LIP)
+  stroke(ctx, lw * 0.45, rgba(INK, 0.45))
+  ctx.beginPath()
   ctx.moveTo(v.x0 - 1, DESK.y + DESK.face)
   ctx.lineTo(v.x1 + 1, DESK.y + DESK.face)
   stroke(ctx, lw)
@@ -385,6 +422,15 @@ function mug(ctx: Ctx, lw: number, t: number): void {
   ctx.lineTo(0.025, 0.065)
   stroke(ctx, lw * 0.35, rgba('#B0703E', 0.55))
   ctx.restore()
+}
+
+/** The mug's solid, its handle filled in, for its shading (`form.ts`). */
+function mugSolid(ctx: Ctx): void {
+  const { x, halfW, h } = MUG
+  roundRect(ctx, x - halfW - 0.24, -h + 0.1, halfW * 2 + 0.24, h - 0.1, 0.06)
+  ctx.fill()
+  roundRect(ctx, x - halfW, -h, halfW * 2, h, 0.06)
+  ctx.fill()
 }
 
 /**
@@ -954,7 +1000,7 @@ export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) 
   frame(ctx, lw, c.t)
   curtain(ctx, lw, c.t)
   fairyLights(ctx, lw, c.t)
-  pot(ctx, lw, c.t)
+  formed(ctx, 'pot', c.t, { box: [PROPS.plant[0] - 0.1, PROPS.plant[1] - 0.15, PROPS.plant[2] + 0.1, SILL.y + 0.02], at: { x: POT.x, y: SILL.y - POT.h / 2 }, core: 0.1 }, (g) => pot(g, lw, c.t))
   desk(ctx, lw, c.t)
   wallShadows(ctx, c.t)
 }))
@@ -964,19 +1010,21 @@ export const things = scenery<null>(
   (p, _s, c) => inCells(p, c, (ctx, lw) => {
     contacts(ctx, c.t)
     cable(ctx, lw)
-    walkman(ctx, lw, c.t)
+    formed(ctx, 'walkman', c.t, { box: PROPS.walkman, at: { x: (WALKMAN.x0 + WALKMAN.x1) / 2, y: -WALKMAN.h / 2 }, core: 0.12 }, (g) => walkman(g, lw, c.t))
     // Unless someone has it up (`hands.ts` draws it then, on its way); its steam stays a moment where it was.
     const up = liftAt(c.t)
-    if (up <= 0.001) mug(ctx, lw, c.t)
+    if (up <= 0.001) formed(ctx, 'mug', c.t, { box: PROPS.mug, at: { x: MUG.x, y: -MUG.h / 2 }, core: 0.2, solid: (g) => mugSolid(g) }, (g) => mug(g, lw, c.t))
     if (up < 0.999) {
       ctx.save()
       ctx.globalAlpha = 1 - up
       steam(ctx, c.t)
       ctx.restore()
     }
-    cat(ctx, lw, c.t)
-    BOOKS.forEach((b, i) => book(ctx, lw, b, i, c.t))
-    headphones(ctx, lw, c.t)
+    const cl = climbAt(c.t)
+    const cx = (CAT.x0 + CAT.chest) / 2 + cl.dx
+    formed(ctx, 'cat', c.t, { box: [cx - 1.5, cl.dy - 1.7, cx + 1.5, cl.dy + 0.15], at: { x: cx, y: cl.dy - 0.35 }, core: 0.22 }, (g) => cat(g, lw, c.t))
+    BOOKS.forEach((b, i) => formed(ctx, `book${i}`, c.t, { box: [b.x0 - 0.15, b.top - 0.05, b.x1 + 0.1, b.bottom + 0.03], at: { x: (b.x0 + b.x1) / 2, y: (b.top + b.bottom) / 2 }, core: 0.09 }, (g) => book(g, lw, b, i, c.t)))
+    formed(ctx, 'headphones', c.t, { box: [CUP.x - CUP.halfW - 0.1, BAND_TOP - 0.1, FAR_CUP.x + FAR_CUP.halfW + 0.1, 0.03], at: { x: (CUP.x + FAR_CUP.x) / 2, y: -0.25 }, core: 0.15, k: 0.6 }, (g) => headphones(g, lw, c.t))
     lamp(ctx, lw, c.t)
     knob(ctx, lw, c.t)
     windowRims(ctx, lw, c.t)

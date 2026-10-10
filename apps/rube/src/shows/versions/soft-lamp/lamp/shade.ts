@@ -51,7 +51,8 @@ export function contacts(ctx: Ctx, t: number): void {
   for (const [x, w, y] of feet) {
     if (w <= 0) continue
     const s = fromLamp(x, t)
-    pool(ctx, x, y, w * (1 + Math.abs(s.lean)), 0.07, s.a * 0.85, s.lean)
+    // Lying forward on the desk's top, as well as at the foot.
+    pool(ctx, x, y + 0.03, w * (1 + Math.abs(s.lean)), 0.09, s.a * 0.85, s.lean)
   }
   // Each book on the one under it.
   for (let i = 0; i < BOOKS.length - 1; i++) {

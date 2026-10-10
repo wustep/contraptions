@@ -162,7 +162,7 @@ export function reflection(ctx: Ctx, t: number): void {
   const hy = 0.07 * p.bow - 0.04 * p.stretch + breath * 0.5
   // Thinking, the head turns a little toward the rain on the left, the eyes after it.
   const lean = 0.05 * p.bow + p.scan - 0.035 * p.think - 0.05 * p.kitten
-  const hair = rgba(HAIR, 0.95)
+  const hair = rgba(HAIR, 0.6)
   // The hair behind: falling past the shoulders either side of the face, in a few soft locks at its ends.
   g.fillStyle = hair
   g.beginPath()
@@ -175,10 +175,13 @@ export function reflection(ctx: Ctx, t: number): void {
   g.fill()
   // Shoulders, sloping from the neck, in the sweater, rising a little as they breathe; lit on the lamp's side, and
   // fading down into the dark (the desk and the room below take no light to throw back).
+  // A reflection is the light a thing gives back, so the sweater is in the glass only where the lamp is on it: its
+  // shoulder toward the lamp, and hardly the rest (a dark room's dark sweater shows as almost nothing on the night).
   const sy = breath
-  const sw = g.createLinearGradient(0, 0.28, 0, 1.0)
-  sw.addColorStop(0, rgba(KNIT, 0.85))
-  sw.addColorStop(1, rgba(KNIT, 0))
+  const sw = g.createLinearGradient(-0.8, 0, 0.8, 0)
+  sw.addColorStop(0, rgba(KNIT, 0.1))
+  sw.addColorStop(0.45, rgba(KNIT, 0.22))
+  sw.addColorStop(1, rgba(KNIT, 0.5))
   g.fillStyle = sw
   g.beginPath()
   g.moveTo(-0.11, 0.27 + sy)
@@ -189,6 +192,15 @@ export function reflection(ctx: Ctx, t: number): void {
   g.bezierCurveTo(0.7, 0.36 + sy, 0.36, 0.3 + sy, 0.11, 0.27 + sy)
   g.closePath()
   g.fill()
+  // And down into the dark: the desk and the room below take no light to throw back.
+  g.save()
+  g.globalCompositeOperation = 'destination-out'
+  const down = g.createLinearGradient(0, 0.4, 0, 1.0)
+  down.addColorStop(0, 'rgba(0, 0, 0, 0)')
+  down.addColorStop(1, 'rgba(0, 0, 0, 1)')
+  g.fillStyle = down
+  g.fillRect(-1, 0.4, 2, 0.8)
+  g.restore()
   // The lamp on the shoulder nearer it.
   const lit = g.createRadialGradient(0.62, 0.42, 0.02, 0.62, 0.42, 0.42)
   lit.addColorStop(0, rgba(warm, 0.55))
@@ -198,7 +210,10 @@ export function reflection(ctx: Ctx, t: number): void {
   // The neck, and the sweater's ribbed roll collar round it.
   g.fillStyle = rgba(SKIN, 0.7)
   g.fillRect(-0.055, 0.15 + hy * 0.5, 0.11, 0.14)
-  g.fillStyle = rgba(KNIT, 0.98)
+  const collar = g.createLinearGradient(-0.16, 0, 0.16, 0)
+  collar.addColorStop(0, rgba(KNIT, 0.3))
+  collar.addColorStop(1, rgba(KNIT, 0.75))
+  g.fillStyle = collar
   g.beginPath()
   g.ellipse(0, 0.3 + sy, 0.16, 0.065, 0, 0, Math.PI * 2)
   g.fill()
@@ -314,8 +329,8 @@ export function reflection(ctx: Ctx, t: number): void {
     const hyw = 0.72 + 0.045 + row * 0.05
     g.globalAlpha = write
     const arm = g.createLinearGradient(0.7, 0.55, hx, hyw)
-    arm.addColorStop(0, rgba(KNIT, 0.6))
-    arm.addColorStop(1, rgba(KNIT, 0.25))
+    arm.addColorStop(0, rgba(KNIT, 0.45))
+    arm.addColorStop(1, rgba(KNIT, 0.2))
     g.strokeStyle = arm
     g.lineWidth = 0.17
     g.lineCap = 'round'
@@ -344,8 +359,9 @@ export function reflection(ctx: Ctx, t: number): void {
   g.ellipse(0.15 + lean * 0.8, 0.05 + hy, 0.035, 0.05, 0, 0, Math.PI * 2)
   g.fill()
   const face = g.createLinearGradient(-0.16, 0, 0.16, 0)
-  face.addColorStop(0, rgba(SKIN, 0.4))
-  face.addColorStop(1, rgba(SKIN, 0.95))
+  face.addColorStop(0, rgba(SKIN, 0.22))
+  face.addColorStop(0.45, rgba(SKIN, 0.6))
+  face.addColorStop(1, rgba(SKIN, 1))
   g.fillStyle = face
   g.beginPath()
   // A softer chin than an oval: rounder at the top, narrowing a little to it.
@@ -458,11 +474,12 @@ export function reflection(ctx: Ctx, t: number): void {
   if (p.stretch > 0.02) {
     const k = p.stretch
     g.globalAlpha = k
-    g.strokeStyle = rgba(KNIT, 0.7)
-    g.lineWidth = 0.14
+    g.lineWidth = 0.11
     g.lineCap = 'round'
     g.lineJoin = 'round'
     for (const side of [-1, 1]) {
+      // Lit as the sweater is: the arm on the lamp's side catches it, the other hardly.
+      g.strokeStyle = rgba(KNIT, side > 0 ? 0.42 : 0.2)
       g.beginPath()
       // Shoulder up to a wide elbow beside the head, then the forearm in over the top of it.
       g.moveTo(side * 0.48, 0.48)
