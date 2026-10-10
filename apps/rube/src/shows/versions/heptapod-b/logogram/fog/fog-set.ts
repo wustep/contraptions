@@ -373,13 +373,17 @@ export function drawFog(p: p5, k: number, t: number): void {
   drawAir(p, k, f, t)
   // Far off: Abbott, and the logograms hanging at depth; then Costello behind her way, the nearer air,
   // Costello over it; then the white the tops of them go into; then the ink.
+  // While Abbott holds her it is the nearest of them (in her plane, and darker than Costello in the fog), so it is
+  // drawn over the nearer air and over Costello's reaching limb; as it draws back it goes behind them again.
   const A = abbott(t)
-  if (A) drawStaged(p, k, f, A)
+  const holding = A !== null && A.depth > 0.95
+  if (A && !holding) drawStaged(p, k, f, A)
   drawHanging(p, k, f, t)
   const C = costello(t, f)
   if (C.depth < 1) drawStaged(p, k, f, C)
   drawLayer(p, k, f, LAYERS[2], t)
   if (C.depth >= 1) drawStaged(p, k, f, C)
+  if (A && holding) drawStaged(p, k, f, A)
   // The white they stand in: the upper frame thickens to it, so a limb comes down out of the fog, not from the edge
   // (less in the wide frames, where the heptapods are far up it).
   const ctx = p.drawingContext as CanvasRenderingContext2D
