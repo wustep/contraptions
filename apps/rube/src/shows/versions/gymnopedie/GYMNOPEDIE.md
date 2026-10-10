@@ -207,6 +207,14 @@ air warm where the sun's light grazes it. At night the sea's light shows through
 a band under the surface. Close, through the first Gnossienne, the ball carries a small warm glow of its own: the
 flame it lights the lamps with.
 
+From far off it is a world in sunlight (`globe.ts`). Close, its deep water is coloured by the hour where the ball is,
+which at the seam is the dark before dawn; but from space half of any world is always in the sun. So as the planet
+becomes the picture its face becomes a lit globe: deep ocean blue on the sun's side, the sun's glint on the water, loose
+patches of cloud over it turning with the world, a thin blue air on the day's limb, and the night coming round softly
+from the far side. It is drawn on a canvas of its own and its night side rubbed out there before it is laid on, so the
+night side is still the dark deep water with the sea's own light in it, and the ring of lamps on its rim; and the dawn
+that puts the lamps out comes from the lit side. 0.2 ms a frame (six times slowed).
+
 The sea gives it back: the stones, the lamps, the flowers, the perched gulls and the ball (with its flame) are drawn again upside down from their feet, into a
 canvas of half the stage's resolution, faded with depth, and laid over the water row by row, each row shifted a little
 by a ripple that grows as it goes down. The sky's colour lies on the water under its surface. The reflection fades as
@@ -377,7 +385,7 @@ measured at under a millisecond's difference, and left out.
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
 the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the aurora, the whale) and their
-layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; `blossom.ts` the colonnade's bougainvillea; `comet.ts` the third Gnossienne's comet; `squall.ts` the shower coming and going; `cirrus.ts` the high cloud; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; `blossom.ts` the colonnade's bougainvillea; `comet.ts` the third Gnossienne's comet; `squall.ts` the shower coming and going; `cirrus.ts` the high cloud; `globe.ts` the world seen from space; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 

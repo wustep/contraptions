@@ -13,6 +13,7 @@ import { lampLight, farStones } from './stones'
 import { mirrorShore } from './shore'
 import { drawRipples, ripplesAt, warmRipples, type Glitter, type Lamp } from './ripples'
 import { drawDolphins } from './dolphins'
+import { drawGlobe } from './globe'
 
 // ---------------------------------------------------------------- the light on the water
 
@@ -178,6 +179,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     ctx.beginPath()
     ctx.arc(0, 0, r, 0, Math.PI * 2)
     ctx.fill()
+    // From far off, a world in sunlight: lit on the sun's side whatever the hour where the ball is.
     // Far off, at night: the sea's own light all through the deep water, turning with the planet.
     const far = smooth(Math.log(v.cells), Math.log(22), Math.log(70)) * smooth(day.night, 0.3, 0.8)
     if (far > 0.01) {
@@ -190,6 +192,9 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       ctx.drawImage(deepLight(), -R, -R, 2 * R, 2 * R)
       ctx.restore()
     }
+    // From far off, a world in sunlight, over that: lit on the sun's side whatever the hour where the ball is, its night
+    // side left to the dark and the sea's own light.
+    drawGlobe(ctx, RADIUS * k, sun, smooth(v.wide, 0.25, 0.75))
     // And its far side from the sun in shadow, once it is small enough to be a world.
     const shade = smooth(v.wide, 0.1, 0.6)
     if (shade > 0.01) {
