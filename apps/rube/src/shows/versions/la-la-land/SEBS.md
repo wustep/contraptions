@@ -13,7 +13,7 @@ The Epilogue is the film's "what if": Sebastian, at the piano in his own club fi
 **The cast**
 - **Sebastian is the blue ball** (`#4C7FD9`). He is the thread: his path is the chain of parts, and he makes things go.
 - **Mia is the yellow ball** (`#F2C230`). She is company in every scene. She gets her life from timing: a hesitation, a catch-up, a turn toward him, a bow.
-- **David is the grey ball** (`#8E8579`), her husband. He is only in the real club, at the start and the end, never in the dream.
+- **David is the grey ball** (`#8E8579`), her husband, his outline warm with their table's candle. He is only in the real club, at the start and the end, never in the dream.
 - **Their son is the small green ball** (`#72AE5E`, yellow and blue together). He is only in the home movie.
 
 **The other road.** The Epilogue is a "what if", and a what-if only reads against what was. So where the story turns, the other way it went is in the picture too, for a few seconds: an *echo* of Seb, pale where he is blue, its rim dashed and crawling, flickering like old film and leaving a short wake. It is no one's ball: nothing touches it, and it comes apart into motes when it is done (`echo.ts`). It brings the other world's colour with it: in the dream a soft pocket of the real world's grey goes round it, and in the real club a pocket of the dream's rose. There are six:
