@@ -33,7 +33,6 @@ import {
   topPose,
   weightY,
   wheelAngle,
-  Q,
 } from './limbo-geo'
 import { box, disc, faded, line, shape, soft, vwash, type Pen } from './limbo-pen'
 
@@ -345,7 +344,7 @@ function drawLiftFront(pen: Pen, t: number): void {
   }
   // The lever on the post: home, taken, pulled.
   // Long enough, and its knob pale enough, to be seen against the cage's dark: it is his choice, and it was an iron
-  // stroke on dark iron. As it comes home on the let-go, the knob flares where it strikes the stop.
+  // stroke on dark iron.
   const lv = lever(t)
   const pv: Pt = [cx1 - 0.1, cy - 0.62]
   const la = -Math.PI / 2 + 0.35 - lv * 1.15
@@ -354,8 +353,6 @@ function drawLiftFront(pen: Pen, t: number): void {
   line(pen, pv, knob, IRON, 1.3)
   disc(pen, pv, 0.035, IRON, 0.5)
   disc(pen, knob, 0.06, mixHex(LIMBO.lamp, IRON, 0.25), 0.6)
-  const u = t - Q.letGo
-  if (u > -0.05 && u < 0.6) bloom(pen.p, pen.k, knob, 0.45, LIMBO.lamp, 0.55 * Math.exp(-Math.max(0, u) / 0.18))
 }
 
 /* ------------------------------------------------------------------ the front, over everything inside */
@@ -383,7 +380,7 @@ function drawFrontLower(pen: Pen): void {
   for (let i = 0; i < 3; i++) {
     const fl = FLOORS[i]
     const ceil = FLOORS[i + 1] + FLOOR_SLAB
-    // The empty floors' windows: dark, but each with its sill, a glazing bar, and the dusk sky caught in its top pane.
+    // The empty floors' windows: dark, but each with its sill and the dusk sky caught in its top pane.
     for (const wx of [-0.38, 0.32, 1.0]) {
       const [wy0, wy1] = [ceil + 0.55, fl - 0.75]
       box(pen, wx - 0.2, wy0, wx + 0.2, wy1, GLASS_DARK, 0.6)
@@ -391,7 +388,6 @@ function drawFrontLower(pen: Pen): void {
         [0, LIMBO.skyWarm, 0.22],
         [1, LIMBO.skyWarm, 0],
       ])
-      line(pen, [wx - 0.2, (wy0 + wy1) / 2], [wx + 0.2, (wy0 + wy1) / 2], mixHex(pen.ink, CONCRETE_DUSK, 0.3), 0.5)
       box(pen, wx - 0.26, wy1, wx + 0.26, wy1 + 0.07, mixHex(CONCRETE, LIMBO.skyWarm, 0.2), 0.5)
     }
   }
@@ -431,17 +427,15 @@ function drawFrontUpper(pen: Pen, lit: number): void {
   box(pen, TABLE.x - TABLE.w / 2, WINDOW.y1 - 0.42, TABLE.x + TABLE.w / 2, WINDOW.y1 - 0.36, sil, 0)
   for (const tx of [TABLE.x - TABLE.w / 2 + 0.06, TABLE.x + TABLE.w / 2 - 0.1]) box(pen, tx, WINDOW.y1 - 0.36, tx + 0.04, WINDOW.y1, sil, 0)
   box(pen, wx0, WINDOW.y0, WINDOW.x1, WINDOW.y1, null, 0.8)
-  // Its frame, deep in the concrete: the reveal's shade along its top and its sides, a transom bar, mullions, and a
-  // sill standing out under it, lit along its top.
+  // Its frame, deep in the concrete: the reveal's shade along its top and its side, mullions, and a sill standing out
+  // under it.
   box(pen, wx0, WINDOW.y0, WINDOW.x1, WINDOW.y0 + 0.09, mixHex(CONCRETE_DARK, LIMBO.lamp, 0.15), 0)
   box(pen, wx0, WINDOW.y0, wx0 + 0.07, WINDOW.y1, mixHex(CONCRETE_DARK, LIMBO.lamp, 0.15), 0)
-  line(pen, [wx0, WINDOW.y0 + 0.62], [WINDOW.x1, WINDOW.y0 + 0.62], pen.ink, 0.55)
   for (const q of [0.25, 0.5, 0.75]) {
     const mx = lerp(wx0, WINDOW.x1, q)
     line(pen, [mx, WINDOW.y0], [mx, WINDOW.y1], pen.ink, 0.55)
   }
   box(pen, wx0 - 0.1, WINDOW.y1, WINDOW.x1 + 0.1, WINDOW.y1 + 0.1, CONCRETE, 0.6)
-  line(pen, [wx0 - 0.1, WINDOW.y1 + 0.01], [WINDOW.x1 + 0.1, WINDOW.y1 + 0.01], mixHex(LIMBO.lamp, CONCRETE, 0.4), 0.6)
   line(pen, [x0, ROOF + 0.02], [x1, ROOF + 0.02], mixHex(LIMBO.skyWarm, CONCRETE, 0.3), 0.8)
 }
 
