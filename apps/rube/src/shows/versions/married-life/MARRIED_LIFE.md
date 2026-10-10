@@ -799,6 +799,10 @@ window.
     through the attic to the nursery's ceiling (its flue cannot come down through the nursery, whose window is where
     it would run), so it floated over the room in every close there. The stack now stands from the roof band up, its
     foot under the band on both sides (it pokes into the attic otherwise, bright under the storm's darkening).
+  - *The fix-up, re-watched* by a sixteenth viewer who has never seen Up (21.5 to 50 s, two frames a second): a wreck
+    made their shared home (80%), done over in their colours, the two chairs side by side; that it was her old house
+    (the film's clubhouse) only 15%, as the picture never says so; the beat, a home they make together, lands. And the
+    chimney after last round's change, on a phone upright: from the roof up, the attic clear.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
