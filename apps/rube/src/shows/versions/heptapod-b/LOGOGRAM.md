@@ -415,6 +415,9 @@ changed, in the order of the film, and then what runs through it:
   The great ring's halves ended in blunt, notched blocks as they were written (168 → 183); their ends now taper over
   the ink ahead of the pen, never under her. And out of the white-out (132) Costello's paler pen came down over
   Abbott's palm; while Abbott holds her it is drawn nearest.
+- **A tenth critic, at four frames a second** over the valley and the meadow: as the lift rises (45 → 65) each stage's
+  latch, a little pawl by its X's right end, hung past the beam's end while the stage was barely open (its X spreads
+  wider than the beam then), a loose bar beside the folded pack. It hangs from the beam now, never past its end.
 
 ## Arrival nods
 

@@ -220,7 +220,8 @@ function drawStage(d: Painter, s: StageShape, i: number, t: number): void {
     const since = t - LATCHES[i]
     const down = since < 0 ? 0 : 1 - Math.exp(-since / 0.05) * Math.cos(Math.min(Math.PI, since * 30))
     const a = -1.0 + 1.0 * Math.min(1.15, down)
-    const base: Pt = [CX + s.half + 0.1, s.top + 0.01]
+    // Hung from the beam over it, never past the beam's end (a stage barely open spreads its X wider than the beam).
+    const base: Pt = [CX + Math.min(s.half + 0.1, BEAM_HALF - 0.03), s.top + 0.01]
     const tip: Pt = [base[0] + Math.cos(a) * 0.17, base[1] - Math.sin(a) * 0.17 + 0.025]
     bar(d, base, tip, 0.035, VALLEY.steelDark, d.w * 0.6)
   }
