@@ -368,6 +368,8 @@ const SOLO_PITCH: [number, number][] = [
   [264.8, 79], [265.15, 82], [265.2, 84], [265.25, 85], [265.3, 86], [265.35, 88], [265.5, 87], [265.75, 86], [266.05, 84], [266.45, 86],
   [267.75, 0], [268.7, 84], [268.75, 85], [268.8, 86], [269.4, 0],
 ]
+/** Whether the solo is sounding a note at `t` (false in its rests). */
+export const SOLO_SOUNDING = (t: number): boolean => t > AT.trumpet - 0.4 && t < 268.3 && pitchAt(t) > 0
 const pitchAt = (t: number): number => {
   let m = 0
   for (const [ti, mi] of SOLO_PITCH) {

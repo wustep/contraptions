@@ -5,7 +5,7 @@ import { AT, paris } from '../music'
 import { CLUB_MAT as M } from '../worlds'
 import { hop } from '../physics'
 import {
-  BALLOONS, DARK, drawClub, drawLamp, FLASHES, PIVOT, HANDOFF, J0, LAND_X1, LEAVE, LIGHTS, MEET, MIA_STEPS, miaAt, SEESAW_T, seat, SLAM, SNARE_T,
+  BALLOONS, DARK, drawClub, drawLamp, FLASHES, KNOCK, PIVOT, SOLO_SOUNDING, HANDOFF, J0, LAND_X1, LEAVE, LIGHTS, MEET, MIA_STEPS, miaAt, SEESAW_T, seat, SLAM, SNARE_T,
   SOLO_LANDINGS, stepBall, STEP_T, VALVE_T,
 } from './jazz-club'
 
@@ -51,6 +51,13 @@ export const houseTop = (y1: number, fh: number): number => y1 + 0.01 * fh - (0.
 const LIT_FROM = LIGHTS - 0.2
 export const HOUSE_SPAN: [number, number] = [LIT_FROM, 268.3]
 
+/** How much the solo is sounding at `t` (0 in its rests): eased, so the house sways with phrases, not notes. */
+function playing(t: number): number {
+  let a = 0
+  for (let j = 0; j < 8; j++) if (SOLO_SOUNDING(t - j * 0.1)) a += 1 / 8
+  return a
+}
+
 function drawHouse(p: p5, k: number, t: number): void {
   if (t < LIGHTS - 0.2 || t > 268.3) return
   const f = frame(p, k)
@@ -65,15 +72,25 @@ function drawHouse(p: p5, k: number, t: number): void {
     const s = 1.25 * h.size * fh
     let nod = 0
     if (h.nods && lit > 0) for (const b of BEATS) { const d = t - b - h.lag; if (d > 0 && d < 0.4) nod = Math.max(nod, Math.exp(-d / 0.12)) }
+    // In the dark they listen: swaying slowly with the solo while it plays, still in its rests; and on the knock, as he
+    // slams the beam over and she rolls to him, they all lift at once, a held breath.
+    let sway = 0
+    let lift = 0
+    if (dark > 0) {
+      sway = dark * playing(t) * Math.sin(t * 1.6 + h.x * 0.9) * 0.012 * s
+      const k0 = t - KNOCK
+      lift = dark * (k0 < 0 ? 0 : Math.min(1, k0 / 0.12) * Math.exp(-Math.max(0, k0 - 0.4) / 1.4)) * 0.018 * s
+    }
     const base = f.y1 + 0.01 * fh
-    const headY = base - 0.075 * s + 0.006 * s * nod
+    const headY = base - 0.075 * s + 0.006 * s * nod - lift
+    const xh = x + sway
     const r = 0.03 * s
     ctx.fillStyle = rgba(M.black, 0.94)
     ctx.beginPath()
     ctx.ellipse(x * k, (base - 0.02 * s) * k, 0.07 * s * k, 0.045 * s * k, 0, Math.PI, Math.PI * 2)
     ctx.fill()
     ctx.beginPath()
-    ctx.arc(x * k, headY * k, r * k, 0, Math.PI * 2)
+    ctx.arc(xh * k, headY * k, r * k, 0, Math.PI * 2)
     ctx.fill()
     // Warm on the top of the head from the bulbs; in the dark, the spot just catching the nearest.
     const near = Math.max(0, 1 - Math.abs(x - PIVOT[0]) / 2.2)
@@ -82,7 +99,7 @@ function drawHouse(p: p5, k: number, t: number): void {
       ctx.strokeStyle = rgba(lit > 0.5 ? M.bulb : M.spot, rim)
       ctx.lineWidth = Math.max(1, 0.006 * s * k)
       ctx.beginPath()
-      ctx.arc(x * k, headY * k, r * k, Math.PI * 1.15, Math.PI * 1.85)
+      ctx.arc(xh * k, headY * k, r * k, Math.PI * 1.15, Math.PI * 1.85)
       ctx.stroke()
     }
     if (h.table) {
