@@ -120,6 +120,10 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
   // Fading, it loses its edge as it pales: the hull gives way to a blur of itself, wider as it goes, so it melts into
   // the air and never stands there as a see-through bowl with a sharp rim.
   const melt = o.goes === 'fade' ? smooth01(vanish / 0.6) : 0
+  // And the cloud takes it: a body of mist where it was, thickening as it melts and thinning after it, so what is
+  // behind it never shows through it as through a window.
+  const mist = o.goes === 'fade' ? 0.85 * smooth01(vanish / 0.45) * (1 - smooth01((vanish - 0.5) / 0.5)) : 0
+  if (mist > 0.001) softSilhouette(ctx, k, [pts], [], air, mist, 3 + 20 * vanish)
   if (melt > 0.001) softSilhouette(ctx, k, [pts], [], mixHex(body, rim, 0.25), fade * melt, 1.5 + 16 * vanish)
   ctx.save()
   ctx.globalAlpha *= fade * (1 - melt)
