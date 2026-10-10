@@ -887,6 +887,8 @@ window.
     Goldberg machine…"), kept to whichever show is up (`player.ts`, every show; checked across a switch and back).
   - *Names and frames* (WCAG 4.1.2, 3.1.1): the YouTube player's frame is titled ("The music, on YouTube"), every
     visible control has a name, and the page declares its language. Nothing to change.
+  - *Reflow at 320 px* (WCAG 1.4.10): no sideways scroll with the panel closed (the stage fills it) or open (the panel
+    becomes a sheet under the picture); nothing past the right edge.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
