@@ -148,7 +148,7 @@ The planet has weather, at depths behind the stones (`air.ts`):
   the cloud breaks: the sun comes through on it while the rain still falls, a sun shower that lights the bow
   (`SUN_GLINTS`, `BREAK`). The day's high notes are answered by the sun, as the night's are by the stars.
 - The Milky Way at night, turning with the stars; and a shooting star on the top note of each of the first
-  Gnossienne's four high phrases and the third's two, a melody's peak answered in the sky.
+  Gnossienne's four high phrases and the third's two, a melody's peak answered in the sky; each falls clear above the ball, which over the pond rides high in the frame.
 - Mist on the water at dawn, a little at dusk, and under the moon; fireflies over the pond in the third Gnossienne.
 
 Four things happen once a day:

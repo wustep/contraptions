@@ -3,7 +3,7 @@ import { mixHex, type PieceCtx } from '../../../../parts'
 import { wrap } from './music'
 import { RADIUS, along, ballLocal } from './path'
 import {
-  BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, auroraAt, auroraSheet, auroraSize, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, milkyWay, wingsAt, type CloudLight,
+  BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, auroraAt, auroraSheet, auroraSize, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, METEORS, milkyWay, wingsAt, type CloudLight,
   FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat, lanternAt,
 } from './air'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
@@ -164,7 +164,12 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     const dir = hash(i, 133) > 0.5 ? 1 : -1
     const a = 0.22 + 0.2 * hash(i, 134)
     const sx = W * (dir > 0 ? 0.1 + 0.45 * hash(i, 131) : 0.45 + 0.45 * hash(i, 131))
-    const sy = hy - AURORA_OVER * F + F * (0.05 + 0.1 * hash(i, 132))
+    // Its whole fall kept above the ball, where the ball rides high in the frame (over the pond, the camera looks low).
+    const ballTop = Math.min(...[0, 0.35, 0.7, 1.05, 1.4].map((dt) => {
+      const b = ballLocal(METEORS[i] + dt)
+      return onCanvas(ctx, c.k, ...polar(b.u, b.h + 0.3), m)[1]
+    }))
+    const sy = Math.max((H - F) / 2 + F * 0.03, Math.min(hy - AURORA_OVER * F + F * (0.05 + 0.1 * hash(i, 132)), ballTop - F * 0.1 - Math.sin(a) * L))
     const q = 1 - (1 - fall.q) ** 2
     const hx = sx + dir * Math.cos(a) * L * q
     const hy2 = sy + Math.sin(a) * L * q
