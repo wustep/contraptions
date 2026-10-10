@@ -664,6 +664,12 @@ window.
   - *The restaged fall, on the music.* Her coming to rest (176.272) already sat on a measured onset (176.274); his bolt
     came 60 ms after the next strong note (175.409, strength 0.71, the basket's tip). His stillness now ends on it: he
     bolts on the note, with the basket's tip (a check holds him still to it and moving after).
+  - *A whole play on the deployed preview, after the player's changes* (Chrome, YouTube, real time, the clock read
+    every second): 0:00 to 4:18 in 259 s of wall, never backwards, never held three seconds, within a second of the
+    wall throughout (the clock's own resolution), no warning on the page, nothing in the console but YouTube's own
+    start-up note; the credits over the sky, and at the end Replay under the house, over the light on its walk.
+    The yard's pop-up, looked at again: the book opens on the note, she perks up and leaps to it, and they carry it in
+    open as the phrase turns (about two seconds of it); the dream goes on in the jar's own picture, so it is kept.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
