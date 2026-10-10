@@ -41,15 +41,16 @@ export const ERA = {
   news: [SEAM.news, SEAM.arrival] as const,
   home: [SEAM.home, 409] as const,
 }
-/** The last scene's chords before the cut: the two of them turn to the empty cradle (TURN) and step toward it (NEAR);
- * then the cut onto the cradle at dawn, the baby in it (BEGIN), Ian beyond it on her right until he goes (`ianAfter`). */
+/** The last scene's chords: the two of them turn to the empty cradle (TURN) and step toward it (NEAR); then, on the
+ * fall onto B-flat (BEGIN), she rocks it and the baby comes into it, Ian beyond it on her right until he goes
+ * (`ianAfter`). */
 export const TURN = 341.618
 export const NEAR = 345.49
 export const BEGIN = 349.495
 /**
- * Before the cut the empty cradle stands this far to the right of its dawn place: none now, it waits where the first
- * frame has it, so nothing moves across the cut but the time. (A way off to the right, it and Ian each jumped to a new
- * place on the cut, and fresh readers took the cut for a slip in the edit.)
+ * Before BEGIN the empty cradle stands this far to the right of its dawn place: none now, it waits where the first
+ * frame has it, so nothing in the room moves when Hannah comes but Hannah. (A way off to the right, it and Ian each
+ * jumped to a new place on what was then a cut, and fresh readers took the cut for a slip in the edit.)
  */
 export const EMPTY_DX = 0
 
@@ -148,7 +149,7 @@ export const DAWN_PUSHES: Push[] = [
   { t: 19.127, a: 0.15, w: 0.11 },
 ]
 /**
- * At the end: the empty cradle when she comes to it, then with Hannah in it from the cut, dying away with the music.
+ * At the end: the empty cradle when she comes to it, then with Hannah in it, dying away with the music.
  * From the last B-flat on she barely moves (the check holds her place and Hannah's to 1% of the frame).
  */
 export const HOME_PUSHES: Push[] = [
@@ -189,6 +190,18 @@ export const babyAt = (T: number): Pt => pose(cradleTheta(T), BABY0)
 export const PATIENT: Pt = [1.0, -0.35]
 /** She goes on the swell: her ball fades into the bed between these show times. */
 export const GONE: [number, number] = [SWELL, 96.595]
+/**
+ * And she comes back into the cradle her going played backwards, as long, from the fall onto B-flat: there was a cut
+ * there, the camera a step closer on the same three and the baby in the cradle, and readers took it for a dropped
+ * frame. Nothing in the room moves but the time, so there is no cut; the camera goes in to the cradle as she comes.
+ */
+export const COMES: [number, number] = [BEGIN, BEGIN + GONE[1] - GONE[0]]
+/** How far she has gone into the bed (0 there, 1 gone) at show time T, or, after GONE, out of the cradle: the one
+ * curve, run backwards from BEGIN. Its fade (her colour into the linen) and its sink (her size into the pillow). */
+export function going(T: number): { fade: number; sink: number } {
+  const t = T >= COMES[0] ? GONE[0] + COMES[1] - T : T
+  return { fade: ss(t, GONE[0], GONE[1] - 0.1), sink: ss(t, GONE[0] + 0.3, GONE[1] - 0.05) }
+}
 /** Louise comes to the bed's side on this chord and stays there: she ends the scene against the empty bed. */
 export const BEDSIDE_T = 80.376
 export const BEDSIDE_X = 0.27
@@ -310,8 +323,8 @@ export function lightAt(T: number): Light {
     const u = ss(T, SEAM.home, SEAM.home + 2.4)
     return light(0, 1, 0, 0, 0.45 + 0.55 * u, 0.3)
   }
-  // The choice: the morning carries across the cut to the cradle, and cools to the blue hour over the pull-back, so the
-  // circle closes on the first frame's light by the last attack.
+  // The choice: the morning holds while the baby comes, and cools to the blue hour over the pull-back, so the circle
+  // closes on the first frame's light by the last attack.
   const u = ss(T, BEGIN + 1.5, LAST - 1)
   if (u < 1) return light(u, 1 - u, 0, 0, 1 - u, 0.3 + 0.55 * u)
   return FIRST_LIGHT
@@ -364,8 +377,8 @@ export const NEWS_X = BEDSIDE_X
 
 /**
  * Home: by the long window beside Ian, the empty cradle a little way off on their right. On the chords she rolls into
- * him (the touch), and the two of them turn to the cradle and go toward it a step at a time. On the cut (BEGIN) the
- * cradle is at its dawn place beside her, where Ian stood, the baby in it; she rocks it, and settles at her dawn place.
+ * him (the touch), and the two of them turn to the cradle and go toward it a step at a time. On BEGIN she rocks it and
+ * the baby comes into it, and she settles at her dawn place.
  */
 export const HOME_X = -0.35
 export const IAN_X = HOME_X + 0.36
@@ -374,8 +387,8 @@ const STEP = 0.0925
 /** Their steps toward the cradle: each begins on its chord and takes a long breath. */
 const steps = (T: number, step = STEP): number => step * (s5((T - TURN + 0.1) / 1.3) + s5((T - NEAR + 0.1) / 1.3))
 /** Ian beside her: when she rolls into him he gives a little with it and comes back against her; then, from the turn,
- * he goes round behind the cradle to its far side, so it stands between them as she goes to it, where the cut finds
- * them both. He looks at her; at the cradle as he goes round it; at her again from its far side. */
+ * he goes round behind the cradle to its far side, so it stands between them as she goes to it and as the baby
+ * comes. He looks at her; at the cradle as he goes round it; at her again from its far side. */
 const ROUND: [number, number] = [TURN + 0.4, NEAR + 1.6]
 export function ianX(T: number): number {
   const u = T - HUG_T
@@ -386,10 +399,9 @@ export function ianX(T: number): number {
 export const ianLook = (T: number): number =>
   Math.PI + 0.35 - (Math.PI + 0.6) * ss(T, TURN - 0.1, TURN + 1.2) + (Math.PI + 0.5) * ss(T, ROUND[1] - 0.4, ROUND[1] + 0.4)
 /**
- * Ian after the cut to the cradle: where he was before it, on the cradle's far side, with her as she rocks it on the
- * chord. Then he turns away, stands a moment, looks back at her, and goes, out
+ * Ian from BEGIN: on the cradle's far side, with her as she rocks it on the chord and the baby comes. Then he turns away, stands a moment, looks back at her, and goes, out
  * of the frame on the right and on out of the room, before the camera draws back, so the last frame is the first and
- * has no Ian. In the film he leaves her. Cut away at the cut, as he was, four fresh readers in nine (four of the last
+ * has no Ian. In the film he leaves her. Cut away at what was then a cut, four fresh readers in nine (four of the last
  * five) took his going for a slip; put on her left across it, he swapped sides and read as a slip again, and gone
  * without a beat, as deleted.
  */
@@ -410,7 +422,7 @@ function goneBy(u: number): number {
   const b = w <= 0 ? 0 : w < 2 ? ((OUT - WALK) * w * w) / 4 : (OUT - WALK) * (w - 1)
   return a + b
 }
-/** Where he is (world x) from the cut on; past the room's whole frame by IAN_GONE. */
+/** Where he is (world x) from BEGIN on; past the room's whole frame by IAN_GONE. */
 export function ianAfter(T: number): number {
   // A half step away as he turns, then still; and as he looks back, a lean back toward her, held a second, before he
   // goes. (The look alone, his mark turning, was too slight to see as a pause.)

@@ -1,7 +1,7 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { mix } from '../cast'
 import { box, part, scenery, type Company, type Part, type PartShot, type Slot } from '../kit'
-import { HALF, LAST, SEAM, SWELL, TONIC } from '../music'
+import { HALF, LAST, PLAGAL, SEAM, SWELL, TONIC } from '../music'
 import type { ShellSpot } from '../seams'
 import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME, IAN, LOUISE } from '../worlds'
 import { CLOCK_HULL, CRADLE_HULL, BED_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawTV, drawTVGlow, tvShell } from './props'
@@ -19,6 +19,7 @@ import {
   CLOCK_STRIKES,
   DAWN_PUSHES,
   GONE as GONE_AT,
+  going,
   HOME_PUSHES,
   HOME_X,
   HUG_T,
@@ -83,7 +84,7 @@ export const houseSet = scenery<null>({
     const lx = louiseX(T)
     if (lx !== null) balls.push([lx, 0])
     const theta = cradleTheta(T)
-    // The cradle at its dawn place throughout, empty before the cut and Hannah in it from it.
+    // The cradle at its dawn place throughout, empty until Hannah comes into it.
     const dx = era === 'home' && T < BEGIN ? EMPTY_DX : 0
     if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)).map(([x, y]) => [x + dx, y] as Pt))
     if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL)
@@ -231,8 +232,7 @@ export const bed: Part<HouseState> = part<HouseState>(
           // She turns toward her mother when she comes close. On the swell she goes: paler, and smaller, sinking into
           // the pillow she lies on, until there is nothing there.
           const look = -Math.PI / 2 - 0.2 - 0.9 * ss(t, 80.1, 81.6)
-          const fade = ss(t, GONE[0], GONE[1] - 0.1)
-          const sink = ss(t, GONE[0] + 0.3, GONE[1] - 0.05)
+          const { fade, sink } = going(t)
           const pale = mix(HOUSE.linen, HOUSE.linenShade, 0.4)
           const scale = r * (1 - 0.985 * sink)
           const bottom = PATIENT[1] + R * r
@@ -317,8 +317,20 @@ export const home: Part<HouseState> = part<HouseState>(
         from: BEGIN,
         to: slot.end + 1,
         at: (t) => {
+          // She comes into the cradle the way she went from the bed, backwards: out of the linen, paler and smaller,
+          // rising and filling into herself. Her foot stays where the cradle holds her.
           const [x, y] = babyAt(t)
-          return { x: x - o[0], y: y - o[1], scale: HANNAH_AGE.baby, spin: BABY_LOOK + cradleTheta(t), rim: BABY_RIM }
+          const { fade, sink } = going(t)
+          const pale = mix(HOUSE.linen, HOUSE.linenShade, 0.4)
+          const scale = HANNAH_AGE.baby * (1 - 0.985 * sink)
+          return {
+            x: x - o[0],
+            y: y + R * (HANNAH_AGE.baby - scale) - o[1],
+            scale,
+            spin: BABY_LOOK + cradleTheta(t),
+            color: mix(HANNAH, pale, fade),
+            rim: mix(BABY_RIM, pale, fade),
+          }
         },
       },
     ]
@@ -335,11 +347,12 @@ export const home: Part<HouseState> = part<HouseState>(
       { t: HUG_T, cells: 3.1, hold: w(1.08, -0.53) },
       { t: TURN, cells: 3.0, hold: w(1.15, -0.51) },
       { t: NEAR, cells: 2.92, hold: w(1.22, -0.5) },
-      { t: BEGIN - 0.05, cells: 2.85, hold: w(1.26, -0.49) },
-      // The opening played backwards: the cut opens close on the cradle at dawn, Hannah in it (the dawn's closest
-      // framing); close through the last B-flat; then one long slow draw back, arriving on the first frame exactly on
-      // the last attack, and held there to the end.
-      { t: BEGIN, cells: 2.6, hold: w(0.7, -0.4), cut: true },
+      { t: BEGIN, cells: 2.85, hold: w(1.26, -0.49) },
+      // The opening played backwards: as Hannah comes, the camera goes in to the cradle, to the dawn's closest framing,
+      // over the chord; close through the last B-flat; then one long slow draw back, arriving on the first frame
+      // exactly on the last attack, and held there to the end. (It was a cut, onto nearly the same framing, and read as
+      // a slip in the edit.)
+      { t: PLAGAL, cells: 2.6, hold: w(0.7, -0.4) },
       { t: TONIC, cells: 2.7, hold: w(0.69, -0.41) },
       { t: LAST, cells: 4.6, hold: first },
       { t: slot.end, cells: 4.6, hold: first },
