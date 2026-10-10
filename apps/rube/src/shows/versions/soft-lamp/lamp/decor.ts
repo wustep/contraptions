@@ -617,6 +617,13 @@ const SNARES: { t: number; h: number }[] = (() => {
   return out.sort((a, b) => a.t - b.t)
 })()
 
+/** How far the far cup's cushion is pressed at `t` (cells): a small give on each snare, as hard as it was struck. */
+export function farPress(t: number): number {
+  let d = 0
+  for (const b of recent(SNARES, t)) d += b.h * 0.12 * Math.exp(-((b.s / 0.06) ** 2))
+  return d
+}
+
 /** Of `beats`, those in the last second and a half: how hard each pushes the air (cells), and how long ago. */
 function recent(beats: { t: number; h: number }[], t: number): { h: number; s: number }[] {
   const out: { h: number; s: number }[] = []

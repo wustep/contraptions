@@ -67,10 +67,10 @@ export const BOOKS: Book[] = [
 export const CUP = { x: 2.52, halfW: 0.36, top: -0.34, hollow: 0.06 }
 /** Where the ball rests in the cup (its middle). */
 export const IN_CUP = { x: CUP.x, y: CUP.top + CUP.hollow - R }
-/** The far cup, standing: its middle, half its thickness, and its height. */
-export const FAR_CUP = { x: 4.22, halfW: 0.2, h: 0.78 }
-/** The band's arch: how high its top is. */
-export const BAND_TOP = -1.28
+/** The far cup, the near one's twin, on its back too: its middle, half its width, and its height (the near cup's). */
+export const FAR_CUP = { x: 4.06, halfW: CUP.halfW, h: -CUP.top }
+/** The band's arch, standing between the cups' yokes: how high its top reaches (a headband's round, about). */
+export const BAND_TOP = -0.95
 
 /** The lamp: its base on the desk, its elbow, the head's hinge, and where the shade points. */
 export const LAMP = {

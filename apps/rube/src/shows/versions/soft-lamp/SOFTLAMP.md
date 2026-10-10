@@ -1297,6 +1297,27 @@ reflection was a pale oval and a bun over a fading jumper, more a ghost than som
 210. **Fixed on the way.** The writing hand was first drawn below the glass's foot, where the clip took it; it is raised
      to just above it.
 
+### The seventy-sixth pass: a cold review, and headphones at a glance
+
+A seventh reviewer, with no context, looked at sixteen frames of both takes. Its notes were weighed against what the
+show means to do: the hand at the start (turning the lamp on), the mug gone at 19:40 (being refilled), the ball between
+steps, the clock (real time from 11:41) and the still take's drift are as intended; its first proposal (the person at
+the desk, seen from behind) would undo the show's point of view, whose hand is the person's. Taken:
+
+211. **Headphones that read at a glance.** It saw "a kettle or a handbag", the ball's seat "a soap dish" (as three
+     reviewers had before it). The far cup stood on its edge, the near one lay on its back: two different shapes joined
+     by a band. Now the pair is set down face up as headphones are, both cups on their backs, cushions up, twins, and
+     the band stands between their yokes in a headband's round, its padding along the inside of its top and its sides
+     bowing a little out, clear of the ball as it nods. Each cup is lit on the side toward the lamp. The far cup still
+     plays the snare: its cushion now gives a little on each one, as the near one does under the kick. Its place
+     (`FAR_CUP`) keeps it whole in the window's look and the room's.
+212. **The moth at rest** read as "a ghost or a bird" on the moonlit glass at the end: its wings were folded into a
+     small roof. Settled, it spreads them flat in a soft triangle, a darker band and an eyespot on each, as a moth on a
+     pane does.
+
+Not taken: the kitten "cropped in half" in the moving take (it is whole there, near the frame's edge); cast shadows
+(they are drawn; a lamp above a desk throws most of them onto the desk, out of sight).
+
 ## Judgment calls for Stephen
 
 - **The light.** How dark the room falls away from its lights is two colours (`ambientAt`, `lamp/light.ts`, the

@@ -99,7 +99,7 @@ export function mothAt(t: number): { x: number; y: number; a: number; fly: numbe
 
 const WING_LIT = '#F6E6C4'
 
-/** The moth: a small soft body, and its wings, a pale blur flying, folded back into a little roof at rest. */
+/** The moth: a small soft body, and its wings, a pale blur flying, spread flat in a soft triangle at rest. */
 export function moth(ctx: Ctx, lw: number, t: number): void {
   const m = mothAt(t)
   if (m.a <= 0.01) return
@@ -126,22 +126,29 @@ export function moth(ctx: Ctx, lw: number, t: number): void {
       ctx.stroke()
     }
   } else {
-    // Settled: the wings laid back along the body, a small rounded roof, a darker band across them.
-    ctx.beginPath()
-    ctx.moveTo(0, -SPAN * 0.2)
-    ctx.quadraticCurveTo(SPAN * 0.32, SPAN * 0.05, SPAN * 0.2, SPAN * 0.32)
-    ctx.lineTo(-SPAN * 0.2, SPAN * 0.32)
-    ctx.quadraticCurveTo(-SPAN * 0.32, SPAN * 0.05, 0, -SPAN * 0.2)
-    ctx.fillStyle = wingColor
-    ctx.fill()
-    ctx.strokeStyle = rgba(INK, 0.85)
-    ctx.lineWidth = lw * 0.5
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(-SPAN * 0.2, SPAN * 0.14)
-    ctx.quadraticCurveTo(0, SPAN * 0.08, SPAN * 0.2, SPAN * 0.14)
-    ctx.strokeStyle = rgba('#5C4A3A', 0.5)
-    ctx.stroke()
+    // Settled, as a moth rests on a wall or a pane: its wings spread flat in a soft triangle either side of the body,
+    // their front edges swept back, a darker band across each and a small eyespot.
+    for (const side of [-1, 1]) {
+      ctx.beginPath()
+      ctx.moveTo(side * SPAN * 0.04, -SPAN * 0.1)
+      ctx.quadraticCurveTo(side * SPAN * 0.3, -SPAN * 0.16, side * SPAN * 0.5, SPAN * 0.02)
+      ctx.quadraticCurveTo(side * SPAN * 0.42, SPAN * 0.26, side * SPAN * 0.06, SPAN * 0.24)
+      ctx.closePath()
+      ctx.fillStyle = wingColor
+      ctx.fill()
+      ctx.strokeStyle = rgba(INK, 0.8)
+      ctx.lineWidth = lw * 0.5
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(side * SPAN * 0.1, SPAN * 0.02)
+      ctx.quadraticCurveTo(side * SPAN * 0.28, -SPAN * 0.02, side * SPAN * 0.42, SPAN * 0.09)
+      ctx.strokeStyle = rgba('#5C4A3A', 0.5)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(side * SPAN * 0.28, SPAN * 0.1, SPAN * 0.035, 0, Math.PI * 2)
+      ctx.fillStyle = rgba('#5C4A3A', 0.55)
+      ctx.fill()
+    }
   }
   // The body, and two feathered antennae.
   ctx.beginPath()
