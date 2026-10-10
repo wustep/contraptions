@@ -412,6 +412,10 @@ each world, and changed:
   blank lit panels in the concrete, beside the lift tower's siding and downpipe (a critic's note). The room shows
   through it in silhouette against the lamp, as it is inside: the lamp on its cord, the curtain at the window's end,
   the table; and the window sits deep in its frame, the reveal in shade, a transom bar, a sill standing out under it.
+- **The crags under the ridge** (123 to 152, plainest in a tall frame): where the rock breaks through the snow, each
+  crag ended on the face with a hard edge and read as a slab laid on it, as the hairpin's boulder did. Each throws a
+  soft shadow on the face under its foot now, a little east of it. (A drift over its foot was tried first: on the
+  shaded face it came out a hard white block, brighter than the snow round it.)
 
 ## Inception nods
 

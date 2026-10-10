@@ -657,6 +657,22 @@ function drawFace(ctx: C2D, c: Ctx, x0: number, x1: number): void {
   for (const face of FACES) drawRockFace(ctx, k, face, x0, x1)
   for (const crag of CRAGS) {
     if (crag[0][0] > x1 + 4 || crag[0][0] < x0 - 6) continue
+    // Its shadow on the face under its foot, soft, a little east of it (the sun is low in the west): without it the
+    // crag ended on the snow with a hard edge and read as a slab laid on the face, plainest in a tall frame.
+    const xs = crag.map((q) => q[0])
+    const ys = crag.map((q) => q[1])
+    const [lx, rx, by] = [Math.min(...xs), Math.max(...xs), Math.max(...ys)]
+    ctx.save()
+    ctx.translate(((lx + rx) / 2 + 0.35) * k, (by - 0.05) * k)
+    ctx.scale(1, 0.32)
+    const r = ((rx - lx) / 2 + 0.6) * k
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+    g.addColorStop(0, rgba(HOLLOW, 0.5))
+    g.addColorStop(0.6, rgba(HOLLOW, 0.22))
+    g.addColorStop(1, rgba(HOLLOW, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(-r, -r, 2 * r, 2 * r)
+    ctx.restore()
     drawRockFace(ctx, k, { pts: crag, ledges: [] }, x0, x1)
   }
   // The band throws its shadow down the slope under it, east of the low sun: blue, deepest at its foot (Mal waits
