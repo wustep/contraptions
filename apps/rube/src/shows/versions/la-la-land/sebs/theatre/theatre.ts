@@ -1260,7 +1260,22 @@ function drawLamp(p: p5, k: number, ink: string, weight: number, t: number): voi
 }
 
 /** The rows: seat backs with their backs to us, low while the house sits, up on their hits with their paddles clapping. */
+/**
+ * The other road, at her show: in the film her play went on to a near-empty house, and he wasn't there. In the lead-in
+ * bar, while the house holds its breath, that night shows through for a breath: the seats empty, flickering like old
+ * film, and the house goes grey round him. On the downbeat he springs up, and the full house is back as it rises.
+ */
+export const EMPTY: [number, number, number] = [113.45, 114.0, SPRING - 0.06]
+export function emptyAt(t: number): number {
+  if (t < EMPTY[0] || t > SPRING + 0.02) return 0
+  const up = Math.min(1, (t - EMPTY[0]) / (EMPTY[1] - EMPTY[0]))
+  const back = t < EMPTY[2] ? 1 : Math.max(0, 1 - (t - EMPTY[2]) / 0.08)
+  const flicker = 0.82 + 0.18 * hash(Math.floor(t * 14), 5, 9)
+  return up * up * back * flicker
+}
+
 function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stage: number): void {
+  const empty = emptyAt(t)
   const { k, ink, weight } = c
   const bg = THEATRE_INK.bg
   const warm = Math.min(1, house)
@@ -1286,8 +1301,9 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
       const top = base - h
       // Someone in every seat but his: the back of a head over the seat-back, the stage's light along its crown. A full
       // house, the one the film's version never had. They stand with their seats.
-      if (!st.his) {
+      if (!st.his && empty < 0.97) {
         const hr = 0.115
+        p.drawingContext.globalAlpha = 1 - empty
         const hy = top - 0.05 - 0.06 * up
         p.noStroke()
         p.fill('#1A0A0E')
@@ -1296,6 +1312,7 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
         p.stroke(alpha(p, M.bulb, 0.45 + 0.4 * Math.min(1, stage) + 0.15 * warm))
         p.strokeWeight(weight * 0.9)
         p.arc(st.x * k, hy * k, 2 * hr * k, 2 * hr * k, Math.PI * 1.15, Math.PI * 1.85)
+        p.drawingContext.globalAlpha = 1
       }
       p.stroke(alpha(p, ink, 0.28 + 0.2 * warm))
       p.strokeWeight(weight * 0.5)
@@ -1329,6 +1346,15 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
         }
       }
     }
+  }
+  // And the house goes grey round him while it is empty: the real night's colour.
+  if (empty > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.globalCompositeOperation = 'saturation'
+    ctx.fillStyle = rgba('#808080', 0.85 * empty)
+    ctx.fillRect((ARCH0 - 1) * k, (ROW_Y[0] - 0.7) * k, (RIGHT - ARCH0 + 1) * k, (ROW_Y[ROW_Y.length - 1] - ROW_Y[0] + 1.2) * k)
+    ctx.restore()
   }
 }
 
