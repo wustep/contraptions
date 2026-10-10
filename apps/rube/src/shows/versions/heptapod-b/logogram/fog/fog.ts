@@ -128,9 +128,10 @@ export const fog2 = stretch(1, 'fog2', (slot, _o, at) => {
     { t: 143.1, cells: 5.4, off: [0.9, -0.6], w: 0 },
     // Wide for the long arcs, leading her, so the ring written for her is seen whole, before she comes down into it,
     // and the one she leaves is still there behind her.
-    { t: 145.0, cells: 8.0, off: [1.9, -0.4], w: 0 },
     // In the long flights the frame is anchored a little to where she will land (the ring written for her), so she is
     // seen to travel across it toward the ring instead of holding one place on the screen against the fog.
+    { t: 145.0, cells: 8.0, off: [1.9, -0.4], hold: landing(at, 146.193, [1.9, -0.4]), w: LEAD },
+    { t: 146.193, cells: 8.4, off: [2.05, -0.35], hold: landing(at, 146.193, [2.05, -0.35]), w: LEAD },
     { t: 147.7, cells: 8.8, off: [2.2, -0.3], hold: landing(at, 149.728, [2.2, -0.3]), w: LEAD },
     { t: 149.728, cells: 8.8, off: [2.2, -0.35], hold: landing(at, 149.728, [2.2, -0.35]), w: LEAD },
     { t: 150.8, cells: 8.8, off: [2.2, -0.4], hold: landing(at, 153.316, [2.2, -0.4]), w: LEAD },
