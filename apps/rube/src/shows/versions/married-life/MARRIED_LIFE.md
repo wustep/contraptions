@@ -670,6 +670,11 @@ window.
     start-up note; the credits over the sky, and at the end Replay under the house, over the light on its walk.
     The yard's pop-up, looked at again: the book opens on the note, she perks up and leaps to it, and they carry it in
     open as the phrase turns (about two seconds of it); the dream goes on in the jar's own picture, so it is kept.
+  - *The nursery and the ward, close.* The nursery clean: the winch lifts her shelf, the mural grows sky, birds and
+    hill, the two of them at the cot at the end. The ward's last seconds clean: the camera draws back as the window
+    goes to night, the balloon over her. Considered and not taken: closing her eye at the end of the ward, so a first
+    viewer sees the moment she dies; the film itself cuts from the ward to the funeral and never shows it, and the
+    show keeps to that.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
