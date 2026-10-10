@@ -274,8 +274,8 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
 
   // The show's three conversations in subtitles: each line in its own scene, one at a time, none over a jump, and
   // nothing said as Joy goes over the brink.
-  const scenes: Record<string, [number, number]> = { taxes: [20.19, 29.37], alley: [JUMPS.premiere, JUMPS.dojo], hush: [JUMPS.void, JUMPS.mosaic], rocks: [JUMPS.rocks, JUMPS.brink], peak: [JUMPS.brink, JUMPS.home], home: [JUMPS.home, CREDITS_AT] }
-  check('all at once: subtitles at the taxes, in the alley, the hush, the rocks and home only, before the credits, one at a time, and silent as Joy goes over',
+  const scenes: Record<string, [number, number]> = { taxes: [20.19, 29.37], alley: [JUMPS.premiere, JUMPS.dojo], hush: [JUMPS.void, JUMPS.mosaic], wall: [JUMPS.mosaic, JUMPS.eye], rocks: [JUMPS.rocks, JUMPS.brink], peak: [JUMPS.brink, JUMPS.home], home: [JUMPS.home, CREDITS_AT] }
+  check('all at once: subtitles at the taxes, in the alley, the hush, the wall, the rocks and home only, before the credits, one at a time, and silent as Joy goes over',
     SUBTITLES.length >= 14 && SUBTITLES.every((sub, i) => sub.at > scenes[sub.scene][0] + 0.5 && sub.to < scenes[sub.scene][1] - 0.2 && sub.to > sub.at + 1 && (i === 0 || sub.at >= SUBTITLES[i - 1].to)) &&
     SUBTITLES.every((sub) => sub.to < 213.96 - 0.2 || sub.at > 213.96 + 1.5) && ['taxes', 'alley', 'hush', 'rocks', 'home'].every((sc) => SUBTITLES.some((s) => s.scene === sc)))
 

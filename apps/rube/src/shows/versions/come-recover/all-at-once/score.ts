@@ -331,8 +331,8 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     set.after.push(standing(eyePiece, 0, 0, [...cells.values()], state, DURATION) as Placed)
   }
 
-  // Under the subtitles low in the frame, in the hush, the rocks and home, a soft dark (`credits.ts`).
-  for (const world of ['void', 'rocks', 'home'] as WorldKey[]) {
+  // Under the subtitles low in the frame, in the hush, the wall of every life, the rocks and home, a soft dark (`credits.ts`).
+  for (const world of ['void', 'multi', 'rocks', 'home'] as WorldKey[]) {
     const cells = new Map<string, Pt>()
     for (const leg of legs) if (leg.world === world) for (const placed of leg.placed) for (const c of placed.cells) cells.set(`${c[0]},${c[1]}`, c)
     ;(sets[world] ??= { scenery: [], after: [] }).after.push(standing(subtitleBed, 0, 0, [...cells.values()], null, DURATION) as Placed)

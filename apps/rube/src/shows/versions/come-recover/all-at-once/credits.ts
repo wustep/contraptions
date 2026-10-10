@@ -124,7 +124,7 @@ export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
  *
  * Each comes on a note the scene already moves on, and goes before the next.
  */
-export type Scene = 'taxes' | 'alley' | 'hush' | 'rocks' | 'peak' | 'home'
+export type Scene = 'taxes' | 'alley' | 'hush' | 'wall' | 'rocks' | 'peak' | 'home'
 export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 'joy' | 'waymond'; scene: Scene }[] = [
   // The taxes: Joy stops below her mother at the adding machine, and her mother does not look up.
   { at: 24.0, to: 26.2, line: 'Mom? Can I —', who: 'joy', scene: 'taxes' },
@@ -135,6 +135,9 @@ export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 
   { at: 134.2, to: 136.4, line: 'There you are.', who: 'joy', scene: 'hush' },
   { at: 136.8, to: 139.0, line: 'Joy? What is this place?', who: 'evelyn', scene: 'hush' },
   { at: 139.3, to: 141.8, line: 'Come and see.', who: 'joy', scene: 'hush' },
+  // Everywhere at once, as the wall crowds toward the crescendo and he is beside her in nearly every life: what he
+  // asks of her, the one thing he asks, before the great hit, where she does it.
+  { at: 186.9, to: 189.5, line: 'Be kind. Especially now.', who: 'waymond', scene: 'wall' },
   { at: 208.5, to: 211.6, line: 'It is quiet here. Nothing has to mean anything.', who: 'joy', scene: 'rocks' },
   { at: 212.0, to: 213.7, line: 'You don’t have to follow me.', who: 'joy', scene: 'rocks' },
   { at: 216.4, to: 218.4, line: 'Joy —', who: 'evelyn', scene: 'rocks' },
@@ -171,7 +174,8 @@ function subtitleBedAt(t: number): { light: number; at: [number, number]; deep: 
     if (sub.scene === 'alley') continue
     const light = clamp((t - sub.at) / SUB_FADE) * (1 - clamp((t - (sub.to - SUB_FADE)) / SUB_FADE))
     // Under the other's lines (italic, which the page sets a little faded) the dark is deeper.
-    if (light > best.light) best = { light, at: subAt(sub.scene), deep: sub.who === 'evelyn' ? 1 : 1.3 }
+    // Over the wall of a hundred lives, the busiest picture in the show, deeper still.
+    if (light > best.light) best = { light, at: subAt(sub.scene), deep: (sub.who === 'evelyn' ? 1 : 1.3) * (sub.scene === 'wall' ? 1.4 : 1) }
   }
   return best
 }
