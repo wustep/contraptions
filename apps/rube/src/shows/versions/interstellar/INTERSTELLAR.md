@@ -231,7 +231,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 124 (latest)
+## Polish pass 125 (latest)
+
+Overview from Saturn to the end ran at 3 to 9 frames a second against about 60 everywhere else (measured live in the player at 1280×800). A count of canvas fills per frame found why. At 260 s Overview made 33,869 fills, 24,964 of them `space/sky.ts`'s stars, the whole space world's starfield laid at 4 to 7 px a cell. A normal frame there makes 405. Pass 108 had let the stars go below 3 px a cell, judging by the widest shot in the show, near 4 px on a 320 px phone. These two skies are never drawn that far out. Measured over every second of the show, Zoom's widest shot of them on a 320 px phone is 25 px a cell (space) and 34 (Edmunds), so the normal view's is 17 and 23. Both skies now let their stars go between 10 and 14 px a cell, and Edmunds' skips its loop once nothing would be drawn, as `space/sky.ts`'s already did.
+
+After the change, Overview at 260 s makes 6,072 fills and at 222 s 1,442. Painted in a loop with the before and after timed alternately under the same load, a frame from 222 s on fell from about 140 ms to 12 to 74 ms. The rest is Edmunds' ground, its stones and craters laid across the whole world, which is left. Every 2 s from 88 s to the end, normal at 960×540, 390×844 and 320×568 and Zoom at 390×844, is pixel for pixel what it was. Overview's Saturn and Edmunds now have a clean dark sky at every screen size up to about 2000 px wide.
+
+## Polish pass 124
 
 No change to the show: pass 123's frame-against-frame scan in Zoom, at 30 frames a second (9,000 frames). Zoom frames the show more closely and slides to keep a focus in shot, so it could pop where the show's own frame does not. Only three things jump:
 - 84.5 to 84.7 s: the launch's shudder as the engines light, a pixel's shake on a tenth-second rhythm;

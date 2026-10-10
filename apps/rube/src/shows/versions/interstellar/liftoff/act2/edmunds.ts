@@ -675,11 +675,12 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   // Stars, going out toward the band, and a little with the dawn.
   p.noStroke()
   const cell = 1.25
-  // A star is a few pixels at any scale: below 3 px a cell (Overview), they would be a solid speckle, so they go.
-  const sparse = smooth(k, 2.1, 3)
+  // A star is a few pixels at any scale: at Overview's (below 14 px a cell) they would be a solid speckle, and slow, so
+  // they go. No real view comes that far out (the widest, on a 320 px phone, is 23).
+  const sparse = smooth(k, 10, 14)
   const ox = f.cx * 0.97
   const oy = f.cy * 0.97
-  for (let i = Math.floor((f.x0 - ox) / cell) - 1; i <= Math.ceil((f.x1 - ox) / cell); i++) {
+  for (let i = Math.floor((f.x0 - ox) / cell) - 1; sparse > 0 && i <= Math.ceil((f.x1 - ox) / cell); i++) {
     for (let j = Math.floor((f.y0 - oy) / cell) - 1; j <= Math.ceil((E - oy) / cell); j++) {
       if (hash(i, j, 61) > 0.42) continue
       const x = ox + (i + hash(i, j, 62)) * cell

@@ -43,9 +43,10 @@ export const voidSky = scenery<VoidState>({
     // Stars, three depths. Each layer is a tiling of cells with a star or none, offset by how far it drifts.
     p.noStroke()
     const shown = smooth(s.deck - f.cy, 2, 10)
-    // A star is a few pixels at any scale. Below 3 px a cell (Overview; the widest real shot on the narrowest phone is near 4), they would be
-    // a solid speckle, so they go.
-    const sparse = smooth(k, 2.1, 3)
+    // A star is a few pixels at any scale, so at Overview's (2 to 13 px a cell, the whole world in the frame) they would
+    // be a solid speckle, and 25,000 fills a frame (4 frames a second). They go below 14 px a cell; no real view comes
+    // that far out (the widest, on a 320 px phone, is 17).
+    const sparse = smooth(k, 10, 14)
     for (let l = 0; sparse > 0 && l < LAYERS.length; l++) {
       const L = LAYERS[l]
       const ox = f.cx * (1 - L.f)
