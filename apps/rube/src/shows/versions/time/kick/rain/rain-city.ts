@@ -510,11 +510,17 @@ export function drawLampLight(pen: Pen, f: View, te: number): void {
     bloom(p, k, head, 1.0, LAMP, 0.32 * flick)
     beam(p, k, head, [x, 0], 0.22, 2.4, LAMP, 0.12 * flick)
     pool(p, k, [x, 0.02], 1.5, 0.13, LAMP, 0.22 * flick)
-    const r = ctx.createLinearGradient(0, 0, 0, 0.5 * k)
-    r.addColorStop(0, rgba(LAMP, 0.26 * flick))
+    // Its reflection in the wet road: a soft streak down from its foot, fading at its sides as well as down (a strip
+    // with hard sides read as a pasted-on panel).
+    ctx.save()
+    ctx.translate(x * k, 0)
+    ctx.scale(0.3, 1)
+    const r = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.55 * k)
+    r.addColorStop(0, rgba(LAMP, 0.3 * flick))
     r.addColorStop(1, rgba(LAMP, 0))
     ctx.fillStyle = r
-    ctx.fillRect((x - 0.35) * k, 0, 0.7 * k, 0.5 * k)
+    ctx.fillRect(-0.55 * k, 0, 1.1 * k, 0.55 * k)
+    ctx.restore()
   }
 }
 

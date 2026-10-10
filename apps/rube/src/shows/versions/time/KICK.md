@@ -475,6 +475,13 @@ each world, and changed:
   over its shops; folded over and hung upside down at the city's far left, its mansard came down through the roofs of
   the street under it, the two drawn through each other (a critic's note in Overview). It is one floor over its shops
   now, and hangs clear of them, sky between.
+- **The glass door onto the garden** (248 to 254): shut, its pane stopped a little short of the doorway's head, sky
+  between; swinging open, its top rose over the cut wall above the doorway (a critic's note). Shut, it meets the head;
+  swinging out, it goes behind the cut wall.
+- **The vault door's rail** (186 to 191): the rail it rolls on ended a little above the floor, a dark bar floating in
+  the antechamber. It stands on a sill down to the floor now.
+- **The lamps' light in the wet road** (69 to 86): under each lamp its reflection was a strip with hard sides, a
+  pasted-on panel. It is a narrow soft streak now, fading at its sides as well as down.
 
 ## Inception nods
 
