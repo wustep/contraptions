@@ -101,6 +101,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - every ball on the stage is someone, once;
 - David looks at her at her table, and the swap there is seen: the dream's him greyed, and her looking at it;
 - the room as it is is muted, the dream in full colour all through, and the colour back by the last frame;
+- at her show the empty house shows through only in the lead-in, and is full again when he springs up;
 - his music rising out of the club with the band never runs through a credit card;
 - the piano drawn in the stars is whole in the picture, at the dip and over the city;
 - the other road is seen where the story turns, and only there: each of the six echoes well inside the frame, mostly there, at its moment; and in the hush she rocks from the knock and looks after the one who walked out;
