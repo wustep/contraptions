@@ -127,6 +127,17 @@ const LAND_AT: Pt[] = [
   [-6.3, BENCH_TOP - R],
 ]
 export const AT_GLASS: Pt = [-7.7, SILL_TOP - R]
+/** In the quiet after the song: he settles a little closer along the sill to his son, and leans to him once. */
+export const SETTLE = 248.6
+const SETTLED = SETTLE + 2.6
+const SETTLE_DX = -0.12
+/** The boy's small hand comes out of the blanket, and Marty leans to it. Unstruck: there are no beats here. */
+export const HAND = 252.4
+export const ANSWER = 253.3
+const ANSWER_DUR = 1.3
+export const CLOSE: Pt = [AT_GLASS[0] + SETTLE_DX, AT_GLASS[1]]
+/** Where the nurse holds him up: right at the glass, beside Marty. */
+export const HELD: Pt = [-8.0, -0.42]
 
 /** Rachel on the pillow; their son in the front row's first bassinet. */
 export const RACHEL_AT: Pt = [0.8, -0.35]
@@ -134,7 +145,7 @@ export const SON_BED: Pt = [-8.45, -0.4]
 /** The nurse stands behind the front row, at the son's bassinet. */
 export const NURSE_X = -9.2
 /** The bassinets: the front row (the son's first), and the row behind. */
-export const FRONT: number[] = [-8.45, -9.5, -10.55, -11.45]
+export const FRONT: number[] = [-8.45, -9.65, -10.6, -11.5]
 export const BACK: number[] = [-10.1, -11.05]
 export const FRONT_RIM = -0.3
 export const BACK_RIM = -0.62
@@ -197,7 +208,9 @@ export function martyAt(t: number): Pt {
       return [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u - arc * 4 * u * (1 - u)]
     }
   }
-  return [AT_GLASS[0] + trembleAt(t), AT_GLASS[1]]
+  const a = (t - ANSWER) / ANSWER_DUR
+  const lean = a <= 0 || a >= 1 ? 0 : Math.sin(Math.PI * a) ** 2
+  return [AT_GLASS[0] + trembleAt(t) + SETTLE_DX * smooth(t, SETTLE, SETTLED) - 0.045 * lean, AT_GLASS[1] - 0.008 * lean]
 }
 
 export function hospitalWay(): Seg[] {
@@ -222,7 +235,13 @@ export function hospitalWay(): Seg[] {
   }
   // The last tremble has died away to nothing: settle exactly on the sill, and hold there to the end.
   segs.push({ from: martyAt(t), to: AT_GLASS, dur: 0.2, ease: 'inout' })
-  rest(t + 0.2, T1, AT_GLASS)
+  rest(t + 0.2, SETTLE, AT_GLASS)
+  segs.push(...carried(martyAt, SETTLE, SETTLED, 40))
+  segs[segs.length - 1].to = CLOSE
+  rest(SETTLED, ANSWER, CLOSE)
+  segs.push(...carried(martyAt, ANSWER, ANSWER + ANSWER_DUR, 30))
+  segs[segs.length - 1].to = CLOSE
+  rest(ANSWER + ANSWER_DUR, T1, CLOSE)
   return segs
 }
 
@@ -243,12 +262,17 @@ export function rachelAt(t: number): Pt {
 /** How far the nurse has him lifted, 0 to 1. */
 export const liftOf = (t: number): number => smooth(t, LIFT, LIFTED)
 
+/** The nurse's slow rocking once she holds him up. */
+export const rockOf = (t: number): number => Math.sin(((t - LIFTED) / 2.6) * Math.PI * 2) * smooth(t, LIFTED, LIFTED + 2)
+
 export function babyAt(t: number): Pt {
   let wx = 0
-  for (const w of WRIGGLES) if (t >= w && t < w + 0.8) wx += 0.022 * ring(t - w, 5.5, 0.22)
-  const l = liftOf(t)
-  const rock = 0.012 * Math.sin(((t - LIFTED) / 2.2) * Math.PI * 2) * smooth(t, LIFTED, LIFTED + 1.5)
-  return [SON_BED[0] + wx + 0.16 * l + rock, SON_BED[1] - 0.46 * l - Math.abs(rock) * 0.3]
+  for (const w of [...WRIGGLES, HAND]) if (t >= w && t < w + 0.8) wx += 0.022 * ring(t - w, 5.5, 0.22)
+  // Up out of the bassinet first, then across to the glass beside Marty.
+  const up = smooth(t, LIFT, LIFT + (LIFTED - LIFT) * 0.6)
+  const over = smooth(t, LIFT + (LIFTED - LIFT) * 0.25, LIFTED)
+  const rock = 0.02 * rockOf(t)
+  return [SON_BED[0] + (HELD[0] - SON_BED[0]) * over + wx + rock, SON_BED[1] + (HELD[1] - SON_BED[1]) * up - 0.2 * Math.sin(Math.PI * over) - Math.abs(rock) * 0.25]
 }
 
 /* ------------------------------------------------------------------ strikes */

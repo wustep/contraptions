@@ -4,7 +4,7 @@ import { mix, type Pen } from '../pen'
 import { CREDITS_AT, SON, at } from '../music'
 import { BABY_SCALE } from '../worlds'
 import { drawOver, drawPart, drawSet, warm } from './draw'
-import { AT_GLASS, babyAt, HOSPITAL_STRIKES, hospitalWay, LIFT, martyAt, NUDGE, rachelAt, T1 } from './geo'
+import { babyAt, CLOSE, HOSPITAL_STRIKES, hospitalWay, LIFT, martyAt, NUDGE, rachelAt, T1 } from './geo'
 
 /**
  * The ward (202.391 → 266, bar 95 to the end). On "All for freedom and for pleasure" he is at rest on the foot of
@@ -63,7 +63,7 @@ export const nursery = part<WardState>(
   },
   (slot) => ({
     cells: box(-20, -9, 10, 5),
-    exit: [AT_GLASS[0] + 0.5, AT_GLASS[1]] as Pt,
+    exit: [CLOSE[0] + 0.5, CLOSE[1]] as Pt,
     lane: { segs: hospitalWay(), fire: NUDGE - slot.begin },
     state: { begin: slot.begin },
     company: [
@@ -89,9 +89,11 @@ function shots(): PartShot[] {
     hold(at(98, 2), 3.8, [-2.3, 0.15]),
     hold(at(98, 4), 4.0, [-5.4, 0.2]),
     hold(SON, 4.2, [-8.2, -0.55]),
-    hold(LIFT, 4.9, [-8.6, -0.95]),
-    hold(CREDITS_AT, 6.6, [-9.2, -2.0]),
-    hold(T1, 6.75, [-9.2, -2.05]),
+    hold(LIFT, 4.7, [-8.4, -0.85]),
+    hold(at(107, 1), 5.2, [-8.7, -1.3]),
+    hold(CREDITS_AT, 6.2, [-8.9, -1.85]),
+    hold(259, 5.3, [-8.6, -1.7]),
+    hold(T1, 4.6, [-8.3, -1.42]),
   ]
 }
 

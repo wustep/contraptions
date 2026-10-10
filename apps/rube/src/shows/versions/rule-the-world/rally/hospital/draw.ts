@@ -43,6 +43,8 @@ import {
   WALL,
   WARD_WIN,
   liftOf,
+  rockOf,
+  HAND,
   pillowTop,
 } from './geo'
 import { SON } from '../music'
@@ -462,6 +464,14 @@ export function drawPart(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
     }
   }
   drawBench(pen, t)
+  const sun = smooth(t, 232, 264)
+  if (sun > 0.003) {
+    const ctx = ctxOf(pen.p)
+    ctx.save()
+    fillWith(pen, [[GLASS.x0 + 0.3, FLOOR + 0.04], [GLASS.x1 - 0.2, FLOOR + 0.04], [GLASS.x1 + 1.2, FLOOR + 1.4], [GLASS.x0 + 1.4, FLOOR + 1.4]], rgba(pen, C.gold, 0.32 * sun))
+    ctx.restore()
+    glow(pen, [(GLASS.x0 + GLASS.x1) / 2 + 0.6, SILL_TOP + 0.5], 3.0, C.gold, 0.22 * sun)
+  }
   drawNursery(pen, t, w, baby)
   const out = smooth(t, SON, BLIND_TOP)
   if (out > 0.002) {
@@ -539,7 +549,7 @@ export function nurseOf(t: number, baby: Pt): { lean: number; head: Pt; shoulder
   const nod = 0.03 * ring(t - LOOK, 2.2, 0.35)
   const lx = 0.13 * lean
   const ly = 0.07 * lean
-  const x = NURSE_X
+  const x = NURSE_X + 0.35 * lift + 0.025 * rockOf(t)
   const head: Pt = [x + 0.03 + lx * 1.3 + 0.06 * (1 - look) + 0.03 * lift, -1.53 + ly * 1.2 + 0.05 * (1 - look) + nod]
   const shoulders: [Pt, Pt] = [
     [x - 0.27 + lx, -1.24 + ly],
@@ -550,8 +560,8 @@ export function nurseOf(t: number, baby: Pt): { lean: number; head: Pt; shoulder
     [x + 0.1, -0.52],
   ]
   const on: [Pt, Pt] = [
-    [baby[0] - 0.25, baby[1] + 0.05],
-    [baby[0] + 0.1, baby[1] + 0.08],
+    [baby[0] - 0.29, baby[1] + 0.06],
+    [baby[0] + 0.11, baby[1] + 0.1],
   ]
   const hands: [Pt, Pt] = [
     [rest[0][0] + (on[0][0] - rest[0][0]) * reach, rest[0][1] + (on[0][1] - rest[0][1]) * reach],
@@ -562,7 +572,7 @@ export function nurseOf(t: number, baby: Pt): { lean: number; head: Pt; shoulder
 
 function drawNurse(pen: Pen, t: number, baby: Pt): void {
   const n = nurseOf(t, baby)
-  const x = NURSE_X
+  const x = (n.shoulders[0][0] + n.shoulders[1][0]) / 2 - 0.13 * n.lean
   const [sl, sr] = n.shoulders
   // Her uniform: shoulders to waist, the skirt below the sill.
   shape(pen, [sl, sr, [x + 0.22, -0.3], [x + 0.36, 0.4], [x - 0.36, 0.4], [x - 0.22, -0.3]], C.nurse)
@@ -628,11 +638,21 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt): void {
     newborn(pen, x, BACK_RIM, 0.8, cryOf(t, 3 + i), i % 2 ? C.hoodPink : C.hoodBlue)
   })
   drawNurse(pen, t, baby)
+  // His own light: the one warm light in the nursery, on him from the moment the blind goes up.
+  const lit = smooth(t, SON - 0.1, SON + 0.6)
+  if (lit > 0.003) {
+    glow(pen, [baby[0] - 0.05, baby[1] + 0.02], 0.75, '#FFC56A', 0.7 * lit)
+    glow(pen, [baby[0], baby[1]], 0.32, '#FFF0D0', 0.75 * lit)
+  }
   FRONT.forEach((x, i) => {
     bassinet(pen, x, FRONT_RIM, 1, false)
     if (i > 0) newborn(pen, x, FRONT_RIM, 1, cryOf(t, i - 1), i % 2 ? C.hoodPink : C.hoodBlue)
   })
   drawArms(pen, t, baby)
+  // The swaddle's hood behind his head (his face clear of it).
+  ellipse(pen, [baby[0] - 0.03, baby[1] + 0.005], 0.1, 0.095, C.sheet)
+  // The morning through the nursery's own window, stronger as the song goes.
+  glow(pen, [-10.7, -1.45], 1.6, '#FFD58A', 0.35 * smooth(t, 232, 264))
   // The blind's roller, under the window's head.
   rect(pen, x0, y0, x1, y0 + 0.09, C.blindShade)
   line(pen, [x0, y0 + 0.09], [x1, y0 + 0.09], C.woodDark, 0.5)
@@ -655,14 +675,13 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
   line(pen, [r[0] - 0.08, r[1] + 0.1], [r[0] + 0.36, r[1] + 0.11], C.blanketShade, 0.5)
   // The son's swaddle round him, and the nurse's hands at it.
   const b = baby
-  const { p, k } = pen
-  ellipse(pen, [b[0] - 0.17, b[1] + 0.04], 0.19, 0.08, C.sheet)
-  line(pen, [b[0] - 0.3, b[1] + 0.03], [b[0] - 0.06, b[1] + 0.0], C.blanketShade, 0.5)
-  line(pen, [b[0] - 0.24, b[1] + 0.09], [b[0] - 0.08, b[1] + 0.06], C.hoodBlue, 0.9)
-  p.noFill()
-  p.stroke(pen.tone(C.sheet))
-  p.strokeWeight(0.035 * k)
-  p.arc(b[0] * k, b[1] * k, 0.19 * k, 0.19 * k, Math.PI * 0.55, Math.PI * 1.3)
+  const { p } = pen
+  ellipse(pen, [b[0] - 0.25, b[1] + 0.04], 0.18, 0.085, C.sheet)
+  line(pen, [b[0] - 0.38, b[1] + 0.03], [b[0] - 0.12, b[1] + 0.01], C.blanketShade, 0.5)
+  line(pen, [b[0] - 0.33, b[1] + 0.1], [b[0] - 0.14, b[1] + 0.08], C.hoodBlue, 0.9)
+  // In the quiet, his small hand comes up out of the blanket.
+  const hand = smooth(t, HAND, HAND + 0.3) * (1 - smooth(t, HAND + 1.8, HAND + 2.6))
+  if (hand > 0.01) ellipse(pen, [b[0] - 0.13, b[1] - 0.02 - 0.06 * hand + 0.01 * Math.sin((t - HAND) * 14) * hand], 0.03, 0.03, C.babySkin)
   const n = nurseOf(t, b)
   for (const h of n.hands) ellipse(pen, h, 0.045, 0.04, C.skin)
   // The blind: down until he comes to the glass; on SON it goes up and snaps onto its roller.
