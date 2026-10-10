@@ -9,6 +9,7 @@ import {
 import { drawShore } from './shore'
 import { drawSquall } from './squall'
 import { drawCirrus } from './cirrus'
+import { drawFisher, fishersIn } from './fishers'
 import { HEAD, MID, cometAngle, cometAnswers, cometFlare, cometLight, cometSprite, cometSway } from './comet'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
@@ -580,6 +581,16 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
       }
       p.pop()
     }
+  }
+
+  // The night's fishing boats far out, their lamps lit.
+  for (const f of fishersIn(c.t, half)) {
+    p.push()
+    atSea(p, k, u + f.d)
+    ctx.translate(0, k * (0.02 - 0.015 * osc(c.t, 0.08, f.seed * 1.7)))
+    ctx.scale(k, k)
+    drawFisher(ctx, f.size, f.lit, c.t, f.seed, day, near * f.edge)
+    p.pop()
   }
 
   // Gulls, by day, close.

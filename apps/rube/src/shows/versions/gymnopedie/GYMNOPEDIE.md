@@ -143,6 +143,10 @@ The planet has weather, at depths behind the stones (`air.ts`):
   dark as the first Gnossienne gets under way (`lanternAt`): small sloops
   sitting low in the water, the sail on the sun's side lit, beating home against the ball's way, so each crosses the
   frame slowly in half a minute or so (`SAILS`, `BOATS`).
+- Night fishing boats far out (`fishers.ts`): as the island fishermen go out with lamps, seven small boats in a far layer
+  of their own, drifting slowly, each a low dark hull with a bright warm lamp hung out over the water, rocking; their
+  light is laid on the sea as a column of glitter, as the colonnade's lamps' is. They light their lamps one by one after
+  the ball's first, stay out through both nights, and put them out before the dawn.
 - Gulls perched on the colonnade, at the far end of a long stone (a held note) here and there, fifteen in all.
   As the ball comes down on their stone they lift off on its note, startled up first and then away ahead of it,
   white wings beating and then easier, climbing until they are gone, well clear of the ball; they are back on their perches, roosting, by the time the ball comes
@@ -394,7 +398,7 @@ measured at under a millisecond's difference, and left out.
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
 the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the aurora, the whale) and their
-layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; `blossom.ts` the colonnade's bougainvillea; `comet.ts` the third Gnossienne's comet; `squall.ts` the shower coming and going; `cirrus.ts` the high cloud; `globe.ts` the world seen from space; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; `blossom.ts` the colonnade's bougainvillea; `comet.ts` the third Gnossienne's comet; `squall.ts` the shower coming and going; `cirrus.ts` the high cloud; `globe.ts` the world seen from space; `fishers.ts` the night's fishing boats; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 

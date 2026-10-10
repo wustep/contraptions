@@ -18,6 +18,7 @@ import { BLOSSOM } from '../src/shows/versions/gymnopedie/orbit/blossom'
 import { cometAnswers, cometAt, cometAngle, cometFlare } from '../src/shows/versions/gymnopedie/orbit/comet'
 import { squallAt } from '../src/shows/versions/gymnopedie/orbit/squall'
 import { CIRRUS, cirrusLight } from '../src/shows/versions/gymnopedie/orbit/cirrus'
+import { FISHERS, SMACKS, fisherAt } from '../src/shows/versions/gymnopedie/orbit/fishers'
 import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -132,7 +133,7 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: every flower opens as the ball comes, and closes at dawn', flowers.length > 150 && closed.length === 0, closed.slice(0, 5).map((s) => s.index).join(', '))
 
   // The air: clouds, gulls, mist and fireflies at their depths, all coming round with the period.
-  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY, SAILS, SHORE, RANGE, CIRRUS]
+  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY, SAILS, SHORE, RANGE, CIRRUS, FISHERS]
   const roundAgain = layers.every((l) => [0, 3.3, 17.9, 40].every((x) => {
     const a = layered(x, 0, l.f, l.span, l.wind)
     const b = layered(x, PERIOD - 1e-7, l.f, l.span, l.wind)
@@ -194,6 +195,11 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: the cirrus glow at sunset and after it, and are gone in the full night',
     cirrusTimes.every((t) => skyAt(t).night < 0.88 || cirrusLight(t).light < 1e-6) &&
     cirrusTimes.some((t) => t > 200 && t < 240 && cirrusLight(t).glow > 0.3) && Math.abs(cirrusLight(0).light - cirrusLight(PERIOD - 1e-6).light) < 1e-4)
+  // The fishing boats: their lamps lit only in the night, after the ball's first lamp, and out before the dawn.
+  const fishTimes = Array.from({ length: 1270 }, (_, i) => i * 0.5)
+  check('gymnopedie: the fishing boats\' lamps burn only through the night, out before the dawn',
+    SMACKS.every((b) => fishTimes.every((t) => fisherAt(b.seed, t) === 0 || (skyAt(t).night > 0.5 && t > PIECES[1].from && t < PIECES[2].end))) &&
+    SMACKS.every((b) => fisherAt(b.seed, 400) === 1 && fisherAt(b.seed, 0) === 0))
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5

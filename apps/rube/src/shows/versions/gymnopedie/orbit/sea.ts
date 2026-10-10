@@ -14,6 +14,7 @@ import { mirrorShore } from './shore'
 import { drawRipples, ripplesAt, warmRipples, type Glitter, type Lamp } from './ripples'
 import { drawDolphins } from './dolphins'
 import { drawGlobe } from './globe'
+import { fishersIn } from './fishers'
 
 // ---------------------------------------------------------------- the light on the water
 
@@ -311,6 +312,8 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       const w = stone.u1 - stone.u0
       lamps.push({ x: stone.u0 + shift + (w > 0.42 ? 0.1 : w / 2) - mid, light: lit })
     }
+    // And the fishing boats' lamps, far out, the same.
+    for (const f of fishersIn(c.t, (v.u1 - v.u0) / 2)) lamps.push({ x: f.d - 0.55, light: 0.7 * f.lit * f.edge })
     drawRipples(ctx, k, c.t, (v.u1 - v.u0) / 2, day, water, close * ripplesAt(v.cells), glitter, lamps)
     // Dolphins in the near water, once, in the morning.
     drawDolphins(ctx, k, c.t, day, close * ripplesAt(v.cells))
