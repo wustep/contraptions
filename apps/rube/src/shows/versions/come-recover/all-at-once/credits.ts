@@ -305,7 +305,9 @@ export function creditsAt(t: number): TitleCard[] {
   })
   CAPTIONS.forEach((c, n) => {
     const light = clamp((t - c.at) / SUB_FADE) * (1 - clamp((t - (c.to - SUB_FADE)) / SUB_FADE))
-    if (light > 0.001) out.push({ key: `all-at-once-caption-${n}`, names: [], notes: [c.text], plain: true, caption: true, light, rise: 0, at: CAP_AT, scale: 1.4, least: 11 / 1.95 })
+    // Under the credits, which take the frame's upper left, a caption moves to its upper right, clear of them.
+    const at: [number, number] = c.at >= CREDITS_AT - 0.5 ? [0.74, CAP_AT[1]] : CAP_AT
+    if (light > 0.001) out.push({ key: `all-at-once-caption-${n}`, names: [], notes: [c.text], plain: true, caption: true, light, rise: 0, at, scale: 1.4, least: 11 / 1.95 })
   })
   if (t < CREDITS_AT) return out
   CARDS.forEach((card, n) => {

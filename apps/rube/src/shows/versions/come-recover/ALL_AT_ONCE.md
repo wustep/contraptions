@@ -1027,6 +1027,10 @@ The notes went back to the builders who made each part, who still had their cont
   first ones all but vanished. A CC button in the transport row first crowded its clock under the music button; the
   toggle has a row of its own now, with its On/Off at its edge. Checked on the real page: hidden for Gymnopédie,
   off on a first visit, on with a click, kept across a reload, off again. `npm run build` passes (3,073 checks).
+- **Sound captions, finished.** C turns them on and off, as M, O and Z do their controls (a shared change, named in
+  the toggle's title; nothing for a show without captions), checked on the real page. On an upright phone and at 4:3
+  they read in their box; under the credits a caption at the top centre sat on the credit card's role line on both,
+  so from the credits on captions move to the frame's upper right, clear of the cards on every stage.
 
 ## The looks
 
