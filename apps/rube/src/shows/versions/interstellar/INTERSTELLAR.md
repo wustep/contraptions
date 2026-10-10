@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 126 (latest)
+## Polish pass 127 (latest)
+
+No change to the show: the rest of the fill count. After pass 126 the heaviest normal frames are the station's wide shots (134 to 136 s and 166 to 172 s), about 2,500 fills, three times the median. That is mostly `standOnRim`, the props standing round the ring, and the camera has the whole ring in the frame there, so they are in the frame too. Nothing is drawn there for nothing, so it is left. Overview still makes 6,000 to 17,000 fills a frame because it shows the whole world at once, and every piece of it is on the canvas. Making it lighter would mean drawing less of it, so it is left too. Live frame rates could not be measured fairly this pass: other jobs were loading the machine enough that a 1,100-fill frame ran at 17 fps.
+
+## Polish pass 126
 
 Pass 125's count of canvas fills, run over the whole show in the normal view (1280×720, every 2 s), found one frame far heavier than the rest. The median is 871 fills a frame, and the next heaviest is about 2,570 (the station's clouds). At 124 s, the fall out of the tesseract, it is 11,008, and it stays near 11,000 from 123.5 to 125 s. Almost all of it is `miniCase`: the bookcases of the lattice going on every way, a couple of hundred of them, each about forty fills (its glow, the case, ten books, 21 dividers, its frame). They were drawn whether or not they were in the frame. Now a case whose box, glow and all, lands wholly off the canvas (`offCanvas`, through the canvas's current transform) is not drawn. That halves the heaviest frame, 11,008 to 5,672 at 124 s, and takes 123.5 s from about 6,100 to 995. During the pull-back (124.5 s) most of the cases are really in the frame and it stays near 8,700. Drawing them more simply would change the picture, so it is left. Every quarter-second from 115 to 128 s, at 960×540, 390×844, 2560×1080, Zoom and Overview, is pixel for pixel what it was.
 
