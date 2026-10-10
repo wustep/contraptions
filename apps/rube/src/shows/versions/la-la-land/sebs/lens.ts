@@ -49,7 +49,7 @@ function tile(): HTMLCanvasElement | null {
 }
 
 /** A circle the grade lifts inside (the spotlight's iris into the dream; his stage with the band), in world cells, or null. */
-export type IrisAt = (t: number, span: number) => { x: number; y: number; r: number; f: number } | null
+export type IrisAt = (t: number, span: number) => { x: number; y: number; r: number; f: number; dark?: number } | null
 
 export const lens = scenery<{ iris: IrisAt } | null>({
   name: 'lens',
@@ -74,6 +74,14 @@ export const lens = scenery<{ iris: IrisAt } | null>({
       g.addColorStop(0, rgba(c, 0))
       g.addColorStop(1, rgba(c, a))
       return g
+    }
+    // At the waking the circle also darkens outside, half way to the dark the way in closed to.
+    if (iris && (iris.dark ?? 0) > 0.01) {
+      const dk = ctx.createRadialGradient(iris.x * k, iris.y * k, iris.r * 0.8 * k, iris.x * k, iris.y * k, iris.r * 1.15 * k)
+      dk.addColorStop(0, rgba('#000000', 0))
+      dk.addColorStop(1, rgba('#000000', iris.dark ?? 0))
+      ctx.fillStyle = dk
+      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
     }
     if (m > 0.01) {
       // Greyer: the colour drawn out toward grey; and colder: a little blue laid in the shadows.

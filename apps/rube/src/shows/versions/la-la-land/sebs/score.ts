@@ -141,6 +141,15 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
       const open = Math.min(1, (t - AT.band + 0.05) / 0.5)
       return { x: piano1[0] + 4.2, y: piano1[1] - 0.6, r: (3.2 + 34 * u * u) * open, f: 0 }
     }
+    // And out of it, the same way: as the dream drains the grey closes in from the edges to a circle of the dream's
+    // colour round him as he goes back to the keys, and on the last chord it shuts. The dream goes in and out through
+    // the same circle.
+    if (t >= 451.45 && t < AT.last + 0.4) {
+      const sm = (a: number, b: number) => { const v = Math.max(0, Math.min(1, (t - a) / (b - a))); return v * v * (3 - 2 * v) }
+      const [x, y] = where(t)
+      const r = (span * (1 - sm(451.5, AT.last)) + 1.1 * sm(451.5, AT.last)) * (1 - sm(AT.last, AT.last + 0.38))
+      return { x, y: y - 0.2, r: Math.max(0.02, r), f: 0.55 * sm(452.2, AT.last) * (1 - sm(AT.last, AT.last + 0.38)), dark: 0.6 * sm(451.9, AT.last) }
+    }
     if (intoDream.kind !== 'iris' || t < intoDream.down[0] || t > intoDream.up[0]) return null
     const f = coverAt(intoDream, t)
     const [x, y] = intoDream.from(t)
