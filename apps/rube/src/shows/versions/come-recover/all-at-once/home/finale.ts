@@ -2,10 +2,9 @@ import type p5 from 'p5'
 import { FLOOR, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { box, carried, frame, part, type Company, type PartShot } from '../kit'
 import { LIGHTS, lightAt, penOf, shade, STREET, type Glow } from './set'
-import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, waymondAt, windowLight } from './finale-plan'
+import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, SWELL, waymondAt, windowLight } from './finale-plan'
 import { HOME } from '../worlds'
 import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './finale-lives'
-import { CLOSE, PULL_FROM, PULL_TO } from './multitude'
 import { drawCamera, drawContactShadows, drawFlash, drawFlashShadows, drawLanternString, drawPhoto, drawSwitch, drawTripodFront, drawWasher, drawWasherDoor, drawWindowGlow, fireworkFloor, fireworkLight, fireworks, lightColor, stringGlows } from './finale-draw'
 
 /**
@@ -250,12 +249,12 @@ export const finale = part<FinaleState>(
       { t: 296.1, cells: 5.15, hold: H(-3.35, -1.38), w: 1 },
       { t: LIVES_FIRST - 0.2, cells: 2.75, hold: H(PORT[0] - 0.7, -0.62), w: 1 },
       { t: LIVES_OUT, cells: 2.6, hold: H(PORT[0] - 0.66, -0.62), w: 1 },
-      // The swell, and they look at one another: held. Then the long draw back, out of the shop and on into the
-      // night, until home is one lit window among all of them (`multitude.ts`), and the end's dark.
-      { t: PULL_FROM, cells: CLOSE, hold: H(PORT[0] - 0.65, -0.62), w: 1 },
-      // (How far back is the draw back's own, `cameraCellsAt`: these keys only say where the camera looks.)
-      { t: PULL_TO, cells: 36, hold: H(PORT[0], PORT[1]), w: 1 },
-      { t: END - 0.05, cells: 36, hold: H(PORT[0], PORT[1]), w: 1 },
+      // The swell, and they look at one another: held. Then back, slowly, to the shop at night, and the end's dark.
+      // Low enough that Zoom keeps the family whole on a strip of floor, and high enough that the frame still takes in
+      // the lucky cat's shelf.
+      { t: SWELL + 1.05, cells: 2.58, hold: H(PORT[0] - 0.65, -0.62), w: 1 },
+      { t: SWELL + 7.5, cells: 5.45, hold: H(-3.1, -1.5), w: 1 },
+      { t: END - 0.05, cells: 5.45, hold: H(-3.1, -1.5), w: 1 },
     ]
     return shots.filter((k) => k.t > slot.begin + 0.39 && k.t <= slot.end + 1e-6)
   },

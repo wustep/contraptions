@@ -160,8 +160,6 @@ export const LIGHTS = {
   neonOff: Infinity,
   /** When the garland's lanterns go down to an ember (the finale sets it: with the tubes, on the last hit). */
   lanternsOff: Infinity,
-  /** Whether the whole room is out of sight at `t`, under the night at the end (`multitude.ts` sets it): not drawn. */
-  hidden: (_t: number): boolean => false,
 }
 
 /** How lit the garland's lantern `i` is at `t`, 0..1: lit on its time, and down to an ember from `LIGHTS.lanternsOff`. */
@@ -1738,12 +1736,10 @@ function lightMap(p: p5, k: number, t: number): void {
 export const room = scenery<RoomState | null>({
   name: 'room',
   draw: (p, s, c) => {
-    if (LIGHTS.hidden(c.t)) return
     const f = frame(p, c.k)
     drawRoom(penOf(p, c), c.t, f, s)
   },
   over: (p, _s, c) => {
-    if (LIGHTS.hidden(c.t)) return
     const f = frame(p, c.k)
     if (allLit(c.t, f.x0, f.x1)) return
     lightMap(p, c.k, c.t)

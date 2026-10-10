@@ -8,7 +8,7 @@ import { DURATION, JUMPS, ONSETS, fight } from './music'
 import { MultiverseShow, type Flicker, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { EVELYN, type WorldKey } from './worlds'
 import { credits, endShade, subtitleBed } from './credits'
-import { LIGHTS as ROOM_LIGHTS, room, ROOM, shade, TUBES, type RoomState } from './home/set'
+import { room, ROOM, shade, TUBES, type RoomState } from './home/set'
 import { laundromat } from './home/laundromat'
 import { dryer } from './home/dryer'
 import { premiere } from './star/premiere'
@@ -28,7 +28,6 @@ import { STEP_RATE, stepPrint } from './star/premiere-alley'
 import { drain, radiance } from './void/radiance'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
-import { cameraCellsAt, multitude, PULL_FROM, veilShade } from './home/multitude'
 import { crown, type CrownState } from './void/crown'
 import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './home/finale-lives'
 import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, T_DOOR, W_TOUCH } from './home/finale-plan'
@@ -89,9 +88,8 @@ const SETS = (roomState: RoomState, crownState: CrownState): Partial<Record<Worl
   // The laundromat: one room, its walls, fixtures and lights, which every home leg happens in.
   home: {
     scenery: [standing(room, 0, 0, box(-12, -8, 44, 4, 2), roomState, DURATION)],
-    // At the end, the night the camera draws back into and every other life's lit window in it; then the dark under
-    // the end credits' words.
-    after: [standing(multitude, 0, 0, box(-12, -8, 44, 4, 2), null, DURATION), standing(credits, 0, 0, box(-12, -8, 44, 4, 2), null, DURATION)],
+    // The dark under the end credits' words.
+    after: [standing(credits, 0, 0, box(-12, -8, 44, 4, 2), null, DURATION)],
   },
   // Jobu's bagel, where the pull draws everything in and the peak spins it all back out.
   // Behind it, in the peak, the radiance of every life it gives back; over it, in the pull, the colours it takes.
@@ -326,7 +324,7 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     for (const leg of legs) if (leg.world === world) for (const placed of leg.placed) for (const c of placed.cells) cells.set(`${c[0]},${c[1]}`, c)
     const set = (sets[world] ??= { scenery: [], after: [] })
     // In the laundromat they are lit as the room is, and go down into the dark with it at the end.
-    const state: EyesState = { show: null, specs, shade: world === 'home' ? (hex, x, y, t) => endShade(veilShade(shade(hex, x, y, t), t, x, y), t, x, y) : undefined }
+    const state: EyesState = { show: null, specs, shade: world === 'home' ? (hex, x, y, t) => endShade(shade(hex, x, y, t), t, x, y) : undefined }
     eyeStates.push(state)
     set.after.push(standing(eyePiece, 0, 0, [...cells.values()], state, DURATION) as Placed)
   }
@@ -359,23 +357,6 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     ;(sets[world] ??= { scenery: [], after: [] }).after.push(standing(film, 0, 0, [...cells.values()], picture, DURATION) as Placed)
   }
 
-  // Under the night at the end every part in the laundromat is out of sight (`multitude.ts`), and seen from that far
-  // out every one of them is in the frame: none is drawn while the night covers them.
-  for (const leg of legs) {
-    if (leg.world !== 'home') continue
-    leg.placed = leg.placed.map((placed) => {
-      const { draw, over } = placed.piece
-      const hidden = (t: number) => ROOM_LIGHTS.hidden(placed.start + t)
-      return {
-        ...placed,
-        piece: {
-          ...placed.piece,
-          draw: draw && ((p, st, c) => (hidden(c.t) ? undefined : draw.call(placed.piece, p, st, c))),
-          over: over && ((p, st, c) => (hidden(c.t) ? undefined : over.call(placed.piece, p, st, c))),
-        },
-      } as Placed
-    })
-  }
   const show = new MultiverseShow(legs, sets, flickers, DURATION, riders, company.sort((a, b) => a.from - b.from), isCalm)
   for (const state of eyeStates) state.show = show
   crownState.show = show
@@ -411,9 +392,7 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     const owner = show.owner(t)
     const f = cams[owner](t)
     const [ox, oy] = show.offset(t)
-    // The last shot's draw back is its own (`multitude.ts`): the keys say where it looks, and it says how far back.
-    const cells = t > PULL_FROM ? cameraCellsAt(t) : f.cells
-    return { ...f, x: f.x + ox, y: f.y + oy, cells: cells * (1 - punch(t, isCalm)) }
+    return { ...f, x: f.x + ox, y: f.y + oy, cells: f.cells * (1 - punch(t, isCalm)) }
   }
   return { show, camera, eyes: specs }
 }
