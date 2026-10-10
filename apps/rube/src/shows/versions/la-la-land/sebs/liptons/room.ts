@@ -373,6 +373,43 @@ function wall(d: Draw, t: number): void {
   for (const x of TABLES) glow(p, d.k, x, TABLE.top - 0.4, 1.9, M.lamp, 0.16 * lampAt(x, t), 1, 1.25)
 }
 
+/**
+ * The houses across the street, seen through a window centred at `cx`: they are well beyond the glass, so they slide
+ * with the camera by most of the way (the further a thing is, the less it moves across the frame as the camera goes).
+ */
+const HOUSES = Array.from({ length: 22 }, (_, i) => ({ x: -16 + i * 0.95 + 0.25 * hash(i, 31), w: 0.62 + 0.2 * hash(i, 32), h: 0.45 + 0.35 * hash(i, 33), lit: hash(i, 34) }))
+function acrossTheStreet(d: Draw, cx: number, x0: number, x1: number, sill: number): void {
+  const { p, k } = d
+  const fr = frame(p, k)
+  // Aligned as authored when the window is in the middle of the frame; elsewhere slid by 0.55 of the camera's offset.
+  const shift = (fr.cx - cx) * 0.55
+  const ground = sill - 0.2
+  p.noStroke()
+  for (const hs of HOUSES) {
+    const hx = hs.x + cx * 0.3 + shift
+    if (hx + hs.w < x0 - 0.2 || hx > x1 + 0.2) continue
+    const top = ground - hs.h
+    p.fill(mixHex(NIGHT, '#000000', 0.35))
+    p.rect((hx + hs.w / 2) * k, (top + hs.h / 2) * k, hs.w * k, hs.h * k)
+    // The gable, and the snow on it.
+    p.triangle(hx * k, top * k, (hx + hs.w) * k, top * k, (hx + hs.w / 2) * k, (top - 0.26) * k)
+    p.fill(alpha(p, SNOW, 0.8))
+    p.triangle((hx - 0.04) * k, (top + 0.02) * k, (hx + hs.w / 2) * k, (top - 0.29) * k, (hx + hs.w / 2) * k, (top - 0.22) * k)
+    p.triangle((hx + hs.w + 0.04) * k, (top + 0.02) * k, (hx + hs.w / 2) * k, (top - 0.29) * k, (hx + hs.w / 2) * k, (top - 0.22) * k)
+    // Its windows, warm, one or two lit.
+    for (let j = 0; j < 2; j++) {
+      if (hash(Math.round(hs.x * 10), j + 40) < 0.3) continue
+      const wx = hx + hs.w * (0.2 + 0.45 * j)
+      glow(p, k, wx + 0.07, top + 0.22, 0.25, M.lamp, 0.25)
+      p.fill(alpha(p, M.lamp, 0.85))
+      p.rect((wx + 0.07) * k, (top + 0.22) * k, 0.11 * k, 0.13 * k)
+    }
+  }
+  // The snow lying in the street before them.
+  p.fill(alpha(p, SNOW, 0.55))
+  p.rect(((x0 + x1) / 2) * k, (ground + 0.2) * k, (x1 - x0 + 0.4) * k, 0.4 * k)
+}
+
 /** Two tall windows in the back wall, between the tables: the snowy night through them, a wreath on each. */
 const WINDOWS = [-8.8, -4.4]
 const WIN = { half: 0.72, top: -0.75, sill: 1.42 }
@@ -387,6 +424,14 @@ function windows(d: Draw, t: number): void {
     g.addColorStop(1, NIGHT)
     ctx.fillStyle = g
     ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+    // Across the street, through the glass: snowy houses with their windows lit, further off than the room, so as the
+    // camera crosses the room they slide behind the window more slowly than the window goes by.
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+    ctx.clip()
+    acrossTheStreet(d, cx, x0, x1, y1)
+    ctx.restore()
     // Snow falling past outside, and lying on the outer ledge.
     p.noStroke()
     p.fill(alpha(p, SNOW, 0.5))

@@ -20,7 +20,7 @@ import { DOOR, DOOR_SHUT, ROOM } from '../src/shows/versions/la-la-land/sebs/clu
 import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs/piano-figure'
 import { NARROW, aperture, muted, wakingCircle } from '../src/shows/versions/la-la-land/sebs/lens'
 import { emptyAt } from '../src/shows/versions/la-la-land/sebs/theatre/theatre'
-import { HORIZON, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
+import { HORIZON, SIGN_AT, SIGN_U, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
 import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
 import { SONG_COUNT, partStar, songAt } from '../src/shows/versions/la-la-land/sebs/audition/shadow'
@@ -515,6 +515,22 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       }
     }
     check('sebs: the piano drawn in the stars is whole in the picture, at the dip and over the city', cut.length === 0, cut.slice(0, 5).join(', '))
+    // Her name in lights over the real city: the sign on the far hills lights in her yellow on The End's swell, before
+    // their stars come out, and from the last block lit to the last frame it is whole in the picture with the club and
+    // the piano in the stars. (The far hills slide with the camera by four fifths of the way, `city.ts`.)
+    const signOut: string[] = []
+    for (let t = Math.max(...SIGN_AT) + 0.3; t <= DURATION; t += 0.2) {
+      const f = cam(t)
+      const cx = f.x - piano[0]
+      const cy = f.y - piano[1]
+      for (const u of SIGN_U) {
+        const x = u + cx * 0.8 - cx
+        const y = HORIZON + (cy - HORIZON) * 0.8 * 0.35 - 5.55 - cy
+        if (Math.abs(x) > (f.cells * 16) / 9 / 2 - 0.5 || Math.abs(y) > f.cells / 2 - 0.5) { signOut.push(t.toFixed(1)); break }
+      }
+    }
+    check('sebs: her name in lights over the city at the end, lit before their stars and whole in the picture to the last frame',
+      SIGN_AT.length === 9 && Math.max(...SIGN_AT) < THEIRS_AT[0] && Math.min(...SIGN_AT) > AT.band && signOut.length === 0, signOut.slice(0, 5).join(', '))
   }
   // David, her husband: his eyes on her at her table while hers go to the stage. And the swap at her table is seen: the
   // dream's him there, greyed, in the picture with her looking at it, before David sits down into it.

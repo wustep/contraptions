@@ -195,7 +195,13 @@ function farBank(p: p5, k: number, T: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   ctx.translate(0, -up * k)
-  const vis = (h: House) => h.x1 > f.x0 - 1 && h.x0 < f.x1 + 1
+  // The far bank is a flat further upstage than the quay: as the camera goes along with the waltz it slides by less,
+  // a third of the way behind, so the tower and the roofs stand off from the lamps and the umbrellas in depth. As
+  // painted when the camera is over the clock.
+  const far = (f.cx - 7) * 0.3
+  ctx.save()
+  ctx.translate(far * k, 0)
+  const vis = (h: House) => h.x1 > f.x0 - far - 1 && h.x0 < f.x1 - far + 1
   // The tower behind the roofs: painted, with its gold lights.
   {
     const x = TOWER_X
@@ -302,6 +308,7 @@ function farBank(p: p5, k: number, T: number): void {
       ctx.fillRect((w[0] - 0.045) * k, (w[1] - 0.07) * k, 0.09 * k, 0.13 * k)
     }
   }
+  ctx.restore()
   // The river: dark water, painted ripples, the lit windows and the tower drawn down into it.
   ctx.fillStyle = NIGHT_MAT.deep
   ctx.fillRect((f.x0 - 1) * k, BANK * k, (f.x1 - f.x0 + 2) * k, (PARAPET - BANK + 0.02) * k)
@@ -317,9 +324,9 @@ function farBank(p: p5, k: number, T: number): void {
   }
   for (const h of HOUSES) {
     if (!vis(h)) continue
-    for (const w of h.windows) glow(p, k, w[0] + 0.03 * Math.sin(T * 1.7 + w[0] * 3), BANK + 0.24, 0.26, NIGHT_MAT.gold, 0.28, 0.28, 1)
+    for (const w of h.windows) glow(p, k, w[0] + far + 0.03 * Math.sin(T * 1.7 + w[0] * 3), BANK + 0.24, 0.26, NIGHT_MAT.gold, 0.28, 0.28, 1)
   }
-  glow(p, k, TOWER_X, BANK + 0.25, 0.9, NIGHT_MAT.gold, 0.18, 0.4, 0.5)
+  glow(p, k, TOWER_X + far, BANK + 0.25, 0.9, NIGHT_MAT.gold, 0.18, 0.4, 0.5)
   // The quay's parapet: dressed stone, a pale coping, piers.
   ctx.fillStyle = NIGHT_MAT.ultramarine
   ctx.fillRect((f.x0 - 1) * k, PARAPET * k, (f.x1 - f.x0 + 2) * k, (UPSTAGE - PARAPET + 0.01) * k)

@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import type { Pt } from '../../../../parts'
 import { frame, glow, hash, knock, rgba, scenery, smooth } from './kit'
 import { AT, END_AT, level } from './music'
-import { NIGHT_MAT, SEBS_MAT } from './worlds'
+import { MIA, NIGHT_MAT, SEBS_MAT } from './worlds'
 import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, JOIN, KINDLED } from './night/stars'
 import { drawPianoFigure } from './piano-figure'
 import { DIP, POLE, skyAngle } from './night/painted-waltz'
@@ -231,6 +231,45 @@ function batch() {
   }
 }
 
+/**
+ * Her name in lights, without a letter: the sign on the far hills, nine blocks as the Hollywood number's were. Over
+ * the city at the start it stands pale and unlit. At the end, on The End's swell, it lights in her yellow, a block at a
+ * time from the middle out, as it did at the top of the number in the dream: what the dream gave her, she has. His
+ * club is lit below it, and the piano in the stars above them both is what they had only in the dream.
+ */
+export const SIGN_U = [-8.4, -2.9]
+const SIGN_BLOCKS = 9
+/** When each block lights, middle first: from the swell's arrival, before their stars come out. */
+export const SIGN_AT = Array.from({ length: SIGN_BLOCKS }, (_, i) => SWELL + 0.35 + Math.abs(i - (SIGN_BLOCKS - 1) / 2) * 0.32)
+function drawSign(p: p5, k: number, t: number, end: boolean, ox: number, oy: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [u0, u1] = SIGN_U
+  const step = (u1 - u0) / SIGN_BLOCKS
+  for (let i = 0; i < SIGN_BLOCKS; i++) {
+    const u = u0 + step * (i + 0.5)
+    // Level along the hill's face, a little under the crest, the blocks set a hair up and down as the real ones are.
+    const top = HORIZON + oy - 5.55 + 0.07 * Math.sin(i * 2.3)
+    const w = step * 0.72
+    const h = 0.85
+    const x = u + ox - w / 2
+    const on = end ? smooth(t, SIGN_AT[i], SIGN_AT[i] + 0.25) : 0
+    // The struts behind it, down into the hill.
+    ctx.fillStyle = rgba('#0B0A14', 0.8)
+    ctx.fillRect((x + w * 0.2) * k, (top + h) * k, 0.06 * k, 0.5 * k)
+    ctx.fillRect((x + w * 0.75) * k, (top + h) * k, 0.06 * k, 0.5 * k)
+    // Unlit, a pale block in the dark; lit, her yellow, with its glow on the hill.
+    ctx.fillStyle = rgba('#C9C2D6', 0.32 * (1 - on))
+    ctx.fillRect(x * k, top * k, w * k, h * k)
+    if (on > 0.01) {
+      glow(p, k, x + w / 2, top + h / 2, 1.5, MIA, 0.32 * on)
+      ctx.fillStyle = rgba(MIA, 0.95 * on)
+      ctx.fillRect(x * k, top * k, w * k, h * k)
+      ctx.fillStyle = rgba('#FFF4C8', 0.5 * on)
+      ctx.fillRect((x + w * 0.15) * k, (top + h * 0.12) * k, w * 0.7 * k, h * 0.3 * k)
+    }
+  }
+}
+
 export const city = scenery<CityState>({
   name: 'city',
   over(p, s, c) {
@@ -393,6 +432,7 @@ export const city = scenery<CityState>({
       ctx.fill()
     }
     hills(true, HILL_FAR, 0.2)
+    drawSign(p, k, t, s.end, slide(0.2), lift(0.2))
 
     const tx = slide(0.35)
     const ty = lift(0.35)

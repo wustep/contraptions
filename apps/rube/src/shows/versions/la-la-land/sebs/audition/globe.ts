@@ -665,8 +665,10 @@ function drawParis(p: p5, k: number, t: number, s: GlobeState, f: { x0: number; 
     glow(p, k, 11.5, STREET - 1.2, 8.5, M.night, lit, 1.25, 0.62)
     glow(p, k, 11, STREET - 0.8, 7, M.city, 0.13 * lit, 1.3, 0.45)
   }
-  // The tower, beyond the roofs.
+  // The tower, beyond the roofs: far beyond them, so as the camera comes down the street it slides by less than they do.
   const tOn = smooth(t, TOWER - 0.05, TOWER + 0.1)
+  p.push()
+  p.translate(X(((f.x0 + f.x1) / 2 - 10) * 0.3), 0)
   const tower = (inset: number) => {
     p.beginShape()
     for (let i = 0; i <= 24; i++) {
@@ -721,6 +723,7 @@ function drawParis(p: p5, k: number, t: number, s: GlobeState, f: { x0: number; 
     const beacon = TOWER_X
     glow(p, k, beacon, STREET - TOWER_H - 0.05, 0.3, M.city, 0.6 * tOn, 1, 1)
   }
+  p.pop()
   // The houses: mansard roofs of zinc, chimneys, windows.
   for (const h of s.houses) {
     if (h.x1 < f.x0 - 1 || h.x0 > f.x1 + 1) continue
@@ -728,7 +731,9 @@ function drawParis(p: p5, k: number, t: number, s: GlobeState, f: { x0: number; 
     p.strokeWeight(Math.max(1, 0.025 * k))
     p.fill(M.night)
     p.rect(X((h.x0 + h.x1) / 2), X((h.top + STREET) / 2), X(h.x1 - h.x0), X(STREET - h.top))
-    // The roof, a steep zinc slope with dormers, and its chimneys.
+    // The roof, a steep zinc slope with dormers, and its chimneys: solid, so the tower behind doesn't show through it.
+    p.fill(M.night)
+    p.quad(X(h.x0 - 0.04), X(h.top), X(h.x1 + 0.04), X(h.top), X(h.x1 - 0.18), X(h.top - h.roof), X(h.x0 + 0.18), X(h.top - h.roof))
     p.fill(rgba(M.sea, 0.35))
     p.quad(X(h.x0 - 0.04), X(h.top), X(h.x1 + 0.04), X(h.top), X(h.x1 - 0.18), X(h.top - h.roof), X(h.x0 + 0.18), X(h.top - h.roof))
     p.fill(M.night)
