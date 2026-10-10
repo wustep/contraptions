@@ -1240,7 +1240,14 @@ function drawTower(ctx: C2D, c: Ctx, st: number): void {
   concrete(ctx, c, tx1, wy, tx1 + 3.1, wy + 0.6, SNOW.concreteDark)
   strip(ctx, c, tx1 + 0.2, tx1 + 2.9, wy + 0.18, wy + 0.4, st, 6)
   snowcap(ctx, k, tx1, tx1 + 3.1, wy, 0.09)
-  rect(ctx, k, tx1 + 2.4, wy + 0.6, tx1 + 2.58, FORT.upper + 1.6)
+  // Braced back to the tower under it, a cantilever into the mountain behind (a leg stood down from it and stopped
+  // in the air, nothing under it).
+  ctx.beginPath()
+  ctx.moveTo((tx1 + 2.3) * k, (wy + 0.6) * k)
+  ctx.lineTo((tx1 + 2.55) * k, (wy + 0.6) * k)
+  ctx.lineTo(tx1 * k, (wy + 2.6) * k)
+  ctx.lineTo(tx1 * k, (wy + 2.3) * k)
+  ctx.closePath()
   ctx.fillStyle = SNOW.concreteDark
   ctx.fill()
   inked(ctx, c, 0.7)
