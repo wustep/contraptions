@@ -834,6 +834,10 @@ settle Shang: they still asked whether the red ball was a spouse or Hannah grown
 so much; the braid and his bearing stay, harmless, but the question is not answered by them. Their other notes had
 been met before. Nothing to change.
 
+An eighty-sixth took a note the fifteenth reader gave: the gala's guests read as coal, as rocks. Dark discs with only
+the room's light along their tops, they had nothing of the cast about them. The near ones have a dim outline all round
+now and a mark that looks toward the room's middle, as every ball in the show has; the far ones stay in the haze.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

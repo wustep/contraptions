@@ -196,6 +196,19 @@ function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
     ctx.beginPath()
     ctx.arc(x * k, y * k, (r - 0.006 * g.d) * k, Math.PI * 1.15, Math.PI * 1.75)
     ctx.stroke()
+    // People, as the cast are: a dim outline all round and a mark that looks, toward the room's middle. (Dark discs
+    // with only the light along their tops, a fresh reader took them for coal, for rocks.)
+    const near = Math.max(0, 1 - haze)
+    ctx.strokeStyle = rgba(mix(GALA.roomLit, GALA.lightWarm, 0.3), 0.32 * near * (1 - 0.6 * h))
+    ctx.lineWidth = Math.max(0.6, 0.016 * k * g.d)
+    ctx.beginPath()
+    ctx.arc(x * k, y * k, (r - 0.008 * g.d) * k, 0, Math.PI * 2)
+    ctx.stroke()
+    const look = x < 0 ? -0.35 : Math.PI + 0.35
+    ctx.fillStyle = rgba(mix(GALA.roomLit, GALA.lightWarm, 0.3), 0.55 * near * (1 - 0.6 * h))
+    ctx.beginPath()
+    ctx.arc((x + Math.cos(look) * r * 0.5) * k, (y + Math.sin(look) * r * 0.5) * k, Math.max(0.6, r * 0.17 * k), 0, Math.PI * 2)
+    ctx.fill()
     if (!g.glass) continue
     // The toast: a tiny glass lifted over it, catching the light.
     const up = smooth(t, T_TOAST + 0.07 * (g.seed % 6), T_TOAST + 0.6 + 0.07 * (g.seed % 6)) * (1 - smooth(t, T_TOAST + 3.3, T_TOAST + 4.3))
