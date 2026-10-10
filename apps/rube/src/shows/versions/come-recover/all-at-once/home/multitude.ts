@@ -345,12 +345,18 @@ export const multitude = scenery<null>({
       const y0 = PORT[1] + (ROOM.ceiling - PORT[1]) * sc
       const y1 = PORT[1] + (0.2 - PORT[1]) * sc
       const a = shopVeilAt(t) * level
-      if (a > 0.003) {
-        // A soft light the shape of the shop's front, and the lit box itself in it, faint.
-        ctx.globalAlpha = clamp(a * 0.7)
+      // The glow round it outlasts the night over it: it fades as the fall goes on in, not on the frame the shop is
+      // first drawn, so the hand from the light to the shop is a dissolve.
+      const halo = level * Math.max(shopVeilAt(t), smooth((pullAt(t) - OPEN_HELD * 0.4) / (OPEN_HELD * 0.6)))
+      if (halo > 0.003) {
+        ctx.globalAlpha = clamp(halo * 0.7)
         const gw = (x1 - x0) * 1.3 + 10 * px
         const gh = (y1 - y0) * 3 + 12 * px
         ctx.drawImage(art[1], ((x0 + x1) / 2) * k - (gw * k) / 2, ((y0 + y1) / 2) * k - (gh * k) / 2, gw * k, gh * k)
+        ctx.globalAlpha = 1
+      }
+      if (a > 0.003) {
+        // The lit box itself in it, faint, while the shop is still under the night.
         ctx.globalAlpha = clamp(a * 0.6)
         ctx.fillStyle = '#E4F5EA'
         ctx.fillRect(x0 * k, y0 * k, Math.max(1, (x1 - x0) * k), Math.max(1, (y1 - y0) * k))
