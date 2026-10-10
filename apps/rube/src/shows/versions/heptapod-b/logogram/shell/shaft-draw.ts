@@ -326,8 +326,9 @@ export function drawStone(p: p5, c: Ctx, t: number): void {
 
 /**
  * The stone's grain: long soft beds running along the shaft either side of it, each a shade apart from the next, their
- * edges wandering gently. Flat fills, no lines: smooth and geological. Under the floor they thin out before the
- * chamber, whose floor is plain.
+ * edges wandering gently. Flat fills, no lines: smooth and geological. Under the floor they fade out before the
+ * chamber, whose floor is plain. (They used to thin to a point there, and a deep bed's point was a steep wedge where a
+ * tall frame, a phone's, shows the stone far under the floor.)
  */
 const BEDS = [0.7, 1.6, 2.9, 4.6, 6.8, 9.5]
 const bedAt = (side: number, i: number, x: number): number => {
@@ -336,25 +337,30 @@ const bedAt = (side: number, i: number, x: number): number => {
 }
 function drawStrata(p: p5, k: number, x0: number, x1: number, ya: number, yb: number): void {
   const step = 0.3
-  p.noStroke()
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const side of [1, -1]) {
     const base = side > 0 ? FLOOR_STONE : STONE
     for (let i = 0; i + 1 < BEDS.length; i += 2) {
       const near = side > 0 ? bedAt(side, i, x0) : bedAt(side, i + 1, x0)
       if ((side > 0 && near > yb + 1) || (side < 0 && near < ya - 1)) continue
-      const taper = (x: number) => (side > 0 ? clamp01((X_END - 0.8 - x) / 2.4) : 1)
-      p.fill(mixHex(base, SHELL.dark, 0.16 + 0.06 * (i / 2)))
-      p.beginShape()
+      const color = mixHex(base, SHELL.dark, 0.16 + 0.06 * (i / 2))
+      if (side > 0) {
+        const g = ctx.createLinearGradient((X_END - 3.2) * k, 0, (X_END - 0.8) * k, 0)
+        g.addColorStop(0, `rgba(${rgb(color)}, 1)`)
+        g.addColorStop(1, `rgba(${rgb(color)}, 0)`)
+        ctx.fillStyle = g
+      } else ctx.fillStyle = color
+      ctx.beginPath()
       for (let x = x0; x <= x1 + step; x += step) {
         const q = Math.min(x, x1)
-        p.vertex(q * k, bedAt(side, i, q) * k)
+        ctx.lineTo(q * k, bedAt(side, i, q) * k)
       }
       for (let x = x1; x >= x0 - step; x -= step) {
         const q = Math.max(x, x0)
-        const a = bedAt(side, i, q)
-        p.vertex(q * k, (a + (bedAt(side, i + 1, q) - a) * taper(q)) * k)
+        ctx.lineTo(q * k, bedAt(side, i + 1, q) * k)
       }
-      p.endShape(p.CLOSE)
+      ctx.closePath()
+      ctx.fill()
     }
   }
 }
