@@ -3,7 +3,8 @@ import { mixHex, type Pt, type Seg } from '../../../../../parts'
 import { box, carried, frame, part, type Ctx, type PartShot } from '../kit'
 import { JUMPS } from '../music'
 import { SEAMS } from '../seams'
-import { DOJO, DOJO_THEME, EVELYN, HIBACHI, HIBACHI_THEME, HOME, HOTDOG, HOTDOG_THEME, JOY, LAUNDROMAT, MULTI_THEME, PREMIERE, ROCKS, ROCKS_THEME, STAR } from '../worlds'
+import { DOJO, DOJO_THEME, EVELYN, HIBACHI, HIBACHI_THEME, HOME, HOTDOG, HOTDOG_THEME, JOY, LAUNDROMAT, MULTI_THEME, PREMIERE, ROCKS, ROCKS_THEME, STAR, WAYMOND } from '../worlds'
+import { R } from '../../../../../parts'
 import { backdrop, SKINS, type Moment, type Skin } from './skins'
 import { at, beam, circle, ellipse, glow, hash, line, lodFor, poly, rect, rgba, round, type Pen } from './skins-pen'
 import { PANEL_LOOKS, paintPicture, prefersCalm, type Look } from '../film'
@@ -115,6 +116,35 @@ const thrown = (vx: number, vy: number, x: number, g = 12, drag = 0): Pt => {
   const e = 1 - Math.exp(-drag * x)
   const vt = g / drag
   return [(vx / drag) * e, vt * x + ((vy - vt) / drag) * e]
+}
+
+/* ------------------------------------------------------------------ he is there */
+
+/**
+ * In the IRS office, the life where the film's other Waymond first comes to her, he is there: sitting on the auditor's
+ * desk among her trophies, his googly eye on her as she flies past. It sets up the mosaic's wall (`mosaic.ts`), where
+ * he is in more and more of her lives. Only here: in the party, the street corner and karaoke the ground he would
+ * stand on is below the frame, and the canyon's ledge is the two stones'.
+ */
+const WAYMOND_IN: Partial<Record<Kind, Pt>> = { irs: [0.98, 1.2] }
+
+function waymondIn(s: Scene, kind: Kind): void {
+  const at0 = WAYMOND_IN[kind]
+  if (!at0) return
+  const { pen } = s
+  layer(s, 1, () => {
+    const x = at0[0]
+    const y = at0[1] - R
+    circle(pen, x, y, R, WAYMOND, 1)
+    if (pen.lod > 2) return
+    // His eye on her: where she is, in this world's own place.
+    const hx = s.b[0] - s.b0[0]
+    const hy = s.b[1] - s.b0[1]
+    const a = Math.atan2(hy - y, hx - x)
+    const er = R * 0.62
+    circle(pen, x, y - R * 0.12, er, '#FFFFFF', pen.lod <= 1 ? 0.8 : 0)
+    circle(pen, x + Math.cos(a) * er * 0.42, y - R * 0.12 + Math.sin(a) * er * 0.42, er * 0.46, '#141414', 0)
+  })
 }
 
 /* ------------------------------------------------------------------ 1. the piñata */
@@ -632,6 +662,7 @@ function paint(p: p5, _s: SurfState, c: Ctx): void {
       break
     case 'irs':
       irs(s)
+      waymondIn(s, 'irs')
       break
     case 'karaoke':
       karaoke(s)
