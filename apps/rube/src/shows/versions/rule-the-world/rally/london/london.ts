@@ -4,7 +4,7 @@ import { box, frame, part, scenery, type PartShot } from '../kit'
 import type { Pen } from '../pen'
 import { SEAMS } from '../seams'
 import { drawHall, drawPlay } from './draw'
-import { EXIT, LONDON_STRIKES, REST, SEGS, T0, T1 } from './geo'
+import { EXIT, LAST_LOB, LOB_LANDS, LONDON_STRIKES, REST, SEGS, T0, T1 } from './geo'
 
 /**
  * London: the British Open, 1952 (bar 25 → bar 43). A big cold hall under an iron and glass roof, two green tables
@@ -72,7 +72,13 @@ function shots(): PartShot[] {
     hold(at(31, 4), 11, [7.2, -1.95], true),
     hold(68.0, 10.2, [7.7, -1.6]),
     hold(70.3, 6.0, [11.35, -0.5]),
-    hold(78, 5.95, [11.35, -0.62]),
+    // In toward Kay as she leans forward, slowly; a cut close on Endo and Kay as his sponge sends up the last lob,
+    // and back to the table as it lands; out again to the master for the last point.
+    hold(73.0, 6.0, [11.35, -0.5]),
+    hold(79.6, 5.8, [11.42, -0.82]),
+    hold(LAST_LOB, 3.7, [14.0, -0.95], true),
+    hold(LOB_LANDS, 5.8, [11.42, -0.82], true),
+    hold(84.6, 6.0, [11.35, -0.5]),
     hold(at(41, 1), 6.0, [11.35, -0.5]),
     hold(88.4, 5.9, [10.6, -0.2]),
     hold(89.4, 5.4, [9.0, 0.15]),
@@ -83,5 +89,8 @@ function shots(): PartShot[] {
 
 export const LONDON_HITS: readonly number[] = LONDON_STRIKES
 
-/** The cut to the hall on Kletzki's miss, roof and all, until the final's first rally is under way. */
-export const LONDON_WIDE: [number, number][] = [[at(31, 4), 69.9]]
+/** The cut to the hall on Kletzki's miss, until the final's first rally is under way; the close on Endo's last lob, as the ball leaves it. */
+export const LONDON_WIDE: [number, number][] = [
+  [at(31, 4), 69.9],
+  [LAST_LOB, LOB_LANDS],
+]

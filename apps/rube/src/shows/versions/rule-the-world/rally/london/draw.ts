@@ -388,10 +388,13 @@ function umpire(pen: Pen, tb: Table, t: number, x: number): void {
 function card(pen: Pen, cx: number, y: number, n: number, flip: number, was: number): void {
   const w = 0.17
   const h = 0.42
+  // Pips, laid like a die's: one in the middle, two or three on the diagonal.
+  const LAY: Record<number, Pt[]> = { 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]] }
   const bars = (val: number, y0: number, y1: number) => {
-    for (let i = 0; i < val; i++) {
-      const bx = cx + (i - (val - 1) / 2) * 0.085
-      rect(pen, bx - 0.022, Math.max(y0, y + 0.08), bx + 0.022, Math.min(y1, y + h - 0.08), C.cardInk)
+    for (const [u, v] of LAY[val] ?? []) {
+      const py = y + h / 2 + v * 0.115
+      if (py < y0 + 0.03 || py > y1 - 0.03) continue
+      ellipse(pen, [cx + u * 0.085, py], 0.036, 0.036, C.cardInk)
     }
   }
   rect(pen, cx - w, y, cx + w, y + h, C.card)
@@ -646,18 +649,22 @@ interface Figure {
   stride: number | null
   /** Faces left (toward the table) or right (walking away). */
   face: 1 | -1
+  /** How far the knees bend (cells the hip drops), and how far the front foot steps in. */
+  crouch?: number
+  step?: number
 }
 
 function figure(pen: Pen, f: Figure): void {
   const s = f.h / 3.2
-  const hip: Pt = [f.x, FLOOR - 1.5 * s]
+  const crouch = f.crouch ?? 0
+  const hip: Pt = [f.x, FLOOR - 1.5 * s + crouch]
   const up = (d: number, side: number): Pt => [hip[0] - Math.sin(f.lean) * d * f.face + side * Math.cos(f.lean), hip[1] - Math.cos(f.lean) * d - side * Math.sin(f.lean) * f.face]
   // Legs: the stance, or the stride.
   const st = f.stride
   const swing = st === null ? 0 : 0.28 * Math.sin(st)
-  const feet: Pt[] = st === null ? [[f.x - 0.3, FLOOR], [f.x + 0.25, FLOOR]] : [[f.x - swing, FLOOR], [f.x + swing, FLOOR]]
+  const feet: Pt[] = st === null ? [[f.x - 0.3 - (f.step ?? 0), FLOOR], [f.x + 0.25, FLOOR]] : [[f.x - swing, FLOOR], [f.x + swing, FLOOR]]
   for (const [i, ft] of feet.entries()) {
-    const knee: Pt = [(hip[0] + ft[0]) / 2 - 0.08 * f.face, (hip[1] + FLOOR) / 2 + 0.02]
+    const knee: Pt = [(hip[0] + ft[0]) / 2 - (0.08 + 1.1 * crouch) * f.face, (hip[1] + FLOOR) / 2 + 0.02]
     const col = i === 0 ? C.trouser : mix(C.trouser, C.whiteShade, 0.6)
     path(pen, [[hip[0] + (i ? 0.06 : -0.06), hip[1]], knee, [ft[0], ft[1] - 0.08]], col, 7.5 * s)
     shape(pen, [[ft[0] - 0.17, FLOOR], [ft[0] - 0.15, FLOOR - 0.1], [ft[0] + 0.1, FLOOR - 0.11], [ft[0] + 0.1, FLOOR]], '#E8E5DA')
@@ -739,18 +746,37 @@ function kletzki(pen: Pen, t: number): void {
   }
 }
 
+/** Endo's small life: a knee bend and a shift of weight into each stroke, a step in to each lob, a slow breath. */
+function endoBody(t: number): { crouch: number; shift: number; step: number } {
+  let crouch = 0.03 + 0.015 * Math.sin(t * 1.7)
+  let shift = 0
+  let step = 0
+  for (const s of STROKES) {
+    if (s.who !== 'endo') continue
+    const d = t - s.t
+    if (d < -0.6 || d > 0.9) continue
+    const into = Math.exp(-((d + 0.05) * (d + 0.05)) / (2 * 0.12 * 0.12))
+    crouch += (s.kind === 'lob' ? 0.2 : s.kind === 'dead' ? 0.06 : 0.12) * into
+    shift -= (s.kind === 'dead' ? 0.02 : 0.08) * into
+    if (s.kind === 'lob') step = Math.max(step, smooth(d, -0.5, -0.12) * (1 - smooth(d, 0.25, 0.85)))
+  }
+  return { crouch, shift, step: 0.32 * step }
+}
+
 function endo(pen: Pen, t: number): void {
   // The bow: down on the beat, held, and up.
   const bow = t < BOW ? 0 : t < BOW + 0.3 ? ease((t - BOW) / 0.3) : t < BOW + 1.0 ? 1 : 1 - ease((t - BOW - 1.0) / 0.6)
+  const b = endoBody(t)
   figure(pen, {
-    x: ENDO_X,
+    x: ENDO_X + b.shift - 0.5 * b.step,
     h: ENDO_H,
-    lean: 0.06 + 0.7 * bow,
+    lean: 0.06 + 0.12 * b.crouch + 0.7 * bow,
     bat: track(EN_KEYS, t),
     batKind: 'endo',
     hair: 'black',
     stride: null,
     face: 1,
+    crouch: b.crouch,
+    step: 0.5 * b.step,
   })
 }
-

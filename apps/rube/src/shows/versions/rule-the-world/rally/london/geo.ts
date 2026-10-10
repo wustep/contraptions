@@ -254,6 +254,10 @@ export const LOBS = [5, 14, 21]
   }
 }
 
+/** Endo's last lob, and where it lands on Marty's side: the close shot's two cuts. */
+export const LAST_LOB = STROKES.filter((s) => s.kind === 'lob').slice(-1)[0].t
+export const LOB_LANDS = BOUNCES.find((b) => b.t > LAST_LOB)!.t
+
 /* ---- the last point: the dead shot, the miss, off the end, the floorboards ---- */
 export const DEAD_AT: Pt = [B.x1 + 0.55, -0.3]
 export const DIE_AT: Pt = [B.x0 + 2.05, 0]
