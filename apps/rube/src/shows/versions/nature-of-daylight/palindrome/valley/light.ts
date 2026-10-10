@@ -205,10 +205,10 @@ export function drawSunWash(ctx: Ctx, k: number, f: View, t: number): void {
   const band = far > 0.01 ? 6 * far : 0
   // On whole pixels, each slice meeting the next exactly: under these blends an overlap or a gap is a line.
   const px = (y: number) => Math.round(y * k)
-  const pass = (op: GlobalCompositeOperation, style: (y: number) => CanvasGradient) => {
+  const pass = (op: GlobalCompositeOperation, color: string, F: (l: number) => number) => {
     ctx.globalCompositeOperation = op
     const n = band > 0 ? 24 : 0
-    ctx.fillStyle = style(MEADOW)
+    ctx.fillStyle = across(ctx, k, x0, x1, color, (x) => F(lit(x)))
     // The fade in at its top too: overlapped, its seams striped the treeline in a tall frame.
     for (let i = 0; i < n; i++) {
       const ya = px(top + (band * i) / n)
@@ -222,20 +222,25 @@ export function drawSunWash(ctx: Ctx, k: number, f: View, t: number): void {
     const to = top + h
     const upper = Math.min(to, Math.max(from, MEADOW))
     if (upper > from) ctx.fillRect(x0 * k, px(from), (x1 - x0) * k, px(upper) - px(from))
-    // A few pixels a slice, however tall the floor is on the screen: forty in all stood a tall frame's near meadow in
-    // steps a dozen pixels high, the slanting edge a staircase.
-    const m = Math.min(200, Math.max(40, Math.ceil(((to - upper) * k) / 3)))
-    for (let i = 0; i < m && to > upper; i++) {
-      const ya = px(upper + ((to - upper) * i) / m)
-      const yb = px(upper + ((to - upper) * (i + 1)) / m)
-      if (yb <= ya) continue
-      ctx.fillStyle = style((ya + yb) / 2 / k)
-      ctx.fillRect(x0 * k, ya, (x1 - x0) * k, yb - ya)
+    // Below it the light depends on x + SKEW·depth alone, so one gradient laid along that slant draws the edge
+    // exactly: no slices (forty stood a tall frame's near meadow in steps; two hundred cost the daylight a fifth).
+    if (to > upper) {
+      const xa = x0 + SKEW * Math.max(0, upper - MEADOW)
+      const xb = x1 + SKEW * Math.max(0, to - MEADOW)
+      const lam = (xb - xa) / (1 + SKEW * SKEW)
+      const g = ctx.createLinearGradient(xa * k, MEADOW * k, (xa + lam) * k, (MEADOW + SKEW * lam) * k)
+      const stops = 48
+      for (let i = 0; i <= stops; i++) {
+        const xs = xa + ((xb - xa) * i) / stops
+        g.addColorStop(i / stops, rgba(color, clamp01(F(sunAt(t, xs)))))
+      }
+      ctx.fillStyle = g
+      ctx.fillRect(x0 * k, px(upper), (x1 - x0) * k, px(to) - px(upper))
     }
   }
-  pass('soft-light', (y) => across(ctx, k, x0, x1, mix(VALLEY.lamp, VALLEY.grass, 0.4), (x) => 0.85 * lit(x, y)))
-  pass('screen', (y) => across(ctx, k, x0, x1, VALLEY.floodlight, (x) => 0.13 * lit(x, y)))
-  pass('multiply', (y) => across(ctx, k, x0, x1, mix(VALLEY.ridge, VALLEY.cloudShade, 0.35), (x) => 0.55 * d.sun * (1 - lit(x, y) / Math.max(0.001, d.sun))))
+  pass('soft-light', mix(VALLEY.lamp, VALLEY.grass, 0.4), (l) => 0.85 * l)
+  pass('screen', VALLEY.floodlight, (l) => 0.13 * l)
+  pass('multiply', mix(VALLEY.ridge, VALLEY.cloudShade, 0.35), (l) => 0.55 * d.sun * (1 - l / Math.max(0.001, d.sun)))
   const close = clamp01((24 - (f.y1 - f.y0)) / 14)
   if (close > 0.01) {
     // Close, the floor toward us a little deeper at the frame's foot.

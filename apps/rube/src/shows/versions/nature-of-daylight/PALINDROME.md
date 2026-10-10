@@ -984,6 +984,13 @@ each frame as the lobes drift, so the open fog flickers by one level in two hund
 before. It cannot be seen. Over the whole show the median frame is now twenty-six milliseconds, from thirty-one, and
 the worst sixty-five, from ninety-two: the daylight's break and the blast.
 
+A hundred-and-ninth took the daylight. The hundred-and-first had cut the sun's light on the near meadow into a slice
+every three pixels, as many as two hundred, each with its own gradient, so its slanting edge would not step; that was
+a fifth of the daylight's frame. But below the far line the light hangs on one thing only, how far along the slant a
+point lies, x plus 1.4 times its depth: a single gradient laid along that slant draws the edge exactly. It is one
+gradient a pass now, no slices: the same picture to within seven levels in the wide and the tall frame, the edge one
+soft slant, and the daylight five to ten milliseconds cheaper.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
