@@ -265,12 +265,15 @@ export const ledge = part<State>(
     // Close on the two of them, still, and closer, the canyon open beyond the lip.
     { t: BEGIN + 0.9, cells: 3.0, hold: [0.2, -0.3], w: 0.9 },
     { t: PEBBLE_AT[2] - 0.5, cells: 2.45, hold: [0.3, -0.2] },
-    // The last pebble: the camera draws back a little and down the face to see it go, the two of them still on the
-    // lip at the top of the frame. A wider shot loses them both and the pebble to specks.
-    { t: fall(12.5), cells: 5.2, hold: [1.15, 0.85] },
-    { t: fall(14.5), cells: 5.0, hold: [1.05, 0.75] },
-    // Then in, slowly, all through Joy's rocking and her lean out over the edge, and closer while she waits there.
-    { t: ROCK_AT[0], cells: 4.6, hold: [0.75, 0.5] },
+    // The last pebble: the camera draws back with it as it goes down the face, and goes on drawing back, until the
+    // two of them are two specks on the rim of a canyon as big as the world, the rim along the top of the frame and
+    // its walls stepping away into the haze. A universe where nothing ever happened: held, in the silence.
+    { t: fall(10.5), cells: 6.2, hold: [1.7, 1.6] },
+    { t: fall(14.5), cells: 25, hold: [12.6, 6.4] },
+    { t: fall(16.5), cells: 27, hold: [13.6, 7.0] },
+    // Then in, slowly, in one long move, under Joy's first words and through her rocking, to her lean out over the
+    // edge, and closer while she waits there.
+    { t: fall(21), cells: 11, hold: [3.8, 2.3] },
     { t: LEAN, cells: 3.6, hold: [0.34, 0.0] },
     { t: OVER - 0.15, cells: 2.8, hold: [0.2, -0.16] },
     // She is gone; Evelyn on the rim, alone.
@@ -303,5 +306,8 @@ export const ledge = part<State>(
     { t: END, cells: 4.4, hold: [31.25, 33.75], w: 0.8 },
   ],
 )
+
+/** The reveal: from the camera drawing back with the last pebble until it is back in on Joy rocking (show seconds). */
+export const REVEAL: [number, number] = [fall(10.5), fall(23)]
 
 export const ROCKS_HITS: number[] = strikes()
