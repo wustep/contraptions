@@ -779,6 +779,11 @@ window.
     frame of it on a sheet at four a second. Kept on the music.
   - *The beat-by-beat fixes on a phone held upright* (his lean, the falls as water in all three places, the bigger
     lamp lit and out, the thrown tickets): all whole in the frame, the storey above in the extra picture.
+  - *The balloon, asked about* by a twelfth viewer who has never seen Up (180 to 230 s, two frames a second): his at
+    the funeral and home, tied to her empty chair: "her, or his memory of her" (85%), the one saturated colour in a
+    greyed world. Most moving: him in his chair, the balloon over her empty one, the lamp coming on "as if it were an
+    ordinary evening for two". Left: the bedside handover unclear at that scale; the wait at the steps read as him
+    hesitating to go in, which is its meaning.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
