@@ -6,11 +6,16 @@ import type { Performance, Version } from '../src/shows/registry'
 import { sectionOf } from '../src/shows/registry'
 import plan from '../../../scripts/shows/plans/soft-lamp-onsets.json'
 import { DURATION, show } from '../src/shows/versions/soft-lamp/lamp'
-import { AIMS } from '../src/shows/versions/soft-lamp/lamp/camera'
-import { BOOKS, CONTACT, CUP, ON_SILL, PROPS, R, SILL } from '../src/shows/versions/soft-lamp/lamp/desk'
+import { AIMS, catInViewAt } from '../src/shows/versions/soft-lamp/lamp/camera'
+import { BOOKS, CAT, CONTACT, CUP, ON_SILL, POT, PROPS, R, SILL } from '../src/shows/versions/soft-lamp/lamp/desk'
 import { MUSIC_END, TRACKS, YOUTUBE, barTime, kickAt } from '../src/shows/versions/soft-lamp/lamp/music'
-import { LANDINGS, LAPS, LEGS, NODS, ballAt, hollowY, legAt } from '../src/shows/versions/soft-lamp/lamp/route'
+import { LANDINGS, LAPS, LEGS, NODS, ballAt, hollowY, legAt, machineBusy } from '../src/shows/versions/soft-lamp/lamp/route'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/soft-lamp/lamp/titles'
+import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/lens'
+import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
+import { SNOW, coverAt, rainAt, snowAt } from '../src/shows/versions/soft-lamp/lamp/world'
+import { REACHES, REFILL, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
+import { CLIMB, DOZES, SNOW_LOOK, STRETCHES, YAWNS, climbAt } from '../src/shows/versions/soft-lamp/lamp/cat'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -167,6 +172,76 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
   }
   check('soft lamp: the ball is in the frame all the time, and in Zoom\'s closer frame 99.5% of it', lost / seen < 0.005, `${((lost / seen) * 100).toFixed(2)}% out`)
 
+  // Through the glass: what moves there at its depth, sharp in the frames that look at it and soft at the desk; and the
+  // window's moments, each played to a frame that holds it in focus.
+  const sharp = [0, 0.21].map((x) => blurOf({ x, y: -1.9, size: 4.9 }))
+  const close = blurOf({ x: 1.75, y: -0.57, size: 2.45 })
+  const still = layerOf({ x: 0.21, y: -1.9, size: 4.9 }, 0.55)
+  check('soft lamp: the city sharp in the window\'s look and the room\'s, soft at the cup, and every layer where it was drawn in the window\'s look',
+    sharp.every((b) => b < 0.005) && close > 0.07 && still.s === 1 && near(still.ox, 0) && near(still.oy, 0), `soft ${close.toFixed(3)}`)
+  const m = MOMENTS
+  const inFocus = (t: number) => blurOf(lensOf(perf.camera!(t))) <= 0.02
+  check('soft lamp: lightning three times in the heaviest rain, the cat in view; the shooting stars in focus',
+    m.lightning.length === 3 && m.lightning.every((t) => rainAt(t) >= 0.68 && catInViewAt(t)) &&
+    m.shooting.length >= 2 && m.shooting.every(inFocus), JSON.stringify(m))
+
+  // The first snow: as the rain thins after the storm, never in the heavy rain, stopped before the shooting stars, and
+  // what settles staying to the end; the kitten looks up at it once, in view.
+  check('soft lamp: the first snow falls as the rain thins, stops before the shooting stars, settles and stays; the kitten sees it',
+    rainAt(SNOW.from) < 0.6 && m.lightning.every((t) => snowAt(t) === 0) && m.shooting.every((t) => snowAt(t) === 0 && t > SNOW.to) &&
+    snowAt(SNOW.full + 30) > 0.6 && coverAt(SNOW.to) > 0.85 && coverAt(MUSIC_END) >= coverAt(SNOW.to) && coverAt(SNOW.from - 1) === 0 &&
+    SNOW_LOOK > SNOW.from && SNOW_LOOK < SNOW.to && catInViewAt(SNOW_LOOK) && catInViewAt(SNOW_LOOK + 9) && !machineBusy(SNOW_LOOK, SNOW_LOOK + 9, 2),
+    `snow look ${SNOW_LOOK}`)
+
+  // Sleepier through the night: it dozes off three or four times late, in view, clear of the machine and its other moments.
+  check('soft lamp: the kitten dozes off three or four times late in the night, in view, clear of its other moments',
+    DOZES.length >= 3 && DOZES.length <= 4 && DOZES.every((t) => t > 1100 && t < CLIMB - 30 && catInViewAt(t) && catInViewAt(t + 9) && !machineBusy(t, t + 9, 2) &&
+      [...YAWNS, ...STRETCHES, SNOW_LOOK].every((m) => m < t - 18 || m > t + 15)), JSON.stringify(DOZES))
+
+  // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched, the mug taken away after
+  // midnight and brought back hot, and the lamp turned down at the end; each while the camera holds what the hand reaches for, and none over the cat's own moments.
+  const kinds = REACHES.map((r) => r.kind).join(' ')
+  const heldFor = (r: (typeof REACHES)[number]) => {
+    const box = r.kind === 'pet' ? PROPS.cat : r.kind === 'lamp' || r.kind === 'on' ? PROPS['lamp base'] : PROPS.mug
+    for (let s = r.at; s <= r.at + r.dur; s += 0.5) {
+      const c = perf.camera!(s)
+      const hw = (c.cells * 16) / 9 / 2
+      const hh = c.cells / 2
+      if (box[0] < c.x - hw || box[2] > c.x + hw || box[1] < c.y - hh || box[3] > c.y + hh) return false
+    }
+    return true
+  }
+  check('soft lamp: a hand turns the lamp on, takes a sip, scratches the kitten, refills the tea after midnight, and turns the lamp down, each in frame, clear of the yawns',
+    kinds === 'on sip pet away back lamp' && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
+    REFILL > 1140 && REFILL < MUSIC_END - 300 &&
+    YAWNS.every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
+
+  check('soft lamp: trains cross the city a few times, minutes apart, from the dusk to a little after midnight',
+    m.trains.length === 4 && m.trains.every((t, i) => i === 0 || t - m.trains[i - 1] >= 170) && m.trains[3] < 1450,
+    m.trains.join(' '))
+
+  // The machine's drops and lobs are the show's backbone: the hand, the stretches and the lightning keep clear of them.
+  const crowding = [
+    ...REACHES.filter((r) => r.kind !== 'on' && r.kind !== 'lamp').filter((r) => machineBusy(r.at, r.at + r.dur)).map((r) => `hand ${r.kind} ${r.at}`),
+    ...STRETCHES.filter((t) => machineBusy(t, t + 6.8)).map((t) => `stretch ${t.toFixed(0)}`),
+    ...m.lightning.filter((t) => machineBusy(t, t + 3.2)).map((t) => `lightning ${t}`),
+  ]
+  check('soft lamp: nothing crowds the machine: no reach, stretch or flash on a drop or a lob', crowding.length === 0, crowding.join(', '))
+
+  // At the end it climbs to the sill (the ball's stair, the other way) and sleeps there, under the window, clear of the
+  // plant pot, once the ball is in the cup for good and the camera is on the whole room.
+  const endC = climbAt(DURATION)
+  const sillCat = [CAT.x0 + endC.dx, CAT.chest + endC.dx]
+  check('soft lamp: at the end the kitten climbs to the sill and sleeps there, clear of the pot, the ball in the cup',
+    near(endC.dy, -1.42, 0.01) && sillCat[0] > POT.x + POT.halfW + 0.05 && sillCat[1] < SILL.x1 && CLIMB > LAPS[LAPS.length - 1].cup + 10 &&
+    perf.camera!(CLIMB).cells > 6.5, `${sillCat.map((x) => x.toFixed(2)).join('..')}`)
+
+  // The kitten gets up and stretches twice, each whole in the frame, clear of its other moments and the hand.
+  check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns and the hand',
+    STRETCHES.length === 2 && STRETCHES.every((t) => t > 0) && STRETCHES[0] < 900 && STRETCHES[1] > 1200 &&
+    STRETCHES.every((t) => catInViewAt(t) && catInViewAt(t + 6.8) && YAWNS.every((m) => m < t - 3.2 || m > t + 7) &&
+      REACHES.every((r) => r.at > t + 7 || r.at + r.dur < t)), STRETCHES.map((t) => t.toFixed(0)).join(' '))
+
   // The words.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names, ...(c.notes ?? [])].join(' ')).join(' | ')
   check('soft lamp: the title over the first intro, each track named as it begins, the credits over the last outro, set by the page',
@@ -174,4 +249,47 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     TRACKS.every((t) => said.includes(t.title) && said.includes(t.artists)) &&
     ['Soft Lamp', 'Directed by', 'Stephen Wu', 'Claude Opus 5.5', 'Lofi Girl', 'p5.js'].every((w) => said.includes(w)), said)
   check('soft lamp: one room and no cut', perf.cuts?.(0) === false && perf.cuts?.(900) === false && perf.show === show)
+}
+
+/** The still take: the same show, the camera held on the room the whole half hour. */
+export function checkSoftLampStill(perf: Performance, version: Version, check: Check): void {
+  check('soft lamp (still): in the picker as Soft Lamp, Opus 5.5 (Still), on the Ambient shelf, with a line and a still',
+    version.title === 'Soft Lamp' && version.label === 'Opus 5.5 (Still)' && sectionOf('soft-lamp') === 'Ambient' && !!version.about &&
+    typeof version.still === 'number')
+  check('soft lamp (still): the same show and music as the first take', perf.show === show && perf.duration === DURATION &&
+    perf.soundtrack?.youtube?.[0]?.id === YOUTUBE)
+  // Held: it drifts, but within a few per cent and slower than anyone would see as a move.
+  let drift = 0
+  let speed = 0
+  const c0 = perf.camera!(0)
+  for (let t = 0; t < DURATION; t += 1) {
+    const a = perf.camera!(t)
+    const b = perf.camera!(t + 1)
+    drift = Math.max(drift, Math.hypot(a.x - c0.x, a.y - c0.y) / c0.cells, Math.abs(a.cells / c0.cells - 1))
+    speed = Math.max(speed, Math.hypot(b.x - a.x, b.y - a.y) / a.cells)
+  }
+  check('soft lamp (still): one held frame, drifting no more than a few per cent, imperceptibly slowly', drift < 0.05 && speed < 0.0005,
+    `drift ${(drift * 100).toFixed(1)}%, ${(speed * 100).toFixed(3)}% of a frame a second`)
+  const sliced = new Set<string>()
+  for (let t = 0; t < DURATION; t += 5) {
+    const c = perf.camera!(t)
+    const hw = (c.cells * 16) / 9 / 2
+    const hh = c.cells / 2
+    for (const [name, [x0, y0, x1, y1]] of Object.entries(PROPS))
+      if (x1 > c.x - hw && x0 < c.x + hw && y1 > c.y - hh && y0 < c.y + hh && !(x0 >= c.x - hw + 0.1 && x1 <= c.x + hw - 0.1 && y0 >= c.y - hh + 0.1 && y1 <= c.y + hh + 0.5)) sliced.add(name)
+  }
+  check('soft lamp (still): its frame shows each thing whole, or not at all, all the while', sliced.size === 0, [...sliced].join(', '))
+  let lost = 0
+  let out = 0
+  let n = 0
+  for (let t = 0; t < DURATION; t += 0.25) {
+    const b = ballAt(t)
+    const c = perf.camera!(t)
+    const hw = (c.cells * 16) / 9 / 2
+    const hh = c.cells / 2
+    n++
+    if (Math.abs(b.x - c.x) > hw - R || Math.abs(b.y - c.y) > hh - R) out++
+    if (Math.abs(b.x - c.x) > hw / 1.5 - R || Math.abs(b.y - c.y) > hh / 1.5 - R) lost++
+  }
+  check('soft lamp (still): the ball always in the frame, and in Zoom\'s closer frame nearly always', out === 0 && lost / n < 0.05, `${out} out, ${((lost / n) * 100).toFixed(1)}% out of Zoom`)
 }

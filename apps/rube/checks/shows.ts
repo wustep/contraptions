@@ -52,7 +52,7 @@ import { checkMagnum } from './magnum'
 import { checkKick } from './kick'
 import { checkOstinato } from './ostinato'
 import { checkPalindrome } from './palindrome'
-import { checkSoftLamp } from './soft-lamp'
+import { checkSoftLamp, checkSoftLampStill } from './soft-lamp'
 import { checkQuintessence } from './quintessence'
 
 let failures = 0
@@ -236,6 +236,7 @@ async function main(): Promise<void> {
     lalaland.map((v) => v.take).join(',') === 'opus5-5,fable5-1' && lalaland.every((v) => v.title === 'Epilogue' && v.note === undefined) &&
     lalaland.map((v) => v.label).join('|') === 'Opus 5.5|Fable 5.1' && epilogueTake?.label === 'Opus 5.5' && pickVersion(shipped.works, 'la-la-land', null)?.take === 'opus5-5')
   check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55,grok47' && pickVersion(shipped.works, 'cornfield-chase', null)?.take === 'opus55')
+  check('Soft Lamp leads with its still take, the moving camera second', shipped.works.find((w) => w.work === 'soft-lamp')?.versions.map((v) => v.take).join(',') === 'opus55-still,opus55' && pickVersion(shipped.works, 'soft-lamp', null)?.take === 'opus55-still')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
   check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
@@ -483,6 +484,7 @@ async function main(): Promise<void> {
       if (work.work === 'nature-of-daylight' && version.take === 'opus55') checkPalindrome(perf, version, check)
       if (work.work === 'time' && version.take === 'opus55') checkKick(perf, version, check)
       if (work.work === 'soft-lamp' && version.take === 'opus55') checkSoftLamp(perf, version, check)
+      if (work.work === 'soft-lamp' && version.take === 'opus55-still') checkSoftLampStill(perf, version, check)
       if (work.work === 'step-out' && version.take === 'opus55') checkQuintessence(perf, version, check)
 
       if (work.work === 'interstellar' && version.take === 'opus55') {
