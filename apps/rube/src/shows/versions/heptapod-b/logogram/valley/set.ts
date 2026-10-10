@@ -720,13 +720,18 @@ function drawDeck(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, ope
   ctx.fillStyle = fill
   if (open < 0.02) ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (mean - 6 - top) * k)
   else {
-    // With the opening in it: the fill in strips, thinning where it has opened.
-    const n = 40
+    // With the opening in it: the fill in strips, thinning where it has opened. Each strip's ends sit on whole device
+    // pixels, so the strips meet exactly: overlapping or gapping at a fractional edge, every seam was a hairline.
+    const m = ctx.getTransform()
+    const snap = (x: number) => (m.b === 0 && m.c === 0 ? (Math.round(m.a * x * k + m.e) - m.e) / m.a : x * k)
+    // About 3 px each, so the hole's edge thins smoothly rather than in steps.
+    const n = Math.max(40, Math.min(640, Math.ceil((Math.abs(m.a) * (f.x1 - f.x0 + 2) * k) / 3)))
     for (let i = 0; i < n; i++) {
       const xa = f.x0 - 1 + ((f.x1 - f.x0 + 2) * i) / n
       const xb = f.x0 - 1 + ((f.x1 - f.x0 + 2) * (i + 1)) / n
+      const a0 = snap(xa)
       ctx.globalAlpha *= 1 - hole((xa + xb) / 2)
-      ctx.fillRect(xa * k, top * k, (xb - xa + 0.05) * k, (mean - 6 - top) * k)
+      ctx.fillRect(a0, top * k, snap(xb) - a0, (mean - 6 - top) * k)
       ctx.globalAlpha /= Math.max(1e-3, 1 - hole((xa + xb) / 2))
     }
   }
