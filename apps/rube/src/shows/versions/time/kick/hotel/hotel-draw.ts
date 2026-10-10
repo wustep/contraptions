@@ -197,7 +197,8 @@ function drawNight(g: Pen, f: View): void {
   // Towers: a far row and a near row, with a few lit windows.
   for (const row of [0, 1]) {
     const col = row ? C.cityNear : C.cityFar
-    for (let i = 0; i < 64; i++) {
+    // Out past the first and the last of them too, so seen whole (Overview) the city runs to the frame's edges.
+    for (let i = -14; i < 76; i++) {
       const w = 1.4 + hash(i, row, 3) * (row ? 2.2 : 3)
       const x = -66 + i * 2.25 + hash(i, row, 5) * 1.1
       if (x + w < f.x0 - 1 || x > f.x1 + 1) continue

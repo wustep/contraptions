@@ -392,6 +392,11 @@ each world, and changed:
   marked the blow, so each seemed to reverse and shoot off (a motion critic read both as teleports); Fischer's flare
   was lost on the pale sky. Each throw now flashes a ring where it lands and leaves a short streak in their colour
   behind them, gone in half a second (`cast.ts`, `streak`).
+- **The porch's ground** (244 to the end, seen whole or tall): left of the house, the porch's stone ran on down to the
+  frame's foot, a blank pale column for the whole of the ending in Overview (a critic's note). It is cut where the
+  garden's ground is, with the same earth under it.
+- **The hotel's skyline** (the dream stack, seen whole): its towers began a sixth of the way in from the frame's left,
+  flat dark before them (a critic's note). They run on past both ends now; every tower that was there is unchanged.
 
 ## Inception nods
 
