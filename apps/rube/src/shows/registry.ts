@@ -205,7 +205,7 @@ const SHELVED: Record<string, Section> = {
 }
 export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
 
-/** The favourite works, by rank. They are starred, set out first in the picker, and the Shows tab opens the first. */
+/** The favourite works, by rank. They are starred, pinned to the top of their shelf, and the Shows tab opens the first. */
 const FAVORITES: Record<string, number> = {
   interstellar: 1,
   'la-la-land': 2,
@@ -217,21 +217,15 @@ const FAVORITES: Record<string, number> = {
 export const favorites = (works: Work[]): Work[] =>
   works.filter((w) => w.favorite !== undefined).sort((a, b) => a.favorite! - b.favorite!)
 
-/** The picker's shelf of favourites, set out before the others. */
-export const FAVORITE_SHELF = 'Favorites' as const
-
 /**
- * The works by shelf: the favourites by rank, then each shelf by title without them; empty shelves left out.
+ * The works by shelf: each shelf its favourites by rank, then the rest by title; empty shelves left out.
  */
-export function shelves(works: Work[]): { section: Section | typeof FAVORITE_SHELF; works: Work[] }[] {
-  const rest = works.filter((w) => w.favorite === undefined)
-  return [
-    { section: FAVORITE_SHELF, works: favorites(works) },
-    ...SECTIONS.map((section) => ({
-      section,
-      works: rest.filter((w) => sectionOf(w.work) === section).sort((a, b) => a.title.localeCompare(b.title)),
-    })),
-  ].filter((s) => s.works.length > 0)
+export function shelves(works: Work[]): { section: Section; works: Work[] }[] {
+  return SECTIONS.map((section) => ({
+    section,
+    works: works.filter((w) => sectionOf(w.work) === section)
+      .sort((a, b) => (a.favorite ?? Infinity) - (b.favorite ?? Infinity) || a.title.localeCompare(b.title)),
+  })).filter((s) => s.works.length > 0)
 }
 
 /** `versions/<work>/<take>.show.ts`, or null for a path that is not one. */

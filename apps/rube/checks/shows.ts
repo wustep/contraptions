@@ -259,8 +259,8 @@ async function main(): Promise<void> {
     renamed.length === 4 && lost.length === 0, lost.map((r) => `${r.work}/${r.was}`).join(', '))
   check('the build writes a renamed take\'s old address as a page', /RENAMED_TAKES\[w\.work\]/.test(readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')))
   const shelved = shelves(shipped.works).map((s) => `${s.section}: ${s.works.map((w) => w.title).join(', ')}`)
-  check('the picker sets out the favourites first, then the rest as Machine, Movies and Ambient',
-    shelved.join(' / ') === 'Favorites: Voyage, Epilogue, Everything, Clair de Lune / Machine: Cornfield Chase, Première Arabesque / Movies: Caravan, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence / Ambient: Gymnopédie, Ostinato, Soft Lamp', shelved.join(' / '))
+  check('the picker shelves the works as Machine, Movies and Ambient, each with its favourites pinned first',
+    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Voyage, Epilogue, Everything, Caravan, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence / Ambient: Gymnopédie, Ostinato, Soft Lamp', shelved.join(' / '))
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()

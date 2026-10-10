@@ -390,7 +390,7 @@ panelRoot.append(showCard)
 const workList = createListbox({
   label: 'Show',
   value: current?.work ?? '',
-  // On their shelves (`registry.ts`): the favourites, starred, then Machine, Movies, Ambient.
+  // On their shelves (`registry.ts`): Machine, Movies, Ambient, each with its favourites starred and first.
   items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section, mark: w.favorite === undefined ? undefined : icon(ICON.star) }))),
   onChange: (work) => {
     const next = pickVersion(works, work, null)

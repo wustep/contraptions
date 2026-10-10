@@ -40,9 +40,9 @@ The folder and file names are addresses, so they are chosen once:
   Lune, Première Arabesque, Cornfield Chase), **Movies** and **Ambient**
   (Gymnopédie, Soft Lamp, Ostinato). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Favourites**: `FAVORITES` in `../registry.ts` ranks them (Voyage, Epilogue,
-  Everything, Clair de Lune). The picker stars them and sets them out first, in
-  that order, ahead of the shelves; a take with `favorite: true` is starred on
-  its tab (Epilogue's Opus 5.5).
+  Everything, Clair de Lune). The picker stars them and pins them to the top of
+  their own shelf, in that order; a take with `favorite: true` is starred on its
+  tab (Epilogue's Opus 5.5).
 - **Code**: a take that is more than a score file keeps its code in a folder
   named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
   the take id carries a code name, the folder uses the same one. A take's code
