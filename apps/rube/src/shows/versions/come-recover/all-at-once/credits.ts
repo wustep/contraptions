@@ -192,19 +192,24 @@ export const subtitleBed = scenery<null>({
     const bh = Math.min(h, (w * 9) / 16)
     // On the words' middle: their top is where `SUB_AT` puts it, and they are at least SUB_LEAST tall.
     const cy = (f.y0 + (h - bh) / 2 + bh * where[1]) * k + Math.max(bh * 0.022 * k, SUB_LEAST * 0.8)
-    const cx = (f.x0 + w * where[0]) * k
-    const rx = Math.max(Math.min(w, (bh * 16) / 9) * (where === SUB_AT ? 0.34 : 0.24) * k, 170)
-    // As tall as the words are, however small the stage (they never go under SUB_LEAST on the page).
-    const ry = Math.max(rx * 0.16, SUB_LEAST * 1.9)
+    // Across the whole frame, from its edge (the foot, or the top for words set high) to a little past the words: the
+    // frame's edge in shade, as a film's is under its subtitles, not a dark smudge floating on a pale canyon.
+    const low = where[1] > 0.5
+    const reach = Math.max(bh * 0.2 * k, SUB_LEAST * 5)
+    const inner = low ? cy - reach : cy + reach
+    const edge = (low ? f.y1 + 0.5 : f.y0 - 0.5) * k
+    const a = 0.42 * deep * sub
     ctx.save()
-    ctx.translate(cx, cy)
-    ctx.scale(1, ry / rx)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(30, 24, 20, ${0.5 * deep * sub})`)
-    g.addColorStop(0.6, `rgba(30, 24, 20, ${0.3 * deep * sub})`)
-    g.addColorStop(1, 'rgba(30, 24, 20, 0)')
+    const g = ctx.createLinearGradient(0, inner, 0, edge)
+    // Eased in, so it has no top edge of its own: full at the words, and a little less at the frame's edge.
+    const at = Math.min(0.9, Math.abs(cy - inner) / Math.abs(edge - inner))
+    for (let i = 0; i <= 6; i++) {
+      const u = i / 6
+      g.addColorStop(at * u, `rgba(30, 24, 20, ${a * u * u * (3 - 2 * u)})`)
+    }
+    g.addColorStop(1, `rgba(30, 24, 20, ${a * 0.8})`)
     ctx.fillStyle = g
-    ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
+    ctx.fillRect((f.x0 - 1) * k, Math.min(inner, edge), (f.x1 - f.x0 + 2) * k, Math.abs(edge - inner))
     ctx.restore()
   },
 })
