@@ -3,7 +3,7 @@ import type { Pt } from '../../../../../parts'
 import { mix, rgba } from '../cast'
 import { frame, hash } from '../kit'
 import { HOUSE } from '../worlds'
-import { SEAM } from '../music'
+import { LAST, SEAM } from '../music'
 import { FLOOR, lightAt, ss, type Light } from './time'
 
 /**
@@ -216,6 +216,17 @@ function forest(ctx: Ctx, k: number, trees: Pine[], off: number, gx0: number, gx
  * floor with the window's light on it. `shadows` are the things standing in the light (their outlines at rest on the
  * floor, world cells), whose shadows fall toward us.
  */
+/**
+ * The fog's own clock: show time, but once the last note has gone it runs on four times as fast, eased in over four
+ * seconds, so the long hold under the credits breathes (at the music's pace the banks moved a pixel in a few seconds,
+ * and the room stood frozen for half a minute).
+ */
+function fogTime(T: number): number {
+  const u = T - LAST
+  if (u <= 0) return T
+  return T + (u < 4 ? (3 * u * u) / 8 : 3 * (u - 2))
+}
+
 export function drawRoom(p: p5, k: number, T: number): void {
   const ctx = p.drawingContext as Ctx
   const f = frame(p, k)
@@ -381,9 +392,12 @@ function drawView(ctx: Ctx, k: number, T: number, L: Light, C: Mood, f: { cx: nu
     for (let i = 0; i < 7; i++) {
       const y = shore + 0.02 + 0.1 * i + 0.03 * Math.sin(i * 2.3)
       const len = 2.2 + 1.6 * hash(i, 3, 1)
-      const drift = ((T * (0.018 + 0.01 * hash(i, 3, 2)) + hash(i, 3, 3) * 9) % 9) - 4.5
-      for (let j = -2; j <= 2; j++) {
-        const cx = gx0 + ((((j * 4.6 + drift + far * 0.8 + i * 1.7) % 23) + 23) % 23) - 3
+      // Never wrapped on its own: each bank's copies are drawn either side of the 23-cell period, so one crossing
+      // its end is already coming in at the other, and nothing jumps.
+      const drift = fogTime(T) * (0.018 + 0.01 * hash(i, 3, 2)) + hash(i, 3, 3) * 9 - 4.5
+      for (let n = 0; n < 15; n++) {
+        const j = (n % 5) - 2
+        const cx = gx0 + ((((j * 4.6 + drift + far * 0.8 + i * 1.7) % 23) + 23) % 23) - 3 + 23 * (Math.floor(n / 5) - 1)
         if (cx < gx0 - len || cx > gx1 + len) continue
         ctx.save()
         ctx.translate(px(cx), px(y))

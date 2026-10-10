@@ -936,6 +936,15 @@ stacked arcs. It is twenty-four now over the same depth, one soft bank. The wedg
 made the same way and was tried finer too, but twenty-four near-clear layers piled the browser's gradient dither into
 a grain with a seam at its end; it stays at nine, whose edges did not show.
 
+A hundred-and-fourth looked at the show at a retina screen's size (2560 × 1440), and through a filter that lifts
+every small step eight times; nothing showed that a viewer would see. Then it asked the six-frames-a-second film where
+nothing moves: only the hold under the credits, from the last attack to the end, thirty-six seconds of a room that
+stood frozen, the fog on the lake moving a pixel in a few seconds. The fog keeps its own clock now: the music's until
+the last attack, then four times as fast, eased in over four seconds, so the room breathes while the cards come. The
+first frame is the same to the pixel, and the last is the first, everyone where they were. The banks had a hidden
+fault too: each wrapped round on its own every nine cells, and every twenty-three, with no copy coming in at the other
+end, so a bank could jump where it was seen. Each is drawn either side of its period now, and wraps unseen.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
