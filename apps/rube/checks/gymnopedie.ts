@@ -15,6 +15,7 @@ import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 import { BAND, SHARES, SLICKS } from '../src/shows/versions/gymnopedie/orbit/ripples'
 import { LEAPS } from '../src/shows/versions/gymnopedie/orbit/dolphins'
 import { BLOSSOM } from '../src/shows/versions/gymnopedie/orbit/blossom'
+import { cometAt, cometAngle } from '../src/shows/versions/gymnopedie/orbit/comet'
 import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -165,6 +166,12 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: bougainvillea flowers on the colonnade, on stones apart, none with a gull',
     flowering.length >= 12 && flowering.every((i, j) => STONES[i].piece === 0 && !PERCHED.has(i) && (j === 0 || i - flowering[j - 1] >= 3)),
     `${flowering.length} flowering: ${flowering.join(', ')}`)
+  // The comet: the third Gnossienne's, at night, up in the sky, and only then; coming round with the period.
+  const cometTimes = Array.from({ length: 1270 }, (_, i) => i * 0.5)
+  const cometUp = cometTimes.filter((t) => cometAt(t) > 0)
+  check('gymnopedie: the comet crosses the third Gnossienne\'s sky, at night and over the horizon, and only then',
+    cometUp.length > 200 && cometUp.every((t) => t > PIECES[2].from && t < PIECES[2].last && skyAt(t).night > 0.5 && Math.abs(cometAngle(t)) < 1.75) &&
+    cometAt(0) === 0 && cometAt(PERIOD - 1e-6) === 0, `${cometUp.length / 2} s up`)
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5

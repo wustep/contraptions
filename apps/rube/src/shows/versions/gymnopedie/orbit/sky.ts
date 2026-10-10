@@ -7,6 +7,7 @@ import {
   FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat, lanternAt,
 } from './air'
 import { drawShore } from './shore'
+import { HEAD, MID, cometAngle, cometLight, cometSprite, cometSway } from './comet'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
   scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, sunAngle, moonAngle, type Body, bodies, sunWay, moonWay, AURORA_OVER, SUN_FAR, MOON_FAR,
@@ -192,6 +193,30 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     ctx.beginPath()
     ctx.arc(hx, hy2, Math.max(1.5, F / 300), 0, Math.PI * 2)
     ctx.fill()
+  }
+
+  // A comet over the third Gnossienne, crossing the sky ahead of the moon, its tail away from the sun. (Drawn once, on
+  // the first frame, far off at the seam, rather than the frame it first comes into.)
+  cometSprite()
+  const comet = cometLight(c.t) * (1 - v.wide)
+  if (comet > 0.01) {
+    const a = cometAngle(c.t)
+    const [hx] = onCanvas(ctx, c.k, ...polar(u + 0.55, 0), m)
+    const reach = F * 0.62
+    const cx = hx + Math.sin(a) * reach * 1.12
+    const cy = hy - Math.cos(a) * reach * 0.78
+    const tail = Math.atan2(cy - sun.y, cx - sun.x) + cometSway(c.t)
+    // Low, it goes into the horizon's haze, as the stars do.
+    const over = smooth(hy - cy, F * 0.03, F * 0.22)
+    const size = (F * 0.42) / 900
+    ctx.save()
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.globalAlpha = Math.min(1, comet * over)
+    ctx.translate(cx, cy)
+    ctx.rotate(tail)
+    ctx.scale(size, size)
+    ctx.drawImage(cometSprite(), -HEAD, -MID)
+    ctx.restore()
   }
 
   // The sun and the moon, on arcs over the horizon; gone when the planet is small (they are its sky, not space's).
