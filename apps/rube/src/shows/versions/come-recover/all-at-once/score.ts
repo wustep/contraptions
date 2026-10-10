@@ -29,6 +29,7 @@ import { drain, radiance } from './void/radiance'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
 import { cameraCellsAt, multitude, PULL_FROM, veilShade } from './home/multitude'
+import { crown, type CrownState } from './void/crown'
 import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './home/finale-lives'
 import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, T_DOOR, W_TOUCH } from './home/finale-plan'
 
@@ -84,7 +85,7 @@ const PLAN = (): LegPlan[] => [
 ]
 
 /** The world-wide scenery of each world: skies, rooms, weather. Parts fill these as they are built. */
-const SETS = (roomState: RoomState): Partial<Record<WorldKey, WorldSet>> => ({
+const SETS = (roomState: RoomState, crownState: CrownState): Partial<Record<WorldKey, WorldSet>> => ({
   // The laundromat: one room, its walls, fixtures and lights, which every home leg happens in.
   home: {
     scenery: [standing(room, 0, 0, box(-12, -8, 44, 4, 2), roomState, DURATION)],
@@ -100,7 +101,8 @@ const SETS = (roomState: RoomState): Partial<Record<WorldKey, WorldSet>> => ({
       standing(bagel, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
       standing(drain, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
     ],
-    after: [],
+    // Round Joy while she is Jobu, a ring of everything (`void/crown.ts`).
+    after: [standing(crown, 0, 0, box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), crownState, DURATION)],
   },
 })
 
@@ -238,7 +240,8 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
 
   // Every world's scenery, and the googly eyes over everything in every world.
   const roomState: RoomState = { watch: null }
-  const sets = SETS(roomState)
+  const crownState: CrownState = { show: null }
+  const sets = SETS(roomState, crownState)
   // The family portrait: from her hurrying back beside Joy, all three look into the lens through the flash; then
   // down at the photograph as it comes out and flutters to the floor, until it has developed.
   const lens = onCamera(0.5, 0)
@@ -358,6 +361,7 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
 
   const show = new MultiverseShow(legs, sets, flickers, DURATION, riders, company.sort((a, b) => a.from - b.from), isCalm)
   for (const state of eyeStates) state.show = show
+  crownState.show = show
   // While she tumbles in the big dryer, the googly-eyed bags on the washers either side watch her go round: this
   // show's own room, so another composed show (in the checks, a tool) has its own.
   roomState.watch = (t) => {
