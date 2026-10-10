@@ -242,6 +242,12 @@ same measure the far-off lights fade in by, so they are up first on any canvas) 
 silhouettes, which stay whole underneath until it is nearly whole, so no stone is ever seen through. The sea's mirror draws its stones the same way,
 since its ripple and fade leave no more of them than that.
 
+Timed as it now stands, the least of forty redraws of the same moment (so that the rest of the machine adds nothing),
+in Chrome on the GPU at 2880 × 1800 with the CPU slowed four times: 1.4 ms at the seam, 4 to 7 ms through the day, the
+aurora's night and the pond, and 11 to 12 ms in the wide shot between the Gnossiennes, where the whole thread of lamps
+is in view: every moment inside the 16.7 ms of a frame at 60 a second. A cached glow and kept colours for the lamps'
+beams were tried and measured at under a millisecond's difference there, and left out.
+
 ## Where things are
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
