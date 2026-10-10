@@ -4,7 +4,7 @@ import { FLOOR, R, laneAt, mixHex, type Lane, type Pt, type Seg } from '../../..
 import { beam, box, carried, glow, hash, knock, part, rgba, ring, smooth, type Ctx, type Way } from '../kit'
 import { dream, snap } from '../music'
 import { G, hop } from '../physics'
-import { STUDIO_MAT as M } from '../worlds'
+import { MIA, STUDIO_MAT as M } from '../worlds'
 import { BURST, EXIT, MIA_AT_BURST, SIGN, clothDrop, flood as studioFlood, monotone } from './studio'
 
 /**
@@ -230,16 +230,23 @@ function drawSign(p: p5, c: Ctx, t: number): void {
   const { k } = c
   const dy = -clothDrop(t)
   const blaze = knock(t - BUTTON, 0.5)
+  // Whose dream this is: over the flourish's six hits the sign goes from white to her yellow, a block a hit from the
+  // middle outward, and blazes in it on the last: her name in lights, without a letter.
+  const hers = (i: number): number => {
+    const from = FLOURISH[Math.min(5, Math.floor(Math.abs(i - 4) * 1.3))] - 0.05
+    return smooth(t, from, from + 0.18)
+  }
   SIGN.forEach((b, i) => {
     const on = lampLevel(t, SIGN_AT[i], OUT[3])
     if (on <= 0) return
     const lift = on + 0.5 * blaze
-    glow(p, k, b.x, b.y - b.h / 2 + dy, 0.95 + 0.4 * blaze, M.lamp, 0.42 * lift, 1, 1.15)
+    const y = hers(i)
+    glow(p, k, b.x, b.y - b.h / 2 + dy, 0.95 + 0.4 * blaze + 0.3 * y, mixHex(M.lamp, MIA, 0.8 * y), (0.42 + 0.2 * y) * lift, 1, 1.15)
     p.push()
     p.translate(X(k, b.x), X(k, b.y + dy))
     p.rotate(b.tilt)
     p.noStroke()
-    p.fill(mixHex(mixHex(M.sign, M.mountain, 0.42), M.sign, Math.min(1, lift)))
+    p.fill(mixHex(mixHex(mixHex(M.sign, M.mountain, 0.42), M.sign, Math.min(1, lift)), MIA, 0.85 * y))
     p.rect(X(k, -b.w / 2), X(k, -b.h), X(k, b.w), X(k, b.h))
     p.pop()
   })
