@@ -3,7 +3,10 @@ import { box, carried, looks, part, scenery, type Look, type PartShot, type Slot
 import { SEAM } from '../music'
 import { SEAMS } from '../seams'
 import { drawFog, FOG_EXTENT } from './fog-set'
-import { F4, FOG1, FOG_STRIKES, GREAT, herAt, PATH, RINGS } from './fog-plan'
+import { costelloNib, F4, FOG1, FOG_STRIKES, GREAT, herAt, PATH, RINGS } from './fog-plan'
+
+/** When the frame has gone back to the whole great ring, both pens in it: from here she watches Costello's. */
+const WRITING = 170.3
 
 /**
  * Beyond the glass (the fog builder's): the fog's standing set, and the four stretches of Louise in it between the
@@ -59,17 +62,33 @@ function lane(slot: Slot, o: Pt): { segs: Seg[]; end: Pt; lo: Pt; hi: Pt } {
 }
 
 /**
- * Where she looks, the two times it matters in the fog (elsewhere she is riding the ink and her eye rolls with her):
- * up at Abbott, in the cup of its palm beyond the glass, until it lets her go; and on the great ring's close, up
+ * Where she looks, the times it matters in the fog (elsewhere she is riding the ink and her eye rolls with her): up
+ * at Abbott, in the cup of its palm beyond the glass, until it lets her go; across the great ring to Costello's pen
+ * at its top while the two of them write it, so the two pens are seen to write it together; and on its close, up
  * through it to where the two halves meet over her, hers and Costello's, held to the cut.
  */
 const AT_ABBOTT = -2.0
 const UP = -Math.PI / 2
+const AT_PEN = (t: number): number => {
+  const her = herAt(t)
+  const nib = costelloNib(t)
+  return Math.atan2(nib[1] - her[1], nib[0] - her[0])
+}
 const FOG_LOOKS: Look[][] = [
   [{ from: SEAM.fog1 - 1, to: FOG1.release - 0.15, at: () => AT_ABBOTT }],
   [],
   [],
-  [{ from: F4.close - 0.2, to: Infinity, at: () => UP }],
+  [
+    {
+      from: WRITING,
+      to: Infinity,
+      at: (t) => {
+        const u = Math.max(0, Math.min(1, (t - (F4.close - 0.6)) / 0.5))
+        const a = AT_PEN(Math.min(t, F4.close))
+        return a + (UP - a) * u * u * (3 - 2 * u)
+      },
+    },
+  ],
 ]
 
 function stretch(i: number, name: string, shots: (slot: Slot, o: Pt, at: (t: number) => Pt) => PartShot[]) {
