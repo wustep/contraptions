@@ -897,6 +897,15 @@ watched whole between them. Their order is in git; here they are by what they di
   reader as *Waymond: …*). The wall gets the subtitles' shade, deeper than anywhere, since it is the busiest picture.
 - **The opening's hand from light to shop.** At 15 fps the soft glow round the lit box vanished in one frame as the
   real shop took over (2.93 to 3.00 s); it now fades as the fall goes on in, a dissolve.
+- **Overview, at both ends.** The opening and the draw back lay their windows round the show's camera; in Overview (the
+  viewer's O, the whole shop) the ring sat off to one side and a grey box floated in the night. The pieces are not told
+  which view is on, but through those stretches the show's camera is within a cell or so of home's window and Overview
+  is centred far from it, so the night stands aside there (`OVERVIEW` in `home/multitude.ts`) and the shop is seen.
+- **Measured, and a browser tried.** A whole-show frame-time sweep at 4× throttle held 55 to 60 fps everywhere but the
+  peak (249 to 257 s, 38 to 44); the show as it was at the start of these passes measured the same there, side by side,
+  so it is not a regression, and a profile found its cost spread across the bagel's own drawing. Firefox was tried
+  again with Playwright's matching build (Firefox 156): it exits at launch with *Could not find profile folder*, even
+  run directly with a profile folder that exists, so it is still untried here.
 - **The subtitles' shade.** The soft dark under a subtitle was an ellipse floating mid-frame, which on the rocks' pale
   canyon read as a smudge of dirt. It is now the frame's whole foot in shade, eased up to just over the words (at the
   taxes, its top, down to just under them), as a film's lower frame is under its subtitles.
