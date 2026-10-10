@@ -1005,6 +1005,18 @@ The notes went back to the builders who made each part, who still had their cont
   roman from italic; the chapters and the credits are spoken as they read. Played through the taxes, the alley and
   the rocks, each line was heard once with its speaker, and seeking through them while paused said nothing.
   `check:shows` holds it, and fails on a line without its speaker. `npm run build` passes (3,070 checks).
+- **An audio description.** With the dialogue spoken, a viewer who cannot see heard fifteen lines and the music and
+  nothing of what happens. Now the show has a described track, as a film does: 22 short descriptions, a few plain
+  words at each scene and its turns (*An alley in the rain. Waymond waits under a streetlamp.*), spoken between the
+  lines (`DESCRIBED` in `credits.ts`). Each is a card with nothing on it but its `said`, so nothing is seen (measured:
+  an empty, zero-sized card) and a saved video paints none.
+  - A live region speaks a change by replacing the last, so a description must be over before the next thing is
+    spoken, and must not cut anything off. Estimated at 14 characters a second, nine first descriptions would have
+    been cut or cut in; they are shorter now, two move past their chapter cards, and two are gone (*She steps down to
+    Waymond*, now in the kindness description; *Joy's stone goes over*, which had no room, and which *You don't have
+    to follow me*, *Joy —* and *I'm coming* already tell). `check:shows` holds both. Played on the real page, each was
+    heard once and in order with the lines.
+  - `npm run build` passes (3,072 checks).
 
 ## The looks
 

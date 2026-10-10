@@ -7,7 +7,7 @@ import type { Performance } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/eeaao-onsets.json'
 import { STRIKES } from '../src/shows/versions/come-recover/all-at-once/hits'
 import { COMBS, CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall, fight } from '../src/shows/versions/come-recover/all-at-once/music'
-import { CARDS, CHAPTERS, CREDITS_OK, SUBTITLES, creditsAt, goneAt } from '../src/shows/versions/come-recover/all-at-once/credits'
+import { CARDS, CHAPTERS, CREDITS_OK, DESCRIBED, SUBTITLES, creditsAt, goneAt } from '../src/shows/versions/come-recover/all-at-once/credits'
 import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/peak'
 import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
 import { keepIn, keepOf } from '../src/shows/versions/come-recover/all-at-once/film'
@@ -253,12 +253,14 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   check('all at once: the googly eye comes on the great hit, beat 123 of the fight', near(JUMPS.eye, 191.216) && Math.abs(fight(123) - JUMPS.eye) < 0.03)
   check('all at once: Joy is given her eye while her mother pulls her back, after the brink and before home', JOY_EYE > JUMPS.brink && JOY_EYE < JUMPS.home)
 
+  // The cards that show something (an audio description's card is only spoken).
+  const seen = (t: number) => creditsAt(t).filter((c) => !c.key.includes('described'))
   // The film's three chapters, which are the show's three parts: each named as it begins, and gone well before the next.
   const starts = [0, JUMPS.premiere, JUMPS.mosaic]
   check('all at once: the chapters, Everything, Everywhere and All at Once, each as its part begins and gone long before the next',
     CHAPTERS.map((c) => c.names.join()).join('|') === 'Everything|Everywhere|All at Once' &&
     CHAPTERS.every((c, i) => c.at >= starts[i] && c.at < starts[i] + 1 && goneAt(c) < (starts[i + 1] ?? JUMPS.eye) - 5) &&
-    creditsAt(CHAPTERS[1].at + 2).length === 1 && creditsAt(JUMPS.eye).length === 0)
+    seen(CHAPTERS[1].at + 2).length === 1 && seen(JUMPS.eye).length === 0)
 
   // The show's three conversations in subtitles: each line in its own scene, one at a time, none over a jump, and
   // nothing said as Joy goes over the brink.
@@ -280,6 +282,23 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     if (!card || !card.said) unsaid.push(c.names.join())
   }
   check('all at once: every line is spoken to a screen reader with its speaker, and every chapter and credit card is spoken', unsaid.length === 0, unsaid.join(' | '))
+  // And described: a scene's few words at each of its turns, unseen (nothing on the card), never over a line.
+  const undescribed = DESCRIBED.filter((d) => {
+    const card = creditsAt(d.at + 0.2).find((c) => c.said === d.said)
+    const over = SUBTITLES.some((sub) => d.at > sub.at - 0.3 && d.at < sub.to)
+    return !card || card.names.length > 0 || !!card.role || !!card.notes || over
+  })
+  check('all at once: an audio description at every scene, unseen, and never over a line', DESCRIBED.length >= 20 && undescribed.length === 0, undescribed.map((d) => d.at).join(', '))
+  // Each said in full: a screen reader speaks a live region's change by replacing the last, so a description has to
+  // be over (at about 14 characters a second, a reader's ordinary rate) before the next thing is spoken.
+  const spoken = [
+    ...DESCRIBED.map((d) => ({ at: d.at, n: d.said.length, d: true })),
+    ...SUBTITLES.map((sub) => ({ at: sub.at, n: sub.line.length + 8, d: false })),
+    ...[...CHAPTERS, ...CARDS].map((c) => ({ at: c.at, n: 20, d: false })),
+  ].sort((a, b) => a.at - b.at)
+  // A description is not to cut off anything, nor be cut off; the lines and cards are on their own clocks.
+  const cut = spoken.filter((x, i) => i + 1 < spoken.length && (x.d || spoken[i + 1].d) && x.at + x.n / 14 > spoken[i + 1].at)
+  check('all at once: every description is said in full, and cuts nothing off', cut.length === 0, cut.map((x) => x.at.toFixed(1)).join(', '))
 
   // The end credits: words the page sets over the dark room after the last hit, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')

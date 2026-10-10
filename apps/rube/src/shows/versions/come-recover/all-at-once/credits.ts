@@ -212,6 +212,37 @@ const SUB_FADE = 0.28
 /** Who speaks, for a screen reader, which cannot see roman from italic. */
 const WHO = { evelyn: 'Evelyn', joy: 'Joy', waymond: 'Waymond' } as const
 
+/**
+ * The audio description: for a viewer who cannot see the show, a few plain words at each scene and its turns,
+ * spoken by a screen reader as the show plays, between the lines of dialogue, as a film's described track is. Each is
+ * a card with nothing on it but its `said`, so nothing is seen: the page sets an empty card, a saved video paints none.
+ */
+export const DESCRIBED: { at: number; said: string }[] = [
+  { at: 2.2, said: 'The Wang family laundromat, at night. Waymond, a jade ball with a googly eye.' },
+  { at: 7.9, said: 'Evelyn, a vermilion ball, rolls onto a washer’s lever, and the machines begin.' },
+  { at: 19.3, said: 'The taxes, on an adding machine. Joy, a violet ball, comes in.' },
+  { at: 31.5, said: 'A crank throws her into a basket of lanterns, and then into the big dryer. Other worlds show in its glass.' },
+  { at: 60.0, said: 'Another life: a red carpet, in widescreen, the press’s flashes going off.' },
+  { at: 69.2, said: 'An alley in the rain. Waymond waits under a streetlamp.' },
+  { at: 82.4, said: 'The drain gives way and carries her from him.' },
+  { at: 86.5, said: 'A kung fu picture, an old print. Wooden men trade her blow by blow, up to a gong.' },
+  { at: 97.4, said: 'Hot dog fingers, playing a piano, in soft focus.' },
+  { at: 107.0, said: 'A cartoon kitchen. A raccoon under a chef’s hat works the levers.' },
+  { at: 121.1, said: 'A new world on every hit, then black.' },
+  { at: 128.1, said: 'She drifts down through the dark. A light finds Joy on a colossal bagel.' },
+  { at: 142.3, said: 'Everything goes into the bagel’s hole, one thing a beat, and she is drawn in after it.' },
+  { at: 171.2, said: 'The frame splits into her other lives, more and more of them, and Waymond is in nearly all of them.' },
+  { at: 191.5, said: 'Home. A googly eye lands on her. She gives one to each of Jobu’s machines, and each turns gentle.' },
+  { at: 200.4, said: 'Silence. Two stones on the edge of a canyon: hers, and Joy’s.' },
+  { at: 222.3, said: 'Evelyn follows, ledge by ledge, down to Joy.' },
+  { at: 233.0, said: 'Down to a dark ring in the sand, and in.' },
+  { at: 242.0, said: 'The bagel’s hole. Waymond’s line turns it back, and everything it took bursts out, each thing in its colour. A googly eye lands on Joy.' },
+  { at: 264.4, said: 'Through a washer’s window: home. The three of them, together.' },
+  { at: 283.0, said: 'A family portrait. The flash, and the photograph.' },
+  { at: 295.4, said: 'The lights go out.' },
+]
+const DESCRIBED_FOR = 1.2
+
 /** When a card has gone, show seconds. */
 export const goneAt = (card: Card): number => card.at + FORM + card.hold + GO
 
@@ -236,6 +267,9 @@ export function creditsAt(t: number): TitleCard[] {
         ? { key: `all-at-once-subtitle-${n}`, names: [sub.line], plain: true, light, rise: 0, at, scale: 0.62, least: SUB_LEAST / 5.6, said: `${WHO[sub.who]}: ${sub.line}` }
         : { key: `all-at-once-subtitle-${n}`, names: [], notes: [sub.line], plain: true, light, rise: 0, at: [at[0], at[1] + 0.006], scale: 1.75, least: SUB_LEAST / 1.95, said: `${WHO[sub.who]}: ${sub.line}` }
     out.push(card)
+  })
+  DESCRIBED.forEach((d, n) => {
+    if (t >= d.at && t < d.at + DESCRIBED_FOR) out.push({ key: `all-at-once-described-${n}`, names: [], light: 1, at: [0.5, 0.5], said: d.said })
   })
   if (t < CREDITS_AT) return out
   CARDS.forEach((card, n) => {
