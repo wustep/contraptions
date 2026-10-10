@@ -4,6 +4,7 @@ import { alpha, box, carried, frame, glow, hash, part, ring, rgba, route, smooth
 import { hop } from '../physics'
 import { MOVIE_MAT as M } from '../worlds'
 import { box2, lerp, seg, shape, soft, trackAt, vgrad, type Key } from './movie-kit'
+import { birds, bunting, butterflies, clouds, farTrees, flowerBed, hedge, homeWall, lounger, mailbox, partyTable, poolRing, sailboat, summerSky, tree, umbrella } from './movie-sets'
 
 /**
  * The home movie: their life on eight-millimetre film, as it might have been.
@@ -818,10 +819,6 @@ function reel(p: p5, k: number, weight: number, at: Pt, r: number, pack: number,
 
 /* ------------------------------------------------------------------ the shots */
 
-/** The sky of a shot: a gradient over the whole box, `top` to `low` at the horizon `yh`. */
-function sky(p: p5, k: number, b: Rect, top: string, low: string, yh: number): void {
-  vgrad(p, k, b.x0, b.y0, b.x1, b.y1, [[0, top], [Math.max(0.01, (yh - b.y0) / (b.y1 - b.y0)), low], [1, low]])
-}
 
 /** Flat ground from `y` down, across the box. */
 function flat(p: p5, k: number, b: Rect, y: number, fill: string | p5.Color, ink: string, w: number): void {
@@ -833,9 +830,14 @@ function flat(p: p5, k: number, b: Rect, y: number, fill: string | p5.Color, ink
 function drawHouse(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
-  sky(p, k, b, M.sky, M.cream, 0.2)
+  summerSky(p, k, b, 0.2)
   // A low sun behind the palm, very soft.
   glow(p, k, 0.3, -2.6, 2.4, M.cream, 0.55)
+  clouds(p, k, ink, w, t, [[-6.6, -3.35, 0.9], [-1.9, -3.1, 0.65], [1.6, -2.75, 0.5]])
+  birds(p, k, ink, w, t, -3.4, -2.95, 3)
+  // The tree beside the house, and the hedge along the back of the garden.
+  tree(p, k, ink, w, -2.45, FLOORY, 2.3, 0.75, t)
+  hedge(p, k, ink, w, -3.7, b.x1, FLOORY, 0.3)
   // The lawn and the path.
   flat(p, k, b, FLOORY, M.grass, ink, w)
   shape(p, k, [[STEP_X[0] - 0.1, FLOORY], [b.x1, FLOORY], [b.x1, FLOORY + 0.1], [STEP_X[0] - 0.1, FLOORY + 0.1]], M.warm, null)
@@ -863,6 +865,9 @@ function drawHouse(p: p5, t: number, c: Ctx, b: Rect): void {
     shape(p, k, [[x0, STEP_TOP[i]], [x1, STEP_TOP[i]], [x1, FLOORY], [x0, FLOORY]], M.warm, ink, w * 0.9)
   }
   seg(p, k, [-8.4, LAWN + 0.08], [STEP_X[3], LAWN + 0.08], alpha(p, ink, 0.3), w * 0.6)
+  // Flowers along the porch's foot; the mailbox by the gate.
+  flowerBed(p, k, ink, w, -8.3, STEP_X[3] - 0.1, FLOORY)
+  mailbox(p, k, ink, w, -0.45, FLOORY)
   // The pram, rocked by her hand on its handle.
   pram(p, k, ink, w, PRAM_X + rockAt(t), t)
   // The gate: he pushes it on its latch side; it swings away round its hinge and its spring brings it back.
@@ -972,8 +977,11 @@ function pram(p: p5, k: number, ink: string, w: number, x: number, t: number): v
 function drawParty(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
-  sky(p, k, b, M.sky, M.cream, LAWN - 0.8)
+  summerSky(p, k, b, LAWN - 0.8)
   glow(p, k, -1.6, -3.0, 2.2, M.cream, 0.5)
+  clouds(p, k, ink, w, t, [[-7.0, -3.0, 0.8], [-2.6, -3.3, 0.7], [0.4, -2.7, 0.45]])
+  // The tree at the end of the garden, its branch holding one end of the bunting.
+  tree(p, k, ink, w, -0.15, LAWN, 2.1, 0.7, t)
   // The hedge along the back of the garden, and the lawn.
   p.fill(alpha(p, M.teal, 0.75))
   p.stroke(ink)
@@ -984,6 +992,9 @@ function drawParty(p: p5, t: number, c: Ctx, b: Rect): void {
   p.vertex(b.x1 * k, (LAWN + 0.01) * k)
   p.endShape(p.CLOSE)
   flat(p, k, b, LAWN, M.grass, ink, w)
+  // Bunting from the house's eave (off to the left) to the tree, and the table with the lemonade behind the party.
+  bunting(p, k, ink, w, [-9.2, -2.55], [-0.4, -2.35], 0.32, t)
+  partyTable(p, k, ink, w, -1.55, LAWN)
   // The high chair: splayed legs, the seat he sits in, the tray with his cake.
   const cx = CHAIR_X
   const seat = CHAIR_SEAT + SON_R(0.85)
@@ -1090,11 +1101,14 @@ function balloon(p: p5, k: number, ink: string, w: number, i: number, s: number)
 function drawBeach(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
-  sky(p, k, b, M.sky, M.cream, SEA - 0.2)
+  summerSky(p, k, b, SEA - 0.72)
   glow(p, k, 1.5, -2.2, 2.6, M.cream, 0.6)
+  clouds(p, k, ink, w, t, [[-7.3, -2.2, 0.7], [-3.6, -2.45, 0.55], [-0.9, -2.0, 0.6]])
+  birds(p, k, ink, w, t, -5.6, -1.9, 2)
   // The far sea, a band to the horizon.
   shape(p, k, [[b.x0, SEA - 0.72], [b.x1, SEA - 0.72], [b.x1, b.y1], [b.x0, b.y1]], alpha(p, M.pool, 0.85), null)
   seg(p, k, [b.x0, SEA - 0.72], [b.x1, SEA - 0.72], alpha(p, ink, 0.5), w * 0.6)
+  sailboat(p, k, ink, w, -3.3 + (t - 358.5) * 0.03, SEA - 0.72)
   // The sand: flat, then sloping down into the sea at the right.
   const sand = (x: number) => (x < SEA_EDGE ? LAWN : LAWN + (x - SEA_EDGE) * 0.22)
   p.fill(M.cream)
@@ -1105,6 +1119,8 @@ function drawBeach(p: p5, t: number, c: Ctx, b: Rect): void {
   for (let x = b.x0; x <= b.x1 + 0.2; x += 0.25) p.vertex(x * k, sand(x) * k)
   p.vertex(b.x1 * k, b.y1 * k)
   p.endShape(p.CLOSE)
+  // Their umbrella and towel, up the beach behind her.
+  umbrella(p, k, ink, w, -7.55, LAWN, t)
   // The wet sand the waves have reached, darker.
   const reach = washAt(t)
   const wetTo = Math.min(reach.x, reach.far)
@@ -1219,8 +1235,11 @@ function bucket(p: p5, k: number, ink: string, w: number, t: number): void {
 function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
-  sky(p, k, b, M.sky, M.cream, LAWN - 0.7)
+  summerSky(p, k, b, LAWN - 0.7)
   glow(p, k, 1.2, -3.4, 2.4, M.cream, 0.6)
+  clouds(p, k, ink, w, t, [[-6.0, -2.75, 0.85], [-2.4, -3.15, 0.6], [1.0, -2.45, 0.7]])
+  birds(p, k, ink, w, t, -4.2, -2.3, 3)
+  hedge(p, k, ink, w, b.x0, b.x1, LAWN, 0.42)
   // A palm over the far side of the pool.
   palm(p, k, ink, w, 2.6, LAWN, 2.9, t)
   // The deck, terracotta tiles, and the pool sunk in it: its water, its lip, the depth.
@@ -1236,6 +1255,7 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
   p.vertex(x1 * k, 1.2 * k)
   p.vertex((POOL_X0 + 0.04) * k, 1.2 * k)
   p.endShape(p.CLOSE)
+  poolRing(p, k, ink, w, 1.75 + 0.05 * Math.sin(t * 0.4), WATER + water(1.75), t)
   // The light on the pool floor, wavering.
   for (let i = 0; i < 6; i++) {
     const x = POOL_X0 + 0.5 + i * 0.75 + 0.1 * Math.sin(t * 0.9 + i)
@@ -1245,6 +1265,7 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
     p.bezier(x * k, 0.95 * k, (x + 0.15) * k, 0.9 * k, (x + 0.25) * k, 1.0 * k, (x + 0.4) * k, 0.95 * k)
   }
   seg(p, k, [POOL_X0, LAWN], [POOL_X0, 1.2], ink, w)
+  lounger(p, k, ink, w, -5.5, LAWN)
   // The board: its stand on the deck, the plank out over the water, bending at its tip on each landing.
   box2(p, k, BOARD_ROOT - 0.15, LAWN + 0.06, BOARD_ROOT + 0.2, LAWN + 0.2, M.teal, ink, w * 0.8)
   const d = boardDip(t)
@@ -1359,8 +1380,10 @@ function drawField(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
   const late = smooth(t, CUTS[3], CUTS[4])
-  sky(p, k, b, M.sky, M.cream, -0.9)
+  summerSky(p, k, b, -0.9)
   glow(p, k, 6.5, -1.3, 3.2, M.orange, 0.25 + 0.2 * late)
+  clouds(p, k, ink, w, t, [[-1.4, -3.0, 0.75], [2.3, -3.25, 0.9], [5.6, -2.85, 0.6], [8.2, -3.1, 0.7]])
+  birds(p, k, ink, w, t, 1.0, -2.6, 3)
   // Far hills, soft.
   p.fill(alpha(p, M.teal, 0.55))
   p.noStroke()
@@ -1369,6 +1392,7 @@ function drawField(p: p5, t: number, c: Ctx, b: Rect): void {
   for (let x = b.x0; x <= b.x1 + 0.5; x += 0.5) p.vertex(x * k, (-1.0 - 0.35 * Math.sin(x * 0.55 + 1) - 0.15 * Math.sin(x * 1.3)) * k)
   p.vertex(b.x1 * k, b.y1 * k)
   p.endShape(p.CLOSE)
+  farTrees(p, k, ink, w, b.x0, b.x1, (x) => -1.0 - 0.35 * Math.sin(x * 0.55 + 1) - 0.15 * Math.sin(x * 1.3))
   // The meadow.
   p.fill(M.grass)
   p.stroke(ink)
@@ -1392,6 +1416,7 @@ function drawField(p: p5, t: number, c: Ctx, b: Rect): void {
   }
   // The tall ones along his way, each opening on its note as he goes by.
   for (let i = 0; i < FLOWER_X.length; i++) flower(p, k, ink, w, FLOWER_X[i], t - BLOOMS[i], i)
+  butterflies(p, k, ink, w, t, 2.2 + (t - CUTS[3]) * 0.3, -0.75)
 }
 
 /** A tall flower at x: a stem that he brushes, a bud that bursts open on the note, petals settling. */
@@ -1449,8 +1474,10 @@ function drawHome(p: p5, t: number, c: Ctx, b: Rect): void {
   seg(p, k, [(wx0 + wx1) / 2, wy0], [(wx0 + wx1) / 2, wy1], ink, w * 0.7)
   // The floor.
   shape(p, k, [[b.x0, floor], [b.x1, floor], [b.x1, b.y1], [b.x0, b.y1]], M.orange, ink, w)
-  // The lamp: a pole and a shade, its light on the wall.
+  // Their room: his piano, the pictures of their life on the wall, the rug, a plant.
   const lampOn = 1 - off
+  homeWall(p, k, ink, w, floor, lampOn)
+  // The lamp: a pole and a shade, its light on the wall.
   glow(p, k, LAMP_X, -1.45, 2.0, M.sun, 0.55 * lampOn)
   seg(p, k, [LAMP_X, floor], [LAMP_X, -1.35], ink, w * 1.2)
   box2(p, k, LAMP_X - 0.2, floor - 0.04, LAMP_X + 0.2, floor, M.teal, ink, w * 0.8)
