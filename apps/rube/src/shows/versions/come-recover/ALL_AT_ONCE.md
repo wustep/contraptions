@@ -136,7 +136,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 0 | the chord | The night of every life's lit window, the ring of them the show ends on, with a dark box in its hole, and the title, *Everything*, over all of them. On the chord's eight onsets the box's fluorescent tubes blink and catch: the Wang family laundromat, a lit box among the lit windows. From 1.5 the camera falls in toward it, the windows streaming out past the frame's edges, the shop coming up out of the night, then the street round it, until (6.2) it is the laundromat at night with a red neon washer in its window. On the way in Waymond sets a slumped, googly-eyed laundry bag back on its bottom. |
+| 0 | the chord | The Wang family laundromat at night, a lit box on a dark street, with a red neon washer in the window. On the chord's eight onsets the fluorescent tubes blink and catch, the one over Evelyn first. In the silence Waymond sets a slumped, googly-eyed laundry bag back on its bottom. |
 | 7.93 | the entry | She rolls onto the foot lever of the washer by the door. Four quarters drop from the coin column on the next four onsets, and the washer fills, spins up and walks toward the lever. |
 | 12.79 | the great hit | The washer jumps and slams onto the lever, and she is thrown across the shop into a heap of receipts. The receipts storm up and come down onto the spike, the audit letter last (16.78). |
 | 19.8 to 30 | the soft run | The taxes: she works the adding machine's long keyboard, rolling to a key on the long gaps and bouncing key to key on the quick notes, twenty strokes. On each one the crank ratchets, and the tape curls down the counter's end into loops on the floor. Joy comes in on the door's bell (20.19), crosses the shop, and stops right below her mother (23.74), leaning up toward her. Her mother does not look up. Joy turns and goes on the bell (29.37), and Waymond edges after her. Subtitled, high on the tile wall: *Mom? Can I —* (hers, in italic) / *Not now, Joy.* |
@@ -153,9 +153,9 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 86.30 | the flurry | the dojo | The kung fu picture she could have lived. Four wing chun wooden men trade her down their arms, tak-tak-tak, each arm swinging into her and ringing. A bo staff on a rope bats her over their heads, and a high kick sends her up to the bronze gong (95.42). A last kick is the jump. |
 | 97.15 | flurry | hot dog fingers | A pink room and a grand piano, played with the feet. Her shin is posed as the dummy's thigh was. She rides and bounces up the keys, each dipping and blushing lilac as it sounds, into a hand of floppy sausage fingers that drapes over her. On 103.56 she lands on the mustard bottle and it squirts. The index finger sags under her and snaps on 106.73. |
 | 106.73 | flurry | Raccacoonie | A teppanyaki chef who is a machine, and Raccacoonie inside the toque working the levers. The cleaver chops, and the spatula flicks her into the onion volcano, where she rattles like a lid. On 112.71 it erupts, and a shrimp tail is flung into the hat's pocket (113.69). In the breath the raccoon comes out under the brim and eats it, and in the last run an egg cracks on the spatula. |
-| 120.95 | six big hits | the surf | One long flight, and a new world on every hit: a piñata party, a sign spinner on a street corner, the IRS office with its trophies, karaoke under a mirror ball, then a canyon, held, where two stones sit on a ledge in the foreground, faintly vermilion and faintly violet: the rocks, before we know them. Then flashes of every world she came through, backwards, and black. In the IRS office Waymond sits on the auditor's desk, his eye on her as she flies past: the first life in which he is seen with her, before the mosaic has him in nearly all of them. |
+| 120.95 | six big hits | the surf | One long flight, and a new world on every hit: a piñata party, a sign spinner on a street corner, the IRS office with its trophies, karaoke under a mirror ball, then a canyon, held, where two stones sit on a ledge in the foreground, faintly vermilion and faintly violet: the rocks, before we know them. Then flashes of every world she came through, backwards, and black. |
 | 127.66 | two hits | the surf's end | Out of the black, every world she flew through comes back at her as slivers, clamps into a ring round her with a flash (127.66), spins, and collapses into her, down to a point (127.79). |
-| 127.79 | the hush | the dark | She drifts down through a dark full of far-off lit windows, every life's, the night the show opens and ends in (`void/farWindows.ts`). On each of the hush's nine quiet notes a ninth of them go out, until by 133.6 the dark is dark: Jobu's nothing. Seeds and salt pass at three depths, a sliver of colossal rim catching light below. On 133.79 a soft beam finds Joy, sitting still on the crown of the everything bagel, and a ring of everything gathers round her: Jobu's crown (`void/crown.ts`). Then the show's one conversation in shot and reverse shot: a cut to Jobu, close under her light, the ring going round her, for *There you are.*; to her mother alone in the dark for *Joy? What is this place?*; and back to Jobu for *Come and see.*, from whom the camera draws back and back until the whole lit bagel is in the frame and she is tiny on its crown. |
+| 127.79 | the hush | the dark | She drifts down through the dark, Jobu's nothing. Seeds and salt pass at three depths, a sliver of colossal rim catching light below. On 133.79 a soft beam finds Joy, sitting still on the crown of the everything bagel, and a ring of everything gathers round her: Jobu's crown (`void/crown.ts`). Then the show's one conversation in shot and reverse shot: a cut to Jobu, close under her light, the ring going round her, for *There you are.*; to her mother alone in the dark for *Joy? What is this place?*; and back to Jobu for *Come and see.*, from whom the camera draws back and back until the whole lit bagel is in the frame and she is tiny on its crown. |
 | 142 | the pulse | the pull | Everything drifts in on slow spirals and goes over the lip on the beats, one thing a beat: a coat hanger, a sock, a trophy, a dog. Each time the well's violet glow flares and the bagel throbs, hardest on the loudest beats, with dust kicked off the lip. Evelyn is drawn in on a decaying orbit, a step closer each bar. The camera rides the orbit with her, close, the crust streaming past and things going over the lip beside her, with a warm catch-light under her. On beat 56 the lip brakes her to the brink, and in the held break Joy watches from the crown. On 165.62 she tips in. Each thing trails a ribbon of its own life's colour along its spiral for its last second, and as it goes over the lip the ribbon is drawn in after it and a ring of that colour flares round the lip and goes out: thing by thing the dark takes her colours, which the peak gives back. |
 
 ### All at Once (165.6 s to the end)
@@ -795,7 +795,7 @@ watched whole between them. Their order is in git; here they are by what they di
 - **The chapters.** *Part one, Everything* over the storefront's dark glass (on a tall stage, the dark storey above
   the shop), *Part two, Everywhere* in the premiere's lower widescreen bar, *Part three, All at Once* in the dark she
   breaks into (`CHAPTERS` in `credits.ts`).
-- **The conversations.** Fifteen lines, the show's own, in subtitles (`SUBTITLES`): Evelyn in roman, the other in
+- **The conversations.** Seventeen lines, the show's own, in subtitles (`SUBTITLES`): Evelyn in roman, the other in
   italic, the frame's foot (or, at the taxes, its top) in shade across its width where the scene is pale (`subtitleBed`). The taxes are the wound (*Mom? Can I —* /
   *Not now, Joy.*) and the rest answers it: the alley's *Here. With me. Stay a little.* / *I can't.*; the hush, where
   Joy speaks first and ends *Come and see.*; the rocks, as the film's stones talk, opening on eight seconds of
@@ -809,8 +809,7 @@ watched whole between them. Their order is in git; here they are by what they di
   colour (by `THING_WORLD`), until the bagel stands black in a radiance of every life (`radiance`).
 - **Kindness up close.** The camera comes in on each eye she gives, opens out for the lob, holds the cradle as a
   two-shot with Waymond, and closes on the two of them.
-- **He is in every life.** Waymond sits on the IRS auditor's desk in the surf (`waymondIn` in `multi/surf.ts`), and in
-  everywhere at once he drops in beside her machine in more and more of her lives, Joy in some, eyeless yet
+- **He is in every life.** In everywhere at once Waymond drops in beside her machine in more and more of her lives, Joy in some, eyeless yet
   (`family` in `multi/mosaic.ts`).
 - **Every life once more.** Under the credits the lives she went through pass once through the washer's lit glass,
   the three of them together in each, in the picture each was in (`home/finale-lives.ts`); then the glass is its own
@@ -864,42 +863,9 @@ watched whole between them. Their order is in git; here they are by what they di
     lasts longer. Joy's burst at the peak is the same shape at her smaller size and keeps its old length, so the
     share card (255.75 s, just after it) is pixel for pixel the committed one.
   - The dive drew faster than the unchanged wall before it (33 against 14 fps at 4× throttle on a loaded machine).
-- **The opening is the ending, the other way.** The show opened on the laundromat; now it opens where it ends, in
-  the night of every life's lit window gathered in a ring, the title over them, and the tubes catching on the chord
-  light the box in the ring's hole: then the camera falls in to the shop (`OPEN_FROM` to `OPEN_TO` in
-  `home/multitude.ts`). Of all of them, this one, at both ends.
-  - The stage's camera is held at 150 cells (not 36, as at the end), so the lit box falling in is the shop itself;
-    beyond that it is a soft light the shape of its front. The night is cut round the shop's box, so the street and
-    the ground come up round it only when the fall is close.
-  - Every part in the laundromat, not only the room, now leaves itself undrawn while the night covers it (seen from
-    150 cells every one is in the frame): the night held 38 to 43 fps at 4× throttle on a loaded machine, as an
-    ordinary scene did (36 to 39). The fall itself dips to about 25 for its second and a half.
-  - Waymond's looks up at the tubes and at the bag were in the night now, too small to be seen; they are gone, and
-    the audio description says the windows instead (*Lit windows in the night. One of them: the Wang family
-    laundromat.*), with him named as Evelyn rolls in. For reduced motion the show opens on the laundromat, as before.
-- **The windows, all through.** The night of every life's lit window was the show's first and last image; now it
-  runs through the middle too (`void/farWindows.ts`). When the surf's worlds collapse into her, the dark she drifts
-  through is full of them, far off, fixed in the frame as the rocks' sun is; on each of the hush's nine quiet notes
-  (129.4 to 133.6) a ninth of them go out, so the beam that finds Jobu on 133.79 is the only light left. At the peak
-  they come on again, a few on each beat from `fall(142)` behind the radiance, and are all there round the bagel as it
-  becomes the washer's window. The audio description at the dark says so. The hush holds 60 fps at 4× throttle;
-  at the peak the cost was within the noise of paired runs.
-- **The third window.** The dryer's glass opens the multiverse and the washer's gives the lives back under the
-  credits; the bagel's hole, which was a dark well, is now the window between, where they are taken. All through the
-  pull (from the reveal to the tip in) rounds of her lives, the red carpet, the dojo, the hot dog piano and
-  Raccacoonie's kitchen, with nobody in them, spiral down the drain at the bottom of the well, off its middle, going
-  round and smaller and dark as they go, slow in the hush and quicker on the pulse (`drawTunnel` in
-  `home/finale-lives.ts`, read through `BagelPose.tunnel`). A first version laid them as concentric rounds and the hole
-  read as a great eye; spiralled, it reads as a drain. The pull holds 60 fps at 4× throttle.
-- **What he asks.** The film turns on Waymond asking for kindness, and here the great hit is where she gives it, but
-  he had said nothing that led there. Now, as the wall crowds toward the crescendo with him beside her in nearly every
-  life, he does, in the show's own words: *Be kind. Especially now.* (186.9 to 189.5, italic, spoken to a screen
-  reader as *Waymond: …*). The wall gets the subtitles' shade, deeper than anywhere, since it is the busiest picture.
-- **The opening's hand from light to shop.** At 15 fps the soft glow round the lit box vanished in one frame as the
-  real shop took over (2.93 to 3.00 s); it now fades as the fall goes on in, a dissolve.
-- **Overview, at both ends.** The opening and the draw back lay their windows round the show's camera; in Overview (the
-  viewer's O, the whole shop) the ring sat off to one side and a grey box floated in the night. The pieces are not told
-  which view is on, but through those stretches the show's camera is within a cell or so of home's window and Overview
+- **Overview, at the end.** The draw back lays its windows round the show's camera; in Overview (the viewer's O, the
+  whole shop) the ring sat off to one side and a grey box floated in the night. The pieces are not told which view is
+  on, but through the draw back the show's camera is within a cell or so of home's window and Overview
   is centred far from it, so the night stands aside there (`OVERVIEW` in `home/multitude.ts`) and the shop is seen.
 - **Measured, and a browser tried.** A whole-show frame-time sweep at 4× throttle held 55 to 60 fps everywhere but the
   peak (249 to 257 s, 38 to 44); the show as it was at the start of these passes measured the same there, side by side,
@@ -909,6 +875,35 @@ watched whole between them. Their order is in git; here they are by what they di
 - **The subtitles' shade.** The soft dark under a subtitle was an ellipse floating mid-frame, which on the rocks' pale
   canyon read as a smudge of dirt. It is now the frame's whole foot in shade, eased up to just over the words (at the
   taxes, its top, down to just under them), as a film's lower frame is under its subtitles.
+
+### Less: a subtraction pass
+
+The director's passes had each added something; this one watched the newest of them again and took out what did not
+earn its place. Nothing was added, the song is the same, and every jump and hit is where it was.
+
+- **The opening is the laundromat again.** For a while the show opened in the night of every life's lit window,
+  falling in to the shop. From that far out the windows read as a field of glitter, the shop as a grey strip in the
+  dark, and the tubes catching (the show's first beat) were too small to see; Waymond's looks at the tubes and the bag
+  had to go with it. It also spent the ending's one reveal in the first six seconds. The show opens on the shop again,
+  the tubes catching over Waymond as he looks up at them, and the night of windows is the last shot's alone.
+- **The hush is dark.** Far-off lit windows filled the dark she drifts into and went out a ninth at a time on the
+  hush's notes, then came back behind the peak's radiance. In the hush they read as a starfield, so the dark was busy
+  where it should be nothing, and at the peak they were a spatter of dots over the beams. Gone (`void/farWindows.ts`).
+- **The bagel's hole is a well.** Rounds of her lives spiralling down its drain through the pull read as a muddy pink
+  smudge in the hole, a third account of the dark taking her colours over the ribbons and the rings on the lip, which
+  already tell it. Gone.
+- **Waymond is not in the IRS office.** He sat on the auditor's desk in the surf, but the frame's foot cut him to a
+  sliver for the half second she flies past. The mosaic, where he is beside her in life after life, says it.
+- **Waymond does not say *Be kind. Especially now.*** It came over the wall of 144 lives just before the great hit, small
+  at the foot of the busiest picture in the show, and its shade dimmed the wall's lower rows on the crescendo. It said
+  out loud what the next ten seconds show: she gives each of Jobu's machines an eye. The alley's *Stay a little* and
+  home's *I'm staying* carry his part in words.
+- Kept, watched again: each life's own picture, the chapters, the other subtitles, Jobu's crown and the hush's reverse
+  shots, the rocks' reveal, the dive into the great hit, the lives in the washer's window, and the last shot's draw back
+  into the night of windows, now the show's one reveal of them.
+- Checked after the cuts: `check:shows` passes; the opening, hush, pull, peak, wall, great hit and ending watched again
+  frame by frame; the ending in Overview shows the shop; under reduced motion the show opens as before; the page logs no
+  errors.
 
 ### For every viewer
 
