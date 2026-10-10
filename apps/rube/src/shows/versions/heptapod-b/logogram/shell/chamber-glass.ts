@@ -309,19 +309,25 @@ function drawFloor(p: p5, k: number, g: number): void {
   }
 }
 
-/** As the ring closes the glass's light swells and fills the room: white rising over it all (the veil takes it after). */
-function drawSwell(p: p5, k: number, t: number): void {
-  const w = swellAt(t)
+/**
+ * As the ring closes the glass's light swells and fills the room: white rising over it all (the veil takes it after).
+ * `floor` is the floor's line in the drawing's own cells: the shaft's last stretch, which a wide frame shows past the
+ * chamber's left, goes white with it too, rather than standing grey in the white (its stone is darker than the
+ * chamber's lit walls, so it takes the swell at a greater `strength`).
+ */
+export function drawSwell(p: p5, k: number, t: number, floor = GLASS_BOT, strength = 1): void {
+  const w = Math.min(1, strength * swellAt(t))
   if (w <= 0.002) return
+  const air = Math.min(1, 0.6 * strength * swellAt(t))
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const f = frame(p, k)
   // From the glass: the light fills the air over the floor first, and the floor close behind it (never a dark slab
   // left standing in the white).
-  ctx.fillStyle = rgba(SHELL.glow, 0.6 * w)
-  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (GLASS_BOT - f.y0 + 1) * k)
+  ctx.fillStyle = rgba(SHELL.glow, air)
+  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (floor - f.y0 + 1) * k)
   // The polished floor takes the light as a reflection: brightest at its edge, under the glass, so the two meet in one
   // white, and less down toward us, so the floor reads as a floor going white rather than a grey slab under the white.
-  const top = GLASS_BOT
+  const top = floor
   // Over as much floor as the frame shows (a tall window, a phone, sees far more of it than the 16:9 frame does).
   const g = ctx.createLinearGradient(0, top * k, 0, Math.max(top + 4, f.y1) * k)
   g.addColorStop(0, rgba(SHELL.glow, Math.min(1, 1.5 * w)))

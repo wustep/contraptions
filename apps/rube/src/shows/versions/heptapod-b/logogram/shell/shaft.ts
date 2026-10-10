@@ -1,6 +1,7 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { box, carried, lookFrom, part, type Company, type Look, type PartShot } from '../kit'
 import { TURN } from '../music'
+import { drawSwell } from './chamber-glass'
 import { drawDeckOver, drawDeckRig, drawDust, drawMist, drawMistFront, drawPuffs, drawStone } from './shaft-draw'
 import {
   I_HOPS,
@@ -142,6 +143,7 @@ export const shaft = part<ShaftState>(
     over: (p, s, c) => {
       drawDeckOver(p, c, s.begin + c.t)
       drawMistFront(p, c, s.begin + c.t)
+      drawSwell(p, c.k, s.begin + c.t, Y_F, 1.6)
     },
   },
   (slot) => {
