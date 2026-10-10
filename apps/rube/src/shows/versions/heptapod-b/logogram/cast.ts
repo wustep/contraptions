@@ -518,8 +518,11 @@ export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase
   const n = 10
   for (let i = 0; i < 7; i++) {
     const a = -Math.PI / 2 + (i / 7) * TAU + 0.03 * Math.sin(phase * 0.3 + i)
-    const len = r * (0.92 + 0.08 * Math.sin(i * 2.1))
-    const curl = 0.16 * Math.sin(i * 1.7 + 0.6) + 0.04 * Math.sin(phase * 0.2 + i)
+    // The first points up the limb, behind its wrist: seen only as far as it is hidden there (its pad, curling out
+    // past the narrow wrist, read as a knob on the limb, not a finger).
+    const behind = i === 0
+    const len = behind ? r * 0.4 : r * (0.92 + 0.08 * Math.sin(i * 2.1))
+    const curl = behind ? 0 : 0.16 * Math.sin(i * 1.7 + 0.6) + 0.04 * Math.sin(phase * 0.2 + i)
     const w0 = r * 0.19
     const w1 = r * 0.078
     const left: Pt[] = []
