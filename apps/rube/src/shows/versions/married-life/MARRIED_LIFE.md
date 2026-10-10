@@ -749,6 +749,9 @@ window.
     half sure: the falls' near-white ribbon read as a stripe, a door or a road, and the cliff as a house, a tent or a
     temple. The falls are now water in all three of their places (the pop-up, the jar, the hall's painting): a pale
     blue, with deeper streaks falling in it and white spray at the foot (`fallStreaks`, `props/falls.ts`).
+  - *The tie wheel, re-watched* by a seventh viewer who has never seen Up (137 to 158 s, three frames a second): a
+    rotating tie rack that hands him the day's tie (85%), the years passing in routine (75%), the two of them greying
+    together (75%), calm and a little bittersweet. The earlier "fairground wheel" was the sparse sheets'. Kept.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
