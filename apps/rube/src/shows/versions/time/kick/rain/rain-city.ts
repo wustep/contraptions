@@ -422,11 +422,8 @@ function shop(pen: Pen, te: number): void {
   p.line(((wx0 + wx1) / 2) * k, wy0 * k, ((wx0 + wx1) / 2) * k, wy1 * k)
   // Its light: on the pavement under the awning and into the street.
   pool(p, k, [(x0 + x1) / 2 - 0.4, 0.02], 2.2, 0.16, RAIN.windowLit, 0.3 * glow)
-  const r = ctx.createLinearGradient(0, 0, 0, 0.55 * k)
-  r.addColorStop(0, rgba(RAIN.windowLit, 0.34 * glow))
-  r.addColorStop(1, rgba(RAIN.windowLit, 0))
-  ctx.fillStyle = r
-  ctx.fillRect((wx0 + 0.05) * k, 0, (wx1 - wx0 - 0.1) * k, 0.55 * k)
+  // Into the street: a soft pool fading out on every side (a window-wide box of light ended on hard vertical edges).
+  pool(p, k, [(wx0 + wx1) / 2, 0.22], (wx1 - wx0) / 2 + 0.7, 0.34, RAIN.windowLit, 0.3 * glow)
   bloom(p, k, [(wx0 + wx1) / 2, y + 1.1], 2.4, RAIN.windowLit, 0.16 * glow)
   // The awning: a canvas sloped out from the wall, its valance scalloped, dark against the lit window; it shivers as
   // the train goes by.
@@ -453,9 +450,11 @@ function shop(pen: Pen, te: number): void {
     if (i > 0) p.vertex((x - (x1 - x0 + 0.24) / n / 2) * k, (y + 0.3) * k)
   }
   p.endShape(p.CLOSE)
-  // Its arms back to the wall.
-  p.line((x0 + 0.1) * k, (y + 0.02) * k, (x0 + 0.1) * k, (y + 0.9) * k)
-  p.line((x1 - 0.1) * k, (y + 0.02) * k, (x1 - 0.1) * k, (y + 0.9) * k)
+  // Its arms back to the wall, each into a bracket on the wall under it (they hung from it and stopped in the air).
+  for (const ax of [x0 + 0.1, x1 - 0.1]) {
+    p.line(ax * k, (y + 0.02) * k, ax * k, (y + 0.62) * k)
+    p.rect((ax - 0.07) * k, (y + 0.58) * k, 0.14 * k, 0.12 * k)
+  }
   p.pop()
   // The drip off its edge, on the rain's clock: a thin sheet of drops falling from the valance.
   if (k > 16) {
