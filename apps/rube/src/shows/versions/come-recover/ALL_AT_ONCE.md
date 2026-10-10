@@ -85,7 +85,9 @@ Before most jumps the next world bleeds through for a frame or two, the way the 
 - Each flicker starts 60 ms after an onset, so the leg going out is seen striking it first.
 - There are two before a jump, on the last two onsets before it, so with the cut a jump stays under three flashes a
   second.
-- Six jumps have none:
+- Seven jumps have none:
+  - into everywhere at once, whose break is its own violet flare: a flicker there showed the mosaic's full wall of
+    worlds twenty seconds early;
   - the two that close in an iris, into the kitchen (the romance's heart) and into the surf (the cartoon's round):
     the iris is the jump, and a flicker of the next world whole in the middle of it broke it;
   - the first, which builds in the dryer's own glass instead;
@@ -939,6 +941,11 @@ The notes went back to the builders who made each part, who still had their cont
   the jump, as the dryer's glass and the mosaic's panels are theirs), and `check:shows` holds it. Into the dojo the
   flickers show it in its own print, and the bars hold through the cut; into the hot dog life they show it in its
   haze. Ten flickers in all, from thirteen.
+- **The rest of the jumps in motion.** The other five jumps were rendered as 30 fps filmstrips too. Out of the dryer,
+  into the dark, the great hit home and back through the washer's window all read cleanly. Into everywhere at once,
+  the two flickers showed the mosaic's full wall of 64 bright worlds over the dark bagel, a wall the show does not
+  reach until 184 s, and the largest swing of light in the show. That jump now has none; its violet flare is its
+  break. Eight flickers in all.
 
 ## The looks
 

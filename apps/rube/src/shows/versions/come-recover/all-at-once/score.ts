@@ -214,14 +214,16 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     }
   })
 
-  // The flickers: before every jump but six. The first builds in the dryer's own glass instead, the surf's worlds
+  // The flickers: before every jump but seven. The first builds in the dryer's own glass instead, the surf's worlds
   // collapse into her on their own before the dark, the fold home on the great hit is the mosaic's own (its panels
-  // flip there), and the drop into the rocks' silence is a clean cut. Into the kitchen and into the surf the picture
+  // flip there), and the drop into the rocks' silence is a clean cut. Into everywhere at once the break is its own
+  // violet flare into the dark, and a flicker of the mosaic there showed its full wall of worlds, twenty seconds early
+  // and the largest swing of light in the show. Into the kitchen and into the surf the picture
   // closes on her in an iris (`film.ts`), the romance's heart and the cartoon's round: the iris is the jump, and a
   // flicker of the next world whole in the middle of it broke it with a swing of light.
   const flickers: Flicker[] = []
   legs.forEach((leg, i) => {
-    if (i === 0 || ['premiere', 'pull', 'kindness', 'rocks', 'hibachi', 'surf'].includes(leg.key)) return
+    if (i === 0 || ['premiere', 'pull', 'mosaic', 'kindness', 'rocks', 'hibachi', 'surf'].includes(leg.key)) return
     if (calm !== true) flickers.push(...flickersBefore(i, leg.from, FLICKERS_A_JUMP))
   })
 

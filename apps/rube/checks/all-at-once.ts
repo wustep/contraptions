@@ -38,9 +38,9 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     jumpTimes.length === 11 && offJump.length === 0 && near(JUMPS.rocks, fall(0)), offJump.map((t) => t.toFixed(3)).join(', '))
   check('all at once: no portal anywhere, and no cut drawn', [0, 57.9, 58, 128, 191.3, 250, 300].every((t) => perf.cuts?.(t) === false))
   check('all at once: flickers only in the second before a jump, each a frame or three',
-    show.flickers.every((f) => f.to - f.from <= 0.1 && jumpTimes.some((j) => j - f.from > 0 && j - f.from < 1.0)) && show.flickers.length >= 10 &&
-    // and none into an iris, which is the jump itself: the kitchen's and the surf's.
-    !show.flickers.some((f) => [JUMPS.hibachi, JUMPS.surf].some((j) => j - f.from > 0 && j - f.from < 1.0)))
+    show.flickers.every((f) => f.to - f.from <= 0.1 && jumpTimes.some((j) => j - f.from > 0 && j - f.from < 1.0)) && show.flickers.length >= 8 &&
+    // and none into an iris, which is the jump itself (the kitchen's and the surf's), nor into everywhere at once.
+    !show.flickers.some((f) => [JUMPS.hibachi, JUMPS.surf, JUMPS.mosaic].some((j) => j - f.from > 0 && j - f.from < 1.0)))
   // With the cut itself, no more than two flickers a jump keeps the frame's light under three flashes a second.
   check('all at once: no more than two flickers before any jump, so a jump never flashes more than three times a second',
     jumpTimes.every((j) => show.flickers.filter((f) => j - f.from > 0 && j - f.from < 1.0).length <= 2))
