@@ -543,15 +543,16 @@ function drawFarShore(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
   haze.addColorStop(1, rgba(HOUSE.fog, 0.5 * L.fog))
   ctx.fillStyle = haze
   ctx.fillRect(x0 * k, (shore - 0.35 * s) * k, (x1 - x0) * k, 0.35 * s * k)
-  // Pines: narrow spires in stands and gaps, a far row and a nearer, darker one.
+  // Pines: narrow spires in stands and gaps, a far row and a nearer, darker one. Each stands at its own place on the
+  // shore (the nth of a row, a little off its mark), so the same tree is drawn there every frame as the view slides.
   const pines = (color: string, base: number, hMin: number, hMax: number, seed: number) => {
     ctx.fillStyle = color
     ctx.beginPath()
     ctx.moveTo(x0 * k, (base + 0.02) * k)
-    let v = (x0 - dx) / s
-    const v1 = (x1 - dx) / s
-    while (v <= v1) {
-      const n = Math.floor(v * 30)
+    const gap = 0.04
+    const n1 = Math.ceil((x1 - dx) / s / gap) + 1
+    for (let n = Math.floor((x0 - dx) / s / gap) - 1; n <= n1; n++) {
+      const v = gap * (n + 0.6 * (hash(n, seed, 5) - 0.5))
       const clump = 0.5 + 0.5 * Math.sin(v * 0.9 + seed) * Math.sin(v * 0.37 + seed * 2) + 0.25 * Math.sin(v * 2.3 + seed * 3)
       const h = (hMin + (hMax - hMin) * hash(n, seed, 2) ** 1.4) * (0.35 + 0.8 * Math.max(0, Math.min(1.2, clump))) * s
       const w = h * (0.26 + 0.1 * hash(n, seed, 3))
@@ -563,7 +564,6 @@ function drawFarShore(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
       ctx.lineTo((x + w * 0.3) * k, (base - h * 0.45) * k)
       ctx.lineTo((x + w * 0.18) * k, (base - h * 0.45) * k)
       ctx.lineTo((x + w * 0.5) * k, (base - 0.01) * k)
-      v += 0.04 * (0.6 + 0.8 * hash(n, seed, 5))
     }
     ctx.lineTo(x1 * k, (base + 0.02) * k)
     ctx.closePath()

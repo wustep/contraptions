@@ -64,15 +64,29 @@ function blob(ctx: Ctx, k: number, x: number, y: number, rx: number, ry: number,
   ctx.restore()
 }
 
+/**
+ * Where to sample a line from a to b: on a grid fixed in the world, not to the frame, at most two pixels apart (a
+ * power of two of a cell, so it changes only when the camera's scale halves or doubles), and at every multiple of
+ * each of `corners`, where the line has a corner (a crown's foot, a pine's tip). Sampled from the frame's edge, the
+ * points slid along the line as the camera moved and caught the trees' tops and the gaps between them differently
+ * each frame: the trees flickered.
+ */
+function along(a: number, b: number, k: number, corners: number[] = []): number[] {
+  const step = Math.max(2 ** Math.floor(Math.log2(2 / k)), 1 / 128)
+  const xs = [a, b]
+  for (let i = Math.ceil(a / step); i * step < b; i++) xs.push(i * step)
+  for (const c of corners) for (let i = Math.ceil(a / c); i * c < b; i++) xs.push(i * c)
+  return xs.sort((p, q) => p - q)
+}
+
 /** A silhouette across the frame: from `yAt(x)` down to `bottom`, sampled finely enough for the frame. */
-function silhouette(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, bottom: number, fill: string | CanvasGradient, x0 = -Infinity, x1 = Infinity): void {
+function silhouette(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, bottom: number, fill: string | CanvasGradient, x0 = -Infinity, x1 = Infinity, corners: number[] = []): void {
   const a = Math.max(f.x0 - 1, x0)
   const b = Math.min(f.x1 + 1, x1)
   if (b <= a) return
-  const step = Math.max((f.x1 - f.x0) / 260, 0.06)
   ctx.beginPath()
   ctx.moveTo(a * k, bottom * k)
-  for (let x = a; x <= b + step; x += step) ctx.lineTo(Math.min(x, b) * k, yAt(Math.min(x, b)) * k)
+  for (const x of along(a, b, k, corners)) ctx.lineTo(x * k, yAt(x) * k)
   ctx.lineTo(b * k, bottom * k)
   ctx.closePath()
   ctx.fillStyle = fill
@@ -132,6 +146,8 @@ const treeline = (x: number) => {
   }
   return 0.55 + 0.7 * fbm(x / 5, 14) + Math.max(crowns(0.55, 13, 0.32), crowns(0.83, 18, 0.4) - 0.08)
 }
+/** Where the treeline's crowns meet: its corners. */
+const CROWNS = [0.55, 0.83]
 
 /** The ridge nearest us, down the right of the picture: the helicopter comes round its shoulder. Its line, world y. */
 const softplus = (v: number, w: number) => w * Math.log(1 + Math.exp(v / w))
@@ -280,11 +296,11 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
     // In the daylight, the haze behind them shines, shafts slanting through it: the trees dark against it, rimmed.
     drawHaze(ctx, k, f, t)
     drawFarShafts(ctx, k, f, t)
-    silhouette(ctx, k, f, (x) => MEADOW - treeline(x), MEADOW + 0.5, tg)
+    silhouette(ctx, k, f, (x) => MEADOW - treeline(x), MEADOW + 0.5, tg, -Infinity, Infinity, CROWNS)
     const close = 1 - smooth(f.y1 - f.y0, 10, 30)
     if (d.sun > 0.01 && close > 0.01) {
       // Light through the leaves at the crowns' edge, soft into them: a glow, not a drawn line.
-      for (const [w, a] of [[0.025, 0.32], [0.07, 0.2], [0.16, 0.1]] as const) rim(ctx, k, f, (x) => MEADOW - treeline(x), w, rgba(VALLEY.floodlight, a * d.sun * close))
+      for (const [w, a] of [[0.025, 0.32], [0.07, 0.2], [0.16, 0.1]] as const) rim(ctx, k, f, (x) => MEADOW - treeline(x), w, rgba(VALLEY.floodlight, a * d.sun * close), CROWNS)
     }
   }
   // The meadow toward us: pale in the haze at the valley floor, darker nearer, with the shadows of the cloud on it.
@@ -304,17 +320,11 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
 }
 
 /** A rim of light along a silhouette's top edge, `w` cells deep. */
-function rim(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, w: number, fill: string): void {
-  const step = Math.max((f.x1 - f.x0) / 260, 0.04)
+function rim(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, w: number, fill: string, corners: number[] = []): void {
+  const xs = along(f.x0 - 1, f.x1 + 1, k, corners)
   ctx.beginPath()
-  let first = true
-  for (let x = f.x0 - 1; x <= f.x1 + 1 + step; x += step) {
-    const y = yAt(x)
-    if (first) ctx.moveTo(x * k, y * k)
-    else ctx.lineTo(x * k, y * k)
-    first = false
-  }
-  for (let x = f.x1 + 1 + step; x >= f.x0 - 1 - step; x -= step) ctx.lineTo(x * k, (yAt(x) + w) * k)
+  xs.forEach((x, i) => (i ? ctx.lineTo(x * k, yAt(x) * k) : ctx.moveTo(x * k, yAt(x) * k)))
+  for (let i = xs.length - 1; i >= 0; i--) ctx.lineTo(xs[i] * k, (yAt(xs[i]) + w) * k)
   ctx.closePath()
   ctx.fillStyle = fill
   ctx.fill()
@@ -943,8 +953,9 @@ export function drawValleyOver(p: p5, k: number, t: number): void {
     // Its line falls away to the left of -40, below any 16:9 frame, but a frame taller than 16:9 sees it fall: cut off
     // there, its end stood up as a sheer wall in the meadow. So it goes on to the frame's edge, laid under the ridge as
     // it always was and overlapping it a little, so the two are one shape and the ridge's own pines do not move.
-    if (f.x0 - 1 < -40) silhouette(ctx, k, f, line, Math.max(f.y1, 40) + 2, g, -Infinity, -39.5)
-    silhouette(ctx, k, f, line, Math.max(f.y1, 40) + 2, g, -40)
+    // Its pines' feet and tips are a third of a cell apart.
+    if (f.x0 - 1 < -40) silhouette(ctx, k, f, line, Math.max(f.y1, 40) + 2, g, -Infinity, -39.5, [1 / 3])
+    silhouette(ctx, k, f, line, Math.max(f.y1, 40) + 2, g, -40, Infinity, [1 / 3])
     void d
   }
   ctx.restore()
