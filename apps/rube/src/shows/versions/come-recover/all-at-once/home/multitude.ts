@@ -6,7 +6,7 @@ import { prefersCalm } from '../film'
 import { lightColor } from './finale-draw'
 import { DURATION } from '../music'
 import { PORT, SWELL, windowLight } from './finale-plan'
-import { ROOM } from './set'
+import { LIGHTS as ROOM_LIGHTS, ROOM } from './set'
 
 /**
  * The last shot: of all of them, this one.
@@ -76,6 +76,9 @@ export const veilHere = (t: number, x: number, y: number): number => {
   if (r <= 0.001) return v
   return v * smooth((Math.hypot(x - HOLE[0], y - HOLE[1]) - r * 0.55) / (r * 0.45))
 }
+// Once the night covers it all, the room is not drawn at all: nothing of it can be seen.
+ROOM_LIGHTS.hidden = (t: number): boolean => veilAt(t) >= 0.9995 && holeAt(t) <= 0.001
+
 export const veilShade = (hex: string, t: number, x: number, y: number): string => {
   const d = veilHere(t, x, y)
   return d <= 0.001 ? hex : mixHex(hex, NIGHT, d)
