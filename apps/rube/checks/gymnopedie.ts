@@ -14,6 +14,7 @@ import { BANK, BREAK, FIGURES, overcastAt, FIREFLY, GULLS, HEAPS, METEORS, MIST,
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 import { BAND, SHARES, SLICKS } from '../src/shows/versions/gymnopedie/orbit/ripples'
 import { LEAPS } from '../src/shows/versions/gymnopedie/orbit/dolphins'
+import { BLOSSOM } from '../src/shows/versions/gymnopedie/orbit/blossom'
 import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -159,6 +160,11 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: the dolphins leap once a period, each on a Gymnopédie bass note, by day, in a close shot',
     LEAPS.length >= 8 && LEAPS.every((l) => BASS.some((b) => b.t === l.t && b.piece === 0) && skyAt(l.t).night < 0.1 && cellsAt(l.t) < 9 && cellsAt(l.t + 1.45) < 9) &&
     new Set(LEAPS.map((l) => l.who)).size === 3)
+  // Bougainvillea: on some of the Gymnopédie's stones, never two side by side, never one with a gull on it.
+  const flowering = [...BLOSSOM.keys()].sort((a, b) => a - b)
+  check('gymnopedie: bougainvillea flowers on the colonnade, on stones apart, none with a gull',
+    flowering.length >= 12 && flowering.every((i, j) => STONES[i].piece === 0 && !PERCHED.has(i) && (j === 0 || i - flowering[j - 1] >= 3)),
+    `${flowering.length} flowering: ${flowering.join(', ')}`)
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5

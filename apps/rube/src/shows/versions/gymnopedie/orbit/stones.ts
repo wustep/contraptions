@@ -1,4 +1,5 @@
 import type p5 from 'p5'
+import { BLOSSOM, drawBlossom, plant } from './blossom'
 import { R as BALL_R, mixHex, type PieceCtx } from '../../../../parts'
 import { PERIOD, PIECES, wrap } from './music'
 import { LENGTH, RADIUS, STONES, along, ballLocal, float, since, sink, squash, stonesIn, type Stone } from './path'
@@ -280,6 +281,8 @@ for (const s of STONES) {
   PERCHED.set(s.index, { at: s.u1 - 0.18, face: hash(s.index, 213) > 0.35 ? -1 : 1 })
 }
 
+plant(new Set(PERCHED.keys()))
+
 /** Where a gull is `s` seconds after it lifts off, from its perch: cells along, and up. Startled up first, then away. */
 export const gullFlight = (s: number): [number, number] => [0.15 * s + 0.3 * s * s, 0.12 + 1.3 * s - 0.12 * s * s]
 
@@ -386,6 +389,8 @@ export function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: bool
       if (mirrored) p.scale(1, -1)
       if (stone.piece === 0) {
         column(p, k, sw, h, day, c.weight, Math.min(1, 0.7 * pulse(stone, c.t) + cadence(stone, c.t)), sun)
+        // Bougainvillea over the first of a flowering stone's spans.
+        if (j === 0 && BLOSSOM.has(stone.index)) drawBlossom(ctx, k, stone, sw, h, day, c.t)
       } else if (stone.piece === 1) {
         // Lit by the ball, and burning on behind it until dawn: Ariadne's thread in lamps.
         const lit = lampLight(stone, c.t)

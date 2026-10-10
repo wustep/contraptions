@@ -197,6 +197,19 @@ number of times in `f` of the way round, and its wind carries it a whole number 
 with the period like everything else. Anything in a layer fades towards the edge of its repeat (`inLayer`), so when the
 camera draws out wider than a repeat nothing jumps across the frame.
 
+## The colonnade in flower
+
+As on the far shore's islands, bougainvillea grows on the colonnade (`blossom.ts`): on twenty of its stones, never two side by
+side and never one with a gull on it, a vine climbs one column from the sea, winding, a leaf
+here and there, and spills over the slab in a cascade of magenta, hanging longest by its column and thinning along the
+slab towards the middle; never on the slab's top, where the ball rolls. It is the one strong colour in the morning's
+pale picture, greyed in the shower and gone to the dusk's colours as the light goes. And it answers the melody, as the
+perched gulls do: as the ball comes down on a flowering stone, on its note, ten petals shake loose and drift down,
+fluttering, carried a little back the way the ball came, to the water.
+
+Each stone's blossoms are one path to a colour, made once, and the colours once a frame: 0.3 ms a frame for all of them
+(the median of 30 with the CPU slowed six times; building the paths each frame had cost ten times that).
+
 ## The sea's surface
 
 The sea was a smooth gradient with its reflections on it. Now it has a surface (`ripples.ts`): wavelets seen in
@@ -330,7 +343,7 @@ measured at under a millisecond's difference, and left out.
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
 the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the aurora, the whale) and their
-layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; `blossom.ts` the colonnade's bougainvillea; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 
@@ -389,4 +402,5 @@ Gnossienne's pond; gulls perch on the colonnade and lift off as the ball lands o
 only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; every inner note lights a star of
 a constellation, at night; the aurora is the first Gnossienne's, in the full night only; the sun and the moon go round
 without a jump, the seam included; the far shore's windows are dark by day, lit in the night and out by the dawn, and
-the lighthouse is lit with the first lamp and put out by the dawn; the sea's surface comes round; the dolphins leap once, each on a Gymnopédie bass note, by day, close; the titles.
+the lighthouse is lit with the first lamp and put out by the dawn; the sea's surface comes round; the dolphins leap once, each on a Gymnopédie bass note, by day, close; bougainvillea flowers on stones apart, none with a
+gull; the titles.
