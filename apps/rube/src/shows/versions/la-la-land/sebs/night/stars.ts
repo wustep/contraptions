@@ -371,70 +371,6 @@ interface StarsState {
   o: Pt
 }
 
-/**
- * Their waltz, written in the sky. From the push-off each of them leaves a thread of light in their own colour, laid
- * into the sky's turning frame where they were, so the dome carries it round: two dancers turning in a turning sky draw
- * a rosette, and over the waltz the record of their dance blooms round the pole in blue and gold, braiding, the newest
- * brightest; on the swell it wheels with the star trails, and it goes with the lamps.
- */
-const TRAIL_DT = 1 / 30
-const TRAIL_FROM = LIFT + 0.4
-const unrot = (q: Pt, a: number): Pt => [q[0] * Math.cos(a) + q[1] * Math.sin(a), -q[0] * Math.sin(a) + q[1] * Math.cos(a)]
-const TRAILS: { s: number; seb: Pt; mia: Pt }[] = (() => {
-  const out: { s: number; seb: Pt; mia: Pt }[] = []
-  for (let s = TRAIL_FROM; s <= LAST; s += TRAIL_DT) {
-    const a = skyAngle(s)
-    const b = sebAt(s)
-    const m = miaAt(s)
-    out.push({ s, seb: unrot([b[0] - POLE[0], b[1] - POLE[1]], a), mia: unrot([m[0] - POLE[0], m[1] - POLE[1]], a) })
-  }
-  return out
-})()
-/** The last `back` seconds of their trails at `T`, in the night's frame: what the checks see. */
-export function waltzTrail(T: number, back = 2): Pt[] {
-  const out: Pt[] = []
-  for (const q of TRAILS) {
-    if (q.s > T) break
-    if (T - q.s <= back) out.push(inSky(q.seb, T), inSky(q.mia, T))
-  }
-  return out
-}
-function drawWaltzTrails(p: p5, k: number, T: number): void {
-  if (T < TRAIL_FROM) return
-  const fade = 1 - smooth(T, DARK[0], DARK[0] + 0.6)
-  if (fade <= 0) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const LV = 8
-  ctx.save()
-  ctx.lineCap = 'round'
-  ctx.lineJoin = 'round'
-  for (const [who, color] of [['seb', SEB], ['mia', MIA]] as const) {
-    const paths: Path2D[] = Array.from({ length: LV }, () => new Path2D())
-    let prev: Pt | null = null
-    for (const q of TRAILS) {
-      if (q.s > T) break
-      const age = T - q.s
-      // Newest brightest; a long tail, as a star trail's.
-      const a = Math.exp(-age / 9) * smooth(age, 0, 0.35)
-      const at = inSky(q[who], T)
-      if (prev && a > 0.02) {
-        const lv = Math.min(LV - 1, Math.floor(a * LV))
-        paths[lv].moveTo(prev[0] * k, prev[1] * k)
-        paths[lv].lineTo(at[0] * k, at[1] * k)
-      }
-      prev = at
-    }
-    for (const [w, a0] of [[0.07, 0.1], [0.018, 0.75]] as const) {
-      ctx.lineWidth = Math.max(1, w * k)
-      for (let lv = 0; lv < LV; lv++) {
-        ctx.strokeStyle = rgba(color, a0 * fade * ((lv + 0.5) / LV))
-        ctx.stroke(paths[lv])
-      }
-    }
-  }
-  ctx.restore()
-}
-
 export const stars = part<StarsState>(
   {
     name: 'stars',
@@ -484,8 +420,6 @@ export const stars = part<StarsState>(
         const a = (0.4 * smooth(T, KINDLED[0].at, KINDLED[0].at + 0.8) + 0.6 * smooth(T, DIP - 1.6, DIP - 0.8)) * (1 - smooth(T, DARK[0], DARK[0] + 0.5))
         drawPianoFigure(p, k, FIGURE_AT(), FIGURE_SIZE, FIGURE_TURN, draw, a, NIGHT_MAT.gold)
       }
-      // Their waltz, written in the sky.
-      drawWaltzTrails(p, k, T)
       // The lit stars, and theirs in the floor.
       for (const q of KINDLED) {
         if (T < q.at) continue

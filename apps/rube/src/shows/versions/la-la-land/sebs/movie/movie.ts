@@ -469,23 +469,6 @@ export function filmWeave(t: number): [number, number] {
   return [dx * on, dy * on]
 }
 
-/**
- * And it was shot by hand: someone in the family holding the camera. While the film fills the frame the picture sways
- * a little, slowly, the way a held camera breathes with its holder, and the zoom wanders in and out a little as a
- * home camera's does. The sway is a part of the frame's height, for the camera to carry; the zoom scales the frame.
- */
-export function handheld(t: number): { dx: number; dy: number; zoom: number } {
-  const on = smooth(t, GATE1, GATE1 + 0.8) * (1 - smooth(t, BACK0 - 0.6, BACK0))
-  if (on <= 0) return { dx: 0, dy: 0, zoom: 1 }
-  const TAU = Math.PI * 2
-  const dx = 0.015 * Math.sin(TAU * 0.31 * t + 0.4) + 0.0085 * Math.sin(TAU * 0.77 * t + 1.3) + 0.0035 * Math.sin(TAU * 1.9 * t + 2.2)
-  const dy = 0.011 * Math.sin(TAU * 0.43 * t + 2.0) + 0.007 * Math.sin(TAU * 0.91 * t + 0.6) + 0.003 * Math.sin(TAU * 2.3 * t + 1.1)
-  // The zoom drifts, in and out a little, never stopping: continuous through the splices, so at a match cut the three
-  // of them still stay exactly where they were.
-  const creep = 1 + 0.035 * Math.sin(TAU * t / 7.3 + 0.8) + 0.018 * Math.sin(TAU * t / 3.1 + 2.4)
-  return { dx: dx * on, dy: dy * on, zoom: 1 + (creep - 1) * on }
-}
-
 function drawFilm(p: p5, t: number, c: Ctx): void {
   const { k } = c
   const fr = frame(p, k)

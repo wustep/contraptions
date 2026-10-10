@@ -11,7 +11,7 @@ const MOVIE: [number, number] = [340.5, 395.3]
 /**
  * The grade: the room as it is, muted; the dream, in full colour, as the film's Epilogue does it. The real club at the
  * start is graded colder and greyer, her yellow and his blue with it; the colour comes in as the spotlight's iris
- * opens on Lipton's (39.95 to 41.9) and goes again as the rose drains out at the waking (451.5 to 453.73). Then on
+ * opens on Lipton's (39.95 to 41.9) and goes again as the colour drains out at the waking (451.5 to 453.73). Then on
  * The End's swell, as his notes rise to become their stars over the city, it comes back: the music brings it.
  */
 export function muted(t: number): number {
@@ -177,20 +177,6 @@ export const lens = scenery<{ iris: IrisAt } | null>({
     g.addColorStop(1, rgba('#000000', 0.2))
     ctx.fillStyle = g
     ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
-    // The dream's edge: all through the dream a soft glow of its rose at the corners of the frame, the colour the
-    // echoes bring into the real world; the drive and the last room wear it too, until the waking takes it away.
-    const dream = 1 - m
-    if (dream > 0.01) {
-      ctx.globalCompositeOperation = 'screen'
-      // Stronger, and further in, in the drive and the dream's last room, which look most like the room as it is.
-      const near = Math.max(0, Math.min(1, (t - 395.3) / 1.5)) * (1 - Math.max(0, Math.min(1, (t - 451.5) / 1.5)))
-      const d = ctx.createRadialGradient(f.cx * k, f.cy * k, r * (0.6 - 0.14 * near) * k, f.cx * k, f.cy * k, r * 1.02 * k)
-      d.addColorStop(0, rgba('#E46A9A', 0))
-      d.addColorStop(1, rgba('#E46A9A', (0.14 + 0.44 * near) * dream))
-      ctx.fillStyle = d
-      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
-      ctx.globalCompositeOperation = 'source-over'
-    }
     const tl = tile()
     if (tl) {
       const fi = Math.floor(t * 24)

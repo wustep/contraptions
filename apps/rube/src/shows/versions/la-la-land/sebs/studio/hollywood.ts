@@ -322,53 +322,6 @@ const SCRUB: [number, number, number][] = (() => {
   return out
 })()
 
-/**
- * The hillside's houses: this is the hill over the city at the magic hour, so it has its homes, small boxes under their
- * roofs tucked in below each stretch of the road, dark against the sunset until their windows come on, a band at a
- * time as the two of them climb past it, on the beats, and going out with the road's lamps at the end of the number.
- * Each: centre x, foot y, width, and when it lights.
- */
-const HOMES: { x: number; y: number; w: number; at: number }[] = (() => {
-  const out: { x: number; y: number; w: number; at: number }[] = []
-  const bands: [number, number][] = [[Y1 + FLOOR, 183], [Y2 + FLOOR, 191], [Y3 + FLOOR, 199], [YC + FLOOR, 207]]
-  bands.forEach(([up, b0], j) => {
-    const foot = up + 1.02
-    const [a, bb] = hillSpan(foot - 0.2)
-    let n = 0
-    for (let x = a + 0.45 + 0.2 * hash(j, 51); x < bb - 0.45; x += 0.62 + 0.28 * hash(Math.round(x * 10), 52 + j)) {
-      if (BUSH.some(([bx, by]) => Math.hypot(x - bx, foot - 0.2 - by) < RB + 0.45)) continue
-      out.push({ x, y: foot, w: 0.34 + 0.12 * hash(n, 53 + j), at: beat(b0 + 0.5 * (n % 4) + 0.25 * hash(n, 57 + j)) })
-      n++
-    }
-  })
-  return out
-})()
-function drawHomes(p: p5, c: Ctx, t: number, s: HollyState): void {
-  const { k, ink, weight } = c
-  const shown = paintAt(15, t)
-  if (shown < 0.02) return
-  const off = 1 - smooth(t, OUT[0], OUT[OUT.length - 1])
-  for (const h of HOMES) {
-    // Clear of the lamp posts on the stretch below.
-    if (s.lamps.some(([lx, ly]) => Math.abs(lx - h.x) < h.w / 2 + 0.12 && ly > h.y && ly - h.y < 0.7)) continue
-    const top = h.y - 0.26
-    const wall = mixHex(M.hillDeep, M.flat, 0.12)
-    p.stroke(rgba(ink, 0.5 * shown))
-    p.strokeWeight(weight * 0.5)
-    p.fill(rgba(wall, shown))
-    p.rect(X(k, h.x - h.w / 2), X(k, top), X(k, h.w), X(k, 0.26))
-    p.fill(rgba(mixHex(M.hillDeep, M.skyCoral, 0.25), shown))
-    p.triangle(X(k, h.x - h.w / 2 - 0.04), X(k, top), X(k, h.x + h.w / 2 + 0.04), X(k, top), X(k, h.x), X(k, top - 0.16))
-    const on = smooth(t, h.at - 0.02, h.at + 0.12) * off * shown
-    if (on > 0.01) glow(p, k, h.x, top + 0.12, 0.45, M.lamp, 0.22 * on)
-    p.noStroke()
-    for (const dx of h.w > 0.4 ? [-0.09, 0.09] : [0]) {
-      p.fill(on > 0.01 ? rgba(M.lamp, 0.25 + 0.7 * on) : rgba(M.hillDeep, shown))
-      p.rect(X(k, h.x + dx - 0.035), X(k, top + 0.07), X(k, 0.07), X(k, 0.09))
-    }
-  }
-}
-
 function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
   const { k, ink, weight } = c
   // The near hill stands in its own shadow against the sunset: deep indigo at its foot, a little lighter toward the
@@ -409,7 +362,6 @@ function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
       p.ellipse(X(k, x + r * 0.15), X(k, y - r * 0.35), X(k, r * 1.4), X(k, r * 0.5))
     }
   }
-  drawHomes(p, c, t, s)
   // The road: its hairpins first (up the face behind the bushes), then the stretches, blue, a pale line down each.
   const road = paint(15, t, M.road)
   const edge = mixHex(road, ink, 0.35)

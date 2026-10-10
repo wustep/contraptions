@@ -5,7 +5,7 @@
 import type { Performance, Version } from '../src/shows/registry'
 import type { ShowBall } from '../src/show'
 import { R } from '../src/parts'
-import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, KINDLED, figureDraw, inSky, waltzTrail } from '../src/shows/versions/la-la-land/sebs/night/stars'
+import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, KINDLED, figureDraw, inSky } from '../src/shows/versions/la-la-land/sebs/night/stars'
 import { DIP, sebAt } from '../src/shows/versions/la-la-land/sebs/night/painted-waltz'
 import { OUT as HOLLY_OUT } from '../src/shows/versions/la-la-land/sebs/studio/hollywood'
 import { show as sebsShow, covers as sebsCovers } from '../src/shows/versions/la-la-land/sebs'
@@ -23,7 +23,7 @@ import { emptyAt } from '../src/shows/versions/la-la-land/sebs/theatre/theatre'
 import { HORIZON, SIGN_AT, SIGN_U, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
 import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
-import { SONG_COUNT, partStar, songAt } from '../src/shows/versions/la-la-land/sebs/audition/shadow'
+import { SONG_COUNT, songAt } from '../src/shows/versions/la-la-land/sebs/audition/shadow'
 import { BAND_RISING, DREAM_CALL, lastNoteAt } from '../src/shows/versions/la-la-land/sebs/club/finale'
 import { HOUSE_SPAN, houseTop } from '../src/shows/versions/la-la-land/sebs/paris/jazz'
 import { HANDOFF, SKYLINE, soloThreads, towerDrawn } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
@@ -257,21 +257,6 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     }
   }
   check('sebs: every star the melody lights is lit in the picture', KINDLED.length === 11 && unseen.length === 0, unseen.join(', '))
-  // Their waltz is written in the sky: the newest of each one's trail, laid into the turning sky, is in the picture.
-  {
-    const trailOut: string[] = []
-    let points = 0
-    for (let T = 303; T < 338.5; T += 0.5) {
-      const [wx, wy] = show.where(T)
-      const [nx, ny] = sebAt(T)
-      const f = cam(T)
-      for (const [x, y] of waltzTrail(T)) {
-        points++
-        if (Math.abs(x + wx - nx - f.x) > (f.cells * 16) / 9 / 2 || Math.abs(y + wy - ny - f.y) > f.cells / 2) { trailOut.push(T.toFixed(1)); break }
-      }
-    }
-    check('sebs: their waltz is written in the sky, its newest stretch in the picture', points > 1000 && trailOut.length === 0, trailOut.slice(0, 6).join(', '))
-  }
   // The credits come up in open sky over the club, not across its roof and pelmet: while a card is up, the roof's line
   // is below the card's last line. (The first card once came up inside the club, on the pelmet's scallops.)
   const roofY = piano[1] + ROOM.roof
@@ -582,20 +567,6 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     let outside = 0
     for (let t = 90.5; t < 133; t += 0.05) if (t < 113.4 || t > 115.6) outside = Math.max(outside, emptyAt(t))
     check('sebs: at her show the empty house shows through only in the lead-in, full again when he springs up', outside === 0 && emptyAt(114.6) > 0.7 && emptyAt(115.6) === 0, `outside ${outside}`)
-  }
-  // At the audition she gets the part: the star off the signed paper comes to rest over her, in the picture, and stays
-  // with her through the flood.
-  {
-    const aud = show.holder(185)
-    const bad: string[] = []
-    for (let t = 190.6; t < 195; t += 0.1) {
-      const q = partStar(t)
-      const m = show.mia(t)
-      if (!q || !m) { bad.push(`${t.toFixed(1)} missing`); break }
-      const x = aud.col + q.x, y = aud.row + q.y
-      if (Math.abs(x - m.x) > 0.05 || y > m.y || m.y - y > 0.6 || !inShot(t, { x, y })) { bad.push(t.toFixed(1)); break }
-    }
-    check('sebs: at the audition the gold star from the signed paper settles over her, in the picture', bad.length === 0 && !partStar(189) , bad.join(', '))
   }
   // The grade: the room as it is muted, the dream in full colour all through, and the colour back at the last frame.
   {
