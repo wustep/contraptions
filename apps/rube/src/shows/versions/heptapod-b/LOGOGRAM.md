@@ -430,6 +430,17 @@ changed, in the order of the film, and then what runs through it:
   → 143.68, up to 10 px): its end runs on past her now. And the great ring's first stroke came in beside her with a
   square end (168.4), its tail held back from the first moment: it is held only near the close. She is on the ink in
   every frame now but the single frames she lands in.
+- **On a phone**: every frame at 1 fps and two fresh critics at four frames a second, in a 390 × 844 frame, which sees
+  more world above and below the composed one. The view through the lake house's window, and the valley's ground mist
+  and haze, judged how close the camera stood by the frame's whole height, which a tall frame makes look like a far
+  wider shot: through the window the far hills went, and the near firs stood huge in the lower panes (197 → 251, and
+  every lake house); close on the meadow its drifting mist was gone. They take the composed frame's height now, and a
+  16:9 frame is not changed by a pixel. Over the shell's departure (189.9 → 192.2), as the cloud began to open, its
+  fill was laid in strips that overlapped at fractional pixels, a comb of hairlines across the sky (worst on a phone,
+  in its top rows on a 16:9 frame): the strips meet on whole pixels now, and are fine enough that the opening thins
+  smoothly. Under the shaft's floor (75 → 93) the beds of stone ended in steep wedges where a tall frame shows them:
+  they fade out instead. And as the toss closes the ring round her (155.1), the ring she had just left still closed
+  in full ink below her, beside it: it draws back into the fog once the ring round her has closed.
 
 ## Arrival nods
 
