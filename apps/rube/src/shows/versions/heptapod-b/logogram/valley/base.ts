@@ -261,8 +261,9 @@ export const BASE_HITS: number[] = [
  * as the floods answer, until they set off for the lift. Elsewhere their eyes roll with them.
  */
 const UP_AT_SLOT = -Math.PI / 2 + 0.15
-const LOUISE_LOOKS: Look[] = [{ from: 36.0, to: 39.5, at: () => UP_AT_SLOT }]
-const IAN_LOOKS: Look[] = [{ from: 37.75, to: 39.85, at: () => UP_AT_SLOT }]
+// Held until each moves off (she at 40.1, he a little after), so no eye drops to the grass while they stand there.
+const LOUISE_LOOKS: Look[] = [{ from: 36.0, to: 40.05, at: () => UP_AT_SLOT }]
+const IAN_LOOKS: Look[] = [{ from: 37.75, to: 40.35, at: () => UP_AT_SLOT }]
 
 export const base = part<BaseState>(
   {
