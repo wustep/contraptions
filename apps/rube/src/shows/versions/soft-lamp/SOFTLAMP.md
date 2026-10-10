@@ -1113,6 +1113,16 @@ Not taken: the cat's half-lidded eyes (a taste), the mug away for its refill.
      the ring now: everything of the cushion in front of the hollow's near edge, the full width of the cup, down to just
      above the shell's bright rim, the hollow's edge and the seam drawn on it. The ball sits down in the dark.
 
+### The sixty-seventh pass: a pair of headphones
+
+180. **Every cold review put the headphones first or near it**, and a fifth said what the earlier patches had not fixed:
+     two unmatched dark shapes (a pincushion on a box, a black slab standing on edge) and a band leaving one from its
+     corner, a hose. Redrawn as one pair, in the same places so the machine is unchanged: cream shells and dark pads,
+     as lofi desks have them; the near cup a shallow bowl lying on its back, its dark pad a ring round the speaker cloth
+     with the ball in it; the far cup a rounded shell on its edge, its pad toward the near one, its lamp side lit; each
+     cup in a yoke, a fork round its middle, and the cream band, padded underneath, from yoke to yoke. The cream takes
+     the lamp, so the far cup is no longer a dark hole in the pool of light. The drawer line and the badge are gone.
+
 **Subtracted:** the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's

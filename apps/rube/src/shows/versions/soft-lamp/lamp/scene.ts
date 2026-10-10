@@ -520,10 +520,12 @@ function cushion(t: number): number {
   return d
 }
 
-const SHELL = '#2A2638'
-const SHELL_LIT = '#7A6A80'
-const PAD = '#3F3548'
-const PAD_LIT = '#B08A86'
+// A pair of cream headphones with dark pads, as a lofi desk has: light shells that take the lamp, dark pads that frame
+// the ball.
+const SHELL = '#4A3C4C'
+const SHELL_LIT = '#EDC9AE'
+const PAD = '#2A2232'
+const PAD_LIT = '#7A6270'
 
 /** The near cup's cushion, from the side: a soft pad with rounded shoulders and a hollow between them. */
 function cushionPath(ctx: Ctx, top: number): void {
@@ -545,62 +547,100 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   const lamp = lampAt(t)
   const warm = lampColor(t)
   const top = CUP.top + cushion(t)
-  // The band: from a yoke on the near cup's far side, up in an arch, and down onto the standing cup's crown.
-  const a = { x: CUP.x + CUP.halfW + 0.02, y: CUP.top + 0.2 }
-  const b = { x: FAR_CUP.x, y: -FAR_CUP.h + 0.04 }
-  const c1 = { x: a.x + 0.12, y: BAND_TOP - 0.18 }
-  const c2 = { x: b.x - 0.02, y: BAND_TOP - 0.34 }
+  const l = lightAt(CUP.x, -0.15) * lamp
+  // Cream reads as cream even at the pool's edge: the room's light on it, then the lamp's.
+  const shell = (k: number) => lit(SHELL, SHELL_LIT, Math.min(1, 0.32 * Math.max(0.4, lamp) + 0.75 * k))
+  // Each cup hangs in a yoke, a fork round its middle, and the band runs from yoke to yoke.
+  const w = CUP.halfW * 0.94
+  const nearYoke = { x: CUP.x + w + 0.01, y: CUP.top + 0.17, r: 0.1 }
+  const fx = FAR_CUP.x
+  const fw = FAR_CUP.halfW
+  const fh = FAR_CUP.h
+  const farYoke = { x: fx + 0.02, y: -fh, r: 0.12 }
+  const a = { x: nearYoke.x + nearYoke.r, y: nearYoke.y }
+  const b = { x: farYoke.x, y: farYoke.y - farYoke.r }
+  const c1 = { x: a.x + 0.16, y: BAND_TOP - 0.18 }
+  const c2 = { x: b.x - 0.04, y: BAND_TOP - 0.32 }
   const band = () => {
     ctx.beginPath()
     ctx.moveTo(a.x, a.y)
     ctx.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, b.x, b.y)
   }
+  // The band: a cream arch, its padding a dark strip along its underside.
+  const bl = lightAt((a.x + b.x) / 2, BAND_TOP, 0) * lamp
   band()
-  ctx.lineWidth = 0.1
+  ctx.lineWidth = 0.11
   ctx.strokeStyle = INK
   ctx.stroke()
   band()
-  ctx.lineWidth = 0.1 - lw * 2
-  ctx.strokeStyle = lit(SHELL, SHELL_LIT, lightAt((a.x + b.x) / 2, BAND_TOP, 0) * lamp * 0.7)
+  ctx.lineWidth = 0.11 - lw * 2
+  ctx.strokeStyle = shell(bl * 0.8 + 0.1)
   ctx.stroke()
-  // The padding along the top of the arch.
   ctx.save()
+  ctx.translate(0.025, 0.03)
   ctx.beginPath()
-  ctx.rect(a.x + 0.25, BAND_TOP - 1, b.x - a.x - 0.35, 1.25)
+  ctx.rect(a.x + 0.2, BAND_TOP - 1, b.x - a.x - 0.3, 1.25)
   ctx.clip()
   band()
-  ctx.lineWidth = 0.05
-  ctx.strokeStyle = lit(PAD, PAD_LIT, lightAt(a.x + 0.6, BAND_TOP) * lamp * 0.8)
+  ctx.lineWidth = 0.035
+  ctx.strokeStyle = lit(PAD, PAD_LIT, bl * 0.8)
   ctx.stroke()
   ctx.restore()
-  // The far cup, on its edge: the shell away from us, the cushion toward the near cup.
-  const fx = FAR_CUP.x
-  const fw = FAR_CUP.halfW
-  const fh = FAR_CUP.h
-  roundRect(ctx, fx - fw, -fh, fw * 2, fh, 0.16)
-  ctx.fillStyle = lit(SHELL, SHELL_LIT, lightAt(fx, -fh / 2) * lamp * 0.8)
+  // A yoke: a fork round the cup's middle, its arm out to the band.
+  const yoke = (y: { x: number; y: number; r: number }, from: number, to: number, k: number) => {
+    ctx.beginPath()
+    ctx.arc(y.x, y.y, y.r, from, to)
+    ctx.lineWidth = 0.05
+    ctx.strokeStyle = INK
+    ctx.stroke()
+    ctx.lineWidth = 0.05 - lw * 1.6
+    ctx.strokeStyle = shell(k)
+    ctx.stroke()
+  }
+  // The far cup, standing on its edge, its pad toward the near one: a rounded shell, the dark pad on its near face.
+  const fl = lightAt(fx - fw, -fh / 2) * lamp
+  roundRect(ctx, fx - fw * 0.55, -fh, fw * 1.55, fh, fw * 0.75)
+  const fg = ctx.createLinearGradient(fx - fw, 0, fx + fw, 0)
+  fg.addColorStop(0, shell(fl * 0.95 + 0.15))
+  fg.addColorStop(1, shell(fl * 0.45 + 0.05))
+  ctx.fillStyle = fg
   ctx.fill()
   stroke(ctx, lw)
-  roundRect(ctx, fx - fw - 0.05, -fh + 0.05, 0.16, fh - 0.1, 0.07)
-  ctx.fillStyle = lit(PAD, PAD_LIT, lightAt(fx - fw, -fh / 2) * lamp)
+  roundRect(ctx, fx - fw - 0.06, -fh + 0.04, 0.2, fh - 0.08, 0.09)
+  ctx.fillStyle = lit(PAD, PAD_LIT, fl * 0.9)
   ctx.fill()
   stroke(ctx, lw)
-  // The yoke on the near cup.
-  roundRect(ctx, CUP.x + CUP.halfW - 0.08, CUP.top + 0.13, 0.14, 0.12, 0.03)
-  ctx.fillStyle = lit(SHELL, SHELL_LIT, 0.4 * lamp)
-  ctx.fill()
-  stroke(ctx, lw * 0.8)
-  // The near cup's shell, lying on its back.
-  const w = CUP.halfW * 0.94
-  roundRect(ctx, CUP.x - w, CUP.top + 0.15, w * 2, -CUP.top - 0.15, 0.07)
-  const l = lightAt(CUP.x, -0.15) * lamp
+  // The lamp along its lit edge.
+  ctx.beginPath()
+  ctx.moveTo(fx - fw * 0.4, -fh + 0.06)
+  ctx.quadraticCurveTo(fx - fw * 0.55 + 0.02, -fh / 2, fx - fw * 0.4, -0.06)
+  ctx.lineWidth = 0.018
+  ctx.strokeStyle = rgba(warm, 0.6 * fl)
+  ctx.stroke()
+  yoke(farYoke, Math.PI * 1.05, Math.PI * 1.95, fl * 0.8 + 0.1)
+  // The near cup's shell, lying on its back: a shallow rounded bowl, its rim up.
+  ctx.beginPath()
+  ctx.moveTo(CUP.x - w, CUP.top + 0.15)
+  ctx.lineTo(CUP.x + w, CUP.top + 0.15)
+  ctx.bezierCurveTo(CUP.x + w + 0.01, -0.06, CUP.x + w * 0.8, 0, CUP.x + w * 0.6, 0)
+  ctx.lineTo(CUP.x - w * 0.6, 0)
+  ctx.bezierCurveTo(CUP.x - w * 0.8, 0, CUP.x - w - 0.01, -0.06, CUP.x - w, CUP.top + 0.15)
+  ctx.closePath()
   const g = ctx.createLinearGradient(CUP.x - w, 0, CUP.x + w, 0)
-  g.addColorStop(0, lit(SHELL, SHELL_LIT, l * 0.3))
-  g.addColorStop(1, lit(SHELL, SHELL_LIT, l * 0.9))
+  g.addColorStop(0, shell(l * 0.5 + 0.08))
+  g.addColorStop(1, shell(l * 0.95 + 0.12))
   ctx.fillStyle = g
   ctx.fill()
   stroke(ctx, lw)
-  // Its cushion, as pressed.
+  // The lamp along its rim.
+  ctx.beginPath()
+  ctx.moveTo(CUP.x - w * 0.3, CUP.top + 0.175)
+  ctx.lineTo(CUP.x + w - 0.04, CUP.top + 0.175)
+  ctx.lineWidth = 0.014
+  ctx.strokeStyle = rgba(warm, 0.55 * l)
+  ctx.stroke()
+  yoke(nearYoke, -Math.PI * 0.45, Math.PI * 0.45, l * 0.9 + 0.12)
+  // Its cushion, as pressed: the dark pad.
   cushionPath(ctx, top)
   const pg = ctx.createLinearGradient(0, top, 0, CUP.top + 0.17)
   pg.addColorStop(0, lit(PAD, PAD_LIT, l))
@@ -608,51 +648,32 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   ctx.fillStyle = pg
   ctx.fill()
   stroke(ctx, lw)
-  // Its face, seen a little from above: the cushion a ring round the dark speaker cloth, the ball sitting in it.
+  // Its face, seen a little from above: the pad a ring round the darker speaker cloth, the ball sitting in it.
   ctx.save()
   cushionPath(ctx, top)
   ctx.clip()
   ctx.beginPath()
   ctx.ellipse(CUP.x, top + 0.035, w * 0.62, 0.042, 0, 0, Math.PI * 2)
-  ctx.fillStyle = lit('#1E1A2A', '#4A4258', l * 0.6)
+  ctx.fillStyle = lit('#120E18', '#2E2636', l * 0.6)
   ctx.fill()
   ctx.lineWidth = lw * 0.7
   ctx.strokeStyle = rgba(INK, 0.7)
   ctx.stroke()
-  ctx.restore()
-  // What says headphones: the shell's bright rim where the cushion sits in it, a small badge on its side, and the
-  // cushion's stitched seam.
-  const metal = (k: number) => lit('#6E6A7E', '#E8D9C2', Math.min(1, l * 0.9 + k))
-  const rimY = CUP.top + 0.155
-  ctx.beginPath()
-  ctx.moveTo(CUP.x - w + 0.04, rimY)
-  ctx.lineTo(CUP.x + w - 0.04, rimY)
-  ctx.lineWidth = 0.022
-  ctx.strokeStyle = metal(0.15)
-  ctx.stroke()
-  const bx = CUP.x + 0.02
-  const by = (rimY + 0) / 2 + 0.01
-  ctx.beginPath()
-  ctx.ellipse(bx, by, 0.022, 0.018, 0, 0, Math.PI * 2)
-  ctx.fillStyle = metal(0.2)
-  ctx.fill()
-  ctx.save()
-  cushionPath(ctx, top)
-  ctx.clip()
+  // The pad's stitched seam.
   ctx.setLineDash([0.025, 0.02])
   ctx.beginPath()
-  ctx.moveTo(CUP.x - w + 0.05, rimY - 0.035)
-  ctx.lineTo(CUP.x + w - 0.05, rimY - 0.035)
+  ctx.moveTo(CUP.x - w + 0.05, CUP.top + 0.12)
+  ctx.lineTo(CUP.x + w - 0.05, CUP.top + 0.12)
   ctx.lineWidth = lw * 0.5
-  ctx.strokeStyle = rgba(INK, 0.45)
+  ctx.strokeStyle = rgba('#000000', 0.35)
   ctx.stroke()
   ctx.restore()
-  // The lamp along the cushion's far shoulder.
+  // The lamp along the pad's far shoulder.
   ctx.beginPath()
   ctx.moveTo(CUP.x + SHOULDER * 0.5, top + 0.02)
   ctx.quadraticCurveTo(CUP.x + SHOULDER + 0.06, top - 0.005, CUP.x + CUP.halfW - 0.02, top + 0.07)
   ctx.lineWidth = 0.016
-  ctx.strokeStyle = rgba(warm, 0.55 * l)
+  ctx.strokeStyle = rgba(warm, 0.45 * l)
   ctx.stroke()
 }
 
@@ -754,7 +775,7 @@ function lip(ctx: Ctx, lw: number, t: number): void {
   ctx.moveTo(cx - w + 0.05, CUP.top + 0.12)
   ctx.lineTo(cx + w - 0.05, CUP.top + 0.12)
   ctx.lineWidth = lw * 0.5
-  ctx.strokeStyle = rgba(INK, 0.45)
+  ctx.strokeStyle = rgba('#000000', 0.35)
   ctx.stroke()
   ctx.restore()
 }
