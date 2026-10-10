@@ -379,7 +379,8 @@ each world, and changed:
   critics' notes, close up and in a tall frame). Each wing now starts well inside the hull and is clipped to outside
   its outline: it goes in under the ring, as a wing behind a cut hull would.
 - **The jet bridge's wheels** (231 to 238): docked, its leg stood right on the plane's outer main gear, the two sets of
-  black wheels merged into one shape. Its leg is further back along it now, clear of the gear.
+  black wheels merged into one shape. Its leg is further back along it now, clear of the gear. And the seams between
+  its sections stop at its floor's underside (one ran on past it into the apron, plain under Zoom).
 - **The picture in the hotel's corridor** (92 to 107): it hung right over a wall lamp, the lamp's shade showing under
   its frame (a critic's note). It hangs on the bare wall between that lamp and the next door now.
 - **Limbo's garden on the beach** (0 to 30, 155 to 177): its lawn ran on 0.8 of a cell below the line the house and the

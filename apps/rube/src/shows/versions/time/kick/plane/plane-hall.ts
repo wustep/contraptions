@@ -52,7 +52,8 @@ function drawBridge(pen: Pen, t: number, f: Frame): void {
   shape(pen, [[front, roof - 0.22], [cab1, roof - 0.22], [cab1, roof - 0.12], [mid, roof - 0.12], [mid, roof - 0.05], [base, roof - 0.05], [base, roof + 0.08], [front, roof + 0.08]], STEEL, 0.7)
   shape(pen, [[front, floor], [base, floor], [base, floor + 0.17], [cab1, floor + 0.17], [cab1, floor + 0.24], [front, floor + 0.24]], STEEL, 0.7)
   box(pen, front, floor - 0.02, base, floor + 0.02, FLOORING, 0)
-  for (const x of [cab1, mid]) line(pen, [x, roof - 0.12], [x, floor + 0.2], rgba(PLANE.night, 0.55), 0.7)
+  // Each seam down to its sections' floor underside, the cab's lower one at its own (it ran on past the floor below).
+  for (const [x, foot] of [[cab1, floor + 0.17], [mid, floor + 0.17]] as const) line(pen, [x, roof - 0.12], [x, foot], rgba(PLANE.night, 0.55), 0.7)
   // Its lights along the ceiling.
   for (let x = front + 0.6; x < base - 0.2; x += 1.1) puff(pen, [x, roof + 0.18], 0.45, 0.18, HOME.sun, 0.35)
   // The canopy: pleats of the bellows from floor to roof, pressed to the hull's curve once it is docked.
