@@ -246,7 +246,7 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
     ctx.beginPath()
     ctx.rect(x0 * k, NEAR_EDGE * k, (x1 - x0) * k, (bottom - NEAR_EDGE) * k)
     ctx.clip()
-    earth(ctx, k, x0, x1, NEAR_EDGE, bottom)
+    earth(ctx, k, x0, x1, bottom)
     ctx.restore()
     line(ctx, k, [x0, NEAR_EDGE], [x1, NEAR_EDGE], INK, w * 0.8)
   }
@@ -343,7 +343,7 @@ function porch(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
     ctx.beginPath()
     ctx.rect(x0 * k, NEAR_EDGE * k, (x1 - x0) * k, (bottom - NEAR_EDGE) * k)
     ctx.clip()
-    earth(ctx, k, x0, x1, NEAR_EDGE, bottom)
+    earth(ctx, k, x0, x1, bottom)
     ctx.restore()
     line(ctx, k, [x0, NEAR_EDGE], [x1, NEAR_EDGE], INK, w * 0.8)
   }
@@ -419,7 +419,7 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
 
 /**
  * The earth under the house, cut: in a tall frame it is near half the picture, so it is not a blank. The footings go
- * down under the two walls in laid stone; the earth lies in soft bands, darker as it goes down, a few stones in it.
+ * down under the two walls; the earth lies in soft bands, darker as it goes down.
  */
 function ground(ctx: C2D, k: number, f: Frame, w: number, foot: number): void {
   const [fx0, fx1] = HOUSE.front
@@ -430,35 +430,20 @@ function ground(ctx: C2D, k: number, f: Frame, w: number, foot: number): void {
   ctx.beginPath()
   ctx.rect(fx0 * k, foot * k, (ex1 - fx0) * k, (bottom - foot) * k)
   ctx.clip()
-  earth(ctx, k, fx0, ex1, foot, bottom)
-  // The footings, a little wider than their walls, in courses of stone.
+  earth(ctx, k, fx0, ex1, bottom)
+  // The footings, a little wider than their walls.
   const depth = 1.1
-  for (const [a, b] of [[fx0, fx1 + 0.12], [ex0 - 0.12, ex1]]) {
-    shape(ctx, k, box(a, foot, b, foot + depth), mixHex(STONE, HOME.floorShade, 0.45), INK, w * 0.6)
-    ctx.strokeStyle = rgba(INK, 0.35)
-    ctx.lineWidth = Math.max(1, w * 0.35)
-    ctx.beginPath()
-    for (let r = 0, y = foot; y < foot + depth - 0.01; r++, y += depth / 4) {
-      if (r) {
-        ctx.moveTo(a * k, y * k)
-        ctx.lineTo(b * k, y * k)
-      }
-      const x = a + (b - a) * (r % 2 ? 0.35 : 0.65)
-      ctx.moveTo(x * k, y * k)
-      ctx.lineTo(x * k, (y + depth / 4) * k)
-    }
-    ctx.stroke()
-  }
+  for (const [a, b] of [[fx0, fx1 + 0.12], [ex0 - 0.12, ex1]]) shape(ctx, k, box(a, foot, b, foot + depth), mixHex(STONE, HOME.floorShade, 0.45), INK, w * 0.6)
   ctx.restore()
 }
 
 /**
- * The earth's soft bands, darker going down, and the stones in it, from `top` down, across `xa` to `xb`. The bands and
- * the stones lie from one origin wherever it is cut (under the house's slab), so the earth under the house, the porch
- * and the garden is one ground, its strata running on across, not three pasted panels. Callers clip to their cut.
+ * The earth's soft bands, darker going down, across `xa` to `xb`. The bands lie from one origin wherever it is cut
+ * (under the house's slab), so the earth under the house, the porch and the garden is one ground, its strata running
+ * on across, not three pasted panels. Callers clip to their cut.
  */
 const EARTH_AT = FLOOR + HOUSE.slab
-function earth(ctx: C2D, k: number, xa: number, xb: number, top: number, bottom: number): void {
+function earth(ctx: C2D, k: number, xa: number, xb: number, bottom: number): void {
   // The bands: each a little darker, their tops wandering gently.
   const bands = [0.55, 1.35, 2.4, 3.8]
   bands.forEach((d, i) => {
@@ -470,17 +455,6 @@ function earth(ctx: C2D, k: number, xa: number, xb: number, top: number, bottom:
     ctx.fillStyle = rgba(mixHex(HOME.floorShade, INK, 0.35), 0.1 + 0.03 * i)
     ctx.fill()
   })
-  // Stones in the earth, a few to a cell, flattened as stones lie.
-  ctx.fillStyle = rgba(mixHex(STONE, HOME.floorShade, 0.55), 0.42)
-  for (let i = Math.floor(xa); i < xb; i++)
-    for (let j = 0; j < 9; j++) {
-      const [x, y] = [i + hash(i, j, 41), EARTH_AT + 0.35 + j * 0.7 + 0.5 * hash(i, j, 42)]
-      if (y < top || y > bottom || hash(i, j, 43) < 0.45) continue
-      const r = 0.035 + 0.05 * hash(i, j, 44)
-      ctx.beginPath()
-      ctx.ellipse(x * k, y * k, r * 1.5 * k, r * k, (hash(i, j, 45) - 0.5) * 0.6, 0, Math.PI * 2)
-      ctx.fill()
-    }
 }
 
 /** A window in the hall's back wall, onto the side of the garden: sky and leaves, and its light on the sill. */
