@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../parts'
-import { glow, rgba, smooth } from './kit'
+import { frame, glow, rgba, smooth } from './kit'
 import { keyX } from './club/geometry'
 
 /**
@@ -97,16 +97,20 @@ export function call(notes: { t: number; midi: number }[], her: (t: number) => P
  * light and drifts up into the dark, slowing and fading, the notes of a phrase strung together as a thread. At Seb's,
  * now, from his first note until the camera finds her.
  */
-export function rising(notes: { t: number; midi: number }[], color: string, size = 1, life = 3.2): (p: p5, k: number, t: number) => void {
+export function rising(notes: { t: number; midi: number }[], color: string, size = 1, life = 3.2, height = 1.25, minPx = 0): (p: p5, k: number, t: number) => void {
   const beads = notes.map((n, i) => ({ t: n.t, x: keyX(n.midi), drift: 0.25 * Math.sin(i * 2.3) }))
   const at = (c: (typeof beads)[number], t: number): { x: number; y: number; a: number } | null => {
     const s = t - c.t
     if (s < 0 || s > life) return null
-    const rise = 1.25 * (1 - Math.exp(-s / 1.2))
+    const rise = height * (1 - Math.exp(-s / (1.2 * Math.sqrt(height / 1.25))))
     return { x: c.x + c.drift * (s / life), y: -0.72 - rise, a: Math.min(1, s / 0.08) * (1 - s / life) ** 0.9 }
   }
   return (p, k, t) => {
     const ctx = p.drawingContext as CanvasRenderingContext2D
+    // However far out the camera is, a bead keeps a size on the screen.
+    const fr = frame(p, k)
+    const px = ((fr.y1 - fr.y0) * k) / 540
+    const sz = (cells: number) => Math.max(cells * size * k, cells * 55 * minPx * px)
     ctx.save()
     ctx.lineCap = 'round'
     for (let i = 1; i < beads.length; i++) {
@@ -115,7 +119,7 @@ export function rising(notes: { t: number; midi: number }[], color: string, size
       const b = at(beads[i], t)
       if (!a || !b) continue
       ctx.strokeStyle = rgba(color, 0.4 * Math.min(a.a, b.a))
-      ctx.lineWidth = 0.012 * size * k
+      ctx.lineWidth = sz(0.012)
       ctx.beginPath()
       ctx.moveTo(a.x * k, a.y * k)
       ctx.lineTo(b.x * k, b.y * k)
@@ -124,10 +128,10 @@ export function rising(notes: { t: number; midi: number }[], color: string, size
     for (const c of beads) {
       const q = at(c, t)
       if (!q) continue
-      glow(p, k, q.x, q.y, 0.22 * size, color, 0.5 * q.a)
+      glow(p, k, q.x, q.y, sz(0.22) / k, color, 0.5 * q.a)
       ctx.fillStyle = rgba('#FFF6E2', 0.9 * q.a)
       ctx.beginPath()
-      ctx.arc(q.x * k, q.y * k, 0.035 * size * k, 0, Math.PI * 2)
+      ctx.arc(q.x * k, q.y * k, sz(0.035), 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.restore()

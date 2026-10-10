@@ -277,6 +277,9 @@ function plan(begin: number) {
 
 const PLAN = plan(BEGIN)
 
+/** What he plays with the band, from its first hit: the notes that rise from the club as the camera draws back. */
+export const BAND_TUNE: { t: number; midi: number }[] = bandTune().map((n) => ({ t: n.t, midi: n.midi }))
+
 /**
  * In the dream's last room the theme reaches her where she sits, as it did at the start, but warm with the dream's
  * rose: the notes the piano plays by itself go out to her table. When the dream drains on the last chord, the notes
