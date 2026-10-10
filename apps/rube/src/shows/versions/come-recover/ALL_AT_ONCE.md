@@ -754,300 +754,102 @@ The notes went back to the builders who made each part, who still had their cont
 - **A pass for Safari.** Twelve key frames were rendered in WebKit, Safari's engine (26.6, in a throwaway install),
   and compared with Chrome: the great hit's sunburst, Joy's violet burst, the bursts' clipping, the end's dark and
   the reduced-motion listener. They match, apart from the edges of type and lines, and the page reports no errors.
-- **A director's pass: the long way down, and every life in the window.** Small passes had stopped finding much, so
-  the show was watched whole again for what it most lacked, and two things were rebuilt.
-  - **The rocks' long way down** (219.6 to 241.8 s) is the film's most moving scene, and it was the show's emptiest
-    stretch: the camera drew back to 23 cells and held there, so for twenty seconds the two of them were specks on a
-    beige canyon, and their meeting on the bench, the moment their colour starts to come back, was two dots
-    touching. Now the camera goes over the brink after her and stays close, 3.3 to 4.8 cells, down the wall, the
-    long drop and the gorge, with room below her for where she is going. The meeting is a close two-shot (2.25
-    cells, pushing in to 2.05), and Evelyn looks at Joy through it. Where the stones touch, each one's own colour
-    comes back first: a round of it spreads over the stone from the touching side, turning with the stone as it
-    rolls, ahead of the slow return of the whole (`flushOf` in `ledge.ts`). The canyon's scale is kept for one
-    breath, on the long talus (about 9 cells), and the camera comes in again for the last bounds and the ring.
-    `check:shows` caught Evelyn leaving the Zoom frame for 0.1 s in a bound at 239.2 s; the framing there was
-    eased, and the worst is now 0.94 of the half-frame.
-  - **The tail** was thirty seconds of a still room under the credits. The show opened the multiverse in a window,
-    the big dryer's, at 46 s; now a window closes it. In the washer's lit glass the lives she went through come back
-    once, in the order back home, with the three of them together in each (`home/finale-lives.ts`): the bagel's
-    crown, three stones on the ledge, the griddle under the toque, the piano's keys, the dojo, the red carpet. The
-    family look up at the window all through them. Each comes and goes over three quarters of a second, and the
-    carpet's far flashbulb glints slowly, so nothing in the window flashes. After the carpet the glass is its own
-    light again, and on the swell they look at one another.
-- **A director's pass: every life its own picture.** Every world was drawn in the same clean full frame, so a jump
-  changed the set but never the film. Now the lives are pictures of their own kinds (`film.ts`): the movie star's in
-  widescreen, the kung fu picture an old scope print, the hot dog life a soft-focus romance, and home the plain full
-  frame. Coming home from the dojo's bars into the hot dog life's open frame, and from everywhere at once into the
-  laundromat, the picture opens up.
-  - The bars hid what the old framings left at the frame's edges. The checks for Zoom, for the family cut at the edge
-    and for the looks being seen now measure against the band between the bars. Under Zoom they found Evelyn out of
-    it for 6 s in the alley and on the carpet, because the camera stood well above her. The premiere's and the
-    alley's framings now keep her nearer the band's middle, with the carpet and the alley's floor low in it. Two of
-    the dojo's held shots follow her a little more as the kick sends her up to the gong. Under Zoom no cut by the
-    band lasts as long as a second.
-  - Nothing in the pictures flashes. The print's brightness does not flicker, and its grain is fine and dim. With
-    reduced motion asked for, the grain holds still and the scratches and dust are left out.
-  - Seen and kept: the jumps into each picture and out of it, the flickers (each shows the next life in its own
-    picture), Overview (where the bars stay, as the picture's own), Zoom, and ultrawide (a stage wider than 2.39:1
-    has no bars). On a tall phone stage the widescreen lives are a band across its middle, as a widescreen film is on
-    a phone, with black above and below where the full frame showed more world (see Known limits).
-- **A director's pass: every film at once.** The pictures were only the lives' own legs, so everywhere at once, the
-  climax, was still a wall of one kind of picture. Now each panel carries its life's look: the movie star's carpet and
-  alley between bars, the dojo an old print, the piano in its haze. The surf's new worlds gain looks of their own
-  (karaoke a VHS tape with a tracking band, the IRS office green under its tubes), and the surf's glimpses of the
-  lives carry theirs too. On the great hit every panel flips to the laundromat's plain frame, and the net snaps shut.
-  - In a tall panel (the two-way split at 170.8 s) the bars took half the height; a panel keeps at least 60% of it
-    between its bars.
-  - Measured in Chrome at 1440×810, scrubbing a frame at a time: with a look in every panel the 16- to 64-panel walls
-    took 23–27 ms a frame, against 16–17 ms without. So the many small panels get a light version (the grade, the
-    bars and the tape's scanlines, without grain, wear or vignette), and the walls are back at 16–17 ms, as before.
-    A panel drawn at the skins' finest detail (34 px a cell or more, so the first splits on a large stage) keeps the
-    whole look.
-  - The checks' band for widescreen now covers the surf's glimpses of the movie star's and the dojo's lives.
-- **A director's pass: the dark fills with every colour.** The peak is the loudest passage of the cue, and it was the
-  darkest picture in the show: the black bagel in the black, the same frame for 17 s. Now everything the bagel gives
-  back comes out with a beam of its life's colour behind it (`void/radiance.ts`, by `THING_WORLD`), round the whole
-  circle a golden step apart, so the radiance fills on every side and not only where things are thrown. Each beam
-  flares as it comes and settles to a glow that stays, and they wheel with a fifth of the bagel's turn. When the line
-  runs out they draw in and dim, and the hole's window light takes over for the cut home.
-  - They rise one a beat, each a narrow share of the frame, so the frame's light never swings as a flash does.
-  - Measured in Chrome at 1440×810: in the peak's close shots (252 s) the beams reached far past the frame and cost
-    14 ms a frame. They are clipped to the frame now, and every stretch of the peak is at 16.5–16.8 ms.
-- **A director's pass: the dark takes her colours first.** The peak's radiance gives back every life's colour, but
-  nothing had shown them being taken. Now in the pull each thing trails a ribbon of its life's colour for its last
-  second, which is drawn into the hole after it, and a ring of that colour flares round the lip and goes out
-  (`drain` in `void/radiance.ts`). The ribbons are in each life's first colour, never the carpet's or the dojo's red,
-  which beside Evelyn read as her own trail; the peak's beams keep both. Their pieces meet butt-ended, as round ends
-  overlapping beaded them. The pull holds 16–17 ms a frame with them.
-  - A whole-show sheet of 80 frames, after this and the passes before it: every world reads, and nothing has
-    regressed.
-- **A director's pass: each picture its own camera.** The lives had their own looks but one camera. Now the kung fu
-  picture crash-zooms on its five hardest blows, as a Shaw Brothers picture does, the gong's the deepest (it had a
-  punch of its own, which the crash replaces). The movie star's widescreen lens flares: every press flash and gun
-  throws a horizontal blue-white streak, and the alley's lamp and neon flare faintly (`flare` in
-  `star/premiere-light.ts`). Under Zoom, in the dojo's band, no cut lasts as long as a second with the crashes in.
-- **A director's pass: the romance and the cartoon end their scenes in their own way.** The hot dog life's soft-focus
-  romance now closes on her in a heart, and Raccacoonie's clean cartoon picture opens on her in a round iris and
-  closes on her in one, as a cartoon ends (`IRISES` in `film.ts`). Each fills the frame with black round a hole that
-  rides on her, smoothed over a fifth of a second; each takes most of a second, once, so none of them flashes. The
-  flickers before the jump into the kitchen still show it whole.
-- **A director's pass: the chapters.** The show is built on the film's three parts, but nothing told the viewer so.
-  Now each is named as it begins, as the film names its chapters: *Part one, Everything* over the storefront's dark
-  glass as the tubes come on (it was moved in off the bright wall and a light sign in the door), *Part two,
-  Everywhere* set in the premiere's lower widescreen bar as a film sets a title in its letterbox, and *Part three, All
-  at Once* in the dark before the laundromat comes up round her. `check:shows` holds the three to their names and
-  their parts (692 checks).
-- **An audit across the modes, after the director's passes.** The pictures, irises, crash zooms, chapters, beams and
-  ribbons were each checked where they change what a viewer sees:
-  - **Zoom:** the whole show swept at 48 frames; every world reads and she is in every frame.
-  - **The saved video:** its frames paint the page's words themselves (`shows/words.ts`), and that painter ignored a
-    card's `scale` and `plain`, which the page honours. A saved video would have set *Everywhere* at 1.6 times its
-    size, out of the widescreen bar it is set in. It now sizes and colours cards as the page does (a fix in the
-    shared file, which Boléro's and Soft Lamp's scaled credits needed too). A painted frame of each chapter and of
-    the first credit was compared with the page's.
-  - **Reduced motion:** rendered with the preference emulated, the dojo has no crash zoom and the print's grain holds
-    still; the irises, as cuts, stay.
-  - **Safari's engine:** nine frames of the new work (the bars, the print, the haze, the heart iris, the tape, the
-    pull's ribbons, everywhere at once, the radiance, the lives in the window) rendered in WebKit as in Chrome. Its
-    one failed request is the analytics' debug script, not the show.
-- **A director's pass: the alley step-printed.** The movie star's life borrows from Wong Kar-wai, and his signature,
-  step-printing, was missing from the alley it borrows him for. Now the descent to Waymond (70.6 to 76.3) and the
-  drain taking her (82.2 to 85.0) are held at six steps a second and smeared: the rain is drawn at the held step and
-  the two before it, fading (`stepPrint` in `star/premiere-alley.ts`), and the two of them leave stepped ghosts behind
-  them (`paintGhosts` in `film.ts`). A ghost shows only where its ball has moved from, so Waymond, waiting still, is
-  not veiled. All of it is worked out from the show's clock, so a scrubbed frame is the frame that played; the ball
-  and everything it strikes keep real time. Measured in Chrome at 1440×810, the alley holds 16.6–16.8 ms a frame with
-  the rain drawn three times over.
-- **The alley's step-printing, watched in motion, and the first glimpses of the lives.**
-  - A filmstrip at 30 fps through the descent showed the step-printing all but unseen: she floats slowly, the camera
-    rides with her, and her ghosts were only an eighth of a second behind her, where they were faded out as not having
-    moved. The steps are now six a second, the ghosts a step and a half and three steps behind (to half a second),
-    and a ghost fades only where it is within 0.7 of a radius of its ball. Her trail down the steps and her held steps
-    down the drain's shaft now read; Waymond, waiting still, is still clear.
-  - The big dryer's glass, where the lives are first seen (46 to 57 s), now shows each in its picture's colour: the
-    dojo's wedge an old print, the hot dogs' soft. Not the bars: in a wedge of the drum they read as black chunks.
-- **A director's pass: the rocks speak.** The rim's silence was the plainest stretch of the show, and the film's is
-  famous for one thing: its two stones talk in subtitles. Now these do (`SUBTITLES` in `credits.ts`, set by the page as
-  the chapters and credits are). The lines are the show's own, not the film's, eight in all, each on a note the stones
-  already move on. Evelyn's are in roman and Joy's in italic, so who speaks is told without a name, and a soft dark
-  low in the frame (`ledge.ts`) keeps the cream readable on the pale canyon. Nothing is said as Joy goes over. A new
-  check holds them to the canyon, one at a time, and silent at the brink (693 checks). A saved video's frame of each
-  kind matches the page's.
-  - The full `check:shows` run of the last pass, which an outside SIGTERM had cut short twice on a loaded machine,
-    finished: all 692 passed.
-- **A director's pass: the three conversations.** The rocks' subtitles made one scene speak; the show has three
-  conversations, and now all three do. In the alley, the film's "in another life", she and Waymond speak in the
-  widescreen's lower bar, as a Wong Kar-wai picture is subtitled, and in the hush Joy speaks first from the crown of
-  the bagel. Evelyn is always in roman and the other in italic. The rocks' soft dark is now one piece
-  (`subtitleBed` in `credits.ts`) under the hush's lines too, where the middle one sat over the bagel's seeds. The
-  check now holds every line to its own scene, one at a time, none over a jump. The lines are the show's own.
-- **The subtitles on a phone.** On an upright phone the 16:9 frame the page sets words in is about 220 px tall, and
-  the subtitles came out 7 px high, unreadable. A card can now set the least its type may be on the page
-  (`TitleCard.least`, a shared addition the page honours); the subtitles are never under 13 px, and the soft dark
-  under them grows and centres to match. The alley's still sit in its bar. On a desktop nothing changes.
-- **A director's pass: the callback.** In the alley Waymond asks her to *stay a little* and she says *I can't*. Home,
-  the three of them together at the washer's foot, he asks again, and she answers *I'm staying.* A fourth
-  conversation, two lines, and the subtitles' arc: the only lines the show says twice. The soft dark is under them in
-  the laundromat too. The check holds them to home, before the credits.
-- **A director's pass: the wound the conversations answer.** The subtitles had answers and no question. Now, at the
-  taxes, Joy comes to her mother and says *Mom? Can I —*, and her mother, not looking up, says *Not now, Joy.*
-  Everything said after answers it: Joy's *There you are.* in the hush, her mother's *Where else would I be?* on the
-  bench, and *I'm staying.* at home. The close two-shot has the family along the frame's foot, where the words covered
-  Joy and the counter's red, so this scene's subtitles sit high on the plain tile wall, left of the corkboard, and the
-  soft dark follows each scene's place. The check holds every line to its scene, the taxes now one of five.
-- **A director's pass: she learns his words, and the words together.** At the peak, once Joy has her eye and mother
-  and daughter look at each other, Evelyn says to her what Waymond said in the alley, *Here. With me.* It comes at
-  255.8 s, on the close shot, as the camera opens onto the radiance. That is after the share card's frame (255.75),
-  whose picture was rendered again and is pixel for pixel the committed one.
-  - Every stretch with words was then screenshotted on the real page together (the chapters, all six conversations,
-    the credits). Joy's and the others' lines, in italic, which the page sets a little faded, were faint on the
-    canyon; the soft dark under them is deeper now.
-- **The chapters and credits on a phone.** On an upright phone their fine print (*Part one*, each credit's role, the
-  cast's "as" lines, the notes) was 4–5 px high. They now set a floor of their own (`least`, 4.2 px a unit), and the
-  page keeps a card that grows past the stage's width inside it (a shared change: such a card is shrunk to fit and
-  kept within the edges). *Part one, Everything*, grown, would have crossed the bright washer, so on a tall stage it
-  lifts into the dark storey above the shop, as a title card. On a 1280×720 desktop nothing changes; at 960×540 the
-  chapters are a little larger, *Everywhere* still in its bar.
-- **A pass for frame time, after the director's passes.** They added drawing all through the show (the pictures,
-  irises, crash zooms, beams, ribbons, step-printing, the lives in the window), so the whole show was played at 1×
-  in real Chrome at 1440×810 on a 2× display: 19,816 frames, a mean of 16.7 ms (59.9 fps), but with ten frames over
-  33 ms, the worst 150 ms, on a machine at a load of 10 to 20 from other work. To tell the show from the machine, the
-  four heaviest stretches (the dryer's glimpses, the surf, everywhere at once, the peak's radiance) were played
-  alternately in this branch and in the show as it was before the director's passes (`7f5f9dd3`, in a scratch
-  worktree), twice each. Both hold 16.7 ms a frame, with the odd 20 to 48 ms frame in either as the load moves: no
-  regression. The spikes did not come back in either once the load fell.
-- **Considered and left:** a last drift of the washer's window to another life after the credits, as the film's
-  Evelyn drifts and comes back. The window already shows the red carpet last at 308.9 s, so it would have repeated a
-  beat rather than added one.
-- **A director's pass: kindness, up close.** The great hit's turn, the film's thesis, was shot at 4 to 6.3 cells:
-  at 1280×720, Evelyn 30 to 47 px across, but the eyes she gives each jumper small, and nothing framing the giving. The camera now comes in on each kindness (2.6 to
-  3.1 cells), framed between her and the jumper so her eye is seen to fly to it and land: the glove's punch going
-  soft, the trap's bite a toss, the mallet's blow a scoop. It opens out for the lob under the ceiling (4.3 to 4.7
-  cells, keyed from the throw, so she is never at the frame's top), comes in again on the claw, holds the cradle as
-  a two-shot with Waymond watching across the table, and closes to 2.2 cells as she steps down to him. Under Zoom her
-  worst is 0.88 of the half-frame.
-- **A pass for size, by measure.** The kindness pass's first account said Evelyn was "about 10 px" in the fight's
-  wide shots. That was measured from a contact sheet's thumbnail: at 1280×720 she was 30 to 47 px across. It is
-  corrected above. Measured properly over the whole show, Evelyn, and Joy and Waymond while in the frame, are at
-  least 14 px across everywhere but the hush (down to 11 px, small against the bagel on purpose). `check:shows` now
-  holds it (694 checks); at a 30 px threshold the check fails where it should, on the opening's wide shot, the
-  pull, the canyon's breath and the peak's wide shots.
-- **Overview, after the pictures.** The bars, the old print, the heart and the cartoon iris, karaoke's tracking
-  band and the wall of films all frame the whole world as the picture's own, and she is in each.
-- **A pass for motion at the jumps.** The film language is mostly in its transitions, so four jumps were rendered as
-  filmstrips at 30 fps. Into the kitchen and into the surf, the flickers before the jump showed the next world whole
-  in the middle of the iris closing on her: the romance's heart broken by two frames of a dark kitchen, and the
-  cartoon's iris by a bright piñata, each a large swing of light. Those two jumps now have no flickers (the iris is
-  the jump, as the dryer's glass and the mosaic's panels are theirs), and `check:shows` holds it. Into the dojo the
-  flickers show it in its own print, and the bars hold through the cut; into the hot dog life they show it in its
-  haze. Ten flickers in all, from thirteen.
-- **The rest of the jumps in motion.** The other five jumps were rendered as 30 fps filmstrips too. Out of the dryer,
-  into the dark, the great hit home and back through the washer's window all read cleanly. Into everywhere at once,
-  the two flickers showed the mosaic's full wall of 64 bright worlds over the dark bagel, a wall the show does not
-  reach until 184 s, and the largest swing of light in the show. That jump now has none; its violet flare is its
-  break. Eight flickers in all.
-- **An audit after the director's passes, in two more modes.** The whole show was swept with reduced motion asked
-  for, at 48 frames: every world, picture and line is there, the crash zooms, step-printing and grain left out as
-  they should be. Firefox was tried again and would not start (see Known limits).
-- **A director's pass: he is in every life.** Everywhere at once was the one long stretch with no story beat of its
-  own: a wall of her lives, and in none of them anyone she loves. Now Waymond is beside her machine in more and more
-  of them as the wall multiplies (`family` in `multi/mosaic.ts`): each panel's Waymond drops in on a beat of his own,
-  from beat 77, until about three panels in four have him by the crescendo, his googly eye turned to her. From beat
-  105 Joy is in about a third, on her side, without an eye, since hers comes at the peak. The home panel has neither,
-  and from the turn on 122 they are gone with every other world, so the fold brings her home to him waiting at the
-  table. The first placement stood them at the panels' edges, cut in the 2×2 views; they stand just past the
-  plank's ends now.
-  - Frame time could not be told from the machine's load in playback; measured by direct renders in the next pass.
-- **The mosaic's family, measured, and the last two jumps.** On a loaded machine playback could not tell the family's
-  cost from noise, so frames were rendered directly instead, in this commit and the one before it, interleaved:
-  at 182, 186.5 and 189.5 s, 1440×810 at 2× with the PNG's encode, a median of 57.7 ms with the family and 61.7 ms
-  without, over 36 each. The cost is below the noise. The drop into the rocks and the brink were watched at 30 fps
-  too, so all eleven jumps have been: the rocks a hard cut into the silence, the brink its two flickers and the cut.
-- **The full build, after the director's passes.** They changed three shared files (`words.ts`, `registry.ts`,
-  `player.ts`), and until now only the typecheck and `check:shows` had been run. `npm run build` passes: the
-  typecheck, every check suite (3,069 checks, three more than before: the chapters, the subtitles, the family's
-  size) and the production bundle. The show's chunk is 415.9 KB (152.5 KB gzipped), 23.6 KB (8.4 KB) more than
-  before the passes. The portrait and the photograph (290 to 296 s) were looked at again and are as they were.
-- **A trim pass.** The director's passes added a great deal, so the whole show was read again for what to take
-  out. Two lines went. The hush's last, *Everything. All of it, at once.*, said the show's title 24 s before its
-  chapter card does; Joy now says *Come and see.*, and the pull takes her mother in. On the rocks, four lines ran
-  nearly back to back through what the music plays as silence; *Somewhere nothing ever happened.* is cut, so *Where
-  are we?* is answered, after four seconds of quiet, by *It is quiet here. Nothing has to mean anything.* The film
-  looks, flares, crash zooms and step-printing were each looked at for whether they crowd their scene, and are kept:
-  each is in one life only, and each goes where that life ends.
-- **A second trim, of the script as a whole.** Read straight through, Evelyn asked where she was three times: *I don't
-  know where I am.* in the alley, *What is this place?* in the hush, *Where are we?* on the rocks. The third is cut.
-  The drop into the rocks is now silent for eight seconds, as the music is, and Joy speaks first there, as she does in
-  the hush. Fifteen lines in all.
-- **Two more stage shapes, on the real page.** The new work had been seen at 16:9, an upright phone and an ultrawide
-  frame, but never at 4:3, an iPad's. At 1024×768 the widescreen bars, the old print, the heart and the round iris,
-  the wall of films, the radiance, the chapters, every scene's subtitles and the credits all sit as they should, the
-  soft dark centred on each line (an apparent offset at the taxes was two crops pasted over each other; measured, it
-  is centred). At 1440×560 (2.57:1, wider than the widescreen) the widescreen lives have no bars, so *Everywhere* and
-  the alley's lines, set in the lower bar, land on the dark street and the drain, where they still read.
-- **A director's pass: he is first seen in another life.** The mosaic's beat, Waymond in her lives, arrived there
-  unannounced. Now, in the surf, he sits on the auditor's desk in the IRS office (the life where the film's other
-  Waymond first comes to her), his googly eye following her as she flies past (`waymondIn` in `multi/surf.ts`). He
-  was tried in all four of the surf's lives with a ground: in the party, the street corner and karaoke that ground is
-  below the frame, so he was there and never seen, and standing him on nothing would read wrong. So the IRS alone.
-  He first sat against the stamp's foot; he is between the stamp and the trophies now.
-- **A regression sweep after the last passes.** The whole show at 48 frames after the mosaic's family, the surf's
-  Waymond, the trims and the shared player's changes: every world reads, and nothing has regressed. `npm run build`
-  passes again (3,069 checks and the production bundle).
-- **Safari's engine, the whole show.** WebKit had seen only key frames of the director's passes. The whole show was
-  now scrubbed in it every half second, 663 frames, and again with reduced motion asked for: no errors (the one
-  failing request is the analytics' debug script). Page screenshots of the chapters, the step-printed alley, the
-  surf's Waymond, the mosaic's family, the rocks' subtitle and the peak's line match Chrome's.
-- **Heard, not only seen.** The show has dialogue now, and none of it reached a screen reader: the page's words layer
-  is `aria-hidden`, as its cards fade and blur. A card can now be spoken (`TitleCard.said`, a shared addition the
-  player honours through a visually hidden polite live region): once, as it first comes up while the show plays, and
-  not on a scrub or a seek. Every line is spoken with who says it (*Joy: Mom? Can I —*), since a reader cannot see
-  roman from italic; the chapters and the credits are spoken as they read. Played through the taxes, the alley and
-  the rocks, each line was heard once with its speaker, and seeking through them while paused said nothing.
-  `check:shows` holds it, and fails on a line without its speaker. `npm run build` passes (3,070 checks).
-- **An audio description.** With the dialogue spoken, a viewer who cannot see heard fifteen lines and the music and
-  nothing of what happens. Now the show has a described track, as a film does: 22 short descriptions, a few plain
-  words at each scene and its turns (*An alley in the rain. Waymond waits under a streetlamp.*), spoken between the
-  lines (`DESCRIBED` in `credits.ts`). Each is a card with nothing on it but its `said`, so nothing is seen (measured:
-  an empty, zero-sized card) and a saved video paints none.
-  - A live region speaks a change by replacing the last, so a description must be over before the next thing is
-    spoken, and must not cut anything off. Estimated at 14 characters a second, nine first descriptions would have
-    been cut or cut in; they are shorter now, two move past their chapter cards, and two are gone (*She steps down to
-    Waymond*, now in the kindness description; *Joy's stone goes over*, which had no room, and which *You don't have
-    to follow me*, *Joy —* and *I'm coming* already tell). `check:shows` holds both. Played on the real page, each was
-    heard once and in order with the lines.
-  - `npm run build` passes (3,072 checks).
-- **Sound captions.** The descriptions are for a viewer who cannot see. For one who cannot hear, the show was missing
-  the thing it is built on: every hit, jump and silence is the cue's. Now it has sound captions, as a film's are for
-  sound: 21 in brackets (*[A held chord, and quiet]*, *[A pulse comes in, and builds]*, *[Near silence]*, *[The
-  loudest passage]*), small at the top of the frame in a dark box of their own (`CAPTIONS` in `credits.ts`). They are
-  the viewer's choice: a "Sound captions" row in the player (a shared addition, `Performance.captions` and
-  `TitleCard.caption`), shown only for a show that has them, off by default, remembered in the browser. Not spoken (a
-  screen reader's user hears the music), and not in a saved video. Over the pale scenes, without their box, the
-  first ones all but vanished. A CC button in the transport row first crowded its clock under the music button; the
-  toggle has a row of its own now, with its On/Off at its edge. Checked on the real page: hidden for Gymnopédie,
-  off on a first visit, on with a click, kept across a reload, off again. `npm run build` passes (3,073 checks).
-- **Sound captions, finished.** C turns them on and off, as M, O and Z do their controls (a shared change, named in
-  the toggle's title; nothing for a show without captions), checked on the real page. On an upright phone and at 4:3
-  they read in their box; under the credits a caption at the top centre sat on the credit card's role line on both,
-  so from the credits on captions move to the frame's upper right, clear of the cards on every stage.
-- **The described track and the captions, timed against the show.** Read against when things happen, five
-  descriptions ran ahead of the picture, worse than none for a listener who cannot see: *A light finds Joy* 5.7 s
-  before it does, *a dark ring in the sand, and in* 8 s before they reach it, one at the hole that told the line, the
-  burst and Joy's eye up to 12 s early, and the portrait's flash 8 s early. They are split and re-timed (24 now), and
-  each is tied to the moment it describes (`of`, from the show's own clock where it has one); `check:shows` holds
-  each to be said no earlier, and caught a sixth, the taxes' (now on Joy's entrance). The captions sit on the cue's
-  own structure but for *[It fades out]*, a second ahead of the upload's fade; it starts with it now. `npm run build`
-  passes (3,074 checks).
-- **Spoken words at other speeds.** The described track and the lines are timed to be heard whole at 1×; at 2× or
-  4× each would have cut the last off. The player now speaks them only at 1× or slower (a shared change); on the real
-  page, playing through the taxes at 2× said nothing, and at 1× said the description and both lines.
-- **A review of the shared code this take added.** The words path in `player.ts` was read end to end. One fault:
-  the `least` clamp read a card's width twice a frame right after writing its styles, forcing a layout on every
-  frame a subtitle, chapter or credit was up (about a third of the show). A card's width goes as its unit, so it is
-  measured once as it is built; sixteen screenshots, phone and desktop, including the long credit that the clamp
-  shrinks on a phone, are pixel for pixel as before. An unused class on the captions toggle is gone. The speech's
-  bookkeeping, the empty description cards and the C key's handling were checked and are as intended.
+
+## The director's passes
+
+After the polish passes above had stopped finding much, a later session took the show further in larger passes,
+watched whole between them. Their order is in git; here they are by what they did.
+
+### Every life is its own film
+
+`film.ts`. A jump changes the picture as well as the world.
+
+- **The movie star's life** (the premiere and the alley) is 2.39:1 widescreen between black bars, with a soft vignette
+  and fine grain. Its lens flares: every press flash throws a blue-white streak, and the alley's lamp and neon flare
+  faintly (`flare` in `star/premiere-light.ts`). The alley, which the life borrows from Wong Kar-wai, is step-printed
+  at six steps a second while she floats down to Waymond and as the drain takes her: the rain in held steps with two
+  fading echoes, and stepped ghosts where the two of them have moved from (`stepPrint` in `star/premiere-alley.ts`,
+  `paintGhosts` in `film.ts`). It comes out
+  sharp for the touch.
+- **The kung fu picture** (the dojo) is a faded old scope print: lifted blacks, heavy grain changing 24 times a
+  second, a scratch and dust. It crash-zooms on its five hardest blows, the gong deepest (`CRASHES` in `score.ts`).
+- **The hot dog life** is a soft-focus romance, its edges a pink haze, and ends as a romance does, closing on her in a
+  heart-shaped iris as the finger snaps.
+- **Raccacoonie** is a cartoon: it opens on her in a round iris and closes on her in one before the surf (`IRISES`).
+- **The surf's new worlds** have looks too: karaoke is a VHS tape with a tracking band, the IRS office green under its
+  tubes.
+- **Home** is the plain full frame, so the picture opens up on the way home.
+- The looks carry wherever a life is seen: in everywhere at once (a wall of every kind of film, a lighter version in
+  small panels), the surf's glimpses, the big dryer's first glimpses (their colour, without bars, which in a wedge of
+  the drum read as black chunks), and the washer's window under the credits.
+- Into the two irises and into everywhere at once there are no flickers: the iris, and the mosaic's violet break, are
+  those jumps, and a flicker in the middle of them broke them or showed the mosaic's full wall twenty seconds early.
+
+### The story
+
+- **The chapters.** *Part one, Everything* over the storefront's dark glass (on a tall stage, the dark storey above
+  the shop), *Part two, Everywhere* in the premiere's lower widescreen bar, *Part three, All at Once* in the dark she
+  breaks into (`CHAPTERS` in `credits.ts`).
+- **The conversations.** Fifteen lines, the show's own, in subtitles (`SUBTITLES`): Evelyn in roman, the other in
+  italic, a soft dark under them where the scene is pale (`subtitleBed`). The taxes are the wound (*Mom? Can I —* /
+  *Not now, Joy.*) and the rest answers it: the alley's *Here. With me. Stay a little.* / *I can't.*; the hush, where
+  Joy speaks first and ends *Come and see.*; the rocks, as the film's stones talk, opening on eight seconds of
+  silence; at the peak Evelyn says Waymond's *Here. With me.* to Joy; and home, *Stay a little?* / *I'm staying.* A
+  trim pass took out three lines: one that said the show's title before its card, one that crowded the rim's
+  silence, and Evelyn's third question of where she was.
+- **The rocks' long way down** stays close on the two of them, with one wide breath on the long scree; where the
+  stones touch on the bench each one's colour comes back first (`flushOf` in `rocks/ledge.ts`).
+- **The dark takes her colours, and gives them back.** In the pull each thing trails a ribbon of its life's colour
+  into the hole (`drain` in `void/radiance.ts`); at the peak each thing given back comes out with a beam of that
+  colour (by `THING_WORLD`), until the bagel stands black in a radiance of every life (`radiance`).
+- **Kindness up close.** The camera comes in on each eye she gives, opens out for the lob, holds the cradle as a
+  two-shot with Waymond, and closes on the two of them.
+- **He is in every life.** Waymond sits on the IRS auditor's desk in the surf (`waymondIn` in `multi/surf.ts`), and in
+  everywhere at once he drops in beside her machine in more and more of her lives, Joy in some, eyeless yet
+  (`family` in `multi/mosaic.ts`).
+- **Every life once more.** Under the credits the lives she went through pass once through the washer's lit glass,
+  the three of them together in each, in the picture each was in (`home/finale-lives.ts`); then the glass is its own
+  light, and on its swell they look at one another.
+
+### For every viewer
+
+- **Heard.** The page's words layer is `aria-hidden`, as its cards fade and blur, so a card can be spoken (`TitleCard.said`): once,
+  as it first comes up while the show plays at 1× or slower. Every line is spoken with who says it, since a reader
+  cannot see roman from italic, and the chapters and credits as they read.
+- **Described.** An audio description, 24 short lines at the scenes and their turns, spoken between the lines on empty
+  cards nobody sees (`DESCRIBED`). Each is tied to the moment it describes (`of`) and is never said before it, is
+  short enough to be said whole at a reader's ordinary rate, and cuts nothing off.
+- **Captioned.** Sound captions for what the music does, 21 in brackets in a dark box at the top of the frame, on the
+  cue's own structure (`CAPTIONS`). They are the viewer's choice: a "Sound captions" row in the player, or C, off by
+  default and remembered (`Performance.captions`, `TitleCard.caption`); not spoken, not in a saved video.
+- **Read on a phone.** Words that must be read keep a floor on their size on the page (`TitleCard.least`), and a card
+  grown by it is kept within the stage.
+
+### How it was checked
+
+- **Every jump watched in motion** at 30 fps, and the whole show swept at 48 to 80 frames after the larger passes.
+- **Every stage and mode:** Zoom, Overview, an upright phone, 4:3, ultrawide (2.57:1, where the widescreen lives have
+  no bars), reduced motion, the saved video's painted words, and WebKit (the whole show scrubbed every half second
+  with no errors, its new pictures matching Chrome's). Firefox would not start where the passes ran.
+- **Frame time:** the heaviest stretches played against the show before these passes (`7f5f9dd3`), both at 16.7 ms
+  a frame; the
+  mosaic's family measured by direct renders, below the noise. The beams and the panels' looks were each made cheaper
+  where a first version cost too much.
+- **Size:** the family is at least 14 px across at 1280×720 everywhere but the hush. (A figure of "about 10 px" in
+  the kindness fight came from a thumbnail; she was 30 to 47 px.)
+- **The full build** passes after every round of them: 3,074 checks. The show's chunk is 415.9 KB (152.5 KB gzipped)
+  as of the film looks and the story, 23.6 KB (8.4 KB) more than before.
+
+### Shared code this take changed
+
+Each in its own commit; cards and shows that do not use them are as before.
+
+- `shows/words.ts`: a saved video sets a card at its `scale`, and a `plain` card's accents in cream, as the page does
+  (Boléro's and Soft Lamp's scaled credits needed it too).
+- `shows/registry.ts`, `shows/player.ts`: `TitleCard.least`, measured once per card rather than laid out every frame;
+  `TitleCard.said`, spoken through a visually hidden polite live region; `Performance.captions` and
+  `TitleCard.caption`, with the player's "Sound captions" row and the C key.
+- `shows/stage.ts`: a saved video leaves sound captions out. `src/ui/styles.css`: the captions' box and row.
 
 ## The looks
 
@@ -1157,6 +959,14 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - set by the page;
   - opening on "Directed by Claude Opus 5.5", and naming Evelyn, Joy, Waymond, Son Lux, the cue, the film, Daniels and p5.js;
   - with no demo disclaimer on the frame. The attribution file keeps it.
+- **The words:**
+  - the chapters, *Everything*, *Everywhere* and *All at Once*, each within a second of its part's start and gone well
+    before the next;
+  - the subtitles each in its own scene, one at a time, none over a jump, nothing said as Joy goes over;
+  - every line spoken to a screen reader with its speaker, and every chapter and credit spoken;
+  - the audio description: at every scene, unseen, never over a line, never said before what it describes, each said
+    whole and cutting nothing off at a reader's ordinary rate;
+  - sound captions offered, each one a caption card, unspoken, one at a time.
 - **The panel:** the work is Everything, one take, Opus 5.5, with no note and no byline.
 
 ## How it is built
