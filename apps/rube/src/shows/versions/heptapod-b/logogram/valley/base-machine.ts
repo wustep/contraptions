@@ -6,7 +6,7 @@ import { PULSES, pulse } from '../music'
 import { VALLEY } from '../worlds'
 import { PAD } from './camp'
 import { BELLY, MEADOW, SHELL_X } from './geo'
-import { clamp01, lobe, rgbOf, sm } from './set-air'
+import { clamp01, lobe, rgbOf, sm, softBeam } from './set-air'
 import { openAt } from './set'
 
 /**
@@ -146,7 +146,7 @@ const PUFFS: { t: number; size: number; dark: number }[] = [
   { t: COUGHS[0], size: 1.0, dark: 1.3 },
   { t: COUGHS[1], size: 1.3, dark: 1.4 },
   { t: CATCH, size: 1.8, dark: 1.5 },
-  ...RUN_PULSES.map((p) => ({ t: p.t, size: 0.35 + 0.55 * Math.min(1.4, p.g), dark: 0.25 })),
+  ...RUN_PULSES.map((p) => ({ t: p.t, size: 0.35 + 0.55 * Math.min(1.4, p.g), dark: 0.7 })),
 ]
 const PUFF_TIMES = PUFFS.map((p) => p.t)
 
@@ -209,17 +209,8 @@ export function drawLight(p: p5, k: number, t: number): void {
     const flare = Math.exp(-Math.max(0, t - LAMPS[i]) / 0.25)
     lobe(ctx, k, x, y, 1.6 + 2.6 * inFog + 1.2 * flare, 1.2 + 1.3 * inFog + 0.8 * flare, lamp, (0.42 + 0.3 * flare) * on * (1 + 0.6 * inFog), 0.2)
     lobe(ctx, k, x, y, 0.45, 0.4, warm, 0.8 * Math.min(1, on), 0.3)
-    // A soft fan of light down and out over the camp.
-    const g = ctx.createLinearGradient(x * k, y * k, (x + side * 2) * k, (y + 3) * k)
-    g.addColorStop(0, `rgba(${lamp}, ${0.18 * on})`)
-    g.addColorStop(1, `rgba(${lamp}, 0)`)
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(x * k, (y - 0.1) * k)
-    ctx.lineTo((x + side * 3.2) * k, (y + 2.2) * k)
-    ctx.lineTo((x + side * 1.2) * k, (y + 3.4) * k)
-    ctx.closePath()
-    ctx.fill()
+    // A soft fan of light down and out over the camp: soft across, gone at its end, never a pane's edge.
+    softBeam(ctx, k, [x, y], [x + side * 2.4, y + 3], 0.15, 2.6, lamp, 0.42 * on, 'lampFan', fanAlong)
   })
   // The head's bank: four lamps looking up at the belly, their light a long soft wedge to it.
   const head = lampAt(t, HEAD)
@@ -245,30 +236,17 @@ export function drawLight(p: p5, k: number, t: number): void {
   })
 }
 
+/** Down a mast lamp's fan: bright at the lamp, gone where it reaches. */
+const fanAlong = (v: number): number => (1 - v) ** 1.2
+
+/** Along a flood's beam: brightest at the lamp, fading up through the fog to the belly, and gone at its end (the pool
+ * on the belly is its own), so its end is never a hard line across it. */
+const floodAlong = (v: number): number => (v < 0.6 ? 1 - (0.55 * v) / 0.6 : 0.45 - (0.3 * (v - 0.6)) / 0.4) * (1 - sm(v, 0.82, 1))
+
 /** A soft beam of light from `a` to `b`, `w0` wide at its source and `w1` at its end, fading along it. */
 function beam(ctx: CanvasRenderingContext2D, k: number, a: Pt, b: Pt, w0: number, w1: number, rgb: string, al: number): void {
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  const L = Math.hypot(dx, dy)
-  const nx = -dy / L
-  const ny = dx / L
-  const g = ctx.createLinearGradient(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-  g.addColorStop(0, `rgba(${rgb}, ${al})`)
-  g.addColorStop(0.6, `rgba(${rgb}, ${al * 0.45})`)
-  g.addColorStop(1, `rgba(${rgb}, ${al * 0.15})`)
-  ctx.fillStyle = g
-  // Two passes, a wide faint one and the core, so its edges are soft.
-  for (const [s, f] of [[1.8, 0.45], [1, 1]] as const) {
-    ctx.globalAlpha *= f
-    ctx.beginPath()
-    ctx.moveTo((a[0] + (nx * w0 * s) / 2) * k, (a[1] + (ny * w0 * s) / 2) * k)
-    ctx.lineTo((b[0] + (nx * w1 * s) / 2) * k, (b[1] + (ny * w1 * s) / 2) * k)
-    ctx.lineTo((b[0] - (nx * w1 * s) / 2) * k, (b[1] - (ny * w1 * s) / 2) * k)
-    ctx.lineTo((a[0] - (nx * w0 * s) / 2) * k, (a[1] - (ny * w0 * s) / 2) * k)
-    ctx.closePath()
-    ctx.fill()
-    ctx.globalAlpha /= f
-  }
+  // Its whole soft width takes in what was its faint outer pass.
+  softBeam(ctx, k, a, b, w0 * 1.8, w1 * 1.8, rgb, al * 1.4, 'flood', floodAlong)
 }
 
 /** A floodlight's head (its lens), and the point on the belly it looks at. */
@@ -377,16 +355,22 @@ export function drawStarter(p: p5, k: number, t: number, { ink, weight }: Ink): 
       lobe(p.drawingContext as CanvasRenderingContext2D, k, x + side * (0.2 + 0.7 * Math.sqrt(u)) * size, MEADOW - 0.1 - 0.25 * u, r, r * 0.6, dust, 0.45 * (1 - u) * (1 - u), 0.4)
     }
   }
-  // The exhaust: soft puffs rising off the stack and drifting back, the coughs dark.
+  // The exhaust: soft puffs rising off the stack and drifting back, the coughs dark. Each is a short burst out of the
+  // stack, not one ball of smoke leaving it: the cloud is seen to come from the stack.
   const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const pf of PUFFS) {
-    const age = t - pf.t
-    if (age < 0 || age > 2.2) continue
     if (pf.t > t + 0.01) break
-    const u = age / 2.2
     const col = rgbOf(mixHex(VALLEY.fog, mixHex(VALLEY.steelDark, ink, 0.4), Math.min(1, 0.45 * pf.dark)))
-    const r = (0.16 + 0.5 * Math.sqrt(u)) * pf.size
-    lobe(ctx, k, STACK_X - 0.9 * age - 0.1, STACK_TOP - 0.22 - 1.1 * Math.sqrt(age) * pf.size, r, r * 0.8, col, Math.min(0.85, 0.42 * pf.dark) * (1 - u) * (1 - u), 0.45)
+    const burst = pf.dark > 1 ? 5 : 2
+    for (let n = 0; n < burst; n++) {
+      const age = t - pf.t - n * 0.07
+      if (age < 0 || age > 2.2) continue
+      const u = age / 2.2
+      const tail = 1 - 0.16 * n
+      const r = (0.16 + 0.5 * Math.sqrt(u)) * pf.size * tail
+      // Out of the stack's mouth, rising steadily as it drifts back.
+      lobe(ctx, k, STACK_X - 0.9 * age - 0.1, STACK_TOP - 0.6 * r - 0.75 * age * Math.sqrt(pf.size), r, r * 0.8, col, Math.min(0.85, 0.42 * pf.dark) * (1 - u) * (1 - u) * tail, 0.45)
+    }
   }
 }
 

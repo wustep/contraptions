@@ -20,7 +20,7 @@ import { bellAt, CH, CHURCH_BOX, ease, FOOT, FUN, gloomy, paint, pchip, SEATED, 
  * it, widening, to arrive on 197.712, the strongest onset of the whole cue: the whole empty church, the bell they were
  * married under tolling once at the top of the frame, the rope jolting and swaying beside him at the bottom. It
  * answers softly as it swings back (198.409). He looks up at it; bows his head; and goes out into the silence and down
- * the steps, one at a time, as the camera comes down with the dust, and comes to rest at their foot on 201.944
+ * the steps, one at a time, as the camera comes down, and comes to rest at their foot on 201.944
  * (`CUTS.home`: the house builder's own front steps match).
  *
  * The part's frame is the church world's, shifted by `FUNERAL_AT` (Carl seated is its (-0.5, 0)).
@@ -35,15 +35,21 @@ export const FUNERAL_AT: Pt = [SEATED[0] + 0.5, SEATED[1]]
  * He leans forward to get up as the grey morning comes up, and lets himself down off the seat to the floor (landing on
  * the phrase's strong onset, 192.052). An old man: the seat is twice his height above the floor, so he takes it at
  * under half a cell a second, all the way from the seat's edge to the floor; then the whole of the walk slowly (under
- * 0.6 cells a second in the aisle, about 0.65 at most out of the doors, slower than he climbed the hill), so he goes
- * early.
+ * 0.65 cells a second in the aisle after his pause at her picture, about as much out of the doors, slower than he
+ * climbed the hill), so he goes early.
  */
 const LEAN = 190.1
 /** He starts to slide forward off the seat (after the lean has begun), and is on the floor on DOWN. */
 const MOVE = 190.3
 const DOWN = 192.052
-/** He walks from the pew to the porch under the tower, and stands there. */
-const WALK = 192.2
+/**
+ * On the floor he turns to her picture on the easel and leans to it, slowly, the lean he gave her in the office and at
+ * her bedside, and holds it; then he straightens and walks from the pew to the porch under the tower, and stands there.
+ */
+// His lean to her picture: it takes over from the lean he gets down with, over the same window that one lets go (so he
+// never straightens between them), and leans a little further to her, arriving on the piano's note at 192.569.
+const TO_HER_FULL = 192.569
+const WALK = 192.7
 const HALT = 197.5
 /** Where he stops: in the porch, the rope a step to his right and his balloon clear of it. */
 const PORCH = CH.tower[0] + 0.25
@@ -55,7 +61,7 @@ const OUT = 198.05
 const STOOD: Pt = [SEATED[0] - 0.2, 0]
 
 /** Down the aisle at an even, slow pace (about half a cell a second), easing from rest and to rest. */
-const aisle = pchip([WALK, 193.0, 194.9, 196.8, HALT], [STOOD[0], STOOD[0] + 0.21, STOOD[0] + 1.2, PORCH - 0.23, PORCH], 0, 0)
+const aisle = pchip([WALK, 193.4, 195.1, 196.85, HALT], [STOOD[0], STOOD[0] + 0.21, STOOD[0] + 1.2, PORCH - 0.23, PORCH], 0, 0)
 /** Out through the doors and down, at the same even pace (the steps' foot is fixed: `CUTS.home`), at rest there. */
 const out = pchip([OUT, 198.55, 199.9, 201.05, CUT.home], [PORCH, PORCH + 0.19, PORCH + 1.07, PORCH + 1.84, FOOT[0]], 0, 0)
 
@@ -134,11 +140,18 @@ function carlPose(T: number): { tilt: number; squash: number } {
   const up = -0.17 * ease(T, TOLL + 0.02, TOLL + 0.6) * (1 - ease(T, ANSWER + 0.05, OUT + 0.45))
   const bow = 0.07 * smooth(T, OUT - 0.2, OUT + 0.4) * (1 - smooth(T, 201.3, CUT.home - 0.05))
   const squash = slump + 0.05 * knock(T - DOWN, 0.2) * (T >= DOWN ? 1 : 0) + 0.045 * knock(T - TOLL, 0.22) * (T >= TOLL ? 1 : 0)
-  return { tilt: forward + stoop + up + bow, squash }
+  // To her picture (it is to his left, where they stood): a slow lean that takes over from his getting-down lean,
+  // full on its note and held; his base sets off first and his top lets go of her over the first steps (drag).
+  const handOver = -0.13 * smooth(T, DOWN - 0.3, DOWN + 0.3)
+  const further = -0.07 * smooth(T, TO_HER_FULL - 0.3, TO_HER_FULL)
+  const toHer = (handOver + further) * (1 - smooth(T, WALK, WALK + 0.6))
+  // The bow comes from his body too: a small settle as it arrives.
+  const bowed = 0.03 * smooth(T, TO_HER_FULL - 0.3, TO_HER_FULL) * (1 - smooth(T, WALK, WALK + 0.4))
+  return { tilt: forward + toHer + stoop + up + bow, squash: squash + bowed }
 }
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
-export const FUNERAL_HITS: number[] = [DOWN, TOLL, ANSWER]
+export const FUNERAL_HITS: number[] = [DOWN, TO_HER_FULL, TOLL, ANSWER]
 
 interface FuneralState {
   begin: number
@@ -312,7 +325,7 @@ export const funeral = part<FuneralState>(
       // at its left end (its pipes ring with the toll) to the tower and the steps at its right, the bell well inside
       // the top of the frame, the rope down to him, and him whole at the bottom even under Zoom.
       key(TOLL, 7.5, 2.3, -1.92),
-      // The answer; then down with the dust as he goes.
+      // The answer; then down as he goes.
       key(OUT, 7.45, 2.75, -1.85),
       key(199.95, 5.7, 5.0, -1.3),
       // Down the steps to the cut (`CUTS.home`): 4.5 cells, Carl 0.6 left of centre and 1.1 below it.

@@ -290,8 +290,10 @@ function greatMirror(pen: Pen, t: number, f: Frame): void {
     ;(facing > 0.4 && !lying ? lit : plain).push(pts)
   }
   fillPaths(pen, plain, mixHex(PARIS.glass, PARIS.slate, 0.15), 0.8)
-  fillPaths(pen, lit, '#FFFFFF', 0.92)
-  strokePaths(pen, [...plain, ...lit].map((g) => [...g, g[0]]), mixHex(PARIS.slate, PARIS.glass, 0.35), 0.35, 0.9)
+  // A bright face is the sky in the glass, not blank white, and every shard has a firm edge: against the pale
+  // facades a white one with a hairline edge read as a flat cut-out.
+  fillPaths(pen, lit, mixHex('#FFFFFF', PARIS.glass, 0.3), 0.92)
+  strokePaths(pen, [...plain, ...lit].map((g) => [...g, g[0]]), mixHex(PARIS.slate, PARIS.glass, 0.15), 0.6, 0.95)
   // Light: the flash where she touched it, and a glint where each big one lands.
   if (u < 0.7) bloom(pen.p, k, TOUCH, 1.9, '#FFFFFF', 0.55 * (1 - u / 0.7))
   for (const s of SHARD_LIST) {

@@ -1447,29 +1447,48 @@ function drawStreetBurst(p: p5, k: number, W: number, ink: string, t: number): v
   const u = t - STREET
   if (u < 0) return
   const [cx] = CRATER
-  // The crater: a dark pit in the cobbles, its lip heaved up.
+  // The fire's light first, so the pit cut under it stays a hole and never a lit dish.
+  const wet = (1 - 0.72 * doused(t)) * (1 - 0.42 * landing(t))
+  glow(p, k, cx, GROUND - 1.2, 3.2 + 3 * Math.exp(-u / 0.4), TOWN.fire, (0.16 + 0.5 * Math.exp(-u / 0.25)) * wet)
+  // The crater: a pit cut down through the cobbles into the stone, its lip heaved up. Dark at its floor; its walls
+  // lit from the fire burning in it, warmest at the mouth.
   const open = step(u, 0.04)
+  const DEEP = 0.5
   p.push()
-  const mouth = (close: boolean) => {
-    p.beginShape()
-    p.vertex((cx - 0.95 * open) * k, (GROUND - 0.02) * k)
-    p.bezierVertex(
-      (cx - 0.7 * open) * k,
-      (GROUND + 0.42 * open) * k,
-      (cx + 0.7 * open) * k,
-      (GROUND + 0.42 * open) * k,
-      (cx + 0.95 * open) * k,
-      (GROUND - 0.02) * k,
-    )
-    p.endShape(close ? p.CLOSE : undefined)
+  // Its edge is torn, never a smooth bowl: the cobbles broken off unevenly, the stone under them split.
+  const N = 14
+  const edge: Pt[] = []
+  for (let i = 0; i <= N; i++) {
+    const v = i / N
+    const x = cx + (v * 2 - 1) * 0.95 * open
+    const bowl = Math.sin(Math.PI * v)
+    const y = GROUND - 0.02 + DEEP * open * Math.pow(bowl, 0.7) * (i === 0 || i === N ? 0 : 0.78 + 0.32 * hash(i, 4, 93))
+    edge.push([x, y])
   }
-  p.noStroke()
-  p.fill(mixHex(TOWN.cobbleDark, TOWN.night, 0.75))
-  mouth(true)
-  p.noFill()
-  p.stroke(alpha(p, ink, 0.9))
-  p.strokeWeight(W * 0.8)
-  mouth(false)
+  const trace = (ctx: CanvasRenderingContext2D) => {
+    ctx.beginPath()
+    edge.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  }
+  {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    // A hole: near black, the night's indigo in it, and only its mouth catching the fire burning down in it.
+    trace(ctx)
+    ctx.closePath()
+    ctx.fillStyle = mixHex(INDIGO, '#08070C', 0.5)
+    ctx.fill()
+    const lit = ctx.createLinearGradient(0, (GROUND - 0.02) * k, 0, (GROUND + DEEP * 0.45 * open) * k)
+    lit.addColorStop(0, rgba(TOWN.ember, 0.5 * wet))
+    lit.addColorStop(1, rgba(TOWN.ember, 0))
+    ctx.fillStyle = lit
+    ctx.fill()
+    trace(ctx)
+    ctx.strokeStyle = rgba(ink, 0.9)
+    ctx.lineWidth = W * 0.8
+    ctx.lineJoin = 'round'
+    ctx.stroke()
+    ctx.restore()
+  }
   // The lip: slabs of the street heaved up and tipped at the crater's edges.
   p.fill(RUBBLE)
   p.stroke(alpha(p, ink, 0.6))
@@ -1507,11 +1526,10 @@ function drawStreetBurst(p: p5, k: number, W: number, ink: string, t: number): v
   p.pop()
   // The fireball: up at once, rolling up and out, settling to a fire in the crater that burns on, until her water
   // beats it down: it ducks under each stroke's water as it lands, and comes back a little less each time.
-  const wet = (1 - 0.72 * doused(t)) * (1 - 0.42 * landing(t))
   const tall = step(u, 0.04) * (0.6 + 2.6 * Math.exp(-u / 0.45)) * wet
   const width = (0.9 + 1.4 * Math.exp(-u / 0.6) + 0.5 * smooth(u, 0, 0.3)) * (0.7 + 0.3 * wet)
-  glow(p, k, cx, GROUND - 1.2, 3.2 + 3 * Math.exp(-u / 0.4), TOWN.fire, (0.16 + 0.5 * Math.exp(-u / 0.25)) * wet)
-  fire(p, k, cx, GROUND + 0.05, width, tall * (1 + 0.2 * smooth(u, 2, 14)), { t, seed: 90, lean: 0.1 })
+  // Up out of the pit: its roots down inside the mouth.
+  fire(p, k, cx, GROUND + 0.16, width, tall * (1 + 0.2 * smooth(u, 2, 14)), { t, seed: 90, lean: 0.1 })
   sparks(p, k, cx, GROUND - 0.4, u, 22, 7, 94)
 }
 

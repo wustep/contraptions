@@ -52,7 +52,8 @@ function drawBridge(pen: Pen, t: number, f: Frame): void {
   shape(pen, [[front, roof - 0.22], [cab1, roof - 0.22], [cab1, roof - 0.12], [mid, roof - 0.12], [mid, roof - 0.05], [base, roof - 0.05], [base, roof + 0.08], [front, roof + 0.08]], STEEL, 0.7)
   shape(pen, [[front, floor], [base, floor], [base, floor + 0.17], [cab1, floor + 0.17], [cab1, floor + 0.24], [front, floor + 0.24]], STEEL, 0.7)
   box(pen, front, floor - 0.02, base, floor + 0.02, FLOORING, 0)
-  for (const x of [cab1, mid]) line(pen, [x, roof - 0.12], [x, floor + 0.2], rgba(PLANE.night, 0.55), 0.7)
+  // Each seam down to its sections' floor underside, the cab's lower one at its own (it ran on past the floor below).
+  for (const [x, foot] of [[cab1, floor + 0.17], [mid, floor + 0.17]] as const) line(pen, [x, roof - 0.12], [x, foot], rgba(PLANE.night, 0.55), 0.7)
   // Its lights along the ceiling.
   for (let x = front + 0.6; x < base - 0.2; x += 1.1) puff(pen, [x, roof + 0.18], 0.45, 0.18, HOME.sun, 0.35)
   // The canopy: pleats of the bellows from floor to roof, pressed to the hull's curve once it is docked.
@@ -61,8 +62,9 @@ function drawBridge(pen: Pen, t: number, f: Frame): void {
     for (let y = roof - 0.22; y <= floor + 0.001; y += 0.1) pts.push([Math.max(front, hullX(y) - 0.05) + i * 0.055, y])
     polyline(pen, pts, i % 2 ? mixHex(PLANE.night, PLANE.cabin, 0.5) : mixHex(PLANE.caseDark, PLANE.night, 0.4), 2.2)
   }
-  // Its leg and wheels, on the apron, the wheels turning as it comes out.
-  const lx = front + 1.1
+  // Its leg and wheels, on the apron, the wheels turning as it comes out; far enough back along it that, docked,
+  // they stand clear of the plane's outer main gear, not over it.
+  const lx = front + 2.2
   box(pen, lx - 0.08, floor + 0.24, lx + 0.08, GROUND - 0.5, STEEL, 0.6)
   box(pen, lx - 0.3, GROUND - 0.55, lx + 0.3, GROUND - 0.45, STEEL, 0.6)
   const roll = (front - TERM.air) / 0.5
@@ -95,9 +97,14 @@ function drawOutside(pen: Pen, t: number, f: Frame): void {
   const x0 = TERM.land
   const x1 = Math.max(f.x1 + 1, x0 + 1)
   const floor = CAB.floor
-  vwash(pen, x0, x1, f.y0 - 1, floor, [
-    [0, mixHex(HOME.sky, PLANE.dawnHigh, 0.35), 1],
-    [0.7, mixHex(PLANE.dawn, HOME.sun, 0.35), 1],
+  // Its sky comes in only from the terminal's top down, out of the morning's own: above the roofs (a tall frame sees
+  // that far up) the two skies met on a ruled vertical line.
+  const top = TERM.roof - 1.1
+  const span = floor - top
+  vwash(pen, x0, x1, top, floor, [
+    [0, mixHex(HOME.sky, PLANE.dawnHigh, 0.35), 0],
+    [(TERM.roof - top) / span, mixHex(HOME.sky, PLANE.dawnHigh, 0.35), 1],
+    [1 - 0.3 * (floor - TERM.roof) / span, mixHex(PLANE.dawn, HOME.sun, 0.35), 1],
     [1, mixHex(PLANE.dawn, HOME.sun, 0.55), 1],
   ])
   // Across the road: low buildings in the morning haze, palms along the kerb.
@@ -121,7 +128,11 @@ function drawOutside(pen: Pen, t: number, f: Frame): void {
   // The glare, only at the end: the sun off the street and the glass, coming up to the veil.
   const g = glareAt(t)
   if (g > 0.002) {
-    box(pen, x0, f.y0 - 1, x1, floor + 0.35, rgba(HOME.sun, 0.85 * g), 0)
+    vwash(pen, x0, x1, top, floor + 0.35, [
+      [0, HOME.sun, 0],
+      [(TERM.roof - top) / (floor + 0.35 - top), HOME.sun, 0.85 * g],
+      [1, HOME.sun, 0.85 * g],
+    ])
     glow(pen, [x0 + 0.6, -0.6], 3.2, HOME.sun, 0.8 * g)
   }
 }
@@ -140,8 +151,25 @@ function drawTerminal(pen: Pen, t: number, f: Frame): void {
   const foot = TERM.foot
   if (f.x1 > land) drawOutside(pen, t, f)
   // The lower level, concrete, down to the apron.
-  box(pen, air - 0.1, floor + 0.35, Math.max(f.x1 + 1, land + 3), GROUND, CONCRETE, 0.7)
-  for (let x = air + 0.4; x < land - 0.5; x += 1.4) box(pen, x, 1.6, x + 0.8, GROUND, mixHex(PLANE.night, PLANE.cabinLit, 0.5), 0.6)
+  // In a tall frame it is near half the picture, so it is not a blank: the soffit's shade under the floor, a plinth
+  // along its foot, and its doors onto the apron glazed in frames under a canopy.
+  const lx1 = Math.max(f.x1 + 1, land + 3)
+  box(pen, air - 0.1, floor + 0.35, lx1, GROUND, CONCRETE, 0.7)
+  vwash(pen, air - 0.1, lx1, floor + 0.35, floor + 1.0, [
+    [0, PLANE.caseDark, 0.35],
+    [1, PLANE.caseDark, 0],
+  ])
+  box(pen, air - 0.1, GROUND - 0.2, lx1, GROUND, mixHex(CONCRETE, PLANE.caseDark, 0.35), 0.5)
+  for (let x = air + 0.4; x < land - 0.5; x += 1.4) {
+    box(pen, x - 0.1, 1.42, x + 0.9, 1.52, mixHex(CONCRETE, PLANE.caseDark, 0.25), 0.6)
+    box(pen, x - 0.06, 1.6, x + 0.86, GROUND, STEEL, 0.6)
+    vwash(pen, x, x + 0.8, 1.66, GROUND, [
+      [0, mixHex(PLANE.night, PLANE.cabinLit, 0.5), 1],
+      [0.55, mixHex(PLANE.night, PLANE.dawn, 0.25), 1],
+      [1, mixHex(PLANE.cabinLit, PLANE.dawn, 0.35), 1],
+    ])
+    line(pen, [x + 0.4, 1.66], [x + 0.4, GROUND], STEEL, 0.6)
+  }
   // The hall's back wall, and in it a long window onto the morning city.
   box(pen, air, TERM.ceil, land, foot, HALL_WALL, 0)
   const w0 = air + 0.3
@@ -249,8 +277,8 @@ function stampAt(t: number): Pt {
 }
 
 /**
- * His passport: up from him onto the slope as he comes to the booth, shut; it opens; stamped; it goes back down to
- * him, open still (the mark on it), shutting as it goes behind him.
+ * His passport: up from him onto the slope as he comes to the booth, shut; it opens; stamped; it shuts on the slope
+ * and goes back down to him.
  */
 function passportAt(t: number): { at: Pt; open: number } | null {
   const on: Pt = [SLOPE_MID, (SLOPE.bottom + SLOPE.top) / 2]
@@ -264,11 +292,14 @@ function passportAt(t: number): { at: Pt; open: number } | null {
     const h = him()
     return { at: [lerp(h[0], on[0], u), lerp(h[1], on[1], u) - 0.12 * Math.sin(u * Math.PI)], open: 0 }
   }
-  const open = sm(t, AT_BOOTH + 0.3, AT_BOOTH + 0.65) * (1 - sm(t, CLEAR - 0.2, CLEAR))
-  if (t < CLEAR - 0.4) return { at: on, open }
-  const u = sm(t, CLEAR - 0.4, CLEAR)
+  // Shut on the slope before it goes; then off the slope's edge toward him, and only then down to him, so it never
+  // hangs open in the air over the counter's front.
+  const open = sm(t, AT_BOOTH + 0.3, AT_BOOTH + 0.65) * (1 - sm(t, CLEAR - 0.55, CLEAR - 0.35))
+  if (t < CLEAR - 0.35) return { at: on, open }
+  const ux = sm(t, CLEAR - 0.35, CLEAR - 0.12)
+  const uy = sm(t, CLEAR - 0.2, CLEAR)
   const h = him()
-  return { at: [lerp(on[0], h[0], u), lerp(on[1], h[1], u) - 0.08 * Math.sin(u * Math.PI)], open }
+  return { at: [lerp(on[0], h[0], ux), lerp(on[1], h[1], uy) - 0.05 * Math.sin(ux * Math.PI)], open }
 }
 
 const INK_MARK = mixHex(PLANE.window, PLANE.night, 0.25)

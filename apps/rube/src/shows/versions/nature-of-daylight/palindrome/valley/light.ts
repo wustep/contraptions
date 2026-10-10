@@ -39,7 +39,8 @@ function glow(ctx: Ctx, k: number, x: number, y: number, rx: number, ry: number,
 export function sunAt(t: number, x: number): number {
   const d = daylight(t)
   if (d.sun <= 0) return 0
-  const soft = 4 + 0.06 * Math.max(0, d.edge - SUN_BREAK[0])
+  // A cloud's shadow has a broad soft edge on the ground, never a line: wide from the start, wider as it races off.
+  const soft = 9 + 0.12 * Math.max(0, d.edge - SUN_BREAK[0])
   return d.sun * clamp01((d.edge - x) / soft + 0.5)
 }
 
@@ -48,7 +49,8 @@ function breakAt(t: number): { open: number; rx: number; ry: number } {
   if (t < G.sun) return { open: 0, rx: 0, ry: 0 }
   const open = 1 - Math.pow(1 - clamp01((t - G.sun) / 2.2), 2.4)
   const rx = (4 + 20 * open) * (1 + 0.35 * smooth(t, G.sun + 2.2, G.end))
-  return { open, rx, ry: rx * 0.36 }
+  // A long low tear along the ridge, never a round hole: a saucer is what a round bright hole over beams reads as.
+  return { open, rx: rx * 1.3, ry: rx * 0.2 }
 }
 
 /**
@@ -84,20 +86,27 @@ export function drawBreak(ctx: Ctx, k: number, t: number): void {
   glow(ctx, k, bx, by + 1, 22, 6, VALLEY.lamp, 0.22 * d.glow * (1 - open), 0.3)
   if (open > 0.001) {
     // The light through the veil.
-    glow(ctx, k, bx, by, rx * 1.2, ry * 1.3, VALLEY.floodlight, 0.9 * open, 0.5)
-    glow(ctx, k, bx, by - ry * 0.1, rx * 0.6, ry * 0.6, SHELL.screen, 0.8 * open, 0.5)
+    // Bleeding out into the cloud round it, brightest low along the tear and with no rim of its own.
+    glow(ctx, k, bx + rx * 0.2, by + ry * 0.6, rx * 2.2, ry * 3.2, VALLEY.lamp, 0.22 * open, 0.1)
+    glow(ctx, k, bx, by, rx * 1.3, ry * 1.6, VALLEY.floodlight, 0.6 * open, 0.15)
+    glow(ctx, k, bx, by + ry * 0.2, rx * 0.7, ry * 0.7, SHELL.screen, 0.55 * open, 0.2)
     // The cloud's torn edge above the break: heavy billows, dark, their undersides lit from below by the low sun.
     const heavy = mix(VALLEY.cloudShade, VALLEY.steelDark, 0.45)
-    const n = 9
+    // The deck's underside over it, darkening broadly toward the edge, so the edge is the cloud's and not one dark
+    // streak hung alone in a pale sky.
+    ctx.globalCompositeOperation = 'source-over'
+    glow(ctx, k, bx + rx * 0.2, by - ry * 2.4, rx * 3.6, ry * 3.4, heavy, 0.5 * open, 0.3)
+    const n = 14
     for (let i = 0; i < n; i++) {
       const u = (i + 0.5) / n
-      const x = bx + (u - 0.5) * 2.3 * rx * (1.05 + 0.1 * hash(i, 58, 1))
+      const x = bx + (u - 0.5) * 2.6 * rx * (1.05 + 0.1 * hash(i, 58, 1))
+      // A ragged edge, a little higher over the middle of the tear, not a dome.
       const arch = 1 - (2 * u - 1) ** 2
-      const y = by - ry * (0.55 + 0.55 * arch) - 1.2
+      const y = by - ry * (0.7 + 0.25 * arch + 0.6 * (hash(i, 58, 3) - 0.5)) - 1.2
       const brx = rx * (0.2 + 0.1 * hash(i, 58, 2)) + 2.2
-      const bry = ry * 0.34 + 1.4
+      const bry = ry * 0.5 + 1.8
       ctx.globalCompositeOperation = 'source-over'
-      glow(ctx, k, x, y, brx, bry, heavy, 0.72 * open, 0.55)
+      glow(ctx, k, x, y, brx, bry, heavy, 0.5 * open, 0.4)
       ctx.globalCompositeOperation = 'screen'
       glow(ctx, k, x + brx * 0.1, y + bry * 0.55, brx * 0.8, bry * 0.35, VALLEY.floodlight, 0.7 * open, 0.35)
     }
@@ -143,15 +152,21 @@ export function drawValleyShade(ctx: Ctx, k: number, f: View, t: number): void {
   ctx.save()
   ctx.globalCompositeOperation = 'multiply'
   ctx.fillStyle = g
-  // Fading in from the cloud down, in slices: no edge along its top.
+  // Fading in from the cloud down, in slices: no edge along its top. On whole pixels, each meeting the next exactly:
+  // overlapped, every seam was a strip shaded twice, a line.
   const band = 18
   const n = 18
+  const px = (y: number) => Math.round(y * k)
   for (let i = 0; i < n; i++) {
+    const ya = px(top + (band * i) / n)
+    const yb = px(top + (band * (i + 1)) / n)
+    if (yb <= ya) continue
     ctx.globalAlpha = (i + 0.5) / n
-    ctx.fillRect(x0 * k, (top + (band * i) / n) * k, (x1 - x0) * k, (band / n + 0.02) * k)
+    ctx.fillRect(x0 * k, ya, (x1 - x0) * k, yb - ya)
   }
   ctx.globalAlpha = 1
-  ctx.fillRect(x0 * k, (top + band) * k, (x1 - x0) * k, Math.max(0, bottom - top - band) * k)
+  const below = px(top + band)
+  ctx.fillRect(x0 * k, below, (x1 - x0) * k, Math.max(0, bottom * k - below))
   ctx.restore()
 }
 
@@ -180,24 +195,52 @@ export function drawSunWash(ctx: Ctx, k: number, f: View, t: number): void {
   // On the valley floor and what stands on it; seen from away, fading in up the foot of the slopes.
   const top = Math.max(f.y0 - 1, MEADOW - 0.05 - 7 * far)
   const h = Math.max(f.y1, top) + 1 - top
-  const lit = (x: number) => sunAt(t, x)
+  // The shadow's edge on the floor slants with depth, as it would lying on ground going away from us: nearer, it has
+  // come less far. Seen from a tall frame (a phone's), a straight edge stood up the near meadow as a band.
+  const SKEW = 1.4
+  const lit = (x: number, y = MEADOW) => sunAt(t, x + SKEW * Math.max(0, y - MEADOW))
   ctx.save()
-  // Each pass in slices whose strength rises over the first cells from its top, so it has no edge.
+  // Each pass in slices whose strength rises over the first cells from its top, so it has no edge; below the far
+  // line, in slices down the near floor, each with the edge where it lies at its depth.
   const band = far > 0.01 ? 6 * far : 0
-  const pass = (op: GlobalCompositeOperation, style: CanvasGradient) => {
+  // On whole pixels, each slice meeting the next exactly: under these blends an overlap or a gap is a line.
+  const px = (y: number) => Math.round(y * k)
+  const pass = (op: GlobalCompositeOperation, color: string, F: (l: number) => number) => {
     ctx.globalCompositeOperation = op
-    ctx.fillStyle = style
     const n = band > 0 ? 24 : 0
+    ctx.fillStyle = across(ctx, k, x0, x1, color, (x) => F(lit(x)))
+    // The fade in at its top too: overlapped, its seams striped the treeline in a tall frame.
     for (let i = 0; i < n; i++) {
+      const ya = px(top + (band * i) / n)
+      const yb = px(top + (band * (i + 1)) / n)
+      if (yb <= ya) continue
       ctx.globalAlpha = (i + 0.5) / n
-      ctx.fillRect(x0 * k, (top + (band * i) / n) * k, (x1 - x0) * k, (band / n + 0.02) * k)
+      ctx.fillRect(x0 * k, ya, (x1 - x0) * k, yb - ya)
     }
     ctx.globalAlpha = 1
-    ctx.fillRect(x0 * k, (top + band) * k, (x1 - x0) * k, Math.max(0, h - band) * k)
+    const from = top + band
+    const to = top + h
+    const upper = Math.min(to, Math.max(from, MEADOW))
+    if (upper > from) ctx.fillRect(x0 * k, px(from), (x1 - x0) * k, px(upper) - px(from))
+    // Below it the light depends on x + SKEW·depth alone, so one gradient laid along that slant draws the edge
+    // exactly: no slices (forty stood a tall frame's near meadow in steps; two hundred cost the daylight a fifth).
+    if (to > upper) {
+      const xa = x0 + SKEW * Math.max(0, upper - MEADOW)
+      const xb = x1 + SKEW * Math.max(0, to - MEADOW)
+      const lam = (xb - xa) / (1 + SKEW * SKEW)
+      const g = ctx.createLinearGradient(xa * k, MEADOW * k, (xa + lam) * k, (MEADOW + SKEW * lam) * k)
+      const stops = 48
+      for (let i = 0; i <= stops; i++) {
+        const xs = xa + ((xb - xa) * i) / stops
+        g.addColorStop(i / stops, rgba(color, clamp01(F(sunAt(t, xs)))))
+      }
+      ctx.fillStyle = g
+      ctx.fillRect(x0 * k, px(upper), (x1 - x0) * k, px(to) - px(upper))
+    }
   }
-  pass('soft-light', across(ctx, k, x0, x1, mix(VALLEY.lamp, VALLEY.grass, 0.4), (x) => 0.85 * lit(x)))
-  pass('screen', across(ctx, k, x0, x1, VALLEY.floodlight, (x) => 0.13 * lit(x)))
-  pass('multiply', across(ctx, k, x0, x1, mix(VALLEY.ridge, VALLEY.cloudShade, 0.35), (x) => 0.55 * d.sun * (1 - lit(x) / Math.max(0.001, d.sun))))
+  pass('soft-light', mix(VALLEY.lamp, VALLEY.grass, 0.4), (l) => 0.85 * l)
+  pass('screen', VALLEY.floodlight, (l) => 0.13 * l)
+  pass('multiply', mix(VALLEY.ridge, VALLEY.cloudShade, 0.35), (l) => 0.55 * d.sun * (1 - l / Math.max(0.001, d.sun)))
   const close = clamp01((24 - (f.y1 - f.y0)) / 14)
   if (close > 0.01) {
     // Close, the floor toward us a little deeper at the frame's foot.
@@ -334,14 +377,13 @@ export function drawRays(ctx: Ctx, k: number, t: number, far = 1): void {
   ]
   for (let i = 0; i < rays.length; i++) {
     const r = rays[i]
-    const sway = 0.5 * Math.sin(t * 0.3 + i * 1.7)
-    const xa = bx + r.from * rx
+    // From all along the tear, so the shafts fan out of the cloud's edge rather than falling from one bright spot.
+    const xa = bx + (r.from - 0.25) * rx * 1.7
     const ya = by + ry * 0.25 + 1 + r.dy
     // Landing along the floor between the ridge's foot and the light's edge.
-    const xb = bx + 22 + (reach - bx - 22) * r.to + sway
+    const xb = bx + 22 + (reach - bx - 22) * r.to
     const yb = MEADOW + 0.5
-    const shimmer = 0.9 + 0.1 * Math.sin(t * 0.8 + i * 2.1)
-    const a = r.a * d.sun * shimmer * far
+    const a = r.a * d.sun * far
     const len = Math.hypot(xb - xa, yb - ya) || 1
     const nx = -(yb - ya) / len
     const ny = (xb - xa) / len
@@ -353,9 +395,14 @@ export function drawRays(ctx: Ctx, k: number, t: number, far = 1): void {
       const w1 = r.w * wide
       const share = 1 / n
       const g = ctx.createLinearGradient(xa * k, ya * k, xb * k, yb * k)
-      g.addColorStop(0, rgba(VALLEY.floodlight, 0.85 * a * share))
+      // Out of the break's own glow, so a shaft has no end up there: it comes on over its first stretch.
+      g.addColorStop(0, rgba(VALLEY.floodlight, 0))
+      g.addColorStop(0.18, rgba(VALLEY.floodlight, 0.85 * a * share))
       g.addColorStop(0.55, rgba(VALLEY.floodlight, 0.5 * a * share))
-      g.addColorStop(1, rgba(VALLEY.lamp, 0.26 * a * share))
+      // And gone by its foot, into the light on the floor: cut off square at its full strength, the nested widths'
+      // ends stepped down the meadow, a staircase in a tall frame.
+      g.addColorStop(0.86, rgba(VALLEY.lamp, 0.26 * a * share))
+      g.addColorStop(1, rgba(VALLEY.lamp, 0))
       ctx.fillStyle = g
       ctx.beginPath()
       ctx.moveTo((xa + nx * w0) * k, (ya + ny * w0) * k)

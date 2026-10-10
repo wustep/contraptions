@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { laneAt, mixHex, puff, R, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
+import { alpha, box, carried, frame, hash, knock, lastOf, lensedArc, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
@@ -537,10 +537,10 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     { t: CAMP_MEET - 0.35, cells: 3.7, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.9], w: 0.95 },
     { t: CAMP_MEET + 0.55, cells: 2.9, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
     { t: 259.7, cells: 2.75, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
-    { t: 262.0, cells: END_CELLS, hold: END_HOLD },
-    { t: MIX_END, cells: END_CELLS + 0.25, hold: [END_HOLD[0] + 0.05, END_HOLD[1] - 0.08] },
-    // Under the credits the camera goes on drawing back, slower, and up a little into the sky they are written in.
-    { t: DURATION, cells: END_CELLS + 0.75, hold: [END_HOLD[0] + 0.1, END_HOLD[1] - 0.3] },
+    // The draw-back is unhurried: eight seconds out to the whole camp as the first cards come, and it never stops,
+    // going on, slower, under the rest of the credits and up a little into the sky they are written in.
+    { t: 267.5, cells: END_CELLS, hold: END_HOLD },
+    { t: DURATION, cells: END_CELLS + 1.1, hold: [END_HOLD[0] + 0.1, END_HOLD[1] - 0.4] },
   ]
 }
 
@@ -605,7 +605,17 @@ function drawAll(p: p5, s: EdmundsState, c: Ctx): void {
   }
   drawSky(p, c, v, T)
   drawLand(p, c, v, T)
-  drawMouth(p, c, T)
+  // The far mouth closes behind the Ranger once the camera has gone on with it (by OUT + 1 it is out of the frame):
+  // it shrinks to nothing over two seconds, so the planet's sky is its own for the landing and the camp.
+  const shut = 1 - smooth(T, OUT + 1.2, OUT + 3.2)
+  if (shut > 0.005) {
+    p.push()
+    p.translate(X(MOUTH[0]), X(MOUTH[1]))
+    p.scale(shut)
+    p.translate(-X(MOUTH[0]), -X(MOUTH[1]))
+    drawMouth(p, c, T)
+    p.pop()
+  }
   drawShield(p, c, T)
   drawChute(p, c, T)
   drawCamp(p, c, v, T)
@@ -663,14 +673,17 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   // Stars, going out toward the band, and a little with the dawn.
   p.noStroke()
   const cell = 1.25
+  // A star is a few pixels at any scale: at Overview's (below 14 px a cell) they would be a solid speckle, and slow, so
+  // they go. No real view comes that far out (the widest, on a 320 px phone, is 23).
+  const sparse = smooth(k, 10, 14)
   const ox = f.cx * 0.97
   const oy = f.cy * 0.97
-  for (let i = Math.floor((f.x0 - ox) / cell) - 1; i <= Math.ceil((f.x1 - ox) / cell); i++) {
+  for (let i = Math.floor((f.x0 - ox) / cell) - 1; sparse > 0 && i <= Math.ceil((f.x1 - ox) / cell); i++) {
     for (let j = Math.floor((f.y0 - oy) / cell) - 1; j <= Math.ceil((E - oy) / cell); j++) {
       if (hash(i, j, 61) > 0.42) continue
       const x = ox + (i + hash(i, j, 62)) * cell
       const y = oy + (j + hash(i, j, 63)) * cell
-      const a = smooth(E - y, 1.3, 4.6) * (1 - 0.35 * dawn) * (0.35 + 0.65 * hash(i, j, 64)) * (0.8 + 0.2 * Math.sin(T * 1.4 + i * 2.3 + j))
+      const a = sparse * smooth(E - y, 1.3, 4.6) * (1 - 0.35 * dawn) * (0.35 + 0.65 * hash(i, j, 64)) * (0.8 + 0.2 * Math.sin(T * 1.4 + i * 2.3 + j))
       if (a <= 0.03) continue
       p.fill(alpha(p, STAR, a))
       p.circle(X(x), X(y), 1.1 + 1.5 * hash(i, j, 65))
@@ -683,7 +696,8 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   const rise = smooth(T, LAMP, MIX_END) + smooth(T, MIX_END, DURATION)
   glow(p, X(sx), X(E + 0.1), X(3.6 + 0.8 * dawn), DARK.gold, 0.36 + 0.22 * dawn)
   glow(p, X(sx), X(E), X(1.1), VOID.ink, 0.16 + 0.3 * rise)
-  const sy = E + 0.3 - 0.21 * rise
+  // Its edge by the music's end, and clear of the horizon by the end of the credits.
+  const sy = E + 0.3 - 0.2 * Math.min(1, rise) - 0.42 * Math.max(0, rise - 1)
   if (sy - 0.26 < E) {
     glow(p, X(sx), X(E - 0.02), X(0.8), DARK.gold, 0.55 * rise)
     p.noStroke()
@@ -733,7 +747,8 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   ctx2.arc(0, 0, X(r), 0, TAU)
   ctx2.fill()
   ctx2.strokeStyle = rgba(WHITE, 0.75)
-  ctx2.lineWidth = Math.max(0.8, X(0.012))
+  // At least 0.8 px on the screen, not 0.8 px scaled by far: Overview and an upright phone draw it far larger.
+  ctx2.lineWidth = Math.max(0.8 / far, X(0.012))
   ctx2.beginPath()
   ctx2.arc(0, 0, X(r * 1.015), 0, TAU)
   ctx2.stroke()
@@ -828,7 +843,9 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
   // The plain: long drifts of sand, then stones, cracks and craters, at their depths.
   const rows: number[] = []
   for (let j = 0; j < 34; j++) rows.push(Math.pow(1.16, -j))
-  for (let j = 1; j < 10; j++) rows.push(Math.pow(1.16, j))
+  // Nearer than the camp, too, all the way to the bottom of the lowest, tallest frame: the camera sits low at the
+  // camp, and the rows used to stop at about four times the site's nearness, leaving the foreground bare.
+  for (let j = 1; j < 17; j++) rows.push(Math.pow(1.16, j))
   for (const s of rows) {
     const y = groundY(v, s)
     if (y < E + 0.025 || y > f.y1 + 0.4) continue
@@ -856,7 +873,7 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
     const b1 = f.cx + (f.x1 + 0.6 - f.cx) / s
     for (let i = Math.floor(b0 / step) - 1; i <= Math.ceil(b1 / step); i++) {
       const h = hash(i, j, 81)
-      if (h > (s > 1.05 ? 0.25 : 0.6)) continue
+      if (h > (s > 2.2 ? 0.2 : s > 1.05 ? 0.25 : 0.6)) continue
       const sj = s * (1 + 0.07 * (hash(i, j, 82) - 0.5))
       const gx = (i + hash(i, j, 83)) * step
       const x = groundX(v, gx, sj)
@@ -864,13 +881,16 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
       // The camp's ground is cleared.
       if (sj > 0.8 && sj < 1.35 && gx > LX - 2.2 && gx < CAIRN_X + 1.2) continue
       const kind = hash(i, j, 84)
-      if (kind < 0.42 && sj < 1.3) {
+      if (kind < 0.42 && (sj < 1.3 || sj > 1.6)) {
         // A stone: an upright lump, lit on the sunward side.
-        const w = (0.12 + 0.3 * hash(i, j, 85)) * sj
+        // In the foreground, pebbles in the ground's own shade, not boulders: they give the near ground its depth
+        // without standing up into the shot.
+        const fore = sj > 1.6
+        const w = fore ? (0.05 + 0.1 * hash(i, j, 85)) * Math.min(sj, 4) : (0.12 + 0.3 * hash(i, j, 85)) * sj
         if (w < 0.022) continue
-        const hh = w * (0.4 + 0.3 * hash(i, j, 86))
+        const hh = w * (fore ? 0.3 + 0.15 * hash(i, j, 86) : 0.4 + 0.3 * hash(i, j, 86))
         p.noStroke()
-        p.fill(ROCK)
+        p.fill(fore ? mixHex(ROCK, LAND_NEAR, 0.45) : ROCK)
         p.beginShape()
         p.vertex(X(x - w / 2), X(yy))
         p.quadraticVertex(X(x - w * 0.35), X(yy - hh), X(x + w * 0.05), X(yy - hh))
@@ -941,10 +961,7 @@ function drawMouth(p: p5, c: Ctx, T: number): void {
       p.fill(alpha(p, STAR, b * 0.8))
       p.circle(X(mx + Math.cos(a) * r), X(my + Math.sin(a) * r), Math.max(1.1, X(0.022) * (0.6 + b)))
     } else {
-      p.noFill()
-      p.stroke(alpha(p, STAR, b * 0.7))
-      p.strokeWeight(Math.max(1, X(0.016)))
-      p.arc(X(mx), X(my), X(r * 2), X(r * 2), a, a + len)
+      lensedArc(p, X(mx), X(my), X(r), a, len, STAR, b * 0.75, Math.max(1, X(0.02)))
     }
   }
   // Saturn, small and bent, low in the glass.
@@ -1854,8 +1871,9 @@ function drawCamp(p: p5, c: Ctx, v: View, T: number): void {
   // The lamp: a mast on a tripod, a plate at its foot for the ball, a rod up to the switch, the lamp at the top.
   const lever = T >= LAMP ? 1 : 0
   outline(p, ink, weight * 0.8)
+  // (Its near foot comes down behind where he rests, so nothing pokes into the light between the two of them.)
   p.line(X(MAST_X - 0.28), X(G), X(MAST_X), X(G - 0.42))
-  p.line(X(MAST_X + 0.3), X(G), X(MAST_X), X(G - 0.42))
+  p.line(X(MAST_X + 0.17), X(G), X(MAST_X), X(G - 0.42))
   solid(p, ink, weight * 0.8, DARK.slate)
   p.rect(X(MAST_X), X((G + LAMP_Y) / 2), X(0.07), X(G - LAMP_Y))
   // The rod, and the switch arm at its top: down when lit.

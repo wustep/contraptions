@@ -52,6 +52,13 @@ export function shellSeen(t: number): number {
   return 1 - smooth(t, RELEASE - 3.4, RELEASE)
 }
 
+/**
+ * The shell for Overview: its lower half at rest, from its middle to the meadow, either side of its axis. (Framed by
+ * her parts alone, round the lift and the camp, Overview had the shell off its top corner, and its coming and going out
+ * of the frame altogether.) Its lower half, not all of it: whole, at its size, the camp would be specks under it.
+ */
+export const VALLEY_SHELL = { x0: SHELL_X - 0.27 * SHELL_H, y0: REST_CY - 0.05 * SHELL_H, x1: SHELL_X + 0.27 * SHELL_H, y1: MEADOW }
+
 /* ------------------------------------------------------------------ the cloud */
 
 /** The cloud deck: clear under CLOUD_LOW, thickening up to all but solid at CLOUD_HIGH (the television's picture). */
@@ -261,7 +268,10 @@ export function slotAt(t: number): { open: number; light: number } {
   }
   if (t < G.shut) {
     const s = t - A.open
-    const open = 0.1 + 0.9 * (1 - Math.pow(1 - clamp01(s / 1.1), 3))
+    // The doors part from the crack over a second and more, eased both ways: eased out only, it was four tenths open
+    // in a sixth of a second, and the throat's light came on at once, a pop rather than an opening.
+    const u = clamp01(s / 1.2)
+    const open = 0.1 + 0.9 * u * u * (3 - 2 * u)
     // A flare as it opens, then the steady light; fading as they go up into it, to the dark inside.
     const flare = 0.4 * Math.exp(-s / 0.6)
     // The morning after, it has been open all night: its light pale in the grey.

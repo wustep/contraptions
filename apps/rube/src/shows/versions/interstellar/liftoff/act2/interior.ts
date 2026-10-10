@@ -24,6 +24,70 @@ const SOIL = 0.55
 const HULL = 0.5
 const SPOKES = [Math.PI * 1.18, Math.PI * 1.18 + (Math.PI * 2) / 3, Math.PI * 1.18 - (Math.PI * 2) / 3]
 
+/**
+ * The station's own weather: a few fair-weather clouds in the air, their flat bases toward the land under them
+ * (down is outward) and their tops toward the axis. They are what the open air is measured by: the ball crosses
+ * the axis past them, and the long climbs round the ring have them over the fields. Each is `a` round the ring,
+ * `h` cells up from the land and `w` wide, and they drift slowly round with the air, clear of the spokes.
+ */
+const CLOUDS: { a: number; h: number; w: number; seed: number }[] = [
+  { a: 0.52, h: 3.1, w: 2.6, seed: 1 },
+  { a: 0.92, h: 7.2, w: 3.6, seed: 2 },
+  { a: 2.35, h: 6.4, w: 3.0, seed: 3 },
+  { a: 2.95, h: 9.5, w: 2.8, seed: 4 },
+  { a: -1.02, h: 12.6, w: 2.7, seed: 5 },
+  { a: -1.62, h: 7.0, w: 3.4, seed: 6 },
+  { a: -1.98, h: 11.4, w: 2.4, seed: 7 },
+]
+/** Radians a second: the air's slow drift round the ring, the same way the ball goes. */
+const DRIFT = -0.0035
+
+function drawClouds(p: p5, ax: number, ay: number, k: number, t: number, since: number, lit: number, ink: string, weight: number, f: ReturnType<typeof frame>): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const X = (x: number) => x * k
+  const dusk = '#3A4359'
+  const body = mixHex(dusk, '#F3EFE5', lit)
+  for (const cl of CLOUDS) {
+    const a = cl.a + DRIFT * (t - since)
+    const r = RIM_R - cl.h
+    const cx = ax + r * Math.cos(a)
+    const cy = ay + r * Math.sin(a)
+    const { w } = cl
+    if (cx + w < f.x0 || cx - w > f.x1 || cy + w < f.y0 || cy - w > f.y1) continue
+    // Puffs along the top, bigger toward the middle, each sitting on the base; and a crown. Flat, as everything in
+    // the station is: no shading, and they do not breathe.
+    const n = 5 + Math.floor(hash(cl.seed, 11) * 3)
+    const puffs: [number, number, number][] = []
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5) / n - 0.5
+      const pr = w * (0.1 + 0.1 * (1 - (2 * u) ** 2)) * (0.85 + 0.3 * hash(cl.seed, i, 12))
+      puffs.push([u * w * 0.82 + (hash(cl.seed, i, 13) - 0.5) * w * 0.06, -pr, pr])
+    }
+    const cr = w * 0.18
+    puffs.push([(hash(cl.seed, 14) - 0.5) * w * 0.3, -cr - w * 0.07, cr])
+    const x0 = puffs[0][0]
+    const x1 = puffs[n - 1][0]
+    ctx.save()
+    ctx.translate(X(cx), X(cy))
+    ctx.rotate(a - Math.PI / 2)
+    // Inked once round the outside: stroke the whole body, then fill over the inner half of the line (opaque, so no
+    // puff's own outline shows through).
+    ctx.beginPath()
+    for (const [x, y, pr] of puffs) {
+      ctx.moveTo(X(x + pr), X(y))
+      ctx.arc(X(x), X(y), X(pr), 0, Math.PI * 2)
+    }
+    ctx.rect(X(x0), X(-w * 0.13), X(x1 - x0), X(w * 0.13))
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = Math.max(1.4, weight * 1.5)
+    ctx.strokeStyle = alpha(p, ink, 0.32).toString()
+    ctx.stroke()
+    ctx.fillStyle = body
+    ctx.fill()
+    ctx.restore()
+  }
+}
+
 export const interior = scenery<InteriorState>({
   name: 'interior',
   draw: (p: p5, s, c) => {
@@ -80,6 +144,8 @@ export const interior = scenery<InteriorState>({
         p.line(X(x - Math.sin(a) * 0.18), X(y + Math.cos(a) * 0.18), X(x + Math.sin(a) * 0.18), X(y - Math.cos(a) * 0.18))
       }
     }
+
+    drawClouds(p, ax, ay, k, t, s.lights, lit, ink, weight, f)
 
     // The land: soil, then hull, all the way round.
     p.noFill()

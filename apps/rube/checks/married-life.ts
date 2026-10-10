@@ -2,17 +2,24 @@
  * The checks for Married Life (`versions/married-life/opus55.show.ts`), run by `check:shows`. Kept in their own
  * file: what the show promises is its own.
  */
-import type { Performance, Version } from '../src/shows/registry'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { zoomFrame as zoomOf, type Performance, type Version } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/married-life-onsets.json'
 import { STRIKES } from '../src/shows/versions/married-life/life/hits'
-import { AT, BEATS, CUT, DURATION, ONSETS, PIANO, RECORDING, SEAM } from '../src/shows/versions/married-life/life/music'
+import { AT, BEATS, CUT, DURATION, ONSETS, RECORDING, SEAM } from '../src/shows/versions/married-life/life/music'
 import { CARDS, CREDITS_AT, CREDITS_OK, creditsAt } from '../src/shows/versions/married-life/life/credits'
 import { CUTS } from '../src/shows/versions/married-life/life/seams'
 import { CARL, ELLIE, ELLIE_ID, carlAt, ellieAt } from '../src/shows/versions/married-life/life/worlds'
-import { BALLOON_FROM, balloonAt, HALF, LEANS, STIRS } from '../src/shows/versions/married-life/life/cast'
+import { BALLOON_FROM, balloonAt, ellieSpin, HALF, lookOf, STIRS } from '../src/shows/versions/married-life/life/cast'
+import { BALLOON_SIZE } from '../src/shows/versions/married-life/life/props/balloon'
+import { ridge, STEP } from '../src/shows/versions/married-life/life/hill/hill'
+import { INSIDE_SPAN } from '../src/shows/versions/married-life/life/inside/inside'
+import { KICK, TYRE } from '../src/shows/versions/married-life/life/inside/jar-clock'
+import { ticketsInFlight } from '../src/shows/versions/married-life/life/inside/ties'
+import { INSIDE_AT } from '../src/shows/versions/married-life/life/score'
 import { JOLTS } from '../src/shows/versions/married-life/life/score'
 import { FUN } from '../src/shows/versions/married-life/life/church/church'
-import { ALONE } from '../src/shows/versions/married-life/life/house/front-plan'
 import { R } from '../src/parts'
 import { HAND } from '../src/shows/versions/married-life/life/clinic/hospital'
 import type { LifeShow } from '../src/shows/versions/married-life/life/show'
@@ -135,8 +142,8 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   // to be seen: his whole square and her whole ball, not only their middles.
   const zoomed = (t: number, x: number, y: number, r: number) => {
     const f = cam(t)
-    const cells = f.cells / 1.5
-    return Math.max((Math.abs(x - f.x) + r) / ((cells * 16) / 9 / 2), (Math.abs(y - f.y) + r) / (cells / 2))
+    const z = zoomOf(f, 1.5)
+    return Math.max((Math.abs(x - z.x) + r) / ((z.cells * 16) / 9 / 2), (Math.abs(y - z.y) + r) / (z.cells / 2))
   }
   const outOfZoom: string[] = []
   const herOutOfZoom: string[] = []
@@ -180,6 +187,69 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     }
   }
   check('married life: no wide shot lingers (over 6 cells for at most 2.5 s, but for the named reveals)', wide.length === 0, wide.slice(0, 6).join('; '))
+
+  // Under Zoom the first setbacks lost what they turn on (the flat tyre and the jar off the frame's two sides, the arm
+  // that tips it out of it, the lamp he climbs to above it): from the tyre to the ladder's kick Zoom is out to the
+  // show's own frame, which holds them.
+  {
+    let most = 0
+    let mostAt = 0
+    for (let t = TYRE; t <= KICK; t += 0.05) {
+      const z = cam(t).zoomFull ?? 1
+      if (z > most) { most = z; mostAt = t }
+    }
+    check('married life: under Zoom the tyre, the jar\'s taking and the lamp he climbs to stay in the frame (Zoom out to the show\'s own)', most < 0.02,
+      `Zoom ${most.toFixed(2)} of its way in at ${mostAt.toFixed(2)} s`)
+  }
+
+  // The two tickets are thrown, not hopped: each rises well clear of the press's slot (so it is seen whole against the
+  // wall, and read as a ticket before the hill), and stays inside the frame, under Zoom too.
+  {
+    const highest = [0, 0]
+    const out: string[] = []
+    for (let t = AT.cadence[0]; t < AT.cadence[2]; t += 0.01) {
+      ticketsInFlight(t).forEach((tk) => {
+        highest[tk.n] = Math.max(highest[tk.n], tk.up)
+        const h = show.at(t)
+        const [x, y] = [h.x + tk.dx, h.y + tk.dy]
+        for (const f of [cam(t), zoomOf(cam(t), 1.5)]) {
+          const hw = (f.cells * 16) / 9 / 2
+          if (Math.abs(x - f.x) > hw - 0.12 || Math.abs(y - f.y) > f.cells / 2 - 0.12) out.push(`${t.toFixed(2)} s`)
+        }
+      })
+    }
+    check('married life: the tickets are thrown high off the press, and stay in the frame (under Zoom too)',
+      highest.every((u) => u >= 0.25) && out.length === 0, `rise ${highest.map((u) => u.toFixed(2)).join(', ')} cells; out ${out.slice(0, 3).join(', ')}`)
+  }
+
+  // The storm's rain stays under the photosensitive flash threshold on a phone held upright (measured at 0.3: 1.1% of
+  // the screen flashing more than three times a second, against about 2.8%; at 0.42 it was 4.5%).
+  {
+    const storm = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/married-life/life/inside/jar-storm.ts'), 'utf8')
+    const m = storm.match(/rgba\(220, 238, 243, \$\{([0-9.]+) \* r\}\)/)
+    check('married life: the storm\'s rain is soft enough not to flash (its streaks at most 0.3 opaque)', !!m && Number(m[1]) <= 0.3, m ? m[1] : 'not found')
+  }
+
+  // A phone held upright (as tall as 9:21) sees far above and beside the composed frame (`stage.ts`, `perf.tall`):
+  // wherever the house's inside is on, that whole stage is inside the sky and earth the set paints round it, so the
+  // storm's wide has no edge in its sky.
+  const ARM = 16 / 9
+  const bare: string[] = []
+  for (const [from, to] of [[CUT.nursery, CUT.doctor], [CUT.yard, CUT.climb]]) {
+    for (let t = from; t < to; t += 0.05) {
+      const f = cam(t)
+      const high = f.cells * ARM * (21 / 9)
+      const extra = high - f.cells
+      const top = f.y - f.cells / 2 - (perf.tall ?? 0.5) * extra - INSIDE_AT[1]
+      const foot = top + high
+      const side = (f.cells * ARM) / 2
+      const x = f.x - INSIDE_AT[0]
+      if (top < INSIDE_SPAN[2] || foot > INSIDE_SPAN[3] || x - side < INSIDE_SPAN[0] || x + side > INSIDE_SPAN[1]) {
+        bare.push(`${t.toFixed(2)} (top ${top.toFixed(1)}, foot ${foot.toFixed(1)})`)
+      }
+    }
+  }
+  check('married life: a phone held upright sees no edge to the house\'s sky, not even at the storm', bare.length === 0, bare.slice(0, 4).join(', '))
 
   // Ellie: with him from the wedding to the hospital, never after; she never jumps in a place, and comes and goes
   // only out of shot or at a cut. At the kiss she touches him.
@@ -268,14 +338,10 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   check('married life: the balloon never jumps in a place (no more than 0.04 cells in 4 ms)', balloonJump <= 0.04, `${balloonJump.toFixed(3)} at ${balloonJumpAt.toFixed(3)} s`)
 
   // The heaviest note is felt through the frame, and only it: the camera takes one blow, on the toll, a damped swing of
-  // at most 1.5% of the frame's height. The balloon is stirred by the toll and its answer and nothing else; at home it
-  // leans toward him only on the piano's own notes, after he has sat down and before the credits.
-  const pianoNote = (t: number) => PIANO.some((n) => Math.abs(n.t - t) <= 0.01)
-  check('married life: the frame takes a blow only on the toll (at most 1.5% of its height), the balloon is stirred only by the toll and its answer, and at home it leans only on the piano\'s notes',
-    JOLTS.length === 1 && near(JOLTS[0].t, AT.church) && JOLTS[0].amp <= 0.015 &&
-      STIRS.length === 2 && near(STIRS[0].t, FUN.toll) && near(STIRS[1].t, FUN.answer) &&
-      LEANS.length > 0 && LEANS.every((l) => pianoNote(l.t) && l.t > ALONE.sit && l.t < CREDITS_AT),
-    `jolts ${JOLTS.map((j) => j.t.toFixed(3)).join(', ')}; stirs ${STIRS.map((x) => x.t.toFixed(3)).join(', ')}; leans ${LEANS.map((l) => l.t.toFixed(3)).join(', ')}`)
+  // at most 1.5% of the frame's height, and the balloon is stirred by the toll and nothing else.
+  check('married life: the frame takes a blow only on the toll (at most 1.5% of its height), and the balloon is stirred only by the toll',
+    JOLTS.length === 1 && near(JOLTS[0].t, AT.church) && JOLTS[0].amp <= 0.015 && STIRS.length === 1 && near(STIRS[0].t, FUN.toll),
+    `jolts ${JOLTS.map((j) => j.t.toFixed(3)).join(', ')}; stirs ${STIRS.map((x) => x.t.toFixed(3)).join(', ')}`)
 
   // The end credits: words the page sets over the house, after he has sat down, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
@@ -284,4 +350,220 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && CARDS.filter((c) => c.role === 'Directed by').length === 1 &&
     ['Claude Opus 5.5', 'Carl Fredricksen', 'Ellie Fredricksen', 'Michael Giacchino', 'Married Life', 'Up', 'Pete Docter', 'p5.js'].every((w) => said.includes(w)) &&
     !/Stephen Wu|tech demo/i.test(said), said)
+  // The cards that come up while the dusk is still light set their role and "as" lines in cream, not gold (gold was
+  // under WCAG's 4.5:1 for small text against the sky behind it: 3.8:1); by the third the sky is night and gold reads.
+  check('married life: the credits over the still light dusk are in cream (contrast), the rest in gold',
+    CARDS.slice(0, 2).every((c) => creditsAt(c.at + 2).some((k) => k.plain)) && CARDS.slice(2).every((c) => !c.plain))
+  // On a phone held upright the frame is about 220px high, and at a hundredth of it the roles were 4px: every card
+  // keeps a least unit (`least`), and the player and a video's painter both honour it.
+  {
+    const cards = CARDS.flatMap((c) => creditsAt(c.at + 2))
+    const src = (f: string) => readFileSync(join(process.cwd(), `apps/rube/src/shows/${f}`), 'utf8')
+    check('married life: the credits keep a readable size on a phone held upright',
+      cards.length >= CARDS.length && cards.every((c) => (c.least ?? 0) >= 4) &&
+      /Math\.max\(fh \/ 100, c\.least \?\? 0\)/.test(src('player.ts')) && /Math\.max\(u, c\.least \?\? 0\)/.test(src('words.ts')))
+  }
+
+  // Under Zoom the two of them keep off the frame's edges, not only inside it (Zoom's own hold, `zoom.ts`): neither is
+  // within an eighth of its half size of an edge for 2.5 s or more, except where the staging fills the Zoom frame: the
+  // nursery, him at the winch and her on the cradle nine tenths of its width apart, and the ward, the balloon over them
+  // and the two of them under it. And the balloon's crown is never cut by more than a sliver (0.08 of
+  // the half height) under Zoom.
+  const zoomFrame = (t: number) => {
+    const f = cam(t)
+    const z = zoomOf(f, 1.5)
+    const zh = z.cells / 2
+    return { zh, zw: (zh * 16) / 9, zy: z.y, zx: z.x }
+  }
+  let edgeRun = 0
+  let edgeFrom = 0
+  let edgeWorst = 0
+  let edgeWorstAt = ''
+  let crown = Infinity
+  let crownAt = 0
+  for (let t = 0; t <= perf.duration; t += 0.05) {
+    const { zh, zw, zy, zx } = zoomFrame(t)
+    const h = show.at(t)
+    const e = show.ellie(t)
+    let worst = 0
+    const bodies: [number, number, number][] = []
+    if (!h.hidden && h.scale >= 0.3) bodies.push([h.x, h.y, HALF * h.scale])
+    if (e && (e.scale ?? 1) >= 0.3) bodies.push([e.x, e.y, R * (e.scale ?? 1)])
+    for (const [x, y, r] of bodies) worst = Math.max(worst, (y + r - zy) / zh, (zy - y + r) / zh, (x + r - zx) / zw, (zx - x + r) / zw)
+    const full = (t >= 64.5 && t <= 69.5) || (t >= CUT.hospital - 0.3 && t <= 186.0)
+    if (worst > 0.88 && !full) {
+      if (edgeRun === 0) edgeFrom = t
+      edgeRun += 0.05
+      if (edgeRun > edgeWorst) { edgeWorst = edgeRun; edgeWorstAt = `${edgeFrom.toFixed(2)} s` }
+    } else edgeRun = 0
+    const b = balloonAt(show, t)
+    if (b) {
+      const [, wy] = show.where(t)
+      const c = (h.y + (b.at[1] - wy) - BALLOON_SIZE.ry - (zy - zh)) / zh
+      if (c < crown) { crown = c; crownAt = t }
+    }
+  }
+  check('married life: under Zoom the two of them keep off the frame\'s edges (never within an eighth of an edge for 2.5 s, but in the nursery and the ward, where they fill it)',
+    edgeWorst < 2.5, `longest ${edgeWorst.toFixed(2)} s from ${edgeWorstAt}`)
+  check('married life: under Zoom the balloon\'s crown is never cut by more than a sliver (0.08 of the half height)',
+    crown >= -0.08, `${crown.toFixed(3)} at ${crownAt.toFixed(2)} s`)
+
+  // Zoom's hold moves as gently as the camera's own move: the frame's sharpest change of speed under Zoom (pan in frame
+  // heights and zoom in log units, a second squared, at 60 fps, cuts and the toll's blow aside) is at most twice the
+  // show's own. Straight lines between the hold's samples once made it twenty times (a judder each tenth of a second).
+  const sharpest = (zoomed: boolean) => {
+    const dt = 1 / 60
+    const cutTimes: number[] = Object.values(CUT)
+    const at = (t: number) => {
+      const f = cam(t)
+      const z = zoomed ? zoomOf(f, 1.5) : f
+      return { x: z.x, y: z.y, L: Math.log(z.cells), cells: z.cells }
+    }
+    let worst = 0
+    let worstAt = 0
+    for (let t = 2 * dt; t < perf.duration - 2 * dt; t += dt) {
+      if (cutTimes.some((c) => Math.abs(t - c) < 0.05) || JOLTS.some((j) => t > j.t - 0.05 && t < j.t + 1.5)) continue
+      const a = at(t - dt)
+      const b = at(t)
+      const c = at(t + dt)
+      const v = Math.hypot((c.x - 2 * b.x + a.x) / b.cells, (c.y - 2 * b.y + a.y) / b.cells, c.L - 2 * b.L + a.L) / dt / dt
+      if (v > worst) { worst = v; worstAt = t }
+    }
+    return [worst, worstAt]
+  }
+  const [own, ownAt] = sharpest(false)
+  const [inZoom, inZoomAt] = sharpest(true)
+  check('married life: under Zoom the frame moves as gently as the show\'s own (its sharpest change of speed at most twice the show\'s)',
+    inZoom <= 2 * own, `Zoom ${inZoom.toFixed(2)} at ${inZoomAt.toFixed(2)} s; the show's ${own.toFixed(2)} at ${ownAt.toFixed(2)} s`)
+
+  // His square and her ball never overlap (by more than 0.02 cells), anywhere she is with him: touching at the kiss,
+  // never pressed into one shape (a step on top of his lean once pressed his corner over her there).
+  let overlap = 0
+  let overlapAt = 0
+  for (let t = 0; t <= CUT.funeral; t += 0.01) {
+    const e = show.ellie(t)
+    const h = show.at(t)
+    if (!e || h.hidden) continue
+    const tilt = show.pose(t)?.tilt ?? 0
+    const dx = e.x - h.x
+    const dy = e.y - h.y
+    const lx = Math.cos(-tilt) * dx - Math.sin(-tilt) * dy
+    const ly = Math.sin(-tilt) * dx + Math.cos(-tilt) * dy
+    const gap = Math.hypot(Math.max(Math.abs(lx) - HALF, 0), Math.max(Math.abs(ly) - HALF, 0)) - R * (e.scale ?? 1)
+    if (-gap > overlap) { overlap = -gap; overlapAt = t }
+  }
+  check('married life: his square and her ball never overlap (by more than 0.02 cells)', overlap <= 0.02, `${overlap.toFixed(3)} at ${overlapAt.toFixed(2)} s`)
+
+  // On the hill his hurry down to her shows on screen: while he runs flat out (175.75 to 176.4 s, after the beat he
+  // stands struck still watching her go) he keeps moving toward
+  // her in the frame, at least 3% of its width a second, under Zoom too; a camera that catches up at his own speed
+  // stands him still mid-run, and that reads as hesitating.
+  for (const zoomed of [false, true]) {
+    const across = (t: number) => {
+      const z = zoomed ? zoomOf(cam(t), 1.5) : cam(t)
+      return (show.at(t).x - z.x) / ((z.cells * 16) / 9)
+    }
+    let slowest = Infinity
+    let slowestAt = 0
+    for (let t = 175.75; t <= 176.4; t += 0.02) {
+      const v = (across(t + 0.02) - across(t)) / 0.02
+      if (v < slowest) { slowest = v; slowestAt = t }
+    }
+    check(`married life: on the hill he keeps moving toward her on screen while he runs${zoomed ? ', under Zoom' : ''}`,
+      slowest >= 0.03, `${(slowest * 100).toFixed(1)}% of the width a second at ${slowestAt.toFixed(2)} s`)
+  }
+
+  // On the fieldstone, given way, she lies slumped, not round like a ball at rest: from 176.8 to 178.7 s, before her
+  // answer, drawn at most 92% of her height and at least 1.2 times as wide as high.
+  let slumpWorst = ''
+  for (let t = 176.8; t <= 178.7; t += 0.05) {
+    const e = show.ellie(t)
+    const h = e?.scale ?? 1
+    const w = h * (e?.stretch ?? 1)
+    if (!e || h > 0.92 || w / h < 1.2) { slumpWorst = `${t.toFixed(2)} s: height ${h.toFixed(3)}, width ${(w / h).toFixed(2)} times it`; break }
+  }
+  check('married life: on the fieldstone she lies slumped, not round', slumpWorst === '', slumpWorst)
+
+  // Her face, the dot, is steered where the story needs it (`LOOKS`): at him for the kiss, at the crest of the dance and
+  // on the fieldstone; up at the clouds on the blanket; at him in her armchair. And it never turns faster than her own
+  // roll would turn it, beyond a brisk turn (0.15 rad in a 60 fps frame more than her roll): no snap.
+  const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
+  const drawn = (t: number) => lookOf(show, t, ellieSpin(show, t))
+  const toHim = (t: number) => {
+    const e = show.ellie(t)!
+    const c = show.at(t)
+    return Math.atan2(c.y - 0.12 - e.y, c.x - e.x)
+  }
+  const beats: [string, number, () => number][] = [
+    ['the kiss', 17.9, () => toHim(17.9)],
+    ['her armchair', 47.3, () => toHim(47.3)],
+    ['the clouds', 56, () => -1.35],
+    ['the crest', 157.5, () => toHim(157.5)],
+    ['the fieldstone', 179.6, () => toHim(179.6)],
+  ]
+  const offs = beats.map(([n, t, at]) => [n, Math.abs(wrap(drawn(t) - at()))] as [string, number])
+  check('married life: her face looks where the story needs it (at him at the kiss, in her armchair, at the crest and on the fieldstone; up at the clouds)',
+    offs.every(([, d]) => d < 0.35), offs.map(([n, d]) => `${n} ${((d * 180) / Math.PI).toFixed(0)}°`).join(', '))
+  let snap = 0
+  let snapAt = 0
+  for (let t = 0; t <= CUT.funeral; t += 1 / 120) {
+    if (!show.ellie(t) || !show.ellie(t + 1 / 60)) continue
+    const d = Math.abs(wrap(drawn(t + 1 / 60) - drawn(t)))
+    const o = Math.abs(wrap(ellieSpin(show, t + 1 / 60) - ellieSpin(show, t)))
+    if (d - o > snap) { snap = d - o; snapAt = t }
+  }
+  check('married life: her face never snaps round (at most 0.15 rad a frame faster than her own roll)', snap <= 0.15, `${snap.toFixed(3)} at ${snapAt.toFixed(2)} s`)
+  // As she gives way and goes back down the flank to the stone, she slides limp, face down; her face does not roll with
+  // her (a fresh viewer read the roll as the two of them sliding down for fun). From a little after the give to rest:
+  // her roll turns well over a radian, her face less than a fifth of one.
+  {
+    let face = 0
+    let roll = 0
+    for (let t = 174.95; t < 176.9; t += 1 / 60) {
+      face += Math.abs(wrap(drawn(t + 1 / 60) - drawn(t)))
+      roll += Math.abs(wrap(ellieSpin(show, t + 1 / 60) - ellieSpin(show, t)))
+    }
+    check('married life: as she gives way she slides back limp, her face down, not rolling', roll > 1 && face < 0.2,
+      `her roll ${roll.toFixed(2)} rad, her face ${face.toFixed(2)} rad`)
+  }
+
+  // On the hill's flank they rest on the slope, not in it (`seat`): their outline never cuts into the drawn ground by
+  // more than a twentieth of R, until she gives way (her slump is the story's).
+  const sink = (cx: number, cy: number) => {
+    let best = Infinity
+    for (let x = cx - 1; x <= Math.min(cx + 1, STEP.x0); x += 0.004) best = Math.min(best, Math.hypot(x - cx, ridge(x) + R - cy))
+    return best / R - 1
+  }
+  let flank = 0
+  let flankAt = 0
+  for (let t = CUT.climb; t <= 174.3; t += 0.05) {
+    const [cx, cy] = show.where(t)
+    const h = show.at(t)
+    const e = show.ellie(t)
+    if (cx < STEP.x0 - 0.2) { const s = sink(cx, cy); if (s < flank) { flank = s; flankAt = t } }
+    if (e) {
+      const ex = e.x - h.x + cx
+      const ey = e.y - h.y + cy
+      if (ex < STEP.x0 - 0.2) { const s = sink(ex, ey); if (s < flank) { flank = s; flankAt = t } }
+    }
+  }
+  // As she gives way he stands struck still watching her go, then runs down after her: she reaches the stone first, and
+  // is still there alone a moment before he arrives (with them arriving together, a fresh viewer read the two of them
+  // as sliding down together).
+  {
+    const arrives = (pos: (t: number) => number, end: number) => {
+      for (let t = 174.7; t <= end; t += 0.01) if (Math.abs(pos(t) - pos(end)) < 0.06) return t
+      return end
+    }
+    const her = arrives((t) => show.ellie(t)!.x, 178.5)
+    const his = arrives((t) => show.at(t).x, 177.6)
+    check('married life: on the hill she reaches the stone first, and he comes after her', his - her >= 0.5,
+      `her ${her.toFixed(2)} s, him ${his.toFixed(2)} s`)
+    // And he bolts on the next strong note after her give-way (175.409, the basket's tip): still until it, moving after.
+    const x = (t: number) => show.at(t).x
+    check('married life: on the hill he stands struck still until the note, and bolts on it',
+      Math.abs(x(175.4) - x(174.9)) < 0.005 && x(175.6) - x(175.41) > 0.03,
+      `still ${Math.abs(x(175.4) - x(174.9)).toFixed(3)}, then ${(x(175.6) - x(175.41)).toFixed(3)} cells`)
+  }
+  check('married life: on the hill\'s flank they rest on the slope, not in it (until she gives way)', flank >= -0.05, `${flank.toFixed(3)} R at ${flankAt.toFixed(2)} s`)
 }

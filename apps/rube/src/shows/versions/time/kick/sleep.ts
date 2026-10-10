@@ -1,8 +1,9 @@
-import type { Pt } from '../../../../parts'
+import { R, type Pt } from '../../../../parts'
 import { bloom, rgba } from './cast'
 import { box, frame, hash, scenery } from './kit'
-import { DOWN, SLEEP_BANDS, UP, type Crossing } from './stack'
-import { SLEEP } from './worlds'
+import { SEAM } from './music'
+import { BAND, DOWN, SLEEP_BANDS, UP, type Crossing } from './stack'
+import { COBB, SLEEP } from './worlds'
 
 /**
  * The dark of sleep between two levels (the director's): a band of deep night under each level's ground and over the
@@ -20,6 +21,19 @@ const CROSSINGS: (Crossing & { up: boolean })[] = [
   ...Object.values(UP).map((c) => ({ ...c, up: true })),
 ]
 
+/**
+ * Where he is, and when the camera is out on the whole stack at once (the director's great wides): `score.ts` hands
+ * them over once the show is laid. At that size a ball is a pixel, so he is drawn there as a spark in his own colour
+ * with the streak of his climb behind it, all the way up, not only where he crosses the dark. So too whenever the
+ * frame is out that far on the dream (`dream`, his legs in it; Overview sees the whole stack the whole time).
+ */
+let wide: { where: (t: number) => Pt; spans: [number, number][]; dream: [number, number][]; awake: [number, number][] } | null = null
+/** How tall a frame (cells) is far enough out on the stack for him to be drawn as a spark. */
+const FAR_OUT = 40
+export function sparkInWides(where: (t: number) => Pt, spans: [number, number][], dream: [number, number][], awake: [number, number][] = []): void {
+  wide = { where, spans, dream, awake }
+}
+
 export const sleep = scenery<null>({
   name: 'sleep',
   draw: (p, _s, c) => {
@@ -28,16 +42,24 @@ export const sleep = scenery<null>({
     const ctx = p.drawingContext as CanvasRenderingContext2D
     const x0 = (f.x0 - 1) * k
     const w = (f.x1 - f.x0 + 2) * k
+    // The prologue is limbo alone: nothing is dreamt over it yet, so a frame on it (a tall one sees well over the
+    // tower) finds the dark of sleep going on up over limbo's sky, not the levels the job will go through. Overview,
+    // the stack seen whole, still sees all four.
+    const alone = t < SEAM.paris && f.y0 > BAND.snow.top
     for (const band of SLEEP_BANDS) {
-      const top = band.top - FEATHER
+      const sealed = alone && band.below === 'limbo'
+      const top = sealed ? Math.min(band.top - FEATHER, f.y0 - 1) : band.top - FEATHER
       const bottom = band.bottom + FEATHER
       if (bottom < f.y0 - 1 || top > f.y1 + 1) continue
       const g = ctx.createLinearGradient(0, top * k, 0, bottom * k)
-      const edge = FEATHER / (bottom - top)
-      g.addColorStop(0, rgba(SLEEP.mid, 0))
-      g.addColorStop(edge, rgba(SLEEP.mid, 0.96))
-      g.addColorStop(0.5, rgba(SLEEP.deep, 1))
-      g.addColorStop(1 - edge, rgba(SLEEP.mid, 0.96))
+      const at = (y: number) => (y - top) / (bottom - top)
+      if (sealed) g.addColorStop(0, rgba(SLEEP.deep, 1))
+      else {
+        g.addColorStop(0, rgba(SLEEP.mid, 0))
+        g.addColorStop(at(band.top), rgba(SLEEP.mid, 0.96))
+      }
+      g.addColorStop(at(band.mid), rgba(SLEEP.deep, 1))
+      g.addColorStop(at(band.bottom), rgba(SLEEP.mid, 0.96))
       g.addColorStop(1, rgba(SLEEP.mid, 0))
       ctx.save()
       ctx.fillStyle = g
@@ -70,8 +92,59 @@ export const sleep = scenery<null>({
       const far = Math.max(1, (f.y1 - f.y0) / 24)
       bloom(p, k, at, (cr.up ? 1.6 : 2.4) * (cr.up ? far : 1), SLEEP.mote, a * (cr.up ? Math.min(1.6, 0.8 + far * 0.2) : 1))
     }
+    const out = f.y1 - f.y0 >= FAR_OUT
+    const span = wide?.spans.find(([a, b]) => t >= a && t <= b) ?? (out ? wide?.dream.find(([a, b]) => t >= a && t <= b) : undefined)
+    for (const [a, b] of span ? [span] : []) {
+      if (!wide || t < a || t > b) continue
+      const far = Math.max(1, (f.y1 - f.y0) / 24)
+      const at = wide.where(t)
+      // The streak: where he was over the last half second, thinning and fading back along his climb.
+      ctx.save()
+      ctx.lineCap = 'round'
+      for (let j = 0; j < 10; j++) {
+        const s0 = Math.max(a, t - j * 0.05)
+        const s1 = Math.max(a, t - (j + 1) * 0.05)
+        if (s1 >= s0) break
+        const p0 = wide.where(s0)
+        const p1 = wide.where(s1)
+        ctx.strokeStyle = rgba(SLEEP.mote, 0.5 * (1 - j / 10))
+        ctx.lineWidth = Math.max(1, 0.2 * far * k * (1 - j / 12))
+        ctx.beginPath()
+        ctx.moveTo(p0[0] * k, p0[1] * k)
+        ctx.lineTo(p1[0] * k, p1[1] * k)
+        ctx.stroke()
+      }
+      ctx.restore()
+      bloom(p, k, at, 1.5 * far, SLEEP.mote, 0.55)
+      ctx.fillStyle = COBB
+      ctx.beginPath()
+      ctx.arc(at[0] * k, at[1] * k, Math.max(2, 0.19 * far * k), 0, Math.PI * 2)
+      ctx.fill()
+    }
   },
 })
 
 /** The cells the dark claims: enough of every band, across the whole width a level may be seen at. */
 export const SLEEP_CELLS: Pt[] = SLEEP_BANDS.flatMap((b) => box(-70, b.top - 2, 80, b.bottom + 2, 3))
+
+/**
+ * Paris seen whole (Overview, the more so in a tall frame): the city is a strip across a great sky and he is a speck in
+ * it, five pixels across or less. Whenever the frame is out that far, he is the same spark in
+ * his own colour there too (`awake`, his legs out of the dream that need it), so he can be found.
+ */
+export const beacon = scenery<null>({
+  name: 'beacon',
+  draw: (p, _s, c) => {
+    const { k, t } = c
+    if (!wide || R * k >= 2.5) return
+    if (!wide.awake.some(([a, b]) => t >= a && t <= b)) return
+    const f = frame(p, k)
+    const far = Math.max(1, (f.y1 - f.y0) / 24)
+    const at = wide.where(t)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.fillStyle = COBB
+    ctx.beginPath()
+    ctx.arc(at[0] * k, at[1] * k, Math.max(2, 0.19 * far * k), 0, Math.PI * 2)
+    ctx.fill()
+  },
+})

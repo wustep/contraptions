@@ -164,12 +164,14 @@ export function wordPainter(w: number, h: number, dx = 0, dy = 0): (into: Canvas
     for (const c of cards) {
       if (c.light <= 0) continue
       ctx.clearRect(0, 0, w, h)
+      // A card's unit is the frame's, or its own floor (`least`) if that is larger; its shade is sized by the same.
+      const cu = Math.max(u, c.least ?? 0)
       const top = (c.at[1] + (c.rise ?? 0) / 100) * h
-      const bottom = card(ctx, c, c.at[0] * w, top, u)
+      const bottom = card(ctx, c, c.at[0] * w, top, cu)
       if (c.shade) {
         into.save()
         into.setTransform(1, 0, 0, 1, 0, 0)
-        veil(into, dx + c.at[0] * w, dy + top, dy + bottom, u, c.shade * Math.min(1, c.light))
+        veil(into, dx + c.at[0] * w, dy + top, dy + bottom, cu, c.shade * Math.min(1, c.light))
         into.restore()
       }
       into.save()

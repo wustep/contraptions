@@ -35,8 +35,9 @@ the credits over the house.
 
 - **The file.** `married-life-demo.mp3` was removed from the repo (copyrighted). Live playback is YouTube only. Rebuild locally with yt-dlp if needed for measurement; it was demo-only:
   `ATTRIBUTION.txt` says so.
-- **The YouTube cue.** The soundtrack also plays the upload itself (`youtube: [{ id: '2rn-vMbFglI' }]`), on the same
-  clock. The file is the fallback, and what an export records.
+- **The YouTube cue.** The soundtrack is the upload itself (`youtube: [{ id: '2rn-vMbFglI' }]`), and it drives the show's
+  clock. With no file there is no fallback: if YouTube cannot play, the show runs silent on the wall clock, and an
+  export records silent (its credits drawn in).
 - **Measured once**, by `scripts/shows/married-life-onsets.py` into `scripts/shows/plans/married-life-onsets.json`.
   The waltz does not keep one tempo: it ritards at phrase ends, halts for the loss, comes back slower, and presses on
   before the tickets. So there is no comb. A beat tracker with a drifting tempo prior follows it beat by beat. Each
@@ -59,7 +60,7 @@ the credits over the house.
 
 ## In order
 
-Every scene has one hero mechanism that does something real on the music. There are 254 strikes in all, each on a
+Every scene has one hero mechanism that does something real on the music. There are 258 strikes in all, each on a
 measured beat or onset. In the waltzes the two of them play the bar between them: Carl, square, keeps the oom (the
 bass, on the one); Ellie, round, answers on the first pah.
 
@@ -71,17 +72,21 @@ bass, on the one); Ellie, round, answers on the first pah.
 - **The machine is the organ.** On every onset of the jazzed march its speaking pipes breathe: each stretches up a
   little, goes gold and gives three soft puffs from its mouth, and the bellows pump. The families sit at the couple's
   scale, head and shoulders over the pews: his parents grey and square and still, hers warm and round in hats,
-  bobbing on the beat. Ellie hops on the march's accents; Carl makes small stiff hops, and on one she bumps him; while
+  bobbing on the beat; on the kiss and the peal hers throw petals, a burst over their own heads that drifts down over
+  the two of them, seen to come from them. Ellie hops on the march's accents; Carl makes small stiff hops, and on one she bumps him; while
   she waits he shuffles two nervous steps along the altar step and back. The camera reveals the whole church and its
   bell once (landing on his startled hop, 3.45), comes in on the organ, carries past the couple to the pews, and
   closes on the two of them for the kiss, low in the frame under the lower half of the east window. As the march slows they turn to each other a step on each of its slowing
-  notes (15.41, 15.95, 16.81, 17.21): she rolls closer and rises onto her toes, his lean grows.
-- **The kiss is on waltz bar 1 (17.76)**, the last of the gap closed, held through the bar, with the organ's great
+  notes (15.41, 15.95, 16.81, 17.21): she rolls closer and rises onto her toes, his lean grows, and she looks up into
+  his face.
+- **The kiss is on waltz bar 1 (17.76)**, her last step meeting his lean (he does not step in too: their outlines
+  touch, not overlap), held through the bar, with the organ's great
   chord, a warm shaft from the east window's glass on them and a second flash from off frame, a warm wash that leaves
   them seen. The bell peals on the next three downbeats. From the kiss
   the camera pulls out over those three bars and comes to rest on bar 4's peal (20.89), the whole nave in, the bell
   swinging whole in its tower; then it runs on after them at that distance, never coming back in. They run down the
-  aisle, the doors fly open as Ellie reaches them, and they run out under the bell at 1.6 cells a second.
+  aisle, the doors fly open as Ellie reaches them, and they run out under the bell at 1.6 cells a second, he leaning
+  into the run with half his kiss lean, upright for the cut.
 
 ### The fix-up (21.58 to 49.64 s): the house, from the street
 
@@ -103,10 +108,10 @@ bass, on the one); Ellie, round, answers on the first pah.
 - **The mailbox.** Her handprint (a round palm) goes on bar 21, his (a square palm) on bar 22: two small hands,
   fingers up, thumbs reaching toward each other, in the box's own paint pressed darker, so they never read as two
   more of them. He has let the cart go as the mast folded, and it has rolled on past the box alone and braked on bar
-  20, so the box stands clear on its post; she springs back to it off the cart's tail. She leaps over him, landing
-  on 23's two (40.77, the strongest attack of the phrase and the first waltz's second-loudest swell), and leads up the
-  steps; he follows a bar behind. On the soft bars 29 to 31 they sit in the two armchairs at the bay
-  window.
+  20, so the box stands clear on its post; she springs back to it off the cart's tail. She leaps
+  over him, landing on 23's two (40.77, the strongest attack of the
+  phrase and the first waltz's second-loudest swell), and leads up the steps; he follows a bar behind. On the soft bars 29 to 31 they sit in the two armchairs at the bay
+  window, she looking at him (down at him as he crosses in front of her chair, then over at him in his).
 
 ### The clouds (49.64 to 63.25 s): the hill
 
@@ -116,10 +121,14 @@ bass, on the one); Ellie, round, answers on the first pah.
   belongs to, and the whole cloud takes a breath as it does. Every downbeat lands twice, at the chimney and in the sky.
 - Bars 32 to 35 build an airship (round nose, finned tail, a gondola slung under it), which sails off left. Bars 35
   to 38 build Paradise Falls in cloud: her tepui, as tall as it is wide, sheer sides of heaped billows, a flat lit
-  top, lit on the left and in shadow on the right. On bar 39 three falls pour off the lip into the mist, which curls
+  top, lit on the left and in shadow on the right. On bar 39 three falls of water pour off the lip (the pale blue,
+  streaked, of the painting and the pop-up, not cloud: white on white it read as a jar) into the mist, which curls
   up where they land; the camera holds it whole, pouring, through bar 40, and then a gust takes it off. Bars 39 to 44 build **a
   baby**, sitting up in a cushion of cloud, one leg out, an arm reaching, whole over the two of them and placed where
-  the mobile will be at the match cut. He starts; she rolls close. The camera stays at most 5.5 cells.
+  the mobile will be at the match cut. As far apart as the armchairs at the cut, she rolls in close to him over bar
+  33 and lies by him under all of it, her face turned up to the sky (`LOOKS`); he starts at the baby, she turns her
+  face from it to him, he answers with a small lean to her, and she looks back up at it for the cut (`GLANCE`): what
+  they want, decided between them. She rolls the last of the way. The camera stays at most 5.5 cells.
 
 ### The nursery (63.25 to 73.46 s): the house, inside, upstairs
 
@@ -164,7 +173,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   the back door on bar 3, and as he goes past the bookcase the book slides back off his top onto its shelf, on bar 4.
   It is one walk from the stump to his seesaw.
 - **The jar.** A seesaw stands in front of the fireplace. Carl hops on his end on each downbeat (taking off on the
-  third beat before it, the waltz's pickup), and the cup end
+  third beat before it, the waltz's pickup, when the plank, held half down under his weight since the stroke, kicks
+  up and throws him), and the cup end
   throws a handful of five coins over the room, spreading and closing up again, turning and catching the light, into
   the jar's slot on the mantle on the next downbeat; each handful puts a visible notch of brass in the glass, the jar
   clinks in its cradle, and Ellie on the ladder counts each one in: up off her tread as it drops into the slot, down
@@ -173,13 +183,16 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   on a sprung knuckle at the mantle's end; under it a tin hopper feeds **a chute** down the wall to a slot, and what
   goes down the chute is gone, paid out of the house. Life breaks it open three times:
   - the tyre of their car (a round family car), seen through the window in a still frame with the jar on the mantle
-    in it (the hubcap flies); she pushes the jar
+    in it (the drive set high in the glass so the flat tyre is seen flat above the sill, the hubcap a ringed disc that
+    flies); she pushes the jar
     over in its cradle, the coins run down the chute and out, and the cradle's spring sets it back on its feet,
     slowly. Paid for, the car drives off out of the window;
-  - Carl's leg: the refill's stroke shakes the pendant lamp and it sputters out (lit, it throws a soft warm cone down
-    the wall); the camera looks up with him as he climbs the ladder to it, the ladder kicks under the lamp, he falls
-    (the camera in close), and her
-    touch wraps a bandage round his foot; she pours the jar out again;
+  - Carl's leg: the refill's stroke shakes the pendant lamp and it sputters out (lit, a bright bulb throws a warm cone
+    down the wall; out, it is dark; drawn half as big again, so his reason to climb is
+    seen, and under Zoom the frame eases out to hold it); the camera looks up with him as he climbs the ladder to it, the ladder kicks under the lamp, he falls
+    (in a frame held all but still, so his fall is seen whole), and only once he is down does she drop off the
+    mantle's front, clear of the ladder, and roll to him past its feet, the camera going in close; her
+    touch, on the two, wraps a bandage round his foot; she pours the jar out again;
   - the storm: as she reaches the jar for the second pour the camera draws back to the whole house as it gathers, one
     even move (17.2 cells by 128.55: the
     house, its roof, and the garden tree's broad old crown whole over the ridge on its trunk, bending in the gusts
@@ -198,9 +211,10 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 - **The dance**, on the swell of the second waltz: side by side, she at his right, rising on every downbeat and
   swaying on the two and three, across the open floor from the gramophone toward her painting. The swell crests from
   bar 51's third beat into bar 52's downbeat (156.75 to 157.5 s, the loudest of the second half; by bar 53 it is 8 to
-  10 dB down). They dance in hold, and through the crest she rolls out along the floor to arm's length on
-  52's downbeat, as the warm pool brightens and the camera, come in with the swell, is closest on the two of them
-  (1.9 cells) under their wedding photograph on the hall wall. The low evening sun through the front door's glass
+  10 dB down). They dance in hold, her face on him throughout, and through the crest she rolls out along the floor
+  to arm's length on 52's downbeat, still looking at him, as a dancer spots her partner, as the warm pool brightens and the camera, come in with the swell, is closest on the two of them
+  (1.9 cells) under their wedding photograph on the hall wall, hung low under the chair rail and large enough to read
+  at the close: the two of them at arm's length under the picture of them touching. The low evening sun through the front door's glass
   lays two long warm shafts down the hall (the glass's cross bar splits it, so it reads as sun through a window): it gathers with the swell and falls full on the two of them on the crest, the
   light that fell on them at the kiss, and settles as the music falls away. She rolls back in by bar 53, and as they close into each other's arms on bar 55 it cranes out to the desk
   and her painting.
@@ -210,7 +224,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   (a roll of blank tickets on its top, a hand lever that throws down on each stamp, a window whose reel rolls through
   a city, the sea, mountains, to the falls) on bars 57 to 60, as the music presses on, and the camera pushes in slowly
   on the press, the basket and him until it is close (2.55 cells) on the slot and the basket as the two tickets fly
-  into it on the cadence (166.93, 167.28); it draws back as the lid shuts on 167.71, on through the cut. Past the open front door the
+  into it on the cadence (166.93, 167.28), each thrown high off the slot and turning slowly, so it is seen whole
+  against the wall over the press before it drops in; it draws back as the lid shuts on 167.71, on through the cut. Past the open front door the
   porch has its rail and the evening sky. He goes out after her with the basket on his top.
 
 ### The climb (167.71 to 180.41 s): the hill, years later
@@ -223,51 +238,71 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   steep flank toward it; he nearly gets there, and she never does. (In summer the tree stands left of the crest where
   they lie; seen from the lane years later, it stands where the climb can reach it.)
 - Close on them (2.8 cells), she climbs after him, tires, rests, pushes on and stalls. **On 174.67 she gives way**:
-  she sinks, and rolls back the short way she climbed onto the fieldstone's worn top, and is still. No bounce. The
-  strike is the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays
-  there. He does not stop: he hurries down after her, faster than he has gone in years, the camera in close with
-  them (2.4 to 1.9 cells, the basket left out of the frame), and eases to rest beside her on the stone. He leans to
-  her; she answers with the smallest roll toward him.
+  she sinks, and slides back limp the short way she climbed onto the fieldstone's worn top, her face down and not
+  rolling with her (a ball that rolls back reads as play), down in a little over a second and a half, and is still,
+  slumped (lower, wider: `slumpOf`), spent. No bounce. The strike is
+  the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays there, and
+  its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets to give
+  her, lying on the slope as he passes. Struck, he straightens up out of the slope's lean and stands still for most
+  of a second, watching her go, so she is seen
+  to fall first; then on the next strong note (175.409, the one the basket tips over on) he bolts down after her, faster than he has gone in years, up out of the slope's lean and
+  into the run (`RUN`, `runTilt`: tilted with the slope, a square going downhill
+  read as tumbling), the camera hanging back so he is seen to cross the frame to her, in close with them (2.4 to 1.9
+  cells, the basket left out of the frame), and comes onto the stone beside her three quarters of a second after she
+  has come to rest, so for a moment she lies there alone. He leans to her; she answers with the smallest roll toward him, lifting
+  only partly out of her slump, her face turning to him, and looking at him across the cut into the ward, where the
+  slump eases out under the covers.
 
 ### The hospital (180.41 to 189.45 s): the clinic
 
-- Her bed is at his chair's height; his chair's back is low and brown, so the old grey Carl stands clear of it
-  against the pale wall. He has brought her the balloon. The sky in the window goes gold, rose, violet, night. He
-  tips to pull the lamp on (182.43). Then he leans to her and gives her the balloon: at the full of his lean the
-  string passes from his corner to her, arriving on 184.88, tied short, and the balloon settles to float just over
-  her. On 185.66 she rolls the smallest way toward him, and he answers with a lean that arrives on the
-  next strong note (186.53): her gesture and his each have their note. The camera opens a little from the
-  cut in (2.7 cells) as he reaches for the lamp and holds the long-strung balloon whole over him (3.3 cells), then
-  comes in with the balloon as it settles, to 2.7 cells on her touch and his answer, the balloon whole under Zoom
-  too; then it begins to leave her, one slow draw back through the cut into the empty church.
+- Her bed is at his chair's height and her length, its foot a cell past her; she lies in it, the blanket over her
+  lower third, the sheet turned down at her and a mound where she lies (`drawCovers`, in front of her, dimmed with
+  the ward). His chair's back is low and brown, so the old grey Carl stands clear of it against the pale wall. He has
+  brought her the balloon, and comes in with it held close on a short string, letting it up as he reaches for the
+  lamp. The sky in the window goes gold, rose, violet, night. He tips to pull the lamp on (182.43). Then he leans to
+  her and gives her the balloon: at the full of his lean the string passes from his corner to her, arriving on
+  184.88, tied short, and the balloon settles to float just over her. She looks up at it, then round to him. On
+  185.66 she rolls the smallest way toward him, and he answers with a lean that arrives on the next strong note
+  (186.53): her gesture and his each have their note. The camera opens a little from the cut in (2.7 cells) as he
+  reaches for the lamp and the balloon rises whole over him (3.3 cells), then comes in and down onto the two of them
+  as it settles, to 2.7 cells on her touch and his answer, the two of them two thirds down the frame (Zoom keeps its
+  own, higher hold there, `hospitalZoomDrop`, so the balloon stays whole in it); then it begins to leave her, one
+  slow draw back through the cut into the empty church.
 
 ### The funeral (189.45 to 201.94 s): the church, empty
 
 - The same church, empty. It opens under the hospital's night, dim and blue, the glass dark, and the grey morning
   comes up over it in three seconds, the one pale beam and its dust last. Carl sits alone in the front pew, the
-  wedding photograph on an easel where they stood. Across the cut the balloon is his again: it holds its place and
+  wedding photograph on an easel where they stood: a third larger than the hall's, the two of them in it with a hint
+  of the blue and coral they were that day, and a soft warm light gathering on it as the morning comes, the one warm
+  thing at the altar end. Across the cut the balloon is his again: it holds its place and
   rises back over him as its string is let out. She is gone. The camera drifts slowly across the dawn to the wedding kiss's framing, now
   empty, arriving as he reaches the floor.
 - As the morning comes up he lets himself down off the pew, forward to its edge and down its front in one even move
-  (under half a cell a second, the seat twice his height), onto the floor on 192.05, and walks the aisle at an old man's pace (about
-  half a cell a second) into the porch, where the bell's rope hangs. As it is pulled the camera rises
+  (under half a cell a second, the seat twice his height), onto the floor on 192.05; there he turns to her picture and
+  leans to it, the lean he gave her in the office and at her bedside, taking over from the lean he got down with,
+  deepening on the piano's note (192.57) and held; then he walks the aisle at an old man's pace (about 0.65 cells a
+  second), his top lingering toward her as he goes, into the porch, where the bell's rope hangs. As it is pulled the camera rises
   and widens with it, and **the bell tolls once, on the cue's strongest onset (197.71)**, the whole empty church in
   the frame from the organ to the steps, and the toll is felt through all of it: the organ's pipes ring gold with it, as they went on every note
   of the march, and fade as the bell dies away; the balloon swings aside on its string and sways back; he starts; and
   the frame itself takes the blow, a small damped drop that settles in half a second (the only one in the show).
-  Dust sifts down. The answer, as the bell swings back, stirs them again, less. He goes out in the silence and comes to rest at the foot of the steps.
+  The bell answers softly as it swings back. He goes out in the silence and comes to rest at the foot of the steps.
 
 ### Alone (201.94 to 258 s): the house, from the street, at dusk
 
 - The church's steps become his own front steps: a match cut. The house is faded, the roof patched where the tree
   came through.
-- On the piano's notes he climbs the three steps, one careful step at a time, the camera close (3.5 cells) on the
-  steps, the door and the porch rail, the mailbox's faded handprints at the frame's edge. The latch; the door, and
-  the camera widens as he goes in. The bay's glass runs down to the room's floor, so he is seen whole through it,
+- On the piano's notes he climbs the three steps, one careful step at a time (lifting, then
+  shifting onto the tread: a climb, not a hop, `climbUp`), the camera close (3.5 cells) on the
+  steps, the door and the porch rail, the mailbox's faded handprints at the frame's edge. The latch; as it gives he
+  draws the balloon's string in short (`GATHERS` in `life/cast.ts`), so it comes in under the lintel with him before
+  the door shuts and passes the wall between the door and the bay at his side; the door, and the camera widens as he
+  goes in. In the bay he lets the string out again, before he ties it. The bay's glass runs down to the room's floor, so he is seen whole through it,
   and its middle light is one pane from head to floor, so no bar crosses the balloon over her chair. He ties the
-  balloon to her chair, so it floats over the empty seat. He sits in his, with a slow settle, and leans to put the
-  lamp on. Tied to her chair, the balloon leans the smallest way toward him on three of the piano's phrase notes
-  (219.70, 221.88, 226.20), easing over and back: her last gesture at her bedside was the same.
+  balloon to her chair, so it floats over the empty seat. He climbs into his, as onto the steps, and settles heavily,
+  and leans to put the
+  lamp on.
 - The camera pushes in slowly on the two chairs through the sit, and holds the lit room for a phrase of the piano,
   him in his chair and the balloon over her empty one; then it draws back past the roof before the first card, and
   on at an even rate to the last frame (27 cells): the lit window, the house at dusk, the roof,
@@ -284,7 +319,14 @@ Up (2009); **After** Up, a film by Pete Docter, co-directed by Bob Peterson, Pix
 back past the roof by then, so every card lies over the sky; the canvas puts nothing under the words, and no star
 comes out under a card while it is up. On a phone held
 upright the stage shows more sky than the 16:9 box, and the cards go up into it (`TitleCard.lift`, a share of the
-extra height, used only by this show).
+extra height, used only by this show). There the frame is about 220px high, and at a hundredth of it the roles were
+4px and the cast's lines 9: the cards keep a least unit of 4.5px (`TitleCard.least`, also only this show's), so a
+role reads at 8.6px and a name at 25, and the widest card, the cast, is under three quarters of the screen.
+
+**On a phone held upright** the extra picture goes mostly above the frame (`Performance.tall`, 0.85 of it, used only
+by this show): every set stands on a floor or the ground, with sky, a roof or the storey above over it and only earth
+under it, so a tall stage shows the church's spire, the house's roof and the hill's sky, not a slab of ground. The
+cards go with the picture.
 
 **No balloon coda.** The montage ends with Carl alone in the house. What the film does next, the house lifting on
 balloons, belongs to other music. The show ends where the montage ends: two chairs, one empty, the lamp in the
@@ -301,7 +343,8 @@ window.
   waltz's downbeats (bars 3 and 37). No portal, and no cut drawn.
 - **Carl:** in a place he never jumps. At every cut he holds his place on the screen (within 1% of the frame a
   millisecond). He is never hidden for more than 2.5 s. The stage draws no ball: the cast draws the two of them.
-- **Zoom and distance:** under Zoom (1.5× closer) his whole square and her whole ball stay in the frame. No shot wider
+- **Zoom and distance:** under Zoom (1.5× closer, held off the middle by `zoomDrop` where the camera says) his whole
+  square and her whole ball stay in the frame. No shot wider
   than 6 cells lasts more than 2.5 s, except five named reveals, each held to its window and its widest: bar 4's peal
   and the run out to the old house (the bell whole, up to 6.6 cells), the house made new (the machine as tall as it),
   the storm (the whole house and its tree, up to 17.6 cells), the one toll, and the credits (up to 27.5 cells). The
@@ -318,8 +361,21 @@ window.
 - **The years:** his blue and her coral grey with age, and hers is the colour she is drawn in.
 - **The balloon:** it comes in with him to the hospital and not before; it is hers at her bedside, from his giving
   it to the cut; it is his again from the church to the end; and it never jumps in a place.
-- **The toll:** the frame takes a blow only there (at most 1.5% of its height); the balloon is stirred only by the toll
-  and its answer; at home it leans only on the piano's own notes, after he sits and before the credits.
+- **The toll:** the frame takes a blow only there (at most 1.5% of its height); the balloon is stirred only by the toll.
+- **Zoom's margins:** neither of them within an eighth of the Zoom frame's edge for 2.5 s or more, except where the
+  staging fills it (the nursery, nine tenths of its width apart; the ward, the balloon over them); the balloon's crown
+  never cut by more than 0.08 of its half height; and the frame's sharpest change of speed under Zoom at most twice
+  the show's own.
+- **Her face:** at him at the kiss, in her armchair, at the crest and on the fieldstone, and up at the clouds (each
+  within 20°); never turning more than 0.15 rad a frame faster than her own roll.
+- **The flank:** neither cuts into the hill's slope by more than a twentieth of R, until she gives way.
+- **Contact:** his square and her ball never overlap by more than 0.02 cells while she is with him.
+- **The slump:** on the fieldstone, before her answer, she is drawn at most 92% of her height and at least 1.2 times
+  as wide as high.
+- **The hill's hurry:** while he runs flat out (175.0 to 176.2 s) he keeps moving toward her on screen, at least 3% of
+  the frame's width a second, under Zoom too.
+- **A phone held upright:** wherever the house's inside is on, a stage as tall as 9:21 sees only the sky and earth
+  the set paints round it (`INSIDE_SPAN`), even at the storm's wide.
 - **The credits:** after he has sat down and gone before the end, set by the page, opening on Directed by Claude
   Opus 5.5 and naming Carl and Ellie Fredricksen, Michael Giacchino, Married Life, Up, Pete Docter and p5.js.
 
@@ -335,11 +391,20 @@ window.
   - `cast.ts`: Carl (a rounded square that slides and leans with the slope), Ellie (a ball), their trails, the bow
     tie and the balloon, drawn in every world between the parts' drawings and their fronts; the years' bearing
     (`bearingOfAge`) under every part's pose; the balloon's ties (`show.ties`: to her at the bedside, to her chair
-    at the end), what stirs it (`STIRS`: the toll and its answer) and its leans toward him at home (`LEANS`).
+    at the end), what stirs it (`STIRS`: the toll), and where
+    he holds its string short (`GATHERS`: into the ward, and through his own door).
   - `music.ts`: the measured clock (`BEATS`, `bar`, `beat`, `onsets`, `AT`, `CUT`, `SEAM`) and `AGE`.
   - `kit.ts`: the part contract, Liftoff's and Epilogue's: `part`, `route`, `hop`, `carried`, `lay`, `frame`, and the
     p5 fill-cache guard. `worlds.ts` holds the palettes and the cast's colours.
   - `credits.ts`, and `hits.ts` (every strike, gathered for the check).
+  - `index.ts`: the performance. Two framing hints the stage reads, both used only by this show: `tall` (on a phone
+    held upright, 0.85 of the extra picture goes above the frame) and, on the camera's framing, `zoomDrop` (where
+    Zoom holds off the frame's middle: higher on the home steps, lower through the credits; `zoomDropAt` in
+    `house/alone.ts`, `hospitalZoomDrop` in `clinic/hospital.ts`, `fixupZoomDrop` in `house/fixup.ts`), and on top of
+    those Zoom's own hold, `zoom.ts`: worked out once for the whole show, it keeps the two of them off the Zoom frame's
+    edges (`zoomDrop` and `zoomSlide`) without pushing the topmost of them or the balloon's crown out. Before the
+    credits Zoom eases back to the show's own frame (`zoomFull`, `zoomFullAt` in `house/alone.ts`), which the cards
+    are set over. Each is read through `zoomFrame` in `registry.ts`, by the stage and the checks alike.
 - **The places and their parts**, one builder each:
   - `church/`: `church.ts` (the set, in two lights), `wedding.ts`, `funeral.ts`.
   - `house/`: `front.ts` (the street side), `front-house.ts` (the house drawn old, new, faded, at dusk),
@@ -358,7 +423,8 @@ window.
 
 - `npm run dev`, then open `/shows/married-life/`. Space plays and pauses; Z is Zoom (1.5× closer).
 - `npm run check:shows` runs its checks with every other show's; `npm run build` runs every check.
-- `python3 scripts/shows/married-life-onsets.py` measures the mp3 again and rewrites the onsets file.
+- `python3 scripts/shows/married-life-onsets.py` measures the recording again and rewrites the onsets file (it needs the
+  mp3 rebuilt locally first; it is not in the repo).
 
 ## How it was made
 
@@ -440,6 +506,412 @@ window.
   that poke up at the frame's foot are not under it). Considered and kept: the fix-up's wide from 31 to 36 s, where the
   two of them are small, because it is the house made new.
 
+- **Polish rounds 6 to 38 (Opus 5.5, one director, PR #163).** Rounds of audit and fix, each logged in that PR's
+  description and in git; what they left, by area (the scenes above describe the show as it now is):
+  - *Story and staging.* At the funeral her photograph is larger, hand-tinted with their blue and coral (as is its
+    copy over the dance), warmed by the dawn, and he leans to it before he walks. Under the baby cloud they look at
+    each other (`GLANCE`); on the blanket she lies close, looking up. The tickets spill on the hill. Her bed is her
+    size, the covers over her (`drawCovers`). Her face is steered where the story needs it and never snaps (`LOOKS`,
+    `lookOf`). The balloon is carried short through doors and into the ward (`GATHERS`); the flat tyre is seen flat;
+    at the kiss he no longer steps in on his lean; on the hill's slope they rest on it, not in it (`seat`). The new
+    gestures are on measured notes and registered strikes.
+  - *Framing.* On a phone held upright the extra picture goes above (`Performance.tall`). Zoom has the parts' holds
+    (`zoomDropAt`, `hospitalZoomDrop`, `fixupZoomDrop`) and its own (`zoom.ts`: off the edges, the crown kept,
+    smoothed twice and read along a curve), eases back to the show's frame for the credits (`zoomFullAt`), all read
+    through `zoomFrame` in `registry.ts`. Overview frames the place in play (`Performance.overview`, `LifeShow.place`).
+  - *Checks.* His square and her ball never overlapping; Zoom's margins, the crown under Zoom, Zoom's gentleness, her face at each beat and never snapping, and
+    resting on the slope; the fragile ones proved by undoing their fix. `anchorCached` made the suite 96 s faster.
+  - *Lenses tried*, so a later pass can choose a new one: contact sheets; full-size stills; frame differencing for
+    pops (repeated after the motion and camera work: the same fifteen spikes, all cuts, the flash, the lightning and
+    the lamp); each cut before and after; Zoom; a phone upright, and with Zoom, and again after the motion and story rounds (the cloud over the
+    field covers the whole tall frame, no seam at the 16:9 edge); an ultrawide 21:9 stage, with and
+    without Zoom (the sets run on past their walls into sky and floor, no voids; Zoom's vertical framing is 16:9's), and
+    a 4:3 tablet; a 2x (high-DPI) screen (the stage's canvas at full density, line weights in proportion); a hidden
+    tab (simulated: no frames and `document.hidden` for 10 s; YouTube plays on and the picture is in step at once
+    on return), and hidden across the music's end with timers throttled to once a second: the show runs on to
+    4:18 and YouTube stays quiet, also with its restart forced while hidden: with nothing asking the show, YouTube's
+    own time showed it paused at its start within a second, so the player's background timer catches it; the
+    keyboard with YouTube on (Space plays and pauses with the music in step; Z and O toggle Zoom and Overview while it
+    plays, the music undisturbed); a drag of the scrub bar while YouTube plays (it pauses the show, as the player is
+    built to; on play the music goes to the picture and they run in step); taps on the stage of an
+    emulated phone with YouTube on (play, pause, play, the music in step; the panel tucked away, the stage whole); the balloon's crown; contact with floors and
+    slopes; stillness; gaze, as a whole and beat by beat; strobing; the camera's acceleration; render cost; contrast;
+    three fresh critics (frames, regressions, story) and a story re-watch; the notes against the code; the shared code
+    against `origin/main`; the credits under Zoom; Overview; the exports, and a real video export; the console; the full `npm run build` (every suite and the bundle; Vite's chunk-size
+    notice is `origin/main`'s too); the
+    player's speeds; her face through the doctor's office and into the yard (up toward the coat before the news, then
+    turned away from him as she rolls away, and still turned away across the cut; kept as it is: a downcast look as
+    well would have to turn down and back up within three seconds to meet the cut without a snap).
+  - *Considered and kept.* Ellie stands before the open front door's leaf at the tickets (past it she leaves the Zoom
+    frame through the press's push-in). The balloon is hidden half a second at the bay's post, while he is too. The
+    tilted car is not in front of the window's bar (a critic's false alarm, checked in the pixels). The climb is not
+    restaged so he finds her far below. At the funeral he does not step toward the easel before his lean (the aisle's
+    pace allows no more). The aisle is 0.65 cells a second, from 0.58, to keep the toll on its note. Render-cost
+    outliers are headless Chromium's, not the show's.
+  - *Motion* (a motion critic, from filmstrips at 12 to 24 frames a second). Taken: his lean to her picture held and
+    let go with drag as he walks (it had been a wobble that never held); Ellie's leap at the mailbox gathered, drawn
+    out along its flight and landing wide on its note (`leapShape`); old Carl climbing his steps and his chair as a
+    climb (`climbUp`), with a gather before each step and a heavier settle. Then the other three: his hurry down the
+    hill, a frozen beat on the strike and a burst to twice his old speed, gaining on her as she rolls, leaning into
+    it with a stride's bob (`RUN`); his run down the aisle, half his kiss lean kept as a lean into the run and a
+    bounce on each downbeat, upright again before the cut; the seesaw rising only half way under his weight and the
+    rest as he takes off, so the reset launches him (`leaveAfter`). The critic re-watched all six: the funeral lean and
+    the leap move well; the first climb popped up and hovered beside the tread (a regression), now a rise eased at
+    both ends with the shift across from a tenth of the way, up and over the nose; the hill's catch-up front-loaded
+    so it is seen while she rolls; a small bound before each downbeat of the aisle run; the seesaw's kick a moment
+    before he leaves, so it throws him; the funeral lean deepened on its note so the arrival is felt. A third re-watch:
+    the steps, the chair, the aisle and the funeral bow move well; the hill now runs flat out and arrives as she
+    comes to rest (it had crept for 1.4 s, then, front-loaded, it ran into her as she settled), still beside her to
+    his lean; the seesaw's kick is fast at its start and begins 0.1 s before he leaves, so the plank carries him off;
+    the bow has a small settle in it. A fourth: the seesaw throws him; the hill arrives cleanly but reads as a
+    determined pace more than a dash (she rolls back at nearly his speed, and the camera follows him), so his stride
+    is stronger; and the camera lags his run (a key at 175.9, `LAG_X`), so he crosses a fifth of the frame toward her
+    while he runs flat out, and it settles on the two of them as he eases onto the stone. (A first lag caught up at his
+    own speed mid-run and stood him still on screen for 0.3 s, read as hesitating: measure on-screen speed, not only
+    its sign.) Re-watched: a dash, then an arrival, in the show's frame and under Zoom. Kept: under Zoom, while the
+    frame hangs back (about 175.7 to 176.4), Ellie and the stone sit near its right edge for under a second.
+  - *A first-time viewer* (a fourth critic, told nothing of the changes): the show holds together, the arc builds,
+    nothing jars; strongest the bedside to the lit house, weakest the grey yard. Taken: on the fieldstone she lay
+    round and upright, eye up, like someone sat down for a breather; she now slumps (`slumpOf`: lower, wider), looks
+    down, spent, lifts only partly to answer him, and the ward takes the slump up across the cut and lets it go under
+    the covers. The yard's grey lifts from 90 s, with his walk out, instead of from 95. Re-watched by the same viewer:
+    both land (the slump reads as "she can't go on", the ward takes it up naturally). Optional: dimming the
+    autumn light from her fall, then tried and kept (`overcast` in `hill/climb.ts`): a cloud's shadow over the field,
+    dimming and cooling over two seconds from her fall and held to the cut, leading into the ward's dusk. Re-watched:
+    felt as the light going out of the place, the two of them still clear; the cut into the brighter ward reads as a
+    change of place (its window's gold to night carries the fall of light on), so the overcast is not eased out before
+    it, which would undo the beat; 20% is the right strength (any more reads as a grade over the shot).
+  - *A viewer who has never seen Up* (a fifth critic, told nothing of the film): the whole arc reads from the
+    picture alone, the wedding to him alone at the end. Its confusions were mostly the machines, which are the
+    premise: the jar's mechanism (that each mishap costs coins), the doctor's office (no one there), the tie wheel,
+    the ticket press (read briefly as a slot machine), the engine on the hill. Taken: his bandage, a sliver, now a
+    taller band with its wraps crossing it. Considered and not taken: making the jar's losses literal, which would
+    restage the show's central machine.
+  - *Speeds with YouTube.* 0.25x to 2x exact; 4x ran at 2x (YouTube plays no faster, the show follows the music,
+    and with the mp3 out of the repo there is no file to fall to). Now, past 2x with no file, YouTube sits out:
+    silent, no say in the clock, which runs at 4x on the wall; back at 2x or slower it comes in where the picture is
+    (`sittingOut` in `soundtrack.ts`; every YouTube-only show gains it).
+  - *A phone held upright* (contact sheets at 9:19.5, and a scan of every second for full-width edges in the top of
+    the frame). At the storm's wide the house's sky stopped 40 cells above it and a flat grey band showed over it,
+    the rain falling across the join; the set now paints 160 cells up (`INSIDE_SPAN`), and a check holds a 9:21
+    stage inside it. The scan's other edges are floors, ceilings and the autumn hill's cloud bands, wider than an
+    upright frame, which read as strata.
+  - *Lenses that found nothing.* A phone on its side (about 21:9, every second scanned for full-height edges: only
+    walls, door frames, the coat stand and the porch posts). Motion, every frame at 30 fps diffed against the last:
+    away from the cuts the only jumps are the wedding photograph's flash, the two lightning strikes and the lamp
+    coming on at home, each on purpose. The share card (47.3 s) is pixel for pixel what the show draws now. The
+    credits on a phone, upright and on its side: set in the sky, clear of the house.
+  - *Determinism.* 120 times across the show drawn going forward, going back and in a shuffled order: every pixel
+    the same, so a scrub, a seek or a jump draws what play would. And the live stage, after playing a stretch, paused
+    and sought to 15 times, against `still` at the same times: every pixel the same, so the audits' stills are what a
+    viewer sees.
+  - *WebKit* (Playwright's WebKit 26.6, Safari's engine, headless). The picture: 17 frames across the show against
+    Chromium's, at most 0.12% of pixels apart (edge smoothing). The player on the deployed preview: the show starts
+    on its own with the sound held and the Sound button up, Space lets it in, the arrows step and pause, Space plays
+    on, Home goes to the top, nothing in the console. Found: WebKit refuses sound to the YouTube player for a press
+    made on the page (the player says it plays, its time stands still), and the player dropped that answer: the
+    Sound button went, the show ran on silent on the wall, with nothing left to press. Now every way of letting the
+    sound in (`joinSound` in `player.ts`) holds it again on a refusal, muted so YouTube still keeps the time, with the
+    Sound button back (Chromium made to refuse the same way did the same before, and does the same after). Whether
+    Safari itself, with a speaker and a person's press, refuses as headless WebKit does is not known.
+  - *An iPhone* (WebKit with Playwright's iPhone 15 Pro: touch, its screen, upright and on its side). A tap on Sound
+    is refused as on the desktop and the button is back within two seconds; speeds, taps on the stage and a seek to
+    the end behave; nothing is wider than the screen. Found: on its side with the panel up, the stage is about four
+    times as wide as high, the composed frame stands in its middle at full height, and the Sound button, centred low,
+    covered the two of them at the altar in the opening shot. Where the world beside the frame has room (150 px or
+    more), the button now stands there instead (`besideFrame` in `player.ts`, every show; an ultrawide screen too).
+  - *Theater* (every show, shuffled, one after another). Out: from 252 s the credits play out, Theater moves on to
+    the next show, Married Life's YouTube player is gone and the next one drives its own clock at 1x, with the sound
+    held or let in. In: arrived at after 18 skips through other shows, its music comes in with it and keeps time
+    from the first second. And on an ultrawide screen (2560 by 1080) the held Sound button stands beside the frame.
+  - *A fresh frame critic* (told nothing of the rounds; six dense sheets and close stills). Taken: as he comes in
+    at home (211.3 to 213 s) the balloon showed a slit of blue between the bay's corner post and the wall beside it
+    (the wall began 0.03 cells right of the post), so it read as sliced, not hidden; the wall now meets the post.
+    Kept: at the door (209 to 211 s) the jamb is the line indoors begins, and he and the balloon pass behind it
+    together while what is still outside stays in front of the wall, the rule of the whole homecoming; at 200.67 s
+    he is mid step down from the church's floor (0.22 cells a step); at 91.7 s the book is in front of the screen
+    door's frame as he carries it out through it.
+  - *Slivers*, after the post's gap: every 0.2 s through the wedding, the fix-up and from the ward to the credits,
+    a scan for strips of her coral or the balloon's blue three pixels wide or less and ten or more tall (what the
+    gap showed). Found only edges past a bar the thing is behind (the door's jamb, a mullion, the bay's post as the
+    balloon comes into the bay) and the edges of the orange guests in the pews: no gap left.
+  - *A fresh Zoom critic* (the first under Zoom). Nothing severe; kept: the balloon hidden for a moment as he goes
+    from the door behind the wall into the bay, and Ellie the same at the fix-up's door (43.0 to 43.2 s), as above;
+    on the hill under Zoom the basket he drops leaves the top of the frame as the camera follows the two of them down
+    (174.5 to 175.2 s), the tickets it spills staying in; in the show's own frame it is whole.
+  - *The credits on a phone*, measured: upright, the roles were 4px, the notes under 4 and the cast's lines 9. Floors
+    for every show's credits were tried first and taken back: two other shows' cards are set off the middle, so on
+    a phone they ran off the screen, and slid back on they covered Merry-Go-Round's castle and crowded Soft Lamp's
+    window. Now a card may ask for a least unit (`least`), and only this show's do; every show's cards checked on a
+    phone at every second still fit the screen. A colour barcode of the show (a column a half second) found the arc
+    whole: no jump of light or colour inside a scene but the storm's.
+  - *A fresh story critic* (contact sheets in order, the story written back beat by beat first). It told the whole arc
+    back right. Taken, its first note: on the hill her give-way read as the two of them sliding back down, the picnic
+    gone wrong, not as her failing; her face rolled with her down the flank (nine radians), like a ball at play. Now
+    from the give her face is held down (`LOOKS`, `spot`) and she slides back limp, slumping as she goes, into the
+    fieldstone's look; checked: her face turns under a fifth of a radian while her roll would turn it more than one.
+    Considered and kept: the yard's long push of the book and the short pop-up (the walk is one walk on the music);
+    the three takings of the jar (the premise's machine); her death told by the ward's light going (understatement);
+    the ties' wheel and the slow homecoming (the years, and mourning).
+  - *The fresh story critic's re-watches of the hill.* After her face was held down: the turn landed at her give-way
+    at full size ("she went limp"), but he came down with her at her speed, tilted with the slope, and read as
+    falling too. Taken: he stands struck still for 0.8 s watching her go, then runs upright, leaning forward with a
+    bound each stride, and comes onto the stone after her; her slide is quicker (1.6 s from 2.3; she crept on), so
+    she lies still and alone a moment before he comes. Re-watched: "she fell and he came after her", at full size
+    and at the sheet's scale; its one note, that standing still on the slope's lean he looked stopped mid-tumble, taken
+    (struck, he straightens up). The run's on-screen check moved past his stillness (175.75 to
+    176.4 s); a check holds her on the stone at least half a second before him.
+  - *After the hill's restaging*, under Zoom and on a phone upright: he stands struck still high in the frame while she
+    goes down to the stone, then runs down to her, both whole in the frame throughout. The story critic's other
+    notes, looked at again: the flat tyre is staged (the camera pushes in to the window, the tyre goes with a puff,
+    the car sits tilted while the jar is spent and is level after); a sheet a frame every 1.4 s steps over the
+    puff, viewing speed does not.
+  - *The restaged fall, on the music.* Her coming to rest (176.272) already sat on a measured onset (176.274); his bolt
+    came 60 ms after the next strong note (175.409, strength 0.71, the basket's tip). His stillness now ends on it: he
+    bolts on the note, with the basket's tip (a check holds him still to it and moving after).
+  - *A whole play on the deployed preview, after the player's changes* (Chrome, YouTube, real time, the clock read
+    every second): 0:00 to 4:18 in 259 s of wall, never backwards, never held three seconds, within a second of the
+    wall throughout (the clock's own resolution), no warning on the page, nothing in the console but YouTube's own
+    start-up note; the credits over the sky, and at the end Replay under the house, over the light on its walk.
+    The yard's pop-up, looked at again: the book opens on the note, she perks up and leaps to it, and they carry it in
+    open as the phrase turns (about two seconds of it); the dream goes on in the jar's own picture, so it is kept.
+  - *The nursery and the ward, close.* The nursery clean: the winch lifts her shelf, the mural grows sky, birds and
+    hill, the two of them at the cot at the end. The ward's last seconds clean: the camera draws back as the window
+    goes to night, the balloon over her. Considered and not taken: closing her eye at the end of the ward, so a first
+    viewer sees the moment she dies; the film itself cuts from the ward to the funeral and never shows it, and the
+    show keeps to that.
+  - *A slow device* (Chrome with the CPU slowed four times, 1280 by 720 at 2x, playing; the time each frame's drawing
+    takes): the storm the heaviest (11 ms a frame on average, 27 ms at the 95th), then the clouds and the ties (about
+    9 ms, 20 to 23 at the 95th); the fix-up, the hill and the credits 3 to 5 ms. Unslowed, the storm is about 3 ms. So
+    on a slow phone the storm may drop the odd frame, never a run of them. A profile spread the time thinly; p5's
+    parsing of colour strings looked the largest single share, but a cache of parsed colours (pixel for pixel the
+    same, 24 frames) bought nothing measurable, so it was not kept.
+  - *A second viewer who has never seen Up*, after the hill's restaging (contact sheets, the story told back first). The
+    whole arc came back from the picture alone: the wedding, the house made theirs, the baby wished for and lost
+    (about 75% sure, on the cut from the nursery to the cold corridor), the dream of the falls, the savings and the
+    setbacks, the years, the tickets, her failing on the hill ("she can't make the climb"), the ward, the funeral
+    mirroring the wedding (its strongest beat), him alone. Its confusions were again the machines: the arm that takes
+    the jar (the premise's, kept), how he came off the ladder, the tie wheel, the ticket press. One looked checkable:
+    whether the jar is emptied; at full size it is (before the first taking the coins are up behind its picture,
+    after it the jar is bare with new coins dropping in, and it is full again before the second), so kept.
+  - *How he came off the ladder* (both viewers unsure). In the show's own frame the motive is there: the lamp goes out
+    over the ladder, he climbs and reaches for it, the ladder kicks. Under Zoom it was not: the lamp stood above the
+    Zoom frame the whole time, so he climbed toward nothing and fell. Now Zoom eases out to the show's own frame over
+    two seconds as the lamp goes, holds it while he climbs, reaches and the ladder kicks, and comes back in over two
+    as he falls; a check holds Zoom out from the lamp going to the kick.
+  - *Under Zoom, every beat that turns on a thing* (fourteen, side by side with the show's own frame: the peal, the
+    rollers, the pop-up, the tyre, the taking, the storm's limb, the tie wheel, the press and its painting, the
+    tickets on the slope, the balloon given, her portrait, the balloon tied to her chair, the lamp at home). All whole
+    but the first setbacks: the flat rear tyre went off the frame's left and the jar off its right (the beat is set so
+    the tyre goes in one still frame with the jar it will cost), and the arm that tips the jar out of it. So Zoom's
+    ease out now starts two seconds before the tyre and holds through the taking, the car driving off and the lamp,
+    back in over two seconds as he falls (`setbacksZoomFull`, `jar.ts`); the check holds Zoom out from the tyre to the
+    kick, and a 30 fps scan of the ease found no pop.
+  - *The second and third takings under Zoom* (the two the beat audit left out). The second (125.2 s): Zoom comes back
+    in after his fall onto the bandage, and the jar is half off its right edge as she walks the mantle to it, but it
+    tips into the frame (whole by 125.4) and the arm follows it in (125.8): kept. The third is inside the storm's wide,
+    the jar small but in frame.
+  - *Him "dangling" from the tie wheel* (the second no-Up viewer). At full size he stands on the floor's plate under
+    the wheel in the morning's collar and tie, the brass dropper over him; only at a contact sheet's scale does a blue
+    square in a collar and tie look like one of the ties hung on the wheel. Kept.
+  - *Slivers under Zoom* (the scan run again under Zoom, every 0.2 s through the wedding, the fix-up and the ward to the
+    credits: half as close again, any gap twice as wide). Only edges past a thing in front: the balloon at the door's
+    jamb and the bay's corner post (its outline whole either side), Carl behind a porch post, the mailbox's red flag,
+    her trail, the orange guests. No gap.
+  - *The setbacks' Zoom ease on a phone held upright*: the tyre, the jar, the arm that takes it and the lamp he climbs
+    to all in the frame, the nursery and the roof in the extra picture over them.
+  - *Memory over repeated plays* (the whole show six times over at 4x, the heap read after two garbage collections
+    each time): 14.7 MB at the start, 19.2 after the first pass (caches filling), then 20.0, 20.3, 20.3, 20.2, 21.2;
+    the page's elements 222 throughout. No leak.
+  - *The ticket press* (both fresh viewers misread it: a slot machine, a camera; the slips known for tickets only on
+    the hill). The tickets had a third of a second each, the cadence's two notes, and on a true fall they made a low
+    hop at the basket's rim, spinning, gone in a blink. Now each is thrown (`ticketAt`, `ties.ts`): a stage's
+    gravity, harder for the shorter first flight, so both rise about a third of a cell over the slot and turn
+    slowly, seen whole against the wall, red and white, before they drop in; the timing on the notes is unchanged.
+    A check holds both at least a quarter cell over the slot and inside the frame, under Zoom too (the first try,
+    higher, touched Zoom's top).
+  - *"The arm that takes the jar"* (both fresh viewers). There is no arm: she tips the jar in its cradle and the coins
+    run down the tin chute and out through the wall's slot. Its funnel at the jar's mouth and its two brackets (read
+    as joints) make a grabber of it. Kept: both took the beat's meaning from it all the same ("life takes the
+    savings"), and only the mechanism was misread; redrawing it would redesign the show's central machine.
+  - *The thrown tickets, re-watched* by a third viewer who has never seen Up (150 to 180 s, told only that the two of
+    them had saved for the falls): "it makes tickets", "probably for the trip to the waterfall", a surprise picnic to
+    give them to her there (65% sure); before, both viewers had read the press as a slot machine or a camera. From a
+    sheet a frame a second it read the hill as him too old for the climb; the critic who had the dense strip of the
+    fall read it as she fell and he came after her, so this is taken as the sheet's sampling (three frames of a
+    three-second beat), not restaged.
+  - *The hill, settled* by a fourth viewer who has never seen Up, given the climb at four frames a second (168 to
+    183 s) and nothing leading: her (90% sure), "she can't manage the climb", a health problem not an accident (85%);
+    the turn on 174.6 as he leaves the basket and the tickets to go to her. So the third viewer's "him too old" was the
+    one-a-second sheet's. Not readable at that scale: whether she collapses or rolls back tired; either carries it.
+  - *The doctor's office, re-watched* by a fifth viewer who has never seen Up (the baby cloud to the yard, three or four
+    frames a second, nothing leading): there about the baby, and bad news (80% sure); which news open (lost, or can't
+    have one), as the film leaves it. Her sinking read plainly; his lean to her (8°) did not ("I can't tell whether
+    he's leaning toward her or just still"), and his reach to her is half the beat: now 14°, clear at both framings.
+  - *The yard and the book, re-watched* by a sixth viewer who has never seen Up (84 to 106 s, three frames a second):
+    a big book (90%), a place they dream of going (70%), the turn on 100.7 as it opens. What the pop-up showed was
+    half sure: the falls' near-white ribbon read as a stripe, a door or a road, and the cliff as a house, a tent or a
+    temple. The falls are now water in all three of their places (the pop-up, the jar, the hall's painting): a pale
+    blue, with deeper streaks falling in it and white spray at the foot (`fallStreaks`, `props/falls.ts`).
+  - *The tie wheel, re-watched* by a seventh viewer who has never seen Up (137 to 158 s, three frames a second): a
+    rotating tie rack that hands him the day's tie (85%), the years passing in routine (75%), the two of them greying
+    together (75%), calm and a little bittersweet. The earlier "fairground wheel" was the sparse sheets'. Kept.
+  - *The storm, re-watched* by an eighth viewer who has never seen Up (124 to 140 s, three frames a second): the limb
+    through the nursery's roof read, and its place meant something ("the old wound being torn open again"), and the two
+    of them through it together. Confounded by the test, not the show: the sheet began at 124, so it held the leg's
+    taking (125.2) without the fall it pays for, and the viewer, told the jar had gone twice, took that for the storm's
+    and found the order backwards. What it does show: the storm's own taking (129.3) is not seen, the jar small in the
+    house's wide. Kept: the wide is the storm's (the house, the tree, the limb), and the third taking is the one a
+    critic already found one too many; making it legible would recut a sequence locked to the music.
+  - *The whole show, after the beat-by-beat fixes*, told back by a ninth viewer who has never seen Up (a frame a
+    second): the arc whole, the wedding to him alone (the ward, the funeral, home at 90 to 95%). The fixes held: the
+    hill read right even at that scale ("she falls behind… he rolls back down to her… she is unwell"), and his lean
+    in the waiting room was among what landed hardest ("his chair leaning to hers. Nothing happens, and that's why it
+    hurts"). Most lost: the ladder (117 to 126 s), who fell (it guessed her, 55%); the one beat not yet watched by a
+    viewer frame by frame.
+  - *The ladder, re-watched* by a tenth viewer who has never seen Up (115 to 127 s, four frames a second): him who
+    climbs, falls and is bandaged (85%), but why he climbs only 40%, and the lamp never named: small at the frame's
+    top, a pale bulb and a faint glow, its going out was not seen. Now the shade and bulb are drawn half as big again
+    (`LAMP_SCALE`), lit it is a bright warm bulb with a stronger bloom and cone down the wall, out it is dark, and as it
+    blows a thin wisp of smoke rises off it for a second.
+  - *The bigger lamp, re-watched* by an eleventh viewer who has never seen Up (the same stretch and questions): the lamp
+    now named as why he climbs ("to fix or change the lamp that just went out", 60%, from never named and 40%); him who
+    falls and is bandaged (80%). It thought the lamp lit again by 124.5; it does not (the bulb is dark there, the
+    shade back in the frame as the camera moves).
+  - *The lamp's sputter* (the eleventh viewer called its going out "subtle"): 0.36 s from the stroke that shakes it
+    (118.613) to out on the next beat (118.973), four flickers of about a tenth of a second each; plain in motion, one
+    frame of it on a sheet at four a second. Kept on the music.
+  - *The beat-by-beat fixes on a phone held upright* (his lean, the falls as water in all three places, the bigger
+    lamp lit and out, the thrown tickets): all whole in the frame, the storey above in the extra picture.
+  - *The balloon, asked about* by a twelfth viewer who has never seen Up (180 to 230 s, two frames a second): his at
+    the funeral and home, tied to her empty chair: "her, or his memory of her" (85%), the one saturated colour in a
+    greyed world. Most moving: him in his chair, the balloon over her empty one, the lamp coming on "as if it were an
+    ordinary evening for two". Left: the bedside handover unclear at that scale; the wait at the steps read as him
+    hesitating to go in, which is its meaning.
+  - *The bedside, re-watched* by a thirteenth viewer who has never seen Up (180 to 189 s, four frames a second): a
+    vigil, the balloon his and then hers (75%), but "neither of them moves visibly", and the knot's passing read as
+    "a slide, not a hand-over". His lean to give it was 10° and his answer 2.5°, at a distance that holds the balloon
+    over them; now 17° to give it (back to 9°) and 7° for his answer, on the same notes. Her roll is held by the
+    seam to the church and kept. In the show's own frame they stay small (the balloon over them needs the room);
+    under Zoom the giving and the answer read plainly.
+  - *The bigger bedside leans, re-watched* by a fourteenth viewer (the same stretch and questions): his lean now seen,
+    "the one clear gesture… he tilts forward toward her head", with the string passing to her (75%), where the last
+    viewer saw neither move. Her roll still not seen; held by the seam, kept.
+  - *The nursery, re-watched* by a fifteenth viewer who has never seen Up (63 to 73.5 s, four frames a second): a
+    nursery (95%), his winch lifting her on a painter's platform, the mural made by the two of them, its hill the
+    baby cloud's hill. It also found "a rust-red rectangle at the top of the frame": the chimney's stack, drawn down
+    through the attic to the nursery's ceiling (its flue cannot come down through the nursery, whose window is where
+    it would run), so it floated over the room in every close there. The stack now stands from the roof band up, its
+    foot under the band on both sides (it pokes into the attic otherwise, bright under the storm's darkening).
+  - *The fix-up, re-watched* by a sixteenth viewer who has never seen Up (21.5 to 50 s, two frames a second): a wreck
+    made their shared home (80%), done over in their colours, the two chairs side by side; that it was her old house
+    (the film's clubhouse) only 15%, as the picture never says so; the beat, a home they make together, lands. And the
+    chimney after last round's change, on a phone upright: from the roof up, the attic clear.
+  - *The wedding, re-watched* by a seventeenth viewer who has never seen Up (0 to 22 s, three frames a second): their
+    wedding (90%), the kiss and the petals the moment that tells most, and unasked, the two families: "a reserved one
+    and an exuberant one". With this every beat has been watched by a fresh viewer at three or four frames a second;
+    each misreading that was the picture's was fixed and watched again (the tickets, the waiting-room lean, the falls,
+    the lamp, the bedside, the chimney), and the rest read as meant.
+  - *The wedding's petals* (the seventeenth viewer: "they first show up near the upper right window… could be something
+    going wrong at the stained glass"). Thrown at 2.2 to 3.6 cells a second they were up round the windows within half
+    a second, before the camera had the throwers whole. Now 1.4 to 2.2: a burst over the bright family's own heads,
+    drifting toward the aisle and down over the two of them, seen to come from them.
+  - *The lower petals, re-watched* by an eighteenth viewer (the same stretch and questions): "the colourful group is the
+    one that throws petals… the petals burst from their pews", the grey pew not joining in; the window not named.
+  - *The petals and the chimney under Zoom*: the chimney stands above the roof in the storm, dark with it, and the
+    nursery's ceiling is clear; the petals burst straight over the bright family, by a window's sill in Zoom's
+    tighter frame (the windows sit just over the pews there), theirs all the same.
+  - *Motion, again, after the beat-by-beat fixes* (the leans, the tickets, the petals, the lamp, the falls, the chimney):
+    every frame at 30 fps diffed against the last, 7,800 frames: away from the cuts the same four jumps as before and
+    no others, the flash, the two lightning strikes and the lamp at home, each on purpose.
+  - *The kiss, looked at again* (one wedding viewer: it "could take it as a nudge or a stumble"). Kept: it is several
+    cues, not one lean (his lean growing to 0.15 rad on the slowing march, her roll in and up onto her toes, the touch,
+    the light gathering on them, the photograph), both wedding viewers read it as the kiss and one as the moment that
+    told most, and a deeper press was tried before and made one squashed shape of them.
+  - *The whole show again, after every fix*, told back by a nineteenth viewer who has never seen Up (two frames a
+    second, the densest whole-show look): the arc whole, "she can't make it up… she's ill (80%)", the tickets read as
+    tickets and a surprise, the lamp named as why he climbs; hardest the waiting room, the tickets sliding away, the
+    empty chair. Its two "visual" flags checked full size and kept: 126.41 a clean frame of the jar tipping as the camera
+    draws back (the sheet's downscale made it look double-exposed), and 158 the ticket press's lever coming into the
+    frame's corner as the camera pans to it.
+  - *The falls in the clouds* (the nineteenth viewer read the airship and the baby, not the cliff: "a pot or jar… a
+    cylinder or column"). Its ribbons were cloud-white on a cloud: white on white. They are now the falls' water, as in
+    the painting, the pop-up and the jar: pale blue, deeper streaks falling in it, shaded down its right, so the
+    dream in the sky is the same place as the picture they save for.
+  - *The water in the clouds, re-watched* by a twentieth viewer (49.6 to 63.3 s, three frames a second): airship
+    (90%), waterfall (75%: "a tall cloud block… blue streaks pouring down"), baby (85%), read as "adventure and
+    travel… the wish for a child"; the last viewer had seen a jar or a column. Before the water pours it is still a
+    column, as it is built to be: the cliff first, then the falls on bar 39.
+  - *The cloud falls under Zoom and on a phone held upright*: the blue water whole in both. The engine that puffs them
+    runs by itself (the twentieth viewer could not tell who worked it): its flywheel keeps the waltz, a chuff on every
+    downbeat, so what it builds reads as their daydream, as that viewer took it. Kept.
+  - *The "pink lift" in the yard* (two viewers: a pink lift or chute, a pink panel popping up). It is the back screen
+    door, seen edge on, swinging out toward us as he pushes through with the book (91.4) and shut behind him (92.5):
+    a flat pink frame with its mesh for about a second. At full size a door, and named one by the viewer who saw it at
+    three frames a second; kept.
+  - *The share card, again*: rendered from this branch it differed from the committed card in a 7-pixel strip by the
+    porch, the wall meeting the bay's corner post (the balloon's slit, round 72). Regenerated (1200 by 630 at 47.3, the
+    still tooling), so the card a link unfurls with is the show as it is.
+    The PR's walk-in screenshot (four frames, 210.6 to 212.4) was stale by the same strip and was rebuilt too.
+  - *Photosensitive flashing* (WCAG 2.3.1's general flash rule, approximated: relative luminance per pixel at 60 fps, a
+    flash a pair of opposing changes of 0.1 or more with the darker under 0.8, failing where more than three fall in any
+    second over more than about 2.8% of the screen; counted in the page, at full size). The wedding's flash and the lamp
+    pass. The storm's lightning is two strokes 0.8 s apart and passes; its rain did not on a phone held upright, where
+    the sky fills the screen: each streak passing a pixel is a flash, 4.48% of the screen at the streaks' 0.42 (1.81%
+    at 1280 by 720). At 0.3 the rain is still plainly rain and the phone is at 1.06%; a check holds it there.
+    Under Zoom, where the streaks are drawn larger: 1.85% at 1280 by 720, 1.78% on the phone; the wedding's flash on the
+    phone 0.01%. All under.
+  - *The credits' contrast* (WCAG 1.4.3: 4.5:1 for small text, 3:1 for large), each line against the brightest tenth of
+    the sky behind it, every half second, on a desk and a phone. The cream names and notes passed (6.5:1 at worst); the
+    gold role and "as" lines did not on the first two cards, up while the dusk is still light (3.8:1 for "Directed by"
+    at 234 s, 4.4:1 for "the blue square"). Those two cards are now plain (`TitleCard.plain`: the card's cream), the
+    rest gold over the night; every line 5.4:1 or better. A saved video still paints them gold: the exporter
+    (`words.ts`) does not read `plain`, which two other shows use too, so it is left for its own change.
+  - *The share line* (the picker's line and a link's preview text): "…the house they fix up, live in, patch and leave"
+    promised the film's flight, which this take leaves out (no balloon coda, above); now "…patch and grow old in".
+  - *With YouTube blocked* (its hosts refused): the show plays silent on the wall clock at its own speed, and the
+    panel says "The soundtrack would not load. The show runs silent, on the wall clock." The music control said "This
+    version has no soundtrack", and while YouTube played, "a saved video keeps its music": neither true here. It now
+    says the soundtrack would not load, and for a YouTube-only show that a saved video is silent (`player.ts`).
+    And after a video is saved the panel said "Saved: picture and music" whatever the file held; it now says the file
+    is silent where the music is YouTube's (muting does not change what is recorded, only what is heard).
+    The player's other words on sound, read for this show: "the site's own copy is playing it" can only come where a
+    show has a file (`fellBack`), so never here; loading, held and blocked are true as they stand.
+  - *The keyboard* (WCAG 2.4.7, focus visible): Tab reaches every control in order (the panel's handle, the site's
+    links, full screen, the show picker, the credit's link, the YouTube player, the seek bar, play, restart, music,
+    speed, the three cameras, Theater, the export sizes, Save PNG), each with a focus mark: the accent outline on
+    buttons and links, the accent thumb on the seek bar, the accent border on the speed list and the handle.
+  - *A screen reader* (WCAG 1.1.1): the canvas had no role and no name, so the show itself said nothing. It is now an
+    image named by the show's title and share line ("Married Life: Michael Giacchino's Married Life, from Up, as a Rube
+    Goldberg machine…"), kept to whichever show is up (`player.ts`, every show; checked across a switch and back).
+  - *Names and frames* (WCAG 4.1.2, 3.1.1): the YouTube player's frame is titled ("The music, on YouTube"), every
+    visible control has a name, and the page declares its language. Nothing to change.
+  - *Reflow at 320 px* (WCAG 1.4.10): no sideways scroll with the panel closed (the stage fills it) or open (the panel
+    becomes a sheet under the picture); nothing past the right edge.
+  - *Not measured.* The YouTube cue's sync at real speed, by ear.
+
+- **Subtraction pass (Opus 5.5, PR #163).** A director's pass over what the polish rounds added, cutting what
+  decorated a beat without telling it: the skip onto each downbeat of the aisle run; Ellie's squash and stretch over
+  the mailbox (`leapShape`); old Carl's crouch before each of his steps (the climb itself, `climbUp`, is kept); the
+  bob and squash of each stride on the hill (his struck stillness and upright run are kept); the cloud over the field
+  from her fall (`overcast`; the ward's dusk carries the light's fall); and the smoke off the blown bulb (the bigger
+  lamp, bright then dark, is kept). No strike was among them; `check:shows` passes, and contact sheets of each cut and
+  of the whole show show nothing broken.
+- **Second subtraction pass (Opus 5.5, PR #163).** The show looked at again, whole, after the first cut, for what still
+  decorated without telling: the dust sifted from the tower at the toll (34 specks too small to see at the toll's
+  width; the nave's dust was taken out in the craft pass for the same reason), the second, smaller stir of the balloon
+  and glow of the organ at the bell's answer (the toll is felt once; the bell's own swing back stays, a strike), and
+  the balloon's three leans toward him at home (`LEANS`, at most 0.07 cells, too small to read as anything but drift).
+  No strike was among them.
+- **Who falls at the ladder (Opus 5.5, PR #163).** A test viewer could not tell who fell (117 to 126 s), as the ninth
+  had guessed her. On sheets at six frames a second the cause was plain: the camera pushed in under his fall, so the
+  frame moved as he did, and the biggest motion in the close that followed was Ellie's high leap off the mantle,
+  coming down through the ladder's rails at tread height with her trail behind her: a fall from the ladder, hers.
+  Now the frame holds (3.7 to 3.62 cells) from the kick to his landing, and goes in only once he is down; she waits
+  for that, drops low off the mantle's front on the fireplace side of the ladder, and rolls to him past its feet.
+  Her touch moves from bar 20's one to its two (122.27, her beat), so the roll is not a dash, and the bandage wraps
+  in 0.45 s, before she climbs again. Nothing added; the strikes are the same in number, each on the music.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
@@ -447,11 +919,24 @@ window.
 - The tree stands in a different place on the hill in each season (left of the crest in summer, at the top of the
   path in autumn). Only one season is ever on screen, and each is framed from a different side, so it reads as their
   tree both times; a wide that held the summer place and them years later needs about 9.5 cells.
-- Under Zoom the frame must keep the two of them within a third of its height of its middle, so a close shot always
-  shows a sixth of its height below their floor, and the dance keeps them low in the frame.
-- Under Zoom the balloon's top is cut on the home steps (about 205.5 to 208.4 s): a 3.5-cell close under Zoom is 2.33
-  cells, and his feet to the balloon's crown on its 1.3-cell string is about as much. Zoom holds the two of them, not
-  the balloon.
+- Under Zoom the first setbacks (the tyre, the jar's taking, the lamp he climbs to) are kept in the frame by easing Zoom
+  out to the show's own frame (110.5 to 122.7 s).
+- Under Zoom (`zoom.ts`) the two of them are held off the frame's edges, but in two places the staging fills the Zoom
+  frame and they come near an edge for a few seconds: the nursery (him at the winch, her on the cradle, nine tenths
+  of its width apart) and the ward (the balloon over them, the two of them under it). On the home steps, as he starts
+  up (203.9 s), the balloon's crown is cut by a sliver under Zoom (0.07 of the half height). Under the baby cloud
+  (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
+  Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
-- Only Chrome on macOS has been watched. The YouTube cue's sync, Safari and a recording export have not been
-  measured for this take.
+- Photosensitive flashing is measured by approximation only (above), not with a certified analyser.
+- A saved video's credits paint every role line gold: `words.ts` ignores `TitleCard.plain` (the page honours it).
+- Only Chrome on macOS has been watched; Safari's engine has been measured headless (above), Safari itself not. The
+  YouTube cue has, on the
+  deployed preview in Chromium (PR #163): it loads, plays, and drives the show's clock in real time (10 s of show in
+  10 s), with no fallback; whether picture and sound feel in sync to a listener is still for a person to judge.
+  A full play there found that, at times, YouTube started the video again from the top as it ran out, a moment before
+  the cue's end: the picture froze at 4:10 under the song heard again, and the credits' last eight seconds never
+  came. `youtube.ts` now treats a time gone back more than two seconds near the end as the cue run out (forced in a
+  test: before, frozen; after, the wall carries the show to 4:18 and YouTube is paused). A
+  recording export has (headless Chromium, PR #163): it runs the whole 258 s with the credits painted in, silent (no
+  `src`); at 1080p headless rendered 15 frames a second, a software limit, not measured on a machine with a GPU.

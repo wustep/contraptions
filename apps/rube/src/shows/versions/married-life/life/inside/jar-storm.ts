@@ -108,7 +108,10 @@ function rain(p: p5, c: Ctx, T: number): void {
   ctx.rect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
   housePath(ctx, k)
   ctx.clip('evenodd')
-  ctx.strokeStyle = `rgba(220, 238, 243, ${0.42 * r})`
+  // No brighter than this: each streak passing a pixel counts as a flash, and on a phone held upright, where the sky
+  // fills the screen, at 0.42 the rain flashed over 4.5% of it more than three times a second (WCAG 2.3.1's general
+  // flash threshold is about 2.8%); at 0.3, 1.1%.
+  ctx.strokeStyle = `rgba(220, 238, 243, ${0.3 * r})`
   ctx.lineWidth = Math.max(1, k * 0.014)
   ctx.beginPath()
   const span = f.x1 - f.x0 + 2
@@ -600,9 +603,21 @@ function bandage(p: p5, c: Ctx, T: number, carl: Figure): void {
   p.stroke(alpha(p, INK, 0.9))
   p.strokeWeight(weight * 0.6)
   p.fill(HOME.trim)
-  const band = 0.085 * k
+  // Tall enough to read at the room's framing, with its wraps crossing it, so it reads as gauze wound round him and
+  // not as a white stripe.
+  const band = 0.11 * k
   const len = (w + 0.02 * k) * wrap
-  p.rect(w / 2 + 0.01 * k - len, h / 2 - band - 0.012 * k, len, band, 0.02 * k)
+  const x0 = w / 2 + 0.01 * k - len
+  const y0 = h / 2 - band - 0.012 * k
+  p.rect(x0, y0, len, band, 0.02 * k)
+  p.strokeWeight(weight * 0.4)
+  p.stroke(alpha(p, INK, 0.45))
+  for (const u of [0.3, 0.62]) {
+    const x = x0 + len * u
+    if (x - 0.03 * k > x0) p.line(x - 0.03 * k, y0 + band, x + 0.03 * k, y0)
+  }
+  p.stroke(alpha(p, INK, 0.9))
+  p.strokeWeight(weight * 0.6)
   if (wrap > 0.95) {
     // The knot, on her side.
     p.ellipse(w / 2 + 0.035 * k, h / 2 - band / 2 - 0.012 * k, 0.07 * k, 0.05 * k)

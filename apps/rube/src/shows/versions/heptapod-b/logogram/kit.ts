@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { ballAt, laneAt, laneTime, type BallChange, type BallState, type Lane, type Piece, type PieceCtx, type Pt, type Seg } from '../../../../parts'
+import { ballAt, laneAt, laneTime, R, type BallChange, type BallState, type Lane, type Piece, type PieceCtx, type Pt, type Seg } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { ShowBall } from '../../../../show'
 
@@ -49,8 +49,57 @@ export interface Built<S> {
 /** See `Built.riders`. */
 export type Riders = (t: number, hero: ShowBall) => ShowBall[] | null
 
+/** The shortest turn from angle `a` to `b`. */
+export const turnTo = (a: number, b: number): number => {
+  const d = (b - a) % (2 * Math.PI)
+  return d > Math.PI ? d - 2 * Math.PI : d < -Math.PI ? d + 2 * Math.PI : d
+}
+/** 0 before, 1 after, smooth between: `u` from 0 to 1. */
+export const ease = (u: number): number => {
+  const v = Math.max(0, Math.min(1, u))
+  return v * v * (3 - 2 * v)
+}
+/** A window in which the hero looks at something, rather than her eye rolling with her: from, to, and where. */
+export interface Look {
+  from: number
+  to: number
+  at: (t: number) => number
+}
+/**
+ * Her eye turned to look in the windows given, from where her roll has it and back to it (the show hands a rider her
+ * roll as the stage draws it, as `spin`), each turn over about half a second. Outside them it rolls with her.
+ */
+export function looks(list: Look[], xAt?: (t: number) => number): Riders {
+  return (t, hero) => {
+    const roll = hero.spin ?? 0
+    const spin = lookFrom(list, t, roll, xAt)
+    return spin === null ? null : [{ ...hero, spin }]
+  }
+}
+/**
+ * Where an eye points at `t` given where its roll has it: turned to the look in force, or null to leave it. Given
+ * `xAt` (where the ball is, in any frame of its own, through the look), the way round is chosen once, from where its
+ * roll had the eye as the look began, and held: turned "the short way" at every frame instead, an eye rolling past
+ * the far side of its target would flip and snap half a turn.
+ */
+export function lookFrom(list: Look[], t: number, roll: number, xAt?: (t: number) => number): number | null {
+  const look = list.find((l) => t > l.from && t < l.to + 0.4)
+  if (!look) return null
+  const w = ease((t - look.from) / 0.45) * (1 - ease((t - look.to) / 0.4))
+  if (w <= 0) return null
+  if (!xAt) return roll + w * turnTo(roll, look.at(t))
+  const from = roll - (xAt(t) - xAt(look.from)) / R
+  const aim = look.at(look.from)
+  const target = from + turnTo(from, aim) + turnTo(aim, look.at(t))
+  return roll + w * (target - roll)
+}
+
 /** Where they are: the ball's own fields but its id and, unless they have changed, its colour. */
-export type Companion = Omit<ShowBall, 'id' | 'color'> & { color?: string }
+export type Companion = Omit<ShowBall, 'id' | 'color'> & {
+  color?: string
+  /** Where they look, given where their roll has their eye (the show knows the roll): a companion's acting. */
+  look?: (roll: number) => number | null
+}
 
 /** Who keeps the hero company. */
 export type Who = 'ian' | 'hannah'
@@ -305,6 +354,15 @@ export function frame(p: p5, k: number): { x0: number; y0: number; x1: number; y
     y1 = Math.max(y1, y)
   }
   return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }
+}
+
+/**
+ * How many cells the camera's composed 16:9 frame is top to bottom, from the frame `frame` gives: its own height,
+ * unless it is taller than 16:9 (a phone), where the stage sees more world above and below the composed frame while
+ * the camera has not moved back. What a drawing judges the camera's closeness by.
+ */
+export function composedCells(f: { x0: number; y0: number; x1: number; y1: number }): number {
+  return Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
 }
 
 /** A colour with an alpha, 0..1. */
