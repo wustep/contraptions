@@ -81,7 +81,11 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
 - **The window** is the evening, and the half hour's clock (`lamp/sky.ts`). It opens on the last of a dusk, violet over
   peach, a few clouds lit from under; the blue hour; the clouds come over and it rains from the third track, heaviest
   through Exhale; it eases, the glass stays wet a while, and by the last two tracks it is clear, with stars and the
-  moon risen into the right-hand pane (and, late, two shooting stars, which the cat looks up at). In the heaviest rain,
+  moon risen into the right-hand pane (and, late, two shooting stars, which the cat looks up at). Between the
+  two, as the rain thins after the storm, it turns cold: the last of it falls as sleet and then as the first snow, for
+  about four minutes through takeoff (`snowAt`, `lamp/world.ts`; `lamp/snow.ts`). It whitens the roofs across the street
+  and the viaduct, drifts on the ledge in the foot of each pane, and frosts the glass's corners, and what has settled
+  stays, white under the moon, to the end. In the heaviest rain,
   lightning far off lights the clouds three times. What is past the glass has depth: it moves against the bars as the
   camera moves, and goes soft, its lights opening into discs, when the camera is close at the desk (`lamp/lens.ts`). Outside, the city's windows come on
   through the dusk and go out one by one through the night, a few of them the cool flicker of a screen; one, close,
@@ -1206,7 +1210,41 @@ headlights); the near lights, out-of-focus bulbs across the frame's top corners 
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
 the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of the drops on the glass.
 
+### The seventy-second pass: the first snow
+
+A step back rather than a polish: what would make the half hour remarkable to leave on, not only correct. The window is
+the show's clock and its best idea, and its night had one turn in it (rain, then clear). Now it has a second, the kind of
+thing you look up from your work and notice:
+
+192. **The first snow** (`lamp/snow.ts`, `snowAt` and `coverAt` in `lamp/world.ts`). As the rain thins after the storm
+     (23:04) it turns to sleet and then snow, heaviest through takeoff with a flurry and a lull in it, and it stops at
+     26:52, before the sky clears for the moon. Flakes fall at three depths, each moving against the bars at its own
+     rate as the camera moves; the far ones over the far roofs, the nearest opening into soft discs when the camera is
+     close, as the city does. A few land on the pane, sit a moment as small white stars, and melt into beads. The snow
+     sky glows a lit lilac (the city's light held in the low cloud).
+193. **What settles stays.** The roofs across the street, their water tanks and the viaduct take a white cap as the
+     snow falls (a minute's fall covers them); it drifts on the ledge outside, in the foot of each lower pane and along
+     the meeting rail, deepest in the corners; the glass frosts in its corners. All of it stays to the end: Passing By
+     plays over a white city under the moon, and the kitten climbs to sleep on the sill in front of the drifts.
+194. **The room answers it.** Once the roofs are white, the window's light on the wall is a little stronger and
+     cooler, and its rim on the things on the desk paler (`rim.ts`).
+195. **The kitten sees it.** Once it is falling thick enough to see (24:12), the kitten looks up at it for nine seconds,
+     its eyes going down the glass with one flake and then the next, before it goes back to the music (`SNOW_LOOK`,
+     `cat.ts`): clear of its stretch, the hand and the machine.
+196. **A shelf over the lamp** (`highShelf`, `room.ts`). The top right of the home frame was an empty quarter of wall.
+     A small shelf there now, over the lamp's arm (the pothos from the high shelf, which only a phone held upright ever
+     saw, comes down to it; a plainer shelf of books stays up there for the phone): three books and one leaning,
+     a pothos trailing over the edge, and a short string of the fairy lights along its front, the last to come on, which
+     warms the wall behind it. A second, smaller warm place up in the dark beyond the lamp's head. It sits right of the
+     window's look so that frame never cuts it, and inside the home frame and the still take's.
+197. **The shooting stars** keep out of the snow: the first is found after it has stopped, and they may come a minute and
+     a half apart (two of them, 28:01 and 29:32).
+
 ## Judgment calls for Stephen
+
+- **The snow.** The night's second turn: rain to snow to a white city under the moon. It is the largest change to the
+  window since the rain; its timing is four numbers (`SNOW`, `lamp/world.ts`) and how much falls one per depth
+  (`FLAKES`, `lamp/snow.ts`). It could go and leave the night as it was.
 
 - **Track cards.** Each track's name and artists come up for a few seconds as it begins, on one line, as a stream
   shows what is playing. It is twelve cards in half an hour; they could go.
@@ -1247,4 +1285,5 @@ starts where the last ended; a lap a track, the last staying; the drop on the dr
 every step and the cup landing on one or three; the lob on the last drum bar's three and the landing on the drums'
 last downbeat; the turn at the pot and a walk that never turns back or stops; nods only on kicks struck on one or three,
 in the groove, in the cup; the ball in the hollow while it sits; still at the end; the camera under half a frame a
-second and half a frame a second a second; every held frame whole and clear; Zoom; the words.
+second and half a frame a second a second; every held frame whole and clear; Zoom; the words; the first snow after the heavy rain, stopped before the shooting
+stars, settled to the end, and the kitten looking up at it in view.

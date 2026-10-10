@@ -8,7 +8,7 @@ import { camera, catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
 import { LANDINGS, LAPS, ballAt, machineBusy } from './route'
 import { rgba } from './canvas'
-import { INK, LAMP_ON, hash, lampAt, lightAt, lit } from './world'
+import { INK, LAMP_ON, SNOW, hash, lampAt, lightAt, lit } from './world'
 
 /**
  * The cat: a ginger kitten loafed on the desk between the mug and the books, under the sill, its face to the room.
@@ -133,7 +133,9 @@ function gaze(t: number, lag: number): { x: number; y: number } {
   const st = shootAt(t - 0.3)
   const s = { x: g.x + (st.x - g.x) * st.a, y: g.y + (st.y - g.y) * st.a }
   const fl = flashAt(t)
-  const f = { x: s.x + (fl.x - s.x) * fl.look, y: s.y + (fl.y - s.y) * fl.look }
+  const f1 = { x: s.x + (fl.x - s.x) * fl.look, y: s.y + (fl.y - s.y) * fl.look }
+  const sn = snowLookAt(t - 0.2)
+  const f = { x: f1.x + (sn.x - f1.x) * sn.a, y: f1.y + (sn.y - f1.y) * sn.a }
   // The moth, when it flies: now and then, a while at a time, its eyes go to it (a cat cannot leave a moth be).
   const m = mothAt(t - 0.2)
   const keen = mothKeen(t)
@@ -318,6 +320,37 @@ function stretchIn(n: number): number {
 }
 
 /**
+ * The first snow: once it is falling thick enough to see, the kitten looks up at it a while, its eyes going slowly
+ * down the glass with a flake, as a cat's do, before it goes back to the music. While the camera holds it, clear of a
+ * stretch, the hand and the machine's moments.
+ */
+const SNOW_LOOK_FOR = 9
+export const SNOW_LOOK: number = (() => {
+  for (let at = SNOW.from + 26; at < SNOW.full + 80; at += 1) {
+    if (!catInViewAt(at) || !catInViewAt(at + SNOW_LOOK_FOR)) continue
+    if (machineBusy(at, at + SNOW_LOOK_FOR, 2)) continue
+    if (STRETCHES.some((m) => m > at - STRETCH - 4 && m < at + SNOW_LOOK_FOR + 4)) continue
+    if ([...YAWNS, ...WASHES].some((m) => m > at - 6 && m < at + SNOW_LOOK_FOR + 2)) continue
+    if (REACHES.some((r) => r.at < at + SNOW_LOOK_FOR + 4 && r.at + r.dur > at - 4)) continue
+    return at
+  }
+  return -100
+})()
+
+/** Where the kitten watches the snow at `t`, and how much it has its eye (0 to 1). */
+export function snowLookAt(t: number): { x: number; y: number; a: number } {
+  const s = t - SNOW_LOOK
+  if (s < 0 || s > SNOW_LOOK_FOR + 1) return { x: 0, y: 0, a: 0 }
+  // One flake and then the next: down a little way, a glance back up, down again.
+  const down = (s % 4.5) / 4.5
+  return {
+    x: -2.35 + 0.12 * Math.sin(s * 0.8),
+    y: -3.9 + 0.75 * down + 0.35 * Math.floor(s / 4.5),
+    a: smooth(s, 0, 0.6) * (1 - smooth(s, SNOW_LOOK_FOR - 0.6, SNOW_LOOK_FOR + 1)),
+  }
+}
+
+/**
  * Where a stretch is at `t`: how far up onto its feet (`up`), how far its front is stretched out along the desk, chest
  * down and rear up (`out`), and the yawn that comes with it at full stretch (`yawn`).
  */
@@ -406,7 +439,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   // A shooting star, or lightning, brings it out of the music to look, and it goes back in after.
   // A scratch under the chin: it shuts its eyes and leans into the hand.
   const pet = petAt(t) * (1 - sleepAt(t))
-  const vibe = vibeAt(t) * (1 - washAt(t).k) * (1 - smooth(stretchAt(t).up, 0, 0.3)) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - handAt(t).a) * (1 - mothKeen(t))
+  const vibe = vibeAt(t) * (1 - washAt(t).k) * (1 - smooth(stretchAt(t).up, 0, 0.3)) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - snowLookAt(t).a) * (1 - handAt(t).a) * (1 - mothKeen(t))
   // Stretching: up on its feet, the body lifted and tipped forward (chest down, rear up) about its rear, and longer;
   // the head down and forward with it, the eyes shut in a yawn.
   const s0 = stretchAt(t)

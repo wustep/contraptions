@@ -1,5 +1,8 @@
 import { mixHex } from '../../../../parts'
-import { DESK } from './desk'
+import { DESK, SHELF } from './desk'
+
+/** The high shelf under the ceiling, right of the window: only a phone held upright sees it. */
+const TOP_SHELF = { x0: 1.35, x1: 2.75, y: -6.55 }
 import { rgba, viewOf } from './canvas'
 import { INK, hash, lampAt, lampColor, lightAt, lit, skyAt } from './world'
 
@@ -22,8 +25,6 @@ export const CEILING = -8.4
 const APRON = { y0: DESK.y + DESK.face, y1: DESK.y + DESK.face + 0.34 }
 /** The pedestal of drawers under the desk's left. */
 const PEDESTAL = { x0: -4.7, x1: -2.5 }
-/** The high shelf over the desk, right of the window. */
-const SHELF = { x0: 1.35, x1: 4.35, y: -6.55 }
 
 
 function line(ctx: Ctx, lw: number, color = INK): void {
@@ -101,53 +102,93 @@ export function hanger(ctx: Ctx, lw: number, t: number): void {
   line(ctx, lw * 0.7)
 }
 
-/** The high shelf: books stood along it, one leaning, and a pothos whose vines trail over the edge and stir. */
-export function highShelf(ctx: Ctx, lw: number, t: number): void {
+/**
+ * The shelf over the lamp: books stood along it, one leaning, and a pothos whose vines trail over the edge and stir;
+ * a string of the fairy lights hangs along its edge (`decor.ts`), and they warm the wall behind it, so it is the
+ * room's second, smaller warm place, up in the dark beyond the lamp's head. `glow` is how bright that string is.
+ */
+export function highShelf(ctx: Ctx, lw: number, t: number, glow = 0): void {
+  shelf(ctx, lw, t, glow, SHELF, [[0.11, 0.5, '#7A4E6E'], [0.1, 0.56, '#3F6E78'], [0.12, 0.46, '#B68A44']], true)
+  // And higher, under the ceiling, where only a phone held upright sees it: a plainer shelf of books.
+  shelf(ctx, lw, t, 0, TOP_SHELF, [[0.13, 0.56, '#7A4E6E'], [0.11, 0.62, '#3F6E78'], [0.15, 0.5, '#B68A44'], [0.1, 0.58, '#A4533C'], [0.12, 0.54, '#5B5A8E'], [0.14, 0.48, '#6E8E9A']], false)
+}
+
+function shelf(ctx: Ctx, lw: number, t: number, glow: number, S: { x0: number; x1: number; y: number }, books: [number, number, string][], plant: boolean): void {
   const v = viewOf(ctx)
-  if (v.y0 > SHELF.y - 0.8) return
+  if (v.y0 > S.y - 0.8 || v.x1 < S.x0 - 0.5) return
   const lamp = lampAt(t)
-  const l = (x: number, y: number) => Math.min(1, lightAt(x, y, 1) * lamp * 1.5 + 0.1)
-  const dim = (c: string, x: number, y: number) => lit(mixHex(c, '#1E1A30', 0.65), c, l(x, y))
+  // The lights' warmth on the wall behind it, and on what is on it.
+  const mid = (S.x0 + S.x1) / 2
+  if (glow > 0) {
+    const wg = ctx.createRadialGradient(mid, S.y + 0.15, 0.05, mid, S.y + 0.15, 1.7)
+    wg.addColorStop(0, rgba('#FFC890', 0.14 * glow))
+    wg.addColorStop(1, rgba('#FFC890', 0))
+    ctx.fillStyle = wg
+    ctx.fillRect(mid - 1.8, S.y - 1.6, 3.6, 3.2)
+  }
+  const l = (x: number, y: number) => Math.min(1, lightAt(x, y, 1) * lamp * 1.5 + 0.12 + 0.16 * glow * Math.exp(-((y - S.y) ** 2) / 0.2))
+  const dim = (c: string, x: number, y: number) => lit(mixHex(c, '#1E1A30', 0.62), c, l(x, y))
   // The books.
-  const books: [number, number, string][] = [[0.13, 0.56, '#7A4E6E'], [0.11, 0.62, '#3F6E78'], [0.15, 0.5, '#B68A44'], [0.1, 0.58, '#A4533C'], [0.12, 0.54, '#5B5A8E']]
-  let x = SHELF.x0 + 0.15
+  let x = S.x0 + 0.1
   for (const [w, h, c] of books) {
     ctx.beginPath()
-    ctx.rect(x, SHELF.y - h, w, h)
-    ctx.fillStyle = dim(c, x, SHELF.y - h / 2)
+    ctx.rect(x, S.y - h, w, h)
+    ctx.fillStyle = dim(c, x, S.y - h / 2)
     ctx.fill()
     line(ctx, lw * 0.6)
     ctx.fillStyle = rgba('#EFE4CE', 0.25)
-    ctx.fillRect(x + 0.02, SHELF.y - h + 0.08, w - 0.04, 0.03)
+    ctx.fillRect(x + 0.02, S.y - h + 0.08, w - 0.04, 0.03)
     x += w + 0.01
   }
   // One leaning on the last.
   ctx.save()
-  ctx.translate(x + 0.02, SHELF.y)
+  ctx.translate(x + 0.02, S.y)
   ctx.rotate(0.32)
   ctx.beginPath()
   ctx.rect(0, -0.5, 0.12, 0.5)
-  ctx.fillStyle = dim('#3E7A5E', x, SHELF.y - 0.3)
+  ctx.fillStyle = dim('#3E7A5E', x, S.y - 0.3)
   ctx.fill()
   line(ctx, lw * 0.6)
   ctx.restore()
+  if (plant) pothos(ctx, lw, t, S, dim)
+  // The board, and its two brackets.
+  ctx.beginPath()
+  ctx.rect(S.x0, S.y, S.x1 - S.x0, 0.08)
+  ctx.fillStyle = dim('#8A5A3E', (S.x0 + S.x1) / 2, S.y)
+  ctx.fill()
+  line(ctx, lw * 0.8)
+  for (const bx of [S.x0 + 0.18, S.x1 - 0.32]) {
+    ctx.beginPath()
+    ctx.moveTo(bx, S.y + 0.08)
+    ctx.lineTo(bx, S.y + 0.32)
+    ctx.lineTo(bx + 0.04, S.y + 0.32)
+    ctx.quadraticCurveTo(bx + 0.06, S.y + 0.12, bx + 0.22, S.y + 0.08)
+    ctx.closePath()
+    ctx.fillStyle = '#2A2638'
+    ctx.fill()
+    line(ctx, lw * 0.5)
+  }
+}
+
+/** The pothos on a shelf, its vines trailing down past the edge, stirring. */
+function pothos(ctx: Ctx, lw: number, t: number, S: { x0: number; x1: number; y: number }, dim: (c: string, x: number, y: number) => string): void {
   // The pothos, its vines trailing down past the shelf's edge, stirring.
-  const px = SHELF.x0 + 2.2
+  const px = S.x0 + 0.8
   for (let i = 0; i < 6; i++) {
     const sx = px - 0.18 + i * 0.07
-    const len = 0.45 + hash(i, 171) * 0.45
+    const len = 0.3 + hash(i, 171) * 0.42
     const sway = 0.04 * Math.sin(t * 0.4 + i * 1.3)
     ctx.beginPath()
-    ctx.moveTo(sx, SHELF.y - 0.2)
-    ctx.quadraticCurveTo(sx + (i - 2.5) * 0.12, SHELF.y + 0.05, sx + (i - 2.5) * 0.09 + sway, SHELF.y + len)
-    ctx.strokeStyle = dim('#3C6B4C', sx, SHELF.y)
+    ctx.moveTo(sx, S.y - 0.2)
+    ctx.quadraticCurveTo(sx + (i - 2.5) * 0.07, S.y + 0.05, sx + (i - 2.5) * 0.05 + sway, S.y + len)
+    ctx.strokeStyle = dim('#3C6B4C', sx, S.y)
     ctx.lineWidth = 0.018
     ctx.stroke()
     // Its leaves along it.
     for (let k = 1; k <= 4; k++) {
       const u = k / 4.5
-      const lx = sx + ((i - 2.5) * 0.09 + sway) * u * u + (i - 2.5) * 0.12 * 2 * u * (1 - u)
-      const ly = SHELF.y - 0.2 + (len + 0.2) * u
+      const lx = sx + ((i - 2.5) * 0.05 + sway) * u * u + (i - 2.5) * 0.07 * 2 * u * (1 - u)
+      const ly = S.y - 0.2 + (len + 0.2) * u
       const side = k % 2 ? 1 : -1
       ctx.beginPath()
       ctx.ellipse(lx + side * 0.04, ly, 0.05, 0.035, side * 0.6, 0, Math.PI * 2)
@@ -157,37 +198,20 @@ export function highShelf(ctx: Ctx, lw: number, t: number): void {
   }
   // Its pot.
   ctx.beginPath()
-  ctx.moveTo(px - 0.24, SHELF.y - 0.34)
-  ctx.lineTo(px + 0.24, SHELF.y - 0.34)
-  ctx.lineTo(px + 0.19, SHELF.y)
-  ctx.lineTo(px - 0.19, SHELF.y)
+  ctx.moveTo(px - 0.24, S.y - 0.34)
+  ctx.lineTo(px + 0.24, S.y - 0.34)
+  ctx.lineTo(px + 0.19, S.y)
+  ctx.lineTo(px - 0.19, S.y)
   ctx.closePath()
-  ctx.fillStyle = dim('#E2D6C4', px, SHELF.y - 0.17)
+  ctx.fillStyle = dim('#CDBFAE', px, S.y - 0.17)
   ctx.fill()
   line(ctx, lw * 0.7)
   // Top leaves over the pot's rim.
   for (let k = 0; k < 5; k++) {
     ctx.beginPath()
-    ctx.ellipse(px - 0.2 + k * 0.1, SHELF.y - 0.38 - (k % 2) * 0.05, 0.07, 0.045, (k - 2) * 0.4, 0, Math.PI * 2)
-    ctx.fillStyle = dim(k % 2 ? '#5E9A5E' : '#4B8452', px, SHELF.y - 0.4)
+    ctx.ellipse(px - 0.2 + k * 0.1, S.y - 0.38 - (k % 2) * 0.05, 0.07, 0.045, (k - 2) * 0.4, 0, Math.PI * 2)
+    ctx.fillStyle = dim(k % 2 ? '#5E9A5E' : '#4B8452', px, S.y - 0.4)
     ctx.fill()
-  }
-  // The board, and its two brackets.
-  ctx.beginPath()
-  ctx.rect(SHELF.x0, SHELF.y, SHELF.x1 - SHELF.x0, 0.08)
-  ctx.fillStyle = dim('#8A5A3E', (SHELF.x0 + SHELF.x1) / 2, SHELF.y)
-  ctx.fill()
-  line(ctx, lw * 0.8)
-  for (const bx of [SHELF.x0 + 0.3, SHELF.x1 - 0.3]) {
-    ctx.beginPath()
-    ctx.moveTo(bx, SHELF.y + 0.08)
-    ctx.lineTo(bx, SHELF.y + 0.32)
-    ctx.lineTo(bx + 0.04, SHELF.y + 0.32)
-    ctx.quadraticCurveTo(bx + 0.06, SHELF.y + 0.12, bx + 0.22, SHELF.y + 0.08)
-    ctx.closePath()
-    ctx.fillStyle = '#2A2638'
-    ctx.fill()
-    line(ctx, lw * 0.5)
   }
 }
 

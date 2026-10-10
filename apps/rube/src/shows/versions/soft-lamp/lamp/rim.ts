@@ -2,7 +2,7 @@ import { mixHex } from '../../../../parts'
 import { rgba } from './canvas'
 import { WINDOW } from './desk'
 import { MUSIC_END, smooth } from './music'
-import { cloudAt, lampAt, nightAt, skyAt } from './world'
+import { cloudAt, coverAt, lampAt, nightAt, skyAt } from './world'
 
 /**
  * The window's light on the room. Everything on the desk stands in front of the window, so the window backlights it:
@@ -20,10 +20,12 @@ const WX = (WINDOW.x0 + WINDOW.x1) / 2
 export function rimAt(t: number): { color: string; a: number } {
   const sky = skyAt(t)
   const moon = smooth(nightAt(t), 0.5, 0.62) * (1 - 0.85 * cloudAt(t))
-  const color = mixHex(mixHex('#8E98DA', '#F2A98C', sky.dusk * 0.85), '#E2E5FF', moon * 0.7)
+  // The settled snow gives back the city's light and the moon's: a paler, stronger rim once the roofs are white.
+  const snow = coverAt(t)
+  const color = mixHex(mixHex('#8E98DA', '#F2A98C', sky.dusk * 0.85), '#E2E5FF', Math.min(1, moon * 0.7 + snow * 0.3))
   // With the lamp turned down at the end, the moonlight is the room's light.
   const dark = (1 - lampAt(t)) * smooth(t, MUSIC_END - 2, MUSIC_END + 4)
-  const a = Math.min(1, 0.3 + 0.35 * sky.dusk + 0.3 * moon + 0.35 * dark)
+  const a = Math.min(1, 0.3 + 0.35 * sky.dusk + 0.3 * moon + 0.12 * snow + 0.35 * dark)
   return { color, a }
 }
 

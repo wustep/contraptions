@@ -28,6 +28,11 @@ export const ROD = { y: -5.78, x0: -4.4, x1: 1.05 }
 export const CURTAIN = { x0: -4.3, x1: -3.2, tie: -3.05, hem: -1.72 }
 
 /** The sill: its top, and how far it runs either side of the frame. The ball tips off its right end. */
+/**
+ * The small shelf on the wall over the lamp's arm: right of the window's look (whose right edge is at 4.57), so that
+ * frame never cuts it, and inside the room's home frame and the still take's.
+ */
+export const SHELF = { x0: 4.68, x1: 5.74, y: -3.62 }
 export const SILL = { y: -1.42, x0: -3.78, x1: 0.9, thick: 0.1 }
 /** The ball's height on the sill (its middle). */
 export const ON_SILL = SILL.y - R

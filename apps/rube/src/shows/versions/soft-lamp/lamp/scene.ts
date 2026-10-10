@@ -16,7 +16,7 @@ import { reflection } from './reflection'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { flashRoom, night } from './sky'
-import { CREAM, INK, MOUTH, hash, lampAt, lampColor, lightAt, lit, skyAt } from './world'
+import { CREAM, INK, MOUTH, coverAt, hash, lampAt, lampColor, lightAt, lit, skyAt } from './world'
 
 /**
  * Everything but the ball, each a drawing told show time, in cells (the drawing is scaled so a unit is a cell).
@@ -99,12 +99,15 @@ function wall(ctx: Ctx, t: number): void {
   wg.addColorStop(1, WALL_LOW)
   ctx.fillStyle = wg
   ctx.fillRect(v.x0 - 1, v.y0 - 1, v.x1 - v.x0 + 2, DESK.y - v.y0 + 1)
-  // The window's light on the wall round it: the sky's colour, strong at dusk, faint at night.
+  // The window's light on the wall round it: the sky's colour, strong at dusk, faint at night; and once the snow has
+  // settled, the city's white roofs give a little more of it back, cooler.
   const cx = (WINDOW.x0 + WINDOW.x1) / 2
   const cy = (WINDOW.y0 + WINDOW.y1) / 2
+  const cover = coverAt(t)
+  const spill = mixHex(sky.low, '#9CA6E0', 0.5 * cover)
   const w = ctx.createRadialGradient(cx, cy + 0.6, 0.5, cx, cy + 0.6, 4.6)
-  w.addColorStop(0, rgba(sky.low, 0.22 + 0.28 * sky.dusk))
-  w.addColorStop(1, rgba(sky.low, 0))
+  w.addColorStop(0, rgba(spill, 0.22 + 0.28 * sky.dusk + 0.12 * cover))
+  w.addColorStop(1, rgba(spill, 0))
   ctx.fillStyle = w
   ctx.fillRect(v.x0 - 1, v.y0 - 1, v.x1 - v.x0 + 2, DESK.y - v.y0 + 1)
   // The fairy lights' warmth along the wall over the window.
@@ -932,7 +935,7 @@ function lamp(ctx: Ctx, lw: number, t: number): void {
 export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) => {
   wall(ctx, c.t)
   ceiling(ctx, lw, c.t)
-  highShelf(ctx, lw, c.t)
+  highShelf(ctx, lw, c.t, fairyGlowAt(c.t))
   hanger(ctx, lw, c.t)
   print(ctx, lw, c.t)
   notes(ctx, lw, c.t)

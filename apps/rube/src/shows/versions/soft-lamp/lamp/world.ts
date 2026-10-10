@@ -114,8 +114,42 @@ function perTrack(table: number[], t: number, lead: number, lag: number): number
 /** The rain, 0 to 1. */
 export const rainAt = (t: number): number => perTrack(RAIN, t, 14, 8)
 
-/** How much of the sky the cloud covers, 0 to 1: it comes over ahead of the rain and clears after it. */
-export const cloudAt = (t: number): number => perTrack(CLOUD, t, 24, 14)
+/**
+ * The first snow. As the rain thins after the storm it turns cold: the last of it comes down as sleet and then as snow,
+ * for a few minutes through takeoff and into Daydream, heaviest a minute or so in, and it stops before the sky clears
+ * for the moon and the shooting stars. 0 to 1.
+ */
+export const SNOW = { from: 1384, full: 1440, ease: 1530, to: 1612 }
+export const snowAt = (t: number): number => {
+  const v = smooth(t, SNOW.from, SNOW.full) * (1 - smooth(t, SNOW.ease, SNOW.to))
+  // A flurry and a lull in it, so it is weather, not a setting.
+  return v * (0.82 + 0.18 * Math.sin((2 * Math.PI * (t - SNOW.from)) / 47))
+}
+
+/** How cold it has turned, 0 to 1: what falls is rain before, snow after (sleet between). */
+export const coldAt = (t: number): number => smooth(t, SNOW.from - 10, SNOW.from + 40)
+
+/**
+ * How much snow lies on the roofs, 0 to 1: what has fallen so far (a full minute's fall covers them), and it stays,
+ * white under the moon, to the end. Summed once, a second at a time, so a scrub back is the same roofs.
+ */
+const COVER: number[] = (() => {
+  const out = [0]
+  let s = 0
+  for (let t = 1; t <= 2000; t++) {
+    s += snowAt(t)
+    out.push(1 - Math.exp(-s / 55))
+  }
+  return out
+})()
+export function coverAt(t: number): number {
+  if (t <= 0) return 0
+  const i = Math.min(COVER.length - 2, Math.floor(t))
+  return COVER[i] + (COVER[i + 1] - COVER[i]) * Math.min(1, t - i)
+}
+
+/** How much of the sky the cloud covers, 0 to 1: it comes over ahead of the rain and clears after it (the snow's own cloud too). */
+export const cloudAt = (t: number): number => Math.max(perTrack(CLOUD, t, 24, 14), 0.72 * snowAt(t))
 
 /** How far into the night it is, 0 to 1, over the whole show. */
 export const nightAt = (t: number): number => Math.max(0, Math.min(1, t / (MUSIC_END + 6)))
@@ -140,7 +174,10 @@ export function skyAt(t: number): { top: string; mid: string; low: string; dusk:
   const [u1, ...b] = SKY[i + 1]
   const f = smooth(u, u0, u1)
   const grey = cloudAt(t) * 0.45
-  const mix = (k: number) => mixHex(mixHex(a[k], b[k], f), '#2F3658', grey * (k === 2 ? 0.5 : 1))
+  // A snow sky glows: the city's light held in the low cloud, a soft lit lilac rather than night.
+  const snow = snowAt(t)
+  const glow = ['#2C2E5A', '#463F72', '#6A5482'] as const
+  const mix = (k: number) => mixHex(mixHex(mixHex(a[k], b[k], f), '#2F3658', grey * (k === 2 ? 0.5 : 1)), glow[k], snow * (0.42 + 0.15 * k))
   return { top: mix(0), mid: mix(1), low: mix(2), dusk: 1 - smooth(u, 0, 0.16) }
 }
 

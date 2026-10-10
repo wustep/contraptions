@@ -6,7 +6,8 @@ import { MUSIC_END, smooth } from './music'
 import { blurOf, inLayer, layerOf, lensIn, lensOf, onWall, type Lens } from './lens'
 import { sweepAt } from './decor'
 import { machineBusy } from './route'
-import { cloudAt, hash, lampAt, nightAt, rainAt, skyAt } from './world'
+import { cloudAt, coldAt, hash, snowAt, lampAt, nightAt, rainAt, skyAt } from './world'
+import { FLAKES, flakes, landed, roofSnow, settled } from './snow'
 
 /**
  * The view through the glass, a function of show time: the sky from dusk into night, the clouds coming over and
@@ -83,9 +84,14 @@ export function night(ctx: Ctx, t: number): void {
     soften(ctx, blur, px, (g) => out(g, true))
     bokeh(ctx, lens, lights, blur)
   }
+  // The snow falling past, nearer than the city: soft as the camera comes close, as the city is.
+  inLayer(ctx, lens, FLAKES[1].p, () => flakes(ctx, t, 1, blur))
+  inLayer(ctx, lens, FLAKES[2].p, () => flakes(ctx, t, 2, blur))
   inLayer(ctx, lens, DEPTH.rain, () => rain(ctx, t))
   fog(ctx, t)
   drops(ctx, t, rainAt(t))
+  landed(ctx, t)
+  settled(ctx, t)
   // The room in the glass: the lamp's warmth caught faintly in the pane nearest it.
   const lamp = lampAt(t)
   const r = ctx.createRadialGradient(GLASS.x1 - 0.25, GLASS.y1 - 0.7, 0.02, GLASS.x1 - 0.25, GLASS.y1 - 0.7, 1.1)
@@ -233,9 +239,9 @@ function shootPath(at: number, u: number): { x: number; y: number } {
 }
 
 /**
- * When the shooting stars cross: three, late, in a clear sky, played to the camera as the cat's moments are, each at a
- * moment the frame holds both the whole of its streak and the cat (so the cat can be seen to look up at it), a few
- * minutes apart, the last before the cat goes to sleep. Worked out once, at load.
+ * When the shooting stars cross: two or three, late, in a clear sky once the snow has stopped, played to the camera as
+ * the cat's moments are, each at a moment the frame holds both the whole of its streak and the cat (so the cat can be
+ * seen to look up at it), a minute and a half or more apart, the last before the cat goes to sleep. Worked out once, at load.
  */
 const SHOOTS: number[] = (() => {
   const out: number[] = []
@@ -255,8 +261,8 @@ const SHOOTS: number[] = (() => {
     return true
   }
   for (let at = 1300; at < 1786 && out.length < 3; at += 1) {
-    if (out.length && at < out[out.length - 1] + 120) continue
-    if (nightAt(at) < 0.6 || cloudAt(at) > 0.35 || machineBusy(at - 2, at + 4)) continue
+    if (out.length && at < out[out.length - 1] + 90) continue
+    if (nightAt(at) < 0.6 || cloudAt(at) > 0.35 || snowAt(at - 20) > 0.02 || machineBusy(at - 2, at + 4)) continue
     if (!catInViewAt(at) || !catInViewAt(at + 3) || !seen(at)) continue
     out.push(at)
   }
@@ -641,6 +647,7 @@ function train(ctx: Ctx, t: number, sky: { dusk: number }, sink: Sink): void {
   ctx.fillStyle = dark
   ctx.fillRect(RUN.x0 - 2, TRACK_Y, RUN.x1 - RUN.x0 + 4, 0.045)
   for (let x = RUN.x0 - 2 + 0.35; x < RUN.x1 + 2; x += 0.9) ctx.fillRect(x, TRACK_Y + 0.04, 0.04, 0.6)
+  roofSnow(ctx, t, RUN.x0 - 2, TRACK_Y, RUN.x1 - RUN.x0 + 4, true)
   for (const at of TRAINS) {
     const s = t - at
     if (s < 0 || s > TRAIN_DUR) continue
@@ -760,6 +767,7 @@ function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }, lens: Len
   for (const [row, color, base, tall] of [[0, far, -1.9, 1.15], [1, near, -1.35, 0.85]] as const) {
     // Between the far roofs and the near: the mist after the rain, and the elevated line, and its trains.
     if (row === 1) {
+      inLayer(ctx, lens, FLAKES[0].p, () => flakes(ctx, t, 0))
       inLayer(ctx, lens, DEPTH.far, () => mist(ctx, t, -2.0, 0.9, 0))
       inLayer(ctx, lens, DEPTH.train, () => train(ctx, t, sky, sink(DEPTH.train)))
     }
@@ -776,7 +784,12 @@ function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }, lens: Len
         ctx.fillRect(x, base - h, w, h + 2)
         if (row === 0 && i >= 0 && x < GLASS.x1 + 0.3 && base - h < tallest.y) tallest = { x: x + w / 2, y: base - h }
         // A water tank or a stair head on some roofs.
-        if (hash(i, row, 17) < 0.3) ctx.fillRect(x + w * 0.2, base - h - 0.12, 0.14, 0.13)
+        const tank = hash(i, row, 17) < 0.3
+        if (tank) ctx.fillRect(x + w * 0.2, base - h - 0.12, 0.14, 0.13)
+        // And on them, the first snow, once it has settled.
+        roofSnow(ctx, t, x, base - h, w, row === 0)
+        if (tank) roofSnow(ctx, t, x + w * 0.2, base - h - 0.12, 0.14, row === 0)
+        ctx.fillStyle = color
         const cols = Math.max(1, Math.floor(w / 0.16))
         const rows = Math.max(1, Math.floor(h / 0.17))
         for (let a = 0; a < cols; a++) {
@@ -1036,7 +1049,8 @@ function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
 
 /** The rain falling past: thin, faint, fast, slanting a little with the wind. As many as the weather has. */
 function rain(ctx: Ctx, t: number): void {
-  const count = 150 * rainAt(t)
+  // Turning to snow: fewer of it falls as rain, until none does.
+  const count = 150 * rainAt(t) * (1 - smooth(coldAt(t), 0.2, 0.9))
   ctx.lineWidth = 0.012
   ctx.lineCap = 'round'
   const HH = H + 0.6

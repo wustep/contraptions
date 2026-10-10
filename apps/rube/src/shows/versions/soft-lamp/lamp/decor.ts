@@ -1,5 +1,5 @@
 import { mixHex } from '../../../../parts'
-import { CLOCK, CUP, CURTAIN, FAR_CUP, NOTES, PRINT, ROD, WINDOW } from './desk'
+import { CLOCK, CUP, CURTAIN, FAR_CUP, NOTES, PRINT, ROD, SHELF, WINDOW } from './desk'
 import { NODS } from './route'
 import { MUSIC_END, TRACKS, barTime, heldAt, smooth, snareAt, trackAt } from './music'
 import { rgba, viewOf } from './canvas'
@@ -142,6 +142,8 @@ const SWAGS: [number, number, number, number, number][] = [
   [WINDOW.x0 + 0.05, WINDOW.y0 + 0.08, WINDOW.mullion, WINDOW.y0 + 0.08, 1.45],
   [WINDOW.mullion, WINDOW.y0 + 0.08, WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 1.25],
   [WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 2.75, -4.95, 0.45],
+  // Along the edge of the shelf over the lamp, the last to come on.
+  [SHELF.x0 + 0.06, SHELF.y + 0.07, SHELF.x1 - 0.06, SHELF.y + 0.07, 0.2],
 ]
 /** A point along a swag, `u` 0 to 1: a parabola from hook to hook, `sag` below the chord at its middle. */
 function swagAt(s: [number, number, number, number, number], u: number): { x: number; y: number } {

@@ -13,11 +13,11 @@ import { LANDINGS, LAPS, LEGS, NODS, ballAt, hollowY, legAt, machineBusy } from 
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/soft-lamp/lamp/titles'
 import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/lens'
 import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
-import { rainAt } from '../src/shows/versions/soft-lamp/lamp/world'
+import { SNOW, coverAt, rainAt, snowAt } from '../src/shows/versions/soft-lamp/lamp/world'
 import { HUMAN_STRETCH, reflectionSeen } from '../src/shows/versions/soft-lamp/lamp/reflection'
 import { MOTH_IN, mothAt } from '../src/shows/versions/soft-lamp/lamp/moth'
 import { REACHES, REFILL, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
-import { CLIMB, STRETCHES, WASHES, YAWNS, climbAt } from '../src/shows/versions/soft-lamp/lamp/cat'
+import { CLIMB, SNOW_LOOK, STRETCHES, WASHES, YAWNS, climbAt } from '../src/shows/versions/soft-lamp/lamp/cat'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -187,6 +187,14 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     m.lightning.length === 3 && m.lightning.every((t) => rainAt(t) >= 0.68 && catInViewAt(t)) &&
     m.shooting.length >= 2 && m.shooting.every(inFocus) && m.crossings.length >= 5 && m.crossings.every(([t]) => inFocus(t)) &&
     m.crossings.every(([t]) => m.lightning.every((f) => t < f - 10 || t > f + 10)), JSON.stringify(m))
+
+  // The first snow: as the rain thins after the storm, never in the heavy rain, stopped before the shooting stars, and
+  // what settles staying to the end; the kitten looks up at it once, in view.
+  check('soft lamp: the first snow falls as the rain thins, stops before the shooting stars, settles and stays; the kitten sees it',
+    rainAt(SNOW.from) < 0.6 && m.lightning.every((t) => snowAt(t) === 0) && m.shooting.every((t) => snowAt(t) === 0 && t > SNOW.to) &&
+    snowAt(SNOW.full + 30) > 0.6 && coverAt(SNOW.to) > 0.85 && coverAt(MUSIC_END) >= coverAt(SNOW.to) && coverAt(SNOW.from - 1) === 0 &&
+    SNOW_LOOK > SNOW.from && SNOW_LOOK < SNOW.to && catInViewAt(SNOW_LOOK) && catInViewAt(SNOW_LOOK + 9) && !machineBusy(SNOW_LOOK, SNOW_LOOK + 9, 2),
+    `snow look ${SNOW_LOOK}`)
 
   // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched, hands round the mug in the
   // rain, a face drawn in the mist on the glass, the mug taken away after midnight and brought back hot, and the lamp
