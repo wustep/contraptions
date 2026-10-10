@@ -162,7 +162,9 @@ const GUESTS: Guest[] = KNOTS.flatMap(([x0, d0, n], i) => {
 
 function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
   const h = hush(t)
-  const body = GALA.guests
+  // A muted grey a little above the room, people standing in its dim light: darker than the room they stood in (near
+  // black), at their size two fresh readers in a row took them for holes, coal, ball bearings, olives.
+  const body = mix(GALA.roomLit, GALA.cloth, 0.2)
   for (const g of GUESTS) {
     const drift = 0.018 * Math.sin(t * 0.35 + g.seed * 1.7)
     const [x, y] = seen(f, g.d, g.x + drift, 0)
@@ -205,7 +207,7 @@ function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
     ctx.arc(x * k, y * k, (r - 0.008 * g.d) * k, 0, Math.PI * 2)
     ctx.stroke()
     const look = x < 0 ? -0.35 : Math.PI + 0.35
-    ctx.fillStyle = rgba(mix(GALA.roomLit, GALA.lightWarm, 0.3), 0.55 * near * (1 - 0.6 * h))
+    ctx.fillStyle = rgba(GALA.guests, 0.7 * near * (1 - 0.6 * h))
     ctx.beginPath()
     ctx.arc((x + Math.cos(look) * r * 0.5) * k, (y + Math.sin(look) * r * 0.5) * k, Math.max(0.6, r * 0.17 * k), 0, Math.PI * 2)
     ctx.fill()

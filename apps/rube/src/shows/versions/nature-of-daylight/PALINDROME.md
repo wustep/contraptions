@@ -29,7 +29,7 @@ stand again in the reverse order; and the last frame is the first.
 - **Abbott and Costello**, the heptapods, are drawn, never balls: a heavy body on seven limbs, a hand standing on its
   fingertips, always in fog.
 
-Everyone else is a ball too, a small dark disc at the balls' own scale: the gala's guests. There are no drawn people.
+Everyone else is a ball too, at the balls' own scale: the gala's guests, a muted grey in the room's dim light. There are no drawn people.
 
 ## The cue
 
@@ -837,6 +837,12 @@ been met before. Nothing to change.
 An eighty-sixth took a note the fifteenth reader gave: the gala's guests read as coal, as rocks. Dark discs with only
 the room's light along their tops, they had nothing of the cast about them. The near ones have a dim outline all round
 now and a mark that looks toward the room's middle, as every ball in the show has; the far ones stay in the haze.
+
+An eighty-seventh gave the show to a sixteenth fresh reader. The braid read: a general, a leader. The guests did not:
+coal, ball bearings, olives, as the fifteenth had said, the eighty-sixth's outline and mark lost at their size. They
+were darker than the room they stood in, holes in it. They are a muted grey a little above it now, people in its dim
+light, with dark marks that look; still well below her and Shang. And the whole of what the site's build runs passed
+again (every suite and the production build); the show's chunk is 238 kB.
 
 ## Arrival nods
 
