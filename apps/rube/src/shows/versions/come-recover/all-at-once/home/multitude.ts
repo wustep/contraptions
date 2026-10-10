@@ -6,7 +6,7 @@ import { prefersCalm } from '../film'
 import { lightColor } from './finale-draw'
 import { DURATION } from '../music'
 import { PORT, SWELL, windowLight } from './finale-plan'
-import { LIGHTS as ROOM_LIGHTS, ROOM } from './set'
+import { LIGHTS as ROOM_LIGHTS, ROOM, TUBES, tubeLevel } from './set'
 
 /**
  * The last shot: of all of them, this one.
@@ -29,6 +29,23 @@ import { LIGHTS as ROOM_LIGHTS, ROOM } from './set'
  * asked to reduce motion, the windows do not sweep in: each is where it will rest from the start, and only lights.
  */
 
+/**
+ * The opening is the end, run the other way. The show starts out here, in the night of every life's lit window, the
+ * ring of them with home's dark in its hole, and the title comes up over all of them. On the chord the tubes in the
+ * hole catch, one lit box among all the lit windows, and the camera falls in toward it, the windows streaming out past
+ * the frame's edges, until it is the laundromat's own first framing (handed in by the score: `setOpening`). For a
+ * viewer who has asked to reduce motion, the show opens on the laundromat, as it always did.
+ */
+export const OPEN_FROM = 1.5
+export const OPEN_TO = 6.2
+let OPEN_END = { x: 0, y: 0, cells: 6.3 }
+/** The laundromat's own framing where the fall in ends: from the score, which has the camera. */
+export function setOpening(end: { x: number; y: number; cells: number }): void {
+  OPEN_END = end
+}
+/** Whether the opening's fall is on at `t`: before it ends, and not for a viewer who asked for less motion. */
+const opening = (t: number): boolean => t < OPEN_TO && !prefersCalm()
+
 /** The draw back starts a beat after the swell, when they have looked at one another; it comes to rest here. */
 export const PULL_FROM = SWELL + 1.05
 export const PULL_TO = 326.6
@@ -40,6 +57,8 @@ export const FAR = 420
  * shot and into the last, and a little further on to the end.
  */
 export function pullAt(t: number): number {
+  // The fall in at the start: from all the way out to the laundromat's own framing, evenly in scale, eased at both ends.
+  if (opening(t)) return Math.pow(FAR, 1 - smooth((t - OPEN_FROM) / (OPEN_TO - OPEN_FROM))) * Math.pow(OPEN_END.cells, smooth((t - OPEN_FROM) / (OPEN_TO - OPEN_FROM)))
   if (t <= PULL_FROM) return CLOSE
   if (t >= PULL_TO) return FAR * Math.pow(1.05, clamp((t - PULL_TO) / (DURATION - PULL_TO)))
   return CLOSE * Math.pow(FAR / CLOSE, smooth((t - PULL_FROM) / (PULL_TO - PULL_FROM)))
@@ -51,25 +70,54 @@ export function pullAt(t: number): number {
  * the draw back would show them (`pullAt`, scaled to the stage's frame): only they are seen moving.
  */
 const HELD = 36
+/**
+ * In the opening the stage's camera is held much further out, so that the lit box falling in is the shop itself (it is
+ * small there, and its fall is quick): beyond that, it is a light (`multitude`).
+ */
+const OPEN_HELD = 150
 export const cameraCellsAt = (t: number): number => {
   const d = pullAt(t)
+  if (opening(t)) return Math.min(d, OPEN_HELD)
   return d / Math.pow(1 + Math.pow(d / HELD, 4), 0.25)
 }
 /** How much further back the windows are seen from than the stage's camera is: 1 while the shop can still be seen. */
 const beyond = (t: number): number => pullAt(t) / cameraCellsAt(t)
 
+/**
+ * The stage's framing in the opening's fall: how far back (`cameraCellsAt`), and where it looks, which is home's
+ * window (the ring's middle) while it is far out, and the laundromat's own framing as it comes in.
+ */
+export function openingFraming(t: number, base: { x: number; y: number; cells: number }): { x: number; y: number; cells: number } {
+  if (!opening(t)) return base
+  const cells = cameraCellsAt(t)
+  const w = smooth((Math.log(cells) - Math.log(OPEN_END.cells)) / (Math.log(HELD) - Math.log(OPEN_END.cells)))
+  return { cells, x: base.x + (PORT[0] - base.x) * w, y: base.y + (PORT[1] - base.y) * w }
+}
+
 /** The night the shop sinks into: over the room, outside a soft opening at the window and the family below it. */
 const NIGHT = '#07090A'
-/** How far the shop has gone down into the night at `t`, 0..1: all of it before the stage's camera stops. */
-export const veilAt = (t: number): number => smooth((t - (PULL_FROM + 2.4)) / 4.6)
+/**
+ * How far the shop has gone down into the night at `t`, 0..1: all of it before the stage's camera stops. In the opening,
+ * the other way: all of it while the stage's camera is held, and it comes up out of the night as the fall arrives.
+ */
+export const veilAt = (t: number): number => (opening(t) ? 1 : t < PULL_FROM ? 0 : smooth((t - (PULL_FROM + 2.4)) / 4.6))
+/**
+ * In the opening the shop is cut out of the night, not under it: over the shop's own box the night lifts as soon as the
+ * stage's camera can show it, and over the street and the ground round it only when the fall is close.
+ */
+const SHOP = { x0: ROOM.x0 - 0.3, x1: ROOM.x1 + 0.3, y0: ROOM.ceiling - 0.45, y1: 0.42 }
+const inShop = (x: number, y: number): boolean => x > SHOP.x0 && x < SHOP.x1 && y > SHOP.y0 && y < SHOP.y1
+const shopVeilAt = (t: number): number => (opening(t) ? smooth((beyond(t) - 1) / 0.12) : 0)
+const roundVeilAt = (t: number): number => (opening(t) ? smooth((pullAt(t) - 16) / 26) : 0)
 /** The opening the veil leaves: round the window and the family at its foot, in cells. */
 const HOLE: Pt = [PORT[0], PORT[1] + 0.22]
 const HOLE_R = 0.95
 /** The opening's radius in cells at `t`: it closes as the camera stops, where the window from afar takes over. */
-const holeAt = (t: number): number => (HOLE_R / beyond(t)) * (1 - smooth((beyond(t) - 1.08) / 0.5))
+const holeAt = (t: number): number => (t < PULL_FROM ? 0 : (HOLE_R / beyond(t)) * (1 - smooth((beyond(t) - 1.08) / 0.5)))
 
 /** How dark the veil leaves (x, y) at `t`: for what draws over it (the googly eyes). */
 export const veilHere = (t: number, x: number, y: number): number => {
+  if (opening(t)) return inShop(x, y) ? shopVeilAt(t) : roundVeilAt(t)
   const v = veilAt(t)
   if (v <= 0) return 0
   const r = holeAt(t)
@@ -77,7 +125,7 @@ export const veilHere = (t: number, x: number, y: number): number => {
   return v * smooth((Math.hypot(x - HOLE[0], y - HOLE[1]) - r * 0.55) / (r * 0.45))
 }
 // Once the night covers it all, the room is not drawn at all: nothing of it can be seen.
-ROOM_LIGHTS.hidden = (t: number): boolean => veilAt(t) >= 0.9995 && holeAt(t) <= 0.001
+ROOM_LIGHTS.hidden = (t: number): boolean => (opening(t) ? shopVeilAt(t) >= 0.9995 : veilAt(t) >= 0.9995 && holeAt(t) <= 0.001)
 
 export const veilShade = (hex: string, t: number, x: number, y: number): string => {
   const d = veilHere(t, x, y)
@@ -204,7 +252,8 @@ export const multitude = scenery<null>({
   draw: () => {},
   over: (p: p5, _s, c) => {
     const t = c.t
-    if (t < PULL_FROM) return
+    const open = opening(t)
+    if (!open && t < PULL_FROM) return
     const { k } = c
     const f = frame(p, k)
     const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -214,7 +263,26 @@ export const multitude = scenery<null>({
     const V = D * beyond(t)
     const veil = veilAt(t)
     ctx.save()
-    if (veil > 0.001) {
+    if (open) {
+      // The night round the shop, with the shop's box cut out of it; and over the box, the night until it can be shown.
+      const round = roundVeilAt(t)
+      const shop = shopVeilAt(t)
+      if (round > 0.999 && shop > 0.999) {
+        // All of it night: one fill, so the box's edge leaves no seam.
+        ctx.fillStyle = NIGHT
+        ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+      } else if (round > 0.001) {
+        ctx.fillStyle = rgba(NIGHT, round)
+        ctx.beginPath()
+        ctx.rect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+        ctx.rect(SHOP.x0 * k, SHOP.y0 * k, (SHOP.x1 - SHOP.x0) * k, (SHOP.y1 - SHOP.y0) * k)
+        ctx.fill('evenodd')
+      }
+      if (shop > 0.001 && !(round > 0.999 && shop > 0.999)) {
+        ctx.fillStyle = rgba(NIGHT, shop)
+        ctx.fillRect(SHOP.x0 * k, SHOP.y0 * k, (SHOP.x1 - SHOP.x0) * k, (SHOP.y1 - SHOP.y0) * k)
+      }
+    } else if (veil > 0.001) {
       // The shop and the street go down into the night, all but the window and the three of them under it.
       const hole = holeAt(t)
       ctx.fillStyle = rgba(NIGHT, veil)
@@ -238,8 +306,10 @@ export const multitude = scenery<null>({
     const halfH = (f.y1 - f.y0) / 2 + 2
     const mx = (f.x0 + f.x1) / 2
     const my = (f.y0 + f.y1) / 2
+    // In the opening every window is lit from the first moment, and they go as the fall comes in close.
+    const near0 = open ? smooth((V - 18) / 45) : 1
     for (const L of LIGHTS) {
-      const up = smooth((t - L.on) / 0.9)
+      const up = open ? smooth(t / 0.5) * near0 : smooth((t - L.on) / 0.9)
       if (up <= 0.002) continue
       // Where it is in the shop's cells: its own place, seen from the draw back's distance; calm, already where it will
       // rest in the frame, and as big as it will be there.
@@ -255,12 +325,39 @@ export const multitude = scenery<null>({
       const haze = 1 / (1 + L.z / 7000)
       const breath = 1 + 0.1 * Math.sin(t * 0.7 + L.phase)
       // Behind the shop until it has gone into the night: not seen through it.
-      const behind = x > ROOM.x0 - 0.3 && x < ROOM.x1 + 0.3 && y > ROOM.ceiling - 0.4 && y < 0.6 ? veil * veil * veil : 1
+      const cover = open ? shopVeilAt(t) : veil
+      const behind = x > ROOM.x0 - 0.3 && x < ROOM.x1 + 0.3 && y > ROOM.ceiling - 0.4 && y < 0.6 ? cover * cover * cover : 1
       const a = up * L.b * haze * breath * behind
       ctx.globalAlpha = clamp(a)
       const size = shown * 2 * k
       ctx.drawImage(art[L.tint], x * k - size / 2, y * k - size / 2, size, size)
       ctx.globalAlpha = 1
+    }
+    // In the opening, this one is the shop with its tubes coming on: a lit box among the lit windows, as long as it is
+    // under the night; the shop itself comes up out of it.
+    if (open) {
+      let level = 0
+      for (let i = 0; i < TUBES.length; i++) level += tubeLevel(i, t)
+      level /= TUBES.length
+      const sc = D / V
+      const x0 = PORT[0] + (ROOM.x0 - PORT[0]) * sc
+      const x1 = PORT[0] + (ROOM.x1 - PORT[0]) * sc
+      const y0 = PORT[1] + (ROOM.ceiling - PORT[1]) * sc
+      const y1 = PORT[1] + (0.2 - PORT[1]) * sc
+      const a = shopVeilAt(t) * level
+      if (a > 0.003) {
+        // A soft light the shape of the shop's front, and the lit box itself in it, faint.
+        ctx.globalAlpha = clamp(a * 0.7)
+        const gw = (x1 - x0) * 1.3 + 10 * px
+        const gh = (y1 - y0) * 3 + 12 * px
+        ctx.drawImage(art[1], ((x0 + x1) / 2) * k - (gw * k) / 2, ((y0 + y1) / 2) * k - (gh * k) / 2, gw * k, gh * k)
+        ctx.globalAlpha = clamp(a * 0.6)
+        ctx.fillStyle = '#E4F5EA'
+        ctx.fillRect(x0 * k, y0 * k, Math.max(1, (x1 - x0) * k), Math.max(1, (y1 - y0) * k))
+        ctx.globalAlpha = 1
+      }
+      ctx.restore()
+      return
     }
     // And this one: the window she is home in, from afar, as the others are.
     const own = smooth((t - (PULL_FROM + 5.5)) / 3)

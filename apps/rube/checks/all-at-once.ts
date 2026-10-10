@@ -15,6 +15,7 @@ import { surfLookAt } from '../src/shows/versions/come-recover/all-at-once/multi
 import type { MultiverseShow } from '../src/shows/versions/come-recover/all-at-once/show'
 import { REVEAL } from '../src/shows/versions/come-recover/all-at-once/rocks/ledge'
 import { REVERSES } from '../src/shows/versions/come-recover/all-at-once/void/pull'
+import { OPEN_TO } from '../src/shows/versions/come-recover/all-at-once/home/multitude'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 
@@ -193,7 +194,8 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
 
   // Seen whole, not as specks: at 1280×720 Evelyn, and Joy and Waymond while they are in the frame, are never under
   // 14 px across for more than 2 s, but in the hush, where the two of them are small against the bagel on purpose, and
-  // in the rocks' reveal, two specks on the rim of a canyon as big as the world, also on purpose.
+  // in the rocks' reveal, two specks on the rim of a canyon as big as the world, and in the opening's fall in from the
+  // night of lit windows, also on purpose.
   const specks: string[] = []
   for (const who of ['evelyn', 'joy', 'waymond'] as const) {
     let from = -1
@@ -202,7 +204,7 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
       const b = who === 'evelyn' ? (h!.hidden ? null : h) : who === 'joy' ? show.joy(t) : show.waymond(t)
       const f = cam(t)
       const inFrame = !!b && Math.abs(b.x - f.x) < (f.cells * 8) / 9 && Math.abs(b.y - f.y) < f.cells / 2
-      const hush = (t > JUMPS.void && t < fight(8)) || (t > REVEAL[0] && t < REVEAL[1])
+      const hush = (t > JUMPS.void && t < fight(8)) || (t > REVEAL[0] && t < REVEAL[1]) || t < OPEN_TO
       const small = inFrame && !hush && (2 * R * ((b as { scale?: number }).scale ?? 1) * 720) / f.cells < 14
       if (small && from < 0) from = t
       if (!small && from >= 0) {
@@ -211,7 +213,7 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
       }
     }
   }
-  check('all at once: the family is never a speck: at least 14 px across at 1280×720, but in the hush and the rocks\' reveal', specks.length === 0, specks.join(', '))
+  check('all at once: the family is never a speck: at least 14 px across at 1280×720, but in the hush, the rocks\' reveal and the opening\'s fall', specks.length === 0, specks.join(', '))
 
   // The ball is never out of sight for long.
   let hidden = 0

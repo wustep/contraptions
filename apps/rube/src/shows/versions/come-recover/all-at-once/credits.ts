@@ -224,8 +224,8 @@ const WHO = { evelyn: 'Evelyn', joy: 'Joy', waymond: 'Waymond' } as const
  * a card with nothing on it but its `said`, so nothing is seen: the page sets an empty card, a saved video paints none.
  */
 export const DESCRIBED: { at: number; said: string; of?: number }[] = [
-  { at: 2.2, said: 'The Wang family laundromat, at night. Waymond, a jade ball with a googly eye.' },
-  { at: 7.9, of: 7.93, said: 'Evelyn, a vermilion ball, rolls onto a washer’s lever, and the machines begin.' },
+  { at: 2.2, said: 'Lit windows in the night. One of them: the Wang family laundromat.' },
+  { at: 7.9, of: 7.93, said: 'Waymond, a jade ball with a googly eye, watches Evelyn, a vermilion ball, roll onto a washer’s lever, and the machines begin.' },
   { at: 20.2, of: 20.19, said: 'The taxes. Joy, a violet ball, comes in.' },
   { at: 31.5, of: 30.65, said: 'A crank throws her into a basket of lanterns, and then into the big dryer. Other worlds show in its glass.' },
   { at: 60.0, of: JUMPS.premiere, said: 'Another life: a red carpet, in widescreen, the press’s flashes going off.' },

@@ -1,4 +1,4 @@
-import { FLOOR, type BallState, type Pt } from '../../../../parts'
+import { type BallState, type Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
@@ -8,7 +8,7 @@ import { DURATION, JUMPS, ONSETS, fight } from './music'
 import { MultiverseShow, type Flicker, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { EVELYN, type WorldKey } from './worlds'
 import { credits, endShade, subtitleBed } from './credits'
-import { room, ROOM, shade, TUBES, type RoomState } from './home/set'
+import { LIGHTS as ROOM_LIGHTS, room, shade, type RoomState } from './home/set'
 import { laundromat } from './home/laundromat'
 import { dryer } from './home/dryer'
 import { premiere } from './star/premiere'
@@ -28,7 +28,7 @@ import { STEP_RATE, stepPrint } from './star/premiere-alley'
 import { drain, radiance } from './void/radiance'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
-import { cameraCellsAt, multitude, PULL_FROM, veilShade } from './home/multitude'
+import { cameraCellsAt, multitude, OPEN_TO, openingFraming, PULL_FROM, setOpening, veilShade } from './home/multitude'
 import { crown, type CrownState } from './void/crown'
 import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './home/finale-lives'
 import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, T_DOOR, W_TOUCH } from './home/finale-plan'
@@ -265,11 +265,8 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
       who: 'waymond' as const,
       from: 0,
       gaze: [
-        // The cold open: up at the tubes as they blink and catch over him, the one at his left and then the one at his
-        // right; down at the slumped bag as he sets it on its bottom; and at her, before she sets the machine going.
-        { from: 0.45, to: 1.35, at: () => [TUBES[1].x, ROOM.ceiling + 0.35] },
-        { from: 1.2, to: 2.3, at: () => [TUBES[2].x, ROOM.ceiling + 0.35] },
-        { from: 3.9, to: 5.1, at: () => [3.12, FLOOR - 0.3] },
+        // The cold open: the tubes catching and the slumped bag set on its bottom are seen from the night outside, as
+        // the camera falls in (`multitude.ts`); once it is in, he looks at her, before she sets the machine going.
         { from: 6.3, to: 8.3 },
         { from: 20.3, to: 23.95, at: 'joy' as const },
         { from: 23.7, to: 27.65 },
@@ -359,6 +356,23 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     ;(sets[world] ??= { scenery: [], after: [] }).after.push(standing(film, 0, 0, [...cells.values()], picture, DURATION) as Placed)
   }
 
+  // Under the night at the start and the end every part in the laundromat is out of sight (`multitude.ts`), and seen
+  // from that far out every one of them is in the frame: none is drawn while the night covers them.
+  for (const leg of legs) {
+    if (leg.world !== 'home') continue
+    leg.placed = leg.placed.map((placed) => {
+      const { draw, over } = placed.piece
+      const hidden = (t: number) => ROOM_LIGHTS.hidden(placed.start + t)
+      return {
+        ...placed,
+        piece: {
+          ...placed.piece,
+          draw: draw && ((p, st, c) => (hidden(c.t) ? undefined : draw.call(placed.piece, p, st, c))),
+          over: over && ((p, st, c) => (hidden(c.t) ? undefined : over.call(placed.piece, p, st, c))),
+        },
+      } as Placed
+    })
+  }
   const show = new MultiverseShow(legs, sets, flickers, DURATION, riders, company.sort((a, b) => a.from - b.from), isCalm)
   for (const state of eyeStates) state.show = show
   crownState.show = show
@@ -390,9 +404,11 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     const where = (s: number): Pt => show.where(Math.max(leg.from, Math.min(leg.to - 1e-6, s)))
     cams.push(director(where, keys, DURATION))
   })
+  // The opening falls in from the night of lit windows to the laundromat's own first framing (`multitude.ts`).
+  setOpening(cams[0](OPEN_TO))
   const camera = (t: number): Framing => {
     const owner = show.owner(t)
-    const f = cams[owner](t)
+    const f = t < OPEN_TO && !isCalm() ? openingFraming(t, cams[owner](t)) : cams[owner](t)
     const [ox, oy] = show.offset(t)
     // The last shot's draw back is its own (`multitude.ts`): the keys say where it looks, and it says how far back.
     const cells = t > PULL_FROM ? cameraCellsAt(t) : f.cells
