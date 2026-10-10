@@ -337,6 +337,7 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
     const wrong = performanceProblems(loaded)
     if (wrong.length) throw new Error(wrong.join(', '))
     perf = loaded
+    loaded.dialogue?.(dialogue)
     transport = new Transport({ duration: loaded.duration, heard: () => music.position(), loop: !!loaded.loop })
     transport.setSpeed(speed)
     lastT = 0
@@ -513,6 +514,29 @@ function toggleCaptions(): void {
   if (transport) renderWords(transport.now())
 }
 ccBtn.addEventListener('click', toggleCaptions)
+// Dialogue, for a show that has it (`Performance.dialogue`): off unless the viewer turns it on, and remembered in this
+// browser. The show plays straight through without it.
+const DIALOGUE_KEY = 'shows-dialogue'
+let dialogue = (() => {
+  try {
+    return localStorage.getItem(DIALOGUE_KEY) === '1'
+  } catch {
+    return false
+  }
+})()
+const dlState = el('span', { class: 'cc-state' }, ['Off'])
+const dlBtn = el('button', { type: 'button', class: 'chip cc', 'aria-label': 'Dialogue' }, [el('span', {}, ['Dialogue']), dlState])
+const dlRow = el('div', { class: 'row cc' }, [dlBtn])
+function toggleDialogue(): void {
+  dialogue = !dialogue
+  try {
+    localStorage.setItem(DIALOGUE_KEY, dialogue ? '1' : '0')
+  } catch {}
+  perf?.dialogue?.(dialogue)
+  sync()
+  if (transport) renderWords(transport.now())
+}
+dlBtn.addEventListener('click', toggleDialogue)
 const restartBtn = el('button', { type: 'button', class: 'tbtn', title: 'Back to the top of the show (Home)', 'aria-label': 'Restart' }, [icon(ICON.restart)])
 restartBtn.addEventListener('click', () => seek(0))
 // Overview and Zoom were two toggles that turned each other off: one choice of three, so one control.
@@ -542,7 +566,8 @@ transportSec.append(
   scrub,
   el('div', { class: 'row deck player' }, [playBtn, restartBtn, time, musicBtn, speedBox.node]),
   cameraSeg.node,
-  // Sound captions: a row of their own, shown only for a show that has them.
+  // Dialogue and sound captions: a row each, shown only for a show that has them.
+  dlRow,
   ccRow,
   el('div', { class: 'row door' }, [doorBtn]),
   transportNote,
@@ -691,6 +716,11 @@ function sync(): void {
   speedBox.set(speed)
   speedBox.setDisabled(busy)
   doorBtn.disabled = busy
+  dlBtn.disabled = busy || !perf?.dialogue
+  dlRow.hidden = !perf?.dialogue
+  dlBtn.setAttribute('aria-pressed', String(!!perf?.dialogue && dialogue))
+  dlState.textContent = dialogue ? 'On' : 'Off'
+  dlBtn.title = dialogue ? 'Turn the dialogue off (D)' : 'Turn on the dialogue: the family’s words, in subtitles (D)'
   ccBtn.disabled = !perf?.captions
   ccRow.hidden = !perf?.captions
   ccBtn.setAttribute('aria-pressed', String(!!perf?.captions && captions))
@@ -915,7 +945,7 @@ const onKey = (e: KeyboardEvent) => {
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  // Letter keys are case-blind: Caps Lock must not silence P, M, C, O or Z.
+  // Letter keys are case-blind: Caps Lock must not silence P, M, C, D, O or Z.
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
   if (key === 'p') {
     shell.toggle()
@@ -940,6 +970,9 @@ const onKey = (e: KeyboardEvent) => {
       break
     case 'c':
       if (perf?.captions) toggleCaptions()
+      break
+    case 'd':
+      if (perf?.dialogue) toggleDialogue()
       break
     case 'o':
       if (perf) setOverview(!overview)

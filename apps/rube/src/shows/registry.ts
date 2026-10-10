@@ -105,6 +105,12 @@ export interface Performance {
    * viewer who cannot hear it. They are seen only while the viewer has captions on (the player's CC). Left out, none.
    */
   captions?: boolean
+  /**
+   * The show has dialogue the viewer may turn on (the player's Dialogue row), off unless they do: the player says the
+   * viewer's choice here before the first frame and on every change, and the show's words and picture follow it (a
+   * saved video too). The show plays through whole either way. Left out, the show has none to offer.
+   */
+  dialogue?(on: boolean): void
 }
 
 /** One card of words over the stage, as the page is to set it at a moment (and a video's frame to paint it). */

@@ -906,7 +906,7 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .deck.player > .lb.speed .lb-trigger { padding: 6px; gap: 6px; }
 .tbtn.music[aria-pressed='false'] { color: var(--dim); }
 .tbtn.music.held { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-/* Sound captions, for a show that has them: a toggle of its own row, lit when on. */
+/* Dialogue and sound captions, for a show that has them: a toggle each, its own row, lit when on. */
 .row.cc[hidden] { display: none; }
 .row.cc > .chip { flex: 1; justify-content: flex-start; padding: 5px 9px; }
 .row.cc > .chip[aria-pressed='false'] { color: var(--dim); }
