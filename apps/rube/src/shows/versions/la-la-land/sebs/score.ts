@@ -4,10 +4,10 @@ import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
 import { box, lay, scenery, standing } from './kit'
 import { echoes } from './echo'
-import { lens } from './lens'
+import { lens, type IrisAt } from './lens'
 import { AT, DURATION, dream } from './music'
 import { SebsShow, type Stage } from './show'
-import { covers, IRIS_OPEN, IRIS_SNAP, RED_LIFT, type Cover } from './transitions'
+import { coverAt, covers, IRIS_OPEN, IRIS_SNAP, RED_LIFT, type Cover } from './transitions'
 import { CLUB, CLUB_MAT, DRIVE, GLOBE, LIPTONS, MOVIE, NIGHT, SEB, SEBS, SHADOW, STUDIO, STUDIO_MAT, THEATRE, THEATRE_MAT } from './worlds'
 import { city } from './city'
 import { clubRoom, DOOR } from './club/room'
@@ -131,7 +131,15 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
   }
   // The other road, over each place and under its cover: the same cells the lid claims, so it is drawn wherever it is.
   // The lens over the whole picture, under the covers; the other road over it, so the colour it brings is its own.
-  const lensOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: lens, state: null })
+  // (The lens is told where the spotlight's iris into the dream is, so the dream's colour can come in inside it.)
+  const intoDream = coverList[0]
+  const irisAt: IrisAt = (t, span) => {
+    if (intoDream.kind !== 'iris' || t < intoDream.down[0] || t > intoDream.up[0]) return null
+    const f = coverAt(intoDream, t)
+    const [x, y] = intoDream.from(t)
+    return { x, y, r: intoDream.r0 + (1 - f) * Math.max(0, span - intoDream.r0), f }
+  }
+  const lensOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: lens, state: { iris: irisAt } })
   // His music in the room as it is, over the grade: the colour in the grey room. From his first note to her table at
   // the start (in the piano's frame), and the last note to the door at the end (in the room's, which is the piano's).
   const colour = scenery<null>({

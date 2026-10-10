@@ -48,7 +48,10 @@ function tile(): HTMLCanvasElement | null {
   return cv
 }
 
-export const lens = scenery<null>({
+/** The spotlight's iris into the dream: where it is and how far it has closed, in world cells, or null. */
+export type IrisAt = (t: number, span: number) => { x: number; y: number; r: number; f: number } | null
+
+export const lens = scenery<{ iris: IrisAt } | null>({
   name: 'lens',
   draw: () => {},
   over(p, _s, c) {
@@ -62,14 +65,35 @@ export const lens = scenery<null>({
     const r = Math.hypot(w, h) / 2
     ctx.save()
     const m = muted(t)
+    // Into the dream: as the stage light closes down on him at the keys, the circle of light round him fills with the
+    // dream's warm colour while the room outside stays grey; it shuts, and opens on Lipton's.
+    const iris = m > 0.01 ? _s?.iris(t, Math.hypot(w, h)) : null
+    const paint = (c: string, a: number) => {
+      if (!iris) return c === '' ? '' : rgba(c, a)
+      const g = ctx.createRadialGradient(iris.x * k, iris.y * k, iris.r * 0.75 * k, iris.x * k, iris.y * k, iris.r * 1.05 * k)
+      g.addColorStop(0, rgba(c, 0))
+      g.addColorStop(1, rgba(c, a))
+      return g
+    }
     if (m > 0.01) {
       // Greyer: the colour drawn out toward grey; and colder: a little blue laid in the shadows.
       ctx.globalCompositeOperation = 'saturation'
-      ctx.fillStyle = rgba('#808080', 0.36 * m)
+      ctx.fillStyle = paint('#808080', 0.36 * m)
       ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
       ctx.globalCompositeOperation = 'soft-light'
-      ctx.fillStyle = rgba('#3A5A9A', 0.28 * m)
+      ctx.fillStyle = paint('#3A5A9A', 0.28 * m)
       ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      if (iris && iris.f > 0.05) {
+        // The warm light of the dream gathering in the circle as it closes: a lamp's warmth, laid on by screen.
+        ctx.globalCompositeOperation = 'screen'
+        const warm = ctx.createRadialGradient(iris.x * k, iris.y * k, 0, iris.x * k, iris.y * k, iris.r * k)
+        const a = 0.42 * iris.f * iris.f
+        warm.addColorStop(0, rgba('#F2A65A', a))
+        warm.addColorStop(0.65, rgba('#C8506A', 0.7 * a))
+        warm.addColorStop(1, rgba('#C8506A', 0))
+        ctx.fillStyle = warm
+        ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      }
       ctx.globalCompositeOperation = 'source-over'
     }
     const g = ctx.createRadialGradient(f.cx * k, f.cy * k, r * 0.55 * k, f.cx * k, f.cy * k, r * 1.02 * k)
