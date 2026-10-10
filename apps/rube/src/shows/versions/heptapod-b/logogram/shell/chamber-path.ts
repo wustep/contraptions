@@ -204,12 +204,12 @@ function ianTrack(): Track {
     { until: 102.8 + cruise, v: 0.42 },
     { until: 102.8 + cruise + 1.7, v: 0 },
     { until: back, v: 0 },
-    { until: back + 0.5, v: -0.45 },
+    { until: back + 0.7, v: -0.95 },
     { until: back + 1.9, v: 0 },
     // Out of shot while the ring is written; and when it has closed (126.131) he comes forward again, to the edge of
     // the light a step behind her, and is there watching as the glass goes white. He does not go through.
     { until: 126.2, v: 0 },
-    { until: 127.3, v: 1.2 },
+    { until: 127.3, v: 1.65 },
     { until: 129.2, v: 0 },
     { until: OUT + 1, v: 0 },
   ])
