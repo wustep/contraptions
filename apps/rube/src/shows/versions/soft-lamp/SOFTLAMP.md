@@ -1388,6 +1388,17 @@ ball's "hover" (its nod off the kick), and the lamp on at ten seconds (it comes 
 224. **The fairy lights right of the window** dipped a sliver into the home frame's top, a few bulbs cut by its edge;
      they hang in a deeper drape now, well into the frame and clear over the clock.
 
+### The eighty-first pass: in motion
+
+The reviews have all been of stills; the show is watched moving. Played through for what jumps:
+
+225. **The page turns** (`pageAt`, `lamp/reflection.ts`). The notebook in the glass snapped from a written page to a
+     blank one every two and a half minutes. Now the full leaf lifts off the right, goes over with its writing on it,
+     and lies down on the left, a second and a half, the hand off the page while it turns; the page under it is new.
+226. **The work put away.** A little before the kitten gets up for the sill, they stop writing, close the notebook (the
+     page goes over and the cover shows, warm in the lamp) and the pen is put down; then the lamp goes down. The half
+     hour ends with the work done.
+
 ## Judgment calls for Stephen
 
 - **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in

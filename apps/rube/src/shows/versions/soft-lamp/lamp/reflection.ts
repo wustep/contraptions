@@ -91,6 +91,25 @@ function thinkAt(t: number): number {
   return smooth(s, 0, 1.2) * (1 - smooth(s, 6.6, 8))
 }
 
+/** A page of their notebook lasts this long, and turning it takes this long. */
+const PAGE = 150
+const TURN = 1.5
+/** They close the notebook a little before the kitten gets up for the sill, and so before the lamp goes down. */
+const CLOSE_AT = CLIMB - 9
+
+/**
+ * Their notebook at `t`: how much of the page in hand is written (`lines`, 0 to 1), how far over the last page is being
+ * turned (`turn`, 0 to 1, or 0 when none is), and how far it has been closed (`close`).
+ */
+function pageAt(t: number): { lines: number; turn: number; close: number } {
+  const n = Math.floor(t / PAGE)
+  const s = t - n * PAGE
+  const turn = n > 0 && s < TURN ? smooth(s, 0, TURN) : 0
+  const close = smooth(t, CLOSE_AT, CLOSE_AT + 1.8)
+  const lines = Math.max(0, Math.min(1, (Math.min(t, CLOSE_AT) - n * PAGE - TURN) / (PAGE - TURN - 4)))
+  return { lines, turn: close > 0 ? 0 : turn, close }
+}
+
 /** How the person in the window is, at `t`: how strongly seen, where the head is turned, the mug, the reach. */
 function poseAt(t: number) {
   const seen = reflectionSeen(t)
@@ -193,43 +212,65 @@ export function reflection(ctx: Ctx, t: number): void {
   g.stroke()
   // Their notebook, open on the desk under the lamp: in the glass, the brightest thing they have, a warm page lit from
   // above, its ruled lines and the lines they have written on it (darker: what gives back less light), filling as they
-  // write, a page at a time.
+  // write. A page full, they turn it: the leaf lifts off the right and goes over to the left, and the page under it is
+  // new. At the end, before the lamp goes down, they close it.
   {
     const py0 = 0.72
     const py1 = 1.12
-    const page = g.createLinearGradient(-0.2, 0, 0.9, 0)
-    page.addColorStop(0, rgba('#E9D2B0', 0.55))
-    page.addColorStop(1, rgba('#FFEBCB', 0.95))
-    g.fillStyle = page
+    const F = 0.315
+    const pg = pageAt(t)
+    // A leaf on the right, turned `u` of the way over (0 flat on the right, 1 flat on the left), lifting as it goes.
+    const at = (x: number, y: number, u: number) => ({
+      x: F + (x - F) * Math.cos(Math.PI * u),
+      y: y - 0.09 * Math.sin(Math.PI * u) * ((x - F) / 0.6),
+    })
+    const leaf = (u: number, fill: string, lines: number) => {
+      const c = [at(F, py0, u), at(0.78, py0, u), at(0.92, py1, u), at(F, py1, u)]
+      g.beginPath()
+      g.moveTo(c[0].x, c[0].y)
+      for (const q of c.slice(1)) g.lineTo(q.x, q.y)
+      g.closePath()
+      g.fillStyle = fill
+      g.fill()
+      // Its writing, on its face while its face is up.
+      if (lines > 0 && Math.cos(Math.PI * u) > 0.05) {
+        g.strokeStyle = rgba('#5A4436', 0.55)
+        g.lineWidth = 0.009
+        g.beginPath()
+        for (let k = 0; k < 7; k++) {
+          const y = py0 + 0.045 + k * 0.05
+          const lx0 = 0.36 + 0.02 * (k / 7)
+          const lx1 = 0.8 + 0.12 * (k / 7)
+          const full = Math.max(0, Math.min(1, lines * 7 - k))
+          if (full <= 0) break
+          // In short words, with gaps between.
+          for (let x = lx0; x < lx0 + (lx1 - lx0) * full; x += 0.07) {
+            const e = Math.min(x + 0.04 + 0.02 * hash(k, Math.floor(x * 100), 611), lx0 + (lx1 - lx0) * full)
+            const q0 = at(x, y, u)
+            const q1 = at(e, y, u)
+            g.moveTo(q0.x, q0.y)
+            g.lineTo(q1.x, q1.y)
+          }
+        }
+        g.stroke()
+      }
+    }
+    const paper = (k: number) => rgba('#FFEBCB', 0.95 * k)
+    // The left page, written full.
+    const left = g.createLinearGradient(-0.24, 0, F, 0)
+    left.addColorStop(0, rgba('#E9D2B0', 0.55))
+    left.addColorStop(1, rgba('#F6E0BE', 0.8))
+    g.fillStyle = left
     g.beginPath()
     g.moveTo(-0.12, py0)
-    g.lineTo(0.78, py0)
-    g.lineTo(0.92, py1)
+    g.lineTo(F, py0)
+    g.lineTo(F, py1)
     g.lineTo(-0.24, py1)
     g.closePath()
     g.fill()
-    // The fold down its middle, and the facing page, a little dimmer.
-    g.fillStyle = rgba('#000000', 0.18)
-    g.fillRect(0.31, py0, 0.012, py1 - py0)
-    // The lines written so far on the page in hand: a new page every two minutes and a half or so.
-    const PAGE = 150
-    const done = (t % PAGE) / PAGE
     g.strokeStyle = rgba('#5A4436', 0.55)
     g.lineWidth = 0.009
     g.beginPath()
-    for (let k = 0; k < 7; k++) {
-      const y = py0 + 0.045 + k * 0.05
-      const lx0 = 0.36 + 0.02 * (k / 7)
-      const lx1 = 0.8 + 0.12 * (k / 7)
-      const full = Math.max(0, Math.min(1, done * 7 - k))
-      if (full <= 0) break
-      // In short words, with gaps between.
-      for (let x = lx0; x < lx0 + (lx1 - lx0) * full; x += 0.07) {
-        g.moveTo(x, y)
-        g.lineTo(Math.min(x + 0.04 + 0.02 * hash(k, Math.floor(x * 100), 611), lx0 + (lx1 - lx0) * full), y)
-      }
-    }
-    // And the facing page, already full.
     for (let k = 0; k < 7; k++) {
       const y = py0 + 0.045 + k * 0.05
       for (let x = -0.08 - 0.02 * (k / 7); x < 0.27; x += 0.07) {
@@ -238,13 +279,36 @@ export function reflection(ctx: Ctx, t: number): void {
       }
     }
     g.stroke()
+    // The right page, the one in hand (until it is closed over).
+    if (pg.close < 0.001) leaf(0, paper(1), pg.lines)
+    // A page turning over, with what was written on it.
+    if (pg.turn > 0 && pg.turn < 1) leaf(pg.turn, paper(0.55 + 0.45 * Math.abs(Math.cos(Math.PI * pg.turn))), 1)
+    // Closing: the right page goes over onto the left, and then it is the cover that shows, dark.
+    if (pg.close > 0.001) {
+      leaf(pg.close, paper(0.55 + 0.45 * Math.abs(Math.cos(Math.PI * pg.close))), pg.lines)
+      const shut = smooth(pg.close, 0.85, 1)
+      if (shut > 0) {
+        g.fillStyle = rgba('#B07A5E', 0.9 * shut)
+        g.beginPath()
+        g.moveTo(-0.12, py0 - 0.01)
+        g.lineTo(F + 0.01, py0 - 0.01)
+        g.lineTo(F + 0.01, py1)
+        g.lineTo(-0.24, py1)
+        g.closePath()
+        g.fill()
+      }
+    }
+    // The fold down the middle.
+    g.fillStyle = rgba('#000000', 0.18 * (1 - smooth(pg.close, 0.8, 1)))
+    g.fillRect(F - 0.006, py0, 0.012, py1 - py0)
   }
   // The writing arm: the forearm along the desk to the hand and its pen, which goes along the line as the head does.
-  const write = (1 - Math.max(p.think, p.stretch, p.kitten)) * (1 - p.sip)
+  // (Off the page while it turns, and put down once the book is shut.)
+  const pgw = pageAt(t)
+  const write = (1 - Math.max(p.think, p.stretch, p.kitten)) * (1 - p.sip) * (1 - Math.sin(Math.PI * pgw.turn)) * (1 - smooth(pgw.close, 0, 0.3))
   if (write > 0.02) {
     // On the line it is writing, along it as the head goes.
-    const PAGE = 150
-    const done = (t % PAGE) / PAGE
+    const done = pageAt(t).lines
     const row = Math.min(6, Math.floor(done * 7))
     const hx = 0.4 + 0.45 * (done * 7 - row) + p.scan * 0.6
     const hyw = 0.72 + 0.045 + row * 0.05
