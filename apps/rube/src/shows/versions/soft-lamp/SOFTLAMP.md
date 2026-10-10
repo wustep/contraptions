@@ -1333,6 +1333,22 @@ had nowhere to rest in front of the room.
 214. **Fixed on the way.** The first plant was five long vines of small sharp leaves that reached the sill's plant and
      crossed the window's sky; close things are few, large and soft, and it keeps to the curtain now.
 
+### The seventy-eighth pass: the night coming on in the kitten
+
+The cold review's third point: the kitten was the same at a quarter to midnight as at ten past, and then asleep. Its
+sleep at the end is built toward now (`drowseAt`, `DOZES`, `lamp/cat.ts`):
+
+215. **Sleepier as the night goes.** From about fifteen minutes in, its lids rest lower over its eyes while it watches,
+     more of its blinks are the slow ones, and slower, and it breathes more slowly. Bright-eyed at dusk; heavy-lidded by
+     the last track.
+216. **It dozes off.** Four times late in the night (19:23, 22:23, 25:21, 28:19), where it lies: its eyes close by
+     themselves, its head sinks and tips, its ears go soft, a few seconds; then a small start, the head up, the eyes
+     open, and it is watching again. Each in a phrase it spends watching (a doze shows against open eyes, not against
+     the shut arch of nodding along), while the camera holds it, clear of its yawns, washes and stretches, the snow, the
+     sky's moments, the hand, a car's lights and the machine. `check:shows` holds them.
+217. **Fixed on the way.** The first dozes fell where it was already nodding along, eyes shut, and read as nothing;
+     one began a second after it had looked up at the first snow.
+
 ## Judgment calls for Stephen
 
 - **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in

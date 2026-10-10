@@ -351,6 +351,48 @@ export function snowLookAt(t: number): { x: number; y: number; a: number } {
 }
 
 /**
+ * How sleepy it is getting, 0 to 1: bright through the evening, its lids heavier and its blinks slower past midnight,
+ * the night coming on in it before it climbs to the sill to sleep.
+ */
+export const drowseAt = (t: number): number => smooth(t, 900, 1700) * (1 - sleepAt(t))
+
+/**
+ * Dozing off: late in the night, three or four times, where it lies, its eyes close by themselves and its head sinks
+ * and its ears go soft, a few seconds; then a small start, the head up and the eyes open, and it is watching again.
+ * While the camera holds it, clear of its other moments, the machine's and the sky's.
+ */
+const DOZE = 9
+export const DOZES: number[] = (() => {
+  const out: number[] = []
+  const busy = [...YAWNS, ...WASHES, ...STRETCHES, SNOW_LOOK, ...MOMENTS.shooting, ...MOMENTS.lightning]
+  for (let at = 1150; at < CLIMB - 40 && out.length < 4; at += 1) {
+    if (out.length && at < out[out.length - 1] + 110) continue
+    if (!catInViewAt(at) || !catInViewAt(at + DOZE)) continue
+    if (machineBusy(at, at + DOZE, 2)) continue
+    if (busy.some((m) => m > at - 18 && m < at + DOZE + 6)) continue
+    if (REACHES.some((r) => r.at < at + DOZE + 6 && r.at + r.dur > at - 6)) continue
+    // In a phrase it spends watching, not nodding along with its eyes already shut: a doze shows against open eyes.
+    let clear = true
+    for (let s = at - 2; s <= at + DOZE + 1 && clear; s += 0.5) if (sweepAt(s).a > 0.02 || vibeAt(s) > 0.05) clear = false
+    if (clear) out.push(at)
+  }
+  return out
+})()
+
+/** Where a doze is at `t`: how far gone (`k`, 0 to 1), and the start it wakes with (`jolt`). */
+export function dozeAt(t: number): { k: number; jolt: number } {
+  for (const at of DOZES) {
+    const s = t - at
+    if (s < 0 || s > DOZE) continue
+    const k = smooth(s, 0, 3.2) * (1 - smooth(s, 6.4, 6.75))
+    const j = s - 6.4
+    const jolt = j > 0 && j < 1.6 ? Math.exp(-j / 0.3) * Math.sin(j * 14) : 0
+    return { k, jolt }
+  }
+  return { k: 0, jolt: 0 }
+}
+
+/**
  * Where a stretch is at `t`: how far up onto its feet (`up`), how far its front is stretched out along the desk, chest
  * down and rear up (`out`), and the yawn that comes with it at full stretch (`yawn`).
  */
@@ -378,8 +420,10 @@ function nodAt(t: number): number {
 function blinkAt(t: number): number {
   const k = Math.floor(t / 4.3)
   const at = k * 4.3 + hash(k, 91) * 3
-  const slow = hash(k, 92) < 0.25
-  const d = slow ? 1.4 : 0.22
+  // Sleepier, more of its blinks are slow ones, and slower.
+  const drowse = drowseAt(at)
+  const slow = hash(k, 92) < 0.25 + 0.45 * drowse
+  const d = slow ? 1.4 + 0.9 * drowse : 0.22
   const s = t - at
   if (s < 0 || s > d) return 0
   return Math.sin((Math.PI * s) / d) ** (slow ? 1 : 2)
@@ -430,7 +474,9 @@ export const awayAt = (t: number): number => smooth(t, CLIMB + 0.8, CLIMB + 1.6)
 function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): void {
   const lamp = lampAt(t)
   const sleep = sleepAt(t)
-  const breath = Math.sin((2 * Math.PI * t) / (3.4 + sleep * 1.4))
+  const drowse = drowseAt(t)
+  const doze = dozeAt(t)
+  const breath = Math.sin((2 * Math.PI * t) / (3.4 + sleep * 1.4 + drowse * 0.6 + doze.k * 0.8))
   const l = Math.min(1, lightAt(CAT.chest + c.dx, -0.4 + c.dy) * lamp * 1.6 + 0.12)
   const fur = (k = 1) => lit(FUR, FUR_LIT, l * k)
   const { x0, chest, top } = CAT
@@ -439,7 +485,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   // A shooting star, or lightning, brings it out of the music to look, and it goes back in after.
   // A scratch under the chin: it shuts its eyes and leans into the hand.
   const pet = petAt(t) * (1 - sleepAt(t))
-  const vibe = vibeAt(t) * (1 - washAt(t).k) * (1 - smooth(stretchAt(t).up, 0, 0.3)) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - snowLookAt(t).a) * (1 - handAt(t).a) * (1 - mothKeen(t))
+  const vibe = vibeAt(t) * (1 - washAt(t).k) * (1 - smooth(stretchAt(t).up, 0, 0.3)) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - snowLookAt(t).a) * (1 - handAt(t).a) * (1 - mothKeen(t)) * (1 - doze.k)
   // Stretching: up on its feet, the body lifted and tipped forward (chest down, rear up) about its rear, and longer;
   // the head down and forward with it, the eyes shut in a yawn.
   const s0 = stretchAt(t)
@@ -618,7 +664,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const wash = washAt(t)
   const over = Math.max(0, wash.paw - 1)
   const hx0 = CAT.head.x
-  const hy0 = CAT.head.y - 0.025 * pet + 0.26 * sleep + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn + wash.k * (0.03 + 0.02 * wash.lick + 0.02 * over)
+  const hy0 = CAT.head.y - 0.025 * pet + 0.26 * sleep + 0.075 * doze.k - 0.02 * doze.jolt + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn + wash.k * (0.03 + 0.02 * wash.lick + 0.02 * over)
   // Its gaze, in its own frame: carried and turned as it is.
   const gz = gaze(t, 0.22)
   const look = { x: C_CX + (gz.x - c.dx - C_CX) * Math.sign(c.face), y: gz.y - c.dy }
@@ -626,7 +672,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const dy = look.y - hy0
   const d = Math.hypot(dx, dy) || 1
   const awake = 1 - sleep
-  const watch = awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet)
+  const watch = awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet) * (1 - doze.k)
   const lx = (dx / d) * watch
   const ly = (dy / d) * watch + 0.25 * vibe * awake
   // With the body as it stretches: down and forward, over its outstretched paws.
@@ -634,7 +680,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const hx = carried.x + lx * 0.035 + 0.12 * st.out
   const hy = carried.y - 0.02 + ly * 0.02 + 0.1 * st.out
   const tilt = lx * 0.12 - ly * 0.06 - yawn * 0.12 + sleep * 0.3 + vibe * awake * 0.08 * Math.sin((Math.PI * beatOf(tr, t)) / 2) +
-    wash.k * (0.1 + 0.32 * over) + pet * (0.2 + 0.03 * Math.sin(t * 2.2)) + tipF * 0.6
+    wash.k * (0.1 + 0.32 * over) + pet * (0.2 + 0.03 * Math.sin(t * 2.2)) + tipF * 0.6 + 0.16 * doze.k - 0.05 * doze.jolt
   ctx.save()
   ctx.translate(hx, hy)
   ctx.rotate(tilt)
@@ -647,7 +693,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     ctx.save()
     ctx.translate(side * 0.14, -0.13)
     // Hearing a new track, both ears come up and turn a little forward.
-    ctx.rotate(side * 0.25 + (side > 0 ? flick * 0.35 : 0) - side * sleep * 0.25 + side * yawn * 0.3 + side * pet * 0.2 - side * 0.14 * perk)
+    ctx.rotate(side * 0.25 + (side > 0 ? flick * 0.35 : 0) - side * sleep * 0.25 - side * doze.k * 0.18 + side * yawn * 0.3 + side * pet * 0.2 - side * 0.14 * perk)
     ctx.beginPath()
     ctx.moveTo(-0.085, 0.04)
     ctx.quadraticCurveTo(-0.04, -0.12, 0.0, -0.16)
@@ -701,7 +747,8 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
 
   // The eyes: round and open as it watches; the upper lid comes down over them to blink, so a blink caught halfway is
   // sleepy, never cross; shut in the content arch while it nods along, and shut soft as it sleeps or yawns.
-  const open = Math.max(0, (1 - blinkAt(t)) * awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet))
+  // Sleepier, its lids rest lower over its eyes; dozing, they close.
+  const open = Math.max(0, (1 - blinkAt(t)) * (1 - 0.3 * drowse) * awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet) * (1 - doze.k))
   const happy = (vibe > 0.5 || pet > 0.5) && sleep < 0.5 && yawn < 0.3 && wash.k < 0.3
   const px = lx * 0.03
   const py = ly * 0.026

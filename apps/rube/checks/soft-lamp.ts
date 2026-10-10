@@ -17,7 +17,7 @@ import { SNOW, coverAt, rainAt, snowAt } from '../src/shows/versions/soft-lamp/l
 import { HUMAN_STRETCH, reflectionSeen } from '../src/shows/versions/soft-lamp/lamp/reflection'
 import { MOTH_IN, mothAt } from '../src/shows/versions/soft-lamp/lamp/moth'
 import { REACHES, REFILL, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
-import { CLIMB, SNOW_LOOK, STRETCHES, WASHES, YAWNS, climbAt } from '../src/shows/versions/soft-lamp/lamp/cat'
+import { CLIMB, DOZES, SNOW_LOOK, STRETCHES, WASHES, YAWNS, climbAt } from '../src/shows/versions/soft-lamp/lamp/cat'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -195,6 +195,11 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     snowAt(SNOW.full + 30) > 0.6 && coverAt(SNOW.to) > 0.85 && coverAt(MUSIC_END) >= coverAt(SNOW.to) && coverAt(SNOW.from - 1) === 0 &&
     SNOW_LOOK > SNOW.from && SNOW_LOOK < SNOW.to && catInViewAt(SNOW_LOOK) && catInViewAt(SNOW_LOOK + 9) && !machineBusy(SNOW_LOOK, SNOW_LOOK + 9, 2),
     `snow look ${SNOW_LOOK}`)
+
+  // Sleepier through the night: it dozes off three or four times late, in view, clear of the machine and its other moments.
+  check('soft lamp: the kitten dozes off three or four times late in the night, in view, clear of its other moments',
+    DOZES.length >= 3 && DOZES.length <= 4 && DOZES.every((t) => t > 1100 && t < CLIMB - 30 && catInViewAt(t) && catInViewAt(t + 9) && !machineBusy(t, t + 9, 2) &&
+      [...YAWNS, ...WASHES, ...STRETCHES, SNOW_LOOK].every((m) => m < t - 18 || m > t + 15)), JSON.stringify(DOZES))
 
   // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched, hands round the mug in the
   // rain, a face drawn in the mist on the glass, the mug taken away after midnight and brought back hot, and the lamp
