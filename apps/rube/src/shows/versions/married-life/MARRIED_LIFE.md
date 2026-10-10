@@ -820,6 +820,10 @@ window.
   - *Motion, again, after the beat-by-beat fixes* (the leans, the tickets, the petals, the lamp, the falls, the chimney):
     every frame at 30 fps diffed against the last, 7,800 frames: away from the cuts the same four jumps as before and
     no others, the flash, the two lightning strikes and the lamp at home, each on purpose.
+  - *The kiss, looked at again* (one wedding viewer: it "could take it as a nudge or a stumble"). Kept: it is several
+    cues, not one lean (his lean growing to 0.15 rad on the slowing march, her roll in and up onto her toes, the touch,
+    the light gathering on them, the photograph), both wedding viewers read it as the kiss and one as the moment that
+    told most, and a deeper press was tried before and made one squashed shape of them.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
