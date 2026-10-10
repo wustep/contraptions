@@ -1394,8 +1394,8 @@ function drawVaultFace(p: p5, ctx: C2D, c: Ctx, t: number): void {
   // The door: a steel disc, rolled right along its rail as it opens (turning as a wheel turns).
   const cx = lerp(dx, FORT.doorTo, d.roll)
   const turn = -((cx - dx) / r)
-  // Its rail along the face.
-  rect(ctx, k, dx - r * 0.4, dy + r + 0.02, FORT.doorTo + r + 0.1, dy + r + 0.12)
+  // Its rail along the face, on a sill down to the floor (it ended a little above the floor, a bar floating there).
+  rect(ctx, k, dx - r * 0.4, dy + r + 0.02, FORT.doorTo + r + 0.1, FLOOR_Y)
   ctx.fillStyle = SNOW.vault
   ctx.fill()
   drawDoor(ctx, c, [cx, dy], r, turn, d.wheel, d.bolts)
