@@ -1263,7 +1263,7 @@ function drawLamp(p: p5, k: number, ink: string, weight: number, t: number): voi
 /**
  * The other road, at her show: in the film her play went on to a near-empty house, and he wasn't there. In the lead-in
  * bar, while the house holds its breath, that night shows through for a breath: the seats empty, flickering like old
- * film, and the house goes grey round him. On the downbeat he springs up, and the full house is back as it rises.
+ * film, and the house goes grey behind him. On the downbeat he springs up, and the full house is back as it rises.
  */
 export const EMPTY: [number, number, number] = [113.45, 114.0, SPRING - 0.06]
 export function emptyAt(t: number): number {
@@ -1347,13 +1347,15 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
       }
     }
   }
-  // And the house goes grey round him while it is empty: the real night's colour.
+  // And the house goes grey behind him while it is empty: the real night's colour. Not him: in grey he would read as
+  // David, and he is the one who is there.
   if (empty > 0.01) {
     const ctx = p.drawingContext as CanvasRenderingContext2D
     ctx.save()
     ctx.globalCompositeOperation = 'saturation'
     ctx.fillStyle = rgba('#808080', 0.85 * empty)
-    ctx.fillRect((ARCH0 - 1) * k, (ROW_Y[0] - 0.7) * k, (RIGHT - ARCH0 + 1) * k, (ROW_Y[ROW_Y.length - 1] - ROW_Y[0] + 1.2) * k)
+    const top = ROW_Y[0] + 0.08
+    ctx.fillRect((ARCH0 - 1) * k, top * k, (RIGHT - ARCH0 + 1) * k, (ROW_Y[ROW_Y.length - 1] - top + 0.5) * k)
     ctx.restore()
   }
 }
