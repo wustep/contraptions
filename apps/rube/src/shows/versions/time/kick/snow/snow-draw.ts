@@ -326,15 +326,24 @@ function drawGuards(p: p5, ctx: C2D, c: Ctx, t: number): void {
 }
 
 /**
- * Where Mal's shot strikes Fischer at the vault's door: a hard white flash on the shot, fading as the camera cuts back
- * to him, so the hit is seen and not only his going under.
+ * Where Mal's shot strikes Fischer at the vault's door: a hard white flash on the shot, and a ring going out from him
+ * across the floor, still fading when the camera cuts back to him, so the hit is seen and not only his going under.
  */
-function drawHit(p: p5, k: number, t: number): void {
+function drawHit(p: p5, ctx: C2D, k: number, t: number): void {
   const u = t - T.shot
   if (u < 0 || u > 1.6) return
   const at: Pt = [SHOT_X, FLOOR_Y - R]
   bloom(p, k, at, 0.9, SNOW.flash, 0.95 * Math.exp(-u / 0.12))
   bloom(p, k, at, 0.5, SNOW.flash, 0.55 * Math.exp(-u / 0.45))
+  // The ring, out along the floor (seen a little from above: flattened).
+  const r = 0.2 + 1.1 * (1 - Math.exp(-u / 0.35))
+  ctx.save()
+  ctx.strokeStyle = rgba(SNOW.flash, 0.8 * (1 - u / 1.6))
+  ctx.lineWidth = Math.max(1, 0.035 * k)
+  ctx.beginPath()
+  ctx.ellipse(at[0] * k, FLOOR_Y * k, r * k, r * 0.28 * k, 0, 0, TAU)
+  ctx.stroke()
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ Mal */
@@ -433,7 +442,7 @@ export function drawSnowPart(p: p5, c: Ctx, t: number, o: Pt): void {
     drawRifle(p, ctx, c, t, false)
     // The floor goes soft under them: Fischer where he is shot; Cobb and Ariadne by the gate as the case opens.
     sink(p, k, [SHOT_X, FLOOR_Y], t - T.shot - 0.3, F_THROUGH - T.shot - 0.3, 0.8)
-    drawHit(p, k, t)
+    drawHit(p, ctx, k, t)
     sink(p, k, [LIE_C, FLOOR_Y], t - T.sink, C_THROUGH - T.sink, 0.75)
     sink(p, k, [LIE_A, FLOOR_Y], t - T.sink, A_THROUGH - T.sink, 0.7)
     drawCaseLines(ctx, c, t)
