@@ -150,7 +150,7 @@ const miaAtTable = (t: number): Pt => {
  * reaches her at her table. In the room as it is, which is graded grey, his music is the colour: these are gold, and
  * drawn over the grade (`score.ts`, the colour layer), the only full colour in the room.
  */
-export const RISING = rising(MELODY.filter((n) => n.t < 21.6), '#F2C46B', 1.5, 4.2)
+export const RISING = rising(MELODY.filter((n) => n.t < 21.6), '#F2C46B', 1.5, 4.2, 1.25, 1)
 export const TABLE_CALL = call(MELODY.filter((n) => n.t > 21.6 && n.t < 30.6), miaAtTable, '#F2C46B', 0.68)
 
 export const opening = part<OpeningState>(

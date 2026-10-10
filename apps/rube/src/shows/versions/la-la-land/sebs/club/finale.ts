@@ -4,7 +4,7 @@ import { box, glow, part, rgba, route, type Company, type PartShot, type Way } f
 import { AT, notes as measured } from '../music'
 import { hop } from '../physics'
 import { SEBS_MAT } from '../worlds'
-import { call } from '../call'
+import { call, rising } from '../call'
 import { fold, keyRest } from './geometry'
 import { DOWN, drawPiano, heldOn, keysOf, play, restOn, type Note, type Press } from './piano'
 import { BAND, BAND_LAMPS, DOOR, DOOR_SHUT, lightsAt, MIA_SEAT, ROOM, SEAT, SIDE_SEAT, TABLE } from './room'
@@ -279,6 +279,12 @@ const PLAN = plan(BEGIN)
 
 /** What he plays with the band, from its first hit: the notes that rise from the club as the camera draws back. */
 export const BAND_TUNE: { t: number; midi: number }[] = bandTune().map((n) => ({ t: n.t, midi: n.midi }))
+/**
+ * With the band, his notes rise from the keys up out of the club, through its roof and into the night over the city,
+ * as the camera draws back, leaning away up toward where their stars will be (and clear of the credits in the sky
+ * over the club); on the swell they become them. In the piano's frame, which is the room's.
+ */
+export const BAND_RISING = rising(BAND_TUNE.filter((n) => n.t < 494.5), '#F2C46B', 1.4, 8, 19, 1.3, 1.15)
 
 /**
  * In the dream's last room the theme reaches her where she sits, as it did at the start, but warm with the dream's

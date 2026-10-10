@@ -92,12 +92,18 @@ export function call(notes: { t: number; midi: number }[], her: (t: number) => P
   })
 }
 
+/** A rising's drawing, and its beads in flight (for the checks), in the piano's frame. */
+export interface Rising {
+  (p: p5, k: number, t: number): void
+  beads: (t: number) => { x: number; y: number; a: number }[]
+}
+
 /**
  * His playing before it has anyone to reach: each note lifts off the strings over its key (piano frame) as a bead of
  * light and drifts up into the dark, slowing and fading, the notes of a phrase strung together as a thread. At Seb's,
  * now, from his first note until the camera finds her.
  */
-export function rising(notes: { t: number; midi: number }[], color: string, size = 1, life = 3.2, height = 1.25, minPx = 0, lean = 0): (p: p5, k: number, t: number) => void {
+export function rising(notes: { t: number; midi: number }[], color: string, size = 1, life = 3.2, height = 1.25, minPx = 0, lean = 0): Rising {
   const beads = notes.map((n, i) => ({ t: n.t, x: keyX(n.midi), drift: 0.25 * Math.sin(i * 2.3) }))
   const at = (c: (typeof beads)[number], t: number): { x: number; y: number; a: number } | null => {
     const s = t - c.t
@@ -105,7 +111,7 @@ export function rising(notes: { t: number; midi: number }[], color: string, size
     const rise = height * (1 - Math.exp(-s / (1.2 * Math.sqrt(height / 1.25))))
     return { x: c.x + c.drift * (s / life) + lean * rise, y: -0.72 - rise, a: Math.min(1, s / 0.08) * (1 - s / life) ** 0.9 }
   }
-  return (p, k, t) => {
+  const draw = (p: p5, k: number, t: number) => {
     const ctx = p.drawingContext as CanvasRenderingContext2D
     // However far out the camera is, a bead keeps a size on the screen.
     const fr = frame(p, k)
@@ -136,4 +142,7 @@ export function rising(notes: { t: number; midi: number }[], color: string, size
     }
     ctx.restore()
   }
+  return Object.assign(draw, {
+    beads: (t: number) => beads.map((c) => at(c, t)).filter((q): q is { x: number; y: number; a: number } => !!q),
+  })
 }
