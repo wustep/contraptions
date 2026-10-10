@@ -878,6 +878,10 @@ window.
     is silent where the music is YouTube's (muting does not change what is recorded, only what is heard).
     The player's other words on sound, read for this show: "the site's own copy is playing it" can only come where a
     show has a file (`fellBack`), so never here; loading, held and blocked are true as they stand.
+  - *The keyboard* (WCAG 2.4.7, focus visible): Tab reaches every control in order (the panel's handle, the site's
+    links, full screen, the show picker, the credit's link, the YouTube player, the seek bar, play, restart, music,
+    speed, the three cameras, Theater, the export sizes, Save PNG), each with a focus mark: the accent outline on
+    buttons and links, the accent thumb on the seek bar, the accent border on the speed list and the handle.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
