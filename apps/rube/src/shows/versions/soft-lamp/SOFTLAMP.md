@@ -1044,6 +1044,16 @@ Not taken: the stair's slow even steps and the nod's size, which are the machine
 against it; the sip's mug going out of the picture (it goes to someone's lips, under the frame); the lob's launch (the
 ball crouches into the cushion before, on the kick).
 
+### The sixty-second pass: the motion review's last points
+
+164. **The wash never went over the ear**: the paw stopped at its cheek, so the wipe that is a cat washing did not
+     read. It goes up the side of its head now and over the ear, the forearm bending round the outside of its cheek
+     (not a stick across its face), thicker, and the head leaning further into it.
+165. **The stretch's forelegs were two straight tubes** from the chest to the paws. Reaching out, they bend low at the
+     elbow and lie along the desk to the paws, as a cat's do in a stretch.
+166. Looked at and left: the tail rising behind it as it gets up (at a frame every 0.12 s it comes up continuously from
+     behind its rear, quickly: a strip at 0.37 s a frame had skipped it).
+
 **Subtracted:** twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);

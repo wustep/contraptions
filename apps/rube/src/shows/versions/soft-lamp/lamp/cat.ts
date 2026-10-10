@@ -445,11 +445,13 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   // Its legs, when it is up: the hind pair straight down under its rear, the fore pair under its chest, stretched out
   // along the desk at full stretch, the near of each pair a shade lighter.
   if (st.up > 0.01) {
-    const leg = (from: { x: number; y: number }, to: { x: number; y: number }, w: number, k: number) => {
+    const leg = (from: { x: number; y: number }, to: { x: number; y: number }, w: number, k: number, bend = 0) => {
       ctx.lineCap = 'round'
       ctx.beginPath()
       ctx.moveTo(from.x, from.y)
-      ctx.lineTo(to.x, to.y)
+      // Reaching out, a foreleg bends at the elbow, low, and lies along the desk to the paw.
+      if (bend > 0) ctx.quadraticCurveTo(from.x + (to.x - from.x) * 0.3, to.y - 0.02, to.x, to.y)
+      else ctx.lineTo(to.x, to.y)
       ctx.lineWidth = w
       ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
       ctx.stroke()
@@ -469,7 +471,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     }
     for (const [i, [fx, k, ahead]] of ([[chest - 0.06, 0.7, 0.04], [chest - 0.2, 0.95, 0]] as const).entries()) {
       const sh = T(fx, -0.08)
-      leg(sh, { x: sh.x + (0.42 + ahead) * st.out + 0.02 + step(i + 1), y: -0.005 }, 0.13, k)
+      leg(sh, { x: sh.x + (0.42 + ahead) * st.out + 0.02 + step(i + 1), y: -0.005 }, 0.13, k, st.out)
     }
   }
 
@@ -590,7 +592,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const hx = carried.x + lx * 0.035 + 0.12 * st.out
   const hy = carried.y - 0.02 + ly * 0.02 + 0.1 * st.out
   const tilt = lx * 0.12 - ly * 0.06 - yawn * 0.12 + sleep * 0.3 + vibe * awake * 0.08 * Math.sin((Math.PI * beatOf(tr, t)) / 2) +
-    wash.k * (0.1 + 0.22 * over) + pet * (0.2 + 0.03 * Math.sin(t * 2.2)) + tipF * 0.6
+    wash.k * (0.1 + 0.32 * over) + pet * (0.2 + 0.03 * Math.sin(t * 2.2)) + tipF * 0.6
   ctx.save()
   ctx.translate(hx, hy)
   ctx.rotate(tilt)
@@ -790,7 +792,8 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     // From the shoulder, under its ruff: only the forearm shows, bent up to the face.
     const from = { x: chest - 0.1, y: -0.24 }
     const chin = { x: hx + 0.085, y: hy + 0.15 }
-    const ear = { x: hx + 0.2, y: hy - 0.02 }
+    // Up the side of its head and over the ear: the wipe that is the wash.
+    const ear = { x: hx + 0.13, y: hy - 0.19 }
     const rest = { x: chest - 0.08, y: -0.08 }
     const px = rest.x + (chin.x - rest.x) * p + (ear.x - chin.x) * over
     const py = rest.y + (chin.y - rest.y) * p + (ear.y - chin.y) * over
@@ -798,11 +801,13 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     ctx.beginPath()
     ctx.moveTo(from.x, from.y)
     // Round the outside of its cheek as it goes over the ear, not across its face.
-    ctx.quadraticCurveTo(from.x + 0.07 + over * 0.2, (from.y + py) / 2 + 0.03, px, py)
-    ctx.lineWidth = 0.085
+    // Over the ear, the forearm bends round the outside of its cheek, not across its face.
+    const bend = { x: from.x + 0.07 + over * (hx + 0.36 - from.x - 0.07), y: (from.y + py) / 2 + 0.03 + over * 0.08 }
+    ctx.quadraticCurveTo(bend.x, bend.y, px, py)
+    ctx.lineWidth = 0.1
     ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
     ctx.stroke()
-    ctx.lineWidth = 0.085 - lw * 2
+    ctx.lineWidth = 0.1 - lw * 2
     ctx.strokeStyle = lit('#B49276', CREAM_FUR, l)
     ctx.stroke()
     ctx.beginPath()
