@@ -47,7 +47,8 @@ const AGAINST = 2 * R + 0.006
 /**
  * Where they look on the meadow: she up and back to where the shell went, as it lifts and goes and the light comes
  * through; then at Ian as he comes to her, and from the touch on at him and a little up, which is how her eye stands
- * as the lake house opens on the first frame. He, once he is at her side, at her.
+ * as the lake house opens on the first frame. He, waiting, up at the shell going and then across to her; once he is
+ * at her side, at her.
  */
 const LOUISE_LOOKS: Look[] = [
   {
@@ -59,7 +60,16 @@ const LOUISE_LOOKS: Look[] = [
     },
   },
 ]
-const IAN_LOOKS: Look[] = [{ from: TOUCH + 0.05, to: Infinity, at: () => Math.PI - 0.35 }]
+const IAN_LOOKS: Look[] = [
+  // Waiting far off: up at the shell as it lifts and goes (from before the cut in, so he is seen already looking),
+  // and as the light comes through, across the meadow to her, and so off toward her.
+  {
+    from: 184.8,
+    to: IAN_GO - 0.15,
+    at: (t) => -1.85 + turnTo(-1.85, Math.PI - 0.05) * ease((t - 189.9) / 0.6),
+  },
+  { from: TOUCH + 0.05, to: Infinity, at: () => Math.PI - 0.35 },
+]
 
 /** Her, in the part's frame at show time `t`: still, but for a look up as the shell lifts, and a lean to him. */
 function herAt(t: number): Pt {
