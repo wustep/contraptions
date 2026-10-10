@@ -21,6 +21,7 @@ import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs
 import { HORIZON, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
 import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
+import { SONG_COUNT, songAt } from '../src/shows/versions/la-la-land/sebs/audition/shadow'
 import { DREAM_CALL, lastNoteAt } from '../src/shows/versions/la-la-land/sebs/club/finale'
 import { HOUSE_SPAN, houseTop } from '../src/shows/versions/la-la-land/sebs/paris/jazz'
 import { HANDOFF, soloThreads } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
@@ -337,8 +338,22 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     const atDoor = lastNoteAt(DOOR_SHUT - 0.001)
     const shut = lastNoteAt(DOOR_SHUT + 0.001)
     const lastOk = !!atDoor && !!shut && Math.hypot(atDoor.x - shut.x, atDoor.y - shut.y) < 0.05 && Math.abs(shut.x - ROOM.wallL1) < 0.3 && !lastNoteAt(DOOR_SHUT + 0.7)
-    check('sebs: his playing reaches her, at her table, across Lipton\'s and in the dream, and the last of it the door as it shuts', arrivals > 30 && dreamArrivals > 10 && miss.length === 0 && seenAtTable > 20 && lastOk,
-      `${arrivals} + ${dreamArrivals} arrivals, ${seenAtTable} seen at the table, last at the door ${lastOk}; ${miss.slice(0, 4).join(', ')}`)
+    // And at the audition the other way: every note of her song lands on him in his chair.
+    const aud = show.holder(185)
+    let songLands = 0
+    for (let i = 0; i < SONG_COUNT; i++) {
+      for (let t = 180; t < 192; t += 0.02) {
+        const q = songAt(i, t)
+        const next = songAt(i, t + 0.02)
+        if (!q || next) continue
+        songLands++
+        const [sx, sy] = show.where(t)
+        if (Math.hypot(aud.col + q.x - sx, aud.row + q.y - sy) > 0.25) miss.push(`her song ${t.toFixed(2)}`)
+        break
+      }
+    }
+    check('sebs: his playing reaches her, at her table, across Lipton\'s and in the dream, and the last of it the door as it shuts; her song reaches him', songLands > 10 && arrivals > 30 && dreamArrivals > 10 && miss.length === 0 && seenAtTable > 20 && lastOk,
+      `${arrivals} + ${dreamArrivals} arrivals, ${songLands} of her song, ${seenAtTable} seen at the table, last at the door ${lastOk}; ${miss.slice(0, 4).join(', ')}`)
   }
   // His club in Paris is full, and its house never covers the two of them: their heads stay above everyone's.
   {
