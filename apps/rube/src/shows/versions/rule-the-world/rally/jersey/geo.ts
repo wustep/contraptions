@@ -69,13 +69,25 @@ export function bob(t: number): number {
   return y
 }
 
+/** A level crossing: the front wheels go over its rails on a beat; its two lamps take turns, on the beat and its "a". */
+export const XING_T = at(67, 3)
+export const XING_X = cabX(XING_T) + CAB.wheels[1]
+export const XING_FROM = at(67, 1)
+export const XING_TO = a(68, 1)
+/** The lamps' changes while it is in the picture (the beats are struck already, by the joints). */
+export const XING_A = [a(67, 2), a(67, 3), a(67, 4)]
+/** A car the other way: its headlamps sweep across the back window on the "a". */
+export const PASSING = a(66, 2)
+export const PASS_V = 3.5
+export const passX = (t: number) => cabX(PASSING) + 0.4 - PASS_V * (t - PASSING)
+
 /* ------------------------------------------------------------------ the farm */
 
 /** The farmhouse, its porch, the gate. */
 export const HOUSE: [number, number] = [S + 5.6, S + 12.2]
 export const PORCH: [number, number] = [S + 6.6, S + 10.6]
 export const PORCH_Y = ROAD - 0.55
-export const GATE_X = S + 4.2
+export const GATE_X = S + 6.4
 /** The window the shots come from (ground floor, right of the porch), its centre. */
 export const SHOT_WIN: Pt = [S + 11.3, ROAD - 2.0]
 /** The barn: its two end walls' outer faces; the loft. */
@@ -94,9 +106,12 @@ export const DOOR_HEAD = ROAD - 2.5
 /* ------------------------------------------------------------------ the clock of the trouble */
 
 export const HOP_M = at(69, 2)
-export const LAND_M = at(69, 3)
+export const LAND_M = at(69, 4)
 export const HOP_R = at(69, 3)
-export const LAND_R = at(69, 4)
+export const LAND_R = at(70, 1)
+/** Out of the back window, over the bonnet and down onto the road in front of its nose. */
+export const OUT_M = S + 5.1
+export const OUT_R = S + 5.65
 /** The porch light clicks on. */
 export const PORCH_ON = at(70, 1)
 export const GATE_T = at(70, 3)
@@ -151,11 +166,11 @@ export const COT_IN = at(77, 4)
 export const SHUT = at(78, 1)
 export const LEAVE = at(78, 2)
 /** Its red light, flashing on every beat it is in the picture. */
-export const RED_FLASHES = beats([75, 3], [80, 2])
+export const RED_FLASHES = beats([75, 3], [79, 2])
 const AMB_IN = 18
 const AMB_ACC = (2 * AMB_IN) / (AMB_STOP - AMB_FROM) ** 2
-const LEAVE_ACC = 0.55
-const LEAVE_V = 2.2
+const LEAVE_ACC = 0.4
+const LEAVE_V = 1.8
 
 /** The ambulance's back end: braking in from the right; parked; pulling away to the left, toward the city. */
 export function ambX(t: number): number {
@@ -184,7 +199,7 @@ export const COT_TOP = ROAD - 0.62
 /* ------------------------------------------------------------------ the airfield */
 
 /** The boarding stair's foot, its six steps (0.4 up and 0.4 along each), the door at its head. */
-export const SF = S + 28.0
+export const SF = S + 35.7
 export const STEP = 0.4
 export const STEPS = 6
 export const DOOR_X = SF + STEP * STEPS
@@ -199,9 +214,9 @@ export const REST: Pt = [WIN_X, SILL - R]
 
 /** The indecision, and the stair. */
 const M0 = RS + 0.45
-const LEFT1 = at(79, 3)
-const RIGHT1 = at(80, 1)
-const LEFT2 = at(80, 2)
+const LEFT1 = at(78, 3)
+const RIGHT1 = at(79, 3)
+const LEFT2 = at(79, 4)
 const FOOT = at(80, 4)
 export const STOPS = [LEFT1, RIGHT1, LEFT2, FOOT]
 export const STEP_TIMES = beats([81, 1], [82, 2])
@@ -254,13 +269,13 @@ const seated = (dx: number) => (t: number): Pt => [cabX(t) + dx, bob(t)]
 const RIDE_N = (t0: number, t1: number) => Math.ceil((t1 - t0) * 90)
 
 /** The run from the gate to the barn: up to speed in a beat and a third, then flat out. */
-const V_RUN = 5
+const V_RUN = (14.04 - 6.4) / (0.5 * (at(71, 2) - a(70, 4)) + (at(72, 1) - at(71, 2)))
 
 /** Marty's lane. */
 function martyWay(): Seg[] {
   const ride = carried(seated(0), T0, HOP_M, RIDE_N(T0, HOP_M))
   const p = new Path(HOP_M, seated(0)(HOP_M))
-  p.hop(LAND_M, [S + 0.45, GB])
+  p.hop(LAND_M, [OUT_M, GB])
   p.hold(PORCH_ON)
   p.roll(GATE_T, GATE_X)
   p.hold(SHOTS[0])
@@ -288,10 +303,10 @@ function martyWay(): Seg[] {
   p.hold(at(75, 2))
   p.roll(at(75, 4), M0)
   // The indecision: toward her tail lights, back toward the plane, toward the lights, and to the stair.
-  p.hold(at(79, 1))
-  p.roll(LEFT1, M0 - 1.2)
-  p.roll(RIGHT1, M0 + 0.85)
-  p.roll(LEFT2, M0 + 0.25)
+  p.hold(LEAVE)
+  p.roll(LEFT1, M0 - 0.75)
+  p.roll(RIGHT1, S + 32.0)
+  p.roll(LEFT2, S + 31.0)
   p.roll(FOOT, SF - 0.3)
   // Up the stair, a step a beat.
   for (let k = 1; k <= STEPS; k++) p.hop(STEP_TIMES[k - 1], [SF + STEP * k - 0.2, ROAD - STEP * k - R])
@@ -305,7 +320,7 @@ function martyWay(): Seg[] {
 function rachelWay(): Seg[] {
   const ride = carried(seated(0.6), T0, HOP_R, RIDE_N(T0, HOP_R))
   const p = new Path(HOP_R, seated(0.6)(HOP_R))
-  p.hop(LAND_R, [S + 1.15, GB])
+  p.hop(LAND_R, [OUT_R, GB])
   p.hold(PORCH_ON)
   p.roll(GATE_T, GATE_X + 0.55)
   p.hold(SHOTS[0])
@@ -356,8 +371,11 @@ export const JERSEY_STRIKES: number[] = [
   ...BUMPS,
   HALT,
   HOP_M,
+  HOP_R,
   LAND_M,
   LAND_R,
+  ...XING_A,
+  PASSING,
   PORCH_ON,
   ...SHOTS,
   FLINCH,

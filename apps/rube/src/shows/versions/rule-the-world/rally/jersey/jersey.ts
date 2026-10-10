@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { box, frame, part, scenery, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import type { Pen } from '../pen'
-import { drawAirfield, drawAmbDoor, drawAmbulance, drawBarn, drawFar, drawGround, drawHouse, drawRoadside, drawSky, drawTheCab } from './draw'
+import { drawAirfield, drawAmbDoor, drawAmbulance, drawBarn, drawCrossing, drawFar, drawGlare, drawGround, drawHouse, drawPassing, drawRoadside, drawSky, drawTheCab } from './draw'
 import {
   AMB_STOP,
   COT_IN0,
@@ -56,6 +56,7 @@ export const jerseySet = scenery<null>({
     drawFar(pen, c.t, f)
     drawGround(pen, c.t, f)
     drawRoadside(pen, c.t, f)
+    drawCrossing(pen, c.t)
     drawAirfield(pen, c.t, f)
     drawHouse(pen, c.t)
     drawBarn(pen, c.t)
@@ -79,7 +80,9 @@ export const night = part<NightState>(
       const t = s.begin + c.t
       const pen = penOf(p, c.k, c.ink, c.weight)
       p.push()
+      drawPassing(pen, t)
       drawTheCab(pen, t)
+      drawGlare(pen, t)
       drawAmbulance(pen, t, inside(t) ? 'under' : 'all')
       if (!inside(t)) drawAmbDoor(pen, t)
       p.pop()
@@ -137,12 +140,14 @@ function shots(): PartShot[] {
     follow(IN_BARN + 0.6, 6.4, [1.6, -1.7]),
     hold(DOOR_HITS[0] - 0.1, 6.4, [S + 19.6, ROAD - 2.15]),
     hold(DOOR_HITS[3] + 0.2, 6.4, [S + 20.4, ROAD - 2.15]),
-    hold(STOPS[0] - 9.6, 11.5, [S + 20.5, ROAD - 3.4]),
-    hold(AMB_STOP - 0.6, 11.5, [S + 21.5, ROAD - 3.4]),
-    hold(AMB_STOP + 1.3, 6.6, [RS + 0.2, ROAD - 2.1]),
-    hold(STOPS[0] - 0.6, 6.6, [RS + 0.2, ROAD - 2.1]),
-    hold(STOPS[2], 7.0, [RS - 2.6, ROAD - 2.4]),
-    follow(STEP_TIMES[1], 6.0, [0.9, -1.1]),
+    hold(DOOR_HITS[3] + 2.0, 11.5, [S + 19.3, ROAD - 3.4]),
+    hold(AMB_STOP - 0.6, 11.5, [S + 19.8, ROAD - 3.4]),
+    hold(AMB_STOP + 1.3, 6.6, [RS - 0.3, ROAD - 2.1]),
+    hold(STOPS[0] + 0.1, 6.6, [RS - 0.3, ROAD - 2.1]),
+    hold(STOPS[1], 8.4, [S + 27.4, ROAD - 2.7]),
+    hold(STOPS[2] + 0.2, 8.4, [S + 27.0, ROAD - 2.7]),
+    follow(STEP_TIMES[0], 6.6, [0.6, -1.3]),
+    follow(STEP_TIMES[2], 6.0, [0.9, -1.1]),
     follow(STEP_TIMES[5], 4.4, [0.7, -0.7]),
     hold(T1, end.cells, [REST[0] + end.frame[0], REST[1] + end.frame[1]]),
   ]
