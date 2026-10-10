@@ -171,10 +171,11 @@ class Walk {
 /**
  * Little Hannah across the room to her mother: from her corner of the floor, a roll (and in the end, three skips on
  * the flutter's hardest notes), a spring up onto the bench's end, a roll along it to her mother, a soft touch a sliver
- * short, and back a little (the recovery long and damped) to sit beside her. The spring lands near the top of its arc
+ * short, and back a little (the recovery long and damped) to sit beside her; at the end (`stay`) she stays against her
+ * instead. The spring lands near the top of its arc
  * (a child climbing up), just past the bench's end.
  */
-function toMother(start: number, o: { go: number; skips?: number[]; run?: number; spring: number; land: number; touch: number; end: number; lean?: number; back?: number }): Lane {
+function toMother(start: number, o: { go: number; skips?: number[]; run?: number; spring: number; land: number; touch: number; end: number; lean?: number; back?: number; stay?: number }): Lane {
   const vTouch = 0.45
   const hop = o.land - o.spring
   const roll = o.touch - o.land
@@ -205,6 +206,16 @@ function toMother(start: number, o: { go: number; skips?: number[]; run?: number
   // Up onto the bench: a spring, rising over its end and coming down onto it (gravity's arc alone in so short a hop
   // would still be rising as she lands, and she would pass through the slab's corner on the way up).
   w.hop(o.land, BENCH_Y - FLOOR_Y, 0.16).roll(o.touch, vTouch)
+  if (o.stay) {
+    // The touch, at the end: her mother rocks back to her place under it (with `LOUISE_END`'s ease), and she goes
+    // with her, against her, and stays there.
+    const to: Pt = [SEAT[0] - R - HR - 0.006, BENCH_Y]
+    w.segs.push({ from: w.p, to, dur: o.stay, ease: 'out' })
+    w.p = to
+    w.t = o.touch + o.stay
+    w.rest(o.end)
+    return w.lane()
+  }
   // The touch: she rebounds a little, softly, and comes to rest beside her.
   const back = o.back ?? 0.22
   const settle = o.touch + (2 * (touchX - SETTLE_X)) / back
@@ -219,6 +230,8 @@ export const HANNAH_PROLOGUE = toMother(0, { go: PRO.go, spring: PRO.spring, lan
  * toward her with a small roll, and leans there while she comes; the child's touch rocks her back to her place.
  */
 export const LEAN = 0.07
+/** How long the touch takes to rock her back to her place. */
+const ROCK = 0.95
 export const LOUISE_END: Lane = (() => {
   const w = new Walk(SCENES.end.begin, SEAT).rest(END.knows)
   const to: Pt = [SEAT[0] - LEAN, SEAT[1]]
@@ -226,14 +239,14 @@ export const LOUISE_END: Lane = (() => {
   w.p = to
   w.t = END.knows + 1.2
   w.rest(END.touch)
-  w.segs.push({ from: to, to: SEAT, dur: 0.95, ease: 'out' })
+  w.segs.push({ from: to, to: SEAT, dur: ROCK, ease: 'out' })
   w.p = SEAT
-  w.t = END.touch + 0.95
+  w.t = END.touch + ROCK
   w.rest(DURATION)
   return w.lane()
 })()
 
-export const HANNAH_END = toMother(SCENES.end.begin, { go: END.go, skips: END.skip, run: END.run, spring: END.spring, land: END.land, touch: END.touch, end: DURATION + 1, lean: LEAN, back: 0.13 })
+export const HANNAH_END = toMother(SCENES.end.begin, { go: END.go, skips: END.skip, run: END.run, spring: END.spring, land: END.land, touch: END.touch, end: DURATION + 1, lean: LEAN, stay: ROCK })
 
 /** Older Hannah, in the second vision: she leans in against her, rests, and goes (along the bench, down off its end, out). */
 export const HANNAH_V2: Lane = (() => {
