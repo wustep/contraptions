@@ -1238,7 +1238,7 @@ thing you look up from your work and notice:
      warms the wall behind it. A second, smaller warm place up in the dark beyond the lamp's head. It sits right of the
      window's look so that frame never cuts it, and inside the home frame and the still take's.
 197. **The shooting stars** keep out of the snow: the first is found after it has stopped, and they may come a minute and
-     a half apart (two of them, 28:01 and 29:32).
+     a half apart (two of them, 27:06 and 28:50).
 
 ### The seventy-third pass: the room lit by its lights
 
@@ -1341,7 +1341,7 @@ sleep at the end is built toward now (`drowseAt`, `DOZES`, `lamp/cat.ts`):
 215. **Sleepier as the night goes.** From about fifteen minutes in, its lids rest lower over its eyes while it watches,
      more of its blinks are the slow ones, and slower, and it breathes more slowly. Bright-eyed at dusk; heavy-lidded by
      the last track.
-216. **It dozes off.** Four times late in the night (19:23, 22:23, 25:21, 28:19), where it lies: its eyes close by
+216. **It dozes off.** Four times late in the night (19:10, 21:39, 25:21, 27:54), where it lies: its eyes close by
      themselves, its head sinks and tips, its ears go soft, a few seconds; then a small start, the head up, the eyes
      open, and it is watching again. Each in a phrase it spends watching (a doze shows against open eyes, not against
      the shut arch of nodding along), while the camera holds it, clear of its yawns, washes and stretches, the snow, the
@@ -1369,7 +1369,24 @@ ball's "hover" (its nod off the kick), and the lamp on at ten seconds (it comes 
 220. **The face in the mist** sat on clear glass with no mist round it: it is drawn in a breath's worth of mist now,
      wider than the face, so its clear lines are in something.
 221. **The tea** was gone from the desk three and a half minutes after midnight; it comes back hot after a minute and a
-     half (19:11 to 20:44).
+     half (18:25 to 20:04).
+
+### The eightieth pass: every look worth holding, and the last train
+
+222. **The lamp's side is out of the moving take's rotation** (`ORDERS`, `lamp/camera.ts`). Two cold reviewers in a
+     row found it a wall and a sliver of window, without the kitten, the person in the glass or the weather, which are
+     what there is to look at. A replacement was looked for and none fits: any frame wide enough for the kitten and the
+     cup either cuts the mug, the plant, the shade or the far cup at an edge, or loses the ball under Zoom. So each
+     groove takes the room's two homes by turns, the desk under the lamp and the window over the desk, each track
+     starting on its own; the kitten is in every frame the moving take holds. Everything timed to the camera was found
+     again (the hand's reaches, the kitten's moments and dozes, the sky's moments), some at new times: the face in the
+     mist 13:30, the tea away 18:25 and back 20:04, the dozes 19:10, 21:39, 25:21 and 27:54, the shooting stars 27:06
+     and 28:50.
+223. **The last train** (`TRAINS`, `lamp/sky.ts`). The trains had stopped a little after midnight. One more crosses
+     at 27:41, over the white roofs under the moon, its windows lit, while the frame holds the window and clear of the
+     planes and the shooting stars.
+224. **The fairy lights right of the window** dipped a sliver into the home frame's top, a few bulbs cut by its edge;
+     they hang in a deeper drape now, well into the frame and clear over the clock.
 
 ## Judgment calls for Stephen
 

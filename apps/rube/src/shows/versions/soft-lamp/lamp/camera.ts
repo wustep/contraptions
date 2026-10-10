@@ -48,27 +48,19 @@ const GROOVE = [
   { x: 2.0, y: -1.3, cells: 4.5 },
   // The window over the desk: the rain, the plant and the mug, and the stair and the cup small under the lamp.
   { x: 0.21, y: -1.9, cells: 4.9 },
-  // From the lamp's side: the shade, the band's arch, the cup under the light (low, for Zoom, as the last).
+  // From the lamp's side: the shade, the band's arch, the cup under the light (low, for Zoom, as the last). Retired.
   { x: 3.0, y: -1.3, cells: 3.7 },
 ]
 /**
- * The order each track takes them in (indices into GROOVE), the first being where it settles after the stair. The cup,
+ * The order each track takes them in (indices into GROOVE), the first being where it settles after the stair: the room's
+ * two homes, the desk under the lamp and the window over the desk, by turns, each track starting on its own. The cup,
  * close, is out of the rotation (the dullest look, and the least loveable thing at the largest size, four reviewers
- * said); the desk under the lamp and the window are the room's two homes, and the lamp's side comes once a cycle.
+ * said), and so is the lamp's side (two more said it held a wall and a sliver of window, and lost the kitten, the
+ * person in the glass and the weather, which are what there is to look at).
  */
 const ORDERS = [
-  [1, 2, 1, 3, 2, 1],
-  [2, 1, 3, 1, 2, 1],
-  [1, 3, 2, 1, 2, 1],
-  [2, 1, 2, 3, 1, 2],
-  [1, 2, 3, 2, 1, 2],
-  [3, 1, 2, 1, 2, 1],
-  [2, 1, 2, 1, 3, 2],
-  [1, 2, 1, 3, 2, 1],
-  [2, 3, 1, 2, 1, 2],
-  [1, 2, 1, 2, 3, 1],
-  [2, 1, 3, 2, 1, 2],
-  [1, 2, 1, 2, 1, 3],
+  [1, 2, 1, 2, 1, 2],
+  [2, 1, 2, 1, 2, 1],
 ]
 
 const AIMS: Aim[] = []

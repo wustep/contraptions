@@ -6,7 +6,7 @@ import { MUSIC_END, smooth } from './music'
 import { blurOf, inLayer, layerOf, lensIn, lensOf, onWall, type Lens } from './lens'
 import { sweepAt } from './decor'
 import { machineBusy } from './route'
-import { cloudAt, coldAt, coverAt, hash, snowAt, lampAt, nightAt, rainAt, skyAt } from './world'
+import { SNOW, cloudAt, coldAt, coverAt, hash, snowAt, lampAt, nightAt, rainAt, skyAt } from './world'
 import { FLAKES, flakes, landed, roofSnow, settled } from './snow'
 import { antenna, fireEscape, waterTower } from './roofs'
 
@@ -615,28 +615,40 @@ function trainAt(at: number, t: number): { front: number; dir: 1 | -1 } {
 }
 
 /**
- * When the trains run: from once the city's lights are coming on, a few minutes apart, the last of them a little
- * after midnight; each while the frame holds the window, in focus, for most of the time its front is crossing the
- * glass. Worked out once, at load.
+ * When the trains run: from once the city's lights are coming on, a few minutes apart, the fourth a little after
+ * midnight; and one more, the last train, late, over the snow once it has settled, under the moon. Each while the frame
+ * holds the window, in focus, for most of the time its front is crossing the glass, and clear of a plane and a falling
+ * star. Worked out once, at load.
  */
+function trainSeen(at: number): boolean {
+  let seen = 0
+  let crossing = 0
+  for (let s = 0; s <= TRAIN_DUR; s += 0.5) {
+    const c = camera(at + s)
+    const lens = lensOf(c)
+    const q = onWall(lens, DEPTH.train, trainAt(at, at + s).front, TRACK_Y)
+    if (q.x < GLASS.x0 || q.x > GLASS.x1) continue
+    crossing++
+    const hh = c.cells / 2
+    const hw = (hh * 16) / 9
+    if (blurOf(lens) < 0.045 && Math.abs(q.x - c.x) < hw - 0.1 && Math.abs(q.y - c.y) < hh - 0.1) seen++
+  }
+  return crossing > 4 && seen >= 0.8 * crossing
+}
 const TRAINS: number[] = (() => {
   const out: number[] = []
   for (let at = 150; at < 1450 && out.length < 4; at += 1) {
     if (out.length && at < out[out.length - 1] + 260) continue
     if ([...FLIGHTS].some((f) => Math.abs(f - at) < 40)) continue
-    let seen = 0
-    let crossing = 0
-    for (let s = 0; s <= TRAIN_DUR; s += 0.5) {
-      const c = camera(at + s)
-      const lens = lensOf(c)
-      const q = onWall(lens, DEPTH.train, trainAt(at, at + s).front, TRACK_Y)
-      if (q.x < GLASS.x0 || q.x > GLASS.x1) continue
-      crossing++
-      const hh = c.cells / 2
-      const hw = (hh * 16) / 9
-      if (blurOf(lens) < 0.045 && Math.abs(q.x - c.x) < hw - 0.1 && Math.abs(q.y - c.y) < hh - 0.1) seen++
+    if (trainSeen(at)) out.push(at)
+  }
+  // The last train, over the white roofs.
+  for (let at = SNOW.to + 30; at < MUSIC_END - TRAIN_DUR - 20; at += 1) {
+    if ([...FLIGHTS].some((f) => Math.abs(f - at) < 40) || SHOOTS.some((f) => f > at - 15 && f < at + TRAIN_DUR + 15)) continue
+    if (trainSeen(at)) {
+      out.push(at)
+      break
     }
-    if (crossing > 4 && seen >= 0.8 * crossing) out.push(at)
   }
   return out
 })()

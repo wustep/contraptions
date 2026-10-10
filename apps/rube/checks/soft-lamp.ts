@@ -220,8 +220,9 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     REFILL > 1140 && REFILL < MUSIC_END - 300 &&
     [...YAWNS, ...WASHES].every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
 
-  check('soft lamp: trains cross the city a few times, minutes apart, from the dusk to a little after midnight',
-    m.trains.length >= 4 && m.trains.every((t, i) => i === 0 || t - m.trains[i - 1] >= 170) && m.trains[m.trains.length - 1] < 1450,
+  check('soft lamp: trains cross the city a few times, minutes apart, from the dusk to a little after midnight, and a last one over the snow',
+    m.trains.length === 5 && m.trains.every((t, i) => i === 0 || t - m.trains[i - 1] >= 170) && m.trains[3] < 1450 &&
+      m.trains[4] > SNOW.to && coverAt(m.trains[4]) > 0.85 && m.shooting.every((f) => f < m.trains[4] - 15 || f > m.trains[4] + 30),
     m.trains.join(' '))
 
   check('soft lamp: a moth comes to the lamp as the rain thins, and is on the moonlit glass at the end',

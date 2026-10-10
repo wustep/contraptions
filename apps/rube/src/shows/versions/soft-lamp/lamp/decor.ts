@@ -141,7 +141,9 @@ const SWAGS: [number, number, number, number, number][] = [
   // Deep enough to hang into the room's frames as a drape, not glows cut off by their top edge.
   [WINDOW.x0 + 0.05, WINDOW.y0 + 0.08, WINDOW.mullion, WINDOW.y0 + 0.08, 1.45],
   [WINDOW.mullion, WINDOW.y0 + 0.08, WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 1.25],
-  [WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 2.75, -4.95, 0.45],
+  // Over the wall right of the window, a drape that comes well down into the home frame (not a sliver at its top) and
+  // clears the clock under it.
+  [WINDOW.x1 - 0.05, WINDOW.y0 + 0.08, 2.75, -4.95, 0.75],
   // Along the edge of the shelf over the lamp, the last to come on.
   [SHELF.x0 + 0.06, SHELF.y + 0.07, SHELF.x1 - 0.06, SHELF.y + 0.07, 0.2],
 ]
