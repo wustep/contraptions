@@ -170,8 +170,20 @@ export function smoke(p: p5, k: number, s: Smoke, t: number, light = 1): void {
     const r = s.size * (0.45 + 1.05 * Math.sqrt(u)) * (0.65 + 0.7 * h2)
     const fade = Math.min(1, a / 0.25) * Math.pow(1 - u, 1.2)
     const col = mixHex(TOWN.smoke, TOWN.ember, (s.lit ?? 0.5) * Math.max(0, 1 - u * 2.4))
-    p.fill(alpha(p, col, base * fade * light))
-    p.ellipse(px * k, py * k, 2 * r * k, 2 * r * k * (0.72 + 0.3 * h3))
+    // A billow with a body and a soft edge, never a flat disc: held through most of its radius, then gone.
+    const a1 = base * fade * light
+    const R = r * 1.12 * k
+    const ctx = ctxOf(p)
+    ctx.save()
+    ctx.translate(px * k, py * k)
+    ctx.scale(1, 0.72 + 0.3 * h3)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R)
+    g.addColorStop(0, rgba(col, a1))
+    g.addColorStop(0.62, rgba(col, a1 * 0.92))
+    g.addColorStop(1, rgba(col, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(-R, -R, 2 * R, 2 * R)
+    ctx.restore()
   }
   p.pop()
 }

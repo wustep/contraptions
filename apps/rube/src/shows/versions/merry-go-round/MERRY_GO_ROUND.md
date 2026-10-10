@@ -136,6 +136,8 @@ the deck line a moment after each landing (`onBody` follows it, so riders and th
   again on successive bars (a strobe of dark and light): a phrase that builds is ridden in one frame. The raid also
   cuts up to the sky three times, her ball hidden below the frame's foot for under 2 s each.
 - **Soft volume.** Smoke, steam, fog, dust and clouds are radial puffs, never outlined, uneven in size, never a row.
+  The war's smoke too (`raid-fx.ts` `smoke`): each billow holds its body most of the way out and goes soft at its
+  edge, so the crater's smoke over the burning house reads as smoke and never as a stack of flat red discs.
   The finale's clouds are drawn as the town's are: two heaps of uneven size on a long soft underside, big and small
   side by side at heights in tiers, with open sky between.
 - **No trail.** No ball draws a trail (`CastleShow.trailOff`): the camera rides with her on the porch, the deck, the
@@ -146,6 +148,8 @@ the deck line a moment after each landing (`onBody` follows it, so riders and th
   lands as a soft pool or a soft-sided shaft, and glows out of a crack; never a hard-edged wedge or a ruled line.
 - **Fire sits in what burns.** A roof's fire comes up out of a ragged hole in its slates, lit from inside, the slates
   round it warm and the roof's edges catching the light; the town burning beyond the roofs goes down behind their line.
+  The street's crater is a hole, not a dish: a torn edge cut down through the cobbles into the stone, near black, only
+  its mouth catching the fire burning down in it, with the fire's light laid before the pit so the pit stays dark.
 - **On a phone held upright** every set ends soft: the town's stone sinks into the night below the street, the land
   and the gorge go down into one mist, and the finale's veil is the sky's own gradient placed as the sky places it.
 - **The credits** are words the page sets (`Performance.titles`, `credits.ts`) high and a little left of middle,
