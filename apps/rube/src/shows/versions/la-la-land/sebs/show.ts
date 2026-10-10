@@ -221,6 +221,9 @@ export class SebsShow extends Show {
           if (l.who !== 'seb') mia.spin = turn((mia.x - col) / R, toMia + Math.PI, w)
         }
       }
+      // David, wherever he sits beside her, looks at her: her husband, attentive, while her eyes go to the stage.
+      const david = company.find((b) => b.id === DAVID_ID)
+      if (david && mia && Math.hypot(david.x - mia.x, david.y - mia.y) < 1.2) david.spin = Math.atan2(mia.y - david.y, mia.x - david.x)
       here.balls = [hero, ...company]
     }
     return here
