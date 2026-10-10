@@ -182,18 +182,56 @@ function reachFor(f: Frame, at: Pt, d: number, limb: number, P: Pt, u: number): 
   return { limb, to, u, bow: to[0] < rootX ? 0.13 : -0.13 }
 }
 
-/** What Costello's reaching limb is doing at `t`: writing a ring, spinning the crescent, or the great ring's pen. */
-function costelloReach(t: number, f: Frame, at: Pt, h: number, d: number): HeptapodOpts['reach'] {
+type Reach = NonNullable<HeptapodOpts['reach']>
+
+/**
+ * The limb that writes ring `r`: the one whose foot is nearest where its first ink lands, as things stand when it is
+ * born, chosen once. (Chosen afresh every frame from the moving camera, it flipped to another limb in a single frame
+ * whenever the frame's middle passed between two feet.)
+ */
+function writerLimb(r: Ring): number {
+  const tb = r.born
+  const far = inFog2(tb)
+  const at = far ? costelloFarAt(tb) : costelloHigh(tb)
+  const d = far ? COSTELLO_FAR.d : 1
+  const h = far ? COSTELLO_FAR.h : COSTELLO_H
+  // The frame's middle, there: her way (what the far presences are placed from).
+  const cx = wayAt(tb)[0]
+  const P = firstInk(r)
+  return nearestLimb(at, h, cx + (P[0] - cx) / d, 3)
+}
+
+/**
+ * What Costello's reaching limbs are doing at `t`: writing rings, spinning the crescent, or the great ring's pen. The
+ * strongest first. Rings written close together overlap: each one's limb comes and goes on its own, so the next one's
+ * reach never appears all at once as the last one's ends (it did: a limb switched in a single frame).
+ */
+function costelloReaches(t: number, f: Frame, at: Pt, d: number): Reach[] {
   // Writing: the limb nearest reaches toward where the ring will be while its jet goes, then draws back.
+  const writing: Reach[] = []
   for (const r of RINGS) {
     if (!r.by || r.by.who !== 'costello' || r.key === 'G') continue
     const t0 = r.by.t0
     if (t < t0 - 0.9 || t > r.born + 1.5) continue
-    const P = firstInk(r)
-    const X = f.cx + (P[0] - f.cx) / d
     const u = 0.6 * sstep((t - (t0 - 0.9)) / 0.9) * (1 - sstep((t - (r.born + 0.2)) / 1.3))
-    return reachFor(f, at, d, nearestLimb(at, h, X, 3), P, u)
+    if (u <= 1e-4) continue
+    const a = reachFor(f, at, d, writerLimb(r), firstInk(r), u)
+    // Two on the one limb: it goes between them as much as each has reached, never jumping from one to the other.
+    const same = writing.find((w) => w.limb === a.limb)
+    if (same) {
+      const k = a.u / (a.u + same.u)
+      same.to = [same.to[0] + (a.to[0] - same.to[0]) * k, same.to[1] + (a.to[1] - same.to[1]) * k]
+      same.bow = (same.bow ?? 0) + ((a.bow ?? 0) - (same.bow ?? 0)) * k
+      same.u = Math.max(same.u, a.u)
+    } else writing.push(a)
   }
+  if (writing.length) return writing.sort((a, b) => b.u - a.u)
+  const one = costelloOther(t, f, at, d)
+  return one ? [one] : []
+}
+
+/** Costello's reach when it is not writing: spinning the crescent, or the great ring's pen. */
+function costelloOther(t: number, f: Frame, at: Pt, d: number): HeptapodOpts['reach'] {
   // Spinning the crescent (fog3's three pushes, fog4's kick): its front limb comes down, its tip on the rim, and
   // pushes it round, carried with it a little way, and lifts off.
   const W = RINGS.find((r) => r.key === 'W')
@@ -222,6 +260,7 @@ function costello(t: number, f: Frame): Staged {
   const at = far ? costelloFarAt(t) : costelloHigh(t)
   const d = far ? COSTELLO_FAR.d : 1
   const h = far ? COSTELLO_FAR.h : COSTELLO_H
+  const reaches = costelloReaches(t, f, at, d)
   const o: HeptapodOpts = {
     t,
     h,
@@ -231,7 +270,8 @@ function costello(t: number, f: Frame): Staged {
     fog: far ? 0.68 : 0.42,
     air: FOG.white,
     color: FOG.heptapod,
-    reach: costelloReach(t, f, at, h, d),
+    reach: reaches[0],
+    also: reaches.slice(1),
     // What it does comes out of the fog: the reaching limb clearer than the body it leaves.
     reachFog: far ? 0.42 : 0.24,
     lean: 0.05 * Math.sin(t * 0.13),
@@ -405,8 +445,10 @@ export function drawFog(p: p5, k: number, t: number): void {
     const u = (t - ring.by.t0) / (ring.born - ring.by.t0)
     if (u <= 0 || u >= 1.6) continue
     const start = (ring.lo(ring.born) + ring.hi(ring.born)) / 2 + ring.spin(ring.born)
-    const reach = C.o.reach
-    const limb = reach ? reach.limb : ring.by.limb
+    // Its own ring's limb (rings close together are written by two limbs at once): the one nearest its first ink.
+    const reaching = [C.o.reach, ...(C.o.also ?? [])].filter((r): r is Reach => !!r)
+    const own = writerLimb(ring)
+    const limb = reaching.some((r) => r.limb === own) ? own : (C.o.reach?.limb ?? ring.by.limb)
     drawSpray(p, k, tipOf(f, C, limb), onInk(ring, start, ring.born), u, FOG.ink, 1.15)
   }
   p.pop()

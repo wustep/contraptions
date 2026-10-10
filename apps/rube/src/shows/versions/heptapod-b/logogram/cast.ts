@@ -221,6 +221,8 @@ export interface HeptapodOpts {
    * one side (positive to its right as it goes, negative to its left), and slims toward its tip.
    */
   reach?: { limb: number; to: Pt; u: number; bow?: number }
+  /** More limbs reaching at once, each on a limb of its own (the fog builder's: one limb draws back as the next comes). */
+  also?: { limb: number; to: Pt; u: number; bow?: number }[]
   /**
    * Optional (the chamber builder's): how deep in the fog the reaching limb and its palm are once it has reached, 0
    * clear .. 1 gone; a limb reaching for the glass comes out of the fog the body is in. Unset, it is the body's `fog`.
@@ -256,6 +258,12 @@ const FEET: Pt[] = [
 /** How far back each limb is (0 the front, toward us .. 1 behind): the back ones are paler. */
 const DEPTH = [0.7, 0.35, 0.8, 0, 0.75, 0.3, 0.65]
 
+/** The reach limb `i` is making, if any. */
+function reachOf(o: HeptapodOpts, i: number): HeptapodOpts['reach'] {
+  if (o.reach && o.reach.limb === i) return o.reach
+  return o.also?.find((r) => r.limb === i)
+}
+
 /** Where limb `i`'s tip is (cells from the origin), standing or reaching: where its ink comes from. */
 export function heptapodTip(o: HeptapodOpts, i: number): Pt {
   const { h, t } = o
@@ -265,10 +273,11 @@ export function heptapodTip(o: HeptapodOpts, i: number): Pt {
   const own = o.tips?.[i]
   let x = own ? own[0] : (f[0] + sway) * h
   let y = own ? own[1] : f[1] * h
-  if (o.reach && o.reach.limb === i) {
-    const u = smooth01(o.reach.u)
-    x += (o.reach.to[0] - x) * u
-    y += (o.reach.to[1] - y) * u
+  const r = reachOf(o, i)
+  if (r) {
+    const u = smooth01(r.u)
+    x += (r.to[0] - x) * u
+    y += (r.to[1] - y) * u
   }
   return [x, y]
 }
@@ -346,7 +355,8 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     const rootX = (i - 3) * 0.036 * h + Math.sin(lean) * (hip - top) * 0.2
     const root: Pt = [rootX, hip - 0.05 * h]
     const tip = heptapodTip(o, i)
-    const reaching = o.reach && o.reach.limb === i ? smooth01(o.reach.u) : 0
+    const its = reachOf(o, i)
+    const reaching = its ? smooth01(its.u) : 0
     // Out from under the body and down to the floor, like the ribs of an umbrella: a shoulder that rises a little as
     // it leaves, then a long fall to the tip. A reaching limb straightens toward what it reaches for.
     const out = tip[0] - root[0]
@@ -356,7 +366,7 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     const c1: Pt = [root[0] + out * 0.38 + sway * 0.5, root[1] - rise * (1 - reaching)]
     const c2: Pt = [tip[0] - out * (0.12 - 0.1 * reaching) + sway, root[1] + drop * (0.1 + 0.55 * reaching) - rise * 0.35 * (1 - reaching)]
     // A bowed reach: its middle pushed off the straight line to one side (only where `reach.bow` is given).
-    const bow = reaching > 0 && o.reach?.bow ? o.reach.bow * reaching : 0
+    const bow = reaching > 0 && its?.bow ? its.bow * reaching : 0
     if (bow) {
       const len = Math.hypot(out, drop) || 1
       const bx = (-drop / len) * bow * len
