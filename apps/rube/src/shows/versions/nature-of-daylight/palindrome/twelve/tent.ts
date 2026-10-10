@@ -43,7 +43,9 @@ const HANDSET: [number, number] = [2.7, 3.68]
  * How long the hop onto press n takes (n = PRESSES.length is the call key), landing on the beat: a little longer, and
  * so a little higher, digit by digit as the music builds, and the call key the highest.
  */
-export const hopFor = (n: number): number => (n >= PRESSES.length ? 0.54 : 0.36 + (0.12 * n) / (PRESSES.length - 1))
+// Short hops, low over the keys: at 0.36 to 0.54 s each rose a ball and a half above them, and she was caught in the
+// air in half the frames, a bubble loose over the keyboard to two fresh readers.
+export const hopFor = (n: number): number => (n >= PRESSES.length ? 0.4 : 0.26 + (0.08 * n) / (PRESSES.length - 1))
 
 /** Which key (0..5 a digit, 6 the call key) Louise is on at show time t, or -1. */
 export function keyUnder(t: number): number {

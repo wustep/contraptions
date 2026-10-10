@@ -795,6 +795,11 @@ knowing how it ends. But they saw him there, then gone: a cell from the frame's 
 He walks out of the frame now, over some three seconds, and only quickens once he is out of it, well ahead of the
 frame's edge as the camera draws back, and on out of the room. The last frame is the first, to the same measure.
 
+A seventy-eighth took the note two fresh readers had given apart: at the sat phone (279 to 288 s) she floated over the
+keys, a bubble, a cursor. Her hops along them lasted a third to a half of a second, so each rose a ball and a half and
+a frame a second caught her in the air in half its frames. They are shorter now, a quarter to two fifths of a second,
+still landing on the beats: low over the keys, and in the air far less.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
