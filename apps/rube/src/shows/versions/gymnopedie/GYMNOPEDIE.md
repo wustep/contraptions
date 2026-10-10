@@ -248,7 +248,7 @@ aurora's night and the pond (6.7 ms the median of 48 moments round the loop), an
 shot between the Gnossiennes, where the whole thread of lamps is in view: every moment inside the 16.7 ms of a frame at
 60 a second. Slowed six times, a low-end phone, that wide shot went just over (16 to 18 ms), nearly all of it the lamps'
 paths of light on the water, each a pixel or two there; past 14 cells out they are drawn in fewer rows, the same
-picture at that size, and it is 12 to 13.5 ms. A cached glow and kept colours for the lamps' beams were tried and
+picture at that size, and it is 12 to 13.5 ms. Timed so at all 48 moments, six times slowed, the worst is 11.6 ms and the median 5.7. A cached glow and kept colours for the lamps' beams were tried and
 measured at under a millisecond's difference, and left out.
 
 ## Where things are
