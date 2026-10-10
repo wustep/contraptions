@@ -884,6 +884,13 @@ watched whole between them. Their order is in git; here they are by what they di
   they come on again, a few on each beat from `fall(142)` behind the radiance, and are all there round the bagel as it
   becomes the washer's window. The audio description at the dark says so. The hush holds 60 fps at 4× throttle;
   at the peak the cost was within the noise of paired runs.
+- **The third window.** The dryer's glass opens the multiverse and the washer's gives the lives back under the
+  credits; the bagel's hole, which was a dark well, is now the window between, where they are taken. All through the
+  pull (from the reveal to the tip in) rounds of her lives, the red carpet, the dojo, the hot dog piano and
+  Raccacoonie's kitchen, with nobody in them, spiral down the drain at the bottom of the well, off its middle, going
+  round and smaller and dark as they go, slow in the hush and quicker on the pulse (`drawTunnel` in
+  `home/finale-lives.ts`, read through `BagelPose.tunnel`). A first version laid them as concentric rounds and the hole
+  read as a great eye; spiralled, it reads as a drain. The pull holds 60 fps at 4× throttle.
 - **The subtitles' shade.** The soft dark under a subtitle was an ellipse floating mid-frame, which on the rocks' pale
   canyon read as a smudge of dirt. It is now the frame's whole foot in shade, eased up to just over the words (at the
   taxes, its top, down to just under them), as a film's lower frame is under its subtitles.
