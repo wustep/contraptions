@@ -891,6 +891,12 @@ watched whole between them. Their order is in git; here they are by what they di
   round and smaller and dark as they go, slow in the hush and quicker on the pulse (`drawTunnel` in
   `home/finale-lives.ts`, read through `BagelPose.tunnel`). A first version laid them as concentric rounds and the hole
   read as a great eye; spiralled, it reads as a drain. The pull holds 60 fps at 4× throttle.
+- **What he asks.** The film turns on Waymond asking for kindness, and here the great hit is where she gives it, but
+  he had said nothing that led there. Now, as the wall crowds toward the crescendo with him beside her in nearly every
+  life, he does, in the show's own words: *Be kind. Especially now.* (186.9 to 189.5, italic, spoken to a screen
+  reader as *Waymond: …*). The wall gets the subtitles' shade, deeper than anywhere, since it is the busiest picture.
+- **The opening's hand from light to shop.** At 15 fps the soft glow round the lit box vanished in one frame as the
+  real shop took over (2.93 to 3.00 s); it now fades as the fall goes on in, a dissolve.
 - **The subtitles' shade.** The soft dark under a subtitle was an ellipse floating mid-frame, which on the rocks' pale
   canyon read as a smudge of dirt. It is now the frame's whole foot in shade, eased up to just over the words (at the
   taxes, its top, down to just under them), as a film's lower frame is under its subtitles.
