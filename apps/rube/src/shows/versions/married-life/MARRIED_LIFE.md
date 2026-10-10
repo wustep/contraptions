@@ -702,6 +702,10 @@ window.
     ease out now starts two seconds before the tyre and holds through the taking, the car driving off and the lamp,
     back in over two seconds as he falls (`setbacksZoomFull`, `jar.ts`); the check holds Zoom out from the tyre to the
     kick, and a 30 fps scan of the ease found no pop.
+  - *The second and third takings under Zoom* (the two the beat audit left out). The second (125.2 s): Zoom comes back
+    in after his fall onto the bandage, and the jar is half off its right edge as she walks the mantle to it, but it
+    tips into the frame (whole by 125.4) and the arm follows it in (125.8): kept. The third is inside the storm's wide,
+    the jar small but in frame.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
