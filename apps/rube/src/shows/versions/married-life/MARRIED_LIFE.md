@@ -233,13 +233,17 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   they lie; seen from the lane years later, it stands where the climb can reach it.)
 - Close on them (2.8 cells), she climbs after him, tires, rests, pushes on and stalls. **On 174.67 she gives way**:
   she sinks, and slides back limp the short way she climbed onto the fieldstone's worn top, her face down and not
-  rolling with her (a ball that rolls back reads as play), and is still, slumped (lower, wider: `slumpOf`), spent; and a cloud comes over the field (`overcast`). No bounce. The
-  strike is the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays
-  there, and its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets
-  to give her, lying on the slope as he passes. Stopped by his lurch for a frozen beat, he hurries down after her,
-  faster than he has gone in years, leaning into it with a stride (`RUN`), the camera hanging back so he is seen to
-  cross the frame to her, in close with them (2.4 to 1.9 cells, the basket left out of the frame), and eases onto the
-  stone beside her just as she comes to rest. He leans to her; she answers with the smallest roll toward him, lifting
+  rolling with her (a ball that rolls back reads as play), down in a little over a second and a half, and is still,
+  slumped (lower, wider: `slumpOf`), spent; and a cloud comes over the field (`overcast`). No bounce. The strike is
+  the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays there, and
+  its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets to give
+  her, lying on the slope as he passes. Struck, he straightens up out of the slope's lean and stands still for most
+  of a second, watching her go, so she is seen
+  to fall first; then he hurries down after her, faster than he has gone in years, up out of the slope's lean and
+  into the run, bounding a little each stride (`RUN`, `runTilt`: tilted with the slope, a square going downhill
+  read as tumbling), the camera hanging back so he is seen to cross the frame to her, in close with them (2.4 to 1.9
+  cells, the basket left out of the frame), and comes onto the stone beside her three quarters of a second after she
+  has come to rest, so for a moment she lies there alone. He leans to her; she answers with the smallest roll toward him, lifting
   only partly out of her slump, her face turning to him, and looking at him across the cut into the ward, where the
   slump eases out under the covers.
 
@@ -644,6 +648,14 @@ window.
     Considered and kept: the yard's long push of the book and the short pop-up (the walk is one walk on the music);
     the three takings of the jar (the premise's machine); her death told by the ward's light going (understatement);
     the ties' wheel and the slow homecoming (the years, and mourning).
+  - *The fresh story critic's re-watches of the hill.* After her face was held down: the turn landed at her give-way
+    at full size ("she went limp"), but he came down with her at her speed, tilted with the slope, and read as
+    falling too. Taken: he stands struck still for 0.8 s watching her go, then runs upright, leaning forward with a
+    bound each stride, and comes onto the stone after her; her slide is quicker (1.6 s from 2.3; she crept on), so
+    she lies still and alone a moment before he comes. Re-watched: "she fell and he came after her", at full size
+    and at the sheet's scale; its one note, that standing still on the slope's lean he looked stopped mid-tumble, taken
+    (struck, he straightens up). The run's on-screen check moved past his stillness (175.75 to
+    176.4 s); a check holds her on the stone at least half a second before him.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits

@@ -84,7 +84,9 @@ const E = {
   /** She starts to slip, the smallest way; and she gives way: she sinks, and rolls back onto the stone, and is still. */
   sag: 174.3,
   give: 174.672,
-  settle: 174.672 + 2.3,
+  // Down onto the stone in a little over a second and a half, and still there (she crept on for over two seconds before,
+  // so she never quite came to rest before he did).
+  settle: 174.672 + 1.6,
   /** She answers his lean: the smallest roll toward him. */
   answer: 178.8,
   answered: 179.5,
@@ -177,12 +179,15 @@ const RUN = (() => {
   // one, so he is seen to gain on her while she is still rolling.
   // Front-loaded: a short burst to its peak, held only a moment, then a long ease onto the stone, so most of the gap
   // closes while she is still rolling (the camera follows him, so it is the gap that shows his speed).
-  // Flat out the whole way, a short ease, and on the stone just as she comes to rest (`E.settle`), then still beside
+  // Flat out the whole way, a short ease, and on the stone a moment after she has come to rest (`E.settle`), then still beside
   // her until his lean: stillness reads, creeping does not; and he never runs into her as she settles.
-  const hold = 0.18
+  // Struck still for a beat as she gives way, watching her go: she is seen to fall first, and he comes after her (a
+  // fresh viewer, with a short hold, read the two of them as sliding down together).
+  const hold = 0.8
   const ta = 0.25
   const td = 0.55
-  const still = T.beside - (E.settle + 0.05)
+  // He is on the stone 0.75 s after she is still: she lies there alone a moment before he comes.
+  const still = T.beside - (E.settle + 0.75)
   const span = T.beside - T.fall
   const tc = span - hold - ta - td - still
   const d = HIS_REST - JOLT_TO
@@ -230,7 +235,11 @@ function carl(t: number): Pt {
   if (t < T.beside) {
     // Down the slope after her and onto the stone, as fast as he has gone in years, easing to a stop beside her.
     const x = JOLT_TO + RUN.at(t - T.fall)
-    return [x, seat(x)]
+    const pace = runPace(t)
+    // Running, he stands up out of the slope's lean (`runTilt`) on his downhill corner, and bounds a little with each
+    // stride: a runner, not a block tumbling down after her.
+    const upright = stand(x, runTilt(t, x)) - stand(x, groundTilt(x))
+    return [x, seat(x) + upright - 0.04 * pace * Math.abs(Math.sin(Math.PI * 3.5 * (t - T.fall)))]
   }
   return [HIS_REST, STEP.y]
 }
@@ -246,6 +255,39 @@ function groundTilt(x: number): number {
   // The ground he stands on: the flank, then the flat of the stone and the lane beyond it (level, as `ridgeSlope`).
   const ground = (u: number) => (u >= STEP.x0 ? STEP.y : ridge(u))
   return Math.atan((ground(x + HALF) - ground(x - HALF)) / (2 * HALF))
+}
+
+/** How fast he is running down to her, as a share of his top speed (0 standing, 1 flat out). */
+function runPace(t: number): number {
+  if (t <= T.fall || t >= T.beside) return 0
+  const v = (RUN.at(t + 0.02 - T.fall) - RUN.at(t - 0.02 - T.fall)) / 0.04
+  return Math.max(0, Math.min(1, v / RUN.vp))
+}
+
+/**
+ * His lean from the moment she gives way to the stone: struck, he straightens up out of the slope's lean at once (a
+ * square tilted with the slope, standing still, read as stopped mid-tumble); flat out, a little forward into the run.
+ */
+function runTilt(t: number, x: number): number {
+  const pace = runPace(t)
+  const struck = smooth(t, T.fall, T.fall + 0.35)
+  return groundTilt(x) * (1 - 0.75 * Math.max(pace, struck)) + 0.12 * pace
+}
+
+/**
+ * Where his centre is, at `x` and leaning `tilt`, with his lower bottom corner on the drawn ground (`ridge` is the
+ * ground less R) and the other clear of it.
+ */
+function stand(x: number, tilt: number): number {
+  const c = Math.cos(tilt)
+  const s = Math.sin(tilt)
+  let y = Infinity
+  for (const ox of [-HALF, HALF]) {
+    const dx = ox * c - HALF * s
+    const dy = ox * s + HALF * c
+    y = Math.min(y, ridge(x + dx) + R - dy)
+  }
+  return y
 }
 
 /** How Carl holds himself: with the ground, upright in a hop, a look back at her, and a small squash on each landing. */
@@ -264,12 +306,8 @@ function bearing(t: number): { tilt: number; squash: number } {
   tilt += 0.1 * smooth(t, T.top, T.top + 0.35) * (1 - smooth(t, T.fall, T.fall + 0.5))
   // Beside her, he leans to her; after her answer he straightens, upright for the cut (his chair's side is upright).
   tilt += 0.12 * smooth(t, T.lean, T.beside + 0.45) * (1 - smooth(t, T.rise, END - 0.05))
-  // Hurrying down to her: a lean into the run with his speed, and a stride's bob while he goes.
-  if (t > T.fall && t < T.beside) {
-    const v = (carl(t + 0.02)[0] - carl(t - 0.02)[0]) / 0.04
-    const pace = Math.max(0, Math.min(1, v / RUN.vp))
-    tilt += 0.1 * pace
-  }
+  // Hurrying down to her: up out of the slope's lean and into the run with his speed (`runTilt`).
+  if (t > T.fall && t < T.beside) tilt += runTilt(t, x) - groundTilt(x)
   let squash = 0
   if (t > T.fall && t < T.beside) {
     const v = (carl(t + 0.02)[0] - carl(t - 0.02)[0]) / 0.04

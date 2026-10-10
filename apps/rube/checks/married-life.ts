@@ -411,7 +411,8 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   }
   check('married life: his square and her ball never overlap (by more than 0.02 cells)', overlap <= 0.02, `${overlap.toFixed(3)} at ${overlapAt.toFixed(2)} s`)
 
-  // On the hill his hurry down to her shows on screen: while he runs flat out (175.0 to 176.2 s) he keeps moving toward
+  // On the hill his hurry down to her shows on screen: while he runs flat out (175.75 to 176.4 s, after the beat he
+  // stands struck still watching her go) he keeps moving toward
   // her in the frame, at least 3% of its width a second, under Zoom too; a camera that catches up at his own speed
   // stands him still mid-run, and that reads as hesitating.
   for (const zoomed of [false, true]) {
@@ -421,7 +422,7 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     }
     let slowest = Infinity
     let slowestAt = 0
-    for (let t = 175.0; t <= 176.2; t += 0.02) {
+    for (let t = 175.75; t <= 176.4; t += 0.02) {
       const v = (across(t + 0.02) - across(t)) / 0.02
       if (v < slowest) { slowest = v; slowestAt = t }
     }
@@ -502,6 +503,19 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
       const ey = e.y - h.y + cy
       if (ex < STEP.x0 - 0.2) { const s = sink(ex, ey); if (s < flank) { flank = s; flankAt = t } }
     }
+  }
+  // As she gives way he stands struck still watching her go, then runs down after her: she reaches the stone first, and
+  // is still there alone a moment before he arrives (with them arriving together, a fresh viewer read the two of them
+  // as sliding down together).
+  {
+    const arrives = (pos: (t: number) => number, end: number) => {
+      for (let t = 174.7; t <= end; t += 0.01) if (Math.abs(pos(t) - pos(end)) < 0.06) return t
+      return end
+    }
+    const her = arrives((t) => show.ellie(t)!.x, 178.5)
+    const his = arrives((t) => show.at(t).x, 177.6)
+    check('married life: on the hill she reaches the stone first, and he comes after her', his - her >= 0.5,
+      `her ${her.toFixed(2)} s, him ${his.toFixed(2)} s`)
   }
   check('married life: on the hill\'s flank they rest on the slope, not in it (until she gives way)', flank >= -0.05, `${flank.toFixed(3)} R at ${flankAt.toFixed(2)} s`)
 }
