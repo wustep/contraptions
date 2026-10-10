@@ -231,7 +231,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 118 (latest)
+## Polish pass 119 (latest)
+
+No change to the show. Two checks off the frame:
+- The two YouTube uploads the show plays online (`JuSsvM8B4Jc`, `kpK4cDk2bRs`) are still up and still allow embedding. YouTube's oEmbed answers 200 for both, from WaterTower Music, the soundtrack's own label, so the online music is not about to go dark.
+- Reduced motion. The site honours `prefers-reduced-motion` in its own interface (`src/ui/styles.css`) but not in shows, and Voyage has fast camera moves (the whip at 235 s, the swing past Gargantua). A show plays only when it is asked to, and slowing its camera would change the film for everyone who asked for less motion. That is a decision for all shows, not this one, so it is left, noted.
+
+## Polish pass 118
 
 No change to the show: an upright tablet (768×900, about 3:4 under the player's bar), the one common screen shape between the phone and the desktop not yet swept. Every 6 s, nothing is lost. The extra height goes to sky and ground, as on the phone. The near-empty frames are the ones already known to be meant: the whip's landing at 236 s and the long fall.
 
