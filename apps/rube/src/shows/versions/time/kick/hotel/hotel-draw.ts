@@ -979,8 +979,9 @@ function drawCorridorThings(g: Pen, f: View, t: number): void {
     const ch_ = floating([-13.95, 20.6], [0.15, -0.5], 4, 0.05, 13, t)
     at(g, ch_.at, ch_.turn, () => poly(g, [[-0.22, 0.4], [-0.22, -0.42], [-0.1, -0.42], [-0.1, 0.02], [0.24, 0.02], [0.24, 0.4]], H.woodLight, g.ink, 0.6))
   }
-  if (seen(f, -12, 18.8, -10, 20.2)) {
-    const pic = floating([-10.9, 19.35], [0.1, 0.12], 5, 0.04, 15, t)
+  // The picture hangs between a sconce and the next door, not over the sconce.
+  if (seen(f, -11.2, 18.8, -9.0, 20.2)) {
+    const pic = floating([-10.1, 19.35], [0.1, 0.12], 5, 0.04, 15, t)
     at(g, pic.at, pic.turn, () => {
       rect(g, -0.35, -0.24, 0.35, 0.24, H.brass, g.ink, 0.5)
       rect(g, -0.28, -0.17, 0.28, 0.17, mixHex(H.carpet, H.glass, 0.4))
