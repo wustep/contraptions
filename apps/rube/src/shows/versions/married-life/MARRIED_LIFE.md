@@ -812,6 +812,8 @@ window.
     going wrong at the stained glass"). Thrown at 2.2 to 3.6 cells a second they were up round the windows within half
     a second, before the camera had the throwers whole. Now 1.4 to 2.2: a burst over the bright family's own heads,
     drifting toward the aisle and down over the two of them, seen to come from them.
+  - *The lower petals, re-watched* by an eighteenth viewer (the same stretch and questions): "the colourful group is the
+    one that throws petals… the petals burst from their pews", the grey pew not joining in; the window not named.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
