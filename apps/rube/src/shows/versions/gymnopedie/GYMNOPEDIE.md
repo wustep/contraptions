@@ -197,6 +197,12 @@ stretching to the top of the screen, and a shooting star falls over the scene. H
 the same way, so nothing that fades as the camera draws out (the gulls, the fireflies, the bow, the reflections) takes
 an upright phone for a wide shot. Audited at 16:9, 21:9, 4:3 and an upright phone.
 
+And on more than one engine and density: stills from Safari's engine (WebKit) match Chromium's to within
+anti-aliasing at nine moments through the day (every set-piece drawn, the title veil's CSS resolved the same); the live
+canvas at density 2 matches a still of the same device size at 47 of 48 moments across the loop, the 48th (the wide
+shot) to within sub-pixel smoothing of the far stones; and 480 × 270, 1280 × 720 and 3840 × 2160 are the same picture
+at three sizes.
+
 ## The words
 
 The page sets the titles over the stage, and they come over busy places: the title and the credits over the planet's
