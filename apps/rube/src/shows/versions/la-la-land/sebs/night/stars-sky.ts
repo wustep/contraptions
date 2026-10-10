@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { frame, glow, rgba, smooth } from '../kit'
 import { NIGHT_MAT } from '../worlds'
-import { CLOCK_X, FLY_SET, FLY_SKY, LAMPS, POLE, scatter, skyAngle, UPSTAGE } from './painted-waltz'
+import { APEX, CLOCK_X, DIP, FLY_SET, FLY_SKY, LAMPS, LIFT, POLE, QUIET, scatter, skyAngle, UPSTAGE } from './painted-waltz'
 
 /**
  * The real sky behind the painted one, and the floor both stand on. Drawn in
@@ -61,10 +61,28 @@ const BAND = -0.55
 })()
 
 /** The band's haze: soft blobs along it. */
-const HAZE = Array.from({ length: 18 }, (_, i) => {
-  const u = -26 + (52 * (i + 0.5)) / 18 + 1.5 * (scatter(i, 20) - 0.5)
-  const v = 0.9 * (scatter(i, 21) - 0.5)
-  return { x: u * Math.cos(BAND) - v * Math.sin(BAND), y: u * Math.sin(BAND) + v * Math.cos(BAND), size: 2.2 + 1.6 * scatter(i, 22), a: 0.07 + 0.06 * scatter(i, 23) }
+/**
+ * The band's haze, painted as the planetarium paints it: clouds of the galaxy along the band in their own colours,
+ * violet and rose and a little teal over the blue, so it is a nebula and not more blue on blue; and a dark lane of
+ * dust down its middle. It turns with the stars.
+ */
+const NEBULA = ['#4C74D0', '#7B55D0', '#C05A9E', '#3F9FB8', '#5A6CE0']
+const HAZE = Array.from({ length: 34 }, (_, i) => {
+  const u = -26 + (52 * (i + 0.5)) / 34 + 1.5 * (scatter(i, 20) - 0.5)
+  const v = 1.4 * (scatter(i, 21) - 0.5) + 0.5 * Math.sin(u * 0.33)
+  const c = scatter(i, 24)
+  return {
+    x: u * Math.cos(BAND) - v * Math.sin(BAND),
+    y: u * Math.sin(BAND) + v * Math.cos(BAND),
+    size: 1.8 + 2.2 * scatter(i, 22),
+    a: 0.11 + 0.1 * scatter(i, 23),
+    color: NEBULA[Math.floor(c * NEBULA.length) % NEBULA.length],
+  }
+})
+const DUST = Array.from({ length: 16 }, (_, i) => {
+  const u = -24 + (48 * (i + 0.5)) / 16 + 1.2 * (scatter(i, 25) - 0.5)
+  const v = 0.25 * Math.sin(u * 0.33) + 0.3 * (scatter(i, 26) - 0.5)
+  return { x: u * Math.cos(BAND) - v * Math.sin(BAND), y: u * Math.sin(BAND) + v * Math.cos(BAND), size: 0.9 + 0.8 * scatter(i, 27), a: 0.18 + 0.12 * scatter(i, 28) }
 })
 
 /** How much of the real sky is uncovered: none until the painted sky starts to fly. */
@@ -96,13 +114,21 @@ function starField(p: p5, k: number, T: number, mirror: boolean, fade: number): 
   if (mirror) ctx.rect((f.x0 - 1) * k, UPSTAGE * k, (f.x1 - f.x0 + 2) * k, (f.y1 - UPSTAGE + 1) * k)
   else ctx.rect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (UPSTAGE - f.y0 + 1) * k)
   ctx.clip()
-  // The band's haze.
+  // The band's haze: a nebula, coming up as they rise into it, and fullest at the top of the swell.
+  const swell = 0.55 + 0.45 * smooth(T, LIFT, APEX + 2) + 0.25 * smooth(T, QUIET[1], DIP) * (1 - smooth(T, DIP, DIP + 1.5))
   for (const h of HAZE) {
     const x = px + h.x * cs - h.y * sn
     const yy = py + h.x * sn + h.y * cs
     const y = mirror ? 2 * UPSTAGE - yy : yy
     if (x < f.x0 - 5 || x > f.x1 + 5 || y < f.y0 - 5 || y > f.y1 + 5) continue
-    glow(p, k, x, y, h.size, NIGHT_MAT.swirl, h.a * fade * m, 1.2, 0.85)
+    glow(p, k, x, y, h.size, h.color, h.a * fade * m * swell, 1.25, 0.8)
+  }
+  for (const d of DUST) {
+    const x = px + d.x * cs - d.y * sn
+    const yy = py + d.x * sn + d.y * cs
+    const y = mirror ? 2 * UPSTAGE - yy : yy
+    if (x < f.x0 - 3 || x > f.x1 + 3 || y < f.y0 - 3 || y > f.y1 + 3) continue
+    glow(p, k, x, y, d.size, NIGHT_MAT.deep, d.a * fade * m * swell, 1.4, 0.55)
   }
   // Paths by colour and brightness, so a thousand stars are a dozen fills.
   const LV = 4

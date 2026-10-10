@@ -4,7 +4,7 @@ import { createListbox } from '../../../../src/ui/listbox'
 import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
 import { recordingFormat } from './record'
-import { performanceProblems, pickVersion, shelves, type Performance, type TitleCard, type Version } from './registry'
+import { performanceProblems, pickVersion, placeCard, shelves, type Performance, type TitleCard, type Version } from './registry'
 import { showCard as shareCard, showFromPath, showPath } from './share'
 import { createSoundtrack, prefetchSoundtrack } from './soundtrack'
 import './youtube.css'
@@ -253,12 +253,29 @@ async function playLinked(): Promise<void> {
   armSound()
 }
 
+/**
+ * A gesture brings the held sound in, where the picture is. It can be refused even so (a browser that wants the tap
+ * inside the player's own frame, as iOS can): then the sound is held again, the picture going on muted and the Sound
+ * button back for the next tap, rather than a silent show with nothing to press.
+ */
+async function soundIn(): Promise<void> {
+  soundHeld = false
+  joinedAt = performance.now()
+  setMuted(false)
+  if (!transport || !perf?.soundtrack) return
+  const mine = generation
+  const result = await music.play(transport.now())
+  if (result !== 'blocked' || !alive || mine !== generation || !transport) return
+  soundHeld = true
+  setMuted(true)
+  void music.play(transport.now())
+  armSound()
+  sync()
+}
+
 /** The sound is held. The next gesture starts it where the picture is, and a control whose job is the sound keeps that job. */
 function armSound(): void {
   releaseSound()
-  const join = () => {
-    if (transport && perf?.soundtrack) void music.play(transport.now())
-  }
   const unlock = (e: Event) => {
     const key = e instanceof KeyboardEvent ? e.key : ''
     const musicControl = (e.target instanceof Element && !!e.target.closest('button.music')) || key === 'm' || key === 'M'
@@ -266,15 +283,12 @@ function armSound(): void {
     if (!alive || !soundHeld) return
     // The music control does the unmuting itself, and starts the sound with it.
     if (musicControl) return
-    soundHeld = false
-    joinedAt = performance.now()
-    if (muted) setMuted(false)
     // Space would also pause. The gesture only owed the sound; the picture stays.
     if ((key === ' ' || key === 'Enter') && transport?.playing) {
       e.preventDefault()
       e.stopImmediatePropagation()
     }
-    join()
+    void soundIn()
   }
   releaseSound = () => {
     window.removeEventListener('pointerdown', unlock, true)
@@ -337,6 +351,7 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
     const wrong = performanceProblems(loaded)
     if (wrong.length) throw new Error(wrong.join(', '))
     perf = loaded
+    loaded.dialogue?.(dialogue)
     transport = new Transport({ duration: loaded.duration, heard: () => music.position(), loop: !!loaded.loop })
     transport.setSpeed(speed)
     lastT = 0
@@ -390,8 +405,8 @@ panelRoot.append(showCard)
 const workList = createListbox({
   label: 'Show',
   value: current?.work ?? '',
-  // On their shelves (`registry.ts`): Machine, Movies, Ambient.
-  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section }))),
+  // On their shelves (`registry.ts`): Machine, Movies, Ambient, each with its favourites starred and first.
+  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section, mark: w.favorite === undefined ? undefined : icon(ICON.star) }))),
   onChange: (work) => {
     const next = pickVersion(works, work, null)
     // Under a host a pick goes on as its next one would, and the running order carries on after it.
@@ -417,15 +432,22 @@ const bigPlay = el('button', { type: 'button', class: 'stage-play' }, [icon(ICON
 bigPlay.addEventListener('click', () => {
   bigPlay.blur()
   if (soundHeld) {
-    soundHeld = false
-    joinedAt = performance.now()
-    setMuted(false)
-    if (transport && perf?.soundtrack) void music.play(transport.now())
+    void soundIn()
     return
   }
   void play()
 })
 stageRoot.append(bigPlay)
+// On a stage much wider than the show's 16:9 (a phone on its side with the panel up, an ultrawide screen) the composed
+// frame stands in the middle at full height, and the button, centred low, sat over whoever stands on its floor (Married
+// Life's opening couple, hidden behind Sound). Where the world beside the frame has room for it, it goes there.
+const besideFrame = new ResizeObserver(() => {
+  const w = stageRoot.clientWidth
+  const half = (stageRoot.clientHeight * 8) / 9
+  const side = w / 2 - half
+  bigPlay.style.left = side >= 150 ? `${w / 2 + half + side / 2}px` : ''
+})
+besideFrame.observe(stageRoot)
 
 // While a show loads, or when it would not, the stage says so: the panel says it too, but the panel starts hidden,
 // and a blank stage reads as broken. A failed load is tried again by a reload: the browser keeps a module that would
@@ -487,10 +509,53 @@ musicBtn.addEventListener('click', () => {
     setMuted(!muted)
     return
   }
-  soundHeld = false
-  setMuted(false)
-  if (transport && perf?.soundtrack) void music.play(transport.now())
+  void soundIn()
 })
+// Sound captions, for a show that has them (`Performance.captions`): off unless the viewer turns them on, and
+// remembered in this browser.
+const CAPTIONS_KEY = 'shows-captions'
+let captions = (() => {
+  try {
+    return localStorage.getItem(CAPTIONS_KEY) === '1'
+  } catch {
+    return false
+  }
+})()
+const ccState = el('span', { class: 'cc-state' }, ['Off'])
+const ccBtn = el('button', { type: 'button', class: 'chip cc', 'aria-label': 'Sound captions' }, [el('span', {}, ['Sound captions']), ccState])
+const ccRow = el('div', { class: 'row cc' }, [ccBtn])
+function toggleCaptions(): void {
+  captions = !captions
+  try {
+    localStorage.setItem(CAPTIONS_KEY, captions ? '1' : '0')
+  } catch {}
+  sync()
+  if (transport) renderWords(transport.now())
+}
+ccBtn.addEventListener('click', toggleCaptions)
+// Dialogue, for a show that has it (`Performance.dialogue`): off unless the viewer turns it on, and remembered in this
+// browser. The show plays straight through without it.
+const DIALOGUE_KEY = 'shows-dialogue'
+let dialogue = (() => {
+  try {
+    return localStorage.getItem(DIALOGUE_KEY) === '1'
+  } catch {
+    return false
+  }
+})()
+const dlState = el('span', { class: 'cc-state' }, ['Off'])
+const dlBtn = el('button', { type: 'button', class: 'chip cc', 'aria-label': 'Dialogue' }, [el('span', {}, ['Dialogue']), dlState])
+const dlRow = el('div', { class: 'row cc' }, [dlBtn])
+function toggleDialogue(): void {
+  dialogue = !dialogue
+  try {
+    localStorage.setItem(DIALOGUE_KEY, dialogue ? '1' : '0')
+  } catch {}
+  perf?.dialogue?.(dialogue)
+  sync()
+  if (transport) renderWords(transport.now())
+}
+dlBtn.addEventListener('click', toggleDialogue)
 const restartBtn = el('button', { type: 'button', class: 'tbtn', title: 'Back to the top of the show (Home)', 'aria-label': 'Restart' }, [icon(ICON.restart)])
 restartBtn.addEventListener('click', () => seek(0))
 // Overview and Zoom were two toggles that turned each other off: one choice of three, so one control.
@@ -520,6 +585,9 @@ transportSec.append(
   scrub,
   el('div', { class: 'row deck player' }, [playBtn, restartBtn, time, musicBtn, speedBox.node]),
   cameraSeg.node,
+  // Dialogue and sound captions: a row each, shown only for a show that has them.
+  dlRow,
+  ccRow,
   el('div', { class: 'row door' }, [doorBtn]),
   transportNote,
 )
@@ -578,7 +646,7 @@ videoBtn.addEventListener('click', () => {
       videoBtn.textContent = `Stop · ${Math.round(done * 100)}%`
     })
     .then(
-      (saved) => say(exportNote, saved ? `Saved: picture and music${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
+      (saved) => say(exportNote, saved ? `Saved: ${perf?.soundtrack?.src ? 'picture and music' : perf?.soundtrack ? 'the picture, silent (the music is YouTube’s)' : 'the picture'}${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
       (err) => {
         console.error(err)
         say(exportNote, err instanceof Error ? err.message : String(err), 'bad')
@@ -596,6 +664,16 @@ const pauseIcon = icon(ICON.pause)
 const soundIcon = icon(ICON.sound)
 const mutedIcon = icon(ICON.muted)
 music.onChange(() => sync())
+// The browser stopped the music mid-show for want of a gesture (a cue coming in that no press was behind): hold the
+// sound, as a link that is refused holds it, the picture going on muted and the Sound button up for the press.
+music.onRefused(() => {
+  if (recording || !transport?.playing || soundHeld) return
+  soundHeld = true
+  setMuted(true)
+  void music.play(transport.now())
+  armSound()
+  sync()
+})
 // A press on YouTube's own player moves the show with it.
 music.onPlayer((playing) => {
   // A recording owns the show, and plays the file: YouTube's player is put back to silence.
@@ -613,6 +691,15 @@ function sync(): void {
   const playing = transport?.playing ?? false
   const ready = perf !== null
 
+  // The picture says nothing to a screen reader: the canvas is named, as an image, by the show's title and its own share
+  // line (WCAG 1.1.1). The stage's controls stay outside it.
+  const canvas = stageRoot.querySelector('canvas')
+  if (canvas) {
+    canvas.setAttribute('role', 'img')
+    const name = current ? `${current.title}${current.about ? `: ${current.about}` : ''}` : 'The show'
+    if (canvas.getAttribute('aria-label') !== name) canvas.setAttribute('aria-label', name)
+  }
+
   // The title card.
   empty.hidden = works.length > 0
   workList.node.hidden = takeRow.hidden = works.length === 0
@@ -622,7 +709,8 @@ function sync(): void {
   workList.node.classList.toggle('disabled', busy)
   if (work && (takeChips.length !== work.versions.length || takeChips.some((c, i) => c.version !== work.versions[i]))) {
     takeChips = work.versions.map((version) => {
-      const b = el('button', { type: 'button', title: version.note ?? version.label }, [version.label])
+      const b = el('button', { type: 'button', title: version.note ?? (version.favorite ? `${version.label}, a favourite` : version.label) }, [version.label])
+      if (version.favorite) b.append(icon(ICON.star))
       b.addEventListener('click', () => {
         if (version !== current && !recording) void open(version, host ? 'link' : true)
       })
@@ -667,6 +755,16 @@ function sync(): void {
   speedBox.set(speed)
   speedBox.setDisabled(busy)
   doorBtn.disabled = busy
+  dlBtn.disabled = busy || !perf?.dialogue
+  dlRow.hidden = !perf?.dialogue
+  dlBtn.setAttribute('aria-pressed', String(!!perf?.dialogue && dialogue))
+  dlState.textContent = dialogue ? 'On' : 'Off'
+  dlBtn.title = dialogue ? 'Turn the dialogue off (D)' : 'Turn on the dialogue: the family’s words, in subtitles (D)'
+  ccBtn.disabled = !perf?.captions
+  ccRow.hidden = !perf?.captions
+  ccBtn.setAttribute('aria-pressed', String(!!perf?.captions && captions))
+  ccState.textContent = captions ? 'On' : 'Off'
+  ccBtn.title = captions ? 'Turn the sound captions off (C)' : 'Turn on sound captions: words for what the music does (C)'
   const hasMusic = !!perf?.soundtrack && music.state() !== 'failed'
   musicBtn.disabled = !hasMusic
   musicBtn.setAttribute('aria-pressed', String(hasMusic && !muted && !soundHeld))
@@ -679,7 +777,9 @@ function sync(): void {
       : muted
         ? 'Turn the music on (M)'
         : 'Turn the music off (M). The show keeps its time; a saved video keeps its music.'
-    : 'This version has no soundtrack'
+    : perf?.soundtrack
+      ? 'The soundtrack would not load, so the show runs silent'
+      : 'This version has no soundtrack'
   say(
     transportNote,
     perf?.soundtrack && music.state() === 'failed'
@@ -697,9 +797,15 @@ function sync(): void {
   )
 
   // The stage's own word while there is no show on it.
-  stageNote.hidden = !current || !(loading || failed)
+  // (Not while the browser holds the sound: then the stage's own Sound button says what is wanted, and the note sat on it.)
+  const waiting = stalled && !soundHeld
+  stageNote.hidden = !current || !(loading || failed || waiting)
   stageNote.classList.toggle('bad', !!failed)
-  stageNoteText.textContent = failed ? `${current?.title ?? 'This show'} would not load.` : `Loading ${current?.title ?? 'the show'}…`
+  stageNoteText.textContent = failed
+    ? `${current?.title ?? 'This show'} would not load.`
+    : loading
+      ? `Loading ${current?.title ?? 'the show'}…`
+      : 'Waiting for the music…'
   retryBtn.hidden = !failed
 
   // The stage's own play button: at the top, at the end, where the browser is waiting for a press,
@@ -722,7 +828,7 @@ function sync(): void {
   videoBtn.title = busy
     ? 'Stop the recording. No file is kept.'
     : canRecord
-      ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.`
+      ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.${perf?.soundtrack && !perf.soundtrack.src ? ' It is silent: the music plays from YouTube, which a recording cannot take.' : ''}`
       : 'Video export needs a browser that can record the canvas.'
 }
 
@@ -739,9 +845,23 @@ function credited(): boolean {
 const wordsLayer = el('div', { class: 'stage-words', 'aria-hidden': 'true' })
 stageRoot.append(wordsLayer)
 const wordCards = new Map<string, HTMLElement>()
+/** A floored card's width per unit of its type, measured once as it is built. */
+const cardWidths = new Map<string, number>()
+// The words a screen reader is to hear (`TitleCard.said`: a show's dialogue): the layer above is hidden from it, since
+// its cards fade and blur, so each such card is spoken once, here, as it first comes up while the show plays at 1× or
+// slower. Not on a scrub or a seek, nor faster than its own pace, so a reader is not flooded.
+const saidLayer = el('div', { class: 'stage-said', 'aria-live': 'polite', 'aria-atomic': 'true' })
+Object.assign(saidLayer.style, { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', whiteSpace: 'nowrap' })
+stageRoot.append(saidLayer)
+const saidKeys = new Set<string>()
+const cardText = (c: TitleCard): string => [c.role, ...c.names.map((n) => (typeof n === 'string' ? n : `${n[0]}, ${n[1]}`)), ...(c.notes ?? [])].filter(Boolean).join('. ')
 
 function buildCard(c: TitleCard): HTMLElement {
-  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}` })
+  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}${c.shade ? ' shaded' : ''}${c.caption ? ' caption' : ''}` })
+  if (c.shade) {
+    node.style.setProperty('--shade', String(c.shade))
+    node.append(el('div', { class: 'veil' }))
+  }
   if (c.role) node.append(el('div', { class: 'role' }, [c.role]))
   for (const n of c.names) {
     if (typeof n === 'string') {
@@ -763,12 +883,21 @@ function buildCard(c: TitleCard): HTMLElement {
 }
 
 function renderWords(t: number): void {
-  const cards = perf?.titles && !overview && !recording ? perf.titles(t) : []
+  const cards = perf?.titles && !overview && !recording ? perf.titles(t).filter((c) => !c.caption || captions) : []
   const live = new Set(cards.map((c) => c.key))
   for (const [key, node] of wordCards) {
     if (live.has(key)) continue
     node.remove()
     wordCards.delete(key)
+    cardWidths.delete(key)
+  }
+  for (const key of saidKeys) if (!live.has(key)) saidKeys.delete(key)
+  for (const c of cards) {
+    if (!c.said || saidKeys.has(c.key)) continue
+    saidKeys.add(c.key)
+    // Only at 1× or slower: a show's spoken words are timed to be heard whole at its own pace, and at 2× or 4× each
+    // would cut the last off before a reader could finish it.
+    if (transport?.playing && speed <= 1) saidLayer.textContent = typeof c.said === 'string' ? c.said : cardText(c)
   }
   if (!cards.length) return
   const W = stageRoot.clientWidth
@@ -783,10 +912,37 @@ function renderWords(t: number): void {
       wordsLayer.append(node)
       wordCards.set(c.key, node)
     }
-    node.style.left = `${(W - fw) / 2 + c.at[0] * fw}px`
+    // Centred on its place, but kept on the stage: on a phone's short frame the small lines' 9px floor (styles.css) can
+    // widen a card past the edge, so it slides in just far enough to keep a margin. A card that fits is where it was.
+    node.style.left = `${placeCard((W - fw) / 2 + c.at[0] * fw, node.offsetWidth, W)}px`
     const lift = c.lift ? c.lift * Math.max(0, (H - fh) / 2) : 0
-    node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
-    if (c.scale && c.scale !== 1) node.style.setProperty('--u', `${(fh / 100) * c.scale}px`)
+    const above = (perf?.tall ?? 0.5) * (H - fh)
+    node.style.top = `${above + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
+    // `least` floors the card's own unit, after its `scale` (with no scale, as a floor on the frame's unit).
+    let unit = Math.max((fh / 100) * (c.scale ?? 1), c.least ?? 0)
+    if (unit !== fh / 100) node.style.setProperty('--u', `${unit}px`)
+    else node.style.removeProperty('--u')
+    // A card with a floor on its type, grown past the frame it was set for: never wider than the stage, and kept
+    // inside its edges. (Cards without one are as they were.)
+    // Its width goes as its unit (all its type is set in it), so it is measured once, as it is built, and worked
+    // out from then on: no layout forced on every frame it is up.
+    if (c.least) {
+      const room = W * 0.94
+      let perUnit = cardWidths.get(c.key)
+      if (perUnit === undefined) {
+        perUnit = node.offsetWidth / unit
+        cardWidths.set(c.key, perUnit)
+      }
+      let wide = perUnit * unit
+      if (wide > room) {
+        unit *= room / wide
+        wide = room
+        node.style.setProperty('--u', `${unit}px`)
+      }
+      const half = wide / 2
+      const x = (W - fw) / 2 + c.at[0] * fw
+      node.style.left = `${Math.max(W * 0.03 + half, Math.min(W * 0.97 - half, x))}px`
+    }
     node.style.opacity = c.light.toFixed(3)
     // Out of focus as it comes and goes: it comes into focus as it comes up.
     node.style.filter = c.light > 0.995 ? '' : `blur(${((1 - c.light) * fh * 0.012).toFixed(2)}px)`
@@ -797,12 +953,31 @@ function renderWords(t: number): void {
 let lastTime = ''
 /** Where the clock was on the frame before, so a loop coming round its seam is seen as a pass. */
 let lastT = 0
+/**
+ * The music is the clock, so music that stops coming (a connection lost mid-show, YouTube buffering) holds the
+ * picture with it. Playing, and the clock still for this long, the stage says it is waiting: a frozen picture with
+ * nothing on it reads as broken. `stallT` and `stallSince` are where the clock last stood and since when.
+ */
+const STALL_MS = 1500
+let stallT = -1
+let stallSince = 0
+let stalled = false
 let raf = 0
 function tick(): void {
   if (!alive) return
   if (transport) {
     const t = transport.now()
     music.follow(t)
+    const still = transport.playing && t === stallT
+    if (!still) {
+      stallT = t
+      stallSince = performance.now()
+    }
+    const nowStalled = still && performance.now() - stallSince > STALL_MS
+    if (nowStalled !== stalled) {
+      stalled = nowStalled
+      sync()
+    }
     // Played through: at the end, or, for a loop, round its seam (a seek resets `lastT`, so a jump back is not one).
     const through = transport.playing && (transport.loop ? t < lastT - transport.duration / 2 : t >= transport.duration)
     lastT = t
@@ -844,7 +1019,7 @@ const onKey = (e: KeyboardEvent) => {
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  // Letter keys are case-blind: Caps Lock must not silence P, M, O or Z.
+  // Letter keys are case-blind: Caps Lock must not silence P, M, C, D, O or Z.
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
   if (key === 'p') {
     shell.toggle()
@@ -860,12 +1035,16 @@ const onKey = (e: KeyboardEvent) => {
     case 'm':
       if (!perf?.soundtrack) break
       if (soundHeld) {
-        soundHeld = false
-        setMuted(false)
-        if (transport) void music.play(transport.now())
+        void soundIn()
         break
       }
       setMuted(!muted)
+      break
+    case 'c':
+      if (perf?.captions) toggleCaptions()
+      break
+    case 'd':
+      if (perf?.dialogue) toggleDialogue()
       break
     case 'o':
       if (perf) setOverview(!overview)
@@ -950,6 +1129,7 @@ if (import.meta.env.DEV) {
 
   return () => {
     alive = false
+    besideFrame.disconnect()
     window.clearTimeout(warmTimer)
     releaseSound()
     shell.holdHandle(false)

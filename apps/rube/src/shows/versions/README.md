@@ -13,7 +13,7 @@ both in lower case and hyphens. Drop the file in and it is in the picker at
 Nothing else keeps a list. A link to it is `/shows/<work>/<take>/`, and the
 work's first take is also `/shows/<work>/`. `/shows/?show=<work>&take=<take>`
 still opens it, and `/theater/?show=<work>&take=<take>` starts Theater on it.
-`/shows/` with no work opens Clair de Lune, Take B.
+`/shows/` with no work opens the first favourite, Voyage.
 
 Keep two takes of the same music side by side for as long as you like; they
 share nothing unless you make them share it. To combine them later, write a
@@ -37,8 +37,12 @@ The folder and file names are addresses, so they are chosen once:
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
-  Lune, Première Arabesque, Cornfield Chase, Ostinato), **Movies** and **Ambient**
-  (Gymnopédie, Soft Lamp). A work is Movies unless `SHELVED` in `../registry.ts` names it.
+  Lune, Première Arabesque, Cornfield Chase), **Movies** and **Ambient**
+  (Gymnopédie, Soft Lamp, Ostinato). A work is Movies unless `SHELVED` in `../registry.ts` names it.
+- **Favourites**: `FAVORITES` in `../registry.ts` ranks them (Voyage, Epilogue,
+  Everything, Clair de Lune). The picker stars them and pins them to the top of
+  their own shelf, in that order; a take with `favorite: true` is starred on its
+  tab (Epilogue's Opus 5.5).
 - **Code**: a take that is more than a score file keeps its code in a folder
   named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
   the take id carries a code name, the folder uses the same one. A take's code
@@ -119,7 +123,9 @@ first second to its last.
   top to bottom. A stage of another shape sees more world round that frame,
   never less of it; a saved file is exactly it. Overview overrides framing
   with Machine's fit of the current world's bounds. Zoom sits closer on the
-  follow camera. Each turns the other off. They affect live viewing
+  follow camera, about the same middle; a camera that names a `focus` (what
+  the shot is about) has Zoom slide over just enough to keep it well inside
+  (`zoomed` in `../registry.ts`), as Voyage does for Cooper. Each turns the other off. They affect live viewing
   and export without changing the music clock.
 - **A label's upload can play the music instead of the file.** Add
   `youtube: [{ id }]` to the soundtrack and the page embeds that video in
@@ -232,11 +238,12 @@ The arrangement note is `apps/rube/src/shows/versions/cornfield-chase/VOICES.md`
 score, Cornfield Chase and then No Time for Caution, so it is not a take of
 Cornfield Chase, and its one take carries no subtitle (the panel shows the
 title alone when the label repeats it). Every piece is new. It is not a
-stock arrangement: two worlds made for it, a farm in the dust years and the
-dark past it, and a rocket between them in place of a portal. The show lives
-in `interstellar/liftoff/`. `show.ts` holds two universes on one clock
-that share cells, and the stage changes universe while the rocket is inside
-the cloud. Each part is handed a slot (the time the ball arrives, the time
+stock arrangement: worlds made for it, a farm in the dust years, the dark
+past it, Cooper Station and the outside, and a rocket from the first to the
+second in place of a portal. The show lives in `interstellar/liftoff/`.
+`show.ts` holds four universes on one clock that share cells; the stage
+changes universe while the rocket is inside the cloud, on the second cue's
+accent, and on the undock. Each part is handed a slot (the time the ball arrives, the time
 it leaves, the onsets it must strike) and builds its lane from timed
 waypoints, so its strikes land on the measured onsets in
 `scripts/shows/plans/cornfield-opus55-onsets.json` by construction.
@@ -244,19 +251,21 @@ waypoints, so its strikes land on the measured onsets in
 against the onset file. The check also asserts that the ball never jumps,
 and that it is never hidden for long. Two more balls keep him company, as in the film: blue Dr. Amelia Brand
 (the hero, Cooper, has the farm and drives the truck) and, on Cooper
-Station, slate old Murph. Parts show them through `Built.company` spans
+Station, slate old Murph (a smaller, lighter young Murph follows him on the farm). Parts show them through `Built.company` spans
 (show time, part frame, `who`), and the check holds them to the story: Brand
 not on the farm, with him from NASA's bunker to the ring, waiting in orbit,
-and at her camp on Edmunds' planet, where they meet at the end; Murph only in
-the far-side house, where she sends him on; neither ever jumping, and each
+and at her camp on Edmunds' planet, where they meet at the end; Murph a child
+on the farm and at the base, and old only in the far-side house, where she
+sends him on; neither ever jumping, and each
 coming and going only out of shot. It ends with credits after the music, in silence: the words are set
 by the page from `Performance.titles(t)` (a show's canvas sets no type), and
 the starlight they come out of is the canvas's. The report is
 `apps/rube/src/shows/versions/interstellar/INTERSTELLAR.md`.
 It has a second act on a second cue, Zimmer's *No Time for Caution*, also demo
-only: the show plays one mix of the two (`apps/rube/src/shows/versions/interstellar/interstellar-liftoff-mix-demo.mp3`,
-built by `scripts/shows/liftoff-mix.sh`), Cornfield Chase untouched and then the second cue
-from its bar-26 accent. Act II's strikes are held to that cue's measured organ pulse
+only: it was timed to one mix of the two (built by `scripts/shows/liftoff-mix.sh`),
+Cornfield Chase untouched and then the second cue from its bar-26 accent. No
+recording is kept (#147): the page plays the two official uploads as two YouTube
+cues on the mix's numbers (`interstellar/liftoff/index.ts`). Act II's strikes are held to that cue's measured organ pulse
 (`scripts/shows/liftoff-ntfc-onsets.py` → `scripts/shows/plans/liftoff-ntfc-onsets.json`).
 
 `la-la-land/opus5-5` (in the picker, **Opus 5.5** under **Epilogue**) is a one-shot take on
@@ -420,7 +429,7 @@ off-beat onto its own attack, with the free onsets of the intro, the drop and th
 `scripts/shows/plans/relax-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/magnum.ts`). The
 report is `apps/rube/src/shows/versions/relax/MAGNUM.md`.
 
-`bolero/opus55` (in the picker, **Ostinato**, on the Machine shelf, one take, **Opus 5.5**) is Ravel's *Boléro*, whole,
+`bolero/opus55` (in the picker, **Ostinato**, on the Ambient shelf, one take, **Opus 5.5**) is Ravel's *Boléro*, whole,
 as one machine that grows with it: a tower of storeys standing on a single side drum, a storey for each pair of the
 tune's eighteen statements (A A B B four times, then one each for the last A and B), each wider than the one under it.
 The recording is Omega13a's, made in MuseScore 4 with Muse Sounds from Ravel's score and released on Wikimedia Commons

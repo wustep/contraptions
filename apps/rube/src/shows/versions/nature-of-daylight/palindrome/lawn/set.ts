@@ -3,6 +3,7 @@ import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { mix, rgba } from '../cast'
 import { frame, hash } from '../kit'
+import { SEAM } from '../music'
 import { HOUSE, SHELL } from '../worlds'
 import { BRUSHES, hannahAt, louiseAt, PIVOT, SEAT_T, SEAT_W, seatAt, surface } from './swing'
 
@@ -209,6 +210,8 @@ interface Clump {
   lobes: [number, number, number][]
   need: number
 }
+/** The clumps from here on are along the swing's limb, not in the crown. */
+const LIMB_CLUMPS = 16
 const CLUMPS: Clump[] = (() => {
   const spots: [number, number, number][] = [
     // The crown.
@@ -216,9 +219,11 @@ const CLUMPS: Clump[] = (() => {
     [54.5, -7.6, 1.4], [56.4, -8.1, 1.6], [58.3, -7.6, 1.4], [60.1, -7.4, 1.2], [62.0, -7.0, 1.1], [63.6, -6.3, 0.95],
     [52.9, -6.6, 1.1], [51.6, -7.2, 0.95], [53.4, -5.5, 0.9], [52.3, -5.4, 0.75],
     // Along the swing's limb and over its lowered end.
-    [61.7, -5.85, 0.8], [62.95, -5.45, 0.75], [63.95, -4.7, 0.62], [57.9, -6.25, 0.85], [59.7, -6.45, 0.85], [56.6, -6.0, 0.7],
-    // Low on the limb itself, where the frame sees them.
-    [57.3, -5.55, 0.5], [58.7, -5.6, 0.45], [61.9, -5.3, 0.5], [62.95, -4.95, 0.46], [63.55, -4.25, 0.4]
+    [61.7, -5.85, 0.8], [62.95, -5.45, 0.75], [57.9, -6.25, 0.85], [59.7, -6.45, 0.85], [56.6, -6.0, 0.7],
+    // Low on the limb itself, where the frame sees them. None out at the bend over its lowered end: the swing's close
+    // frame draws back past it, and a clump cut by the frame's top there, solid among the sprays' single leaves, read
+    // as a blob, a glitch.
+    [57.3, -5.55, 0.5], [58.7, -5.6, 0.45], [61.9, -5.3, 0.5]
   ]
   return spots.map(([x, y, r], i) => {
     const lobes: [number, number, number][] = [[0, -0.1 * r, 0.5 * r], [-0.3 * r, 0.05 * r, 0.42 * r], [0.3 * r, 0.05 * r, 0.42 * r]]
@@ -227,9 +232,19 @@ const CLUMPS: Clump[] = (() => {
       const rr = r * (0.2 + 0.14 * hash(i, j, 42))
       lobes.push([Math.cos(a) * r * (0.78 - rr / r * 0.6), Math.sin(a) * r * (0.5 - rr / r * 0.4), rr])
     }
-    return { x, y, r, lobes, need: 0.12 + 0.82 * hash(i, 9, 1) }
+    // The crown fills and thins clump by clump; the leaves along the swing's limb come and go together, as its
+    // hanging sprays do, or in the spring one clump of them hangs alone at the limb's bend when the frame draws back.
+    return { x, y, r, lobes, need: i >= LIMB_CLUMPS ? 0.12 : 0.12 + 0.82 * hash(i, 9, 1) }
   })
 })()
+
+/** The tree whole, crown and trunk, in world cells: what Overview must take in on the lawn besides the swing. */
+export const LAWN_TREE = {
+  x0: Math.min(TRUNK_X - 1.1, ...CLUMPS.map((c) => c.x - c.r)),
+  y0: Math.min(...CLUMPS.map((c) => c.y - c.r)),
+  x1: Math.max(...CLUMPS.map((c) => c.x + c.r)),
+  y1: Math.max(...CLUMPS.map((c) => c.y + c.r)),
+}
 
 /** The hanging leafy twigs at the limb's end, which she reaches at the front of her arc: rest positions. */
 interface Spray {
@@ -455,8 +470,10 @@ function drawSky(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
     const y = top + h * (0.2 + 0.2 * i + 0.05 * hash(i, 8, 1))
     const len = (3 + 2.5 * hash(i, 8, 2)) * s
     const drift = t * (0.04 + 0.02 * hash(i, 8, 3))
-    for (let j = -2; j <= 2; j++) {
-      const cx = dx * 1.1 + ((((j * 9.1 + drift + i * 3.7 + hash(i, 8, 4) * 6) % 45) + 45) % 45) - 22 + SEAM_CAM[0]
+    // Each bank also drawn a period either side, so one wrapping round is already coming in at the other end.
+    for (let n = 0; n < 15; n++) {
+      const j = (n % 5) - 2
+      const cx = dx * 1.1 + ((((j * 9.1 + drift + i * 3.7 + hash(i, 8, 4) * 6) % 45) + 45) % 45) - 22 + SEAM_CAM[0] + 45 * (Math.floor(n / 5) - 1)
       if (cx < f.x0 - len || cx > f.x1 + len) continue
       ctx.save()
       ctx.translate(cx * k, y * k)
@@ -526,15 +543,16 @@ function drawFarShore(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
   haze.addColorStop(1, rgba(HOUSE.fog, 0.5 * L.fog))
   ctx.fillStyle = haze
   ctx.fillRect(x0 * k, (shore - 0.35 * s) * k, (x1 - x0) * k, 0.35 * s * k)
-  // Pines: narrow spires in stands and gaps, a far row and a nearer, darker one.
+  // Pines: narrow spires in stands and gaps, a far row and a nearer, darker one. Each stands at its own place on the
+  // shore (the nth of a row, a little off its mark), so the same tree is drawn there every frame as the view slides.
   const pines = (color: string, base: number, hMin: number, hMax: number, seed: number) => {
     ctx.fillStyle = color
     ctx.beginPath()
     ctx.moveTo(x0 * k, (base + 0.02) * k)
-    let v = (x0 - dx) / s
-    const v1 = (x1 - dx) / s
-    while (v <= v1) {
-      const n = Math.floor(v * 30)
+    const gap = 0.04
+    const n1 = Math.ceil((x1 - dx) / s / gap) + 1
+    for (let n = Math.floor((x0 - dx) / s / gap) - 1; n <= n1; n++) {
+      const v = gap * (n + 0.6 * (hash(n, seed, 5) - 0.5))
       const clump = 0.5 + 0.5 * Math.sin(v * 0.9 + seed) * Math.sin(v * 0.37 + seed * 2) + 0.25 * Math.sin(v * 2.3 + seed * 3)
       const h = (hMin + (hMax - hMin) * hash(n, seed, 2) ** 1.4) * (0.35 + 0.8 * Math.max(0, Math.min(1.2, clump))) * s
       const w = h * (0.26 + 0.1 * hash(n, seed, 3))
@@ -546,7 +564,6 @@ function drawFarShore(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
       ctx.lineTo((x + w * 0.3) * k, (base - h * 0.45) * k)
       ctx.lineTo((x + w * 0.18) * k, (base - h * 0.45) * k)
       ctx.lineTo((x + w * 0.5) * k, (base - 0.01) * k)
-      v += 0.04 * (0.6 + 0.8 * hash(n, seed, 5))
     }
     ctx.lineTo(x1 * k, (base + 0.02) * k)
     ctx.closePath()
@@ -580,8 +597,10 @@ function drawFarShore(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
     const y = shore + (0.03 + 0.09 * i) * s
     const len = (2.2 + 1.8 * hash(i, 3, 1)) * s
     const drift = t * (0.03 + 0.015 * hash(i, 3, 2))
-    for (let j = -3; j <= 3; j++) {
-      const cx = dx + ((((j * 5.3 + drift + i * 1.9 + hash(i, 3, 3) * 5) % 37) + 37) % 37) - 18 + SEAM_CAM[0]
+    // A period either side too, so a bank wrapping round never jumps where it is seen.
+    for (let n = 0; n < 21; n++) {
+      const j = (n % 7) - 3
+      const cx = dx + ((((j * 5.3 + drift + i * 1.9 + hash(i, 3, 3) * 5) % 37) + 37) % 37) - 18 + SEAM_CAM[0] + 37 * (Math.floor(n / 7) - 1)
       if (cx < x0 - len || cx > x1 + len) continue
       ctx.save()
       ctx.translate(cx * k, y * k)
@@ -622,7 +641,7 @@ function drawHouseLight(ctx: Ctx, k: number, f: Frame, L: Look): void {
 }
 
 /** The lawn: the flat by the swing, running on toward the water, and the bank up to the terrace behind. */
-function drawLawn(ctx: Ctx, k: number, f: Frame, L: Look): void {
+function drawLawn(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
   const x0 = Math.min(44, Math.floor(f.x0) - 2)
   const x1 = Math.max(76, Math.ceil(f.x1) + 2)
   const bottom = Math.max(4, f.y1 + 2)
@@ -662,35 +681,86 @@ function drawLawn(ctx: Ctx, k: number, f: Frame, L: Look): void {
     ctx.lineTo((x + 0.1) * k, (y - h * 0.7) * k)
   }
   ctx.stroke()
+  drawTurf(ctx, k, f, L, t)
+}
+
+/**
+ * The lawn toward us, which was one flat green: a scatter of grass in rows that open out as they come nearer (the
+ * ground seen a little from above), leaning with the air off the lake. Sparse and low in contrast: the ground, not a
+ * thing to look at.
+ */
+function drawTurf(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
+  if (f.y1 < R + 0.2) return
+  const dark = rgba(mix(L.grassDark, HOUSE.night, 0.15), 0.28)
+  const pale = rgba(mix(L.grass, HOUSE.linen, 0.25 + 0.4 * L.snow), 0.3)
+  const darkPath = new Path2D()
+  const palePath = new Path2D()
+  let y = R + 0.16
+  let j = 0
+  ctx.save()
+  ctx.lineCap = 'round'
+  while (y < f.y1 + 0.3 && j < 50) {
+    const depth = Math.min(3, y - R)
+    const dx = 0.2 + 0.16 * depth
+    const size = 0.05 + 0.06 * depth
+    for (let i = Math.floor(f.x0 / dx) - 1; i <= Math.ceil(f.x1 / dx) + 1; i++) {
+      if (hash(i, j, 61) > 0.42) continue
+      const x = i * dx + (hash(i, j, 62) - 0.5) * dx
+      const by = y + (hash(i, j, 63) - 0.5) * 0.06
+      // Only on the lawn's face, never up over the bank's top edge.
+      if (by < surface(x) + 0.1) continue
+      const h = size * (0.6 + 0.8 * hash(i, j, 64))
+      const lean = 0.25 * Math.sin(t * 0.6 + x * 0.45 + j) + 0.1
+      const path = hash(i, j, 65) > 0.55 ? palePath : darkPath
+      for (let b = 0; b < 2; b++) {
+        const bx = x + (b - 0.5) * h * 0.3
+        const bl = lean + (b - 0.5) * 0.6
+        path.moveTo(bx * k, by * k)
+        path.quadraticCurveTo((bx + bl * h * 0.35) * k, (by - h * 0.6) * k, (bx + bl * h) * k, (by - h) * k)
+      }
+    }
+    y += 0.14 + 0.1 * depth
+    j++
+  }
+  ctx.lineWidth = Math.max(0.6, 0.02 * k)
+  ctx.strokeStyle = dark
+  ctx.stroke(darkPath)
+  ctx.strokeStyle = pale
+  ctx.stroke(palePath)
+  ctx.restore()
 }
 
 function drawCanopy(ctx: Ctx, k: number, L: Look, wind: number, back: boolean): void {
   const d = L.density
   if (d < 0.01) return
   const on = CLUMPS.filter((c) => c.need <= d + 1e-3)
+  // Each clump grows in from its buds as the leaves come, rather than being there whole the moment they pass its
+  // share: whole at once, the lone clump at the limb's bend popped into the top of the frame in the spring and stayed,
+  // a stray green blob.
+  const g = (c: Clump) => 0.25 + 0.75 * Math.min(1, (d - c.need) / 0.15)
   if (back) {
     // The shade under the crown.
     ctx.fillStyle = L.leafDark
     ctx.beginPath()
-    for (const c of on) lobesPath(ctx, k, c, c.r * 0.12 + wind * 0.5, c.r * 0.12, 1.02)
+    for (const c of on) lobesPath(ctx, k, c, c.r * 0.12 + wind * 0.5, c.r * 0.12, 1.02 * g(c))
     ctx.fill()
     return
   }
   ctx.fillStyle = L.leaf
   ctx.beginPath()
-  for (const c of on) lobesPath(ctx, k, c, wind, 0, 0.9)
+  for (const c of on) lobesPath(ctx, k, c, wind, 0, 0.9 * g(c))
   ctx.fill()
   // The light on each clump's upper side: the clump lit, less itself moved down and along.
   for (const c of on) {
     ctx.save()
     ctx.beginPath()
-    lobesPath(ctx, k, c, wind, 0, 0.9)
+    lobesPath(ctx, k, c, wind, 0, 0.9 * g(c))
     ctx.clip()
     ctx.fillStyle = L.leafLight
     ctx.fillRect((c.x - c.r * 2) * k, (c.y - c.r * 2) * k, c.r * 4 * k, c.r * 4 * k)
     ctx.fillStyle = L.leaf
     ctx.beginPath()
-    lobesPath(ctx, k, c, wind + c.r * 0.16, c.r * 0.2, 0.9)
+    lobesPath(ctx, k, c, wind + c.r * 0.16, c.r * 0.2, 0.9 * g(c))
     ctx.fill()
     ctx.restore()
   }
@@ -869,14 +939,22 @@ function drawSwing(ctx: Ctx, k: number, t: number, near: boolean): void {
 
 /* ------------------------------------------------------------------ the set */
 
+/**
+ * Whether the lawn is the place on the stage. The lawn and the lake house are one world, and the lawn paints its sky
+ * and grass across the whole frame; seen from away (the Overview camera has the house and the lawn in one frame) it
+ * would paint over the room while she is in it. So it draws only while a lawn leg has her: the swing and what she sees.
+ */
+const onLawn = (t: number): boolean => (t >= SEAM.swing && t < SEAM.bed) || (t >= SEAM.sees && t < SEAM.fog2)
+
 export function lawnDraw(p: p5, k: number, t: number): void {
+  if (!onLawn(t)) return
   const ctx = p.drawingContext as Ctx
   const f = frame(p, k)
   const L = lookAt(t)
   ctx.save()
   drawSky(ctx, k, f, L, t)
   drawFarShore(ctx, k, f, L, t)
-  drawLawn(ctx, k, f, L)
+  drawLawn(ctx, k, f, L, t)
   drawHouseLight(ctx, k, f, L)
   drawShadows(ctx, k, t, L)
   drawTree(ctx, k, L, t)
@@ -887,6 +965,7 @@ export function lawnDraw(p: p5, k: number, t: number): void {
 }
 
 export function lawnOver(p: p5, k: number, t: number): void {
+  if (!onLawn(t)) return
   const ctx = p.drawingContext as Ctx
   ctx.save()
   drawSwing(ctx, k, t, true)

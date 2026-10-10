@@ -117,9 +117,10 @@ export function drawHeli(p: p5, k: number, t: number): void {
   ctx.save()
   ctx.translate((at[0] + COM[0]) * k, (at[1] + COM[1]) * k)
   ctx.rotate(pitch)
-  // Climbing away it turns round to fly off nose first: seen from the side, its length narrows and opens again.
+  // Climbing away it turns round to fly off nose first: seen from the side, its length narrows and opens again. Never
+  // narrower than a third: squeezed to a sliver mid-turn, its body, skid and tail stood on end and it read as falling.
   const turn = Math.cos(Math.PI * smooth(t, AWAY + 0.25, AWAY + 1.45))
-  ctx.scale(Math.sign(turn || 1) * Math.max(0.05, Math.abs(turn)), 1)
+  ctx.scale(Math.sign(turn || 1) * Math.max(0.35, Math.abs(turn)), 1)
   ctx.translate(-COM[0] * k, -COM[1] * k)
   const K = k
   const P = (x: number, y: number): [number, number] => [x * K, y * K]

@@ -43,7 +43,11 @@ export const voidSky = scenery<VoidState>({
     // Stars, three depths. Each layer is a tiling of cells with a star or none, offset by how far it drifts.
     p.noStroke()
     const shown = smooth(s.deck - f.cy, 2, 10)
-    for (let l = 0; l < LAYERS.length; l++) {
+    // A star is a few pixels at any scale, so at Overview's (2 to 13 px a cell, the whole world in the frame) they would
+    // be a solid speckle, and 25,000 fills a frame (4 frames a second). They go below 14 px a cell; no real view comes
+    // that far out (the widest, on a 320 px phone, is 17).
+    const sparse = smooth(k, 10, 14)
+    for (let l = 0; sparse > 0 && l < LAYERS.length; l++) {
       const L = LAYERS[l]
       const ox = f.cx * (1 - L.f)
       const oy = f.cy * (1 - L.f)
@@ -57,7 +61,7 @@ export const voidSky = scenery<VoidState>({
           const x = ox + (i + hash(i, j, l * 7 + 2)) * L.cell
           const y = oy + (j + hash(i, j, l * 7 + 3)) * L.cell
           const twinkle = 0.88 + 0.12 * Math.sin(t * (0.7 + hash(i, j, l)) + i)
-          const strength = L.a * shown * twinkle * (0.5 + hash(i, j, l * 7 + 4) * 0.5)
+          const strength = L.a * shown * sparse * twinkle * (0.5 + hash(i, j, l * 7 + 4) * 0.5)
           const size = L.size * (0.6 + hash(i, j, l * 7 + 5) * 0.7)
           const tint = hash(i, j, 31) < 0.3 ? DARK.ice : '#F4EEDF'
           // Only the nearest, brightest stars bloom; the rest stay pinpoints.

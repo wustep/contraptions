@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, mixHex, type Pt } from '../../../../../parts'
-import { beam, box, carried, frame, glow, part, rgba, ring, smooth, type Companion, type Ctx } from '../kit'
+import { beam, box, carried, frame, glow, hash, part, rgba, ring, smooth, type Companion, type Ctx } from '../kit'
 import { AT, snap } from '../music'
 import { STUDIO_MAT as M } from '../worlds'
 
@@ -82,6 +82,47 @@ const MOUNTAIN: Pt[] = [
 const RIDGE: Pt[] = [
   [-10, -5.2], [-6, -6.8], [-2, -7.6], [2, -8.8], [6, -9.3], [9, -8.6], [24, -8.2], [28, -9.6], [32, -10.3], [36, -9.1], [40, -8.2], [44, -7.4],
 ].map(([x, y]) => [H(x), y])
+/** Lights in the houses low on the mountain, a few dabs of gold (Hollywood frame, landed). */
+const DUSK_LIGHTS: [number, number, number][] = Array.from({ length: 46 }, (_, i): [number, number, number] => {
+  const x = -8 + 50 * hash(i, 51)
+  // Under the mountain's line where it is, and in its lower part.
+  let top = -3.6
+  for (let j = 0; j + 1 < MOUNTAIN.length; j++) {
+    const [ax, ay] = MOUNTAIN[j]
+    const [bx, by] = MOUNTAIN[j + 1]
+    if (H(x) >= ax && H(x) <= bx) top = ay + ((by - ay) * (H(x) - ax)) / (bx - ax)
+  }
+  const y = Math.max(top + 1.2, -1.7 - 2.6 * hash(i, 52) ** 1.6)
+  return [H(x), y, 0.06 + 0.05 * hash(i, 53)]
+}).filter(([, y]) => y < -1.5)
+
+/** Palms along the foot of the painted mountain (Hollywood frame): where each stands, how tall, its lean. */
+const PALMS = Array.from({ length: 22 }, (_, i) => ({ x: -9 + i * 2.45 + 0.9 * (hash(i, 55) - 0.5), h: 1.6 + 1.1 * hash(i, 56), lean: (hash(i, 57) - 0.5) * 0.25 }))
+/** A palm painted flat: a thin curving trunk and a burst of fronds. */
+function paintedPalm(p: p5, k: number, x: number, foot: number, h: number, lean: number, fill: string): void {
+  const tx = x + lean * h
+  const ty = foot - h
+  p.noFill()
+  p.stroke(fill)
+  p.strokeWeight(Math.max(1, X(k, 0.07)))
+  p.beginShape()
+  p.vertex(X(k, x), X(k, foot))
+  p.quadraticVertex(X(k, x + lean * h * 0.3), X(k, foot - h * 0.55), X(k, tx), X(k, ty))
+  p.endShape()
+  p.strokeWeight(Math.max(1, X(k, 0.05)))
+  for (let j = 0; j < 7; j++) {
+    const a = -Math.PI / 2 + (j - 3) * 0.48
+    const L = 0.55 + 0.12 * Math.cos(j * 1.3)
+    const ex = tx + Math.cos(a) * L
+    const ey = ty + Math.sin(a) * L * 0.6 + 0.2 * Math.abs(j - 3) * 0.12
+    p.beginShape()
+    p.vertex(X(k, tx), X(k, ty))
+    p.quadraticVertex(X(k, tx + Math.cos(a) * L * 0.5), X(k, ty + Math.sin(a) * L * 0.5 - 0.12), X(k, ex), X(k, ey + 0.15))
+    p.endShape()
+  }
+  p.noStroke()
+}
+
 /** The cloth's painted clouds: long banks low and high in the sky, each a few flat lobes (Hollywood frame, landed). */
 const CLOUDS: { x: number; y: number; fill: string; lobes: [number, number, number, number][] }[] = [
   { x: 1.5, y: -12.6, fill: mixHex(M.skyTop, M.skyLow, 0.55), lobes: [[0, 0, 2.6, 0.32], [1.6, -0.25, 1.5, 0.3], [-1.4, 0.1, 1.2, 0.22]] },
@@ -142,7 +183,7 @@ export function monotone(knots: [number, number][]): (t: number) => number {
 /** The cut-outs, where they stand (this frame): each a hair ahead of where the two of them are when it rises. */
 type Kind = 'palm' | 'towers' | 'tower' | 'lamp'
 const CUTS: { kind: Kind; x: number; at: number }[] = [
-  { kind: 'palm', x: 1.05, at: POP_AT[0] },
+  { kind: 'palm', x: 1.32, at: POP_AT[0] },
   { kind: 'towers', x: 2.62, at: POP_AT[1] },
   { kind: 'tower', x: 4.2, at: POP_AT[2] },
   { kind: 'lamp', x: 5.72, at: POP_AT[3] },
@@ -278,17 +319,21 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   if (x1 <= x0 || bottom <= y0) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
-  // The painted sky: violet overhead to rose at the horizon.
-  const g = ctx.createLinearGradient(0, X(k, -14 + dy), 0, X(k, -1.5 + dy))
-  g.addColorStop(0, M.skyTop)
-  g.addColorStop(0.5, mixHex(M.skyTop, M.skyLow, 0.42))
-  g.addColorStop(1, M.skyLow)
+  // The painted sky at the magic hour: indigo overhead, violet, magenta, coral, and gold along the horizon, laid
+  // on in bands the way a scenic painter does it, so every height the camera climbs to has its own colour.
+  const g = ctx.createLinearGradient(0, X(k, -17 + dy), 0, X(k, -1.2 + dy))
+  g.addColorStop(0, M.skyHigh)
+  g.addColorStop(0.3, M.skyTop)
+  g.addColorStop(0.55, M.skyMid)
+  g.addColorStop(0.78, M.skyCoral)
+  g.addColorStop(1, M.horizon)
   ctx.fillStyle = g
   ctx.fillRect(X(k, x0), X(k, y0), X(k, x1 - x0), X(k, bottom - y0))
   ctx.restore()
   // The painted sun, going down behind the far ridge: a flat disc of pale gold, the hour the film is named for.
+  glow(p, k, H(21.8), -9.4 + dy, 7.5, M.horizon, 0.45)
   p.noStroke()
-  p.fill(mixHex(M.bush, M.skyLow, 0.35))
+  p.fill(mixHex(M.bush, M.skyCoral, 0.35))
   p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 4.4))
   p.fill(mixHex(M.bush, M.flat, 0.45))
   p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 3.3))
@@ -307,13 +352,66 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
     p.vertex(X(k, pts[pts.length - 1][0]), X(k, bottom))
     p.endShape(p.CLOSE)
   }
-  ridge(RIDGE, mixHex(M.hill, M.skyLow, 0.5))
-  ridge(MOUNTAIN, mixHex(M.hill, M.skyTop, 0.5))
+  ridge(RIDGE, M.ridge)
+  // The mountain: warmer high up, where the sunset catches it, deepening toward its foot; painted, so its shading is
+  // a few soft bands following its shape, and the first lights of the houses on it coming on at dusk.
+  const mg = ctx.createLinearGradient(0, X(k, -11.9 + dy), 0, X(k, bottom))
+  mg.addColorStop(0, mixHex(M.mountain, M.skyMid, 0.42))
+  mg.addColorStop(0.45, M.mountain)
+  mg.addColorStop(1, mixHex(M.mountain, M.hillDeep, 0.55))
+  p.fill(M.mountain)
+  ctx.fillStyle = mg
+  p.beginShape()
+  p.vertex(X(k, MOUNTAIN[0][0]), X(k, bottom))
+  for (const [x, y] of MOUNTAIN) p.vertex(X(k, x), X(k, y + dy))
+  p.vertex(X(k, MOUNTAIN[MOUNTAIN.length - 1][0]), X(k, bottom))
+  p.endShape(p.CLOSE)
+  p.noFill()
+  for (const [down, a] of [[1.1, 0.22], [2.6, 0.16], [4.4, 0.12]] as const) {
+    p.stroke(rgba(M.skyMid, a))
+    p.strokeWeight(X(k, 0.09))
+    p.beginShape()
+    for (const [x, y] of MOUNTAIN) p.curveVertex(X(k, x), X(k, Math.min(bottom - 0.4, y + dy + down * (1 + 0.15 * Math.sin(x * 0.7)))))
+    p.endShape()
+  }
+  // The observatory on the far ridge, catching the last of the sun: a long low building, a dome at each end and the
+  // great one in the middle. Painted flat, a shade darker than the ridge, its domes rimmed with the sunset.
+  {
+    const ox = H(4.6)
+    let oy = -8.9
+    for (let j = 0; j + 1 < RIDGE.length; j++) {
+      const [ax, ay] = RIDGE[j]
+      const [bx, by] = RIDGE[j + 1]
+      if (ox >= ax && ox <= bx) oy = ay + ((by - ay) * (ox - ax)) / (bx - ax)
+    }
+    const base = oy + dy + 0.05
+    const wall = mixHex(M.ridge, M.mountain, 0.55)
+    p.noStroke()
+    p.fill(wall)
+    p.rect(X(k, ox - 1.5), X(k, base - 0.42), X(k, 3.0), X(k, 0.47))
+    for (const [dx, r] of [[-1.2, 0.26], [1.2, 0.26], [0, 0.5]] as const) {
+      p.fill(wall)
+      p.rect(X(k, ox + dx - r * 0.75), X(k, base - 0.42 - (dx ? 0.18 : 0.3)), X(k, r * 1.5), X(k, dx ? 0.18 : 0.3))
+      p.arc(X(k, ox + dx), X(k, base - 0.42 - (dx ? 0.18 : 0.3)), X(k, r * 1.7), X(k, r * 1.7), Math.PI, Math.PI * 2)
+      p.noFill()
+      p.stroke(rgba(M.horizon, 0.55))
+      p.strokeWeight(Math.max(1, X(k, 0.035)))
+      p.arc(X(k, ox + dx), X(k, base - 0.42 - (dx ? 0.18 : 0.3)), X(k, r * 1.7), X(k, r * 1.7), Math.PI * 1.15, Math.PI * 1.85)
+      p.noStroke()
+    }
+  }
+  // A row of palms at the mountain's foot, painted dark against the glow: the city the number is in.
+  for (const pm of PALMS) paintedPalm(p, k, H(pm.x), -1.55 + dy, pm.h, pm.lean, mixHex(M.hillDeep, M.mountain, 0.35))
+  p.noStroke()
+  for (const [x, y, r] of DUSK_LIGHTS) {
+    p.fill(rgba(M.horizon, 0.75))
+    p.circle(X(k, x), X(k, y + dy), X(k, r))
+  }
   // A soft band of rose light low on the cloth, behind the set: the painted sunset.
   ctx.save()
   const band = ctx.createLinearGradient(0, X(k, -3.4 + dy), 0, X(k, bottom))
-  band.addColorStop(0, rgba(M.skyLow, 0))
-  band.addColorStop(1, rgba(M.skyLow, 0.55))
+  band.addColorStop(0, rgba(M.skyCoral, 0))
+  band.addColorStop(1, rgba(M.horizon, 0.5))
   ctx.fillStyle = band
   ctx.fillRect(X(k, x0), X(k, -3.4 + dy), X(k, x1 - x0), X(k, bottom + 3.4 - dy))
   ctx.restore()
@@ -323,7 +421,7 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
     p.translate(X(k, H(b.x)), X(k, b.y + dy))
     p.rotate(b.tilt)
     p.noStroke()
-    p.fill(mixHex(M.sign, M.hill, 0.42))
+    p.fill(mixHex(M.sign, M.mountain, 0.42))
     p.rect(X(k, -b.w / 2), X(k, -b.h), X(k, b.w), X(k, b.h))
     p.pop()
   }
@@ -392,6 +490,21 @@ function drawFloor(p: p5, c: Ctx, t: number): void {
   p.line(X(k, x0), X(k, front), X(k, x1), X(k, front))
   p.stroke(rgba(ink, 0.35))
   p.line(X(k, x0), X(k, Y_BACK), X(k, x1), X(k, Y_BACK))
+  // Footlights along the lip: it is a stage, and the number is played to a house. They come on with the colour, the
+  // run going out from the door both ways a moment behind it, and their light falls warm down the dark face.
+  if (reach > 0) {
+    const step = 0.9
+    for (let x = Math.ceil((x0 + 0.2) / step) * step; x < x1 - 0.2; x += step) {
+      const on = smooth(reach - Math.abs(x - DOOR_X), 0.6, 2.2)
+      if (on <= 0.01) continue
+      glow(p, k, x, front + 0.08, 0.75, M.lamp, 0.22 * on, 1.1, 1.0)
+      solid(p, ink, weight * 0.45, mixHex(M.skyTop, ink, 0.4))
+      p.arc(X(k, x), X(k, front + 0.02), X(k, 0.3), X(k, 0.22), Math.PI, Math.PI * 2, p.CHORD)
+      p.noStroke()
+      p.fill(rgba(M.lamp, 0.35 + 0.6 * on))
+      p.ellipse(X(k, x), X(k, front + 0.01), X(k, 0.16), X(k, 0.07))
+    }
+  }
 }
 
 /** The fly battens overhead and the work lights on them: a sound stage's ceiling, gone once the cloth is down. */
@@ -408,6 +521,86 @@ function drawGrid(p: p5, c: Ctx, t: number): void {
     solid(p, ink, weight * 0.6, M.shadow)
     p.rect(X(k, x + 0.55), X(k, y + 0.04), X(k, 0.26), X(k, 0.2), X(k, 0.04))
     beam(p, k, x + 0.68, y + 0.24, x + 0.95, Y_BACK - 0.4, 0.2, 1.5, M.flat, 0.35)
+  }
+  // The specials: a lamp on the pipe over each cut-out, dark until its cut-out stands, then struck on with a flash and
+  // left burning warm on it. The set is lit as it builds.
+  for (const cut of CUTS) {
+    const lx = cut.x + 0.25
+    const since = t - cut.at
+    const on = since < 0 ? 0 : 0.75 + 0.25 * Math.exp(-since / 0.35)
+    const flash = since < 0 ? 0 : Math.exp(-since / 0.12)
+    p.stroke(mixHex(M.shadow, ink, 0.5))
+    p.strokeWeight(Math.max(1, weight * 0.6))
+    p.line(X(k, lx), X(k, y), X(k, lx), X(k, y + 0.16))
+    if (on > 0) beam(p, k, lx, y + 0.38, cut.x, HINGE - 0.1, 0.16, 1.9, M.lamp, 0.2 * on + 0.25 * flash)
+    p.push()
+    p.translate(X(k, lx), X(k, y + 0.24))
+    p.rotate(Math.atan2(HINGE - y, cut.x - lx) - Math.PI / 2)
+    solid(p, ink, weight * 0.6, mixHex(M.shadow, ink, 0.55))
+    p.rect(X(k, -0.12), X(k, -0.1), X(k, 0.24), X(k, 0.24), X(k, 0.05))
+    p.noStroke()
+    p.fill(on > 0 ? mixHex(M.lamp, M.flat, 0.5 * flash) : mixHex(M.shadow, ink, 0.3))
+    p.ellipse(0, X(k, 0.15), X(k, 0.2), X(k, 0.06))
+    p.pop()
+    if (flash > 0.02) glow(p, k, lx, y + 0.4, 0.6, M.lamp, 0.5 * flash)
+  }
+}
+
+/**
+ * The studio's camera: an old blimped camera on a pedestal by the door's flat, its two magazine reels up top. It is
+ * shooting them: from the moment the white lifts its red light is on, and its lens turns to follow him along the
+ * floor. The cloth comes down over it with everything else of the studio.
+ */
+const CAM: [number, number] = [9.55, Y_BACK]
+function drawCamera(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const body = mixHex(M.shadow, ink, 0.62)
+  const metal = mixHex(M.shadow, ink, 0.4)
+  const [cx, foot] = CAM
+  const head = foot - 1.55
+  // The pedestal: a column on a three-wheeled base.
+  solid(p, ink, weight * 0.7, metal)
+  p.rect(X(k, cx - 0.06), X(k, head + 0.15), X(k, 0.12), X(k, foot - head - 0.3))
+  p.rect(X(k, cx - 0.42), X(k, foot - 0.2), X(k, 0.84), X(k, 0.08), X(k, 0.03))
+  for (const dx of [-0.36, 0, 0.36]) {
+    solid(p, ink, weight * 0.6, body)
+    p.circle(X(k, cx + dx), X(k, foot - 0.06), X(k, 0.12))
+  }
+  // The head, turned to him.
+  const tx = sebX(t)
+  const aim = Math.max(-0.5, Math.min(0.35, Math.atan2(-0.15 - head, tx - cx))) + Math.PI
+  p.push()
+  p.translate(X(k, cx), X(k, head))
+  p.rotate(aim)
+  // (Drawn facing +x, then turned round to face back along the floor toward him.)
+  solid(p, ink, weight * 0.8, body)
+  p.rect(X(k, -0.35), X(k, -0.22), X(k, 0.7), X(k, 0.42), X(k, 0.06))
+  solid(p, ink, weight * 0.7, metal)
+  p.rect(X(k, 0.35), X(k, -0.12), X(k, 0.24), X(k, 0.22), X(k, 0.02))
+  solid(p, ink, weight * 0.7, body)
+  p.rect(X(k, 0.59), X(k, -0.15), X(k, 0.08), X(k, 0.28), X(k, 0.02))
+  // The reels, turning as it runs.
+  const run = smooth(t, BEGIN + 0.6, BEGIN + 1.2)
+  for (const [rx, r] of [[-0.18, 0.2], [0.17, 0.2]] as const) {
+    solid(p, ink, weight * 0.7, body)
+    p.circle(X(k, rx), X(k, -0.22 - r), X(k, 2 * r))
+    p.stroke(metal)
+    p.strokeWeight(Math.max(1, weight * 0.6))
+    const a = t * 3.2 * run
+    for (let j = 0; j < 3; j++) {
+      const th = a + (j * Math.PI * 2) / 3
+      p.line(X(k, rx), X(k, -0.22 - r), X(k, rx + Math.cos(th) * r * 0.75), X(k, -0.22 - r + Math.sin(th) * r * 0.75))
+    }
+  }
+  p.pop()
+  // Its red light, on while it runs.
+  const tally = run * (0.85 + 0.15 * Math.sin(t * 5))
+  if (tally > 0.01) {
+    glow(p, k, cx + 0.02, head - 0.33, 0.28, M.door, 0.55 * tally)
+    p.noStroke()
+    p.fill(mixHex(mixHex(M.shadow, ink, 0.4), M.door, tally))
+    p.circle(X(k, cx + 0.02), X(k, head - 0.33), X(k, 0.08))
   }
 }
 
@@ -565,6 +758,7 @@ function drawStudio(p: p5, s: StudioState, c: Ctx): void {
   p.ellipseMode(p.CENTER)
   drawGrid(p, c, t)
   drawFlats(p, c, t)
+  drawCamera(p, c, t)
   drawCloth(p, c, t)
   drawFloor(p, c, t)
   drawSpill(p, c, t)

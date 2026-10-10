@@ -1,21 +1,25 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { mix } from '../cast'
 import { box, part, scenery, type Company, type Part, type PartShot, type Slot } from '../kit'
-import { HALF, LAST, SEAM, SWELL, TONIC } from '../music'
+import { HALF, LAST, PLAGAL, SEAM, SWELL, TONIC } from '../music'
 import type { ShellSpot } from '../seams'
-import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME } from '../worlds'
+import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME, IAN, LOUISE } from '../worlds'
 import { CLOCK_HULL, CRADLE_HULL, BED_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawTV, drawTVGlow, tvShell } from './props'
-import { drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
+import { drawBallMirror, drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
 import {
   EMPTY_DX,
   NEAR,
   TURN,
   ianLook,
+  ianAfter,
+  ianAfterLook,
+  IAN_GONE,
   BEGIN,
   BEDSIDE_X,
   CLOCK_STRIKES,
   DAWN_PUSHES,
   GONE as GONE_AT,
+  going,
   HOME_PUSHES,
   HOME_X,
   HUG_T,
@@ -80,12 +84,13 @@ export const houseSet = scenery<null>({
     const lx = louiseX(T)
     if (lx !== null) balls.push([lx, 0])
     const theta = cradleTheta(T)
-    // Before the cut the empty cradle stands a little way off, clear of Ian; from it, at its dawn place.
+    // The cradle at its dawn place throughout, empty until Hannah comes into it.
     const dx = era === 'home' && T < BEGIN ? EMPTY_DX : 0
     if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)).map(([x, y]) => [x + dx, y] as Pt))
     if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL)
     if (era === 'news') shadows.push(TV_HULL)
     if (era === 'home' && T < BEGIN) balls.push([ianX(T), 0])
+    if (era === 'home' && T >= BEGIN && T < IAN_GONE) balls.push([ianAfter(T), 0])
     drawRoom(p, k, T)
     if (era === 'dawn' || era === 'home') {
       p.push()
@@ -99,6 +104,8 @@ export const houseSet = scenery<null>({
     }
     if (era === 'news') drawTV(p, k, T, L)
     drawMirror(p, k, T)
+    // Louise first, then Ian when he is here: the same order `balls` has them in.
+    drawBallMirror(p, k, T, balls.map((b, i) => [b, i === 0 ? LOUISE : IAN] as [Pt, string]))
     drawFloorLight(p, k, T, shadows, balls)
     if (era === 'news') drawTVGlow(p, k, T)
     drawVignette(p, k, T)
@@ -225,8 +232,7 @@ export const bed: Part<HouseState> = part<HouseState>(
           // She turns toward her mother when she comes close. On the swell she goes: paler, and smaller, sinking into
           // the pillow she lies on, until there is nothing there.
           const look = -Math.PI / 2 - 0.2 - 0.9 * ss(t, 80.1, 81.6)
-          const fade = ss(t, GONE[0], GONE[1] - 0.1)
-          const sink = ss(t, GONE[0] + 0.3, GONE[1] - 0.05)
+          const { fade, sink } = going(t)
           const pale = mix(HOUSE.linen, HOUSE.linenShade, 0.4)
           const scale = r * (1 - 0.985 * sink)
           const bottom = PATIENT[1] + R * r
@@ -255,9 +261,12 @@ export const bed: Part<HouseState> = part<HouseState>(
       // The clock whole beside the bed while it runs down: its last notch and its pendulum settling on the swell.
       { t: 89.281, cells: 3.55, hold: w(1.95, -0.92) },
       { t: SWELL, cells: 3.45, hold: w(1.92, -0.9) },
-      { t: 94.6, cells: 3.4, hold: w(1.8, -0.86) },
-      // Then in on her as she goes, and on the empty pillow.
-      { t: GONE[1], cells: 2.72, hold: w(0.95, -0.43) },
+      // Then in on her as she goes, close while she pales into the pillow, and held on it empty. (The push came after
+      // she had gone: she went in the wide, small under the clock, and the close-up found an empty bed.)
+      // The clock kept whole at the frame's right: pushed in past it, it was a sliver at the edge, and two fresh readers
+      // took it for gone, the clock vanished with her.
+      { t: 95.0, cells: 3.15, hold: w(1.95, -0.5) },
+      { t: GONE[1], cells: 3.1, hold: w(1.93, -0.48) },
       { t: SEAM.news, cells: 4.6, hold: w(BEDSIDE_X + 1.05, -0.95) },
     ]
   },
@@ -298,12 +307,30 @@ export const home: Part<HouseState> = part<HouseState>(
         at: (t) => ({ x: ianX(t) - o[0], y: -o[1], spin: ianLook(t) }),
       },
       {
+        who: 'ian',
+        from: BEGIN,
+        to: IAN_GONE,
+        at: (t) => ({ x: ianAfter(t) - o[0], y: -o[1], spin: ianAfterLook(t) }),
+      },
+      {
         who: 'hannah',
         from: BEGIN,
         to: slot.end + 1,
         at: (t) => {
+          // She comes into the cradle the way she went from the bed, backwards: out of the linen, paler and smaller,
+          // rising and filling into herself. Her foot stays where the cradle holds her.
           const [x, y] = babyAt(t)
-          return { x: x - o[0], y: y - o[1], scale: HANNAH_AGE.baby, spin: BABY_LOOK + cradleTheta(t), rim: BABY_RIM }
+          const { fade, sink } = going(t)
+          const pale = mix(HOUSE.linen, HOUSE.linenShade, 0.4)
+          const scale = HANNAH_AGE.baby * (1 - 0.985 * sink)
+          return {
+            x: x - o[0],
+            y: y + R * (HANNAH_AGE.baby - scale) - o[1],
+            scale,
+            spin: BABY_LOOK + cradleTheta(t),
+            color: mix(HANNAH, pale, fade),
+            rim: mix(BABY_RIM, pale, fade),
+          }
         },
       },
     ]
@@ -320,11 +347,12 @@ export const home: Part<HouseState> = part<HouseState>(
       { t: HUG_T, cells: 3.1, hold: w(1.08, -0.53) },
       { t: TURN, cells: 3.0, hold: w(1.15, -0.51) },
       { t: NEAR, cells: 2.92, hold: w(1.22, -0.5) },
-      { t: BEGIN - 0.05, cells: 2.85, hold: w(1.26, -0.49) },
-      // The opening played backwards: the cut opens close on the cradle at dawn, Hannah in it (the dawn's closest
-      // framing); close through the last B-flat; then one long slow draw back, arriving on the first frame exactly on
-      // the last attack, and held there to the end.
-      { t: BEGIN, cells: 2.6, hold: w(0.7, -0.4), cut: true },
+      { t: BEGIN, cells: 2.85, hold: w(1.26, -0.49) },
+      // The opening played backwards: as Hannah comes, the camera goes in to the cradle, to the dawn's closest framing,
+      // over the chord; close through the last B-flat; then one long slow draw back, arriving on the first frame
+      // exactly on the last attack, and held there to the end. (It was a cut, onto nearly the same framing, and read as
+      // a slip in the edit.)
+      { t: PLAGAL, cells: 2.6, hold: w(0.7, -0.4) },
       { t: TONIC, cells: 2.7, hold: w(0.69, -0.41) },
       { t: LAST, cells: 4.6, hold: first },
       { t: slot.end, cells: 4.6, hold: first },

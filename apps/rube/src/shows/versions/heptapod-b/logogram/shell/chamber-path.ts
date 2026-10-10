@@ -179,8 +179,9 @@ export const IAN_REST = X_PALM - 2.95
 /**
  * Ian: half a cell behind her out of the shaft; he stops when she does, and sets off after her a little later; he
  * stops short when Abbott comes out of the white, and waits until Costello has come too; then on, and stops a way
- * behind her. When the palm comes down on the glass he backs off a little, and further while the ring is written,
- * out of shot. He never goes to the glass.
+ * behind her. When the palm comes down on the glass he backs off a little, out of shot while the ring is written;
+ * once it has closed he comes forward to stand a step behind her and watch her go into the white. He never goes to
+ * the glass.
  */
 function ianTrack(): Track {
   const pre: Stretch[] = [
@@ -203,12 +204,13 @@ function ianTrack(): Track {
     { until: 102.8 + cruise, v: 0.42 },
     { until: 102.8 + cruise + 1.7, v: 0 },
     { until: back, v: 0 },
-    { until: back + 0.5, v: -0.45 },
+    { until: back + 0.7, v: -0.95 },
     { until: back + 1.9, v: 0 },
-    // And, out of shot while the ring is written, further back again: he does not go through.
-    { until: 122.3, v: 0 },
-    { until: 123.3, v: -0.55 },
-    { until: 126.5, v: 0 },
+    // Out of shot while the ring is written; and when it has closed (126.131) he comes forward again, to the edge of
+    // the light a step behind her, and is there watching as the glass goes white. He does not go through.
+    { until: 126.2, v: 0 },
+    { until: 127.3, v: 1.65 },
+    { until: 129.2, v: 0 },
     { until: OUT + 1, v: 0 },
   ])
 }

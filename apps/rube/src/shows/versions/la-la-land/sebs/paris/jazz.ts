@@ -1,9 +1,11 @@
 import type { Pt } from '../../../../../parts'
-import { box, carried, part, route, type Way } from '../kit'
-import { AT } from '../music'
+import type p5 from 'p5'
+import { box, carried, frame, glow, hash, part, rgba, route, smooth, type Way } from '../kit'
+import { AT, paris } from '../music'
+import { CLUB_MAT as M } from '../worlds'
 import { hop } from '../physics'
 import {
-  BALLOONS, drawClub, drawLamp, FLASHES, HANDOFF, J0, LAND_X1, LEAVE, LIGHTS, MEET, MIA_STEPS, miaAt, SEESAW_T, seat, SLAM, SNARE_T,
+  BALLOONS, DARK, drawClub, drawLamp, FLASHES, KNOCK, PIVOT, SOLO_SOUNDING, HANDOFF, J0, LAND_X1, LEAVE, LIGHTS, MEET, MIA_STEPS, miaAt, SEESAW_T, seat, SLAM, SNARE_T,
   SOLO_LANDINGS, stepBall, STEP_T, VALVE_T,
 } from './jazz-club'
 
@@ -29,6 +31,94 @@ interface JazzState {
 /** Every strike: the door, the lights, the stair (his steps and hers), every end of the see-saw, the flashes, the balloons, the snare, the band's valves. */
 export const JAZZ_HITS: number[] = [...new Set([SLAM, LIGHTS, ...STEP_T, ...MIA_STEPS, ...SEESAW_T, ...FLASHES, BALLOONS, ...SNARE_T, ...VALVE_T.filter((t) => t < AT.trumpet)])].sort((a, b) => a - b)
 
+/**
+ * The house: the club is his, in Paris, and it is full. A row of them at the little tables nearest us, black against
+ * the room along the foot of the picture, nearer than anything else so they slide a little faster than it as the
+ * camera goes; the bulbs warm the tops of their heads, a candle and a glass glint on each table, and they nod on the
+ * band's beat, each in their own time. When the room goes dark for the trumpet they are only shapes, the spot's
+ * light just catching the heads nearest it.
+ */
+const HOUSE = Array.from({ length: 30 }, (_, i) => ({
+  x: -6 + i * 0.62 + 0.25 * (hash(i, 71) - 0.5),
+  size: 0.85 + 0.3 * hash(i, 72),
+  lag: 0.02 + 0.09 * hash(i, 73),
+  nods: hash(i, 74) < 0.7,
+  table: i % 3 === 1,
+}))
+const BEATS = Array.from({ length: 120 }, (_, k) => paris(k)).filter((b) => b > LIGHTS && b < DARK[0])
+/** How high the house's heads reach, in a frame `fh` cells tall whose foot is at `y1`: everything of the story stays above it. */
+export const houseTop = (y1: number, fh: number): number => y1 + 0.01 * fh - (0.075 + 0.03 + 0.006) * 1.25 * 1.15 * fh
+const LIT_FROM = LIGHTS - 0.2
+export const HOUSE_SPAN: [number, number] = [LIT_FROM, 268.3]
+
+/** How much the solo is sounding at `t` (0 in its rests): eased, so the house sways with phrases, not notes. */
+function playing(t: number): number {
+  let a = 0
+  for (let j = 0; j < 8; j++) if (SOLO_SOUNDING(t - j * 0.1)) a += 1 / 8
+  return a
+}
+
+function drawHouse(p: p5, k: number, t: number): void {
+  if (t < LIGHTS - 0.2 || t > 268.3) return
+  const f = frame(p, k)
+  const fh = f.y1 - f.y0
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const lit = smooth(t, LIGHTS - 0.1, LIGHTS + 0.3) * (1 - smooth(t, DARK[0], DARK[1]))
+  const dark = smooth(t, DARK[0], DARK[1])
+  for (const h of HOUSE) {
+    // Nearer than the room: it slides past faster.
+    const x = f.cx + (h.x - f.cx) * 1.35
+    if (x < f.x0 - 0.5 || x > f.x1 + 0.5) continue
+    const s = 1.25 * h.size * fh
+    let nod = 0
+    if (h.nods && lit > 0) for (const b of BEATS) { const d = t - b - h.lag; if (d > 0 && d < 0.4) nod = Math.max(nod, Math.exp(-d / 0.12)) }
+    // In the dark they listen: swaying slowly with the solo while it plays, still in its rests; and on the knock, as he
+    // slams the beam over and she rolls to him, they all lift at once, a held breath.
+    let sway = 0
+    let lift = 0
+    if (dark > 0) {
+      sway = dark * playing(t) * Math.sin(t * 1.6 + h.x * 0.9) * 0.012 * s
+      const k0 = t - KNOCK
+      lift = dark * (k0 < 0 ? 0 : Math.min(1, k0 / 0.12) * Math.exp(-Math.max(0, k0 - 0.4) / 1.4)) * 0.018 * s
+    }
+    const base = f.y1 + 0.01 * fh
+    const headY = base - 0.075 * s + 0.006 * s * nod - lift
+    const xh = x + sway
+    const r = 0.03 * s
+    ctx.fillStyle = rgba(M.black, 0.94)
+    ctx.beginPath()
+    ctx.ellipse(x * k, (base - 0.02 * s) * k, 0.07 * s * k, 0.045 * s * k, 0, Math.PI, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(xh * k, headY * k, r * k, 0, Math.PI * 2)
+    ctx.fill()
+    // Warm on the top of the head from the bulbs; in the dark, the spot just catching the nearest.
+    const near = Math.max(0, 1 - Math.abs(x - PIVOT[0]) / 2.2)
+    const rim = 0.45 * lit + 0.35 * dark * near
+    if (rim > 0.02) {
+      ctx.strokeStyle = rgba(lit > 0.5 ? M.bulb : M.spot, rim)
+      ctx.lineWidth = Math.max(1, 0.006 * s * k)
+      ctx.beginPath()
+      ctx.arc(xh * k, headY * k, r * k, Math.PI * 1.15, Math.PI * 1.85)
+      ctx.stroke()
+    }
+    if (h.table) {
+      const tx = x + 0.3 * s * 0.25
+      const ty = base - 0.05 * s
+      ctx.fillStyle = rgba(M.black, 0.96)
+      ctx.fillRect((tx - 0.05 * s) * k, ty * k, 0.1 * s * k, 0.008 * s * k)
+      const flame = (1 - 0.7 * dark) * (0.85 + 0.15 * Math.sin(t * 9 + h.x * 3))
+      glow(p, k, tx - 0.02 * s, ty - 0.012 * s, 0.05 * s, M.bulb, 0.5 * flame)
+      ctx.fillStyle = rgba(M.bulb, 0.9 * flame)
+      ctx.beginPath()
+      ctx.arc((tx - 0.02 * s) * k, (ty - 0.01 * s) * k, 0.004 * s * k, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = rgba(M.brass, 0.55 * flame)
+      ctx.fillRect((tx + 0.02 * s) * k, (ty - 0.02 * s) * k, 0.008 * s * k, 0.02 * s * k)
+    }
+  }
+}
+
 export const jazz = part<JazzState>(
   {
     name: 'jazz',
@@ -38,6 +128,9 @@ export const jazz = part<JazzState>(
       p.rectMode(p.CORNER)
       drawClub(p, c.k, c.weight, t)
       drawLamp(p, c.k, c.weight, t)
+    },
+    over(p, s, c) {
+      drawHouse(p, c.k, c.t + s.begin)
     },
   },
   (slot) => {
@@ -67,10 +160,11 @@ export const jazz = part<JazzState>(
     // Close on the band while he plays it alone: the see-saw big in frame, the trumpet over it, drifting along the kit.
     { t: SOLO_LANDINGS[1][0], cells: 3.75, hold: [4.5, 1.5] },
     { t: 222.6, cells: 3.55, hold: [4.75, 1.55] },
-    // Up to the landing for her premiere, the band still in the corner of the frame on the way.
+    // Up to the landing for her premiere, two levels in one frame: her by the door above, his see-saw still going in the
+    // corner below, so when the net lets go she comes down to someone.
     { t: 224.0, cells: 5.8, hold: [1.4, 0.3] },
-    { t: FLASHES[0] + 0.1, cells: 4.3, hold: [-0.85, -0.45] },
-    { t: FLASHES[5], cells: 4.5, hold: [-0.2, -0.45] },
+    { t: FLASHES[0] + 0.1, cells: 5.6, hold: [1.2, 0.5] },
+    { t: FLASHES[5], cells: 5.6, hold: [1.3, 0.55] },
     // The balloons go, and she comes down to him.
     { t: BALLOONS + 0.5, cells: 6.0, hold: [1.7, 0.2] },
     { t: 230.0, cells: 5.8, hold: [2.5, 0.7] },

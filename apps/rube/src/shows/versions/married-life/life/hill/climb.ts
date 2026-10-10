@@ -4,9 +4,10 @@ import { HALF } from '../cast'
 import { alpha, box, carried, part, smooth, type Company, type Pose } from '../kit'
 import { CUT } from '../music'
 import { BASKET, drawBasket } from '../props/basket'
+import { drawTicket } from '../inside/ties-set'
 import { CUTS } from '../seams'
 import { HILL, HOME, INK } from '../worlds'
-import { autumn, LANE_Y, ridge, ridgeSlope, STEP } from './hill'
+import { autumn, LANE_Y, ridge, ridgeSlope, seat, STEP } from './hill'
 
 /**
  * CLIMB (167.706 to 180.413): the same hill, years later, in autumn. A held note, and then the piano.
@@ -83,7 +84,9 @@ const E = {
   /** She starts to slip, the smallest way; and she gives way: she sinks, and rolls back onto the stone, and is still. */
   sag: 174.3,
   give: 174.672,
-  settle: 174.672 + 2.3,
+  // Down onto the stone in a little over a second and a half, and still there (she crept on for over two seconds before,
+  // so she never quite came to rest before he did).
+  settle: 174.672 + 1.6,
   /** She answers his lean: the smallest roll toward him. */
   answer: 178.8,
   answered: 179.5,
@@ -119,6 +122,16 @@ const giveX = (t: number) => {
 }
 /** How far she has sunk (0 upright, 1 slumped): at once as she gives way, then held. */
 const sunk = (t: number) => smooth(t, E.give - 0.06, E.give + 0.42)
+/**
+ * How she lies, given way: lower and wider, slumped onto what she lies on (her bottom stays on it), clearly not a ball
+ * at rest; her answer to his lean lifts her only partly out of it, an effort. Null before she gives way. The ward
+ * takes this up across the cut and lets it go under the covers (`hospital.ts`).
+ */
+export function slumpOf(t: number): { scale: number; stretch: number } | null {
+  const s = sunk(t) * (1 - 0.35 * smooth(t, E.answer, E.answered))
+  if (s <= 0) return null
+  return { scale: 1 - 0.1 * s, stretch: 1 + 0.26 * s }
+}
 
 /* ------------------------------------------------------------------ Carl */
 
@@ -158,30 +171,41 @@ const CLIMB_TO = STEP.x0 - 1.6
 const JOLT_TO = CLIMB_TO + 0.08
 
 /**
- * His run down to her: from the jolt's landing (moving already, `RUN.v0`), gathering to his top speed, holding it,
- * and easing to rest beside her; a velocity that rises and falls by smoothsteps, so it never kicks. Horizontal
- * cells/s; on the flank that is about 0.9 along the ground at its fastest.
+ * His run down to her: stopped by his lurch's landing for a frozen beat, then a burst to his top speed, held, and eased
+ * to rest beside her; a velocity that rises and falls by smoothsteps, so it never kicks. Horizontal cells/s.
  */
 const RUN = (() => {
-  const v0 = (2 * (JOLT_TO - CLIMB_TO)) / (T.fall - T.jolt)
-  const ta = 0.45
-  const td = 1.2
+  // The same ends as ever: from the jolt's landing, beside her on 177.3; the burst is to a top speed well over the old
+  // one, so he is seen to gain on her while she is still rolling.
+  // Front-loaded: a short burst to its peak, held only a moment, then a long ease onto the stone, so most of the gap
+  // closes while she is still rolling (the camera follows him, so it is the gap that shows his speed).
+  // Flat out the whole way, a short ease, and on the stone a moment after she has come to rest (`E.settle`), then still beside
+  // her until his lean: stillness reads, creeping does not; and he never runs into her as she settles.
+  // Struck still for a beat as she gives way, watching her go: she is seen to fall first, and he comes after her (a
+  // fresh viewer, with a short hold, read the two of them as sliding down together). He bolts on the next strong note
+  // (175.409, the one the basket tips over on).
+  const hold = T.tip - T.fall
+  const ta = 0.25
+  const td = 0.55
+  // He is on the stone 0.75 s after she is still: she lies there alone a moment before he comes.
+  const still = T.beside - (E.settle + 0.75)
   const span = T.beside - T.fall
-  const tc = span - ta - td
+  const tc = span - hold - ta - td - still
   const d = HIS_REST - JOLT_TO
-  const vp = (d - (v0 * ta) / 2) / (ta / 2 + tc + td / 2)
+  const vp = d / (ta / 2 + tc + td / 2)
   /** The integral of a smoothstep from 0 to `u`. */
   const I = (u: number) => u * u * u - (u * u * u * u) / 2
   const at = (tau: number): number => {
-    if (tau <= 0) return 0
-    if (tau < ta) return v0 * tau + (vp - v0) * ta * I(tau / ta)
-    const a = v0 * ta + ((vp - v0) * ta) / 2
-    if (tau < ta + tc) return a + vp * (tau - ta)
+    const t = tau - hold
+    if (t <= 0) return 0
+    if (t < ta) return vp * ta * I(t / ta)
+    const a = (vp * ta) / 2
+    if (t < ta + tc) return a + vp * (t - ta)
     const b = a + vp * tc
-    const u = Math.min(1, (tau - ta - tc) / td)
+    const u = Math.min(1, (t - ta - tc) / td)
     return b + vp * td * (u - I(u))
   }
-  return { v0, vp, at }
+  return { vp, at }
 })()
 
 /** Carl in the hill's cells at show time `t`. */
@@ -201,18 +225,21 @@ function carl(t: number): Pt {
   if (t < T.go) return [CLIMB_FROM, STEP.y]
   if (t < T.top) {
     const x = lerp(CLIMB_FROM, CLIMB_TO, CLIMB((t - T.go) / (T.top - T.go)))
-    return [x, ridge(x)]
+    return [x, seat(x)]
   }
-  if (t < T.jolt) return [CLIMB_TO, ridge(CLIMB_TO)]
+  if (t < T.jolt) return [CLIMB_TO, seat(CLIMB_TO)]
   if (t < T.fall) {
     const u = lift((t - T.jolt) / (T.fall - T.jolt))
     const x = lerp(CLIMB_TO, JOLT_TO, u)
-    return [x, ridge(x) - 4 * 0.05 * u * (1 - u)]
+    return [x, seat(x) - 4 * 0.05 * u * (1 - u)]
   }
   if (t < T.beside) {
     // Down the slope after her and onto the stone, as fast as he has gone in years, easing to a stop beside her.
     const x = JOLT_TO + RUN.at(t - T.fall)
-    return [x, ridge(x)]
+    // Running, he stands up out of the slope's lean (`runTilt`) on his downhill corner: a runner, not a block tumbling
+    // down after her.
+    const upright = stand(x, runTilt(t, x)) - stand(x, groundTilt(x))
+    return [x, seat(x) + upright]
   }
   return [HIS_REST, STEP.y]
 }
@@ -228,6 +255,39 @@ function groundTilt(x: number): number {
   // The ground he stands on: the flank, then the flat of the stone and the lane beyond it (level, as `ridgeSlope`).
   const ground = (u: number) => (u >= STEP.x0 ? STEP.y : ridge(u))
   return Math.atan((ground(x + HALF) - ground(x - HALF)) / (2 * HALF))
+}
+
+/** How fast he is running down to her, as a share of his top speed (0 standing, 1 flat out). */
+function runPace(t: number): number {
+  if (t <= T.fall || t >= T.beside) return 0
+  const v = (RUN.at(t + 0.02 - T.fall) - RUN.at(t - 0.02 - T.fall)) / 0.04
+  return Math.max(0, Math.min(1, v / RUN.vp))
+}
+
+/**
+ * His lean from the moment she gives way to the stone: struck, he straightens up out of the slope's lean at once (a
+ * square tilted with the slope, standing still, read as stopped mid-tumble); flat out, a little forward into the run.
+ */
+function runTilt(t: number, x: number): number {
+  const pace = runPace(t)
+  const struck = smooth(t, T.fall, T.fall + 0.35)
+  return groundTilt(x) * (1 - 0.75 * Math.max(pace, struck)) + 0.12 * pace
+}
+
+/**
+ * Where his centre is, at `x` and leaning `tilt`, with his lower bottom corner on the drawn ground (`ridge` is the
+ * ground less R) and the other clear of it.
+ */
+function stand(x: number, tilt: number): number {
+  const c = Math.cos(tilt)
+  const s = Math.sin(tilt)
+  let y = Infinity
+  for (const ox of [-HALF, HALF]) {
+    const dx = ox * c - HALF * s
+    const dy = ox * s + HALF * c
+    y = Math.min(y, ridge(x + dx) + R - dy)
+  }
+  return y
 }
 
 /** How Carl holds himself: with the ground, upright in a hop, a look back at her, and a small squash on each landing. */
@@ -246,6 +306,8 @@ function bearing(t: number): { tilt: number; squash: number } {
   tilt += 0.1 * smooth(t, T.top, T.top + 0.35) * (1 - smooth(t, T.fall, T.fall + 0.5))
   // Beside her, he leans to her; after her answer he straightens, upright for the cut (his chair's side is upright).
   tilt += 0.12 * smooth(t, T.lean, T.beside + 0.45) * (1 - smooth(t, T.rise, END - 0.05))
+  // Hurrying down to her: up out of the slope's lean and into the run with his speed (`runTilt`).
+  if (t > T.fall && t < T.beside) tilt += runTilt(t, x) - groundTilt(x)
   let squash = 0
   for (const at of [T.onStep, T.fall]) {
     const ago = t - at
@@ -275,7 +337,7 @@ function ellie(t: number): Pt {
     const u = lift((t - E.hop) / (E.onStep - E.hop))
     return [lerp(foot, TREAD, u), lerp(LANE_Y, STEP.y, u) - 4 * 0.13 * u * (1 - u)]
   }
-  const on = (x: number): Pt => [x, ridge(x)]
+  const on = (x: number): Pt => [x, seat(x)]
   if (t < E.on) return on(TREAD)
   if (t < E.rest) return on(lerp(TREAD, MID, tire((t - E.on) / (E.rest - E.on))))
   if (t < E.push) return on(MID)
@@ -355,6 +417,9 @@ function drawStone(p: p5, k: number, weight: number, t: number): void {
 
 /* ------------------------------------------------------------------ the basket */
 
+/** How far the camera has panned by 175.9, his full-speed run under way. */
+const LAG_X = 7.5
+
 const THROW = T.jolt + 0.02
 /** Where the basket lands, up the path behind him, and how it sits there. */
 const BASKET_X = CLIMB_TO - 0.36
@@ -394,6 +459,31 @@ function basketAt(t: number): { x: number; y: number; tilt: number; open: number
   return { x: cx + Math.cos(a) * half, y: cy + Math.sin(a) * half, tilt: a, open: Math.max(0, Math.min(1.1, open)) }
 }
 
+/**
+ * The tickets, his surprise, spilling out as the basket lands askew on the strike (`T.fall`, its lid jolted open): two
+ * of them slip from its mouth and slide away down the straw toward the two of them, one after the other, and lie on
+ * the slope as he hurries down to her, in the frame for his first second. What the fall interrupted is seen: he was
+ * about to give them to her. Each ticket's middle and its turn, in the hill's cells.
+ */
+function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
+  const out: { x: number; y: number; angle: number }[] = []
+  const land = basketAt(T.fall + 0.02)
+  if (!land) return out
+  // Out of the downhill side of its mouth.
+  const mx = land.x + Math.sin(land.tilt) * BASKET.h * 0.6 + BASKET.w * 0.35
+  // The first slips out on the strike itself; the second on the next onset (174.916).
+  for (const [delay, reach, spin] of [[0.08, 0.3, -0.9], [174.916 - T.fall, 0.5, 0.7]] as [number, number, number][]) {
+    const s = t - T.fall - delay
+    if (s <= 0) continue
+    const u = 1 - Math.exp(-s / 0.22)
+    const x = mx + reach * u
+    const lie = Math.atan(ridgeSlope(x))
+    const y = ridge(x) + R - 0.03 - 0.1 * Math.exp(-s / 0.12)
+    out.push({ x, y, angle: lie + spin * (1 - u) * (1 - u) })
+  }
+  return out
+}
+
 /* ------------------------------------------------------------------ the part */
 
 export interface ClimbState {
@@ -403,7 +493,16 @@ export interface ClimbState {
 export const climb = part<ClimbState>(
   {
     name: 'climb',
-    draw: (p: p5, s, c) => drawStone(p, c.k, c.weight, s.begin + c.t),
+    draw: (p: p5, s, c) => {
+      const t = s.begin + c.t
+      drawStone(p, c.k, c.weight, t)
+      // The spilled tickets lie on the ground, behind the two of them: he passes in front of them as he hurries down.
+      if (c.t < -0.001 || c.t > END - BEGIN + 2) return
+      for (const tk of ticketsAt(t)) {
+        const [tx, ty] = L(tk.x, tk.y)
+        drawTicket(p, c.k, c.weight, tx, ty, tk.angle)
+      }
+    },
     over: (p: p5, s, c) => {
       const t = s.begin + c.t
       if (c.t < -0.001 || c.t > END - BEGIN + 2) return
@@ -430,11 +529,9 @@ export const climb = part<ClimbState>(
         at: (t) => {
           const [x, y] = ellie(t)
           const [lx, ly] = L(x, y)
-          // Given way: a little lower and wider, slumped onto what she lies on (her bottom stays on it).
-          const s = sunk(t)
-          if (s <= 0) return { x: lx, y: ly }
-          const scale = 1 - 0.07 * s
-          return { x: lx, y: ly + R * (1 - scale), scale, stretch: 1 + 0.16 * s, angle: Math.atan(ridgeSlope(x)) }
+          const slump = slumpOf(t)
+          if (!slump) return { x: lx, y: ly }
+          return { x: lx, y: ly + R * (1 - slump.scale), ...slump, angle: Math.atan(ridgeSlope(x)) }
         },
       },
     ]
@@ -468,7 +565,9 @@ export const climb = part<ClimbState>(
       // left behind up the path; on the stone as he reaches her; and the two of them and nothing else.
       { t: 174.0, cells: 2.4, hold: h(7.0, 1.47) },
       { t: E.give, cells: 2.2, hold: h(7.22, 1.58) },
-      { t: 175.6, cells: 2.1, hold: h(7.72, 1.74) },
+      // The camera is caught by his burst: it lags him while he runs flat out, so he keeps moving forward on screen
+      // toward her, and settles on the two of them as he eases onto the stone (an arrival, never a stall).
+      { t: 175.9, cells: 2.1, hold: h(LAG_X, 1.72) },
       { t: T.beside, cells: 2.0, hold: h(8.5, 1.86) },
       { t: 179.0, cells: 1.9, hold: h(8.55, 1.88) },
       // A breath out for the cut (`CUTS.hospital`), wide enough for the balloon on the far side and over to her side,
@@ -479,4 +578,4 @@ export const climb = part<ClimbState>(
 )
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
-export const CLIMB_HITS: number[] = [T.onStep, E.onStep, T.fall, T.tip]
+export const CLIMB_HITS: number[] = [T.onStep, E.onStep, T.fall, T.tip, 174.916].sort((a, b) => a - b)

@@ -6,6 +6,7 @@ import { SEAMS } from '../seams'
 import { DOJO, DOJO_THEME, HIBACHI, HIBACHI_THEME, HOME, HOTDOG, HOTDOG_THEME, STAR, VOID } from '../worlds'
 import { STOP, basketFront, drawGarland, seatAt } from './set-garland'
 import { BIG_DRYER, LIGHTS, dryerBody, lantern, lanternLit, penOf, portDoor, type Pen } from './set'
+import { PANEL_LOOKS, paintPicture, pixelOf, prefersCalm } from '../film'
 
 /**
  * The breath: the big dryer, 34.33 to the first jump at 57.95.
@@ -446,6 +447,14 @@ function glimpse(pen: Pen, world: World, cx: number, cy: number, r: number, a0: 
       p.fill(i % 3 === 0 ? VOID.salt : VOID.sesame)
       p.ellipse((mx + Math.cos(b) * rr) * k, (my + Math.sin(b) * rr) * k, r * (0.04 + 0.03 * (i % 2)) * k, r * 0.025 * k)
     }
+  }
+  // Each glimpse already in the colour of the picture its life is in (`film.ts`): the dojo an old print, the hot dogs
+  // soft. The first sight of each life is the film it will be. No bars: in a wedge of the drum they read as black
+  // chunks, not as widescreen.
+  const look = PANEL_LOOKS[world]
+  if (look) {
+    ctx.globalAlpha = alph
+    paintPicture(ctx, look, (cx - r) * k, (cy - r) * k, 2 * r * k, 2 * r * k, t, prefersCalm(), pixelOf(ctx), 1, true)
   }
   ctx.restore()
 }
