@@ -268,6 +268,11 @@ function drawStands(pen: Pen, t: number, f: { x0: number; y0: number; x1: number
   const up = risen(t)
   const sg = surge(t)
   const lv = level(t)
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.lineWidth = pen.w * 1.6
   for (let r = 24; r >= 0; r--) {
     const y = 0.3 - r * ROW
     if (y < f.y0 - 0.6 || y - ROW > f.y1) continue
@@ -302,19 +307,49 @@ function drawStands(pen: Pen, t: number, f: { x0: number; y0: number; x1: number
       if ((up > 0.3 && ph > 0.4) || (gi && stand > 0.3 && (up > 0.3 || sg * (0.4 + ph) > 0.35))) {
         const wave = Math.sin(t * 9 + ph * 12) * 0.06
         const ax = ph > 0.7 ? 1 : -1
-        line(pen, [hx + ax * 0.12, yy - 0.18], [hx + ax * 0.2 + wave, yy - 0.62 - 0.08 * sg], tone(body), 1.6)
-        if (ph > 0.75 || gi) line(pen, [hx - ax * 0.12, yy - 0.18], [hx - ax * 0.16 - wave, yy - 0.58], tone(body), 1.6)
+        ctx.strokeStyle = pen.tone(tone(body))
+        ctx.beginPath()
+        ctx.moveTo((hx + ax * 0.12) * k, (yy - 0.18) * k)
+        ctx.lineTo((hx + ax * 0.2 + wave) * k, (yy - 0.62 - 0.08 * sg) * k)
+        if (ph > 0.75 || gi) {
+          ctx.moveTo((hx - ax * 0.12) * k, (yy - 0.18) * k)
+          ctx.lineTo((hx - ax * 0.16 - wave) * k, (yy - 0.58) * k)
+        }
+        ctx.stroke()
       }
-      shape(pen, [[hx - 0.16, yy], [hx - 0.15, yy - 0.2], [hx - 0.08, yy - 0.26], [hx + 0.08, yy - 0.26], [hx + 0.15, yy - 0.2], [hx + 0.16, yy]], tone(body))
+      // The crowd is a thousand people: drawn straight onto the canvas, not through p5's shapes.
+      ctx.fillStyle = pen.tone(tone(body))
+      ctx.beginPath()
+      ctx.moveTo((hx - 0.16) * k, yy * k)
+      ctx.lineTo((hx - 0.15) * k, (yy - 0.2) * k)
+      ctx.lineTo((hx - 0.08) * k, (yy - 0.26) * k)
+      ctx.lineTo((hx + 0.08) * k, (yy - 0.26) * k)
+      ctx.lineTo((hx + 0.15) * k, (yy - 0.2) * k)
+      ctx.lineTo((hx + 0.16) * k, yy * k)
+      ctx.fill()
       const head: Pt = [hx, yy - 0.36]
-      ellipse(pen, head, 0.095, 0.105, tone(hash(j, r, 13) > 0.2 ? C.skin : C.skinDark))
-      if (gi) {
+      ctx.fillStyle = pen.tone(tone(hash(j, r, 13) > 0.2 ? C.skin : C.skinDark))
+      ctx.beginPath()
+      ctx.ellipse(head[0] * k, head[1] * k, 0.095 * k, 0.105 * k, 0, 0, Math.PI * 2)
+      ctx.fill()
+      if (gi && !capUp(j, r, t)) {
         // The garrison cap, unless it is in the air.
-        if (!capUp(j, r, t)) shape(pen, [[head[0] - 0.1, head[1] - 0.05], [head[0] + 0.1, head[1] - 0.06], [head[0] + 0.07, head[1] - 0.13], [head[0] - 0.09, head[1] - 0.11]], tone(C.oliveDark))
-        else ellipse(pen, [head[0], head[1] - 0.06], 0.095, 0.06, tone(C.hair))
-      } else ellipse(pen, [head[0], head[1] - 0.05], 0.095, 0.065, tone(C.hair))
+        ctx.fillStyle = pen.tone(tone(C.oliveDark))
+        ctx.beginPath()
+        ctx.moveTo((head[0] - 0.1) * k, (head[1] - 0.05) * k)
+        ctx.lineTo((head[0] + 0.1) * k, (head[1] - 0.06) * k)
+        ctx.lineTo((head[0] + 0.07) * k, (head[1] - 0.13) * k)
+        ctx.lineTo((head[0] - 0.09) * k, (head[1] - 0.11) * k)
+        ctx.fill()
+      } else {
+        ctx.fillStyle = pen.tone(tone(C.hair))
+        ctx.beginPath()
+        ctx.ellipse(head[0] * k, (head[1] - (gi ? 0.06 : 0.05)) * k, 0.095 * k, (gi ? 0.06 : 0.065) * k, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
     }
   }
+  ctx.restore()
 }
 
 /** Which GIs throw their caps, and when. */
