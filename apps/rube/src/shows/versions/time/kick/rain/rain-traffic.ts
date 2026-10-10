@@ -102,7 +102,12 @@ function car(pen: Pen, x: number, y: number, angle: number, s: number, len: numb
 
 /** The two cars at the head of the bridge and the taxi, before the train and after. */
 export function drawTraffic(pen: Pen, f: View, te: number): void {
-  // Flung ones first: they come down behind the train.
+  // Flung ones first: they come down behind the train. Their lamps' light stops at the street's foot.
+  const { ctx, k } = pen
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect((f.x0 - 2) * k, (f.y0 - 3) * k, (f.x1 - f.x0 + 4) * k, (STREET_FOOT - f.y0 + 3) * k)
+  ctx.clip()
   for (let i = 0; i < FLUNG.length; i++) {
     const c = FLUNG[i]
     const ps = flungPose(c, te)
@@ -115,7 +120,10 @@ export function drawTraffic(pen: Pen, f: View, te: number): void {
     const s = CAR_S - 0.08 * ps.far
     car(pen, x, ps.y, ps.angle, s, c.len, hit ? mixHex(body, RAIN.street, 0.2 * ps.far) : body, c.taxi, lamps, door, hit ? sm((te - c.hit) / 0.12) : 0)
   }
+  ctx.restore()
 }
+/** The street's underside: light from the street's traffic stops here. */
+const STREET_FOOT = 0.6
 
 /** Sparks off the locomotive's nose as it meets each car. */
 function sparks(pen: Pen, te: number, c: Flung): void {
@@ -174,7 +182,8 @@ function beamOnStreet(pen: Pen, b: Beam, nose: number): void {
   const lg = ctx.createLinearGradient(x0 * k, 0, x1 * k, 0)
   lg.addColorStop(0, rgba(RAIN.lamp, 0))
   lg.addColorStop(0.6, rgba(RAIN.lamp, 0.3 * b.a))
-  lg.addColorStop(1, rgba(RAIN.lamp, 0.12 * b.a))
+  lg.addColorStop(0.85, rgba(RAIN.lamp, 0.12 * b.a))
+  lg.addColorStop(1, rgba(RAIN.lamp, 0))
   ctx.fillStyle = lg
   ctx.fillRect(x0 * k, 0, (x1 - x0) * k, 0.5 * k)
 }
@@ -193,8 +202,14 @@ export function drawTrain(pen: Pen, f: View, te: number): void {
   const lamp = sm((te - T_LAMP + 0.1) / 0.1)
   const b = trainBeam(te)
   if (b) {
+    // Its light stops at the street: it was painted on down through it into the ground under it.
+    pen.ctx.save()
+    pen.ctx.beginPath()
+    pen.ctx.rect((f.x0 - 2) * k, (f.y0 - 2) * k, (f.x1 - f.x0 + 4) * k, (STREET_FOOT - f.y0 + 2) * k)
+    pen.ctx.clip()
     beam(p, k, b.from, b.to, b.w0, b.w1, RAIN.lamp, b.a)
     beamOnStreet(pen, b, nose)
+    pen.ctx.restore()
   }
   const wheel = (x: number, r: number) => {
     p.fill(ink)

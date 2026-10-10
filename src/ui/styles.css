@@ -513,6 +513,8 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
 .lb-glyph { width: 15px; height: 15px; flex: none; color: var(--dim); }
 .lb-glyph rect { fill: none; stroke: currentColor; stroke-width: 1.8; }
 .lb-trigger .lb-glyph, .lb-opt.act .lb-glyph { color: var(--text); }
+/* A small mark just after an option's label: a favourite's star, in the accent. */
+.lb-mark { width: 9px; height: 9px; margin-left: 5px; vertical-align: 0; fill: var(--accent); }
 
 /* ---- sliders -------------------------------------------------------- */
 
@@ -648,6 +650,9 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .seg button:hover { background: var(--raised); color: var(--text); }
 .seg button.on { background: var(--accent-soft); color: var(--accent); }
 .seg button:active { transform: none; }
+/* A favourite take: its star after the label, in the accent, quieter until it is the one on. */
+.takes button svg { width: 9px; height: 9px; margin-left: 5px; vertical-align: 0; fill: var(--accent); opacity: 0.7; }
+.takes button.on svg { opacity: 1; }
 
 /* ---- transport ------------------------------------------------------ */
 
@@ -785,7 +790,10 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 /* A show's end credits: the page's words over the frame, since the canvas
    sets none. Placed and faded by the player (`renderWords`); sized in --u, a
    hundredth of the composed frame's height, so they sit the same at any size.
-   Light ink on the show's own sky; a serif, for the credits of a film. */
+   Light ink on the show's own sky; a serif, for the credits of a film. The
+   small lines (the role, a cast line's "as", the notes) keep at least 9px, so
+   a phone's short frame does not shrink them out of reading; that floor only
+   bites under a frame about 545px tall. A saved video paints its own (words.ts). */
 .stage-words { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
 .stage-words .card {
   position: absolute;
@@ -797,8 +805,21 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   text-shadow: 0 0 calc(var(--u) * 1.4) rgba(244, 238, 223, 0.28);
   will-change: opacity, filter;
 }
+/* A card's veil (`TitleCard.shade`): a soft oval of the dark round its words, behind them, as the video's frames draw it
+   (`words.ts`). */
+.stage-words .card.shaded { isolation: isolate; }
+.stage-words .card .veil {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: calc(var(--u) * 135);
+  height: calc(170% + var(--u) * 12);
+  z-index: -1;
+  background: radial-gradient(closest-side, rgb(5 7 16 / var(--shade)), rgb(5 7 16 / calc(var(--shade) * 0.6)) 55%, rgb(5 7 16 / 0));
+}
 .stage-words .role {
-  font-size: calc(var(--u) * 1.9);
+  font-size: max(9px, calc(var(--u) * 1.9));
   font-weight: 600;
   letter-spacing: 0.34em;
   text-transform: uppercase;
@@ -817,7 +838,7 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   line-height: 1.42;
 }
 .stage-words .cast .who { text-align: right; }
-.stage-words .cast .as { text-align: left; font-style: italic; font-size: 0.62em; color: #D9A441; text-shadow: none; }
+.stage-words .cast .as { text-align: left; font-style: italic; font-size: max(9px, 0.62em); color: #D9A441; text-shadow: none; }
 /* The ball they are: a small disc with the show's ink edge, sitting on the line. The panel's `.swatch` (padding and a
    2px border) would make it 18px on any stage; here it is 0.78em whole, its gold ring a share of the card's unit, as
    a saved video paints it (words.ts). */
@@ -836,10 +857,10 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .stage-words .cast .swatch.slab { border-radius: 0.1em; }
 /* A card over a light sky (`TitleCard.plain`): its role and "as" lines in the card's cream, not gold. */
 .stage-words .card.plain .role, .stage-words .card.plain .cast .as { color: #ECE5D3; }
-.stage-words .note { font-size: calc(var(--u) * 1.95); font-style: italic; opacity: 0.8; margin-top: calc(var(--u) * 0.9); }
+.stage-words .note { font-size: max(9px, calc(var(--u) * 1.95)); font-style: italic; opacity: 0.8; margin-top: calc(var(--u) * 0.9); }
 .stage-words .card .name + .note { margin-top: calc(var(--u) * 1.6); }
-.stage-words .note.fine { font-size: calc(var(--u) * 1.65); opacity: 0.58; margin-top: calc(var(--u) * 1.4); }
-.stage-words .title .note { font-style: normal; letter-spacing: 0.12em; font-size: calc(var(--u) * 2.1); }
+.stage-words .note.fine { font-size: max(9px, calc(var(--u) * 1.65)); opacity: 0.58; margin-top: calc(var(--u) * 1.4); }
+.stage-words .title .note { font-style: normal; letter-spacing: 0.12em; font-size: max(9px, calc(var(--u) * 2.1)); }
 
 /* The frame a video is recorded from, standing over the stage while it is
    made. It is built at the size of the file, not of the stage, so this is

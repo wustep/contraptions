@@ -1,12 +1,12 @@
 import { R, laneAt, mixHex, type Lane, type Pt, type Seg } from '../../../../../parts'
 import type { ShowBall } from '../../../../../show'
-import { tear } from '../cast'
+import { streak, tear } from '../cast'
 import { box, carried, frame, part, scenery, type Company, type PartShot, type Riders, type Slot } from '../kit'
 import { FIRST, SEAMS } from '../seams'
 import { beat, half } from '../music'
 import { G } from '../physics'
 import { DOWN, FISCHER_DOWN, FISCHER_UP, ORIGIN, UP, exitFor, local } from '../stack'
-import { KID_DARK, KID_ID, KID_SCALE, LIMBO, SLEEP } from '../worlds'
+import { FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO, SLEEP } from '../worlds'
 import {
   A_KICK_AT,
   BOTTOM,
@@ -198,6 +198,8 @@ function drawKicks(pen: Pen, t: number): void {
   flare(KICK_AT, Q.kick)
   flare(A_KICK_AT, Q.kick)
   flare(F_KICK_AT, Q.fischerKick)
+  // The flare is lost on the pale sky: his throw is marked as it is in Paris, by the streak behind him.
+  streak(pen.p, pen.k, fischerAt, Q.fischerKick, t, FISCHER)
   // The tear in the top of the sky, as they go up out of it into the dark.
   const through = (x: number, when: number) => tear(pen.p, pen.k, [x, TOP_OF_SKY + 0.6], t - when, 1.2, LIMBO.foam)
   through(FISCHER_UP.at[0], FISCHER_UP.t - 0.13)
@@ -311,7 +313,16 @@ function limboLane(): Seg[] {
   // In the room: to the cabin's door when she is out; and there he stays, face to face with Mal.
   push(still(lastTo(segs), 169.4 - now()))
   push({ from: lastTo(segs), to: [CABIN_DOOR_X, lastTo(segs)[1]], dur: 0.8, ease: 'inout' })
-  push(still(lastTo(segs), Q.letGo - now()))
+  // His choice, as his own gesture (a viewer new to it saw him "sit still" while the lever moved by itself): back from
+  // the door, from her, as we come back from the children; then on the let-go he throws himself up against the lever,
+  // and lands at the door as the rope takes him.
+  const door = lastTo(segs)
+  const back: Pt = [door[0] - 0.2, door[1]]
+  push(still(door, Q.lever + 0.05 - now()))
+  push({ from: door, to: back, dur: 0.45, ease: 'inout' })
+  push(still(back, Q.letGo - 0.32 - now()))
+  push({ from: back, to: [door[0], door[1] - 0.16], dur: 0.18, ease: 'out' })
+  push({ from: [door[0], door[1] - 0.16], to: door, dur: Q.letGo - now(), ease: 'in' })
   // He lets go: the same rope carries him up to the roof.
   push(...carried((s) => [CABIN_DOOR_X, cabinY(s + b) - R], at(Q.letGo), at(Q.roof), 20))
   push(still(lastTo(segs), Q.roof + 0.55 - now()))
@@ -472,11 +483,15 @@ function limboShots(_slot: Slot): PartShot[] {
     h(Q.lever - 0.1, 3.15, plus(GARDEN_VIEW, [0.1, 0.05])),
     { ...h(Q.lever, 3.8, [-1.1, 77.6]), cut: true },
     h(Q.letGo, 3.7, [-1.12, 77.6]),
-    h(176.9, 4.4, [-1.3, 76.6]),
+    // Up with him as the cage rises, so under Zoom too he stays in the picture.
+    h(176.9, 4.4, [-1.3, 76.25]),
+    h(177.4, 5.0, [-1.05, 75.3]),
     h(178.3, 7.2, [0.2, 75.45]),
     h(Q.fischerKick + 0.35, 7.5, [0.9, 75.4]),
-    h(Q.stepOff, 7.1, [1.0, 75.3]),
-    h(Q.kick, 8.6, [1.1, 76.5]),
+    // Fischer gone, in close on the two of them at the edge: her leap, and him a beat behind her.
+    h(Q.ariadneLeap - 0.2, 4.4, [0.95, 74.35]),
+    h(Q.stepOff, 5.8, [1.05, 74.9]),
+    h(Q.kick, 7.6, [1.1, 77.0]),
     // The kick: the camera goes up with them, keeping them in the frame's upper third, at their speed into the dark.
     { t: Q.end, cells: 9, off: [0.25, 2.4], w: 0 },
   ]

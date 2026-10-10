@@ -256,6 +256,11 @@ function palmOpen(t: number): number {
 export const RING_AT: Pt = [X_PALM + 4.35, -3.15]
 export const RING_R = 2.6
 const RING_SEED = 1014
+/**
+ * Where on the ring (in its own turn) no tendril grows: toward the palm's forearm, which its longest tendril would
+ * otherwise run into, its drop landing dark on the dark limb. Just off that tendril, so its short neighbour stays.
+ */
+const ARM_CLEAR = 2.98
 /** Where Costello's limb holds its tip to write, and when it goes up. */
 const WRITE_AT: Pt = [X_PALM + 8.3, -5.3]
 const WRITE_UP = pulse(502)
@@ -409,6 +414,6 @@ export function drawInk(p: p5, k: number, t: number, seen: Seen): void {
   const spin = spinAt(t)
   p.push()
   p.translate(RING_AT[0] * k, RING_AT[1] * k)
-  drawLogogram(p, k, { r: ringR(t), seed: RING_SEED, t, form, start: ARRIVE, spin, color: ink, marks: meetMark(t) })
+  drawLogogram(p, k, { r: ringR(t), seed: RING_SEED, t, form, start: ARRIVE, spin, color: ink, marks: meetMark(t), clear: ARM_CLEAR })
   p.pop()
 }

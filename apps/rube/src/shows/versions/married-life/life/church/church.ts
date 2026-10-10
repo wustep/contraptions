@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, frame, hash, knock, scenery, smooth } from '../kit'
 import { AT, bar, beat, beatsIn } from '../music'
-import { CHURCH, CLINIC, HILL, HOME, INK } from '../worlds'
+import { CARL, CHURCH, CLINIC, ELLIE, HILL, HOME, INK } from '../worlds'
 
 /**
  * The church (the church builder's set): a small white chapel cut open down its length, like the house, seen from the
@@ -163,12 +163,12 @@ export function rankLight(r: number, t: number): number {
 
 /**
  * The empty church at the funeral: nobody plays, but the one toll fills it, and the organ's pipes ring with it (the
- * gold they went on every note of the march), fading as the bell dies away; less at the answer.
+ * gold they went on every note of the march), fading as the bell dies away.
  */
 export function tollRing(t: number): number {
   if (!gloomy(t) || t < FUN.toll) return 0
   const on = (s: number, a: number, d: number) => (t < s ? 0 : a * Math.min(1, (t - s) / 0.05) * Math.exp(-(t - s) / d))
-  return on(FUN.toll, 0.55, 0.9) + on(FUN.answer, 0.22, 0.7)
+  return on(FUN.toll, 0.55, 0.9)
 }
 
 /** The reservoir's fill (0 empty, 1 full): drawn down by every note, pumped back up by the feeder on the beat. */
@@ -775,40 +775,61 @@ function drawAltar(p: p5, k: number, c: Paint, weight: number, t: number): void 
 
 /**
  * The wedding photograph on an easel where they stood, at the funeral (the flash at the start of the show took it):
- * in sepia, a square and a round one, touching. A black ribbon across its corner.
+ * in sepia, a square and a round one, touching, each with a hint of the colour they were that day (his young blue,
+ * her coral), so it reads as them and as the picture the show opened on, not as a sign. A black ribbon across its
+ * corner. As the grey morning comes up, a soft warm light gathers on it, the one warm thing at the altar end: she is
+ * there, in the picture. Drawn a third larger than the hall's copy, so it holds the frame from the pew.
  */
-function drawPhotograph(p: p5, k: number, c: Paint, weight: number): void {
+const PHOTO_S = 1.3
+function drawPhotograph(p: p5, k: number, c: Paint, weight: number, t: number): void {
   const x = (ALTAR_CARL + ALTAR_ELLIE) / 2
   const foot = CH.floor
-  const top = -1.25
+  const s = PHOTO_S
+  const top = -1.25 - 0.48 * (s - 1)
+  const mid = top + 0.24 * s
+  // The morning's warmth on it, behind the frame: a soft glow on the wall round the picture.
+  const warm = beamUp(t)
+  if (warm > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createRadialGradient(x * k, mid * k, 0.1 * k, x * k, mid * k, 0.75 * k)
+    g.addColorStop(0, `rgba(255, 226, 170, ${0.38 * warm})`)
+    g.addColorStop(1, 'rgba(255, 226, 170, 0)')
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect((x - 0.8) * k, (mid - 0.8) * k, 1.6 * k, 1.6 * k)
+    ctx.restore()
+  }
   p.stroke(alpha(p, INK, 0.9))
   p.strokeWeight(weight * 0.6)
   p.line((x - 0.22) * k, foot * k, (x - 0.02) * k, (top - 0.06) * k)
   p.line((x + 0.22) * k, foot * k, (x + 0.02) * k, (top - 0.06) * k)
   p.line((x + 0.05) * k, foot * k, (x + 0.01) * k, (top + 0.1) * k)
   p.fill(c.timber)
-  box2(p, k, x - 0.28, top + 0.48, x + 0.28, top + 0.52)
+  box2(p, k, x - 0.28 * s, top + 0.48 * s, x + 0.28 * s, top + 0.52 * s)
   p.strokeWeight(weight * 0.8)
   p.fill(c.gold)
-  box2(p, k, x - 0.26, top, x + 0.26, top + 0.48, 0.01)
+  box2(p, k, x - 0.26 * s, top, x + 0.26 * s, top + 0.48 * s, 0.01)
   p.noStroke()
-  p.fill(mixHex(HOME.paper, HOME.wood, 0.35))
-  box2(p, k, x - 0.21, top + 0.05, x + 0.21, top + 0.43)
+  const sepia = mixHex(HOME.paper, HOME.wood, 0.3)
+  p.fill(mixHex(sepia, '#FFE6B0', 0.25 * warm))
+  box2(p, k, x - 0.21 * s, top + 0.05 * s, x + 0.21 * s, top + 0.43 * s)
   p.fill(alpha(p, mixHex(HOME.wood, INK, 0.2), 0.45))
-  box2(p, k, x - 0.21, top + 0.34, x + 0.21, top + 0.43)
-  p.fill(mixHex(HOME.wood, INK, 0.4))
+  box2(p, k, x - 0.21 * s, top + 0.34 * s, x + 0.21 * s, top + 0.43 * s)
+  const figure = mixHex(HOME.wood, INK, 0.35)
+  p.fill(mixHex(figure, CARL, 0.45))
   p.push()
-  p.translate((x - 0.05) * k, (top + 0.29) * k)
+  p.translate((x - 0.05 * s) * k, (top + 0.29 * s) * k)
   p.rotate(0.14)
-  box2(p, k, -0.045, -0.045, 0.045, 0.045, 0.01)
+  box2(p, k, -0.045 * s, -0.045 * s, 0.045 * s, 0.045 * s, 0.01)
   p.pop()
-  p.circle((x + 0.042) * k, (top + 0.29) * k, 0.09 * k)
+  p.fill(mixHex(figure, ELLIE, 0.5))
+  p.circle((x + 0.042 * s) * k, (top + 0.29 * s) * k, 0.09 * s * k)
   p.fill(alpha(p, INK, 0.92))
   poly(p, k, [
-    [x + 0.1, top],
-    [x + 0.19, top],
-    [x + 0.26, top + 0.07],
-    [x + 0.26, top + 0.16],
+    [x + 0.1 * s, top],
+    [x + 0.19 * s, top],
+    [x + 0.26 * s, top + 0.07 * s],
+    [x + 0.26 * s, top + 0.16 * s],
   ])
 }
 
@@ -1036,9 +1057,11 @@ const PETALS: Petal[] = (() => {
         out.push({
           x0: hx - 0.04 + 0.08 * h(1),
           y0: hy,
-          // Thrown up and out toward the aisle (left, over the two of them), and some back.
+          // Thrown up and out toward the aisle (left, over the two of them), and some back. A burst over their own heads,
+          // not a fountain: thrown higher, they were up round the windows before the throwers were in the frame, and a
+          // fresh viewer read them as something coming off the stained glass.
           vx: -0.9 + (h(2) - 0.35) * 1.8,
-          vy: -(2.2 + h(3) * 1.4),
+          vy: -(1.4 + h(3) * 0.8),
           at: at + h(4) * 0.1,
           color: colours[Math.floor(h(5) * colours.length)],
           spin: (h(6) - 0.5) * 9,
@@ -1213,29 +1236,6 @@ function drawTower(p: p5, k: number, c: Paint, weight: number, t: number): void 
   p.circle(((tx0 + tx1) / 2) * k, (CH.spire - 0.03) * k, 0.08 * k)
 }
 
-/**
- * The toll shaken down: at the funeral's one toll (and a little at its answer) dust sifts from under the ringing floor
- * and drifts down through the porch's grey light, onto the man standing under it.
- */
-function drawSift(p: p5, k: number, t: number): void {
-  if (!gloomy(t) || t < FUN.toll) return
-  const [tx0, tx1] = CH.tower
-  const top = -2.9
-  p.noStroke()
-  for (let i = 0; i < 34; i++) {
-    const at = (i < 24 ? FUN.toll : FUN.answer) + hash(i, 21) * 0.35
-    const age = t - at
-    if (age < 0 || age > 4.5) continue
-    const fall = 0.28 + 0.2 * hash(i, 22)
-    const y = top + 0.05 + fall * age + 0.25 * (1 - Math.exp(-age / 0.3))
-    if (y > CH.floor) continue
-    const x = tx0 + CH.wall + 0.05 + (tx1 - tx0 - 2 * CH.wall - 0.1) * hash(i, 23) + 0.06 * Math.sin(age * (1.2 + hash(i, 24)) + i)
-    const a = (i < 24 ? 0.6 : 0.35) * Math.min(1, age / 0.25) * (1 - age / 4.5)
-    p.fill(alpha(p, '#FFFFFF', a))
-    p.circle(x * k, y * k, (0.012 + 0.012 * hash(i, 25)) * k)
-  }
-}
-
 /* ------------------------------------------------------------------ the set */
 
 export const churchSet = scenery<null>({
@@ -1325,14 +1325,13 @@ export const churchSet = scenery<null>({
     drawLight(p, k, c, t)
     drawOrgan(p, k, c, weight, t)
     drawAltar(p, k, c, weight, t)
-    if (c.g) drawPhotograph(p, k, c, weight)
+    if (c.g) drawPhotograph(p, k, c, weight, t)
     for (const x of CH.pews) pewAt(p, k, c, weight, x)
     drawFolk(p, k, t)
     drawPetals(p, k, t, false)
 
     // The tower, from the ground: the porch under it, the ringing chamber, the belfry, the spire.
     drawTower(p, k, c, weight, t)
-    drawSift(p, k, t)
 
     // The walls and floors, cut: the apse wall up under the roof, the floor slab, all one warm dark in section; the
     // roof over them, slate, eaves to peak and down to the tower.

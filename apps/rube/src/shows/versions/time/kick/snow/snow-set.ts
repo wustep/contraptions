@@ -6,8 +6,13 @@ import { level } from '../music'
 import { BAND, clock } from '../stack'
 import { PLANE, SNOW } from '../worlds'
 import {
+  A_SHIFT,
+  ARIADNE_SNOW,
   CASE_X,
   clamp01,
+  COBB,
+  F_SHIFT,
+  FISCHER_SNOW,
   CREVASSE,
   doorAt,
   DROP,
@@ -174,12 +179,13 @@ function drawSet(p: p5, c: Ctx, t: number): void {
   drawSky(ctx, k, x0, x1)
   drawFar(ctx, k, f)
   drawFace(ctx, c, x0, x1)
+  drawStepShadows(ctx, k, t)
   drawPistes(ctx, k, x0, x1)
   drawFeatures(ctx, c, t)
   drawValley(ctx, c, x0, x1, st)
   drawFortress(p, ctx, c, t, st)
   drawOutside(ctx, c, t)
-  drawSnowfall(ctx, k, f, st, false)
+  drawSnowfall(ctx, k, f, st, false, t < T.kick)
   ctx.restore()
 }
 
@@ -195,7 +201,7 @@ function drawSetOver(p: p5, c: Ctx, t: number): void {
   ctx.rect(x0 * k, TOP * k, (x1 - x0) * k, (BOTTOM - TOP) * k)
   ctx.clip()
   drawCollapseDust(ctx, c, t)
-  drawSnowfall(ctx, k, f, clock('snow', t), true)
+  drawSnowfall(ctx, k, f, clock('snow', t), true, t < T.kick)
   ctx.restore()
 }
 
@@ -513,7 +519,8 @@ function stepBand(): { rock: Pt[]; shade: Pt[]; shelves: Pt[][] } {
   const [lx, ly] = J1_LIP
   const top = ly + R
   const [jx, jy] = TRACK.j1Land
-  const foot = jy + R
+  // Its foot a little up the slope from the piste, a strip of snow between: they land and run under it, not across it.
+  const foot = jy + R - 0.26
   const rock: Pt[] = []
   const shade: Pt[] = []
   // The top edge from the right of the lip to the band's left end, slightly falling; the foot back along under it.
@@ -532,6 +539,45 @@ function stepBand(): { rock: Pt[]; shade: Pt[]; shelves: Pt[][] } {
   return { rock, shade, shelves }
 }
 const STEP = stepBand()
+/**
+ * Off the rock step they fly in front of the band, down across its face, and without more it looks as if they sink
+ * through the rock. Each throws a shadow on the band behind it (the low sun is west, so a little east of them and
+ * lower), further off and softer at the top of the air, where they are furthest out from the face; it closes up on
+ * them as they come down to its foot. Only on the rock: the flight is seen to be in front of it.
+ */
+function drawStepShadows(ctx: C2D, k: number, t: number): void {
+  const fly = T.j1Land - T.j1
+  const riders: [typeof COBB, number][] = [
+    [ARIADNE_SNOW, -A_SHIFT],
+    [COBB, 0],
+    [FISCHER_SNOW, F_SHIFT],
+  ]
+  let any = false
+  for (const [, shift] of riders) if (t > T.j1 + shift && t < T.j1Land + shift) any = true
+  if (!any) return
+  ctx.save()
+  path(ctx, STEP.rock, k)
+  ctx.clip()
+  for (const [m, shift] of riders) {
+    const u = (t - T.j1 - shift) / fly
+    if (u <= 0 || u >= 1) continue
+    const [x, y] = m.at(t)
+    // Out from the face most at the top of the air; the shadow fades in off the lip and out onto the landing.
+    const out = Math.sin(Math.PI * u)
+    const a = 0.55 * Math.min(1, u / 0.12, (1 - u) / 0.12) * (1 - 0.35 * out)
+    const [sx, sy] = [x + 0.12 + 0.38 * out, y + 0.1 + 0.22 * out]
+    const r = R * (1.1 + 0.6 * out)
+    const g = ctx.createRadialGradient(sx * k, sy * k, 0, sx * k, sy * k, r * 1.6 * k)
+    g.addColorStop(0, rgba(SNOW.rockDark, a))
+    g.addColorStop(0.55, rgba(SNOW.rockDark, a * 0.8))
+    g.addColorStop(1, rgba(SNOW.rockDark, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.ellipse(sx * k, sy * k, r * 1.6 * k, r * 1.25 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
 /** The ledge over the gate: a rock wall with snow on its top, the apron in front of it. */
 const LEDGE_WALL: Pt[] = [
   [LEDGE.from - 0.3, LEDGE.y + R + 0.12],
@@ -611,6 +657,22 @@ function drawFace(ctx: C2D, c: Ctx, x0: number, x1: number): void {
   for (const face of FACES) drawRockFace(ctx, k, face, x0, x1)
   for (const crag of CRAGS) {
     if (crag[0][0] > x1 + 4 || crag[0][0] < x0 - 6) continue
+    // Its shadow on the face under its foot, soft, a little east of it (the sun is low in the west): without it the
+    // crag ended on the snow with a hard edge and read as a slab laid on the face, plainest in a tall frame.
+    const xs = crag.map((q) => q[0])
+    const ys = crag.map((q) => q[1])
+    const [lx, rx, by] = [Math.min(...xs), Math.max(...xs), Math.max(...ys)]
+    ctx.save()
+    ctx.translate(((lx + rx) / 2 + 0.35) * k, (by - 0.05) * k)
+    ctx.scale(1, 0.32)
+    const r = ((rx - lx) / 2 + 0.6) * k
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+    g.addColorStop(0, rgba(HOLLOW, 0.5))
+    g.addColorStop(0.6, rgba(HOLLOW, 0.22))
+    g.addColorStop(1, rgba(HOLLOW, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(-r, -r, 2 * r, 2 * r)
+    ctx.restore()
     drawRockFace(ctx, k, { pts: crag, ledges: [] }, x0, x1)
   }
   // The band throws its shadow down the slope under it, east of the low sun: blue, deepest at its foot (Mal waits
@@ -682,18 +744,28 @@ function drawFace(ctx: C2D, c: Ctx, x0: number, x1: number): void {
   // Snow overhanging both lips.
   fill(ctx, [[cv.x0 - 0.45, cv.top - 0.02], [cv.x0 + 0.14, cv.top - 0.02], [cv.x0 + 0.06, cv.top + 0.16], [cv.x0 - 0.4, cv.top + 0.2]], k, SNOW.snow)
   fill(ctx, [[cv.x1 - 0.16, far - 0.02], [cv.x1 + 0.5, far - 0.02], [cv.x1 + 0.45, far + 0.2], [cv.x1 - 0.08, far + 0.16]], k, SNOW.snow)
-  // The pines at the hairpin, and a boulder in its bend.
-  fill(
-    ctx,
-    [
-      [TRACK.HAIR.pts[20][0] + 0.9, TRACK.HAIR.pts[20][1] + 0.1],
-      [TRACK.HAIR.pts[20][0] + 1.25, TRACK.HAIR.pts[20][1] - 0.25],
-      [TRACK.HAIR.pts[20][0] + 1.75, TRACK.HAIR.pts[20][1] - 0.2],
-      [TRACK.HAIR.pts[20][0] + 1.95, TRACK.HAIR.pts[20][1] + 0.2],
-    ],
-    k,
-    SNOW.rock,
-  )
+  // The pines at the hairpin, and a boulder in its bend: bedded in the snow, lit on its west, its east in shade, snow
+  // on its crown, and its shadow long on the slope like the pines' (it was a bare flat slab, floating).
+  {
+    const [hx, hy] = TRACK.HAIR.pts[20]
+    const bx = hx + 1.45
+    const foot = hy + 0.2
+    longShadow(ctx, k, bx + 0.2, foot, 0.5, 1.0)
+    const body: Pt[] = [
+      [bx - 0.6, foot + 0.04],
+      [bx - 0.5, foot - 0.22],
+      [bx - 0.22, foot - 0.42],
+      [bx + 0.12, foot - 0.46],
+      [bx + 0.42, foot - 0.3],
+      [bx + 0.56, foot - 0.04],
+      [bx + 0.5, foot + 0.06],
+    ]
+    fill(ctx, body, k, SHADE_ROCK)
+    fill(ctx, [body[0], body[1], body[2], body[3], [bx + 0.02, foot - 0.12], [bx - 0.2, foot + 0.05]], k, SUN_ROCK)
+    fill(ctx, [[bx - 0.36, foot - 0.33], [bx - 0.2, foot - 0.45], [bx + 0.12, foot - 0.5], [bx + 0.36, foot - 0.33], [bx + 0.1, foot - 0.37], [bx - 0.15, foot - 0.3]], k, SNOW.snow)
+    // The snow drifted up round its foot.
+    fill(ctx, [[bx - 0.75, foot + 0.08], [bx - 0.5, foot - 0.04], [bx + 0.5, foot - 0.02], [bx + 0.72, foot + 0.1]], k, SNOW.snow)
+  }
   for (const [x, foot, h] of HAIR_PINES) {
     if (x < x0 - 2 || x > x1 + 2) continue
     longShadow(ctx, k, x, foot, h, h * 0.42)
@@ -706,27 +778,25 @@ function drawPistes(ctx: C2D, k: number, x0: number, x1: number): void {
   ctx.save()
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
-  for (const { path: pth, kind } of PISTES) {
-    const pts = pth.pts
-    const xs = pts.map((q) => q[0])
-    if (Math.max(...xs) < x0 - 1 || Math.min(...xs) > x1 + 1) continue
-    // The groove sits under the ball's path, on the snow.
-    const under = (i: number): Pt => {
-      const a = pts[Math.max(0, i - 1)]
-      const b = pts[Math.min(pts.length - 1, i + 1)]
-      const h = Math.atan2(b[1] - a[1], b[0] - a[0])
-      // The normal toward the snow: down the screen for a run left or right.
-      const n: Pt = [-Math.sin(h), Math.cos(h)]
-      const s = n[1] < 0 ? -1 : 1
-      return [pts[i][0] + n[0] * R * s, pts[i][1] + n[1] * R * s]
-    }
+  // Each kind is one path, stroked once: where one piste runs on into the next their ends overlap, and stroked apart
+  // the overlap showed as a darker blot.
+  for (const which of ['piste', 'branch'] as const) {
     ctx.beginPath()
-    for (let i = 0; i < pts.length; i++) {
-      const [x, y] = under(i)
-      if (i === 0) ctx.moveTo(x * k, y * k)
-      else ctx.lineTo(x * k, y * k)
+    for (const { path: pth, kind } of PISTES) {
+      if (kind !== which) continue
+      const pts = pth.pts
+      const xs = pts.map((q) => q[0])
+      if (Math.max(...xs) < x0 - 1 || Math.min(...xs) > x1 + 1) continue
+      // The groove sits under the ball's path, on the snow: straight down from it, so that round a hairpin's turn it
+      // follows the arc a ball's width lower rather than jumping from one side of the path to the other.
+      const under = (i: number): Pt => [pts[i][0], pts[i][1] + R]
+      for (let i = 0; i < pts.length; i++) {
+        const [x, y] = under(i)
+        if (i === 0) ctx.moveTo(x * k, y * k)
+        else ctx.lineTo(x * k, y * k)
+      }
     }
-    ctx.strokeStyle = rgba(SNOW.snowDeep, kind === 'piste' ? 0.34 : 0.26)
+    ctx.strokeStyle = rgba(SNOW.snowDeep, which === 'piste' ? 0.34 : 0.26)
     ctx.lineWidth = Math.max(1, 0.1 * k)
     ctx.stroke()
     ctx.strokeStyle = rgba(SNOW.snowShade, 0.9)
@@ -910,6 +980,29 @@ function drawValley(ctx: C2D, c: Ctx, x0: number, x1: number, st: number): void 
     k,
     rgba(SNOW.snowShade, 0.7),
   )
+  // Under its snow the apron is ground, cut as the knoll beside it is: rock, darker as it goes down, so whoever sinks
+  // through the apron's floor is seen to go into the mountain and not through white air.
+  {
+    const apron: Pt[] = [
+      [LEDGE.lip - 2.4, FLOOR_Y],
+      [GATE_X + 0.05, FLOOR_Y],
+      [GATE_X + 0.05, FORT.foot + 0.4],
+      [GATE_X - 1.6, VALLEY_Y - 0.3],
+      [LEDGE.lip - 4.8, VALLEY_Y - 0.3],
+      [LEDGE.lip - 3.4, FLOOR_Y + 1.3],
+    ]
+    ctx.save()
+    path(ctx, apron, k)
+    ctx.clip()
+    const top = FLOOR_Y + 0.6
+    const cg = ctx.createLinearGradient(0, top * k, 0, (VALLEY_Y - 0.3) * k)
+    cg.addColorStop(0, mixHex(SNOW.snowDeep, SNOW.rock, 0.5))
+    cg.addColorStop(0.3, SNOW.rock)
+    cg.addColorStop(1, SNOW.rockDark)
+    ctx.fillStyle = cg
+    ctx.fillRect((LEDGE.lip - 5) * k, top * k, (GATE_X - LEDGE.lip + 5.2) * k, (VALLEY_Y - top) * k)
+    ctx.restore()
+  }
   // Near pines in the valley, swaying a little on the snow's clock, and some on the face's foot.
   for (let i = Math.floor(x0 / 1.3); i <= Math.ceil(x1 / 1.3); i += lod) {
     const x = i * 1.3 + hash(i, 5, 43) * 0.9
@@ -1147,7 +1240,14 @@ function drawTower(ctx: C2D, c: Ctx, st: number): void {
   concrete(ctx, c, tx1, wy, tx1 + 3.1, wy + 0.6, SNOW.concreteDark)
   strip(ctx, c, tx1 + 0.2, tx1 + 2.9, wy + 0.18, wy + 0.4, st, 6)
   snowcap(ctx, k, tx1, tx1 + 3.1, wy, 0.09)
-  rect(ctx, k, tx1 + 2.4, wy + 0.6, tx1 + 2.58, FORT.upper + 1.6)
+  // Braced back to the tower under it, a cantilever into the mountain behind (a leg stood down from it and stopped
+  // in the air, nothing under it).
+  ctx.beginPath()
+  ctx.moveTo((tx1 + 2.3) * k, (wy + 0.6) * k)
+  ctx.lineTo((tx1 + 2.55) * k, (wy + 0.6) * k)
+  ctx.lineTo(tx1 * k, (wy + 2.6) * k)
+  ctx.lineTo(tx1 * k, (wy + 2.3) * k)
+  ctx.closePath()
   ctx.fillStyle = SNOW.concreteDark
   ctx.fill()
   inked(ctx, c, 0.7)
@@ -1301,11 +1401,19 @@ function drawVaultFace(p: p5, ctx: C2D, c: Ctx, t: number): void {
   // The door: a steel disc, rolled right along its rail as it opens (turning as a wheel turns).
   const cx = lerp(dx, FORT.doorTo, d.roll)
   const turn = -((cx - dx) / r)
-  // Its rail along the face.
-  rect(ctx, k, dx - r * 0.4, dy + r + 0.02, FORT.doorTo + r + 0.1, dy + r + 0.12)
+  // Its rail along the face, on a sill down to the floor (it ended a little above the floor, a bar floating there).
+  rect(ctx, k, dx - r * 0.4, dy + r + 0.02, FORT.doorTo + r + 0.1, FLOOR_Y)
   ctx.fillStyle = SNOW.vault
   ctx.fill()
   drawDoor(ctx, c, [cx, dy], r, turn, d.wheel, d.bolts)
+  // The lamp's warmth out through the open doorway, across the antechamber's floor to the son at its sill: the
+  // first warm light he has stood in, the whole dream. It goes out with the kick.
+  const warm = d.roll * (t < T.kick ? 1 : 0)
+  if (warm > 0.003) {
+    pool(p, k, [dx - 0.25, fl - 0.04], 2.1, 0.32, SNOW.pinwheel, 0.34 * warm)
+    pool(p, k, [dx - 0.1, fl - 0.04], 1.0, 0.18, mixHex(SNOW.pinwheel, SNOW.flash, 0.4), 0.3 * warm)
+    bloom(p, k, [dx, dy + 0.35 * r], 1.6 * r, SNOW.pinwheel, 0.12 * warm)
+  }
 }
 
 function drawDoor(ctx: C2D, c: Ctx, [cx, cy]: Pt, r: number, turn: number, wheel: number, bolts: number): void {
@@ -1377,7 +1485,7 @@ function drawVaultInside(p: p5, ctx: C2D, c: Ctx, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect((dx - r) * k, (dy - r) * k, 2 * r * k, 2 * r * k)
   // The lamp's light down on the bed: the one warm light in the fortress.
-  pool(p, k, [dx + 0.2, fl - 0.55], 1.0, 0.35, SNOW.pinwheel, 0.25)
+  pool(p, k, [dx + 0.2, fl - 0.55], 1.1, 0.45, SNOW.pinwheel, 0.42)
   bloom(p, k, [dx + 0.1, dy - r + 0.1], 0.9, SNOW.flash, 0.3)
   // The bed: legs, the mattress, the sheet over him, the pillow at the right, by the bedside and its pinwheel.
   const bx0 = dx - 0.75
@@ -1573,9 +1681,10 @@ function drawCollapseDust(ctx: C2D, c: Ctx, t: number): void {
 
 /**
  * The snow falling, on the snow's own clock (while he is in limbo it hangs in the air): flakes of many sizes, soft,
- * sparse, drifting; in `near` a few bigger ones out of focus, in front of everything.
+ * sparse, drifting; in `near` a few bigger ones out of focus, in front of everything. While the fortress stands
+ * (`indoors`), none falls in its ground floor: the antechamber, the vault and the footing under them are inside.
  */
-function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: number, near: boolean): void {
+function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: number, near: boolean, indoors: boolean): void {
   const S = 4
   const per = near ? (k > 70 ? 5 : k > 40 ? 2 : 1) : k < 8 ? 3 : 7
   const i0 = Math.floor((f.x0 - 1) / S)
@@ -1594,6 +1703,7 @@ function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: numb
         const drift = (((h1 * S + st * 0.12) % S) + S) % S
         const x = i * S + drift + Math.sin(st * (0.5 + h2) + h1 * 9) * 0.25
         const y = j * S + ((h2 * S + st * speed) % S)
+        if (indoors && x > FORT.x0 && x < FORT.x1 && y > FORT.ceil && y < FORT.foot + 1.5) continue
         const r = near ? 0.035 + 0.03 * h1 : 0.018 + 0.04 * h3 * h3
         const a = near ? 0.5 : 0.35 + 0.45 * h1
         if (r * k < 0.5 && !near) continue

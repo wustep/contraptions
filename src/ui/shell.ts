@@ -154,6 +154,8 @@ export const ICON = {
   // Four corners going out to the edges, and the same four drawn back in.
   fullscreen: ['M3 3h7v3H6v4H3z', 'M14 3h7v7h-3V6h-4z', 'M3 14h3v4h4v3H3z', 'M18 14h3v7h-7v-3h4z'],
   windowed: ['M7 3h3v7H3V7h4z', 'M14 3h3v4h4v3h-7z', 'M3 14h7v7H7v-4H3z', 'M14 14h7v3h-4v4h-3z'],
+  // A favourite: a five-pointed star.
+  star: ['M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z'],
 }
 
 /** A titled section appended to the panel. The title row takes readouts on its right. */

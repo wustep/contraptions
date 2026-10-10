@@ -299,3 +299,18 @@ export const fixup = part<FixupState>(
   },
   () => shotsFor(),
 )
+
+/**
+ * Under Zoom (half as close again round the same middle), from the cut to the old house until the camera comes in at
+ * the mailbox, the frame is held high for the mast and the house, and Carl, pushing the cart on the lawn, stood on the
+ * Zoom frame's very foot for fifteen seconds (0.89 to 0.98 of its half height under its middle) with room to spare over
+ * the two of them. So Zoom holds a little lower there (`Framing.zoomDrop`): he is about three quarters down, the
+ * mast's top given up first. The show's own frame, the house seen whole, is unchanged.
+ */
+export function fixupZoomDrop(T: number): number {
+  const ease = (a: number, b: number) => {
+    const u = Math.max(0, Math.min(1, (T - a) / (b - a)))
+    return u * u * (3 - 2 * u)
+  }
+  return 0.22 * ease(CUT.house, CUT.house + 1.0) * (1 - ease(36.6, 38.0))
+}

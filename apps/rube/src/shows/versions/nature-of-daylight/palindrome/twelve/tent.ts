@@ -28,8 +28,12 @@ const BASE_TOP = -0.18
 /** Its digit keys and its call key, along its top (tent cells): each a little wider than she is, so it shows under her. */
 export const KEYS = [0.5, 0.8, 1.1, 1.4, 1.7, 2.0]
 export const CALL_X = 2.3
-const KEY_W = 0.27
+export const KEY_W = 0.27
 const CAP = 0.075
+/** The keys' tops and their feet, tent cells: what the gala's ghost of the keypad draws (where she is, the cut on her). */
+export const KEY_SPAN: [number, number] = [BASE_TOP - CAP, BASE_TOP]
+/** The phone's body, its ends and its foot, tent cells: the ghost draws it too, so it reads as the phone. */
+export const PHONE_BODY = { x0: BASE[0], x1: BASE[1], top: BASE_TOP, foot: TOP }
 const SINK = 0.03
 /** Where a ball sits on a pressed key. */
 export const ON_KEY = BASE_TOP - CAP + SINK - R
@@ -39,7 +43,9 @@ const HANDSET: [number, number] = [2.7, 3.68]
  * How long the hop onto press n takes (n = PRESSES.length is the call key), landing on the beat: a little longer, and
  * so a little higher, digit by digit as the music builds, and the call key the highest.
  */
-export const hopFor = (n: number): number => (n >= PRESSES.length ? 0.54 : 0.36 + (0.12 * n) / (PRESSES.length - 1))
+// Short hops, low over the keys: at 0.36 to 0.54 s each rose a ball and a half above them, and she was caught in the
+// air in half the frames, a bubble loose over the keyboard to two fresh readers.
+export const hopFor = (n: number): number => (n >= PRESSES.length ? 0.4 : 0.26 + (0.08 * n) / (PRESSES.length - 1))
 
 /** Which key (0..5 a digit, 6 the call key) Louise is on at show time t, or -1. */
 export function keyUnder(t: number): number {
@@ -82,11 +88,11 @@ function rounded(ctx: CanvasRenderingContext2D, x: number, y: number, w: number,
 }
 
 /** The handset lying on its back on the table, off the hook: a handle between the mouthpiece and the earpiece cups. */
-function drawHandset(ctx: CanvasRenderingContext2D, k: number): void {
+export function drawHandset(ctx: CanvasRenderingContext2D, k: number, fill: string = TENT.phone, rim = true): void {
   const [a, b] = HANDSET
   const cup = 0.24
   const floor = TOP * k
-  ctx.fillStyle = TENT.phone
+  ctx.fillStyle = fill
   // The handle, bowed up between the cups.
   ctx.beginPath()
   ctx.moveTo((a + cup * 0.6) * k, floor - 0.13 * k)
@@ -100,6 +106,7 @@ function drawHandset(ctx: CanvasRenderingContext2D, k: number): void {
   ctx.fill()
   rounded(ctx, (b - cup * 1.1) * k, floor - 0.19 * k, cup * 1.1 * k, 0.19 * k, 0.08 * k)
   ctx.fill()
+  if (!rim) return
   ctx.fillStyle = rgba(TENT.canvasLit, 0.6)
   ctx.fillRect((a + 0.03) * k, floor - 0.17 * k, (cup - 0.06) * k, Math.max(1, 0.02 * k))
   ctx.fillRect((b - cup * 1.1 + 0.03) * k, floor - 0.19 * k, (cup * 1.1 - 0.06) * k, Math.max(1, 0.02 * k))
@@ -171,7 +178,14 @@ function drawPhone(ctx: CanvasRenderingContext2D, k: number, t: number): void {
     g.addColorStop(0, rgba(TENT.keypad, awake * (0.16 + 0.12 * hit + 0.1 * calling)))
     g.addColorStop(1, rgba(TENT.keypad, 0))
     ctx.fillStyle = g
-    ctx.fillRect((KEYS[0] - 0.16) * k, (BASE_TOP - CAP - 0.16) * k, (CALL_X - KEYS[0] + 0.32) * k, 0.16 * k)
+    // Soft at its ends: nested, each a little wider and fainter (no blur filter, which is costly every frame).
+    ctx.save()
+    for (let j = 0; j < 8; j++) {
+      const out = 0.03 * j
+      ctx.globalAlpha = 0.125
+      ctx.fillRect((KEYS[0] - 0.1 - out) * k, (BASE_TOP - CAP - 0.16) * k, (CALL_X - KEYS[0] + 0.2 + 2 * out) * k, 0.16 * k)
+    }
+    ctx.restore()
   }
   const key = (x: number, w: number, n: number) => {
     const down = n === under ? SINK : 0
@@ -181,7 +195,15 @@ function drawPhone(ctx: CanvasRenderingContext2D, k: number, t: number): void {
       g.addColorStop(0, rgba(TENT.keypad, awake * (0.3 + 0.45 * hit)))
       g.addColorStop(1, rgba(TENT.keypad, 0))
       ctx.fillStyle = g
-      ctx.fillRect((x - w / 2 - 0.04) * k, (BASE_TOP - CAP - 0.3) * k, (w + 0.08) * k, (0.3 + down) * k)
+      // Soft at its sides as well as its top: with square sides it stood round her as a lit box. Nested bands, each
+      // wider and fainter, not a blur filter, which is costly every frame.
+      ctx.save()
+      for (let j = 0; j < 10; j++) {
+        const half = w / 2 - 0.08 + 0.025 * j
+        ctx.globalAlpha = 0.1
+        ctx.fillRect((x - half) * k, (BASE_TOP - CAP - 0.3) * k, 2 * half * k, (0.3 + down) * k)
+      }
+      ctx.restore()
     }
     const top = (BASE_TOP - CAP + down) * k
     const h = (CAP - down) * k + 1
@@ -292,6 +314,37 @@ function drawTent(p: p5, k: number, t: number): void {
   // The floor.
   ctx.fillStyle = TENT.floor
   ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, (f.y1 - FLOOR + 2) * k)
+  // Lit as the room is: the ring's cold light pooled on the floor by the wall, the table's shadow across it, and the
+  // floor going dark toward us. Flat, a tall frame's half of floor stood under the table as one slab.
+  if (f.y1 > FLOOR) {
+    ctx.save()
+    ctx.translate(CENTRE[0] * k, (FLOOR + 0.2) * k)
+    ctx.scale(1, 0.22)
+    const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, 9 * k)
+    pool.addColorStop(0, rgba(TENT.screenGlow, 0.04 + 0.1 * L))
+    pool.addColorStop(0.5, rgba(TENT.screenGlow, 0.02 + 0.04 * L))
+    pool.addColorStop(1, rgba(TENT.screenGlow, 0))
+    ctx.fillStyle = pool
+    ctx.fillRect(-9 * k, -9 * k, 18 * k, 18 * k)
+    ctx.restore()
+    // The table's shadow soft at its ends too: cut square, it stood on the floor as a box.
+    const half = (TABLE[1] - TABLE[0]) / 2 + 0.6
+    ctx.save()
+    ctx.translate(((TABLE[0] + TABLE[1]) / 2) * k, FLOOR * k)
+    ctx.scale(1, 0.9 / half)
+    const under = ctx.createRadialGradient(0, 0, 0, 0, 0, half * k)
+    under.addColorStop(0, rgba(TENT.cable, 0.4))
+    under.addColorStop(0.75, rgba(TENT.cable, 0.25))
+    under.addColorStop(1, rgba(TENT.cable, 0))
+    ctx.fillStyle = under
+    ctx.fillRect(-half * k, 0, 2 * half * k, half * k)
+    ctx.restore()
+    const near = ctx.createLinearGradient(0, FLOOR * k, 0, (FLOOR + 6) * k)
+    near.addColorStop(0, rgba(TENT.cable, 0))
+    near.addColorStop(1, rgba(TENT.cable, 0.55))
+    ctx.fillStyle = near
+    ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, (f.y1 - FLOOR + 2) * k)
+  }
   ctx.fillStyle = rgba(TENT.cable, 0.6)
   ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, 0.05 * k)
   drawAlarm(ctx, k, t, f)
