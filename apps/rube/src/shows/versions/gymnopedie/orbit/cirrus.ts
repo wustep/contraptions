@@ -88,8 +88,9 @@ export function cirrusLight(t: number): { colour: string; light: number; glow: n
   const below = Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) - 1.75
   const keys: [number, string, number, number][] = [
     // below, colour, how much is seen, how much they glow (lit from under by a low sun).
-    [-1.6, '#FFFFFF', 0.32, 0],
-    [-0.5, '#FFF4E2', 0.36, 0],
+    // By day only a trace: the sunset is their moment, and the noon sky has its cumulus.
+    [-1.6, '#FFFFFF', 0.16, 0],
+    [-0.5, '#FFF4E2', 0.22, 0],
     [-0.2, '#FFDCA8', 0.5, 0.35],
     [0.0, '#FFB28A', 0.62, 0.7],
     [0.18, '#EE92A6', 0.6, 0.55],

@@ -129,7 +129,7 @@ The planet has weather, at depths behind the stones (`air.ts`):
   moves through the day (`coverAt`): most of it by day, thinning at night for the stars and the Milky Way, more again
   under the moon; a cloud gathers and thins as the cover comes over its share.
 - Cirrus, high over the cumulus, mares' tails in a layer of their own that goes by slowest of all (`cirrus.ts`): a faint
-  white by day; as the sun goes down they take its light, gold and then orange and pink, brightest on the sun's side of
+  trace of white by day (the noon sky has its cumulus); as the sun goes down they take its light, gold and then orange and pink, brightest on the sun's side of
   the frame, and glow on after it has set, pink to mauve, as the first lamps are lit, until the light leaves them grey
   and the full night has them. So again, the other way round, before the dawn. Drawn once in white, and tinted again
   only when their colour has moved on.
@@ -378,7 +378,11 @@ aurora's night and the pond (6.7 ms the median of 48 moments round the loop), an
 shot between the Gnossiennes, where the whole thread of lamps is in view: every moment inside the 16.7 ms of a frame at
 60 a second. Slowed six times, a low-end phone, that wide shot went just over (16 to 18 ms), nearly all of it the lamps'
 paths of light on the water, each a pixel or two there; past 14 cells out they are drawn in fewer rows, the same
-picture at that size, and it is 12 to 13.5 ms. Timed so at all 48 moments, six times slowed, the worst is 11.6 ms and the median 5.7. A cached glow and kept colours for the lamps' beams were tried and
+picture at that size, and it is 12 to 13.5 ms. Timed so at all 48 moments, six times slowed, the worst is 11.6 ms and the median 5.7. After the far shore, the sea's surface, the dolphins, the
+bougainvillea, the comet, the squall, the cirrus and the globe went in, the same 48 moments were timed again (six times
+slowed, the least of 30 redraws): the median 3.6 ms; the five worst, timed again twice with 50 redraws each (the machine
+was busy, and 30 did not always reach the least), 9.0 to 9.5 ms at worst (5:04 and 4:24, the first Gnossienne's aurora
+night): every moment inside a frame at 60 a second, and the worst no worse than before them. A cached glow and kept colours for the lamps' beams were tried and
 measured at under a millisecond's difference, and left out.
 
 ## Where things are
