@@ -11,7 +11,7 @@ import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
-import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, sectionOf, shelves, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
+import { RENAMED_TAKES, favorites, performanceProblems, pickVersion, readShows, sectionOf, shelves, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
@@ -128,7 +128,7 @@ async function main(): Promise<void> {
     check('a take that is not there falls to the work\'s first', pickVersion(works, 'premiere-arabesque', 'take-z')?.take === 'take-a')
     check('except Clair de Lune, which falls to Take B', pickVersion(works, 'clair-de-lune', 'take-z')?.take === 'take-b')
     check('a work that is not there falls to the first work', pickVersion(works, 'nocturne', null)?.work === 'clair-de-lune')
-    check('a link with no work opens Clair de Lune, Take B', pickVersion(works, null, null)?.work === 'clair-de-lune' && pickVersion(works, null, null)?.take === 'take-b')
+    check('a link with no work opens the first favourite, here Clair de Lune, Take B', pickVersion(works, null, null)?.work === 'clair-de-lune' && pickVersion(works, null, null)?.take === 'take-b')
     check('Clair de Lune with no take opens Take B', pickVersion(works, 'clair-de-lune', null)?.take === 'take-b')
     check('an explicit take is still that take', pickVersion(works, 'clair-de-lune', 'take-a')?.take === 'take-a')
     check('an empty folder picks nothing', pickVersion([], 'clair-de-lune', 'take-a') === null)
@@ -178,7 +178,11 @@ async function main(): Promise<void> {
     return modeFromPath(path) !== 'shows' || !at || pickVersion(shipped.works, at.work, at.take) !== v
   }))
   check('every take\'s address opens that take', unaddressed.length === 0, unaddressed.map((v) => `${v.work}/${v.take}`).join(', '))
-  check('the Shows tab opens Clair de Lune\'s one take', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-b')
+  check('the Shows tab opens the first favourite, Voyage', pickVersion(shipped.works, null, null)?.work === 'interstellar' && pickVersion(shipped.works, null, null)?.take === 'opus55')
+  check('the favourites are Voyage, Epilogue, Everything and Clair de Lune, in that order',
+    favorites(shipped.works).map((w) => w.title).join(', ') === 'Voyage, Epilogue, Everything, Clair de Lune', favorites(shipped.works).map((w) => w.title).join(', '))
+  const starred = shipped.works.flatMap((w) => w.versions).filter((v) => v.favorite).map((v) => `${v.work}/${v.take}`)
+  check('the one starred take is Epilogue\'s Opus 5.5', starred.join(',') === 'la-la-land/opus5-5', starred.join(','))
   check('Clair de Lune is take-b, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
@@ -238,7 +242,7 @@ async function main(): Promise<void> {
   check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55,grok47' && pickVersion(shipped.works, 'cornfield-chase', null)?.take === 'opus55')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
-  check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
+  check('Cornfield Chase takes have no notes', cornfield.every((v) => v.note === undefined))
   // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
   const interstellar = shipped.works.find((w) => w.work === 'interstellar')
   const liftoffTake = interstellar?.versions[0]
@@ -255,8 +259,8 @@ async function main(): Promise<void> {
     renamed.length === 4 && lost.length === 0, lost.map((r) => `${r.work}/${r.was}`).join(', '))
   check('the build writes a renamed take\'s old address as a page', /RENAMED_TAKES\[w\.work\]/.test(readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')))
   const shelved = shelves(shipped.works).map((s) => `${s.section}: ${s.works.map((w) => w.title).join(', ')}`)
-  check('the picker and Theater shelve the works as Machine, Movies and Ambient',
-    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Ostinato, Première Arabesque / Movies: Caravan, Epilogue, Everything, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence, Voyage / Ambient: Gymnopédie, Soft Lamp', shelved.join(' / '))
+  check('the picker shelves the works as Machine, Movies and Ambient, each with its favourites pinned first',
+    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Voyage, Epilogue, Everything, Caravan, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence / Ambient: Gymnopédie, Ostinato, Soft Lamp', shelved.join(' / '))
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()
@@ -296,11 +300,11 @@ async function main(): Promise<void> {
       }
       if (work.work === 'come-recover' && version.take === 'opus55-all-at-once') checkAllAtOnce(perf, check)
       if (work.work === 'cornfield-chase' && version.take === 'grok47') {
-        check('cornfield: the whole recording, with the demo credit',
+        check('cornfield: the whole recording, credited to Hans Zimmer and Interstellar',
           near(perf.duration, 126.984) &&
           (perf.soundtrack?.offset ?? 0) === 0 &&
           !!perf.soundtrack?.credit?.includes('Hans Zimmer') &&
-          !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+          !/tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
         const endCam = perf.camera?.(perf.duration)
         check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
@@ -445,9 +449,9 @@ async function main(): Promise<void> {
         void BUILD
       }
       if (work.work === 'cornfield-chase' && version.take === 'opus55') {
-        check('cornfield opus55: the whole recording from zero, with the demo credit',
+        check('cornfield opus55: the whole recording from zero, credited to Hans Zimmer and Interstellar',
           near(perf.duration, 126.984) && (perf.soundtrack?.offset ?? 0) === 0 &&
-          !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+          !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !/tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
         const score = (perf.show as StockShow).score
         check('cornfield opus55: Forest, one portal, then the Arcade', score.maps.map((m) => m.world).join(',') === 'garden,arcade' &&

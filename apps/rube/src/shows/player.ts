@@ -390,8 +390,8 @@ panelRoot.append(showCard)
 const workList = createListbox({
   label: 'Show',
   value: current?.work ?? '',
-  // On their shelves (`registry.ts`): Machine, Movies, Ambient.
-  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section }))),
+  // On their shelves (`registry.ts`): Machine, Movies, Ambient, each with its favourites starred and first.
+  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section, mark: w.favorite === undefined ? undefined : icon(ICON.star) }))),
   onChange: (work) => {
     const next = pickVersion(works, work, null)
     // Under a host a pick goes on as its next one would, and the running order carries on after it.
@@ -622,7 +622,8 @@ function sync(): void {
   workList.node.classList.toggle('disabled', busy)
   if (work && (takeChips.length !== work.versions.length || takeChips.some((c, i) => c.version !== work.versions[i]))) {
     takeChips = work.versions.map((version) => {
-      const b = el('button', { type: 'button', title: version.note ?? version.label }, [version.label])
+      const b = el('button', { type: 'button', title: version.note ?? (version.favorite ? `${version.label}, a favourite` : version.label) }, [version.label])
+      if (version.favorite) b.append(icon(ICON.star))
       b.addEventListener('click', () => {
         if (version !== current && !recording) void open(version, host ? 'link' : true)
       })
