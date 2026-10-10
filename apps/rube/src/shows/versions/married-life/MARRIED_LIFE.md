@@ -860,6 +860,12 @@ window.
     at 1280 by 720). At 0.3 the rain is still plainly rain and the phone is at 1.06%; a check holds it there.
     Under Zoom, where the streaks are drawn larger: 1.85% at 1280 by 720, 1.78% on the phone; the wedding's flash on the
     phone 0.01%. All under.
+  - *The credits' contrast* (WCAG 1.4.3: 4.5:1 for small text, 3:1 for large), each line against the brightest tenth of
+    the sky behind it, every half second, on a desk and a phone. The cream names and notes passed (6.5:1 at worst); the
+    gold role and "as" lines did not on the first two cards, up while the dusk is still light (3.8:1 for "Directed by"
+    at 234 s, 4.4:1 for "the blue square"). Those two cards are now plain (`TitleCard.plain`: the card's cream), the
+    rest gold over the night; every line 5.4:1 or better. A saved video still paints them gold: the exporter
+    (`words.ts`) does not read `plain`, which two other shows use too, so it is left for its own change.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
@@ -879,6 +885,7 @@ window.
   Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Photosensitive flashing is measured by approximation only (above), not with a certified analyser.
+- A saved video's credits paint every role line gold: `words.ts` ignores `TitleCard.plain` (the page honours it).
 - Only Chrome on macOS has been watched; Safari's engine has been measured headless (above), Safari itself not. The
   YouTube cue has, on the
   deployed preview in Chromium (PR #163): it loads, plays, and drives the show's clock in real time (10 s of show in

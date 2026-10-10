@@ -355,6 +355,10 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && CARDS.filter((c) => c.role === 'Directed by').length === 1 &&
     ['Claude Opus 5.5', 'Carl Fredricksen', 'Ellie Fredricksen', 'Michael Giacchino', 'Married Life', 'Up', 'Pete Docter', 'p5.js'].every((w) => said.includes(w)) &&
     !/Stephen Wu|tech demo/i.test(said), said)
+  // The cards that come up while the dusk is still light set their role and "as" lines in cream, not gold (gold was
+  // under WCAG's 4.5:1 for small text against the sky behind it: 3.8:1); by the third the sky is night and gold reads.
+  check('married life: the credits over the still light dusk are in cream (contrast), the rest in gold',
+    CARDS.slice(0, 2).every((c) => creditsAt(c.at + 2).some((k) => k.plain)) && CARDS.slice(2).every((c) => !c.plain))
   // On a phone held upright the frame is about 220px high, and at a hundredth of it the roles were 4px: every card
   // keeps a least unit (`least`), and the player and a video's painter both honour it.
   {
