@@ -882,6 +882,11 @@ turn Ian goes round behind it to its far side, the empty cradle between them as 
 moves: Louise, the cradle, Ian, all where they were; only the time changes, the baby in it. Then he goes, as the
 seventy-fifth to the seventy-seventh left it. The last frame is the first, to the same measure.
 
+A ninety-fourth checked the ninety-third with a fresh reader: Ian goes round the cradle, she chooses the daughter she
+knows she will lose, he leaves her. But with nothing moving across the cut, the cut itself, the frame closing in as the
+baby comes, read as a dropped frame, a jump cut. It is a cut in time; the morning swells through the glass now and falls
+back over it, half a second each way, never near white, the room seen through it.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

@@ -108,6 +108,20 @@ export const houseSet = scenery<null>({
     drawFloorLight(p, k, T, shadows, balls)
     if (era === 'news') drawTVGlow(p, k, T)
     drawVignette(p, k, T)
+    // The cut to the cradle is a cut in time, nothing in the room moving across it: the morning swells through the
+    // glass and falls back across it, so it reads as time passing and not a frame dropped. Never near white.
+    if (era === 'home') {
+      const u = (T - BEGIN) / 0.38
+      const glare = 0.42 * Math.exp(-u * u)
+      if (glare > 0.01) {
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        ctx.save()
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.fillStyle = `rgba(246, 232, 200, ${glare})`
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+        ctx.restore()
+      }
+    }
   },
   over: (p, _s, c) => {
     const T = c.t
