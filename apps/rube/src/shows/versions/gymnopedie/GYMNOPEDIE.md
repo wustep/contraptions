@@ -191,6 +191,30 @@ number of times in `f` of the way round, and its wind carries it a whole number 
 with the period like everything else. Anything in a layer fades towards the edge of its repeat (`inLayer`), so when the
 camera draws out wider than a repeat nothing jumps across the frame.
 
+## The sea's surface
+
+The sea was a smooth gradient with its reflections on it. Now it has a surface (`ripples.ts`): wavelets seen in
+perspective, catching the sky on their faces and dark in their troughs, small and close-packed at the horizon (where
+they merge into the sky's sheen) and longer and further apart nearer. They are drawn in sixteen bands from the horizon
+down, each going by at its depth's pace (the near water faster than the far) with a little wind across it, so the
+surface moves as water does when the camera travels over it; each band's pace and wind are whole numbers of its tiles a
+period, so it comes round. Two sets of wavelets cross-fade slowly, band by band, so the water glitters rather than
+slides.
+
+- Under the sun and the moon the same wavelets are lit: a glitter path, narrow at the horizon and wider nearer, drawn
+  into a canvas of its own column of the water, faded softly to either side, and added to the frame's light. It sits
+  under the chords' flashes of light on the water, which answer the music as before.
+- Slicks: long streaks of glassy water where the wind does not reach, the sky smooth in them, going by at their depths.
+- How ruffled the water is follows how full the music is (`loudness`), calm under the Gymnopédie's long notes and
+  livelier where the Gnossiennes run on; it roughens in the shower, and is fainter at night.
+
+The wavelets are drawn from two tiles made once, on the first frame of the sea (far off at the seam, 26 ms), not the
+first close one. A frame's surface costs 0.4 to 0.6 ms (the median of 30 frames with the CPU slowed six times, glitter
+included). They fade with the camera drawing out (12 to 24 cells), and towards their deepest band, so the deeper sea of a
+phone held upright has no edge to them. That frame also showed a line, there from before, where the sea's band met the
+planet's deep water under it: the band's foot is now the colour the deep water has there, which depends on where the
+sun is.
+
 ## The far shore
 
 The sea had nothing beyond it but cloud; now the ball goes along a coast (`shore.ts`). Islands stand out on the
@@ -293,7 +317,7 @@ measured at under a millisecond's difference, and left out.
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
 the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the aurora, the whale) and their
-layers; `shore.ts` the far shore; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 
@@ -352,4 +376,4 @@ Gnossienne's pond; gulls perch on the colonnade and lift off as the ball lands o
 only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; every inner note lights a star of
 a constellation, at night; the aurora is the first Gnossienne's, in the full night only; the sun and the moon go round
 without a jump, the seam included; the far shore's windows are dark by day, lit in the night and out by the dawn, and
-the lighthouse is lit with the first lamp and put out by the dawn; the titles.
+the lighthouse is lit with the first lamp and put out by the dawn; the sea's surface comes round; the titles.

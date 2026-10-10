@@ -12,6 +12,7 @@ import { CADENCES, CLOSE, DAWN_GOING, SUN_GLINTS, gullFlight, PERCHED, dawnAt, l
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
 import { BANK, BREAK, FIGURES, overcastAt, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, lanternAt, BOATS, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
+import { BAND, SHARES, SLICKS } from '../src/shows/versions/gymnopedie/orbit/ripples'
 import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -149,6 +150,10 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
     LIGHTHOUSE_ON >= piece1.from && lighthouseAt(LIGHTHOUSE_ON - 0.01) === 0 && lighthouseAt(LIGHTHOUSE_ON + 2) === 1 &&
     [300, 450, 600, PERIOD - 0.01, 0.5].every((t) => lighthouseAt(t) === 1) && dayTimes.every((t) => lighthouseAt(t) === 0) &&
     Math.abs(beamAt(0).facing - beamAt(PERIOD - 1e-9).facing) < 1e-6 && Math.abs(beamAt(0).across - beamAt(PERIOD - 1e-9).across) < 1e-6)
+  // The sea's surface: each band of wavelets goes a whole number of its tiles a period, and so do the slicks (two tiles).
+  const whole = (x: number) => Math.abs(x - Math.round(x)) < 1e-9
+  check('gymnopedie: the sea\'s surface (its bands of wavelets and its slicks) comes round with the period',
+    BAND.every((b) => whole(b.pace * SHARES) && whole(b.wind)) && SLICKS.every((s) => whole(s.pace * SHARES / 2)))
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5

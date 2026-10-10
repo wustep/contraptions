@@ -11,6 +11,7 @@ import {
 } from './frame'
 import { lampLight, farStones } from './stones'
 import { mirrorShore } from './shore'
+import { drawRipples, ripplesAt, warmRipples, type Glitter } from './ripples'
 
 // ---------------------------------------------------------------- the light on the water
 
@@ -81,6 +82,29 @@ function waterLight(p: p5, c: PieceCtx, u: number, light: number, rgb: string, r
 
 // ---------------------------------------------------------------- the sea
 
+/**
+ * The colour of the planet's deep water (its core, lit from the sun's side: a gradient from a small circle half way
+ * towards the sun out to its whole round) at its rim under the ball.
+ */
+function coreUnder(t: number, day: Sky): string {
+  const sun = sunWay(t)
+  const ball = along(t) / RADIUS
+  // In radii of the core: the gradient's inner circle at `o`, radius 0.1, growing to radius 1.05 about the middle.
+  const [ox, oy] = [Math.sin(sun) * 0.5, -Math.cos(sun) * 0.5]
+  const [px, py] = [Math.sin(ball), -Math.cos(ball)]
+  // Where along the gradient the rim point is: the `s` whose circle passes through it.
+  let lo = 0
+  let hi = 1
+  for (let i = 0; i < 24; i++) {
+    const s = (lo + hi) / 2
+    const cx = ox * (1 - s)
+    const cy = oy * (1 - s)
+    if (Math.hypot(px - cx, py - cy) > 0.1 + 0.95 * s) lo = s
+    else hi = s
+  }
+  return mixHex(mixHex(day.sea, day.deep, 0.5), day.deep, (lo + hi) / 2)
+}
+
 const DEPTH = 5
 
 /** The sea's own light at night, woken by the swell. */
@@ -89,6 +113,7 @@ const GLOW_RGB = [120, 228, 214]
 const mixRgb = (a: number[], b: number[], f: number): string => a.map((x, i) => Math.round(x + (b[i] - x) * f)).join(', ')
 
 export const sea = scenery<null>('sea', (p, _s, c) => {
+  warmRipples()
   const ctx = p.drawingContext as Ctx2D
   const v = viewOf(p, c)
   const day = weathered(c.t)
@@ -111,7 +136,9 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
   }
   water.closePath()
   const g = ctx.createRadialGradient(0, 0, (RADIUS - DEPTH) * k, 0, 0, RADIUS * k)
-  g.addColorStop(0, day.deep)
+  // Its foot the colour the planet's deep water has just under it, where the ball is, so there is no line between them
+  // on a tall frame that shows that far down.
+  g.addColorStop(0, coreUnder(c.t, day))
   g.addColorStop(1, day.sea)
   ctx.fillStyle = g
   ctx.fill(water)
@@ -253,6 +280,19 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     // Reflections: the stones upside down in the water, rippling, fading as they go down; a lit lamp a longer,
     // warmer streak too, with its path of light on the water.
     mirror(p, c, v, day, water, close)
+    // The surface over the reflections: wavelets catching the sky.
+    // Under the sun and the moon, a glitter path of the same wavelets.
+    const glitter: Glitter[] = []
+    {
+      const m = ctx.getTransform()
+      const cell = Math.hypot(m.a, m.b) * k
+      const [hx] = onCanvas(ctx, k, ...polar(along(c.t) + 0.55, 0))
+      for (const b of bodies(ctx, c, v, day)) {
+        const light = b.light * smooth(1.85 - Math.abs(b.angle), 0, 0.35) * (0.55 + 0.45 * Math.min(1, Math.abs(b.angle) / 1.2))
+        if (light > 0.02) glitter.push({ x: (b.x - hx) / cell, light: light * (b.sun ? 1 : 0.8), width: b.sun ? 0.14 : 0.1 })
+      }
+    }
+    drawRipples(ctx, k, c.t, (v.u1 - v.u0) / 2, day, water, close * ripplesAt(v.cells), glitter)
     const ctx2 = p.drawingContext as Ctx2D
     // Each lamp's path of light, fewer rows once the camera is far enough off that a row is a pixel or two: in the wide
     // shots between the pieces the whole thread of lamps is in view, and their strokes were most of the frame's cost.
