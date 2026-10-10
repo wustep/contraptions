@@ -15,7 +15,7 @@ import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 import { BAND, SHARES, SLICKS } from '../src/shows/versions/gymnopedie/orbit/ripples'
 import { LEAPS } from '../src/shows/versions/gymnopedie/orbit/dolphins'
 import { BLOSSOM } from '../src/shows/versions/gymnopedie/orbit/blossom'
-import { cometAt, cometAngle } from '../src/shows/versions/gymnopedie/orbit/comet'
+import { cometAnswers, cometAt, cometAngle, cometFlare } from '../src/shows/versions/gymnopedie/orbit/comet'
 import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -172,6 +172,12 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: the comet crosses the third Gnossienne\'s sky, at night and over the horizon, and only then',
     cometUp.length > 200 && cometUp.every((t) => t > PIECES[2].from && t < PIECES[2].last && skyAt(t).night > 0.5 && Math.abs(cometAngle(t)) < 1.75) &&
     cometAt(0) === 0 && cometAt(PERIOD - 1e-6) === 0, `${cometUp.length / 2} s up`)
+  // While it is up, the comet answers a top note in place of a shooting star: it flares on the note, and there is no
+  // shooting star then to compete with it.
+  const answered = METEORS.map((_, i) => i).filter(cometAnswers)
+  check('gymnopedie: the comet flares on the top note it answers, in place of a shooting star',
+    answered.length >= 1 && answered.every((i) => cometFlare(METEORS[i] - 0.05) === 0 && cometFlare(METEORS[i] + 0.3) > 0.5 && cometAt(METEORS[i]) > 0.05) &&
+    METEORS.filter((_, i) => !cometAnswers(i)).length >= 4)
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5

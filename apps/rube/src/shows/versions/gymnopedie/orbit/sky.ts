@@ -7,10 +7,10 @@ import {
   FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat, lanternAt,
 } from './air'
 import { drawShore } from './shore'
-import { HEAD, MID, cometAngle, cometLight, cometSprite, cometSway } from './comet'
+import { HEAD, MID, cometAngle, cometAnswers, cometFlare, cometLight, cometSprite, cometSway } from './comet'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
-  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, sunAngle, moonAngle, type Body, bodies, sunWay, moonWay, AURORA_OVER, SUN_FAR, MOON_FAR,
+  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, sunAngle, moonAngle, type Body, bodies, sunWay, moonWay, AURORA_OVER, SUN_FAR, MOON_FAR, haloSprite,
 } from './frame'
 
 /**
@@ -159,7 +159,8 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
 
   // A shooting star, on a high phrase's top note.
   const fall = meteorAt(c.t)
-  if (fall && day.night > 0.3 && v.wide < 0.5) {
+  // (Not the one the comet answers, while it is up.)
+  if (fall && day.night > 0.3 && v.wide < 0.5 && !cometAnswers(fall.i)) {
     const i = fall.i
     // High in the sky, falling slant and short, clear of the stones.
     const L = W * 0.26
@@ -217,6 +218,16 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     ctx.scale(size, size)
     ctx.drawImage(cometSprite(), -HEAD, -MID)
     ctx.restore()
+    // On a note it answers, its head flares.
+    const flare = cometFlare(c.t) * comet * over
+    if (flare > 0.01) {
+      const r = F * 0.05 * (0.6 + 0.4 * flare)
+      ctx.save()
+      ctx.globalCompositeOperation = 'lighter'
+      ctx.globalAlpha = Math.min(1, flare)
+      ctx.drawImage(haloSprite('255, 252, 240', '236, 242, 255', '200, 220, 255'), cx - r, cy - r, 2 * r, 2 * r)
+      ctx.restore()
+    }
   }
 
   // The sun and the moon, on arcs over the horizon; gone when the planet is small (they are its sky, not space's).

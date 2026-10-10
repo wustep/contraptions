@@ -148,7 +148,8 @@ The planet has weather, at depths behind the stones (`air.ts`):
   the cloud breaks: the sun comes through on it while the rain still falls, a sun shower that lights the bow
   (`SUN_GLINTS`, `BREAK`). The day's high notes are answered by the sun, as the night's are by the stars.
 - The Milky Way at night, turning with the stars; and a shooting star on the top note of each of the first
-  Gnossienne's four high phrases and the third's two, a melody's peak answered in the sky; each falls clear above the ball, which over the pond rides high in the frame.
+  Gnossienne's four high phrases and the third's three, a melody's peak answered in the sky (the first of the
+  third's, while the comet is up, by the comet instead); each falls clear above the ball, which over the pond rides high in the frame.
 - Mist on the water at dawn, a little at dusk, and under the moon; fireflies over the pond in the third Gnossienne.
 
 Six things happen once a day:
@@ -157,7 +158,9 @@ Six things happen once a day:
   ahead of it (0.8 rad west of it), and sets in the west before the piece ends, fading into the horizon's haze as the
   stars do. Its tail points away from the sun, under the planet through the night, so it swings as the comet goes over:
   a soft dust tail of round puffs of light along a curving spine, each wider and fainter than the last, with a faint
-  grain of strands, and a fainter, straight ion tail, blue. A little brighter where the music is fuller. Drawn once as an
+  grain of strands, and a fainter, straight ion tail, blue. A little brighter where the music is fuller. While it is up it
+  answers the night's top note in place of a shooting star (two streaks at once competed, and one was taken for the
+  other): on that note its head flares, quickly up and slowly back. Drawn once as an
   image, on the first frame, and laid on the sky turned and scaled.
 - Dolphins, once, in the morning (`dolphins.ts`): a pod of three in the near water in front of the colonnade, from
   1:18 to 1:41. Each bass note of that passage sends one of them up out of the water, in turn, so each leaps every
@@ -284,6 +287,19 @@ houses and the windows drawn one rectangle at a time, so the houses are two fill
 the fully lit windows one; each lit face and the haze is a fill of the outline with a gradient rather than a clip; the mirror takes only the islands' bodies and the windows. With the CPU slowed six times, the
 moments with the shore in view cost what they did without it, within the run-to-run variation (least of 30 redraws),
 and the worst moment of the loop (the pull-out between the Gnossiennes, about 15 ms) is unchanged.
+
+## Motion, again
+
+The far shore, the sea's surface, the dolphins, the bougainvillea and the comet were audited in motion, the whole period
+at ten frames a second. Each moment was drawn twice on the live stage, once whole and once with only those layers left
+out, so that the difference is what they alone add; the camera, the stones and the ball cancel out of it. A pop is then
+an 8 × 8 block of that difference that changes in one frame and holds still for three frames either side. Nothing in
+them pops. What the scan turned up were fast things moving (a dolphin breaking the surface, petals, the camera's dive
+at dawn carrying the islands) and one moment where the stage's two drawings did not match, which a frame-by-frame look
+at 30 frames a second showed to be smooth. The water's glitter and the islands' rippled reflection change step by step
+by their nature, a speck at a time, and were left out of the scan. One thing was found by reading rather than by the
+scan: the slicks wrap round their repeat 16 cells either side of the ball, inside the picture in the widest frames where
+the surface is still faintly drawn; they now fade towards the edge of their repeat, as the air's layers do.
 
 ## Any screen
 

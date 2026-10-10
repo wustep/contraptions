@@ -1,4 +1,6 @@
-import { PIECES, loudness, osc, wrap } from './music'
+import { MELODY, PIECES, loudness, osc, wrap } from './music'
+import { since } from './path'
+import { METEORS } from './air'
 import { smooth } from './world'
 import { moonAngle } from './frame'
 
@@ -24,8 +26,27 @@ export function cometAt(t: number): number {
 /** Its angle from overhead, as the sun's and the moon's are (east positive). */
 export const cometAngle = (t: number): number => moonAngle(t) + COMET_LEAD
 
+/**
+ * Which of the shooting stars the comet answers instead: a top note of the third Gnossienne's while the comet is up. Two
+ * streaks at once would compete (and the one is easily taken for the other), so on that note the comet flares.
+ */
+export const cometAnswers = (i: number): boolean =>
+  MELODY.some((n) => n.t === METEORS[i] && n.piece === 2) && cometAt(METEORS[i]) > 0.05
+
+/** How much the comet flares at `t`: on each note it answers, quickly up and slowly back. */
+export function cometFlare(t: number): number {
+  let f = 0
+  for (let i = 0; i < METEORS.length; i++) {
+    if (!cometAnswers(i)) continue
+    const s = since(t, METEORS[i])
+    if (s < 0 || s > 6) continue
+    f = Math.max(f, smooth(s, 0, 0.12) * Math.exp(-s / 1.4))
+  }
+  return f
+}
+
 /** How bright it is, with the music. */
-export const cometLight = (t: number): number => cometAt(t) * (0.8 + 0.25 * loudness(t))
+export const cometLight = (t: number): number => cometAt(t) * (0.8 + 0.25 * loudness(t) + 0.45 * cometFlare(t))
 
 let sprite: HTMLCanvasElement | null = null
 

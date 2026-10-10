@@ -263,14 +263,17 @@ export function drawRipples(ctx: Ctx2D, k: number, t: number, half: number, day:
     if (d < -span2 / 2) d += span2
     if (d > span2 / 2) d -= span2
     const w = slick.w * (0.4 + slick.y)
-    if (Math.abs(d) - w > half + 1) continue
+    // Faded towards the edge of its repeat, where it comes round from the other side: in a wide frame, where the
+    // surface is still faintly drawn, that is inside the picture.
+    const edge = 1 - smooth(Math.abs(d), span2 * 0.3, span2 * 0.46)
+    if (Math.abs(d) - w > half + 1 || edge < 0.01) continue
     const h = Math.max(0.012, slick.h * slick.y)
     const breathe = 0.75 + 0.25 * osc(t, 0.03, slick.seed)
     ctx.save()
     ctx.translate(d * P, slick.y * P)
     ctx.scale(w * P, h * P)
     const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
-    const a = light * 0.55 * breathe * smooth(slick.y, 0.03, 0.2)
+    const a = light * 0.55 * breathe * edge * smooth(slick.y, 0.03, 0.2)
     gr.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${a.toFixed(3)})`)
     gr.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, ${(a * 0.6).toFixed(3)})`)
     gr.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
