@@ -1,6 +1,6 @@
 # La La Land, Seb's
 
-Copyrighted recordings. This is a private tech demo and a one-shot eval take only. Do not ship this audio in a public build. Nothing here claims any right to it. Attribution: `apps/rube/src/shows/versions/la-la-land/SEBS_ATTRIBUTION.txt`.
+Copyrighted recordings. They play only from YouTube (the label's own uploads); no copy of the audio is in the repo. Nothing here claims any right to it. Attribution: `apps/rube/src/shows/versions/la-la-land/SEBS_ATTRIBUTION.txt`.
 
 Open it at `/shows/la-la-land/opus5-5/`. In the Shows picker it is **Opus 5.5**, a take of the work **Epilogue**.
 
@@ -44,14 +44,14 @@ Every piece is new, and so is every place. Nothing is drawn from Machine's world
 | 297.33 | The stars | The flats fly out, and up through a trap in the dark floor comes the machine of the night: a brass star projector, the kind a planetarium keeps, a lens-studded globe at each end of a tilted axis. It lights as they push off and float up beside it, and it turns geared to their waltz. Each star the melody lights (eleven of them) is thrown from its high globe on a thread of light, and joined to the nearest star already lit, so a constellation grows round them; they float close, in each other's arms. The camera goes far out on the rise, the two of them small under the whole turning sky, and comes in close through the quiet, the two of them filling the frame among the stars. Two broad soft cones of light sweep from its high globe as it turns, slowly while they float and fast in the whirl. It whirls with them up the swell while the sky wheels into star trails, and stops with them on the dip (336.62), where the planetarium's figure round them, a grand piano seen from above in fine gold line, is complete: it has drawn on through the waltz, a stretch for each star the melody lit, and is held through the touch (`piano-figure.ts`). A nebula lies along the galaxy's band, violet and rose and a little teal with a dark lane of dust, swelling as they rise into it. Everything is doubled in the dark glass. As the lights go its lamps go out, a beat before the dark, and the next place opens on another projector's lamp. |
 | 340.5 | The home movie | A projector in a dark room; the camera goes into its picture. Their life on eight-millimetre film, in six shots joined by match cuts (the balls stay put and the world changes round them): the house and the pram, a first birthday with balloons, the beach and a yellow bucket, the pool and the diving board (she cheers him on from the deck), a field of flowers that open as he brushes them, the couch at night. It looks like eight-millimetre: the picture weaves in the gate frame by frame (the camera carries the weave, so the balls weave too), the stock is faded and warm, grain crawls over it, its exposure breathes, and scratches run down it now and then. The film runs out. |
 | 395.3 | The drive | A freeway jam at night (the film's first scene, rhymed), the cars creeping up in waves on the notes, their brake lights red on the deck. The city beyond is cool towers under a deep sky with its glow on the haze, warm windows and red beacons; and across the basin, under their jam, another freeway is moving, a river of tail lights one way and headlights the other. The exit ramp, the street, sodium lamps coming on ahead of them, and a blue neon arrow that buzzes on over a door. |
-| 423.4 | Seb's, the dream's last room | The same club, warm with the dream's rose. They cross to her table; on the stage the piano plays itself, and an echo of him plays it, the one who is really there, hopping its keys as they go down. The notes it plays go out to her at her table in candle gold, as his did at the start in the cold, until the dream drains and the ones still in the air go out before they reach her. They kiss on 450.107. The rose drains out of the walls and the light, the room is its cold blue again, and he drifts back up to the keys, landing on the last chord (453.73). The chord rings on him, and the picture cuts to her table: the dream's him still in the seat beside her drains from blue to grey while her eyes stay on it, and David comes back from the bar and sits down into it as it comes apart. |
+| 423.4 | Seb's, the dream's last room | The same club, warm with the dream's rose. They cross to her table; on the stage the piano plays itself, and an echo of him plays it, the one who is really there, hopping its keys as they go down. The notes it plays go out to her at her table in candle gold, as his did at the start, until the dream drains and the ones still in the air go out before they reach her. They kiss on 450.107. The rose drains out of the walls and the light, the room is its cold blue again, and he drifts back up to the keys, landing on the last chord (453.73). The chord rings on him, and the picture cuts to her table: the dream's him still in the seat beside her drains from blue to grey while her eyes stay on it, and David comes back from the bar and sits down into it as it comes apart. |
 | 453.73 | Seb's, now | Silence. David has come back to her table. They go to the door, he out onto the pavement, she as far as the doorway. In close shots cut against each other, as in the film: she turns back from the doorway, he looks up, she smiles, he nods. The End comes in (464) and she is gone; one last note he plays follows her across the empty room to the door, and the door shuts on its note (467.866) as it arrives: it flares against the shut door and goes out. The band's lamps come up behind him (471.546); he nods the count-in; on the band's first hit (478.05) the stage blazes and the camera draws back out of the club, over its roof, to the whole city of stars, where searchlights sweep, and his notes rise from the keys in gold, up through the roof into the night. The credits come up in the sky. On The End's orchestra (496.27) two more searchlights swing up from behind the hills, the city brightens with the swell, the observatory on its ridge lights, their constellation from among the stars comes out over the city star by star, each star one of his notes rising from the keys out of the club and over the city to its place, and once the last has come to rest the gold piano from the dip draws itself round them again, held to the last frame, and the beams cross on the last chord. |
 
 ## The music
 
 **The audio.**
-- Fetched once with yt-dlp from the label's "Justin Hurwitz - Topic" uploads. They are not kept: `scripts/shows/sebs-mix.sh` takes them as fetched.
-- The show plays one file, `apps/rube/src/shows/versions/la-la-land/la-la-land-sebs-mix-demo.mp3`, built by `scripts/shows/sebs-mix.sh`: the Epilogue from its first sample, untouched, then The End from 464.0 s. No gain, no fades, no timing changes.
+- The show plays the label's "Justin Hurwitz - Topic" uploads from YouTube, as two embeds on one clock: the Epilogue whole (`_vpCaKQXhMg`), then The End (`PMbrnvyLTdg`) from 464 s (`sebs/index.ts`). No copy of the audio is in the repo, and `check:shows` holds that the take has no local file.
+- The clock was measured once from a mix of the same two uploads (`scripts/shows/sebs-mix.sh`: the Epilogue from its first sample, untouched, then The End from 464.0 s; no gain, fades or timing changes), which is not kept.
 
 **Its clock.** `scripts/shows/sebs-onsets.py` measured the mix once (numpy and ffmpeg) into `scripts/shows/plans/sebs-onsets.json`:
 - every onset (1,980), with its strength and, where the texture is thin enough, the top voice's pitch (the piano's melody, the trumpet's solo);
@@ -76,7 +76,7 @@ Each place is its own universe; the stage changes place only under a cover, draw
 | 269 | the trumpet → painted Paris | An iris, closing on the two of them and opening on the next scene. |
 | 340.5 | the stars → the home movie | Dark. |
 | 395.3 | the home movie → the drive | Dark, as the film runs out. |
-| 423.4 | the street → Seb's | Through the door. |
+| 423.4 | the street → Seb's | Dark, as they go in through the door. |
 
 The club at the end is the club at the start, built again where the thread comes back to it, with the city round it at both ends.
 
@@ -96,6 +96,10 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - their constellation comes out over the city of stars, every star of it in the picture from when it comes out to the last frame;
 - his playing reaches her: every note that goes out from the keys at her table, across Lipton's and in the dream's last room arrives where she will be, the ones at her table are seen, and the last reaches the door as it shuts; and at the audition every note of her song lands on him;
 - the house in Paris never covers the two of them;
+- the opening plays the piano's notes, on their attacks, and not the ghosts in the rests;
+- every ball on the stage is someone, once;
+- David looks at her at her table, and the swap there is seen: the dream's him greyed, and her looking at it;
+- the room as it is is muted, the dream in full colour all through, and the colour back by the last frame;
 - his music rising out of the club with the band never runs through a credit card;
 - the piano drawn in the stars is whole in the picture, at the dip and over the city;
 - the other road is seen where the story turns, and only there: each of the six echoes well inside the frame, mostly there, at its moment; and in the hush she rocks from the knock and looks after the one who walked out;
@@ -117,6 +121,9 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - **The show:** `.../la-la-land/sebs/`.
   - `call.ts`: his playing made visible: rising into the dark at the start, then reaching her, at Seb's and at Lipton's.
   - `lens.ts`: the lens the whole picture is seen through (a little fall-off at the corners, a fine grain), but for the home movie, which has its own stock; and the grade: the room as it is muted and colder, the dream in full colour, with the colour coming in at Lipton's, draining at the waking, and brought back by The End's swell.
+  - `piano-figure.ts`: the gold piano the planetarium draws among the stars, and over the city at the end.
+  - `transitions.ts`: the covers the stage changes place under (the spotlight's iris, the curtain, white, dark, the door, the iris).
+  - `physics.ts`: gravity and hops. `index.ts`: the performance (the camera, the covers, the credits, the YouTube soundtrack).
   - `echo.ts`: the other road, drawn over each place and under its cover; the parts say where (`Built.echoes`) and the show keeps them (`SebsShow.echoes`).
   - `kit.ts`: the part contract (`Slot`, `Built`, `Company`, `Echo`), timed `route` and `carried` lanes, `lay()` with seam checks, and drawing helpers (`frame`, `glow`, `beam`, `ring`).
   - `show.ts`: a `Show` with eleven universes on one clock, and the company merged in.
@@ -130,7 +137,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
   - `Performance.titles` and the page's words layer, for the credits;
   - `ShowVersion.director`, for the byline (since removed: the picker has no bylines);
   - the styles for both.
-- **Rebuilding the audio.** `sh scripts/shows/sebs-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/shows/sebs-onsets.py` measures it again. Neither needs to run unless the mix changes.
+- **Measuring the clock again.** `sh scripts/shows/sebs-mix.sh` rebuilds the measuring mix from the two uploads, and `python3 scripts/shows/sebs-onsets.py` measures it. Neither needs to run unless the recordings change.
 
 ## Visual polish
 
@@ -440,7 +447,7 @@ A sixtieth pass, the picture against the music:
 
 A sixty-first pass, the show's card:
 
-- **Its picture.** The picture a link to the show unfurls with (`public/shows/la-la-land/opus5-5.png`, taken at the show's `still`) had been made before these passes, so it no longer matched the show: in it the two of them looked past each other on the quay. And at its moment, 272.0, their turn to each other had only begun and every umbrella was furled. The still is now 273.1, just past the waltz's first ONE: the first umbrella open behind them, the lamp, and the two of them on the wet quay looking at each other. Only this take's card was made again; the Shows page's own card uses another take's.
+- **Its picture.** The picture a link to the show unfurls with (`public/shows/la-la-land/opus5-5.png`, taken at the show's `still`) had been made before these passes, so it no longer matched the show: in it the two of them looked past each other on the quay. And at its moment, 272.0, their turn to each other had only begun and every umbrella was furled. The still was then 273.1, just past the waltz's first ONE: the first umbrella open behind them, the lamp, and the two of them on the wet quay looking at each other. (Later it moved to 266.15, the trumpet's last run in the dark; see the PR's Round 15.) Only this take's card was made again; the Shows page's own card uses another take's.
 
 A sixty-second pass, the notes again:
 

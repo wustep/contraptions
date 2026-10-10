@@ -142,8 +142,7 @@ const miaAtTable = (t: number): Pt => {
   return [MIA_SEAT[0] - 0.058 * (u * u * (3 - 2 * u)), MIA_SEAT[1]]
 }
 /**
- * At Seb's, now, the theme reaches her where she sits: the notes he plays go out to her table in the club's cold
- * light, the first of them a breath before she lifts her eyes to the stage. She knows it.
+ * At Seb's, now, the theme reaches her where she sits: the notes he plays go out to her table, the first of them a breath before she lifts her eyes to the stage. She knows it.
  */
 /**
  * Before it reaches her: from his first note the theme rises off the strings into the dark of the club; then it
