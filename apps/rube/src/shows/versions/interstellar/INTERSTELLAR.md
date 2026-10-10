@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 132 (latest)
+## Polish pass 133 (latest)
+
+- **Online, No Time for Caution was heard early, faintly, under Cornfield Chase, for eight seconds.** The whole show was played online start to finish in real time (pass 130's GPU Chrome, both players read every 2 s). It ran in step throughout: worst offset 0.001 s, no stall note, no console errors, and it stopped at 291 s with the music silent under the credits. One sample showed the second video already playing at volume 5 at 121.7 s. Read every 50 ms, it was running early (the player's `PREROLL`, so it is moving when it comes in), unmuted, at volume 5 from 118.5 s to its entry at 126.5 s: the last eight seconds before its cue point (95.76 to 103.76 of the upload) under the end of Cornfield Chase, at about −26 dB. The cause is in the shared YouTube player (`shows/youtube.ts`). An early cue was started with `unMute()` and volume 0, and YouTube puts an unmuted player at 0 up to 5 on its own, at the first buffering after. `setVolume` sends only changes, so the 0 was never sent again. Pass 130's half-second samples had happened to land on 0. A cue running early or warming is now muted (`hush`), and unmuted at its entry, where the fade-in takes it up from 1. The viewer's mute is still followed before and after. Read again, the early run is muted at volume 0 from start to entry, the hand-over fades as before, and seek, pause, resume, 2×, 0.5× and the viewer's mute all behave. A new check holds it, and fails against the old player. This is in the shared player, so every YouTube show with a second cue is quieter for it. Voyage was the one with a cue that runs early.
+
+## Polish pass 132
 
 No change to the show: the online music at the player's other speeds, read as in passes 130 and 131. At 2× and at 0.5× YouTube follows (`getPlaybackRate` 2 and 0.5) and the active video stays in step to the hundredth, through steady play and through the hand-over at both speeds. Two small things, neither heard:
 - A change of speed sets the waiting second video going for a moment, muted (volume 0) and from wherever it was cued, before it pauses again.

@@ -132,6 +132,16 @@ async function main(): Promise<void> {
   check('a credit card stays where it is when it fits, slides in to a margin when it would cross an edge, and centres when it cannot fit',
     placeCard(200, 100, 400) === 200 && placeCard(30, 100, 400) === 58 && placeCard(390, 100, 400) === 342 &&
     placeCard(152, 331, 390) === 173.5 && placeCard(100, 390, 390) === 195 && placeCard(58, 100, 400) === 58)
+  // A YouTube cue running ahead of its entry is muted, not just at volume 0: YouTube puts an unmuted player at volume 0
+  // up to 5 on its own, so the next recording was heard faintly under the one before it for eight seconds (pass 133).
+  {
+    const yt = readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.ts'), 'utf8')
+    check('a YouTube cue running early or warming is muted until its entry, and follows the viewer\'s mute after',
+      /const hush = \(d: Deck, silent: boolean\) => \{\s*if \(muted \|\| silent\) d\.player!\.mute\(\)/.test(yt) &&
+      yt.includes('hush(d, early)') && /d\.warm = 'on'[\s\S]{0,80}hush\(d, true\)/.test(yt) &&
+      /d\.early = false\s*hush\(d, false\)/.test(yt) && yt.includes("hush(d, d.early || d.warm === 'on')") &&
+      !/if \(muted\) d\.player\.mute\(\)\s*else d\.player\.unMute\(\)/.test(yt))
+  }
   check('Z toggles Zoom and O toggles Overview', /case 'z':/.test(player) && /case 'o':/.test(player) && player.includes('Zoom in on the action (Z)') && player.includes('Zoom out to the whole world (O)'))
 
   /* ------------------------------------------------------------------ the registry */

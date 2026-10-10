@@ -265,6 +265,17 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     d.player.setVolume(n)
   }
 
+  /**
+   * Muted when the viewer has muted, or while it runs unheard (early, or warming). Volume 0 is not enough: an unmuted
+   * player at volume 0 is put up to 5 by YouTube on its own a moment later (seen on the first buffering after
+   * `unMute`), and since `setVolume` sends only changes, the 0 is not sent again, so a cue running early was heard
+   * at 5 under the one before it.
+   */
+  const hush = (d: Deck, silent: boolean) => {
+    if (muted || silent) d.player!.mute()
+    else d.player!.unMute()
+  }
+
   const start = (d: Deck, t: number, early: boolean) => {
     if (!d.player || !d.ready) return
     if (d.warm === 'on') d.warm = 'done'
@@ -273,8 +284,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     d.toldAt = performance.now()
     d.ear.reset()
     d.player.setPlaybackRate(speed)
-    if (muted) d.player.mute()
-    else d.player.unMute()
+    hush(d, early)
     setVolume(d, early ? 0 : level(d, t))
     d.player.seekTo(Math.max(0, videoAt(d, t)), true)
     d.player.playVideo()
@@ -313,6 +323,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     if (!d.player || !d.ready) return
     d.warm = 'on'
     d.toldAt = performance.now()
+    hush(d, true)
     setVolume(d, 0)
     d.player.setPlaybackRate(speed)
     d.player.seekTo(parkAt(d), true)
@@ -522,6 +533,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
           if (d.early) {
             // Its entry: it has been running silently, and is heard from here.
             d.early = false
+            hush(d, false)
             raise(d)
           } else if (!d.running && d.state !== ENDED) {
             // Its entry, with nothing to run early from (a video from its first second): in now.
@@ -585,8 +597,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       muted = next
       for (const d of decks) {
         if (!d.player || !d.ready) continue
-        if (next) d.player.mute()
-        else d.player.unMute()
+        hush(d, d.early || d.warm === 'on')
       }
     },
     onChange(fn) {
