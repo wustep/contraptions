@@ -12,16 +12,16 @@ import { DUST } from '../worlds'
  * (`at`, show time to world cells), not a ball.
  */
 export interface Flight {
-  /** Where it is, its bank (radians), 0..1 for how much of it there is to see, the ground under it, and the sun off its wing (0..1). */
-  at(t: number): { p: Pt; bank: number; seen: number; ground: number | null; glint?: number }
+  /** Where it is, its bank (radians), 0..1 for how much of it there is to see, the ground under it (and how much of its shadow there is), and the sun off its wing (0..1). */
+  at(t: number): { p: Pt; bank: number; seen: number; ground: number | null; shade?: number; glint?: number }
 }
 
 export const drone = scenery<Flight>({
   name: 'drone',
   draw: (p, s, c) => {
-    const { p: at, bank, seen, ground, glint } = s.at(c.t)
+    const { p: at, bank, seen, ground, shade, glint } = s.at(c.t)
     if (seen <= 0) return
-    drawDrone(p, c.k, c.ink, c.weight, at, bank, seen, ground, glint ?? 0)
+    drawDrone(p, c.k, c.ink, c.weight, at, bank, seen, ground, glint ?? 0, shade ?? 1)
   },
 })
 
@@ -33,13 +33,13 @@ const CHORD = 0.17
 /**
  * The drone at `at` (cells, in whatever frame the caller draws in), banked by
  * `bank`, `seen` its opacity, with its shadow on `ground` if given, and
- * `glint` (0..1) for the sun catching the near wing.
+ * `glint` (0..1) for the sun catching the near wing, and `shade` (0..1) for how much of its shadow there is.
  */
-export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt, bank: number, seen = 1, ground: number | null = null, glint = 0): void {
+export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt, bank: number, seen = 1, ground: number | null = null, glint = 0, shade = 1): void {
   const X = (x: number) => x * k
   if (ground !== null) {
     p.noStroke()
-    p.fill(alpha(p, ink, 0.1 * seen))
+    p.fill(alpha(p, ink, 0.1 * seen * shade))
     p.ellipse(X(at[0] + 0.2), X(ground), X(1.7), X(0.14))
   }
   p.push()

@@ -7,6 +7,7 @@ import { beat, beats, DROP } from '../music'
 import { dropTime, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { cornWall, stalk } from './corn'
+import { drawFence } from './fence'
 
 /**
  * The truck, and Cooper drives it. It is waiting on the field road under the
@@ -764,50 +765,8 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   outline(p, ink, weight * 0.6)
   for (let y = GROUND + 0.4; y < GROUND + 3; y += 0.5) p.line(X(s.edge), X(y), X(s.edge + 0.16), X(y))
 
-  // The fence: two posts and two rails across the field; on the downbeat the grille takes the rails and they go end over end.
-  {
-    const x = s.fence
-    const hit = t - FENCE
-    const lean = hit > 0 ? Math.min(0.5, hit * 3) : 0
-    solid(p, ink, weight, DUST.wood)
-    for (const [dx, side] of [[-0.95, -1], [0.95, 1]] as const) {
-      p.push()
-      p.translate(X(x + dx), X(GROUND))
-      p.rotate(side > 0 ? lean : lean * 0.3)
-      p.rect(0, X(-0.45), X(0.1), X(0.9))
-      p.pop()
-    }
-    for (const [ry, spin] of [[0.72, 1], [0.38, -1]] as const) {
-      for (const half of [-1, 1] as const) {
-        const cx0 = x + half * 0.47
-        const cy0 = GROUND - ry
-        let cx = cx0
-        let cy = cy0
-        let a = 0
-        if (hit > 0) {
-          // Thrown ahead of the truck, up and over, and down in the stubble.
-          const fly = Math.min(hit, 0.9)
-          cx = cx0 + (3.1 + half * 0.4) * fly
-          cy = Math.min(GROUND - 0.05, cy0 - (1.6 + spin * 0.3) * fly + 0.5 * 9 * fly * fly)
-          a = spin * half * 5 * fly
-        }
-        p.push()
-        p.translate(X(cx), X(cy))
-        p.rotate(a)
-        solid(p, ink, weight, DUST.wood)
-        p.rect(0, 0, X(0.94), X(0.08))
-        p.pop()
-      }
-    }
-    if (hit > 0 && hit < 0.4) {
-      p.stroke(alpha(p, ink, 1 - hit / 0.4))
-      p.strokeWeight(weight)
-      for (let j = 0; j < 5; j++) {
-        const a = -0.9 + j * 0.45
-        p.line(X(x + Math.cos(a) * 0.25), X(GROUND - 0.55 + Math.sin(a) * 0.25), X(x + Math.cos(a) * (0.35 + hit)), X(GROUND - 0.55 + Math.sin(a) * (0.35 + hit)))
-      }
-    }
-  }
+  // The fence: two posts and two rails across the field; on the downbeat the grille takes the rails (`fence.ts`).
+  drawFence(p, k, ink, weight, s.fence, GROUND, t - FENCE, CHASE_PACE)
 
   // The stalks the grille takes: standing, bent under, and back up behind.
   for (let i = 0; i < s.stalks.length; i++) {

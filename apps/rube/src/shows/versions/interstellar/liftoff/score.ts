@@ -13,7 +13,7 @@ import { yard, YARD_END } from './earth/yard'
 import { rearAt, truck } from './earth/truck'
 import { drone, type Flight } from './earth/drone'
 import { combine } from './earth/combine'
-import { gate } from './earth/gate'
+import { droneJoin, gate, LEVEL as GATE_LEVEL, type GateState } from './earth/gate'
 import { gantry } from './earth/gantry'
 import { PUNCH, punchHeight, rocket, rocketPose, ROCKET_LENGTH } from './rocket'
 import { cloud } from './cloud'
@@ -103,20 +103,50 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   const b0 = (pickup.state as { b0: number }).b0
   const rear = (t: number) => pickup.col + rearAt(b0, t)
   const road = pickup.row + 1 + FLOOR
+  // The drone is one flight from the corn to the bunker roof: the chase's, then over the dam and down with the valley,
+  // throttled back over the combine, and on to where the gate's part has it, at its pace and height (`droneJoin`).
+  const gatePlaced = earth.placed.find((p) => p.piece.name === 'gate')!
+  const join = droneJoin(gatePlaced.state as GateState)
+  const p1: Pt = [gatePlaced.col + gatePlaced.mirror * join.p[0], gatePlaced.row + join.p[1]]
+  const v1: Pt = [gatePlaced.mirror * join.v[0], join.v[1]]
+  const LEAVE = beat(84)
+  const chase = (t: number) => {
+    const lead = smooth(t, 33.9, 38.6)
+    const close = smooth(t, DROP, beat(83))
+    const ahead = 5.6 - 1.8 * close + 0.3 * Math.sin(t * 0.9)
+    const x = rear(t) - 5 * (1 - lead) + ahead * lead
+    const y = road - 3.6 * (1 - lead) + (-2.55 + 0.1 * Math.sin(t * 1.7)) * lead
+    const bank = -0.04 * (1 - lead) + 0.05 * Math.sin(t * 0.9) * lead
+    return { x, y, bank }
+  }
+  const c0 = chase(LEAVE)
+  const cb = chase(LEAVE - 0.01)
+  const v0: Pt = [(c0.x - cb.x) / 0.01, (c0.y - cb.y) / 0.01]
+  const span = GATE_LEVEL - LEAVE
+  const hermite = (a: number, b: number, va: number, vb: number, w: number): number =>
+    (2 * w ** 3 - 3 * w ** 2 + 1) * a + (w ** 3 - 2 * w ** 2 + w) * va * span + (-2 * w ** 3 + 3 * w ** 2) * b + (w ** 3 - w ** 2) * vb * span
   const flight: Flight = {
     at(t) {
       // In from behind the truck as it pulls away, high, overtaking it and coming down to lead it along the road;
-      // ahead of it all the way through the corn.
-      if (t < 33.9) return { p: [0, 0], bank: 0, seen: 0, ground: null, glint: 0 }
-      const lead = smooth(t, 33.9, 38.6)
-      // Ahead, a little closer every bar, until the dam: then it is over the edge and away down the valley.
-      const close = smooth(t, DROP, beat(83))
-      const gone = smooth(t, beat(84), beat(86) + 1.2)
-      const ahead = 5.6 - 1.8 * close + 0.3 * Math.sin(t * 0.9)
-      const x = rear(Math.min(t, beat(84))) - 5 * (1 - lead) + ahead * lead + gone * 9
-      const y = road - 3.6 * (1 - lead) + (-2.55 + 0.1 * Math.sin(t * 1.7)) * lead - gone * 1.5
-      const bank = -0.04 * (1 - lead) + 0.05 * Math.sin(t * 0.9) * lead - gone * 0.12
-      return { p: [x, y], bank, seen: 1 - smooth(t, beat(86), beat(86) + 1.4), ground: gone > 0.2 ? null : road - 2, glint: glintAt(t) }
+      // ahead of it all the way through the corn, a little closer every bar, until the dam.
+      if (t < 33.9 || t >= GATE_LEVEL) return { p: [0, 0], bank: 0, seen: 0, ground: null, glint: 0 }
+      if (t <= LEAVE) {
+        const { x, y, bank } = chase(t)
+        return { p: [x, y], bank, seen: 1, ground: road - 2, shade: 1 - smooth(t, LEAVE - 0.8, LEAVE), glint: glintAt(t) }
+      }
+      // Over the edge and on: one curve from the chase's pace to the gate's, so it never jumps or stops.
+      // (Held a little lower and nearer than the straight curve while the combine plays, so the frame has all of it;
+      // a sine squared, so neither end's pace changes.)
+      const along = (w: number): Pt => {
+        const dip = Math.sin(Math.PI * w) ** 2
+        return [hermite(c0.x, p1[0], v0[0], v1[0], w) - 1.6 * dip, hermite(c0.y, p1[1], v0[1], v1[1], w) + 0.55 * dip]
+      }
+      const w = (t - LEAVE) / span
+      const [x, y] = along(w)
+      const dy = (along(Math.min(1, w + 0.001))[1] - y) / (0.001 * span)
+      // Its bank eases from the chase's to the gate's pitch, nose down a touch while it comes down faster than either end.
+      const bank = c0.bank + (join.pitch - c0.bank) * smooth(w, 0, 1) + 0.3 * (dy - v0[1] - (v1[1] - v0[1]) * w)
+      return { p: [x, y], bank, seen: 1, ground: null, glint: 0 }
     },
   }
 

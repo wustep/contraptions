@@ -231,7 +231,16 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 150 (latest)
+## Polish pass 151 (latest)
+
+Stephen's three notes:
+- **The drone is one flight.** It used to fade out in mid-air over the dam (53 s), be gone through the combine, and then a second drone slid down into the top of the frame at the gate (64.5 s), at another height and pace. Now the chase's flight (`score.ts`) carries on over the dam: down with the valley, throttled back over the combine where it stays in the frame, and on to exactly where, how fast and how high the gate's part takes it on beat 105 (`droneJoin` in `earth/gate.ts`). The curve between them is a Hermite, so its position, pace and bank are continuous at both ends; its shadow fades out at the dam and back in at the gate rather than switching.
+- **The fence breaks with weight** (`earth/fence.ts`). The rails snap at the grille with a few splinters. The near lengths swing down on their nails into the stubble. The far ones are thrown on ahead, worked out once as rigid boards under the farm's gravity with the ground under them: the low one lands on the eighth (80½) and the high one on beat 81, each on one end, then slaps flat with a puff of dust, bounces once and lies still. The far post is pulled over and settles leaning; the near one shudders. Before, the boards flew a fixed arc, slid along the road still spinning, and froze standing in it as crosses.
+- **No clouds in the station** (`act2/interior.ts`). They are gone, with nothing in their place; the air's gradient and the spokes give the open air its scale.
+
+Audited with before and after frames: the chase, the dam, the combine and the gate every 0.5–0.65 s, back-to-back frames at 1/30 s across both seams of the drone's flight, the fence every 0.05 s from the hit until the boards lie still, and the station every 2.5 s from 128 to 186 s. `npm run build` passes, every check included. No strike, cue, camera key or music moved.
+
+## Polish pass 150
 
 A second subtraction pass, after a fresh look at the whole show. Two more things go:
 - **The glow inside the wormholes' rims** (`lensRim` in `kit.ts`, pass 13). A soft band of light just inside each sphere's rim, too faint to find at 1x; the lensed arcs and the rim's own line already say glass. The helper goes with it.
