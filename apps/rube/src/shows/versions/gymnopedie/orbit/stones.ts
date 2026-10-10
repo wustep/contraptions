@@ -171,7 +171,7 @@ function column(p: p5, k: number, w: number, h: number, day: Sky, weight: number
  * The first Gnossienne's stones: a beam of bronze on slim dark posts, with a lamp at its front that the ball lights
  * as it lands. `lamp` is how bright it burns.
  */
-function stele(p: p5, k: number, w: number, h: number, day: Sky, weight: number, lamp: number, withLamp: boolean): void {
+function stele(p: p5, k: number, w: number, h: number, day: Sky, weight: number, lamp: number, withLamp: boolean, lean = 0): void {
   const K = (v: number) => v * k
   const body = mixHex('#23283C', day.lit, 0.2)
   const posts = w > 0.42 ? [0.09, w - 0.09] : [w / 2]
@@ -203,7 +203,12 @@ function stele(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
     p.noStroke()
     p.fill(alpha(p, '#FFE7B0', Math.min(1, lamp * 1.4)))
     const fh = 0.05 + 0.06 * lamp
-    p.ellipse(K(lx), K(-h - 0.05 - fh / 2), K(0.035), K(fh))
+    // Leaning from its foot, as the ball rolls by (`bowAt`).
+    p.push()
+    p.translate(K(lx), K(-h - 0.05))
+    p.rotate(lean)
+    p.ellipse(0, K(-fh / 2), K(0.035), K(fh))
+    p.pop()
   }
 }
 
@@ -324,7 +329,7 @@ function perchedGull(p: p5, k: number, day: Sky, weight: number, face: number, t
 }
 
 /**
- * How far a lotus flower standing at `u` on a leaf `h` high bows from the ball at `t`, radians: away from it as it rolls
+ * How far a lotus flower (or a lamp's flame) standing at `u` on a stone `h` high bows from the ball at `t`, radians: away from it as it rolls
  * close along the leaf, most when it is nearest, and back upright once it has gone; nothing while the ball is in the air
  * over it. It turns from leaning one way to the other as the ball goes over its foot, where the ball hides it.
  */
@@ -384,7 +389,8 @@ export function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: bool
       } else if (stone.piece === 1) {
         // Lit by the ball, and burning on behind it until dawn: Ariadne's thread in lamps.
         const lit = lampLight(stone, c.t)
-        stele(p, k, sw, h, day, c.weight, lit > 0 ? Math.min(1, lit + 0.45 * cadence(stone, c.t)) : 0, j === 0)
+        const lampU = u0 + (sw > 0.42 ? 0.1 : sw / 2)
+        stele(p, k, sw, h, day, c.weight, lit > 0 ? Math.min(1, lit + 0.45 * cadence(stone, c.t)) : 0, j === 0, j === 0 ? 0.8 * bowAt(lampU, h - 0.05, c.t) : 0)
       } else {
         const sway = 0.03 * osc(c.t, 0.11, stone.index + j)
         const flower = j === n - 1 && w > 0.9
