@@ -107,7 +107,6 @@ export const sleep = scenery<null>({
       }
       ctx.restore()
       bloom(p, k, at, 1.5 * far, SLEEP.mote, 0.55)
-      bloom(p, k, at, 0.8 * far, COBB, 0.9)
       ctx.fillStyle = COBB
       ctx.beginPath()
       ctx.arc(at[0] * k, at[1] * k, Math.max(2, 0.19 * far * k), 0, Math.PI * 2)
@@ -133,7 +132,6 @@ export const beacon = scenery<null>({
     const f = frame(p, k)
     const far = Math.max(1, (f.y1 - f.y0) / 24)
     const at = wide.where(t)
-    bloom(p, k, at, 0.8 * far, COBB, 0.7)
     const ctx = p.drawingContext as CanvasRenderingContext2D
     ctx.fillStyle = COBB
     ctx.beginPath()
