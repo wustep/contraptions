@@ -52,7 +52,7 @@ import { checkMagnum } from './magnum'
 import { checkKick } from './kick'
 import { checkOstinato } from './ostinato'
 import { checkPalindrome } from './palindrome'
-import { checkSoftLamp } from './soft-lamp'
+import { checkSoftLamp, checkSoftLampStill } from './soft-lamp'
 import { checkQuintessence } from './quintessence'
 
 let failures = 0
@@ -483,6 +483,7 @@ async function main(): Promise<void> {
       if (work.work === 'nature-of-daylight' && version.take === 'opus55') checkPalindrome(perf, version, check)
       if (work.work === 'time' && version.take === 'opus55') checkKick(perf, version, check)
       if (work.work === 'soft-lamp' && version.take === 'opus55') checkSoftLamp(perf, version, check)
+      if (work.work === 'soft-lamp' && version.take === 'opus55-still') checkSoftLampStill(perf, version, check)
       if (work.work === 'step-out' && version.take === 'opus55') checkQuintessence(perf, version, check)
 
       if (work.work === 'interstellar' && version.take === 'opus55') {

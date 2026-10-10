@@ -51,3 +51,11 @@ export const performance: Performance = {
     youtube: [{ id: YOUTUBE, until: MUSIC_END, fadeOut: 2 }],
   },
 }
+
+/**
+ * The still take: the same night, the same room, the same machine and moments, seen from one place the whole half hour,
+ * as the streams are. The room's home frame (the window and its curtain, the kitten, the books, the headphones and the
+ * whole lamp), held from the first second to the last. Everything the first take plays to its camera happens in it too.
+ */
+export const HOME = { x: 0.95, y: -2.05, cells: 5.7 }
+export const stillPerformance: Performance = { ...performance, camera: () => HOME }

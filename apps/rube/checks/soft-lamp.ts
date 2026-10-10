@@ -252,3 +252,30 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     ['Soft Lamp', 'Directed by', 'Stephen Wu', 'Claude Opus 5.5', 'Lofi Girl', 'p5.js'].every((w) => said.includes(w)), said)
   check('soft lamp: one room and no cut', perf.cuts?.(0) === false && perf.cuts?.(900) === false && perf.show === show)
 }
+
+/** The still take: the same show, the camera held on the room the whole half hour. */
+export function checkSoftLampStill(perf: Performance, version: Version, check: Check): void {
+  check('soft lamp (still): in the picker as Soft Lamp, Opus 5.5 (Still), on the Ambient shelf, with a line and a still',
+    version.title === 'Soft Lamp' && version.label === 'Opus 5.5 (Still)' && sectionOf('soft-lamp') === 'Ambient' && !!version.about &&
+    typeof version.still === 'number')
+  check('soft lamp (still): the same show and music as the first take', perf.show === show && perf.duration === DURATION &&
+    perf.soundtrack?.youtube?.[0]?.id === YOUTUBE)
+  const cams = [0, 300, 900, 1500, DURATION].map((t) => perf.camera!(t))
+  check('soft lamp (still): one held frame from the first second to the last', cams.every((c) => c.x === cams[0].x && c.y === cams[0].y && c.cells === cams[0].cells))
+  const c = cams[0]
+  const hw = (c.cells * 16) / 9 / 2
+  const hh = c.cells / 2
+  const sliced = Object.entries(PROPS).filter(([, [x0, y0, x1, y1]]) =>
+    x1 > c.x - hw && x0 < c.x + hw && y1 > c.y - hh && y0 < c.y + hh && !(x0 >= c.x - hw + 0.1 && x1 <= c.x + hw - 0.1 && y0 >= c.y - hh + 0.1 && y1 <= c.y + hh + 0.5))
+  check('soft lamp (still): its frame shows each thing whole, or not at all', sliced.length === 0, sliced.map(([n]) => n).join(', '))
+  let lost = 0
+  let out = 0
+  let n = 0
+  for (let t = 0; t < DURATION; t += 0.25) {
+    const b = ballAt(t)
+    n++
+    if (Math.abs(b.x - c.x) > hw - R || Math.abs(b.y - c.y) > hh - R) out++
+    if (Math.abs(b.x - c.x) > hw / 1.5 - R || Math.abs(b.y - c.y) > hh / 1.5 - R) lost++
+  }
+  check('soft lamp (still): the ball always in the frame, and in Zoom\'s closer frame nearly always', out === 0 && lost / n < 0.05, `${out} out, ${((lost / n) * 100).toFixed(1)}% out of Zoom`)
+}

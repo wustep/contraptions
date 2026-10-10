@@ -1,7 +1,8 @@
 # Soft Lamp (Opus 5.5)
 
-`/shows/soft-lamp/opus55/` (also `/shows/soft-lamp/`), in the picker as **Soft Lamp**, one take, **Opus 5.5**, on the
-**Ambient** shelf beside Gymnopédie.
+`/shows/soft-lamp/opus55/` (also `/shows/soft-lamp/`), in the picker as **Soft Lamp**, **Opus 5.5**, on the
+**Ambient** shelf beside Gymnopédie; and a second take, **Opus 5.5 (Still)** (`/shows/soft-lamp/opus55-still/`), the
+same half hour held in one frame (the seventy-first pass).
 
 Half an hour of Lofi Girl's *Best of lofi hip hop 2021*, its first twelve tracks, round a small machine on a study desk
 by a window, from dusk into a rainy night. It is music to study to, and the picture is meant to be left on, in the
@@ -1169,6 +1170,16 @@ painterly look (taken, the sixty-ninth pass). The other two would change the pie
      across a still picture. The camera has seventy-three aims in the half hour where it had a hundred and seventy-six,
      every one a held frame; Zoom still keeps the ball. A shooting star that the new timing put two seconds after a lob
      keeps clear of the machine's moments now.
+
+### The seventy-first pass: a still take
+
+187. **Six reviewers leaned toward one held frame** for the whole half hour, as the streams are; the cost is the machine
+     small in it. Rather than choose for Stephen, both are in the picker: the first take as it is, and a second,
+     **Opus 5.5 (Still)** (`opus55-still.show.ts`, `stillPerformance` in `lamp/index.ts`): the same show, music and
+     moments, the camera held from the first second to the last on the room's home frame, the window and its curtain,
+     the kitten, the books, the headphones and the whole lamp. Everything the first take plays to its camera happens
+     in it too, and is in its frame. `check:shows` holds it: one frame throughout, each thing in it whole, the ball
+     always in it (and in Zoom nearly always). Its own share card. It runs as the first take does.
 
 **Subtracted:** the camera following the ball along the sill (a held frame now); the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
