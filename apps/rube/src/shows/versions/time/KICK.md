@@ -471,6 +471,10 @@ each world, and changed:
   face and on past its top edge where the wing rises, so at the gate the engine seemed to hang from the jet bridge's
   floor over it (a critic's note). The engine's top sits inside the wing's depth; its pylon is a stub inside it now,
   and the engine hangs from the wing.
+- **Folded Paris's far bank, seen whole** (47 to 61): the far bank's front, past the bridge's end, was three floors
+  over its shops; folded over and hung upside down at the city's far left, its mansard came down through the roofs of
+  the street under it, the two drawn through each other (a critic's note in Overview). It is one floor over its shops
+  now, and hangs clear of them, sky between.
 
 ## Inception nods
 

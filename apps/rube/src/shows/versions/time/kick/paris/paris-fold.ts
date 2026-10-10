@@ -398,15 +398,18 @@ function leafContent(pen: Pen, t: number, f: Frame): void {
     rect(pen, L + DECK_END + 1, Y_S, L + 46, Y_S + 0.3, PARIS.cobble, 0.6)
     const bx0 = L + 30.2
     const bx1 = L + 43.6
-    rect(pen, bx0, Y_S - 6.2, bx1, Y_S, PARIS.stone, 0.7)
+    // One floor over its shops, not three: folded over and hung upside down, a floor more brought its mansard down
+    // through the roofs of the street under it (plainest seen whole).
+    const wall = 3.6
+    rect(pen, bx0, Y_S - wall, bx1, Y_S, PARIS.stone, 0.7)
     const wins: Pt[][] = []
-    for (let fl = 0; fl < 3; fl++) for (let x = bx0 + 0.55; x < bx1 - 0.3; x += 1.15) {
+    for (let fl = 0; fl < 1; fl++) for (let x = bx0 + 0.55; x < bx1 - 0.3; x += 1.15) {
       const y = Y_S - 2.25 - 1.3 * fl - 1.08
       wins.push([[x - 0.21, y], [x + 0.21, y], [x + 0.21, y + 0.86], [x - 0.21, y + 0.86]])
     }
     fillPaths(pen, wins, mixHex(PARIS.slate, PARIS.cafe, 0.45))
     for (let x = bx0 + 0.4; x < bx1 - 1.5; x += 2.4) rect(pen, x, Y_S - 1.7, x + 1.8, Y_S, PARIS.cafe, 0.5)
-    shape(pen, [[bx0 - 0.05, Y_S - 6.2], [bx1 + 0.05, Y_S - 6.2], [bx1 - 0.15, Y_S - 7.15], [bx0 + 0.15, Y_S - 7.15]], PARIS.slate, 0.6)
+    shape(pen, [[bx0 - 0.05, Y_S - wall], [bx1 + 0.05, Y_S - wall], [bx1 - 0.15, Y_S - wall - 0.95], [bx0 + 0.15, Y_S - wall - 0.95]], PARIS.slate, 0.6)
     lampPost(pen, L + DECK_END + 1.6, Y_S)
   }
   // The balustrade along the deck's near edge.
