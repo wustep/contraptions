@@ -1133,7 +1133,26 @@ Not taken: the cat's half-lidded eyes (a taste), the mug away for its refill.
      foot swings forward lifted and goes back planted, the diagonal pairs together, a lifted leg folding at the knee
      (or the hock, behind), and the body bobbing a little at each footfall.
 
-**Subtracted:** the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
+### The sixty-eighth pass: a creative director's review
+
+A sixth reviewer was asked not for faults but for what keeps the piece from feeling like Lofi Girl. It said: the camera
+does not settle; the eye has no warm, human centre; and the colour has no depth, everything one mid-value mauve.
+Taken:
+
+183. **The cup, close, is out of the rotation**: "the dullest frame in the piece, the least loveable object at the
+     largest size" (it, and three reviewers before it). The groove's looks are the desk under the lamp and the window,
+     the room's two homes, and the lamp's side once a cycle. The kitten is in the frame 90% of the half hour now (77%).
+     Everything played to the camera lands again (the sip 3:12, the scratch 9:20, the mug 11:13, the face in the mist
+     19:13, the tea 20:44 and 22:49, the stretches 8:39 and 24:00, theirs 24:08).
+184. **Colour with depth.** The night sky is a deeper blue, less lilac, so the room's one warm light has a cold to
+     stand against; the vignette is deeper and cool at the edges, so the corners are in the dark and the lamp's pool
+     is the warm place in the frame.
+
+Put to Stephen, not done: one locked home shot for the half hour (all six reviewers lean that way); a notebook in the
+lamp's pool with the hand writing in it, the human centre the reviewer asked for; thinner, tinted outlines toward a
+painterly look. Each would change the piece's design rather than finish it.
+
+**Subtracted:** the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);

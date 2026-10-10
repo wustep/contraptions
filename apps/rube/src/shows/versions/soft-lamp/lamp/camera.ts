@@ -52,24 +52,23 @@ const GROOVE = [
   { x: 3.0, y: -1.3, cells: 3.7 },
 ]
 /**
- * The order each track takes them in (indices into GROOVE), the first being where it settles after the stair. Six to a
- * cycle, so the two closer looks that leave the kitten out (the cup, close, and the lamp's side) come once a cycle
- * each and the two that hold the whole desk and the cat (the desk under the lamp, the window) twice: a room to leave on
- * seen mostly whole, the closer looks a moment's attention.
+ * The order each track takes them in (indices into GROOVE), the first being where it settles after the stair. The cup,
+ * close, is out of the rotation (the dullest look, and the least loveable thing at the largest size, four reviewers
+ * said); the desk under the lamp and the window are the room's two homes, and the lamp's side comes once a cycle.
  */
 const ORDERS = [
-  [0, 1, 2, 1, 3, 2],
-  [1, 3, 2, 1, 0, 2],
-  [0, 2, 1, 3, 2, 1],
-  [3, 1, 2, 0, 1, 2],
-  [1, 0, 2, 1, 3, 2],
-  [0, 2, 1, 3, 1, 2],
-  [2, 1, 0, 2, 3, 1],
-  [1, 2, 3, 1, 0, 2],
-  [0, 1, 2, 3, 2, 1],
-  [3, 2, 1, 0, 1, 2],
-  [1, 3, 2, 1, 0, 2],
-  [0, 2, 1, 2, 3, 1],
+  [1, 2, 1, 3, 2, 1],
+  [2, 1, 3, 1, 2, 1],
+  [1, 3, 2, 1, 2, 1],
+  [2, 1, 2, 3, 1, 2],
+  [1, 2, 3, 2, 1, 2],
+  [3, 1, 2, 1, 2, 1],
+  [2, 1, 2, 1, 3, 2],
+  [1, 2, 1, 3, 2, 1],
+  [2, 3, 1, 2, 1, 2],
+  [1, 2, 1, 2, 3, 1],
+  [2, 1, 3, 2, 1, 2],
+  [1, 2, 1, 2, 1, 3],
 ]
 
 const AIMS: Aim[] = []

@@ -382,8 +382,10 @@ export function vignette(ctx: Ctx): void {
   ctx.translate(cx, cy)
   ctx.scale(1, (v.y1 - v.y0) / (v.x1 - v.x0) * 1.5)
   const g = ctx.createRadialGradient(0, 0, r * 0.45, 0, 0, r * 1.02)
-  g.addColorStop(0, 'rgba(14, 10, 30, 0)')
-  g.addColorStop(1, 'rgba(14, 10, 30, 0.5)')
+  // Deeper at the edges, and cool: the room's corners in the dark, so the lamp's pool is the one warm place.
+  g.addColorStop(0, 'rgba(10, 10, 32, 0)')
+  g.addColorStop(0.55, 'rgba(10, 10, 32, 0.16)')
+  g.addColorStop(1, 'rgba(10, 10, 32, 0.64)')
   ctx.fillStyle = g
   ctx.fillRect(-r * 1.1, -r * 1.1 / ((v.y1 - v.y0) / (v.x1 - v.x0) * 1.5), r * 2.2, (r * 2.2) / ((v.y1 - v.y0) / (v.x1 - v.x0) * 1.5))
   ctx.restore()

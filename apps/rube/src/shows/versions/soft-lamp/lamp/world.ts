@@ -127,8 +127,9 @@ const SKY: [number, string, string, string][] = [
   [0, '#4A4683', '#A06C9F', '#F2A37F'],
   [0.05, '#363570', '#7C5A93', '#D88584'],
   [0.12, '#242752', '#4A3F74', '#7E5684'],
-  [0.24, '#181C3C', '#2A2B57', '#463B69'],
-  [1, '#131733', '#1F2449', '#36345F'],
+  // Night: a deeper, bluer sky, so the room's one warm light has a cold to stand against.
+  [0.24, '#121A42', '#1E2A60', '#383F72'],
+  [1, '#0C1438', '#162252', '#2C3668'],
 ]
 export function skyAt(t: number): { top: string; mid: string; low: string; dusk: number } {
   const u = nightAt(t)
@@ -138,7 +139,7 @@ export function skyAt(t: number): { top: string; mid: string; low: string; dusk:
   const [u1, ...b] = SKY[i + 1]
   const f = smooth(u, u0, u1)
   const grey = cloudAt(t) * 0.45
-  const mix = (k: number) => mixHex(mixHex(a[k], b[k], f), '#363A55', grey * (k === 2 ? 0.5 : 1))
+  const mix = (k: number) => mixHex(mixHex(a[k], b[k], f), '#2F3658', grey * (k === 2 ? 0.5 : 1))
   return { top: mix(0), mid: mix(1), low: mix(2), dusk: 1 - smooth(u, 0, 0.16) }
 }
 
