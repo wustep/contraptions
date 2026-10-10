@@ -456,6 +456,11 @@ each world, and changed:
   but the traffic and the train run in the middle of it, set back from the near kerb, so the taxi, the waiting cars
   and the wrecks stood a little up the facades, in the air (a critic's note under Zoom). The street has its far side
   now, wet asphalt from a far kerb at the buildings' feet, and they stand on it.
+- **The shop's light and awning** (68.9 to 76): its light ran into the street as a box the window's width, ending on
+  hard vertical edges, and the awning's arms hung from it and stopped in the air (a critic's note under Zoom). The
+  light is a soft pool fading on every side, and each arm ends in a bracket on the wall.
+- **Ariadne and Fischer on the roof, under Zoom** (177.3 to 177.6): waiting on the roof as the cage brings him up,
+  they were half cut by the frame's top. The camera starts up a little further, and from 177.5 they are whole.
 
 ## Inception nods
 

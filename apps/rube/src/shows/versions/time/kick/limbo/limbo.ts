@@ -487,7 +487,7 @@ function limboShots(_slot: Slot): PartShot[] {
     h(Q.letGo, 3.7, [-1.12, 77.6]),
     // Up with him as the cage rises, so under Zoom too he stays in the picture.
     h(176.9, 4.4, [-1.3, 76.25]),
-    h(177.4, 5.0, [-1.05, 75.55]),
+    h(177.4, 5.0, [-1.05, 75.3]),
     h(178.3, 7.2, [0.2, 75.45]),
     h(Q.fischerKick + 0.35, 7.5, [0.9, 75.4]),
     // Fischer gone, in close on the two of them at the edge: her leap, and him a beat behind her.
