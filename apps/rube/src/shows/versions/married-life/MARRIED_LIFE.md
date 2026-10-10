@@ -706,6 +706,9 @@ window.
     in after his fall onto the bandage, and the jar is half off its right edge as she walks the mantle to it, but it
     tips into the frame (whole by 125.4) and the arm follows it in (125.8): kept. The third is inside the storm's wide,
     the jar small but in frame.
+  - *Him "dangling" from the tie wheel* (the second no-Up viewer). At full size he stands on the floor's plate under
+    the wheel in the morning's collar and tie, the brass dropper over him; only at a contact sheet's scale does a blue
+    square in a collar and tie look like one of the ties hung on the wheel. Kept.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
