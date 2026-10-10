@@ -117,8 +117,12 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
   const bodyDark = mixHex(VALLEY.shellDark, air, haze * 0.8)
   const rim = mixHex(VALLEY.shellLight, air, haze * 0.7)
   const fade = o.goes === 'fade' ? 1 - smooth01(vanish) : 1 - smooth01((vanish - 0.35) / 0.65)
+  // Fading, it loses its edge as it pales: the hull gives way to a blur of itself, wider as it goes, so it melts into
+  // the air and never stands there as a see-through bowl with a sharp rim.
+  const melt = o.goes === 'fade' ? smooth01(vanish / 0.6) : 0
+  if (melt > 0.001) softSilhouette(ctx, k, [pts], [], mixHex(body, rim, 0.25), fade * melt, 1.5 + 16 * vanish)
   ctx.save()
-  ctx.globalAlpha *= fade
+  ctx.globalAlpha *= fade * (1 - melt)
   // The body: lighter where the sky is on it (top and left), darkest at the belly.
   const g = ctx.createLinearGradient(-w * 0.5 * k, -h * k, w * 0.35 * k, 0)
   g.addColorStop(0, rim)
