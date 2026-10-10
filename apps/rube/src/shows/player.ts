@@ -739,6 +739,14 @@ function credited(): boolean {
 const wordsLayer = el('div', { class: 'stage-words', 'aria-hidden': 'true' })
 stageRoot.append(wordsLayer)
 const wordCards = new Map<string, HTMLElement>()
+// The words a screen reader is to hear (`TitleCard.said`: a show's dialogue): the layer above is hidden from it, since
+// its cards fade and blur, so each such card is spoken once, here, as it first comes up while the show plays. Not on a
+// scrub or a seek, so a reader is not flooded.
+const saidLayer = el('div', { class: 'stage-said', 'aria-live': 'polite', 'aria-atomic': 'true' })
+Object.assign(saidLayer.style, { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', whiteSpace: 'nowrap' })
+stageRoot.append(saidLayer)
+const saidKeys = new Set<string>()
+const cardText = (c: TitleCard): string => [c.role, ...c.names.map((n) => (typeof n === 'string' ? n : `${n[0]}, ${n[1]}`)), ...(c.notes ?? [])].filter(Boolean).join('. ')
 
 function buildCard(c: TitleCard): HTMLElement {
   const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}` })
@@ -769,6 +777,12 @@ function renderWords(t: number): void {
     if (live.has(key)) continue
     node.remove()
     wordCards.delete(key)
+  }
+  for (const key of saidKeys) if (!live.has(key)) saidKeys.delete(key)
+  for (const c of cards) {
+    if (!c.said || saidKeys.has(c.key)) continue
+    saidKeys.add(c.key)
+    if (transport?.playing) saidLayer.textContent = typeof c.said === 'string' ? c.said : cardText(c)
   }
   if (!cards.length) return
   const W = stageRoot.clientWidth

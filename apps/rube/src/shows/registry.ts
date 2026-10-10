@@ -138,6 +138,12 @@ export interface TitleCard {
    * painter does not need it.
    */
   least?: number
+  /**
+   * Optional: words a screen reader is to hear (a show's dialogue). The page's words are hidden from it, as they fade
+   * and blur; a `said` card is spoken once, politely, as it first comes up while the show plays: its own text, or
+   * this string in its place (to name who speaks, which the page shows only by its type). Unset: as before.
+   */
+  said?: boolean | string
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
 }
