@@ -231,7 +231,17 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 142 (latest)
+## Polish pass 143 (latest)
+
+No change to the show. A finding that needs real Safari: **in WebKit the online music stops at the hand-over, 126.5 s, and the show waits there for good.** Played online in Playwright's WebKit 26.6 and read through both players as in pass 130, Cornfield Chase plays heard and No Time for Caution runs early, muted, in step. At its entry, the moment it is made heard, WebKit pauses it (state 2). Cornfield Chase ends at 126.95. The show stands at 126.51 under "Waiting for the music…", with no Sound button, for as long as it was watched. It is not pass 133's doing: the player from before it, which ran the cue early unmuted at volume 0, stops the same way when the volume rises. Two things were tried and neither worked:
+- Starting it again when it is paused within 1.5 s of being made heard. The fresh play is refused too.
+- Not running it early at all, only warming it and starting it at its entry. Refused as well.
+
+Seeking straight to 200 s, No Time for Caution does play heard. The difference is when it starts, not how: a play started inside a viewer's action (Playwright runs its scripted calls as a user gesture) is allowed, and one the player starts on its own timer two minutes later is not. WebKit asks for a gesture before media plays with sound. A gesture early in the show does not reach a second YouTube frame told to play much later.
+
+Whether real Safari does the same cannot be settled here. Playwright's WebKit is not Safari, and how it counts gestures through YouTube's frames may differ. If Safari does, a fix would have to win the second cue's permission at the viewer's own press (play it heard, briefly, inside that gesture) or hand the music over within one player. Neither is to be guessed at blind in the shared player, so the attempts were taken back out. The pull request's test plan now asks for the hand-over to be watched in Safari.
+
+## Polish pass 142
 
 No change to the show: other browsers. Every audit was in Chromium. The one canvas feature in the show's own drawing that browsers came to late is Saturn's `createConicGradient` (`act2/undock.ts`; Safari 16.1, Firefox 112). `words.ts`'s `filter` and `letterSpacing` are used only in a saved video. In WebKit 26.6 (Safari's engine), 14 moments across the show (8 to 275 s, 960×540) match Chromium's: mean difference 0.3 to 0.8 of 255, at most 0.12% of pixels off by more than 40 (edges), Saturn's conic gradient included, with no page errors. Firefox was not tried. The copy installed is older than this Playwright can drive (it timed out at launch), and fetching a newer one was left to the person whose machine it is.
 
