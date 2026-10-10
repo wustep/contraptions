@@ -3,7 +3,7 @@ import type { Pt } from '../../../../../parts'
 import { drawHeptapod, drawInk, inkAt, inkRing, mix, rgba, type Ring } from '../cast'
 import { ring } from './ink'
 import { drawRail } from './words'
-import { frame, hash } from '../kit'
+import { frame, hash, softLayer } from '../kit'
 import { LOUISE, SHANG, SHELL, VALLEY } from '../worlds'
 import {
   BOARD,
@@ -702,33 +702,33 @@ function pour(ctx: Ctx, k: number, t: number, f: Frame): void {
   const front = FAR - (1.5 + 9 * u)
   const top = HOLE_TOP * (0.35 + 0.35 * u)
   const a = 0.5 + 0.35 * smooth(t, T.flood, T.fog)
-  ctx.save()
-  // Fine steps over the same depth: at seven, the bank's tops stood in the room as nested arcs.
-  const layers = 24
-  for (let i = 0; i < layers; i++) {
-    const layer = (i * 6) / (layers - 1)
-    const lift = layer * 0.2
-    const al = (a * 1.1) / layers
-    const gx = ctx.createLinearGradient(FAR * k, 0, (front - layer * 0.35) * k, 0)
-    gx.addColorStop(0, rgba(SHELL.glow, al))
-    gx.addColorStop(0.7, rgba(SHELL.fogLit, al * 0.45))
-    gx.addColorStop(1, rgba(SHELL.fogLit, 0))
-    ctx.fillStyle = gx
-    ctx.beginPath()
-    ctx.moveTo(FAR * k, (top - lift) * k)
-    const n = 16
-    for (let i = 0; i <= n; i++) {
-      const v = i / n
-      const x = FAR + (front - layer * 0.35 - FAR) * v
-      const y = top - lift + (FLOOR - 0.15 - top + lift * 0.6) * v ** 0.7 + 0.18 * Math.sin(v * 7 + t * 0.9 + layer)
-      ctx.lineTo(x * k, y * k)
+  // Seven banks blurred together once, small: drawn sharp, their tops stood in the dark room as stacked arcs, and
+  // twenty-four of them to hide it cost the blast's frames a third again.
+  const layers = 7
+  softLayer(ctx, [(front - layers * 0.35 - 1) * k, (top - 1.8) * k, (FAR + 0.6) * k, (FLOOR + 0.5) * k], 0.22 * k, (c) => {
+    for (let layer = 0; layer < layers; layer++) {
+      const lift = layer * 0.2
+      const al = (a * 1.1) / layers
+      const gx = c.createLinearGradient(FAR * k, 0, (front - layer * 0.35) * k, 0)
+      gx.addColorStop(0, rgba(SHELL.glow, al))
+      gx.addColorStop(0.7, rgba(SHELL.fogLit, al * 0.45))
+      gx.addColorStop(1, rgba(SHELL.fogLit, 0))
+      c.fillStyle = gx
+      c.beginPath()
+      c.moveTo(FAR * k, (top - lift) * k)
+      const n = 16
+      for (let i = 0; i <= n; i++) {
+        const v = i / n
+        const x = FAR + (front - layer * 0.35 - FAR) * v
+        const y = top - lift + (FLOOR - 0.15 - top + lift * 0.6) * v ** 0.7 + 0.18 * Math.sin(v * 7 + t * 0.9 + layer)
+        c.lineTo(x * k, y * k)
+      }
+      c.lineTo((front - layer * 0.35) * k, (FLOOR + 0.3) * k)
+      c.lineTo(FAR * k, (FLOOR + 0.3) * k)
+      c.closePath()
+      c.fill()
     }
-    ctx.lineTo((front - layer * 0.35) * k, (FLOOR + 0.3) * k)
-    ctx.lineTo(FAR * k, (FLOOR + 0.3) * k)
-    ctx.closePath()
-    ctx.fill()
-  }
-  ctx.restore()
+  })
   void f
 }
 

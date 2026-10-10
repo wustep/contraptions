@@ -338,3 +338,49 @@ export function lastOf(times: readonly number[], t: number): { i: number; ago: n
 }
 
 export type Ctx = PieceCtx
+
+/**
+ * Soft light laid on the frame: drawn into a scratch canvas at half size, blurred there once, and laid on whole.
+ * `box` is the region it may cover, in the frame's own units (px, under the current transform); `blur` is in pixels.
+ */
+let scratch: [HTMLCanvasElement, HTMLCanvasElement] | null = null
+
+/** Two scratch canvases at least w by h, shared by everything soft drawn small. */
+export function scratchPair(w: number, h: number): [HTMLCanvasElement, HTMLCanvasElement] {
+  if (!scratch) scratch = [document.createElement('canvas'), document.createElement('canvas')]
+  for (const c of scratch) {
+    if (c.width < w) c.width = w
+    if (c.height < h) c.height = h
+  }
+  return scratch
+}
+
+export function softLayer(ctx: CanvasRenderingContext2D, box: [number, number, number, number], blur: number, draw: (c: CanvasRenderingContext2D) => void): void {
+  const m = ctx.getTransform()
+  const S = 0.5
+  const pad = Math.ceil(3 * blur * S) + 2
+  const cw = ctx.canvas.width
+  const ch = ctx.canvas.height
+  const ax = Math.max(0, Math.floor(m.a * box[0] + m.e))
+  const ay = Math.max(0, Math.floor(m.d * box[1] + m.f))
+  const bx = Math.min(cw, Math.ceil(m.a * box[2] + m.e))
+  const by = Math.min(ch, Math.ceil(m.d * box[3] + m.f))
+  if (bx - ax < 2 || by - ay < 2) return
+  const w = Math.ceil((bx - ax) * S) + 2 * pad
+  const h = Math.ceil((by - ay) * S) + 2 * pad
+  const pair = scratchPair(w, h)
+  const [A, B] = pair.map((c) => c.getContext('2d') as CanvasRenderingContext2D)
+  A.setTransform(1, 0, 0, 1, 0, 0)
+  A.clearRect(0, 0, w, h)
+  A.setTransform(m.a * S, m.b * S, m.c * S, m.d * S, (m.e - ax) * S + pad, (m.f - ay) * S + pad)
+  draw(A)
+  B.setTransform(1, 0, 0, 1, 0, 0)
+  B.clearRect(0, 0, w, h)
+  B.filter = `blur(${(blur * S).toFixed(2)}px)`
+  B.drawImage(pair[0], 0, 0, w, h, 0, 0, w, h)
+  B.filter = 'none'
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.drawImage(pair[1], 0, 0, w, h, ax - pad / S, ay - pad / S, w / S, h / S)
+  ctx.restore()
+}

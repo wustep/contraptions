@@ -962,6 +962,18 @@ bar. The time-gated drawings that end mid-shot (the helicopter, Abbott's jagged 
 blast's white. The clock's bell shivers on a clock that wraps every ten seconds, a thousandth of a pixel's jump. Nothing
 to change.
 
+A hundred-and-seventh timed it: the show played, not filmed, a moment every six seconds, each frame's time taken as
+the browser paints it (in software, with no graphics card, so every number is slow, but they are slow alike). The
+lake house cost three times the rest, a hundred to a hundred and forty milliseconds a frame against forty: the show's
+first and last frames, and the hold under the credits, were its heaviest. Two blurs did it. The sun on the floor
+blurred each pane's light and each shadow on its own, six or more blurs a frame; the floor's mirror blurred a band of
+the frame whole. Each is drawn small now, into a scratch canvas at half size, blurred there once and laid on whole
+(`softLayer` in `kit.ts`): the same picture to within five levels, the first frame among them, and the house as cheap as
+anywhere. The white coming in after the blast, made of twenty-four banks to hide their edges, had added half again to
+those frames; it is seven banks blurred together the same way, smooth and cheaper. Over the whole show the median frame
+went from forty-one milliseconds to thirty-one, and the worst from a hundred and forty to ninety-two. The worst now
+are the fog beyond the glass, made of many soft gradients, and left as they are.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
