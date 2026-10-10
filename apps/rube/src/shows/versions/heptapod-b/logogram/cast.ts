@@ -509,7 +509,7 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
   ctx.restore()
   // The palm: at the end of a reach the tip opens into seven fingers, flat against whatever it touches.
   limbs.forEach((g, n) => {
-    if (g.reaching > 0.6 && (o.palm ?? 0) > 0.01) drawPalm(p, k, g.tip, 0.1 * h * (o.palm ?? 0), g.col, t + order[n])
+    if (g.reaching > 0.6 && (o.palm ?? 0) > 0.01) drawPalm(p, k, g.tip, 0.1 * h * (o.palm ?? 0), g.col, t + order[n], o.palm ?? 0)
   })
   p.pop()
   ctx.restore()
@@ -517,9 +517,11 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
 
 /**
  * A palm pressed flat: a round centre and seven fingers splayed evenly round it, each tapering to a blunt tip. `r`
- * is the fingers' reach in cells. Drawn in `col` about `at`.
+ * is the fingers' reach in cells. Drawn in `col` about `at`. `open` (0 .. 1) is how far the hand has opened: closed,
+ * its fingers lie together out of the limb's end as one bud, and they fan out as it opens, so a hand opening or
+ * closing never shows as short ticks round the limb's tip.
  */
-export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase = 0): void {
+export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase = 0, open = 1): void {
   if (r * k < 1) return
   p.push()
   p.noStroke()
@@ -530,15 +532,21 @@ export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase
   // Seven fingers, each a living thing: a full root out of the palm, a long taper with a little curl of its own, and a
   // soft round pad at its tip where it presses. A hand of seven, never a star of seven points.
   const n = 10
+  // How far the fingers have fanned out from lying together, pointing on down out of the limb.
+  const v = clamp01((open - 0.12) / 0.75)
+  const spread = v * v * (3 - 2 * v)
   for (let i = 0; i < 7; i++) {
-    const a = -Math.PI / 2 + (i / 7) * TAU + 0.03 * Math.sin(phase * 0.3 + i)
+    const splayed = (i / 7) * TAU + 0.03 * Math.sin(phase * 0.3 + i)
+    const behind = i === 0
+    // The first stays up the limb behind its wrist all along, growing there as the rest fan out.
+    const a = behind ? splayed - Math.PI / 2 : Math.PI / 2 + (splayed - Math.PI) * (0.12 + 0.88 * spread)
     // The first points up the limb, behind its wrist: seen only as far as it is hidden there (its pad, curling out
     // past the narrow wrist, read as a knob on the limb, not a finger).
-    const behind = i === 0
-    const len = behind ? r * 0.4 : r * (0.92 + 0.08 * Math.sin(i * 2.1))
-    const curl = behind ? 0 : 0.16 * Math.sin(i * 1.7 + 0.6) + 0.04 * Math.sin(phase * 0.2 + i)
-    const w0 = r * 0.19
-    const w1 = r * 0.078
+    const len = behind ? r * 0.4 * spread : r * (0.92 + 0.08 * Math.sin(i * 2.1))
+    const curl = (behind ? 0 : 0.16 * Math.sin(i * 1.7 + 0.6) + 0.04 * Math.sin(phase * 0.2 + i)) * spread
+    // Lying together they are fuller, so a closed hand reads as one bud, not a fringe of pads.
+    const w0 = r * (0.19 + 0.07 * (1 - spread))
+    const w1 = r * (0.078 + 0.04 * (1 - spread))
     const left: Pt[] = []
     const right: Pt[] = []
     let tip: Pt = [0, 0]
