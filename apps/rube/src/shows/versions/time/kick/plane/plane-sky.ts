@@ -66,33 +66,7 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
   glow(pen, SUN, 16, PLANE.lamp, 0.55)
   glow(pen, SUN, 6, HOME.sun, 0.55)
   drawGroundFar(pen, t, f)
-  drawUnderDeck(pen, t, f)
   drawCloudDeck(pen, t, f)
-}
-
-/**
- * Below the deck, before the ground comes up: loose wisps of lower cloud in the gold, rising past with the deck as the
- * plane comes down (in a tall frame the air under the wings was one flat fill, half the picture).
- */
-function drawUnderDeck(pen: Pen, t: number, f: Frame): void {
-  const bottom = cloudAt(t) + CLOUD_DEPTH
-  const floor = Math.min(groundAt(t) - 1.2, f.y1 + 2)
-  if (bottom + 1 > floor || bottom > f.y1 + 2) return
-  const lit = mixHex(PLANE.dawn, HOME.sun, 0.45)
-  const shade = mixHex(PLANE.dawnHigh, PLANE.window, 0.15)
-  for (let row = 0; row < 7; row++) {
-    const y = bottom + 1.6 + row * 2.3
-    if (y > floor) break
-    if (y < f.y0 - 2) continue
-    for (let i = Math.floor((f.x0 - 6) / 4.5); i <= Math.ceil((f.x1 + 6) / 4.5); i++) {
-      if (hash(i, row, 51) < 0.45) continue
-      const x = i * 4.5 + 2 * hash(i, row, 52)
-      const w = 1.6 + 2.6 * hash(i, row, 53)
-      const fade = clamp01((floor - y) / 2) * (0.75 - row * 0.06)
-      puff(pen, [x, y + 0.14], w, 0.36, shade, 0.7 * fade)
-      puff(pen, [x - 0.2, y], w * 0.85, 0.28, lit, 0.85 * fade)
-    }
-  }
 }
 
 /**
