@@ -142,6 +142,8 @@ const easeInOut = (u: number): number => u * u * (3 - 2 * u)
  * the music, and the observatory on its ridge, where the planetarium is, lights up.
  */
 export const SWELL = END_AT + 32.268
+/** The End's last chord, which the piano in the stars plays (the credits' own reckoning of it). */
+const FINAL_CHORD = END_AT + 39.4
 export const CITY_HITS = [SWELL]
 
 /**
@@ -307,7 +309,7 @@ export const city = scenery<CityState>({
         if (since < 0) return
         const [x, y] = at(i)
         const on = smooth(since, 0, 0.12)
-        const flare = knock(since, 0.5)
+        const flare = Math.max(knock(since, 0.5), 0.8 * knock(t - FINAL_CHORD, 1.0))
         const tw = 0.85 + 0.15 * Math.sin(t * 1.3 + i * 2.1)
         const r = Math.max(1.6 * px, 0.06 * k) * (0.75 + 0.25 * (q.size / 0.036)) * (1 + 0.8 * flare)
         const halo = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * 6)
@@ -330,10 +332,10 @@ export const city = scenery<CityState>({
         ctx.fill()
       })
       const last = THEIRS_AT[THEIRS_AT.length - 1]
-      const fd = smooth(t, last + 0.5, last + 3.2) * 1.4
+      const fd = smooth(t, last + 0.05, last + 0.6) * 1.4
       if (fd > 0) {
         const [fx, fy] = THEIRS_FIGURE.at
-        drawPianoFigure(p, k, [fx + sx, fy + sy], THEIRS_FIGURE.size, THEIRS_FIGURE.turn, fd, smooth(t, last + 0.4, last + 1.2), NIGHT_MAT.gold, 1.3 * px)
+        drawPianoFigure(p, k, [fx + sx, fy + sy], THEIRS_FIGURE.size, THEIRS_FIGURE.turn, fd, smooth(t, last, last + 0.35), NIGHT_MAT.gold, 1.3 * px, knock(t - FINAL_CHORD, 1.1))
       }
     }
     ctx.restore()

@@ -30,7 +30,7 @@ export const OUTLINE: Pt[] = (() => {
 })()
 
 /** Draw the figure centred on `at` (cells), `size` cells across, turned by `angle`, `draw` of the way on, at `a`. */
-export function drawPianoFigure(p: p5, k: number, at: Pt, size: number, angle: number, draw: number, a: number, color: string, minPx = 0): void {
+export function drawPianoFigure(p: p5, k: number, at: Pt, size: number, angle: number, draw: number, a: number, color: string, minPx = 0, flash = 0): void {
   if (a <= 0.01 || draw <= 0) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const P = ([x, y]: Pt): Pt => {
@@ -56,8 +56,23 @@ export function drawPianoFigure(p: p5, k: number, at: Pt, size: number, angle: n
   }
   // The keys, once the outline is round: a row of short strokes along the keyboard.
   const keys = Math.max(0, Math.min(1, (draw - 1) / 0.4))
+  if (keys > 0 && flash > 0.01) {
+    // A chord played on it: light along the keyboard.
+    const [g0, h0] = P([-0.5, 0.55])
+    const [g1, h1] = P([0.5, 0.55])
+    const gr = ctx.createLinearGradient(g0 * k, h0 * k, g1 * k, h1 * k)
+    gr.addColorStop(0, rgba(color, 0))
+    gr.addColorStop(0.5, rgba('#FFF6DA', 0.75 * flash * a))
+    gr.addColorStop(1, rgba(color, 0))
+    ctx.strokeStyle = gr
+    ctx.lineWidth = Math.max(0.16 * size * k, minPx * 8) * 0.5
+    ctx.beginPath()
+    ctx.moveTo(g0 * k, h0 * k)
+    ctx.lineTo(g1 * k, h1 * k)
+    ctx.stroke()
+  }
   if (keys > 0) {
-    ctx.strokeStyle = rgba(color, 0.7 * a)
+    ctx.strokeStyle = rgba(flash > 0.01 ? '#FFF6DA' : color, Math.min(1, (0.7 + 0.3 * flash) * a))
     ctx.lineWidth = Math.max(0.014 * k, minPx * 0.8)
     const m = 14
     for (let i = 1; i < m; i++) {
