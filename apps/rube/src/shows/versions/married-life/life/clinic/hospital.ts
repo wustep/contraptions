@@ -1,8 +1,10 @@
 import type p5 from 'p5'
-import { mixHex, type Pt } from '../../../../../parts'
+import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, part, type Companion, type Ctx, type Pose } from '../kit'
 import { CLINIC, HOME, INK } from '../worlds'
 import { CUTS } from '../seams'
+import { CUT } from '../music'
+import { slumpOf } from '../hill/climb'
 import { CEIL, drawVisitorChair, FLOOR, hexA, lean, SEAT, tube, W_IN, W_OUT, WARD, WARD_APART, wardDusk, WINDOW } from './clinic'
 
 /**
@@ -56,8 +58,11 @@ const TABLE = { x0: -0.9, x1: -0.3, top: 0.0 }
 const LAMP = { x: -0.58, bottom: -0.47, top: -0.76, wb: 0.46, wt: 0.3 }
 const CHAIN: Pt = [LAMP.x + 0.15, LAMP.bottom + 0.02]
 const CHAIN_L = 0.3
-/** The bed: from behind his chair to its foot; the mattress's top; her pillow. */
-const BED = { x0: -0.12, x1: 2.72, top: 0.21 }
+/**
+ * The bed: from behind his chair to its foot; the mattress's top; her pillow. Her length, not a grown-up's: the foot
+ * about a cell past her, so the mound under the covers is plainly her and the bed is not long and empty past her.
+ */
+const BED = { x0: -0.12, x1: 1.5, top: 0.21 }
 const PILLOW = { x0: 0.1, x1: 0.9 }
 
 /* ------------------------------------------------------------------ the two of them */
@@ -72,9 +77,11 @@ const inout = (u: number) => { const v = clamp01(u); return v * v * (3 - 2 * v) 
  * again by the cut.
  */
 function tilt(T: number): number {
+  // Big enough to be seen at the ward's distance: at 10° to give her the balloon and 2.5° for his answer, a fresh
+  // viewer saw neither of them move at all, and the knot's passing read as a string sliding, not a gift.
   const reach = -0.3 * inout((T - REACH) / (CLICK - REACH)) * (1 - inout((T - CLICK - 0.08) / 1.45))
-  const give = 0.18 * inout((T - HAND.lean) / (HAND.to - HAND.lean)) - 0.1 * inout((T - HAND.to - 0.05) / 0.95)
-  const answer = 0.045 * inout((T - TOUCH - 0.15) / (ANSWER - TOUCH - 0.15))
+  const give = 0.3 * inout((T - HAND.lean) / (HAND.to - HAND.lean)) - 0.15 * inout((T - HAND.to - 0.05) / 0.95)
+  const answer = 0.12 * inout((T - TOUCH - 0.15) / (ANSWER - TOUCH - 0.15))
   return reach + (give + answer) * (1 - inout((T - 187.55) / 1.6))
 }
 
@@ -172,10 +179,9 @@ function drawLamp(p: p5, k: number, weight: number, T: number): void {
   p.pop()
 }
 
-/** His chair, and the bed beside it: steel, a mattress, her pillow pressed where she lies, the blanket, the rails. */
+/** His chair, and the bed beside it: steel, a mattress, her pillow pressed where she lies, the rails (the blanket is in front of her: `drawCovers`). */
 function drawBed(p: p5, k: number, weight: number, ex: number, dim: number): void {
   const sheet = mixHex(CLINIC.sheet, CLINIC.steel, 0.08)
-  const blanket = mixHex(mixHex(CLINIC.wall, HOME.sky, 0.35), CLINIC.sheet, 0.25)
   const frameSteel = mixHex(CLINIC.steel, CLINIC.sheet, 0.3)
   const { x0, x1, top } = BED
   p.push()
@@ -229,24 +235,6 @@ function drawBed(p: p5, k: number, weight: number, ex: number, dim: number): voi
     p.vertex(x * k, pillowTop(x) * k)
   }
   p.bezierVertex((q1 + 0.04) * k, (pillowTop(q1) - 0.02) * k, (q1 + 0.05) * k, (top - 0.01) * k, q1 * k, (top + 0.005) * k)
-  p.endShape(p.CLOSE)
-  // The blanket, from her side to the foot, hanging over the mattress's near side; the sheet turned down over it.
-  const b0 = ex + 0.155
-  p.fill(blanket)
-  p.beginShape()
-  p.vertex(b0 * k, (top - 0.035) * k)
-  p.bezierVertex((b0 + 0.3) * k, (top - 0.05) * k, (x1 - 0.6) * k, (top - 0.04) * k, (x1 - 0.2) * k, (top - 0.03) * k)
-  p.vertex((x1 - 0.2) * k, (top + 0.24) * k)
-  p.bezierVertex((x1 - 0.7) * k, (top + 0.27) * k, (b0 + 0.4) * k, (top + 0.25) * k, (b0 + 0.02) * k, (top + 0.24) * k)
-  p.bezierVertex((b0 - 0.03) * k, (top + 0.15) * k, (b0 - 0.03) * k, (top + 0.02) * k, b0 * k, (top - 0.035) * k)
-  p.endShape(p.CLOSE)
-  p.fill(sheet)
-  p.beginShape()
-  p.vertex(b0 * k, (top - 0.035) * k)
-  p.bezierVertex((b0 + 0.08) * k, (top - 0.045) * k, (b0 + 0.18) * k, (top - 0.045) * k, (b0 + 0.24) * k, (top - 0.04) * k)
-  p.bezierVertex((b0 + 0.26) * k, (top + 0.05) * k, (b0 + 0.25) * k, (top + 0.14) * k, (b0 + 0.27) * k, (top + 0.245) * k)
-  p.vertex((b0 + 0.02) * k, (top + 0.24) * k)
-  p.bezierVertex((b0 - 0.03) * k, (top + 0.15) * k, (b0 - 0.03) * k, (top + 0.02) * k, b0 * k, (top - 0.035) * k)
   p.endShape(p.CLOSE)
   // A clipboard on the foot rail: her chart, its page a blank light.
   p.stroke(INK)
@@ -318,6 +306,72 @@ function pool(p: p5, c: Ctx, T: number): void {
   ctx.restore()
 }
 
+/** A colour as the ward's dusk leaves it (`dusk`'s multiply, worked out here for what is drawn in front of the cast). */
+function dimmed(hex: string, dim: number): string {
+  const a = 0.5 * dim
+  const m = mixHex(HOME.night, CLINIC.steel, 0.35)
+  const ch = (h: string, i: number) => parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16)
+  const out = [0, 1, 2].map((i) => Math.round(ch(hex, i) * (1 - a + (a * ch(m, i)) / 255)))
+  return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`
+}
+
+/**
+ * Her covers, in front of her: she is in the bed, not on it. The blanket comes up over the lower third of her from just
+ * on her far side, a soft mound where she lies under it, and down to the foot, hanging over the mattress's near side;
+ * the sheet turned down over its top edge. It starts clear of his chair at his fullest lean, so it never covers him.
+ */
+function drawCovers(p: p5, k: number, weight: number, ex: number, dim: number): void {
+  const blanket = dimmed(mixHex(mixHex(CLINIC.wall, HOME.sky, 0.35), CLINIC.sheet, 0.25), dim)
+  const sheet = dimmed(mixHex(CLINIC.sheet, CLINIC.steel, 0.08), dim)
+  const { x1, top } = BED
+  const b0 = ex - 0.16
+  const hang = top + 0.24
+  // The top edge, from her far side to the foot: across her, over the mound of her, down to the mattress.
+  const edge = (p: p5, dy: number) => {
+    p.vertex(b0 * k, (0.09 + dy) * k)
+    p.bezierVertex((b0 + 0.07) * k, (0.07 + dy) * k, (ex - 0.04) * k, (0.06 + dy) * k, (ex + 0.06) * k, (0.06 + dy) * k)
+    p.bezierVertex((ex + 0.16) * k, (0.06 + dy) * k, (ex + 0.22) * k, (0.05 + dy) * k, (ex + 0.32) * k, (0.06 + dy) * k)
+    p.bezierVertex((ex + 0.48) * k, (0.08 + dy) * k, (ex + 0.56) * k, (top - 0.04 + dy) * k, (ex + 0.72) * k, (top - 0.035 + dy) * k)
+  }
+  p.push()
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.85)
+  p.fill(blanket)
+  p.beginShape()
+  edge(p, 0)
+  p.vertex((x1 - 0.2) * k, (top - 0.03) * k)
+  p.vertex((x1 - 0.2) * k, hang * k)
+  p.bezierVertex((x1 - 0.45) * k, (hang + 0.025) * k, (b0 + 0.3) * k, (hang + 0.01) * k, (b0 + 0.02) * k, hang * k)
+  p.bezierVertex((b0 - 0.03) * k, (hang - 0.09) * k, (b0 - 0.03) * k, 0.13 * k, b0 * k, 0.09 * k)
+  p.endShape(p.CLOSE)
+  // The sheet turned down over the blanket's top, across her and over the mound.
+  p.fill(sheet)
+  p.strokeWeight(weight * 0.7)
+  p.beginShape()
+  p.vertex(b0 * k, 0.09 * k)
+  p.bezierVertex((b0 + 0.07) * k, 0.07 * k, (ex - 0.04) * k, 0.06 * k, (ex + 0.06) * k, 0.06 * k)
+  p.bezierVertex((ex + 0.16) * k, 0.06 * k, (ex + 0.22) * k, 0.05 * k, (ex + 0.32) * k, 0.06 * k)
+  p.vertex((ex + 0.32) * k, 0.115 * k)
+  p.bezierVertex((ex + 0.22) * k, 0.105 * k, (ex + 0.16) * k, 0.12 * k, (ex + 0.06) * k, 0.12 * k)
+  p.bezierVertex((ex - 0.04) * k, 0.12 * k, (b0 + 0.06) * k, 0.13 * k, (b0 - 0.005) * k, 0.15 * k)
+  p.endShape(p.CLOSE)
+  p.pop()
+}
+
+/**
+ * Under Zoom, the hold through her touch and his answer (`Framing.zoomDrop`, negative: above the frame's middle): the
+ * show's frame comes down onto the two of them there, and Zoom, half as close again, would then lose the balloon over
+ * them; it keeps the hold it had (a cell and a half over the floor), easing in with the camera's move and out with the
+ * draw back to the cut.
+ */
+export function hospitalZoomDrop(T: number): number {
+  const ease = (a: number, b: number) => {
+    const u = clamp01((T - a) / (b - a))
+    return u * u * (3 - 2 * u)
+  }
+  return -0.19 * ease(HAND.to, TOUCH + 0.6) * (1 - ease(187.1, CUT.funeral))
+}
+
 /* ------------------------------------------------------------------ the part */
 
 interface HospitalState {
@@ -340,14 +394,27 @@ export const hospital = part<HospitalState>(
       p.pop()
       dusk(p, c, T)
     },
-    over: (p, s, c) => pool(p, c, c.t + s.begin),
+    over: (p, s, c) => {
+      const T = c.t + s.begin
+      const [ex] = herAt(Math.max(W_IN, Math.min(W_OUT, T)))
+      p.push()
+      p.translate(O * c.k, 0)
+      drawCovers(p, c.k, c.weight, ex, wardDusk(T).dim)
+      p.pop()
+      pool(p, c, T)
+    },
   },
   (slot) => {
     const dur = slot.end - slot.begin
     const lane = carried((t) => { const [x, y] = carlAt(slot.begin + t); return [O + x, y] }, 0, dur, Math.max(1, Math.round(dur / 0.04)))
+    // Slumped as she lay on the hill, across the cut, and settling round under the covers over its first second.
+    const slumped = slumpOf(CUT.hospital - 1e-3)
     const her = (T: number): Companion => {
       const [x, y] = herAt(T)
-      return { x: O + x, y }
+      const left = slumped ? 1 - inout((T - CUT.hospital) / 1.2) : 0
+      if (left <= 0 || !slumped) return { x: O + x, y }
+      const scale = 1 - (1 - slumped.scale) * left
+      return { x: O + x, y: y + R * (1 - scale), scale, stretch: 1 + (slumped.stretch - 1) * left }
     }
     const pose: Pose[] = [{ from: slot.begin, to: slot.end, at: (T) => ({ tilt: tilt(T) }) }]
     return {
@@ -361,14 +428,17 @@ export const hospital = part<HospitalState>(
   },
   (slot) => [
     // From the hill's close framing (`CUTS.hospital`), out and over to the lamp as he reaches for it, and up, so the
-    // balloon over him comes whole into the frame (its string is long while he holds it: Zoom wants about 3.35 cells
-    // with the frame's middle near a cell over them). Then he gives it to her, tied short, and it comes down to float
+    // balloon over him comes whole into the frame (he comes in with its string gathered short, `GATHERS`, and lets it
+    // up as he reaches for the lamp; let out, Zoom wants about 3.35 cells with the frame's middle near a cell over
+    // them). Then he gives it to her, tied short, and it comes down to float
     // just over her; the camera comes in with it to the two of them, closing on her roll toward him (185.655, the
     // film's touch) and his answer, the balloon whole over them under Zoom, and stays a moment.
     { t: CLICK, cells: 3.3, hold: [O + 0.02, -0.93], w: 1 },
     { t: HAND.to, cells: 3.36, hold: [O + 0.4, -0.97], w: 1 },
-    { t: TOUCH + 0.6, cells: 2.7, hold: [O + 0.36, -0.63], w: 1 },
-    { t: 187.1, cells: 2.67, hold: [O + 0.35, -0.62], w: 1 },
+    // The touch and his answer sit two thirds down the frame, not on its foot under a wall (the balloon is tied short
+    // to her now, so the frame can come down onto them); Zoom keeps its own, higher hold (`hospitalZoomDrop`).
+    { t: TOUCH + 0.6, cells: 2.7, hold: [O + 0.36, -0.45], w: 1 },
+    { t: 187.1, cells: 2.67, hold: [O + 0.35, -0.45], w: 1 },
     // Then, as she is still again, the leaving starts: one slow draw back, unbroken, through the cut to the church
     // (`CUTS.funeral`) and on into it. The balloon whole over her; across the cut it is his again, and drifts back over
     // him in the empty church as its string is let out.

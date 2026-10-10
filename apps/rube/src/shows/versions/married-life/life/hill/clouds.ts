@@ -5,6 +5,7 @@ import { bar, beat, BEATS, CUT } from '../music'
 import { CUTS } from '../seams'
 import { CHURCH, HILL, HOME, INK } from '../worlds'
 import { TREE_X } from './hill'
+import { FALLS } from '../props/falls'
 
 /**
  * CLOUDS (49.644 to 63.251, waltz bars 32 to 45): the picnic on the hill, a summer afternoon when they were young.
@@ -603,14 +604,19 @@ function drawPour(p: p5, k: number, t: number): void {
     // a hard end: the water thins into it.
     const running = pour < 1
     const front = running ? y1 - 0.9 * half(y1) : y1
+    // Water, not more cloud: the falls' pale blue and its streaks (as the painting, the pop-up and the jar have them),
+    // so the cliff reads as the falls in the sky; white on white, a fresh viewer took it for a jar or a column.
     p.fill(alpha(p, HILL.cloud, 0.4))
     band(-1, 1, y0, y1, 0.025)
-    p.fill(HILL.cloud)
+    p.fill(FALLS.water)
     band(-1, 1, y0, front)
     if (front - y0 > 0.1) {
-      p.fill(shade)
-      band(0.25, 1, y0, front)
+      p.fill(alpha(p, mixHex(FALLS.water, FALLS.waterStreak, 0.45), 0.9))
+      band(0.3, 1, y0, front)
+      p.fill(alpha(p, FALLS.waterStreak, 0.85))
+      for (const u of [-0.35, 0.15]) band(u - 0.09, u + 0.09, y0 + 0.04, front - 0.03)
     }
+    void shade
     if (running) {
       const [cx, cy] = Q(r.x, front)
       p.fill(alpha(p, HILL.cloud, 0.55))
@@ -864,14 +870,27 @@ function drawBlanket(p: p5, k: number, weight: number): void {
 const HOP = { up: beat('waltz', 37, 3), down: bar('waltz', 38) }
 /** His start when the baby has its head: a small lift, down on the waltz. */
 const START = { up: beat('waltz', 43, 3) - 0.26, down: beat('waltz', 43, 3) }
-/** When she rolls to him: after his start, to the cut. */
+/**
+ * She comes in close: as far apart as the armchairs at the cut, she rolls most of the way to him over bar 33, as the
+ * airship builds, and lies there by him, as in the film, under all the clouds; the last of the way after his start.
+ */
+const NEAR = { from: bar('waltz', 33) + 0.15, to: bar('waltz', 34) + 0.2, x: CARL[0] + 0.42 }
+/**
+ * The baby whole over them, they look at each other: after his start she turns her face from it to him, he answers
+ * with a small lean, and she looks back up at it before the cut, so the match onto the mobile carries her upward look
+ * (`LOOKS` in `cast.ts` turns her face; his lean is this part's pose). What they want, decided between them.
+ */
+// Her turn to him completes on bar 44's downbeat (her turn takes 0.35 s, from his start), and his lean arrives on the
+// strongest note between (62.305), the gesture and its answer each on their note.
+export const GLANCE = { to: START.down, answer: 62.305 - 0.35, back: END - 0.05 }
+/** When she rolls the rest of the way to him: after his start, to the cut. */
 const ROLL = { from: START.down + 0.2, to: END - 0.12 }
 
 /** She leans toward the falls as they pour: a little way right on the grass, and back. */
 const LEAN = { from: bar('waltz', 40), mid: bar('waltz', 40) + 0.7, to: bar('waltz', 41) + 0.4 }
 
 function ellieAt(t: number): { x: number; y: number } {
-  let x = ELLIE_FROM
+  let x = ELLIE_FROM + (NEAR.x - ELLIE_FROM) * smooth(t, NEAR.from, NEAR.to)
   let y = 0
   if (t > LEAN.from && t < LEAN.to) x += 0.07 * (t < LEAN.mid ? smooth(t, LEAN.from, LEAN.mid) : 1 - smooth(t, LEAN.mid, LEAN.to))
   if (t >= HOP.up && t <= HOP.down) {
@@ -880,7 +899,7 @@ function ellieAt(t: number): { x: number; y: number } {
   }
   if (t > ROLL.from) {
     const u = smooth(t, ROLL.from, ROLL.to)
-    x = ELLIE_FROM + (ELLIE_TO - ELLIE_FROM) * u
+    x = NEAR.x + (ELLIE_TO - NEAR.x) * u
   }
   return { x, y }
 }
@@ -920,11 +939,16 @@ export const clouds = part<CloudsState>(
       { at: slot.end - slot.begin, p: CARL },
     ]
     const company: Company[] = [{ from: slot.begin, to: slot.end, at: (t) => ellieAt(t) }]
+    // His start at the baby; then, as she turns from it to him, his answer: a small lean to her (she is at his right),
+    // held, and upright again before the cut, so nothing of it carries into the nursery.
     const pose: Pose[] = [
       {
         from: START.down,
-        to: START.down + 0.8,
-        at: (t) => ({ squash: 0.1 * Math.exp(-(t - START.down) / 0.12) * Math.max(0, Math.cos((t - START.down) * 9)) }),
+        to: END,
+        at: (t) => ({
+          squash: 0.1 * Math.exp(-(t - START.down) / 0.12) * Math.max(0, Math.cos((t - START.down) * 9)),
+          tilt: 0.1 * smooth(t, GLANCE.answer, GLANCE.answer + 0.35) * (1 - smooth(t, GLANCE.back - 0.45, END - 0.08)),
+        }),
       },
     ]
     return {
@@ -956,4 +980,4 @@ export const clouds = part<CloudsState>(
 )
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music): every chuff, one a bar, and the double; and his start, down on a beat. */
-export const CLOUDS_HITS: number[] = [...PUFFS.map((p) => p.t0), START.down].sort((a, b) => a - b)
+export const CLOUDS_HITS: number[] = [...PUFFS.map((p) => p.t0), START.down, GLANCE.answer + 0.35].sort((a, b) => a - b)

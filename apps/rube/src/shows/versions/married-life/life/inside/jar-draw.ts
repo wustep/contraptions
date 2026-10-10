@@ -105,6 +105,11 @@ function weather(p: p5, k: number, T: number, [x0, x1, y0, y1]: number[], seed: 
   }
 }
 
+/** How far up the glass the drive and the car sit, so the wheels clear the window's sill and frame. */
+const DRIVE_UP = 0.14
+/** The hubcap's width: as big as the hub it comes off and then some, so it is seen to fly. */
+const HUBCAP_D = 0.17
+
 /** The drive through the left-hand window: a hedge, the drive, their car; the tyre that blows, and the hubcap. */
 function driveway(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
@@ -122,8 +127,12 @@ function driveway(p: p5, c: Ctx, T: number): void {
     for (let i = 0; i <= 12; i++) p.vertex(x(x0 - 0.2 + i * 0.24), x(-1.5 - 0.06 * Math.abs(Math.sin(i * 1.9))))
     p.vertex(x(x1 + 0.2), x(y1))
     p.endShape(p.CLOSE)
+    // The lawn, the drive and all on it sit a little up the glass, so the car's wheels clear the sill and frame: the
+    // tyre that goes flat is seen flat, not lost behind the sill under its dust.
+    p.push()
+    p.translate(0, x(-DRIVE_UP))
     p.fill(mixHex(HOME.grass, '#A7BC90', 0.3))
-    p.rect(x(x0), x(-1.3), x(x1 - x0), x(0.36))
+    p.rect(x(x0), x(-1.3), x(x1 - x0), x(0.5))
     p.fill(HOME.stone)
     p.rect(x(x0), x(-1.07), x(x1 - x0), x(0.14))
 
@@ -208,8 +217,11 @@ function driveway(p: p5, c: Ctx, T: number): void {
       p.stroke(alpha(p, INK, 0.8))
       p.strokeWeight(weight * 0.5)
       p.fill(HOME.trim)
-      p.ellipse(x(hx), x(hy), x(0.09), x(0.09 * Math.abs(Math.cos(tilt)) + 0.02))
+      p.ellipse(x(hx), x(hy), x(HUBCAP_D), x(HUBCAP_D * Math.abs(Math.cos(tilt)) + 0.02))
+      p.noFill()
+      p.ellipse(x(hx), x(hy), x(HUBCAP_D * 0.5), x(HUBCAP_D * 0.5 * Math.abs(Math.cos(tilt)) + 0.01))
     }
+    p.pop()
     // Seen through glass.
     p.noStroke()
     p.fill(alpha(p, '#FFFFFF', 0.1))
@@ -273,14 +285,14 @@ function lampLight(p: p5, k: number, T: number): void {
   // light down from its rim, so that when it sputters and goes out the room is seen to lose it.
   ctx.translate(LAMP.x * k, LAMP.ceil * k)
   ctx.rotate(swing)
-  const rim = LAMP.cord + 0.2
+  const rim = LAMP.cord + 0.2 * LAMP_SCALE
   const g = ctx.createRadialGradient(0, (rim + 0.02) * k, 0, 0, (rim + 0.02) * k, 1.5 * k)
-  g.addColorStop(0, `rgba(255, 227, 166, ${0.34 * lit})`)
+  g.addColorStop(0, `rgba(255, 227, 166, ${0.5 * lit})`)
   g.addColorStop(1, 'rgba(255, 227, 166, 0)')
   ctx.fillStyle = g
   ctx.fillRect(-1.5 * k, (rim - 1.5) * k, 3 * k, 3 * k)
   const cone = ctx.createLinearGradient(0, rim * k, 0, (rim + 1.8) * k)
-  cone.addColorStop(0, `rgba(255, 232, 178, ${0.3 * lit})`)
+  cone.addColorStop(0, `rgba(255, 232, 178, ${0.44 * lit})`)
   cone.addColorStop(1, 'rgba(255, 232, 178, 0)')
   ctx.fillStyle = cone
   ctx.beginPath()
@@ -293,6 +305,9 @@ function lampLight(p: p5, k: number, T: number): void {
   ctx.restore()
 }
 
+/** The lamp's shade and bulb, drawn this much over their measures (the cord, and the light, are as they were). */
+const LAMP_SCALE = 1.5
+
 function lamp(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
   const x = X(k)
@@ -304,10 +319,17 @@ function lamp(p: p5, c: Ctx, T: number): void {
   p.strokeWeight(weight * 0.5)
   p.line(0, 0, 0, x(LAMP.cord))
   p.translate(0, x(LAMP.cord))
-  // The bulb under the rim: warm when lit, grey when it has gone.
+  // Half as big again as it was drawn: small at the frame's top, its going out was not seen, and it is why he climbs.
+  p.scale(LAMP_SCALE)
+  // The bulb under the rim: bright and warm when lit, dark when it has gone, so the reason he climbs is seen (a fresh
+  // viewer, with a pale bulb and a faint glow, did not see the lamp go out at all).
   p.noStroke()
-  p.fill(lit > 0.01 ? mixHex('#E6E1D6', HOME.lamp, lit) : '#D6D1C6')
-  p.ellipse(0, x(0.22), x(0.1), x(0.08))
+  p.fill(lit > 0.01 ? mixHex('#E6E1D6', '#FFD86B', lit) : '#6E6A64')
+  p.ellipse(0, x(0.22), x(0.12), x(0.1))
+  if (lit > 0.5) {
+    p.fill(alpha(p, '#FFFBEA', lit))
+    p.ellipse(0, x(0.215), x(0.05), x(0.04))
+  }
   // The shade: a cream bell.
   p.stroke(alpha(p, INK, 0.9))
   p.strokeWeight(weight * 0.7)

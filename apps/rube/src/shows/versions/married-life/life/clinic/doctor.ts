@@ -58,9 +58,12 @@ const roll = (T: number): number => 0.09 * settle((T - SLUMP - 0.05) / 1.7)
 /** She is a little less, sunk: 1 to 0.965. */
 const small = (T: number): number => 1 - 0.035 * settle((T - SLUMP) / 1.6)
 
-/** Carl's lean to her (radians, clockwise): out on the fourth note, held, and back in the near silence. */
+/**
+ * Carl's lean to her (radians, clockwise): out on the fourth note, held, and back in the near silence. About 14°: at
+ * 8° a fresh viewer could not tell whether he leaned to her or only sat still, and his reach to her is half the beat.
+ */
 function tilt(T: number): number {
-  const out = 0.14 * inout((T - LEAN) / 1.25) + 0.012 * inout((T - LEAN - 1.25) / 0.4)
+  const out = 0.24 * inout((T - LEAN) / 1.25) + 0.012 * inout((T - LEAN - 1.25) / 0.4)
   return out * (1 - inout((T - BACK) / 1.15))
 }
 

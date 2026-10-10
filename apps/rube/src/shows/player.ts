@@ -256,9 +256,6 @@ async function playLinked(): Promise<void> {
 /** The sound is held. The next gesture starts it where the picture is, and a control whose job is the sound keeps that job. */
 function armSound(): void {
   releaseSound()
-  const join = () => {
-    if (transport && perf?.soundtrack) void music.play(transport.now())
-  }
   const unlock = (e: Event) => {
     const key = e instanceof KeyboardEvent ? e.key : ''
     const musicControl = (e.target instanceof Element && !!e.target.closest('button.music')) || key === 'm' || key === 'M'
@@ -274,7 +271,7 @@ function armSound(): void {
       e.preventDefault()
       e.stopImmediatePropagation()
     }
-    join()
+    joinSound()
   }
   releaseSound = () => {
     window.removeEventListener('pointerdown', unlock, true)
@@ -282,6 +279,23 @@ function armSound(): void {
   }
   window.addEventListener('pointerdown', unlock, true)
   window.addEventListener('keydown', unlock, true)
+}
+
+/**
+ * The held sound let in where the picture is. A browser can refuse it even for a gesture (WebKit refuses sound to a
+ * YouTube player for a press made on the page, not on the player): then the sound is held again, muted so the music
+ * still keeps the time, and the Sound button is back for another try, rather than a press that did nothing.
+ */
+function joinSound(): void {
+  if (!transport || !perf?.soundtrack) return
+  const mine = generation
+  void music.play(transport.now()).then((result) => {
+    if (result !== 'blocked' || !alive || mine !== generation || !transport?.playing || muted) return
+    soundHeld = true
+    setMuted(true)
+    void music.play(transport.now())
+    armSound()
+  })
 }
 
 function setOverview(on: boolean): void {
@@ -420,12 +434,22 @@ bigPlay.addEventListener('click', () => {
     soundHeld = false
     joinedAt = performance.now()
     setMuted(false)
-    if (transport && perf?.soundtrack) void music.play(transport.now())
+    joinSound()
     return
   }
   void play()
 })
 stageRoot.append(bigPlay)
+// On a stage much wider than the show's 16:9 (a phone on its side with the panel up, an ultrawide screen) the composed
+// frame stands in the middle at full height, and the button, centred low, sat over whoever stands on its floor (Married
+// Life's opening couple, hidden behind Sound). Where the world beside the frame has room for it, it goes there.
+const besideFrame = new ResizeObserver(() => {
+  const w = stageRoot.clientWidth
+  const half = (stageRoot.clientHeight * 8) / 9
+  const side = w / 2 - half
+  bigPlay.style.left = side >= 150 ? `${w / 2 + half + side / 2}px` : ''
+})
+besideFrame.observe(stageRoot)
 
 // While a show loads, or when it would not, the stage says so: the panel says it too, but the panel starts hidden,
 // and a blank stage reads as broken. A failed load is tried again by a reload: the browser keeps a module that would
@@ -489,7 +513,7 @@ musicBtn.addEventListener('click', () => {
   }
   soundHeld = false
   setMuted(false)
-  if (transport && perf?.soundtrack) void music.play(transport.now())
+  joinSound()
 })
 const restartBtn = el('button', { type: 'button', class: 'tbtn', title: 'Back to the top of the show (Home)', 'aria-label': 'Restart' }, [icon(ICON.restart)])
 restartBtn.addEventListener('click', () => seek(0))
@@ -571,6 +595,9 @@ videoBtn.addEventListener('click', () => {
   const mine = (recording = new AbortController())
   const name = `${exportName()}${speed === 1 ? '' : `-${speed}x`}`
   const words = credited() ? ', and the credits' : ', nothing written on it'
+  // What the file has: the recorder takes a soundtrack file's audio (muted or not: muting only stops it being heard as it
+  // records) and nothing else, so a show whose music is YouTube's saves silent, and "picture and music" was untrue there.
+  const sound = !perf?.soundtrack ? '' : perf.soundtrack.src ? ' and music' : ", silent (its music is YouTube's)"
   say(exportNote, 'Playing the show through once to record it. Keep this tab in front.')
   sync()
   void stage
@@ -578,7 +605,7 @@ videoBtn.addEventListener('click', () => {
       videoBtn.textContent = `Stop · ${Math.round(done * 100)}%`
     })
     .then(
-      (saved) => say(exportNote, saved ? `Saved: picture and music${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
+      (saved) => say(exportNote, saved ? `Saved: picture${sound}${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
       (err) => {
         console.error(err)
         say(exportNote, err instanceof Error ? err.message : String(err), 'bad')
@@ -612,6 +639,15 @@ function sync(): void {
   const busy = recording !== null
   const playing = transport?.playing ?? false
   const ready = perf !== null
+
+  // The picture says nothing to a screen reader: the canvas is named, as an image, by the show's title and its own share
+  // line (WCAG 1.1.1). The stage's controls stay outside it.
+  const canvas = stageRoot.querySelector('canvas')
+  if (canvas) {
+    canvas.setAttribute('role', 'img')
+    const name = current ? `${current.title}${current.about ? `: ${current.about}` : ''}` : 'The show'
+    if (canvas.getAttribute('aria-label') !== name) canvas.setAttribute('aria-label', name)
+  }
 
   // The title card.
   empty.hidden = works.length > 0
@@ -678,8 +714,12 @@ function sync(): void {
       ? 'The browser is holding the sound. Click or press M to bring it in.'
       : muted
         ? 'Turn the music on (M)'
-        : 'Turn the music off (M). The show keeps its time; a saved video keeps its music.'
-    : 'This version has no soundtrack'
+        : perf?.soundtrack?.src
+          ? 'Turn the music off (M). The show keeps its time; a saved video keeps its music.'
+          : 'Turn the music off (M). The show keeps its time. (Its music is YouTube: a saved video is silent.)'
+    : perf?.soundtrack && music.state() === 'failed'
+      ? 'The soundtrack would not load'
+      : 'This version has no soundtrack'
   say(
     transportNote,
     perf?.soundtrack && music.state() === 'failed'
@@ -785,8 +825,11 @@ function renderWords(t: number): void {
     }
     node.style.left = `${(W - fw) / 2 + c.at[0] * fw}px`
     const lift = c.lift ? c.lift * Math.max(0, (H - fh) / 2) : 0
-    node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
-    if (c.scale && c.scale !== 1) node.style.setProperty('--u', `${(fh / 100) * c.scale}px`)
+    const above = (perf?.tall ?? 0.5) * (H - fh)
+    node.style.top = `${above + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
+    const u = Math.max(fh / 100, c.least ?? 0) * (c.scale ?? 1)
+    if (u !== fh / 100) node.style.setProperty('--u', `${u}px`)
+    else node.style.removeProperty('--u')
     node.style.opacity = c.light.toFixed(3)
     // Out of focus as it comes and goes: it comes into focus as it comes up.
     node.style.filter = c.light > 0.995 ? '' : `blur(${((1 - c.light) * fh * 0.012).toFixed(2)}px)`
@@ -862,7 +905,7 @@ const onKey = (e: KeyboardEvent) => {
       if (soundHeld) {
         soundHeld = false
         setMuted(false)
-        if (transport) void music.play(transport.now())
+        joinSound()
         break
       }
       setMuted(!muted)
@@ -950,6 +993,7 @@ if (import.meta.env.DEV) {
 
   return () => {
     alive = false
+    besideFrame.disconnect()
     window.clearTimeout(warmTimer)
     releaseSound()
     shell.holdHandle(false)

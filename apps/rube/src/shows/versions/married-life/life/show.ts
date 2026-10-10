@@ -128,6 +128,11 @@ export class LifeShow extends Show {
   }
 
   /** The leg that has the ball at `t`. */
+  /** The cells of the place in play at `t` (its leg's parts): what Overview frames, not the whole world's sets. */
+  place(t: number): Box {
+    return boundsOf(this.legs[this.owner(t)].placed)
+  }
+
   owner(t: number): number {
     const time = this.clamp(t)
     let i = 0

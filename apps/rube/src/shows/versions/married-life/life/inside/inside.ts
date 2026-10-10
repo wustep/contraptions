@@ -61,8 +61,9 @@ export const INSIDE = {
   ] as [number, number, number, number][],
 }
 
-/** How far round the house its sky and earth are painted: [x0, x1, y0, y1] from its origin. */
-const SPAN = [-70, 70, -40, 30]
+/** How far round the house its sky and earth are painted: [x0, x1, y0, y1] from its origin. High enough for a phone
+ * held upright at the storm, the widest look at the house, which sees far above the roof (held by `check:shows`). */
+export const INSIDE_SPAN = [-70, 70, -160, 30]
 
 /** The cells the set claims, [x0, y0, x1, y1] from its origin. */
 export const INSIDE_BOX: [number, number, number, number] = [-18, -13, 27, 3]
@@ -100,10 +101,10 @@ export const inside = scenery<null>({
 
     // The sky, wherever the frame shows it over the yard and the roof, and the earth under everything: only round
     // the house, so a wide look at the whole world (Overview) still sees the street side and the rest.
-    const X0 = Math.max(f.x0, SPAN[0])
-    const X1 = Math.min(f.x1, SPAN[1])
-    const Y0 = Math.max(f.y0, SPAN[2])
-    const Y1 = Math.min(f.y1, SPAN[3])
+    const X0 = Math.max(f.x0, INSIDE_SPAN[0])
+    const X1 = Math.min(f.x1, INSIDE_SPAN[1])
+    const Y0 = Math.max(f.y0, INSIDE_SPAN[2])
+    const Y1 = Math.min(f.y1, INSIDE_SPAN[3])
     if (X1 > X0 && Y1 > Y0) {
       p.noStroke()
       p.fill(skyAt(t))
@@ -278,12 +279,16 @@ export const inside = scenery<null>({
     p.noStroke()
     p.fill(mixHex('#7C6250', '#6D5A4E', age))
     p.triangle(H.eaves[0] * k, H.eavesY * k, rx * k, ry * k, H.eaves[1] * k, H.eavesY * k)
-    // The chimney, up through the roof.
+    // The chimney, up out of the roof. Its stack is drawn from just under the roof's band, not down through the attic:
+    // the flue has no way down through the nursery (its window is where it would run), and drawn to the nursery's
+    // ceiling it stood in every close of the nursery as a brick block floating over the room.
     const [c0, c1, ctop] = H.chimney
+    // Its foot is the roof band's underside where the roof is highest under it, so the band covers it on both sides.
+    const bandFoot = (x: number) => H.eavesY + 0.12 + 0.42 + ((x - (H.eaves[0] - 0.3)) / (rx - (H.eaves[0] - 0.3))) * (ry - (H.eavesY + 0.12 + 0.42))
     p.stroke(ink)
     p.strokeWeight(weight)
     p.fill(mixHex('#A8604A', '#8E6656', age))
-    rect(p, k, c0, ctop, c1, H.ceilUp)
+    rect(p, k, c0, ctop, c1, bandFoot(c1))
     rect(p, k, c0 - 0.12, ctop - 0.2, c1 + 0.12, ctop)
     const roof = mixHex(HOME.roof, HOME.roofOld, age)
     p.fill(roof)

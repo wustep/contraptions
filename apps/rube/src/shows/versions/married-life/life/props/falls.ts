@@ -15,7 +15,11 @@ export const FALLS = {
   skyTop: '#E9A77F',
   cliff: '#7F6A8F',
   cliffShade: '#5F4E72',
-  water: '#EAF4F6',
+  // Water, not paint: a pale blue with deeper streaks falling in it and white spray at its foot (near-white, a fresh
+  // viewer read the falls as a stripe, a door or a road, and the cliff as a house, a tent or a temple).
+  water: '#BFE1EC',
+  waterStreak: '#7DB6CC',
+  spray: '#F6FBFC',
   jungle: '#4F8A5A',
   jungleFar: '#6FA070',
 }
@@ -57,7 +61,7 @@ export function drawFalls(p: p5, k: number, weight: number, x0: number, y0: numb
   p.vertex(X(0.8), Y(0.86))
   p.vertex(X(0.66), Y(0.86))
   p.endShape(p.CLOSE)
-  // The falls: a pale ribbon off the lip, widening into mist at the foot.
+  // The falls: a ribbon of water off the lip, streaked as it falls, widening into spray at the foot.
   p.fill(alpha(p, FALLS.water, light))
   p.beginShape()
   p.vertex(X(0.45), Y(0.3))
@@ -65,6 +69,9 @@ export function drawFalls(p: p5, k: number, weight: number, x0: number, y0: numb
   p.vertex(X(0.53), Y(0.84))
   p.vertex(X(0.41), Y(0.84))
   p.endShape(p.CLOSE)
+  fallStreaks(p, X, Y, [0.455, 0.475, 0.495], 0.31, 0.82, [-0.03, -0.012, 0.012], weight * 0.45, light)
+  p.noStroke()
+  p.fill(alpha(p, FALLS.spray, light))
   p.ellipse(X(0.47), Y(0.86), w * 0.22 * k, h * 0.07 * k)
   // The near jungle over the cliff's foot.
   p.fill(alpha(p, FALLS.jungle, light))
@@ -86,5 +93,18 @@ export function drawFalls(p: p5, k: number, weight: number, x0: number, y0: numb
   p.stroke(alpha(p, INK, 0.9 * light))
   p.strokeWeight(weight * 0.8)
   p.rect(X(0), Y(0), w * k, h * k)
+  p.pop()
+}
+
+/**
+ * Streaks of falling water down a falls: thin deeper-blue lines from `top` to `foot` (shares of the picture), each
+ * starting at `xs[i]` and spreading by `spread[i]` as it falls, as the ribbon does.
+ */
+export function fallStreaks(p: p5, X: (u: number) => number, Y: (v: number) => number, xs: number[], top: number, foot: number, spread: number[], w: number, light = 1): void {
+  p.push()
+  p.noFill()
+  p.stroke(alpha(p, FALLS.waterStreak, 0.9 * light))
+  p.strokeWeight(Math.max(0.5, w))
+  xs.forEach((x, i) => p.line(X(x), Y(top + 0.02 * i), X(x + spread[i]), Y(foot - 0.03 * i)))
   p.pop()
 }

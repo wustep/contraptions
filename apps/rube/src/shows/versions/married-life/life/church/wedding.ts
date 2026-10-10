@@ -102,8 +102,11 @@ const TOWARD: [number, number][] = [
 const HER_ROLL = [0.02, 0.015, 0.02, 0.025]
 const HER_RISE = [0.035, 0.03, 0.025, 0.01]
 const HIS_LEAN = [0.035, 0.035, 0.04, 0.04]
-/** He closes the last of the gap with her on the kiss, and runs from there. */
-const KISS_STEP = 0.02
+/**
+ * How far he steps in on the kiss, and runs from there: none, now. His lean (0.15 rad by the kiss) already brings his
+ * upper corner to her; a step as well pressed his corner over her ball, one squashed shape instead of a kiss.
+ */
+const KISS_STEP = 0
 const toward = (T: number, amounts: number[]): number => TOWARD.reduce((v, [a, b], i) => v + amounts[i] * ease(T, a, b), 0)
 /** A breath in on each step: up from rest to 1 a fifth of a second after its onset, and a long damped settle. */
 const breathIn = (T: number): number =>
@@ -204,8 +207,9 @@ function carlPose(T: number): { tilt: number; squash: number } {
   }
   // Stepped away, he looks back at the pews; he stops looking as he steps back in.
   const glance = 0.07 * smooth(T, 6.1, 6.6) * (1 - smooth(T, 7.3, 7.85))
-  // His lean toward her, growing a step on each of the slowing march's onsets into the kiss; straightened as he runs.
-  const lean = toward(T, HIS_LEAN) * (1 - ease(T, HER_RUN - 0.07, HIS_RUN + 0.35))
+  // His lean toward her, growing a step on each of the slowing march's onsets into the kiss; as he runs, half of it is
+  // kept as a lean into the run (toward the doors, as she is), let go before the cut so he is upright across it.
+  const lean = toward(T, HIS_LEAN) * (1 - 0.5 * ease(T, HER_RUN - 0.07, HIS_RUN + 0.35)) * (1 - ease(T, 20.95, 21.45))
   // Each step of it a small settle as it lands.
   for (const [, b] of TOWARD) squash += 0.025 * (T < b ? ease(T, b - 0.12, b) : knock(T - b, 0.16))
   return { tilt: step + glance + lean, squash }

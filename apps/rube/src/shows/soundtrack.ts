@@ -1,5 +1,5 @@
 import type { SoundtrackSpec } from './registry'
-import { createYouTubeSoundtrack } from './youtube'
+import { createYouTubeSoundtrack, type YouTubeSoundtrack } from './youtube'
 
 /**
  * The music. One audio element for the page's life, handed a new recording
@@ -95,8 +95,11 @@ export interface ShowSoundtrack extends Soundtrack {
  * only: without a local `src`, a failed embed leaves the show silent.
  */
 export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtube'): ShowSoundtrack {
-  const file = createFileSoundtrack()
-  const tube = createYouTubeSoundtrack(host)
+  return combineSoundtracks(createFileSoundtrack(), createYouTubeSoundtrack(host), prefer)
+}
+
+/** The file and YouTube, as one: which plays, and handing over between them. Apart from the players, so a check can hand it stand-ins. */
+export function combineSoundtracks(file: Soundtrack, tube: YouTubeSoundtrack, prefer: MusicSource = 'youtube'): ShowSoundtrack {
   let spec: SoundtrackSpec | null = null
   let active: Soundtrack = file
   let fell = false
@@ -123,6 +126,13 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
   /** YouTube for a version that names its upload, unless the speed is one its player cannot play and there is a file that can. */
   const wantsTube = (next: SoundtrackSpec | null) =>
     !!next?.youtube?.length && prefer === 'youtube' && (speed <= YOUTUBE_MAX_SPEED || !next.src)
+  /**
+   * Past YouTube's fastest with no file to take over, YouTube sits out: its player would round the speed down, and
+   * the picture, which follows the music, with it, so 4x would play at 2x. Instead the music is silent and has no say
+   * (`position` is null), and the show runs on the wall clock at the speed asked for; back at 2x or slower, YouTube
+   * comes in again where the show is.
+   */
+  const sittingOut = () => active === tube && speed > YOUTUBE_MAX_SPEED && !spec?.src
   return {
     load(next) {
       spec = next
@@ -133,14 +143,15 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
       active.load(next)
     },
     state: () => active.state(),
-    position: () => active.position(),
+    position: () => (sittingOut() ? null : active.position()),
     follow(t) {
       shown = t
-      active.follow(t)
+      if (!sittingOut()) active.follow(t)
     },
     async play(at) {
       wanted = true
       shown = at
+      if (sittingOut()) return 'playing'
       if (active !== tube) return active.play(at)
       asking = true
       const result = await tube.play(at).finally(() => (asking = false))
@@ -154,9 +165,19 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
     },
     seek: (at) => active.seek(at),
     setSpeed(next) {
+      const wasOut = sittingOut()
       speed = next
       file.setSpeed(next)
       tube.setSpeed(next)
+      // Into a speed YouTube cannot play, with no file: it falls silent; out of one again: it comes back in.
+      if (!wasOut && sittingOut()) {
+        const keep = wanted
+        tube.pause()
+        wanted = keep
+      } else if (wasOut && !sittingOut() && wanted) {
+        tube.seek(shown)
+        void tube.play(shown)
+      }
       // Past YouTube's fastest its player would round down, and the picture, which follows the music, with it.
       // The file plays any speed: it takes over where the show is, and keeps the version from then on.
       if (active === tube && !wantsTube(spec) && spec) {

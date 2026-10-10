@@ -1,12 +1,13 @@
 import type p5 from 'p5'
 import { ball, R, type Pt } from '../../../../parts'
 import { alpha, scenery } from './kit'
-import { AGE, AT, bar } from './music'
+import { AGE, AT, bar, CUT } from './music'
 import type { LifeShow } from './show'
 import { carlAt, INK } from './worlds'
 import { drawBalloon, BALLOON_SIZE } from './props/balloon'
 import { drawBowTie } from './inside/ties-tie'
 import { FUN } from './church/church'
+import { GLANCE } from './hill/clouds'
 
 /**
  * The two of them, drawn (the stage draws no ball in this show: `LifeShow.at` hands it none).
@@ -46,33 +47,106 @@ export const BOW_FROM = bar('jar', 48) + 0.6
 export const BALLOON_REST: Pt = [0.24, -1.42]
 
 /**
- * What stirs the balloon in the still air. The church's one toll goes through it: a sharp swing aside on its string
+ * What stirs the balloon in the still air: the church's one toll goes through it, a sharp swing aside on its string
  * and a long slow sway back (a damped swing from rest: `amp` cells aside at its fullest, over a `period`, dying away
- * over `decay` seconds), and a little at the answer.
+ * over `decay` seconds).
  */
-export const STIRS: { t: number; amp: number; period: number; decay: number }[] = [
-  { t: FUN.toll, amp: 0.2, period: 1.7, decay: 1.4 },
-  { t: FUN.answer, amp: 0.07, period: 1.7, decay: 1.2 },
+export const STIRS: { t: number; amp: number; period: number; decay: number }[] = [{ t: FUN.toll, amp: 0.2, period: 1.7, decay: 1.4 }]
+/**
+ * Where he draws the string in short and lets it out again (show seconds). He comes into the ward with it held close
+ * (it is in at the cut already gathered), so it rides in the frame over him in the close on the cut, under Zoom too,
+ * and lets it up as the camera opens and he reaches for the lamp. At home, as the latch gives, he gathers it in so
+ * the balloon comes in under the lintel with him, before the door shuts behind him, and past the wall between the
+ * door and the bay; he lets it out again in the bay, before he ties it to her chair. `string` is its gathered length;
+ * it is taken in over [in0, in1] and let out over [out0, out1], quintic eased.
+ */
+export const GATHERS: { in0: number; in1: number; out0: number; out1: number; string: number }[] = [
+  { in0: AT.hospital - 1.5, in1: AT.hospital - 1, out0: 181.3, out1: 183.0, string: 0.8 },
+  { in0: 208.2, in1: 209.3, out0: 212.7, out1: 214.2, string: 0.3 },
 ]
 /**
- * At home, tied to her chair, it leans the smallest way toward him on the piano's phrase notes once he has sat down
- * (her last gesture at her bedside was the same: the smallest roll toward him). Each lean eases up from nothing to
- * `amp` cells (negative is toward his chair) at `rise` seconds after the note, and back, slowly.
+ * Where her one dot, her face, looks while she is still: up at the clouds on the hill; and at him through the five
+ * mornings at the tie wheel and the dance (spotting him through it), she at his right, so up and to her
+ * left (`at`, the dot's angle on the screen, y down). Rolling, her dot rolls with her, as everywhere; it comes round to him as she comes to rest (by her speed,
+ * smoothed), so at the crest, held at arm's length, she is looking at him, not at the floor. Eased in and out over
+ * `ease` seconds at the span's ends.
  */
-export const LEANS: { t: number; amp: number; rise: number }[] = [
-  { t: 219.696, amp: -0.07, rise: 0.5 },
-  { t: 221.884, amp: -0.06, rise: 0.5 },
-  { t: 226.203, amp: -0.06, rise: 0.55 },
+export const LOOKS: { from: number; to: number; ease: number; at: number | ((show: LifeShow, t: number) => number); spot?: boolean }[] = [
+  // In her armchair at the new bay, at him as he comes in and sits, a little above his middle (not at her lap, as the
+  // roll had it); then, across the cut onto the blanket, turning up to the clouds the engine builds (up, and a little
+  // toward the shapes), carried just across the next cut onto the mobile until she rolls off to the cradle. One span,
+  // its target turning, so her face never drops back to her roll between the two.
+  {
+    from: bar('waltz', 27) + 0.2,
+    to: CUT.nursery + 0.6,
+    ease: 0.9,
+    at: (show, t) => {
+      const up = turnTo(towardHim(show, t), -1.35, (t - CUT.hill - 0.3) / 1.2)
+      // At the baby, to him and back up (`GLANCE`, in the clouds part).
+      const toHim = Math.min((t - GLANCE.to) / 0.35, (GLANCE.back - t) / 0.3)
+      return toHim > 0 ? turnTo(up, towardHim(show, t), toHim) : up
+    },
+  },
+  // The five mornings, while she knots his ties: faded out as she knots the bow tie, before she rolls to the lever.
+  { from: bar('jar', 39), to: bar('jar', 48) + 0.4, ease: 0.8, at: -2.3 },
+  // The dance, from its first downbeat (she arrives at rest) to the embrace: her face stays on him all through it, the
+  // turn-out at the crest too, as a dancer turning out keeps her eyes on her partner (`spot`: her roll does not take
+  // it back); faded out while she is still held in the embrace, before she sets off for the door.
+  { from: bar('jar', 51) - 0.2, to: bar('jar', 55) + 0.3, ease: 0.6, at: towardHim, spot: true },
+  // The kiss: from the march's slowing steps as they turn to each other, at him (up into his face, not at his middle),
+  // easing off as she sets out down the aisle (18.6), so it never lets go at speed.
+  { from: 15.2, to: 19.0, ease: 0.6, at: towardHim },
+  // From the moment she gives way (174.672, `climb.ts`), spent, she looks down, toward the ground on his side, and her
+  // face does not roll as she goes back down the flank (`spot`): she slides back limp, not a ball rolling (a fresh
+  // viewer read the rolling as the two of them sliding down for fun). Held on the fieldstone; her answer to his lean is
+  // her face turning to him with her smallest roll (178.8 to 179.5), and it holds across the match cut into the ward
+  // until she looks up at the balloon he has brought.
+  { from: 174.5, to: CUT.hospital + 1.0, ease: 0.45, spot: true, at: (show, t) => turnTo(2.1, towardHim(show, t), (t - 178.6) / 0.7) },
 ]
+/** The angle from her to a little above his middle (his face, as far as a square has one), on the screen. */
+function towardHim(show: LifeShow, t: number): number {
+  const e = show.ellie(t)
+  const c = show.at(t)
+  return e ? Math.atan2(c.y - 0.12 - e.y, c.x - e.x) : 0
+}
+/** From angle `a` to angle `b` the short way round, `u` of the way (0..1, eased). */
+function turnTo(a: number, b: number, u: number): number {
+  const v = Math.max(0, Math.min(1, u))
+  const d = b - a
+  return a + (d - 2 * Math.PI * Math.round(d / (2 * Math.PI))) * v * v * (3 - 2 * v)
+}
+export function lookOf(show: LifeShow, t: number, own: number): number {
+  for (const l of LOOKS) {
+    if (t <= l.from || t >= l.to) continue
+    const edge = Math.min(1, (t - l.from) / l.ease, (l.to - t) / l.ease)
+    // Her speed, smoothed over a third of a second: still or swaying (under 0.3 cells a second), she looks; rolling at
+    // 1.2 or more, her dot rolls with her; a short hand-off between, so the blend is seldom near half.
+    // Sampled inside the place she is in: her cells change at a cut, which is no speed.
+    const leg = show.legs[show.owner(t)]
+    const at = (s: number) => show.ellie(Math.max(leg.from + 1e-4, Math.min(leg.to - 1e-4, s)))
+    let v = 0
+    for (const dt of [-0.15, -0.05, 0.05, 0.15]) {
+      const a = at(t + dt - 0.05)
+      const b = at(t + dt + 0.05)
+      if (a && b) v += Math.abs(b.x - a.x) / 0.1 / 4
+    }
+    const still = l.spot ? 1 : 1 - Math.max(0, Math.min(1, (v - 0.3) / 0.9))
+    const target = typeof l.at === 'number' ? l.at : l.at(show, t)
+    // The span's own fade in and out is timed for when she is at rest, so it turns her face evenly the short way round
+    // (as directions, a fade between near opposites would whip through the middle). Her roll's hand-off, which comes
+    // while she rolls, is blended as directions: as angles, the short way round flips sides as her roll passes the far
+    // side of where she is to look, a half-turn snap while the blend is partway.
+    const faced = turnTo(own, target, edge)
+    const w = still * still * (3 - 2 * still)
+    return Math.atan2((1 - w) * Math.sin(own) + w * Math.sin(faced), (1 - w) * Math.cos(own) + w * Math.cos(faced))
+  }
+  return own
+}
 function stir(t: number): number {
   let x = 0
   for (const s of STIRS) {
     const u = t - s.t
     if (u > 0) x += s.amp * Math.exp(-u / s.decay) * Math.sin((2 * Math.PI * u) / s.period)
-  }
-  for (const l of LEANS) {
-    const u = (t - l.t) / l.rise
-    if (u > 0) x += l.amp * u * u * Math.exp(2 * (1 - u))
   }
   return x
 }
@@ -232,7 +306,7 @@ export function ellieSpin(show: LifeShow, t: number): number {
  * over the second after the knot arrives (the balloon settling down to her) and let out again over 2.2 s after the
  * tie's span ends, so across the cut it rises back to its length. Quintic eases: no kick at either end.
  */
-function stringAt(show: LifeShow, t: number): number {
+export function stringAt(show: LifeShow, t: number): number {
   const ease = (u: number) => {
     const v = Math.max(0, Math.min(1, u))
     return v * v * v * (v * (v * 6 - 15) + 10)
@@ -243,6 +317,11 @@ function stringAt(show: LifeShow, t: number): number {
     const into = ease((t - (tie.arrive - 0.1)) / 1.2)
     const out = t < tie.to ? 0 : ease((t - tie.to) / 2.2)
     L += (tie.string - BALLOON_SIZE.string) * into * (1 - out)
+  }
+  for (const g of GATHERS) {
+    const into = ease((t - g.in0) / (g.in1 - g.in0))
+    const out = ease((t - g.out0) / (g.out1 - g.out0))
+    L += (g.string - BALLOON_SIZE.string) * into * (1 - out)
   }
   return L
 }
@@ -270,6 +349,22 @@ export function balloonAt(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway
   return b
 }
 
+/**
+ * Where the knot is at `s`, in leg `leg`'s cells, remembered: the balloon's lag averages sixty of these on a fixed grid,
+ * and one moment's grid is the last one's but for a sample or two, so each is worked out once (a frame's balloon was
+ * 122 of them, now two or three; `check:shows`'s balloon scan forty seconds, now one). `anchorIn` is a function of
+ * the show alone, so what is remembered never goes stale; a new show starts a new memory.
+ */
+const knots = new WeakMap<LifeShow, Map<string, Pt>>()
+function anchorCached(show: LifeShow, s: number, leg: number): Pt {
+  let m = knots.get(show)
+  if (!m) knots.set(show, (m = new Map()))
+  const key = `${leg}:${s.toFixed(6)}`
+  let p = m.get(key)
+  if (!p) m.set(key, (p = anchorIn(show, s, leg)))
+  return p
+}
+
 /** Where the balloon rides at `t` on its string from where it is tied, lagging where it is tied in the still air. */
 function riding(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway: number } | null {
   if (t < BALLOON_FROM) return null
@@ -286,7 +381,7 @@ function riding(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway: number }
     let w = 0
     for (let i = 0; i <= 60; i++) {
       const s = Math.max(BALLOON_FROM, g - i * D)
-      const [px, py] = anchorIn(show, s, leg)
+      const [px, py] = anchorCached(show, s, leg)
       const wi = Math.exp(-(i * D) / 0.4)
       ax += (px + rest[0]) * wi
       ay += (py + rest[1]) * wi
@@ -355,7 +450,7 @@ export const cast = scenery<CastState>({
           p.pop()
         },
       )
-      const spin = ellieSpin(show, t)
+      const spin = lookOf(show, t, ellieSpin(show, t))
       const size = ellie.scale ?? 1
       // Settled a little onto the floor with the years: flattened on the vertical about her bottom, under whatever
       // squash or stretch a part gives her.

@@ -4,7 +4,7 @@ import { alpha, box, carried, part, smooth, type Companion, type Ctx, type PartS
 import { AGE, AT, bar, beat, SEAM } from '../music'
 import { G_EARTH } from '../physics'
 import { BOW_FROM, HALF } from '../cast'
-import { CHURCH, HOME, INK } from '../worlds'
+import { CARL, CHURCH, ELLIE, HOME, INK } from '../worlds'
 import { BASKET, drawBasket } from '../props/basket'
 import { CUTS } from '../seams'
 import { DESK, DOOR, drawDesk, drawDoor, drawDusk, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, MACHINE, PEDAL, WHEEL } from './ties-set'
@@ -853,8 +853,8 @@ function drawCrestLight(p: p5, k: number, a: number): void {
   // A soft penumbra round the whole, then the two shafts crisp inside it, warmest at the glass.
   shaft(gTop, gFoot, 0.12, 0.05, 0.03)
   for (const [y0, y1] of [[gTop, bar - 0.035], [bar + 0.035, gFoot]]) {
-    shaft(y0, y1, 0.03, 0.08, 0.05)
-    shaft(y0, y1, 0, 0.15, 0.1)
+    shaft(y0, y1, 0.03, 0.1, 0.07)
+    shaft(y0, y1, 0, 0.21, 0.15)
   }
   // Where it lands: a warm glow on the wall low behind them (only the wall: the floor's cut edge stays dark).
   const mid = (CREST.from + CREST.to) / 2
@@ -875,12 +875,14 @@ function drawCrestLight(p: p5, k: number, a: number): void {
 /* ------------------------------------------------------------------ their wedding photograph */
 
 /**
- * Their wedding photograph on the hall's wall, above the chair rail over the open floor: the one the flash took at the
- * start, the same drawing that stands on the funeral's easel (church.ts `drawPhotograph`), smaller and without its
- * ribbon: a gilt frame, the sepia card, a square and a round one touching. The dance's crest is framed under it, so
- * at the loudest bar of the second waltz they dance under the day they married. Its middle, and the top of its frame.
+ * Their wedding photograph on the hall's wall, hung just under the chair rail over the open floor: the one the flash
+ * took at the start, the same drawing that stands on the funeral's easel (church.ts `drawPhotograph`), smaller and
+ * without its ribbon: a gilt frame, the sepia card, a square and a round one touching. The dance's crest is framed
+ * under it, so at the loudest bar of the second waltz they dance under the day they married: hung low and large
+ * enough to be read at the crest's close, a hand over his top, not a stamp at the frame's edge. Its middle, and the
+ * top of its frame.
  */
-const PHOTO = { x: 4.5, top: -1.335, s: 0.72 }
+const PHOTO = { x: 4.5, top: -0.87, s: 1.05 }
 function drawWeddingPhoto(p: p5, k: number, weight: number, age: number): void {
   const { x, top, s } = PHOTO
   const gold = mixHex(HOME.brass, '#B9A06A', age * 0.6)
@@ -901,13 +903,16 @@ function drawWeddingPhoto(p: p5, k: number, weight: number, age: number): void {
   r(x - 0.21 * s, top + 0.05 * s, x + 0.21 * s, top + 0.43 * s)
   p.fill(alpha(p, mixHex(HOME.wood, INK, 0.2), 0.45))
   r(x - 0.21 * s, top + 0.34 * s, x + 0.21 * s, top + 0.43 * s)
-  // The two of them, touching, standing on it: his square a little tipped towards her.
-  p.fill(mixHex(HOME.wood, INK, 0.4))
+  // The two of them, touching, standing on it: his square a little tipped towards her; each with the hint of the
+  // colour they were that day, as on the funeral's easel (church.ts `drawPhotograph`): the same picture.
+  const figure = mixHex(HOME.wood, INK, 0.35)
+  p.fill(mixHex(figure, CARL, 0.45))
   p.push()
   p.translate((x - 0.05 * s) * k, (top + 0.29 * s) * k)
   p.rotate(0.14)
   p.rect(-0.045 * s * k, -0.045 * s * k, 0.09 * s * k, 0.09 * s * k, 0.01 * s * k)
   p.pop()
+  p.fill(mixHex(figure, ELLIE, 0.5))
   p.circle((x + 0.042 * s) * k, (top + 0.29 * s) * k, 0.09 * s * k)
   p.pop()
 }
@@ -997,7 +1002,13 @@ function seated(j: number, T: number): { angle: number; snug: number } {
   return { angle: loose + jiggle, snug: smooth(T, Tc - 0.03, Tc + 0.05) }
 }
 
-/** The tickets' flights: from the machine's slot, up and over into the basket on his top. */
+/**
+ * The tickets' flights: from the machine's slot, up and over into the basket on his top. Each has a third of a second
+ * (the cadence's two notes), and on a true fall it was a low hop at the basket's rim, spinning, gone in a blink: two
+ * fresh viewers read the press as a slot machine or a camera, and knew the slips for tickets only on the hill. So they
+ * are thrown: popped high off the slot (`LOFT`, its gravity a stage's, not the world's) and turning slowly, so each is
+ * seen whole against the wall over the press before it drops in.
+ */
 const SLOT: Pt = [MACHINE.x + MACHINE.half + 0.03, MACHINE.wy - 0.02]
 function ticketAt(from: number, to: number, T: number): { x: number; y: number; a: number } | null {
   if (T < from || T >= to) return null
@@ -1005,10 +1016,23 @@ function ticketAt(from: number, to: number, T: number): { x: number; y: number; 
   const tx = top.x + 0.07
   const ty = top.y - BASKET.h + 0.08
   const D = to - from
+  // The same height for both, though the first has less time: thrown harder for a shorter flight.
+  const LOFT = 2.2 * G_EARTH * ((SHUT - STAMP2) / D) ** 2
   const vx = (tx - SLOT[0]) / D
-  const vy = (ty - SLOT[1] - 0.5 * G_EARTH * D * D) / D
+  const vy = (ty - SLOT[1] - 0.5 * LOFT * D * D) / D
   const dt = T - from
-  return { x: SLOT[0] + vx * dt, y: SLOT[1] + vy * dt + 0.5 * G_EARTH * dt * dt, a: -0.3 + dt * 9 }
+  return { x: SLOT[0] + vx * dt, y: SLOT[1] + vy * dt + 0.5 * LOFT * dt * dt, a: -0.25 + (dt / D) * 1.1 }
+}
+
+/** For the check: the tickets in the air at `T`, from Carl's centre, and how high over the slot each is. */
+export function ticketsInFlight(T: number): { n: number; dx: number; dy: number; up: number }[] {
+  const [cx, cy] = carlAt(T)
+  const out: { n: number; dx: number; dy: number; up: number }[] = []
+  for (const [n, [a, b]] of [[STAMP1, STAMP2], [STAMP2, SHUT]].entries()) {
+    const tk = ticketAt(a, b, T)
+    if (tk) out.push({ n, dx: tk.x - cx, dy: tk.y - cy, up: SLOT[1] - tk.y })
+  }
+  return out
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -1147,7 +1171,7 @@ export const ties = part<TiesState>(
       // The dance, on the swell: the camera goes in with it. On its first downbeat the gramophone is whole in the left
       // third, its record turning, the two of them meeting in front of it; then in, down the hall with them, to land
       // closest on the crest, 52's downbeat, as she rolls out from his side to arm's length: the two of them in the
-      // warm pool as it swells, under their wedding photograph (`PHOTO`, in the frame's upper third; the key a touch
+      // warm pool as it swells, under their wedding photograph (`PHOTO`, low over them in the frame's upper half; the key a touch
       // higher than `low` for it, which Zoom still allows). That close sits between the horn's mouth
       // (its rim reaches x 2.98) and the ticket press's hand lever (its grip 6.48), so neither is cut by the frame's
       // edges, and it holds them left of the middle, with the floor they are waltzing into ahead of them. It stays

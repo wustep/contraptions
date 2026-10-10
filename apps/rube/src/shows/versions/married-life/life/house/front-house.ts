@@ -460,9 +460,10 @@ export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swing
   p.fill(c.trim)
   rect(p, k, x0, -2.2, x0 + facet, -2.15)
   rect(p, k, x1 - facet, -2.2, x1, -2.15)
-  // The wall between the bay and the door, up to the porch roof, and the door's jambs and head.
+  // The wall between the bay and the door, up to the porch roof, and the door's jambs and head. It meets the bay's
+  // corner post (x1 + 0.05): a gap there showed a slit of the balloon between post and wall as he came in.
   const d = HOUSE.door
-  siding(p, k, weight, L, c, x1 + 0.08, d.x0, HOUSE.porch.roof, P, 7)
+  siding(p, k, weight, L, c, x1 + 0.05, d.x0, HOUSE.porch.roof, P, 7)
   // And the wall over the door, up under the porch roof: what anyone indoors (and the balloon) is behind.
   siding(p, k, weight, L, c, d.x0 - 0.08, d.x1 + 0.08, -2.86, d.top, 8)
   p.stroke(c.ink)

@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { ONSETS, SEAM, beat } from '../music'
+import { ONSETS, SEAM, beat, beatsIn } from '../music'
 
 /**
  * The living room's clock and its geometry (the jar builder's): every time the room keeps, every place in it, and the
@@ -54,9 +54,9 @@ export const LAMP_OUT = J(17, 2)
 export const CLIMB = [J(17, 3), J(18)]
 export const KICK = onset(119.902)
 export const FALL = J(19)
-/** She comes down to him, touches him; the bandage. Then up again to the jar. */
+/** She comes down to him, touches him (on the two, her beat); the bandage. Then up again to the jar. */
 export const TO_HIM = J(19, 3)
-export const TOUCH = J(20)
+export const TOUCH = J(20, 2)
 export const UP2 = [J(21), J(21, 2), J(22)]
 export const PUSH2 = J(23)
 /** The storm: a first flash; the tree through the roof; the jar thrown over; thunder. */
@@ -159,7 +159,26 @@ export function plankAt(t: number): number {
   if (!Number.isFinite(s)) return COCKED
   // His weight drives it down from the moment he lands on it, gathering, until it thumps the floor on the beat.
   if (s < TOUCHDOWN) { const u = s / TOUCHDOWN; return COCKED + (FIRED - COCKED) * (0.55 * u + 0.45 * u * u) }
-  return FIRED + (COCKED - FIRED) * rise(s - TOUCHDOWN - 0.04, 0.11)
+  // The counterweight takes it back up, but his weight is still on it: half way, and the rest as he leaves it (on the
+  // next stroke's pickup, when he takes off for it; after a run's last stroke, a moment later), so the reset launches
+  // him instead of lifting him like a feather.
+  const slam = latest(SLAMS, t + 1e-9)
+  const half = 0.5 * rise(s - TOUCHDOWN - 0.04, 0.15)
+  // The kick starts a moment before he leaves, so his end is already rising under him: it throws him.
+  const k = clamp01((t - (leaveAfter(slam) - 0.1)) / 0.12)
+  const rest = 0.5 * (1 - (1 - k) ** 3)
+  return FIRED + (COCKED - FIRED) * (half + rest)
+}
+
+/** When he leaves the plank after the stroke at `slam`: the next stroke's pickup (beat 3 of the bar before it), if the
+ * strokes go on bar by bar; else 0.7 s after. */
+function leaveAfter(slam: number): number {
+  const next = SLAMS.find((x) => x > slam + 0.01)
+  if (next !== undefined && next - slam < 1.3) {
+    const three = beatsIn(next - 0.6, next).filter((b) => b.pos === 3)
+    if (three.length) return three[three.length - 1].t
+  }
+  return slam + 0.7
 }
 
 /** A point on the plank at `d` along it from the axle, raised `up` off its centre line (its top is 0.035 up). */
@@ -321,7 +340,7 @@ export const boardAt = (t: number, i: number): number => {
 /** The bandage round his foot: 0 none .. 1 wrapped; unwound as he heals, as they go. */
 export function bandageAt(t: number): number {
   if (t < TOUCH) return 0
-  const on = smoothstep((t - TOUCH) / 0.6)
+  const on = smoothstep((t - TOUCH) / 0.45)
   const off = smoothstep((t - (SUN + 0.1)) / 0.7)
   return on * (1 - off)
 }
