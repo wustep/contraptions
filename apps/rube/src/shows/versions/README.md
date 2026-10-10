@@ -13,7 +13,7 @@ both in lower case and hyphens. Drop the file in and it is in the picker at
 Nothing else keeps a list. A link to it is `/shows/<work>/<take>/`, and the
 work's first take is also `/shows/<work>/`. `/shows/?show=<work>&take=<take>`
 still opens it, and `/theater/?show=<work>&take=<take>` starts Theater on it.
-`/shows/` with no work opens Clair de Lune, Take B.
+`/shows/` with no work opens the first favourite, Voyage.
 
 Keep two takes of the same music side by side for as long as you like; they
 share nothing unless you make them share it. To combine them later, write a
@@ -39,6 +39,10 @@ The folder and file names are addresses, so they are chosen once:
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
   Lune, Première Arabesque, Cornfield Chase), **Movies** and **Ambient**
   (Gymnopédie, Soft Lamp, Ostinato). A work is Movies unless `SHELVED` in `../registry.ts` names it.
+- **Favourites**: `FAVORITES` in `../registry.ts` ranks them (Voyage, Epilogue,
+  Everything, Clair de Lune). The picker stars them and sets them out first, in
+  that order, ahead of the shelves; a take with `favorite: true` is starred on
+  its tab (Epilogue's Opus 5.5).
 - **Code**: a take that is more than a score file keeps its code in a folder
   named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
   the take id carries a code name, the folder uses the same one. A take's code

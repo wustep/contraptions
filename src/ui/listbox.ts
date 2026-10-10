@@ -27,6 +27,8 @@ export interface ListboxItem {
   glyph?: SVGSVGElement
   /** The heading this option sits under in the list. Items of a group should be adjacent. */
   group?: string
+  /** Small trailing glyph set just after the option's label, e.g. a favourite's star. Cloned per use. */
+  mark?: SVGSVGElement
 }
 
 export interface Listbox {
@@ -83,6 +85,11 @@ function renderContent(target: HTMLElement, item: ListboxItem, withNote = false)
   const text = make('span', 'lb-text')
   const label = make('span', 'lb-label')
   label.textContent = item.label
+  if (withNote && item.mark) {
+    const mark = item.mark.cloneNode(true) as SVGSVGElement
+    mark.classList.add('lb-mark')
+    label.append(mark)
+  }
   text.append(label)
   if (withNote && item.note) {
     const note = make('span', 'lb-note')

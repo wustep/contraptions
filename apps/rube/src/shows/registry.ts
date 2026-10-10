@@ -150,6 +150,8 @@ export interface ShowVersion {
   about?: string
   /** Seconds of show at which the share card's picture is taken (`scripts/shows/show-cards.mjs`). */
   still?: number
+  /** A favourite take of its work: starred on its tab. */
+  favorite?: boolean
   load(): Promise<Performance>
 }
 
@@ -167,6 +169,8 @@ export interface Work {
   work: string
   title: string
   versions: Version[]
+  /** Where it stands among the favourites (`FAVORITES`), 1 first; left out, it is not one. */
+  favorite?: number
 }
 
 const PATH = /(?:^|\/)versions\/([a-z0-9][a-z0-9-]*)\/([a-z0-9][a-z0-9-]*)\.show\.ts$/
@@ -201,12 +205,33 @@ const SHELVED: Record<string, Section> = {
 }
 export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
 
-/** The works by shelf, each shelf by title; empty shelves left out. */
-export function shelves(works: Work[]): { section: Section; works: Work[] }[] {
-  return SECTIONS.map((section) => ({
-    section,
-    works: works.filter((w) => sectionOf(w.work) === section).sort((a, b) => a.title.localeCompare(b.title)),
-  })).filter((s) => s.works.length > 0)
+/** The favourite works, by rank. They are starred, set out first in the picker, and the Shows tab opens the first. */
+const FAVORITES: Record<string, number> = {
+  interstellar: 1,
+  'la-la-land': 2,
+  'come-recover': 3,
+  'clair-de-lune': 4,
+}
+
+/** The favourites, first first. */
+export const favorites = (works: Work[]): Work[] =>
+  works.filter((w) => w.favorite !== undefined).sort((a, b) => a.favorite! - b.favorite!)
+
+/** The picker's shelf of favourites, set out before the others. */
+export const FAVORITE_SHELF = 'Favorites' as const
+
+/**
+ * The works by shelf: the favourites by rank, then each shelf by title without them; empty shelves left out.
+ */
+export function shelves(works: Work[]): { section: Section | typeof FAVORITE_SHELF; works: Work[] }[] {
+  const rest = works.filter((w) => w.favorite === undefined)
+  return [
+    { section: FAVORITE_SHELF, works: favorites(works) },
+    ...SECTIONS.map((section) => ({
+      section,
+      works: rest.filter((w) => sectionOf(w.work) === section).sort((a, b) => a.title.localeCompare(b.title)),
+    })),
+  ].filter((s) => s.works.length > 0)
 }
 
 /** `versions/<work>/<take>.show.ts`, or null for a path that is not one. */
@@ -255,10 +280,10 @@ export function readShows(found: Record<string, unknown>): Registry {
       problems.push(`${path}: the default export is not a show: it needs a title, a label and load()`)
       continue
     }
-    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, about: v.about, still: v.still, load: v.load }
+    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, about: v.about, still: v.still, favorite: v.favorite, load: v.load }
     const work = works.find((w) => w.work === at.work)
     if (!work) {
-      works.push({ work: at.work, title: v.title, versions: [version] })
+      works.push({ work: at.work, title: v.title, versions: [version], favorite: FAVORITES[at.work] })
       continue
     }
     if (work.title !== v.title) problems.push(`${path}: titled "${v.title}", where the other takes of ${at.work} say "${work.title}"`)
@@ -268,24 +293,23 @@ export function readShows(found: Record<string, unknown>): Registry {
   return { works, problems }
 }
 
-/** The Shows tab, with no work in the link: Clair de Lune. */
-export const DEFAULT_WORK = 'clair-de-lune'
 /** Clair de Lune, with no take in the link: Take B. */
+const CLAIR = 'clair-de-lune'
 export const DEFAULT_TAKE = 'take-b'
 
 /**
  * The version a link names. A work that is not there falls to the first
  * work; a take that is not there falls to that work's first, or to Take B
- * on Clair de Lune. A link that names no work opens Clair de Lune, Take B,
- * when it is there.
+ * on Clair de Lune. A link that names no work opens the first favourite
+ * (Voyage), when there is one.
  */
 export function pickVersion(works: Work[], work: string | null, take: string | null): Version | null {
   const w = work
     ? (works.find((o) => o.work === work) ?? works[0])
-    : (works.find((o) => o.work === DEFAULT_WORK) ?? works[0])
+    : (favorites(works)[0] ?? works[0])
   if (!w) return null
   const fallback = (w.versions.find((v) => v.take === PREFERRED_TAKES[w.work]) ??
-    (w.work === DEFAULT_WORK ? w.versions.find((v) => v.take === DEFAULT_TAKE) : undefined) ??
+    (w.work === CLAIR ? w.versions.find((v) => v.take === DEFAULT_TAKE) : undefined) ??
     w.versions[0])
   const named = take && currentTake(w.work, take)
   return w.versions.find((v) => v.take === named) ?? fallback ?? null
