@@ -467,6 +467,10 @@ each world, and changed:
 - **The light on home's back wall** (245 to the end): a little of the morning's bounce high on the wall, over the
   table, was a box with hard top and side edges, a pale panel (a critic's note; at the last push-in it is half the
   frame). It is a soft glow now, fading on every side.
+- **The engines' pylons** (62 to 68, 213.7 to 244): seen head on, each pylon ran up from its engine over the wing's
+  face and on past its top edge where the wing rises, so at the gate the engine seemed to hang from the jet bridge's
+  floor over it (a critic's note). The engine's top sits inside the wing's depth; its pylon is a stub inside it now,
+  and the engine hangs from the wing.
 
 ## Inception nods
 

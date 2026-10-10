@@ -278,8 +278,10 @@ export function drawAirframe(pen: Pen, t: number, f: Frame): void {
 
 function drawEngine(pen: Pen, t: number, x: number, y: number, skin: string, day: boolean): void {
   const r = NACELLE
-  // The pylon up to the wing.
-  shape(pen, [[x - 0.14, y - r + 0.1], [x - 0.08, y - r - 0.62], [x + 0.08, y - r - 0.62], [x + 0.14, y - r + 0.1]], skin, 0.6)
+  // The pylon up to the wing's underside (drawn over the wing to its top edge, on the wing's rise it stood up above
+  // it, and the engine seemed to hang from whatever was over it: the jet bridge, at the gate).
+  // The engine's top sits just under the wing's top edge (y - r is wingY + 0.1), so the pylon is a short stub to it.
+  shape(pen, [[x - 0.14, y - r + 0.1], [x - 0.09, y - r + 0.03], [x + 0.09, y - r + 0.03], [x + 0.14, y - r + 0.1]], skin, 0.6)
   ring(pen, x, y, r * 0.8, r, skin, 0.7)
   const fan = day ? mixHex(PLANE.night, PLANE.cabinLit, 0.6) : PLANE.night
   oval(pen, x, y, r * 0.8, r * 0.8, fan, 0.5)
