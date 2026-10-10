@@ -7,6 +7,7 @@ import {
   FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat, lanternAt,
 } from './air'
 import { drawShore } from './shore'
+import { drawSquall } from './squall'
 import { HEAD, MID, cometAngle, cometAnswers, cometFlare, cometLight, cometSprite, cometSway } from './comet'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
@@ -531,6 +532,8 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
   layer(BANKS, BANK, hazy, (0.6 - 0.4 * day.night) * near * light.alpha, false)
   // The far shore, in front of the bank: islands, their villages and the lighthouse.
   drawShore(ctx, k, c.t, half, { day, sunAngle: sunAngle(c.t), moonUp }, near)
+  // The afternoon's squall, in front of the far shore, coming over the sea and going off with the bow in it.
+  drawSquall(ctx, k, c.t, day, near)
   layer(CLOUDS, HEAPS, light, 0.92 * near * light.alpha, true)
 
   // Sailboats far out on the water by day, sitting into the sea (its surface is drawn over their hulls' feet).

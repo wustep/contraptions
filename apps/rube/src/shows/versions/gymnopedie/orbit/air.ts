@@ -53,7 +53,7 @@ export interface Cloud {
   puffs: [number, number, number][]
 }
 
-function cumulus(seed: number, x: number, h: number, w: number, tall: number): Cloud {
+export function cumulus(seed: number, x: number, h: number, w: number, tall: number): Cloud {
   const rank = hash(seed, 0, 40)
   const n = 3 + Math.floor(w * 2.2)
   const puffs: [number, number, number][] = []

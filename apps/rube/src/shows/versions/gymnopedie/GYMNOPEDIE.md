@@ -173,6 +173,13 @@ Six things happen once a day:
   water, and stops by 182 s. As it clears, a bow stands opposite the low sun for the piece's last bars: a pale
   watercolour band, a fainter second bow outside it with its colours turned round, and lighter sky inside. It fades
   as the camera draws back into the dusk (`rainAt`, `overcastAt`, `bowAt`).
+- The shower is seen coming and going across the sea (`squall.ts`). From 1:56 a squall comes in from the west, the sun's
+  side, over the far shore: a long cumulus dark with rain, its top lit, trailing curtains of rain to the water, slanting
+  with the wind and stirring, in thin strips densest down each curtain's middle so they have no edge. As it comes
+  overhead its curtains go into the rain all round; from 2:56 it goes off east, still dark, its cloud's top warmed by the
+  low sun, and the bow stands in it, opposite the sun, where a bow is. It goes with the wind, across the frame, faster
+  than the ball. One gradient to a curtain, its strips' density as their alpha: 0.4 ms a frame (the median of 30 with
+  the CPU slowed six times; a gradient to each strip had cost 6).
 - At night the sea has its own light. A bass note's swell wakes it: the crest glows a cold green-blue as it runs, and
   the motes in the water under it light as it passes over them and go out behind it. So each bass note still sends
   out its two crests, now as two threads of light running away along the dark water.
@@ -365,7 +372,7 @@ measured at under a millisecond's difference, and left out.
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
 the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the aurora, the whale) and their
-layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; `blossom.ts` the colonnade's bougainvillea; `comet.ts` the third Gnossienne's comet; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; `blossom.ts` the colonnade's bougainvillea; `comet.ts` the third Gnossienne's comet; `squall.ts` the shower coming and going; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 
@@ -425,4 +432,5 @@ only while it is low and up; a wave of light runs back along each piece's way fr
 a constellation, at night; the aurora is the first Gnossienne's, in the full night only; the sun and the moon go round
 without a jump, the seam included; the far shore's windows are dark by day, lit in the night and out by the dawn, and
 the lighthouse is lit with the first lamp and put out by the dawn; the sea's surface comes round; the dolphins leap once, each on a Gymnopédie bass note, by day, close; bougainvillea flowers on stones apart, none with a
-gull; the comet crosses only the third Gnossienne's night sky; the titles.
+gull; the comet crosses only the third Gnossienne's night sky; the squall comes from the west before the rain and goes
+off east with the bow in it; the titles.

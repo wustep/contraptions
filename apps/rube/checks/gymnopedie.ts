@@ -16,6 +16,7 @@ import { BAND, SHARES, SLICKS } from '../src/shows/versions/gymnopedie/orbit/rip
 import { LEAPS } from '../src/shows/versions/gymnopedie/orbit/dolphins'
 import { BLOSSOM } from '../src/shows/versions/gymnopedie/orbit/blossom'
 import { cometAnswers, cometAt, cometAngle, cometFlare } from '../src/shows/versions/gymnopedie/orbit/comet'
+import { squallAt } from '../src/shows/versions/gymnopedie/orbit/squall'
 import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -178,6 +179,15 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: the comet flares on the top note it answers, in place of a shooting star',
     answered.length >= 1 && answered.every((i) => cometFlare(METEORS[i] - 0.05) === 0 && cometFlare(METEORS[i] + 0.3) > 0.5 && cometAt(METEORS[i]) > 0.05) &&
     METEORS.filter((_, i) => !cometAnswers(i)).length >= 4)
+  // The squall: seen coming from the west before the rain, out of sight overhead while it rains, going off east with
+  // the bow standing in it; and nowhere else in the period.
+  const squallTimes = Array.from({ length: 1270 }, (_, i) => i * 0.5)
+  const squallSeen = squallTimes.filter((t) => (squallAt(t)?.there ?? 0) > 0.3)
+  check('gymnopedie: the squall comes from the west before the rain and goes off east with the bow in it',
+    squallSeen.length > 20 && squallSeen.every((t) => {
+      const s = squallAt(t)!
+      return rainAt(t) < 0.5 ? (bowAt(t) > 0.3 ? s.x > 0 : s.x < 0 || t > 170) : Math.abs(s.x) > 1.6
+    }) && squallSeen.some((t) => t < 152 && squallAt(t)!.x < -2) && squallSeen.some((t) => bowAt(t) > 0.5 && squallAt(t)!.x > 2) && squallAt(10) === null && squallAt(400) === null)
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5
