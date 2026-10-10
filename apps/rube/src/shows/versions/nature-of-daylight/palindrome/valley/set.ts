@@ -64,15 +64,29 @@ function blob(ctx: Ctx, k: number, x: number, y: number, rx: number, ry: number,
   ctx.restore()
 }
 
+/**
+ * Where to sample a line from a to b: on a grid fixed in the world, not to the frame, at most two pixels apart (a
+ * power of two of a cell, so it changes only when the camera's scale halves or doubles), and at every multiple of
+ * each of `corners`, where the line has a corner (a crown's foot, a pine's tip). Sampled from the frame's edge, the
+ * points slid along the line as the camera moved and caught the trees' tops and the gaps between them differently
+ * each frame: the trees flickered.
+ */
+function along(a: number, b: number, k: number, corners: number[] = []): number[] {
+  const step = Math.max(2 ** Math.floor(Math.log2(2 / k)), 1 / 128)
+  const xs = [a, b]
+  for (let i = Math.ceil(a / step); i * step < b; i++) xs.push(i * step)
+  for (const c of corners) for (let i = Math.ceil(a / c); i * c < b; i++) xs.push(i * c)
+  return xs.sort((p, q) => p - q)
+}
+
 /** A silhouette across the frame: from `yAt(x)` down to `bottom`, sampled finely enough for the frame. */
-function silhouette(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, bottom: number, fill: string | CanvasGradient, x0 = -Infinity, x1 = Infinity): void {
+function silhouette(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, bottom: number, fill: string | CanvasGradient, x0 = -Infinity, x1 = Infinity, corners: number[] = []): void {
   const a = Math.max(f.x0 - 1, x0)
   const b = Math.min(f.x1 + 1, x1)
   if (b <= a) return
-  const step = Math.max((f.x1 - f.x0) / 260, 0.06)
   ctx.beginPath()
   ctx.moveTo(a * k, bottom * k)
-  for (let x = a; x <= b + step; x += step) ctx.lineTo(Math.min(x, b) * k, yAt(Math.min(x, b)) * k)
+  for (const x of along(a, b, k, corners)) ctx.lineTo(x * k, yAt(x) * k)
   ctx.lineTo(b * k, bottom * k)
   ctx.closePath()
   ctx.fillStyle = fill
@@ -132,6 +146,8 @@ const treeline = (x: number) => {
   }
   return 0.55 + 0.7 * fbm(x / 5, 14) + Math.max(crowns(0.55, 13, 0.32), crowns(0.83, 18, 0.4) - 0.08)
 }
+/** Where the treeline's crowns meet: its corners. */
+const CROWNS = [0.55, 0.83]
 
 /** The ridge nearest us, down the right of the picture: the helicopter comes round its shoulder. Its line, world y. */
 const softplus = (v: number, w: number) => w * Math.log(1 + Math.exp(v / w))
@@ -186,11 +202,11 @@ function drawCloud(ctx: Ctx, k: number, f: Frame, t: number): void {
   g.addColorStop(0.2, rgba(shade, 0.22))
   g.addColorStop(0.42, rgba(mix(shade, body, 0.35), 0.62))
   g.addColorStop(0.7, rgba(mix(shade, body, 0.6), 0.88))
-  g.addColorStop(1, rgba(body, 0.97))
+  g.addColorStop(1, rgba(body, 0.96))
+  // One fill, the deck's top held on above CLOUD_HIGH by the gradient itself: as two, a ramp up to it and a flat
+  // fill over it, their half-cell overlap was cloud laid twice, a bright line straight across the shell.
   ctx.fillStyle = g
-  ctx.fillRect((f.x0 - 1) * k, CLOUD_HIGH * k, (f.x1 - f.x0 + 2) * k, (CLOUD_LOW - CLOUD_HIGH) * k)
-  ctx.fillStyle = rgba(body, 0.96)
-  ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (CLOUD_HIGH - top + 0.5) * k)
+  ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (CLOUD_LOW - top) * k)
   drawHeave(ctx, k, t, true)
   // The daylight: a glow behind the cloud where the shell went in, then the cloud opening there and the sun through.
   if (d.glow > 0 || d.sun > 0) drawBreak(ctx, k, t)
@@ -216,17 +232,19 @@ function drawHeave(ctx: Ctx, k: number, t: number, front: boolean): void {
     const gx = SHELL_X - 1
     const gy = -54
     // Heavier as it gathers: the cloud there thick and dark underneath, the light behind it.
-    const heavy = mix(shade, VALLEY.steelDark, 0.25 + 0.2 * u)
-    blob(ctx, k, gx, gy - 2 + 2 * u, 27 - 5 * u, 8, heavy, (0.45 + 0.2 * u) * a, 0.35)
-    for (let i = 0; i < 6; i++) {
-      const turn = (i % 2 ? 1 : -1) * s * (0.28 + 0.06 * i)
-      const ang = i * 1.05 + turn
-      const r = (15 - 6 * u) * (0.55 + 0.45 * hash(i, 97, 1))
+    // Only a little darker than the deck round it, and many soft billows run together, so it is weather and never a
+    // thing: no lens, no single dark disc in the sky.
+    const heavy = mix(shade, VALLEY.steelDark, 0.08 + 0.1 * u)
+    blob(ctx, k, gx, gy - 2 + 2 * u, 34 - 5 * u, 10, heavy, (0.22 + 0.12 * u) * a, 0.2)
+    for (let i = 0; i < 12; i++) {
+      const turn = (i % 2 ? 1 : -1) * s * (0.2 + 0.04 * (i % 6))
+      const ang = i * 0.53 + 0.7 * hash(i, 97, 3) + turn
+      const r = (17 - 6 * u) * (0.45 + 0.55 * hash(i, 97, 1))
       const x = gx + Math.cos(ang) * r * 1.5
-      const y = gy - 3 + Math.sin(ang) * r * 0.32 + 1.5 * u
-      const size = 9 + 5 * hash(i, 97, 2)
-      blob(ctx, k, x, y + 1.6, size * 1.05, 3.6, heavy, 0.6 * a, 0.3)
-      blob(ctx, k, x, y - 0.6, size * 0.9, 2.6, mix(body, heavy, 0.25 + 0.35 * u), 0.7 * a, 0.4)
+      const y = gy - 3 + Math.sin(ang) * r * 0.42 + 1.5 * u
+      const size = 8 + 8 * hash(i, 97, 2)
+      blob(ctx, k, x, y + 1.4, size * 1.1, 4.6 + 1.6 * hash(i, 97, 4), heavy, 0.28 * a, 0.2)
+      blob(ctx, k, x + 0.8, y - 0.8, size * 0.95, 3.8 + 1.4 * hash(i, 97, 5), mix(body, heavy, 0.15 + 0.2 * u), 0.4 * a, 0.25)
     }
     return
   }
@@ -278,9 +296,12 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
     // In the daylight, the haze behind them shines, shafts slanting through it: the trees dark against it, rimmed.
     drawHaze(ctx, k, f, t)
     drawFarShafts(ctx, k, f, t)
-    silhouette(ctx, k, f, (x) => MEADOW - treeline(x), MEADOW + 0.5, tg)
+    silhouette(ctx, k, f, (x) => MEADOW - treeline(x), MEADOW + 0.5, tg, -Infinity, Infinity, CROWNS)
     const close = 1 - smooth(f.y1 - f.y0, 10, 30)
-    if (d.sun > 0.01 && close > 0.01) rim(ctx, k, f, (x) => MEADOW - treeline(x), 0.04, rgba(VALLEY.floodlight, 0.75 * d.sun * close))
+    if (d.sun > 0.01 && close > 0.01) {
+      // Light through the leaves at the crowns' edge, soft into them: a glow, not a drawn line.
+      for (const [w, a] of [[0.025, 0.32], [0.07, 0.2], [0.16, 0.1]] as const) rim(ctx, k, f, (x) => MEADOW - treeline(x), w, rgba(VALLEY.floodlight, a * d.sun * close), CROWNS)
+    }
   }
   // The meadow toward us: pale in the haze at the valley floor, darker nearer, with the shadows of the cloud on it.
   if (f.y1 > MEADOW) {
@@ -299,17 +320,11 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
 }
 
 /** A rim of light along a silhouette's top edge, `w` cells deep. */
-function rim(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, w: number, fill: string): void {
-  const step = Math.max((f.x1 - f.x0) / 260, 0.04)
+function rim(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, w: number, fill: string, corners: number[] = []): void {
+  const xs = along(f.x0 - 1, f.x1 + 1, k, corners)
   ctx.beginPath()
-  let first = true
-  for (let x = f.x0 - 1; x <= f.x1 + 1 + step; x += step) {
-    const y = yAt(x)
-    if (first) ctx.moveTo(x * k, y * k)
-    else ctx.lineTo(x * k, y * k)
-    first = false
-  }
-  for (let x = f.x1 + 1 + step; x >= f.x0 - 1 - step; x -= step) ctx.lineTo(x * k, (yAt(x) + w) * k)
+  xs.forEach((x, i) => (i ? ctx.lineTo(x * k, yAt(x) * k) : ctx.moveTo(x * k, yAt(x) * k)))
+  for (let i = xs.length - 1; i >= 0; i--) ctx.lineTo(xs[i] * k, (yAt(xs[i]) + w) * k)
   ctx.closePath()
   ctx.fillStyle = fill
   ctx.fill()
@@ -413,29 +428,6 @@ function drawField(ctx: Ctx, k: number, f: Frame, t: number): void {
     }
   })
   if (row >= 0) flush()
-  ctx.restore()
-}
-
-/** Dew on the grass in the sun: now and then a blade's tip catches the light, and lets it go. */
-function drawDew(ctx: Ctx, k: number, f: Frame, t: number): void {
-  const fade = fieldFade(f, t)
-  if (fade <= 0.01 || daylight(t).sun <= 0.01) return
-  ctx.save()
-  ctx.globalCompositeOperation = 'screen'
-  ctx.fillStyle = rgba(VALLEY.floodlight, 1)
-  tufts(f, (x, y, h, i, j) => {
-    if (hash(i, j, 85) > 0.09) return
-    const sun = sunAt(t, x)
-    if (sun < 0.3) return
-    const tw = Math.pow(Math.max(0, Math.sin(t * (1.6 + hash(i, j, 86)) + hash(i, j, 87) * 6.283)), 10)
-    if (tw < 0.03) return
-    const lean = 0.3 * Math.sin(t * 0.7 + x * 0.5 + y) + 0.15
-    const r = (0.012 + 0.006 * Math.min(4, y - MEADOW)) * (0.6 + 0.6 * tw)
-    ctx.globalAlpha = tw * sun * fade
-    ctx.beginPath()
-    ctx.arc((x - h * 0.12 + (lean - 0.25) * h) * k, (y - h) * k, Math.max(0.6, r * k), 0, Math.PI * 2)
-    ctx.fill()
-  })
   ctx.restore()
 }
 
@@ -626,6 +618,21 @@ function drawLift(ctx: Ctx, k: number, t: number): void {
     const ym = y0 - (i + 0.5) * hs
     ctx.fillRect((x - 0.035) * k, (ym - 0.035) * k, 0.07 * k, 0.07 * k)
   }
+  // The pins at the arms' ends, where each stage joins the next: linked arms, so folded flat it is a lift's stack and
+  // not a coil. (With pins only at the crossings, the light and dark arms folded into one zigzag, a spring.)
+  for (let i = 0; i <= n; i++) {
+    const yj = y0 - i * hs
+    for (const xj of [xl, xr]) {
+      ctx.fillStyle = mix(steelDark, VALLEY.shellDark, 0.55)
+      ctx.beginPath()
+      ctx.arc(xj * k, yj * k, Math.max(1.2, 0.07 * k), 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = steel
+      ctx.beginPath()
+      ctx.arc(xj * k, yj * k, Math.max(0.5, 0.03 * k), 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
   // The ram: from the base up to the second stage's crossing.
   const ramTop: Pt = [x + 0.02, y0 - 1.5 * hs]
   const ramFoot: Pt = [x - w * 0.36, y0 - 0.02]
@@ -664,17 +671,21 @@ function drawLift(ctx: Ctx, k: number, t: number): void {
     ctx.fillStyle = steelDark
     ctx.fillRect((hx - 0.045) * k, (hy - 0.045) * k, 0.09 * k, 0.09 * k)
   }
-  // The hose along the grass to the pedal, and the pedal.
-  ctx.strokeStyle = mix(VALLEY.shellDark, VALLEY.oliveDark, 0.4)
-  ctx.lineWidth = Math.max(0.8, 0.045 * k)
+  // The hose along the grass to the pedal's housing, and the pedal. Thin and down in the grass, the grass's own dark:
+  // thick and near black on top of it, it ran to her and not to the pedal under her, a leash.
+  ctx.strokeStyle = mix(VALLEY.oliveDark, VALLEY.shellDark, 0.25)
+  ctx.lineWidth = Math.max(0.8, 0.028 * k)
   ctx.beginPath()
-  ctx.moveTo((x + LIFT.baseHalf) * k, (MEADOW - 0.08) * k)
-  ctx.bezierCurveTo((x + LIFT.baseHalf + 0.6) * k, (MEADOW + 0.02) * k, (PEDAL.x1 - 0.2) * k, (MEADOW + 0.02) * k, (PEDAL.x1 + 0.05) * k, (MEADOW - 0.04) * k)
+  ctx.moveTo((x + LIFT.baseHalf) * k, (MEADOW - 0.06) * k)
+  ctx.bezierCurveTo((x + LIFT.baseHalf + 0.6) * k, (MEADOW + 0.04) * k, (PEDAL.x1 - 0.2) * k, (MEADOW + 0.04) * k, (PEDAL.x1 + 0.1) * k, (MEADOW - 0.03) * k)
   ctx.stroke()
   const press = pedalAt(t)
   const endY = MEADOW - 0.05 - PEDAL.rise * (1 - press)
+  // The housing the pedal is hinged on and the hose goes into: a box, its top catching the light.
   ctx.fillStyle = steelDark
-  ctx.fillRect((PEDAL.x1 - 0.08) * k, (MEADOW - 0.08) * k, 0.2 * k, 0.08 * k)
+  ctx.fillRect((PEDAL.x1 - 0.08) * k, (MEADOW - 0.13) * k, 0.28 * k, 0.13 * k)
+  ctx.fillStyle = steel
+  ctx.fillRect((PEDAL.x1 - 0.08) * k, (MEADOW - 0.13) * k, 0.28 * k, Math.max(1, 0.025 * k))
   ctx.fillStyle = steel
   ctx.beginPath()
   ctx.moveTo(PEDAL.x1 * k, (MEADOW - 0.05) * k)
@@ -708,7 +719,7 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
   const belly = cy + s.h / 2
   const foot = belly - 0.035 * s.h
   const w = SLOT_W
-  const doors = smooth(slot.open, 0.12, 0.45)
+  const doors = smooth(slot.open, 0.12, 0.8)
   if (doors > 0.01) {
     const tall = 0.045 * s.h * slot.open
     ctx.save()
@@ -719,12 +730,14 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
     ctx.fillStyle = g
     ctx.beginPath()
     const r = Math.min(0.3, w / 2)
-    // The throat opens with the doors: from its middle outward.
-    const hw = (w / 2) * doors
+    // The throat the full width of the slot cut above it, coming up out of the dark as the doors part: opened from
+    // its middle it stood narrow under the wide cut, a T.
+    const hw = w / 2
+    ctx.globalAlpha *= doors
     ctx.moveTo((cx - hw) * k, (foot + 0.02) * k)
     ctx.lineTo((cx - hw) * k, (belly - 0.1 - r) * k)
-    ctx.quadraticCurveTo((cx - hw) * k, (belly - 0.08) * k, (cx - hw + r * doors) * k, (belly - 0.08) * k)
-    ctx.lineTo((cx + hw - r * doors) * k, (belly - 0.08) * k)
+    ctx.quadraticCurveTo((cx - hw) * k, (belly - 0.08) * k, (cx - hw + r) * k, (belly - 0.08) * k)
+    ctx.lineTo((cx + hw - r) * k, (belly - 0.08) * k)
     ctx.quadraticCurveTo((cx + hw) * k, (belly - 0.08) * k, (cx + hw) * k, (belly - 0.1 - r) * k)
     ctx.lineTo((cx + hw) * k, (foot + 0.02) * k)
     ctx.closePath()
@@ -759,10 +772,12 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
       ctx.restore()
     }
     ctx.restore()
-  } else if (slot.light > 0.01 && slot.open > 0.001) {
-    // A crack of light at the doors' seam, before they part: a thin bright line, soft at its ends.
+  }
+  if (slot.light > 0.01 && slot.open > 0.001 && doors < 0.99) {
+    // A crack of light at the doors' seam, before they part: a thin bright line, soft at its ends. It goes as the
+    // throat comes, handing over to it: put out the moment the throat began, the seam went dark between them.
     ctx.save()
-    ctx.globalAlpha *= seen
+    ctx.globalAlpha *= seen * (1 - doors)
     ctx.globalCompositeOperation = 'screen'
     const sy = foot - 0.03
     const lw = w * (0.35 + 0.65 * smooth(slot.open, 0, 0.1))
@@ -773,8 +788,18 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
     lg.addColorStop(1, rgba(SHELL.glow, 0))
     ctx.fillStyle = lg
     ctx.fillRect((cx - lw / 2) * k, (sy - 0.035) * k, lw * k, 0.07 * k)
-    ctx.fillStyle = rgba(SHELL.fogLit, 0.18 * slot.light)
-    ctx.fillRect((cx - lw / 2) * k, (sy - 0.18) * k, lw * k, 0.36 * k)
+    // Its light on the hull round it, soft all round: a flat pale block behind the line, with edges of its own, read
+    // as something stuck on the hull, a scratch, not light coming through a seam.
+    ctx.save()
+    ctx.translate(cx * k, sy * k)
+    ctx.scale(1, 0.32)
+    const hr = lw * 0.85 * k
+    const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, hr)
+    halo.addColorStop(0, rgba(SHELL.fogLit, 0.3 * slot.light))
+    halo.addColorStop(1, rgba(SHELL.fogLit, 0))
+    ctx.fillStyle = halo
+    ctx.fillRect(-hr, -hr, 2 * hr, 2 * hr)
+    ctx.restore()
     ctx.restore()
   }
 }
@@ -785,21 +810,26 @@ function drawSpill(ctx: Ctx, k: number, t: number): void {
   const s = shellAt(t)
   if (slot.light <= 0.01 || slot.open < 0.05) return
   const belly = s.c[1] + s.h / 2
-  const a = slot.light * shellSeen(t) * smooth(slot.open, 0.05, 0.5)
+  const a = slot.light * shellSeen(t) * smooth(slot.open, 0.05, 0.7)
   const w0 = SLOT_W * 0.45
   ctx.save()
   ctx.globalCompositeOperation = 'screen'
-  const g = ctx.createLinearGradient(0, belly * k, 0, MEADOW * k)
-  g.addColorStop(0, rgba(SHELL.fogLit, 0.2 * a))
-  g.addColorStop(1, rgba(SHELL.fogLit, 0.04 * a))
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo((SHELL_X - w0) * k, belly * k)
-  ctx.lineTo((SHELL_X + w0) * k, belly * k)
-  ctx.lineTo((SHELL_X + 2.4) * k, (MEADOW + 0.2) * k)
-  ctx.lineTo((SHELL_X - 2.4) * k, (MEADOW + 0.2) * k)
-  ctx.closePath()
-  ctx.fill()
+  // Feathered: nested cones, faint at the widest, so the light has no edge in the air.
+  const n = 5
+  for (let j = 0; j < n; j++) {
+    const wide = 1.35 - (0.75 * j) / (n - 1)
+    const g = ctx.createLinearGradient(0, belly * k, 0, MEADOW * k)
+    g.addColorStop(0, rgba(SHELL.fogLit, (0.2 * a) / n))
+    g.addColorStop(1, rgba(SHELL.fogLit, (0.04 * a) / n))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo((SHELL_X - w0 * wide) * k, belly * k)
+    ctx.lineTo((SHELL_X + w0 * wide) * k, belly * k)
+    ctx.lineTo((SHELL_X + 2.4 * wide) * k, (MEADOW + 0.2) * k)
+    ctx.lineTo((SHELL_X - 2.4 * wide) * k, (MEADOW + 0.2) * k)
+    ctx.closePath()
+    ctx.fill()
+  }
   blob(ctx, k, SHELL_X, MEADOW + 0.1, 5.5, 0.8, SHELL.fogLit, 0.26 * a, 0.3)
   ctx.restore()
 }
@@ -837,7 +867,9 @@ function drawWash(ctx: Ctx, k: number, t: number): void {
     const ph = (t * 0.9 + i * 0.25) % 1
     for (const dir of [-1, 1]) {
       const x = hx + 0.3 + dir * (1.2 + ph * 4.5)
-      blob(ctx, k, x, MEADOW - 0.25 - ph * 0.5, 1.1 + ph * 1.4, 0.35 + ph * 0.3, col, 0.4 * w * (1 - ph), 0.3)
+      // Coming up from nothing as it is blown out, as well as going: at full strength from its first frame, each puff
+      // popped into being by the rotor.
+      blob(ctx, k, x, MEADOW - 0.25 - ph * 0.5, 1.1 + ph * 1.4, 0.35 + ph * 0.3, col, 0.4 * w * (1 - ph) * Math.min(1, ph / 0.2), 0.3)
     }
   }
 }
@@ -883,7 +915,6 @@ export function drawValley(p: p5, k: number, t: number): void {
   drawSunWash(ctx, k, f, t)
   drawSunlight(ctx, k, t, f.x0, f.x1, smooth(f.y1 - f.y0, 10, 40))
   drawShadows(ctx, k, t)
-  drawDew(ctx, k, f, t)
   drawFloorMist(ctx, k, f, t)
   drawRays(ctx, k, t, smooth(f.y1 - f.y0, 6, 30))
   ctx.restore()
@@ -911,14 +942,20 @@ export function drawValleyOver(p: p5, k: number, t: number): void {
     g.addColorStop(0, lit(mix(VALLEY.hill, VALLEY.oliveDark, 0.5), t))
     g.addColorStop(0.5, mix(VALLEY.oliveDark, VALLEY.shellDark, 0.3))
     g.addColorStop(1, mix(VALLEY.oliveDark, VALLEY.shellDark, 0.55))
-    silhouette(ctx, k, f, (x) => {
+    const line = (x: number) => {
       const y = nearRidge(x)
       // Pines along its line: a ragged edge of tops, of every height.
       const i = Math.floor(x * 1.5)
       const fx = x * 1.5 - i
       const tree = 0.5 + 1.3 * hash(i, 91, 1) * hash(i, 91, 2)
       return y - tree * (1 - Math.abs(fx - 0.5) * 2)
-    }, Math.max(f.y1, 40) + 2, g, -40)
+    }
+    // Its line falls away to the left of -40, below any 16:9 frame, but a frame taller than 16:9 sees it fall: cut off
+    // there, its end stood up as a sheer wall in the meadow. So it goes on to the frame's edge, laid under the ridge as
+    // it always was and overlapping it a little, so the two are one shape and the ridge's own pines do not move.
+    // Its pines' feet and tips are a third of a cell apart.
+    if (f.x0 - 1 < -40) silhouette(ctx, k, f, line, Math.max(f.y1, 40) + 2, g, -Infinity, -39.5, [1 / 3])
+    silhouette(ctx, k, f, line, Math.max(f.y1, 40) + 2, g, -40, Infinity, [1 / 3])
     void d
   }
   ctx.restore()

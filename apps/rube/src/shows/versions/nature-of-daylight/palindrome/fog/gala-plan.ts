@@ -13,7 +13,8 @@ import { SEAM, beats, chords } from '../music'
  *   270.878  ...the fourth: the tower full, alight tier by tier; the bottle runs dry.
  *   272.869  she rolls off the pedal and goes to him (the bottle rights itself); the room raises its glasses; he
  *            comes on to her.
- *   274.802  he leans in and they touch: he tells her (his number, his wife's last words: a whisper is a touch).
+ *   274.802  he leans in and they touch: he tells her (his number, his wife's last words: a whisper is a touch), and a
+ *            ghost of the sat phone comes up beside them, lighting the first of his number.
  *   277.647  at rest, Shang on her right at [0.34, 0]. (The tent: the call.)
  */
 
@@ -56,7 +57,9 @@ export function tierFill(i: number, t: number): number {
 }
 
 /** The stand: a slender post by the table, the bottle's cradle over the tower, the pedal at its foot. */
-export const PEDAL = { hinge: -1.15, end: -0.72, lift: 0.07 }
+// Its free end still under her as she rests on it, and a ball's width short of where she ends beside him, so it never
+// touches her side after (it ended against her, and read as a rod from the stand to her).
+export const PEDAL = { hinge: -1.15, end: -0.8, lift: 0.07 }
 /** The bottle turns in its cradle about this point: at rest leaning back, pouring tipped over the top coupe. */
 const POUR = (-40 * Math.PI) / 180
 const MOUTH: Pt = [TABLE.x, TABLE.top - TIERS * COUPE.h - 0.25]

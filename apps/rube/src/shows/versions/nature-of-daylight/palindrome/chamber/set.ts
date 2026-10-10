@@ -3,8 +3,8 @@ import type { Pt } from '../../../../../parts'
 import { drawHeptapod, drawInk, inkAt, inkRing, mix, rgba, type Ring } from '../cast'
 import { ring } from './ink'
 import { drawRail } from './words'
-import { frame, hash } from '../kit'
-import { SHELL, TENT, VALLEY } from '../worlds'
+import { frame, hash, softLayer } from '../kit'
+import { LOUISE, SHANG, SHELL, VALLEY } from '../worlds'
 import {
   BOARD,
   BOARDS,
@@ -78,6 +78,8 @@ export const PALM_R = 0.4
 export const PALM: Pt = [FAR + 0.36, -0.02]
 /** Where Abbott strikes the glass in the bomb. */
 const SLAM: Pt = [FAR + 0.95, -1.5]
+/** Its hand there, bigger than the palm she met, so it stands out from the arm behind it as a hand. */
+const SLAM_R = 0.7
 
 /** A ring made jagged: Abbott's frantic writing. */
 const jagged = (base: Ring): Ring => ({
@@ -95,20 +97,30 @@ function gripsOf(who: Writer): Grip[] {
     out.push({ t0: l.born, t1: l.born + l.form, to: inkAt(rg, l.c[0], l.c[1], l.R, rg.start), open: 0, lead: Math.min(0.9, 0.35 + l.form * 0.3), palm: PALM_R })
   }
   if (who === 'abbott') {
-    // The hand comes: raised over her as she goes to the glass, then down onto it, where she is.
-    out.push({ t0: T.palm - 1.25, t1: T.palm - 0.77, to: [9.3, -2.7], open: 0.45, lead: 1.2, palm: PALM_R })
+    // The hand comes: raised over her as she goes to the glass, then down onto it, where she is. Raised in the close
+    // frame and slowly, so it is seen there: raised to just above the frame's top in a second, it swept up through
+    // the close as a limb with a knot on it and was gone.
+    out.push({ t0: T.palm - 1.25, t1: T.palm - 0.77, to: [9.2, -1.6], open: 0.9, lead: 1.8, palm: PALM_R })
     out.push({ t0: T.palm, t1: T.palm + 2.3, to: PALM, open: 1, lead: 0.77, palm: PALM_R })
     const w = ring(WEAPON.seed)
     out.push({ t0: WEAPON.born, t1: WEAPON.born + 1.3, to: inkAt(w, WEAPON.c[0], WEAPON.c[1], WEAPON.R, w.start), open: 0, lead: 0.5, palm: PALM_R })
-    out.push({ t0: T.slam, t1: T.slam + 0.45, to: SLAM, open: 1, lead: 0.32, palm: 0.55 })
-    out.push({ t0: T.slam + 1.3, t1: T.slam + 1.9, to: [SLAM[0] + 0.2, SLAM[1] - 1.1], open: 1, lead: 0.3, palm: 0.55 })
+    out.push({ t0: T.slam, t1: T.slam + 0.45, to: SLAM, open: 1, lead: 0.32, palm: SLAM_R })
+    out.push({ t0: T.slam + 1.3, t1: T.slam + 1.9, to: [SLAM[0] + 0.2, SLAM[1] - 1.1], open: 1, lead: 0.3, palm: SLAM_R })
     FRANTIC.bursts.forEach((bt, i) => {
       const a = FRANTIC_RING.start + (i % 2 === 0 ? 1 : -1) * (0.4 + i * 0.7)
-      out.push({ t0: bt, t1: bt + 0.45, to: inkAt(FRANTIC_RING, FRANTIC.c[0], FRANTIC.c[1], FRANTIC.R, a), open: 0, lead: 0.28, palm: PALM_R })
+      // The first from where the slam left it: the arm raised over two seconds, in the wide before the cut in close, so
+      // it is up out of the close frame when the cut comes. (Swept up in a quarter of a second, it flashed through the
+      // close frame as a limb for three frames.) The rest follow on from it, already up.
+      out.push({ t0: bt, t1: bt + 0.45, to: inkAt(FRANTIC_RING, FRANTIC.c[0], FRANTIC.c[1], FRANTIC.R, a), open: 0, lead: i === 0 ? 2.0 : 0.28, palm: PALM_R })
     })
   }
   return out.sort((a, b) => a.t0 - b.t0)
 }
+/**
+ * How long a limb takes to draw back after it writes, when nothing follows soon. Eased both ways, a limb drawn back in
+ * under a second swept out of a close frame in a few frames, a flash, as the frantic writing's first reach once did.
+ */
+const WITHDRAW = 1.5
 function keysOf(grips: Grip[]): Key[] {
   const keys: Key[] = []
   grips.forEach((g, i) => {
@@ -117,7 +129,7 @@ function keysOf(grips: Grip[]): Key[] {
     if (!last || last.u === 0) keys.push({ t: g.t0 - g.lead, u: 0, to: g.to, open: 0, palm: g.palm })
     keys.push({ t: g.t0, u: 1, to: g.to, open: g.open, palm: g.palm })
     keys.push({ t: g.t1, u: 1, to: g.to, open: g.open, palm: g.palm })
-    if (!next || next.t0 - next.lead - g.t1 > 0.9) keys.push({ t: g.t1 + 0.9, u: 0, to: g.to, open: 0, palm: g.palm })
+    if (!next || next.t0 - next.lead - g.t1 > WITHDRAW) keys.push({ t: g.t1 + WITHDRAW, u: 0, to: g.to, open: 0, palm: g.palm })
   })
   return keys
 }
@@ -154,6 +166,7 @@ export function drawChamber(p: p5, k: number, t: number): void {
   drawRail(p, ctx, k, t)
   fallenSuits(ctx, k, t)
   charge(ctx, k, t)
+  soldier(ctx, k, t)
   shards(ctx, k, t)
   ctx.restore()
 }
@@ -168,9 +181,20 @@ export function drawChamberOver(p: p5, k: number, t: number): void {
   pour(ctx, k, t, f)
   const fl = flashAt(t)
   if (fl > 0.002) {
-    // The blast: the whole frame white for an instant, burning from the charge.
-    ctx.fillStyle = rgba(SHELL.glow, 0.97 * fl)
+    // The blast: burning from the charge, white at its heart and its light thrown down the whole chamber, the room seen
+    // through it. (One even white over the frame, the instant had no source: a frame of it read as a blank, a failed
+    // render, to every fresh eye.)
+    ctx.fillStyle = rgba(SHELL.glow, 0.5 * fl)
     ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+    const [cx, cy] = [CHARGE[0] * k, (CHARGE[1] - 0.15) * k]
+    const r = (2 + 9 * Math.min(1, (t - T.blast) / 0.15)) * k
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+    g.addColorStop(0, rgba('#FFFFFF', fl))
+    g.addColorStop(0.12, rgba('#FFFFFF', 0.95 * fl))
+    g.addColorStop(0.45, rgba(SHELL.glow, 0.7 * fl))
+    g.addColorStop(1, rgba(SHELL.glow, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
   }
   // The white coming in through the broken glass, over everything, whitening the dust into the veil.
   const flood = smooth(t, T.flood - 0.4, T.fog)
@@ -220,6 +244,26 @@ function beyond(p: p5, ctx: Ctx, k: number, t: number, f: Frame, wake: number): 
   dawn.addColorStop(1, rgba(SHELL.dark, 0))
   ctx.fillStyle = dawn
   ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
+  // While it is still waking, within the close frame too: the height held darker, and the light coming up low by the
+  // glass first, a glow with a place in the fog. (Mixed down toward the dark evenly, the half-woken white was one flat
+  // grey slab beside the glass, like an unpainted panel.)
+  const waking = clamp01(wake * 2.5) * clamp01(1 - wake)
+  if (waking > 0.01) {
+    const up = ctx.createLinearGradient(0, -4 * k, 0, 0.5 * k)
+    up.addColorStop(0, rgba(SHELL.dark, 0.45 * waking))
+    up.addColorStop(1, rgba(SHELL.dark, 0))
+    ctx.fillStyle = up
+    ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
+    const gx = (FAR + 1.2) * k
+    const gy = 0.3 * k
+    const gr = 5 * k
+    const glow = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr)
+    glow.addColorStop(0, rgba(SHELL.glow, 0.5 * waking))
+    glow.addColorStop(0.5, rgba(SHELL.fogLit, 0.18 * waking))
+    glow.addColorStop(1, rgba(SHELL.fogLit, 0))
+    ctx.fillStyle = glow
+    ctx.fillRect(gx - gr, gy - gr, 2 * gr, 2 * gr)
+  }
   for (let i = 0; i < 6; i++) {
     const by = (-8.5 + i * 1.9 + 0.5 * Math.sin(t * 0.07 + i * 1.7)) * k
     const h = (1.1 + 0.6 * hash(i, 3, 5)) * k
@@ -236,12 +280,13 @@ function beyond(p: p5, ctx: Ctx, k: number, t: number, f: Frame, wake: number): 
     heptapod(p, ctx, k, t, costello(t), 2, 'costello', wake, SHELL.heptapod)
     heptapod(p, ctx, k, t, abbott(t), 1, 'abbott', wake, SHELL.heptapodDark)
   }
-  // Fog in front of them, low: they stand in it.
+  // Fog in front of them, low: they stand in it. It holds its last on down to the frame's foot, which a frame taller
+  // than 16:9 sees: stopped three cells down, its edge was a hard line across the white.
   const low = ctx.createLinearGradient(0, 0.25 * k, 0, 3 * k)
   low.addColorStop(0, rgba(SHELL.glow, 0))
   low.addColorStop(1, rgba(SHELL.glow, 0.85 * wake))
   ctx.fillStyle = low
-  ctx.fillRect(x0, 0.25 * k, x1 - x0, 3 * k)
+  ctx.fillRect(x0, 0.25 * k, x1 - x0, Math.max(3 * k, y1 - 0.25 * k))
   // Their ink, on the glass: what is being written, and what is waiting to be read.
   for (const l of LOGOS) {
     if (t < l.born || t >= l.slotIn) continue
@@ -285,33 +330,57 @@ function weapon(p: p5, ctx: Ctx, k: number, t: number): void {
   const dy = Math.sin(ang)
   const root = inkAt(rg, WEAPON.c[0], WEAPON.c[1], WEAPON.R, ang)
   const len = (Math.hypot(WEAPON_HIT[0] - root[0], WEAPON_HIT[1] - root[1]) + 0.3) * fling
-  const tip: Pt = [root[0] + dx * len, root[1] + dy * len]
-  const nx = -dy
-  const ny = dx
-  const w = 0.17
-  ctx.beginPath()
-  ctx.moveTo((root[0] + nx * w - dx * 0.2) * k, (root[1] + ny * w - dy * 0.2) * k)
-  ctx.lineTo(tip[0] * k, tip[1] * k)
-  ctx.lineTo((root[0] - nx * w - dx * 0.2) * k, (root[1] - ny * w - dy * 0.2) * k)
-  ctx.closePath()
-  ctx.fillStyle = rgba(SHELL.ink, 0.97)
-  ctx.fill()
-  // A barb thrown back off it, and a second, shorter spike: it is hard all over.
-  const barb = (at: number, side: number, l: number) => {
-    const bx = root[0] + dx * len * at
-    const by = root[1] + dy * len * at
-    const bdx = dx * -0.55 + nx * side
-    const bdy = dy * -0.55 + ny * side
-    const bl = Math.hypot(bdx, bdy)
-    ctx.beginPath()
-    ctx.moveTo((bx + nx * 0.05) * k, (by + ny * 0.05) * k)
-    ctx.lineTo((bx + (bdx / bl) * l * fling) * k, (by + (bdy / bl) * l * fling) * k)
-    ctx.lineTo((bx - nx * 0.05 + dx * 0.12) * k, (by - ny * 0.05 + dy * 0.12) * k)
+  // A stroke of their ink, not a cut-out: it starts inside the ring's band and leaves it as a heavy blot (so it grows
+  // out of the ring, with no stub standing off its far side), bends a little, and tapers to a point, with the rings'
+  // own bleed round it. Every stroke turns the same way round, so the spike and its barbs fill as one shape.
+  const centre = (from: Pt, dir: Pt, l: number, curl: number, q: number): Pt => [
+    from[0] + dir[0] * l * q - dir[1] * curl * l * q * q,
+    from[1] + dir[1] * l * q + dir[0] * curl * l * q * q,
+  ]
+  const stroke = (from: Pt, dir: Pt, l: number, curl: number, w: number) => {
+    const m = 20
+    const left: Pt[] = []
+    const right: Pt[] = []
+    for (let i = 0; i <= m; i++) {
+      const q = i / m
+      const [cx, cy] = centre(from, dir, l, curl, q)
+      const tx = dir[0] - dir[1] * curl * 2 * q
+      const ty = dir[1] + dir[0] * curl * 2 * q
+      const tl = Math.hypot(tx, ty) || 1
+      // Full at the root, a little swell just out of it, and a long taper to the point.
+      const hw = (w * Math.pow(1 - q, 0.85) * (1 + 0.18 * Math.exp(-((q - 0.12) ** 2) / 0.006))) / 2
+      left.push([(cx - (ty / tl) * hw) * k, (cy + (tx / tl) * hw) * k])
+      right.push([(cx + (ty / tl) * hw) * k, (cy - (tx / tl) * hw) * k])
+    }
+    ctx.moveTo(left[0][0], left[0][1])
+    for (const q of left) ctx.lineTo(q[0], q[1])
+    for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i][0], right[i][1])
     ctx.closePath()
+  }
+  const dir: Pt = [dx, dy]
+  // Bent like a thorn: straight, out of a ring, it read as the handle of a magnifying glass.
+  const CURL = -0.2
+  const w0 = WEAPON.R * rg.w(ang) * 2.3
+  const from: Pt = [root[0] - dx * w0 * 0.3, root[1] - dy * w0 * 0.3]
+  const reach = len + w0 * 0.3
+  // Barbs thrown back off it and hooked: it is hard all over.
+  const barbs = [
+    { at: 0.4, side: 1, l: 0.55 },
+    { at: 0.62, side: -1, l: 0.42 },
+    { at: 0.8, side: 1, l: 0.3 },
+  ].map((b) => {
+    const bdx = dx * -0.55 - dy * b.side
+    const bdy = dy * -0.55 + dx * b.side
+    const bl = Math.hypot(bdx, bdy)
+    return { from: centre(from, dir, reach, CURL, b.at), dir: [bdx / bl, bdy / bl] as Pt, l: b.l * fling, curl: 0.3 * b.side, w: w0 * 0.75 * Math.pow(1 - b.at, 0.85) }
+  })
+  for (const [widen, alpha] of [[1.9, 0.12], [1.35, 0.22], [1, 0.97]] as const) {
+    ctx.beginPath()
+    stroke(from, dir, reach, CURL, w0 * widen)
+    for (const b of barbs) stroke(b.from, b.dir, b.l, b.curl, b.w * widen)
+    ctx.fillStyle = rgba(SHELL.ink, alpha)
     ctx.fill()
   }
-  barb(0.45, 1, 0.42)
-  barb(0.62, -1, 0.3)
 }
 
 /** Abbott's jagged writing before the blast: it grows in bursts, on the beats. */
@@ -633,31 +702,33 @@ function pour(ctx: Ctx, k: number, t: number, f: Frame): void {
   const front = FAR - (1.5 + 9 * u)
   const top = HOLE_TOP * (0.35 + 0.35 * u)
   const a = 0.5 + 0.35 * smooth(t, T.flood, T.fog)
-  ctx.save()
+  // Seven banks blurred together once, small: drawn sharp, their tops stood in the dark room as stacked arcs, and
+  // twenty-four of them to hide it cost the blast's frames a third again.
   const layers = 7
-  for (let layer = 0; layer < layers; layer++) {
-    const lift = layer * 0.2
-    const al = (a * 1.1) / layers
-    const gx = ctx.createLinearGradient(FAR * k, 0, (front - layer * 0.35) * k, 0)
-    gx.addColorStop(0, rgba(SHELL.glow, al))
-    gx.addColorStop(0.7, rgba(SHELL.fogLit, al * 0.45))
-    gx.addColorStop(1, rgba(SHELL.fogLit, 0))
-    ctx.fillStyle = gx
-    ctx.beginPath()
-    ctx.moveTo(FAR * k, (top - lift) * k)
-    const n = 16
-    for (let i = 0; i <= n; i++) {
-      const v = i / n
-      const x = FAR + (front - layer * 0.35 - FAR) * v
-      const y = top - lift + (FLOOR - 0.15 - top + lift * 0.6) * v ** 0.7 + 0.18 * Math.sin(v * 7 + t * 0.9 + layer)
-      ctx.lineTo(x * k, y * k)
+  softLayer(ctx, [(front - layers * 0.35 - 1) * k, (top - 1.8) * k, (FAR + 0.6) * k, (FLOOR + 0.5) * k], 0.22 * k, (c) => {
+    for (let layer = 0; layer < layers; layer++) {
+      const lift = layer * 0.2
+      const al = (a * 1.1) / layers
+      const gx = c.createLinearGradient(FAR * k, 0, (front - layer * 0.35) * k, 0)
+      gx.addColorStop(0, rgba(SHELL.glow, al))
+      gx.addColorStop(0.7, rgba(SHELL.fogLit, al * 0.45))
+      gx.addColorStop(1, rgba(SHELL.fogLit, 0))
+      c.fillStyle = gx
+      c.beginPath()
+      c.moveTo(FAR * k, (top - lift) * k)
+      const n = 16
+      for (let i = 0; i <= n; i++) {
+        const v = i / n
+        const x = FAR + (front - layer * 0.35 - FAR) * v
+        const y = top - lift + (FLOOR - 0.15 - top + lift * 0.6) * v ** 0.7 + 0.18 * Math.sin(v * 7 + t * 0.9 + layer)
+        c.lineTo(x * k, y * k)
+      }
+      c.lineTo((front - layer * 0.35) * k, (FLOOR + 0.3) * k)
+      c.lineTo(FAR * k, (FLOOR + 0.3) * k)
+      c.closePath()
+      c.fill()
     }
-    ctx.lineTo((front - layer * 0.35) * k, (FLOOR + 0.3) * k)
-    ctx.lineTo(FAR * k, (FLOOR + 0.3) * k)
-    ctx.closePath()
-    ctx.fill()
-  }
-  ctx.restore()
+  })
   void f
 }
 
@@ -704,7 +775,9 @@ function marks(p: p5, ctx: Ctx, k: number, t: number, cy: number, light: number)
   BOARDS.forEach((bd, i) => {
     if (bd.t - 1.2 <= t) n = i
   })
-  const ink = mix(SHELL.board, SHELL.marker, 0.25 + 0.75 * light)
+  // Her own hand, in her gold, deepened to read on the white: theirs is black ink, so her question and their answer
+  // read apart. (In the same near-black, the joined rings of her question read as one more of theirs.)
+  const ink = mix(SHELL.board, mix(LOUISE, '#3A2A10', 0.45), 0.25 + 0.75 * light)
   ctx.strokeStyle = ink
   ctx.lineWidth = 0.028 * k
   ctx.lineCap = 'round'
@@ -779,7 +852,28 @@ export function drawSuit(p: p5, k: number, x: number, y: number, light = 1): voi
   suitAt(ctx, k, 0.5 + 0.5 * clamp01(light))
   ctx.restore()
 }
-function suitAt(ctx: Ctx, k: number, light: number): void {
+function suitAt(ctx: Ctx, k: number, light: number, empty = false): void {
+  if (empty) {
+    // Empty, its window is glass with nothing behind it: pale, a glint on it. (Open onto the dark wall behind, the window
+    // was a black disc in the suit, a third ball, a bowling ball.)
+    suitPath(ctx, k, 0)
+    ctx.fillStyle = mix(SHELL.dark, SHELL.suit, light)
+    ctx.fill()
+    const ey = -FLOOR * k
+    ctx.beginPath()
+    ctx.arc(0, ey, 0.11 * k, 0, Math.PI * 2)
+    ctx.fillStyle = mix(mix(SHELL.dark, SHELL.suit, light), '#FFFFFF', 0.12)
+    ctx.fill()
+    ctx.strokeStyle = rgba(SHELL.dark, 0.25)
+    ctx.lineWidth = Math.max(1, 0.015 * k)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(0, ey, 0.07 * k, Math.PI * 1.1, Math.PI * 1.45)
+    ctx.strokeStyle = rgba('#FFFFFF', 0.5 * light)
+    ctx.lineWidth = Math.max(1, 0.018 * k)
+    ctx.stroke()
+    return
+  }
   suitPath(ctx, k, 0)
   const vy = -FLOOR * k
   ctx.moveTo(0.11 * k, vy)
@@ -810,39 +904,30 @@ function wornSuits(ctx: Ctx, k: number, t: number): void {
   }
 }
 
-/** A suit off: its halves fall away either side and lie there. */
+/**
+ * A suit off: lifted off her whole and set down beside her, standing empty, its window on nothing, the shape the other
+ * one still wears; then gone. (Split in two halves that fell away, it read to every fresh eye as something else: wings
+ * opening, an egg hatching, a pair of bowls on the floor.)
+ */
 function fallenSuits(ctx: Ctx, k: number, t: number): void {
   if (t > T.out + 1) return
   for (const who of ['louise', 'ian'] as const) {
     const u = suitOf(who, t)
     if (u <= 0) continue
+    const gone = smooth(u, 2.2, 3.0)
+    if (gone >= 1) continue
     const when = who === 'louise' ? T.suit : T.ianSuit
     const at = who === 'louise' ? louiseAt(when) : ianAt(when)
     if (!at) continue
     const light = 0.5 + 0.5 * lightAt(at[0], t)
-    for (const side of [-1, 1] as const) {
-      // Open a crack, then fall outward about its outer foot, a little bounce, and lie still.
-      const crack = 0.035 * smooth(u, 0, 0.12)
-      const fall = Math.min(1, Math.max(0, u - 0.1) ** 2 * 5.5)
-      const bounce = u > 0.53 ? 0.1 * Math.exp(-(u - 0.53) / 0.18) * Math.abs(Math.sin((u - 0.53) * 16)) : 0
-      const ang = side * (Math.PI / 2) * (fall - bounce)
-      const slide = side * (crack + 0.16 * smooth(u, 0.3, 1.4))
-      const gone = smooth(u, 0.45, 0.95)
-      if (gone >= 1) continue
-      ctx.save()
-      // They go down into the floor as they fade: nothing is left lying there.
-      ctx.beginPath()
-      ctx.rect((at[0] - 2) * k, (FLOOR - 2) * k, 4 * k, 2 * k)
-      ctx.clip()
-      ctx.translate((at[0] + slide + side * SUIT.w * 0.5) * k, (FLOOR + 0.3 * gone) * k)
-      ctx.rotate(ang)
-      ctx.translate(-side * SUIT.w * 0.5 * k, 0)
-      suitPath(ctx, k, side)
-      ctx.globalAlpha *= 1 - gone
-      ctx.fillStyle = mix(SHELL.dark, SHELL.suit, light * (side < 0 ? 0.75 : 1))
-      ctx.fill()
-      ctx.restore()
-    }
+    // Up off her, then across and down onto the floor a little behind her, toward where they came in.
+    const up = 0.16 * (smooth(u, 0, 0.3) - smooth(u, 0.35, 0.8))
+    const aside = -0.36 * smooth(u, 0.3, 0.8)
+    ctx.save()
+    ctx.globalAlpha *= 1 - gone
+    ctx.translate((at[0] + aside) * k, (FLOOR + at[1] - up) * k)
+    suitAt(ctx, k, light, true)
+    ctx.restore()
   }
 }
 
@@ -850,37 +935,117 @@ function fallenSuits(ctx: Ctx, k: number, t: number): void {
 
 /** The soldiers' charge, on the floor between them and the glass. */
 export const CHARGE: Pt = [6.3, FLOOR]
+/**
+ * The soldier who set the charge: a small dark ball, as everyone but the four of them is. At the cut it is at the charge;
+ * on the next beat it nudges it and the charge's light comes on, armed; on the beat after it rolls back past the two
+ * of them, behind them, and away out of the chamber the way it came. Without it the charge was simply there, and the blast read as
+ * the heptapods' doing.
+ */
+/** At the cast's own scale: smaller, with only a hairline of light on it, it read as a stray speck as it hopped. */
+const SOLDIER_R = 0.13
+const SOLDIER_AT = CHARGE[0] - 0.22 - SOLDIER_R - 0.03
+const ARM = 215.65
+const HOP: [number, number] = [216.0, 216.625]
+const HOP_TO = 4.55
+const GONE_BY = 219.0
+function soldierAt(t: number): Pt | null {
+  if (t < T.bomb || t > GONE_BY) return null
+  const y = FLOOR - SOLDIER_R
+  if (t < ARM - 0.25) return [SOLDIER_AT - 0.02 * Math.sin((t - T.bomb) * 5), y]
+  // The nudge: in against the charge on the beat, and back.
+  if (t < HOP[0]) {
+    const u = (t - (ARM - 0.25)) / (HOP[0] - (ARM - 0.25))
+    return [SOLDIER_AT + 0.03 * Math.sin(Math.PI * Math.min(1, u * 1.6)), y]
+  }
+  if (t < HOP[1]) {
+    // Past them along the floor, behind them (they are drawn over him): hopping over them, a frame of him in the air
+    // read as a bubble rising, a balloon, not a man going.
+    const u = (t - HOP[0]) / (HOP[1] - HOP[0])
+    return [SOLDIER_AT + (HOP_TO - SOLDIER_AT) * (u * u * (3 - 2 * u)), y]
+  }
+  // Away down the chamber, gathering speed, and out through the door it came in by. (Stopped short of it, it went out
+  // mid-floor, which Overview, seeing the whole chamber, showed as a pop.)
+  const u = (t - HOP[1]) / (GONE_BY - HOP[1])
+  return [HOP_TO - (HOP_TO - (JAMB - 0.9)) * u * u, y]
+}
+function soldier(ctx: Ctx, k: number, t: number): void {
+  const at = soldierAt(t)
+  if (!at) return
+  const [x, y] = at
+  // Into the doorway's dark.
+  const seen = 1 - smooth(x, JAMB + 0.1, JAMB - 0.7)
+  if (seen <= 0.01) return
+  ctx.save()
+  ctx.globalAlpha *= seen
+  // Its shadow on the floor, fading as it leaves the floor in the hop, so it is a ball in the room.
+  const lift = Math.max(0, FLOOR - SOLDIER_R - y)
+  const sh = 0.45 * Math.max(0, 1 - lift / 0.5)
+  if (sh > 0.01) {
+    ctx.fillStyle = rgba('#000000', sh)
+    ctx.beginPath()
+    ctx.ellipse(x * k, FLOOR * k, SOLDIER_R * k * (1.1 + lift), SOLDIER_R * k * 0.22, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // In the army's olive drab, the camp's own colour (the helicopter's, the trucks'): a soldier, not one of the cast.
+  // (Near black with their rim and at their size, four fresh readers in seven took it for a third character.)
+  ctx.fillStyle = mix(VALLEY.olive, SHELL.dark, 0.25)
+  ctx.beginPath()
+  ctx.arc(x * k, y * k, SOLDIER_R * k, 0, Math.PI * 2)
+  ctx.fill()
+  // A quiet ring of the room's light all round it, as the cast's balls have theirs, but grey: a ball, not a hole.
+  ctx.strokeStyle = rgba(SHELL.wallLit, 0.45)
+  ctx.lineWidth = Math.max(1, 0.022 * k)
+  ctx.beginPath()
+  ctx.arc(x * k, y * k, SOLDIER_R * k - ctx.lineWidth / 2, 0, Math.PI * 2)
+  ctx.stroke()
+  // The chamber's cold light along its top and round the side toward the glass, so it reads as a ball against the
+  // dark wall.
+  ctx.strokeStyle = rgba(mix(SHELL.wallLit, '#ffffff', 0.4), 0.95)
+  ctx.lineWidth = Math.max(1.2, 0.03 * k)
+  ctx.beginPath()
+  ctx.arc(x * k, y * k, SOLDIER_R * k - ctx.lineWidth / 2, Math.PI * 1.15, Math.PI * 2.3)
+  ctx.stroke()
+  ctx.restore()
+}
+
 function charge(ctx: Ctx, k: number, t: number): void {
   if (t < T.bomb - 1 || t >= T.blast) return
   const [x, y] = CHARGE
   const light = lightAt(x, t)
   ctx.fillStyle = mix(SHELL.dark, SHELL.heptapodDark, 0.8)
-  ctx.fillRect((x - 0.19) * k, (y - 0.2) * k, 0.38 * k, 0.2 * k)
+  ctx.fillRect((x - 0.22) * k, (y - 0.24) * k, 0.44 * k, 0.24 * k)
   // Its light's post.
-  ctx.fillRect((x + 0.005) * k, (y - 0.25) * k, 0.03 * k, 0.06 * k)
+  ctx.fillRect((x + 0.005) * k, (y - 0.3) * k, 0.03 * k, 0.07 * k)
   ctx.fillStyle = rgba(SHELL.wallLit, 0.5 * light)
-  ctx.fillRect((x - 0.19) * k, (y - 0.2) * k, 0.38 * k, 0.03 * k)
-  // One bright light on it, flashing on each beat.
+  ctx.fillRect((x - 0.22) * k, (y - 0.24) * k, 0.44 * k, 0.03 * k)
+  // One bright light on it, flashing on each beat: the red of the alarm lamp in the command tent, so it reads as
+  // theirs and as danger. (A dim keypad green, it read as nothing, and the blast as the heptapods' doing.) Never quite
+  // out between the beats.
   let on = 0
   for (const bt of BLINKS) {
     const u = t - bt
-    if (u >= 0 && u < 0.3) on = Math.max(on, 1 - u / 0.3)
+    if (u >= 0 && u < 0.45) on = Math.max(on, 1 - u / 0.45)
   }
+  const armed = t >= BLINKS[0] - 0.3 ? 0.25 : 0
   const lx = (x + 0.02) * k
-  const ly = (y - 0.25) * k
-  if (on > 0.01) {
+  const ly = (y - 0.3) * k
+  const glowA = Math.max(on, armed * 0.4)
+  if (glowA > 0.01) {
     ctx.save()
     ctx.translate(lx, ly)
-    ctx.scale(1.8, 1)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.3 * k)
-    g.addColorStop(0, rgba(TENT.keypad, 0.5 * on))
-    g.addColorStop(1, rgba(TENT.keypad, 0))
+    ctx.scale(1.6, 1)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.55 * k)
+    g.addColorStop(0, rgba(SHANG, 0.7 * glowA))
+    g.addColorStop(0.3, rgba(SHANG, 0.25 * glowA))
+    g.addColorStop(1, rgba(SHANG, 0))
     ctx.fillStyle = g
-    ctx.fillRect(-0.3 * k, -0.3 * k, 0.6 * k, 0.6 * k)
+    ctx.fillRect(-0.55 * k, -0.55 * k, 1.1 * k, 1.1 * k)
     ctx.restore()
   }
-  ctx.fillStyle = mix(SHELL.dark, TENT.keypad, 0.3 + 0.7 * on)
-  ctx.fillRect(lx - 0.07 * k, ly - 0.035 * k, 0.14 * k, 0.07 * k)
+  // Dark glass until the soldier arms it, so its coming on is the arming. (Dull red from the cut, it was armed already.)
+  const lens = t >= BLINKS[0] - 0.3 ? mix(SHELL.dark, SHANG, 0.45) : mix(SHELL.dark, SHELL.wallLit, 0.15)
+  ctx.fillStyle = mix(lens, mix(SHANG, '#FFFFFF', 0.25), Math.max(on, armed))
+  ctx.fillRect(lx - 0.08 * k, ly - 0.04 * k, 0.16 * k, 0.08 * k)
 }
 /** The charge's light: on each beat from the one after the slam to the blast. */
 export const BLINKS: number[] = [215.65, 216.625, 217.513, 218.424, 219.417, 220.375, 221.362, 222.348]

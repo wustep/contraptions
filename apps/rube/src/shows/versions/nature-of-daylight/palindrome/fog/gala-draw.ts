@@ -2,8 +2,10 @@ import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
-import { level } from '../music'
-import { GALA } from '../worlds'
+import { beats, level, SEAM } from '../music'
+import { GALA, TENT } from '../worlds'
+import { CALL_X, drawHandset, KEY_SPAN, KEY_W, KEYS, PHONE_BODY } from '../twelve/tent'
+import { NUMBER } from '../twelve/timeline'
 import {
   BOTTLE,
   bottleAngle,
@@ -21,6 +23,7 @@ import {
   TIERS,
   tierFill,
   T_TOAST,
+  T_TOUCH,
 } from './gala-plan'
 
 /**
@@ -99,12 +102,11 @@ function chandelier(ctx: Ctx, k: number, f: Frame, x: number, t: number, i: numb
   // The chain up out of the frame.
   ctx.fillStyle = rgba(GALA.lightWarm, 0.35)
   ctx.fillRect(cx * k - 0.5, (f.y0 - 1) * k, 1, (cy - 0.7 * s - f.y0 + 1) * k)
-  // The strands: an inverted dome of short falls of light, swaying a little.
+  // The strands: an inverted dome of short falls of light.
   const n = 15
   for (let j = 0; j < n; j++) {
     const u = (j / (n - 1)) * 2 - 1
-    const sway = 0.02 * Math.sin(t * 0.7 + j + i)
-    const sx = cx + u * 0.75 * s + sway
+    const sx = cx + u * 0.75 * s
     const top = cy - 0.55 * s + Math.abs(u) * 0.15 * s
     const len = (0.9 - 0.55 * u * u) * s
     const a = 0.55 + 0.35 * hash(j, i, 7)
@@ -157,7 +159,9 @@ const GUESTS: Guest[] = KNOTS.flatMap(([x0, d0, n], i) => {
 
 function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
   const h = hush(t)
-  const body = GALA.guests
+  // A muted grey a little above the room, people standing in its dim light: darker than the room they stood in (near
+  // black), at their size two fresh readers in a row took them for holes, coal, ball bearings, olives.
+  const body = mix(GALA.roomLit, GALA.cloth, 0.2)
   for (const g of GUESTS) {
     const drift = 0.018 * Math.sin(t * 0.35 + g.seed * 1.7)
     const [x, y] = seen(f, g.d, g.x + drift, 0)
@@ -166,6 +170,21 @@ function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
     if (x < f.x0 - 1 || x > f.x1 + 1) continue
     // Deeper, the more of the room's haze on it (the far ones well into it); and more again for the whisper.
     const haze = (1 - g.d) * 1.45 + 0.35 * h
+    // Standing on the polished floor, not hung on the wall: a soft shadow under each, and its dim reflection.
+    const foot = y + r * 0.96
+    ctx.save()
+    ctx.translate(x * k, foot * k)
+    ctx.scale(1, 0.22)
+    const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.35 * k)
+    sg.addColorStop(0, rgba(body, 0.5 * (1 - Math.min(0.85, haze))))
+    sg.addColorStop(1, rgba(body, 0))
+    ctx.fillStyle = sg
+    ctx.fillRect(-r * 1.35 * k, -r * 1.35 * k, 2.7 * r * k, 2.7 * r * k)
+    ctx.restore()
+    ctx.fillStyle = rgba(mix(body, GALA.roomLit, Math.min(0.85, haze)), 0.18)
+    ctx.beginPath()
+    ctx.ellipse(x * k, (foot + r * 0.55) * k, r * 0.8 * k, r * 0.5 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
     ctx.fillStyle = mix(body, GALA.roomLit, Math.min(0.85, haze))
     ctx.beginPath()
     ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
@@ -176,6 +195,19 @@ function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
     ctx.beginPath()
     ctx.arc(x * k, y * k, (r - 0.006 * g.d) * k, Math.PI * 1.15, Math.PI * 1.75)
     ctx.stroke()
+    // People, as the cast are: a dim outline all round and a mark that looks, toward the room's middle. (Dark discs
+    // with only the light along their tops, a fresh reader took them for coal, for rocks.)
+    const near = Math.max(0, 1 - haze)
+    ctx.strokeStyle = rgba(mix(GALA.roomLit, GALA.lightWarm, 0.3), 0.32 * near * (1 - 0.6 * h))
+    ctx.lineWidth = Math.max(0.6, 0.016 * k * g.d)
+    ctx.beginPath()
+    ctx.arc(x * k, y * k, (r - 0.008 * g.d) * k, 0, Math.PI * 2)
+    ctx.stroke()
+    const look = x < 0 ? -0.35 : Math.PI + 0.35
+    ctx.fillStyle = rgba(GALA.guests, 0.7 * near * (1 - 0.6 * h))
+    ctx.beginPath()
+    ctx.arc((x + Math.cos(look) * r * 0.5) * k, (y + Math.sin(look) * r * 0.5) * k, Math.max(0.6, r * 0.17 * k), 0, Math.PI * 2)
+    ctx.fill()
     if (!g.glass) continue
     // The toast: a tiny glass lifted over it, catching the light.
     const up = smooth(t, T_TOAST + 0.07 * (g.seed % 6), T_TOAST + 0.6 + 0.07 * (g.seed % 6)) * (1 - smooth(t, T_TOAST + 3.3, T_TOAST + 4.3))
@@ -359,13 +391,25 @@ function stand(ctx: Ctx, k: number, t: number): void {
   ctx.fillRect((POST.x - 0.025) * k, POST.top * k, 0.05 * k, (FLOOR_Y - POST.top) * k)
   ctx.fillRect((POST.x - 0.12) * k, (FLOOR_Y - 0.03) * k, 0.24 * k, 0.03 * k)
   ctx.fillRect(BOTTLE.c[0] * k, (POST.top - 0.02) * k, (POST.x - BOTTLE.c[0]) * k, 0.04 * k)
-  // The pedal: a brass plate hinged at the post's foot, its free end raised, pressed flat under her.
+  // The pedal: a brass plate hinged at the post's foot, its free end raised, pressed flat under her. A wedge, deeper at
+  // its free end with a dark tread on it: drawn as a thin even strip, once she had rolled off it, it read as a rod
+  // from the stand to her side, a leash.
   const lift = PEDAL.lift * (1 - pedalDown(t))
+  const len = PEDAL.end - PEDAL.hinge
   ctx.save()
   ctx.translate(PEDAL.hinge * k, FLOOR_Y * k)
-  ctx.rotate(-Math.atan2(lift, PEDAL.end - PEDAL.hinge))
+  ctx.rotate(-Math.atan2(lift, len))
   ctx.fillStyle = brass
-  ctx.fillRect(0, -0.035 * k, (PEDAL.end - PEDAL.hinge) * k, 0.035 * k)
+  ctx.beginPath()
+  ctx.moveTo(0, 0)
+  ctx.lineTo(0, -0.03 * k)
+  ctx.lineTo(len * k, -0.06 * k)
+  ctx.quadraticCurveTo((len + 0.02) * k, -0.06 * k, (len + 0.02) * k, -0.03 * k)
+  ctx.lineTo((len + 0.02) * k, 0)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = dark
+  ctx.fillRect(len * 0.45 * k, -0.065 * k, len * 0.5 * k, 0.018 * k)
   ctx.restore()
   // The bottle in its cradle, turning about its middle: dark glass, a pale foil at its neck.
   const a = bottleAngle(t)
@@ -425,5 +469,63 @@ export function drawGala(p: p5, k: number, t: number): void {
   ctx.fillRect((f.x0 - 1) * k, FLOOR_Y * k, (f.x1 - f.x0 + 2) * k, 1.5 * k)
   tower(ctx, k, t)
   stand(ctx, k, t)
+  number(ctx, k, t)
   p.pop()
+}
+
+/**
+ * What he tells her: his number, which she will dial. After the whisper a ghost of the sat phone's keys comes up beside
+ * them, on her right where he is, lit the keys' own green (in his red it read as warning lights, the bomb's colour), just where the keys stand in the tent after the cut (the cut carries her and the
+ * camera together, so the same place on the screen), and its keys light one a beat in the order she will press them;
+ * on the cut the real keys are there, and she dials the same keys in the same order. Without it nothing passed between
+ * them at the touch, and "the number he gave her" could not be read.
+ */
+/** The beats between the whisper and the cut: a digit on each. */
+const GHOST_BEATS = beats(T_TOUCH + 0.4, SEAM.call - 0.4)
+function number(ctx: Ctx, k: number, t: number): void {
+  const up = smooth(t, T_TOUCH + 0.25, T_TOUCH + 0.85)
+  if (up <= 0.001) return
+  const [hx, hy] = HER_END
+  const [top, foot] = KEY_SPAN
+  const key = (x: number, lit: number) => {
+    const x0 = (hx + x - KEY_W / 2) * k
+    const y0 = (hy + top) * k
+    const w = KEY_W * k
+    const h = (foot - top) * k
+    if (lit > 0.01) {
+      const g = ctx.createRadialGradient(x0 + w / 2, y0 + h / 2, 0, x0 + w / 2, y0 + h / 2, KEY_W * 1.3 * k)
+      g.addColorStop(0, rgba(TENT.keypad, 0.75 * lit * up))
+      g.addColorStop(1, rgba(TENT.keypad, 0))
+      ctx.fillStyle = g
+      ctx.fillRect(x0 - KEY_W * 1.3 * k + w / 2, y0 - KEY_W * 1.3 * k + h / 2, KEY_W * 2.6 * k, KEY_W * 2.6 * k)
+    }
+    // Bright enough, lit, to catch at speed: fainter, the hand-off was easy to miss.
+    ctx.fillStyle = rgba(mix(TENT.keypad, '#FFFFFF', 0.15 + 0.45 * lit), (0.2 + 0.8 * lit) * up)
+    ctx.fillRect(x0 + 0.02 * k, y0, w - 0.04 * k, h)
+  }
+  // Each of the first digits on its beat, as he speaks: a flare, then held lit.
+  const litOf = (digit: number) => {
+    let v = 0
+    GHOST_BEATS.forEach((bt, n) => {
+      if (NUMBER[n] === digit && t >= bt) v = Math.max(v, 0.55 + 0.45 * Math.exp(-(t - bt) / 0.35))
+    })
+    return v
+  }
+  // The phone's body under its keys, faint, with the keys' light along its edge: keys floating alone read as lights.
+  const bx0 = (hx + PHONE_BODY.x0) * k
+  const bx1 = (hx + PHONE_BODY.x1) * k
+  const by0 = (hy + PHONE_BODY.top) * k
+  const by1 = (hy + PHONE_BODY.foot) * k
+  ctx.fillStyle = rgba(mix(GALA.roomLit, '#000000', 0.7), 0.5 * up)
+  ctx.fillRect(bx0, by0, bx1 - bx0, by1 - by0)
+  ctx.strokeStyle = rgba(TENT.keypad, 0.35 * up)
+  ctx.lineWidth = Math.max(1, 0.012 * k)
+  ctx.strokeRect(bx0, by0, bx1 - bx0, by1 - by0)
+  // And its handset beside it, off the hook, as it lies in the tent: without it the ghost read as a bar counter.
+  ctx.save()
+  ctx.translate(hx * k, hy * k)
+  drawHandset(ctx, k, rgba(mix(GALA.roomLit, '#000000', 0.7), 0.5 * up), false)
+  ctx.restore()
+  KEYS.forEach((x, digit) => key(x, litOf(digit)))
+  key(CALL_X, 0)
 }

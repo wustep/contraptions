@@ -1,9 +1,8 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { drawScreen, inkRing, mix, PLACES, rgba } from '../cast'
-import { level } from '../music'
 import { SHANG, TENT } from '../worlds'
-import { closeFlare, linkDrop, linkLit, linkSpan, panelAngle, pulsesAt, redCast, screenFlash, screenOn } from './timeline'
+import { closeFlare, linkDrop, linkLit, linkSpan, panelAngle, redCast, screenFlash, screenOn } from './timeline'
 
 /**
  * The ring: twelve screens on one circular rig like a clock face, each showing a shell over its own place, each
@@ -34,7 +33,7 @@ const LW = 0.25
 const ROPE = 0.13
 const SAG = 0.75
 /** How far a fallen screen hangs over on its corner (radians, clockwise). */
-const STOP = 0.85
+const STOP = 0.52
 
 const RING = inkRing(12)
 /** The ring's radius at an angle, as a share of RM: a logogram's ring, but only a little out of true (it is a rig). */
@@ -48,6 +47,15 @@ export const mountAt = (i: number): Pt => ringAt(angleOf(i))
 
 /** The ring's top, for framing: the top of the screen at twelve o'clock. */
 export const RING_TOP = mountAt(6)[1] - PH
+
+/**
+ * The ring whole, its screens on it, in world cells: what Overview must take in in the tent besides the table. (Framed
+ * by her parts alone, all along the table, Overview saw the bottom of the ring and not the world it is.)
+ */
+export const TENT_RING = (() => {
+  const xs = Array.from({ length: 12 }, (_, i) => mountAt(i)[0])
+  return { x0: Math.min(...xs) - PW, y0: RING_TOP - 0.3, x1: Math.max(...xs) + PW, y1: MONTANA[1] }
+})()
 
 /** A link's band: points along the ring from a0 to a1, each with its width. */
 function band(a0: number, a1: number, widen: number, n = 28, taper = 0): { outer: Pt[]; inner: Pt[] } {
@@ -156,10 +164,8 @@ function drawLink(ctx: CanvasRenderingContext2D, k: number, j: number, t: number
   const c = cable(j, t)
   const span = linkSpan(j, t)
   const g = Math.min(2.2, linkLit(j, t))
-  // The light in the links breathes with the music.
-  const breath = 0.7 + 0.6 * level(t)
   const lit = !!span && span.to - span.from > 0.002
-  if (lit) for (const [w, al] of GLOW) fillCable(ctx, k, c, span.from, span.to, w, rgba(TENT.signal, al * g * breath), 0.012 * w)
+  if (lit) for (const [w, al] of GLOW) fillCable(ctx, k, c, span.from, span.to, w, rgba(TENT.signal, al * g), 0.012 * w)
   // The cable itself, solid and dark; the light in it where it is lit.
   fillCable(ctx, k, c, 0, 1, 1, mix(TENT.frame, TENT.canvasLit, 0.3))
   if (lit) {
@@ -212,15 +218,35 @@ function drawPanel(p: p5, k: number, i: number, t: number, th: number, on: numbe
     sh.addColorStop(1, rgba(TENT.screenOn, 0))
     ctx.fillStyle = sh
     ctx.fillRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
+    // The shell still there in the dead glass, a ghost of the last picture: the world gone dark, not the shell.
+    ctx.fillStyle = rgba(mix(TENT.screenOff, TENT.screenOn, 0.5), 0.35 * dead)
+    ctx.beginPath()
+    ctx.ellipse((FR + GW / 2) * k, (-PH + FR + GH * 0.42) * k, GH * 0.13 * k, GH * 0.27 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+    // Its frame catching the room's light along the top and the side toward the lamp, so it reads as a set, not a slab.
+    ctx.strokeStyle = rgba(mix(TENT.canvasLit, TENT.screenOn, 0.3), 0.45 * dead)
+    ctx.lineWidth = Math.max(1, 0.03 * k)
+    ctx.beginPath()
+    ctx.moveTo(0.02 * k, -0.02 * k)
+    ctx.lineTo(0.02 * k, (-PH + 0.02) * k)
+    ctx.lineTo((PW - 0.02) * k, (-PH + 0.02) * k)
+    ctx.stroke()
+    ctx.strokeStyle = rgba('#000000', 0.35 * dead)
+    ctx.strokeRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
   }
   const red = redCast(i, t)
   if (red > 0.01) {
-    // China's screen, with Shang on the line: a red light up out of it before its own picture.
+    // China's screen, with Shang on the line: its picture up in a red light before it settles to its own. (A flat red
+    // over the dead glass read as a blank screen, an error, not a place coming back.)
+    if (red > on) drawScreen(p, k, FR, -PH + FR, GW, GH, { on: red, place: PLACES[i], t, glow: 0, bezel: TENT.frame })
     const g = ctx.createLinearGradient(0, 0, 0, -PH * k)
-    g.addColorStop(0, rgba(SHANG, 0.85 * red))
-    g.addColorStop(1, rgba(mix(SHANG, TENT.screenOn, 0.35), 0.75 * red))
+    g.addColorStop(0, rgba(SHANG, 0.55 * red))
+    g.addColorStop(1, rgba(mix(SHANG, TENT.screenOn, 0.35), 0.35 * red))
     ctx.fillStyle = g
     ctx.fillRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
+    ctx.strokeStyle = rgba(SHANG, 0.9 * red)
+    ctx.lineWidth = Math.max(1.5, 0.04 * k)
+    ctx.strokeRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
   }
   const flash = screenFlash(i, t)
   if (flash > 0.01) {
@@ -261,7 +287,7 @@ function drawKnuckle(ctx: CanvasRenderingContext2D, k: number, i: number): void 
   ctx.fillRect((px - 0.07) * k, (py - 0.07) * k, 0.14 * k, 0.14 * k)
 }
 
-/** The ring, all of it, at show time t: the rig, the glows, the links, the screens, their hinges, and the pulses. */
+/** The ring, all of it, at show time t: the rig, the glows, the links, the screens, and their hinges. */
 export function drawRing(p: p5, k: number, t: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
@@ -293,7 +319,6 @@ export function drawRing(p: p5, k: number, t: number): void {
     ctx.fillRect(CENTRE[0] * k - r1, CENTRE[1] * k - r1, 2 * r1, 2 * r1)
   }
   for (let j = 0; j < 12; j++) drawLink(ctx, k, j, t)
-  drawPulses(ctx, k, t)
   // What hangs over goes behind what stands.
   const order = Array.from({ length: 12 }, (_, i) => i).sort((a, b) => th[b] - th[a])
   for (let i = 0; i < 12; i++) drawMount(ctx, k, i)
@@ -301,26 +326,3 @@ export function drawRing(p: p5, k: number, t: number): void {
   for (let i = 0; i < 12; i++) drawKnuckle(ctx, k, i)
   ctx.restore()
 }
-
-/** After it closes: the signal goes round, both ways from Montana at once, and meets itself at the top. */
-function drawPulses(ctx: CanvasRenderingContext2D, k: number, t: number): void {
-  for (const { u, a } of pulsesAt(t)) {
-    for (const dir of [1, -1]) {
-      const head = angleOf(0) + dir * u * Math.PI
-      const seg = (from: number, len: number, widen: number, style: string) => {
-        const lo = Math.min(from, from - dir * len)
-        const hi = Math.max(from, from - dir * len)
-        fillBand(ctx, k, band(lo, hi, widen, 8), style)
-      }
-      seg(head, 0.7, 4, rgba(TENT.screenGlow, 0.18 * a))
-      seg(head, 0.45, 2.2, rgba(TENT.screenOn, 0.28 * a))
-      for (let n = 0; n < 8; n++) seg(head - dir * n * 0.055, 0.055, 1.25, rgba('#FFFFFF', a * 0.95 * (1 - n / 8)))
-    }
-    // Where the two meet at the top, a moment's brighter light.
-    if (u > 0.92) {
-      const top = angleOf(6)
-      fillBand(ctx, k, band(top - 0.12, top + 0.12, 2.4, 8), rgba(TENT.screenOn, 0.5 * a * ((u - 0.92) / 0.08)))
-    }
-  }
-}
-

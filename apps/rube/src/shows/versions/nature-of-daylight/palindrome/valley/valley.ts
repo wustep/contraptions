@@ -161,13 +161,15 @@ export const going = part<ValleyState>(
       hold(o, G.sun, 72, -6, -31),
       hold(o, 324.4, 68, -12, -27),
       hold(o, 326.0, 64, -8, -24),
-      // The light reaches her: cut in to them, the horizon high and the lit meadow under them, as he comes across it.
-      { ...hold(o, G.lit, 7.2, 15.2, 1.1), cut: true },
-      hold(o, 328.3, 7.0, 14.9, 1.0),
-      hold(o, 329.9, 6.8, 14.8, 0.9),
-      // They touch: cut to the two of them, and hold.
-      { ...hold(o, G.touch, 4.55, MEET[0] + 0.8, MEET[1] - 0.75), cut: true },
-      hold(o, 332.2, 4.45, MEET[0] + 0.8, MEET[1] - 0.8),
+      // The light reaches her: cut in to them, low in the frame with the light coming down over them, as he comes
+      // across it. (Framed with the horizon high, the meadow had two thirds of the picture and they were dots on the
+      // treeline: the meeting the whole film comes to, buried in grass.)
+      { ...hold(o, G.lit, 7.2, 15.2, -1.0), cut: true },
+      hold(o, 328.3, 7.0, 14.9, -1.1),
+      hold(o, 329.9, 6.8, 14.8, -1.1),
+      // They touch: cut in close on the two of them, and hold, breathing back out to the home seam.
+      { ...hold(o, G.touch, 3.6, MEET[0] + 0.62, MEET[1] - 0.55), cut: true },
+      hold(o, 332.2, 3.9, MEET[0] + 0.7, MEET[1] - 0.65),
       // The home seam: 4.4 cells, [0.8, -0.8] on her.
       hold(o, slot.end, 4.4, MEET[0] + 0.8, MEET[1] - 0.8),
     ]

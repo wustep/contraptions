@@ -33,8 +33,12 @@ export const IAN_ID = 91
  */
 export const HANNAH = '#DE6F86'
 export const HANNAH_ID = 92
-/** Hannah's size as she grows: a scale on the ball. */
-export const HANNAH_AGE = { baby: 0.42, child: 0.58, girl: 0.72, young: 0.86 } as const
+/**
+ * Hannah's size as she grows: a scale on the ball. A ladder a viewer can read across the cuts: a baby, a small child on
+ * the swing, a girl near Louise's height by the leap, a young woman nearly her size. (Child 0.58 to girl 0.72, she read
+ * as the same small ball from the swing to the bed.)
+ */
+export const HANNAH_AGE = { baby: 0.42, child: 0.5, girl: 0.8, young: 0.92 } as const
 
 /** General Shang: a deep red ball, only at the gala (the future), where he tells her what to say. */
 export const SHANG = '#A8322D'
