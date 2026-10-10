@@ -124,9 +124,11 @@ export const lens = scenery<{ iris: IrisAt } | null>({
     const dream = 1 - m
     if (dream > 0.01) {
       ctx.globalCompositeOperation = 'screen'
-      const d = ctx.createRadialGradient(f.cx * k, f.cy * k, r * 0.6 * k, f.cx * k, f.cy * k, r * 1.02 * k)
+      // Stronger, and further in, in the drive and the dream's last room, which look most like the room as it is.
+      const near = Math.max(0, Math.min(1, (t - 395.3) / 1.5)) * (1 - Math.max(0, Math.min(1, (t - 451.5) / 1.5)))
+      const d = ctx.createRadialGradient(f.cx * k, f.cy * k, r * (0.6 - 0.14 * near) * k, f.cx * k, f.cy * k, r * 1.02 * k)
       d.addColorStop(0, rgba('#E46A9A', 0))
-      d.addColorStop(1, rgba('#E46A9A', 0.32 * dream))
+      d.addColorStop(1, rgba('#E46A9A', (0.32 + 0.26 * near) * dream))
       ctx.fillStyle = d
       ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
       ctx.globalCompositeOperation = 'source-over'
