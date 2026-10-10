@@ -3,7 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, carried, hash, knock, part, smooth, type Company, type Ctx, type PartShot } from '../kit'
-import { cue } from '../music'
+import { cue, UNDOCK } from '../music'
 import { BALL, DUST, MURPH } from '../worlds'
 import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
 
@@ -100,8 +100,12 @@ const NUDGE = cue(158)
 const OUT = cue(159)
 /** The hub's brake comes off and the car goes up through the attic. */
 const LIFT_GO = cue(160)
-/** Murph's span ends here, the car well up the spoke and the house out of the frame below it. */
-const MURPH_GONE = cue(165)
+/**
+ * Murph's span ends with the station itself, on the undock's cut outside. It used to end once the house had left the
+ * 16:9 frame below the climbing car, but a taller screen (a phone held upright) still sees the house then, and she went
+ * out of her doorway as if switched off. She stays at the threshold, where the car left her.
+ */
+const MURPH_GONE = UNDOCK
 const xy = (q: Pt): { x: number; y: number } => ({ x: q[0], y: q[1] })
 
 /** The trapdoor comes down on its stop. */
@@ -762,15 +766,37 @@ function drawPark(p: p5, s: BallparkState, c: Ctx): void {
 
 /**
  * Pulled right back, the ball is a speck: it trails a short streak of its
- * own colour, which fades as the camera comes in and it is big again.
+ * own colour, which fades as the camera comes in and it is big again. How
+ * small it is is judged on the screen, in CSS pixels, not in the canvas's
+ * (on a phone's dense screen those are three to one, and the streak held
+ * back where the ball was smallest). Where it is a speck it also carries a
+ * soft warm halo, never under 9px across the screen, so a phone held upright,
+ * whose frame is a fifth of 1080p's, can find it across the whole ring.
  */
+/** His sand as "r, g, b", once: the halo is drawn every frame of the flight, and a p5 colour parsed thrice a frame cost a millisecond on a phone's canvas. */
+const BALL_RGB = [1, 3, 5].map((i) => parseInt(BALL.slice(i, i + 2), 16)).join(', ')
 function drawStreak(p: p5, c: Ctx, T: number): void {
   if (T <= HIT + 0.04 || T >= WINDOW) return
-  const px = 2 * R * c.k
+  const density = p.pixelDensity()
+  const px = (2 * R * c.k) / density
   // Not over the far house in the last instant: by then the camera is in close anyway.
-  const f = clamp((18 - px) / 9) * (1 - smooth(T, WINDOW - 0.6, WINDOW - 0.25))
+  // (Faded in off the bat over a third of a second: on a phone he is already small at the hit, and it popped on.)
+  const f = clamp((18 - px) / 9) * smooth(T, HIT + 0.04, HIT + 0.38) * (1 - smooth(T, WINDOW - 0.6, WINDOW - 0.25))
   if (f <= 0) return
   const X = (v: number) => v * c.k
+  {
+    const [hx, hy] = flightAt(T)
+    const r = Math.max(R * c.k * 2.4, 9 * density)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createRadialGradient(X(hx), X(hy), 0, X(hx), X(hy), r)
+    g.addColorStop(0, `rgba(${BALL_RGB}, ${0.5 * f})`)
+    g.addColorStop(0.45, `rgba(${BALL_RGB}, ${0.2 * f})`)
+    g.addColorStop(1, `rgba(${BALL_RGB}, 0)`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(X(hx), X(hy), r, 0, Math.PI * 2)
+    ctx.fill()
+  }
   const n = 16
   const span = 0.55
   for (let i = n; i >= 1; i--) {
@@ -781,7 +807,7 @@ function drawStreak(p: p5, c: Ctx, T: number): void {
     const b = flightAt(t1)
     const u = 1 - (i - 0.5) / n
     p.stroke(alpha(p, BALL, f * 0.6 * u))
-    p.strokeWeight(Math.max(2, px * 0.9) * (0.35 + 0.65 * u))
+    p.strokeWeight(Math.max(2 * density, R * c.k * 1.8) * (0.35 + 0.65 * u))
     p.line(X(a[0]), X(a[1]), X(b[0]), X(b[1]))
   }
 }

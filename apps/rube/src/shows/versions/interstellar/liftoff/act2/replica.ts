@@ -400,7 +400,10 @@ export const replica = part<ReplicaState>(
     // The whole ring.
     { t: cue(112), cells: 46, hold: toL(AX), w: 1 },
     { t: cue(112.45), cells: 46, hold: toL(AX), w: 1 },
-    // Back in, to the front door.
+    // Back in, to the front door. The frame comes down faster than it closes in, so its foot stays below the kitchen
+    // floor he crosses (it had shut ahead of coming down, and lost him under the bottom edge for most of a second).
+    { t: cue(113), cells: 17, hold: toL([5.5, -7.5]), w: 1 },
+    { t: cue(113.5), cells: 8.5, hold: toL([7, -2.8]), w: 1 },
     { t: cue(114), cells: 5, hold: toL([8.6, -0.55]), w: 1 },
     { t: cue(115.6), cells: 5, hold: toL([10.2, -0.8]), w: 0.6 },
   ],
@@ -881,10 +884,14 @@ function drawClock(p: p5, c: Ctx, t: number): void {
   p.stroke(mixHex(DUST.corn, ink, 0.3))
   p.strokeWeight(Math.max(1, w * 0.9))
   p.line(X(PIVOT[0]), X(PIVOT[1]), X(bob[0]), X(bob[1]))
+  // The bob is a lens, as the farmhouse clock's is (`earth/house.ts`): a round brass disc swinging beside him read as
+  // another ball.
   solid(p, ink, w * 0.8, DUST.corn)
-  p.circle(X(bob[0]), X(bob[1]), X(0.17))
-  outline(p, ink, w * 0.4)
-  p.circle(X(bob[0]), X(bob[1]), X(0.09))
+  p.push()
+  p.translate(X(bob[0]), X(bob[1]))
+  p.rotate(-th)
+  p.ellipse(0, 0, X(0.22), X(0.075))
+  p.pop()
   // The ledge from the side door.
   solid(p, ink, w * 0.8, DUST.wood)
   rect(p, k, CK_L, LEDGE_Y, CK_L + 0.5, LEDGE_Y + 0.035)

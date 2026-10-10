@@ -4,7 +4,7 @@ import { createListbox } from '../../../../src/ui/listbox'
 import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
 import { recordingFormat } from './record'
-import { performanceProblems, pickVersion, shelves, type Performance, type TitleCard, type Version } from './registry'
+import { performanceProblems, pickVersion, placeCard, shelves, type Performance, type TitleCard, type Version } from './registry'
 import { showCard as shareCard, showFromPath, showPath } from './share'
 import { createSoundtrack, prefetchSoundtrack } from './soundtrack'
 import './youtube.css'
@@ -253,12 +253,29 @@ async function playLinked(): Promise<void> {
   armSound()
 }
 
+/**
+ * A gesture brings the held sound in, where the picture is. It can be refused even so (a browser that wants the tap
+ * inside the player's own frame, as iOS can): then the sound is held again, the picture going on muted and the Sound
+ * button back for the next tap, rather than a silent show with nothing to press.
+ */
+async function soundIn(): Promise<void> {
+  soundHeld = false
+  joinedAt = performance.now()
+  setMuted(false)
+  if (!transport || !perf?.soundtrack) return
+  const mine = generation
+  const result = await music.play(transport.now())
+  if (result !== 'blocked' || !alive || mine !== generation || !transport) return
+  soundHeld = true
+  setMuted(true)
+  void music.play(transport.now())
+  armSound()
+  sync()
+}
+
 /** The sound is held. The next gesture starts it where the picture is, and a control whose job is the sound keeps that job. */
 function armSound(): void {
   releaseSound()
-  const join = () => {
-    if (transport && perf?.soundtrack) void music.play(transport.now())
-  }
   const unlock = (e: Event) => {
     const key = e instanceof KeyboardEvent ? e.key : ''
     const musicControl = (e.target instanceof Element && !!e.target.closest('button.music')) || key === 'm' || key === 'M'
@@ -266,15 +283,12 @@ function armSound(): void {
     if (!alive || !soundHeld) return
     // The music control does the unmuting itself, and starts the sound with it.
     if (musicControl) return
-    soundHeld = false
-    joinedAt = performance.now()
-    if (muted) setMuted(false)
     // Space would also pause. The gesture only owed the sound; the picture stays.
     if ((key === ' ' || key === 'Enter') && transport?.playing) {
       e.preventDefault()
       e.stopImmediatePropagation()
     }
-    join()
+    void soundIn()
   }
   releaseSound = () => {
     window.removeEventListener('pointerdown', unlock, true)
@@ -417,10 +431,7 @@ const bigPlay = el('button', { type: 'button', class: 'stage-play' }, [icon(ICON
 bigPlay.addEventListener('click', () => {
   bigPlay.blur()
   if (soundHeld) {
-    soundHeld = false
-    joinedAt = performance.now()
-    setMuted(false)
-    if (transport && perf?.soundtrack) void music.play(transport.now())
+    void soundIn()
     return
   }
   void play()
@@ -487,9 +498,7 @@ musicBtn.addEventListener('click', () => {
     setMuted(!muted)
     return
   }
-  soundHeld = false
-  setMuted(false)
-  if (transport && perf?.soundtrack) void music.play(transport.now())
+  void soundIn()
 })
 const restartBtn = el('button', { type: 'button', class: 'tbtn', title: 'Back to the top of the show (Home)', 'aria-label': 'Restart' }, [icon(ICON.restart)])
 restartBtn.addEventListener('click', () => seek(0))
@@ -578,7 +587,7 @@ videoBtn.addEventListener('click', () => {
       videoBtn.textContent = `Stop · ${Math.round(done * 100)}%`
     })
     .then(
-      (saved) => say(exportNote, saved ? `Saved: picture and music${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
+      (saved) => say(exportNote, saved ? `Saved: ${perf?.soundtrack?.src ? 'picture and music' : perf?.soundtrack ? 'the picture, silent (the music is YouTube’s)' : 'the picture'}${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
       (err) => {
         console.error(err)
         say(exportNote, err instanceof Error ? err.message : String(err), 'bad')
@@ -596,6 +605,16 @@ const pauseIcon = icon(ICON.pause)
 const soundIcon = icon(ICON.sound)
 const mutedIcon = icon(ICON.muted)
 music.onChange(() => sync())
+// The browser stopped the music mid-show for want of a gesture (a cue coming in that no press was behind): hold the
+// sound, as a link that is refused holds it, the picture going on muted and the Sound button up for the press.
+music.onRefused(() => {
+  if (recording || !transport?.playing || soundHeld) return
+  soundHeld = true
+  setMuted(true)
+  void music.play(transport.now())
+  armSound()
+  sync()
+})
 // A press on YouTube's own player moves the show with it.
 music.onPlayer((playing) => {
   // A recording owns the show, and plays the file: YouTube's player is put back to silence.
@@ -679,7 +698,9 @@ function sync(): void {
       : muted
         ? 'Turn the music on (M)'
         : 'Turn the music off (M). The show keeps its time; a saved video keeps its music.'
-    : 'This version has no soundtrack'
+    : perf?.soundtrack
+      ? 'The soundtrack would not load, so the show runs silent'
+      : 'This version has no soundtrack'
   say(
     transportNote,
     perf?.soundtrack && music.state() === 'failed'
@@ -697,9 +718,15 @@ function sync(): void {
   )
 
   // The stage's own word while there is no show on it.
-  stageNote.hidden = !current || !(loading || failed)
+  // (Not while the browser holds the sound: then the stage's own Sound button says what is wanted, and the note sat on it.)
+  const waiting = stalled && !soundHeld
+  stageNote.hidden = !current || !(loading || failed || waiting)
   stageNote.classList.toggle('bad', !!failed)
-  stageNoteText.textContent = failed ? `${current?.title ?? 'This show'} would not load.` : `Loading ${current?.title ?? 'the show'}…`
+  stageNoteText.textContent = failed
+    ? `${current?.title ?? 'This show'} would not load.`
+    : loading
+      ? `Loading ${current?.title ?? 'the show'}…`
+      : 'Waiting for the music…'
   retryBtn.hidden = !failed
 
   // The stage's own play button: at the top, at the end, where the browser is waiting for a press,
@@ -722,7 +749,7 @@ function sync(): void {
   videoBtn.title = busy
     ? 'Stop the recording. No file is kept.'
     : canRecord
-      ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.`
+      ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.${perf?.soundtrack && !perf.soundtrack.src ? ' It is silent: the music plays from YouTube, which a recording cannot take.' : ''}`
       : 'Video export needs a browser that can record the canvas.'
 }
 
@@ -783,7 +810,9 @@ function renderWords(t: number): void {
       wordsLayer.append(node)
       wordCards.set(c.key, node)
     }
-    node.style.left = `${(W - fw) / 2 + c.at[0] * fw}px`
+    // Centred on its place, but kept on the stage: on a phone's short frame the small lines' 9px floor (styles.css) can
+    // widen a card past the edge, so it slides in just far enough to keep a margin. A card that fits is where it was.
+    node.style.left = `${placeCard((W - fw) / 2 + c.at[0] * fw, node.offsetWidth, W)}px`
     const lift = c.lift ? c.lift * Math.max(0, (H - fh) / 2) : 0
     node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
     if (c.scale && c.scale !== 1) node.style.setProperty('--u', `${(fh / 100) * c.scale}px`)
@@ -797,12 +826,31 @@ function renderWords(t: number): void {
 let lastTime = ''
 /** Where the clock was on the frame before, so a loop coming round its seam is seen as a pass. */
 let lastT = 0
+/**
+ * The music is the clock, so music that stops coming (a connection lost mid-show, YouTube buffering) holds the
+ * picture with it. Playing, and the clock still for this long, the stage says it is waiting: a frozen picture with
+ * nothing on it reads as broken. `stallT` and `stallSince` are where the clock last stood and since when.
+ */
+const STALL_MS = 1500
+let stallT = -1
+let stallSince = 0
+let stalled = false
 let raf = 0
 function tick(): void {
   if (!alive) return
   if (transport) {
     const t = transport.now()
     music.follow(t)
+    const still = transport.playing && t === stallT
+    if (!still) {
+      stallT = t
+      stallSince = performance.now()
+    }
+    const nowStalled = still && performance.now() - stallSince > STALL_MS
+    if (nowStalled !== stalled) {
+      stalled = nowStalled
+      sync()
+    }
     // Played through: at the end, or, for a loop, round its seam (a seek resets `lastT`, so a jump back is not one).
     const through = transport.playing && (transport.loop ? t < lastT - transport.duration / 2 : t >= transport.duration)
     lastT = t
@@ -860,9 +908,7 @@ const onKey = (e: KeyboardEvent) => {
     case 'm':
       if (!perf?.soundtrack) break
       if (soundHeld) {
-        soundHeld = false
-        setMuted(false)
-        if (transport) void music.play(transport.now())
+        void soundIn()
         break
       }
       setMuted(!muted)

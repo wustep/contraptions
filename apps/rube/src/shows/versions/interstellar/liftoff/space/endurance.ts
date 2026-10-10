@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type Companion, type Ctx } from '../kit'
+import { alpha, box, carried, frame, hash, knock, lastOf, lensedArc, part, smooth, type Companion, type Ctx } from '../kit'
 import { beat } from '../music'
 import { brandDrift } from '../rocket'
 import { G_LOW } from '../physics'
@@ -966,10 +966,7 @@ function drawSphere(p: p5, s: EnduranceState, c: Ctx, T: number): void {
       p.fill(alpha(p, ink, bright * 0.85))
       p.circle(X(sx + Math.cos(a) * r), X(sy + Math.sin(a) * r), Math.max(1.2, X(0.025) * (0.6 + bright)))
     } else {
-      p.noFill()
-      p.stroke(alpha(p, ink, bright * 0.75))
-      p.strokeWeight(Math.max(1, X(0.018)))
-      p.arc(X(sx), X(sy), X(r * 2), X(r * 2), a, a + len)
+      lensedArc(p, X(sx), X(sy), X(r), a, len, ink, bright * 0.8, Math.max(1, X(0.022)))
     }
   }
   p.noFill()

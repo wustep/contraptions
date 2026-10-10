@@ -582,12 +582,16 @@ function murphTruck(s: TruckState, edge: number, t: number): Companion {
   const flume = -MR + R
   let q: Pt
   if (t < M_WAIT) {
-    // Down the flume after him, easing to a stop short of its end.
+    // Down the flume after him, easing to a stop short of its end. Before that, a second rolling in at the speed she
+    // enters it with, from out past the edge of even a wide (21:9) screen, so she never appears out of nothing there.
     const T = M_WAIT - (M_WAIT - 2.2)
-    const u = clamp((t - (M_WAIT - 2.2)) / T)
     const x0 = edge - 3.9
     const x1 = edge - 0.32
-    q = [x0 + (x1 - x0) * (1 - (1 - u) * (1 - u)), flume]
+    if (t < M_WAIT - 2.2) q = [x0 - ((2 * (x1 - x0)) / T) * (M_WAIT - 2.2 - t), flume]
+    else {
+      const u = clamp((t - (M_WAIT - 2.2)) / T)
+      q = [x0 + (x1 - x0) * (1 - (1 - u) * (1 - u)), flume]
+    }
   } else if (t < M_GO) q = [edge - 0.32, flume]
   else if (t < M_LANDS) {
     // Over the end and down into the bed by the tailgate.
@@ -640,7 +644,11 @@ export const truck = part<TruckState>(
       return hi
     })
     s.fence = rearAt(b0, FENCE) + LEN + 0.04
-    s.ditch = [rearAt(b0, TAKEOFF) + WHEELS[1] + 0.2, rearAt(b0, LANDING) + WHEELS[0] - 0.15]
+    // The ditch lies under the truck's middle at the top of its jump. (The truck flies less than its wheelbase, so no
+    // stretch of road is cleared by both wheels in the air: a ditch fitted between them came out narrower than its own
+    // sides, inside out, a pot on the road.)
+    const over = (rearAt(b0, TAKEOFF) + WHEELS[1] + rearAt(b0, LANDING) + WHEELS[0]) / 2
+    s.ditch = [over - 0.28, over + 0.28]
     s.edge = rearAt(b0, STOP + 1) + LEN + 0.12
     const rider = (t: number): Pt => {
       const [u, v] = heroAt(t + slot.begin)
@@ -670,7 +678,7 @@ export const truck = part<TruckState>(
       lane: { segs, fire: at(DROP) },
       state: s,
       // Murph, from up the flume behind him to the truck left at the dam, out of the frame.
-      company: [{ from: M_WAIT - 2.2, to: MURPH_TRUCK_END, who: 'murph', at: (t) => murphTruck(s, edge, t) }],
+      company: [{ from: M_WAIT - 3.2, to: MURPH_TRUCK_END, who: 'murph', at: (t) => murphTruck(s, edge, t) }],
     }
   },
 )
@@ -684,7 +692,9 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   const wx1 = Math.min(s.edge - 0.1, f.x1 + 1)
   if (wx1 > f.x0 - 1) {
     // Each wall starts where it has height: a wall of no height would be a bare line along its foot, across the bank.
-    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 0.6), x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1] })
+    // The tall one comes up over its own height, not as a cliff; at the dam both end as steeply as each other, so the
+    // two tops do not run side by side down to the edge.
+    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 0.6), x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1], rise: [2.6, 1.2] })
     cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 1.4), x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1] })
   }
   // The bank the corn track runs along, the same earth as the track's, sloping down to the road.
@@ -703,8 +713,10 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   p.line(X(dx1), X(GROUND), X(s.edge), X(GROUND))
   // The ditch is a cut in the road, sloped sides, dark inside, a strip of water at its foot; the lip a hump of dirt
   // thrown up before it.
-  const foot = 0.42
-  const slope = 0.12
+  const foot = 0.3
+  // The ditch is only as wide as the jump lets it be, so its sides lean in by a share of its width: never so far that
+  // they cross and stand it on its head as a pot.
+  const slope = Math.min(0.12, (dx1 - dx0) * 0.2)
   const cut = (d: number): Pt[] => [[dx0 - d, GROUND - 0.001], [dx1 + d, GROUND - 0.001], [dx1 - slope, GROUND + foot], [dx0 + slope, GROUND + foot]]
   p.noStroke()
   p.fill(mixHex(DUST.shade, ink, 0.62))
@@ -732,9 +744,11 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   p.noStroke()
   p.stroke(alpha(p, DUST.sky, 0.8))
   p.strokeWeight(Math.max(1, weight * 0.6))
-  for (let i = 0; i < 3; i++) {
-    const wx = dx0 + 0.1 + ((i * 0.37 + t * 0.2) % (dx1 - dx0 - 0.2))
-    p.line(X(wx), X(GROUND + 0.28), X(wx + 0.12), X(GROUND + 0.28))
+  // Glints on the water at its foot, inside the cut.
+  const run = dx1 - dx0 - 2 * slope - 0.16
+  for (let i = 0; i < (run > 0.3 ? 2 : run > 0.08 ? 1 : 0); i++) {
+    const wx = dx0 + slope + 0.02 + ((i * 0.37 + t * 0.2) % run)
+    p.line(X(wx), X(GROUND + foot - 0.05), X(wx + 0.1), X(GROUND + foot - 0.05))
   }
   outline(p, ink, weight)
   p.stroke(alpha(p, ink, 0.3))

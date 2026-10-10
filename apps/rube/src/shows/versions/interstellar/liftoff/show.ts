@@ -7,13 +7,15 @@ import type { Theme } from '../../../../../../../src/core/themes'
 import { BALL, BRAND, BRAND_ID, MURPH, MURPH_ID } from './worlds'
 
 /**
- * Liftoff as a `Show`: two universes on one clock, and no portal between
- * them. The farm and the dark share one set of cells — the dark is simply
- * above the farm — and the rocket that carries the ball from one to the
- * other is placed in both. The show hands the stage the farm until the
- * rocket is inside the cloud deck, and the dark from then on; the cloud
- * fills the frame at that moment in both, so the change of ink is never
- * seen.
+ * Liftoff as a `Show`: four universes on one clock (the farm, the dark, the
+ * station and the outside), and no portal between them. The farm and the
+ * dark share one set of cells — the dark is simply above the farm — and the
+ * rocket that carries the ball from one to the other is placed in both. The
+ * show hands the stage the farm until the rocket is inside the cloud deck,
+ * and the dark from then on; the cloud fills the frame at that moment in
+ * both, so the change of ink is never seen. The station takes the stage on
+ * the second cue's accent, in the same room as the dark's last shot, and the
+ * outside on the undock, in a match cut on the Ranger (`score.ts`).
  *
  * Every universe runs on show time (`local` is `t`, `begin` is 0), so a
  * part's `t` is always seconds since the ball reached it, and a piece of

@@ -334,7 +334,10 @@ function murphBase(s: GateState, t: number): Companion {
     return hermite(x0, x1, v0 * T, v1 * T, w)
   }
   let x: number
-  if (t < M_HIDE) x = run(M_IN, M_HIDE, start, hide, 3.4, 0)
+  // Two seconds rolling up the track at the speed she comes in with, first, from past the edge of even a wide (21:9)
+  // screen, so she never appears out of nothing in its view.
+  if (t < M_IN) x = start - 3.4 * (M_IN - t)
+  else if (t < M_HIDE) x = run(M_IN, M_HIDE, start, hide, 3.4, 0)
   else if (t < M_GO) x = hide
   else if (t < M_FLAP_A) x = run(M_GO, M_FLAP_A, hide, a, 0, 3.0)
   else if (t < M_FLAP_B) x = run(M_FLAP_A, M_FLAP_B, a, b, 3.0, 2.2)
@@ -668,7 +671,7 @@ export const gate = part<GateState>(
       // Murph: up the apron after the cage has gone, kept back by TARS, and there as the rocket goes.
       company: [
         { from: HER_ON, to: slot.end, at: (t) => goldGate(s, lane, slot.begin, t) },
-        { from: M_IN, to: M_OUT, who: 'murph', at: (t) => murphBase(s, t) },
+        { from: M_IN - 2, to: M_OUT, who: 'murph', at: (t) => murphBase(s, t) },
       ],
     }
   },

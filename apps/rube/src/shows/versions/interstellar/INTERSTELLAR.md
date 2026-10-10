@@ -13,7 +13,9 @@ Open it at `/shows/interstellar/`. In the Shows picker it is its own work, **Voy
 A Rube Goldberg machine plays two cues back to back, 4:23 of music, and then 28 s of end credits in silence over the last scene: 4:51 in all. Three balls tell the story, as the film does.
 - **Joseph Cooper is the sand ball** (`#F0C987`): the thread. He has the farm, he drives the truck, and he makes every machine go.
 - **Dr. Amelia Brand is the blue ball** (`#1F5E98`): NASA's. She joins him at the base and rides with him to the ring in orbit, where they are parted, and she waits while he is on Miller. At the very end he finds her at her camp on Edmunds' planet, and they meet.
-- **Murph, old, is the slate ball** (`#7C8C9C`): Cooper's daughter. On Cooper Station he finds her in the far-side house, a lifetime older than he is. She comes to him, and she sends him on, to Brand.
+- **Murph is the slate ball**: Cooper's daughter.
+  - As a child (`#8FA8C4`, a lighter, bluer slate, and smaller) she is on the farm. She is in her bed under the window from the first frame, comes down the stairs after him, stows away in the truck's bed, and follows him to the base, where TARS keeps her back at the tower's foot as the rocket goes.
+  - Old (`#7C8C9C`), on Cooper Station, he finds her in the far-side house, a lifetime older than he is. She comes to him, and she sends him on, to Brand.
 
 Every world is new for this take, and there are no portals. A rocket carries them from Earth to the dark in Act I. A scored cut on the second cue's first accent opens Act II.
 
@@ -35,7 +37,7 @@ Every part is new: the pieces, the worlds, the palettes, the sky, and the camera
 The film's ending has two reunions, and so does the show. On Cooper Station, Cooper meets his daughter, old Murph. Then, on Edmunds' planet, he finds Brand. The roles are locked:
 - **Cooper (sand)** has the farm and drives, and every mechanism's beat is his.
 - **Brand (blue)** is NASA's and joins him later. She is blue the whole show.
-- **Murph (slate)** is his daughter, old, and appears only on the station.
+- **Murph (slate)** is his daughter: a child on the farm and at the base, old on the station, and nowhere else.
 
 **How the company moves.**
 - He makes things go.
@@ -51,7 +53,7 @@ The film's ending has two reunions, and so does the show. On Cooper Station, Coo
    - He is at the wheel through the chase, and at the dam he is thrown clear.
 2. **The base: Brand joins.**
    - The drone that led him lands on NASA's bunker. He rolls in through one flap and out of the other, and TARS stops him.
-   - A beat later a blue ball rolls out after him: Brand's first appearance, 71.4 s into the show.
+   - A beat later a blue ball rolls out after him: Brand's first appearance, 71.6 s into the show (beat 114½).
    - She taps his back, and they roll to the tower together and sit side by side in the rocket's window.
 3. **Space.** They float out of the fairing together and ride the mass driver, the dock and the airlock. They run the spinning ring's corridor.
 4. **The split** (beat 160). The trapdoor drops *him* into the catapult's cup and slaps shut a ball's width in front of her. She stays on the shut door for a beat, then runs on round the ring.
@@ -75,7 +77,7 @@ Every change of scene is scored and continuous. No cue or strike was moved for a
 | 88.8 s | the farm → the dark | The world changes inside the cloud's white-out. The two worlds share cells, so neither ball moves. |
 | 103.8 s | the ring → Miller | A whip through the sphere. Her ring span ends out of shot and her orbit span starts out of shot. |
 | 113 to 115 s | Miller → Gargantua | One Ranger the whole way, from Miller's water to the claw. |
-| 118 to 127.5 s | the tesseract → the bed | The tesseract gets its time: the book knock, the watch, and a grand pull-back to its endless rooms. Then a 1.4 s bridge: the rooms fold away above him and he falls back through them, gold threads streaming past, drifts through the black toward a warm light that opens as a circle into the dim room, and settles into the pillow (124.3 s). He wakes (124.5 s), and the slow push-in holds to the scored accent. |
+| 118 to 127.5 s | the tesseract → the bed | The tesseract gets its time: the dive through its rooms, the book knock, the watch, and a grand pull-back to its endless rooms. Then a 1.35 s bridge (124.27 to 125.62 s): the rooms fold away above him and he falls back through them, gold threads streaming past, drifts through the black toward a warm light that opens as a circle into the dim room, and settles into the pillow (125.62 s). He wakes (125.82 s), and the slow push-in holds to the scored accent. |
 
 **Act II**
 
@@ -96,10 +98,11 @@ Every change of scene is scored and continuous. No cue or strike was moved for a
 
 **The audio.**
 - The cue was fetched once with yt-dlp and ffmpeg from WaterTower Music's official upload. It is not kept: `scripts/shows/liftoff-mix.sh` takes it as fetched.
-- The show plays one file, `apps/rube/src/shows/versions/interstellar/interstellar-liftoff-mix-demo.mp3`, built by `scripts/shows/liftoff-mix.sh`:
+- The show was timed to one mix, built by `scripts/shows/liftoff-mix.sh`:
   - Cornfield Chase plays whole and untouched from its first sample, so Act I keeps the clock it was timed to. It fades out over its last second, to 126.98 s.
   - No Time for Caution comes in 103.76 s into the cue, one beat before its bar-26 accent, fading up over that beat. The accent lands at 127.507 s of the show, and the cue runs to its end, 262.74 s.
 - Starting at bar 26 skips the cue's first 1:44. What is left is the two-minute build to the peak, which is the part a machine can drive.
+- The repository keeps no copy of either recording, nor of the mix, since #147 made copyrighted soundtracks YouTube-only. The show plays the two official uploads as two cues (`liftoff/index.ts`), with the mix's numbers: Cornfield Chase from its start, faded out by 126.98 s, and No Time for Caution from 103.76 s into its upload at 126.5 s of the show, faded in over a beat, and cut at the mix's end (262.741 s; the upload runs 6 s longer). So every strike lands online where it lands in the mix. The one difference is level: YouTube cannot play a video above its own volume, so the mix's lift on the cue's quiet opening is not heard.
 
 **Its clock.**
 - `scripts/shows/liftoff-ntfc-onsets.py` measured the mix once (numpy and ffmpeg) into `scripts/shows/plans/liftoff-ntfc-onsets.json`.
@@ -119,14 +122,19 @@ The music is the only clock.
   - Act II: No Time for Caution's 60 bpm pulse, beats and eighths (±30 ms).
 - **What `check:shows` holds it to.**
   - 365 strikes (232 in Act I, 133 in Act II), every one on a measured onset;
-  - more than 90% of Act I's beats from the drop to the last hit struck, and 123 of Act II's 129 beats;
+  - more than 90% of Act I's beats from the drop to the last hit struck, and 121 of Act II's 129 beats;
   - the ball never jumps, through every change of world and every cut;
   - the ball is never hidden longer than 2.5 s;
-  - the mix, its length and its demo credit;
+  - the soundtrack: YouTube only (no file), its first cue Cornfield Chase from zero, the music's length (262.741 s), and its credit to Hans Zimmer, both cues and Interstellar;
   - the end credits: after the music has stopped, set by the page, and naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues;
   - the stage is in the station from the accent, and outside from the undock;
   - the camera's roll: square everywhere but the far side, a third of a turn through the reunion, square again by the hub and the cut;
-  - under Zoom, Cooper in the frame every tenth of a second to the music's end, but for the cage's climb (75 to 77 s), the whip through the sphere (103.8 s) and the ring's reveal (130.5 to 137 s);
+  - in the show's own frame, Cooper's whole ball in shot every 0.02 s to the music's end, but for the cage's climb (74.9 to 77.3 s) and the whip through the sphere (103.7 to 104.3 s);
+  - under Zoom (with its slide to keep Cooper, `Framing.focus`), Cooper's whole ball and as much again round it inside the frame every 0.02 s, but for the three shots that are about more than him (the cage's climb, the whip, the ring's reveal at 130.4 to 137.2 s; `zoomFreeSpan` in `score.ts` gives each with its eases);
+  - no ball (Cooper, Brand or Murph) cut by the frame's edge for more than 0.6 s, and no two balls drawn into each other, but behind the bunker's wall (71.1 to 71.2 s);
+  - through each reunion, the one he meets (Murph, 176.5 to 183 s; Brand, 255.5 s to the music's end) at least 5% of the frame inside, in the show's own frame and under Zoom;
+  - the push-in on him in bed and the settle in the channel as slow moves (fastest zoom under 0.3 and 0.6, log cells a second);
+  - on a phone, the streak across the axis judging his size in CSS pixels, keeping a halo of at least 9 CSS pixels, and fading in off the bat (read from the source);
   - the whip out of the wormhole never stopping while the Ranger flies;
   - Brand (the blue ball):
     - she is out of shot on the farm and through the drive (twelve sample times, 1 to 60 s);
@@ -137,29 +145,31 @@ The music is the only clock.
     - she never jumps;
     - she only comes and goes out of shot;
     - where she is, there are exactly two balls with two ids, and never more.
+  - Murph (the slate ball): a child on the farm and at the base, old on the station; at her threshold as the lift climbs (190 s) and out of shot at the other sample times; never jumping;
+  - Brand and Murph both come and go only out of shot, tested every millisecond against the 16:9 frame, a wide (21:9) screen, an upright phone (390 × 844), and Zoom's frame at each.
 
 ## Act I, in order
 
 | Time (s) | Music | Part | What happens |
 | ---: | --- | --- | --- |
-| 0 | piano | Murph's bookcase | In the dark, Cooper sits at the right-hand end of the top shelf, a plain solid ball in the dawn's first light. Murph's wind-up tin dump truck is parked on the floor by the case. On the first clear note the model lander goes over, on its own: a shiver, a little dust, and it tips. Then ten books drop the same way, one per note, left to right, short and tall: S, T, A, Y in Morse. Nothing touches them. He stays on his spot, but glances at each thing as it goes: a small turn toward it, and back by the next note. The last book topples toward him, and its falling top knocks him off his spot (11.8 s). He rolls along the empty shelf and out through a small hinged flap in the side of the case (12.0 s). |
+| 0 | piano | Murph's bookcase | In the dark, Cooper sits at the right-hand end of the top shelf, a plain solid ball in the dawn's first light. Murph's wind-up tin dump truck is parked on the floor by the case. On the first clear note the model lander goes over, on its own: a shiver, a little dust, and it tips. Then ten books drop the same way, one per note, left to right, short and tall: S, T, A, Y in Morse. Nothing touches them. He stays on his spot, but glances at each thing as it goes: a small turn toward it, and back by the next note. The last book topples toward him, and its falling top knocks him off his spot (11.8 s). He rolls along the empty shelf and out through a small hinged flap in the side of the case (12.0 s). Young Murph is asleep in her bed under the window from the first frame, and wakes on the first book (5.13 s). |
 | 12.3 | piano | the tin truck | He drops onto the toy truck's cab roof with a clank, rolls off the back into the dump box, and the landing lets the wind-up spring go. The truck lurches one lurch a note, its key turning a quarter each time, through the window light where the dust comes down in bands. |
-| 15.7 | piano | stairs, porch | At the stairwell the truck's dump box tips up and he rolls out over the lip. He goes down the stairs a step per note, out onto the porch, and down the porch steps. |
+| 15.7 | piano | stairs, porch | At the stairwell the truck's dump box tips up and he rolls out over the lip. He goes down the stairs a step per note, out onto the porch, and down the porch steps. Murph is off her bed after him (14.9 s) and down the stairs a step behind, hop for hop on the same notes, and stops at the head of the porch steps to watch him go (20.35 s). |
 | 20.2 | piano | the yard | A plank on a sawhorse flips over. The windmill's ratchet hoist lifts a tin pail a tooth per note, and a trip bar tips him into the clothes basket on the loudest piano note. The basket runs down the line, knocking the pegs off, and throws him onto the end of the hand pump's handle. His weight works the pump: water comes out of the spout into the irrigation channel, and the handle springs back and lobs him in after it. |
 | 26.6 | piano | the channel | The water carries him along the top of the bank, under the corn. Four flap gates hang across the channel; each board rides over his back and slaps shut behind him on a piano note. At the end the channel spills over the bank, where the truck is waiting. |
-| 29.2 | piano, organ | the truck | He hops onto the bed's rail on a note and rolls along it into the cab's corner. The knock swings the door open, he rolls in onto the bench, and the door slams behind him on a note: he is the driver. The engine turns over on the organ's first chords and catches, and the headlights come on at the strongest onset of the gather. |
+| 29.2 | piano, organ | the truck | He hops onto the bed's rail on a note and rolls along it into the cab's corner. The knock swings the door open, he rolls in onto the bench, and the door slams behind him on a note: he is the driver. The engine turns over on the organ's first chords and catches, and the headlights come on at the strongest onset of the gather. Murph has followed down the channel a few cells behind. Once the door has slammed she drops into the truck's bed on the next note (32.3 s) and rides there low behind the near wall, her crown showing. |
 | 42.48 | the drop | the truck | He floors it into the corn, pressed back into the bench. A stalk on every beat, and the seat throws him up on every beat and he comes down on the eighth, at the wheel behind the glass. It jumps a ditch on beat 76 and goes through a fence on beat 80. The drone it chases flies ahead and glints on each downbeat. |
-| beat 84 | chase | the dam | He stands on the brakes at the edge. The door flies open and he is thrown out through it, up onto the hood and along it, and off the nose over the edge. The truck stays at the edge, empty, its door swinging. |
+| beat 84 | chase | the dam | He stands on the brakes at the edge. The door flies open and he is thrown out through it, up onto the hood and along it, and off the nose over the edge. The truck stays at the edge, empty, its door swinging. Murph, in the bed, is thrown against the cab and stays with the truck at the edge. |
 | beat 86 | chase | the combine | An autonomous harvester with an empty cab and its aerial lamp on the 1.25 s tick. The chain runs reel, feeder, drum, elevator, tank, then the auger swinging out, then the spout. Then a plank on a straw bale. |
-| beat 100 | chase | the base's fence | A cattle grid on the eighths, a well sweep that throws, sprung dogs along the fence top, a counterweighted barrier arm, and a lever that lights the landing lamps. The drone lands on NASA's bunker on beat 112, the drone that led him here. He rolls in through one flap (113) and out of the other (114), and TARS, four tall slabs of dark steel standing guard by the door, swings a slab down across his way: he stops against it, the film's first meeting. On 114½ the flap is pushed open again and Brand rolls out after him, her first appearance. It slaps shut behind her on 115, and she catches him up and taps his back on 115½, and TARS lifts its slab and lets them by. |
-| beat 116 | chase | the gantry | They roll into the cage together, and it climbs the tower, lighting a lamp per eighth. Along the arm and into the rocket's nose window side by side on beat 124. The lamps go out one per beat while the camera pushes in on the two of them. |
-| beat 134 | the pedal | the rocket | Ignition, then liftoff on the downbeat of 136, and a surge through the flame on each beat of the climb. On beat 142 it goes into the cloud: a flash of white with the rocket's shadow in it, and out into the dark in the other ink. Staging on 144, the second stage on 145, the turn into orbit. On 147 the fairing splits and they float out. |
+| beat 100 | chase | the base's fence | A cattle grid on the eighths, a well sweep that throws, sprung dogs along the fence top, a counterweighted barrier arm, and a lever that lights the landing lamps. The drone lands on NASA's bunker on beat 112, the drone that led him here. He rolls in through one flap (113) and out of the other (114), and TARS, four tall slabs of dark steel standing guard by the door, swings a slab down across his way: he stops against it, the film's first meeting. On 114½ the flap is pushed open again and Brand rolls out after him, her first appearance. It slaps shut behind her on 115, and she catches him up and taps his back on 115½, and TARS lifts its slab and lets them by. Murph has come in behind him all along, up the track a few cells back (from beat 109) and into hiding by the switch (112½). |
+| beat 116 | chase | the gantry | They roll into the cage together, and it climbs the tower, lighting a lamp per eighth. Along the arm and into the rocket's nose window side by side on beat 124. The lamps go out one per beat while the camera pushes in on the two of them. When the cage has gone up, Murph follows his way: through the bunker, pushing its flaps as he did (117½, 119), and out into TARS's slab, swung across her way (120). She runs into it (120½), tries once more (122), and is kept back at the tower's foot, looking up. |
+| beat 134 | the pedal | the rocket | Ignition, then liftoff on the downbeat of 136, and a surge through the flame on each beat of the climb. On beat 142 it goes into the cloud: a flash of white with the rocket's shadow in it, and out into the dark in the other ink. Staging on 144, the second stage on 145, the turn into orbit. On 147 the fairing splits and they float out. At the ignition TARS fans its slabs out in front of Murph against the blast, and the billow rolls over them both. |
 | beat 148 | full organ | the ring | The mass driver's beacon calls them in. The cradle takes both, its coils fire on the eighths, and they lob to the ring station, a ring of twelve modules, and match its spin. The jaws close on both on beat 156, the film's spinning dock. Then the airlock, and a run inside the spinning ring. On the downbeat of 160 the trapdoor drops him into the catapult's cup and shuts before she gets there. She stays on the door a beat, then runs on round the ring. The catapult throws him into the sphere past a small ringed planet. |
 | beat 166 | full organ | Miller | Out of the far side of the sphere onto a sheet of shallow water. He moves on the 1.25 s tick, two beats: a landed Ranger's legs, two buoys, and TARS cartwheeling one slab per tick. Up in orbit Brand waits on the ring, a tally mark a lap, her blue dimming with the years. The "mountains" on the horizon are a wave. The landed Ranger lifts off on beat 178 and picks TARS up on 179½, and the wave throws him off its crest on 180. |
 | beat 180 to 189 | climax | Gargantua | The slingshot: the same Ranger catches him on a tether (181), TARS lets go (182) and is swallowed (183½). Two turns round the black hole, spiralling in and speeding up: down through the disk (183), behind the dark with its light wrapping the rim (184), the wide shot with disk, dark and halo whole, up through the disk (185), over the top with the halo filling the frame (186), down and behind again, a quarter-turn an eighth, and the engine burns on the loudest eighth (187½). Release on 188, and the fall to the centre on 189. |
-| beat 189 to 191 | climax | the tesseract | The dark opens round him and he is a ghost in a lattice of bookcases going on every way, and he goes looking. Rooms come at him out of the depth and go round him, each Murph's bookcase from behind at another time and another way up: on its side in moonlight after the books have gone (on 190, its frame ringing gold as he goes through), then upside down in the sepia of years before (190½). Then Murph's own comes up out of the depth, upright and lamplit, and he is behind its model lander on the last hit (119.409) and pushes it off. |
-| 119.7 to 122.9 | after the last hit | the tesseract | **Still in the tesseract, the ghost knocks the books over**, the film's bookshelf beat: the ten books along the back of the row in the opening's order, the Morse rhythm three and a half times as fast, from 119.67 to 120.85 s. Then he glides back to Cooper's watch at the end of the row, and **the watch ticks the message** on 194½, 195 and 195½, gold threads of light running in along the board to it on each tick. Then the grand pull-back: Murph's bookcase is one of a lattice of lit bookcases, each with its row and its watch, on and on into depth. |
-| 122.9 to 127.5 | the decay | the bed | The fall out of the tesseract, and the bed: he lands in the pillow in a dim room (124.3 s), Murph's room as the station keeps it, at night, and wakes on 124.5, a solid ball again: he stirs, and the quilt slides. The camera comes in on him slowly. |
+| beat 189 to 193 | climax, then the decay | the tesseract | The dark opens round him on 189 and he is a ghost in a lattice of bookcases going on every way, and he goes looking. Rooms come at him out of the depth and go round him, each Murph's bookcase from behind at another time and another way up: on its side in moonlight after the books have gone (on 190, its frame ringing gold as he goes through), then upside down in the sepia of years before (on the last hit, 119.409 s). Then Murph's own comes up out of the depth, upright and lamplit, and he is behind its model lander on 193 (120.63 s) and pushes it off. |
+| 120.9 to 124.3 | the decay | the tesseract | **Still in the tesseract, the ghost knocks the books over**, the film's bookshelf beat: the ten books along the back of the row in the opening's order, the Morse rhythm about three and a half times as fast, from 120.89 to 122.07 s. Then he glides back to Cooper's watch at the end of the row and touches it on 196½ (122.82 s), and from then **its second hand ticks the message**, in Morse, gold threads of light running in along the board to it. Then the grand pull-back (123.42 to 124.27 s): Murph's bookcase is one of a lattice of lit bookcases, each with its row and its watch, on and on into depth. |
+| 124.3 to 127.5 | the decay | the bed | The fall out of the tesseract, and the bed: he lands in the pillow in a dim room (125.62 s), Murph's room as the station keeps it, at night, and wakes at 125.82 s, a solid ball again: he stirs, and the quilt slides. The camera comes in on him slowly, in one move, to the accent. |
 
 ## Act II, in order
 
@@ -172,20 +182,22 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 | 139.5 | 116 to 131 | the working ring | A farm in the sky, one machine a bar. On 116 he knocks down a sluice's paddle, and the pipe under the ground fills the noria's sump. The noria: his weight drops the clutch in, and a Geneva drive turns the water wheel a quarter a beat. Down a stepped channel, a flap gate falling flat on each beat. Off the spout into the tray on the front of the harvest tram, which trips a row of corn bins' gates, a bin a beat. At the end of the line the tray's gate drops. He pushes the paddle under each sunlight louvre over the seed beds, so a shade flips up a beat at a time. |
 | 155.5 | 132 to 144 | the ballpark | The diamond stands sideways on the ring where the ground has turned to a wall. A scoreboard stands high over the field on a mast. Its home row turns over one plate a beat for nine innings, the ninth on the hit, and its clock ticks the cue's second. The first-base bag is a treadle that springs a mitt open; the mitt shuts on him and flips him to the pitching machine. Its wheels spin up a notch at a time while a winch draws a mechanical bat back. On the eighth the gate lets him into the wheels, and the bat meets the pitch on the accent (140). The light tower's lamps come on, a bank a beat. |
 | 168.5 | 145 to 153 | the flight | The film's gag. He goes up toward the axis and curves under the hub, because the ring turns under him, while the camera pulls out to the whole ring and the cue gathers. He comes down on the far side through a poplar (150) and a round tree (151), and in at an attic window on the accent and step up (152). The crash stops her rocking. An old trunk knocks the trapdoor's latch (153). |
-| 176.5 | 153 to 156 | Murph | The camera has turned with the ring, so the far-side house stands upright. **Old Murph**, the slate ball, rocks in her chair by the far wall: a spindle-back rocker, side on, with turned arms and a small quilt folded over its crest rail. His watch is not in this room. The trapdoor settles on its stop on 153½, he rolls off its end, lands on 154 and rolls toward the lift. Then **they meet**: the chair pitches her off and she rolls out across the room, he turns back and rolls out to her, and they meet on the open floor on 155. She walks him to the lift and nudges him in on 155½: go to her. He coasts to the middle of the car by the big step (156), and she stays at the threshold as the car goes. |
-| 179.5 | 156 to 172 | the spoke | Loud from here. The gate drops, the brake comes off, and the lift car climbs the spoke toward the axis while its counterweight comes down the other side. Each beat the car trips a landing's flag and its lamp lights, so the lit lamps climb the spoke behind it. Gravity falls away as it rises. He bounces a beat at a time, then a hop takes two beats, and on 170 he leaves the floor and does not come back. The sheave's brake bites on 171, and the car stops at the hub on 172. |
+| 176.5 | 153 to 159 | Murph | The camera has turned with the ring, so the far-side house stands upright. **Old Murph**, the slate ball, rocks in her chair by the far wall: a spindle-back rocker, side on, with turned arms and a small quilt folded over its crest rail. His watch is not in this room. The trapdoor settles on its stop on 153½, he rolls off its end, lands on 154 and rolls on over the lip into the lift car's doorway. Then **they meet**. The chair pitches her down on 155 and he turns back to her. She steps across the floor to him on 155½, and they touch on the organ's big step up, 156, and hold, still together, through 157. She draws back and nudges him on into the car on 158: go to her. He comes to rest in the middle of the car, and its gate drops on 159; she stays at the threshold. |
+| 183.5 | 160 to 172 | the spoke | Loud from here. The brake comes off on 160 and the lift car climbs the spoke toward the axis, through the attic, while its counterweight comes down the other side. Each beat the car trips a landing's flag and its lamp lights, so the lit lamps climb the spoke behind it. Gravity falls away as it rises. He bounces a beat at a time, then a hop takes two beats, and on 170 he leaves the floor and does not come back. The sheave's brake bites on 171, and the car stops at the hub on 172. |
 | 196.5 | 173 to 183 | the hub | He floats on into the docking bay, where the Ranger sits in its cradle. A grabber arm springs out, closes on him, swings him over the ship and sets him in the seat. The canopy runs forward and knocks home, and the arm whips back into its catch. The cockpit lights, and the cradle's four clamps let go one a beat, tail to nose. |
 | 207.5 | 184 to 194 | the undock | The cue's biggest step, and a match cut to outside on the ship. The port's clamps spring open, and the camera pulls back to Cooper Station seen from the side, turning. The umbilical fires out and whips back to its socket, and the nose jets back the ship off the port. Roll jets take the spin off in three equal steps, and it stops dead, level, on the loudest beat. The probe snaps back, it pitches end for end, the port's collar slides home, and the engine lights. |
 | 218.5 | 195 to 211 | Saturn | The burn pulses with the organ, each kick as hard as the beat it is on, out over Saturn's cloud tops and then over its rings. The way is marked by beacons left by whoever went first. On each kick the ship goes over one, and it wakes: vanes out, lamp lit. The lit line grows behind it. Engine off, the nose jets brake a beat at a time, and the nose touches the wormhole on 210. On 211 the cockpit goes in, the ball's light wrapping the sphere's rim. |
 | 235.5 | 212 to 227 | Edmunds' planet | On 212 the far side opens at the sphere's centre, and the camera whips through to a desert world at dawn: a dark sky, a thin gold band, Gargantua small and high. The Ranger comes out of the far mouth on 213 and lands in the real order, one stage a beat. A pitch-up, four retro burns, the drogue mortar, and the chute opening reefed and then in two steps. The heat shield drops, the chute is cut and the belly engines light, a landing leg comes down on each of 225 and 226, and the flare. |
 | 251.5 | 228 | Edmunds' planet | Touchdown on the cue's loudest bar. |
-| 252.5 | 229 to 232 | Brand's camp | The canopy swings open, the ramp slams down (230), and **Brand**, the blue ball, sets off from the cairn she built for Edmunds, across her camp toward him. The seat kicks him out over the nose (231), he rolls down the ramp and stops at the foot of the lamp, and on the last hit (232) the lamp lights. |
+| 252.5 | 229 to 232 | Brand's camp | The canopy swings open, the ramp slams down (230), and **Brand**, the blue ball, sets off from the cairn she built for Edmunds, across her camp toward him. The seat kicks him out over the nose (230½), he lands on the ramp (231½), rolls down it and stops at the foot of the lamp, and on the last hit (232) the lamp lights. |
 | 255.5 to 262.7 | the stop | Cooper meets Amelia | The music stops dead. He rolls off the lamp's plate toward her, and **they meet under the lamp** on the next beat (256.49 s), easing into each other; the lamp swells once. They rest together while the camera draws back over the camp: the dome with its porthole lit, the flag, the cairn, her helmet set down on a rock. The sun's edge comes up behind the cairn. |
-| 261.4 to 291 | silence | the credits | Over the two of them at the camp at dawn, while the camera goes on drawing back and the sun clears the horizon (see below). |
+| 261.4 to 291 | silence | the credits | Over the two of them at the camp at dawn, while the camera goes on drawing back, the sun clears the horizon. |
 
-Six Act II beats are still unstruck, on purpose:
+Eight Act II beats are unstruck, on purpose:
 - **113:** the camera swoops back in from the whole ring to the house, and the move is the event. A mechanism small enough to fit the kitchen would not read at that distance.
 - **145 to 149:** the ball in flight across the axis, a held breath while the cue gathers. At whole-ring scale nothing mechanical reads.
+- **157:** Cooper and old Murph, touching, held still between the touch on 156 and her nudge on 158.
+- **231:** at Brand's camp, the seat's kick and his landing on the ramp fall on the eighths either side of it (230½ and 231½).
 
 ## End credits
 
@@ -203,13 +215,15 @@ The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a 
 
 | Starts (s) | Role | Names | Fine print |
 | ---: | --- | --- | --- |
-| 261.4 | Directed by | Stephen Wu | |
-| 266.0 | Machines, drawings and code | Claude Opus 5.5 | |
-| 270.7 | With | Joseph Cooper, the sand ball; Dr. Amelia Brand, the blue ball; Murph, the slate ball; TARS, four slabs of steel | |
-| 276.5 | Music | Hans Zimmer | "Cornfield Chase" and "No Time for Caution", from Interstellar (2014). The recordings are used here only for a private tech demo. |
-| 282.4 | Drawn with | p5.js | |
+| 261.4 | Directed by | Stephen Wu; Claude Opus 5.5 | |
+| 266.5 | Machines, drawings and code | Claude Opus 5.5 | |
+| 271.2 | With | Joseph Cooper, the sand ball; Dr. Amelia Brand, the blue ball; Murph, the slate ball, young and old; TARS, four slabs of steel | |
+| 277.0 | Music | Hans Zimmer | "Cornfield Chase" and "No Time for Caution", from Interstellar (2014) |
+| 282.9 | Drawn with | p5.js | |
 
-There is no title card. After p5.js's card goes (about 287 s), the camp holds alone at dawn to the end, 291 s.
+(Each card starts when the one before has gathered (1.4 s), held, and all but a quarter second of its going (0.95 s) is done: `credits.ts`.)
+
+There is no title card. After p5.js's card goes (about 287.5 s), the camp holds alone at dawn to the end, 291 s.
 
 **How it is built.**
 - The words are the page's, not the canvas's. A show's canvas refuses type (`shows/stage.ts`), so that a saved PNG carries no words. `Performance.titles(t)` is a new, optional hook in `shows/registry.ts`. The Shows page (`shows/main.ts`) sets whatever it returns over the composed 16:9 frame, in a serif, sized in hundredths of the frame's height. It fades and blurs each card by its `light`.
@@ -217,7 +231,739 @@ There is no title card. After p5.js's card goes (about 287 s), the camp holds al
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 3 (latest)
+## Polish pass 150 (latest)
+
+A second subtraction pass, after a fresh look at the whole show. Two more things go:
+- **The glow inside the wormholes' rims** (`lensRim` in `kit.ts`, pass 13). A soft band of light just inside each sphere's rim, too faint to find at 1x; the lensed arcs and the rim's own line already say glass. The helper goes with it.
+- **The station clouds' shading and breathing** (`drawClouds` in `act2/interior.ts`, pass 5). The clouds stay, as flat shapes inked once round the outside like everything else in the station: no lit tops or shaded bases, and no puffs swelling and shrinking. They are drawn opaque now; at 92% the puffs' own outlines showed through the flat fill, which the frame audit caught.
+
+Audited after the cuts: the louvres (151 s), the station whole (145, 166 s), the flight across the axis (171 s), the lights coming up and the three wormholes, at 16:9 and in an upright 9:16 frame. `npm run build` passes, every check included. No strike, cue, camera key or music moved.
+
+## Polish pass 149
+
+A subtraction pass: everything this branch added to the picture was looked at again for whether it earns its place. Three things were cut, all decoration that drew the eye without telling the story:
+- **The dawn wind** (`drawDrift` in `act2/edmunds.ts`, pass 11). The wisps of sand under the credits were faint gold smears at best, an animation for its own sake. The credits' stillness is the point: the flag, the sun coming up and the slow draw-back are enough.
+- **Saturn's weather streaks** (`drawSaturn` in `act2/undock.ts`, pass 16). Fifty-four barely-there strokes no viewer could find at 1x. The bands, the softened night side and the haze that fades round the limb stay.
+- **The kitchen's shelf of jars and plates, its hanging lamp, and the bowl and runner on the table** (`drawKitchen` in `earth/house.ts`, pass 15). In the opening they crowded the bottom of a frame that belongs to the ball and Murph's room, and the lamp's cone hung alone at the frame's edge. The table, the two stools and the tall clock stay. The clock pays off in the museum, and the table and stools still say "kitchen" there.
+
+Kept, and why: the station's clouds (they give the open air and the flight across the axis a scale), the fall's gold threads (without them the fall read as an empty frame), the near pebbles at the camp (the foreground was bare), the lensed arcs (a restyle of what was there, not an addition), and every fix to framing, the music and the shared player.
+
+Audited after the cuts: 32 stills across the show, the opening, the museum, Saturn and the camp at 16:9 and in an upright 9:16 frame. Nothing was left bare and nothing broke. `npm run build` passes, every check included. No strike, cue or camera key moved, and the music is untouched.
+
+## Polish pass 148
+
+No change to the show: a held sound at the show's end, where pass 147's paused-and-held case would most likely arise. Under the refusing policy, a link left held from 288 s plays to its end and starts again from 0. A show link is a named visit, and `advance()` plays a pool of one again. On the reopen, the muted try ran out of patience while the fresh YouTube players were still loading, so `playLinked` fell back to its last resort, as written: the picture runs on the wall clock with the Sound button up, and the music joins at the next gesture. A tap there was refused (the policy), held again, and from then the music ran muted in step under the picture. So the end never leaves a held show paused, and the case pass 147 noted does not arise on a link. Nothing here is new to this branch.
+
+## Polish pass 147
+
+No change to the show: passes 133 to 146 changed the shared YouTube player six times in quick succession, each tried alone, so the whole change to `youtube.ts` and `player.ts` was read against `origin/main` as one piece. It holds together.
+- `hush` mutes alike at start, warm, entry and the viewer's own mute. A viewer who has muted is still muted at an entry, so WebKit has nothing to stop.
+- The warm at the press runs once a deck, yields to the timer's early run, and is parked by the warm branch as before. A pause stops a warming deck.
+- `heardAt` only acts within 1.5 s of an entry. Its one false reading, a viewer pausing YouTube's own player in that moment, puts up the Sound button, which is harmless.
+- The wait's `getPlayerState` look cannot pass a real refusal, which leaves the player paused or unstarted.
+- All four ways of bringing a held sound in go through `soundIn`, which holds it again only on a real refusal and gives up if the show changed meanwhile. `onRefused` acts only while playing, not recording, and not already held. The stall note gives way to the Sound button while the sound is held.
+
+One older behaviour is unchanged: a Sound tap on a held show that is paused starts the music under a still picture, as the old `join` did.
+
+## Polish pass 146
+
+- **Pass 145's open case, given a way through: the browser's stop at an entry now holds the sound.** In WebKit, after a link that started on its own and a Sound tap, No Time for Caution was stopped as it was made heard at 126.5 s. The player took that for the viewer pausing YouTube's own player, and paused the show with no word of why. Pass 145 tried to make the tap win the second cue, and could not. Now a cue stopped within 1.5 s of being made heard at its entry is taken for what it is, a refusal (`youtube.ts`, `heardAt`, `onRefused`). The page holds the sound as a refused link does (`player.ts`): the picture goes on, the music under it muted and in step, and the Sound button is up. The tap that follows is a press, so it may start the cue heard. In WebKit, at 126.5 s the show goes on muted (No Time for Caution at 103.89, then 104.89), the Sound button comes up, and one tap brings it in heard and in step (106.01 at show 128.75). Cornfield Chase's last half-second of fade is lost to the stop. In Chrome, where nothing is stopped, the hand-over, the viewer's mute, the refused-tap re-hold and pass 144's press-at-60 hand-over in WebKit are all as they were. One Chrome run sat at 124 s unstarted, and three re-runs did not, so it was the loaded machine. A check holds it, and fails on the old player.
+
+## Polish pass 145
+
+- **In WebKit, a link visitor's Sound tap was undone two seconds later, every time.** Pass 144's warm-at-the-press assumed a press behind every start. A link plays on its own, and in WebKit the sound is held (muted). Tapping Sound brought Cornfield Chase in, heard, and two seconds later the show muted it and held the sound again. The play was asked of a player already playing muted. WebKit sends no state change for that, so the wait for one (`begin`'s patience) ran out and called it refused, and pass 136's re-hold muted it. Before pass 136 the result was ignored, so this was mine. The wait now asks the player before calling a play refused: if it is playing, it was not refused. The tap's sound now stays. A real refusal (passes 136 and 137, Chrome's refusing policy) is still caught and held again, and seek and pause are as they were. A check holds it, and fails without it.
+- **Left open, in WebKit: after a link's Sound tap, the music stops at the hand-over.** The link's own start warmed No Time for Caution with no press behind it, so WebKit never let it sound. At 126.5 s it is paused and the show pauses with it, now a paused show rather than pass 143's endless wait. One tap on the picture brings it in, heard and in step (104.73 s, volume 100). Making the tap itself win the second cue was tried: playing it again inside the tap, or pausing and playing it, if already running early. It did not, and one variant left Cornfield Chase unstarted after a tap at 100 s. It was taken back out rather than guessed further at in the shared player. The test plan's Safari line now names this case too.
+
+## Polish pass 144
+
+- **Pass 143's WebKit stop at the hand-over, fixed.** Pass 143 found that a play started inside the viewer's press may sound, and one the player starts on its own later may not. WebKit decides that per player: a player played during a gesture is let sound afterwards. So every later YouTube cue is now warmed once inside the press (`begin`, `blessed`): played muted for a moment, then parked, as `warmUp` already did 45 s ahead. In WebKit, a press at 60 s now carries Voyage through 126.5 s, 66 s later. No Time for Caution comes in at its entry, unmuted, fading 5, 59, 100, and plays on in step. Before, it stopped there and the show waited for good. Epilogue had the same stop: under the old player its second recording stayed paused at 464 s in WebKit, and now it comes in. In Chrome nothing changes: the hand-over crossfade, the muted early run, seek, pause and resume, the viewer's mute before and after the entry, and the held sound all behave as in passes 130 to 138. The only cost elsewhere is that the second recording is fetched at the press rather than 45 s before it is needed. A check holds it, and fails on the old player. Real Safari may count gestures through YouTube's frames differently from Playwright's WebKit, so the pull request's test plan still asks for the hand-over to be watched in Safari, now to confirm.
+
+## Polish pass 143
+
+No change to the show. A finding that needs real Safari: **in WebKit the online music stops at the hand-over, 126.5 s, and the show waits there for good.** Played online in Playwright's WebKit 26.6 and read through both players as in pass 130, Cornfield Chase plays heard and No Time for Caution runs early, muted, in step. At its entry, the moment it is made heard, WebKit pauses it (state 2). Cornfield Chase ends at 126.95. The show stands at 126.51 under "Waiting for the music…", with no Sound button, for as long as it was watched. It is not pass 133's doing: the player from before it, which ran the cue early unmuted at volume 0, stops the same way when the volume rises. Two things were tried and neither worked:
+- Starting it again when it is paused within 1.5 s of being made heard. The fresh play is refused too.
+- Not running it early at all, only warming it and starting it at its entry. Refused as well.
+
+Seeking straight to 200 s, No Time for Caution does play heard. The difference is when it starts, not how: a play started inside a viewer's action (Playwright runs its scripted calls as a user gesture) is allowed, and one the player starts on its own timer two minutes later is not. WebKit asks for a gesture before media plays with sound. A gesture early in the show does not reach a second YouTube frame told to play much later.
+
+Whether real Safari does the same cannot be settled here. Playwright's WebKit is not Safari, and how it counts gestures through YouTube's frames may differ. If Safari does, a fix would have to win the second cue's permission at the viewer's own press (play it heard, briefly, inside that gesture) or hand the music over within one player. Neither is to be guessed at blind in the shared player, so the attempts were taken back out. The pull request's test plan now asks for the hand-over to be watched in Safari.
+
+## Polish pass 142
+
+No change to the show: other browsers. Every audit was in Chromium. The one canvas feature in the show's own drawing that browsers came to late is Saturn's `createConicGradient` (`act2/undock.ts`; Safari 16.1, Firefox 112). `words.ts`'s `filter` and `letterSpacing` are used only in a saved video. In WebKit 26.6 (Safari's engine), 14 moments across the show (8 to 275 s, 960×540) match Chromium's: mean difference 0.3 to 0.8 of 255, at most 0.12% of pixels off by more than 40 (edges), Saturn's conic gradient included, with no page errors. Firefox was not tried. The copy installed is older than this Playwright can drive (it timed out at launch), and fetching a newer one was left to the person whose machine it is.
+
+## Polish pass 141
+
+No change to the show: high-density screens. Every audit ran at a device pixel ratio of 1, and phones draw at 2 or 3, where anything sized in pixels could come out differently (the 0.8 px floors, the stars, pass 126's off-canvas test, the credits' own transform). The live canvas does take the device's ratio (390×844 at 3 is a 1170×1368 canvas). Read back at ratio 3 and scaled to CSS size, it matches ratio 1 at 13 moments, including five under the credits: mean difference 0.5 to 1.5 of 255, no pixel off by more than 60. Floors and star sizes are in CSS pixels through p5's scaled context. `offCanvas` measures through the full transform against the canvas's device size. The credits' `setTransform` keeps the context's scale, which carries the ratio. A Retina screen or a phone sees the same picture, sharper.
+
+## Polish pass 140
+
+No change to the show: whether a viewer's GPU draws the picture these passes have audited. Every frame checked so far came from the software-drawn headless shell, and GPU and software rasterisers can differ (gradient precision, blending, anti-aliasing). The live canvas was read back at 13 moments across all four worlds (20 to 285 s, 1280×720), in GPU Chrome (pass 129's) and in the shell. The mean difference is 0.4 to 0.7 of 255, and at most 0.12% of pixels differ by more than 40 (98 s, edges). It is anti-aliasing, not a different picture, so what has been audited is what a GPU shows.
+
+## Polish pass 139
+
+No change to the show: the held sound in Theater (`/theater/`), which is always a named visit and shuffles every show, under the refusing policy of passes 136 to 138. Six visits landed on Merry-Go-Round, Mountain King, Gymnopédie, Nature of Daylight, Boléro and Relax, from YouTube and from files. Each was playing muted with the sound held and the Sound button up. On Merry-Go-Round, a refused Space was held again, with "Waiting for the music…" between, as on Voyage. One more visit had not reached the hold within 30 s on the loaded machine. Five more all did, so it was the load. As in pass 136, held YouTube shows advance slowly in this headless set-up (about 1.9 s in 8) and file shows at speed.
+
+## Polish pass 138
+
+No change to the show: what the viewer sees in the two seconds after a refused tap, before the sound is held again (passes 136 and 137). Read every quarter-second after Space under the refusing policy, the picture stands, and from about 0.5 s the stage says "Waiting for the music…", with its Reload button, as for any stall (pass 89). At about 2.5 s the hold returns, the note goes, the Sound button is back and the picture runs on muted. It is a short wait, and the note says what is happening, so it is left.
+
+## Polish pass 137
+
+- **The M key still left the show silent with nothing to press.** Pass 136's `soundIn` was tried only by the stage's Sound button. Under the same refusing policy every other way in was tried: Space, M, a tap on the picture, and the panel's music button, closed on a link visit, so not reachable there. Space and a tap are held again once the player has given up on the play (about 2 s into the show, the picture waiting meanwhile), with the Sound button back. M was not. With the sound held, the gesture listener lets M through to the key handler, since the music control unmutes for itself, and the key handler's own copy of the bring-it-in code ignored the result: held false, music paused, picture running on, no button. Pass 136 had missed it as a fourth copy. It now calls `soundIn` too, and is held again like the rest. The check counts all four callers, and fails on the old key handler.
+
+## Polish pass 136
+
+- **A refused tap on the Sound button left the show silent with nothing to press.** Pass 135 could not hold the sound on demand. With `--autoplay-policy=user-gesture-required` it holds every time, and then the tap could be tried. That policy wants the gesture inside each frame, so a tap on the page does not count for YouTube's cross-origin frame, which is close to how iOS Safari can behave. The tap released the hold, unmuted, and asked the music to play. YouTube refused and paused, and nothing listened for the refusal. The Sound button was gone, the music state said ready, unmuted, and both videos sat paused while the picture ran on silent, with no button and no note, for as long as it was watched. The three places that bring a held sound in all started the music without looking at the result: a gesture anywhere, the stage's Sound button, and the panel's music button. They are now one `soundIn` (`shows/player.ts`). If the play comes back blocked, the sound is held again, as `playLinked` holds it: muted, the music going on under the picture, the Sound button back. Tried again, a refused tap is held again within half a second, the music runs in step muted (120.16 against 120.22), and the hand-over runs under it. A tap that is allowed does what it did. A new check holds it, and fails against the old player.
+- Under that policy, held playback ran at about a third of real time. The YouTube video itself advanced 1.6 s in 5 s while reporting playing at rate 1, and the show followed it, as it should. Under the default policy it is 1:1 at the same moment. It is this headless set-up's muted playback, not the show, but a refused visit on a real phone is still worth watching by hand.
+
+## Polish pass 135
+
+No change to the show: the named link online (`/shows/interstellar/opus55`), where a browser that refuses sound has the picture play on with the sound held and a Sound button to tap. With `--autoplay-policy=document-user-activation-required`, Chrome for Testing refused once: playing, muted, sound held, from YouTube, as passes 101 and 102 describe. In four later runs it let the sound through, so the held state could not be made to happen on demand here. That is Chrome's autoplay judgement, not the show. What could be checked: in every run the next cue's early start was muted (`MUTED`, volume 0) under Cornfield Chase heard at 100, through pass 133's fix. Tapping Sound releases the hold through the same `setMuted(false)` that pass 133 tried during an early start, where the early cue stayed muted until its entry. A refused visit on a real phone is still worth a look by hand.
+
+## Polish pass 134
+
+No change to the show: pass 133's fix to the shared YouTube player, tried on the one other show with a second YouTube cue, Epilogue (`la-la-land/sebs`, `PMbrnvyLTdg` at 464 s, from its video's start). Its second cue never runs early (there is nothing before its first second), but it warms 45 s ahead. With the fix, the warm at 419 s plays muted at volume 0 for about 1.5 s and parks, and at 464.02 s it comes in heard at 100 (its cue has no fade). With the old player, the warm stayed at volume 0 unmuted through its short run, and YouTube did not raise it in that time. So Epilogue was not heard early before, and for it the fix only guards against it. The rise to 5 came during Voyage's eight-second early run.
+
+## Polish pass 133
+
+- **Online, No Time for Caution was heard early, faintly, under Cornfield Chase, for eight seconds.** The whole show was played online start to finish in real time (pass 130's GPU Chrome, both players read every 2 s). It ran in step throughout: worst offset 0.001 s, no stall note, no console errors, and it stopped at 291 s with the music silent under the credits. One sample showed the second video already playing at volume 5 at 121.7 s. Read every 50 ms, it was running early (the player's `PREROLL`, so it is moving when it comes in), unmuted, at volume 5 from 118.5 s to its entry at 126.5 s: the last eight seconds before its cue point (95.76 to 103.76 of the upload) under the end of Cornfield Chase, at about −26 dB. The cause is in the shared YouTube player (`shows/youtube.ts`). An early cue was started with `unMute()` and volume 0, and YouTube puts an unmuted player at 0 up to 5 on its own, at the first buffering after. `setVolume` sends only changes, so the 0 was never sent again. Pass 130's half-second samples had happened to land on 0. A cue running early or warming is now muted (`hush`), and unmuted at its entry, where the fade-in takes it up from 1. The viewer's mute is still followed before and after. Read again, the early run is muted at volume 0 from start to entry, the hand-over fades as before, and seek, pause, resume, 2×, 0.5× and the viewer's mute all behave. A new check holds it, and fails against the old player. This is in the shared player, so every YouTube show with a second cue is quieter for it. Voyage was the one with a cue that runs early.
+
+## Polish pass 132
+
+No change to the show: the online music at the player's other speeds, read as in passes 130 and 131. At 2× and at 0.5× YouTube follows (`getPlaybackRate` 2 and 0.5) and the active video stays in step to the hundredth, through steady play and through the hand-over at both speeds. Two small things, neither heard:
+- A change of speed sets the waiting second video going for a moment, muted (volume 0) and from wherever it was cued, before it pauses again.
+- At 2× Cornfield Chase pauses at 126.60 of its video rather than 126.96, but its fade has already brought it to volume 3, so nothing is cut off.
+
+## Polish pass 131
+
+No change to the show: the online music under a viewer's hands, read through both embedded players as in pass 130.
+- Played from 0, the show holds at 0.00 while Cornfield Chase buffers, then runs with it, the video's position equal to the show's to the hundredth.
+- Seeking. Mid-show to 200 s, the active video is No Time for Caution, at 177.26 (200 − 126.5 + 103.76) within 0.3 s and in step from then on, and Cornfield Chase pauses. Back to 60 s, Cornfield Chase picks up at 60.18 and the other pauses. Into the crossfade at 126.3 s, both are heard at their fade levels (48 and 1) and the second is in step within 0.7 s.
+- Paused, both stop and hold. Resumed, it is back in step within a second (63.48 against 63.53 at 0.3 s, then equal).
+
+The online path behaves for play, seek, pause and resume, at the start, in the middle and across the hand-over.
+
+## Polish pass 130
+
+No change to the show: the online music, played for the first time rather than checked by its numbers. Full Chrome for Testing (pass 129's) plays YouTube embeds headless, which the headless shell cannot. The show was played online (`/shows/`, no `?music=file`), and both embedded players were read every half-second through `YT.get` (video, position, state, volume), against the show's clock. The show's own `report()` is circular here: the clock follows it.
+- Opened online, the music is ready from YouTube with no fallback.
+- The hand-over. No Time for Caution (`kpK4cDk2bRs`) rolls silently at volume 0 from about 123 s, so it is playing by its cue. Cornfield Chase fades 96, 48, 7 from 126.0 to 127.0 s and pauses at 126.96 of its video, against a cue end of 126.984. No Time for Caution comes up 1, 47, 98, 100 from 126.5 to 128 s, the mix script's one-second fades crossing.
+- In step. After the hand-over the second video is where the cue puts it: at show time 130.00 s it is at 107.26 s, 103.76 + (130 − 126.5), to the hundredth.
+- The end. It stops at 240.01 s into the video, show time 262.75, against `MIX_END` 262.741, and stays paused under the credits. This confirms pass 103 by measurement.
+
+Whether it sounds right still needs an ear, as the pull request's test plan asks. That the right recordings play at the right places, and stop where they should, is now measured.
+
+## Polish pass 129
+
+No change to the show: pass 128's question, whether the tesseract and Edmunds' dawn are slow for a viewer or only for the test browser. The same live measurement (1280×800, 1.5 s of play) was run in full Chrome for Testing with GPU canvas (`--use-angle=metal --enable-gpu --enable-gpu-rasterization`), alternated twice with the software-only headless shell under the same load:
+
+| | 30 s (farm) | 122 s | 124 s | 260 s |
+| --- | --- | --- | --- | --- |
+| GPU Chrome | 58 to 60 fps | 59 to 65 | 58 to 60 | 61 to 62 |
+| software shell | 60 | 34 to 38 | 26 to 47 | 43 to 54 |
+
+With a GPU the whole show holds 60 frames a second. The slow scenes were the software rasteriser drawing large gradients, as pass 128 found. `chrome://gpu` could not be read in headless mode to show the GPU in use, but the difference between the two browsers is the evidence.
+
+## Polish pass 128
+
+No change to the show: the live frame rate, measured with the machine quieter. Played in the player at 1280×800, the farm (30 s) and the station (168 s) hold 60 frames a second. The tesseract (122 and 124 s) runs at 23 to 26 and Edmunds at dawn (260 s) at 39. The fill count does not explain it: 122 s makes about 1,100 fills, the station's wide shot 2,500. A CPU profile of the live player does. At 122 and 260 s, 89 to 93% of the time is Chrome's own work ("(program)": rasterising and compositing), and the show's JavaScript is about 1%. These scenes are made of large soft gradients and translucent fills (the tesseract's lamplit rooms and glows, the dawn sky), and this headless browser draws the canvas in software, with no GPU. A browser with GPU canvas acceleration draws gradients cheaply, so this measures the test machine, not a viewer's. Making it cheaper here would mean fewer or smaller glows, a change to the picture, so it is left, noted.
+
+## Polish pass 127
+
+No change to the show: the rest of the fill count. After pass 126 the heaviest normal frames are the station's wide shots (134 to 136 s and 166 to 172 s), about 2,500 fills, three times the median. That is mostly `standOnRim`, the props standing round the ring, and the camera has the whole ring in the frame there, so they are in the frame too. Nothing is drawn there for nothing, so it is left. Overview still makes 6,000 to 17,000 fills a frame because it shows the whole world at once, and every piece of it is on the canvas. Making it lighter would mean drawing less of it, so it is left too. Live frame rates could not be measured fairly this pass: other jobs were loading the machine enough that a 1,100-fill frame ran at 17 fps.
+
+## Polish pass 126
+
+Pass 125's count of canvas fills, run over the whole show in the normal view (1280×720, every 2 s), found one frame far heavier than the rest. The median is 871 fills a frame, and the next heaviest is about 2,570 (the station's clouds). At 124 s, the fall out of the tesseract, it is 11,008, and it stays near 11,000 from 123.5 to 125 s. Almost all of it is `miniCase`: the bookcases of the lattice going on every way, a couple of hundred of them, each about forty fills (its glow, the case, ten books, 21 dividers, its frame). They were drawn whether or not they were in the frame. Now a case whose box, glow and all, lands wholly off the canvas (`offCanvas`, through the canvas's current transform) is not drawn. That halves the heaviest frame, 11,008 to 5,672 at 124 s, and takes 123.5 s from about 6,100 to 995. During the pull-back (124.5 s) most of the cases are really in the frame and it stays near 8,700. Drawing them more simply would change the picture, so it is left. Every quarter-second from 115 to 128 s, at 960×540, 390×844, 2560×1080, Zoom and Overview, is pixel for pixel what it was.
+
+## Polish pass 125
+
+Overview from Saturn to the end ran at 3 to 9 frames a second against about 60 everywhere else (measured live in the player at 1280×800). A count of canvas fills per frame found why. At 260 s Overview made 33,869 fills, 24,964 of them `space/sky.ts`'s stars, the whole space world's starfield laid at 4 to 7 px a cell. A normal frame there makes 405. Pass 108 had let the stars go below 3 px a cell, judging by the widest shot in the show, near 4 px on a 320 px phone. These two skies are never drawn that far out. Measured over every second of the show, Zoom's widest shot of them on a 320 px phone is 25 px a cell (space) and 34 (Edmunds), so the normal view's is 17 and 23. Both skies now let their stars go between 10 and 14 px a cell, and Edmunds' skips its loop once nothing would be drawn, as `space/sky.ts`'s already did.
+
+After the change, Overview at 260 s makes 6,072 fills and at 222 s 1,442. Painted in a loop with the before and after timed alternately under the same load, a frame from 222 s on fell from about 140 ms to 12 to 74 ms. The rest is Edmunds' ground, its stones and craters laid across the whole world, which is left. Every 2 s from 88 s to the end, normal at 960×540, 390×844 and 320×568 and Zoom at 390×844, is pixel for pixel what it was. Overview's Saturn and Edmunds now have a clean dark sky at every screen size up to about 2000 px wide.
+
+## Polish pass 124
+
+No change to the show: pass 123's frame-against-frame scan in Zoom, at 30 frames a second (9,000 frames). Zoom frames the show more closely and slides to keep a focus in shot, so it could pop where the show's own frame does not. Only three things jump:
+- 84.5 to 84.7 s: the launch's shudder as the engines light, a pixel's shake on a tenth-second rhythm;
+- 120.73 s: the ghost's glow pulsing at the watch in the tesseract;
+- 207.47 s: the cut.
+
+All three are meant.
+
+## Polish pass 123
+
+No change to the show: the whole show at 60 frames a second, every frame against the next (18,000 of them, 320×180, the share of pixels changing by more than 40 of 255). It looked for frames that change more than three times as much as the frames either side of them. Each one it found is meant:
+- the bedroom, 6 to 11 s: books falling on the shelf;
+- the launch, 71 to 86 s: the lamps and the smoke;
+- 127.5 to 127.65 s: Act II's lamps striking. The mean brightness goes 83 to 151 over 0.05 s, dips to 118 for two frames as one lamp catches late (`act2/replica.ts`, `duskAt`), and comes back. That is a single flash, under WCAG's three a second;
+- 207.48 s: a cut;
+- 217.48, 219.48, 221.48, 228.48 and 246.48 s, on the beat: the Ranger's main engine lighting in one frame, as ignition does.
+
+Nothing else in the show changes from one frame to the next by more than its neighbours do. The scan script renders each frame once and writes every 10 s of show, after a first try that rendered each frame twice and wrote only at the end stalled for 30 minutes.
+
+## Polish pass 122
+
+No change to the show.
+- The corn that passes 112 and 114 reshaped, 28 to 55 s, frame by frame at 60 frames a second (`window.shows.still` at 320×180, the share of pixels changing by more than 40 of 255 from one frame to the next). No frame changes more than three times as much as the frames either side of it, so nothing pops. The largest changes, 53.4 to 53.6 s (18% a frame), are a steady run, the camera dropping over the dam with the truck, not a jump.
+- The Ranger's thruster puffs at 213 s, up close at 1920×1080. They are soft round clouds that drift and thin out over about 0.4 s, and they read as gas, so they are left.
+
+## Polish pass 121
+
+No change to the show: Saturn, 214 to 230.5 s every 1.5 s, and the undocking, 212.5 to 215 s every half-second, at 1280×720. The faint grey discs above and below the Ranger's tail at 213 to 214 s are its thrusters' puffs thinning after each pulse, not a fault. The probes, the planet's limb, the rings and the sphere at 230 s all read.
+
+## Polish pass 120
+
+No change to the show: the landing at the camp, 248 to 253.5 s in half-seconds, and the canopy's opening at 252 s in twentieths, at 1280×720. The spent drogue drifts up out of the top of the frame. The Ranger comes down on its jets, its legs out, with dust under it, and sets down. The canopy hinges back over about 0.35 s rather than jumping open, and Cooper is up in the seat as it clears.
+
+## Polish pass 119
+
+No change to the show. Two checks off the frame:
+- The two YouTube uploads the show plays online (`JuSsvM8B4Jc`, `kpK4cDk2bRs`) are still up and still allow embedding. YouTube's oEmbed answers 200 for both, from WaterTower Music, the soundtrack's own label, so the online music is not about to go dark.
+- Reduced motion. The site honours `prefers-reduced-motion` in its own interface (`src/ui/styles.css`) but not in shows, and Voyage has fast camera moves (the whip at 235 s, the swing past Gargantua). A show plays only when it is asked to, and slowing its camera would change the film for everyone who asked for less motion. That is a decision for all shows, not this one, so it is left, noted.
+
+## Polish pass 118
+
+No change to the show: an upright tablet (768×900, about 3:4 under the player's bar), the one common screen shape between the phone and the desktop not yet swept. Every 6 s, nothing is lost. The extra height goes to sky and ground, as on the phone. The near-empty frames are the ones already known to be meant: the whip's landing at 236 s and the long fall.
+
+## Polish pass 117
+
+No change to the show: a search of the code for pass 108's fault, a floor in screen pixels (`Math.max(0.8, …)`) set inside a `scale()` that changes, and so scaled with it. Besides Gargantua over Edmunds (fixed in 108), three blocks have one:
+- The lattice folding away (`drawLattice`'s `fold`, 1 down to 0.2). It only shrinks, so its floors only get thinner as it goes, which is right.
+- The rooms going past in the tesseract (`sc`, `space/gargantua.ts`). Their lattice and ring widths are divided by `sc` to keep a width on the screen, but their floors (0.7 and 1 px) are not. Where a floor binds (small screens), a room's lines thicken as it comes near.
+- `drawCaseBack`'s 1 px floor, drawn inside the same scale.
+
+On an upright phone, frame by frame from 119 to 121 s, the near rooms' lines stay faint and fine, and the thickening reads as nearness. So it is left, noted.
+
+## Polish pass 116
+
+No change to the show: the pull request's pictures. Its before/after table was last drawn at 5b347875, 50 commits back. Every row was redrawn at this branch's head with the same tools and sizes and compared pixel for pixel. Four had changed:
+- the pull-back (261.6 s), the last frame (290 s) and the phone frame of the camp (259 s): Gargantua's rim, since pass 108 (at 400 px wide the old 0.8 px floor was scaled up there too);
+- across the axis (171 s): the ball's streak halo.
+
+The table's After column is now this branch's head. The share card (`public/shows/interstellar/opus55.png`, 240.4 s) was redrawn too and is identical to the one committed.
+
+## Polish pass 115
+
+No change to the show. Passes 112 and 114's corn, every 2 s from 28 to 54 s, on an upright phone (390×844) and in Zoom, where pass 112 had looked only at 1280×720. On the phone the wall's start reads as a low rise of the field behind the truck, and in Zoom as the field coming up. At the dam, in both, the two walls drop together without crossing. The bedroom (6 to 15 s) and the camp under the credits (258 to 299 s) were also looked at frame by frame at 1280×720, the last stretches no pass had seen that way. Both are clean.
+
+## Polish pass 114
+
+Pass 112's corn made a fault of its own, at the far end. The tall wall fell to the dam over 2.6 cells, but the shorter green wall in front still fell over 1.2. From 51 to 53 s the tall wall's top came down beside the green one's, a cell or less away, and crossed it: a doubled, scribbled edge just behind the cab. Pass 112 looked at 53 s, where the cab hides most of it, and missed it. `cornWall`'s `rise` now takes one length for each end. The tall wall comes up over 2.6 cells, as pass 112 made it, and ends over 1.2, as both walls did before, so at the dam the two drop together, the tall one behind. The rise at 30 s is unchanged.
+
+## Polish pass 113
+
+No change to the show: the rest of it at 1280×720, frame by frame, the way pass 112 found the cliff of corn. That covered the combine to the launch (55 to 87 s), the station (131 to 163 s), the far-side house to the Ranger's release (177 to 209 s), and Saturn to the camp (213 to 256 s). Two things looked like faults and are not:
+- The thin white bar beside the Ranger at 244 s is the drogue's hatch cover, thrown off as the chute comes out (243.5 s). It tumbles away left.
+- The rounded shapes along the horizon at 245 s are the mesas' flared talus (`act2/edmunds.ts`), not the sky band's edge.
+
+## Polish pass 112
+
+The tall corn across the road from the truck (29 to 54 s) began with a cliff. A field wall's ends come up out of nothing over 1.2 cells (`cornWall`'s taper), which is a gentle swell on the channel's 1.55-cell corn. On the truck's far wall, 2.6 cells tall, it was a slope of about 65°: a slanted cut edge standing behind the truck like a cardboard flat as it rolls in, and the same drop at the dam behind the cab. `cornWall` now takes the length of that rise (`rise`, 1.2 as before by default), and the tall wall rises over its own height, 2.6 cells. It now reads as a field coming up from the ground, and at the dam it falls away behind the cab. Every other wall is untouched, and the share card (240.4 s) is on Edmunds' planet.
+
+## Polish pass 111
+
+No change to the show: Overview on a desktop, swept whole for the first time since pass 108 changed its skies. The farm, the station and the camp read. Saturn's sky keeps its stars at this size, as it should, since a cell is over 3 px. Three more drawings are made to the camera and show it here:
+- Miller's sea, from 104 to 112 s. Its horizon is at the eye, so the world under it is an empty blue-grey.
+- The tesseract at 122 s, a small cross alone in the dark.
+- At 236 s, the far side opening through the sphere at the end of the whip. It is sized to fill the camera's frame, so in Overview it grows over Saturn.
+
+Each lasts only as long as its scene. As in pass 107, they are left, noted. Overview is for the layout, and giving these an Overview of their own would mean redrawing them.
+
+## Polish pass 110
+
+No change to the show. Three looks not taken before:
+- The whole show on a short, wide canvas (844×340, a landscape phone under the player's bar). Nothing is lost. Gargantua over Edmunds' planet sits lower in the sky, near the horizon, since it keeps its share of a shorter frame, but stays clear of the mesas.
+- The ball's long fall (168 to 172 s) on an upright phone. The whole station is in the frame and the ball's streak reads.
+- Miller's planet and the swing past Gargantua (100 to 115 s) at full size. Gargantua comes in from the top right with the pan rather than appearing, and the ring fades as it should.
+
+## Polish pass 109
+
+No change to the show. This pass audited it fresh, normal and Zoom, every 6 s, and took a closer look at four places that stood out on a contact sheet. Each holds up:
+- the gathered stars in the sky under the credits (266 to 296 s), which are the credits' own starlight (`credits.ts`), each card formed out of them;
+- the empty land at 236 s, the far side's sky held for about 0.2 s at the end of the whip before the far mouth slides in from the right, whole and without a pop;
+- the sky with only the ball in it from 169 to 172 s, which is the long fall to the house, the empty frame being the distance;
+- the fade up on the bedroom over the first seconds.
+
+The characters' colours were checked for colour-blind viewers. The pairs that share a scene differ in luminance or along the blue–yellow axis that red–green colour blindness keeps: Cooper's sand and Brand's blue at 4.3:1, Brand's and old Murph's slate at 2.0:1.
+
+## Polish pass 108
+
+Pass 107's two Overview faults on an upright phone, found cheaper than it feared. Gargantua's pale disc was one line: the white rim round the dark had a floor of 0.8 px set inside the scaling that keeps Gargantua's size on the screen (`far`), so the floor was scaled too. On an upright phone that made the rim about 2.8 px. In Overview it made a ring wide enough to cover the dark. The floor is now 0.8 px on the screen (`0.8 / far`). The speckle was the stars: each is a few pixels at any scale, laid on a grid of world cells, so in Overview, at about 2 px a cell, they packed solid. Both skies (`space/sky.ts`, `act2/edmunds.ts`) now let their stars go below 3 px a cell. The widest real shot on a 320 px phone is near 4. A sweep of the whole show, normal at 960×540, 390×844 and 320×568 and Zoom at 390×844, is pixel for pixel what it was. The one change outside Overview is the rim on an upright phone, now about 1.3 px, in proportion as it is on a desktop.
+
+## Polish pass 107
+
+No change to the show: Overview on an upright phone, the one pairing of view and screen not swept before. The farm, the dark and the station read. On Edmunds' planet, from 243 s to the end, Gargantua shows as a large pale disc with a gold line across it, and the sky past Saturn (215 to 229 s) as a dense speckle of stars. Both skies are drawn to the camera, not the world: the horizon at the eye's height, Gargantua at a share of the frame (`act2/edmunds.ts`, "drawn to a 6.8-cell frame"), the stars filling whatever frame there is. That is what makes the landing and the camp right in every real view. Overview frames the whole world with no eye in it, so these skies have nothing to stand on. Giving them an Overview of their own would mean rebuilding how those scenes are drawn, for a view meant to show the machine's layout, so it is left, noted.
+
+## Polish pass 106
+
+No change to the show. The pull request's description now names pass 103's change to the music online and pass 102's exception for the Sound button. Its test plan asks a reviewer to listen to the music's end, the one change made by numbers alone, since audio could not be heard here.
+
+## Polish pass 105
+
+No change to the show: whether pass 103's fault (an online cue with no end, playing past what its mix trims) is in any other show. It is not. Every other YouTube show plays one upload whole, with nothing trimmed, so running to the video's end is right. The one other show with a mix script and a second cue, Epilogue's Seb's take (`la-la-land/sebs`), plays its second recording whole too: `sebs-mix.sh` delays it to 464 s with no trim, as its cue does. Voyage was alone in trimming a recording its cue played whole.
+
+## Polish pass 104
+
+No change to the show. The online cues' fades were checked against the mix's, and they match. Cornfield Chase fades out over the second before its 126.984 s end, as the mix fades it from 125.98 s for 1.0 s. No Time for Caution fades in over its first second, as the mix fades it in from its trim's start for 1.0 s. Pass 81's check now holds the fades to the mix as well as the start, place and end, so the cues match the mix in every number the mix sets. Halving the fade-in made it fail.
+
+## Polish pass 103
+
+- **Online, the music now ends where the mix does.** Watching the stall note across the music's end, the music heard ran on past it. No Time for Caution's upload is 246.28 s long, and the mix the show was timed to cuts it at 240 s, at 262.74 s of the show. The YouTube cue had no `until`, so online the upload's last 6.28 s played into the credits, 262.74 to 269.0 s, which are meant to run in silence. The cue now ends at `MIX_END` with a hard cut, as the mix does (`liftoff/index.ts`). The music heard stops at 262.78 s, and the clock runs on through the credits with no stall note. Pass 81's check holds this end to the mix's trim too, and fails without it.
+
+## Polish pass 102
+
+- **The stall note no longer covers the Sound button.** Pass 101's numbers showed that on a browser refusing sound, which is most phones on a link, the picture waits a few seconds at the start while the player learns it is refused and retries muted. In that wait pass 89's note said "Waiting for the music…", and once the sound was held it was drawn right over the stage's yellow Sound button, the one thing the viewer had to tap. It now gives way while the sound is held (`shows/player.ts`): before the refusal is known it says it is waiting, which is true, and from then the Sound button stands alone. The guard holds the exception, and fails without it.
+
+## Polish pass 101
+
+No change to the show: pass 100's proposed fix tested and withdrawn. Under Chrome's gesture-required autoplay policies the browser really did refuse the sound (the player fell back to playing muted with the sound held). The refused unmuted attempt reported the same states as a slow link: cued, unstarted, buffering, unstarted within a few milliseconds, then unstarted until the muted retry played at about 4 s. A refused embed blips through buffering too. So "count any buffering since the play" would take real refusals for a slow link, and before `PATIENCE` the two cannot be told apart by the deck's state. The only lever is a longer `PATIENCE`, which would make every real refusal, the common case, wait longer before falling back. The finding stays as it is, noted.
+
+## Polish pass 100
+
+No change to the show: evidence for pass 95's open finding, a slow start taken for an autoplay block. The YouTube decks' own state reports (their `infoDelivery` messages to the page) were logged through a throttled seek into No Time for Caution. Within 70 ms of the play, its deck went unstarted, buffering, unstarted. It then sat unstarted until 2.44 s, buffered, and was playing at 2.51 s. `PATIENCE` in `shows/youtube.ts` is 2.5 s, and at that moment it asks only whether the deck is buffering now. So on a slow link the outcome is a race decided by tens of milliseconds: this run started, pass 95's identical one was called refused.
+
+A possible fix, for whoever next works on `youtube.ts` (tested in pass 101 and withdrawn): count a deck as slow, not refused, if it has reported buffering at any time since the play began, not only at the moment of the check. It is not made here, because it is unknown whether an embed the browser really refuses also blips through buffering. If it does, this would hide real autoplay blocks, which are the common case. That wants a test on real phones with autoplay refused.
+
+## Polish pass 99
+
+No change to the show. This bible now has about a hundred dated passes, each renumbered by hand: the old one's "latest" marker taken off, the new one put on top. Read through, they ran newest first, 98 down to 3, with no gap, no repeat and one marked latest. `check:shows` now holds them to that, so a slip in the record (two marked latest, a number missed) fails the build.
+
+## Polish pass 98
+
+No change to the show: leaving the tab and coming back, as a phone does. The page was frozen for 6 s mid-show (Chrome's page lifecycle, `frozen` then `active`). YouTube's player, in its own frame, played on through it. On return the picture was where the music was from the first frame back (148.07 s and 148.07 s), stayed in step after, and the stall note did not show.
+
+## Polish pass 97
+
+No change to the show: the stall note while a video is saved. A recording plays the show through on a frame of its own, and the player's transport stays paused the whole time, so the stage's "Waiting for the music…" does not show over it, nor after it is stopped. Started from the panel's Save video, watched for 4 s, stopped.
+
+## Polish pass 96
+
+No change to the show: whether the stall note could show while a viewer holds the scrubber still, which would blame the music for the viewer's own hand. It cannot. Any move of the scrubber pauses the show first (`pause()` in its input handler), so it is not playing. A press on the handle without a move pins nothing, and the show plays on with its clock moving. The arrow keys pause as well.
+
+## Polish pass 95
+
+No change to the show: Voyage on a slow link (400 ms latency, 1.6 Mbps), opened fresh from the production build, and its stage watched from the first moment. It loads in about 4 s and plays. When the music falls behind, the clock holds and the stage says "Waiting for the music…", as pass 89 meant. Two findings are left as they are:
+
+- **A slow start reads as an autoplay block.** Seeking into a part of No Time for Caution not yet fetched, with the link throttled, the YouTube deck was still unstarted (not yet "buffering") after `PATIENCE` (2.5 s, `shows/youtube.ts`). The player took that as the browser refusing to play, stopped, and asked for a press. On a slow link that is the wrong reason. But it is the shared player's judgement of real autoplay blocks, which are far more common, and the test is DevTools throttling with a scripted play, not a phone on a bad signal. It is noted here for whoever next works on `youtube.ts`.
+- **Stutter.** On the slowest stretches the clock moved in short bursts, each pause under 1.5 s, so no note showed while the picture jerked. Holding the note until the music ran steadily for a second was tried. It was taken out because it could not be shown to change what was seen.
+
+## Polish pass 94
+
+No change to the show: the stall note at a show's first play, which pass 93 did not reach (its shows were already warm). The stage note was recorded every 0.1 s. Opening Voyage fresh, it said "Loading Voyage…" for 0.2 s and then nothing, the clock starting at once. In Theater, from the end of Gymnopédie into the next show, it said "Loading Kick…" for 0.2 s and then nothing. On a slow connection, where YouTube took over 1.5 s to start, it would say "Waiting for the music…", which would be true.
+
+## Polish pass 93
+
+No change to the show: pass 89's stall note, which is every show's, tried on all of them. Each of the 21 takes in the picker played 10 s from 5 s (16 from YouTube, 5 from a file). The "Waiting for the music…" note never showed, and each clock ran on to about 14.5 s. No take gives a false stall.
+
+## Polish pass 92
+
+No change to the show. The pull request's description lists pass 89's stall note among the changes to shared code (it is every show's), and has a short performance note from passes 84 to 88. Its images and the rest are kept.
+
+## Polish pass 91
+
+No change to the show: pass 89's note looked at, during a simulated drop on desktop and on an upright phone. It is the stage note's small dark pill, low and centred, and reads over the pale station and the dark sky alike. It covers a little of the picture, but only while the picture is frozen anyway. On the farm (a seek to 40 s) it did not show, rightly: that stretch was already buffered, and the music played on through the cut.
+
+## Polish pass 90
+
+No change to the show. Pass 89's guard shown to fail: with the stall left out of the stage note's condition, `check:shows` fails, and the file was restored. One case was not tested there: a browser holding the sound on a deep link until a tap. Headless Chrome lets the muted player autoplay even under a gesture-required policy, so it could not be reproduced. `playLinked` in `shows/player.ts` keeps the picture going while the sound is held, with the music muted or on the wall clock, so the clock moves and the "waiting" note cannot show over the tap prompt.
+
+## Polish pass 89
+
+- **A stall says so.** The connection was cut mid-show, the way a phone loses signal, by blocking YouTube's video servers after a seek. The player did the right thing for time: the music is the clock, so the picture held at 150 s with the music and resumed with it, in step, when the connection came back. But for those seconds the stage was a frozen frame with nothing on it, which reads as broken. Now, when a show is playing and its clock has not moved for 1.5 s, the stage's own note (the one that says a show is loading) says "Waiting for the music…" until it moves again (`shows/player.ts`, for every show and either source). Fifteen seconds of normal play never showed it, and nor did a pause. `check:shows` guards it.
+
+## Polish pass 88
+
+No change to the show: what it costs to load. Everything heavy is behind `load()`, so the show's code arrives as its own chunk when it is opened. In the production build that chunk is 354 KB, 134 KB gzipped, in the middle of the shows' chunks (the largest is 197 KB gzipped). This round grew it by 3 KB gzipped (2%) over `main`: the kitchen, Saturn's weather, the halos.
+
+## Polish pass 87
+
+No change to the show: memory over a long session (Theater plays shows back to back, and a page can stay open). The whole show was painted five times over at 30 fps, and the JS heap measured after each pass with garbage collected first: 18.8 MB at the start, then 25.7, 26.9, 27.1, 26.6 and 26.9 MB. About 8 MB is warmed up once, and after that it holds level and moves both ways. Nothing leaks.
+
+## Polish pass 86
+
+No change to the show: the whole show CPU-profiled at phone size, after passes 84 and 85 each found colour parsing in a per-frame loop. About 90% of the time is the canvas's own work: fill 41%, stroke 39%, then save and restore and the transforms. The show's script barely shows. Colour parsing is now about 1.5% in all, and no single function of its own reaches 1%. There is nothing left there worth the risk of a change.
+
+## Polish pass 85
+
+- **The fall's gold threads build their gradients from a precomputed RGB** (`space/gargantua.ts`), as pass 84 did the halo. Sixteen a frame, each parsing two p5 colours. At phone size the fall out of the tesseract goes from 7.85 to 7.35 ms at the median and 13.0 to 10.9 ms at worst. The frame is pixel for pixel the same.
+- **Where the rest of the fall's time goes.** A CPU profile at phone size puts two thirds of it in the canvas filling large shapes, and 14% in stroking: rasterizing the rooms, the dark and the vignette over a 1170 × 2532 canvas, not the show's own script. The headless browser used here rasterizes in software, and a phone's browser draws canvas on the GPU, so this overstates it. Cutting it would mean redrawing the tesseract in fewer, smaller layers: a large change for an uncertain gain, so it is left.
+
+## Polish pass 84
+
+- **What the show costs a phone.** Pass 12's render-cost audit was at 1280 × 720; an upright phone draws 1170 × 2532. There, `paintShow` takes 1.9 ms at the median and 99% of frames under 5.9 ms, the slowest 11.4 ms at the tesseract letting go, as on desktop. The second-slowest stretch was new to that list: the flight's end across the axis (172 to 174 s). Timed against the code before it, pass 68's halo had added about 1.2 ms there (4.4 to 5.6 ms at the median at 174 s), since it built its gradient from three p5 colours parsed every frame. It is built from the sand's RGB computed once now. It is back to 4.4 ms, and the frame is pixel for pixel the same.
+
+## Polish pass 83
+
+No change to the show. The pull request's description now names passes 79 to 81's guards: the YouTube cues held to the mix script, and the bible's strike counts and credits table held to the code. Its images and the rest are kept.
+
+## Polish pass 82
+
+No change to the show: a regression sweep after passes 53 to 72 changed the picture. The whole show was swept at 16:9 every 1.5 s, offset from earlier sweeps, and nothing has broken. The recent changes sit well among their neighbours: the swoop back to the house (136.9 s), Murph at her doorway as the lift climbs (183.4 to 184.9 s), and the streak across the axis (168 to 172 s).
+
+## Polish pass 81
+
+- **The YouTube cues are held to the mix.** Pass 14 checked by hand that the uploads are cued on the mix's numbers. Those numbers live in two files, `liftoff/index.ts` (what plays) and `scripts/shows/liftoff-mix.sh` (what the show was timed to), and if they parted every Act II strike would be off the music online. `check:shows` now reads the script's two trims and its delay, and holds Cornfield Chase's `until`, No Time for Caution's `from` and its `at` to them. Each of the three, nudged in `index.ts`, makes it fail.
+
+## Polish pass 80
+
+- **The credits table is held to the cards.** It had drifted from `credits.ts` for months before pass 10 caught it. `check:shows` now builds each row's start, role and names from `CARDS` and requires the table above to be exactly those rows, no more. A start time put back to the old 266.0, or the director's card back to one name, each makes it fail. (A first try ran past the table's end into the later tables, and is held to the table's own lines.) The fine print is left out of the comparison: the cards use curly quotes and the table straight ones.
+
+## Polish pass 79
+
+- **The bible's counts are held to the code.** After a dozen edits to show code since pass 27, the counts were measured again: 365 strikes (232 in Act I, 133 in Act II), and 121 of Act II's 129 beats, the same eight left unstruck. They had gone stale once without anyone noticing, so `check:shows` now computes them from `hits.ts` and requires the two lines of the list above to say exactly that. With either number edited it fails. (A first version matched the words anywhere, and passed with a wrong number because pass 27's dated section repeats them. It is held to the list's own lines.)
+
+## Polish pass 78
+
+No change to the show: the frame-step audit run under Zoom, which had moved three times (passes 7, 53, 55) without one. Beside the written spikes, four stood out: 75.3, 125.4, 162.9 and 240.5 s. At 240.5 s a retro burn flares on the Ranger, as scored. The other three are pans, and the Zoom camera's worst jolt within half a second of each is 0.08 to 0.12, the size of an ordinary move against the whips' 0.42. They show as spikes only because Zoom's closer frame turns a pan into more changed pixels.
+
+## Polish pass 77
+
+No change to the show: pass 68's flight halo seen in Overview, where Cooper is small throughout and so the streak and halo are on for the whole flight. He reads as a small gold comet crossing the ring (166 to 174 s), the one thing moving in a still frame. The halo is faint at that scale and leaves no stray glow.
+
+## Polish pass 76
+
+No change to the show, and an idea tried and taken out. On an upright phone Cooper is 0.6 CSS pixels in the ring's reveal (133 to 136.7 s), so pass 68's halo was tried there too, in the replica, under him and only where he is a speck (1080p never drew it). It sat on him, checked with a marker at full size, but a warm glow does not show against the station's pale interior. All that read was its lower edge spilling onto the dark below the hull: a stray glow under the house, not a mark on him. In the flight the halo works because he is alone against open sky. A stronger mark would pull the eye in a shot meant to show the whole ring, so the reveal is left as it was, on a phone too.
+
+## Polish pass 75
+
+No change to the show. The list above of what `check:shows` holds the show to had not followed this round's checks: it now names the show's own frame, the cut edges and overlaps, the reunions, the slow moves and the phone streak, and says how Zoom and coming and going are tested now. It was read against the checks' own names in `checks/shows.ts`.
+
+## Polish pass 74
+
+No change to the show: pass 9's frame-step audit run again at an upright phone's shape (390 × 844), where everything sized to the screen crosses its thresholds at other moments. The spikes are the same set as on desktop, all written: the ignition (84 s), the whip through the sphere (104.2 s), the tesseract's moves (118 to 125 s), the station's lamps striking (127.5 s) and the far side opening (235.7 s). There is nothing phone-only, and nothing at the bat's hit (163.5 s), where pass 72 took a pop out.
+
+## Polish pass 73
+
+No change to the show: the phone streak's other end looked at on an upright phone. Coming down to the far side (174 to 175.5 s), it trails him through the poplar and the round tree, his written path, and has faded by 175.3 s, before he reaches the roof. Nothing of it lies over the house as he crashes in.
+
+## Polish pass 72
+
+- **The phone streak no longer pops on at the hit** (163.54 s). Pass 68's fix judged his size in CSS pixels, so on an upright phone he is already small at the bat's hit, and the streak and halo, which switch on just after it, jumped from nothing to 85% in one frame (a third of that under Zoom). Before pass 68 that could not happen: in canvas pixels he was large at the hit. They now fade in over a third of a second off the bat (`drawStreak`, `act2/ballpark.ts`). On desktop nothing changes, since he is big there and the streak stays off. The guard from pass 70 now holds the fade-in too, and fails without it.
+
+## Polish pass 71
+
+No change to the show. The pull request's summary now names pass 68's change on a phone (Cooper findable in the flight across the axis) and its guard. Its table, which shows desktop stills, needs nothing new: pass 68 leaves 1080p as it was.
+
+## Polish pass 70
+
+- **A guard for pass 68.** The streak's fix is drawing code, which `check:shows` cannot run, so it reads the source, as it does for the player's wording. It holds `drawStreak` to judging his size in CSS pixels (over the canvas's density) and to a halo of at least 9 CSS pixels. With the size test put back in canvas pixels it fails; the file was restored.
+
+## Polish pass 69
+
+No change to the show: Brand's and Murph's size on an upright phone, as pass 68 measured Cooper's. Each one's radius in CSS pixels was measured every 0.05 s while in shot. Only one stretch is under 2px for more than a second: old Murph at 166.1 to 168.0 s (down to 0.84px), in her far-side house during the whole-ring pull-out. The shot is about Cooper's flight toward her, and she is the shot's subject only from 176 s, when the camera is in close. Brand in orbit over Miller stays above 2px throughout.
+
+## Polish pass 68
+
+- **Cooper findable across the axis on a phone** (`drawStreak` in `act2/ballpark.ts`, 164.9 to 174.1 s). On a phone held upright the 16:9 picture is about 220 CSS pixels tall, a fifth of 1080p's. In the flight across the axis Cooper's radius there falls under 2.5px for 9 seconds, down to 0.8px. The streak meant to mark him judged "small" in canvas pixels, which on a phone's dense screen are three to a CSS pixel, so it held back exactly where he was smallest. It now judges in CSS pixels. Where he is a speck, a soft warm halo is drawn round him, never under 9 CSS pixels, and the streak keeps a width he can be seen by. At 1080p, where he is bigger, the halo is faint and the shot looks as it did. (The ring's reveal, 132.9 to 136.7 s, is as small on a phone, but there he sits at the house's door, where the shot sends the eye, and is left.)
+
+## Polish pass 67
+
+No change to the show: how big Cooper is on the screen. His radius was measured at 1080p every 0.05 s. It is under 6px for more than a second only in the two whole-ring shots, which are written as the world bigger than him: the ring's reveal (133.9 to 136.3 s, down to 3.1px) and the pull-out as he flies across the axis (166.0 to 167.8 s, down to 4.1px). In the flight he trails a gold streak across the pale sky that the eye finds at once. In the reveal he is at the house's door at the ring's foot, where the shot sends the eye.
+
+## Polish pass 66
+
+No change to the show. The pull request's description had said that nothing in the picture changed after its stills were taken (pass 31, at `ae4fd1ae`), which passes 53 to 61 made untrue. Its table is rendered again, `origin/main` against this branch at `5b347875`, with rows added for Murph's landing (15.9 s), the swoop back from the ring (136.8 s) and Murph at her doorway (190.2 s): 18 pairs. Its summary now names those changes and the new checks. A wide-screen row for Murph's entrance was tried and left out: a pop happens in an instant, so the stills before and after look the same.
+
+## Polish pass 65
+
+No change to the show: pass 64's extended come-and-go check shown to fail. With young Murph's old entrance to the channel put back (her span from `M_WAIT - 2.2`), it fails at 29.800 s, the wide-screen pop pass 61 fixed; the file was restored. Every check this round added has now been seen to fail on the break it guards against.
+
+## Polish pass 64
+
+No change to the show: the come-and-go test run under Zoom on a wide screen and on an upright phone, the two combinations pass 61 left out. Neither Brand nor Murph appears or vanishes in view. `check:shows` now tests Zoom's frame as well as the show's own, at both shapes, so every camera and screen shape the player offers is covered.
+
+## Polish pass 63
+
+No change to the show: the whole show swept on a wide (21:9) screen, every 4 s, which sees more world to each side of the 16:9 frame than any earlier sweep. Nowhere does the world stop short. The farm goes on past the house, the road past the dam, the base past the cattle grid; the station's hull and ring, and the plain to either side of Brand's camp under the credits, run on to the screen's edges.
+
+## Polish pass 62
+
+No change to the show: pass 61's lead-ins for young Murph looked at on a wide (21:9) screen, the one that can see them. In the channel she comes along the water by the pump behind Cooper (29.7 s), off the screen's edge before that. At the base she rolls along the ground at the fence's foot (67.8 s), off the edge before that. Both have ground under them.
+
+## Polish pass 61
+
+The check that Brand and Murph only come and go out of shot samples every millisecond, but against the 16:9 frame alone. A stage of another shape sees more world round that frame, so the same test was run with Zoom's frame, a wide (21:9) screen's and an upright phone's (390 × 844).
+
+- **Young Murph no longer appears out of nothing on a wide screen.** She came into being just past the 16:9 frame's side, where a 21:9 screen sees, twice: in the channel (29.8 s) and at the base's track (68.26 s). Each entrance now has a lead-in at the speed she enters with (`earth/truck.ts`, one second; `earth/gate.ts`, two, since there the camera keeps pace), so she rolls in from past the edge of even a wide screen. Her motion from the old entrance on is unchanged.
+- **Old Murph stays in her house until the cut outside** (`MURPH_GONE` in `act2/ballpark.ts`, now the undock). Her span ended at 188.5 s, once the house had left the 16:9 frame below the climbing car. A phone still saw her go. More than that, in the ordinary 16:9 frame the house swings back into the bottom of the shot as the camera turns square (about 189.8 s), and her doorway was empty. She is there now, at her threshold by the chair, watching the car go. One check had asserted the empty doorway (Murph absent at 190 s). It now asserts she is in shot then, and on the station holds her to being out of shot rather than gone.
+- **The check sees what any stage sees.** "Comes and goes only out of shot" now tests a wide screen's width and an upright phone's height besides the 16:9 frame. With the base's old entrance put back, it fails at 68.259 s.
+
+## Polish pass 60
+
+No change to the show: pass 59's new landing looked at, not only measured. At 15.90 s Murph comes down just behind Cooper with their outlines meeting, a near bump, not her disc drawn into his. By 16.1 s he is on the first tread and she waits at the stairwell's top, a step behind, as written.
+
+## Polish pass 59
+
+- **Young Murph no longer lands in Cooper** (15.9 s). Every pair of balls was measured every 0.02 s for overlap. Twice, one disc ran into another. In NASA's bunker (71.1 to 71.2 s) Cooper rolls through the place Brand waits, but the bunker's wall hides both, as written. On the farm the other was seen: Murph, hopping off the foot of her bed, landed against Cooper as he dropped onto the first stair, 0.015 cells into him for a frame or two. She lands 0.04 cells further back now (`earth/house.ts`), and her path on from there is unchanged and continuous.
+- **A check for it.** `check:shows` now holds that no two balls are ever drawn into each other, the bunker excepted. With her old landing put back, it fails at 15.90 s.
+
+## Polish pass 58
+
+No change to the show, and a check for the reunions. Zoom's focus is Cooper alone, but the two reunions are about two balls. Measured every 0.02 s, the one he meets stays whole and well inside both frames throughout. Murph in the far-side house (176.5 to 183 s) keeps at least 13% of the frame's height from the edge under Zoom, and 25% in the show's own frame. Brand at her camp (255.5 s to the music's end) keeps 13% under Zoom and 17% in the show's own. `check:shows` now holds each to 5% in both frames. Set to 20% for one run it failed at Murph's, so it can fail.
+
+## Polish pass 57
+
+No change to the show: what passes 53, 55 and 56's dense checks cost. They sample the camera every 0.02 s over the whole show, some for three balls. `check:shows` runs inside every `npm run build`, so it was timed twice on this branch (231 s, 201 s) and twice on `main` (233 s, 205 s). The difference is lost in the run-to-run noise: the new samples are arithmetic on the camera and the ball's path, and the suite's time goes elsewhere, the same on `main`.
+
+## Polish pass 56
+
+No change to the show, and a new check. A ball leaving the frame is sometimes written; a ball hanging half off the frame's edge reads as a framing mistake. All three balls were measured every 0.02 s in the show's own frame for stretches cut by the edge. The only one longer than 0.3 s is Brand at 249.3 to 249.74 s, which is the pan bringing her camp into frame as the Ranger comes down: she slides in from the right edge and is whole by 249.75 s. That is an entrance, and it is left. `check:shows` now holds that no ball (Cooper, Brand or Murph, scaled) is cut by the edge for more than 0.6 s. With the limit lowered to 0.3 s for one run it caught that pan, so it can fail.
+
+## Polish pass 55
+
+- **The swoop back from the ring's reveal keeps him in shot** (136.4 to 137.1 s). Nothing checked that Cooper stays in the show's own frame. Measured every 0.02 s, he leaves it three times. Two are written to: the cage going up out of the top, and the whip through the sphere. The third was not: the swoop back in from the whole ring to the front door closed in faster than it came down, so for 0.76 s its bottom edge cut through the kitchen floor he was crossing, and he was below it, by up to 2.3 cells. Two keys (`act2/replica.ts`, on 113 and 113½) now bring the frame down sooner. The swoop comes in with the whole house and its floor in frame, he stays in view going to the turnstile, and the pan where it lands is smoother (0.15 to 0.10). The swoop's start, its end and the whole-ring shot are unchanged. The zoom's own acceleration where the swoop begins rose to 0.22, below the tesseract's authored 0.31. Under Zoom, the frames over the small jolt threshold fell from 193 to 173.
+- **A check for it.** `check:shows` now holds his whole ball inside the show's own frame every 0.02 s, but for the cage's climb and the whip. With the old keys put back, it fails at the old gap.
+
+## Polish pass 54
+
+No change to the show: pass 53's Zoom change looked at, not only measured. Zoom was rendered across the end of each long window. In the cage's climb (76.4 to 77.7 s) it keeps the rocket's window as the cage arrives, and from 77.3 s both balls sit in it, framed. At the end of the ring's reveal (136.3 to 137.7 s) it comes back down from the ring and the house as the swoop settles, and from 137.0 s Cooper is in frame, by the clock's door and then the turnstile.
+
+## Polish pass 53
+
+The pull request's whole diff against `main` was read for leftovers: 23 files, all accounted for, no debug output, scratch paths or loosened tests, and `main` has not moved. One weakness did turn up.
+
+- **Zoom loses Cooper after the ring's reveal** (137.2 to 137.7 s). Pass 7's rewrite of the Zoom check made it stricter, his whole ball and a margin rather than his centre, but it widened the three Zoom-free windows by the half-second eases either side and checked nothing there. In five of those six half-seconds his centre stays inside. Just after the ring's reveal it went 7.6% of the frame's height out. That was not pass 7's doing (Zoom without a focus loses him there too), and the old check, sampling every 0.1 s, missed it. Now a long Zoom-free window (the cage's climb, the ring's reveal) eases inside itself, its length a third of the window and at most a second, so Zoom has him again by its end. The whip, only 0.6 s, eases just outside as before: easing inside it pulled the frame across his jump from one world to the next (a 4.8 jolt). The rule is one function, `zoomFreeSpan` in `score.ts`, shared by the camera and the check. The check is exact at the long windows' edges now and samples every 0.02 s. His centre stays at least 12% of the frame inside in every half-second round the windows. The worst Zoom camera jolt is still the authored whip (0.42), and 193 frames cross the small threshold, against 179.
+
+## Polish pass 52
+
+No change to the show. Pass 51 broke two of its guards on purpose but not the silent-export one, which reads its line with a pattern. Both of its parts were broken now: a weaker warning on the button, and the note after saving put back to "picture and music". The check failed each time, and the file was restored. Guards for Voyage's own picture fixes (the cloud deck and the far mouth in Overview, the ditch, the one Ranger) were weighed and left: they live in drawing code that needs a canvas, which `check:shows` does not have, and the frame audits cover them.
+
+## Polish pass 51
+
+- **Guards for the other shared changes.** `check:shows` now holds, as it holds the player's keys, by reading the source: the failed-soundtrack wording and the silent-export warning before and after saving (`shows/player.ts`, passes 42 and 43), and the credits' 9px floor on each of its five small lines (`src/ui/styles.css`, pass 45). Each was broken on purpose once to see the check fail, then restored.
+
+## Polish pass 50
+
+- **A test for keeping credit cards on the stage.** Pass 47's slide-in was arithmetic inside the player's DOM code, which `check:shows` cannot reach, so a later edit could break it and only a phone would show it. It is a pure function now, `placeCard` in `shows/registry.ts` beside `zoomed`, which the player calls, and `check:shows` tests it: a card that fits stays put, one near either edge slides in to the 8px margin, one wider than the stage is centred, and Merry-Go-Round's real case (331px wide, centred at 152 on a 390px phone) lands at 173.5. In the live page that card still sits 8px in.
+
+## Polish pass 49
+
+No change to the show. The pull request's description now has a section for the changes in shared code, which touch every show: Zoom's focus, the failed-soundtrack wording, the silent-export warning, and the credits on phones (the 9px floor and the slide back onto the stage), with Merry-Go-Round's trade-off. Its images and table are kept.
+
+## Polish pass 48
+
+No change to the show: pass 47's claim checked. Pass 47 said that sliding a credit card back onto the stage moves only a card that would cross the edge. Every show's credits were sampled each second at 1440 × 900 and at a narrower 1024 × 700 (374 and 376 card samples): none is pinned at the 8px margin, so none was moved, and desktop credits sit where they did.
+
+## Polish pass 47
+
+- **Credits kept on the stage.** Pass 45's 9px floor is in the shared stylesheet, so every show's credits were checked on an upright phone: each card's edges against the screen's at every half second a card is up. Only Merry-Go-Round's cast card spilled over, 13px off the left edge at 310 s: the larger notes made it wider (206 to 331px), and it is centred near the frame's left. The player now slides a card in, just enough to keep an 8px margin, when it would cross the stage's edge (`renderWords` in `shows/player.ts`); a card that fits stays where it was. No show's card leaves the screen now. On a phone that card's notes now run over the castle; before, they sat beside it at about 5px and could not be read.
+
+## Polish pass 46
+
+No change to the show: a phone held sideways (844 × 390). The page gives the stage the whole screen, with the panel behind its handle. The opening, the louvres (150 s) and the cast card all read; the cast notes come out at about 10px, above pass 45's 9px floor.
+
+## Polish pass 45
+
+- **The credits on a phone.** The page sizes the credits in hundredths of the 16:9 frame's height. On a phone held upright (390 × 844) that frame is about 220px tall, so the cast card's notes ("the sand ball"…) and the music card's fine print came out at about 4px, too small to read. The small lines, the role, a cast line's "as" and the notes, now keep at least 9px (`src/ui/styles.css`). The floor only applies when the frame is under about 545px tall, so desktop credits and saved videos (`words.ts`) are unchanged, and the cast card still fits a phone's width.
+
+## Polish pass 44
+
+No change to the show: the side panel read line by line on Voyage's page. It has the title, the credit naming both cues, the YouTube player, the transport (4:51), Overview, Follow and Zoom, Theater, and Export, all as they should be. The credit line links Cornfield Chase's upload only: the soundtrack has one `href`, and the embedded player shows No Time for Caution's own upload while that cue plays. Linking both would change the shared soundtrack format for one show, so it is left.
+
+## Polish pass 43
+
+- **A saved video says it is silent.** A video records the soundtrack's file, and since #147 Voyage has none (its music is YouTube's, which a recording cannot take), so Save video makes a silent file. The button never said so, and the note after saving said "Saved: picture and music" for every show. The button now adds "It is silent: the music plays from YouTube, which a recording cannot take." The note says "Saved: the picture, silent (the music is YouTube's)" where there is no file, "the picture" where there is no soundtrack at all, and "picture and music" only where there is one (`shows/player.ts`). Shows with a file (Gymnopédie checked) are unchanged.
+
+## Polish pass 42
+
+- **When YouTube cannot play.** Since #147 Voyage has no file to fall back on, so with YouTube blocked (a content blocker, a network, a region) it has no music at all. Tested by blocking YouTube's hosts: the show still loads and plays, silent, on the wall clock, and the panel says so ("The soundtrack would not load. The show runs silent, on the wall clock."). But the music button, disabled, said "This version has no soundtrack", which is not true of a show whose soundtrack failed. It now says "The soundtrack would not load, so the show runs silent" (`shows/player.ts`). A show with no soundtrack keeps the old words, and normal playback is unchanged.
+
+## Polish pass 41
+
+No change to the show: the two YouTube cues in the live player. The music is two videos handed over at 126.5 s, and nothing had tested the hand-over live. On Voyage's page the show's clock and the music heard were read together after seeks and while playing. They agree to the hundredth of a second when playing within each cue (from 40 s and from 200 s), after seeking back across the hand-over (to 60 s), when playing straight through it (from 124 s to 128.2 s), and at 2× in both cues (two seconds of show a second). After the music (270 s) nothing is heard and the clock goes on through the silent credits, as it should.
+
+## Polish pass 40
+
+No change to the show: Voyage in Theater. `/theater/?show=interstellar&take=opus55` opens on Voyage ("Voyage · Theater · contraptions"), plays from the start with YouTube as the music (about 5 s heard after 6 s, so in step), draws the opening as the Shows page does, and pauses on a click to the stage, with no console errors of its own. Theater rewrites its address to `/theater/` once it starts, as it does for every show: that is Theater's, not Voyage's.
+
+## Polish pass 39
+
+No change to the show: what a shared link shows. Both built pages, `/shows/interstellar/` and `/shows/interstellar/opus55/`, carry the same title ("Voyage · contraptions"), the version file's `about` as their description and Open Graph and Twitter text, one canonical address (the work's page), and the card at 1200 × 630. The card the build ships is byte for byte the one pass 34 rendered.
+
+## Polish pass 38
+
+No change to the show: the live page's console. Voyage's own page (`/shows/interstellar/`) was loaded, seeked through the whole show and played in Follow, Zoom and Overview, collecting every warning, error and failed request. It loads with YouTube as the music's source and nothing failed. None of what the console says is Voyage's. The YouTube embed brings cross-origin messages, aborted video requests on each seek, and its permission and GPU probes (`web-share`, `compute-pressure`, a GL "ReadPixels" stall, "No available adapters"): Everything, the other YouTube show, logs the same, and Gymnopédie, played from a file, none of them. The analytics script is blocked only in dev. The show reads no pixels while it plays; the only pixel read in its code is `toBlob`, for saved stills.
+
+## Polish pass 37
+
+- **Rebuilding the mix works again** (`scripts/shows/liftoff-mix.sh`). It read Cornfield Chase from a file #147 deleted, so it failed with a bare ffmpeg error and could only be used by recreating that file at that exact path. It now takes Cornfield Chase as an optional second argument, keeping the old path as its default, and names any missing file before ffmpeg runs. Its header gives the commands to fetch both recordings from the uploads the show plays, and says the mix is for measuring and is not committed. Tested on every error path and, run from another directory with both files given, as far as ffmpeg (which this machine does not have, so no mix was built).
+
+## Polish pass 36
+
+No change to the show, and one idea weighed and left. During the descent over Edmunds' planet (238 to 248 s) the frame is sky and empty plain. A sign of Brand's camp from the air would set up the reunion. But the camp is at the landing site, under the falling ship and below the frame's bottom edge until the camera levels out (about 246.5 s), not on the horizon where a far light could show. Signalling it earlier would take a beacon reaching up out of frame, and the scored light at the camp is the lamp on the last hit (232): a beacon before it would spend that light early. The descent stays as it is, and the camp comes up into view as he levels out.
+
+## Polish pass 35
+
+No change to the show. Pass 9's frame-step audit sampled every 0.1 s, so a glitch one frame long could fall between its samples. The three universe switches were compared frame by frame at 60 fps instead, over a second round each. Inside the cloud (88.2 to 89.4 s), no frame changes more than 4% of the picture from the last. At the undock, the single 86% step at 207.48 s is the match cut. On the accent, the steps at 127.52, 127.58 and 127.63 s (11%, 45%, 61%) are the lamps striking: the room comes up, dips as one falters, and catches, as written ("one catches late").
+
+## Polish pass 34
+
+- **The share card** (`public/shows/interstellar/opus55.png`, at 240.4 s) is rendered again from this branch, by the call `scripts/shows/show-cards.mjs` makes (`window.shows.still(240.4, 1200, 630)`), so the picture a link unfurls with is what the show draws. It differed from the old card in 285 of 756,000 pixels, a few of pass 6's pebbles, and looks the same.
+
+## Polish pass 33
+
+No change to the show. The working ring (139 to 155 s) and the ballpark (155 to 168 s) were checked at full size: the noria and its buckets, the stepped channel, the harvest tram tripping the corn bins, the louvres, the mitt catching him, the scoreboard and its clock, the pitching machine winding up, and the bat meeting him on the hit. With this, every stretch of the show has had a full-size look this round.
+
+## Polish pass 32
+
+No change to the show. Miller's water world (104 to 113 s) and the Gargantua slingshot (113 to 118 s) were checked at full size: the landed Ranger, the buoys and TARS cartwheeling, with their reflections; Brand's ring in orbit; the wave rising out of the "mountains" and hiding the horizon's line behind it as it should; TARS swallowed; the two turns round the hole on the tether.
+
+## Polish pass 31
+
+No change to the show. The pull request's description was rewritten to cover every round: a summary of how the show was audited and what changed, and a before/after table of fifteen stills (`origin/main` against this branch), Zoom, Overview and the phone frame among them. The share card (240.4 s) was checked against a fresh render again: 285 pixels of 756,000 differ, a few of pass 6's pebbles, so it is left as it is.
+
+## Polish pass 30
+
+No change to the show: "How it is built" and the audio notes checked against the code and the repository. `worlds.ts` has no `AGED`: the years' grey is `GREY`, and the two Murphs are `MURPH` and `MURPH_YOUNG`. The audio notes still described the show as playing the mix file, which #147 removed with Cornfield Chase's recording when copyrighted soundtracks became YouTube-only. They now say what plays (the two uploads, on the mix's numbers), what `check:shows` holds the soundtrack to, and what rebuilding the mix now needs.
+
+## Polish pass 29
+
+No change to the show: the farm and the chase (0 to 84 s) checked against the code. Their strike times hold (the gate's, the gantry's and the rocket's checked beat for beat), but for Brand's first appearance, at 71.6 s (beat 114½) where it said 71.4. And young Murph, in the cast since #92, was in none of the Act I table's rows. Her part is written into them now, from `earth/house.ts`, `earth/truck.ts` and `earth/gate.ts`: she wakes on the first book, follows him downstairs a step behind, stows away in the truck's bed, trails him to the base, and is kept back by TARS at the tower's foot, which shields her from the ignition.
+
+## Polish pass 28
+
+No change to the show: Act I's end checked against the code, as pass 27 did Act II's. The tesseract was given more time at some point (`space/gargantua.ts`: "the dive was given twice the time"), and the tables above still had it as it was. The second room passes on the last hit, not on 190½. He is behind the lander on 193 (120.63 s), not on the last hit. The books go from 120.89 to 122.07 s, not 119.67 to 120.85. The watch is touched once, on 196½, and ticks its Morse from there, not three comb strikes. The pillow is at 125.62 s and the wake at 125.82 s, not 124.3 and 124.5. The Act I table and the cuts table are corrected; the dated sections are left as written.
+
+## Polish pass 27
+
+No change to the show: the bible's numbers checked against the code. The strike counts hold: 365 in all, 232 in Act I and 133 in Act II. But 121 of Act II's 129 beats are struck, not 123, and the reunion and the camp had moved on the page since they were written up. The code (`act2/ballpark.ts`, `act2/hub.ts`, `act2/edmunds.ts`) has them touch on 156 and hold through 157, her nudge on 158, the gate on 159 and the lift on 160; the kick is on 230½ and the landing on the ramp on 231½. The Act II table, the list of unstruck beats (now eight, with 157 and 231) and the check's count above are corrected to match. The dated sections below are left as they were written.
+
+## Polish pass 26
+
+- **A guard for pass 9's two camera fixes** (`checks/shows.ts`). A stray key had squeezed two slow moves into a third of a second: the push-in on him in bed through the decay, and the settle on him in the channel. Nothing in a still frame shows that, so a later edit could bring it back unseen. `check:shows` now holds both to slow moves. The fastest zoom (log of cells per second) must stay under 0.3 in bed and under 0.6 in the channel. They are 0.22 and 0.48 now, where they were about 0.8 each before the fix.
+
+## Polish pass 25
+
+No change to the show: a photosensitivity check. Each frame's mean relative luminance was measured at 30 fps from the first frame to the last. A flash in WCAG's sense is a pair of opposing changes of 10% or more, with the darker state under 80%, and the limit is three in any second. The show has 18 such changes in all, each a single cut or dawn: the light in Murph's room, the cloud's white-out and the dark above it, the tesseract letting go, the lamps striking in the station, the ring's reveal and the swoop back, the flight across the axis, the lift, and the cut outside. The most in any one second is three, at 127.57 s, the station's lamps striking with one catching late: one and a half flashes, under the limit.
+
+## Polish pass 24
+
+No change to the show. The launch (84 to 93 s) was checked at full size: the ignition's billow over the pad, the tower falling away, the cloud deck from under and over, staging, and the turn into orbit.
+
+## Polish pass 23
+
+No change to the show. The climb up the spoke, the docking bay and the match cut outside (184 to 209 s) were checked at full size. Across the cut (207.45 to 207.55 s) the Ranger keeps its heading, nose to the port, and its place and size on the screen, while the bay turns to the dark round it.
+
+## Polish pass 22
+
+No change to the show. Passes 15 to 21's kitchen was checked in the tall 9:16 frame, which sees all of it: at dawn, by day at 6 s, and in the museum, it reads whole, with its floor and the footing under it. The tesseract (119 to 124 s) was checked at full size: each room hides the ones behind it, and the threads run along the board. The light-blue disc on Murph's top shelf seen from behind is young Murph asleep on her pillow, through the case (`space/gargantua.ts`).
+
+## Polish pass 21
+
+- **The opening's bottom edge.** Pass 15's kitchen stood two chairs at the table, and their backs rose into the first frames' bottom edge: cut off there, they were two bare posts. They are stools now, low enough to stay under that edge, and the jug on the table is a low bowl for the same reason. The museum's kitchen has the same stools.
+
+## Polish pass 20
+
+The contrast audit of pass 17, run for the other two balls, with no change to the show. Every half second, Brand's and Murph's fill against a ring of the picture just outside them. Where it is lowest, it is meant to be. Murph lies in her bed at dawn, a silhouette against the window. She hides in the truck's bed with only her crown over the side. She is a few pixels at the tower's foot in the liftoff's wide shot. Brand is inside the bunker. At full size each reads.
+
+## Polish pass 19
+
+- **The kitchen, shared with the museum.** Pass 15's kitchen is drawn in the museum replica too, where the replica's dumbwaiter cupboard (x 2.04) stands. The table's right-hand chair crowded the cupboard there. The table, its chairs and its lamp sit a quarter cell further left now, and the wall shelf is shorter, so that the lamp's shade no longer meets its end. Both kitchens, the farm's at dawn and the museum's, read without a clash.
+
+## Polish pass 18
+
+An audit of the round-things rule, run on the code rather than found by eye: every disc drawn at about a ball's size (0.16 to 0.34 cells across), with its colour and where it stands. Most are tin, denim or faint hull, away from the balls. At full size the catapult's gold pivot reads as a spoked ratchet wheel and the ballpark's light-tower lamps as a bank of four in a panel. One remained:
+
+- **The museum clock's bob** (`act2/replica.ts`, 131 to 136 s). A round brass disc swinging just under Cooper while he rides the clock's weight. It is a lens now, as the farmhouse clock's bob is since pass 15, so the two clocks match and the only round thing in the case is him.
+
+(The replica draws Act I's house, so pass 15's kitchen, its shelf, table, lamp and chairs, is in the museum too, as a rebuilt farmhouse's kitchen should be. The replica's own clock stands exactly over the farmhouse one.)
+
+## Polish pass 17
+
+A contrast audit: every half second, Cooper's fill against a ring of the picture just outside him. On the farm the two are close throughout, as meant (sand on dust-coloured paper: he reads by his ink edge and his warmth), and the frames where they come closest still read. The audit's frames showed something else:
+
+- **The gantry's lamps** (`earth/gantry.ts`, 70 to 88 s). Ten round discs up the tower's side, almost a ball's size and a sand colour, lighting gold one an eighth as the cage climbs past them with Cooper and Brand in it. They broke the show's rule, kept since the polish round, that nothing round stands where a ball could be. Each is now a caged bulkhead lamp on its bracket, a squared housing with its guard bars. Its timing is the same: lit as the cage passes, out one a beat in the countdown.
+
+## Polish pass 16
+
+A measure of emptiness over the whole show: each second's frame split in sixteen, counting the squares with almost no detail. Only one stretch came out mostly empty: the skim over Saturn (225 to 226 s), where the planet's face was a dozen broad bands of flat colour.
+
+- **Weather on Saturn** (`drawSaturn` in `act2/undock.ts`). Fine streaks now run along its latitudes from the southern bands to the pole. They are a little wavy, in the bands' own amber and hull, and barely there. When the Ranger skims a few cells of the limb the face reads as cloud tops, and toward the pole, which leans toward us, they close into soft rings as Saturn's polar bands do. Seen whole, in Overview, it is a banded planet rather than a striped ball.
+
+## Polish pass 15
+
+- **The kitchen under Murph's room** (`drawKitchen` in `earth/house.ts`). The first frames of the show, the dawn in Murph's room, had their lower 40% bare plaster: the kitchen below the room, left of the stairwell, where no ball goes, was drawn empty. It is furnished now: a shelf of jars and plates on the wall, a table under a hanging tin lamp with two stools (pass 21; first chairs) and a bowl, and the tall clock. The clock stands where the station's museum will stand it (x 3.07 to 3.97) and is the same case. Here it only keeps time, the pendulum swinging a second a beat and the hands at twenty to six, before the museum makes it a machine in Act II. Its bob is a lens, not a disc, so nothing round in the kitchen can be taken for a ball. No ball's path or strike moved.
+
+## Polish pass 14
+
+A check of the YouTube cues against the mix the show was timed to, with no change to the show. Online the show plays two uploads, not the mix. Cornfield Chase plays from its start and fades out by 126.984 s. No Time for Caution plays from 103.76 s into its upload, at 126.5 s of the show, fading in over a second. `scripts/shows/liftoff-mix.sh` builds the mix from the same upload with the same numbers: trimmed at 103.76 s and delayed by 126.5 s. So online every strike lands where the mix has it. The one difference is level: YouTube cannot lift a video above its own volume, so the mix's +7 dB on the cue's quiet opening is not heard online (noted in `liftoff/index.ts`).
+
+## Polish pass 13
+
+A regression pass after passes 4 to 12, with no change to the show. The whole show was swept again on new frames (every 1.5 s, offset from the earlier sweeps). The motion audit (camera and Cooper's place on the screen at 60 fps) and the frame-step audit were re-run against their first results. The motion numbers are the same as pass 4's. The frame-step spikes are the same set less the two that pass 9 fixed. The largest, at 235.7 s, is the far side's iris opening as written (`revealAt`, an accelerating t^2.2 over 0.6 s): every frame of it is continuous.
+
+The saved video was checked too, as the exporter paints it (`paintShow`, then `wordPainter` with the credits): at 1080p and in the 9:16 Shorts letterbox the cards sit where the page sets them, inside the 16:9 picture.
+
+## Polish pass 12
+
+Two more audits came back clean. A **stillness audit** compared frames half a second apart all through the show: the only still run is the camp held alone after the last card, 287.5 s to the end, as written. A **render-cost audit** timed `paintShow` at 1280 × 720, frame by frame, taking the fastest of three paints so pauses drop out: median 1.4 ms, 99% under 4 ms, the slowest 8.2 ms at the tesseract's pull-back, all well inside a 60 fps frame.
+
+- **The wormholes' lensed stars** (the sphere in Act I, 100 to 104 s; the sphere in Act II, 228 to 235 s; its far mouth at Edmunds' planet, 235.5 to 239 s). The stars near the rim are smeared round it by the lensing, which is right. But each was an even white dash with blunt ends, so the rim of every sphere read as hatched in short strokes, a scribbled ring (the closed #148 had said so). Each smear is light now (`lensedArc` in `kit.ts`): brightest and widest at its middle, running out to nothing at both ends. A soft band of the light the lensing gathers (`lensRim`) sits just inside the rim, so the sphere reads as glass. The three spheres share both drawings.
+
+## Polish pass 11
+
+- **The dawn wind along the plain** (from 261 s to the end, `drawDrift` in `act2/edmunds.ts`). The silent credits are the show's longest stretch with the least moving: the flag in the wind, the sun coming up, the slow draw-back, and a ground gone dead still once the landing's dust had settled. Now thin wisps of sand lift low off the plain as the music stops and drift the way the flag blows, lit gold by the sunrise. The far ones pass behind the camp; the near ones run along the ground in front of it, below Cooper and Brand, never across them or the cards. Each fades in and out over its own run, and the frame-step audit across the credits is unchanged (largest one-step change 1.7%, the credits' starlight), so none pops.
+
+## Polish pass 10
+
+Three audits that found nothing to fix in the picture, and one that found the bible out of date.
+
+- **The credits as they are seen.** The page sets the cards' words over the canvas, so stills never show them. Screenshots of the page, seeked into the credits, show each card readable over the sky as the camera draws back (pass 4's slower draw-back has the first card come in while the frame is still close on the two of them; it clears the lamp). The table above had gone stale: the director's card has named Stephen Wu and Claude Opus 5.5 since #94, the cast card says "young and old" for Murph, the music card's fine print is only the cues and the film, and the times had drifted. It is corrected from `credits.ts`.
+- **Is Cooper seen.** Every 0.2 s the frame was sampled where Cooper should be, for his sand. Where it is missing he is meant to be out of sight or changed: the whips, inside the wormhole, the ghost, too small in the ring's reveal and the flight across the axis, inside the combine's works (under the 2.5 s the checks allow), and behind the noria's water.
+- **Camera keys close together.** Every pair of keys under 0.6 s apart that changes the framing by more than 8% is an authored move (the bunker's push-in, the ignition, the mass driver, the tesseract, Murph's room). No check was added: in numbers, last pass's stray keys look like these.
+- **Big frames.** Live, the canvas is drawn at the screen's pixel ratio, so stars and hairlines sized in pixels keep their look on a retina screen; saved video stops at 1080p.
+
+## Polish pass 9
+
+An audit of what changes between frames rather than what a frame looks like. Every tenth of a second, two frames a sixtieth of a second apart were rendered and compared. In that time ordinary motion moves almost nothing, so a large share of changed pixels, standing out against the samples round it, is a pop, a flicker or a snap. After that, the camera's fastest zooms and pans were listed over the whole show. Every one is an authored move (the tesseract's pull-back, the swoop from the ring to the door, the ignition, the whips through the sphere) except two, and both were the same fault: a camera key left too close to another, so a move that should take a second or more took a third of one.
+
+- **The push-in in the bedroom** (125.8 to 127 s). It is meant to come in on him slowly, the whole of the decay. A key at `WAKE + 0.8` (126.62 s) had stayed where it was when the wake moved later, so the whole push, nearly half a cell, was squeezed into the last 0.36 s before the accent: in one frame step every outline in the room moved. That key is gone, and the push is one move from the pillow to the end of the cue. Its fastest is 0.57 cells a second, where it was 1.6. The share of the frame changing in one step went from 4.7% to 0.4%.
+- **The channel** (26.6 to 27.6 s). The yard's last key (4.2 cells) and the score's key for the channel (3.6 cells) stood three tenths of a second apart, so as he plunged in the camera punched in and straight back out. The channel's framing is at 27.5 s now and a little less close (3.9 cells), so it settles on him in the water as the bank carries him, and opens out for the truck.
+
+## Polish pass 8
+
+The show swept in **Overview** (the O key), which frames the whole of the world that is up at once. Two things were left standing that the show's own camera never looks at, but Overview did:
+
+- **The cloud deck after the whip** (104 to 127 s). The deck is the seam between the farm and the dark, drawn in both, and it went on being drawn after nothing looked at it again: in Overview, a white bar across the whole dark, under Miller, Gargantua and the tesseract. It stops half a second after the whip through the sphere to Miller (beat 166, `CLOUD_GONE` in `score.ts`).
+- **The wormhole's far mouth at Edmunds' planet** (from 236.5 s to the end). It stayed open on the horizon, a dark sphere left by the camp, all through the landing and the credits. It closes behind the Ranger now, shrinking to nothing over two seconds, from 237.7 s, once the camera has gone on with the ship and it is out of the frame.
+
+The show's own frames are unchanged by both. The share card (240.4 s) differs from a fresh render in 285 pixels, a few of pass 6's pebbles, and is left as it is.
+
+## Polish pass 7
+
+Every pass before this looked at the show's own camera. This one swept it under **Zoom**, the player's closer follow (1.5 times nearer, about the same middle).
+
+- **Zoom keeps its subject** (`Framing.focus`, `zoomed` in `shows/registry.ts`). The shots are composed for the wide frame, and some left Cooper on the closer frame's edge or past it. The worst was the countdown (77.5 to 86.5 s): the wide shot holds the window at its top and Murph at the tower's foot at its bottom, and under Zoom the window, with the two of them in it, was cut by the top edge. A camera can now name what a shot is about. Zoom then slides over, along the picture's own axes so a rolled camera works too, by the least it must to keep that point a fifth of the frame inside every edge. A soft knee lets it take hold gradually. Voyage names Cooper, smoothed over about a second as the follow camera smooths him, except in the three shots that are about more than him (the cage's climb, the whip through the sphere, the ring's reveal), with half-second eases in and out. The wide frame is unchanged, and shows that name no focus are unchanged.
+- **Measured.** The nearest Cooper comes to a Zoom edge went from 3.7% of the frame's height (at 229.95 s) to 12%. The camera's motion under Zoom is as smooth as before: the worst velocity jumps are the same authored whips, and 179 frames cross the small threshold where 164 did. A first version, which locked the frame to Cooper's raw position, jolted at every strike (2.27 at the bat's hit); the smoothing and the knee took that out.
+- **Checks.** `zoomed` is tested on its own: the middle kept, a focus held at the margin, a rolled camera, no step as a focus crosses the margin. Liftoff's Zoom check uses the stage's own framing and holds Cooper's whole ball, and as much again round it, inside every edge, where it used to ask only that his centre be in.
+
+## Polish pass 6
+
+The show was swept again in a tall phone frame (9:16), which sees much more world above and below the 16:9 frame than a wide window does. The farm, the space set pieces and the station all hold up there. One thing did not:
+
+- **The near ground at the camp** (from 248 s to the end). The camera sits low at the camp, and the plain's stones, cracks and drifts stopped at about four times the landing site's nearness. In a tall frame, and along the bottom of a wide one, the near ground was a bare flat colour. The rows go on now to the bottom of the tallest frame. The near ones are pebbles and cracks in the ground's own shade, not boulders, so they give the foreground depth without standing up into the reunion's shot. The camp's cleared ground is kept.
+
+## Polish pass 5
+
+A second sweep, half a second off the first, then closer looks at the wormhole, the fall out of the tesseract, Miller and the busy stretches at full size.
+
+- **One Ranger into the wormhole** (234.2 to 235.1 s). The part of the ship inside the glass was shrunk about the sphere's centre while the part outside was not, so the front came away from the tail and showed as a second, smaller ship beside it. While it straddles the rim it now shrinks about the point where it goes in, so it stays joined to its tail. Once the tail is in, it slides on to the centre, where the far side opens.
+- **Gold threads through the fall** (124.6 to 125.4 s). The threads going past the ghost were hairlines at a third opacity, so the fall read as an empty dark frame. There are more of them, a little thicker, bright at the leading end and fading back along their length.
+
+## Polish pass 4
+
+The whole show was swept a second at a time, then the weak stretches frame by frame, and the camera and Cooper's place on the screen were measured at 60 fps for kinks. The jolts that turned up are all strikes or hidden; these are what the frames showed.
+
+- **Saturn's night side** (226.5 to 227.5 s). It was a hard black wedge, darker than space, with the gold glow round the limb running on beside it. The terminator is a soft dusk now, never quite as dark as the sky. The glow thins outward in fine rings and fades round the night side. The bands are drawn fine enough to stay curves when the Ranger skims a few cells of the limb, where they had read as facets.
+- **The ditch** (47 s). It was fitted between the front wheel's takeoff and the rear wheel's landing. The truck flies less than its wheelbase (about 1.3 cells against 1.87), so that stretch does not exist, and the ditch came out inside out: a pot standing on the road, with its glints out on the dirt. It is a shallow cut with sloped sides under the truck's middle at the top of the jump. No strike moved.
+- **Weather in Cooper Station** (`act2/interior.ts`). Seven fair-weather clouds hang in the station's air. Their flat bases face the land under them and their tops face the axis. They are inked once round the outside, with lit tops and shaded bases, and they drift slowly round with the air, clear of the spokes. The climb under the louvres (150 to 152 s) and the flight across the axis (169 to 173 s) had been frames of empty haze. Now they have something to measure the air by, and the flight goes past clouds.
+- **The draw-back under the credits.** From the two of them under the lamp to the whole camp took about a second (260.8 to 262.1 s), and then the frame held still for 29 s. Now it takes eight seconds (259.7 to 267.5 s), as the first cards come, and goes on, slower, to the end, up a little into the sky the cards are written in. The credits are set in the screen's place, so they do not move with it.
+- **The sun clears the horizon.** It shows its edge by the music's end, as before, and is wholly up by the last frame, where it had stopped a little past half.
+- **The lamp's near foot** came down between Cooper and Brand, a stroke in the light between them. It comes down behind him now.
+
+## Polish pass 3
 
 - **The countdown.** The push in on the two of them in the window runs on to the ignition (83.76 s) and turns there. Before, it stopped at 83.1 s and the camera was already pulling back before the pedal came in.
 - **The whip out of the wormhole** lands on the Ranger, not on the mouth. It used to stop dead at 236.5 s with the ship still going about 4 cells a second, then start after it.
@@ -437,11 +1183,11 @@ These are visual and mechanical only. There are no stills, no text, and no audio
   - `camera.ts`: authored camera keys.
   - `music.ts`: both combs, the mix's length, and the Act II landmarks (`ACT2`, `UNDOCK`, `PEAK`, `FINAL`).
   - `hits.ts`: every strike, gathered for the check.
-  - `worlds.ts`: the palettes, `BALL` (Cooper's sand), `BRAND` (Brand's blue) and `AGED` (her after the years, slate).
+  - `worlds.ts`: the palettes, `BALL` (Cooper's sand), `BRAND` (Brand's blue), `GREY` (what the years do to a colour: her blue in orbit is mixed toward it), `MURPH` (old Murph's slate) and `MURPH_YOUNG` (young Murph's lighter slate, drawn at `MURPH_SMALL`).
 - **The parts.** They live in `earth/`, `rocket.ts`, `space/` and `act2/`, one file per set piece.
   - `act2/station.ts` has the station's geometry: the ring, its axis, standing things upright on it.
   - `act2/interior.ts` draws the ring round the parts.
   - `earth/truck.ts` exports the pickup's drawing, so the same truck appears at the dam, the gate and the tower.
 - **The camera's roll.** `Framing.angle` (optional, in `shows/registry.ts`) turns the picture about its middle. The engine (`drawWorld`) rotates after the backdrop and chooses pieces from the box round the turned view. `kit.frame()` takes the canvas's corners back through the turned transform, so skies and culling still cover the frame. Liftoff's roll curve is `rollAt` in `score.ts`; no other show sets an angle.
 - **Checks.** `apps/rube/checks/shows.ts` has a Liftoff block, run by `npm run check:shows`.
-- **Rebuilding the audio.** `sh scripts/shows/liftoff-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/shows/liftoff-ntfc-onsets.py` measures it again. Neither needs to run unless the mix changes.
+- **Rebuilding the audio.** `sh scripts/shows/liftoff-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/shows/liftoff-ntfc-onsets.py` measures it again. Neither needs to run unless the mix changes. Neither source is kept in the repository any more (#147): fetch both from the uploads the show plays (the commands are at the top of the script) and give them as its arguments, No Time for Caution first and Cornfield Chase second (it defaults to its old path, `apps/rube/src/shows/versions/cornfield-chase/cornfield-chase-zimmer.mp3`). A missing file is named before ffmpeg runs. If the mix changes, the YouTube cues in `liftoff/index.ts` change with it.

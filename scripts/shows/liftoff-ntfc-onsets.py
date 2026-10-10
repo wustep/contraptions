@@ -1,9 +1,12 @@
 """
 Liftoff, Act II: No Time for Caution's onsets, measured once, in show time.
 
-The show plays apps/rube/src/shows/versions/interstellar/interstellar-liftoff-mix-demo.mp3 (built by
-scripts/shows/liftoff-mix.sh): Cornfield Chase whole, then No Time for Caution
-from one beat before its bar-26 accent. This reads the mix and writes
+The show is timed to the mix scripts/shows/liftoff-mix.sh builds, at
+apps/rube/src/shows/versions/interstellar/interstellar-liftoff-mix-demo.mp3:
+Cornfield Chase whole, then No Time for Caution from one beat before its
+bar-26 accent. The mix is not kept in the repository (copyrighted audio is
+YouTube-only, #147; the page plays the two uploads on the mix's numbers), so
+build it locally first. This reads the mix and writes
 scripts/shows/plans/liftoff-ntfc-onsets.json, which the parts are timed to
 and check:shows holds them against. Rerun only if the mix changes:
 

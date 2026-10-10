@@ -11,12 +11,13 @@ import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
-import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, sectionOf, shelves, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
+import { RENAMED_TAKES, performanceProblems, pickVersion, placeCard, readShows, sectionOf, shelves, versionPath, zoomed, type Performance, type ShowVersion } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
 import { GRID, strictTake, strikes } from '../src/shows/versions/metronome/metronome'
 import { Show } from '../src/show'
+import { R as BALL_R } from '../src/parts'
 import type { StockShow } from '../src/shows/stock/show'
 import cornfieldOnsets from '../../../scripts/shows/plans/cornfield-opus55-onsets.json'
 import { checkAllAtOnce } from './all-at-once'
@@ -29,7 +30,7 @@ import { KISS_AT, ROOM } from '../src/shows/versions/la-la-land/epilogue/room'
 import { MIA as MIA_HEX, HUSBAND as HUSBAND_HEX } from '../src/shows/versions/la-la-land/epilogue/worlds'
 import type { EpilogueShow } from '../src/shows/versions/la-la-land/epilogue/show'
 import { STRIKES } from '../src/shows/versions/interstellar/liftoff/hits'
-import { SWITCH } from '../src/shows/versions/interstellar/liftoff/score'
+import { SWITCH, ZOOM_FREE as LIFTOFF_ZOOM_FREE, zoomFreeSpan } from '../src/shows/versions/interstellar/liftoff/score'
 import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from '../src/shows/versions/interstellar/liftoff/music'
 import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/interstellar/liftoff/credits'
 import { FALL_NOTES, GHOST_REST } from '../src/shows/versions/interstellar/liftoff/earth/house'
@@ -103,9 +104,65 @@ async function main(): Promise<void> {
   const soundtrack = readFileSync(join(process.cwd(), 'apps/rube/src/shows/soundtrack.ts'), 'utf8')
   check('a file play waits for canplay, as YouTube waits for its players', soundtrack.includes('status === \'loading\'') && soundtrack.includes('waiting.push') && soundtrack.includes('deep link'))
   check('a deep link with the sound held keeps a Sound button on the stage, and lights the panel\'s', player.includes("soundHeld ? 'Sound'") && /musicBtn\.classList\.toggle\('held', hasMusic && soundHeld\)/.test(player))
-  check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('cam.cells / FOLLOW_ZOOM'))
+  check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('zoomed(cam, FOLLOW_ZOOM)'))
+  {
+    const plain = zoomed({ x: 3, y: -2, cells: 9 }, 1.5)
+    const kept = zoomed({ x: 0, y: 0, cells: 9, focus: [0.5, 0.4] }, 1.5)
+    const far = zoomed({ x: 0, y: 0, cells: 9, focus: [0, -4.4] }, 1.5)
+    const rolled = zoomed({ x: 0, y: 0, cells: 9, angle: Math.PI / 2, focus: [0, -6] }, 1.5)
+    check('Zoom keeps the middle, or slides just enough to keep a named focus well inside the closer frame',
+      plain.x === 3 && plain.y === -2 && plain.cells === 6 && kept.x === 0 && kept.y === 0 && !('focus' in kept) &&
+      far.x === 0 && Math.abs(far.y - (-4.4 + 6 * 0.3)) < 1e-9 && Math.abs(rolled.y - (-6 + 6 * (8 / 9 - 0.2))) < 1e-9 && Math.abs(rolled.x) < 1e-9 &&
+      // and it takes hold of the focus gradually: no step in where the frame is as the focus crosses the margin.
+      Array.from({ length: 200 }, (_, i) => zoomed({ x: 0, y: 0, cells: 9, focus: [0, -1 - i * 0.01] }, 1.5).y).every((y, i, a) => i === 0 || Math.abs(y - a[i - 1]) <= 0.0100001))
+  }
   check('a work with one take has no take row to pick from', /work\.versions\.length < 2\) takeRow\.hidden = true/.test(player))
   check('no take has a byline in the panel', !/byline/.test(player) && !/director/.test(player))
+  // A show whose music fails, or whose music is YouTube's alone, says so: the button does not claim there is no
+  // soundtrack, Save video warns that its file will be silent, and the note after saving does not say "picture and music".
+  check('a failed soundtrack is called failed, and a YouTube-only show\'s saved video is called silent before and after',
+    player.includes('The soundtrack would not load, so the show runs silent') &&
+    player.includes('It is silent: the music plays from YouTube, which a recording cannot take.') &&
+    /perf\?\.soundtrack\?\.src \? 'picture and music' : perf\?\.soundtrack \? 'the picture, silent/.test(player))
+  // Music that stops coming mid-show holds the picture with it; the stage says it is waiting rather than freezing silent.
+  // (But not over the stage's Sound button while the browser holds the sound: it sat on it once, pass 102.)
+  check('a show whose music stalls says so on the stage, and gives way to the Sound button',
+    /const STALL_MS = \d+/.test(player) && player.includes("'Waiting for the music…'") && player.includes('const waiting = stalled && !soundHeld') &&
+    player.includes('loading || failed || waiting'))
+  check('a credit card stays where it is when it fits, slides in to a margin when it would cross an edge, and centres when it cannot fit',
+    placeCard(200, 100, 400) === 200 && placeCard(30, 100, 400) === 58 && placeCard(390, 100, 400) === 342 &&
+    placeCard(152, 331, 390) === 173.5 && placeCard(100, 390, 390) === 195 && placeCard(58, 100, 400) === 58)
+  // The Sound button's tap can itself be refused (a browser wanting the tap inside the player's own frame): the sound is
+  // held again, the Sound button back, rather than the show going on silent with nothing to press (pass 136).
+  check('a held sound refused again at the tap is held again, with the Sound button back, from every control that brings it in (a gesture, the Sound button, the music button, M)',
+    /async function soundIn\(\)[\s\S]{0,300}const result = await music\.play\(transport\.now\(\)\)\s*if \(result !== 'blocked'[\s\S]{0,80}soundHeld = true\s*setMuted\(true\)\s*void music\.play\(transport\.now\(\)\)\s*armSound\(\)/.test(player) &&
+    (player.match(/void soundIn\(\)/g) ?? []).length === 4 && !player.includes('void music.play(transport.now())\n    return') &&
+    !/if \(transport\) void music\.play\(transport\.now\(\)\)\s*break/.test(player))
+  // A YouTube cue running ahead of its entry is muted, not just at volume 0: YouTube puts an unmuted player at volume 0
+  // up to 5 on its own, so the next recording was heard faintly under the one before it for eight seconds (pass 133).
+  {
+    const yt = readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.ts'), 'utf8')
+    // WebKit lets a player sound only if it was played inside a gesture; a later cue first played by the timer was
+    // stopped at its entry, and the show stood waiting there for good (pass 143). Each is warmed in the press, once.
+    // A held sound brought in while its cue already runs muted gets no state change in WebKit: the wait must look at the
+    // player before calling it refused, or the sound is held again two seconds after the tap, every time (pass 145).
+    // A cue the browser stops the moment it is made heard is a refusal, not the viewer pausing YouTube: the page holds
+    // the sound and puts the Sound button up, rather than pausing the show with no word of why (pass 146).
+    check('a cue stopped by the browser as it is made heard holds the sound, with the Sound button up',
+      /d\.early = false\s*hush\(d, false\)\s*d\.heardAt = performance\.now\(\)/.test(yt) &&
+      /if \(d\.heardAt && performance\.now\(\) - d\.heardAt < HEARD_GRACE && current && wanted\) \{[\s\S]{0,500}toldRefused\(\)\s*return/.test(yt) &&
+      /music\.onRefused\(\(\) => \{\s*if \(recording \|\| !transport\?\.playing \|\| soundHeld\) return\s*soundHeld = true\s*setMuted\(true\)\s*void music\.play\(transport\.now\(\)\)\s*armSound\(\)/.test(player))
+    check('the wait for a play looks at the player before calling it refused',
+      /if \(pending !== resolve\) return\s*\/\/[^\n]*\n[^\n]*\n\s*if \(d\.player\?\.getPlayerState\(\) === PLAYING\) return settleRefusal\('playing'\)/.test(yt))
+    check('every later YouTube cue is warmed inside the viewer\'s press, once, so WebKit lets it sound at its entry',
+      /function begin\(\): Promise<PlayResult> \{\s*arrange\(shown\)[\s\S]{0,700}if \(!x\.blessed && x\.ready && x\.cue\.at > shown && !x\.running && x\.warm !== 'on'\) \{\s*x\.blessed = true\s*warmUp\(x\)/.test(yt) &&
+      yt.includes("warm: 'no', blessed: false,"))
+    check('a YouTube cue running early or warming is muted until its entry, and follows the viewer\'s mute after',
+      /const hush = \(d: Deck, silent: boolean\) => \{\s*if \(muted \|\| silent\) d\.player!\.mute\(\)/.test(yt) &&
+      yt.includes('hush(d, early)') && /d\.warm = 'on'[\s\S]{0,80}hush\(d, true\)/.test(yt) &&
+      /d\.early = false\s*hush\(d, false\)/.test(yt) && yt.includes("hush(d, d.early || d.warm === 'on')") &&
+      !/if \(muted\) d\.player\.mute\(\)\s*else d\.player\.unMute\(\)/.test(yt))
+  }
   check('Z toggles Zoom and O toggles Overview', /case 'z':/.test(player) && /case 'o':/.test(player) && player.includes('Zoom in on the action (Z)') && player.includes('Zoom out to the whole world (O)'))
 
   /* ------------------------------------------------------------------ the registry */
@@ -189,6 +246,9 @@ async function main(): Promise<void> {
 
   // Credits live are the page's DOM; a video has them painted into its frame (`words.ts`). The two are one look.
   const css = readFileSync(join(process.cwd(), 'src/ui/styles.css'), 'utf8')
+  // The end credits' small lines keep 9px on a phone's short frame (sized in --u alone they fell to about 4px).
+  check('the end credits\' small lines keep at least 9px',
+    ['.stage-words .role {\n  font-size: max(9px,', '.stage-words .cast .as { text-align: left; font-style: italic; font-size: max(9px,', '.stage-words .note { font-size: max(9px,', '.stage-words .note.fine { font-size: max(9px,', 'letter-spacing: 0.12em; font-size: max(9px,'].every((rule) => css.includes(rule)))
   const words = readFileSync(join(process.cwd(), 'apps/rube/src/shows/words.ts'), 'utf8')
   const stageSrc = readFileSync(join(process.cwd(), 'apps/rube/src/shows/stage.ts'), 'utf8')
   const cardFace = /\.stage-words \.card \{[^}]*font-family: ([^;]+);/.exec(css)?.[1]
@@ -492,10 +552,40 @@ async function main(): Promise<void> {
           !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.includes('No Time for Caution') &&
           !!perf.soundtrack?.credit?.includes('Interstellar') && !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
+        // Online the music is two uploads, cued on the mix the show was timed to (liftoff-mix.sh): Cornfield Chase to the
+        // end of its trim, then No Time for Caution from the same point in its upload, at the show time the mix delays it
+        // to. Kept in two files, they are held to each other, or every Act II strike would be off the music online.
+        {
+          const mix = readFileSync(join(process.cwd(), 'scripts/shows/liftoff-mix.sh'), 'utf8')
+          const trims = [...mix.matchAll(/atrim=([\d.]+):([\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])])
+          const delay = Number(/adelay=(\d+)\|/.exec(mix)?.[1] ?? NaN) / 1000
+          const [cf, nt] = perf.soundtrack?.youtube ?? []
+          const fade = (dir: string) => { const m = new RegExp(`afade=t=${dir}:st=([\\d.]+):d=([\\d.]+)`).exec(mix); return m ? { st: Number(m[1]), d: Number(m[2]) } : null }
+          const fadeOut = fade('out')
+          const fadeIn = fade('in')
+          check('liftoff: the YouTube cues are the mix\'s numbers (Cornfield Chase\'s end, No Time for Caution\'s start, its place in the show and its end, and both fades)',
+            trims.length === 2 && !!cf && !!nt && near(cf.until ?? NaN, trims[0][1]) && near(nt.from ?? NaN, trims[1][0]) && near(nt.at ?? NaN, delay) &&
+            // and ends where the mix cuts it, not at the upload's own end 6 s later, in the silent credits (pass 103)
+            near(nt.until ?? NaN, delay + trims[1][1] - trims[1][0], 0.01) &&
+            // and fades as the mix does: Cornfield Chase out over its last second, No Time for Caution in over a beat
+            fadeOut !== null && fadeIn !== null && near(cf.fadeOut ?? NaN, fadeOut.d, 0.01) && near((cf.until ?? NaN) - (cf.fadeOut ?? NaN), fadeOut.st, 0.01) &&
+            near(nt.fadeIn ?? NaN, fadeIn.d, 0.01) && near(fadeIn.st, 0, 0.01),
+            JSON.stringify({ trims, delay, cues: perf.soundtrack?.youtube }))
+        }
         // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.
         const said = LIFTOFF_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
         check('Interstellar: Directed by Stephen Wu, and under him Claude Opus 5.5',
           LIFTOFF_CARDS[0].role === 'Directed by' && LIFTOFF_CARDS[0].names.join('|') === 'Stephen Wu|Claude Opus 5.5')
+        // The bible's table of the cards is the cards: each row's start, role and names as credits.ts builds them, and no
+        // row besides (it drifted once, for months: pass 10).
+        {
+          const bible = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/INTERSTELLAR.md'), 'utf8')
+          const table = bible.slice(bible.indexOf('| Starts (s) | Role | Names | Fine print |')).split('\n\n')[0]
+          const rows = table.split('\n').slice(2).map((l) => l.split(' | ').slice(0, 3).join(' | '))
+          const want = LIFTOFF_CARDS.map((c) => `| ${c.at.toFixed(1)} | ${c.role ?? ''} | ${c.names.map((n) => (typeof n === 'string' ? n : `${n[0]}, ${n[1]}`)).join('; ')}`)
+          check('liftoff: the bible\'s table of the end credits is the cards, start, role and names', rows.length === want.length && want.every((w, i) => rows[i] === w),
+            want.filter((w, i) => rows[i] !== w).join(' / '))
+        }
         check('liftoff: end credits after the music, set by the page, ending on the camp alone (no title card), naming Stephen Wu, Opus 5.5, Joseph Cooper, Dr. Amelia Brand, Murph, TARS, p5.js, Hans Zimmer and both cues',
           CREDITS_OK && perf.titles === creditsAt && creditsAt(LIFTOFF_CARDS[0].at - 0.1).length === 0 && creditsAt(perf.duration).length === 0 && !/liftoff/i.test(said) &&
           ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Joseph Cooper', 'Dr. Amelia Brand', 'Murph', 'TARS', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar'].every((w) => said.includes(w)) &&
@@ -542,6 +632,25 @@ async function main(): Promise<void> {
         for (let k = 104; k <= 232; k++) beats2.push(cue(k))
         const struck2 = beats2.filter((t) => act2.some((s) => Math.abs(s - t) <= 0.03))
         check('liftoff: in Act II, nearly every beat of the organ is struck', struck2.length >= beats2.length * 0.85, `${struck2.length}/${beats2.length}`)
+        // The bible's dated passes are renumbered by hand each time: newest first, no gap, no repeat, one marked latest.
+        {
+          const bible = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/INTERSTELLAR.md'), 'utf8')
+          const heads = [...bible.matchAll(/^## Polish pass (\d+)( \(latest\))?$/gm)]
+          const ns = heads.map((m) => Number(m[1]))
+          check('liftoff: the bible\'s polish passes run newest first, without a gap or a repeat, the newest alone marked latest',
+            ns.length > 0 && ns.every((n, i) => i === 0 || n === ns[i - 1] - 1) && heads.filter((m) => m[2]).length === 1 && !!heads[0][2],
+            ns.slice(0, 6).join(' '))
+        }
+        // The bible's figures are the code's: they went stale once, unnoticed, so they are read and held to it.
+        {
+          const bible = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/INTERSTELLAR.md'), 'utf8')
+          const actI = [...Object.values(STRIKES.piano), ...Object.values(STRIKES.organ), ...Object.values(STRIKES.comb)].flat().length
+          const actII = Object.values(STRIKES.cue2).flat().length
+          // (The exact lines of its list of what the checks hold, not words a dated section might repeat.)
+          const said = `  - ${actI + actII} strikes (${actI} in Act I, ${actII} in Act II), every one on a measured onset;`
+          const beatsSaid = `and ${struck2.length} of Act II's ${beats2.length} beats;\n`
+          check('liftoff: the bible\'s strike and beat counts are the code\'s', bible.includes(said) && bible.includes(beatsSaid), `code says "${said}" and "${beatsSaid}"`)
+        }
         const chase = Object.values(STRIKES.comb).flat()
         const beats: number[] = []
         for (let b = 68; b <= 191; b++) beats.push(chaseBeat(b))
@@ -603,13 +712,18 @@ async function main(): Promise<void> {
         const atCamp = [LIFTOFF_CAMP_MEET + 0.5, MIX_END - 0.5, 270, LIFTOFF_END - 0.5]
         const station = [177, 178.5, 179.25, 180.5]
         const brandAway = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, ...station, 190, 215]
-        const murphAway = [60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
+        // (Not 190: as the lift climbs and the camera turns back, the far-side house comes back into the bottom of the
+        // frame, and she is in it, at her threshold, watching the car go.)
+        const murphAway = [60, 100, 130, 140, 150, 215, 250, 260, 280]
         const murphYoung = [0, 3, 6, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 68.8, 69.6, 74, 75.3, 78]
         const miss: string[] = []
         for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
         for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)
         for (const t of station) if (!inShot(t, show.murph(t))) miss.push(`Murph not in shot ${t}`)
-        for (const t of murphAway) if (show.murph(t)) miss.push(`Murph at ${t}`)
+        // On the station she stays at her threshold until the cut outside (so no screen sees her switched off), so there
+        // she is held to being out of shot; anywhere else, to not being there at all.
+        for (const t of murphAway) if (t > ACT2 && t < UNDOCK ? inShot(t, show.murph(t)) : show.murph(t)) miss.push(`Murph at ${t}`)
+        if (!inShot(190, show.murph(190))) miss.push('Murph not at her threshold at 190')
         for (const t of murphYoung) {
           const m = show.murph(t)
           if (!inShot(t, m)) miss.push(`young Murph not in shot ${t}`)
@@ -624,19 +738,105 @@ async function main(): Promise<void> {
         // Under Zoom (1.5 times closer) Cooper stays in the frame, but for three shots that are about something bigger
         // than him: the cage going up out of the top while Murph is kept back at the tower's foot, the whip through
         // the sphere, and the pull-back from the replica to the whole ring.
-        const zoomAway: [number, number][] = [[74.9, 77.3], [103.7, 104.3], [130.4, 137.2]]
-        const zoomMiss: string[] = []
-        for (let t = 0; t <= MIX_END; t += 0.1) {
-          if (zoomAway.some(([a, b]) => t > a && t < b)) continue
+        // Across the axis, on a phone, he is a speck of under a CSS pixel: the streak that marks him judges his size on the
+        // screen (canvas pixels over the density), and keeps a halo of at least 9 CSS pixels round him (pass 68).
+        {
+          const ballpark = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/interstellar/liftoff/act2/ballpark.ts'), 'utf8')
+          const streak = /function drawStreak[\s\S]*?\n}\n/.exec(ballpark)?.[0] ?? ''
+          check('liftoff: the streak across the axis judges his size in CSS pixels and keeps a 9px halo round him on a phone',
+            streak.includes('const px = (2 * R * c.k) / density') && streak.includes('Math.max(R * c.k * 2.4, 9 * density)') &&
+            // and fades it in off the bat, since on a phone he is small already at the hit (it popped on: pass 72)
+            streak.includes('smooth(T, HIT + 0.04, HIT + 0.38)'))
+        }
+        // In the show's own frame, Cooper's whole ball is in shot every 0.02 s but for the two shots written to lose him:
+        // the cage going up out of the top, and the whip through the sphere. (The swoop back from the ring's reveal once
+        // shut ahead of coming down and lost him under the bottom edge for most of a second.)
+        const ownMiss: string[] = []
+        for (let t = 0; t <= MIX_END; t += 0.02) {
+          if (([[74.9, 77.3], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
           const f = perf.camera!(t)
           const a = f.angle ?? 0
           const [hx, hy] = show.where(t)
           const dx = hx - f.x
           const dy = hy - f.y
-          const zc = f.cells / 1.5
-          if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (zc * 8) / 9 && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < zc / 2)) zoomMiss.push(t.toFixed(1))
+          if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (f.cells * 8) / 9 - BALL_R && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < f.cells / 2 - BALL_R)) ownMiss.push(t.toFixed(2))
         }
-        check('liftoff: under Zoom Cooper is in the frame, but for the cage\'s climb, the whip through the sphere and the ring\'s reveal', zoomMiss.length === 0, zoomMiss.join(' '))
+        check('liftoff: in the show\'s own frame Cooper\'s whole ball is in shot, but for the cage\'s climb and the whip through the sphere', ownMiss.length === 0, ownMiss.slice(0, 12).join(' '))
+        // Two balls are never drawn into each other: they come close (the meetings), never overlap. The one exception is in
+        // NASA's bunker, where he rolls through the place Brand waits while the bunker's wall hides both.
+        const overlaps: string[] = []
+        for (let t = 0; t <= LIFTOFF_END; t += 0.02) {
+          if (t > 70.9 && t < 71.4) continue
+          const bs = show.at(t).balls ?? []
+          for (let i = 0; i < bs.length; i++) {
+            for (let j = i + 1; j < bs.length; j++) {
+              const reach = BALL_R * ((bs[i].scale ?? 1) + (bs[j].scale ?? 1))
+              if (Math.hypot(bs[i].x - bs[j].x, bs[i].y - bs[j].y) < reach - 0.002) overlaps.push(`${t.toFixed(2)} ${bs[i].id ?? 0}/${bs[j].id ?? 0}`)
+            }
+          }
+        }
+        check('liftoff: no two balls are ever drawn into each other (but behind the bunker\'s wall)', overlaps.length === 0, overlaps.slice(0, 8).join(', '))
+        // The two reunions are about two balls, and Zoom's focus is Cooper alone: through each, the one he meets (Murph in
+        // the far-side house, Brand at her camp) is whole and well inside both the show's own frame and Zoom's.
+        const meetMiss: string[] = []
+        for (const [who, a, b] of [['murph', 176.5, 183], ['brand', 255.5, MIX_END]] as const) {
+          for (let t = a; t <= b; t += 0.02) {
+            const q = show[who](t)
+            if (!q) { meetMiss.push(`${who} gone ${t.toFixed(2)}`); continue }
+            for (const f of [perf.camera!(t), zoomed(perf.camera!(t), 1.5)]) {
+              const ang = f.angle ?? 0
+              const r = BALL_R * (q.scale ?? 1)
+              const dx = q.x - f.x
+              const dy = q.y - f.y
+              const room = Math.min((f.cells * 8) / 9 - r - Math.abs(dx * Math.cos(ang) - dy * Math.sin(ang)), f.cells / 2 - r - Math.abs(dx * Math.sin(ang) + dy * Math.cos(ang)))
+              if (room < 0.05 * f.cells) meetMiss.push(`${who} ${t.toFixed(2)}`)
+            }
+          }
+        }
+        check('liftoff: through each reunion the one Cooper meets is well inside the frame, in the show\'s own and under Zoom', meetMiss.length === 0, meetMiss.slice(0, 8).join(' '))
+        // No ball hangs cut by the frame's edge: crossing it is a moment (a pan revealing Brand at her camp is the longest,
+        // under half a second), never a ball parked half out of shot.
+        const cutRuns: string[] = []
+        for (const who of ['cooper', 'brand', 'murph'] as const) {
+          let from = -1
+          for (let t = 0; t <= MIX_END + 0.02; t += 0.02) {
+            const f = perf.camera!(t)
+            const a = f.angle ?? 0
+            const q = who === 'cooper' ? { x: show.where(t)[0], y: show.where(t)[1], scale: 1 } : show[who](t)
+            let cut = false
+            if (q && t <= MIX_END) {
+              const r = BALL_R * (q.scale ?? 1)
+              const dx = q.x - f.x
+              const dy = q.y - f.y
+              const sx = Math.abs(dx * Math.cos(a) - dy * Math.sin(a))
+              const sy = Math.abs(dx * Math.sin(a) + dy * Math.cos(a))
+              const hx = (f.cells * 8) / 9
+              const hy = f.cells / 2
+              cut = !(sx < hx - r && sy < hy - r) && !(sx > hx + r || sy > hy + r)
+            }
+            if (cut && from < 0) from = t
+            if (!cut && from >= 0) {
+              if (t - from > 0.6) cutRuns.push(`${who} ${from.toFixed(2)}-${t.toFixed(2)}`)
+              from = -1
+            }
+          }
+        }
+        check('liftoff: no ball hangs cut by the frame\'s edge for more than 0.6 s', cutRuns.length === 0, cutRuns.join(', '))
+        // Zoom's framing is the stage's own (`zoomed`), which slides to keep the camera's focus, Cooper, inside: so he
+        // is held to more than his centre being in: his whole ball, and as much again round it, inside every edge.
+        const zoomMiss: string[] = []
+        for (let t = 0; t <= MIX_END; t += 0.02) {
+          if (LIFTOFF_ZOOM_FREE.map(zoomFreeSpan).some(([a, b]) => t > a && t < b)) continue
+          const f = zoomed(perf.camera!(t), 1.5)
+          const a = f.angle ?? 0
+          const [hx, hy] = show.where(t)
+          const dx = hx - f.x
+          const dy = hy - f.y
+          const zc = f.cells
+          const edge = 2 * BALL_R
+          if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (zc * 8) / 9 - edge && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < zc / 2 - edge)) zoomMiss.push(t.toFixed(1))
+        }
+        check('liftoff: under Zoom Cooper\'s whole ball is well inside the frame, but for the cage\'s climb, the whip through the sphere and the ring\'s reveal', zoomMiss.length === 0, zoomMiss.join(' '))
         // Out of the wormhole's far mouth the whip hands over to the Ranger: the camera does not stop dead while it flies.
         let slowest = Infinity
         for (let t = cue(213) - 0.3; t < cue(213) + 0.6; t += 1 / 60) {
@@ -645,6 +845,16 @@ async function main(): Promise<void> {
           slowest = Math.min(slowest, (Math.hypot(b.x - a.x, b.y - a.y) * 60) / b.cells)
         }
         check('liftoff: the whip out of the wormhole goes on with the Ranger, with no stop', slowest > 0.5, `${slowest.toFixed(2)} frames/s`)
+        // Two slow moves that a stray camera key once squeezed into a third of a second: the push-in on him in bed through
+        // the decay, and the settle on him in the channel. Neither zooms faster than this (log of cells, per second).
+        const zoomRate = (a: number, b: number): number => {
+          let worst = 0
+          for (let t = a; t < b; t += 1 / 60) worst = Math.max(worst, Math.abs(Math.log(perf.camera!(t + 1 / 60).cells / perf.camera!(t).cells)) * 60)
+          return worst
+        }
+        const pushInBed = zoomRate(125.9, 126.98)
+        const settleInChannel = zoomRate(26.5, 28.0)
+        check('liftoff: the push-in in bed and the settle in the channel are slow moves, not snaps', pushInBed < 0.3 && settleInChannel < 0.6, `bed ${pushInBed.toFixed(2)}, channel ${settleInChannel.toFixed(2)}`)
         const young = show.brand(inOrbit[0])
         const old = show.brand(inOrbit[2])
         check('liftoff: up in orbit Brand\'s blue dims with the years, and she is her own blue again at the end',
@@ -661,6 +871,22 @@ async function main(): Promise<void> {
         }
         // They meet close, with a little light between them: not pressed together.
         check('liftoff: on Edmunds\' planet, at the end, Cooper meets Amelia at her camp, close but not pressed together', closest >= 0.27 && closest <= 0.42, `closest ${closest.toFixed(3)}`)
+        // A stage of another shape sees more world round the 16:9 frame: a wide (21:9) screen more to each side, a phone
+        // held upright (390 × 844) nearly four frames' height. Coming and going is held to all of what they see.
+        // Under Zoom too, whose closer frame slides to keep Cooper.
+        const seenAnywhere = (t: number, b: { x: number; y: number; scale?: number } | null) => {
+          if (!b || (b.scale ?? 1) <= 0.02) return false
+          return [perf.camera!(t), zoomed(perf.camera!(t), 1.5)].some((f) => {
+            const a = f.angle ?? 0
+            const dx = b.x - f.x
+            const dy = b.y - f.y
+            const x = Math.abs(dx * Math.cos(a) - dy * Math.sin(a))
+            const y = Math.abs(dx * Math.sin(a) + dy * Math.cos(a))
+            const wide = x < (f.cells * 21) / 18 + 0.2 && y < f.cells / 2 + 0.2
+            const tall = x < (f.cells * 8) / 9 + 0.2 && y < (f.cells / 2) * (844 / ((390 * 9) / 16)) + 0.2
+            return wide || tall
+          })
+        }
         // They never jump while they are drawn, and come and go (or are hidden and shown) only out of shot.
         const drawn = (g: { scale?: number } | null) => !!g && (g.scale ?? 1) > 0.02
         for (const [name, of] of [['Brand', (t: number) => show.brand(t)], ['Murph', (t: number) => show.murph(t)]] as const) {
@@ -675,14 +901,14 @@ async function main(): Promise<void> {
               if (d > gJump) { gJump = d; gAt = t }
             }
             // Out of nothing (or out of hidden, all at once) where the camera can see: a pop. Likewise into nothing.
-            if (!gPrev && inShot(t, g)) pops.push(`in at ${t.toFixed(3)}`)
-            else if (gPrev && !g && inShot(t - 0.001, gPrev)) pops.push(`out at ${t.toFixed(3)}`)
+            if (!gPrev && seenAnywhere(t, g)) pops.push(`in at ${t.toFixed(3)}`)
+            else if (gPrev && !g && seenAnywhere(t - 0.001, gPrev)) pops.push(`out at ${t.toFixed(3)}`)
             else if (gPrev && g && !drawn(gPrev) && (g.scale ?? 1) > 0.3 && inShot(t, g)) pops.push(`shown at ${t.toFixed(3)}`)
             else if (gPrev && g && drawn(gPrev) && (gPrev.scale ?? 1) > 0.3 && !drawn(g) && inShot(t - 0.001, gPrev)) pops.push(`hidden at ${t.toFixed(3)}`)
             gPrev = g
           }
           check(`liftoff: ${name} never jumps (no more than 0.04 cells a millisecond)`, gJump <= 0.04, `${gJump.toFixed(3)} at ${gAt.toFixed(3)} s`)
-          check(`liftoff: ${name} comes and goes only out of shot`, pops.length === 0, pops.slice(0, 8).join(', '))
+          check(`liftoff: ${name} comes and goes only out of shot, on a wide screen and an upright phone too, under Zoom or not`, pops.length === 0, pops.slice(0, 8).join(', '))
         }
       }
     }

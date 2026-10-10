@@ -33,6 +33,86 @@ const WELL_R = 6.4
 const WINDOW = { x0: 2.95, x1: 3.8, y0: -3.38, y1: -2.5 }
 const DOOR_TOP = -1.02
 
+/* ------------------------------------------------------------------ the kitchen */
+
+/**
+ * The kitchen under Murph's room, left of the stairwell, where no ball goes: a table and two stools, and the tall
+ * clock that the station's museum will rebuild as a machine (`act2/replica.ts`), standing where it will stand there
+ * and keeping time: its pendulum swings a second a beat, its hands at dawn. The bob is a lens, not a disc, so nothing
+ * round in here can be taken for a ball.
+ */
+const CK_L = 3.07
+const CK_R = 3.97
+const CK_MID = (CK_L + CK_R) / 2
+const CK_HOOD_TOP = -1.64
+const CK_HOOD_BOT = -1.2
+const CK_TRUNK_BOT = -0.08
+// (Clear of the museum's dumbwaiter cupboard at x 2.04, which the replica stands in this same kitchen in Act II.)
+const TABLE_X0 = 0.0
+const TABLE_X1 = 1.6
+const TABLE_TOP = -0.5
+function drawKitchen(p: p5, c: Ctx): void {
+  const { k, ink, weight: w } = c
+  const X = (v: number) => v * k
+  const R4 = (x0: number, y0: number, x1: number, y1: number) => p.rect(X((x0 + x1) / 2), X((y0 + y1) / 2), X(x1 - x0), X(y1 - y0))
+  // The table: a top, an apron, four legs (two seen).
+  solid(p, ink, w, DUST.wood)
+  R4(TABLE_X0, TABLE_TOP, TABLE_X1, TABLE_TOP + 0.06)
+  R4(TABLE_X0 + 0.06, TABLE_TOP + 0.06, TABLE_X1 - 0.06, TABLE_TOP + 0.13)
+  for (const x of [TABLE_X0 + 0.1, TABLE_X1 - 0.16]) R4(x, TABLE_TOP + 0.13, x + 0.06, DOWN)
+  // Two stools, one each end: low, so that nothing stands up out of the table's line into the bottom of the opening's
+  // frame (chair backs there were cut off by its edge into two bare posts).
+  for (const x of [TABLE_X0 - 0.22, TABLE_X1 + 0.22]) {
+    const seat = -0.3
+    outline(p, ink, w * 0.9)
+    p.line(X(x - 0.08), X(seat + 0.04), X(x - 0.13), X(DOWN))
+    p.line(X(x + 0.08), X(seat + 0.04), X(x + 0.13), X(DOWN))
+    p.line(X(x), X(seat + 0.04), X(x), X(DOWN))
+    p.line(X(x - 0.1), X(-0.13), X(x + 0.1), X(-0.13))
+    solid(p, ink, w, DUST.wood)
+    R4(x - 0.14, seat, x + 0.14, seat + 0.05)
+  }
+  // The tall clock: base and trunk, the glass, the pendulum, the hood and its face.
+  const case_ = mixHex(DUST.wood, DUST.rust, 0.25)
+  solid(p, ink, w, case_)
+  R4(CK_L + 0.12, CK_HOOD_BOT, CK_R - 0.12, CK_TRUNK_BOT)
+  R4(CK_L + 0.06, CK_TRUNK_BOT - 0.02, CK_R - 0.06, DOWN)
+  solid(p, ink, w * 0.7, mixHex(DUST.shade, ink, 0.22))
+  R4(CK_L + 0.22, CK_HOOD_BOT + 0.08, CK_R - 0.22, CK_TRUNK_BOT - 0.14)
+  // A second a beat: the swing is a sine, so it is quickest through the bottom, as a pendulum is.
+  const th = 0.11 * Math.sin(Math.PI * c.t)
+  const piv: Pt = [CK_MID, CK_HOOD_BOT + 0.04]
+  const L = 0.78
+  const bob: Pt = [piv[0] + Math.sin(th) * L, piv[1] + Math.cos(th) * L]
+  outline(p, ink, w * 0.6)
+  p.stroke(mixHex(DUST.corn, ink, 0.35))
+  p.line(X(piv[0]), X(piv[1]), X(bob[0]), X(bob[1]))
+  solid(p, ink, w * 0.6, mixHex(DUST.corn, ink, 0.15))
+  p.push()
+  p.translate(X(bob[0]), X(bob[1]))
+  p.rotate(-th)
+  p.ellipse(0, 0, X(0.2), X(0.07))
+  p.pop()
+  solid(p, ink, w, case_)
+  R4(CK_L + 0.05, CK_HOOD_TOP + 0.1, CK_R - 0.05, CK_HOOD_BOT)
+  p.arc(X(CK_MID), X(CK_HOOD_TOP + 0.12), X(CK_R - CK_L - 0.2), X(0.2), Math.PI, 2 * Math.PI, p.CHORD)
+  R4(CK_L + 0.02, CK_HOOD_BOT - 0.03, CK_R - 0.02, CK_HOOD_BOT + 0.02)
+  solid(p, ink, w * 0.8, DUST.bone)
+  const face: Pt = [CK_MID, -1.41]
+  p.circle(X(face[0]), X(face[1]), X(0.3))
+  outline(p, ink, w * 0.45)
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2
+    p.line(X(face[0] + Math.cos(a) * 0.11), X(face[1] + Math.sin(a) * 0.11), X(face[0] + Math.cos(a) * 0.135), X(face[1] + Math.sin(a) * 0.135))
+  }
+  // Twenty to six in the morning, the minute hand creeping with the show.
+  const minute = -Math.PI / 2 + ((40 + c.t / 60) / 60) * Math.PI * 2
+  const hour = -Math.PI / 2 + ((5 + 40 / 60) / 12) * Math.PI * 2
+  outline(p, ink, w * 0.7)
+  p.line(X(face[0]), X(face[1]), X(face[0] + Math.cos(minute) * 0.11), X(face[1] + Math.sin(minute) * 0.11))
+  p.line(X(face[0]), X(face[1]), X(face[0] + Math.cos(hour) * 0.07), X(face[1] + Math.sin(hour) * 0.07))
+}
+
 /* ------------------------------------------------------------------ the house */
 
 export const house = scenery<null>({
@@ -99,6 +179,8 @@ export const house = scenery<null>({
       p.line(X(x + 0.27), X((DOWN + 0.16 + YARD) / 2), X(x + 0.27 + (i % 2 ? 0.02 : -0.02)), X(YARD))
     }
     p.line(X(WALL_L), X((DOWN + 0.16 + YARD) / 2), X(WALL_R), X((DOWN + 0.16 + YARD) / 2))
+
+    drawKitchen(p, c)
 
     // The stair: a stringer and four treads.
     solid(p, ink, weight, DUST.wood)
@@ -1168,7 +1250,8 @@ function murphHouse(t: number): Pt {
   const onQuilt = BED.top - 0.035 - MR
   const foot: Pt = [BED.x1 - 0.2, onQuilt]
   const floorY = UP - MR
-  const down: Pt = [BED.x1 + 0.22, floorY]
+  // (Landing a little short of the stairwell, so her disc never runs into his as he drops onto the first tread.)
+  const down: Pt = [BED.x1 + 0.18, floorY]
   if (t < M_WAKES) return onPillow
   if (t < M_UP) {
     // Woken with a start: up off the pillow a little and down; a stir this way and that; then she leans toward the
