@@ -968,8 +968,8 @@ lake house cost three times the rest, a hundred to a hundred and forty milliseco
 first and last frames, and the hold under the credits, were its heaviest. Two blurs did it. The sun on the floor
 blurred each pane's light and each shadow on its own, six or more blurs a frame; the floor's mirror blurred a band of
 the frame whole. Each is drawn small now, into a scratch canvas at half size, blurred there once and laid on whole
-(`softLayer` in `kit.ts`): the same picture to within five levels, the first frame among them, and the house as cheap as
-anywhere. The white coming in after the blast, made of twenty-four banks to hide their edges, had added half again to
+(`softLayer` in `kit.ts`): the same picture to within five levels, the first frame among them, and the house down to
+thirty-five to fifty-five milliseconds, about the show's middle. The white coming in after the blast, made of twenty-four banks to hide their edges, had added half again to
 those frames; it is seven banks blurred together the same way, smooth and cheaper. Over the whole show the median frame
 went from forty-one milliseconds to thirty-one, and the worst from a hundred and forty to ninety-two. The worst now
 are the fog beyond the glass, made of many soft gradients, and left as they are.
