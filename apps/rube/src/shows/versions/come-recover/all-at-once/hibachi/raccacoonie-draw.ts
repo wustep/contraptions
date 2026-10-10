@@ -160,6 +160,36 @@ function tongue(pen: Pen, x: number, base: number, wd: number, h: number, lean: 
   p.endShape(p.CLOSE)
 }
 
+/** The counter's red lacquer: the apron rail a teppanyaki bar has along its front, where the diners would sit. */
+const LACQUER = '#8E2B22'
+
+/**
+ * The counter's face, under the burners: the griddle's heat glowing down the steel and dying away, and a red
+ * lacquered apron rail with a brass edge along the foot, so the bottom of the frame is a kitchen's counter and not a
+ * slab.
+ */
+function drawCounterFace(pen: Pen, x0: number, x1: number): void {
+  const { p, t } = pen
+  const top = rig.TOP + PLATE + SLOT + 0.07
+  const hot = Math.max(level(t), blaze(t))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The heat, down from the burners.
+  const g = ctx.createLinearGradient(0, X(pen, top), 0, X(pen, top + 0.9))
+  g.addColorStop(0, `rgba(${rgbOf(H.flame)}, ${0.12 + 0.12 * hot})`)
+  g.addColorStop(1, `rgba(${rgbOf(H.flame)}, 0)`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect(X(pen, x0), X(pen, top), X(pen, x1 - x0), X(pen, 0.9))
+  ctx.restore()
+  // The apron rail, red lacquer with a brass edge on top and its own gloss.
+  const ry = FLOOR - 0.34
+  fillPoly(pen, [[x0, ry], [x1, ry], [x1, FLOOR], [x0, FLOOR]], LACQUER, pen.ink, pen.w * 0.7)
+  p.noStroke()
+  p.fill(alpha(p, '#FFFFFF', 0.12))
+  p.rect(X(pen, x0), X(pen, ry + 0.07), X(pen, x1 - x0), X(pen, 0.03))
+  bar(pen, [x0, ry - 0.02], [x1, ry - 0.02], 0.045, '#C9A04A', pen.ink, pen.w * 0.5)
+}
+
 /** The griddle, the burners under it, and the counter down to the floor: one long teppan, out past the frame. */
 export function drawCounter(pen: Pen): void {
   const { p, k, t } = pen
@@ -173,6 +203,7 @@ export function drawCounter(pen: Pen): void {
   p.strokeWeight(pen.w * 0.6)
   for (let x = Math.floor(x0 / 1.6) * 1.6 + 0.3; x < x1; x += 1.6) p.line(X(pen, x), X(pen, rig.TOP + PLATE + SLOT + 0.3), X(pen, x), X(pen, FLOOR - 0.3))
   bar(pen, [x0, rig.TOP + PLATE + SLOT + 0.035], [x1, rig.TOP + PLATE + SLOT + 0.035], 0.07, H.steelDeep, pen.ink, pen.w * 0.7)
+  drawCounterFace(pen, x0, x1)
   // The burner slot: dark, with the gas flames licking the plate's underside, higher when the music is.
   fillPoly(pen, [[x0, rig.TOP + PLATE], [x1, rig.TOP + PLATE], [x1, rig.TOP + PLATE + SLOT], [x0, rig.TOP + PLATE + SLOT]], BG, pen.ink, pen.w * 0.6)
   const hot = Math.max(level(t), blaze(t))
@@ -673,8 +704,20 @@ export function drawSpoon(pen: Pen): void {
     const q = P(0.32, 0.06)
     drawTail(pen, q[0], q[1], tip - 0.25)
   } else if (t < rig.TAIL_IN) {
+    // In the shot's wide, a tail is a few pixels: its arc trails behind it, and it is drawn larger at the top of its
+    // flight, back to its own size as it drops into the pocket, so the throw that sets up the peek is seen.
+    const u = (t - rig.SPOON_DOWN) / rig.TAIL_FLY
+    const { p } = pen
+    p.noStroke()
+    for (let i = 8; i >= 1; i--) {
+      const s = t - i * 0.028
+      if (s < rig.SPOON_DOWN) continue
+      const [tx, ty] = tailFlight(s)
+      p.fill(alpha(p, mixHex(H.shrimp, H.flameHot, 0.4), 0.5 * (1 - i / 9)))
+      p.circle(X(pen, tx), X(pen, ty), X(pen, 0.07 * (1 - i / 11)))
+    }
     const [x, y, a] = tailFlight(t)
-    drawTail(pen, x, y, a)
+    drawTail(pen, x, y, a, 1 + 0.6 * Math.sin(Math.PI * Math.min(1, u)))
   }
 }
 

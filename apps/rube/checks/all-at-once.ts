@@ -2,13 +2,19 @@
  * The checks for Come Recover, All at Once: one ball through every world, on the recording's own onsets. Called by
  * `check-shows.ts` for that take.
  */
+import { R } from '../src/parts'
 import type { Performance } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/eeaao-onsets.json'
 import { STRIKES } from '../src/shows/versions/come-recover/all-at-once/hits'
 import { COMBS, CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall, fight } from '../src/shows/versions/come-recover/all-at-once/music'
-import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/come-recover/all-at-once/credits'
+import { CAPTIONS, CARDS, CHAPTERS, CREDITS_OK, DESCRIBED, SUBTITLES, creditsAt, goneAt, setDialogue, subtitleLight } from '../src/shows/versions/come-recover/all-at-once/credits'
 import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/peak'
+import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
+import { keepIn, keepOf } from '../src/shows/versions/come-recover/all-at-once/film'
+import { surfLookAt } from '../src/shows/versions/come-recover/all-at-once/multi/surf'
 import type { MultiverseShow } from '../src/shows/versions/come-recover/all-at-once/show'
+import { REVEAL } from '../src/shows/versions/come-recover/all-at-once/rocks/ledge'
+import { REVERSES } from '../src/shows/versions/come-recover/all-at-once/void/pull'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 
@@ -34,7 +40,12 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     jumpTimes.length === 11 && offJump.length === 0 && near(JUMPS.rocks, fall(0)), offJump.map((t) => t.toFixed(3)).join(', '))
   check('all at once: no portal anywhere, and no cut drawn', [0, 57.9, 58, 128, 191.3, 250, 300].every((t) => perf.cuts?.(t) === false))
   check('all at once: flickers only in the second before a jump, each a frame or three',
-    show.flickers.every((f) => f.to - f.from <= 0.1 && jumpTimes.some((j) => j - f.from > 0 && j - f.from < 1.0)) && show.flickers.length >= 20)
+    show.flickers.every((f) => f.to - f.from <= 0.1 && jumpTimes.some((j) => j - f.from > 0 && j - f.from < 1.0)) && show.flickers.length >= 8 &&
+    // and none into an iris, which is the jump itself (the kitchen's and the surf's), nor into everywhere at once.
+    !show.flickers.some((f) => [JUMPS.hibachi, JUMPS.surf, JUMPS.mosaic].some((j) => j - f.from > 0 && j - f.from < 1.0)))
+  // With the cut itself, no more than two flickers a jump keeps the frame's light under three flashes a second.
+  check('all at once: no more than two flickers before any jump, so a jump never flashes more than three times a second',
+    jumpTimes.every((j) => show.flickers.filter((f) => j - f.from > 0 && j - f.from < 1.0).length <= 2))
 
   // One ball, one path: in its world it never jumps; at a jump the camera carries it, so on the screen it holds still.
   const cam = perf.camera!
@@ -59,7 +70,9 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     }
     const s = onScreen(t)
     const ds = Math.hypot(s[0] - prevS[0], s[1] - prevS[1])
-    if (ds > screen) { screen = ds; screenAt = t }
+    // The hush's cuts between Jobu and her mother are cuts of the camera, not jumps: the ball moves on the screen there.
+    const cutHere = REVERSES.some((r) => r.some((c) => Math.abs(t - c) < 0.01))
+    if (ds > screen && !cutHere) { screen = ds; screenAt = t }
     prev = here
     prevLeg = leg
     prevS = s
@@ -88,17 +101,117 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   check('all at once: the peak strikes nearly every beat (247.7 to 264.1 s)', peak.n >= peak.of * 0.85, `${peak.n}/${peak.of}`)
   check('all at once: home\'s last three hits are struck', HOME_HITS.every((h) => all.some((s) => Math.abs(s - h) <= 0.03)))
 
-  // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
+  // How much of the frame's height is picture at `t`: the lives in a picture of their own are in widescreen, between
+  // bars (`film.ts`), as are the surf's glimpses of them, and what must be seen is held to the band between them.
+  const keep = (t: number): number => Math.min(keepIn(show.legs[show.owner(t)].world), keepOf(surfLookAt(t)))
+
+  // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen, but
+  // in the hush's reverse shots on Jobu, where it is out of the frame on purpose (`REVERSES`).
   const outOfZoom: string[] = []
   for (let t = 0; t <= perf.duration; t += 0.05) {
     const h = show.at(t)
     if (h.hidden || h.scale < 0.3) continue
+    if (REVERSES.some(([a, b]) => t >= a && t <= b)) continue
     const f = cam(t)
     const cells = f.cells / 1.5
-    const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / (cells / 2))
+    const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / ((cells * keep(t)) / 2))
     if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
   }
   check('all at once: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+
+  // For a viewer who asks to reduce motion: no flickers, and no punch on the great hit, with the world and the story
+  // otherwise the same, every jump at the same moment.
+  const calm = compose(true)
+  const made = compose(false)
+  check('all at once: with reduced motion, no flickers and no zoom punch, and the same jumps',
+    calm.show.flickers.length === 0 && made.show.flickers.length > 0 &&
+    Math.abs(calm.camera(JUMPS.eye + 0.08).cells - made.camera(JUMPS.eye + 0.08).cells) > 0.05 &&
+    calm.show.legs.every((l, i) => l.from === made.show.legs[i].from))
+
+  // The looks: every gaze is live, its eye's ball and the one it looks at both there for nearly all of its span, so
+  // none of them is quietly doing nothing.
+  const { eyes } = made
+  const ballOf = (who: 'evelyn' | 'joy' | 'waymond', t: number): unknown => {
+    if (who === 'evelyn') {
+      const h = show.at(t)
+      return h.hidden || h.scale <= 0.3 ? null : h
+    }
+    return who === 'joy' ? show.joy(t) : show.waymond(t)
+  }
+  const deadLooks: string[] = []
+  const unseenLooks: string[] = []
+  let looks = 0
+  for (const spec of eyes) {
+    for (const g of spec.gaze ?? []) {
+      looks++
+      let n = 0
+      let live = 0
+      for (let t = g.from; t <= g.to; t += 0.05) {
+        n++
+        const at = g.at ?? 'evelyn'
+        const target = typeof at === 'function' ? at(t) : ballOf(at, t)
+        if (t >= spec.from && ballOf(spec.who, t) && target) live++
+      }
+      if (live < n * 0.9) deadLooks.push(`${spec.who} ${g.from.toFixed(2)} (${Math.round((100 * live) / n)}%)`)
+      // And seen: its eye in the frame of the show's own camera, and big enough to read, for at least half of it.
+      let seen = 0
+      for (let t = g.from; t <= g.to; t += 0.05) {
+        const b = t >= spec.from ? (ballOf(spec.who, t) as { x: number; y: number; scale?: number } | null) : null
+        if (!b) continue
+        const f = cam(t)
+        const inside = Math.abs(b.x - f.x) < (f.cells * 16) / 9 / 2 - R && Math.abs(b.y - f.y) < (f.cells * keep(t)) / 2 - R
+        if (inside && 2 * 0.6 * R * (b.scale ?? 1) * (720 / f.cells) >= 7) seen++
+      }
+      if (seen < n * 0.5) unseenLooks.push(`${spec.who} ${g.from.toFixed(2)} (${Math.round((100 * seen) / n)}%)`)
+    }
+  }
+  check('all at once: every look is live, the one looking and the one looked at both there', deadLooks.length === 0 && looks >= 20, `${looks} looks; ${deadLooks.join(', ')}`)
+  check('all at once: every look is seen, its eye in the frame and big enough to read for at least half of it', unseenLooks.length === 0, unseenLooks.join(', '))
+
+  // Joy and Waymond are in the frame or out of it, never left half cut by its edge for long: a moment going out of
+  // shot or with the camera on the move, but not a beat held with one of them sliced.
+  // Evelyn is held to it under Zoom too, where her centre alone in the frame (the check above) would let her sit
+  // half off its edge.
+  const sliced: string[] = []
+  for (const [who, zoom] of [['joy', 1], ['waymond', 1], ['evelyn', 1.5]] as const) {
+    let from = -1
+    for (let t = 0; t <= perf.duration + 0.05; t += 0.05) {
+      const h = who === 'evelyn' && t <= perf.duration ? show.at(t) : null
+      const b = t > perf.duration ? null : who === 'evelyn' ? (h!.hidden || h!.scale < 0.3 ? null : h) : who === 'joy' ? show.joy(t) : show.waymond(t)
+      const f = cam(t)
+      const c = f.cells / zoom
+      const m = b ? Math.min((c * 16) / 9 / 2 - Math.abs(b.x - f.x), (c * keep(t)) / 2 - Math.abs(b.y - f.y)) : Infinity
+      const cut = m < R && m > -R
+      if (cut && from < 0) from = t
+      if (!cut && from >= 0) {
+        if (t - from > 1.0) sliced.push(`${who}${zoom > 1 ? ' (Zoom)' : ''} ${from.toFixed(2)}–${t.toFixed(2)}`)
+        from = -1
+      }
+    }
+  }
+  check('all at once: Joy and Waymond, and Evelyn under Zoom, are never left cut by the frame\'s edge for more than a second', sliced.length === 0, sliced.join(', '))
+
+  // Seen whole, not as specks: at 1280×720 Evelyn, and Joy and Waymond while they are in the frame, are never under
+  // 14 px across for more than 2 s, but in the hush, where the two of them are small against the bagel on purpose, and
+  // in the rocks' reveal, two specks on the rim of a canyon as big as the world, also on purpose.
+  const specks: string[] = []
+  for (const who of ['evelyn', 'joy', 'waymond'] as const) {
+    let from = -1
+    for (let t = 0; t <= CREDITS_AT + 0.05; t += 0.1) {
+      const h = who === 'evelyn' ? show.at(t) : null
+      const b = who === 'evelyn' ? (h!.hidden ? null : h) : who === 'joy' ? show.joy(t) : show.waymond(t)
+      const f = cam(t)
+      const inFrame = !!b && Math.abs(b.x - f.x) < (f.cells * 8) / 9 && Math.abs(b.y - f.y) < f.cells / 2
+      const hush = (t > JUMPS.void && t < fight(8)) || (t > REVEAL[0] && t < REVEAL[1])
+      const small = inFrame && !hush && (2 * R * ((b as { scale?: number }).scale ?? 1) * 720) / f.cells < 14
+      if (small && from < 0) from = t
+      if (!small && from >= 0) {
+        if (t - from > 2) specks.push(`${who} ${from.toFixed(1)}–${t.toFixed(1)}`)
+        from = -1
+      }
+    }
+  }
+  check('all at once: the family is never a speck: at least 14 px across at 1280×720, but in the hush and the rocks\' reveal', specks.length === 0, specks.join(', '))
 
   // The ball is never out of sight for long.
   let hidden = 0
@@ -147,6 +260,71 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   check('all at once: the googly eye comes on the great hit, beat 123 of the fight', near(JUMPS.eye, 191.216) && Math.abs(fight(123) - JUMPS.eye) < 0.03)
   check('all at once: Joy is given her eye while her mother pulls her back, after the brink and before home', JOY_EYE > JUMPS.brink && JOY_EYE < JUMPS.home)
 
+  // The show's own words that are seen (an audio description's card is only spoken; a sound caption is the viewer's
+  // choice).
+  const seen = (t: number) => creditsAt(t).filter((c) => !c.key.includes('described') && !c.caption)
+  // The film's three chapters, which are the show's three parts: each named as it begins, and gone well before the next.
+  const starts = [0, JUMPS.premiere, JUMPS.mosaic]
+  check('all at once: the chapters, Everything, Everywhere and All at Once, each as its part begins and gone long before the next',
+    CHAPTERS.map((c) => c.names.join()).join('|') === 'Everything|Everywhere|All at Once' &&
+    CHAPTERS.every((c, i) => c.at >= starts[i] && c.at < starts[i] + 1 && goneAt(c) < (starts[i + 1] ?? JUMPS.eye) - 5) &&
+    seen(CHAPTERS[1].at + 2).length === 1 && seen(JUMPS.eye).length === 0)
+
+  // The dialogue is the viewer's to turn on: off, no line is seen or spoken and no shade comes up for one; on, every
+  // line is back.
+  const lineAt = (sub: (typeof SUBTITLES)[number]) => creditsAt((sub.at + sub.to) / 2).some((c) => c.key.includes('subtitle')) || subtitleLight((sub.at + sub.to) / 2) > 0
+  check('all at once: the dialogue is offered, off until the viewer turns it on, and all of it back when they do',
+    typeof perf.dialogue === 'function' && SUBTITLES.every((sub) => !lineAt(sub)) && (perf.dialogue!(true), SUBTITLES.every(lineAt)))
+
+  // The show's three conversations in subtitles: each line in its own scene, one at a time, none over a jump, and
+  // nothing said as Joy goes over the brink.
+  const scenes: Record<string, [number, number]> = { taxes: [20.19, 29.37], alley: [JUMPS.premiere, JUMPS.dojo], hush: [JUMPS.void, JUMPS.mosaic], rocks: [JUMPS.rocks, JUMPS.brink], peak: [JUMPS.brink, JUMPS.home], home: [JUMPS.home, CREDITS_AT] }
+  check('all at once: subtitles at the taxes, in the alley, the hush, the rocks and home only, before the credits, one at a time, and silent as Joy goes over',
+    SUBTITLES.length >= 14 && SUBTITLES.every((sub, i) => sub.at > scenes[sub.scene][0] + 0.5 && sub.to < scenes[sub.scene][1] - 0.2 && sub.to > sub.at + 1 && (i === 0 || sub.at >= SUBTITLES[i - 1].to)) &&
+    SUBTITLES.every((sub) => sub.to < 213.96 - 0.2 || sub.at > 213.96 + 1.5) && ['taxes', 'alley', 'hush', 'rocks', 'home'].every((sc) => SUBTITLES.some((s) => s.scene === sc)))
+
+  // Heard as well as seen: every line of dialogue is spoken to a screen reader with who says it, and every chapter and
+  // credit card is spoken (`TitleCard.said`; the page's words layer is hidden from it).
+  const unsaid: string[] = []
+  for (const sub of SUBTITLES) {
+    const card = creditsAt((sub.at + sub.to) / 2).find((c) => c.key.includes('subtitle'))
+    const who = sub.who[0].toUpperCase() + sub.who.slice(1)
+    if (!card || card.said !== `${who}: ${sub.line}`) unsaid.push(sub.line)
+  }
+  for (const c of [...CHAPTERS, ...CARDS]) {
+    const card = creditsAt(c.at + 1.5).find((x) => x.names.join() === c.names.join())
+    if (!card || !card.said) unsaid.push(c.names.join())
+  }
+  check('all at once: every line is spoken to a screen reader with its speaker, and every chapter and credit card is spoken', unsaid.length === 0, unsaid.join(' | '))
+  // Sound captions, for a viewer who cannot hear the music: offered, each one a caption card (seen only with CC on),
+  // never spoken (a screen reader's user hears the music), and none over another.
+  const uncaptioned = CAPTIONS.filter((cap, i) => {
+    const card = creditsAt((cap.at + cap.to) / 2).find((c) => c.notes?.[0] === cap.text)
+    return !card || !card.caption || !!card.said || (i > 0 && cap.at < CAPTIONS[i - 1].to)
+  })
+  check('all at once: sound captions for the music, seen only with CC on, unspoken, one at a time', perf.captions === true && CAPTIONS.length >= 15 && uncaptioned.length === 0, uncaptioned.map((c) => c.text).join(' | '))
+
+  // And described: a scene's few words at each of its turns, unseen (nothing on the card), never over a line.
+  const undescribed = DESCRIBED.filter((d) => {
+    const card = creditsAt(d.at + 0.2).find((c) => c.said === d.said)
+    const over = SUBTITLES.some((sub) => d.at > sub.at - 0.3 && d.at < sub.to)
+    return !card || card.names.length > 0 || !!card.role || !!card.notes || over
+  })
+  // Never ahead of the picture: each is said no earlier than what it describes happens.
+  const early = DESCRIBED.filter((d) => d.of !== undefined && d.at < d.of - 0.05)
+  check('all at once: no description is said before what it describes', DESCRIBED.filter((d) => d.of !== undefined).length >= 20 && early.length === 0, early.map((d) => d.at).join(', '))
+  check('all at once: an audio description at every scene, unseen, and never over a line', DESCRIBED.length >= 20 && undescribed.length === 0, undescribed.map((d) => d.at).join(', '))
+  // Each said in full: a screen reader speaks a live region's change by replacing the last, so a description has to
+  // be over (at about 14 characters a second, a reader's ordinary rate) before the next thing is spoken.
+  const spoken = [
+    ...DESCRIBED.map((d) => ({ at: d.at, n: d.said.length, d: true })),
+    ...SUBTITLES.map((sub) => ({ at: sub.at, n: sub.line.length + 8, d: false })),
+    ...[...CHAPTERS, ...CARDS].map((c) => ({ at: c.at, n: 20, d: false })),
+  ].sort((a, b) => a.at - b.at)
+  // A description is not to cut off anything, nor be cut off; the lines and cards are on their own clocks.
+  const cut = spoken.filter((x, i) => i + 1 < spoken.length && (x.d || spoken[i + 1].d) && x.at + x.n / 14 > spoken[i + 1].at)
+  check('all at once: every description is said in full, and cuts nothing off', cut.length === 0, cut.map((x) => x.at.toFixed(1)).join(', '))
+
   // The end credits: words the page sets over the dark room after the last hit, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
   check('all at once: end credits after the last hit, set by the page, opening on Directed by Claude Opus 5.5 and naming Evelyn, Joy, Waymond, Son Lux, the film and p5.js',
@@ -154,4 +332,5 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && CARDS.filter((c) => c.role === 'Directed by').length === 1 &&
     ['Directed by', 'Claude Opus 5.5', 'Evelyn', 'Joy', 'Waymond', 'Son Lux', 'Come Recover', 'Everything Everywhere All at Once', 'Daniels', 'p5.js'].every((w) => said.includes(w)) &&
     !/private tech demo/i.test(said), said)
+  setDialogue(false)
 }

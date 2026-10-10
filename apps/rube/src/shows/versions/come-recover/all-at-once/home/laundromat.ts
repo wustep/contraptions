@@ -522,18 +522,20 @@ export const laundromat = part<LaundromatState>(
 
 function shotsFor(_slot: { begin: number; end: number }): PartShot[] {
   return [
-    // The cold open: the whole shop, lit box in the dark street, from the window to the counter; held through the
-    // silence, drifting in.
-    { t: 0.12, cells: 6.3, hold: [-1.85, -1.95] },
-    { t: CHORD + 1.3, cells: 6.2, hold: [-1.8, -1.92] },
+    // The cold open: the whole shop, lit box in the dark street, from the window to past the counter; held through
+    // the silence, drifting in. Wide enough on the right that Waymond setting the slumped bag back up (`NUDGE`), the
+    // show's first beat, is inside the frame and not cut by its edge.
+    { t: 0.12, cells: 6.62, hold: [-1.6, -2.05] },
+    { t: CHORD + 1.3, cells: 6.5, hold: [-1.55, -2.0] },
     { t: 7.4, cells: 5.4, hold: [-1.3, -1.52] },
     // In on the washer by the door and its lever as she starts it, and closer as it winds up.
     { t: 8.25, cells: 3.8, hold: [-1.05, -1.1] },
     { t: 12.35, cells: 3.4, hold: [-0.9, -0.95] },
     // The throw, across to the counter; the receipts and the spike, the letter.
     { t: 13.3, cells: 3.9, hold: [0.55, -1.45] },
-    { t: 14.5, cells: 3.35, hold: [1.75, -1.55] },
-    { t: 18.3, cells: 3.3, hold: [1.05, -1.5] },
+    // Wide and low enough for the floor: Waymond watches the storm from it, whole, not cut by the bottom edge.
+    { t: 14.5, cells: 3.6, hold: [1.75, -1.32] },
+    { t: 18.3, cells: 3.5, hold: [1.05, -1.3] },
     // Out to the door as the bell goes; with Joy across the shop to her mother, and in close on the two of them, her
     // mother working above her, Waymond watching; out again after her as she goes.
     { t: 20.1, cells: 4.3, hold: [-0.42, -1.45] },

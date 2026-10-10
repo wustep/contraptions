@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, mixHex, type Pt } from '../../../../../parts'
-import { alpha } from '../kit'
+import { alpha, hash, smooth } from '../kit'
 import { HOME } from '../worlds'
 import { lantern, propEye, ROOM, table, type Pen } from './set'
 import {
@@ -8,6 +8,7 @@ import {
   APPEAR,
   armAt,
   B,
+  ballAt,
   jawsAt,
   DESK,
   EYE_AT,
@@ -64,6 +65,109 @@ function poly(pen: Pen, pts: Pt[]): void {
 }
 
 /* ------------------------------------------------------------------ the party: lanterns, table, steamers, karaoke */
+
+/** The party's wall: where it is dressed for the new year, over the table (room cells). */
+const DRESS = { x0: 29.7, x1: 36.0, swag: -4.2, dip: 0.32, scroll: { xs: [30.55, 34.55], top: -3.45, h: 1.38, w: 0.3 }, card: { x: 31.5, y: -2.48, r: 0.3 } }
+
+/**
+ * The wall over the party, dressed for the new year: crepe-paper festoons under the ceiling, red and gold by turns,
+ * a pair of red couplet scrolls flanking the table, their brushed lines in gold, and between them a red luck card
+ * hung on its point. It fills the pale wall the party stood under, and its paper stirs when the arm rushes past.
+ */
+export function drawPartyWall(pen: Pen, t: number): void {
+  const { p, k, ink, w } = pen
+  const { x0, x1, swag, dip } = DRESS
+  // The festoons: scallops of crepe paper from tack to tack, a red run over a gold one, each sagging and stirring.
+  const tacks = 7
+  const span = (x1 - x0) / tacks
+  for (const [hex, drop, off] of [
+    [HOME.gold, dip * 1.18, 0.5],
+    [HOME.red, dip, 0],
+  ] as const) {
+    for (let i = 0; i < tacks; i++) {
+      const a = x0 + (i + off) * span
+      const b = Math.min(x1, a + span)
+      if (b - a < span * 0.5) continue
+      const sag = drop * (1 + 0.06 * Math.sin(t * 1.7 + i * 1.3)) + 0.05 * Math.max(0, lanternSway(i % 2, t) * 4)
+      solid(p, ink, w * 0.5, hex)
+      p.beginShape()
+      for (let j = 0; j <= 12; j++) {
+        const u = j / 12
+        p.vertex((a + (b - a) * u) * k, (swag + sag * Math.sin(Math.PI * u)) * k)
+      }
+      for (let j = 12; j >= 0; j--) {
+        const u = j / 12
+        p.vertex((a + (b - a) * u) * k, (swag + (sag - 0.1) * Math.sin(Math.PI * u) + 0.02) * k)
+      }
+      p.endShape(p.CLOSE)
+      // The crepe's crinkle.
+      faint(pen, 0.25, w * 0.35)
+      for (let j = 1; j < 6; j++) {
+        const u = j / 6
+        const x = a + (b - a) * u
+        const y = swag + sag * Math.sin(Math.PI * u)
+        p.line(x * k, (y - 0.08) * k, x * k, (y - 0.01) * k)
+      }
+    }
+  }
+  // Each tack, a gold rosette.
+  solid(p, ink, w * 0.5, HOME.gold)
+  for (let i = 0; i <= tacks; i++) p.circle((x0 + i * span) * k, (swag + 0.01) * k, 0.12 * k)
+  // The couplets: red scrolls on their wooden rods, a column of gold strokes down each.
+  const sc = DRESS.scroll
+  sc.xs.forEach((x, i) => {
+    const lean = 0.012 * Math.sin(t * 1.1 + i * 2)
+    p.push()
+    p.translate(x * k, sc.top * k)
+    p.rotate(lean)
+    solid(p, ink, w * 0.7, HOME.red)
+    p.rect(0, (sc.h / 2) * k, sc.w * k, sc.h * k)
+    outline(p, HOME.gold, Math.max(1, w * 0.5))
+    p.rect(0, (sc.h / 2) * k, (sc.w - 0.07) * k, (sc.h - 0.07) * k)
+    solid(p, ink, w * 0.6, HOME.wood)
+    for (const y of [-0.02, sc.h + 0.02]) p.rect(0, y * k, (sc.w + 0.12) * k, 0.05 * k, 0.02 * k)
+    // The brushed lines: five marks a scroll, each a stroke or two, never the same twice.
+    p.noFill()
+    p.stroke(HOME.gold)
+    p.strokeWeight(Math.max(1, 0.028 * k))
+    for (let j = 0; j < 5; j++) {
+      const cy = 0.2 + j * 0.25
+      const h1 = hash(i, j, 31)
+      const h2 = hash(i, j, 37)
+      p.line(-0.08 * k, (cy - 0.05 + 0.04 * h1) * k, 0.08 * k, (cy - 0.06 + 0.03 * h2) * k)
+      p.line((-0.02 + 0.05 * h2) * k, (cy - 0.09) * k, (0.0 + 0.04 * h1) * k, (cy + 0.07) * k)
+      if (h1 > 0.45) p.line(-0.07 * k, (cy + 0.05) * k, 0.07 * k, (cy + 0.04 + 0.02 * h2) * k)
+    }
+    p.pop()
+  })
+  // The luck card, hung on its point from a tack, swinging a hair: red, a gold border, a gold flower in its middle.
+  const cd = DRESS.card
+  const swing = 0.03 * Math.sin(t * 1.4) + 0.06 * lanternSway(0, t)
+  outline(p, ink, w * 0.4)
+  p.line(cd.x * k, (cd.y - cd.r - 0.42) * k, cd.x * k, (cd.y - cd.r) * k)
+  p.push()
+  p.translate(cd.x * k, (cd.y - cd.r) * k)
+  p.rotate(swing)
+  p.translate(0, cd.r * k)
+  p.rotate(Math.PI / 4)
+  const side = cd.r * Math.SQRT2
+  solid(p, ink, w * 0.8, HOME.red)
+  p.rect(0, 0, side * k, side * k)
+  outline(p, HOME.gold, Math.max(1, w * 0.6))
+  p.rect(0, 0, (side - 0.09) * k, (side - 0.09) * k)
+  p.rotate(-Math.PI / 4)
+  p.noStroke()
+  p.fill(HOME.gold)
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 - Math.PI / 2
+    p.circle(Math.cos(a) * 0.11 * k, Math.sin(a) * 0.11 * k, 0.13 * k)
+  }
+  p.fill(HOME.red)
+  p.circle(0, 0, 0.08 * k)
+  p.pop()
+  solid(p, ink, w * 0.5, HOME.gold)
+  p.circle(cd.x * k, (cd.y - cd.r - 0.42) * k, 0.07 * k)
+}
 
 /** The paper lanterns on their cords from the ceiling, each swinging about its hook in the ceiling. */
 export function drawLanterns(pen: Pen, t: number): void {
@@ -381,7 +485,7 @@ export function drawGlove(pen: Pen, t: number): void {
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.glove)
     const eye = gloveEye(t)
-    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing - (g.aim + Math.PI / 2) * 0.15, e.lift)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, watching(t, EYE_AT.glove, eye.at, e.swing - (g.aim + Math.PI / 2) * 0.15), e.lift)
   }
 }
 
@@ -455,7 +559,7 @@ export function drawTrap(pen: Pen, t: number): void {
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.trap)
     const eye = trapEye(t)
-    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing + j.sway * 1.5, e.lift)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, watching(t, EYE_AT.trap, eye.at, e.swing + j.sway * 1.5), e.lift)
   }
 }
 
@@ -505,7 +609,7 @@ export function drawHammer(pen: Pen, t: number): void {
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.hammer)
     const eye = hammerEye(t)
-    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing + phi * 0.8, e.lift)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, watching(t, EYE_AT.hammer, eye.at, e.swing + phi * 0.8), e.lift)
   }
 }
 
@@ -618,7 +722,7 @@ export function drawArm(pen: Pen, t: number): void {
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.claw)
     const eye = clawEye(t)
-    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing, e.lift)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, watching(t, EYE_AT.claw, eye.at, e.swing), e.lift)
   }
 }
 
@@ -628,6 +732,21 @@ export function clawEye(t: number): { at: Pt; r: number } {
   const up = g.a - Math.PI / 2
   const flip = Math.cos(g.a) < 0 ? -1 : 1
   return { at: [g.end[0] + Math.cos(g.a) * 0.03 + Math.cos(up) * 0.12 * flip, g.end[1] + Math.sin(g.a) * 0.03 + Math.sin(up) * 0.12 * flip], r: 0.1 }
+}
+
+/**
+ * A gentled machine's pupil, watching her: once its new eye has settled from its landing, it turns to her, wherever
+ * she goes, and keeps on her to the end of the fight. `base` is the pupil's own swing, which it eases out of.
+ */
+function watching(t: number, at: number, eye: Pt, base: number): number {
+  const u = t - at - 0.9
+  if (u <= 0) return base
+  const w = smooth(u, 0, 0.4)
+  const [x, y] = ballAt(t)
+  const a = Math.atan2(y - eye[1], x - eye[0]) - Math.PI / 2
+  // The short way round from its own swing to her.
+  const d = Math.atan2(Math.sin(a - base), Math.cos(a - base))
+  return base + d * w
 }
 
 /* ------------------------------------------------------------------ the eyes she gives them */
@@ -642,11 +761,23 @@ const GIVEN: { at: number; target: (t: number) => { at: Pt; r: number } }[] = [
 ]
 
 /**
+ * Where she looks as she gives each eye: at the machine it goes to, from a breath before until it has landed. The
+ * glove's waits until her own new eye has had its fling. Room cells, which are the kindness leg's world cells.
+ */
+export const GIFT_LOOKS: { from: number; to: number; at: (t: number) => Pt }[] = GIVEN.map((g, i) => ({
+  from: i === 0 ? g.at - 0.3 : g.at - 0.5,
+  to: g.at + 0.3,
+  at: (t: number) => g.target(t).at,
+}))
+
+/**
  * The eyes she gives: on each machine's beat a copy of her own googly eye pops off hers, flies in a quick arc,
  * turning, its pupil flapping round, and slaps onto the machine as it touches her. Drawn over her (the part's
  * `over`). Her eye (`fx.ts`) is centred on her ball, its white 0.6 of her radius.
  */
 export function drawGivenEyes(pen: Pen, t: number, her: (t: number) => Pt): void {
+  const { p, k } = pen
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const g of GIVEN) {
     const u = t - (g.at - FLIGHT)
     if (u < 0 || u >= FLIGHT) continue
@@ -654,13 +785,35 @@ export function drawGivenEyes(pen: Pen, t: number, her: (t: number) => Pt): void
     const from = her(g.at - FLIGHT)
     const to = g.target(g.at).at
     const d = Math.hypot(to[0] - from[0], to[1] - from[1])
-    const f = 1 - (1 - s) * (1 - s) * (1 - 0.4 * s)
-    const lift = (0.1 + 0.35 * d) * 4 * s * (1 - s)
-    const x = from[0] + (to[0] - from[0]) * f
-    const y = from[1] + (to[1] - from[1]) * f - lift
-    // Peeled off hers at her eye's size, it swells to the machine's as it goes.
+    const at = (s: number): Pt => {
+      const f = 1 - (1 - s) * (1 - s) * (1 - 0.4 * s)
+      const lift = (0.1 + 0.35 * d) * 4 * s * (1 - s)
+      return [from[0] + (to[0] - from[0]) * f, from[1] + (to[1] - from[1]) * f - lift]
+    }
+    const [x, y] = at(s)
+    // Peeled off hers at her eye's size, it swells to the machine's as it goes, and a little past it in mid-flight,
+    // so on the pale tile the gift is seen going.
     const r0 = 0.6 * R
-    const r = (r0 + (g.target(g.at).r - r0) * s) * (0.7 + 0.3 * Math.min(1, s / 0.2))
+    const swell = 1 + 0.45 * Math.sin(Math.PI * s)
+    const r = (r0 + (g.target(g.at).r - r0) * s) * (0.7 + 0.3 * Math.min(1, s / 0.2)) * swell
+    // It carries the great hit's lantern gold with it: a trail of its arc, and a soft light round it.
+    const fade = Math.sin(Math.PI * Math.min(1, s * 1.15))
+    p.noStroke()
+    for (let i = 7; i >= 1; i--) {
+      const q = s - i * 0.035
+      if (q < 0) continue
+      const [tx, ty] = at(q)
+      p.fill(alpha(p, HOME.gold, 0.55 * fade * (1 - i / 8)))
+      p.circle(tx * k, ty * k, r * 1.1 * (1 - i / 10) * k)
+    }
+    const gr = r * 3.2 * k
+    const glowG = ctx.createRadialGradient(x * k, y * k, r * 0.8 * k, x * k, y * k, gr)
+    glowG.addColorStop(0, `rgba(255, 201, 90, ${0.55 * fade})`)
+    glowG.addColorStop(1, 'rgba(255, 201, 90, 0)')
+    ctx.save()
+    ctx.fillStyle = glowG
+    ctx.fillRect(x * k - gr, y * k - gr, 2 * gr, 2 * gr)
+    ctx.restore()
     propEye(pen, x, y, r, s * Math.PI * 2.6 + 0.5 * Math.sin(s * 19), 0.7 * Math.sin(Math.PI * s))
   }
 }

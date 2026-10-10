@@ -22,7 +22,10 @@ import {
   carpetX,
   flightIn,
 } from './premiere-clock'
-import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, glint, glow, pool, rgba as rgbaHex } from './premiere-light'
+import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, flare, glint, glow, pool, rgba as rgbaHex, smear } from './premiere-light'
+
+/** The kerb the carpet is laid to: stone, a shade up from the wet street. */
+const KERB = mixHex(STREET, SILVER, 0.1)
 
 /**
  * The red carpet of her own premiere, at night: the theatre's dark front with its doors lit and its marquee over
@@ -560,6 +563,7 @@ function drawCarpet(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
   p.noStroke()
   p.fill(STREET)
   p.rect(X((x0 + x1) / 2), X((CARPET + foot) / 2), X(x1 - x0), X(foot - CARPET))
+  drawStreet(p, c, t, x0, x1)
   // The carpet: its face, seen a little from above, a gold binding on its far edge, and its near edge in shadow.
   solid(p, INK, weight, STAR.carpet)
   p.rect(X((x0 + x1) / 2), X(CARPET + 0.12), X(x1 - x0), X(0.24))
@@ -573,6 +577,53 @@ function drawCarpet(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
   if (o > 0.01) {
     pool(p, X((DOORS.x0 + DOORS.x1) / 2 + 0.3), X(CARPET + 0.1), X(3.2 * o + 0.6), X(0.24), STAR.spot, (0.7 + 0.3 * knock(t - DOORS_WIDE, 0.3)) * Math.min(1, o * 2))
     glow(p, X((DOORS.x0 + DOORS.x1) / 2), X(CARPET - 1.2), X(3.4), STAR.spot, 0.25 * o)
+  }
+}
+
+/**
+ * The street in front of the theatre, under the carpet's kerb: wet from the rain round the corner, so the night's
+ * lights stand in it. The pilasters' gold slits and the lit poster cases lie in it as long smears, and the doors'
+ * light, the spotlight's pool and every flash of the press are shown back out of it as they come. Without it the
+ * frame's foot is a dead band of dark under the carpet.
+ */
+function drawStreet(p: p5, c: Ctx, t: number, x0: number, x1: number): void {
+  const { k, weight } = c
+  const X = (v: number) => v * k
+  const kerb = CARPET + 0.24
+  const top = kerb + 0.2
+  // The kerb's face: dressed stone, a shade up from the street, its arris catching the light.
+  solid(p, INK, weight * 0.5, KERB)
+  p.rect(X((x0 + x1) / 2), X(kerb + 0.1), X(x1 - x0), X(0.2))
+  outline(p, mixHex(KERB, SILVER, 0.5), Math.max(1, X(0.018)))
+  p.line(X(x0), X(kerb + 0.015), X(x1), X(kerb + 0.015))
+  // The pilasters' gold and the poster cases, standing in the wet.
+  for (let i = Math.floor(x0 / 3.4) - 1; i <= Math.ceil(x1 / 3.4) + 1; i++) {
+    const px = i * 3.4 + 0.2
+    if (px > EDGE_X - 0.2 || px < x0 - 1) continue
+    if (!(px > DOORS.x0 - 0.8 && px < DOORS.x1 + 0.8)) {
+      smear(p, X(px), X(top), X(0.3), X(2.2), STAR.gold, 0.16)
+      const cx = px + 1.7
+      if (!(cx > DOORS.x0 - 1 && cx < DOORS.x1 + 1) && cx < EDGE_X - 1.2) smear(p, X(cx), X(top), X(0.9), X(1.4), STAR.spot, 0.07)
+    }
+  }
+  // The doors' light, as they open.
+  const o = doorsOpen(t)
+  if (o > 0.01) smear(p, X((DOORS.x0 + DOORS.x1) / 2), X(top), X(2.0 * o + 0.4), X(2.6), STAR.spot, 0.28 * Math.min(1, o * 2))
+  // The spotlight's pool, under her.
+  const { x, b } = spotAt(t)
+  if (b > 0.01) smear(p, X(x), X(top), X(1.3), X(2.0), STAR.spot, 0.22 * b)
+  // Each flash, a beat in the wet.
+  for (const fl of FLASHES) {
+    const s = t - fl.t
+    if (s < 0 || s > 0.6) continue
+    smear(p, X(fl.x), X(top), X(0.7), X(2.4), STAR.flash, 0.5 * knock(s, 0.08))
+  }
+  // A few long ripples of sheen across it.
+  outline(p, rgbaHex(SILVER, 0.08), Math.max(1, X(0.014)))
+  for (let j = 0; j < 4; j++) {
+    const y = top + 0.32 + j * (0.38 + 0.12 * j)
+    const off = 1.3 * hash(j, 5, 7)
+    for (let xx = Math.floor(x0 / 2.6) * 2.6 + off; xx < x1; xx += 2.6) p.line(X(xx), X(y), X(xx + 0.9 + 0.6 * hash(j, Math.round(xx * 3), 9)), X(y))
   }
 }
 
@@ -595,11 +646,20 @@ export function premiereOver(p: p5, c: Ctx, t: number): void {
   const f = frame(p, c.k)
   if (f.x0 > EDGE_X + 2) return
   const X = (v: number) => v * c.k
+  // Each gun the press fires, as it pops: a shorter streak from its reflector.
+  for (const s of PRESS) {
+    const { pop } = flashOf(s, t)
+    if (pop <= 0.02) continue
+    const [rx, ry] = reflectorOf(s)
+    flare(p, X(rx), X(ry), X(3.2), X(0.05), 0.55 * pop)
+  }
   for (const fl of FLASHES) {
     const s = t - fl.t
     if (s < 0 || s > 0.8) continue
     const a = knock(s, 0.08)
     glow(p, X(fl.x), X(fl.y), X(4.5), STAR.flash, 0.4 * a, 0.2)
+    // The widescreen lens's flare: a streak across the frame from the gun.
+    flare(p, X(fl.x), X(fl.y), X(Math.max(6, (f.x1 - f.x0) * 0.75)), X(0.07), 0.7 * a)
     // The frame's flash: a wide wash of light falling off from the gun, not a flat sheet over the frame, so the
     // dark under the carpet stays dark and the room is lit from where the flash went off.
     glow(p, X(fl.x), X(fl.y), X(Math.max(f.x1 - f.x0, f.y1 - f.y0) * 0.9), '#FFFFFF', 0.2 * a, 0.45)

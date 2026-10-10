@@ -1,4 +1,4 @@
-import { ballAt, laneAt, type Pt } from '../../../../parts'
+import { ballAt, laneAt, type Lane, type LanePoint, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
@@ -67,9 +67,55 @@ function boundsOf(pieces: Placed[]): Box {
   return b
 }
 
+/**
+ * Where a lane has the ball at `t`: `laneAt`'s answer, found by halving rather than by walking the lane from its
+ * start. A carried lane is laid at sixty segments a second, so a long one (the peak's, the pull's) is a thousand and
+ * more, and the googly eyes ask where the balls were a thousand times a frame; walking them was most of a frame on a
+ * slow machine. The segment found is the same one `laneAt` would stop at, and it is handed to `laneAt` alone.
+ */
+interface Seek {
+  ends: number[]
+  singles: Lane[]
+}
+const SEEKS = new WeakMap<Lane, Seek>()
+function seek(lane: Lane, t: number): LanePoint {
+  if (lane.segs.length < 24) return laneAt(lane, t)
+  let found = SEEKS.get(lane)
+  if (!found) {
+    const ends: number[] = []
+    let acc = 0
+    for (const seg of lane.segs) {
+      acc += seg.dur
+      ends.push(acc)
+    }
+    found = { ends, singles: lane.segs.map((seg) => ({ segs: [seg], fire: 0 })) }
+    SEEKS.set(lane, found)
+  }
+  const want = Math.max(0, t)
+  const { ends } = found
+  // The first segment whose end is at or past `want`; the last if none is.
+  let lo = 0
+  let hi = ends.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (ends[mid] >= want) hi = mid
+    else lo = mid + 1
+  }
+  // `laneAt` on the one segment, with its index put back as the whole lane's.
+  const p = laneAt(found.singles[lo], want - (ends[lo] - lane.segs[lo].dur))
+  return { ...p, seg: lo }
+}
+
 export class MultiverseShow extends Show {
   private readonly keys: WorldKey[]
   private readonly worlds: Universe[]
+  /**
+   * Each leg's world as the stage is handed it: the world itself, with the leg's own bounds. Overview (the viewer's
+   * O) frames a world's bounds, and a world that two legs share far apart (the surf and the mosaic, the dark and the
+   * peak) would otherwise frame both, a vignette lost in a field of its colour. The home legs keep the whole shop,
+   * which is the room every one of them happens in. One object a leg, so what compares worlds (trails) still can.
+   */
+  private readonly legWorlds: Universe[]
 
   constructor(
     readonly legs: Leg[],
@@ -78,6 +124,8 @@ export class MultiverseShow extends Show {
     readonly duration: number,
     private readonly riders: Riders = [],
     private readonly company: Spans = [],
+    /** While this says so, the flickers are left out: the viewer has asked to reduce motion. */
+    private readonly quiet: () => boolean = () => false,
   ) {
     super('all-at-once')
     this.keys = [...new Set(legs.map((l) => l.world))]
@@ -100,6 +148,12 @@ export class MultiverseShow extends Show {
         journey: duration,
       }
     })
+    this.legWorlds = legs.map((leg) => {
+      const world = this.worlds[this.keys.indexOf(leg.world)]
+      if (leg.world === 'home') return world
+      const bounds = boundsOf(leg.placed)
+      return { ...world, box: bounds, bounds }
+    })
   }
 
   clamp(t: number): number {
@@ -117,7 +171,7 @@ export class MultiverseShow extends Show {
   /** The leg whose world is on the stage at `t`: the owner's, or the next one's (or the last one's) in a flicker. */
   presented(t: number): number {
     const time = this.clamp(t)
-    const f = this.flickers.find((x) => time >= x.from && time < x.to)
+    const f = this.quiet() ? undefined : this.flickers.find((x) => time >= x.from && time < x.to)
     return f ? f.leg : this.owner(time)
   }
 
@@ -176,7 +230,7 @@ export class MultiverseShow extends Show {
   /** Where the ball is at `t`, in its own leg's cells. Cheap: what the camera samples. */
   where(t: number): Pt {
     const placed = this.holder(t)
-    const at = laneAt(placed.lane, this.clamp(t) - placed.start)
+    const at = seek(placed.lane, this.clamp(t) - placed.start)
     return [placed.col + placed.mirror * at.x, placed.row + at.y]
   }
 
@@ -185,10 +239,10 @@ export class MultiverseShow extends Show {
     const owner = this.owner(time)
     const shown = this.presented(time)
     const [ox, oy] = this.shift(owner, shown)
-    const universe = this.worlds[this.keys.indexOf(this.legs[shown].world)]
+    const universe = this.legWorlds[shown]
     const placed = this.holder(time)
     const into = time - placed.start
-    const point = laneAt(placed.lane, into)
+    const point = seek(placed.lane, into)
     const ball = ballAt(placed.ballIn, placed.changes, into)
     const here: ShowPoint = {
       ...point,

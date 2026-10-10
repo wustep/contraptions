@@ -175,7 +175,8 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
       s.draw = () => {
         if (size.fit === 'letterbox') s.background(0)
         paintShow(s, showing, at, full, tight, size.fit === 'letterbox' ? box : undefined)
-        if (words) words(s.drawingContext as CanvasRenderingContext2D, showing.titles!(Math.max(0, Math.min(showing.duration, at))))
+        // A saved video has the show's words but not its sound captions, which are the viewer's choice on the page.
+        if (words) words(s.drawingContext as CanvasRenderingContext2D, showing.titles!(Math.max(0, Math.min(showing.duration, at))).filter((c) => !c.caption))
       }
     })
     return {

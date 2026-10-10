@@ -2,8 +2,9 @@ import type p5 from 'p5'
 import { FLOOR, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { box, carried, frame, part, type Company, type PartShot } from '../kit'
 import { LIGHTS, lightAt, penOf, shade, STREET, type Glow } from './set'
-import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, waymondAt, windowLight } from './finale-plan'
+import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, SWELL, waymondAt, windowLight } from './finale-plan'
 import { HOME } from '../worlds'
+import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './finale-lives'
 import { drawCamera, drawContactShadows, drawFlash, drawFlashShadows, drawLanternString, drawPhoto, drawSwitch, drawTripodFront, drawWasher, drawWasherDoor, drawWindowGlow, fireworkFloor, fireworkLight, fireworks, lightColor, stringGlows } from './finale-draw'
 
 /**
@@ -66,10 +67,14 @@ install(STREET, 'finale-fireworks', fireworks)
  */
 const CARS = [299.6, 317.4]
 const CAR_CROSS = 2.6
+/** The car's size against the far fronts. */
+const CAR_SCALE = 1.5
 const carAt = (t: number): { x: number; u: number } | null => {
   for (const at of CARS) {
+    // Past the glass (u 1) it drives on down the street beyond the shop's end wall, for a frame wide enough to see it,
+    // and out of any frame before it stops being drawn.
     const u = (t - at) / CAR_CROSS
-    if (u >= 0 && u <= 1) return { x: -1.8 - 8.4 * u, u }
+    if (u >= 0 && u <= 3) return { x: -1.8 - 8.4 * u, u }
   }
   return null
 }
@@ -80,34 +85,44 @@ install(STREET, 'finale-cars', (p: p5, k: number, t: number) => {
   const road = FLOOR - 0.62
   const ctx = p.drawingContext as CanvasRenderingContext2D
   // The beam out ahead of it, low along the road.
-  const g = ctx.createLinearGradient((x - 0.55) * k, 0, (x - 2.6) * k, 0)
+  const nose = x - 0.55 * CAR_SCALE
+  const g = ctx.createLinearGradient(nose * k, 0, (nose - 2.4) * k, 0)
   g.addColorStop(0, 'rgba(255, 244, 214, 0.55)')
   g.addColorStop(1, 'rgba(255, 244, 214, 0)')
   ctx.fillStyle = g
   ctx.beginPath()
-  ctx.moveTo((x - 0.55) * k, (road - 0.2) * k)
-  ctx.lineTo((x - 2.6) * k, (road - 0.42) * k)
-  ctx.lineTo((x - 2.6) * k, (road + 0.02) * k)
-  ctx.lineTo((x - 0.55) * k, (road - 0.12) * k)
+  ctx.moveTo(nose * k, (road - 0.27) * k)
+  ctx.lineTo((nose - 2.4) * k, (road - 0.5) * k)
+  ctx.lineTo((nose - 2.4) * k, (road + 0.02) * k)
+  ctx.lineTo(nose * k, (road - 0.17) * k)
   ctx.fill()
-  // The car: a dark shape against the far fronts, its cabin's glass, a wheel at each end, and its lamps.
+  // The car: a dark shape against the far fronts, its cabin's glass, a wheel at each end, and its lamps. It is drawn
+  // at the far fronts' own scale, a car's length to their doorways, not a toy's.
+  const S = CAR_SCALE
+  const X = (dx: number) => (x + dx * S) * k
+  const Y = (dy: number) => (road + dy * S) * k
+  const L = (v: number) => v * S * k
   p.noStroke()
   p.fill(mixHex(HOME.night, HOME.steelDark, 0.15))
-  p.rect(x * k, (road - 0.17) * k, 1.1 * k, 0.24 * k, 0.07 * k)
-  p.rect((x + 0.06) * k, (road - 0.36) * k, 0.62 * k, 0.2 * k, 0.08 * k, 0.08 * k, 0, 0)
+  p.rect(X(0), Y(-0.17), L(1.1), L(0.24), L(0.07))
+  p.rect(X(0.06), Y(-0.36), L(0.62), L(0.2), L(0.08), L(0.08), 0, 0)
   p.fill(mixHex(HOME.night, HOME.glassDeep, 0.35))
-  p.rect((x + 0.06) * k, (road - 0.35) * k, 0.5 * k, 0.12 * k, 0.05 * k)
+  p.rect(X(0.06), Y(-0.35), L(0.5), L(0.12), L(0.05))
+  // The street's light along its roof.
+  p.fill(mixHex(HOME.night, HOME.steel, 0.3))
+  p.rect(X(0.06), Y(-0.455), L(0.5), L(0.02), L(0.01))
   p.fill(mixHex(HOME.night, HOME.steelDark, 0.05))
-  for (const wx of [-0.33, 0.35]) p.circle((x + wx) * k, (road - 0.04) * k, 0.18 * k)
+  for (const wx of [-0.33, 0.35]) p.circle(X(wx), Y(-0.04), L(0.18))
   p.fill('#FFF4D6')
-  p.ellipse((x - 0.53) * k, (road - 0.16) * k, 0.07 * k, 0.06 * k)
+  p.ellipse(X(-0.53), Y(-0.16), L(0.07), L(0.06))
   p.fill(HOME.red)
-  p.rect((x + 0.54) * k, (road - 0.17) * k, 0.04 * k, 0.07 * k)
+  p.rect(X(0.54), Y(-0.17), L(0.04), L(0.07))
 })
 install(LIGHTS.glows, 'finale-cars', (t: number): Glow[] => {
   const car = carAt(t)
   if (!car) return []
   // The headlights thrown in through the window, travelling across the floor and the washer the other way.
+  if (car.u > 1) return []
   const inside = -7.4 + 6.8 * car.u
   const a = Math.sin(Math.PI * car.u)
   return [{ x: inside, y: -0.9, r: 1.5, a: 0.32 * a, color: '#FFF1CF' }]
@@ -197,34 +212,49 @@ export const finale = part<FinaleState>(
   (slot) => {
     const H = (x: number, y: number): Pt => toPart([x, y])
     const shots: PartShot[] = [
-      // Close on the window, as the peak left it: the drum turns them.
+      // Close on the window, as the peak left it: the drum turns them. Then back a little, slowly, to take in
+      // Waymond waiting by the lever, whole and not cut by the frame's edge, before he leaps it.
       { t: slot.begin + 0.6, cells: 2.4, hold: H(PORT[0], PORT[1] + 0.02), w: 1 },
-      { t: 268.2, cells: 2.55, hold: H(PORT[0] + 0.04, PORT[1] + 0.08), w: 1 },
+      { t: slot.begin + 1.9, cells: 2.72, hold: H(PORT[0] + 0.04, PORT[1] + 0.02), w: 1 },
+      { t: 268.2, cells: 2.78, hold: H(PORT[0] + 0.1, PORT[1] + 0.06), w: 1 },
       // The door, the drop, and back to take in Waymond coming.
       { t: 269.7, cells: 3.1, hold: H(-2.05, -0.5), w: 1 },
       { t: 271.7, cells: 3.8, hold: H(-1.95, -0.72), w: 1 },
-      { t: 275.2, cells: 4.3, hold: H(-2.1, -1.3), w: 1 },
+      { t: 275.2, cells: 4.3, hold: H(-2.1, -1.12), w: 1 },
       // In, slowly, to the three of them together at the washer's foot, its window glowing behind them; and hold.
       // The string of lanterns is whole in the frame or out of it: the push goes under it in half a second, not
       // with their tassels hanging in at the top for two.
-      { t: 276.3, cells: 3.95, hold: H(-2.08, -1.22), w: 1 },
+      { t: 276.3, cells: 3.95, hold: H(-2.08, -1.06), w: 1 },
       { t: 276.9, cells: 3.2, hold: H(-2.05, -0.7), w: 1 },
       { t: 279.0, cells: 2.6, hold: H(-2.03, -0.6), w: 1 },
       { t: 282.2, cells: 2.6, hold: H(-2.05, -0.6), w: 1 },
       // Out again with her, under the camera's tripod, to the switch under the window.
-      { t: 284.8, cells: 3.75, hold: H(-4.35, -1.02), w: 1 },
-      { t: 286.2, cells: 3.75, hold: H(-4.4, -1.02), w: 1 },
+      // Her and the switch, and the whole string over the family as it lights a lantern a beat: its far end and
+      // its anchor in the frame, not cut by the right edge, and less of the night glass on the left. Held low enough
+      // that Zoom (the same middle, 1.5 times closer) keeps a strip of floor under them rather than its bottom edge on it.
+      { t: 284.8, cells: 3.85, hold: H(-3.5, -0.95), w: 1 },
+      { t: 286.2, cells: 3.85, hold: H(-3.45, -0.95), w: 1 },
       // She presses it: back and right, the string of lanterns lighting over the family one a beat.
-      { t: 287.8, cells: 4.25, hold: H(-3.55, -1.25), w: 1 },
+      { t: 287.8, cells: 4.25, hold: H(-3.55, -1.1), w: 1 },
       // And settle on the portrait: the door's glass, the camera, the family under the lanterns.
-      { t: 290.2, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
-      { t: FLASH + 0.6, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
-      { t: 293.2, cells: 3.9, hold: H(-3.45, -1.12), w: 1 },
+      { t: 290.2, cells: 3.85, hold: H(-3.5, -0.95), w: 1 },
+      { t: FLASH + 0.6, cells: 3.85, hold: H(-3.5, -0.95), w: 1 },
+      { t: 293.2, cells: 3.9, hold: H(-3.45, -0.96), w: 1 },
       // Then back, towards the washer's glow, for the lights going out. Both stay inside the shop's end wall: the
       // storefront's glass is the frame's left edge, so the room is never seen cut off in the dark of the tail.
-      { t: 294.6, cells: 5.15, hold: H(-3.4, -1.52), w: 1 },
-      // The rest: drawing back, very slowly, over the dark.
-      { t: END - 0.05, cells: 5.45, hold: H(-3.1, -1.66), w: 1 },
+      { t: 294.6, cells: 5.15, hold: H(-3.4, -1.38), w: 1 },
+      // Held while the tubes go out over the counter; then in, close, to the window and the three of them at its
+      // foot, for the lives that pass through its glass under the credits. The window is right of the middle, so the
+      // credits have the dark of the door and the storefront to the left of it.
+      { t: 296.1, cells: 5.15, hold: H(-3.35, -1.38), w: 1 },
+      { t: LIVES_FIRST - 0.2, cells: 2.75, hold: H(PORT[0] - 0.7, -0.62), w: 1 },
+      { t: LIVES_OUT, cells: 2.6, hold: H(PORT[0] - 0.66, -0.62), w: 1 },
+      // The swell, and they look at one another: held. Then back, slowly, to the shop at night, and the end's dark.
+      // Low enough that Zoom keeps the family whole on a strip of floor, and high enough that the frame still takes in
+      // the lucky cat's shelf.
+      { t: SWELL + 1.05, cells: 2.58, hold: H(PORT[0] - 0.65, -0.62), w: 1 },
+      { t: SWELL + 7.5, cells: 5.45, hold: H(-3.1, -1.5), w: 1 },
+      { t: END - 0.05, cells: 5.45, hold: H(-3.1, -1.5), w: 1 },
     ]
     return shots.filter((k) => k.t > slot.begin + 0.39 && k.t <= slot.end + 1e-6)
   },

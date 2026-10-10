@@ -314,7 +314,7 @@ export const dummies = part<DojoState>(
     return [
       // Down out of the rafters with her, opening out onto the first pair.
       { t: slot.begin + 0.5, cells: 5.0, off: [0.5, 0.7] },
-      { t: 87.25, cells: 5.1, hold: H(1.6, 2.35), w: 0.9 },
+      { t: 87.25, cells: 5.1, hold: H(1.6, 2.35), w: 0.78 },
       { t: 89.3, cells: 5.1, hold: H(1.6, 2.4), w: 0.92 },
       // The kick up into the staff: wide enough for its swing.
       { t: 90.2, cells: 6.4, hold: H(1.35, 2.8), w: 0.95 },
@@ -326,8 +326,8 @@ export const dummies = part<DojoState>(
       // Held on him through the catch and the wind, until the kick; then up with her to the gong.
       { t: 94.88, cells: 5.2, hold: H(6.15, 2.45), w: 0.9 },
       // The high kick and the gong, wide: from his leg to the beam.
-      { t: 95.25, cells: 6.1, hold: H(6.5, 5.0), w: 0.97 },
-      { t: 95.9, cells: 6.3, hold: H(6.3, 4.45), w: 0.95 },
+      { t: 95.25, cells: 6.1, hold: H(6.5, 5.0), w: 0.85 },
+      { t: 95.9, cells: 6.3, hold: H(6.3, 4.45), w: 0.7 },
       // In on the leg as it winds, to the seam's framing at the kick.
       { t: 96.5, cells: 5.4, hold: H(5.95, 2.1), w: 0.92 },
       { t: slot.end, cells: 4.5, hold: H(last[0] + 0.25, last[1] + 0.45), w: 0.85 },

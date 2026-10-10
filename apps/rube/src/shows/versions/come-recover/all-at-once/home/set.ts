@@ -6,7 +6,7 @@ import { alpha, frame, hash, knock, scenery, smooth } from '../kit'
 import { GREAT, HOME_HITS, home } from '../music'
 import { HOME_CIRCLE } from '../seams'
 import { KNOTS, WIRE_A, WIRE_B, lanternAt } from './set-garland'
-import { EYE_PUPIL, EYE_WHITE, HOME, LAUNDROMAT } from '../worlds'
+import { EVELYN, EYE_PUPIL, EYE_WHITE, HOME, JOY, LAUNDROMAT, WAYMOND } from '../worlds'
 
 /**
  * The Wang family laundromat: the room every home leg happens in, and the canonical drawings of its fixtures.
@@ -916,6 +916,18 @@ export function tube(pen: Pen, x: number, level: number): void {
 /** Where the neon washer hangs in the window. */
 const NEON_AT: Pt = [-5.72, -2.55]
 
+/** The block across the street, on past the shop's end wall to the left: fronts of their own widths and heights. */
+const FAR_FRONTS: [number, number, number][] = (() => {
+  const out: [number, number, number][] = []
+  let a1 = -9.6
+  for (let i = 0; i < 9; i++) {
+    const a0 = a1 - (1.2 + 0.5 * hash(i, 1, 57))
+    out.unshift([a0, a1, -3.2 - 1.2 * hash(i, 2, 57)])
+    a1 = a0
+  }
+  return out
+})()
+
 function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: number): void {
   const { p, k } = pen
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -923,15 +935,14 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
   p.fill(NIGHT)
   p.rect(((x0 + x1) / 2) * k, ((y0 + y1) / 2) * k, (x1 - x0) * k, (y1 - y0) * k)
   // The block across the street: building fronts in two night tones, each with a grid of windows, a few lit warm.
-  const fronts: [number, number, number][] = [
-    [-9.6, -8.2, -3.9],
-    [-8.2, -6.9, -3.3],
-    [-6.9, -5.6, -4.2],
-    [-5.6, -4.3, -3.6],
-    [-4.3, -2.9, -4.0],
-  ]
-  fronts.forEach(([a0, a1, roof], i) => {
-    p.fill(mixHex(HOME.night, HOME.steelDark, i % 2 ? 0.22 : 0.34))
+  // Further left the block goes on, past the shop's end wall, for a frame wide enough to look out past it.
+  const fronts: [number, number, number][] = [...FAR_FRONTS, [-9.6, -8.2, -3.9], [-8.2, -6.9, -3.3], [-6.9, -5.6, -4.2], [-5.6, -4.3, -3.6], [-4.3, -2.9, -4.0]]
+  fronts.forEach(([a0, a1, roof], at) => {
+    if (a1 < x0 || a0 > x1) return
+    // Each front's own number, the original block's 0 to 4 as they always were, so its tones and lit windows are
+    // unchanged; the fronts further left count back from there.
+    const i = at - FAR_FRONTS.length
+    p.fill(mixHex(HOME.night, HOME.steelDark, Math.abs(i) % 2 ? 0.22 : 0.34))
     p.rect(((a0 + a1) / 2) * k, ((roof + FLOOR - 0.6) / 2) * k, (a1 - a0) * k, (FLOOR - 0.6 - roof) * k)
     p.fill(mixHex(HOME.night, HOME.steelDark, 0.5))
     p.rect(((a0 + a1) / 2) * k, roof * k, (a1 - a0 + 0.06) * k, 0.08 * k)
@@ -968,24 +979,29 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
   p.rect((lx + 0.18) * k, -3.1 * k, 0.4 * k, 0.05 * k)
   p.fill(HOME.light)
   p.ellipse((lx + 0.36) * k, -3.02 * k, 0.22 * k, 0.08 * k)
-  // A string of new year lanterns across the street, small and far, on their line.
-  p.noFill()
-  p.stroke(alpha(p, HOME.steelDark, 0.9))
-  p.strokeWeight(Math.max(1, k * 0.01))
-  p.beginShape()
-  for (let i = 0; i <= 16; i++) {
-    const sx = -9.4 + (i / 16) * 6.4
-    p.vertex(sx * k, (-3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI)) * k)
-  }
-  p.endShape()
-  p.noStroke()
-  for (let i = 0; i < 6; i++) {
-    const sx = -8.9 + i * 1.08
-    const sy = -3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI) + 0.1
-    p.fill(alpha(p, HOME.red, 0.85))
-    p.ellipse(sx * k, sy * k, 0.17 * k, 0.14 * k)
-    p.fill(alpha(p, HOME.gold, 0.7))
-    p.rect(sx * k, (sy - 0.075) * k, 0.07 * k, 0.025 * k)
+  // Strings of new year lanterns across the street, small and far, on their line: the one seen through the glass, and
+  // more spans of it on down the street to the left, so a wide frame never sees it end in the air.
+  for (let span = 0; span < 4; span++) {
+    const off = -6.4 * span
+    if (-3.0 + off < x0 || -9.4 + off > x1) continue
+    p.noFill()
+    p.stroke(alpha(p, HOME.steelDark, 0.9))
+    p.strokeWeight(Math.max(1, k * 0.01))
+    p.beginShape()
+    for (let i = 0; i <= 16; i++) {
+      const sx = -9.4 + (i / 16) * 6.4
+      p.vertex((sx + off) * k, (-3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI)) * k)
+    }
+    p.endShape()
+    p.noStroke()
+    for (let i = 0; i < 6; i++) {
+      const sx = -8.9 + i * 1.08
+      const sy = -3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI) + 0.1
+      p.fill(alpha(p, HOME.red, 0.85))
+      p.ellipse((sx + off) * k, sy * k, 0.17 * k, 0.14 * k)
+      p.fill(alpha(p, HOME.gold, 0.7))
+      p.rect((sx + off) * k, (sy - 0.075) * k, 0.07 * k, 0.025 * k)
+    }
   }
   for (const f of STREET) f(pen.p, k, t)
 }
@@ -1135,6 +1151,15 @@ function frontDoor(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the room */
 
+/**
+ * The room's own state, one a composed show: what the googly-eyed bags on the washers watch, if anything, as a point in
+ * the room at show time `t` and how far they are turned to it. The score fills it once its show exists, so the bags
+ * follow her round the big dryer.
+ */
+export interface RoomState {
+  watch: ((t: number) => { p: Pt; w: number } | null) | null
+}
+
 /** The idle washers' laundry bags on top, and how they sit. */
 const TOP_BAGS: { x: number; color: string; size: number }[] = [
   { x: 5.45, color: HOME.rose, size: 0.62 },
@@ -1150,6 +1175,23 @@ const TOP_BAGS: { x: number; color: string; size: number }[] = [
 const CLOCK = { x: -1.9, y: -3.55, r: 0.27 }
 const PRICES = { x: 4.55, y: -2.95, w: 0.92, h: 0.78 }
 const CALENDAR = { x: 26.7, y: -3.05, w: 0.62, h: 0.82 }
+/**
+ * A shelf high between the door's washer and the counter, up under the tubes where a shop keeps its luck: a lucky cat
+ * waving on it, a money plant trailing over its edge, and between them an old photograph of the three of them in its
+ * frame, the one the night ends by taking again. It is in the wide shots (the opening, the credits) and above the
+ * finale's close ones, whose top edge would otherwise cut the cat's head off; it is clear of the throw up to the
+ * hanger.
+ */
+const SHELF = { x0: -1.3, x1: -0.14, y: -3.7 }
+const PHOTO = { x: -0.67, w: 0.4, h: 0.33 }
+/**
+ * A corkboard over the counter's far end, where the taxes are done, low enough to be in the two-shot of Joy's visit
+ * and clear of the throw up to the hanger at the counter's near end: a red envelope, and a crayon drawing Joy made
+ * when she was small, the three of them in a row under a sun. The receipt storm goes up across it, so nothing on it
+ * is white paper: the drawing is on yellow construction paper and the cork is dark, and a flying receipt never reads
+ * as one pinned there.
+ */
+const CORK = { x: 2.02, y: -2.3, w: 0.92, h: 0.56 }
 
 function nail(pen: Pen, x: number, y: number): void {
   const { p, k, ink, w } = pen
@@ -1183,6 +1225,203 @@ function wallClock(pen: Pen, t: number): void {
   hand(Math.floor(t * 1) / 60, r * 0.8, 0.012, HOME.red)
   solid(p, ink, w * 0.3, ink)
   p.circle(x * k, y * k, 0.04 * k)
+}
+
+function pin(pen: Pen, x: number, y: number, col: string): void {
+  const { p, k, ink, w } = pen
+  solid(p, ink, w * 0.35, col)
+  p.circle(x * k, y * k, 0.06 * k)
+}
+
+function corkboard(pen: Pen): void {
+  const { p, k, ink, w } = pen
+  const { x, y, w: bw, h: bh } = CORK
+  solid(p, ink, w, HOME.wood)
+  p.rect(x * k, y * k, bw * k, bh * k, 0.03 * k)
+  solid(p, ink, w * 0.4, mixHex(HOME.wood, HOME.night, 0.2))
+  p.rect(x * k, y * k, (bw - 0.1) * k, (bh - 0.1) * k)
+  const L = x - bw / 2
+  const T = y - bh / 2
+  // The red envelope, tucked in at an angle, a gold mark on it.
+  p.push()
+  p.translate((L + 0.72) * k, (T + 0.3) * k)
+  p.rotate(0.12)
+  solid(p, ink, w * 0.4, HOME.red)
+  p.rect(0, 0, 0.17 * k, 0.26 * k, 0.01 * k)
+  solid(p, ink, w * 0.3, HOME.gold)
+  p.circle(0, -0.02 * k, 0.07 * k)
+  p.pop()
+  // Joy's drawing: a sheet of paper, a little crooked, three round faces in crayon in their own colours, a sun.
+  p.push()
+  p.translate((L + 0.33) * k, (T + 0.28) * k)
+  p.rotate(-0.07)
+  solid(p, ink, w * 0.35, mixHex(HOME.butter, HOME.paper, 0.35))
+  p.rect(0, 0, 0.42 * k, 0.32 * k)
+  p.noFill()
+  p.strokeWeight(Math.max(1, 0.018 * k))
+  p.stroke(HOME.butter)
+  p.circle(0.14 * k, -0.09 * k, 0.07 * k)
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2
+    p.line((0.14 + Math.cos(a) * 0.05) * k, (-0.09 + Math.sin(a) * 0.05) * k, (0.14 + Math.cos(a) * 0.075) * k, (-0.09 + Math.sin(a) * 0.075) * k)
+  }
+  ;[EVELYN, JOY, WAYMOND].forEach((col, i) => {
+    const fx = -0.12 + 0.1 * i
+    const r = i === 1 ? 0.03 : 0.038
+    p.stroke(col)
+    p.circle(fx * k, 0.04 * k, 2 * r * k)
+    // A crayon smile and a body line.
+    p.arc(fx * k, 0.045 * k, r * k, r * 0.7 * k, 0.2, Math.PI - 0.2)
+    p.line(fx * k, (0.04 + r) * k, fx * k, (0.12) * k)
+  })
+  // The ground they stand on, a green scribble.
+  p.stroke('#5E9E62')
+  p.line(-0.18 * k, 0.13 * k, 0.18 * k, 0.125 * k)
+  p.pop()
+  pin(pen, L + 0.33 - 0.005, T + 0.13, HOME.red)
+}
+
+/**
+ * What is in the ground under the shop, seen in the cut: stones bedded in the earth, a water main along the whole
+ * length, and the laundromat's own drain line under its washers, a trap and a drop up to each one. On a wide stage it
+ * is a strip at the frame's foot; on a phone's squarer stage it is a quarter of the frame, and it reads as ground a
+ * family's shop stands on rather than a blank band. All of it is in the earth's own tones, quiet under the room.
+ */
+function underground(pen: Pen, x0: number, x1: number, top: number, deep: number): void {
+  const { p, k, ink, w } = pen
+  const earth = mixHex(HOME.floor, HOME.night, 0.62)
+  // Stones: a few to a cell, flat-ish, lighter and darker than the earth, never two the same.
+  p.noStroke()
+  for (let cx = Math.floor(x0); cx <= Math.ceil(x1); cx++) {
+    for (let j = 0; j < 3; j++) {
+      const hx = hash(cx, j, 71)
+      const hy = hash(cx, j, 72)
+      const hs = hash(cx, j, 73)
+      const x = cx + hx
+      const y = top + 0.35 + hy * (deep - 0.45)
+      const r = 0.05 + 0.09 * hs
+      p.fill(mixHex(earth, hs > 0.5 ? HOME.floor : HOME.night, 0.16 + 0.12 * hx))
+      p.ellipse(x * k, y * k, 2 * r * k * (1.2 + 0.5 * hy), 2 * r * k)
+    }
+  }
+  const pipe = mixHex(earth, HOME.steelDark, 0.55)
+  const lip = mixHex(earth, HOME.steel, 0.45)
+  // The water main, the whole length of the shop, low in the ground.
+  const mainY = top + deep * 0.62
+  solid(p, mixHex(ink, earth, 0.5), w * 0.5, pipe)
+  p.rect(((x0 + x1) / 2) * k, mainY * k, (x1 - x0) * k, 0.13 * k)
+  p.noStroke()
+  p.fill(lip)
+  for (let x = Math.ceil(x0 / 2.4) * 2.4; x < x1; x += 2.4) p.rect(x * k, mainY * k, 0.07 * k, 0.19 * k, 0.015 * k)
+  // The drain: under the washers, falling gently toward the street, a trap and a drop up to each one.
+  const d0 = WASHERS[0].x - 0.6
+  const d1 = WASHERS[WASHERS.length - 1].x + 0.3
+  if (d1 < x0 || d0 > x1) return
+  const dy = (x: number) => top + 0.42 + 0.012 * (d1 - x)
+  solid(p, mixHex(ink, earth, 0.5), w * 0.5, pipe)
+  p.beginShape()
+  p.vertex(d0 * k, (dy(d0) - 0.06) * k)
+  p.vertex(d1 * k, (dy(d1) - 0.06) * k)
+  p.vertex(d1 * k, (dy(d1) + 0.06) * k)
+  p.vertex(d0 * k, (dy(d0) + 0.06) * k)
+  p.endShape(p.CLOSE)
+  for (const wa of WASHERS) {
+    const x = wa.x + 0.35
+    if (x < x0 - 0.5 || x > x1 + 0.5) continue
+    // The drop through the slab, and its U-trap.
+    solid(p, mixHex(ink, earth, 0.5), w * 0.45, pipe)
+    p.rect(x * k, ((FLOOR + 0.44 + dy(x) - 0.2) / 2) * k, 0.07 * k, (dy(x) - 0.2 - FLOOR - 0.44) * k)
+    p.noFill()
+    p.stroke(pipe)
+    p.strokeWeight(Math.max(1, 0.07 * k))
+    p.arc((x + 0.08) * k, (dy(x) - 0.2) * k, 0.16 * k, 0.2 * k, 0, Math.PI)
+    p.line((x + 0.16) * k, (dy(x) - 0.2) * k, (x + 0.16) * k, (dy(x) - 0.05) * k)
+  }
+}
+
+function shelf(pen: Pen, t: number): void {
+  const { p, k, ink, w } = pen
+  const { x0, x1, y } = SHELF
+  // The old photograph, stood on the shelf in its frame, leaning a little: the three of them, younger, in front of the
+  // shop's window.
+  const ph = PHOTO
+  p.push()
+  p.translate(ph.x * k, (y - ph.h / 2) * k)
+  p.rotate(-0.05)
+  solid(p, ink, w * 0.8, HOME.wood)
+  p.rect(0, 0, ph.w * k, ph.h * k, 0.02 * k)
+  solid(p, ink, w * 0.4, mixHex(HOME.paper, HOME.butter, 0.35))
+  p.rect(0, 0, (ph.w - 0.1) * k, (ph.h - 0.1) * k)
+  // Faded: the window's circle behind them, and the three in a row.
+  p.noStroke()
+  p.fill(mixHex(HOME.glass, HOME.paper, 0.45))
+  p.circle(0, -0.02 * k, 0.2 * k)
+  ;[EVELYN, JOY, WAYMOND].forEach((col, i) => {
+    p.fill(mixHex(col, HOME.paper, 0.35))
+    p.circle((-0.11 + 0.11 * i) * k, 0.07 * k, (i === 1 ? 0.07 : 0.085) * k)
+  })
+  p.pop()
+  // The shelf on its two brackets.
+  solid(p, ink, w * 0.5, HOME.steelDark)
+  for (const bx of [x0 + 0.18, x1 - 0.18]) {
+    p.triangle(bx * k, y * k, (bx + 0.001) * k, (y + 0.22) * k, (bx + 0.14) * k, y * k)
+  }
+  solid(p, ink, w * 0.8, HOME.wood)
+  p.rect(((x0 + x1) / 2) * k, (y + 0.035) * k, (x1 - x0) * k, 0.07 * k, 0.015 * k)
+  // The money plant in its pot, trailing over the edge, a leaf a hand.
+  const px = x1 - 0.22
+  solid(p, ink, w * 0.5, mixHex(HOME.red, HOME.wood, 0.4))
+  p.beginShape()
+  p.vertex((px - 0.11) * k, (y - 0.2) * k)
+  p.vertex((px + 0.11) * k, (y - 0.2) * k)
+  p.vertex((px + 0.08) * k, y * k)
+  p.vertex((px - 0.08) * k, y * k)
+  p.endShape(p.CLOSE)
+  const leaf = mixHex(HOME.tileDeep, '#3F7A4E', 0.6)
+  outline(p, mixHex(leaf, ink, 0.3), Math.max(1, w * 0.4))
+  p.noFill()
+  p.beginShape()
+  for (let i = 0; i <= 10; i++) {
+    const u = i / 10
+    p.vertex((px + 0.1 + 0.06 * Math.sin(u * 3)) * k, (y - 0.18 + 0.4 * u) * k)
+  }
+  p.endShape()
+  solid(p, mixHex(leaf, ink, 0.3), w * 0.35, leaf)
+  for (let i = 0; i < 5; i++) {
+    const u = i / 4
+    const lx = px + 0.1 + 0.06 * Math.sin(u * 3) + (i % 2 === 0 ? 0.045 : -0.045)
+    const ly = y - 0.16 + 0.38 * u
+    p.ellipse(lx * k, ly * k, 0.09 * k, 0.065 * k)
+  }
+  for (const [lx, ly] of [[-0.06, -0.3], [0.02, -0.34], [-0.1, -0.24], [0.08, -0.26]] as const) p.ellipse((px + lx) * k, (y + ly) * k, 0.1 * k, 0.07 * k)
+  // The lucky cat: white, a red collar and a gold bell, one paw up and waving, a beat every second and a third.
+  const cx = x0 + 0.26
+  const base = y
+  solid(p, ink, w * 0.6, HOME.enamel)
+  p.ellipse(cx * k, (base - 0.13) * k, 0.26 * k, 0.26 * k)
+  p.circle(cx * k, (base - 0.34) * k, 0.24 * k)
+  // Ears.
+  p.triangle((cx - 0.11) * k, (base - 0.4) * k, (cx - 0.07) * k, (base - 0.5) * k, (cx - 0.02) * k, (base - 0.44) * k)
+  p.triangle((cx + 0.11) * k, (base - 0.4) * k, (cx + 0.07) * k, (base - 0.5) * k, (cx + 0.02) * k, (base - 0.44) * k)
+  // The waving paw, on its shoulder.
+  const wave = 0.5 * Math.sin(t * Math.PI * 1.5)
+  p.push()
+  p.translate((cx + 0.1) * k, (base - 0.2) * k)
+  p.rotate(-0.25 + wave * 0.6)
+  solid(p, ink, w * 0.5, HOME.enamel)
+  p.ellipse(0, -0.1 * k, 0.08 * k, 0.2 * k)
+  p.pop()
+  // Its face: two shut, smiling eyes and a nose; the collar and bell.
+  outline(p, ink, w * 0.45)
+  p.arc((cx - 0.045) * k, (base - 0.35) * k, 0.05 * k, 0.04 * k, Math.PI, Math.PI * 2)
+  p.arc((cx + 0.045) * k, (base - 0.35) * k, 0.05 * k, 0.04 * k, Math.PI, Math.PI * 2)
+  p.noStroke()
+  p.fill(HOME.rose)
+  p.circle(cx * k, (base - 0.31) * k, 0.025 * k)
+  solid(p, ink, w * 0.4, HOME.red)
+  p.rect(cx * k, (base - 0.235) * k, 0.16 * k, 0.03 * k, 0.015 * k)
+  solid(p, ink, w * 0.4, HOME.gold)
+  p.circle(cx * k, (base - 0.205) * k, 0.045 * k)
 }
 
 function priceBoard(pen: Pen): void {
@@ -1248,7 +1487,7 @@ const RUNNING = [2, 5]
 /** The great hit shakes the room: everything loose hops, and settles. */
 const jolt = (t: number): number => knock(t - GREAT, 0.12) * Math.sin(Math.max(0, t - GREAT) * 38)
 
-function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; y1: number }): void {
+function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; y1: number }, state: RoomState | null = null): void {
   const { p, k, ink, w } = pen
   const R0 = ROOM.x0
   const R1 = ROOM.x1
@@ -1336,6 +1575,7 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
         if (y > f.y1 + 0.5) break
         p.line(gx0 * k, y * k, gx1 * k, y * k)
       }
+      underground(pen, gx0, gx1, top, deep)
     }
   }
   solid(p, ink, w, HOME.floor)
@@ -1346,8 +1586,16 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     solid(p, ink, w, SECTION)
     p.rect(((a + b) / 2) * k, ((C - 0.4 + FLOOR + 0.44) / 2) * k, (b - a) * k, (FLOOR + 0.44 - C + 0.4) * k)
   }
-  // The pavement outside the storefront's end, where the frame looks past it.
+  // Outside the storefront's end, where the frame looks past it: the street the window looks onto, going on, and its
+  // pavement. On a wide stage (an ultrawide screen, the credits' draw-back) it is the night street, not a dark slab.
   if (f.x0 < R0 - 0.3) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect((f.x0 - 1) * k, (f.y0 - 1) * k, (R0 - 0.3 - f.x0 + 1) * k, (FLOOR + 0.44 - f.y0 + 1) * k)
+    ctx.clip()
+    street(pen, t, f.x0 - 1, R0 - 0.3, f.y0 - 1, FLOOR + 0.44)
+    ctx.restore()
     p.noStroke()
     p.fill(mixHex(HOME.night, HOME.steelDark, 0.45))
     p.rect(((f.x0 - 1 + R0 - 0.3) / 2) * k, (FLOOR + 0.22) * k, (R0 - 0.3 - f.x0 + 1) * k, 0.44 * k)
@@ -1357,6 +1605,8 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
   if (see(CLOCK.x - 0.4, CLOCK.x + 0.4)) wallClock(pen, t)
   if (see(PRICES.x - 0.6, PRICES.x + 0.6)) priceBoard(pen)
   if (see(CALENDAR.x - 0.4, CALENDAR.x + 0.4)) calendar(pen)
+  if (see(SHELF.x0 - 0.3, SHELF.x1 + 0.3)) shelf(pen, t)
+  if (see(CORK.x - CORK.w, CORK.x + CORK.w)) corkboard(pen)
   // The fixtures. The counter.
   if (see(COUNTER.x0, COUNTER.x1)) counterFront(pen)
   // The washers (all but the laundromat part's, the first).
@@ -1397,11 +1647,19 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     stool(pen, 25.4)
   }
   // Laundry bags waiting on the washers, googly-eyed (Waymond's work): they hop on the great hit.
+  // Watching her, when there is someone to watch: the pupils turned along the line to her.
+  const seen = state?.watch?.(t) ?? null
   for (const b of TOP_BAGS) {
     if (!see(b.x - 0.5, b.x + 0.5)) continue
     const near = clamp(1 - Math.abs(b.x - WASHERS[0].x) / 10)
     const hop = Math.max(0, j) * 0.08 * near
-    bag(pen, b.x, WASHER.top - hop, { color: b.color, size: b.size, swing: 0.8 * j * near, lift: clamp(j * 1.5) * near })
+    let swing = 0.8 * j * near
+    if (seen) {
+      // How far it is turned to her (`w`, eased in and out), its pupils drawn the short way round.
+      const a = Math.atan2(seen.p[1] - (WASHER.top - 0.3 * b.size), seen.p[0] - b.x) - Math.PI / 2
+      swing += Math.atan2(Math.sin(a), Math.cos(a)) * seen.w
+    }
+    bag(pen, b.x, WASHER.top - hop, { color: b.color, size: b.size, swing, lift: clamp(j * 1.5) * near })
   }
   // The tubes, over all of it.
   TUBES.forEach((tb, i) => {
@@ -1475,11 +1733,11 @@ function lightMap(p: p5, k: number, t: number): void {
  * The room: scenery drawn from show time. Its `draw` is the shop and every idle fixture in it; its `over` is the
  * light, over every part's `draw` and the balls.
  */
-export const room = scenery<null>({
+export const room = scenery<RoomState | null>({
   name: 'room',
-  draw: (p, _s, c) => {
+  draw: (p, s, c) => {
     const f = frame(p, c.k)
-    drawRoom(penOf(p, c), c.t, f)
+    drawRoom(penOf(p, c), c.t, f, s)
   },
   over: (p, _s, c) => {
     const f = frame(p, c.k)
