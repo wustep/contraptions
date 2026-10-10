@@ -697,7 +697,7 @@ function lawn(p: p5, c: Ctx, f: Frame, t: number, balls: Body[]): void {
   ctx.restore()
   // The water's edge at the bank's foot.
   soft(ctx, k, ox + SHORE.x + 0.4, oy + SHORE.y - 0.02, 1.3, 0.07, LAKE.lakeLight, 0.6)
-  // The grass's edge: one ink line, and tufts along it that move in the air.
+  // The grass's edge: one ink line.
   p.push()
   p.noFill()
   p.stroke(ink)
@@ -705,17 +705,6 @@ function lawn(p: p5, c: Ctx, f: Frame, t: number, balls: Body[]): void {
   p.beginShape()
   for (let x = x0; x <= x1; x += 0.05) p.vertex(X(x), X(top(x)))
   p.endShape()
-  p.stroke(mixHex(LAKE.grassDark, LAKE.pines, 0.35))
-  p.strokeWeight(Math.max(1, weight * 0.7))
-  const first = Math.floor(x0 / 0.23)
-  for (let i = first; i * 0.23 < x1; i++) {
-    if (hash(i, 81) < 0.4) continue
-    const bx = i * 0.23 + 0.12 * hash(i, 82)
-    const by = top(bx)
-    const sway = 0.028 * Math.sin(tau * 2.1 + bx * 1.7)
-    const h = 0.06 + 0.08 * hash(i, 83)
-    for (let j = -1; j <= 1; j++) p.line(X(bx + j * 0.022), X(by + 0.004), X(bx + j * 0.042 + sway), X(by - h * (1 - 0.3 * Math.abs(j))))
-  }
   p.pop()
   // Their shadows on the grass, down and to the right of each (the sun is high, behind us to the left).
   for (const { x, y, r } of balls) {

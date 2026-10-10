@@ -2,7 +2,7 @@ import type { Pt, Seg } from '../../../../../parts'
 import { box, carried, lookFrom, part, type Company, type Look, type PartShot } from '../kit'
 import { TURN } from '../music'
 import { drawSwell } from './chamber-glass'
-import { drawDeckOver, drawDeckRig, drawDust, drawMist, drawMistFront, drawPuffs, drawStone } from './shaft-draw'
+import { drawDeckOver, drawDeckRig, drawMist, drawMistFront, drawPuffs, drawStone } from './shaft-draw'
 import {
   I_HOPS,
   I_TOUCH,
@@ -38,7 +38,7 @@ import {
  * two of them on it and comes up against its stops on a pulse (67.431). Dark. She rolls across the deck to the
  * floodlight's switch and touches it (68.383): the lamp stutters, and catches on the next pulse (68.621), and its beam
  * goes up the shaft, the low ribs round it catching the light one above another into the dark, and far up a faint
- * white. Dust hangs in the beam, falling slowly down the throat.
+ * white.
  *
  * On the great burst (70.513) she leaps from the deck, and gravity turns under her: Earth's pull (down the throat)
  * swings round to the shell's own, toward the wall on her right, over half a second, and she falls in a true curve
@@ -137,7 +137,6 @@ export const shaft = part<ShaftState>(
       drawStone(p, c, t)
       drawMist(p, c, t)
       drawDeckRig(p, c, t)
-      drawDust(p, c, t)
       drawPuffs(p, c, t)
     },
     over: (p, s, c) => {

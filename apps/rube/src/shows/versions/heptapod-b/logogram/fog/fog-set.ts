@@ -10,8 +10,8 @@ import { costelloNib, F3, F4, FOG1, GREAT, herAt, P0, RINGS } from './fog-plan'
 
 /**
  * Beyond the glass, drawn: white fog without a floor, soft volumes drifting at several depths, a denser white far
- * below; Costello near and huge, Abbott further back and paler; the rings they write hanging where and when they
- * were written. Everything is read from the plan by show time, so the ink she rides is the ink drawn.
+ * below; Costello near and huge, Abbott further back and paler; the rings they write, where and when they are
+ * written. Everything is read from the plan by show time, so the ink she rides is the ink drawn.
  */
 
 type Frame = ReturnType<typeof frame>
@@ -333,33 +333,6 @@ function tipOf(f: Frame, s: Staged, limb: number): Pt {
   return seen(f, s.depth, s.at[0] + tx, s.at[1] + ty)
 }
 
-/* ------------------------------------------------------------------ the writing already in the fog */
-
-/**
- * Logograms hanging at depth along fog2 (written before, or far off while she goes): paler and smaller with distance,
- * each placed to be seen from her way at `tc` at `off` from her, so the fog fills with writing as the show goes.
- */
-const HANGING = [
-  { seed: 401, r: 2.6, d: 0.36, born: 126.5, tc: 143.6, off: [3.9, -2.2] as Pt },
-  { seed: 419, r: 2.9, d: 0.34, born: 140.5, tc: 147.6, off: [4.4, 2.0] as Pt },
-  { seed: 421, r: 2.3, d: 0.4, born: 146.9, tc: 150.6, off: [-4.2, -2.1] as Pt },
-  { seed: 431, r: 2.7, d: 0.35, born: 149.4, tc: 153.3, off: [4.0, -2.6] as Pt },
-].map((h) => ({ ...h, at: behind(h.tc, h.d, h.off) }))
-
-function drawHanging(p: p5, k: number, f: Frame, t: number): void {
-  if (!inFog2(t)) return
-  for (const w of HANGING) {
-    const s = t - w.born
-    if (s < 0) continue
-    const [x, y] = seen(f, w.d, w.at[0], w.at[1])
-    if (x + w.r * w.d < f.x0 - 1 || x - w.r * w.d > f.x1 + 1 || y + w.r * w.d < f.y0 - 1 || y - w.r * w.d > f.y1 + 1) continue
-    p.push()
-    p.translate(x * k, y * k)
-    drawLogogram(p, k * w.d, { r: w.r, seed: w.seed, t, form: 0.35 + 0.65 * sstep(s / 3.4), start: hash(w.seed, 1) * TAU, spin: 0.02 * t, fade: clamp01((s - 30) / 40), color: mixHex(FOG.inkSoft, FOG.white, 0.55), light: 0.16 })
-    p.pop()
-  }
-}
-
 /* ------------------------------------------------------------------ the rings */
 
 function drawRing(p: p5, k: number, ring: Ring, t: number): void {
@@ -413,14 +386,13 @@ export function drawFog(p: p5, k: number, t: number): void {
   p.push()
   p.noStroke()
   drawAir(p, k, f, t)
-  // Far off: Abbott, and the logograms hanging at depth; then Costello behind her way, the nearer air,
+  // Far off: Abbott; then Costello behind her way, the nearer air,
   // Costello over it; then the white the tops of them go into; then the ink.
   // While Abbott holds her it is the nearest of them (in her plane, and darker than Costello in the fog), so it is
   // drawn over the nearer air and over Costello's reaching limb; as it draws back it goes behind them again.
   const A = abbott(t)
   const holding = A !== null && A.depth > 0.95
   if (A && !holding) drawStaged(p, k, f, A)
-  drawHanging(p, k, f, t)
   const C = costello(t, f)
   if (C.depth < 1) drawStaged(p, k, f, C)
   drawLayer(p, k, f, LAYERS[2], t)

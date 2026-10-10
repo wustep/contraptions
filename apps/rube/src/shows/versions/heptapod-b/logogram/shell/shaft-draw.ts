@@ -8,7 +8,6 @@ import { SHELL, VALLEY } from '../worlds'
 import {
   DECK,
   deckX,
-  gravity,
   ianAt,
   louiseAt,
   PRESS,
@@ -35,7 +34,7 @@ import { TURN } from '../music'
  * roll turns it all on the screen. Side on, the shaft is a section through dark stone: the cut stone round it, the
  * far wall seen between its two faces, low ribs across it like rings. Three lights and nothing else: the daylight
  * coming up the throat from the valley below, the deck's floodlight once she switches it on, and the white at the
- * far end, growing. Dust hangs in the air and falls the way gravity does.
+ * far end, growing.
  */
 
 const clamp01 = (u: number) => Math.max(0, Math.min(1, u))
@@ -622,85 +621,6 @@ export function drawDeckOver(p: p5, c: Ctx, t: number): void {
   p.translate(deckX(t) * k, 0)
   p.rotate(Math.PI / 2)
   drawDeck(p, k, DECK[0], DECK[1], { ink: RIG_INK, weight, steel: STEEL, over: true })
-  p.pop()
-}
-
-/* ------------------------------------------------------------------ the dust */
-
-/**
- * Dust, drifting the way gravity pulls: down the throat in the mouth, then, as gravity turns, turning with it (each
- * mote's drift lags a little, the way fine dust in air does) toward the new floor. Tiny, soft, seen only where light is.
- */
-const V_DUST = 0.16
-const TAU_DUST = 0.4
-const DUST_DT = 0.01
-const DUST_T0 = TURN - 1
-const DUST_T1 = TURN + 3
-const DRIFT: Pt[] = (() => {
-  // The drift from DUST_T0, tabled: velocity relaxing toward V_DUST along gravity.
-  const out: Pt[] = [[0, 0]]
-  let v: Pt = [-V_DUST, 0]
-  let p: Pt = [0, 0]
-  for (let t = DUST_T0; t < DUST_T1; t += DUST_DT) {
-    const g = gravity(t)
-    const gl = Math.hypot(g[0], g[1]) || 1
-    const want: Pt = [(V_DUST * g[0]) / gl, (V_DUST * g[1]) / gl]
-    const e = 1 - Math.exp(-DUST_DT / TAU_DUST)
-    v = [v[0] + (want[0] - v[0]) * e, v[1] + (want[1] - v[1]) * e]
-    p = [p[0] + v[0] * DUST_DT, p[1] + v[1] * DUST_DT]
-    out.push(p)
-  }
-  return out
-})()
-function drift(t: number): Pt {
-  if (t <= DUST_T0) return [-V_DUST * (t - DUST_T0), 0]
-  const i = (t - DUST_T0) / DUST_DT
-  if (i >= DRIFT.length - 1) {
-    const e = DRIFT[DRIFT.length - 1]
-    return [e[0], e[1] + V_DUST * (t - DUST_T1)]
-  }
-  const j = Math.floor(i)
-  const f = i - j
-  return [DRIFT[j][0] + (DRIFT[j + 1][0] - DRIFT[j][0]) * f, DRIFT[j][1] + (DRIFT[j + 1][1] - DRIFT[j][1]) * f]
-}
-
-const MOTES = 420
-export function drawDust(p: p5, c: Ctx, t: number): void {
-  const { k } = c
-  const f = frame(p, k)
-  const minD = 1.3 / k
-  p.push()
-  p.noStroke()
-  const D = drift(t)
-  for (let i = 0; i < MOTES; i++) {
-    const life = 4 + 4 * hash(i, 1, 91)
-    const ph = hash(i, 2, 91) * life
-    const cyc = Math.floor((t + ph) / life)
-    const age = (t + ph - cyc * life) / life
-    const born = t - age * life
-    const B = drift(born)
-    const m = 0.6 + 0.8 * hash(i, 3, 91)
-    // Born anywhere in the shaft's first cells or its throat, thinning up the shaft.
-    const u = hash(i, cyc, 92)
-    const bx = X_LIP - 3.5 + (X_END - X_LIP + 3.5) * u * u
-    const by = Y_C + (Y_F - Y_C) * hash(i, cyc, 93)
-    const w = 0.035
-    const x = bx + m * (D[0] - B[0]) + w * Math.sin(t * (0.7 + hash(i, 4, 91)) + i)
-    const y = by + m * (D[1] - B[1]) + w * Math.cos(t * (0.6 + hash(i, 5, 91)) + i * 1.3)
-    if (x < f.x0 || x > f.x1 || y < f.y0 || y > f.y1) continue
-    // In the shaft's air or the throat, never in the stone.
-    const inShaft = x > X_LIP && x < X_END && y > ceilY(x) + 0.05 && y < floorY(x) - 0.05
-    const inThroat = x <= X_LIP && y > THROAT[0] && y < THROAT[1]
-    if (!inShaft && !inThroat) continue
-    const l = lightAt(x, y, t)
-    const env = Math.sin(Math.PI * age)
-    const tw = 0.65 + 0.35 * Math.sin(t * (2.2 + 3 * hash(i, 6, 91)) + i * 2.1)
-    const a = Math.pow(clamp01(l * 1.1), 1.6) * env * tw * 0.95
-    if (a < 0.03) continue
-    const d = Math.max(minD, 0.018 + 0.014 * hash(i, 7, 91))
-    p.fill(alpha(p, WARM, a))
-    p.ellipse(x * k, y * k, d * k, d * k)
-  }
   p.pop()
 }
 
