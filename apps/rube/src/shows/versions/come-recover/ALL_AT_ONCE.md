@@ -979,6 +979,12 @@ The notes went back to the builders who made each part, who still had their cont
   know where I am.* in the alley, *What is this place?* in the hush, *Where are we?* on the rocks. The third is cut.
   The drop into the rocks is now silent for eight seconds, as the music is, and Joy speaks first there, as she does in
   the hush. Fifteen lines in all.
+- **Two more stage shapes, on the real page.** The new work had been seen at 16:9, an upright phone and an ultrawide
+  frame, but never at 4:3, an iPad's. At 1024×768 the widescreen bars, the old print, the heart and the round iris,
+  the wall of films, the radiance, the chapters, every scene's subtitles and the credits all sit as they should, the
+  soft dark centred on each line (an apparent offset at the taxes was two crops pasted over each other; measured, it
+  is centred). At 1440×560 (2.57:1, wider than the widescreen) the widescreen lives have no bars, so *Everywhere* and
+  the alley's lines, set in the lower bar, land on the dark street and the drain, where they still read.
 
 ## The looks
 
