@@ -1180,6 +1180,10 @@ painterly look (taken, the sixty-ninth pass). The other two would change the pie
      the kitten, the books, the headphones and the whole lamp. Everything the first take plays to its camera happens
      in it too, and is in its frame. `check:shows` holds it: one frame throughout, each thing in it whole, the ball
      always in it (and in Zoom nearly always). Its own share card. It runs as the first take does.
+188. **The still take, audited** where the last pass had not: the live page on a 16:10 laptop with a track's card up
+     (the wash under the name where the name is), a phone held upright (the whole room, floor to ceiling, round the
+     frame), a scrub back (the same frame), and sixty frames a second in Chrome with its GPU at dusk, in the rain, past
+     midnight and at the end. Nothing to change.
 
 **Subtracted:** the camera following the ball along the sill (a held frame now); the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
