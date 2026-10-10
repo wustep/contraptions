@@ -824,6 +824,8 @@ watched whole between them. Their order is in git; here they are by what they di
   default and remembered (`Performance.captions`, `TitleCard.caption`); not spoken, not in a saved video.
 - **Read on a phone.** Words that must be read keep a floor on their size on the page (`TitleCard.least`), and a card
   grown by it is kept within the stage.
+- **By keyboard.** The "Sound captions" toggle is in the Tab order where it sits, after the camera, shows the accent
+  focus ring the other controls do, and toggles on Enter; C does the same from anywhere.
 
 ### How it was checked
 
