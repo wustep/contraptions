@@ -231,7 +231,18 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 128 (latest)
+## Polish pass 129 (latest)
+
+No change to the show: pass 128's question, whether the tesseract and Edmunds' dawn are slow for a viewer or only for the test browser. The same live measurement (1280×800, 1.5 s of play) was run in full Chrome for Testing with GPU canvas (`--use-angle=metal --enable-gpu --enable-gpu-rasterization`), alternated twice with the software-only headless shell under the same load:
+
+| | 30 s (farm) | 122 s | 124 s | 260 s |
+| --- | --- | --- | --- | --- |
+| GPU Chrome | 58 to 60 fps | 59 to 65 | 58 to 60 | 61 to 62 |
+| software shell | 60 | 34 to 38 | 26 to 47 | 43 to 54 |
+
+With a GPU the whole show holds 60 frames a second. The slow scenes were the software rasteriser drawing large gradients, as pass 128 found. `chrome://gpu` could not be read in headless mode to show the GPU in use, but the difference between the two browsers is the evidence.
+
+## Polish pass 128
 
 No change to the show: the live frame rate, measured with the machine quieter. Played in the player at 1280×800, the farm (30 s) and the station (168 s) hold 60 frames a second. The tesseract (122 and 124 s) runs at 23 to 26 and Edmunds at dawn (260 s) at 39. The fill count does not explain it: 122 s makes about 1,100 fills, the station's wide shot 2,500. A CPU profile of the live player does. At 122 and 260 s, 89 to 93% of the time is Chrome's own work ("(program)": rasterising and compositing), and the show's JavaScript is about 1%. These scenes are made of large soft gradients and translucent fills (the tesseract's lamplit rooms and glows, the dawn sky), and this headless browser draws the canvas in software, with no GPU. A browser with GPU canvas acceleration draws gradients cheaply, so this measures the test machine, not a viewer's. Making it cheaper here would mean fewer or smaller glows, a change to the picture, so it is left, noted.
 
