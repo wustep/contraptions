@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 141 (latest)
+## Polish pass 142 (latest)
+
+No change to the show: other browsers. Every audit was in Chromium. The one canvas feature in the show's own drawing that browsers came to late is Saturn's `createConicGradient` (`act2/undock.ts`; Safari 16.1, Firefox 112). `words.ts`'s `filter` and `letterSpacing` are used only in a saved video. In WebKit 26.6 (Safari's engine), 14 moments across the show (8 to 275 s, 960×540) match Chromium's: mean difference 0.3 to 0.8 of 255, at most 0.12% of pixels off by more than 40 (edges), Saturn's conic gradient included, with no page errors. Firefox was not tried. The copy installed is older than this Playwright can drive (it timed out at launch), and fetching a newer one was left to the person whose machine it is.
+
+## Polish pass 141
 
 No change to the show: high-density screens. Every audit ran at a device pixel ratio of 1, and phones draw at 2 or 3, where anything sized in pixels could come out differently (the 0.8 px floors, the stars, pass 126's off-canvas test, the credits' own transform). The live canvas does take the device's ratio (390×844 at 3 is a 1170×1368 canvas). Read back at ratio 3 and scaled to CSS size, it matches ratio 1 at 13 moments, including five under the credits: mean difference 0.5 to 1.5 of 255, no pixel off by more than 60. Floors and star sizes are in CSS pixels through p5's scaled context. `offCanvas` measures through the full transform against the canvas's device size. The credits' `setTransform` keeps the context's scale, which carries the ratio. A Retina screen or a phone sees the same picture, sharper.
 
