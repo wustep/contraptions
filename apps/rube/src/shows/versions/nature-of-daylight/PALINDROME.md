@@ -863,6 +863,12 @@ cut to the cradle, the cradle and Ian each in a new place across it, has read as
 cradle must end where the first frame has it, which is where Ian stands before the cut, so to lose the jump is to
 restage the room before it. Left for the director's word.
 
+A ninety-first weighed taking the cut to the cradle without a word back, as the fiftieth and the seventy-fourth had
+taken theirs. It would not stay in the room: for neither the cradle nor Ian to move across the cut, Ian must be on
+her left before it, and he is on her right from the field, across the match cut into the room; so the field's meeting
+would be restaged too, or he would cross behind her on screen. That is a story's restaging, not a polish, and it
+waits for the word. The branch is clean, the show's check passes whole. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
