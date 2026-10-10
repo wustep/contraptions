@@ -268,6 +268,34 @@ export function paintSky(p: p5, k: number, f: Frame): void {
   g.addColorStop(1, HAZE)
   ctx.fillStyle = g
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+  paintSun(ctx, k, f)
+}
+
+/**
+ * The sun: low and pale over the far canyon, a white disc gone soft in the haze, and the sky warm round it. So far
+ * off it keeps its place in the frame however the camera moves, as the cloud does; the walls come up over it.
+ */
+function paintSun(ctx: Ctx2D, k: number, f: Frame): void {
+  const W = f.x1 - f.x0
+  const H = f.y1 - f.y0
+  // Sized to the frame's height on a 16:9 stage (read off its width), so a taller stage does not grow it.
+  const S = Math.min(H, (W * 9) / 16)
+  const cx = (f.x0 + W * 0.74) * k
+  const cy = (f.cy - S * 0.27) * k
+  const r = S * 0.05 * k
+  const warm = mixHex(ROCKS.sand, '#FFFFFF', 0.55)
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 9)
+  glow.addColorStop(0, rgba(warm, 0.55))
+  glow.addColorStop(0.25, rgba(warm, 0.22))
+  glow.addColorStop(1, rgba(warm, 0))
+  ctx.fillStyle = glow
+  ctx.fillRect(cx - r * 9, cy - r * 9, r * 18, r * 18)
+  const disc = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 1.25)
+  disc.addColorStop(0, 'rgba(255, 253, 246, 0.95)')
+  disc.addColorStop(0.78, 'rgba(255, 251, 240, 0.85)')
+  disc.addColorStop(1, rgba(warm, 0))
+  ctx.fillStyle = disc
+  ctx.fillRect(cx - r * 1.3, cy - r * 1.3, r * 2.6, r * 2.6)
 }
 
 /**

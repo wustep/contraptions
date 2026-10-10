@@ -231,8 +231,10 @@ const LOOSE = 291.445
 export const PHOTO_DOWN = 292.769
 export const DEVELOPED = 293.013
 /** The instant photograph's size, and where it ends: propped against the washer's front, by the family. */
-export const PHOTO = { w: 0.3, h: 0.36 }
-const PHOTO_REST: Pt = [WX - 0.62, FLOOR - PHOTO.h / 2 - 0.005]
+// Big enough to read as the night's picture on a phone's stage too, where everything is a quarter the size: it leans
+// on the washer's edge, clear of the tripod's leg and of Evelyn.
+export const PHOTO = { w: 0.42, h: 0.5 }
+const PHOTO_REST: Pt = [WX - 0.85, FLOOR - PHOTO.h / 2 - 0.005]
 
 /**
  * The photograph: pushed out of the camera's slot on 291.2, let go on 291.45, fluttering down on the air to land

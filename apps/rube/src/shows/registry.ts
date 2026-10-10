@@ -190,6 +190,17 @@ export interface Performance {
    * none. Left out, there are none.
    */
   titles?(t: number): TitleCard[]
+  /**
+   * The show offers sound captions: some of its `titles` are `caption` cards, words for what the music does, for a
+   * viewer who cannot hear it. They are seen only while the viewer has captions on (the player's CC). Left out, none.
+   */
+  captions?: boolean
+  /**
+   * The show has dialogue the viewer may turn on (the player's Dialogue row), off unless they do: the player says the
+   * viewer's choice here before the first frame and on every change, and the show's words and picture follow it (a
+   * saved video too). The show plays through whole either way. Left out, the show has none to offer.
+   */
+  dialogue?(on: boolean): void
 }
 
 /** One card of words over the stage, as the page is to set it at a moment (and a video's frame to paint it). */
@@ -222,11 +233,20 @@ export interface TitleCard {
   /** Optional: the card's type this many times its usual size (unset: 1, every show's credits as they were). */
   scale?: number
   /**
-   * Optional: the least its unit may be, in pixels (a hundredth of the frame's height, before `scale`): for a card that
-   * must stay readable on a small stage, a phone held upright, where the frame is about 220px high and a role line
-   * would be 4px. Unset: no least, every show's credits as they were.
+   * Optional: the least the card's unit (a hundredth of the 16:9 frame, times `scale`) may be on the page, in CSS
+   * pixels, so words that must be read (subtitles, credits) are still read on a small stage, a phone held upright, where
+   * the frame is about 220px high and a role line would be 4px. A card grown by it is never wider than the stage and is
+   * kept inside its edges. Unset: no least, every show's credits as they were.
    */
   least?: number
+  /**
+   * Optional: words a screen reader is to hear (a show's dialogue). The page's words are hidden from it, as they fade
+   * and blur; a `said` card is spoken once, politely, as it first comes up while the show plays at 1× or slower: its own text, or
+   * this string in its place (to name who speaks, which the page shows only by its type). Unset: as before.
+   */
+  said?: boolean | string
+  /** Optional: a sound caption (what the music does), seen only while the viewer has captions on. Unset: always seen. */
+  caption?: boolean
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
   /**

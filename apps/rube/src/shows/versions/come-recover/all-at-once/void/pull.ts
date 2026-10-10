@@ -73,17 +73,23 @@ export const pull = part<PullState>(
       if (pose.pool > 0.001) {
         const [jx, jy] = toPart(joyAt(t))
         const top = jy - 11
-        const g = ctx.createLinearGradient(0, top * k, 0, (jy + 0.4) * k)
-        g.addColorStop(0, rgba(VOID.rimLight, 0))
-        g.addColorStop(1, rgba(VOID.rimLight, 0.13 * pose.pool))
-        ctx.beginPath()
-        ctx.moveTo((jx - 0.25) * k, top * k)
-        ctx.lineTo((jx + 0.25) * k, top * k)
-        ctx.lineTo((jx + 0.9) * k, (jy + 0.3) * k)
-        ctx.lineTo((jx - 0.9) * k, (jy + 0.3) * k)
-        ctx.closePath()
-        ctx.fillStyle = g
-        ctx.fill()
+        // Soft at its edges, as light in haze is: a few nested beams, each fainter and wider, so seen close (Jobu's
+        // shots) it has no hard side.
+        for (let n = 0; n < 10; n++) {
+          const wide = 1.3 - 0.1 * n
+          const a = 0.0135
+          const g = ctx.createLinearGradient(0, top * k, 0, (jy + 0.4) * k)
+          g.addColorStop(0, rgba(VOID.rimLight, 0))
+          g.addColorStop(1, rgba(VOID.rimLight, a * pose.pool))
+          ctx.beginPath()
+          ctx.moveTo((jx - 0.25 * wide) * k, top * k)
+          ctx.lineTo((jx + 0.25 * wide) * k, top * k)
+          ctx.lineTo((jx + 0.9 * wide) * k, (jy + 0.3) * k)
+          ctx.lineTo((jx - 0.9 * wide) * k, (jy + 0.3) * k)
+          ctx.closePath()
+          ctx.fillStyle = g
+          ctx.fill()
+        }
       }
       // The things from every world: floating in the dark round it, then taken, each on its beat.
       const lit = pose.lit
@@ -144,11 +150,20 @@ export const pull = part<PullState>(
       // Out of the surf's last framing, with her as she drifts in, alone in the dark.
       { t: slot.begin + 0.6, cells: 5.2, w: 0, off: [0.15, 0.1] },
       { t: 131.2, cells: 5.8, w: 0, off: [0.6, -0.4] },
-      // Room for something up and to the right of her, in the dark.
+      // Room for something up and to the right of her, in the dark: the light finds Joy there.
       { t: 133.4, cells: 6.6, hold: H(-3.1, -4.9), w: 0.85 },
-      { t: REVEAL, cells: 6.2, hold: H(-2.9, -5.0), w: 0.85 },
-      // The reveal: back and back until the whole of it is in the frame, Joy tiny on its crown.
-      { t: REVEAL + 4.8, cells: 16.5, hold: H(0, -0.6), w: 0.92 },
+      { t: REVERSES[0][0] - 0.004, cells: 6.5, hold: H(-3.05, -4.92), w: 0.85 },
+      // The show's one conversation in shot and reverse shot, as a film's confrontation is: cut to Jobu on the crown
+      // under her light, her ring of everything going round her (`crown.ts`), for her line, the camera creeping in;
+      ...cut(REVERSES[0][0], 2.3, H(-0.45, -6.68)),
+      { t: REVERSES[0][1] - 0.004, cells: 2.05, hold: H(-0.4, -6.66), w: 1 },
+      // cut to her mother, alone in the dark, for hers;
+      ...cut(REVERSES[0][1], 2.6, H(-4.72, -3.98)),
+      { t: REVERSES[1][0] - 0.004, cells: 2.45, hold: H(-4.55, -3.86), w: 1 },
+      // and back to Jobu for "Come and see", and the reveal: from her, back and back until the whole of the bagel is in
+      // the frame and she is tiny on its crown.
+      ...cut(REVERSES[1][0], 2.2, H(-0.4, -6.66)),
+      { t: 140.7, cells: 6.6, hold: H(-0.35, -5.1), w: 1 },
       { t: 142.4, cells: 16, hold: H(0, -0.6), w: 1 },
       // The pull, ridden: keys every tenth of a second from one smooth move (`ride`).
       ...rideKeys(H),
@@ -161,6 +176,20 @@ export const pull = part<PullState>(
     return shots
   },
 )
+
+/**
+ * The cuts of the hush's conversation, show seconds: on Jobu from the first to the second, on Evelyn to the third, and
+ * on Jobu again from the third until the reveal draws back to take her mother in (by 141.1, under Zoom). Through Jobu's two
+ * shots the ball is out of the frame on purpose, the one time it is: the check allows them (`REVERSES`).
+ */
+export const REVERSES: [number, number][] = [
+  [134.03, 136.58],
+  [139.18, 141.1],
+]
+/** A cut, as camera keys: the new framing from a hair after `t` (the key before is the old framing, at `t - 0.004`, under a frame before). */
+function cut(t: number, cells: number, hold: Pt): PartShot[] {
+  return [{ t: t + 0.001, cells, hold, w: 1 }]
+}
 
 /* ------------------------------------------------------------------ her catch-light, and the heavy swallows' kick */
 
@@ -278,7 +307,8 @@ const DARK = '#0A090C'
  * Seeds and crumbs adrift in the dark at three depths, so the hush has depth and slow motion before anything is lit:
  * the far ones slide by slowly as the camera follows her, the near ones quickly, all sinking very slowly toward the
  * bagel. Each depth is one pattern repeated every `tile` cells and moving as a whole, so nothing pops as it drifts.
- * The two far depths are behind the bagel (kept off its disc); the near one is in front.
+ * The two far depths are behind the bagel (kept off its disc); the near one is in front. Bright enough that on a
+ * desktop screen the fall reads as depth and motion, not as a stalled black frame, and still a hush.
  */
 interface DustLayer {
   depth: number
@@ -290,9 +320,9 @@ interface DustLayer {
   behind: boolean
 }
 const DUST: DustLayer[] = [
-  { depth: 0.32, tile: 12, n: 64, size: 0.05, a: 0.2, seed: 1, behind: true },
-  { depth: 0.66, tile: 12, n: 34, size: 0.09, a: 0.26, seed: 2, behind: true },
-  { depth: 1.4, tile: 14, n: 11, size: 0.2, a: 0.19, seed: 3, behind: false },
+  { depth: 0.32, tile: 12, n: 64, size: 0.05, a: 0.3, seed: 1, behind: true },
+  { depth: 0.66, tile: 12, n: 34, size: 0.09, a: 0.4, seed: 2, behind: true },
+  { depth: 1.4, tile: 14, n: 11, size: 0.2, a: 0.3, seed: 3, behind: false },
 ]
 /** Where the dark sinks to: toward the bagel, down and to the right of where she comes in. */
 const SINK: Pt = [0.8, 0.6]

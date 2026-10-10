@@ -6,6 +6,7 @@ import { SEAMS } from '../seams'
 import { DOJO, DOJO_THEME, EVELYN, HIBACHI, HIBACHI_THEME, HOME, HOTDOG, HOTDOG_THEME, JOY, LAUNDROMAT, MULTI_THEME, PREMIERE, ROCKS, ROCKS_THEME, STAR } from '../worlds'
 import { backdrop, SKINS, type Moment, type Skin } from './skins'
 import { at, beam, circle, ellipse, glow, hash, line, lodFor, poly, rect, rgba, round, type Pen } from './skins-pen'
+import { PANEL_LOOKS, paintPicture, prefersCalm, type Look } from '../film'
 
 /**
  * The surf: she has learned to jump, and now it comes faster than she can land. The spatula's flip carries on as
@@ -649,11 +650,29 @@ function paint(p: p5, _s: SurfState, c: Ctx): void {
   ctx.restore()
 }
 
+/** The picture the surf is in at `t`: each world she flies through is in its own (`film.ts`), even for a glimpse. */
+export function surfLookAt(t: number): Look | undefined {
+  let i = -1
+  for (let j = 0; j < WORLDS.length; j++) if (t >= WORLDS[j].at) i = j
+  if (i < 0 || t > END) return undefined
+  const w = WORLDS[i]
+  return w.kind === 'flash' ? PANEL_LOOKS[w.skin!.key] : PANEL_LOOKS[w.kind]
+}
+
+function picture(p: p5, _s: SurfState, c: Ctx): void {
+  const t = BEGIN + c.t
+  const look = surfLookAt(t)
+  if (!look) return
+  const f = frame(p, c.k)
+  const px = Math.max(0.5, ((f.y1 - f.y0) * c.k) / 540)
+  paintPicture(p.drawingContext as CanvasRenderingContext2D, look, f.x0 * c.k, f.y0 * c.k, (f.x1 - f.x0) * c.k, (f.y1 - f.y0) * c.k, t, prefersCalm(), px)
+}
+
 const inkOf = (k: Kind): string =>
   k === 'karaoke' ? PREMIERE.ink : k === 'canyon' ? ROCKS_THEME.ink : k === 'black' ? MULTI_THEME.ink : LAUNDROMAT.ink
 
 export const surf = part<SurfState>(
-  { name: 'surf', draw: paint },
+  { name: 'surf', draw: paint, over: picture },
   (slot) => {
     const span = slot.end - slot.begin
     const lane: Seg[] = carried(flight, 0, span, 140)
