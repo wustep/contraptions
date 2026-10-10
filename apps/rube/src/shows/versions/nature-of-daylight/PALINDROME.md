@@ -869,6 +869,12 @@ her left before it, and he is on her right from the field, across the match cut 
 would be restaged too, or he would cross behind her on screen. That is a story's restaging, not a polish, and it
 waits for the word. The branch is clean, the show's check passes whole. Nothing to change.
 
+A ninety-second weighed the last note readers kept giving that no round had met: Ian gone from the blast to the field,
+read by four as perhaps dead. He is seen after the blast, thrown and whole; and the field's meeting is his coming back,
+which any sight of him between (down the lift with her, or in the tent) would spend before it. It stays. With that,
+every note fresh readers have given more than once is met or kept for a stated reason, but the cut to the cradle, which
+waits for the director's word. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
