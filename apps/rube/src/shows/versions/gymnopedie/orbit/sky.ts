@@ -1,13 +1,11 @@
 import type p5 from 'p5'
 import { mixHex, type PieceCtx } from '../../../../parts'
-import { wrap } from './music'
 import { RADIUS, along, ballLocal } from './path'
 import {
   BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, METEORS, milkyWay, wingsAt, type CloudLight,
-  FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat, lanternAt,
+  FIGURES, figureAt,
 } from './air'
 import { drawShore } from './shore'
-import { drawCirrus } from './cirrus'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
   scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, sunAngle, moonAngle, type Body, bodies, sunWay, moonWay, SKY_HIGH, SUN_FAR, MOON_FAR,
@@ -15,7 +13,7 @@ import {
 
 /**
  * The sky: the day's gradient, the stars and the Milky Way, shooting stars, the sun and the moon on
- * their arcs and, far off, in space; the rays of the low sun, the bow, and the clouds and gulls (`air.ts`).
+ * their arcs and, far off, in space; the bow, and the clouds and gulls (`air.ts`).
  */
 
 // ---------------------------------------------------------------- the sky
@@ -217,11 +215,6 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   const afar = smooth(v.wide, 0.3, 0.55)
   if (afar > 0.01) inSpace(p, c, afar)
 
-  // Rays from the low sun, at dawn and through the afternoon into the sunset; not under the shower's cloud, so they
-  // come as it clears.
-  const rays = raysAt(c.t) * near
-  if (rays > 0.01 && sun.light > 0.01) sunRays(ctx, c, v, sun, rays)
-
   // The bow, opposite the sun, as the shower clears.
   // Close: drawn back over the planet the bow would only be a stripe across the sky.
   const bow = bowAt(c.t) * near * (1 - smooth(v.cells, 9, 17))
@@ -296,57 +289,6 @@ function inSpace(p: p5, c: PieceCtx, light: number): void {
     ctx.beginPath()
     ctx.arc(x * mr, y * mr, r * mr, 0, Math.PI * 2)
     ctx.fill()
-  }
-  ctx.restore()
-}
-
-/** How much the low sun's rays show at `t`, 0 to 1. */
-export function raysAt(t: number): number {
-  const a = Math.abs(sunAngle(t))
-  if (wrap(t) > 230) return 0
-  return smooth(a, 0.8, 1.2) * (1 - smooth(a, 1.68, 1.84)) * (1 - overcastAt(t))
-}
-
-/**
- * Crepuscular rays: soft wedges of warm light fanning from the sun across the sky, each breathing slowly, with
- * darker gaps between; behind the stones, which stand in front of them.
- */
-function sunRays(ctx: Ctx2D, c: PieceCtx, v: View, sun: Body, light: number): void {
-  const W = ctx.canvas.width
-  const H = ctx.canvas.height
-  const m = ctx.getTransform()
-  let low = 0
-  for (let i = 0; i <= 12; i++) low = Math.max(low, onCanvas(ctx, c.k, ...polar(v.u0 + ((v.u1 - v.u0) * i) / 12, 0), m)[1])
-  ctx.save()
-  ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.beginPath()
-  ctx.rect(0, 0, W, Math.min(H, low))
-  ctx.clip()
-  ctx.globalCompositeOperation = 'lighter'
-  const reach = Math.hypot(W, H) * 1.1
-  const glow = ctx.createRadialGradient(sun.x, sun.y, frameOf(ctx) * 0.06, sun.x, sun.y, reach)
-  glow.addColorStop(0, 'rgba(255, 226, 180, 0)')
-  glow.addColorStop(0.04, 'rgba(255, 226, 180, 0.4)')
-  glow.addColorStop(0.18, 'rgba(255, 214, 166, 0.14)')
-  glow.addColorStop(0.55, 'rgba(255, 214, 166, 0.03)')
-  glow.addColorStop(1, 'rgba(255, 214, 166, 0)')
-  ctx.fillStyle = glow
-  const N = 16
-  for (let i = 0; i < N; i++) {
-    const a = (2 * Math.PI * (i + 0.6 * hash(i, 201))) / N + 0.05 * osc(c.t, 0.008, i)
-    const half = 0.025 + 0.05 * hash(i, 202)
-    const breathe = 0.5 + 0.5 * osc(c.t, 0.035 + 0.03 * hash(i, 203), i * 2.3)
-    const alpha = light * (0.035 + 0.06 * breathe) * (0.5 + 0.5 * hash(i, 204))
-    if (alpha < 0.004) continue
-    // Feathered: three wedges, each narrower, so the ray is brightest down its middle and has no edge.
-    ctx.globalAlpha = alpha
-    for (const f of [1, 0.62, 0.3]) {
-      ctx.beginPath()
-      ctx.moveTo(sun.x, sun.y)
-      ctx.arc(sun.x, sun.y, reach, a - half * f, a + half * f)
-      ctx.closePath()
-      ctx.fill()
-    }
   }
   ctx.restore()
 }
@@ -487,49 +429,10 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
       p.pop()
     }
   }
-  // Highest and furthest: the cirrus, which take the low sun's colours and keep them after it has set.
-  drawCirrus(ctx, k, c.t, half, sun.x, near)
   layer(BANKS, BANK, hazy, (0.6 - 0.4 * day.night) * near * light.alpha, false)
-  // The far shore, in front of the bank: islands, their villages and the lighthouse.
+  // The far shore, in front of the bank: islands and their villages.
   drawShore(ctx, k, c.t, half, { day, sunAngle: sunAngle(c.t), moonUp }, near)
   layer(CLOUDS, HEAPS, light, 0.92 * near * light.alpha, true)
-
-  // Sailboats far out on the water by day, sitting into the sea (its surface is drawn over their hulls' feet).
-  const boats = near * boatsOut(c.t)
-  if (boats > 0.01) {
-    const toward = Math.max(-1, Math.min(1, Math.sin(sunAngle(c.t)) * 2))
-    // Dimming with the dusk to the sky's own colours, so the lantern is what is seen.
-    const dusk = mixHex(day.top, day.low, 0.45)
-    const sail = mixHex(mixHex('#FBF6EC', day.lit, 0.3), dusk, 0.7 * day.night)
-    const shade = mixHex(mixHex(mixHex('#C9CFD8', day.low, 0.3), day.top, 0.15), dusk, 0.8 * day.night)
-    const hull = mixHex(day.line, day.sea, 0.35)
-    for (const b of BOATS) {
-      const d = layered(b.x, c.t, SAILS.f, SAILS.span, SAILS.wind)
-      const edge = inLayer(d, SAILS.span)
-      if (Math.abs(d) > half + 1 || edge < 0.01) continue
-      p.push()
-      atSea(p, k, u + d)
-      // Riding the sea's slow breath, low on the horizon.
-      ctx.translate(0, k * (0.03 - 0.02 * osc(c.t, 0.09, b.seed * 2)))
-      const rock = osc(c.t, 0.12, b.seed)
-      drawBoat(ctx, k, b.size, toward, rock, sail, shade, hull, 0.85 * boats * edge)
-      // At dusk its lantern, at the masthead, lit as the lamps are lit; a little unsteady, as a flame is.
-      const lantern = lanternAt(b.seed, c.t) * boats * edge
-      if (lantern > 0.01) {
-        ctx.rotate(rock * 0.05)
-        const y = -1.28 * b.size * k
-        const r = k * b.size * 0.45
-        const a = lantern * (0.9 + 0.1 * osc(c.t, 0.4, b.seed * 3))
-        const g = ctx.createRadialGradient(0, y, 0, 0, y, r)
-        g.addColorStop(0, `rgba(255, 226, 160, ${a.toFixed(3)})`)
-        g.addColorStop(0.18, `rgba(255, 196, 110, ${(0.45 * a).toFixed(3)})`)
-        g.addColorStop(1, 'rgba(255, 190, 100, 0)')
-        ctx.fillStyle = g
-        ctx.fillRect(-r, y - r, 2 * r, 2 * r)
-      }
-      p.pop()
-    }
-  }
 
   // Gulls, by day, close.
   const gulls = near * (1 - smooth(day.night, 0.12, 0.4)) * (1 - smooth(v.cells, 9, 14))

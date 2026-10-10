@@ -128,21 +128,8 @@ The planet has weather, at depths behind the stones (`air.ts`):
   horizon's colour under them at dawn and dusk, dim and edged silver under the moon. How much of the sky is cloud
   moves through the day (`coverAt`): most of it by day, thinning at night for the stars and the Milky Way, more again
   under the moon; a cloud gathers and thins as the cover comes over its share.
-- Cirrus, high over the cumulus, mares' tails in a layer of their own that goes by slowest of all (`cirrus.ts`): a faint
-  trace of white by day (the noon sky has its cumulus); as the sun goes down they take its light, gold and then orange and pink, brightest on the sun's side of
-  the frame, and glow on after it has set, pink to mauve, as the first lamps are lit, until the light leaves them grey
-  and the full night has them. So again, the other way round, before the dawn. Drawn once in white, and tinted again
-  only when their colour has moved on.
-- Rays from the low sun: at dawn through the morning's mist, and through the afternoon into the sunset, soft
-  feathered wedges of warm light fanning across the sky behind the columns, each breathing slowly; held back while the
-  shower's cloud is over, so they come as it clears (`raysAt`).
 - The sun lights the colonnade from its side of the sky: each column's shade is on its west face in the morning,
   narrows to noon, and crosses to the east face through the afternoon.
-- Sailboats far out on the horizon from mid-morning on into the dusk, hidden in the shower's haze, each lighting a
-  lantern at its masthead as the colonnade's lamps are lit, its sails dimming into the dusk, and going home into the
-  dark as the first Gnossienne gets under way (`lanternAt`): small sloops
-  sitting low in the water, the sail on the sun's side lit, beating home against the ball's way, so each crosses the
-  frame slowly in half a minute or so (`SAILS`, `BOATS`).
 - Gulls perched on the colonnade, at the far end of a long stone (a held note) here and there, fifteen in all.
   As the ball comes down on their stone they lift off on its note, startled up first and then away ahead of it,
   white wings beating and then easier, climbing until they are gone, well clear of the ball; they are back on their perches, roosting, by the time the ball comes
@@ -156,7 +143,7 @@ The planet has weather, at depths behind the stones (`air.ts`):
   Gnossienne's four high phrases and the third's three, a melody's peak answered in the sky; each falls clear above the ball, which over the pond rides high in the frame.
 - Mist on the water at dawn, a little at dusk, and under the moon; fireflies over the pond in the third Gnossienne.
 
-Three things happen once a day:
+Two things happen once a day:
 
 - An afternoon shower over the Gymnopédie's second statement. The cloud gathers and greys from 138 s, the sky and the
   sea go grey with it and the sun pales behind it. A soft rain falls from 152 s, with each drop's ring spreading on the
@@ -166,9 +153,6 @@ Three things happen once a day:
 - At night the sea has its own light. A bass note's swell wakes it: the crest glows a cold green-blue as it runs, and
   the motes in the water under it light as it passes over them and go out behind it. So each bass note still sends
   out its two crests, now as two threads of light running away along the dark water.
-- Under the moonlit pond in the third Gnossienne, once, a whale: a dark shape deep in the water, outlined in the sea's
-  light. It swims the ball's way more slowly than the ball goes, so it passes back under it over a minute
-  (`whaleAt`).
 
 From far off, at the seam, the planet is a world in space. The sun and the moon each go once round it a period (the
 sun across the sky through the Gymnopédie and slowly round under the planet through the night; the moon up for the
@@ -238,8 +222,8 @@ sun is.
 ## The far shore
 
 The sea had nothing beyond it but cloud; now the ball goes along a coast (`shore.ts`). Islands stand out on the
-horizon, in front of the bank of cloud and behind the boats, and behind them, paler, two ranges of mountains further
-off. They are far, so they go by slowly (the islands at 0.16 of the ball's pace, the mountains at 0.07), each taking a
+horizon, in front of the bank of cloud, and behind them, paler, a range of mountains further off under the night.
+They are far, so they go by slowly (the islands at 0.16 of the ball's pace, the mountains at 0.07), each taking a
 couple of minutes to cross the frame; each layer's repeat is its share of the way round, once, so it comes round with
 the period. Each island is placed by the moment it is in the middle of the frame, so the day is told by what is out
 there:
@@ -250,7 +234,6 @@ there:
 - a mountain that the afternoon shower comes down on, greying into the rain;
 - a white village up its hill at sunset, terraces of cubes, a blue-domed chapel at the top and a windmill on the
   ridge, its sails turning;
-- a headland with a lighthouse, in view as the first Gnossienne begins;
 - a long low island in the first Gnossienne's night;
 - a hermitage between two peaks under the moon;
 - a sea stack before the dawn.
@@ -262,9 +245,7 @@ with the sea's curve at its ends, so it never stands off the water.
 
 The shore keeps the story. At dusk, as the ball lights the colonnade's lamps, the villages' windows light one by one
 (198 to 242 s), and late in the night they go out one by one, a few kept until the dawn, which puts them out with the
-lamps. The lighthouse is lit with the ball's first lamp (`LIGHTHOUSE_ON`) and turns all night, thirty turns a period:
-its beam is a long soft wedge along the horizon, as long as it points across, widening and brightening as it swings
-towards us, and its lantern flashes as it faces us. The dawn puts it out. The sea gives the islands back, and their
+lamps. The sea gives the islands back, and their
 lit windows, in its rippled mirror.
 
 Its cost was measured. A first cut cost a few milliseconds a frame with the CPU slowed six times, most of it the
@@ -308,7 +289,7 @@ device pixels (`devicePx`), so a phone's density does not thicken them.
 ## The words
 
 The page sets the titles over the stage, and they come over busy places: the title and the credits over the planet's
-lit limb and its ring of lamps, the Gnossiennes' names over the sunset's rays and the cadence. So each card is shaded,
+lit limb and its ring of lamps, the Gnossiennes' names over the sunset and the cadence. So each card is shaded,
 as a film's titles are: a soft oval of the dark round its words (`shade` on the card), drawn with the words wherever
 they are drawn (the page, and a saved video's frames) and nowhere else, so a still saved from the canvas alone has no
 veil without words in it.
@@ -352,8 +333,8 @@ measured at under a millisecond's difference, and left out.
 ## Where things are
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
-the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the whale) and their
-layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `cirrus.ts` the high cloud; `globe.ts` the world seen from space; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, fireflies) and their
+layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `globe.ts` the world seen from space; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 
@@ -382,7 +363,7 @@ so it cannot change sides at the seam; and the soft-light sprites are kept by al
 ## Taken away
 
 The saved video was made end to end and read back: picture and sound (VP9 and Opus at 720p, played through once at
-4×), every titled moment painted in and readable, the weather and the whale all there. The vertical
+4×), every titled moment painted in and readable, the weather all there. The vertical
 "Shorts" frame and the tighter Zoom framing were looked at through the day too.
 
 ## What the ball meets
@@ -406,12 +387,10 @@ to one heard chord; the camera breathes only on held melody notes, never jumps i
 loudness come round with the period; every lamp is dark until the ball lights it and burns until dawn, and every
 flower opens as the ball comes and closes at dawn, across the seam; every layer of the air comes round with the
 period, and a shooting star falls only on a Gnossienne's top note, at night; there is one shower, in the
-Gymnopédie, with the bow after it and gone before the first Gnossienne; the whale passes once, under the third
-Gnossienne's pond; gulls perch on the colonnade and lift off as the ball lands on their stone, on its note; rays come from the sun
-only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; every inner note lights a star of
+Gymnopédie, with the bow after it and gone before the first Gnossienne; gulls perch on the colonnade and lift off as
+the ball lands on their stone, on its note; a wave of light runs back along each piece's way from its last note, and only then; every inner note lights a star of
 a constellation, at night; the sun and the moon go round
-without a jump, the seam included; the far shore's windows are dark by day, lit in the night and out by the dawn, and
-the lighthouse is lit with the first lamp and put out by the dawn; the sea's surface comes round; the titles.
+without a jump, the seam included; the far shore's windows are dark by day, lit in the night and out by the dawn; the sea's surface comes round; the titles.
 
 ## Less
 
@@ -421,7 +400,7 @@ and the story, and what only fills the frame. Taken out:
 - the aurora: two and a half minutes of teal curtains over the first Gnossienne, the piece whose story is the warm
   thread of lamps the ball lights; the night is now dark enough for the lamps to lead (the Milky Way, the
   constellations and the shooting stars stay);
-- the comet over the third Gnossienne, which crowded a sky that already has the moon, the whale, the fireflies and the
+- the comet over the third Gnossienne, which crowded a sky that already has the moon, the fireflies and the
   constellations; the shooting star it stood in for is back on its top note;
 - the bougainvillea and its petals: magenta smudges on the colonnade's clean white, read at the show's size as noise;
 - the morning's dolphins, a grey shape that came and went in the near water with nothing to answer;
@@ -432,3 +411,20 @@ and the story, and what only fills the frame. Taken out:
 - the lamp's flame leaning after the ball, a motion too small to be seen.
 
 The music, the ball, the camera and everything else are as they were.
+
+## Less, again
+
+Looked at again with fresh eyes after that cut, the frame was still crowded behind the colonnade, the white columns
+and the ball losing to what stood behind them. Taken out:
+
+- the cirrus: pink streaks across the top of every dusk and dawn, a second sunset over the real one;
+- the low sun's rays: a fan of searchlight wedges round a sun whose own glow already says it is low;
+- the long range of mountains behind the morning, a grey mass that muddied the white columns against it for a minute
+  and a half (the islands stay, and the range under the night, which the pond stands against);
+- the sailboats and their lanterns: a white sail parked between the columns by day, and more small warm lights at
+  dusk beside the lamps and the village windows;
+- the lighthouse and its beam: a bright wedge swept along the horizon all night, crossing the lamps' columns, the
+  loudest thing in the first Gnossienne after the lamps it competed with;
+- the whale, a dark smear under the pond's reflections that, at the show's size, read as a stain on the water.
+
+Their checks went with them. Nothing was added; the music, the ball, the camera and the rest are as they were.

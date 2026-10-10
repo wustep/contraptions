@@ -1,26 +1,25 @@
 import { mixHex } from '../../../../parts'
-import { MELODY, PERIOD, osc, wrap } from './music'
+import { PERIOD, osc, wrap } from './music'
 import { RADIUS, along } from './path'
 import { inLayer, layered, mistAt, overcastAt, repeatOf } from './air'
 import { hash, polar, smooth, type Sky } from './world'
 import { devicePx, haloSprite, type Ctx2D } from './frame'
 
 /**
- * The far shore: islands out on the horizon, behind the stones and the boats, in front of the bank of cloud; and
+ * The far shore: islands out on the horizon, behind the stones, in front of the bank of cloud; and
  * behind them, fainter, a range of mountains further still. The sea was a line with nothing beyond it; now the ball
  * goes along a coast, as a day's sailing in the Aegean would.
  *
  * Each island is centred in the frame at its own moment of the day (`T`), so the day is told by what is out there: a
  * temple on its hill in the morning sun, a mountain the shower comes down on, a white village with a windmill in the
- * evening, a lighthouse on a headland for the night, a hermitage between two peaks under the moon. They are far, so
+ * evening, a hermitage between two peaks under the moon. They are far, so
  * they go by slowly (a layer at depth `f` passes at `f` of the ball's pace, `layered`), each taking a couple of minutes
  * to cross the frame, and they come round with the period: the layer's repeat is `f` of the way round, once.
  *
  * Lit by the day: the sun's side paler and warm, the air between thickening their colour to the horizon's, more in
  * the shower and the mist; at dusk they go to silhouettes against the sunset, and dark against the night. At dusk,
  * as the ball lights the colonnade's lamps, the villages' windows light one by one, and go out one by one late in
- * the night, a few left for the dawn; the lighthouse is lit with the ball's first lamp and turns all night, its
- * beam sweeping across the dark and flashing as it comes round to face us, until the dawn puts it out with the lamps.
+ * the night, a few left for the dawn.
  */
 
 /** The islands' layer, and the mountains' further off. */
@@ -61,7 +60,6 @@ export interface Isle {
   temple: number | null
   chapel: number | null
   windmill: number | null
-  lighthouse: number | null
   seed: number
 }
 
@@ -103,7 +101,6 @@ interface Spec {
   temple?: number
   chapel?: number
   windmill?: number
-  lighthouse?: number
   /** A house that keeps its light all night. */
   hermit?: number
 }
@@ -148,12 +145,6 @@ function isle(spec: Spec, seed: number): Isle {
     const y = groundOf(base, s) - 0.04
     houses.push({ s, y, h: 0.06, w: 0.1, window: windowOf(s + 0.015, y + 0.03, seed * 97 + 90, true) })
   }
-  if (spec.lighthouse !== undefined) {
-    // The keeper's house beside it.
-    const s = spec.lighthouse - 0.22
-    const y = groundOf(base, s) - 0.03
-    houses.push({ s, y, h: 0.06, w: 0.11, window: windowOf(s - 0.02, y + 0.028, seed * 97 + 91, true) })
-  }
   // Back to front: the highest behind.
   houses.sort((p, q) => q.y - p.y)
   return {
@@ -168,14 +159,12 @@ function isle(spec: Spec, seed: number): Isle {
     temple: spec.temple ?? null,
     chapel: spec.chapel ?? null,
     windmill: spec.windmill ?? null,
-    lighthouse: spec.lighthouse ?? null,
     seed,
   }
 }
 
 export const ISLES: Isle[] = [
-  // Far off, the mountains: a long range behind the morning, a lower one dark under the stars and the moon.
-  { T: 112, layer: RANGE, bumps: [[-2.6, 0.62, 1.5], [-0.3, 1.05, 1.3], [1.9, 0.78, 1.4], [3.7, 0.4, 1]] },
+  // Far off, a range of mountains dark under the stars and the moon.
   { T: 440, layer: RANGE, bumps: [[-1.6, 0.55, 1.4], [0.9, 0.82, 1.1], [2.6, 0.4, 0.9]] },
   // Skerries at dawn.
   { T: 38, bumps: [[-0.5, 0.17, 0.42], [0.35, 0.25, 0.38], [0.95, 0.09, 0.3]] },
@@ -185,8 +174,6 @@ export const ISLES: Isle[] = [
   { T: 146, haze: 0.44, bumps: [[0, 1.0, 0.85], [-1.0, 0.42, 0.85], [1.15, 0.45, 1.0]], village: [0.6, 1.3, 2.2] },
   // The village, white up its hill, a chapel's dome at the top and a windmill on the ridge: its windows lit at dusk.
   { T: 188, bumps: [[-0.55, 0.62, 0.95], [0.9, 0.44, 1.05], [-1.9, 0.2, 0.6]], village: [0.78, -1.5, 1.25], chapel: -0.5, windmill: 1.45, cypress: [-1.7, 1.85] },
-  // The headland and its lighthouse, lit with the ball's first lamp.
-  { T: 238, bumps: [[-0.9, 0.4, 0.85], [0.35, 0.28, 0.75], [1.35, 0.16, 0.45]], lighthouse: 1.5, cypress: [-1.25, -1.12] },
   // A long low island in the first Gnossienne's night, a few windows.
   { T: 362, bumps: [[-1.6, 0.2, 1.3], [0.4, 0.28, 1.5], [2.1, 0.14, 0.8]], village: [0.35, -0.5, 0.7] },
   // The hermitage between two peaks, under the moon, its one window lit all night.
@@ -195,11 +182,6 @@ export const ISLES: Isle[] = [
   { T: 586, bumps: [[0, 0.3, 0.3], [0.45, 0.14, 0.28]] },
 ].map((s, i) => isle(s as Spec, i + 1))
 
-/** The moment the ball lights its first lamp: the lighthouse is lit with it. */
-export const LIGHTHOUSE_ON = MELODY.find((n) => n.piece === 1)!.t
-/** A turn of its light: a whole number a period, so it comes round. */
-export const BEAM_TURNS = 30
-
 /** How much of a light that is lit at `on` and put out at `off` (either may be past the period's end) is lit at `t`. */
 function between(t: number, on: number, off: number, fade = 1.5): number {
   const u = wrap(t)
@@ -207,17 +189,8 @@ function between(t: number, on: number, off: number, fade = 1.5): number {
   return Math.max(at(u), at(u + PERIOD))
 }
 
-/** How lit the lighthouse is at `t`: from the ball's first lamp until the dawn puts the lamps out. */
-export const lighthouseAt = (t: number): number => between(t, LIGHTHOUSE_ON, PERIOD + 2.2, 1.2)
-
 /** How lit a window is at `t`. */
 export const windowAt = (w: Window, t: number): number => between(t, w.on, w.off) * (0.92 + 0.08 * osc(t, 0.31, w.on))
-
-/** The lighthouse's beam at `t`: which way it points round (0 at us), and so how far across and how much at us. */
-export function beamAt(t: number): { across: number; facing: number } {
-  const a = (2 * Math.PI * BEAM_TURNS * wrap(t)) / PERIOD
-  return { across: Math.sin(a), facing: Math.cos(a) }
-}
 
 /** The windmill's sails: whole turns a period. */
 const SAIL_TURNS = 64
@@ -322,18 +295,6 @@ export function drawShore(ctx: Ctx2D, k: number, t: number, half: number, light:
     drawIsle(ctx, isle, tone, t, false)
     ctx.restore()
   }
-  // The lighthouse's beam, over its island and the sky.
-  const lit = lighthouseAt(t)
-  if (lit > 0.01) {
-    for (const { isle, d, edge } of islesIn(t, half + 8)) {
-      if (isle.lighthouse === null) continue
-      ctx.save()
-      seaFrame(ctx, k, u + d)
-      ctx.globalAlpha = alpha * edge
-      beam(ctx, isle, t, lit * smooth(light.day.night, 0.25, 0.7))
-      ctx.restore()
-    }
-  }
 }
 
 /**
@@ -398,7 +359,7 @@ function drawIsle(ctx: Ctx2D, isle: Isle, tone: Tone, t: number, mirrored: boole
   lights(ctx, isle, t, px, alpha, !mirrored)
 }
 
-/** What stands on an island: its trees, its temple, its houses, the chapel, the windmill and the lighthouse. */
+/** What stands on an island: its trees, its temple, its houses, the chapel and the windmill. */
 function details(ctx: Ctx2D, isle: Isle, tone: Tone, t: number, px: number): void {
   // Cypresses: dark spires.
   ctx.fillStyle = mixHex(tone.body, '#1E2A26', 0.5 * (1 - tone.dark))
@@ -495,39 +456,9 @@ function details(ctx: Ctx2D, isle: Isle, tone: Tone, t: number, px: number): voi
       ctx.fill()
     }
   }
-  // The lighthouse: a white tower on the headland, a dark band, the lantern and its cap.
-  if (isle.lighthouse !== null) {
-    const s = isle.lighthouse
-    const y = groundOf(isle, s) - 0.02
-    const H = 0.3
-    ctx.fillStyle = tone.white
-    ctx.beginPath()
-    ctx.moveTo(s - 0.038, -y)
-    ctx.lineTo(s - 0.026, -y - H)
-    ctx.lineTo(s + 0.026, -y - H)
-    ctx.lineTo(s + 0.038, -y)
-    ctx.closePath()
-    ctx.fill()
-    ctx.fillStyle = tone.shade
-    ctx.fillRect(tone.side > 0 ? s - 0.034 : s + 0.012, -y - H * 0.95, 0.022, H * 0.95)
-    ctx.fillStyle = mixHex('#7A3A34', tone.body, 0.35 + 0.5 * tone.dark)
-    ctx.fillRect(s - 0.033, -y - H * 0.55, 0.066, 0.04)
-    ctx.fillStyle = mixHex('#2B2F38', tone.body, 0.3)
-    ctx.fillRect(s - 0.036, -y - H - 0.008, 0.072, 0.01)
-    ctx.fillRect(s - 0.022, -y - H - 0.06, 0.044, 0.012)
-    ctx.beginPath()
-    ctx.moveTo(s - 0.026, -y - H - 0.058)
-    ctx.lineTo(s, -y - H - 0.09)
-    ctx.lineTo(s + 0.026, -y - H - 0.058)
-    ctx.closePath()
-    ctx.fill()
-    const lit = lighthouseAt(t)
-    ctx.fillStyle = lit > 0.01 ? mixHex(tone.shade, '#FFE6B0', lit) : mixHex(tone.shade, '#3A4050', 0.5)
-    ctx.fillRect(s - 0.018, -y - H - 0.048, 0.036, 0.04)
-  }
 }
 
-/** The windows, warm points with a soft light round them, and the lighthouse's lamp. */
+/** The windows, warm points with a soft light round them. */
 function lights(ctx: Ctx2D, isle: Isle, t: number, px: number, alpha: number, glow: boolean): void {
   const sprite = haloSprite('255, 236, 196', '255, 206, 132', '255, 178, 96')
   const far = isle.layer === RANGE ? 0.5 : 1
@@ -558,54 +489,4 @@ function lights(ctx: Ctx2D, isle: Isle, t: number, px: number, alpha: number, gl
     ctx.globalAlpha = alpha * far
     ctx.fill(lit)
   }
-  ctx.globalAlpha = alpha
-  // The lighthouse's lamp: a glow, flashing as the beam comes round to us.
-  if (isle.lighthouse !== null) {
-    const lit = lighthouseAt(t)
-    if (lit > 0.01) {
-      const s = isle.lighthouse
-      const y = groundOf(isle, s) - 0.02 + 0.3 + 0.028
-      const { facing } = beamAt(t)
-      const flash = Math.max(0, facing) ** 8
-      const r = 0.12 + 0.55 * flash
-      ctx.globalAlpha = alpha * lit * (0.55 + 0.45 * flash)
-      ctx.drawImage(haloSprite('255, 248, 228', '255, 232, 180', '255, 214, 150'), s - r, -y - r, 2 * r, 2 * r)
-      ctx.globalAlpha = alpha
-    }
-  }
-}
-
-/**
- * The lighthouse's beam: a long soft wedge from its lantern along the horizon, to the side it is pointing, as long
- * as it points across, widening and brightening as it swings round towards us, faint as it swings away.
- */
-function beam(ctx: Ctx2D, isle: Isle, t: number, light: number): void {
-  if (light < 0.01 || isle.lighthouse === null) return
-  const s = isle.lighthouse
-  const y = -(groundOf(isle, s) - 0.02 + 0.3 + 0.028)
-  const { across, facing } = beamAt(t)
-  const L = 9 * Math.abs(across)
-  if (L < 0.05) return
-  const dir = across > 0 ? 1 : -1
-  const toward = Math.max(0, facing)
-  const spread = 0.05 + 0.5 * toward
-  const a = light * (0.08 + 0.18 * toward) * (0.4 + 0.6 * smooth(L, 0, 2))
-  const g = ctx.createLinearGradient(s, y, s + dir * L, y)
-  g.addColorStop(0, `rgba(255, 238, 200, ${a.toFixed(3)})`)
-  g.addColorStop(0.35, `rgba(255, 232, 190, ${(a * 0.45).toFixed(3)})`)
-  g.addColorStop(1, 'rgba(255, 232, 190, 0)')
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  ctx.fillStyle = g
-  // Feathered: the wedge twice, the narrower over the wider, so it is brightest down its middle.
-  for (const w of [1, 0.45]) {
-    ctx.beginPath()
-    ctx.moveTo(s, y - 0.012)
-    ctx.lineTo(s + dir * L, y - spread * w)
-    ctx.lineTo(s + dir * L, y + spread * w * 0.6)
-    ctx.lineTo(s, y + 0.012)
-    ctx.closePath()
-    ctx.fill()
-  }
-  ctx.restore()
 }

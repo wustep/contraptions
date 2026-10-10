@@ -3,7 +3,7 @@ import { R as BALL_R, mixHex, type PieceCtx } from '../../../../parts'
 import { CHORDS, loudness } from './music'
 import { LENGTH, RADIUS, along, ballLocal, crest, since, sink, squash, stonesIn, swell } from './path'
 import {
-  BANKS_OF_MIST, MIST, WHALE, deepLight, rainAt, ringAt, whaleAt, whaleShape, inLayer, layered, mistAt,
+  BANKS_OF_MIST, MIST, deepLight, rainAt, ringAt, inLayer, layered, mistAt,
 } from './air'
 import { BALL, alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
@@ -218,47 +218,6 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       p.strokeWeight((8 - i) * 1.6 * px)
       p.arc(0, 0, RADIUS * 2 * k, RADIUS * 2 * k, sunFace - spread, sunFace + spread)
     }
-  }
-
-  // The whale, deep under the pond, before anything on the water is drawn over it.
-  const whale = whaleAt(c.t)
-  if (whale && !whole && whale.there > 0.01) {
-    const u = along(c.t) + whale.d
-    const { body, flukes, fin } = whaleShape(k, whale.beat)
-    const m = ctx.getTransform()
-    const dens = Math.hypot(m.a, m.b)
-    p.push()
-    atSea(p, k, u)
-    ctx.translate(0, WHALE.depth * k)
-    // Swimming the ball's way, nose ahead, rising and sinking a little with its stroke.
-    ctx.translate(0, 0.06 * whale.beat * k)
-    const shape = new Path2D()
-    body.forEach(([x, y], i) => (i ? shape.lineTo(x, y) : shape.moveTo(x, y)))
-    shape.closePath()
-    const tail = new Path2D()
-    flukes.forEach(([x, y], i) => (i ? tail.lineTo(x, y) : tail.moveTo(x, y)))
-    tail.closePath()
-    fin.forEach(([x, y], i) => (i ? tail.lineTo(x, y) : tail.moveTo(x, y)))
-    tail.closePath()
-    // Soft-edged, as a shape seen through deep water: a wider, fainter pass under the body itself.
-    const dark = mixHex(day.deep, '#03060E', 0.45)
-    ctx.lineJoin = 'round'
-    ctx.strokeStyle = alpha(p, dark, 0.14 * whale.there).toString()
-    ctx.lineWidth = k * 0.12
-    ctx.stroke(shape)
-    ctx.fillStyle = alpha(p, dark, 0.36 * whale.there).toString()
-    ctx.fill(shape)
-    ctx.fill(tail)
-    // Its outline in the sea's light: motes along its back and belly, flickering.
-    for (let i = 0; i < body.length; i += 2) {
-      const [x, y] = body[i]
-      const a = whale.there * (0.18 + 0.22 * Math.max(0, osc(c.t, 0.21 + 0.05 * hash(i, 181), i * 1.7)))
-      ctx.fillStyle = `rgba(${GLOW}, ${a.toFixed(3)})`
-      ctx.beginPath()
-      ctx.arc(x, y, Math.max(0.8 / dens, k * 0.009), 0, Math.PI * 2)
-      ctx.fill()
-    }
-    p.pop()
   }
 
   // What is drawn only close (the reflections, the surface's light, the sea's glow, the rain's rings, the mist) is gone

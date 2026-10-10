@@ -53,7 +53,7 @@ export function viewOf(p: p5, c: PieceCtx): View {
 /**
  * How tall the picture is that the camera frames, device pixels: the canvas's height, or on a canvas narrower than
  * 16:9 (a phone held upright), the height of the 16:9 picture across its width, with more sky and sea round it. What
- * the sky's own things (the sun and the moon, the bow, the rays) are sized by, so they keep their place
+ * the sky's own things (the sun and the moon, the bow) are sized by, so they keep their place
  * over the horizon.
  */
 /**

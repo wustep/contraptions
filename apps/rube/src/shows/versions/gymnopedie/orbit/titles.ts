@@ -70,7 +70,7 @@ export function titlesAt(t: number): TitleCard[] {
       light,
       rise: (1 - up) * 1.1,
       at: card.title ? [0.5, 0.12] : [0.5, 0.08],
-      // Over the planet's lit limb and its ring of lamps, the sunset's rays, the cadence: shaded, as a film's titles are.
+      // Over the planet's lit limb, its ring of lamps and the cadence: shaded, as a film's titles are.
       shade: 0.3,
     })
   })

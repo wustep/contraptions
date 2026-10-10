@@ -8,13 +8,12 @@ import { show } from '../src/shows/versions/gymnopedie/orbit'
 import { BASS, BREATHS, CHORDS, GRACES, MARGIN, MELODY, NOTES, PERIOD, PIECES, loudness } from '../src/shows/versions/gymnopedie/orbit/music'
 import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../src/shows/versions/gymnopedie/orbit/path'
 import { breath, cellsAt, wideAt } from '../src/shows/versions/gymnopedie/orbit/camera'
-import { CADENCES, CLOSE, DAWN_GOING, SUN_GLINTS, gullFlight, PERCHED, dawnAt, leafRings, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
+import { CADENCES, CLOSE, DAWN_GOING, SUN_GLINTS, gullFlight, PERCHED, dawnAt, leafRings, bloom, cadenceFronts, lampLight, moonAngle, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
-import { BANK, BREAK, FIGURES, overcastAt, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, lanternAt, BOATS, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
+import { BANK, BREAK, FIGURES, overcastAt, FIREFLY, GULLS, HEAPS, METEORS, MIST, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 import { BAND, SHARES, SLICKS } from '../src/shows/versions/gymnopedie/orbit/ripples'
-import { CIRRUS, cirrusLight } from '../src/shows/versions/gymnopedie/orbit/cirrus'
-import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
+import { ISLES, RANGE, SHORE, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -128,17 +127,16 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: every flower opens as the ball comes, and closes at dawn', flowers.length > 150 && closed.length === 0, closed.slice(0, 5).map((s) => s.index).join(', '))
 
   // The air: clouds, gulls, mist and fireflies at their depths, all coming round with the period.
-  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY, SAILS, SHORE, RANGE, CIRRUS]
+  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY, SHORE, RANGE]
   const roundAgain = layers.every((l) => [0, 3.3, 17.9, 40].every((x) => {
     const a = layered(x, 0, l.f, l.span, l.wind)
     const b = layered(x, PERIOD - 1e-7, l.f, l.span, l.wind)
     const d = Math.abs(a - b)
     return Math.min(d, l.span - d) < 1e-4
   }))
-  check('gymnopedie: every layer of the air (the clouds, the gulls, the mist, the fireflies, the boats, the far shore) comes round with the period',
-    roundAgain && [coverAt, mistAt, firefliesOut, boatsOut].every((f) => Math.abs(f(PERIOD - 1e-7) - f(0)) < 1e-4))
-  // The far shore: its windows dark by day, lit at dusk with the lamps and out by the dawn; the lighthouse lit with the
-  // ball's first lamp and put out by the dawn, its light turning whole turns a period.
+  check('gymnopedie: every layer of the air (the clouds, the gulls, the mist, the fireflies, the far shore) comes round with the period',
+    roundAgain && [coverAt, mistAt, firefliesOut].every((f) => Math.abs(f(PERIOD - 1e-7) - f(0)) < 1e-4))
+  // The far shore: its windows dark by day, lit at dusk with the lamps and out by the dawn.
   const windows = ISLES.flatMap((i) => i.houses.map((h) => h.window).filter((w) => w !== null))
   const dayTimes = Array.from({ length: 80 }, (_, i) => 8 + i * 2.3)
   const darkByDay = windows.every((w) => dayTimes.every((t) => windowAt(w, t) === 0))
@@ -146,53 +144,28 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   const outByDawn = windows.every((w) => windowAt(w, 6) === 0 && windowAt(w, 0) >= 0)
   check('gymnopedie: the far shore\'s windows are dark by day, lit in the night, and out by the dawn',
     windows.length > 40 && darkByDay && litAtNight > windows.length * 0.9 && outByDawn, `${windows.length} windows, ${litAtNight} lit at 300 s`)
-  const piece1 = PIECES[1]
-  check('gymnopedie: the lighthouse is lit with the ball\'s first lamp, burns through the night, and the dawn puts it out; its light comes round',
-    LIGHTHOUSE_ON >= piece1.from && lighthouseAt(LIGHTHOUSE_ON - 0.01) === 0 && lighthouseAt(LIGHTHOUSE_ON + 2) === 1 &&
-    [300, 450, 600, PERIOD - 0.01, 0.5].every((t) => lighthouseAt(t) === 1) && dayTimes.every((t) => lighthouseAt(t) === 0) &&
-    Math.abs(beamAt(0).facing - beamAt(PERIOD - 1e-9).facing) < 1e-6 && Math.abs(beamAt(0).across - beamAt(PERIOD - 1e-9).across) < 1e-6)
   // The sea's surface: each band of wavelets goes a whole number of its tiles a period, and so do the slicks (two tiles).
   const whole = (x: number) => Math.abs(x - Math.round(x)) < 1e-9
   check('gymnopedie: the sea\'s surface (its bands of wavelets and its slicks) comes round with the period',
     BAND.every((b) => whole(b.pace * SHARES) && whole(b.wind)) && SLICKS.every((s) => whole(s.pace * SHARES / 2)))
-  // The cirrus: taking the sunset's colours and keeping them after, gone in the full night, and coming round.
-  const cirrusTimes = Array.from({ length: 1270 }, (_, i) => i * 0.5)
-  check('gymnopedie: the cirrus glow at sunset and after it, and are gone in the full night',
-    cirrusTimes.every((t) => skyAt(t).night < 0.88 || cirrusLight(t).light < 1e-6) &&
-    cirrusTimes.some((t) => t > 200 && t < 240 && cirrusLight(t).glow > 0.3) && Math.abs(cirrusLight(0).light - cirrusLight(PERIOD - 1e-6).light) < 1e-4)
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5
   })
   check('gymnopedie: a shooting star falls only on a Gnossienne\'s top note, at night', meteorsOk, METEORS.map((t) => t.toFixed(1)).join(', '))
 
-  // The weather's one shower, the bow after it, and the whale.
+  // The weather's one shower, and the bow after it.
   let rainFrom = Infinity
   let rainTo = -Infinity
   let bowFrom = Infinity
   let bowTo = -Infinity
-  let whaleFrom = Infinity
-  let whaleTo = -Infinity
   for (let t = 0; t < PERIOD; t += 0.1) {
     if (rainAt(t) > 0) { rainFrom = Math.min(rainFrom, t); rainTo = t }
     if (bowAt(t) > 0) { bowFrom = Math.min(bowFrom, t); bowTo = t }
-    if (whaleAt(t)) { whaleFrom = Math.min(whaleFrom, t); whaleTo = t }
   }
-  const [G1, GN1, GN3] = PIECES
+  const [G1, GN1] = PIECES
   check('gymnopedie: one shower, in the Gymnopédie, and the bow after it, gone before the first Gnossienne',
     rainFrom > G1.from && rainTo < G1.last && bowFrom > rainFrom + 10 && bowTo < GN1.from, `rain ${rainFrom.toFixed(0)}-${rainTo.toFixed(0)}, bow ${bowFrom.toFixed(0)}-${bowTo.toFixed(0)}`)
-  check('gymnopedie: the whale passes once, under the third Gnossienne\'s pond', whaleFrom > GN3.from && whaleTo < GN3.last,
-    `${whaleFrom.toFixed(0)}-${whaleTo.toFixed(0)}`)
-
-  let raysWrong = 0
-  let raysSeen = 0
-  for (let t = 0; t < PERIOD; t += 0.1) {
-    if (raysAt(t) <= 0) continue
-    raysSeen++
-    if (Math.abs(sunAngle(t)) < 0.8 || Math.abs(sunAngle(t)) > 1.84 || t > G1.end + 20) raysWrong++
-  }
-  check('gymnopedie: rays come from the sun only while it is low and up, at dawn and into the sunset', raysSeen > 0 && raysWrong === 0,
-    `${raysSeen} moments, ${raysWrong} wrong`)
 
   const perched = [...PERCHED.keys()].map((i) => STONES[i])
   check('gymnopedie: gulls perch on the colonnade, each lifting off as the ball lands on its stone, on its note',
@@ -241,10 +214,6 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   // The sea is drawn whole once the planet starts to be small in the frame; what is drawn only close is gone by then.
   check('gymnopedie: what the sea draws only close has faded before it is drawn whole, so nothing goes out in a frame',
     wideAt(CLOSE[1]) <= 0.001 && CLOSE[0] < CLOSE[1], `wide ${wideAt(CLOSE[1]).toFixed(4)} at ${CLOSE[1]} cells`)
-
-  const lanternsOk = BOATS.every((b) => lanternAt(b.seed, PIECES[0].last) === 0 && lanternAt(b.seed, PIECES[1].from + 7) === 1 &&
-    Math.abs(lanternAt(b.seed, PERIOD - 1e-7) * boatsOut(PERIOD - 1e-7) - lanternAt(b.seed, 0) * boatsOut(0)) < 1e-6)
-  check('gymnopedie: the boats light their lanterns at dusk, as the first Gnossienne begins, and are home by night', lanternsOk && boatsOut(260) === 0)
 
   // The pond answers the ball: rings on the water from every landing and bounce on a leaf, after it and not before.
   const leaves = STONES.filter((s) => s.piece === 2)
