@@ -638,7 +638,7 @@ function drawSong(p: p5, k: number, t: number): void {
  */
 const STAR_FROM = PEN[2] + 0.1
 const STAR_AT = LEAP + 0.25
-function partStar(t: number): { x: number; y: number; a: number; s: number } | null {
+export function partStar(t: number): { x: number; y: number; a: number; s: number } | null {
   if (t < STAR_FROM || t > 195.9) return null
   const [px, py] = penPath(PEN[2])
   const [mx, my] = miaPath(Math.min(t, STAR_AT))
