@@ -300,10 +300,14 @@ export function drawStone(p: p5, c: Ctx, t: number): void {
   p.fill(STONE)
   p.rect(xa * k, ya * k, (xb - xa) * k, (yb - ya) * k)
   {
+    // (Out of the plain stone at the lip it turns over a cell and a half, not on a hard edge down the frame.)
     const fx0 = Math.max(xa, X_LIP)
     if (xb > fx0) {
-      const g = ctx.createLinearGradient((X_END - 3.5) * k, 0, X_END * k, 0)
-      g.addColorStop(0, mixHex(STONE, FLOOR_STONE, 0.55))
+      const g = ctx.createLinearGradient(X_LIP * k, 0, X_END * k, 0)
+      const at = (x: number) => (x - X_LIP) / (X_END - X_LIP)
+      g.addColorStop(0, STONE)
+      g.addColorStop(at(X_LIP + 1.5), mixHex(STONE, FLOOR_STONE, 0.55))
+      g.addColorStop(at(X_END - 3.5), mixHex(STONE, FLOOR_STONE, 0.55))
       g.addColorStop(1, FLOOR_STONE)
       ctx.fillStyle = g
       ctx.fillRect(fx0 * k, Y_F * k, (xb - fx0) * k, Math.max(0, yb - Y_F) * k)
