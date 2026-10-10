@@ -288,8 +288,6 @@ each world, and changed:
 - **Mal's shot landing** (145.15 to 146.8): on the cut back from her, Fischer was already half under the floor, and
   nothing said he had been hit. The shot strikes now: a white flash where he stands, a ring out across the floor and a
   spray of snow thrown up off it, still settling as the camera comes back to him (a fresh critic's note).
-- **The reunion's hold** (259.4 to 262.5): come to him, the children sat still for three seconds before the embrace.
-  They cannot keep still now: little hops on the beats, by turns, landing on the beat (a second critic's note).
 - **The top at the last chord** (270.8 to 274.6): the push in goes on further, so the top stands a quarter of the
   frame's height at the cut to black, not a fifth.
 - **The front door** (244.8): it swung so deep into the hall that its foot came to rest on his crown as he came in
@@ -320,8 +318,7 @@ each world, and changed:
   now, and she is still the same teal, as findable in the café, on the plane at night and in the vault.
 - **The lift in the lobby** (191.5 to 199.3): the lobby round the shaft, where the cabin with the sleepers rides down to
   the slam, was bare pale wall from pilaster to pilaster. The lift has its landing there now: a walnut surround either
-  side of the shaft, a sconce each side, the call buttons, and over them a floor dial whose needle follows the cabin,
-  on the top floor until the blast and swinging over to the lobby as it falls.
+  side of the shaft, a sconce each side and the call buttons.
 - **The ground under the runway** (223 to 244): in a tall frame (a phone held upright, a Short) the cut ground under
   the runway is near half the picture as the plane comes in, and it was two flat greys. The runway is laid in slabs
   now, their joints in it, on a bed of crushed stone, and under that the earth lies in soft bands, darker going down,
@@ -428,13 +425,6 @@ each world, and changed:
 - **The tower's empty floors** (0 to 30, 152 to 183, plainest in a tall frame): their windows were bare dark
   rectangles under a room drawn in full. They stay dark, the floors empty, but each has a sill, a glazing bar and the
   dusk sky caught in its top pane.
-- **The guards fire on them** (131.8 to 139.5): the snowmobiles chased them down the face, and nothing they did
-  touched them; to a viewer new to it the chase had "no threat that lands" (a cold critic's note). On alternate beats
-  from the first jump to the ledge a rider's gun flashes (the same star of flame as Mal's, a pale glow was lost), and a tenth of a second on a spurt of snow kicks up on
-  Fischer's track just ahead of him, a dark streak of the round flying in from the guard's side first (without it a
-  second cold critic read the spurts as his own ski spray), so he rides into the spray (behind him, the last of the three, it fell off a
-  tight frame): a dark pock and a spray in the snow's blue shade (white on white was lost). Never a hit: Mal's shot,
-  four seconds later, is the one that lands.
 - **The wreckage off the shore** (from the dive, 156.6 on): the return to limbo's beach is the show's first frame
   again, on purpose, and two viewers new to it read it as the opening replayed. Pieces of the city they built are
   afloat off the shore now, slabs of concrete with their window holes, tilted, riding the swell half under, so the
@@ -491,9 +481,6 @@ each world, and changed:
 - **The fortress's walkway** (123 to 151): the walkway out from the tower toward the mountain stood on one leg that
   stopped in the air, nothing under it (two critics' notes, in the tall frame). It is a cantilever into the mountain
   behind now, braced back to the tower under it by a strut.
-- **Under the cloud deck** (222 to 225, plainest in a tall frame): coming down out of the deck, the air under the wings
-  was one flat gold fill, half the picture, until the ground came up (two critics' notes). Loose wisps of lower cloud
-  lie in it now, lit along their tops and cool beneath, rising past with the deck.
 - **The garden door folded open** (251 to the end): it hung from the floor's back line, a third of a cell higher than its
   own doorway, so folded open against the house it stood taller than the doors beside it and rose past the wall
   (a critic's note in a tall frame). It hangs in the doorway's front plane now, the doorway's height.
@@ -506,6 +493,16 @@ each world, and changed:
   the end of its car, dim in the rain, on it.
 - **The cloud deck's underside** (213.7 to 225): its body's wash stopped on a ruled line at its foot, and the ragged
   fringe began under it (a critic's note). It fades out over its last stretch into the fringe now.
+
+A subtraction pass after them took back what had been added and did not earn its place:
+- **The guards' fire** down the face (131.8 to 139.5): flashes, rounds streaking in and spurts of snow on Fischer's
+  track on alternate beats. It took four rounds of patching to read at all, crowded the chase, and spent the shot
+  before Mal's: hers, on the chord, is the show's one gunshot again.
+- **The children's hops** before the embrace (259.4 to 262.5): they stand still for him again, the hold before the
+  embrace a held breath, not a fidget.
+- **The lobby's floor dial** (191.5 to 199.3): a needle nobody follows while the cabin falls; the landing keeps its
+  surround, sconces and call buttons.
+- **The wisps under the cloud deck** (222 to 225): the air under the wings coming down is the morning's plain gold again.
 
 ## Inception nods
 
