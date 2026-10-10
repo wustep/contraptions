@@ -12,7 +12,7 @@ import { MARTY, RACHEL } from './worlds'
  *
  * The words are the page's: a show's canvas sets no type, and a saved frame or a recorded video has none
  * (`shows/stage.ts`), so the player sets them over the frame from `creditsAt` in its own face. The canvas's half is
- * only a soft shade under them, so they read over the pale ward.
+ * the hall's light going down round the nursery's lit window, so they read over the pale ward.
  */
 
 export interface Card {
@@ -96,10 +96,10 @@ export function creditsAt(t: number): TitleCard[] {
   return out
 }
 
-/** How deep the shade under the words is at `t`: up with the first card, down after the last. */
-const bedAt = (t: number): number => clamp((t - CREDITS_AT + 0.4) / 1.6) * (1 - clamp((t - LAST_GONE + 0.4) / 1.8))
+/** How far the hall's light is down at `t`: going down with the first card, and staying down to the end. */
+const bedAt = (t: number): number => easeInOutCubic(clamp((t - CREDITS_AT + 1.2) / 3.2))
 
-/** The canvas's half: a soft shade where the words come. */
+/** The canvas's half: the hall's light going down, and a soft shade where the words come. */
 export const credits = scenery<null>({
   name: 'credits',
   draw: () => {},
@@ -113,6 +113,20 @@ export const credits = scenery<null>({
     const h = (w * 9) / 16
     const bx = (f.x0 + f.x1) / 2 - w / 2
     const by = (f.y0 + f.y1) / 2 - h / 2
+    // The corridor's light goes down as the credits come, and the nursery's window (low in the middle of the last
+    // picture) stays lit: the words come up on the dark of the hall, over the glow of the glass.
+    const wx = (bx + w * 0.5) * k
+    const wy = (by + h * 0.64) * k
+    const hall = ctx.createRadialGradient(wx, wy, w * 0.15 * k, wx, wy, w * 0.78 * k)
+    hall.addColorStop(0, 'rgba(22, 20, 17, 0)')
+    hall.addColorStop(0.42, `rgba(22, 20, 17, ${0.52 * bed})`)
+    hall.addColorStop(1, `rgba(22, 20, 17, ${0.78 * bed})`)
+    ctx.save()
+    ctx.fillStyle = hall
+    // Over the whole frame, which may see more than the 16:9 the words are placed in.
+    ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+    ctx.restore()
+    // And a little more shade right under the words.
     const cx = (bx + w * AT[0]) * k
     const cy = (by + h * (AT[1] + 0.13)) * k
     const rx = w * 0.36 * k
@@ -120,9 +134,9 @@ export const credits = scenery<null>({
     ctx.translate(cx, cy)
     ctx.scale(1, 0.42)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(30, 36, 40, ${0.09 * bed})`)
-    g.addColorStop(0.6, `rgba(30, 36, 40, ${0.04 * bed})`)
-    g.addColorStop(1, 'rgba(30, 36, 40, 0)')
+    g.addColorStop(0, `rgba(22, 20, 17, ${0.3 * bed})`)
+    g.addColorStop(0.6, `rgba(22, 20, 17, ${0.1 * bed})`)
+    g.addColorStop(1, 'rgba(22, 20, 17, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
     ctx.restore()
