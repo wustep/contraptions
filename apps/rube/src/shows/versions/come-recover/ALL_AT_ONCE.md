@@ -1039,6 +1039,9 @@ The notes went back to the builders who made each part, who still had their cont
   each to be said no earlier, and caught a sixth, the taxes' (now on Joy's entrance). The captions sit on the cue's
   own structure but for *[It fades out]*, a second ahead of the upload's fade; it starts with it now. `npm run build`
   passes (3,074 checks).
+- **Spoken words at other speeds.** The described track and the lines are timed to be heard whole at 1×; at 2× or
+  4× each would have cut the last off. The player now speaks them only at 1× or slower (a shared change); on the real
+  page, playing through the taxes at 2× said nothing, and at 1× said the description and both lines.
 
 ## The looks
 
@@ -1231,6 +1234,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - Zoom is a closer look at Evelyn: Joy and Waymond are cropped by it at times, which is what it is for.
 - Under Zoom, the credits' longest line crosses the near end of the lantern string. The words are set by the page,
   the same in every mode.
+- The spoken words (the lines and the described track) are spoken only at 1× or slower.
 - Sound captions are not in a saved video: they are the viewer's choice on the page, and the recorder does not know
   it.
 - The reduced-motion preference is followed live, and the page's Save PNG and Save video paint from the same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
