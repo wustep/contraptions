@@ -482,6 +482,10 @@ each world, and changed:
   the antechamber. It stands on a sill down to the floor now.
 - **The lamps' light in the wet road** (69 to 86): under each lamp its reflection was a strip with hard sides, a
   pasted-on panel. It is a narrow soft streak now, fading at its sides as well as down.
+- **The van's underside** (69 to 88): the dark underside that hides Mal behind it was one flat box from bumper to
+  bumper, down past the road, and read as a plinth the van stood on (a critic's note under Zoom). It is a soft
+  shadow on the road the van's length now, the chassis in shade only between the wheels (still deep enough that she
+  never shows under it), and the wheel wells dark.
 
 ## Inception nods
 

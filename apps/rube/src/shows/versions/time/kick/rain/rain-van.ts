@@ -231,15 +231,33 @@ function drawUnder(p: p5, k: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const X = (u: number) => u * k
   const ground = 0.575
-  const P = new Path2D()
-  P.rect(X(-L + 0.08), X(BOT - 0.02), X(2 * L - 0.16), X(ground + 0.07 - (BOT - 0.02)))
-  const g = ctx.createLinearGradient(0, X(BOT), 0, X(ground))
-  g.addColorStop(0, mixHex(RAIN.street, RAIN.buildingDark, 0.6))
-  g.addColorStop(1, mixHex(RAIN.street, RAIN.streetWet, 0.3))
+  // Its shadow on the wet road, soft, the length of the van (a flat box from bumper to bumper, down to the road, read
+  // as a plinth it stood on).
   ctx.save()
-  ctx.fillStyle = g
-  ctx.fill(P, 'evenodd')
+  ctx.translate(0, X(ground))
+  ctx.scale(1, 0.09)
+  const sh = ctx.createRadialGradient(0, 0, 0, 0, 0, X(L))
+  sh.addColorStop(0, rgba(RAIN.buildingDark, 0.7))
+  sh.addColorStop(0.75, rgba(RAIN.buildingDark, 0.45))
+  sh.addColorStop(1, rgba(RAIN.buildingDark, 0))
+  ctx.fillStyle = sh
+  ctx.fillRect(-X(L), -X(L), X(2 * L), X(2 * L))
   ctx.restore()
+  // The chassis between the wheels, in shade, low enough that nothing behind the van shows under it.
+  const P = new Path2D()
+  // Down a little past the road's line, into its own shadow (she stands at the kerb a little lower than the van's road,
+  // and must not show under it): the chassis in shade, deepening into the shadow at its foot.
+  P.rect(X(-WHEEL_U), X(BOT - 0.02), X(2 * WHEEL_U), X(ground + 0.07 - (BOT - 0.02)))
+  const g = ctx.createLinearGradient(0, X(BOT), 0, X(ground + 0.07))
+  g.addColorStop(0, mixHex(RAIN.street, RAIN.buildingDark, 0.75))
+  g.addColorStop(0.7, mixHex(RAIN.street, RAIN.buildingDark, 0.55))
+  g.addColorStop(1, mixHex(RAIN.street, RAIN.buildingDark, 0.7))
+  ctx.fillStyle = g
+  ctx.fill(P)
+  // The wheel wells and a thin underbody along its whole length, dark, under the body and the wheels: the arches show
+  // only the dark of the wells, not what stands behind the van.
+  ctx.fillStyle = mixHex(RAIN.street, RAIN.buildingDark, 0.8)
+  ctx.fillRect(X(-L + 0.08), X(BOT - ARCH_R), X(2 * L - 0.16), X(ARCH_R + 0.05))
 }
 
 function drawShell(p: p5, k: number, ink: string, w: number, t: number, wet: number): void {
