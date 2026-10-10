@@ -1,7 +1,7 @@
 import { R as BALL_R, type PieceCtx } from '../../../../parts'
 import { GRACES, MELODY } from './music'
 import { LENGTH, RADIUS, STONES, along, ballLocal, float, since, sink, squash, stonesIn } from './path'
-import { FIREFLIES, FIREFLY, dropAt, rainAt, firefliesOut, inLayer, layered, overcastAt } from './air'
+import { BREAK, FIREFLIES, FIREFLY, dropAt, rainAt, firefliesOut, inLayer, layered, overcastAt } from './air'
 import { hash, osc, polar, smooth } from './world'
 import { scenery, type Ctx2D, viewOf, frameOf, onCanvas, lamplighter, haloSprite, sunAngle, moonAngle, weathered, devicePx } from './frame'
 import { lampLight, bloom, cadenceFronts, cadence, SEGMENT } from './stones'
@@ -14,7 +14,8 @@ import { lampLight, bloom, cadenceFronts, cadence, SEGMENT } from './stones'
  */
 /**
  * The Gymnopédie's top note answered by the sun, as the Gnossiennes' are by the stars (`METEORS`): each time the ball
- * comes down on it, a star of sunlight catches the edge of the column's slab on the sun's side, and fades.
+ * comes down on it, a star of sunlight catches the edge of the column's slab on the sun's side, and fades. In the
+ * shower, the last of them is the cloud breaking, so it is not dimmed by it.
  */
 const G1_TOP = Math.max(...MELODY.filter((n) => n.piece === 0).map((n) => n.p))
 export const SUN_GLINTS = MELODY.filter((n) => n.piece === 0 && n.p === G1_TOP).map((n) => {
@@ -78,7 +79,7 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
   for (const g of SUN_GLINTS) {
     const s = since(c.t, g.t)
     if (s < 0 || s > 2) continue
-    const a = (1 - Math.exp(-s / 0.03)) * Math.exp(-s / 0.45) * Math.min(1, g.v / 45) * (1 - 0.8 * overcastAt(c.t)) * (1 - v.wide)
+    const a = (1 - Math.exp(-s / 0.03)) * Math.exp(-s / 0.45) * Math.min(1, g.v / 45) * (g.t === BREAK ? 1 : 1 - 0.8 * overcastAt(c.t)) * (1 - v.wide)
     if (a < 0.01) continue
     const st = g.stone
     const back = Math.round((along(c.t) - (st.u0 + st.u1) / 2) / LENGTH) * LENGTH

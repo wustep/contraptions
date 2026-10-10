@@ -387,8 +387,18 @@ export const rainAt = (t: number): number => {
 /** How overcast it is at `t`, 0 to 1: the cloud before and after the rain itself. */
 export const overcastAt = (t: number): number => {
   const u = wrap(t)
-  return smooth(u, SHOWER.gather, SHOWER.from) * (1 - smooth(u, SHOWER.to, SHOWER.clear + 6))
+  // The cloud breaks on the Gymnopédie's last top note: the sun comes through at once while the rain still falls (a
+  // sun shower, which lights the bow), and the rest of the cloud clears after.
+  const clearing = Math.max(0.65 * smooth(u, BREAK, BREAK + 0.8), smooth(u, BREAK, SHOWER.clear + 6))
+  return smooth(u, SHOWER.gather, SHOWER.from) * (1 - clearing)
 }
+
+/** The Gymnopédie's last top note, in the shower: where the sun breaks through. */
+export const BREAK = (() => {
+  const g1 = MELODY.filter((n) => n.piece === 0)
+  const top = Math.max(...g1.map((n) => n.p))
+  return g1.filter((n) => n.p === top && n.t > SHOWER.from && n.t < SHOWER.clear).map((n) => n.t)[0] ?? SHOWER.to
+})()
 
 /** How much of the bow there is at `t`, 0 to 1. */
 export const bowAt = (t: number): number => {

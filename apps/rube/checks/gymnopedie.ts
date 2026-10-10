@@ -10,7 +10,7 @@ import { LENGTH, STONES, TOUCHES, ballLocal, riding, squash, swell } from '../sr
 import { breath, cellsAt, wideAt } from '../src/shows/versions/gymnopedie/orbit/camera'
 import { CADENCES, CLOSE, DAWN_GOING, SUN_GLINTS, PERCHED, dawnAt, leafRings, bloom, cadenceFronts, lampLight, moonAngle, raysAt, sunAngle } from '../src/shows/versions/gymnopedie/orbit/scene'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
-import { BANK, FIGURES, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, lanternAt, BOATS, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
+import { BANK, BREAK, FIGURES, overcastAt, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, lanternAt, BOATS, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -223,8 +223,12 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
     (j > 0 && !s.bounced[j]) || (leafRings(t, s.weight[j], t - 0.05).length === 0 && leafRings(t, s.weight[j], t + 0.3).length > 0)))
   check('gymnopedie: every landing on a leaf sends rings out on the pond, as its note sounds', ringsOk && leaves.length > 150)
 
+  const g1TopsAll = () => MELODY.filter((n) => n.piece === 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === 0).map((m) => m.p)))
   const g1Top = Math.max(...MELODY.filter((n) => n.piece === 0).map((n) => n.p))
   const g1Tops = MELODY.filter((n) => n.piece === 0 && n.p === g1Top)
+  check('gymnopedie: the shower\'s cloud breaks on the Gymnopédie\'s last top note, while it still rains',
+    g1TopsAll().some((n) => n.t === BREAK) && rainAt(BREAK + 1) > 0.5 && overcastAt(BREAK - 0.1) > 0.95 && overcastAt(BREAK + 1.5) < 0.4,
+    `break at ${BREAK.toFixed(2)} s`)
   check('gymnopedie: the sun glints on the Gymnopédie\'s top note, each time it comes, on the stone the ball lands on',
     SUN_GLINTS.length === g1Tops.length && g1Tops.length >= 4 && SUN_GLINTS.every((g, i) => g.t === g1Tops[i].t && g.stone.touches.includes(g.t)),
     `${SUN_GLINTS.length} glints`)
