@@ -279,12 +279,16 @@ export const inside = scenery<null>({
     p.noStroke()
     p.fill(mixHex('#7C6250', '#6D5A4E', age))
     p.triangle(H.eaves[0] * k, H.eavesY * k, rx * k, ry * k, H.eaves[1] * k, H.eavesY * k)
-    // The chimney, up through the roof.
+    // The chimney, up out of the roof. Its stack is drawn from just under the roof's band, not down through the attic:
+    // the flue has no way down through the nursery (its window is where it would run), and drawn to the nursery's
+    // ceiling it stood in every close of the nursery as a brick block floating over the room.
     const [c0, c1, ctop] = H.chimney
+    // Its foot is the roof band's underside where the roof is highest under it, so the band covers it on both sides.
+    const bandFoot = (x: number) => H.eavesY + 0.12 + 0.42 + ((x - (H.eaves[0] - 0.3)) / (rx - (H.eaves[0] - 0.3))) * (ry - (H.eavesY + 0.12 + 0.42))
     p.stroke(ink)
     p.strokeWeight(weight)
     p.fill(mixHex('#A8604A', '#8E6656', age))
-    rect(p, k, c0, ctop, c1, H.ceilUp)
+    rect(p, k, c0, ctop, c1, bandFoot(c1))
     rect(p, k, c0 - 0.12, ctop - 0.2, c1 + 0.12, ctop)
     const roof = mixHex(HOME.roof, HOME.roofOld, age)
     p.fill(roof)

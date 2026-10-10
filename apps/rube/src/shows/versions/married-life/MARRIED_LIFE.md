@@ -793,6 +793,12 @@ window.
   - *The bigger bedside leans, re-watched* by a fourteenth viewer (the same stretch and questions): his lean now seen,
     "the one clear gesture… he tilts forward toward her head", with the string passing to her (75%), where the last
     viewer saw neither move. Her roll still not seen; held by the seam, kept.
+  - *The nursery, re-watched* by a fifteenth viewer who has never seen Up (63 to 73.5 s, four frames a second): a
+    nursery (95%), his winch lifting her on a painter's platform, the mural made by the two of them, its hill the
+    baby cloud's hill. It also found "a rust-red rectangle at the top of the frame": the chimney's stack, drawn down
+    through the attic to the nursery's ceiling (its flue cannot come down through the nursery, whose window is where
+    it would run), so it floated over the room in every close there. The stack now stands from the roof band up, its
+    foot under the band on both sides (it pokes into the attic otherwise, bright under the storm's darkening).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
