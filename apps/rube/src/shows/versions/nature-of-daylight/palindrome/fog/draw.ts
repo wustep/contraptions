@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { drawHeptapod, drawInk, mix, rgba } from '../cast'
-import { frame, hash, smooth } from '../kit'
+import { frame, hash, smooth, softLayer } from '../kit'
 import { FOG } from '../worlds'
 import {
   ABBOTT,
@@ -73,7 +73,15 @@ const LAYERS: Layer[] = [
   { d: 0.85, step: 8, size: 4.8, drift: 0.16, cols: [FOG.white, FOG.grey, FOG.white], a: 0.34, seed: 13 },
 ]
 
+/**
+ * A depth of fog, drawn small and laid on whole: soft lobes all, overlapping many deep, they were the costliest thing
+ * in the show; drawn at a quarter (the far layer) or half size and scaled up, they look the same for a fraction.
+ */
 function drawLayer(ctx: Ctx, k: number, f: Frame, L: Layer, t: number): void {
+  softLayer(ctx, [(f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 + 1) * k, (f.y1 + 1) * k], 0, (c) => lobes(c, k, f, L, t), L.d < 0.5 ? 0.25 : 0.5)
+}
+
+function lobes(ctx: Ctx, k: number, f: Frame, L: Layer, t: number): void {
   const x0 = f.cx + (f.x0 - f.cx) / L.d - L.size * 2
   const x1 = f.cx + (f.x1 - f.cx) / L.d + L.size * 2
   const y0 = f.cy + (f.y0 - f.cy) / L.d - L.size

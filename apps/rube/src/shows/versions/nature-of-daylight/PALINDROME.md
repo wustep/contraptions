@@ -974,6 +974,16 @@ those frames; it is seven banks blurred together the same way, smooth and cheape
 went from forty-one milliseconds to thirty-one, and the worst from a hundred and forty to ninety-two. The worst now
 are the fog beyond the glass, made of many soft gradients, and left as they are.
 
+A hundred-and-eighth took the fog beyond the glass (232 to 266 s), the costliest place left: seventy to a hundred and
+thirty milliseconds a frame. It is three depths of soft lobes, each a radial gradient over its own square, overlapping
+many deep, and the farthest depth, the biggest lobes and the most of them, was half of it. Each depth is drawn into a
+scratch canvas now and laid on whole, the far one at a quarter size and the nearer two at half (`softLayer` takes a
+scale, and skips its blur when asked for none): soft already, they look the same, to within seven levels, and the fog
+costs thirty-one to thirty-seven. One thing it costs: the browser's dither in a small gradient settles differently
+each frame as the lobes drift, so the open fog flickers by one level in two hundred and fifty-five where it held still
+before. It cannot be seen. Over the whole show the median frame is now twenty-six milliseconds, from thirty-one, and
+the worst sixty-five, from ninety-two: the daylight's break and the blast.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

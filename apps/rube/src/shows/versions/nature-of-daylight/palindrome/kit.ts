@@ -339,10 +339,6 @@ export function lastOf(times: readonly number[], t: number): { i: number; ago: n
 
 export type Ctx = PieceCtx
 
-/**
- * Soft light laid on the frame: drawn into a scratch canvas at half size, blurred there once, and laid on whole.
- * `box` is the region it may cover, in the frame's own units (px, under the current transform); `blur` is in pixels.
- */
 let scratch: [HTMLCanvasElement, HTMLCanvasElement] | null = null
 
 /** Two scratch canvases at least w by h, shared by everything soft drawn small. */
@@ -355,9 +351,20 @@ export function scratchPair(w: number, h: number): [HTMLCanvasElement, HTMLCanva
   return scratch
 }
 
-export function softLayer(ctx: CanvasRenderingContext2D, box: [number, number, number, number], blur: number, draw: (c: CanvasRenderingContext2D) => void): void {
+/**
+ * Soft things laid on the frame: drawn into a scratch canvas at `scale` of full size (half, unless told), blurred there
+ * once if `blur` (in pixels) asks it, and laid on whole. `box` is the region it may cover, in the frame's own units
+ * (px, under the current transform). For what is soft already, the fog's far lobes, a small canvas costs a fraction.
+ */
+export function softLayer(
+  ctx: CanvasRenderingContext2D,
+  box: [number, number, number, number],
+  blur: number,
+  draw: (c: CanvasRenderingContext2D) => void,
+  scale = 0.5,
+): void {
   const m = ctx.getTransform()
-  const S = 0.5
+  const S = scale
   const pad = Math.ceil(3 * blur * S) + 2
   const cw = ctx.canvas.width
   const ch = ctx.canvas.height
@@ -374,13 +381,15 @@ export function softLayer(ctx: CanvasRenderingContext2D, box: [number, number, n
   A.clearRect(0, 0, w, h)
   A.setTransform(m.a * S, m.b * S, m.c * S, m.d * S, (m.e - ax) * S + pad, (m.f - ay) * S + pad)
   draw(A)
-  B.setTransform(1, 0, 0, 1, 0, 0)
-  B.clearRect(0, 0, w, h)
-  B.filter = `blur(${(blur * S).toFixed(2)}px)`
-  B.drawImage(pair[0], 0, 0, w, h, 0, 0, w, h)
-  B.filter = 'none'
+  if (blur > 0) {
+    B.setTransform(1, 0, 0, 1, 0, 0)
+    B.clearRect(0, 0, w, h)
+    B.filter = `blur(${(blur * S).toFixed(2)}px)`
+    B.drawImage(pair[0], 0, 0, w, h, 0, 0, w, h)
+    B.filter = 'none'
+  }
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.drawImage(pair[1], 0, 0, w, h, ax - pad / S, ay - pad / S, w / S, h / S)
+  ctx.drawImage(pair[blur > 0 ? 1 : 0], 0, 0, w, h, ax - pad / S, ay - pad / S, w / S, h / S)
   ctx.restore()
 }
