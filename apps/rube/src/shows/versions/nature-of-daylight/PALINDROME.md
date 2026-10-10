@@ -804,6 +804,11 @@ A seventy-ninth gave the show to a thirteenth fresh reader. Ian walking out read
 But the empty suit the sixty-ninth set beside her had its window open onto the dark wall behind it, and it read as a
 black ball inside it, a bowling ball. Its window is glass now, pale, a glint on it.
 
+An eightieth gave the show to a fourteenth fresh reader: Ian leaves, she stays rocking the cradle, the loop closes.
+The suit, the hops, Ian's walk passed without a word. Their worst, the baby there on the cut when the cradle was empty
+before it, is the choice itself, the empty cradle they turn to and the child the cut gives her, as the seventh reader
+read it; the rest had been met before. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
