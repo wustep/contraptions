@@ -5,7 +5,7 @@
 import type { Performance, Version } from '../src/shows/registry'
 import type { ShowBall } from '../src/show'
 import { R } from '../src/parts'
-import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, KINDLED, figureDraw, inSky } from '../src/shows/versions/la-la-land/sebs/night/stars'
+import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, KINDLED, figureDraw, inSky, waltzTrail } from '../src/shows/versions/la-la-land/sebs/night/stars'
 import { DIP, sebAt } from '../src/shows/versions/la-la-land/sebs/night/painted-waltz'
 import { OUT as HOLLY_OUT } from '../src/shows/versions/la-la-land/sebs/studio/hollywood'
 import { show as sebsShow, covers as sebsCovers } from '../src/shows/versions/la-la-land/sebs'
@@ -257,6 +257,21 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     }
   }
   check('sebs: every star the melody lights is lit in the picture', KINDLED.length === 11 && unseen.length === 0, unseen.join(', '))
+  // Their waltz is written in the sky: the newest of each one's trail, laid into the turning sky, is in the picture.
+  {
+    const trailOut: string[] = []
+    let points = 0
+    for (let T = 303; T < 338.5; T += 0.5) {
+      const [wx, wy] = show.where(T)
+      const [nx, ny] = sebAt(T)
+      const f = cam(T)
+      for (const [x, y] of waltzTrail(T)) {
+        points++
+        if (Math.abs(x + wx - nx - f.x) > (f.cells * 16) / 9 / 2 || Math.abs(y + wy - ny - f.y) > f.cells / 2) { trailOut.push(T.toFixed(1)); break }
+      }
+    }
+    check('sebs: their waltz is written in the sky, its newest stretch in the picture', points > 1000 && trailOut.length === 0, trailOut.slice(0, 6).join(', '))
+  }
   // The credits come up in open sky over the club, not across its roof and pelmet: while a card is up, the roof's line
   // is below the card's last line. (The first card once came up inside the club, on the pelmet's scallops.)
   const roofY = piano[1] + ROOM.roof
