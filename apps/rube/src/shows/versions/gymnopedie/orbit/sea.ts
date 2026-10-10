@@ -11,7 +11,7 @@ import {
 } from './frame'
 import { lampLight, farStones } from './stones'
 import { mirrorShore } from './shore'
-import { drawRipples, ripplesAt, warmRipples, type Glitter } from './ripples'
+import { drawRipples, ripplesAt, warmRipples, type Glitter, type Lamp } from './ripples'
 import { drawDolphins } from './dolphins'
 
 // ---------------------------------------------------------------- the light on the water
@@ -293,7 +293,17 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
         if (light > 0.02) glitter.push({ x: (b.x - hx) / cell, light: light * (b.sun ? 1 : 0.8), width: b.sun ? 0.14 : 0.1 })
       }
     }
-    drawRipples(ctx, k, c.t, (v.u1 - v.u0) / 2, day, water, close * ripplesAt(v.cells), glitter)
+    // And under each lit lamp, its flame's.
+    const lamps: Lamp[] = []
+    const mid = along(c.t) + 0.55
+    for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
+      if (stone.piece !== 1) continue
+      const lit = lampLight(stone, c.t)
+      if (lit <= 0.02) continue
+      const w = stone.u1 - stone.u0
+      lamps.push({ x: stone.u0 + shift + (w > 0.42 ? 0.1 : w / 2) - mid, light: lit })
+    }
+    drawRipples(ctx, k, c.t, (v.u1 - v.u0) / 2, day, water, close * ripplesAt(v.cells), glitter, lamps)
     // Dolphins in the near water, once, in the morning.
     drawDolphins(ctx, k, c.t, day, close * ripplesAt(v.cells))
     const ctx2 = p.drawingContext as Ctx2D

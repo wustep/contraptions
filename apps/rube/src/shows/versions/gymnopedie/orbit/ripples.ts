@@ -38,6 +38,9 @@ export const BAND = EDGES.slice(0, -1).map((y0, j) => {
 let tiles: HTMLCanvasElement[] | null = null
 /** The glitter path's own canvas. */
 let shine: HTMLCanvasElement | null = null
+/** The lamps' glitter's canvas, and its mask. */
+let warm: HTMLCanvasElement | null = null
+let under: HTMLCanvasElement | null = null
 
 /** Make the tiles now, if they are not made: on the first frame of the sea, far off at the seam, not the first close one. */
 export function warmRipples(): void {
@@ -97,7 +100,13 @@ export interface Glitter {
   width: number
 }
 
-export function drawRipples(ctx: Ctx2D, k: number, t: number, half: number, day: Sky, water: Path2D, light: number, glitter: Glitter[] = []): void {
+/** A lit lamp over the water: where it is across the frame, cells from the middle, and how bright it burns. */
+export interface Lamp {
+  x: number
+  light: number
+}
+
+export function drawRipples(ctx: Ctx2D, k: number, t: number, half: number, day: Sky, water: Path2D, light: number, glitter: Glitter[] = [], lamps: Lamp[] = []): void {
   if (light < 0.01) return
   tiles ??= makeTiles()
   const u = along(t) + 0.55
@@ -173,6 +182,76 @@ export function drawRipples(ctx: Ctx2D, k: number, t: number, half: number, day:
     ctx.globalCompositeOperation = 'lighter'
     ctx.globalAlpha = Math.min(1, light * g.light * 1.25)
     ctx.drawImage(shine, left, 0)
+    ctx.globalCompositeOperation = 'source-over'
+  }
+  // Under each lit lamp, the wavelets catch its flame: a warm column of glitter going down from its foot, as the sun's
+  // does by day. All the lamps in one canvas: the surface drawn whole into it, kept only under the lamps (a mask of their
+  // columns, added together), and tinted the flame's colour. Fading as the camera draws back: from further off a lamp's
+  // glitter is a speck.
+  const glow = lamps.length ? 1 - smooth(half, 14, 17) : 0
+  if (glow > 0.01) {
+    // Only as wide as the lamps in the frame reach.
+    const xs = lamps.map((l) => l.x)
+    const lo = Math.max(-(half + 0.6), Math.min(...xs) - 0.6) * P
+    const hi = Math.min(half + 0.6, Math.max(...xs) + 0.6) * P
+    const gw = Math.max(1, Math.ceil(hi - lo))
+    const gh = Math.ceil(DEEP * P)
+    warm ??= document.createElement('canvas')
+    under ??= document.createElement('canvas')
+    for (const c of [warm, under]) {
+      if (c.width !== gw || c.height !== gh) {
+        c.width = gw
+        c.height = gh
+      }
+    }
+    const mc = under.getContext('2d')!
+    mc.setTransform(1, 0, 0, 1, 0, 0)
+    mc.globalCompositeOperation = 'source-over'
+    mc.clearRect(0, 0, gw, gh)
+    mc.globalCompositeOperation = 'lighter'
+    for (const lamp of lamps) {
+      const lx = lamp.x * P - lo
+      if (lx < -0.5 * P || lx > gw + 0.5 * P) continue
+      // A narrow column, a little wider and fainter as it comes nearer.
+      mc.save()
+      mc.translate(lx, 0)
+      mc.scale(0.32 * P, 2.3 * P)
+      const g = mc.createRadialGradient(0, 0, 0, 0, 0, 1)
+      // A burning lamp (about half its flare) lights its column fully.
+      const a = Math.min(1, 1.8 * lamp.light)
+      g.addColorStop(0, `rgba(0, 0, 0, ${a.toFixed(3)})`)
+      g.addColorStop(0.4, `rgba(0, 0, 0, ${(0.6 * a).toFixed(3)})`)
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      mc.fillStyle = g
+      mc.fillRect(-1, 0, 2, 1)
+      mc.restore()
+    }
+    const gc = warm.getContext('2d')!
+    gc.setTransform(1, 0, 0, 1, 0, 0)
+    gc.globalCompositeOperation = 'source-over'
+    gc.globalAlpha = 1
+    gc.clearRect(0, 0, gw, gh)
+    gc.translate(-lo, 0)
+    for (const b of bands) {
+      if (b.far < 0.05) continue
+      for (let v = 0; v < 2; v++) {
+        gc.globalAlpha = Math.min(1, b.far * b.alphas[v])
+        span(gc, tiles[v], lo, lo + gw, b.off, b.sy, b.sh, W)
+      }
+    }
+    gc.setTransform(1, 0, 0, 1, 0, 0)
+    gc.globalAlpha = 1
+    gc.globalCompositeOperation = 'destination-in'
+    gc.drawImage(under, 0, 0)
+    gc.globalCompositeOperation = 'source-atop'
+    gc.fillStyle = 'rgb(255, 200, 128)'
+    gc.fillRect(0, 0, gw, gh)
+    ctx.globalCompositeOperation = 'lighter'
+    // Twice over, the second fainter: the wavelets are sparse, and a flame on dark water is bright.
+    ctx.globalAlpha = Math.min(1, light * glow)
+    ctx.drawImage(warm, lo, 0)
+    ctx.globalAlpha = Math.min(1, 0.6 * light * glow)
+    ctx.drawImage(warm, lo, 0)
     ctx.globalCompositeOperation = 'source-over'
   }
   // Slicks: long streaks of glassy water where the wind does not reach, the sky smooth in them.

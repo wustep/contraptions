@@ -210,13 +210,20 @@ slides.
 - Under the sun and the moon the same wavelets are lit: a glitter path, narrow at the horizon and wider nearer, drawn
   into a canvas of its own column of the water, faded softly to either side, and added to the frame's light. It sits
   under the chords' flashes of light on the water, which answer the music as before.
+- Under each lit lamp, the wavelets catch its flame: a warm column of glitter going down from its foot, so the first
+  Gnossienne's thread of lamps shimmers in the water. All the lamps in one canvas: the surface drawn whole into it,
+  kept only under the lamps (a mask of their columns, added together), tinted the flame's colour and added to the
+  frame's light; only as wide as the lamps in the frame reach, and fading as the camera draws back (from 14 to 17 cells
+  either way), where a lamp's glitter would be a speck. It sits under the lamps' own paths of light, which the chords
+  set flashing as before.
 - Slicks: long streaks of glassy water where the wind does not reach, the sky smooth in them, going by at their depths.
 - How ruffled the water is follows how full the music is (`loudness`), calm under the Gymnopédie's long notes and
   livelier where the Gnossiennes run on; it roughens in the shower, and is fainter at night.
 
 The wavelets are drawn from two tiles made once, on the first frame of the sea (far off at the seam, 26 ms), not the
-first close one. A frame's surface costs 0.4 to 0.6 ms (the median of 30 frames with the CPU slowed six times, glitter
-included). They fade with the camera drawing out (12 to 24 cells), and towards their deepest band, so the deeper sea of a
+first close one. A frame's surface costs 0.4 to 0.7 ms (the median of 30 frames with the CPU slowed six times, glitter
+included), and 2.7 ms in the first Gnossienne's widest framing, about twenty lamps' glitter in view; the dolphins cost
+0.1 ms. They fade with the camera drawing out (12 to 24 cells), and towards their deepest band, so the deeper sea of a
 phone held upright has no edge to them. That frame also showed a line, there from before, where the sea's band met the
 planet's deep water under it: the band's foot is now the colour the deep water has there, which depends on where the
 sun is.
