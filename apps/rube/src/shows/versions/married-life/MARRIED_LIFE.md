@@ -71,7 +71,8 @@ bass, on the one); Ellie, round, answers on the first pah.
 - **The machine is the organ.** On every onset of the jazzed march its speaking pipes breathe: each stretches up a
   little, goes gold and gives three soft puffs from its mouth, and the bellows pump. The families sit at the couple's
   scale, head and shoulders over the pews: his parents grey and square and still, hers warm and round in hats,
-  bobbing on the beat. Ellie hops on the march's accents; Carl makes small stiff hops, and on one she bumps him; while
+  bobbing on the beat; on the kiss and the peal hers throw petals, a burst over their own heads that drifts down over
+  the two of them, seen to come from them. Ellie hops on the march's accents; Carl makes small stiff hops, and on one she bumps him; while
   she waits he shuffles two nervous steps along the altar step and back. The camera reveals the whole church and its
   bell once (landing on his startled hop, 3.45), comes in on the organ, carries past the couple to the pews, and
   closes on the two of them for the kiss, low in the frame under the lower half of the east window. As the march slows they turn to each other a step on each of its slowing
@@ -119,7 +120,8 @@ bass, on the one); Ellie, round, answers on the first pah.
   belongs to, and the whole cloud takes a breath as it does. Every downbeat lands twice, at the chimney and in the sky.
 - Bars 32 to 35 build an airship (round nose, finned tail, a gondola slung under it), which sails off left. Bars 35
   to 38 build Paradise Falls in cloud: her tepui, as tall as it is wide, sheer sides of heaped billows, a flat lit
-  top, lit on the left and in shadow on the right. On bar 39 three falls pour off the lip into the mist, which curls
+  top, lit on the left and in shadow on the right. On bar 39 three falls of water pour off the lip (the pale blue,
+  streaked, of the painting and the pop-up, not cloud: white on white it read as a jar) into the mist, which curls
   up where they land; the camera holds it whole, pouring, through bar 40, and then a gust takes it off. Bars 39 to 44 build **a
   baby**, sitting up in a cushion of cloud, one leg out, an arm reaching, whole over the two of them and placed where
   the mobile will be at the match cut. As far apart as the armchairs at the cut, she rolls in close to him over bar
@@ -184,8 +186,9 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
     flies); she pushes the jar
     over in its cradle, the coins run down the chute and out, and the cradle's spring sets it back on its feet,
     slowly. Paid for, the car drives off out of the window;
-  - Carl's leg: the refill's stroke shakes the pendant lamp and it sputters out (lit, it throws a soft warm cone down
-    the wall); the camera looks up with him as he climbs the ladder to it, the ladder kicks under the lamp, he falls
+  - Carl's leg: the refill's stroke shakes the pendant lamp and it sputters out (lit, a bright bulb throws a warm cone
+    down the wall; out, it is dark and a wisp of smoke rises off it; drawn half as big again, so his reason to climb is
+    seen, and under Zoom the frame eases out to hold it); the camera looks up with him as he climbs the ladder to it, the ladder kicks under the lamp, he falls
     (the camera in close), and her
     touch wraps a bandage round his foot; she pours the jar out again;
   - the storm: as she reaches the jar for the second pour the camera draws back to the whole house as it gathers, one
