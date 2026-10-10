@@ -181,15 +181,19 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
   if (v.wide > 0.01) {
     const face = along(c.t) / RADIUS - Math.PI / 2
     p.noFill()
+    // Widths in the picture's own measure: a share of the framed height, whatever the canvas's size or density (the
+    // stroke is in drawing units, which the canvas's transform scales by its density).
+    const m = ctx.getTransform()
+    const unit = frameOf(ctx) / 720 / Math.hypot(m.a, m.b)
     for (let i = 0; i < 6; i++) {
       const spread = 1.5 - i * 0.2
       p.stroke(alpha(p, mixHex(day.low, '#FFF1DA', 0.3), (0.08 + i * 0.045) * v.wide))
-      p.strokeWeight(Math.max(1, (6 - i) * 1.4))
+      p.strokeWeight((6 - i) * 1.4 * unit)
       p.arc(0, 0, RADIUS * 2 * k, RADIUS * 2 * k, face - spread, face + spread)
     }
     const sunFace = sunWay(c.t) - Math.PI / 2
     const warm = mixHex(day.low, '#FFC48E', 0.65)
-    const px = Math.max(1, frameOf(ctx) / 720)
+    const px = unit
     for (let i = 0; i < 7; i++) {
       const spread = 1.1 - i * 0.14
       p.stroke(alpha(p, warm, (0.05 + i * 0.05) * smooth(v.wide, 0.1, 0.55)))

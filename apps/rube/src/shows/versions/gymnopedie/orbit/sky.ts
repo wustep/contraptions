@@ -125,12 +125,14 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
       base = Math.max(base, (H - F) / 2 + F * 0.07 + highest)
       const at = (i: number): [number, number] => [left + offsets[i], base - rise(i)]
       ctx.lineCap = 'round'
+      // A pixel at the least, fainter where that is more than its share of a small frame.
       ctx.lineWidth = Math.max(1, F / 900)
+      const thin = Math.min(1, F / 900 / 0.8)
       for (const s of stars) {
         if (s.i === 0 || s.line < 0.01) continue
         const [x0, y0] = at(s.i - 1)
         const [x1, y1] = at(s.i)
-        ctx.strokeStyle = `rgba(214, 226, 255, ${(0.2 * starry * s.line).toFixed(3)})`
+        ctx.strokeStyle = `rgba(214, 226, 255, ${(0.2 * starry * s.line * thin).toFixed(3)})`
         ctx.beginPath()
         ctx.moveTo(x0, y0)
         ctx.lineTo(x0 + (x1 - x0) * s.line, y0 + (y1 - y0) * s.line)
@@ -169,7 +171,7 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     const tail = L * 0.32 * Math.min(1, q * 2.5)
     const tx = hx - dir * Math.cos(a) * tail
     const ty = hy2 - Math.sin(a) * tail
-    const light = fall.light * smooth(day.night, 0.3, 0.7) * smooth(hy - hy2, 0, F * 0.12)
+    const light = fall.light * smooth(day.night, 0.3, 0.7) * smooth(hy - hy2, 0, F * 0.12) * Math.min(1, F / 330 / 1.5)
     const streak = ctx.createLinearGradient(tx, ty, hx, hy2)
     streak.addColorStop(0, 'rgba(255, 246, 228, 0)')
     streak.addColorStop(1, `rgba(255, 246, 228, ${light.toFixed(3)})`)

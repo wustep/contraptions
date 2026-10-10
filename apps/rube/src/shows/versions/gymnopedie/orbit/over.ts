@@ -202,7 +202,7 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
   if (v.wide > 0.02) {
     const b = ballLocal(c.t)
     const [x, y] = polar(b.u, b.h)
-    const r = 22 * Math.max(1, p.width / 1600)
+    const r = 22 * Math.max(p.width / 1600, Math.min(1, p.width / 1280))
     const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r)
     g.addColorStop(0, `rgba(255, 240, 210, ${(0.85 * v.wide).toFixed(3)})`)
     g.addColorStop(0.2, `rgba(255, 228, 180, ${(0.35 * v.wide).toFixed(3)})`)
