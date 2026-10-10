@@ -765,6 +765,11 @@ window.
     in the waiting room was among what landed hardest ("his chair leaning to hers. Nothing happens, and that's why it
     hurts"). Most lost: the ladder (117 to 126 s), who fell (it guessed her, 55%); the one beat not yet watched by a
     viewer frame by frame.
+  - *The ladder, re-watched* by a tenth viewer who has never seen Up (115 to 127 s, four frames a second): him who
+    climbs, falls and is bandaged (85%), but why he climbs only 40%, and the lamp never named: small at the frame's
+    top, a pale bulb and a faint glow, its going out was not seen. Now the shade and bulb are drawn half as big again
+    (`LAMP_SCALE`), lit it is a bright warm bulb with a stronger bloom and cone down the wall, out it is dark, and as it
+    blows a thin wisp of smoke rises off it for a second.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits

@@ -7,7 +7,7 @@ import { drawChairs } from '../props/chairs'
 import { drawJar } from '../props/jar'
 import { INSIDE } from './inside'
 import {
-  AXLE, BOX, CHAIRS_X, CHUTE, CHUTE_LEN, COIN_GAP, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, JAR_H, JAR_W, LAMP, LADDER, LANDS, MANTLE, POURS, SLAMS,
+  AXLE, BOX, CHAIRS_X, CHUTE, CHUTE_LEN, COIN_GAP, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, JAR_H, JAR_W, LAMP, LAMP_OUT, LADDER, LANDS, MANTLE, POURS, SLAMS,
   SLOT, TREE, TYRE, carAt, clamp01, cupAt, fillAt, jarAt, jarBase, jarMouth, ladderAt, lampAt, onPlank, plankAt, smoothstep, stormAt,
   sunAt,
 } from './jar-clock'
@@ -285,14 +285,14 @@ function lampLight(p: p5, k: number, T: number): void {
   // light down from its rim, so that when it sputters and goes out the room is seen to lose it.
   ctx.translate(LAMP.x * k, LAMP.ceil * k)
   ctx.rotate(swing)
-  const rim = LAMP.cord + 0.2
+  const rim = LAMP.cord + 0.2 * LAMP_SCALE
   const g = ctx.createRadialGradient(0, (rim + 0.02) * k, 0, 0, (rim + 0.02) * k, 1.5 * k)
-  g.addColorStop(0, `rgba(255, 227, 166, ${0.34 * lit})`)
+  g.addColorStop(0, `rgba(255, 227, 166, ${0.5 * lit})`)
   g.addColorStop(1, 'rgba(255, 227, 166, 0)')
   ctx.fillStyle = g
   ctx.fillRect(-1.5 * k, (rim - 1.5) * k, 3 * k, 3 * k)
   const cone = ctx.createLinearGradient(0, rim * k, 0, (rim + 1.8) * k)
-  cone.addColorStop(0, `rgba(255, 232, 178, ${0.3 * lit})`)
+  cone.addColorStop(0, `rgba(255, 232, 178, ${0.44 * lit})`)
   cone.addColorStop(1, 'rgba(255, 232, 178, 0)')
   ctx.fillStyle = cone
   ctx.beginPath()
@@ -305,6 +305,9 @@ function lampLight(p: p5, k: number, T: number): void {
   ctx.restore()
 }
 
+/** The lamp's shade and bulb, drawn this much over their measures (the cord, and the light, are as they were). */
+const LAMP_SCALE = 1.5
+
 function lamp(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
   const x = X(k)
@@ -316,10 +319,28 @@ function lamp(p: p5, c: Ctx, T: number): void {
   p.strokeWeight(weight * 0.5)
   p.line(0, 0, 0, x(LAMP.cord))
   p.translate(0, x(LAMP.cord))
-  // The bulb under the rim: warm when lit, grey when it has gone.
+  // Half as big again as it was drawn: small at the frame's top, its going out was not seen, and it is why he climbs.
+  p.scale(LAMP_SCALE)
+  // The bulb under the rim: bright and warm when lit, dark when it has gone, so the reason he climbs is seen (a fresh
+  // viewer, with a pale bulb and a faint glow, did not see the lamp go out at all).
   p.noStroke()
-  p.fill(lit > 0.01 ? mixHex('#E6E1D6', HOME.lamp, lit) : '#D6D1C6')
-  p.ellipse(0, x(0.22), x(0.1), x(0.08))
+  p.fill(lit > 0.01 ? mixHex('#E6E1D6', '#FFD86B', lit) : '#6E6A64')
+  p.ellipse(0, x(0.22), x(0.12), x(0.1))
+  if (lit > 0.5) {
+    p.fill(alpha(p, '#FFFBEA', lit))
+    p.ellipse(0, x(0.215), x(0.05), x(0.04))
+  }
+  // As it blows: a thin wisp of smoke off the bulb, rising and fading over a second.
+  const since = T - LAMP_OUT
+  if (since > 0 && since < 1.1) {
+    const u = since / 1.1
+    for (let i = 0; i < 3; i++) {
+      const v = Math.max(0, u - i * 0.12)
+      if (v <= 0) continue
+      p.fill(alpha(p, '#8F8A82', 0.55 * (1 - v)))
+      p.ellipse(x(0.04 * Math.sin(v * 7 + i)), x(0.22 + 0.06 - 0.5 * v), x(0.05 + 0.08 * v), x(0.05 + 0.08 * v))
+    }
+  }
   // The shade: a cream bell.
   p.stroke(alpha(p, INK, 0.9))
   p.strokeWeight(weight * 0.7)
