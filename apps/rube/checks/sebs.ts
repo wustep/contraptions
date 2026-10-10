@@ -26,7 +26,7 @@ import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
 import { SONG_COUNT, partStar, songAt } from '../src/shows/versions/la-la-land/sebs/audition/shadow'
 import { BAND_RISING, DREAM_CALL, lastNoteAt } from '../src/shows/versions/la-la-land/sebs/club/finale'
 import { HOUSE_SPAN, houseTop } from '../src/shows/versions/la-la-land/sebs/paris/jazz'
-import { HANDOFF, soloThreads } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
+import { HANDOFF, SKYLINE, soloThreads, towerDrawn } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -325,6 +325,16 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       }
     }
     check('sebs: the trumpet\'s solo is written in light, in the picture', solo.piece.name === 'trumpet' && lit > 2000 && seen / lit >= 0.85, `${seen}/${lit} seen`)
+    // And it paints the city they are going to: its phrases settle into a Paris skyline over the band, the last run
+    // drawing the tower, all of it there and in the picture before the iris starts to close.
+    const T = 267.25
+    const f = cam(T)
+    const off = SKYLINE.filter(([x, y]) => {
+      const wx = solo.col + x - HANDOFF[0] - 0.5
+      const wy = solo.row + y - HANDOFF[1]
+      return Math.abs(wx - f.x) > (f.cells * 16) / 9 / 2 - 0.1 || Math.abs(wy - f.y) > f.cells / 2 - 0.1
+    })
+    check('sebs: the solo paints Paris: the skyline and its tower drawn, in the picture, before the iris', towerDrawn(T) === 1 && towerDrawn(264.5) === 0 && off.length === 0, `${off.length} points out`)
   }
   // His playing reaches her: at her table at the start and across Lipton's, every note that goes out from the keys
   // arrives where she is, and the ones at her table are seen going to her.
