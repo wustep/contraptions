@@ -880,7 +880,9 @@ function drawWash(ctx: Ctx, k: number, t: number): void {
     const ph = (t * 0.9 + i * 0.25) % 1
     for (const dir of [-1, 1]) {
       const x = hx + 0.3 + dir * (1.2 + ph * 4.5)
-      blob(ctx, k, x, MEADOW - 0.25 - ph * 0.5, 1.1 + ph * 1.4, 0.35 + ph * 0.3, col, 0.4 * w * (1 - ph), 0.3)
+      // Coming up from nothing as it is blown out, as well as going: at full strength from its first frame, each puff
+      // popped into being by the rotor.
+      blob(ctx, k, x, MEADOW - 0.25 - ph * 0.5, 1.1 + ph * 1.4, 0.35 + ph * 0.3, col, 0.4 * w * (1 - ph) * Math.min(1, ph / 0.2), 0.3)
     }
   }
 }

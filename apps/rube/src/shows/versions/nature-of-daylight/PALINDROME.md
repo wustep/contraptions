@@ -945,6 +945,14 @@ first frame is the same to the pixel, and the last is the first, everyone where 
 fault too: each wrapped round on its own every nine cells, and every twenty-three, with no copy coming in at the other
 end, so a bank could jump where it was seen. Each is drawn either side of its period now, and wraps unseen.
 
+A hundred-and-fifth went looking for the same fault everywhere, in every place that wraps something drifting round
+on itself. The lake house's high streaks of cloud wrap far enough out that the window never shows it. The lawn's far
+cloud banks and the fog on its lake wrapped at a fixed distance from the swing, which is only out of sight while the
+frame is narrow enough; each is drawn a period either side now, as the house's fog is. And the helicopter's wash: each
+puff of mist blown out from under it faded as it went, then came back at full strength at the rotor from one frame to
+the next. It comes up from nothing now as well. The lawn, the vision and the wash filmed at six frames a second: no
+jump in any.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

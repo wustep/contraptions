@@ -470,8 +470,10 @@ function drawSky(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
     const y = top + h * (0.2 + 0.2 * i + 0.05 * hash(i, 8, 1))
     const len = (3 + 2.5 * hash(i, 8, 2)) * s
     const drift = t * (0.04 + 0.02 * hash(i, 8, 3))
-    for (let j = -2; j <= 2; j++) {
-      const cx = dx * 1.1 + ((((j * 9.1 + drift + i * 3.7 + hash(i, 8, 4) * 6) % 45) + 45) % 45) - 22 + SEAM_CAM[0]
+    // Each bank also drawn a period either side, so one wrapping round is already coming in at the other end.
+    for (let n = 0; n < 15; n++) {
+      const j = (n % 5) - 2
+      const cx = dx * 1.1 + ((((j * 9.1 + drift + i * 3.7 + hash(i, 8, 4) * 6) % 45) + 45) % 45) - 22 + SEAM_CAM[0] + 45 * (Math.floor(n / 5) - 1)
       if (cx < f.x0 - len || cx > f.x1 + len) continue
       ctx.save()
       ctx.translate(cx * k, y * k)
@@ -595,8 +597,10 @@ function drawFarShore(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
     const y = shore + (0.03 + 0.09 * i) * s
     const len = (2.2 + 1.8 * hash(i, 3, 1)) * s
     const drift = t * (0.03 + 0.015 * hash(i, 3, 2))
-    for (let j = -3; j <= 3; j++) {
-      const cx = dx + ((((j * 5.3 + drift + i * 1.9 + hash(i, 3, 3) * 5) % 37) + 37) % 37) - 18 + SEAM_CAM[0]
+    // A period either side too, so a bank wrapping round never jumps where it is seen.
+    for (let n = 0; n < 21; n++) {
+      const j = (n % 7) - 3
+      const cx = dx + ((((j * 5.3 + drift + i * 1.9 + hash(i, 3, 3) * 5) % 37) + 37) % 37) - 18 + SEAM_CAM[0] + 37 * (Math.floor(n / 7) - 1)
       if (cx < x0 - len || cx > x1 + len) continue
       ctx.save()
       ctx.translate(cx * k, y * k)
