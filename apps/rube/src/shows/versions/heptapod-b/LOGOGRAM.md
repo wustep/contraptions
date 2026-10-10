@@ -493,6 +493,10 @@ changed, in the order of the film, and then what runs through it:
   holds as at 1x, with no console errors. It showed one thing the stills had too: as the shell melted (188.5 → 190) its
   sharp hull, still faintly drawn under the soft one, left its dark flank as a hard line in the cloud. The hull gives
   way sooner now, and the shell greys into the cloud with no edge.
+- **A first-time viewer** (the film's stills shown with no scene plan): they followed it from the lake house to the
+  circle's close, and felt the peak at Hannah going and the rain unaided. Ring to ring (144 → 156) they didn't know
+  which of the many rings to follow: the fog's own hanging rings are paler now, and a ring she has left draws back
+  further, so the one she rides or is flung toward leads.
 
 ## Arrival nods
 
