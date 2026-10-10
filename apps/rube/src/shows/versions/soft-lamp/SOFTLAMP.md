@@ -1279,6 +1279,24 @@ blocks. A lofi window is a view you could look into for half an hour.
      desk's looks with the shelf itself out of frame: it is higher now, wholly above those frames and inside the home
      frame, and `check:shows` holds it as it holds every prop (whole in a frame or not in it).
 
+### The seventy-fifth pass: the one at the desk
+
+The streams this takes after are a person studying; here that person is only ever seen in the window, and their
+reflection was a pale oval and a bun over a fading jumper, more a ghost than someone.
+
+206. **Drawn as someone** (`lamp/reflection.ts`). A face with a chin and colour in its cheeks, an ear, a side-swept
+     fringe, hair falling past the shoulders in locks, a bun with a pencil through it; a neck and the sweater's ribbed
+     roll collar; the lamp's light on the near shoulder; the shoulders rising a little as they breathe. Drawn at a finer
+     grain and a little stronger, so it reads in the wide frames, and still only light on the glass.
+207. **Writing.** Their arm comes down to the work in front of them, low on the glass, the hand and the pen going along
+     the line as the head does, the pen's end catching the lamp, still while they look up.
+208. **The lamp in the glass.** Beside them, the lamp they sit under: its bulb a soft point and its light round it,
+     going down with it at the end.
+209. **The first snow.** They look up at it a moment after the kitten does (and just after their stretch, which runs
+     into it: they stretch, and see it).
+210. **Fixed on the way.** The writing hand was first drawn below the glass's foot, where the clip took it; it is raised
+     to just above it.
+
 ## Judgment calls for Stephen
 
 - **The light.** How dark the room falls away from its lights is two colours (`ambientAt`, `lamp/light.ts`, the

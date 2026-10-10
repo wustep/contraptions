@@ -3,17 +3,18 @@ import { GLASS, WINDOW } from './desk'
 import { REACHES, handAt, mugAt } from './hands'
 import { lensIn } from './lens'
 import { camera } from './camera'
-import { CLIMB, STRETCHES } from './cat'
+import { CLIMB, STRETCHES, snowLookAt } from './cat'
 import { beatOf, drumsAt, smooth, trackAt } from './music'
 import { flashAt, shootAt } from './sky'
 import { hash, lampAt, lampColor, skyAt } from './world'
 
 /**
  * Whoever sits at the desk, seen at last, the only way they could be: in the window. Once it is dark outside, the
- * glass is a mirror, and the lamp lights them in it, faint, behind the rain: hair up, the sage sweater the hand's sleeve
- * is, head bowed over their work, nodding a little with the drums. Their reflection does what the hand does: lifts the
- * mug to their face for a sip, looks up from the work at the finger drawing on the glass, and up when the lightning
- * goes or a star falls. Between, they write (the head going along the lines), and now and then stop with the pen at
+ * glass is a mirror, and the lamp lights them in it, faint, behind the rain: hair up in a bun with a pencil through it,
+ * the sage sweater the hand's sleeve is with its roll collar, head bowed over their work, the pen going along the lines,
+ * nodding a little with the drums, breathing; the lamp they sit under beside them in the glass. Their reflection does
+ * what the hand does: lifts the mug to their face for a sip, looks up from the work at the finger drawing on the glass,
+ * and up when the lightning goes, a star falls, or the first snow comes (a moment after the kitten). Between, they write (the head going along the lines), and now and then stop with the pen at
  * their lips to look out at the night; and once, late, just after the kitten has, they stretch. They come with the lamp and go with it.
  *
  * A reflection is light on the glass, never dark: it only adds. It sits in front of the camera, as anyone's own
@@ -34,7 +35,7 @@ const HAIR = '#5A3A30'
 
 /** A small canvas the reflection is drawn into, laid over the glass soft: made once. */
 let pad: HTMLCanvasElement | null = null
-const RES = 96
+const RES = 160
 const BOX = { x0: -1.25, y0: -1.0, x1: 1.25, y1: 1.15 }
 
 /** How strongly the window shows them: the lamp on them, and the dark outside (the dusk outshines a reflection). */
@@ -94,7 +95,8 @@ function thinkAt(t: number): number {
 function poseAt(t: number) {
   const seen = reflectionSeen(t)
   // Head bowed over the work; up to look out at a flash or a falling star; nodding a little with the drums.
-  const up = Math.max(flashAt(t).look, shootAt(t - 0.4).a)
+  // And up at the first snow, a moment after the kitten does.
+  const up = Math.max(flashAt(t).look, shootAt(t - 0.4).a, snowLookAt(t - 0.8).a)
   const tr = trackAt(t)
   const b = beatOf(tr, t)
   const f = b - Math.floor(b)
@@ -113,7 +115,7 @@ function poseAt(t: number) {
   const line = (t / 3.3) % 1
   const scan = 0.035 * (line < 0.85 ? line / 0.85 : 1 - (line - 0.85) / 0.15) - 0.017
   const lifted = Math.max(looking, think, stretch, kitten)
-  return { seen, bow: bow * (1 - lifted), sip: m.e * (1 - m.gone), think, stretch, scan: scan * (1 - lifted) * (1 - up), kitten }
+  return { seen, bow: bow * (1 - lifted), sip: m.e * (1 - m.gone), think, stretch, scan: scan * (1 - lifted) * (1 - up), kitten, away: Math.max(lifted, up) }
 }
 
 /** The reflection, on the glass, after the night and before the window's frame. */
@@ -137,45 +139,116 @@ export function reflection(ctx: Ctx, t: number): void {
   g.setTransform(RES, 0, 0, RES, -BOX.x0 * RES, -BOX.y0 * RES)
   const warm = lampColor(t)
   // Bowed over the work, the face goes down and forward and more of the top of the head shows.
-  const hy = 0.07 * p.bow - 0.04 * p.stretch
+  const breath = 0.008 * Math.sin((2 * Math.PI * t) / 4.2)
+  const hy = 0.07 * p.bow - 0.04 * p.stretch + breath * 0.5
   // Thinking, the head turns a little toward the rain on the left, the eyes after it.
   const lean = 0.05 * p.bow + p.scan - 0.035 * p.think - 0.05 * p.kitten
   const hair = rgba(HAIR, 0.95)
-  // The hair behind: falling to the shoulders either side of the face.
+  // The hair behind: falling past the shoulders either side of the face, in a few soft locks at its ends.
   g.fillStyle = hair
   g.beginPath()
-  g.moveTo(-0.24, 0.3)
-  g.bezierCurveTo(-0.3, 0.05, -0.27, -0.24 + hy, 0, -0.26 + hy)
-  g.bezierCurveTo(0.27, -0.24 + hy, 0.31, 0.05, 0.25, 0.3)
-  g.quadraticCurveTo(0, 0.36, -0.24, 0.3)
+  g.moveTo(-0.25, 0.36)
+  g.bezierCurveTo(-0.32, 0.05, -0.27, -0.25 + hy, 0, -0.27 + hy)
+  g.bezierCurveTo(0.27, -0.25 + hy, 0.33, 0.05, 0.26, 0.36)
+  g.quadraticCurveTo(0.2, 0.4, 0.15, 0.33)
+  g.quadraticCurveTo(0, 0.3, -0.15, 0.33)
+  g.quadraticCurveTo(-0.2, 0.4, -0.25, 0.36)
   g.fill()
-  // Shoulders, sloping from the neck, in the sweater, lit on the lamp's side; a ribbed collar round the neck.
-  // (Fading down into the dark: the desk and the room below take no light to throw back.)
-  const sw = g.createLinearGradient(0, 0.28, 0, 0.95)
-  sw.addColorStop(0, rgba(KNIT, 0.8))
+  // Shoulders, sloping from the neck, in the sweater, rising a little as they breathe; lit on the lamp's side, and
+  // fading down into the dark (the desk and the room below take no light to throw back).
+  const sy = breath
+  const sw = g.createLinearGradient(0, 0.28, 0, 1.0)
+  sw.addColorStop(0, rgba(KNIT, 0.85))
   sw.addColorStop(1, rgba(KNIT, 0))
   g.fillStyle = sw
   g.beginPath()
-  g.moveTo(-0.1, 0.27)
-  g.bezierCurveTo(-0.35, 0.3, -0.7, 0.36, -0.82, 0.62)
+  g.moveTo(-0.11, 0.27 + sy)
+  g.bezierCurveTo(-0.36, 0.3 + sy, -0.7, 0.36 + sy, -0.82, 0.62)
   g.lineTo(-0.9, 1.2)
   g.lineTo(0.9, 1.2)
   g.lineTo(0.82, 0.62)
-  g.bezierCurveTo(0.7, 0.36, 0.35, 0.3, 0.1, 0.27)
+  g.bezierCurveTo(0.7, 0.36 + sy, 0.36, 0.3 + sy, 0.11, 0.27 + sy)
   g.closePath()
   g.fill()
-  g.fillStyle = rgba(KNIT, 0.95)
+  // The lamp on the shoulder nearer it.
+  const lit = g.createRadialGradient(0.62, 0.42, 0.02, 0.62, 0.42, 0.42)
+  lit.addColorStop(0, rgba(warm, 0.55))
+  lit.addColorStop(1, rgba(warm, 0))
+  g.fillStyle = lit
+  g.fillRect(0.1, 0.1, 0.9, 0.8)
+  // The neck, and the sweater's ribbed roll collar round it.
+  g.fillStyle = rgba(SKIN, 0.7)
+  g.fillRect(-0.055, 0.15 + hy * 0.5, 0.11, 0.14)
+  g.fillStyle = rgba(KNIT, 0.98)
   g.beginPath()
-  g.ellipse(0, 0.3, 0.15, 0.06, 0, 0, Math.PI * 2)
+  g.ellipse(0, 0.3 + sy, 0.16, 0.065, 0, 0, Math.PI * 2)
   g.fill()
-  // The face, bowed, the lamp's light on the cheek nearer it.
+  g.strokeStyle = rgba('#6E8472', 0.7)
+  g.lineWidth = 0.008
+  g.beginPath()
+  for (const rx of [-0.1, -0.05, 0, 0.05, 0.1]) {
+    g.moveTo(rx, 0.26 + sy)
+    g.lineTo(rx * 1.05, 0.34 + sy)
+  }
+  g.stroke()
+  // The writing arm: the forearm along the desk to the hand and its pen, which goes along the line as the head does.
+  const write = (1 - Math.max(p.think, p.stretch, p.kitten)) * (1 - p.sip)
+  if (write > 0.02) {
+    const hx = 0.24 + p.scan * 4.5
+    // Low on the glass, just above its foot: the work on the desk in front of them.
+    const hyw = 0.84
+    g.globalAlpha = write
+    const arm = g.createLinearGradient(0.7, 0.55, hx, hyw)
+    arm.addColorStop(0, rgba(KNIT, 0.6))
+    arm.addColorStop(1, rgba(KNIT, 0.25))
+    g.strokeStyle = arm
+    g.lineWidth = 0.17
+    g.lineCap = 'round'
+    g.beginPath()
+    g.moveTo(0.66, 0.52)
+    g.quadraticCurveTo(0.66, 0.82, hx + 0.12, hyw)
+    g.stroke()
+    g.fillStyle = rgba(SKIN, 0.5)
+    g.beginPath()
+    g.ellipse(hx, hyw - 0.01, 0.07, 0.05, -0.3, 0, Math.PI * 2)
+    g.fill()
+    // The pen, its end catching the lamp, moving a little as it writes.
+    // (Still while they look up from the page.)
+    const wig = 0.012 * Math.sin(t * 11) * (1 - p.away)
+    g.strokeStyle = rgba(warm, 0.75)
+    g.lineWidth = 0.016
+    g.beginPath()
+    g.moveTo(hx - 0.04, hyw + 0.02)
+    g.lineTo(hx + 0.07 + wig, hyw - 0.14)
+    g.stroke()
+    g.globalAlpha = 1
+  }
+  // The face, bowed, the lamp's light on the cheek nearer it; the ear on that side.
+  g.fillStyle = rgba(SKIN, 0.75)
+  g.beginPath()
+  g.ellipse(0.15 + lean * 0.8, 0.05 + hy, 0.035, 0.05, 0, 0, Math.PI * 2)
+  g.fill()
   const face = g.createLinearGradient(-0.16, 0, 0.16, 0)
-  face.addColorStop(0, rgba(SKIN, 0.35))
+  face.addColorStop(0, rgba(SKIN, 0.4))
   face.addColorStop(1, rgba(SKIN, 0.95))
   g.fillStyle = face
   g.beginPath()
-  g.ellipse(lean, 0.03 + hy, 0.15, 0.19 - 0.03 * p.bow, 0, 0, Math.PI * 2)
+  // A softer chin than an oval: rounder at the top, narrowing a little to it.
+  const fx = lean
+  const fy = 0.03 + hy
+  const fh = 0.19 - 0.03 * p.bow
+  g.moveTo(fx - 0.15, fy - 0.02)
+  g.bezierCurveTo(fx - 0.15, fy - fh * 1.05, fx + 0.15, fy - fh * 1.05, fx + 0.15, fy - 0.02)
+  g.bezierCurveTo(fx + 0.15, fy + fh * 0.7, fx + 0.05, fy + fh, fx, fy + fh)
+  g.bezierCurveTo(fx - 0.05, fy + fh, fx - 0.15, fy + fh * 0.7, fx - 0.15, fy - 0.02)
   g.fill()
+  // A little colour in the cheeks.
+  g.fillStyle = rgba('#F08A7E', 0.35)
+  for (const cxk of [-0.085, 0.095]) {
+    g.beginPath()
+    g.ellipse(fx + cxk, fy + 0.07, 0.03, 0.018, 0, 0, Math.PI * 2)
+    g.fill()
+  }
   // Eyes: lowered lids over the work, open when they look up.
   g.strokeStyle = rgba(HAIR, 0.9)
   g.lineWidth = 0.018
@@ -192,19 +265,36 @@ export function reflection(ctx: Ctx, t: number): void {
     }
     g.stroke()
   }
-  // The fringe over the brow, the crown, and the bun; the lamp along the bun's edge.
+  // The fringe, swept to one side over the brow, the crown, and the bun with a pencil through it; the lamp along the
+  // bun's edge and down the hair on its side.
   g.fillStyle = hair
   g.beginPath()
-  g.ellipse(lean * 0.6, -0.1 + hy, 0.18, 0.12 + 0.04 * p.bow, 0, Math.PI, Math.PI * 2)
-  g.quadraticCurveTo(0.04 + lean, -0.02 + hy + 0.04 * p.bow, -0.18 + lean * 0.6, -0.1 + hy)
+  g.moveTo(-0.17 + lean * 0.6, -0.04 + hy)
+  g.bezierCurveTo(-0.2 + lean * 0.6, -0.22 + hy, 0.16 + lean * 0.6, -0.26 + hy, 0.18 + lean * 0.6, -0.06 + hy)
+  g.quadraticCurveTo(0.09 + lean, -0.1 + hy + 0.03 * p.bow, 0.02 + lean, -0.02 + hy + 0.04 * p.bow)
+  g.quadraticCurveTo(-0.07 + lean, -0.08 + hy + 0.02 * p.bow, -0.17 + lean * 0.6, -0.04 + hy)
   g.fill()
+  const bx = -0.05
+  const by = -0.3 + hy * 0.5
+  g.strokeStyle = rgba('#E4B45E', 0.85)
+  g.lineWidth = 0.016
   g.beginPath()
-  g.arc(-0.05, -0.3 + hy * 0.5, 0.09, 0, Math.PI * 2)
+  g.moveTo(bx - 0.15, by + 0.07)
+  g.lineTo(bx + 0.13, by - 0.08)
+  g.stroke()
+  g.fillStyle = hair
+  g.beginPath()
+  g.arc(bx, by, 0.09, 0, Math.PI * 2)
   g.fill()
+  g.strokeStyle = rgba('#E4B45E', 0.85)
+  g.beginPath()
+  g.moveTo(bx + 0.06, by - 0.035)
+  g.lineTo(bx + 0.13, by - 0.08)
+  g.stroke()
   g.strokeStyle = rgba(warm, 0.85)
   g.lineWidth = 0.022
   g.beginPath()
-  g.arc(-0.05, -0.3 + hy * 0.5, 0.09, -1.3, 0.5)
+  g.arc(bx, by, 0.09, -1.3, 0.5)
   g.stroke()
   g.beginPath()
   g.ellipse(0, -0.02 + hy, 0.24, 0.25, 0, -1.1, 0.2)
@@ -282,8 +372,22 @@ export function reflection(ctx: Ctx, t: number): void {
   // Light on the glass: it only adds.
   ctx.globalCompositeOperation = 'screen'
   // A little stronger in the wide frames, where they are small.
-  ctx.globalAlpha = 0.26 * a * (1 + 0.35 * smooth(lens.size, 5.0, 5.6))
+  ctx.globalAlpha = 0.36 * a * (1 + 0.3 * smooth(lens.size, 5.0, 5.6))
   ctx.imageSmoothingEnabled = true
   ctx.drawImage(pad, cx + BOX.x0, cy + BOX.y0, BOX.x1 - BOX.x0, BOX.y1 - BOX.y0)
+  // Beside them in the glass, the lamp they sit under: its bulb a warm point in the shade's mouth, and its light round it.
+  const lx = cx + 0.9
+  const ly = cy - 0.42
+  ctx.globalAlpha = a
+  const lg = ctx.createRadialGradient(lx, ly, 0.01, lx, ly, 0.55)
+  lg.addColorStop(0, rgba(warm, 0.3))
+  lg.addColorStop(0.15, rgba(warm, 0.1))
+  lg.addColorStop(1, rgba(warm, 0))
+  ctx.fillStyle = lg
+  ctx.fillRect(lx - 0.6, ly - 0.6, 1.2, 1.2)
+  ctx.fillStyle = rgba('#FFF1D8', 0.22)
+  ctx.beginPath()
+  ctx.ellipse(lx, ly + 0.02, 0.05, 0.022, 0, 0, Math.PI * 2)
+  ctx.fill()
   ctx.restore()
 }
