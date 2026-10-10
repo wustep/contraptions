@@ -141,7 +141,7 @@ function smooth(u: number): number {
 
 /** The lit windows' colours: this one's warm light most of all, and the lives she went through. */
 const WARM = lightColor(1)
-const TINTS: { color: string; share: number }[] = [
+export const TINTS: { color: string; share: number }[] = [
   { color: WARM, share: 0.42 },
   // A shop with its tubes still on, someone working late: the room's mint, lit.
   { color: '#D6F0DE', share: 0.1 },
@@ -218,7 +218,7 @@ function gauss(u: number, v: number): number {
 /** A soft light, drawn once a tint into a small canvas, white at its heart: what each window is from far off. */
 let SPRITES: HTMLCanvasElement[] | null = null
 const SPRITE = 64
-function sprites(): HTMLCanvasElement[] | null {
+export function sprites(): HTMLCanvasElement[] | null {
   if (SPRITES) return SPRITES
   if (typeof document === 'undefined') return null
   SPRITES = TINTS.map(({ color }) => {

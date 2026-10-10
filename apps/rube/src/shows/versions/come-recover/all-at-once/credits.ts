@@ -235,7 +235,7 @@ export const DESCRIBED: { at: number; said: string; of?: number }[] = [
   { at: 97.4, of: JUMPS.hotdog, said: 'Hot dog fingers, playing a piano, in soft focus.' },
   { at: 107.0, of: JUMPS.hibachi, said: 'A cartoon kitchen. A raccoon under a chef’s hat works the levers.' },
   { at: 121.1, of: JUMPS.surf, said: 'A new world on every hit, then black.' },
-  { at: 128.1, of: JUMPS.void, said: 'She drifts down through the dark, past seeds and salt.' },
+  { at: 128.1, of: JUMPS.void, said: 'She drifts down through a dark full of far-off lit windows. One by one, they go out.' },
   { at: 142.3, of: 135.64, said: 'A colossal everything bagel, Joy on its crown, a ring of everything going round her. Everything goes into its hole, one thing a beat, and Evelyn is drawn in after it.' },
   { at: 171.2, of: 170.8, said: 'The frame splits into her other lives, more and more of them, and Waymond is in nearly all of them.' },
   { at: 191.5, of: JUMPS.eye, said: 'Home. A googly eye lands on her. She gives one to each of Jobu’s machines, and each turns gentle.' },

@@ -30,6 +30,7 @@ import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
 import { cameraCellsAt, multitude, OPEN_TO, openingFraming, PULL_FROM, setOpening, veilShade } from './home/multitude'
 import { crown, type CrownState } from './void/crown'
+import { farWindows } from './void/farWindows'
 import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './home/finale-lives'
 import { BACK, DEVELOPED, EJECT, NUZZLE, onCamera, photoAt, PORT, SWELL, T_DOOR, W_TOUCH } from './home/finale-plan'
 
@@ -97,6 +98,8 @@ const SETS = (roomState: RoomState, crownState: CrownState): Partial<Record<Worl
   // Behind it, in the peak, the radiance of every life it gives back; over it, in the pull, the colours it takes.
   void: {
     scenery: [
+      // Every life's window, far off, going out in the hush and coming on again at the peak (`void/farWindows.ts`).
+      standing(farWindows, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
       standing(radiance, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
       standing(bagel, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
       standing(drain, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
