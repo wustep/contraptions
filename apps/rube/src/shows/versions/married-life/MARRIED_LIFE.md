@@ -870,6 +870,10 @@ window.
     (`words.ts`) does not read `plain`, which two other shows use too, so it is left for its own change.
   - *The share line* (the picker's line and a link's preview text): "…the house they fix up, live in, patch and leave"
     promised the film's flight, which this take leaves out (no balloon coda, above); now "…patch and grow old in".
+  - *With YouTube blocked* (its hosts refused): the show plays silent on the wall clock at its own speed, and the
+    panel says "The soundtrack would not load. The show runs silent, on the wall clock." The music control said "This
+    version has no soundtrack", and while YouTube played, "a saved video keeps its music": neither true here. It now
+    says the soundtrack would not load, and for a YouTube-only show that a saved video is silent (`player.ts`).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits

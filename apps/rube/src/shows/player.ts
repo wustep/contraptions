@@ -702,8 +702,12 @@ function sync(): void {
       ? 'The browser is holding the sound. Click or press M to bring it in.'
       : muted
         ? 'Turn the music on (M)'
-        : 'Turn the music off (M). The show keeps its time; a saved video keeps its music.'
-    : 'This version has no soundtrack'
+        : perf?.soundtrack?.src
+          ? 'Turn the music off (M). The show keeps its time; a saved video keeps its music.'
+          : 'Turn the music off (M). The show keeps its time. (Its music is YouTube: a saved video is silent.)'
+    : perf?.soundtrack && music.state() === 'failed'
+      ? 'The soundtrack would not load'
+      : 'This version has no soundtrack'
   say(
     transportNote,
     perf?.soundtrack && music.state() === 'failed'
