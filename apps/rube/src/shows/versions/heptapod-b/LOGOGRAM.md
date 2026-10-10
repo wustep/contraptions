@@ -441,6 +441,11 @@ changed, in the order of the film, and then what runs through it:
   smoothly. Under the shaft's floor (75 → 93) the beds of stone ended in steep wedges where a tall frame shows them:
   they fade out instead. And as the toss closes the ring round her (155.1), the ring she had just left still closed
   in full ink below her, beside it: it draws back into the fog once the ring round her has closed.
+- **In a wide window** (21:9, more world either side): two fresh critics at four frames a second. As the room went
+  white (130.1 → 130.3) the shaft's last stretch, past the chamber's left, stood grey in the white with a hard edge at
+  the floor's height: the chamber's swell of light is drawn in its own part and never reached it. It goes white with
+  the chamber now. And where the shaft's floor runs out of its throat (71.5 → 76, in a 16:9 frame too) the floor's
+  stone began on a hard vertical seam: it turns out of the lip's over a cell and a half.
 
 ## Arrival nods
 
