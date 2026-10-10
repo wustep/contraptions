@@ -190,8 +190,9 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   - Carl's leg: the refill's stroke shakes the pendant lamp and it sputters out (lit, a bright bulb throws a warm cone
     down the wall; out, it is dark; drawn half as big again, so his reason to climb is
     seen, and under Zoom the frame eases out to hold it); the camera looks up with him as he climbs the ladder to it, the ladder kicks under the lamp, he falls
-    (the camera in close), and her
-    touch wraps a bandage round his foot; she pours the jar out again;
+    (in a frame held all but still, so his fall is seen whole), and only once he is down does she drop off the
+    mantle's front, clear of the ladder, and roll to him past its feet, the camera going in close; her
+    touch, on the two, wraps a bandage round his foot; she pours the jar out again;
   - the storm: as she reaches the jar for the second pour the camera draws back to the whole house as it gathers, one
     even move (17.2 cells by 128.55: the
     house, its roof, and the garden tree's broad old crown whole over the ridge on its trunk, bending in the gusts
@@ -902,6 +903,14 @@ window.
   and glow of the organ at the bell's answer (the toll is felt once; the bell's own swing back stays, a strike), and
   the balloon's three leans toward him at home (`LEANS`, at most 0.07 cells, too small to read as anything but drift).
   No strike was among them.
+- **Who falls at the ladder (Opus 5.5, PR #163).** A test viewer could not tell who fell (117 to 126 s), as the ninth
+  had guessed her. On sheets at six frames a second the cause was plain: the camera pushed in under his fall, so the
+  frame moved as he did, and the biggest motion in the close that followed was Ellie's high leap off the mantle,
+  coming down through the ladder's rails at tread height with her trail behind her: a fall from the ladder, hers.
+  Now the frame holds (3.7 to 3.62 cells) from the kick to his landing, and goes in only once he is down; she waits
+  for that, drops low off the mantle's front on the fireplace side of the ladder, and rolls to him past its feet.
+  Her touch moves from bar 20's one to its two (122.27, her beat), so the roll is not a dash, and the bandage wraps
+  in 0.45 s, before she climbs again. Nothing added; the strikes are the same in number, each on the music.
 
 ## Known limits
 

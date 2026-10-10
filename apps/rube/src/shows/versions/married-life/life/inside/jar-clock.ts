@@ -54,9 +54,9 @@ export const LAMP_OUT = J(17, 2)
 export const CLIMB = [J(17, 3), J(18)]
 export const KICK = onset(119.902)
 export const FALL = J(19)
-/** She comes down to him, touches him; the bandage. Then up again to the jar. */
+/** She comes down to him, touches him (on the two, her beat); the bandage. Then up again to the jar. */
 export const TO_HIM = J(19, 3)
-export const TOUCH = J(20)
+export const TOUCH = J(20, 2)
 export const UP2 = [J(21), J(21, 2), J(22)]
 export const PUSH2 = J(23)
 /** The storm: a first flash; the tree through the roof; the jar thrown over; thunder. */
@@ -340,7 +340,7 @@ export const boardAt = (t: number, i: number): number => {
 /** The bandage round his foot: 0 none .. 1 wrapped; unwound as he heals, as they go. */
 export function bandageAt(t: number): number {
   if (t < TOUCH) return 0
-  const on = smoothstep((t - TOUCH) / 0.6)
+  const on = smoothstep((t - TOUCH) / 0.45)
   const off = smoothstep((t - (SUN + 0.1)) / 0.7)
   return on * (1 - off)
 }

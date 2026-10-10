@@ -180,10 +180,12 @@ function elliePath(carlX: (t: number) => number): Path {
   e.hold(115.75).glide(AGAINST[0], PUSH1, 0.3).glide(AGAINST[0] + 0.07, PUSH1 + 0.3, 0)
   e.hold(116.9).glide(SEAT[0], 118.0, 0)
   // He falls: down to him; she touches him; the bandage. Then up again, and she gives the jar over a second time.
-  e.hold(120.85).hop([3.6, 0], TO_HIM).glide(FELL[0] + 0.37, TOUCH, 0)
+  // (Once he is down: a low drop off the mantle's front, clear of the ladder, and a roll to him past its feet. A high
+  // leap that came down through its rails read as her falling off it, and a viewer took his fall for hers.)
+  e.hold(FALL + 0.15).hop([4.22, 0], TO_HIM, 0.3).glide(FELL[0] + 0.37, TOUCH, 0)
   // (The last leap, onto the mantle, is quicker and flatter than the first: the camera is drawing back from the
   // bandage then, and holds the two of them whole.)
-  e.hold(122.55).hop(T1, UP2[0]).hop(T2, UP2[1]).hold(123.62).hop(SEAT, UP2[2], 0.22)
+  e.hold(122.72).hop(T1, UP2[0]).hop(T2, UP2[1]).hold(123.62).hop(SEAT, UP2[2], 0.22)
   e.hold(124.25).glide(AGAINST[0], PUSH2, 0.3).glide(AGAINST[0] + 0.07, PUSH2 + 0.3, 0)
   e.hold(125.7).glide(SEAT[0], 126.8, 0)
   // The tree: a start. Then down onto his plank, ahead of him, down it, off it, and on with him to the hall.
@@ -301,7 +303,7 @@ export const jar = part<JarState>(
 /**
  * The camera: a step in on each handful; then a few long moves, each landed before its event. Left and out to the
  * room between the car and the jar before the tyre goes; one move right onto the cradle, the chute and his machine
- * for the pour, held there through the refill and the lamp; one push in as he climbs and falls, landed close on her
+ * for the pour, held there through the refill, the lamp and his fall; one push in once he is down, landed close on her
  * touch; then one long draw back (never faster than 0.25 of a log step a second until the storm gathers) past the
  * second pour to the whole house, so the limb breaks through the roof inside the frame and the roof is patched in
  * it; and in again to follow them into the hall. Both stay whole inside the Zoom frame throughout (two thirds of the height,
@@ -394,10 +396,10 @@ function shots(): PartShot[] {
     // reaching for.
     k(LAMP_OUT, 3.92, [5.1, -1.18]),
     k(KICK, 3.7, [4.35, -1.3]),
-    // In, all the way, as he falls and she comes down to him: landed close on her touch, a drift while the bandage
-    // wraps. (At 120.2 he is at the top of his fall, and at 121.0 she is at the top of her hop down off the mantle:
-    // no closer than 2.8 there.)
-    k(FALL, 3.1, [3.75, -0.85]),
+    // Held through his fall, so it plays whole in a frame that is all but still (pushing in under it, his fall was
+    // lost and hers down to him was taken for it); then in, all the way, once he is down and she comes to him: landed
+    // close on her touch, a drift while the bandage wraps.
+    k(FALL, 3.62, [4.2, -1.25]),
     k(TOUCH, 2.38, [3.07, -0.62]),
     // Then one long move out toward the storm: gently at first, faster as she climbs the ladder and leaps to the
     // mantle (she stays whole in Zoom: 2.5 cells as she reaches the tread, 2.95 at the top of her leap), past the
