@@ -96,6 +96,12 @@ function timeRing(ring: Ring, o: { born: number; start: number; tc: number; ac: 
   return { ...ring, born: o.born, closed: o.close, whole: o.whole, lo, hi, fade: o.close + 12 }
 }
 
+/**
+ * How far a ring's end runs on past where she sits at it or leaves it: as far as an end tapers, so she rides its full
+ * thickness to the last (her place on the ink is worked out from its whole width), never the thin of its point.
+ */
+const TIP = 0.5
+
 export const PATH = new Path()
 export const RINGS: Ring[] = []
 /** Every strike the fog makes (show seconds). */
@@ -281,10 +287,10 @@ export const FOG2 = (() => {
     let ring: Ring
     if (i === 0) {
       // She came into the first before the cut (off the picture): it has been written round from its upper left, and
-      // its end ahead of her already waits where she will leave it.
+      // its end ahead of her already waits just past where she will leave it.
       const sp = l.ring.spin
       const behind = wrapNear(3.35 - sp(T2), 0)
-      const loX = wrapNear(l.ax - sp(l.tx), behind - 1.5)
+      const loX = wrapNear(l.ax - sp(l.tx), behind - 1.5) - TIP
       let hiM = wrapNear(-Math.PI / 2 - 0.3 - sp(s.close), behind + 1.2)
       if (hiM < behind + 0.3) hiM += TAU
       ring = {
@@ -397,7 +403,6 @@ export const FOG34 = (() => {
   const { W0, alpha0, onW, rise } = FOG34
   // The crescent: written before (off the picture), from her place back round its left side; she sits at its tip.
   const L = 1.95
-  const TIP = 0.5
   const W: Ring = {
     ...W0,
     born: 157.2,
