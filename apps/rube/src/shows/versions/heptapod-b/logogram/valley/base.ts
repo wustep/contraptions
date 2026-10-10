@@ -1,6 +1,6 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { laneAt, R } from '../../../../../parts'
-import { box, carried, frame, part, type PartShot } from '../kit'
+import { box, carried, frame, lookFrom, looks, part, type Look, type PartShot } from '../kit'
 import { BURST1, pulse, SEAM } from '../music'
 import { G, dropTime } from '../physics'
 import { SEAMS } from '../seams'
@@ -145,21 +145,23 @@ const HOPS: Pt[] = [
 ]
 
 /** Louise's lane, in the world. */
+const HOP_OUT = 0.38
 function louise(): Path {
   const seat = (t: number) => seatAt(t)
   const out = pulse(98)
   const lands = pulse(100)
   const path = new Path(seat(B0), B0)
   path.carry(seat, out)
-  // She hops out of the door and down onto the deck.
-  path.fly([path.at[0] + 0.5, ON_PAD], lands)
-  const vHop = 0.5 / (lands - out)
-  // Along the deck and off its edge, into the bucket.
+  // She hops out of the door and down onto the deck: a short hop, so she is high in it as she passes Ian on her right.
+  path.fly([path.at[0] + HOP_OUT, ON_PAD], lands)
+  const vHop = HOP_OUT / (lands - out)
+  // Along the deck and off its edge, into the bucket: the deck's edge is at the bucket's rim, so she hops it (twice a
+  // plain drop's time, a ball's height up), clear of the rim until she is over the bucket, not through its wall.
   const inBucket = bucketSeat(INTO_BUCKET)
-  const fall = dropTime(inBucket[1] - ON_PAD)
+  const hop = 2.1 * dropTime(inBucket[1] - ON_PAD)
   const edge: Pt = [PAD.x1, ON_PAD]
-  const vEdge = (inBucket[0] - edge[0]) / fall
-  path.roll(edge, INTO_BUCKET - fall, vHop, vEdge, 0.45)
+  const vEdge = (inBucket[0] - edge[0]) / hop
+  path.roll(edge, INTO_BUCKET - hop, vHop, vEdge, 0.45)
   path.fly(inBucket, INTO_BUCKET)
   // Down with it, inside it (out of sight for 0.7 s, the bucket where she is); tipped out.
   path.carry(bucketSeat, THUD, 0, true)
@@ -254,6 +256,15 @@ export const BASE_HITS: number[] = [
   pulse(179),
 ].sort((a, b) => a - b)
 
+/**
+ * Where they look, stopped under the belly: up at the slot as it opens over them in its six steps, and holding there
+ * as the floods answer, until they set off for the lift. Elsewhere their eyes roll with them.
+ */
+const UP_AT_SLOT = -Math.PI / 2 + 0.15
+// Held until each moves off (she at 40.1, he a little after), so no eye drops to the grass while they stand there.
+const LOUISE_LOOKS: Look[] = [{ from: 36.0, to: 40.05, at: () => UP_AT_SLOT }]
+const IAN_LOOKS: Look[] = [{ from: 37.75, to: 40.35, at: () => UP_AT_SLOT }]
+
 export const base = part<BaseState>(
   {
     name: 'base',
@@ -299,6 +310,7 @@ export const base = part<BaseState>(
       exit,
       lane: { segs: L.segs, fire: INTO_BUCKET - begin },
       state: { begin },
+      riders: looks(LOUISE_LOOKS),
       company: [
         {
           who: 'ian',
@@ -306,7 +318,7 @@ export const base = part<BaseState>(
           to: slot.end,
           at: (t: number) => {
             const q = laneAt(ianLane, t - begin)
-            return { x: q.x, y: q.y }
+            return { x: q.x, y: q.y, look: (roll: number) => lookFrom(IAN_LOOKS, t, roll) }
           },
         },
       ],

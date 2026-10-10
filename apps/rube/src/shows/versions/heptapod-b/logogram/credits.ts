@@ -1,6 +1,7 @@
 import { clamp, easeInOutCubic } from '../../../../../../../src/core/ease'
 import type { TitleCard } from '../../../registry'
 import { frame, scenery } from './kit'
+import { WIN } from './lake/house-plan'
 import { CREDITS_AT, DURATION, FLUTTER } from './music'
 import { HANNAH, IAN, LOUISE, SHELL } from './worlds'
 
@@ -100,16 +101,35 @@ export function creditsAt(t: number): TitleCard[] {
 /** How deep the shade under the words is at `t`: up with the first card, down after the last. */
 const bedAt = (t: number): number => clamp((t - CREDITS_AT + 0.4) / 1.6) * (1 - clamp((t - LAST_GONE + 0.4) / 1.8))
 
-/** The canvas's half: a soft shade where the words come. */
+/**
+ * The room going to dusk as the credits run: it dims over a few seconds from the first card and stays dim to the end,
+ * while the window keeps its light. The quiet wall the words are set on darkens under them, and the last of the day is
+ * out on the water.
+ */
+const duskAt = (t: number): number => easeInOutCubic(clamp((t - CREDITS_AT + 0.4) / 7))
+
+/** The canvas's half: the room's dusk, and a soft shade where the words come. */
 export const credits = scenery<null>({
   name: 'credits',
   draw: () => {},
   over: (p, _s, c) => {
     const bed = bedAt(c.t)
-    if (bed <= 0.001) return
+    const dusk = duskAt(c.t)
+    if (bed <= 0.001 && dusk <= 0.001) return
     const { k } = c
     const f = frame(p, k)
     const ctx = p.drawingContext as CanvasRenderingContext2D
+    if (dusk > 0.001) {
+      // Everything but the glass (its frame stays as dark as it was against the light).
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+      ctx.rect(WIN.x0 * k, WIN.top * k, (WIN.x1 - WIN.x0) * k, (WIN.sill - WIN.top) * k)
+      ctx.fillStyle = `rgba(30, 36, 40, ${0.26 * dusk})`
+      ctx.fill('evenodd')
+      ctx.restore()
+    }
+    if (bed <= 0.001) return
     const w = Math.min(f.x1 - f.x0, ((f.y1 - f.y0) * 16) / 9)
     const h = (w * 9) / 16
     const bx = (f.x0 + f.x1) / 2 - w / 2

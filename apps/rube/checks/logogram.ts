@@ -14,7 +14,7 @@ import { rollAt } from '../src/shows/versions/heptapod-b/logogram/shell/shaft'
 import { TURN_FOR } from '../src/shows/versions/heptapod-b/logogram/shell/shaft-path'
 import { CLOSE } from '../src/shows/versions/heptapod-b/logogram/shell/chamber-path'
 import { RING_AT, ringR } from '../src/shows/versions/heptapod-b/logogram/shell/chamber-heptapods'
-import { BROW, V1_AT } from '../src/shows/versions/heptapod-b/logogram/lake/house-plan'
+import { BENCH, BROW, ROOM, SCENES as LAKE_SCENES, V1_AT } from '../src/shows/versions/heptapod-b/logogram/lake/house-plan'
 import { CUT_IN } from '../src/shows/versions/heptapod-b/logogram/valley/depart'
 import { R } from '../src/parts'
 
@@ -81,6 +81,89 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
   }
   check('logogram: inside a place the ball never jumps (no more than 0.04 cells a millisecond)', jump <= 0.04, `${jump.toFixed(3)} at ${jumpAt.toFixed(3)} s`)
   check('logogram: every cut is a match cut: on the screen the ball never jumps (no more than 1% of the frame a millisecond)', screen <= 0.01, `${screen.toFixed(4)} at ${screenAt.toFixed(3)} s`)
+
+  // Their eyes are how they act, and the eye a look turns is turned from the roll: it never snaps, at a cut, at a seam
+  // between parts, or where a look takes it from the roll or hands it back. Beyond what the ball's own roll turns it, an
+  // eye turns no more than 0.15 rad in a 120th of a second (the prologue's quickest glance is 0.13).
+  {
+    const wrap = (a: number) => {
+      const d = a % (2 * Math.PI)
+      return d > Math.PI ? d - 2 * Math.PI : d < -Math.PI ? d + 2 * Math.PI : d
+    }
+    const eyes = (t: number) => {
+      const h = show.at(t)
+      const col = h.universe.pieces[0]?.col ?? 0
+      const out = new Map<string, { s: number; x: number }>()
+      for (const b of h.balls ?? [{ id: h.ball.id, x: h.x, spin: undefined }]) out.set(String(b.id), { s: b.spin ?? (b.x - col) / R, x: b.x })
+      if (!out.has(String(h.ball.id))) out.set(String(h.ball.id), { s: (h.x - col) / R, x: h.x })
+      return { out, leg: show.owner(t) }
+    }
+    const dt = 1 / 120
+    let prev = eyes(0)
+    let worst = 0
+    let worstAt = 0
+    for (let t = dt; t < perf.duration; t += dt) {
+      const cur = eyes(t)
+      if (cur.leg === prev.leg) {
+        for (const [id, b] of cur.out) {
+          const a = prev.out.get(id)
+          if (!a) continue
+          const over = Math.abs(wrap(b.s - a.s)) - Math.abs((b.x - a.x) / R) * 1.6
+          if (over > worst) {
+            worst = over
+            worstAt = t
+          }
+        }
+      }
+      prev = cur
+    }
+    check('logogram: their eyes never snap (no more than 0.15 rad in a 120th of a second beyond their roll)', worst <= 0.15, `${worst.toFixed(3)} at ${worstAt.toFixed(3)} s`)
+  }
+  // Two balls never pass into each other: Louise, Ian and Hannah keep their own room, at every 120th of a second.
+  {
+    let worst = 0
+    let worstAt = 0
+    for (let t = 0; t < perf.duration; t += 1 / 120) {
+      const balls = show.at(t).balls ?? []
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          const a = balls[i]
+          const b = balls[j]
+          if ((a.scale ?? 1) === 0 || (b.scale ?? 1) === 0) continue
+          const over = (R * (a.scale ?? 1) + R * (b.scale ?? 1) - Math.hypot(a.x - b.x, a.y - b.y)) / R
+          if (over > worst) {
+            worst = over
+            worstAt = t
+          }
+        }
+      }
+    }
+    check('logogram: no two balls ever pass into each other (overlap under 5% of a radius)', worst <= 0.05, `${worst.toFixed(3)} R at ${worstAt.toFixed(3)} s`)
+  }
+  // In the lake house no ball sinks into the floor or the bench, nor passes through the bench's corners (Hannah springs
+  // up over its end, and older Hannah rolls off its far end).
+  {
+    let worst = 0
+    let worstAt = 0
+    const corners = [BENCH.x0, BENCH.x1].flatMap((x) => [[x, BENCH.top], [x, BENCH.top + BENCH.slab]])
+    for (const sc of [LAKE_SCENES.prologue, LAKE_SCENES.v2, LAKE_SCENES.v3, LAKE_SCENES.end]) {
+      for (let t = sc.begin + 0.01; t < Math.min(sc.end, perf.duration - 0.01); t += 1 / 120) {
+        const h = show.at(t)
+        for (const b of h.balls ?? [{ x: h.x, y: h.y, scale: 1 }]) {
+          const r = R * (b.scale ?? 1)
+          if (r === 0) continue
+          const onBench = b.x > BENCH.x0 - 0.02 && b.x < BENCH.x1 + 0.02 && b.y < BENCH.top
+          let sink = b.y + r - (onBench ? BENCH.top : ROOM.floor)
+          for (const [cx, cy] of corners) sink = Math.max(sink, r - Math.hypot(b.x - cx, b.y - cy))
+          if (sink / R > worst) {
+            worst = sink / R
+            worstAt = t
+          }
+        }
+      }
+    }
+    check('logogram: in the lake house no ball sinks into the floor or the bench, nor through its corners', worst <= 0.06, `${worst.toFixed(3)} R at ${worstAt.toFixed(3)} s`)
+  }
 
   // Every strike lands on something the recording has: a pulse, or a measured onset.
   const within = (t: number) => onPulse(t, 0.03) || onOnset(t, 0.04)

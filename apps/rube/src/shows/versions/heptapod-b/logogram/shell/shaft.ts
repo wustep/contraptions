@@ -1,7 +1,8 @@
 import type { Pt, Seg } from '../../../../../parts'
-import { box, carried, part, type Company, type PartShot } from '../kit'
+import { box, carried, lookFrom, part, type Company, type Look, type PartShot } from '../kit'
 import { TURN } from '../music'
-import { drawDeckOver, drawDeckRig, drawDust, drawMist, drawMistFront, drawPuffs, drawStone } from './shaft-draw'
+import { drawSwell } from './chamber-glass'
+import { drawDeckOver, drawDeckRig, drawMist, drawMistFront, drawPuffs, drawStone } from './shaft-draw'
 import {
   I_HOPS,
   I_TOUCH,
@@ -37,7 +38,7 @@ import {
  * two of them on it and comes up against its stops on a pulse (67.431). Dark. She rolls across the deck to the
  * floodlight's switch and touches it (68.383): the lamp stutters, and catches on the next pulse (68.621), and its beam
  * goes up the shaft, the low ribs round it catching the light one above another into the dark, and far up a faint
- * white. Dust hangs in the beam, falling slowly down the throat.
+ * white.
  *
  * On the great burst (70.513) she leaps from the deck, and gravity turns under her: Earth's pull (down the throat)
  * swings round to the shell's own, toward the wall on her right, over half a second, and she falls in a true curve
@@ -121,6 +122,13 @@ function lane(slot: { begin: number; end: number }): Seg[] {
   return segs
 }
 
+/**
+ * Where they look on the deck in the mouth: once she has pressed the switch, up the shaft the way the beam goes (along
+ * its length, which the camera's quarter turn shows as up), into the dark it lights, until they leap; then the eyes
+ * roll with them again.
+ */
+const UP_SHAFT: Look[] = [{ from: T_SWITCH + 0.1, to: T_LEAP - 0.1, at: () => 0 }]
+
 export const shaft = part<ShaftState>(
   {
     name: 'shaft',
@@ -129,12 +137,12 @@ export const shaft = part<ShaftState>(
       drawStone(p, c, t)
       drawMist(p, c, t)
       drawDeckRig(p, c, t)
-      drawDust(p, c, t)
       drawPuffs(p, c, t)
     },
     over: (p, s, c) => {
       drawDeckOver(p, c, s.begin + c.t)
       drawMistFront(p, c, s.begin + c.t)
+      drawSwell(p, c.k, s.begin + c.t, Y_F, 1.6)
     },
   },
   (slot) => {
@@ -147,7 +155,7 @@ export const shaft = part<ShaftState>(
         to: slot.end,
         at: (t) => {
           const [x, y] = ianAt(t)
-          return { x, y, spin: ianSpin(t) }
+          return { x, y, spin: lookFrom(UP_SHAFT, t, ianSpin(t)) ?? ianSpin(t) }
         },
       },
     ]
@@ -157,7 +165,7 @@ export const shaft = part<ShaftState>(
       lane: { segs, fire: T_STOP - slot.begin },
       state: { begin: slot.begin },
       company,
-      riders: (t, hero) => [{ ...hero, spin: louiseSpin(t) }],
+      riders: (t, hero) => [{ ...hero, spin: lookFrom(UP_SHAFT, t, louiseSpin(t)) ?? louiseSpin(t) }],
     }
   },
   (slot) => {

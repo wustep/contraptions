@@ -96,6 +96,12 @@ function timeRing(ring: Ring, o: { born: number; start: number; tc: number; ac: 
   return { ...ring, born: o.born, closed: o.close, whole: o.whole, lo, hi, fade: o.close + 12 }
 }
 
+/**
+ * How far a ring's end runs on past where she sits at it or leaves it: as far as an end tapers, so she rides its full
+ * thickness to the last (her place on the ink is worked out from its whole width), never the thin of its point.
+ */
+const TIP = 0.5
+
 export const PATH = new Path()
 export const RINGS: Ring[] = []
 /** Every strike the fog makes (show seconds). */
@@ -281,10 +287,10 @@ export const FOG2 = (() => {
     let ring: Ring
     if (i === 0) {
       // She came into the first before the cut (off the picture): it has been written round from its upper left, and
-      // its end ahead of her already waits where she will leave it.
+      // its end ahead of her already waits just past where she will leave it.
       const sp = l.ring.spin
       const behind = wrapNear(3.35 - sp(T2), 0)
-      const loX = wrapNear(l.ax - sp(l.tx), behind - 1.5)
+      const loX = wrapNear(l.ax - sp(l.tx), behind - 1.5) - TIP
       let hiM = wrapNear(-Math.PI / 2 - 0.3 - sp(s.close), behind + 1.2)
       if (hiM < behind + 0.3) hiM += TAU
       ring = {
@@ -311,6 +317,10 @@ export const FOG2 = (() => {
       })
       hits.push(s.born, l.tc)
     }
+    // Once she has left it, it draws back a little into the fog, finishing its close behind her already drawn back,
+    // so the ring she is going to is the one the eye goes to, never two in full ink at once. The last still closes
+    // below her after the ring she is tossed into has closed round her, so it draws back once that one has.
+    ring.recede = (F2[i + 1] ? l.tx : Math.max(l.tx, FV.close)) + 0.2
     RINGS.push(ring)
     PATH.add({ t0: l.tc, t1: l.tx, at: (t) => onRing(ring, l.a(t), t), what: 'ride', ring })
     const next = FOG2[i + 1]
@@ -399,10 +409,14 @@ export const FOG34 = (() => {
     born: 157.2,
     closed: F4.closeW,
     whole: F4.closeW + 2.5,
-    // It hangs under the great ring as that begins, then goes back into the white, so the great ring is written alone.
-    fade: F4.closeW + 0.8,
-    fadeFor: 3.5,
-    lo: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 - 0.1], [F4.stop + 0.3, alpha0 - 0.1], [F4.closeW, alpha0 + L - TAU]]),
+    // Once she leaves it, it goes back into the white while it is still in the picture, so the great ring is written
+    // alone: the camera rises with her, and left to fade later it sat cut by the frame's bottom edge, a sliver and then
+    // a pale arc there, until the frame went back to the whole of the great ring (170.3).
+    fade: F4.stop + 0.25,
+    fadeFor: 0.8,
+    // Its tip runs on past her by as much as it tapers over, so she sits on its full thickness, never over the thin
+    // of its point (her place on it is worked out from its whole width).
+    lo: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 - TIP], [F4.stop + 0.3, alpha0 - TIP], [F4.closeW, alpha0 + L - TAU]]),
     hi: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 + L], [F4.stop + 0.3, alpha0 + L], [F4.closeW, alpha0 + L]]),
     by: { who: 'costello', limb: 2, t0: 156.5 },
   }
@@ -518,7 +532,8 @@ export const GREAT = (() => {
     const p = PULSES.find((q) => Math.abs(q.t - at) < 1e-6)
     const s = p ? p.g : 1
     const scale = (0.45 + 0.55 * sstep((at - t0) / 3.2)) * (at > 181.5 ? 0.45 : 1)
-    return { a: ownRaw(at), size: (0.022 + 0.03 * clamp01((s - 0.8) / 0.5)) * scale, width: 0.055, at }
+    // Wide enough that neighbouring blots run into one swell of ink, never a row of notches along its edge.
+    return { a: ownRaw(at), size: (0.022 + 0.03 * clamp01((s - 0.8) / 0.5)) * scale * 0.72, width: 0.12, at }
   })
   const probe = blank('G', 310, G_R, spin, { marks })
   const rho = rideR(probe, her(t0), t0)

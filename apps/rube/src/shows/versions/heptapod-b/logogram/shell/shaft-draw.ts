@@ -3,11 +3,11 @@ import { mixHex, R, type Pt } from '../../../../../parts'
 import { DECK_LAMP_LENS, drawDeck } from '../cast'
 import { alpha, frame, hash, type Ctx } from '../kit'
 import { level, pulse } from '../music'
+import { softBeam } from '../valley/set-air'
 import { SHELL, VALLEY } from '../worlds'
 import {
   DECK,
   deckX,
-  gravity,
   ianAt,
   louiseAt,
   PRESS,
@@ -34,7 +34,7 @@ import { TURN } from '../music'
  * roll turns it all on the screen. Side on, the shaft is a section through dark stone: the cut stone round it, the
  * far wall seen between its two faces, low ribs across it like rings. Three lights and nothing else: the daylight
  * coming up the throat from the valley below, the deck's floodlight once she switches it on, and the white at the
- * far end, growing. Dust hangs in the air and falls the way gravity does.
+ * far end, growing.
  */
 
 const clamp01 = (u: number) => Math.max(0, Math.min(1, u))
@@ -106,6 +106,8 @@ export function floodLens(t: number): { at: Pt; dir: Pt } {
   return { at: [deckX(t) + DECK_LAMP_LENS.up, DECK[1] - DECK_LAMP_LENS.back], dir: [Math.cos(a), Math.sin(a)] }
 }
 const BEAM_HALF = 0.3
+/** Along the lamp's beam: bright at the lens, gone by its far end. */
+const lampAlong = (v: number): number => (v < 0.25 ? 1 - (1.8 * v) : v < 0.6 ? 0.55 - (0.35 * (v - 0.25)) / 0.35 : 0.2 * (1 - (v - 0.6) / 0.4))
 const BEAM_LEN = 17
 /** The lift's top stage's height at the cut (the valley side's, measured): it opens on as the deck rises. */
 const TOP_STAGE = 1.28
@@ -210,6 +212,39 @@ function tunnelPath(ctx: CanvasRenderingContext2D, k: number, xa: number, xb: nu
  * A lit lip along a face that runs along x: bands laid into the stone from the face (`into` +1 down, -1 up), each a
  * little deeper and fainter, lit along their length by `light`. No line: the light fades into the stone.
  */
+/**
+ * A rib's light across it, widest first: [width, alpha, shift]. The old three bars' profile (1.7, 1.0 and 0.45 wide)
+ * spread over many thin ones with the same light in all, so a rib is a soft ridge, never a stack of bars.
+ */
+const RIB_STEPS: [number, number, number][] = [[1.7, 0.3, -0.08], [1.0, 0.5, -0.04], [0.45, 0.8, 0]]
+const RIB_LAYERS: [number, number, number][] = (() => {
+  const n = 6
+  const out: [number, number, number][] = []
+  for (let i = 0; i < n; i++) {
+    const r = (i / (n - 1)) * (RIB_STEPS.length - 1)
+    const j = Math.min(RIB_STEPS.length - 2, Math.floor(r))
+    const f = r - j
+    const [a, b] = [RIB_STEPS[j], RIB_STEPS[j + 1]]
+    out.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f])
+  }
+  // The same light in all as the three bars had.
+  const sum = out.reduce((s, l) => s + l[1], 0)
+  return out.map(([w, a, d]) => [w, (a * 1.6) / sum, d])
+})()
+
+/**
+ * A lit lip's depths into the stone, deepest first, and each layer's share of its light: the old six steps' profile
+ * (1, 0.7, 0.46, 0.28, 0.15, 0.07 of its depth) spread over many thin layers, so its glow falls off with no steps.
+ */
+const LIP_STEPS = [1, 0.7, 0.46, 0.28, 0.15, 0.07, 0]
+const LIP_N = 12
+const LIP_LAYERS = Array.from({ length: LIP_N }, (_, i) => {
+  const r = ((i + 0.5) * (LIP_STEPS.length - 1)) / LIP_N
+  const j = Math.floor(r)
+  return LIP_STEPS[j] + (LIP_STEPS[j + 1] - LIP_STEPS[j]) * (r - j)
+})
+const LIP_SHARE = (LIP_STEPS.length - 1) / LIP_N
+
 function lipX(ctx: CanvasRenderingContext2D, k: number, xa: number, xb: number, face: (x: number) => number, into: number, depth: number, light: (x: number) => number): void {
   if (xb - xa < 0.05) return
   const step = Math.max(0.1, (xb - xa) / 110)
@@ -218,10 +253,9 @@ function lipX(ctx: CanvasRenderingContext2D, k: number, xa: number, xb: number, 
   xs.push(xb)
   const ls = xs.map((x) => clamp01(light(x)))
   if (Math.max(...ls) < 0.02) return
-  const layers = [1, 0.7, 0.46, 0.28, 0.15, 0.07]
-  for (const d of layers) {
+  for (const d of LIP_LAYERS) {
     const g = ctx.createLinearGradient(xa * k, 0, xb * k, 0)
-    xs.forEach((x, i) => g.addColorStop((x - xa) / (xb - xa), `rgba(${LIP}, ${0.16 * ls[i]})`))
+    xs.forEach((x, i) => g.addColorStop((x - xa) / (xb - xa), `rgba(${LIP}, ${0.16 * LIP_SHARE * ls[i]})`))
     ctx.fillStyle = g
     ctx.beginPath()
     xs.forEach((x, i) => (i ? ctx.lineTo(x * k, face(x) * k) : ctx.moveTo(x * k, face(x) * k)))
@@ -237,9 +271,9 @@ function lipY(ctx: CanvasRenderingContext2D, k: number, ya: number, yb: number, 
   const ls: number[] = []
   for (let i = 0; i <= n; i++) ls.push(clamp01(light(ya + ((yb - ya) * i) / n)))
   if (Math.max(...ls) < 0.02) return
-  for (const d of [1, 0.7, 0.46, 0.28, 0.15, 0.07]) {
+  for (const d of LIP_LAYERS) {
     const g = ctx.createLinearGradient(0, ya * k, 0, yb * k)
-    ls.forEach((l, i) => g.addColorStop(i / n, `rgba(${LIP}, ${0.13 * l})`))
+    ls.forEach((l, i) => g.addColorStop(i / n, `rgba(${LIP}, ${0.13 * LIP_SHARE * l})`))
     ctx.fillStyle = g
     const w = depth * d
     ctx.fillRect(Math.min(x, x + into * w) * k, ya * k, w * k, (yb - ya) * k)
@@ -265,10 +299,14 @@ export function drawStone(p: p5, c: Ctx, t: number): void {
   p.fill(STONE)
   p.rect(xa * k, ya * k, (xb - xa) * k, (yb - ya) * k)
   {
+    // (Out of the plain stone at the lip it turns over a cell and a half, not on a hard edge down the frame.)
     const fx0 = Math.max(xa, X_LIP)
     if (xb > fx0) {
-      const g = ctx.createLinearGradient((X_END - 3.5) * k, 0, X_END * k, 0)
-      g.addColorStop(0, mixHex(STONE, FLOOR_STONE, 0.55))
+      const g = ctx.createLinearGradient(X_LIP * k, 0, X_END * k, 0)
+      const at = (x: number) => (x - X_LIP) / (X_END - X_LIP)
+      g.addColorStop(0, STONE)
+      g.addColorStop(at(X_LIP + 1.5), mixHex(STONE, FLOOR_STONE, 0.55))
+      g.addColorStop(at(X_END - 3.5), mixHex(STONE, FLOOR_STONE, 0.55))
       g.addColorStop(1, FLOOR_STONE)
       ctx.fillStyle = g
       ctx.fillRect(fx0 * k, Y_F * k, (xb - fx0) * k, Math.max(0, yb - Y_F) * k)
@@ -291,8 +329,9 @@ export function drawStone(p: p5, c: Ctx, t: number): void {
 
 /**
  * The stone's grain: long soft beds running along the shaft either side of it, each a shade apart from the next, their
- * edges wandering gently. Flat fills, no lines: smooth and geological. Under the floor they thin out before the
- * chamber, whose floor is plain.
+ * edges wandering gently. Flat fills, no lines: smooth and geological. Under the floor they fade out before the
+ * chamber, whose floor is plain. (They used to thin to a point there, and a deep bed's point was a steep wedge where a
+ * tall frame, a phone's, shows the stone far under the floor.)
  */
 const BEDS = [0.7, 1.6, 2.9, 4.6, 6.8, 9.5]
 const bedAt = (side: number, i: number, x: number): number => {
@@ -301,25 +340,30 @@ const bedAt = (side: number, i: number, x: number): number => {
 }
 function drawStrata(p: p5, k: number, x0: number, x1: number, ya: number, yb: number): void {
   const step = 0.3
-  p.noStroke()
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const side of [1, -1]) {
     const base = side > 0 ? FLOOR_STONE : STONE
     for (let i = 0; i + 1 < BEDS.length; i += 2) {
       const near = side > 0 ? bedAt(side, i, x0) : bedAt(side, i + 1, x0)
       if ((side > 0 && near > yb + 1) || (side < 0 && near < ya - 1)) continue
-      const taper = (x: number) => (side > 0 ? clamp01((X_END - 0.8 - x) / 2.4) : 1)
-      p.fill(mixHex(base, SHELL.dark, 0.16 + 0.06 * (i / 2)))
-      p.beginShape()
+      const color = mixHex(base, SHELL.dark, 0.16 + 0.06 * (i / 2))
+      if (side > 0) {
+        const g = ctx.createLinearGradient((X_END - 3.2) * k, 0, (X_END - 0.8) * k, 0)
+        g.addColorStop(0, `rgba(${rgb(color)}, 1)`)
+        g.addColorStop(1, `rgba(${rgb(color)}, 0)`)
+        ctx.fillStyle = g
+      } else ctx.fillStyle = color
+      ctx.beginPath()
       for (let x = x0; x <= x1 + step; x += step) {
         const q = Math.min(x, x1)
-        p.vertex(q * k, bedAt(side, i, q) * k)
+        ctx.lineTo(q * k, bedAt(side, i, q) * k)
       }
       for (let x = x1; x >= x0 - step; x -= step) {
         const q = Math.max(x, x0)
-        const a = bedAt(side, i, q)
-        p.vertex(q * k, (a + (bedAt(side, i + 1, q) - a) * taper(q)) * k)
+        ctx.lineTo(q * k, bedAt(side, i + 1, q) * k)
       }
-      p.endShape(p.CLOSE)
+      ctx.closePath()
+      ctx.fill()
     }
   }
 }
@@ -371,7 +415,7 @@ function drawAirLight(p: p5, c: Ctx, t: number, xa: number, xb: number): void {
     const lit: number[] = []
     for (let j = 0; j <= n; j++) lit.push(clamp01(lightAt(r.x, y0 + ((y1 - y0) * j) / n, t, 0.3)))
     if (Math.max(...lit) < 0.04) continue
-    for (const [wm, am, dx] of [[1.7, 0.3, -0.08], [1.0, 0.5, -0.04], [0.45, 0.8, 0]] as const) {
+    for (const [wm, am, dx] of RIB_LAYERS) {
       const g = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
       lit.forEach((l, j) => g.addColorStop(j / n, `rgba(${rgb(WARM)}, ${0.24 * am * l * l})`))
       ctx.fillStyle = g
@@ -399,7 +443,10 @@ function drawLips(p: p5, c: Ctx, t: number, xa: number, xb: number, ya: number, 
     const s = slope(floorY, x)
     const toMouth = Math.max(0.25, Math.min(2.5, 1 - 3.5 * s))
     const toFar = Math.max(0.25, Math.min(2.5, 1 + 3.5 * s))
-    return 0.08 + 1.25 * mouthLight(x, floorY(x) - 0.06, t) * toMouth + farLight(x, t) * toFar
+    // Dying away over the last cells to the opening, so the shaft's floor runs on into the chamber's dark floor
+    // rather than stopping on a cut.
+    const out = clamp01((X_END - x) / 1.6)
+    return (0.08 + 1.25 * mouthLight(x, floorY(x) - 0.06, t) * toMouth + farLight(x, t) * toFar) * out * (2 - out)
   })
   // The ceiling, a little dimmer; its rounded lip at the opening catching the chamber's light.
   lipX(ctx, k, x0, x1, ceilY, -1, 0.3, (x) => {
@@ -560,31 +607,9 @@ export function drawDeckRig(p: p5, c: Ctx, t: number): void {
     ctx.save()
     tunnelPath(ctx, k, f.x0 - 1, f.x1 + 1)
     ctx.clip()
-    const nx = -dir[1]
-    const ny = dir[0]
-    // Many thin cones, each a little wider and fainter: a beam with a bright core and soft edges, no bands.
-    const LAYERS = 14
-    for (let j = 0; j < LAYERS; j++) {
-      const spread = 0.15 + (1.75 * j) / (LAYERS - 1)
-      const a = 0.036 * Math.exp(-((spread / 1.25) ** 2))
-      const w0 = 0.1 * Math.min(1, spread)
-      const w1 = BEAM_LEN * Math.tan(BEAM_HALF * spread)
-      const far: Pt = [at[0] + dir[0] * BEAM_LEN, at[1] + dir[1] * BEAM_LEN]
-      const g = ctx.createLinearGradient(at[0] * k, at[1] * k, far[0] * k, far[1] * k)
-      const c0 = rgb(WARM)
-      g.addColorStop(0, `rgba(${c0}, ${a * on})`)
-      g.addColorStop(0.25, `rgba(${c0}, ${a * 0.55 * on})`)
-      g.addColorStop(0.6, `rgba(${c0}, ${a * 0.2 * on})`)
-      g.addColorStop(1, `rgba(${c0}, 0)`)
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.moveTo((at[0] + nx * w0) * k, (at[1] + ny * w0) * k)
-      ctx.lineTo((far[0] + nx * w1) * k, (far[1] + ny * w1) * k)
-      ctx.lineTo((far[0] - nx * w1) * k, (far[1] - ny * w1) * k)
-      ctx.lineTo((at[0] - nx * w0) * k, (at[1] - ny * w0) * k)
-      ctx.closePath()
-      ctx.fill()
-    }
+    // One soft cone: a bright core, nothing at its edges, never a band where one layer of it ends.
+    const far: Pt = [at[0] + dir[0] * BEAM_LEN, at[1] + dir[1] * BEAM_LEN]
+    softBeam(ctx, k, at, far, 0.2, 2 * BEAM_LEN * Math.tan(BEAM_HALF * 1.6), rgb(WARM), 0.22 * on, 'shaftLamp', lampAlong)
     ctx.restore()
   }
 }
@@ -596,85 +621,6 @@ export function drawDeckOver(p: p5, c: Ctx, t: number): void {
   p.translate(deckX(t) * k, 0)
   p.rotate(Math.PI / 2)
   drawDeck(p, k, DECK[0], DECK[1], { ink: RIG_INK, weight, steel: STEEL, over: true })
-  p.pop()
-}
-
-/* ------------------------------------------------------------------ the dust */
-
-/**
- * Dust, drifting the way gravity pulls: down the throat in the mouth, then, as gravity turns, turning with it (each
- * mote's drift lags a little, the way fine dust in air does) toward the new floor. Tiny, soft, seen only where light is.
- */
-const V_DUST = 0.16
-const TAU_DUST = 0.4
-const DUST_DT = 0.01
-const DUST_T0 = TURN - 1
-const DUST_T1 = TURN + 3
-const DRIFT: Pt[] = (() => {
-  // The drift from DUST_T0, tabled: velocity relaxing toward V_DUST along gravity.
-  const out: Pt[] = [[0, 0]]
-  let v: Pt = [-V_DUST, 0]
-  let p: Pt = [0, 0]
-  for (let t = DUST_T0; t < DUST_T1; t += DUST_DT) {
-    const g = gravity(t)
-    const gl = Math.hypot(g[0], g[1]) || 1
-    const want: Pt = [(V_DUST * g[0]) / gl, (V_DUST * g[1]) / gl]
-    const e = 1 - Math.exp(-DUST_DT / TAU_DUST)
-    v = [v[0] + (want[0] - v[0]) * e, v[1] + (want[1] - v[1]) * e]
-    p = [p[0] + v[0] * DUST_DT, p[1] + v[1] * DUST_DT]
-    out.push(p)
-  }
-  return out
-})()
-function drift(t: number): Pt {
-  if (t <= DUST_T0) return [-V_DUST * (t - DUST_T0), 0]
-  const i = (t - DUST_T0) / DUST_DT
-  if (i >= DRIFT.length - 1) {
-    const e = DRIFT[DRIFT.length - 1]
-    return [e[0], e[1] + V_DUST * (t - DUST_T1)]
-  }
-  const j = Math.floor(i)
-  const f = i - j
-  return [DRIFT[j][0] + (DRIFT[j + 1][0] - DRIFT[j][0]) * f, DRIFT[j][1] + (DRIFT[j + 1][1] - DRIFT[j][1]) * f]
-}
-
-const MOTES = 420
-export function drawDust(p: p5, c: Ctx, t: number): void {
-  const { k } = c
-  const f = frame(p, k)
-  const minD = 1.3 / k
-  p.push()
-  p.noStroke()
-  const D = drift(t)
-  for (let i = 0; i < MOTES; i++) {
-    const life = 4 + 4 * hash(i, 1, 91)
-    const ph = hash(i, 2, 91) * life
-    const cyc = Math.floor((t + ph) / life)
-    const age = (t + ph - cyc * life) / life
-    const born = t - age * life
-    const B = drift(born)
-    const m = 0.6 + 0.8 * hash(i, 3, 91)
-    // Born anywhere in the shaft's first cells or its throat, thinning up the shaft.
-    const u = hash(i, cyc, 92)
-    const bx = X_LIP - 3.5 + (X_END - X_LIP + 3.5) * u * u
-    const by = Y_C + (Y_F - Y_C) * hash(i, cyc, 93)
-    const w = 0.035
-    const x = bx + m * (D[0] - B[0]) + w * Math.sin(t * (0.7 + hash(i, 4, 91)) + i)
-    const y = by + m * (D[1] - B[1]) + w * Math.cos(t * (0.6 + hash(i, 5, 91)) + i * 1.3)
-    if (x < f.x0 || x > f.x1 || y < f.y0 || y > f.y1) continue
-    // In the shaft's air or the throat, never in the stone.
-    const inShaft = x > X_LIP && x < X_END && y > ceilY(x) + 0.05 && y < floorY(x) - 0.05
-    const inThroat = x <= X_LIP && y > THROAT[0] && y < THROAT[1]
-    if (!inShaft && !inThroat) continue
-    const l = lightAt(x, y, t)
-    const env = Math.sin(Math.PI * age)
-    const tw = 0.65 + 0.35 * Math.sin(t * (2.2 + 3 * hash(i, 6, 91)) + i * 2.1)
-    const a = Math.pow(clamp01(l * 1.1), 1.6) * env * tw * 0.95
-    if (a < 0.03) continue
-    const d = Math.max(minD, 0.018 + 0.014 * hash(i, 7, 91))
-    p.fill(alpha(p, WARM, a))
-    p.ellipse(x * k, y * k, d * k, d * k)
-  }
   p.pop()
 }
 

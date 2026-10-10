@@ -1,12 +1,12 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { drawShell, shellHalf } from '../cast'
-import { box, frame, hash, scenery } from '../kit'
+import { box, composedCells, frame, hash, scenery } from '../kit'
 import { BURST1, pulse } from '../music'
 import { VALLEY } from '../worlds'
 import { CAMP_PROPS, drawPad, drawRoad, PAD } from './camp'
 import { BELLY, MEADOW, SHELL_H, SHELL_W, SHELL_X, SLOT_W } from './geo'
-import { band, clamp01, fbm, lerp, lobe, lobeR, rgbOf, sm, vnoise } from './set-air'
+import { band, clamp01, fbm, lerp, lobe, lobeR, rgbOf, sm, softBeam, vnoise } from './set-air'
 
 /**
  * The valley's standing set (the valley builder's; the lift part plays in it): Montana under low cloud.
@@ -193,13 +193,16 @@ function drawFarCamp(ctx: CanvasRenderingContext2D, k: number, f: F, air: string
   const s = 1 / FAR_D
   const y0 = floorOf(FAR_D) + sy + 0.1 * s
   if (y0 - 8 * s > f.y1 || y0 < f.y0) return
-  const low = Math.min(0.9, lowHaze(f.cy) * Math.min(1, (1 - 1 / FAR_D) * 1.25))
+  // It stands on the valley floor in front of the near hills, small with distance: so it is hazed a little less than
+  // the hill behind it, never more (paler than the land behind, it read as pale boxes floating on the hill).
+  const behind = LAYERS[LAYERS.length - 1].d
+  const low = 0.85 * Math.min(0.9, lowHaze(f.cy) * Math.min(1, (1 - 1 / behind) * 1.25))
   // Seen only from down on the meadow (from the air it is specks, and hidden by the shell).
   const seen = sm(f.cy, -24, -10)
   if (seen <= 0.01) return
   ctx.save()
   ctx.globalAlpha *= seen
-  ctx.fillStyle = mixHex(mixHex(VALLEY.ridge, VALLEY.oliveDark, 0.6), air, 0.25 + low * 0.45)
+  ctx.fillStyle = mixHex(mixHex(VALLEY.ridge, VALLEY.oliveDark, 0.6), air, 0.12 + low)
   for (const it of FAR_CAMP) {
     const x0 = it.x + sx
     if (x0 + 9 * s < f.x0 || x0 > f.x1) continue
@@ -239,7 +242,7 @@ function drawFarCamp(ctx: CanvasRenderingContext2D, k: number, f: F, air: string
     // A tent's roof and a truck's canvas catch the sky: a paler band, so they read as things and not as blocks.
     if (it.kind !== 'tower') {
       const body: string = String(ctx.fillStyle)
-      ctx.fillStyle = mixHex(body, air, 0.35)
+      ctx.fillStyle = mixHex(body, air, 0.2)
       ctx.beginPath()
       if (it.kind === 'tent') {
         ctx.moveTo(X(0.06), Y(1.25))
@@ -470,7 +473,7 @@ function drawFogBand(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
 function drawMist(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, a: number, open = 0): void {
   if (f.y1 < MEADOW - 6 || f.y0 > MEADOW + 1 || a <= 0.01) return
   const fog = rgbOf(VALLEY.fog)
-  const cells = f.y1 - f.y0
+  const cells = composedCells(f)
   const close = 1 - sm(cells, 9, 18)
   if (close > 0.01) {
     const g = 2.4
@@ -574,33 +577,43 @@ function drawCeiling(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
  */
 function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, open: number): void {
   if (open <= 0.02) return
-  const light = rgbOf(VALLEY.floodlight)
+  // Sunlight, not the floods' cream: warm, the first warmth the valley has had (the reunion is in it).
+  const light = rgbOf(mixHex(VALLEY.floodlight, VALLEY.lamp, 0.5))
   const top = -132
   const len = MEADOW - top
   const lean = 0.1
+  // Drawn with gradients straight onto the picture, worked out at every pixel: pushed in close on the reunion each
+  // shaft spans most of the frame, and a stretched sprite (or a layer of its own, its faint edges kept in eight bits)
+  // showed hairline stripes of colour there. Its top fifth, where it comes on out of the cloud, is cut in thin slices
+  // each a little stronger, in the cloud where no step can be seen.
+  const view = ctx.getTransform()
+  const ON = 0.2
+  const SLICES = 14
   for (let j = 0; j < 6; j++) {
     const x = SHELL_X - 22 + j * 10 + 3 * Math.sin(t * 0.05 + j) + (hash(j, 2, 43) - 0.5) * 4
     const w = 2.6 + 3.2 * hash(j, 1, 43)
-    const a = (0.11 + 0.08 * hash(j, 3, 43)) * sm(open, 0.05 + j * 0.06, 0.45 + j * 0.06)
+    const a = (0.14 + 0.09 * hash(j, 3, 43)) * sm(open, 0.05 + j * 0.06, 0.45 + j * 0.06)
     if (a <= 0.004) continue
     const foot = x + len * lean
-    if (Math.max(x, foot) + w * 4 < f.x0 || Math.min(x, foot) - w * 3 > f.x1) continue
-    const g2 = ctx.createLinearGradient(0, top * k, 0, MEADOW * k)
-    g2.addColorStop(0, `rgba(${light}, 0)`)
-    g2.addColorStop(0.2, `rgba(${light}, ${a})`)
-    g2.addColorStop(1, `rgba(${light}, ${a * 0.85})`)
-    ctx.fillStyle = g2
-    for (const [grow, al] of [[2.2, 0.35], [1, 1]] as const) {
-      ctx.globalAlpha *= al
-      ctx.beginPath()
-      ctx.moveTo((x - w * grow) * k, top * k)
-      ctx.lineTo((x + w * grow) * k, top * k)
-      ctx.lineTo((foot + w * 1.6 * grow) * k, MEADOW * k)
-      ctx.lineTo((foot - w * 1.2 * grow) * k, MEADOW * k)
-      ctx.closePath()
-      ctx.fill()
-      ctx.globalAlpha /= al
+    // Its whole soft width: as wide as its old halo was.
+    const span = w * 5.6
+    if (Math.max(x, foot) + span / 2 < f.x0 || Math.min(x, foot) - span / 2 > f.x1) continue
+    ctx.save()
+    // Its own frame: across it along x, down it along y, leaning with it; level at its top and at the grass.
+    ctx.setTransform(view.multiply(new DOMMatrix([1, 0, lean, 1, x * k, top * k])))
+    const g = ctx.createLinearGradient((-span / 2) * k, 0, (span / 2) * k, 0)
+    const peak = Math.min(1, a * 2.3)
+    for (let i = 0; i <= 16; i++) {
+      const u = Math.abs(i / 16 - 0.5) * 2
+      g.addColorStop(i / 16, `rgba(${light}, ${peak * (1 - u * u) ** 1.5})`)
     }
+    ctx.fillStyle = g
+    ctx.fillRect((-span / 2) * k, ON * len * k, span * k, (1 - ON) * len * k)
+    for (let i = 0; i < SLICES; i++) {
+      ctx.globalAlpha = sm((i + 0.5) / SLICES, 0, 1)
+      ctx.fillRect((-span / 2) * k, ((ON * len * i) / SLICES) * k, span * k, ((ON * len) / SLICES) * k + 0.5)
+    }
+    ctx.restore()
     // Where it falls, the grass is lit.
     lobe(ctx, k, foot + w * 0.2, MEADOW - 0.1, w * 2.4, 0.55, light, a * 2.2, 0.45)
   }
@@ -625,6 +638,10 @@ function drawCrown(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, op
   }
 }
 
+/** Down the slot's fall of light, steady and in a step's flash. */
+const slotAlong = (v: number): number => (v < 0.55 ? 1 - (0.6 * v) / 0.55 : 0.4 - (0.233 * (v - 0.55)) / 0.45)
+const slotFlashAlong = (v: number): number => (v < 0.55 ? 1 - (0.6 * v) / 0.55 : 0.4 * (1 - (v - 0.55) / 0.45))
+
 /**
  * The slot's light, once it opens: a bloom at its mouth, a soft fall of light down to the meadow (brighter for a
  * moment on each of its six steps), the belly lit round it and a pool of it on the grass. Gone as the shell goes.
@@ -640,22 +657,14 @@ function drawSlotLight(ctx: CanvasRenderingContext2D, k: number, f: F, t: number
   let flash = 0
   for (const at of BURST1) if (t >= at) flash = Math.max(flash, Math.exp(-(t - at) / 0.14))
   const sw = SLOT_W * slot
-  const fall = ctx.createLinearGradient(0, y0 * k, 0, MEADOW * k)
-  fall.addColorStop(0, `rgba(${light}, ${(0.3 + 0.45 * flash) * a})`)
-  fall.addColorStop(0.55, `rgba(${light}, ${(0.12 + 0.18 * flash) * a})`)
-  fall.addColorStop(1, `rgba(${light}, ${0.05 * a})`)
-  ctx.fillStyle = fall
-  for (const [grow, al] of [[1.9, 0.45], [1, 1]] as const) {
-    ctx.globalAlpha *= al
-    ctx.beginPath()
-    ctx.moveTo((SHELL_X - (sw / 2) * grow) * k, y0 * k)
-    ctx.lineTo((SHELL_X + (sw / 2) * grow) * k, y0 * k)
-    ctx.lineTo((SHELL_X + (sw * 1.7 + 1.5) * grow) * k, MEADOW * k)
-    ctx.lineTo((SHELL_X - (sw * 1.7 + 1.5) * grow) * k, MEADOW * k)
-    ctx.closePath()
-    ctx.fill()
-    ctx.globalAlpha /= al
-  }
+  // The fall: steady, and brighter near the mouth for a moment on each step. Its whole soft width takes in what was
+  // its faint outer pass.
+  const top: Pt = [SHELL_X, y0]
+  const foot: Pt = [SHELL_X, MEADOW]
+  const w0 = sw * 1.9
+  const w1 = (sw * 3.4 + 3) * 1.9
+  softBeam(ctx, k, top, foot, w0, w1, light, 0.3 * 1.7 * a, 'slot', slotAlong, true)
+  softBeam(ctx, k, top, foot, w0, w1, light, 0.45 * 1.7 * flash * a, 'slotFlash', slotFlashAlong, true)
   // The bloom at its mouth, the belly lit round it, the pool on the meadow.
   lobe(ctx, k, SHELL_X, y0 + 0.2, sw * 0.9 + 0.8, 0.9, light, (0.55 + 0.6 * flash) * a, 0.3)
   lobe(ctx, k, SHELL_X, y0 - 0.4, sw * 1.6 + 2.5, 1.1, light, 0.16 * a, 0.4)
@@ -711,13 +720,18 @@ function drawDeck(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, ope
   ctx.fillStyle = fill
   if (open < 0.02) ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (mean - 6 - top) * k)
   else {
-    // With the opening in it: the fill in strips, thinning where it has opened.
-    const n = 40
+    // With the opening in it: the fill in strips, thinning where it has opened. Each strip's ends sit on whole device
+    // pixels, so the strips meet exactly: overlapping or gapping at a fractional edge, every seam was a hairline.
+    const m = ctx.getTransform()
+    const snap = (x: number) => (m.b === 0 && m.c === 0 ? (Math.round(m.a * x * k + m.e) - m.e) / m.a : x * k)
+    // About 3 px each, so the hole's edge thins smoothly rather than in steps.
+    const n = Math.max(40, Math.min(640, Math.ceil((Math.abs(m.a) * (f.x1 - f.x0 + 2) * k) / 3)))
     for (let i = 0; i < n; i++) {
       const xa = f.x0 - 1 + ((f.x1 - f.x0 + 2) * i) / n
       const xb = f.x0 - 1 + ((f.x1 - f.x0 + 2) * (i + 1)) / n
+      const a0 = snap(xa)
       ctx.globalAlpha *= 1 - hole((xa + xb) / 2)
-      ctx.fillRect(xa * k, top * k, (xb - xa + 0.05) * k, (mean - 6 - top) * k)
+      ctx.fillRect(a0, top * k, snap(xb) - a0, (mean - 6 - top) * k)
       ctx.globalAlpha /= Math.max(1e-3, 1 - hole((xa + xb) / 2))
     }
   }
@@ -781,7 +795,7 @@ export const valleySet = scenery<null>({
 function drawValley(p: p5, k: number, t: number, ink: string, weight: number): void {
   const f = frame(p, k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const cells = f.y1 - f.y0
+  const cells = composedCells(f)
   const open = openAt(t)
   const vanish = vanishAt(t)
 
@@ -838,6 +852,19 @@ function drawValley(p: p5, k: number, t: number, ink: string, weight: number): v
   ctx.lineTo((f.x1 + 1) * k, (f.y1 + 1) * k)
   ctx.closePath()
   ctx.fill()
+  // The near ridge's lower face, where its pour pools: close to, it is in the ground mist, paler toward its foot (as
+  // the cut in on the flare sees its flank). From the wide the mist is too thin to tell, and the foot meets the meadow.
+  const pooled = 0.6 * (1 - sm(cells, 40, 90))
+  if (pooled > 0.01 && f.x0 < -44 && f.y1 > MEADOW - 20) {
+    ctx.save()
+    ctx.clip()
+    const pool = ctx.createLinearGradient(0, (MEADOW - 20) * k, 0, MEADOW * k)
+    pool.addColorStop(0, `rgba(${rgbOf(VALLEY.fog)}, 0)`)
+    pool.addColorStop(1, `rgba(${rgbOf(VALLEY.fog)}, ${pooled})`)
+    ctx.fillStyle = pool
+    ctx.fillRect((f.x0 - 1) * k, (MEADOW - 20) * k, (Math.min(f.x1 + 1, -40) - f.x0 + 1) * k, 20 * k)
+    ctx.restore()
+  }
   if (f.y1 > MEADOW) {
     ctx.fillStyle = VALLEY.meadow
     ctx.fillRect((f.x0 - 1) * k, MEADOW * k, (f.x1 - f.x0 + 2) * k, (f.y1 - MEADOW + 1) * k)

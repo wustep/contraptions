@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
-import { frame, hash, type Ctx } from '../kit'
+import { composedCells, frame, hash, type Ctx } from '../kit'
 import { LAKE } from '../worlds'
 import {
   BENCH,
@@ -75,8 +75,7 @@ function band(ctx: C2D, k: number, x0: number, x1: number, y0: number, y1: numbe
  * and grows only by what is left of the camera's own move from `ref`.
  */
 function depth(p: p5, k: number, f: Frame, ref: { x: number; y: number; cells: number }, d: number, fn: () => void): void {
-  const cells = f.y1 - f.y0
-  const m = cells / ref.cells
+  const m = composedCells(f) / ref.cells
   const S = 1 - d + d * m
   const ox = d * (f.cx - m * ref.x)
   const oy = d * (f.cy - m * ref.y)
@@ -85,6 +84,12 @@ function depth(p: p5, k: number, f: Frame, ref: { x: number; y: number; cells: n
   p.scale(S)
   fn()
   p.pop()
+}
+
+/** Where a point `x` of a layer `d` of the way to the horizon (see `depth`) is seen, in the room's own cells. */
+function viewX(f: Frame, d: number, x: number): number {
+  const m = composedCells(f) / VIEW_CAM.cells
+  return d * (f.cx - m * VIEW_CAM.x) + (1 - d + d * m) * x
 }
 
 /**
@@ -472,6 +477,13 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
     [1, wall, 1],
   ])
   soft(ctx, k, cx, ROOM.ceiling, (WIN.x1 - WIN.x0) * 0.6, 0.9, LAKE.wall, 0.1 * lit * (1 - dim * 0.5))
+  // Where the wall meets it, a clean line, and the soft shadow of the ceiling's edge on the wall under it.
+  band(ctx, k, fx0, fx1, ROOM.ceiling, ROOM.ceiling + 0.35, [[0, LAKE.night, 0.1 * (1 - dim * 0.5)], [1, LAKE.night, 0]])
+  p.stroke(ink)
+  p.strokeWeight(weight * 0.7)
+  p.line(X(fx0), X(ROOM.ceiling), X(fx1), X(ROOM.ceiling))
+  p.noStroke()
+
 
   // The floor: pale oak going away from us, dimmer near.
   const floor = shade(LAKE.floor, dim * 0.9)
@@ -481,7 +493,7 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
     [1, shade(LAKE.floorDark, Math.min(1, dim * 0.9 + 0.15)), 1],
   ])
   // The window in the boards: each pane's light drawn down the polish and fading, the mullions dark between; the
-  // sun's path on the water again under it.
+  // sun's path on the water again under it (straight under where the water, far off, shows it from here).
   const refl = mixHex(LAKE.glass, LAKE.dawn, 0.4)
   const pane = (WIN.x1 - WIN.x0) / 4
   for (let i = 0; i < 4; i++) {
@@ -494,7 +506,7 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
     ])
     soft(ctx, k, (a + b) / 2, ROOM.wall + 0.08, pane * 0.5, 0.5, refl, 0.16 * lit)
   }
-  if (L.path > 0.02) soft(ctx, k, SUN[0], ROOM.wall + 0.45, 0.32, 0.85, LAKE.fog, 0.3 * L.path + 0.1 * L.glare)
+  if (L.path > 0.02) soft(ctx, k, viewX(f, 0.5, SUN[0]), ROOM.wall + 0.45, 0.32, 0.85, LAKE.fog, 0.3 * L.path + 0.1 * L.glare)
 
   // The window's frame: head, sill, jambs and the slim mullions.
   const mull = shade(LAKE.mullion, dim * 0.3)
@@ -560,7 +572,20 @@ function bench(p: p5, c: Ctx, dim: number): void {
   p.rectMode(p.CORNER)
   // Under it, in its shadow, the glass's foot and the floor.
   const ctx = p.drawingContext as C2D
-  band(ctx, k, BENCH.x0, BENCH.x1, BENCH.top + BENCH.slab, ROOM.floor, [[0, LAKE.night, 0.28], [1, LAKE.night, 0.12]])
+  // Its ends fade out within the slab's length, so the shadow is never a dark box with square corners.
+  const fade = 0.14
+  const n = 10
+  const under: [number, string, number][] = [[0, LAKE.night, 0.28], [1, LAKE.night, 0.12]]
+  band(ctx, k, BENCH.x0 + fade, BENCH.x1 - fade, BENCH.top + BENCH.slab, ROOM.floor, under)
+  for (let i = 0; i < n; i++) {
+    const a = (i + 0.5) / n
+    ctx.save()
+    ctx.globalAlpha *= a * a * (3 - 2 * a)
+    const w = fade / n
+    band(ctx, k, BENCH.x0 + i * w, BENCH.x0 + (i + 1) * w, BENCH.top + BENCH.slab, ROOM.floor, under)
+    band(ctx, k, BENCH.x1 - (i + 1) * w, BENCH.x1 - i * w, BENCH.top + BENCH.slab, ROOM.floor, under)
+    ctx.restore()
+  }
   soft(ctx, k, (BENCH.x0 + BENCH.x1) / 2, ROOM.floor + 0.01, (BENCH.x1 - BENCH.x0) * 0.6, 0.06, LAKE.night, 0.3)
   solid(p, ink, weight, shade(LAKE.floorDark, dim * 0.75))
   for (const x of [BENCH.x0 + 0.16, BENCH.x1 - 0.16 - BENCH.leg]) p.rect(X(x), X(BENCH.top + BENCH.slab - 0.01), X(BENCH.leg), X(ROOM.floor - BENCH.top - BENCH.slab + 0.01))
@@ -672,7 +697,7 @@ function lawn(p: p5, c: Ctx, f: Frame, t: number, balls: Body[]): void {
   ctx.restore()
   // The water's edge at the bank's foot.
   soft(ctx, k, ox + SHORE.x + 0.4, oy + SHORE.y - 0.02, 1.3, 0.07, LAKE.lakeLight, 0.6)
-  // The grass's edge: one ink line, and tufts along it that move in the air.
+  // The grass's edge: one ink line.
   p.push()
   p.noFill()
   p.stroke(ink)
@@ -680,17 +705,6 @@ function lawn(p: p5, c: Ctx, f: Frame, t: number, balls: Body[]): void {
   p.beginShape()
   for (let x = x0; x <= x1; x += 0.05) p.vertex(X(x), X(top(x)))
   p.endShape()
-  p.stroke(mixHex(LAKE.grassDark, LAKE.pines, 0.35))
-  p.strokeWeight(Math.max(1, weight * 0.7))
-  const first = Math.floor(x0 / 0.23)
-  for (let i = first; i * 0.23 < x1; i++) {
-    if (hash(i, 81) < 0.4) continue
-    const bx = i * 0.23 + 0.12 * hash(i, 82)
-    const by = top(bx)
-    const sway = 0.028 * Math.sin(tau * 2.1 + bx * 1.7)
-    const h = 0.06 + 0.08 * hash(i, 83)
-    for (let j = -1; j <= 1; j++) p.line(X(bx + j * 0.022), X(by + 0.004), X(bx + j * 0.042 + sway), X(by - h * (1 - 0.3 * Math.abs(j))))
-  }
   p.pop()
   // Their shadows on the grass, down and to the right of each (the sun is high, behind us to the left).
   for (const { x, y, r } of balls) {
@@ -727,7 +741,8 @@ export function drawGlare(p: p5, c: Ctx, L: Light): void {
   const ctx = p.drawingContext as C2D
   const g = L.glare
   // The window's own light, white, spilling past its frame into the room.
-  soft(ctx, k, SUN[0], SUN[1] + 0.4, 7.5, 3.6, LAKE.fog, 0.85 * g * g, 0.35)
+  // Centred on the sun where its layer of the view shows it from here (the first frame's camera: where it is).
+  soft(ctx, k, viewX(f, 0.78, SUN[0]), SUN[1] + 0.4, 7.5, 3.6, LAKE.fog, 0.85 * g * g, 0.35)
   ctx.fillStyle = rgba(LAKE.fog, 0.55 * g * g * g)
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
 }

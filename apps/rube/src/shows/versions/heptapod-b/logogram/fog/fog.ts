@@ -1,9 +1,12 @@
 import type { Pt, Seg } from '../../../../../parts'
-import { box, carried, part, scenery, type PartShot, type Slot } from '../kit'
+import { box, carried, looks, part, scenery, type Look, type PartShot, type Slot } from '../kit'
 import { SEAM } from '../music'
 import { SEAMS } from '../seams'
 import { drawFog, FOG_EXTENT } from './fog-set'
-import { FOG_STRIKES, GREAT, herAt, PATH, RINGS } from './fog-plan'
+import { costelloNib, F4, FOG1, FOG_STRIKES, GREAT, herAt, PATH, RINGS } from './fog-plan'
+
+/** When the frame has gone back to the whole great ring, both pens in it: from here she watches Costello's. */
+const WRITING = 170.3
 
 /**
  * Beyond the glass (the fog builder's): the fog's standing set, and the four stretches of Louise in it between the
@@ -58,6 +61,36 @@ function lane(slot: Slot, o: Pt): { segs: Seg[]; end: Pt; lo: Pt; hi: Pt } {
   return { segs, end: fn(span), lo, hi }
 }
 
+/**
+ * Where she looks, the times it matters in the fog (elsewhere she is riding the ink and her eye rolls with her): up
+ * at Abbott, in the cup of its palm beyond the glass, until it lets her go; across the great ring to Costello's pen
+ * at its top while the two of them write it, so the two pens are seen to write it together; and on its close, up
+ * through it to where the two halves meet over her, hers and Costello's, held to the cut.
+ */
+const AT_ABBOTT = -2.0
+const UP = -Math.PI / 2
+const AT_PEN = (t: number): number => {
+  const her = herAt(t)
+  const nib = costelloNib(t)
+  return Math.atan2(nib[1] - her[1], nib[0] - her[0])
+}
+const FOG_LOOKS: Look[][] = [
+  [{ from: SEAM.fog1 - 1, to: FOG1.release - 0.15, at: () => AT_ABBOTT }],
+  [],
+  [],
+  [
+    {
+      from: WRITING,
+      to: Infinity,
+      at: (t) => {
+        const u = Math.max(0, Math.min(1, (t - (F4.close - 0.6)) / 0.5))
+        const a = AT_PEN(Math.min(t, F4.close))
+        return a + (UP - a) * u * u * (3 - 2 * u)
+      },
+    },
+  ],
+]
+
 function stretch(i: number, name: string, shots: (slot: Slot, o: Pt, at: (t: number) => Pt) => PartShot[]) {
   const o = FOG_AT[i]
   const at = (t: number): Pt => {
@@ -74,6 +107,7 @@ function stretch(i: number, name: string, shots: (slot: Slot, o: Pt, at: (t: num
         exit: [end[0] + 0.5, end[1]] as Pt,
         lane: { segs, fire: (first ?? slot.begin) - slot.begin },
         state: null,
+        riders: FOG_LOOKS[i].length ? looks(FOG_LOOKS[i], (t) => herAt(t)[0]) : undefined,
       }
     },
     (slot) => shots(slot, o, at),
@@ -91,13 +125,27 @@ export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
     // then back a little to take in the ring written beside her.
     { t: 131.6, cells: 3.8, hold: [her0[0] + 0.1, her0[1] - 0.55], w: 1 },
     { t: 132.7, cells: 3.9, hold: local(o, R1.c, -0.9, -0.95), w: 1 },
+    // Down a little to take in the ring coming while she is still held, then still through the drop and the catch
+    // (133.127 → 133.573), so she is seen to fall onto it: the frame going on down through it outran her short fall
+    // in the fog's low gravity, and she rose on the screen as she let go.
+    { t: 133.1, cells: 4.4, hold: local(o, R1.c, -0.72, -0.36), w: 1 },
+    { t: 133.65, cells: 4.4, hold: local(o, R1.c, -0.72, -0.36), w: 1 },
     { t: 134.4, cells: 4.6, hold: local(o, R1.c, 0.0, 0.45), w: 1 },
     { t: 136.8, cells: 4.8, hold: local(o, R1.c, 0.15, 0.5), w: 1 },
-    // Out with her as she glides through the bottom: the cut's framing, following.
-    { t: 138.5, cells: 4.6, off: [0.7, -0.5], w: 0 },
-    { t: slot.end, cells: 4.5, off: [0.7, -0.5], w: 0 },
+    // Out with her as she glides through the bottom: the cut's framing, following, wide enough that the ring she
+    // rides keeps its top in the frame as it drifts up (her place on the screen the same: the offset scales with it).
+    { t: 138.5, cells: 5.5, off: [0.84, -0.6], w: 0 },
+    { t: slot.end, cells: 5.4, off: [0.84, -0.6], w: 0 },
   ]
 })
+
+/** How much of a long flight's framing is anchored to where she lands. */
+const LEAD = 0.3
+/** The framing a follow would have as she lands at `tc`: her landing point, and the follow's offset. */
+const landing = (at: (t: number) => Pt, tc: number, off: Pt): Pt => {
+  const p = at(tc)
+  return [p[0] + off[0], p[1] + off[1]]
+}
 
 export const fog2 = stretch(1, 'fog2', (slot, _o, at) => {
   const top = at(slot.end)
@@ -105,9 +153,13 @@ export const fog2 = stretch(1, 'fog2', (slot, _o, at) => {
     { t: 143.1, cells: 5.4, off: [0.9, -0.6], w: 0 },
     // Wide for the long arcs, leading her, so the ring written for her is seen whole, before she comes down into it,
     // and the one she leaves is still there behind her.
-    { t: 145.0, cells: 8.0, off: [1.9, -0.4], w: 0 },
-    { t: 147.7, cells: 8.8, off: [2.2, -0.3], w: 0 },
-    { t: 150.4, cells: 8.8, off: [2.2, -0.4], w: 0 },
+    // In the long flights the frame is anchored a little to where she will land (the ring written for her), so she is
+    // seen to travel across it toward the ring instead of holding one place on the screen against the fog.
+    { t: 145.0, cells: 8.0, off: [1.9, -0.4], hold: landing(at, 146.193, [1.9, -0.4]), w: LEAD },
+    { t: 146.193, cells: 8.4, off: [2.05, -0.35], hold: landing(at, 146.193, [2.05, -0.35]), w: LEAD },
+    { t: 147.7, cells: 8.8, off: [2.2, -0.3], hold: landing(at, 149.728, [2.2, -0.3]), w: LEAD },
+    { t: 149.728, cells: 8.8, off: [2.2, -0.35], hold: landing(at, 149.728, [2.2, -0.35]), w: LEAD },
+    { t: 150.8, cells: 8.8, off: [2.2, -0.4], hold: landing(at, 153.316, [2.2, -0.4]), w: LEAD },
     { t: 152.4, cells: 8.2, off: [1.6, -0.4], w: 0 },
     { t: 153.2, cells: 7.2, off: [0.6, -0.45], w: 0 },
     // The toss: the frame goes up with her and waits at the top of the ring written round her.
@@ -132,7 +184,7 @@ export const fog4 = stretch(3, 'fog4', (slot, o, at) => {
   const c = local(o, GREAT.ring.c)
   const end = at(slot.end)
   return [
-    { t: 166.7, cells: 4.3, hold: [at(166.7)[0] + 0.6, at(166.7)[1] - 0.9], w: 1 },
+    // From the cut it carries her sideways drift straight on into the rise (a key at 166.7 stopped that pan dead).
     { t: 167.5, cells: 4.9, hold: [at(167.5)[0] + 0.5, at(167.5)[1] - 1.25], w: 1 },
     // Stopped at the top of her rise, where the ink begins under her; then back through the first hard run to the
     // whole of the ring the two pens will write, hers at the bottom and Costello's limb on the top, and held on it

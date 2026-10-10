@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../parts'
 import { alpha, hash } from './kit'
+import { softBeam } from './valley/set-air'
 import { FOG, SHELL, VALLEY } from './worlds'
 
 /**
@@ -62,6 +63,28 @@ export function shellHalf(u: number): number {
 }
 
 /**
+ * A soft puff of `hex` at (x, y) cells, `rx` by `ry`: dense at its middle and nothing at its edge, so puffs that
+ * overlap make one cloud, never a cluster of discs.
+ */
+function softPuff(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, rx: number, ry: number, hex: string, a: number): void {
+  if (a <= 0.004 || rx * k < 0.5 || ry * k < 0.3) return
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.scale(1, ry / rx)
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+  grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${a})`)
+  grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${a * 0.7})`)
+  grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+  ctx.fillStyle = grad
+  ctx.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
+  ctx.restore()
+}
+
+/** Down the slot's spill: brightest at the mouth, gone 14 cells down. */
+const spillAlong = (v: number): number => 1 - v
+
+/**
  * The shell, hanging: its belly's lowest point at the origin, its top `h` cells up. A smooth dark stone of a thing,
  * lens-thin, its left edge catching the sky, faint strata across its face, and the slot in its belly when it opens.
  */
@@ -94,8 +117,16 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
   const bodyDark = mixHex(VALLEY.shellDark, air, haze * 0.8)
   const rim = mixHex(VALLEY.shellLight, air, haze * 0.7)
   const fade = o.goes === 'fade' ? 1 - smooth01(vanish) : 1 - smooth01((vanish - 0.35) / 0.65)
+  // Fading, it loses its edge as it pales: the hull gives way to a blur of itself, wider as it goes, so it melts into
+  // the air and never stands there as a see-through bowl with a sharp rim.
+  const melt = o.goes === 'fade' ? smooth01(vanish / 0.3) : 0
+  // And the cloud takes it: a body of mist where it was, thickening as it melts and thinning after it, so what is
+  // behind it never shows through it as through a window.
+  const mist = o.goes === 'fade' ? 0.85 * smooth01(vanish / 0.45) * (1 - smooth01((vanish - 0.5) / 0.5)) : 0
+  if (mist > 0.001) softSilhouette(ctx, k, [pts], [], air, mist, 3 + 20 * vanish)
+  if (melt > 0.001) softSilhouette(ctx, k, [pts], [], mixHex(body, rim, 0.25), fade * melt, 1.5 + 16 * vanish)
   ctx.save()
-  ctx.globalAlpha *= fade
+  ctx.globalAlpha *= fade * (1 - melt)
   // The body: lighter where the sky is on it (top and left), darkest at the belly.
   const g = ctx.createLinearGradient(-w * 0.5 * k, -h * k, w * 0.35 * k, 0)
   g.addColorStop(0, rim)
@@ -136,24 +167,21 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
   if (slot > 0.001 && vanish < 0.3) {
     const sw = (o.slotW ?? 2.6) * slot
     const sd = 0.9
-    const spill = ctx.createLinearGradient(0, 0, 0, 14 * k)
-    spill.addColorStop(0, `rgba(243,241,230,${0.22 * slot * (1 - haze)})`)
-    spill.addColorStop(1, 'rgba(243,241,230,0)')
-    ctx.fillStyle = spill
-    ctx.beginPath()
-    ctx.moveTo(-sw * 0.5 * k, 0)
-    ctx.lineTo(sw * 0.5 * k, 0)
-    ctx.lineTo(sw * 1.6 * k, 14 * k)
-    ctx.lineTo(-sw * 1.6 * k, 14 * k)
-    ctx.closePath()
-    ctx.fill()
+    // Soft across, as the valley's own fall of light under it is: never a pane with straight sides.
+    softBeam(ctx, k, [0, 0], [0, 14], sw * 1.3, sw * 3.8, '243, 241, 230', 0.45 * slot * (1 - haze), 'spill', spillAlong, true)
     // The mouth itself is cut into the hull: clipped to its outline, so nothing of it hangs below the round belly.
     ctx.save()
     ctx.clip(hull)
     ctx.fillStyle = mixHex(VALLEY.slot, air, haze * 0.6)
     ctx.fillRect(-sw * 0.5 * k, -sd * k, sw * k, (sd + 0.05) * k)
-    ctx.fillStyle = `rgba(243,241,230,${0.5 * slot * (1 - haze)})`
-    ctx.fillRect(-sw * 0.5 * k, -sd * 0.35 * k, sw * k, sd * 0.12 * k)
+    // The light caught on its far lip: a soft band, not a bar with edges.
+    const lip = 0.5 * slot * (1 - haze)
+    const lg = ctx.createLinearGradient(0, -sd * 0.6 * k, 0, -sd * 0.02 * k)
+    lg.addColorStop(0, 'rgba(243,241,230,0)')
+    lg.addColorStop(0.55, `rgba(243,241,230,${lip})`)
+    lg.addColorStop(1, 'rgba(243,241,230,0)')
+    ctx.fillStyle = lg
+    ctx.fillRect(-sw * 0.5 * k, -sd * 0.6 * k, sw * k, sd * 0.58 * k)
     ctx.restore()
   }
   ctx.restore()
@@ -171,9 +199,8 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
       const x = x0 + side * life * w * 0.25
       const y = y0 - life * h * 0.35
       const r = (2 + 5 * hash(i, 5, 31)) * (0.6 + life)
-      p.noStroke()
-      p.fill(alpha(p, mixHex(VALLEY.cloud, air, 0.3), 0.55 * Math.sin(Math.PI * life)))
-      p.ellipse(x * k, y * k, r * 2 * k, r * 1.3 * k)
+      // A little wider than the old flat puffs, as a soft edge reaches further than a hard one.
+      softPuff(p.drawingContext as CanvasRenderingContext2D, k, x, y, r * 1.25, r * 0.8, mixHex(VALLEY.cloud, air, 0.3), 0.7 * Math.sin(Math.PI * life))
     }
   }
 }
@@ -202,6 +229,8 @@ export interface HeptapodOpts {
    * one side (positive to its right as it goes, negative to its left), and slims toward its tip.
    */
   reach?: { limb: number; to: Pt; u: number; bow?: number }
+  /** More limbs reaching at once, each on a limb of its own (the fog builder's: one limb draws back as the next comes). */
+  also?: { limb: number; to: Pt; u: number; bow?: number }[]
   /**
    * Optional (the chamber builder's): how deep in the fog the reaching limb and its palm are once it has reached, 0
    * clear .. 1 gone; a limb reaching for the glass comes out of the fog the body is in. Unset, it is the body's `fog`.
@@ -237,6 +266,12 @@ const FEET: Pt[] = [
 /** How far back each limb is (0 the front, toward us .. 1 behind): the back ones are paler. */
 const DEPTH = [0.7, 0.35, 0.8, 0, 0.75, 0.3, 0.65]
 
+/** The reach limb `i` is making, if any. */
+function reachOf(o: HeptapodOpts, i: number): HeptapodOpts['reach'] {
+  if (o.reach && o.reach.limb === i) return o.reach
+  return o.also?.find((r) => r.limb === i)
+}
+
 /** Where limb `i`'s tip is (cells from the origin), standing or reaching: where its ink comes from. */
 export function heptapodTip(o: HeptapodOpts, i: number): Pt {
   const { h, t } = o
@@ -246,12 +281,49 @@ export function heptapodTip(o: HeptapodOpts, i: number): Pt {
   const own = o.tips?.[i]
   let x = own ? own[0] : (f[0] + sway) * h
   let y = own ? own[1] : f[1] * h
-  if (o.reach && o.reach.limb === i) {
-    const u = smooth01(o.reach.u)
-    x += (o.reach.to[0] - x) * u
-    y += (o.reach.to[1] - y) * u
+  const r = reachOf(o, i)
+  if (r) {
+    const u = smooth01(r.u)
+    x += (r.to[0] - x) * u
+    y += (r.to[1] - y) * u
   }
   return [x, y]
+}
+
+/**
+ * A soft edge round a silhouette (`shapes`, polygons in cells, and `dots`, circles [x, y, r]): its blur alone, `blur`
+ * cells wide in `color` at `a`, the shape itself never painted (it is drawn far off the canvas and only its shadow
+ * brought back), so it can go under translucent parts without darkening them.
+ */
+function softSilhouette(ctx: CanvasRenderingContext2D, k: number, shapes: Pt[][], dots: [number, number, number][], color: string, a: number, blur: number): void {
+  if (a <= 0.004 || blur * k < 0.5) return
+  const m = ctx.getTransform()
+  const px = Math.hypot(m.a, m.b)
+  const off = 30000
+  const inv = m.inverse()
+  const [ux, uy] = [inv.a * off, inv.b * off]
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))
+  ctx.save()
+  ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${a})`
+  ctx.shadowBlur = blur * k * px
+  ctx.shadowOffsetX = off
+  ctx.shadowOffsetY = 0
+  ctx.fillStyle = '#000'
+  ctx.beginPath()
+  for (const pts of shapes) {
+    // All the same way round, so the union is filled once (nonzero).
+    let area = 0
+    for (let i = 0; i < pts.length; i++) area += pts[i][0] * pts[(i + 1) % pts.length][1] - pts[(i + 1) % pts.length][0] * pts[i][1]
+    const seq = area < 0 ? pts.slice().reverse() : pts
+    seq.forEach(([x, y], i) => (i ? ctx.lineTo(x * k - ux, y * k - uy) : ctx.moveTo(x * k - ux, y * k - uy)))
+    ctx.closePath()
+  }
+  for (const [x, y, rr] of dots) {
+    ctx.moveTo((x + rr) * k - ux, y * k - uy)
+    ctx.arc(x * k - ux, y * k - uy, rr * k, 0, Math.PI * 2)
+  }
+  ctx.fill()
+  ctx.restore()
 }
 
 /**
@@ -276,10 +348,14 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
   const bw = (0.17 + 0.02 * who) * h
   const colorAt = (depth: number) => mixHex(base, air, Math.min(1, fog + depth * 0.35 * (1 - fog)))
   ctx.save()
-  ctx.globalAlpha *= light
+  // Deepest in the fog it goes by fading, not by paling further: its colour is the air's at the fog's whitest, and
+  // against fog that is greyer in places it would stand out as white limbs, a ghost brighter than what it is in.
+  ctx.globalAlpha *= light * Math.min(1, (1 - fog) / 0.15)
   p.push()
   p.noStroke()
-  // Limbs first, the back ones before the front, then the body over their roots, then the front limb over the body.
+  // One creature, not layers: every soft edge first (so none lies over another part), then the limbs solid, the back
+  // ones before the front, then the body over all their roots (the front limb comes out from under its hip, never a
+  // disc stuck on it), its folds, and last any palm.
   const order = [0, 2, 4, 6, 1, 5, 3]
   const limb = (i: number) => {
     const d = DEPTH[i]
@@ -287,7 +363,8 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     const rootX = (i - 3) * 0.036 * h + Math.sin(lean) * (hip - top) * 0.2
     const root: Pt = [rootX, hip - 0.05 * h]
     const tip = heptapodTip(o, i)
-    const reaching = o.reach && o.reach.limb === i ? smooth01(o.reach.u) : 0
+    const its = reachOf(o, i)
+    const reaching = its ? smooth01(its.u) : 0
     // Out from under the body and down to the floor, like the ribs of an umbrella: a shoulder that rises a little as
     // it leaves, then a long fall to the tip. A reaching limb straightens toward what it reaches for.
     const out = tip[0] - root[0]
@@ -297,7 +374,7 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     const c1: Pt = [root[0] + out * 0.38 + sway * 0.5, root[1] - rise * (1 - reaching)]
     const c2: Pt = [tip[0] - out * (0.12 - 0.1 * reaching) + sway, root[1] + drop * (0.1 + 0.55 * reaching) - rise * 0.35 * (1 - reaching)]
     // A bowed reach: its middle pushed off the straight line to one side (only where `reach.bow` is given).
-    const bow = reaching > 0 && o.reach?.bow ? o.reach.bow * reaching : 0
+    const bow = reaching > 0 && its?.bow ? its.bow * reaching : 0
     if (bow) {
       const len = Math.hypot(out, drop) || 1
       const bx = (-drop / len) * bow * len
@@ -339,31 +416,30 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
       reaching > 0 && o.reachFog !== undefined
         ? mixHex(base, air, Math.min(1, fog + (clamp01(o.reachFog) - fog) * reaching + d * 0.35 * (1 - fog)))
         : mixHex(base, air, Math.min(1, standing + d * 0.35 * (1 - standing)))
-    // Its root, rounded, so the front limb (drawn over the body) never shows a square end.
-    p.fill(alpha(p, col, 0.95))
-    p.ellipse(root[0] * k, root[1] * k, w0 * 2.05 * k, w0 * 2.05 * k)
-    // A soft edge: the same shape a little wider and faint under it, then the limb.
-    for (const [grow, a] of [[1.4, 0.16], [1, 0.95]] as const) {
-      p.fill(alpha(p, col, a))
-      p.beginShape()
-      for (let j = 0; j < left.length; j++) {
-        const mx = (left[j][0] + right[j][0]) / 2
-        const my = (left[j][1] + right[j][1]) / 2
-        p.vertex((mx + (left[j][0] - mx) * grow) * k, (my + (left[j][1] - my) * grow) * k)
-      }
-      for (let j = right.length - 1; j >= 0; j--) {
-        const mx = (left[j][0] + right[j][0]) / 2
-        const my = (left[j][1] + right[j][1]) / 2
-        p.vertex((mx + (right[j][0] - mx) * grow) * k, (my + (right[j][1] - my) * grow) * k)
-      }
-      p.endShape(p.CLOSE)
-    }
-    // The palm: at the end of a reach the tip opens into seven fingers, flat against whatever it touches.
-    if (reaching > 0.6 && (o.palm ?? 0) > 0.01) {
-      drawPalm(p, k, tip, 0.1 * h * (o.palm ?? 0), col, t + i)
-    }
+    return { left, right, col, root, w0, tip, reaching }
   }
-  for (const i of order.slice(0, 6)) limb(i)
+  const limbs = order.map(limb)
+  type LimbShape = (typeof limbs)[number]
+  // The limb's outline at `grow` times its width, and its blunt round tip: in a close frame the limb's end is seen,
+  // and it is never a square cut.
+  const outline = (g: LimbShape, grow: number) => {
+    const { left, right } = g
+    p.beginShape()
+    for (let j = 0; j < left.length; j++) {
+      const mx = (left[j][0] + right[j][0]) / 2
+      const my = (left[j][1] + right[j][1]) / 2
+      p.vertex((mx + (left[j][0] - mx) * grow) * k, (my + (left[j][1] - my) * grow) * k)
+    }
+    for (let j = right.length - 1; j >= 0; j--) {
+      const mx = (left[j][0] + right[j][0]) / 2
+      const my = (left[j][1] + right[j][1]) / 2
+      p.vertex((mx + (right[j][0] - mx) * grow) * k, (my + (right[j][1] - my) * grow) * k)
+    }
+    p.endShape(p.CLOSE)
+    const e = left.length - 1
+    const tw = Math.hypot(left[e][0] - right[e][0], left[e][1] - right[e][1]) * grow
+    p.ellipse(((left[e][0] + right[e][0]) / 2) * k, ((left[e][1] + right[e][1]) / 2) * k, tw * k, tw * k)
+  }
   // The body: a tall trunk, rounded at the crown, fullest a third of the way down, drawing in to the hip where the
   // limbs leave it; a little lean, and a few soft folds down it.
   const col = colorAt(0.1)
@@ -375,67 +451,127 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     // v: 0 at the crown, 1 at the hip, round the right side and back up the left.
     const v = (1 - Math.cos(a)) / 2
     const side = Math.sin(a) >= 0 ? 1 : -1
-    const profile = Math.pow(Math.sin(Math.PI * Math.min(1, v * 0.92 + 0.04)), 0.62) * (1 - 0.32 * v * v)
+    // A domed crown and a rounded hip (never a flat cut across either end), fullest a third of the way down.
+    const profile = Math.pow(Math.sin(Math.PI * v), 0.55) * (1 - 0.32 * v * v)
     const half = bw * profile * (1 + 0.04 * Math.sin(5 * v + who * 2 + (side > 0 ? 0 : 1.3)))
     const x = side * half + Math.sin(lean) * (1 - v) * bodyH * 0.35
     const y = top + bodyH * v
     bodyPts.push([x, y])
   }
-  p.fill(alpha(p, col, 0.16))
-  p.beginShape()
-  const midY = top + bodyH / 2
-  for (const [x, y] of bodyPts) p.vertex(x * 1.14 * k, (midY + (y - midY) * 1.05) * k)
-  p.endShape(p.CLOSE)
-  p.fill(alpha(p, col, 0.97))
+  // The soft edge: one true blur round the whole of it, limbs and body together, under everything solid (never a
+  // fainter copy of each part, whose edges would stand as outlines).
+  const tips = limbs.map((g): [number, number, number] => {
+    const e = g.left.length - 1
+    return [(g.left[e][0] + g.right[e][0]) / 2, (g.left[e][1] + g.right[e][1]) / 2, Math.hypot(g.left[e][0] - g.right[e][0], g.left[e][1] - g.right[e][1]) / 2]
+  })
+  softSilhouette(ctx, k, [...limbs.map((g) => [...g.left, ...g.right.slice().reverse()]), bodyPts], tips, col, 0.4, 0.035 * h)
+  // The limbs, solid, back to front, each with its root rounded inside where the body will be.
+  for (const g of limbs) {
+    p.fill(g.col)
+    p.ellipse(g.root[0] * k, g.root[1] * k, g.w0 * 2.05 * k, g.w0 * 2.05 * k)
+    outline(g, 1)
+  }
+  p.fill(col)
   p.beginShape()
   for (const [x, y] of bodyPts) p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
-  // Folds: two or three long soft darker bands down the trunk, and the crown a shade lighter where the light is.
+  // The crown going up into the air: what is highest is the most fogged, so the head is lost in the white rather than
+  // ending on a line.
+  ctx.save()
+  ctx.beginPath()
+  bodyPts.forEach(([x, y], j) => (j ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  ctx.closePath()
+  ctx.clip()
+  const [ar, ag, ab] = [1, 3, 5].map((i) => parseInt(air.slice(i, i + 2), 16))
+  const crown = ctx.createLinearGradient(0, top * k, 0, (top + bodyH * 0.45) * k)
+  crown.addColorStop(0, `rgba(${ar}, ${ag}, ${ab}, ${0.5 * (1 - fog)})`)
+  crown.addColorStop(1, `rgba(${ar}, ${ag}, ${ab}, 0)`)
+  ctx.fillStyle = crown
+  ctx.fillRect((-bw * 1.6 - bodyH * 0.4) * k, top * k, (bw * 3.2 + bodyH * 0.8) * k, bodyH * 0.45 * k)
+  ctx.restore()
+  // Folds: three long soft darker bands down the trunk, blurred and fading out at both ends (never lines that stop
+  // square), kept inside the body.
   const fold = mixHex(col, '#000000', 0.12 * (1 - fog))
+  const folds: Pt[][] = []
   for (let f = 0; f < 3; f++) {
     const fx = (-0.45 + 0.42 * f + 0.06 * who) * bw
-    p.fill(alpha(p, fold, 0.35))
-    p.beginShape()
-    for (let j = 0; j <= 12; j++) {
-      const v = 0.15 + 0.75 * (j / 12)
-      p.vertex((fx + Math.sin(lean) * (1 - v) * bodyH * 0.35 - bw * 0.035 * Math.sin(Math.PI * v)) * k, (top + bodyH * v) * k)
-    }
-    for (let j = 12; j >= 0; j--) {
-      const v = 0.15 + 0.75 * (j / 12)
-      p.vertex((fx + Math.sin(lean) * (1 - v) * bodyH * 0.35 + bw * 0.035 * Math.sin(Math.PI * v)) * k, (top + bodyH * v) * k)
-    }
-    p.endShape(p.CLOSE)
+    const edge = (sgn: number): Pt[] =>
+      Array.from({ length: 13 }, (_, j) => {
+        const u = j / 12
+        const v = 0.15 + 0.75 * u
+        const w = bw * 0.06 * Math.sin(Math.PI * u)
+        return [fx + Math.sin(lean) * (1 - v) * bodyH * 0.35 + sgn * w, top + bodyH * v]
+      })
+    folds.push([...edge(-1), ...edge(1).reverse()])
   }
+  ctx.save()
+  ctx.beginPath()
+  bodyPts.forEach(([x, y], j) => (j ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  ctx.closePath()
+  ctx.clip()
+  softSilhouette(ctx, k, folds, [], fold, 0.35, bw * 0.08)
+  ctx.restore()
+  // The palm: at the end of a reach the tip opens into seven fingers, flat against whatever it touches.
+  limbs.forEach((g, n) => {
+    if (g.reaching > 0.6 && (o.palm ?? 0) > 0.01) drawPalm(p, k, g.tip, 0.1 * h * (o.palm ?? 0), g.col, t + order[n], o.palm ?? 0)
+  })
   p.pop()
-  limb(order[6])
   ctx.restore()
 }
 
 /**
  * A palm pressed flat: a round centre and seven fingers splayed evenly round it, each tapering to a blunt tip. `r`
- * is the fingers' reach in cells. Drawn in `col` about `at`.
+ * is the fingers' reach in cells. Drawn in `col` about `at`. `open` (0 .. 1) is how far the hand has opened: closed,
+ * its fingers lie together out of the limb's end as one bud, and they fan out as it opens, so a hand opening or
+ * closing never shows as short ticks round the limb's tip.
  */
-export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase = 0): void {
+export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase = 0, open = 1): void {
   if (r * k < 1) return
   p.push()
   p.noStroke()
-  p.fill(alpha(p, col, 0.97))
+  // Solid: one hand, its fingers, pads and the limb's end under it never showing through each other.
+  p.fill(col)
   p.translate(at[0] * k, at[1] * k)
-  p.circle(0, 0, r * 0.62 * k)
+  p.circle(0, 0, r * 0.7 * k)
+  // Seven fingers, each a living thing: a full root out of the palm, a long taper with a little curl of its own, and a
+  // soft round pad at its tip where it presses. A hand of seven, never a star of seven points.
+  const n = 10
+  // How far the fingers have fanned out from lying together, pointing on down out of the limb.
+  const v = clamp01((open - 0.12) / 0.75)
+  const spread = v * v * (3 - 2 * v)
   for (let i = 0; i < 7; i++) {
-    const a = -Math.PI / 2 + (i / 7) * TAU + 0.03 * Math.sin(phase * 0.3 + i)
-    const len = r * (0.92 + 0.08 * Math.sin(i * 2.1))
-    const w0 = r * 0.16
-    const w1 = r * 0.07
-    const ca = Math.cos(a)
-    const sa = Math.sin(a)
+    const splayed = (i / 7) * TAU + 0.03 * Math.sin(phase * 0.3 + i)
+    const behind = i === 0
+    // The first stays up the limb behind its wrist all along, growing there as the rest fan out.
+    const a = behind ? splayed - Math.PI / 2 : Math.PI / 2 + (splayed - Math.PI) * (0.12 + 0.88 * spread)
+    // The first points up the limb, behind its wrist: seen only as far as it is hidden there (its pad, curling out
+    // past the narrow wrist, read as a knob on the limb, not a finger).
+    const len = behind ? r * 0.4 * spread : r * (0.92 + 0.08 * Math.sin(i * 2.1))
+    const curl = (behind ? 0 : 0.16 * Math.sin(i * 1.7 + 0.6) + 0.04 * Math.sin(phase * 0.2 + i)) * spread
+    // Lying together they are fuller, so a closed hand reads as one bud, not a fringe of pads.
+    const w0 = r * (0.19 + 0.07 * (1 - spread))
+    const w1 = r * (0.078 + 0.04 * (1 - spread))
+    const left: Pt[] = []
+    const right: Pt[] = []
+    let tip: Pt = [0, 0]
+    for (let j = 0; j <= n; j++) {
+      const u = j / n
+      const d = r * 0.18 + (len - r * 0.18) * u
+      const ang = a + curl * u * u
+      const x = Math.cos(ang) * d
+      const y = Math.sin(ang) * d
+      // The side, across the finger's own direction (its spine's, curl and all).
+      const dir = a + 2 * curl * u
+      const w = w1 + (w0 - w1) * (1 - u) ** 1.1
+      left.push([x - Math.sin(dir) * w, y + Math.cos(dir) * w])
+      right.push([x + Math.sin(dir) * w, y - Math.cos(dir) * w])
+      tip = [x, y]
+    }
     p.beginShape()
-    p.vertex((ca * r * 0.2 - sa * w0) * k, (sa * r * 0.2 + ca * w0) * k)
-    p.vertex((ca * len - sa * w1) * k, (sa * len + ca * w1) * k)
-    p.vertex(ca * (len + w1) * k, sa * (len + w1) * k)
-    p.vertex((ca * len + sa * w1) * k, (sa * len - ca * w1) * k)
-    p.vertex((ca * r * 0.2 + sa * w0) * k, (sa * r * 0.2 - ca * w0) * k)
+    for (const [x, y] of left) p.vertex(x * k, y * k)
+    for (let j = right.length - 1; j >= 0; j--) p.vertex(right[j][0] * k, right[j][1] * k)
     p.endShape(p.CLOSE)
+    p.circle(tip[0] * k, tip[1] * k, w1 * 2.25 * k)
   }
   p.pop()
 }
@@ -469,6 +605,11 @@ export interface LogogramOpts {
   marks?: { a: number; size: number; width: number; grow?: number }[]
   /** Optional (the fog builder's): radians over which a forming end tapers (0.5 if unset). */
   taper?: number
+  /**
+   * Optional (the director's): where a ball sits on the ring (in its own turn, like `start`). No tendril grows out of
+   * her: one near her draws back as she comes, so none ever reads as a stalk on the ball.
+   */
+  clear?: number
 }
 
 interface Blot {
@@ -578,30 +719,20 @@ export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
     outer.push([c * (mid + hw) * breathe, si * (mid + hw) * breathe])
     inner.push([c * (mid - hw) * breathe, si * (mid - hw) * breathe])
   }
-  p.push()
-  p.noStroke()
-  // Haze, then body: the soft edge of ink in water, then the ink.
-  const passes: [number, number][] = fade > 0 ? [[2.6 * spread, 0.05], [1.7 * spread, 0.1], [1, 0.9 - 0.4 * fade]] : [[2.4, 0.05], [1.6, 0.11], [1, 0.92]]
-  for (const [grow, a] of passes) {
-    p.fill(alpha(p, color, a * light))
-    p.beginShape()
-    for (let i = 0; i < outer.length; i++) {
-      const mx = (outer[i][0] + inner[i][0]) / 2
-      const my = (outer[i][1] + inner[i][1]) / 2
-      p.vertex((mx + (outer[i][0] - mx) * grow) * k, (my + (outer[i][1] - my) * grow) * k)
-    }
-    for (let i = inner.length - 1; i >= 0; i--) {
-      const mx = (outer[i][0] + inner[i][0]) / 2
-      const my = (outer[i][1] + inner[i][1]) / 2
-      p.vertex((mx + (inner[i][0] - mx) * grow) * k, (my + (inner[i][1] - my) * grow) * k)
-    }
-    p.endShape(p.CLOSE)
-  }
+  // The ring and its tendrils are one body of ink, filled at once: where a tendril leaves the ring there is no darker
+  // overlap. Its haze is a true blur round the whole of it (the soft edge of ink in water), never stepped outlines.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const m = ctx.getTransform()
+  const px = Math.hypot(m.a, m.b)
+  const body = (fade > 0 ? 0.9 - 0.4 * fade : 0.92) * light
+  const shapes: Pt[][] = [[...outer, ...inner.slice().reverse()]]
+  const drops: { x: number; y: number; rx: number; ry: number; a: number }[] = []
   // Tendrils: curling strokes off the ring, tapering, some ending in a drop.
   if (reach > 0.001) {
     s.tendrils.forEach((td, i) => {
       if (!inArc(td.a)) return
-      const grow = smooth01((reach - i * 0.06) / 0.7)
+      const away = o.clear === undefined ? 1 : smooth01((angDist(td.a, o.clear) - 0.22) / 0.3)
+      const grow = smooth01((reach - i * 0.06) / 0.7) * away
       if (grow <= 0.001) return
       const { mid, half } = logogramAt(o, td.a)
       const dir = td.inward ? -1 : 1
@@ -622,33 +753,47 @@ export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
         left.push([x + tx * w, y + ty * w])
         right.push([x - tx * w, y - ty * w])
       }
-      for (const [g, a] of [[1.8, 0.1], [1, 0.9 - 0.4 * fade]] as const) {
-        p.fill(alpha(p, color, a * light))
-        p.beginShape()
-        for (let j = 0; j < left.length; j++) {
-          const mx = (left[j][0] + right[j][0]) / 2
-          const my = (left[j][1] + right[j][1]) / 2
-          p.vertex((mx + (left[j][0] - mx) * g) * k, (my + (left[j][1] - my) * g) * k)
-        }
-        for (let j = right.length - 1; j >= 0; j--) {
-          const mx = (left[j][0] + right[j][0]) / 2
-          const my = (left[j][1] + right[j][1]) / 2
-          p.vertex((mx + (right[j][0] - mx) * g) * k, (my + (right[j][1] - my) * g) * k)
-        }
-        p.endShape(p.CLOSE)
-      }
+      shapes.push([...left, ...right.slice().reverse()])
       if (td.drop && grow > 0.85) {
         const u = 1.12
         const rr = r0 + dir * len * u
         const aa = td.a + td.curl * (len / Math.max(0.1, o.r))
         // A drop: small, dark, never ball-sized (its width is a fraction of the ring's thickness).
         const d = Math.min(half * 0.9, R * 0.6) * spread
-        p.fill(alpha(p, color, (0.85 - 0.4 * fade) * light * smooth01((grow - 0.85) / 0.15)))
-        p.ellipse(Math.cos(aa + spin) * rr * breathe * k, Math.sin(aa + spin) * rr * breathe * k, d * 2 * k, d * 1.6 * k)
+        drops.push({ x: Math.cos(aa + spin) * rr * breathe, y: Math.sin(aa + spin) * rr * breathe, rx: d, ry: d * 0.8, a: (0.85 - 0.4 * fade) * light * smooth01((grow - 0.85) / 0.15) })
       }
     })
   }
-  p.pop()
+  const [cr, cg, cb] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))
+  ctx.save()
+  ctx.shadowOffsetX = 0
+  ctx.shadowOffsetY = 0
+  // As wide as the old outer haze reached past the ink's edge, and as faint.
+  ctx.shadowBlur = o.r * 0.16 * spread * k * px
+  ctx.shadowColor = `rgba(${cr}, ${cg}, ${cb}, ${0.6 * light})`
+  ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${body})`
+  ctx.beginPath()
+  for (const pts of shapes) {
+    // All the same way round, so where they overlap the ink is filled once (nonzero), never cut out.
+    let area = 0
+    for (let i = 0; i < pts.length; i++) {
+      const [x0, y0] = pts[i]
+      const [x1, y1] = pts[(i + 1) % pts.length]
+      area += x0 * y1 - x1 * y0
+    }
+    const seq = area < 0 ? pts.slice().reverse() : pts
+    seq.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+    ctx.closePath()
+  }
+  ctx.fill()
+  for (const d of drops) {
+    if (d.a <= 0.004) continue
+    ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${d.a})`
+    ctx.beginPath()
+    ctx.ellipse(d.x * k, d.y * k, d.rx * k, d.ry * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
 }
 
 /**
@@ -694,19 +839,30 @@ export function drawSpray(p: p5, k: number, from: Pt, to: Pt, u: number, color =
   p.fill(alpha(p, color, 0.55 * fade * light))
   p.beginShape()
   for (const [x, y] of left) p.vertex(x * k, y * k)
+  // Its end in the head is round, never a square cut where the head is thin enough to show it.
+  const [ex, ey] = at(reach)
+  const [lx, ly] = left[n]
+  const ca = Math.atan2(ly - ey, lx - ex)
+  const cr = Math.hypot(lx - ex, ly - ey)
+  // Round from its left edge through the way it is going to its right.
+  const [px, py] = at(Math.max(0, reach - 0.01))
+  const sweep = Math.sign((lx - ex) * (ey - py) - (ly - ey) * (ex - px)) || 1
+  for (let j = 1; j < 8; j++) p.vertex((ex + Math.cos(ca + sweep * (Math.PI * j) / 8) * cr) * k, (ey + Math.sin(ca + sweep * (Math.PI * j) / 8) * cr) * k)
   for (let j = right.length - 1; j >= 0; j--) p.vertex(right[j][0] * k, right[j][1] * k)
   p.endShape(p.CLOSE)
-  // The head: a billow of soft overlapping clouds, opening as it slows.
+  // The head: a billow of soft overlapping clouds, opening as it slows: each dense at its middle and nothing at its
+  // edge, so the billow is one soft cloud, never a cluster of discs.
   const [hx, hy] = at(reach)
   const r = (0.06 + 0.22 * reach) * len * 0.5
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const puff = (x: number, y: number, rx: number, ry: number, a: number) => softPuff(ctx, k, x, y, rx, ry, color, a)
   for (let i = 0; i < 7; i++) {
     const a = (i / 7) * TAU + v * 1.3
     const off = r * (0.25 + 0.35 * reach)
-    p.fill(alpha(p, color, (0.16 + 0.06 * (i % 2)) * light * (0.5 + 0.5 * fade)))
-    p.ellipse((hx + Math.cos(a) * off) * k, (hy + Math.sin(a) * off) * k, r * (1.1 + 0.3 * Math.sin(i * 2.3)) * k, r * (0.9 + 0.3 * Math.cos(i * 1.7)) * k)
+    // Half-widths a little past the old discs', as a soft edge reaches further than a hard one.
+    puff(hx + Math.cos(a) * off, hy + Math.sin(a) * off, r * (1.1 + 0.3 * Math.sin(i * 2.3)) * 0.65, r * (0.9 + 0.3 * Math.cos(i * 1.7)) * 0.65, (0.24 + 0.08 * (i % 2)) * light * (0.5 + 0.5 * fade))
   }
-  p.fill(alpha(p, color, 0.35 * light * fade))
-  p.ellipse(hx * k, hy * k, r * 0.9 * k, r * 0.75 * k)
+  puff(hx, hy, r * 0.6, r * 0.5, 0.5 * light * fade)
   p.pop()
 }
 

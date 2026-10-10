@@ -1,9 +1,11 @@
-import type { Pt } from '../../../../../parts'
-import { box, part, route, type Company, type PartShot } from '../kit'
+import type p5 from 'p5'
+import { FLOOR, R, type Pt } from '../../../../../parts'
+import { IAN, LOUISE } from '../worlds'
+import { box, ease, lookFrom, looks, part, route, turnTo, type Company, type Look, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
-import { drawChamber } from './chamber-glass'
+import { drawChamber, glassLight, swellAt } from './chamber-glass'
 import { FOOTFALLS } from './chamber-heptapods'
-import { CLOSE, IAN_PATH, IN, INK_IN, LOUISE_PATH, OPENS, OUT, PALM, REACH, SPRAY, SURGES, WAKE, X_LEAN, X_PALM, X_REST } from './chamber-path'
+import { ABBOTT_SEEN, CLOSE, IAN_PATH, IN, INK_IN, LOUISE_PATH, OPENS, OUT, PALM, REACH, SET_OFF, SPRAY, SURGES, WAKE, X_LEAN, X_PALM, X_REST } from './chamber-path'
 
 /**
  * The chamber (85.786 → 130.409): the chamber builder's. First contact.
@@ -31,13 +33,70 @@ interface ChamberState {
   begin: number
 }
 
+/** Where she looks: up at a giant over the glass, up at the palm, and up and over to the ring as it is written. */
+const AT_GIANT = -1.0
+const AT_PALM = -Math.PI / 2 + 0.12
+const AT_RING = -0.55
+/** Ahead and up, at the glass as it wakes: the great wall of white at the end of the floor. */
+const AT_GLASS = -0.4
+/** Following the limb as it comes down out of the giants to her. */
+const LIMB_DOWN = 115.4
+/**
+ * When she looks rather than rolls, and at what. Only while she is at rest (or all but), so her eye never slides on a
+ * rolling ball: stopped as the glass wakes, at it; stopped as Abbott comes out of the white; at the glass's foot through the grand wide, the giants over
+ * her and then the limb coming down; and from the palm's opening through the touch and the writing, into the white.
+ * Between them, and on the rolls, her eye rolls with her.
+ */
+const LOOKS: Look[] = [
+  { from: 87.85, to: 89.2, at: () => AT_GLASS },
+  { from: ABBOTT_SEEN + 0.3, to: 99.25, at: () => AT_GIANT },
+  { from: 105.2, to: SET_OFF - 0.2, at: (t) => AT_GIANT + turnTo(AT_GIANT, AT_PALM) * ease((t - LIMB_DOWN) / 2.2) },
+  { from: OPENS + 0.55, to: Infinity, at: (t) => AT_PALM + turnTo(AT_PALM, AT_RING) * ease((t - (SPRAY + 0.1)) / 0.6) },
+]
+/**
+ * Ian's eye, wherever he is stopped: at the glass as it wakes, up at Abbott as he hesitates for it, up at the giants through the wide and down
+ * the limb as it comes to her, and from when he comes forward again, on her, going into the white.
+ */
+const IAN_LOOKS: Look[] = [
+  { from: 88.15, to: 89.9, at: () => AT_GLASS },
+  { from: 97.9, to: 101.55, at: () => AT_GIANT },
+  { from: 106.8, to: 119.95, at: (t) => AT_GIANT + turnTo(AT_GIANT, -0.35) * ease((t - LIMB_DOWN) / 2.2) },
+  { from: 129.25, to: Infinity, at: () => -0.3 },
+]
+
 /** Every strike: the glass's two wakings, the seen footfalls, the limb leaving the floor, the palm opening, the touch, the spray, the ink coming in, the ring's surges, its closing and its tendrils. */
 export const CHAMBER_HITS: number[] = [...new Set([...WAKE, ...FOOTFALLS.map((f) => f.at), OPENS, PALM, SPRAY, INK_IN, ...SURGES, CLOSE, REACH])].sort((a, b) => a - b)
+
+/**
+ * The two of them in the polished floor: each a faint reflection under it, lit by the glass behind them, fading down
+ * into the floor's dark, and gone in the white. (A shadow would not show on this floor; the reflection grounds them.)
+ */
+function drawReflections(p: p5, k: number, t: number): void {
+  const lit = Math.min(1, glassLight(t)) * (1 - swellAt(t))
+  if (lit <= 0.02) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  for (const [x, color] of [[LOUISE_PATH.x(t), LOUISE], [IAN_PATH.x(t), IAN]] as const) {
+    const cy = 2 * FLOOR
+    const n = parseInt(color.slice(1), 16)
+    const rgb = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+    const g = ctx.createLinearGradient(0, FLOOR * k, 0, (FLOOR + 2 * R) * k)
+    g.addColorStop(0, `rgba(${rgb}, ${0.3 * lit})`)
+    g.addColorStop(1, `rgba(${rgb}, 0)`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.ellipse(x * k, cy * k, R * k, R * 0.85 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
 
 export const chamber = part<ChamberState>(
   {
     name: 'chamber',
-    draw: (p, s, c) => drawChamber(p, c.k, s.begin + c.t),
+    draw: (p, s, c) => {
+      const t = s.begin + c.t
+      drawChamber(p, c.k, t)
+      drawReflections(p, c.k, t)
+    },
   },
   (slot) => {
     const ways = LOUISE_PATH.ways(slot.begin)
@@ -46,7 +105,7 @@ export const chamber = part<ChamberState>(
         who: 'ian',
         from: slot.begin,
         to: slot.end,
-        at: (t) => ({ x: IAN_PATH.x(t), y: 0 }),
+        at: (t) => ({ x: IAN_PATH.x(t), y: 0, look: (roll) => lookFrom(IAN_LOOKS, t, roll, (u) => IAN_PATH.x(u)) }),
       },
     ]
     return {
@@ -54,6 +113,7 @@ export const chamber = part<ChamberState>(
       exit: [X_LEAN + 0.5, 0] as Pt,
       lane: { segs: route(ways), fire: WAKE[0] - slot.begin },
       state: { begin: slot.begin },
+      riders: looks(LOOKS, (t) => LOUISE_PATH.x(t)),
       company,
     }
   },
