@@ -803,6 +803,11 @@ window.
     made their shared home (80%), done over in their colours, the two chairs side by side; that it was her old house
     (the film's clubhouse) only 15%, as the picture never says so; the beat, a home they make together, lands. And the
     chimney after last round's change, on a phone upright: from the roof up, the attic clear.
+  - *The wedding, re-watched* by a seventeenth viewer who has never seen Up (0 to 22 s, three frames a second): their
+    wedding (90%), the kiss and the petals the moment that tells most, and unasked, the two families: "a reserved one
+    and an exuberant one". With this every beat has been watched by a fresh viewer at three or four frames a second;
+    each misreading that was the picture's was fixed and watched again (the tickets, the waiting-room lean, the falls,
+    the lamp, the bedside, the chimney), and the rest read as meant.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
