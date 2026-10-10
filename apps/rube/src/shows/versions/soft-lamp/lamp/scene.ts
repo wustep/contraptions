@@ -130,7 +130,7 @@ function wall(ctx: Ctx, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(v.x0 - 1, v.y0 - 1, v.x1 - v.x0 + 2, DESK.y - v.y0 + 1)
   // The plaster: an uneven, painted tone over all of it.
-  plaster(ctx, v.x0 - 1, v.y0 - 1, v.x1 + 1, DESK.y, 0.24)
+  plaster(ctx, v.x0 - 1, v.y0 - 1, v.x1 + 1, DESK.y, 0.2, 2.2)
 }
 
 /** The window's frame, its bars, and the sill. */
@@ -1022,7 +1022,7 @@ export const things = scenery<null>(
     }
     const cl = climbAt(c.t)
     const cx = (CAT.x0 + CAT.chest) / 2 + cl.dx
-    formed(ctx, 'cat', c.t, { box: [cx - 1.5, cl.dy - 1.7, cx + 1.5, cl.dy + 0.15], at: { x: cx, y: cl.dy - 0.35 }, core: 0.22 }, (g) => cat(g, lw, c.t))
+    formed(ctx, 'cat', c.t, { box: [cx - 1.5, cl.dy - 1.7, cx + 1.5, cl.dy + 0.15], at: { x: cx, y: cl.dy - 0.35 }, core: 0.22, smooth: true }, (g) => cat(g, lw, c.t))
     BOOKS.forEach((b, i) => formed(ctx, `book${i}`, c.t, { box: [b.x0 - 0.15, b.top - 0.05, b.x1 + 0.1, b.bottom + 0.03], at: { x: (b.x0 + b.x1) / 2, y: (b.top + b.bottom) / 2 }, core: 0.09 }, (g) => book(g, lw, b, i, c.t)))
     formed(ctx, 'headphones', c.t, { box: [CUP.x - CUP.halfW - 0.1, BAND_TOP - 0.1, FAR_CUP.x + FAR_CUP.halfW + 0.1, 0.03], at: { x: (CUP.x + FAR_CUP.x) / 2, y: -0.25 }, core: 0.15, k: 0.6 }, (g) => headphones(g, lw, c.t))
     lamp(ctx, lw, c.t)

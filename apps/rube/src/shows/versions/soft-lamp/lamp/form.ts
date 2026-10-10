@@ -31,6 +31,12 @@ export interface Form {
    * not throw a shadow onto what is behind it. The drawing itself if not given.
    */
   solid?: (g: Ctx) => void
+  /**
+   * Shaded by one smooth fall of light across it, toward the lamp to away, in place of the cut crescent: for a thing
+   * whose outline is too intricate for a crescent to read as shadow (the kitten's head on its body, its thin legs). Its
+   * lit edge is left out too.
+   */
+  smooth?: boolean
 }
 
 /** About an outline's width, cells: how far in from the line the lit edge starts. */
@@ -172,6 +178,34 @@ export function formed(ctx: Ctx, name: string, t: number, f: Form, draw: (g: Ctx
     ctx.globalCompositeOperation = op
     ctx.globalAlpha = a
     ctx.drawImage(B, 0, 0, bw, bh, bx, by, w, h)
+  }
+  if (f.smooth) {
+    // Across the thing, from its far side to its side toward the lamp: the shadow's colour, going to nothing past the
+    // middle. Kept to its outline as the crescent is.
+    if (shadowA > 0.004) {
+      const cx = w / 2
+      const cy = h / 2
+      const reach = (Math.abs(lamp.ux) * w + Math.abs(lamp.uy) * h) / 2
+      b.setTransform(1, 0, 0, 1, 0, 0)
+      b.globalCompositeOperation = 'source-over'
+      b.globalAlpha = 1
+      b.clearRect(0, 0, w, h)
+      b.drawImage(L, 0, 0, w, h, 0, 0, w, h)
+      b.globalCompositeOperation = 'source-in'
+      const gr = b.createLinearGradient(cx - lamp.ux * reach, cy - lamp.uy * reach, cx + lamp.ux * reach, cy + lamp.uy * reach)
+      gr.addColorStop(0, CORE)
+      gr.addColorStop(0.55, CORE + '00')
+      gr.addColorStop(1, CORE + '00')
+      b.fillStyle = gr
+      b.fillRect(0, 0, w, h)
+      b.globalCompositeOperation = 'destination-in'
+      for (let i = 0; i < 2; i++) b.drawImage(L, 0, 0, w, h, 0, 0, w, h)
+      ctx.globalCompositeOperation = 'multiply'
+      ctx.globalAlpha = shadowA
+      ctx.drawImage(B, 0, 0, w, h, bx, by, w, h)
+    }
+    ctx.restore()
+    return
   }
   side(lamp.ux * core, lamp.uy * core, CORE, shadowA, 'multiply')
   const ink = INSET * k

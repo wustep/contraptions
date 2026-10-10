@@ -845,8 +845,30 @@ function skyline(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: num
   }
 }
 
+/** A soft round of light, one per colour, made once: what a lit window's glow is drawn with. */
+const glows = new Map<string, HTMLCanvasElement>()
+function glowOf(color: string): HTMLCanvasElement {
+  let c = glows.get(color)
+  if (!c) {
+    c = Object.assign(document.createElement('canvas'), { width: 64, height: 64 })
+    const g = c.getContext('2d')!
+    const r = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+    r.addColorStop(0, rgba(color, 0.75))
+    r.addColorStop(0.25, rgba(color, 0.3))
+    r.addColorStop(1, rgba(color, 0))
+    g.fillStyle = r
+    g.fillRect(0, 0, 64, 64)
+    glows.set(color, c)
+  }
+  return c
+}
+
 function city(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: number }, lens: Lens, sink: (p: number) => Sink): void {
   const n = nightAt(t)
+  // Each lit window's glow round it: a little in clear air, wider and stronger through the rain and the wet glass,
+  // the haze holding the light; none to speak of in the dusk, which outshines it.
+  const halo = (0.35 + 0.65 * Math.max(wetAt(t), 0.6 * cloudAt(t))) * (1 - 0.8 * sky.dusk)
+  const glowing = typeof document !== 'undefined' && halo > 0.02
   const far = mixHex('#2B2850', '#463E6E', sky.dusk)
   const near = mixHex('#17162C', '#2A2445', sky.dusk)
   // The sky's light on the city's edges: the dusk's warmth, then once it is clear the moon's, paler off the snow.
@@ -939,6 +961,21 @@ function city(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: number
             else {
               ctx.fillStyle = rgba(c, alpha)
               ctx.fillRect(wx, wy, 0.065, 0.075)
+              // Some with a blind part down, or a curtain drawn to one side: a home, not a lit square.
+              const dress = hash(i * 31 + a, b + row * 17, 41)
+              if (!screen && dress < 0.45) {
+                ctx.fillStyle = rgba(mixHex(c, '#3A2436', 0.55), alpha * 0.7)
+                if (dress < 0.25) ctx.fillRect(wx, wy, 0.065, 0.075 * (0.25 + 0.4 * hash(i * 31 + a, b, 42)))
+                else ctx.fillRect(wx + (dress < 0.35 ? 0 : 0.04), wy, 0.025, 0.075)
+              }
+              if (glowing) {
+                const gr = 0.12 + 0.1 * halo
+                ctx.save()
+                ctx.globalCompositeOperation = 'screen'
+                ctx.globalAlpha = Math.min(1, (0.35 + alpha) * halo * (row ? 1 : 0.75))
+                ctx.drawImage(glowOf(c), wx + 0.0325 - gr, wy + 0.0375 - gr, gr * 2, gr * 2)
+                ctx.restore()
+              }
             }
           }
         }

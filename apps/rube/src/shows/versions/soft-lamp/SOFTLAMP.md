@@ -1399,6 +1399,34 @@ The reviews have all been of stills; the show is watched moving. Played through 
      page goes over and the cover shows, warm in the lamp) and the pen is put down; then the lamp goes down. The half
      hour ends with the work done.
 
+### The eighty-second pass: the room in the round
+
+Eighty passes had added to what happens; none had changed how the room is painted. Every prop was a flat fill and a
+line, a clip-art room, where a lofi painting turns each thing in its light. This pass is the painting, everywhere at once:
+
+227. **Form** (`lamp/form.ts`). Each thing on the desk (the Walkman, the mug, the kitten, each book, the headphones, the
+     plant on the sill) is drawn on its own small layer, and its own outline gives it a side away from the lamp, a cel
+     shadow with a soft terminator in the room's cool violet, and toward the lamp a warm lit edge just inside its line.
+     Because it comes from the outline, the kitten is turned in the light in every pose: loafed, stretching, walking to
+     the books, on the sill. Strength follows the lamp where the thing stands, so it comes on with the lamp and eases
+     at the end; the shadow side never quite goes, the window lighting the room too. The mug's is worked from its
+     solid, so its handle's hole throws nothing on it. It costs about a millisecond and a half a frame.
+     The kitten alone is shaded by one smooth fall of light across it instead: a blind A/B review (the old flat frames
+     against these, order shuffled) chose these in three moments of four, the lost one for the kitten, whose head on
+     its body and thin legs made the crescent into blotches on its head and belly and doubled edges on its legs.
+228. **The wall is plaster.** A soft, uneven tone over it (a tiling noise, laid soft-light), so the wall is painted,
+     not a gradient.
+229. **The desk has a top.** The band under everything is the desk's top now, running back to the wall: darker where it
+     meets the wall, a front lip with the light along its edge, and the lamp's pool lying on the wood as an oval round
+     where the shade looks. Each thing's shadow lies forward onto it.
+230. **The glass gives back only what is lit.** The person in the window was a pale ghost, her sweater lighter than the
+     night outside, which no reflection can be. Now it is what the lamp lights: the lamp's side of her face and her
+     near shoulder, the page, the lamp; her far side and her hair hardly show. Her stretch's arms, a hard pale outline
+     against the faint body, are lit the same way.
+231. **The city's lights glow.** Each lit window across the street has a soft round of light about it, small in clear
+     air, wider in the rain and the haze, none in the dusk; and some have a blind half down or a curtain to one side,
+     so they read as rooms.
+
 ## Judgment calls for Stephen
 
 - **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in
@@ -1438,6 +1466,8 @@ The reviews have all been of stills; the show is watched moving. Played through 
   sixty-fourth pass): the closer looks are rarer, the whole-desk looks commoner. Holding the wide room most of the time
   would go further, the machine small in it.
 - **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.
+- **The form.** How deep each thing's shadow side goes is one number a thing (`core`, where `scene.ts` calls `formed`),
+  and how dark it is two (`CORE` and `shadowA`, `lamp/form.ts`). The plaster is one call (`plaster`, in `wall`).
 
 ## Checks
 
