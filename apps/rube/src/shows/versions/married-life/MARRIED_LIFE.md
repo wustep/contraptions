@@ -834,6 +834,10 @@ window.
     cylinder or column"). Its ribbons were cloud-white on a cloud: white on white. They are now the falls' water, as in
     the painting, the pop-up and the jar: pale blue, deeper streaks falling in it, shaded down its right, so the
     dream in the sky is the same place as the picture they save for.
+  - *The water in the clouds, re-watched* by a twentieth viewer (49.6 to 63.3 s, three frames a second): airship
+    (90%), waterfall (75%: "a tall cloud block… blue streaks pouring down"), baby (85%), read as "adventure and
+    travel… the wish for a child"; the last viewer had seen a jar or a column. Before the water pours it is still a
+    column, as it is built to be: the cliff first, then the falls on bar 39.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
