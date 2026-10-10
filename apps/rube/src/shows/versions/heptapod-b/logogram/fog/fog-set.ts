@@ -344,10 +344,11 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
     const hi = ring.hi(t)
     const half = Math.max(0, (hi - lo) / 2)
     const form = 0.7 * (0.5 - Math.sin(Math.asin(1 - 2 * Math.min(1, half / Math.PI)) / 3)) * 0.9999
-    // Each half's leading end runs out to a point over as much of the ink ahead of her pen as there is (never under
-    // her, where she rides it at its full thickness), so it reads as ink running, not a blunt cut.
-    const ahead = hi - (GREAT.her(t) - GREAT.spin(t))
-    const lead = Math.min(LEAD_TAPER, Math.max(ring.taper, 0.8 * ahead))
+    // Each half's ends run out to a point over as much of the ink as lies between her pen and them, so they read as
+    // ink running, not a blunt cut, and never thin under her, where she rides it at its full thickness (her place on
+    // it is worked out from its whole width). Early on its tail is held only a little behind her.
+    const pen = GREAT.her(t) - GREAT.spin(t)
+    const lead = Math.min(LEAD_TAPER, 0.8 * Math.min(hi - pen, pen - lo))
     const taper = Math.min(lead, Math.max(0.015, 0.3 * (TAU - 4 * half)))
     drawLogogram(p, k, { ...base, start: (lo + hi) / 2, form, taper })
     drawLogogram(p, k, { ...base, start: (lo + hi) / 2 - Math.PI, form, taper })
