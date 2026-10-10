@@ -82,9 +82,10 @@ agree without seeing each other.
   cradle, the swing's seat, the bed, the swing in the vision. The same place on the screen, a different age.
 - **The white-out** (231.039): the blast's dust in the chamber, lit by the broken glass, swells to white, and the fog
   beyond the glass comes out of it.
-- **The circle.** The last cut opens close on the cradle, baby Hannah in it; from the last B-flat the camera draws back,
-  the opening's push in played backwards, the morning cooling to the blue hour as it goes, and arrives on the first frame on the last attack (371.931): the lake house
-  at dawn, Louise beside the cradle. It holds there to the end.
+- **The circle.** There is no last cut. On the fall onto B-flat (349.495) baby Hannah comes into the empty cradle the
+  way she went from the bed, backwards, and the camera goes in close on it; from the last B-flat it draws back, the
+  opening's push in played backwards, the morning cooling to the blue hour as it goes, and arrives on the first frame
+  on the last attack (371.931): the lake house at dawn, Louise beside the cradle. It holds there to the end.
 
 ## In order
 
@@ -106,7 +107,7 @@ Times are show seconds; chord *n* is the *n*th change of harmony.
 | 266.124 | chord 71 | the gala | Years on: an evening reception, champagne light, knots of dark guests. She rolls onto a brass pouring stand and a champagne tower fills a tier a beat; the room raises its glasses (272.869); **Shang** crosses to her, leans in and they touch: the whisper (274.802), and a ghost of the sat phone's keys comes up beside them, lighting the first of his number. |
 | 277.647 | chord 74 | the command tent | The sat phone, the red lamp burning. She hops key to key on the beats, the number he gave her; the dead ring on 283.458; the call key on **288.554, the loudest bars**: the call goes up the cable, China's screen rises red, and **the dominoes stand again, backwards**, one a beat, the last to fall the first to rise, the camera drawing back until **the ring closes whole in the wide on the loudest bar (303.827)**, the lamp going out. |
 | 311.293 | chord 84 | Montana | Morning. The lift's deck comes down; **the shell goes up the way it came down**, into the cloud, **gone as the high violins stop (318.711)**. The hush: the cloud churning where it went. **322.606: the cloud breaks over the left ridge and the low sun rakes across the valley**, its light sweeping along the floor to her on 326.258; Ian comes to her across the light; **they touch (330.170)**, close, and hold. |
-| 334.031 | chord 90 | the lake house | Home, in the morning light: Louise and Ian by the window, close, the empty cradle beside them; after the turn he goes round it to its far side. She rolls into him (337.850); they turn to the cradle (341.618) and go to it (345.490). **349.495: a cut close on the cradle, baby Hannah in it**, Louise rocking it, Ian beyond it on her right, the cradle between them: they chose her, in the same morning light. Then he turns away, looks back at her, and goes out of the room. She rocks it on the last chords, fainter and fainter; from the last B-flat the camera draws back, the opening's push in played backwards, and arrives on the first frame on the last attack (371.931). The credits in the silence over the wall above the window. |
+| 334.031 | chord 90 | the lake house | Home, in the morning light: Louise and Ian by the window, close, the empty cradle beside them; after the turn he goes round it to its far side. She rolls into him (337.850); they turn to the cradle (341.618) and go to it (345.490). **349.495: she rocks it and baby Hannah comes into it**, rising pale out of the linen and filling into her rose, her going on the swell played backwards, as the camera goes in close on the cradle; Ian beyond it on her right, the cradle between them: they chose her, in the same morning light. Then he turns away, looks back at her, and goes out of the room. She rocks it on the last chords, fainter and fainter; from the last B-flat the camera draws back, the opening's push in played backwards, and arrives on the first frame on the last attack (371.931). The credits in the silence over the wall above the window. |
 
 ## End credits
 
@@ -139,7 +140,8 @@ card the room holds to the end, 408 s.
 - Louise inside the Zoom frame and findable (never under 5.5 px across for more than 1.5 s) outside the two great
   wides (the shell's arrival, its going and the daylight); never hidden long;
 - Ian, Hannah and Shang where the story has them, never jumping, never popping in shot (Hannah's going on the swell
-  the one exception), never two of anyone;
+  and her coming back into the cradle the exceptions), never two of anyone;
+- Hannah coming into the cradle at the end as she went from the bed, backwards, with no cut after the cut home;
 - the end credits' words, and the onset file being this recording's.
 
 ## How it is built
@@ -1043,6 +1045,32 @@ that ran on its own rather than on the story or the music:
 
 `tsc` and the full `check:shows` pass (686 checks). The ring, the gala and the daylight through the meadow were
 filmed again; nothing else changed.
+
+A hundred-and-fifteenth took the flickering trees. The pines on the far shore behind the swing (22 to 72 s, 250 to
+257 s) were drawn by walking along the shore from the frame's left edge, each step's length and each tree's height
+picked by where the walk had got to; as the camera moved, the walk started somewhere new, and every frame drew a
+different row of trees. Each tree now has its own place on the shore, the nth of the row a little off its mark, so
+the same tree stands there every frame and slides with the view. In the valley the trees behind the camp and the
+pines along the near ridge flickered more faintly for the same kind of reason: their outline was sampled from the
+frame's edge, at points a few pixels apart, so the points slid along the crowns as the camera moved and caught their
+tops and the gaps between them differently each frame. The points are fixed in the world now, two pixels apart at
+most, with one at every crown's foot and every pine's tip, and the outline holds. Set against the frame before it,
+shifted to match, the far shore at 30 s changes a quarter as much (7.2 levels to 1.8); at 252 s, where the camera
+moves fast, two-fifths as much; what is left is the two rows sliding at their own speeds. The frames cost the same.
+
+A hundred-and-sixteenth took the ending, which readers rated the weakest moment, several taking the cut to the
+cradle (349.495) for a slip in the edit. Rounds 93 and 94 had made nothing in the room move across it and laid a
+swell of light over it; the first subtraction rightly took the swell away, and the cut was bare again. It was a jump
+cut in the plain sense: the same three things, a tenth closer and half a cell over, and a baby where there had been
+none. The cut was the wrong tool, not the dressing: nothing in the room changes but the time. So there is no cut. On
+the fall onto B-flat she rocks the empty cradle and Hannah comes into it the way she went from the bed on the swell,
+the same curve run backwards: up out of the linen, pale and small, filling into her rose over the same 2.7 s, while
+the camera goes in to the cradle, arriving on the plagal chord at the framing the cut had cut to. The film's own
+ending says the same thing: the one who went is the one who is coming. From the plagal chord on, nothing has changed:
+Ian turns away, looks back and goes; the camera draws back to the first frame on the last attack. Around 349.5 s the
+frame-to-frame change is now about its neighbours' (round 97 measured the cut at 20.6 times them); the largest in
+the span is Ian's turn. A new check holds it: Hannah's coming matches her going backwards, and there is no camera cut
+after the cut home. `tsc` and the full `check:shows` pass (687 checks).
 
 ## Arrival nods
 
