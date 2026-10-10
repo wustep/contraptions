@@ -7,7 +7,7 @@ import {
 } from './air'
 import { BALL, alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
-  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, bodies, sunWay, AURORA_OVER, lamplighter,
+  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, bodies, sunWay, AURORA_OVER, lamplighter, devicePx,
 } from './frame'
 import { lampLight, farStones } from './stones'
 
@@ -60,7 +60,7 @@ function waterLight(p: p5, c: PieceCtx, u: number, light: number, rgb: string, r
   const full = loudness(c.t)
   const chords = sounding(c.t)
   const top = -swell(u, c.t)
-  const thick = Math.max(1.2, c.weight * 1.1)
+  const thick = Math.max(1.2 * devicePx(ctx), c.weight * 1.1)
   ctx.save()
   for (let j = 0; j < rows; j++) {
     const d = 0.06 + 0.07 * j + 0.0035 * j * j
@@ -294,7 +294,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     // The surface: a line of light where the sky meets it, brighter along the swells' crests.
     p.noFill()
     p.stroke(alpha(p, day.low, 0.55))
-    p.strokeWeight(Math.max(1, c.weight * 0.8))
+    p.strokeWeight(Math.max(devicePx(ctx), c.weight * 0.8))
     p.beginShape()
     for (let i = 0; i <= n; i++) {
       const u = u0 + ((u1 - u0) * i) / n
@@ -304,7 +304,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     p.endShape()
     ctx.save()
     ctx.lineCap = 'round'
-    ctx.lineWidth = Math.max(1, c.weight * 1.25)
+    ctx.lineWidth = Math.max(devicePx(ctx), c.weight * 1.25)
     const foam = mixHex(day.low, '#FFF7EA', 0.6)
     const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(foam.slice(i, i + 2), 16))
     // At night the swell wakes the sea's light: the crest glows a cold green-blue as it runs.
@@ -324,7 +324,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
         ctx.moveTo(xa * k, ya * k)
         ctx.lineTo(xb * k, yb * k)
         ctx.stroke()
-        ctx.lineWidth = Math.max(1, c.weight * 1.25)
+        ctx.lineWidth = Math.max(devicePx(ctx), c.weight * 1.25)
       }
       ctx.strokeStyle = glow > 0.01
         ? `rgba(${mixRgb([fr, fg, fb], GLOW_RGB, 0.6 * glow)}, ${(0.75 * lift).toFixed(3)})`
@@ -365,7 +365,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
         for (const ring of r) {
           const [x, y] = polar(at, swell(at, c.t) - 0.04 - ring.r * 0.16)
           ctx.save()
-          ctx.lineWidth = Math.max(1, c.weight * 0.9)
+          ctx.lineWidth = Math.max(devicePx(ctx), c.weight * 0.9)
           ctx.strokeStyle = `rgba(${fr}, ${fg}, ${fb}, ${ring.a.toFixed(3)})`
           ctx.beginPath()
           ctx.ellipse(x * k, y * k, ring.r * k, ring.r * k * 0.16, at / RADIUS, 0, Math.PI * 2)
@@ -380,7 +380,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     if (rain > 0.01) {
       const span = v.u1 - v.u0
       ctx.save()
-      ctx.lineWidth = Math.max(1, c.weight * 0.8)
+      ctx.lineWidth = Math.max(devicePx(ctx), c.weight * 0.8)
       for (let i = 0; i < 70; i++) {
         const r = ringAt(i, c.t)
         const u = v.u0 + r.x * span

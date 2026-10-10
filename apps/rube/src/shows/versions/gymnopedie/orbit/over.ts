@@ -3,7 +3,7 @@ import { GRACES, MELODY } from './music'
 import { LENGTH, RADIUS, STONES, along, ballLocal, float, since, sink, squash, stonesIn } from './path'
 import { FIREFLIES, FIREFLY, dropAt, rainAt, firefliesOut, inLayer, layered, overcastAt } from './air'
 import { hash, osc, polar, smooth } from './world'
-import { scenery, type Ctx2D, viewOf, frameOf, onCanvas, lamplighter, haloSprite, sunAngle, moonAngle, weathered } from './frame'
+import { scenery, type Ctx2D, viewOf, frameOf, onCanvas, lamplighter, haloSprite, sunAngle, moonAngle, weathered, devicePx } from './frame'
 import { lampLight, bloom, cadenceFronts, cadence, SEGMENT } from './stones'
 
 // ---------------------------------------------------------------- over the ball
@@ -52,7 +52,7 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.translate(x * k, y * k)
     ctx.rotate(g.u / RADIUS + 0.4 * s)
     ctx.strokeStyle = `rgba(255, 250, 232, ${(0.9 * a).toFixed(3)})`
-    ctx.lineWidth = Math.max(1, k * 0.012)
+    ctx.lineWidth = Math.max(devicePx(ctx), k * 0.012)
     ctx.lineCap = 'round'
     ctx.beginPath()
     ctx.moveTo(-len, 0)

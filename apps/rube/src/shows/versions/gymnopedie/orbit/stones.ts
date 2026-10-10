@@ -4,7 +4,7 @@ import { PERIOD, PIECES, wrap } from './music'
 import { LENGTH, RADIUS, STONES, along, ballLocal, float, since, sink, squash, stonesIn, type Stone } from './path'
 import { drawGull } from './air'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
-import { scenery, type Ctx2D, type View, viewOf, onCanvas, atSea, weathered, sunAngle, sunWay, lamplighter } from './frame'
+import { scenery, type Ctx2D, type View, viewOf, onCanvas, atSea, weathered, sunAngle, sunWay, lamplighter, devicePx } from './frame'
 
 // ---------------------------------------------------------------- the stones
 
@@ -215,7 +215,7 @@ function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
   // The stem, from under the sea to the leaf's middle, bowed a little by the swell.
   p.noFill()
   p.stroke(mixHex('#4F7466', day.sea, 0.3))
-  p.strokeWeight(Math.max(1, K(0.03)))
+  p.strokeWeight(Math.max(devicePx(p.drawingContext as Ctx2D), K(0.03)))
   p.bezier(K(w / 2 + sway * 0.4), K(0.3), K(w / 2 - 0.08 + sway), K(-h * 0.35), K(w / 2 + 0.06), K(-h * 0.7), K(w / 2), K(-h + 0.02))
   // The leaf: flat, with a rim turned up at its edge.
   p.stroke(ink)

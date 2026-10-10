@@ -56,6 +56,15 @@ export function viewOf(p: p5, c: PieceCtx): View {
  * the sky's own things (the sun and the moon, the bow, the aurora, the rays) are sized by, so they keep their place
  * over the horizon.
  */
+/**
+ * One device pixel, in the units of whatever the canvas is drawing under now. A minimum width written as `1` under the
+ * world's transform would be the canvas's density in device pixels (three on a phone); written as this, it is one.
+ */
+export const devicePx = (ctx: Ctx2D): number => {
+  const m = ctx.getTransform()
+  return 1 / (Math.hypot(m.a, m.b) || 1)
+}
+
 export const frameOf = (ctx: Ctx2D): number => Math.min(ctx.canvas.height, (ctx.canvas.width * 9) / 16)
 
 /** Where a point of the world (cells) is on the canvas, in device pixels: through the canvas's transform, or `m`. */
