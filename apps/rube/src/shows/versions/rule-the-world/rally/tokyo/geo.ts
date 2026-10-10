@@ -47,8 +47,8 @@ export const REST: Pt = [6.95, FLOOR - R]
 
 /* ------------------------------------------------------------------ the clock */
 
-/** Flash bulbs in the dark stands as he comes in. */
-export const FLASH_IN = [at(83, 1), a(83, 2), at(83, 2), a(83, 4)]
+/** One flash bulb in the dark stands as he comes in, on the broken-off line. */
+export const FLASH_IN = at(83, 1)
 /** The umpire's hand-bell: the exhibition. */
 export const BELL = at(83, 3)
 /** Endo bows to him (the bottom of the bow). */
@@ -347,7 +347,7 @@ export const GI: [number, number, number] = [3.0, 7.0, 7]
 /* ------------------------------------------------------------------ strikes */
 
 export const TOKYO_STRIKES: number[] = [
-  ...FLASH_IN,
+  FLASH_IN,
   BELL,
   BOW1,
   ...STOMPS,

@@ -157,7 +157,7 @@ const par = (f: Frame, fx: number, fy = fx): Pt => [f.cx * fx, (f.cy - CY0) * fy
 
 /* ------------------------------------------------------------------ the sky and the far */
 
-export function drawSky(pen: Pen, t: number, f: Frame): void {
+export function drawSky(pen: Pen, f: Frame): void {
   const [, oy] = par(f, 0.8)
   const horizon = ROAD - 1.25 + oy
   vgrad(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, [
@@ -173,8 +173,7 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
     const y = sy + CY0 - 2 - hash(i, 2) * 14
     const px = ((((x - f.x0) % 60) + 60) % 60) + f.x0
     if (y > horizon - 0.6 || px > f.x1) continue
-    const tw = 0.55 + 0.45 * Math.sin(t * (1 + hash(i, 3) * 2) + i)
-    ellipse(pen, [px, y], 0.012 + hash(i, 4) * 0.018, 0.012 + hash(i, 4) * 0.018, mix(C.skyMid, C.star, 0.4 + 0.5 * tw))
+    ellipse(pen, [px, y], 0.012 + hash(i, 4) * 0.018, 0.012 + hash(i, 4) * 0.018, mix(C.skyMid, C.star, 0.4 + 0.5 * hash(i, 3)))
   }
   // The moon, high and a little left, all but fixed.
   const [mx, my] = par(f, 0.94)
@@ -186,7 +185,7 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
   ellipse(pen, [m[0] - 0.14, m[1] + 0.1], 0.06, 0.05, C.moonShade)
 }
 
-export function drawFar(pen: Pen, t: number, f: Frame): void {
+export function drawFar(pen: Pen, f: Frame): void {
   // Far hills.
   {
     const [ox, oy] = par(f, 0.82, 0.8)
@@ -220,8 +219,7 @@ export function drawFar(pen: Pen, t: number, f: Frame): void {
       if (hash(i, 23) > 0.45) continue
       const x = ox + i * 3.7 + hash(i, 24) * 2
       const y = base - 0.12 - hash(i, 25) * 0.1
-      const flick = 0.85 + 0.15 * Math.sin(t * 3 + i)
-      glow(pen, [x, y], 0.35, C.farmLight, 0.35 * flick)
+      glow(pen, [x, y], 0.35, C.farmLight, 0.3)
       ellipse(pen, [x, y], 0.03, 0.03, C.farmLight)
     }
   }
@@ -402,25 +400,19 @@ export function drawHouse(pen: Pen, t: number): void {
   shape(pen, [[x0 - 0.35, top + 0.05], [x0 + 1.4, top - 2.1], [x1 - 1.4, top - 2.1], [x1 + 0.35, top + 0.05]], C.roof)
   line(pen, [x0 - 0.35, top + 0.05], [x1 + 0.35, top + 0.05], C.trim, 0.8)
   rect(pen, x1 - 2.2, top - 2.9, x1 - 1.6, top - 1.6, C.roof)
-  // Smoke from the chimney, slow.
-  for (let i = 0; i < 4; i++) {
-    const u = ((t * 0.12 + i / 4) % 1 + 1) % 1
-    blob(pen, circle([x1 - 1.9 + u * 0.8, top - 3.0 - u * 1.6], 0.2 + u * 0.35), '#1B2427', 0.45 * (1 - u))
-  }
   // The windows: upstairs, and down; the one at the right is where the shots come from.
-  const lit = (i: number) => 0.85 + 0.15 * Math.sin(t * 2.1 + i * 1.7)
-  const win = (cx: number, cy: number, w: number, h: number, i: number, dim = false) => {
+  const win = (cx: number, cy: number, w: number, h: number, dim = false) => {
     rect(pen, cx - w / 2 - 0.08, cy - h / 2 - 0.08, cx + w / 2 + 0.08, cy + h / 2 + 0.1, C.trim)
-    rect(pen, cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2, dim ? C.winDim : mix(C.winDim, C.win, lit(i)))
+    rect(pen, cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2, dim ? C.winDim : C.win)
     line(pen, [cx, cy - h / 2], [cx, cy + h / 2], C.trim, 0.5)
     line(pen, [cx - w / 2, cy], [cx + w / 2, cy], C.trim, 0.5)
     if (!dim) glow(pen, [cx, cy], 1.4, C.win, 0.12)
   }
-  for (const [i, cx] of [x0 + 1.0, x0 + 3.3, x0 + 5.6].entries()) win(cx, top + 1.2, 0.75, 1.05, i, i === 1)
-  win(x0 + 0.55, ROAD - 2.0, 0.7, 1.15, 5)
+  for (const [i, cx] of [x0 + 1.0, x0 + 3.3, x0 + 5.6].entries()) win(cx, top + 1.2, 0.75, 1.05, i === 1)
+  win(x0 + 0.55, ROAD - 2.0, 0.7, 1.15)
   // The shot window: white in each burst.
   const sf = SHOT_FLASH(t)
-  win(SHOT_WIN[0], SHOT_WIN[1], 0.75, 1.15, 6)
+  win(SHOT_WIN[0], SHOT_WIN[1], 0.75, 1.15)
   if (sf > 0.01) {
     rect(pen, SHOT_WIN[0] - 0.37, SHOT_WIN[1] - 0.57, SHOT_WIN[0] + 0.37, SHOT_WIN[1] + 0.57, mix(C.win, C.white, sf))
     glint(pen, [SHOT_WIN[0] - 0.1, SHOT_WIN[1] + 0.05], 0.9 * sf + 0.2, C.white, sf)
@@ -634,7 +626,6 @@ export function drawBarn(pen: Pen, t: number): void {
       if (life <= 0) continue
       shape(pen, [[h.x - r * 1.5, ROAD], [h.x - r, ROAD - r * 0.5], [h.x + r, ROAD - r * 0.55], [h.x + r * 1.5, ROAD]], C.hayDark)
       tongue(pen, [h.x, ROAD - 0.05], r * 2.4, (r * 2.4 + 1.2 * k) * life, t, 100 + i)
-      if (k > 0.05) glint(pen, [h.x, ROAD - 0.3], 0.7 * k, C.fireCore, k)
     }
   }
   // The end walls, cut: the near end open; the far end's hay door, hinged at its head.
@@ -727,8 +718,7 @@ export function drawAirfield(pen: Pen, t: number, f: Frame): void {
   ellipse(pen, beacon, 0.1, 0.1, sweep < 0.5 ? C.green : C.runWhite)
   // Runway lights: a far row and a near row.
   for (let x = Math.ceil(Math.max(f.x0, APRON_FROM + 1) / 1.6) * 1.6; x < f.x1 + 1; x += 1.6) {
-    const tw = 0.8 + 0.2 * Math.sin(t * 2 + x)
-    glow(pen, [x, ROAD - 0.55], 0.28, C.blue, 0.5 * tw)
+    glow(pen, [x, ROAD - 0.55], 0.28, C.blue, 0.45)
     ellipse(pen, [x, ROAD - 0.55], 0.03, 0.025, C.blue)
   }
   for (let x = Math.ceil(Math.max(f.x0, APRON_FROM + 3) / 2.4) * 2.4; x < f.x1 + 1; x += 2.4) {

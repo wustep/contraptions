@@ -33,7 +33,7 @@ screen across, so he holds still while the world round him becomes somewhere els
 | 121.018 | 57–64 | **The bowling alley** (`alley/`) | As the band drops out: Queens after midnight, and a table in the back for money games. Wally holds the stakes. The hustle: the first point thrown on purpose (the bets go up), then every beat a bat; the winner flies off the table down a lane into all ten pins, the marks' hats come off, Marty rides the ball return back under the floor and pops out of its hood, and rolls along the curb behind Wally's cab to drop in over its trunk. |
 | 138.142 | 65–82 | **New Jersey** (`jersey/`) | As the guitar comes in: the same cab, now on a night road, Rachel beside him on the seat. The farmhouse, Mishkin's men, white bursts at a window; a lantern into the hay and the barn on fire through the solo; Rachel hurt, an ambulance's red light on the beats, the doors close on her. "I can't stand this indecision": across the dark field toward the airfield, back toward the ambulance's tail lights, and across again; up the stair a step a beat, to the round window. |
 | 176.689 | 83–94 | **Tokyo** (`tokyo/`) | On "Everybody wants to rule the -", broken off: the exhibition he is meant to throw, one table under one lamp in a packed arena, GIs in a block of the stands. He stamps and the house lights come up; on "never, never, never, never" the real match, all sixteen beats bats and all sixteen shuffles bounces; the winning smash on the "Everybody" (bar 89, the camera punches in), caps in the air, streamers, flash bulbs. Then quiet: Endo picks him off the floor, sets him on the end line, bows, and the lights go down to the one lamp. |
-| 202.391 | 95–end | **The ward** (`hospital/`) | On "All for freedom and for pleasure": the foot of Rachel's bed at dawn; he rolls up to her, a warm glow between them, and goes down the corridor's checkerboard. On the last "Everybody wants to rule the world" (bar 99) he lands on the nursery window's sill and the blind goes up: his son, in the nursery's one warm light. The other babies cry, the nurse lifts him right up to the glass beside Marty, Marty trembles on the beats. Under the credits the hall's light goes down round the lit window and the camera pushes in slowly on the two of them, and holds. |
+| 202.391 | 95–end | **The ward** (`hospital/`) | On "All for freedom and for pleasure": the foot of Rachel's bed at dawn; he rolls up to her, a warm glow between them, and goes down the corridor's checkerboard. On the last "Everybody wants to rule the world" (bar 99) he lands on the nursery window's sill and the blind goes up: his son, in the nursery's one warm light, the other babies asleep. The nurse lifts him right up to the glass beside Marty, Marty trembles on the beats. Under the credits the hall's light goes down round the lit window and the camera pushes in slowly on the two of them, and holds. |
 
 The camera is authored (holds, follows and a few cuts on strikes), punches in twice (the tub, the winning point), and
 whips nowhere. Over every place lie a 35 mm grain and a soft vignette (`rally/grain.ts`), baked once per canvas size
@@ -51,7 +51,7 @@ story's four fixed moments are `LOSS`, `CRASH`, `WIN` and `SON`.
 ## What the check holds
 
 `apps/rube/checks/rally.ts`: the order of the places; every cut on a downbeat and on the song's turns, and a match cut
-(the ball never moves on the screen across it); one continuous path; 548 strikes, every one within 30 ms of a beat, a
+(the ball never moves on the screen across it); one continuous path; 529 strikes, every one within 30 ms of a beat, a
 shuffle or a measured onset; the turns struck (the bass in, "Welcome", each hook, the lost point, the tub, the break,
 the guitar, the broken line, the winning point, "All for freedom", his son); the matches striking most of their beats
 (the Tokyo match all of them); the camera never whipping, cutting only on strikes, and keeping Marty findable and in
@@ -80,3 +80,14 @@ the level crossing on New Jersey's road (the guitar carries the ride on its own)
 Murray's safe and the safe's light breathing with the song, London's drift toward Kay and its in-and-out cut on Endo's
 last lob, and the ward's after-song gesture (Marty edging closer, the boy's hand, the lean): the push-in holds on the
 two of them instead.
+
+## The second subtraction pass
+
+Then once more with fresh eyes, cutting the busy detail and the idle motion that the first cut had left: in the ward,
+the other babies' crying (they sleep, and his son is the one awake in the one warm light), the chimney's smoke in the
+window and the flashes off the tile where he lands; in the alley, the El train across the hustle, the urn's steam, the
+stuttering tube, and the star-glints off the door, the bills and the house balls; at the hotel, the radiator's puffs of
+steam and the cartoon marks off its clanks and the fire escape's treads, and the star on the puddle; in New Jersey, the
+farmhouse chimney's smoke, its windows' flicker, the stars' and runway lights' twinkle, and the star on each burning
+bale; in Tokyo, three of the four flash bulbs on the broken-off line (one stays, on the line itself), and the flash
+bulbs drawn as plain bursts of light rather than stars.

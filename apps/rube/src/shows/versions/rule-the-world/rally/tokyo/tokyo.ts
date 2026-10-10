@@ -10,9 +10,8 @@ import { BACK2, END, LEAVE, P0, PICK, SERVE, SET, STOMPS, T0, T1, TOKYO_STRIKES,
  * Tokyo (176.689 → 202.391, bars 83 to 94): the exhibition he is meant to lose, and the real match he forces.
  *
  * He comes in at rest on the near corner of the one table, under the lamp, the crowd dark round it, on the broken-off
- * "Everybody wants to rule the -"; flash bulbs go in the stands, the umpire's bell, Endo bows. Marty refuses: he stomps
- * on the table, and each stomp brings a section of the house lights up, while his sprung bat cocks; he hops back into
- * its pan. Then "Say that you'll never, never…": the real match, a bat on every beat and a bounce on every shuffle,
+ * "Everybody wants to rule the -"; a flash bulb, the umpire's bell, Endo bows. Marty refuses: he stomps on the table, and each stomp
+ * brings a section of the house lights up, while his sprung bat cocks; he hops back into its pan. Then "Say that you'll never, never…": the real match, a bat on every beat and a bounce on every shuffle,
  * Endo's thick sponge bat against Marty's sprung one, the crowd surging, the GIs on their feet. On "Everybody" (WIN)
  * his bat fires with everything and the ball goes past Endo into the boards; the arena erupts (caps, streamers, flash
  * bulbs on the beats). In the quiet, Endo turns, picks him up off the floor, carries him back and sets him on the end

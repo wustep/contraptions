@@ -198,28 +198,15 @@ export function drawArena(pen: Pen, t: number, f: { x0: number; y0: number; x1: 
   glow(pen, [NET_X, FLOOR + 0.05], 3.6, C.lamp, 0.12)
   drawJudges(pen, t)
   drawBoard(pen, t)
-  // Flash bulbs, in the stands.
-  for (const [i, ft] of [...FLASH_IN, ...FLASH_WIN].entries()) {
+  // Flash bulbs in the stands: one as he comes in, and the arena's as it erupts.
+  for (const [i, ft] of [FLASH_IN, ...FLASH_WIN].entries()) {
     const u = t - ft
     if (u < 0 || u > 0.6) continue
-    const pos = flashAt(i, ft)
+    const pos: Pt = i === 0 ? [1.3, -1.05] : [-3 + 12.5 * hash(i + 3, 71), -5.4 + 5 * hash(i + 3, 72)]
     const a = flash(u, 0.12)
     glow(pen, pos, 2.2, C.lamp, 0.35 * a)
-    glint(pen, pos, 0.32 * (0.6 + 0.4 * a), '#FFFFFF', a)
+    glow(pen, pos, 0.4, '#FFFFFF', a)
   }
-}
-
-function flashAt(i: number, ft: number): Pt {
-  if (ft < SERVE) {
-    const fixed: Pt[] = [
-      [1.3, -1.05],
-      [-1.9, -1.6],
-      [2.5, -0.55],
-      [-1.0, -2.1],
-    ]
-    return fixed[i % fixed.length]
-  }
-  return [-3 + 12.5 * hash(i, 71), -5.4 + 5 * hash(i, 72)]
 }
 
 /** A string of paper lanterns across the arena, sagging between its posts. */

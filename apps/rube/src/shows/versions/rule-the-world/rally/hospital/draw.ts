@@ -10,7 +10,6 @@ import {
   BLIND_TOP,
   BLOOM,
   CEIL,
-  CRIES,
   CURTAIN,
   CUT,
   DADO,
@@ -95,8 +94,6 @@ export const C = {
   hair: '#4A3528',
   band: '#2C2C2C',
   babySkin: '#EFC5AA',
-  cry: '#E59486',
-  mouth: '#5E2A2A',
   hoodBlue: '#BCD4E6',
   hoodPink: '#ECC7D0',
   blind: '#E8DFC5',
@@ -153,7 +150,7 @@ export function drawSet(pen: Pen, t: number, f: Frame): void {
   glow(pen, [-4.6, -0.4], 3.6, morning, 0.1 + 0.18 * w)
   glow(pen, [-9.4, -1.6], 5.5, morning, 0.05 + 0.16 * w)
   drawFloor(pen, f, w)
-  drawWardWindow(pen, t, w)
+  drawWardWindow(pen, w)
   drawCurtain(pen, f)
   drawStand(pen, w)
   drawBed(pen, w)
@@ -203,7 +200,7 @@ function drawFloor(pen: Pen, f: Frame, w: number): void {
 }
 
 /** The tall window behind the bed: the city's roofs and water tanks against the dawn. */
-function drawWardWindow(pen: Pen, t: number, w: number): void {
+function drawWardWindow(pen: Pen, w: number): void {
   const { x0, x1, y0, y1 } = WARD_WIN
   rect(pen, x0 - 0.16, y0 - 0.16, x1 + 0.16, y1 + 0.2, C.frameShade)
   vgrad(pen, x0, y0, x1, y1, [
@@ -244,11 +241,6 @@ function drawWardWindow(pen: Pen, t: number, w: number): void {
     rect(pen, tx - 0.22 * s, ty - 0.42 * s, tx + 0.22 * s, ty, roofs)
     shape(pen, [[tx - 0.25 * s, ty - 0.42 * s], [tx, ty - 0.62 * s], [tx + 0.25 * s, ty - 0.42 * s]], roofs)
     line(pen, [tx - 0.22 * s, ty - 0.2 * s], [tx + 0.22 * s, ty - 0.2 * s], far, 0.5)
-  }
-  // A thread of smoke from a chimney, slow.
-  for (let i = 0; i < 5; i++) {
-    const u = ((t * 0.08 + i / 5) % 1) as number
-    glow(pen, [x1 - 0.7 + u * 0.3, y1 - 0.9 - u * 1.2], 0.18 + u * 0.2, mix('#C7CDD2', '#F2D9B5', w), 0.25 * (1 - u))
   }
   ctx.restore()
   // The sashes and their bars.
@@ -454,14 +446,6 @@ export function drawPart(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
   // Their shadows, and his on what he crosses.
   shadow(pen, rachel, 0.13, 0.2)
   if (t < SON + 2 || marty[1] < SILL_TOP) shadow(pen, marty, 0.13, 0.28)
-  // His landings on the floor: a little light off the tile.
-  for (const l of LANDS.slice(0, 2)) {
-    const f = flash(t - l, 0.3)
-    if (f > 0.01) {
-      const x = laneX(l)
-      glow(pen, [x, FLOOR + 0.08], 0.55, '#FFF6E0', 0.55 * f)
-    }
-  }
   drawBench(pen, t)
   const sun = smooth(t, 232, 264)
   if (sun > 0.003) {
@@ -478,9 +462,6 @@ export function drawPart(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
   }
 }
 
-/** Where he lands at each landing time (the floor's lands are the first two). */
-const laneX = (t: number): number => (t === LANDS[0] ? -2.6 : t === LANDS[1] ? -4.4 : -6.3)
-
 function drawBench(pen: Pen, t: number): void {
   const [a, b] = BENCH
   const dy = 0.02 * ring(t - LANDS[2], 9, 0.16)
@@ -496,18 +477,6 @@ function drawBench(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the nursery */
 
-/** How open a crying baby's mouth is at `t`. */
-function cryOf(t: number, i: number): number {
-  let v = 0
-  for (const [c, who] of CRIES) {
-    if (who !== i) continue
-    const s = t - c
-    if (s < 0 || s > 1.6) continue
-    v = Math.max(v, s < 0.35 ? Math.min(1, s / 0.05) : Math.exp(-(s - 0.35) / 0.3))
-  }
-  return v
-}
-
 function bassinet(pen: Pen, x: number, rim: number, s: number, legs: boolean): void {
   const hw = 0.39 * s
   const d = 0.3 * s
@@ -520,23 +489,17 @@ function bassinet(pen: Pen, x: number, rim: number, s: number, legs: boolean): v
   line(pen, [x - hw + 0.05, rim + d * 0.55], [x + hw - 0.05, rim + d * 0.55], C.enamelShade, 0.5)
 }
 
-/** A newborn, drawn: swaddled, the head at the right, a knit cap; crying when `cry` is up. */
-function newborn(pen: Pen, x: number, rim: number, s: number, cry: number, hood: string): void {
-  const jig = 0.012 * s * Math.sin(cry * 40) * cry
-  ellipse(pen, [x - 0.08 * s, rim - 0.055 * s + jig], 0.25 * s, 0.085 * s, C.sheet)
-  line(pen, [x - 0.2 * s, rim - 0.06 * s + jig], [x + 0.05 * s, rim - 0.1 * s + jig], C.blanketShade, 0.5)
-  const head: Pt = [x + 0.17 * s, rim - 0.08 * s + jig]
-  ellipse(pen, head, 0.072 * s, 0.072 * s, mix(C.babySkin, C.cry, 0.6 * cry))
+/** A newborn, drawn, asleep: swaddled, the head at the right, a knit cap. */
+function newborn(pen: Pen, x: number, rim: number, s: number, hood: string): void {
+  ellipse(pen, [x - 0.08 * s, rim - 0.055 * s], 0.25 * s, 0.085 * s, C.sheet)
+  line(pen, [x - 0.2 * s, rim - 0.06 * s], [x + 0.05 * s, rim - 0.1 * s], C.blanketShade, 0.5)
+  const head: Pt = [x + 0.17 * s, rim - 0.08 * s]
+  ellipse(pen, head, 0.072 * s, 0.072 * s, C.babySkin)
   // The cap, over the top and back of the head.
   const { p, k } = pen
   p.noStroke()
   p.fill(pen.tone(hood))
   p.arc(head[0] * k, head[1] * k, 0.17 * s * k, 0.17 * s * k, Math.PI * 0.95, Math.PI * 1.9, p.PIE)
-  if (cry > 0.02) {
-    ellipse(pen, [head[0] + 0.02 * s, head[1] + 0.02 * s], 0.02 * s * (0.5 + cry), 0.024 * s * cry, C.mouth)
-    // A small fist up out of the blanket.
-    ellipse(pen, [x - 0.02 * s, rim - 0.13 * s - 0.05 * s * cry], 0.03 * s, 0.03 * s, mix(C.babySkin, C.cry, 0.4))
-  }
 }
 
 /** Head bowed to the bassinet before LOOK; up to the glass after; leaning in to reach, straightening as she lifts. */
@@ -634,7 +597,7 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt): void {
   // The back row, the nurse, the front row; the son's own bassinet, his blanket over him drawn after (over the ball).
   BACK.forEach((x, i) => {
     bassinet(pen, x, BACK_RIM, 0.8, true)
-    newborn(pen, x, BACK_RIM, 0.8, cryOf(t, 3 + i), i % 2 ? C.hoodPink : C.hoodBlue)
+    newborn(pen, x, BACK_RIM, 0.8, i % 2 ? C.hoodPink : C.hoodBlue)
   })
   drawNurse(pen, t, baby)
   // His own light: the one warm light in the nursery, on him from the moment the blind goes up.
@@ -645,7 +608,7 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt): void {
   }
   FRONT.forEach((x, i) => {
     bassinet(pen, x, FRONT_RIM, 1, false)
-    if (i > 0) newborn(pen, x, FRONT_RIM, 1, cryOf(t, i - 1), i % 2 ? C.hoodPink : C.hoodBlue)
+    if (i > 0) newborn(pen, x, FRONT_RIM, 1, i % 2 ? C.hoodPink : C.hoodBlue)
   })
   drawArms(pen, t, baby)
   // The swaddle's hood behind his head (his face clear of it).

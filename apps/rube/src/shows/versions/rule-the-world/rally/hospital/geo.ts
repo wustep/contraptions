@@ -63,17 +63,6 @@ export const WRIGGLES: number[] = (() => {
   return out
 })()
 
-/** The other babies cry: [time, which]. */
-export const CRIES: [number, number][] = (() => {
-  const out: [number, number][] = []
-  let n = 0
-  for (let bar = 101; bar <= 114; bar++) {
-    out.push([at(bar, 1), n++ % 5])
-    if (bar % 2 === 0 && bar <= 110) out.push([at(bar, 3), (n++ * 3) % 5])
-  }
-  return out
-})()
-
 /* ------------------------------------------------------------------ the ground */
 
 export const FLOOR = 1.3
@@ -277,7 +266,6 @@ export const HOSPITAL_STRIKES: number[] = [
   LIFTED,
   ...TREMBLES,
   ...WRIGGLES,
-  ...CRIES.map(([t]) => t),
 ]
   .filter((t, i, all) => all.findIndex((u) => Math.abs(u - t) < 1e-6) === i)
   .sort((a, b) => a - b)

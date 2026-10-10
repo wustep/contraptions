@@ -92,7 +92,6 @@ const C = {
   winWarm: '#C99A52',
   winCool: '#7FA3B8',
   trestle: '#05080F',
-  train: '#E2C27A',
   street: '#141B27',
   streetHi: '#1F2A3A',
   walk: '#3A4658',
@@ -397,7 +396,7 @@ function drawFedora(pen: Pen, base: Pt, rot: number, col: string): void {
 /** The night outside, the room, the lanes, the floor in section: drawn first, on show time. */
 export function drawSet(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
   rect(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, C.dark)
-  if (f.x0 < WALL[0]) outside(pen, t, Math.max(f.x0 - 1, -40), WALL[0], f)
+  if (f.x0 < WALL[0]) outside(pen, Math.max(f.x0 - 1, -40), WALL[0], f)
   if (f.x1 > WALL[1] && f.x0 < END_WALL) room(pen, t, f)
   if (f.x1 > END_WALL) {
     rect(pen, END_WALL, f.y0 - 1, f.x1 + 1, f.y1 + 1, C.brickDark)
@@ -405,13 +404,13 @@ export function drawSet(pen: Pen, t: number, f: { x0: number; y0: number; x1: nu
   }
 }
 
-function outside(pen: Pen, t: number, x0: number, x1: number, f: { y0: number; y1: number }): void {
+function outside(pen: Pen, x0: number, x1: number, f: { y0: number; y1: number }): void {
   vgrad(pen, x0, f.y0 - 1, x1, ROAD, [
     [0, C.sky0, 1],
     [0.55, C.sky1, 1],
     [1, C.sky2, 1],
   ])
-  // The El on its trestle, over the far side of the street, and a train now and then.
+  // The El on its trestle, over the far side of the street.
   const ty = -3.55
   for (let x = Math.floor(x0 / 3.4) * 3.4; x < x1; x += 3.4) rect(pen, x - 0.07, ty, x + 0.07, -0.5, C.trestle)
   // Across the street: low brick, a few windows lit.
@@ -441,16 +440,6 @@ function outside(pen: Pen, t: number, x0: number, x1: number, f: { y0: number; y
   }
   rect(pen, x0, ty - 0.3, x1, ty, C.trestle)
   for (let x = Math.floor(x0 / 0.5) * 0.5; x < x1; x += 0.5) line(pen, [x, ty - 0.3], [x + 0.5, ty], '#0C1424', 0.6)
-  const train = trainAt(t)
-  if (train !== null) {
-    for (let c = 0; c < 4; c++) {
-      const cx = train - c * 3.1
-      if (cx + 3 < x0 || cx > x1 + 3) continue
-      rect(pen, cx, ty - 0.82, cx + 2.95, ty - 0.32, '#141A24')
-      for (let wn = 0; wn < 7; wn++) rect(pen, cx + 0.18 + wn * 0.4, ty - 0.68, cx + 0.42 + wn * 0.4, ty - 0.48, C.train)
-      glow(pen, [cx + 1.5, ty - 0.55], 1.8, C.train, 0.12)
-    }
-  }
   // The far sidewalk; the street; the near sidewalk at the door, and its curb.
   rect(pen, x0, -0.62, x1, -0.5, '#2E394A')
   vgrad(pen, x0, -0.5, x1, ROAD + 0.05, [
@@ -482,14 +471,6 @@ function outside(pen: Pen, t: number, x0: number, x1: number, f: { y0: number; y
   glow(pen, [lx + 2.2, ROAD], 3.2, C.mercury, 0.1)
 }
 
-function trainAt(t: number): number | null {
-  // One train, right to left, through the hustle.
-  const t0 = 126.0
-  const v = -9
-  const x = 2 + v * (t - t0)
-  return x > -40 && x < 12 ? x : null
-}
-
 function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
   const x0 = WALL[1]
   const x1 = END_WALL
@@ -504,7 +485,7 @@ function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: 
     path(pen, [[x, -2.2], [x, -3.75], [x + 1.9, -3.75]], mix(C.creamDark, '#000000', 0.3), 0.5)
   }
   // Each tube washes the wall under it, cold.
-  for (const tx of TUBES) glow(pen, [tx + 0.85, -3.4], 2.0, C.tubeGlow, 0.16 * tubeLit(tx, t))
+  for (const tx of TUBES) glow(pen, [tx + 0.85, -3.4], 2.0, C.tubeGlow, 0.16)
   rect(pen, x0, -1.95, x1, BACK, mix(C.wood, '#000000', 0.2))
   for (let x = x0 + 0.1; x < x1; x += 0.42) rect(pen, x, -1.92, x + 0.025, BACK, C.woodDark)
   rect(pen, x0, -2.03, x1, -1.92, C.trim)
@@ -546,15 +527,14 @@ function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: 
   }
   rect(pen, x0, CEIL, x1, CEIL + 0.06, C.woodDark)
   for (const tx of TUBES) {
-    const lit = tubeLit(tx, t)
     rect(pen, tx - 0.05, CEIL + 0.06, tx + 1.75, CEIL + 0.12, '#3A3530')
-    rect(pen, tx, CEIL + 0.12, tx + 1.7, CEIL + 0.2, mix('#5D6460', C.tube, lit))
-    glow(pen, [tx + 0.85, CEIL + 0.6], 2.6, C.tubeGlow, 0.13 * lit)
-    glow(pen, [tx + 0.85, CEIL + 0.16], 0.9, C.tube, 0.35 * lit)
+    rect(pen, tx, CEIL + 0.12, tx + 1.7, CEIL + 0.2, C.tube)
+    glow(pen, [tx + 0.85, CEIL + 0.6], 2.6, C.tubeGlow, 0.13)
+    glow(pen, [tx + 0.85, CEIL + 0.16], 0.9, C.tube, 0.35)
   }
 
   // The lunch counter, its stools, and what is on it.
-  counter(pen, t)
+  counter(pen)
 
   // The floor: the back aisle, the carpet, the approach, the lanes, the gutters.
   rect(pen, x0, BACK, x1, AISLE[1], C.carpet)
@@ -598,14 +578,13 @@ function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: 
   // The tubes' reflections run along the polished lanes.
   for (const tx of TUBES) {
     if (tx < FOUL - 1) continue
-    const lit = tubeLit(tx, t)
     for (const [a, b] of [FAR, NEAR]) {
       const y = a + (b - a) * 0.3
       const ctx = ctxOf(pen.p)
       const k = pen.k
       const g = ctx.createLinearGradient((tx - 0.9) * k, 0, (tx + 2.6) * k, 0)
       g.addColorStop(0, rgba(pen, C.tube, 0))
-      g.addColorStop(0.5, rgba(pen, C.tube, 0.42 * lit))
+      g.addColorStop(0.5, rgba(pen, C.tube, 0.42))
       g.addColorStop(1, rgba(pen, C.tube, 0))
       ctx.save()
       ctx.fillStyle = g
@@ -659,13 +638,6 @@ function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: 
 }
 
 const TUBES = [-0.6, 2.4, 5.4, 8.4, 11.4, 14.4, 17.4]
-function tubeLit(tx: number, t: number): number {
-  // One tube over the lanes is going, and stutters now and then.
-  if (tx !== 11.4) return 1
-  const u = (t * 1.7) % 7
-  if (u < 0.5) return 0.35 + 0.65 * (Math.sin(t * 71) > 0.2 ? 1 : 0.3)
-  return 0.92
-}
 
 function carpetPattern(pen: Pen, x0: number, y0: number, x1: number, y1: number): void {
   for (let y = y0 + 0.1; y < y1; y += 0.2) {
@@ -690,10 +662,10 @@ function crown(pen: Pen, c: Pt, s: number): void {
   for (const dx of [-0.55, 0, 0.55]) ellipse(pen, [x + dx * s, y - (dx === 0 ? 0.42 : 0.29) * s], 0.05 * s, 0.05 * s, C.crown)
 }
 
-function counter(pen: Pen, t: number): void {
+function counter(pen: Pen): void {
   const [x0, x1] = COUNTER
   const top = -2.42
-  // The back bar: a shelf, cups, the pie case, the urn steaming.
+  // The back bar: a shelf, cups, the pie case, the urn.
   rect(pen, x0 + 0.1, -3.05, x1 - 0.1, -2.98, C.woodDark)
   for (let i = 0; i < 6; i++) {
     const cx = x0 + 0.35 + i * 0.16
@@ -714,10 +686,6 @@ function counter(pen: Pen, t: number): void {
   rect(pen, ux - 0.17, top - 0.62, ux - 0.09, top - 0.1, mix(C.urn, '#FFFFFF', 0.3))
   ellipse(pen, [ux, top - 0.64], 0.17, 0.04, C.chromeDark)
   rect(pen, ux + 0.17, top - 0.28, ux + 0.25, top - 0.24, C.chromeDark)
-  for (let i = 0; i < 3; i++) {
-    const u = (t * 0.25 + i / 3) % 1
-    blob(pen, [[ux - 0.05 + Math.sin(t + i) * 0.05, top - 0.7 - u * 0.6], [ux + 0.06, top - 0.75 - u * 0.6], [ux, top - 0.85 - u * 0.6]], C.smoke, 0.12 * (1 - u))
-  }
   rect(pen, x0 + 0.6, top - 0.2, x0 + 0.78, top - 0.1, C.chrome)
   rect(pen, x0 + 0.92, top - 0.16, x0 + 1.04, top - 0.1, C.cup)
   // The counter's light: warm, from a shaded bulb over it.
@@ -841,7 +809,6 @@ function doorLeaf(pen: Pen, t: number): void {
   if (w < 0.06) {
     rect(pen, WALL[0] + 0.06, HEAD + 0.06, WALL[1] - 0.06, FLOOR, C.chromeDark)
     rect(pen, WALL[0] + 0.1, HEAD + 0.2, WALL[1] - 0.1, -0.5, '#1E3550')
-    glint(pen, [(WALL[0] + WALL[1]) / 2, -1.6], 0.22, C.mercury, 0.7 * flash(t - DOOR_SHUT, 0.25))
     return
   }
   const leaf: Pt[] = [[x, HEAD + 0.06], [x - w, HEAD + 0.16], [x - w, FLOOR - 0.08], [x, FLOOR]]
@@ -850,7 +817,6 @@ function doorLeaf(pen: Pen, t: number): void {
   shape(pen, [inset(0.12, 0.06), inset(0.88, 0.06), inset(0.88, 0.8), inset(0.12, 0.8)], '#1E3550')
   shape(pen, [inset(0.2, 0.1), inset(0.4, 0.1), inset(0.28, 0.6), inset(0.15, 0.6)], '#2F4E6C')
   line(pen, inset(0.15, 0.55), inset(0.85, 0.55), C.chrome, 1.4)
-  glint(pen, inset(0.3, 0.2), 0.2, C.mercury, 0.6 * flash(t - DOOR_SHUT, 0.25))
 }
 
 /* ------------------------------------------------------------------ the lamp over the money table */
@@ -1202,9 +1168,6 @@ function wally(pen: Pen, t: number): void {
     },
   })
   if (behind) ctx.restore()
-  // The money slaps home: a flick of light off the bills.
-  if (t >= RAISE && t < RAISE + 0.4) glint(pen, [0.24, -2.1], 0.22, C.creamHi, 0.9 * flash(t - RAISE, 0.12))
-  if (t >= POCKET && t < POCKET + 0.4) glint(pen, [w.x - 0.12, w.y - 2.35], 0.18, C.creamHi, 0.8 * flash(t - POCKET, 0.12))
 }
 
 /* ------------------------------------------------------------------ the rack and its house balls */
@@ -1236,7 +1199,6 @@ function rack(pen: Pen, t: number): void {
     }
     glint(pen, [b[0] - 0.07, b[1] - 0.09], 0.05, C.tube, 0.7)
   }
-  if (t >= CLACK && t < CLACK + 0.4) glint(pen, [BOWLS0[0] + 0.06 + BOWL_R, RAIL - BOWL_R], 0.18, C.white, flash(t - CLACK, 0.1))
 }
 
 /* ------------------------------------------------------------------ the near rack of pins */

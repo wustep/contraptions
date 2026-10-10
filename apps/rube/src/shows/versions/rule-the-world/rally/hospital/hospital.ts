@@ -13,7 +13,7 @@ import { AT_GLASS, babyAt, HOSPITAL_STRIKES, hospitalWay, LIFT, martyAt, NUDGE, 
  * bed, springs off its foot, and hops out of the ward's door and down the corridor's checkerboard on the beats, onto the
  * bench, onto the nursery's sill; and on the last "Everybody wants to rule the world" the blind goes up and there is his
  * son, in the front row's first bassinet. Through the guitar and the fade he stays at the glass, trembling on the beats
- * (he is crying), while the other babies cry and the nurse lifts the boy a little toward the glass; the camera eases
+ * (he is crying), while the nurse lifts the boy up to the glass beside him; the camera eases
  * back to a still picture of the corridor's window, the wall above it pale and quiet for the credits, the morning
  * warming to gold until the end.
  *

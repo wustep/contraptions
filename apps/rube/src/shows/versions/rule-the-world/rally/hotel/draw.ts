@@ -315,7 +315,6 @@ function drawStreet(pen: Pen, t: number, f: Frame): void {
     const gx = head[0] - 1.6 + i * 0.75
     line(pen, [gx, y + 0.04], [gx + 0.25, y + 0.04], C.sodium, 0.35)
   }
-  glint(pen, [head[0] + 0.1, y + 0.06], 0.12, C.sodium, 0.5 * lit)
   // The ripple where he lands.
   const sp = t - PAVE
   if (sp > 0 && sp < 1.4) {
@@ -516,17 +515,6 @@ function drawMartyRoom(pen: Pen, t: number): void {
   limb(pen, [r1 + dx, fl - 0.3], [r1 + 0.22, fl - 0.3], 0.07, C.radiatorDark)
   limb(pen, [r1 + 0.22, fl - 0.3], [r1 + 0.22, fl], 0.07, C.radiatorDark)
   ellipse(pen, [r1 + 0.22, fl - 0.42], 0.06, 0.06, C.iron)
-  for (const k of KNOCKS) {
-    const s = t - k
-    if (s < 0 || s > 0.9) continue
-    // A puff of steam from the valve, and the clank's little marks.
-    blob(pen, [[r1 + 0.2, fl - 0.5 - s * 0.6], [r1 + 0.35 + s * 0.3, fl - 0.65 - s * 0.9], [r1 + 0.15, fl - 0.8 - s * 1.0], [r1 + 0.0, fl - 0.6 - s * 0.7]], '#DCD8CC', 0.35 * (1 - s / 0.9))
-    const m = flash(s, 0.12)
-    for (const a of [-0.5, 0, 0.5]) {
-      const c: Pt = [r1 + 0.22 + 0.25 * Math.sin(a), fl - 0.32 - 0.25 * Math.cos(a)]
-      line(pen, c, [c[0] + 0.14 * Math.sin(a), c[1] - 0.14 * Math.cos(a)], C.plasterHi, 0.7 * m)
-    }
-  }
   // The suitcase under the bed (back from London), the iron bed, its mattress.
   rect(pen, BED[0] + 0.5, fl - 0.42, BED[0] + 1.75, fl - 0.02, C.suitcase)
   rect(pen, BED[0] + 0.8, fl - 0.42, BED[0] + 0.88, fl - 0.02, C.strap)
@@ -814,8 +802,6 @@ export function drawFireEscape(pen: Pen, t: number): void {
     const y = L_MISH + RISE * n
     const m = flash(s, 0.12)
     line(pen, [x - 0.2, y + 0.01 + 0.03 * ring(s, 14, 0.12)], [x + 0.2, y + 0.01 - 0.03 * ring(s, 14, 0.12)], '#9FB4B0', 1.4 * m)
-    // The ring: little marks off both ends of the tread.
-    for (const side of [-1, 1]) for (const a of [-0.5, 0.3]) line(pen, [x + side * 0.26, y - 0.04 + a * 0.1], [x + side * 0.42, y - 0.08 + a * 0.22], '#BFD2CC', 0.7 * m)
   }
   drawLadder(pen, t)
 }
