@@ -820,6 +820,11 @@ punch, or meant (the blast, the lamp going out, Ian coming into the chamber, the
 changes shows among them, and the blast's own jump is smaller than it was, the room seen through it. Nothing to
 change.
 
+An eighty-third looked at what the seventy-fourth to the seventy-ninth changed through Zoom and a tall frame, the
+cameras the sixty-second and the seventy-first last took: the suit, the soldier, the ring into the gala, the hops on
+the keys, Ian by the cradle, his look back and his going. All held; he is out of the tall frame by 360 s, long
+before the last. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
