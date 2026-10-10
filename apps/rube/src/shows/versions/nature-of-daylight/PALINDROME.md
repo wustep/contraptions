@@ -829,6 +829,11 @@ An eighty-fourth took the question six fresh readers in fourteen had left open: 
 his red alone, close to Hannah's rose, he was her grown, a stranger, a lover. His red stays (it is China's screen and
 the alarm lamp); a general wears a mark, and he is a little the larger now, his outline a dress uniform's brass braid.
 
+An eighty-fifth gave the show to a fifteenth fresh reader, asked to name every ball. The eighty-fourth's braid did not
+settle Shang: they still asked whether the red ball was a spouse or Hannah grown. Without words a ball can carry only
+so much; the braid and his bearing stay, harmless, but the question is not answered by them. Their other notes had
+been met before. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
