@@ -998,6 +998,13 @@ The notes went back to the builders who made each part, who still had their cont
   now scrubbed in it every half second, 663 frames, and again with reduced motion asked for: no errors (the one
   failing request is the analytics' debug script). Page screenshots of the chapters, the step-printed alley, the
   surf's Waymond, the mosaic's family, the rocks' subtitle and the peak's line match Chrome's.
+- **Heard, not only seen.** The show has dialogue now, and none of it reached a screen reader: the page's words layer
+  is `aria-hidden`, as its cards fade and blur. A card can now be spoken (`TitleCard.said`, a shared addition the
+  player honours through a visually hidden polite live region): once, as it first comes up while the show plays, and
+  not on a scrub or a seek. Every line is spoken with who says it (*Joy: Mom? Can I —*), since a reader cannot see
+  roman from italic; the chapters and the credits are spoken as they read. Played through the taxes, the alley and
+  the rocks, each line was heard once with its speaker, and seeking through them while paused said nothing.
+  `check:shows` holds it, and fails on a line without its speaker. `npm run build` passes (3,070 checks).
 
 ## The looks
 
@@ -1155,7 +1162,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - `shows/words.ts`: a saved video sets a card at its `scale`, and a `plain` card's accents in cream, as the page
     does (for the chapters; Boléro's and Soft Lamp's scaled credits needed it too);
   - `shows/registry.ts` and `shows/player.ts`: `TitleCard.least`, a floor on a card's type on the page, for words
-    read on a phone, and a card it grows kept within the stage. Cards without it are set as before.
+    read on a phone, and a card it grows kept within the stage; and `TitleCard.said`, a card spoken to a screen
+    reader as it comes up while the show plays. Cards without them are as before.
 - **Measuring the audio again.** For authoring only: `sh scripts/shows/eeaao-cue.sh <fetched cue>` cuts a private
   copy, and `python3 scripts/shows/eeaao-onsets.py` measures it. The copy is not to be committed or shipped; the
   show plays from YouTube.

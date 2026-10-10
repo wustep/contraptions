@@ -267,6 +267,20 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     SUBTITLES.length >= 14 && SUBTITLES.every((sub, i) => sub.at > scenes[sub.scene][0] + 0.5 && sub.to < scenes[sub.scene][1] - 0.2 && sub.to > sub.at + 1 && (i === 0 || sub.at >= SUBTITLES[i - 1].to)) &&
     SUBTITLES.every((sub) => sub.to < 213.96 - 0.2 || sub.at > 213.96 + 1.5) && ['taxes', 'alley', 'hush', 'rocks', 'home'].every((sc) => SUBTITLES.some((s) => s.scene === sc)))
 
+  // Heard as well as seen: every line of dialogue is spoken to a screen reader with who says it, and every chapter and
+  // credit card is spoken (`TitleCard.said`; the page's words layer is hidden from it).
+  const unsaid: string[] = []
+  for (const sub of SUBTITLES) {
+    const card = creditsAt((sub.at + sub.to) / 2).find((c) => c.key.includes('subtitle'))
+    const who = sub.who[0].toUpperCase() + sub.who.slice(1)
+    if (!card || card.said !== `${who}: ${sub.line}`) unsaid.push(sub.line)
+  }
+  for (const c of [...CHAPTERS, ...CARDS]) {
+    const card = creditsAt(c.at + 1.5).find((x) => x.names.join() === c.names.join())
+    if (!card || !card.said) unsaid.push(c.names.join())
+  }
+  check('all at once: every line is spoken to a screen reader with its speaker, and every chapter and credit card is spoken', unsaid.length === 0, unsaid.join(' | '))
+
   // The end credits: words the page sets over the dark room after the last hit, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
   check('all at once: end credits after the last hit, set by the page, opening on Directed by Claude Opus 5.5 and naming Evelyn, Joy, Waymond, Son Lux, the film and p5.js',

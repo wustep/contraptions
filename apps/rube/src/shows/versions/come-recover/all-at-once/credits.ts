@@ -209,6 +209,8 @@ export const subtitleBed = scenery<null>({
   },
 })
 const SUB_FADE = 0.28
+/** Who speaks, for a screen reader, which cannot see roman from italic. */
+const WHO = { evelyn: 'Evelyn', joy: 'Joy', waymond: 'Waymond' } as const
 
 /** When a card has gone, show seconds. */
 export const goneAt = (card: Card): number => card.at + FORM + card.hold + GO
@@ -219,7 +221,7 @@ export function creditsAt(t: number): TitleCard[] {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
     // On a tall stage the first lifts into the dark over the room, clear of the bright washer it would grow across.
-    out.push({ key: `all-at-once-chapter-${n}`, role: card.role, names: card.names, title: true, light, rise: rise * 0.5, at: card.pos, scale: card.scale, least: WORDS_LEAST, lift: n === 0 ? 1.55 : undefined })
+    out.push({ key: `all-at-once-chapter-${n}`, role: card.role, names: card.names, title: true, light, rise: rise * 0.5, at: card.pos, scale: card.scale, least: WORDS_LEAST, said: true, lift: n === 0 ? 1.55 : undefined })
   })
   SUBTITLES.forEach((sub, n) => {
     const up = clamp((t - sub.at) / SUB_FADE)
@@ -231,15 +233,15 @@ export function creditsAt(t: number): TitleCard[] {
     const at = subAt(sub.scene)
     const card: TitleCard =
       sub.who === 'evelyn'
-        ? { key: `all-at-once-subtitle-${n}`, names: [sub.line], plain: true, light, rise: 0, at, scale: 0.62, least: SUB_LEAST / 5.6 }
-        : { key: `all-at-once-subtitle-${n}`, names: [], notes: [sub.line], plain: true, light, rise: 0, at: [at[0], at[1] + 0.006], scale: 1.75, least: SUB_LEAST / 1.95 }
+        ? { key: `all-at-once-subtitle-${n}`, names: [sub.line], plain: true, light, rise: 0, at, scale: 0.62, least: SUB_LEAST / 5.6, said: `${WHO[sub.who]}: ${sub.line}` }
+        : { key: `all-at-once-subtitle-${n}`, names: [], notes: [sub.line], plain: true, light, rise: 0, at: [at[0], at[1] + 0.006], scale: 1.75, least: SUB_LEAST / 1.95, said: `${WHO[sub.who]}: ${sub.line}` }
     out.push(card)
   })
   if (t < CREDITS_AT) return out
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `all-at-once-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, least: WORDS_LEAST })
+    out.push({ key: `all-at-once-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, least: WORDS_LEAST, said: true })
   })
   return out
 }
