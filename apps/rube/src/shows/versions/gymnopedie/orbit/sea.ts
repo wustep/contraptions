@@ -7,9 +7,10 @@ import {
 } from './air'
 import { BALL, alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
-  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, bodies, sunWay, AURORA_OVER, lamplighter, devicePx,
+  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, bodies, sunWay, AURORA_OVER, lamplighter, devicePx, sunAngle, moonAngle,
 } from './frame'
 import { lampLight, farStones } from './stones'
+import { mirrorShore } from './shore'
 
 // ---------------------------------------------------------------- the light on the water
 
@@ -480,6 +481,8 @@ function mirror(p: p5, c: PieceCtx, v: View, day: Sky, water: Path2D, close: num
   gc.globalAlpha = 1
   gc.clearRect(0, top / 2, w, h - top / 2)
   gc.setTransform(new DOMMatrix([0.5, 0, 0, 0.5, 0, 0]).multiply(ctx.getTransform()))
+  // The far shore first, behind the stones.
+  mirrorShore(gc, k, c.t, (v.u1 - v.u0) / 2, { day, sunAngle: sunAngle(c.t), moonUp: smooth(1.9 - Math.abs(moonAngle(c.t)), 0, 0.5) })
   farStones(gc, c, v, day, true, 0.8)
   // And the ball, upside down under itself, with its flame through the first Gnossienne.
   {

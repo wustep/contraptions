@@ -191,6 +191,44 @@ number of times in `f` of the way round, and its wind carries it a whole number 
 with the period like everything else. Anything in a layer fades towards the edge of its repeat (`inLayer`), so when the
 camera draws out wider than a repeat nothing jumps across the frame.
 
+## The far shore
+
+The sea had nothing beyond it but cloud; now the ball goes along a coast (`shore.ts`). Islands stand out on the
+horizon, in front of the bank of cloud and behind the boats, and behind them, paler, two ranges of mountains further
+off. They are far, so they go by slowly (the islands at 0.16 of the ball's pace, the mountains at 0.07), each taking a
+couple of minutes to cross the frame; each layer's repeat is its share of the way round, once, so it comes round with
+the period. Each island is placed by the moment it is in the middle of the frame, so the day is told by what is out
+there:
+
+- skerries at dawn;
+- a temple on its hill in the morning sun, six columns and a pediment, with cypresses and a hamlet by the shore,
+  answering the colonnade;
+- a mountain that the afternoon shower comes down on, greying into the rain;
+- a white village up its hill at sunset, terraces of cubes, a blue-domed chapel at the top and a windmill on the
+  ridge, its sails turning;
+- a headland with a lighthouse, in view as the first Gnossienne begins;
+- a long low island under the aurora;
+- a hermitage between two peaks under the moon;
+- a sea stack before the dawn.
+
+They are lit by the day: the side towards the sun paler and warm when it is low, the whitewash taking the sunset's
+colour, the air between thickening them to the horizon's colour, more in the shower and the morning mist; they go to
+silhouettes against the sunset and dark against the night, edged with the moon's silver. A wide island is bent down
+with the sea's curve at its ends, so it never stands off the water.
+
+The shore keeps the story. At dusk, as the ball lights the colonnade's lamps, the villages' windows light one by one
+(198 to 242 s), and late in the night they go out one by one, a few kept until the dawn, which puts them out with the
+lamps. The lighthouse is lit with the ball's first lamp (`LIGHTHOUSE_ON`) and turns all night, thirty turns a period:
+its beam is a long soft wedge along the horizon, as long as it points across, widening and brightening as it swings
+towards us, and its lantern flashes as it faces us. The dawn puts it out. The sea gives the islands back, and their
+lit windows, in its rippled mirror.
+
+Its cost was measured. A first cut cost a few milliseconds a frame with the CPU slowed six times, most of it the
+houses and the windows drawn one rectangle at a time, so the houses are two fills an island (lit and shaded faces) and
+the fully lit windows one; each lit face and the haze is a fill of the outline with a gradient rather than a clip; the mirror takes only the islands' bodies and the windows. With the CPU slowed six times, the
+moments with the shore in view cost what they did without it, within the run-to-run variation (least of 30 redraws),
+and the worst moment of the loop (the pull-out between the Gnossiennes, about 15 ms) is unchanged.
+
 ## Any screen
 
 The camera frames a 16:9 picture. On a canvas narrower than that (a phone held upright, a tablet) the stage shows the
@@ -255,7 +293,7 @@ measured at under a millisecond's difference, and left out.
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
 the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the aurora, the whale) and their
-layers; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+layers; `shore.ts` the far shore; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 
@@ -313,4 +351,5 @@ Gymnopédie, with the bow after it and gone before the first Gnossienne; the wha
 Gnossienne's pond; gulls perch on the colonnade and lift off as the ball lands on their stone, on its note; rays come from the sun
 only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; every inner note lights a star of
 a constellation, at night; the aurora is the first Gnossienne's, in the full night only; the sun and the moon go round
-without a jump, the seam included; the titles.
+without a jump, the seam included; the far shore's windows are dark by day, lit in the night and out by the dawn, and
+the lighthouse is lit with the first lamp and put out by the dawn; the titles.

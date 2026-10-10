@@ -12,6 +12,7 @@ import { CADENCES, CLOSE, DAWN_GOING, SUN_GLINTS, gullFlight, PERCHED, dawnAt, l
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/gymnopedie/orbit/titles'
 import { BANK, BREAK, FIGURES, overcastAt, FIREFLY, GULLS, HEAPS, METEORS, MIST, SAILS, boatsOut, lanternAt, BOATS, auroraAt, figureAt, bowAt, coverAt, firefliesOut, layered, mistAt, rainAt, whaleAt } from '../src/shows/versions/gymnopedie/orbit/air'
 import { skyAt } from '../src/shows/versions/gymnopedie/orbit/world'
+import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -125,15 +126,29 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: every flower opens as the ball comes, and closes at dawn', flowers.length > 150 && closed.length === 0, closed.slice(0, 5).map((s) => s.index).join(', '))
 
   // The air: clouds, gulls, mist and fireflies at their depths, all coming round with the period.
-  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY, SAILS]
+  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY, SAILS, SHORE, RANGE]
   const roundAgain = layers.every((l) => [0, 3.3, 17.9, 40].every((x) => {
     const a = layered(x, 0, l.f, l.span, l.wind)
     const b = layered(x, PERIOD - 1e-7, l.f, l.span, l.wind)
     const d = Math.abs(a - b)
     return Math.min(d, l.span - d) < 1e-4
   }))
-  check('gymnopedie: every layer of the air (the clouds, the gulls, the mist, the fireflies, the boats) comes round with the period',
+  check('gymnopedie: every layer of the air (the clouds, the gulls, the mist, the fireflies, the boats, the far shore) comes round with the period',
     roundAgain && [coverAt, mistAt, firefliesOut, boatsOut].every((f) => Math.abs(f(PERIOD - 1e-7) - f(0)) < 1e-4))
+  // The far shore: its windows dark by day, lit at dusk with the lamps and out by the dawn; the lighthouse lit with the
+  // ball's first lamp and put out by the dawn, its light turning whole turns a period.
+  const windows = ISLES.flatMap((i) => i.houses.map((h) => h.window).filter((w) => w !== null))
+  const dayTimes = Array.from({ length: 80 }, (_, i) => 8 + i * 2.3)
+  const darkByDay = windows.every((w) => dayTimes.every((t) => windowAt(w, t) === 0))
+  const litAtNight = windows.filter((w) => windowAt(w, 300) > 0.8).length
+  const outByDawn = windows.every((w) => windowAt(w, 6) === 0 && windowAt(w, 0) >= 0)
+  check('gymnopedie: the far shore\'s windows are dark by day, lit in the night, and out by the dawn',
+    windows.length > 40 && darkByDay && litAtNight > windows.length * 0.9 && outByDawn, `${windows.length} windows, ${litAtNight} lit at 300 s`)
+  const piece1 = PIECES[1]
+  check('gymnopedie: the lighthouse is lit with the ball\'s first lamp, burns through the night, and the dawn puts it out; its light comes round',
+    LIGHTHOUSE_ON >= piece1.from && lighthouseAt(LIGHTHOUSE_ON - 0.01) === 0 && lighthouseAt(LIGHTHOUSE_ON + 2) === 1 &&
+    [300, 450, 600, PERIOD - 0.01, 0.5].every((t) => lighthouseAt(t) === 1) && dayTimes.every((t) => lighthouseAt(t) === 0) &&
+    Math.abs(beamAt(0).facing - beamAt(PERIOD - 1e-9).facing) < 1e-6 && Math.abs(beamAt(0).across - beamAt(PERIOD - 1e-9).across) < 1e-6)
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5

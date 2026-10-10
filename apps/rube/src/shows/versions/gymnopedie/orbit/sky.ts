@@ -6,6 +6,7 @@ import {
   BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, auroraAt, auroraSheet, auroraSize, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, METEORS, milkyWay, wingsAt, type CloudLight,
   FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat, lanternAt,
 } from './air'
+import { drawShore } from './shore'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
   scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, sunAngle, moonAngle, type Body, bodies, sunWay, moonWay, AURORA_OVER, SUN_FAR, MOON_FAR,
@@ -492,6 +493,8 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
     }
   }
   layer(BANKS, BANK, hazy, (0.6 - 0.4 * day.night) * near * light.alpha, false)
+  // The far shore, in front of the bank: islands, their villages and the lighthouse.
+  drawShore(ctx, k, c.t, half, { day, sunAngle: sunAngle(c.t), moonUp }, near)
   layer(CLOUDS, HEAPS, light, 0.92 * near * light.alpha, true)
 
   // Sailboats far out on the water by day, sitting into the sea (its surface is drawn over their hulls' feet).
