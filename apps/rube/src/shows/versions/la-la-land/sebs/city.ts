@@ -191,6 +191,44 @@ function drawRising(p: p5, k: number, t: number, fr: { x0: number; y0: number; x
   }
 }
 
+/**
+ * Many small lights, gathered into a path per colour and brightness level and filled once each: a thousand lamps are
+ * a few dozen fills, not a thousand.
+ */
+const LEVELS = 8
+function batch() {
+  const paths = new Map<string, Path2D[]>()
+  return {
+    dot(color: string, a: number, x: number, y: number, r: number) {
+      if (a <= 0.01) return
+      let ps = paths.get(color)
+      if (!ps) {
+        ps = Array.from({ length: LEVELS }, () => new Path2D())
+        paths.set(color, ps)
+      }
+      const lv = Math.max(0, Math.min(LEVELS - 1, Math.floor(Math.min(1, a) * LEVELS)))
+      ps[lv].moveTo(x + r, y)
+      ps[lv].arc(x, y, r, 0, Math.PI * 2)
+    },
+    rect(color: string, a: number, x: number, y: number, w: number, h: number) {
+      if (a <= 0.01) return
+      let ps = paths.get(color)
+      if (!ps) {
+        ps = Array.from({ length: LEVELS }, () => new Path2D())
+        paths.set(color, ps)
+      }
+      const lv = Math.max(0, Math.min(LEVELS - 1, Math.floor(Math.min(1, a) * LEVELS)))
+      ps[lv].rect(x, y, w, h)
+    },
+    fill(ctx: CanvasRenderingContext2D) {
+      for (const [color, ps] of paths) ps.forEach((path, lv) => {
+        ctx.fillStyle = rgba(color, (lv + 0.5) / LEVELS)
+        ctx.fill(path)
+      })
+    },
+  }
+}
+
 export const city = scenery<CityState>({
   name: 'city',
   over(p, s, c) {
@@ -222,6 +260,7 @@ export const city = scenery<CityState>({
     // A star's size is in cells, so in the widest shots it would shrink below a pixel: it keeps a floor, in pixels of a
     // 540-line frame, so the sky is as starry wide as it is close.
     const px = ((fr.y1 - fr.y0) * k) / 540
+    const starDots = batch()
     for (const st of STARS) {
       const x = st.x + sx
       const y = st.y + sy
@@ -244,11 +283,9 @@ export const city = scenery<CityState>({
         ctx.lineTo(x * k, y * k + g)
         ctx.stroke()
       }
-      ctx.fillStyle = rgba(LIGHT_COOL, 0.35 + 0.55 * tw)
-      ctx.beginPath()
-      ctx.arc(x * k, y * k, r, 0, Math.PI * 2)
-      ctx.fill()
+      starDots.dot(LIGHT_COOL, 0.35 + 0.55 * tw, x * k, y * k, r)
     }
+    starDots.fill(ctx)
     if (s.end && t > THEIRS_AT[0] - 0.1) {
       // Theirs, coming out over the city: each star with a flare as it comes, then the line back to its neighbour.
       const at = (i: number): Pt => [THEIRS[i].x + sx, THEIRS[i].y + sy]
@@ -357,6 +394,7 @@ export const city = scenery<CityState>({
 
     const tx = slide(0.35)
     const ty = lift(0.35)
+    const windows = batch()
     for (const [i, tw] of TOWERS.entries()) {
       const x = tw.x + tx
       if (x + tw.w < fr.x0 - 1 || x > fr.x1 + 1) continue
@@ -368,13 +406,13 @@ export const city = scenery<CityState>({
         for (let q = 0; q < Math.floor(tw.w / 0.3); q++) {
           const lit = hash(i, r * 7 + q, 3)
           if (lit < 0.8) continue
-          ctx.fillStyle = rgba(LIGHT, 0.35 + 0.4 * (lit - 0.8) * 5)
-          ctx.fillRect((x + 0.12 + q * 0.3) * k, (y0 + 0.3 + r * 0.45) * k, 0.1 * k, 0.16 * k)
+          windows.rect(LIGHT, 0.35 + 0.4 * (lit - 0.8) * 5, (x + 0.12 + q * 0.3) * k, (y0 + 0.3 + r * 0.45) * k, 0.1 * k, 0.16 * k)
         }
       }
       // A red lamp on the tallest.
       if (tw.h > 12) glow(p, k, x + tw.w / 2, y0 - 0.15, 0.35, '#E0533D', 0.5 + 0.5 * Math.sin(t * 2.4))
     }
+    windows.fill(ctx)
 
     // The near hills: a spur on the left that the observatory stands on, falling away before the club.
     {
@@ -431,6 +469,7 @@ export const city = scenery<CityState>({
     const swellLight = s.end ? 1 + 0.45 * smooth(t, SWELL - 2, SWELL + 3) * level(t) : 1
     // The city's own glow on the air over it.
     glow(p, k, VANISH + slide(0.25), HORIZON + 0.8 + lift(0.25), 26, '#C9795E', 0.16, 1.6, 0.28)
+    const lamps = batch()
     for (const b of BOULEVARDS) {
       for (let j = 1; j <= b.n; j++) {
         // Lamps evenly spaced along the ground, so closer together on the screen the further off they are.
@@ -443,10 +482,7 @@ export const city = scenery<CityState>({
         const y = HORIZON + (STREET - 0.6 - HORIZON) * Math.pow(near, 1.6) + lift(dd)
         if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1) continue
         const tw = 0.8 + 0.2 * Math.sin(t * 0.6 + j * 0.7 + b.ph)
-        ctx.fillStyle = rgba('#F7C779', (0.45 + 0.4 * near) * tw * fade)
-        ctx.beginPath()
-        ctx.arc(x * k, y * k, Math.max(0.6, 0.045 * (0.5 + 1.5 * near) * k), 0, Math.PI * 2)
-        ctx.fill()
+        lamps.dot('#F7C779', (0.45 + 0.4 * near) * tw * fade, x * k, y * k, Math.max(0.6, 0.045 * (0.5 + 1.5 * near) * k))
       }
     }
     for (const l of LIGHTS) {
@@ -458,11 +494,9 @@ export const city = scenery<CityState>({
       if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1) continue
       const tw = 0.6 + 0.4 * Math.sin(t * (0.8 + l.d) + l.ph)
       const r = (l.big ? 0.06 : 0.032) * (0.55 + 1.4 * near)
-      ctx.fillStyle = rgba(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near) * swellLight)
-      ctx.beginPath()
-      ctx.arc(x * k, y * k, Math.max(0.5, r * k), 0, Math.PI * 2)
-      ctx.fill()
+      lamps.dot(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near) * swellLight, x * k, y * k, Math.max(0.5, r * k))
     }
+    lamps.fill(ctx)
 
     // The near ground, from the street to the front of the frame.
     ctx.fillStyle = SEBS_MAT.deep
