@@ -35,9 +35,8 @@ import { drawFloor, drawSky, lampLight } from './stars-sky'
  *
  * The iris opens on the two of them standing close under a streetlamp on a
  * painted quay: the river and the far bank's roofs and the tower behind in
- * ultramarine brushwork, a painted sky with a moon and swirls, wet cobbles
- * with red petals on them. When the orchestra comes in under the choir they
- * begin to turn, and waltz along the quay: behind them a line of furled
+ * ultramarine brushwork, a painted sky with a moon and swirls, wet cobbles.
+ * When the orchestra comes in under the choir they begin to turn, and waltz along the quay: behind them a line of furled
  * umbrellas on sprung stands, the ensemble, pops open one on each ONE as
  * they pass (five bars), and dances after that, a dip on every ONE, a
  * curtsy together on the accents as the pair nears the great street clock.
@@ -707,45 +706,6 @@ function balloons(p: p5, k: number, ink: string, weight: number, T: number): voi
   }
 }
 
-/* ------------------------------------------------------------------ the petals */
-
-/** Red petals on the cobbles; the ones on the pair's line are lifted as they turn past and settle behind them. */
-const PETALS = Array.from({ length: 24 }, (_, i) => {
-  const x = -2.5 + 14 * scatter(i, 150)
-  const y = UPSTAGE + 0.3 + 1.6 * scatter(i, 151) ** 1.6
-  // When the pair's centre comes by.
-  let pass = Infinity
-  for (let t = WALTZ; t < FLY_SET; t += 0.02) if (centre(t)[0] >= x) { pass = t; break }
-  return { x, y, a: scatter(i, 152) * Math.PI, pass, near: Math.abs(y) < 0.5 }
-})
-
-function petals(p: p5, k: number, T: number): void {
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  // Dimmer as the lamps go; swept up with the set when Paris flies, so the stars' glass floor is clean.
-  const fade = (0.3 + 0.7 * lampLight(T)) * (1 - smooth(T, FLY_SET, FLY_SET + 2.5))
-  if (fade <= 0.001) return
-  ctx.fillStyle = rgba(NIGHT_MAT.petal, 0.95 * fade)
-  for (const q of PETALS) {
-    let x = q.x
-    let y = q.y
-    let a = q.a
-    if (q.near && T > q.pass - 0.35) {
-      const s = Math.min(1, (T - q.pass + 0.35) / 1.9)
-      const hop = Math.sin(Math.PI * s) ** 2
-      x += 0.45 * smooth(s, 0, 1)
-      y -= 0.34 * hop
-      a += 5 * smooth(s, 0, 1)
-    }
-    ctx.save()
-    ctx.translate(x * k, y * k)
-    ctx.rotate(a)
-    ctx.beginPath()
-    ctx.ellipse(0, 0, 0.055 * k, 0.03 * k, 0, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.restore()
-  }
-}
-
 /* ------------------------------------------------------------------ the part */
 
 /** Every strike in painted Paris: five umbrellas, four curtsies, midnight's three strokes, the balloons. */
@@ -817,7 +777,6 @@ export const painted = part<PaintedState>(
       paintedSky(p, k, T)
       farBank(p, k, T)
       drawFloor(p, k, T, SET)
-      petals(p, k, T)
       ripples(p, k, T)
       if (lift(T, 2) < 14) {
         for (const x of LAMPS) lamp(p, k, c.ink, c.weight, T, x)

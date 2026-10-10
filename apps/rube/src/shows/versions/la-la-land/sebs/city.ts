@@ -137,9 +137,8 @@ const CROSS: Pt = [-4, 20]
 const easeInOut = (u: number): number => u * u * (3 - 2 * u)
 
 /**
- * The End's orchestra arriving (its one clear onset), and the swell it climbs to. On the arrival two more searchlights
- * swing up from behind the hills and every beam flares; through the swell the city's lights and the beams grow with
- * the music, and the observatory on its ridge, where the planetarium is, lights up.
+ * The End's orchestra arriving (its one clear onset), and the swell it climbs to. On the arrival the searchlights
+ * flare; through the swell the city's lights and the beams grow with the music, and the observatory on its ridge, where the planetarium is, lights up.
  */
 export const SWELL = END_AT + 32.268
 /** The End's last chord, which the piano in the stars plays (the credits' own reckoning of it). */
@@ -383,18 +382,14 @@ export const city = scenery<CityState>({
     // band and cross on The End's last chord.
     const band = s.end ? smooth(t, AT.band - 0.2, AT.band + 2.5) : 0.55
     const last = END_AT + 39.4
-    const arrive = s.end ? smooth(t, SWELL - 0.05, SWELL + 1.4) : 0
     const flare = s.end ? knock(t - SWELL, 0.5) : 0
-    const beams: [number, number][] = [[0, 30], [1, -12], [2, 58], [3, -44]]
+    const beams: [number, number][] = [[0, 30], [1, -12]]
     for (const [i, base] of beams) {
-      // The two that come with the orchestra rise from lying along the hills to their place.
-      const late = i >= 2
-      if (late && arrive <= 0.001) continue
       const side = i % 2 === 0 ? -1 : 1
       const sweep = s.end
         ? 0.32 * Math.sin((t - AT.band) * 0.23 + i * 2.2) * (1 - smooth(t, last - 5, last)) + side * 0.16 * smooth(t, last - 5, last)
         : 0.3 * Math.sin(t * 0.21 + i * 2.2)
-      const free = side * (late ? 0.34 + 1.1 * (1 - arrive) : 0.22) + sweep
+      const free = side * 0.22 + sweep
       const bx = base + slide(0.3)
       const by = HORIZON + 1 + lift(0.3)
       // On The End's last chord every beam swings onto one point in the sky over the city, and they cross there and hold.
@@ -403,7 +398,7 @@ export const city = scenery<CityState>({
       const len = 60
       const tipX = bx + Math.sin(lean) * len
       const tipY = by - Math.cos(lean) * len
-      const a = 0.09 * band * (0.7 + 0.3 * level(t)) * (late ? arrive : 1) * (1 + 1.2 * flare)
+      const a = 0.09 * band * (0.7 + 0.3 * level(t)) * (1 + 1.2 * flare)
       const grad = ctx.createLinearGradient(bx * k, by * k, tipX * k, tipY * k)
       grad.addColorStop(0, rgba('#F4EAD0', a * 1.6))
       grad.addColorStop(1, rgba('#F4EAD0', 0))
