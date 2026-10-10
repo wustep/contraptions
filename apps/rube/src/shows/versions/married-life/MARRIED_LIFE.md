@@ -784,6 +784,12 @@ window.
     greyed world. Most moving: him in his chair, the balloon over her empty one, the lamp coming on "as if it were an
     ordinary evening for two". Left: the bedside handover unclear at that scale; the wait at the steps read as him
     hesitating to go in, which is its meaning.
+  - *The bedside, re-watched* by a thirteenth viewer who has never seen Up (180 to 189 s, four frames a second): a
+    vigil, the balloon his and then hers (75%), but "neither of them moves visibly", and the knot's passing read as
+    "a slide, not a hand-over". His lean to give it was 10° and his answer 2.5°, at a distance that holds the balloon
+    over them; now 17° to give it (back to 9°) and 7° for his answer, on the same notes. Her roll is held by the
+    seam to the church and kept. In the show's own frame they stay small (the balloon over them needs the room);
+    under Zoom the giving and the answer read plainly.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits

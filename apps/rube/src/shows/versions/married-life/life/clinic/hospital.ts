@@ -77,9 +77,11 @@ const inout = (u: number) => { const v = clamp01(u); return v * v * (3 - 2 * v) 
  * again by the cut.
  */
 function tilt(T: number): number {
+  // Big enough to be seen at the ward's distance: at 10° to give her the balloon and 2.5° for his answer, a fresh
+  // viewer saw neither of them move at all, and the knot's passing read as a string sliding, not a gift.
   const reach = -0.3 * inout((T - REACH) / (CLICK - REACH)) * (1 - inout((T - CLICK - 0.08) / 1.45))
-  const give = 0.18 * inout((T - HAND.lean) / (HAND.to - HAND.lean)) - 0.1 * inout((T - HAND.to - 0.05) / 0.95)
-  const answer = 0.045 * inout((T - TOUCH - 0.15) / (ANSWER - TOUCH - 0.15))
+  const give = 0.3 * inout((T - HAND.lean) / (HAND.to - HAND.lean)) - 0.15 * inout((T - HAND.to - 0.05) / 0.95)
+  const answer = 0.12 * inout((T - TOUCH - 0.15) / (ANSWER - TOUCH - 0.15))
   return reach + (give + answer) * (1 - inout((T - 187.55) / 1.6))
 }
 
