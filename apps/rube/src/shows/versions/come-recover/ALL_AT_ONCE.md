@@ -1059,7 +1059,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - **No portals, and no cuts drawn.**
 - **Reduced motion:** the calm version has no flickers and no punch, and the same jumps.
 - **Flickers:** only in the second before a jump, each a frame or three, and no more than two before any jump, so a
-  jump never flashes more than three times a second.
+  jump never flashes more than three times a second; none into the two irises (the kitchen, the surf) or into
+  everywhere at once; at least eight in all.
 - **The ball:**
   - inside a world it never jumps;
   - at every jump it holds its place on the screen, within 1% of the frame a millisecond: every jump is a match cut;
@@ -1131,6 +1132,11 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   (PR #88):
   - `Performance.titles` and the page's words layer, for the credits;
   - `Framing.angle`, the camera roll, which is unused here.
+- **Shared files this take changed**, each in its own commit:
+  - `shows/words.ts`: a saved video sets a card at its `scale`, and a `plain` card's accents in cream, as the page
+    does (for the chapters; Boléro's and Soft Lamp's scaled credits needed it too);
+  - `shows/registry.ts` and `shows/player.ts`: `TitleCard.least`, a floor on a card's type on the page, for words
+    read on a phone, and a card it grows kept within the stage. Cards without it are set as before.
 - **Measuring the audio again.** For authoring only: `sh scripts/shows/eeaao-cue.sh <fetched cue>` cuts a private
   copy, and `python3 scripts/shows/eeaao-onsets.py` measures it. The copy is not to be committed or shipped; the
   show plays from YouTube.
