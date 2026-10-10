@@ -801,7 +801,8 @@ watched whole between them. Their order is in git; here they are by what they di
   Joy speaks first and ends *Come and see.*; the rocks, as the film's stones talk, opening on eight seconds of
   silence; at the peak Evelyn says Waymond's *Here. With me.* to Joy; and home, *Stay a little?* / *I'm staying.* A
   trim pass took out three lines: one that said the show's title before its card, one that crowded the rim's
-  silence, and Evelyn's third question of where she was.
+  silence, and Evelyn's third question of where she was. They are the viewer's choice, off by default (see *Dialogue
+  off by default*, below).
 - **The rocks' long way down** stays close on the two of them, with one wide breath on the long scree; where the
   stones touch on the bench each one's colour comes back first (`flushOf` in `rocks/ledge.ts`).
 - **The dark takes her colours, and gives them back.** In the pull each thing trails a ribbon of its life's colour
@@ -918,6 +919,18 @@ The whole show was watched again after the first cut. Two more things went; noth
 - Checked after the cuts: `check:shows` passes; the opening, hush, pull, peak, wall, great hit and ending watched again
   frame by frame; the ending in Overview shows the shop; under reduced motion the show opens as before; the page logs no
   errors.
+
+### Dialogue off by default
+
+The subtitled conversations are now behind a toggle, off unless the viewer turns them on: a "Dialogue" row in the
+player, above "Sound captions", or D, remembered in this browser (`Performance.dialogue`, `setDialogue` in
+`credits.ts`). Off, no line is set, spoken or shaded for: the subtitle cards and the shade under them (`subtitleBed`)
+both follow the choice. On, all seventeen lines come back as they were, a saved video's too.
+
+- No scene waits on a line: every move is on the music, so with them off the show plays straight through, with
+  nothing held empty where a line was. Each scene that had one (the taxes, the alley, the hush, the rocks, the
+  peak, home) was watched both ways; the taxes' tile wall and the rocks' foot simply stay clear.
+- Nothing else changed: the song, the jumps and hits, the chapters, the audio description and the sound captions.
 
 ### For every viewer
 
@@ -1075,6 +1088,7 @@ goes (about 325.9 s) the ring of windows holds alone; from 328.1 s it goes down 
 - **The words:**
   - the chapters, *Everything*, *Everywhere* and *All at Once*, each within a second of its part's start and gone well
     before the next;
+  - the dialogue off until the viewer turns it on, and every line back when they do;
   - the subtitles each in its own scene, one at a time, none over a jump, nothing said as Joy goes over;
   - every line spoken to a screen reader with its speaker, and every chapter and credit spoken;
   - the audio description: at every scene, unseen, never over a line, never said before what it describes, each said
@@ -1131,7 +1145,10 @@ goes (about 325.9 s) the ring of windows holds alone; from 328.1 s it goes down 
     read on a phone, and a card it grows kept within the stage; and `TitleCard.said`, a card spoken to a screen
     reader as it comes up while the show plays; and `Performance.captions` with `TitleCard.caption`, sound captions
     behind the player's opt-in "Sound captions" row (`stage.ts` leaves them out of a saved video, `styles.css` gives
-    them their box and the row its look). Cards and shows without them are as before.
+    them their box and the row its look). Cards and shows without them are as before;
+  - `shows/registry.ts` and `shows/player.ts`: `Performance.dialogue`, a show's dialogue behind the player's opt-in
+    "Dialogue" row and the D key, off by default; the player tells the show the viewer's choice, and its words and
+    picture follow it. Shows without it are as before.
 - **Measuring the audio again.** For authoring only: `sh scripts/shows/eeaao-cue.sh <fetched cue>` cuts a private
   copy, and `python3 scripts/shows/eeaao-onsets.py` measures it. The copy is not to be committed or shipped; the
   show plays from YouTube.
@@ -1164,6 +1181,7 @@ goes (about 325.9 s) the ring of windows holds alone; from 328.1 s it goes down 
 - Under Zoom, the credits' longest line crosses the near end of the lantern string. The words are set by the page,
   the same in every mode.
 - The spoken words (the lines and the described track) are spoken only at 1× or slower.
+- A saved video has the dialogue only if the viewer had it on when saving.
 - Sound captions are not in a saved video: they are the viewer's choice on the page, and the recorder does not know
   it.
 - The reduced-motion preference is followed live, and the page's Save PNG and Save video paint from the same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
