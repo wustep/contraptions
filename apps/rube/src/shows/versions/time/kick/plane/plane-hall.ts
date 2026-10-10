@@ -95,9 +95,14 @@ function drawOutside(pen: Pen, t: number, f: Frame): void {
   const x0 = TERM.land
   const x1 = Math.max(f.x1 + 1, x0 + 1)
   const floor = CAB.floor
-  vwash(pen, x0, x1, f.y0 - 1, floor, [
-    [0, mixHex(HOME.sky, PLANE.dawnHigh, 0.35), 1],
-    [0.7, mixHex(PLANE.dawn, HOME.sun, 0.35), 1],
+  // Its sky comes in only from the terminal's top down, out of the morning's own: above the roofs (a tall frame sees
+  // that far up) the two skies met on a ruled vertical line.
+  const top = TERM.roof - 1.1
+  const span = floor - top
+  vwash(pen, x0, x1, top, floor, [
+    [0, mixHex(HOME.sky, PLANE.dawnHigh, 0.35), 0],
+    [(TERM.roof - top) / span, mixHex(HOME.sky, PLANE.dawnHigh, 0.35), 1],
+    [1 - 0.3 * (floor - TERM.roof) / span, mixHex(PLANE.dawn, HOME.sun, 0.35), 1],
     [1, mixHex(PLANE.dawn, HOME.sun, 0.55), 1],
   ])
   // Across the road: low buildings in the morning haze, palms along the kerb.
@@ -121,7 +126,11 @@ function drawOutside(pen: Pen, t: number, f: Frame): void {
   // The glare, only at the end: the sun off the street and the glass, coming up to the veil.
   const g = glareAt(t)
   if (g > 0.002) {
-    box(pen, x0, f.y0 - 1, x1, floor + 0.35, rgba(HOME.sun, 0.85 * g), 0)
+    vwash(pen, x0, x1, top, floor + 0.35, [
+      [0, HOME.sun, 0],
+      [(TERM.roof - top) / (floor + 0.35 - top), HOME.sun, 0.85 * g],
+      [1, HOME.sun, 0.85 * g],
+    ])
     glow(pen, [x0 + 0.6, -0.6], 3.2, HOME.sun, 0.8 * g)
   }
 }

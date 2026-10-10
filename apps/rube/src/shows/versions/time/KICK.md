@@ -372,6 +372,10 @@ each world, and changed:
   terrace's stone came on toward us all the way to the frame's foot, so in a phone-shaped frame the terrace was a pale
   pillar beside a green slab (a critic's note). They end a little toward us now, cut, and under them is the same earth
   as under the house, its bands and stones. A wide frame never sees that far down and is unchanged.
+- **The sky over the terminal** (236 to 244, in a tall frame): the street beyond the landside glass had a sky of its
+  own, from the frame's top down, and over the terminal's roof it met the morning's on a ruled vertical line, the
+  morning's grey-green beside its warm (a critic's note). It and the glare at the end come in only from the roof's
+  height down now, out of the morning's sky.
 
 ## Inception nods
 
