@@ -198,7 +198,7 @@ function drawKicks(pen: Pen, t: number): void {
   flare(KICK_AT, Q.kick)
   flare(A_KICK_AT, Q.kick)
   flare(F_KICK_AT, Q.fischerKick)
-  // The flare is lost on the pale sky: his throw is marked as it is in Paris, a ring and the streak behind him.
+  // The flare is lost on the pale sky: his throw is marked as it is in Paris, by the streak behind him.
   streak(pen.p, pen.k, fischerAt, Q.fischerKick, t, FISCHER)
   // The tear in the top of the sky, as they go up out of it into the dark.
   const through = (x: number, when: number) => tear(pen.p, pen.k, [x, TOP_OF_SKY + 0.6], t - when, 1.2, LIMBO.foam)

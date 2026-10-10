@@ -25,7 +25,7 @@ export function drawParisOver(p: p5, k: number, t: number, ink: string, w: numbe
   p.push()
   drawCafeAir(pen, t, f)
   drawNearMirror(pen, t)
-  // Mal's blow: a ring where it lands, and the streak of Ariadne thrown up out of the dream.
+  // Mal's blow: the streak of Ariadne thrown up out of the dream.
   streak(p, k, ariAt, STRIKE, t, ARIADNE)
   p.pop()
 }

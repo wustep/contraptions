@@ -290,10 +290,10 @@ export function tear(p: p5, k: number, at: Pt, u: number, w = 0.9, color = '#FFF
 
 /**
  * **The throw.** Where a kick or a blow throws someone up out of a lit level (no dark to cross there, so nothing else
- * marks it): a ring flashed out where it struck, and the streak of the throw behind them, their colour thinning back
- * along the last few tenths of their path, gone in half a second. `at` is their path; `t0` the blow.
+ * marks it): the streak of the throw behind them, their colour thinning back along the last few tenths of their path,
+ * gone in half a second. `at` is their path; `t0` the blow.
  */
-export function streak(p: p5, k: number, at: (t: number) => Pt, t0: number, t: number, color: string, ring = '#FFFFFF'): void {
+export function streak(p: p5, k: number, at: (t: number) => Pt, t0: number, t: number, color: string): void {
   const u = t - t0
   if (u < 0 || u > 0.7) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -311,16 +311,6 @@ export function streak(p: p5, k: number, at: (t: number) => Pt, t0: number, t: n
     ctx.beginPath()
     ctx.moveTo(x0 * k, y0 * k)
     ctx.lineTo(x1 * k, y1 * k)
-    ctx.stroke()
-  }
-  // The ring where the blow landed.
-  if (u < 0.3) {
-    const [cx, cy] = at(t0)
-    const r = (0.15 + 0.9 * Math.sqrt(u / 0.3)) * k
-    ctx.strokeStyle = rgba(ring, 0.85 * (1 - u / 0.3))
-    ctx.lineWidth = Math.max(1, 0.06 * k * (1 - u / 0.3) + 0.02 * k)
-    ctx.beginPath()
-    ctx.arc(cx * k, cy * k, r, 0, Math.PI * 2)
     ctx.stroke()
   }
   ctx.restore()
