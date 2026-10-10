@@ -1031,6 +1031,14 @@ The notes went back to the builders who made each part, who still had their cont
   the toggle's title; nothing for a show without captions), checked on the real page. On an upright phone and at 4:3
   they read in their box; under the credits a caption at the top centre sat on the credit card's role line on both,
   so from the credits on captions move to the frame's upper right, clear of the cards on every stage.
+- **The described track and the captions, timed against the show.** Read against when things happen, five
+  descriptions ran ahead of the picture, worse than none for a listener who cannot see: *A light finds Joy* 5.7 s
+  before it does, *a dark ring in the sand, and in* 8 s before they reach it, one at the hole that told the line, the
+  burst and Joy's eye up to 12 s early, and the portrait's flash 8 s early. They are split and re-timed (24 now), and
+  each is tied to the moment it describes (`of`, from the show's own clock where it has one); `check:shows` holds
+  each to be said no earlier, and caught a sixth, the taxes' (now on Joy's entrance). The captions sit on the cue's
+  own structure but for *[It fades out]*, a second ahead of the upload's fade; it starts with it now. `npm run build`
+  passes (3,074 checks).
 
 ## The looks
 

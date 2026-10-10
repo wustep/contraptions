@@ -4,7 +4,7 @@ import type { TitleCard } from '../../../registry'
 import { frame, scenery } from './kit'
 import { mixHex } from '../../../../parts'
 import { PORT } from './home/finale-plan'
-import { CREDITS_AT, DURATION, HOME_HITS, JUMPS } from './music'
+import { CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall } from './music'
 import { EVELYN, JOY, WAYMOND } from './worlds'
 
 /**
@@ -214,37 +214,42 @@ const WHO = { evelyn: 'Evelyn', joy: 'Joy', waymond: 'Waymond' } as const
 
 /**
  * The audio description: for a viewer who cannot see the show, a few plain words at each scene and its turns,
- * spoken by a screen reader as the show plays, between the lines of dialogue, as a film's described track is. Each is
+ * spoken by a screen reader as the show plays, between the lines of dialogue, as a film's described track is, and
+ * never ahead of what it says: each is said as the thing it describes happens (`of`), or after. Each is
  * a card with nothing on it but its `said`, so nothing is seen: the page sets an empty card, a saved video paints none.
  */
-export const DESCRIBED: { at: number; said: string }[] = [
+export const DESCRIBED: { at: number; said: string; of?: number }[] = [
   { at: 2.2, said: 'The Wang family laundromat, at night. Waymond, a jade ball with a googly eye.' },
-  { at: 7.9, said: 'Evelyn, a vermilion ball, rolls onto a washer’s lever, and the machines begin.' },
-  { at: 19.3, said: 'The taxes, on an adding machine. Joy, a violet ball, comes in.' },
-  { at: 31.5, said: 'A crank throws her into a basket of lanterns, and then into the big dryer. Other worlds show in its glass.' },
-  { at: 60.0, said: 'Another life: a red carpet, in widescreen, the press’s flashes going off.' },
-  { at: 69.2, said: 'An alley in the rain. Waymond waits under a streetlamp.' },
-  { at: 82.4, said: 'The drain gives way and carries her from him.' },
-  { at: 86.5, said: 'A kung fu picture, an old print. Wooden men trade her blow by blow, up to a gong.' },
-  { at: 97.4, said: 'Hot dog fingers, playing a piano, in soft focus.' },
-  { at: 107.0, said: 'A cartoon kitchen. A raccoon under a chef’s hat works the levers.' },
-  { at: 121.1, said: 'A new world on every hit, then black.' },
-  { at: 128.1, said: 'She drifts down through the dark. A light finds Joy on a colossal bagel.' },
-  { at: 142.3, said: 'Everything goes into the bagel’s hole, one thing a beat, and she is drawn in after it.' },
-  { at: 171.2, said: 'The frame splits into her other lives, more and more of them, and Waymond is in nearly all of them.' },
-  { at: 191.5, said: 'Home. A googly eye lands on her. She gives one to each of Jobu’s machines, and each turns gentle.' },
-  { at: 200.4, said: 'Silence. Two stones on the edge of a canyon: hers, and Joy’s.' },
-  { at: 222.3, said: 'Evelyn follows, ledge by ledge, down to Joy.' },
-  { at: 233.0, said: 'Down to a dark ring in the sand, and in.' },
-  { at: 242.0, said: 'The bagel’s hole. Waymond’s line turns it back, and everything it took bursts out, each thing in its colour. A googly eye lands on Joy.' },
-  { at: 264.4, said: 'Through a washer’s window: home. The three of them, together.' },
-  { at: 283.0, said: 'A family portrait. The flash, and the photograph.' },
-  { at: 295.4, said: 'The lights go out.' },
+  { at: 7.9, of: 7.93, said: 'Evelyn, a vermilion ball, rolls onto a washer’s lever, and the machines begin.' },
+  { at: 20.2, of: 20.19, said: 'The taxes. Joy, a violet ball, comes in.' },
+  { at: 31.5, of: 30.65, said: 'A crank throws her into a basket of lanterns, and then into the big dryer. Other worlds show in its glass.' },
+  { at: 60.0, of: JUMPS.premiere, said: 'Another life: a red carpet, in widescreen, the press’s flashes going off.' },
+  { at: 69.2, of: 68.7, said: 'An alley in the rain. Waymond waits under a streetlamp.' },
+  { at: 82.4, of: 82.13, said: 'The drain gives way and carries her from him.' },
+  { at: 86.5, of: JUMPS.dojo, said: 'A kung fu picture, an old print. Wooden men trade her blow by blow, up to a gong.' },
+  { at: 97.4, of: JUMPS.hotdog, said: 'Hot dog fingers, playing a piano, in soft focus.' },
+  { at: 107.0, of: JUMPS.hibachi, said: 'A cartoon kitchen. A raccoon under a chef’s hat works the levers.' },
+  { at: 121.1, of: JUMPS.surf, said: 'A new world on every hit, then black.' },
+  { at: 128.1, of: JUMPS.void, said: 'She drifts down through the dark, past seeds and salt.' },
+  { at: 142.3, of: 135.64, said: 'A colossal everything bagel, Joy on its crown. Everything goes into its hole, one thing a beat, and Evelyn is drawn in after it.' },
+  { at: 171.2, of: 170.8, said: 'The frame splits into her other lives, more and more of them, and Waymond is in nearly all of them.' },
+  { at: 191.5, of: JUMPS.eye, said: 'Home. A googly eye lands on her. She gives one to each of Jobu’s machines, and each turns gentle.' },
+  { at: 200.4, of: JUMPS.rocks, said: 'Silence. Two stones on the edge of a canyon: hers, and Joy’s.' },
+  { at: 222.3, of: fall(48.5), said: 'Evelyn follows, ledge by ledge, down to Joy.' },
+  { at: 236.5, of: 236.0, said: 'Down and down, to a dark ring in the sand.' },
+  { at: 242.0, of: JUMPS.brink, said: 'Into the bagel’s hole. Evelyn holds Joy at its lip.' },
+  { at: 247.5, of: 247.35, said: 'Waymond’s line turns the bagel back, and everything it took bursts out, each thing in its colour.' },
+  { at: 254.6, of: fall(136), said: 'Joy gets an eye.' },
+  { at: 264.4, of: JUMPS.home, said: 'Through a washer’s window: home. The three of them, together.' },
+  { at: 283.0, said: 'They gather for a family portrait.' },
+  { at: 291.2, of: HOME_HITS[1], said: 'The flash, and the photograph.' },
+  { at: 295.4, of: HOME_HITS[2], said: 'The lights go out.' },
 ]
 const DESCRIBED_FOR = 1.2
 
 /**
- * Sound captions, for a viewer who cannot hear the cue the whole show is built on: what the music does, in brackets,
+ * Sound captions, for a viewer who cannot hear the cue (each on the cue's own structure: the fight's pulse at 142.0,
+ * the drop at 200.2, the peak at 247.4, home's pulse at 278.2, the upload's fade from 323) the whole show is built on: what the music does, in brackets,
  * small at the top of the frame, as a film's captions for sound are. Seen only with the player's CC on.
  */
 export const CAPTIONS: { at: number; to: number; text: string }[] = [
@@ -268,7 +273,7 @@ export const CAPTIONS: { at: number; to: number; text: string }[] = [
   { at: 278.2, to: 281.5, text: '[A gentle pulse]' },
   { at: 291.0, to: 293.5, text: '[The last great hit]' },
   { at: 297.2, to: 301.0, text: '[A long, quiet tail]' },
-  { at: 322.0, to: 326.0, text: '[It fades out]' },
+  { at: 323.0, to: 327.0, text: '[It fades out]' },
 ]
 const CAP_AT: [number, number] = [0.5, 0.025]
 

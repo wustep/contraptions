@@ -297,6 +297,9 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     const over = SUBTITLES.some((sub) => d.at > sub.at - 0.3 && d.at < sub.to)
     return !card || card.names.length > 0 || !!card.role || !!card.notes || over
   })
+  // Never ahead of the picture: each is said no earlier than what it describes happens.
+  const early = DESCRIBED.filter((d) => d.of !== undefined && d.at < d.of - 0.05)
+  check('all at once: no description is said before what it describes', DESCRIBED.filter((d) => d.of !== undefined).length >= 20 && early.length === 0, early.map((d) => d.at).join(', '))
   check('all at once: an audio description at every scene, unseen, and never over a line', DESCRIBED.length >= 20 && undescribed.length === 0, undescribed.map((d) => d.at).join(', '))
   // Each said in full: a screen reader speaks a live region's change by replacing the last, so a description has to
   // be over (at about 14 characters a second, a reader's ordinary rate) before the next thing is spoken.
