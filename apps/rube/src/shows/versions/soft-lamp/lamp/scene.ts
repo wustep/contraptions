@@ -13,6 +13,7 @@ import { REFILL, doodle, hands, knob, liftAt } from './hands'
 import { moth } from './moth'
 import { rimAt, rimLine } from './rim'
 import { reflection } from './reflection'
+import { light } from './light'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { flashRoom, night } from './sky'
@@ -982,6 +983,8 @@ export const things = scenery<null>(
     // Someone's hand, now and then, in front of it all.
     moth(ctx, lw, c.t)
     hands(ctx, lw, c.t, (g) => mug(g, lw, c.t))
+    // The room's light over all of it: the lamp's pool, the window and the fairy lights keep what they reach.
+    light(ctx, c.t)
     bloom(ctx, c.t)
     motes(ctx, c.t)
     flashRoom(ctx, c.t)

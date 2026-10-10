@@ -1240,8 +1240,27 @@ thing you look up from your work and notice:
 197. **The shooting stars** keep out of the snow: the first is found after it has stopped, and they may come a minute and
      a half apart (two of them, 28:01 and 29:32).
 
+### The seventy-third pass: the room lit by its lights
+
+198. **A light map over the room** (`lamp/light.ts`). Every thing was drawn in its own colours, warmed where the lamp
+     faced it, so the room was one even mid plum from corner to corner and the lamp lit a bulb rather than a room. Now
+     the room's dark is laid over everything (multiplied, the glass left alone, since it is a light), and each light
+     keeps a share of the room from it: the lamp's cone and a broad low glow round it, the window's soft round
+     (strongest at dusk, moonlit late, stronger once the snow lies), each bulb of the fairy lights, the Walkman's light,
+     and a passing car's. Away from them the room falls into a night that deepens from dusk's violet to blue.
+199. **So the light is an event.** As the lamp comes on, the room changes from the window's dusk to the lamp's pool;
+     the lamp's beam has an edge on the wall above its head. At the end, when it is turned down, the room goes back to
+     the window, the moon and the snow: a blue room with the kitten asleep on the sill. The shelf's string of lights is
+     the one warm place left up in the dark.
+200. **Audited.** The moving take's lamp frames showed the cone's edge as a line across the wall (softened: the cone is
+     gentler and a broad glow round the lamp blurs its edge); under the desk in a phone held upright stays legible.
+     In Chrome at 1080p on a 2× display it holds a 16.7 ms median frame at dusk, in the rain, in the snow and at the end,
+     with the same spread of slow frames with the light map on as off (the machine was busy with other work).
+
 ## Judgment calls for Stephen
 
+- **The light.** How dark the room falls away from its lights is two colours (`ambientAt`, `lamp/light.ts`, the
+  dusk's and the night's); how far the window's light reaches is one number (`windowShare`).
 - **The snow.** The night's second turn: rain to snow to a white city under the moon. It is the largest change to the
   window since the rain; its timing is four numbers (`SNOW`, `lamp/world.ts`) and how much falls one per depth
   (`FLAKES`, `lamp/snow.ts`). It could go and leave the night as it was.

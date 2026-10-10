@@ -233,6 +233,9 @@ export function fairyLights(ctx: Ctx, lw: number, t: number): void {
   }
 }
 
+/** Where each bulb is and how bright at `t`, for the room's light (`light.ts`). */
+export const bulbsAt = (t: number): { x: number; y: number; a: number }[] => BULBS.map((b) => ({ x: b.x, y: b.y, a: bulbAt(b, t) }))
+
 /** How much light the fairy lights give the wall under them, 0 to 1 (for the wall's own glow). */
 export const fairyGlowAt = (t: number): number => (BULBS.length ? bulbAt(BULBS[Math.floor(BULBS.length / 2)], t) : 0)
 
