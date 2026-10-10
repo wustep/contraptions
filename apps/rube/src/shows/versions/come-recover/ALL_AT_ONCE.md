@@ -92,7 +92,7 @@ Before most jumps the next world bleeds through for a frame or two, the way the 
     the iris is the jump, and a flicker of the next world whole in the middle of it broke it;
   - the first, which builds in the dryer's own glass instead;
   - the jump into the dark, where the surf's worlds collapse into her on their own;
-  - the fold home on the great hit, where the mosaic flips its own panels;
+  - the fold home on the great hit, where the camera dives into home's own panel;
   - the drop into the rocks' silence, which is a clean cut.
 
 Through every jump she is moving at, the ball draws out along its way for a few frames, most at the cut itself, as if
@@ -105,7 +105,7 @@ lifted, heavy grain that changes 24 times a second, a scratch down the emulsion 
 soft-focus romance, its edges gone to a glowing pink haze. A flicker before a jump shows the next life in its own
 picture. The surf's new worlds have pictures too: the IRS office is under green office tubes, and karaoke is a VHS
 tape, with scanlines and a tracking band rolling down it. Everywhere at once is a wall of every kind of film at once:
-each panel is in its life's picture, and on the great hit every panel flips to the laundromat's plain frame. Even the
+each panel is in its life's picture, and on the great hit the camera has dived into the one panel that is home, the laundromat's plain frame. Even the
 lives in the washer's window under the credits are in theirs. Raccacoonie, Jobu's dark and the rocks are left as
 they are.
 
@@ -164,7 +164,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | ---: | --- | --- | --- |
 | 165.62 | a hit, then a swell | everywhere | She breaks through into the dark in a violet flare, seeds flung out round her, and falls slowly past them, and the laundromat comes up round her, its tubes flickering on. On `fight(72)` she lands on a seesaw and the frame tears into two panels: home and the premiere. |
 | 170.8 to 190 | the pumping pulse | everywhere | The frame splits into 4 panels on beat 76, 9 on 88, 16 on 96, 36 on 104 and 64 on 112. Each panel is another world with her in it, the same seesaw in its own materials: 13 worlds, no two neighbours alike, each in its own kind of picture (widescreen, an old print, a soft-focus haze, a VHS tape, office tubes). She and the weight trade throws on every beat. In every life she has, he is there: Waymond arrives beside her machine in more and more of the panels, on a beat each, his googly eye on her, until he is in three in four; in the last phrases Joy is there in some, without an eye yet. |
-| 190 to 191.2 | the crescendo | everywhere | The wall crowds to 144 panels, and the seesaw throws her high. On 121½ every panel flips like a card to another world. On 122 they all flip to the same place, the laundromat, and on 122½ the net of frames snaps shut round her. |
+| 190 to 191.2 | the crescendo | everywhere | The wall crowds to 144 panels, and the seesaw throws her high in every one. Then, of all of them, this one: the camera dives into the wall toward the panel that is home, a lurch on each of 121½, 122 and 122½, every other life swelling out past the frame's edges, until home's panel, the party corner with Jobu's jumpers already waiting in it, is the whole frame a few frames before the hit. |
 | 191.22 | the great hit | home | She lands alone, home, at the party, and the googly eye slaps onto her in a burst of warm light, its pupil whirling round before it settles. Jobu's jumpers are in the room, each rearing at her in turn: a boxing glove on a spring out of a gift box (125), a steel trap (128), a mallet from the ceiling (130), a scissor arm (133). On each one's beat a copy of her own eye flies off her and lands on it, and its blow turns gentle: a nudge, a squeeze, a scoop, a cradle. The arm sets her on the dumpling steamers, and she steps down one a beat to the table, touching Waymond on the fight's last hit (199.61). |
 | 200.16 | the drop | the rocks | Silence. Two stones on a ledge over a vast canyon, lumpy and flat-bottomed, the colour drained out of them: Evelyn's with her eye, Joy's beside it, where Waymond was. A pale sun hangs low over the far canyon. Pebbles fall from the lip and take forever to land; with the last, the camera draws back down the wall after it, and on, until the two stones are two specks on the rim of a canyon as big as the world, and holds them there in the silence (204.4 to 207.0); then it comes back in, in one long move, under Joy's first words. Joy's stone teeters forward on its flat underside (207.56, 208.36) and rolls out to the brink (209.96). On 213.96, the strongest note in the quiet, it goes over. Evelyn rolls to where she was (214.76), flinches back (216.36), and goes after her (219.56). The stones speak in subtitles, as the film's do, plain words low in the frame (this show's own lines, Evelyn's in roman and Joy's in italic): *It is quiet here. Nothing has to mean anything.* / *You don't have to follow me.* Nothing as she goes over; then *Joy —* and *I'm coming.* |
 | 220 to 241.8 | a soft swell | the rocks | The long way down, on the beats, ledge by ledge. The camera goes over the brink after her and stays close, the wall's strata going up past. On a bench halfway down Joy is waiting, and Evelyn comes to rest against her (226.56) in a close two-shot, looking at her: where the stones touch, each one's colour comes back first and spreads over it. Joy goes on (227.76) and the camera goes down the gorge with them, Joy a bound ahead. On the long talus it draws back for a breath, the canyon most of the frame and the two of them small on the scree, then comes in again for the last bounds. At the bottom a dark ring lies in the sand: the bagel. Joy drops into it, and on 241.76 Evelyn follows. On the bench: *You came all this way.* / *Where else would I be?* |
@@ -849,6 +849,21 @@ watched whole between them. Their order is in git; here they are by what they di
   - Cost: the ring's things are many shapes each, so they are drawn only on its near side, fading as they go round
     behind her. Its paint measured 1.2 to 2.5 ms a frame at 4× throttle on a machine at a load of 30 to 60 (so a
     fraction of a millisecond unthrottled); a cache of the things as images was tried and was slower.
+- **The great hit, as the turning point.** Into the great hit the wall of 144 lives turned over like cards twice, to
+  other lives and then to windows on one room, each turn showing the dark between the cards: the frame's mean light
+  went 0.26, 0.01, 0.30, 0.01, 0.57 in about a third of a second (measured at 60 fps), two near-black dips on top of
+  the cut. And the hit landed in an empty room, the party and Jobu's jumpers appearing on the cut.
+  - Now the camera dives into the wall toward home's panel, a lurch a beat on 121½, 122 and 122½, the other lives
+    swelling past the frame's edges, the gutters thinning away; the dive is all the way in a few frames before the
+    hit, home's panel then covering the whole stage (on 4:3 and on a phone as well as 16:9). The frame's light holds
+    between 0.26 and 0.30 through it and rises once, as home's pale room fills it.
+  - Home's panel in the dive is the room as the kindness leg draws it, the party wall, the table and Jobu's jumpers
+    in it (`drawHome` in `multi/mosaic.ts`), so the cut on the hit changes nothing.
+  - The burst on the hit is the show's biggest: longer rays, two rings of light going out wide, and, for the great
+    hit only, a warm wash over the room for a moment (a fifth of the way to gold at most, never over her), and it
+    lasts longer. Joy's burst at the peak is the same shape at her smaller size and keeps its old length, so the
+    share card (255.75 s, just after it) is pixel for pixel the committed one.
+  - The dive drew faster than the unchanged wall before it (33 against 14 fps at 4× throttle on a loaded machine).
 - **The subtitles' shade.** The soft dark under a subtitle was an ellipse floating mid-frame, which on the rocks' pale
   canyon read as a smudge of dirt. It is now the frame's whole foot in shade, eased up to just over the words (at the
   taxes, its top, down to just under them), as a film's lower frame is under its subtitles.
