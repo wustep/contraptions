@@ -913,6 +913,14 @@ Every changed file is the show's drawing, staging and notes. Nothing to change.
 A hundredth watched the whole show through once more, a frame every three seconds: it holds from the cradle to the
 cradle, and nothing new showed. Nothing to change.
 
+A hundred-and-first watched again, the whole show a frame every two and a half seconds, then full size where it looked
+off, then in a phone's tall frame. The tall frame found the daylight (323 to 327 s) wrong: the sun's edge on the near
+meadow came down in a staircase, steps a dozen pixels high. Two things made it. The near floor's light was cut into
+forty slices whatever the frame, each with the edge where it lies at its depth; a tall frame has a lot of floor, so
+each slice was tall. It is a slice every three pixels now. And each shaft was six nested widths ending square at its
+full strength, so their feet stood stepped streaks along the floor, which showed in the wide too. Each shaft now fades
+to nothing over its last seventh, into the light on the floor. The edge is one soft slant in any frame.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

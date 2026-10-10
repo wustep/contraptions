@@ -222,7 +222,9 @@ export function drawSunWash(ctx: Ctx, k: number, f: View, t: number): void {
     const to = top + h
     const upper = Math.min(to, Math.max(from, MEADOW))
     if (upper > from) ctx.fillRect(x0 * k, px(from), (x1 - x0) * k, px(upper) - px(from))
-    const m = 40
+    // A few pixels a slice, however tall the floor is on the screen: forty in all stood a tall frame's near meadow in
+    // steps a dozen pixels high, the slanting edge a staircase.
+    const m = Math.min(200, Math.max(40, Math.ceil(((to - upper) * k) / 3)))
     for (let i = 0; i < m && to > upper; i++) {
       const ya = px(upper + ((to - upper) * i) / m)
       const yb = px(upper + ((to - upper) * (i + 1)) / m)
@@ -394,7 +396,10 @@ export function drawRays(ctx: Ctx, k: number, t: number, far = 1): void {
       g.addColorStop(0, rgba(VALLEY.floodlight, 0))
       g.addColorStop(0.18, rgba(VALLEY.floodlight, 0.85 * a * share))
       g.addColorStop(0.55, rgba(VALLEY.floodlight, 0.5 * a * share))
-      g.addColorStop(1, rgba(VALLEY.lamp, 0.26 * a * share))
+      // And gone by its foot, into the light on the floor: cut off square at its full strength, the nested widths'
+      // ends stepped down the meadow, a staircase in a tall frame.
+      g.addColorStop(0.86, rgba(VALLEY.lamp, 0.26 * a * share))
+      g.addColorStop(1, rgba(VALLEY.lamp, 0))
       ctx.fillStyle = g
       ctx.beginPath()
       ctx.moveTo((xa + nx * w0) * k, (ya + ny * w0) * k)
