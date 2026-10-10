@@ -957,9 +957,12 @@ The notes went back to the builders who made each part, who still had their cont
   and from the turn on 122 they are gone with every other world, so the fold brings her home to him waiting at the
   table. The first placement stood them at the panels' edges, cut in the 2×2 views; they stand just past the
   plank's ends now.
-  - Frame time could not be told from the machine's load this time (load 16 to 24, the off runs differing from each
-    other by more than on from off). By construction the cost is two small balls and an eye a panel beside skins of
-    dozens of shapes. To be measured again on a quiet machine.
+  - Frame time could not be told from the machine's load in playback; measured by direct renders in the next pass.
+- **The mosaic's family, measured, and the last two jumps.** On a loaded machine playback could not tell the family's
+  cost from noise, so frames were rendered directly instead, in this commit and the one before it, interleaved:
+  at 182, 186.5 and 189.5 s, 1440×810 at 2× with the PNG's encode, a median of 57.7 ms with the family and 61.7 ms
+  without, over 36 each. The cost is below the noise. The drop into the rocks and the brink were watched at 30 fps
+  too, so all eleven jumps have been: the rocks a hard cut into the silence, the brink its two flickers and the cut.
 
 ## The looks
 
