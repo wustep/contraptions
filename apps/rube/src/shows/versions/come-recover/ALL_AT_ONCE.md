@@ -84,8 +84,10 @@ Before most jumps the next world bleeds through for a frame or two, the way the 
 - The stage shows the next leg's world, with the ball carried into it by the jump's own offset.
 - Each flicker starts 60 ms after an onset, so the leg going out is seen striking it first.
 - There are two before a jump, on the last two onsets before it, so with the cut a jump stays under three flashes a
-  second. Into the surf there is one: its own run of worlds, a new one on every hit, is flashing enough.
-- Four jumps have none:
+  second.
+- Six jumps have none:
+  - the two that close in an iris, into the kitchen (the romance's heart) and into the surf (the cartoon's round):
+    the iris is the jump, and a flicker of the next world whole in the middle of it broke it;
   - the first, which builds in the dryer's own glass instead;
   - the jump into the dark, where the surf's worlds collapse into her on their own;
   - the fold home on the great hit, where the mosaic flips its own panels;
@@ -930,6 +932,13 @@ The notes went back to the builders who made each part, who still had their cont
   pull, the canyon's breath and the peak's wide shots.
 - **Overview, after the pictures.** The bars, the old print, the heart and the cartoon iris, karaoke's tracking
   band and the wall of films all frame the whole world as the picture's own, and she is in each.
+- **A pass for motion at the jumps.** The film language is mostly in its transitions, so four jumps were rendered as
+  filmstrips at 30 fps. Into the kitchen and into the surf, the flickers before the jump showed the next world whole
+  in the middle of the iris closing on her: the romance's heart broken by two frames of a dark kitchen, and the
+  cartoon's iris by a bright piñata, each a large swing of light. Those two jumps now have no flickers (the iris is
+  the jump, as the dryer's glass and the mosaic's panels are theirs), and `check:shows` holds it. Into the dojo the
+  flickers show it in its own print, and the bars hold through the cut; into the hot dog life they show it in its
+  haze. Ten flickers in all, from thirteen.
 
 ## The looks
 
