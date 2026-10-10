@@ -991,6 +991,14 @@ point lies, x plus 1.4 times its depth: a single gradient laid along that slant 
 gradient a pass now, no slices: the same picture to within seven levels in the wide and the tall frame, the edge one
 soft slant, and the daylight five to ten milliseconds cheaper.
 
+A hundred-and-tenth checked the last five rounds against where this session began: the same four contact sheets,
+filmed again at the same moments, each frame set against its first take. Every difference was one a round had meant
+(the tent's floor, the white after the blast, the shafts' feet, the fog drifting under the credits) but one: a faint
+line along the foot of the frame after the blast, which no round had drawn. It came from the scratch canvases the
+soft layers share. Each use cleared only the part it drew in, and scaled up, a canvas is read a pixel past that part,
+where an earlier, larger use (the fog, a whole frame of it) had left its picture. Each use now clears a margin past
+its edge. The line is gone, and the house, which shares them, holds to within five levels of its first take.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

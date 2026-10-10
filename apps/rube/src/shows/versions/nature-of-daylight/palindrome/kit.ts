@@ -341,7 +341,11 @@ export type Ctx = PieceCtx
 
 let scratch: [HTMLCanvasElement, HTMLCanvasElement] | null = null
 
-/** Two scratch canvases at least w by h, shared by everything soft drawn small. */
+/**
+ * Two scratch canvases at least w by h, shared by everything soft drawn small. Callers ask a little more than they use
+ * and clear it: scaled up, a canvas is read a pixel past the part drawn from, and what an earlier, larger use left there
+ * stood in the frame as a faint line along the edge.
+ */
 export function scratchPair(w: number, h: number): [HTMLCanvasElement, HTMLCanvasElement] {
   if (!scratch) scratch = [document.createElement('canvas'), document.createElement('canvas')]
   for (const c of scratch) {
@@ -375,15 +379,15 @@ export function softLayer(
   if (bx - ax < 2 || by - ay < 2) return
   const w = Math.ceil((bx - ax) * S) + 2 * pad
   const h = Math.ceil((by - ay) * S) + 2 * pad
-  const pair = scratchPair(w, h)
+  const pair = scratchPair(w + 4, h + 4)
   const [A, B] = pair.map((c) => c.getContext('2d') as CanvasRenderingContext2D)
   A.setTransform(1, 0, 0, 1, 0, 0)
-  A.clearRect(0, 0, w, h)
+  A.clearRect(0, 0, w + 4, h + 4)
   A.setTransform(m.a * S, m.b * S, m.c * S, m.d * S, (m.e - ax) * S + pad, (m.f - ay) * S + pad)
   draw(A)
   if (blur > 0) {
     B.setTransform(1, 0, 0, 1, 0, 0)
-    B.clearRect(0, 0, w, h)
+    B.clearRect(0, 0, w + 4, h + 4)
     B.filter = `blur(${(blur * S).toFixed(2)}px)`
     B.drawImage(pair[0], 0, 0, w, h, 0, 0, w, h)
     B.filter = 'none'

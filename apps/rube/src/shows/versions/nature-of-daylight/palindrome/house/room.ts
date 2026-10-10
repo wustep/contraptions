@@ -602,13 +602,13 @@ export function drawMirror(p: p5, k: number, T: number): void {
   const pad = Math.ceil(3 * blur * S) + 2
   const w = Math.ceil(sw * S) + 2 * pad
   const h = Math.ceil(sh * S) + 2 * pad
-  const pair = scratchPair(w, h)
+  const pair = scratchPair(w + 4, h + 4)
   const [A, B] = pair.map((c) => c.getContext('2d') as Ctx)
   A.setTransform(1, 0, 0, 1, 0, 0)
-  A.clearRect(0, 0, w, h)
+  A.clearRect(0, 0, w + 4, h + 4)
   A.drawImage(ctx.canvas, sx, sy, sw, sh, pad, pad, sw * S, sh * S)
   B.setTransform(1, 0, 0, 1, 0, 0)
-  B.clearRect(0, 0, w, h)
+  B.clearRect(0, 0, w + 4, h + 4)
   B.filter = `blur(${(blur * S).toFixed(2)}px)`
   B.drawImage(pair[0], 0, 0, w, h, 0, 0, w, h)
   B.filter = 'none'
