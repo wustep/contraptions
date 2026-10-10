@@ -694,7 +694,6 @@ function sync(): void {
   ccBtn.disabled = !perf?.captions
   ccRow.hidden = !perf?.captions
   ccBtn.setAttribute('aria-pressed', String(!!perf?.captions && captions))
-  ccBtn.classList.toggle('on', !!perf?.captions && captions)
   ccState.textContent = captions ? 'On' : 'Off'
   ccBtn.title = captions ? 'Turn the sound captions off (C)' : 'Turn on sound captions: words for what the music does (C)'
   const hasMusic = !!perf?.soundtrack && music.state() !== 'failed'
@@ -769,6 +768,8 @@ function credited(): boolean {
 const wordsLayer = el('div', { class: 'stage-words', 'aria-hidden': 'true' })
 stageRoot.append(wordsLayer)
 const wordCards = new Map<string, HTMLElement>()
+/** A floored card's width per unit of its type, measured once as it is built. */
+const cardWidths = new Map<string, number>()
 // The words a screen reader is to hear (`TitleCard.said`: a show's dialogue): the layer above is hidden from it, since
 // its cards fade and blur, so each such card is spoken once, here, as it first comes up while the show plays at 1× or
 // slower. Not on a scrub or a seek, nor faster than its own pace, so a reader is not flooded.
@@ -807,6 +808,7 @@ function renderWords(t: number): void {
     if (live.has(key)) continue
     node.remove()
     wordCards.delete(key)
+    cardWidths.delete(key)
   }
   for (const key of saidKeys) if (!live.has(key)) saidKeys.delete(key)
   for (const c of cards) {
@@ -837,14 +839,22 @@ function renderWords(t: number): void {
     else node.style.removeProperty('--u')
     // A card with a floor on its type, grown past the frame it was set for: never wider than the stage, and kept
     // inside its edges. (Cards without one are as they were.)
+    // Its width goes as its unit (all its type is set in it), so it is measured once, as it is built, and worked
+    // out from then on: no layout forced on every frame it is up.
     if (c.least) {
       const room = W * 0.94
-      const wide = node.offsetWidth
+      let perUnit = cardWidths.get(c.key)
+      if (perUnit === undefined) {
+        perUnit = node.offsetWidth / unit
+        cardWidths.set(c.key, perUnit)
+      }
+      let wide = perUnit * unit
       if (wide > room) {
         unit *= room / wide
+        wide = room
         node.style.setProperty('--u', `${unit}px`)
       }
-      const half = Math.min(node.offsetWidth, room) / 2
+      const half = wide / 2
       const x = (W - fw) / 2 + c.at[0] * fw
       node.style.left = `${Math.max(W * 0.03 + half, Math.min(W * 0.97 - half, x))}px`
     }
