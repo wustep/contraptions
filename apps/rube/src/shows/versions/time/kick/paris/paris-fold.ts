@@ -289,7 +289,7 @@ function leafContent(pen: Pen, t: number, f: Frame): void {
   farRoofs(pen, f)
   farQuai(pen, t, f)
   // Under the deck: the Seine in its bed between its quais, the piers standing in it, the iron arches over it.
-  if (seen(f, L - 0.3, Y_S, L + 44, UNDER)) {
+  if (seen(f, L - 0.3, Y_S, L + 46, UNDER)) {
     // The water, and its surface: sloshing in its bed when the bridge slams home, and settling.
     const slosh = (x: number) => {
       const u = t - LOCK
@@ -311,11 +311,14 @@ function leafContent(pen: Pen, t: number, f: Frame): void {
       if (gl > 0.25) glints.push([[gx - gw, gy], [gx + gw, gy], [gx + gw * 0.7, gy + 0.03], [gx - gw * 0.7, gy + 0.03]])
     }
     fillPaths(pen, glints, PARIS.mirror, 0.45)
-    rect(pen, L - 0.3, BED_Y, L + 44, UNDER, EARTH, 0)
+    // The far bank is ground, not a pavement on a plank: earth under it down to the bed, and the bed and the cut under
+    // it run on to the leaf's end (seen whole, its building stood on a hairline over open sky).
+    rect(pen, L + DECK_END + 1.0, Y_S + 0.3, L + 46, BED_Y, mixHex(EARTH, PARIS.stoneShade, 0.25), 0)
+    rect(pen, L - 0.3, BED_Y, L + 46, UNDER, EARTH, 0)
     // The leaf's underside: the cut the fold made, rough.
     const rough: Pt[] = [[L - 0.3, UNDER - 0.2]]
-    for (let x = L - 0.3; x <= L + 44; x += 0.6) rough.push([x, UNDER + 0.1 + 0.25 * hash(Math.round(x * 5), 95)])
-    rough.push([L + 44, UNDER - 0.2])
+    for (let x = L - 0.3; x <= L + 46; x += 0.6) rough.push([x, UNDER + 0.1 + 0.25 * hash(Math.round(x * 5), 95)])
+    rough.push([L + 46, UNDER - 0.2])
     shape(pen, rough, EARTH, 0)
     // The quais' walls at either end.
     for (const [a, b] of [[L - 0.3, L + 0.8], [L + DECK_END - 0.2, L + DECK_END + 1.0]]) {

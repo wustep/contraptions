@@ -496,6 +496,9 @@ each world, and changed:
 - **The garden door folded open** (251 to the end): it hung from the floor's back line, a third of a cell higher than its
   own doorway, so folded open against the house it stood taller than the doors beside it and rose past the wall
   (a critic's note in a tall frame). It hangs in the doorway's front plane now, the doorway's height.
+- **Paris's far bank, seen whole** (31 to 61): the far bank past the bridge's end was a pavement on a plank, its
+  building standing on a hairline over open sky down to the river's bed, upright and, once folded, overhead (a critic's
+  note in Overview). It is ground now, earth down to the bed, and the bed and the fold's rough cut run on under it.
 
 ## Inception nods
 
