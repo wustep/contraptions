@@ -482,6 +482,36 @@ function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
     beam(p, k, muzzle, [muzzle[0] + d[1] * 0.5, muzzle[1] - d[0] * 0.5], 0.05, 0.28, core, 0.7 * f)
     beam(p, k, muzzle, [muzzle[0] - d[1] * 0.5, muzzle[1] + d[0] * 0.5], 0.05, 0.28, core, 0.7 * f)
     bloom(p, k, [muzzle[0] + d[0] * 0.25, muzzle[1] + d[1] * 0.25], 0.9, SNOW.flash, 0.8 * f)
+    // The muzzle flash's own shape, crisp, for its first tenth of a second: a star of flame along the aim, gold with
+    // a white heart and a thin ink edge (a soft glow alone was pale on the pale snow).
+    if (u < 0.12) {
+      const c2 = p.drawingContext as C2D
+      const nx = -d[1]
+      const ny = d[0]
+      const sc = 1 - u / 0.12
+      const ctr: Pt = [muzzle[0] + d[0] * 0.12, muzzle[1] + d[1] * 0.12]
+      const star: Pt[] = []
+      for (let q = 0; q < 10; q++) {
+        const a = (q / 10) * Math.PI * 2
+        const along = Math.cos(a)
+        const r = (q % 2 ? 0.07 : along > 0.5 ? 0.42 : 0.2) * (0.6 + 0.4 * sc)
+        star.push([ctr[0] + (d[0] * Math.cos(a) + nx * Math.sin(a)) * r, ctr[1] + (d[1] * Math.cos(a) + ny * Math.sin(a)) * r])
+      }
+      c2.save()
+      c2.beginPath()
+      star.forEach(([x, y], q) => (q ? c2.lineTo(x * k, y * k) : c2.moveTo(x * k, y * k)))
+      c2.closePath()
+      c2.fillStyle = SNOW.pinwheel
+      c2.fill()
+      c2.strokeStyle = SNOW.vault
+      c2.lineWidth = Math.max(1, c.weight * 0.6)
+      c2.stroke()
+      c2.beginPath()
+      c2.arc(ctr[0] * k, ctr[1] * k, 0.06 * k, 0, Math.PI * 2)
+      c2.fillStyle = SNOW.flash
+      c2.fill()
+      c2.restore()
+    }
   }
   const smoke = ss(u / 0.15) * (1 - ss((u - 0.5) / 1.1))
   if (smoke > 0.01) {
