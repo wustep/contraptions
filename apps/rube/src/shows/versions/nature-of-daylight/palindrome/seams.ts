@@ -200,7 +200,7 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     ian: [0.36, 0],
     hannah: null,
     shang: null,
-    what: 'at rest, Ian touching her on her right. Meadow side: in the daylight where the shell was, the cloud opened. House side: in the lake house at dusk by the long window, Ian beside her; the cradle is there, empty, on her right a little way off. He goes out of the picture before the end; baby Hannah is in the cradle from a cut on the fall onto B-flat (349.495), and the picture settles on the first frame.',
+    what: 'at rest, Ian touching her on her right. Meadow side: in the daylight where the shell was, the cloud opened. House side: in the lake house at dusk by the long window, Ian beside her; the cradle is there, empty, on her right a little way off. He goes out of the picture before the end; on the fall onto B-flat (349.495) baby Hannah comes into the cradle, her going played backwards, as the camera goes in to it, with no cut, and the picture settles on the first frame.',
   },
 }
 

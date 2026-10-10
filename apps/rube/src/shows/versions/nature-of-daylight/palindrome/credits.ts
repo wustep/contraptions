@@ -35,7 +35,8 @@ const script: Omit<Card, 'at'>[] = [
   {
     hold: 5.0,
     role: 'With',
-    place: [0.5, 0.075],
+    // Five lines: up nearer the ceiling, so the last clears the window's top rail.
+    place: [0.5, 0.04],
     names: [
       ['Louise Banks', 'the gold ball', LOUISE],
       ['Ian Donnelly', 'the blue ball', IAN],

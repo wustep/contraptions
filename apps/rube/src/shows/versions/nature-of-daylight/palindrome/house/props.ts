@@ -240,6 +240,19 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
   const linen = mix(mix(HOUSE.linenShade, HOUSE.linen, 0.35 + 0.5 * L.amb), HOUSE.night, 0.15 * (1 - L.amb))
   const linenShade = mix(linen, HOUSE.linenShade, 0.6)
   ctx.save()
+  // The head and the foot: oak boards rounded over at the top, the head the taller, so the bed is the cradle grown
+  // up, its hood become a headboard. Their tops catch the window's light.
+  for (const [x0, x1, top] of [[BED.x0 - 0.03, BED.x0 + 0.05, -0.5], [BED.x1 - 0.05, BED.x1 + 0.03, -0.31]] as const) {
+    ctx.fillStyle = W.body
+    roundRect(ctx, k, x0, top, x1 - x0, FLOOR - top, 0.035)
+    ctx.fill()
+    ctx.strokeStyle = rgba(W.rim, W.rimA)
+    ctx.lineWidth = Math.max(1, 0.012 * k)
+    ctx.beginPath()
+    ctx.moveTo((x0 + 0.012) * k, (top + 0.03) * k)
+    ctx.quadraticCurveTo((x0 + 0.012) * k, (top + 0.006) * k, ((x0 + x1) / 2) * k, (top + 0.006) * k)
+    ctx.stroke()
+  }
   // Legs and the oak frame.
   ctx.fillStyle = W.shade
   path(ctx, k, [[BED.x0 + 0.05, FLOOR], [BED.x0 + 0.12, FLOOR], [BED.x0 + 0.12, 0.02], [BED.x0 + 0.05, 0.02]])
@@ -264,7 +277,8 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
   ctx.closePath()
   ctx.fill()
   // The duvet over the rest of the bed, hanging down over its side and its foot in soft folds.
-  const duvet = mix(mix(HOUSE.linen, HOUSE.lakeLight, 0.5), HOUSE.night, 0.28 * (1 - L.amb))
+  // Warm linen, never the lake's grey-blue behind it, so the bed stands against the window.
+  const duvet = mix(mix(HOUSE.linen, HOUSE.dusk, 0.32), HOUSE.night, 0.22 * (1 - L.amb))
   const dg = ctx.createLinearGradient(0, (BED.mattress - 0.05) * k, 0, 0.02 * k)
   dg.addColorStop(0, mix(duvet, HOUSE.fog, 0.25))
   dg.addColorStop(0.35, duvet)
@@ -283,15 +297,44 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
   ctx.bezierCurveTo(0.98 * k, -0.06 * k, 0.98 * k, (top + 0.04) * k, 1.0 * k, (top + 0.012) * k)
   ctx.closePath()
   ctx.fill()
-  // Its soft folds where it falls over the side: broad shadows, no lines.
-  for (const [x, w] of [[1.42, 0.16], [1.93, 0.2], [2.38, 0.14]] as const) {
+  // Its soft folds where it falls over the side: each a wedge from a little below the top, widening to the hem, lit on
+  // its left and shaded on its right, coming in from nothing at its top, kept inside the duvet: a fold has no edge of
+  // its own. (In slices, not under a blur filter, which is costly every frame.)
+  ctx.save()
+  ctx.clip()
+  for (const [x, w] of [[1.42, 0.09], [1.93, 0.11], [2.38, 0.08]] as const) {
+    const y0 = top + 0.03
+    const y1 = 0.01
     const g = ctx.createLinearGradient((x - w) * k, 0, (x + w) * k, 0)
-    g.addColorStop(0, rgba(HOUSE.night, 0))
-    g.addColorStop(0.5, rgba(HOUSE.night, 0.08))
+    g.addColorStop(0, rgba(HOUSE.linen, 0))
+    g.addColorStop(0.35, rgba(HOUSE.linen, 0.14))
+    g.addColorStop(0.55, rgba(HOUSE.night, 0.03))
+    g.addColorStop(0.75, rgba(HOUSE.night, 0.09))
     g.addColorStop(1, rgba(HOUSE.night, 0))
     ctx.fillStyle = g
-    ctx.fillRect((x - w) * k, (top + 0.04) * k, 2 * w * k, (-top - 0.05) * k)
+    // Fine enough that its coming in from nothing is a ramp, not steps: in eight, the first slices' strength jumped by
+    // a quarter at a time, bands across the top of every fold.
+    const n = 24
+    for (let i = 0; i < n; i++) {
+      const ua = i / n
+      const ub = (i + 1) / n
+      const ya = y0 + (y1 - y0) * ua
+      const yb = y0 + (y1 - y0) * ub
+      // Its width down the fold: narrow at the top, eased out to full at the hem.
+      const wa = w * (0.15 + 0.85 * Math.sqrt(ua))
+      const wb = w * (0.15 + 0.85 * Math.sqrt(ub))
+      ctx.globalAlpha = Math.min(1, (ua + ub) / 2 / 0.45)
+      ctx.beginPath()
+      ctx.moveTo((x - wa) * k, ya * k)
+      ctx.lineTo((x + wa) * k, ya * k)
+      ctx.lineTo((x + wb) * k, yb * k)
+      ctx.lineTo((x - wb) * k, yb * k)
+      ctx.closePath()
+      ctx.fill()
+    }
   }
+  ctx.globalAlpha = 1
+  ctx.restore()
   ctx.restore()
   void T
 }
@@ -300,8 +343,8 @@ export function drawBed(p: p5, k: number, T: number, L: Light): void {
 export function drawBedOver(p: p5, k: number, T: number, L: Light): void {
   const ctx = p.drawingContext as Ctx
   const gone = ss(T, GONE[0] + 0.6, GONE[1] + 0.4)
-  const blanket = mix(mix(HOUSE.linen, HOUSE.lakeLight, 0.55), HOUSE.night, 0.3 * (1 - L.amb))
-  const fold = mix(mix(HOUSE.linen, HOUSE.fog, 0.3), HOUSE.night, 0.22 * (1 - L.amb))
+  const blanket = mix(mix(HOUSE.linen, HOUSE.dusk, 0.32), HOUSE.night, 0.22 * (1 - L.amb))
+  const fold = mix(mix(HOUSE.linen, HOUSE.fog, 0.3), HOUSE.night, 0.18 * (1 - L.amb))
   const r = R * HANNAH_AGE.young
   const cx = PATIENT[0]
   // The mound over her lower half, and the fold along its top.
@@ -311,16 +354,17 @@ export function drawBedOver(p: p5, k: number, T: number, L: Light): void {
   ctx.beginPath()
   ctx.moveTo((cx - r * 1.25) * k, (BED.mattress + 0.01) * k)
   ctx.bezierCurveTo((cx - r * 1.2) * k, (top + 0.02) * k, (cx - r * 0.6) * k, top * k, (cx + r * 0.1) * k, top * k)
-  ctx.bezierCurveTo((cx + r * 1.2) * k, top * k, 1.28 * k, (BED.mattress - 0.03) * k, 1.6 * k, (BED.mattress - 0.03) * k)
-  ctx.lineTo(1.6 * k, (BED.mattress + 0.02) * k)
+  // Its tail runs down into the duvet's own line, one sheet, no step where it ends.
+  ctx.bezierCurveTo((cx + r * 1.2) * k, top * k, 1.3 * k, (BED.mattress - 0.03) * k, 2.0 * k, (BED.mattress + 0.012) * k)
+  ctx.lineTo(2.0 * k, (BED.mattress + 0.03) * k)
   ctx.closePath()
   ctx.fill()
   ctx.fillStyle = fold
   ctx.beginPath()
   ctx.moveTo((cx - r * 1.22) * k, (top + 0.035) * k)
   ctx.bezierCurveTo((cx - r * 1.1) * k, (top + 0.006) * k, (cx - r * 0.5) * k, (top - 0.004) * k, (cx + r * 0.1) * k, (top - 0.004) * k)
-  ctx.bezierCurveTo((cx + r * 0.9) * k, (top - 0.004) * k, (cx + r * 1.4) * k, (top + 0.01) * k, (cx + r * 1.9) * k, (top + 0.03) * k)
-  ctx.lineTo((cx + r * 1.9) * k, (top + 0.055) * k)
+  // Tapering away to nothing at its end, not stopping square.
+  ctx.bezierCurveTo((cx + r * 0.9) * k, (top - 0.004) * k, (cx + r * 1.4) * k, (top + 0.01) * k, (cx + r * 2.3) * k, (top + 0.045) * k)
   ctx.bezierCurveTo((cx + r * 1.2) * k, (top + 0.04) * k, (cx - r * 0.5) * k, (top + 0.035) * k, (cx - r * 1.1) * k, (top + 0.06) * k)
   ctx.closePath()
   ctx.fill()
