@@ -477,6 +477,9 @@ changed, in the order of the film, and then what runs through it:
   the same flat grey to the credits. Once it is through, the low sun lays the window's panes on the floor now, warm and
   soft-edged, widening toward us, the mullions' shadows between; they go dim with the room under the credits. The
   prologue's catch of the light has them too.
+- **The first ring, whole** (137.75 → 139.476): following her through its bottom, the frame let the ring drift up out
+  of its top, so the last sight of the first ring she rode, before the cut into summer, had no top. The following
+  framing is wider now, her place on the screen the same for the match cut.
 
 ## Arrival nods
 
