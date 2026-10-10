@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 114 (latest)
+## Polish pass 115 (latest)
+
+No change to the show. Passes 112 and 114's corn, every 2 s from 28 to 54 s, on an upright phone (390×844) and in Zoom, where pass 112 had looked only at 1280×720. On the phone the wall's start reads as a low rise of the field behind the truck, and in Zoom as the field coming up. At the dam, in both, the two walls drop together without crossing. The bedroom (6 to 15 s) and the camp under the credits (258 to 299 s) were also looked at frame by frame at 1280×720, the last stretches no pass had seen that way. Both are clean.
+
+## Polish pass 114
 
 Pass 112's corn made a fault of its own, at the far end. The tall wall fell to the dam over 2.6 cells, but the shorter green wall in front still fell over 1.2. From 51 to 53 s the tall wall's top came down beside the green one's, a cell or less away, and crossed it: a doubled, scribbled edge just behind the cab. Pass 112 looked at 53 s, where the cab hides most of it, and missed it. `cornWall`'s `rise` now takes one length for each end. The tall wall comes up over 2.6 cells, as pass 112 made it, and ends over 1.2, as both walls did before, so at the dam the two drop together, the tall one behind. The rise at 30 s is unchanged.
 
