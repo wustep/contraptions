@@ -874,6 +874,8 @@ window.
     panel says "The soundtrack would not load. The show runs silent, on the wall clock." The music control said "This
     version has no soundtrack", and while YouTube played, "a saved video keeps its music": neither true here. It now
     says the soundtrack would not load, and for a YouTube-only show that a saved video is silent (`player.ts`).
+    And after a video is saved the panel said "Saved: picture and music" whatever the file held; it now says the file
+    is silent where the music is YouTube's (muting does not change what is recorded, only what is heard).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits

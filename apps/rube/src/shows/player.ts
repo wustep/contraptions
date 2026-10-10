@@ -595,6 +595,9 @@ videoBtn.addEventListener('click', () => {
   const mine = (recording = new AbortController())
   const name = `${exportName()}${speed === 1 ? '' : `-${speed}x`}`
   const words = credited() ? ', and the credits' : ', nothing written on it'
+  // What the file has: the recorder takes a soundtrack file's audio (muted or not: muting only stops it being heard as it
+  // records) and nothing else, so a show whose music is YouTube's saves silent, and "picture and music" was untrue there.
+  const sound = !perf?.soundtrack ? '' : perf.soundtrack.src ? ' and music' : ", silent (its music is YouTube's)"
   say(exportNote, 'Playing the show through once to record it. Keep this tab in front.')
   sync()
   void stage
@@ -602,7 +605,7 @@ videoBtn.addEventListener('click', () => {
       videoBtn.textContent = `Stop · ${Math.round(done * 100)}%`
     })
     .then(
-      (saved) => say(exportNote, saved ? `Saved: picture and music${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
+      (saved) => say(exportNote, saved ? `Saved: picture${sound}${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
       (err) => {
         console.error(err)
         say(exportNote, err instanceof Error ? err.message : String(err), 'bad')

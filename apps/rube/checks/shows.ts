@@ -122,7 +122,8 @@ async function main(): Promise<void> {
   // The music control tells the truth: a soundtrack that failed to load is not "no soundtrack", and a YouTube-only show's
   // saved video is silent (the recorder takes a file's audio, and there is none).
   check('the music control says when the soundtrack failed, and that a YouTube-only show saves silent',
-    player.includes("'The soundtrack would not load'") && /perf\?\.soundtrack\?\.src\s*\n\s*\? 'Turn the music off \(M\)\. The show keeps its time; a saved video keeps its music\.'/.test(player) && player.includes('a saved video is silent'))
+    player.includes("'The soundtrack would not load'") && /perf\?\.soundtrack\?\.src\s*\n\s*\? 'Turn the music off \(M\)\. The show keeps its time; a saved video keeps its music\.'/.test(player) && player.includes('a saved video is silent') &&
+    player.includes('`Saved: picture${sound}${words}.`') && player.includes("silent (its music is YouTube's)"))
   // A YouTube cue started again from the top as it runs out is treated as run out, so the show carries on to its end
   // instead of freezing under the song heard again (found on Married Life's deployed preview); and `position` asks.
   check('a YouTube cue restarted at its end is run out, and nothing else is',
