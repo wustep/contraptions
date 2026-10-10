@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 140 (latest)
+## Polish pass 141 (latest)
+
+No change to the show: high-density screens. Every audit ran at a device pixel ratio of 1, and phones draw at 2 or 3, where anything sized in pixels could come out differently (the 0.8 px floors, the stars, pass 126's off-canvas test, the credits' own transform). The live canvas does take the device's ratio (390×844 at 3 is a 1170×1368 canvas). Read back at ratio 3 and scaled to CSS size, it matches ratio 1 at 13 moments, including five under the credits: mean difference 0.5 to 1.5 of 255, no pixel off by more than 60. Floors and star sizes are in CSS pixels through p5's scaled context. `offCanvas` measures through the full transform against the canvas's device size. The credits' `setTransform` keeps the context's scale, which carries the ratio. A Retina screen or a phone sees the same picture, sharper.
+
+## Polish pass 140
 
 No change to the show: whether a viewer's GPU draws the picture these passes have audited. Every frame checked so far came from the software-drawn headless shell, and GPU and software rasterisers can differ (gradient precision, blending, anti-aliasing). The live canvas was read back at 13 moments across all four worlds (20 to 285 s, 1280×720), in GPU Chrome (pass 129's) and in the shell. The mean difference is 0.4 to 0.7 of 255, and at most 0.12% of pixels differ by more than 40 (98 s, edges). It is anti-aliasing, not a different picture, so what has been audited is what a GPU shows.
 
