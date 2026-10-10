@@ -7,7 +7,7 @@ import type { Performance } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/eeaao-onsets.json'
 import { STRIKES } from '../src/shows/versions/come-recover/all-at-once/hits'
 import { COMBS, CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall, fight } from '../src/shows/versions/come-recover/all-at-once/music'
-import { CAPTIONS, CARDS, CHAPTERS, CREDITS_OK, DESCRIBED, SUBTITLES, creditsAt, goneAt } from '../src/shows/versions/come-recover/all-at-once/credits'
+import { CAPTIONS, CARDS, CHAPTERS, CREDITS_OK, DESCRIBED, SUBTITLES, creditsAt, goneAt, setDialogue, subtitleLight } from '../src/shows/versions/come-recover/all-at-once/credits'
 import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/peak'
 import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
 import { keepIn, keepOf } from '../src/shows/versions/come-recover/all-at-once/film'
@@ -270,6 +270,12 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     CHAPTERS.every((c, i) => c.at >= starts[i] && c.at < starts[i] + 1 && goneAt(c) < (starts[i + 1] ?? JUMPS.eye) - 5) &&
     seen(CHAPTERS[1].at + 2).length === 1 && seen(JUMPS.eye).length === 0)
 
+  // The dialogue is the viewer's to turn on: off, no line is seen or spoken and no shade comes up for one; on, every
+  // line is back.
+  const lineAt = (sub: (typeof SUBTITLES)[number]) => creditsAt((sub.at + sub.to) / 2).some((c) => c.key.includes('subtitle')) || subtitleLight((sub.at + sub.to) / 2) > 0
+  check('all at once: the dialogue is offered, off until the viewer turns it on, and all of it back when they do',
+    typeof perf.dialogue === 'function' && SUBTITLES.every((sub) => !lineAt(sub)) && (perf.dialogue!(true), SUBTITLES.every(lineAt)))
+
   // The show's three conversations in subtitles: each line in its own scene, one at a time, none over a jump, and
   // nothing said as Joy goes over the brink.
   const scenes: Record<string, [number, number]> = { taxes: [20.19, 29.37], alley: [JUMPS.premiere, JUMPS.dojo], hush: [JUMPS.void, JUMPS.mosaic], rocks: [JUMPS.rocks, JUMPS.brink], peak: [JUMPS.brink, JUMPS.home], home: [JUMPS.home, CREDITS_AT] }
@@ -326,4 +332,5 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && CARDS.filter((c) => c.role === 'Directed by').length === 1 &&
     ['Directed by', 'Claude Opus 5.5', 'Evelyn', 'Joy', 'Waymond', 'Son Lux', 'Come Recover', 'Everything Everywhere All at Once', 'Daniels', 'p5.js'].every((w) => said.includes(w)) &&
     !/private tech demo/i.test(said), said)
+  setDialogue(false)
 }

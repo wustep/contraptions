@@ -123,6 +123,9 @@ export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
  *   can.
  *
  * Each comes on a note the scene already moves on, and goes before the next.
+ *
+ * They are the viewer's choice, off unless they turn them on (the player's Dialogue row, `Performance.dialogue`): no
+ * scene waits on a line, so without them the show plays straight through, and with them the words come back as they were.
  */
 export type Scene = 'taxes' | 'alley' | 'hush' | 'rocks' | 'peak' | 'home'
 export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 'joy' | 'waymond'; scene: Scene }[] = [
@@ -148,6 +151,11 @@ export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 
   { at: 276.2, to: 278.8, line: 'Stay a little?', who: 'waymond', scene: 'home' },
   { at: 279.6, to: 282.2, line: 'I’m staying.', who: 'evelyn', scene: 'home' },
 ]
+let dialogue = false
+/** The viewer's choice of the dialogue (`Performance.dialogue`): the subtitles, and the shade under them, follow it. */
+export function setDialogue(on: boolean): void {
+  dialogue = on
+}
 /** Where the subtitles sit, as shares of the 16:9 frame (their top middle): low, or in the widescreen's lower bar. */
 export const SUB_AT: [number, number] = [0.5, 0.855]
 const SUB_IN_BAR: [number, number] = [0.5, 0.884]
@@ -167,6 +175,7 @@ export function subtitleLight(t: number): number {
 }
 function subtitleBedAt(t: number): { light: number; at: [number, number]; deep: number } {
   let best = { light: 0, at: SUB_AT, deep: 1 }
+  if (!dialogue) return best
   for (const sub of SUBTITLES) {
     if (sub.scene === 'alley') continue
     const light = clamp((t - sub.at) / SUB_FADE) * (1 - clamp((t - (sub.to - SUB_FADE)) / SUB_FADE))
@@ -297,7 +306,7 @@ export function creditsAt(t: number): TitleCard[] {
     // On a tall stage the first lifts into the dark over the room, clear of the bright washer it would grow across.
     out.push({ key: `all-at-once-chapter-${n}`, role: card.role, names: card.names, title: true, light, rise: rise * 0.5, at: card.pos, scale: card.scale, least: WORDS_LEAST, said: true, lift: n === 0 ? 1.55 : undefined })
   })
-  SUBTITLES.forEach((sub, n) => {
+  if (dialogue) SUBTITLES.forEach((sub, n) => {
     const up = clamp((t - sub.at) / SUB_FADE)
     const down = clamp((t - (sub.to - SUB_FADE)) / SUB_FADE)
     const light = up * (1 - down)

@@ -1,5 +1,5 @@
 import type { Performance } from '../../../registry'
-import { creditsAt, HAS_CAPTIONS } from './credits'
+import { creditsAt, HAS_CAPTIONS, setDialogue } from './credits'
 import { DURATION } from './music'
 import { compose } from './score'
 
@@ -17,6 +17,8 @@ export const performance: Performance = {
   titles: creditsAt,
   // Sound captions for what the music does, seen with the player's CC on.
   captions: HAS_CAPTIONS,
+  // The family's words, in subtitles, seen with the player's Dialogue on; off, the show plays straight through.
+  dialogue: setDialogue,
   soundtrack: {
     offset: 0,
     credit: 'Son Lux · Come Recover (Empathy Fight) · Everything Everywhere All at Once (2022)',
