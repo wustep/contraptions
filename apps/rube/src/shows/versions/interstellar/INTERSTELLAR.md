@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 117 (latest)
+## Polish pass 118 (latest)
+
+No change to the show: an upright tablet (768×900, about 3:4 under the player's bar), the one common screen shape between the phone and the desktop not yet swept. Every 6 s, nothing is lost. The extra height goes to sky and ground, as on the phone. The near-empty frames are the ones already known to be meant: the whip's landing at 236 s and the long fall.
+
+## Polish pass 117
 
 No change to the show: a search of the code for pass 108's fault, a floor in screen pixels (`Math.max(0.8, …)`) set inside a `scale()` that changes, and so scaled with it. Besides Gargantua over Edmunds (fixed in 108), three blocks have one:
 - The lattice folding away (`drawLattice`'s `fold`, 1 down to 0.2). It only shrinks, so its floors only get thinner as it goes, which is right.
