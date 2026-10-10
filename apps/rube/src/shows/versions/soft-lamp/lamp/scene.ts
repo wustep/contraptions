@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
 import { BAND_TOP, BOOKS, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, R, SILL, WALKMAN, WINDOW, type Book } from './desk'
-import { MUSIC_END, heldAt } from './music'
+import { MUSIC_END, heldAt, smooth } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt, squashAt } from './route'
 import { cat } from './cat'
 import { bloom, clock, curtain, draughtAt, scrim, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
@@ -781,6 +781,38 @@ function lip(ctx: Ctx, lw: number, t: number): void {
   ctx.restore()
 }
 
+/**
+ * The cup playing: on each kick it plays, a soft warm glow in the air over it, gone within a quarter second, as hard
+ * as the kick was struck. Small beside the ball's nod close up; in a wide frame, where the nod is a few pixels, it is
+ * what says the machine is keeping time.
+ */
+const KICK_MAX = Math.max(1e-6, ...NODS.map((n) => n.h))
+function beatGlow(ctx: Ctx, t: number): void {
+  const lamp = lampAt(t)
+  if (lamp < 0.2) return
+  let k = 0
+  for (let i = NODS.length - 1; i >= 0; i--) {
+    const s = t - NODS[i].t
+    if (s < 0) continue
+    if (s > 0.8) break
+    k = Math.max(k, (NODS[i].h / KICK_MAX) * Math.exp(-s / 0.18))
+  }
+  if (k < 0.01) return
+  // Stronger the wider the frame: barely there close, plain in the room's frame.
+  const wide = smooth(viewOf(ctx).y1 - viewOf(ctx).y0, 3, 6)
+  const a = k * lamp * (0.06 + 0.16 * wide)
+  const x = CUP.x
+  const y = CUP.top - 0.12
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  const g = ctx.createRadialGradient(x, y, 0, x, y, 0.55)
+  g.addColorStop(0, rgba(lampColor(t), a))
+  g.addColorStop(1, rgba(lampColor(t), 0))
+  ctx.fillStyle = g
+  ctx.fillRect(x - 0.6, y - 0.6, 1.2, 1.2)
+  ctx.restore()
+}
+
 /* ------------------------------------------------------------------ the lamp */
 
 const METAL = '#24363C'
@@ -943,6 +975,7 @@ export const things = scenery<null>(
   (p, _s, c) => inCells(p, c, (ctx, lw) => {
     ballShine(ctx, lw, c.t)
     lip(ctx, lw, c.t)
+    beatGlow(ctx, c.t)
     // Someone's hand, now and then, in front of it all.
     moth(ctx, lw, c.t)
     hands(ctx, lw, c.t, (g) => mug(g, lw, c.t))

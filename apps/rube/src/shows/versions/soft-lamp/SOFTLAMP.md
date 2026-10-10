@@ -1196,6 +1196,9 @@ painterly look (taken, the sixty-ninth pass). The other two would change the pie
      the reflection was a smudge there (it is a third stronger in the wide frames). Not taken: framing it higher (Zoom
      then loses the ball in the cup, the check said, 77% of the time), framing it tighter (it cuts the plant or the
      lamp's foot), and the closing hand at the frame's edge (the lamp stands there).
+191. **The machine keeping time, at the still take's size.** In its wide frame the ball's nod is a few pixels. On each
+     kick the cup plays, a soft warm glow now rises in the air over it and is gone within a quarter second, as hard as
+     the kick was struck: plain in a wide frame, barely there close, where the nod says it (`beatGlow`, `scene.ts`).
 
 **Subtracted:** the camera following the ball along the sill (a held frame now); the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
