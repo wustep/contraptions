@@ -100,6 +100,11 @@ export interface Performance {
    * none. Left out, there are none.
    */
   titles?(t: number): TitleCard[]
+  /**
+   * The show offers sound captions: some of its `titles` are `caption` cards, words for what the music does, for a
+   * viewer who cannot hear it. They are seen only while the viewer has captions on (the player's CC). Left out, none.
+   */
+  captions?: boolean
 }
 
 /** One card of words over the stage, as the page is to set it at a moment (and a video's frame to paint it). */
@@ -144,6 +149,8 @@ export interface TitleCard {
    * this string in its place (to name who speaks, which the page shows only by its type). Unset: as before.
    */
   said?: boolean | string
+  /** Optional: a sound caption (what the music does), seen only while the viewer has captions on. Unset: always seen. */
+  caption?: boolean
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
 }

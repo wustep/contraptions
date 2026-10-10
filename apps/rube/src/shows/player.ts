@@ -491,6 +491,27 @@ musicBtn.addEventListener('click', () => {
   setMuted(false)
   if (transport && perf?.soundtrack) void music.play(transport.now())
 })
+// Sound captions, for a show that has them (`Performance.captions`): off unless the viewer turns them on, and
+// remembered in this browser.
+const CAPTIONS_KEY = 'shows-captions'
+let captions = (() => {
+  try {
+    return localStorage.getItem(CAPTIONS_KEY) === '1'
+  } catch {
+    return false
+  }
+})()
+const ccState = el('span', { class: 'cc-state' }, ['Off'])
+const ccBtn = el('button', { type: 'button', class: 'chip cc', 'aria-label': 'Sound captions' }, [el('span', {}, ['Sound captions']), ccState])
+const ccRow = el('div', { class: 'row cc' }, [ccBtn])
+ccBtn.addEventListener('click', () => {
+  captions = !captions
+  try {
+    localStorage.setItem(CAPTIONS_KEY, captions ? '1' : '0')
+  } catch {}
+  sync()
+  if (transport) renderWords(transport.now())
+})
 const restartBtn = el('button', { type: 'button', class: 'tbtn', title: 'Back to the top of the show (Home)', 'aria-label': 'Restart' }, [icon(ICON.restart)])
 restartBtn.addEventListener('click', () => seek(0))
 // Overview and Zoom were two toggles that turned each other off: one choice of three, so one control.
@@ -520,6 +541,8 @@ transportSec.append(
   scrub,
   el('div', { class: 'row deck player' }, [playBtn, restartBtn, time, musicBtn, speedBox.node]),
   cameraSeg.node,
+  // Sound captions: a row of their own, shown only for a show that has them.
+  ccRow,
   el('div', { class: 'row door' }, [doorBtn]),
   transportNote,
 )
@@ -667,6 +690,12 @@ function sync(): void {
   speedBox.set(speed)
   speedBox.setDisabled(busy)
   doorBtn.disabled = busy
+  ccBtn.disabled = !perf?.captions
+  ccRow.hidden = !perf?.captions
+  ccBtn.setAttribute('aria-pressed', String(!!perf?.captions && captions))
+  ccBtn.classList.toggle('on', !!perf?.captions && captions)
+  ccState.textContent = captions ? 'On' : 'Off'
+  ccBtn.title = captions ? 'Turn the sound captions off' : 'Turn on sound captions: words for what the music does'
   const hasMusic = !!perf?.soundtrack && music.state() !== 'failed'
   musicBtn.disabled = !hasMusic
   musicBtn.setAttribute('aria-pressed', String(hasMusic && !muted && !soundHeld))
@@ -749,7 +778,7 @@ const saidKeys = new Set<string>()
 const cardText = (c: TitleCard): string => [c.role, ...c.names.map((n) => (typeof n === 'string' ? n : `${n[0]}, ${n[1]}`)), ...(c.notes ?? [])].filter(Boolean).join('. ')
 
 function buildCard(c: TitleCard): HTMLElement {
-  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}` })
+  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}${c.caption ? ' caption' : ''}` })
   if (c.role) node.append(el('div', { class: 'role' }, [c.role]))
   for (const n of c.names) {
     if (typeof n === 'string') {
@@ -771,7 +800,7 @@ function buildCard(c: TitleCard): HTMLElement {
 }
 
 function renderWords(t: number): void {
-  const cards = perf?.titles && !overview && !recording ? perf.titles(t) : []
+  const cards = perf?.titles && !overview && !recording ? perf.titles(t).filter((c) => !c.caption || captions) : []
   const live = new Set(cards.map((c) => c.key))
   for (const [key, node] of wordCards) {
     if (live.has(key)) continue

@@ -840,6 +840,9 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .stage-words .card .name + .note { margin-top: calc(var(--u) * 1.6); }
 .stage-words .note.fine { font-size: calc(var(--u) * 1.65); opacity: 0.58; margin-top: calc(var(--u) * 1.4); }
 .stage-words .title .note { font-style: normal; letter-spacing: 0.12em; font-size: calc(var(--u) * 2.1); }
+/* A sound caption carries its own dark box, as captions do, so it reads over a pale scene as over a dark one. */
+.stage-words .card.caption { background: rgba(10, 10, 12, 0.66); padding: calc(var(--u) * 0.45) calc(var(--u) * 1.1); border-radius: calc(var(--u) * 0.45); text-shadow: none; }
+.stage-words .card.caption .note { opacity: 1; margin-top: 0; }
 
 /* The frame a video is recorded from, standing over the stage while it is
    made. It is built at the size of the file, not of the stage, so this is
@@ -903,6 +906,13 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .deck.player > .lb.speed .lb-trigger { padding: 6px; gap: 6px; }
 .tbtn.music[aria-pressed='false'] { color: var(--dim); }
 .tbtn.music.held { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+/* Sound captions, for a show that has them: a toggle of its own row, lit when on. */
+.row.cc[hidden] { display: none; }
+.row.cc > .chip { flex: 1; justify-content: flex-start; padding: 5px 9px; }
+.row.cc > .chip[aria-pressed='false'] { color: var(--dim); }
+.row.cc > .chip[aria-pressed='true'] { border-color: var(--accent); color: var(--accent); }
+.row.cc .cc-state { margin-left: auto; font-size: 11px; color: var(--faint); }
+.row.cc > .chip[aria-pressed='true'] .cc-state { color: var(--accent); }
 .seg.camera button { padding: 5px 0; }
 /* A show's sizes are words, not multipliers. In the side panel (and on the
    narrowest phones) they and both saves do not fit one line: "Shorts" ran
