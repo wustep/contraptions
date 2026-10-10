@@ -339,14 +339,15 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
     // The great ring, as it is written: her half from her pen at its bottom, Costello's from its pen at its top,
     // each the same ink turned half a turn from the other. Each half's tail is held a little short of the other's pen
     // (the inks' round ends would otherwise run together a second and more early, and the ring read closed before it
-    // is), and on the close the tails run into the gaps: the halves meet on 183.182, seen to.
-    const lo = ring.lo(t) + JOIN_GAP * (1 - sstep((t - (ring.closed - JOIN_RUN)) / JOIN_RUN))
+    // is), and on the close the tails run into the gaps: the halves meet on 183.182, seen to. Held only where it comes
+    // near that pen (half a turn back from its own head): early on the ink runs out both ways from under her.
     const hi = ring.hi(t)
+    const lo = Math.max(ring.lo(t), hi - Math.PI + JOIN_GAP * (1 - sstep((t - (ring.closed - JOIN_RUN)) / JOIN_RUN)))
     const half = Math.max(0, (hi - lo) / 2)
     const form = 0.7 * (0.5 - Math.sin(Math.asin(1 - 2 * Math.min(1, half / Math.PI)) / 3)) * 0.9999
     // Each half's ends run out to a point over as much of the ink as lies between her pen and them, so they read as
     // ink running, not a blunt cut, and never thin under her, where she rides it at its full thickness (her place on
-    // it is worked out from its whole width). Early on its tail is held only a little behind her.
+    // it is worked out from its whole width).
     const pen = GREAT.her(t) - GREAT.spin(t)
     const lead = Math.min(LEAD_TAPER, 0.8 * Math.min(hi - pen, pen - lo))
     const taper = Math.min(lead, Math.max(0.015, 0.3 * (TAU - 4 * half)))
