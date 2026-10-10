@@ -1,7 +1,7 @@
 import type { Framing } from '../../../registry'
-import { SILL } from './desk'
+import { PROPS } from './desk'
 import { TRACKS, barTime } from './music'
-import { LAPS, ballAt } from './route'
+import { LAPS } from './route'
 
 /**
  * The camera: a slow operator who is always a little behind what they decide to look at.
@@ -32,37 +32,35 @@ const W = 1.3
 const WIDE = { x: 0.9, y: -2.2, cells: 7.0 }
 /** The lower window and the whole machine: what a lob needs, and what a break draws back to. */
 const ROOM = { x: -0.17, y: -1.95, cells: 5.3 }
-/** The stair and the cup, with the sill's end over them. */
-const STAIR = { x: 1.5, y: -1.3, cells: 3.5 }
+/** The stair and the cup, with the sill's end over them, and the cat watching from beside the books. */
+const STAIR = { x: 1.45, y: -1.3, cells: 3.9 }
 
 /**
  * Where the camera sits with the listener through a groove, a phrase (eight bars) at a time. Each track takes them in
  * its own order, so no two tracks are framed alike, and none is a new idea: the same four looks at the same desk.
  */
 const GROOVE = [
-  // The cup, close: the ball in its seat, the stair's foot, the band rising out of frame.
-  { x: 1.75, y: -0.64, cells: 2.45 },
-  // The desk under the lamp: books, cup, band, the shade whole over them.
-  { x: 2.15, y: -1.55, cells: 4.2 },
+  // The cup, close: the ball in its seat, the stair's foot, the band rising out of frame. Low enough that a 16:10
+  // laptop's taller frame round the same middle still keeps the lamp's shade above its top.
+  { x: 1.75, y: -0.57, cells: 2.45 },
+  // The desk under the lamp: the cat, books, cup, band, the shade whole over them. Low enough that Zoom's closer
+  // frame about the same middle still has the cup whole under the ball.
+  { x: 2.0, y: -1.3, cells: 4.5 },
   // The window over the desk: the rain, the plant and the mug, and the stair and the cup small under the lamp.
   { x: 0.21, y: -1.9, cells: 4.9 },
-  // From the lamp's side: the shade, the band's arch, the cup under the light.
-  { x: 3.0, y: -1.45, cells: 3.7 },
+  // From the lamp's side: the shade, the band's arch, the cup under the light (low, for Zoom, as the last). Retired.
+  { x: 3.0, y: -1.3, cells: 3.7 },
 ]
-/** The order each track takes them in (indices into GROOVE), the first being where it settles after the stair. */
+/**
+ * The order each track takes them in (indices into GROOVE), the first being where it settles after the stair: the room's
+ * two homes, the desk under the lamp and the window over the desk, by turns, each track starting on its own. The cup,
+ * close, is out of the rotation (the dullest look, and the least loveable thing at the largest size, four reviewers
+ * said), and so is the lamp's side (two more said it held a wall and a sliver of window, and lost the kitten, the
+ * person in the glass and the weather, which are what there is to look at).
+ */
 const ORDERS = [
-  [0, 1, 2, 1],
-  [1, 3, 0, 2],
-  [0, 2, 1, 3],
-  [3, 1, 0, 2],
-  [1, 0, 2, 3],
-  [0, 3, 1, 2],
-  [2, 1, 0, 3],
-  [1, 2, 3, 0],
-  [0, 1, 3, 2],
-  [3, 0, 2, 1],
-  [1, 3, 2, 0],
-  [0, 2, 1, 3],
+  [1, 2, 1, 2, 1, 2],
+  [2, 1, 2, 1, 2, 1],
 ]
 
 const AIMS: Aim[] = []
@@ -79,11 +77,9 @@ function plan(): void {
     // lob left it) it comes down onto the sill over a few bars.
     const prev = LAPS[lap.track - 1]
     const walkFrom = prev?.bounce ?? 6
-    for (let s = walkFrom + 3; s < lap.tip - 1.5 * bar; s += 3) {
-      // Where it stops following, at the sill's end, is a frame it holds until the stair.
-      const x = Math.min(SILL.x1 - 0.65, ballAt(s + 2).x + 0.5)
-      at(s, { x, y: -1.58, cells: 3.7 }, x === SILL.x1 - 0.65)
-    }
+    // The window over the desk, held: the whole sill in it, the ball walking across a still picture (it once stepped
+    // after the ball every three seconds, a fifth of the half hour of small moves).
+    if (walkFrom + 3 < lap.tip - 1.5 * bar) at(walkFrom + 3, GROOVE[2])
     // A bar and a half before the drop: back to take in the stair.
     at(lap.tip - 1.5 * bar, STAIR)
     // Once it is in the cup, the track's first look; then a new one each phrase.
@@ -91,7 +87,8 @@ function plan(): void {
     const endGroove = lap.lob ?? barTime(tr, tr.exit)
     const breaks = tr.runs.slice(1).map((r, i) => ({ from: barTime(tr, tr.runs[i].to), to: barTime(tr, r.from) }))
     let phrase = 0
-    for (let i = tr.entry + 2 + 8; ; i += 8) {
+    // A look holds two phrases (sixteen bars): fewer moves, the room still for longer.
+    for (let i = tr.entry + 2 + 16; ; i += 16) {
       const start = barTime(tr, i)
       if (start > endGroove - 2 * bar) break
       // Not in a break, nor just before or after one: the break has its own frames.
@@ -99,8 +96,11 @@ function plan(): void {
       phrase++
       at(start - 0.5 * bar, GROOVE[order[phrase % order.length]])
     }
-    // A break: out to the room, and back in as the drums return, to the look the phrase after it would have.
+    // A break: out to the room, and back in as the drums return, to the look the phrase after it would have. Not for a
+    // break too short for the move to settle (the rig needs some six seconds): out and straight back in is a lurch,
+    // not a breath, so through those the camera stays where it is.
     for (const b of breaks) {
+      if (b.to - b.from < 8) continue
       at(b.from - 0.25 * bar, ROOM)
       phrase++
       at(b.to - 0.75 * bar, GROOVE[order[phrase % order.length]])
@@ -139,6 +139,22 @@ export function camera(t: number): Framing {
     lc += (Math.log(a.cells) - Math.log(p.cells)) * f
   }
   return { x, y, cells: Math.exp(lc) }
+}
+
+/**
+ * Whether the camera's frame from `t` on (the aim it is settling into) shows the cat whole: so the cat can play to
+ * the camera, saving its nodding along and its yawns for when someone is looking.
+ */
+export function catInViewAt(t: number): boolean {
+  let a = AIMS[0]
+  for (const aim of AIMS) {
+    if (aim.t > t) break
+    a = aim
+  }
+  const [x0, y0, x1, y1] = PROPS.cat
+  const hw = (a.cells * 16) / 9 / 2
+  const hh = a.cells / 2
+  return x0 >= a.x - hw && x1 <= a.x + hw && y0 >= a.y - hh && y1 <= a.y + hh
 }
 
 export { AIMS }
