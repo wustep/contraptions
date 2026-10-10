@@ -48,7 +48,7 @@ function tile(): HTMLCanvasElement | null {
   return cv
 }
 
-/** The spotlight's iris into the dream: where it is and how far it has closed, in world cells, or null. */
+/** A circle the grade lifts inside (the spotlight's iris into the dream; his stage with the band), in world cells, or null. */
 export type IrisAt = (t: number, span: number) => { x: number; y: number; r: number; f: number } | null
 
 export const lens = scenery<{ iris: IrisAt } | null>({

@@ -134,6 +134,13 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
   // (The lens is told where the spotlight's iris into the dream is, so the dream's colour can come in inside it.)
   const intoDream = coverList[0]
   const irisAt: IrisAt = (t, span) => {
+    // With the band, the colour comes back first to his stage: a pocket of it round the bandstand from its first hit,
+    // growing outward as the camera draws back, until on The End's swell it is everywhere.
+    if (t >= AT.band - 0.05 && t < 503.5) {
+      const u = Math.max(0, Math.min(1, (t - AT.band) / (501 - AT.band)))
+      const open = Math.min(1, (t - AT.band + 0.05) / 0.5)
+      return { x: piano1[0] + 4.2, y: piano1[1] - 0.6, r: (3.2 + 34 * u * u) * open, f: 0 }
+    }
     if (intoDream.kind !== 'iris' || t < intoDream.down[0] || t > intoDream.up[0]) return null
     const f = coverAt(intoDream, t)
     const [x, y] = intoDream.from(t)
