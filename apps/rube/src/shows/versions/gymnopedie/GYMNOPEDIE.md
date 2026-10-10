@@ -128,6 +128,11 @@ The planet has weather, at depths behind the stones (`air.ts`):
   horizon's colour under them at dawn and dusk, dim and edged silver under the moon. How much of the sky is cloud
   moves through the day (`coverAt`): most of it by day, thinning at night for the stars and the Milky Way, more again
   under the moon; a cloud gathers and thins as the cover comes over its share.
+- Cirrus, high over the cumulus, mares' tails in a layer of their own that goes by slowest of all (`cirrus.ts`): a faint
+  white by day; as the sun goes down they take its light, gold and then orange and pink, brightest on the sun's side of
+  the frame, and glow on after it has set, pink to mauve, as the first lamps are lit, until the light leaves them grey
+  and the full night has them. So again, the other way round, before the dawn. Drawn once in white, and tinted again
+  only when their colour has moved on.
 - Rays from the low sun: at dawn through the morning's mist, and through the afternoon into the sunset, soft
   feathered wedges of warm light fanning across the sky behind the columns, each breathing slowly; held back while the
   shower's cloud is over, so they come as it clears (`raysAt`).
@@ -372,7 +377,7 @@ measured at under a millisecond's difference, and left out.
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
 the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the aurora, the whale) and their
-layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; `blossom.ts` the colonnade's bougainvillea; `comet.ts` the third Gnossienne's comet; `squall.ts` the shower coming and going; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; `blossom.ts` the colonnade's bougainvillea; `comet.ts` the third Gnossienne's comet; `squall.ts` the shower coming and going; `cirrus.ts` the high cloud; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 

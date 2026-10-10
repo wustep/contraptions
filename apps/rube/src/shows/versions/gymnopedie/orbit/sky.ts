@@ -8,6 +8,7 @@ import {
 } from './air'
 import { drawShore } from './shore'
 import { drawSquall } from './squall'
+import { drawCirrus } from './cirrus'
 import { HEAD, MID, cometAngle, cometAnswers, cometFlare, cometLight, cometSprite, cometSway } from './comet'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
@@ -529,6 +530,8 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
       p.pop()
     }
   }
+  // Highest and furthest: the cirrus, which take the low sun's colours and keep them after it has set.
+  drawCirrus(ctx, k, c.t, half, sun.x, near)
   layer(BANKS, BANK, hazy, (0.6 - 0.4 * day.night) * near * light.alpha, false)
   // The far shore, in front of the bank: islands, their villages and the lighthouse.
   drawShore(ctx, k, c.t, half, { day, sunAngle: sunAngle(c.t), moonUp }, near)

@@ -17,6 +17,7 @@ import { LEAPS } from '../src/shows/versions/gymnopedie/orbit/dolphins'
 import { BLOSSOM } from '../src/shows/versions/gymnopedie/orbit/blossom'
 import { cometAnswers, cometAt, cometAngle, cometFlare } from '../src/shows/versions/gymnopedie/orbit/comet'
 import { squallAt } from '../src/shows/versions/gymnopedie/orbit/squall'
+import { CIRRUS, cirrusLight } from '../src/shows/versions/gymnopedie/orbit/cirrus'
 import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -131,7 +132,7 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: every flower opens as the ball comes, and closes at dawn', flowers.length > 150 && closed.length === 0, closed.slice(0, 5).map((s) => s.index).join(', '))
 
   // The air: clouds, gulls, mist and fireflies at their depths, all coming round with the period.
-  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY, SAILS, SHORE, RANGE]
+  const layers = [BANK, HEAPS, GULLS, MIST, FIREFLY, SAILS, SHORE, RANGE, CIRRUS]
   const roundAgain = layers.every((l) => [0, 3.3, 17.9, 40].every((x) => {
     const a = layered(x, 0, l.f, l.span, l.wind)
     const b = layered(x, PERIOD - 1e-7, l.f, l.span, l.wind)
@@ -188,6 +189,11 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
       const s = squallAt(t)!
       return rainAt(t) < 0.5 ? (bowAt(t) > 0.3 ? s.x > 0 : s.x < 0 || t > 170) : Math.abs(s.x) > 1.6
     }) && squallSeen.some((t) => t < 152 && squallAt(t)!.x < -2) && squallSeen.some((t) => bowAt(t) > 0.5 && squallAt(t)!.x > 2) && squallAt(10) === null && squallAt(400) === null)
+  // The cirrus: taking the sunset's colours and keeping them after, gone in the full night, and coming round.
+  const cirrusTimes = Array.from({ length: 1270 }, (_, i) => i * 0.5)
+  check('gymnopedie: the cirrus glow at sunset and after it, and are gone in the full night',
+    cirrusTimes.every((t) => skyAt(t).night < 0.88 || cirrusLight(t).light < 1e-6) &&
+    cirrusTimes.some((t) => t > 200 && t < 240 && cirrusLight(t).glow > 0.3) && Math.abs(cirrusLight(0).light - cirrusLight(PERIOD - 1e-6).light) < 1e-4)
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5
