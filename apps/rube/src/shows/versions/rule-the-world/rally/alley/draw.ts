@@ -57,6 +57,9 @@ import {
   ROAD,
   SEAT,
   SIDEWALK,
+  SKIP,
+  CURB_KICK,
+  WALK,
   STRIKE,
   STROKES,
   TABLE,
@@ -454,16 +457,24 @@ function outside(pen: Pen, t: number, x0: number, x1: number, f: { y0: number; y
     [0, C.street, 1],
     [1, C.streetHi, 1],
   ])
-  rect(pen, x0, ROAD + 0.05, x1, f.y1 + 1, C.ground)
+  vgrad(pen, x0, ROAD + 0.05, x1, WALK[0] - 0.06, [
+    [0, C.streetHi, 1],
+    [1, C.street, 1],
+  ])
   for (let i = Math.floor(x0 / 1.6); i * 1.6 < x1; i++) rect(pen, i * 1.6, -0.08, i * 1.6 + 0.7, -0.05, '#2A3446')
-  shape(pen, [[CURB, -0.5], [x1, -0.5], [x1, FLOOR], [CURB, FLOOR]], C.walkTop)
-  for (let y = -0.4; y < FLOOR; y += 0.18) line(pen, [CURB, y], [x1, y], C.walk, 0.4)
-  rect(pen, CURB, FLOOR, x1, ROAD + 0.05, C.walkFace)
-  line(pen, [CURB, FLOOR], [x1, FLOOR], C.walkTop, 0.6)
-  rect(pen, CURB - 0.03, -0.5, CURB, ROAD, '#56657A')
+  // The near curb, and the sidewalk in front of the cab, its slabs, its face.
+  rect(pen, x0, WALK[0] - 0.06, x1, WALK[0], '#56657A')
+  rect(pen, x0, WALK[0], x1, WALK[1], C.walkTop)
+  line(pen, [x0, (WALK[0] + WALK[1]) / 2 + 0.06], [x1, (WALK[0] + WALK[1]) / 2 + 0.06], C.walk, 0.3)
+  for (let x = Math.floor(x0 / 0.9) * 0.9; x < x1; x += 0.9) line(pen, [x, WALK[0]], [x - 0.08, WALK[1]], C.walk, 0.4)
+  rect(pen, x0, WALK[1], x1, WALK[1] + 0.1, C.walkFace)
+  rect(pen, x0, WALK[1] + 0.1, x1, f.y1 + 1, C.ground)
+  // The stoop at the door, down from the threshold to the sidewalk.
+  rect(pen, WALL[0] - 0.45, FLOOR, WALL[0], WALK[0] + 0.05, C.walkFace)
+  rect(pen, WALL[0] - 0.45, FLOOR - 0.03, WALL[0], FLOOR + 0.03, C.walkTop)
   // The streetlamp, a cold mercury light on the cab and the curb.
-  const lx = -9.8
-  rect(pen, lx - 0.05, -3.6, lx + 0.05, ROAD, '#0A0F18')
+  const lx = -10.6
+  rect(pen, lx - 0.05, -3.6, lx + 0.05, (WALK[0] + WALK[1]) / 2, '#0A0F18')
   path(pen, [[lx, -3.6], [lx + 0.15, -3.85], [lx + 0.6, -3.85]], '#0A0F18', 1.6)
   shape(pen, [[lx + 0.4, -3.88], [lx + 0.85, -3.88], [lx + 0.75, -3.76], [lx + 0.5, -3.76]], '#0A0F18')
   glow(pen, [lx + 0.62, -3.72], 3.8, C.mercury, 0.22)
@@ -1273,7 +1284,7 @@ function hitMarks(pen: Pen, t: number): void {
     ...[...BOUNCES, ...DRIBBLE].map((b): [number, Pt] => [b, [WAY.at(b)[0], WAY.at(b)[1] + R]]),
     [LANE_LAND, [WAY.at(LANE_LAND)[0], FLOOR]],
     [PIT_LAND, [WAY.at(PIT_LAND)[0], PIT_FLOOR]],
-    [SIDEWALK, [WAY.at(SIDEWALK)[0], FLOOR]],
+    ...[SIDEWALK, SKIP, CURB_KICK].map((b): [number, Pt] => [b, [WAY.at(b)[0], WAY.at(b)[1] + R]]),
   ]
   for (const [bt, p] of touches) {
     const s = t - bt

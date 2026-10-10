@@ -3,7 +3,7 @@ import { box, frame, part, scenery, type PartShot } from '../kit'
 import type { Pen } from '../pen'
 import { SEAMS } from '../seams'
 import { drawAlley, drawSet } from './draw'
-import { ALLEY_STRIKES, HATS, LANE_LAND, POP, SEAT, T0, T1, WAY } from './geo'
+import { ALLEY_STRIKES, CURB_KICK, HATS, HITS, LANE_LAND, POP, SEAT, T0, T1, WAY, WINNER } from './geo'
 
 /**
  * The bowling alley in Queens after midnight (121.018 → 138.142, bars 57 to 64), as the band drops out and the synth
@@ -69,20 +69,23 @@ function shots(): PartShot[] {
   const hold = (t: number, cells: number, at: Pt, cut = false): PartShot => ({ t, cells, hold: at, w: 1, ...(cut ? { cut } : {}) })
   const seam = SEAMS.jersey
   const MASTER: Pt = [5.85, -2.2]
+  // The real rally: the camera leans to whichever side is striking, a breath each beat, the bats always in.
+  const rally: PartShot[] = HITS.slice(0, -1).map((t, i) => hold(t, 7.2, [i % 2 === 0 ? 5.3 : 6.05, -2.25]))
   return [
     hold(T0 + 2.9, 8.4, MASTER),
     hold(125.2, 8.4, MASTER),
     hold(126.0, 7.0, [4.7, -2.35]),
     hold(127.0, 7.0, [4.7, -2.35]),
-    hold(127.9, 8.4, MASTER),
-    hold(133.35, 8.4, MASTER),
+    ...rally,
+    hold(WINNER, 7.2, [5.3, -2.25]),
     hold(134.42, 6.8, [12.2, -1.2]),
     hold(134.93, 6.2, [17.3, -1.15]),
     hold(135.4, 6.0, [17.5, -1.15]),
     hold(HATS, 6.8, [4.3, -2.35], true),
     hold(POP - 0.05, 6.6, [4.2, -2.3]),
     hold(POP, 6.2, [-0.75, -1.0], true),
-    hold(137.15, 4.4, [-5.0, -1.05]),
+    hold(136.6, 5.6, [-3.6, -0.7]),
+    hold(CURB_KICK, 4.8, [-7.2, -0.75]),
     hold(T1, seam.cells, [SEAT[0] + seam.frame[0], SEAT[1] + seam.frame[1]]),
   ]
 }

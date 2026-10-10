@@ -37,6 +37,9 @@ export const HEAD = FLOOR - 2.6
 /** Outside: the sidewalk's edge, and the road's level. */
 export const CURB = -2.0
 export const ROAD = 0.28
+/** The near sidewalk, in front of the cab along the whole street: its top's near and far edges, and a ball on it. */
+export const WALK: [number, number] = [0.44, 0.82]
+export const SIDE_Y = 0.62 - R
 /** Where he sits on the cab's back seat at the cut: the cab is drawn from here. */
 export const SEAT: Pt = [-6.8, ROAD - CAB.road]
 /** The foul line, where the lanes begin; the lanes' end (the pin deck's back edge); the pit; the end wall. */
@@ -117,10 +120,13 @@ export const HATS = at(63, 4)
 /** Up out of the rack's hood as Wally pockets the cash; the sidewalk; the back seat; the settle; the headlights. */
 export const POP = at(64, 1)
 export const POCKET = at(64, 1)
-export const SIDEWALK = at(64, 2)
-export const SEAT_LAND = a(64, 3)
-export const SETTLE = at(64, 4)
+export const SIDEWALK = a(64, 1)
+export const SKIP = at(64, 2)
+export const CURB_KICK = at(64, 3)
+export const SEAT_LAND = at(64, 4)
 export const LIGHTS = a(64, 4)
+/** Where he kicks up off the sidewalk behind the cab. */
+export const KICK_X = -9.4
 
 /** The fires of Marty's bat, and which kind. */
 export const FIRES: { t: number; kind: 'serve' | 'clumsy' | 'hit' | 'winner' }[] = [
@@ -137,7 +143,7 @@ export interface Stroke {
 
 /* ------------------------------------------------------------------ the rally's places */
 
-const markBat = (i: number): Pt => [9.08 + 0.12 * (hash(i, 3) - 0.5), -2.58 + 0.16 * (hash(i, 4) - 0.5)]
+const markBat = (i: number): Pt => [8.82 + 0.1 * (hash(i, 3) - 0.5), -2.58 + 0.16 * (hash(i, 4) - 0.5)]
 const markSide = (i: number): number => 6.95 + 0.6 * (hash(i, 5) - 0.5)
 const martySide = (i: number): number => 4.75 + 0.5 * (hash(i, 6) - 0.5)
 /** How high a crossing flies over the net, and the little rise off the table up to the bat. */
@@ -222,9 +228,12 @@ export function alleyWay(): { segs: Seg[]; at: (t: number) => Pt } {
   ways.push({ at: POP - 0.1, p: [LIFT_X + 0.08, TRACK - R] })
   ways.push({ at: POP, p: [HOOD[0] + 0.24, RAIL - 0.5], hidden: true })
   // Out of the hood, through the door onto the sidewalk, and up over the cab's nose into its back seat.
-  ways.push({ at: SIDEWALK, p: [-1.6, 0], arc: 0.62 })
-  ways.push({ at: SEAT_LAND, p: SEAT, arc: 2.0 })
-  ways.push({ at: SETTLE, p: SEAT, arc: 0.035 })
+  // Out of the hood, through the door, down onto the sidewalk in front of the cab; along it under the cab's flank, past
+  // its rear bumper; a kick up off the curb behind it, over the trunk and down through the rear window onto the seat.
+  ways.push({ at: SIDEWALK, p: [-1.9, SIDE_Y], arc: 0.55 })
+  ways.push({ at: SKIP, p: [-3.5, SIDE_Y], arc: 0.035 })
+  ways.push({ at: CURB_KICK, p: [KICK_X, SIDE_Y] })
+  ways.push({ at: SEAT_LAND, p: SEAT, arc: 1.3 })
   ways.push({ at: T1, p: SEAT })
   add(ways)
   return {
@@ -239,7 +248,7 @@ export const WAY = alleyWay()
 
 /* ------------------------------------------------------------------ Wally's walk out */
 
-export const WALK0 = HATS + 0.3
+export const WALK0 = HATS + 0.1
 export const WALK1 = SEAT_LAND - 0.05
 /** Where Wally's feet are: by the counter, then out of the door, round behind the cab to its driver's door. */
 export function wallyAt(t: number): { x: number; y: number; walking: boolean; face: 1 | -1; sink: number } {
@@ -290,8 +299,9 @@ export const ALLEY_STRIKES: number[] = [
   HATS,
   POP,
   SIDEWALK,
+  SKIP,
+  CURB_KICK,
   SEAT_LAND,
-  SETTLE,
   LIGHTS,
 ]
   .filter((t, i, all) => all.findIndex((u) => Math.abs(u - t) < 1e-6) === i)
