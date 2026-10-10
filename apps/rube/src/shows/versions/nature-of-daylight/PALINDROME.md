@@ -905,6 +905,11 @@ A ninety-eighth brought the eighty-first's side-by-side up to date, its after-pi
 eighty-fourth to the ninety-fourth: the forty-ninth against now at eleven moments, the cut to the cradle, Shang, the
 guests and the clock added. The show is unchanged.
 
+A ninety-ninth checked the brief's two standing rules again, as the forty-seventh had, over the fifty rounds since:
+no audio file anywhere in the branch's difference from main, none tracked for the show; the onsets, the version file,
+the music, the cue's declaration (the label's upload, `rVN1B-tUpgs`, by YouTube) and the attribution all untouched.
+Every changed file is the show's drawing, staging and notes. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
