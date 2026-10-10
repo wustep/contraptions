@@ -233,23 +233,29 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   }
 
   // The sun and the moon, on arcs over the horizon; gone when the planet is small (they are its sky, not space's).
-  const body = ({ x: bx, y: by, light }: Body, radius: number, core: string, glow: string) => {
+  // Low over the horizon each is seen through more air: reddened, its glow wider and warmer, a little larger and a little
+  // flattened, as a setting sun and a rising moon are; whitening as it climbs. (In space, from far off, none of that.)
+  const inAir = 1 - smooth(v.wide, 0, 0.3)
+  const body = ({ x: bx, y: by, light, angle }: Body, radius: number, high: string, low: string, glowHigh: number[], glowLow: number[]) => {
     if (light <= 0.01) return
-    const glowR = radius * 7
-    const halo = ctx.createRadialGradient(bx, by, radius * 0.6, bx, by, glowR)
-    halo.addColorStop(0, glow.replace('A', (0.55 * light).toFixed(3)))
-    halo.addColorStop(1, glow.replace('A', '0'))
+    const near = smooth(Math.abs(angle), 1.15, 1.72) * inAir
+    const r = radius * (1 + 0.14 * near)
+    const [gr, gg, gb] = glowHigh.map((c, i) => Math.round(c + (glowLow[i] - c) * near))
+    const glowR = r * (7 + 3 * near)
+    const halo = ctx.createRadialGradient(bx, by, r * 0.6, bx, by, glowR)
+    halo.addColorStop(0, `rgba(${gr}, ${gg}, ${gb}, ${(0.55 * light * (1 + 0.25 * near)).toFixed(3)})`)
+    halo.addColorStop(1, `rgba(${gr}, ${gg}, ${gb}, 0)`)
     ctx.fillStyle = halo
     ctx.fillRect(bx - glowR, by - glowR, glowR * 2, glowR * 2)
     ctx.globalAlpha = light
-    ctx.fillStyle = core
+    ctx.fillStyle = mixHex(high, low, near)
     ctx.beginPath()
-    ctx.arc(bx, by, radius, 0, Math.PI * 2)
+    ctx.ellipse(bx, by, r, r * (1 - 0.1 * near), 0, 0, Math.PI * 2)
     ctx.fill()
     ctx.globalAlpha = 1
   }
-  body(sun, sun.r, '#FFF1D6', 'rgba(255, 214, 160, A)')
-  body(moon, moon.r, '#F2EEE2', 'rgba(200, 214, 240, A)')
+  body(sun, sun.r, '#FFF1D6', '#FFA060', [255, 214, 160], [255, 150, 92])
+  body(moon, moon.r, '#F2EEE2', '#F4C890', [200, 214, 240], [240, 196, 150])
   ctx.restore()
 
   // The clouds and the gulls, close: once the planet draws away they are too small to be anything.

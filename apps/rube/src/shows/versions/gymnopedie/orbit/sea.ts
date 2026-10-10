@@ -295,7 +295,10 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       const [hx] = onCanvas(ctx, k, ...polar(along(c.t) + 0.55, 0))
       for (const b of bodies(ctx, c, v, day)) {
         const light = b.light * smooth(1.85 - Math.abs(b.angle), 0, 0.35) * (0.55 + 0.45 * Math.min(1, Math.abs(b.angle) / 1.2))
-        if (light > 0.02) glitter.push({ x: (b.x - hx) / cell, light: light * (b.sun ? 1 : 0.8), width: b.sun ? 0.14 : 0.1 })
+        // Coloured as the body is when it is low: a setting sun's orange, a rising moon's amber (as in \`sky.ts\`).
+        const low = smooth(Math.abs(b.angle), 1.15, 1.72)
+        const colour = mixHex('#FFFFFF', b.sun ? '#FFB070' : '#F6CE98', low)
+        if (light > 0.02) glitter.push({ x: (b.x - hx) / cell, light: light * (b.sun ? 1 : 0.8), width: b.sun ? 0.14 : 0.1, colour })
       }
     }
     // And under each lit lamp, its flame's.

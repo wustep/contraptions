@@ -98,6 +98,8 @@ export interface Glitter {
   x: number
   light: number
   width: number
+  /** Its colour, when not white: a low sun's or moon's. */
+  colour?: string
 }
 
 /** A lit lamp over the water: where it is across the frame, cells from the middle, and how bright it burns. */
@@ -178,6 +180,11 @@ export function drawRipples(ctx: Ctx2D, k: number, t: number, half: number, day:
       fade.addColorStop(1, 'rgba(0, 0, 0, 1)')
       gc.fillStyle = fade
       gc.fillRect(0, b.sy, gw, b.sh + 0.5)
+    }
+    if (g.colour) {
+      gc.globalCompositeOperation = 'source-atop'
+      gc.fillStyle = g.colour
+      gc.fillRect(0, 0, gw, gh)
     }
     ctx.globalCompositeOperation = 'lighter'
     ctx.globalAlpha = Math.min(1, light * g.light * 1.25)

@@ -207,6 +207,11 @@ air warm where the sun's light grazes it. At night the sea's light shows through
 a band under the surface. Close, through the first Gnossienne, the ball carries a small warm glow of its own: the
 flame it lights the lamps with.
 
+Low over the horizon the sun and the moon are seen through more air, as they are: each reddens (the sun to orange,
+the moon to amber), its glow widens and warms, and it is a little larger and a little flattened; it whitens as it
+climbs. Their paths of glitter on the sea take the same colour. So the sun sets orange over the far shore, and the moon
+rises amber over the pond and sets gold before the dawn. Not from space, where there is no air between.
+
 From far off it is a world in sunlight (`globe.ts`). Close, its deep water is coloured by the hour where the ball is,
 which at the seam is the dark before dawn; but from space half of any world is always in the sun. So as the planet
 becomes the picture its face becomes a lit globe: deep ocean blue on the sun's side, the sun's glint on the water, loose
