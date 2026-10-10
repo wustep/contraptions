@@ -355,7 +355,7 @@ function drawHanging(p: p5, k: number, f: Frame, t: number): void {
     if (x + w.r * w.d < f.x0 - 1 || x - w.r * w.d > f.x1 + 1 || y + w.r * w.d < f.y0 - 1 || y - w.r * w.d > f.y1 + 1) continue
     p.push()
     p.translate(x * k, y * k)
-    drawLogogram(p, k * w.d, { r: w.r, seed: w.seed, t, form: 0.35 + 0.65 * sstep(s / 3.4), start: hash(w.seed, 1) * TAU, spin: 0.02 * t, fade: clamp01((s - 30) / 40), color: mixHex(FOG.inkSoft, FOG.white, 0.3), light: 0.3 })
+    drawLogogram(p, k * w.d, { r: w.r, seed: w.seed, t, form: 0.35 + 0.65 * sstep(s / 3.4), start: hash(w.seed, 1) * TAU, spin: 0.02 * t, fade: clamp01((s - 30) / 40), color: mixHex(FOG.inkSoft, FOG.white, 0.55), light: 0.16 })
     p.pop()
   }
 }
@@ -371,7 +371,7 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
   const dx = her[0] - ring.c[0]
   const dy = her[1] - ring.c[1]
   const clear = Math.abs(Math.hypot(dx, dy) - ring.r) < 0.6 ? Math.atan2(dy, dx) - ink.spin : undefined
-  const back = ring.recede === undefined ? 1 : 1 - 0.45 * sstep((t - ring.recede) / 1.0)
+  const back = ring.recede === undefined ? 1 : 1 - 0.6 * sstep((t - ring.recede) / 1.0)
   const base = { r: ring.r, seed: ring.seed, t, spin: ink.spin, fade: ink.fade, color: FOG.ink, light: ring.light * back, marks, taper: ink.taper, clear }
   p.push()
   p.translate(ring.c[0] * k, ring.c[1] * k)
