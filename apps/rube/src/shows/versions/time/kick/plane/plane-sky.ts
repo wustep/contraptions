@@ -247,13 +247,15 @@ export function drawAirframe(pen: Pen, t: number, f: Frame): void {
   for (const s of [-1, 1]) {
     const pts: Pt[] = []
     const lower: Pt[] = []
-    for (let d = 1.8; d <= 34; d += 1) {
+    // From under the hull (at the wing's height it is about 1.45 wide), so the root meets the body and no sky shows
+    // between them.
+    for (let d = 1.2; d <= 34; d += 1) {
       const thick = 0.34 * (1 - d / 44)
       const fl = flexAt(t, d)
       pts.push([cx + s * d, wingY(d) + fl + dy])
       lower.push([cx + s * d, wingY(d) + fl + thick + dy])
     }
-    const xs = [cx + s * 1.8, cx + s * 34]
+    const xs = [cx + s * 1.2, cx + s * 34]
     if (Math.max(...xs) < f.x0 - 1 || Math.min(...xs) > f.x1 + 1) continue
     shape(pen, [...pts, ...lower.reverse()], skin, 0.7)
     polyline(pen, lower.map(([x, y]) => [x, y - 0.06] as Pt), under, 1.6)
