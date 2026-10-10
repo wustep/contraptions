@@ -182,15 +182,19 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     const here = along(c.t)
     const half = (v.u1 - v.u0) / 2
     ctx.save()
+    const ball = ballLocal(c.t)
     for (const f of FIREFLIES) {
       const d = layered(f.x, c.t, FIREFLY.f, FIREFLY.span, FIREFLY.wind) + 0.3 * osc(c.t, 0.035 + 0.03 * hash(f.seed, 141), f.seed)
       const edge = inLayer(d, FIREFLY.span)
       if (Math.abs(d) > half || edge < 0.01) continue
       const h = f.h + 0.22 * osc(c.t, 0.05 + 0.04 * hash(f.seed, 142), f.seed * 1.3)
+      const dd = d
       const blink = Math.max(0, osc(c.t, 0.08 + 0.07 * hash(f.seed, 143), f.seed * 2.7)) ** 1.5
-      const a = flies * edge * (0.25 + 0.75 * blink)
+      // One the ball comes close to goes dim, as if behind it, so none is seen over it (and none is moved).
+      const nearBall = smooth(Math.hypot(here + dd - ball.u, h - ball.h), 0.12, 0.35)
+      const a = flies * edge * (0.25 + 0.75 * blink) * nearBall
       if (a < 0.02) continue
-      const [x, y] = onCanvas(ctx, k, ...polar(here + d, h), m)
+      const [x, y] = onCanvas(ctx, k, ...polar(here + dd, h), m)
       const r = cell * (0.1 + 0.16 * blink)
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.globalAlpha = a

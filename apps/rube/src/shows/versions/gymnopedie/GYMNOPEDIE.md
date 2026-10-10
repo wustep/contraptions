@@ -286,7 +286,8 @@ it, the one-note figures of the third Gnossienne a single star with no line. On 
 rolls across where the flower stands; and the flower bows aside, leaning away from the ball as it comes and back
 upright once it has gone (`bowAt`); it turns from one side to the other as the ball goes over its foot, where the ball
 hides it. A lamp's new flame does the same: it leans back after the ball as it rolls on from the lamp it has lit, and
-stands up again.
+stands up again. A firefly the ball comes through (2.7% of the third Gnossienne, measured) dims as
+if behind it, so none glows over the ball's face; they are not pushed, which made them dart.
 
 ## Checks
 
