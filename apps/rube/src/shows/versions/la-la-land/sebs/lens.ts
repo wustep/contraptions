@@ -1,3 +1,4 @@
+import type p5 from 'p5'
 import { frame, rgba, scenery } from './kit'
 
 /**
@@ -44,6 +45,20 @@ export function aperture(t: number): number {
     return a0 + (a1 - a0) * u * u * (3 - 2 * u)
   }
   return a
+}
+
+/**
+ * What of the canvas is picture at `t`, in the current frame's cells: all of it but the masking at the sides. (What is
+ * drawn outside it is covered; a place can leave it undrawn.)
+ */
+export function picture(p: p5, k: number, t: number): { x0: number; y0: number; x1: number; y1: number } {
+  const f = frame(p, k)
+  const a = aperture(t)
+  if (a > 0.9995) return f
+  // And a pixel or two under the masking's edge, where it is not quite opaque.
+  const m = (p.drawingContext as CanvasRenderingContext2D).getTransform()
+  const half = (Math.min(f.x1 - f.x0, ((f.y1 - f.y0) * 16) / 9) * a) / 2 + 2 / (k * (Math.hypot(m.a, m.b) || 1))
+  return { x0: Math.max(f.x0, f.cx - half), y0: f.y0, x1: Math.min(f.x1, f.cx + half), y1: f.y1 }
 }
 
 /** The masking at the sides of the picture, drawn last of all, over the covers too: it is the screen's, not the scene's. */
@@ -104,6 +119,9 @@ export const lens = scenery<{ iris: IrisAt } | null>({
     const h = f.y1 - f.y0
     // The corners are the picture's: in the narrow frame, the masking's edges.
     const r = Math.hypot(Math.min(w, (h * 16) / 9) * aperture(t), h) / 2
+    // Only the picture is filled: the masking covers the rest.
+    const v = picture(p, k, t)
+    const fill = () => ctx.fillRect(v.x0 * k, v.y0 * k, (v.x1 - v.x0) * k, (v.y1 - v.y0) * k)
     ctx.save()
     const m = muted(t)
     // Into the dream: as the stage light closes down on him at the keys, the circle of light round him fills with the
@@ -122,16 +140,16 @@ export const lens = scenery<{ iris: IrisAt } | null>({
       dk.addColorStop(0, rgba('#000000', 0))
       dk.addColorStop(1, rgba('#000000', iris.dark ?? 0))
       ctx.fillStyle = dk
-      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      fill()
     }
     if (m > 0.01) {
       // Greyer: the colour drawn out toward grey; and colder: a little blue laid in the shadows.
       ctx.globalCompositeOperation = 'saturation'
       ctx.fillStyle = paint('#808080', 0.36 * m)
-      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      fill()
       ctx.globalCompositeOperation = 'soft-light'
       ctx.fillStyle = paint('#3A5A9A', 0.28 * m)
-      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      fill()
       if (iris && iris.f > 0.05) {
         // The warm light of the dream gathering in the circle as it closes: a lamp's warmth, laid on by screen.
         ctx.globalCompositeOperation = 'screen'
@@ -141,7 +159,7 @@ export const lens = scenery<{ iris: IrisAt } | null>({
         warm.addColorStop(0.65, rgba('#C8506A', 0.7 * a))
         warm.addColorStop(1, rgba('#C8506A', 0))
         ctx.fillStyle = warm
-        ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+        fill()
       }
       ctx.globalCompositeOperation = 'source-over'
     }
@@ -149,7 +167,12 @@ export const lens = scenery<{ iris: IrisAt } | null>({
     g.addColorStop(0, rgba('#000000', 0))
     g.addColorStop(1, rgba('#000000', 0.2))
     ctx.fillStyle = g
-    ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+    // The fall-off is nothing inside its inner circle, so only the ring outside it is filled.
+    ctx.beginPath()
+    ctx.rect(v.x0 * k, v.y0 * k, (v.x1 - v.x0) * k, (v.y1 - v.y0) * k)
+    ctx.moveTo((f.cx + r * 0.55) * k, f.cy * k)
+    ctx.arc(f.cx * k, f.cy * k, r * 0.55 * k, 0, Math.PI * 2)
+    ctx.fill('evenodd')
     ctx.restore()
   },
 })

@@ -533,7 +533,12 @@ function overFilm(p: p5, t: number, c: Ctx): void {
   vg.addColorStop(0.6, rgba(M.room, 0.16))
   vg.addColorStop(1, rgba(M.room, 0.62))
   ctx.fillStyle = vg
-  ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  // Nothing inside its inner circle, so only the ring outside it is filled.
+  ctx.beginPath()
+  ctx.rect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  ctx.moveTo((vx + rad * 0.5) * k, vy * k)
+  ctx.arc(vx * k, vy * k, rad * 0.5 * k, 0, Math.PI * 2)
+  ctx.fill('evenodd')
   // The gate's corners: the picture's edge is a rounded box, soft.
   const corner = vh * 0.09
   for (const [inset, a] of [[0, 0.9], [vh * 0.012, 0.35], [vh * 0.026, 0.14]] as [number, number][]) {

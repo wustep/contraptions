@@ -3,6 +3,8 @@ import type { Pt } from '../../../../parts'
 import { frame, glow, hash, knock, rgba, scenery, smooth } from './kit'
 import { AT, END_AT, level } from './music'
 import { MIA, NIGHT_MAT, SEBS_MAT } from './worlds'
+import { picture } from './lens'
+import { insideRoom } from './club/room'
 import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, JOIN, KINDLED } from './night/stars'
 import { drawPianoFigure } from './piano-figure'
 import { DIP, POLE, skyAngle } from './night/painted-waltz'
@@ -226,6 +228,8 @@ export const city = scenery<CityState>({
   draw(p, s, c) {
     const k = c.k
     const t = c.t
+    // Inside the club the room covers the whole city: nothing of it is seen.
+    if (insideRoom(picture(p, k, t))) return
     const fr = frame(p, k)
     const ctx = p.drawingContext as CanvasRenderingContext2D
     // Parallax: a layer at depth d slides with the camera by (1 - d) of the way.

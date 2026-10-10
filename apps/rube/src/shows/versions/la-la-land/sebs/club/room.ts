@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
 import { beam, frame, glow, hash, rgba, scenery, smooth } from '../kit'
+import { picture } from '../lens'
 import { DRIVE_MAT, SEBS_MAT } from '../worlds'
 import { PIANO } from './geometry'
 
@@ -49,6 +50,15 @@ export const ROOM = {
   roof: -6.4,
   /** The door's head, in the left wall (it opens from here to the floor). */
   doorTop: 1.72,
+}
+
+/**
+ * Whether the picture `fr` (room cells) is all inside the room, under its ceiling: then the back wall, and the street
+ * along the front below its floor, cover everything behind them, and the city need not be drawn. `street` asks the
+ * same of the wall alone, above the floor: then the street need not be drawn either.
+ */
+export function insideRoom(fr: { x0: number; y0: number; x1: number; y1: number }, street = false): boolean {
+  return fr.x0 >= ROOM.wallL1 && fr.x1 <= ROOM.wallR0 && fr.y0 >= ROOM.ceil && (!street || fr.y1 <= ROOM.floor)
 }
 
 /** Where a ball sits on a chair: its seat's top is `SEAT` (the ball's centre is a radius above it). */
@@ -311,50 +321,53 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   const R = ROOM
   const cut = M.deep
 
-  // The street along the front, and the ground under it, across the frame.
-  p.noStroke()
-  p.fill(mixHex(bg, M.lacquer, 0.5))
-  rect(fr.x0 - 1, R.floor, fr.x1 + 1, Math.max(fr.y1 + 1, R.floor + 2))
-  // The pavement: thick enough to read from far off, its kerb catching the streetlight.
-  p.fill(M.wall)
-  rect(fr.x0 - 1, R.floor, fr.x1 + 1, R.floor + 0.22)
-  p.stroke(rgba(M.brass, 0.45))
-  p.strokeWeight(weight * 0.6)
-  p.line(X(fr.x0 - 1), X(R.floor + 0.22), X(fr.x1 + 1), X(R.floor + 0.22))
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.8)
-  p.line(X(fr.x0 - 1), X(R.floor), X(fr.x1 + 1), X(R.floor))
-  // The road along the front: asphalt, its centre line, the near kerb, and the club's light lying on it.
-  {
-    const r0 = R.floor + 0.22
-    const r1 = R.floor + 2.1
-    const mid = (r0 + r1) / 2
+  // The street, unless the picture is all inside the room above its floor, where the back wall covers it.
+  if (!insideRoom(picture(p, k, t), true)) {
+    // The street along the front, and the ground under it, across the frame.
     p.noStroke()
-    p.fill(mixHex(bg, M.lacquer, 0.32))
-    rect(fr.x0 - 1, r0, fr.x1 + 1, r1)
-    glow(p, k, (R.wallL0 + R.wallR1) / 2, r0 + 0.15, (R.wallR1 - R.wallL0) * 0.55, M.candle, 0.06 + 0.06 * Math.max(L.house, L.blaze), 1, 0.12)
-    glow(p, k, -15.2 + 0.4, r0 + 0.2, 1.6, M.candle, 0.1, 1, 0.3)
-    p.fill(rgba(M.brass, 0.22))
-    for (let x = Math.floor((fr.x0 - 1) / 1.6) * 1.6; x < fr.x1 + 1; x += 1.6) rect(x, mid - 0.025, x + 0.8, mid + 0.025)
+    p.fill(mixHex(bg, M.lacquer, 0.5))
+    rect(fr.x0 - 1, R.floor, fr.x1 + 1, Math.max(fr.y1 + 1, R.floor + 2))
+    // The pavement: thick enough to read from far off, its kerb catching the streetlight.
     p.fill(M.wall)
-    rect(fr.x0 - 1, r1, fr.x1 + 1, r1 + 0.18)
-    p.stroke(rgba(M.brass, 0.3))
-    p.strokeWeight(weight * 0.5)
-    p.line(X(fr.x0 - 1), X(r1), X(fr.x1 + 1), X(r1))
-  }
-  // A streetlamp on the pavement, short of the door: sodium, the way the drive comes in.
-  {
-    const lx = -15.2
+    rect(fr.x0 - 1, R.floor, fr.x1 + 1, R.floor + 0.22)
+    p.stroke(rgba(M.brass, 0.45))
+    p.strokeWeight(weight * 0.6)
+    p.line(X(fr.x0 - 1), X(R.floor + 0.22), X(fr.x1 + 1), X(R.floor + 0.22))
     p.stroke(ink)
-    p.strokeWeight(weight * 0.7)
-    p.line(X(lx), X(R.floor), X(lx), X(-0.35))
-    p.line(X(lx), X(-0.35), X(lx + 0.35), X(-0.5))
-    solid(p, ink, weight * 0.5, M.lacquer)
-    poly([[lx + 0.22, -0.55], [lx + 0.58, -0.55], [lx + 0.52, -0.43], [lx + 0.28, -0.43]])
-    glow(p, k, lx + 0.4, -0.3, 2.4, M.candle, 0.16, 1, 1.35)
-    p.noStroke()
-    p.fill(M.candle)
-    rect(lx + 0.3, -0.45, lx + 0.5, -0.41, 0.01)
+    p.strokeWeight(weight * 0.8)
+    p.line(X(fr.x0 - 1), X(R.floor), X(fr.x1 + 1), X(R.floor))
+    // The road along the front: asphalt, its centre line, the near kerb, and the club's light lying on it.
+    {
+      const r0 = R.floor + 0.22
+      const r1 = R.floor + 2.1
+      const mid = (r0 + r1) / 2
+      p.noStroke()
+      p.fill(mixHex(bg, M.lacquer, 0.32))
+      rect(fr.x0 - 1, r0, fr.x1 + 1, r1)
+      glow(p, k, (R.wallL0 + R.wallR1) / 2, r0 + 0.15, (R.wallR1 - R.wallL0) * 0.55, M.candle, 0.06 + 0.06 * Math.max(L.house, L.blaze), 1, 0.12)
+      glow(p, k, -15.2 + 0.4, r0 + 0.2, 1.6, M.candle, 0.1, 1, 0.3)
+      p.fill(rgba(M.brass, 0.22))
+      for (let x = Math.floor((fr.x0 - 1) / 1.6) * 1.6; x < fr.x1 + 1; x += 1.6) rect(x, mid - 0.025, x + 0.8, mid + 0.025)
+      p.fill(M.wall)
+      rect(fr.x0 - 1, r1, fr.x1 + 1, r1 + 0.18)
+      p.stroke(rgba(M.brass, 0.3))
+      p.strokeWeight(weight * 0.5)
+      p.line(X(fr.x0 - 1), X(r1), X(fr.x1 + 1), X(r1))
+    }
+    // A streetlamp on the pavement, short of the door: sodium, the way the drive comes in.
+    {
+      const lx = -15.2
+      p.stroke(ink)
+      p.strokeWeight(weight * 0.7)
+      p.line(X(lx), X(R.floor), X(lx), X(-0.35))
+      p.line(X(lx), X(-0.35), X(lx + 0.35), X(-0.5))
+      solid(p, ink, weight * 0.5, M.lacquer)
+      poly([[lx + 0.22, -0.55], [lx + 0.58, -0.55], [lx + 0.52, -0.43], [lx + 0.28, -0.43]])
+      glow(p, k, lx + 0.4, -0.3, 2.4, M.candle, 0.16, 1, 1.35)
+      p.noStroke()
+      p.fill(M.candle)
+      rect(lx + 0.3, -0.45, lx + 0.5, -0.41, 0.01)
+    }
   }
 
   // The room's back wall, lit by the house lights; a dado along its foot with a brass rail.
