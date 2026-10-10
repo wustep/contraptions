@@ -446,6 +446,9 @@ changed, in the order of the film, and then what runs through it:
   the floor's height: the chamber's swell of light is drawn in its own part and never reached it. It goes white with
   the chamber now. And where the shaft's floor runs out of its throat (71.5 → 76, in a 16:9 frame too) the floor's
   stone began on a hard vertical seam: it turns out of the lip's over a cell and a half.
+- **The crescent left behind** (167.3 → 170.3): flung up out of it, she rises with the camera, and the crescent,
+  fading only from 168.5, sat cut by the frame's bottom edge, a sliver and then a pale arc, under the great ring's
+  first strokes. It goes back into the white as she leaves it now, while it is still in the picture.
 
 ## Arrival nods
 
