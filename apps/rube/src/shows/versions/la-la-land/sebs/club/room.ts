@@ -558,13 +558,18 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     ctx.save()
     ctx.globalAlpha = there
     for (const [x, y] of seats) {
+      // A person, not a ball: shoulders on the seat and a smaller head over them, so nothing here reads as one of the
+      // four; the candles' light along the head and a shoulder.
+      const hy = y - 0.2
       p.noStroke()
       p.fill('#1A1226')
-      p.circle(x * k, y * k, 0.27 * k)
+      p.ellipse(x * k, (y + 0.05) * k, 0.34 * k, 0.3 * k)
+      p.circle(x * k, hy * k, 0.17 * k)
       p.noFill()
       p.stroke(rgba(M.candle, 0.7))
       p.strokeWeight(weight * 0.8)
-      p.arc(x * k, y * k, 0.27 * k, 0.27 * k, Math.PI * 1.2, Math.PI * 1.95)
+      p.arc(x * k, hy * k, 0.17 * k, 0.17 * k, Math.PI * 1.2, Math.PI * 1.95)
+      p.arc(x * k, (y + 0.05) * k, 0.34 * k, 0.3 * k, Math.PI * 1.15, Math.PI * 1.5)
     }
     ctx.restore()
   }
