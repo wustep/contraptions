@@ -953,6 +953,15 @@ puff of mist blown out from under it faded as it went, then came back at full st
 the next. It comes up from nothing now as well. The lawn, the vision and the wash filmed at six frames a second: no
 jump in any.
 
+A hundred-and-sixth looked for pops: anything that comes or goes from one frame to the next where it is seen. The
+whole show filmed at ten frames a second, each frame cut into small squares and set against the last, flagging any
+square that changed hard while the rest of the frame and the frames round it stayed still. Every one it found is a
+strike on the music, quick by intent: the slot opening, the suit's board and her question flipping up, "weapon"
+flung, the screens tipping and standing again, her hops along the phone's keys, the last screen up on the loudest
+bar. The time-gated drawings that end mid-shot (the helicopter, Abbott's jagged ring) end out of the frame or in the
+blast's white. The clock's bell shivers on a clock that wraps every ten seconds, a thousandth of a pixel's jump. Nothing
+to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
