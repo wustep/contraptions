@@ -315,7 +315,16 @@ function limboLane(): Seg[] {
   // In the room: to the cabin's door when she is out; and there he stays, face to face with Mal.
   push(still(lastTo(segs), 169.4 - now()))
   push({ from: lastTo(segs), to: [CABIN_DOOR_X, lastTo(segs)[1]], dur: 0.8, ease: 'inout' })
-  push(still(lastTo(segs), Q.letGo - now()))
+  // His choice, as his own gesture (a viewer new to it saw him "sit still" while the lever moved by itself): back from
+  // the door, from her, as we come back from the children; then on the let-go he throws himself up against the lever,
+  // and lands at the door as the rope takes him.
+  const door = lastTo(segs)
+  const back: Pt = [door[0] - 0.2, door[1]]
+  push(still(door, Q.lever + 0.05 - now()))
+  push({ from: door, to: back, dur: 0.45, ease: 'inout' })
+  push(still(back, Q.letGo - 0.32 - now()))
+  push({ from: back, to: [door[0], door[1] - 0.16], dur: 0.18, ease: 'out' })
+  push({ from: [door[0], door[1] - 0.16], to: door, dur: Q.letGo - now(), ease: 'in' })
   // He lets go: the same rope carries him up to the roof.
   push(...carried((s) => [CABIN_DOOR_X, cabinY(s + b) - R], at(Q.letGo), at(Q.roof), 20))
   push(still(lastTo(segs), Q.roof + 0.55 - now()))
