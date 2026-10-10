@@ -852,6 +852,13 @@ window.
     porch, the wall meeting the bay's corner post (the balloon's slit, round 72). Regenerated (1200 by 630 at 47.3, the
     still tooling), so the card a link unfurls with is the show as it is.
     The PR's walk-in screenshot (four frames, 210.6 to 212.4) was stale by the same strip and was rebuilt too.
+  - *Photosensitive flashing* (WCAG 2.3.1's general flash rule, approximated: relative luminance per pixel at 60 fps, a
+    flash a pair of opposing changes of 0.1 or more with the darker under 0.8, failing where more than three fall in any
+    second over more than about 2.8% of the screen). The wedding's flash and the lamp at home pass (none over three).
+    The storm as drawn counts 10.6% of the screen over three, all of it in the sky's rain streaks (a streak passing a
+    pixel counts as a flash); with the rain off, 0.18%: the lightning itself is two strokes 0.8 s apart and passes. Kept:
+    the rain is a fine moving texture, not an area changing brightness; whether an analyser counts it so is for a
+    certified tool (Harding, PEAT), not run here.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
@@ -870,6 +877,8 @@ window.
   (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
   Zoom keeps them; the show's own frame has it whole.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
+- Photosensitive flashing is measured by approximation only (above); the storm's rain is what a per-pixel count flags,
+  and no certified analyser has been run.
 - Only Chrome on macOS has been watched; Safari's engine has been measured headless (above), Safari itself not. The
   YouTube cue has, on the
   deployed preview in Chromium (PR #163): it loads, plays, and drives the show's clock in real time (10 s of show in
