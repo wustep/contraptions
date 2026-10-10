@@ -841,6 +841,10 @@ window.
   - *The cloud falls under Zoom and on a phone held upright*: the blue water whole in both. The engine that puffs them
     runs by itself (the twentieth viewer could not tell who worked it): its flywheel keeps the waltz, a chuff on every
     downbeat, so what it builds reads as their daydream, as that viewer took it. Kept.
+  - *The "pink lift" in the yard* (two viewers: a pink lift or chute, a pink panel popping up). It is the back screen
+    door, seen edge on, swinging out toward us as he pushes through with the book (91.4) and shut behind him (92.5):
+    a flat pink frame with its mesh for about a second. At full size a door, and named one by the viewer who saw it at
+    three frames a second; kept.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
