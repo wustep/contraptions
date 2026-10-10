@@ -145,7 +145,7 @@ export interface TitleCard {
   least?: number
   /**
    * Optional: words a screen reader is to hear (a show's dialogue). The page's words are hidden from it, as they fade
-   * and blur; a `said` card is spoken once, politely, as it first comes up while the show plays: its own text, or
+   * and blur; a `said` card is spoken once, politely, as it first comes up while the show plays at 1× or slower: its own text, or
    * this string in its place (to name who speaks, which the page shows only by its type). Unset: as before.
    */
   said?: boolean | string

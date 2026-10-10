@@ -770,8 +770,8 @@ const wordsLayer = el('div', { class: 'stage-words', 'aria-hidden': 'true' })
 stageRoot.append(wordsLayer)
 const wordCards = new Map<string, HTMLElement>()
 // The words a screen reader is to hear (`TitleCard.said`: a show's dialogue): the layer above is hidden from it, since
-// its cards fade and blur, so each such card is spoken once, here, as it first comes up while the show plays. Not on a
-// scrub or a seek, so a reader is not flooded.
+// its cards fade and blur, so each such card is spoken once, here, as it first comes up while the show plays at 1× or
+// slower. Not on a scrub or a seek, nor faster than its own pace, so a reader is not flooded.
 const saidLayer = el('div', { class: 'stage-said', 'aria-live': 'polite', 'aria-atomic': 'true' })
 Object.assign(saidLayer.style, { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', whiteSpace: 'nowrap' })
 stageRoot.append(saidLayer)
@@ -812,7 +812,9 @@ function renderWords(t: number): void {
   for (const c of cards) {
     if (!c.said || saidKeys.has(c.key)) continue
     saidKeys.add(c.key)
-    if (transport?.playing) saidLayer.textContent = typeof c.said === 'string' ? c.said : cardText(c)
+    // Only at 1× or slower: a show's spoken words are timed to be heard whole at its own pace, and at 2× or 4× each
+    // would cut the last off before a reader could finish it.
+    if (transport?.playing && speed <= 1) saidLayer.textContent = typeof c.said === 'string' ? c.said : cardText(c)
   }
   if (!cards.length) return
   const W = stageRoot.clientWidth
