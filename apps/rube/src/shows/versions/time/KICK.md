@@ -446,6 +446,12 @@ each world, and changed:
   on down through the street into the ground under it, the train's lit patch on the asphalt ending square (a critic's
   note). The wrecks lie on the asphalt; the beams stop at the street's underside, and the patch fades out at both
   ends. Off the bridge, falling, the van's beam goes where it points.
+- **The porch by the front door** (244 to 247): left of the door, the porch was one blank pale field, the hedge ending
+  on a ruled line over it (a critic's note). It is laid stone like the garden's terrace, its courses widening toward
+  us, and the hedge's shade lies on the stone at its foot.
+- **The mirror's shards** (53.6 to 56): a bright one was blank white with a hairline edge, and against the pale
+  facades the biggest read as a flat cut-out. A bright face is the sky in the glass now, and every shard has a firm
+  edge.
 
 ## Inception nods
 
