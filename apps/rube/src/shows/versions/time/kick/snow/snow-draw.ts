@@ -472,8 +472,10 @@ function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
   // drifts off and thins.
   const u = t - T.shot
   if (u < 0 || u > 1.6) return
-  const f = Math.exp(-u / 0.06)
-  if (u < 0.3) {
+  // Held a little (a sixth of a second was gone between looks), and the smoke grey: pale on the pale snow, the shot
+  // did not read, and a viewer new to it could not tell her rifle from ski poles.
+  const f = Math.exp(-u / 0.11)
+  if (u < 0.45) {
     const core = mixHex(SNOW.flash, SNOW.pinwheel, 0.35)
     beam(p, k, muzzle, [muzzle[0] + d[0] * 1.5, muzzle[1] + d[1] * 1.5], 0.1, 0.9, core, f)
     beam(p, k, muzzle, [muzzle[0] + d[0] * 0.8, muzzle[1] + d[1] * 0.8], 0.06, 0.35, SNOW.flash, f)
@@ -486,9 +488,10 @@ function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
     const at: Pt = [muzzle[0] + d[0] * (0.2 + 0.25 * u) + 0.15 * u, muzzle[1] + d[1] * (0.2 + 0.25 * u) - 0.25 * u]
     const r = 0.18 + 0.3 * u
     const g = (p.drawingContext as C2D).createRadialGradient(at[0] * k, at[1] * k, 0, at[0] * k, at[1] * k, r * k)
-    g.addColorStop(0, rgba(SNOW.snow, 0.75 * smoke))
-    g.addColorStop(0.6, rgba(SNOW.snow, 0.3 * smoke))
-    g.addColorStop(1, rgba(SNOW.snow, 0))
+    const grey = mixHex(SNOW.rock, SNOW.snowShade, 0.35)
+    g.addColorStop(0, rgba(grey, 0.75 * smoke))
+    g.addColorStop(0.6, rgba(grey, 0.32 * smoke))
+    g.addColorStop(1, rgba(grey, 0))
     const cx = p.drawingContext as C2D
     cx.fillStyle = g
     cx.fillRect((at[0] - r) * k, (at[1] - r) * k, 2 * r * k, 2 * r * k)

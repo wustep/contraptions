@@ -437,6 +437,9 @@ each world, and changed:
   again, on purpose, and two viewers new to it read it as the opening replayed. Pieces of the city they built are
   afloat off the shore now, slabs of concrete with their window holes, tilted, riding the swell half under, so the
   circle comes back to the same place, further gone. The opening is unchanged.
+- **Mal's shot at her end** (145.15 to 146.6): the flash was gone in a sixth of a second, pale on the pale snow, and
+  its smoke white on white, so a viewer new to it saw her holding "something long, a rifle, ski poles or a radio".
+  The flash holds a little longer, and its smoke drifts off the muzzle in grey.
 
 ## Inception nods
 
