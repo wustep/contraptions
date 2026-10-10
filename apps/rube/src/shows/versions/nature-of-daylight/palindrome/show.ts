@@ -3,6 +3,9 @@ import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
 import type { Company, Riders as PartRiders, Who } from './kit'
+import { LAWN_TREE } from './lawn/set'
+import { TENT_RING } from './twelve/ring'
+import { VALLEY_SHELL } from './valley/geo'
 import { HANNAH, HANNAH_AGE, HANNAH_ID, IAN, IAN_ID, LOUISE, SHANG, SHANG_ID, WORLDS, type WorldKey } from './worlds'
 
 /**
@@ -43,6 +46,9 @@ export type Spans = (Company & { world: WorldKey })[]
 /** Extra balls from a part, over its slot, in world cells. */
 export type Riders = { from: number; to: number; leg: number; fn: PartRiders }[]
 
+/** The lake house's legs out on its lawn: the swing and what she is shown (the lawn draws only during these). */
+const LAWN_LEGS = new Set(['swing', 'sees'])
+
 function boundsOf(pieces: Placed[]): Box {
   const b: Box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }
   for (const p of pieces) {
@@ -60,6 +66,12 @@ function boundsOf(pieces: Placed[]): Box {
 export class PalindromeShow extends Show {
   private readonly keys: WorldKey[]
   private readonly worlds: Universe[]
+  /**
+   * Each leg's place as Overview frames it. The lake house and its lawn are one world, but the lawn draws only while
+   * she is on it, so framed as one the room was a thin strip in a corner of an empty frame: each room (indoors, and the
+   * lawn) is framed by its own legs. The same universe in all else.
+   */
+  private readonly rooms: Universe[]
   /** The camera's cuts inside a place (`Shot.cut`), in show seconds: the score fills it; the checks read it. */
   cameraCuts: number[] = []
   /** A fast fall is one tapered streak, not a string of discs that read as other balls. */
@@ -78,6 +90,9 @@ export class PalindromeShow extends Show {
       const set = sets[key] ?? { scenery: [], after: [] }
       const chain = legs.filter((l) => l.world === key).flatMap((l) => l.placed)
       const bounds = boundsOf(chain)
+      // In the tent the ring is the place, and in the valley the shell: each stands over her parts.
+      const over = key === 'tent' ? TENT_RING : key === 'valley' ? VALLEY_SHELL : null
+      if (over) Object.assign(bounds, { x0: Math.min(bounds.x0, over.x0), y0: Math.min(bounds.y0, over.y0), x1: Math.max(bounds.x1, over.x1), y1: Math.max(bounds.y1, over.y1) })
       const world = WORLDS[key]
       return {
         index,
@@ -92,6 +107,26 @@ export class PalindromeShow extends Show {
         bounds,
         journey: duration,
       }
+    })
+    const roomOf = (l: Leg) => `${l.world}:${LAWN_LEGS.has(l.key) ? 'lawn' : 'in'}`
+    const byRoom = new Map<string, Universe>()
+    this.rooms = legs.map((leg) => {
+      const room = roomOf(leg)
+      const seen = byRoom.get(room)
+      if (seen) return seen
+      const universe = this.worlds[this.keys.indexOf(leg.world)]
+      const all = legs.filter((l) => l.world === leg.world)
+      const own = all.filter((l) => roomOf(l) === room)
+      // A place with one room keeps its own universe; a place with two gives each room its own bounds.
+      let made = universe
+      if (own.length < all.length) {
+        const b = boundsOf(own.flatMap((l) => l.placed))
+        // Out on the lawn the tree is the place: its crown stands over the swing, above any part.
+        if (room.endsWith(':lawn')) Object.assign(b, { x0: Math.min(b.x0, LAWN_TREE.x0), y0: Math.min(b.y0, LAWN_TREE.y0), x1: Math.max(b.x1, LAWN_TREE.x1), y1: Math.max(b.y1, LAWN_TREE.y1) })
+        made = { ...universe, bounds: b }
+      }
+      byRoom.set(room, made)
+      return made
     })
   }
 
@@ -161,7 +196,7 @@ export class PalindromeShow extends Show {
   override at(t: number): ShowPoint {
     const time = this.clamp(t)
     const owner = this.owner(time)
-    const universe = this.worlds[this.keys.indexOf(this.legs[owner].world)]
+    const universe = this.rooms[owner]
     const placed = this.holder(time)
     const into = time - placed.start
     const point = laneAt(placed.lane, into)

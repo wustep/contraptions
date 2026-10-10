@@ -68,10 +68,13 @@ export interface ShellLook {
 /** Half its width at `v` from top (-1) to bottom (1), as a share of its height: a stone stood on its edge, fuller low. */
 const shellHalf = (v: number): number => 0.245 * Math.pow(Math.max(0, 1 - v * v), 0.56) * (1 + 0.09 * v) * (1 - 0.06 * Math.max(0, -v) ** 2)
 
-/** The shell's outline, centre (cx, cy) and height h, in pixels: 72 points round, leaning a hair to its right. */
+/**
+ * The shell's outline, centre (cx, cy) and height h, in pixels, leaning a hair to its right: 72 points round at most
+ * sizes, more when it fills the frame over the camp, so its belly never shows a facet.
+ */
 function shellPath(ctx: Ctx, cx: number, cy: number, h: number): void {
   ctx.beginPath()
-  const n = 72
+  const n = Math.min(720, Math.max(72, 4 * Math.round(h / 12)))
   for (let i = 0; i <= n; i++) {
     const a = (i / n) * Math.PI * 2
     const v = -Math.cos(a)
@@ -286,24 +289,33 @@ function drawPalm(ctx: Ctx, c: Pt, r: number, open: number, angle: number, color
   const n = 7
   const spread = 0.3 + 0.7 * open
   ctx.fillStyle = color
+  // The pad a little longer than it is wide, along the limb, so the hand has a heel behind its fingers.
   ctx.beginPath()
-  ctx.ellipse(c[0], c[1], r * 0.44, r * 0.4, angle, 0, Math.PI * 2)
+  ctx.ellipse(c[0], c[1], r * 0.56, r * 0.46, angle, 0, Math.PI * 2)
   ctx.fill()
+  const fx = Math.cos(angle)
+  const fy = Math.sin(angle)
   for (let i = 0; i < n; i++) {
-    const a = angle + (i - (n - 1) / 2) * ((Math.PI * 1.55) / (n - 1)) * spread
-    const len = r * (0.82 + 0.18 * Math.cos((i - 3) * 0.55)) * (0.5 + 0.5 * open)
-    const w0 = r * 0.34
-    const w1 = r * 0.21
+    // Fanned from the front of the pad over a hand's width, not round it: with the fan wider than a right angle on
+    // each side, seven fingers read as a star at any size. The middle ones longest, the outer ones shorter and splayed
+    // a little wider, each from its own knuckle along the pad's front edge.
+    const side = (i - (n - 1) / 2) / ((n - 1) / 2)
+    const a = angle + side * Math.PI * 0.34 * spread * (1 + 0.18 * Math.abs(side))
+    const len = r * (0.62 + 0.38 * Math.cos(side * 1.2)) * (0.5 + 0.5 * open)
+    // Thick as fingers, not spokes.
+    const w0 = r * (0.34 - 0.06 * Math.abs(side))
+    const w1 = r * (0.22 - 0.04 * Math.abs(side))
     const ux = Math.cos(a)
     const uy = Math.sin(a)
     const nx = -uy
     const ny = ux
-    const tip: Pt = [c[0] + ux * len, c[1] + uy * len]
+    const knuckle: Pt = [c[0] + fx * r * 0.12 - fy * side * r * 0.2, c[1] + fy * r * 0.12 + fx * side * r * 0.2]
+    const tip: Pt = [knuckle[0] + ux * len, knuckle[1] + uy * len]
     ctx.beginPath()
-    ctx.moveTo(c[0] + nx * w0 * 0.5, c[1] + ny * w0 * 0.5)
+    ctx.moveTo(knuckle[0] + nx * w0 * 0.5, knuckle[1] + ny * w0 * 0.5)
     ctx.lineTo(tip[0] + nx * w1 * 0.5, tip[1] + ny * w1 * 0.5)
     ctx.arc(tip[0], tip[1], w1 * 0.5, a + Math.PI / 2, a - Math.PI / 2, true)
-    ctx.lineTo(c[0] - nx * w0 * 0.5, c[1] - ny * w0 * 0.5)
+    ctx.lineTo(knuckle[0] - nx * w0 * 0.5, knuckle[1] - ny * w0 * 0.5)
     ctx.closePath()
     ctx.fill()
     // The finger's pad: a little fuller at the tip.
@@ -321,6 +333,37 @@ function drawPalm(ctx: Ctx, c: Pt, r: number, open: number, angle: number, color
  */
 export function drawHeptapod(p: p5, k: number, x: number, y: number, s: number, o: HeptapodLook = {}): void {
   const ctx = ctxOf(p)
+  const alpha = ctx.globalAlpha
+  if (alpha >= 0.995 || alpha <= 0.002) {
+    if (alpha > 0.002) heptapodOn(ctx, k, x, y, s, o)
+    return
+  }
+  // Faded (coming out of the fog, going into it), it fades as one shape: drawn whole at full strength on a layer of
+  // its own, then laid down at the fade. Drawn straight at the fade, every limb over the body and over another limb
+  // doubled up, and the seams showed through it.
+  const layer = layerFor(ctx.canvas.width, ctx.canvas.height)
+  const lc = layer.getContext('2d')!
+  lc.setTransform(1, 0, 0, 1, 0, 0)
+  lc.clearRect(0, 0, layer.width, layer.height)
+  lc.setTransform(ctx.getTransform())
+  lc.globalAlpha = 1
+  lc.globalCompositeOperation = 'source-over'
+  heptapodOn(lc, k, x, y, s, o)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.drawImage(layer, 0, 0)
+  ctx.restore()
+}
+
+let layer: HTMLCanvasElement | null = null
+function layerFor(w: number, h: number): HTMLCanvasElement {
+  if (!layer) layer = document.createElement('canvas')
+  if (layer.width !== w) layer.width = w
+  if (layer.height !== h) layer.height = h
+  return layer
+}
+
+function heptapodOn(ctx: Ctx, k: number, x: number, y: number, s: number, o: HeptapodLook): void {
   const fogC = o.fogColor ?? FOG.white
   const base = o.color ?? FOG.heptapod
   const depth = clamp01(o.fog ?? 0.35)
@@ -369,6 +412,11 @@ export function drawHeptapod(p: p5, k: number, x: number, y: number, s: number, 
     ctx.fillStyle = g
     ctx.fill()
     const open = clamp01(o.reach.open ?? 0)
+    // Its end rounded over, a closed hand: with no palm open it stopped square, a stump.
+    ctx.fillStyle = mix(col(0), fogC, 0.08)
+    ctx.beginPath()
+    ctx.arc(tip[0], tip[1], S * 0.045 * 0.62, 0, Math.PI * 2)
+    ctx.fill()
     if (open > 0.01) {
       const ang = Math.atan2(tip[1] - from[1], tip[0] - from[0])
       drawPalm(ctx, tip, (o.reach.palm ?? s * 0.15) * k, open, ang, col(0))

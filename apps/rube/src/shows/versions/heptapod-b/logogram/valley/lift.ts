@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { drawDeck, shellHalf } from '../cast'
-import { box, carried, hash, knock, lastOf, part, type Ctx } from '../kit'
+import { box, carried, hash, knock, lastOf, lookFrom, looks, part, type Ctx, type Look } from '../kit'
 import { pulse, SEAM } from '../music'
 import { VALLEY } from '../worlds'
 import { LIFT_AT, LIFT_EXIT, SHELL_H, SHELL_W, SHELL_X, SLOT_W } from './geo'
@@ -220,7 +220,8 @@ function drawStage(d: Painter, s: StageShape, i: number, t: number): void {
     const since = t - LATCHES[i]
     const down = since < 0 ? 0 : 1 - Math.exp(-since / 0.05) * Math.cos(Math.min(Math.PI, since * 30))
     const a = -1.0 + 1.0 * Math.min(1.15, down)
-    const base: Pt = [CX + s.half + 0.1, s.top + 0.01]
+    // Hung from the beam over it, never past the beam's end (a stage barely open spreads its X wider than the beam).
+    const base: Pt = [CX + Math.min(s.half + 0.1, BEAM_HALF - 0.03), s.top + 0.01]
     const tip: Pt = [base[0] + Math.cos(a) * 0.17, base[1] - Math.sin(a) * 0.17 + 0.025]
     bar(d, base, tip, 0.035, VALLEY.steelDark, d.w * 0.6)
   }
@@ -449,6 +450,8 @@ const BAND_LO = MEAD - 7
 /** The moment the deck tears free of the fog: the lift's burst's hardest pulse. */
 const TEAR = pulse(228)
 const FOGGY = rgbOf(VALLEY.fog)
+/** The torn fog's underside, in its own shadow: what gives it a shape against a sky as pale as it is. */
+const FOG_UNDER = rgbOf(mixHex(VALLEY.cloudShade, VALLEY.ridge, 0.25))
 
 /** The fog the deck drags up through the band with it: where each lobe sits on the deck, its size and weight. */
 const CLING: { x: number; y: number; rx: number; ry: number; a: number }[] = [
@@ -473,7 +476,8 @@ const CLING: { x: number; y: number; rx: number; ry: number; a: number }[] = [
 /**
  * Going up through the band, the deck drags its fog up with it: it gathers round the plate and the rail as they go
  * into the band, thickest in its middle, veiling the two of them; on 54.509 the deck surges clear of it, and the fog
- * it carried tears off, flung up a little and out, thinning fast, and what is left sinks back into the band.
+ * it carried tears off, flung up a little and out, shadowed underneath against the sky, thinning over half a second,
+ * and what is left sinks back into the band.
  */
 function drawCling(p: p5, k: number, t: number): void {
   if (t < 51 || t > TEAR + 3.5) return
@@ -485,17 +489,21 @@ function drawCling(p: p5, k: number, t: number): void {
   const depth = smoothUp(-rise + R, BAND_LO - 0.35, BAND_LO - 1.3)
   if (depth <= 0.01) return
   const since = torn ? t - TEAR : 0
-  // Flung up on the surge and spent at once; then drifting apart and sinking, and thinning away.
+  // Flung up on the surge and spent at once; spreading off the deck and thinning over half a second; then what is left
+  // drifts apart, sinks, and thins away.
   const up = torn ? 0.8 * (1 - Math.exp(-since / 0.12)) - 0.16 * since : 0
-  const fade = torn ? (0.18 * Math.exp(-since / 0.8) + 0.82 * Math.exp(-since / 0.11)) * (1 - smoothUp(since, 1.8, 3.4)) : 1
+  const fade = torn ? (0.5 * Math.exp(-since / 0.75) + 0.5 * Math.exp(-since / 0.22)) * (1 - smoothUp(since, 1.8, 3.4)) : 1
   CLING.forEach((l, i) => {
     const swirl = 0.08 * Math.sin(t * 0.9 + i * 1.7)
-    const out = torn ? (l.x - CX) * 0.45 * (1 - Math.exp(-since / 0.2)) : 0
+    const out = torn ? (l.x - CX) * 0.8 * (1 - Math.exp(-since / 0.3)) : 0
     const x = l.x + swirl + out
     const trail = l.ry > l.rx
     const y = -rise + l.y + 0.05 * Math.sin(t * 1.3 + i) - (trail ? -0.4 * since : up)
     const grow = 1 + (torn ? 0.6 * (1 - Math.exp(-since / 0.6)) : 0)
-    lobe(ctx, k, x, y, l.rx * grow, l.ry * grow, FOGGY, 0.62 * l.a * depth * fade)
+    const a = 0.62 * l.a * depth * fade
+    // Torn off, it is fog against sky: its underside in shadow, its top lit, so it reads as thrown.
+    if (torn && !trail) lobe(ctx, k, x, y + l.ry * grow * 0.32, l.rx * grow * 0.92, l.ry * grow * 0.8, FOG_UNDER, a * 0.75)
+    lobe(ctx, k, x, y, l.rx * grow, l.ry * grow, FOGGY, a)
   })
 }
 
@@ -519,6 +527,13 @@ function overLift(p: p5, s: LiftState, c: Ctx): void {
   drawCling(p, k, t)
 }
 
+/**
+ * Where they look, riding the deck up: up at the belly they are rising to, through the fog, out of it and through the
+ * look up at its dome, and back to their rolls before the cut into the shaft (where her eye already holds on the
+ * screen across the camera's quarter turn).
+ */
+const LOOKS: Look[] = [{ from: 47.0, to: SEAM.shaft - 0.6, at: () => -Math.PI / 2 + 0.1 }]
+
 export const lift = part<LiftState>(
   {
     name: 'lift',
@@ -536,7 +551,8 @@ export const lift = part<LiftState>(
       exit: LIFT_EXIT,
       lane: { segs, fire: 0 },
       state: { begin: slot.begin },
-      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: (t) => ({ x: ianX(t), y: -riseAt(t) }) }],
+      riders: looks(LOOKS),
+      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: (t) => ({ x: ianX(t), y: -riseAt(t), look: (roll: number) => lookFrom(LOOKS, t, roll) }) }],
     }
   },
   (slot) => {
