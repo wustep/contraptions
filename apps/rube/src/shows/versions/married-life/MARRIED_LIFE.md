@@ -817,6 +817,9 @@ window.
   - *The petals and the chimney under Zoom*: the chimney stands above the roof in the storm, dark with it, and the
     nursery's ceiling is clear; the petals burst straight over the bright family, by a window's sill in Zoom's
     tighter frame (the windows sit just over the pews there), theirs all the same.
+  - *Motion, again, after the beat-by-beat fixes* (the leans, the tickets, the petals, the lamp, the falls, the chimney):
+    every frame at 30 fps diffed against the last, 7,800 frames: away from the cuts the same four jumps as before and
+    no others, the flash, the two lightning strikes and the lamp at home, each on purpose.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
