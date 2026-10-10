@@ -425,6 +425,12 @@ function stars(ctx: Ctx, t: number, cloud: number, sink: Sink): void {
 }
 
 /** The moon: it rises into the right-hand pane over the last part of the night, a soft full moon with a halo. */
+/** How much moon there is to light by at `t`: risen, and not behind the cloud or the rain (0 to 1). */
+export function moonAt(t: number): number {
+  const up = smooth(nightAt(t), 0.5, 0.6)
+  return up * (1 - 0.82 * cloudAt(t)) * (1 - smooth(rainAt(t), 0.04, 0.25))
+}
+
 function moon(ctx: Ctx, t: number, cloud: number, lens: Lens): void {
   const n = nightAt(t)
   const up = smooth(n, 0.5, 0.6)

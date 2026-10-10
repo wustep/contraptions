@@ -1,7 +1,7 @@
 import { camera } from './camera'
 import { rgba, viewOf } from './canvas'
 import { sweepAt } from './decor'
-import { CAT, GLASS, LAMP, MUG } from './desk'
+import { CAT, GLASS, LAMP, MUG, OPEN } from './desk'
 import { MUSIC_END, smooth } from './music'
 import { ballAt, machineBusy } from './route'
 import { MOMENTS, wetAt } from './sky'
@@ -21,7 +21,7 @@ import { INK, LAMP_ON, MOUTH, hash, lampAt, lightAt, lit, rainAt } from './world
 
 type Ctx = CanvasRenderingContext2D
 
-type Kind = 'on' | 'sip' | 'cup' | 'pet' | 'draw' | 'away' | 'back' | 'lamp'
+type Kind = 'on' | 'sip' | 'cup' | 'pet' | 'draw' | 'away' | 'back' | 'lamp' | 'page'
 
 interface Reach {
   kind: Kind
@@ -31,7 +31,7 @@ interface Reach {
 }
 
 /** How long each takes, seconds, in and out included. */
-const DUR: Record<Kind, number> = { on: 5.6, sip: 11, cup: 13, pet: 9, draw: 9.5, away: 6, back: 6, lamp: 10 }
+const DUR: Record<Kind, number> = { on: 5.6, sip: 11, cup: 13, pet: 9, draw: 9.5, away: 6, back: 6, lamp: 10, page: 7 }
 /** How long the hand takes to come in, and to go. */
 const IN = 1.5
 const OUT = 1.3
@@ -50,6 +50,8 @@ const BOX: Record<Kind, [number, number, number, number]> = {
   pet: [CAT.x0, -1.1, CAT.head.x + 0.75, 0.25],
   draw: [-3.0, -2.45, -1.8, 0.25],
   lamp: [LAMP.base.x - 0.4, -0.45, LAMP.base.x + 0.7, 0.2],
+  // The open book, and the leaf standing up as it goes over.
+  page: [OPEN.x - OPEN.half - 0.15, OPEN.front - OPEN.half - 0.1, OPEN.x + OPEN.half + 0.6, OPEN.front + 0.02],
 }
 
 /** Whether the camera's frame holds `box` from `t0` to `t1`, clear of its edges. */
@@ -120,6 +122,10 @@ export const REACHES: Reach[] = (() => {
   find('away', 1100, 1450)
   const away = out.find((r) => r.kind === 'away')
   if (away) find('back', away.at + 55, away.at + 420)
+  // A page of the open book turned, three times through the night: reading, the hand's longest work.
+  find('page', 975, 1100)
+  find('page', 1230, 1460)
+  find('page', 1480, 1730)
   // The lamp, turned down as the last track rings out: the knob turns as the light goes (`lampAt`).
   out.push({ kind: 'lamp', at: MUSIC_END - 3.6, dur: DUR.lamp })
   return out.sort((a, b) => a.at - b.at)
@@ -186,6 +192,30 @@ export const REFILL = (() => {
   const back = REACHES.find((r) => r.kind === 'back')
   return back ? back.at + 4 : Infinity
 })()
+
+/** When a page is turned, the leaf goes over this many seconds into the reach, taking this long. */
+const LEAF = { from: IN + 0.5, dur: 2.2 }
+
+/**
+ * The open book's pages (`book.ts`): how many have been turned by `t`, and how far over the one being turned is (0 flat
+ * on the right, 1 flat on the left; 0 when none is).
+ */
+export function turnAt(t: number): { n: number; u: number } {
+  let n = 0
+  let u = 0
+  for (const r of REACHES) {
+    if (r.kind !== 'page') continue
+    const s = t - r.at - LEAF.from
+    if (s >= LEAF.dur) n++
+    else if (s > 0) u = smooth(s, 0, LEAF.dur)
+  }
+  return { n, u }
+}
+
+/** Where the leaf's near outer corner is, `u` of the way over: up off the desk as it stands, and down on the left. */
+export function leafCorner(u: number): { x: number; y: number } {
+  return { x: OPEN.x + OPEN.half * Math.cos(Math.PI * u), y: OPEN.front - 0.02 - OPEN.half * 0.8 * Math.sin(Math.PI * u) }
+}
 
 /** How big the mug is drawn, as it comes toward the camera. */
 const grow = (e: number): number => 1 + 2.2 * e * e
@@ -277,6 +307,18 @@ function poseAt(t: number): Pose | null {
     thumb = 1
     tip = drawTip(s)
     reach = 0
+  } else if (r.kind === 'page') {
+    // The right hand, in from below on the right, the leaf's corner between finger and thumb, over to the left with it.
+    side = 1
+    const u = Math.max(0, Math.min(1, (s - LEAF.from) / LEAF.dur))
+    const w = smooth(u, 0, 1)
+    angle = -0.35 - 0.55 * w
+    arm = 2.55 + 0.35 * w
+    curl = [0.2, 0.6, 0.7, 0.75]
+    thumb = 0
+    pinch = 1
+    tip = leafCorner(s < LEAF.from ? 0 : w)
+    reach = PALM.len + 0.3 * 0.75
   } else {
     // The lamp's knob, between finger and thumb, turned as the light comes up, or goes down.
     // From the right, at about the desk's height, as an arm resting along the desk reaches over to it (from below,

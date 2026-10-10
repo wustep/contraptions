@@ -204,9 +204,9 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
   // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched, hands round the mug in the
   // rain, a face drawn in the mist on the glass, the mug taken away after midnight and brought back hot, and the lamp
   // turned down at the end; each while the camera holds what the hand reaches for, and none over the cat's own moments.
-  const kinds = REACHES.map((r) => r.kind).join(' ')
+  const kinds = REACHES.filter((r) => r.kind !== 'page').map((r) => r.kind).join(' ')
   const heldFor = (r: (typeof REACHES)[number]) => {
-    const box = r.kind === 'pet' ? PROPS.cat : r.kind === 'lamp' || r.kind === 'on' ? PROPS['lamp base'] : r.kind === 'draw' ? [-3.0, -2.45, -1.8, 0.25] : PROPS.mug
+    const box = r.kind === 'page' ? PROPS.book : r.kind === 'pet' ? PROPS.cat : r.kind === 'lamp' || r.kind === 'on' ? PROPS['lamp base'] : r.kind === 'draw' ? [-3.0, -2.45, -1.8, 0.25] : PROPS.mug
     for (let s = r.at; s <= r.at + r.dur; s += 0.5) {
       const c = perf.camera!(s)
       const hw = (c.cells * 16) / 9 / 2
@@ -216,9 +216,15 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     return true
   }
   check('soft lamp: a hand turns the lamp on, takes a sip, scratches the kitten, warms itself on the mug, draws in the mist, refills the tea after midnight, and turns the lamp down, each in frame, clear of the yawns and washes',
-    [...REACHES.map((r) => r.kind)].sort().join(' ') === 'away back cup draw lamp on pet sip' && kinds.startsWith('on sip pet') && kinds.endsWith('away back lamp') && REACHES.filter((r) => r.kind === 'draw').every((r) => rainAt(r.at) > 0.55) && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
+    [...REACHES.filter((r) => r.kind !== 'page').map((r) => r.kind)].sort().join(' ') === 'away back cup draw lamp on pet sip' && kinds.startsWith('on sip pet') && kinds.endsWith('away back lamp') && REACHES.filter((r) => r.kind === 'draw').every((r) => rainAt(r.at) > 0.55) && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
     REFILL > 1140 && REFILL < MUSIC_END - 300 &&
     [...YAWNS, ...WASHES].every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
+
+  // And it turns a page of the open book three times through the night, in frame.
+  const pages = REACHES.filter((r) => r.kind === 'page')
+  check('soft lamp: a hand turns a page of the open book three times, minutes apart, each in frame, clear of the kitten\'s moments',
+    pages.length === 3 && pages.every(heldFor) && pages.every((r, i) => i === 0 || r.at - pages[i - 1].at > 120) &&
+      [...YAWNS, ...WASHES].every((m) => pages.every((r) => m + 3 < r.at || m > r.at + r.dur)), pages.map((r) => r.at.toFixed(0)).join(' '))
 
   check('soft lamp: trains cross the city a few times, minutes apart, from the dusk to a little after midnight, and a last one over the snow',
     m.trains.length === 5 && m.trains.every((t, i) => i === 0 || t - m.trains[i - 1] >= 170) && m.trains[3] < 1450 &&

@@ -1,7 +1,8 @@
 import { rgba } from './canvas'
-import { DESK } from './desk'
+import { DESK, OPEN } from './desk'
 import { draughtAt } from './decor'
-import { INK, lampAt, lampColor, lightAt, lit } from './world'
+import { INK, hash, lampAt, lampColor, lightAt, lit } from './world'
+import { turnAt } from './hands'
 
 /**
  * What lies on the desk nearer us than the things along the wall: a book left open under the lamp, face up, and a
@@ -15,8 +16,6 @@ import { INK, lampAt, lampColor, lightAt, lit } from './world'
 
 type Ctx = CanvasRenderingContext2D
 
-/** The open book's span on the desk: its middle, its half width at the near edge, and how far back and forward it lies. */
-export const OPEN = { x: 1.62, half: 0.62, back: DESK.y + DESK.top * 0.26, front: DESK.y + DESK.top * 0.8 }
 
 const COVER = '#3F5E66'
 const PAPER = '#E9DCC4'
@@ -53,7 +52,10 @@ export function openBook(ctx: Ctx, lw: number, t: number): void {
   ctx.stroke()
   // The pages: each a leaf curving up into the spine. The right one's outer corner lifts in the draught.
   const lift = Math.max(0, -draughtAt(t) - 0.035) * 0.9
-  const page = (side: -1 | 1) => {
+  const turn = turnAt(t)
+  // Each page its own print: how long each line runs.
+  const print = (seed: number, i: number) => (i === 5 ? 0.35 + 0.5 * hash(seed, i, 71) : 0.85 + 0.15 * hash(seed, i, 72))
+  const page = (side: -1 | 1, seed: number) => {
     const outerBack = x + side * bh
     const outerFront = x + side * half
     const up = side === 1 ? lift : 0
@@ -82,15 +84,17 @@ export function openBook(ctx: Ctx, lw: number, t: number): void {
       const w = bh + (half - bh) * u
       const a = x + side * 0.07
       const b = x + side * (w - 0.08)
-      const short = i === 5 ? 0.55 : 1
+      const short = print(seed, i)
       const dy = -up * u * (side === 1 ? 1 : 0)
       ctx.moveTo(a, y + dy * 0.5)
       ctx.lineTo(a + (b - a) * short, y + dy)
     }
     ctx.stroke()
   }
-  page(-1)
-  page(1)
+  // The left page is the one last turned over; the right, the next.
+  page(-1, turn.n * 2)
+  page(1, turn.n * 2 + 1 + (turn.u > 0 ? 2 : 0))
+  if (turn.u > 0) leaf(ctx, lw, turn.u, l, turn.n * 2 + 1)
   // The lamp's warmth on the open pages, strongest nearest the pool's middle.
   if (l > 0.01) {
     ctx.save()
@@ -119,6 +123,47 @@ export function openBook(ctx: Ctx, lw: number, t: number): void {
   ctx.strokeStyle = lit('#5A2420', '#C8564A', 0.2 + 0.7 * l)
   ctx.stroke()
   pencil(ctx, lw, t)
+}
+
+/**
+ * The leaf going over, `u` of the way: turning about the spine, it stands up off the desk (its outer edge rising as
+ * far as it is wide), and comes down on the left. Its face while it faces up, its back after, a shade darker.
+ */
+function leaf(ctx: Ctx, lw: number, u: number, l: number, seed: number): void {
+  const { x, half, back, front } = OPEN
+  const bh = half * 0.86
+  const c = Math.cos(Math.PI * u)
+  const sn = Math.sin(Math.PI * u)
+  const of = { x: x + half * c, y: front - 0.02 - half * 0.8 * sn }
+  const ob = { x: x + bh * c, y: back - bh * 0.8 * sn }
+  ctx.beginPath()
+  ctx.moveTo(x, back + 0.01)
+  ctx.quadraticCurveTo((x + ob.x) / 2, (back + ob.y) / 2 - 0.03 * sn, ob.x, ob.y)
+  ctx.lineTo(of.x, of.y)
+  ctx.quadraticCurveTo((x + of.x) / 2, (front + of.y) / 2 - 0.03 * sn, x, front)
+  ctx.closePath()
+  const face = c > 0
+  ctx.fillStyle = lit(face ? '#A89A86' : '#8E8070', face ? PAPER_LIT : PAPER, 0.3 + 0.7 * l * (0.6 + 0.4 * Math.abs(c)))
+  ctx.fill()
+  ctx.lineWidth = lw * 0.7
+  ctx.strokeStyle = rgba(INK, 0.85)
+  ctx.stroke()
+  // Its print, faint, on whichever side shows.
+  if (Math.abs(c) > 0.2) {
+    ctx.strokeStyle = rgba('#5A4E58', (0.25 + 0.15 * l) * Math.abs(c))
+    ctx.lineWidth = 0.008
+    ctx.beginPath()
+    for (let i = 0; i < 6; i++) {
+      const v = (i + 1) / 7.2
+      const k = 0.85 + 0.15 * hash(seed + (face ? 0 : 1), i, 72)
+      const y0 = back + 0.02 + (front - back - 0.05) * v ** 1.15
+      const w = (bh + (half - bh) * v) * c
+      const lift = -(bh + (half - bh) * v) * 0.8 * sn
+      ctx.moveTo(x + 0.07 * Math.sign(c), y0 + lift * 0.1)
+      ctx.lineTo(x + (w - 0.08 * Math.sign(c)) * k, y0 + lift * 0.9)
+    }
+    ctx.stroke()
+  }
 }
 
 /** A pencil lying on the wood left of the book, at a slant, its point toward the pages. */

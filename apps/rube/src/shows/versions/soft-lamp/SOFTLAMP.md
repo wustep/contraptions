@@ -1453,6 +1453,23 @@ surface, so nothing lives on it." Its first ask, a high three-quarter view, woul
 A blind A/B review (the last commit's frames against these, five moments, shuffled) chose these in all five, four
 clearly: "it says someone is studying here … the lamp's pool of light now falls on a page instead of empty wood."
 
+### The eighty-fourth pass: the window's light on the desk, and a page turned
+
+The desk having a top now, two things it could hold that it couldn't before:
+
+237. **The window's light lying on the desk** (`lamp/spill.ts`). What comes in through the glass falls down and out
+     onto the desk's top under the window: the window's own shape, four panes and the bars' cross through them, nearer
+     the wall for the bottom of the glass, further out for the top. A low warm one in the dusk, laid long; a pale cool
+     one shorter once the moon is up in a clear sky, a little stronger once the snow lies; a cold one for a moment in
+     each far flash of lightning. When the lamp goes down at the end the moonlight on the desk is the room's light, and
+     the kitten asleep on the sill is a soft dark in it. It is in the light map too (`spillShare`), so the night's
+     dark does not take it. (Not the headlights: a car below throws its light up, never down onto the desk.)
+238. **A page turned** (`page`, `REACHES`, `lamp/hands.ts`; `leaf`, `lamp/book.ts`). Three times through the night
+     (16:15, 21:34, 24:40) the right hand comes in from below, takes the open book's page by its corner, carries the leaf
+     up over the spine (it stands as it goes, as tall as it is wide) and lays it down on the left, and goes; the new
+     page has its own print. Each while the camera holds the book, clear of the lightning, the cars, the shooting stars
+     and the machine. `check:shows` holds them.
+
 ## Judgment calls for Stephen
 
 - **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in
@@ -1479,7 +1496,9 @@ clearly: "it says someone is studying here … the lamp's pool of light now fall
   stage, so it is not in this PR.
 - **The focus.** How soft the city goes at the desk is one number (`blurOf`, `lamp/lens.ts`), and how far the layers
   move is one per layer (`DEPTH`, `lamp/sky.ts`). Both are set to be felt on a move rather than seen in a still.
-- **The hand.** Someone at the desk, never seen but for a hand and a sleeve, eight times: the lamp on, a sip, a chin
+- **The window's light on the desk.** Its strength is three numbers (`spillAt`, `lamp/spill.ts`: the dusk's, the
+  moon's, a flash's) and its throw two (`kd`, `kx`).
+- **The hand.** Someone at the desk, never seen but for a hand and a sleeve, eight times (and three page turns): the lamp on, a sip, a chin
   scratch, hands round the mug, a face drawn in the mist, the mug away and back, the lamp down. It could be fewer (the lamp's two
   and the refill alone would still say someone is there). The sweater's colour is one constant (`KNIT`, `lamp/hands.ts`).
 - **The reflection.** The one person in the show, seen only in the window, faint. It is the boldest addition; its

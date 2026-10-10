@@ -6,6 +6,7 @@ import { LANDINGS, NODS, SHOULDER, ballAt, squashAt } from './route'
 import { cat, climbAt } from './cat'
 import { formed, plaster } from './form'
 import { openBook } from './book'
+import { spill } from './spill'
 import { bloom, clock, farPress, curtain, draughtAt, scrim, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
 import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
@@ -352,6 +353,8 @@ function desk(ctx: Ctx, lw: number, t: number): void {
     ctx.fillRect(-1, -1, 2, 2)
     ctx.restore()
   }
+  // The window's light lying on it, when there is any: the dusk's, the moon's, a flash's.
+  spill(ctx, t)
   // Its front edge's face, darker, and along the top of it the edge catching the lamp.
   const f = ctx.createLinearGradient(v.x0, 0, v.x1, 0)
   for (let i = 0; i <= n; i++) {

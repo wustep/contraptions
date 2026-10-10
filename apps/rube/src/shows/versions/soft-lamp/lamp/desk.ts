@@ -20,6 +20,12 @@ export { R }
  */
 export const DESK = { y: 0, top: 0.52, face: 0.64, x0: -12, x1: 12 }
 
+/**
+ * The book left open on the desk under the lamp (`book.ts`): its middle, its half width at the near edge, and how far
+ * back and forward it lies on the desk's top.
+ */
+export const OPEN = { x: 1.62, half: 0.62, back: DESK.y + DESK.top * 0.26, front: DESK.y + DESK.top * 0.8 }
+
 /** The window's outer frame, and the one bar across it and the one up it. */
 export const WINDOW = { x0: -3.5, x1: 0.62, y0: -5.5, y1: -1.42, frame: 0.16, mullion: -1.44, transom: -3.55 }
 

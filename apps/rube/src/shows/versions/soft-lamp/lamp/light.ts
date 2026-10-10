@@ -1,6 +1,7 @@
 import { mixHex } from '../../../../parts'
 import { rgba, viewOf } from './canvas'
 import { DESK, GLASS, WALKMAN } from './desk'
+import { spillShare } from './spill'
 import { bulbsAt, sweepAt } from './decor'
 import { MUSIC_END, smooth } from './music'
 import { MOUTH, coverAt, lampAt, lightAt, nightAt, skyAt } from './world'
@@ -117,6 +118,8 @@ export function light(ctx: Ctx, t: number): void {
   const end = smooth(t, MUSIC_END - 2, MUSIC_END + 4)
   room(windowMap, 0.5 + 0.4 * sky.dusk + 0.15 * moon + 0.12 * coverAt(t) + 0.1 * end)
   g.globalAlpha = 1
+  // The window's light lying on the desk.
+  spillShare(g, t)
   // Each bulb of the fairy lights keeps a little round of the wall round it.
   for (const b of bulbsAt(t)) {
     if (b.a < 0.02) continue
