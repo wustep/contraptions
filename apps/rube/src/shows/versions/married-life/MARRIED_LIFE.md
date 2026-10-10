@@ -709,6 +709,10 @@ window.
   - *Him "dangling" from the tie wheel* (the second no-Up viewer). At full size he stands on the floor's plate under
     the wheel in the morning's collar and tie, the brass dropper over him; only at a contact sheet's scale does a blue
     square in a collar and tie look like one of the ties hung on the wheel. Kept.
+  - *Slivers under Zoom* (the scan run again under Zoom, every 0.2 s through the wedding, the fix-up and the ward to the
+    credits: half as close again, any gap twice as wide). Only edges past a thing in front: the balloon at the door's
+    jamb and the bay's corner post (its outline whole either side), Carl behind a porch post, the mailbox's red flag,
+    her trail, the orange guests. No gap.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
