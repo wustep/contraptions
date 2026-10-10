@@ -341,6 +341,8 @@ each world, and changed:
 - **The van's sliding door** (70.5 to 89): it opened from just behind the cab back over the rear wheel, so the open
   doorway was cut down through the wheel's arch and its edge sliced the tyre. The door is between the wheels now, as
   a van's is, and Ariadne's place on the bench is a little forward, so with the door shut all three sit in its window.
+  They hop in from the pavement behind it, on the near side of it: until they land on the bench they are drawn in
+  front of its body, so none of them goes behind its rear quarter mid-hop and is lost.
 - **Across the face under Zoom** (127.5 to 133.5): running left over the fortress's roof and on to the hairpin, the
   camera led them by two cells, and Fischer, at the back, was a cell or two behind Cobb; Zoom tightens on the same
   point, and under it he rode off the right edge for four seconds. The camera leads them by half as much now, closer
@@ -352,26 +354,22 @@ each world, and changed:
   a speck in it (two pixels across in a wide frame, nothing at all in a tall one) for thirty seconds. Whenever he
   would be drawn five pixels across or less there, he is the same spark in his own colour the dream gives him
   (`sleep.ts`, `beacon`). The director's camera and Zoom are never out that far, and draw him as before.
-- **Hopping into the van** (72.3 to 74.2): round 35 moved the sliding door forward, between the wheels, and each of
-  them hops in from the pavement behind the van, so each went behind its rear quarter for the middle of the hop and
-  was gone (Cobb for a quarter second, by a sweep of every quarter second for his colour). Out on the pavement they are
-  on the near side of the van, in front of its body: they are seen against the rear quarter now until they land on
-  the bench through the door.
-- **Fischer's taxi pulling away** (71.9 to 72.7): it eased off the kerb at about Cobb's pace, so for most of a second
-  he and Fischer rolled along right over its two wheels and read as its wheels (a fresh critic's note). It pulls out
-  briskly now, clear of them in a third of a second, and waits in the queue at the bridge for the train.
-- **Fischer's taxi coming in** (69.2 to 70.4): it slowed to the kerb right behind Ariadne and Cobb, so for most of a
-  second they sat along its sill between its wheels, a car with four wheels in a row (a critic's note under Zoom). It
-  comes in later and quicker now, past them in half a second, to the same stop on the same beat.
+- **Fischer's taxi** (69.2 to 72.7): it slowed to the kerb right behind Ariadne and Cobb, and later eased off it at
+  about Cobb's pace, so both times two of them sat along its sill between its wheels for most of a second, a car with
+  four wheels in a row (two critics' notes). It comes in later and quicker, past them in half a second, to the same
+  stop on the same beat, and pulls out briskly, clear of them in a third of a second, to wait in the queue at the
+  bridge for the train.
 - **The cage up the shaft, under Zoom** (177 to 177.6): the camera held low on the flat as the cage rose, and under
   Zoom he went half out of the frame's top. It starts up with him sooner, and under Zoom he stays in the picture.
 - **The far trees over home's wall, under Zoom** (251 to 265): their layer rides up with the camera, most under Zoom,
   and its body stopped just under its base, so a strip of sky showed between the trees and the wall's top. Its body
   runs down behind the wall now.
-- **The ground under the garden** (249 to the end, in a tall frame): the house stands on cut earth, but the lawn and the
-  terrace's stone came on toward us all the way to the frame's foot, so in a phone-shaped frame the terrace was a pale
-  pillar beside a green slab (a critic's note). They end a little toward us now, cut, and under them is the same earth
-  as under the house, its bands and stones. A wide frame never sees that far down and is unchanged.
+- **The ground of the home** (244 to the end, in a tall frame or seen whole): the house stood on cut earth, but the
+  lawn and the terrace's stone on one side and the porch's stone on the other came on toward us all the way to the
+  frame's foot, so in a phone-shaped frame the terrace was a pale pillar beside a green slab, and in Overview the
+  porch a blank pale column (critics' notes). They end a little toward us now, cut on one line, and under the house,
+  the porch and the garden is one earth: its bands and stones lie from one origin, in one shading, and the house's
+  cut edge stops where theirs begins. A wide frame never sees that far down and is unchanged.
 - **The sky over the terminal** (236 to 244, in a tall frame): the street beyond the landside glass had a sky of its
   own, from the frame's top down, and over the terminal's roof it met the morning's on a ruled vertical line, the
   morning's grey-green beside its warm (a critic's note). It and the glare at the end come in only from the roof's
@@ -381,8 +379,6 @@ each world, and changed:
   now, and meet it.
 - **The jet bridge's wheels** (231 to 238): docked, its leg stood right on the plane's outer main gear, the two sets of
   black wheels merged into one shape. Its leg is further back along it now, clear of the gear.
-- **The garden's cut** (round 45's): the terrace's slab and the turf's edge were drawn a little under the cut line, so
-  the stone hung below it into the earth. They end on the line now.
 - **The picture in the hotel's corridor** (92 to 107): it hung right over a wall lamp, the lamp's shade showing under
   its frame (a critic's note). It hangs on the bare wall between that lamp and the next door now.
 - **Limbo's garden on the beach** (0 to 30, 155 to 177): its lawn ran on 0.8 of a cell below the line the house and the
@@ -392,15 +388,8 @@ each world, and changed:
   marked the blow, so each seemed to reverse and shoot off (a motion critic read both as teleports); Fischer's flare
   was lost on the pale sky. Each throw now flashes a ring where it lands and leaves a short streak in their colour
   behind them, gone in half a second (`cast.ts`, `streak`).
-- **The porch's ground** (244 to the end, seen whole or tall): left of the house, the porch's stone ran on down to the
-  frame's foot, a blank pale column for the whole of the ending in Overview (a critic's note). It is cut where the
-  garden's ground is, with the same earth under it.
 - **The hotel's skyline** (the dream stack, seen whole): its towers began a sixth of the way in from the frame's left,
   flat dark before them (a critic's note). They run on past both ends now; every tower that was there is unchanged.
-- **One earth under the home** (244 to the end, seen tall or whole): with the porch and the garden cut over earth, the
-  ground under the house, the porch and the garden was three panels, their bands and stones starting at different
-  depths, their shading too, and the house's ink edge running down between them (a critic's note). The bands and
-  stones lie from one origin now, in one shading, and the house's cut edge stops where theirs begins.
 - **The share card** (`public/shows/time/opus55.png`, the frame at 49.2): it was made before Ariadne's teal deepened,
   so a link to the show unfurled with her old colour. It is made again from the show as it is; nothing else in it moved.
 
