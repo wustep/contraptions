@@ -790,6 +790,11 @@ green blob at the top of the willow (62 s), which three readers have called a gl
 back past the limb's bend, and the clumps of leaves out there, solid among the sprays' single leaves and cut by the
 frame's top, read as a blob. There are none at the bend now; the crown in the wide is as full as it was.
 
+A seventy-seventh gave the show to a twelfth fresh reader: Ian leaves, they said, and she stays with her daughter,
+knowing how it ends. But they saw him there, then gone: a cell from the frame's edge, he crossed it in under a second.
+He walks out of the frame now, over some three seconds, and only quickens once he is out of it, well ahead of the
+frame's edge as the camera draws back, and on out of the room. The last frame is the first, to the same measure.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

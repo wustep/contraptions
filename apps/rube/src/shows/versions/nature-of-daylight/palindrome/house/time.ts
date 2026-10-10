@@ -390,19 +390,32 @@ export const IAN_STAYS_X = 1.85
 const IAN_TURNS = BEGIN + 1.5
 const IAN_LOOKS_BACK = BEGIN + 2.4
 export const IAN_GOES = BEGIN + 4.0
-const IAN_PACE = 1.05
-const IAN_UP = 1.1
+/**
+ * His going: slowly at first, a walk out of the frame over some three seconds (at a run he crossed its edge in under
+ * one, and was there, then gone, as if dropped), then faster once he is out of it, well ahead of the frame's edge as
+ * the camera draws back, and on out of the room.
+ */
+const WALK = 0.42
+const OUT = 1.5
+function goneBy(u: number): number {
+  const a = u < 1 ? (WALK * u * u) / 2 : WALK * (u - 0.5)
+  const w = u - 3.2
+  const b = w <= 0 ? 0 : w < 2 ? ((OUT - WALK) * w * w) / 4 : (OUT - WALK) * (w - 1)
+  return a + b
+}
 /** Where he is (world x) from the cut on; past the room's whole frame by IAN_GONE. */
 export function ianAfter(T: number): number {
   // A half step away as he turns, then still; and as he looks back, a lean back toward her, held a second, before he
   // goes. (The look alone, his mark turning, was too slight to see as a pause.)
   const step = 0.1 * s5((T - IAN_TURNS) / 0.6) - 0.06 * (s5((T - IAN_LOOKS_BACK) / 0.4) - s5((T - IAN_GOES + 0.45) / 0.45))
   const u = T - IAN_GOES
-  if (u <= 0) return IAN_STAYS_X + step
-  const d = u < IAN_UP ? (IAN_PACE * u * u) / (2 * IAN_UP) : IAN_PACE * (u - IAN_UP / 2)
-  return IAN_STAYS_X + step + d
+  return IAN_STAYS_X + step + (u <= 0 ? 0 : goneBy(u))
 }
-export const IAN_GONE = IAN_GOES + 16 / IAN_PACE + IAN_UP / 2
+export const IAN_GONE = (() => {
+  let u = 0
+  while (goneBy(u) < 16) u += 0.05
+  return IAN_GOES + u
+})()
 /** He looks at her and the cradle (on his left); turns away to the right; looks back at her; turns and goes. */
 const AT_HER = Math.PI + 0.25
 const AWAY = -0.15
