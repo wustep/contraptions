@@ -110,7 +110,7 @@ function rect(ctx: Ctx, r: number, x0: number, y0: number, x1: number, y1: numbe
 }
 
 /** One life, painted in the glass's own frame: centre at the origin, `r` the glass's radius in pixels, `u` its drift. */
-function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number, fam = true): void {
+function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number): void {
   // Seen going past: the picture drifts a little across the glass.
   ctx.translate((0.12 - 0.24 * u) * r, 0)
   switch (life) {
@@ -141,7 +141,7 @@ function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number, fam = 
         ctx.ellipse((cx + Math.cos(a) * 1.3 * q) * r, (cy + Math.sin(a) * 0.9 * q) * r, 0.03 * r, 0.014 * r, a, 0, Math.PI * 2)
         ctx.fill()
       }
-      if (fam) family(ctx, r, 0, 0.17, 0.14, VOID_THEME.ink)
+      family(ctx, r, 0, 0.17, 0.14, VOID_THEME.ink)
       break
     }
     case 'rocks': {
@@ -157,7 +157,7 @@ function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number, fam = 
       rect(ctx, r, -1.4, 0.3, 1.4, 1.2, ROCKS.canyon)
       rect(ctx, r, -1.4, 0.3, 1.4, 0.36, ROCKS.stone)
       rect(ctx, r, -1.4, 0.62, 1.4, 1.2, ROCKS.canyonShade)
-      if (fam) family(ctx, r, -0.05, 0.3, 0.145, '#3A342D', true)
+      family(ctx, r, -0.05, 0.3, 0.145, '#3A342D', true)
       break
     }
     case 'raccoon': {
@@ -187,7 +187,7 @@ function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number, fam = 
       ctx.fill()
       ctx.fillStyle = HIBACHI.raccoonDeep
       ctx.fillRect(0.3 * r, -0.17 * r, 0.24 * r, 0.035 * r)
-      if (fam) family(ctx, r, -0.25, 0.32, 0.14, HIBACHI_THEME.ink)
+      family(ctx, r, -0.25, 0.32, 0.14, HIBACHI_THEME.ink)
       break
     }
     case 'hotdog': {
@@ -207,7 +207,7 @@ function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number, fam = 
       ctx.moveTo(0.95 * r, -1.1 * r)
       ctx.quadraticCurveTo(0.9 * r, -0.3 * r, 0.62 * r, 0.12 * r)
       ctx.stroke()
-      if (fam) family(ctx, r, -0.2, 0.3, 0.14, HOTDOG_THEME.ink)
+      family(ctx, r, -0.2, 0.3, 0.14, HOTDOG_THEME.ink)
       break
     }
     case 'dojo': {
@@ -236,7 +236,7 @@ function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number, fam = 
       ctx.fill()
       rect(ctx, r, -1.4, 0.3, 1.4, 1.2, DOJO.lacquer)
       rect(ctx, r, -1.4, 0.3, 1.4, 0.35, DOJO.woodDeep)
-      if (fam) family(ctx, r, -0.2, 0.3, 0.14, DOJO_THEME.ink)
+      family(ctx, r, -0.2, 0.3, 0.14, DOJO_THEME.ink)
       break
     }
     case 'premiere': {
@@ -275,7 +275,7 @@ function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number, fam = 
       }
       ctx.closePath()
       ctx.fill()
-      if (fam) family(ctx, r, -0.2, 0.32, 0.14, PREMIERE.ink)
+      family(ctx, r, -0.2, 0.32, 0.14, PREMIERE.ink)
       break
     }
   }
@@ -313,57 +313,5 @@ export function drawLives(ctx: Ctx, k: number, cx: number, cy: number, rCells: n
   rim.addColorStop(1, `rgba(0, 0, 0, ${0.35 * a})`)
   ctx.fillStyle = rim
   ctx.fillRect(-r, -r, 2 * r, 2 * r)
-  ctx.restore()
-}
-
-/**
- * The bagel's hole as a tunnel her lives go down (`void/bagel.ts`, through the pull): the red carpet, the dojo, the
- * hot dog piano, Raccacoonie's kitchen, each a round of its world shrinking into the dark and going dark as it goes,
- * one after another, and nobody in them. The dryer's glass opened the multiverse and the washer's gives the lives
- * back (`drawLives`); this is the window between, where they are taken. `depth` is how far down they have gone (one a
- * life), `r` the hole's radius in pixels, at the current origin; `strength` how much of it there is.
- */
-const TAKEN: Life[] = ['premiere', 'dojo', 'hotdog', 'raccoon']
-/** How fast a life shrinks as it goes down, and how far it circles while it does. */
-const DEEP = 0.55
-const SWIRL = 1.15
-export function drawTunnel(ctx: Ctx, r: number, depth: number, strength: number, t: number): void {
-  if (strength <= 0.01) return
-  ctx.save()
-  ctx.beginPath()
-  ctx.arc(0, 0, r, 0, Math.PI * 2)
-  ctx.clip()
-  // They spiral down the drain, as the things they came with do: each a round of its world, off the middle, going
-  // round and in and smaller. The deepest is drawn first, the nearest over it.
-  const first = Math.floor(depth - 7)
-  for (let j = first; j <= Math.ceil(depth + 0.5); j++) {
-    const d = depth - j
-    if (d < -0.5 || d > 7) continue
-    const s = Math.exp(-d * DEEP)
-    const rr = r * 0.56 * s
-    if (rr < 1.2) continue
-    const a = j * 2.4 + d * SWIRL
-    const off = r * 0.42 * s
-    // Up out of the dark of the well's wall, seen, and taken by the dark as it goes down.
-    const seen = Math.min(1, (d + 0.5) / 1.1) * Math.max(0, 1 - d / 6) ** 1.6 * strength
-    if (seen <= 0.01) continue
-    const life = TAKEN[((j % TAKEN.length) + TAKEN.length) % TAKEN.length]
-    ctx.save()
-    ctx.translate(Math.cos(a) * off, Math.sin(a) * off)
-    ctx.rotate(a + Math.PI / 2)
-    ctx.beginPath()
-    ctx.arc(0, 0, rr, 0, Math.PI * 2)
-    ctx.clip()
-    ctx.globalAlpha = 0.85 * seen
-    paintLife(ctx, life, rr, 0.5, t, false)
-    // Its colour going first: a veil of the dark, deeper the further down, and dark at its edge so it is a glimpse.
-    ctx.globalAlpha = 1
-    const g = ctx.createRadialGradient(0, 0, rr * 0.35, 0, 0, rr)
-    g.addColorStop(0, `rgba(8, 6, 12, ${0.18 * seen})`)
-    g.addColorStop(1, `rgba(8, 6, 12, ${0.85 * seen})`)
-    ctx.fillStyle = g
-    ctx.fillRect(-rr, -rr, 2 * rr, 2 * rr)
-    ctx.restore()
-  }
   ctx.restore()
 }

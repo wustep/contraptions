@@ -124,7 +124,7 @@ export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
  *
  * Each comes on a note the scene already moves on, and goes before the next.
  */
-export type Scene = 'taxes' | 'alley' | 'hush' | 'wall' | 'rocks' | 'peak' | 'home'
+export type Scene = 'taxes' | 'alley' | 'hush' | 'rocks' | 'peak' | 'home'
 export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 'joy' | 'waymond'; scene: Scene }[] = [
   // The taxes: Joy stops below her mother at the adding machine, and her mother does not look up.
   { at: 24.0, to: 26.2, line: 'Mom? Can I —', who: 'joy', scene: 'taxes' },
@@ -135,9 +135,6 @@ export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 
   { at: 134.2, to: 136.4, line: 'There you are.', who: 'joy', scene: 'hush' },
   { at: 136.8, to: 139.0, line: 'Joy? What is this place?', who: 'evelyn', scene: 'hush' },
   { at: 139.3, to: 141.8, line: 'Come and see.', who: 'joy', scene: 'hush' },
-  // Everywhere at once, as the wall crowds toward the crescendo and he is beside her in nearly every life: what he
-  // asks of her, the one thing he asks, before the great hit, where she does it.
-  { at: 186.9, to: 189.5, line: 'Be kind. Especially now.', who: 'waymond', scene: 'wall' },
   { at: 208.5, to: 211.6, line: 'It is quiet here. Nothing has to mean anything.', who: 'joy', scene: 'rocks' },
   { at: 212.0, to: 213.7, line: 'You don’t have to follow me.', who: 'joy', scene: 'rocks' },
   { at: 216.4, to: 218.4, line: 'Joy —', who: 'evelyn', scene: 'rocks' },
@@ -174,8 +171,7 @@ function subtitleBedAt(t: number): { light: number; at: [number, number]; deep: 
     if (sub.scene === 'alley') continue
     const light = clamp((t - sub.at) / SUB_FADE) * (1 - clamp((t - (sub.to - SUB_FADE)) / SUB_FADE))
     // Under the other's lines (italic, which the page sets a little faded) the dark is deeper.
-    // Over the wall of a hundred lives, the busiest picture in the show, deeper still.
-    if (light > best.light) best = { light, at: subAt(sub.scene), deep: (sub.who === 'evelyn' ? 1 : 1.3) * (sub.scene === 'wall' ? 1.4 : 1) }
+    if (light > best.light) best = { light, at: subAt(sub.scene), deep: sub.who === 'evelyn' ? 1 : 1.3 }
   }
   return best
 }
@@ -228,8 +224,8 @@ const WHO = { evelyn: 'Evelyn', joy: 'Joy', waymond: 'Waymond' } as const
  * a card with nothing on it but its `said`, so nothing is seen: the page sets an empty card, a saved video paints none.
  */
 export const DESCRIBED: { at: number; said: string; of?: number }[] = [
-  { at: 2.2, said: 'Lit windows in the night. One of them: the Wang family laundromat.' },
-  { at: 7.9, of: 7.93, said: 'Waymond, a jade ball with a googly eye, watches Evelyn, a vermilion ball, roll onto a washer’s lever, and the machines begin.' },
+  { at: 2.2, said: 'The Wang family laundromat, at night. Waymond, a jade ball with a googly eye.' },
+  { at: 7.9, of: 7.93, said: 'Evelyn, a vermilion ball, rolls onto a washer’s lever, and the machines begin.' },
   { at: 20.2, of: 20.19, said: 'The taxes. Joy, a violet ball, comes in.' },
   { at: 31.5, of: 30.65, said: 'A crank throws her into a basket of lanterns, and then into the big dryer. Other worlds show in its glass.' },
   { at: 60.0, of: JUMPS.premiere, said: 'Another life: a red carpet, in widescreen, the press’s flashes going off.' },
@@ -239,8 +235,8 @@ export const DESCRIBED: { at: number; said: string; of?: number }[] = [
   { at: 97.4, of: JUMPS.hotdog, said: 'Hot dog fingers, playing a piano, in soft focus.' },
   { at: 107.0, of: JUMPS.hibachi, said: 'A cartoon kitchen. A raccoon under a chef’s hat works the levers.' },
   { at: 121.1, of: JUMPS.surf, said: 'A new world on every hit, then black.' },
-  { at: 128.1, of: JUMPS.void, said: 'She drifts down through a dark full of far-off lit windows. One by one, they go out.' },
-  { at: 142.3, of: 135.64, said: 'A colossal everything bagel, Joy on its crown, a ring of everything going round her. Everything goes into its hole, one thing a beat, her lives spiralling down it, and Evelyn is drawn in after them.' },
+  { at: 128.1, of: JUMPS.void, said: 'She drifts down through the dark, past seeds and salt.' },
+  { at: 142.3, of: 135.64, said: 'A colossal everything bagel, Joy on its crown, a ring of everything going round her. Everything goes into its hole, one thing a beat, and Evelyn is drawn in after it.' },
   { at: 171.2, of: 170.8, said: 'The frame splits into her other lives, more and more of them, and Waymond is in nearly all of them.' },
   { at: 191.5, of: JUMPS.eye, said: 'Home. A googly eye lands on her. She gives one to each of Jobu’s machines, and each turns gentle.' },
   { at: 200.4, of: JUMPS.rocks, said: 'Silence. Two stones on the edge of a canyon: hers, and Joy’s.' },
