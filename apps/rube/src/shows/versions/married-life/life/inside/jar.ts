@@ -421,13 +421,15 @@ function shots(): PartShot[] {
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
 /**
- * Under Zoom (half as close again) the pendant lamp stood above the frame from the moment it went out to his fall: he
- * climbed the ladder toward nothing and fell, the reason gone. So Zoom eases out to the show's own frame as the lamp
- * goes (`Framing.zoomFull`), holds it while he climbs, reaches and the ladder kicks, and comes back in as he falls.
+ * Under Zoom (half as close again) the first setbacks lost what they turn on: the car's flat rear tyre went off the
+ * frame's left and the jar off its right, the arm that tips it out of the frame (the beat is set so the tyre goes in
+ * one still frame with the jar it will cost), and then the pendant lamp stood above the frame from its going out to his
+ * fall, so he climbed the ladder toward nothing. So Zoom eases out to the show's own frame over the two seconds before
+ * the tyre (`Framing.zoomFull`), holds it through the taking, the car driving off and the lamp, and comes back in over
+ * two seconds as he falls: eased so Zoom moves as gently as the show's own frame.
  */
-export function lampZoomFull(t: number): number {
-  // Eased out and back over about two seconds each way, so Zoom moves as gently as the show's own frame.
-  return 1 - smooth(t, LAMP_OUT - 2.2, LAMP_OUT) * (1 - smooth(t, FALL - 0.2, FALL + 1.9))
+export function setbacksZoomFull(t: number): number {
+  return 1 - smooth(t, TYRE - 2.2, TYRE) * (1 - smooth(t, FALL - 0.2, FALL + 1.9))
 }
 
 export const JAR_HITS: number[] = [

@@ -693,7 +693,15 @@ window.
     over the ladder, he climbs and reaches for it, the ladder kicks. Under Zoom it was not: the lamp stood above the
     Zoom frame the whole time, so he climbed toward nothing and fell. Now Zoom eases out to the show's own frame over
     two seconds as the lamp goes, holds it while he climbs, reaches and the ladder kicks, and comes back in over two
-    as he falls (`lampZoomFull`, `jar.ts`); a check holds Zoom out from the lamp going to the kick.
+    as he falls; a check holds Zoom out from the lamp going to the kick.
+  - *Under Zoom, every beat that turns on a thing* (fourteen, side by side with the show's own frame: the peal, the
+    rollers, the pop-up, the tyre, the taking, the storm's limb, the tie wheel, the press and its painting, the
+    tickets on the slope, the balloon given, her portrait, the balloon tied to her chair, the lamp at home). All whole
+    but the first setbacks: the flat rear tyre went off the frame's left and the jar off its right (the beat is set so
+    the tyre goes in one still frame with the jar it will cost), and the arm that tips the jar out of it. So Zoom's
+    ease out now starts two seconds before the tyre and holds through the taking, the car driving off and the lamp,
+    back in over two seconds as he falls (`setbacksZoomFull`, `jar.ts`); the check holds Zoom out from the tyre to the
+    kick, and a 30 fps scan of the ease found no pop.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
@@ -703,7 +711,8 @@ window.
 - The tree stands in a different place on the hill in each season (left of the crest in summer, at the top of the
   path in autumn). Only one season is ever on screen, and each is framed from a different side, so it reads as their
   tree both times; a wide that held the summer place and them years later needs about 9.5 cells.
-- Under Zoom the lamp he climbs to is kept in the frame by easing Zoom out to the show's own frame (118.5 to 122 s).
+- Under Zoom the first setbacks (the tyre, the jar's taking, the lamp he climbs to) are kept in the frame by easing Zoom
+  out to the show's own frame (110.5 to 122.7 s).
 - Under Zoom (`zoom.ts`) the two of them are held off the frame's edges, but in two places the staging fills the Zoom
   frame and they come near an edge for a few seconds: the nursery (him at the winch, her on the cradle, nine tenths
   of its width apart) and the ward (the balloon over them, the two of them under it). On the home steps, as he starts

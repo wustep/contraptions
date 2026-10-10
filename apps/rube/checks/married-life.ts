@@ -15,7 +15,7 @@ import { BALLOON_FROM, balloonAt, ellieSpin, HALF, LEANS, lookOf, STIRS } from '
 import { BALLOON_SIZE } from '../src/shows/versions/married-life/life/props/balloon'
 import { ridge, STEP } from '../src/shows/versions/married-life/life/hill/hill'
 import { INSIDE_SPAN } from '../src/shows/versions/married-life/life/inside/inside'
-import { KICK, LAMP_OUT } from '../src/shows/versions/married-life/life/inside/jar-clock'
+import { KICK, TYRE } from '../src/shows/versions/married-life/life/inside/jar-clock'
 import { INSIDE_AT } from '../src/shows/versions/married-life/life/score'
 import { JOLTS } from '../src/shows/versions/married-life/life/score'
 import { FUN } from '../src/shows/versions/married-life/life/church/church'
@@ -188,16 +188,17 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   }
   check('married life: no wide shot lingers (over 6 cells for at most 2.5 s, but for the named reveals)', wide.length === 0, wide.slice(0, 6).join('; '))
 
-  // Under Zoom the lamp he climbs to stood above the frame and he climbed toward nothing: from the lamp going out to the
-  // ladder's kick Zoom is out to the show's own frame, which holds the lamp whole.
+  // Under Zoom the first setbacks lost what they turn on (the flat tyre and the jar off the frame's two sides, the arm
+  // that tips it out of it, the lamp he climbs to above it): from the tyre to the ladder's kick Zoom is out to the
+  // show's own frame, which holds them.
   {
     let most = 0
     let mostAt = 0
-    for (let t = LAMP_OUT; t <= KICK; t += 0.05) {
+    for (let t = TYRE; t <= KICK; t += 0.05) {
       const z = cam(t).zoomFull ?? 1
       if (z > most) { most = z; mostAt = t }
     }
-    check('married life: under Zoom the lamp he climbs to stays in the frame (Zoom out to the show\'s own)', most < 0.02,
+    check('married life: under Zoom the tyre, the jar\'s taking and the lamp he climbs to stay in the frame (Zoom out to the show\'s own)', most < 0.02,
       `Zoom ${most.toFixed(2)} of its way in at ${mostAt.toFixed(2)} s`)
   }
 
