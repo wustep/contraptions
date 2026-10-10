@@ -777,6 +777,8 @@ window.
   - *The lamp's sputter* (the eleventh viewer called its going out "subtle"): 0.36 s from the stroke that shakes it
     (118.613) to out on the next beat (118.973), four flickers of about a tenth of a second each; plain in motion, one
     frame of it on a sheet at four a second. Kept on the music.
+  - *The beat-by-beat fixes on a phone held upright* (his lean, the falls as water in all three places, the bigger
+    lamp lit and out, the thrown tickets): all whole in the frame, the storey above in the extra picture.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
