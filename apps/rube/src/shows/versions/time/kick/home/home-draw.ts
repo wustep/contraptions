@@ -306,8 +306,21 @@ function porch(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
     foliage(ctx, k, cx, HOUSE.back, 0.75 + 0.3 * hash(i, 22), 0.75 + 0.25 * hash(i, 23), i * 3.1, t, LEAVES, true)
   }
   fillBox(ctx, k, x0, HOUSE.back, x1, FLOOR, vgrad(ctx, k, HOUSE.back, FLOOR, [[0, mixHex(STONE, HOME.wallShade, 0.5), 1], [1, STONE, 1]]))
-  fillBox(ctx, k, x0, FLOOR, x1, f.y1 + 1, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
-  void w
+  // Cut where the garden's ground is cut, the earth under it: seen whole (Overview) or in a tall frame, the stone ran
+  // on down to the frame's foot, a blank pale column.
+  const cut = Math.min(f.y1 + 1, NEAR_EDGE)
+  fillBox(ctx, k, x0, FLOOR, x1, cut, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
+  if (f.y1 + 1 > NEAR_EDGE) {
+    const bottom = f.y1 + 1
+    fillBox(ctx, k, x0, NEAR_EDGE, x1, bottom, vgrad(ctx, k, NEAR_EDGE, NEAR_EDGE + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, NEAR_EDGE * k, (x1 - x0) * k, (bottom - NEAR_EDGE) * k)
+    ctx.clip()
+    earth(ctx, k, x0, x1, NEAR_EDGE, bottom)
+    ctx.restore()
+    line(ctx, k, [x0, NEAR_EDGE], [x1, NEAR_EDGE], INK, w * 0.8)
+  }
 }
 
 /* ------------------------------------------------------------------ the house */
