@@ -89,6 +89,8 @@ declare global {
   }
 }
 
+/** How soon after a cue that ran early is made heard a pause counts as the browser refusing it (`heardAt`). */
+const HEARD_GRACE = 1500
 /** The player's states, as `onStateChange` numbers them. */
 const UNSTARTED = -1
 const ENDED = 0
@@ -185,6 +187,8 @@ interface Deck {
   movingAt: number
   /** Warming ahead of its entry (`WARM`): 'on' while it plays silently, 'done' once parked, buffered. */
   warm: 'no' | 'on' | 'done'
+  /** When it was made heard at its entry, having run early unheard: a pause right after is the browser's, not the viewer's. */
+  heardAt: number
   /** Played once inside a viewer's press (`begin`), so WebKit lets it sound later. */
   blessed: boolean
   ear: ReturnType<typeof listener>
@@ -200,6 +204,8 @@ export interface YouTubeSoundtrack extends Soundtrack {
   report(): number | null
   /** Heard when the viewer plays or pauses YouTube's own player, so the show can go with it. */
   onPlayer(fn: (playing: boolean) => void): void
+  /** Heard when the browser stops a cue the moment it is made heard: the sound wants a gesture again. */
+  onRefused(fn: () => void): void
 }
 
 /** YouTube's players for a show's soundtrack, drawn into `host`, which the page puts where it can be seen. */
@@ -214,6 +220,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
   let shown = 0
   let changed = () => {}
   let toldPlayer: (playing: boolean) => void = () => {}
+  let toldRefused: () => void = () => {}
   /** A play waiting to hear whether the browser let it start. */
   let pending: ((r: PlayResult) => void) | null = null
   let patience = 0
@@ -378,6 +385,15 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       if (pending && current) settleRefusal('playing')
       else if (!d.running && current && theirs) toldPlayer(true)
     } else if (state === PAUSED) {
+      if (d.heardAt && performance.now() - d.heardAt < HEARD_GRACE && current && wanted) {
+        // Stopped the moment it was made heard: WebKit will not let a player that never played inside a gesture turn
+        // audible (a link that started on its own warmed it with no press behind it, pass 145). That is a refusal, not
+        // the viewer's hand on YouTube's player: the page holds the sound, and the next press brings it in.
+        d.heardAt = 0
+        d.running = false
+        toldRefused()
+        return
+      }
       if (pending && current && theirs) {
         // Asked to play and left paused, long after its seek has settled: the browser wants a gesture first. (A pause
         // close on our own word is the seek's echo, and a refusal that stays silent is caught by the wait in `begin`.)
@@ -470,7 +486,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
         const mount = document.createElement('div')
         box.append(mount)
         host.append(box)
-        return { cue: settle(c), player: null, box, ready: false, state: UNSTARTED, running: false, early: false, volume: -1, toldAt: 0, lead: 0, movingAt: 0, warm: 'no', blessed: false, ear: listener() }
+        return { cue: settle(c), player: null, box, ready: false, state: UNSTARTED, running: false, early: false, volume: -1, toldAt: 0, lead: 0, movingAt: 0, warm: 'no', blessed: false, heardAt: 0, ear: listener() }
       })
       raise(null)
       loadApi().then(
@@ -549,6 +565,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
             // Its entry: it has been running silently, and is heard from here.
             d.early = false
             hush(d, false)
+            d.heardAt = performance.now()
             raise(d)
           } else if (!d.running && d.state !== ENDED) {
             // Its entry, with nothing to run early from (a video from its first second): in now.
@@ -617,6 +634,9 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     },
     onChange(fn) {
       changed = fn
+    },
+    onRefused(fn) {
+      toldRefused = fn
     },
     onPlayer(fn) {
       toldPlayer = fn

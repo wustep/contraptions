@@ -605,6 +605,16 @@ const pauseIcon = icon(ICON.pause)
 const soundIcon = icon(ICON.sound)
 const mutedIcon = icon(ICON.muted)
 music.onChange(() => sync())
+// The browser stopped the music mid-show for want of a gesture (a cue coming in that no press was behind): hold the
+// sound, as a link that is refused holds it, the picture going on muted and the Sound button up for the press.
+music.onRefused(() => {
+  if (recording || !transport?.playing || soundHeld) return
+  soundHeld = true
+  setMuted(true)
+  void music.play(transport.now())
+  armSound()
+  sync()
+})
 // A press on YouTube's own player moves the show with it.
 music.onPlayer((playing) => {
   // A recording owns the show, and plays the file: YouTube's player is put back to silence.

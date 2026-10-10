@@ -82,6 +82,8 @@ export interface ShowSoundtrack extends Soundtrack {
   fellBack(): boolean
   /** Heard when the viewer plays or pauses YouTube's own player. */
   onPlayer(fn: (playing: boolean) => void): void
+  /** Heard when the browser stops the music mid-show for want of a gesture (YouTube only). */
+  onRefused(fn: () => void): void
   /** YouTube's unsmoothed report of where it is, in seconds of show; null from a file. For the dev probes. */
   report(): number | null
 }
@@ -177,6 +179,7 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
     source: () => (!spec ? null : active === tube ? 'youtube' : 'file'),
     fellBack: () => fell,
     onPlayer: (fn) => tube.onPlayer(fn),
+    onRefused: (fn) => tube.onRefused(fn),
     report: () => (active === tube ? tube.report() : null),
   }
 }

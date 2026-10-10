@@ -146,11 +146,17 @@ async function main(): Promise<void> {
     // stopped at its entry, and the show stood waiting there for good (pass 143). Each is warmed in the press, once.
     // A held sound brought in while its cue already runs muted gets no state change in WebKit: the wait must look at the
     // player before calling it refused, or the sound is held again two seconds after the tap, every time (pass 145).
+    // A cue the browser stops the moment it is made heard is a refusal, not the viewer pausing YouTube: the page holds
+    // the sound and puts the Sound button up, rather than pausing the show with no word of why (pass 146).
+    check('a cue stopped by the browser as it is made heard holds the sound, with the Sound button up',
+      /d\.early = false\s*hush\(d, false\)\s*d\.heardAt = performance\.now\(\)/.test(yt) &&
+      /if \(d\.heardAt && performance\.now\(\) - d\.heardAt < HEARD_GRACE && current && wanted\) \{[\s\S]{0,500}toldRefused\(\)\s*return/.test(yt) &&
+      /music\.onRefused\(\(\) => \{\s*if \(recording \|\| !transport\?\.playing \|\| soundHeld\) return\s*soundHeld = true\s*setMuted\(true\)\s*void music\.play\(transport\.now\(\)\)\s*armSound\(\)/.test(player))
     check('the wait for a play looks at the player before calling it refused',
       /if \(pending !== resolve\) return\s*\/\/[^\n]*\n[^\n]*\n\s*if \(d\.player\?\.getPlayerState\(\) === PLAYING\) return settleRefusal\('playing'\)/.test(yt))
     check('every later YouTube cue is warmed inside the viewer\'s press, once, so WebKit lets it sound at its entry',
       /function begin\(\): Promise<PlayResult> \{\s*arrange\(shown\)[\s\S]{0,700}if \(!x\.blessed && x\.ready && x\.cue\.at > shown && !x\.running && x\.warm !== 'on'\) \{\s*x\.blessed = true\s*warmUp\(x\)/.test(yt) &&
-      yt.includes("blessed: false, ear: listener()"))
+      yt.includes("warm: 'no', blessed: false,"))
     check('a YouTube cue running early or warming is muted until its entry, and follows the viewer\'s mute after',
       /const hush = \(d: Deck, silent: boolean\) => \{\s*if \(muted \|\| silent\) d\.player!\.mute\(\)/.test(yt) &&
       yt.includes('hush(d, early)') && /d\.warm = 'on'[\s\S]{0,80}hush\(d, true\)/.test(yt) &&
