@@ -23,7 +23,7 @@ import { HORIZON, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
 import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
 import { SONG_COUNT, songAt } from '../src/shows/versions/la-la-land/sebs/audition/shadow'
-import { DREAM_CALL, lastNoteAt } from '../src/shows/versions/la-la-land/sebs/club/finale'
+import { BAND_RISING, DREAM_CALL, lastNoteAt } from '../src/shows/versions/la-la-land/sebs/club/finale'
 import { HOUSE_SPAN, houseTop } from '../src/shows/versions/la-la-land/sebs/paris/jazz'
 import { HANDOFF, soloThreads } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
 
@@ -268,6 +268,27 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       const bottom = (c.at?.[1] ?? 0.16) + (c.names.length > 2 ? 0.27 : 0.13)
       if (roofAt - bottom < creditClear) { creditClear = roofAt - bottom; creditWorst = `${t.toFixed(1)} s` }
     }
+  }
+  // His music rising out of the club with the band never runs through a credit card: while a card is up, no bead is in
+  // the band of the frame it is set in (the middle third across, from just above its first line to below its last).
+  {
+    const through: string[] = []
+    for (let t = CARDS[0].at; t < 503; t += 0.1) {
+      const cards = creditsAt(t).filter((c) => c.light > 0.3)
+      if (!cards.length) continue
+      const f = cam(t)
+      for (const q of BAND_RISING.beads(t)) {
+        if (q.a < 0.15) continue
+        const fx = (piano[0] + q.x - (f.x - (f.cells * 16) / 9 / 2)) / ((f.cells * 16) / 9)
+        const fy = (piano[1] + q.y - (f.y - f.cells / 2)) / f.cells
+        for (const c of cards) {
+          const top = (c.at?.[1] ?? 0.16) - 0.03
+          const bottom = top + 0.03 + (c.names.length > 2 ? 0.27 : 0.13)
+          if (fx > 0.33 && fx < 0.67 && fy > top && fy < bottom) { through.push(t.toFixed(1)); break }
+        }
+      }
+    }
+    check('sebs: his music rising out of the club never runs through the credits', through.length === 0, [...new Set(through)].slice(0, 6).join(', '))
   }
   // The story's beats are seen: at each, everyone it is about is in the picture.
   const beats: [number, string, ('seb' | 'mia' | 'david')[]][] = [
