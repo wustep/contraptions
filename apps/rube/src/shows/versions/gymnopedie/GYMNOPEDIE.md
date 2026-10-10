@@ -278,6 +278,14 @@ The saved video was made end to end and read back: picture and sound (VP9 and Op
 4×), every titled moment painted in and readable, the weather, the aurora and the whale all there. The vertical
 "Shorts" frame and the tighter Zoom framing were looked at through the day too.
 
+## What the ball meets
+
+Measured, not only looked at, since at the show's size these things are a few pixels: the ball keeps clear of every
+gull (0.76 cells at the closest, a check); every shooting star falls clear above it; the constellations hang clear of
+it, the one-note figures of the third Gnossienne a single star with no line. On every leaf with a flower (74) the ball
+rolls across where the flower stands; it is drawn in front, so it reads as passing before the flower, which is there
+behind it, opening, as it rolls on, and that is left as it is.
+
 ## Checks
 
 `check:shows` (`apps/rube/checks/gymnopedie.ts`): the picker entry, the credit, the three pieces in order; the loop
