@@ -311,8 +311,9 @@ export function flungPose(c: Flung, te: number): FlungPose {
   const tau = Math.min(te - c.hit, c.flight)
   const u = tau / c.flight
   const far = sm((u - 0.55) / 0.45)
-  // It comes down on its roof on the far side of the street.
-  const yEnd = -0.2 - 0.56 * (CAR_S - 0.08)
+  // It comes down on its roof on the far side of the street, its crushed roof on the asphalt (it rested 0.17 of a
+  // cell up, in the air, the roof's crush not counted).
+  const yEnd = -0.18 - 0.38 * (CAR_S - 0.08)
   // A throw: up and back the way the train goes, turning end over end, and down behind the train.
   const vy = (CAR_Y - yEnd + 6 * c.flight * c.flight) / c.flight
   const y = CAR_Y - vy * tau + 6 * tau * tau

@@ -441,6 +441,11 @@ each world, and changed:
   its smoke white on white, so a viewer new to it saw her holding "something long, a rifle, ski poles or a radio".
   The flash holds a little longer, its first tenth of a second a crisp star of flame along the aim (gold, a white
   heart, a thin ink edge), and its smoke drifts off the muzzle in grey.
+- **The rain street after the train** (75 to 86): the cars it flung came to rest on their roofs a little above the
+  road, in the air (their crushed roofs not counted), and the train's, the taxi's and the van's headlamps were painted
+  on down through the street into the ground under it, the train's lit patch on the asphalt ending square (a critic's
+  note). The wrecks lie on the asphalt; the beams stop at the street's underside, and the patch fades out at both
+  ends. Off the bridge, falling, the van's beam goes where it points.
 
 ## Inception nods
 

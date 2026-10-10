@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { beam, bloom, rgba } from '../cast'
-import { hash } from '../kit'
+import { frame, hash } from '../kit'
 import { SPLASH } from '../stack'
 import { PLANE, RAIN } from '../worlds'
 import { DOOR_U, FLOOR_V, SEAT_U, SEAT_V, T_SINK, UNDER, WHEEL_R, WHEEL_U, caseOpen, doorOpen, eff, lampOn, sm, vanPoint, wheelTurn, type Pose } from './rain-geo'
@@ -101,7 +101,18 @@ export function drawVanBack(p: p5, k: number, ink: string, w: number, pose: Pose
   if (lamp > 0.05 && k > 3) {
     const [lx, ly] = vanPoint(pose, L - 0.02, 0.06)
     const ahead = vanPoint(pose, L + 4.2, 0.9)
+    // On the street and the bridge its light stops at the road's underside (it was painted on into the ground under
+    // it); off the bridge, falling, it goes where it points.
+    const onRoad = pose.y < 0.2
+    if (onRoad) {
+      const f = frame(p, k)
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect((f.x0 - 2) * k, (f.y0 - 2) * k, (f.x1 - f.x0 + 4) * k, (0.6 - f.y0 + 2) * k)
+      ctx.clip()
+    }
     beam(p, k, [lx, ly], ahead, 0.14, 1.5, RAIN.lamp, 0.34 * lamp)
+    if (onRoad) ctx.restore()
   }
   p.push()
   toPose(p, k, pose)
