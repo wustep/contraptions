@@ -135,7 +135,6 @@ export const SUBTITLES: { at: number; to: number; line: string; who: 'evelyn' | 
   { at: 134.2, to: 136.4, line: 'There you are.', who: 'joy', scene: 'hush' },
   { at: 136.8, to: 139.0, line: 'Joy? What is this place?', who: 'evelyn', scene: 'hush' },
   { at: 139.3, to: 141.8, line: 'Come and see.', who: 'joy', scene: 'hush' },
-  { at: 201.4, to: 204.4, line: 'Where are we?', who: 'evelyn', scene: 'rocks' },
   { at: 208.5, to: 211.6, line: 'It is quiet here. Nothing has to mean anything.', who: 'joy', scene: 'rocks' },
   { at: 212.0, to: 213.7, line: 'You don’t have to follow me.', who: 'joy', scene: 'rocks' },
   { at: 216.4, to: 218.4, line: 'Joy —', who: 'evelyn', scene: 'rocks' },
