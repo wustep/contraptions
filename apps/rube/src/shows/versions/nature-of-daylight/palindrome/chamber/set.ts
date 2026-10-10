@@ -850,7 +850,28 @@ export function drawSuit(p: p5, k: number, x: number, y: number, light = 1): voi
   suitAt(ctx, k, 0.5 + 0.5 * clamp01(light))
   ctx.restore()
 }
-function suitAt(ctx: Ctx, k: number, light: number): void {
+function suitAt(ctx: Ctx, k: number, light: number, empty = false): void {
+  if (empty) {
+    // Empty, its window is glass with nothing behind it: pale, a glint on it. (Open onto the dark wall behind, the window
+    // was a black disc in the suit, a third ball, a bowling ball.)
+    suitPath(ctx, k, 0)
+    ctx.fillStyle = mix(SHELL.dark, SHELL.suit, light)
+    ctx.fill()
+    const ey = -FLOOR * k
+    ctx.beginPath()
+    ctx.arc(0, ey, 0.11 * k, 0, Math.PI * 2)
+    ctx.fillStyle = mix(mix(SHELL.dark, SHELL.suit, light), '#FFFFFF', 0.12)
+    ctx.fill()
+    ctx.strokeStyle = rgba(SHELL.dark, 0.25)
+    ctx.lineWidth = Math.max(1, 0.015 * k)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(0, ey, 0.07 * k, Math.PI * 1.1, Math.PI * 1.45)
+    ctx.strokeStyle = rgba('#FFFFFF', 0.5 * light)
+    ctx.lineWidth = Math.max(1, 0.018 * k)
+    ctx.stroke()
+    return
+  }
   suitPath(ctx, k, 0)
   const vy = -FLOOR * k
   ctx.moveTo(0.11 * k, vy)
@@ -903,7 +924,7 @@ function fallenSuits(ctx: Ctx, k: number, t: number): void {
     ctx.save()
     ctx.globalAlpha *= 1 - gone
     ctx.translate((at[0] + aside) * k, (FLOOR + at[1] - up) * k)
-    suitAt(ctx, k, light)
+    suitAt(ctx, k, light, true)
     ctx.restore()
   }
 }

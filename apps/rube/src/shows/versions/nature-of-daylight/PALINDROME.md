@@ -800,6 +800,10 @@ keys, a bubble, a cursor. Her hops along them lasted a third to a half of a seco
 a frame a second caught her in the air in half its frames. They are shorter now, a quarter to two fifths of a second,
 still landing on the beats: low over the keys, and in the air far less.
 
+A seventy-ninth gave the show to a thirteenth fresh reader. Ian walking out read: he leaves, she knowingly chooses.
+But the empty suit the sixty-ninth set beside her had its window open onto the dark wall behind it, and it read as a
+black ball inside it, a bowling ball. Its window is glass now, pale, a glint on it.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
