@@ -549,6 +549,25 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     table(q, tb.x)
     candle(q, tb.x, t, tb.x)
   }
+  // In the dream's last room the club is full: someone on every chair, a dark shape with the candle's light along it,
+  // turned to the stage; and two at the bar. As the dream drains they go, and the room is as it is.
+  if (s.end && t < ROSE_OUT[1]) {
+    const there = 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6)
+    const seats: Pt[] = [...TABLES.flatMap((tb) => tb.chairs.map(([dx]) => [tb.x + dx, SEAT - 0.14] as Pt)), ...BAR.stools.map((x) => [x, 2.5 - 0.14] as Pt)]
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.globalAlpha = there
+    for (const [x, y] of seats) {
+      p.noStroke()
+      p.fill('#1A1226')
+      p.circle(x * k, y * k, 0.27 * k)
+      p.noFill()
+      p.stroke(rgba(M.candle, 0.7))
+      p.strokeWeight(weight * 0.8)
+      p.arc(x * k, y * k, 0.27 * k, 0.27 * k, Math.PI * 1.2, Math.PI * 1.95)
+    }
+    ctx.restore()
+  }
   stool(q, MIA_SEAT[0])
   stool(q, SIDE_SEAT[0])
   table(q, TABLE.x, 'base', 0.19)
