@@ -283,8 +283,9 @@ The saved video was made end to end and read back: picture and sound (VP9 and Op
 Measured, not only looked at, since at the show's size these things are a few pixels: the ball keeps clear of every
 gull (0.76 cells at the closest, a check); every shooting star falls clear above it; the constellations hang clear of
 it, the one-note figures of the third Gnossienne a single star with no line. On every leaf with a flower (74) the ball
-rolls across where the flower stands; it is drawn in front, so it reads as passing before the flower, which is there
-behind it, opening, as it rolls on, and that is left as it is.
+rolls across where the flower stands; and the flower bows aside, leaning away from the ball as it comes and back
+upright once it has gone (`bowAt`); it turns from one side to the other as the ball goes over its foot, where the ball
+hides it.
 
 ## Checks
 

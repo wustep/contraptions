@@ -208,7 +208,7 @@ function stele(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
 }
 
 /** A lotus leaf on its stem: the third Gnossienne's stones. `open` is how far its flower has opened, if it has one. */
-function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number, sway: number, open: number, flower: boolean, wave = 0): void {
+function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number, sway: number, open: number, flower: boolean, wave = 0, bow = 0): void {
   const K = (v: number) => v * k
   const leaf = mixHex('#5E8C77', day.lit, 0.25)
   const ink = alpha(p, day.line, 0.75)
@@ -254,7 +254,7 @@ function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
     const len = 0.12 + 0.09 * open - Math.abs(i) * 0.018
     p.push()
     p.translate(K(fx), K(fy))
-    p.rotate(a)
+    p.rotate(a + bow)
     p.fill(mixHex(mixHex('#9DB59A', '#D8A9B3', 0.55), mixHex('#EFC6CD', '#FBF1EE', Math.abs(i) / 3), open))
     p.ellipse(0, K(-len / 2), K(0.05 + 0.035 * open), K(len))
     p.pop()
@@ -323,6 +323,20 @@ function perchedGull(p: p5, k: number, day: Sky, weight: number, face: number, t
   p.pop()
 }
 
+/**
+ * How far a lotus flower standing at `u` on a leaf `h` high bows from the ball at `t`, radians: away from it as it rolls
+ * close along the leaf, most when it is nearest, and back upright once it has gone; nothing while the ball is in the air
+ * over it. It turns from leaning one way to the other as the ball goes over its foot, where the ball hides it.
+ */
+function bowAt(u: number, h: number, t: number): number {
+  const b = ballLocal(t)
+  let du = (u - b.u) % LENGTH
+  if (du > LENGTH / 2) du -= LENGTH
+  if (du < -LENGTH / 2) du += LENGTH
+  const low = Math.exp(-(((b.h - (h + 0.15)) / 0.25) ** 2))
+  return 0.6 * Math.tanh(du / 0.08) * Math.exp(-((du / 0.32) ** 2)) * low
+}
+
 /** The longest a stone is drawn in one piece: longer, it is several, each standing square to the curve of the sea. */
 export const SEGMENT = [1.5, 1.3, 1.1]
 
@@ -373,7 +387,8 @@ export function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: bool
         stele(p, k, sw, h, day, c.weight, lit > 0 ? Math.min(1, lit + 0.45 * cadence(stone, c.t)) : 0, j === 0)
       } else {
         const sway = 0.03 * osc(c.t, 0.11, stone.index + j)
-        lotus(p, k, sw, h, day, c.weight, sway, bloom(stone, c.t), j === n - 1 && w > 0.9, cadence(stone, c.t))
+        const flower = j === n - 1 && w > 0.9
+        lotus(p, k, sw, h, day, c.weight, sway, bloom(stone, c.t), flower, cadence(stone, c.t), flower ? bowAt(u0 + sw - Math.min(0.24, sw * 0.25), h, c.t) : 0)
       }
       p.pop()
     }
