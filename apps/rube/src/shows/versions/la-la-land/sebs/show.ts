@@ -1,4 +1,4 @@
-import { ballAt, laneAt, type Pt } from '../../../../parts'
+import { ballAt, laneAt, R, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
@@ -32,6 +32,65 @@ export interface Stage {
   /** Show time from which this universe is on the stage. */
   from: number
 }
+
+/**
+ * Where they look. A ball's mark turns with its rolling everywhere else; in these spans it is turned to look, eased
+ * in from its rolling, held, and let go to roll again.
+ * - `both`: each looks at the other. The kiss at Lipton's and the room lighting up after it, the curtain call's touch, the roll down the beam to him,
+ *   the waltz from its first ONE to the touch among the stars, and the look and the nods at the door, so that her
+ *   close shot looks across to him and his back to her; and in the car, where she leans in to him. (The club's kiss is set by
+ *   where they sit.)
+ * - `mia`: she alone looks: at her table at the start, up from David to the man at the piano.
+ * - `seb`: he alone looks: at her, across the room at the start, as he finds her at her table, the what-if's first
+ *   moment; and, once she has gone, back at the door she went out by (`at`, a fixed direction), before the count-in.
+ */
+interface Look {
+  from: number
+  to: number
+  /** How long it takes to turn to look, and to let go. */
+  ease: [number, number]
+  who: 'both' | 'seb' | 'mia'
+  /** A fixed direction to look (radians, on the screen), rather than at her. */
+  at?: number
+}
+const touch = (t: number): Look => ({ from: t, to: t + 1.2, ease: [0.7, 0.8], who: 'both' })
+const LOOKS: Look[] = [
+  // Leaning in to David over their table, eye to eye, before her eyes go up to the stage.
+  { from: 22.0, to: 24.0, ease: [0.4, 0.5], who: 'mia', at: 0 },
+  // Up to the stage, clearly above David across the table: the man at the piano is only a little higher than him.
+  { from: 25.0, to: 31.5, ease: [1.0, 0.9], who: 'mia', at: -0.87 },
+  { from: 32.8, to: 35.2, ease: [0.6, 0.7], who: 'seb' },
+  // The kiss, and still eye to eye while the room lights up round them, until they go to the cup.
+  { from: 65.515, to: 69.4, ease: [0.7, 0.8], who: 'both' },
+  touch(125.585),
+  touch(266.008),
+  { from: 269.9, to: 338.709 + 1.2, ease: [0.3, 0.8], who: 'both' },
+  // In the car: where she leans in to him in the jam's silences, and again when they have stopped at the club.
+  { from: 399.2, to: 404.6, ease: [0.6, 0.6], who: 'both' },
+  { from: 418.5, to: 421.4, ease: [0.6, 0.5], who: 'both' },
+  // Waking: her eyes stay on the place beside her, and on David as he sits down in it.
+  { from: 451.7, to: 456.6, ease: [0.5, 0.6], who: 'mia', at: 0.05 },
+  { from: 461.0, to: 464.2, ease: [0.4, 0.5], who: 'both' },
+  { from: 471.2, to: 472.8, ease: [0.5, 0.7], who: 'seb', at: Math.PI + 0.12 },
+]
+/** The look in force at `t`, and how far it has turned to it. */
+function lookAt(t: number): { look: Look; w: number } | null {
+  let best: { look: Look; w: number } | null = null
+  for (const look of LOOKS) {
+    const [i, o] = look.ease
+    const w = t < look.from - i || t > look.to + o ? 0 : t < look.from ? 1 - ((look.from - t) / i) ** 2 : t <= look.to ? 1 : 1 - ((t - look.to) / o) ** 2
+    if (w > 0 && (!best || w > best.w)) best = { look, w }
+  }
+  return best
+}
+/** From `a` toward `b` by `w`, the short way round. */
+function turn(a: number, b: number, w: number): number {
+  const d = Math.atan2(Math.sin(b - a), Math.cos(b - a))
+  return a + d * w
+}
+
+/** David's outline: the candle's warm light on him. */
+const DAVID_RIM = '#E9B868'
 
 const IDS: Record<Who, number> = { mia: MIA_ID, david: DAVID_ID, son: SON_ID }
 const COLORS: Record<Who, string> = { mia: MIA, david: DAVID, son: SON }
@@ -141,7 +200,8 @@ export class SebsShow extends Show {
       begin: 0,
     }
     const company = (['mia', 'david', 'son'] as Who[]).map((who) => this.companion(time, who)).filter((b): b is ShowBall => !!b)
-    if (company.length) {
+    const look = lookAt(time)
+    if (company.length || look) {
       const hero: ShowBall = {
         id: ball.id,
         x: here.x,
@@ -152,6 +212,23 @@ export class SebsShow extends Show {
         stretch: point.stretch,
         angle: point.angle,
       }
+      // Where they look, each one's mark is turned from its rolling to look.
+      const mia = company.find((b) => b.id === MIA_ID)
+      if (look) {
+        const col = universe.pieces[0]?.col ?? 0
+        const { look: l, w } = look
+        if (l.at !== undefined) {
+          if (l.who === 'mia' && mia) mia.spin = turn((mia.x - col) / R, l.at, w)
+          else if (l.who !== 'mia') hero.spin = turn((hero.x - col) / R, l.at, w)
+        } else if (mia) {
+          const toMia = Math.atan2(mia.y - hero.y, mia.x - hero.x)
+          if (l.who !== 'mia') hero.spin = turn((hero.x - col) / R, toMia, w)
+          if (l.who !== 'seb') mia.spin = turn((mia.x - col) / R, toMia + Math.PI, w)
+        }
+      }
+      // David, wherever he sits beside her, looks at her: her husband, attentive, while her eyes go to the stage.
+      const david = company.find((b) => b.id === DAVID_ID)
+      if (david && mia && Math.hypot(david.x - mia.x, david.y - mia.y) < 1.2) david.spin = Math.atan2(mia.y - david.y, mia.x - david.x)
       here.balls = [hero, ...company]
     }
     return here
@@ -178,6 +255,9 @@ export class SebsShow extends Show {
     const b = span?.at(time)
     if (!b) return null
     const scale = who === 'son' ? (b.scale ?? 1) * SON_SCALE : b.scale
-    return { ...b, id: IDS[who], color: b.color ?? COLORS[who], scale }
+    // David, in the room as it is, lit by their table's candle: his outline warm, so he is seen as someone sitting with
+    // her, not a grey shape in the grey room.
+    const rim = who === 'david' ? DAVID_RIM : b.rim
+    return { ...b, id: IDS[who], color: b.color ?? COLORS[who], scale, ...(rim ? { rim } : {}) }
   }
 }

@@ -1,8 +1,8 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, mixHex, type Pt } from '../../../../../parts'
-import { alpha, beam, box, carried, frame, glow, knock, lastOf, part, rgba, ring, route, type Companion, type Ctx, type PartShot, type Way } from '../kit'
-import { DREAM_PERIOD, dream, notes, snap } from '../music'
+import { alpha, beam, box, carried, frame, glow, hash, knock, lastOf, part, rgba, ring, route, type Companion, type Ctx, type PartShot, type Way } from '../kit'
+import { DREAM_PERIOD, dream, level, notes, snap } from '../music'
 import { G, hop } from '../physics'
 import { THEATRE_INK, THEATRE_MAT as M } from '../worlds'
 
@@ -285,8 +285,14 @@ function miaAt(t: number): Companion {
   // A breath as the lights come up on her; the bows.
   const b = Math.max(bow(t - BOW1, 0.34), bow(t - BOW2, 0.22), bow(t - BOW3, 0.3))
   const lift = 0.025 * Math.sin(Math.PI * clamp01((t - THUD) / 0.9))
+  // As the house rises for her, row by row, a little hop of joy on each.
+  let joy = 0
+  for (const r of ROWS) {
+    const u = (t - r) / 0.26
+    if (u > 0 && u < 1) joy = Math.max(joy, 0.12 * Math.sin(Math.PI * u))
+  }
   const stretch = 1 - 0.18 * b
-  return { x, y: y - lift + R * (1 - stretch), stretch, angle: Math.PI / 2 }
+  return { x, y: y - lift - joy + R * (1 - stretch), stretch, angle: Math.PI / 2 }
 }
 
 /* ------------------------------------------------------------------ light */
@@ -389,6 +395,15 @@ export const theatre = part<TheatreState>(
     const sat: Way = { at: at(SPRING), p: [SEAT_X, SEATED_Y] }
     // On his feet on the downbeat.
     const up = hop(sat, [SEAT_X, STAND_Y], at(SPRING) + 0.3)
+    // Standing, cheering her: a small bounce landing on the house's claps, until he goes up to her.
+    const cheer: Way[] = []
+    let lastC = SPRING + 0.3
+    for (const c of CLAPS) {
+      if (c < SPRING + 0.75 || c > LEAP - 0.6 || c - lastC < 0.42) continue
+      const rest: Way = { at: at(c) - 0.2, p: [SEAT_X, STAND_Y] }
+      cheer.push(rest, hop(rest, [SEAT_X, STAND_Y], at(c), G * 1.6))
+      lastC = c
+    }
     const stand: Way = { at: at(LEAP), p: [SEAT_X, STAND_Y] }
     // Up onto the stage beside her.
     const land = hop(stand, [LAND_X, 0], at(LAND))
@@ -396,7 +411,7 @@ export const theatre = part<TheatreState>(
     const nod0: Way = { at: at(BOW3) - 0.08, p: [LAND_X, 0] }
     const nod1: Way = { ...hop(nod0, [LAND_X, 0], at(BOW3) + 0.14, G * 0.5) }
     const end: Way = { at: T, p: [LAND_X, 0] }
-    segs.push(...route([o0, o1, lip, seat, sat, up, stand, land, nod0, nod1, end]))
+    segs.push(...route([o0, o1, lip, seat, sat, up, ...cheer, stand, land, nod0, nod1, end]))
 
     const seats: TheatreState['seats'] = []
     for (let r = 0; r < ROW_Y.length; r++) {
@@ -429,21 +444,22 @@ export const theatre = part<TheatreState>(
     { t: THUD, cells: 7.4, hold: [15.5, -1.4] },
     // He hops off the arbor, round the arch, and into his seat.
     { t: SEAT + 0.2, cells: 5.3, hold: [15.5, -0.3] },
-    // Her show: in on her in the spot, the house cut to the front row's backs, and his, along the foot of the frame.
-    { t: SHOW[0].t1, cells: 4.2, hold: [16.3, -0.75] },
-    { t: SHOW[1].t1, cells: 4.0, hold: [16.05, -0.8] },
-    { t: SHOW[2].t1, cells: 3.85, hold: [16.15, -0.8] },
+    // Her show: in on her in the spot, the house cut to the front row's backs, and him whole among them along the foot
+    // of the frame; her window whole over her.
+    { t: SHOW[0].t1, cells: 5.0, hold: [16.3, -0.78] },
+    { t: SHOW[1].t1, cells: 4.85, hold: [16.05, -0.8] },
+    { t: SHOW[2].t1, cells: 4.75, hold: [16.15, -0.8] },
     // The lead-in bar: the house holds its breath; back a little, to him.
-    { t: 114.9, cells: 4.4, hold: [15.8, -0.45] },
-    { t: SPRING, cells: 5.2, hold: [15.9, 0.0] },
+    { t: 114.9, cells: 4.9, hold: [15.8, -0.62] },
+    { t: SPRING, cells: 5.6, hold: [15.9, -0.35] },
     { t: ROWS[3], cells: 7.0, hold: [16.1, -0.3] },
-    { t: BOW1, cells: 5.8, hold: [16.1, -0.25] },
-    // The curtain calls: close on the two of them at the stage's edge.
-    { t: BOW2 + 0.3, cells: 4.7, hold: [15.95, -0.35] },
-    { t: LAND, cells: 4.5, hold: [15.8, -0.3] },
-    { t: CURTAIN_IN[1], cells: 4.5, hold: [15.8, -0.55] },
-    { t: BOW3, cells: 4.3, hold: [15.8, -0.45] },
-    { t: WHITE, cells: 4.5, hold: [15.8, -0.5] },
+    { t: BOW1, cells: 6.0, hold: [16.1, -0.3] },
+    // The curtain calls: close on the two of them at the stage's edge, her window whole over them.
+    { t: BOW2 + 0.3, cells: 5.0, hold: [15.95, -0.75] },
+    { t: LAND, cells: 4.9, hold: [15.8, -0.75] },
+    { t: CURTAIN_IN[1], cells: 4.8, hold: [15.8, -0.8] },
+    { t: BOW3, cells: 4.7, hold: [15.8, -0.85] },
+    { t: WHITE, cells: 4.8, hold: [15.8, -0.8] },
   ],
 )
 
@@ -549,10 +565,15 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
   // Behind the arch: the stage's back wall, dark velvet, and her window flown in against it.
   p.fill(mixHex(bg, M.velvetDeep, 0.55))
   rrect(p, k, ARCH0, ARCH_TOP, ARCH1, FLOOR)
-  if (stage > 0.01) {
-    glow(p, k, MID, -1.9, 3.6, M.bulb, 0.22 * Math.min(1, stage), 1.25, 0.85)
+  // While she plays, her window's light breathes with the music: up as a phrase swells, down in its rests, so the set
+  // plays with her. Steady again for the ovation.
+  const playing = Math.min(1, (t - THUD) / 1.2) * (1 - Math.min(1, Math.max(0, (t - SPRING + 0.8) / 0.8)))
+  const breath = t > THUD && t < SPRING ? 1 + 0.45 * (level(t) - 0.55) * Math.max(0, playing) : 1
+  const lit = stage * breath
+  if (lit > 0.01) {
+    glow(p, k, MID, -1.9, 3.6, M.bulb, 0.22 * Math.min(1.3, lit), 1.25, 0.85)
   }
-  drawWindow(p, k, ink, weight, stage)
+  drawWindow(p, k, ink, weight, lit, t)
 
   // The spot's pool on the stage floor (under the curtain as it rises), and on the curtain once it is in behind them.
   const spot = spotAt(t)
@@ -849,7 +870,41 @@ function drawDoor(p: p5, k: number, ink: string, weight: number, t: number): voi
 }
 
 /** Her window, flown in against the back wall: the set of her show. Dark until the stage lights come up on it. */
-function drawWindow(p: p5, k: number, ink: string, weight: number, stage: number): void {
+/**
+ * What her window looks out on: the day of her show, told while she plays it. Before she begins, the warm light of
+ * the stage. Then dawn on her roll, a blue sky with its clouds on her leap, dusk as she hops home, and night, a moon
+ * and stars, while the house holds its breath; when the house rises for her it goes to the stage's warm light again,
+ * brighter. Each change is a breath of crossfade, on her moves.
+ */
+interface View {
+  top: string
+  low: string
+  sun: number
+  clouds: number
+  night: number
+  /** How fully the panes show a sky (the stage's warm light is only half up in them). */
+  sky: number
+}
+const VIEWS: [number, View][] = [
+  [0, { top: M.bulb, low: M.spot, sun: 0, clouds: 0, night: 0, sky: 0 }],
+  [SHOW[0].t0, { top: '#E7A2B6', low: '#FFD69C', sun: 1, clouds: 0, night: 0, sky: 1 }],
+  [SHOW[1].t0, { top: '#78AEE6', low: '#D5EAF6', sun: 0, clouds: 1, night: 0, sky: 1 }],
+  [SHOW[2].t0, { top: '#5B3D88', low: '#F0885A', sun: 0.6, clouds: 0, night: 0, sky: 1 }],
+  [SHOW[2].t1 + 0.45, { top: '#121A44', low: '#2C3B78', sun: 0, clouds: 0, night: 1, sky: 1 }],
+  [SPRING, { top: M.bulb, low: M.spot, sun: 0, clouds: 0, night: 0, sky: 0 }],
+]
+function viewAt(t: number): View {
+  let i = 0
+  while (i + 1 < VIEWS.length && t >= VIEWS[i + 1][0]) i++
+  const [t0, a] = VIEWS[i]
+  const prev = VIEWS[Math.max(0, i - 1)][1]
+  const f = i === 0 ? 1 : Math.min(1, Math.max(0, (t - t0) / 0.6))
+  const u = f * f * (3 - 2 * f)
+  const mix = (x: number, y: number) => x + (y - x) * u
+  return { top: mixHex(prev.top, a.top, u), low: mixHex(prev.low, a.low, u), sun: mix(prev.sun, a.sun), clouds: mix(prev.clouds, a.clouds), night: mix(prev.night, a.night), sky: mix(prev.sky, a.sky) }
+}
+
+function drawWindow(p: p5, k: number, ink: string, weight: number, stage: number, t: number): void {
   const bg = THEATRE_INK.bg
   const x0 = MID - 0.85
   const x1 = MID + 0.85
@@ -865,11 +920,60 @@ function drawWindow(p: p5, k: number, ink: string, weight: number, stage: number
   rrect(p, k, x0, y0, x1, y1)
   p.noStroke()
   const ctx = p.drawingContext as CanvasRenderingContext2D
+  const v = viewAt(t)
+  const dark = mixHex(bg, M.velvetDeep, 0.6)
   const g = ctx.createLinearGradient(0, (y0 + 0.12) * k, 0, (y1 - 0.12) * k)
-  g.addColorStop(0, mixHex(mixHex(bg, M.velvetDeep, 0.6), M.bulb, lit * 0.55))
-  g.addColorStop(1, mixHex(mixHex(bg, M.velvetDeep, 0.6), M.spot, lit * 0.9))
+  g.addColorStop(0, mixHex(dark, v.top, lit * (0.55 + 0.4 * v.sky)))
+  g.addColorStop(1, mixHex(dark, v.low, lit * 0.9))
   ctx.fillStyle = g
-  ctx.fillRect((x0 + 0.12) * k, (y0 + 0.12) * k, (x1 - x0 - 0.24) * k, (y1 - y0 - 0.24) * k)
+  const px0 = x0 + 0.12
+  const py0 = y0 + 0.12
+  const pw = x1 - x0 - 0.24
+  const ph = y1 - y0 - 0.24
+  ctx.fillRect(px0 * k, py0 * k, pw * k, ph * k)
+  // The view's sun, clouds, moon and stars, inside the panes.
+  if (lit > 0.05 && (v.sun > 0.01 || v.clouds > 0.01 || v.night > 0.01)) {
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(px0 * k, py0 * k, pw * k, ph * k)
+    ctx.clip()
+    if (v.sun > 0.01) {
+      glow(p, k, MID + 0.3, py0 + ph * 0.78, 0.6, '#FFE6A8', 0.6 * v.sun * lit)
+      ctx.fillStyle = rgba('#FFF0C8', 0.95 * v.sun * lit)
+      ctx.beginPath()
+      ctx.arc((MID + 0.3) * k, (py0 + ph * 0.8) * k, 0.2 * k, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    if (v.clouds > 0.01) {
+      ctx.fillStyle = rgba('#FFFFFF', 0.85 * v.clouds * lit)
+      for (const [cx, cy, rx] of [[MID - 0.35, py0 + ph * 0.3, 0.32], [MID + 0.4, py0 + ph * 0.55, 0.26]] as const) {
+        ctx.beginPath()
+        ctx.ellipse(cx * k, cy * k, rx * k, rx * 0.36 * k, 0, 0, Math.PI * 2)
+        ctx.ellipse((cx + rx * 0.45) * k, (cy - rx * 0.18) * k, rx * 0.55 * k, rx * 0.35 * k, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    if (v.night > 0.01) {
+      ctx.fillStyle = rgba('#F4EEDC', 0.95 * v.night * lit)
+      ctx.beginPath()
+      ctx.arc((MID - 0.35) * k, (py0 + ph * 0.28) * k, 0.16 * k, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = mixHex(v.top, v.low, 0.2)
+      ctx.beginPath()
+      ctx.arc((MID - 0.29) * k, (py0 + ph * 0.25) * k, 0.14 * k, 0, Math.PI * 2)
+      ctx.fill()
+      for (let i = 0; i < 14; i++) {
+        const sx = px0 + pw * hash(i, 61)
+        const sy = py0 + ph * 0.75 * hash(i, 62)
+        const tw = 0.6 + 0.4 * Math.sin(t * 3 + i * 1.7)
+        ctx.fillStyle = rgba('#FFFFFF', 0.85 * v.night * lit * tw)
+        ctx.beginPath()
+        ctx.arc(sx * k, sy * k, (0.018 + 0.014 * hash(i, 63)) * k, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    ctx.restore()
+  }
   outline(p, mixHex(bg, M.boards, 0.6 + 0.4 * lit), weight * 1.1)
   p.line(MID * k, (y0 + 0.12) * k, MID * k, (y1 - 0.12) * k)
   p.line((x0 + 0.12) * k, ((y0 + y1) / 2) * k, (x1 - 0.12) * k, ((y0 + y1) / 2) * k)
@@ -1156,7 +1260,22 @@ function drawLamp(p: p5, k: number, ink: string, weight: number, t: number): voi
 }
 
 /** The rows: seat backs with their backs to us, low while the house sits, up on their hits with their paddles clapping. */
+/**
+ * The other road, at her show: in the film her play went on to a near-empty house, and he wasn't there. In the lead-in
+ * bar, while the house holds its breath, that night shows through for a breath: the seats empty, flickering like old
+ * film, and the house goes grey behind him. On the downbeat he springs up, and the full house is back as it rises.
+ */
+export const EMPTY: [number, number, number] = [113.45, 114.0, SPRING - 0.06]
+export function emptyAt(t: number): number {
+  if (t < EMPTY[0] || t > SPRING + 0.02) return 0
+  const up = Math.min(1, (t - EMPTY[0]) / (EMPTY[1] - EMPTY[0]))
+  const back = t < EMPTY[2] ? 1 : Math.max(0, 1 - (t - EMPTY[2]) / 0.08)
+  const flicker = 0.82 + 0.18 * hash(Math.floor(t * 14), 5, 9)
+  return up * up * back * flicker
+}
+
 function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stage: number): void {
+  const empty = emptyAt(t)
   const { k, ink, weight } = c
   const bg = THEATRE_INK.bg
   const warm = Math.min(1, house)
@@ -1180,6 +1299,21 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
       const h = LOW + (HIGH - LOW) * up
       const x0 = st.x - SEAT_W / 2
       const top = base - h
+      // Someone in every seat but his: the back of a head over the seat-back, the stage's light along its crown. A full
+      // house, the one the film's version never had. They stand with their seats.
+      if (!st.his && empty < 0.97) {
+        const hr = 0.115
+        p.drawingContext.globalAlpha = 1 - empty
+        const hy = top - 0.05 - 0.06 * up
+        p.noStroke()
+        p.fill('#1A0A0E')
+        p.circle(st.x * k, hy * k, 2 * hr * k)
+        p.noFill()
+        p.stroke(alpha(p, M.bulb, 0.45 + 0.4 * Math.min(1, stage) + 0.15 * warm))
+        p.strokeWeight(weight * 0.9)
+        p.arc(st.x * k, hy * k, 2 * hr * k, 2 * hr * k, Math.PI * 1.15, Math.PI * 1.85)
+        p.drawingContext.globalAlpha = 1
+      }
       p.stroke(alpha(p, ink, 0.28 + 0.2 * warm))
       p.strokeWeight(weight * 0.5)
       p.fill(fill)
@@ -1213,10 +1347,70 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
       }
     }
   }
+  // And the house goes grey behind him while it is empty: the real night's colour. Not him: in grey he would read as
+  // David, and he is the one who is there.
+  if (empty > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.globalCompositeOperation = 'saturation'
+    ctx.fillStyle = rgba('#808080', 0.85 * empty)
+    const top = ROW_Y[0] + 0.08
+    ctx.fillRect((ARCH0 - 1) * k, top * k, (RIGHT - ARCH0 + 1) * k, (ROW_Y[ROW_Y.length - 1] - top + 0.5) * k)
+    ctx.restore()
+  }
+}
+
+/**
+ * The ovation: after the first rose, more come, thrown from all over the house on its claps, each up through the light
+ * and down onto the stage, until by the curtain the boards round her are strewn with them. Each lands clear of the two
+ * of them, and lies where it fell.
+ */
+const ROSE_TRIP = 0.85
+/* (A rose's spin is in half turns, a whole number of them and a hair, so it comes down lying flat on the boards.) */
+const THROWN = (() => {
+  const out: { t: number; from: Pt; to: Pt; spin: number }[] = []
+  const slots: number[] = []
+  for (let x = ARCH0 + 0.75; x < ARCH1 - 0.7; x += 0.19) slots.push(x)
+  const used: number[] = [16.52]
+  let n = 0
+  for (const c of CLAPS) {
+    if (c < BOW1 + 0.35 || c > CURTAIN_IN[0] - 0.4 || n >= 22) continue
+    const land = c + ROSE_TRIP
+    // Clear of her where she is when it lands, and of him once he is up on the stage beside her.
+    const her = miaAt(land).x
+    const free = slots.filter((x) => Math.abs(x - her) > 0.42 && (land < LEAP || Math.abs(x - LAND_X) > 0.45) && (land < TOUCH || Math.abs(x - MEET_X) > 0.45) && used.every((u) => Math.abs(u - x) > 0.17))
+    if (!free.length) continue
+    const x = free[Math.floor(hash(n, 81) * free.length)]
+    used.push(x)
+    const r = Math.floor(hash(n, 82) * 4)
+    let i = Math.floor(hash(n, 83) * PER_ROW)
+    if (r === 0 && i === HIS) i = (i + 3) % PER_ROW
+    out.push({ t: c, from: [seatX(r, i), ROW_Y[r] - HIGH - 0.03], to: [x, FLOOR - 0.045], spin: (hash(n, 84) > 0.5 ? 1 : -1) * (2 + Math.floor(3 * hash(n, 85))) + 0.04 * (hash(n, 86) - 0.5) })
+    n++
+  }
+  return out
+})()
+function thrownAt(r: (typeof THROWN)[number], t: number): { x: number; y: number; a: number } | null {
+  const s = t - r.t
+  if (s < 0) return null
+  if (s < ROSE_TRIP) {
+    const u = s / ROSE_TRIP
+    const arc = (ROSE_G * 1.4 * ROSE_TRIP * ROSE_TRIP) / 8 + 0.6
+    return { x: lerp(r.from[0], r.to[0], u), y: lerp(r.from[1], r.to[1], u) - arc * 4 * u * (1 - u), a: r.spin * u * Math.PI }
+  }
+  const k = s - ROSE_TRIP
+  return { x: r.to[0], y: r.to[1] - 0.04 * Math.max(0, Math.sin(Math.min(Math.PI, k * 9))) * Math.exp(-k / 0.1), a: r.spin * Math.PI }
 }
 
 function drawRose(p: p5, k: number, ink: string, weight: number, t: number): void {
-  const r = roseAt(t)
+  for (const th of THROWN) {
+    const q = thrownAt(th, t)
+    if (q) roseShape(p, k, ink, weight, q)
+  }
+  roseShape(p, k, ink, weight, roseAt(t))
+}
+
+function roseShape(p: p5, k: number, ink: string, weight: number, r: { x: number; y: number; a: number }): void {
   p.push()
   p.translate(r.x * k, r.y * k)
   p.rotate(r.a)

@@ -17,8 +17,8 @@ import { BAND, BAND_LAMPS, DOOR, DOOR_SHUT, lightsAt, MIA_SEAT, ROOM, SEAT, SIDE
  * glides from her side up to the piano, landing on the keys on the last chord, 453.73. While the camera is on him
  * David comes back from the bar and sits where he sat.
  *
- * The coda, in silence: stillness. David gets down and goes out ahead of her; she hesitates, gets down and follows,
- * stops short of the door and turns; he looks up on the key; they nod, together. The End comes in and she goes out
+ * The coda, in silence: stillness. David gets down and goes out ahead of her; she gets down and follows him across
+ * the room, stops in the doorway and turns back; he looks up on the key; they nod, together. The End comes in and she goes out
  * after David, and the door swings shut on its closer on The End's onset, 467.866. He is alone. The band's lamps
  * come up behind him on 471.5; he nods the count-in; on 478.05 the stage blazes and he plays with the band.
  *
@@ -47,6 +47,8 @@ const LOOK: [number, number] = [462.1, 462.6]
 const NOD_MIA = 462.85
 const NOD = 463.55
 const GO = 463.95
+/** Where she stops and turns back: in the club's doorway, just inside its threshold. */
+const DOORWAY = -12.1
 /** The cuts between their close shots. */
 const CUTS = { her: 461.02, him: 462.05, smile: 462.75, nod: 463.45, out: 464.27 }
 /** The count-in: four nods, a beat apart, onto the band. */
@@ -54,18 +56,18 @@ const COUNT = [0, 1, 2, 3].map((i) => BAND - 0.4515 * (4 - i))
 /** Where the two of them go out of shot, and are let go. */
 const GONE = 467.55
 
-/** Her nod: the ball dips, squashed a little on the floor, and comes back up. */
+/** Her nod: the ball dips, squashed on the floor, and comes back up; deep enough to read in her close shot. */
 function nodded([x, y]: Pt, t: number) {
-  const u = (t - NOD_MIA) / 0.55
+  const u = (t - NOD_MIA) / 0.58
   const n = u <= 0 || u >= 1 ? 0 : Math.sin(Math.PI * Math.pow(u, 0.7))
-  return n ? { x, y: y + R * 0.13 * n, stretch: 1 - 0.13 * n, angle: Math.PI / 2 } : { x, y }
+  return n ? { x, y: y + R * 0.3 * n, stretch: 1 - 0.3 * n, angle: Math.PI / 2 } : { x, y }
 }
 
 /** A close shot held on `at` from `a` to `b`: a cut in (the key a frame after the last one), a slow push, and out at `b`. */
-function closeOn(a: number, b: number, at: Pt): { t: number; cells: number; hold: Pt }[] {
+function closeOn(a: number, b: number, at: Pt, cells = 2.5): { t: number; cells: number; hold: Pt }[] {
   return [
-    { t: a, cells: 2.5, hold: at },
-    { t: b - 0.02, cells: 2.3, hold: at },
+    { t: a, cells, hold: at },
+    { t: b - 0.02, cells: cells * 0.92, hold: at },
   ]
 }
 
@@ -149,8 +151,8 @@ function plan(begin: number) {
   // He looks up at her, a small turn on the key; the nod.
   const looked = plus(held, -0.05)
   seb.push(hold(seb, LOOK[0]), ease(LOOK[1], looked))
-  // A nod, for a ball on a key: a small lift and back, settling softly.
-  seb.push(hold(seb, NOD), { at: NOD + 0.22, p: plus(looked, 0, -0.05), ease: 'out' }, ease(NOD + 0.62, looked))
+  // A nod, for a ball on a key: a lift and back, settling softly; enough to read in his close shot.
+  seb.push(hold(seb, NOD), { at: NOD + 0.22, p: plus(looked, 0, -0.13), ease: 'out' }, ease(NOD + 0.62, looked))
   // The count-in: four nods, onto the band.
   for (const c of COUNT) seb.push(hold(seb, c - 0.1), { at: c, p: plus(looked, 0, -0.04), ease: 'out' }, ease(c + 0.22, looked))
   seb.push(hold(seb, BAND - 0.2), { at: BAND - 0.15, p: plus(restOn(LAST_KEY), -0.05), ease: 'in' })
@@ -179,27 +181,32 @@ function plan(begin: number) {
   miaWays.push(hold(miaWays, KISS - 0.55), ease(KISS, [MIA_SEAT[0] + 0.074, SEAT_Y - 0.045]))
   // He goes, and she settles back on her stool.
   miaWays.push(hold(miaWays, LEAVE + 0.3), ease(452.8, MIA_SEAT))
-  // A hesitation while David goes; then down, and after him as far as the tables, where she stops and turns.
-  const stop = -4.989
-  miaWays.push(hold(miaWays, 458.4), ease(458.85, [-2.78, FLOOR_Y], 0.05))
-  miaWays.push(...walk(458.85, 461.2, -2.78, stop, 0, 0))
+  // A breath while David gets up and goes by below her stool; then down, behind him, and after him across the room to
+  // the door, where she stops in the doorway and turns back, as in the film. (Down any sooner, she is in his way.)
+  const stop = DOORWAY
+  miaWays.push(hold(miaWays, 458.3), ease(458.7, [-2.78, FLOOR_Y], 0.05))
+  miaWays.push(...walk(458.7, 461.2, -2.78, stop, 0, 0))
   miaWays.push(hold(miaWays, 461.45), ease(TURN, [stop + 0.05, FLOOR_Y]))
   // (Her nod is a dip: see `nodded`.) The End: to the door, out through it, and away up the street.
-  miaWays.push(hold(miaWays, GO))
-  miaWays.push(...walk(GO, 467.4, stop + 0.05, -14.9, 0, 1.4))
+  // She lingers a moment as David steps off ahead of her, then follows him out, walking on up the street.
+  miaWays.push(hold(miaWays, GO + 0.45))
+  miaWays.push(...walk(GO + 0.45, 467.4, stop + 0.05, -14.9, 0, -1.4))
   miaWays.push({ at: GONE, p: [-14.9 - 1.4 * (GONE - 467.4), FLOOR_Y] })
 
   /* -------------------------------------------- David */
   const barStool: Pt = [-10.25, 2.5 - 0.13]
   const david: Way[] = [{ at: 451.8, p: barStool }]
   david.push(ease(452.3, [-9.95, FLOOR_Y], 0.05))
-  david.push(...walk(452.3, 454.9, -9.95, -1.8, 0, 0))
+  // Across the room while the camera is on him at the keys, so he is past her stool and waiting below the empty seat
+  // when the picture cuts to her table (454.15); then up into it, into the dream's him going grey there.
+  david.push(...walk(452.3, 454.05, -9.95, -1.8, 0, 0))
   david.push(hold(david, 455.0), ease(455.45, SIDE_SEAT, 0.08))
-  david.push(hold(david, 456.45), ease(456.9, [-1.8, FLOOR_Y], 0.04))
-  david.push(...walk(456.9, 460.9, -1.8, -13.05, 0, 0))
-  david.push(hold(david, GO + 0.9))
-  david.push(...walk(GO + 0.9, 467.0, -13.05, -15.4, 0, 1.4))
-  david.push({ at: GONE, p: [-15.4 - 1.4 * (GONE - 467.0), FLOOR_Y] })
+  // Down on the far side of his stool, and off already walking, so he goes by under hers in a moment, not a pause.
+  david.push(hold(david, 456.45), ease(456.9, [-1.6, FLOOR_Y], 0.04))
+  david.push(...walk(456.9, 460.9, -1.6, -13.05, -2.2, 0))
+  david.push(hold(david, GO - 0.2))
+  david.push(...walk(GO - 0.2, 466.6, -13.05, -16.0, 0, -1.4))
+  david.push({ at: GONE, p: [-16.0 - 1.4 * (GONE - 466.6), FLOOR_Y] })
 
   const miaAt = track(miaWays)
   const davidAt = track(david)
@@ -257,28 +264,39 @@ export const finale = part<FinaleState>(
     { t: 438.0, cells: 3.4, hold: F([2.8, -0.4]) },
     { t: 441.6, cells: 3.1, hold: F([3.2, -0.35]) },
     { t: 443.2, cells: 5.8, hold: F([-0.4, 1.25]) },
-    { t: 444.9, cells: 1.9, hold: F([TABLE.x, 2.5]) },
-    { t: 451.3, cells: 1.8, hold: F([TABLE.x, 2.5]) },
+    { t: 444.9, cells: 1.65, hold: F([TABLE.x, 2.58]) },
+    { t: 451.3, cells: 1.55, hold: F([TABLE.x, 2.58]) },
     // With him up to the keys, onto the last chord; the stillness.
-    { t: 452.6, cells: 4.2, hold: F([1.2, 0.9]) },
+    // Wide enough to keep her table in the frame as he goes.
+    { t: 452.6, cells: 4.6, hold: F([0.9, 1.05]) },
     { t: 453.9, cells: 3.2, hold: F([4.3, -0.3]) },
-    { t: 456.4, cells: 3.0, hold: F([4.4, -0.3]) },
-    // Out to the two of them: David goes ahead to the door; she stops among the tables. Then close shots, cut against
-    // each other: her turn, his look, her smile, his nod. Then out to her going.
-    { t: 459.4, cells: 7.2, hold: F([-0.15, 1.2]) },
-    { t: CUTS.her - 0.02, cells: 7.2, hold: F([-0.15, 1.2]) },
-    ...closeOn(CUTS.her, CUTS.him, F([-4.939, FLOOR_Y - 0.32])),
-    ...closeOn(CUTS.him, CUTS.smile, F([keyRest(LAST_KEY)[0] - 0.05, -0.34])),
-    ...closeOn(CUTS.smile, CUTS.nod, F([-4.939, FLOOR_Y - 0.32])),
-    ...closeOn(CUTS.nod, CUTS.out, F([keyRest(LAST_KEY)[0] - 0.05, -0.34])),
-    { t: CUTS.out, cells: 7.4, hold: F([-6.6, 1.2]) },
+    { t: 454.13, cells: 3.18, hold: F([4.32, -0.3]) },
+    // Cut, on the chord's ring, to her table: the dream's kiss's own two-shot, a little wider. We watch the dream's him
+    // in the seat beside her drain to grey while she looks at it, and David come in and sit down into it. The dream is
+    // over. Then out with her as she follows David to the door.
+    { t: 454.15, cells: 2.05, hold: F([TABLE.x - 0.12, 2.5]) },
+    { t: 456.55, cells: 1.8, hold: F([TABLE.x, 2.55]) },
+    // He goes ahead to the door and out onto the pavement; she follows him across the room and stops in the doorway.
+    // Then close shots, cut against each other: her turn back from the doorway, his look, her smile, his nod. Then out
+    // to her going.
+    { t: 459.4, cells: 6.2, hold: F([-6.2, 1.85]) },
+    { t: CUTS.her - 0.02, cells: 4.8, hold: F([-11.0, 2.1]) },
+    // Hers as close as his: she fills her shot as he and the keys fill his.
+    ...closeOn(CUTS.her, CUTS.him, F([DOORWAY + 0.05, FLOOR_Y - 0.12]), 1.55),
+    ...closeOn(CUTS.him, CUTS.smile, F([keyRest(LAST_KEY)[0] - 0.05, -0.2]), 1.75),
+    ...closeOn(CUTS.smile, CUTS.nod, F([DOORWAY + 0.05, FLOOR_Y - 0.12]), 1.55),
+    ...closeOn(CUTS.nod, CUTS.out, F([keyRest(LAST_KEY)[0] - 0.05, -0.2]), 1.75),
+    // Out to her going: the doorway, her on its threshold and David waiting on the pavement beyond.
+    { t: CUTS.out, cells: 4.2, hold: F([-12.4, 2.05]) },
     // After her to the door, out; the door swings shut. Back across the empty room to him, the band's lamps behind him.
-    { t: 466.9, cells: 4.6, hold: F([-10.6, 1.45]) },
-    { t: 468.3, cells: 4.6, hold: F([-10.8, 1.45]) },
+    { t: 466.9, cells: 4.6, hold: F([-11.3, 1.45]) },
+    { t: 468.3, cells: 4.6, hold: F([-11.5, 1.45]) },
     { t: 469.8, cells: 7, hold: F([-2.5, 0.8]) },
-    // Him at the keys and the band's stands beside him in one frame, so the lamps come up in it and the count-in is to them.
-    { t: 471.3, cells: 5.3, hold: F([6.4, 0.65]) },
-    { t: 477.9, cells: 4.9, hold: F([6.2, 0.55]) },
+    // Him at the keys and the whole bandstand beside him, the piano left of centre and the band right of it, so the lamps come up in the frame as he looks back
+    // at the door; and closer still on him for the count-in, his nods to the band.
+    { t: 472.0, cells: 7.3, hold: F([6.0, 0.5]) },
+    { t: 475.6, cells: 7.1, hold: F([6.0, 0.45]) },
+    { t: 477.9, cells: 7.0, hold: F([6.0, 0.43]) },
     { t: 480.0, cells: 7, hold: F([3.6, -1.6]) },
   ],
 )

@@ -224,11 +224,15 @@ export function theta(t: number): number {
 /** 0 on the floor, 1 once they are afloat and the circle faces us. */
 export const air = (t: number): number => smooth(t, LIFT, APEX)
 
-/** Half the distance between them: arm's length on the floor, wider afloat, closer in the quiet, widest at the top of the swell. */
+/**
+ * Half the distance between them: arm's length on the floor; afloat, closer, in each other's arms (a ball's width
+ * between them); closer still in the quiet, nearly touching; and opening a little at the top of the swell, for the
+ * whirl to read.
+ */
 function radius(t: number): number {
-  let r = 0.28 + 0.08 * air(t)
-  r -= 0.06 * smooth(t, QUIET[0], QUIET[0] + 2.4) * (1 - smooth(t, QUIET[1], QUIET[1] + 1.6))
-  r += 0.1 * smooth(t, QUIET[1], DIP - 0.4)
+  let r = 0.28 - 0.02 * air(t)
+  r -= 0.07 * smooth(t, QUIET[0], QUIET[0] + 2.4) * (1 - smooth(t, QUIET[1], QUIET[1] + 1.6))
+  r += 0.08 * smooth(t, QUIET[1], DIP - 0.4)
   return r
 }
 

@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
 import { beam, frame, glow, hash, rgba, scenery, smooth } from '../kit'
+import { picture } from '../lens'
 import { DRIVE_MAT, SEBS_MAT } from '../worlds'
 import { PIANO } from './geometry'
 
@@ -49,6 +50,15 @@ export const ROOM = {
   roof: -6.4,
   /** The door's head, in the left wall (it opens from here to the floor). */
   doorTop: 1.72,
+}
+
+/**
+ * Whether the picture `fr` (room cells) is all inside the room, under its ceiling: then the back wall, and the street
+ * along the front below its floor, cover everything behind them, and the city need not be drawn. `street` asks the
+ * same of the wall alone, above the floor: then the street need not be drawn either.
+ */
+export function insideRoom(fr: { x0: number; y0: number; x1: number; y1: number }, street = false): boolean {
+  return fr.x0 >= ROOM.wallL1 && fr.x1 <= ROOM.wallR0 && fr.y0 >= ROOM.ceil && (!street || fr.y1 <= ROOM.floor)
 }
 
 /** Where a ball sits on a chair: its seat's top is `SEAT` (the ball's centre is a radius above it). */
@@ -311,50 +321,53 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   const R = ROOM
   const cut = M.deep
 
-  // The street along the front, and the ground under it, across the frame.
-  p.noStroke()
-  p.fill(mixHex(bg, M.lacquer, 0.5))
-  rect(fr.x0 - 1, R.floor, fr.x1 + 1, Math.max(fr.y1 + 1, R.floor + 2))
-  // The pavement: thick enough to read from far off, its kerb catching the streetlight.
-  p.fill(M.wall)
-  rect(fr.x0 - 1, R.floor, fr.x1 + 1, R.floor + 0.22)
-  p.stroke(rgba(M.brass, 0.45))
-  p.strokeWeight(weight * 0.6)
-  p.line(X(fr.x0 - 1), X(R.floor + 0.22), X(fr.x1 + 1), X(R.floor + 0.22))
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.8)
-  p.line(X(fr.x0 - 1), X(R.floor), X(fr.x1 + 1), X(R.floor))
-  // The road along the front: asphalt, its centre line, the near kerb, and the club's light lying on it.
-  {
-    const r0 = R.floor + 0.22
-    const r1 = R.floor + 2.1
-    const mid = (r0 + r1) / 2
+  // The street, unless the picture is all inside the room above its floor, where the back wall covers it.
+  if (!insideRoom(picture(p, k, t), true)) {
+    // The street along the front, and the ground under it, across the frame.
     p.noStroke()
-    p.fill(mixHex(bg, M.lacquer, 0.32))
-    rect(fr.x0 - 1, r0, fr.x1 + 1, r1)
-    glow(p, k, (R.wallL0 + R.wallR1) / 2, r0 + 0.15, (R.wallR1 - R.wallL0) * 0.55, M.candle, 0.06 + 0.06 * Math.max(L.house, L.blaze), 1, 0.12)
-    glow(p, k, -15.2 + 0.4, r0 + 0.2, 1.6, M.candle, 0.1, 1, 0.3)
-    p.fill(rgba(M.brass, 0.22))
-    for (let x = Math.floor((fr.x0 - 1) / 1.6) * 1.6; x < fr.x1 + 1; x += 1.6) rect(x, mid - 0.025, x + 0.8, mid + 0.025)
+    p.fill(mixHex(bg, M.lacquer, 0.5))
+    rect(fr.x0 - 1, R.floor, fr.x1 + 1, Math.max(fr.y1 + 1, R.floor + 2))
+    // The pavement: thick enough to read from far off, its kerb catching the streetlight.
     p.fill(M.wall)
-    rect(fr.x0 - 1, r1, fr.x1 + 1, r1 + 0.18)
-    p.stroke(rgba(M.brass, 0.3))
-    p.strokeWeight(weight * 0.5)
-    p.line(X(fr.x0 - 1), X(r1), X(fr.x1 + 1), X(r1))
-  }
-  // A streetlamp on the pavement, short of the door: sodium, the way the drive comes in.
-  {
-    const lx = -15.2
+    rect(fr.x0 - 1, R.floor, fr.x1 + 1, R.floor + 0.22)
+    p.stroke(rgba(M.brass, 0.45))
+    p.strokeWeight(weight * 0.6)
+    p.line(X(fr.x0 - 1), X(R.floor + 0.22), X(fr.x1 + 1), X(R.floor + 0.22))
     p.stroke(ink)
-    p.strokeWeight(weight * 0.7)
-    p.line(X(lx), X(R.floor), X(lx), X(-0.35))
-    p.line(X(lx), X(-0.35), X(lx + 0.35), X(-0.5))
-    solid(p, ink, weight * 0.5, M.lacquer)
-    poly([[lx + 0.22, -0.55], [lx + 0.58, -0.55], [lx + 0.52, -0.43], [lx + 0.28, -0.43]])
-    glow(p, k, lx + 0.4, -0.3, 2.4, M.candle, 0.16, 1, 1.35)
-    p.noStroke()
-    p.fill(M.candle)
-    rect(lx + 0.3, -0.45, lx + 0.5, -0.41, 0.01)
+    p.strokeWeight(weight * 0.8)
+    p.line(X(fr.x0 - 1), X(R.floor), X(fr.x1 + 1), X(R.floor))
+    // The road along the front: asphalt, its centre line, the near kerb, and the club's light lying on it.
+    {
+      const r0 = R.floor + 0.22
+      const r1 = R.floor + 2.1
+      const mid = (r0 + r1) / 2
+      p.noStroke()
+      p.fill(mixHex(bg, M.lacquer, 0.32))
+      rect(fr.x0 - 1, r0, fr.x1 + 1, r1)
+      glow(p, k, (R.wallL0 + R.wallR1) / 2, r0 + 0.15, (R.wallR1 - R.wallL0) * 0.55, M.candle, 0.06 + 0.06 * Math.max(L.house, L.blaze), 1, 0.12)
+      glow(p, k, -15.2 + 0.4, r0 + 0.2, 1.6, M.candle, 0.1, 1, 0.3)
+      p.fill(rgba(M.brass, 0.22))
+      for (let x = Math.floor((fr.x0 - 1) / 1.6) * 1.6; x < fr.x1 + 1; x += 1.6) rect(x, mid - 0.025, x + 0.8, mid + 0.025)
+      p.fill(M.wall)
+      rect(fr.x0 - 1, r1, fr.x1 + 1, r1 + 0.18)
+      p.stroke(rgba(M.brass, 0.3))
+      p.strokeWeight(weight * 0.5)
+      p.line(X(fr.x0 - 1), X(r1), X(fr.x1 + 1), X(r1))
+    }
+    // A streetlamp on the pavement, short of the door: sodium, the way the drive comes in.
+    {
+      const lx = -15.2
+      p.stroke(ink)
+      p.strokeWeight(weight * 0.7)
+      p.line(X(lx), X(R.floor), X(lx), X(-0.35))
+      p.line(X(lx), X(-0.35), X(lx + 0.35), X(-0.5))
+      solid(p, ink, weight * 0.5, M.lacquer)
+      poly([[lx + 0.22, -0.55], [lx + 0.58, -0.55], [lx + 0.52, -0.43], [lx + 0.28, -0.43]])
+      glow(p, k, lx + 0.4, -0.3, 2.4, M.candle, 0.16, 1, 1.35)
+      p.noStroke()
+      p.fill(M.candle)
+      rect(lx + 0.3, -0.45, lx + 0.5, -0.41, 0.01)
+    }
   }
 
   // The room's back wall, lit by the house lights; a dado along its foot with a brass rail.
@@ -366,6 +379,15 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.stroke(rgba(M.brass, 0.5))
   p.strokeWeight(weight * 0.5)
   p.line(X(R.wallL1), X(2.0), X(R.stageX0), X(2.0))
+  // The dado is wainscot: tall sunk panels under the rail, the same joinery as the stage's front.
+  p.noFill()
+  p.strokeWeight(weight * 0.4)
+  for (let x = R.wallL1 + 0.15; x + 1.0 < R.stageX0 - 0.1; x += 1.18) {
+    p.stroke(rgba(M.lacquer, 0.5))
+    rect(x, 2.14, x + 1.0, R.floor - 0.12, 0.02)
+    p.stroke(rgba(M.brass, 0.14))
+    p.line(X(x + 0.03), X(2.145), X(x + 0.97), X(2.145))
+  }
   vband(p, k, R.wallL1, R.ceil, R.wallR0, R.ceil + 1.6, [[0, rgba(M.deep, 0.75)], [1, rgba(M.deep, 0)]])
   if (L.rose > 0.005) glow(p, k, (R.wallL1 + R.wallR0) / 2, 0.6, 12, M.rose, 0.2 * L.rose, 1.4, 0.75)
 
@@ -515,6 +537,20 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.stroke(rgba(M.brass, 0.85))
   p.strokeWeight(weight * 0.55)
   p.line(X(sx0 + 0.02), X(R.stage + 0.02), X(R.wallR0), X(R.stage + 0.02))
+  // Its front is panelled, so it reads as joinery and not a slab beside her table: inset frames a shade darker, each
+  // with a fine brass bead along its top where the light catches it.
+  for (let x = sx0 + 0.12; x + 0.6 < R.wallR0 - 0.08; x += 0.74) {
+    p.noStroke()
+    p.fill(rgba(M.lacquer, 0.22))
+    rect(x, R.stage + 0.11, x + 0.6, R.floor - 0.09, 0.015)
+    p.noFill()
+    p.stroke(rgba(M.lacquer, 0.55))
+    p.strokeWeight(weight * 0.4)
+    rect(x, R.stage + 0.11, x + 0.6, R.floor - 0.09, 0.015)
+    p.stroke(rgba(M.brass, 0.32))
+    p.strokeWeight(weight * 0.35)
+    p.line(X(x + 0.02), X(R.stage + 0.115), X(x + 0.58), X(R.stage + 0.115))
+  }
   glow(p, k, 2.7, R.stage, 3.0, L.stage, 0.22 * L.stageA, 1.2, 0.14)
 
   // The band's things, idle: the bass on its side, the kit, a stool, the stands with their clip lamps.
@@ -525,6 +561,30 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     for (const [dx, face] of tb.chairs) chair(q, tb.x + dx, face)
     table(q, tb.x)
     candle(q, tb.x, t, tb.x)
+  }
+  // In the dream's last room the club is full: someone on every chair, a dark shape with the candle's light along it,
+  // turned to the stage; and two at the bar. As the dream drains they go, and the room is as it is.
+  if (s.end && t < ROSE_OUT[1]) {
+    const there = 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6)
+    const seats: Pt[] = [...TABLES.flatMap((tb) => tb.chairs.map(([dx]) => [tb.x + dx, SEAT - 0.14] as Pt)), ...BAR.stools.map((x) => [x, 2.5 - 0.14] as Pt)]
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.globalAlpha = there
+    for (const [x, y] of seats) {
+      // A person, not a ball: shoulders on the seat and a smaller head over them, so nothing here reads as one of the
+      // four; the candles' light along the head and a shoulder.
+      const hy = y - 0.2
+      p.noStroke()
+      p.fill('#1A1226')
+      p.ellipse(x * k, (y + 0.05) * k, 0.34 * k, 0.3 * k)
+      p.circle(x * k, hy * k, 0.17 * k)
+      p.noFill()
+      p.stroke(rgba(M.candle, 0.7))
+      p.strokeWeight(weight * 0.8)
+      p.arc(x * k, hy * k, 0.17 * k, 0.17 * k, Math.PI * 1.2, Math.PI * 1.95)
+      p.arc(x * k, (y + 0.05) * k, 0.34 * k, 0.3 * k, Math.PI * 1.15, Math.PI * 1.5)
+    }
+    ctx.restore()
   }
   stool(q, MIA_SEAT[0])
   stool(q, SIDE_SEAT[0])

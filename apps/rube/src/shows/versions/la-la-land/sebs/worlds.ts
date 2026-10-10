@@ -98,10 +98,20 @@ export const STUDIO_MAT = {
   /** The painted sky of the Hollywood number: violet to rose. */
   skyTop: '#4B2E86',
   skyLow: '#E0689A',
+  /** The magic hour, painted: indigo overhead, through magenta and coral, to gold on the horizon. */
+  skyHigh: '#271C58',
+  skyMid: '#B4478D',
+  skyCoral: '#EE7A5E',
+  horizon: '#F6BE6A',
+  /** The far ridge in the sunset's haze, the sign's mountain at dusk, and the near hill in its own shadow. */
+  ridge: '#B65C8C',
+  mountain: '#5E3378',
+  hillLit: '#463178',
+  hillDeep: '#211843',
   bush: '#E9C53A',
   bushShade: '#C99E22',
   palm: '#3E7B57',
-  road: '#3F57B8',
+  road: '#4C7BE6',
   star: '#F4D35E',
   lamp: '#FFE7A8',
   hill: '#8A5AA8',
@@ -116,6 +126,8 @@ export const SHADOW_MAT = {
   warm: '#F7EBCB',
   shadow: '#15131A',
   soft: '#3A3640',
+  /** Her song's light, the one other colour the shadow play has: amber, deep enough to hold on the lit screen. */
+  gold: '#D89A1E',
 }
 
 /** The globe in the dark, and Paris at night beyond it. */
@@ -171,6 +183,9 @@ export const MOVIE_MAT = {
   /** The dark room the projector stands in. */
   room: '#141018',
   beam: '#FFF2D0',
+  /** The stock's fade: a warm multiply over the picture, and the haze that lifts its blacks. */
+  sepia: '#D9B88A',
+  lift: '#5A4430',
 }
 
 /** The drive, and the walk to the club: night, headlights, a blue neon arrow. */
@@ -187,6 +202,15 @@ export const DRIVE_MAT = {
   frame: '#1C1420',
   sill: '#5B4554',
   car: ['#6F2B34', '#2F4C6E', '#8A8F99', '#3B5B45', '#C9B48A'],
+  /** The night over the basin: deep overhead, and the city's own glow low on it. */
+  night: '#070A1E',
+  dusk: '#1A1840',
+  glowLow: '#5A3346',
+  /** The towers, cool in the dark, a little lighter where the haze catches their tops; a cool window. */
+  tower: '#1F1C3A',
+  towerTop: '#3B2F52',
+  white: '#DCE6FF',
+  beacon: '#FF4A3D',
 }
 
 export const SEBS: World = world('sebs', "Seb's", 'The club, now.', SEBS_INK)

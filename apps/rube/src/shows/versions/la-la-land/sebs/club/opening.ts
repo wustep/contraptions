@@ -116,12 +116,11 @@ function plan0(begin: number) {
       to: COMPANY_TO,
       who: 'mia',
       at: (t) => {
-        const u = Math.max(0, Math.min(1, (t - TURN[0]) / (TURN[1] - TURN[0])))
         // She rolls back a hair on her seat, and her eyes come up to the stage.
-        return still([MIA_SEAT[0] - 0.058 * (u * u * (3 - 2 * u)), MIA_SEAT[1]])
+        return still(miaAtTable(t))
       },
     },
-    { from: 0, to: COMPANY_TO, who: 'david', at: () => still(SIDE_SEAT) },
+    { from: 0, to: COMPANY_TO, who: 'david', at: (t) => still(davidAtTable(t)) },
   ]
   return {
     ways: [from, ...played.ways],
@@ -132,6 +131,24 @@ function plan0(begin: number) {
   }
 }
 const PLAN = plan0(0)
+
+/** Every note of the melody he plays, show seconds and pitch, the run up to the hush included. */
+export const MELODY: { t: number; midi: number }[] = [...theme(0.5, FLOURISH).melody, ...RUN.map(([t, midi]) => ({ t, midi }))]
+
+/** Where she sits at her table at the start, rolling back a hair as she lifts her eyes (the company's own place). */
+const miaAtTable = (t: number): Pt => {
+  const u = Math.max(0, Math.min(1, (t - TURN[0]) / (TURN[1] - TURN[0])))
+  return [MIA_SEAT[0] + 0.074 * TOGETHER(t) - 0.058 * (u * u * (3 - 2 * u)), MIA_SEAT[1] - 0.04 * TOGETHER(t)]
+}
+/**
+ * Who David is to her: as the camera finds their table they are leaning in together over it, touching, as the two of
+ * them will at this table in the dream; then she draws back, and her eyes go up to the man at the piano.
+ */
+export const TOGETHER = (t: number): number => {
+  const ease = (a: number, b: number) => { const v = Math.max(0, Math.min(1, (t - a) / (b - a))); return v * v * (3 - 2 * v) }
+  return ease(21.9, 22.5) * (1 - ease(23.9, 24.5))
+}
+const davidAtTable = (t: number): Pt => [SIDE_SEAT[0] - 0.074 * TOGETHER(t), SIDE_SEAT[1] - 0.04 * TOGETHER(t)]
 
 export const opening = part<OpeningState>(
   {
@@ -145,14 +162,16 @@ export const opening = part<OpeningState>(
       const light = liptons ? { color: LIPTONS_MAT.lamp, lit: 1 } : { color: mixHex(cold, SEBS_MAT.candle, 0.45 * (house(t, false) - 0.12)), lit: 1 }
       drawPiano(p, c.k, c.ink, c.weight, t, s.keys, light)
     },
+
   },
   (slot) => {
     const plan = slot.begin === 0 ? PLAN : plan0(slot.begin)
     const [x0, y0, x1, y1] = PIANO_CELLS
+    const lane = { segs: route(plan.ways), fire: plan.fire - slot.begin }
     return {
       cells: box(x0, y0, x1, y1),
       exit: [OPENING_END[0] + 0.5, OPENING_END[1]],
-      lane: { segs: route(plan.ways), fire: plan.fire - slot.begin },
+      lane,
       state: { begin: slot.begin, keys: plan.keys },
       company: plan.company,
     }
@@ -163,18 +182,21 @@ export const opening = part<OpeningState>(
     // In through the room...
     { t: 6.5, cells: 9, hold: [1.9, -0.9] },
     // ...to the piano as the phrase settles, and on in while the lights go down on it.
-    { t: 12.3, cells: 4.3, hold: [2.75, -0.75] },
-    { t: 17.6, cells: 3.15, hold: [2.95, -0.38] },
-    { t: 19.3, cells: 3.3, hold: [2.85, -0.3] },
+    { t: 12.3, cells: 4.3, hold: [2.6, -0.75] },
+    { t: 17.6, cells: 3.15, hold: [2.6, -0.38] },
+    { t: 19.3, cells: 3.3, hold: [2.55, -0.3] },
     // Out to her table, and hold on her while he plays on. The move draws back on the way, so it crosses the room
     // (him at the keys, her at her table) rather than the piano's legs.
-    { t: 20.75, cells: 5.6, hold: [-0.3, 1.25] },
+    { t: 20.75, cells: 6.2, hold: [-0.3, 1.25] },
     { t: 22.4, cells: 1.95, hold: [-2.05, 2.36] },
-    { t: 31.0, cells: 1.75, hold: [-2.12, 2.4] },
-    // Back to the keys the same way, and the stage light closes on them.
-    { t: 33.0, cells: 5.6, hold: [-0.3, 1.25] },
-    { t: 34.7, cells: 3.0, hold: [2.95, -0.35] },
-    { t: 35.6, cells: 3.0, hold: [2.95, -0.35] },
+    // In, slowly, as she lifts her eyes to the stage.
+    { t: 25.0, cells: 1.92, hold: [-2.06, 2.37] },
+    { t: 31.0, cells: 1.32, hold: [-2.16, 2.44] },
+    // Back to the room the same way, the two of them in one frame, and held while his eye finds her across it; then in
+    // to the keys, and the stage light closes on them.
+    { t: 33.0, cells: 6.7, hold: [0.05, 1.2] },
+    { t: 34.6, cells: 6.6, hold: [0.05, 1.15] },
+    { t: 36.0, cells: 3.0, hold: [2.95, -0.35] },
     { t: 39.4, cells: 2.8, hold: [3.0, -0.3] },
   ],
 )

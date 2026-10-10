@@ -3,8 +3,10 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
 import { box, carried, frame, glow, knock, part, rgba, smooth, type PartShot } from '../kit'
 import { NIGHT_MAT } from '../worlds'
+import { IRIS_OPEN } from '../transitions'
 import {
   barPhase,
+  BARS,
   CART_X,
   centre,
   CHIME_HITS,
@@ -12,7 +14,9 @@ import {
   CURTSY_HITS,
   FLY_SET,
   FLY_SKY,
+  groundUnder,
   LAMPS,
+  LIFT,
   MIA_SPAN,
   miaAt,
   NIGHT_FROM,
@@ -31,9 +35,8 @@ import { drawFloor, drawSky, lampLight } from './stars-sky'
  *
  * The iris opens on the two of them standing close under a streetlamp on a
  * painted quay: the river and the far bank's roofs and the tower behind in
- * ultramarine brushwork, a painted sky with a moon and swirls, wet cobbles
- * with red petals on them. When the orchestra comes in under the choir they
- * begin to turn, and waltz along the quay: behind them a line of furled
+ * ultramarine brushwork, a painted sky with a moon and swirls, wet cobbles.
+ * When the orchestra comes in under the choir they begin to turn, and waltz along the quay: behind them a line of furled
  * umbrellas on sprung stands, the ensemble, pops open one on each ONE as
  * they pass (five bars), and dances after that, a dip on every ONE, a
  * curtsy together on the accents as the pair nears the great street clock.
@@ -192,7 +195,13 @@ function farBank(p: p5, k: number, T: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   ctx.translate(0, -up * k)
-  const vis = (h: House) => h.x1 > f.x0 - 1 && h.x0 < f.x1 + 1
+  // The far bank is a flat further upstage than the quay: as the camera goes along with the waltz it slides by less,
+  // a third of the way behind, so the tower and the roofs stand off from the lamps and the umbrellas in depth. As
+  // painted when the camera is over the clock.
+  const far = (f.cx - 7) * 0.3
+  ctx.save()
+  ctx.translate(far * k, 0)
+  const vis = (h: House) => h.x1 > f.x0 - far - 1 && h.x0 < f.x1 - far + 1
   // The tower behind the roofs: painted, with its gold lights.
   {
     const x = TOWER_X
@@ -299,6 +308,31 @@ function farBank(p: p5, k: number, T: number): void {
       ctx.fillRect((w[0] - 0.045) * k, (w[1] - 0.07) * k, 0.09 * k, 0.13 * k)
     }
   }
+  // As the iris opens, the trumpet's gold drawing of the city is still on it a moment: a line of gold along the roofs
+  // and up the tower, going out as the waltz begins. The drawing became the painting.
+  const traced = smooth(T, IRIS_OPEN, IRIS_OPEN + 0.5) * (1 - smooth(T, IRIS_OPEN + 3.0, IRIS_OPEN + 5.0))
+  if (traced > 0.01) {
+    const trace = new Path2D()
+    for (const h of HOUSES) {
+      if (!vis(h)) continue
+      trace.moveTo(h.x0 * k, BANK * k)
+      trace.lineTo(h.x0 * k, h.wall * k)
+      trace.lineTo((h.x0 + 0.16) * k, h.roof * k)
+      trace.lineTo((h.x1 - 0.16) * k, h.roof * k)
+      trace.lineTo(h.x1 * k, h.wall * k)
+    }
+    const x = TOWER_X
+    trace.moveTo((x - 1.0) * k, BANK * k)
+    trace.quadraticCurveTo((x - 0.25) * k, (BANK - 2.6) * k, x * k, (BANK - 5.3) * k)
+    trace.quadraticCurveTo((x + 0.25) * k, (BANK - 2.6) * k, (x + 1.0) * k, BANK * k)
+    ctx.lineJoin = 'round'
+    for (const [w, a0] of [[0.14, 0.18], [0.035, 1]] as const) {
+      ctx.lineWidth = w * k
+      ctx.strokeStyle = rgba(NIGHT_MAT.gold, a0 * traced)
+      ctx.stroke(trace)
+    }
+  }
+  ctx.restore()
   // The river: dark water, painted ripples, the lit windows and the tower drawn down into it.
   ctx.fillStyle = NIGHT_MAT.deep
   ctx.fillRect((f.x0 - 1) * k, BANK * k, (f.x1 - f.x0 + 2) * k, (PARAPET - BANK + 0.02) * k)
@@ -314,9 +348,9 @@ function farBank(p: p5, k: number, T: number): void {
   }
   for (const h of HOUSES) {
     if (!vis(h)) continue
-    for (const w of h.windows) glow(p, k, w[0] + 0.03 * Math.sin(T * 1.7 + w[0] * 3), BANK + 0.24, 0.26, NIGHT_MAT.gold, 0.28, 0.28, 1)
+    for (const w of h.windows) glow(p, k, w[0] + far + 0.03 * Math.sin(T * 1.7 + w[0] * 3), BANK + 0.24, 0.26, NIGHT_MAT.gold, 0.28, 0.28, 1)
   }
-  glow(p, k, TOWER_X, BANK + 0.25, 0.9, NIGHT_MAT.gold, 0.18, 0.4, 0.5)
+  glow(p, k, TOWER_X + far, BANK + 0.25, 0.9, NIGHT_MAT.gold, 0.18, 0.4, 0.5)
   // The quay's parapet: dressed stone, a pale coping, piers.
   ctx.fillStyle = NIGHT_MAT.ultramarine
   ctx.fillRect((f.x0 - 1) * k, PARAPET * k, (f.x1 - f.x0 + 2) * k, (UPSTAGE - PARAPET + 0.01) * k)
@@ -672,45 +706,6 @@ function balloons(p: p5, k: number, ink: string, weight: number, T: number): voi
   }
 }
 
-/* ------------------------------------------------------------------ the petals */
-
-/** Red petals on the cobbles; the ones on the pair's line are lifted as they turn past and settle behind them. */
-const PETALS = Array.from({ length: 24 }, (_, i) => {
-  const x = -2.5 + 14 * scatter(i, 150)
-  const y = UPSTAGE + 0.3 + 1.6 * scatter(i, 151) ** 1.6
-  // When the pair's centre comes by.
-  let pass = Infinity
-  for (let t = WALTZ; t < FLY_SET; t += 0.02) if (centre(t)[0] >= x) { pass = t; break }
-  return { x, y, a: scatter(i, 152) * Math.PI, pass, near: Math.abs(y) < 0.5 }
-})
-
-function petals(p: p5, k: number, T: number): void {
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  // Dimmer as the lamps go; swept up with the set when Paris flies, so the stars' glass floor is clean.
-  const fade = (0.3 + 0.7 * lampLight(T)) * (1 - smooth(T, FLY_SET, FLY_SET + 2.5))
-  if (fade <= 0.001) return
-  ctx.fillStyle = rgba(NIGHT_MAT.petal, 0.95 * fade)
-  for (const q of PETALS) {
-    let x = q.x
-    let y = q.y
-    let a = q.a
-    if (q.near && T > q.pass - 0.35) {
-      const s = Math.min(1, (T - q.pass + 0.35) / 1.9)
-      const hop = Math.sin(Math.PI * s) ** 2
-      x += 0.45 * smooth(s, 0, 1)
-      y -= 0.34 * hop
-      a += 5 * smooth(s, 0, 1)
-    }
-    ctx.save()
-    ctx.translate(x * k, y * k)
-    ctx.rotate(a)
-    ctx.beginPath()
-    ctx.ellipse(0, 0, 0.055 * k, 0.03 * k, 0, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.restore()
-  }
-}
-
 /* ------------------------------------------------------------------ the part */
 
 /** Every strike in painted Paris: five umbrellas, four curtsies, midnight's three strokes, the balloons. */
@@ -718,6 +713,55 @@ export const PAINTED_HITS = [...UMBRELLA_HITS, ...CURTSY_HITS, ...CHIME_HITS, RE
 
 interface PaintedState {
   begin: number
+}
+
+/**
+ * Their steps on the wet quay. A waltz is three steps a bar, and on the wet stones each one leaves a ripple of the
+ * lamps' gold spreading out under whoever stepped, the ONE of each bar the strongest, both of them together; the
+ * two and the three, him and then her. The rings spread and thin as they go round, so the floor carries a trail of
+ * where they have turned. They stop as the set flies out, before the machine comes up through the floor.
+ */
+const STEPS: { t: number; who: 'seb' | 'mia' | 'both'; s: number }[] = (() => {
+  const out: { t: number; who: 'seb' | 'mia' | 'both'; s: number }[] = []
+  for (let i = 0; i + 1 < BARS.length; i++) {
+    const a = BARS[i]
+    const b = BARS[i + 1]
+    // (None once the set is flying out: the floor is clear for the machine coming up through it.)
+    if (a < WALTZ - 0.01 || a >= FLY_SET - 1.2) continue
+    out.push({ t: a, who: 'both', s: 1 })
+    out.push({ t: a + (b - a) / 3, who: 'seb', s: 0.55 })
+    out.push({ t: a + (2 * (b - a)) / 3, who: 'mia', s: 0.55 })
+  }
+  return out
+})()
+const RIPPLE = 1.7
+function ripples(p: p5, k: number, T: number): void {
+  if (T < WALTZ - 0.05 || T > LIFT + RIPPLE) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  for (const st of STEPS) {
+    const age = T - st.t
+    if (age < 0 || age > RIPPLE) continue
+    for (const who of st.who === 'both' ? (['seb', 'mia'] as const) : [st.who]) {
+      if (who === 'mia' && (st.t < MIA_SPAN[0] || st.t >= MIA_SPAN[1])) continue
+      const at = who === 'seb' ? sebAt(st.t) : miaAt(st.t)
+      const y = groundUnder(st.t, who)
+      // Out under the ball where it stepped; two rings, the second a beat behind the first.
+      for (const [lag, w] of [[0, 1], [0.18, 0.55]] as const) {
+        const v = (age - lag) / (RIPPLE - lag)
+        if (v <= 0) continue
+        const r = 0.1 + 1.25 * Math.sqrt(v) * (0.7 + 0.3 * st.s)
+        const a = st.s * w * 0.9 * (1 - v) ** 1.4 * lampLight(T) ** 0.5
+        if (a < 0.01) continue
+        ctx.strokeStyle = rgba(NIGHT_MAT.gold, a)
+        ctx.lineWidth = Math.max(1.2, 0.03 * k * (1 - 0.5 * v))
+        ctx.beginPath()
+        ctx.ellipse(at[0] * k, (y + 0.02) * k, r * k, r * 0.26 * k, 0, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+    }
+  }
+  ctx.restore()
 }
 
 export const painted = part<PaintedState>(
@@ -733,7 +777,7 @@ export const painted = part<PaintedState>(
       paintedSky(p, k, T)
       farBank(p, k, T)
       drawFloor(p, k, T, SET)
-      petals(p, k, T)
+      ripples(p, k, T)
       if (lift(T, 2) < 14) {
         for (const x of LAMPS) lamp(p, k, c.ink, c.weight, T, x)
         UMBRELLAS.forEach((u, i) => umbrella(p, k, c.ink, c.weight, T, u, i))
@@ -778,9 +822,16 @@ export const painted = part<PaintedState>(
       { t: slot.begin, cells: 4.3, hold: [-0.6, -1.0] },
       { t: WALTZ - 0.3, cells: 4.6, hold: c(WALTZ, -1.0, -0.1) },
       // Out, as the orchestra comes in, to the quay and the umbrellas opening along it.
-      { t: 276.2, cells: 6.0, hold: c(276.2, -1.45, 0.4) },
-      { t: 279.4, cells: 6.3, hold: c(279.4, -1.6, 0.4) },
-      { t: 286.5, cells: 6.6, hold: c(286.5, -1.8, 0.6) },
+      { t: 276.2, cells: 5.0, hold: c(276.2, -1.15, 0.35) },
+      { t: 279.4, cells: 5.1, hold: c(279.4, -1.2, 0.35) },
+      // In to the waltz itself through the curtsies: the two of them turning, their reflections under them on the wet
+      // stones, the umbrellas dipping behind. Keyed every phrase or so on the centre they turn about, so it travels with
+      // them and does not follow either one round.
+      { t: CURTSY_HITS[0], cells: 4.3, hold: c(CURTSY_HITS[0], -0.9, 0.15) },
+      { t: 284.4, cells: 4.2, hold: c(284.4, -0.88, 0.15) },
+      { t: CURTSY_HITS[1], cells: 4.2, hold: c(CURTSY_HITS[1], -0.88, 0.15) },
+      // Back out on the next curtsy, toward the clock.
+      { t: CURTSY_HITS[2], cells: 5.6, hold: c(CURTSY_HITS[2], -1.35, 0.5) },
       // The clock: its bell at the top of the frame, the two of them under it.
       { t: MIDNIGHT - 0.5, cells: 6.2, hold: [CLOCK_X - 0.1, -1.62] },
       { t: RELEASE - 0.3, cells: 6.6, hold: [CLOCK_X + 0.4, -1.85] },

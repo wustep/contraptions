@@ -309,7 +309,7 @@ function miaEarly(t: number): Pt {
     const u = (t - RUN[0]) / (RUN[1] - RUN[0])
     return [UP_TO[0] + (MIA_WAIT[0] - UP_TO[0]) * hermite(u, 1, 1, 0.55, 0), ON_STAGE]
   }
-  // She waits; as he comes down she looks up (a hair back), and leans in to him for the touch.
+  // She waits. As he comes down she looks up (a hair back), and leans in to him for the touch.
   if (t < 65.25) {
     const look = 0.018 * inout((t - 63.2) / 1.2)
     return [MIA_WAIT[0] + look, ON_STAGE]

@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import type { Pt, Seg } from '../../../../../parts'
+import { mixHex, type Pt, type Seg } from '../../../../../parts'
 import { neonArrow, ROOM } from '../club/room'
 import { alpha, box, carried, frame, glow, hash, knock, part, ring, rgba, smooth, type Ctx, type PartShot } from '../kit'
 import { DRIVE_MAT as D } from '../worlds'
@@ -47,6 +47,15 @@ export const DRIVE_HITS = [...P1, ...P2, PULL, ...JOINTS, ...LAMPS, STOP, NEON, 
 
 const RD = 0.52
 const STREET = RD + 3.4
+/**
+ * The deck has two lanes, seen from a little above: the jam stands in the far one (its road is RD), and the near one
+ * runs along the deck's edge, this much lower, where the exit ramp leaves. Pulling out, he swings down into the near
+ * lane, so he passes in front of the car ahead and not into it.
+ */
+const FAR = 0.13
+const EDGE = RD + FAR
+const TOP = 0.24
+const laneAt = (t: number): number => -FAR * (1 - smooth(t, PULL + 0.05, PULL + 0.75))
 /** The car: its length, its wheels (from the rear bumper), the beltline; where each of them sits on the bench. */
 const LEN = 2.3
 const WB: [number, number] = [0.45, 1.85]
@@ -109,7 +118,7 @@ const rearAt = (t: number): number => X0 + inched(0, t) + driven(t)
 /** The exit ramp: it leaves the deck just ahead of where they wait and comes down to the street. */
 const RAMP0 = rearAt(PULL) + LEN + 0.3
 const RAMP1 = RAMP0 + 11
-const roadAt = (x: number): number => RD + (STREET - RD) * smooth(x, RAMP0, RAMP1)
+const roadAt = (x: number): number => EDGE + (STREET - EDGE) * smooth(x, RAMP0, RAMP1)
 
 /** Where they stop, the kerb, and the club's door: its wall's outer face and the threshold (a ball's centre on it). */
 const PARK = rearAt(STOP + 1)
@@ -142,7 +151,7 @@ function poseAt(t: number): Pose {
   if (go > 0) a -= 0.03 * (1 - Math.exp(-go / 0.15)) * Math.exp(-go / 0.5)
   // Each joint of the ramp: a knock up through the springs.
   for (const j of JOINTS) lift += 0.04 * ring(t - j, 2.6, 0.16)
-  return { x: x + WB[0], y: yb - lift, a }
+  return { x: x + WB[0], y: yb - lift + laneAt(t), a }
 }
 
 /** A point of their car's body (u from the rear bumper, v up from the road) at t. */
@@ -217,10 +226,11 @@ export const drive = part<DriveState>(
     // The jam, from beside them: the next cars ahead, the wave coming back down the line.
     { t: BEGIN, cells: 6.4, hold: [1.2, -0.55] },
     { t: 398.9, cells: 6.2, hold: [1.0, -0.5] },
-    // In the silence, in on the two of them.
-    { t: 401.4, cells: 3.8, hold: [-0.35, -0.25] },
-    { t: 402.3, cells: 3.9, hold: [-0.3, -0.25] },
-    { t: 404.6, cells: 6.2, hold: [1.3, -0.55] },
+    // In the silence between the waves, close on the two of them in his car, her leaning in to him, the city and the
+    // river of lights going by behind them; out again as the wave comes back down the line to them.
+    { t: 400.3, cells: 2.6, hold: [-0.55, -0.42] },
+    { t: 403.9, cells: 2.45, hold: [-0.5, -0.42] },
+    { t: 405.3, cells: 6.2, hold: [1.3, -0.55] },
     // The long silence: out wide, the line of lights along the high road, the ramp going down, the city under the stars.
     { t: 407.6, cells: 10.6, hold: [5.8, -0.1] },
     { t: PULL + 0.4, cells: 10.2, hold: [6.2, 0.05] },
@@ -241,8 +251,11 @@ const TOWERS = Array.from({ length: 44 }, (_, i) => {
   const x = -30 + i * 1.9 + hash(i, 1) * 1.2
   const w = 1.1 + 1.6 * hash(i, 2)
   const h = 2.5 + 7 * hash(i, 3) * hash(i, 4) + 1.5 * hash(i, 5)
-  const lit: Pt[] = []
-  for (let cx = 0.2; cx < w - 0.15; cx += 0.36) for (let cy = 0.4; cy < h - 0.2; cy += 0.5) if (hash(i * 97 + Math.round(cx * 10), Math.round(cy * 10), 7) < 0.2) lit.push([cx, cy])
+  const lit: [number, number, number][] = []
+  for (let cx = 0.2; cx < w - 0.15; cx += 0.36) for (let cy = 0.4; cy < h - 0.2; cy += 0.5) {
+    const v = hash(i * 97 + Math.round(cx * 10), Math.round(cy * 10), 7)
+    if (v < 0.3) lit.push([cx, cy, v < 0.07 ? 1 : 0])
+  }
   return { x, w, h, lit }
 })
 
@@ -258,8 +271,17 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
   const w = weight
   const fr = frame(p, k)
   const line = rgba(ink, 0.3)
-  // The night: dark overhead, a sodium haze low over the city.
-  vgrad(p, k, fr.x0 - 1, fr.y0 - 1, fr.x1 + 1, fr.y1 + 1, [[0, rgba(D.asphalt, 0)], [Math.max(0.02, Math.min(0.98, (STREET - 1.5 - fr.y0) / (fr.y1 - fr.y0 + 2))), rgba(D.sodium, 0.14)], [1, rgba(D.asphalt, 0.6)]])
+  // The night: deep overhead, indigo lower, and the city's own glow on the haze over the basin.
+  {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createLinearGradient(0, -10 * k, 0, (STREET - 0.5) * k)
+    g.addColorStop(0, D.night)
+    g.addColorStop(0.5, D.dusk)
+    g.addColorStop(0.85, D.glowLow)
+    g.addColorStop(1, mixHex(D.glowLow, D.sodium, 0.35))
+    ctx.fillStyle = g
+    ctx.fillRect((fr.x0 - 1) * k, (fr.y0 - 1) * k, (fr.x1 - fr.x0 + 2) * k, (fr.y1 - fr.y0 + 2) * k)
+  }
   // The stars and the far hills, the sodium haze along their foot.
   const far = fr.cx * 0.85
   p.noStroke()
@@ -280,25 +302,54 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
   const par = 0.5
   const ox = fr.cx * par
   const base = STREET + 0.8
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const tw of TOWERS) {
     const x0 = tw.x + ox
     if (x0 > fr.x1 + 1 || x0 + tw.w < fr.x0 - 1) continue
-    shape(p, k, [[x0, base], [x0 + tw.w, base], [x0 + tw.w, base - tw.h], [x0, base - tw.h]], D.brick, null)
+    // Cool in the dark, its top catching the haze's warmth; a fine light edge along its roof.
+    const g = ctx.createLinearGradient(0, (base - tw.h) * k, 0, (base - tw.h + 2.5) * k)
+    g.addColorStop(0, D.towerTop)
+    g.addColorStop(1, D.tower)
     p.noStroke()
-    p.fill(alpha(p, D.sodium, 0.55))
-    for (const [lx, ly] of tw.lit) p.rect((x0 + lx) * k, (base - tw.h + ly) * k, 0.12 * k, 0.16 * k)
+    p.fill(D.tower)
+    ctx.fillStyle = g
+    // (This drawing's rects are centred.)
+    p.rect((x0 + tw.w / 2) * k, (base - tw.h / 2) * k, tw.w * k, tw.h * k)
+    p.stroke(rgba(D.sodium, 0.22))
+    p.strokeWeight(Math.max(1, w * 0.5))
+    p.line(x0 * k, (base - tw.h) * k, (x0 + tw.w) * k, (base - tw.h) * k)
+    p.noStroke()
+    for (const [lx, ly, cool] of tw.lit) {
+      p.fill(cool ? alpha(p, D.white, 0.5) : alpha(p, D.sodium, 0.7))
+      p.rect((x0 + lx) * k, (base - tw.h + ly) * k, 0.12 * k, 0.16 * k)
+    }
+    // A red light on the tallest roofs, blinking slowly, each in its own time.
+    if (tw.h > 6.5) {
+      const on = Math.sin(t * 2.2 + tw.x) > 0.55 ? 1 : 0.15
+      glow(p, k, x0 + tw.w / 2, base - tw.h - 0.12, 0.35, D.beacon, 0.5 * on)
+      p.fill(alpha(p, D.beacon, 0.4 + 0.6 * on))
+      p.circle((x0 + tw.w / 2) * k, (base - tw.h - 0.12) * k, 0.09 * k)
+    }
   }
+  // Across the basin, another freeway, and it is moving: a river of tail lights going one way and headlights the
+  // other, as far as the eye goes, under and beyond their jam.
+  river(p, k, t, fr, ox)
   // The street below, and the ground under it falling away into the dark.
   shape(p, k, [[fr.x0 - 1, STREET], [fr.x1 + 1, STREET], [fr.x1 + 1, fr.y1 + 1], [fr.x0 - 1, fr.y1 + 1]], D.asphalt, null)
   vgrad(p, k, fr.x0 - 1, STREET + 0.3, fr.x1 + 1, Math.max(STREET + 1.5, fr.y1 + 1), [[0, rgba(D.frame, 0)], [1, rgba(D.frame, 0.85)]])
   seg(p, k, [fr.x0 - 1, STREET], [fr.x1 + 1, STREET], line, w)
   // The freeway: its piers, its far rail, its deck.
-  for (let x = Math.floor((fr.x0 - 2) / 6) * 6; x < fr.x1 + 2; x += 6) shape(p, k, [[x - 0.22, RD + 0.35], [x + 0.22, RD + 0.35], [x + 0.3, STREET], [x - 0.3, STREET]], rgba(D.brick, 0.9), line, w * 0.6)
-  seg(p, k, [fr.x0 - 1, RD - 0.5], [fr.x1 + 1, RD - 0.5], rgba(ink, 0.18), w * 0.8)
-  for (let x = Math.floor(fr.x0); x < fr.x1 + 1; x += 1) seg(p, k, [x, RD - 0.5], [x, RD], rgba(ink, 0.1), w * 0.5)
-  shape(p, k, [[fr.x0 - 1, RD], [fr.x1 + 1, RD], [fr.x1 + 1, RD + 0.35], [fr.x0 - 1, RD + 0.35]], D.asphalt, line, w)
+  for (let x = Math.floor((fr.x0 - 2) / 6) * 6; x < fr.x1 + 2; x += 6) shape(p, k, [[x - 0.22, EDGE + 0.35], [x + 0.22, EDGE + 0.35], [x + 0.3, STREET], [x - 0.3, STREET]], rgba(D.brick, 0.9), line, w * 0.6)
+  seg(p, k, [fr.x0 - 1, EDGE - TOP - 0.5], [fr.x1 + 1, EDGE - TOP - 0.5], rgba(ink, 0.18), w * 0.8)
+  for (let x = Math.floor(fr.x0); x < fr.x1 + 1; x += 1) seg(p, k, [x, EDGE - TOP - 0.5], [x, EDGE - TOP], rgba(ink, 0.1), w * 0.5)
+  // The deck's top, its two lanes and the dashes between them; then its edge.
+  shape(p, k, [[fr.x0 - 1, EDGE - TOP], [fr.x1 + 1, EDGE - TOP], [fr.x1 + 1, EDGE], [fr.x0 - 1, EDGE]], D.asphalt, null)
+  vgrad(p, k, fr.x0 - 1, EDGE - TOP, fr.x1 + 1, EDGE, [[0, rgba(D.frame, 0.35)], [1, rgba(D.frame, 0)]])
+  for (let x = Math.floor(fr.x0 - 1); x < fr.x1 + 1; x += 1.2) seg(p, k, [x, RD + 0.06], [x + 0.5, RD + 0.06], rgba(ink, 0.12), w * 0.5)
+  seg(p, k, [fr.x0 - 1, EDGE - TOP], [fr.x1 + 1, EDGE - TOP], rgba(ink, 0.15), w * 0.6)
+  shape(p, k, [[fr.x0 - 1, EDGE], [fr.x1 + 1, EDGE], [fr.x1 + 1, EDGE + 0.35], [fr.x0 - 1, EDGE + 0.35]], D.asphalt, line, w)
   // The freeway's tall lamps, and their pools on the deck.
-  for (let x = Math.floor((fr.x0 - 3) / 7) * 7 + 3; x < fr.x1 + 3; x += 7) sodium(p, k, ink, w, x, RD, 2.6, 1)
+  for (let x = Math.floor((fr.x0 - 3) / 7) * 7 + 3; x < fr.x1 + 3; x += 7) sodium(p, k, ink, w, x, EDGE - TOP, 2.6, 1)
   // The line of cars: headlamps on the car ahead's tail, tails flaring as each stops.
   for (const i of CARS) {
     const x = X0 + i * GAP + inched(i, t)
@@ -317,6 +368,33 @@ function drawDrive(p: p5, t: number, c: Ctx): void {
   // Their car: the body drawn over them while they sit in it (see `over`), behind them once they are out.
   carBody(p, c, t, false)
   if (t >= OUT) carBody(p, c, t, true)
+}
+
+/** The far freeway: its height on the picture, and its two streams' cars (where each starts, its gap, its speed). */
+const RIVER_Y = 1.75
+const STREAMS = [
+  { y: RIVER_Y - 0.05, v: -1.15, color: D.tail, cars: Array.from({ length: 90 }, (_, i) => -40 + i * 1.05 + 0.6 * hash(i, 91)) },
+  { y: RIVER_Y + 0.05, v: 1.35, color: D.head, cars: Array.from({ length: 90 }, (_, i) => -40 + i * 1.1 + 0.7 * hash(i, 92)) },
+]
+function river(p: p5, k: number, t: number, fr: { x0: number; x1: number; y0: number; y1: number }, ox: number): void {
+  if (RIVER_Y < fr.y0 - 1 || RIVER_Y > fr.y1 + 1) return
+  // Its deck, a thin dark line with a glow along it.
+  glow(p, k, fr.x0 + (fr.x1 - fr.x0) / 2, RIVER_Y, (fr.x1 - fr.x0) * 0.7, D.sodium, 0.06, 1, 0.04)
+  p.noStroke()
+  p.fill(alpha(p, D.frame, 0.85))
+  p.rect((fr.x0 - 1) * k, (RIVER_Y + 0.1) * k, (fr.x1 - fr.x0 + 2) * k, 0.07 * k)
+  const span = 95
+  for (const st of STREAMS) {
+    for (const c0 of st.cars) {
+      let x = c0 + st.v * (t - BEGIN)
+      x = ((((x + 40) % span) + span) % span) - 40 + ox
+      if (x < fr.x0 - 0.3 || x > fr.x1 + 0.3) continue
+      p.fill(alpha(p, st.color, 0.22))
+      p.ellipse(x * k, st.y * k, 0.34 * k, 0.13 * k)
+      p.fill(alpha(p, st.color, 0.95))
+      p.ellipse(x * k, st.y * k, 0.12 * k, 0.06 * k)
+    }
+  }
 }
 
 /** A tall sodium lamp at x, standing on `foot`, its head `h` up, its pool of orange on the road. */
@@ -368,7 +446,8 @@ function sedan(p: p5, k: number, ink: string, w: number, x: number, i: number, t
     p.strokeWeight(w * 0.6)
     p.circle(X(u) * k, -WR * k, 2 * WR * k)
   }
-  // Tail and head.
+  // Tail and head; the brake light lying red on the deck behind it.
+  glow(p, k, X(-0.25), 0.04, 0.7, D.tail, 0.22 * brake, 1.4, 0.22)
   glow(p, k, X(0.02), -0.36, 0.45, D.tail, 0.45 * brake)
   box2(p, k, X(-0.02), -0.42, X(0.08), -0.3, brake > 0.6 ? D.tail : alpha(p, D.tail, 0.6), null)
   box2(p, k, X(LEN - 0.08), -0.36, X(LEN + 0.02), -0.26, D.head, null)

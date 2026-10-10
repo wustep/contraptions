@@ -10,7 +10,8 @@ import { drawDark, FLARE, HANDOFF, HOP_UP, KNOCK, miaAt, seat, SHIVER, VALVE_T }
  * over the see-saw; the two of them sit on its two ends at the edge of the
  * light, a balance. The valves go down on the solo's notes by themselves,
  * and the bell lifts with its high notes and bows with its low ones; a few
- * motes turn in the beam. In each of the solo's breaths she inches in along
+ * motes turn in the beam, and each phrase it plays goes out of the bell as a thread of light, at the height of its
+ * notes, drifting up into the dark and fading (`drawSolo`). In each of the solo's breaths she inches in along
  * her end toward him, and the beam leans his way a little more. Its high
  * accents set the hi-hat's open cymbal shivering at the edge of the light;
  * on its biggest note the lamp flares. Out of the silence at 264.7 he
@@ -74,10 +75,12 @@ export const trumpet = part<TrumpetState>(
     return [
       // One slow move across the whole solo: a dolly left to right, the way she inches, with a push-in, down onto the
       // see-saw for the knock. Every channel keeps going one way, so it never stops on a key.
-      { t: slot.begin + 0.05, cells: 3.85, hold: h(4.18, 1.22) },
-      { t: 247.0, cells: 3.62, hold: h(4.32, 1.27) },
-      { t: 255.5, cells: 3.42, hold: h(4.47, 1.33) },
-      { t: 264.0, cells: 3.2, hold: h(4.62, 1.45) },
+      // It sits a little to the right of the two of them, so the solo's threads of light, going out from the bell
+      // and up into the dark on that side, are in the picture with them.
+      { t: slot.begin + 0.05, cells: 3.85, hold: h(4.5, 1.12) },
+      { t: 247.0, cells: 3.7, hold: h(4.66, 1.15) },
+      { t: 255.5, cells: 3.5, hold: h(4.8, 1.22) },
+      { t: 264.0, cells: 3.25, hold: h(4.85, 1.4) },
       { t: 266.6, cells: 3.0, hold: h(4.75, 1.65) },
       { t: slot.end - 0.05, cells: 2.98, hold: h(4.8, 1.7) },
     ]
