@@ -850,6 +850,12 @@ The push in on her left it a sliver at the frame's edge, and a push in under a s
 there, then gone. The close frame keeps it whole at its right now, the clock running down beside the emptying bed,
 and Louise in it under Zoom as the check holds her.
 
+An eighty-ninth took the note that outlasted every version of it: the ring carried into the gala. Grey, then shorter,
+then gathered into her, then in her gold, any frame of it a fresh reader caught they took for a thing in the room, a
+wreath, a hoop; the eighteenth, a gold hula hoop. And the gala reads as a future she is shown without it: that reader
+said memories of the future unprompted. It is gathered into her at once now, gone in a third of a second, the cut's
+carry and nothing more.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

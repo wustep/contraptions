@@ -487,15 +487,15 @@ export function drawGala(p: p5, k: number, t: number): void {
  */
 function carried(p: p5, k: number, t: number): void {
   const at = SEAM.gala
-  const fade = 1 - smooth(t, at + 0.4, at + 0.9)
+  const fade = 1 - smooth(t, at + 0.15, at + 0.38)
   if (t < at || fade <= 0.001) return
   const c = smallC(at)
   const her0 = fogHerAt(at)
   const here = herAt(at)
-  // Drawn in to her as it pales: a moment where it was, then gathered into her, and in her own gold, so it is hers
-  // going into her. (Left at its size over the room as it paled, every fresh eye took it for a thing in the ballroom, a
-  // wreath, a layer left showing; in a pale grey, even gathering, still a wreath.)
-  const into = smooth(t, at + 0.05, at + 0.7)
+  // Gathered into her at once, in her own gold, and gone in a third of a second: the cut's carry, not a thing in the
+  // room. (Any frame of it a fresh eye caught, over four tries at it, they took for a thing in the ballroom: a wreath,
+  // a layer left showing, a hoop, a hula hoop; and the gala reads as a future she is shown without it lingering.)
+  const into = smooth(t, at, at + 0.32)
   const now = herAt(t)
   const x = here[0] + c[0] - her0[0] + (now[0] - (here[0] + c[0] - her0[0])) * into
   const y = here[1] + c[1] - her0[1] + (now[1] - (here[1] + c[1] - her0[1])) * into
