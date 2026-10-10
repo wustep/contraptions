@@ -539,6 +539,25 @@ export function drawBridge(pen: Pen, f: View): void {
     p.endShape(p.CLOSE)
     p.fill(mixHex(STONE, RAIN.kerb, 0.3))
     p.rect((x - 0.78) * k, (SPRING - 0.25) * k, 1.56 * k, 0.3 * k)
+    // Under the water it goes down into the murk, its foot lost in it (the bed is not drawn, and it ended square in
+    // mid-water, plainest in a tall frame).
+    const ctx = pen.ctx
+    const murk = ctx.createLinearGradient(0, (RAIN_GEO.river + 0.6) * k, 0, (RAIN_GEO.bed + 0.25) * k)
+    const deep = mixHex(RAIN.river, RAIN.street, 0.55)
+    murk.addColorStop(0, rgba(deep, 0))
+    murk.addColorStop(0.75, rgba(deep, 0.9))
+    murk.addColorStop(1, rgba(deep, 1))
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo((x - 0.62) * k, SPRING * k)
+    ctx.lineTo((x + 0.62) * k, SPRING * k)
+    ctx.lineTo((x + 0.83) * k, (RAIN_GEO.bed + 0.26) * k)
+    ctx.lineTo((x - 0.83) * k, (RAIN_GEO.bed + 0.26) * k)
+    ctx.closePath()
+    ctx.clip()
+    ctx.fillStyle = murk
+    ctx.fillRect((x - 0.9) * k, (RAIN_GEO.river + 0.6) * k, 1.8 * k, (RAIN_GEO.bed - RAIN_GEO.river - 0.3) * k)
+    ctx.restore()
   }
   if (k > 9) {
     p.stroke(rgba(ink, 0.3))
