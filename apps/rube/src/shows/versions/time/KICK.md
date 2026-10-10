@@ -259,7 +259,7 @@ each world, and changed:
 - **Limbo's roof** (180 to 183): the push, her leap and his step were specks in a frame of the whole tower. Once
   Fischer is gone the camera comes in close on the two of them at the edge, and opens again as they fall to the kick.
 - **Mal's rifle** in the cut to her (143.3 to 145.6) was three strokes. It is a sniper's rifle in silhouette now:
-  butt, grip, magazine, scope on its mounts with a glint on its lens, the long barrel and its brake.
+  butt, grip, magazine, scope on its mounts, the long barrel and its brake.
 - **The snow's rock step** (130 to 132): its foot sat over the piste, so after the jump they ran across the face of
   the cliff. Its foot is a little up the slope now, a strip of snow between, and they run under it.
 - **Home's table** (248): he came up to the table's end through the near chair. The chair stands pulled out from the
@@ -269,8 +269,6 @@ each world, and changed:
   stands, none falls in its ground floor; it falls again once the kick brings the building down.
 - **Mal at the train** (75 to 76): the headlamp's catch on her was a thin rim, briefly. Its light now spills down off
   the wet street onto her for longer, a warm pool round her and a brighter rim.
-- **The children in his memory** stood stock-still in limbo's garden while home's shift their weight at play. They
-  play in the memory too, the same two movements on the same clock, so the gardens rhyme in motion as in layout.
 - **The passport** (241): stamped, it went back to him open, on a straight line that left its pages hanging in the
   air over the booth's front. It shuts on the slope now, slides off its edge, and drops to him.
 - **The cloud deck under the plane** (213.7 to 223): in a tall frame (a phone held upright, a Short) its body was one
@@ -286,8 +284,8 @@ each world, and changed:
   and its shadow on the wet road now, the wheels over it, until the floor goes soft (bar 23), so the three are still
   seen to sink out through it.
 - **Mal's shot landing** (145.15 to 146.8): on the cut back from her, Fischer was already half under the floor, and
-  nothing said he had been hit. The shot strikes now: a white flash where he stands, a ring out across the floor and a
-  spray of snow thrown up off it, still settling as the camera comes back to him (a fresh critic's note).
+  nothing said he had been hit. The shot strikes now: a white flash where he stands and a ring out across the floor,
+  still fading as the camera comes back to him (a fresh critic's note).
 - **The top at the last chord** (270.8 to 274.6): the push in goes on further, so the top stands a quarter of the
   frame's height at the cut to black, not a fifth.
 - **The front door** (244.8): it swung so deep into the hall that its foot came to rest on his crown as he came in
@@ -300,7 +298,7 @@ each world, and changed:
   cut rock, darker as it goes down, and they are seen to sink into the mountain (a fourth critic's note).
 - **The earth under the house** (244.8 to the end): in a tall frame (a phone held upright, a Short) the cut ground
   under the floor is near half the picture, and it was one flat brown, under the top's last shot too. It lies in
-  soft bands now, darker going down, a few stones in it, and the footings go down under the walls in laid stone.
+  soft bands now, darker going down, and the footings go down under the walls.
 - **Off the rock step** (129.9 to 131.4): the band runs across the face toward us, so the jump flies in front of it, but
   nothing said so: each of them sat on its top edge and then seemed to sink down through the rock to its foot. Each
   throws a shadow on the band behind it now, a little east of them and lower, furthest off and softest at the top of
@@ -321,8 +319,8 @@ each world, and changed:
   side of the shaft, a sconce each side and the call buttons.
 - **The ground under the runway** (223 to 244): in a tall frame (a phone held upright, a Short) the cut ground under
   the runway is near half the picture as the plane comes in, and it was two flat greys. The runway is laid in slabs
-  now, their joints in it, on a bed of crushed stone, and under that the earth lies in soft bands, darker going down,
-  a few stones in it, as under the house.
+  now, their joints in it, on a bed, and under that the earth lies in soft bands, darker going down, as under the
+  house.
 - **Down through the hotel's floors under Zoom** (117.5 to 121.8): the camera sat well below them as they fell, so they
   rode high in the frame; Zoom tightens on the same point, and under it he came through each slab on the frame's top
   edge, the three of them crowded under it all the way down. The camera now sits nearly on them, and under Zoom they
@@ -365,7 +363,7 @@ each world, and changed:
   lawn and the terrace's stone on one side and the porch's stone on the other came on toward us all the way to the
   frame's foot, so in a phone-shaped frame the terrace was a pale pillar beside a green slab, and in Overview the
   porch a blank pale column (critics' notes). They end a little toward us now, cut on one line, and under the house,
-  the porch and the garden is one earth: its bands and stones lie from one origin, in one shading, and the house's
+  the porch and the garden is one earth: its bands lie from one origin, in one shading, and the house's
   cut edge stops where theirs begins. A wide frame never sees that far down and is unchanged.
 - **The sky over the terminal** (236 to 244, in a tall frame): the street beyond the landside glass had a sky of its
   own, from the frame's top down, and over the terminal's roof it met the morning's on a ruled vertical line, the
@@ -385,8 +383,8 @@ each world, and changed:
   ends on that line now, a lip over the sand.
 - **Thrown up out of a lit level** (59.05 Ariadne struck in Paris, 179.6 Fischer's kick off limbo's roof): nothing
   marked the blow, so each seemed to reverse and shoot off (a motion critic read both as teleports); Fischer's flare
-  was lost on the pale sky. Each throw now flashes a ring where it lands and leaves a short streak in their colour
-  behind them, gone in half a second (`cast.ts`, `streak`).
+  was lost on the pale sky. Each throw now leaves a short streak in their colour behind them, gone in half a
+  second (`cast.ts`, `streak`).
 - **The hotel's skyline** (the dream stack, seen whole): its towers began a sixth of the way in from the frame's left,
   flat dark before them (a critic's note). They run on past both ends now; every tower that was there is unchanged.
 - **The share card** (`public/shows/time/opus55.png`, the frame at 49.2): it was made before Ariadne's teal deepened,
@@ -398,8 +396,8 @@ each world, and changed:
   little to her side of him until it is over, so under Zoom too she is in the picture for it.
 - **His lever** (172.2 to 175.8): the lever that draws the bolt and lets Mal go was a short iron stroke on the cage's
   dark iron, so his choice had no gesture; a viewer new to it saw him simply stay with her, then be on the roof (a cold
-  critic's note). It is longer now, its knob pale, catching the lamp; it is seen taken, and as it comes home on the
-  let-go its knob flares where it strikes the stop. And the choice is his own gesture (a second cold critic saw him
+  critic's note). It is longer now, its knob pale, catching the lamp; it is seen taken and comes home on the let-go.
+  And the choice is his own gesture (a second cold critic saw him
   "sit still" while the lever moved by itself): as we come back from the children he rolls back from the door, from
   her; on the let-go he throws himself up against the lever, and lands at the door as the rope takes him.
 - **The boulder in the hairpin** (131 to 138): a bare grey four-sided slab, flat-bottomed, no shade and no shadow,
@@ -413,26 +411,24 @@ each world, and changed:
 - **Their window from outside** (whenever the room's front is closed, most plainly at the roof, 178 to 183): it was four
   blank lit panels in the concrete, beside the lift tower's siding and downpipe (a critic's note). The room shows
   through it in silhouette against the lamp, as it is inside: the lamp on its cord, the curtain at the window's end,
-  the table; and the window sits deep in its frame, the reveal in shade, a transom bar, a sill standing out under it.
+  the table; and the window sits deep in its frame, the reveal in shade, a sill standing out under it.
 - **The crags under the ridge** (123 to 152, plainest in a tall frame): where the rock breaks through the snow, each
   crag ended on the face with a hard edge and read as a slab laid on it, as the hairpin's boulder did. Each throws a
   soft shadow on the face under its foot now, a little east of it. (A drift over its foot was tried first: on the
   shaded face it came out a hard white block, brighter than the snow round it.)
 - **The terminal's ground floor** (236 to 244, plainest in a tall frame): near half the picture, it was a flat grey
   slab with two plain navy rectangles for doors, under a hall drawn in full (a critic's note). Its doors are glazed now
-  in steel frames, a transom and their push bars, the morning on the glass, under a canopy each; the wall has its
-  panels, the soffit's shade under the floor and a plinth along its foot.
+  in steel frames, under a canopy each; the soffit's shade lies under the floor and a plinth along the wall's foot.
 - **The tower's empty floors** (0 to 30, 152 to 183, plainest in a tall frame): their windows were bare dark
-  rectangles under a room drawn in full. They stay dark, the floors empty, but each has a sill, a glazing bar and the
-  dusk sky caught in its top pane.
+  rectangles under a room drawn in full. They stay dark, the floors empty, but each has a sill and the dusk sky caught
+  in its top pane.
 - **The wreckage off the shore** (from the dive, 156.6 on): the return to limbo's beach is the show's first frame
   again, on purpose, and two viewers new to it read it as the opening replayed. Pieces of the city they built are
   afloat off the shore now, slabs of concrete with their window holes, tilted, riding the swell half under, so the
   circle comes back to the same place, further gone. The opening is unchanged.
 - **Mal's shot at her end** (145.15 to 146.6): the flash was gone in a sixth of a second, pale on the pale snow, and
   its smoke white on white, so a viewer new to it saw her holding "something long, a rifle, ski poles or a radio".
-  The flash holds a little longer, its first tenth of a second a crisp star of flame along the aim (gold, a white
-  heart, a thin ink edge), and its smoke drifts off the muzzle in grey.
+  The flash holds a little longer, and its smoke drifts off the muzzle in grey.
 - **The rain street after the train** (75 to 86): the cars it flung came to rest on their roofs a little above the
   road, in the air (their crushed roofs not counted), and the train's, the taxi's and the van's headlamps were painted
   on down through the street into the ground under it, the train's lit patch on the asphalt ending square (a critic's
@@ -487,10 +483,6 @@ each world, and changed:
 - **Paris's far bank, seen whole** (31 to 61): the far bank past the bridge's end was a pavement on a plank, its
   building standing on a hairline over open sky down to the river's bed, upright and, once folded, overhead (a critic's
   note in Overview). It is ground now, earth down to the bed, and the bed and the fold's rough cut run on under it.
-- **The far bank's traffic** (69 to 92, 199 to 213): the lights of the cars on the road beyond the river were small
-  lit lozenges with no road and no cars, and under the bridge they hung in the mist like stray specks, a van's lamps
-  without the van (a critic's note). The road is a darker line along the far quay's top now, and each light is at
-  the end of its car, dim in the rain, on it.
 - **The cloud deck's underside** (213.7 to 225): its body's wash stopped on a ruled line at its foot, and the ragged
   fringe began under it (a critic's note). It fades out over its last stretch into the fringe now.
 
@@ -503,6 +495,26 @@ A subtraction pass after them took back what had been added and did not earn its
 - **The lobby's floor dial** (191.5 to 199.3): a needle nobody follows while the cabin falls; the landing keeps its
   surround, sconces and call buttons.
 - **The wisps under the cloud deck** (222 to 225): the air under the wings coming down is the morning's plain gold again.
+
+A second subtraction pass took back more:
+- **The far bank's traffic** (69 to 92, 199 to 213): cars and their lamps moving along the road beyond the river,
+  specks in the mist that had needed a road and cars drawn under them to read at all. The far quay stands in the
+  mist with nothing on it.
+- **The children's play in his memory** (23 to 27, 172.5 to 175): they stand still in limbo's garden, as a memory
+  does; at home they move.
+- **The muzzle flash's star and the scope's glint** (144 to 145.6): a third layer over the flash's beams and glow,
+  and an inked edge on light. The flash and the grey smoke carry the shot.
+- **The spray of snow off the vault's floor** (145.15 to 146.8): snow thrown up indoors, where no snow falls. The
+  flash and the ring mark the hit.
+- **The ring where a throw lands** (59.05, 179.6): the streak alone marks the throw; the show draws no hairline rings
+  for light.
+- **The lever's flare** (175.8): the knob is pale and his lunge is the gesture; it does not also flash.
+- **Stones in the cut earth** (under the house and the runway), the crushed stone under the runway, and the
+  footings' courses: the bands alone keep the earth from a blank.
+- **The terminal's ground floor** (236 to 244): its wall panels, its doors' transoms, push bars and the glint on
+  their glass. The glazed doors, their canopies, the soffit and the plinth stay.
+- **Limbo's windows**: the empty floors' glazing bars, and the transom and the sill's lit line on their window seen
+  from outside.
 
 ## Inception nods
 
