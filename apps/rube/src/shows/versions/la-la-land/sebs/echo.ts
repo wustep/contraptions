@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { R } from '../../../../parts'
 import { glow, hash, rgba, scenery, type EchoBall } from './kit'
+import { muted } from './lens'
 
 /**
  * The other road, drawn. The Epilogue is a "what if", and a what-if only reads against what was: so where the dream
@@ -48,6 +49,31 @@ export function drawEcho(p: p5, k: number, weight: number, t: number, e: EchoBal
     ctx.stroke()
   }
   ctx.restore()
+  // The other world's colour comes with it. In the dream it is the room as it is showing through: a soft pocket of
+  // grey round it, the colour drawn out there. In the room as it is it is the dream: a pocket of the dream's rose.
+  {
+    const m = muted(t)
+    const pr = 0.9 * (1 + 0.5 * gone)
+    const pa = Math.max(0, Math.min(1, e.a)) * (1 - gone ** 2)
+    if (pa > 0.01) {
+      ctx.save()
+      const g = ctx.createRadialGradient(e.x * k, e.y * k, 0, e.x * k, e.y * k, pr * k)
+      if (m < 0.5) {
+        ctx.globalCompositeOperation = 'saturation'
+        g.addColorStop(0, rgba('#808080', 0.85 * pa))
+        g.addColorStop(0.5, rgba('#808080', 0.5 * pa))
+        g.addColorStop(1, rgba('#808080', 0))
+      } else {
+        ctx.globalCompositeOperation = 'soft-light'
+        g.addColorStop(0, rgba('#E46A9A', 1.0 * pa))
+        g.addColorStop(0.5, rgba('#E46A9A', 0.6 * pa))
+        g.addColorStop(1, rgba('#E46A9A', 0))
+      }
+      ctx.fillStyle = g
+      ctx.fillRect((e.x - pr) * k, (e.y - pr) * k, 2 * pr * k, 2 * pr * k)
+      ctx.restore()
+    }
+  }
   const body = 1 - gone
   if (body > 0.02) {
     const s = 1 - 0.35 * gone
