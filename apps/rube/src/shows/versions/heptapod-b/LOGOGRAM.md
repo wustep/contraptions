@@ -483,6 +483,10 @@ changed, in the order of the film, and then what runs through it:
 - **Watching her partner write** (170.3 → 183.2): riding the turning ink, her eye rolled with her, so the two pens
   wrote the great ring without either seeming to know of the other. Her eye holds on Costello's pen across the ring
   now while they write, and turns up to where the halves meet as they close.
+- **Eyes on what matters, again** (an acting review, every second of the film, each ball seen four times larger): as
+  the glass woke (87.2), the two of them came to rest with their eyes low on the dark floor; each looks up at it now
+  while stopped. Waiting on the meadow (185.3), Ian looked at the grass while she watched the shell lift; he watches it
+  go now, and turns to her as the light comes through.
 
 ## Arrival nods
 
