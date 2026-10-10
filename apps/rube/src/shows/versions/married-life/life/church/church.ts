@@ -163,12 +163,12 @@ export function rankLight(r: number, t: number): number {
 
 /**
  * The empty church at the funeral: nobody plays, but the one toll fills it, and the organ's pipes ring with it (the
- * gold they went on every note of the march), fading as the bell dies away; less at the answer.
+ * gold they went on every note of the march), fading as the bell dies away.
  */
 export function tollRing(t: number): number {
   if (!gloomy(t) || t < FUN.toll) return 0
   const on = (s: number, a: number, d: number) => (t < s ? 0 : a * Math.min(1, (t - s) / 0.05) * Math.exp(-(t - s) / d))
-  return on(FUN.toll, 0.55, 0.9) + on(FUN.answer, 0.22, 0.7)
+  return on(FUN.toll, 0.55, 0.9)
 }
 
 /** The reservoir's fill (0 empty, 1 full): drawn down by every note, pumped back up by the feeder on the beat. */
@@ -1236,29 +1236,6 @@ function drawTower(p: p5, k: number, c: Paint, weight: number, t: number): void 
   p.circle(((tx0 + tx1) / 2) * k, (CH.spire - 0.03) * k, 0.08 * k)
 }
 
-/**
- * The toll shaken down: at the funeral's one toll (and a little at its answer) dust sifts from under the ringing floor
- * and drifts down through the porch's grey light, onto the man standing under it.
- */
-function drawSift(p: p5, k: number, t: number): void {
-  if (!gloomy(t) || t < FUN.toll) return
-  const [tx0, tx1] = CH.tower
-  const top = -2.9
-  p.noStroke()
-  for (let i = 0; i < 34; i++) {
-    const at = (i < 24 ? FUN.toll : FUN.answer) + hash(i, 21) * 0.35
-    const age = t - at
-    if (age < 0 || age > 4.5) continue
-    const fall = 0.28 + 0.2 * hash(i, 22)
-    const y = top + 0.05 + fall * age + 0.25 * (1 - Math.exp(-age / 0.3))
-    if (y > CH.floor) continue
-    const x = tx0 + CH.wall + 0.05 + (tx1 - tx0 - 2 * CH.wall - 0.1) * hash(i, 23) + 0.06 * Math.sin(age * (1.2 + hash(i, 24)) + i)
-    const a = (i < 24 ? 0.6 : 0.35) * Math.min(1, age / 0.25) * (1 - age / 4.5)
-    p.fill(alpha(p, '#FFFFFF', a))
-    p.circle(x * k, y * k, (0.012 + 0.012 * hash(i, 25)) * k)
-  }
-}
-
 /* ------------------------------------------------------------------ the set */
 
 export const churchSet = scenery<null>({
@@ -1355,7 +1332,6 @@ export const churchSet = scenery<null>({
 
     // The tower, from the ground: the porch under it, the ringing chamber, the belfry, the spire.
     drawTower(p, k, c, weight, t)
-    drawSift(p, k, t)
 
     // The walls and floors, cut: the apse wall up under the roof, the floor slab, all one warm dark in section; the
     // roof over them, slate, eaves to peak and down to the tower.

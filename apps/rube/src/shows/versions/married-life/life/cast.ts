@@ -47,24 +47,11 @@ export const BOW_FROM = bar('jar', 48) + 0.6
 export const BALLOON_REST: Pt = [0.24, -1.42]
 
 /**
- * What stirs the balloon in the still air. The church's one toll goes through it: a sharp swing aside on its string
+ * What stirs the balloon in the still air: the church's one toll goes through it, a sharp swing aside on its string
  * and a long slow sway back (a damped swing from rest: `amp` cells aside at its fullest, over a `period`, dying away
- * over `decay` seconds), and a little at the answer.
+ * over `decay` seconds).
  */
-export const STIRS: { t: number; amp: number; period: number; decay: number }[] = [
-  { t: FUN.toll, amp: 0.2, period: 1.7, decay: 1.4 },
-  { t: FUN.answer, amp: 0.07, period: 1.7, decay: 1.2 },
-]
-/**
- * At home, tied to her chair, it leans the smallest way toward him on the piano's phrase notes once he has sat down
- * (her last gesture at her bedside was the same: the smallest roll toward him). Each lean eases up from nothing to
- * `amp` cells (negative is toward his chair) at `rise` seconds after the note, and back, slowly.
- */
-export const LEANS: { t: number; amp: number; rise: number }[] = [
-  { t: 219.696, amp: -0.07, rise: 0.5 },
-  { t: 221.884, amp: -0.06, rise: 0.5 },
-  { t: 226.203, amp: -0.06, rise: 0.55 },
-]
+export const STIRS: { t: number; amp: number; period: number; decay: number }[] = [{ t: FUN.toll, amp: 0.2, period: 1.7, decay: 1.4 }]
 /**
  * Where he draws the string in short and lets it out again (show seconds). He comes into the ward with it held close
  * (it is in at the cut already gathered), so it rides in the frame over him in the close on the cut, under Zoom too,
@@ -160,10 +147,6 @@ function stir(t: number): number {
   for (const s of STIRS) {
     const u = t - s.t
     if (u > 0) x += s.amp * Math.exp(-u / s.decay) * Math.sin((2 * Math.PI * u) / s.period)
-  }
-  for (const l of LEANS) {
-    const u = (t - l.t) / l.rise
-    if (u > 0) x += l.amp * u * u * Math.exp(2 * (1 - u))
   }
   return x
 }

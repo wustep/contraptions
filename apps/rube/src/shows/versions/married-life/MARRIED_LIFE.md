@@ -286,7 +286,7 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   the frame from the organ to the steps, and the toll is felt through all of it: the organ's pipes ring gold with it, as they went on every note
   of the march, and fade as the bell dies away; the balloon swings aside on its string and sways back; he starts; and
   the frame itself takes the blow, a small damped drop that settles in half a second (the only one in the show).
-  Dust sifts down. The answer, as the bell swings back, stirs them again, less. He goes out in the silence and comes to rest at the foot of the steps.
+  The bell answers softly as it swings back. He goes out in the silence and comes to rest at the foot of the steps.
 
 ### Alone (201.94 to 258 s): the house, from the street, at dusk
 
@@ -301,8 +301,7 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   and its middle light is one pane from head to floor, so no bar crosses the balloon over her chair. He ties the
   balloon to her chair, so it floats over the empty seat. He climbs into his, as onto the steps, and settles heavily,
   and leans to put the
-  lamp on. Tied to her chair, the balloon leans the smallest way toward him on three of the piano's phrase notes
-  (219.70, 221.88, 226.20), easing over and back: her last gesture at her bedside was the same.
+  lamp on.
 - The camera pushes in slowly on the two chairs through the sit, and holds the lit room for a phrase of the piano,
   him in his chair and the balloon over her empty one; then it draws back past the roof before the first card, and
   on at an even rate to the last frame (27 cells): the lit window, the house at dusk, the roof,
@@ -361,8 +360,7 @@ window.
 - **The years:** his blue and her coral grey with age, and hers is the colour she is drawn in.
 - **The balloon:** it comes in with him to the hospital and not before; it is hers at her bedside, from his giving
   it to the cut; it is his again from the church to the end; and it never jumps in a place.
-- **The toll:** the frame takes a blow only there (at most 1.5% of its height); the balloon is stirred only by the toll
-  and its answer; at home it leans only on the piano's own notes, after he sits and before the credits.
+- **The toll:** the frame takes a blow only there (at most 1.5% of its height); the balloon is stirred only by the toll.
 - **Zoom's margins:** neither of them within an eighth of the Zoom frame's edge for 2.5 s or more, except where the
   staging fills it (the nursery, nine tenths of its width apart; the ward, the balloon over them); the balloon's crown
   never cut by more than 0.08 of its half height; and the frame's sharpest change of speed under Zoom at most twice
@@ -392,7 +390,7 @@ window.
   - `cast.ts`: Carl (a rounded square that slides and leans with the slope), Ellie (a ball), their trails, the bow
     tie and the balloon, drawn in every world between the parts' drawings and their fronts; the years' bearing
     (`bearingOfAge`) under every part's pose; the balloon's ties (`show.ties`: to her at the bedside, to her chair
-    at the end), what stirs it (`STIRS`: the toll and its answer), its leans toward him at home (`LEANS`), and where
+    at the end), what stirs it (`STIRS`: the toll), and where
     he holds its string short (`GATHERS`: into the ward, and through his own door).
   - `music.ts`: the measured clock (`BEATS`, `bar`, `beat`, `onsets`, `AT`, `CUT`, `SEAM`) and `AGE`.
   - `kit.ts`: the part contract, Liftoff's and Epilogue's: `part`, `route`, `hop`, `carried`, `lay`, `frame`, and the
@@ -898,6 +896,12 @@ window.
   from her fall (`overcast`; the ward's dusk carries the light's fall); and the smoke off the blown bulb (the bigger
   lamp, bright then dark, is kept). No strike was among them; `check:shows` passes, and contact sheets of each cut and
   of the whole show show nothing broken.
+- **Second subtraction pass (Opus 5.5, PR #163).** The show looked at again, whole, after the first cut, for what still
+  decorated without telling: the dust sifted from the tower at the toll (34 specks too small to see at the toll's
+  width; the nave's dust was taken out in the craft pass for the same reason), the second, smaller stir of the balloon
+  and glow of the organ at the bell's answer (the toll is felt once; the bell's own swing back stays, a strike), and
+  the balloon's three leans toward him at home (`LEANS`, at most 0.07 cells, too small to read as anything but drift).
+  No strike was among them.
 
 ## Known limits
 

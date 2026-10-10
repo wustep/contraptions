@@ -20,7 +20,7 @@ import { bellAt, CH, CHURCH_BOX, ease, FOOT, FUN, gloomy, paint, pchip, SEATED, 
  * it, widening, to arrive on 197.712, the strongest onset of the whole cue: the whole empty church, the bell they were
  * married under tolling once at the top of the frame, the rope jolting and swaying beside him at the bottom. It
  * answers softly as it swings back (198.409). He looks up at it; bows his head; and goes out into the silence and down
- * the steps, one at a time, as the camera comes down with the dust, and comes to rest at their foot on 201.944
+ * the steps, one at a time, as the camera comes down, and comes to rest at their foot on 201.944
  * (`CUTS.home`: the house builder's own front steps match).
  *
  * The part's frame is the church world's, shifted by `FUNERAL_AT` (Carl seated is its (-0.5, 0)).
@@ -325,7 +325,7 @@ export const funeral = part<FuneralState>(
       // at its left end (its pipes ring with the toll) to the tower and the steps at its right, the bell well inside
       // the top of the frame, the rope down to him, and him whole at the bottom even under Zoom.
       key(TOLL, 7.5, 2.3, -1.92),
-      // The answer; then down with the dust as he goes.
+      // The answer; then down as he goes.
       key(OUT, 7.45, 2.75, -1.85),
       key(199.95, 5.7, 5.0, -1.3),
       // Down the steps to the cut (`CUTS.home`): 4.5 cells, Carl 0.6 left of centre and 1.1 below it.
