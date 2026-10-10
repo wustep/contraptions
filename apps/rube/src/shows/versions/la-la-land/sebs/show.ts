@@ -68,6 +68,8 @@ const LOOKS: Look[] = [
   // In the car: where she leans in to him in the jam's silences, and again when they have stopped at the club.
   { from: 399.2, to: 404.6, ease: [0.6, 0.6], who: 'both' },
   { from: 418.5, to: 421.4, ease: [0.6, 0.5], who: 'both' },
+  // Waking: her eyes stay on the place beside her, on the dream's him, as it greys, and on David as he sits down in it.
+  { from: 451.7, to: 456.6, ease: [0.5, 0.6], who: 'mia', at: 0.05 },
   { from: 461.0, to: 464.2, ease: [0.4, 0.5], who: 'both' },
   { from: 471.2, to: 472.8, ease: [0.5, 0.7], who: 'seb', at: Math.PI + 0.12 },
 ]

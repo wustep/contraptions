@@ -1,5 +1,6 @@
 import type p5 from 'p5'
 import { R } from '../../../../parts'
+import { mixHex } from '../../../../parts'
 import { glow, hash, rgba, scenery, type EchoBall } from './kit'
 import { muted } from './lens'
 
@@ -80,7 +81,10 @@ export function drawEcho(p: p5, k: number, weight: number, t: number, e: EchoBal
     glow(p, k, e.x, e.y, 0.5, ECHO, 0.24 * a * body)
     ctx.save()
     ctx.translate(e.x * k, e.y * k)
-    ctx.fillStyle = rgba(ECHO, 0.5 * a * body)
+    const turn = Math.max(0, Math.min(1, e.turn ?? 0))
+    const fillC = turn > 0 && e.turnTo ? mixHex(ECHO, e.turnTo, turn) : ECHO
+    const rimC = turn > 0 && e.turnTo ? mixHex(ECHO_RIM, e.turnTo, 0.6 * turn) : ECHO_RIM
+    ctx.fillStyle = rgba(fillC, (0.5 + 0.35 * turn) * a * body)
     ctx.beginPath()
     ctx.arc(0, 0, (d / 2) * s, 0, Math.PI * 2)
     ctx.fill()
@@ -91,7 +95,7 @@ export function drawEcho(p: p5, k: number, weight: number, t: number, e: EchoBal
     // The rim, dashed, its dashes crawling round.
     ctx.setLineDash([d * 0.22, d * 0.15])
     ctx.lineDashOffset = -t * d * 0.5
-    ctx.strokeStyle = rgba(ECHO_RIM, 0.92 * a * body)
+    ctx.strokeStyle = rgba(rimC, 0.92 * a * body)
     ctx.lineWidth = weight * 0.9
     ctx.stroke()
     ctx.setLineDash([])

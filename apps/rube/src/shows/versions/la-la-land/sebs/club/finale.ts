@@ -3,7 +3,7 @@ import { laneAt, mixHex, R, type Pt } from '../../../../../parts'
 import { box, glow, part, rgba, route, type Company, type PartShot, type Way } from '../kit'
 import { AT, notes as measured } from '../music'
 import { hop } from '../physics'
-import { SEBS_MAT } from '../worlds'
+import { DAVID, SEBS_MAT } from '../worlds'
 import { call, rising } from '../call'
 import { fold, keyRest } from './geometry'
 import { DOWN, drawPiano, heldOn, keysOf, play, restOn, type Note, type Press } from './piano'
@@ -259,7 +259,10 @@ function plan(begin: number) {
       const lean = 1 - Math.max(0, Math.min(1, (t - 453.2) / 1.6))
       const [x, y] = F([kissed[0] + (SIDE_SEAT[0] - kissed[0]) * (1 - lean), kissed[1] + (SIDE_SEAT[1] - kissed[1]) * (1 - lean)])
       const a = Math.min(1, (t - LEAVE + 0.05) / 0.45) * (1 - 0.35 * Math.max(0, Math.min(1, (t - 452.5) / 2.5)))
-      return { x, y, a, spin: Math.PI, gone: Math.max(0, Math.min(1, (t - 455.32) / 1.05)) }
+      // As David comes back across the room to the table, it drains from the dream's blue to his grey; it comes apart as
+      // he sits down into it.
+      const turn = Math.max(0, Math.min(1, (t - 453.9) / 1.4))
+      return { x, y, a, spin: Math.PI, gone: Math.max(0, Math.min(1, (t - 455.32) / 1.05)), turn: turn * turn * (3 - 2 * turn), turnTo: DAVID }
     },
   }
 
@@ -412,12 +415,12 @@ export const finale = part<FinaleState>(
     // Wide enough to keep her table, and the echo of him left at it, in the frame as he goes.
     { t: 452.6, cells: 4.6, hold: F([0.9, 1.05]) },
     { t: 453.9, cells: 3.2, hold: F([4.3, -0.3]) },
-    { t: 454.45, cells: 3.15, hold: F([4.35, -0.3]) },
-    { t: 455.36, cells: 3.1, hold: F([4.36, -0.3]) },
-    // Cut, as David sits down in the seat beside her: the dream's kiss's own close two-shot at her table, and it is
-    // David in Seb's seat. The dream is over. Then out with her as she follows David to the door.
-    { t: 455.38, cells: 1.6, hold: F([TABLE.x, 2.58]) },
-    { t: 456.55, cells: 1.6, hold: F([TABLE.x, 2.58]) },
+    { t: 454.13, cells: 3.18, hold: F([4.32, -0.3]) },
+    // Cut, on the chord's ring, to her table: the dream's kiss's own two-shot, a little wider. We watch the dream's him
+    // in the seat beside her drain to grey while she looks at it, and David come in and sit down into it. The dream is
+    // over. Then out with her as she follows David to the door.
+    { t: 454.15, cells: 2.05, hold: F([TABLE.x - 0.12, 2.5]) },
+    { t: 456.55, cells: 1.8, hold: F([TABLE.x, 2.55]) },
     // He goes ahead to the door and out onto the pavement; she follows him across the room and stops in the doorway.
     // Then close shots, cut against each other: her turn back from the doorway, his look, her smile, his nod. Then out
     // to her going.

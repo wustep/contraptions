@@ -65,6 +65,9 @@ export interface EchoBall {
   spin?: number
   /** 0 whole, 1 dissolved into motes. */
   gone?: number
+  /** How far it has gone to another's colour (0..1), and whose: the dream's him draining to David's grey as David comes. */
+  turn?: number
+  turnTo?: string
 }
 
 /** Where one of them is: the ball's own fields but its id and, unless it has changed, its colour. */
