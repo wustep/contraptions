@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 137 (latest)
+## Polish pass 138 (latest)
+
+No change to the show: what the viewer sees in the two seconds after a refused tap, before the sound is held again (passes 136 and 137). Read every quarter-second after Space under the refusing policy, the picture stands, and from about 0.5 s the stage says "Waiting for the music…", with its Reload button, as for any stall (pass 89). At about 2.5 s the hold returns, the note goes, the Sound button is back and the picture runs on muted. It is a short wait, and the note says what is happening, so it is left.
+
+## Polish pass 137
 
 - **The M key still left the show silent with nothing to press.** Pass 136's `soundIn` was tried only by the stage's Sound button. Under the same refusing policy every other way in was tried: Space, M, a tap on the picture, and the panel's music button, closed on a link visit, so not reachable there. Space and a tap are held again once the player has given up on the play (about 2 s into the show, the picture waiting meanwhile), with the Sound button back. M was not. With the sound held, the gesture listener lets M through to the key handler, since the music control unmutes for itself, and the key handler's own copy of the bring-it-in code ignored the result: held false, music paused, picture running on, no button. Pass 136 had missed it as a fourth copy. It now calls `soundIn` too, and is held again like the rest. The check counts all four callers, and fails on the old key handler.
 
