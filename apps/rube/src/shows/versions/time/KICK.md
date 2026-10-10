@@ -461,6 +461,12 @@ each world, and changed:
   light is a soft pool fading on every side, and each arm ends in a bracket on the wall.
 - **Ariadne and Fischer on the roof, under Zoom** (177.3 to 177.6): waiting on the roof as the cage brings him up,
   they were half cut by the frame's top. The camera starts up a little further, and from 177.5 they are whole.
+- **The bridge's pier under the water** (89 to 92, 199 to 201, plainest in a tall frame): the bed is not drawn in the
+  dark water, so the pier came down through the river and ended square in it, on its own capped foot (a critic's
+  note). It goes down into the murk now, darkening, its foot lost in it.
+- **The light on home's back wall** (245 to the end): a little of the morning's bounce high on the wall, over the
+  table, was a box with hard top and side edges, a pale panel (a critic's note; at the last push-in it is half the
+  frame). It is a soft glow now, fading on every side.
 
 ## Inception nods
 

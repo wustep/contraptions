@@ -386,7 +386,20 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   shade.addColorStop(1, rgba(dim, 0))
   ctx.fillStyle = shade
   ctx.fillRect((TOP_AT[0] - 2.2) * k, (HOUSE.back - 2.4) * k, 2.82 * k, 2.4 * k)
-  fillBox(ctx, k, TOP_AT[0] - 2.2, HOUSE.back - 2.4, TOP_AT[0] + 0.62, HOUSE.back - 1.2, vgrad(ctx, k, HOUSE.back - 2.4, HOUSE.back - 1.2, [[0, HOME.wall, 0.5], [1, HOME.wall, 0]]))
+  // A little of the morning's bounce high on the wall over it, soft on every side (a box of it read as a pale panel).
+  {
+    const c: Pt = [TOP_AT[0] - 0.8, HOUSE.back - 2.1]
+    const r = 1.5
+    ctx.save()
+    ctx.translate(c[0] * k, c[1] * k)
+    ctx.scale(1, 0.6)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * k)
+    g.addColorStop(0, rgba(HOME.wall, 0.45))
+    g.addColorStop(1, rgba(HOME.wall, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(-r * k, -r * k, 2 * r * k, 2 * r * k)
+    ctx.restore()
+  }
   hallWindow(ctx, k, w)
   // The skirting, and the floor running back to it: warm boards, a little darker at the back.
   fillBox(ctx, k, fx1, HOUSE.back - 0.1, ex0, HOUSE.back, mixHex(HOME.wall, HOME.wallShade, 0.7))
