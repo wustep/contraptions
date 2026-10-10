@@ -108,9 +108,10 @@ export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
     { t: 132.7, cells: 3.9, hold: local(o, R1.c, -0.9, -0.95), w: 1 },
     { t: 134.4, cells: 4.6, hold: local(o, R1.c, 0.0, 0.45), w: 1 },
     { t: 136.8, cells: 4.8, hold: local(o, R1.c, 0.15, 0.5), w: 1 },
-    // Out with her as she glides through the bottom: the cut's framing, following.
-    { t: 138.5, cells: 4.6, off: [0.7, -0.5], w: 0 },
-    { t: slot.end, cells: 4.5, off: [0.7, -0.5], w: 0 },
+    // Out with her as she glides through the bottom: the cut's framing, following, wide enough that the ring she
+    // rides keeps its top in the frame as it drifts up (her place on the screen the same: the offset scales with it).
+    { t: 138.5, cells: 5.5, off: [0.84, -0.6], w: 0 },
+    { t: slot.end, cells: 5.4, off: [0.84, -0.6], w: 0 },
   ]
 })
 
