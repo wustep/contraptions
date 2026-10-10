@@ -858,6 +858,8 @@ window.
     pass. The storm's lightning is two strokes 0.8 s apart and passes; its rain did not on a phone held upright, where
     the sky fills the screen: each streak passing a pixel is a flash, 4.48% of the screen at the streaks' 0.42 (1.81%
     at 1280 by 720). At 0.3 the rain is still plainly rain and the phone is at 1.06%; a check holds it there.
+    Under Zoom, where the streaks are drawn larger: 1.85% at 1280 by 720, 1.78% on the phone; the wedding's flash on the
+    phone 0.01%. All under.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
