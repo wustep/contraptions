@@ -681,6 +681,14 @@ window.
     on a slow phone the storm may drop the odd frame, never a run of them. A profile spread the time thinly; p5's
     parsing of colour strings looked the largest single share, but a cache of parsed colours (pixel for pixel the
     same, 24 frames) bought nothing measurable, so it was not kept.
+  - *A second viewer who has never seen Up*, after the hill's restaging (contact sheets, the story told back first). The
+    whole arc came back from the picture alone: the wedding, the house made theirs, the baby wished for and lost
+    (about 75% sure, on the cut from the nursery to the cold corridor), the dream of the falls, the savings and the
+    setbacks, the years, the tickets, her failing on the hill ("she can't make the climb"), the ward, the funeral
+    mirroring the wedding (its strongest beat), him alone. Its confusions were again the machines: the arm that takes
+    the jar (the premise's, kept), how he came off the ladder, the tie wheel, the ticket press. One looked checkable:
+    whether the jar is emptied; at full size it is (before the first taking the coins are up behind its picture,
+    after it the jar is bare with new coins dropping in, and it is full again before the second), so kept.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
