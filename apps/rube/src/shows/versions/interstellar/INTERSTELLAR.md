@@ -231,7 +231,17 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 129 (latest)
+## Polish pass 130 (latest)
+
+No change to the show: the online music, played for the first time rather than checked by its numbers. Full Chrome for Testing (pass 129's) plays YouTube embeds headless, which the headless shell cannot. The show was played online (`/shows/`, no `?music=file`), and both embedded players were read every half-second through `YT.get` (video, position, state, volume), against the show's clock. The show's own `report()` is circular here: the clock follows it.
+- Opened online, the music is ready from YouTube with no fallback.
+- The hand-over. No Time for Caution (`kpK4cDk2bRs`) rolls silently at volume 0 from about 123 s, so it is playing by its cue. Cornfield Chase fades 96, 48, 7 from 126.0 to 127.0 s and pauses at 126.96 of its video, against a cue end of 126.984. No Time for Caution comes up 1, 47, 98, 100 from 126.5 to 128 s, the mix script's one-second fades crossing.
+- In step. After the hand-over the second video is where the cue puts it: at show time 130.00 s it is at 107.26 s, 103.76 + (130 − 126.5), to the hundredth.
+- The end. It stops at 240.01 s into the video, show time 262.75, against `MIX_END` 262.741, and stays paused under the credits. This confirms pass 103 by measurement.
+
+Whether it sounds right still needs an ear, as the pull request's test plan asks. That the right recordings play at the right places, and stop where they should, is now measured.
+
+## Polish pass 129
 
 No change to the show: pass 128's question, whether the tesseract and Edmunds' dawn are slow for a viewer or only for the test browser. The same live measurement (1280×800, 1.5 s of play) was run in full Chrome for Testing with GPU canvas (`--use-angle=metal --enable-gpu --enable-gpu-rasterization`), alternated twice with the software-only headless shell under the same load:
 
