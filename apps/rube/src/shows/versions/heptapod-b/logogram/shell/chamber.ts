@@ -37,26 +37,30 @@ interface ChamberState {
 const AT_GIANT = -1.0
 const AT_PALM = -Math.PI / 2 + 0.12
 const AT_RING = -0.55
+/** Ahead and up, at the glass as it wakes: the great wall of white at the end of the floor. */
+const AT_GLASS = -0.4
 /** Following the limb as it comes down out of the giants to her. */
 const LIMB_DOWN = 115.4
 /**
  * When she looks rather than rolls, and at what. Only while she is at rest (or all but), so her eye never slides on a
- * rolling ball: stopped as Abbott comes out of the white; at the glass's foot through the grand wide, the giants over
+ * rolling ball: stopped as the glass wakes, at it; stopped as Abbott comes out of the white; at the glass's foot through the grand wide, the giants over
  * her and then the limb coming down; and from the palm's opening through the touch and the writing, into the white.
  * Between them, and on the rolls, her eye rolls with her.
  */
 const LOOKS: Look[] = [
+  { from: 87.85, to: 89.2, at: () => AT_GLASS },
   { from: ABBOTT_SEEN + 0.3, to: 99.25, at: () => AT_GIANT },
   { from: 105.2, to: SET_OFF - 0.2, at: (t) => AT_GIANT + turnTo(AT_GIANT, AT_PALM) * ease((t - LIMB_DOWN) / 2.2) },
   { from: OPENS + 0.55, to: Infinity, at: (t) => AT_PALM + turnTo(AT_PALM, AT_RING) * ease((t - (SPRAY + 0.1)) / 0.6) },
 ]
 /**
- * Ian's eye, wherever he is stopped: up at Abbott as he hesitates for it, up at the giants through the wide and down
+ * Ian's eye, wherever he is stopped: at the glass as it wakes, up at Abbott as he hesitates for it, up at the giants through the wide and down
  * the limb as it comes to her, and from when he comes forward again, on her, going into the white.
  */
 const IAN_LOOKS: Look[] = [
+  { from: 88.15, to: 89.9, at: () => AT_GLASS },
   { from: 97.9, to: 101.55, at: () => AT_GIANT },
-  { from: 106.8, to: 119.5, at: (t) => AT_GIANT + turnTo(AT_GIANT, -0.35) * ease((t - LIMB_DOWN) / 2.2) },
+  { from: 106.8, to: 119.95, at: (t) => AT_GIANT + turnTo(AT_GIANT, -0.35) * ease((t - LIMB_DOWN) / 2.2) },
   { from: 129.25, to: Infinity, at: () => -0.3 },
 ]
 
