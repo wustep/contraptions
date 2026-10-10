@@ -91,6 +91,9 @@ function turn(a: number, b: number, w: number): number {
   return a + d * w
 }
 
+/** David's outline: the candle's warm light on him. */
+const DAVID_RIM = '#E9B868'
+
 const IDS: Record<Who, number> = { mia: MIA_ID, david: DAVID_ID, son: SON_ID }
 const COLORS: Record<Who, string> = { mia: MIA, david: DAVID, son: SON }
 
@@ -265,6 +268,9 @@ export class SebsShow extends Show {
     const b = span?.at(time)
     if (!b) return null
     const scale = who === 'son' ? (b.scale ?? 1) * SON_SCALE : b.scale
-    return { ...b, id: IDS[who], color: b.color ?? COLORS[who], scale }
+    // David, in the room as it is, lit by their table's candle: his outline warm, so he is seen as someone sitting with
+    // her, not a grey shape in the grey room.
+    const rim = who === 'david' ? DAVID_RIM : b.rim
+    return { ...b, id: IDS[who], color: b.color ?? COLORS[who], scale, ...(rim ? { rim } : {}) }
   }
 }
