@@ -8,6 +8,21 @@ import { frame, hash, rgba, scenery } from './kit'
  */
 const MOVIE: [number, number] = [340.5, 395.3]
 
+/**
+ * The grade: the room as it is, muted; the dream, in full colour, as the film's Epilogue does it. The real club at the
+ * start is graded colder and greyer, her yellow and his blue with it; the colour comes in as the spotlight's iris
+ * opens on Lipton's (39.95 to 41.9) and goes again as the rose drains out at the waking (451.5 to 453.73). Then on
+ * The End's swell, as his notes rise to become their stars over the city, it comes back: the music brings it.
+ */
+export function muted(t: number): number {
+  const ramp = (a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)))
+  const s = (u: number) => u * u * (3 - 2 * u)
+  if (t < 40.6) return 1 - s(ramp(39.95, 40.6))
+  if (t < 451.5) return 0
+  if (t < 494) return s(ramp(451.5, 453.73))
+  return 1 - s(ramp(494, 503))
+}
+
 let TILE: HTMLCanvasElement | null = null
 function tile(): HTMLCanvasElement | null {
   if (TILE || typeof document === 'undefined') return TILE
@@ -46,6 +61,17 @@ export const lens = scenery<null>({
     const h = f.y1 - f.y0
     const r = Math.hypot(w, h) / 2
     ctx.save()
+    const m = muted(t)
+    if (m > 0.01) {
+      // Greyer: the colour drawn out toward grey; and colder: a little blue laid in the shadows.
+      ctx.globalCompositeOperation = 'saturation'
+      ctx.fillStyle = rgba('#808080', 0.36 * m)
+      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      ctx.globalCompositeOperation = 'soft-light'
+      ctx.fillStyle = rgba('#3A5A9A', 0.28 * m)
+      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      ctx.globalCompositeOperation = 'source-over'
+    }
     const g = ctx.createRadialGradient(f.cx * k, f.cy * k, r * 0.55 * k, f.cx * k, f.cy * k, r * 1.02 * k)
     g.addColorStop(0, rgba('#000000', 0))
     g.addColorStop(1, rgba('#000000', 0.2))
