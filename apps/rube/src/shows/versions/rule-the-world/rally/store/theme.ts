@@ -4,9 +4,9 @@ import type { Theme } from '../../../../../../../../src/core/themes'
 export const STORE_THEME: Theme = {
   name: 'store',
   label: 'The Shoe Store',
-  bg: '#2A2119',
+  bg: '#1E1611',
   ink: '#E9DCC4',
-  colors: ['#2A2119', '#E9DCC4'],
+  colors: ['#3B2C21', '#B8946A', '#D8C7A4', '#FFD48A', '#7FA6C8', '#171515'],
   weight: 0.8,
-  note: 'The Shoe Store',
+  note: "Uncle Murray's shoe store, before it opens: walls of shoe boxes to the ceiling, the stockroom, the safe in the back office.",
 }
