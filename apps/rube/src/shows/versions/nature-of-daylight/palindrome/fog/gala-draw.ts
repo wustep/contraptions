@@ -1,12 +1,11 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
-import { drawInk, mix, rgba } from '../cast'
+import { mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
 import { beats, level, SEAM } from '../music'
-import { GALA, LOUISE, TENT } from '../worlds'
+import { GALA, TENT } from '../worlds'
 import { CALL_X, drawHandset, KEY_SPAN, KEY_W, KEYS, PHONE_BODY } from '../twelve/tent'
 import { NUMBER } from '../twelve/timeline'
-import { herAt as fogHerAt, SMALL, SMALL_TURN, smallBloom, smallC, smallPale, smallR, smallTendrils, smallU } from './plan'
 import {
   BOTTLE,
   bottleAngle,
@@ -25,7 +24,6 @@ import {
   tierFill,
   T_TOAST,
   T_TOUCH,
-  herAt,
 } from './gala-plan'
 
 /**
@@ -464,7 +462,6 @@ export function drawGala(p: p5, k: number, t: number): void {
   chandelier(ctx, k, f, 5.4, t, 2)
   crowd(ctx, k, f, t)
   haze(ctx, k, f, t)
-  carried(p, k, t)
   // The foreground floor's sheen, and the tower's light lying on it.
   const sheen = ctx.createLinearGradient(0, FLOOR_Y * k, 0, (FLOOR_Y + 1.5) * k)
   sheen.addColorStop(0, rgba(GALA.lightWarm, 0.1))
@@ -474,39 +471,6 @@ export function drawGala(p: p5, k: number, t: number): void {
   tower(ctx, k, t)
   stand(ctx, k, t)
   number(ctx, k, t)
-  p.pop()
-}
-
-/**
- * The ring she was shown, carried across the cut into the gala: at the cut it is where it was, in the same place by
- * her on the screen (the cut carries her and the camera together), and pales away in a second. In the fog it is ink
- * on white; here, on the dark room, a ghost of it in light. So the gala comes out of what she is shown, as the swing
- * did, and reads as another thing she sees: years on, not the next day. Gone before the camera has drawn back far: it is
- * drawn in the room, and over a second and a half the draw-back shrank it onto the floor among the guests, a pale hoop
- * standing in the ballroom, a prop.
- */
-function carried(p: p5, k: number, t: number): void {
-  const at = SEAM.gala
-  const fade = 1 - smooth(t, at + 0.15, at + 0.38)
-  if (t < at || fade <= 0.001) return
-  const c = smallC(at)
-  const her0 = fogHerAt(at)
-  const here = herAt(at)
-  // Gathered into her at once, in her own gold, and gone in a third of a second: the cut's carry, not a thing in the
-  // room. (Any frame of it a fresh eye caught, over four tries at it, they took for a thing in the ballroom: a wreath,
-  // a layer left showing, a hoop, a hula hoop; and the gala reads as a future she is shown without it lingering.)
-  const into = smooth(t, at, at + 0.32)
-  const now = herAt(t)
-  const x = here[0] + c[0] - her0[0] + (now[0] - (here[0] + c[0] - her0[0])) * into
-  const y = here[1] + c[1] - her0[1] + (now[1] - (here[1] + c[1] - her0[1])) * into
-  const ctx = p.drawingContext as Ctx
-  p.push()
-  p.translate(x * k, y * k)
-  p.rotate(SMALL_TURN)
-  ctx.save()
-  ctx.globalAlpha *= (1 - smallPale(at)) * 1.5 * fade
-  drawInk(p, k, 0, 0, smallR(at) * (1 - 0.88 * into), SMALL, smallU(at), { tendrils: smallTendrils(at) * (1 - into), bloom: smallBloom(at), color: mix(LOUISE, GALA.lightWarm, 0.35) })
-  ctx.restore()
   p.pop()
 }
 

@@ -5,8 +5,7 @@ import { SEAM, beats, chords } from '../music'
 /**
  * The gala, years on, as a plan (gala world cells, y down; the floor's top at y = R, so a ball on it has y = 0).
  *
- *   266.124  at rest in the room, in champagne light, beside the tower of coupes and its pouring stand; the ring she
- *            was shown carried in with her, its ghost paling over the room.
+ *   266.124  at rest in the room, in champagne light, beside the tower of coupes and its pouring stand.
  *   267.012  she rolls onto the stand's pedal: the bottle over the tower tips and pours.
  *   267.964  the top coupe brims and runs over into the tier below...
  *   268.968  ...the second tier brims...
