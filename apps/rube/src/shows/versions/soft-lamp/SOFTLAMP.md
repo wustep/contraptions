@@ -148,21 +148,24 @@ triple-pole critically damped rig, so every move starts with neither speed nor a
 overshooting over about six seconds. It is the sum of each aim's step response: a function of time, so scrubbing back is
 the same frame as playing forward.
 
-The frames: the room (the show opens and closes on it); the sill walk (the frame keeping a little ahead of the ball,
-resting at the sill's end); the stair, a bar and a half before each drop; and through each groove, a phrase (eight
-bars) at a time, four looks at the same desk, each track taking them in its own order:
+It is meant to be still most of the time, as the streams are (six cold reviews asked for that; passes sixty-four,
+sixty-five, sixty-eight and seventy took it most of the way): seventy-three held frames in the half hour, each held
+for forty seconds or more as a rule. The frames:
 
-- the cup, close: the ball in its seat, the stair's foot, the band rising out of frame;
-- the desk under the lamp: the cat, books, cup, band and the whole lamp over them;
-- the window over the desk: the rain, the plant and the mug, and the machine small under the lamp;
-- the lamp's side: the shade, the band's arch, the cup under the light.
+- the room, wide: the show opens and closes on it;
+- the window over the desk: the rain, the plant and the mug, the kitten, the machine small under the lamp. Held through
+  each sill walk, the ball walking across a still picture, and one of the groove's two homes;
+- the stair, a bar and a half before each drop;
+- the desk under the lamp: the kitten, the books, the headphones and the whole lamp: the groove's other home;
+- the lamp's side: the shade, the band's arch, the cup under the light, once in each cycle of six looks.
 
-A break draws back to the room (one long enough for the move to settle), and so does the bar before each lob, so the
-whole arc is in the frame.
+Through each groove a look holds two phrases (sixteen bars), each track taking them in its own order. A break draws
+back to the room (one long enough for the move to settle), and so does the bar before each lob, so the whole arc is in
+the frame. The kitten is in the frame 90% of the half hour. (The cup, close, was a fourth look; it is out of the
+rotation, sixty-eighth pass.)
 
 Every held frame is composed: each prop in it whole and clear of the frame's edges by a tenth of a cell, or not in it
-at all (the props stand across the desk with few gaps between them, so each frame is solved for edges that fall in
-those gaps). Under Zoom (the same frame half again closer) the ball is in the picture 99.9% of the half hour.
+at all. Under Zoom (the same frame half again closer) the ball stays in the picture all but a moment.
 
 ## The words
 
@@ -1165,8 +1168,7 @@ painterly look (taken, the sixty-ninth pass). The other two would change the pie
      about a fifth of the half hour. It holds the window over the desk now, the whole sill in it, and the ball walks
      across a still picture. The camera has seventy-three aims in the half hour where it had a hundred and seventy-six,
      every one a held frame; Zoom still keeps the ball. A shooting star that the new timing put two seconds after a lob
-     keeps clear of the machine's moments now. (The description of the sill walk under "The camera", above, is of the
-     old following frame.)
+     keeps clear of the machine's moments now.
 
 **Subtracted:** the camera following the ball along the sill (a held frame now); the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
