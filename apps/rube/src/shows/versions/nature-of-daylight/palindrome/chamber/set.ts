@@ -703,8 +703,10 @@ function pour(ctx: Ctx, k: number, t: number, f: Frame): void {
   const top = HOLE_TOP * (0.35 + 0.35 * u)
   const a = 0.5 + 0.35 * smooth(t, T.flood, T.fog)
   ctx.save()
-  const layers = 7
-  for (let layer = 0; layer < layers; layer++) {
+  // Fine steps over the same depth: at seven, the bank's tops stood in the room as nested arcs.
+  const layers = 24
+  for (let i = 0; i < layers; i++) {
+    const layer = (i * 6) / (layers - 1)
     const lift = layer * 0.2
     const al = (a * 1.1) / layers
     const gx = ctx.createLinearGradient(FAR * k, 0, (front - layer * 0.35) * k, 0)

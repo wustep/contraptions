@@ -928,6 +928,14 @@ the ring's cold light pooled on it by the wall, brighter as the screens come bac
 and the floor going dark toward us. The shadow was cut square at first and stood on the floor as a box; it is an
 ellipse, soft at its ends.
 
+A hundred-and-third filmed the whole show at six frames a second and measured each frame against the last: every
+jump was a cut, on the music, or a gesture meant to be quick (the palm drawn back after each word, the ring gathered
+onto the rail). Then it went through the show in an ultrawide frame. After the blast (224 to 231 s) the white
+coming in through the broken glass was seven nested banks, each with a hard top, and they stood in the dark room as
+stacked arcs. It is twenty-four now over the same depth, one soft bank. The wedge of light on the wall was
+made the same way and was tried finer too, but twenty-four near-clear layers piled the browser's gradient dither into
+a grain with a seam at its end; it stays at nine, whose edges did not show.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
