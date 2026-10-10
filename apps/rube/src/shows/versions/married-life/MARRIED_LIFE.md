@@ -770,6 +770,10 @@ window.
     top, a pale bulb and a faint glow, its going out was not seen. Now the shade and bulb are drawn half as big again
     (`LAMP_SCALE`), lit it is a bright warm bulb with a stronger bloom and cone down the wall, out it is dark, and as it
     blows a thin wisp of smoke rises off it for a second.
+  - *The bigger lamp, re-watched* by an eleventh viewer who has never seen Up (the same stretch and questions): the lamp
+    now named as why he climbs ("to fix or change the lamp that just went out", 60%, from never named and 40%); him who
+    falls and is bandaged (80%). It thought the lamp lit again by 124.5; it does not (the bulb is dark there, the
+    shade back in the frame as the camera moves).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
