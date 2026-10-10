@@ -142,6 +142,11 @@ async function main(): Promise<void> {
   // up to 5 on its own, so the next recording was heard faintly under the one before it for eight seconds (pass 133).
   {
     const yt = readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.ts'), 'utf8')
+    // WebKit lets a player sound only if it was played inside a gesture; a later cue first played by the timer was
+    // stopped at its entry, and the show stood waiting there for good (pass 143). Each is warmed in the press, once.
+    check('every later YouTube cue is warmed inside the viewer\'s press, once, so WebKit lets it sound at its entry',
+      /function begin\(\): Promise<PlayResult> \{\s*arrange\(shown\)[\s\S]{0,700}if \(!x\.blessed && x\.ready && x\.cue\.at > shown && !x\.running && x\.warm !== 'on'\) \{\s*x\.blessed = true\s*warmUp\(x\)/.test(yt) &&
+      yt.includes("blessed: false, ear: listener()"))
     check('a YouTube cue running early or warming is muted until its entry, and follows the viewer\'s mute after',
       /const hush = \(d: Deck, silent: boolean\) => \{\s*if \(muted \|\| silent\) d\.player!\.mute\(\)/.test(yt) &&
       yt.includes('hush(d, early)') && /d\.warm = 'on'[\s\S]{0,80}hush\(d, true\)/.test(yt) &&

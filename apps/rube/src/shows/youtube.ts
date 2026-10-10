@@ -185,6 +185,8 @@ interface Deck {
   movingAt: number
   /** Warming ahead of its entry (`WARM`): 'on' while it plays silently, 'done' once parked, buffered. */
   warm: 'no' | 'on' | 'done'
+  /** Played once inside a viewer's press (`begin`), so WebKit lets it sound later. */
+  blessed: boolean
   ear: ReturnType<typeof listener>
 }
 
@@ -390,6 +392,16 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
   /** Start the cue the show is in, and hear whether the browser lets it. */
   function begin(): Promise<PlayResult> {
     arrange(shown)
+    // Every later cue is warmed now, inside the viewer's press, once. WebKit lets a player sound only if it was played
+    // during a gesture: one first played by the timer minutes later, as a cue running early before its entry is, is
+    // stopped the moment it is made heard (pass 143: Voyage's hand-over at 126.5 s, and the show stood waiting there
+    // for good). Played muted here and parked, it may sound later. Elsewhere it is only an early fetch.
+    for (const x of decks) {
+      if (!x.blessed && x.ready && x.cue.at > shown && !x.running && x.warm !== 'on') {
+        x.blessed = true
+        warmUp(x)
+      }
+    }
     const d = at(shown)
     if (!d || shown >= end(d)) return Promise.resolve<PlayResult>('playing')
     const began = performance.now()
@@ -455,7 +467,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
         const mount = document.createElement('div')
         box.append(mount)
         host.append(box)
-        return { cue: settle(c), player: null, box, ready: false, state: UNSTARTED, running: false, early: false, volume: -1, toldAt: 0, lead: 0, movingAt: 0, warm: 'no', ear: listener() }
+        return { cue: settle(c), player: null, box, ready: false, state: UNSTARTED, running: false, early: false, volume: -1, toldAt: 0, lead: 0, movingAt: 0, warm: 'no', blessed: false, ear: listener() }
       })
       raise(null)
       loadApi().then(
