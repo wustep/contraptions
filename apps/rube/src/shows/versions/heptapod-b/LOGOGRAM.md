@@ -449,6 +449,11 @@ changed, in the order of the film, and then what runs through it:
 - **The crescent left behind** (167.3 → 170.3): flung up out of it, she rises with the camera, and the crescent,
   fading only from 168.5, sat cut by the frame's bottom edge, a sliver and then a pale arc, under the great ring's
   first strokes. It goes back into the white as she leaves it now, while it is still in the picture.
+- **A limb that switched in a frame**: a scan of every frame at 30 fps for anything that changes in one frame and not
+  around it. Through fog2 Costello's writing limb was picked afresh every frame as the foot nearest the ring's first
+  ink seen from the moving camera, so as the frame's middle passed between two feet the reach jumped to another limb in
+  a single frame (144.8, 148.43): it is chosen once, as the ring is born. And it can reach with two limbs at once now,
+  so rings written close together each keep their own, each spray from its own.
 
 ## Arrival nods
 
