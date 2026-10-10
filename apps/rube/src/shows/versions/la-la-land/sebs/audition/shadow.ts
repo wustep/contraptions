@@ -632,6 +632,51 @@ function drawSong(p: p5, k: number, t: number): void {
   ctx.restore()
 }
 
+/**
+ * She gets the part: as the pen finishes signing, a gold star lifts off the signed paper and arcs across the screen to
+ * her, and settles over her, glowing, through the flood. Gold, like her name in lights over Hollywood.
+ */
+const STAR_FROM = PEN[2] + 0.1
+const STAR_AT = LEAP + 0.25
+function partStar(t: number): { x: number; y: number; a: number; s: number } | null {
+  if (t < STAR_FROM || t > 195.9) return null
+  const [px, py] = penPath(PEN[2])
+  const [mx, my] = miaPath(Math.min(t, STAR_AT))
+  const to: Pt = [mx, my - 0.42]
+  const u = Math.max(0, Math.min(1, (t - STAR_FROM) / (STAR_AT - STAR_FROM)))
+  const e = u * u * (3 - 2 * u)
+  const x = px + (to[0] - px) * e
+  const y = py - 0.1 + (to[1] - py + 0.1) * e - 1.1 * 4 * e * (1 - e)
+  const settled = t > STAR_AT ? miaPath(t) : null
+  return settled ? { x: settled[0], y: settled[1] - 0.42, a: 1, s: 1 + 0.15 * Math.sin((t - STAR_AT) * 5) * Math.exp(-(t - STAR_AT)) } : { x, y, a: Math.min(1, (t - STAR_FROM) / 0.15), s: 0.7 + 0.3 * e }
+}
+function drawPartStar(p: p5, k: number, t: number): void {
+  const q = partStar(t)
+  if (!q) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const r = 0.11 * q.s
+  ctx.save()
+  ctx.translate(q.x * k, q.y * k)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 3 * k)
+  g.addColorStop(0, rgba(SHADOW_MAT.gold, 0.55 * q.a))
+  g.addColorStop(1, rgba(SHADOW_MAT.gold, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(-r * 3 * k, -r * 3 * k, r * 6 * k, r * 6 * k)
+  ctx.beginPath()
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + (i * Math.PI) / 5
+    const rr = (i % 2 ? 0.45 : 1) * r * k
+    ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr)
+  }
+  ctx.closePath()
+  ctx.fillStyle = rgba(MIA, q.a)
+  ctx.strokeStyle = rgba(INK, 0.8 * q.a)
+  ctx.lineWidth = Math.max(1, 0.012 * k)
+  ctx.fill()
+  ctx.stroke()
+  ctx.restore()
+}
+
 export const shadow = part<ShadowState>(
   {
     name: 'shadow',
@@ -697,6 +742,7 @@ export const shadow = part<ShadowState>(
       pen(p, k, penPath(t), penLean(t))
       lamp(p, k, pose)
       drawSong(p, k, t)
+      drawPartStar(p, k, t)
 
       // At the crest the light eats the shapes and the dark round the screen, from the two of them outward: only they
       // are left in it.
