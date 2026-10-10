@@ -26,6 +26,7 @@ import {
   UPSTAGE,
 } from './painted-waltz'
 import { lampLight } from './stars-sky'
+import { drawPianoFigure } from '../piano-figure'
 
 /**
  * The stars: the painted Paris flies out, and they are alone on a dark floor
@@ -60,10 +61,17 @@ interface Kindled {
 }
 
 const rot = (q: Pt, a: number): Pt => [q[0] * Math.cos(a) - q[1] * Math.sin(a), q[0] * Math.sin(a) + q[1] * Math.cos(a)]
-const inSky = (local: Pt, T: number): Pt => {
+/** A star of the sky's own turning frame at `T`, in the NIGHT frame (the waltz's). */
+export const inSky = (local: Pt, T: number): Pt => {
   const q = rot(local, skyAngle(T))
   return [POLE[0] + q[0], POLE[1] + q[1]]
 }
+
+/** The projector's place (see the machine of the night, below): its axis across, and where its feet stand on the glass, a
+ * little upstage of the line the two of them pushed off from. Here, because the stars are placed against the frame
+ * that holds both them and it. */
+const PX = 11.0
+const PBASE = -0.2
 
 /**
  * The notes' stars make a crown round the pole of the sky, which is where the
@@ -85,8 +93,11 @@ export const KINDLED: Kindled[] = (() => {
         const r = r0 + 0.12 * scatter(i, 200)
         const local = rot([r * Math.cos(a), r * Math.sin(a)], -skyAngle(DIP))
         const born = inSky(local, at)
-        // In the picture when lit: near them, and a little above the floor's edge.
-        let score = Math.min(3.1 - Math.abs(born[1] - c0[1]), 5.2 - Math.abs(born[0] - c0[0]))
+        // In the picture when lit: inside the frame the camera holds then, which sits between them and the projector
+        // (four tenths of the way down to it) and is about five cells tall, with a margin, and a little above the floor.
+        const fy = c0[1] + (PBASE - 0.95 - c0[1]) * 0.4
+        const fx = c0[0] + (PX - c0[0]) * 0.4
+        let score = Math.min(2.05 - Math.abs(born[1] - fy), 3.4 - Math.abs(born[0] - fx))
         for (let t = at; t < DARK[1]; t += 0.1) {
           const q = inSky(local, t)
           const m = centre(t)
@@ -176,9 +187,6 @@ function reflection(p: p5, k: number, ink: string, weight: number, color: string
  * lenses blur, stopped with them on the dip. The sky it throws is the sky that turns round them, and each star the
  * melody lights is thrown from one of its lenses.
  */
-const PX = 11.0
-/** Where its feet stand on the glass: a little upstage of the line the two of them pushed off from. */
-const PBASE = -0.2
 const AXIS = -0.52
 const HALF = 0.62
 const GLOBE_R = 0.27
@@ -295,6 +303,27 @@ function drawProjector(p: p5, k: number, ink: string, weight: number, T: number,
 }
 
 /** Each star the melody lights is thrown from the high globe: a thread of light out to it that flares and goes. */
+/**
+ * What it throws: two broad soft cones of light from the high globe, opposite each other, turning with it as it turns
+ * (geared to their waltz), so the sky is swept as a lighthouse sweeps the sea: slowly while they float, fast in the
+ * whirl. Only the cones pointing up into the night are seen.
+ */
+function projectorBeams(p: p5, k: number, T: number): void {
+  const on = lamp(T)
+  if (on <= 0.01) return
+  const g = globeAt(T, 1)
+  const base = -Math.PI / 2 + spin(T) * 1.6
+  for (let i = 0; i < 2; i++) {
+    const a = base + i * Math.PI
+    const up = -Math.sin(a)
+    if (up <= 0.05) continue
+    const L = 11
+    const ex = g[0] + Math.cos(a) * L
+    const ey = g[1] + Math.sin(a) * L
+    beam(p, k, g[0], g[1], ex, ey, 0.18, 4.2, '#C9D8FF', 0.085 * on * Math.min(1, up * 2))
+  }
+}
+
 function throwStars(p: p5, k: number, T: number): void {
   const g = globeAt(T, 1)
   for (const q of KINDLED) {
@@ -305,6 +334,31 @@ function throwStars(p: p5, k: number, T: number): void {
     beam(p, k, g[0], g[1], x, y, 0.04, 0.16, NIGHT_MAT.star, 0.28 * f)
   }
 }
+
+/** For each star after the first, the star it is joined to: the nearest of those lit before it (the sky turns them all
+ * together, so the nearest in its own frame is the nearest in the picture). */
+export const JOIN: number[] = KINDLED.map((q, i) => {
+  let best = 0
+  let bd = Infinity
+  for (let j = 0; j < i; j++) {
+    const d = Math.hypot(q.local[0] - KINDLED[j].local[0], q.local[1] - KINDLED[j].local[1])
+    if (d < bd) { bd = d; best = j }
+  }
+  return best
+})
+
+/** How far the piano figure is drawn at `T`: a share of its outline for each star lit, whole (1) and then its keys (to
+ * 1.4) through the dip. */
+export function figureDraw(T: number): number {
+  let lit = 0
+  for (const q of KINDLED) lit += smooth(T, q.at, q.at + 0.9)
+  return Math.max((lit / KINDLED.length) * (1 - 0.0001), smooth(T, DIP - 1.6, DIP + 0.9) * 1.4)
+}
+
+/** The figure: centred a little above them at the dip, so they are inside it, its keyboard below them. */
+export const FIGURE_SIZE = 2.25
+export const FIGURE_TURN = -0.12
+export const FIGURE_AT = (): Pt => [POLE[0] + 0.1, POLE[1] + 0.5]
 
 /* ------------------------------------------------------------------ the part */
 
@@ -330,8 +384,42 @@ export const stars = part<StarsState>(
       p.translate(-s.o[0] * k, -s.o[1] * k)
       // The projector in the glass, then itself, and the light it throws to each new star.
       drawProjector(p, k, c.ink, c.weight, T, true)
+      projectorBeams(p, k, T)
       drawProjector(p, k, c.ink, c.weight, T, false)
       throwStars(p, k, T)
+      // The constellation they make: each star the melody lights is joined to the nearest of the stars already lit, the
+      // line drawing out from it to the new one as it lights, so the sky gathers one branching figure round them as
+      // the waltz goes on, its lines short and none across another.
+      // It turns with the sky, and goes with the projector's lamps when the lights go.
+      {
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        const fade = 1 - smooth(T, DARK[0], DARK[0] + 0.6)
+        ctx.save()
+        ctx.lineCap = 'round'
+        ctx.lineWidth = Math.max(0.6, 0.014 * k)
+        for (let i = 1; i < KINDLED.length; i++) {
+          const q = KINDLED[i]
+          const u = smooth(T, q.at, q.at + 0.7)
+          if (u <= 0 || fade <= 0) continue
+          const [x0, y0] = inSky(KINDLED[JOIN[i]].local, T)
+          const [x1, y1] = inSky(q.local, T)
+          ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.22 * fade)
+          ctx.beginPath()
+          ctx.moveTo(x0 * k, y0 * k)
+          ctx.lineTo((x0 + (x1 - x0) * u) * k, (y0 + (y1 - y0) * u) * k)
+          ctx.stroke()
+        }
+        ctx.restore()
+      }
+      // The planetarium draws the figure its stars make, as a planetarium does: in fine gold line round the two of them,
+      // a grand piano. Held through the touch; it goes with the lamps.
+      {
+        // It draws on through the waltz, a stretch of line for each star the melody lights, faint while it grows; at the
+        // dip it is whole and bright, and the keys come in.
+        const draw = figureDraw(T)
+        const a = (0.4 * smooth(T, KINDLED[0].at, KINDLED[0].at + 0.8) + 0.6 * smooth(T, DIP - 1.6, DIP - 0.8)) * (1 - smooth(T, DARK[0], DARK[0] + 0.5))
+        drawPianoFigure(p, k, FIGURE_AT(), FIGURE_SIZE, FIGURE_TURN, draw, a, NIGHT_MAT.gold)
+      }
       // The lit stars, and theirs in the floor.
       for (const q of KINDLED) {
         if (T < q.at) continue
@@ -375,8 +463,11 @@ export const stars = part<StarsState>(
       const q = centre(t)
       return here([q[0] + dx, q[1] + dy])
     }
-    /** The pair and their reflection both: held on the floor's line between them. */
-    const both = (t: number): Pt => here([(centre(t)[0] + PX) / 2, -0.6])
+    /** Further out: the two of them and the machine low in the frame, the turning sky over them, a strip of the glass. */
+    const high = (t: number): Pt => {
+      const c = centre(t)
+      return here([(c[0] + PX) / 2, PBASE - 2.8])
+    }
     /** Halfway between the two of them and the projector they rise from: both in the picture. */
     const mid = (t: number, bias = 0.5): Pt => {
       const c = centre(t)
@@ -391,19 +482,22 @@ export const stars = part<StarsState>(
       { t: APEX - 0.4, cells: 5.4, hold: mid(APEX - 0.4, 0.45) },
       { t: 309.0, cells: 5.0, hold: mid(309.0, 0.4) },
       { t: 313.6, cells: 5.2, hold: mid(313.6, 0.4) },
-      // The scale of it: the two of them in the turning sky, the machine, and all of it again in the glass.
-      { t: 316.6, cells: 7.6, hold: both(316.6) },
-      { t: 319.4, cells: 7.3, hold: both(319.4) },
-      { t: 323.6, cells: 5.2, hold: mid(323.6, 0.4) },
-      // Close, in the quiet.
-      { t: QUIET[0] + 1.2, cells: 4.1, hold: on(QUIET[0] + 1.2, -0.45) },
-      { t: QUIET[1], cells: 4.2, hold: on(QUIET[1], -0.45) },
+      // The scale of it: out, the two of them small in the turning sky and its nebula, the machine sweeping it, and all
+      // of it again in the glass.
+      { t: 316.8, cells: 8.0, hold: high(316.8) },
+      { t: 319.6, cells: 8.3, hold: high(319.6) },
+      { t: 323.6, cells: 5.4, hold: mid(323.6, 0.4) },
+      // (Held a beat, so the last star the melody lights is in the picture its second.)
+      { t: 325.2, cells: 5.2, hold: mid(325.2, 0.35) },
+      // And close, in the quiet: the two of them in each other's arms, filling the frame, with the open sky round them.
+      { t: QUIET[0] + 1.2, cells: 2.5, hold: on(QUIET[0] + 1.2, -0.6) },
+      { t: QUIET[1], cells: 2.35, hold: on(QUIET[1], -0.6) },
       // The swell: out to the whole wheel of the sky round them, the projector whirling under them.
-      { t: 334.4, cells: 7.8, hold: mid(334.4, 0.45) },
+      { t: 334.4, cells: 9.5, hold: mid(334.4, 0.45) },
       { t: DIP, cells: 6.2, hold: mid(DIP, 0.35) },
-      // In on the held dip, and on the touch.
-      { t: LAST, cells: 4.8, hold: on(LAST, 0.1) },
-      { t: DARK[1], cells: 4.6, hold: on(DARK[1], 0.1) },
+      // In on the held dip, and on the touch, the projector whole under them: its lamps flare on the touch and go out.
+      { t: LAST, cells: 5.0, hold: mid(LAST, 0.4) },
+      { t: DARK[1], cells: 4.8, hold: mid(DARK[1], 0.4) },
     ]
   },
 )

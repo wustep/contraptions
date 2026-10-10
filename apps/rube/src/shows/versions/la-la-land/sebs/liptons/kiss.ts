@@ -119,38 +119,49 @@ export const kiss = part<null>(
       // The stage light opens on the keys where the opening left them, and draws back to the room: the door, the piano.
       [39.9, 2.8, [3.0, -0.3]],
       [42.7, 12.5, [-4.6, -0.6]],
-      // Her walk, table by table, the piano coming into the right of the frame.
-      [45.6, 6.5, [-8.0, 1.5]],
-      [50.5, 6.2, [-5.2, 1.5]],
-      [55.2, 5.8, [-2.4, 1.3]],
+      // Her walk, table by table: close enough that she is someone crossing a room, with the windows and their snow over
+      // her. Then, from halfway, him at the keys at the right of the frame and her at the left, so it is him she is
+      // drawn across the room to, and the frame closes on the two of them as she nears.
+      [45.6, 5.5, [-8.0, 1.4]],
+      [48.0, 5.5, [-7.0, 1.4]],
+      [50.5, 6.4, [-2.1, 1.4]],
+      [53.0, 5.9, [-1.75, 1.35]],
+      [55.2, 5.6, [-1.25, 1.3]],
+      // Closing on the two of them as the distance between them closes.
+      [56.6, 4.7, [0.35, 1.2]],
       // The stage: he runs up the keys, she runs along under them.
-      [57.8, 5.4, [1.2, 1.1]],
+      [57.8, 4.8, [1.0, 1.15]],
       [61.5, 4.6, [4.3, 0.9]],
       // The hush: in, slowly, on the piano's end.
       [62.3, 4.6, [5.4, 0.7]],
       [64.2, 4.2, [5.85, 1.05]],
-      // Closest, and stillest, a breath before they touch; as they touch it starts back.
-      [65.3, 3.4, [6.15, 1.75]],
+      // Closest, and stillest, a breath before they touch, the two of them in the middle of the picture under the
+      // piano's end; held on them through the touch, and then it starts back.
+      [65.3, 3.2, [6.2, 2.42]],
+      [65.85, 3.15, [6.2, 2.42]],
       // The bloom, one move: back off the kiss and up as the room's lights come on out both ways, across to the
       // tables as their lamps flare, wide on the whole lit room while still drifting, and on round to the tree.
-      [66.4, 8.0, [1.9, -0.1]],
+      [66.5, 6.2, [3.9, 0.9]],
       [67.25, 11.8, [-0.3, -0.8]],
       [68.6, 13.0, [2.2, -1.05]],
       // To the tree, and up it with the cup.
       [70.8, 6.5, [8.4, 1.3]],
       [73.6, 7.6, [7.6, -0.8]],
       [76.6, 7.2, [8.1, -2.8]],
-      // Across the room on the bulbs: close, a little ahead of them, so each bulb is seen lighting beside them.
-      [T.tip, 6.2, [7.7, -3.5]],
-      [(T.swags[0] + T.swags[1]) / 2, 6.0, [5.0, -3.3]],
-      [(T.swags[1] + T.swags[2]) / 2, 5.9, [0.2, -2.8]],
-      [(T.swags[2] + T.swags[3]) / 2, 5.9, [-4.65, -2.1]],
-      [(T.swags[3] + T.swags[4]) / 2, 6.0, [-9.5, -1.3]],
-      [T.swags[4], 6.2, [-11.3, -0.9]],
+      // Across the room on the bulbs: close, a little ahead of them, so each bulb is seen lighting beside them, and high
+      // enough that the frame is them, the string and the garland over it, not the piano's lid cut off along its foot.
+      [T.tip, 5.0, [7.7, -3.95]],
+      // Held on the star while the cup tips them out onto the string; then along it with them.
+      [T.tip + 0.55, 5.0, [7.65, -3.95]],
+      [(T.swags[0] + T.swags[1]) / 2, 4.1, [5.0, -3.75]],
+      [(T.swags[1] + T.swags[2]) / 2, 4.0, [0.2, -3.3]],
+      [(T.swags[2] + T.swags[3]) / 2, 4.0, [-4.65, -2.55]],
+      [(T.swags[3] + T.swags[4]) / 2, 4.3, [-9.5, -1.65]],
+      [T.swags[4], 4.7, [-11.3, -1.1]],
       // Down the garland, out of the door.
-      [87.2, 6.3, [-12.4, 0.9]],
-      [88.6, 6, [-14.1, 1.35]],
-      [90.0, 6, [-14.6, 1.4]],
+      [87.2, 5.1, [-12.4, 1.1]],
+      [88.6, 5.0, [-14.1, 1.45]],
+      [90.0, 5.0, [-14.6, 1.5]],
     ]
     return keys.map(([t, cells, hold]): PartShot => ({ t, cells, hold: toK(hold) }))
   },
