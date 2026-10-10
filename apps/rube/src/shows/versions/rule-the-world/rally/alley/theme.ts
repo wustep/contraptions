@@ -4,9 +4,9 @@ import type { Theme } from '../../../../../../../../src/core/themes'
 export const ALLEY_THEME: Theme = {
   name: 'alley',
   label: 'The Bowling Alley',
-  bg: '#211A26',
+  bg: '#160F12',
   ink: '#EBDDCB',
-  colors: ['#211A26', '#EBDDCB'],
+  colors: ['#160F12', '#561324', '#C68A45', '#EAF8EE', '#0E1C33', '#EBDDCB'],
   weight: 0.8,
   note: 'The Bowling Alley',
 }
