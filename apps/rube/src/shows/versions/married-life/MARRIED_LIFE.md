@@ -219,7 +219,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   (a roll of blank tickets on its top, a hand lever that throws down on each stamp, a window whose reel rolls through
   a city, the sea, mountains, to the falls) on bars 57 to 60, as the music presses on, and the camera pushes in slowly
   on the press, the basket and him until it is close (2.55 cells) on the slot and the basket as the two tickets fly
-  into it on the cadence (166.93, 167.28); it draws back as the lid shuts on 167.71, on through the cut. Past the open front door the
+  into it on the cadence (166.93, 167.28), each thrown high off the slot and turning slowly, so it is seen whole
+  against the wall over the press before it drops in; it draws back as the lid shuts on 167.71, on through the cut. Past the open front door the
   porch has its rail and the evening sky. He goes out after her with the basket on his top.
 
 ### The climb (167.71 to 180.41 s): the hill, years later
@@ -718,6 +719,13 @@ window.
   - *Memory over repeated plays* (the whole show six times over at 4x, the heap read after two garbage collections
     each time): 14.7 MB at the start, 19.2 after the first pass (caches filling), then 20.0, 20.3, 20.3, 20.2, 21.2;
     the page's elements 222 throughout. No leak.
+  - *The ticket press* (both fresh viewers misread it: a slot machine, a camera; the slips known for tickets only on
+    the hill). The tickets had a third of a second each, the cadence's two notes, and on a true fall they made a low
+    hop at the basket's rim, spinning, gone in a blink. Now each is thrown (`ticketAt`, `ties.ts`): a stage's
+    gravity, harder for the shorter first flight, so both rise about a third of a cell over the slot and turn
+    slowly, seen whole against the wall, red and white, before they drop in; the timing on the notes is unchanged.
+    A check holds both at least a quarter cell over the slot and inside the frame, under Zoom too (the first try,
+    higher, touched Zoom's top).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits

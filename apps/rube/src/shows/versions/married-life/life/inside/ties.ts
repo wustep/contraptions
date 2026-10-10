@@ -1002,7 +1002,13 @@ function seated(j: number, T: number): { angle: number; snug: number } {
   return { angle: loose + jiggle, snug: smooth(T, Tc - 0.03, Tc + 0.05) }
 }
 
-/** The tickets' flights: from the machine's slot, up and over into the basket on his top. */
+/**
+ * The tickets' flights: from the machine's slot, up and over into the basket on his top. Each has a third of a second
+ * (the cadence's two notes), and on a true fall it was a low hop at the basket's rim, spinning, gone in a blink: two
+ * fresh viewers read the press as a slot machine or a camera, and knew the slips for tickets only on the hill. So they
+ * are thrown: popped high off the slot (`LOFT`, its gravity a stage's, not the world's) and turning slowly, so each is
+ * seen whole against the wall over the press before it drops in.
+ */
 const SLOT: Pt = [MACHINE.x + MACHINE.half + 0.03, MACHINE.wy - 0.02]
 function ticketAt(from: number, to: number, T: number): { x: number; y: number; a: number } | null {
   if (T < from || T >= to) return null
@@ -1010,10 +1016,23 @@ function ticketAt(from: number, to: number, T: number): { x: number; y: number; 
   const tx = top.x + 0.07
   const ty = top.y - BASKET.h + 0.08
   const D = to - from
+  // The same height for both, though the first has less time: thrown harder for a shorter flight.
+  const LOFT = 2.2 * G_EARTH * ((SHUT - STAMP2) / D) ** 2
   const vx = (tx - SLOT[0]) / D
-  const vy = (ty - SLOT[1] - 0.5 * G_EARTH * D * D) / D
+  const vy = (ty - SLOT[1] - 0.5 * LOFT * D * D) / D
   const dt = T - from
-  return { x: SLOT[0] + vx * dt, y: SLOT[1] + vy * dt + 0.5 * G_EARTH * dt * dt, a: -0.3 + dt * 9 }
+  return { x: SLOT[0] + vx * dt, y: SLOT[1] + vy * dt + 0.5 * LOFT * dt * dt, a: -0.25 + (dt / D) * 1.1 }
+}
+
+/** For the check: the tickets in the air at `T`, from Carl's centre, and how high over the slot each is. */
+export function ticketsInFlight(T: number): { n: number; dx: number; dy: number; up: number }[] {
+  const [cx, cy] = carlAt(T)
+  const out: { n: number; dx: number; dy: number; up: number }[] = []
+  for (const [n, [a, b]] of [[STAMP1, STAMP2], [STAMP2, SHUT]].entries()) {
+    const tk = ticketAt(a, b, T)
+    if (tk) out.push({ n, dx: tk.x - cx, dy: tk.y - cy, up: SLOT[1] - tk.y })
+  }
+  return out
 }
 
 /* ------------------------------------------------------------------ the part */

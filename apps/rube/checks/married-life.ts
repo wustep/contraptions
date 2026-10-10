@@ -16,6 +16,7 @@ import { BALLOON_SIZE } from '../src/shows/versions/married-life/life/props/ball
 import { ridge, STEP } from '../src/shows/versions/married-life/life/hill/hill'
 import { INSIDE_SPAN } from '../src/shows/versions/married-life/life/inside/inside'
 import { KICK, TYRE } from '../src/shows/versions/married-life/life/inside/jar-clock'
+import { ticketsInFlight } from '../src/shows/versions/married-life/life/inside/ties'
 import { INSIDE_AT } from '../src/shows/versions/married-life/life/score'
 import { JOLTS } from '../src/shows/versions/married-life/life/score'
 import { FUN } from '../src/shows/versions/married-life/life/church/church'
@@ -200,6 +201,26 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     }
     check('married life: under Zoom the tyre, the jar\'s taking and the lamp he climbs to stay in the frame (Zoom out to the show\'s own)', most < 0.02,
       `Zoom ${most.toFixed(2)} of its way in at ${mostAt.toFixed(2)} s`)
+  }
+
+  // The two tickets are thrown, not hopped: each rises well clear of the press's slot (so it is seen whole against the
+  // wall, and read as a ticket before the hill), and stays inside the frame, under Zoom too.
+  {
+    const highest = [0, 0]
+    const out: string[] = []
+    for (let t = AT.cadence[0]; t < AT.cadence[2]; t += 0.01) {
+      ticketsInFlight(t).forEach((tk) => {
+        highest[tk.n] = Math.max(highest[tk.n], tk.up)
+        const h = show.at(t)
+        const [x, y] = [h.x + tk.dx, h.y + tk.dy]
+        for (const f of [cam(t), zoomOf(cam(t), 1.5)]) {
+          const hw = (f.cells * 16) / 9 / 2
+          if (Math.abs(x - f.x) > hw - 0.12 || Math.abs(y - f.y) > f.cells / 2 - 0.12) out.push(`${t.toFixed(2)} s`)
+        }
+      })
+    }
+    check('married life: the tickets are thrown high off the press, and stay in the frame (under Zoom too)',
+      highest.every((u) => u >= 0.25) && out.length === 0, `rise ${highest.map((u) => u.toFixed(2)).join(', ')} cells; out ${out.slice(0, 3).join(', ')}`)
   }
 
   // A phone held upright (as tall as 9:21) sees far above and beside the composed frame (`stage.ts`, `perf.tall`):
