@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 125 (latest)
+## Polish pass 126 (latest)
+
+Pass 125's count of canvas fills, run over the whole show in the normal view (1280×720, every 2 s), found one frame far heavier than the rest. The median is 871 fills a frame, and the next heaviest is about 2,570 (the station's clouds). At 124 s, the fall out of the tesseract, it is 11,008, and it stays near 11,000 from 123.5 to 125 s. Almost all of it is `miniCase`: the bookcases of the lattice going on every way, a couple of hundred of them, each about forty fills (its glow, the case, ten books, 21 dividers, its frame). They were drawn whether or not they were in the frame. Now a case whose box, glow and all, lands wholly off the canvas (`offCanvas`, through the canvas's current transform) is not drawn. That halves the heaviest frame, 11,008 to 5,672 at 124 s, and takes 123.5 s from about 6,100 to 995. During the pull-back (124.5 s) most of the cases are really in the frame and it stays near 8,700. Drawing them more simply would change the picture, so it is left. Every quarter-second from 115 to 128 s, at 960×540, 390×844, 2560×1080, Zoom and Overview, is pixel for pixel what it was.
+
+## Polish pass 125
 
 Overview from Saturn to the end ran at 3 to 9 frames a second against about 60 everywhere else (measured live in the player at 1280×800). A count of canvas fills per frame found why. At 260 s Overview made 33,869 fills, 24,964 of them `space/sky.ts`'s stars, the whole space world's starfield laid at 4 to 7 px a cell. A normal frame there makes 405. Pass 108 had let the stars go below 3 px a cell, judging by the widest shot in the show, near 4 px on a 320 px phone. These two skies are never drawn that far out. Measured over every second of the show, Zoom's widest shot of them on a 320 px phone is 25 px a cell (space) and 34 (Edmunds), so the normal view's is 17 and 23. Both skies now let their stars go between 10 and 14 px a cell, and Edmunds' skips its loop once nothing would be drawn, as `space/sky.ts`'s already did.
 

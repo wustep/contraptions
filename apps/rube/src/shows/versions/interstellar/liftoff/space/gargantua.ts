@@ -1135,13 +1135,36 @@ function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
 }
 
 /** One of the tesseract's rooms, Murph's bookcase from behind, in its own (shelf) cells, `a` of it. */
+/** Whether a box in the current drawing's coordinates lands wholly off the canvas, as it is transformed now. */
+function offCanvas(ctx: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number): boolean {
+  const m = ctx.getTransform()
+  let lx = Infinity
+  let ly = Infinity
+  let hx = -Infinity
+  let hy = -Infinity
+  for (const [x, y] of [[x0, y0], [x1, y0], [x0, y1], [x1, y1]]) {
+    const px = m.a * x + m.c * y + m.e
+    const py = m.b * x + m.d * y + m.f
+    lx = Math.min(lx, px)
+    hx = Math.max(hx, px)
+    ly = Math.min(ly, py)
+    hy = Math.max(hy, py)
+  }
+  const pad = 2
+  return hx < -pad || hy < -pad || lx > ctx.canvas.width + pad || ly > ctx.canvas.height + pad
+}
+
 function miniCase(p: p5, k: number, ink: string, weight: number, a: number): void {
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const was = ctx.globalAlpha
-  ctx.globalAlpha = was * a
   const CAP = SHELF_TOP - 0.6
   const MIDY = SHELF_TOP + 0.46
+  // A case wholly off the canvas, its glow and all, is not drawn: on the way out of the tesseract there are a couple of
+  // hundred, forty fills each, and most are out of the frame.
+  const mid = (CAP + FLOOR) / 2
+  if (offCanvas(ctx, X(-0.8), X(Math.min(CAP, mid - 1.5)), X(2.35), X(Math.max(FLOOR, mid + 1.5)))) return
+  const was = ctx.globalAlpha
+  ctx.globalAlpha = was * a
   // Its room's light behind it, lamplight, and a little of it spilling round the case into the dark (warm, so that
   // seen dim over the dark it goes amber, not grey; small, so a hundred of them do not fog the dark between).
   glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.5), DARK.amber, 0.18)
