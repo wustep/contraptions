@@ -151,8 +151,14 @@ The planet has weather, at depths behind the stones (`air.ts`):
   Gnossienne's four high phrases and the third's two, a melody's peak answered in the sky; each falls clear above the ball, which over the pond rides high in the frame.
 - Mist on the water at dawn, a little at dusk, and under the moon; fireflies over the pond in the third Gnossienne.
 
-Four things happen once a day:
+Five things happen once a day:
 
+- Dolphins, once, in the morning (`dolphins.ts`): a pod of three in the near water in front of the colonnade, from
+  1:18 to 1:41. Each bass note of that passage sends one of them up out of the water, in turn, so each leaps every
+  third bar, as high as the note was played: an arc a body and a half long, nose up as it rises and down as it dives,
+  its shape seen under the water a moment before, spray and two spreading rings where it breaks the surface. They swim
+  against the ball's way, as the boats do, so the pod crosses the frame slowly from right to left. Nearer water is
+  further down the frame, so the nearer dolphins are drawn larger.
 - An afternoon shower over the Gymnopédie's second statement. The cloud gathers and greys from 138 s, the sky and the
   sea go grey with it and the sun pales behind it. A soft rain falls from 152 s, with each drop's ring spreading on the
   water, and stops by 182 s. As it clears, a bow stands opposite the low sun for the piece's last bars: a pale
@@ -317,7 +323,7 @@ measured at under a millisecond's difference, and left out.
 
 `orbit/`: `music.ts` the notes as played; `path.ts` the ball's way and the stones; `camera.ts`; `titles.ts`; `world.ts`
 the day's colours; `air.ts` what lives in the air and the water (clouds, gulls, mist, the aurora, the whale) and their
-layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
+layers; `shore.ts` the far shore; `ripples.ts` the sea's surface; `dolphins.ts` the morning's dolphins; and the drawings, `sky.ts`, `stones.ts`, `sea.ts` and `over.ts` (over the ball), with what they share in
 `frame.ts` (the framed picture, the weathered day, the sun's and the moon's ways, the lamplighter's flame).
 `scene.ts` is their index.
 
@@ -376,4 +382,4 @@ Gnossienne's pond; gulls perch on the colonnade and lift off as the ball lands o
 only while it is low and up; a wave of light runs back along each piece's way from its last note, and only then; every inner note lights a star of
 a constellation, at night; the aurora is the first Gnossienne's, in the full night only; the sun and the moon go round
 without a jump, the seam included; the far shore's windows are dark by day, lit in the night and out by the dawn, and
-the lighthouse is lit with the first lamp and put out by the dawn; the sea's surface comes round; the titles.
+the lighthouse is lit with the first lamp and put out by the dawn; the sea's surface comes round; the dolphins leap once, each on a Gymnopédie bass note, by day, close; the titles.

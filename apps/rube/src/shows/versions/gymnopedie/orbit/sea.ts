@@ -12,6 +12,7 @@ import {
 import { lampLight, farStones } from './stones'
 import { mirrorShore } from './shore'
 import { drawRipples, ripplesAt, warmRipples, type Glitter } from './ripples'
+import { drawDolphins } from './dolphins'
 
 // ---------------------------------------------------------------- the light on the water
 
@@ -293,6 +294,8 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       }
     }
     drawRipples(ctx, k, c.t, (v.u1 - v.u0) / 2, day, water, close * ripplesAt(v.cells), glitter)
+    // Dolphins in the near water, once, in the morning.
+    drawDolphins(ctx, k, c.t, day, close * ripplesAt(v.cells))
     const ctx2 = p.drawingContext as Ctx2D
     // Each lamp's path of light, fewer rows once the camera is far enough off that a row is a pixel or two: in the wide
     // shots between the pieces the whole thread of lamps is in view, and their strokes were most of the frame's cost.
