@@ -487,6 +487,8 @@ changed, in the order of the film, and then what runs through it:
   the glass woke (87.2), the two of them came to rest with their eyes low on the dark floor; each looks up at it now
   while stopped. Waiting on the meadow (185.3), Ian looked at the grass while she watched the shell lift; he watches it
   go now, and turns to her as the light comes through.
+  Under the open slot (39.5 → 40.1) both eyes dropped to the grass just before they moved off; they hold their look
+  up now until each rolls away.
 
 ## Arrival nods
 
