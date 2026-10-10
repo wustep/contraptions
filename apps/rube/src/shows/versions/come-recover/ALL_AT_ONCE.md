@@ -175,7 +175,8 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 282.2 | home's pulse | home | The family portrait. A wooden box camera with a bellows stands on a tripod by the door, facing them. Joy and Waymond straighten up on two small hops. Evelyn rolls to a foot switch under the window and presses it on 286.20: a string of lanterns over the family lights one a beat, and the camera draws back to take in the whole portrait. The self-timer's red lamp blinks faster and faster while she hurries back beside Joy (290.38). |
 | 290.99 | the last great hit | home | The flash: the bulb bursts, the room washes white from the camera's side with their shadows thrown on the washer, and a firework fills the door's glass with gold. The photograph ejects (291.20), flutters down like a leaf and props itself against the washer beside them (292.77). It develops by 293.01: the glowing washer window with the three of them in it, eyes and all. |
 | 295.01 | the last hit | home | The tubes go out in the reverse order of the opening, and the neon with them. The three of them rest in the washer window's warm glow. |
-| 297 to 328 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes. The dryer's window opened the multiverse; the washer's closes it. In its lit glass the lives she went through come back once, in the order back home, about two seconds each: the bagel, the rocks, Raccacoonie's kitchen, the hot dog piano, the dojo, the red carpet. In each the three of them are there together, small, eyes and all (on the rocks, three stones on the ledge where there were two). The three look up at the window all through them, and the empty drum gives a slow half-turn among them (305.40). Then the glass is only its own warm light; it swells once (312.59), and they look at one another: of all of them, this one. |
+| 297 to 313.6 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes, and the camera comes in close on the washer's window, the credits over the door's dark glass to its left. The dryer's window opened the multiverse; the washer's closes it. In its lit glass the lives she went through come back once, in the order back home, about two seconds each: the bagel, the rocks, Raccacoonie's kitchen, the hot dog piano, the dojo, the red carpet. In each the three of them are there together, small, eyes and all (on the rocks, three stones on the ledge where there were two). The three look up at the window all through them, and the empty drum gives a slow half-turn among them (305.40). Then the glass is only its own warm light; it swells once (312.59), and they look at one another. |
+| 313.6 to 332 | the tail | home | Of all of them, this one. The camera draws back, and goes on drawing back: out of the shop, which sinks into the night until only its washer's window is lit, and on into a night full of other lit windows (`home/multitude.ts`). Each is a laundromat in another life: most warm like this one, some in the colours of the lives she flew through, a few with their tubes still on. They stand at depths behind the shop, so the near ones sweep in from the frame's edges while the far ones barely move, and they light as she looks out, the nearest first. By 326.6 they have come to rest in a ring, the everything bagel made again of every life's lit window, with home the one light in its hole. From 328.1 the end's dark takes them, this window last. |
 
 ## The polish pass
 
@@ -814,13 +815,26 @@ watched whole between them. Their order is in git; here they are by what they di
 - **Every life once more.** Under the credits the lives she went through pass once through the washer's lit glass,
   the three of them together in each, in the picture each was in (`home/finale-lives.ts`); then the glass is its own
   light, and on its swell they look at one another.
+- **Of all of them, this one.** The ending was thirty-five seconds of one held wide shot, the lives in the window
+  about 30 px across. Now the camera comes in close for the lives (about three times the size), and after the swell
+  draws back out of the shop into a night of other lit windows, every life she might have lived, which gather into a
+  ring, the bagel remade from them, with home the one light in its hole (`home/multitude.ts`).
+  - The windows are drawn in depth (each at its own distance behind the shop), so the draw back has real parallax.
+    Under reduced motion they do not sweep: each lights where it will rest.
+  - Seen whole from far off, the shop is every drawing in the laundromat at once, which dropped a 4× throttled
+    machine to 11 fps. By then it has gone into the night, so the stage's camera eases to a hold at about 36 cells,
+    out of sight, and only the windows go on as the draw back would show them (`pullAt`, `cameraCellsAt`): back to
+    25 to 32 fps there, with 41 at 290 s in the same run (the machine was loaded).
+  - The end's dark waits for the ring (328.1 s, not 0.5 s after the last card), and the credits' bed is a little
+    deeper, for the close shot's lit tile. Two more lines of audio description: the lives in the glass, and the
+    night of windows.
 
 ### For every viewer
 
 - **Heard.** The page's words layer is `aria-hidden`, as its cards fade and blur, so a card can be spoken (`TitleCard.said`): once,
   as it first comes up while the show plays at 1× or slower. Every line is spoken with who says it, since a reader
   cannot see roman from italic, and the chapters and credits as they read.
-- **Described.** An audio description, 24 short lines at the scenes and their turns, spoken between the lines on empty
+- **Described.** An audio description, 26 short lines at the scenes and their turns, spoken between the lines on empty
   cards nobody sees (`DESCRIBED`). Each is tied to the moment it describes (`of`) and is never said before it, is
   short enough to be said whole at a reader's ordinary rate, and cuts nothing off.
 - **Captioned.** Sound captions for what the music does, 21 in brackets in a dark box at the top of the frame, on the
@@ -919,8 +933,9 @@ clock, the lanterns and the family by the washer stay clear of the words. The ca
 | 314.8 | After | Everything Everywhere All at Once | a film by Daniels (2022) |
 | 320.8 | Drawn with | p5.js | |
 
-There is no title card. After p5.js's card goes (about 325.9 s), the room goes down into the dark as the music fades
-to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `credits.ts`).
+There is no title card. The last two cards come over the draw back into the night of lit windows. After p5.js's card
+goes (about 325.9 s) the ring of windows holds alone; from 328.1 s it goes down into the dark as the music fades to
+332, this window last; the googly eyes go with it (`endDarkAt` in `credits.ts`).
 
 ## What `check:shows` holds it to
 
@@ -1002,6 +1017,9 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
     great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's
     comes with a smaller, softer burst in her violet.
   - `home/finale-lives.ts`: the lives in the washer's window under the credits.
+  - `home/multitude.ts`: the last shot's draw back: the veil the shop sinks into, the night of other lives' lit
+    windows in depth and their ring, and how far back the camera is (`pullAt`; the stage's own camera stops short of it,
+    `cameraCellsAt`).
   - `film.ts`: the picture each life is in (widescreen, the old print, the soft-focus romance, the tape, the office
     tubes), painted over a world's whole frame, a panel of everywhere at once, the surf, or the washer's window.
   - `credits.ts`: the cards, the soft dark under them, and the room's fade to dark with the music after the last
