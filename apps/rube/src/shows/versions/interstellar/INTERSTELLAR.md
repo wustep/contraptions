@@ -231,7 +231,18 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 122 (latest)
+## Polish pass 123 (latest)
+
+No change to the show: the whole show at 60 frames a second, every frame against the next (18,000 of them, 320×180, the share of pixels changing by more than 40 of 255). It looked for frames that change more than three times as much as the frames either side of them. Each one it found is meant:
+- the bedroom, 6 to 11 s: books falling on the shelf;
+- the launch, 71 to 86 s: the lamps and the smoke;
+- 127.5 to 127.65 s: Act II's lamps striking. The mean brightness goes 83 to 151 over 0.05 s, dips to 118 for two frames as one lamp catches late (`act2/replica.ts`, `duskAt`), and comes back. That is a single flash, under WCAG's three a second;
+- 207.48 s: a cut;
+- 217.48, 219.48, 221.48, 228.48 and 246.48 s, on the beat: the Ranger's main engine lighting in one frame, as ignition does.
+
+Nothing else in the show changes from one frame to the next by more than its neighbours do. The scan script renders each frame once and writes every 10 s of show, after a first try that rendered each frame twice and wrote only at the end stalled for 30 minutes.
+
+## Polish pass 122
 
 No change to the show.
 - The corn that passes 112 and 114 reshaped, 28 to 55 s, frame by frame at 60 frames a second (`window.shows.still` at 320×180, the share of pixels changing by more than 40 of 255 from one frame to the next). No frame changes more than three times as much as the frames either side of it, so nothing pops. The largest changes, 53.4 to 53.6 s (18% a frame), are a steady run, the camera dropping over the dam with the truck, not a jump.
