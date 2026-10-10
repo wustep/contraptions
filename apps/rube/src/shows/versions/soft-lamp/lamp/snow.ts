@@ -120,11 +120,11 @@ export function landed(ctx: Ctx, t: number): void {
   }
 }
 
-/** The snow on a roof `w` wide whose top is at `x, y`: a soft white cap, a little over its edges. `far` is paler, seen through more air. */
-export function roofSnow(ctx: Ctx, t: number, x: number, y: number, w: number, far: boolean): void {
+/** The snow on a roof `w` wide whose top is at `x, y`: a soft white cap, a little over its edges, `deep` at most. `far` is paler, seen through more air. */
+export function roofSnow(ctx: Ctx, t: number, x: number, y: number, w: number, far: boolean, deep = far ? 0.026 : 0.034): void {
   const c = coverAt(t)
   if (c < 0.01) return
-  const h = (far ? 0.026 : 0.034) * c
+  const h = deep * c
   const color = mixHex(snowColor(t), far ? '#8E8CB8' : '#B9BCE0', far ? 0.45 : 0.25)
   ctx.fillStyle = rgba(color, Math.min(1, c * 1.6))
   const o = 0.012 * c

@@ -1257,6 +1257,28 @@ thing you look up from your work and notice:
      In Chrome at 1080p on a 2× display it holds a 16.7 ms median frame at dusk, in the rain, in the snow and at the end,
      with the same spread of slow frames with the light map on as off (the machine was busy with other work).
 
+### The seventy-fourth pass: the city through the window
+
+The window is two fifths of every frame and the show's clock, and past the glass the city was two rows of plain
+blocks. A lofi window is a view you could look into for half an hour.
+
+201. **The towers far off** (`skyline`, `lamp/sky.ts`). Past the roofs, a third, farther layer: slim towers in the
+     haze, nearer the low sky's colour than the roofs are, one with a spire and a mast whose red light blinks slowly, one
+     stepped at its crown, a few small lit windows. At dusk they stand against the peach; at night they are faint shapes
+     with the city's glow on them. They move least against the bars of anything in the city.
+202. **Roofs with things on them** (`lamp/roofs.ts`). Water towers on legs with pointed caps; antennas; stair heads;
+     second blocks stepped back; a parapet along each roof. On the nearer walls, fire escapes zigzagging down past the
+     windows. The unlit windows are recesses now, so a wall reads as a building with nobody home rather than a slab.
+203. **The sky's light on them.** Each wall is paler at the top where the sky's glow reaches it; a thin edge of light runs
+     along the roofs and down their right sides, the dusk's warmth and later the moon's, paler again once the snow lies.
+204. **And the snow on all of it.** Every new roof, setback, tower cap, fire-escape landing and far crown takes its
+     share of the first snow (the far towers' through the haze).
+205. **Fixed on the way.** The far towers first came too tall and too wide, filling the top panes and hiding the dusk;
+     they are lower, slimmer and farther apart, and their snow, which floated as white lines once the towers went dark
+     against the night, is fainter. The shelf over the lamp showed its string of lights hanging in at the top of the
+     desk's looks with the shelf itself out of frame: it is higher now, wholly above those frames and inside the home
+     frame, and `check:shows` holds it as it holds every prop (whole in a frame or not in it).
+
 ## Judgment calls for Stephen
 
 - **The light.** How dark the room falls away from its lights is two colours (`ambientAt`, `lamp/light.ts`, the

@@ -6,8 +6,9 @@ import { MUSIC_END, smooth } from './music'
 import { blurOf, inLayer, layerOf, lensIn, lensOf, onWall, type Lens } from './lens'
 import { sweepAt } from './decor'
 import { machineBusy } from './route'
-import { cloudAt, coldAt, hash, snowAt, lampAt, nightAt, rainAt, skyAt } from './world'
+import { cloudAt, coldAt, coverAt, hash, snowAt, lampAt, nightAt, rainAt, skyAt } from './world'
 import { FLAKES, flakes, landed, roofSnow, settled } from './snow'
+import { antenna, fireEscape, waterTower } from './roofs'
 
 /**
  * The view through the glass, a function of show time: the sky from dusk into night, the clouds coming over and
@@ -44,7 +45,7 @@ interface Light {
 type Sink = { p: number; list: Light[] } | null
 
 /** How deep each layer is (0 the glass, 1 the sky): `lens.ts`. */
-const DEPTH = { sky: 0.55, clouds: 0.5, plane: 0.45, birds: 0.35, far: 0.4, train: 0.36, near: 0.3, rain: 0.12 }
+const DEPTH = { sky: 0.55, clouds: 0.5, skyline: 0.47, plane: 0.45, birds: 0.35, far: 0.4, train: 0.36, near: 0.3, rain: 0.12 }
 
 /** The night through the glass, clipped to it. */
 export function night(ctx: Ctx, t: number): void {
@@ -759,10 +760,89 @@ function mist(ctx: Ctx, t: number, y: number, k: number, bank: number): void {
   ctx.fillRect(GLASS.x0 - 4, y - 0.3, W + 8, 0.55)
 }
 
-function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }, lens: Lens, sink: (p: number) => Sink): void {
+/**
+ * The city's towers far off, past the roofs, pale in the haze between: a few taller than the rest, one with a spire and
+ * a mast, its red light slow; one stepped at its crown; a few lit windows, small. Seen through more air than the roofs,
+ * so nearer the sky's colour.
+ */
+/** The snow on the far towers: there, but through the haze. */
+function hazeSnow(ctx: Ctx, t: number, x: number, y: number, w: number, far: boolean, deep: number): void {
+  ctx.save()
+  ctx.globalAlpha = 0.45
+  roofSnow(ctx, t, x, y, w, far, deep)
+  ctx.restore()
+}
+
+function skyline(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: number }, edge: string, edgeA: number, sink: Sink): void {
+  const haze = mixHex(mixHex('#2B2850', '#463E6E', sky.dusk), sky.low, 0.5)
+  const base = -2.0
+  let x = GLASS.x0 - 1.6
+  for (let i = 0; x < GLASS.x1 + 1.6; i++) {
+    const w = 0.16 + hash(i, 401) * 0.18
+    const h = 0.4 + hash(i, 402) ** 2 * 0.95
+    const top = base - h
+    const kind = hash(i, 403)
+    ctx.fillStyle = haze
+    ctx.fillRect(x, top, w, h + 0.5)
+    if (kind < 0.18) {
+      // A spire and its mast, and the mast's light.
+      ctx.beginPath()
+      ctx.moveTo(x + w * 0.15, top)
+      ctx.lineTo(x + w / 2, top - 0.22)
+      ctx.lineTo(x + w * 0.85, top)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillRect(x + w / 2 - 0.004, top - 0.38, 0.008, 0.17)
+      const blink = Math.max(0, Math.sin((t * Math.PI) / 1.7 + i)) ** 4
+      if (sink) sink.list.push({ x: x + w / 2, y: top - 0.385, r: 0.02, color: '#FF6A5A', a: 0.75 * blink, p: sink.p })
+      else {
+        ctx.fillStyle = rgba('#FF6A5A', 0.75 * blink)
+        ctx.beginPath()
+        ctx.arc(x + w / 2, top - 0.385, 0.012, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      hazeSnow(ctx, t, x, top, w * 0.15, true, 0.014)
+      hazeSnow(ctx, t, x + w * 0.85, top, w * 0.15, true, 0.014)
+    } else if (kind < 0.4) {
+      // Stepped at its crown.
+      ctx.fillRect(x + w * 0.15, top - 0.08, w * 0.7, 0.08)
+      ctx.fillRect(x + w * 0.32, top - 0.15, w * 0.36, 0.07)
+      hazeSnow(ctx, t, x, top, w, true, 0.014)
+      hazeSnow(ctx, t, x + w * 0.15, top - 0.08, w * 0.7, true, 0.014)
+      hazeSnow(ctx, t, x + w * 0.32, top - 0.15, w * 0.36, true, 0.014)
+    } else hazeSnow(ctx, t, x, top, w, true, 0.018)
+    if (edgeA > 0.01) {
+      ctx.fillStyle = rgba(edge, 0.2 * edgeA)
+      ctx.fillRect(x + w - 0.006, top, 0.006, h)
+    }
+    // A few lit windows, small and far.
+    for (let k = 0; k < 14; k++) {
+      if (hash(i, k, 404) > 0.5) continue
+      const wx = x + 0.03 + hash(i, k, 405) * (w - 0.06)
+      const wy = top + 0.06 + hash(i, k, 406) * (h - 0.1)
+      const on = 10 + hash(i, k, 407) * 120
+      if (t < on || wy > base - 0.02) continue
+      const a = 0.4 * Math.min(1, (t - on) / 2) * (1 - 0.5 * smooth(nightAt(t), 0.6, 1) * hash(i, k, 408))
+      if (sink) sink.list.push({ x: wx, y: wy, r: 0.012, color: '#F4C48A', a, p: sink.p })
+      else {
+        ctx.fillStyle = rgba('#F4C48A', a)
+        ctx.fillRect(wx - 0.01, wy - 0.012, 0.02, 0.024)
+      }
+    }
+    x += w + 0.2 + hash(i, 409) * 0.6
+  }
+}
+
+function city(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: number }, lens: Lens, sink: (p: number) => Sink): void {
   const n = nightAt(t)
   const far = mixHex('#2B2850', '#463E6E', sky.dusk)
   const near = mixHex('#17162C', '#2A2445', sky.dusk)
+  // The sky's light on the city's edges: the dusk's warmth, then once it is clear the moon's, paler off the snow.
+  const moonlit = smooth(n, 0.55, 0.7) * (1 - 0.8 * cloudAt(t))
+  const edge = mixHex('#C8CEF6', '#F2B08E', sky.dusk)
+  const edgeA = Math.min(1, 0.7 * sky.dusk + 0.75 * moonlit + 0.15 * coverAt(t))
+  // Far off, past the roofs, the city's towers in the haze.
+  inLayer(ctx, lens, DEPTH.skyline, () => skyline(ctx, t, sky, edge, edgeA, sink(DEPTH.skyline)))
   let tallest = { x: 0, y: 0 }
   for (const [row, color, base, tall] of [[0, far, -1.9, 1.15], [1, near, -1.35, 0.85]] as const) {
     // Between the far roofs and the near: the mist after the rain, and the elevated line, and its trains.
@@ -780,25 +860,62 @@ function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }, lens: Len
     inLayer(ctx, lens, p, () => {
       const building = (i: number, x: number, w: number) => {
         const h = 0.25 + hash(i, row, 11) * tall
+        const top = base - h
+        // Its wall, a little paler up where the sky's glow reaches it.
+        const wall = ctx.createLinearGradient(0, top, 0, base)
+        wall.addColorStop(0, mixHex(color, sky.low, row ? 0.1 : 0.16))
+        wall.addColorStop(1, color)
+        ctx.fillStyle = wall
+        ctx.fillRect(x, top, w, h + 2)
+        // Its parapet, a lip along the top.
+        ctx.fillStyle = mixHex(color, sky.low, row ? 0.18 : 0.24)
+        ctx.fillRect(x - 0.008, top - 0.012, w + 0.016, 0.018)
+        // What stands on it: a stair head set back, a water tower, an antenna, a second block stepped back; or nothing.
+        const kind = hash(i, row, 23)
+        const scale = row ? 1 : 0.8
+        let crown = top
         ctx.fillStyle = color
-        ctx.fillRect(x, base - h, w, h + 2)
-        if (row === 0 && i >= 0 && x < GLASS.x1 + 0.3 && base - h < tallest.y) tallest = { x: x + w / 2, y: base - h }
-        // A water tank or a stair head on some roofs.
-        const tank = hash(i, row, 17) < 0.3
-        if (tank) ctx.fillRect(x + w * 0.2, base - h - 0.12, 0.14, 0.13)
-        // And on them, the first snow, once it has settled.
-        roofSnow(ctx, t, x, base - h, w, row === 0)
-        if (tank) roofSnow(ctx, t, x + w * 0.2, base - h - 0.12, 0.14, row === 0)
+        if (kind < 0.2 && w > 0.5) {
+          const sw = w * 0.5
+          const sh = 0.12 + hash(i, row, 24) * 0.22
+          ctx.fillRect(x + w * 0.25, top - sh, sw, sh)
+          ctx.fillStyle = mixHex(color, sky.low, row ? 0.18 : 0.24)
+          ctx.fillRect(x + w * 0.25 - 0.006, top - sh - 0.01, sw + 0.012, 0.014)
+          roofSnow(ctx, t, x + w * 0.25, top - sh - 0.01, sw, row === 0)
+          crown = top - sh
+        } else if (kind < 0.42) {
+          waterTower(ctx, t, x + w * (0.3 + 0.4 * hash(i, row, 25)), top, scale, color, edge, edgeA, row === 0)
+        } else if (kind < 0.55) {
+          antenna(ctx, x + w * 0.7, top, 0.18 + 0.12 * hash(i, row, 26), color)
+        } else if (kind < 0.75) {
+          ctx.fillRect(x + w * 0.2, top - 0.1, 0.14, 0.11)
+          roofSnow(ctx, t, x + w * 0.2, top - 0.1, 0.14, row === 0)
+        }
+        if (row === 0 && i >= 0 && x < GLASS.x1 + 0.3 && crown < tallest.y) tallest = { x: x + w / 2, y: crown }
+        // The sky's light along its top and down its right: the dusk's, then the moon's.
+        if (edgeA > 0.01) {
+          ctx.fillStyle = rgba(edge, (row ? 0.4 : 0.3) * edgeA)
+          ctx.fillRect(x - 0.008, top - 0.012, w + 0.016, 0.006)
+          ctx.fillRect(x + w - 0.008, top, 0.008, Math.min(h, 0.6))
+        }
+        // And on it, the first snow, once it has settled.
+        roofSnow(ctx, t, x, top - 0.012, w, row === 0)
         ctx.fillStyle = color
         const cols = Math.max(1, Math.floor(w / 0.16))
         const rows = Math.max(1, Math.floor(h / 0.17))
         for (let a = 0; a < cols; a++) {
           for (let b = 0; b < rows; b++) {
             const key = hash(i * 31 + a, b + row * 17, 3)
-            if (key > 0.26) continue
+            const dark = key > 0.26 || t < 4 + hash(i * 31 + a, b + row * 17, 9) * 110 || n > 0.3 + hash(i * 31 + a, b + row * 17, 5) * 0.95
+            // A dark window: a recess in the wall, a shade darker, its sill catching the sky's edge.
+            if (dark) {
+              if (lights) continue
+              ctx.fillStyle = rgba('#0A0918', row ? 0.32 : 0.22)
+              ctx.fillRect(x + 0.06 + a * 0.16, base - h + 0.08 + b * 0.17, 0.065, 0.075)
+              continue
+            }
             const on = 4 + hash(i * 31 + a, b + row * 17, 9) * 110
             const out = 0.3 + hash(i * 31 + a, b + row * 17, 5) * 0.95
-            if (t < on || n > out) continue
             const fade = Math.min(1, (t - on) * 2) * Math.min(1, (out - n) * 30)
             const screen = key < 0.035
             const flick = screen ? 0.75 + 0.25 * Math.sin(t * 7 + a * 3 + b) * Math.sin(t * 2.3 + i) : 1
@@ -812,6 +929,11 @@ function city(ctx: Ctx, t: number, sky: { low: string; dusk: number }, lens: Len
               ctx.fillRect(wx, wy, 0.065, 0.075)
             }
           }
+        }
+        // A fire escape down some of the nearer walls, in front of their windows.
+        if (row === 1 && w > 0.45 && hash(i, row, 29) < 0.65) {
+          const fx = x + 0.035 + Math.floor(hash(i, row, 30) * Math.max(1, cols - 2)) * 0.16
+          fireEscape(ctx, t, fx, Math.min(0.3, w - 0.07), top + 0.02, base, 0.17, mixHex(color, '#05040C', 0.5), edge, edgeA)
         }
       }
       // From where the window's own street starts, on to the right, then back from it to the left.

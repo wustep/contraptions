@@ -115,7 +115,8 @@ export function highShelf(ctx: Ctx, lw: number, t: number, glow = 0): void {
 
 function shelf(ctx: Ctx, lw: number, t: number, glow: number, S: { x0: number; x1: number; y: number }, books: [number, number, string][], plant: boolean): void {
   const v = viewOf(ctx)
-  if (v.y0 > S.y - 0.8 || v.x1 < S.x0 - 0.5) return
+  // Nothing to draw unless some of it, the vines under it included, is in view.
+  if (v.y0 > S.y + 0.6 || v.y1 < S.y - 0.8 || v.x1 < S.x0 - 0.5 || v.x0 > S.x1 + 0.5) return
   const lamp = lampAt(t)
   // The lights' warmth on the wall behind it, and on what is on it.
   const mid = (S.x0 + S.x1) / 2
@@ -173,10 +174,10 @@ function shelf(ctx: Ctx, lw: number, t: number, glow: number, S: { x0: number; x
 /** The pothos on a shelf, its vines trailing down past the edge, stirring. */
 function pothos(ctx: Ctx, lw: number, t: number, S: { x0: number; x1: number; y: number }, dim: (c: string, x: number, y: number) => string): void {
   // The pothos, its vines trailing down past the shelf's edge, stirring.
-  const px = S.x0 + 0.8
+  const px = S.x0 + 0.74
   for (let i = 0; i < 6; i++) {
     const sx = px - 0.18 + i * 0.07
-    const len = 0.3 + hash(i, 171) * 0.42
+    const len = 0.18 + hash(i, 171) * 0.27
     const sway = 0.04 * Math.sin(t * 0.4 + i * 1.3)
     ctx.beginPath()
     ctx.moveTo(sx, S.y - 0.2)
