@@ -5,6 +5,7 @@ import { bar, beat, BEATS, CUT } from '../music'
 import { CUTS } from '../seams'
 import { CHURCH, HILL, HOME, INK } from '../worlds'
 import { TREE_X } from './hill'
+import { FALLS } from '../props/falls'
 
 /**
  * CLOUDS (49.644 to 63.251, waltz bars 32 to 45): the picnic on the hill, a summer afternoon when they were young.
@@ -603,14 +604,19 @@ function drawPour(p: p5, k: number, t: number): void {
     // a hard end: the water thins into it.
     const running = pour < 1
     const front = running ? y1 - 0.9 * half(y1) : y1
+    // Water, not more cloud: the falls' pale blue and its streaks (as the painting, the pop-up and the jar have them),
+    // so the cliff reads as the falls in the sky; white on white, a fresh viewer took it for a jar or a column.
     p.fill(alpha(p, HILL.cloud, 0.4))
     band(-1, 1, y0, y1, 0.025)
-    p.fill(HILL.cloud)
+    p.fill(FALLS.water)
     band(-1, 1, y0, front)
     if (front - y0 > 0.1) {
-      p.fill(shade)
-      band(0.25, 1, y0, front)
+      p.fill(alpha(p, mixHex(FALLS.water, FALLS.waterStreak, 0.45), 0.9))
+      band(0.3, 1, y0, front)
+      p.fill(alpha(p, FALLS.waterStreak, 0.85))
+      for (const u of [-0.35, 0.15]) band(u - 0.09, u + 0.09, y0 + 0.04, front - 0.03)
     }
+    void shade
     if (running) {
       const [cx, cy] = Q(r.x, front)
       p.fill(alpha(p, HILL.cloud, 0.55))

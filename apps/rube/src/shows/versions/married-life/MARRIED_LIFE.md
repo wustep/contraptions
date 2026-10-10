@@ -830,6 +830,10 @@ window.
     empty chair. Its two "visual" flags checked full size and kept: 126.41 a clean frame of the jar tipping as the camera
     draws back (the sheet's downscale made it look double-exposed), and 158 the ticket press's lever coming into the
     frame's corner as the camera pans to it.
+  - *The falls in the clouds* (the nineteenth viewer read the airship and the baby, not the cliff: "a pot or jar… a
+    cylinder or column"). Its ribbons were cloud-white on a cloud: white on white. They are now the falls' water, as in
+    the painting, the pop-up and the jar: pale blue, deeper streaks falling in it, shaded down its right, so the
+    dream in the sky is the same place as the picture they save for.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
