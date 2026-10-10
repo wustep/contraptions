@@ -7,7 +7,7 @@ import type { Performance } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/eeaao-onsets.json'
 import { STRIKES } from '../src/shows/versions/come-recover/all-at-once/hits'
 import { COMBS, CREDITS_AT, DURATION, HOME_HITS, JUMPS, fall, fight } from '../src/shows/versions/come-recover/all-at-once/music'
-import { CARDS, CHAPTERS, CREDITS_OK, DESCRIBED, SUBTITLES, creditsAt, goneAt } from '../src/shows/versions/come-recover/all-at-once/credits'
+import { CAPTIONS, CARDS, CHAPTERS, CREDITS_OK, DESCRIBED, SUBTITLES, creditsAt, goneAt } from '../src/shows/versions/come-recover/all-at-once/credits'
 import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/peak'
 import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
 import { keepIn, keepOf } from '../src/shows/versions/come-recover/all-at-once/film'
@@ -253,8 +253,9 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   check('all at once: the googly eye comes on the great hit, beat 123 of the fight', near(JUMPS.eye, 191.216) && Math.abs(fight(123) - JUMPS.eye) < 0.03)
   check('all at once: Joy is given her eye while her mother pulls her back, after the brink and before home', JOY_EYE > JUMPS.brink && JOY_EYE < JUMPS.home)
 
-  // The cards that show something (an audio description's card is only spoken).
-  const seen = (t: number) => creditsAt(t).filter((c) => !c.key.includes('described'))
+  // The show's own words that are seen (an audio description's card is only spoken; a sound caption is the viewer's
+  // choice).
+  const seen = (t: number) => creditsAt(t).filter((c) => !c.key.includes('described') && !c.caption)
   // The film's three chapters, which are the show's three parts: each named as it begins, and gone well before the next.
   const starts = [0, JUMPS.premiere, JUMPS.mosaic]
   check('all at once: the chapters, Everything, Everywhere and All at Once, each as its part begins and gone long before the next',
@@ -282,6 +283,14 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     if (!card || !card.said) unsaid.push(c.names.join())
   }
   check('all at once: every line is spoken to a screen reader with its speaker, and every chapter and credit card is spoken', unsaid.length === 0, unsaid.join(' | '))
+  // Sound captions, for a viewer who cannot hear the music: offered, each one a caption card (seen only with CC on),
+  // never spoken (a screen reader's user hears the music), and none over another.
+  const uncaptioned = CAPTIONS.filter((cap, i) => {
+    const card = creditsAt((cap.at + cap.to) / 2).find((c) => c.notes?.[0] === cap.text)
+    return !card || !card.caption || !!card.said || (i > 0 && cap.at < CAPTIONS[i - 1].to)
+  })
+  check('all at once: sound captions for the music, seen only with CC on, unspoken, one at a time', perf.captions === true && CAPTIONS.length >= 15 && uncaptioned.length === 0, uncaptioned.map((c) => c.text).join(' | '))
+
   // And described: a scene's few words at each of its turns, unseen (nothing on the card), never over a line.
   const undescribed = DESCRIBED.filter((d) => {
     const card = creditsAt(d.at + 0.2).find((c) => c.said === d.said)

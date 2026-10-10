@@ -1017,6 +1017,16 @@ The notes went back to the builders who made each part, who still had their cont
     to follow me*, *Joy —* and *I'm coming* already tell). `check:shows` holds both. Played on the real page, each was
     heard once and in order with the lines.
   - `npm run build` passes (3,072 checks).
+- **Sound captions.** The descriptions are for a viewer who cannot see. For one who cannot hear, the show was missing
+  the thing it is built on: every hit, jump and silence is the cue's. Now it has sound captions, as a film's are for
+  sound: 21 in brackets (*[A held chord, and quiet]*, *[A pulse comes in, and builds]*, *[Near silence]*, *[The
+  loudest passage]*), small at the top of the frame in a dark box of their own (`CAPTIONS` in `credits.ts`). They are
+  the viewer's choice: a "Sound captions" row in the player (a shared addition, `Performance.captions` and
+  `TitleCard.caption`), shown only for a show that has them, off by default, remembered in the browser. Not spoken (a
+  screen reader's user hears the music), and not in a saved video. Over the pale scenes, without their box, the
+  first ones all but vanished. A CC button in the transport row first crowded its clock under the music button; the
+  toggle has a row of its own now, with its On/Off at its edge. Checked on the real page: hidden for Gymnopédie,
+  off on a first visit, on with a click, kept across a reload, off again. `npm run build` passes (3,073 checks).
 
 ## The looks
 
@@ -1175,7 +1185,9 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
     does (for the chapters; Boléro's and Soft Lamp's scaled credits needed it too);
   - `shows/registry.ts` and `shows/player.ts`: `TitleCard.least`, a floor on a card's type on the page, for words
     read on a phone, and a card it grows kept within the stage; and `TitleCard.said`, a card spoken to a screen
-    reader as it comes up while the show plays. Cards without them are as before.
+    reader as it comes up while the show plays; and `Performance.captions` with `TitleCard.caption`, sound captions
+    behind the player's opt-in "Sound captions" row (`stage.ts` leaves them out of a saved video, `styles.css` gives
+    them their box and the row its look). Cards and shows without them are as before.
 - **Measuring the audio again.** For authoring only: `sh scripts/shows/eeaao-cue.sh <fetched cue>` cuts a private
   copy, and `python3 scripts/shows/eeaao-onsets.py` measures it. The copy is not to be committed or shipped; the
   show plays from YouTube.
@@ -1207,6 +1219,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - Zoom is a closer look at Evelyn: Joy and Waymond are cropped by it at times, which is what it is for.
 - Under Zoom, the credits' longest line crosses the near end of the lantern string. The words are set by the page,
   the same in every mode.
+- Sound captions are not in a saved video: they are the viewer's choice on the page, and the recorder does not know
+  it.
 - The reduced-motion preference is followed live, and the page's Save PNG and Save video paint from the same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
   for a file would take a change to the shared stage and recorder, and that viewer has asked for the calmer show.
 - Only Chrome on macOS has been watched playing. In WebKit (Safari's engine) the whole show was scrubbed every half

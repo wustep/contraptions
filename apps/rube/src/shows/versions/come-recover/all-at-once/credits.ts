@@ -243,6 +243,38 @@ export const DESCRIBED: { at: number; said: string }[] = [
 ]
 const DESCRIBED_FOR = 1.2
 
+/**
+ * Sound captions, for a viewer who cannot hear the cue the whole show is built on: what the music does, in brackets,
+ * small at the top of the frame, as a film's captions for sound are. Seen only with the player's CC on.
+ */
+export const CAPTIONS: { at: number; to: number; text: string }[] = [
+  { at: 0.3, to: 4.5, text: '[A held chord, and quiet]' },
+  { at: 7.9, to: 11.0, text: '[Soft notes, one at a time]' },
+  { at: 12.8, to: 15.0, text: '[A hit]' },
+  { at: 34.3, to: 38.5, text: '[A long, slow swell]' },
+  { at: 57.9, to: 61.0, text: '[Louder]' },
+  { at: 68.7, to: 72.0, text: '[Sustained, softer]' },
+  { at: 86.3, to: 89.5, text: '[A flurry of notes]' },
+  { at: 120.9, to: 124.5, text: '[Big hits, one after another]' },
+  { at: 127.8, to: 131.5, text: '[A hush]' },
+  { at: 142.0, to: 146.0, text: '[A pulse comes in, and builds]' },
+  { at: 165.6, to: 169.0, text: '[A hit, then a swell]' },
+  { at: 171.0, to: 175.0, text: '[The pulse pumps, faster and harder]' },
+  { at: 191.2, to: 194.0, text: '[The greatest hit]' },
+  { at: 200.2, to: 205.0, text: '[Near silence]' },
+  { at: 220.2, to: 224.0, text: '[A soft swell]' },
+  { at: 247.4, to: 251.5, text: '[The loudest passage]' },
+  { at: 264.2, to: 268.0, text: '[It falls away]' },
+  { at: 278.2, to: 281.5, text: '[A gentle pulse]' },
+  { at: 291.0, to: 293.5, text: '[The last great hit]' },
+  { at: 297.2, to: 301.0, text: '[A long, quiet tail]' },
+  { at: 322.0, to: 326.0, text: '[It fades out]' },
+]
+const CAP_AT: [number, number] = [0.5, 0.025]
+
+/** Whether the show has sound captions: for the player's CC (`Performance.captions`). */
+export const HAS_CAPTIONS = true
+
 /** When a card has gone, show seconds. */
 export const goneAt = (card: Card): number => card.at + FORM + card.hold + GO
 
@@ -270,6 +302,10 @@ export function creditsAt(t: number): TitleCard[] {
   })
   DESCRIBED.forEach((d, n) => {
     if (t >= d.at && t < d.at + DESCRIBED_FOR) out.push({ key: `all-at-once-described-${n}`, names: [], light: 1, at: [0.5, 0.5], said: d.said })
+  })
+  CAPTIONS.forEach((c, n) => {
+    const light = clamp((t - c.at) / SUB_FADE) * (1 - clamp((t - (c.to - SUB_FADE)) / SUB_FADE))
+    if (light > 0.001) out.push({ key: `all-at-once-caption-${n}`, names: [], notes: [c.text], plain: true, caption: true, light, rise: 0, at: CAP_AT, scale: 1.4, least: 11 / 1.95 })
   })
   if (t < CREDITS_AT) return out
   CARDS.forEach((card, n) => {
