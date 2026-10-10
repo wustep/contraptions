@@ -101,6 +101,18 @@ export const lens = scenery<{ iris: IrisAt } | null>({
     g.addColorStop(1, rgba('#000000', 0.2))
     ctx.fillStyle = g
     ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+    // The dream's edge: all through the dream a soft glow of its rose at the corners of the frame, the colour the
+    // echoes bring into the real world; the drive and the last room wear it too, until the waking takes it away.
+    const dream = 1 - m
+    if (dream > 0.01) {
+      ctx.globalCompositeOperation = 'screen'
+      const d = ctx.createRadialGradient(f.cx * k, f.cy * k, r * 0.6 * k, f.cx * k, f.cy * k, r * 1.02 * k)
+      d.addColorStop(0, rgba('#E46A9A', 0))
+      d.addColorStop(1, rgba('#E46A9A', 0.32 * dream))
+      ctx.fillStyle = d
+      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      ctx.globalCompositeOperation = 'source-over'
+    }
     const tl = tile()
     if (tl) {
       const fi = Math.floor(t * 24)
