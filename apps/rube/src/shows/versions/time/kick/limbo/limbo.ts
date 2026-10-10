@@ -1,12 +1,12 @@
 import { R, laneAt, mixHex, type Lane, type Pt, type Seg } from '../../../../../parts'
 import type { ShowBall } from '../../../../../show'
-import { tear } from '../cast'
+import { streak, tear } from '../cast'
 import { box, carried, frame, part, scenery, type Company, type PartShot, type Riders, type Slot } from '../kit'
 import { FIRST, SEAMS } from '../seams'
 import { beat, half } from '../music'
 import { G } from '../physics'
 import { DOWN, FISCHER_DOWN, FISCHER_UP, ORIGIN, UP, exitFor, local } from '../stack'
-import { KID_DARK, KID_ID, KID_SCALE, LIMBO, SLEEP } from '../worlds'
+import { FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO, SLEEP } from '../worlds'
 import {
   A_KICK_AT,
   BOTTOM,
@@ -198,6 +198,8 @@ function drawKicks(pen: Pen, t: number): void {
   flare(KICK_AT, Q.kick)
   flare(A_KICK_AT, Q.kick)
   flare(F_KICK_AT, Q.fischerKick)
+  // The flare is lost on the pale sky: his throw is marked as it is in Paris, a ring and the streak behind him.
+  streak(pen.p, pen.k, fischerAt, Q.fischerKick, t, FISCHER)
   // The tear in the top of the sky, as they go up out of it into the dark.
   const through = (x: number, when: number) => tear(pen.p, pen.k, [x, TOP_OF_SKY + 0.6], t - when, 1.2, LIMBO.foam)
   through(FISCHER_UP.at[0], FISCHER_UP.t - 0.13)

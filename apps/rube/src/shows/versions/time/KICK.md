@@ -388,6 +388,10 @@ each world, and changed:
 - **Limbo's garden on the beach** (0 to 30, 155 to 177): its lawn ran on 0.8 of a cell below the line the house and the
   tower stand on, fading out over the sand with square sides, a green patch pasted on the beach (a critic's note). It
   ends on that line now, a lip over the sand.
+- **Thrown up out of a lit level** (59.05 Ariadne struck in Paris, 179.6 Fischer's kick off limbo's roof): nothing
+  marked the blow, so each seemed to reverse and shoot off (a motion critic read both as teleports); Fischer's flare
+  was lost on the pale sky. Each throw now flashes a ring where it lands and leaves a short streak in their colour
+  behind them, gone in half a second (`cast.ts`, `streak`).
 
 ## Inception nods
 
