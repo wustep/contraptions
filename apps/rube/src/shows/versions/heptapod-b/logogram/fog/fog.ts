@@ -125,6 +125,11 @@ export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
     // then back a little to take in the ring written beside her.
     { t: 131.6, cells: 3.8, hold: [her0[0] + 0.1, her0[1] - 0.55], w: 1 },
     { t: 132.7, cells: 3.9, hold: local(o, R1.c, -0.9, -0.95), w: 1 },
+    // Down a little to take in the ring coming while she is still held, then still through the drop and the catch
+    // (133.127 → 133.573), so she is seen to fall onto it: the frame going on down through it outran her short fall
+    // in the fog's low gravity, and she rose on the screen as she let go.
+    { t: 133.1, cells: 4.4, hold: local(o, R1.c, -0.72, -0.36), w: 1 },
+    { t: 133.65, cells: 4.4, hold: local(o, R1.c, -0.72, -0.36), w: 1 },
     { t: 134.4, cells: 4.6, hold: local(o, R1.c, 0.0, 0.45), w: 1 },
     { t: 136.8, cells: 4.8, hold: local(o, R1.c, 0.15, 0.5), w: 1 },
     // Out with her as she glides through the bottom: the cut's framing, following, wide enough that the ring she
