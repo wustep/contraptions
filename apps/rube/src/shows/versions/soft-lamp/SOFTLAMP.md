@@ -1427,6 +1427,32 @@ line, a clip-art room, where a lofi painting turns each thing in its light. This
      air, wider in the rain and the haze, none in the dusk; and some have a blind half down or a curtain to one side,
      so they read as rooms.
 
+### The eighty-third pass: a desk with depth
+
+A fresh creative director, no context, eight frames: "a tidy lineup of flat icons, not a room. Everything is drawn
+edge-on and sits on one baseline, evenly spaced like products on a shelf … the desk is a thin strip with no top
+surface, so nothing lives on it." Its first ask, a high three-quarter view, would redraw the machine; the rest is here:
+
+232. **The desk's top is a plane** (`DESK.top`, `lamp/desk.ts`; `desk`, `scene.ts`). It runs from the wall, where
+     everything stands, to its front edge half a cell down the frame: dark at the wall, its boards' grain further
+     apart as they come toward us, a seam and a knot, its front edge's face below. The lamp's pool lies on it as a
+     warm oval, and the light map's dark under the desk starts below its front edge now (`light.ts`).
+233. **Something open on it** (`lamp/book.ts`). In the middle of the pool, nearer us than the things along the wall, a
+     book left open face up, its pages curving into the spine, a few lines of print, a ribbon out of the foot; the right
+     page's corner lifts a little in the draught that stirs the curtain, and settles. A pencil lies by it. So the
+     desk is somebody's, mid-work, and the lamp's light falls on a page.
+234. **The headphones lie down.** Their band stood up between the cups like a croquet hoop ("two pie dishes joined by a
+     croquet hoop"); set down face up, it lies flat on the wood in a U toward us, each yoke's arm coming down to it,
+     its padding along its inside edge and the lamp along its near rim. The pads are a darker, cooler fabric, so they
+     stop reading warm and baked under the lamp.
+235. **Night, with contrast.** The room away from its lights falls deeper and bluer (`ambientAt`), the lamp's round on
+     the wall is softer so its pool on the desk leads, and the grain is down from 55% to 36%.
+236. **Held whole.** The band, the book and the pencil are props now (`PROPS`): every held frame shows them whole or
+     not at all.
+
+A blind A/B review (the last commit's frames against these, five moments, shuffled) chose these in all five, four
+clearly: "it says someone is studying here … the lamp's pool of light now falls on a page instead of empty wood."
+
 ## Judgment calls for Stephen
 
 - **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in

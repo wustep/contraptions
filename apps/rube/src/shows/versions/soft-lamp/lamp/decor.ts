@@ -469,7 +469,7 @@ export function grain(ctx: Ctx, t: number): void {
   const oy = Math.floor(hash(k, 2, 141) * 160)
   ctx.translate(ox, oy)
   ctx.fillStyle = all[k % all.length]
-  ctx.globalAlpha = 0.55
+  ctx.globalAlpha = 0.36
   ctx.fillRect(-ox, -oy, ctx.canvas.width, ctx.canvas.height)
   ctx.restore()
 }

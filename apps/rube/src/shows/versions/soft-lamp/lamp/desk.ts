@@ -14,8 +14,11 @@ import { R } from '../../../../parts'
 
 export { R }
 
-/** The desk: its top, and its front edge's face. */
-export const DESK = { y: 0, face: 0.28, x0: -12, x1: 12 }
+/**
+ * The desk: where its top meets the wall (`y`, what everything stands on), how far down the frame its top comes toward
+ * us (`top`: it is seen a little from above, a plane running back to the wall), and the foot of its front edge's face.
+ */
+export const DESK = { y: 0, top: 0.52, face: 0.64, x0: -12, x1: 12 }
 
 /** The window's outer frame, and the one bar across it and the one up it. */
 export const WINDOW = { x0: -3.5, x1: 0.62, y0: -5.5, y1: -1.42, frame: 0.16, mullion: -1.44, transom: -3.55 }
@@ -132,6 +135,10 @@ export const PROPS: Record<string, [number, number, number, number]> = {
   notes: [NOTES.x0, NOTES.y0, NOTES.x1, NOTES.y1],
   walkman: [WALKMAN.x0 - 0.02, -WALKMAN.h - 0.07, WALKMAN.x1 + 0.03, 0],
   print: [PRINT.x0, PRINT.y0, PRINT.x1, PRINT.y1],
+  // Lying on the desk's top, nearer us: the headphones' band in its U, and the open book and its pencil (`book.ts`).
+  band: [CUP.x + CUP.halfW * 0.94 + 0.06, CUP.top, FAR_CUP.x - CUP.halfW * 0.94 - 0.06, DESK.top * 0.5],
+  book: [0.95, DESK.top * 0.2, 2.29, DESK.top * 0.95],
+  pencil: [0.08, DESK.top * 0.45, 0.78, DESK.top * 0.85],
   // The shelf over the lamp, its books and pothos, and below it the string of lights and the vines.
   shelf: [SHELF.x0, SHELF.y - 0.6, SHELF.x1 + 0.1, SHELF.y + 0.47],
   clock: [CLOCK.x - CLOCK.r - 0.03, CLOCK.y - CLOCK.r - 0.03, CLOCK.x + CLOCK.r + 0.05, CLOCK.y + CLOCK.r + 0.05],

@@ -1,6 +1,6 @@
 import { mixHex } from '../../../../parts'
 import { rgba, viewOf } from './canvas'
-import { GLASS, WALKMAN } from './desk'
+import { DESK, GLASS, WALKMAN } from './desk'
 import { bulbsAt, sweepAt } from './decor'
 import { MUSIC_END, smooth } from './music'
 import { MOUTH, coverAt, lampAt, lightAt, nightAt, skyAt } from './world'
@@ -54,7 +54,7 @@ function bake(f: (x: number, y: number) => number): HTMLCanvasElement {
 /** The lamp's share: its cone on the desk and the wall, and the glow round the shade. */
 const lampShare = (x: number, y: number): number => {
   // Under the desk's top the lamp does not reach, but for the desk's own front edge.
-  const under = smooth(y, 0.25, 0.7)
+  const under = smooth(y, DESK.top + 0.05, DESK.face + 0.4)
   // Its cone, softly edged, and round it a broad low glow off the desk and the wall, so the cone has no line.
   const cone = Math.min(1, lightAt(x, y, 1) * 1.3)
   const d = Math.hypot(x - MOUTH.x, y - MOUTH.y)
@@ -75,7 +75,7 @@ const windowShare = (x: number, y: number): number => {
 function ambientAt(t: number): string {
   const sky = skyAt(t)
   const night = smooth(nightAt(t), 0.04, 0.3)
-  const base = mixHex('#DCD2E6', '#7C80B2', night)
+  const base = mixHex('#DCD2E6', '#62669C', night)
   // The white roofs give a little back.
   return mixHex(base, '#B4B8DA', 0.35 * coverAt(t) * night * (1 - sky.dusk))
 }

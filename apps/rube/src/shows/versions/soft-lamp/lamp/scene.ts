@@ -1,10 +1,11 @@
 import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
-import { BAND_TOP, BOOKS, CAT, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, PROPS, R, SILL, WALKMAN, WINDOW, type Book } from './desk'
+import { BOOKS, CAT, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, PROPS, R, SILL, WALKMAN, WINDOW, type Book } from './desk'
 import { MUSIC_END, heldAt, smooth } from './music'
 import { LANDINGS, NODS, SHOULDER, ballAt, squashAt } from './route'
 import { cat, climbAt } from './cat'
 import { formed, plaster } from './form'
+import { openBook } from './book'
 import { bloom, clock, farPress, curtain, draughtAt, scrim, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
 import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
@@ -123,8 +124,8 @@ function wall(ctx: Ctx, t: number): void {
   // The lamp's light on the wall: a warm round of it behind the books and the cup, warmest low down.
   const g = ctx.createRadialGradient(LAMP.pool.x + 0.1, -0.15, 0.05, LAMP.pool.x + 0.1, -0.7, 3.8)
   const warm = lampColor(t)
-  g.addColorStop(0, rgba(mixHex(WALL_LIT, warm, 0.45), 0.9 * lamp))
-  g.addColorStop(0.3, rgba(WALL_LIT, 0.5 * lamp))
+  g.addColorStop(0, rgba(mixHex(WALL_LIT, warm, 0.45), 0.75 * lamp))
+  g.addColorStop(0.3, rgba(WALL_LIT, 0.4 * lamp))
   g.addColorStop(0.65, rgba(mixHex(WALL_LIT, '#6A3F5A', 0.5), 0.2 * lamp))
   g.addColorStop(1, rgba(WALL, 0))
   ctx.fillStyle = g
@@ -287,74 +288,93 @@ function windowRims(ctx: Ctx, lw: number, t: number): void {
 function desk(ctx: Ctx, lw: number, t: number): void {
   const v = viewOf(ctx)
   const lamp = lampAt(t)
+  const warm = lampColor(t)
+  const TOP = DESK.y + DESK.top
   // Under the desk: the drawers, the floor, the rug (`room.ts`).
   underDesk(ctx, lw, t)
-  // Its front edge, lit along under the lamp.
+  // Its top, a plane running back from us to the wall, the wood a little lighter toward us (it faces the room more),
+  // and lit where the lamp reaches it.
+  const n = 12
   const g = ctx.createLinearGradient(v.x0, 0, v.x1, 0)
-  const n = 10
   for (let i = 0; i <= n; i++) {
     const x = v.x0 + ((v.x1 - v.x0) * i) / n
-    g.addColorStop(i / n, lit('#3A2733', mixHex('#B47148', lampColor(t), 0.25), lightAt(x, 0.1) * lamp))
+    g.addColorStop(i / n, lit('#3E2A33', mixHex('#B47148', warm, 0.25), lightAt(x, 0.15) * lamp))
   }
   ctx.fillStyle = g
-  ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, DESK.face)
-  // Its top, seen a little from above, running back to the wall: darker where it meets the wall, its front lip a
-  // narrow face of its own; and on it, the lamp's pool, an oval of light lying on the wood round where the shade looks.
-  const LIP = DESK.y + DESK.face * 0.7
-  const back = ctx.createLinearGradient(0, DESK.y, 0, LIP)
-  back.addColorStop(0, 'rgba(14, 9, 24, 0.5)')
-  back.addColorStop(0.35, 'rgba(14, 9, 24, 0.12)')
-  back.addColorStop(1, 'rgba(14, 9, 24, 0)')
-  ctx.fillStyle = back
-  ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, LIP - DESK.y)
-  ctx.fillStyle = 'rgba(14, 9, 24, 0.28)'
-  ctx.fillRect(v.x0 - 1, LIP, v.x1 - v.x0 + 2, DESK.y + DESK.face - LIP)
+  ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, TOP - DESK.y)
+  // Darker back where it meets the wall, and toward us, out of the light's reach; lighter in between.
+  const depth = ctx.createLinearGradient(0, DESK.y, 0, TOP)
+  depth.addColorStop(0, 'rgba(14, 9, 24, 0.55)')
+  depth.addColorStop(0.18, 'rgba(14, 9, 24, 0.12)')
+  depth.addColorStop(0.55, 'rgba(14, 9, 24, 0)')
+  depth.addColorStop(1, 'rgba(14, 9, 24, 0.18)')
+  ctx.fillStyle = depth
+  ctx.fillRect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, TOP - DESK.y)
+  // The boards' grain, running along the desk, the lines further apart as they come toward us.
+  ctx.strokeStyle = rgba('#2A1A22', 0.24)
+  ctx.lineWidth = 0.011
+  for (let i = 0; i < 7; i++) {
+    const u = (i + 0.6) / 7.4
+    const y = DESK.y + (TOP - DESK.y) * u ** 1.35
+    ctx.beginPath()
+    for (let x = Math.floor(v.x0) - 1; x <= v.x1 + 1; x += 0.25) {
+      const yy = y + Math.sin(x * (0.5 + i * 0.17) + i * 2) * 0.008 * (0.5 + u)
+      if (x === Math.floor(v.x0) - 1) ctx.moveTo(x, yy)
+      else ctx.lineTo(x, yy)
+    }
+    ctx.stroke()
+  }
+  // A seam between two boards, and a knot in one, so it is wood and not a stripe.
+  ctx.strokeStyle = rgba('#1E1219', 0.35)
+  ctx.lineWidth = 0.014
+  ctx.beginPath()
+  ctx.moveTo(v.x0 - 1, DESK.y + (TOP - DESK.y) * 0.47)
+  ctx.lineTo(v.x1 + 1, DESK.y + (TOP - DESK.y) * 0.47)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.ellipse(-1.15, DESK.y + (TOP - DESK.y) * 0.72, 0.09, 0.022, 0, 0, Math.PI * 2)
+  ctx.strokeStyle = rgba('#2A1A22', 0.3)
+  ctx.stroke()
+  // The lamp's pool, lying on the wood round where the shade looks: an oval, warm and soft-edged.
   if (lamp > 0.01) {
     ctx.save()
     ctx.beginPath()
-    ctx.rect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, LIP - DESK.y)
+    ctx.rect(v.x0 - 1, DESK.y, v.x1 - v.x0 + 2, TOP - DESK.y)
     ctx.clip()
-    ctx.translate(LAMP.aim.x + 0.15, DESK.y + (LIP - DESK.y) * 0.5)
-    ctx.scale(LAMP.pool.half * 0.95, (LIP - DESK.y) * 0.95)
+    ctx.translate(LAMP.aim.x + 0.2, DESK.y + (TOP - DESK.y) * 0.38)
+    ctx.scale(LAMP.pool.half * 0.9, (TOP - DESK.y) * 0.75)
     const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
-    const warm = lampColor(t)
-    pool.addColorStop(0, rgba(mixHex(warm, '#FFF0D8', 0.35), 0.5 * lamp))
-    pool.addColorStop(0.55, rgba(warm, 0.3 * lamp))
+    pool.addColorStop(0, rgba(mixHex(warm, '#FFF0D8', 0.35), 0.55 * lamp))
+    pool.addColorStop(0.5, rgba(warm, 0.3 * lamp))
     pool.addColorStop(1, rgba(warm, 0))
     ctx.globalCompositeOperation = 'screen'
     ctx.fillStyle = pool
     ctx.fillRect(-1, -1, 2, 2)
     ctx.restore()
   }
-  // The wood's grain along its top, faint.
-  ctx.strokeStyle = rgba('#2A1A22', 0.28)
-  ctx.lineWidth = 0.012
-  for (let i = 0; i < 3; i++) {
-    const y = DESK.y + 0.045 + i * 0.05
-    ctx.beginPath()
-    for (let x = Math.floor(v.x0) - 1; x <= v.x1 + 1; x += 0.25) {
-      const yy = y + Math.sin(x * (0.7 + i * 0.23) + i * 2) * 0.012
-      if (x === Math.floor(v.x0) - 1) ctx.moveTo(x, yy)
-      else ctx.lineTo(x, yy)
-    }
-    ctx.stroke()
+  // Its front edge's face, darker, and along the top of it the edge catching the lamp.
+  const f = ctx.createLinearGradient(v.x0, 0, v.x1, 0)
+  for (let i = 0; i <= n; i++) {
+    const x = v.x0 + ((v.x1 - v.x0) * i) / n
+    f.addColorStop(i / n, lit('#2C1D26', mixHex('#8A5238', warm, 0.2), lightAt(x, TOP) * lamp * 0.8))
   }
-  // The top's front edge catches the light: a thin bright line along it where the lamp is.
+  ctx.fillStyle = f
+  ctx.fillRect(v.x0 - 1, TOP, v.x1 - v.x0 + 2, DESK.face - DESK.top)
   const e = ctx.createLinearGradient(v.x0, 0, v.x1, 0)
   for (let i = 0; i <= n; i++) {
     const x = v.x0 + ((v.x1 - v.x0) * i) / n
-    e.addColorStop(i / n, rgba(lampColor(t), 0.75 * lightAt(x, 0) * lamp))
+    e.addColorStop(i / n, rgba(warm, 0.75 * lightAt(x, TOP * 0.5) * lamp))
   }
   ctx.fillStyle = e
-  ctx.fillRect(v.x0 - 1, LIP - 0.03, v.x1 - v.x0 + 2, 0.03)
+  ctx.fillRect(v.x0 - 1, TOP, v.x1 - v.x0 + 2, 0.025)
   ctx.beginPath()
   ctx.moveTo(v.x0 - 1, DESK.y)
   ctx.lineTo(v.x1 + 1, DESK.y)
   stroke(ctx, lw * 0.5, rgba(INK, 0.6))
   ctx.beginPath()
-  ctx.moveTo(v.x0 - 1, LIP)
-  ctx.lineTo(v.x1 + 1, LIP)
-  stroke(ctx, lw * 0.45, rgba(INK, 0.45))
+  ctx.moveTo(v.x0 - 1, TOP)
+  ctx.lineTo(v.x1 + 1, TOP)
+  stroke(ctx, lw * 0.6, rgba(INK, 0.6))
   ctx.beginPath()
   ctx.moveTo(v.x0 - 1, DESK.y + DESK.face)
   ctx.lineTo(v.x1 + 1, DESK.y + DESK.face)
@@ -576,8 +596,8 @@ function cushion(t: number): number {
 // the ball.
 const SHELL = '#4A3C4C'
 const SHELL_LIT = '#EDC9AE'
-const PAD = '#2A2232'
-const PAD_LIT = '#7A6270'
+const PAD = '#221E2A'
+const PAD_LIT = '#4E4858'
 
 /** The near cup's cushion, from the side: a soft pad with rounded shoulders and a hollow between them. */
 function cushionPath(ctx: Ctx, top: number, x = CUP.x): void {
@@ -609,52 +629,61 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   const farYoke = { x: fx - w - 0.01, y: CUP.top + 0.17, r: 0.1 }
   const a = { x: nearYoke.x + nearYoke.r, y: nearYoke.y }
   const b = { x: farYoke.x - farYoke.r, y: farYoke.y }
-  // A round arch, as a headband is: up from each yoke, over the top.
-  // (Its sides bow out a little past the yokes, clear of the ball as it nods.)
-  const c1 = { x: a.x - 0.24, y: BAND_TOP - 0.2 }
-  const c2 = { x: b.x + 0.24, y: BAND_TOP - 0.2 }
-  const band = () => {
+  // The band, lying flat on the desk as headphones set down face up lie: from each yoke down onto the wood and round
+  // toward us in a U, the cream of its outside and the dark of its padding along its inner edge, the lamp along its
+  // near rim. Drawn last, over the cups' feet, being nearer.
+  // A half oval on the wood: its ends at the cups' feet, its round toward us.
+  const ex = (a.x + b.x) / 2
+  const erx = (b.x - a.x) / 2 + 0.05
+  const ery = DESK.top * 0.42
+  const ey = DESK.y + 0.035
+  const band = (dy = 0) => {
     ctx.beginPath()
-    ctx.moveTo(a.x, a.y)
-    ctx.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, b.x, b.y)
+    ctx.ellipse(ex, ey + dy, erx, ery, 0, 0, Math.PI)
   }
-  // The band: a cream arch, its padding a dark strip along its underside, and the sliders where it meets each yoke.
-  const bl = lightAt((a.x + b.x) / 2, BAND_TOP, 0) * lamp
-  band()
-  ctx.lineWidth = 0.11
-  ctx.strokeStyle = INK
-  ctx.stroke()
-  band()
-  ctx.lineWidth = 0.11 - lw * 2
-  ctx.strokeStyle = shell(bl * 0.8 + 0.1)
-  ctx.stroke()
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect(a.x - 0.2, BAND_TOP - 1, b.x - a.x + 0.4, -BAND_TOP + 0.6 + CUP.top)
-  ctx.clip()
-  // The padding, inside the arch's top.
-  const pad = () => {
+  // Each yoke's arm down to it, beside the cup.
+  const arms = () => {
     ctx.beginPath()
-    const u0 = 0.22
-    const u1 = 0.78
-    const pt = (u: number) => {
-      const m = 1 - u
-      return {
-        x: m * m * m * a.x + 3 * m * m * u * c1.x + 3 * m * u * u * c2.x + u * u * u * b.x,
-        y: m * m * m * a.y + 3 * m * m * u * c1.y + 3 * m * u * u * c2.y + u * u * u * b.y,
-      }
-    }
-    for (let k = 0; k <= 20; k++) {
-      const q = pt(u0 + ((u1 - u0) * k) / 20)
-      if (k === 0) ctx.moveTo(q.x, q.y + 0.045)
-      else ctx.lineTo(q.x, q.y + 0.045)
-    }
+    ctx.moveTo(a.x - 0.01, a.y + 0.04)
+    ctx.quadraticCurveTo(a.x - 0.04, ey - 0.08, ex - erx + 0.005, ey)
+    ctx.moveTo(b.x + 0.01, b.y + 0.04)
+    ctx.quadraticCurveTo(b.x + 0.04, ey - 0.08, ex + erx - 0.005, ey)
   }
-  pad()
-  ctx.lineWidth = 0.04
-  ctx.strokeStyle = lit(PAD, PAD_LIT, bl * 0.8)
-  ctx.stroke()
-  ctx.restore()
+  const bl = lightAt((a.x + b.x) / 2, 0.1, 0) * lamp
+  const drawBand = () => {
+    arms()
+    ctx.lineWidth = 0.05
+    ctx.strokeStyle = INK
+    ctx.stroke()
+    arms()
+    ctx.lineWidth = 0.05 - lw * 1.6
+    ctx.strokeStyle = shell(bl * 0.8 + 0.1)
+    ctx.stroke()
+    // Its shadow on the desk, just under and toward us.
+    band(0.035)
+    ctx.lineWidth = 0.1
+    ctx.strokeStyle = 'rgba(14, 9, 24, 0.28)'
+    ctx.stroke()
+    // The band seen from a little above: a flat strip, its top face cream.
+    band()
+    ctx.lineWidth = 0.075
+    ctx.strokeStyle = INK
+    ctx.stroke()
+    band()
+    ctx.lineWidth = 0.075 - lw * 2
+    ctx.strokeStyle = shell(bl * 0.85 + 0.1)
+    ctx.stroke()
+    // The padding along its inside edge (the far side of the strip, toward the cups).
+    band(-0.018)
+    ctx.lineWidth = 0.018
+    ctx.strokeStyle = lit(PAD, PAD_LIT, bl * 0.7)
+    ctx.stroke()
+    // The lamp along its near rim.
+    band(0.022)
+    ctx.lineWidth = 0.01
+    ctx.strokeStyle = rgba(warm, 0.6 * bl)
+    ctx.stroke()
+  }
   // A yoke: a fork round the cup's middle, its arm up into the band.
   const yoke = (y: { x: number; y: number; r: number }, from: number, to: number, k: number) => {
     ctx.beginPath()
@@ -732,6 +761,7 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   const l = lightAt(CUP.x, -0.15) * lamp
   cup(CUP.x, top, l, 1)
   yoke(nearYoke, -Math.PI * 0.45, Math.PI * 0.45, l * 0.9 + 0.12)
+  drawBand()
 }
 
 /**
@@ -1024,7 +1054,9 @@ export const things = scenery<null>(
     const cx = (CAT.x0 + CAT.chest) / 2 + cl.dx
     formed(ctx, 'cat', c.t, { box: [cx - 1.5, cl.dy - 1.7, cx + 1.5, cl.dy + 0.15], at: { x: cx, y: cl.dy - 0.35 }, core: 0.22, smooth: true }, (g) => cat(g, lw, c.t))
     BOOKS.forEach((b, i) => formed(ctx, `book${i}`, c.t, { box: [b.x0 - 0.15, b.top - 0.05, b.x1 + 0.1, b.bottom + 0.03], at: { x: (b.x0 + b.x1) / 2, y: (b.top + b.bottom) / 2 }, core: 0.09 }, (g) => book(g, lw, b, i, c.t)))
-    formed(ctx, 'headphones', c.t, { box: [CUP.x - CUP.halfW - 0.1, BAND_TOP - 0.1, FAR_CUP.x + FAR_CUP.halfW + 0.1, 0.03], at: { x: (CUP.x + FAR_CUP.x) / 2, y: -0.25 }, core: 0.15, k: 0.6 }, (g) => headphones(g, lw, c.t))
+    formed(ctx, 'headphones', c.t, { box: [CUP.x - CUP.halfW - 0.1, CUP.top - 0.15, FAR_CUP.x + FAR_CUP.halfW + 0.1, DESK.top * 0.6], at: { x: (CUP.x + FAR_CUP.x) / 2, y: -0.25 }, core: 0.15, k: 0.6 }, (g) => headphones(g, lw, c.t))
+    // Nearer us on the wood: the book left open under the lamp, and its pencil.
+    openBook(ctx, lw, c.t)
     lamp(ctx, lw, c.t)
     knob(ctx, lw, c.t)
     windowRims(ctx, lw, c.t)
