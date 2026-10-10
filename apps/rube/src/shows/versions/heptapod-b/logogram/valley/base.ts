@@ -155,12 +155,13 @@ function louise(): Path {
   // She hops out of the door and down onto the deck: a short hop, so she is high in it as she passes Ian on her right.
   path.fly([path.at[0] + HOP_OUT, ON_PAD], lands)
   const vHop = HOP_OUT / (lands - out)
-  // Along the deck and off its edge, into the bucket.
+  // Along the deck and off its edge, into the bucket: the deck's edge is at the bucket's rim, so she hops it (twice a
+  // plain drop's time, a ball's height up), clear of the rim until she is over the bucket, not through its wall.
   const inBucket = bucketSeat(INTO_BUCKET)
-  const fall = dropTime(inBucket[1] - ON_PAD)
+  const hop = 2.1 * dropTime(inBucket[1] - ON_PAD)
   const edge: Pt = [PAD.x1, ON_PAD]
-  const vEdge = (inBucket[0] - edge[0]) / fall
-  path.roll(edge, INTO_BUCKET - fall, vHop, vEdge, 0.45)
+  const vEdge = (inBucket[0] - edge[0]) / hop
+  path.roll(edge, INTO_BUCKET - hop, vHop, vEdge, 0.45)
   path.fly(inBucket, INTO_BUCKET)
   // Down with it, inside it (out of sight for 0.7 s, the bucket where she is); tipped out.
   path.carry(bucketSeat, THUD, 0, true)
