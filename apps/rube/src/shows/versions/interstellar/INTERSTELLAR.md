@@ -231,7 +231,15 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 115 (latest)
+## Polish pass 116 (latest)
+
+No change to the show: the pull request's pictures. Its before/after table was last drawn at 5b347875, 50 commits back. Every row was redrawn at this branch's head with the same tools and sizes and compared pixel for pixel. Four had changed:
+- the pull-back (261.6 s), the last frame (290 s) and the phone frame of the camp (259 s): Gargantua's rim, since pass 108 (at 400 px wide the old 0.8 px floor was scaled up there too);
+- across the axis (171 s): the ball's streak halo.
+
+The table's After column is now this branch's head. The share card (`public/shows/interstellar/opus55.png`, 240.4 s) was redrawn too and is identical to the one committed.
+
+## Polish pass 115
 
 No change to the show. Passes 112 and 114's corn, every 2 s from 28 to 54 s, on an upright phone (390×844) and in Zoom, where pass 112 had looked only at 1280×720. On the phone the wall's start reads as a low rise of the field behind the truck, and in Zoom as the field coming up. At the dam, in both, the two walls drop together without crossing. The bedroom (6 to 15 s) and the camp under the credits (258 to 299 s) were also looked at frame by frame at 1280×720, the last stretches no pass had seen that way. Both are clean.
 
