@@ -408,6 +408,10 @@ each world, and changed:
   beside a curtain with its folds and doors with their panels (two critics' notes). Every bed has a cover turned down
   from its foot, its fold catching the lamp, a rail in shade, legs and a shadow on the carpet (one `bed`, on both
   floors); every nightstand a top, a drawer and its pull; the desk a plinth, raised panels and its shadow on the marble.
+- **Their window from outside** (whenever the room's front is closed, most plainly at the roof, 178 to 183): it was four
+  blank lit panels in the concrete, beside the lift tower's siding and downpipe (a critic's note). The room shows
+  through it in silhouette against the lamp, as it is inside: the lamp on its cord, the curtain at the window's end,
+  the table; and the window sits deep in its frame, the reveal in shade, a transom bar, a sill standing out under it.
 
 ## Inception nods
 

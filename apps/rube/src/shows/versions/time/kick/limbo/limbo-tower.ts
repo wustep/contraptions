@@ -410,11 +410,28 @@ function drawFrontUpper(pen: Pen, lit: number): void {
     [0, LIMBO.lamp, 0.85 * lit],
     [1, mixHex(LIMBO.lamp, LIMBO.skyWarm, 0.5), 0.95 * lit],
   ])
-  box(pen, WINDOW.x0 - 0.4, WINDOW.y0, WINDOW.x1, WINDOW.y1, null, 0.8)
+  // Their room behind the glass, in silhouette against the lamp: the lamp hung from the ceiling, the curtain at the
+  // window's end, the table under it (from outside it was four blank lit panels).
+  const sil = mixHex(LIMBO.lamp, CONCRETE_DARK, 0.45)
+  const wx0 = WINDOW.x0 - 0.4
+  const lx = TABLE.x + 0.05
+  line(pen, [lx, WINDOW.y0], [lx, WINDOW.y0 + 0.55], sil, 0.6)
+  shape(pen, [[lx - 0.16, WINDOW.y0 + 0.78], [lx + 0.16, WINDOW.y0 + 0.78], [lx + 0.08, WINDOW.y0 + 0.55], [lx - 0.08, WINDOW.y0 + 0.55]], sil, 0)
+  box(pen, WINDOW.x1 - 0.3, WINDOW.y0, WINDOW.x1, WINDOW.y1, mixHex(LIMBO.lamp, CONCRETE_DUSK, 0.25), 0)
+  box(pen, TABLE.x - TABLE.w / 2, WINDOW.y1 - 0.42, TABLE.x + TABLE.w / 2, WINDOW.y1 - 0.36, sil, 0)
+  for (const tx of [TABLE.x - TABLE.w / 2 + 0.06, TABLE.x + TABLE.w / 2 - 0.1]) box(pen, tx, WINDOW.y1 - 0.36, tx + 0.04, WINDOW.y1, sil, 0)
+  box(pen, wx0, WINDOW.y0, WINDOW.x1, WINDOW.y1, null, 0.8)
+  // Its frame, deep in the concrete: the reveal's shade along its top and its sides, a transom bar, mullions, and a
+  // sill standing out under it, lit along its top.
+  box(pen, wx0, WINDOW.y0, WINDOW.x1, WINDOW.y0 + 0.09, mixHex(CONCRETE_DARK, LIMBO.lamp, 0.15), 0)
+  box(pen, wx0, WINDOW.y0, wx0 + 0.07, WINDOW.y1, mixHex(CONCRETE_DARK, LIMBO.lamp, 0.15), 0)
+  line(pen, [wx0, WINDOW.y0 + 0.62], [WINDOW.x1, WINDOW.y0 + 0.62], pen.ink, 0.55)
   for (const q of [0.25, 0.5, 0.75]) {
-    const mx = lerp(WINDOW.x0 - 0.4, WINDOW.x1, q)
+    const mx = lerp(wx0, WINDOW.x1, q)
     line(pen, [mx, WINDOW.y0], [mx, WINDOW.y1], pen.ink, 0.55)
   }
+  box(pen, wx0 - 0.1, WINDOW.y1, WINDOW.x1 + 0.1, WINDOW.y1 + 0.1, CONCRETE, 0.6)
+  line(pen, [wx0 - 0.1, WINDOW.y1 + 0.01], [WINDOW.x1 + 0.1, WINDOW.y1 + 0.01], mixHex(LIMBO.lamp, CONCRETE, 0.4), 0.6)
   line(pen, [x0, ROOF + 0.02], [x1, ROOF + 0.02], mixHex(LIMBO.skyWarm, CONCRETE, 0.3), 0.8)
 }
 
