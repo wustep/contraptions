@@ -231,7 +231,16 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 116 (latest)
+## Polish pass 117 (latest)
+
+No change to the show: a search of the code for pass 108's fault, a floor in screen pixels (`Math.max(0.8, …)`) set inside a `scale()` that changes, and so scaled with it. Besides Gargantua over Edmunds (fixed in 108), three blocks have one:
+- The lattice folding away (`drawLattice`'s `fold`, 1 down to 0.2). It only shrinks, so its floors only get thinner as it goes, which is right.
+- The rooms going past in the tesseract (`sc`, `space/gargantua.ts`). Their lattice and ring widths are divided by `sc` to keep a width on the screen, but their floors (0.7 and 1 px) are not. Where a floor binds (small screens), a room's lines thicken as it comes near.
+- `drawCaseBack`'s 1 px floor, drawn inside the same scale.
+
+On an upright phone, frame by frame from 119 to 121 s, the near rooms' lines stay faint and fine, and the thickening reads as nearness. So it is left, noted.
+
+## Polish pass 116
 
 No change to the show: the pull request's pictures. Its before/after table was last drawn at 5b347875, 50 commits back. Every row was redrawn at this branch's head with the same tools and sizes and compared pixel for pixel. Four had changed:
 - the pull-back (261.6 s), the last frame (290 s) and the phone frame of the camp (259 s): Gargantua's rim, since pass 108 (at 400 px wide the old 0.8 px floor was scaled up there too);
