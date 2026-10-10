@@ -126,6 +126,8 @@ export const SHADOW_MAT = {
   warm: '#F7EBCB',
   shadow: '#15131A',
   soft: '#3A3640',
+  /** Her song's light, the one other colour the shadow play has: amber, deep enough to hold on the lit screen. */
+  gold: '#D89A1E',
 }
 
 /** The globe in the dark, and Paris at night beyond it. */
