@@ -132,6 +132,11 @@ async function main(): Promise<void> {
   check('a credit card stays where it is when it fits, slides in to a margin when it would cross an edge, and centres when it cannot fit',
     placeCard(200, 100, 400) === 200 && placeCard(30, 100, 400) === 58 && placeCard(390, 100, 400) === 342 &&
     placeCard(152, 331, 390) === 173.5 && placeCard(100, 390, 390) === 195 && placeCard(58, 100, 400) === 58)
+  // The Sound button's tap can itself be refused (a browser wanting the tap inside the player's own frame): the sound is
+  // held again, the Sound button back, rather than the show going on silent with nothing to press (pass 136).
+  check('a held sound refused again at the tap is held again, with the Sound button back, from every control that brings it in',
+    /async function soundIn\(\)[\s\S]{0,300}const result = await music\.play\(transport\.now\(\)\)\s*if \(result !== 'blocked'[\s\S]{0,80}soundHeld = true\s*setMuted\(true\)\s*void music\.play\(transport\.now\(\)\)\s*armSound\(\)/.test(player) &&
+    (player.match(/void soundIn\(\)/g) ?? []).length === 3 && !player.includes('void music.play(transport.now())\n    return'))
   // A YouTube cue running ahead of its entry is muted, not just at volume 0: YouTube puts an unmuted player at volume 0
   // up to 5 on its own, so the next recording was heard faintly under the one before it for eight seconds (pass 133).
   {

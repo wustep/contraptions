@@ -253,12 +253,29 @@ async function playLinked(): Promise<void> {
   armSound()
 }
 
+/**
+ * A gesture brings the held sound in, where the picture is. It can be refused even so (a browser that wants the tap
+ * inside the player's own frame, as iOS can): then the sound is held again, the picture going on muted and the Sound
+ * button back for the next tap, rather than a silent show with nothing to press.
+ */
+async function soundIn(): Promise<void> {
+  soundHeld = false
+  joinedAt = performance.now()
+  setMuted(false)
+  if (!transport || !perf?.soundtrack) return
+  const mine = generation
+  const result = await music.play(transport.now())
+  if (result !== 'blocked' || !alive || mine !== generation || !transport) return
+  soundHeld = true
+  setMuted(true)
+  void music.play(transport.now())
+  armSound()
+  sync()
+}
+
 /** The sound is held. The next gesture starts it where the picture is, and a control whose job is the sound keeps that job. */
 function armSound(): void {
   releaseSound()
-  const join = () => {
-    if (transport && perf?.soundtrack) void music.play(transport.now())
-  }
   const unlock = (e: Event) => {
     const key = e instanceof KeyboardEvent ? e.key : ''
     const musicControl = (e.target instanceof Element && !!e.target.closest('button.music')) || key === 'm' || key === 'M'
@@ -266,15 +283,12 @@ function armSound(): void {
     if (!alive || !soundHeld) return
     // The music control does the unmuting itself, and starts the sound with it.
     if (musicControl) return
-    soundHeld = false
-    joinedAt = performance.now()
-    if (muted) setMuted(false)
     // Space would also pause. The gesture only owed the sound; the picture stays.
     if ((key === ' ' || key === 'Enter') && transport?.playing) {
       e.preventDefault()
       e.stopImmediatePropagation()
     }
-    join()
+    void soundIn()
   }
   releaseSound = () => {
     window.removeEventListener('pointerdown', unlock, true)
@@ -417,10 +431,7 @@ const bigPlay = el('button', { type: 'button', class: 'stage-play' }, [icon(ICON
 bigPlay.addEventListener('click', () => {
   bigPlay.blur()
   if (soundHeld) {
-    soundHeld = false
-    joinedAt = performance.now()
-    setMuted(false)
-    if (transport && perf?.soundtrack) void music.play(transport.now())
+    void soundIn()
     return
   }
   void play()
@@ -487,9 +498,7 @@ musicBtn.addEventListener('click', () => {
     setMuted(!muted)
     return
   }
-  soundHeld = false
-  setMuted(false)
-  if (transport && perf?.soundtrack) void music.play(transport.now())
+  void soundIn()
 })
 const restartBtn = el('button', { type: 'button', class: 'tbtn', title: 'Back to the top of the show (Home)', 'aria-label': 'Restart' }, [icon(ICON.restart)])
 restartBtn.addEventListener('click', () => seek(0))
