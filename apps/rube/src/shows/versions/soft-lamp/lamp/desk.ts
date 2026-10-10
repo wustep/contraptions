@@ -108,13 +108,8 @@ export const CAT = { x0: -1.78, chest: -0.76, top: -0.6, head: { x: -0.84, y: -0
  */
 export const WALKMAN = { x0: -3.8, x1: -3.16, h: 0.46 }
 
-/** What is pinned to the wall between the window and the lamp, under the lamp's light: polaroids and notes. */
+/** What is pinned to the wall between the window and the lamp, under the lamp's light: two polaroids and a note. */
 export const NOTES = { x0: 1.0, x1: 2.62, y0: -3.02, y1: -2.08 }
-/** A small round clock on the wall between the window and the lamp, under the fairy lights: its middle and radius. */
-export const CLOCK = { x: 1.6, y: -4.03, r: 0.175 }
-
-/** A small framed print on the wall right of the lamp, seen from the room's wide frame. */
-export const PRINT = { x0: 6.1, x1: 6.92, y0: -4.62, y1: -3.48 }
 
 /** The ball's gravity, cells a second a second: a soft, slow world, but every drop a real drop. */
 export const G = 4.6
@@ -134,10 +129,8 @@ export const PROPS: Record<string, [number, number, number, number]> = {
   cat: [CAT.x0 - 0.04, -1.1, CAT.head.x + 0.34, 0],
   notes: [NOTES.x0, NOTES.y0, NOTES.x1, NOTES.y1],
   walkman: [WALKMAN.x0 - 0.02, -WALKMAN.h - 0.07, WALKMAN.x1 + 0.03, 0],
-  print: [PRINT.x0, PRINT.y0, PRINT.x1, PRINT.y1],
   // Lying on the desk's top, nearer us: the headphones' band in its U, and the open book and its pencil (`book.ts`).
   band: [CUP.x + CUP.halfW * 0.94 + 0.06, CUP.top, FAR_CUP.x - CUP.halfW * 0.94 - 0.06, DESK.top * 0.5],
   book: [0.95, DESK.top * 0.2, 2.29, DESK.top * 0.95],
   pencil: [0.08, DESK.top * 0.45, 0.78, DESK.top * 0.85],
-  clock: [CLOCK.x - CLOCK.r - 0.03, CLOCK.y - CLOCK.r - 0.03, CLOCK.x + CLOCK.r + 0.05, CLOCK.y + CLOCK.r + 0.05],
 }

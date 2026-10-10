@@ -1,6 +1,5 @@
 import { mixHex } from '../../../../parts'
-import { CLOCK, CUP, CURTAIN, FAR_CUP, NOTES, PRINT, ROD, WINDOW } from './desk'
-import { NODS } from './route'
+import { CURTAIN, NOTES, ROD, WINDOW } from './desk'
 import { MUSIC_END, TRACKS, barTime, heldAt, smooth, snareAt, trackAt } from './music'
 import { rgba, viewOf } from './canvas'
 import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, skyAt } from './world'
@@ -13,7 +12,7 @@ import { INK, LAMP_ON, MOUTH, hash, lampAt, lampColor, lightAt, lit, rainAt, sky
  * - The fairy lights strung across the top of the window in two swags and along the wall: they come on, bulb by bulb,
  *   just after the lamp, and breathe with the held sound (the pad and the keys), each at its own pace; in a track's
  *   break, when the drums drop out, a slow wave runs along them.
- * - Polaroids and notes pinned to the wall in the lamp's light; a small print on the far wall.
+ * - Polaroids and a note pinned to the wall in the lamp's light.
  * - Over everything: the lamp's bloom, a vignette, and a film's grain, so the picture has the soft, worn finish of the
  *   streams it is in the manner of.
  */
@@ -241,13 +240,11 @@ export const fairyGlowAt = (t: number): number => (BULBS.length ? bulbAt(BULBS[M
 
 /* ------------------------------------------------------------------ the wall */
 
-/** Polaroids and notes, pinned up between the window and the lamp. */
+/** Two polaroids and a note, pinned up between the window and the lamp. */
 export function notes(ctx: Ctx, lw: number, t: number): void {
   const lamp = lampAt(t)
   const pieces: { x: number; y: number; w: number; h: number; rot: number; kind: 'photo' | 'note'; tint: string; art: string }[] = [
     { x: NOTES.x0 + 0.04, y: NOTES.y0 + 0.08, w: 0.42, h: 0.5, rot: -0.08, kind: 'photo', tint: '#F09A7C', art: '#5B4A86' },
-    { x: NOTES.x0 + 0.52, y: NOTES.y0 + 0.02, w: 0.42, h: 0.5, rot: 0.06, kind: 'photo', tint: '#7FB6C9', art: '#2F5A6E' },
-    { x: NOTES.x0 + 1.06, y: NOTES.y0 + 0.14, w: 0.34, h: 0.34, rot: -0.04, kind: 'note', tint: '#E9C46A', art: '' },
     { x: NOTES.x0 + 0.36, y: NOTES.y0 + 0.6, w: 0.3, h: 0.3, rot: 0.1, kind: 'note', tint: '#E89AAE', art: '' },
     { x: NOTES.x0 + 0.86, y: NOTES.y0 + 0.5, w: 0.42, h: 0.38, rot: -0.05, kind: 'photo', tint: '#B9A0D9', art: '#E5A86E' },
   ]
@@ -308,52 +305,6 @@ export function notes(ctx: Ctx, lw: number, t: number): void {
     ctx.fill()
     ctx.restore()
   }
-}
-
-/** A small framed print on the far wall: a wave under a low sun, in the room's two colours. */
-export function print(ctx: Ctx, lw: number, t: number): void {
-  const lamp = lampAt(t)
-  const { x0, x1, y0, y1 } = PRINT
-  const l = Math.min(1, lightAt((x0 + x1) / 2, (y0 + y1) / 2, 1) * lamp * 1.5 + 0.08)
-  const dim = (c: string) => lit(mixHex(c, '#1E1A30', 0.7), c, l)
-  ctx.fillStyle = rgba('#120E1C', 0.4)
-  ctx.fillRect(x0 + 0.04, y0 + 0.05, x1 - x0, y1 - y0)
-  ctx.fillStyle = dim('#3A2A22')
-  ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
-  ctx.strokeStyle = INK
-  ctx.lineWidth = lw
-  ctx.strokeRect(x0, y0, x1 - x0, y1 - y0)
-  const m = 0.1
-  const ix0 = x0 + m
-  const iy0 = y0 + m
-  const iw = x1 - x0 - 2 * m
-  const ih = y1 - y0 - 2 * m
-  ctx.fillStyle = dim('#EDE2CC')
-  ctx.fillRect(ix0, iy0, iw, ih)
-  const pad = 0.07
-  const g = ctx.createLinearGradient(0, iy0 + pad, 0, iy0 + ih - pad)
-  g.addColorStop(0, dim('#6D5D9E'))
-  g.addColorStop(0.6, dim('#E59A86'))
-  g.addColorStop(1, dim('#F2C38A'))
-  ctx.fillStyle = g
-  ctx.fillRect(ix0 + pad, iy0 + pad, iw - 2 * pad, ih - 2 * pad)
-  ctx.fillStyle = dim('#FFE2B0')
-  ctx.beginPath()
-  ctx.arc(ix0 + iw * 0.5, iy0 + ih * 0.58, 0.11, Math.PI, 0)
-  ctx.fill()
-  ctx.fillStyle = dim('#3E4E86')
-  ctx.beginPath()
-  ctx.moveTo(ix0 + pad, iy0 + ih - pad)
-  ctx.lineTo(ix0 + pad, iy0 + ih * 0.62)
-  for (let k = 0; k <= 8; k++) {
-    const u = k / 8
-    ctx.lineTo(ix0 + pad + u * (iw - 2 * pad), iy0 + ih * 0.62 + Math.sin(u * Math.PI * 3) * 0.025)
-  }
-  ctx.lineTo(ix0 + iw - pad, iy0 + ih - pad)
-  ctx.fill()
-  ctx.strokeStyle = rgba(INK, 0.6)
-  ctx.lineWidth = lw * 0.5
-  ctx.strokeRect(ix0 + pad, iy0 + pad, iw - 2 * pad, ih - 2 * pad)
 }
 
 /* ------------------------------------------------------------------ the finish */
@@ -473,134 +424,7 @@ export function grain(ctx: Ctx, t: number): void {
 }
 
 
-/* ------------------------------------------------------------------ the street */
-
-/**
- * Now and then at night a car goes by below, and its lights come up through the window and sweep across the wall:
- * the window's own shape, its bars in it, pale and cool, moving over the wall and the things pinned to it in a few
- * seconds and gone. In the rain it is freckled with the drops on the glass. Each at its own time, roughly every minute
- * and a half once it is dark.
- */
-export const SWEEPS: number[] = (() => {
-  const out: number[] = []
-  let at = 160
-  for (let k = 0; at < MUSIC_END - 20; k++) {
-    out.push(at)
-    at += 110 + hash(k, 151) * 70
-  }
-  return out
-})()
-const SWEEP_DUR = 4.2
-
-/** Where the sweep is on the wall at `t` and how bright, 0 to 1 (for the cat, who looks). */
-export function sweepAt(t: number): { x: number; y: number; a: number } {
-  let i = SWEEPS.length - 1
-  while (i >= 0 && SWEEPS[i] > t) i--
-  const dark = smooth(t, 120, 300)
-  if (i < 0 || dark <= 0) return { x: 0, y: 0, a: 0 }
-  const s = (t - SWEEPS[i]) / SWEEP_DUR
-  if (s < 0 || s > 1) return { x: 0, y: 0, a: 0 }
-  const dir = hash(i, 152) < 0.5 ? 1 : -1
-  const u = dir > 0 ? s : 1 - s
-  return { x: WINDOW.x1 + 0.15 + u * 7.4, y: -2.6, a: dark * Math.sin(Math.PI * s) }
-}
-
-export function headlights(ctx: Ctx, t: number): void {
-  const dark = smooth(t, 120, 300)
-  let i = SWEEPS.length - 1
-  while (i >= 0 && SWEEPS[i] > t) i--
-  if (i < 0 || dark <= 0) return
-  const s = (t - SWEEPS[i]) / SWEEP_DUR
-  if (s > 1) return
-  // Leftward or rightward, as the car goes.
-  const dir = hash(i, 152) < 0.5 ? 1 : -1
-  const u = dir > 0 ? s : 1 - s
-  const x = WINDOW.x1 - 0.6 + u * 7.4
-  const a = 0.13 * dark * Math.sin(Math.PI * s) ** 1.5
-  const w = 1.5
-  const skew = 0.9 * dir
-  const top = -5.6
-  const bottom = 0
-  ctx.save()
-  // Only on the wall: not on the window, not below the desk.
-  ctx.beginPath()
-  ctx.rect(WINDOW.x1, top - 1, 9, bottom - top + 1)
-  ctx.clip()
-  ctx.globalCompositeOperation = 'screen'
-  // A soft, shapeless wash: the car's light comes in through the window and off the ceiling, so what reaches this wall
-  // is diffuse, brightest high up and fading down it. (Once it was the window's shape with its bars and drops in it,
-  // which this wall, the window's own, could never be lit with.)
-  const cx = x + w / 2 + skew * 0.5
-  ctx.translate(cx, top)
-  ctx.scale(1.4, 4.6)
-  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
-  g.addColorStop(0, `rgba(200, 212, 255, ${(a * 1.3).toFixed(3)})`)
-  g.addColorStop(0.55, `rgba(200, 212, 255, ${(a * 0.6).toFixed(3)})`)
-  g.addColorStop(1, 'rgba(200, 212, 255, 0)')
-  ctx.fillStyle = g
-  ctx.fillRect(-1, -1, 2, 2)
-  ctx.restore()
-}
-
-/**
- * Dust in the lamp's light: a few motes drifting slowly where the light is, each catching it as it turns, gone where
- * the light is not. The one thing in the frame that moves when nothing else does.
- */
-export function motes(ctx: Ctx, t: number): void {
-  const on = lampAt(t)
-  if (on < 0.05) return
-  const warm = lampColor(t)
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const kicks = recent(NODS_AT, t)
-  const cracks = recent(SNARES, t)
-  for (let i = 0; i < 42; i++) {
-    // Each drifts on its own slow loop round a home in the lamp's reach, and sinks a little and rises again; a dozen
-    // hang low round the near cup, in the air it moves, and eight by the far cup, in the air it moves.
-    const low = i >= 22 && i < 34
-    const far = i >= 34
-    const hx = far ? FAR_CUP.x - 0.95 + hash(i, 161) * 0.8 : low ? CUP.x - 0.9 + hash(i, 161) * 1.9 : MOUTH.x - 2.4 + hash(i, 161) * 3.6
-    const hy = far ? -FAR_CUP.h * 0.6 - hash(i, 162) * 0.8 : low ? CUP.top - 0.5 - hash(i, 162) * 0.8 : MOUTH.y + 0.1 + hash(i, 162) * 2.0
-    const sp = 0.05 + hash(i, 163) * 0.08
-    const x = hx + Math.sin(t * sp + hash(i, 164) * 6.3) * 0.5 + Math.sin(t * sp * 2.3 + i) * 0.12
-    let y = hy + Math.cos(t * sp * 0.8 + hash(i, 165) * 6.3) * 0.35 + Math.sin(t * 0.21 + i) * 0.05
-    // The cup plays the kick, and the air over it moves: each mote near it is pushed out and up a little on the beat,
-    // and drifts back. The nearer the cup, the more.
-    let px = 0
-    let py = 0
-    let stir = 0
-    // The near cup plays the kick, the far cup (standing on its edge, its cushion toward the near one) the snare.
-    for (const [list, sx, sy] of [[kicks, CUP.x, CUP.top - 0.05], [cracks, FAR_CUP.x - FAR_CUP.halfW, -FAR_CUP.h / 2]] as const) for (const k of list) {
-      const dx = x - sx
-      const dy = y - sy
-      const d = Math.hypot(dx, dy) || 1
-      const push = k.h * Math.exp(-d / 0.55) * (1 - Math.exp(-k.s / 0.05)) * Math.exp(-k.s / 0.45)
-      px += (dx / d) * push * 0.5
-      py += ((dy / d) * 0.5 - 0.6) * push
-      stir += push
-    }
-    const xx = x + px
-    y += py
-    if (y > -0.05) continue
-    const l = far ? Math.max(0.45, lightAt(xx, y)) : lightAt(xx, y)
-    // Stirred, a mote turns and catches the light.
-    const glint = Math.min(1, 0.35 + 0.65 * Math.max(0, Math.sin(t * (0.8 + hash(i, 166) * 1.5) + i * 2.1)) ** 3 + stir * 6)
-    const a = 0.42 * on * l * glint
-    if (a < 0.02) continue
-    const r = 0.007 + hash(i, 167) * 0.01
-    const g = ctx.createRadialGradient(xx, y, 0, xx, y, r * 3)
-    g.addColorStop(0, rgba(mixHex(warm, '#FFFFFF', 0.5), a))
-    g.addColorStop(0.35, rgba(warm, a * 0.4))
-    g.addColorStop(1, rgba(warm, 0))
-    ctx.fillStyle = g
-    ctx.fillRect(xx - r * 3, y - r * 3, r * 6, r * 6)
-  }
-  ctx.restore()
-}
-
-/** The beats the cups play: the kicks the near cup nods the ball on, and the snare the far cup plays, each how hard. */
-const NOD_MAX = Math.max(1e-6, ...NODS.map((n) => n.h))
-const NODS_AT = NODS.map((n) => ({ t: n.t, h: n.h / NOD_MAX }))
+/** The snare the far cup plays, each how hard. */
 const SNARES: { t: number; h: number }[] = (() => {
   const out: { t: number; h: number }[] = []
   for (const tr of TRACKS) {
@@ -636,81 +460,4 @@ function recent(beats: { t: number; h: number }[], t: number): { h: number; s: n
   }
   for (let i = lo - 1; i >= 0 && t - beats[i].t < 1.5; i--) out.push({ h: 0.2 * beats[i].h, s: t - beats[i].t })
   return out
-}
-
-/* ------------------------------------------------------------------ the clock */
-
-/** The show starts at 11:41 at night, by the clock on the wall. */
-const CLOCK_START = (23 * 60 + 41) * 60 + 12
-
-/**
- * The clock: it keeps the show's own time from 11:41 at night, so midnight passes in the eighth track. Its second hand
- * ticks, each second a small step with a settle in it, as a quartz hand does: the one thing in the room that moves
- * on the second.
- */
-export function clock(ctx: Ctx, lw: number, t: number): void {
-  const { x, y, r } = CLOCK
-  const lamp = lampAt(t)
-  const l = Math.min(1, lightAt(x, y, 1) * lamp * 1.5 + 0.12)
-  const dim = (c: string) => lit(mixHex(c, '#1E1A30', 0.65), c, l)
-  // Its shadow on the wall, and its rim and face.
-  ctx.fillStyle = rgba('#120E1C', 0.35)
-  ctx.beginPath()
-  ctx.arc(x + 0.03, y + 0.04, r + 0.02, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(x, y, r, 0, Math.PI * 2)
-  ctx.fillStyle = dim('#3E6E78')
-  ctx.fill()
-  ctx.strokeStyle = INK
-  ctx.lineWidth = lw
-  ctx.stroke()
-  ctx.beginPath()
-  ctx.arc(x, y, r - 0.035, 0, Math.PI * 2)
-  ctx.fillStyle = dim('#EFE6D2')
-  ctx.fill()
-  ctx.lineWidth = lw * 0.5
-  ctx.stroke()
-  // The hours' marks.
-  ctx.strokeStyle = rgba(INK, 0.7)
-  for (let h = 0; h < 12; h++) {
-    const a = (h / 12) * Math.PI * 2
-    const r0 = h % 3 === 0 ? r - 0.085 : r - 0.065
-    ctx.lineWidth = h % 3 === 0 ? 0.016 : 0.008
-    ctx.beginPath()
-    ctx.moveTo(x + Math.sin(a) * r0, y - Math.cos(a) * r0)
-    ctx.lineTo(x + Math.sin(a) * (r - 0.05), y - Math.cos(a) * (r - 0.05))
-    ctx.stroke()
-  }
-  const now = CLOCK_START + t
-  const whole = Math.floor(now)
-  const f = now - whole
-  // A tick: the step in the first tenth of the second, a little past and back.
-  const step = f < 0.12 ? 1 + Math.sin((f / 0.12) * Math.PI) * 0.08 - (1 - f / 0.12) * (1 - f / 0.12) : 1
-  const sec = ((whole % 60) - 1 + Math.min(1, step)) / 60
-  const min = (now % 3600) / 3600
-  const hour = (now % 43200) / 43200
-  const hand = (u: number, len: number, w: number, color: string) => {
-    const a = u * Math.PI * 2
-    ctx.beginPath()
-    ctx.moveTo(x - Math.sin(a) * len * 0.18, y + Math.cos(a) * len * 0.18)
-    ctx.lineTo(x + Math.sin(a) * len, y - Math.cos(a) * len)
-    ctx.strokeStyle = color
-    ctx.lineWidth = w
-    ctx.stroke()
-  }
-  ctx.lineCap = 'round'
-  hand(hour, r * 0.5, 0.024, INK)
-  hand(min, r * 0.74, 0.016, INK)
-  hand(sec, r * 0.8, 0.007, '#C9534A')
-  ctx.beginPath()
-  ctx.arc(x, y, 0.016, 0, Math.PI * 2)
-  ctx.fillStyle = '#C9534A'
-  ctx.fill()
-  // The glass's sheen.
-  ctx.strokeStyle = rgba('#FFFFFF', 0.18)
-  ctx.lineWidth = 0.014
-  ctx.beginPath()
-  ctx.arc(x, y, r - 0.07, Math.PI * 1.1, Math.PI * 1.45)
-  ctx.stroke()
 }

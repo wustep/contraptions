@@ -4,7 +4,6 @@ import { camera, catInViewAt } from './camera'
 import { GLASS, WINDOW } from './desk'
 import { MUSIC_END, smooth } from './music'
 import { blurOf, inLayer, layerOf, lensIn, lensOf, onWall, type Lens } from './lens'
-import { sweepAt } from './decor'
 import { machineBusy } from './route'
 import { cloudAt, coldAt, coverAt, hash, snowAt, lampAt, nightAt, rainAt, skyAt } from './world'
 import { FLAKES, flakes, landed, roofSnow, settled } from './snow'
@@ -12,7 +11,7 @@ import { antenna, fireEscape, waterTower } from './roofs'
 
 /**
  * The view through the glass, a function of show time: the sky from dusk into night, the clouds coming over and
- * clearing, the stars and the moon when it is clear, a plane now and then, the city across the street with its windows
+ * clearing, the stars and the moon when it is clear, the city across the street with its windows
  * lit and going out (and one of them, close, someone's: `neighbour`), the rain falling past, and on the glass the beads.
  *
  * It is what changes slowest in the show: the half hour is one evening, and the window is its clock. And it is deep:
@@ -45,7 +44,7 @@ interface Light {
 type Sink = { p: number; list: Light[] } | null
 
 /** How deep each layer is (0 the glass, 1 the sky): `lens.ts`. */
-const DEPTH = { sky: 0.55, clouds: 0.5, skyline: 0.47, plane: 0.45, birds: 0.35, far: 0.4, train: 0.36, near: 0.3, rain: 0.12 }
+const DEPTH = { sky: 0.55, clouds: 0.5, skyline: 0.47, birds: 0.35, far: 0.4, train: 0.36, near: 0.3, rain: 0.12 }
 
 /** The night through the glass, clipped to it. */
 export function night(ctx: Ctx, t: number): void {
@@ -73,7 +72,6 @@ export function night(ctx: Ctx, t: number): void {
     inLayer(g, lens, DEPTH.sky, () => stars(g, t, cloud, sink(DEPTH.sky)))
     moon(g, t, cloud, lens)
     inLayer(g, lens, DEPTH.birds, () => birds(g, t, sky.dusk))
-    inLayer(g, lens, DEPTH.plane, () => plane(g, t, cloud, sink(DEPTH.plane)))
     inLayer(g, lens, DEPTH.clouds, () => {
       clouds(g, t, cloud, sky)
       lightning(g, t)
@@ -310,7 +308,7 @@ const FLASHES: number[] = (() => {
       const p = onWall(lensOf(c), DEPTH.clouds, flashSpot(at).x, flashSpot(at).y)
       const hh = c.cells / 2
       const hw = (hh * 16) / 9
-      if (sweepAt(s).a > 0.01 || p.x < GLASS.x0 + 0.3 || p.x > GLASS.x1 - 0.3 || Math.abs(p.x - c.x) > hw - 0.4 || Math.abs(p.y - c.y) > hh - 0.2) ok = false
+      if (p.x < GLASS.x0 + 0.3 || p.x > GLASS.x1 - 0.3 || Math.abs(p.x - c.x) > hw - 0.4 || Math.abs(p.y - c.y) > hh - 0.2) ok = false
     }
     if (ok) out.push(at)
   }
@@ -491,71 +489,6 @@ function birds(ctx: Ctx, t: number, dusk: number): void {
   }
 }
 
-/** Now and then a plane, high and slow, its strobe blinking: only seen when the sky is clear enough. */
-/** How long a plane takes to cross the window, seconds. */
-const FLY = 34
-/** Where a plane that sets off at `at` is, `u` of the way across, and which way it goes. */
-function flight(at: number, u: number): { x: number; y: number; dir: number } {
-  const dir = hash(at, 71) < 0.5 ? 1 : -1
-  const x = dir > 0 ? GLASS.x0 - 0.2 + u * (W + 0.4) : GLASS.x1 + 0.2 - u * (W + 0.4)
-  // Low over the roofs, in the sky the window's look and the room's frame show.
-  return { x, y: GLASS.y0 + 1.45 + hash(at, 72) * 0.35 - u * 0.15, dir }
-}
-
-/**
- * When a plane crosses: in a clear sky only, and played to the camera as the shooting stars are, at moments the frame
- * holds most of its crossing, a few minutes apart. Worked out once, at load.
- */
-const FLIGHTS: number[] = (() => {
-  const out: number[] = []
-  for (let at = 15; at < MUSIC_END - FLY && out.length < 5; at += 1) {
-    if (out.length && at < out[out.length - 1] + 150) continue
-    let seen = 0
-    let clear = true
-    for (let s = 0; s <= FLY; s += 1) {
-      if (cloudAt(at + s) > 0.3) {
-        clear = false
-        break
-      }
-      const c = camera(at + s)
-      const q = flight(at, s / FLY)
-      const p = onWall(lensOf(c), DEPTH.plane, q.x, q.y)
-      const hh = c.cells / 2
-      const hw = (hh * 16) / 9
-      if (Math.abs(p.x - c.x) < hw - 0.1 && Math.abs(p.y - c.y) < hh - 0.1 && p.x > GLASS.x0 && p.x < GLASS.x1) seen++
-    }
-    if (clear && seen >= 0.7 * (FLY + 1)) out.push(at)
-  }
-  return out
-})()
-
-function plane(ctx: Ctx, t: number, cloud: number, sink: Sink): void {
-  for (const at of FLIGHTS) {
-    const s = t - at
-    if (s < 0 || s > FLY) continue
-    const a = Math.max(0, 1 - cloud * 1.3) * (0.5 + 0.5 * darkAt(t) + 0.3 * (1 - darkAt(t)))
-    if (a <= 0.02) return
-    const { x, y, dir } = flight(at, s / FLY)
-    const strobe = (s % 1.3) < 0.09 ? 1 : 0
-    if (sink) {
-      sink.list.push({ x, y, r: 0.012, color: '#FF6B6B', a: 0.75 * a, p: sink.p })
-      if (strobe) sink.list.push({ x: x + 0.03 * dir, y, r: 0.03, color: '#FFFFFF', a, p: sink.p })
-      continue
-    }
-    ctx.fillStyle = rgba('#FF6B6B', 0.75 * a)
-    ctx.beginPath()
-    ctx.arc(x, y, 0.012, 0, Math.PI * 2)
-    ctx.fill()
-    if (strobe) {
-      const g = ctx.createRadialGradient(x + 0.03 * dir, y, 0, x + 0.03 * dir, y, 0.07)
-      g.addColorStop(0, rgba('#FFFFFF', a))
-      g.addColorStop(1, rgba('#FFFFFF', 0))
-      ctx.fillStyle = g
-      ctx.fillRect(x - 0.1, y - 0.1, 0.2, 0.2)
-    }
-  }
-}
-
 /**
  * The clouds: long soft banks drifting slowly right, as many as the cover asks. At dusk they are lit from under in
  * peach and rose; at night they are a little paler than the sky, lit by the city.
@@ -592,13 +525,12 @@ function clouds(ctx: Ctx, t: number, cover: number, sky: { top: string; mid: str
 
 /**
  * The city across the street, low in the pane: two rows of roofs, the far one paler. Its windows come on through the
- * dusk and go out, one by one, through the night; a few are the cool flicker of a screen. On the tallest roof a red
- * light blinks.
+ * dusk and go out, one by one, through the night; a few are the cool light of a screen.
  */
 /**
  * The train: an elevated line runs across the city between the far roofs and the near ones, and a few times through
  * the night a train goes along it, its lit windows a string of light, seen over the low roofs and lost behind the
- * tall ones. Now and then its pantograph throws a small blue spark off the wire. Slow, and silent: the music is the
+ * tall ones. Slow, and silent: the music is the
  * sound. In its own layer, so it slides behind the bars at its depth, and opens into discs of light when the city is
  * soft.
  */
@@ -645,7 +577,6 @@ const TRAINS: number[] = (() => {
   const out: number[] = []
   for (let at = 150; at < 1450 && out.length < 4; at += 1) {
     if (out.length && at < out[out.length - 1] + 260) continue
-    if ([...FLIGHTS].some((f) => Math.abs(f - at) < 40)) continue
     if (trainSeen(at)) out.push(at)
   }
   return out
@@ -710,28 +641,6 @@ function train(ctx: Ctx, t: number, sky: { dusk: number }, sink: Sink): void {
       ctx.fillStyle = g
       ctx.fillRect(hx - 0.16, hy - 0.16, 0.32, 0.32)
     }
-    // Once in a crossing, a spark off the wire over one of the cars: a blink of blue-white.
-    const at2 = TRAIN_DUR * (0.35 + 0.3 * hash(at, 215))
-    const flash = Math.max(0, 1 - Math.abs(s - at2) / 0.09) * (s > at2 - 0.09 && s < at2 + 0.09 ? 1 : 0)
-    const flash2 = Math.max(0, 1 - Math.abs(s - at2 - 0.22) / 0.06)
-    const f = Math.max(flash, 0.7 * flash2)
-    if (f > 0.01) {
-      const car = Math.floor(hash(at, 216) * CARS)
-      const sx = dir > 0 ? front - car * (CAR + COUPLING) - CAR * 0.5 : front + car * (CAR + COUPLING) + CAR * 0.5
-      const sy = TRACK_Y - BODY - 0.06
-      if (sink) sink.list.push({ x: sx, y: sy, r: 0.05, color: '#BFD8FF', a: f, p: sink.p })
-      else {
-        ctx.save()
-        ctx.globalCompositeOperation = 'screen'
-        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 0.45)
-        g.addColorStop(0, rgba('#E8F2FF', 0.95 * f))
-        g.addColorStop(0.15, rgba('#9CC2FF', 0.5 * f))
-        g.addColorStop(1, rgba('#7FA6FF', 0))
-        ctx.fillStyle = g
-        ctx.fillRect(sx - 0.45, sy - 0.45, 0.9, 0.9)
-        ctx.restore()
-      }
-    }
   }
 }
 
@@ -795,7 +704,7 @@ function skyline(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: num
     ctx.fillStyle = haze
     ctx.fillRect(x, top, w, h + 0.5)
     if (kind < 0.18) {
-      // A spire and its mast, and the mast's light.
+      // A spire and its mast.
       ctx.beginPath()
       ctx.moveTo(x + w * 0.15, top)
       ctx.lineTo(x + w / 2, top - 0.22)
@@ -803,14 +712,6 @@ function skyline(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: num
       ctx.closePath()
       ctx.fill()
       ctx.fillRect(x + w / 2 - 0.004, top - 0.38, 0.008, 0.17)
-      const blink = Math.max(0, Math.sin((t * Math.PI) / 1.7 + i)) ** 4
-      if (sink) sink.list.push({ x: x + w / 2, y: top - 0.385, r: 0.02, color: '#FF6A5A', a: 0.75 * blink, p: sink.p })
-      else {
-        ctx.fillStyle = rgba('#FF6A5A', 0.75 * blink)
-        ctx.beginPath()
-        ctx.arc(x + w / 2, top - 0.385, 0.012, 0, Math.PI * 2)
-        ctx.fill()
-      }
       hazeSnow(ctx, t, x, top, w * 0.15, true, 0.014)
       hazeSnow(ctx, t, x + w * 0.85, top, w * 0.15, true, 0.014)
     } else if (kind < 0.4) {
@@ -950,9 +851,8 @@ function city(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: number
             const out = 0.3 + hash(i * 31 + a, b + row * 17, 5) * 0.95
             const fade = Math.min(1, (t - on) * 2) * Math.min(1, (out - n) * 30)
             const screen = key < 0.035
-            const flick = screen ? 0.75 + 0.25 * Math.sin(t * 7 + a * 3 + b) * Math.sin(t * 2.3 + i) : 1
             const c = screen ? '#9DB4F2' : hash(i, a + b, 19) < 0.3 ? '#F0A867' : '#F7C98A'
-            const alpha = (row ? 0.75 : 0.45) * fade * flick
+            const alpha = (row ? 0.75 : 0.45) * fade
             const wx = x + 0.06 + a * 0.16
             const wy = base - h + 0.08 + b * 0.17
             if (lights) lights.list.push({ x: wx + 0.0325, y: wy + 0.0375, r: 0.035, color: c, a: alpha, p })
@@ -1192,4 +1092,4 @@ function drops(ctx: Ctx, t: number, rain: number): void {
 }
 
 /** The window's moments played to the camera, for the report and the check. */
-export const MOMENTS = { trains: TRAINS, lightning: FLASHES, shooting: SHOOTS, planes: FLIGHTS }
+export const MOMENTS = { trains: TRAINS, lightning: FLASHES, shooting: SHOOTS }

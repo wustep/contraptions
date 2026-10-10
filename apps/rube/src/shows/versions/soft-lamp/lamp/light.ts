@@ -2,7 +2,7 @@ import { mixHex } from '../../../../parts'
 import { rgba, viewOf } from './canvas'
 import { DESK, GLASS, WALKMAN } from './desk'
 import { spillShare } from './spill'
-import { bulbsAt, sweepAt } from './decor'
+import { bulbsAt } from './decor'
 import { MUSIC_END, smooth } from './music'
 import { MOUTH, coverAt, lampAt, lightAt, nightAt, skyAt } from './world'
 
@@ -130,7 +130,7 @@ export function light(ctx: Ctx, t: number): void {
     g.fillStyle = rg
     g.fillRect(b.x - r, b.y - r, r * 2, r * 2)
   }
-  // The Walkman's light, and a passing car's on the wall.
+  // The Walkman's light.
   const wx = WALKMAN.x0 + 0.15
   const wy = -WALKMAN.h + 0.1
   const wg = g.createRadialGradient(wx, wy, 0, wx, wy, 0.12)
@@ -138,18 +138,6 @@ export function light(ctx: Ctx, t: number): void {
   wg.addColorStop(1, 'rgba(255, 255, 255, 0)')
   g.fillStyle = wg
   g.fillRect(wx - 0.12, wy - 0.12, 0.24, 0.24)
-  const sw = sweepAt(t)
-  if (sw.a > 0.01) {
-    g.save()
-    g.translate(sw.x, -4)
-    g.scale(1.6, 4)
-    const sg = g.createRadialGradient(0, 0, 0, 0, 0, 1)
-    sg.addColorStop(0, rgba('#F2F4FF', 0.35 * sw.a))
-    sg.addColorStop(1, rgba('#F2F4FF', 0))
-    g.fillStyle = sg
-    g.fillRect(-1, -1, 2, 2)
-    g.restore()
-  }
   // Over the frame, all but the glass.
   ctx.save()
   ctx.beginPath()

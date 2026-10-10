@@ -1,6 +1,5 @@
 import { camera } from './camera'
 import { rgba, viewOf } from './canvas'
-import { sweepAt } from './decor'
 import { CAT, LAMP, MUG } from './desk'
 import { MUSIC_END, smooth } from './music'
 import { machineBusy } from './route'
@@ -64,7 +63,7 @@ function held(box: [number, number, number, number], t0: number, t1: number): bo
 
 /**
  * When it reaches in: worked out once, at load. Each at the first moment in its stretch of the night that the camera
- * holds what it reaches for all the while, clear of a car's lights, the lightning and the shooting stars (the cat has
+ * holds what it reaches for all the while, clear of the lightning and the shooting stars (the cat has
  * its eyes on those), and of each other.
  */
 export const REACHES: Reach[] = (() => {
@@ -73,11 +72,7 @@ export const REACHES: Reach[] = (() => {
     [...MOMENTS.shooting].some((m) => m > t - 8 && m < t + d + 6) ||
     MOMENTS.lightning.some((m) => m > t - 3.5 && m < t + d + 6) ||
     out.some((r) => Math.abs(r.at - t) < 90) ||
-    machineBusy(t, t + d) ||
-    (() => {
-      for (let s = t - 2; s <= t + d + 2; s += 0.5) if (sweepAt(s).a > 0.01) return true
-      return false
-    })()
+    machineBusy(t, t + d)
   const find = (kind: Kind, from: number, to: number) => {
     const d = DUR[kind]
     for (let t = from; t < to; t += 1) {

@@ -15,7 +15,7 @@ import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/le
 import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
 import { SNOW, coverAt, rainAt, snowAt } from '../src/shows/versions/soft-lamp/lamp/world'
 import { REACHES, REFILL, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
-import { CLIMB, DOZES, SNOW_LOOK, STRETCHES, WASHES, YAWNS, climbAt } from '../src/shows/versions/soft-lamp/lamp/cat'
+import { CLIMB, DOZES, SNOW_LOOK, STRETCHES, YAWNS, climbAt } from '../src/shows/versions/soft-lamp/lamp/cat'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -196,7 +196,7 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
   // Sleepier through the night: it dozes off three or four times late, in view, clear of the machine and its other moments.
   check('soft lamp: the kitten dozes off three or four times late in the night, in view, clear of its other moments',
     DOZES.length >= 3 && DOZES.length <= 4 && DOZES.every((t) => t > 1100 && t < CLIMB - 30 && catInViewAt(t) && catInViewAt(t + 9) && !machineBusy(t, t + 9, 2) &&
-      [...YAWNS, ...WASHES, ...STRETCHES, SNOW_LOOK].every((m) => m < t - 18 || m > t + 15)), JSON.stringify(DOZES))
+      [...YAWNS, ...STRETCHES, SNOW_LOOK].every((m) => m < t - 18 || m > t + 15)), JSON.stringify(DOZES))
 
   // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched, the mug taken away after
   // midnight and brought back hot, and the lamp turned down at the end; each while the camera holds what the hand reaches for, and none over the cat's own moments.
@@ -211,10 +211,10 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     }
     return true
   }
-  check('soft lamp: a hand turns the lamp on, takes a sip, scratches the kitten, refills the tea after midnight, and turns the lamp down, each in frame, clear of the yawns and washes',
+  check('soft lamp: a hand turns the lamp on, takes a sip, scratches the kitten, refills the tea after midnight, and turns the lamp down, each in frame, clear of the yawns',
     kinds === 'on sip pet away back lamp' && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
     REFILL > 1140 && REFILL < MUSIC_END - 300 &&
-    [...YAWNS, ...WASHES].every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
+    YAWNS.every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
 
   check('soft lamp: trains cross the city a few times, minutes apart, from the dusk to a little after midnight',
     m.trains.length === 4 && m.trains.every((t, i) => i === 0 || t - m.trains[i - 1] >= 170) && m.trains[3] < 1450,
@@ -237,9 +237,9 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     perf.camera!(CLIMB).cells > 6.5, `${sillCat.map((x) => x.toFixed(2)).join('..')}`)
 
   // The kitten gets up and stretches twice, each whole in the frame, clear of its other moments and the hand.
-  check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns, washes and the hand',
+  check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns and the hand',
     STRETCHES.length === 2 && STRETCHES.every((t) => t > 0) && STRETCHES[0] < 900 && STRETCHES[1] > 1200 &&
-    STRETCHES.every((t) => catInViewAt(t) && catInViewAt(t + 6.8) && [...YAWNS, ...WASHES].every((m) => m < t - 3.2 || m > t + 7) &&
+    STRETCHES.every((t) => catInViewAt(t) && catInViewAt(t + 6.8) && YAWNS.every((m) => m < t - 3.2 || m > t + 7) &&
       REACHES.every((r) => r.at > t + 7 || r.at + r.dur < t)), STRETCHES.map((t) => t.toFixed(0)).join(' '))
 
   // The words.

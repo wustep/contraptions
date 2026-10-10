@@ -69,7 +69,7 @@ a plant in a clay pot; a mug under the sill, and beside it a ginger kitten loafe
 stacked into a stair that steps down to the right, under the sill's right end; the headphones set down on the desk, the
 near cup lying on its back, cushion up, the band arching over to the far cup standing on its edge; and over it all,
 from the right, an architect's lamp, its shade turned down onto the books and the cup. On the wall between the window
-and the lamp, polaroids and notes pinned up in the lamp's light; on the far wall, a small print. The ball is a
+and the lamp, two polaroids and a note pinned up in the lamp's light. The ball is a
 ping-pong ball, so a cell is about 15 cm and everything is its real size (the cat is a kitten).
 
 **One job to a thing.**
@@ -88,9 +88,8 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   stays, white under the moon, to the end. In the heaviest rain,
   lightning far off lights the clouds three times. What is past the glass has depth: it moves against the bars as the
   camera moves, and goes soft, its lights opening into discs, when the camera is close at the desk (`lamp/lens.ts`). Outside, the city's windows come on
-  through the dusk and go out one by one through the night, a few of them the cool flicker of a screen; one, close,
-  is a neighbour's, lit until a little before the end; a red light
-  blinks on the tallest roof; now and then a plane crosses when the sky is clear. On the glass, beads gather where
+  through the dusk and go out one by one through the night, a few of them the cool light of a screen; one, close,
+  is a neighbour's, lit until a little before the end. On the glass, beads gather where
   they land and a few run down in fits and starts.
 - **The fairy lights** come on bulb by bulb just after the lamp, breathe with the held sound, each at its own pace,
   and go down to a low glow by the moon at the end.
@@ -104,8 +103,7 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   at the sill over its head, round to the stair beside it, into the cup. It blinks, now and then slowly. An ear flicks
   when the ball knocks the pot or lands on the sill. Through the groove, a phrase at a time and each phrase its own
   choice, it either keeps watching or shuts its eyes in the content arch and nods along on the beat, the tip of its
-  tail swaying a bar at a time; it comes out of it ahead of a break and ahead of the lob, to watch. Four times, watching,
-  it washes: a paw licked and drawn over its ear. When the last
+  tail swaying a bar at a time; it comes out of it ahead of a break and ahead of the lob, to watch. When the last
   track's drums leave, it climbs the books to the sill and sleeps there, under the moon. Twice it gets up and stretches, front out long and rear up,
   with a yawn, and settles back down.
 - **Someone** is at the desk, where the camera is: never seen but for a hand in a sweater's sleeve. It turns the lamp
@@ -1541,6 +1539,42 @@ with the music); the book and pencil (the desk is somebody's); the window's ligh
 Nothing in the machine, its timing or the song changed. The hand's remaining reaches, found by the same search,
 pass every check, as do the kitten's moments.
 
+### The eighty-eighth pass: less again
+
+A second subtraction, with fresh eyes on the cut of the eighty-seventh: frames from dusk to the end, landscape, a phone
+held upright, and the still take. What still did not earn its place:
+
+255. **The dust in the lamp's light** (`motes`). Forty-odd glints drifting in the cone, pushed by every kick and snare.
+     The ball already nods on the kick and the far cup gives on the snare; the sparkle was a third beat-keeper, and the
+     busiest texture in the frame's warmest place. The cone is clear air now.
+256. **The headlights** (`headlights`, `sweepAt`). A pale wash across the wall every minute and a half, and the kitten
+     turning to follow each one. A recurring distraction with no part in the night's story; the kitten's eyes are back
+     on the ball, the sky and the hand.
+257. **The clock on the wall.** A third timekeeper beside the window (the night) and the Walkman's reels (the half
+     hour), and a second hand ticking under the fairy lights.
+258. **The framed print** on the far wall, a picture of a sunset at the edge of the widest frames. And of the five
+     things pinned up between the window and the lamp, three stay: two polaroids and the pink note.
+259. **The cat's washes.** Four six-second set pieces (a paw licked and drawn over the ear) on top of its blinks, nods,
+     yawns, stretches, dozes, glances and the climb. Its night is plainer and reads better: it watches, it nods along, it
+     gets sleepy, it sleeps.
+260. **Across the street, the things that blink**: the planes and their strobes, the red light on the tallest mast, the
+     screens' flicker (the windows stay, a steady cool blue), and the train's blue spark off the wire. The window keeps
+     what changes the night: the dusk, the rain, the lightning, the snow, the trains, the stars and the moon. The dusk
+     birds stay, two small flocks in the first two minutes.
+261. **Under the desk**, for a phone held upright: the tote on its hook, the backpack, the crate of records, the rug and
+     the slippers. Half the upright frame was clutter in the dark. The macramé hanger in the ceiling's corner, a second
+     plant beside the one on the sill, went too. What is left under the desk is its drawers, the floor and the ukulele,
+     which moved from the drawers' side (where the upright frame cut it in half at its edge) to the knee space under the
+     cup, in the desk's shadow, lit no more than the shadow lets it be.
+262. **The book's small motions and marks**: the open page's corner lifting in the draught, its ribbon, and the ribbon
+     hanging out of the middle book of the stair (two red flecks that read as stray marks). The curtain, the plant and
+     the tea tag still show the draught.
+
+Audit after the cuts: the kitten's yawns, stretches, dozes and snow look, the hand's six reaches and the lightning all
+still land clear of each other (they had been kept clear of the headlights and washes, and the searches now find their
+moments without them); `check:shows` passes, its checks for the washes removed. The share cards are regenerated. The
+machine, its timing and the song are unchanged.
+
 ## Judgment calls for Stephen
 
 - **The light.** How dark the room falls away from its lights is two colours (`ambientAt`, `lamp/light.ts`, the
@@ -1558,7 +1592,6 @@ pass every check, as do the kitten's moments.
   moon and the fairy lights' low glow are the last light.
 - **The cat.** It is the one character, and a kitten for the desk's scale. It nods along in about half the groove's
   phrases (chosen per phrase, not per track); fewer would read as a cat that watches, more as a gag.
-- **The headlights.** Roughly every minute and a half once it is dark, four seconds each; they could be rarer.
 - **Its Short.** The stage letterboxes every show's 9:16 Short, so this one's is 70% black bars, though its room is
   built floor to ceiling and the live upright stage already fills a phone with it. A per-show choice to fill the Short
   (as the live stage does, seeing more world, never less) would make a better Short here; it is a change to the shared

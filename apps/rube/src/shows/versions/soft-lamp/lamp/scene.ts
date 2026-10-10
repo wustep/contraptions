@@ -7,8 +7,8 @@ import { cat, climbAt } from './cat'
 import { formed, plaster } from './form'
 import { openBook } from './book'
 import { spill } from './spill'
-import { bloom, clock, farPress, curtain, draughtAt, scrim, fairyGlowAt, fairyLights, grain, headlights, motes, notes, print, vignette } from './decor'
-import { ceiling, hanger, highShelf, underDesk } from './room'
+import { bloom, farPress, curtain, draughtAt, scrim, fairyGlowAt, fairyLights, grain, notes, vignette } from './decor'
+import { ceiling, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
 import { camera } from './camera'
 import { titlesAt } from './titles'
@@ -546,24 +546,6 @@ function book(ctx: Ctx, lw: number, b: Book, i: number, t: number): void {
   }
   roundRect(ctx, b.x0, top, b.x1 - b.x0, h, 0.03)
   stroke(ctx, lw)
-  // The middle one's ribbon, out of its pages at the left end, lying down onto the book under it.
-  if (i === 1) {
-    // A flat silk ribbon, out of the pages and down, its end cut in a V where it lies on the book below.
-    const RW = 0.05
-    const yb = b.bottom - 0.004
-    ctx.beginPath()
-    ctx.moveTo(b.x0 + 0.01, top + h * 0.38)
-    ctx.quadraticCurveTo(b.x0 - 0.08, top + h * 0.5, b.x0 - 0.06, yb - RW)
-    ctx.lineTo(b.x0 - 0.2, yb - RW)
-    ctx.lineTo(b.x0 - 0.17, yb - RW / 2)
-    ctx.lineTo(b.x0 - 0.2, yb)
-    ctx.lineTo(b.x0 - 0.06 + RW, yb)
-    ctx.quadraticCurveTo(b.x0 - 0.08 + RW, top + h * 0.6, b.x0 + 0.01, top + h * 0.38 + RW)
-    ctx.closePath()
-    ctx.fillStyle = lit('#5A2420', '#C8564A', l * 0.8 + 0.1)
-    ctx.fill()
-    stroke(ctx, lw * 0.6)
-  }
   // Its top edge catches the lamp.
   ctx.fillStyle = rgba(lampColor(t), 0.5 * l)
   ctx.fillRect(b.x0 + 0.05, top, b.x1 - b.x0 - 0.08, 0.02)
@@ -1039,11 +1021,7 @@ export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) 
   wall(ctx, c.t)
   ceiling(ctx, lw, c.t)
   highShelf(ctx, lw, c.t)
-  hanger(ctx, lw, c.t)
-  print(ctx, lw, c.t)
   notes(ctx, lw, c.t)
-  clock(ctx, lw, c.t)
-  headlights(ctx, c.t)
   night(ctx, c.t)
   frame(ctx, lw, c.t)
   curtain(ctx, lw, c.t)
@@ -1089,7 +1067,6 @@ export const things = scenery<null>(
     // The room's light over all of it: the lamp's pool, the window and the fairy lights keep what they reach.
     light(ctx, c.t)
     bloom(ctx, c.t)
-    motes(ctx, c.t)
     flashRoom(ctx, c.t)
     vignette(ctx)
     // Under each track's now-playing line (not the title or the credits, which stand on the dark wall).

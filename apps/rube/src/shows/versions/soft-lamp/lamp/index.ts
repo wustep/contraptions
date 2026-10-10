@@ -60,7 +60,7 @@ export const performance: Performance = {
 export const HOME = { x: 0.91, y: -2.05, cells: 5.7 }
 /**
  * Held, but not frozen: it drifts a little over minutes (a tenth of a cell across, a twentieth up and down, a hair nearer
- * and back, kept between the plant, the lamp's foot and the print at the frame's edges), too slow to see as a move, enough that the city past the glass shifts faintly against the
+ * and back, kept between the plant and the lamp's foot at the frame's edges), too slow to see as a move, enough that the city past the glass shifts faintly against the
  * window's bars, as it does to anyone sitting at a desk.
  */
 export function stillCamera(t: number): { x: number; y: number; cells: number } {

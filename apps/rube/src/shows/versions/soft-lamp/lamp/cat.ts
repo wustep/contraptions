@@ -1,4 +1,3 @@
-import { sweepAt } from './decor'
 import { MOMENTS, flashAt, shootAt } from './sky'
 import { REACHES, handAt, petAt } from './hands'
 import { rimAt } from './rim'
@@ -16,8 +15,7 @@ import { INK, LAMP_ON, SNOW, hash, lampAt, lightAt, lit } from './world'
  * cat's do (along the sill over its head, down the stair beside it, into the cup); it blinks, and now and then slowly,
  * the way a cat says it is content; an ear flicks when the ball knocks the pot. And through a groove, a phrase at a
  * time, it either keeps watching or shuts its eyes and nods along on the beat, its tail tip swaying with it, as anyone
- * listening does. It breathes. Now and then, watching, it washes: a paw licked and drawn over an ear. When the last track's drums leave it puts its head down and sleeps, as the ball does in
- * the cup.
+ * listening does. It breathes. When the last track's drums leave it puts its head down and sleeps, as the ball does in the cup.
  *
  * Every part of it is a function of show time, so a scrub back is the same cat.
  */
@@ -117,8 +115,7 @@ function dreamAt(t: number): number {
 }
 
 /**
- * Where it is looking: the ball, a little behind (its eyes lead its head); or, while a car's lights cross the wall,
- * those; or a flash of lightning in the clouds; or, late in the night, a shooting star through the window, and where it
+ * Where it is looking: the ball, a little behind (its eyes lead its head); or a flash of lightning in the clouds; or, late in the night, a shooting star through the window, and where it
  * went.
  */
 function gaze(t: number, lag: number): { x: number; y: number } {
@@ -126,11 +123,8 @@ function gaze(t: number, lag: number): { x: number; y: number } {
   // A new track: a glance at the Walkman it is coming from.
   const n = newTrackAt(t)
   const ball = { x: b0.x + (WALKMAN_AT.x - b0.x) * 0.85 * n, y: b0.y + (WALKMAN_AT.y - b0.y) * 0.85 * n }
-  const sw = sweepAt(t - 0.35)
-  const k = Math.min(1, sw.a * 1.6)
-  const g = { x: ball.x + (sw.x - ball.x) * k, y: ball.y + (sw.y - ball.y) * k }
   const st = shootAt(t - 0.3)
-  const s = { x: g.x + (st.x - g.x) * st.a, y: g.y + (st.y - g.y) * st.a }
+  const s = { x: ball.x + (st.x - ball.x) * st.a, y: ball.y + (st.y - ball.y) * st.a }
   const fl = flashAt(t)
   const f1 = { x: s.x + (fl.x - s.x) * fl.look, y: s.y + (fl.y - s.y) * fl.look }
   const sn = snowLookAt(t - 0.2)
@@ -208,58 +202,6 @@ export function yawnAt(t: number): number {
   return 0
 }
 
-/** How long a wash takes: the paw up to its chin, four licks, the paw over its ear, and down. */
-const WASH = 6
-/**
- * Its washes: four through the night (if it was nodding along, it stops to wash), while the ball
- * sits and the camera is on it all the while, clear of its yawns and of the lob.
- */
-export const WASHES: number[] = [[1, 2], [3, 4, 2, 6], [5, 6], [7, 8]].map((tracks) => {
-  for (const n of tracks) {
-    const at = washIn(n)
-    if (at > 0) return at
-  }
-  return -100
-})
-
-/** The first moment in track `n` a wash fits, or -100. */
-function washIn(n: number): number {
-  const lap = LAPS[n]
-  const tr = TRACKS[n]
-  for (let k = 0; k < 60; k++) {
-    const at = lap.cup + 14 + k * 2 * tr.period + hash(n, k, 131) * 1.5
-    if (lap.lob !== null && at + WASH + 2 > lap.lob - 8 * tr.period) break
-    if (!catInViewAt(at) || !catInViewAt(at + WASH)) continue
-    if (YAWNS.some((y) => Math.abs(y - at) < WASH + 6)) continue
-    if (REACHES.some((r) => at > r.at - WASH - 4 && at < r.at + r.dur + 4)) continue
-    // (If it was nodding along, it stops to wash: `cat` takes the wash over the nod.)
-    let still = true
-    for (let s = at - 1; s <= at + WASH + 1; s += 0.5) if (sweepAt(s).a > 0.02) still = false
-    if (still) return at
-  }
-  return -100
-}
-
-/**
- * Where a wash is at `t`: how far into it (0, none, to 1) the cat is (`k`, eased in and out), where its paw is (`paw`,
- * 0 tucked, 1 at its chin, 2 over its ear), and how far out its tongue is (`lick`).
- */
-export function washAt(t: number): { k: number; paw: number; lick: number } {
-  for (const at of WASHES) {
-    const s = t - at
-    if (s < 0 || s > WASH) continue
-    const k = smooth(s, 0, 0.6) * (1 - smooth(s, WASH - 0.7, WASH))
-    let paw: number
-    if (s < 0.8) paw = smooth(s, 0, 0.8)
-    else if (s < 3.8) paw = 1 - 0.12 * Math.abs(Math.sin(((s - 0.8) / 3) * Math.PI * 4))
-    else if (s < 5.2) paw = 1 + Math.sin(((s - 3.8) / 1.4) * Math.PI)
-    else paw = 1 - smooth(s, 5.2, WASH)
-    const lick = s > 0.8 && s < 3.8 ? Math.max(0, Math.sin(((s - 0.8) / 3) * Math.PI * 4)) ** 2 : 0
-    return { k, paw, lick }
-  }
-  return { k: 0, paw: 0, lick: 0 }
-}
-
 /** How long a stretch takes: up onto its feet, the front stretched out long with a yawn, and back down. */
 const STRETCH = 6.8
 /** Everything a stretch reaches to: the cat's box, and its front paws out along the desk toward the books. */
@@ -267,7 +209,7 @@ const STRETCH_BOX: [number, number, number, number] = [CAT.x0 - 0.08, -1.25, CAT
 /**
  * Its stretches: twice through the night, as a cat does now and then after lying still a long while, each in a phrase
  * it spends watching (never nodding along), while the camera holds the whole of it, the paws stretched out included;
- * clear of its yawns and washes, the hand, the lob, a car's lights and the sky's moments.
+ * clear of its yawns, the hand, the lob and the sky's moments.
  */
 export const STRETCHES: number[] = [[3, 4, 5, 2, 6, 1], [9, 10, 8]].map((tracks) => {
   for (const n of tracks) {
@@ -295,15 +237,12 @@ function stretchIn(n: number): number {
   for (let k = 0; k < 80; k++) {
     const at = lap.cup + 12 + k * 2 * tr.period + hash(n, k, 151) * 1.5
     if (lap.lob !== null && at + STRETCH + 2 > lap.lob - 8 * tr.period) break
-    if ([...YAWNS, ...WASHES].some((m) => m > at - 10 && m < at + STRETCH + 6)) continue
+    if (YAWNS.some((m) => m > at - 10 && m < at + STRETCH + 6)) continue
     if (REACHES.some((r) => r.at < at + STRETCH + 6 && r.at + r.dur > at - 6)) continue
     if (sky.some((m) => m > at - 12 && m < at + STRETCH + 10)) continue
     if (machineBusy(at, at + STRETCH)) continue
-    if (!held(at - 1, at + STRETCH + 1)) continue
     // (Nodding along, it stops to stretch: `cat` takes the stretch over the nod.)
-    let still = true
-    for (let s = at - 1; s <= at + STRETCH + 1; s += 0.5) if (sweepAt(s).a > 0.02) still = false
-    if (still) return at
+    if (held(at - 1, at + STRETCH + 1)) return at
   }
   return -100
 }
@@ -319,7 +258,7 @@ export const SNOW_LOOK: number = (() => {
     if (!catInViewAt(at) || !catInViewAt(at + SNOW_LOOK_FOR)) continue
     if (machineBusy(at, at + SNOW_LOOK_FOR, 2)) continue
     if (STRETCHES.some((m) => m > at - STRETCH - 4 && m < at + SNOW_LOOK_FOR + 4)) continue
-    if ([...YAWNS, ...WASHES].some((m) => m > at - 6 && m < at + SNOW_LOOK_FOR + 2)) continue
+    if (YAWNS.some((m) => m > at - 6 && m < at + SNOW_LOOK_FOR + 2)) continue
     if (REACHES.some((r) => r.at < at + SNOW_LOOK_FOR + 4 && r.at + r.dur > at - 4)) continue
     return at
   }
@@ -353,7 +292,7 @@ export const drowseAt = (t: number): number => smooth(t, 900, 1700) * (1 - sleep
 const DOZE = 9
 export const DOZES: number[] = (() => {
   const out: number[] = []
-  const busy = [...YAWNS, ...WASHES, ...STRETCHES, SNOW_LOOK, ...MOMENTS.shooting, ...MOMENTS.lightning]
+  const busy = [...YAWNS, ...STRETCHES, SNOW_LOOK, ...MOMENTS.shooting, ...MOMENTS.lightning]
   for (let at = 1150; at < CLIMB - 40 && out.length < 4; at += 1) {
     if (out.length && at < out[out.length - 1] + 110) continue
     if (!catInViewAt(at) || !catInViewAt(at + DOZE)) continue
@@ -362,7 +301,7 @@ export const DOZES: number[] = (() => {
     if (REACHES.some((r) => r.at < at + DOZE + 6 && r.at + r.dur > at - 6)) continue
     // In a phrase it spends watching, not nodding along with its eyes already shut: a doze shows against open eyes.
     let clear = true
-    for (let s = at - 2; s <= at + DOZE + 1 && clear; s += 0.5) if (sweepAt(s).a > 0.02 || vibeAt(s) > 0.05) clear = false
+    for (let s = at - 2; s <= at + DOZE + 1 && clear; s += 0.5) if (vibeAt(s) > 0.05) clear = false
     if (clear) out.push(at)
   }
   return out
@@ -474,7 +413,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   // A shooting star, or lightning, brings it out of the music to look, and it goes back in after.
   // A scratch under the chin: it shuts its eyes and leans into the hand.
   const pet = petAt(t) * (1 - sleepAt(t))
-  const vibe = vibeAt(t) * (1 - washAt(t).k) * (1 - smooth(stretchAt(t).up, 0, 0.3)) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - snowLookAt(t).a) * (1 - handAt(t).a) * (1 - doze.k)
+  const vibe = vibeAt(t) * (1 - smooth(stretchAt(t).up, 0, 0.3)) * (1 - shootAt(t - 0.3).a) * (1 - flashAt(t).look) * (1 - snowLookAt(t).a) * (1 - handAt(t).a) * (1 - doze.k)
   // Stretching: up on its feet, the body lifted and tipped forward (chest down, rear up) about its rear, and longer;
   // the head down and forward with it, the eyes shut in a yawn.
   const s0 = stretchAt(t)
@@ -712,12 +651,9 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     ctx.restore()
   }
 
-  // The head: it turns to the ball, and when it sleeps it comes down onto its paws; washing, it dips to the paw with
-  // each lick, and leans into it as the paw goes over its ear.
-  const wash = washAt(t)
-  const over = Math.max(0, wash.paw - 1)
+  // The head: it turns to the ball, and when it sleeps it comes down onto its paws.
   const hx0 = CAT.head.x
-  const hy0 = CAT.head.y - 0.025 * pet + 0.26 * sleep + 0.075 * doze.k - 0.02 * doze.jolt + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn + wash.k * (0.03 + 0.02 * wash.lick + 0.02 * over)
+  const hy0 = CAT.head.y - 0.025 * pet + 0.26 * sleep + 0.075 * doze.k - 0.02 * doze.jolt + 0.006 * breath + 0.028 * vibe * nodAt(t) - 0.03 * yawn
   // Its gaze, in its own frame: carried and turned as it is.
   const gz = gaze(t, 0.22)
   const look = { x: C_CX + (gz.x - c.dx - C_CX) * Math.sign(c.face), y: gz.y - c.dy }
@@ -725,7 +661,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const dy = look.y - hy0
   const d = Math.hypot(dx, dy) || 1
   const awake = 1 - sleep
-  const watch = awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet) * (1 - doze.k)
+  const watch = awake * (1 - vibe) * (1 - yawn) * (1 - pet) * (1 - doze.k)
   const lx = (dx / d) * watch
   const ly = (dy / d) * watch + 0.25 * vibe * awake
   // With the body as it stretches: down and forward, over its outstretched paws.
@@ -733,7 +669,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const hx = carried.x + lx * 0.035 + 0.12 * st.out
   const hy = carried.y - 0.02 + ly * 0.02 + 0.1 * st.out
   const tilt = lx * 0.12 - ly * 0.06 - yawn * 0.12 + sleep * 0.3 + vibe * awake * 0.08 * Math.sin((Math.PI * beatOf(tr, t)) / 2) +
-    wash.k * (0.1 + 0.32 * over) + pet * (0.2 + 0.03 * Math.sin(t * 2.2)) + tipF * 0.6 + 0.16 * doze.k - 0.05 * doze.jolt
+    pet * (0.2 + 0.03 * Math.sin(t * 2.2)) + tipF * 0.6 + 0.16 * doze.k - 0.05 * doze.jolt
   ctx.save()
   ctx.translate(hx, hy)
   ctx.rotate(tilt)
@@ -741,7 +677,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const RY = 0.215
   // The ears, the near one flicking.
   const flick = flickAt(t) * awake + dreamAt(t) * sleep
-  const perk = newTrackAt(t) * awake * (1 - yawn) * (1 - wash.k)
+  const perk = newTrackAt(t) * awake * (1 - yawn)
   for (const side of [-1, 1]) {
     ctx.save()
     ctx.translate(side * 0.14, -0.13)
@@ -821,8 +757,8 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   // The eyes: round and open as it watches; the upper lid comes down over them to blink, so a blink caught halfway is
   // sleepy, never cross; shut in the content arch while it nods along, and shut soft as it sleeps or yawns.
   // Sleepier, its lids rest lower over its eyes; dozing, they close.
-  const open = Math.max(0, (1 - blinkAt(t)) * (1 - 0.3 * drowse) * awake * (1 - vibe) * (1 - yawn) * (1 - wash.k) * (1 - pet) * (1 - doze.k))
-  const happy = (vibe > 0.5 || pet > 0.5) && sleep < 0.5 && yawn < 0.3 && wash.k < 0.3
+  const open = Math.max(0, (1 - blinkAt(t)) * (1 - 0.3 * drowse) * awake * (1 - vibe) * (1 - yawn) * (1 - pet) * (1 - doze.k))
+  const happy = (vibe > 0.5 || pet > 0.5) && sleep < 0.5 && yawn < 0.3
   const px = lx * 0.03
   const py = ly * 0.026
   const RXE = 0.058
@@ -925,16 +861,6 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     ctx.lineWidth = lw * 0.5
     ctx.stroke()
   }
-  // Washing: the tip of its tongue, out to the paw with each lick.
-  if (wash.lick > 0.15) {
-    ctx.beginPath()
-    ctx.ellipse(0.012, 0.112 + 0.012 * wash.lick, 0.018, 0.012 + 0.012 * wash.lick, 0, 0, Math.PI * 2)
-    ctx.fillStyle = '#D9727C'
-    ctx.fill()
-    ctx.strokeStyle = 'rgba(26, 21, 38, 0.8)'
-    ctx.lineWidth = lw * 0.4
-    ctx.stroke()
-  }
   // Whiskers, faint.
   ctx.strokeStyle = rgba('#F3E6D2', 0.35)
   ctx.lineWidth = 0.008
@@ -947,36 +873,4 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     }
   }
   ctx.restore()
-
-  // Washing: the near foreleg, up from its chest to its chin, then over its ear, the paw's pad toward its face.
-  if (wash.k > 0.01 && wash.paw > 0.02) {
-    const p = Math.min(1, wash.paw)
-    // From the shoulder, under its ruff: only the forearm shows, bent up to the face.
-    const from = { x: chest - 0.1, y: -0.24 }
-    const chin = { x: hx + 0.085, y: hy + 0.15 }
-    // Up the side of its head and over the ear: the wipe that is the wash.
-    const ear = { x: hx + 0.13, y: hy - 0.19 }
-    const rest = { x: chest - 0.08, y: -0.08 }
-    const px = rest.x + (chin.x - rest.x) * p + (ear.x - chin.x) * over
-    const py = rest.y + (chin.y - rest.y) * p + (ear.y - chin.y) * over
-    ctx.lineCap = 'round'
-    ctx.beginPath()
-    ctx.moveTo(from.x, from.y)
-    // Round the outside of its cheek as it goes over the ear, not across its face.
-    // Over the ear, the forearm bends round the outside of its cheek, not across its face.
-    const bend = { x: from.x + 0.07 + over * (hx + 0.36 - from.x - 0.07), y: (from.y + py) / 2 + 0.03 + over * 0.08 }
-    ctx.quadraticCurveTo(bend.x, bend.y, px, py)
-    ctx.lineWidth = 0.1
-    ctx.strokeStyle = INK
-    ctx.stroke()
-    ctx.lineWidth = 0.1 - lw * 2
-    ctx.strokeStyle = lit('#B49276', CREAM_FUR, l)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.ellipse(px, py, 0.055, 0.045, -0.5 - over * 0.6, 0, Math.PI * 2)
-    ctx.fillStyle = lit('#B49276', CREAM_FUR, l)
-    ctx.fill()
-    ctx.lineWidth = lw * 0.7
-    ctx.stroke()
-  }
 }
