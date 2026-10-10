@@ -192,22 +192,6 @@ export function drawCity(pen: Pen, f: View, te: number): void {
     ctx.fillRect(x0 * k, MID_BASE * k, (x1 - x0) * k, (RAIN_GEO.river - MID_BASE) * k)
     ctx.fillStyle = rgba(RAIN.riverLight, 0.75)
     ctx.fillRect(x0 * k, (RAIN_GEO.river - 0.32) * k, (x1 - x0) * k, 0.32 * k)
-    // The far bank's road: the lights of its traffic going both ways, small in the rain (and, when he is deeper,
-    // hanging where they are).
-    if (k > 3) {
-      const span = QUAY_R - QUAY_L
-      for (let i = 0; i < 14; i++) {
-        const dir = i % 2 ? 1 : -1
-        const v = 1.6 + hash(i, 1, 75) * 1.4
-        const x = QUAY_L + ((((hash(i, 2, 75) * span + dir * v * te) % span) + span) % span)
-        if (x < f.x0 - 1 || x > f.x1 + 1) continue
-        const y = MID_BASE - 0.12 - (i % 3) * 0.04
-        const c = dir > 0 ? RAIN.lamp : RAIN.trainRust
-        bloom(p, k, [x, y], 0.13, c, dir > 0 ? 0.42 : 0.34)
-        ctx.fillStyle = rgba(c, dir > 0 ? 0.8 : 0.6)
-        ctx.fillRect((x - 0.035) * k, (y - 0.02) * k, Math.max(1, 0.07 * k), Math.max(1, 0.04 * k))
-      }
-    }
   }
 }
 
@@ -223,6 +207,8 @@ function hazeBand(pen: Pen, f: View, y0: number, y1: number, color: string, a0: 
 }
 
 /** The street's buildings, the shop and its awning, the ground and the quays, the lamps' posts. */
+/** The far kerb, at the buildings' feet. */
+const FAR_KERB = -0.26
 export function drawStreet(pen: Pen, f: View, te: number): void {
   const { p, k, ink, w, ctx } = pen
   // The ground under the street, the quays and the far bank, and the river's bed: dark earth down to the band's
@@ -287,6 +273,23 @@ export function drawStreet(pen: Pen, f: View, te: number): void {
   }
   // The shop: its window lit (the one warm light of the street), its door, its awning over the pavement.
   if (seen(f, AWNING.x0 - 1, AWNING.x1 + 1, -3, 0.6)) shop(pen, te)
+  // The street's far side: wet asphalt from the far kerb at the buildings' feet to the near one. The traffic and the
+  // train run in the middle of the street, set back from the near kerb, and without it they stood a little up the
+  // facades, in the air (a critic's note under Zoom).
+  for (const [a, b] of [[-1e9, QUAY_L], [QUAY_R, 1e9]] as const) {
+    if (!seen(f, a, b, FAR_KERB, 0)) continue
+    const x0 = Math.max(a, f.x0 - 1)
+    const x1 = Math.min(b, f.x1 + 1)
+    const g = ctx.createLinearGradient(0, FAR_KERB * k, 0, 0)
+    g.addColorStop(0, mixHex(RAIN.streetWet, RAIN.street, 0.75))
+    g.addColorStop(1, RAIN.streetWet)
+    ctx.fillStyle = g
+    ctx.fillRect(x0 * k, FAR_KERB * k, (x1 - x0) * k, -FAR_KERB * k)
+    p.stroke(rgba(RAIN.kerb, 0.55))
+    p.strokeWeight(Math.max(1, 0.035 * k))
+    p.line(x0 * k, FAR_KERB * k, x1 * k, FAR_KERB * k)
+    p.noStroke()
+  }
   // The lamps' posts and heads.
   for (const x of LAMPS) {
     const onBridge = x > QUAY_L && x < 0
@@ -403,11 +406,8 @@ function shop(pen: Pen, te: number): void {
   p.line(((wx0 + wx1) / 2) * k, wy0 * k, ((wx0 + wx1) / 2) * k, wy1 * k)
   // Its light: on the pavement under the awning and into the street.
   pool(p, k, [(x0 + x1) / 2 - 0.4, 0.02], 2.2, 0.16, RAIN.windowLit, 0.3 * glow)
-  const r = ctx.createLinearGradient(0, 0, 0, 0.55 * k)
-  r.addColorStop(0, rgba(RAIN.windowLit, 0.34 * glow))
-  r.addColorStop(1, rgba(RAIN.windowLit, 0))
-  ctx.fillStyle = r
-  ctx.fillRect((wx0 + 0.05) * k, 0, (wx1 - wx0 - 0.1) * k, 0.55 * k)
+  // Into the street: a soft pool fading out on every side (a window-wide box of light ended on hard vertical edges).
+  pool(p, k, [(wx0 + wx1) / 2, 0.22], (wx1 - wx0) / 2 + 0.7, 0.34, RAIN.windowLit, 0.3 * glow)
   bloom(p, k, [(wx0 + wx1) / 2, y + 1.1], 2.4, RAIN.windowLit, 0.16 * glow)
   // The awning: a canvas sloped out from the wall, its valance scalloped, dark against the lit window; it shivers as
   // the train goes by.
@@ -434,9 +434,11 @@ function shop(pen: Pen, te: number): void {
     if (i > 0) p.vertex((x - (x1 - x0 + 0.24) / n / 2) * k, (y + 0.3) * k)
   }
   p.endShape(p.CLOSE)
-  // Its arms back to the wall.
-  p.line((x0 + 0.1) * k, (y + 0.02) * k, (x0 + 0.1) * k, (y + 0.9) * k)
-  p.line((x1 - 0.1) * k, (y + 0.02) * k, (x1 - 0.1) * k, (y + 0.9) * k)
+  // Its arms back to the wall, each into a bracket on the wall under it (they hung from it and stopped in the air).
+  for (const ax of [x0 + 0.1, x1 - 0.1]) {
+    p.line(ax * k, (y + 0.02) * k, ax * k, (y + 0.62) * k)
+    p.rect((ax - 0.07) * k, (y + 0.58) * k, 0.14 * k, 0.12 * k)
+  }
   p.pop()
   // The drip off its edge, on the rain's clock: a thin sheet of drops falling from the valance.
   if (k > 16) {
@@ -492,11 +494,17 @@ export function drawLampLight(pen: Pen, f: View, te: number): void {
     bloom(p, k, head, 1.0, LAMP, 0.32 * flick)
     beam(p, k, head, [x, 0], 0.22, 2.4, LAMP, 0.12 * flick)
     pool(p, k, [x, 0.02], 1.5, 0.13, LAMP, 0.22 * flick)
-    const r = ctx.createLinearGradient(0, 0, 0, 0.5 * k)
-    r.addColorStop(0, rgba(LAMP, 0.26 * flick))
+    // Its reflection in the wet road: a soft streak down from its foot, fading at its sides as well as down (a strip
+    // with hard sides read as a pasted-on panel).
+    ctx.save()
+    ctx.translate(x * k, 0)
+    ctx.scale(0.3, 1)
+    const r = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.55 * k)
+    r.addColorStop(0, rgba(LAMP, 0.3 * flick))
     r.addColorStop(1, rgba(LAMP, 0))
     ctx.fillStyle = r
-    ctx.fillRect((x - 0.35) * k, 0, 0.7 * k, 0.5 * k)
+    ctx.fillRect(-0.55 * k, 0, 1.1 * k, 0.55 * k)
+    ctx.restore()
   }
 }
 
@@ -521,6 +529,25 @@ export function drawBridge(pen: Pen, f: View): void {
     p.endShape(p.CLOSE)
     p.fill(mixHex(STONE, RAIN.kerb, 0.3))
     p.rect((x - 0.78) * k, (SPRING - 0.25) * k, 1.56 * k, 0.3 * k)
+    // Under the water it goes down into the murk, its foot lost in it (the bed is not drawn, and it ended square in
+    // mid-water, plainest in a tall frame).
+    const ctx = pen.ctx
+    const murk = ctx.createLinearGradient(0, (RAIN_GEO.river + 0.6) * k, 0, (RAIN_GEO.bed + 0.25) * k)
+    const deep = mixHex(RAIN.river, RAIN.street, 0.55)
+    murk.addColorStop(0, rgba(deep, 0))
+    murk.addColorStop(0.75, rgba(deep, 0.9))
+    murk.addColorStop(1, rgba(deep, 1))
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo((x - 0.62) * k, SPRING * k)
+    ctx.lineTo((x + 0.62) * k, SPRING * k)
+    ctx.lineTo((x + 0.83) * k, (RAIN_GEO.bed + 0.26) * k)
+    ctx.lineTo((x - 0.83) * k, (RAIN_GEO.bed + 0.26) * k)
+    ctx.closePath()
+    ctx.clip()
+    ctx.fillStyle = murk
+    ctx.fillRect((x - 0.9) * k, (RAIN_GEO.river + 0.6) * k, 1.8 * k, (RAIN_GEO.bed - RAIN_GEO.river - 0.3) * k)
+    ctx.restore()
   }
   if (k > 9) {
     p.stroke(rgba(ink, 0.3))

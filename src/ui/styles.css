@@ -513,6 +513,8 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
 .lb-glyph { width: 15px; height: 15px; flex: none; color: var(--dim); }
 .lb-glyph rect { fill: none; stroke: currentColor; stroke-width: 1.8; }
 .lb-trigger .lb-glyph, .lb-opt.act .lb-glyph { color: var(--text); }
+/* A small mark just after an option's label: a favourite's star, in the accent. */
+.lb-mark { width: 9px; height: 9px; margin-left: 5px; vertical-align: 0; fill: var(--accent); }
 
 /* ---- sliders -------------------------------------------------------- */
 
@@ -648,6 +650,9 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .seg button:hover { background: var(--raised); color: var(--text); }
 .seg button.on { background: var(--accent-soft); color: var(--accent); }
 .seg button:active { transform: none; }
+/* A favourite take: its star after the label, in the accent, quieter until it is the one on. */
+.takes button svg { width: 9px; height: 9px; margin-left: 5px; vertical-align: 0; fill: var(--accent); opacity: 0.7; }
+.takes button.on svg { opacity: 1; }
 
 /* ---- transport ------------------------------------------------------ */
 
