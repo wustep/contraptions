@@ -14,11 +14,27 @@ import { R } from '../../../../parts'
 
 export { R }
 
-/** The desk: its top, and its front edge's face. */
-export const DESK = { y: 0, face: 0.28, x0: -12, x1: 12 }
+/**
+ * The desk: where its top meets the wall (`y`, what everything stands on), how far down the frame its top comes toward
+ * us (`top`: it is seen a little from above, a plane running back to the wall), and the foot of its front edge's face.
+ */
+export const DESK = { y: 0, top: 0.52, face: 0.64, x0: -12, x1: 12 }
+
+/**
+ * The book left open on the desk under the lamp (`book.ts`): its middle, its half width at the near edge, and how far
+ * back and forward it lies on the desk's top.
+ */
+export const OPEN = { x: 1.62, half: 0.62, back: DESK.y + DESK.top * 0.26, front: DESK.y + DESK.top * 0.8 }
 
 /** The window's outer frame, and the one bar across it and the one up it. */
 export const WINDOW = { x0: -3.5, x1: 0.62, y0: -5.5, y1: -1.42, frame: 0.16, mullion: -1.44, transom: -3.55 }
+
+/** The glass: inside the frame. */
+export const GLASS = { x0: WINDOW.x0 + WINDOW.frame, x1: WINDOW.x1 - WINDOW.frame, y0: WINDOW.y0 + WINDOW.frame, y1: WINDOW.y1 - 0.12 }
+
+/** The curtain rod over the window, and the one curtain, tied back on the window's left. */
+export const ROD = { y: -5.78, x0: -4.4, x1: 1.05 }
+export const CURTAIN = { x0: -4.3, x1: -3.2, tie: -3.05, hem: -1.72 }
 
 /** The sill: its top, and how far it runs either side of the frame. The ball tips off its right end. */
 export const SILL = { y: -1.42, x0: -3.78, x1: 0.9, thick: 0.1 }
@@ -40,9 +56,9 @@ export interface Book {
  * thick one, so its top stands a little over the cup's cushion and the last step is a drop into the seat.
  */
 export const BOOKS: Book[] = [
-  { x0: 0.34, x1: 1.4, top: -0.92, bottom: -0.66, cover: '#4B5B6B', pages: '#D9CDB5' },
-  { x0: 0.2, x1: 1.86, top: -0.66, bottom: -0.4, cover: '#7A4A37', pages: '#DCD0B8' },
-  { x0: 0.06, x1: 2.3, top: -0.4, bottom: 0, cover: '#6E6150', pages: '#E3D8C2' },
+  { x0: 0.34, x1: 1.4, top: -0.92, bottom: -0.66, cover: '#3F6E78', pages: '#D9CDB5' },
+  { x0: 0.2, x1: 1.86, top: -0.66, bottom: -0.4, cover: '#A4533C', pages: '#DCD0B8' },
+  { x0: 0.06, x1: 2.3, top: -0.4, bottom: 0, cover: '#B68A44', pages: '#E3D8C2' },
 ]
 
 /**
@@ -54,10 +70,10 @@ export const BOOKS: Book[] = [
 export const CUP = { x: 2.52, halfW: 0.36, top: -0.34, hollow: 0.06 }
 /** Where the ball rests in the cup (its middle). */
 export const IN_CUP = { x: CUP.x, y: CUP.top + CUP.hollow - R }
-/** The far cup, standing: its middle, half its thickness, and its height. */
-export const FAR_CUP = { x: 4.22, halfW: 0.2, h: 0.78 }
-/** The band's arch: how high its top is. */
-export const BAND_TOP = -1.28
+/** The far cup, the near one's twin, on its back too: its middle, half its width, and its height (the near cup's). */
+export const FAR_CUP = { x: 4.06, halfW: CUP.halfW, h: -CUP.top }
+/** The band's arch, standing between the cups' yokes: how high its top reaches (a headband's round, about). */
+export const BAND_TOP = -0.95
 
 /** The lamp: its base on the desk, its elbow, the head's hinge, and where the shade points. */
 export const LAMP = {
@@ -80,6 +96,21 @@ export const CONTACT = POT.x + POT.halfW * 0.86 + R
 /** The mug: its middle, half width, height. It stands under the sill, left of the books. */
 export const MUG = { x: -2.35, halfW: 0.3, h: 0.64 }
 
+/**
+ * The cat: a ginger kitten loafed on the desk between the mug and the books, under the sill, facing the stair. It
+ * watches the ball. Its body from `x0` (its rear) to its chest, and its head's middle.
+ */
+export const CAT = { x0: -1.78, chest: -0.76, top: -0.6, head: { x: -0.84, y: -0.66 } }
+
+/**
+ * A Walkman standing on the desk left of the mug, the headphones' cable running to it along the desk: what is playing.
+ * Its left edge, right edge and height.
+ */
+export const WALKMAN = { x0: -3.8, x1: -3.16, h: 0.46 }
+
+/** What is pinned to the wall between the window and the lamp, under the lamp's light: two polaroids and a note. */
+export const NOTES = { x0: 1.0, x1: 2.62, y0: -3.02, y1: -2.08 }
+
 /** The ball's gravity, cells a second a second: a soft, slow world, but every drop a real drop. */
 export const G = 4.6
 
@@ -95,4 +126,11 @@ export const PROPS: Record<string, [number, number, number, number]> = {
   'far cup': [FAR_CUP.x - FAR_CUP.halfW - 0.05, -FAR_CUP.h, FAR_CUP.x + FAR_CUP.halfW, 0],
   'lamp base': [LAMP.base.x - LAMP.base.w / 2, -0.2, LAMP.base.x + LAMP.base.w / 2, 0],
   shade: [LAMP.hinge.x - 0.45, LAMP.hinge.y - 0.2, LAMP.hinge.x + 0.1, -1.95],
+  cat: [CAT.x0 - 0.04, -1.1, CAT.head.x + 0.34, 0],
+  notes: [NOTES.x0, NOTES.y0, NOTES.x1, NOTES.y1],
+  walkman: [WALKMAN.x0 - 0.02, -WALKMAN.h - 0.07, WALKMAN.x1 + 0.03, 0],
+  // Lying on the desk's top, nearer us: the headphones' band in its U, and the open book and its pencil (`book.ts`).
+  band: [CUP.x + CUP.halfW * 0.94 + 0.06, CUP.top, FAR_CUP.x - CUP.halfW * 0.94 - 0.06, DESK.top * 0.5],
+  book: [0.95, DESK.top * 0.2, 2.29, DESK.top * 0.95],
+  pencil: [0.08, DESK.top * 0.45, 0.78, DESK.top * 0.85],
 }

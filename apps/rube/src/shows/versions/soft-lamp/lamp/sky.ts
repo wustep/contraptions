@@ -1,0 +1,1095 @@
+import { mixHex } from '../../../../parts'
+import { rgba, viewOf } from './canvas'
+import { camera, catInViewAt } from './camera'
+import { GLASS, WINDOW } from './desk'
+import { MUSIC_END, smooth } from './music'
+import { blurOf, inLayer, layerOf, lensIn, lensOf, onWall, type Lens } from './lens'
+import { machineBusy } from './route'
+import { cloudAt, coldAt, coverAt, hash, snowAt, lampAt, nightAt, rainAt, skyAt } from './world'
+import { FLAKES, flakes, landed, roofSnow, settled } from './snow'
+import { antenna, fireEscape, waterTower } from './roofs'
+
+/**
+ * The view through the glass, a function of show time: the sky from dusk into night, the clouds coming over and
+ * clearing, the stars and the moon when it is clear, the city across the street with its windows
+ * lit and going out (and one of them, close, someone's: `neighbour`), the rain falling past, and on the glass the beads.
+ *
+ * It is what changes slowest in the show: the half hour is one evening, and the window is its clock. And it is deep:
+ * each layer past the glass is drawn at its depth (`lens.ts`), moving against the bars as the camera moves, and soft,
+ * its lights opened into discs, when the camera is close at the desk.
+ */
+
+type Ctx = CanvasRenderingContext2D
+
+
+const W = GLASS.x1 - GLASS.x0
+const H = GLASS.y1 - GLASS.y0
+/** Half the sash bar's width (`scene.ts`). */
+const BAR_HALF = 0.045
+
+/** A point of light past the glass, in its layer's own coordinates: drawn as a disc of light when out of focus. */
+interface Light {
+  x: number
+  y: number
+  /** Half its size. */
+  r: number
+  /** Half how much longer than tall it is, for a long light (a lit train car): opens into a capsule. */
+  w?: number
+  color: string
+  a: number
+  p: number
+}
+
+/** Where the lights a layer would draw go when the city is soft (gathered, to open into discs over it), or null. */
+type Sink = { p: number; list: Light[] } | null
+
+/** How deep each layer is (0 the glass, 1 the sky): `lens.ts`. */
+const DEPTH = { sky: 0.55, clouds: 0.5, skyline: 0.47, birds: 0.35, far: 0.4, train: 0.36, near: 0.3, rain: 0.12 }
+
+/** The night through the glass, clipped to it. */
+export function night(ctx: Ctx, t: number): void {
+  const lens = lensIn(ctx)
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(GLASS.x0, GLASS.y0, W, H)
+  ctx.clip()
+  const sky = skyAt(t)
+  const cloud = cloudAt(t)
+  const g = ctx.createLinearGradient(0, GLASS.y0, 0, GLASS.y1 - 0.6)
+  g.addColorStop(0, sky.top)
+  g.addColorStop(0.5, sky.mid)
+  g.addColorStop(1, sky.low)
+  ctx.fillStyle = g
+  ctx.fillRect(GLASS.x0, GLASS.y0, W, H)
+  // What is out past the glass, each layer at its depth; soft, and its lights opened into discs, when the camera is
+  // focused on the desk.
+  const blur = blurOf(lens)
+  const m = ctx.getTransform()
+  const px = Math.hypot(m.a, m.b)
+  const lights: Light[] = []
+  const out = (g: Ctx, soft: boolean) => {
+    const sink = (p: number): Sink => (soft ? { p, list: lights } : null)
+    inLayer(g, lens, DEPTH.sky, () => stars(g, t, cloud, sink(DEPTH.sky)))
+    moon(g, t, cloud, lens)
+    inLayer(g, lens, DEPTH.birds, () => birds(g, t, sky.dusk))
+    inLayer(g, lens, DEPTH.clouds, () => {
+      clouds(g, t, cloud, sky)
+      lightning(g, t)
+    })
+    city(g, t, sky, lens, sink)
+  }
+  if (blur * px < 1.2) out(ctx, false)
+  else {
+    soften(ctx, blur, px, (g) => out(g, true))
+    bokeh(ctx, lens, lights, blur)
+  }
+  // The snow falling past, nearer than the city: soft as the camera comes close, as the city is.
+  inLayer(ctx, lens, FLAKES[1].p, () => flakes(ctx, t, 1, blur))
+  inLayer(ctx, lens, FLAKES[2].p, () => flakes(ctx, t, 2, blur))
+  inLayer(ctx, lens, DEPTH.rain, () => rain(ctx, t))
+  fog(ctx, t)
+  drops(ctx, t, rainAt(t))
+  landed(ctx, t)
+  settled(ctx, t)
+  // The room in the glass: the lamp's warmth caught faintly in the pane nearest it.
+  const lamp = lampAt(t)
+  const r = ctx.createRadialGradient(GLASS.x1 - 0.25, GLASS.y1 - 0.7, 0.02, GLASS.x1 - 0.25, GLASS.y1 - 0.7, 1.1)
+  r.addColorStop(0, rgba('#F4B27A', 0.12 * lamp))
+  r.addColorStop(1, rgba('#F4B27A', 0))
+  ctx.fillStyle = r
+  ctx.fillRect(GLASS.x0, GLASS.y0, W, H)
+  ctx.restore()
+}
+
+/** How wet the glass is: the rain, and for a minute or two after it, as the beads stay. */
+export const wetAt = (t: number): number => Math.max(rainAt(t), rainAt(t - 40) * 0.8, rainAt(t - 80) * 0.5)
+
+/**
+ * The glass misting at its foot while it is wet, the warm room against the cold: a pale breath along the bottom of
+ * each pane, thicker in its corners, gone as the glass dries.
+ */
+function fog(ctx: Ctx, t: number): void {
+  const wet = wetAt(t)
+  if (wet <= 0.02) return
+  const g = ctx.createLinearGradient(0, GLASS.y1, 0, GLASS.y1 - 1.1)
+  g.addColorStop(0, rgba('#B4AED6', 0.2 * wet))
+  g.addColorStop(1, rgba('#B4AED6', 0))
+  ctx.fillStyle = g
+  ctx.fillRect(GLASS.x0, GLASS.y1 - 1.1, W, 1.1)
+  for (const x of [GLASS.x0, WINDOW.mullion - BAR_HALF, WINDOW.mullion + BAR_HALF, GLASS.x1]) {
+    const c = ctx.createRadialGradient(x, GLASS.y1, 0.05, x, GLASS.y1, 0.9)
+    c.addColorStop(0, rgba('#B4AED6', 0.14 * wet))
+    c.addColorStop(1, rgba('#B4AED6', 0))
+    ctx.fillStyle = c
+    ctx.fillRect(x - 0.9, GLASS.y1 - 0.9, 1.8, 0.9)
+  }
+}
+
+/** Two scratch canvases for the soft city, kept between frames. */
+const scratch: HTMLCanvasElement[] = []
+function scratchOf(i: number, w: number, h: number): CanvasRenderingContext2D {
+  // Made once at the most a soft frame needs (`soften` keeps under 720 on a side), so never resized mid-show.
+  const c = (scratch[i] ??= Object.assign(document.createElement('canvas'), { width: 736, height: 736 }))
+  if (c.width < w || c.height < h) {
+    c.width = Math.max(c.width, w)
+    c.height = Math.max(c.height, h)
+  }
+  const g = c.getContext('2d') as CanvasRenderingContext2D
+  g.setTransform(1, 0, 0, 1, 0, 0)
+  // All of it, not just this frame's part: what is past the part is sampled at its edge as it is laid back.
+  g.clearRect(0, 0, c.width, c.height)
+  return g
+}
+/** Whether this browser's canvas blurs (Safari's did not until lately); without it, the soft city is scaled down and up. */
+let blurs: boolean | null = null
+function canBlur(): boolean {
+  if (blurs === null) {
+    const g = document.createElement('canvas').getContext('2d')
+    if (g) g.filter = 'blur(1px)'
+    blurs = g?.filter === 'blur(1px)'
+  }
+  return blurs
+}
+
+/**
+ * Draw `draw` (in the wall's cells) soft: into a small canvas over the part of the glass in view, blurred there, and laid
+ * back over the glass. Small, as what is blurred has no detail to keep, so a soft frame costs less than a sharp one.
+ */
+function soften(ctx: Ctx, blur: number, px: number, draw: (g: Ctx) => void): void {
+  const v = viewOf(ctx)
+  const edge = 2 * blur
+  const x0 = Math.max(GLASS.x0, v.x0) - edge
+  const x1 = Math.min(GLASS.x1, v.x1) + edge
+  const y0 = Math.max(GLASS.y0, v.y0) - edge
+  const y1 = Math.min(GLASS.y1, v.y1) + edge
+  if (x1 <= x0 || y1 <= y0) return
+  const sigma = 0.5 * blur
+  const res = Math.min(px, 3 / sigma, 720 / Math.max(x1 - x0, y1 - y0))
+  const w = Math.ceil((x1 - x0) * res)
+  const h = Math.ceil((y1 - y0) * res)
+  const g = scratchOf(0, w, h)
+  g.setTransform(res, 0, 0, res, -x0 * res, -y0 * res)
+  g.lineJoin = 'round'
+  g.lineCap = 'round'
+  draw(g)
+  if (canBlur()) {
+    const b = scratchOf(1, w, h)
+    b.filter = `blur(${(sigma * res).toFixed(2)}px)`
+    b.drawImage(g.canvas, 0, 0, w, h, 0, 0, w, h)
+    b.filter = 'none'
+    ctx.drawImage(b.canvas, 0, 0, w, h, x0, y0, w / res, h / res)
+  } else {
+    const k = 1 / Math.max(1, sigma * res)
+    const sw = Math.max(1, Math.round(w * k))
+    const sh = Math.max(1, Math.round(h * k))
+    const b = scratchOf(1, sw, sh)
+    b.imageSmoothingQuality = 'high'
+    b.drawImage(g.canvas, 0, 0, w, h, 0, 0, sw, sh)
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(b.canvas, 0, 0, sw, sh, x0, y0, w / res, h / res)
+  }
+}
+
+/**
+ * The city's lights out of focus: each opens into a disc as wide as the blur, a nearer one a little less, its light
+ * spread over it (the brightest stay bright, as a lens's highlights do; a star's is spread to nothing). Where discs
+ * overlap they add, as light does.
+ */
+function bokeh(ctx: Ctx, lens: Lens, lights: Light[], blur: number): void {
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  for (const l of lights) {
+    const at = onWall(lens, l.p, l.x, l.y)
+    const size = l.r * layerOf(lens, l.p).s
+    const open = blur * Math.min(1, 0.5 + l.p)
+    const r = Math.max(size, open)
+    const a = l.a * Math.min(1, (3 * 4 * size * size) / (Math.PI * r * r))
+    if (a < 0.01) continue
+    // Square while it is still a lit window, round as it opens.
+    const round = r * smooth(open / size, 0.4, 1)
+    const hw = r + (l.w ?? 0) * layerOf(lens, l.p).s
+    roundRect(ctx, at.x - hw, at.y - r, 2 * hw, 2 * r, round)
+    ctx.fillStyle = rgba(l.color, a * 0.8)
+    ctx.fill()
+    ctx.strokeStyle = rgba(l.color, a * 0.35)
+    ctx.lineWidth = r * 0.12
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: number): void {
+  const q = Math.min(r, w / 2, h / 2)
+  ctx.beginPath()
+  ctx.moveTo(x + q, y)
+  ctx.arcTo(x + w, y, x + w, y + h, q)
+  ctx.arcTo(x + w, y + h, x, y + h, q)
+  ctx.arcTo(x, y + h, x, y, q)
+  ctx.arcTo(x, y, x + w, y, q)
+  ctx.closePath()
+}
+
+/** How long a shooting star takes to cross, seconds. */
+const SHOOT = 0.9
+/** Where a shooting star that starts at `at` is, `u` of the way along its streak. */
+function shootPath(at: number, u: number): { x: number; y: number } {
+  // In the sky the window's look and the room's frame show (not the glass's very top, above both), over the roofs.
+  return { x: GLASS.x0 + 0.4 + (at % 7) * 0.25 + u * 1.3, y: GLASS.y0 + 1.2 + (at % 3) * 0.15 + u * 0.55 }
+}
+
+/**
+ * When the shooting stars cross: two or three, late, in a clear sky once the snow has stopped, played to the camera as
+ * the cat's moments are, each at a moment the frame holds both the whole of its streak and the cat (so the cat can be
+ * seen to look up at it), a minute and a half or more apart, the last before the cat goes to sleep. Worked out once, at load.
+ */
+const SHOOTS: number[] = (() => {
+  const out: number[] = []
+  const seen = (at: number) => {
+    for (const u of [0, 1]) {
+      for (const s of [at, at + SHOOT]) {
+        const c = camera(s)
+        // In focus, too: a streak gone soft is no streak.
+        if (blurOf(lensOf(c)) > 0.01) return false
+        const p = onWall(lensOf(c), DEPTH.sky, shootPath(at, u).x, shootPath(at, u).y)
+        const hh = c.cells / 2
+        const hw = (hh * 16) / 9
+        if (Math.abs(p.x - 0.25 - c.x) > hw - 0.1 || Math.abs(p.y - c.y) > hh - 0.1) return false
+        if (p.x - 0.5 < GLASS.x0 || p.x > GLASS.x1) return false
+      }
+    }
+    return true
+  }
+  for (let at = 1300; at < 1786 && out.length < 3; at += 1) {
+    if (out.length && at < out[out.length - 1] + 90) continue
+    if (nightAt(at) < 0.6 || cloudAt(at) > 0.35 || snowAt(at - 20) > 0.02 || machineBusy(at - 2, at + 4)) continue
+    if (!catInViewAt(at) || !catInViewAt(at + 3) || !seen(at)) continue
+    out.push(at)
+  }
+  return out
+})()
+
+/**
+ * Where a shooting star went, for the cat to look at: from the moment it starts until a couple of seconds after it has
+ * gone (a cat stares at where a thing vanished), with how much it has the cat's eye (0 to 1).
+ */
+export function shootAt(t: number): { x: number; y: number; a: number } {
+  for (const at of SHOOTS) {
+    const s = t - at
+    if (s < 0 || s > SHOOT + 2.4) continue
+    const q = shootPath(at, Math.min(1, s / SHOOT))
+    const p = onWall(lensOf(camera(t)), DEPTH.sky, q.x, q.y)
+    const a = smooth(s, 0, 0.25) * (1 - smooth(s, SHOOT + 1.4, SHOOT + 2.4))
+    return { x: p.x, y: p.y, a }
+  }
+  return { x: 0, y: 0, a: 0 }
+}
+
+/** How long a flash's flicker lasts, seconds, and how long the cat looks after it. */
+const FLASH = 1.2
+const FLASH_LOOK = 3.2
+/** Where in the clouds a flash lights, in the clouds' layer: low, far off over the roofs. */
+const flashSpot = (at: number): { x: number; y: number } => ({ x: GLASS.x0 + 0.9 + hash(at, 201) * (W - 1.8), y: -2.75 - hash(at, 202) * 0.5 })
+
+/**
+ * Lightning, far off: in the heaviest of the rain, three times, the clouds over the city lit from inside for a moment,
+ * a flicker of two or three pulses and gone, the roofs black against it; no bolt and no thunder (the music is the
+ * sound). Played to the camera as the sky's other moments are: each while the frame holds the window and the cat, so
+ * it can be seen to look up, minutes apart, clear of a car's lights. Worked out once, at load.
+ */
+const FLASHES: number[] = (() => {
+  const out: number[] = []
+  for (let at = 300; at < MUSIC_END - 60 && out.length < 3; at += 1) {
+    if (out.length && at < out[out.length - 1] + 90) continue
+    if (rainAt(at) < 0.68 || cloudAt(at) < 0.8 || machineBusy(at, at + FLASH_LOOK)) continue
+    if (!catInViewAt(at) || !catInViewAt(at + FLASH_LOOK)) continue
+    let ok = true
+    for (let s = at - 2; s <= at + FLASH_LOOK + 1 && ok; s += 0.5) {
+      const c = camera(s)
+      const p = onWall(lensOf(c), DEPTH.clouds, flashSpot(at).x, flashSpot(at).y)
+      const hh = c.cells / 2
+      const hw = (hh * 16) / 9
+      if (p.x < GLASS.x0 + 0.3 || p.x > GLASS.x1 - 0.3 || Math.abs(p.x - c.x) > hw - 0.4 || Math.abs(p.y - c.y) > hh - 0.2) ok = false
+    }
+    if (ok) out.push(at)
+  }
+  return out
+})()
+
+/** How bright a flash is, `s` seconds into it: two or three quick pulses, each its own strength, and a short afterglow. */
+function flicker(at: number, s: number): number {
+  if (s < 0 || s > FLASH) return 0
+  let f = 0.12 * Math.exp(-s / 0.35)
+  const pulses = hash(at, 203) < 0.5 ? [[0, 0.65], [0.13, 1], [0.42, 0.45]] : [[0, 1], [0.24, 0.55]]
+  for (const [t0, k] of pulses) if (s >= t0) f += k * Math.exp(-(s - t0) / 0.07)
+  return Math.min(1, f) * (1 - smooth(s, FLASH - 0.3, FLASH))
+}
+
+/**
+ * A flash, for the room and the cat: how bright it is now (`a`), and where in the window it was and how much it has the
+ * cat's eye (`look`, from a moment after it until a few seconds on).
+ */
+export function flashAt(t: number): { a: number; x: number; y: number; look: number } {
+  for (const at of FLASHES) {
+    const s = t - at
+    if (s < -0.5 || s > FLASH_LOOK + 1) continue
+    const q = flashSpot(at)
+    const p = onWall(lensOf(camera(t)), DEPTH.clouds, q.x, q.y)
+    const look = smooth(s, 0.15, 0.45) * (1 - smooth(s, FLASH_LOOK, FLASH_LOOK + 1))
+    return { a: flicker(at, s), x: p.x, y: p.y, look }
+  }
+  return { a: 0, x: 0, y: 0, look: 0 }
+}
+
+/** The room in a flash: a cool light in from the window, strongest by it, gone as quickly. */
+export function flashRoom(ctx: Ctx, t: number): void {
+  const a = flashAt(t).a
+  if (a <= 0.005) return
+  const v = viewOf(ctx)
+  const cx = (WINDOW.x0 + WINDOW.x1) / 2
+  const cy = (WINDOW.y0 + WINDOW.y1) / 2
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  const g = ctx.createRadialGradient(cx, cy, 0.5, cx, cy, 7)
+  g.addColorStop(0, rgba('#C9CBFF', 0.3 * a))
+  g.addColorStop(1, rgba('#C9CBFF', 0.06 * a))
+  ctx.fillStyle = g
+  ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0)
+  ctx.restore()
+}
+
+/** The clouds lit from inside by a flash, round where it is, under the city so the roofs stand black against it. */
+function lightning(ctx: Ctx, t: number): void {
+  for (const at of FLASHES) {
+    const a = flicker(at, t - at)
+    if (a <= 0.005) continue
+    const { x, y } = flashSpot(at)
+    ctx.save()
+    ctx.globalCompositeOperation = 'screen'
+    // The whole deck of cloud lifts, brightest low and round the flash, then its heart.
+    const deck = ctx.createLinearGradient(0, GLASS.y0 - 1, 0, -1.4)
+    deck.addColorStop(0, rgba('#8E8CCF', 0.25 * a))
+    deck.addColorStop(1, rgba('#B9B6EE', 0.5 * a))
+    ctx.fillStyle = deck
+    ctx.fillRect(GLASS.x0 - 4, GLASS.y0 - 1, W + 8, H + 1)
+    const g = ctx.createRadialGradient(x, y, 0.05, x, y, 3.2)
+    g.addColorStop(0, rgba('#F1EEFF', 0.85 * a))
+    g.addColorStop(0.25, rgba('#C4C1F4', 0.5 * a))
+    g.addColorStop(1, rgba('#8E8CCF', 0))
+    ctx.fillStyle = g
+    ctx.fillRect(x - 3.3, y - 3.3, 6.6, 6.6)
+    ctx.restore()
+  }
+}
+
+/** How dark the sky is for stars: none at dusk, all of them by the blue hour's end. */
+const darkAt = (t: number): number => smooth(nightAt(t), 0.06, 0.22)
+
+function stars(ctx: Ctx, t: number, cloud: number, sink: Sink): void {
+  const a0 = darkAt(t) * Math.max(0, 1 - cloud * 1.15)
+  if (a0 <= 0.01) return
+  for (let i = 0; i < 46; i++) {
+    const x = GLASS.x0 + hash(i, 61) * W
+    const y = GLASS.y0 + hash(i, 62) ** 1.4 * (H - 1.4)
+    const tw = 0.55 + 0.45 * Math.sin(t * (0.6 + hash(i, 63) * 1.7) + hash(i, 64) * 6.3)
+    const r = 0.007 + hash(i, 65) ** 3 * 0.014
+    const color = hash(i, 66) < 0.2 ? '#FFD9B8' : '#E6E8FF'
+    const a = a0 * tw * (0.5 + 0.5 * hash(i, 67))
+    if (sink) {
+      sink.list.push({ x, y, r, color, a, p: sink.p })
+      continue
+    }
+    ctx.fillStyle = rgba(color, a)
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // Late in the night, in the clear, a shooting star now and then.
+  for (const at of SHOOTS) {
+    const s = t - at
+    if (s < 0 || s > SHOOT) continue
+    const u = s / SHOOT
+    const { x, y } = shootPath(at, u)
+    const g = ctx.createLinearGradient(x, y, x - 0.5, y - 0.21)
+    const a = a0 * Math.sin(Math.PI * u)
+    g.addColorStop(0, rgba('#FFFFFF', a))
+    g.addColorStop(1, rgba('#FFFFFF', 0))
+    ctx.strokeStyle = g
+    ctx.lineWidth = 0.014
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    ctx.lineTo(x - 0.5, y - 0.21)
+    ctx.stroke()
+  }
+}
+
+/** The moon: it rises into the right-hand pane over the last part of the night, a soft full moon with a halo. */
+/** How much moon there is to light by at `t`: risen, and not behind the cloud or the rain (0 to 1). */
+export function moonAt(t: number): number {
+  const up = smooth(nightAt(t), 0.5, 0.6)
+  return up * (1 - 0.82 * cloudAt(t)) * (1 - smooth(rainAt(t), 0.04, 0.25))
+}
+
+function moon(ctx: Ctx, t: number, cloud: number, lens: Lens): void {
+  const n = nightAt(t)
+  const up = smooth(n, 0.5, 0.6)
+  if (up <= 0) return
+  const u = Math.max(0, (n - 0.5) / 0.5)
+  // At the sky's depth, but never risen behind the top of the frame.
+  const at = onWall(lens, DEPTH.sky, GLASS.x1 - 0.55 - u * 0.75, GLASS.y1 - 1.6 - u * 2.0)
+  const x = at.x
+  // Never risen behind the top of the frame (a wide frame's top is at the glass's).
+  const y = Math.max(GLASS.y0 + 0.24, lens.y - lens.size / 2 + 0.42, at.y)
+  // Not through the rain: behind the cloud until the rain has gone.
+  const a = up * (1 - 0.82 * cloud) * (1 - smooth(rainAt(t), 0.04, 0.25))
+  const halo = ctx.createRadialGradient(x, y, 0.15, x, y, 1.2)
+  halo.addColorStop(0, rgba('#E9E3FF', 0.32 * a))
+  halo.addColorStop(0.4, rgba('#B4B3E8', 0.1 * a))
+  halo.addColorStop(1, rgba('#B4B3E8', 0))
+  ctx.fillStyle = halo
+  ctx.fillRect(x - 1.3, y - 1.3, 2.6, 2.6)
+  ctx.fillStyle = rgba('#F6F0DD', a)
+  ctx.beginPath()
+  ctx.arc(x, y, 0.19, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = rgba('#D6CCB4', 0.55 * a)
+  for (const [dx, dy, r] of [[-0.05, -0.04, 0.05], [0.06, 0.03, 0.035], [-0.02, 0.08, 0.03]]) {
+    ctx.beginPath()
+    ctx.arc(x + dx, y + dy, r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
+/** Birds going home across the dusk: two small flocks, one under the title and one as the first track ends, wings beating, then gliding. */
+function birds(ctx: Ctx, t: number, dusk: number): void {
+  if (dusk < 0.2) return
+  // The first under the title, across while the opening's wide frame holds (the camera comes down to the sill from
+  // nine seconds, and the dusk over the roofs is above that frame); the second slower, as the first track ends.
+  for (const [at, y0, n, dur] of [[1.2, -4.25, 5, 10], [98, -3.75, 3, 26]] as const) {
+    const s = t - at
+    if (s < 0 || s > dur) continue
+    const u = s / dur
+    for (let i = 0; i < n; i++) {
+      // A loose V: each a little behind and to one side of the one ahead, and each its own beat.
+      const back = i * 0.16
+      const side = (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.09
+      const x = GLASS.x0 - 0.4 + u * (W + 0.8) - back
+      const y = y0 + side + Math.sin(s * 0.9 + i) * 0.03 - u * 0.35
+      const beat = Math.sin(s * (7 + i * 0.6) + i * 1.7)
+      const glide = (Math.floor(s / 2.2 + i * 0.3) % 2) === 1
+      const wing = glide ? 0.15 : 0.35 * beat
+      const span = 0.07
+      ctx.beginPath()
+      ctx.moveTo(x - span, y - wing * span)
+      ctx.quadraticCurveTo(x - span * 0.4, y - 0.02 - wing * span * 0.3, x, y)
+      ctx.quadraticCurveTo(x + span * 0.4, y - 0.02 - wing * span * 0.3, x + span, y - wing * span)
+      ctx.strokeStyle = rgba('#2A2140', 0.85 * Math.min(1, dusk * 1.5))
+      ctx.lineWidth = 0.013
+      ctx.stroke()
+    }
+  }
+}
+
+/**
+ * The clouds: long soft banks drifting slowly right, as many as the cover asks. At dusk they are lit from under in
+ * peach and rose; at night they are a little paler than the sky, lit by the city.
+ */
+function clouds(ctx: Ctx, t: number, cover: number, sky: { top: string; mid: string; dusk: number }): void {
+  const lit = mixHex('#2C2E4E', '#E7A08E', sky.dusk)
+  const body = mixHex('#232543', '#6E5A8E', sky.dusk)
+  for (let i = 0; i < 9; i++) {
+    const has = Math.max(0, Math.min(1, (cover - i / 9) * 6))
+    if (has <= 0) continue
+    const span = W + 3
+    const x = GLASS.x0 - 1.5 + ((hash(i, 81) * span + t * (0.012 + hash(i, 82) * 0.01)) % span)
+    const y = GLASS.y0 + 0.4 + hash(i, 83) * (H - 2.2)
+    const w = 0.9 + hash(i, 84) * 1.2
+    for (let j = 0; j < 4; j++) {
+      const cx = x + (j - 1.5) * w * 0.3 + hash(i, j, 85) * 0.1
+      const cy = y - Math.sin((j / 3) * Math.PI) * 0.12 * w
+      const r = w * (0.28 + 0.12 * hash(i, j, 86))
+      const g = ctx.createRadialGradient(cx, cy - r * 0.2, 0, cx, cy, r)
+      g.addColorStop(0, rgba(body, 0.55 * has))
+      g.addColorStop(0.6, rgba(body, 0.35 * has))
+      g.addColorStop(1, rgba(body, 0))
+      ctx.fillStyle = g
+      ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
+      // The underside, lit.
+      const u = ctx.createRadialGradient(cx, cy + r * 0.35, 0, cx, cy + r * 0.35, r * 0.7)
+      u.addColorStop(0, rgba(lit, 0.3 * has))
+      u.addColorStop(1, rgba(lit, 0))
+      ctx.fillStyle = u
+      ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
+    }
+  }
+}
+
+/**
+ * The city across the street, low in the pane: two rows of roofs, the far one paler. Its windows come on through the
+ * dusk and go out, one by one, through the night; a few are the cool light of a screen.
+ */
+/**
+ * The train: an elevated line runs across the city between the far roofs and the near ones, and a few times through
+ * the night a train goes along it, its lit windows a string of light, seen over the low roofs and lost behind the
+ * tall ones. Slow, and silent: the music is the
+ * sound. In its own layer, so it slides behind the bars at its depth, and opens into discs of light when the city is
+ * soft.
+ */
+const TRACK_Y = -1.93
+/** Its cars: how many, each one's length and the gap between, and its height. */
+const CARS = 5
+const CAR = 0.52
+const COUPLING = 0.025
+const BODY = 0.085
+/** How fast it goes, cells a second at its depth, and how far its run is (well past the window either side). */
+const TRAIN_V = 0.95
+const RUN = { x0: GLASS.x0 - 3.4, x1: GLASS.x1 + 3.4 }
+const TRAIN_DUR = (RUN.x1 - RUN.x0 + CARS * (CAR + COUPLING)) / TRAIN_V
+
+/** Where a train that set off at `at` has its front, and which way it is going. */
+function trainAt(at: number, t: number): { front: number; dir: 1 | -1 } {
+  const dir: 1 | -1 = hash(at, 211) < 0.5 ? 1 : -1
+  const run = (t - at) * TRAIN_V
+  return { front: dir > 0 ? RUN.x0 + run : RUN.x1 - run, dir }
+}
+
+/**
+ * When the trains run: from once the city's lights are coming on, a few minutes apart, the fourth a little after
+ * midnight; and one more, the last train, late, over the snow once it has settled, under the moon. Each while the frame
+ * holds the window, in focus, for most of the time its front is crossing the glass, and clear of a plane and a falling
+ * star. Worked out once, at load.
+ */
+function trainSeen(at: number): boolean {
+  let seen = 0
+  let crossing = 0
+  for (let s = 0; s <= TRAIN_DUR; s += 0.5) {
+    const c = camera(at + s)
+    const lens = lensOf(c)
+    const q = onWall(lens, DEPTH.train, trainAt(at, at + s).front, TRACK_Y)
+    if (q.x < GLASS.x0 || q.x > GLASS.x1) continue
+    crossing++
+    const hh = c.cells / 2
+    const hw = (hh * 16) / 9
+    if (blurOf(lens) < 0.045 && Math.abs(q.x - c.x) < hw - 0.1 && Math.abs(q.y - c.y) < hh - 0.1) seen++
+  }
+  return crossing > 4 && seen >= 0.8 * crossing
+}
+const TRAINS: number[] = (() => {
+  const out: number[] = []
+  for (let at = 150; at < 1450 && out.length < 4; at += 1) {
+    if (out.length && at < out[out.length - 1] + 260) continue
+    if (trainSeen(at)) out.push(at)
+  }
+  return out
+})()
+
+/** The line, always there (a dark rail on its piers), and any train on it, at `t`. In the train's layer. */
+function train(ctx: Ctx, t: number, sky: { dusk: number }, sink: Sink): void {
+  const dark = mixHex('#1E1C36', '#3A3460', sky.dusk)
+  // The viaduct: a deck, and piers down into the near roofs.
+  ctx.fillStyle = dark
+  ctx.fillRect(RUN.x0 - 2, TRACK_Y, RUN.x1 - RUN.x0 + 4, 0.045)
+  for (let x = RUN.x0 - 2 + 0.35; x < RUN.x1 + 2; x += 0.9) ctx.fillRect(x, TRACK_Y + 0.04, 0.04, 0.6)
+  roofSnow(ctx, t, RUN.x0 - 2, TRACK_Y, RUN.x1 - RUN.x0 + 4, true)
+  for (const at of TRAINS) {
+    const s = t - at
+    if (s < 0 || s > TRAIN_DUR) continue
+    const { front, dir } = trainAt(at, t)
+    const n = nightAt(t)
+    for (let c = 0; c < CARS; c++) {
+      const x0 = dir > 0 ? front - (c + 1) * CAR - c * COUPLING : front + c * (CAR + COUPLING)
+      ctx.fillStyle = dark
+      ctx.fillRect(x0, TRACK_Y - BODY, CAR, BODY)
+      // The light of its windows on the air round the car.
+      if (!sink) {
+        const glow = ctx.createLinearGradient(0, TRACK_Y - BODY - 0.08, 0, TRACK_Y + 0.04)
+        glow.addColorStop(0, rgba('#F6E4BC', 0))
+        glow.addColorStop(0.5, rgba('#F6E4BC', 0.13))
+        glow.addColorStop(1, rgba('#F6E4BC', 0))
+        ctx.fillStyle = glow
+        ctx.fillRect(x0 - 0.03, TRACK_Y - BODY - 0.08, CAR + 0.06, BODY + 0.12)
+      }
+      // Out of focus (this layer is blurred), a car's row of windows is one warm band, softened into a glow.
+      if (sink) {
+        ctx.fillStyle = rgba('#F4C88A', 0.7 * (0.8 + 0.2 * n))
+        ctx.fillRect(x0 + 0.035, TRACK_Y - BODY + 0.014, CAR - 0.07, 0.045)
+      }
+      // Its windows, lit, a few with someone's shape against them.
+      for (let w = 0; w < 7; w++) {
+        const wx = x0 + 0.04 + w * 0.066
+        const k = hash(at, c * 7 + w, 213)
+        const color = k < 0.25 ? '#CFE0FF' : '#F6E4BC'
+        const a = (0.82 + 0.18 * hash(at, c * 7 + w, 214)) * (0.8 + 0.2 * n)
+        if (sink) continue
+        else {
+          ctx.fillStyle = rgba(color, a)
+          ctx.fillRect(wx, TRACK_Y - BODY + 0.017, 0.045, 0.035)
+          if (k > 0.85) {
+            ctx.fillStyle = rgba('#1E1C36', 0.7)
+            ctx.fillRect(wx + 0.012, TRACK_Y - BODY + 0.027, 0.02, 0.025)
+          }
+        }
+      }
+    }
+    // The headlight, and its light on the rail ahead.
+    const hx = front
+    const hy = TRACK_Y - 0.03
+    if (sink) sink.list.push({ x: hx, y: hy, r: 0.03, color: '#FFF3D6', a: 0.9, p: sink.p })
+    else {
+      const g = ctx.createRadialGradient(hx, hy, 0, hx, hy, 0.16)
+      g.addColorStop(0, rgba('#FFF3D6', 0.85))
+      g.addColorStop(1, rgba('#FFF3D6', 0))
+      ctx.fillStyle = g
+      ctx.fillRect(hx - 0.16, hy - 0.16, 0.32, 0.32)
+    }
+  }
+}
+
+/**
+ * How much mist lies over the city: it gathers as the rain thins after the storm, lies low over the wet roofs, lit from
+ * under by the city's windows, and lifts as the night clears, before the moon is high.
+ */
+export const mistAt = (t: number): number => smooth(t, 1380, 1500) * (1 - smooth(t, 1600, 1720))
+
+/** A bank of mist at `y`: long soft drifts, each its own, sliding slowly along, `k` of the strength. */
+function mist(ctx: Ctx, t: number, y: number, k: number, bank: number): void {
+  const m = mistAt(t) * k
+  if (m < 0.01) return
+  const span = W + 8
+  for (let i = 0; i < 6; i++) {
+    const w = 1.6 + hash(i, bank, 241) * 1.8
+    const x = GLASS.x0 - 4 + ((hash(i, bank, 242) * span + t * (0.025 + 0.015 * hash(i, bank, 243)) * (bank ? -1 : 1)) % span + span) % span
+    const h = 0.18 + 0.12 * hash(i, bank, 244)
+    const yy = y - 0.1 * hash(i, bank, 245)
+    ctx.save()
+    ctx.translate(x, yy)
+    ctx.scale(w, h)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+    g.addColorStop(0, rgba('#A99BC8', 0.32 * m))
+    g.addColorStop(0.5, rgba('#8E84B4', 0.16 * m))
+    g.addColorStop(1, rgba('#8E84B4', 0))
+    ctx.fillStyle = g
+    ctx.fillRect(-1, -1, 2, 2)
+    ctx.restore()
+  }
+  // Lit from under, where the city's windows are: a faint warmth along its foot.
+  const glow = ctx.createLinearGradient(0, y - 0.3, 0, y + 0.25)
+  glow.addColorStop(0, rgba('#E2A27E', 0))
+  glow.addColorStop(1, rgba('#E2A27E', 0.09 * m))
+  ctx.fillStyle = glow
+  ctx.fillRect(GLASS.x0 - 4, y - 0.3, W + 8, 0.55)
+}
+
+/**
+ * The city's towers far off, past the roofs, pale in the haze between: a few taller than the rest, one with a spire and
+ * a mast, its red light slow; one stepped at its crown; a few lit windows, small. Seen through more air than the roofs,
+ * so nearer the sky's colour.
+ */
+/** The snow on the far towers: there, but through the haze. */
+function hazeSnow(ctx: Ctx, t: number, x: number, y: number, w: number, far: boolean, deep: number): void {
+  ctx.save()
+  ctx.globalAlpha = 0.45
+  roofSnow(ctx, t, x, y, w, far, deep)
+  ctx.restore()
+}
+
+function skyline(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: number }, edge: string, edgeA: number, sink: Sink): void {
+  const haze = mixHex(mixHex('#2B2850', '#463E6E', sky.dusk), sky.low, 0.5)
+  const base = -2.0
+  let x = GLASS.x0 - 1.6
+  for (let i = 0; x < GLASS.x1 + 1.6; i++) {
+    const w = 0.16 + hash(i, 401) * 0.18
+    const h = 0.4 + hash(i, 402) ** 2 * 0.95
+    const top = base - h
+    const kind = hash(i, 403)
+    ctx.fillStyle = haze
+    ctx.fillRect(x, top, w, h + 0.5)
+    if (kind < 0.18) {
+      // A spire and its mast.
+      ctx.beginPath()
+      ctx.moveTo(x + w * 0.15, top)
+      ctx.lineTo(x + w / 2, top - 0.22)
+      ctx.lineTo(x + w * 0.85, top)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillRect(x + w / 2 - 0.004, top - 0.38, 0.008, 0.17)
+      hazeSnow(ctx, t, x, top, w * 0.15, true, 0.014)
+      hazeSnow(ctx, t, x + w * 0.85, top, w * 0.15, true, 0.014)
+    } else if (kind < 0.4) {
+      // Stepped at its crown.
+      ctx.fillRect(x + w * 0.15, top - 0.08, w * 0.7, 0.08)
+      ctx.fillRect(x + w * 0.32, top - 0.15, w * 0.36, 0.07)
+      hazeSnow(ctx, t, x, top, w, true, 0.014)
+      hazeSnow(ctx, t, x + w * 0.15, top - 0.08, w * 0.7, true, 0.014)
+      hazeSnow(ctx, t, x + w * 0.32, top - 0.15, w * 0.36, true, 0.014)
+    } else hazeSnow(ctx, t, x, top, w, true, 0.018)
+    if (edgeA > 0.01) {
+      ctx.fillStyle = rgba(edge, 0.2 * edgeA)
+      ctx.fillRect(x + w - 0.006, top, 0.006, h)
+    }
+    // A few lit windows, small and far.
+    for (let k = 0; k < 14; k++) {
+      if (hash(i, k, 404) > 0.5) continue
+      const wx = x + 0.03 + hash(i, k, 405) * (w - 0.06)
+      const wy = top + 0.06 + hash(i, k, 406) * (h - 0.1)
+      const on = 10 + hash(i, k, 407) * 120
+      if (t < on || wy > base - 0.02) continue
+      const a = 0.4 * Math.min(1, (t - on) / 2) * (1 - 0.5 * smooth(nightAt(t), 0.6, 1) * hash(i, k, 408))
+      if (sink) sink.list.push({ x: wx, y: wy, r: 0.012, color: '#F4C48A', a, p: sink.p })
+      else {
+        ctx.fillStyle = rgba('#F4C48A', a)
+        ctx.fillRect(wx - 0.01, wy - 0.012, 0.02, 0.024)
+      }
+    }
+    x += w + 0.2 + hash(i, 409) * 0.6
+  }
+}
+
+/** A soft round of light, one per colour, made once: what a lit window's glow is drawn with. */
+const glows = new Map<string, HTMLCanvasElement>()
+function glowOf(color: string): HTMLCanvasElement {
+  let c = glows.get(color)
+  if (!c) {
+    c = Object.assign(document.createElement('canvas'), { width: 64, height: 64 })
+    const g = c.getContext('2d')!
+    const r = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+    r.addColorStop(0, rgba(color, 0.75))
+    r.addColorStop(0.25, rgba(color, 0.3))
+    r.addColorStop(1, rgba(color, 0))
+    g.fillStyle = r
+    g.fillRect(0, 0, 64, 64)
+    glows.set(color, c)
+  }
+  return c
+}
+
+function city(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: number }, lens: Lens, sink: (p: number) => Sink): void {
+  const n = nightAt(t)
+  // Each lit window's glow round it: a little in clear air, wider and stronger through the rain and the wet glass,
+  // the haze holding the light; none to speak of in the dusk, which outshines it.
+  const halo = (0.35 + 0.65 * Math.max(wetAt(t), 0.6 * cloudAt(t))) * (1 - 0.8 * sky.dusk)
+  const glowing = typeof document !== 'undefined' && halo > 0.02
+  const far = mixHex('#2B2850', '#463E6E', sky.dusk)
+  const near = mixHex('#17162C', '#2A2445', sky.dusk)
+  // The sky's light on the city's edges: the dusk's warmth, then once it is clear the moon's, paler off the snow.
+  const moonlit = smooth(n, 0.55, 0.7) * (1 - 0.8 * cloudAt(t))
+  const edge = mixHex('#C8CEF6', '#F2B08E', sky.dusk)
+  const edgeA = Math.min(1, 0.7 * sky.dusk + 0.75 * moonlit + 0.15 * coverAt(t))
+  // Far off, past the roofs, the city's towers in the haze.
+  inLayer(ctx, lens, DEPTH.skyline, () => skyline(ctx, t, sky, edge, edgeA, sink(DEPTH.skyline)))
+  let tallest = { x: 0, y: 0 }
+  for (const [row, color, base, tall] of [[0, far, -1.9, 1.15], [1, near, -1.35, 0.85]] as const) {
+    // Between the far roofs and the near: the mist after the rain, and the elevated line, and its trains.
+    if (row === 1) {
+      inLayer(ctx, lens, FLAKES[0].p, () => flakes(ctx, t, 0))
+      inLayer(ctx, lens, DEPTH.far, () => mist(ctx, t, -2.0, 0.9, 0))
+      inLayer(ctx, lens, DEPTH.train, () => train(ctx, t, sky, sink(DEPTH.train)))
+    }
+    const p = row ? DEPTH.near : DEPTH.far
+    const lights = sink(p)
+    // The street runs on past the window's edges, for when the camera's moves slide it along behind them.
+    const l = layerOf(lens, p)
+    const from = (GLASS.x0 - l.ox) / l.s - 0.3
+    const to = (GLASS.x1 - l.ox) / l.s + 0.3
+    inLayer(ctx, lens, p, () => {
+      const building = (i: number, x: number, w: number) => {
+        const h = 0.25 + hash(i, row, 11) * tall
+        const top = base - h
+        // Its wall, a little paler up where the sky's glow reaches it.
+        const wall = ctx.createLinearGradient(0, top, 0, base)
+        wall.addColorStop(0, mixHex(color, sky.low, row ? 0.1 : 0.16))
+        wall.addColorStop(1, color)
+        ctx.fillStyle = wall
+        ctx.fillRect(x, top, w, h + 2)
+        // Its parapet, a lip along the top.
+        ctx.fillStyle = mixHex(color, sky.low, row ? 0.18 : 0.24)
+        ctx.fillRect(x - 0.008, top - 0.012, w + 0.016, 0.018)
+        // What stands on it: a stair head set back, a water tower, an antenna, a second block stepped back; or nothing.
+        const kind = hash(i, row, 23)
+        const scale = row ? 1 : 0.8
+        let crown = top
+        ctx.fillStyle = color
+        if (kind < 0.2 && w > 0.5) {
+          const sw = w * 0.5
+          const sh = 0.12 + hash(i, row, 24) * 0.22
+          ctx.fillRect(x + w * 0.25, top - sh, sw, sh)
+          ctx.fillStyle = mixHex(color, sky.low, row ? 0.18 : 0.24)
+          ctx.fillRect(x + w * 0.25 - 0.006, top - sh - 0.01, sw + 0.012, 0.014)
+          roofSnow(ctx, t, x + w * 0.25, top - sh - 0.01, sw, row === 0)
+          crown = top - sh
+        } else if (kind < 0.42) {
+          waterTower(ctx, t, x + w * (0.3 + 0.4 * hash(i, row, 25)), top, scale, color, edge, edgeA, row === 0)
+        } else if (kind < 0.55) {
+          antenna(ctx, x + w * 0.7, top, 0.18 + 0.12 * hash(i, row, 26), color)
+        } else if (kind < 0.75) {
+          ctx.fillRect(x + w * 0.2, top - 0.1, 0.14, 0.11)
+          roofSnow(ctx, t, x + w * 0.2, top - 0.1, 0.14, row === 0)
+        }
+        if (row === 0 && i >= 0 && x < GLASS.x1 + 0.3 && crown < tallest.y) tallest = { x: x + w / 2, y: crown }
+        // The sky's light along its top and down its right: the dusk's, then the moon's.
+        if (edgeA > 0.01) {
+          ctx.fillStyle = rgba(edge, (row ? 0.4 : 0.3) * edgeA)
+          ctx.fillRect(x - 0.008, top - 0.012, w + 0.016, 0.006)
+          ctx.fillRect(x + w - 0.008, top, 0.008, Math.min(h, 0.6))
+        }
+        // And on it, the first snow, once it has settled.
+        roofSnow(ctx, t, x, top - 0.012, w, row === 0)
+        ctx.fillStyle = color
+        const cols = Math.max(1, Math.floor(w / 0.16))
+        const rows = Math.max(1, Math.floor(h / 0.17))
+        for (let a = 0; a < cols; a++) {
+          for (let b = 0; b < rows; b++) {
+            const key = hash(i * 31 + a, b + row * 17, 3)
+            const dark = key > 0.26 || t < 4 + hash(i * 31 + a, b + row * 17, 9) * 110 || n > 0.3 + hash(i * 31 + a, b + row * 17, 5) * 0.95
+            // A dark window: a recess in the wall, a shade darker, its sill catching the sky's edge.
+            if (dark) {
+              if (lights) continue
+              ctx.fillStyle = rgba('#0A0918', row ? 0.32 : 0.22)
+              ctx.fillRect(x + 0.06 + a * 0.16, base - h + 0.08 + b * 0.17, 0.065, 0.075)
+              continue
+            }
+            const on = 4 + hash(i * 31 + a, b + row * 17, 9) * 110
+            const out = 0.3 + hash(i * 31 + a, b + row * 17, 5) * 0.95
+            const fade = Math.min(1, (t - on) * 2) * Math.min(1, (out - n) * 30)
+            const screen = key < 0.035
+            const c = screen ? '#9DB4F2' : hash(i, a + b, 19) < 0.3 ? '#F0A867' : '#F7C98A'
+            const alpha = (row ? 0.75 : 0.45) * fade
+            const wx = x + 0.06 + a * 0.16
+            const wy = base - h + 0.08 + b * 0.17
+            if (lights) lights.list.push({ x: wx + 0.0325, y: wy + 0.0375, r: 0.035, color: c, a: alpha, p })
+            else {
+              ctx.fillStyle = rgba(c, alpha)
+              ctx.fillRect(wx, wy, 0.065, 0.075)
+              // Some with a blind part down, or a curtain drawn to one side: a home, not a lit square.
+              const dress = hash(i * 31 + a, b + row * 17, 41)
+              if (!screen && dress < 0.45) {
+                ctx.fillStyle = rgba(mixHex(c, '#3A2436', 0.55), alpha * 0.7)
+                if (dress < 0.25) ctx.fillRect(wx, wy, 0.065, 0.075 * (0.25 + 0.4 * hash(i * 31 + a, b, 42)))
+                else ctx.fillRect(wx + (dress < 0.35 ? 0 : 0.04), wy, 0.025, 0.075)
+              }
+              if (glowing) {
+                const gr = 0.12 + 0.1 * halo
+                ctx.save()
+                ctx.globalCompositeOperation = 'screen'
+                ctx.globalAlpha = Math.min(1, (0.35 + alpha) * halo * (row ? 1 : 0.75))
+                ctx.drawImage(glowOf(c), wx + 0.0325 - gr, wy + 0.0375 - gr, gr * 2, gr * 2)
+                ctx.restore()
+              }
+            }
+          }
+        }
+        // A fire escape down some of the nearer walls, in front of their windows.
+        if (row === 1 && w > 0.45 && hash(i, row, 29) < 0.65) {
+          const fx = x + 0.035 + Math.floor(hash(i, row, 30) * Math.max(1, cols - 2)) * 0.16
+          fireEscape(ctx, t, fx, Math.min(0.3, w - 0.07), top + 0.02, base, 0.17, mixHex(color, '#05040C', 0.5), edge, edgeA)
+        }
+      }
+      // From where the window's own street starts, on to the right, then back from it to the left.
+      let x = GLASS.x0 - 0.3
+      for (let i = 0; x < to; i++) {
+        const w = 0.45 + hash(i, row, 7) * 0.7
+        building(i, x, w)
+        x += w + 0.02 + hash(i, row, 13) * 0.12
+      }
+      x = GLASS.x0 - 0.3
+      for (let i = -1; x > from; i--) {
+        const w = 0.45 + hash(i, row, 7) * 0.7
+        x -= w + 0.02 + hash(i, row, 13) * 0.12
+        building(i, x, w)
+      }
+    })
+  }
+  // The red light on the tallest roof: on a little over half a second in every two.
+  const blink = Math.max(0, Math.sin((t * Math.PI) / 1.1)) ** 3
+  const red = sink(DEPTH.far)
+  if (red) red.list.push({ x: tallest.x, y: tallest.y - 0.03, r: 0.03, color: '#FF5A4E', a: 0.9 * blink, p: DEPTH.far })
+  else {
+    inLayer(ctx, lens, DEPTH.far, () => {
+      const g = ctx.createRadialGradient(tallest.x, tallest.y - 0.03, 0, tallest.x, tallest.y - 0.03, 0.08)
+      g.addColorStop(0, rgba('#FF5A4E', 0.9 * blink))
+      g.addColorStop(0.3, rgba('#FF5A4E', 0.35 * blink))
+      g.addColorStop(1, rgba('#FF5A4E', 0))
+      ctx.fillStyle = g
+      ctx.fillRect(tallest.x - 0.15, tallest.y - 0.2, 0.3, 0.3)
+    })
+  }
+  // And a thinner bank over the near roofs, in front of them.
+  inLayer(ctx, lens, DEPTH.near, () => mist(ctx, t, -1.45, 0.55, 1))
+  inLayer(ctx, lens, DEPTH.near, () => {
+    // The neighbour's window, before the glow, so the haze over the roofs lies over its wall as over the rest.
+    neighbour(ctx, t, sky)
+    // The city's glow over the roofs.
+    const glow = ctx.createLinearGradient(0, GLASS.y1 - 2.1, 0, GLASS.y1)
+    glow.addColorStop(0, rgba('#B7779A', 0))
+    glow.addColorStop(1, rgba('#B7779A', 0.1 * (1 - sky.dusk)))
+    ctx.fillStyle = glow
+    ctx.fillRect(GLASS.x0 - 4, GLASS.y1 - 2.1, W + 8, 3)
+  })
+}
+
+/**
+ * One window across the street, close enough to see into: the neighbour's, up late too. Its light comes on in the dusk
+ * and goes out a little before ours goes down. A thin curtain is drawn across its left.
+ */
+const FLAT = { x0: -1.98, x1: -1.62, y0: -1.98, y1: -1.73 }
+const FLAT_ON = 38
+const FLAT_OFF = 1652
+
+function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
+  const { x0, x1, y0, y1 } = FLAT
+  const w = x1 - x0
+  const h = y1 - y0
+  const on = Math.min(1, Math.max(0, (t - FLAT_ON) / 1.2)) * Math.min(1, Math.max(0, (FLAT_OFF - t) / 0.8))
+  // The wall round it, so the city's small windows keep clear of it, and its frame.
+  ctx.fillStyle = mixHex('#17162C', '#2A2445', sky.dusk)
+  ctx.fillRect(x0 - 0.06, y0 - 0.06, w + 0.12, h + 0.1)
+  // Its frame, and unlit, the glass: dim, holding a little of the dusk while there is one, dark only at night.
+  const unlit = (night: string, dusk: string) => mixHex(night, dusk, sky.dusk)
+  ctx.fillStyle = rgba(unlit('#0E0C1C', '#2A2444'), 0.9)
+  ctx.fillRect(x0 - 0.015, y0 - 0.015, w + 0.03, h + 0.03)
+  // The room inside: dark, or lit by a lamp somewhere on its right; a low, deep amber, so it sits among the city's
+  // lights and never outshines the ball (bright enough that what crosses it reads).
+  const room = ctx.createRadialGradient(x1 - 0.06, y0 + h * 0.55, 0.02, x1 - 0.06, y0 + h * 0.55, w * 1.1)
+  room.addColorStop(0, mixHex(unlit('#1C1830', '#4A3E62'), '#D9985C', on))
+  room.addColorStop(0.6, mixHex(unlit('#1A162C', '#433858'), '#A86640', on))
+  room.addColorStop(1, mixHex(unlit('#16142A', '#3A3050'), '#5E3430', on))
+  ctx.fillStyle = room
+  ctx.fillRect(x0, y0, w, h)
+  if (on > 0) {
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0, y0, w, h)
+    ctx.clip()
+    // The curtain across its left, thin, lit through.
+    const c = ctx.createLinearGradient(x0, 0, x0 + w * 0.34, 0)
+    c.addColorStop(0, rgba('#E8C4A0', 0.4 * on))
+    c.addColorStop(1, rgba('#E8C4A0', 0.18 * on))
+    ctx.fillStyle = c
+    ctx.beginPath()
+    ctx.moveTo(x0, y0)
+    ctx.lineTo(x0 + w * 0.34, y0)
+    ctx.quadraticCurveTo(x0 + w * 0.26, y0 + h * 0.6, x0 + w * 0.3, y1)
+    ctx.lineTo(x0, y1)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+    // Its light, a little out onto the wet night.
+    const halo = ctx.createRadialGradient((x0 + x1) / 2, (y0 + y1) / 2, 0.05, (x0 + x1) / 2, (y0 + y1) / 2, 0.45)
+    halo.addColorStop(0, rgba('#F2B36E', 0.05 * on))
+    halo.addColorStop(1, rgba('#F2B36E', 0))
+    ctx.fillStyle = halo
+    ctx.fillRect(x0 - 0.5, y0 - 0.5, w + 1, h + 1)
+  }
+  // The mullion across it, and its sill.
+  ctx.fillStyle = rgba(unlit('#0E0C1C', '#2A2444'), 0.9)
+  ctx.fillRect((x0 + x1) / 2 - 0.007, y0, 0.014, h)
+  ctx.fillStyle = mixHex('#2A2445', '#4A4060', sky.dusk)
+  ctx.fillRect(x0 - 0.03, y1, w + 0.06, 0.022)
+}
+
+/** The rain falling past: thin, faint, fast, slanting a little with the wind. As many as the weather has. */
+function rain(ctx: Ctx, t: number): void {
+  // Turning to snow: fewer of it falls as rain, until none does.
+  const count = 150 * rainAt(t) * (1 - smooth(coldAt(t), 0.2, 0.9))
+  ctx.lineWidth = 0.012
+  ctx.lineCap = 'round'
+  const HH = H + 0.6
+  for (let i = 0; i < 150; i++) {
+    const a = Math.min(1, count - i)
+    if (a <= 0) break
+    const speed = 6.2 + hash(i, 1) * 2.4
+    const len = 0.28 + hash(i, 2) * 0.3
+    const y = GLASS.y0 - 0.3 + ((hash(i, 3) * HH + t * speed) % HH)
+    const x = GLASS.x0 + hash(i, 4) * (W + 0.6) - 0.3 - (y - GLASS.y0) * 0.1
+    ctx.strokeStyle = rgba('#B6C0E6', (0.08 + 0.09 * hash(i, 5)) * a)
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    ctx.lineTo(x - len * 0.1, y - len)
+    ctx.stroke()
+  }
+}
+
+const smoothStep = (x: number, a: number, b: number): number => {
+  const u = Math.max(0, Math.min(1, (x - a) / (b - a)))
+  return u * u * (3 - 2 * u)
+}
+
+/**
+ * The drops on the glass. Each bead gathers where it lands, sits, and some go: a bead's life is its own length, and at
+ * its end it runs down the pane in fits and starts, leaving a faint wet line, and is gone; then it lands again
+ * somewhere else. As the rain eases they stop landing, and those on the glass dry where they are.
+ */
+function drops(ctx: Ctx, t: number, rain: number): void {
+  // What the beads show, upside down: how lit the street is (the city's windows on through the night), and the sky.
+  const lights = smooth(t, 20, 140) * (1 - 0.4 * smooth(nightAt(t), 0.7, 1))
+  const skyTop = mixHex(skyAt(t).top, '#C9CCF2', 0.35)
+  // The glass stays wet a while after the rain: how many beads there are follows the rain a minute behind.
+  const wet = wetAt(t)
+  const count = 150 * wet
+  for (let i = 0; i < 160; i++) {
+    const a = Math.min(1, count - i)
+    if (a <= 0) break
+    const life = 26 + hash(i, 21) * 40
+    const u = (t + hash(i, 22) * life) / life
+    const k = Math.floor(u)
+    const f = u - k
+    const x0 = GLASS.x0 + 0.04 + hash(i, k, 23) * (W - 0.08)
+    const y0 = GLASS.y0 + 0.1 + hash(i, k, 24) * (H - 0.2)
+    const r = 0.012 + hash(i, k, 25) ** 2 * 0.03
+    const runs = hash(i, k, 26) < 0.3 && r > 0.02 && rain > 0.15
+    let size = r * Math.min(1, (f * life) / 2)
+    let y = y0
+    let x = x0
+    let alpha = a
+    if (runs) {
+      const run = Math.max(0, (f - 0.72) / 0.28)
+      if (run > 0) {
+        const n = 3
+        const s = run - Math.sin(2 * Math.PI * n * run) / (2 * Math.PI * n)
+        const dist = Math.min(H - (y0 - GLASS.y0), 0.9 + hash(i, k, 27) * 1.8)
+        y = y0 + s * dist
+        x = x0 + Math.sin(s * 5 + i) * 0.02
+        size *= 1 - 0.3 * run
+        alpha *= 1 - smoothStep(run, 0.8, 1)
+        ctx.strokeStyle = rgba('#6F78A6', 0.3 * alpha)
+        ctx.lineWidth = size * 0.9
+        ctx.beginPath()
+        ctx.moveTo(x0, y0)
+        ctx.lineTo(x, y)
+        ctx.stroke()
+      }
+    } else {
+      alpha *= 1 - smoothStep(f, 0.92, 1)
+    }
+    if (size < 0.004) continue
+    const warm = Math.max(0, Math.min(1, (x - GLASS.x0) / W))
+    ctx.beginPath()
+    ctx.ellipse(x, y, size * 0.82, size, 0, 0, Math.PI * 2)
+    if (size > 0.014) {
+      // A bead is a lens: it shows the night upside down, the lit street below in its top half (warm, as the city's
+      // windows are) and the sky above in its bottom half, and a dark edge where it bends the light away.
+      const lens = ctx.createLinearGradient(0, y - size, 0, y + size)
+      lens.addColorStop(0, rgba(mixHex('#9C88B8', '#F0A86E', lights), (0.3 + 0.25 * lights) * alpha))
+      lens.addColorStop(0.45, rgba(mixHex('#8790BE', '#C69A86', warm * 0.55), 0.22 * alpha))
+      lens.addColorStop(1, rgba(skyTop, 0.38 * alpha))
+      ctx.fillStyle = lens
+      ctx.fill()
+      ctx.beginPath()
+      ctx.ellipse(x, y, size * 0.82, size, 0, Math.PI * 0.12, Math.PI * 0.88)
+      ctx.strokeStyle = rgba('#17132A', 0.35 * alpha)
+      ctx.lineWidth = size * 0.2
+      ctx.stroke()
+    } else {
+      ctx.fillStyle = rgba(mixHex('#8790BE', '#C69A86', warm * 0.55), 0.32 * alpha)
+      ctx.fill()
+    }
+    if (size > 0.02) {
+      ctx.fillStyle = rgba(mixHex('#D3D7F5', '#F4C799', warm), 0.5 * alpha)
+      ctx.beginPath()
+      ctx.arc(x + size * 0.25, y - size * 0.4, size * 0.22, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+}
+
+/** The window's moments played to the camera, for the report and the check. */
+export const MOMENTS = { trains: TRAINS, lightning: FLASHES, shooting: SHOOTS }

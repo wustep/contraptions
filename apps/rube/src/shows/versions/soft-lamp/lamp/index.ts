@@ -51,3 +51,24 @@ export const performance: Performance = {
     youtube: [{ id: YOUTUBE, until: MUSIC_END, fadeOut: 2 }],
   },
 }
+
+/**
+ * The still take: the same night, the same room, the same machine and moments, seen from one place the whole half hour,
+ * as the streams are. The room's home frame (the window and its curtain, the kitten, the books, the headphones and the
+ * whole lamp), held from the first second to the last. Everything the first take plays to its camera happens in it too.
+ */
+export const HOME = { x: 0.91, y: -2.05, cells: 5.7 }
+/**
+ * Held, but not frozen: it drifts a little over minutes (a tenth of a cell across, a twentieth up and down, a hair nearer
+ * and back, kept between the plant and the lamp's foot at the frame's edges), too slow to see as a move, enough that the city past the glass shifts faintly against the
+ * window's bars, as it does to anyone sitting at a desk.
+ */
+export function stillCamera(t: number): { x: number; y: number; cells: number } {
+  const T = Math.PI * 2
+  return {
+    x: HOME.x + 0.09 * Math.sin((T * t) / 610),
+    y: HOME.y + 0.05 * Math.sin((T * t) / 430 + 1.3),
+    cells: HOME.cells * (1 + 0.004 * Math.sin((T * t) / 890 + 2.1)),
+  }
+}
+export const stillPerformance: Performance = { ...performance, camera: stillCamera }
