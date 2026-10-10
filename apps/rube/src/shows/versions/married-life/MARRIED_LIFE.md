@@ -713,6 +713,8 @@ window.
     credits: half as close again, any gap twice as wide). Only edges past a thing in front: the balloon at the door's
     jamb and the bay's corner post (its outline whole either side), Carl behind a porch post, the mailbox's red flag,
     her trail, the orange guests. No gap.
+  - *The setbacks' Zoom ease on a phone held upright*: the tyre, the jar, the arm that takes it and the lamp he climbs
+    to all in the frame, the nursery and the roof in the extra picture over them.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
