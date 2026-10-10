@@ -145,13 +145,13 @@ const FLAP = 0.38
 /** The drone: from its pod's centre down to its wheels, its pace, and where it flies. */
 const GEAR = 0.25
 const V_DRONE = 2.4
-const APPEAR = beat(102.25)
-const LEVEL = beat(105)
+/** From here this part flies it: until then it is the chase's flight, come down over the dam and on to here (`score.ts`). */
+export const LEVEL = beat(105)
 const FINAL = beat(109.75)
 const HIGH = -3.45
 const ROLLOUT = 0.32
 
-interface GateState {
+export interface GateState {
   begin: number
   /** Every bar of the grid, and the four the ball skips on. */
   bars: number[]
@@ -487,7 +487,7 @@ function leverAngle(t: number): number {
 
 /** The drone: where its pod is, its pitch, how far its wheels are down, and how hard they are pressed, at show time `t`. */
 function droneAt(s: GateState, t: number): { p: Pt; pitch: number; gear: number; squash: number } | null {
-  if (t < APPEAR) return null
+  if (t < LEVEL) return null
   const pad = ROOF - GEAR
   let x: number
   if (t <= TOUCH) x = s.touch - V_DRONE * (TOUCH - t)
@@ -498,10 +498,7 @@ function droneAt(s: GateState, t: number): { p: Pt; pitch: number; gear: number;
   let y: number
   let pitch = 0
   let squash = 0
-  if (t < LEVEL) {
-    y = -6.2 + (HIGH + 6.2) * easeOutCubic((t - APPEAR) / (LEVEL - APPEAR))
-    pitch = 0.1 * (1 - smooth(t, APPEAR, LEVEL))
-  } else if (t < FINAL) {
+  if (t < FINAL) {
     y = HIGH + 0.07 * Math.sin((t - LEVEL) * 2.4)
     pitch = -0.03 * Math.cos((t - LEVEL) * 2.4)
   } else if (t < TOUCH) {
@@ -518,6 +515,14 @@ function droneAt(s: GateState, t: number): { p: Pt; pitch: number; gear: number;
     pitch = -0.07 * (1 - smooth(k, 0.05, 0.4)) + 0.02 * Math.exp(-Math.max(0, k - 0.4) / 0.25) * Math.sin(Math.max(0, k - 0.4) * 12)
   }
   return { p: [x, y], pitch, gear: smooth(t, beat(110), beat(111)), squash }
+}
+
+/**
+ * Where the drone is as this part takes it (LEVEL), in this part's frame: where, how fast (cells a second), and its
+ * pitch. The chase's flight in `score.ts` arrives here exactly, so there is one drone and one flight.
+ */
+export function droneJoin(s: GateState): { p: Pt; v: Pt; pitch: number } {
+  return { p: [s.touch - V_DRONE * (TOUCH - LEVEL), HIGH], v: [V_DRONE, 0.07 * 2.4], pitch: -0.03 }
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -756,7 +761,8 @@ function drone(d: Draw, s: GateState, f: { x0: number; x1: number; y0: number })
   if (dr && dr.p[0] > f.x0 - 2 && dr.p[0] < f.x1 + 2 && dr.p[1] > f.y0 - 1) {
     const over = dr.p[0] > s.bunker[0] - 0.3 && dr.p[0] < s.bunker[1] + 0.1
     gear(d, dr.p, dr.pitch, dr.gear, dr.squash)
-    drawDrone(p, k, ink, weight, dr.p, dr.pitch, 1, over ? ROOF : FLOOR)
+    // (Its shadow comes up on the ground as it comes down to fly level, rather than all at once as this part takes it.)
+    drawDrone(p, k, ink, weight, dr.p, dr.pitch, 1, over ? ROOF : FLOOR, 0, smooth(t, LEVEL, LEVEL + 1.2))
     if (t >= TOUCH && t < TOUCH + 0.8) {
       const age = t - TOUCH
       p.push()
