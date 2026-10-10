@@ -176,7 +176,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 290.99 | the last great hit | home | The flash: the bulb bursts, the room washes white from the camera's side with their shadows thrown on the washer, and a firework fills the door's glass with gold. The photograph ejects (291.20), flutters down like a leaf and props itself against the washer beside them (292.77). It develops by 293.01: the glowing washer window with the three of them in it, eyes and all. |
 | 295.01 | the last hit | home | The tubes go out in the reverse order of the opening, and the neon with them. The three of them rest in the washer window's warm glow. |
 | 297 to 313.6 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes, and the camera comes in close on the washer's window, the credits over the door's dark glass to its left. The dryer's window opened the multiverse; the washer's closes it. In its lit glass the lives she went through come back once, in the order back home, about two seconds each: the bagel, the rocks, Raccacoonie's kitchen, the hot dog piano, the dojo, the red carpet. In each the three of them are there together, small, eyes and all (on the rocks, three stones on the ledge where there were two). The three look up at the window all through them, and the empty drum gives a slow half-turn among them (305.40). Then the glass is only its own warm light; it swells once (312.59), and they look at one another. |
-| 313.6 to 332 | the tail | home | Of all of them, this one. The camera draws back, and goes on drawing back: out of the shop, which sinks into the night until only its washer's window is lit, and on into a night full of other lit windows (`home/multitude.ts`). Each is a laundromat in another life: most warm like this one, some in the colours of the lives she flew through, a few with their tubes still on. They stand at depths behind the shop, so the near ones sweep in from the frame's edges while the far ones barely move, and they light as she looks out, the nearest first. By 326.6 they have come to rest in a ring, the everything bagel made again of every life's lit window, with home the one light in its hole. From 328.1 the end's dark takes them, this window last. |
+| 313.6 to 332 | the tail | home | After the swell the camera draws back from the window, slowly, to the shop at night under the lanterns. From the last card's going the end's dark takes the room, the washer's window last. |
 
 ## The polish pass
 
@@ -898,6 +898,20 @@ earn its place. Nothing was added, the song is the same, and every jump and hit 
   at the foot of the busiest picture in the show, and its shade dimmed the wall's lower rows on the crescendo. It said
   out loud what the next ten seconds show: she gives each of Jobu's machines an eye. The alley's *Stay a little* and
   home's *I'm staying* carry his part in words.
+
+### Less again: a second subtraction pass
+
+The whole show was watched again after the first cut. Two more things went; nothing was added.
+
+- **The ending is the shop, not a night of windows.** After the swell the camera drew back out of the shop into 1,150
+  lit windows that settled into a ring. Every frame of it read as confetti on black (the flaw that took it out of the
+  opening and the hush), and the ring was the bagel a fourth time. The camera now draws back from the window to the
+  shop at night, and the end's dark takes the room after the last card, the washer's window last, as the music fades.
+  `home/multitude.ts` is gone, and with it the room-hiding the draw back needed for its frame rate, and its line of
+  audio description.
+- **The kitchen counter has no knobs.** The row of gas knobs over flickering pilot flames sat on the frame's foot, cut
+  in half in most shots, and turned with the music under a scene already full of motion. The griddle's heat and the red
+  apron rail still make it a counter.
 - Kept, watched again: each life's own picture, the chapters, the other subtitles, Jobu's crown and the hush's reverse
   shots, the rocks' reveal, the dive into the great hit, the lives in the washer's window, and the last shot's draw back
   into the night of windows, now the show's one reveal of them.
@@ -1093,9 +1107,6 @@ goes (about 325.9 s) the ring of windows holds alone; from 328.1 s it goes down 
     great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show; Joy's
     comes with a smaller, softer burst in her violet.
   - `home/finale-lives.ts`: the lives in the washer's window under the credits.
-  - `home/multitude.ts`: the last shot's draw back: the veil the shop sinks into, the night of other lives' lit
-    windows in depth and their ring, and how far back the camera is (`pullAt`; the stage's own camera stops short of it,
-    `cameraCellsAt`).
   - `film.ts`: the picture each life is in (widescreen, the old print, the soft-focus romance, the tape, the office
     tubes), painted over a world's whole frame, a panel of everywhere at once, the surf, or the washer's window.
   - `credits.ts`: the cards, the soft dark under them, and the room's fade to dark with the music after the last
