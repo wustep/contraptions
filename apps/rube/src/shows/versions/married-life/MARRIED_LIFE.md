@@ -838,6 +838,9 @@ window.
     (90%), waterfall (75%: "a tall cloud block… blue streaks pouring down"), baby (85%), read as "adventure and
     travel… the wish for a child"; the last viewer had seen a jar or a column. Before the water pours it is still a
     column, as it is built to be: the cliff first, then the falls on bar 39.
+  - *The cloud falls under Zoom and on a phone held upright*: the blue water whole in both. The engine that puffs them
+    runs by itself (the twentieth viewer could not tell who worked it): its flywheel keeps the waltz, a chuff on every
+    downbeat, so what it builds reads as their daydream, as that viewer took it. Kept.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
