@@ -752,6 +752,13 @@ window.
   - *The tie wheel, re-watched* by a seventh viewer who has never seen Up (137 to 158 s, three frames a second): a
     rotating tie rack that hands him the day's tie (85%), the years passing in routine (75%), the two of them greying
     together (75%), calm and a little bittersweet. The earlier "fairground wheel" was the sparse sheets'. Kept.
+  - *The storm, re-watched* by an eighth viewer who has never seen Up (124 to 140 s, three frames a second): the limb
+    through the nursery's roof read, and its place meant something ("the old wound being torn open again"), and the two
+    of them through it together. Confounded by the test, not the show: the sheet began at 124, so it held the leg's
+    taking (125.2) without the fall it pays for, and the viewer, told the jar had gone twice, took that for the storm's
+    and found the order backwards. What it does show: the storm's own taking (129.3) is not seen, the jar small in the
+    house's wide. Kept: the wide is the storm's (the house, the tree, the limb), and the third taking is the one a
+    critic already found one too many; making it legible would recut a sequence locked to the music.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
