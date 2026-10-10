@@ -66,7 +66,7 @@ function stockFor(w: number, h: number): HTMLCanvasElement[] | null {
       // A grain about one pixel and a half on a 720p frame, each variant the tile at another offset.
       const s = Math.max(1, h / 480)
       pattern.setTransform(new DOMMatrix([s, 0, 0, s, -Math.floor(hash(k, 1) * TILE) * s, -Math.floor(hash(k, 2) * TILE) * s]))
-      g.globalAlpha = 0.1
+      g.globalAlpha = 0.075
       g.fillStyle = pattern
       g.fillRect(0, 0, w, h)
     }
