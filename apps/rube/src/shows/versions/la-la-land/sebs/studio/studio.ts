@@ -183,7 +183,7 @@ export function monotone(knots: [number, number][]): (t: number) => number {
 /** The cut-outs, where they stand (this frame): each a hair ahead of where the two of them are when it rises. */
 type Kind = 'palm' | 'towers' | 'tower' | 'lamp'
 const CUTS: { kind: Kind; x: number; at: number }[] = [
-  { kind: 'palm', x: 1.05, at: POP_AT[0] },
+  { kind: 'palm', x: 1.32, at: POP_AT[0] },
   { kind: 'towers', x: 2.62, at: POP_AT[1] },
   { kind: 'tower', x: 4.2, at: POP_AT[2] },
   { kind: 'lamp', x: 5.72, at: POP_AT[3] },

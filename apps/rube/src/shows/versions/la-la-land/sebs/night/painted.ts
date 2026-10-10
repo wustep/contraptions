@@ -727,14 +727,15 @@ interface PaintedState {
  * Their steps on the wet quay. A waltz is three steps a bar, and on the wet stones each one leaves a ripple of the
  * lamps' gold spreading out under whoever stepped, the ONE of each bar the strongest, both of them together; the
  * two and the three, him and then her. The rings spread and thin as they go round, so the floor carries a trail of
- * where they have turned. They stop as the two of them lift off the floor among the stars.
+ * where they have turned. They stop as the set flies out, before the machine comes up through the floor.
  */
 const STEPS: { t: number; who: 'seb' | 'mia' | 'both'; s: number }[] = (() => {
   const out: { t: number; who: 'seb' | 'mia' | 'both'; s: number }[] = []
   for (let i = 0; i + 1 < BARS.length; i++) {
     const a = BARS[i]
     const b = BARS[i + 1]
-    if (a < WALTZ - 0.01 || a >= LIFT - 0.3) continue
+    // (None once the set is flying out: the floor is clear for the machine coming up through it.)
+    if (a < WALTZ - 0.01 || a >= FLY_SET - 1.2) continue
     out.push({ t: a, who: 'both', s: 1 })
     out.push({ t: a + (b - a) / 3, who: 'seb', s: 0.55 })
     out.push({ t: a + (2 * (b - a)) / 3, who: 'mia', s: 0.55 })
