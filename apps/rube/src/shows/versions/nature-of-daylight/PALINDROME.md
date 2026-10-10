@@ -1006,6 +1006,14 @@ all of it sits where it did. No error and no warning in either. And the page as 
 YouTube: the label's upload ready, the show loaded, no error across a seek through the changed places. Nothing to
 change.
 
+A hundred-and-twelfth asked whether the show is safe to watch for anyone sensitive to flashing light: the blast, the
+white-out, the television coming on in the dark, the glass waking, the swell over the cut to the cradle, the red lamp
+and the ring's pulses. Each span filmed at thirty frames a second and measured in relative luminance, over the whole
+frame and each ninth of it, counting the general-flash rule's pairs of opposing changes of a tenth or more. Nowhere
+more than one flash in a second; the rule allows three. The blast is one: up in a tenth of a second, down over the
+next, then the long fall to white, which only rises. The red lamp is a small part of the frame and blinks once a beat.
+Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
