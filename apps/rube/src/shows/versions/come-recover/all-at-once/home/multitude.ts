@@ -43,8 +43,16 @@ let OPEN_END = { x: 0, y: 0, cells: 6.3 }
 export function setOpening(end: { x: number; y: number; cells: number }): void {
   OPEN_END = end
 }
+/**
+ * Whether the stage is in Overview (the viewer's O: the whole world, not the show's camera). The pieces are not told,
+ * but through the opening and the draw back the show's camera is centred within a cell or so of home's window, and
+ * Overview on the middle of the whole shop, far from it: what the last frame drawn here saw (`multitude`), so it is
+ * known before the room draws. In Overview the night and the windows stand aside, and the shop is seen as it is.
+ */
+let OVERVIEW = false
+const AWAY = 6
 /** Whether the opening's fall is on at `t`: before it ends, and not for a viewer who asked for less motion. */
-const opening = (t: number): boolean => t < OPEN_TO && !prefersCalm()
+const opening = (t: number): boolean => t < OPEN_TO && !prefersCalm() && !OVERVIEW
 
 /** The draw back starts a beat after the swell, when they have looked at one another; it comes to rest here. */
 export const PULL_FROM = SWELL + 1.05
@@ -117,6 +125,7 @@ const holeAt = (t: number): number => (t < PULL_FROM ? 0 : (HOLE_R / beyond(t)) 
 
 /** How dark the veil leaves (x, y) at `t`: for what draws over it (the googly eyes). */
 export const veilHere = (t: number, x: number, y: number): number => {
+  if (OVERVIEW) return 0
   if (opening(t)) return inShop(x, y) ? shopVeilAt(t) : roundVeilAt(t)
   const v = veilAt(t)
   if (v <= 0) return 0
@@ -125,7 +134,7 @@ export const veilHere = (t: number, x: number, y: number): number => {
   return v * smooth((Math.hypot(x - HOLE[0], y - HOLE[1]) - r * 0.55) / (r * 0.45))
 }
 // Once the night covers it all, the room is not drawn at all: nothing of it can be seen.
-ROOM_LIGHTS.hidden = (t: number): boolean => (opening(t) ? shopVeilAt(t) >= 0.9995 : veilAt(t) >= 0.9995 && holeAt(t) <= 0.001)
+ROOM_LIGHTS.hidden = (t: number): boolean => !OVERVIEW && (opening(t) ? shopVeilAt(t) >= 0.9995 : veilAt(t) >= 0.9995 && holeAt(t) <= 0.001)
 
 export const veilShade = (hex: string, t: number, x: number, y: number): string => {
   const d = veilHere(t, x, y)
@@ -252,10 +261,12 @@ export const multitude = scenery<null>({
   draw: () => {},
   over: (p: p5, _s, c) => {
     const t = c.t
-    const open = opening(t)
-    if (!open && t < PULL_FROM) return
     const { k } = c
     const f = frame(p, k)
+    OVERVIEW = Math.abs(f.cx - PORT[0]) > AWAY
+    if (OVERVIEW) return
+    const open = opening(t)
+    if (!open && t < PULL_FROM) return
     const ctx = p.drawingContext as CanvasRenderingContext2D
     // The stage's frame's height in the shop's cells (a 16:9 frame, read off its width), and how far back the windows
     // are seen from, in the same measure: further than the stage's camera once it has stopped.
