@@ -559,7 +559,8 @@ function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number
       const x = hx - 0.05
       const hw = GLASS.half
       glow(ctx, k, [x, FLOOR - H * 0.55], 0.5, HOME.sun, 0.35)
-      shape(ctx, k, box(x - hw, FLOOR - H, x + hw, FLOOR), DOORWOOD, INK, w * 0.8)
+      // Up to the doorway's head (it stopped a little short of it, sky between).
+      shape(ctx, k, box(x - hw, HOUSE.endHead, x + hw, FLOOR), DOORWOOD, INK, w * 0.8)
       // The pane in its frame, catching the light, between the rails.
       for (const [v0, v1] of [[0.07, 0.31], [0.37, 0.64], [0.7, 0.92]] as const) shape(ctx, k, box(x - hw * 0.45, FLOOR - H * v1, x + hw * 0.45, FLOOR - H * v0), mixHex(HOME.glass, HOME.sun, 0.55), INK, w * 0.35)
       return
@@ -705,6 +706,8 @@ export function drawHome(p: p5, c: Ctx): void {
   drawTop(p, ctx, k, t)
   // The glass door onto the garden, swinging out as he goes through.
   leaf(ctx, k, GLASS.hinge, GLASS.w, 2.47, glassDoor(t), HOME.glass, w * 0.7, true)
+  // The end wall over the doorway is cut in front of it: swinging out, the leaf goes behind it, not over it.
+  shape(ctx, k, box(HOUSE.end[0], HOUSE.ceil - 0.28, HOUSE.end[1], HOUSE.endHead), CUT, INK, w)
   shades(p, k, t)
   ctx.restore()
 }
