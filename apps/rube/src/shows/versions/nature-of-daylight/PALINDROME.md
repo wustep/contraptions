@@ -921,6 +921,13 @@ each slice was tall. It is a slice every three pixels now. And each shaft was si
 full strength, so their feet stood stepped streaks along the floor, which showed in the wide too. Each shaft now fades
 to nothing over its last seventh, into the light on the floor. The edge is one soft slant in any frame.
 
+A hundred-and-second went through the whole show in the tall frame, a still every four seconds, since that was where
+the last defect hid. The tent's floor was one flat fill: in the wide a strip under the table, but in a tall frame
+nearly half the picture, a dead slab under the sat phone's close shots (281 to 293 s). It is lit as the room is now:
+the ring's cold light pooled on it by the wall, brighter as the screens come back, the table's soft shadow under it,
+and the floor going dark toward us. The shadow was cut square at first and stood on the floor as a box; it is an
+ellipse, soft at its ends.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

@@ -314,6 +314,37 @@ function drawTent(p: p5, k: number, t: number): void {
   // The floor.
   ctx.fillStyle = TENT.floor
   ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, (f.y1 - FLOOR + 2) * k)
+  // Lit as the room is: the ring's cold light pooled on the floor by the wall, the table's shadow across it, and the
+  // floor going dark toward us. Flat, a tall frame's half of floor stood under the table as one slab.
+  if (f.y1 > FLOOR) {
+    ctx.save()
+    ctx.translate(CENTRE[0] * k, (FLOOR + 0.2) * k)
+    ctx.scale(1, 0.22)
+    const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, 9 * k)
+    pool.addColorStop(0, rgba(TENT.screenGlow, 0.04 + 0.1 * L))
+    pool.addColorStop(0.5, rgba(TENT.screenGlow, 0.02 + 0.04 * L))
+    pool.addColorStop(1, rgba(TENT.screenGlow, 0))
+    ctx.fillStyle = pool
+    ctx.fillRect(-9 * k, -9 * k, 18 * k, 18 * k)
+    ctx.restore()
+    // The table's shadow soft at its ends too: cut square, it stood on the floor as a box.
+    const half = (TABLE[1] - TABLE[0]) / 2 + 0.6
+    ctx.save()
+    ctx.translate(((TABLE[0] + TABLE[1]) / 2) * k, FLOOR * k)
+    ctx.scale(1, 0.9 / half)
+    const under = ctx.createRadialGradient(0, 0, 0, 0, 0, half * k)
+    under.addColorStop(0, rgba(TENT.cable, 0.4))
+    under.addColorStop(0.75, rgba(TENT.cable, 0.25))
+    under.addColorStop(1, rgba(TENT.cable, 0))
+    ctx.fillStyle = under
+    ctx.fillRect(-half * k, 0, 2 * half * k, half * k)
+    ctx.restore()
+    const near = ctx.createLinearGradient(0, FLOOR * k, 0, (FLOOR + 6) * k)
+    near.addColorStop(0, rgba(TENT.cable, 0))
+    near.addColorStop(1, rgba(TENT.cable, 0.55))
+    ctx.fillStyle = near
+    ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, (f.y1 - FLOOR + 2) * k)
+  }
   ctx.fillStyle = rgba(TENT.cable, 0.6)
   ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, 0.05 * k)
   drawAlarm(ctx, k, t, f)
