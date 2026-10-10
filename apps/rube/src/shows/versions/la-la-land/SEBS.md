@@ -120,7 +120,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - **The version file:** `apps/rube/src/shows/versions/la-la-land/opus5-5.show.ts`. Everything with weight is behind `load()`.
 - **The show:** `.../la-la-land/sebs/`.
   - `call.ts`: his playing made visible: rising into the dark at the start, then reaching her, at Seb's and at Lipton's.
-  - `lens.ts`: the lens the whole picture is seen through (a little fall-off at the corners, a fine grain), but for the home movie, which has its own stock; and the grade: the room as it is muted and colder, the dream in full colour, with the colour coming in at Lipton's, draining at the waking, and brought back by The End's swell.
+  - `lens.ts`: the lens the whole picture is seen through (a little fall-off at the corners, a fine grain), but for the home movie, which has its own stock; and the grade: the room as it is muted and colder, the dream in full colour, with the colour coming in at Lipton's, draining at the waking, coming back first to his stage when the band comes in, in a pocket that grows as the camera draws back, and everywhere on The End's swell.
   - `piano-figure.ts`: the gold piano the planetarium draws among the stars, and over the city at the end.
   - `transitions.ts`: the covers the stage changes place under (the spotlight's iris, the curtain, white, dark, the door, the iris).
   - `physics.ts`: gravity and hops. `index.ts`: the performance (the camera, the covers, the credits, the YouTube soundtrack).
