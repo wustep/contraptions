@@ -460,6 +460,12 @@ changed, in the order of the film, and then what runs through it:
 - **The shell going** (188 → 192.4): it paled into the air as a whole, but kept its hard rim, so by the cut back in it
   stood as a see-through bowl with the ridges and the sunlight showing through it (a fresh critic's note). As it pales
   now its hull gives way to a blur of itself, wider as it goes, and it melts into the cloud.
+- **Into the bucket** (26.4 → 26.5): the deck's edge is at the bucket's rim, and she dropped straight off it, so her
+  side went through the bucket's wall on the way in (a contact sweep at ten frames a second). She hops off the edge now,
+  a ball's height up, clear of the rim until she is over the bucket, and drops in on the same pulse.
+- **Together at the end** (212.3 → 251): on the touch, little Hannah rebounded to where she rests in the prologue, a
+  whole ball's width away, and the two sat apart for the rest of the film. At the end the touch holds: the child rides
+  her mother back to her place under it and stays against her.
 
 ## Arrival nods
 
