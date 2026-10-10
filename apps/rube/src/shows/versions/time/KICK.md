@@ -394,7 +394,8 @@ each world, and changed:
   so a link to the show unfurled with her old colour. It is made again from the show as it is; nothing else in it moved.
 - **Ariadne's goodbye** (234.6 to 235.2): when he dropped out of his seat and rolled away up the aisle, only her eyes
   went with him, and a viewer new to it saw him go home alone, "teal just gone" (a cold critic's note). On the next
-  beat she gives a little hop toward him and settles back into her seat, still watching him go. The camera holds a
+  beat she rises off her seat toward him and stays up, leaning after him, until he is through the door, then settles
+  back (a hop up and straight down was gone in half a second, and a second cold critic saw nothing there). The camera holds a
   little to her side of him until it is over, so under Zoom too she is in the picture for it.
 - **His lever** (172.2 to 175.8): the lever that draws the bolt and lets Mal go was a short iron stroke on the cage's
   dark iron, so his choice had no gesture; a viewer new to it saw him simply stay with her, then be on the roof (a cold
@@ -426,7 +427,8 @@ each world, and changed:
 - **The guards fire on them** (131.8 to 139.5): the snowmobiles chased them down the face, and nothing they did
   touched them; to a viewer new to it the chase had "no threat that lands" (a cold critic's note). On alternate beats
   from the first jump to the ledge a rider's gun flashes, and a tenth of a second on a spurt of snow kicks up on
-  Fischer's track just ahead of him, so he rides into the spray (behind him, the last of the three, it fell off a
+  Fischer's track just ahead of him, a dark streak of the round flying in from the guard's side first (without it a
+  second cold critic read the spurts as his own ski spray), so he rides into the spray (behind him, the last of the three, it fell off a
   tight frame): a dark pock and a spray in the snow's blue shade (white on white was lost). Never a hit: Mal's shot,
   four seconds later, is the one that lands.
 
