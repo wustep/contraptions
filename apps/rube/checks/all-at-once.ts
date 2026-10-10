@@ -183,6 +183,27 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   }
   check('all at once: Joy and Waymond, and Evelyn under Zoom, are never left cut by the frame\'s edge for more than a second', sliced.length === 0, sliced.join(', '))
 
+  // Seen whole, not as specks: at 1280×720 Evelyn, and Joy and Waymond while they are in the frame, are never under
+  // 14 px across for more than 2 s, but in the hush, where the two of them are small against the bagel on purpose.
+  const specks: string[] = []
+  for (const who of ['evelyn', 'joy', 'waymond'] as const) {
+    let from = -1
+    for (let t = 0; t <= CREDITS_AT + 0.05; t += 0.1) {
+      const h = who === 'evelyn' ? show.at(t) : null
+      const b = who === 'evelyn' ? (h!.hidden ? null : h) : who === 'joy' ? show.joy(t) : show.waymond(t)
+      const f = cam(t)
+      const inFrame = !!b && Math.abs(b.x - f.x) < (f.cells * 8) / 9 && Math.abs(b.y - f.y) < f.cells / 2
+      const hush = t > JUMPS.void && t < fight(8)
+      const small = inFrame && !hush && (2 * R * ((b as { scale?: number }).scale ?? 1) * 720) / f.cells < 14
+      if (small && from < 0) from = t
+      if (!small && from >= 0) {
+        if (t - from > 2) specks.push(`${who} ${from.toFixed(1)}–${t.toFixed(1)}`)
+        from = -1
+      }
+    }
+  }
+  check('all at once: the family is never a speck: at least 14 px across at 1280×720, but in the hush', specks.length === 0, specks.join(', '))
+
   // The ball is never out of sight for long.
   let hidden = 0
   let longest = 0

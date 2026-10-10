@@ -916,12 +916,20 @@ The notes went back to the builders who made each part, who still had their cont
   Evelyn drifts and comes back. The window already shows the red carpet last at 308.9 s, so it would have repeated a
   beat rather than added one.
 - **A director's pass: kindness, up close.** The great hit's turn, the film's thesis, was shot at 4 to 6.3 cells:
-  Evelyn about 10 px, and the eyes she gives each jumper specks. The camera now comes in on each kindness (2.6 to
+  at 1280×720, Evelyn 30 to 47 px across, but the eyes she gives each jumper small, and nothing framing the giving. The camera now comes in on each kindness (2.6 to
   3.1 cells), framed between her and the jumper so her eye is seen to fly to it and land: the glove's punch going
   soft, the trap's bite a toss, the mallet's blow a scoop. It opens out for the lob under the ceiling (4.3 to 4.7
   cells, keyed from the throw, so she is never at the frame's top), comes in again on the claw, holds the cradle as
   a two-shot with Waymond watching across the table, and closes to 2.2 cells as she steps down to him. Under Zoom her
   worst is 0.88 of the half-frame.
+- **A pass for size, by measure.** The kindness pass's first account said Evelyn was "about 10 px" in the fight's
+  wide shots. That was measured from a contact sheet's thumbnail: at 1280×720 she was 30 to 47 px across. It is
+  corrected above. Measured properly over the whole show, Evelyn, and Joy and Waymond while in the frame, are at
+  least 14 px across everywhere but the hush (down to 11 px, small against the bagel on purpose). `check:shows` now
+  holds it (694 checks); at a 30 px threshold the check fails where it should, on the opening's wide shot, the
+  pull, the canyon's breath and the peak's wide shots.
+- **Overview, after the pictures.** The bars, the old print, the heart and the cartoon iris, karaoke's tracking
+  band and the wall of films all frame the whole world as the picture's own, and she is in each.
 
 ## The looks
 
@@ -1018,6 +1026,7 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   - Home's last three hits are struck.
 - **The family:**
   - Joy and Waymond, and Evelyn under Zoom, are never left cut by the frame's edge for more than a second;
+  - none of the three is under 14 px across at 1280×720 for more than 2 s, but in the hush;
   - Joy and Waymond never jump;
   - each only comes and goes out of shot, or at a jump, when the whole world changes;
   - there are never two of anyone.
