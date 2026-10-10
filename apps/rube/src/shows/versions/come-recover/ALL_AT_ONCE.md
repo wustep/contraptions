@@ -1042,6 +1042,12 @@ The notes went back to the builders who made each part, who still had their cont
 - **Spoken words at other speeds.** The described track and the lines are timed to be heard whole at 1×; at 2× or
   4× each would have cut the last off. The player now speaks them only at 1× or slower (a shared change); on the real
   page, playing through the taxes at 2× said nothing, and at 1× said the description and both lines.
+- **A review of the shared code this take added.** The words path in `player.ts` was read end to end. One fault:
+  the `least` clamp read a card's width twice a frame right after writing its styles, forcing a layout on every
+  frame a subtitle, chapter or credit was up (about a third of the show). A card's width goes as its unit, so it is
+  measured once as it is built; sixteen screenshots, phone and desktop, including the long credit that the clamp
+  shrinks on a phone, are pixel for pixel as before. An unused class on the captions toggle is gone. The speech's
+  bookkeeping, the empty description cards and the C key's handling were checked and are as intended.
 
 ## The looks
 
