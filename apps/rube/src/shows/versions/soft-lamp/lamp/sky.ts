@@ -426,7 +426,8 @@ function moon(ctx: Ctx, t: number, cloud: number, lens: Lens): void {
   // At the sky's depth, but never risen behind the top of the frame.
   const at = onWall(lens, DEPTH.sky, GLASS.x1 - 0.55 - u * 0.75, GLASS.y1 - 1.6 - u * 2.0)
   const x = at.x
-  const y = Math.max(GLASS.y0 + 0.24, at.y)
+  // Never risen behind the top of the frame (a wide frame's top is at the glass's).
+  const y = Math.max(GLASS.y0 + 0.24, lens.y - lens.size / 2 + 0.42, at.y)
   // Not through the rain: behind the cloud until the rain has gone.
   const a = up * (1 - 0.82 * cloud) * (1 - smooth(rainAt(t), 0.04, 0.25))
   const halo = ctx.createRadialGradient(x, y, 0.15, x, y, 1.2)

@@ -1189,6 +1189,13 @@ painterly look (taken, the sixty-ninth pass). The other two would change the pie
      down, a hair nearer and back (a tenth of a pixel a second at 1080p), too slow to see as a move; over a few minutes
      the city shifts faintly behind the bars, as it does to anyone sitting at a desk. The drift keeps between the plant,
      the lamp's foot and the print at the frame's edges; `check:shows` holds it there all the while, and slow.
+190. **The two takes, side by side, to a reviewer**: the same twelve moments from each. Its verdict: the still take is
+     the one to leave on (one room held, small things moving in it, nothing asking you to look up), and the first is
+     better close (the machine twice the size, the person legible, the moon framed). Put to Stephen. From its list for
+     the still take: the moon rose out of the top of its wide frame at the end (it stays in frame now, in any frame);
+     the reflection was a smudge there (it is a third stronger in the wide frames). Not taken: framing it higher (Zoom
+     then loses the ball in the cup, the check said, 77% of the time), framing it tighter (it cuts the plant or the
+     lamp's foot), and the closing hand at the frame's edge (the lamp stands there).
 
 **Subtracted:** the camera following the ball along the sill (a held frame now); the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
