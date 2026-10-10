@@ -52,7 +52,8 @@ function line(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number
 }
 
 /** One card, whole, at full light: its top middle at (cx, y). */
-function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number, u: number): void {
+/** Draws a card from its top middle, and says where its words end. */
+function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number, u: number): number {
   const glow = u * 1.4
   if (c.role) {
     y += line(ctx, c.role.toUpperCase(), cx, y, { size: u * 1.9, weight: 600, spacing: 0.34 }, LEADING, GOLD, 0)
@@ -97,6 +98,26 @@ function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number
     y += line(ctx, text, cx, y, f, LEADING, INK, glow)
     ctx.globalAlpha = 1
   })
+  return y
+}
+
+/**
+ * A card's veil (`TitleCard.shade`): a soft oval of the dark round its words, as wide as two fifths of the frame and a
+ * little taller than the card, as the page draws it (`.stage-words .veil`).
+ */
+function veil(into: CanvasRenderingContext2D, cx: number, top: number, bottom: number, u: number, a: number): void {
+  const rx = u * 67.5
+  const ry = (bottom - top) * 0.85 + u * 6
+  into.save()
+  into.translate(cx, (top + bottom) / 2)
+  into.scale(rx, ry)
+  const g = into.createRadialGradient(0, 0, 0, 0, 0, 1)
+  g.addColorStop(0, `rgba(5, 7, 16, ${a.toFixed(3)})`)
+  g.addColorStop(0.55, `rgba(5, 7, 16, ${(a * 0.6).toFixed(3)})`)
+  g.addColorStop(1, 'rgba(5, 7, 16, 0)')
+  into.fillStyle = g
+  into.fillRect(-1, -1, 2, 2)
+  into.restore()
 }
 
 /** The ball they are: a disc with an ink ring and a little glow, or 'slab:' and a colour for a bar in its footprint. */
@@ -143,7 +164,14 @@ export function wordPainter(w: number, h: number, dx = 0, dy = 0): (into: Canvas
     for (const c of cards) {
       if (c.light <= 0) continue
       ctx.clearRect(0, 0, w, h)
-      card(ctx, c, c.at[0] * w, (c.at[1] + (c.rise ?? 0) / 100) * h, u)
+      const top = (c.at[1] + (c.rise ?? 0) / 100) * h
+      const bottom = card(ctx, c, c.at[0] * w, top, u)
+      if (c.shade) {
+        into.save()
+        into.setTransform(1, 0, 0, 1, 0, 0)
+        veil(into, dx + c.at[0] * w, dy + top, dy + bottom, u, c.shade * Math.min(1, c.light))
+        into.restore()
+      }
       into.save()
       into.setTransform(1, 0, 0, 1, 0, 0)
       into.globalAlpha = Math.min(1, c.light)

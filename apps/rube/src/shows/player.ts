@@ -741,7 +741,11 @@ stageRoot.append(wordsLayer)
 const wordCards = new Map<string, HTMLElement>()
 
 function buildCard(c: TitleCard): HTMLElement {
-  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}` })
+  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}${c.shade ? ' shaded' : ''}` })
+  if (c.shade) {
+    node.style.setProperty('--shade', String(c.shade))
+    node.append(el('div', { class: 'veil' }))
+  }
   if (c.role) node.append(el('div', { class: 'role' }, [c.role]))
   for (const n of c.names) {
     if (typeof n === 'string') {

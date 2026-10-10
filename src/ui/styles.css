@@ -797,6 +797,19 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   text-shadow: 0 0 calc(var(--u) * 1.4) rgba(244, 238, 223, 0.28);
   will-change: opacity, filter;
 }
+/* A card's veil (`TitleCard.shade`): a soft oval of the dark round its words, behind them, as the video's frames draw it
+   (`words.ts`). */
+.stage-words .card.shaded { isolation: isolate; }
+.stage-words .card .veil {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: calc(var(--u) * 135);
+  height: calc(170% + var(--u) * 12);
+  z-index: -1;
+  background: radial-gradient(closest-side, rgb(5 7 16 / var(--shade)), rgb(5 7 16 / calc(var(--shade) * 0.6)) 55%, rgb(5 7 16 / 0));
+}
 .stage-words .role {
   font-size: calc(var(--u) * 1.9);
   font-weight: 600;
