@@ -876,6 +876,8 @@ window.
     says the soundtrack would not load, and for a YouTube-only show that a saved video is silent (`player.ts`).
     And after a video is saved the panel said "Saved: picture and music" whatever the file held; it now says the file
     is silent where the music is YouTube's (muting does not change what is recorded, only what is heard).
+    The player's other words on sound, read for this show: "the site's own copy is playing it" can only come where a
+    show has a file (`fellBack`), so never here; loading, held and blocked are true as they stand.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
