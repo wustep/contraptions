@@ -241,7 +241,7 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   fillBox(ctx, k, GARDEN.terrace - 0.03, GARDEN.back, GARDEN.terrace + 0.03, cut, rgba(HOME.lawnDark, 0.35))
   if (f.y1 + 1 > NEAR_EDGE) {
     const bottom = f.y1 + 1
-    fillBox(ctx, k, x0, NEAR_EDGE, x1, bottom, vgrad(ctx, k, NEAR_EDGE, NEAR_EDGE + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
+    fillBox(ctx, k, x0 - 0.05, NEAR_EDGE, x1, bottom, vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
     ctx.save()
     ctx.beginPath()
     ctx.rect(x0 * k, NEAR_EDGE * k, (x1 - x0) * k, (bottom - NEAR_EDGE) * k)
@@ -312,7 +312,7 @@ function porch(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   fillBox(ctx, k, x0, FLOOR, x1, cut, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
   if (f.y1 + 1 > NEAR_EDGE) {
     const bottom = f.y1 + 1
-    fillBox(ctx, k, x0, NEAR_EDGE, x1, bottom, vgrad(ctx, k, NEAR_EDGE, NEAR_EDGE + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
+    fillBox(ctx, k, x0, NEAR_EDGE, x1 + 0.05, bottom, vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
     ctx.save()
     ctx.beginPath()
     ctx.rect(x0 * k, NEAR_EDGE * k, (x1 - x0) * k, (bottom - NEAR_EDGE) * k)
@@ -331,7 +331,11 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   const slabTop = HOUSE.ceil - 0.28
   const foot = FLOOR + HOUSE.slab
   // The ground under everything, cut: warm, darkening as it goes down.
-  shape(ctx, k, box(fx0, FLOOR, ex1, f.y1 + 1), vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]), INK, w * 0.8)
+  shape(ctx, k, box(fx0, FLOOR, ex1, f.y1 + 1), vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
+  // Its cut edges in ink only down to where the porch's and the garden's ground is cut: below that it is one earth.
+  const edge = Math.min(f.y1 + 1, NEAR_EDGE)
+  line(ctx, k, [fx0, FLOOR], [fx0, edge], INK, w * 0.8)
+  line(ctx, k, [ex1, FLOOR], [ex1, edge], INK, w * 0.8)
   ground(ctx, k, f, w, foot)
   // The roof: its section, eave to eave, and the loft inside it.
   const e = HOUSE.eave
@@ -409,14 +413,19 @@ function ground(ctx: C2D, k: number, f: Frame, w: number, foot: number): void {
   ctx.restore()
 }
 
-/** The earth's soft bands, darker going down, and the stones in it, from `top` down, across `xa` to `xb`. */
+/**
+ * The earth's soft bands, darker going down, and the stones in it, from `top` down, across `xa` to `xb`. The bands and
+ * the stones lie from one origin wherever it is cut (under the house's slab), so the earth under the house, the porch
+ * and the garden is one ground, its strata running on across, not three pasted panels. Callers clip to their cut.
+ */
+const EARTH_AT = FLOOR + HOUSE.slab
 function earth(ctx: C2D, k: number, xa: number, xb: number, top: number, bottom: number): void {
   // The bands: each a little darker, their tops wandering gently.
   const bands = [0.55, 1.35, 2.4, 3.8]
   bands.forEach((d, i) => {
     ctx.beginPath()
     ctx.moveTo(xa * k, bottom * k)
-    for (let x = xa; x <= xb + 0.2; x += 0.2) ctx.lineTo(x * k, (top + d + 0.07 * Math.sin(x * 1.3 + i * 2.1) + 0.04 * Math.sin(x * 3.1 + i)) * k)
+    for (let x = xa; x <= xb + 0.2; x += 0.2) ctx.lineTo(x * k, (EARTH_AT + d + 0.07 * Math.sin(x * 1.3 + i * 2.1) + 0.04 * Math.sin(x * 3.1 + i)) * k)
     ctx.lineTo(xb * k, bottom * k)
     ctx.closePath()
     ctx.fillStyle = rgba(mixHex(HOME.floorShade, INK, 0.35), 0.1 + 0.03 * i)
@@ -425,9 +434,9 @@ function earth(ctx: C2D, k: number, xa: number, xb: number, top: number, bottom:
   // Stones in the earth, a few to a cell, flattened as stones lie.
   ctx.fillStyle = rgba(mixHex(STONE, HOME.floorShade, 0.55), 0.42)
   for (let i = Math.floor(xa); i < xb; i++)
-    for (let j = 0; j < 6; j++) {
-      const [x, y] = [i + hash(i, j, 41), top + 0.35 + j * 0.7 + 0.5 * hash(i, j, 42)]
-      if (y > bottom || hash(i, j, 43) < 0.45) continue
+    for (let j = 0; j < 9; j++) {
+      const [x, y] = [i + hash(i, j, 41), EARTH_AT + 0.35 + j * 0.7 + 0.5 * hash(i, j, 42)]
+      if (y < top || y > bottom || hash(i, j, 43) < 0.45) continue
       const r = 0.035 + 0.05 * hash(i, j, 44)
       ctx.beginPath()
       ctx.ellipse(x * k, y * k, r * 1.5 * k, r * k, (hash(i, j, 45) - 0.5) * 0.6, 0, Math.PI * 2)

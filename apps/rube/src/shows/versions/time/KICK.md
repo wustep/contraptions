@@ -397,6 +397,10 @@ each world, and changed:
   garden's ground is, with the same earth under it.
 - **The hotel's skyline** (the dream stack, seen whole): its towers began a sixth of the way in from the frame's left,
   flat dark before them (a critic's note). They run on past both ends now; every tower that was there is unchanged.
+- **One earth under the home** (244 to the end, seen tall or whole): with the porch and the garden cut over earth, the
+  ground under the house, the porch and the garden was three panels, their bands and stones starting at different
+  depths, their shading too, and the house's ink edge running down between them (a critic's note). The bands and
+  stones lie from one origin now, in one shading, and the house's cut edge stops where theirs begins.
 
 ## Inception nods
 
