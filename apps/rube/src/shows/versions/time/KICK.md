@@ -401,6 +401,8 @@ each world, and changed:
   ground under the house, the porch and the garden was three panels, their bands and stones starting at different
   depths, their shading too, and the house's ink edge running down between them (a critic's note). The bands and
   stones lie from one origin now, in one shading, and the house's cut edge stops where theirs begins.
+- **The share card** (`public/shows/time/opus55.png`, the frame at 49.2): it was made before Ariadne's teal deepened,
+  so a link to the show unfurled with her old colour. It is made again from the show as it is; nothing else in it moved.
 
 ## Inception nods
 
