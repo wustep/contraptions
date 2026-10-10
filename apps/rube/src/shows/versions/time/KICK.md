@@ -374,9 +374,10 @@ each world, and changed:
   own, from the frame's top down, and over the terminal's roof it met the morning's on a ruled vertical line, the
   morning's grey-green beside its warm (a critic's note). It and the glare at the end come in only from the roof's
   height down now, out of the morning's sky.
-- **The wings' roots** (213.7 to 236): seen head on, each wing began a little out from the hull's side, so sky showed
-  between the body and the wing, plainest close up and in a tall frame (a critic's note). They start under the hull
-  now, and meet it.
+- **The wings' roots** (62 to 68, 213.7 to 236): seen head on, each wing began a little out from the hull's side, so
+  sky showed between the body and the wing; started further in, its root lay over the cut ring and ended square (two
+  critics' notes, close up and in a tall frame). Each wing now starts well inside the hull and is clipped to outside
+  its outline: it goes in under the ring, as a wing behind a cut hull would.
 - **The jet bridge's wheels** (231 to 238): docked, its leg stood right on the plane's outer main gear, the two sets of
   black wheels merged into one shape. Its leg is further back along it now, clear of the gear.
 - **The picture in the hotel's corridor** (92 to 107): it hung right over a wall lamp, the lamp's shade showing under
@@ -492,6 +493,9 @@ each world, and changed:
 - **Under the cloud deck** (222 to 225, plainest in a tall frame): coming down out of the deck, the air under the wings
   was one flat gold fill, half the picture, until the ground came up (two critics' notes). Loose wisps of lower cloud
   lie in it now, lit along their tops and cool beneath, rising past with the deck.
+- **The garden door folded open** (251 to the end): it hung from the floor's back line, a third of a cell higher than its
+  own doorway, so folded open against the house it stood taller than the doors beside it and rose past the wall
+  (a critic's note in a tall frame). It hangs in the doorway's front plane now, the doorway's height.
 
 ## Inception nods
 

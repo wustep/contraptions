@@ -545,7 +545,9 @@ function sunOnFloor(ctx: C2D, k: number): void {
 /** A door leaf swinging about a hinge at the doorway's far side: `phi` 0 shut (in the doorway), π/2 back flat. */
 function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number, fill: string, w: number, glass: boolean, depth = 0.33): void {
   const s = Math.sin(phi)
-  const hb = HOUSE.back
+  // The glass door hangs in the doorway's front plane, as the wall it opens out of is cut (on the floor's back line it
+  // stood a third of a cell higher than its own opening, and folded open it rose past the wall over it).
+  const hb = glass ? FLOOR : HOUSE.back
   const fb = FLOOR - depth * (1 - Math.cos(phi))
   const A: Pt = [hx, hb]
   const B: Pt = [hx, hb - H]
@@ -705,7 +707,7 @@ export function drawHome(p: p5, c: Ctx): void {
   table(ctx, k, w)
   drawTop(p, ctx, k, t)
   // The glass door onto the garden, swinging out as he goes through.
-  leaf(ctx, k, GLASS.hinge, GLASS.w, 2.47, glassDoor(t), HOME.glass, w * 0.7, true)
+  leaf(ctx, k, GLASS.hinge, GLASS.w, FLOOR - HOUSE.endHead, glassDoor(t), HOME.glass, w * 0.7, true)
   // The end wall over the doorway is cut in front of it: swinging out, the leaf goes behind it, not over it.
   shape(ctx, k, box(HOUSE.end[0], HOUSE.ceil - 0.28, HOUSE.end[1], HOUSE.endHead), CUT, INK, w)
   shades(p, k, t)
