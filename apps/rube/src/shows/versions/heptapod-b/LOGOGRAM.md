@@ -466,6 +466,13 @@ changed, in the order of the film, and then what runs through it:
 - **Together at the end** (212.3 → 251): on the touch, little Hannah rebounded to where she rests in the prologue, a
   whole ball's width away, and the two sat apart for the rest of the film. At the end the touch holds: the child rides
   her mother back to her place under it and stays against her.
+- **The palm opening and closing** (118.75, 133.2): it was the whole flat hand shrunk small, so for a frame or two its
+  fingers stood as short ticks round the limb's end, like an insect's legs (a fresh critic's note). Closed, the fingers
+  lie together out of the limb's end now, and fan out to the flat palm as it opens.
+- **The cloud taking the shell** (188.75 → 190.25): as it paled the far ridges' lines showed through its body. A body of
+  mist in its shape thickens as it melts and thins after it, so it greys into the cloud.
+- **Ian out of shot** (121 → 127): backing off from the palm he stopped on the frame's left edge, half cut, slipping in
+  and out as the camera drifted. He backs off out of shot now, and walks back in once the ring has closed.
 
 ## Arrival nods
 
