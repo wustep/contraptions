@@ -142,8 +142,9 @@ const INCH: [number, number, number][] = [
   [253.25, 254.3, 0.335],
   [258.2, 259.4, 0.265],
 ]
-/** The solo's two high accents: the hi-hat's open cymbal, at the edge of the spot, shivers. */
-export const SHIVER = [on(241.325), on(262.072)]
+/** The solo's high accents: the hi-hat's open cymbal, at the edge of the spot, shivers. Its first, and the two-note climb
+ * near its end (the high D, then the peak). */
+export const SHIVER = [on(241.325), on(261.248), on(262.072)]
 /** Its biggest (the F the solo comes back in on, every valve up): the spot's lamp flares. */
 export const FLARE = on(246.549)
 
@@ -367,6 +368,8 @@ const SOLO_PITCH: [number, number][] = [
   [264.8, 79], [265.15, 82], [265.2, 84], [265.25, 85], [265.3, 86], [265.35, 88], [265.5, 87], [265.75, 86], [266.05, 84], [266.45, 86],
   [267.75, 0], [268.7, 84], [268.75, 85], [268.8, 86], [269.4, 0],
 ]
+/** Whether the solo is sounding a note at `t` (false in its rests). */
+export const SOLO_SOUNDING = (t: number): boolean => t > AT.trumpet - 0.4 && t < 268.3 && pitchAt(t) > 0
 const pitchAt = (t: number): number => {
   let m = 0
   for (const [ti, mi] of SOLO_PITCH) {
@@ -621,11 +624,36 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
   const band = smooth(t, SOLO[0][0] - 0.05, SOLO[0][0] + 0.1) * (1 - smooth(t, DARK[0], DARK[1]))
   if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND - 1.1, 3.2, M.bulb, band * (0.1 + 0.08 * level(t)), 1.2, 0.8)
 
-  // The floor.
+  // The floor: old boards, wine-dark, the room's light lying on them and dying into the black under the frame.
   p.noStroke()
   p.fill(M.black)
   p.rect(S(WALL_L - 30), S(GROUND), S(WALL_R - WALL_L + 60), S(20))
-  p.stroke(edge)
+  {
+    const deck = 0.8
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createLinearGradient(0, S(GROUND), 0, S(GROUND + deck))
+    g.addColorStop(0, mixHex(stone, M.redDeep, 0.35))
+    g.addColorStop(1, M.black)
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect(S(WALL_L), S(GROUND), S(WALL_R - WALL_L), S(deck))
+    ctx.restore()
+    // The boards' ends: a staggered joint every so often, fading with the light as the deck goes down.
+    p.strokeWeight(lw * 0.6)
+    for (let x = WALL_L + 0.35, i = 0; x < WALL_R - 0.1; x += 0.62, i++) {
+      const o = (i % 2) * 0.31
+      p.stroke(rgba(INK, 0.09 + 0.09 * L))
+      p.line(S(x + o), S(GROUND + 0.04), S(x + o), S(GROUND + 0.16))
+      p.stroke(rgba(INK, 0.06 + 0.06 * L))
+      p.line(S(x + 0.31 - o), S(GROUND + 0.2), S(x + 0.31 - o), S(GROUND + 0.36))
+      p.stroke(rgba(INK, 0.03 + 0.03 * L))
+      p.line(S(x + o), S(GROUND + 0.4), S(x + o), S(GROUND + 0.6))
+    }
+    // The bulbs' and the band's warmth on the boards.
+    glow(p, k, (WALL_L + WALL_R) / 2, GROUND + 0.05, 5.5, M.bulb, 0.06 + 0.06 * L, 1.4, 0.12)
+    if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND + 0.06, 2.4, M.bulb, band * 0.14, 1.3, 0.12)
+  }
+  p.stroke(rgba(M.brass, 0.18 + 0.2 * L))
   p.strokeWeight(lw)
   p.line(S(WALL_L), S(GROUND), S(WALL_R), S(GROUND))
 
@@ -1250,6 +1278,7 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   glow(p, k, PIVOT[0], GROUND - 0.02, 1.0 + 0.2 * fl, M.spot, 0.3 * on1 * (1 + 0.9 * fl), 1.3, 0.28)
   glow(p, k, HORN[0] + 0.1, HORN[1] + 0.1, 0.9, M.spot, 0.18 * on1 * (1 + 1.2 * fl))
   drawMotes(p, k, t, on1)
+  drawSolo(p, k, t, on1)
   // The lamp itself: a black can in the crown, its lens lit.
   p.stroke(rgba(INK, 0.35))
   p.strokeWeight(Math.max(1, k * 0.02))
@@ -1261,6 +1290,258 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   p.fill(rgba(M.spot, Math.min(1, 0.5 + 0.5 * on1 + 0.3 * fl)))
   p.ellipse(0, S(0.09), S(0.2), S(0.05))
   p.pop()
+}
+
+/**
+ * The solo, written in the air. Each phrase the trumpet plays leaves the bell as a thread of warm light, set at the
+ * height of its notes as it goes out (the high ones higher), drifting off through the spot and up into the vault and
+ * fading, so the dark fills with the solo while she inches toward him: one thread a phrase. The last phrase, the run to the top as she rolls down to him, goes highest.
+ */
+const SOLO_DT = 0.025
+/** The line's pitch at `s`: the measured one, eased over a few hundredths so it bends from note to note. */
+function sungAt(s: number): number {
+  let acc = 0
+  let n = 0
+  for (let j = -4; j <= 4; j++) {
+    const m = pitchAt(s + j * 0.02)
+    if (m) {
+      acc += m
+      n++
+    }
+  }
+  return n ? acc / n : 0
+}
+const SOLO_PHRASES: { s: number; m: number }[][] = (() => {
+  const out: { s: number; m: number }[][] = []
+  let cur: { s: number; m: number }[] = []
+  for (let s = AT.trumpet - 0.4; s < 268.3; s += SOLO_DT) {
+    const m = pitchAt(s) ? sungAt(s) : 0
+    if (m) cur.push({ s, m })
+    else if (cur.length) {
+      out.push(cur)
+      cur = []
+    }
+  }
+  if (cur.length) out.push(cur)
+  return out
+})()
+
+/** Where the bell's mouth is at show time `s`, as the trumpet holds it. (Fixed for a given `s`, so kept once worked out:
+ * the threads ask it of every point of every phrase, every frame.) */
+const MOUTH = new Map<number, Pt>()
+function mouthAt(s: number): Pt {
+  const known = MOUTH.get(s)
+  if (known) return known
+  const q = mouthOf(s)
+  MOUTH.set(s, q)
+  return q
+}
+function mouthOf(s: number): Pt {
+  const a = bellLift(s)
+  const [u, v] = [0.68, 0.16]
+  return [HORN[0] + Math.cos(a) * u - Math.sin(a) * v, HORN[1] + Math.sin(a) * u + Math.cos(a) * v]
+}
+
+/**
+ * And the solo paints the city they are going to. Each phrase, once it is played, settles out of its improvised shape
+ * into a stretch of a Paris skyline hung in the dark over the band: mansard roofs and chimneys, a dome, and on the last
+ * run, as she rolls down to him, the tower. By the knock the whole skyline is there in gold, and the iris opens on it.
+ * The skyline, left to right, as a polyline in this frame.
+ */
+/** The windows in the skyline's houses, lit as their stretch settles. */
+const WINDOWS_AT: Pt[] = []
+export const SKYLINE: Pt[] = (() => {
+  const base = 1.32
+  const out: Pt[] = [[2.3, base]]
+  // Houses: [width, wall, mansard]; low under the trumpet, taller either side of it.
+  const houses: [number, number, number][] = [
+    [0.36, 0.34, 0.15], [0.42, 0.46, 0.17], [0.32, 0.28, 0.13], [0.4, 0.2, 0.11], [0.38, 0.22, 0.11], [0.42, 0.18, 0.11],
+    [0.36, 0.26, 0.12], [0.4, 0.4, 0.16],
+  ]
+  let x = 2.3
+  houses.forEach(([w, wall, roof], i) => {
+    const top = base - wall
+    for (let j = 0; j < Math.floor(w / 0.14); j++) for (let r = 0; r * 0.13 + 0.12 < wall; r++) if (hash(i * 13 + j, r + 71) > 0.35) WINDOWS_AT.push([x + 0.08 + j * 0.14, top + 0.1 + r * 0.13])
+    out.push([x, top], [x + 0.07, top - roof])
+    if (i % 2 === 0) out.push([x + w * 0.35, top - roof], [x + w * 0.35, top - roof - 0.1], [x + w * 0.45, top - roof - 0.1], [x + w * 0.45, top - roof])
+    out.push([x + w - 0.07, top - roof], [x + w, top])
+    x += w
+  })
+  // The dome on its drum.
+  const dc = x + 0.3
+  const drum = base - 0.42
+  out.push([x, drum], [dc - 0.26, drum])
+  for (let i = 0; i <= 10; i++) {
+    const a = Math.PI + (i / 10) * Math.PI
+    out.push([dc + Math.cos(a) * 0.26, drum + Math.sin(a) * 0.3])
+  }
+  out.push([dc + 0.26, drum], [dc + 0.32, base - 0.24])
+  x = dc + 0.32
+  out.push([x + 0.1, base - 0.24], [x + 0.1, base - 0.1])
+  // The tower: its feet, the first platform, the waist, the spire.
+  const tc = x + 0.45
+  const H = 0.98
+  const half = (v: number) => 0.28 * Math.pow(1 - v, 2.2) + 0.012
+  for (let i = 0; i <= 12; i++) {
+    const v = i / 12
+    out.push([tc - half(v), base - v * H])
+  }
+  for (let i = 12; i >= 0; i--) {
+    const v = i / 12
+    out.push([tc + half(v), base - v * H])
+  }
+  return out
+})()
+/** Where the tower's outline begins on the skyline, as a share of its length: the last run's stretch. */
+const SKY_LEN: number[] = (() => {
+  const acc = [0]
+  for (let i = 1; i < SKYLINE.length; i++) acc.push(acc[i - 1] + Math.hypot(SKYLINE[i][0] - SKYLINE[i - 1][0], SKYLINE[i][1] - SKYLINE[i - 1][1]))
+  return acc
+})()
+const TOWER_U = SKY_LEN[SKYLINE.length - 26] / SKY_LEN[SKY_LEN.length - 1]
+function skylineAt(u: number): Pt {
+  const L = SKY_LEN[SKY_LEN.length - 1] * Math.max(0, Math.min(1, u))
+  let i = 1
+  while (i < SKY_LEN.length - 1 && SKY_LEN[i] < L) i++
+  const f = (L - SKY_LEN[i - 1]) / Math.max(1e-9, SKY_LEN[i] - SKY_LEN[i - 1])
+  return [SKYLINE[i - 1][0] + (SKYLINE[i][0] - SKYLINE[i - 1][0]) * f, SKYLINE[i - 1][1] + (SKYLINE[i][1] - SKYLINE[i - 1][1]) * f]
+}
+
+/** A note blown at `s` (pitch `m`), seen at `t`, as the solo improvised it: where it has drifted to, and how much is left. */
+function blownAt(s: number, m: number, t: number): { x: number; y: number; a: number } {
+  const age = t - s
+  const [x0, y0] = mouthAt(s)
+  const out = 1 - Math.exp(-age / 1.3)
+  const x = x0 + 0.85 * out + 0.07 * age
+  const y = y0 - ((m - 70) / 16) * 0.38 * out - 0.045 * age + 0.03 * Math.sin(1.7 * age + s * 2.3)
+  const a = (1 - Math.exp(-age / 0.06)) * Math.max(0.5, Math.exp(-age / 4.2))
+  return { x, y, a }
+}
+/** Each note's place on the skyline, and when its phrase settles there. */
+const SETTLE: Map<number, { u: number; from: number; to: number }> = (() => {
+  const map = new Map<number, { u: number; from: number; to: number }>()
+  const lastI = SOLO_PHRASES.length - 1
+  const before = SOLO_PHRASES.slice(0, lastI).reduce((n, ph) => n + ph.length, 0)
+  let done = 0
+  SOLO_PHRASES.forEach((ph, j) => {
+    const end = ph[ph.length - 1].s
+    const last = j === lastI
+    ph.forEach((n, i) => {
+      const share = ph.length > 1 ? i / (ph.length - 1) : 0
+      // The last run is not carried anywhere: it draws the tower in place as it climbs (`drawTower`).
+      if (last) return
+      const u = (TOWER_U * (done + share * (ph.length - 1))) / Math.max(1, before)
+      map.set(n.s, { u, from: end + 0.5, to: end + 2.3 })
+    })
+    if (!last) done += ph.length
+  })
+  return map
+})()
+/** When the stretch of skyline over `x` has settled: the settling of the note that goes nearest it. */
+const LIT_AT: number[] = WINDOWS_AT.map(([wx]) => {
+  let best = Infinity
+  let at = Infinity
+  for (const st of SETTLE.values()) {
+    const d = Math.abs(skylineAt(st.u)[0] - wx)
+    if (d < best) { best = d; at = st.to }
+  }
+  return at
+})
+function drawWindows(ctx: CanvasRenderingContext2D, k: number, t: number, on1: number): void {
+  WINDOWS_AT.forEach(([x, y], i) => {
+    const a = smooth(t, LIT_AT[i] + 0.1 * (i % 5), LIT_AT[i] + 0.4 + 0.1 * (i % 5))
+    if (a <= 0) return
+    ctx.fillStyle = rgba(M.spot, 0.55 * a * on1)
+    ctx.fillRect((x - 0.025) * k, (y - 0.035) * k, 0.05 * k, 0.07 * k)
+  })
+}
+
+/** The last run: when it starts, and how far through it the tower is drawn, foot to spire to foot. */
+const LAST_RUN = SOLO_PHRASES[SOLO_PHRASES.length - 1]
+export const towerDrawn = (t: number): number => smooth(t, LAST_RUN[0].s, LAST_RUN[0].s + 0.8 * (LAST_RUN[LAST_RUN.length - 1].s - LAST_RUN[0].s))
+function drawTower(ctx: CanvasRenderingContext2D, k: number, t: number, on1: number): void {
+  const d = towerDrawn(t)
+  if (d <= 0) return
+  const u1 = TOWER_U + (1 - TOWER_U) * d
+  const path = new Path2D()
+  const n = 60
+  for (let i = 0; i <= n; i++) {
+    const [x, y] = skylineAt(TOWER_U + ((u1 - TOWER_U) * i) / n)
+    if (i === 0) path.moveTo(x * k, y * k)
+    else path.lineTo(x * k, y * k)
+  }
+  for (const [w, a0] of [[0.075, 0.1], [0.018, 0.75]] as const) {
+    ctx.lineWidth = w * k
+    ctx.strokeStyle = rgba(M.spot, a0 * on1 * 0.7)
+    ctx.stroke(path)
+  }
+  // The pen: a bright point where it is drawing.
+  if (d < 1) {
+    const [x, y] = skylineAt(u1)
+    ctx.fillStyle = rgba(M.spot, on1)
+    ctx.beginPath()
+    ctx.arc(x * k, y * k, 0.045 * k, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
+/** A note of the solo seen at `t`: improvised as it leaves the bell, then settling into its place in the skyline. */
+function threadAt(s: number, m: number, t: number): { x: number; y: number; a: number } {
+  const q = blownAt(s, m, t)
+  const st = SETTLE.get(s)
+  if (!st) return q
+  const f = smooth(t, st.from, st.to)
+  if (f <= 0) return q
+  const [tx, ty] = skylineAt(st.u)
+  return { x: q.x + (tx - q.x) * f, y: q.y + (ty - q.y) * f, a: q.a + (0.7 - q.a) * f }
+}
+
+/** Every point of the solo's threads that is lit at `t` (more than a quarter there), in this frame: what the checks see. */
+export function soloThreads(t: number): Pt[] {
+  const out: Pt[] = []
+  for (const phrase of SOLO_PHRASES) for (const n of phrase) {
+    if (n.s > t) break
+    const q = threadAt(n.s, n.m, t)
+    if (q.a > 0.25) out.push([q.x, q.y])
+  }
+  return out
+}
+
+function drawSolo(p: p5, k: number, t: number, on1: number): void {
+  if (on1 <= 0.01 || t < AT.trumpet - 0.4) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  // The segments, gathered into a few paths by how bright they are, so a thousand of them are a handful of strokes.
+  const LV = 10
+  const paths: Path2D[] = Array.from({ length: LV }, () => new Path2D())
+  for (const phrase of SOLO_PHRASES) {
+    if (phrase[0].s > t) break
+    let prev: { x: number; y: number; a: number } | null = null
+    for (const n of phrase) {
+      if (n.s > t) break
+      const q = threadAt(n.s, n.m, t)
+      // (No stroke between a note gone to its place in the skyline and the next one still leaving the bell.)
+      if (prev && q.a > 0.01 && Math.hypot(q.x - prev.x, q.y - prev.y) < 0.3) {
+        const lv = Math.min(LV - 1, Math.floor(Math.min(prev.a, q.a) * LV))
+        paths[lv].moveTo(prev.x * k, prev.y * k)
+        paths[lv].lineTo(q.x * k, q.y * k)
+      }
+      prev = q
+    }
+  }
+  // Two passes: a soft wide haze, and the bright thread in it.
+  for (const [w, a0] of [[0.075, 0.1], [0.018, 0.75]] as const) {
+    ctx.lineWidth = w * k
+    for (let lv = 0; lv < LV; lv++) {
+      ctx.strokeStyle = rgba(M.spot, a0 * on1 * ((lv + 0.5) / LV))
+      ctx.stroke(paths[lv])
+    }
+  }
+  drawTower(ctx, k, t, on1)
+  drawWindows(ctx, k, t, on1)
+  ctx.restore()
 }
 
 /** Dust in the spot's beam: a few motes turning slowly, each catching the light now and then. */

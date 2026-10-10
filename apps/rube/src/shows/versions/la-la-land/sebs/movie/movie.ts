@@ -4,6 +4,7 @@ import { alpha, box, carried, frame, glow, hash, part, ring, rgba, route, smooth
 import { hop } from '../physics'
 import { MOVIE_MAT as M } from '../worlds'
 import { box2, lerp, seg, shape, soft, trackAt, vgrad, type Key } from './movie-kit'
+import { birds, bunting, butterflies, clouds, farTrees, flowerBed, hedge, homeWall, lounger, mailbox, partyTable, poolRing, sailboat, summerSky, tree, umbrella } from './movie-sets'
 
 /**
  * The home movie: their life on eight-millimetre film, as it might have been.
@@ -36,8 +37,8 @@ const END = 395.3
 /** The gate opens from the screen to the frame, and closes back to the screen at the end. */
 const GATE0 = 345.9
 const GATE1 = 347.5
-const BACK0 = 390.0
-const BACK1 = 392.9
+const BACK0 = 391.4
+const BACK1 = 393.05
 /** The splices, each on the note that makes it: the party, the beach, the pool, the field, home. */
 const CUTS = [349.89, 358.539, 364.275, 373.516, 381.887]
 /** The film's tail through the gate: bare light. */
@@ -289,7 +290,19 @@ const MIA_KEYS: Key[] = [
 function miaAt(t: number): Pt {
   if (t >= CUTS[3]) return fieldFollow(t, -3.55, 4.62, 373.75, 0.78, R)
   const [x, y] = trackAt(MIA_KEYS, t)
-  return [x + rockAt(t), y]
+  return [x + rockAt(t), y - cheerAt(t)]
+}
+
+/** On the deck she bounces with him as he bounces higher on the board, and hops when he goes in. */
+function cheerAt(t: number): number {
+  let h = 0
+  for (const l of LANDS) {
+    const u = (t - l) / 0.24
+    if (u > 0 && u < 1) h = Math.max(h, 0.07 * Math.sin(Math.PI * u))
+  }
+  const u = (t - SPLASH) / 0.34
+  if (u > 0 && u < 1) h = Math.max(h, 0.14 * Math.sin(Math.PI * u))
+  return h
 }
 
 /** Her hand on the pram's handle, rocking it, until he is nearly home. */
@@ -399,24 +412,25 @@ export const movie = part<MovieState>(
     { t: 347.3, cells: 4.9, hold: [-3.0, -1.05] },
     { t: 349.6, cells: 4.3, hold: [-4.2, -1.0] },
     // The party; up with the balloons a little; back down for the candle.
-    { t: 352.2, cells: 4.3, hold: [-4.25, -1.1] },
-    { t: 355.0, cells: 4.8, hold: [-3.9, -1.75] },
-    { t: 357.4, cells: 4.2, hold: [-4.1, -0.95] },
+    { t: 352.2, cells: 3.5, hold: [-4.3, -1.3] },
+    { t: 355.0, cells: 4.3, hold: [-3.95, -1.85] },
+    { t: 357.4, cells: 3.6, hold: [-4.2, -1.25] },
     // The beach.
-    { t: 359.4, cells: 4.4, hold: [-3.6, -0.95] },
-    { t: 363.3, cells: 4.4, hold: [-3.9, -0.95] },
+    { t: 359.4, cells: 3.6, hold: [-4.5, -0.8] },
+    { t: 363.3, cells: 3.6, hold: [-4.6, -0.8] },
     // The pool: wider for the bounces, and the dive.
-    { t: 365.6, cells: 4.9, hold: [-2.7, -1.15] },
-    { t: 368.2, cells: 5.8, hold: [-2.0, -1.55] },
+    { t: 365.6, cells: 4.5, hold: [-2.6, -1.1] },
+    { t: 368.2, cells: 5.2, hold: [-2.0, -1.45] },
     { t: SPLASH, cells: 5.4, hold: [-1.6, -1.05] },
-    { t: 373.2, cells: 4.6, hold: [-1.9, -0.75] },
-    // The field, along with them.
-    { t: 376.0, cells: 4.6, hold: [1.5, -0.6], w: 0.4 },
-    { t: 380.4, cells: 4.4, hold: [4.2, -0.6], w: 0.5 },
-    // Home: on the couch; and out of the screen as the film runs out.
+    { t: 373.2, cells: 3.9, hold: [-2.4, -0.55] },
+    // The field, along with them: the ground low in the frame, so it is the flowers and the hills over them, not a
+    // meadow's worth of empty grass below.
+    { t: 376.0, cells: 4.6, hold: [1.5, -1.0], w: 0.4, off: [0, -0.55] },
+    { t: 380.4, cells: 4.4, hold: [4.2, -1.0], w: 0.5, off: [0, -0.55] },
+    // Home: on the couch, pushing slowly in on the three of them, held close until he has put the lamp out; then out of the screen as the film runs out.
     { t: 382.6, cells: 3.9, hold: [5.2, -0.62] },
-    { t: BACK0, cells: 3.7, hold: [5.3, -0.62] },
-    { t: 392.8, cells: 11.5, hold: [0.3, -0.45] },
+    { t: BACK0, cells: 3.2, hold: [5.3, -0.6] },
+    { t: 393.0, cells: 11.5, hold: [0.3, -0.45] },
     { t: 395.0, cells: 11.7, hold: [0.3, -0.45] },
   ],
 )
@@ -438,6 +452,22 @@ function gateAt(t: number, fr: Rect): { g: Rect; v: Rect; img: Rect } {
 
 /** One frame of film is 1/18 s: what the flicker, the weave and the dust change on. */
 const frameOf = (t: number): number => Math.floor(t * 18)
+
+/**
+ * The gate's weave: the picture is never quite still in the gate. Frame by frame it shifts a hair, mostly up and down
+ * (the claw pulling the film down), with a slow drift under it, and it jumps as each splice goes through. As a part
+ * of the frame's height, for the camera to carry, so the balls in the film weave with it and the gate stays put. Only
+ * while the film fills the frame.
+ */
+export function filmWeave(t: number): [number, number] {
+  const on = smooth(t, GATE1, GATE1 + 0.4) * (1 - smooth(t, BACK0 - 0.3, BACK0))
+  if (on <= 0) return [0, 0]
+  const fi = frameOf(t)
+  const drift = 0.0025 * Math.sin(t * 1.7) + 0.0015 * Math.sin(t * 4.3 + 1)
+  const dy = (hash(fi, 61) - 0.5) * 0.0075 + drift + spliceJump(t) * 0.12
+  const dx = (hash(fi, 62) - 0.5) * 0.0028
+  return [dx * on, dy * on]
+}
 
 function drawFilm(p: p5, t: number, c: Ctx): void {
   const { k } = c
@@ -474,10 +504,25 @@ function overFilm(p: p5, t: number, c: Ctx): void {
   if (shot === 3) overPool(p, t, c)
   if (shot === 5) overHome(p, t, c)
   // The film itself: its warm wash, its flicker, its weave, a speck of dust now and then, the gate's soft corners.
-  const weave = (hash(fi, 3) - 0.5) * 0.022 + spliceJump(t)
+  // (The picture weaves in the gate by the camera, `filmWeave`; the gate itself is still.)
+  const weave = 0
+  const full = smooth(t, GATE0, GATE1) * (1 - smooth(t, BACK0, BACK1))
+  // The stock: faded and warm, its blacks lifted, its whites gone to cream; the exposure breathing frame to frame.
   const flick = 0.07 + 0.035 * hash(fi, 5)
   ctx.fillStyle = rgba(M.warm, flick)
   ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  ctx.save()
+  ctx.globalCompositeOperation = 'multiply'
+  ctx.fillStyle = rgba(M.sepia, 0.12 + 0.04 * full)
+  ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  ctx.globalCompositeOperation = 'screen'
+  ctx.fillStyle = rgba(M.lift, 0.05)
+  ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  ctx.restore()
+  const breathe = (hash(fi, 6) - 0.5) * 0.07 + 0.025 * Math.sin(t * 2.1)
+  ctx.fillStyle = breathe > 0 ? rgba(M.beam, breathe * 0.6) : rgba(M.room, -breathe)
+  ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  if (t < TAIL) scratch(p, k, t, v)
   const vx = (v.x0 + v.x1) / 2
   const vy = (v.y0 + v.y1) / 2 + weave
   const vw = v.x1 - v.x0
@@ -488,7 +533,12 @@ function overFilm(p: p5, t: number, c: Ctx): void {
   vg.addColorStop(0.6, rgba(M.room, 0.16))
   vg.addColorStop(1, rgba(M.room, 0.62))
   ctx.fillStyle = vg
-  ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  // Nothing inside its inner circle, so only the ring outside it is filled.
+  ctx.beginPath()
+  ctx.rect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
+  ctx.moveTo((vx + rad * 0.5) * k, vy * k)
+  ctx.arc(vx * k, vy * k, rad * 0.5 * k, 0, Math.PI * 2)
+  ctx.fill('evenodd')
   // The gate's corners: the picture's edge is a rounded box, soft.
   const corner = vh * 0.09
   for (const [inset, a] of [[0, 0.9], [vh * 0.012, 0.35], [vh * 0.026, 0.14]] as [number, number][]) {
@@ -516,6 +566,35 @@ function overFilm(p: p5, t: number, c: Ctx): void {
   // Outside the gate: the room.
   const inside = g.x0 <= fr.x0 && g.y0 <= fr.y0 && g.x1 >= fr.x1 && g.y1 >= fr.y1
   if (!inside) drawRoom(p, t, c, fr, g, img)
+}
+
+/**
+ * A scratch down the film: a fine bright line that runs for a stretch of a few seconds, wandering a little, and
+ * then is gone; a second, shorter one later. Where the emulsion is torn the light comes through.
+ */
+const SCRATCHES: [number, number, number][] = [
+  [352.6, 356.1, 0.71],
+  [366.2, 368.0, 0.23],
+  [383.4, 387.9, 0.58],
+]
+function scratch(p: p5, k: number, t: number, v: Rect): void {
+  for (const [a, b, at] of SCRATCHES) {
+    if (t < a || t > b) continue
+    const fi = frameOf(t)
+    const env = smooth(t, a, a + 0.15) * (1 - smooth(t, b - 0.25, b))
+    if (hash(fi, 81) < 0.15) continue
+    const w = v.x1 - v.x0
+    const x = v.x0 + w * (at + 0.004 * Math.sin(t * 3.1) + 0.0015 * (hash(fi, 82) - 0.5))
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.strokeStyle = rgba(M.beam, (0.32 + 0.2 * hash(fi, 83)) * env)
+    ctx.lineWidth = Math.max(1, k * 0.012)
+    ctx.beginPath()
+    ctx.moveTo(x * k, v.y0 * k)
+    ctx.lineTo((x + w * 0.002) * k, v.y1 * k)
+    ctx.stroke()
+    ctx.restore()
+  }
 }
 
 /** A splice's flash: bright on the frame of the cut, gone in two more. */
@@ -696,10 +775,6 @@ function reel(p: p5, k: number, weight: number, at: Pt, r: number, pack: number,
 
 /* ------------------------------------------------------------------ the shots */
 
-/** The sky of a shot: a gradient over the whole box, `top` to `low` at the horizon `yh`. */
-function sky(p: p5, k: number, b: Rect, top: string, low: string, yh: number): void {
-  vgrad(p, k, b.x0, b.y0, b.x1, b.y1, [[0, top], [Math.max(0.01, (yh - b.y0) / (b.y1 - b.y0)), low], [1, low]])
-}
 
 /** Flat ground from `y` down, across the box. */
 function flat(p: p5, k: number, b: Rect, y: number, fill: string | p5.Color, ink: string, w: number): void {
@@ -711,9 +786,14 @@ function flat(p: p5, k: number, b: Rect, y: number, fill: string | p5.Color, ink
 function drawHouse(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
-  sky(p, k, b, M.sky, M.cream, 0.2)
+  summerSky(p, k, b, 0.2)
   // A low sun behind the palm, very soft.
   glow(p, k, 0.3, -2.6, 2.4, M.cream, 0.55)
+  clouds(p, k, ink, w, t, [[-6.6, -3.35, 0.9], [-1.9, -3.1, 0.65], [1.6, -2.75, 0.5]])
+  birds(p, k, ink, w, t, -3.4, -2.95, 3)
+  // The tree beside the house, and the hedge along the back of the garden.
+  tree(p, k, ink, w, -2.45, FLOORY, 2.3, 0.75, t)
+  hedge(p, k, ink, w, -3.7, b.x1, FLOORY, 0.3)
   // The lawn and the path.
   flat(p, k, b, FLOORY, M.grass, ink, w)
   shape(p, k, [[STEP_X[0] - 0.1, FLOORY], [b.x1, FLOORY], [b.x1, FLOORY + 0.1], [STEP_X[0] - 0.1, FLOORY + 0.1]], M.warm, null)
@@ -741,6 +821,9 @@ function drawHouse(p: p5, t: number, c: Ctx, b: Rect): void {
     shape(p, k, [[x0, STEP_TOP[i]], [x1, STEP_TOP[i]], [x1, FLOORY], [x0, FLOORY]], M.warm, ink, w * 0.9)
   }
   seg(p, k, [-8.4, LAWN + 0.08], [STEP_X[3], LAWN + 0.08], alpha(p, ink, 0.3), w * 0.6)
+  // Flowers along the porch's foot; the mailbox by the gate.
+  flowerBed(p, k, ink, w, -8.3, STEP_X[3] - 0.1, FLOORY)
+  mailbox(p, k, ink, w, -0.45, FLOORY)
   // The pram, rocked by her hand on its handle.
   pram(p, k, ink, w, PRAM_X + rockAt(t), t)
   // The gate: he pushes it on its latch side; it swings away round its hinge and its spring brings it back.
@@ -850,8 +933,11 @@ function pram(p: p5, k: number, ink: string, w: number, x: number, t: number): v
 function drawParty(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
-  sky(p, k, b, M.sky, M.cream, LAWN - 0.8)
+  summerSky(p, k, b, LAWN - 0.8)
   glow(p, k, -1.6, -3.0, 2.2, M.cream, 0.5)
+  clouds(p, k, ink, w, t, [[-7.0, -3.0, 0.8], [-2.6, -3.3, 0.7], [0.4, -2.7, 0.45]])
+  // The tree at the end of the garden, its branch holding one end of the bunting.
+  tree(p, k, ink, w, -0.15, LAWN, 2.1, 0.7, t)
   // The hedge along the back of the garden, and the lawn.
   p.fill(alpha(p, M.teal, 0.75))
   p.stroke(ink)
@@ -862,6 +948,9 @@ function drawParty(p: p5, t: number, c: Ctx, b: Rect): void {
   p.vertex(b.x1 * k, (LAWN + 0.01) * k)
   p.endShape(p.CLOSE)
   flat(p, k, b, LAWN, M.grass, ink, w)
+  // Bunting from the house's eave (off to the left) to the tree, and the table with the lemonade behind the party.
+  bunting(p, k, ink, w, [-9.2, -2.55], [-0.4, -2.35], 0.32, t)
+  partyTable(p, k, ink, w, -1.55, LAWN)
   // The high chair: splayed legs, the seat he sits in, the tray with his cake.
   const cx = CHAIR_X
   const seat = CHAIR_SEAT + SON_R(0.85)
@@ -968,11 +1057,14 @@ function balloon(p: p5, k: number, ink: string, w: number, i: number, s: number)
 function drawBeach(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
-  sky(p, k, b, M.sky, M.cream, SEA - 0.2)
+  summerSky(p, k, b, SEA - 0.72)
   glow(p, k, 1.5, -2.2, 2.6, M.cream, 0.6)
+  clouds(p, k, ink, w, t, [[-7.3, -2.2, 0.7], [-3.6, -2.45, 0.55], [-0.9, -2.0, 0.6]])
+  birds(p, k, ink, w, t, -5.6, -1.9, 2)
   // The far sea, a band to the horizon.
   shape(p, k, [[b.x0, SEA - 0.72], [b.x1, SEA - 0.72], [b.x1, b.y1], [b.x0, b.y1]], alpha(p, M.pool, 0.85), null)
   seg(p, k, [b.x0, SEA - 0.72], [b.x1, SEA - 0.72], alpha(p, ink, 0.5), w * 0.6)
+  sailboat(p, k, ink, w, -3.3 + (t - 358.5) * 0.03, SEA - 0.72)
   // The sand: flat, then sloping down into the sea at the right.
   const sand = (x: number) => (x < SEA_EDGE ? LAWN : LAWN + (x - SEA_EDGE) * 0.22)
   p.fill(M.cream)
@@ -983,6 +1075,8 @@ function drawBeach(p: p5, t: number, c: Ctx, b: Rect): void {
   for (let x = b.x0; x <= b.x1 + 0.2; x += 0.25) p.vertex(x * k, sand(x) * k)
   p.vertex(b.x1 * k, b.y1 * k)
   p.endShape(p.CLOSE)
+  // Their umbrella and towel, up the beach behind her.
+  umbrella(p, k, ink, w, -7.55, LAWN, t)
   // The wet sand the waves have reached, darker.
   const reach = washAt(t)
   const wetTo = Math.min(reach.x, reach.far)
@@ -1097,8 +1191,11 @@ function bucket(p: p5, k: number, ink: string, w: number, t: number): void {
 function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
-  sky(p, k, b, M.sky, M.cream, LAWN - 0.7)
+  summerSky(p, k, b, LAWN - 0.7)
   glow(p, k, 1.2, -3.4, 2.4, M.cream, 0.6)
+  clouds(p, k, ink, w, t, [[-6.0, -2.75, 0.85], [-2.4, -3.15, 0.6], [1.0, -2.45, 0.7]])
+  birds(p, k, ink, w, t, -4.2, -2.3, 3)
+  hedge(p, k, ink, w, b.x0, b.x1, LAWN, 0.42)
   // A palm over the far side of the pool.
   palm(p, k, ink, w, 2.6, LAWN, 2.9, t)
   // The deck, terracotta tiles, and the pool sunk in it: its water, its lip, the depth.
@@ -1114,6 +1211,7 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
   p.vertex(x1 * k, 1.2 * k)
   p.vertex((POOL_X0 + 0.04) * k, 1.2 * k)
   p.endShape(p.CLOSE)
+  poolRing(p, k, ink, w, 1.75 + 0.05 * Math.sin(t * 0.4), WATER + water(1.75), t)
   // The light on the pool floor, wavering.
   for (let i = 0; i < 6; i++) {
     const x = POOL_X0 + 0.5 + i * 0.75 + 0.1 * Math.sin(t * 0.9 + i)
@@ -1123,6 +1221,7 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
     p.bezier(x * k, 0.95 * k, (x + 0.15) * k, 0.9 * k, (x + 0.25) * k, 1.0 * k, (x + 0.4) * k, 0.95 * k)
   }
   seg(p, k, [POOL_X0, LAWN], [POOL_X0, 1.2], ink, w)
+  lounger(p, k, ink, w, -5.5, LAWN)
   // The board: its stand on the deck, the plank out over the water, bending at its tip on each landing.
   box2(p, k, BOARD_ROOT - 0.15, LAWN + 0.06, BOARD_ROOT + 0.2, LAWN + 0.2, M.teal, ink, w * 0.8)
   const d = boardDip(t)
@@ -1215,7 +1314,8 @@ function overPool(p: p5, t: number, c: Ctx): void {
   const water = waterAt(t)
   const fr = frame(p, k)
   const x1 = fr.x1 + 1
-  p.fill(alpha(p, M.pool, 0.55))
+  // The water in front of whoever is in it: thin enough that he and the boy keep their colours under it.
+  p.fill(alpha(p, M.pool, 0.34))
   p.noStroke()
   p.beginShape()
   for (let x = POOL_X0 + 0.04; x <= x1; x += 0.12) p.vertex(x * k, (WATER + water(x)) * k)
@@ -1236,8 +1336,10 @@ function drawField(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
   const w = weight
   const late = smooth(t, CUTS[3], CUTS[4])
-  sky(p, k, b, M.sky, M.cream, -0.9)
+  summerSky(p, k, b, -0.9)
   glow(p, k, 6.5, -1.3, 3.2, M.orange, 0.25 + 0.2 * late)
+  clouds(p, k, ink, w, t, [[-1.4, -3.0, 0.75], [2.3, -3.25, 0.9], [5.6, -2.85, 0.6], [8.2, -3.1, 0.7]])
+  birds(p, k, ink, w, t, 1.0, -2.6, 3)
   // Far hills, soft.
   p.fill(alpha(p, M.teal, 0.55))
   p.noStroke()
@@ -1246,6 +1348,7 @@ function drawField(p: p5, t: number, c: Ctx, b: Rect): void {
   for (let x = b.x0; x <= b.x1 + 0.5; x += 0.5) p.vertex(x * k, (-1.0 - 0.35 * Math.sin(x * 0.55 + 1) - 0.15 * Math.sin(x * 1.3)) * k)
   p.vertex(b.x1 * k, b.y1 * k)
   p.endShape(p.CLOSE)
+  farTrees(p, k, ink, w, b.x0, b.x1, (x) => -1.0 - 0.35 * Math.sin(x * 0.55 + 1) - 0.15 * Math.sin(x * 1.3))
   // The meadow.
   p.fill(M.grass)
   p.stroke(ink)
@@ -1269,6 +1372,7 @@ function drawField(p: p5, t: number, c: Ctx, b: Rect): void {
   }
   // The tall ones along his way, each opening on its note as he goes by.
   for (let i = 0; i < FLOWER_X.length; i++) flower(p, k, ink, w, FLOWER_X[i], t - BLOOMS[i], i)
+  butterflies(p, k, ink, w, t, 2.2 + (t - CUTS[3]) * 0.3, -0.75)
 }
 
 /** A tall flower at x: a stem that he brushes, a bud that bursts open on the note, petals settling. */
@@ -1326,8 +1430,10 @@ function drawHome(p: p5, t: number, c: Ctx, b: Rect): void {
   seg(p, k, [(wx0 + wx1) / 2, wy0], [(wx0 + wx1) / 2, wy1], ink, w * 0.7)
   // The floor.
   shape(p, k, [[b.x0, floor], [b.x1, floor], [b.x1, b.y1], [b.x0, b.y1]], M.orange, ink, w)
-  // The lamp: a pole and a shade, its light on the wall.
+  // Their room: his piano, the pictures of their life on the wall, the rug, a plant.
   const lampOn = 1 - off
+  homeWall(p, k, ink, w, floor, lampOn)
+  // The lamp: a pole and a shade, its light on the wall.
   glow(p, k, LAMP_X, -1.45, 2.0, M.sun, 0.55 * lampOn)
   seg(p, k, [LAMP_X, floor], [LAMP_X, -1.35], ink, w * 1.2)
   box2(p, k, LAMP_X - 0.2, floor - 0.04, LAMP_X + 0.2, floor, M.teal, ink, w * 0.8)

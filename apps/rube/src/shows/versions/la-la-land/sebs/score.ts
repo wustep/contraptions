@@ -3,10 +3,11 @@ import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
 import { box, lay, standing } from './kit'
+import { lens, masking, wakingCircle, type IrisAt } from './lens'
 import { AT, DURATION, dream } from './music'
 import { SebsShow, type Stage } from './show'
-import { covers, IRIS_OPEN, IRIS_SNAP, RED_LIFT, type Cover } from './transitions'
-import { CLUB, CLUB_MAT, DRIVE, GLOBE, LIPTONS, MOVIE, NIGHT, SEB, SEBS, SHADOW, STUDIO, STUDIO_MAT, THEATRE, THEATRE_MAT } from './worlds'
+import { coverAt, covers, IRIS_OPEN, IRIS_SNAP, RED_LIFT, type Cover } from './transitions'
+import { CLUB, CLUB_MAT, DRIVE, GLOBE, LIPTONS, MOVIE, NIGHT, SEB, SEBS, SHADOW, SHADOW_MAT, STUDIO, STUDIO_MAT, THEATRE, THEATRE_MAT } from './worlds'
 import { city } from './city'
 import { clubRoom, DOOR } from './club/room'
 import { opening } from './club/opening'
@@ -22,7 +23,7 @@ import { jazz } from './paris/jazz'
 import { trumpet } from './paris/trumpet'
 import { painted } from './night/painted'
 import { stars } from './night/stars'
-import { movie } from './movie/movie'
+import { filmWeave, movie } from './movie/movie'
 import { drive } from './movie/drive'
 
 /**
@@ -91,6 +92,12 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
 
   const show0 = (): SebsShow => show
   const where = (t: number): Pt => show0().where(t)
+  /** Between him and her, where she is with him: the iris that closed on the two of them opens on the two of them. */
+  const between = (t: number): Pt => {
+    const h = where(t)
+    const m = show0().mia(t)
+    return m ? [(h[0] + m.x) / 2, (h[1] + m.y) / 2] : h
+  }
   const coverList: Cover[] = [
     // Seb's to Lipton's: the stage light closes down on the keys, and opens again on a warmer room.
     { kind: 'iris', down: [37.9, 39.35], up: [39.95, 41.9], from: (t) => [where(t)[0], where(t)[1] - 0.25], to: (t) => [where(t)[0], where(t)[1] - 0.25], r0: 1.1, r1: 1.1 },
@@ -98,20 +105,22 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
     { kind: 'curtain', down: [dream(49), dream(50.5)], up: [dream(51.5), dream(53)], color: THEATRE_MAT.velvet, deep: THEATRE_MAT.velvetDeep, gold: THEATRE_MAT.gold },
     // The theatre to the studio: the house goes to white.
     { kind: 'black', down: [SWITCH.studio - 0.5, SWITCH.studio], up: [SWITCH.studio, SWITCH.studio + 1.05], color: STUDIO_MAT.paper },
-    // Hollywood to the audition: the lights go out, and a screen lights from behind.
-    { kind: 'black', down: [169.9, 171.4], up: [174.8, 176.6] },
-    // The audition to the globe.
-    { kind: 'black', down: [195.1, 195.85], up: [196.15, 197.4] },
+    // Hollywood to the audition: the hill's lamps go out one by one (169.99 to 171.09), and only then a cloth comes in
+    // from the flies over the dark hill; on the low note the lamp behind it comes up, and it is the audition's screen.
+    { kind: 'cloth', down: [171.15, 171.95], up: [173.07, 175.88], color: '#3B3631', deep: '#1C1917', fall: true, rise: false },
+    // The audition to the globe: the screen floods to its white, and the white flies out on its batten off the globe.
+    { kind: 'cloth', down: [195.1, 195.85], up: [196.15, 197.4], color: SHADOW_MAT.screen, deep: '#B9B1A2', fall: false, rise: true },
     // Paris at night to the club: through its red door, on the kick.
-    { kind: 'black', down: [214.3, SWITCH.club - 0.02], up: [RED_LIFT + 0.02, 215.45], color: CLUB_MAT.red },
+    { kind: 'door', down: [214.3, SWITCH.club - 0.02], up: [RED_LIFT + 0.02, 215.45], color: CLUB_MAT.red, deep: CLUB_MAT.redDeep, brass: CLUB_MAT.brass },
     // The trumpet to painted Paris: an iris, the old way.
-    { kind: 'iris', down: [267.3, 268.2], up: [IRIS_OPEN, 272.6], from: (t) => [where(t)[0] - 0.1, where(t)[1] - 0.05], to: where, r0: 0.55, r1: 0, snap: IRIS_SNAP },
-    // The stars to the home movie.
-    { kind: 'black', down: [338.9, 340.0], up: [341.2, 342.8] },
-    // The home movie to the drive.
-    { kind: 'black', down: [393.6, 395.0], up: [395.6, AT.drive] },
-    // The street to the club: through the door.
-    { kind: 'black', down: [422.55, 423.3], up: [423.5, 424.8] },
+    { kind: 'iris', down: [267.3, 268.2], up: [IRIS_OPEN, 272.6], from: (t) => [where(t)[0] - 0.1, where(t)[1] - 0.05], to: between, r0: 0.55, r1: 0, snap: IRIS_SNAP },
+    // The stars to the home movie: the sky goes, all but one star, and that star is the projector's lamp in the dark.
+    { kind: 'black', down: [338.9, 340.0], up: [341.2, 342.8], spark: { at: [0.31, 0.495], color: '#FFE9B0' } },
+    // The home movie to the drive: the film runs out, the bare light of the empty gate fills the frame, and the white
+    // is the jam's headlights.
+    { kind: 'black', down: [393.6, 395.0], up: [395.6, AT.drive], color: '#F4ECD8', flicker: true },
+    // The street to the club: through its door, as the dream went into the club in Paris.
+    { kind: 'door', down: [422.85, 423.35], up: [423.5, 424.3], color: '#86302F', deep: '#4E1A1B', brass: CLUB_MAT.brass },
   ]
   // The covers are drawn over each place by a lid that claims a cell every 4 across the whole place and round it, so
   // the stage (which only draws what has a cell in view, and never sees less than 8 cells across) always draws it.
@@ -120,7 +129,31 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
     for (const q of pieces) for (const [c, r] of q.cells) { x0 = Math.min(x0, c); y0 = Math.min(y0, r); x1 = Math.max(x1, c); y1 = Math.max(y1, r) }
     return standing(covers, 0, 0, box(x0 - 24, y0 - 24, x1 + 24, y1 + 24, 4), { covers: coverList }, DURATION)
   }
-  const stage = (world: typeof SEBS, from: number, chain: Placed[], scenery: Placed[] = []): Stage => ({ world, theme: world.themes[0], scenery, chain, after: [lidOver([...chain, ...scenery])], from })
+  // The lens over the whole picture, under the covers: the same cells the lid claims, so it is drawn wherever it is.
+  // (The lens is told where the spotlight's iris into the dream is, so the dream's colour can come in inside it.)
+  const intoDream = coverList[0]
+  const irisAt: IrisAt = (t, span) => {
+    // With the band, the colour comes back first to his stage: a pocket of it round the bandstand from its first hit,
+    // growing outward as the camera draws back, until on The End's swell it is everywhere.
+    if (t >= AT.band - 0.05 && t < 503.5) {
+      const u = Math.max(0, Math.min(1, (t - AT.band) / (501 - AT.band)))
+      const open = Math.min(1, (t - AT.band + 0.05) / 0.5)
+      return { x: piano1[0] + 4.2, y: piano1[1] - 0.6, r: (3.2 + 34 * u * u) * open, f: 0 }
+    }
+    // And out of it, the same way: as the dream drains the grey closes in from the edges to a circle of the dream's
+    // colour round him as he goes back to the keys, and on the last chord it shuts. The dream goes in and out through
+    // the same circle.
+    const out = wakingCircle(t, where(t), span)
+    if (out) return out
+    if (intoDream.kind !== 'iris' || t < intoDream.down[0] || t > intoDream.up[0]) return null
+    const f = coverAt(intoDream, t)
+    const [x, y] = intoDream.from(t)
+    return { x, y, r: intoDream.r0 + (1 - f) * Math.max(0, span - intoDream.r0), f }
+  }
+  const lensOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: lens, state: { iris: irisAt } })
+  // The screen's masking, over everything: the narrow frame of the room as it is, opening wide for the dream.
+  const maskOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: masking, state: null })
+  const stage = (world: typeof SEBS, from: number, chain: Placed[], scenery: Placed[] = []): Stage => ({ world, theme: world.themes[0], scenery, chain, after: [lensOver([...chain, ...scenery]), lidOver([...chain, ...scenery]), maskOver([...chain, ...scenery])], from })
 
   const stages: Stage[] = [
     stage(SEBS, 0, [pOpening], [
@@ -145,14 +178,22 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
 
   // The end: from the band (the finale's last key is by 480) the camera draws back out of the club, up over its roof,
   // to the whole city of stars, one move that carries its speed, and settles as The End's last chord rings.
+  // The roof is in the lower half of the frame from the first card on, so the credits come up in the sky over it and
+  // not across its lines.
   const ending: Shot[] = [
-    { t: 488, cells: 16, hold: [piano1[0] + 2.6, piano1[1] - 3.0] },
+    { t: 483.6, cells: 12, hold: [piano1[0] + 2.8, piano1[1] - 5.2] },
+    { t: 488, cells: 16, hold: [piano1[0] + 2.6, piano1[1] - 5.0] },
     { t: 496, cells: 30, hold: [piano1[0] + 3, piano1[1] - 9] },
     { t: 503.4, cells: 44, hold: [piano1[0] + 3, piano1[1] - 15] },
     { t: DURATION, cells: 46, hold: [piano1[0] + 3, piano1[1] - 16] },
   ]
   const shots: Shot[] = [{ t: 0, cells: 5 }, ...dreamChain.shots, ...ending]
   const follow = director((t) => show.where(t), shots, DURATION)
-  const camera = (t: number): Framing => follow(t)
+  // In the home movie the picture weaves in the gate: the camera carries it, so the balls in the film weave too.
+  const camera = (t: number): Framing => {
+    const f = follow(t)
+    const [dx, dy] = filmWeave(t)
+    return dx || dy ? { ...f, x: f.x + dx * f.cells, y: f.y + dy * f.cells } : f
+  }
   return { show, camera, covers: coverList }
 }
