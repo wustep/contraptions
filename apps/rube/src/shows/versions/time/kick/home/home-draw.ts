@@ -25,6 +25,8 @@ const SUNLIGHT = mixHex(HOME.sun, HOME.floor, 0.22)
 const CUT = mixHex(HOME.wallShade, HOME.floorShade, 0.5)
 /** The ground, cut: under the house and the lawn. */
 const SOIL = mixHex(HOME.floorShade, HOME.wallShade, 0.3)
+/** How far toward us the garden's ground comes before it is cut. */
+const NEAR_EDGE = FLOOR + 1.75
 const BARK = mixHex(HOME.floorShade, INK, 0.4)
 const WOOD = mixHex(HOME.table, HOME.floor, 0.45)
 const DOORWOOD = mixHex(HOME.table, HOME.floor, 0.3)
@@ -207,12 +209,15 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   ctx.restore()
   // The lawn comes on toward us, richer in the house's shade; the terrace's stone with it.
   const near = vgrad(ctx, k, FLOOR - 0.02, FLOOR + 2.2, [[0, mixHex(HOME.lawn, HOME.sun, 0.12), 1], [0.35, HOME.lawn, 1], [1, mixHex(HOME.lawnDark, HOME.tree, 0.45), 1]])
-  fillBox(ctx, k, GARDEN.terrace, FLOOR, x1, f.y1 + 1, near)
-  fillBox(ctx, k, x0, FLOOR, GARDEN.terrace, f.y1 + 1, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
+  // It ends a little toward us, cut, and under it the earth as under the house: in a tall frame (a phone held
+  // upright) the ground is near half the picture, and the lawn and the terrace's stone ran on down to its foot.
+  const cut = Math.min(f.y1 + 1, NEAR_EDGE)
+  fillBox(ctx, k, GARDEN.terrace, FLOOR, x1, cut, near)
+  fillBox(ctx, k, x0, FLOOR, GARDEN.terrace, cut, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
   // The terrace is laid stone: its courses widening as they come toward us, each slab's joint a half step from the
   // course behind's.
   {
-    const rows = [GARDEN.back, -0.17, FLOOR, FLOOR + 0.42, FLOOR + 1.0, FLOOR + 1.75, FLOOR + 2.7]
+    const rows = [GARDEN.back, -0.17, FLOOR, FLOOR + 0.42, FLOOR + 1.0, FLOOR + 1.75, FLOOR + 2.7].filter((y) => y <= NEAR_EDGE)
     ctx.save()
     ctx.strokeStyle = rgba(HOME.wallShade, 0.55)
     ctx.lineWidth = Math.max(1, w * 0.35)
@@ -233,7 +238,21 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
     ctx.stroke()
     ctx.restore()
   }
-  fillBox(ctx, k, GARDEN.terrace - 0.03, GARDEN.back, GARDEN.terrace + 0.03, f.y1 + 1, rgba(HOME.lawnDark, 0.35))
+  fillBox(ctx, k, GARDEN.terrace - 0.03, GARDEN.back, GARDEN.terrace + 0.03, cut, rgba(HOME.lawnDark, 0.35))
+  if (f.y1 + 1 > NEAR_EDGE) {
+    const bottom = f.y1 + 1
+    fillBox(ctx, k, x0, NEAR_EDGE, x1, bottom, vgrad(ctx, k, NEAR_EDGE, NEAR_EDGE + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, NEAR_EDGE * k, (x1 - x0) * k, (bottom - NEAR_EDGE) * k)
+    ctx.clip()
+    earth(ctx, k, x0, x1, NEAR_EDGE, bottom)
+    ctx.restore()
+    // The turf's edge over it, and the terrace's slab.
+    fillBox(ctx, k, GARDEN.terrace, NEAR_EDGE, x1, NEAR_EDGE + 0.12, mixHex(HOME.lawnDark, SOIL, 0.4))
+    fillBox(ctx, k, x0, NEAR_EDGE, GARDEN.terrace, NEAR_EDGE + 0.18, mixHex(STONE, HOME.wallShade, 0.5))
+    line(ctx, k, [x0, NEAR_EDGE], [x1, NEAR_EDGE], INK, w * 0.8)
+  }
   tree(ctx, k, f, t, w)
   swing(ctx, k, t, w)
 }
@@ -358,28 +377,7 @@ function ground(ctx: C2D, k: number, f: Frame, w: number, foot: number): void {
   ctx.beginPath()
   ctx.rect(fx0 * k, foot * k, (ex1 - fx0) * k, (bottom - foot) * k)
   ctx.clip()
-  // The bands: each a little darker, their tops wandering gently.
-  const bands = [0.55, 1.35, 2.4, 3.8]
-  bands.forEach((d, i) => {
-    ctx.beginPath()
-    ctx.moveTo(fx0 * k, bottom * k)
-    for (let x = fx0; x <= ex1 + 0.2; x += 0.2) ctx.lineTo(x * k, (foot + d + 0.07 * Math.sin(x * 1.3 + i * 2.1) + 0.04 * Math.sin(x * 3.1 + i)) * k)
-    ctx.lineTo(ex1 * k, bottom * k)
-    ctx.closePath()
-    ctx.fillStyle = rgba(mixHex(HOME.floorShade, INK, 0.35), 0.1 + 0.03 * i)
-    ctx.fill()
-  })
-  // Stones in the earth, a few to a cell, flattened as stones lie.
-  ctx.fillStyle = rgba(mixHex(STONE, HOME.floorShade, 0.55), 0.42)
-  for (let i = Math.floor(fx0); i < ex1; i++)
-    for (let j = 0; j < 6; j++) {
-      const [x, y] = [i + hash(i, j, 41), foot + 0.35 + j * 0.7 + 0.5 * hash(i, j, 42)]
-      if (y > bottom || hash(i, j, 43) < 0.45) continue
-      const r = 0.035 + 0.05 * hash(i, j, 44)
-      ctx.beginPath()
-      ctx.ellipse(x * k, y * k, r * 1.5 * k, r * k, (hash(i, j, 45) - 0.5) * 0.6, 0, Math.PI * 2)
-      ctx.fill()
-    }
+  earth(ctx, k, fx0, ex1, foot, bottom)
   // The footings, a little wider than their walls, in courses of stone.
   const depth = 1.1
   for (const [a, b] of [[fx0, fx1 + 0.12], [ex0 - 0.12, ex1]]) {
@@ -399,6 +397,32 @@ function ground(ctx: C2D, k: number, f: Frame, w: number, foot: number): void {
     ctx.stroke()
   }
   ctx.restore()
+}
+
+/** The earth's soft bands, darker going down, and the stones in it, from `top` down, across `xa` to `xb`. */
+function earth(ctx: C2D, k: number, xa: number, xb: number, top: number, bottom: number): void {
+  // The bands: each a little darker, their tops wandering gently.
+  const bands = [0.55, 1.35, 2.4, 3.8]
+  bands.forEach((d, i) => {
+    ctx.beginPath()
+    ctx.moveTo(xa * k, bottom * k)
+    for (let x = xa; x <= xb + 0.2; x += 0.2) ctx.lineTo(x * k, (top + d + 0.07 * Math.sin(x * 1.3 + i * 2.1) + 0.04 * Math.sin(x * 3.1 + i)) * k)
+    ctx.lineTo(xb * k, bottom * k)
+    ctx.closePath()
+    ctx.fillStyle = rgba(mixHex(HOME.floorShade, INK, 0.35), 0.1 + 0.03 * i)
+    ctx.fill()
+  })
+  // Stones in the earth, a few to a cell, flattened as stones lie.
+  ctx.fillStyle = rgba(mixHex(STONE, HOME.floorShade, 0.55), 0.42)
+  for (let i = Math.floor(xa); i < xb; i++)
+    for (let j = 0; j < 6; j++) {
+      const [x, y] = [i + hash(i, j, 41), top + 0.35 + j * 0.7 + 0.5 * hash(i, j, 42)]
+      if (y > bottom || hash(i, j, 43) < 0.45) continue
+      const r = 0.035 + 0.05 * hash(i, j, 44)
+      ctx.beginPath()
+      ctx.ellipse(x * k, y * k, r * 1.5 * k, r * k, (hash(i, j, 45) - 0.5) * 0.6, 0, Math.PI * 2)
+      ctx.fill()
+    }
 }
 
 /** A window in the hall's back wall, onto the side of the garden: sky and leaves, and its light on the sill. */

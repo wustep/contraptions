@@ -368,6 +368,10 @@ each world, and changed:
 - **The far trees over home's wall, under Zoom** (251 to 265): their layer rides up with the camera, most under Zoom,
   and its body stopped just under its base, so a strip of sky showed between the trees and the wall's top. Its body
   runs down behind the wall now.
+- **The ground under the garden** (249 to the end, in a tall frame): the house stands on cut earth, but the lawn and the
+  terrace's stone came on toward us all the way to the frame's foot, so in a phone-shaped frame the terrace was a pale
+  pillar beside a green slab (a critic's note). They end a little toward us now, cut, and under them is the same earth
+  as under the house, its bands and stones. A wide frame never sees that far down and is unchanged.
 
 ## Inception nods
 
