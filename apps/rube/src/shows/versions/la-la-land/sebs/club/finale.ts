@@ -199,7 +199,9 @@ function plan(begin: number) {
   const barStool: Pt = [-10.25, 2.5 - 0.13]
   const david: Way[] = [{ at: 451.8, p: barStool }]
   david.push(ease(452.3, [-9.95, FLOOR_Y], 0.05))
-  david.push(...walk(452.3, 454.9, -9.95, -1.8, 0, 0))
+  // Across the room while the camera is on him at the keys, so he is past her stool and waiting below the empty seat
+  // when the picture cuts to her table (454.15); then up into it, into the dream's him going grey there.
+  david.push(...walk(452.3, 454.05, -9.95, -1.8, 0, 0))
   david.push(hold(david, 455.0), ease(455.45, SIDE_SEAT, 0.08))
   // Down on the far side of his stool, and off already walking, so he goes by under hers in a moment, not a pause.
   david.push(hold(david, 456.45), ease(456.9, [-1.6, FLOOR_Y], 0.04))
