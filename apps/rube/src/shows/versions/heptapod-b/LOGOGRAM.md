@@ -489,6 +489,10 @@ changed, in the order of the film, and then what runs through it:
   go now, and turns to her as the light comes through.
   Under the open slot (39.5 → 40.1) both eyes dropped to the grass just before they moved off; they hold their look
   up now until each rolls away.
+- **On a retina screen** (the live page at twice the pixels, 18 moments with soft light, blur or ink): everything
+  holds as at 1x, with no console errors. It showed one thing the stills had too: as the shell melted (188.5 → 190) its
+  sharp hull, still faintly drawn under the soft one, left its dark flank as a hard line in the cloud. The hull gives
+  way sooner now, and the shell greys into the cloud with no edge.
 
 ## Arrival nods
 
