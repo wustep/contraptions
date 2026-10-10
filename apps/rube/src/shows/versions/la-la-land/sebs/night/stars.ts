@@ -403,12 +403,15 @@ export const stars = part<StarsState>(
         }
         ctx.restore()
       }
-      // At the top of the swell, as the sky stops with them, the planetarium draws the figure its stars make, as a
-      // planetarium does: in fine gold line round the two of them, a grand piano. Held through the touch; it goes with
-      // the lamps.
+      // The planetarium draws the figure its stars make, as a planetarium does: in fine gold line round the two of them,
+      // a grand piano. Held through the touch; it goes with the lamps.
       {
-        const draw = smooth(T, DIP - 1.6, DIP + 0.9) * 1.4
-        const a = smooth(T, DIP - 1.6, DIP - 0.8) * (1 - smooth(T, DARK[0], DARK[0] + 0.5))
+        // It draws on through the waltz, a stretch of line for each star the melody lights, faint while it grows; at the
+        // dip it is whole and bright, and the keys come in.
+        let lit = 0
+        for (const q of KINDLED) lit += smooth(T, q.at, q.at + 0.9)
+        const draw = Math.max((lit / KINDLED.length) * (1 - 0.0001), smooth(T, DIP - 1.6, DIP + 0.9) * 1.4)
+        const a = (0.4 * smooth(T, KINDLED[0].at, KINDLED[0].at + 0.8) + 0.6 * smooth(T, DIP - 1.6, DIP - 0.8)) * (1 - smooth(T, DARK[0], DARK[0] + 0.5))
         drawPianoFigure(p, k, FIGURE_AT(), FIGURE_SIZE, FIGURE_TURN, draw, a, NIGHT_MAT.gold)
       }
       // The lit stars, and theirs in the floor.
