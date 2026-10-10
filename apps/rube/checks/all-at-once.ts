@@ -14,6 +14,7 @@ import { keepIn, keepOf } from '../src/shows/versions/come-recover/all-at-once/f
 import { surfLookAt } from '../src/shows/versions/come-recover/all-at-once/multi/surf'
 import type { MultiverseShow } from '../src/shows/versions/come-recover/all-at-once/show'
 import { REVEAL } from '../src/shows/versions/come-recover/all-at-once/rocks/ledge'
+import { REVERSES } from '../src/shows/versions/come-recover/all-at-once/void/pull'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 
@@ -69,7 +70,9 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
     }
     const s = onScreen(t)
     const ds = Math.hypot(s[0] - prevS[0], s[1] - prevS[1])
-    if (ds > screen) { screen = ds; screenAt = t }
+    // The hush's cuts between Jobu and her mother are cuts of the camera, not jumps: the ball moves on the screen there.
+    const cutHere = REVERSES.some((r) => r.some((c) => Math.abs(t - c) < 0.01))
+    if (ds > screen && !cutHere) { screen = ds; screenAt = t }
     prev = here
     prevLeg = leg
     prevS = s
@@ -102,11 +105,13 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   // bars (`film.ts`), as are the surf's glimpses of them, and what must be seen is held to the band between them.
   const keep = (t: number): number => Math.min(keepIn(show.legs[show.owner(t)].world), keepOf(surfLookAt(t)))
 
-  // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
+  // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen, but
+  // in the hush's reverse shots on Jobu, where it is out of the frame on purpose (`REVERSES`).
   const outOfZoom: string[] = []
   for (let t = 0; t <= perf.duration; t += 0.05) {
     const h = show.at(t)
     if (h.hidden || h.scale < 0.3) continue
+    if (REVERSES.some(([a, b]) => t >= a && t <= b)) continue
     const f = cam(t)
     const cells = f.cells / 1.5
     const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / ((cells * keep(t)) / 2))
