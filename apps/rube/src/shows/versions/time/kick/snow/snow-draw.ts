@@ -326,67 +326,18 @@ function drawGuards(p: p5, ctx: C2D, c: Ctx, t: number): void {
 }
 
 /**
- * Where Mal's shot strikes Fischer at the vault's door: a hard white flash on the shot, a ring going out from him
- * across the floor and a spray of snow thrown up off it, still settling when the camera cuts back to him, so the hit
- * is seen and not only his going under.
+ * Where Mal's shot strikes Fischer at the vault's door: a hard white flash on the shot, fading as the camera cuts back
+ * to him, so the hit is seen and not only his going under.
  */
-function drawHit(p: p5, ctx: C2D, k: number, t: number): void {
+function drawHit(p: p5, k: number, t: number): void {
   const u = t - T.shot
   if (u < 0 || u > 1.6) return
   const at: Pt = [SHOT_X, FLOOR_Y - R]
   bloom(p, k, at, 0.9, SNOW.flash, 0.95 * Math.exp(-u / 0.12))
   bloom(p, k, at, 0.5, SNOW.flash, 0.55 * Math.exp(-u / 0.45))
-  // The ring, out along the floor (seen a little from above: flattened).
-  const r = 0.2 + 1.1 * (1 - Math.exp(-u / 0.35))
-  ctx.save()
-  ctx.strokeStyle = rgba(SNOW.flash, 0.8 * (1 - u / 1.6))
-  ctx.lineWidth = Math.max(1, 0.035 * k)
-  ctx.beginPath()
-  ctx.ellipse(at[0] * k, FLOOR_Y * k, r * k, r * 0.28 * k, 0, 0, TAU)
-  ctx.stroke()
-  // The spray: flecks thrown up and out, falling back under gravity, thinning.
-  for (let i = 0; i < 16; i++) {
-    const a = -Math.PI * (0.12 + 0.76 * hash(i, 1, 9))
-    const v = 1.6 + 1.6 * hash(i, 2, 9)
-    const x = at[0] + Math.cos(a) * v * u
-    const y = FLOOR_Y - 0.05 + Math.sin(a) * v * u + 3.2 * u * u
-    if (y > FLOOR_Y + 0.02) continue
-    ctx.fillStyle = rgba(SNOW.snow, 0.9 * (1 - u / 1.6))
-    ctx.beginPath()
-    ctx.arc(x * k, y * k, Math.max(0.8, (0.025 + 0.02 * hash(i, 3, 9)) * k), 0, TAU)
-    ctx.fill()
-  }
-  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ Mal */
-
-/** A muzzle flash's shape: a star of flame along the aim `d`, gold with a white heart and a thin ink edge. */
-function muzzleStar(p: p5, c: Ctx, ctr: Pt, d: Pt, sc: number, size: number): void {
-  const { k } = c
-  const c2 = p.drawingContext as C2D
-  const [nx, ny] = [-d[1], d[0]]
-  const star: Pt[] = []
-  for (let q = 0; q < 10; q++) {
-    const a = (q / 10) * Math.PI * 2
-    const r = (q % 2 ? 0.07 : Math.cos(a) > 0.5 ? 0.42 : 0.2) * (0.6 + 0.4 * sc) * size
-    star.push([ctr[0] + (d[0] * Math.cos(a) + nx * Math.sin(a)) * r, ctr[1] + (d[1] * Math.cos(a) + ny * Math.sin(a)) * r])
-  }
-  c2.save()
-  c2.beginPath()
-  star.forEach(([x, y], q) => (q ? c2.lineTo(x * k, y * k) : c2.moveTo(x * k, y * k)))
-  c2.closePath()
-  c2.fillStyle = SNOW.pinwheel
-  c2.fill()
-  c2.strokeStyle = SNOW.vault
-  c2.lineWidth = Math.max(1, c.weight * 0.6)
-  c2.stroke()
-  c2.beginPath()
-  c2.arc(ctr[0] * k, ctr[1] * k, 0.06 * size * k, 0, Math.PI * 2)
-  c2.fillStyle = SNOW.flash
-  c2.fill()
-  c2.restore()
-}
 
 /** Mal's rifle on Fischer at the vault door, and its flash on the chord. */
 function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
@@ -426,9 +377,6 @@ function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
     poly([[0.18, 0.03], [0.2, 0.03], [0.2, 0.06], [0.18, 0.06]])
     poly([[0.29, 0.03], [0.31, 0.03], [0.31, 0.06], [0.29, 0.06]])
     poly([[0.13, 0.06], [0.16, 0.052], [0.33, 0.052], [0.37, 0.045], [0.37, 0.105], [0.33, 0.098], [0.16, 0.098], [0.13, 0.09]])
-    // A glint on the scope's lens as she brings it up.
-    ctx.fillStyle = rgba(SNOW.flash, 0.55)
-    poly([[0.355, 0.055], [0.368, 0.053], [0.368, 0.097], [0.355, 0.095]])
     ctx.restore()
     return
   }
@@ -446,8 +394,6 @@ function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
     beam(p, k, muzzle, [muzzle[0] + d[1] * 0.5, muzzle[1] - d[0] * 0.5], 0.05, 0.28, core, 0.7 * f)
     beam(p, k, muzzle, [muzzle[0] - d[1] * 0.5, muzzle[1] + d[0] * 0.5], 0.05, 0.28, core, 0.7 * f)
     bloom(p, k, [muzzle[0] + d[0] * 0.25, muzzle[1] + d[1] * 0.25], 0.9, SNOW.flash, 0.8 * f)
-    // The muzzle flash's own shape, crisp, for its first tenth of a second (a soft glow alone was pale on the snow).
-    if (u < 0.12) muzzleStar(p, c, [muzzle[0] + d[0] * 0.12, muzzle[1] + d[1] * 0.12], d, 1 - u / 0.12, 1)
   }
   const smoke = ss(u / 0.15) * (1 - ss((u - 0.5) / 1.1))
   if (smoke > 0.01) {
@@ -487,7 +433,7 @@ export function drawSnowPart(p: p5, c: Ctx, t: number, o: Pt): void {
     drawRifle(p, ctx, c, t, false)
     // The floor goes soft under them: Fischer where he is shot; Cobb and Ariadne by the gate as the case opens.
     sink(p, k, [SHOT_X, FLOOR_Y], t - T.shot - 0.3, F_THROUGH - T.shot - 0.3, 0.8)
-    drawHit(p, ctx, k, t)
+    drawHit(p, k, t)
     sink(p, k, [LIE_C, FLOOR_Y], t - T.sink, C_THROUGH - T.sink, 0.75)
     sink(p, k, [LIE_A, FLOOR_Y], t - T.sink, A_THROUGH - T.sink, 0.7)
     drawCaseLines(ctx, c, t)
