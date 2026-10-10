@@ -896,6 +896,11 @@ A ninety-sixth looked at the eighty-eighth to the ninety-fourth (the clock kept 
 the cradle, the swell over the cut) through a tall frame, Zoom and Overview: all held. And the whole of what the site's
 build runs passed again; the show's chunk is 239 kB. Nothing to change.
 
+A ninety-seventh filmed the spans changed since the eighty-second at four frames a second (the bed, the gala, the
+ending): every jump a cut or a push, as before. The cut to the cradle, a jump twenty times its neighbours at the
+eighty-second, is under four now, nothing in the room moving across it and the morning swelling over it. Nothing to
+change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
