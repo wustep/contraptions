@@ -497,6 +497,9 @@ changed, in the order of the film, and then what runs through it:
   circle's close, and felt the peak at Hannah going and the rain unaided. Ring to ring (144 → 156) they didn't know
   which of the many rings to follow: the fog's own hanging rings are paler now, and a ring she has left draws back
   further, so the one she rides or is flung toward leads.
+  A second first-time viewer still saw arcs in three or four places at once: a ring she left drew back only once it
+  had closed, and it closes behind her during her flight, while the next is written. It draws back as she leaves it
+  now, so in each flight the one black arc is the ring being written for her.
 
 ## Arrival nods
 
