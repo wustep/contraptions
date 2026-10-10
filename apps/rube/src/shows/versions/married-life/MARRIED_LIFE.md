@@ -848,6 +848,7 @@ window.
   - *The share card, again*: rendered from this branch it differed from the committed card in a 7-pixel strip by the
     porch, the wall meeting the bay's corner post (the balloon's slit, round 72). Regenerated (1200 by 630 at 47.3, the
     still tooling), so the card a link unfurls with is the show as it is.
+    The PR's walk-in screenshot (four frames, 210.6 to 212.4) was stale by the same strip and was rebuilt too.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
