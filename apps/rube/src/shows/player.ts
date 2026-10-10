@@ -504,14 +504,15 @@ let captions = (() => {
 const ccState = el('span', { class: 'cc-state' }, ['Off'])
 const ccBtn = el('button', { type: 'button', class: 'chip cc', 'aria-label': 'Sound captions' }, [el('span', {}, ['Sound captions']), ccState])
 const ccRow = el('div', { class: 'row cc' }, [ccBtn])
-ccBtn.addEventListener('click', () => {
+function toggleCaptions(): void {
   captions = !captions
   try {
     localStorage.setItem(CAPTIONS_KEY, captions ? '1' : '0')
   } catch {}
   sync()
   if (transport) renderWords(transport.now())
-})
+}
+ccBtn.addEventListener('click', toggleCaptions)
 const restartBtn = el('button', { type: 'button', class: 'tbtn', title: 'Back to the top of the show (Home)', 'aria-label': 'Restart' }, [icon(ICON.restart)])
 restartBtn.addEventListener('click', () => seek(0))
 // Overview and Zoom were two toggles that turned each other off: one choice of three, so one control.
@@ -695,7 +696,7 @@ function sync(): void {
   ccBtn.setAttribute('aria-pressed', String(!!perf?.captions && captions))
   ccBtn.classList.toggle('on', !!perf?.captions && captions)
   ccState.textContent = captions ? 'On' : 'Off'
-  ccBtn.title = captions ? 'Turn the sound captions off' : 'Turn on sound captions: words for what the music does'
+  ccBtn.title = captions ? 'Turn the sound captions off (C)' : 'Turn on sound captions: words for what the music does (C)'
   const hasMusic = !!perf?.soundtrack && music.state() !== 'failed'
   musicBtn.disabled = !hasMusic
   musicBtn.setAttribute('aria-pressed', String(hasMusic && !muted && !soundHeld))
@@ -902,7 +903,7 @@ const onKey = (e: KeyboardEvent) => {
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  // Letter keys are case-blind: Caps Lock must not silence P, M, O or Z.
+  // Letter keys are case-blind: Caps Lock must not silence P, M, C, O or Z.
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
   if (key === 'p') {
     shell.toggle()
@@ -924,6 +925,9 @@ const onKey = (e: KeyboardEvent) => {
         break
       }
       setMuted(!muted)
+      break
+    case 'c':
+      if (perf?.captions) toggleCaptions()
       break
     case 'o':
       if (perf) setOverview(!overview)
