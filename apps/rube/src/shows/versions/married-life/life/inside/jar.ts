@@ -1,5 +1,5 @@
 import { laneAt, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { box, carried, part, type Companion, type PartShot, type Pose } from '../kit'
+import { box, carried, part, smooth, type Companion, type PartShot, type Pose } from '../kit'
 import { beatsIn } from '../music'
 import { drawRoom } from './jar-draw'
 import { HOME_BY, walkHome } from './yard'
@@ -420,6 +420,16 @@ function shots(): PartShot[] {
 }
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
+/**
+ * Under Zoom (half as close again) the pendant lamp stood above the frame from the moment it went out to his fall: he
+ * climbed the ladder toward nothing and fell, the reason gone. So Zoom eases out to the show's own frame as the lamp
+ * goes (`Framing.zoomFull`), holds it while he climbs, reaches and the ladder kicks, and comes back in as he falls.
+ */
+export function lampZoomFull(t: number): number {
+  // Eased out and back over about two seconds each way, so Zoom moves as gently as the show's own frame.
+  return 1 - smooth(t, LAMP_OUT - 2.2, LAMP_OUT) * (1 - smooth(t, FALL - 0.2, FALL + 1.9))
+}
+
 export const JAR_HITS: number[] = [
   PERCH, SETTLE, ...LIFT, ...SLAMS, ...LANDS, ...COUNTS, DOWN, TYRE, HUBCAP, ...UP1, PUSH1, POURS[0].stop, FIXED, LAMP_OUT, ...CLIMB, KICK, FALL,
   TO_HIM, TOUCH, ...UP2, PUSH2, POURS[1].stop, FLASH1, TREE, TOPPLE, THUNDER, ONTO_PLANK, FLASH2, E_OFF, C_OFF, WINCH, ...BOARDS, SUN, SKIP,

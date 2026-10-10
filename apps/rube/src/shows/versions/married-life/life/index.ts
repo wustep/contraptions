@@ -3,6 +3,7 @@ import { creditsAt } from './credits'
 import { zoomDropAt, zoomFullAt } from './house/alone'
 import { hospitalZoomDrop } from './clinic/hospital'
 import { fixupZoomDrop } from './house/fixup'
+import { lampZoomFull } from './inside/jar'
 import { DURATION } from './music'
 import { compose } from './score'
 import { zoomHold } from './zoom'
@@ -15,7 +16,7 @@ export { show }
 function held(t: number): Framing {
   const f = camera(t)
   const drop = zoomDropAt(t) + hospitalZoomDrop(t) + fixupZoomDrop(t)
-  const full = zoomFullAt(t)
+  const full = Math.min(zoomFullAt(t), lampZoomFull(t))
   return drop || full < 1 ? { ...f, ...(drop ? { zoomDrop: drop } : {}), ...(full < 1 ? { zoomFull: full } : {}) } : f
 }
 function framed(t: number): Framing {
@@ -29,7 +30,7 @@ export const performance: Performance = {
   show,
   duration: DURATION,
   // Under Zoom: the parts' own holds (lower while he pushes the cart, higher through her touch at her bedside, lower
-  // through the credits), and Zoom's own (`zoom.ts`), which keeps the two of them off the Zoom frame's edges.
+  // through the credits; out to the show's own frame for the lamp he climbs to), and Zoom's own (`zoom.ts`), which keeps the two of them off the Zoom frame's edges.
   camera: framed,
   // No portal anywhere: every change of place is a match cut on Carl.
   cuts: () => false,

@@ -15,6 +15,7 @@ import { BALLOON_FROM, balloonAt, ellieSpin, HALF, LEANS, lookOf, STIRS } from '
 import { BALLOON_SIZE } from '../src/shows/versions/married-life/life/props/balloon'
 import { ridge, STEP } from '../src/shows/versions/married-life/life/hill/hill'
 import { INSIDE_SPAN } from '../src/shows/versions/married-life/life/inside/inside'
+import { KICK, LAMP_OUT } from '../src/shows/versions/married-life/life/inside/jar-clock'
 import { INSIDE_AT } from '../src/shows/versions/married-life/life/score'
 import { JOLTS } from '../src/shows/versions/married-life/life/score'
 import { FUN } from '../src/shows/versions/married-life/life/church/church'
@@ -186,6 +187,19 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     }
   }
   check('married life: no wide shot lingers (over 6 cells for at most 2.5 s, but for the named reveals)', wide.length === 0, wide.slice(0, 6).join('; '))
+
+  // Under Zoom the lamp he climbs to stood above the frame and he climbed toward nothing: from the lamp going out to the
+  // ladder's kick Zoom is out to the show's own frame, which holds the lamp whole.
+  {
+    let most = 0
+    let mostAt = 0
+    for (let t = LAMP_OUT; t <= KICK; t += 0.05) {
+      const z = cam(t).zoomFull ?? 1
+      if (z > most) { most = z; mostAt = t }
+    }
+    check('married life: under Zoom the lamp he climbs to stays in the frame (Zoom out to the show\'s own)', most < 0.02,
+      `Zoom ${most.toFixed(2)} of its way in at ${mostAt.toFixed(2)} s`)
+  }
 
   // A phone held upright (as tall as 9:21) sees far above and beside the composed frame (`stage.ts`, `perf.tall`):
   // wherever the house's inside is on, that whole stage is inside the sky and earth the set paints round it, so the
