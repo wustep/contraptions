@@ -25,7 +25,7 @@ stand again in the reverse order; and the last frame is the first.
 - **Ian Donnelly** is the blue ball (`#4E7FB5`): from the camp to the chamber, in the tent, on the meadow at the end.
 - **Hannah** is the rose ball (`#DE6F86`), who grows: a baby in the cradle, a child and a girl on the swing, a young
   woman in the bed and in what Louise is shown. She is only ever at the lake house.
-- **General Shang** is the red ball (`#A8322D`), only at the gala, years on.
+- **General Shang** is the red ball (`#A8322D`), a little larger, rimmed in brass braid; only at the gala, years on.
 - **Abbott and Costello**, the heptapods, are drawn, never balls: a heavy body on seven limbs, a hand standing on its
   fingertips, always in fog.
 
@@ -824,6 +824,10 @@ An eighty-third looked at what the seventy-fourth to the seventy-ninth changed t
 cameras the sixty-second and the seventy-first last took: the suit, the soldier, the ring into the gala, the hops on
 the keys, Ian by the cradle, his look back and his going. All held; he is out of the tall frame by 360 s, long
 before the last. Nothing to change.
+
+An eighty-fourth took the question six fresh readers in fourteen had left open: who the red ball at the gala is. In
+his red alone, close to Hannah's rose, he was her grown, a stranger, a lover. His red stays (it is China's screen and
+the alarm lamp); a general wears a mark, and he is a little the larger now, his outline a dress uniform's brass braid.
 
 ## Arrival nods
 
