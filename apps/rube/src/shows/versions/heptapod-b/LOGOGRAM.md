@@ -454,6 +454,12 @@ changed, in the order of the film, and then what runs through it:
   ink seen from the moving camera, so as the frame's middle passed between two feet the reach jumped to another limb in
   a single frame (144.8, 148.43): it is chosen once, as the ring is born. And it can reach with two limbs at once now,
   so rings written close together each keep their own, each spray from its own.
+- **The first long flight** (143.7 → 146.2): flung off the first fog ring, she held one place on the screen for a second
+  and a half against the fog, as the two later flights had before the frame was anchored to where they land (a fresh
+  critic's note). It is anchored the same way now, so she travels across the frame toward the ring written for her.
+- **The shell going** (188 → 192.4): it paled into the air as a whole, but kept its hard rim, so by the cut back in it
+  stood as a see-through bowl with the ridges and the sunlight showing through it (a fresh critic's note). As it pales
+  now its hull gives way to a blur of itself, wider as it goes, and it melts into the cloud.
 
 ## Arrival nods
 
