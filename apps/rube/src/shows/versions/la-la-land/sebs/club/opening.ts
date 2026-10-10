@@ -171,12 +171,14 @@ export const opening = part<OpeningState>(
     const [x0, y0, x1, y1] = PIANO_CELLS
     const lane = { segs: route(plan.ways), fire: plan.fire - slot.begin }
     // The what-if, as it begins: while he plays on and finds her across the room, an echo of him comes away from the
-    // keys, over the case's end and out toward her table, slower as it goes, and comes apart before it gets there.
-    // The dream starts from that.
-    const E = { from: 32.95, to: 34.85, gone: [34.05, 34.8] as [number, number] }
+    // keys, over the case's end and down to her table, beside her; it holds there a beat, and comes apart. The dream
+    // starts from that.
+    const E = { from: 32.95, arrive: 34.45, to: 35.3, gone: [34.75, 35.25] as [number, number] }
     const start = laneAt(lane, E.from - slot.begin)
-    // Up out of the keys, over the case's end, and sinking toward her table: a cubic, eased so it slows as it goes.
-    const P: Pt[] = [[start.x, start.y], [start.x - 1.2, -0.35], [PIANO.caseX0 - 0.7, -0.75], [MIA_SEAT[0] + 1.05, MIA_SEAT[1] - 1.15]]
+    // Up out of the keys, over the case's end, and down to her table, to the place beside her on the side away from
+    // David: a cubic, eased so it slows as it comes. It holds there a beat, looking at her, and comes apart.
+    const BESIDE: Pt = [MIA_SEAT[0] - 0.33, MIA_SEAT[1] - 0.04]
+    const P: Pt[] = [[start.x, start.y], [start.x - 1.2, -0.35], [PIANO.caseX0 - 1.4, -0.4], BESIDE]
     const bez = (u: number): Pt => {
       const a = 1 - u
       const w = [a * a * a, 3 * a * a * u, 3 * a * u * u, u * u * u]
@@ -186,11 +188,12 @@ export const opening = part<OpeningState>(
       from: E.from,
       to: E.to,
       at: (t: number) => {
-        const u = Math.max(0, Math.min(1, (t - E.from) / (E.gone[1] - E.from)))
+        const u = Math.max(0, Math.min(1, (t - E.from) / (E.arrive - E.from)))
         const [x, y] = bez(1 - (1 - u) ** 2)
         const a = Math.min(1, (t - E.from) / 0.35)
         const gone = Math.max(0, Math.min(1, (t - E.gone[0]) / (E.gone[1] - E.gone[0])))
-        return { x, y, a, spin: Math.atan2(MIA_SEAT[1] - y, MIA_SEAT[0] - x), gone }
+        const spin = Math.atan2(MIA_SEAT[1] - y, MIA_SEAT[0] - x)
+        return { x, y, a, spin: u < 1 ? spin : 0, gone }
       },
     }
     return {
