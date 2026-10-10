@@ -262,8 +262,10 @@ export const bed: Part<HouseState> = part<HouseState>(
       { t: SWELL, cells: 3.45, hold: w(1.92, -0.9) },
       // Then in on her as she goes, close while she pales into the pillow, and held on it empty. (The push came after
       // she had gone: she went in the wide, small under the clock, and the close-up found an empty bed.)
-      { t: 95.0, cells: 2.78, hold: w(0.98, -0.45) },
-      { t: GONE[1], cells: 2.72, hold: w(0.95, -0.43) },
+      // The clock kept whole at the frame's right: pushed in past it, it was a sliver at the edge, and two fresh readers
+      // took it for gone, the clock vanished with her.
+      { t: 95.0, cells: 3.15, hold: w(1.95, -0.5) },
+      { t: GONE[1], cells: 3.1, hold: w(1.93, -0.48) },
       { t: SEAM.news, cells: 4.6, hold: w(BEDSIDE_X + 1.05, -0.95) },
     ]
   },

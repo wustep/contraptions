@@ -844,6 +844,12 @@ were darker than the room they stood in, holes in it. They are a muted grey a li
 light, with dark marks that look; still well below her and Shang. And the whole of what the site's build runs passed
 again (every suite and the production build); the show's chunk is 238 kB.
 
+An eighty-eighth gave the show to a seventeenth fresh reader: Shang read, by name; Ian leaves; the loop closes; the
+guests read as a crowd. Their worst was the clock vanishing as Hannah goes (95.5 s), which the eleventh had said too.
+The push in on her left it a sliver at the frame's edge, and a push in under a second reads as a cut: the clock was
+there, then gone. The close frame keeps it whole at its right now, the clock running down beside the emptying bed,
+and Louise in it under Zoom as the check holds her.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
