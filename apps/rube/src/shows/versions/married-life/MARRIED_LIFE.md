@@ -759,6 +759,12 @@ window.
     and found the order backwards. What it does show: the storm's own taking (129.3) is not seen, the jar small in the
     house's wide. Kept: the wide is the storm's (the house, the tree, the limb), and the third taking is the one a
     critic already found one too many; making it legible would recut a sequence locked to the music.
+  - *The whole show, after the beat-by-beat fixes*, told back by a ninth viewer who has never seen Up (a frame a
+    second): the arc whole, the wedding to him alone (the ward, the funeral, home at 90 to 95%). The fixes held: the
+    hill read right even at that scale ("she falls behind… he rolls back down to her… she is unwell"), and his lean
+    in the waiting room was among what landed hardest ("his chair leaning to hers. Nothing happens, and that's why it
+    hurts"). Most lost: the ladder (117 to 126 s), who fell (it guessed her, 55%); the one beat not yet watched by a
+    viewer frame by frame.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
