@@ -394,7 +394,8 @@ each world, and changed:
   so a link to the show unfurled with her old colour. It is made again from the show as it is; nothing else in it moved.
 - **Ariadne's goodbye** (234.6 to 235.2): when he dropped out of his seat and rolled away up the aisle, only her eyes
   went with him, and a viewer new to it saw him go home alone, "teal just gone" (a cold critic's note). On the next
-  beat she gives a little hop toward him and settles back into her seat, still watching him go.
+  beat she gives a little hop toward him and settles back into her seat, still watching him go. The camera holds a
+  little to her side of him until it is over, so under Zoom too she is in the picture for it.
 
 ## Inception nods
 
