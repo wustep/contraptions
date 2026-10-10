@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { beam, bloom, rgba, sink, tear } from '../cast'
 import { hash, type Ctx } from '../kit'
+import { beat } from '../music'
 import { FISCHER_DOWN } from '../stack'
 import { SNOW } from '../worlds'
 import {
@@ -323,6 +324,48 @@ function drawGuards(p: p5, ctx: C2D, c: Ctx, t: number): void {
     const lit = i === 0 ? 1 - ss((t - GUARD_DOWN) / 0.4) * 0.8 : 1 - ss((t - (T.gate + 1)) / 2) * 0.5
     snowmobile(p, ctx, c, at, h, lit)
   })
+  drawShots(p, ctx, c, t)
+}
+
+/**
+ * The guards fire on them down the face (the chase had no threat that landed): on alternate beats of it, a flash at the
+ * rider's shoulder and, a tenth of a second on, a spurt of snow kicked up on Fischer's track just behind him, the
+ * last of the three. Never a hit: Mal's shot is the one that lands.
+ */
+const SHOTS: [number, number][] = [138, 139, 140, 141, 142, 143, 144, 145, 146].map((b, j) => [beat(b) + 0.04, j % 2])
+function drawShots(p: p5, ctx: C2D, c: Ctx, t: number): void {
+  const { k } = c
+  for (const [ts, gi] of SHOTS) {
+    const u = t - ts
+    if (u < 0 || u > 0.7) continue
+    const g = GUARDS[gi]
+    const gat = g.at(ts)
+    const tgt = FISCHER_SNOW.at(ts - 0.15)
+    const side = Math.sign(tgt[0] - gat[0]) || -1
+    // The flash at his shoulder, gone in a tenth of a second.
+    if (u < 0.12) bloom(p, k, [gat[0] + side * 0.45, gat[1] - 0.85], 0.45, SNOW.flash, 0.9 * (1 - u / 0.12))
+    // The spurt where it strikes the snow: up and settling, a few flecks thrown.
+    const v = u - 0.1
+    if (v < 0) continue
+    const at: Pt = [tgt[0], tgt[1] + R]
+    const a = Math.exp(-v / 0.22)
+    // White on white is lost: the pock it leaves is dark, and the spray in the snow's blue shade.
+    ctx.fillStyle = rgba(SNOW.snowDeep, 0.75 * Math.exp(-v / 0.5))
+    ctx.beginPath()
+    ctx.ellipse(at[0] * k, at[1] * k, 0.14 * k, 0.05 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+    bloom(p, k, [at[0], at[1] - 0.18 - 0.4 * Math.min(1, v / 0.15)], 0.35 + 0.45 * Math.min(1, v / 0.2), SNOW.snowShade, a)
+    ctx.fillStyle = rgba(SNOW.snowDeep, 0.85 * a)
+    for (let q = 0; q < 9; q++) {
+      const ang = -Math.PI / 2 + (hash(q, Math.round(ts * 10), 7) - 0.5) * 1.6
+      const sp = 1.8 + 2.0 * hash(q, Math.round(ts * 10), 8)
+      const x = at[0] + Math.cos(ang) * sp * v
+      const y = at[1] + Math.sin(ang) * sp * v + 4 * v * v
+      ctx.beginPath()
+      ctx.arc(x * k, y * k, Math.max(1.2, (0.04 + 0.03 * hash(q, 3, 9)) * k), 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
 }
 
 /**
