@@ -102,12 +102,11 @@ function chandelier(ctx: Ctx, k: number, f: Frame, x: number, t: number, i: numb
   // The chain up out of the frame.
   ctx.fillStyle = rgba(GALA.lightWarm, 0.35)
   ctx.fillRect(cx * k - 0.5, (f.y0 - 1) * k, 1, (cy - 0.7 * s - f.y0 + 1) * k)
-  // The strands: an inverted dome of short falls of light, swaying a little.
+  // The strands: an inverted dome of short falls of light.
   const n = 15
   for (let j = 0; j < n; j++) {
     const u = (j / (n - 1)) * 2 - 1
-    const sway = 0.02 * Math.sin(t * 0.7 + j + i)
-    const sx = cx + u * 0.75 * s + sway
+    const sx = cx + u * 0.75 * s
     const top = cy - 0.55 * s + Math.abs(u) * 0.15 * s
     const len = (0.9 - 0.55 * u * u) * s
     const a = 0.55 + 0.35 * hash(j, i, 7)

@@ -421,29 +421,6 @@ function drawField(ctx: Ctx, k: number, f: Frame, t: number): void {
   ctx.restore()
 }
 
-/** Dew on the grass in the sun: now and then a blade's tip catches the light, and lets it go. */
-function drawDew(ctx: Ctx, k: number, f: Frame, t: number): void {
-  const fade = fieldFade(f, t)
-  if (fade <= 0.01 || daylight(t).sun <= 0.01) return
-  ctx.save()
-  ctx.globalCompositeOperation = 'screen'
-  ctx.fillStyle = rgba(VALLEY.floodlight, 1)
-  tufts(f, (x, y, h, i, j) => {
-    if (hash(i, j, 85) > 0.09) return
-    const sun = sunAt(t, x)
-    if (sun < 0.3) return
-    const tw = Math.pow(Math.max(0, Math.sin(t * (1.6 + hash(i, j, 86)) + hash(i, j, 87) * 6.283)), 10)
-    if (tw < 0.03) return
-    const lean = 0.3 * Math.sin(t * 0.7 + x * 0.5 + y) + 0.15
-    const r = (0.012 + 0.006 * Math.min(4, y - MEADOW)) * (0.6 + 0.6 * tw)
-    ctx.globalAlpha = tw * sun * fade
-    ctx.beginPath()
-    ctx.arc((x - h * 0.12 + (lean - 0.25) * h) * k, (y - h) * k, Math.max(0.6, r * k), 0, Math.PI * 2)
-    ctx.fill()
-  })
-  ctx.restore()
-}
-
 /** How hard the air pushes the grass at `x`: the rotor's wash, the shell's wake as it goes (signed: + to the right). */
 function windAt(t: number, x: number): number {
   let w = 0
@@ -928,7 +905,6 @@ export function drawValley(p: p5, k: number, t: number): void {
   drawSunWash(ctx, k, f, t)
   drawSunlight(ctx, k, t, f.x0, f.x1, smooth(f.y1 - f.y0, 10, 40))
   drawShadows(ctx, k, t)
-  drawDew(ctx, k, f, t)
   drawFloorMist(ctx, k, f, t)
   drawRays(ctx, k, t, smooth(f.y1 - f.y0, 6, 30))
   ctx.restore()

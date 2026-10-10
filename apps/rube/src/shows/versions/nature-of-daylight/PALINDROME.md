@@ -104,7 +104,7 @@ Times are show seconds; chord *n* is the *n*th change of harmony.
 | 250.120 | chord 66 | the lawn | What she is shown: the swing on a summer evening, Hannah a young woman, well, laughing, on its seat where the small ring was. A push; the leaves. |
 | 257.683 | chord 68 | beyond the glass | The ring she was shown grows on each stroke until it fills the frame, and the white round them goes to a grey dusk; **on 262.374 its ends meet at her touch and the white floods out from it: she knows**. The palm lets it go. |
 | 266.124 | chord 71 | the gala | Years on: an evening reception, champagne light, knots of dark guests. She rolls onto a brass pouring stand and a champagne tower fills a tier a beat; the room raises its glasses (272.869); **Shang** crosses to her, leans in and they touch: the whisper (274.802), and a ghost of the sat phone's keys comes up beside them, lighting the first of his number. |
-| 277.647 | chord 74 | the command tent | The sat phone, the red lamp burning. She hops key to key on the beats, the number he gave her; the dead ring on 283.458; the call key on **288.554, the loudest bars**: the call goes up the cable, China's screen rises red, and **the dominoes stand again, backwards**, one a beat, the last to fall the first to rise, the camera drawing back until **the ring closes whole in the wide on the loudest bar (303.827)**, the lamp going out; pulses running both ways round it. |
+| 277.647 | chord 74 | the command tent | The sat phone, the red lamp burning. She hops key to key on the beats, the number he gave her; the dead ring on 283.458; the call key on **288.554, the loudest bars**: the call goes up the cable, China's screen rises red, and **the dominoes stand again, backwards**, one a beat, the last to fall the first to rise, the camera drawing back until **the ring closes whole in the wide on the loudest bar (303.827)**, the lamp going out. |
 | 311.293 | chord 84 | Montana | Morning. The lift's deck comes down; **the shell goes up the way it came down**, into the cloud, **gone as the high violins stop (318.711)**. The hush: the cloud churning where it went. **322.606: the cloud breaks over the left ridge and the low sun rakes across the valley**, its light sweeping along the floor to her on 326.258; Ian comes to her across the light; **they touch (330.170)**, close, and hold. |
 | 334.031 | chord 90 | the lake house | Home, in the morning light: Louise and Ian by the window, close, the empty cradle beside them; after the turn he goes round it to its far side. She rolls into him (337.850); they turn to the cradle (341.618) and go to it (345.490). **349.495: a cut close on the cradle, baby Hannah in it**, Louise rocking it, Ian beyond it on her right, the cradle between them: they chose her, in the same morning light. Then he turns away, looks back at her, and goes out of the room. She rocks it on the last chords, fainter and fainter; from the last B-flat the camera draws back, the opening's push in played backwards, and arrives on the first frame on the last attack (371.931). The credits in the silence over the wall above the window. |
 
@@ -1028,6 +1028,21 @@ both are gone:
   the cut, to make it read as time passing. The show already has one white, the white-out after the blast, and its
   ending wants the room as it is. The cut is a plain cut in now: nothing in the room moves across it, and the
   baby in the cradle is the change.
+
+A hundred-and-fourteenth was a second subtraction, looking again after the first, this time at motion and detail
+that ran on its own rather than on the story or the music:
+
+- **The pulses round the closed ring** (304.8 to 311 s): white glints running both ways round from Montana on each
+  beat after the ring closes. The ring closing whole in light on the loudest bar already says the world is joined;
+  the glints were a second telling. Chord 83 (307.513), which they struck, is still struck by her voice going up the
+  cable on that beat.
+- **The links' light breathing with the music** in the tent: it now holds steady where it is lit.
+- **The dew on the meadow** (from 326 s): a blade's tip here and there catching the sun and letting it go, white
+  flecks in the grass under the reunion. The light on the meadow is enough.
+- **The daylight's shafts swaying and shimmering**, and **the gala's chandelier strands swaying** in a still room.
+
+`tsc` and the full `check:shows` pass (686 checks). The ring, the gala and the daylight through the meadow were
+filmed again; nothing else changed.
 
 ## Arrival nods
 

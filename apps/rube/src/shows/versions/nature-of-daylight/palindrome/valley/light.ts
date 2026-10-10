@@ -377,15 +377,13 @@ export function drawRays(ctx: Ctx, k: number, t: number, far = 1): void {
   ]
   for (let i = 0; i < rays.length; i++) {
     const r = rays[i]
-    const sway = 0.5 * Math.sin(t * 0.3 + i * 1.7)
     // From all along the tear, so the shafts fan out of the cloud's edge rather than falling from one bright spot.
     const xa = bx + (r.from - 0.25) * rx * 1.7
     const ya = by + ry * 0.25 + 1 + r.dy
     // Landing along the floor between the ridge's foot and the light's edge.
-    const xb = bx + 22 + (reach - bx - 22) * r.to + sway
+    const xb = bx + 22 + (reach - bx - 22) * r.to
     const yb = MEADOW + 0.5
-    const shimmer = 0.9 + 0.1 * Math.sin(t * 0.8 + i * 2.1)
-    const a = r.a * d.sun * shimmer * far
+    const a = r.a * d.sun * far
     const len = Math.hypot(xb - xa, yb - ya) || 1
     const nx = -(yb - ya) / len
     const ny = (xb - xa) / len

@@ -1,9 +1,8 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { drawScreen, inkRing, mix, PLACES, rgba } from '../cast'
-import { level } from '../music'
 import { SHANG, TENT } from '../worlds'
-import { closeFlare, linkDrop, linkLit, linkSpan, panelAngle, pulsesAt, redCast, screenFlash, screenOn } from './timeline'
+import { closeFlare, linkDrop, linkLit, linkSpan, panelAngle, redCast, screenFlash, screenOn } from './timeline'
 
 /**
  * The ring: twelve screens on one circular rig like a clock face, each showing a shell over its own place, each
@@ -165,10 +164,8 @@ function drawLink(ctx: CanvasRenderingContext2D, k: number, j: number, t: number
   const c = cable(j, t)
   const span = linkSpan(j, t)
   const g = Math.min(2.2, linkLit(j, t))
-  // The light in the links breathes with the music.
-  const breath = 0.7 + 0.6 * level(t)
   const lit = !!span && span.to - span.from > 0.002
-  if (lit) for (const [w, al] of GLOW) fillCable(ctx, k, c, span.from, span.to, w, rgba(TENT.signal, al * g * breath), 0.012 * w)
+  if (lit) for (const [w, al] of GLOW) fillCable(ctx, k, c, span.from, span.to, w, rgba(TENT.signal, al * g), 0.012 * w)
   // The cable itself, solid and dark; the light in it where it is lit.
   fillCable(ctx, k, c, 0, 1, 1, mix(TENT.frame, TENT.canvasLit, 0.3))
   if (lit) {
@@ -290,7 +287,7 @@ function drawKnuckle(ctx: CanvasRenderingContext2D, k: number, i: number): void 
   ctx.fillRect((px - 0.07) * k, (py - 0.07) * k, 0.14 * k, 0.14 * k)
 }
 
-/** The ring, all of it, at show time t: the rig, the glows, the links, the screens, their hinges, and the pulses. */
+/** The ring, all of it, at show time t: the rig, the glows, the links, the screens, and their hinges. */
 export function drawRing(p: p5, k: number, t: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
@@ -322,7 +319,6 @@ export function drawRing(p: p5, k: number, t: number): void {
     ctx.fillRect(CENTRE[0] * k - r1, CENTRE[1] * k - r1, 2 * r1, 2 * r1)
   }
   for (let j = 0; j < 12; j++) drawLink(ctx, k, j, t)
-  drawPulses(ctx, k, t)
   // What hangs over goes behind what stands.
   const order = Array.from({ length: 12 }, (_, i) => i).sort((a, b) => th[b] - th[a])
   for (let i = 0; i < 12; i++) drawMount(ctx, k, i)
@@ -330,26 +326,3 @@ export function drawRing(p: p5, k: number, t: number): void {
   for (let i = 0; i < 12; i++) drawKnuckle(ctx, k, i)
   ctx.restore()
 }
-
-/** After it closes: the signal goes round, both ways from Montana at once, and meets itself at the top. */
-function drawPulses(ctx: CanvasRenderingContext2D, k: number, t: number): void {
-  for (const { u, a } of pulsesAt(t)) {
-    for (const dir of [1, -1]) {
-      const head = angleOf(0) + dir * u * Math.PI
-      const seg = (from: number, len: number, widen: number, style: string) => {
-        const lo = Math.min(from, from - dir * len)
-        const hi = Math.max(from, from - dir * len)
-        fillBand(ctx, k, band(lo, hi, widen, 8), style)
-      }
-      seg(head, 0.7, 4, rgba(TENT.screenGlow, 0.18 * a))
-      seg(head, 0.45, 2.2, rgba(TENT.screenOn, 0.28 * a))
-      for (let n = 0; n < 8; n++) seg(head - dir * n * 0.055, 0.055, 1.25, rgba('#FFFFFF', a * 0.95 * (1 - n / 8)))
-    }
-    // Where the two meet at the top, a moment's brighter light.
-    if (u > 0.92) {
-      const top = angleOf(6)
-      fillBand(ctx, k, band(top - 0.12, top + 0.12, 2.4, 8), rgba(TENT.screenOn, 0.5 * a * ((u - 0.92) / 0.08)))
-    }
-  }
-}
-
