@@ -143,6 +143,9 @@ The planet has weather, at depths behind the stones (`air.ts`):
   then easier, climbing until they are gone; they are back on their perches, roosting, by the time the ball comes
   round again. They are in the sea's reflection too (`PERCHED`).
 - Gulls by day, a few small flocks overtaking the ball along the colonnade, beating a while and gliding a while.
+- A sun-glint on the Gymnopédie's top note (the F♯ its melody climbs to six times): as the ball lands on it a soft
+  star of sunlight catches the edge of the column's slab on the sun's side and fades, none under the shower's cloud
+  (`SUN_GLINTS`). The day's high notes are answered by the sun, as the night's are by the stars.
 - The Milky Way at night, turning with the stars; and a shooting star on the top note of each of the first
   Gnossienne's four high phrases and the third's two, a melody's peak answered in the sky.
 - Mist on the water at dawn, a little at dusk, and under the moon; fireflies over the pond in the third Gnossienne.

@@ -12,6 +12,17 @@ import { lampLight, bloom, cadenceFronts, cadence, SEGMENT } from './stones'
  * A grace note's spark: the grace leans on the melody note after it, a breath ahead of it, and strikes a light
  * where the ball is about to come down on that note, a lamp's wick in the first Gnossienne.
  */
+/**
+ * The Gymnopédie's top note answered by the sun, as the Gnossiennes' are by the stars (`METEORS`): each time the ball
+ * comes down on it, a star of sunlight catches the edge of the column's slab on the sun's side, and fades.
+ */
+const G1_TOP = Math.max(...MELODY.filter((n) => n.piece === 0).map((n) => n.p))
+export const SUN_GLINTS = MELODY.filter((n) => n.piece === 0 && n.p === G1_TOP).map((n) => {
+  const b = ballLocal(n.t + 0.02)
+  const stone = STONES[b.stone]
+  return { t: n.t, stone, v: n.v }
+})
+
 export const SPARKS = GRACES.map((g) => {
   const on = MELODY.find((n) => n.t > g.t) ?? MELODY[0]
   const b = ballLocal(on.t)
@@ -60,6 +71,45 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.moveTo(0, -len)
     ctx.lineTo(0, len)
     ctx.stroke()
+    ctx.restore()
+  }
+  // A sun-glint on the Gymnopédie's top note: a soft star on the slab's edge towards the sun, turning a little.
+  const sunSide = Math.sin(sunAngle(c.t)) >= 0 ? 1 : -1
+  for (const g of SUN_GLINTS) {
+    const s = since(c.t, g.t)
+    if (s < 0 || s > 2) continue
+    const a = (1 - Math.exp(-s / 0.03)) * Math.exp(-s / 0.45) * Math.min(1, g.v / 45) * (1 - 0.8 * overcastAt(c.t)) * (1 - v.wide)
+    if (a < 0.01) continue
+    const st = g.stone
+    const back = Math.round((along(c.t) - (st.u0 + st.u1) / 2) / LENGTH) * LENGTH
+    const u = (sunSide > 0 ? st.u1 - 0.05 : st.u0 + 0.05) + back
+    const [x, y] = polar(u, st.h - sink(st, c.t))
+    ctx.save()
+    ctx.translate(x * k, y * k)
+    ctx.rotate(u / RADIUS + 0.25 * s)
+    ctx.globalCompositeOperation = 'lighter'
+    const r = k * 0.5
+    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+    glow.addColorStop(0, `rgba(255, 246, 214, ${(0.8 * a).toFixed(3)})`)
+    glow.addColorStop(0.25, `rgba(255, 226, 170, ${(0.25 * a).toFixed(3)})`)
+    glow.addColorStop(1, 'rgba(255, 226, 170, 0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(-r, -r, 2 * r, 2 * r)
+    // Its rays, two long and two short, bright at the heart and fading to nothing at their tips.
+    ctx.lineCap = 'round'
+    ctx.lineWidth = Math.max(devicePx(ctx), k * 0.014)
+    const L = k * (0.35 + 0.25 * Math.min(1, s / 0.3))
+    for (const [dx, dy] of [[L, 0], [0, L * 0.55]]) {
+      const ray = ctx.createLinearGradient(-dx, -dy, dx, dy)
+      ray.addColorStop(0, 'rgba(255, 250, 232, 0)')
+      ray.addColorStop(0.5, `rgba(255, 250, 232, ${(0.9 * a).toFixed(3)})`)
+      ray.addColorStop(1, 'rgba(255, 250, 232, 0)')
+      ctx.strokeStyle = ray
+      ctx.beginPath()
+      ctx.moveTo(-dx, -dy)
+      ctx.lineTo(dx, dy)
+      ctx.stroke()
+    }
     ctx.restore()
   }
   // Far off: the lamps the ball has lit tonight, a thread of lights round the planet, and after them, fainter, the
