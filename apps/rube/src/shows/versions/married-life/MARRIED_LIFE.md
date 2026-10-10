@@ -726,6 +726,10 @@ window.
     slowly, seen whole against the wall, red and white, before they drop in; the timing on the notes is unchanged.
     A check holds both at least a quarter cell over the slot and inside the frame, under Zoom too (the first try,
     higher, touched Zoom's top).
+  - *"The arm that takes the jar"* (both fresh viewers). There is no arm: she tips the jar in its cradle and the coins
+    run down the tin chute and out through the wall's slot. Its funnel at the jar's mouth and its two brackets (read
+    as joints) make a grabber of it. Kept: both took the beat's meaning from it all the same ("life takes the
+    savings"), and only the mechanism was misread; redrawing it would redesign the show's central machine.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
