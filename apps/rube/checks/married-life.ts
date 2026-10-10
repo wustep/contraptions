@@ -516,6 +516,11 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     const his = arrives((t) => show.at(t).x, 177.6)
     check('married life: on the hill she reaches the stone first, and he comes after her', his - her >= 0.5,
       `her ${her.toFixed(2)} s, him ${his.toFixed(2)} s`)
+    // And he bolts on the next strong note after her give-way (175.409, the basket's tip): still until it, moving after.
+    const x = (t: number) => show.at(t).x
+    check('married life: on the hill he stands struck still until the note, and bolts on it',
+      Math.abs(x(175.4) - x(174.9)) < 0.005 && x(175.6) - x(175.41) > 0.03,
+      `still ${Math.abs(x(175.4) - x(174.9)).toFixed(3)}, then ${(x(175.6) - x(175.41)).toFixed(3)} cells`)
   }
   check('married life: on the hill\'s flank they rest on the slope, not in it (until she gives way)', flank >= -0.05, `${flank.toFixed(3)} R at ${flankAt.toFixed(2)} s`)
 }

@@ -182,8 +182,9 @@ const RUN = (() => {
   // Flat out the whole way, a short ease, and on the stone a moment after she has come to rest (`E.settle`), then still beside
   // her until his lean: stillness reads, creeping does not; and he never runs into her as she settles.
   // Struck still for a beat as she gives way, watching her go: she is seen to fall first, and he comes after her (a
-  // fresh viewer, with a short hold, read the two of them as sliding down together).
-  const hold = 0.8
+  // fresh viewer, with a short hold, read the two of them as sliding down together). He bolts on the next strong note
+  // (175.409, the one the basket tips over on).
+  const hold = T.tip - T.fall
   const ta = 0.25
   const td = 0.55
   // He is on the stone 0.75 s after she is still: she lies there alone a moment before he comes.

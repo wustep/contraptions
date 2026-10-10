@@ -239,7 +239,7 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets to give
   her, lying on the slope as he passes. Struck, he straightens up out of the slope's lean and stands still for most
   of a second, watching her go, so she is seen
-  to fall first; then he hurries down after her, faster than he has gone in years, up out of the slope's lean and
+  to fall first; then on the next strong note (175.409, the one the basket tips over on) he bolts down after her, faster than he has gone in years, up out of the slope's lean and
   into the run, bounding a little each stride (`RUN`, `runTilt`: tilted with the slope, a square going downhill
   read as tumbling), the camera hanging back so he is seen to cross the frame to her, in close with them (2.4 to 1.9
   cells, the basket left out of the frame), and comes onto the stone beside her three quarters of a second after she
@@ -661,6 +661,9 @@ window.
     notes, looked at again: the flat tyre is staged (the camera pushes in to the window, the tyre goes with a puff,
     the car sits tilted while the jar is spent and is level after); a sheet a frame every 1.4 s steps over the
     puff, viewing speed does not.
+  - *The restaged fall, on the music.* Her coming to rest (176.272) already sat on a measured onset (176.274); his bolt
+    came 60 ms after the next strong note (175.409, strength 0.71, the basket's tip). His stillness now ends on it: he
+    bolts on the note, with the basket's tip (a check holds him still to it and moving after).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
