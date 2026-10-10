@@ -5,6 +5,7 @@ import { FLOOR, mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash } from '../kit'
 import { HOME } from '../worlds'
 import { EVELYN, JOY, WAYMOND } from '../worlds'
+import { drawLives, livesShown } from './finale-lives'
 import { lantern, lanternLit, LIGHTS, WASHER, washerBody, washerDoor, type Pen, type WasherLook } from './set'
 import {
   BEGIN,
@@ -119,9 +120,12 @@ export function drawWindowGlow(pen: Pen, t: number, dark: number): void {
   const col = lightColor(light.warm)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const a = light.a * dark
+  // Under the credits, every life she went through, once more, in the glass; the glow stands back from them.
+  drawLives(ctx, k, cx, cy, r, col, dark, t)
+  const inner = 1 - 0.6 * livesShown(t) * dark
   ctx.save()
   const g = ctx.createRadialGradient(cx * k, cy * k, r * 0.2 * k, cx * k, cy * k, (r + 0.5) * k)
-  g.addColorStop(0, rgba(p, col, 0.55 * a))
+  g.addColorStop(0, rgba(p, col, 0.55 * a * inner))
   g.addColorStop(r / (r + 0.5), rgba(p, col, 0.32 * a))
   g.addColorStop(1, rgba(p, col, 0))
   ctx.fillStyle = g

@@ -3,9 +3,12 @@ import { R, type Pt, type Seg } from '../../../../../parts'
 import { director } from '../camera'
 import { box, carried, frame, part, type Ctx, type PartShot } from '../kit'
 import { DURATION, fight, JUMPS, strength } from '../music'
-import { EVELYN, LAUNDROMAT, MULTI_THEME, VOID, VOID_THEME } from '../worlds'
-import { room } from '../home/set'
+import { EVELYN, EYE_WHITE, JOY, LAUNDROMAT, MULTI_THEME, VOID, VOID_THEME, WAYMOND } from '../worlds'
+import { penOf, room } from '../home/set'
+import { drawArm, drawDesk, drawGiftBox, drawGlove, drawHammer, drawKaraoke, drawLanterns, drawLid, drawPartyWall, drawSteamers, drawTable, drawTrap, jumpersIn } from '../home/kindness-draw'
+import { lidAt } from '../home/kindness-plan'
 import { KINDNESS_AT } from '../home/kindness'
+import { PANEL_LOOKS, paintPicture, pixelOf, prefersCalm } from '../film'
 import { backdrop, HP, LE, LW, PL, SKINS, skinAt, TH, TILT, WEDGE, type Moment, type Skin, type View } from './skins'
 import { at, circle, glow, hash, lodFor, mix, poly, rect, rgba, type Pen } from './skins-pen'
 
@@ -24,10 +27,10 @@ import { at, circle, glow, hash, lodFor, mix, poly, rect, rgba, type Pen } from 
  * she never saw, a wall of universes all running the one machine in unison.
  *
  * On the crescendo the wall crowds to 144 (beat 121) as the seesaw throws her one last time, high, under home's
- * gravity. On 121½ every panel turns over like a card to another world; on 122 they all turn to the same one, and
- * it is one place seen through a hundred and forty-four windows, with one of her in it: home, the laundromat's own
- * room at the party corner. The frames close in on her, snap shut round her on 122½, and thin away, and on the
- * great hit (123) she lands alone on the floor of home, at rest, where the kindness begins.
+ * gravity, in every life at once. Then, of all of them, this one: the camera dives into the wall, toward the panel
+ * that is home, on 121½, 122 and 122½, a lurch a beat, every other life swelling past the frame's edges as it goes.
+ * Home's panel is the laundromat's own room at the party corner, Jobu's jumpers already in it; it comes to fill the
+ * frame, and on the great hit (123) she lands alone on its floor, at rest, where the kindness begins.
  *
  * The part draws everything in its `over`, in the screen's own place: a panel is a world (`skins.ts`) with its own
  * little camera on the machine. At one panel that camera is the stage's own, so the leg opens and closes on the
@@ -70,11 +73,14 @@ const STEPS: { at: number; g: Grid; snap: number }[] = [
   { at: B(112), g: { cols: 8, rows: 8, ox: 0.5, oy: 0.5 }, snap: 0.11 },
   { at: B(121), g: { cols: 12, rows: 12, ox: 0.5, oy: 0.5 }, snap: 0.07 },
 ]
-/** The crescendo's turns: every panel over to another world on 121½, and on 122 all of them to the calm. */
-const FLIPS = [B(121.5), B(122)]
-const FLIP_T = 0.19
-/** The gathering: from the turn on 122 to the great hit. */
-const FOLD = B(122)
+/**
+ * The dive into home's panel: a lurch closer on each of these beats, then the last of the way eased onto the great
+ * hit, where the panel is the frame. How far, in shares of the whole dive (in scale), after each lurch.
+ */
+const DIVE = [B(121.5), B(122), B(122.5)]
+const DIVE_STEPS = [0.24, 0.47, 0.7]
+/** The wall's last grid is twelve panels across: the dive comes twelve times closer. */
+const DIVE_TO = 12
 const ONE: Grid = { cols: 1, rows: 1, ox: 0, oy: 0 }
 /** The breath in before a break: how far, and how long. */
 const WIND = 0.035
@@ -82,8 +88,7 @@ const WIND_T = 0.22
 
 /**
  * Every strike: the tip into the hole (fight 59: a violet flare off her, the bagel's seeds flung), the tubes, each
- * beat's slam from 72 to 121, the turns on 121½ and 122, the net snapping shut round her on 122½, and her landing
- * on the great hit.
+ * beat's slam from 72 to 121, the dive's lurches on 121½, 122 and 122½, and her landing on the great hit.
  */
 export const MOSAIC_HITS: number[] = [JUMPS.mosaic, FLICKER, LIGHTS, ...Array.from({ length: LAST - FIRST + 1 }, (_, i) => B(FIRST + i)), B(121.5), B(122), B(122.5), END]
 
@@ -263,29 +268,20 @@ function pushAt(t: number): number {
 /** How much a panel of `h` pixels (of a frame `fh` tall) shows top to bottom, in cells: less as it gets small. */
 const cellsTall = (h: number, fh: number): number => 2.3 + 1.7 * Math.pow(Math.max(0.01, h / fh), 0.62)
 
-/** The crescendo's turns at `t`: how wide a panel is (1 flat, 0 edge-on), and how many turns have gone over. */
-function flipAt(t: number): { w: number; n: number } {
-  let n = 0
-  let w = 1
-  for (const f of FLIPS) {
-    if (t >= f) n++
-    const u = (t - (f - FLIP_T / 2)) / FLIP_T
-    if (u > 0 && u < 1) w = Math.abs(Math.cos(Math.PI * u))
+/** How far the dive into home's panel has gone at `t`: 0 the wall, 1 the panel is the frame (in shares of its scale). */
+function diveAt(t: number): number {
+  let v = 0
+  for (let i = 0; i < DIVE.length; i++) {
+    const x = t - DIVE[i]
+    if (x <= 0) break
+    const from = i === 0 ? 0 : DIVE_STEPS[i - 1]
+    v = from + (DIVE_STEPS[i] - from) * (1 - Math.exp(-x / 0.07))
   }
-  return { w, n }
-}
-
-/**
- * How big the net of frames still is, once every panel has turned to the calm: whole until the turn has finished,
- * then closing on her at once and settling onto her, gone on the great hit.
- */
-function gatherAt(t: number): number {
-  const from = FOLD + FLIP_T / 2
-  const u = Math.max(0, Math.min(1, (t - from) / (END - from)))
-  // On 122½ it snaps in hard round her; what is left of it settles onto her by the great hit.
-  const x = t - B(122.5)
-  const snapIn = x < 0 ? 1 : 1 - 0.55 * (1 - Math.exp(-x / 0.025))
-  return Math.pow(1 - u, 1.4) * snapIn
+  // The last of the way: from just after the last lurch, eased to rest a few frames before the great hit, so the panel
+  // is the whole frame, with no edge of the wall left at its sides, before the cut.
+  const u = Math.max(0, Math.min(1, (t - DIVE[2] - 0.06) / (END - 0.06 - DIVE[2] - 0.06)))
+  // Whatever of the way the lurches have left, so it is all the way at the end.
+  return v + (1 - v) * u * u * (3 - 2 * u)
 }
 
 /* ------------------------------------------------------------------ state */
@@ -368,6 +364,65 @@ function evelyn(pen: Pen, e: Pt, back: Pt[] | null, ink: string): void {
   }
 }
 
+/* ------------------------------------------------------------------ the family, in every life */
+
+/**
+ * In every life she has, he is there. As the wall multiplies, Waymond is beside her machine in more and more of the
+ * worlds, on the ground past the weight, his googly eye on her: one panel in eight by beat 80, half by 100, three in
+ * four by the crescendo. In the last phrases Joy is there in some, on her side, without an eye yet (hers comes at the
+ * peak). Each arrives on a beat, dropping in with a little bounce, and stays. The home panel, dark at first, has
+ * neither: there he is waiting at the party table, where the fold brings her.
+ */
+const WAY_X = 1.37
+const JOY_X = -1.37
+/** On which beat a panel's Waymond, or Joy, arrives, or never: from the panel's own hash, earlier for more of them. */
+function arrives(i: number, j: number, who: 'w' | 'j'): number {
+  const h = hash(i * 7 + 3, j * 11 + 5, who === 'w' ? 61 : 67)
+  if (who === 'w') return h < 0.78 ? B(Math.round(77 + (h / 0.78) * 40)) : Infinity
+  return h < 0.32 ? B(Math.round(105 + (h / 0.32) * 14)) : Infinity
+}
+/** How far down from the drop an arrival is `u` seconds in: a fall of half a cell, a bounce, settled. */
+const drop = (u: number): number => (u < 0.16 ? -0.55 * (1 - (u / 0.16) ** 2) : -0.09 * Math.max(0, Math.sin(((u - 0.16) / 0.22) * Math.PI)) * Math.exp(-(u - 0.16) / 0.3))
+
+function familyBall(pen: Pen, x: number, y: number, color: string, eyeOn: Pt | null): void {
+  const { ctx } = pen
+  ctx.fillStyle = color
+  ctx.beginPath()
+  ctx.arc(x, y, pen.lod === 3 ? Math.max(R, 1.1 / pen.q) : R, 0, Math.PI * 2)
+  ctx.fill()
+  if (pen.lod === 3) return
+  if (pen.lod <= 1) {
+    ctx.strokeStyle = pen.ink
+    ctx.lineWidth = pen.lw
+    ctx.stroke()
+  }
+  if (!eyeOn || pen.lod > 2) return
+  // His googly eye, its pupil turned to her.
+  const er = R * 0.62
+  const a = Math.atan2(eyeOn[1] - y, eyeOn[0] - x)
+  ctx.fillStyle = EYE_WHITE
+  ctx.beginPath()
+  ctx.arc(x, y - R * 0.12, er, 0, Math.PI * 2)
+  ctx.fill()
+  if (pen.lod <= 1) {
+    ctx.strokeStyle = pen.ink
+    ctx.lineWidth = pen.lw * 0.8
+    ctx.stroke()
+  }
+  ctx.fillStyle = '#141414'
+  ctx.beginPath()
+  ctx.arc(x + Math.cos(a) * er * 0.42, y - R * 0.12 + Math.sin(a) * er * 0.42, er * 0.46, 0, Math.PI * 2)
+  ctx.fill()
+}
+
+/** Whoever of the family is in panel (i, j) at `t`, beside her machine. */
+function family(pen: Pen, i: number, j: number, t: number, e: Pt): void {
+  const w = arrives(i, j, 'w')
+  if (t >= w) familyBall(pen, WAY_X, -R + drop(t - w), WAYMOND, e)
+  const jo = arrives(i, j, 'j')
+  if (t >= jo) familyBall(pen, JOY_X, -R + drop(t - jo), JOY, null)
+}
+
 /** The seesaw: its wedge, its plank at `phi`, the weight. */
 function seesaw(pen: Pen, skin: Skin, mc: Machine): void {
   poly(pen, [[-WEDGE, 0], [WEDGE, 0], [0.05, -HP + 0.03], [-0.05, -HP + 0.03]], skin.fulcrum)
@@ -402,7 +457,7 @@ interface Box {
 }
 
 /** One panel: a world, its machine and its Evelyn, clipped to its rectangle. */
-function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: number, sc: Pt, sx: number, mc: Machine, back: Pt[] | null, dark = 0): void {
+function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: number, sc: Pt, sx: number, mc: Machine, back: Pt[] | null, dark = 0, cell?: [number, number]): void {
   const pen = penFor(ctx, F, b.cx, b.cy, q, sc, skin.ink, sx)
   const hw = b.w / 2 / q
   const hh = b.h / 2 / q
@@ -426,9 +481,13 @@ function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: n
     ctx.fillStyle = rgba(VOID_THEME.bg, dark)
     ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0)
   }
+  if (cell && dark < 0.5) family(pen, cell[0], cell[1], mc.m.t, mc.e)
   // In the dark her ring is the dark's own ink, as it was in the bagel.
   evelyn(pen, mc.e, back, dark > 0 ? mix(skin.ink, VOID_THEME.ink, dark) : skin.ink)
   if (skin.front && dark < 0.5) skin.front(pen, mc.m, v)
+  // Every panel is the picture its life is in: a wall of every kind of film at once (`film.ts`).
+  const look = PANEL_LOOKS[skin.key]
+  if (look && dark < 0.5) paintPicture(ctx, look, v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0, mc.m.t + hash(Math.round(b.cx), Math.round(b.cy), 7), prefersCalm(), pixelOf(ctx), 0.6, pen.lod >= 1)
   ctx.restore()
 }
 
@@ -527,13 +586,17 @@ export const mosaic = part<MosaicState>(
 function shotsFor(begin: number, rest: Pt, O: Pt): PartShot[] {
   const mid: Pt = [O[0] + SCENE_MID[0], O[1] + SCENE_MID[1]]
   const calm: Pt = [rest[0], rest[1] - 0.3]
+  // As the net closes the frame settles with her, low, so the great hit lands on the room and not on the ground
+  // under it: the floor near the bottom, the wall over her.
+  const low: Pt = [rest[0], rest[1] - 0.72]
   return [
     { t: begin + 0.5, cells: 4, off: [0, 0.35] },
     { t: B(68), cells: 4, off: [0, 0.45] },
     { t: B(71), cells: 4, hold: mid, w: 1 },
     { t: B(116), cells: 4, hold: mid, w: 1 },
     { t: B(119), cells: 3.2, hold: calm, w: 1 },
-    { t: END, cells: 3.2, hold: calm, w: 1 },
+    { t: B(121.5), cells: 3.2, hold: calm, w: 1 },
+    { t: END, cells: 3.2, hold: low, w: 1 },
   ]
 }
 
@@ -556,7 +619,6 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
   const mc = machine(t, s.fall)
   const back = [3, 2, 1].map((i) => machine(t - i * 0.022, s.fall).e)
 
-  const m0 = ctx.getTransform()
   ctx.save()
   ctx.setTransform(F.d, 0, 0, F.d, 0, 0)
   ctx.globalAlpha = 1
@@ -565,14 +627,18 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
   ctx.lineJoin = 'round'
 
   const { g, split } = early ? { g: STEPS[5].g, split: 1 } : gridAt(t)
-  const flip = flipAt(t)
-  const calm = !early && flip.n >= FLIPS.length
+  // The dive into home's panel: how far (0..1), how much closer the wall is, and how far home's panel has become the
+  // stage's own view (its scale and its middle), which it is wholly on the great hit.
+  const dv = early ? 0 : diveAt(t)
+  const zoom = Math.exp(dv * Math.log(DIVE_TO))
+  const land = smoothstep((dv - 0.5) / 0.5)
 
   // The layout, in CSS px: panel (i, j) is centred at (X0 + (i - ox) pw, Y0 + (j - oy) ph), zoomed about the frame's
   // middle.
   const pw = (fw / g.cols) * zf
   const ph = (fh / g.rows) * zf
-  const gut = Math.min(7, Math.max(1.3, 0.03 * Math.min(pw, ph))) * split
+  // The gutters thin away as the dive goes in, so home's panel has no dark edge when it is the frame.
+  const gut = Math.min(7, Math.max(1.3, 0.03 * Math.min(pw, ph))) * split * (1 - dv)
   // Where each panel looks, and how close: the stage's own camera while there is one panel, the machine after.
   const own = 1 - split
   const qLay = ((ph - gut) / cellsTall(ph, fh * zf)) * ringAt(t) * (early ? 1 : pushAt(t))
@@ -591,73 +657,108 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
   const homeE: Pt = [X0 - g.ox * pw + (mc.e[0] - sc[0]) * q, Y0 - g.oy * ph + (mc.e[1] - sc[1]) * q]
   const align = early ? 0 : smoothstep((t - B(119.5)) / (B(121) - B(119.5)))
   const shift: Pt = [(P[0] - homeE[0]) * align, (P[1] - homeE[1]) * align]
-  const sigma = calm ? gatherAt(t) : 1
-  const place = (x: number, y: number): Pt => [P[0] + sigma * (x + shift[0] - P[0]), P[1] + sigma * (y + shift[1] - P[1])]
+  const place = (x: number, y: number): Pt => [x + shift[0], y + shift[1]]
+  // In the dive every panel looks closer by the dive's own zoom, and home's comes to look as the stage does.
+  const qD = lerp(q * zoom, F.k, land)
+  const scD: Pt = [lerp(sc[0], realSc[0], land), lerp(sc[1], realSc[1], land)]
+  // Home's panel: laid on the wall; in the dive, held so that she stays where the stage has her (the wall was slid
+  // there by the crescendo), the rest of the wall swelling out from it.
+  const cHome: Pt = dv > 0 ? [P[0] - (mc.e[0] - scD[0]) * qD, P[1] - (mc.e[1] - scD[1]) * qD] : place(X0 - g.ox * pw, Y0 - g.oy * ph)
+  const zpw = zoom * pw
+  const zph = zoom * ph
 
   // The panels that can be seen: the canvas taken back into the wall.
-  const [ax, ay] = [-shift[0], -shift[1]]
-  let ia = Math.floor((ax - X0) / pw + g.ox - 0.5)
-  let ib = Math.ceil((ax + W - X0) / pw + g.ox + 0.5)
-  let ja = Math.floor((ay - Y0) / ph + g.oy - 0.5)
-  let jb = Math.ceil((ay + H - Y0) / ph + g.oy + 0.5)
+  let ia = Math.floor(-cHome[0] / zpw - 0.5)
+  let ib = Math.ceil((W - cHome[0]) / zpw + 0.5)
+  let ja = Math.floor(-cHome[1] / zph - 0.5)
+  let jb = Math.ceil((H - cHome[1]) / zph + 0.5)
   // One panel, before the first break: no neighbours at its edges.
   if (split <= 0) ia = ib = ja = jb = 0
-
-  if (calm) {
-    // Every panel has turned to the same calm floor, and they turn out to be windows on one place, with one of her
-    // in it: home. The laundromat's own room (`home/set.ts`), laid so that where she comes to rest is where the
-    // kindness leg has her, so the cut on the great hit changes nothing but the party's things appearing.
-    const [ox, oy] = toScreen(s.O[0], s.O[1])
-    ctx.setTransform(m0)
-    p.push()
-    p.translate((s.rest[0] - (KINDNESS_AT[0] - 0.5)) * c.k, (s.rest[1] - KINDNESS_AT[1]) * c.k)
-    room.draw(p, null, { k: c.k, t: time, since: 0, ink: LAUNDROMAT.ink, bg: LAUNDROMAT.bg, weight: c.weight, color: EVELYN, theme: LAUNDROMAT, spin: () => 0 })
-    p.pop()
-    // The net of frames closes on her and thins away.
-    // Fading as fast as it shrinks, so what is left of it never lies on the room as a stray grid.
-    const ga = Math.pow(sigma, 2)
-    ctx.setTransform(F.d, 0, 0, F.d, 0, 0)
-    if (ga > 0.01) {
-      const [gx0, gy0] = place(X0 + (ia - 0.5 - g.ox) * pw, Y0 + (ja - 0.5 - g.oy) * ph)
-      const [gx1, gy1] = place(X0 + (ib + 0.5 - g.ox) * pw, Y0 + (jb + 0.5 - g.oy) * ph)
-      ctx.beginPath()
-      ctx.rect(gx0, gy0, gx1 - gx0, gy1 - gy0)
-      for (let j = ja; j <= jb; j++) {
-        for (let i = ia; i <= ib; i++) {
-          const [cx, cy] = place(X0 + (i - g.ox) * pw, Y0 + (j - g.oy) * ph)
-          const w = (pw - gut) * sigma * flip.w
-          const h = (ph - gut) * sigma
-          ctx.rect(cx - w / 2, cy - h / 2, w, h)
-        }
-      }
-      ctx.fillStyle = rgba(MULTI_THEME.bg, ga)
-      ctx.fill('evenodd')
-    }
-    // Her, over it all.
-    const pen = penFor(ctx, F, ox, oy, F.k, [0, 0], LAUNDROMAT.ink)
-    evelyn(pen, mc.e, null, LAUNDROMAT.ink)
-    ctx.restore()
-    return
-  }
 
   // The gutters: the dark between worlds, under the whole wall.
   ctx.setTransform(F.d, 0, 0, F.d, 0, 0)
   ctx.fillStyle = MULTI_THEME.bg
   ctx.fillRect(0, 0, W, H)
-  for (let j = ja; j <= jb; j++) {
+  // Before the first tear there is one panel and no neighbours: it is the whole stage, not a 16:9 box in the middle of
+  // a wider one with the dark down its sides. As the first tear opens (`split` 0 to 1) the home panel shrinks to its
+  // 16:9 place in step, rather than snapping to it. While it is still oversized it is drawn first, so the neighbours
+  // on every side come in over it and the tear opens evenly.
+  for (const first of [true, false]) for (let j = ja; j <= jb; j++) {
     for (let i = ia; i <= ib; i++) {
-      const [cx, cy] = place(X0 + (i - g.ox) * pw, Y0 + (j - g.oy) * ph)
-      const b: Box = { cx, cy, w: (pw - gut) * flip.w, h: ph - gut }
+      const whole = i === 0 && j === 0 && split < 1
+      if (whole !== first) continue
+      const cx = cHome[0] + i * zpw
+      const cy = cHome[1] + j * zph
+      const own: Box = { cx, cy, w: (pw - gut) * zoom, h: (ph - gut) * zoom }
+      const b: Box = whole
+        ? { cx, cy, w: own.w + (2 * Math.max(cx, W - cx) + 2 - own.w) * (1 - split), h: own.h + (2 * Math.max(cy, H - cy) + 2 - own.h) * (1 - split) }
+        : own
       if (cx + b.w / 2 < 0 || cx - b.w / 2 > W || cy + b.h / 2 < 0 || cy - b.h / 2 > H) continue
       if (b.w < 0.5 || b.h < 0.4) continue
-      const home = i === 0 && j === 0 && flip.n === 0
-      const skin = home ? SKINS.home : skinAt(i, j, flip.n)
+      const home = i === 0 && j === 0
+      // From the dive, home's panel is home itself, drawn after the rest (below).
+      if (home && t >= DIVE[0]) continue
+      const skin = home ? SKINS.home : skinAt(i, j, 0)
       const dark = home ? 0.97 * (1 - lights(t)) : 0
-      panel(ctx, F, skin, b, q, sc, flip.w, mc, back, dark)
+      // The family in every life but home's own panel.
+      panel(ctx, F, skin, b, qD, scD, 1, mc, back, dark, home ? undefined : [i, j])
     }
+  }
+  // From the dive, home's panel is home itself: the laundromat's room at the party corner, as the kindness has it,
+  // over the rest of the wall. As it lands it grows to the whole stage, not only its 16:9 frame, so on a taller or a
+  // wider stage no edge of the wall is left round it at the cut.
+  if (!early && t >= DIVE[0]) {
+    const w = (pw - gut) * zoom
+    const h = (ph - gut) * zoom
+    const b: Box = { cx: cHome[0], cy: cHome[1], w: w + Math.max(0, 2 * Math.max(cHome[0], W - cHome[0]) + 2 - w) * land, h: h + Math.max(0, 2 * Math.max(cHome[1], H - cHome[1]) + 2 - h) * land }
+    drawHome(p, ctx, F, s, c, time, b, cHome, qD, scD, mc, back)
   }
   // In the dark she falls past seeds from the bagel, which go as the lights come.
   if (split <= 0 && t < LIGHTS + 0.4) seedsInDark(ctx, F, s, t, q, sc, place(X0, Y0), mc.e, mix(LAUNDROMAT.ink, VOID_THEME.ink, 0.97 * (1 - lights(t))))
+  ctx.restore()
+}
+
+/**
+ * Home's panel in the dive: the laundromat's own room (`home/set.ts`) and the party corner with Jobu's jumpers
+ * waiting in it (`home/kindness-draw.ts`), drawn as the stage will draw them from the great hit, only smaller, with
+ * the panel's own scale and middle: where she comes to rest is where the kindness leg has her, so the cut on the great
+ * hit changes nothing at all.
+ */
+function drawHome(p: p5, ctx: CanvasRenderingContext2D, F: Frame, s: MosaicState, c: Ctx, time: number, b: Box, cHome: Pt, q: number, sc: Pt, mc: Machine, back: Pt[] | null): void {
+  ctx.save()
+  ctx.setTransform(F.d, 0, 0, F.d, 0, 0)
+  ctx.beginPath()
+  ctx.rect(b.cx - b.w / 2, b.cy - b.h / 2, b.w, b.h)
+  ctx.clip()
+  // A room cell w is, in the part's cells, w + T; in the scene's, w + T - O; and on the screen it is laid as the panel
+  // lays the scene. The room draws in cells times the stage's k, so the transform scales that by q / k.
+  const T: Pt = [s.rest[0] - (KINDNESS_AT[0] - 0.5), s.rest[1] - KINDNESS_AT[1]]
+  const r = q / F.k
+  const ex = cHome[0] + (T[0] - s.O[0] - sc[0]) * q
+  const ey = cHome[1] + (T[1] - s.O[1] - sc[1]) * q
+  ctx.setTransform(F.d * r, 0, 0, F.d * r, F.d * ex, F.d * ey)
+  p.push()
+  room.draw(p, null, { k: c.k, t: time, since: 0, ink: LAUNDROMAT.ink, bg: LAUNDROMAT.bg, weight: c.weight, color: EVELYN, theme: LAUNDROMAT, spin: () => 0 })
+  const pen = penOf(p, { k: c.k, ink: LAUNDROMAT.ink, weight: c.weight })
+  drawPartyWall(pen, time)
+  drawDesk(pen)
+  drawLanterns(pen, time)
+  drawTable(pen)
+  drawKaraoke(pen)
+  drawSteamers(pen)
+  drawGiftBox(pen)
+  if (jumpersIn(time)) {
+    drawHammer(pen, time)
+    drawTrap(pen, time)
+    drawArm(pen, time)
+    drawGlove(pen, time)
+  }
+  const lid = lidAt(time)
+  drawLid(pen, lid.at, lid.turn)
+  p.pop()
+  // Her, over it all.
+  const her = penFor(ctx, F, cHome[0], cHome[1], q, sc, LAUNDROMAT.ink)
+  evelyn(her, mc.e, back, LAUNDROMAT.ink)
   ctx.restore()
 }
 
