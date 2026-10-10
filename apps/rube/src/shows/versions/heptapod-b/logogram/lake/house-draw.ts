@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
-import { frame, hash, type Ctx } from '../kit'
+import { composedCells, frame, hash, type Ctx } from '../kit'
 import { LAKE } from '../worlds'
 import {
   BENCH,
@@ -76,8 +76,7 @@ function band(ctx: C2D, k: number, x0: number, x1: number, y0: number, y1: numbe
  * and grows only by what is left of the camera's own move from `ref`.
  */
 function depth(p: p5, k: number, f: Frame, ref: { x: number; y: number; cells: number }, d: number, fn: () => void): void {
-  const cells = f.y1 - f.y0
-  const m = cells / ref.cells
+  const m = composedCells(f) / ref.cells
   const S = 1 - d + d * m
   const ox = d * (f.cx - m * ref.x)
   const oy = d * (f.cy - m * ref.y)
@@ -90,7 +89,7 @@ function depth(p: p5, k: number, f: Frame, ref: { x: number; y: number; cells: n
 
 /** Where a point `x` of a layer `d` of the way to the horizon (see `depth`) is seen, in the room's own cells. */
 function viewX(f: Frame, d: number, x: number): number {
-  const m = (f.y1 - f.y0) / VIEW_CAM.cells
+  const m = composedCells(f) / VIEW_CAM.cells
   return d * (f.cx - m * VIEW_CAM.x) + (1 - d + d * m) * x
 }
 

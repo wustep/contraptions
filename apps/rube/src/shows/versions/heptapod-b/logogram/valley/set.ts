@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { drawShell, shellHalf } from '../cast'
-import { box, frame, hash, scenery } from '../kit'
+import { box, composedCells, frame, hash, scenery } from '../kit'
 import { BURST1, pulse } from '../music'
 import { VALLEY } from '../worlds'
 import { CAMP_PROPS, drawPad, drawRoad, PAD } from './camp'
@@ -473,7 +473,7 @@ function drawFogBand(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
 function drawMist(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, a: number, open = 0): void {
   if (f.y1 < MEADOW - 6 || f.y0 > MEADOW + 1 || a <= 0.01) return
   const fog = rgbOf(VALLEY.fog)
-  const cells = f.y1 - f.y0
+  const cells = composedCells(f)
   const close = 1 - sm(cells, 9, 18)
   if (close > 0.01) {
     const g = 2.4
@@ -795,7 +795,7 @@ export const valleySet = scenery<null>({
 function drawValley(p: p5, k: number, t: number, ink: string, weight: number): void {
   const f = frame(p, k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const cells = f.y1 - f.y0
+  const cells = composedCells(f)
   const open = openAt(t)
   const vanish = vanishAt(t)
 

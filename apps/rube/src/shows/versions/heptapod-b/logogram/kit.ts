@@ -356,6 +356,15 @@ export function frame(p: p5, k: number): { x0: number; y0: number; x1: number; y
   return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }
 }
 
+/**
+ * How many cells the camera's composed 16:9 frame is top to bottom, from the frame `frame` gives: its own height,
+ * unless it is taller than 16:9 (a phone), where the stage sees more world above and below the composed frame while
+ * the camera has not moved back. What a drawing judges the camera's closeness by.
+ */
+export function composedCells(f: { x0: number; y0: number; x1: number; y1: number }): number {
+  return Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
+}
+
 /** A colour with an alpha, 0..1. */
 export function alpha(p: p5, hex: string, a: number): p5.Color {
   const c = p.color(hex)
