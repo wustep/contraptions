@@ -1,52 +1,14 @@
-import { hash } from './world'
 import type { Ctx2D } from './frame'
 
 /**
  * The planet seen from space, as a world in sunlight. Close, its deep water is coloured by the hour where the ball is;
  * but from far off half of any world is always in the sun's light, whatever the hour on it. So as the planet becomes the
- * picture its face becomes a lit globe: deep ocean blue on the sun's side with the sun's glint on the water, loose patches
- * of cloud over the day turning with the planet, the night coming round from the far side, and a thin blue air on the
- * day's limb. The night side keeps its dark, the sea's own light and the lamps.
+ * picture its face becomes a lit globe: deep ocean blue on the sun's side with the sun's glint on the water, the
+ * night coming round from the far side, and a thin blue air on the day's limb. The night side keeps its dark, the sea's own light and the lamps.
  */
 
-let clouds: HTMLCanvasElement | null = null
 /** The globe's own canvas, remade each frame it is drawn. */
 let globeCanvas: HTMLCanvasElement | null = null
-
-/** The weather, drawn once in white on a square: loose patches of soft streaks, as clouds over a world. */
-function cloudSheet(): HTMLCanvasElement {
-  if (clouds) return clouds
-  const S = 512
-  const c = document.createElement('canvas')
-  c.width = c.height = S
-  const g = c.getContext('2d')!
-  g.translate(S / 2, S / 2)
-  // Loose patches of weather: small streaks in clusters, each cluster at its own angle, not all the way round.
-  for (let j = 0; j < 22; j++) {
-    const r = S * 0.42 * Math.sqrt(hash(j, 901))
-    const a = hash(j, 902) * Math.PI * 2
-    const [cx, cy] = [Math.cos(a) * r, Math.sin(a) * r]
-    const lean = hash(j, 907) * Math.PI
-    for (let i = 0; i < 7; i++) {
-      const len = S * (0.03 + 0.07 * hash(j, i, 903))
-      const thick = S * (0.008 + 0.02 * hash(j, i, 904))
-      g.save()
-      g.translate(cx + (hash(j, i, 908) - 0.5) * S * 0.12, cy + (hash(j, i, 909) - 0.5) * S * 0.08)
-      g.rotate(lean + (hash(j, i, 905) - 0.5) * 0.6)
-      g.scale(len, thick)
-      const blob = g.createRadialGradient(0, 0, 0, 0, 0, 1)
-      const al = 0.1 + 0.16 * hash(j, i, 906)
-      blob.addColorStop(0, `rgba(255, 255, 255, ${al.toFixed(3)})`)
-      blob.addColorStop(0.6, `rgba(255, 255, 255, ${(al * 0.4).toFixed(3)})`)
-      blob.addColorStop(1, 'rgba(255, 255, 255, 0)')
-      g.fillStyle = blob
-      g.fillRect(-1, -1, 2, 2)
-      g.restore()
-    }
-  }
-  clouds = c
-  return c
-}
 
 /**
  * The globe, in the world's transform (the planet's middle at the origin), `R` its radius in the drawing's units, the sun
@@ -84,10 +46,6 @@ export function drawGlobe(ctx: Ctx2D, R: number, sun: number, light: number): vo
   ocean.addColorStop(1, '#0B1A30')
   g.fillStyle = ocean
   g.fillRect(-R, -R, 2 * R, 2 * R)
-  // The weather over it, turning with the world (it is drawn in the world's own frame).
-  g.globalAlpha = 0.6
-  g.drawImage(cloudSheet(), -R, -R, 2 * R, 2 * R)
-  g.globalAlpha = 1
   // The sun's glint on the water.
   const gx = sx * R * 0.52
   const gy = sy * R * 0.52

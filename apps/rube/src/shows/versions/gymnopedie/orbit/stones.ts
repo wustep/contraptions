@@ -1,5 +1,4 @@
 import type p5 from 'p5'
-import { BLOSSOM, drawBlossom, plant } from './blossom'
 import { R as BALL_R, mixHex, type PieceCtx } from '../../../../parts'
 import { PERIOD, PIECES, wrap } from './music'
 import { LENGTH, RADIUS, STONES, along, ballLocal, float, since, sink, squash, stonesIn, type Stone } from './path'
@@ -172,7 +171,7 @@ function column(p: p5, k: number, w: number, h: number, day: Sky, weight: number
  * The first Gnossienne's stones: a beam of bronze on slim dark posts, with a lamp at its front that the ball lights
  * as it lands. `lamp` is how bright it burns.
  */
-function stele(p: p5, k: number, w: number, h: number, day: Sky, weight: number, lamp: number, withLamp: boolean, lean = 0): void {
+function stele(p: p5, k: number, w: number, h: number, day: Sky, weight: number, lamp: number, withLamp: boolean): void {
   const K = (v: number) => v * k
   const body = mixHex('#23283C', day.lit, 0.2)
   const posts = w > 0.42 ? [0.09, w - 0.09] : [w / 2]
@@ -204,12 +203,7 @@ function stele(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
     p.noStroke()
     p.fill(alpha(p, '#FFE7B0', Math.min(1, lamp * 1.4)))
     const fh = 0.05 + 0.06 * lamp
-    // Leaning from its foot, as the ball rolls by (`bowAt`).
-    p.push()
-    p.translate(K(lx), K(-h - 0.05))
-    p.rotate(lean)
-    p.ellipse(0, K(-fh / 2), K(0.035), K(fh))
-    p.pop()
+    p.ellipse(K(lx), K(-h - 0.05 - fh / 2), K(0.035), K(fh))
   }
 }
 
@@ -281,8 +275,6 @@ for (const s of STONES) {
   PERCHED.set(s.index, { at: s.u1 - 0.18, face: hash(s.index, 213) > 0.35 ? -1 : 1 })
 }
 
-plant(new Set(PERCHED.keys()))
-
 /** Where a gull is `s` seconds after it lifts off, from its perch: cells along, and up. Startled up first, then away. */
 export const gullFlight = (s: number): [number, number] => [0.15 * s + 0.3 * s * s, 0.12 + 1.3 * s - 0.12 * s * s]
 
@@ -332,7 +324,7 @@ function perchedGull(p: p5, k: number, day: Sky, weight: number, face: number, t
 }
 
 /**
- * How far a lotus flower (or a lamp's flame) standing at `u` on a stone `h` high bows from the ball at `t`, radians: away from it as it rolls
+ * How far a lotus flower standing at `u` on a leaf `h` high bows from the ball at `t`, radians: away from it as it rolls
  * close along the leaf, most when it is nearest, and back upright once it has gone; nothing while the ball is in the air
  * over it. It turns from leaning one way to the other as the ball goes over its foot, where the ball hides it.
  */
@@ -389,13 +381,10 @@ export function drawStones(p: p5, c: PieceCtx, v: View, day: Sky, mirrored: bool
       if (mirrored) p.scale(1, -1)
       if (stone.piece === 0) {
         column(p, k, sw, h, day, c.weight, Math.min(1, 0.7 * pulse(stone, c.t) + cadence(stone, c.t)), sun)
-        // Bougainvillea over the first of a flowering stone's spans.
-        if (j === 0 && BLOSSOM.has(stone.index)) drawBlossom(ctx, k, stone, sw, h, day, c.t)
       } else if (stone.piece === 1) {
         // Lit by the ball, and burning on behind it until dawn: Ariadne's thread in lamps.
         const lit = lampLight(stone, c.t)
-        const lampU = u0 + (sw > 0.42 ? 0.1 : sw / 2)
-        stele(p, k, sw, h, day, c.weight, lit > 0 ? Math.min(1, lit + 0.45 * cadence(stone, c.t)) : 0, j === 0, j === 0 ? 0.8 * bowAt(lampU, h - 0.05, c.t) : 0)
+        stele(p, k, sw, h, day, c.weight, lit > 0 ? Math.min(1, lit + 0.45 * cadence(stone, c.t)) : 0, j === 0)
       } else {
         const sway = 0.03 * osc(c.t, 0.11, stone.index + j)
         const flower = j === n - 1 && w > 0.9

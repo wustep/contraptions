@@ -3,21 +3,18 @@ import { mixHex, type PieceCtx } from '../../../../parts'
 import { wrap } from './music'
 import { RADIUS, along, ballLocal } from './path'
 import {
-  BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, auroraAt, auroraSheet, auroraSize, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, METEORS, milkyWay, wingsAt, type CloudLight,
+  BANK, BANKS, CLOUDS, FLOCKS, GULLS, HEAPS, bowAt, cloudLight, cloudThere, drawCloud, overcastAt, drawGull, inLayer, layered, meteorAt, METEORS, milkyWay, wingsAt, type CloudLight,
   FIGURES, figureAt, BOATS, SAILS, boatsOut, drawBoat, lanternAt,
 } from './air'
 import { drawShore } from './shore'
-import { drawSquall } from './squall'
 import { drawCirrus } from './cirrus'
-import { drawFisher, fishersIn } from './fishers'
-import { HEAD, MID, cometAngle, cometAnswers, cometFlare, cometLight, cometSprite, cometSway } from './comet'
 import { alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
-  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, sunAngle, moonAngle, type Body, bodies, sunWay, moonWay, AURORA_OVER, SUN_FAR, MOON_FAR, haloSprite,
+  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, sunAngle, moonAngle, type Body, bodies, sunWay, moonWay, SKY_HIGH, SUN_FAR, MOON_FAR,
 } from './frame'
 
 /**
- * The sky: the day's gradient, the stars and the Milky Way, the aurora, shooting stars, the sun and the moon on
+ * The sky: the day's gradient, the stars and the Milky Way, shooting stars, the sun and the moon on
  * their arcs and, far off, in space; the rays of the low sun, the bow, and the clouds and gulls (`air.ts`).
  */
 
@@ -65,8 +62,7 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     }
     ctx.translate(W / 2, H / 2)
     ctx.rotate(roll * 2 + 0.55)
-    // Washed out while the aurora is up: one band of light in the sky at a time.
-    ctx.globalAlpha = starLight * 0.62 * (1 - 0.65 * auroraAt(c.t))
+    ctx.globalAlpha = starLight * 0.62
     ctx.drawImage(milkyWay(), -D / 2, -D / 2, D, D)
     ctx.restore()
   }
@@ -91,17 +87,6 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
       ctx.arc(x, y, s, 0, Math.PI * 2)
       ctx.fill()
     }
-  }
-
-  // The aurora, over the first Gnossienne's night, among the stars.
-  const northern = auroraAt(c.t) * (1 - v.wide)
-  if (northern > 0.01) {
-    const sheet = auroraSheet(c.t, ...auroraSize(W, F), along(c.t))
-    ctx.save()
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.globalAlpha = Math.min(1, 0.62 * northern)
-    ctx.drawImage(sheet, 0, hy - AURORA_OVER * F, W, F)
-    ctx.restore()
   }
 
   // The inner voice's constellations: a star for each of its notes as it sounds, a faint line drawn to it from the last.
@@ -162,8 +147,7 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
 
   // A shooting star, on a high phrase's top note.
   const fall = meteorAt(c.t)
-  // (Not the one the comet answers, while it is up.)
-  if (fall && day.night > 0.3 && v.wide < 0.5 && !cometAnswers(fall.i)) {
+  if (fall && day.night > 0.3 && v.wide < 0.5) {
     const i = fall.i
     // High in the sky, falling slant and short, clear of the stones.
     const L = W * 0.26
@@ -175,7 +159,7 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
       const b = ballLocal(METEORS[i] + dt)
       return onCanvas(ctx, c.k, ...polar(b.u, b.h + 0.3), m)[1]
     }))
-    const sy = Math.max((H - F) / 2 + F * 0.03, Math.min(hy - AURORA_OVER * F + F * (0.05 + 0.1 * hash(i, 132)), ballTop - F * 0.1 - Math.sin(a) * L))
+    const sy = Math.max((H - F) / 2 + F * 0.03, Math.min(hy - SKY_HIGH * F + F * (0.05 + 0.1 * hash(i, 132)), ballTop - F * 0.1 - Math.sin(a) * L))
     const q = 1 - (1 - fall.q) ** 2
     const hx = sx + dir * Math.cos(a) * L * q
     const hy2 = sy + Math.sin(a) * L * q
@@ -197,40 +181,6 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     ctx.beginPath()
     ctx.arc(hx, hy2, Math.max(1.5, F / 300), 0, Math.PI * 2)
     ctx.fill()
-  }
-
-  // A comet over the third Gnossienne, crossing the sky ahead of the moon, its tail away from the sun. (Drawn once, on
-  // the first frame, far off at the seam, rather than the frame it first comes into.)
-  cometSprite()
-  const comet = cometLight(c.t) * (1 - v.wide)
-  if (comet > 0.01) {
-    const a = cometAngle(c.t)
-    const [hx] = onCanvas(ctx, c.k, ...polar(u + 0.55, 0), m)
-    const reach = F * 0.62
-    const cx = hx + Math.sin(a) * reach * 1.12
-    const cy = hy - Math.cos(a) * reach * 0.78
-    const tail = Math.atan2(cy - sun.y, cx - sun.x) + cometSway(c.t)
-    // Low, it goes into the horizon's haze, as the stars do.
-    const over = smooth(hy - cy, F * 0.03, F * 0.22)
-    const size = (F * 0.42) / 900
-    ctx.save()
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.globalAlpha = Math.min(1, comet * over)
-    ctx.translate(cx, cy)
-    ctx.rotate(tail)
-    ctx.scale(size, size)
-    ctx.drawImage(cometSprite(), -HEAD, -MID)
-    ctx.restore()
-    // On a note it answers, its head flares.
-    const flare = cometFlare(c.t) * comet * over
-    if (flare > 0.01) {
-      const r = F * 0.05 * (0.6 + 0.4 * flare)
-      ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
-      ctx.globalAlpha = Math.min(1, flare)
-      ctx.drawImage(haloSprite('255, 252, 240', '236, 242, 255', '200, 220, 255'), cx - r, cy - r, 2 * r, 2 * r)
-      ctx.restore()
-    }
   }
 
   // The sun and the moon, on arcs over the horizon; gone when the planet is small (they are its sky, not space's).
@@ -542,8 +492,6 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
   layer(BANKS, BANK, hazy, (0.6 - 0.4 * day.night) * near * light.alpha, false)
   // The far shore, in front of the bank: islands, their villages and the lighthouse.
   drawShore(ctx, k, c.t, half, { day, sunAngle: sunAngle(c.t), moonUp }, near)
-  // The afternoon's squall, in front of the far shore, coming over the sea and going off with the bow in it.
-  drawSquall(ctx, k, c.t, day, near)
   layer(CLOUDS, HEAPS, light, 0.92 * near * light.alpha, true)
 
   // Sailboats far out on the water by day, sitting into the sea (its surface is drawn over their hulls' feet).
@@ -581,16 +529,6 @@ function air(p: p5, c: PieceCtx, v: View, day: Sky, sun: Body, moon: Body, near:
       }
       p.pop()
     }
-  }
-
-  // The night's fishing boats far out, their lamps lit.
-  for (const f of fishersIn(c.t, half)) {
-    p.push()
-    atSea(p, k, u + f.d)
-    ctx.translate(0, k * (0.02 - 0.015 * osc(c.t, 0.08, f.seed * 1.7)))
-    ctx.scale(k, k)
-    drawFisher(ctx, f.size, f.lit, c.t, f.seed, day, near * f.edge)
-    p.pop()
   }
 
   // Gulls, by day, close.

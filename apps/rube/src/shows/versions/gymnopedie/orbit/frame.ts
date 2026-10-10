@@ -53,7 +53,7 @@ export function viewOf(p: p5, c: PieceCtx): View {
 /**
  * How tall the picture is that the camera frames, device pixels: the canvas's height, or on a canvas narrower than
  * 16:9 (a phone held upright), the height of the 16:9 picture across its width, with more sky and sea round it. What
- * the sky's own things (the sun and the moon, the bow, the aurora, the rays) are sized by, so they keep their place
+ * the sky's own things (the sun and the moon, the bow, the rays) are sized by, so they keep their place
  * over the horizon.
  */
 /**
@@ -158,8 +158,8 @@ export const MOON_FAR = 1.5
 export const sunWay = (t: number): number => along(t) / RADIUS + sunAngle(t)
 export const moonWay = (t: number): number => along(t) / RADIUS + moonAngle(t)
 
-/** How far over the horizon the aurora's sheet reaches, in heights of the framed picture. */
-export const AURORA_OVER = 0.78
+/** How far over the horizon a shooting star may start, at most, in heights of the framed picture. */
+export const SKY_HIGH = 0.78
 
 /** How much the ball carries its flame at `t`: from dusk, as the first Gnossienne begins, until it ends. */
 export const [, GN1_PIECE] = PIECES

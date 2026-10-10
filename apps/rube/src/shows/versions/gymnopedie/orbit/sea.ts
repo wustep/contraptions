@@ -3,18 +3,16 @@ import { R as BALL_R, mixHex, type PieceCtx } from '../../../../parts'
 import { CHORDS, loudness } from './music'
 import { LENGTH, RADIUS, along, ballLocal, crest, since, sink, squash, stonesIn, swell } from './path'
 import {
-  BANKS_OF_MIST, MIST, WHALE, auroraAt, auroraSheet, auroraSize, deepLight, rainAt, ringAt, whaleAt, whaleShape, inLayer, layered, mistAt,
+  BANKS_OF_MIST, MIST, WHALE, deepLight, rainAt, ringAt, whaleAt, whaleShape, inLayer, layered, mistAt,
 } from './air'
 import { BALL, alpha, hash, osc, polar, smooth, type Sky } from './world'
 import {
-  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, bodies, sunWay, AURORA_OVER, lamplighter, devicePx, sunAngle, moonAngle,
+  scenery, type Ctx2D, type View, viewOf, frameOf, onCanvas, atSea, weathered, bodies, sunWay, lamplighter, devicePx, sunAngle, moonAngle,
 } from './frame'
 import { lampLight, farStones } from './stones'
 import { mirrorShore } from './shore'
 import { drawRipples, ripplesAt, warmRipples, type Glitter, type Lamp } from './ripples'
-import { drawDolphins } from './dolphins'
 import { drawGlobe } from './globe'
-import { fishersIn } from './fishers'
 
 // ---------------------------------------------------------------- the light on the water
 
@@ -152,21 +150,6 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     sheen.addColorStop(1, alpha(p, day.low, 0.42 * (1 - v.wide)).toString())
     ctx.fillStyle = sheen
     ctx.fill(water)
-  }
-  // The aurora given back by the water, faint, upside down about the horizon.
-  const northern = auroraAt(c.t) * (1 - v.wide)
-  if (northern > 0.01) {
-    const W = ctx.canvas.width
-    const [, hy] = onCanvas(ctx, k, ...polar(along(c.t) + 0.55, 0))
-    const F = frameOf(ctx)
-    const sheet = auroraSheet(c.t, ...auroraSize(W, F), along(c.t))
-    ctx.save()
-    ctx.clip(water)
-    ctx.setTransform(1, 0, 0, -1, 0, 2 * hy)
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.globalAlpha = Math.min(1, 0.3 * northern)
-    ctx.drawImage(sheet, 0, hy - AURORA_OVER * F, W, F)
-    ctx.restore()
   }
   // The planet under the sea: deep water all the way down, lit a little from the side the sun is on.
   {
@@ -312,11 +295,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       const w = stone.u1 - stone.u0
       lamps.push({ x: stone.u0 + shift + (w > 0.42 ? 0.1 : w / 2) - mid, light: lit })
     }
-    // And the fishing boats' lamps, far out, the same.
-    for (const f of fishersIn(c.t, (v.u1 - v.u0) / 2)) lamps.push({ x: f.d - 0.55, light: 0.7 * f.lit * f.edge })
     drawRipples(ctx, k, c.t, (v.u1 - v.u0) / 2, day, water, close * ripplesAt(v.cells), glitter, lamps)
-    // Dolphins in the near water, once, in the morning.
-    drawDolphins(ctx, k, c.t, day, close * ripplesAt(v.cells))
     const ctx2 = p.drawingContext as Ctx2D
     // Each lamp's path of light, fewer rows once the camera is far enough off that a row is a pixel or two: in the wide
     // shots between the pieces the whole thread of lamps is in view, and their strokes were most of the frame's cost.

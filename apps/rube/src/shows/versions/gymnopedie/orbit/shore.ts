@@ -174,7 +174,7 @@ function isle(spec: Spec, seed: number): Isle {
 }
 
 export const ISLES: Isle[] = [
-  // Far off, the mountains: a long range behind the morning, a lower one dark under the aurora and the moon.
+  // Far off, the mountains: a long range behind the morning, a lower one dark under the stars and the moon.
   { T: 112, layer: RANGE, bumps: [[-2.6, 0.62, 1.5], [-0.3, 1.05, 1.3], [1.9, 0.78, 1.4], [3.7, 0.4, 1]] },
   { T: 440, layer: RANGE, bumps: [[-1.6, 0.55, 1.4], [0.9, 0.82, 1.1], [2.6, 0.4, 0.9]] },
   // Skerries at dawn.
@@ -187,7 +187,7 @@ export const ISLES: Isle[] = [
   { T: 188, bumps: [[-0.55, 0.62, 0.95], [0.9, 0.44, 1.05], [-1.9, 0.2, 0.6]], village: [0.78, -1.5, 1.25], chapel: -0.5, windmill: 1.45, cypress: [-1.7, 1.85] },
   // The headland and its lighthouse, lit with the ball's first lamp.
   { T: 238, bumps: [[-0.9, 0.4, 0.85], [0.35, 0.28, 0.75], [1.35, 0.16, 0.45]], lighthouse: 1.5, cypress: [-1.25, -1.12] },
-  // A long low island under the aurora, a few windows.
+  // A long low island in the first Gnossienne's night, a few windows.
   { T: 362, bumps: [[-1.6, 0.2, 1.3], [0.4, 0.28, 1.5], [2.1, 0.14, 0.8]], village: [0.35, -0.5, 0.7] },
   // The hermitage between two peaks, under the moon, its one window lit all night.
   { T: 506, bumps: [[-0.75, 0.78, 0.62], [0.55, 0.66, 0.58], [1.65, 0.22, 0.65], [-1.9, 0.18, 0.6]], hermit: -0.08, chapel: 0.08 },
@@ -235,19 +235,6 @@ interface Tone {
   /** How dark the day is, 0 to 1, and the moon's silver on its edge. */
   dark: number
   rim: number
-  /** The alpenglow on its heights, 0 to 1, just round sunset and sunrise. */
-  peak: number
-}
-
-/**
- * The alpenglow at a sun `sunAngle` from overhead: the high ground keeping a rose light after the sun has gone, as the
- * sky darkens (and catching it again before it rises), when everything under it is already in shadow. In the sky's
- * frame the sun is under the horizon from about 1.6 either way.
- */
-export function alpenglow(sunAngle: number, night: number): number {
-  const below = Math.abs(Math.atan2(Math.sin(sunAngle), Math.cos(sunAngle))) - 1.6
-  // And gone as the full night comes, whatever the sun's angle under the planet.
-  return smooth(below, 0, 0.12) * (1 - smooth(below, 0.36, 0.56)) * (1 - smooth(night, 0.8, 0.97))
 }
 
 function toneOf(isle: Isle, day: Sky, t: number, sunAngle: number, moonUp: number): Tone {
@@ -277,7 +264,6 @@ function toneOf(isle: Isle, day: Sky, t: number, sunAngle: number, moonUp: numbe
     side: Math.sin(sunAngle) >= 0 ? 1 : -1,
     dark,
     rim: moonUp * dark * (1 - 0.5 * thick),
-    peak: alpenglow(sunAngle, day.night) * (1 - o) * (1 - 0.6 * thick),
   }
 }
 
@@ -385,20 +371,6 @@ function drawIsle(ctx: Ctx2D, isle: Isle, tone: Tone, t: number, mirrored: boole
       ctx.globalAlpha = alpha * 0.55 * tone.sun
       ctx.fillStyle = g
       ctx.fill(shape)
-    }
-    // The alpenglow: the heights lit rose from the top down, the more the higher, the low ground left in shadow.
-    if (tone.peak > 0.01) {
-      const glow = ctx.createLinearGradient(0, -1.15, 0, -0.25)
-      glow.addColorStop(0, 'rgba(255, 120, 140, 1)')
-      glow.addColorStop(0.5, 'rgba(240, 110, 140, 0.45)')
-      glow.addColorStop(1, 'rgba(255, 170, 140, 0)')
-      // Added as light, not painted on: a glow on the dark rock, not a colour.
-      ctx.globalCompositeOperation = 'lighter'
-      ctx.globalAlpha = Math.min(1, alpha * tone.peak * (isle.layer === RANGE ? 1 : 0.75))
-      ctx.fillStyle = glow
-      ctx.fill(shape)
-      ctx.globalCompositeOperation = 'source-over'
-      ctx.globalAlpha = alpha
     }
     // Its feet in the haze over the water.
     const h = ctx.createLinearGradient(0, 0, 0, -Math.min(top, 0.5))
