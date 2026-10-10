@@ -250,7 +250,7 @@ export const WAY = alleyWay()
 
 export const WALK0 = HATS + 0.1
 export const WALK1 = SEAT_LAND - 0.05
-/** Where Wally's feet are: by the counter, then out of the door, round behind the cab to its driver's door. */
+/** Where Wally's feet are: by the counter, then out of the door, off the curb and round behind the cab to its driver's door. */
 export function wallyAt(t: number): { x: number; y: number; walking: boolean; face: 1 | -1; sink: number } {
   const driver = SEAT[0] + CAB.driver
   if (t < WALK0) return { x: WALLY_X, y: FB, walking: false, face: 1, sink: 0 }
@@ -258,7 +258,9 @@ export function wallyAt(t: number): { x: number; y: number; walking: boolean; fa
   const e = u < 0.08 ? (u * u) / 0.16 : u > 0.9 ? 0.91 - ((1 - u) * (1 - u)) / 0.2 : u - 0.04
   const s = Math.max(0, Math.min(1, e / 0.91))
   const x = WALLY_X + (driver - WALLY_X) * s
-  const y = FB + (-0.22 - FB) * Math.min(1, s * 1.6)
+  // Out of the door to the sidewalk's edge, then off the curb into the road on the cab's far side: the roof at his chest.
+  const off = Math.max(0, Math.min(1, (CURB - x) / 0.6))
+  const y = FB + (-0.22 - FB) * Math.min(1, s * 1.6) + (ROAD + 0.22) * off * off * (3 - 2 * off)
   const sink = Math.max(0, (t - (WALK1 - 0.3)) / 0.35)
   return { x, y, walking: u < 1, face: -1, sink: Math.min(1, sink) }
 }

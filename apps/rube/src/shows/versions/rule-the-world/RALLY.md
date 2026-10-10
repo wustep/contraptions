@@ -91,3 +91,10 @@ steam and the cartoon marks off its clanks and the fire escape's treads, and the
 farmhouse chimney's smoke, its windows' flicker, the stars' and runway lights' twinkle, and the star on each burning
 bale; in Tokyo, three of the four flash bulbs on the broken-off line (one stays, on the line itself), and the flash
 bulbs drawn as plain bursts of light rather than stars.
+
+## The third look
+
+Then a look end to end on the live page as well as in stills, fixing what it showed: the shade under the credits
+deepened so their small amber fine print reads over the pale wall, and tied to the cards, so that once the last has
+gone no dark smudge is left over the window; and Wally, walking round to his cab, steps off the curb into the road on
+its far side, so the roof comes to his chest and the camera following Marty no longer cuts off his head.

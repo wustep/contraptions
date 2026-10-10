@@ -99,6 +99,9 @@ export function creditsAt(t: number): TitleCard[] {
 /** How far the hall's light is down at `t`: going down with the first card, and staying down to the end. */
 const bedAt = (t: number): number => easeInOutCubic(clamp((t - CREDITS_AT + 1.2) / 3.2))
 
+/** The shade under the words: up with the hall's going down, and gone with the last card, so no smudge is left. */
+const shadeAt = (t: number): number => bedAt(t) * (1 - easeInOutCubic(clamp((t - (LAST_GONE - GO - 0.2)) / 1.4)))
+
 /** The canvas's half: the hall's light going down, and a soft shade where the words come. */
 export const credits = scenery<null>({
   name: 'credits',
@@ -126,16 +129,18 @@ export const credits = scenery<null>({
     // Over the whole frame, which may see more than the 16:9 the words are placed in.
     ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
     ctx.restore()
-    // And a little more shade right under the words.
+    // And more shade right under the words, while there are words: the fine print is small, and set in the page's amber.
+    const shade = shadeAt(c.t)
+    if (shade <= 0.001) return
     const cx = (bx + w * AT[0]) * k
-    const cy = (by + h * (AT[1] + 0.13)) * k
-    const rx = w * 0.36 * k
+    const cy = (by + h * (AT[1] + 0.07)) * k
+    const rx = w * 0.44 * k
     ctx.save()
     ctx.translate(cx, cy)
     ctx.scale(1, 0.42)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(22, 20, 17, ${0.3 * bed})`)
-    g.addColorStop(0.6, `rgba(22, 20, 17, ${0.1 * bed})`)
+    g.addColorStop(0, `rgba(22, 20, 17, ${0.5 * shade})`)
+    g.addColorStop(0.55, `rgba(22, 20, 17, ${0.22 * shade})`)
     g.addColorStop(1, 'rgba(22, 20, 17, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
