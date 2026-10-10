@@ -80,7 +80,8 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
       const a2 = starLight * over * tw * (0.25 + 0.75 * hash(i, 4))
       if (a2 < 0.02) continue
       ctx.fillStyle = `rgba(244, 238, 223, ${a2.toFixed(3)})`
-      const s = (0.6 + hash(i, 5) * 1.3) * Math.max(1, W / 1600)
+      // Their size as at a 1280 frame, larger past 1600, and smaller below 1280 so a small sky is not coarse.
+      const s = (0.6 + hash(i, 5) * 1.3) * Math.max(W / 1600, Math.min(1, W / 1280))
       ctx.beginPath()
       ctx.arc(x, y, s, 0, Math.PI * 2)
       ctx.fill()

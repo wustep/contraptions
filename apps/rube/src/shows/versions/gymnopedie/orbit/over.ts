@@ -105,8 +105,11 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.lineCap = 'round'
-    ctx.lineWidth = Math.max(1, frameOf(ctx) / 900)
-    ctx.strokeStyle = `rgba(226, 232, 242, ${(0.28 * rain).toFixed(3)})`
+    // A pixel at the least, and fainter where that is thicker than its share of the frame, so a small picture's rain
+    // is as light as a large one's.
+    const thin = frameOf(ctx) / 900
+    ctx.lineWidth = Math.max(1, thin)
+    ctx.strokeStyle = `rgba(226, 232, 242, ${(0.28 * rain * Math.min(1, thin / 0.8)).toFixed(3)})`
     ctx.beginPath()
     const count = Math.round(260 * rain)
     for (let i = 0; i < count; i++) {
