@@ -5,6 +5,7 @@ import { frame, hash, knock, scenery } from '../kit'
 import { fight } from '../music'
 import { VOID } from '../worlds'
 import { drawThing, type Thing } from './bagelThings'
+import { drawTunnel } from '../home/finale-lives'
 import { BRINK, CENTRE, evelyn, FIRST_IN, HOLE, JOY_LIGHT, REVEAL, TIP_IN } from './pullPath'
 
 export { drawThing, THING_WORLD, type Thing } from './bagelThings'
@@ -78,6 +79,11 @@ export interface BagelPose {
    * so something colossal is felt in the dark before it is seen. Optional; 0 when left out.
    */
   glint?: number
+  /**
+   * The lives going down its hole (`drawTunnel` in `home/finale-lives.ts`): how far down they have gone (one a life),
+   * and how much of them there is, 0 to 1. Optional; none when left out.
+   */
+  tunnel?: { depth: number; strength: number; t: number }
 }
 
 /* ------------------------------------------------------------------ the pull's timeline (show seconds) */
@@ -266,7 +272,11 @@ function base(t: number): BagelPose {
     throb += (big ? 0.016 : 0.0065) * w.s * (x / rise) * Math.exp(1 - x / rise)
   }
   const glint = clampS(t, 128.4, JOY_LIGHT - 0.2) * (1 - clampS(t, REVEAL, REVEAL + 1.2))
-  return { turn: bagelTurn(t), scale: 1 + throb, lit, sweep, pool, gulp, dx: 0, dy: 0, glint }
+  // Down the hole her lives go: seen as the whole of it is lit, slow in the hush, quicker once the pulse is in (one a
+  // second and more by the brink), all the way down and dark as she tips in after them.
+  const strength = clampS(t, REVEAL + 0.4, REVEAL + 2.4) * (1 - clampS(t, TIP_IN - 0.5, TIP_IN + 0.25))
+  const depth = 0.32 * Math.max(0, t - REVEAL) + 0.45 * Math.max(0, t - 142) + 0.35 * Math.max(0, t - BRINK)
+  return { turn: bagelTurn(t), scale: 1 + throb, lit, sweep, pool, gulp, dx: 0, dy: 0, glint, tunnel: strength > 0 ? { depth, strength, t } : undefined }
 }
 
 interface Drive {
@@ -673,6 +683,8 @@ export function drawBagel(p: p5, k: number, ink: string, weight: number, pose: B
   ctx.arc(0, 0, h * 0.76, 0, TAU)
   ctx.fillStyle = DARK
   ctx.fill()
+  // Down at the bottom of the well, her lives, going down (in the pull).
+  if (pose.tunnel) drawTunnel(ctx, h * 0.76, pose.tunnel.depth, pose.tunnel.strength, pose.tunnel.t)
   if (seen > 0.001) {
     // The far side of its wall, low down, catches the light from above.
     ctx.save()
