@@ -1318,8 +1318,25 @@ the desk, seen from behind) would undo the show's point of view, whose hand is t
 Not taken: the kitten "cropped in half" in the moving take (it is whole there, near the frame's edge); cast shadows
 (they are drawn; a lamp above a desk throws most of them onto the desk, out of sight).
 
+### The seventy-seventh pass: something near
+
+The cold review's second point stood: every layer of the picture was at the wall or past it, nothing near, so the eye
+had nowhere to rest in front of the room.
+
+213. **A pothos hung near the camera** (`lamp/fore.ts`). From a pot just above the frame, three short vines of large
+     leaves hang into the top left corner, over the curtain: out of focus (drawn small and laid back large, so soft at
+     any size), dark, edged along their tops by the window's light and here and there warmed by the fairy lights, and
+     stirring in the draught off the glass as the curtain does. It hangs by the one at the desk, so it keeps to the
+     corner of whatever the camera looks at, drifting a little against the room as the camera moves, and in the still
+     take as it drifts: the nearest thing, which makes the room behind it deep. Not in the stage's overview of the whole
+     room; against the ceiling on a phone held upright it all but disappears, which is right.
+214. **Fixed on the way.** The first plant was five long vines of small sharp leaves that reached the sill's plant and
+     crossed the window's sky; close things are few, large and soft, and it keeps to the curtain now.
+
 ## Judgment calls for Stephen
 
+- **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in
+  `scene.ts`) and could go.
 - **The light.** How dark the room falls away from its lights is two colours (`ambientAt`, `lamp/light.ts`, the
   dusk's and the night's); how far the window's light reaches is one number (`windowShare`).
 - **The snow.** The night's second turn: rain to snow to a white city under the moon. It is the largest change to the

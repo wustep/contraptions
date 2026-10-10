@@ -14,6 +14,7 @@ import { moth } from './moth'
 import { rimAt, rimLine } from './rim'
 import { reflection } from './reflection'
 import { light } from './light'
+import { foreground } from './fore'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { flashRoom, night } from './sky'
@@ -993,6 +994,8 @@ export const things = scenery<null>(
     bloom(ctx, c.t)
     motes(ctx, c.t)
     flashRoom(ctx, c.t)
+    // Nearest of all, out of focus: the pothos hanging into the corner.
+    foreground(ctx, c.t)
     vignette(ctx)
     // Under each track's now-playing line (not the title or the credits, which stand on the dark wall).
     for (const card of titlesAt(c.t)) if (card.names.length === 1 && Array.isArray(card.names[0])) scrim(ctx, card.light, card.at, camera(c.t).cells)
