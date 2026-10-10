@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 147 (latest)
+## Polish pass 148 (latest)
+
+No change to the show: a held sound at the show's end, where pass 147's paused-and-held case would most likely arise. Under the refusing policy, a link left held from 288 s plays to its end and starts again from 0. A show link is a named visit, and `advance()` plays a pool of one again. On the reopen, the muted try ran out of patience while the fresh YouTube players were still loading, so `playLinked` fell back to its last resort, as written: the picture runs on the wall clock with the Sound button up, and the music joins at the next gesture. A tap there was refused (the policy), held again, and from then the music ran muted in step under the picture. So the end never leaves a held show paused, and the case pass 147 noted does not arise on a link. Nothing here is new to this branch.
+
+## Polish pass 147
 
 No change to the show: passes 133 to 146 changed the shared YouTube player six times in quick succession, each tried alone, so the whole change to `youtube.ts` and `player.ts` was read against `origin/main` as one piece. It holds together.
 - `hush` mutes alike at start, warm, entry and the viewer's own mute. A viewer who has muted is still muted at an entry, so WebKit has nothing to stop.
