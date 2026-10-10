@@ -744,6 +744,11 @@ window.
     frames a second, nothing leading): there about the baby, and bad news (80% sure); which news open (lost, or can't
     have one), as the film leaves it. Her sinking read plainly; his lean to her (8°) did not ("I can't tell whether
     he's leaning toward her or just still"), and his reach to her is half the beat: now 14°, clear at both framings.
+  - *The yard and the book, re-watched* by a sixth viewer who has never seen Up (84 to 106 s, three frames a second):
+    a big book (90%), a place they dream of going (70%), the turn on 100.7 as it opens. What the pop-up showed was
+    half sure: the falls' near-white ribbon read as a stripe, a door or a road, and the cliff as a house, a tent or a
+    temple. The falls are now water in all three of their places (the pop-up, the jar, the hall's painting): a pale
+    blue, with deeper streaks falling in it and white spray at the foot (`fallStreaks`, `props/falls.ts`).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
