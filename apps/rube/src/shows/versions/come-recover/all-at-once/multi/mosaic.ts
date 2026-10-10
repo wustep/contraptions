@@ -3,7 +3,7 @@ import { R, type Pt, type Seg } from '../../../../../parts'
 import { director } from '../camera'
 import { box, carried, frame, part, type Ctx, type PartShot } from '../kit'
 import { DURATION, fight, JUMPS, strength } from '../music'
-import { EVELYN, LAUNDROMAT, MULTI_THEME, VOID, VOID_THEME } from '../worlds'
+import { EVELYN, EYE_WHITE, JOY, LAUNDROMAT, MULTI_THEME, VOID, VOID_THEME, WAYMOND } from '../worlds'
 import { room } from '../home/set'
 import { KINDNESS_AT } from '../home/kindness'
 import { PANEL_LOOKS, paintPicture, pixelOf, prefersCalm } from '../film'
@@ -369,6 +369,65 @@ function evelyn(pen: Pen, e: Pt, back: Pt[] | null, ink: string): void {
   }
 }
 
+/* ------------------------------------------------------------------ the family, in every life */
+
+/**
+ * In every life she has, he is there. As the wall multiplies, Waymond is beside her machine in more and more of the
+ * worlds, on the ground past the weight, his googly eye on her: one panel in eight by beat 80, half by 100, three in
+ * four by the crescendo. In the last phrases Joy is there in some, on her side, without an eye yet (hers comes at the
+ * peak). Each arrives on a beat, dropping in with a little bounce, and stays. The home panel, dark at first, has
+ * neither: there he is waiting at the party table, where the fold brings her.
+ */
+const WAY_X = 1.37
+const JOY_X = -1.37
+/** On which beat a panel's Waymond, or Joy, arrives, or never: from the panel's own hash, earlier for more of them. */
+function arrives(i: number, j: number, who: 'w' | 'j'): number {
+  const h = hash(i * 7 + 3, j * 11 + 5, who === 'w' ? 61 : 67)
+  if (who === 'w') return h < 0.78 ? B(Math.round(77 + (h / 0.78) * 40)) : Infinity
+  return h < 0.32 ? B(Math.round(105 + (h / 0.32) * 14)) : Infinity
+}
+/** How far down from the drop an arrival is `u` seconds in: a fall of half a cell, a bounce, settled. */
+const drop = (u: number): number => (u < 0.16 ? -0.55 * (1 - (u / 0.16) ** 2) : -0.09 * Math.max(0, Math.sin(((u - 0.16) / 0.22) * Math.PI)) * Math.exp(-(u - 0.16) / 0.3))
+
+function familyBall(pen: Pen, x: number, y: number, color: string, eyeOn: Pt | null): void {
+  const { ctx } = pen
+  ctx.fillStyle = color
+  ctx.beginPath()
+  ctx.arc(x, y, pen.lod === 3 ? Math.max(R, 1.1 / pen.q) : R, 0, Math.PI * 2)
+  ctx.fill()
+  if (pen.lod === 3) return
+  if (pen.lod <= 1) {
+    ctx.strokeStyle = pen.ink
+    ctx.lineWidth = pen.lw
+    ctx.stroke()
+  }
+  if (!eyeOn || pen.lod > 2) return
+  // His googly eye, its pupil turned to her.
+  const er = R * 0.62
+  const a = Math.atan2(eyeOn[1] - y, eyeOn[0] - x)
+  ctx.fillStyle = EYE_WHITE
+  ctx.beginPath()
+  ctx.arc(x, y - R * 0.12, er, 0, Math.PI * 2)
+  ctx.fill()
+  if (pen.lod <= 1) {
+    ctx.strokeStyle = pen.ink
+    ctx.lineWidth = pen.lw * 0.8
+    ctx.stroke()
+  }
+  ctx.fillStyle = '#141414'
+  ctx.beginPath()
+  ctx.arc(x + Math.cos(a) * er * 0.42, y - R * 0.12 + Math.sin(a) * er * 0.42, er * 0.46, 0, Math.PI * 2)
+  ctx.fill()
+}
+
+/** Whoever of the family is in panel (i, j) at `t`, beside her machine. */
+function family(pen: Pen, i: number, j: number, t: number, e: Pt): void {
+  const w = arrives(i, j, 'w')
+  if (t >= w) familyBall(pen, WAY_X, -R + drop(t - w), WAYMOND, e)
+  const jo = arrives(i, j, 'j')
+  if (t >= jo) familyBall(pen, JOY_X, -R + drop(t - jo), JOY, null)
+}
+
 /** The seesaw: its wedge, its plank at `phi`, the weight. */
 function seesaw(pen: Pen, skin: Skin, mc: Machine): void {
   poly(pen, [[-WEDGE, 0], [WEDGE, 0], [0.05, -HP + 0.03], [-0.05, -HP + 0.03]], skin.fulcrum)
@@ -403,7 +462,7 @@ interface Box {
 }
 
 /** One panel: a world, its machine and its Evelyn, clipped to its rectangle. */
-function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: number, sc: Pt, sx: number, mc: Machine, back: Pt[] | null, dark = 0): void {
+function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: number, sc: Pt, sx: number, mc: Machine, back: Pt[] | null, dark = 0, cell?: [number, number]): void {
   const pen = penFor(ctx, F, b.cx, b.cy, q, sc, skin.ink, sx)
   const hw = b.w / 2 / q
   const hh = b.h / 2 / q
@@ -427,6 +486,7 @@ function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: n
     ctx.fillStyle = rgba(VOID_THEME.bg, dark)
     ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0)
   }
+  if (cell && dark < 0.5) family(pen, cell[0], cell[1], mc.m.t, mc.e)
   // In the dark her ring is the dark's own ink, as it was in the bagel.
   evelyn(pen, mc.e, back, dark > 0 ? mix(skin.ink, VOID_THEME.ink, dark) : skin.ink)
   if (skin.front && dark < 0.5) skin.front(pen, mc.m, v)
@@ -670,7 +730,8 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
       const home = i === 0 && j === 0 && flip.n === 0
       const skin = home ? SKINS.home : skinAt(i, j, flip.n)
       const dark = home ? 0.97 * (1 - lights(t)) : 0
-      panel(ctx, F, skin, b, q, sc, flip.w, mc, back, dark)
+      // The family in every life but home's own panel, and only until every panel turns to the calm.
+      panel(ctx, F, skin, b, q, sc, flip.w, mc, back, dark, home || t >= FLIPS[1] ? undefined : [i, j])
     }
   }
   // In the dark she falls past seeds from the bagel, which go as the lights come.
