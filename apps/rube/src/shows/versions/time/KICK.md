@@ -486,6 +486,12 @@ each world, and changed:
   bumper, down past the road, and read as a plinth the van stood on (a critic's note under Zoom). It is a soft
   shadow on the road the van's length now, the chassis in shade only between the wheels (still deep enough that she
   never shows under it), and the wheel wells dark.
+- **The fortress's walkway** (123 to 151): the walkway out from the tower toward the mountain stood on one leg that
+  stopped in the air, nothing under it (two critics' notes, in the tall frame). It is a cantilever into the mountain
+  behind now, braced back to the tower under it by a strut.
+- **Under the cloud deck** (222 to 225, plainest in a tall frame): coming down out of the deck, the air under the wings
+  was one flat gold fill, half the picture, until the ground came up (two critics' notes). Loose wisps of lower cloud
+  lie in it now, lit along their tops and cool beneath, rising past with the deck.
 
 ## Inception nods
 
