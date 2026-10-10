@@ -4,6 +4,8 @@ import { box, carried, frame, part, type Company, type PartShot } from '../kit'
 import { LIGHTS, lightAt, penOf, shade, STREET, type Glow } from './set'
 import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, waymondAt, windowLight } from './finale-plan'
 import { HOME } from '../worlds'
+import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './finale-lives'
+import { CLOSE, PULL_FROM, PULL_TO } from './multitude'
 import { drawCamera, drawContactShadows, drawFlash, drawFlashShadows, drawLanternString, drawPhoto, drawSwitch, drawTripodFront, drawWasher, drawWasherDoor, drawWindowGlow, fireworkFloor, fireworkLight, fireworks, lightColor, stringGlows } from './finale-draw'
 
 /**
@@ -242,9 +244,18 @@ export const finale = part<FinaleState>(
       // Then back, towards the washer's glow, for the lights going out. Both stay inside the shop's end wall: the
       // storefront's glass is the frame's left edge, so the room is never seen cut off in the dark of the tail.
       { t: 294.6, cells: 5.15, hold: H(-3.4, -1.38), w: 1 },
-      // The rest: drawing back, very slowly, over the dark. Low enough that Zoom keeps the family whole on a strip of
-      // floor, and high enough that the frame still takes in the lucky cat's shelf.
-      { t: END - 0.05, cells: 5.45, hold: H(-3.1, -1.5), w: 1 },
+      // Held while the tubes go out over the counter; then in, close, to the window and the three of them at its
+      // foot, for the lives that pass through its glass under the credits. The window is right of the middle, so the
+      // credits have the dark of the door and the storefront to the left of it.
+      { t: 296.1, cells: 5.15, hold: H(-3.35, -1.38), w: 1 },
+      { t: LIVES_FIRST - 0.2, cells: 2.75, hold: H(PORT[0] - 0.7, -0.62), w: 1 },
+      { t: LIVES_OUT, cells: 2.6, hold: H(PORT[0] - 0.66, -0.62), w: 1 },
+      // The swell, and they look at one another: held. Then the long draw back, out of the shop and on into the
+      // night, until home is one lit window among all of them (`multitude.ts`), and the end's dark.
+      { t: PULL_FROM, cells: CLOSE, hold: H(PORT[0] - 0.65, -0.62), w: 1 },
+      // (How far back is the draw back's own, `cameraCellsAt`: these keys only say where the camera looks.)
+      { t: PULL_TO, cells: 36, hold: H(PORT[0], PORT[1]), w: 1 },
+      { t: END - 0.05, cells: 36, hold: H(PORT[0], PORT[1]), w: 1 },
     ]
     return shots.filter((k) => k.t > slot.begin + 0.39 && k.t <= slot.end + 1e-6)
   },

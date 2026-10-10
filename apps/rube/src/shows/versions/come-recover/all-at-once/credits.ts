@@ -244,6 +244,8 @@ export const DESCRIBED: { at: number; said: string; of?: number }[] = [
   { at: 283.0, said: 'They gather for a family portrait.' },
   { at: 291.2, of: HOME_HITS[1], said: 'The flash, and the photograph.' },
   { at: 295.4, of: HOME_HITS[2], said: 'The lights go out.' },
+  { at: 310.0, of: 298.6, said: 'Her other lives pass, one by one, through the washer’s glass.' },
+  { at: 322.4, of: 320.0, said: 'The camera draws back into a night full of lit windows, every life she might have lived. They gather in a ring, with home in its middle.' },
 ]
 const DESCRIBED_FOR = 1.2
 
@@ -348,8 +350,8 @@ export const credits = scenery<null>({
     ctx.translate(cx, cy)
     ctx.scale(1, 0.5)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(8, 10, 12, ${0.7 * bed})`)
-    g.addColorStop(0.55, `rgba(8, 10, 12, ${0.42 * bed})`)
+    g.addColorStop(0, `rgba(8, 10, 12, ${0.8 * bed})`)
+    g.addColorStop(0.55, `rgba(8, 10, 12, ${0.52 * bed})`)
     g.addColorStop(1, 'rgba(8, 10, 12, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
@@ -361,9 +363,11 @@ export const credits = scenery<null>({
  * The end: after the last card the recording fades to silence, and the room goes down into the dark with it. The
  * washer's window, the light the family rests in, is the last to go. 0 is the room as it is; 1 is the dark.
  */
-export const endDarkAt = (t: number): number => easeInOutCubic(clamp((t - (LAST_GONE + 0.5)) / (DURATION - 0.4 - (LAST_GONE + 0.5))))
+/** The dark starts once the last card has gone and the draw back has come to rest on every lit window, held a moment. */
+const DARK_FROM = Math.max(LAST_GONE + 0.5, 328.1)
+export const endDarkAt = (t: number): number => easeInOutCubic(clamp((t - DARK_FROM) / (DURATION - 0.4 - DARK_FROM)))
 /** How far the window's own light has gone with it: later, so it outlasts the room. */
-const windowDarkAt = (t: number): number => easeInOutCubic(clamp((t - (LAST_GONE + 2.8)) / (DURATION - 0.2 - (LAST_GONE + 2.8))))
+const windowDarkAt = (t: number): number => easeInOutCubic(clamp((t - (DARK_FROM + 1.6)) / (DURATION - 0.2 - (DARK_FROM + 1.6))))
 
 /** The end's dark as stops from the window's centre out (`at` shares of `END_REACH`): one falloff, for both the dark itself and what goes down with it. */
 const END_REACH = 1.7
