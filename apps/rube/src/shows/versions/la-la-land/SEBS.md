@@ -96,6 +96,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - their constellation comes out over the city of stars, every star of it in the picture from when it comes out to the last frame;
 - his playing reaches her: every note that goes out from the keys at her table, across Lipton's and in the dream's last room arrives where she will be, the ones at her table are seen, and the last reaches the door as it shuts; and at the audition every note of her song lands on him;
 - the house in Paris never covers the two of them;
+- his music rising out of the club with the band never runs through a credit card;
 - the piano drawn in the stars is whole in the picture, at the dip and over the city;
 - the other road is seen where the story turns, and only there: each of the six echoes well inside the frame, mostly there, at its moment; and in the hush she rocks from the knock and looks after the one who walked out;
 - on the last chord he is back on the keys of his own piano, and she is gone by the band;
