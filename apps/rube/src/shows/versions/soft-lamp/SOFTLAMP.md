@@ -1150,7 +1150,14 @@ Taken:
 
 Put to Stephen, not done: one locked home shot for the half hour (all six reviewers lean that way); a notebook in the
 lamp's pool with the hand writing in it, the human centre the reviewer asked for; thinner, tinted outlines toward a
-painterly look. Each would change the piece's design rather than finish it.
+painterly look (taken, the sixty-ninth pass). The other two would change the piece's design rather than finish it.
+
+### The sixty-ninth pass: a drawn line
+
+185. **The heavy near-black outline round everything** read as flat vector illustration (the creative director's
+     review). The room's line is now a deep warm plum, not black, and a little over two thirds the weight: the outlines
+     sit in the picture's colour rather than on it, drawn rather than inked. The ball keeps the stage's own line, a
+     shade firmer than the room's, which suits the one thing the eye should find.
 
 **Subtracted:** the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five

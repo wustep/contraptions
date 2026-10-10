@@ -8,7 +8,7 @@ import { camera, catInViewAt } from './camera'
 import { TRACKS, barTime, beatOf, drumsAt, grooving, smooth, trackAt, type Track } from './music'
 import { LANDINGS, LAPS, ballAt, machineBusy } from './route'
 import { rgba } from './canvas'
-import { LAMP_ON, hash, lampAt, lightAt, lit } from './world'
+import { INK, LAMP_ON, hash, lampAt, lightAt, lit } from './world'
 
 /**
  * The cat: a ginger kitten loafed on the desk between the mug and the books, under the sill, its face to the room.
@@ -443,7 +443,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   ctx.moveTo(t0.x, t0.y)
   ctx.bezierCurveTo(t1.x, t1.y, t2.x, t2.y, t3.x, t3.y)
   ctx.lineWidth = 0.13
-  ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+  ctx.strokeStyle = INK
   ctx.stroke()
   ctx.lineWidth = 0.13 - lw * 2
   ctx.strokeStyle = fur(0.8)
@@ -462,7 +462,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
       else if (knee !== 0) ctx.quadraticCurveTo((from.x + to.x) / 2 + knee, (from.y + to.y) / 2, to.x, to.y)
       else ctx.lineTo(to.x, to.y)
       ctx.lineWidth = w
-      ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+      ctx.strokeStyle = INK
       ctx.stroke()
       ctx.lineWidth = w - lw * 2
       ctx.strokeStyle = fur(k)
@@ -532,7 +532,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   ctx.stroke()
   ctx.restore()
   body()
-  ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+  ctx.strokeStyle = INK
   ctx.lineWidth = lw
   ctx.stroke()
   // Its chest's ruff, under its chin: what the head sits on.
@@ -567,7 +567,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     ctx.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, end.x, end.y)
     ctx.lineCap = 'round'
     ctx.lineWidth = 0.12
-    ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+    ctx.strokeStyle = INK
     ctx.stroke()
     ctx.lineWidth = 0.12 - lw * 2
     ctx.strokeStyle = fur(0.85)
@@ -622,7 +622,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     ctx.closePath()
     ctx.fillStyle = fur(side > 0 ? 1 : 0.6)
     ctx.fill()
-    ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+    ctx.strokeStyle = INK
     ctx.lineWidth = lw
     ctx.stroke()
     ctx.beginPath()
@@ -640,7 +640,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   hg.addColorStop(1, fur(1))
   ctx.fillStyle = hg
   ctx.fill()
-  ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+  ctx.strokeStyle = INK
   ctx.lineWidth = lw
   ctx.stroke()
   // The window's light over the top of its head.
@@ -711,7 +711,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
         ctx.beginPath()
         ctx.moveTo(ex - 0.08, lidY)
         ctx.quadraticCurveTo(ex, lidY + 0.03 * (1 - open), ex + 0.08, lidY)
-        ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+        ctx.strokeStyle = INK
         ctx.lineWidth = lw * 0.8
         ctx.stroke()
       }
@@ -719,7 +719,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
       // The eye's upper line.
       ctx.beginPath()
       ctx.ellipse(ex, ey, RXE, RYE, 0, Math.PI, Math.PI * 2)
-      ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+      ctx.strokeStyle = INK
       ctx.lineWidth = lw * 0.8
       ctx.stroke()
     } else {
@@ -727,7 +727,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
       ctx.beginPath()
       ctx.moveTo(ex - 0.045, ey + (happy ? 0.012 : -0.002))
       ctx.quadraticCurveTo(ex, ey + (happy ? -0.03 : 0.028), ex + 0.045, ey + (happy ? 0.012 : -0.002))
-      ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+      ctx.strokeStyle = INK
       ctx.lineWidth = lw * 0.8
       ctx.stroke()
     }
@@ -738,7 +738,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     ctx.ellipse(0, 0.1 + 0.03 * yawn, 0.045 + 0.01 * yawn, 0.065 * yawn, 0, 0, Math.PI * 2)
     ctx.fillStyle = '#4A1E2A'
     ctx.fill()
-    ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+    ctx.strokeStyle = INK
     ctx.lineWidth = lw * 0.6
     ctx.stroke()
     ctx.beginPath()
@@ -814,7 +814,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     const bend = { x: from.x + 0.07 + over * (hx + 0.36 - from.x - 0.07), y: (from.y + py) / 2 + 0.03 + over * 0.08 }
     ctx.quadraticCurveTo(bend.x, bend.y, px, py)
     ctx.lineWidth = 0.1
-    ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
+    ctx.strokeStyle = INK
     ctx.stroke()
     ctx.lineWidth = 0.1 - lw * 2
     ctx.strokeStyle = lit('#B49276', CREAM_FUR, l)

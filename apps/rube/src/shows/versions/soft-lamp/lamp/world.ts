@@ -10,7 +10,8 @@ import { MUSIC_END, TRACKS, heldAt, smooth, trackAt } from './music'
  * wall, the curtain, the glass), over an indigo dark and a cream. One ink for every line, the ball's too.
  */
 
-export const INK = '#1A1526'
+/** The line: a deep warm plum rather than black, so the outlines sit in the picture's colour, not on it. */
+export const INK = '#2E2236'
 export const CREAM = '#EFE4CE'
 export const BALL = '#F1E6CF'
 

@@ -52,7 +52,8 @@ function inCells(p: p5, c: PieceCtx, fn: (ctx: Ctx, lw: number) => void): void {
   ctx.scale(c.k, c.k)
   ctx.lineJoin = 'round'
   ctx.lineCap = 'round'
-  fn(ctx, c.weight / c.k)
+  // A lighter line than the stage's own: drawn, not inked.
+  fn(ctx, (c.weight / c.k) * 0.72)
   ctx.restore()
 }
 
