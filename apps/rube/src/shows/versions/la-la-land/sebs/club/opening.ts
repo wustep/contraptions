@@ -232,8 +232,8 @@ export const opening = part<OpeningState>(
     { t: 31.0, cells: 1.32, hold: [-2.16, 2.44] },
     // Back to the room the same way, the two of them in one frame, and held while his eye finds her across it; then in
     // to the keys, and the stage light closes on them.
-    { t: 33.0, cells: 6.2, hold: [-0.3, 1.25] },
-    { t: 34.6, cells: 6.1, hold: [-0.25, 1.2] },
+    { t: 33.0, cells: 6.7, hold: [0.05, 1.2] },
+    { t: 34.6, cells: 6.6, hold: [0.05, 1.15] },
     { t: 36.0, cells: 3.0, hold: [2.95, -0.35] },
     { t: 39.4, cells: 2.8, hold: [3.0, -0.3] },
   ],

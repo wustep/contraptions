@@ -118,10 +118,21 @@ function drawCloth(ctx: CanvasRenderingContext2D, k: number, fr: Fr, pad: number
     const band = ((x1 - x0) / folds) * 0.38
     const g = ctx.createLinearGradient((x - band) * k, 0, (x + band) * k, 0)
     g.addColorStop(0, rgba(c.deep, 0))
-    g.addColorStop(0.5, rgba(c.deep, 0.32 * fa))
+    g.addColorStop(0.5, rgba(c.deep, 0.55 * fa))
     g.addColorStop(1, rgba(c.deep, 0))
     ctx.fillStyle = g
     ctx.fillRect((x - band) * k, top * k, 2 * band * k, (hem - top) * k)
+  }
+  // While it hangs, before the lamp is up, the lamp behind it warming: a faint glow coming through its middle.
+  if (!c.rise && t > c.down[1] && t < c.up[1]) {
+    const warm = smooth(t, c.down[1] + 0.15, c.up[0] + 0.4) * (coming ? 1 : f)
+    const r = (fr.y1 - fr.y0) * 0.75
+    const g = ctx.createRadialGradient(fr.cx * k, fr.cy * k, 0, fr.cx * k, fr.cy * k, r * k)
+    g.addColorStop(0, rgba('#F7EBCB', 0.22 * warm))
+    g.addColorStop(0.5, rgba('#F7EBCB', 0.08 * warm))
+    g.addColorStop(1, rgba('#F7EBCB', 0))
+    ctx.fillStyle = g
+    ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, (hem - top) * k)
   }
   // The batten along its hem, and the shadow it throws on what is below.
   if (hem < fr.y1 + pad) {
