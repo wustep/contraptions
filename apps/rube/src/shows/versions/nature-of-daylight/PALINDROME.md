@@ -856,6 +856,13 @@ wreath, a hoop; the eighteenth, a gold hula hoop. And the gala reads as a future
 said memories of the future unprompted. It is gathered into her at once now, gone in a third of a second, the cut's
 carry and nothing more.
 
+A ninetieth checked the eighty-ninth with a fresh reader: the party read as a flash-forward, the future that gives her
+what she needs now, with no ring standing in the room. (A first read this round was of the wrong show: another
+session's server had taken the port these renders use, so its sheets were of another checkout; it was set aside.) The
+cut to the cradle, the cradle and Ian each in a new place across it, has read as a glitch to several readers; the
+cradle must end where the first frame has it, which is where Ian stands before the cut, so to lose the jump is to
+restage the room before it. Left for the director's word.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
