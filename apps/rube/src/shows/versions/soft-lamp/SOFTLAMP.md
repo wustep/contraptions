@@ -1184,6 +1184,11 @@ painterly look (taken, the sixty-ninth pass). The other two would change the pie
      (the wash under the name where the name is), a phone held upright (the whole room, floor to ceiling, round the
      frame), a scrub back (the same frame), and sixty frames a second in Chrome with its GPU at dusk, in the rain, past
      midnight and at the end. Nothing to change.
+189. **Held, but not frozen.** A frame frozen dead loses the window's depth: the city's layers only slide against the
+     bars when the camera moves. The still take now drifts over minutes, a tenth of a cell across, a twentieth up and
+     down, a hair nearer and back (a tenth of a pixel a second at 1080p), too slow to see as a move; over a few minutes
+     the city shifts faintly behind the bars, as it does to anyone sitting at a desk. The drift keeps between the plant,
+     the lamp's foot and the print at the frame's edges; `check:shows` holds it there all the while, and slow.
 
 **Subtracted:** the camera following the ball along the sill (a held frame now); the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
