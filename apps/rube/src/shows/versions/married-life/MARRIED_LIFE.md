@@ -866,6 +866,8 @@ window.
     at 234 s, 4.4:1 for "the blue square"). Those two cards are now plain (`TitleCard.plain`: the card's cream), the
     rest gold over the night; every line 5.4:1 or better. A saved video still paints them gold: the exporter
     (`words.ts`) does not read `plain`, which two other shows use too, so it is left for its own change.
+  - *The share line* (the picker's line and a link's preview text): "…the house they fix up, live in, patch and leave"
+    promised the film's flight, which this take leaves out (no balloon coda, above); now "…patch and grow old in".
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
