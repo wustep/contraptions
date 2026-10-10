@@ -128,7 +128,7 @@ export const lens = scenery<{ iris: IrisAt } | null>({
       const near = Math.max(0, Math.min(1, (t - 395.3) / 1.5)) * (1 - Math.max(0, Math.min(1, (t - 451.5) / 1.5)))
       const d = ctx.createRadialGradient(f.cx * k, f.cy * k, r * (0.6 - 0.14 * near) * k, f.cx * k, f.cy * k, r * 1.02 * k)
       d.addColorStop(0, rgba('#E46A9A', 0))
-      d.addColorStop(1, rgba('#E46A9A', (0.32 + 0.26 * near) * dream))
+      d.addColorStop(1, rgba('#E46A9A', (0.14 + 0.44 * near) * dream))
       ctx.fillStyle = d
       ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
       ctx.globalCompositeOperation = 'source-over'
