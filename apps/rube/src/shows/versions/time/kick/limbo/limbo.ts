@@ -211,14 +211,12 @@ function drawKicks(pen: Pen, t: number): void {
 
 /** The warm rim the low sun behind them puts round the children, dark against it (home's children have one too). */
 const RIM = mixHex(LIMBO.lamp, LIMBO.skyWarm, 0.35)
-/** At play, as home's children are before they turn: small shifts of weight, the same two, on the same clock. */
-const play = (i: number, t: number): number => (i === 0 ? 0.045 * Math.sin((2 * Math.PI * t) / 4.3 + 0.4) : 0.1 * Math.sin((2 * Math.PI * t) / 3.3 + 2.1))
 function kids(origin: Pt): Riders {
-  return (t: number, hero: ShowBall) => [
+  return (_t: number, hero: ShowBall) => [
     hero,
     ...KIDS_AT.map(([x, y], i): ShowBall => ({
       id: KID_ID + i,
-      x: x + play(i, t) - origin[0],
+      x: x - origin[0],
       y: y - R * KID_SCALE - origin[1],
       color: KID_DARK,
       scale: KID_SCALE,
