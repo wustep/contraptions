@@ -814,6 +814,9 @@ window.
     drifting toward the aisle and down over the two of them, seen to come from them.
   - *The lower petals, re-watched* by an eighteenth viewer (the same stretch and questions): "the colourful group is the
     one that throws petals… the petals burst from their pews", the grey pew not joining in; the window not named.
+  - *The petals and the chimney under Zoom*: the chimney stands above the roof in the storm, dark with it, and the
+    nursery's ceiling is clear; the petals burst straight over the bright family, by a window's sill in Zoom's
+    tighter frame (the windows sit just over the pews there), theirs all the same.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
