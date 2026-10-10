@@ -1,12 +1,12 @@
 import type { Theme } from '../../../../../../../../src/core/themes'
 
-/** Tokyo: this place's theme. Its builder owns this file and may tune it. */
+/** Tokyo: the lamp's hard white on the dark-green table, red and white, the crowd in dark blues and browns, the GIs' olive. */
 export const TOKYO_THEME: Theme = {
   name: 'tokyo',
   label: 'Tokyo',
-  bg: '#1B1716',
-  ink: '#F0E6D6',
-  colors: ['#1B1716', '#F0E6D6'],
+  bg: '#07080B',
+  ink: '#EDE6D8',
+  colors: ['#07080B', '#EDE6D8', '#1C4A34', '#B8322A', '#55603A', '#2A3350'],
   weight: 0.8,
   note: 'Tokyo',
 }
