@@ -1,0 +1,22 @@
+Everybody Wants to Rule the World — Tears for Fears
+From Songs from the Big Chair, Mercury Records, 1985.
+Written by Roland Orzabal, Ian Stanley and Chris Hughes.
+Film: Marty Supreme, directed by Josh Safdie, A24, 2025, which ends on "Everybody Wants to Rule the World" as Marty sees
+his son for the first time in the maternity ward, and runs its end credits on it.
+
+The recording is the label's own, as uploaded to YouTube by Universal Music Group ("Everybody Wants To Rule The World",
+provided to YouTube by Universal Music Group, Songs From The Big Chair, ℗ 1985 Mercury Records Limited), video
+awoFZaSuko4:
+https://www.youtube.com/watch?v=awoFZaSuko4
+Duration 4:11. Copyrighted; no rights are claimed.
+
+Playback: YouTube only. No recording of the song is shipped, and none is committed, in this branch or its history.
+
+Files:
+- scripts/shows/rule-the-world-onsets.py — measures the song once from a local analysis copy of the video's audio
+  (fetched with yt-dlp into the git-ignored out/marty-supreme/, never committed): its one comb, every beat and every
+  shuffle on its own attack, its bars, its onsets, its stretches, its loudness.
+- scripts/shows/plans/rule-the-world-onsets.json — what it measured: the show is timed to it and check:shows holds the
+  show to it. It holds times and numbers only, no audio.
+
+Every picture in the show is drawn for it. Nothing from the film's frames, posters or titles is used.
