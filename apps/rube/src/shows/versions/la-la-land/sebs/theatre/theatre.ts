@@ -1284,6 +1284,19 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
       const h = LOW + (HIGH - LOW) * up
       const x0 = st.x - SEAT_W / 2
       const top = base - h
+      // Someone in every seat but his: the back of a head over the seat-back, the stage's light along its crown. A full
+      // house, the one the film's version never had. They stand with their seats.
+      if (!st.his) {
+        const hr = 0.115
+        const hy = top - 0.05 - 0.06 * up
+        p.noStroke()
+        p.fill('#1A0A0E')
+        p.circle(st.x * k, hy * k, 2 * hr * k)
+        p.noFill()
+        p.stroke(alpha(p, M.bulb, 0.45 + 0.4 * Math.min(1, stage) + 0.15 * warm))
+        p.strokeWeight(weight * 0.9)
+        p.arc(st.x * k, hy * k, 2 * hr * k, 2 * hr * k, Math.PI * 1.15, Math.PI * 1.85)
+      }
       p.stroke(alpha(p, ink, 0.28 + 0.2 * warm))
       p.strokeWeight(weight * 0.5)
       p.fill(fill)
