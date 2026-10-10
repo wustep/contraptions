@@ -231,7 +231,18 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 146 (latest)
+## Polish pass 147 (latest)
+
+No change to the show: passes 133 to 146 changed the shared YouTube player six times in quick succession, each tried alone, so the whole change to `youtube.ts` and `player.ts` was read against `origin/main` as one piece. It holds together.
+- `hush` mutes alike at start, warm, entry and the viewer's own mute. A viewer who has muted is still muted at an entry, so WebKit has nothing to stop.
+- The warm at the press runs once a deck, yields to the timer's early run, and is parked by the warm branch as before. A pause stops a warming deck.
+- `heardAt` only acts within 1.5 s of an entry. Its one false reading, a viewer pausing YouTube's own player in that moment, puts up the Sound button, which is harmless.
+- The wait's `getPlayerState` look cannot pass a real refusal, which leaves the player paused or unstarted.
+- All four ways of bringing a held sound in go through `soundIn`, which holds it again only on a real refusal and gives up if the show changed meanwhile. `onRefused` acts only while playing, not recording, and not already held. The stall note gives way to the Sound button while the sound is held.
+
+One older behaviour is unchanged: a Sound tap on a held show that is paused starts the music under a still picture, as the old `join` did.
+
+## Polish pass 146
 
 - **Pass 145's open case, given a way through: the browser's stop at an entry now holds the sound.** In WebKit, after a link that started on its own and a Sound tap, No Time for Caution was stopped as it was made heard at 126.5 s. The player took that for the viewer pausing YouTube's own player, and paused the show with no word of why. Pass 145 tried to make the tap win the second cue, and could not. Now a cue stopped within 1.5 s of being made heard at its entry is taken for what it is, a refusal (`youtube.ts`, `heardAt`, `onRefused`). The page holds the sound as a refused link does (`player.ts`): the picture goes on, the music under it muted and in step, and the Sound button is up. The tap that follows is a press, so it may start the cue heard. In WebKit, at 126.5 s the show goes on muted (No Time for Caution at 103.89, then 104.89), the Sound button comes up, and one tap brings it in heard and in step (106.01 at show 128.75). Cornfield Chase's last half-second of fade is lost to the stop. In Chrome, where nothing is stopped, the hand-over, the viewer's mute, the refused-tap re-hold and pass 144's press-at-60 hand-over in WebKit are all as they were. One Chrome run sat at 124 s unstarted, and three re-runs did not, so it was the loaded machine. A check holds it, and fails on the old player.
 
