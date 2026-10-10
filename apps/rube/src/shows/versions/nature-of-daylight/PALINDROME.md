@@ -809,6 +809,11 @@ The suit, the hops, Ian's walk passed without a word. Their worst, the baby ther
 before it, is the choice itself, the empty cradle they turn to and the child the cut gives her, as the seventh reader
 read it; the rest had been met before. Nothing to change.
 
+An eighty-first set the late rounds side by side for whoever reviews them: the show as the forty-ninth left it and as
+it is now, rendered at the same eight moments (the ending, the blast, Ian's goodbye, the suit, the soldier, the ring
+into the gala, the daylight, the helicopter), in a table at the head of the pull request beside the earlier two. The
+show is unchanged.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
