@@ -104,6 +104,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - at her show the empty house shows through only in the lead-in, and is full again when he springs up;
 - his music rising out of the club with the band never runs through a credit card;
 - the piano drawn in the stars is whole in the picture, at the dip and over the city;
+- the piano grows with their waltz, a share for each star lit, and the way out of the dream closes on him at the keys like the way in;
 - the other road is seen where the story turns, and only there: each of the six echoes well inside the frame, mostly there, at its moment; and in the hush she rocks from the knock and looks after the one who walked out;
 - on the last chord he is back on the keys of his own piano, and she is gone by the band;
 - Mia, David and the son never jump where they can be seen, and come and go only out of shot or under a cover;
