@@ -151,15 +151,14 @@ function drawTerminal(pen: Pen, t: number, f: Frame): void {
   const foot = TERM.foot
   if (f.x1 > land) drawOutside(pen, t, f)
   // The lower level, concrete, down to the apron.
-  // In a tall frame it is near half the picture, so it is not a blank: the soffit's shade under the floor, the wall's
-  // panels, a plinth along its foot, and its doors onto the apron glazed in frames under a canopy, the morning on them.
+  // In a tall frame it is near half the picture, so it is not a blank: the soffit's shade under the floor, a plinth
+  // along its foot, and its doors onto the apron glazed in frames under a canopy.
   const lx1 = Math.max(f.x1 + 1, land + 3)
   box(pen, air - 0.1, floor + 0.35, lx1, GROUND, CONCRETE, 0.7)
   vwash(pen, air - 0.1, lx1, floor + 0.35, floor + 1.0, [
     [0, PLANE.caseDark, 0.35],
     [1, PLANE.caseDark, 0],
   ])
-  for (let x = air + 0.75; x < lx1; x += 0.7) line(pen, [x, floor + 0.5], [x, GROUND - 0.2], rgba(PLANE.caseDark, 0.35), 0.5)
   box(pen, air - 0.1, GROUND - 0.2, lx1, GROUND, mixHex(CONCRETE, PLANE.caseDark, 0.35), 0.5)
   for (let x = air + 0.4; x < land - 0.5; x += 1.4) {
     box(pen, x - 0.1, 1.42, x + 0.9, 1.52, mixHex(CONCRETE, PLANE.caseDark, 0.25), 0.6)
@@ -170,9 +169,6 @@ function drawTerminal(pen: Pen, t: number, f: Frame): void {
       [1, mixHex(PLANE.cabinLit, PLANE.dawn, 0.35), 1],
     ])
     line(pen, [x + 0.4, 1.66], [x + 0.4, GROUND], STEEL, 0.6)
-    line(pen, [x, 2.15], [x + 0.8, 2.15], STEEL, 0.6)
-    line(pen, [x + 0.08, 2.3], [x + 0.3, 2.95], rgba(HOME.sun, 0.35), 0.8)
-    for (const hx of [x + 0.33, x + 0.47]) line(pen, [hx, 3.0], [hx, 3.3], PLANE.case, 0.8)
   }
   // The hall's back wall, and in it a long window onto the morning city.
   box(pen, air, TERM.ceil, land, foot, HALL_WALL, 0)
