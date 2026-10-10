@@ -736,6 +736,10 @@ window.
     sheet a frame a second it read the hill as him too old for the climb; the critic who had the dense strip of the
     fall read it as she fell and he came after her, so this is taken as the sheet's sampling (three frames of a
     three-second beat), not restaged.
+  - *The hill, settled* by a fourth viewer who has never seen Up, given the climb at four frames a second (168 to
+    183 s) and nothing leading: her (90% sure), "she can't manage the climb", a health problem not an accident (85%);
+    the turn on 174.6 as he leaves the basket and the tickets to go to her. So the third viewer's "him too old" was the
+    one-a-second sheet's. Not readable at that scale: whether she collapses or rolls back tired; either carries it.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
