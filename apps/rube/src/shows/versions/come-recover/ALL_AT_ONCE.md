@@ -946,6 +946,9 @@ The notes went back to the builders who made each part, who still had their cont
   the two flickers showed the mosaic's full wall of 64 bright worlds over the dark bagel, a wall the show does not
   reach until 184 s, and the largest swing of light in the show. That jump now has none; its violet flare is its
   break. Eight flickers in all.
+- **An audit after the director's passes, in two more modes.** The whole show was swept with reduced motion asked
+  for, at 48 frames: every world, picture and line is there, the crash zooms, step-printing and grain left out as
+  they should be. Firefox was tried again and would not start (see Known limits).
 
 ## The looks
 
@@ -1132,5 +1135,6 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
 - The reduced-motion preference is followed live, and the page's Save PNG and Save video paint from the same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
   for a file would take a change to the shared stage and recorder, and that viewer has asked for the calmer show.
 - Only Chrome on macOS has been watched playing. Twelve key frames were rendered in WebKit (Safari's engine, 26.6) as
-  well, and match Chrome's, with no errors. Firefox has not been tried: its engine would not start in the sandbox the
-  passes ran in. The recording export has not been re-measured for this take.
+  well, and match Chrome's, with no errors. Firefox has not been tried. Its engine would not start in the sandbox the
+  passes ran in, and a later attempt with Playwright's matching Firefox 156 build, outside the sandbox too, exited
+  at once ("Could not find profile folder") on this macOS. The recording export has not been re-measured for this take.
