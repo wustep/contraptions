@@ -519,8 +519,14 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     const e = show.echoes(455.0).find((x) => (x.turn ?? 0) > 0.6)
     const her = ball(455.0, show.mia(455.0)?.id ?? -1)
     const swapSeen = !!e && inShot(455.0, e) && !!her && inShot(455.0, her) && aim(her.spin, Math.atan2(e.y - her.y, e.x - her.x)) <= Math.PI / 6
-    check('sebs: David looks at her at her table, and the swap there is seen: the dream\'s him greyed, and her looking at it', davidLooks && swapSeen,
-      `david looks ${davidLooks}, swap seen ${swapSeen}`)
+    // And as the camera finds their table they are leaning in together, touching (close, not pressed), before she draws
+    // back and looks up to the stage.
+    const m23 = show.mia(23), d23 = show.david(23), m26 = show.mia(26), d26 = show.david(26)
+    const gap23 = m23 && d23 ? Math.hypot(m23.x - d23.x, m23.y - d23.y) : Infinity
+    const gap26 = m26 && d26 ? Math.hypot(m26.x - d26.x, m26.y - d26.y) : 0
+    const together = gap23 < 2 * R + 0.02 && gap23 > 0.9 * 2 * R && gap26 > 2 * R + 0.08
+    check('sebs: she and David lean in together and he looks at her at her table, and the swap there is seen: the dream\'s him greyed, and her looking at it', davidLooks && swapSeen && together,
+      `david looks ${davidLooks}, swap seen ${swapSeen}, together ${gap23.toFixed(3)} then ${gap26.toFixed(3)}`)
   }
   // At her show the empty house of the film's real night shows through only in the lead-in bar, and the full house is
   // back the moment he springs up (115.52) for the ovation.
