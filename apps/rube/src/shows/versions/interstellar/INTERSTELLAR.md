@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 138 (latest)
+## Polish pass 139 (latest)
+
+No change to the show: the held sound in Theater (`/theater/`), which is always a named visit and shuffles every show, under the refusing policy of passes 136 to 138. Six visits landed on Merry-Go-Round, Mountain King, Gymnopédie, Nature of Daylight, Boléro and Relax, from YouTube and from files. Each was playing muted with the sound held and the Sound button up. On Merry-Go-Round, a refused Space was held again, with "Waiting for the music…" between, as on Voyage. One more visit had not reached the hold within 30 s on the loaded machine. Five more all did, so it was the load. As in pass 136, held YouTube shows advance slowly in this headless set-up (about 1.9 s in 8) and file shows at speed.
+
+## Polish pass 138
 
 No change to the show: what the viewer sees in the two seconds after a refused tap, before the sound is held again (passes 136 and 137). Read every quarter-second after Space under the refusing policy, the picture stands, and from about 0.5 s the stage says "Waiting for the music…", with its Reload button, as for any stall (pass 89). At about 2.5 s the hold returns, the note goes, the Sound button is back and the picture runs on muted. It is a short wait, and the note says what is happening, so it is left.
 
