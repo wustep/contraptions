@@ -208,7 +208,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     const u = along(c.t) + whale.d
     const { body, flukes, fin } = whaleShape(k, whale.beat)
     const m = ctx.getTransform()
-    const cell = Math.hypot(m.a, m.b) * k
+    const dens = Math.hypot(m.a, m.b)
     p.push()
     atSea(p, k, u)
     ctx.translate(0, WHALE.depth * k)
@@ -226,7 +226,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     const dark = mixHex(day.deep, '#03060E', 0.45)
     ctx.lineJoin = 'round'
     ctx.strokeStyle = alpha(p, dark, 0.14 * whale.there).toString()
-    ctx.lineWidth = cell * 0.12
+    ctx.lineWidth = k * 0.12
     ctx.stroke(shape)
     ctx.fillStyle = alpha(p, dark, 0.36 * whale.there).toString()
     ctx.fill(shape)
@@ -237,7 +237,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       const a = whale.there * (0.18 + 0.22 * Math.max(0, osc(c.t, 0.21 + 0.05 * hash(i, 181), i * 1.7)))
       ctx.fillStyle = `rgba(${GLOW}, ${a.toFixed(3)})`
       ctx.beginPath()
-      ctx.arc(x, y, Math.max(0.8, cell * 0.009), 0, Math.PI * 2)
+      ctx.arc(x, y, Math.max(0.8 / dens, k * 0.009), 0, Math.PI * 2)
       ctx.fill()
     }
     p.pop()
@@ -309,7 +309,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(foam.slice(i, i + 2), 16))
     // At night the swell wakes the sea's light: the crest glows a cold green-blue as it runs.
     const glow = smooth(day.night, 0.4, 0.9)
-    const cell = Math.hypot(ctx.getTransform().a, ctx.getTransform().b) * k
+    const dens = Math.hypot(ctx.getTransform().a, ctx.getTransform().b)
     for (let i = 0; i < n; i++) {
       const ua = u0 + ((u1 - u0) * i) / n
       const ub = u0 + ((u1 - u0) * (i + 1)) / n
@@ -319,7 +319,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       const [xb, yb] = polar(ub, swell(ub, c.t))
       if (glow > 0.01) {
         ctx.strokeStyle = `rgba(${GLOW}, ${(0.16 * lift * glow).toFixed(3)})`
-        ctx.lineWidth = Math.max(3, cell * 0.09)
+        ctx.lineWidth = Math.max(3 / dens, k * 0.09)
         ctx.beginPath()
         ctx.moveTo(xa * k, ya * k)
         ctx.lineTo(xb * k, yb * k)
@@ -346,7 +346,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
         const [x, y] = polar(u, swell(u, c.t) - depth)
         ctx.fillStyle = `rgba(${GLOW}, ${a.toFixed(3)})`
         ctx.beginPath()
-        ctx.arc(x * k, y * k, Math.max(0.8, cell * (0.008 + 0.01 * hash(j, 173))), 0, Math.PI * 2)
+        ctx.arc(x * k, y * k, Math.max(0.8 / dens, k * (0.008 + 0.01 * hash(j, 173))), 0, Math.PI * 2)
         ctx.fill()
       }
     }
