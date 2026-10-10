@@ -95,23 +95,30 @@ export function spill(ctx: Ctx, t: number): void {
   ctx.save()
   onTop(ctx)
   ctx.globalCompositeOperation = 'screen'
-  // Strongest nearest the window, fading as it lies further out; its edges soft.
+  // Brightest in its middle and nearest the window, falling away toward its ends and its far edge, as light through a
+  // window does on a surface: a light, not a sheet laid on the wood. Its edges soft, a little halo round each pane.
+  const mid = land(s, (GLASS.x0 + GLASS.x1) / 2, GLASS.y1 - (GLASS.y1 - GLASS.y0) * 0.3)
   const near = land(s, 0, GLASS.y1).y
   const far = land(s, 0, GLASS.y0).y
-  const g = ctx.createLinearGradient(0, near, 0, Math.max(near + 0.01, far))
-  g.addColorStop(0, rgba(s.color, 0.9 * s.a))
-  g.addColorStop(1, rgba(s.color, 0.5 * s.a))
-  // Its edges soft, as light through a pane is a little way off the glass: a falling halo round each pane, then the
-  // pane itself a hair inside its own edge.
   patch(ctx, s)
   ctx.lineJoin = 'round'
-  for (const [w, k] of [[0.09, 0.08], [0.05, 0.12], [0.025, 0.2]]) {
+  for (const [w, k] of [[0.12, 0.04], [0.07, 0.06], [0.035, 0.1]]) {
     ctx.strokeStyle = rgba(s.color, k * s.a)
     ctx.lineWidth = w
     ctx.stroke()
   }
+  ctx.save()
+  patch(ctx, s)
+  ctx.clip()
+  ctx.translate(mid.x, mid.y)
+  ctx.scale((GLASS.x1 - GLASS.x0) * 0.62, Math.max(0.02, (far - near) * 0.9))
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+  g.addColorStop(0, rgba(s.color, 0.75 * s.a))
+  g.addColorStop(0.55, rgba(s.color, 0.45 * s.a))
+  g.addColorStop(1, rgba(s.color, 0.12 * s.a))
   ctx.fillStyle = g
-  ctx.fill()
+  ctx.fillRect(-1.2, -1.2, 2.4, 2.4)
+  ctx.restore()
   // The kitten asleep on the sill, at the end, keeps a little of it off the desk.
   const c = climbAt(t)
   if (c.dy < -1.3) {

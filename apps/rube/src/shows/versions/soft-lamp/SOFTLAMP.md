@@ -1470,6 +1470,28 @@ The desk having a top now, two things it could hold that it couldn't before:
      page has its own print. Each while the camera holds the book, clear of the lightning, the cars, the shooting stars
      and the machine. `check:shows` holds them.
 
+### The eighty-fifth pass: the kitten drawn as the star
+
+Both fresh reviewers' sharpest note on the one character: "the cat looks like clip-art … needs a real silhouette,
+readable loaf volumes, tail wrapped around the body"; standing, "stiff, tube-like legs". Its motion is left as it is;
+its drawing is redone (`lamp/cat.ts`):
+
+239. **A cat's head.** Round at the crown, the cheeks fuller and tufted where they meet the ruff, in place of an oval.
+240. **Its ruff** is fluffy, its lower edge in soft points.
+241. **Its haunch.** The hind leg folded under it, a round at its rear: the loaf is a cat crouched, not a bun. It
+     carries into every pose, standing, walking and asleep.
+242. **Its tail where it can be seen.** Lying, the tail lies along the desk in front of it, from its rear round to its
+     paws, the tip lifting and settling (and, nodding along, swaying a bar at a time) as before; two faint rings and a
+     darker tip. Up on its feet it stands behind, as before; asleep, the sleeping wrap takes over.
+243. **Legs with weight.** Thicker, the hind ones more so: legs, not stilts.
+     A blind reviewer, the old drawing against this, chose this in both moments ("A reads more like a sticker. B reads
+     like a real cat tucked into a loaf"), and its defects were fixed: the haunch's line floated like a seam (it comes
+     up out of the underside and down into the rear's outline now, a thigh's curve), the tail's dark ball of a tip read
+     as a hole and its rings as toes (the tip is the last of the stroke, darker, and the rings are gone), and the ruff's
+     points notched its outline. Left: on its feet it is still long in the body.
+244. **The moonlight on the desk** read as two grey sheets laid on the wood: it is brightest in its middle now and
+     falls away to its ends and its far edge, a soft halo round each pane, the wood's grain through it.
+
 ## Judgment calls for Stephen
 
 - **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in

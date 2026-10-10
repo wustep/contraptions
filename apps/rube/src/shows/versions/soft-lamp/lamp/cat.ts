@@ -510,23 +510,54 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const idle = 0.5 + 0.5 * Math.sin(t * 0.9 + Math.sin(t * 0.31) * 2)
   const sway = 0.5 + 0.5 * Math.sin((Math.PI * beatOf(tr, t)) / 2)
   const lift = (idle * (1 - vibe) + sway * vibe) * (1 - sleep)
-  const tip = { x: chest - 0.2, y: -0.11 - 0.12 * lift }
+  const tip = { x: chest - 0.32, y: -0.1 - 0.12 * lift }
   // Stretching, it goes up behind it instead, a question mark, its tip curling.
   const mix = (a: { x: number; y: number }, b: { x: number; y: number }) => ({ x: a.x + (b.x - a.x) * st.up, y: a.y + (b.y - a.y) * st.up })
   const curl = Math.sin(t * 2.4) * 0.04
   const t0 = mix({ x: x0 + 0.08, y: -0.08 }, T(x0 + 0.02, -0.22))
-  const t1 = mix({ x: x0 + 0.2, y: 0.02 }, T(x0 - 0.1, -0.4))
-  const t2 = mix({ x: chest - 0.55, y: 0.0 }, { x: x0 - 0.12, y: -0.85 - L })
+  const t1 = mix({ x: x0 + 0.05, y: 0.06 }, T(x0 - 0.1, -0.4))
+  const t2 = mix({ x: chest - 0.6, y: 0.035 }, { x: x0 - 0.12, y: -0.85 - L })
   const t3 = mix(tip, { x: x0 + 0.02 + curl, y: -1.02 - L })
-  ctx.beginPath()
-  ctx.moveTo(t0.x, t0.y)
-  ctx.bezierCurveTo(t1.x, t1.y, t2.x, t2.y, t3.x, t3.y)
-  ctx.lineWidth = 0.13
-  ctx.strokeStyle = INK
-  ctx.stroke()
-  ctx.lineWidth = 0.13 - lw * 2
-  ctx.strokeStyle = fur(0.8)
-  ctx.stroke()
+  // Lying, the tail lies along the desk in front of it, round from its rear to its paws, the tip curling up: drawn
+  // after the body, being nearer. Up on its feet, it stands behind.
+  const tailFront = st.up < 0.5
+  const tailWrap = smooth(sleepAt(t), 0.3, 1)
+  const tail = () => {
+    if (tailWrap > 0.99) return
+    ctx.save()
+    ctx.globalAlpha = 1 - tailWrap
+    ctx.lineCap = 'round'
+    ctx.beginPath()
+    ctx.moveTo(t0.x, t0.y)
+    ctx.bezierCurveTo(t1.x, t1.y, t2.x, t2.y, t3.x, t3.y)
+    ctx.lineWidth = 0.13
+    ctx.strokeStyle = INK
+    ctx.stroke()
+    ctx.lineWidth = 0.13 - lw * 2
+    ctx.strokeStyle = fur(0.8)
+    ctx.stroke()
+    // Its tip a shade darker, as a ginger's is: the last of the stroke, not a ball on its end.
+    ctx.beginPath()
+    const u0 = 0.82
+    const m0 = 1 - u0
+    ctx.moveTo(
+      m0 * m0 * m0 * t0.x + 3 * m0 * m0 * u0 * t1.x + 3 * m0 * u0 * u0 * t2.x + u0 * u0 * u0 * t3.x,
+      m0 * m0 * m0 * t0.y + 3 * m0 * m0 * u0 * t1.y + 3 * m0 * u0 * u0 * t2.y + u0 * u0 * u0 * t3.y,
+    )
+    {
+      // The rest of the curve from u0, as its own cubic (de Casteljau).
+      const lerp = (a: { x: number; y: number }, b: { x: number; y: number }) => ({ x: a.x + (b.x - a.x) * u0, y: a.y + (b.y - a.y) * u0 })
+      const p12 = lerp(t1, t2)
+      const p23 = lerp(t2, t3)
+      const q2 = lerp(p12, p23)
+      ctx.bezierCurveTo(q2.x, q2.y, p23.x, p23.y, t3.x, t3.y)
+    }
+    ctx.lineWidth = 0.13 - lw * 2
+    ctx.strokeStyle = lit(FUR_DARK, FUR, l * 0.9)
+    ctx.stroke()
+    ctx.restore()
+  }
+  if (!tailFront) tail()
 
   // Its legs, when it is up: the hind pair straight down under its rear, the fore pair under its chest, stretched out
   // along the desk at full stretch, the near of each pair a shade lighter.
@@ -547,7 +578,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
       ctx.strokeStyle = fur(k)
       ctx.stroke()
       ctx.beginPath()
-      ctx.ellipse(to.x + 0.02, to.y - 0.025, 0.055, 0.03, 0, 0, Math.PI * 2)
+      ctx.ellipse(to.x + 0.02, to.y - 0.03, 0.075, 0.04, 0, 0, Math.PI * 2)
       ctx.fillStyle = lit('#B49276', CREAM_FUR, l * k)
       ctx.fill()
       ctx.lineWidth = lw * 0.7
@@ -555,11 +586,11 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     }
     for (const [i, [hx, k]] of ([[x0 + 0.42, 0.45], [x0 + 0.24, 0.6]] as const).entries()) {
       const hip = T(hx, -0.08)
-      leg(hip, { x: hip.x - 0.02 + step(i), y: -0.005 - raise(i) }, 0.15, k, 0, -0.9 * raise(i))
+      leg(hip, { x: hip.x - 0.02 + step(i), y: -0.005 - raise(i) }, 0.17, k, 0, -0.9 * raise(i))
     }
     for (const [i, [fx, k, ahead]] of ([[chest - 0.06, 0.7, 0.04], [chest - 0.2, 0.95, 0]] as const).entries()) {
       const sh = T(fx, -0.08)
-      leg(sh, { x: sh.x + (0.42 + ahead) * st.out + 0.02 + step(i + 2), y: -0.005 - raise(i + 2) }, 0.13, k, st.out, 0.9 * raise(i + 2))
+      leg(sh, { x: sh.x + (0.42 + ahead) * st.out + 0.02 + step(i + 2), y: -0.005 - raise(i + 2) }, 0.145, k, st.out, 0.9 * raise(i + 2))
     }
   }
 
@@ -601,6 +632,21 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     ctx.quadraticCurveTo(sx + 0.06, top + 0.12, sx + 0.02, top + 0.24)
     ctx.stroke()
   }
+  // Its haunch: the hind leg folded under it, a round at its rear, so the loaf is a cat crouched and not a bun.
+  // (Its line comes up out of the underside, over, and down into the rear's outline: the thigh's curve, not a seam.)
+  const under = -0.09 * lifted
+  ctx.beginPath()
+  ctx.moveTo(x0 + 0.56, under + 0.01)
+  ctx.bezierCurveTo(x0 + 0.56, -0.24, x0 + 0.42, -0.34, x0 + 0.24, -0.33)
+  ctx.quadraticCurveTo(x0 + 0.08, -0.31, x0 - 0.02, -0.2)
+  ctx.strokeStyle = rgba(INK, 0.42)
+  ctx.lineWidth = lw * 0.8
+  ctx.stroke()
+  ctx.lineTo(x0 - 0.1, under + 0.1)
+  ctx.lineTo(x0 + 0.56, under + 0.1)
+  ctx.closePath()
+  ctx.fillStyle = rgba(FUR_DARK, 0.12)
+  ctx.fill()
   // The window's light along its back (`rim.ts`): peach at dusk, cool at night, pale under the moon.
   const rim = rimAt(t)
   ctx.strokeStyle = rgba(rim.color, 0.55 * rim.a)
@@ -615,10 +661,24 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   ctx.lineWidth = lw
   ctx.stroke()
   // Its chest's ruff, under its chin: what the head sits on.
-  ctx.beginPath()
-  ctx.ellipse(chest - 0.08, -0.34, 0.15, 0.22, -0.15, 0, Math.PI * 2)
-  ctx.fillStyle = lit('#A88A70', CREAM_FUR, l * 0.9)
-  ctx.fill()
+  {
+    // Fluffy: its lower edge in soft points.
+    const rx = chest - 0.08
+    const ry = -0.34
+    ctx.beginPath()
+    for (let i = 0; i <= 24; i++) {
+      const a = (i / 24) * Math.PI * 2
+      const below = Math.max(0, Math.sin(a))
+      const r = 1 + 0.09 * below * (i % 2 === 0 ? 1 : 0)
+      const x = rx + Math.cos(a) * 0.15 * r
+      const y = ry + Math.sin(a) * 0.22 * r
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.closePath()
+    ctx.fillStyle = lit('#A88A70', CREAM_FUR, l * 0.9)
+    ctx.fill()
+  }
   // The paws, tucked under its chest (until it is up on them).
   ctx.globalAlpha = 1 - smooth(st.up, 0, 0.25)
   ctx.beginPath()
@@ -628,6 +688,7 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   ctx.lineWidth = lw * 0.7
   ctx.stroke()
   ctx.restore()
+  if (tailFront) tail()
 
   // Asleep, its tail comes round the front of it, along the desk, and its tip tucks up under its chin.
   const wrap = smooth(sleep, 0.3, 1)
@@ -712,8 +773,28 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     ctx.fill()
     ctx.restore()
   }
-  ctx.beginPath()
-  ctx.ellipse(0, 0, RX, RY, 0, 0, Math.PI * 2)
+  // Its head: round at the crown, the cheeks fuller and tufted where they meet the ruff.
+  const headPath = () => {
+    ctx.beginPath()
+    ctx.moveTo(-RX, -0.01)
+    ctx.bezierCurveTo(-RX, -RY * 1.35, RX, -RY * 1.35, RX, -0.01)
+    for (const side of [1, -1]) {
+      // Down the cheek to its tuft, and in under the chin.
+      if (side === 1) {
+        ctx.quadraticCurveTo(RX + 0.03, RY * 0.45, RX + 0.045, RY * 0.62)
+        ctx.lineTo(RX - 0.03, RY * 0.66)
+        ctx.lineTo(RX + 0.01, RY * 0.8)
+        ctx.quadraticCurveTo(RX * 0.55, RY * 1.08, 0, RY * 1.04)
+      } else {
+        ctx.quadraticCurveTo(-RX * 0.55, RY * 1.08, -RX - 0.01, RY * 0.8)
+        ctx.lineTo(-RX + 0.03, RY * 0.66)
+        ctx.lineTo(-RX - 0.045, RY * 0.62)
+        ctx.quadraticCurveTo(-RX - 0.03, RY * 0.45, -RX, -0.01)
+      }
+    }
+    ctx.closePath()
+  }
+  headPath()
   const hg = ctx.createLinearGradient(-RX, 0, RX, 0)
   hg.addColorStop(0, fur(0.5))
   hg.addColorStop(1, fur(1))
