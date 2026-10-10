@@ -51,16 +51,18 @@ interface Layers {
   s: HTMLCanvasElement
   /** The solid, small: drawn back up large, its edge comes out soft (a blur, without a filter's cost). */
   m: HTMLCanvasElement
+  /** The drawing's outline the other way round: clear where it is solid (`outside`). */
+  n: HTMLCanvasElement
 }
 const pool = new Map<string, Layers>()
 
 function layers(name: string, w: number, h: number): Layers {
   let l = pool.get(name)
   if (!l) {
-    l = { a: document.createElement('canvas'), b: document.createElement('canvas'), s: document.createElement('canvas'), m: document.createElement('canvas') }
+    l = { a: document.createElement('canvas'), b: document.createElement('canvas'), s: document.createElement('canvas'), m: document.createElement('canvas'), n: document.createElement('canvas') }
     pool.set(name, l)
   }
-  for (const c of [l.a, l.b, l.s]) {
+  for (const c of [l.a, l.b, l.s, l.n]) {
     if (c.width < w || c.height < h) {
       c.width = Math.max(c.width, w)
       c.height = Math.max(c.height, h)
@@ -156,25 +158,51 @@ export function formed(ctx: Ctx, name: string, t: number, f: Form, draw: (g: Ctx
   // in it); the lit edge, lighter than the outline, at full size, kept to it exactly.
   // `from` moves the thing itself before the cut: the lit edge starts an outline's width in, so it lies inside the
   // line, not over it.
+  // The outline, kept to: B's alpha times the drawing's, again and again, so what is solid stays and what is faint in
+  // the drawing (a soft glow round it) falls away, and the shading does not show past the outline. Done by taking away
+  // the drawing's outside (`destination-out`), never by keeping its inside (`destination-in`): the same sum, but
+  // Safari composites a 'keep' over the whole of a canvas and a 'take away' only where it draws, which is most of
+  // this frame's cost there. The outside is made once a scale.
+  const N = lay.n
+  const n = N.getContext('2d')!
+  let outsideAt = 0
+  const outside = (bw: number, bh: number, r: number) => {
+    if (outsideAt === r) return
+    outsideAt = r
+    n.setTransform(1, 0, 0, 1, 0, 0)
+    n.globalAlpha = 1
+    n.globalCompositeOperation = 'source-over'
+    n.fillStyle = '#000'
+    n.fillRect(0, 0, bw, bh)
+    n.globalCompositeOperation = 'destination-out'
+    n.drawImage(L, 0, 0, w, h, 0, 0, bw, bh)
+  }
+  const keep = (bw: number, bh: number, times: number) => {
+    b.globalCompositeOperation = 'destination-out'
+    for (let i = 0; i < times; i++) b.drawImage(N, 0, 0, bw, bh, 0, 0, bw, bh)
+    // And nothing just past it, as a 'keep' left it: the half-size shadow is drawn back up smooth, which reads a pixel
+    // beyond its edge.
+    b.clearRect(bw, 0, 2, bh + 2)
+    b.clearRect(0, bh, bw + 2, 2)
+  }
   const side = (dx: number, dy: number, color: string, a: number, op: GlobalCompositeOperation, fx = 0, fy = 0) => {
     if (a <= 0.004) return
     const r = op === 'multiply' && k > 160 ? 0.5 : 1
     const bw = Math.ceil(w * r)
     const bh = Math.ceil(h * r)
+    outside(bw, bh, r)
     b.setTransform(1, 0, 0, 1, 0, 0)
     b.globalCompositeOperation = 'source-over'
     b.globalAlpha = 1
     b.clearRect(0, 0, bw, bh)
     b.drawImage(L, 0, 0, w, h, fx * r, fy * r, bw, bh)
-    b.globalCompositeOperation = 'source-in'
+    // The colour where the drawing is: 'source-atop' with a solid colour is 'source-in', kept to the rectangle.
+    b.globalCompositeOperation = 'source-atop'
     b.fillStyle = color
     b.fillRect(0, 0, bw, bh)
     b.globalCompositeOperation = 'destination-out'
     b.drawImage(M, 0, 0, mw, mh, dx * r, dy * r, bw, bh)
-    // Kept to the thing's own outline: its alpha taken again and again, so what is solid stays and what is faint in
-    // the drawing (a soft glow round it) falls away, and the shading does not show past the outline.
-    b.globalCompositeOperation = 'destination-in'
-    for (let i = 0; i < 3; i++) b.drawImage(L, 0, 0, w, h, 0, 0, bw, bh)
+    keep(bw, bh, 3)
     ctx.globalCompositeOperation = op
     ctx.globalAlpha = a
     ctx.drawImage(B, 0, 0, bw, bh, bx, by, w, h)
@@ -186,20 +214,18 @@ export function formed(ctx: Ctx, name: string, t: number, f: Form, draw: (g: Ctx
       const cx = w / 2
       const cy = h / 2
       const reach = (Math.abs(lamp.ux) * w + Math.abs(lamp.uy) * h) / 2
+      outside(w, h, 1)
       b.setTransform(1, 0, 0, 1, 0, 0)
       b.globalCompositeOperation = 'source-over'
       b.globalAlpha = 1
       b.clearRect(0, 0, w, h)
-      b.drawImage(L, 0, 0, w, h, 0, 0, w, h)
-      b.globalCompositeOperation = 'source-in'
       const gr = b.createLinearGradient(cx - lamp.ux * reach, cy - lamp.uy * reach, cx + lamp.ux * reach, cy + lamp.uy * reach)
       gr.addColorStop(0, CORE)
       gr.addColorStop(0.55, CORE + '00')
       gr.addColorStop(1, CORE + '00')
       b.fillStyle = gr
       b.fillRect(0, 0, w, h)
-      b.globalCompositeOperation = 'destination-in'
-      for (let i = 0; i < 2; i++) b.drawImage(L, 0, 0, w, h, 0, 0, w, h)
+      keep(w, h, 3)
       ctx.globalCompositeOperation = 'multiply'
       ctx.globalAlpha = shadowA
       ctx.drawImage(B, 0, 0, w, h, bx, by, w, h)
