@@ -347,6 +347,14 @@ export const JOIN: number[] = KINDLED.map((q, i) => {
   return best
 })
 
+/** How far the piano figure is drawn at `T`: a share of its outline for each star lit, whole (1) and then its keys (to
+ * 1.4) through the dip. */
+export function figureDraw(T: number): number {
+  let lit = 0
+  for (const q of KINDLED) lit += smooth(T, q.at, q.at + 0.9)
+  return Math.max((lit / KINDLED.length) * (1 - 0.0001), smooth(T, DIP - 1.6, DIP + 0.9) * 1.4)
+}
+
 /** The figure: centred a little above them at the dip, so they are inside it, its keyboard below them. */
 export const FIGURE_SIZE = 2.25
 export const FIGURE_TURN = -0.12
@@ -408,9 +416,7 @@ export const stars = part<StarsState>(
       {
         // It draws on through the waltz, a stretch of line for each star the melody lights, faint while it grows; at the
         // dip it is whole and bright, and the keys come in.
-        let lit = 0
-        for (const q of KINDLED) lit += smooth(T, q.at, q.at + 0.9)
-        const draw = Math.max((lit / KINDLED.length) * (1 - 0.0001), smooth(T, DIP - 1.6, DIP + 0.9) * 1.4)
+        const draw = figureDraw(T)
         const a = (0.4 * smooth(T, KINDLED[0].at, KINDLED[0].at + 0.8) + 0.6 * smooth(T, DIP - 1.6, DIP - 0.8)) * (1 - smooth(T, DARK[0], DARK[0] + 0.5))
         drawPianoFigure(p, k, FIGURE_AT(), FIGURE_SIZE, FIGURE_TURN, draw, a, NIGHT_MAT.gold)
       }

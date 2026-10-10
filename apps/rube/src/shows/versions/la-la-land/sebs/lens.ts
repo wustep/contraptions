@@ -51,6 +51,16 @@ function tile(): HTMLCanvasElement | null {
 /** A circle the grade lifts inside (the spotlight's iris into the dream; his stage with the band), in world cells, or null. */
 export type IrisAt = (t: number, span: number) => { x: number; y: number; r: number; f: number; dark?: number } | null
 
+/** The way out of the dream: the circle the dark and grey close in to round him at `at` (world cells), as the dream
+ * drains and he goes back to the keys; it shuts on the last chord (453.73). */
+export function wakingCircle(t: number, at: [number, number], span: number): { x: number; y: number; r: number; f: number; dark: number } | null {
+  const LAST = 453.73
+  if (t < 451.45 || t >= LAST + 0.4) return null
+  const sm = (a: number, b: number) => { const v = Math.max(0, Math.min(1, (t - a) / (b - a))); return v * v * (3 - 2 * v) }
+  const r = (span * (1 - sm(451.5, LAST)) + 1.1 * sm(451.5, LAST)) * (1 - sm(LAST, LAST + 0.38))
+  return { x: at[0], y: at[1] - 0.2, r: Math.max(0.02, r), f: 0.55 * sm(452.2, LAST) * (1 - sm(LAST, LAST + 0.38)), dark: 0.6 * sm(451.9, LAST) }
+}
+
 export const lens = scenery<{ iris: IrisAt } | null>({
   name: 'lens',
   draw: () => {},

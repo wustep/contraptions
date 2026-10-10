@@ -5,8 +5,8 @@
 import type { Performance, Version } from '../src/shows/registry'
 import type { ShowBall } from '../src/show'
 import { R } from '../src/parts'
-import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, KINDLED, inSky } from '../src/shows/versions/la-la-land/sebs/night/stars'
-import { sebAt } from '../src/shows/versions/la-la-land/sebs/night/painted-waltz'
+import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, KINDLED, figureDraw, inSky } from '../src/shows/versions/la-la-land/sebs/night/stars'
+import { DIP, sebAt } from '../src/shows/versions/la-la-land/sebs/night/painted-waltz'
 import { OUT as HOLLY_OUT } from '../src/shows/versions/la-la-land/sebs/studio/hollywood'
 import { show as sebsShow, covers as sebsCovers } from '../src/shows/versions/la-la-land/sebs'
 import { SWITCH } from '../src/shows/versions/la-la-land/sebs/score'
@@ -18,7 +18,7 @@ import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
 import { DOOR, DOOR_SHUT, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
 import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs/piano-figure'
-import { muted } from '../src/shows/versions/la-la-land/sebs/lens'
+import { muted, wakingCircle } from '../src/shows/versions/la-la-land/sebs/lens'
 import { emptyAt } from '../src/shows/versions/la-la-land/sebs/theatre/theatre'
 import { HORIZON, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
@@ -541,6 +541,28 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     for (let t = 41; t < 451.4; t += 0.5) dreamMuted = Math.max(dreamMuted, muted(t))
     check('sebs: the room as it is muted, the dream in full colour, the colour back for the stars',
       muted(10) > 0.99 && muted(30) > 0.99 && dreamMuted === 0 && muted(460) > 0.99 && muted(480) > 0.99 && muted(DURATION) < 0.01, `dream muted ${dreamMuted}`)
+  }
+  // The piano among the stars grows with their waltz: a share of it for each star lit, never going back, and whole by the
+  // dip. And the way out of the dream mirrors the way in: a circle closing on him at the keys, shut by the last chord.
+  {
+    let back = 0
+    let short = ''
+    let prev = 0
+    for (let T = KINDLED[0].at; T < 339; T += 0.05) {
+      const d = figureDraw(T)
+      back = Math.max(back, prev - d)
+      prev = d
+    }
+    KINDLED.forEach((q, i) => { if (figureDraw(q.at + 1) < (i + 1) / KINDLED.length - 0.01) short = `${i}` })
+    const growOk = back < 1e-9 && !short && figureDraw(DIP + 1) >= 1 && figureDraw(KINDLED[0].at - 0.5) < 0.01
+    const at = (t: number) => show.where(t)
+    const c0 = wakingCircle(452.0, at(452.0), 30)
+    const c1 = wakingCircle(453.6, at(453.6), 30)
+    const c2 = wakingCircle(AT.last + 0.38, at(AT.last + 0.38), 30)
+    const onHim = !!c1 && Math.hypot(c1.x - at(453.6)[0], c1.y + 0.2 - at(453.6)[1]) < 1e-6 && inShot(453.6, { x: c1.x, y: c1.y })
+    const closes = !!c0 && !!c1 && !!c2 && c0.r > c1.r && c1.r < 2 && c2.r < 0.05 && !wakingCircle(450, at(450), 30)
+    check('sebs: the piano among the stars grows with their waltz, and the way out of the dream closes on him like the way in', growOk && onHim && closes,
+      `grow ${growOk} (short ${short || 'none'}), on him ${onHim}, closes ${closes}`)
   }
   // The last frame: the whole city, wide.
   const endCam = cam(perf.duration)
