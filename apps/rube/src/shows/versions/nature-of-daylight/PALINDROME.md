@@ -901,6 +901,10 @@ ending): every jump a cut or a push, as before. The cut to the cradle, a jump tw
 eighty-second, is under four now, nothing in the room moving across it and the morning swelling over it. Nothing to
 change.
 
+A ninety-eighth brought the eighty-first's side-by-side up to date, its after-pictures having fallen behind the
+eighty-fourth to the ninety-fourth: the forty-ninth against now at eleven moments, the cut to the cradle, Shang, the
+guests and the clock added. The show is unchanged.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
