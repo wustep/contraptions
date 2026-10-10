@@ -235,6 +235,19 @@ interface Tone {
   /** How dark the day is, 0 to 1, and the moon's silver on its edge. */
   dark: number
   rim: number
+  /** The alpenglow on its heights, 0 to 1, just round sunset and sunrise. */
+  peak: number
+}
+
+/**
+ * The alpenglow at a sun `sunAngle` from overhead: the high ground keeping a rose light after the sun has gone, as the
+ * sky darkens (and catching it again before it rises), when everything under it is already in shadow. In the sky's
+ * frame the sun is under the horizon from about 1.6 either way.
+ */
+export function alpenglow(sunAngle: number, night: number): number {
+  const below = Math.abs(Math.atan2(Math.sin(sunAngle), Math.cos(sunAngle))) - 1.6
+  // And gone as the full night comes, whatever the sun's angle under the planet.
+  return smooth(below, 0, 0.12) * (1 - smooth(below, 0.36, 0.56)) * (1 - smooth(night, 0.8, 0.97))
 }
 
 function toneOf(isle: Isle, day: Sky, t: number, sunAngle: number, moonUp: number): Tone {
@@ -264,6 +277,7 @@ function toneOf(isle: Isle, day: Sky, t: number, sunAngle: number, moonUp: numbe
     side: Math.sin(sunAngle) >= 0 ? 1 : -1,
     dark,
     rim: moonUp * dark * (1 - 0.5 * thick),
+    peak: alpenglow(sunAngle, day.night) * (1 - o) * (1 - 0.6 * thick),
   }
 }
 
@@ -371,6 +385,20 @@ function drawIsle(ctx: Ctx2D, isle: Isle, tone: Tone, t: number, mirrored: boole
       ctx.globalAlpha = alpha * 0.55 * tone.sun
       ctx.fillStyle = g
       ctx.fill(shape)
+    }
+    // The alpenglow: the heights lit rose from the top down, the more the higher, the low ground left in shadow.
+    if (tone.peak > 0.01) {
+      const glow = ctx.createLinearGradient(0, -1.15, 0, -0.25)
+      glow.addColorStop(0, 'rgba(255, 120, 140, 1)')
+      glow.addColorStop(0.5, 'rgba(240, 110, 140, 0.45)')
+      glow.addColorStop(1, 'rgba(255, 170, 140, 0)')
+      // Added as light, not painted on: a glow on the dark rock, not a colour.
+      ctx.globalCompositeOperation = 'lighter'
+      ctx.globalAlpha = Math.min(1, alpha * tone.peak * (isle.layer === RANGE ? 1 : 0.75))
+      ctx.fillStyle = glow
+      ctx.fill(shape)
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.globalAlpha = alpha
     }
     // Its feet in the haze over the water.
     const h = ctx.createLinearGradient(0, 0, 0, -Math.min(top, 0.5))

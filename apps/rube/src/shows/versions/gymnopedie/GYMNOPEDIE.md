@@ -304,6 +304,10 @@ colour, the air between thickening them to the horizon's colour, more in the sho
 silhouettes against the sunset and dark against the night, edged with the moon's silver. A wide island is bent down
 with the sea's curve at its ends, so it never stands off the water.
 
+After the sun has set, as the sky darkens, the heights keep a rose light while everything under them is in shadow
+(`alpenglow`): the far ranges' crests most, the higher islands' tops a little, added as light on the dark rock; and
+they catch it again before the dawn.
+
 The shore keeps the story. At dusk, as the ball lights the colonnade's lamps, the villages' windows light one by one
 (198 to 242 s), and late in the night they go out one by one, a few kept until the dawn, which puts them out with the
 lamps. The lighthouse is lit with the ball's first lamp (`LIGHTHOUSE_ON`) and turns all night, thirty turns a period:

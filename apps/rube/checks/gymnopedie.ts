@@ -19,7 +19,7 @@ import { cometAnswers, cometAt, cometAngle, cometFlare } from '../src/shows/vers
 import { squallAt } from '../src/shows/versions/gymnopedie/orbit/squall'
 import { CIRRUS, cirrusLight } from '../src/shows/versions/gymnopedie/orbit/cirrus'
 import { FISHERS, SMACKS, fisherAt } from '../src/shows/versions/gymnopedie/orbit/fishers'
-import { ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
+import { alpenglow, ISLES, LIGHTHOUSE_ON, RANGE, SHORE, beamAt, lighthouseAt, windowAt } from '../src/shows/versions/gymnopedie/orbit/shore'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -200,6 +200,12 @@ export function checkGymnopedie(perf: Performance, version: Version, check: Chec
   check('gymnopedie: the fishing boats\' lamps burn only through the night, out before the dawn',
     SMACKS.every((b) => fishTimes.every((t) => fisherAt(b.seed, t) === 0 || (skyAt(t).night > 0.5 && t > PIECES[1].from && t < PIECES[2].end))) &&
     SMACKS.every((b) => fisherAt(b.seed, 400) === 1 && fisherAt(b.seed, 0) === 0))
+  // The alpenglow: on the heights only after the sun has set and before it rises, never by day or in the full night.
+  const glowTimes = Array.from({ length: 1270 }, (_, i) => i * 0.5)
+  const glowing = glowTimes.filter((t) => alpenglow(sunAngle(t), skyAt(t).night) > 0.01)
+  check('gymnopedie: the alpenglow lights the heights only round the sun\'s going and coming, not by day or in the full night',
+    glowing.length > 40 && glowing.every((t) => skyAt(t).night > 0.05 && skyAt(t).night < 0.97 && Math.abs(Math.atan2(Math.sin(sunAngle(t)), Math.cos(sunAngle(t)))) > 1.6) &&
+    glowing.some((t) => t > 200 && t < 280) && glowing.some((t) => t < 30 || t > 600), `${glowing.length / 2} s`)
   const meteorsOk = METEORS.length >= 4 && METEORS.every((t) => {
     const n = MELODY.find((m) => m.t === t)
     return !!n && n.piece > 0 && n.p === Math.max(...MELODY.filter((m) => m.piece === n.piece).map((m) => m.p)) && skyAt(t).night > 0.5
