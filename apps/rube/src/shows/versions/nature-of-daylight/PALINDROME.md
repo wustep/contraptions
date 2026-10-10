@@ -999,6 +999,13 @@ soft layers share. Each use cleared only the part it drew in, and scaled up, a c
 where an earlier, larger use (the fog, a whole frame of it) had left its picture. Each use now clears a margin past
 its edge. The line is gone, and the house, which shares them, holds to within five levels of its first take.
 
+A hundred-and-eleventh watched the last rounds' drawing (the soft layers, the house's mirror and floor light, the fog,
+the white after the blast, the daylight's edge) through the player's other two cameras, at eighteen moments each:
+in Zoom, where everything is drawn larger, the soft layers show no edge and the scratch canvases no line; in Overview
+all of it sits where it did. No error and no warning in either. And the page as a visitor opens it, the song from
+YouTube: the label's upload ready, the show loaded, no error across a seek through the changed places. Nothing to
+change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
