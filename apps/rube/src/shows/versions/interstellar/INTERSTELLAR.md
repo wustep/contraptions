@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 119 (latest)
+## Polish pass 120 (latest)
+
+No change to the show: the landing at the camp, 248 to 253.5 s in half-seconds, and the canopy's opening at 252 s in twentieths, at 1280×720. The spent drogue drifts up out of the top of the frame. The Ranger comes down on its jets, its legs out, with dust under it, and sets down. The canopy hinges back over about 0.35 s rather than jumping open, and Cooper is up in the seat as it clears.
+
+## Polish pass 119
 
 No change to the show. Two checks off the frame:
 - The two YouTube uploads the show plays online (`JuSsvM8B4Jc`, `kpK4cDk2bRs`) are still up and still allow embedding. YouTube's oEmbed answers 200 for both, from WaterTower Music, the soundtrack's own label, so the online music is not about to go dark.
