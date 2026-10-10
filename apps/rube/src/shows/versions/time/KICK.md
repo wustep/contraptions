@@ -392,6 +392,9 @@ each world, and changed:
   flat dark before them (a critic's note). They run on past both ends now; every tower that was there is unchanged.
 - **The share card** (`public/shows/time/opus55.png`, the frame at 49.2): it was made before Ariadne's teal deepened,
   so a link to the show unfurled with her old colour. It is made again from the show as it is; nothing else in it moved.
+- **Ariadne's goodbye** (234.6 to 235.2): when he dropped out of his seat and rolled away up the aisle, only her eyes
+  went with him, and a viewer new to it saw him go home alone, "teal just gone" (a cold critic's note). On the next
+  beat she gives a little hop toward him and settles back into her seat, still watching him go.
 
 ## Inception nods
 

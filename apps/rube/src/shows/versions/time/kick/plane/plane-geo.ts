@@ -300,7 +300,17 @@ export function ariadneAt(t: number): { x: number; y: number; spin: number } {
     const look = Math.atan2(c[1] - 0, c[0] - x0)
     spin = turnTo(spin, look, sm(t, OUT - 0.6, OUT + 0.3))
   }
-  return { x: x0 + lean, y: y + 0.5 * lean + jolt(t), spin }
+  // Her goodbye, as he rolls away up the aisle: a little hop toward him on the next beat, and back into her seat, her
+  // eyes still on him (only her eyes went with him, and from the first wide she seemed simply left behind).
+  const BYE = beat(246)
+  const b = (t - BYE) / 0.55
+  let hop = 0
+  let lean2 = 0
+  if (b > 0 && b < 1) {
+    hop = -0.34 * Math.sin(b * Math.PI)
+    lean2 = 0.14 * Math.sin(b * Math.PI)
+  }
+  return { x: x0 + lean + lean2, y: y + 0.5 * lean + hop + jolt(t), spin }
 }
 
 /** Fischer: asleep until he stirs; he puts up his shade on bar 58 and turns into the light; he watches Cobb go by. */
