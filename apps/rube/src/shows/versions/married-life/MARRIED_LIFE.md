@@ -715,6 +715,9 @@ window.
     her trail, the orange guests. No gap.
   - *The setbacks' Zoom ease on a phone held upright*: the tyre, the jar, the arm that takes it and the lamp he climbs
     to all in the frame, the nursery and the roof in the extra picture over them.
+  - *Memory over repeated plays* (the whole show six times over at 4x, the heap read after two garbage collections
+    each time): 14.7 MB at the start, 19.2 after the first pass (caches filling), then 20.0, 20.3, 20.3, 20.2, 21.2;
+    the page's elements 222 throughout. No leak.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
