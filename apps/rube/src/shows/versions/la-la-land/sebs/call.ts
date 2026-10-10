@@ -97,13 +97,13 @@ export function call(notes: { t: number; midi: number }[], her: (t: number) => P
  * light and drifts up into the dark, slowing and fading, the notes of a phrase strung together as a thread. At Seb's,
  * now, from his first note until the camera finds her.
  */
-export function rising(notes: { t: number; midi: number }[], color: string, size = 1, life = 3.2, height = 1.25, minPx = 0): (p: p5, k: number, t: number) => void {
+export function rising(notes: { t: number; midi: number }[], color: string, size = 1, life = 3.2, height = 1.25, minPx = 0, lean = 0): (p: p5, k: number, t: number) => void {
   const beads = notes.map((n, i) => ({ t: n.t, x: keyX(n.midi), drift: 0.25 * Math.sin(i * 2.3) }))
   const at = (c: (typeof beads)[number], t: number): { x: number; y: number; a: number } | null => {
     const s = t - c.t
     if (s < 0 || s > life) return null
     const rise = height * (1 - Math.exp(-s / (1.2 * Math.sqrt(height / 1.25))))
-    return { x: c.x + c.drift * (s / life), y: -0.72 - rise, a: Math.min(1, s / 0.08) * (1 - s / life) ** 0.9 }
+    return { x: c.x + c.drift * (s / life) + lean * rise, y: -0.72 - rise, a: Math.min(1, s / 0.08) * (1 - s / life) ** 0.9 }
   }
   return (p, k, t) => {
     const ctx = p.drawingContext as CanvasRenderingContext2D

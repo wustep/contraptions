@@ -136,8 +136,9 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
   // His music in the room as it is, over the grade: the colour in the grey room. From his first note to her table at
   // the start (in the piano's frame), and the last note to the door at the end (in the room's, which is the piano's).
   // With the band, his notes rise from the keys up out of the club, through its roof and into the night over the city,
-  // as the camera draws back; by the swell the sky over the club is full of his music, and it becomes their stars.
-  const bandRising = rising(BAND_TUNE.filter((n) => n.t < 494.5), '#F2C46B', 1.4, 8, 19, 1.3)
+  // as the camera draws back, leaning away up toward where their stars will be (and clear of the credits in the sky
+  // over the club); on the swell it becomes them.
+  const bandRising = rising(BAND_TUNE.filter((n) => n.t < 494.5), '#F2C46B', 1.4, 8, 19, 1.3, 1.15)
   const colour = scenery<null>({
     name: 'music-colour',
     draw: () => {},
