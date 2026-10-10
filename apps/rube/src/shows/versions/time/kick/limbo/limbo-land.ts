@@ -734,8 +734,9 @@ export function drawGarden(pen: Pen, t: number, f: Frame): void {
     [1, LAWN, 1],
   ])
   soft(pen, SUN_AT[0], GARDEN.back + 0.12, 3.0, 0.22, LAWN_GLOW, 0.75 + 0.25 * mem)
-  // The lawn comes on toward us, richer in the shade, into the earth under it.
-  vwash(pen, x0, x1, GROUND - 0.01, GROUND + 0.8, [
+  // The lawn comes on toward us to the ground's line, a lip of it over the sand (no further: carried down onto the
+  // beach it read as a green patch pasted on it, below the line the house stands on).
+  vwash(pen, x0, x1, GROUND - 0.01, GROUND + 0.18, [
     [0, mixHex(LAWN, LAWN_GLOW, 0.15), 1],
     [0.3, LAWN, 1],
     [0.6, mixHex(LAWN, LIMBO.gardenDark, 0.6), 0.75],

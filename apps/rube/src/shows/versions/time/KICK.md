@@ -383,6 +383,11 @@ each world, and changed:
   black wheels merged into one shape. Its leg is further back along it now, clear of the gear.
 - **The garden's cut** (round 45's): the terrace's slab and the turf's edge were drawn a little under the cut line, so
   the stone hung below it into the earth. They end on the line now.
+- **The picture in the hotel's corridor** (92 to 107): it hung right over a wall lamp, the lamp's shade showing under
+  its frame (a critic's note). It hangs on the bare wall between that lamp and the next door now.
+- **Limbo's garden on the beach** (0 to 30, 155 to 177): its lawn ran on 0.8 of a cell below the line the house and the
+  tower stand on, fading out over the sand with square sides, a green patch pasted on the beach (a critic's note). It
+  ends on that line now, a lip over the sand.
 
 ## Inception nods
 
