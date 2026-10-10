@@ -845,6 +845,9 @@ window.
     door, seen edge on, swinging out toward us as he pushes through with the book (91.4) and shut behind him (92.5):
     a flat pink frame with its mesh for about a second. At full size a door, and named one by the viewer who saw it at
     three frames a second; kept.
+  - *The share card, again*: rendered from this branch it differed from the committed card in a 7-pixel strip by the
+    porch, the wall meeting the bay's corner post (the balloon's slit, round 72). Regenerated (1200 by 630 at 47.3, the
+    still tooling), so the card a link unfurls with is the show as it is.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
