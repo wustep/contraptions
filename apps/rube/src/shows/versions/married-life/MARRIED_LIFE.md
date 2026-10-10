@@ -885,6 +885,8 @@ window.
   - *A screen reader* (WCAG 1.1.1): the canvas had no role and no name, so the show itself said nothing. It is now an
     image named by the show's title and share line ("Married Life: Michael Giacchino's Married Life, from Up, as a Rube
     Goldberg machine…"), kept to whichever show is up (`player.ts`, every show; checked across a switch and back).
+  - *Names and frames* (WCAG 4.1.2, 3.1.1): the YouTube player's frame is titled ("The music, on YouTube"), every
+    visible control has a name, and the page declares its language. Nothing to change.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
