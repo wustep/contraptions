@@ -100,7 +100,7 @@ Times are show seconds; pulse *k* is `pulse(k)`, and a strength in brackets is h
 | 163.126 | the hardest pulse after 8.911 (1.48) | the lake house | The window at dusk, the rain running on the panes, a drop landing on each hard pulse with a glint; Louise alone on the bench. |
 | 166.243 | the push | the fog | **She writes.** Flung up out of the crescent, she comes to the top of her rise where the great ring begins under her (168.136), and the frame goes back to the whole of it, both pens in it, by 170.3. It turns; she is its pen at its bottom, and Costello's front limb the pen at its top; each writes half. She works it like a ball in a turning drum: the ink carries her up the rising wall to a hang, and the first hard pulse of each group flicks her off (170.051, 173.383, and the biggest ride, from 30° up the wall, on 179.368), so she swings back down through the rest, a blot pressed where she is on every one of the push's 21 hard pulses. **The halves meet on 183.182 (1.26)** with her still at the bottom, and the frame holds the whole of it to the cut while the tendrils fling out and the ring's turn slows to rest. |
 | 185.330 | the pulse thins | the valley | The meadow after, wide, Ian waiting by the trucks. The shell rises into the cloud and goes; the cloud opens, the light comes down, the fog lifts. From the cut back in (192.238) one push in on her where the first frame has her; Ian comes to her across the meadow, and they touch (195.344) and stay together. |
-| 196.783 | the last clear pulse | the lake house | The first frame again. The held tones die. On the last flutter Hannah sets off (208.631), skips, dashes, springs and lands in the prologue's rhythm, and touches her on **212.312 (3.7)**. On the touch the sun catches the water, as it did on the first pulse, and comes on through the fog; as the held tones die the camera draws back, slowly, to the whole window by 219.3, the two of them small in it, for the credits in the silence over the wall above it. |
+| 196.783 | the last clear pulse | the lake house | The first frame again. The held tones die. On the last flutter Hannah sets off (208.631), skips, dashes, springs and lands in the prologue's rhythm, and touches her on **212.312 (3.7)**. On the touch the sun catches the water, as it did on the first pulse, and comes on through the fog, laying the window's panes warm on the floor; as the held tones die the camera draws back, slowly, to the whole window by 219.3, the two of them small in it, for the credits in the silence over the wall above it. |
 
 ## The company
 
@@ -473,6 +473,10 @@ changed, in the order of the film, and then what runs through it:
   mist in its shape thickens as it melts and thins after it, so it greys into the cloud.
 - **Ian out of shot** (121 → 127): backing off from the palm he stopped on the frame's left edge, half cut, slipping in
   and out as the camera drifted. He backs off out of shot now, and walks back in once the ring has closed.
+- **The sun in the room** (from 212.3): on the end's touch the sun came through onto the water, but the room stayed
+  the same flat grey to the credits. Once it is through, the low sun lays the window's panes on the floor now, warm and
+  soft-edged, widening toward us, the mullions' shadows between; they go dim with the room under the credits. The
+  prologue's catch of the light has them too.
 
 ## Arrival nods
 
