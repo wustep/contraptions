@@ -824,6 +824,12 @@ window.
     cues, not one lean (his lean growing to 0.15 rad on the slowing march, her roll in and up onto her toes, the touch,
     the light gathering on them, the photograph), both wedding viewers read it as the kiss and one as the moment that
     told most, and a deeper press was tried before and made one squashed shape of them.
+  - *The whole show again, after every fix*, told back by a nineteenth viewer who has never seen Up (two frames a
+    second, the densest whole-show look): the arc whole, "she can't make it up… she's ill (80%)", the tickets read as
+    tickets and a surprise, the lamp named as why he climbs; hardest the waiting room, the tickets sliding away, the
+    empty chair. Its two "visual" flags checked full size and kept: 126.41 a clean frame of the jar tipping as the camera
+    draws back (the sheet's downscale made it look double-exposed), and 158 the ticket press's lever coming into the
+    frame's corner as the camera pans to it.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
