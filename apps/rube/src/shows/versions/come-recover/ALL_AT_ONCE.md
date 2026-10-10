@@ -991,6 +991,9 @@ The notes went back to the builders who made each part, who still had their cont
   was tried in all four of the surf's lives with a ground: in the party, the street corner and karaoke that ground is
   below the frame, so he was there and never seen, and standing him on nothing would read wrong. So the IRS alone.
   He first sat against the stamp's foot; he is between the stamp and the trophies now.
+- **A regression sweep after the last passes.** The whole show at 48 frames after the mosaic's family, the surf's
+  Waymond, the trims and the shared player's changes: every world reads, and nothing has regressed. `npm run build`
+  passes again (3,069 checks and the production bundle).
 
 ## The looks
 
