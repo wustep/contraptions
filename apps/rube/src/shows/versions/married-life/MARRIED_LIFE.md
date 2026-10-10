@@ -675,6 +675,12 @@ window.
     goes to night, the balloon over her. Considered and not taken: closing her eye at the end of the ward, so a first
     viewer sees the moment she dies; the film itself cuts from the ward to the funeral and never shows it, and the
     show keeps to that.
+  - *A slow device* (Chrome with the CPU slowed four times, 1280 by 720 at 2x, playing; the time each frame's drawing
+    takes): the storm the heaviest (11 ms a frame on average, 27 ms at the 95th), then the clouds and the ties (about
+    9 ms, 20 to 23 at the 95th); the fix-up, the hill and the credits 3 to 5 ms. Unslowed, the storm is about 3 ms. So
+    on a slow phone the storm may drop the odd frame, never a run of them. A profile spread the time thinly; p5's
+    parsing of colour strings looked the largest single share, but a cache of parsed colours (pixel for pixel the
+    same, 24 frames) bought nothing measurable, so it was not kept.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
