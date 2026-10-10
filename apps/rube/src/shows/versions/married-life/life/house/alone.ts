@@ -7,7 +7,7 @@ import { CHAIR } from '../props/chairs'
 import { drawFacadeFront } from './front-house'
 import { lookAt } from './front'
 import { ALONE, CHAIRS, FOOT_X, LAMP_X, LAMPS, P, STAR, SWINGS, TREADS } from './front-plan'
-import { crouch, cubic, pieces, stepUp, trace, type Path } from './front-motion'
+import { climbUp, crouch, cubic, pieces, trace, type Path } from './front-motion'
 
 /**
  * ALONE (201.944 to the end): the house builder's. The church's steps become his own: at the cut he is at rest at
@@ -51,18 +51,18 @@ const A = {
 
 const carl: Path = pieces([
   [A.up[0], () => FOOT],
-  [ALONE.steps[0], (T) => stepUp(T, A.up[0], FOOT, ALONE.steps[0], ON[0])],
+  [ALONE.steps[0], (T) => climbUp(T, A.up[0], FOOT, ALONE.steps[0], ON[0])],
   [A.up[1], () => ON[0]],
-  [ALONE.steps[1], (T) => stepUp(T, A.up[1], ON[0], ALONE.steps[1], ON[1])],
+  [ALONE.steps[1], (T) => climbUp(T, A.up[1], ON[0], ALONE.steps[1], ON[1])],
   [A.up[2], () => ON[1]],
-  [ALONE.steps[2], (T) => stepUp(T, A.up[2], ON[1], ALONE.steps[2], ON[2])],
+  [ALONE.steps[2], (T) => climbUp(T, A.up[2], ON[1], ALONE.steps[2], ON[2])],
   [A.toDoor[0], () => ON[2]],
   [A.toDoor[1], (T) => [cubic(T, A.toDoor[0], ON[2][0], 0, A.toDoor[1], DOOR_X, 0), FLOOR]],
   [A.walkIn[0], () => [DOOR_X, FLOOR]],
   [A.walkIn[1], (T) => [cubic(T, A.walkIn[0], DOOR_X, 0, A.walkIn[1], HERS_X, 0), FLOOR]],
   [A.toMine[0], () => [HERS_X, FLOOR]],
   [A.toMine[1], (T) => [cubic(T, A.toMine[0], HERS_X, 0, A.toMine[1], MINE_X, 0), FLOOR]],
-  [ALONE.sit, (T) => stepUp(T, A.toMine[1], [MINE_X, FLOOR], ALONE.sit, SEATED, 0.08)],
+  [ALONE.sit, (T) => climbUp(T, A.toMine[1], [MINE_X, FLOOR], ALONE.sit, SEATED)],
   [Infinity, () => SEATED],
 ])
 
@@ -99,7 +99,8 @@ function carlPose(T: number): { tilt?: number; squash?: number } {
   if (T >= A.walkIn[1] && T < A.toMine[1] + 0.3) return { tilt, squash: settle }
   if (T >= ALONE.sit) {
     const s = T - ALONE.sit
-    return { tilt, squash: 0.11 * Math.exp(-s / 0.4) * Math.cos(Math.min(Math.PI / 2, s * 1.6)) }
+    // The chair takes him heavily: a deeper settle, let go slowly, no rebound.
+    return { tilt, squash: 0.14 * Math.exp(-s / 0.6) * Math.cos(Math.min(Math.PI / 2, s * 1.2)) }
   }
   return { tilt, squash: settle }
 }
@@ -142,6 +143,31 @@ function middleAt(cells: number): Pt {
   }
   return [OUT[0][1], OUT[0][2]]
 }
+/**
+ * Where Zoom (half as close again round the same middle) holds off the frame's middle (`Framing.zoomDrop`; the show's
+ * own frame is unchanged):
+ * - On the steps it holds higher, rising with him a step at a time: the close on the steps keeps him low, and under
+ *   Zoom the balloon over him on its long string lost its crown off the frame's top (up to half the balloon, 203.8 to
+ *   208.7). A third of its half height while he climbs the first two, half for the top one and the latch, with a
+ *   tenth of the half height left under him; let down again as he goes in.
+ * - From the lit room's draw-back it holds a quarter lower: the house, kept low under the sky for the credits, would
+ *   sink off the frame's foot (the porch and the lit window cut, then gone); the porch's foot stays inside the Zoom
+ *   frame to the end, him in the lit window over it.
+ */
+export function zoomDropAt(T: number): number {
+  const steps = (0.33 * ramp(T, 203.8, 205.0) + 0.17 * ramp(T, A.up[2], ALONE.steps[2])) * (1 - ramp(T, 208.4, 209.4))
+  return 0.25 * ramp(T, 226.5, 230.5) * zoomFullAt(T) - steps
+}
+
+/**
+ * The credits are set over the show's own frame's sky; under Zoom, still a cell and a half closer, the house filled
+ * the frame and the first cards lay over its roof and chimney (236 to 241 s). So Zoom eases back to the show's own
+ * frame before the first card (`Framing.zoomFull`), and its low hold with it.
+ */
+export function zoomFullAt(T: number): number {
+  return 1 - ramp(T, CREDITS_AT - 3.2, CREDITS_AT - 0.2)
+}
+
 /**
  * From the lit room, one draw back without a stop: from rest (a Hermite in log cells) past the roof by the first card
  * (`CREDITS_AT`, 12.6 cells), so every card comes over the sky; then an even draw back (the same share of the frame

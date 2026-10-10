@@ -437,6 +437,16 @@ bigPlay.addEventListener('click', () => {
   void play()
 })
 stageRoot.append(bigPlay)
+// On a stage much wider than the show's 16:9 (a phone on its side with the panel up, an ultrawide screen) the composed
+// frame stands in the middle at full height, and the button, centred low, sat over whoever stands on its floor (Married
+// Life's opening couple, hidden behind Sound). Where the world beside the frame has room for it, it goes there.
+const besideFrame = new ResizeObserver(() => {
+  const w = stageRoot.clientWidth
+  const half = (stageRoot.clientHeight * 8) / 9
+  const side = w / 2 - half
+  bigPlay.style.left = side >= 150 ? `${w / 2 + half + side / 2}px` : ''
+})
+besideFrame.observe(stageRoot)
 
 // While a show loads, or when it would not, the stage says so: the panel says it too, but the panel starts hidden,
 // and a blank stage reads as broken. A failed load is tried again by a reload: the browser keeps a module that would
@@ -632,6 +642,15 @@ function sync(): void {
   const playing = transport?.playing ?? false
   const ready = perf !== null
 
+  // The picture says nothing to a screen reader: the canvas is named, as an image, by the show's title and its own share
+  // line (WCAG 1.1.1). The stage's controls stay outside it.
+  const canvas = stageRoot.querySelector('canvas')
+  if (canvas) {
+    canvas.setAttribute('role', 'img')
+    const name = current ? `${current.title}${current.about ? `: ${current.about}` : ''}` : 'The show'
+    if (canvas.getAttribute('aria-label') !== name) canvas.setAttribute('aria-label', name)
+  }
+
   // The title card.
   empty.hidden = works.length > 0
   workList.node.hidden = takeRow.hidden = works.length === 0
@@ -815,8 +834,11 @@ function renderWords(t: number): void {
     // widen a card past the edge, so it slides in just far enough to keep a margin. A card that fits is where it was.
     node.style.left = `${placeCard((W - fw) / 2 + c.at[0] * fw, node.offsetWidth, W)}px`
     const lift = c.lift ? c.lift * Math.max(0, (H - fh) / 2) : 0
-    node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
-    if (c.scale && c.scale !== 1) node.style.setProperty('--u', `${(fh / 100) * c.scale}px`)
+    const above = (perf?.tall ?? 0.5) * (H - fh)
+    node.style.top = `${above + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
+    const u = Math.max(fh / 100, c.least ?? 0) * (c.scale ?? 1)
+    if (u !== fh / 100) node.style.setProperty('--u', `${u}px`)
+    else node.style.removeProperty('--u')
     node.style.opacity = c.light.toFixed(3)
     // Out of focus as it comes and goes: it comes into focus as it comes up.
     node.style.filter = c.light > 0.995 ? '' : `blur(${((1 - c.light) * fh * 0.012).toFixed(2)}px)`
@@ -997,6 +1019,7 @@ if (import.meta.env.DEV) {
 
   return () => {
     alive = false
+    besideFrame.disconnect()
     window.clearTimeout(warmTimer)
     releaseSound()
     shell.holdHandle(false)

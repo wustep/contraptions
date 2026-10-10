@@ -208,6 +208,18 @@ export interface YouTubeSoundtrack extends Soundtrack {
   onRefused(fn: () => void): void
 }
 
+/**
+ * Whether a cue has run out and been started again from the top by YouTube: a video that runs out just short of the
+ * cue's end can be, and its time then jumps back to the beginning while the show stands a moment before `end`, which
+ * is never then reached, so nothing would stop it: the picture would hold (a reported time is never behind what was
+ * shown) and the music be heard again from the start. Near the end (`shown` within a second of `end`), a time gone
+ * back more than two seconds behind what was shown can only be that; a viewer's seek moves `shown` with it, and a
+ * late start lags by tenths. All in seconds of show.
+ */
+export function ranOut(shown: number, end: number, raw: number): boolean {
+  return shown >= end - 1 && raw < shown - 2
+}
+
 /** YouTube's players for a show's soundtrack, drawn into `host`, which the page puts where it can be seen. */
 export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
   let decks: Deck[] = []
@@ -429,6 +441,11 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
           // Playing all along, with no news of it: asked to play while already playing (a held sound brought in, still
           // running muted), WebKit sends no state change, and the wait would call it refused and hold it again (pass 145).
           if (d.player?.getPlayerState() === PLAYING) return settleRefusal('playing')
+          // Sought since past where any cue is heard (beyond its music's end, or between cues): there is nothing to
+          // start, so nothing was refused, as when play is pressed there (above). Without this, a seek past the end
+          // while it waited read as a refusal, and the show was put back where play was pressed and stopped.
+          const there = at(shown)
+          if (!there || shown >= end(there)) return settleRefusal('playing')
           // Slow to come, not refused: give it longer.
           if (d.state === BUFFERING && performance.now() - began < PATIENCE_BUFFERING) return wait()
           // It never started: the browser is holding it for a gesture.
@@ -543,6 +560,11 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       if (!d || !d.player || !d.running || d.early) return null
       // A cue that has run out, or been stopped at its end, has nothing to say: the wall carries the show on.
       if (d.state === ENDED) return null
+      // A cue that YouTube has started again from the top as it ran out (`ranOut`): the wall carries the show on.
+      if (ranOut(shown, end(d), d.cue.at + d.player.getCurrentTime() - d.cue.from)) {
+        stop(d)
+        return null
+      }
       const moving = d.state === PLAYING
       const heard = d.cue.at + (d.ear.hear(d.player.getCurrentTime(), moving, d.player.getPlaybackRate() || speed, performance.now()) - d.cue.from)
       // Never behind what was shown: a player that starts late holds the picture until it catches up.

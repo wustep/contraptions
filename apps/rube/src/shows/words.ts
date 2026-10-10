@@ -143,7 +143,7 @@ export function wordPainter(w: number, h: number, dx = 0, dy = 0): (into: Canvas
     for (const c of cards) {
       if (c.light <= 0) continue
       ctx.clearRect(0, 0, w, h)
-      card(ctx, c, c.at[0] * w, (c.at[1] + (c.rise ?? 0) / 100) * h, u)
+      card(ctx, c, c.at[0] * w, (c.at[1] + (c.rise ?? 0) / 100) * h, Math.max(u, c.least ?? 0))
       into.save()
       into.setTransform(1, 0, 0, 1, 0, 0)
       into.globalAlpha = Math.min(1, c.light)

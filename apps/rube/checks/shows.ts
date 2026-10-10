@@ -13,6 +13,8 @@ import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
 import { RENAMED_TAKES, favorites, performanceProblems, pickVersion, placeCard, readShows, sectionOf, shelves, versionPath, zoomed, type Performance, type ShowVersion } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
+import { ranOut } from '../src/shows/youtube'
+import { combineSoundtracks } from '../src/shows/soundtrack'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
 import { GRID, strictTake, strikes } from '../src/shows/versions/metronome/metronome'
@@ -104,6 +106,68 @@ async function main(): Promise<void> {
   const soundtrack = readFileSync(join(process.cwd(), 'apps/rube/src/shows/soundtrack.ts'), 'utf8')
   check('a file play waits for canplay, as YouTube waits for its players', soundtrack.includes('status === \'loading\'') && soundtrack.includes('waiting.push') && soundtrack.includes('deep link'))
   check('a deep link with the sound held keeps a Sound button on the stage, and lights the panel\'s', player.includes("soundHeld ? 'Sound'") && /musicBtn\.classList\.toggle\('held', hasMusic && soundHeld\)/.test(player))
+  // On a stage much wider than 16:9 the stage's button stands beside the composed frame, where there is room, not over
+  // its middle (on a phone on its side with the panel up, Sound hid Married Life's opening couple).
+  check('on a stage much wider than 16:9 the play button stands beside the composed frame',
+    /const besideFrame = new ResizeObserver/.test(player) && /bigPlay\.style\.left = side >= \d+ \?/.test(player) && /besideFrame\.disconnect\(\)/.test(player))
+  // The picture has a name for a screen reader (WCAG 1.1.1): the stage's canvas is an image named by the show's title and
+  // its share line, kept to whichever show is up.
+  check('the show\'s canvas is an image named by its title and share line',
+    /canvas\.setAttribute\('role', 'img'\)/.test(player) && /current\.title\}\$\{current\.about \?/.test(player) && /canvas\.setAttribute\('aria-label', name\)/.test(player))
+  // A YouTube cue started again from the top as it runs out is treated as run out, so the show carries on to its end
+  // instead of freezing under the song heard again (found on Married Life's deployed preview); and `position` asks.
+  check('a YouTube cue restarted at its end is run out, and nothing else is',
+    ranOut(250.5, 250.53, 0.4) && ranOut(250.2, 250.53, 3) &&
+    !ranOut(250.5, 250.53, 250.45) && !ranOut(200, 250.53, 0.4) && !ranOut(250.5, 250.53, 249.2) && !ranOut(100, 250.53, 99.6) &&
+    /if \(ranOut\(shown, end\(d\),/.test(readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.ts'), 'utf8')))
+  // Waiting to hear whether YouTube was let start, a seek past the music's end (or between cues) stops the player, so
+  // it never starts: before calling that a refusal, the wait asks again where the show is (else the show was put back
+  // where play was pressed, and stopped).
+  {
+    const yt = readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.ts'), 'utf8')
+    const timer = yt.slice(yt.indexOf('patience = window.setTimeout('), yt.indexOf("settleRefusal('blocked')", yt.indexOf('patience = window.setTimeout(')))
+    check('a seek past the music while YouTube is starting is not read as a refusal',
+      /const there = at\(shown\)\s*\n\s*if \(!there \|\| shown >= end\(there\)\) return settleRefusal\('playing'\)/.test(timer))
+  }
+  // Past YouTube's fastest (2x) with no file to take over, YouTube sits out: silent, and no say in the clock, so the
+  // show runs at the speed asked for on the wall; back at 2x or slower it comes in again where the show is. With a
+  // file, the file takes over, as before. Stand-in players record what they are told.
+  {
+    const fake = () => {
+      const log: string[] = []
+      let at = 0
+      let playing = false
+      return {
+        log,
+        load: () => {}, state: () => 'ready' as const, follow: (t: number) => { at = t },
+        position: () => (playing ? at : null),
+        play: async (t: number) => { log.push(`play ${t}`); at = t; playing = true; return 'playing' as const },
+        pause: () => { log.push('pause'); playing = false },
+        seek: (t: number) => { log.push(`seek ${t}`); at = t },
+        setSpeed: () => {}, setMuted: () => {}, onChange: () => {}, onPlayer: () => {}, report: () => null,
+      }
+    }
+    const file = fake()
+    const tube = fake()
+    const music = combineSoundtracks(file as never, tube as never)
+    music.load({ offset: 0, youtube: [{ id: 'x' }] } as never)
+    void music.play(60)
+    music.follow(61)
+    const before = music.position()
+    music.setSpeed(4)
+    const outPos = music.position()
+    const paused = tube.log.includes('pause')
+    music.follow(70)
+    tube.log.length = 0
+    music.setSpeed(1)
+    const backIn = tube.log.includes('seek 70') && tube.log.includes('play 70')
+    const withFile = combineSoundtracks(fake() as never, fake() as never)
+    withFile.load({ offset: 0, src: 'x.mp3', youtube: [{ id: 'x' }] } as never)
+    withFile.setSpeed(4)
+    check('past 2x with no file, YouTube sits out and the show keeps its speed; back at 2x it comes in where the show is',
+      before === 61 && outPos === null && paused && backIn && music.source() === 'youtube' && withFile.source() === 'file',
+      `before ${before}, at 4x ${outPos}, paused ${paused}, back in ${backIn}, with a file ${withFile.source()}`)
+  }
   check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('zoomed(cam, FOLLOW_ZOOM)'))
   {
     const plain = zoomed({ x: 3, y: -2, cells: 9 }, 1.5)

@@ -1,3 +1,4 @@
+import type { Box } from '../plan'
 import type { Show } from '../show'
 
 /**
@@ -28,6 +29,22 @@ export interface Framing {
    */
   angle?: number
   /**
+   * Under Zoom, how far below the frame's middle Zoom holds, as a share of the Zoom frame's half height (negative:
+   * above it): for a shot whose subject sits low or high in the frame (a house under a sky for the credits, a balloon
+   * high over him), which a tighter frame round the same middle would cut. Left out, Zoom holds the middle.
+   */
+  zoomDrop?: number
+  /**
+   * Under Zoom, how far right of the frame's middle Zoom holds, as a share of the Zoom frame's half width (negative:
+   * left of it). Left out, Zoom holds the middle.
+   */
+  zoomSlide?: number
+  /**
+   * Under Zoom, how much of Zoom's closeness applies, 0 to 1: for a stretch composed for the show's own frame (credits
+   * set over its sky), where Zoom eases back to it. Left out, all of it.
+   */
+  zoomFull?: number
+  /**
    * What the shot is about, in cells. Zoom sits closer about the same middle, and a shot composed for the wide frame
    * can leave its subject at the edge of the closer one, or past it (the two of them in the rocket's window, at the
    * top of a frame whose foot holds the tower). Given a focus, Zoom moves over the least it must to keep it well
@@ -57,14 +74,18 @@ const FOCUS_KNEE = 0.08
  * slides square to its screen) by just enough. It is continuous in the camera and the focus: no jumps.
  */
 export function zoomed(cam: Framing, by: number): Framing {
-  const cells = cam.cells / by
+  // First where the camera asks Zoom to hold: `zoomFull` of the closeness, off the middle by `zoomDrop` and `zoomSlide`
+  // (shares of the Zoom frame's half height and half width). Without them, the same middle, `by` times as close.
+  const cells = cam.cells / (1 + (by - 1) * Math.max(0, Math.min(1, cam.zoomFull ?? 1)))
+  const hx = cam.x + ((cam.zoomSlide ?? 0) * cells * 16) / 9 / 2
+  const hy = cam.y + ((cam.zoomDrop ?? 0) * cells) / 2
   const { focus, ...rest } = cam
-  if (!focus) return { ...rest, cells }
+  if (!focus) return { ...rest, cells, x: hx, y: hy }
   const a = cam.angle ?? 0
   const cs = Math.cos(a)
   const sn = Math.sin(a)
-  const dx = focus[0] - cam.x
-  const dy = focus[1] - cam.y
+  const dx = focus[0] - hx
+  const dy = focus[1] - hy
   // The focus on the screen, from the middle, in cells.
   const sx = dx * cs - dy * sn
   const sy = dx * sn + dy * cs
@@ -81,8 +102,11 @@ export function zoomed(cam: Framing, by: number): Framing {
   const ex = past(sx, limX)
   const ey = past(sy, limY)
   // Back from the screen's axes to the world's.
-  return { ...rest, cells, x: cam.x + ex * cs + ey * sn, y: cam.y - ex * sn + ey * cs }
+  return { ...rest, cells, x: hx + ex * cs + ey * sn, y: hy - ex * sn + ey * cs }
 }
+
+/** Zoom's frame for a framing, by the name Married Life's checks and holds know it: `zoomed`, holds and all. */
+export const zoomFrame = zoomed
 
 export interface SoundtrackSpec {
   /**
@@ -142,6 +166,17 @@ export interface Performance {
   camera?(t: number): Framing
   /** Whether the show's cuts are drawn at `t`: the iris at a portal, the fade up from ink. Left out, they are. */
   cuts?(t: number): boolean
+  /**
+   * The box Overview frames at `t`, in the world's cells: for a show whose worlds hold several sets far apart (the
+   * place in play, not the whole world, most of it empty between them). Left out, the whole world.
+   */
+  overview?(t: number): Box
+  /**
+   * In a stage taller than 16:9 (a phone held upright), what share of the extra picture lies above the composed 16:9
+   * frame: for a show whose sets stand on a floor or the ground, with sky, roof or an upper storey over them and only
+   * ground under them. The title cards go with the picture. Left out, half: the frame in the middle.
+   */
+  tall?: number
   /** The music. Left out, the show is silent and runs on the wall clock. */
   soundtrack?: SoundtrackSpec
   /**
@@ -186,6 +221,12 @@ export interface TitleCard {
   lift?: number
   /** Optional: the card's type this many times its usual size (unset: 1, every show's credits as they were). */
   scale?: number
+  /**
+   * Optional: the least its unit may be, in pixels (a hundredth of the frame's height, before `scale`): for a card that
+   * must stay readable on a small stage, a phone held upright, where the frame is about 220px high and a role line
+   * would be 4px. Unset: no least, every show's credits as they were.
+   */
+  least?: number
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
 }
