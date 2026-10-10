@@ -963,6 +963,11 @@ The notes went back to the builders who made each part, who still had their cont
   at 182, 186.5 and 189.5 s, 1440×810 at 2× with the PNG's encode, a median of 57.7 ms with the family and 61.7 ms
   without, over 36 each. The cost is below the noise. The drop into the rocks and the brink were watched at 30 fps
   too, so all eleven jumps have been: the rocks a hard cut into the silence, the brink its two flickers and the cut.
+- **The full build, after the director's passes.** They changed three shared files (`words.ts`, `registry.ts`,
+  `player.ts`), and until now only the typecheck and `check:shows` had been run. `npm run build` passes: the
+  typecheck, every check suite (3,069 checks, three more than before: the chapters, the subtitles, the family's
+  size) and the production bundle. The show's chunk is 415.9 KB (152.5 KB gzipped), 23.6 KB (8.4 KB) more than
+  before the passes. The portrait and the photograph (290 to 296 s) were looked at again and are as they were.
 
 ## The looks
 
