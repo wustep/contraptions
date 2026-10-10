@@ -790,6 +790,9 @@ window.
     over them; now 17° to give it (back to 9°) and 7° for his answer, on the same notes. Her roll is held by the
     seam to the church and kept. In the show's own frame they stay small (the balloon over them needs the room);
     under Zoom the giving and the answer read plainly.
+  - *The bigger bedside leans, re-watched* by a fourteenth viewer (the same stretch and questions): his lean now seen,
+    "the one clear gesture… he tilts forward toward her head", with the string passing to her (75%), where the last
+    viewer saw neither move. Her roll still not seen; held by the seam, kept.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
