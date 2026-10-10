@@ -192,29 +192,6 @@ export function drawCity(pen: Pen, f: View, te: number): void {
     ctx.fillRect(x0 * k, MID_BASE * k, (x1 - x0) * k, (RAIN_GEO.river - MID_BASE) * k)
     ctx.fillStyle = rgba(RAIN.riverLight, 0.75)
     ctx.fillRect(x0 * k, (RAIN_GEO.river - 0.32) * k, (x1 - x0) * k, 0.32 * k)
-    // The far bank's road: the lights of its traffic going both ways, small in the rain (and, when he is deeper,
-    // hanging where they are).
-    if (k > 3) {
-      // The road itself, a darker line along the quay's top, so its lights are seen on it (alone they were specks
-      // hanging in the mist, plainest under the bridge).
-      ctx.fillStyle = rgba(mixHex(RAIN.far, RAIN.buildingDark, 0.5), 0.75)
-      ctx.fillRect(x0 * k, (MID_BASE - 0.06) * k, (x1 - x0) * k, Math.max(1, 0.1 * k))
-      const span = QUAY_R - QUAY_L
-      for (let i = 0; i < 14; i++) {
-        const dir = i % 2 ? 1 : -1
-        const v = 1.6 + hash(i, 1, 75) * 1.4
-        const x = QUAY_L + ((((hash(i, 2, 75) * span + dir * v * te) % span) + span) % span)
-        if (x < f.x0 - 1 || x > f.x1 + 1) continue
-        const y = MID_BASE - 0.12 - (i % 3) * 0.04
-        const c = dir > 0 ? RAIN.lamp : RAIN.trainRust
-        // Its car, dim in the rain, the light at its end.
-        ctx.fillStyle = rgba(mixHex(RAIN.far, RAIN.buildingDark, 0.35), 0.8)
-        ctx.fillRect((x - (dir > 0 ? 0.45 : 0.02)) * k, (y - 0.14) * k, 0.47 * k, (MID_BASE - 0.04 - (y - 0.14)) * k)
-        bloom(p, k, [x, y], 0.13, c, dir > 0 ? 0.42 : 0.34)
-        ctx.fillStyle = rgba(c, dir > 0 ? 0.8 : 0.6)
-        ctx.fillRect((x - 0.035) * k, (y - 0.02) * k, Math.max(1, 0.07 * k), Math.max(1, 0.04 * k))
-      }
-    }
   }
 }
 
