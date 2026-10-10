@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 134 (latest)
+## Polish pass 135 (latest)
+
+No change to the show: the named link online (`/shows/interstellar/opus55`), where a browser that refuses sound has the picture play on with the sound held and a Sound button to tap. With `--autoplay-policy=document-user-activation-required`, Chrome for Testing refused once: playing, muted, sound held, from YouTube, as passes 101 and 102 describe. In four later runs it let the sound through, so the held state could not be made to happen on demand here. That is Chrome's autoplay judgement, not the show. What could be checked: in every run the next cue's early start was muted (`MUTED`, volume 0) under Cornfield Chase heard at 100, through pass 133's fix. Tapping Sound releases the hold through the same `setMuted(false)` that pass 133 tried during an early start, where the early cue stayed muted until its entry. A refused visit on a real phone is still worth a look by hand.
+
+## Polish pass 134
 
 No change to the show: pass 133's fix to the shared YouTube player, tried on the one other show with a second YouTube cue, Epilogue (`la-la-land/sebs`, `PMbrnvyLTdg` at 464 s, from its video's start). Its second cue never runs early (there is nothing before its first second), but it warms 45 s ahead. With the fix, the warm at 419 s plays muted at volume 0 for about 1.5 s and parks, and at 464.02 s it comes in heard at 100 (its cue has no fade). With the old player, the warm stayed at volume 0 unmuted through its short run, and YouTube did not raise it in that time. So Epilogue was not heard early before, and for it the fix only guards against it. The rise to 5 came during Voyage's eight-second early run.
 
