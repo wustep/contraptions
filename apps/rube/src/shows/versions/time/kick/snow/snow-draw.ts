@@ -329,8 +329,8 @@ function drawGuards(p: p5, ctx: C2D, c: Ctx, t: number): void {
 
 /**
  * The guards fire on them down the face (the chase had no threat that landed): on alternate beats of it, a flash at the
- * rider's shoulder and, a tenth of a second on, a spurt of snow kicked up on Fischer's track just behind him, the
- * last of the three. Never a hit: Mal's shot is the one that lands.
+ * rider's shoulder and, a tenth of a second on, a spurt of snow kicked up on Fischer's track just ahead of him, the
+ * last of the three, that he rides through (behind him, it fell off a tight frame). Never a hit: Mal's shot is the one that lands.
  */
 const SHOTS: [number, number][] = [138, 139, 140, 141, 142, 143, 144, 145, 146].map((b, j) => [beat(b) + 0.04, j % 2])
 function drawShots(p: p5, ctx: C2D, c: Ctx, t: number): void {
@@ -340,7 +340,7 @@ function drawShots(p: p5, ctx: C2D, c: Ctx, t: number): void {
     if (u < 0 || u > 0.7) continue
     const g = GUARDS[gi]
     const gat = g.at(ts)
-    const tgt = FISCHER_SNOW.at(ts - 0.15)
+    const tgt = FISCHER_SNOW.at(ts + 0.22)
     const side = Math.sign(tgt[0] - gat[0]) || -1
     // The flash at his shoulder, gone in a tenth of a second.
     if (u < 0.12) bloom(p, k, [gat[0] + side * 0.45, gat[1] - 0.85], 0.45, SNOW.flash, 0.9 * (1 - u / 0.12))

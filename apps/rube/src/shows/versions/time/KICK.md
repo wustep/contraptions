@@ -426,8 +426,9 @@ each world, and changed:
 - **The guards fire on them** (131.8 to 139.5): the snowmobiles chased them down the face, and nothing they did
   touched them; to a viewer new to it the chase had "no threat that lands" (a cold critic's note). On alternate beats
   from the first jump to the ledge a rider's gun flashes, and a tenth of a second on a spurt of snow kicks up on
-  Fischer's track just behind him, a dark pock and a spray in the snow's blue shade (white on white was lost). Never a
-  hit: Mal's shot, four seconds later, is the one that lands.
+  Fischer's track just ahead of him, so he rides into the spray (behind him, the last of the three, it fell off a
+  tight frame): a dark pock and a spray in the snow's blue shade (white on white was lost). Never a hit: Mal's shot,
+  four seconds later, is the one that lands.
 
 ## Inception nods
 
