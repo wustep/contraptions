@@ -1108,6 +1108,11 @@ Not taken: the cat's half-lidded eyes (a taste), the mug away for its refill.
      ball. The one thing that says "ear cup" at a glance is its face: so its cushion's top is seen a little from above
      now, a ring round the dark speaker cloth, and the ball sits in the dark of it. Sixty frames a second as before.
 
+179. **The lip, after the ear cup.** The strip of cushion drawn in front of the ball, so it sits down in the cup, was a
+     rectangle; over the new dark hollow its straight sides cut the dark, a light tab under the ball. It is the front of
+     the ring now: everything of the cushion in front of the hollow's near edge, the full width of the cup, down to just
+     above the shell's bright rim, the hollow's edge and the seam drawn on it. The ball sits down in the dark.
+
 **Subtracted:** the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's

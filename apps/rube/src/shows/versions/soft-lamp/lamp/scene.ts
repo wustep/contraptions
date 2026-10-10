@@ -717,18 +717,24 @@ function lip(ctx: Ctx, lw: number, t: number): void {
   if (Math.abs(b.x - CUP.x) > CUP.halfW + R || b.y < CUP.top - 2 * R - 0.05) return
   const lamp = lampAt(t)
   const top = CUP.top + cushion(t)
-  const x = CUP.x
-  const s = SHOULDER
-  const y = top + CUP.hollow * 0.9
-  const edge = () => {
-    ctx.beginPath()
-    ctx.moveTo(x - s * 0.62, top + 0.012)
-    ctx.quadraticCurveTo(x - s * 0.3, y, x, y + 0.004)
-    ctx.quadraticCurveTo(x + s * 0.3, y, x + s * 0.62, top + 0.012)
-  }
-  edge()
-  ctx.lineTo(x + s * 0.62, top + 0.12)
-  ctx.lineTo(x - s * 0.62, top + 0.12)
+  // The front of the cushion's ring, over the ball: everything of the cushion in front of the hollow's near edge (the
+  // front arc of the dark ellipse `headphones` draws), so the ball sits down in it.
+  const w = CUP.halfW * 0.94
+  const cx = CUP.x
+  const cy = top + 0.035
+  const rx = w * 0.62
+  const ry = 0.042
+  ctx.save()
+  cushionPath(ctx, top)
+  ctx.clip()
+  ctx.beginPath()
+  ctx.moveTo(cx - CUP.halfW - 0.1, cy)
+  ctx.lineTo(cx - rx, cy)
+  ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true)
+  ctx.lineTo(cx + CUP.halfW + 0.1, cy)
+  // (Down to just above the shell's bright rim, which stays.)
+  ctx.lineTo(cx + CUP.halfW + 0.1, CUP.top + 0.142)
+  ctx.lineTo(cx - CUP.halfW - 0.1, CUP.top + 0.142)
   ctx.closePath()
   // The cushion's own shading, top to foot, so the lip is the cushion and not a patch on it.
   const l = lightAt(CUP.x, -0.15) * lamp
@@ -737,8 +743,20 @@ function lip(ctx: Ctx, lw: number, t: number): void {
   pg.addColorStop(1, lit(PAD, PAD_LIT, l * 0.5))
   ctx.fillStyle = pg
   ctx.fill()
-  edge()
-  stroke(ctx, lw * 0.8)
+  // The hollow's near edge, and the stitched seam the lip would otherwise cover.
+  ctx.beginPath()
+  ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true)
+  ctx.lineWidth = lw * 0.7
+  ctx.strokeStyle = rgba(INK, 0.7)
+  ctx.stroke()
+  ctx.setLineDash([0.025, 0.02])
+  ctx.beginPath()
+  ctx.moveTo(cx - w + 0.05, CUP.top + 0.12)
+  ctx.lineTo(cx + w - 0.05, CUP.top + 0.12)
+  ctx.lineWidth = lw * 0.5
+  ctx.strokeStyle = rgba(INK, 0.45)
+  ctx.stroke()
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the lamp */
