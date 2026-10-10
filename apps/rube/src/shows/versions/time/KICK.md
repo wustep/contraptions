@@ -403,6 +403,10 @@ each world, and changed:
 - **The boulder in the hairpin** (131 to 138): a bare grey four-sided slab, flat-bottomed, no shade and no shadow,
   floating on the snow among pines that have both. It is a boulder now, lit on its west and in shade on its east, a
   little snow on its crown, bedded in a drift, its shadow long on the slope like theirs.
+- **The suite's beds** (112 to 121): with their pillows floated off, each was a cream slab on a brown box, and the
+  nightstand a plain box, beside a curtain with its folds and doors with their panels (a critic's note). Each bed has a
+  cover turned down from its foot, its fold catching the lamp, a rail in shade, legs and a shadow on the carpet; the
+  nightstand a top, a drawer and its pull.
 
 ## Inception nods
 

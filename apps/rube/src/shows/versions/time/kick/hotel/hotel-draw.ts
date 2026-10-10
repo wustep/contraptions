@@ -947,14 +947,25 @@ function drawSuite(g: Pen, f: View, t: number): void {
   rect(g, 14.8, 18.72, 18.1, 18.8, H.brass)
   // The beds.
   for (const [b0, b1] of BEDS) {
-    rect(g, b0, 20.72, b1, B.top, H.wood, g.ink, 0.6)
+    // Each bed: its shadow on the carpet, its legs, the frame with its rail in shade, the mattress, and the cover
+    // turned down from the foot, its fold catching the lamp (the pillows float off: without these it was two slabs).
+    pool(g.p, g.k, [(b0 + b1) / 2, B.top - 0.01], (b1 - b0) * 0.55, 0.06, H.wallShade, 0.5)
+    for (const lx of [b0 + 0.08, b1 - 0.2]) rect(g, lx, B.top - 0.1, lx + 0.07, B.top, H.wood)
+    rect(g, b0, 20.72, b1, B.top - 0.1, H.wood, g.ink, 0.6)
+    rect(g, b0 + 0.02, 20.82, b1 - 0.14, B.top - 0.14, mixHex(H.wood, H.wallShade, 0.35))
     rect(g, b0 + 0.04, 20.45, b1 - 0.1, 20.72, C.bedding, g.ink, 0.5)
+    const fold = lerp(b0 + 0.04, b1 - 0.1, 0.62)
+    rect(g, b0 + 0.04, 20.47, fold, 20.74, mixHex(C.curtain, C.bedding, 0.45), g.ink, 0.5)
+    rect(g, fold - 0.12, 20.47, fold, 20.74, mixHex(C.bedding, H.lamp, 0.35), g.ink, 0.4)
     rect(g, b1 - 0.12, 19.78, b1, B.top, H.wood, g.ink, 0.6)
     const pil = floating([b1 - 0.42, 20.37], [-0.2, -0.45], 4, 0.05, b0, t)
     at(g, pil.at, pil.turn, () => rect(g, -0.26, -0.08, 0.26, 0.08, H.glass, g.ink, 0.4))
   }
   // The nightstand and the silver case on it.
   rect(g, 12.72, 20.45, 13.08, B.top, H.woodLight, g.ink, 0.5)
+  rect(g, 12.69, 20.42, 13.11, 20.49, H.wood, g.ink, 0.4)
+  rect(g, 12.77, 20.62, 13.03, 20.78, mixHex(H.woodLight, H.wood, 0.4), g.ink, 0.35)
+  rect(g, 12.87, 20.69, 12.93, 20.71, H.brass)
   const cs = floating([12.9, 20.33], [0.05, -0.5], 4, -0.04, 5, t)
   at(g, cs.at, cs.turn, () => {
     rect(g, -0.26, -0.11, 0.26, 0.11, C.steel, g.ink, 0.6)
