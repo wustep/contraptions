@@ -231,7 +231,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 121 (latest)
+## Polish pass 122 (latest)
+
+No change to the show.
+- The corn that passes 112 and 114 reshaped, 28 to 55 s, frame by frame at 60 frames a second (`window.shows.still` at 320×180, the share of pixels changing by more than 40 of 255 from one frame to the next). No frame changes more than three times as much as the frames either side of it, so nothing pops. The largest changes, 53.4 to 53.6 s (18% a frame), are a steady run, the camera dropping over the dam with the truck, not a jump.
+- The Ranger's thruster puffs at 213 s, up close at 1920×1080. They are soft round clouds that drift and thin out over about 0.4 s, and they read as gas, so they are left.
+
+## Polish pass 121
 
 No change to the show: Saturn, 214 to 230.5 s every 1.5 s, and the undocking, 212.5 to 215 s every half-second, at 1280×720. The faint grey discs above and below the Ranger's tail at 213 to 214 s are its thrusters' puffs thinning after each pulse, not a fault. The probes, the planet's limb, the rings and the sphere at 230 s all read.
 
