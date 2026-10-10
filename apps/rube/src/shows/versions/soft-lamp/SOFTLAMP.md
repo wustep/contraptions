@@ -1349,6 +1349,28 @@ sleep at the end is built toward now (`drowseAt`, `DOZES`, `lamp/cat.ts`):
 217. **Fixed on the way.** The first dozes fell where it was already nodding along, eyes shut, and read as nothing;
      one began a second after it had looked up at the first snow.
 
+### The seventy-ninth pass: a second cold review, and the window a mirror
+
+An eighth reviewer, no context, sixteen frames. Its first point: the person in the glass is a ghost pasted on the
+skyline, the glass reflecting her and nothing of the lit room she sits in; and she writes at a desk with nothing on it.
+Its other notes weighed: the headphones (it still read bowls; the reviewer before it asked for exactly this pair), the
+ball's "hover" (its nod off the kick), and the lamp on at ten seconds (it comes on at two) are left. Taken:
+
+218. **The window a mirror of the lit room** (`lamp/reflection.ts`). Under her, in the glass, her notebook open on the
+     desk under the lamp: the brightest thing she has, a warm page lit from above with its fold and its ruled lines, the
+     facing page written full, and on the page in hand the lines she has written, filling a line at a time as she
+     writes, her hand and pen on the line being written, a new page every two minutes and a half. The lamp's light goes
+     down from its bulb in the glass onto the page, and the desk's lit edge runs along the foot of the pane. Her hair is
+     darker, so her face, the lit thing, stands out of it. So the work on the desk is there, seen the one way the
+     person is.
+219. **The neighbour's window off her chest.** A warm lit window across the street sat squarely on her chest in the
+     glass ("a box she's wearing"); a reflection only adds light, so nothing of hers could hide it. It is across the
+     street's other side now, in the left-hand pane, its crossings and its cat as before.
+220. **The face in the mist** sat on clear glass with no mist round it: it is drawn in a breath's worth of mist now,
+     wider than the face, so its clear lines are in something.
+221. **The tea** was gone from the desk three and a half minutes after midnight; it comes back hot after a minute and a
+     half (19:11 to 20:44).
+
 ## Judgment calls for Stephen
 
 - **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in

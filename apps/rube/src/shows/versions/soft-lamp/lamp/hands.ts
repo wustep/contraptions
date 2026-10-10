@@ -115,11 +115,11 @@ export const REACHES: Reach[] = (() => {
   })
   // Hands round the mug, in the heaviest of the rain.
   find('cup', 560, 1300, (t) => rainAt(t) > 0.55)
-  // About midnight, the tea gone cold: the mug taken away, and a few minutes later brought back hot, the camera holding
-  // the desk each time (in between, the desk stands empty by the cat).
+  // About midnight, the tea gone cold: the mug taken away, and a minute or so later brought back hot (the kettle's
+  // time, no longer: the desk by the cat stands empty only that while), the camera holding the desk each time.
   find('away', 1100, 1450)
   const away = out.find((r) => r.kind === 'away')
-  if (away) find('back', away.at + 120, away.at + 420)
+  if (away) find('back', away.at + 55, away.at + 420)
   // The lamp, turned down as the last track rings out: the knob turns as the light goes (`lampAt`).
   out.push({ kind: 'lamp', at: MUSIC_END - 3.6, dur: DUR.lamp })
   return out.sort((a, b) => a.at - b.at)
@@ -389,11 +389,17 @@ export function doodle(ctx: Ctx, t: number): void {
   ctx.rect(GLASS.x0, GLASS.y0, GLASS.x1 - GLASS.x0, GLASS.y1 - GLASS.y0)
   ctx.clip()
   // The mist it is drawn in, a little thicker there, as where someone has breathed on the glass.
-  const m = ctx.createRadialGradient(FACE.x, FACE.y, 0.05, FACE.x, FACE.y, 0.6)
-  m.addColorStop(0, rgba('#B9B3DA', 0.2 * vis))
+  // (A breath's worth, wider than the face, so the clear lines are drawn in it and not on bare glass.)
+  ctx.save()
+  ctx.translate(FACE.x, FACE.y + 0.05)
+  ctx.scale(1, 0.8)
+  const m = ctx.createRadialGradient(0, 0, 0.05, 0, 0, 0.85)
+  m.addColorStop(0, rgba('#B9B3DA', 0.34 * vis))
+  m.addColorStop(0.6, rgba('#B9B3DA', 0.2 * vis))
   m.addColorStop(1, rgba('#B9B3DA', 0))
   ctx.fillStyle = m
-  ctx.fillRect(FACE.x - 0.6, FACE.y - 0.6, 1.2, 1.2)
+  ctx.fillRect(-0.9, -0.9, 1.8, 1.8)
+  ctx.restore()
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
   let left = len

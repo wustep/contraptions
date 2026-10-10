@@ -986,7 +986,7 @@ function city(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: number
  * along its sill, sits, its tail tip going, and walks off. Small, and seldom: the city's one other person, not a
  * second show.
  */
-const FLAT = { x0: -1.05, x1: -0.69, y0: -1.98, y1: -1.73 }
+const FLAT = { x0: -1.98, x1: -1.62, y0: -1.98, y1: -1.73 }
 const FLAT_ON = 38
 const FLAT_OFF = 1652
 

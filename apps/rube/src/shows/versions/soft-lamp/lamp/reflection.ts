@@ -24,14 +24,14 @@ import { hash, lampAt, lampColor, skyAt } from './world'
 type Ctx = CanvasRenderingContext2D
 
 /** Where the reflection sits when the camera looks at the window over the desk (`lens.ts`'s home): head, and size. */
-const AT = { x: -0.62, y: -2.5 }
+const AT = { x: -0.62, y: -2.72 }
 const HOME_X = 0.21
 /** How much it moves with the camera: nearly all the way, as one's own reflection does. */
 const FOLLOW = 0.85
 
 const KNIT = '#8FA592'
 const SKIN = '#F2B98E'
-const HAIR = '#5A3A30'
+const HAIR = '#3E2822'
 
 /** A small canvas the reflection is drawn into, laid over the glass soft: made once. */
 let pad: HTMLCanvasElement | null = null
@@ -191,12 +191,63 @@ export function reflection(ctx: Ctx, t: number): void {
     g.lineTo(rx * 1.05, 0.34 + sy)
   }
   g.stroke()
+  // Their notebook, open on the desk under the lamp: in the glass, the brightest thing they have, a warm page lit from
+  // above, its ruled lines and the lines they have written on it (darker: what gives back less light), filling as they
+  // write, a page at a time.
+  {
+    const py0 = 0.72
+    const py1 = 1.12
+    const page = g.createLinearGradient(-0.2, 0, 0.9, 0)
+    page.addColorStop(0, rgba('#E9D2B0', 0.55))
+    page.addColorStop(1, rgba('#FFEBCB', 0.95))
+    g.fillStyle = page
+    g.beginPath()
+    g.moveTo(-0.12, py0)
+    g.lineTo(0.78, py0)
+    g.lineTo(0.92, py1)
+    g.lineTo(-0.24, py1)
+    g.closePath()
+    g.fill()
+    // The fold down its middle, and the facing page, a little dimmer.
+    g.fillStyle = rgba('#000000', 0.18)
+    g.fillRect(0.31, py0, 0.012, py1 - py0)
+    // The lines written so far on the page in hand: a new page every two minutes and a half or so.
+    const PAGE = 150
+    const done = (t % PAGE) / PAGE
+    g.strokeStyle = rgba('#5A4436', 0.55)
+    g.lineWidth = 0.009
+    g.beginPath()
+    for (let k = 0; k < 7; k++) {
+      const y = py0 + 0.045 + k * 0.05
+      const lx0 = 0.36 + 0.02 * (k / 7)
+      const lx1 = 0.8 + 0.12 * (k / 7)
+      const full = Math.max(0, Math.min(1, done * 7 - k))
+      if (full <= 0) break
+      // In short words, with gaps between.
+      for (let x = lx0; x < lx0 + (lx1 - lx0) * full; x += 0.07) {
+        g.moveTo(x, y)
+        g.lineTo(Math.min(x + 0.04 + 0.02 * hash(k, Math.floor(x * 100), 611), lx0 + (lx1 - lx0) * full), y)
+      }
+    }
+    // And the facing page, already full.
+    for (let k = 0; k < 7; k++) {
+      const y = py0 + 0.045 + k * 0.05
+      for (let x = -0.08 - 0.02 * (k / 7); x < 0.27; x += 0.07) {
+        g.moveTo(x, y)
+        g.lineTo(x + 0.04 + 0.02 * hash(k, Math.floor(x * 100) + 50, 612), y)
+      }
+    }
+    g.stroke()
+  }
   // The writing arm: the forearm along the desk to the hand and its pen, which goes along the line as the head does.
   const write = (1 - Math.max(p.think, p.stretch, p.kitten)) * (1 - p.sip)
   if (write > 0.02) {
-    const hx = 0.24 + p.scan * 4.5
-    // Low on the glass, just above its foot: the work on the desk in front of them.
-    const hyw = 0.84
+    // On the line it is writing, along it as the head goes.
+    const PAGE = 150
+    const done = (t % PAGE) / PAGE
+    const row = Math.min(6, Math.floor(done * 7))
+    const hx = 0.4 + 0.45 * (done * 7 - row) + p.scan * 0.6
+    const hyw = 0.72 + 0.045 + row * 0.05
     g.globalAlpha = write
     const arm = g.createLinearGradient(0.7, 0.55, hx, hyw)
     arm.addColorStop(0, rgba(KNIT, 0.6))
@@ -389,5 +440,24 @@ export function reflection(ctx: Ctx, t: number): void {
   ctx.beginPath()
   ctx.ellipse(lx, ly + 0.02, 0.05, 0.022, 0, 0, Math.PI * 2)
   ctx.fill()
+  // Its light going down onto their page, and the desk's edge lit along the foot of the glass.
+  const pg = ctx.createLinearGradient(lx, ly, cx + 0.35, cy + 0.9)
+  pg.addColorStop(0, rgba(warm, 0.12))
+  pg.addColorStop(1, rgba(warm, 0.02))
+  ctx.fillStyle = pg
+  ctx.beginPath()
+  ctx.moveTo(lx - 0.06, ly + 0.03)
+  ctx.lineTo(lx + 0.06, ly + 0.03)
+  ctx.lineTo(cx + 0.95, cy + 0.85)
+  ctx.lineTo(cx - 0.2, cy + 0.85)
+  ctx.closePath()
+  ctx.fill()
+  const ey = cy + 1.16
+  const edge = ctx.createLinearGradient(0, ey - 0.03, 0, ey + 0.03)
+  edge.addColorStop(0, rgba(warm, 0))
+  edge.addColorStop(0.5, rgba(warm, 0.22))
+  edge.addColorStop(1, rgba(warm, 0))
+  ctx.fillStyle = edge
+  ctx.fillRect(cx - 1.25, ey - 0.03, 2.5, 0.06)
   ctx.restore()
 }
