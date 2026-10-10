@@ -6,7 +6,6 @@ import { LAKE } from '../worlds'
 import {
   BENCH,
   BROW,
-  DRAWING,
   HORIZON,
   LAMP,
   MULLIONS,
@@ -431,53 +430,6 @@ function rain(p: p5, k: number, t: number, L: Light): void {
 
 /* ------------------------------------------------------------------ the room */
 
-/** The low sun's colour where it lies on the boards. */
-const SUNLIT = mixHex(LAKE.dawn, '#F2D29A', 0.8)
-
-/**
- * The sun come in: once it is through the fog (the dawn's light on the water), the low sun lays the window's panes
- * on the floor, warm, reaching toward us from under the glass and widening away from the sun, the mullions' shadows
- * between them. Soft at every edge, and fading as they come.
- */
-function sunIn(ctx: C2D, k: number, f: Frame, L: Light, pane: number): void {
-  if (L.kind !== 'dawn') return
-  const u = Math.max(0, Math.min(1, (L.path - 0.2) / 0.5))
-  const s = u * u * (3 - 2 * u) * (1 - 0.6 * L.glare)
-  if (s <= 0.004) return
-  const sx = viewX(f, 0.5, SUN[0])
-  const y0 = ROOM.wall
-  const depth = 1.7
-  const spread = 0.28
-  const m = ctx.getTransform()
-  const px = Math.hypot(m.a, m.b)
-  const off = 30000
-  const inv = m.inverse()
-  ctx.save()
-  ctx.shadowColor = rgba(SUNLIT, 0.3 * s)
-  ctx.shadowBlur = 0.09 * k * px
-  ctx.shadowOffsetX = off
-  ctx.shadowOffsetY = 0
-  const g = ctx.createLinearGradient(0, y0 * k, 0, (y0 + depth) * k)
-  g.addColorStop(0, 'rgba(0, 0, 0, 1)')
-  g.addColorStop(0.3, 'rgba(0, 0, 0, 0.6)')
-  g.addColorStop(1, 'rgba(0, 0, 0, 0)')
-  ctx.fillStyle = g
-  ctx.translate(-inv.a * off, -inv.b * off)
-  ctx.beginPath()
-  for (let i = 0; i < 4; i++) {
-    const a = WIN.x0 + pane * i + 0.06
-    const b = WIN.x0 + pane * (i + 1) - 0.06
-    const far = (x: number) => x + (x - sx) * spread
-    ctx.moveTo(a * k, y0 * k)
-    ctx.lineTo(b * k, y0 * k)
-    ctx.lineTo(far(b) * k, (y0 + depth) * k)
-    ctx.lineTo(far(a) * k, (y0 + depth) * k)
-    ctx.closePath()
-  }
-  ctx.fill()
-  ctx.restore()
-}
-
 /** The room's colours by how dim it is. */
 const shade = (hex: string, dim: number) => mixHex(hex, LAKE.night, dim)
 
@@ -532,7 +484,6 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
   p.line(X(fx0), X(ROOM.ceiling), X(fx1), X(ROOM.ceiling))
   p.noStroke()
 
-  drawing(p, c, dim)
 
   // The floor: pale oak going away from us, dimmer near.
   const floor = shade(LAKE.floor, dim * 0.9)
@@ -556,7 +507,6 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
     soft(ctx, k, (a + b) / 2, ROOM.wall + 0.08, pane * 0.5, 0.5, refl, 0.16 * lit)
   }
   if (L.path > 0.02) soft(ctx, k, viewX(f, 0.5, SUN[0]), ROOM.wall + 0.45, 0.32, 0.85, LAKE.fog, 0.3 * L.path + 0.1 * L.glare)
-  sunIn(ctx, k, f, L, pane)
 
   // The window's frame: head, sill, jambs and the slim mullions.
   const mull = shade(LAKE.mullion, dim * 0.3)
@@ -577,89 +527,6 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
   lamp(p, c, dim, L)
   bench(p, c, dim)
   shadows(ctx, k, balls, dim)
-}
-
-/**
- * Hannah's drawing, taped low on the wall over her corner: the two of them by the lake, under a sun. A child's hand: a
- * wobbly round for her mother and a small one for herself, joined by their hands, on the line of the water. In
- * pencil and one crayon, the sun's: nothing in the picture but Louise is her colour, not even a drawing of her.
- */
-function drawing(p: p5, c: Ctx, dim: number): void {
-  const { k, weight } = c
-  const ctx = p.drawingContext as C2D
-  const { x, y, w, h, tilt } = DRAWING
-  const paper = shade('#F3F0E6', dim * 0.8)
-  const pencil = shade('#5C5F63', dim * 0.4)
-  ctx.save()
-  ctx.translate(x * k, y * k)
-  ctx.rotate(tilt)
-  // Its shadow on the wall, the window's light being to its right.
-  ctx.fillStyle = rgba(LAKE.night, 0.12 + 0.06 * dim)
-  ctx.fillRect((-w / 2 - 0.012) * k, (-h / 2 + 0.018) * k, w * k, h * k)
-  p.push()
-  p.rectMode(p.CORNER)
-  // Paper, not a frame: a fine pencil-grey edge, no ink line round it.
-  solid(p, mixHex(paper, pencil, 0.35), Math.max(0.6, weight * 0.25), paper)
-  p.rect(-w * 0.5 * k, -h * 0.5 * k, w * k, h * k)
-  // The tape at its two top corners.
-  p.noStroke()
-  p.fill(shade('#E6DFC8', dim * 0.75))
-  for (const s of [-1, 1]) {
-    p.push()
-    p.translate(s * w * 0.44 * k, -h * 0.5 * k)
-    p.rotate(s * 0.5)
-    p.rect(-0.04 * k, -0.014 * k, 0.08 * k, 0.028 * k)
-    p.pop()
-  }
-  // The sun, in crayon: a yellow round and its rays, up in the corner.
-  const sun = shade('#E8C65A', dim * 0.6)
-  p.stroke(sun)
-  p.strokeWeight(Math.max(1, 0.012 * k))
-  const sx = w * 0.3
-  const sy = -h * 0.24
-  for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2 + 0.3
-    p.line((sx + Math.cos(a) * 0.045) * k, (sy + Math.sin(a) * 0.045) * k, (sx + Math.cos(a) * 0.07) * k, (sy + Math.sin(a) * 0.07) * k)
-  }
-  p.noStroke()
-  p.fill(sun)
-  p.circle(sx * k, sy * k, 0.064 * k)
-  // In pencil: the water's line, the two of them on it, and their joined hands.
-  p.noFill()
-  p.stroke(pencil)
-  p.strokeWeight(Math.max(0.8, 0.007 * k))
-  const ground = h * 0.3
-  p.beginShape()
-  for (let i = 0; i <= 8; i++) {
-    const u = i / 8
-    p.vertex((-w * 0.42 + u * w * 0.84) * k, (ground + 0.008 * Math.sin(u * 13)) * k)
-  }
-  p.endShape()
-  const big = 0.06
-  const small = 0.035
-  // Apart, so the line of their joined hands is there to see between them.
-  const bx = -w * 0.2
-  const hx = w * 0.11
-  // A child's round: a little wobble, and not quite closed.
-  const round = (cx: number, cy: number, r: number, seed: number) => {
-    p.beginShape()
-    for (let i = 0; i <= 14; i++) {
-      const a = (i / 14) * Math.PI * 2.08 + seed
-      const rr = r * (1 + 0.08 * Math.sin(a * 3 + seed * 5))
-      p.vertex((cx + Math.cos(a) * rr) * k, (cy + Math.sin(a) * rr) * k)
-    }
-    p.endShape()
-  }
-  round(bx, ground - big, big, 0.4)
-  round(hx, ground - small, small, 2.1)
-  p.line((bx + big * 0.95) * k, (ground - big * 0.9) * k, (hx - small * 0.95) * k, (ground - small * 1.1) * k)
-  // An eye each, a pencil dot, as every one of them has: the two of them looking at each other.
-  p.noStroke()
-  p.fill(pencil)
-  p.circle((bx + big * 0.4) * k, (ground - big * 1.15) * k, Math.max(1.2, 0.012 * k))
-  p.circle((hx - small * 0.35) * k, (ground - small * 1.2) * k, Math.max(1, 0.009 * k))
-  p.pop()
-  ctx.restore()
 }
 
 /** The floor lamp by the window's left end: a slim stem, a heavy foot, a linen drum. Never lit. */

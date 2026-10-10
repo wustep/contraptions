@@ -340,10 +340,6 @@ function drawTrailer(d: Painter, t: number, begin: number): void {
     const ly = PU_TOP + 0.16 + j * 0.1 - lift
     p.line(X(PU_X0 + 0.14), X(ly), X(PU_X0 + 0.5), X(ly))
   }
-  // Its run lamp, the generator's kind: dark until she is on the deck and the engine catches under her, then lit.
-  p.noStroke()
-  p.fill(run ? VALLEY.lamp : mixHex(VALLEY.steelDark, d.ink, 0.4))
-  p.rect(X(PU_X0 + 0.58), X(PU_TOP + 0.15 - lift), X(0.1), X(0.1))
   // The hydraulic tank on its end, and the hose from the pump down into the well.
   quad(d, [[PU_X1 - 0.3, PU_TOP + 0.1 - lift], [PU_X1 - 0.08, PU_TOP + 0.1 - lift], [PU_X1 - 0.08, CH_TOP - 0.05 - lift], [PU_X1 - 0.3, CH_TOP - 0.05 - lift]], VALLEY.steelDark, d.w * 0.7)
   p.noFill()

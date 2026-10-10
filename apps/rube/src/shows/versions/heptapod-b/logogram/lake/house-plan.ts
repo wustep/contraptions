@@ -43,9 +43,6 @@ export const SUN: Pt = [1.55, -1.02]
 /** The camera the view is drawn for (the show's first frame): far things move less than it (`house-draw.ts`). */
 export const VIEW_CAM = { x: SEAT[0] + 1.3, y: SEAT[1] - 1.0, cells: 4.8 }
 
-/** Her drawing, taped low on the wall over her corner, at her height: its middle, its size, and its tilt. */
-export const DRAWING = { x: -2.82, y: -0.72, w: 0.46, h: 0.34, tilt: -0.06 }
-
 /** Hannah's corner of the floor, across the room: where she is at the first frame (and at the end's). */
 export const HANNAH_HOME = -2.36
 const FLOOR_Y = ROOM.floor - HR

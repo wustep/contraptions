@@ -100,7 +100,7 @@ Times are show seconds; pulse *k* is `pulse(k)`, and a strength in brackets is h
 | 163.126 | the hardest pulse after 8.911 (1.48) | the lake house | The window at dusk, the rain running on the panes, a drop landing on each hard pulse with a glint; Louise alone on the bench. |
 | 166.243 | the push | the fog | **She writes.** Flung up out of the crescent, she comes to the top of her rise where the great ring begins under her (168.136), and the frame goes back to the whole of it, both pens in it, by 170.3. It turns; she is its pen at its bottom, and Costello's front limb the pen at its top; each writes half. She works it like a ball in a turning drum: the ink carries her up the rising wall to a hang, and the first hard pulse of each group flicks her off (170.051, 173.383, and the biggest ride, from 30° up the wall, on 179.368), so she swings back down through the rest, a blot pressed where she is on every one of the push's 21 hard pulses. **The halves meet on 183.182 (1.26)** with her still at the bottom, and the frame holds the whole of it to the cut while the tendrils fling out and the ring's turn slows to rest. |
 | 185.330 | the pulse thins | the valley | The meadow after, wide, Ian waiting by the trucks. The shell rises into the cloud and goes; the cloud opens, the light comes down, the fog lifts. From the cut back in (192.238) one push in on her where the first frame has her; Ian comes to her across the meadow, and they touch (195.344) and stay together. |
-| 196.783 | the last clear pulse | the lake house | The first frame again. The held tones die. On the last flutter Hannah sets off (208.631), skips, dashes, springs and lands in the prologue's rhythm, and touches her on **212.312 (3.7)**. On the touch the sun catches the water, as it did on the first pulse, and comes on through the fog, laying the window's panes warm on the floor; as the held tones die the camera draws back, slowly, to the whole window by 219.3, the two of them small in it, for the credits in the silence over the wall above it. |
+| 196.783 | the last clear pulse | the lake house | The first frame again. The held tones die. On the last flutter Hannah sets off (208.631), skips, dashes, springs and lands in the prologue's rhythm, and touches her on **212.312 (3.7)**. On the touch the sun catches the water, as it did on the first pulse, and comes on through the fog; as the held tones die the camera draws back, slowly, to the whole window by 219.3, the two of them small in it, for the credits in the silence over the wall above it. |
 
 ## The company
 
@@ -240,10 +240,6 @@ eye looks at every still moment. Sweeps at 120 fps for eyes that snap, balls tha
 room's floor and bench (now held by `check:shows`). Render cost, the full build, and regression gates between. What
 changed, in the order of the film, and then what runs through it:
 
-- **Hannah's drawing** (0, 196.8 → 251): low on the wall over her corner, at her height, a child's drawing is taped:
-  the two of them by the water under a crayon sun, in pencil, holding hands, each with a dot for an eye, looking at
-  each other (nothing but Louise is her colour, not even a drawing of her). It is paper, edged in pencil-grey, not
-  framed in ink. It is in the first frame and the last, and in the visions at the window.
 - **Hannah's spring onto the bench** (3.7, 211.9): a sweep for balls sinking into the room's floor and bench found
   her passing through the slab's corner as she came up onto it, in the prologue and on the coda's strongest note:
   gravity's arc alone, in so short a hop, was still rising as she landed. Her spring rises over the end now and comes
@@ -251,10 +247,6 @@ changed, in the order of the film, and then what runs through it:
 - **The far camp** (24 → 62, 194): the tents and trucks up the valley were hazed as if far off but stand in front of
   the near hills, so they were paler than the land behind them, pale boxes floating on the hill. They are hazed a
   little less than that hill now, and their roofs catch only a hint of the sky: a camp in the fog.
-- **The lift's start** (43.758): she comes to rest on the deck and the engine catches under her, but nothing showed
-  her arrival as the cause, and the camp machine seemed to end before the lift began. The power unit now has the
-  generator's run lamp, dark until that pulse and lit on it: the same signal the machine's first engine gave at
-  28.021.
 - **Out of the fog** (54.509, among the cue's strongest pulses): the fog the deck drags up was meant to tear off it on
   the pulse, but it was fog colour on a sky as pale as it, gone in a tenth of a second: the deck only cleared. Torn
   off, it now has a shadowed underside against the sky, and spreads off the deck and thins over half a second.
@@ -473,10 +465,6 @@ changed, in the order of the film, and then what runs through it:
   mist in its shape thickens as it melts and thins after it, so it greys into the cloud.
 - **Ian out of shot** (121 → 127): backing off from the palm he stopped on the frame's left edge, half cut, slipping in
   and out as the camera drifted. He backs off out of shot now, and walks back in once the ring has closed.
-- **The sun in the room** (from 212.3): on the end's touch the sun came through onto the water, but the room stayed
-  the same flat grey to the credits. Once it is through, the low sun lays the window's panes on the floor now, warm and
-  soft-edged, widening toward us, the mullions' shadows between; they go dim with the room under the credits. The
-  prologue's catch of the light has them too.
 - **The first ring, whole** (137.75 → 139.476): following her through its bottom, the frame let the ring drift up out
   of its top, so the last sight of the first ring she rode, before the cut into summer, had no top. The following
   framing is wider now, her place on the screen the same for the match cut.
@@ -500,6 +488,12 @@ changed, in the order of the film, and then what runs through it:
   A second first-time viewer still saw arcs in three or four places at once: a ring she left drew back only once it
   had closed, and it closes behind her during her flight, while the next is written. It draws back as she leaves it
   now, so in each flight the one black arc is the ring being written for her.
+- **Less** (a subtraction pass, every addition above weighed again): three things that only decorated came out. The
+  child's drawing taped on the wall was a postcard in a bare room, the first thing the eye went to in the end's frames
+  and in every vision at the window, saying what Hannah herself already shows. The window's panes laid warm on the
+  floor after the end's touch were a second sun in the room; the water's light and its path in the boards carry it.
+  The lift's run lamp was a few pixels on the power unit no one could find; the engine's rock and its smoke start the
+  lift. The wall is quiet plaster again, and nothing else moved.
 
 ## Arrival nods
 
