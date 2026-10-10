@@ -231,7 +231,16 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 123 (latest)
+## Polish pass 124 (latest)
+
+No change to the show: pass 123's frame-against-frame scan in Zoom, at 30 frames a second (9,000 frames). Zoom frames the show more closely and slides to keep a focus in shot, so it could pop where the show's own frame does not. Only three things jump:
+- 84.5 to 84.7 s: the launch's shudder as the engines light, a pixel's shake on a tenth-second rhythm;
+- 120.73 s: the ghost's glow pulsing at the watch in the tesseract;
+- 207.47 s: the cut.
+
+All three are meant.
+
+## Polish pass 123
 
 No change to the show: the whole show at 60 frames a second, every frame against the next (18,000 of them, 320×180, the share of pixels changing by more than 40 of 255). It looked for frames that change more than three times as much as the frames either side of them. Each one it found is meant:
 - the bedroom, 6 to 11 s: books falling on the shelf;
