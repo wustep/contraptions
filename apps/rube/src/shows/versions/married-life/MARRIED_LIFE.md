@@ -656,6 +656,11 @@ window.
     and at the sheet's scale; its one note, that standing still on the slope's lean he looked stopped mid-tumble, taken
     (struck, he straightens up). The run's on-screen check moved past his stillness (175.75 to
     176.4 s); a check holds her on the stone at least half a second before him.
+  - *After the hill's restaging*, under Zoom and on a phone upright: he stands struck still high in the frame while she
+    goes down to the stone, then runs down to her, both whole in the frame throughout. The story critic's other
+    notes, looked at again: the flat tyre is staged (the camera pushes in to the window, the tyre goes with a puff,
+    the car sits tilted while the jar is spent and is level after); a sheet a frame every 1.4 s steps over the
+    puff, viewing speed does not.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
