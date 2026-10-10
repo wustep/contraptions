@@ -191,7 +191,7 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 | 251.5 | 228 | Edmunds' planet | Touchdown on the cue's loudest bar. |
 | 252.5 | 229 to 232 | Brand's camp | The canopy swings open, the ramp slams down (230), and **Brand**, the blue ball, sets off from the cairn she built for Edmunds, across her camp toward him. The seat kicks him out over the nose (230½), he lands on the ramp (231½), rolls down it and stops at the foot of the lamp, and on the last hit (232) the lamp lights. |
 | 255.5 to 262.7 | the stop | Cooper meets Amelia | The music stops dead. He rolls off the lamp's plate toward her, and **they meet under the lamp** on the next beat (256.49 s), easing into each other; the lamp swells once. They rest together while the camera draws back over the camp: the dome with its porthole lit, the flag, the cairn, her helmet set down on a rock. The sun's edge comes up behind the cairn. |
-| 261.4 to 291 | silence | the credits | Over the two of them at the camp at dawn, while the camera goes on drawing back, the sun clears the horizon and the dawn wind lifts wisps of sand along the plain (see below). |
+| 261.4 to 291 | silence | the credits | Over the two of them at the camp at dawn, while the camera goes on drawing back, the sun clears the horizon. |
 
 Eight Act II beats are unstruck, on purpose:
 - **113:** the camera swoops back in from the whole ring to the house, and the move is the event. A mechanism small enough to fit the kitchen would not read at that distance.
@@ -231,7 +231,18 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 148 (latest)
+## Polish pass 149 (latest)
+
+A subtraction pass: everything this branch added to the picture was looked at again for whether it earns its place. Three things were cut, all decoration that drew the eye without telling the story:
+- **The dawn wind** (`drawDrift` in `act2/edmunds.ts`, pass 11). The wisps of sand under the credits were faint gold smears at best, an animation for its own sake. The credits' stillness is the point: the flag, the sun coming up and the slow draw-back are enough.
+- **Saturn's weather streaks** (`drawSaturn` in `act2/undock.ts`, pass 16). Fifty-four barely-there strokes no viewer could find at 1x. The bands, the softened night side and the haze that fades round the limb stay.
+- **The kitchen's shelf of jars and plates, its hanging lamp, and the bowl and runner on the table** (`drawKitchen` in `earth/house.ts`, pass 15). In the opening they crowded the bottom of a frame that belongs to the ball and Murph's room, and the lamp's cone hung alone at the frame's edge. The table, the two stools and the tall clock stay. The clock pays off in the museum, and the table and stools still say "kitchen" there.
+
+Kept, and why: the station's clouds (they give the open air and the flight across the axis a scale), the fall's gold threads (without them the fall read as an empty frame), the near pebbles at the camp (the foreground was bare), the lensed arcs (a restyle of what was there, not an addition), and every fix to framing, the music and the shared player.
+
+Audited after the cuts: 32 stills across the show, the opening, the museum, Saturn and the camp at 16:9 and in an upright 9:16 frame. Nothing was left bare and nothing broke. `npm run build` passes, every check included. No strike, cue or camera key moved, and the music is untouched.
+
+## Polish pass 148
 
 No change to the show: a held sound at the show's end, where pass 147's paused-and-held case would most likely arise. Under the refusing policy, a link left held from 288 s plays to its end and starts again from 0. A show link is a named visit, and `advance()` plays a pool of one again. On the reopen, the muted try ran out of patience while the fresh YouTube players were still loading, so `playLinked` fell back to its last resort, as written: the picture runs on the wall clock with the Sound button up, and the music joins at the next gesture. A tap there was refused (the policy), held again, and from then the music ran muted in step under the picture. So the end never leaves a held show paused, and the case pass 147 noted does not arise on a link. Nothing here is new to this branch.
 

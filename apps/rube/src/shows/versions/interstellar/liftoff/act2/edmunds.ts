@@ -618,13 +618,11 @@ function drawAll(p: p5, s: EdmundsState, c: Ctx): void {
   }
   drawShield(p, c, T)
   drawChute(p, c, T)
-  drawDrift(p, c, v, T, false)
   drawCamp(p, c, v, T)
   drawDust(p, c, T, 0)
   drawRanger(p, c, T)
   drawRamp(p, c, T)
   drawDust(p, c, T, 1)
-  drawDrift(p, c, v, T, true)
   drawMouthGlass(p, c, T)
   drawBallShadow(p, s, c, T)
   ctx.restore()
@@ -1723,50 +1721,6 @@ function drawDust(p: p5, c: Ctx, T: number, layer: number): void {
     if (lift < 0) continue
     p.fill(alpha(p, i % 3 ? DARK.gold : VOID.ink, power * smooth(age, 0, 0.06) * (1 - age / 1.4) * 0.6))
     p.ellipse(x * k, (G - 0.025 - lift) * k, (0.012 + 0.016 * hash(i, 94)) * k, 0.009 * k)
-  }
-}
-
-/**
- * The dawn wind along the plain, once the music has stopped: thin wisps of sand lifted low off the ground, drifting
- * the way the flag blows, lit by the sunrise. The far ones pass behind the camp; the near ones run along the ground in
- * front of it, below the two of them, never across them. Each comes and goes over its own run, so none pops in or out.
- */
-const DRIFT_FROM = MIX_END - 1.5
-function drawDrift(p: p5, c: Ctx, v: View, T: number, near: boolean): void {
-  const on = smooth(T, DRIFT_FROM, MIX_END + 3)
-  if (on <= 0.002) return
-  const { k } = c
-  const X = (x: number) => x * k
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const lit = mixHex(DARK.gold, VOID.ink, 0.45)
-  const SPAN = 24
-  const mid = END_HOLD[0]
-  const n = near ? 7 : 8
-  for (let i = 0; i < n; i++) {
-    const seed = near ? 200 + i : 100 + i
-    // Depth: nearer than the site (below the two of them) for the near ones, farther (behind the camp) for the rest.
-    const s = near ? 1.14 + 0.36 * hash(seed, 1) : 0.62 + 0.34 * hash(seed, 1)
-    const speed = (0.35 + 0.4 * hash(seed, 2)) * s
-    const run = (hash(seed, 3) * SPAN + speed * (T - DRIFT_FROM)) / SPAN
-    const u = run - Math.floor(run)
-    const gx = mid - SPAN / 2 + u * SPAN
-    // Coming and going over its run: nothing at either end of the wrap.
-    const life = Math.sin(Math.PI * u) ** 1.5
-    const a = on * life * (near ? 0.26 : 0.3) * (0.6 + 0.4 * hash(seed, 4))
-    if (a < 0.004) continue
-    const len = (0.9 + 1.4 * hash(seed, 5)) * s
-    const th = (0.025 + 0.03 * hash(seed, 6)) * s
-    const lift = (0.03 + 0.1 * hash(seed, 7)) * s + 0.02 * Math.sin(T * 0.9 + i * 2.1) * s
-    const x = groundX(v, gx, s)
-    const y = groundY(v, s) - lift
-    const g = ctx.createLinearGradient(X(x - len / 2), 0, X(x + len / 2), 0)
-    g.addColorStop(0, alpha(p, lit, 0).toString())
-    g.addColorStop(0.55, alpha(p, lit, a).toString())
-    g.addColorStop(1, alpha(p, lit, 0).toString())
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.ellipse(X(x), X(y), X(len / 2), Math.max(0.6, X(th)), 0, 0, Math.PI * 2)
-    ctx.fill()
   }
 }
 

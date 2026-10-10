@@ -36,10 +36,10 @@ const DOOR_TOP = -1.02
 /* ------------------------------------------------------------------ the kitchen */
 
 /**
- * The kitchen under Murph's room, left of the stairwell, where no ball goes: a table and two stools under a hanging
- * lamp, and the tall clock that the station's museum will rebuild as a machine (`act2/replica.ts`), standing where it
- * will stand there and keeping time: its pendulum swings a second a beat, its hands at dawn. The bob is a lens, not a
- * disc, so nothing round in here can be taken for a ball.
+ * The kitchen under Murph's room, left of the stairwell, where no ball goes: a table and two stools, and the tall
+ * clock that the station's museum will rebuild as a machine (`act2/replica.ts`), standing where it will stand there
+ * and keeping time: its pendulum swings a second a beat, its hands at dawn. The bob is a lens, not a disc, so nothing
+ * round in here can be taken for a ball.
  */
 const CK_L = 3.07
 const CK_R = 3.97
@@ -55,39 +55,11 @@ function drawKitchen(p: p5, c: Ctx): void {
   const { k, ink, weight: w } = c
   const X = (v: number) => v * k
   const R4 = (x0: number, y0: number, x1: number, y1: number) => p.rect(X((x0 + x1) / 2), X((y0 + y1) / 2), X(x1 - x0), X(y1 - y0))
-  const ceil = UP + 0.16
-  // A shelf on the wall by the back door, high: jars of what the farm put up, a tin, plates stood on edge.
-  const sy = -1.2
-  solid(p, ink, w, DUST.wood)
-  R4(-0.8, sy, 0.42, sy + 0.05)
-  outline(p, ink, w * 0.6)
-  for (const x of [-0.65, 0.3]) p.line(X(x), X(sy + 0.05), X(x - 0.08), X(sy + 0.2))
-  const jars: [number, number, number, string][] = [[-0.66, 0.13, 0.2, DUST.corn], [-0.47, 0.11, 0.15, DUST.rust], [-0.31, 0.13, 0.22, DUST.sage], [0.2, 0.16, 0.18, DUST.tin]]
-  for (const [x, jw, jh, fill] of jars) {
-    solid(p, ink, w * 0.7, mixHex(fill, DUST.bone, 0.2))
-    R4(x, sy - jh, x + jw, sy)
-    solid(p, ink, w * 0.5, DUST.tin)
-    R4(x - 0.01, sy - jh - 0.035, x + jw + 0.01, sy - jh)
-  }
-  solid(p, ink, w * 0.6, DUST.bone)
-  for (const x of [-0.14, -0.04, 0.06]) R4(x, sy - 0.28, x + 0.05, sy)
-
-  // The lamp over the table, on its flex: a tin cone, its mouth down.
-  const lx = (TABLE_X0 + TABLE_X1) / 2
-  outline(p, ink, w * 0.5)
-  p.line(X(lx), X(ceil), X(lx), X(-1.12))
-  solid(p, ink, w * 0.8, DUST.tin)
-  p.quad(X(lx - 0.06), X(-1.14), X(lx + 0.06), X(-1.14), X(lx + 0.2), X(-0.98), X(lx - 0.2), X(-0.98))
-  // The table: a top, an apron, four legs (two seen), and a cloth runner.
+  // The table: a top, an apron, four legs (two seen).
   solid(p, ink, w, DUST.wood)
   R4(TABLE_X0, TABLE_TOP, TABLE_X1, TABLE_TOP + 0.06)
   R4(TABLE_X0 + 0.06, TABLE_TOP + 0.06, TABLE_X1 - 0.06, TABLE_TOP + 0.13)
   for (const x of [TABLE_X0 + 0.1, TABLE_X1 - 0.16]) R4(x, TABLE_TOP + 0.13, x + 0.06, DOWN)
-  solid(p, ink, w * 0.6, mixHex(DUST.bone, DUST.teal, 0.25))
-  R4(lx - 0.35, TABLE_TOP - 0.012, lx + 0.35, TABLE_TOP + 0.03)
-  // A low bowl on the cloth (low, so it stays under the opening frame's edge).
-  solid(p, ink, w * 0.7, DUST.denim)
-  p.quad(X(lx - 0.13), X(TABLE_TOP - 0.07), X(lx + 0.13), X(TABLE_TOP - 0.07), X(lx + 0.08), X(TABLE_TOP - 0.01), X(lx - 0.08), X(TABLE_TOP - 0.01))
   // Two stools, one each end: low, so that nothing stands up out of the table's line into the bottom of the opening's
   // frame (chair backs there were cut off by its edge into two bare posts).
   for (const x of [TABLE_X0 - 0.22, TABLE_X1 + 0.22]) {
