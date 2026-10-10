@@ -1159,7 +1159,16 @@ painterly look (taken, the sixty-ninth pass). The other two would change the pie
      sit in the picture's colour rather than on it, drawn rather than inked. The ball keeps the stage's own line, a
      shade firmer than the room's, which suits the one thing the eye should find.
 
-**Subtracted:** the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
+### The seventieth pass: the sill walk held
+
+186. **Between tracks the camera stepped after the ball** along the sill every three seconds, a small move each time,
+     about a fifth of the half hour. It holds the window over the desk now, the whole sill in it, and the ball walks
+     across a still picture. The camera has seventy-three aims in the half hour where it had a hundred and seventy-six,
+     every one a held frame; Zoom still keeps the ball. A shooting star that the new timing put two seconds after a lob
+     keeps clear of the machine's moments now. (The description of the sill walk under "The camera", above, is of the
+     old following frame.)
+
+**Subtracted:** the camera following the ball along the sill (a held frame now); the cup, close, from the camera's rotation; the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);

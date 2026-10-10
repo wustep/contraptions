@@ -1,7 +1,7 @@
 import type { Framing } from '../../../registry'
-import { PROPS, SILL } from './desk'
+import { PROPS } from './desk'
 import { TRACKS, barTime } from './music'
-import { LAPS, ballAt } from './route'
+import { LAPS } from './route'
 
 /**
  * The camera: a slow operator who is always a little behind what they decide to look at.
@@ -85,11 +85,9 @@ function plan(): void {
     // lob left it) it comes down onto the sill over a few bars.
     const prev = LAPS[lap.track - 1]
     const walkFrom = prev?.bounce ?? 6
-    for (let s = walkFrom + 3; s < lap.tip - 1.5 * bar; s += 3) {
-      // Where it stops following, at the sill's end, is a frame it holds until the stair.
-      const x = Math.min(SILL.x1 - 0.65, ballAt(s + 2).x + 0.5)
-      at(s, { x, y: -1.58, cells: 3.7 }, x === SILL.x1 - 0.65)
-    }
+    // The window over the desk, held: the whole sill in it, the ball walking across a still picture (it once stepped
+    // after the ball every three seconds, a fifth of the half hour of small moves).
+    if (walkFrom + 3 < lap.tip - 1.5 * bar) at(walkFrom + 3, GROOVE[2])
     // A bar and a half before the drop: back to take in the stair.
     at(lap.tip - 1.5 * bar, STAIR)
     // Once it is in the cup, the track's first look; then a new one each phrase.

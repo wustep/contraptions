@@ -256,7 +256,7 @@ const SHOOTS: number[] = (() => {
   }
   for (let at = 1300; at < 1786 && out.length < 3; at += 1) {
     if (out.length && at < out[out.length - 1] + 120) continue
-    if (nightAt(at) < 0.6 || cloudAt(at) > 0.35) continue
+    if (nightAt(at) < 0.6 || cloudAt(at) > 0.35 || machineBusy(at - 2, at + 4)) continue
     if (!catInViewAt(at) || !catInViewAt(at + 3) || !seen(at)) continue
     out.push(at)
   }
