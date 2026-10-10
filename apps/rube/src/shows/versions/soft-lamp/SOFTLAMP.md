@@ -1123,6 +1123,12 @@ Not taken: the cat's half-lidded eyes (a taste), the mug away for its refill.
      cup in a yoke, a fork round its middle, and the cream band, padded underneath, from yoke to yoke. The cream takes
      the lamp, so the far cup is no longer a dark hole in the pool of light. The drawer line and the badge are gone.
 
+181. **The reflection left the glass in the desk's look.** It moved with the camera nearly all the way, so with the
+     camera on the desk under the lamp it had slid off the right of the pane, and a reviewer saw it vanish with the
+     same pane in view. It still moves with the camera, but eased into the right-hand pane at either side, so the desk's
+     look shows them too; and where the frame's own edge would cut through them (the lamp's side), they are not shown,
+     rather than a face peering in at the edge. Their stretch now comes seven seconds after the kitten's (26:31).
+
 **Subtracted:** the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's

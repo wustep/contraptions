@@ -1,5 +1,5 @@
-import { rgba } from './canvas'
-import { GLASS } from './desk'
+import { rgba, viewOf } from './canvas'
+import { GLASS, WINDOW } from './desk'
 import { REACHES, handAt, mugAt } from './hands'
 import { lensIn } from './lens'
 import { camera } from './camera'
@@ -41,7 +41,16 @@ const BOX = { x0: -1.25, y0: -1.0, x1: 1.25, y1: 1.15 }
 export const reflectionSeen = (t: number): number => lampAt(t) * (1 - skyAt(t).dusk) ** 2 * smooth(t, 30, 90)
 
 /** Where the reflection is, across, with the camera at `x`. */
-const centreAt = (x: number): number => AT.x + FOLLOW * (x - HOME_X)
+const centreAt = (x: number): number => {
+  // It moves with the camera, but eased into the right-hand pane at either side: whoever sits at the desk is in front
+  // of that pane wherever the camera is in the room, so the desk's looks show them too, not only the window's.
+  const raw = AT.x + FOLLOW * (x - HOME_X)
+  const lo = WINDOW.mullion + 0.55
+  const hi = GLASS.x1 - 0.5
+  const mid = (lo + hi) / 2
+  const half = (hi - lo) / 2
+  return mid + half * Math.tanh((raw - mid) / half)
+}
 
 /** How long their stretch takes: arms up over the head, a yawn, and down. */
 const REACH_UP = 5.5
@@ -115,7 +124,10 @@ export function reflection(ctx: Ctx, t: number): void {
   const cx = centreAt(lens.x)
   const cy = AT.y
   // Mostly inside the glass, or not at all: no figure lurking at its edge.
-  const inside = smooth(Math.min(cx - 0.45 - GLASS.x0, GLASS.x1 - (cx + 0.45)), -0.6, 0.1)
+  // Nor half cut by the frame's edge, a face peering in: wholly in the picture, or not shown.
+  const v = viewOf(ctx)
+  const framed = smooth(Math.min(cx - 0.55 - v.x0, v.x1 - (cx + 0.55)), -0.15, 0.1)
+  const inside = smooth(Math.min(cx - 0.45 - GLASS.x0, GLASS.x1 - (cx + 0.45)), -0.6, 0.1) * framed
   const a = p.seen * inside
   if (a < 0.02) return
   pad ??= Object.assign(document.createElement('canvas'), { width: Math.ceil((BOX.x1 - BOX.x0) * RES), height: Math.ceil((BOX.y1 - BOX.y0) * RES) })
