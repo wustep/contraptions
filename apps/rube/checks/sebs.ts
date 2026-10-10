@@ -508,6 +508,19 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     }
     check('sebs: the piano drawn in the stars is whole in the picture, at the dip and over the city', cut.length === 0, cut.slice(0, 5).join(', '))
   }
+  // David, her husband: his eyes on her at her table while hers go to the stage. And the swap at her table is seen: the
+  // dream's him there, greyed, in the picture with her looking at it, before David sits down into it.
+  {
+    const ball = (t: number, id: number) => show.at(t).balls?.find((b) => b.id === id)
+    const dv = ball(28, show.david(28)?.id ?? -1)
+    const mi = ball(28, show.mia(28)?.id ?? -1)
+    const davidLooks = !!dv && !!mi && aim(dv.spin, Math.atan2(mi.y - dv.y, mi.x - dv.x)) <= Math.PI / 8
+    const e = show.echoes(455.0).find((x) => (x.turn ?? 0) > 0.6)
+    const her = ball(455.0, show.mia(455.0)?.id ?? -1)
+    const swapSeen = !!e && inShot(455.0, e) && !!her && inShot(455.0, her) && aim(her.spin, Math.atan2(e.y - her.y, e.x - her.x)) <= Math.PI / 6
+    check('sebs: David looks at her at her table, and the swap there is seen: the dream\'s him greyed, and her looking at it', davidLooks && swapSeen,
+      `david looks ${davidLooks}, swap seen ${swapSeen}`)
+  }
   // The grade: the room as it is muted, the dream in full colour all through, and the colour back at the last frame.
   {
     let dreamMuted = 0
