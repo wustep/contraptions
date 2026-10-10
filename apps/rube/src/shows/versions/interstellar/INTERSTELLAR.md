@@ -231,7 +231,16 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 130 (latest)
+## Polish pass 131 (latest)
+
+No change to the show: the online music under a viewer's hands, read through both embedded players as in pass 130.
+- Played from 0, the show holds at 0.00 while Cornfield Chase buffers, then runs with it, the video's position equal to the show's to the hundredth.
+- Seeking. Mid-show to 200 s, the active video is No Time for Caution, at 177.26 (200 − 126.5 + 103.76) within 0.3 s and in step from then on, and Cornfield Chase pauses. Back to 60 s, Cornfield Chase picks up at 60.18 and the other pauses. Into the crossfade at 126.3 s, both are heard at their fade levels (48 and 1) and the second is in step within 0.7 s.
+- Paused, both stop and hold. Resumed, it is back in step within a second (63.48 against 63.53 at 0.3 s, then equal).
+
+The online path behaves for play, seek, pause and resume, at the start, in the middle and across the hand-over.
+
+## Polish pass 130
 
 No change to the show: the online music, played for the first time rather than checked by its numbers. Full Chrome for Testing (pass 129's) plays YouTube embeds headless, which the headless shell cannot. The show was played online (`/shows/`, no `?music=file`), and both embedded players were read every half-second through `YT.get` (video, position, state, volume), against the show's clock. The show's own `report()` is circular here: the clock follows it.
 - Opened online, the music is ready from YouTube with no fallback.
