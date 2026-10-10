@@ -121,7 +121,7 @@ function plan0(begin: number) {
         return still(miaAtTable(t))
       },
     },
-    { from: 0, to: COMPANY_TO, who: 'david', at: () => still(SIDE_SEAT) },
+    { from: 0, to: COMPANY_TO, who: 'david', at: (t) => still(davidAtTable(t)) },
   ]
   return {
     ways: [from, ...played.ways],
@@ -139,8 +139,17 @@ export const MELODY: { t: number; midi: number }[] = [...theme(0.5, FLOURISH).me
 /** Where she sits at her table at the start, rolling back a hair as she lifts her eyes (the company's own place). */
 const miaAtTable = (t: number): Pt => {
   const u = Math.max(0, Math.min(1, (t - TURN[0]) / (TURN[1] - TURN[0])))
-  return [MIA_SEAT[0] - 0.058 * (u * u * (3 - 2 * u)), MIA_SEAT[1]]
+  return [MIA_SEAT[0] + 0.074 * TOGETHER(t) - 0.058 * (u * u * (3 - 2 * u)), MIA_SEAT[1] - 0.04 * TOGETHER(t)]
 }
+/**
+ * Who David is to her: as the camera finds their table they are leaning in together over it, touching, as the two of
+ * them will at this table in the dream; then she draws back, and her eyes go up to the man at the piano.
+ */
+export const TOGETHER = (t: number): number => {
+  const ease = (a: number, b: number) => { const v = Math.max(0, Math.min(1, (t - a) / (b - a))); return v * v * (3 - 2 * v) }
+  return ease(21.9, 22.5) * (1 - ease(23.9, 24.5))
+}
+const davidAtTable = (t: number): Pt => [SIDE_SEAT[0] - 0.074 * TOGETHER(t), SIDE_SEAT[1] - 0.04 * TOGETHER(t)]
 /**
  * At Seb's, now, the theme reaches her where she sits: the notes he plays go out to her table, the first of them a breath before she lifts her eyes to the stage. She knows it.
  */

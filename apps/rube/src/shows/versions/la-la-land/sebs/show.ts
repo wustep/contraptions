@@ -55,6 +55,8 @@ interface Look {
 }
 const touch = (t: number): Look => ({ from: t, to: t + 1.2, ease: [0.7, 0.8], who: 'both' })
 const LOOKS: Look[] = [
+  // Leaning in to David over their table, eye to eye, before her eyes go up to the stage.
+  { from: 22.0, to: 24.0, ease: [0.4, 0.5], who: 'mia', at: 0 },
   // Up to the stage, clearly above David across the table: the man at the piano is only a little higher than him.
   { from: 25.0, to: 31.5, ease: [1.0, 0.9], who: 'mia', at: -0.87 },
   { from: 32.8, to: 35.2, ease: [0.6, 0.7], who: 'seb' },
