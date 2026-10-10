@@ -572,9 +572,9 @@ let sheetAt = Number.NaN
  * ribbon of rays hanging from a slow wave, folding and brightening along its length. `drift` is how far round the
  * camera has come, cells, so the curtains go by a little as it travels. Kept for the moment it was drawn for.
  */
-/** The aurora's sheet for a picture `W` by `F` device pixels: a quarter of its size, and never over 480 across. */
+/** The aurora's sheet for a picture `W` by `F` device pixels: a quarter of its size, and never over 320 across (it is soft). */
 export function auroraSize(W: number, F: number): [number, number] {
-  const w = Math.min(Math.ceil(W / 4), 480)
+  const w = Math.min(Math.ceil(W / 4), 320)
   return [w, Math.ceil((w * F) / W)]
 }
 
