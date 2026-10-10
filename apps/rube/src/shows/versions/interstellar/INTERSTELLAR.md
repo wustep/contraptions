@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 127 (latest)
+## Polish pass 128 (latest)
+
+No change to the show: the live frame rate, measured with the machine quieter. Played in the player at 1280×800, the farm (30 s) and the station (168 s) hold 60 frames a second. The tesseract (122 and 124 s) runs at 23 to 26 and Edmunds at dawn (260 s) at 39. The fill count does not explain it: 122 s makes about 1,100 fills, the station's wide shot 2,500. A CPU profile of the live player does. At 122 and 260 s, 89 to 93% of the time is Chrome's own work ("(program)": rasterising and compositing), and the show's JavaScript is about 1%. These scenes are made of large soft gradients and translucent fills (the tesseract's lamplit rooms and glows, the dawn sky), and this headless browser draws the canvas in software, with no GPU. A browser with GPU canvas acceleration draws gradients cheaply, so this measures the test machine, not a viewer's. Making it cheaper here would mean fewer or smaller glows, a change to the picture, so it is left, noted.
+
+## Polish pass 127
 
 No change to the show: the rest of the fill count. After pass 126 the heaviest normal frames are the station's wide shots (134 to 136 s and 166 to 172 s), about 2,500 fills, three times the median. That is mostly `standOnRim`, the props standing round the ring, and the camera has the whole ring in the frame there, so they are in the frame too. Nothing is drawn there for nothing, so it is left. Overview still makes 6,000 to 17,000 fills a frame because it shows the whole world at once, and every piece of it is on the canvas. Making it lighter would mean drawing less of it, so it is left too. Live frame rates could not be measured fairly this pass: other jobs were loading the machine enough that a 1,100-fill frame ran at 17 fps.
 
