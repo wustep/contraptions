@@ -1,8 +1,8 @@
 # Soft Lamp (Opus 5.5)
 
-`/shows/soft-lamp/opus55/` (also `/shows/soft-lamp/`), in the picker as **Soft Lamp**, **Opus 5.5**, on the
-**Ambient** shelf beside Gymnopédie; and a second take, **Opus 5.5 (Still)** (`/shows/soft-lamp/opus55-still/`), the
-same half hour held in one frame (the seventy-first pass).
+`/shows/soft-lamp/` opens **Soft Lamp**, **Opus 5.5 (Still)** (`/shows/soft-lamp/opus55-still/`), the half hour held in
+one frame, on the **Ambient** shelf beside Gymnopédie. It leads the work (the eighty-ninth pass); the moving camera,
+**Opus 5.5** (`/shows/soft-lamp/opus55/`), is second in the picker.
 
 Half an hour of Lofi Girl's *Best of lofi hip hop 2021*, its first twelve tracks, round a small machine on a study desk
 by a window, from dusk into a rainy night. It is music to study to, and the picture is meant to be left on, in the
@@ -1575,13 +1575,47 @@ still land clear of each other (they had been kept clear of the headlights and w
 moments without them); `check:shows` passes, its checks for the washes removed. The share cards are regenerated. The
 machine, its timing and the song are unchanged.
 
+### The eighty-ninth pass: the director's calls
+
+The open questions put to Stephen were handed back to the director to decide before the merge. Each was weighed
+against the two subtraction passes: does it make the half hour better to leave on, or only more?
+
+263. **The still take leads** (`PREFERRED_TAKES`, `registry.ts`). `/shows/soft-lamp/`, its share card and the picker's
+     first entry are the still take now; the moving camera is second, one click away. The show's brief is a picture to
+     leave on, and the streams it takes after hold one frame for hours. All six reviewers leaned that way, and the side by
+     side (the seventy-first pass) found the still take the one to leave on. Seen again at dusk, in the rain, in the snow
+     and at the end, it is the more finished picture: the whole room composed once (window, kitten, books, cup, lamp),
+     and everything that happens in it plays without the frame asking you to look up. The moving take's case was size:
+     the machine twice as big. The glow over the cup on each kick (the seventy-first pass) already carries the beat at
+     the wide size, and the moving take is still there for anyone who wants it close. `check:shows` holds the order and
+     the default.
+264. **The snow stays.** It is not one of the late additions the subtraction passes were after. It is the window, the
+     show's clock, taking a second turn: dusk, rain and lightning, snow, then a clear sky. It changes the night rather
+     than decorating it. It also makes the end, Passing By over a white city under the moon with the kitten asleep on
+     the sill in front of the drifts. That is the best frame in the half hour, and without the snow it is the same
+     clear night the rain already gave. Both subtraction passes looked at it and kept it. It needs no tuning: it starts
+     after the storm, stops before the stars, and the kitten's one look at it is the right size.
+265. **No notebook with a hand writing in it.** The idea was a warm human centre under the lamp. The desk has one
+     already: the open book and the pencil in the lamp's pool (the eighty-third pass), which a blind review read as
+     "someone is studying here". A hand writing would bring back what the eighty-seventh pass took away, the
+     reflection's notebook filling line by line and the three page turns. It would put a constant motion in the frame's
+     warmest place, beside the ball, which is the one thing there that should move to the music. The hand's six reaches
+     are its whole part, and the person stays someone you never quite see.
+266. **No more painterly line.** Tried: the room's line at half the stage's weight instead of 0.72 (`inCells`,
+     `scene.ts`). At the still take's size the difference hardly shows, and it shows unevenly, because the kitten and
+     most outlines are drawn at their own fixed widths. A truly painterly line, each outline in its own thing's darker
+     tone with broken edges, would mean redrawing every prop. That is a new look, not a finish before merging. The line
+     was reworked once already (plum, not black, the sixty-ninth pass), the form and the plaster do the painting
+     (the eighty-second pass), and no review since has flagged the line. Reverted; the line is as it was.
+
+Nothing else changed: not the machine, its timing, the song (YouTube only), or either take's frames.
+
 ## Judgment calls for Stephen
 
 - **The light.** How dark the room falls away from its lights is two colours (`ambientAt`, `lamp/light.ts`, the
   dusk's and the night's); how far the window's light reaches is one number (`windowShare`).
-- **The snow.** The night's second turn: rain to snow to a white city under the moon. It is the largest change to the
-  window since the rain; its timing is four numbers (`SNOW`, `lamp/world.ts`) and how much falls one per depth
-  (`FLAKES`, `lamp/snow.ts`). It could go and leave the night as it was.
+- **The snow.** Kept (the eighty-ninth pass): the night's second turn, rain to snow to a white city under the moon. Its
+  timing is four numbers (`SNOW`, `lamp/world.ts`) and how much falls one per depth (`FLAKES`, `lamp/snow.ts`).
 
 - **Track cards.** Each track's name and artists come up for a few seconds as it begins, on one line, as a stream
   shows what is playing. It is twelve cards in half an hour; they could go.
@@ -1604,9 +1638,8 @@ machine, its timing and the song are unchanged.
   scratch, the mug away and back, the lamp down (the eighty-seventh pass took it down from eleven). The sweater's colour is one constant (`KNIT`, `lamp/hands.ts`).
 - **The lightning.** Three far-off flashes, no bolt. They could be fewer, or gone; they are the only sudden light in
   the half hour.
-- **The camera.** The cold reviewers' big suggestion was to hold the wide room most of the time. Taken halfway (the
-  sixty-fourth pass): the closer looks are rarer, the whole-desk looks commoner. Holding the wide room most of the time
-  would go further, the machine small in it.
+- **The camera.** The still take, one held frame, leads (the eighty-ninth pass); the moving take is second. Which
+  leads is one entry (`PREFERRED_TAKES`, `registry.ts`).
 - **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.
 - **The form.** How deep each thing's shadow side goes is one number a thing (`core`, where `scene.ts` calls `formed`),
   and how dark it is two (`CORE` and `shadowA`, `lamp/form.ts`). The plaster is one call (`plaster`, in `wall`).
@@ -1621,4 +1654,5 @@ every step and the cup landing on one or three; the lob on the last drum bar's t
 last downbeat; the turn at the pot and a walk that never turns back or stops; nods only on kicks struck on one or three,
 in the groove, in the cup; the ball in the hollow while it sits; still at the end; the camera under half a frame a
 second and half a frame a second a second; every held frame whole and clear; Zoom; the words; the first snow after the heavy rain, stopped before the shooting
-stars, settled to the end, and the kitten looking up at it in view; the hand's six reaches, each in frame.
+stars, settled to the end, and the kitten looking up at it in view; the hand's six reaches, each in frame; the still
+take first in the picker and at `/shows/soft-lamp/`.

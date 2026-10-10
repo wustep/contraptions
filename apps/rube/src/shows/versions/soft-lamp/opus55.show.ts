@@ -3,7 +3,8 @@ import { defineShow } from '../../registry'
 /**
  * Soft Lamp: half an hour of Lofi Girl's "Best of lofi hip hop 2021", as a small machine on a study desk by a window
  * from dusk into a rainy night, a kitten watching: a ball that walks the sill, steps down a stair of books as the drums come in, and sits nodding in
- * the headphones' cup until the drums leave and the cup lobs it back. Its one take is labelled by who made it.
+ * the headphones' cup until the drums leave and the cup lobs it back. This is the moving take, second to the still one
+ * (`opus55-still.show.ts`), which leads the work; its label names who made it.
  */
 export default defineShow({
   title: 'Soft Lamp',

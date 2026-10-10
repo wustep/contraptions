@@ -2,7 +2,8 @@ import { defineShow } from '../../registry'
 
 /**
  * Soft Lamp, held still: the same half hour as the first take, its camera kept on the one room from start to end, the
- * way the streams it takes after never move. Its label names who made it and how it differs.
+ * way the streams it takes after never move. It leads the work (`PREFERRED_TAKES`), so `/shows/soft-lamp/` opens it.
+ * Its label names who made it and how it differs.
  */
 export default defineShow({
   title: 'Soft Lamp',

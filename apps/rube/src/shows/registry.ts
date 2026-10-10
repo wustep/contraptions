@@ -171,7 +171,7 @@ export interface Work {
 
 const PATH = /(?:^|\/)versions\/([a-z0-9][a-z0-9-]*)\/([a-z0-9][a-z0-9-]*)\.show\.ts$/
 /** Takes that should lead their work in the registry, picker and Theater. */
-const PREFERRED_TAKES: Record<string, string> = { 'la-la-land': 'opus5-5', 'cornfield-chase': 'opus55' }
+const PREFERRED_TAKES: Record<string, string> = { 'la-la-land': 'opus5-5', 'cornfield-chase': 'opus55', 'soft-lamp': 'opus55-still' }
 
 /**
  * Takes that shipped under another name: work → old take → take. An old link still opens the take (`pickVersion`),
@@ -233,7 +233,7 @@ export function readShows(found: Record<string, unknown>): Registry {
   const problems: string[] = []
   // By the take's name, not the file's: `opus55.show.ts` sorts after `opus55-spark.show.ts` ('.' comes after '-'),
   // but a take is filed after the take its name extends. Epilogue's and Cornfield
-  // Chase's Opus takes lead their work (`PREFERRED_TAKES`), here and in every picker.
+  // Chase's Opus takes, and Soft Lamp's still take, lead their work (`PREFERRED_TAKES`), here and in every picker.
   const name = (path: string): string => path.replace(/\.show\.ts$/, '')
   const compare = (a: string, b: string): number => {
     const left = versionPath(a)
