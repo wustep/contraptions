@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { box, frame, part, scenery, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import type { Pen } from '../pen'
-import { drawAirfield, drawAmbDoor, drawAmbulance, drawBarn, drawCrossing, drawFar, drawGlare, drawGround, drawHouse, drawPassing, drawRoadside, drawSky, drawTheCab } from './draw'
+import { drawAirfield, drawAmbDoor, drawAmbulance, drawBarn, drawFar, drawGround, drawHouse, drawRoadside, drawSky, drawTheCab } from './draw'
 import {
   AMB_STOP,
   COT_IN0,
@@ -56,7 +56,6 @@ export const jerseySet = scenery<null>({
     drawFar(pen, c.t, f)
     drawGround(pen, c.t, f)
     drawRoadside(pen, c.t, f)
-    drawCrossing(pen, c.t)
     drawAirfield(pen, c.t, f)
     drawHouse(pen, c.t)
     drawBarn(pen, c.t)
@@ -80,9 +79,7 @@ export const night = part<NightState>(
       const t = s.begin + c.t
       const pen = penOf(p, c.k, c.ink, c.weight)
       p.push()
-      drawPassing(pen, t)
       drawTheCab(pen, t)
-      drawGlare(pen, t)
       drawAmbulance(pen, t, inside(t) ? 'under' : 'all')
       if (!inside(t)) drawAmbDoor(pen, t)
       p.pop()

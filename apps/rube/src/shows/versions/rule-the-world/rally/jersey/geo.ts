@@ -69,18 +69,6 @@ export function bob(t: number): number {
   return y
 }
 
-/** A level crossing: the front wheels go over its rails on a beat; its two lamps take turns, on the beat and its "a". */
-export const XING_T = at(67, 3)
-export const XING_X = cabX(XING_T) + CAB.wheels[1]
-export const XING_FROM = at(67, 1)
-export const XING_TO = a(68, 1)
-/** The lamps' changes while it is in the picture (the beats are struck already, by the joints). */
-export const XING_A = [a(67, 2), a(67, 3), a(67, 4)]
-/** A car the other way: its headlamps sweep across the back window on the "a". */
-export const PASSING = a(66, 2)
-export const PASS_V = 3.5
-export const passX = (t: number) => cabX(PASSING) + 0.4 - PASS_V * (t - PASSING)
-
 /* ------------------------------------------------------------------ the farm */
 
 /** The farmhouse, its porch, the gate. */
@@ -374,8 +362,6 @@ export const JERSEY_STRIKES: number[] = [
   HOP_R,
   LAND_M,
   LAND_R,
-  ...XING_A,
-  PASSING,
   PORCH_ON,
   ...SHOTS,
   FLINCH,

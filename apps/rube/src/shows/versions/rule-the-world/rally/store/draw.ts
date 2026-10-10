@@ -1,12 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { hash, lastOf } from '../kit'
 import { ctxOf, ease, ellipse, fillWith, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
-import { level } from '../music'
 import {
   BANG,
-  BILLS,
   CLOCK_SIX,
-  billAt,
   TICKET_UP,
   TICKET_IN,
   BAT_AT,
@@ -286,9 +283,8 @@ export function drawLights(pen: Pen, t: number): void {
   // The safe open: the light falls in on the bills.
   const s = ease((doorDeg(t) - 30) / 110)
   if (s > 0) {
-    const breathe = 0.8 + 0.4 * level(t) + 0.08 * Math.sin(t * 2.3)
-    glow(pen, [(INNER[0] + INNER[2]) / 2, 0.75], 1.0, C.lamp, 0.28 * s * breathe)
-    glow(pen, [(INNER[0] + INNER[2]) / 2, FLOOR], 1.3, C.lamp, 0.08 * s * breathe)
+    glow(pen, [(INNER[0] + INNER[2]) / 2, 0.75], 1.0, C.lamp, 0.28 * s)
+    glow(pen, [(INNER[0] + INNER[2]) / 2, FLOOR], 1.3, C.lamp, 0.08 * s)
     glow(pen, [END_GLINT[0], END_GLINT[1]], 0.3, '#FFF1C8', 0.35 * s)
   }
 }
@@ -335,25 +331,6 @@ function doorLight(pen: Pen, t: number): void {
   }
 }
 
-/** The bills that come loose: each floats down off the top bundle on the shuffle and lands on the floor on the beat. */
-export function drawBills(pen: Pen, t: number): void {
-  for (let i = 0; i < BILLS.length; i++) {
-    const b = billAt(i, t)
-    if (!b) continue
-    const { p, turn, flat } = b
-    const hw = 0.15
-    const hh = flat ? 0.015 : 0.07 * Math.abs(Math.cos(turn))
-    const tilt = flat ? 0 : 0.35 * Math.sin(turn * 0.7)
-    const pts: Pt[] = [
-      [-hw, -hh],
-      [hw, -hh],
-      [hw, hh],
-      [-hw, hh],
-    ].map(([x, y]) => [p[0] + x * Math.cos(tilt) - y * Math.sin(tilt), p[1] + x * Math.sin(tilt) + y * Math.cos(tilt)] as Pt)
-    shape(pen, pts, Math.cos(turn) > 0 || flat ? C.billLight : C.bill, 0.25, C.billDark)
-    if (hh > 0.02) ellipse(pen, p, 0.025, hh * 0.6, C.billLight)
-  }
-}
 
 /* ------------------------------------------------------------------ the room */
 

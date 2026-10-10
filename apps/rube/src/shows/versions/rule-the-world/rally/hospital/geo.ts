@@ -127,15 +127,6 @@ const LAND_AT: Pt[] = [
   [-6.3, BENCH_TOP - R],
 ]
 export const AT_GLASS: Pt = [-7.7, SILL_TOP - R]
-/** In the quiet after the song: he settles a little closer along the sill to his son, and leans to him once. */
-export const SETTLE = 248.6
-const SETTLED = SETTLE + 2.6
-const SETTLE_DX = -0.12
-/** The boy's small hand comes out of the blanket, and Marty leans to it. Unstruck: there are no beats here. */
-export const HAND = 252.4
-export const ANSWER = 253.3
-const ANSWER_DUR = 1.3
-export const CLOSE: Pt = [AT_GLASS[0] + SETTLE_DX, AT_GLASS[1]]
 /** Where the nurse holds him up: right at the glass, beside Marty. */
 export const HELD: Pt = [-8.0, -0.42]
 
@@ -208,9 +199,7 @@ export function martyAt(t: number): Pt {
       return [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u - arc * 4 * u * (1 - u)]
     }
   }
-  const a = (t - ANSWER) / ANSWER_DUR
-  const lean = a <= 0 || a >= 1 ? 0 : Math.sin(Math.PI * a) ** 2
-  return [AT_GLASS[0] + trembleAt(t) + SETTLE_DX * smooth(t, SETTLE, SETTLED) - 0.045 * lean, AT_GLASS[1] - 0.008 * lean]
+  return [AT_GLASS[0] + trembleAt(t), AT_GLASS[1]]
 }
 
 export function hospitalWay(): Seg[] {
@@ -235,13 +224,7 @@ export function hospitalWay(): Seg[] {
   }
   // The last tremble has died away to nothing: settle exactly on the sill, and hold there to the end.
   segs.push({ from: martyAt(t), to: AT_GLASS, dur: 0.2, ease: 'inout' })
-  rest(t + 0.2, SETTLE, AT_GLASS)
-  segs.push(...carried(martyAt, SETTLE, SETTLED, 40))
-  segs[segs.length - 1].to = CLOSE
-  rest(SETTLED, ANSWER, CLOSE)
-  segs.push(...carried(martyAt, ANSWER, ANSWER + ANSWER_DUR, 30))
-  segs[segs.length - 1].to = CLOSE
-  rest(ANSWER + ANSWER_DUR, T1, CLOSE)
+  rest(t + 0.2, T1, AT_GLASS)
   return segs
 }
 
@@ -267,7 +250,7 @@ export const rockOf = (t: number): number => Math.sin(((t - LIFTED) / 2.6) * Mat
 
 export function babyAt(t: number): Pt {
   let wx = 0
-  for (const w of [...WRIGGLES, HAND]) if (t >= w && t < w + 0.8) wx += 0.022 * ring(t - w, 5.5, 0.22)
+  for (const w of WRIGGLES) if (t >= w && t < w + 0.8) wx += 0.022 * ring(t - w, 5.5, 0.22)
   // Up out of the bassinet first, then across to the glass beside Marty.
   const up = smooth(t, LIFT, LIFT + (LIFTED - LIFT) * 0.6)
   const over = smooth(t, LIFT + (LIFTED - LIFT) * 0.25, LIFTED)

@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { CAB, drawCab } from '../cab'
 import { hash, smooth } from '../kit'
-import { a, at } from '../music'
+import { at } from '../music'
 import { blob, ctxOf, ellipse, flash, glint, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import { dropTime } from '../physics'
 import {
@@ -44,12 +44,6 @@ import {
   PORCH,
   PORCH_ON,
   PORCH_Y,
-  PASSING,
-  passX,
-  XING_FROM,
-  XING_TO,
-  XING_X,
-  T0,
   RED_FLASHES,
   ROAD,
   S,
@@ -297,17 +291,6 @@ export function drawGround(pen: Pen, _t: number, f: Frame): void {
     for (let x = Math.ceil(Math.max(a0, APRON_FROM + 2) / 2.5) * 2.5; x < x1; x += 2.5) line(pen, [x, ROAD - 0.42], [x + 0.25, ROAD + 0.28], C.apronSeam, 0.6)
   }
   line(pen, [x0, ROAD + 0.28], [x1, ROAD + 0.28], C.fieldNear, 0.8)
-  // The level crossing's rails, across the road, and their ties.
-  if (XING_X > x0 - 2 && XING_X < x1 + 2) {
-    for (const dx of [-0.05, 0.75]) {
-      shape(pen, [[XING_X + dx - 0.18, ROAD - 0.42], [XING_X + dx - 0.1, ROAD - 0.42], [XING_X + dx + 0.12, ROAD + 0.28], [XING_X + dx + 0.02, ROAD + 0.28]], '#11171A')
-      line(pen, [XING_X + dx - 0.14, ROAD - 0.42], [XING_X + dx + 0.07, ROAD + 0.28], '#8C9699', 0.7)
-    }
-    // The rails run on away into the dark both sides of the road.
-    shape(pen, [[XING_X - 0.6, ROAD - 0.42], [XING_X + 1.4, ROAD - 0.42], [XING_X + 1.0, ROAD - 1.1], [XING_X + 0.2, ROAD - 1.1]], '#0A1210')
-    line(pen, [XING_X - 0.23, ROAD - 0.42], [XING_X + 0.32, ROAD - 1.1], '#5E686B', 0.5)
-    line(pen, [XING_X + 0.62, ROAD - 0.42], [XING_X + 0.88, ROAD - 1.1], '#5E686B', 0.5)
-  }
   // Between the farm and the airfield: dark field, and its fence.
   if (x1 > S + 26 && x0 < APRON_FROM) {
     for (let x = S + 26.2; x < APRON_FROM - 0.2; x += 0.9) rect(pen, x - 0.04, ROAD - 1.25, x + 0.04, ROAD - 0.42, '#1A1915')
@@ -316,84 +299,6 @@ export function drawGround(pen: Pen, _t: number, f: Frame): void {
   }
 }
 
-/** The level crossing's signal: a crossbuck on its post, two lamps that take turns while it rings. */
-export function drawCrossing(pen: Pen, t: number): void {
-  const x = XING_X - 0.75
-  const base = ROAD - 0.42
-  rect(pen, x - 0.06, base - 3.3, x + 0.06, base, '#2B2F30')
-  // The crossbuck: two white boards in an X (no lettering).
-  const c: Pt = [x, base - 3.0]
-  for (const a of [0.6, -0.6]) {
-    const dx = Math.cos(a) * 0.62
-    const dy = Math.sin(a) * 0.62
-    const nx = -Math.sin(a) * 0.08
-    const ny = Math.cos(a) * 0.08
-    shape(pen, [[c[0] - dx - nx, c[1] - dy - ny], [c[0] + dx - nx, c[1] + dy - ny], [c[0] + dx + nx, c[1] + dy + ny], [c[0] - dx + nx, c[1] - dy + ny]], '#D9DCD4')
-  }
-  // The lamps' bar.
-  const ly = base - 2.15
-  rect(pen, x - 0.55, ly - 0.04, x + 0.55, ly + 0.04, '#2B2F30')
-  const on = t >= XING_FROM && t < XING_TO + 0.2
-  const lastB = lastBeat(t)
-  for (const [i, lx] of [x - 0.45, x + 0.45].entries()) {
-    rect(pen, lx - 0.17, ly - 0.17, lx + 0.17, ly + 0.17, '#141718')
-    const lit = on && lastB.i % 2 === i
-    ellipse(pen, [lx, ly], 0.11, 0.11, lit ? '#FF3A22' : '#3A1410')
-    if (lit) glow(pen, [lx, ly], 1.0 + 0.5 * flash(lastB.ago, 0.15), '#FF3A22', 0.5)
-  }
-}
-/** Which of the crossing's beats and "a"s came last, counting from its first. */
-function lastBeat(t: number): { i: number; ago: number } {
-  const marks: number[] = []
-  for (let bar = 67; bar <= 68; bar++) for (let pos = 1; pos <= 4; pos++) {
-    marks.push(at(bar, pos))
-    marks.push(a(bar, pos))
-  }
-  let i = -1
-  for (let j = 0; j < marks.length; j++) if (marks[j] <= t) i = j
-  return { i: Math.max(0, i), ago: i < 0 ? 0 : t - marks[i] }
-}
-
-/** The car the other way: dark, lamps blazing, in the far lane, gone in a moment. */
-export function drawPassing(pen: Pen, t: number): void {
-  if (t < T0 || t > PASSING + 2.5) return
-  const fx = passX(t)
-  const y = ROAD - 0.28
-  const L = 4.6
-  // Its beams ahead (to the left).
-  const ctx = ctxOf(pen.p)
-  const g = ctx.createLinearGradient(fx * pen.k, 0, (fx - 7) * pen.k, 0)
-  g.addColorStop(0, rgba(pen, C.winWarm, 0.35))
-  g.addColorStop(1, rgba(pen, C.winWarm, 0))
-  ctx.save()
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo(fx * pen.k, (y - 0.75) * pen.k)
-  ctx.lineTo((fx - 7) * pen.k, (y - 1.3) * pen.k)
-  ctx.lineTo((fx - 7) * pen.k, (y + 0.3) * pen.k)
-  ctx.lineTo(fx * pen.k, (y - 0.5) * pen.k)
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
-  shape(pen, [[fx, y - 0.25], [fx, y - 0.85], [fx + 1.3, y - 0.95], [fx + 1.8, y - 1.6], [fx + 3.6, y - 1.6], [fx + 4.0, y - 1.0], [fx + L, y - 0.9], [fx + L, y - 0.25]], '#161C1F')
-  shape(pen, [[fx + 1.95, y - 1.0], [fx + 2.15, y - 1.45], [fx + 3.45, y - 1.45], [fx + 3.7, y - 1.0]], '#26343A')
-  for (const wx of [fx + 0.95, fx + 3.6]) ellipse(pen, [wx, y - 0.25], 0.33, 0.33, C.tyre)
-  ellipse(pen, [fx + 0.06, y - 0.68], 0.07, 0.1, C.winWarm)
-  glow(pen, [fx - 0.1, y - 0.68], 2.0, C.winWarm, 0.75)
-  rect(pen, fx + L - 0.06, y - 0.85, fx + L + 0.02, y - 0.6, '#C8321F')
-  glow(pen, [fx + L, y - 0.72], 0.35, '#C8321F', 0.4)
-}
-
-/** The glare of its lamps across the back window as they pass, on the "a". */
-export function drawGlare(pen: Pen, t: number): void {
-  // Its lamps sweep in over the bonnet, flare in the back window as they pass him, and are gone behind.
-  const k = Math.exp(-Math.abs(t - PASSING) / (t < PASSING ? 0.3 : 0.14))
-  if (k < 0.02) return
-  const x = cabX(t)
-  const lx = passX(t) - cabX(t)
-  glow(pen, [x + Math.max(0.3, lx), bob(t) - 0.45], 2.2, C.winWarm, 0.6 * k)
-  glint(pen, [x + Math.max(0.3, lx) + 0.4, bob(t) - 0.6], 0.6 * k, C.white, k)
-}
 const cabXAt = (t: number) => cabX(t)
 
 /** The roadside: telephone poles and their wires, the fence and its posts, and black trees close by. */

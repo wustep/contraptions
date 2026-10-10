@@ -44,7 +44,6 @@ import {
   WARD_WIN,
   liftOf,
   rockOf,
-  HAND,
   pillowTop,
 } from './geo'
 import { SON } from '../music'
@@ -679,9 +678,6 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
   ellipse(pen, [b[0] - 0.25, b[1] + 0.04], 0.18, 0.085, C.sheet)
   line(pen, [b[0] - 0.38, b[1] + 0.03], [b[0] - 0.12, b[1] + 0.01], C.blanketShade, 0.5)
   line(pen, [b[0] - 0.33, b[1] + 0.1], [b[0] - 0.14, b[1] + 0.08], C.hoodBlue, 0.9)
-  // In the quiet, his small hand comes up out of the blanket.
-  const hand = smooth(t, HAND, HAND + 0.3) * (1 - smooth(t, HAND + 1.8, HAND + 2.6))
-  if (hand > 0.01) ellipse(pen, [b[0] - 0.13, b[1] - 0.02 - 0.06 * hand + 0.01 * Math.sin((t - HAND) * 14) * hand], 0.03, 0.03, C.babySkin)
   const n = nurseOf(t, b)
   for (const h of n.hands) ellipse(pen, h, 0.045, 0.04, C.skin)
   // The blind: down until he comes to the glass; on SON it goes up and snaps onto its roller.
