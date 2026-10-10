@@ -1102,6 +1102,12 @@ had found too is taken, firmly:
 
 Not taken: the cat's half-lidded eyes (a taste), the mug away for its refill.
 
+### The sixty-sixth pass: an ear cup
+
+178. **Two reviewers still saw a cushion, not headphones.** From the side, the near cup was a padded slab under the
+     ball. The one thing that says "ear cup" at a glance is its face: so its cushion's top is seen a little from above
+     now, a ring round the dark speaker cloth, and the ball sits in the dark of it. Sixty frames a second as before.
+
 **Subtracted:** the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's

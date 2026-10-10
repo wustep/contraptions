@@ -608,6 +608,18 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   ctx.fillStyle = pg
   ctx.fill()
   stroke(ctx, lw)
+  // Its face, seen a little from above: the cushion a ring round the dark speaker cloth, the ball sitting in it.
+  ctx.save()
+  cushionPath(ctx, top)
+  ctx.clip()
+  ctx.beginPath()
+  ctx.ellipse(CUP.x, top + 0.035, w * 0.62, 0.042, 0, 0, Math.PI * 2)
+  ctx.fillStyle = lit('#1E1A2A', '#4A4258', l * 0.6)
+  ctx.fill()
+  ctx.lineWidth = lw * 0.7
+  ctx.strokeStyle = rgba(INK, 0.7)
+  ctx.stroke()
+  ctx.restore()
   // What says headphones: the shell's bright rim where the cushion sits in it, a small badge on its side, and the
   // cushion's stitched seam.
   const metal = (k: number) => lit('#6E6A7E', '#E8D9C2', Math.min(1, l * 0.9 + k))
