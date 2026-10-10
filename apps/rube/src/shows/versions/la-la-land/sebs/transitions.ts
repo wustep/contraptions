@@ -14,7 +14,18 @@ import { AT, snap } from './music'
  *   up:   [c, d]  it goes, gone at d; the stage changes place between b and c
  */
 export type Cover =
-  | { kind: 'black'; down: [number, number]; up: [number, number]; color?: string }
+  /**
+   * The lights going, or a light filling the frame. With `spark` (where, as fractions of the composed frame), one
+   * point of light stays lit through it: the last star in the sky, which is the next place's lamp. With `flicker`,
+   * it trembles with a projector's shutter: the bare light of an empty gate.
+   */
+  | { kind: 'black'; down: [number, number]; up: [number, number]; color?: string; spark?: { at: [number, number]; color: string }; flicker?: boolean }
+  /**
+   * A cloth, the way a stage changes its scene without the lights going: it flies in from the flies on its batten
+   * (`fall`) or is already there, the light on it filling the frame; and it goes either by flying out again (`rise`),
+   * or by the lamp behind it coming up, from the middle out, through it onto the next place.
+   */
+  | { kind: 'cloth'; down: [number, number]; up: [number, number]; color: string; deep: string; fall: boolean; rise: boolean }
   /**
    * An iris: a ring of dark closing on a point, and opening on another. With `snap`, it closes only to `r0` and holds
    * that last small circle of light until `snap`, when it shuts on the hit.
@@ -64,6 +75,67 @@ export function coverOf(covers: Cover[], t: number): { c: Cover; f: number } | n
   return null
 }
 
+type Fr = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number }
+
+/** A cloth on its batten: coming in from the flies, filling the frame, and flying out or lit through from behind. */
+function drawCloth(ctx: CanvasRenderingContext2D, k: number, fr: Fr, pad: number, c: Extract<Cover, { kind: 'cloth' }>, f: number, t: number): void {
+  const x0 = fr.x0 - pad
+  const x1 = fr.x1 + pad
+  const h = fr.y1 - fr.y0
+  const coming = t <= c.up[0]
+  // Where its hem is: falling in, it comes down past the frame's foot with a little settle on its lines; flying out,
+  // it goes up and away. Otherwise it hangs below the frame's foot.
+  let hem = fr.y1 + pad
+  if (coming && c.fall) {
+    const u = (t - c.down[0]) / (c.down[1] - c.down[0])
+    const e = u >= 1 ? 1 : 1 - (1 - Math.max(0, u)) ** 2.2
+    const settle = u >= 1 ? 0 : 0.035 * h * Math.sin(Math.max(0, u - 0.7) / 0.3 * Math.PI) * (u > 0.7 ? 1 : 0)
+    hem = fr.y0 - 0.1 * h + (fr.y1 + 0.06 * h - (fr.y0 - 0.1 * h)) * e - settle
+  } else if (!coming && c.rise) {
+    const u = Math.min(1, Math.max(0, (t - c.up[0]) / (c.up[1] - c.up[0])))
+    hem = fr.y1 + 0.06 * h - (fr.y1 + 0.06 * h - (fr.y0 - 0.12 * h)) * u * u * (3 - 2 * u)
+  }
+  // How much of it there is: fading in, if it doesn't fall; lit through, if it doesn't rise.
+  const a = coming ? (c.fall ? 1 : f) : c.rise ? 1 : 1
+  const top = fr.y0 - pad
+  if (hem <= top) return
+  ctx.save()
+  // Lit through from behind as it goes: clear from the middle out, where the lamp is.
+  if (!coming && !c.rise) {
+    const r = Math.hypot(x1 - x0, h) / 2
+    const g = ctx.createRadialGradient(fr.cx * k, fr.cy * k, 0, fr.cx * k, fr.cy * k, r * k)
+    g.addColorStop(0, rgba(c.color, Math.max(0, f * 1.6 - 0.6)))
+    g.addColorStop(0.55, rgba(c.color, Math.min(1, f * 1.15)))
+    g.addColorStop(1, rgba(c.color, Math.min(1, f * 1.4)))
+    ctx.fillStyle = g
+  } else ctx.fillStyle = rgba(c.color, a)
+  ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, (hem - top) * k)
+  // Its folds: soft long bands down its height, a shade deeper, easing as it hangs still.
+  const fa = (coming ? (c.fall ? 1 : f) : c.rise ? 1 : f) * 0.5
+  const folds = 9
+  for (let i = 0; i < folds; i++) {
+    const x = x0 + ((i + 0.5) / folds) * (x1 - x0) + 0.15 * Math.sin(t * 1.7 + i * 2.1)
+    const band = ((x1 - x0) / folds) * 0.38
+    const g = ctx.createLinearGradient((x - band) * k, 0, (x + band) * k, 0)
+    g.addColorStop(0, rgba(c.deep, 0))
+    g.addColorStop(0.5, rgba(c.deep, 0.32 * fa))
+    g.addColorStop(1, rgba(c.deep, 0))
+    ctx.fillStyle = g
+    ctx.fillRect((x - band) * k, top * k, 2 * band * k, (hem - top) * k)
+  }
+  // The batten along its hem, and the shadow it throws on what is below.
+  if (hem < fr.y1 + pad) {
+    const sh = ctx.createLinearGradient(0, hem * k, 0, (hem + 0.05 * h) * k)
+    sh.addColorStop(0, rgba('#000000', 0.4))
+    sh.addColorStop(1, rgba('#000000', 0))
+    ctx.fillStyle = sh
+    ctx.fillRect(x0 * k, hem * k, (x1 - x0) * k, 0.05 * h * k)
+    ctx.fillStyle = rgba(c.deep, 0.95)
+    ctx.fillRect(x0 * k, (hem - 0.012 * h) * k, (x1 - x0) * k, 0.012 * h * k)
+  }
+  ctx.restore()
+}
+
 function drawCover(p: p5, k: number, c: Cover, f: number, t: number): void {
   const fr = frame(p, k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -74,8 +146,37 @@ function drawCover(p: p5, k: number, c: Cover, f: number, t: number): void {
   const H = (fr.y1 - fr.y0 + 2 * pad) * k
   ctx.save()
   if (c.kind === 'black') {
-    ctx.fillStyle = rgba(c.color ?? '#000000', f)
+    const shutter = c.flicker ? 0.93 + 0.07 * Math.sin(t * 2 * Math.PI * 18) * Math.sin(t * 2 * Math.PI * 2.3 + 1) : 1
+    ctx.fillStyle = rgba(c.color ?? '#000000', f * shutter)
     ctx.fillRect(X0, Y0, W, H)
+    if (c.spark && f > 0.02) {
+      // The composed frame is 16 to 9, whole on the canvas, about its centre.
+      const fw = Math.min(fr.x1 - fr.x0, ((fr.y1 - fr.y0) * 16) / 9)
+      const fh = (fw * 9) / 16
+      const x = fr.cx + (c.spark.at[0] - 0.5) * fw
+      const y = fr.cy + (c.spark.at[1] - 0.5) * fh
+      // It is there as the dark comes (a star the dark leaves), breathes while it holds, and is the lamp as it lifts.
+      const a = smooth(f, 0.25, 0.85) * (0.85 + 0.15 * Math.sin(t * 5.3))
+      const r = fh * 0.05
+      const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
+      g.addColorStop(0, rgba('#FFFFFF', 0.95 * a))
+      g.addColorStop(0.12, rgba(c.spark.color, 0.8 * a))
+      g.addColorStop(0.4, rgba(c.spark.color, 0.2 * a))
+      g.addColorStop(1, rgba(c.spark.color, 0))
+      ctx.fillStyle = g
+      ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
+      // A star's four-point glint.
+      ctx.strokeStyle = rgba('#FFFFFF', 0.55 * a)
+      ctx.lineWidth = Math.max(1, fh * 0.002 * k)
+      ctx.beginPath()
+      ctx.moveTo((x - r * 0.7) * k, y * k)
+      ctx.lineTo((x + r * 0.7) * k, y * k)
+      ctx.moveTo(x * k, (y - r * 0.7) * k)
+      ctx.lineTo(x * k, (y + r * 0.7) * k)
+      ctx.stroke()
+    }
+  } else if (c.kind === 'cloth') {
+    drawCloth(ctx, k, fr, pad, c, f, t)
   } else if (c.kind === 'iris') {
     // Closing: the opening shrinks on `from`; opening: it grows on `to`. Outside it, the dark, with a soft lip.
     const closing = t <= c.up[0]

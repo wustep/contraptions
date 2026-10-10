@@ -220,20 +220,20 @@ export const opening = part<OpeningState>(
     // In through the room...
     { t: 6.5, cells: 9, hold: [1.9, -0.9] },
     // ...to the piano as the phrase settles, and on in while the lights go down on it.
-    { t: 12.3, cells: 4.3, hold: [2.75, -0.75] },
-    { t: 17.6, cells: 3.15, hold: [2.95, -0.38] },
-    { t: 19.3, cells: 3.3, hold: [2.85, -0.3] },
+    { t: 12.3, cells: 4.3, hold: [2.6, -0.75] },
+    { t: 17.6, cells: 3.15, hold: [2.6, -0.38] },
+    { t: 19.3, cells: 3.3, hold: [2.55, -0.3] },
     // Out to her table, and hold on her while he plays on. The move draws back on the way, so it crosses the room
     // (him at the keys, her at her table) rather than the piano's legs.
-    { t: 20.75, cells: 5.6, hold: [-0.3, 1.25] },
+    { t: 20.75, cells: 6.2, hold: [-0.3, 1.25] },
     { t: 22.4, cells: 1.95, hold: [-2.05, 2.36] },
     // In, slowly, as she lifts her eyes to the stage.
     { t: 25.0, cells: 1.92, hold: [-2.06, 2.37] },
     { t: 31.0, cells: 1.32, hold: [-2.16, 2.44] },
     // Back to the room the same way, the two of them in one frame, and held while his eye finds her across it; then in
     // to the keys, and the stage light closes on them.
-    { t: 33.0, cells: 5.6, hold: [-0.3, 1.25] },
-    { t: 34.6, cells: 5.5, hold: [-0.25, 1.2] },
+    { t: 33.0, cells: 6.2, hold: [-0.3, 1.25] },
+    { t: 34.6, cells: 6.1, hold: [-0.25, 1.2] },
     { t: 36.0, cells: 3.0, hold: [2.95, -0.35] },
     { t: 39.4, cells: 2.8, hold: [3.0, -0.3] },
   ],

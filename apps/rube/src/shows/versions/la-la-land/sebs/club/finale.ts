@@ -426,7 +426,7 @@ export const finale = part<FinaleState>(
     // He goes ahead to the door and out onto the pavement; she follows him across the room and stops in the doorway.
     // Then close shots, cut against each other: her turn back from the doorway, his look, her smile, his nod. Then out
     // to her going.
-    { t: 459.4, cells: 5.4, hold: F([-8.1, 1.85]) },
+    { t: 459.4, cells: 6.2, hold: F([-6.2, 1.85]) },
     { t: CUTS.her - 0.02, cells: 4.8, hold: F([-11.0, 2.1]) },
     // Hers as close as his: she fills her shot as he and the keys fill his.
     ...closeOn(CUTS.her, CUTS.him, F([DOORWAY + 0.05, FLOOR_Y - 0.12]), 1.55),
@@ -436,14 +436,14 @@ export const finale = part<FinaleState>(
     // Out to her going: the doorway, her on its threshold and David waiting on the pavement beyond.
     { t: CUTS.out, cells: 4.2, hold: F([-12.4, 2.05]) },
     // After her to the door, out; the door swings shut. Back across the empty room to him, the band's lamps behind him.
-    { t: 466.9, cells: 4.6, hold: F([-10.6, 1.45]) },
-    { t: 468.3, cells: 4.6, hold: F([-10.8, 1.45]) },
+    { t: 466.9, cells: 4.6, hold: F([-11.3, 1.45]) },
+    { t: 468.3, cells: 4.6, hold: F([-11.5, 1.45]) },
     { t: 469.8, cells: 7, hold: F([-2.5, 0.8]) },
     // Him at the keys and the whole bandstand beside him, the piano left of centre and the band right of it, so the lamps come up in the frame as he looks back
     // at the door; and closer still on him for the count-in, his nods to the band.
-    { t: 472.0, cells: 5.4, hold: F([6.35, 0.8]) },
-    { t: 475.6, cells: 5.2, hold: F([6.35, 0.75]) },
-    { t: 477.9, cells: 5.1, hold: F([6.35, 0.72]) },
+    { t: 472.0, cells: 7.3, hold: F([6.0, 0.5]) },
+    { t: 475.6, cells: 7.1, hold: F([6.0, 0.45]) },
+    { t: 477.9, cells: 7.0, hold: F([6.0, 0.43]) },
     { t: 480.0, cells: 7, hold: F([3.6, -1.6]) },
   ],
 )

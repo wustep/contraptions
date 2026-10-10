@@ -23,6 +23,63 @@ export function muted(t: number): number {
   return 1 - s(ramp(494, 503))
 }
 
+/**
+ * The frame: the room as it is is seen in the old narrow picture, the dream in the wide one. La La Land opens on a
+ * square old frame that stretches out to CinemaScope; here the masking at the sides of the picture opens the same way
+ * as the dream begins (on Lipton's, once the spotlight's iris has opened on it), closes in again as the dream drains
+ * at the waking, and opens once more when the band's stage blazes and the camera draws back to the city.
+ * How much of the composed width shows, 0..1: the narrow frame is the Academy's 1.37 to 1 inside the 16 to 9.
+ */
+export const NARROW = 1.37 / (16 / 9)
+const SPANS: [number, number, number, number][] = [
+  // [from, to, aperture before, aperture after]
+  [41.03, 43.0, NARROW, 1],
+  [451.5, 453.73, 1, NARROW],
+  [478.05, 480.2, NARROW, 1],
+]
+export function aperture(t: number): number {
+  let a = NARROW
+  for (const [t0, t1, a0, a1] of SPANS) {
+    if (t < t0) return a
+    if (t >= t1) { a = a1; continue }
+    const u = (t - t0) / (t1 - t0)
+    return a0 + (a1 - a0) * u * u * (3 - 2 * u)
+  }
+  return a
+}
+
+/** The masking at the sides of the picture, drawn last of all, over the covers too: it is the screen's, not the scene's. */
+export const masking = scenery<null>({
+  name: 'masking',
+  draw: () => {},
+  over(p, _s, c) {
+    const a = aperture(c.t)
+    if (a > 0.9995) return
+    const k = c.k
+    const f = frame(p, k)
+    // The composed frame is 16 to 9 and whole on the canvas; the picture is the middle `a` of its width.
+    const w = Math.min(f.x1 - f.x0, ((f.y1 - f.y0) * 16) / 9)
+    const half = (w * a) / 2
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.fillStyle = '#060507'
+    const pad = 1
+    ctx.fillRect((f.x0 - pad) * k, (f.y0 - pad) * k, (f.cx - half - f.x0 + pad) * k, (f.y1 - f.y0 + 2 * pad) * k)
+    ctx.fillRect((f.cx + half) * k, (f.y0 - pad) * k, (f.x1 - f.cx - half + pad) * k, (f.y1 - f.y0 + 2 * pad) * k)
+    // A little of the picture's light falls off into the masking's edge, as a projected picture's does.
+    const soft = w * 0.012
+    for (const side of [-1, 1]) {
+      const x = f.cx + side * half
+      const g = ctx.createLinearGradient(x * k, 0, (x - side * soft) * k, 0)
+      g.addColorStop(0, rgba('#060507', 0.85))
+      g.addColorStop(1, rgba('#060507', 0))
+      ctx.fillStyle = g
+      ctx.fillRect(Math.min(x, x - side * soft) * k, (f.y0 - pad) * k, soft * k, (f.y1 - f.y0 + 2 * pad) * k)
+    }
+    ctx.restore()
+  },
+})
+
 let TILE: HTMLCanvasElement | null = null
 function tile(): HTMLCanvasElement | null {
   if (TILE || typeof document === 'undefined') return TILE
@@ -72,7 +129,8 @@ export const lens = scenery<{ iris: IrisAt } | null>({
     const ctx = p.drawingContext as CanvasRenderingContext2D
     const w = f.x1 - f.x0
     const h = f.y1 - f.y0
-    const r = Math.hypot(w, h) / 2
+    // The corners are the picture's: in the narrow frame, the masking's edges.
+    const r = Math.hypot(Math.min(w, (h * 16) / 9) * aperture(t), h) / 2
     ctx.save()
     const m = muted(t)
     // Into the dream: as the stage light closes down on him at the keys, the circle of light round him fills with the

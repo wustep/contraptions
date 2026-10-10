@@ -18,7 +18,7 @@ import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
 import { DOOR, DOOR_SHUT, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
 import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs/piano-figure'
-import { muted, wakingCircle } from '../src/shows/versions/la-la-land/sebs/lens'
+import { NARROW, aperture, muted, wakingCircle } from '../src/shows/versions/la-la-land/sebs/lens'
 import { emptyAt } from '../src/shows/versions/la-la-land/sebs/theatre/theatre'
 import { HORIZON, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
@@ -141,7 +141,8 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     const dy = b.y - f.y
     const x = dx * Math.cos(a) - dy * Math.sin(a)
     const y = dx * Math.sin(a) + dy * Math.cos(a)
-    return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
+    // Inside the masking: the room as it is is seen in the narrow frame (`lens.ts`).
+    return Math.abs(x) < ((f.cells * 16) / 9 / 2) * aperture(t) + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
   }
   const miss: string[] = []
   const miaSeen = [25, AT.kiss, 118, 138, 155, 185, 203, 225, 250, 285, 320, 370, 410, 447, 461.5]
@@ -400,7 +401,7 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     const inside = (t: number, b: { x: number; y: number }) => {
       if (covered(t)) return false
       const f = cam(t)
-      return Math.abs(b.x - f.x) < (f.cells * 16) / 9 / 2 - 0.3 && Math.abs(b.y - f.y) < f.cells / 2 - 0.3
+      return Math.abs(b.x - f.x) < ((f.cells * 16) / 9 / 2) * aperture(t) - 0.3 && Math.abs(b.y - f.y) < f.cells / 2 - 0.3
     }
     const roads: [number, string][] = [
       [33.6, 'as he finds her, the what-if leaves him for her table'],
@@ -432,9 +433,15 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     check('sebs: she feels the knock in the hush, and looks after the one who walked out',
       !!before && !!after && after.x - before.x > 0.03 && !!look && Math.cos((look.spin ?? 0) - Math.PI) > Math.cos(Math.PI / 6))
   }
-  // Hollywood's hill lamps go out one by one, and only then the dark comes: each goes out in the open.
-  const toShadow = sebsCovers.find((c) => c.kind === 'black' && c.down[0] > 168 && c.down[0] < SWITCH.shadow)
-  check('sebs: Hollywood\'s lamps go out before the dark comes', !!toShadow && HOLLY_OUT.every((t) => coverAt(toShadow, t) < 0.05))
+  // Hollywood's hill lamps go out one by one, and only then the cloth comes in: each goes out in the open.
+  const toShadow = sebsCovers.find((c) => c.down[0] > 168 && c.down[0] < SWITCH.shadow)
+  check('sebs: Hollywood\'s lamps go out before the cloth comes in', !!toShadow && HOLLY_OUT.every((t) => t < toShadow.down[0]))
+  // Once the dream has opened wide, the picture never goes to black until he wakes: the stage changes its scene the
+  // way a stage does (a curtain, a cloth flown in or out, a door past the lens, white light), and the two darks it keeps
+  // are the trumpet's iris, an old film's own, and the night between the stars and the home movie, where one star stays.
+  const darks = sebsCovers.filter((c) => c.down[0] > 41 && c.up[1] < AT.last && c.kind === 'black' && (c.color ?? '#000000') === '#000000' && !c.spark)
+  check('sebs: in the dream the picture never goes to black but for the iris and the one star', darks.length === 0 &&
+    sebsCovers.some((c) => c.kind === 'black' && !!c.spark), darks.map((c) => c.down[0]).join(', '))
   check('sebs: the credits come up in the open sky over the club', creditClear > 0, `clearance ${creditClear.toFixed(3)} of the frame at ${creditWorst}`)
   // The share card is the show's own frame at its `still`: the two of them in it, and looking at each other.
   {
@@ -555,6 +562,21 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     for (let t = 41; t < 451.4; t += 0.5) dreamMuted = Math.max(dreamMuted, muted(t))
     check('sebs: the room as it is muted, the dream in full colour, the colour back for the stars',
       muted(10) > 0.99 && muted(30) > 0.99 && dreamMuted === 0 && muted(460) > 0.99 && muted(480) > 0.99 && muted(DURATION) < 0.01, `dream muted ${dreamMuted}`)
+  }
+  // The frame: the room as it is in the old narrow picture, the dream in the wide one, the way La La Land's first
+  // image stretches out to CinemaScope. Narrow from the first frame until the dream has opened on Lipton's, wide through
+  // the whole dream, narrow again from the last chord through the door and the count-in, and wide with the band.
+  {
+    let dreamNarrow = 1
+    for (let t = 43; t < 451.5; t += 0.25) dreamNarrow = Math.min(dreamNarrow, aperture(t))
+    let roomWide = 0
+    for (let t = 0; t <= 40.9; t += 0.25) roomWide = Math.max(roomWide, aperture(t))
+    for (let t = AT.last; t <= AT.band; t += 0.25) roomWide = Math.max(roomWide, aperture(t))
+    let wobble = 0
+    for (let t = 0.01; t <= DURATION; t += 0.01) wobble = Math.max(wobble, Math.abs(aperture(t) - aperture(t - 0.01)))
+    check('sebs: the room as it is in the narrow frame, the dream wide, and wide again with the band, never snapping',
+      NARROW > 0.7 && NARROW < 0.8 && dreamNarrow === 1 && Math.abs(roomWide - NARROW) < 1e-9 && aperture(481) === 1 && aperture(DURATION) === 1 && wobble < 0.01,
+      `dream ${dreamNarrow.toFixed(3)}, room ${roomWide.toFixed(3)}, step ${wobble.toFixed(4)}`)
   }
   // The piano among the stars grows with their waltz: a share of it for each star lit, never going back, and whole by the
   // dip. And the way out of the dream mirrors the way in: a circle closing on him at the keys, shut by the last chord.
