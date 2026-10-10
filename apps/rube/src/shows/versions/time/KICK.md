@@ -396,6 +396,10 @@ each world, and changed:
   went with him, and a viewer new to it saw him go home alone, "teal just gone" (a cold critic's note). On the next
   beat she gives a little hop toward him and settles back into her seat, still watching him go. The camera holds a
   little to her side of him until it is over, so under Zoom too she is in the picture for it.
+- **His lever** (172.2 to 175.8): the lever that draws the bolt and lets Mal go was a short iron stroke on the cage's
+  dark iron, so his choice had no gesture; a viewer new to it saw him simply stay with her, then be on the roof (a cold
+  critic's note). It is longer now, its knob pale, catching the lamp; it is seen taken, and as it comes home on the
+  let-go its knob flares where it strikes the stop.
 
 ## Inception nods
 

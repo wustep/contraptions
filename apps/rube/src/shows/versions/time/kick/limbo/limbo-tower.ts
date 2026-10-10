@@ -33,6 +33,7 @@ import {
   topPose,
   weightY,
   wheelAngle,
+  Q,
 } from './limbo-geo'
 import { box, disc, faded, line, shape, soft, vwash, type Pen } from './limbo-pen'
 
@@ -343,11 +344,18 @@ function drawLiftFront(pen: Pen, t: number): void {
     box(pen, SLOT.x0 + 0.01, by - 0.06, SLOT.x0 + 0.1, by + 0.06, null, 0.6, IRON)
   }
   // The lever on the post: home, taken, pulled.
+  // Long enough, and its knob pale enough, to be seen against the cage's dark: it is his choice, and it was an iron
+  // stroke on dark iron. As it comes home on the let-go, the knob flares where it strikes the stop.
   const lv = lever(t)
   const pv: Pt = [cx1 - 0.1, cy - 0.62]
   const la = -Math.PI / 2 + 0.35 - lv * 1.15
-  line(pen, pv, [pv[0] + Math.cos(la) * 0.28, pv[1] + Math.sin(la) * 0.28], IRON, 1.1)
-  disc(pen, [pv[0] + Math.cos(la) * 0.28, pv[1] + Math.sin(la) * 0.28], 0.035, IRON, 0.5)
+  const L = 0.42
+  const knob: Pt = [pv[0] + Math.cos(la) * L, pv[1] + Math.sin(la) * L]
+  line(pen, pv, knob, IRON, 1.3)
+  disc(pen, pv, 0.035, IRON, 0.5)
+  disc(pen, knob, 0.06, mixHex(LIMBO.lamp, IRON, 0.25), 0.6)
+  const u = t - Q.letGo
+  if (u > -0.05 && u < 0.6) bloom(pen.p, pen.k, knob, 0.45, LIMBO.lamp, 0.55 * Math.exp(-Math.max(0, u) / 0.18))
 }
 
 /* ------------------------------------------------------------------ the front, over everything inside */
