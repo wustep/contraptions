@@ -14,8 +14,6 @@ import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/soft-lamp/lamp
 import { blurOf, layerOf, lensOf } from '../src/shows/versions/soft-lamp/lamp/lens'
 import { MOMENTS } from '../src/shows/versions/soft-lamp/lamp/sky'
 import { SNOW, coverAt, rainAt, snowAt } from '../src/shows/versions/soft-lamp/lamp/world'
-import { HUMAN_STRETCH, reflectionSeen } from '../src/shows/versions/soft-lamp/lamp/reflection'
-import { MOTH_IN, mothAt } from '../src/shows/versions/soft-lamp/lamp/moth'
 import { REACHES, REFILL, knobAt } from '../src/shows/versions/soft-lamp/lamp/hands'
 import { CLIMB, DOZES, SNOW_LOOK, STRETCHES, WASHES, YAWNS, climbAt } from '../src/shows/versions/soft-lamp/lamp/cat'
 
@@ -183,10 +181,9 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     sharp.every((b) => b < 0.005) && close > 0.07 && still.s === 1 && near(still.ox, 0) && near(still.oy, 0), `soft ${close.toFixed(3)}`)
   const m = MOMENTS
   const inFocus = (t: number) => blurOf(lensOf(perf.camera!(t))) <= 0.02
-  check('soft lamp: lightning three times in the heaviest rain, the cat in view; the shooting stars and the neighbour\'s crossings in focus',
+  check('soft lamp: lightning three times in the heaviest rain, the cat in view; the shooting stars in focus',
     m.lightning.length === 3 && m.lightning.every((t) => rainAt(t) >= 0.68 && catInViewAt(t)) &&
-    m.shooting.length >= 2 && m.shooting.every(inFocus) && m.crossings.length >= 5 && m.crossings.every(([t]) => inFocus(t)) &&
-    m.crossings.every(([t]) => m.lightning.every((f) => t < f - 10 || t > f + 10)), JSON.stringify(m))
+    m.shooting.length >= 2 && m.shooting.every(inFocus), JSON.stringify(m))
 
   // The first snow: as the rain thins after the storm, never in the heavy rain, stopped before the shooting stars, and
   // what settles staying to the end; the kitten looks up at it once, in view.
@@ -201,12 +198,11 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     DOZES.length >= 3 && DOZES.length <= 4 && DOZES.every((t) => t > 1100 && t < CLIMB - 30 && catInViewAt(t) && catInViewAt(t + 9) && !machineBusy(t, t + 9, 2) &&
       [...YAWNS, ...WASHES, ...STRETCHES, SNOW_LOOK].every((m) => m < t - 18 || m > t + 15)), JSON.stringify(DOZES))
 
-  // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched, hands round the mug in the
-  // rain, a face drawn in the mist on the glass, the mug taken away after midnight and brought back hot, and the lamp
-  // turned down at the end; each while the camera holds what the hand reaches for, and none over the cat's own moments.
-  const kinds = REACHES.filter((r) => r.kind !== 'page').map((r) => r.kind).join(' ')
+  // Someone at the desk: the lamp turned on as the show opens, a sip, the kitten scratched, the mug taken away after
+  // midnight and brought back hot, and the lamp turned down at the end; each while the camera holds what the hand reaches for, and none over the cat's own moments.
+  const kinds = REACHES.map((r) => r.kind).join(' ')
   const heldFor = (r: (typeof REACHES)[number]) => {
-    const box = r.kind === 'page' ? PROPS.book : r.kind === 'pet' ? PROPS.cat : r.kind === 'lamp' || r.kind === 'on' ? PROPS['lamp base'] : r.kind === 'draw' ? [-3.0, -2.45, -1.8, 0.25] : PROPS.mug
+    const box = r.kind === 'pet' ? PROPS.cat : r.kind === 'lamp' || r.kind === 'on' ? PROPS['lamp base'] : PROPS.mug
     for (let s = r.at; s <= r.at + r.dur; s += 0.5) {
       const c = perf.camera!(s)
       const hw = (c.cells * 16) / 9 / 2
@@ -215,25 +211,14 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     }
     return true
   }
-  check('soft lamp: a hand turns the lamp on, takes a sip, scratches the kitten, warms itself on the mug, draws in the mist, refills the tea after midnight, and turns the lamp down, each in frame, clear of the yawns and washes',
-    [...REACHES.filter((r) => r.kind !== 'page').map((r) => r.kind)].sort().join(' ') === 'away back cup draw lamp on pet sip' && kinds.startsWith('on sip pet') && kinds.endsWith('away back lamp') && REACHES.filter((r) => r.kind === 'draw').every((r) => rainAt(r.at) > 0.55) && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
+  check('soft lamp: a hand turns the lamp on, takes a sip, scratches the kitten, refills the tea after midnight, and turns the lamp down, each in frame, clear of the yawns and washes',
+    kinds === 'on sip pet away back lamp' && REACHES.every(heldFor) && knobAt(0) === 1 && knobAt(MUSIC_END - 2) === 0 && knobAt(MUSIC_END + 5) === 1 &&
     REFILL > 1140 && REFILL < MUSIC_END - 300 &&
     [...YAWNS, ...WASHES].every((m) => m > 0 && REACHES.every((r) => m + 3 < r.at || m > r.at + r.dur)), `${kinds} | ${REACHES.map((r) => r.at.toFixed(0)).join(' ')}`)
 
-  // And it turns a page of the open book three times through the night, in frame.
-  const pages = REACHES.filter((r) => r.kind === 'page')
-  check('soft lamp: a hand turns a page of the open book three times, minutes apart, each in frame, clear of the kitten\'s moments',
-    pages.length === 3 && pages.every(heldFor) && pages.every((r, i) => i === 0 || r.at - pages[i - 1].at > 120) &&
-      [...YAWNS, ...WASHES].every((m) => pages.every((r) => m + 3 < r.at || m > r.at + r.dur)), pages.map((r) => r.at.toFixed(0)).join(' '))
-
-  check('soft lamp: trains cross the city a few times, minutes apart, from the dusk to a little after midnight, and a last one over the snow',
-    m.trains.length === 5 && m.trains.every((t, i) => i === 0 || t - m.trains[i - 1] >= 170) && m.trains[3] < 1450 &&
-      m.trains[4] > SNOW.to && coverAt(m.trains[4]) > 0.85 && m.shooting.every((f) => f < m.trains[4] - 15 || f > m.trains[4] + 30),
+  check('soft lamp: trains cross the city a few times, minutes apart, from the dusk to a little after midnight',
+    m.trains.length === 4 && m.trains.every((t, i) => i === 0 || t - m.trains[i - 1] >= 170) && m.trains[3] < 1450,
     m.trains.join(' '))
-
-  check('soft lamp: a moth comes to the lamp as the rain thins, and is on the moonlit glass at the end',
-    MOTH_IN > 1300 && MOTH_IN < MUSIC_END - 240 && rainAt(MOTH_IN) < 0.3 && mothAt(MOTH_IN - 1).a === 0 && mothAt(1700).a === 1 &&
-    mothAt(DURATION).glass === 1 && mothAt(DURATION).fly === 0, `${MOTH_IN}`)
 
   // The machine's drops and lobs are the show's backbone: the hand, the stretches and the lightning keep clear of them.
   const crowding = [
@@ -242,13 +227,6 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
     ...m.lightning.filter((t) => machineBusy(t, t + 3.2)).map((t) => `lightning ${t}`),
   ]
   check('soft lamp: nothing crowds the machine: no reach, stretch or flash on a drop or a lob', crowding.length === 0, crowding.join(', '))
-
-  check('soft lamp: whoever is at the desk is seen in the dark glass while the lamp is on, never at dusk nor once it is down',
-    reflectionSeen(10) < 0.01 && reflectionSeen(1100) > 0.5 && reflectionSeen(1600) > 0.5 && reflectionSeen(DURATION) < 0.25,
-    [10, 1100, 1600, DURATION].map((t) => reflectionSeen(t).toFixed(2)).join(' '))
-
-  check('soft lamp: once, late, just after the kitten stretches, the one in the window stretches too',
-    HUMAN_STRETCH > 1300 && STRETCHES.some((t) => HUMAN_STRETCH - t > 6.8 && HUMAN_STRETCH - t < 30) && reflectionSeen(HUMAN_STRETCH) > 0.4, `${HUMAN_STRETCH}`)
 
   // At the end it climbs to the sill (the ball's stair, the other way) and sleeps there, under the window, clear of the
   // plant pot, once the ball is in the cup for good and the camera is on the whole room.

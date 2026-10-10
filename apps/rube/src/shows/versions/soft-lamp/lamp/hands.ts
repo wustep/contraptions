@@ -1,19 +1,19 @@
 import { camera } from './camera'
 import { rgba, viewOf } from './canvas'
 import { sweepAt } from './decor'
-import { CAT, GLASS, LAMP, MUG, OPEN } from './desk'
+import { CAT, LAMP, MUG } from './desk'
 import { MUSIC_END, smooth } from './music'
-import { ballAt, machineBusy } from './route'
-import { MOMENTS, wetAt } from './sky'
-import { INK, LAMP_ON, MOUTH, hash, lampAt, lightAt, lit, rainAt } from './world'
+import { machineBusy } from './route'
+import { MOMENTS } from './sky'
+import { INK, LAMP_ON, MOUTH, lampAt, lightAt, lit } from './world'
 
 /**
  * Someone at the desk. The show never shows who: the camera is where they sit, and what is seen of them is a hand in
  * a sweater's sleeve, reaching in from the camera's side now and then, as anyone at a desk does through an evening.
  * Early, while the tea is hot, it takes the mug for a sip: lifts it toward the camera and out of the picture, and
- * a few seconds later sets it back down, steaming. In the cold of the rain it comes and rests round the mug a while,
- * for the warmth. Twice it scratches the kitten under its chin, and the kitten shuts its
- * eyes and leans into it. And at the end, as the last track rings out, it turns the lamp's knob down, and goes.
+ * a few seconds later sets it back down, steaming. In the rain it scratches the kitten under its chin, and the kitten
+ * shuts its eyes and leans into it. About midnight it takes the cold tea away and brings it back hot. And at the end,
+ * as the last track rings out, it turns the lamp's knob down, and goes.
  *
  * Seldom, and slow: a few seconds each, minutes apart, each while the camera is holding what it reaches for, so nothing
  * comes in at the edge of a frame unexplained. Every part of it is a function of show time.
@@ -21,7 +21,7 @@ import { INK, LAMP_ON, MOUTH, hash, lampAt, lightAt, lit, rainAt } from './world
 
 type Ctx = CanvasRenderingContext2D
 
-type Kind = 'on' | 'sip' | 'cup' | 'pet' | 'draw' | 'away' | 'back' | 'lamp' | 'page'
+type Kind = 'on' | 'sip' | 'pet' | 'away' | 'back' | 'lamp'
 
 interface Reach {
   kind: Kind
@@ -31,7 +31,7 @@ interface Reach {
 }
 
 /** How long each takes, seconds, in and out included. */
-const DUR: Record<Kind, number> = { on: 5.6, sip: 11, cup: 13, pet: 9, draw: 9.5, away: 6, back: 6, lamp: 10, page: 7 }
+const DUR: Record<Kind, number> = { on: 5.6, sip: 11, pet: 9, away: 6, back: 6, lamp: 10 }
 /** How long the hand takes to come in, and to go. */
 const IN = 1.5
 const OUT = 1.3
@@ -46,12 +46,8 @@ const BOX: Record<Kind, [number, number, number, number]> = {
   sip: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.1],
   away: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
   back: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
-  cup: [MUG.x - 0.75, -MUG.h - 0.1, MUG.x + 0.45, 0.25],
   pet: [CAT.x0, -1.1, CAT.head.x + 0.75, 0.25],
-  draw: [-3.0, -2.45, -1.8, 0.25],
   lamp: [LAMP.base.x - 0.4, -0.45, LAMP.base.x + 0.7, 0.2],
-  // The open book, and the leaf standing up as it goes over.
-  page: [OPEN.x - OPEN.half - 0.15, OPEN.front - OPEN.half - 0.1, OPEN.x + OPEN.half + 0.6, OPEN.front + 0.02],
 }
 
 /** Whether the camera's frame holds `box` from `t0` to `t1`, clear of its edges. */
@@ -73,14 +69,8 @@ function held(box: [number, number, number, number], t0: number, t1: number): bo
  */
 export const REACHES: Reach[] = (() => {
   const out: Reach[] = []
-  const busy = (t: number, d: number, kind?: Kind) =>
-    // (Hands round the mug, at the desk's dark end, may share the night with someone across the street.)
+  const busy = (t: number, d: number) =>
     [...MOMENTS.shooting].some((m) => m > t - 8 && m < t + d + 6) ||
-    (kind !== 'cup' &&
-      [...MOMENTS.crossings.map(([c, , stop]) => [c, c + 3.6 + stop]), ...MOMENTS.cat.flatMap(([a, b]) => [[a, a + 2.4], [b - 2.4, b]])].some(
-        ([a, b]) => a < t + d + 12 && b > t - 12,
-      )) ||
-    // After a flash, a hand may come for the warm mug: what anyone does as the storm comes closer.
     MOMENTS.lightning.some((m) => m > t - 3.5 && m < t + d + 6) ||
     out.some((r) => Math.abs(r.at - t) < 90) ||
     machineBusy(t, t + d) ||
@@ -88,10 +78,10 @@ export const REACHES: Reach[] = (() => {
       for (let s = t - 2; s <= t + d + 2; s += 0.5) if (sweepAt(s).a > 0.01) return true
       return false
     })()
-  const find = (kind: Kind, from: number, to: number, ok: (t: number) => boolean = () => true) => {
+  const find = (kind: Kind, from: number, to: number) => {
     const d = DUR[kind]
     for (let t = from; t < to; t += 1) {
-      if (ok(t) && !busy(t, d, kind) && held(BOX[kind], t - 1, t + d + 1)) {
+      if (!busy(t, d) && held(BOX[kind], t - 1, t + d + 1)) {
         out.push({ kind, at: t, dur: d })
         return
       }
@@ -103,29 +93,11 @@ export const REACHES: Reach[] = (() => {
   find('sip', 160, 560)
   // The kitten, once in the rain.
   find('pet', 560, 900)
-  // A face drawn in the mist on the glass, in the heaviest of the rain: it stays, and goes as the glass dries.
-  // The ball sits in the cup the while (its walk along the sill would pass behind the arm), and the camera all but
-  // holds still.
-  find('draw', 740, 1250, (t) => {
-    if (rainAt(t) < 0.55) return false
-    const c0 = camera(t - 1)
-    for (let s = t - 1; s <= t + DUR.draw + 1; s += 0.5) {
-      const c = camera(s)
-      if (ballAt(s).x < 1.6 || Math.abs(c.x - c0.x) + Math.abs(c.y - c0.y) > 0.35) return false
-    }
-    return true
-  })
-  // Hands round the mug, in the heaviest of the rain.
-  find('cup', 560, 1300, (t) => rainAt(t) > 0.55)
   // About midnight, the tea gone cold: the mug taken away, and a minute or so later brought back hot (the kettle's
   // time, no longer: the desk by the cat stands empty only that while), the camera holding the desk each time.
   find('away', 1100, 1450)
   const away = out.find((r) => r.kind === 'away')
   if (away) find('back', away.at + 55, away.at + 420)
-  // A page of the open book turned, three times through the night: reading, the hand's longest work.
-  find('page', 975, 1100)
-  find('page', 1230, 1460)
-  find('page', 1480, 1730)
   // The lamp, turned down as the last track rings out: the knob turns as the light goes (`lampAt`).
   out.push({ kind: 'lamp', at: MUSIC_END - 3.6, dur: DUR.lamp })
   return out.sort((a, b) => a.at - b.at)
@@ -192,30 +164,6 @@ export const REFILL = (() => {
   const back = REACHES.find((r) => r.kind === 'back')
   return back ? back.at + 4 : Infinity
 })()
-
-/** When a page is turned, the leaf goes over this many seconds into the reach, taking this long. */
-const LEAF = { from: IN + 0.5, dur: 2.2 }
-
-/**
- * The open book's pages (`book.ts`): how many have been turned by `t`, and how far over the one being turned is (0 flat
- * on the right, 1 flat on the left; 0 when none is).
- */
-export function turnAt(t: number): { n: number; u: number } {
-  let n = 0
-  let u = 0
-  for (const r of REACHES) {
-    if (r.kind !== 'page') continue
-    const s = t - r.at - LEAF.from
-    if (s >= LEAF.dur) n++
-    else if (s > 0) u = smooth(s, 0, LEAF.dur)
-  }
-  return { n, u }
-}
-
-/** Where the leaf's near outer corner is, `u` of the way over: up off the desk as it stands, and down on the left. */
-export function leafCorner(u: number): { x: number; y: number } {
-  return { x: OPEN.x + OPEN.half * Math.cos(Math.PI * u), y: OPEN.front - 0.02 - OPEN.half * 0.8 * Math.sin(Math.PI * u) }
-}
 
 /** How big the mug is drawn, as it comes toward the camera. */
 const grow = (e: number): number => 1 + 2.2 * e * e
@@ -286,39 +234,15 @@ function poseAt(t: number): Pose | null {
     const at = { x: CAT.head.x + 0.1, y: CAT.head.y + 0.21 }
     tip = { x: at.x + d.x * 0.015 * sc, y: at.y + d.y * 0.015 * sc }
     reach = PALM.len + 0.3 * (1 - 0.5 * 0.4)
-  } else if (r.kind === 'cup' || r.kind === 'sip' || r.kind === 'away' || r.kind === 'back') {
-    // Round the mug's front, the fingers wrapped round its far side: for the warmth, now and then a finger tapping;
-    // or to take it up for a sip (`sipAt`), the grip a little firmer.
+  } else if (r.kind === 'sip' || r.kind === 'away' || r.kind === 'back') {
+    // Round the mug's front, the fingers wrapped round its far side, to take it up.
     side = -1
     angle = 1.45
     arm = 3.7
-    const tap = r.kind === 'cup' ? Math.max(0, Math.sin(s * 3.1)) ** 8 * (hash(Math.floor(s / 2), 5) < 0.4 ? 1 : 0) : 0
-    curl = [0.35 - 0.25 * tap, 0.35, 0.4, 0.45]
+    curl = [0.35, 0.35, 0.4, 0.45]
     thumb = 1
     tip = { x: MUG.x + MUG.halfW - 0.02, y: -MUG.h * 0.48 }
     reach = PALM.len + 0.3 * 0.62
-  } else if (r.kind === 'draw') {
-    // One finger out, the others curled, its tip tracing the face in the mist (`DOODLE`): a little up and to the right
-    // of straight, the forearm down past the mug.
-    side = -1
-    angle = 0.12
-    arm = 3.3
-    curl = [0, 0.88, 0.92, 0.95]
-    thumb = 1
-    tip = drawTip(s)
-    reach = 0
-  } else if (r.kind === 'page') {
-    // The right hand, in from below on the right, the leaf's corner between finger and thumb, over to the left with it.
-    side = 1
-    const u = Math.max(0, Math.min(1, (s - LEAF.from) / LEAF.dur))
-    const w = smooth(u, 0, 1)
-    angle = -0.35 - 0.55 * w
-    arm = 2.55 + 0.35 * w
-    curl = [0.2, 0.6, 0.7, 0.75]
-    thumb = 0
-    pinch = 1
-    tip = leafCorner(s < LEAF.from ? 0 : w)
-    reach = PALM.len + 0.3 * 0.75
   } else {
     // The lamp's knob, between finger and thumb, turned as the light comes up, or goes down.
     // From the right, at about the desk's height, as an arm resting along the desk reaches over to it (from below,
@@ -333,144 +257,13 @@ function poseAt(t: number): Pose | null {
     reach = PALM.len + 0.3 * 0.75
   }
   const d = dir(angle)
-  // Drawing, the point is the first finger's tip, off the hand's middle: the wrist is where that finger's tip lands.
-  const index = r.kind === 'draw' ? fingerTip(side, angle) : { x: d.x * reach, y: d.y * reach }
+  const index = { x: d.x * reach, y: d.y * reach }
   const rest = { x: tip.x - index.x, y: tip.y - index.y }
   // In, and out, along the forearm, from beyond the frame's foot.
   const a = dir(arm)
   const away = 3.2 * (1 - k)
   const wrist = { x: rest.x + a.x * away, y: rest.y + a.y * away }
   return { r, s, k, side, wrist, angle, arm, curl, thumb, pinch, tip: { x: tip.x + a.x * away, y: tip.y + a.y * away } }
-}
-
-/** Where the first finger's tip is from the wrist, straight out, for a hand turned `angle` (`hand` draws it so). */
-function fingerTip(side: 1 | -1, angle: number): { x: number; y: number } {
-  const f = FINGERS[0]
-  const by = -PALM.len + 0.04
-  const lx = side * (f.x + f.x * 0.25 * f.len)
-  const ly = by - f.len
-  return { x: lx * Math.cos(angle) - ly * Math.sin(angle), y: lx * Math.sin(angle) + ly * Math.cos(angle) }
-}
-
-/**
- * The face drawn in the mist: a kitten's, a circle, two ears, two eyes and a small mouth, on the lower left pane above
- * the mug, where the glass mists thickest. Strokes in the order a finger draws them.
- */
-const FACE = { x: -2.42, y: -2.2, r: 0.21 }
-const DOODLE: { x: number; y: number }[][] = (() => {
-  const { x, y, r } = FACE
-  const at = (dx: number, dy: number) => ({ x: x + dx, y: y + dy })
-  const head = Array.from({ length: 33 }, (_, i) => {
-    const a = Math.PI * 0.6 + (i / 32) * Math.PI * 2
-    return at(Math.cos(a) * r, Math.sin(a) * r * 0.92)
-  })
-  return [
-    head,
-    [at(-0.17, -0.1), at(-0.15, -0.35), at(-0.045, -0.195)],
-    [at(0.045, -0.195), at(0.15, -0.35), at(0.17, -0.1)],
-    [at(-0.075, -0.045), at(-0.073, 0.0)],
-    [at(0.075, -0.045), at(0.073, 0.0)],
-    [at(-0.045, 0.075), at(-0.022, 0.095), at(0, 0.08), at(0.022, 0.095), at(0.045, 0.075)],
-  ]
-})()
-/** How long each stroke is, and all of them, cells. */
-const STROKE_LEN = DOODLE.map((st) => st.reduce((n, p, i) => (i ? n + Math.hypot(p.x - st[i - 1].x, p.y - st[i - 1].y) : 0), 0))
-const DOODLE_LEN = STROKE_LEN.reduce((a, b) => a + b, 0)
-/** When the finger draws: from a moment after it reaches the glass, for five seconds. */
-const DRAW_FROM = 1.7
-const DRAW_FOR = 5.4
-
-/** When the face starts to go: once the glass is half dry after the rain; it is gone two and a half minutes later. */
-const DRIES = (() => {
-  const r = REACHES.find((x) => x.kind === 'draw')
-  if (!r) return Infinity
-  for (let t = r.at + 20; t < MUSIC_END; t += 1) if (wetAt(t) < 0.5) return t
-  return MUSIC_END
-})()
-
-/** How much of the face is drawn, cells along its strokes, `s` seconds into the reach. */
-const drawnAt = (s: number): number => DOODLE_LEN * smooth(s, DRAW_FROM, DRAW_FROM + DRAW_FOR) ** 1
-
-/** A point `len` along the face's strokes. */
-function along(len: number): { x: number; y: number } {
-  let left = Math.max(0, Math.min(DOODLE_LEN, len))
-  for (let i = 0; i < DOODLE.length; i++) {
-    if (left <= STROKE_LEN[i] || i === DOODLE.length - 1) {
-      const st = DOODLE[i]
-      for (let j = 1; j < st.length; j++) {
-        const seg = Math.hypot(st[j].x - st[j - 1].x, st[j].y - st[j - 1].y)
-        if (left <= seg || j === st.length - 1) {
-          const u = Math.min(1, left / (seg || 1))
-          return { x: st[j - 1].x + (st[j].x - st[j - 1].x) * u, y: st[j - 1].y + (st[j].y - st[j - 1].y) * u }
-        }
-        left -= seg
-      }
-    }
-    left -= STROKE_LEN[i]
-  }
-  return DOODLE[0][0]
-}
-
-/** Where the drawing fingertip is: at the face's start as it arrives, along the strokes as it draws, then off. */
-function drawTip(s: number): { x: number; y: number } {
-  return along(drawnAt(s))
-}
-
-/**
- * The face on the glass: the mist cleared where the finger went, so the night shows through a little clearer. It stays while the glass is wet, rain running over it, and
- * goes as the glass dries. Drawn on the glass, after the night and before the window's frame.
- */
-export function doodle(ctx: Ctx, t: number): void {
-  const r = REACHES.find((x) => x.kind === 'draw')
-  if (!r || t < r.at + DRAW_FROM) return
-  const vis = 1 - smooth(t, DRIES, DRIES + 150)
-  if (vis <= 0.01) return
-  const len = drawnAt(t - r.at)
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect(GLASS.x0, GLASS.y0, GLASS.x1 - GLASS.x0, GLASS.y1 - GLASS.y0)
-  ctx.clip()
-  // The mist it is drawn in, a little thicker there, as where someone has breathed on the glass.
-  // (A breath's worth, wider than the face, so the clear lines are drawn in it and not on bare glass.)
-  ctx.save()
-  ctx.translate(FACE.x, FACE.y + 0.05)
-  ctx.scale(1, 0.8)
-  const m = ctx.createRadialGradient(0, 0, 0.05, 0, 0, 0.85)
-  m.addColorStop(0, rgba('#B9B3DA', 0.34 * vis))
-  m.addColorStop(0.6, rgba('#B9B3DA', 0.2 * vis))
-  m.addColorStop(1, rgba('#B9B3DA', 0))
-  ctx.fillStyle = m
-  ctx.fillRect(-0.9, -0.9, 1.8, 1.8)
-  ctx.restore()
-  ctx.lineCap = 'round'
-  ctx.lineJoin = 'round'
-  let left = len
-  for (let i = 0; i < DOODLE.length && left > 0; i++) {
-    const st = DOODLE[i]
-    ctx.beginPath()
-    ctx.moveTo(st[0].x, st[0].y)
-    let used = 0
-    for (let j = 1; j < st.length; j++) {
-      const seg = Math.hypot(st[j].x - st[j - 1].x, st[j].y - st[j - 1].y)
-      if (used + seg <= left) ctx.lineTo(st[j].x, st[j].y)
-      else {
-        const u = (left - used) / seg
-        ctx.lineTo(st[j - 1].x + (st[j].x - st[j - 1].x) * u, st[j - 1].y + (st[j].y - st[j - 1].y) * u)
-        used = left
-        break
-      }
-      used += seg
-    }
-    left -= STROKE_LEN[i]
-    // Clear glass where the finger went: the night darker and plainer through it, with a faint wet edge.
-    ctx.strokeStyle = rgba('#DCD8F6', 0.16 * vis)
-    ctx.lineWidth = 0.064
-    ctx.stroke()
-    ctx.strokeStyle = rgba('#14122A', 0.36 * vis)
-    ctx.lineWidth = 0.04
-    ctx.stroke()
-  }
-  ctx.restore()
 }
 
 const SKIN = '#9A6352'

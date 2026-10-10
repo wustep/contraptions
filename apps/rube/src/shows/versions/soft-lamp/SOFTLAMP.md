@@ -89,7 +89,7 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   lightning far off lights the clouds three times. What is past the glass has depth: it moves against the bars as the
   camera moves, and goes soft, its lights opening into discs, when the camera is close at the desk (`lamp/lens.ts`). Outside, the city's windows come on
   through the dusk and go out one by one through the night, a few of them the cool flicker of a screen; one, close,
-  is a neighbour's, lit until a little before the end, where now and then someone crosses and a cat sits a while; a red light
+  is a neighbour's, lit until a little before the end; a red light
   blinks on the tallest roof; now and then a plane crosses when the sky is clear. On the glass, beads gather where
   they land and a few run down in fits and starts.
 - **The fairy lights** come on bulb by bulb just after the lamp, breathe with the held sound, each at its own pace,
@@ -109,8 +109,8 @@ ping-pong ball, so a cell is about 15 cm and everything is its real size (the ca
   track's drums leave, it climbs the books to the sill and sleeps there, under the moon. Twice it gets up and stretches, front out long and rear up,
   with a yawn, and settles back down.
 - **Someone** is at the desk, where the camera is: never seen but for a hand in a sweater's sleeve. It turns the lamp
-  on as the show opens and down as it ends; between, it takes a sip, scratches the kitten under its chin, rests round
-  the mug in the rain, draws a face in the mist on the glass, and a little after midnight takes the cold tea away and
+  on as the show opens and down as it ends; between, it takes a sip, scratches the kitten under its chin, and a little
+  after midnight takes the cold tea away and
   brings it back hot (`lamp/hands.ts`).
 
 **The design system.** One ink for every line, the ball's included, at the ball's weight (structure at full weight,
@@ -1514,10 +1514,35 @@ its drawing is redone (`lamp/cat.ts`):
 Left as it is: the ball, which every cold look reads as a pearl or a marble on the cup. It is the machine, and the
 machine is the brief.
 
+### The eighty-seventh pass: less
+
+Eighty-six passes had mostly added. This one only takes away: each thing added late was asked whether the half hour
+would be poorer without it. What went:
+
+248. **The near pothos** (`fore.ts`). Dark, soft blots in the top left corner of every frame. It was there to make the
+     room deep; the curtain, the window and the city's layers already do that, and the corner reads cleaner bare.
+249. **The one in the window** (`reflection.ts`): her face, her notebook and its turning pages, her pen, her stretch,
+     the lamp in the glass. A second, ghostly person and a second notebook laid over the city, the picture's busiest
+     place. The open book on the desk and the hand say someone is studying here; the window goes back to being the night.
+250. **The moth** (`moth.ts`), and the kitten's spells of watching it. Seven minutes of a small thing in the lamp's
+     light, taking the kitten's attention from the music it nods to.
+251. **Three of the hand's errands.** The face drawn in the mist, the hands round the mug, and the three page turns.
+     It comes in six times now: the lamp on, a sip, the chin scratch, the mug away and back, the lamp down. Each has a
+     reason; together they are enough.
+252. **The shelf over the lamp**, its books, its pothos and its string of lights: filler in a top right corner that is
+     better as quiet dark wall. The plain shelf under the ceiling that only a phone held upright sees is kept.
+253. **Across the street, the silhouettes**: the neighbour crossing their window and their cat on its sill, a few
+     pixels each. Their window stays lit.
+254. **The last train** over the snow. The trains stop a little after midnight, as they did before the eightieth pass.
+
+Kept, and why: the kitten and everything it does (it is the one character, and its night builds to its sleep); the
+weather and the snow (the clock); the steam, the fairy lights, the motes and the glow over the cup (they keep time
+with the music); the book and pencil (the desk is somebody's); the window's light on the desk (the end's light).
+Nothing in the machine, its timing or the song changed. The hand's remaining reaches, found by the same search,
+pass every check, as do the kitten's moments.
+
 ## Judgment calls for Stephen
 
-- **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in
-  `scene.ts`) and could go.
 - **The light.** How dark the room falls away from its lights is two colours (`ambientAt`, `lamp/light.ts`, the
   dusk's and the night's); how far the window's light reaches is one number (`windowShare`).
 - **The snow.** The night's second turn: rain to snow to a white city under the moon. It is the largest change to the
@@ -1542,13 +1567,8 @@ machine is the brief.
   move is one per layer (`DEPTH`, `lamp/sky.ts`). Both are set to be felt on a move rather than seen in a still.
 - **The window's light on the desk.** Its strength is three numbers (`spillAt`, `lamp/spill.ts`: the dusk's, the
   moon's, a flash's) and its throw two (`kd`, `kx`).
-- **The hand.** Someone at the desk, never seen but for a hand and a sleeve, eight times (and three page turns): the lamp on, a sip, a chin
-  scratch, hands round the mug, a face drawn in the mist, the mug away and back, the lamp down. It could be fewer (the lamp's two
-  and the refill alone would still say someone is there). The sweater's colour is one constant (`KNIT`, `lamp/hands.ts`).
-- **The reflection.** The one person in the show, seen only in the window, faint. It is the boldest addition; its
-  strength is one number (`globalAlpha`, `lamp/reflection.ts`), and it could go entirely and leave the hand alone.
-- **The moth.** The room's only living thing besides the kitten (and the hand), for the last seven minutes.
-  Its spells of the kitten's attention take a little from its nodding along late in the night.
+- **The hand.** Someone at the desk, never seen but for a hand and a sleeve, six times: the lamp on, a sip, a chin
+  scratch, the mug away and back, the lamp down (the eighty-seventh pass took it down from eleven). The sweater's colour is one constant (`KNIT`, `lamp/hands.ts`).
 - **The lightning.** Three far-off flashes, no bolt. They could be fewer, or gone; they are the only sudden light in
   the half hour.
 - **The camera.** The cold reviewers' big suggestion was to hold the wide room most of the time. Taken halfway (the
@@ -1568,4 +1588,4 @@ every step and the cup landing on one or three; the lob on the last drum bar's t
 last downbeat; the turn at the pot and a walk that never turns back or stops; nods only on kicks struck on one or three,
 in the groove, in the cup; the ball in the hollow while it sits; still at the end; the camera under half a frame a
 second and half a frame a second a second; every held frame whole and clear; Zoom; the words; the first snow after the heavy rain, stopped before the shooting
-stars, settled to the end, and the kitten looking up at it in view.
+stars, settled to the end, and the kitten looking up at it in view; the hand's six reaches, each in frame.

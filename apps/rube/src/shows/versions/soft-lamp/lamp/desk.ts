@@ -37,12 +37,6 @@ export const ROD = { y: -5.78, x0: -4.4, x1: 1.05 }
 export const CURTAIN = { x0: -4.3, x1: -3.2, tie: -3.05, hem: -1.72 }
 
 /** The sill: its top, and how far it runs either side of the frame. The ball tips off its right end. */
-/**
- * The small shelf on the wall over the lamp's arm: right of the window's look (whose right edge is at 4.57) and above
- * the desk's looks (whose tops are at -3.55 at the highest), so neither cuts it, its string of lights and its pothos's
- * vines included; and inside the room's home frame and the still take's.
- */
-export const SHELF = { x0: 4.59, x1: 5.65, y: -4.1 }
 export const SILL = { y: -1.42, x0: -3.78, x1: 0.9, thick: 0.1 }
 /** The ball's height on the sill (its middle). */
 export const ON_SILL = SILL.y - R
@@ -145,7 +139,5 @@ export const PROPS: Record<string, [number, number, number, number]> = {
   band: [CUP.x + CUP.halfW * 0.94 + 0.06, CUP.top, FAR_CUP.x - CUP.halfW * 0.94 - 0.06, DESK.top * 0.5],
   book: [0.95, DESK.top * 0.2, 2.29, DESK.top * 0.95],
   pencil: [0.08, DESK.top * 0.45, 0.78, DESK.top * 0.85],
-  // The shelf over the lamp, its books and pothos, and below it the string of lights and the vines.
-  shelf: [SHELF.x0, SHELF.y - 0.6, SHELF.x1 + 0.1, SHELF.y + 0.47],
   clock: [CLOCK.x - CLOCK.r - 0.03, CLOCK.y - CLOCK.r - 0.03, CLOCK.x + CLOCK.r + 0.05, CLOCK.y + CLOCK.r + 0.05],
 }

@@ -12,12 +12,9 @@ import { ceiling, hanger, highShelf, underDesk } from './room'
 import { ballShadow, contacts, wallShadows } from './shade'
 import { camera } from './camera'
 import { titlesAt } from './titles'
-import { REFILL, doodle, hands, knob, liftAt } from './hands'
-import { moth } from './moth'
+import { REFILL, hands, knob, liftAt } from './hands'
 import { rimAt, rimLine } from './rim'
-import { reflection } from './reflection'
 import { light } from './light'
-import { foreground } from './fore'
 import { cable, walkman } from './walkman'
 import { rgba, viewOf } from './canvas'
 import { flashRoom, night } from './sky'
@@ -1041,15 +1038,13 @@ function lamp(ctx: Ctx, lw: number, t: number): void {
 export const room = scenery<null>('room', (p, _s, c) => inCells(p, c, (ctx, lw) => {
   wall(ctx, c.t)
   ceiling(ctx, lw, c.t)
-  highShelf(ctx, lw, c.t, fairyGlowAt(c.t))
+  highShelf(ctx, lw, c.t)
   hanger(ctx, lw, c.t)
   print(ctx, lw, c.t)
   notes(ctx, lw, c.t)
   clock(ctx, lw, c.t)
   headlights(ctx, c.t)
   night(ctx, c.t)
-  reflection(ctx, c.t)
-  doodle(ctx, c.t)
   frame(ctx, lw, c.t)
   curtain(ctx, lw, c.t)
   fairyLights(ctx, lw, c.t)
@@ -1090,15 +1085,12 @@ export const things = scenery<null>(
     lip(ctx, lw, c.t)
     beatGlow(ctx, c.t)
     // Someone's hand, now and then, in front of it all.
-    moth(ctx, lw, c.t)
     hands(ctx, lw, c.t, (g) => mug(g, lw, c.t))
     // The room's light over all of it: the lamp's pool, the window and the fairy lights keep what they reach.
     light(ctx, c.t)
     bloom(ctx, c.t)
     motes(ctx, c.t)
     flashRoom(ctx, c.t)
-    // Nearest of all, out of focus: the pothos hanging into the corner.
-    foreground(ctx, c.t)
     vignette(ctx)
     // Under each track's now-playing line (not the title or the credits, which stand on the dark wall).
     for (const card of titlesAt(c.t)) if (card.names.length === 1 && Array.isArray(card.names[0])) scrim(ctx, card.light, card.at, camera(c.t).cells)

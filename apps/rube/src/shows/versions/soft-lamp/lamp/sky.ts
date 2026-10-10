@@ -6,7 +6,7 @@ import { MUSIC_END, smooth } from './music'
 import { blurOf, inLayer, layerOf, lensIn, lensOf, onWall, type Lens } from './lens'
 import { sweepAt } from './decor'
 import { machineBusy } from './route'
-import { SNOW, cloudAt, coldAt, coverAt, hash, snowAt, lampAt, nightAt, rainAt, skyAt } from './world'
+import { cloudAt, coldAt, coverAt, hash, snowAt, lampAt, nightAt, rainAt, skyAt } from './world'
 import { FLAKES, flakes, landed, roofSnow, settled } from './snow'
 import { antenna, fireEscape, waterTower } from './roofs'
 
@@ -648,14 +648,6 @@ const TRAINS: number[] = (() => {
     if ([...FLIGHTS].some((f) => Math.abs(f - at) < 40)) continue
     if (trainSeen(at)) out.push(at)
   }
-  // The last train, over the white roofs.
-  for (let at = SNOW.to + 30; at < MUSIC_END - TRAIN_DUR - 20; at += 1) {
-    if ([...FLIGHTS].some((f) => Math.abs(f - at) < 40) || SHOOTS.some((f) => f > at - 15 && f < at + TRAIN_DUR + 15)) continue
-    if (trainSeen(at)) {
-      out.push(at)
-      break
-    }
-  }
   return out
 })()
 
@@ -1036,77 +1028,11 @@ function city(ctx: Ctx, t: number, sky: { low: string; mid: string; dusk: number
 
 /**
  * One window across the street, close enough to see into: the neighbour's, up late too. Its light comes on in the dusk
- * and goes out a little before ours goes down. A thin curtain is drawn across its left. Now and then someone crosses
- * behind it, and once, in the heaviest of the rain, stops at the glass to look out at it a while; twice a cat walks
- * along its sill, sits, its tail tip going, and walks off. Small, and seldom: the city's one other person, not a
- * second show.
+ * and goes out a little before ours goes down. A thin curtain is drawn across its left.
  */
 const FLAT = { x0: -1.98, x1: -1.62, y0: -1.98, y1: -1.73 }
 const FLAT_ON = 38
 const FLAT_OFF = 1652
-
-/** Whether the camera's frame shows the neighbour's window, with its light round it, through all of `t` to `t + dur`. */
-function flatSeen(t: number, dur: number): boolean {
-  for (let s = t; s <= t + dur; s += 0.5) {
-    const c = camera(s)
-    const hh = c.cells / 2
-    const hw = (hh * 16) / 9
-    // Where it is through the glass from there, and in focus enough to see someone in it.
-    const lens = lensOf(c)
-    if (blurOf(lens) > 0.02) return false
-    const a = onWall(lens, DEPTH.near, FLAT.x0, FLAT.y0)
-    const b = onWall(lens, DEPTH.near, FLAT.x1, FLAT.y1)
-    if (a.x - 0.1 < c.x - hw || b.x + 0.1 > c.x + hw || a.y - 0.1 < c.y - hh || b.y + 0.05 > c.y + hh) return false
-    if (a.x - 0.06 < GLASS.x0 || b.x + 0.06 > GLASS.x1 || (a.x < WINDOW.mullion + 0.08 && b.x > WINDOW.mullion - 0.08)) return false
-  }
-  return true
-}
-
-/** Whether `t` is near a flash of lightning: what happens across the street keeps clear of the storm's moments. */
-const nearFlash = (t: number): boolean => FLASHES.some((f) => t > f - 15 && t < f + FLASH_LOOK + 8)
-
-const WALK = 3.6
-const LOOK = 7
-const CAT_WALK = 2.4
-
-/**
- * When someone crosses (and which way, and how long they stop at the glass), and when the cat comes and goes: played
- * to the camera as the kitten on the desk is, each at a moment the frame holds the window for all of it, a few minutes
- * apart. The one who stops to look out does it in the heaviest rain the camera gives a window for.
- */
-const { PASSES, SITS } = (() => {
-  const passes: [number, 1 | -1, number][] = []
-  let last = -Infinity
-  for (let t = FLAT_ON + 120; t < FLAT_OFF - 30 && passes.length < 4; t += 1) {
-    if (t - last < 210 || nearFlash(t) || machineBusy(t, t + WALK, 4) || !flatSeen(t, WALK + 1)) continue
-    passes.push([t, passes.length % 2 ? -1 : 1, 0])
-    last = t
-  }
-  // The look: of the times the window is in frame long enough, the wettest, kept clear of the others.
-  let best = -1
-  let bestRain = 0.4
-  for (let t = FLAT_ON + 120; t < FLAT_OFF - 30; t += 1) {
-    const r = rainAt(t)
-    if (r <= bestRain || nearFlash(t) || machineBusy(t, t + WALK + LOOK, 4) || passes.some(([p]) => Math.abs(p - t) < 60) || !flatSeen(t, WALK + LOOK + 1)) continue
-    best = t
-    bestRain = r
-  }
-  if (best > 0) passes.push([best, -1, LOOK])
-  passes.sort((a, b) => a[0] - b[0])
-  // The cat: two visits of two minutes or more, each arrival and leaving in frame.
-  const sits: [number, number][] = []
-  for (let t = 520; t < FLAT_OFF - 200 && sits.length < 2; t += 1) {
-    if (sits.length && t < sits[sits.length - 1][1] + 240) continue
-    if (passes.some(([p]) => Math.abs(p - t) < 15) || machineBusy(t, t + CAT_WALK, 4) || !flatSeen(t, CAT_WALK + 1)) continue
-    for (let u = t + 120; u < t + 260; u += 1) {
-      if (!passes.some(([p]) => Math.abs(p - u) < 15) && !machineBusy(u - CAT_WALK, u, 4) && flatSeen(u - CAT_WALK - 1, CAT_WALK + 1)) {
-        sits.push([t, u])
-        break
-      }
-    }
-  }
-  return { PASSES: passes, SITS: sits }
-})()
 
 function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
   const { x0, x1, y0, y1 } = FLAT
@@ -1133,70 +1059,6 @@ function neighbour(ctx: Ctx, t: number, sky: { dusk: number }): void {
     ctx.beginPath()
     ctx.rect(x0, y0, w, h)
     ctx.clip()
-    const shadow = rgba('#2A1610', 0.82 * on)
-    // Someone crossing, head and shoulders, a little bob in their step.
-    for (const [at, dir, stop] of PASSES) {
-      const walk = WALK
-      const s = t - at
-      if (s < 0 || s > walk + stop) continue
-      const u = s < walk / 2 ? s / walk : s < walk / 2 + stop ? 0.5 : (s - stop) / walk
-      const px = dir > 0 ? x0 - 0.08 + u * (w + 0.16) : x1 + 0.08 - u * (w + 0.16)
-      const moving = s < walk / 2 || s > walk / 2 + stop
-      const bob = moving ? Math.abs(Math.sin(s * 5.2)) * 0.008 : 0
-      const head = y0 + 0.075 - bob
-      ctx.fillStyle = shadow
-      ctx.beginPath()
-      ctx.arc(px, head, 0.032, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.beginPath()
-      ctx.moveTo(px - 0.075, y1 + 0.02)
-      ctx.quadraticCurveTo(px - 0.075, head + 0.045, px, head + 0.04)
-      ctx.quadraticCurveTo(px + 0.075, head + 0.045, px + 0.075, y1 + 0.02)
-      ctx.closePath()
-      ctx.fill()
-    }
-    // The cat: walks in from the right along the sill, sits, its tail tip flicking, and goes the way it came.
-    for (const [from, to] of SITS) {
-      if (t < from || t > to) continue
-      const walk = CAT_WALK
-      const sitX = x0 + w * 0.62
-      const inU = Math.min(1, (t - from) / walk)
-      const outU = Math.max(0, (t - (to - walk)) / walk)
-      const cx = sitX + (1 - smoothStep(inU, 0, 1)) * (x1 + 0.08 - sitX) + smoothStep(outU, 0, 1) * (x1 + 0.08 - sitX)
-      const sitting = inU >= 1 && outU <= 0
-      const base = y1 - 0.004
-      ctx.fillStyle = rgba('#2A1610', 0.9 * on)
-      ctx.beginPath()
-      // Sitting, it is upright, a pear; walking, it is long and low.
-      if (sitting) ctx.ellipse(cx, base - 0.035, 0.028, 0.036, 0, 0, Math.PI * 2)
-      else ctx.ellipse(cx, base - 0.025, 0.045, 0.022, 0, 0, Math.PI * 2)
-      ctx.fill()
-      const hx = sitting ? cx - 0.004 : cx - 0.04
-      const hy = sitting ? base - 0.08 : base - 0.05
-      ctx.beginPath()
-      ctx.arc(hx, hy, 0.02, 0, Math.PI * 2)
-      ctx.moveTo(hx - 0.019, hy - 0.006)
-      ctx.lineTo(hx - 0.014, hy - 0.034)
-      ctx.lineTo(hx - 0.004, hy - 0.016)
-      ctx.moveTo(hx + 0.019, hy - 0.006)
-      ctx.lineTo(hx + 0.014, hy - 0.034)
-      ctx.lineTo(hx + 0.004, hy - 0.016)
-      ctx.fill()
-      // The tail: round its feet when it sits, the tip going; out behind when it walks.
-      const flick = sitting ? Math.sin(t * 2.1) * Math.max(0, Math.sin(t * 0.43)) : 0
-      ctx.strokeStyle = rgba('#2A1610', 0.9 * on)
-      ctx.lineWidth = 0.011
-      ctx.lineCap = 'round'
-      ctx.beginPath()
-      if (sitting) {
-        ctx.moveTo(cx + 0.02, base - 0.006)
-        ctx.quadraticCurveTo(cx + 0.06, base - 0.004, cx + 0.058 + flick * 0.01, base - 0.03 - Math.abs(flick) * 0.012)
-      } else {
-        ctx.moveTo(cx + 0.04, base - 0.03)
-        ctx.quadraticCurveTo(cx + 0.075, base - 0.05, cx + 0.085, base - 0.075)
-      }
-      ctx.stroke()
-    }
     // The curtain across its left, thin, lit through.
     const c = ctx.createLinearGradient(x0, 0, x0 + w * 0.34, 0)
     c.addColorStop(0, rgba('#E8C4A0', 0.4 * on))
@@ -1330,4 +1192,4 @@ function drops(ctx: Ctx, t: number, rain: number): void {
 }
 
 /** The window's moments played to the camera, for the report and the check. */
-export const MOMENTS = { trains: TRAINS, lightning: FLASHES, shooting: SHOOTS, planes: FLIGHTS, crossings: PASSES, cat: SITS }
+export const MOMENTS = { trains: TRAINS, lightning: FLASHES, shooting: SHOOTS, planes: FLIGHTS }
