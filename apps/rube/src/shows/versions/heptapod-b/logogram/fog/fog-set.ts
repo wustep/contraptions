@@ -10,8 +10,8 @@ import { costelloNib, F3, F4, FOG1, GREAT, herAt, P0, RINGS } from './fog-plan'
 
 /**
  * Beyond the glass, drawn: white fog without a floor, soft volumes drifting at several depths, a denser white far
- * below; Costello near and huge, Abbott further back and paler; the rings they write hanging where and when they
- * were written. Everything is read from the plan by show time, so the ink she rides is the ink drawn.
+ * below; Costello near and huge, Abbott further back and paler; the rings they write, where and when they are
+ * written. Everything is read from the plan by show time, so the ink she rides is the ink drawn.
  */
 
 type Frame = ReturnType<typeof frame>
@@ -150,7 +150,9 @@ const behind = (t: number, d: number, off: Pt): Pt => {
 const costelloHigh = (() => {
   const g = GREAT.ring
   const x = mono([[130, 7.5], [139.6, 8.2], [159.9, g.c[0] + 1.2], [186, g.c[0] + 1.6]])
-  const y = mono([[130, -4.6], [139.6, -4.8], [159.9, g.c[1] - g.r - 1.8], [186, g.c[1] - g.r - 1.6]])
+  // Over the great ring its feet stand clear above the frame: only its pen comes down into the picture, never the
+  // ends of its other limbs as stubs along the top edge.
+  const y = mono([[130, -4.6], [139.6, -4.8], [159.9, g.c[1] - g.r - 2.6], [186, g.c[1] - g.r - 2.6]])
   return (t: number): Pt => [x(t), y(t)]
 })()
 const COSTELLO_H = 16
@@ -180,18 +182,56 @@ function reachFor(f: Frame, at: Pt, d: number, limb: number, P: Pt, u: number): 
   return { limb, to, u, bow: to[0] < rootX ? 0.13 : -0.13 }
 }
 
-/** What Costello's reaching limb is doing at `t`: writing a ring, spinning the crescent, or the great ring's pen. */
-function costelloReach(t: number, f: Frame, at: Pt, h: number, d: number): HeptapodOpts['reach'] {
+type Reach = NonNullable<HeptapodOpts['reach']>
+
+/**
+ * The limb that writes ring `r`: the one whose foot is nearest where its first ink lands, as things stand when it is
+ * born, chosen once. (Chosen afresh every frame from the moving camera, it flipped to another limb in a single frame
+ * whenever the frame's middle passed between two feet.)
+ */
+function writerLimb(r: Ring): number {
+  const tb = r.born
+  const far = inFog2(tb)
+  const at = far ? costelloFarAt(tb) : costelloHigh(tb)
+  const d = far ? COSTELLO_FAR.d : 1
+  const h = far ? COSTELLO_FAR.h : COSTELLO_H
+  // The frame's middle, there: her way (what the far presences are placed from).
+  const cx = wayAt(tb)[0]
+  const P = firstInk(r)
+  return nearestLimb(at, h, cx + (P[0] - cx) / d, 3)
+}
+
+/**
+ * What Costello's reaching limbs are doing at `t`: writing rings, spinning the crescent, or the great ring's pen. The
+ * strongest first. Rings written close together overlap: each one's limb comes and goes on its own, so the next one's
+ * reach never appears all at once as the last one's ends (it did: a limb switched in a single frame).
+ */
+function costelloReaches(t: number, f: Frame, at: Pt, d: number): Reach[] {
   // Writing: the limb nearest reaches toward where the ring will be while its jet goes, then draws back.
+  const writing: Reach[] = []
   for (const r of RINGS) {
     if (!r.by || r.by.who !== 'costello' || r.key === 'G') continue
     const t0 = r.by.t0
     if (t < t0 - 0.9 || t > r.born + 1.5) continue
-    const P = firstInk(r)
-    const X = f.cx + (P[0] - f.cx) / d
     const u = 0.6 * sstep((t - (t0 - 0.9)) / 0.9) * (1 - sstep((t - (r.born + 0.2)) / 1.3))
-    return reachFor(f, at, d, nearestLimb(at, h, X, 3), P, u)
+    if (u <= 1e-4) continue
+    const a = reachFor(f, at, d, writerLimb(r), firstInk(r), u)
+    // Two on the one limb: it goes between them as much as each has reached, never jumping from one to the other.
+    const same = writing.find((w) => w.limb === a.limb)
+    if (same) {
+      const k = a.u / (a.u + same.u)
+      same.to = [same.to[0] + (a.to[0] - same.to[0]) * k, same.to[1] + (a.to[1] - same.to[1]) * k]
+      same.bow = (same.bow ?? 0) + ((a.bow ?? 0) - (same.bow ?? 0)) * k
+      same.u = Math.max(same.u, a.u)
+    } else writing.push(a)
   }
+  if (writing.length) return writing.sort((a, b) => b.u - a.u)
+  const one = costelloOther(t, f, at, d)
+  return one ? [one] : []
+}
+
+/** Costello's reach when it is not writing: spinning the crescent, or the great ring's pen. */
+function costelloOther(t: number, f: Frame, at: Pt, d: number): HeptapodOpts['reach'] {
   // Spinning the crescent (fog3's three pushes, fog4's kick): its front limb comes down, its tip on the rim, and
   // pushes it round, carried with it a little way, and lifts off.
   const W = RINGS.find((r) => r.key === 'W')
@@ -220,6 +260,7 @@ function costello(t: number, f: Frame): Staged {
   const at = far ? costelloFarAt(t) : costelloHigh(t)
   const d = far ? COSTELLO_FAR.d : 1
   const h = far ? COSTELLO_FAR.h : COSTELLO_H
+  const reaches = costelloReaches(t, f, at, d)
   const o: HeptapodOpts = {
     t,
     h,
@@ -229,7 +270,8 @@ function costello(t: number, f: Frame): Staged {
     fog: far ? 0.68 : 0.42,
     air: FOG.white,
     color: FOG.heptapod,
-    reach: costelloReach(t, f, at, h, d),
+    reach: reaches[0],
+    also: reaches.slice(1),
     // What it does comes out of the fog: the reaching limb clearer than the body it leaves.
     reachFog: far ? 0.42 : 0.24,
     lean: 0.05 * Math.sin(t * 0.13),
@@ -291,50 +333,37 @@ function tipOf(f: Frame, s: Staged, limb: number): Pt {
   return seen(f, s.depth, s.at[0] + tx, s.at[1] + ty)
 }
 
-/* ------------------------------------------------------------------ the writing already in the fog */
-
-/**
- * Logograms hanging at depth along fog2 (written before, or far off while she goes): paler and smaller with distance,
- * each placed to be seen from her way at `tc` at `off` from her, so the fog fills with writing as the show goes.
- */
-const HANGING = [
-  { seed: 401, r: 2.6, d: 0.36, born: 126.5, tc: 143.6, off: [3.9, -2.2] as Pt },
-  { seed: 419, r: 2.9, d: 0.34, born: 140.5, tc: 147.6, off: [4.4, 2.0] as Pt },
-  { seed: 421, r: 2.3, d: 0.4, born: 146.9, tc: 150.6, off: [-4.2, -2.1] as Pt },
-  { seed: 431, r: 2.7, d: 0.35, born: 149.4, tc: 153.3, off: [4.0, -2.6] as Pt },
-].map((h) => ({ ...h, at: behind(h.tc, h.d, h.off) }))
-
-function drawHanging(p: p5, k: number, f: Frame, t: number): void {
-  if (!inFog2(t)) return
-  for (const w of HANGING) {
-    const s = t - w.born
-    if (s < 0) continue
-    const [x, y] = seen(f, w.d, w.at[0], w.at[1])
-    if (x + w.r * w.d < f.x0 - 1 || x - w.r * w.d > f.x1 + 1 || y + w.r * w.d < f.y0 - 1 || y - w.r * w.d > f.y1 + 1) continue
-    p.push()
-    p.translate(x * k, y * k)
-    drawLogogram(p, k * w.d, { r: w.r, seed: w.seed, t, form: 0.35 + 0.65 * sstep(s / 3.4), start: hash(w.seed, 1) * TAU, spin: 0.02 * t, fade: clamp01((s - 30) / 40), color: mixHex(FOG.inkSoft, FOG.white, 0.3), light: 0.3 })
-    p.pop()
-  }
-}
-
 /* ------------------------------------------------------------------ the rings */
 
 function drawRing(p: p5, k: number, ring: Ring, t: number): void {
   const ink = inkAt(ring, t)
   if (!ink) return
   const marks = marksAt(ring, t)
-  const base = { r: ring.r, seed: ring.seed, t, spin: ink.spin, fade: ink.fade, color: FOG.ink, light: ring.light, marks, taper: ink.taper }
+  // Where she is on it, when she is on it (or all but): so no tendril grows out of her.
+  const her = herAt(t)
+  const dx = her[0] - ring.c[0]
+  const dy = her[1] - ring.c[1]
+  const clear = Math.abs(Math.hypot(dx, dy) - ring.r) < 0.6 ? Math.atan2(dy, dx) - ink.spin : undefined
+  const back = ring.recede === undefined ? 1 : 1 - 0.6 * sstep((t - ring.recede) / 1.0)
+  const base = { r: ring.r, seed: ring.seed, t, spin: ink.spin, fade: ink.fade, color: FOG.ink, light: ring.light * back, marks, taper: ink.taper, clear }
   p.push()
   p.translate(ring.c[0] * k, ring.c[1] * k)
   if (ring.key === 'G' && t < ring.closed) {
     // The great ring, as it is written: her half from her pen at its bottom, Costello's from its pen at its top,
-    // each the same ink turned half a turn from the other.
-    const lo = ring.lo(t)
+    // each the same ink turned half a turn from the other. Each half's tail is held a little short of the other's pen
+    // (the inks' round ends would otherwise run together a second and more early, and the ring read closed before it
+    // is), and on the close the tails run into the gaps: the halves meet on 183.182, seen to. Held only where it comes
+    // near that pen (half a turn back from its own head): early on the ink runs out both ways from under her.
     const hi = ring.hi(t)
+    const lo = Math.max(ring.lo(t), hi - Math.PI + JOIN_GAP * (1 - sstep((t - (ring.closed - JOIN_RUN)) / JOIN_RUN)))
     const half = Math.max(0, (hi - lo) / 2)
     const form = 0.7 * (0.5 - Math.sin(Math.asin(1 - 2 * Math.min(1, half / Math.PI)) / 3)) * 0.9999
-    const taper = Math.min(ring.taper, Math.max(0.015, 0.3 * (TAU - 4 * half)))
+    // Each half's ends run out to a point over as much of the ink as lies between her pen and them, so they read as
+    // ink running, not a blunt cut, and never thin under her, where she rides it at its full thickness (her place on
+    // it is worked out from its whole width).
+    const pen = GREAT.her(t) - GREAT.spin(t)
+    const lead = Math.min(LEAD_TAPER, 0.8 * Math.min(hi - pen, pen - lo))
+    const taper = Math.min(lead, Math.max(0.015, 0.3 * (TAU - 4 * half)))
     drawLogogram(p, k, { ...base, start: (lo + hi) / 2, form, taper })
     drawLogogram(p, k, { ...base, start: (lo + hi) / 2 - Math.PI, form, taper })
   } else {
@@ -345,21 +374,30 @@ function drawRing(p: p5, k: number, ring: Ring, t: number): void {
 
 /* ------------------------------------------------------------------ the set */
 
+/** How far short of the other half's pen each half's tail is held while the great ring is written, and how long its run into the gap on the close takes. */
+const JOIN_GAP = 0.35
+const JOIN_RUN = 0.18
+/** The most a half of the great ring's forming ends taper over, radians (as other rings' do). */
+const LEAD_TAPER = 0.4
+
 /** The fog's standing drawing, for the whole show (it is only ever on the stage while she is beyond the glass). */
 export function drawFog(p: p5, k: number, t: number): void {
   const f = frame(p, k)
   p.push()
   p.noStroke()
   drawAir(p, k, f, t)
-  // Far off: Abbott, and the logograms hanging at depth; then Costello behind her way, the nearer air,
+  // Far off: Abbott; then Costello behind her way, the nearer air,
   // Costello over it; then the white the tops of them go into; then the ink.
+  // While Abbott holds her it is the nearest of them (in her plane, and darker than Costello in the fog), so it is
+  // drawn over the nearer air and over Costello's reaching limb; as it draws back it goes behind them again.
   const A = abbott(t)
-  if (A) drawStaged(p, k, f, A)
-  drawHanging(p, k, f, t)
+  const holding = A !== null && A.depth > 0.95
+  if (A && !holding) drawStaged(p, k, f, A)
   const C = costello(t, f)
   if (C.depth < 1) drawStaged(p, k, f, C)
   drawLayer(p, k, f, LAYERS[2], t)
   if (C.depth >= 1) drawStaged(p, k, f, C)
+  if (A && holding) drawStaged(p, k, f, A)
   // The white they stand in: the upper frame thickens to it, so a limb comes down out of the fog, not from the edge
   // (less in the wide frames, where the heptapods are far up it).
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -379,8 +417,10 @@ export function drawFog(p: p5, k: number, t: number): void {
     const u = (t - ring.by.t0) / (ring.born - ring.by.t0)
     if (u <= 0 || u >= 1.6) continue
     const start = (ring.lo(ring.born) + ring.hi(ring.born)) / 2 + ring.spin(ring.born)
-    const reach = C.o.reach
-    const limb = reach ? reach.limb : ring.by.limb
+    // Its own ring's limb (rings close together are written by two limbs at once): the one nearest its first ink.
+    const reaching = [C.o.reach, ...(C.o.also ?? [])].filter((r): r is Reach => !!r)
+    const own = writerLimb(ring)
+    const limb = reaching.some((r) => r.limb === own) ? own : (C.o.reach?.limb ?? ring.by.limb)
     drawSpray(p, k, tipOf(f, C, limb), onInk(ring, start, ring.born), u, FOG.ink, 1.15)
   }
   p.pop()

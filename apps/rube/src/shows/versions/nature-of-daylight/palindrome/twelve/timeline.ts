@@ -54,9 +54,8 @@ export const PRESSES = [278.639, 279.661, 280.654, 281.612, 282.523, 283.458, 28
 export const CALL_KEY = B(288.554)
 /** The number Shang gave her, as keys of the phone's row (0..5), one a beat. */
 export const NUMBER = [1, 4, 2, 2, 5, 0, 3, 3, 1, 4]
-/** The link's signal pulses round the whole ring, both ways from Montana, on each beat after it closes. */
-export const PULSES = [304.785, 305.662, 306.561, 307.513, 308.442, 309.348, 310.317].map(B)
-export const PULSE_FOR = 0.78
+/** She speaks: from the call on, her voice goes up the cable on each beat to the ring. */
+export const VOICE = [CALL_KEY, ...BEATS.filter((b) => b.t > CALL_KEY + 0.5 && b.t < 311).map((b) => b.t)]
 
 /** The falls and rises, as the check reads them: the eleven screens in the order they went, and came back. */
 export const FALLS: { screen: number; t: number }[] = Array.from({ length: 11 }, (_, n) => ({ screen: n + 1, t: release(n + 1) }))
@@ -64,7 +63,7 @@ export const RISES: { screen: number; t: number }[] = Array.from({ length: 11 },
 
 /** Every strike of the tent: each on a beat (the dark strikes all fourteen of its beats; the call every beat from the wake). */
 export const DARK_HITS: number[] = [...F.slice(1), ...SLIPS[1]].sort((a, b) => a - b)
-export const CALL_HITS: number[] = [WAKE, ...PRESSES, CALL_KEY, ...S.slice(1), ...STEPS[11], ...STEPS[1], ...PULSES].sort((a, b) => a - b)
+export const CALL_HITS: number[] = [WAKE, ...PRESSES, CALL_KEY, ...S.slice(1), ...STEPS[11], ...STEPS[1], ...VOICE.filter((v) => v > WHOLE)].sort((a, b) => a - b)
 
 /* ------------------------------------------------------------------ motion */
 
@@ -303,22 +302,6 @@ export function linkSpan(j: number, t: number): { from: number; to: number; fron
 
 /** The flare of the ring closing on the loudest bar: 1 on it, dying away over a couple of seconds. */
 export const closeFlare = (t: number): number => (t >= WHOLE ? Math.exp(-(t - WHOLE) / 1.1) : 0)
-
-/** The ring's pulses after it closes: each a pair of lights going both ways round from Montana, meeting at the top. */
-export function pulsesAt(t: number): { u: number; a: number }[] {
-  const out: { u: number; a: number }[] = []
-  for (const at of PULSES) {
-    // Each goes round from Montana as her words reach it up the cable.
-    const tau = t - at - CALL_UP
-    if (tau < 0 || tau > PULSE_FOR + 0.25) continue
-    const u = Math.min(1, tau / PULSE_FOR)
-    out.push({ u: 1 - (1 - u) * (1 - u) * 0.35 - (1 - u) * 0.65, a: tau > PULSE_FOR ? 1 - (tau - PULSE_FOR) / 0.25 : 1 })
-  }
-  return out
-}
-
-/** She speaks: from the call on, her voice goes up the cable on each beat to the ring. */
-export const VOICE = [CALL_KEY, ...BEATS.filter((b) => b.t > CALL_KEY + 0.5 && b.t < 311).map((b) => b.t)]
 
 /** The lights going up the cable from the phone to Montana: each 0..1 of the way, and how bright (the call's the most). */
 export function cablePulses(t: number): { u: number; a: number }[] {

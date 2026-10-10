@@ -20,6 +20,8 @@ export interface Card {
   role?: string
   names: (string | [string, string] | [string, string, string])[]
   notes?: string[]
+  /** Its role and "as" lines in the card's cream, not gold (`TitleCard.plain`): over the dusk's still light sky. */
+  plain?: boolean
 }
 
 const FORM = 1.3
@@ -35,9 +37,12 @@ const OVERLAP = 0.25
 export const CREDITS_AT = 232.745
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 2.3, role: 'Directed by', names: ['Claude Opus 5.5'] },
+  // The first two come up while the dusk is still light: their gold role and "as" lines were under WCAG's 4.5:1 for small
+  // text against the sky behind them (3.8:1 at worst), so they are in the card's cream; by the third the sky is night.
+  { hold: 2.3, role: 'Directed by', names: ['Claude Opus 5.5'], plain: true },
   {
     hold: 3.1,
+    plain: true,
     role: 'With',
     names: [
       // Carl is square: the page's small bar in the disc's footprint.
@@ -84,6 +89,13 @@ function lightOf(card: Card, t: number): { light: number; rise: number } {
   return { light: easeInOutCubic(up) * (1 - easeInOutCubic(down)), rise: (1 - easeInOutCubic(up)) * 0.8 }
 }
 
+/**
+ * The least unit of the cards' type, in pixels: on a phone held upright the frame is about 220px high, and at a
+ * hundredth of it the roles were 4px and the cast's lines 9; at this they read (a role 8.6px, a name 25), and the
+ * widest card, the cast, is still under three quarters of the screen. On any larger stage it does nothing.
+ */
+const LEAST = 4.5
+
 /** The cards up at `t`, for the page to set (`Performance.titles`). */
 export function creditsAt(t: number): TitleCard[] {
   if (t < CREDITS_AT) return []
@@ -91,7 +103,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `married-life-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, lift: LIFT })
+    out.push({ key: `married-life-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, lift: LIFT, least: LEAST, plain: card.plain })
   })
   return out
 }

@@ -48,7 +48,7 @@ export const L_HOPS: readonly [number, number][] = [
 export const I_HOPS: readonly [number, number][] = [
   [pulse(310), pulse(312)],
   [pulse(340), pulse(342)],
-  [pulse(350), pulse(352)],
+  [pulse(351), pulse(353)],
   [pulse(357), pulse(359)],
 ]
 /** The deck's lamp knocks on its bracket's stop as gravity settles (pulse 300). */

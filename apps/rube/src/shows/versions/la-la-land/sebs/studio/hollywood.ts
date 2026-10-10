@@ -1,10 +1,10 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, laneAt, mixHex, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { beam, box, carried, glow, knock, part, rgba, ring, smooth, type Ctx, type Way } from '../kit'
+import { beam, box, carried, glow, hash, knock, part, rgba, ring, smooth, type Ctx, type Way } from '../kit'
 import { dream, snap } from '../music'
 import { G, hop } from '../physics'
-import { STUDIO_MAT as M } from '../worlds'
+import { MIA, STUDIO_MAT as M } from '../worlds'
 import { BURST, EXIT, MIA_AT_BURST, SIGN, clothDrop, flood as studioFlood, monotone } from './studio'
 
 /**
@@ -37,9 +37,9 @@ const onset = (t: number) => snap(t, 0.02)?.t ?? t
 const FLOURISH = [166.15, 166.487, 166.847, 167.114, 167.462, 167.845].map(onset)
 const BUTTON = FLOURISH[5]
 /** The lamps going out, one by one, into the blackout. */
-const OUT = [169.993, 170.539, 170.841, 171.085].map(onset)
+export const OUT = [169.993, 170.539, 170.841, 171.085].map(onset)
 /** Mia is ours until the dark is whole. */
-const MIA_TO = 171.4
+const MIA_TO = 171.96
 
 /* ------------------------------------------------------------------ the set */
 
@@ -113,8 +113,8 @@ const MIA_BUSH = SEB_BUSH.map((k) => k + 2)
 
 type Build = { segs: Seg[]; last: Way }
 const start = (at: number, p: Pt): Build => ({ segs: [], last: { at, p } })
-function hopTo(b: Build, p: Pt, at: number): void {
-  const w = hop(b.last, p, at)
+function hopTo(b: Build, p: Pt, at: number, g?: number): void {
+  const w = hop(b.last, p, at, g)
   b.segs.push({ from: b.last.p, to: p, dur: at - b.last.at, arc: w.arc })
   b.last = { at, p }
 }
@@ -163,7 +163,12 @@ function miaPath(): Build {
   // Stopped a step behind him when the colour comes; onto the trap as it resets, and out on the next beat.
   const b = start(0, [MIA_AT_BURST, 0])
   rollTo(b, TRAP, t(166), { ease: 'inout' })
-  for (let i = 0; i < 4; i++) hopTo(b, [STARS[2 * i + 1].x, 0], t(168 + 2 * i))
+  // Leapfrog: she waits on her star while he vaults over her, then a short hop of one beat to the next, landing on its
+  // star as he goes over the one ahead. While he is over her she is on the ground, and they never pass through each other.
+  for (let i = 0; i < 4; i++) {
+    rollTo(b, b.last.p, t(167 + 2 * i))
+    hopTo(b, [STARS[2 * i + 1].x, 0], t(168 + 2 * i))
+  }
   // Along the front of the kick-line: on at the pace she landed with, stopping to watch him go up the toes, then after him.
   const x0 = STARS[7].x
   const along = monotone([
@@ -225,16 +230,23 @@ function drawSign(p: p5, c: Ctx, t: number): void {
   const { k } = c
   const dy = -clothDrop(t)
   const blaze = knock(t - BUTTON, 0.5)
+  // Whose dream this is: over the flourish's six hits the sign goes from white to her yellow, a block a hit from the
+  // middle outward, and blazes in it on the last: her name in lights, without a letter.
+  const hers = (i: number): number => {
+    const from = FLOURISH[Math.min(5, Math.floor(Math.abs(i - 4) * 1.3))] - 0.05
+    return smooth(t, from, from + 0.18)
+  }
   SIGN.forEach((b, i) => {
     const on = lampLevel(t, SIGN_AT[i], OUT[3])
     if (on <= 0) return
     const lift = on + 0.5 * blaze
-    glow(p, k, b.x, b.y - b.h / 2 + dy, 0.95 + 0.4 * blaze, M.lamp, 0.42 * lift, 1, 1.15)
+    const y = hers(i)
+    glow(p, k, b.x, b.y - b.h / 2 + dy, 0.95 + 0.4 * blaze + 0.3 * y, mixHex(M.lamp, MIA, 0.8 * y), (0.42 + 0.2 * y) * lift, 1, 1.15)
     p.push()
     p.translate(X(k, b.x), X(k, b.y + dy))
     p.rotate(b.tilt)
     p.noStroke()
-    p.fill(mixHex(mixHex(M.sign, M.hill, 0.42), M.sign, Math.min(1, lift)))
+    p.fill(mixHex(mixHex(mixHex(M.sign, M.mountain, 0.42), M.sign, Math.min(1, lift)), MIA, 0.85 * y))
     p.rect(X(k, -b.w / 2), X(k, -b.h), X(k, b.w), X(k, b.h))
     p.pop()
   })
@@ -284,15 +296,72 @@ const HILL: Pt[] = (() => {
   return pts
 })()
 
+/** Where the hill's left and right outlines are at height `y` (between the floor and the crest). */
+function hillSpan(y: number): [number, number] {
+  const side = (pts: Pt[]) => {
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const [x0, y0] = pts[i]
+      const [x1, y1] = pts[i + 1]
+      if ((y <= y0 && y >= y1) || (y >= y0 && y <= y1)) return x0 + ((x1 - x0) * (y - y0)) / (y1 - y0 || 1)
+    }
+    return pts[0][0]
+  }
+  const i = HILL.findIndex(([x]) => x === CREST[1])
+  return [side(HILL.slice(0, i)), side(HILL.slice(i))]
+}
+/** Scrub on the hill: dabs scattered over its face, clear of the road's stretches. */
+const SCRUB: [number, number, number][] = (() => {
+  const out: [number, number, number][] = []
+  for (let i = 0; i < 70 && out.length < 34; i++) {
+    const y = FLOOR - 0.15 + (YC + FLOOR + 0.5 - FLOOR) * hash(i, 41)
+    const [a, b] = hillSpan(y)
+    const x = a + 0.2 + (b - a - 0.4) * hash(i, 42)
+    if (ROAD.some(([x0, x1, ry]) => x > x0 - 0.3 && x < x1 + 0.3 && Math.abs(y - ry - 0.08) < 0.32)) continue
+    out.push([x, y, 0.06 + 0.06 * hash(i, 43)])
+  }
+  return out
+})()
+
 function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
   const { k, ink, weight } = c
-  const hill = paint(15, t, M.hill)
+  // The near hill stands in its own shadow against the sunset: deep indigo at its foot, a little lighter toward the
+  // crest, and a rim of the sun's coral along the side and the crest that face it.
+  const hill = paint(15, t, M.hillLit)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const outlineHill = () => {
+    p.beginShape()
+    p.curveVertex(X(k, HILL[0][0]), X(k, HILL[0][1]))
+    for (const [x, y] of HILL) p.curveVertex(X(k, x), X(k, y))
+    p.curveVertex(X(k, HILL[HILL.length - 1][0]), X(k, HILL[HILL.length - 1][1]))
+    p.endShape(p.CLOSE)
+  }
   solid(p, ink, weight, hill)
-  p.beginShape()
-  p.curveVertex(X(k, HILL[0][0]), X(k, HILL[0][1]))
-  for (const [x, y] of HILL) p.curveVertex(X(k, x), X(k, y))
-  p.curveVertex(X(k, HILL[HILL.length - 1][0]), X(k, HILL[HILL.length - 1][1]))
-  p.endShape(p.CLOSE)
+  const shade = ctx.createLinearGradient(0, X(k, YC + FLOOR), 0, X(k, FLOOR))
+  shade.addColorStop(0, hill)
+  shade.addColorStop(1, paint(15, t, M.hillDeep))
+  ctx.fillStyle = shade
+  outlineHill()
+  // The rim: the crest and the sunward (right) flank, a soft line of coral just inside the outline.
+  const rim = paintAt(15, t)
+  if (rim > 0.02) {
+    p.noFill()
+    p.stroke(rgba(M.skyCoral, 0.75 * rim))
+    p.strokeWeight(X(k, 0.05))
+    p.beginShape()
+    const lit = HILL.slice(HILL.findIndex(([x]) => x === CREST[0]) - 1, HILL.length - 1)
+    p.curveVertex(X(k, lit[0][0] + 0.04), X(k, lit[0][1] + 0.05))
+    for (const [x, y] of lit) p.curveVertex(X(k, x - (x > CREST[1] ? 0.05 : 0)), X(k, y + 0.05))
+    p.curveVertex(X(k, lit[lit.length - 1][0] - 0.05), X(k, lit[lit.length - 1][1]))
+    p.endShape()
+    // Scrub on the slopes, dabbed in, catching a little of the light on its upper edge.
+    p.noStroke()
+    for (const [x, y, r] of SCRUB) {
+      p.fill(rgba(M.hillDeep, 0.55 * rim))
+      p.ellipse(X(k, x), X(k, y), X(k, r * 2.2), X(k, r * 1.3))
+      p.fill(rgba(M.ridge, 0.35 * rim))
+      p.ellipse(X(k, x + r * 0.15), X(k, y - r * 0.35), X(k, r * 1.4), X(k, r * 0.5))
+    }
+  }
   // The road: its hairpins first (up the face behind the bushes), then the stretches, blue, a pale line down each.
   const road = paint(15, t, M.road)
   const edge = mixHex(road, ink, 0.35)
@@ -628,17 +697,21 @@ export const hollywood = part<HollyState>(
     // The burst, close by the door; then back, all the way, to the whole painted set as the sign lights.
     { t: BURST - 0.04, cells: 5.4, off: [0.35, -1.35], w: 0 },
     { t: BURST + 0.45, cells: 6.2, off: [0.6, -1.5], w: 0 },
-    { t: beat(170), cells: 17, hold: [8.4, -5.0], w: 1 },
-    { t: beat(174.5), cells: 17, hold: [8.6, -5.0], w: 1 },
+    { t: beat(170), cells: 9.0, hold: [6.8, -2.9], w: 1 },
+    { t: beat(174.5), cells: 8.6, hold: [7.4, -2.6], w: 1 },
     // In on the kick-line.
     { t: beat(176.5), cells: 6.4, hold: [9.2, -1.25], w: 0.85 },
     { t: beat(181.5), cells: 6.6, hold: [10.4, -1.3], w: 0.85 },
     // The hill, whole, rising with them.
     { t: beat(185.5), cells: 6.4, hold: [14.9, -2.6], w: 0.45 },
     { t: beat(197), cells: 5.9, hold: [15.0, -3.5], w: 0.4 },
-    { t: beat(207), cells: 6.8, hold: [15.0, -4.5], w: 0.5 },
-    // The crest and its fan of light, wide.
-    { t: FLOURISH[0] - 0.3, cells: 13, hold: [14.6, -5.7], w: 1 },
+    { t: beat(207), cells: 6.8, hold: [14.6, -6.2], w: 0.6 },
+    // The top of the number: the two of them on the crest under the whole sign, the searchlights fanning out of it on
+    // the six hits; then back to the whole hill as its lamps go out one by one.
+    { t: FLOURISH[0] - 0.3, cells: 6.9, hold: [13.7, -7.55], w: 1 },
+    // Pushing in on them across the six accelerating hits, so the frame builds with the music to the last.
+    { t: 167.95, cells: 5.9, hold: [13.75, -7.7], w: 1 },
+    { t: 168.9, cells: 6.3, hold: [13.8, -7.6], w: 1 },
     { t: OUT[0], cells: 13.4, hold: [14.6, -5.7], w: 1 },
     { t: MIA_TO, cells: 14, hold: [14.6, -5.8], w: 1 },
   ],

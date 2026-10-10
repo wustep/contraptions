@@ -1,9 +1,9 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { mix, rgba } from '../cast'
-import { frame, hash } from '../kit'
+import { frame, hash, scratchPair, softLayer } from '../kit'
 import { HOUSE } from '../worlds'
-import { SEAM } from '../music'
+import { LAST, SEAM } from '../music'
 import { FLOOR, lightAt, ss, type Light } from './time'
 
 /**
@@ -216,6 +216,17 @@ function forest(ctx: Ctx, k: number, trees: Pine[], off: number, gx0: number, gx
  * floor with the window's light on it. `shadows` are the things standing in the light (their outlines at rest on the
  * floor, world cells), whose shadows fall toward us.
  */
+/**
+ * The fog's own clock: show time, but once the last note has gone it runs on four times as fast, eased in over four
+ * seconds, so the long hold under the credits breathes (at the music's pace the banks moved a pixel in a few seconds,
+ * and the room stood frozen for half a minute).
+ */
+function fogTime(T: number): number {
+  const u = T - LAST
+  if (u <= 0) return T
+  return T + (u < 4 ? (3 * u * u) / 8 : 3 * (u - 2))
+}
+
 export function drawRoom(p: p5, k: number, T: number): void {
   const ctx = p.drawingContext as Ctx
   const f = frame(p, k)
@@ -381,9 +392,12 @@ function drawView(ctx: Ctx, k: number, T: number, L: Light, C: Mood, f: { cx: nu
     for (let i = 0; i < 7; i++) {
       const y = shore + 0.02 + 0.1 * i + 0.03 * Math.sin(i * 2.3)
       const len = 2.2 + 1.6 * hash(i, 3, 1)
-      const drift = ((T * (0.018 + 0.01 * hash(i, 3, 2)) + hash(i, 3, 3) * 9) % 9) - 4.5
-      for (let j = -2; j <= 2; j++) {
-        const cx = gx0 + ((((j * 4.6 + drift + far * 0.8 + i * 1.7) % 23) + 23) % 23) - 3
+      // Never wrapped on its own: each bank's copies are drawn either side of the 23-cell period, so one crossing
+      // its end is already coming in at the other, and nothing jumps.
+      const drift = fogTime(T) * (0.018 + 0.01 * hash(i, 3, 2)) + hash(i, 3, 3) * 9 - 4.5
+      for (let n = 0; n < 15; n++) {
+        const j = (n % 5) - 2
+        const cx = gx0 + ((((j * 4.6 + drift + far * 0.8 + i * 1.7) % 23) + 23) % 23) - 3 + 23 * (Math.floor(n / 5) - 1)
         if (cx < gx0 - len || cx > gx1 + len) continue
         ctx.save()
         ctx.translate(px(cx), px(y))
@@ -474,40 +488,42 @@ export function drawFloorLight(p: p5, k: number, T: number, shadows: Pt[][], bal
   if (L.sun > 0.01 && gx1 > gx0) {
     const panes = [WIN_X[0], ...MULLIONS, WIN_X[1]]
     const sun = mix(HOUSE.lamp, HOUSE.linen, 0.3)
-    ctx.save()
-    ctx.filter = `blur(${Math.max(1, k * 0.06).toFixed(1)}px)`
-    for (let i = 0; i + 1 < panes.length; i++) {
-      const a = panes[i] + 0.06
-      const b = panes[i + 1] - 0.06
-      if (b < x0 - 1 || a - SLANT * LEN > x1 + 1) continue
-      const g = ctx.createLinearGradient(0, px(FLOOR), 0, px(FLOOR + LEN))
-      g.addColorStop(0, rgba(sun, 0.26 * L.sun))
-      g.addColorStop(0.6, rgba(sun, 0.1 * L.sun))
-      g.addColorStop(1, rgba(sun, 0))
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.moveTo(px(a), px(FLOOR))
-      ctx.lineTo(px(b), px(FLOOR))
-      ctx.lineTo(px(b - SLANT * LEN), px(FLOOR + LEN))
-      ctx.lineTo(px(a - SLANT * LEN), px(FLOOR + LEN))
-      ctx.closePath()
-      ctx.fill()
-    }
-    // What stands in the light keeps it off the floor behind it: soft, faint shadows toward us.
-    ctx.fillStyle = rgba(C.floorFar, 0.5 * L.sun)
-    for (const outline of shadows) {
-      ctx.beginPath()
-      outline.forEach(([x, y], i) => {
-        const h = FLOOR - Math.min(FLOOR, y)
-        const sx = x - SLANT * h * 0.8
-        const sy = FLOOR + h * 0.8
-        if (i === 0) ctx.moveTo(px(sx), px(sy))
-        else ctx.lineTo(px(sx), px(sy))
-      })
-      ctx.closePath()
-      ctx.fill()
-    }
-    ctx.restore()
+    // Blurred once, small: each pane and shadow blurred on its own (six or more full blurs a frame) made the house
+    // the costliest place in the show by three times.
+    const reach = LEN + 1.2
+    softLayer(ctx, [px(x0), px(FLOOR - 0.1), px(x1), px(FLOOR + reach)], Math.max(1, k * 0.06), (c) => {
+      for (let i = 0; i + 1 < panes.length; i++) {
+        const a = panes[i] + 0.06
+        const b = panes[i + 1] - 0.06
+        if (b < x0 - 1 || a - SLANT * LEN > x1 + 1) continue
+        const g = c.createLinearGradient(0, px(FLOOR), 0, px(FLOOR + LEN))
+        g.addColorStop(0, rgba(sun, 0.26 * L.sun))
+        g.addColorStop(0.6, rgba(sun, 0.1 * L.sun))
+        g.addColorStop(1, rgba(sun, 0))
+        c.fillStyle = g
+        c.beginPath()
+        c.moveTo(px(a), px(FLOOR))
+        c.lineTo(px(b), px(FLOOR))
+        c.lineTo(px(b - SLANT * LEN), px(FLOOR + LEN))
+        c.lineTo(px(a - SLANT * LEN), px(FLOOR + LEN))
+        c.closePath()
+        c.fill()
+      }
+      // What stands in the light keeps it off the floor behind it: soft, faint shadows toward us.
+      c.fillStyle = rgba(C.floorFar, 0.5 * L.sun)
+      for (const outline of shadows) {
+        c.beginPath()
+        outline.forEach(([x, y], i) => {
+          const h = FLOOR - Math.min(FLOOR, y)
+          const sx = x - SLANT * h * 0.8
+          const sy = FLOOR + h * 0.8
+          if (i === 0) c.moveTo(px(sx), px(sy))
+          else c.lineTo(px(sx), px(sy))
+        })
+        c.closePath()
+        c.fill()
+      }
+    })
   }
   // Where things touch the floor: a small close shadow, in any light.
   for (const [bx] of balls) {
@@ -522,6 +538,36 @@ export function drawFloorLight(p: p5, k: number, T: number, shadows: Pt[][], bal
     ctx.fillRect(px(bx - 0.17), px(FLOOR - 0.16), px(0.34), px(0.34))
     ctx.restore()
   }
+}
+
+/**
+ * The balls given back by the polished floor too. The mirror copies only what is drawn before them, so the cradle
+ * stood in the oak and Louise and Ian on it did not: each now has a dim soft reflection under it, as faint as the
+ * mirror's and fading into the oak. `balls` are each a ball's middle and its colour.
+ */
+export function drawBallMirror(p: p5, k: number, T: number, balls: [Pt, string][]): void {
+  const ctx = p.drawingContext as Ctx
+  const f = frame(p, k)
+  if (FLOOR > f.y1 || FLOOR < f.y0) return
+  const L = lightAt(T)
+  const C = roomColors(L)
+  const a = 0.17 + 0.1 * L.morn - 0.07 * L.night
+  ctx.save()
+  // Soft by its gradient, not a blur filter (a filter is costly every frame): brightest just under the floor line, where
+  // the ball meets its reflection, fading down and out to nothing at its rim.
+  for (const [[x, y], color] of balls) {
+    const r = FLOOR - y
+    const cy = FLOOR + r
+    const g = ctx.createRadialGradient(x * k, (FLOOR + 0.35 * r) * k, 0, x * k, cy * k, r * 1.05 * k)
+    g.addColorStop(0, rgba(mix(color, C.floorFar, 0.2), a))
+    g.addColorStop(0.55, rgba(mix(color, C.floorFar, 0.4), a * 0.55))
+    g.addColorStop(1, rgba(mix(color, C.floorFar, 0.6), 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(x * k, cy * k, r * 1.05 * k, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
 }
 
 /**
@@ -550,13 +596,28 @@ export function drawMirror(p: p5, k: number, T: number): void {
   const sw = Math.min(cw, Math.ceil(bx)) - sx
   const sh = Math.min(ch, Math.ceil(by)) - sy
   if (sw <= 2 || sh <= 2) return
+  // Copied small and blurred there once, then laid on turned over: blurred whole, it cost the house a third again.
+  const S = 0.5
+  const blur = Math.max(0.8, m.a * k * 0.02)
+  const pad = Math.ceil(3 * blur * S) + 2
+  const w = Math.ceil(sw * S) + 2 * pad
+  const h = Math.ceil(sh * S) + 2 * pad
+  const pair = scratchPair(w + 4, h + 4)
+  const [A, B] = pair.map((c) => c.getContext('2d') as Ctx)
+  A.setTransform(1, 0, 0, 1, 0, 0)
+  A.clearRect(0, 0, w + 4, h + 4)
+  A.drawImage(ctx.canvas, sx, sy, sw, sh, pad, pad, sw * S, sh * S)
+  B.setTransform(1, 0, 0, 1, 0, 0)
+  B.clearRect(0, 0, w + 4, h + 4)
+  B.filter = `blur(${(blur * S).toFixed(2)}px)`
+  B.drawImage(pair[0], 0, 0, w, h, 0, 0, w, h)
+  B.filter = 'none'
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.globalAlpha = 0.17 + 0.1 * L.morn - 0.07 * L.night
-  ctx.filter = `blur(${Math.max(0.8, m.a * k * 0.02).toFixed(1)}px)`
   ctx.translate(0, 2 * Math.round(by))
   ctx.scale(1, -1)
-  ctx.drawImage(ctx.canvas, sx, sy, sw, sh, sx, sy, sw, sh)
+  ctx.drawImage(pair[1], 0, 0, w, h, sx - pad / S, sy - pad / S, w / S, h / S)
   ctx.restore()
   // The oak takes it back as it comes toward us.
   ctx.save()

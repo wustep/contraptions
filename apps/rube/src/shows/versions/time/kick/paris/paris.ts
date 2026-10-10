@@ -2,7 +2,10 @@ import { laneAt, mixHex, type Pt } from '../../../../../parts'
 import type { ShowBall } from '../../../../../show'
 import { box, frame, part, scenery, type Company, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
-import { COBB, PARIS, PARIS_THEME } from '../worlds'
+import { COBB, MAL, PARIS, PARIS_THEME } from '../worlds'
+
+/** Mal's edge in Paris: the light off the stone on the wine. */
+const MAL_RIM = mixHex(PARIS.stone, MAL, 0.25)
 import {
   ariAt,
   ARI_HOP_OVER,
@@ -146,13 +149,16 @@ export const paris = part<ParisState>(
           // and then, on the eighth, round to him.
           const look = (p: Pt) => Math.atan2(p[1] - y, p[0] - x)
           const a0 = look(ariAt(Math.min(t, STRIKE + 0.35)))
-          if (t <= MAL_TURN) return { x, y, spin: a0 }
+          // Among the black of the projections her wine would sink into them: the light off the stone catches her
+          // edge, so she is seen coming out of them.
+          const rim = MAL_RIM
+          if (t <= MAL_TURN) return { x, y, spin: a0, rim }
           const a1 = look(cobbPos(t))
           let d = a1 - a0
           while (d > Math.PI) d -= 2 * Math.PI
           while (d < -Math.PI) d += 2 * Math.PI
           const u = Math.min(1, (t - MAL_TURN) / 0.2)
-          return { x, y, spin: a0 + d * u * u * (3 - 2 * u) }
+          return { x, y, spin: a0 + d * u * u * (3 - 2 * u), rim }
         },
       },
     ]

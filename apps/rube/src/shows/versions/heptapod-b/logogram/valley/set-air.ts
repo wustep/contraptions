@@ -59,6 +59,66 @@ export function lobeR(ctx: CanvasRenderingContext2D, k: number, x: number, y: nu
   ctx.restore()
 }
 
+const beams = new Map<string, HTMLCanvasElement>()
+/**
+ * A shaft of light from `a` to `b` (cells), `w0` across at `a` and `w1` at `b`, its whole soft width: dense along
+ * its middle and nothing at its edges, so however close the camera comes it never shows a pane's edge. `along(v)`
+ * is how bright it is from `a` (0) to `b` (1); `kind` names that curve, for the cache. Drawn from a sprite made
+ * once for each kind, colour and taper, set onto the beam's line. `level` cuts its ends level instead of square to
+ * it, for a shaft that comes down onto flat ground.
+ */
+export function softBeam(ctx: CanvasRenderingContext2D, k: number, a: readonly [number, number], b: readonly [number, number], w0: number, w1: number, rgb: string, al: number, kind: string, along: (v: number) => number, level = false): void {
+  if (al <= 0.004) return
+  const W = 256
+  const H = 128
+  const wide = Math.max(w0, w1)
+  // Its taper in eighths of a doubling (fine near a point, coarse near its full width), so a beam that opens or
+  // narrows makes a few sprites, not one a frame.
+  const q = (w: number) => 2 ** (Math.round(Math.log2(Math.max(1 / 256, w / wide)) * 8) / 8)
+  const q0 = q(w0)
+  const q1 = q(w1)
+  const key = `${kind}|${rgb}|${q0}|${q1}`
+  let sprite = beams.get(key)
+  if (!sprite) {
+    sprite = document.createElement('canvas')
+    sprite.width = W
+    sprite.height = H
+    const c = sprite.getContext('2d')!
+    const [r, g, bl] = rgb.split(',').map(Number)
+    const img = c.createImageData(W, H)
+    for (let y = 0; y < H; y++) {
+      const v = (y + 0.5) / H
+      const down = along(v)
+      const half = lerp(q0, q1, v)
+      for (let x = 0; x < W; x++) {
+        const u = (Math.abs((x + 0.5) / W - 0.5) * 2) / half
+        const across = u >= 1 ? 0 : (1 - u * u) ** 2
+        const i = (y * W + x) * 4
+        img.data[i] = r
+        img.data[i + 1] = g
+        img.data[i + 2] = bl
+        img.data[i + 3] = Math.round(255 * clamp01(down) * across)
+      }
+    }
+    c.putImageData(img, 0, 0)
+    beams.set(key, sprite)
+  }
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const L = Math.hypot(dx, dy)
+  // Level, its width is measured across the frame, not across it: near enough for a beam that leans a little.
+  const [nx, ny] = level ? [1, 0] : [-dy / L, dx / L]
+  ctx.save()
+  ctx.globalAlpha *= Math.min(1, al)
+  ctx.imageSmoothingEnabled = true
+  // Bilinear: the sprite is only ever stretched, where 'high' looks no different and costs far more.
+  ctx.imageSmoothingQuality = 'low'
+  // The sprite's across onto the beam's normal, its down onto the line from `a` to `b`.
+  ctx.transform((nx * wide * k) / W, (ny * wide * k) / W, (dx * k) / H, (dy * k) / H, (a[0] - (nx * wide) / 2) * k, (a[1] - (ny * wide) / 2) * k)
+  ctx.drawImage(sprite, 0, 0)
+  ctx.restore()
+}
+
 /** Smooth value noise in [0, 1) along x. */
 export function vnoise(x: number, seed: number): number {
   const i = Math.floor(x)

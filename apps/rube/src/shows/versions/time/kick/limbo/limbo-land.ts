@@ -19,6 +19,7 @@ import {
   SUN_AT,
   SWING,
   memory,
+  Q,
   TOP_OF_SKY,
   TREE,
   UPRUSH,
@@ -472,6 +473,45 @@ export function surface(x: number, t: number): number {
 /** Where the sea's surface meets the sand (the swash aside), for drawing the water only as far as it goes. */
 const SHORE_END = WATERLINE + 0.9
 
+/**
+ * The return (from the dive on): pieces of the city they built, fallen into the sea, afloat off the shore he washes up
+ * on, so the circle back to the show's first frame is the same place, but further gone (two viewers new to it read the
+ * close return as the opening replayed). Slabs of concrete with their window holes, tilted, riding the swell, half under.
+ */
+const WRECKAGE: [number, number, number, number][] = [
+  // x, width, height, tilt
+  [-9.1, 0.8, 0.3, -0.18],
+  [-10.7, 1.2, 0.4, 0.12],
+  [-12.6, 0.8, 0.3, -0.3],
+]
+function drawWreckage(pen: Pen, t: number, xa: number, xb: number): void {
+  if (t < Q.under) return
+  const ctx = pen.p.drawingContext as CanvasRenderingContext2D
+  const { k } = pen
+  WRECKAGE.forEach(([x, w, h, tilt], i) => {
+    if (x + w < xa || x - w > xb) return
+    const y = surface(x, t) + 0.06
+    const turn = tilt + 0.06 * Math.sin(t * 1.3 + i * 2)
+    ctx.save()
+    ctx.translate(x * k, y * k)
+    ctx.rotate(turn)
+    // Its face, lit along its top, and its window holes; its lower part under the water.
+    ctx.fillStyle = mixHex(LIMBO.concrete, LIMBO.sky, 0.15)
+    ctx.fillRect((-w / 2) * k, -h * k, w * k, h * 1.7 * k)
+    ctx.fillStyle = mixHex(LIMBO.concrete, LIMBO.foam, 0.4)
+    ctx.fillRect((-w / 2) * k, -h * k, w * k, 0.05 * k)
+    ctx.fillStyle = mixHex(LIMBO.concreteDark, SLEEP.mid, 0.3)
+    for (let q = 0; q < Math.floor(w / 0.24); q++) ctx.fillRect((-w / 2 + 0.08 + q * 0.24) * k, (-h + 0.1) * k, 0.12 * k, 0.12 * k)
+    ctx.strokeStyle = pen.ink
+    ctx.lineWidth = Math.max(1, pen.w * 0.6)
+    ctx.strokeRect((-w / 2) * k, -h * k, w * k, h * 1.7 * k)
+    ctx.restore()
+    // The sea over its foot, and the foam where it breaks round it.
+    soft(pen, x, y + 0.12, w * 0.75, 0.14, mixHex(NEAR_SEA, LIMBO.seaDeep, 0.3), 0.95)
+    soft(pen, x, y + 0.02, w * 0.7, 0.07, LIMBO.foam, 0.55)
+  })
+}
+
 export function drawSea(pen: Pen, t: number, f: Frame): void {
   if (f.x0 > SHORE_END || f.y0 > BOTTOM || f.y1 < SEA - 2) return
   const xa = f.x0 - 1
@@ -495,6 +535,7 @@ export function drawSea(pen: Pen, t: number, f: Frame): void {
   ])
   const glint: Pt[] = [...top, ...top.slice().reverse().map(([x, y]): Pt => [x, y + 0.035])]
   wash(pen, glint, LIMBO.foam, 0.45)
+  drawWreckage(pen, t, xa, xb)
   // Foam on the breakers' crests as they rise to break.
   for (const tk of WAVES) {
     const ahead = tk - t
@@ -530,8 +571,26 @@ export function drawGround(pen: Pen, f: Frame): void {
     pts.push([hi, sandY(hi)])
     wash(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + th])], col, a)
   }
-  band(-200, WATERLINE, SEABED_TOP, 1, 0.45)
-  band(WATERLINE, 200, LIMBO.sand, 1, 0.34)
+  // The seabed's skin and the sand's cross-fade under the water's edge, so the shore runs down into the sea and is
+  // not cut off square at the waterline (the sea over it is clear enough to show a square end).
+  const M = 0.35
+  const fade = (x0: number, x1: number, col: string, th: number, a0: number, a1: number) => {
+    const lo = Math.max(xa, x0)
+    const hi = Math.min(xb, x1)
+    if (hi <= lo) return
+    const pts: Pt[] = []
+    for (let x = lo; x <= hi + 1e-9; x += Math.min(step, 0.05)) pts.push([x, sandY(x)])
+    pts.push([hi, sandY(hi)])
+    hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + th])], x0, x1, [
+      [0, col, a0],
+      [1, col, a1],
+    ])
+  }
+  band(-200, WATERLINE - M + 0.06, SEABED_TOP, 1, 0.45)
+  fade(WATERLINE - M, WATERLINE + M, SEABED_TOP, 0.45, 1, 0)
+  band(WATERLINE + M - 0.06, 200, LIMBO.sand, 1, 0.34)
+  fade(WATERLINE - M, WATERLINE + M, LIMBO.sand, 0.34, 0, 1)
+  fade(WATERLINE - M - 0.1, WATERLINE - 0.1, LIMBO.sandWet, 0.36, 0, 0.9)
   {
     const lo = Math.max(xa, WATERLINE - 0.1)
     const hi = Math.min(xb, -3.6)
@@ -716,8 +775,9 @@ export function drawGarden(pen: Pen, t: number, f: Frame): void {
     [1, LAWN, 1],
   ])
   soft(pen, SUN_AT[0], GARDEN.back + 0.12, 3.0, 0.22, LAWN_GLOW, 0.75 + 0.25 * mem)
-  // The lawn comes on toward us, richer in the shade, into the earth under it.
-  vwash(pen, x0, x1, GROUND - 0.01, GROUND + 0.8, [
+  // The lawn comes on toward us to the ground's line, a lip of it over the sand (no further: carried down onto the
+  // beach it read as a green patch pasted on it, below the line the house stands on).
+  vwash(pen, x0, x1, GROUND - 0.01, GROUND + 0.18, [
     [0, mixHex(LAWN, LAWN_GLOW, 0.15), 1],
     [0.3, LAWN, 1],
     [0.6, mixHex(LAWN, LIMBO.gardenDark, 0.6), 0.75],

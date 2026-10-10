@@ -146,7 +146,7 @@ export const BRUSHES: { t: number; depth: number }[] = [...SWING_KEYS, ...SEES_K
 
 /** Her size: a child at the swing's start, a girl by the second voice; a young woman in what Louise sees. */
 export const hannahScale = (t: number): number =>
-  t < 150 ? HANNAH_AGE.child + (HANNAH_AGE.girl - HANNAH_AGE.child) * smooth(t, 26.5, 40.5) : HANNAH_AGE.young
+  t < 150 ? HANNAH_AGE.child + (HANNAH_AGE.girl - HANNAH_AGE.child) * smooth(t, 26.5, 61) : HANNAH_AGE.young
 
 const dir = (a: number): Pt => [Math.sin(a), Math.cos(a)]
 const tan = (a: number): Pt => [Math.cos(a), -Math.sin(a)]
@@ -216,15 +216,29 @@ export function hannahAt(t: number): { x: number; y: number; scale: number } | n
   const vx = leapV()[0]
   const xStop = LAND_X + (vx * ROLL_OUT) / 2
   if (t < LANDS + ROLL_OUT) {
+    // She lands bouncing, a child's landing: a small hop up off the grass as she runs on. (Rolled flat to a stop and
+    // left there, she read as thrown off the swing, lying still.) Low, about her own height: four times it, caught in
+    // the air she hung against the lake, afloat on it.
     const s = t - LANDS
-    return { x: LAND_X + vx * s - (vx * s * s) / (2 * ROLL_OUT), y, scale }
+    const u = s / ROLL_OUT
+    return { x: LAND_X + vx * s - (vx * s * s) / (2 * ROLL_OUT), y: y - 0.15 * 4 * u * (1 - u), scale }
   }
   const hop = BACK_ON - HOP_T
-  const back0 = LANDS + ROLL_OUT + 0.35
-  const back1 = hop - 0.3
+  // And straight back for the seat, running, there with a beat in hand to wait for it.
+  const back0 = LANDS + ROLL_OUT + 0.12
+  const back1 = hop - 1.3
   if (t < hop) {
-    const u = smooth(t, back0, back1)
-    return { x: xStop + (HOP_FROM_X - xStop) * u, y, scale }
+    // Running, not eased back: up to pace in a quarter of a second, on at it, skipping as a child runs, and waiting by
+    // the seat for it. (Eased out of a stop over three seconds, she lay where she landed most of a second first, and
+    // the leap read as a child thrown from the swing.)
+    const T = Math.min(2.6, back1 - back0)
+    const a = 0.25
+    const d = Math.max(0, Math.min(T, t - back0))
+    const v = 1 / (T - a)
+    const u = d < a ? (v * d * d) / (2 * a) : d > T - a ? 1 - (v * (T - d) ** 2) / (2 * a) : v * (d - a / 2)
+    const running = d > 0 && d < T ? 1 : 0
+    const skip = running * 0.06 * Math.abs(Math.sin((Math.PI * d) / 0.34))
+    return { x: xStop + (HOP_FROM_X - xStop) * u, y: y - skip, scale }
   }
   // The hop onto the seat: a parabola from the grass in front of it onto it, landing on the chord.
   const [x1, y1] = seatedAt(BACK_ON)
