@@ -892,6 +892,10 @@ minute a plain slip. A frame a second caught the swell at its height and took it
 is the half-second it was meant. The doubled post they saw at 350.5 s is one mullion, seen at full size. Nothing to
 change.
 
+A ninety-sixth looked at the eighty-eighth to the ninety-fourth (the clock kept whole, the ring gone at once, Ian round
+the cradle, the swell over the cut) through a tall frame, Zoom and Overview: all held. And the whole of what the site's
+build runs passed again; the show's chunk is 239 kB. Nothing to change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
