@@ -431,6 +431,53 @@ function rain(p: p5, k: number, t: number, L: Light): void {
 
 /* ------------------------------------------------------------------ the room */
 
+/** The low sun's colour where it lies on the boards. */
+const SUNLIT = mixHex(LAKE.dawn, '#F2D29A', 0.8)
+
+/**
+ * The sun come in: once it is through the fog (the dawn's light on the water), the low sun lays the window's panes
+ * on the floor, warm, reaching toward us from under the glass and widening away from the sun, the mullions' shadows
+ * between them. Soft at every edge, and fading as they come.
+ */
+function sunIn(ctx: C2D, k: number, f: Frame, L: Light, pane: number): void {
+  if (L.kind !== 'dawn') return
+  const u = Math.max(0, Math.min(1, (L.path - 0.2) / 0.5))
+  const s = u * u * (3 - 2 * u) * (1 - 0.6 * L.glare)
+  if (s <= 0.004) return
+  const sx = viewX(f, 0.5, SUN[0])
+  const y0 = ROOM.wall
+  const depth = 1.7
+  const spread = 0.28
+  const m = ctx.getTransform()
+  const px = Math.hypot(m.a, m.b)
+  const off = 30000
+  const inv = m.inverse()
+  ctx.save()
+  ctx.shadowColor = rgba(SUNLIT, 0.3 * s)
+  ctx.shadowBlur = 0.09 * k * px
+  ctx.shadowOffsetX = off
+  ctx.shadowOffsetY = 0
+  const g = ctx.createLinearGradient(0, y0 * k, 0, (y0 + depth) * k)
+  g.addColorStop(0, 'rgba(0, 0, 0, 1)')
+  g.addColorStop(0.3, 'rgba(0, 0, 0, 0.6)')
+  g.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  ctx.fillStyle = g
+  ctx.translate(-inv.a * off, -inv.b * off)
+  ctx.beginPath()
+  for (let i = 0; i < 4; i++) {
+    const a = WIN.x0 + pane * i + 0.06
+    const b = WIN.x0 + pane * (i + 1) - 0.06
+    const far = (x: number) => x + (x - sx) * spread
+    ctx.moveTo(a * k, y0 * k)
+    ctx.lineTo(b * k, y0 * k)
+    ctx.lineTo(far(b) * k, (y0 + depth) * k)
+    ctx.lineTo(far(a) * k, (y0 + depth) * k)
+    ctx.closePath()
+  }
+  ctx.fill()
+  ctx.restore()
+}
+
 /** The room's colours by how dim it is. */
 const shade = (hex: string, dim: number) => mixHex(hex, LAKE.night, dim)
 
@@ -509,6 +556,7 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
     soft(ctx, k, (a + b) / 2, ROOM.wall + 0.08, pane * 0.5, 0.5, refl, 0.16 * lit)
   }
   if (L.path > 0.02) soft(ctx, k, viewX(f, 0.5, SUN[0]), ROOM.wall + 0.45, 0.32, 0.85, LAKE.fog, 0.3 * L.path + 0.1 * L.glare)
+  sunIn(ctx, k, f, L, pane)
 
   // The window's frame: head, sill, jambs and the slim mullions.
   const mull = shade(LAKE.mullion, dim * 0.3)
