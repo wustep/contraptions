@@ -124,6 +124,10 @@ async function main(): Promise<void> {
   check('the music control says when the soundtrack failed, and that a YouTube-only show saves silent',
     player.includes("'The soundtrack would not load'") && /perf\?\.soundtrack\?\.src\s*\n\s*\? 'Turn the music off \(M\)\. The show keeps its time; a saved video keeps its music\.'/.test(player) && player.includes('a saved video is silent') &&
     player.includes('`Saved: picture${sound}${words}.`') && player.includes("silent (its music is YouTube's)"))
+  // The picture has a name for a screen reader (WCAG 1.1.1): the stage's canvas is an image named by the show's title and
+  // its share line, kept to whichever show is up.
+  check('the show\'s canvas is an image named by its title and share line',
+    /canvas\.setAttribute\('role', 'img'\)/.test(player) && /current\.title\}\$\{current\.about \?/.test(player) && /canvas\.setAttribute\('aria-label', name\)/.test(player))
   // A YouTube cue started again from the top as it runs out is treated as run out, so the show carries on to its end
   // instead of freezing under the song heard again (found on Married Life's deployed preview); and `position` asks.
   check('a YouTube cue restarted at its end is run out, and nothing else is',

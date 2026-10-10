@@ -640,6 +640,15 @@ function sync(): void {
   const playing = transport?.playing ?? false
   const ready = perf !== null
 
+  // The picture says nothing to a screen reader: the canvas is named, as an image, by the show's title and its own share
+  // line (WCAG 1.1.1). The stage's controls stay outside it.
+  const canvas = stageRoot.querySelector('canvas')
+  if (canvas) {
+    canvas.setAttribute('role', 'img')
+    const name = current ? `${current.title}${current.about ? `: ${current.about}` : ''}` : 'The show'
+    if (canvas.getAttribute('aria-label') !== name) canvas.setAttribute('aria-label', name)
+  }
+
   // The title card.
   empty.hidden = works.length > 0
   workList.node.hidden = takeRow.hidden = works.length === 0

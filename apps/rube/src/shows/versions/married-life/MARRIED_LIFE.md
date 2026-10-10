@@ -882,6 +882,9 @@ window.
     links, full screen, the show picker, the credit's link, the YouTube player, the seek bar, play, restart, music,
     speed, the three cameras, Theater, the export sizes, Save PNG), each with a focus mark: the accent outline on
     buttons and links, the accent thumb on the seek bar, the accent border on the speed list and the handle.
+  - *A screen reader* (WCAG 1.1.1): the canvas had no role and no name, so the show itself said nothing. It is now an
+    image named by the show's title and share line ("Married Life: Michael Giacchino's Married Life, from Up, as a Rube
+    Goldberg machine…"), kept to whichever show is up (`player.ts`, every show; checked across a switch and back).
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
