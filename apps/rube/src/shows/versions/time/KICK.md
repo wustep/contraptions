@@ -376,6 +376,13 @@ each world, and changed:
   own, from the frame's top down, and over the terminal's roof it met the morning's on a ruled vertical line, the
   morning's grey-green beside its warm (a critic's note). It and the glare at the end come in only from the roof's
   height down now, out of the morning's sky.
+- **The wings' roots** (213.7 to 236): seen head on, each wing began a little out from the hull's side, so sky showed
+  between the body and the wing, plainest close up and in a tall frame (a critic's note). They start under the hull
+  now, and meet it.
+- **The jet bridge's wheels** (231 to 238): docked, its leg stood right on the plane's outer main gear, the two sets of
+  black wheels merged into one shape. Its leg is further back along it now, clear of the gear.
+- **The garden's cut** (round 45's): the terrace's slab and the turf's edge were drawn a little under the cut line, so
+  the stone hung below it into the earth. They end on the line now.
 
 ## Inception nods
 

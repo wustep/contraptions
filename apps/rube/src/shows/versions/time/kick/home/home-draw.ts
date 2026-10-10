@@ -248,9 +248,6 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
     ctx.clip()
     earth(ctx, k, x0, x1, NEAR_EDGE, bottom)
     ctx.restore()
-    // The turf's edge over it, and the terrace's slab.
-    fillBox(ctx, k, GARDEN.terrace, NEAR_EDGE, x1, NEAR_EDGE + 0.12, mixHex(HOME.lawnDark, SOIL, 0.4))
-    fillBox(ctx, k, x0, NEAR_EDGE, GARDEN.terrace, NEAR_EDGE + 0.18, mixHex(STONE, HOME.wallShade, 0.5))
     line(ctx, k, [x0, NEAR_EDGE], [x1, NEAR_EDGE], INK, w * 0.8)
   }
   tree(ctx, k, f, t, w)
