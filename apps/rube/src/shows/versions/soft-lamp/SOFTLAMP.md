@@ -1129,6 +1129,10 @@ Not taken: the cat's half-lidded eyes (a taste), the mug away for its refill.
      look shows them too; and where the frame's own edge would cut through them (the lamp's side), they are not shown,
      rather than a face peering in at the edge. Their stretch now comes seven seconds after the kitten's (26:31).
 
+182. **The kitten's walk was a footstool sliding**: four straight legs shuffling a little to and fro. It walks now: each
+     foot swings forward lifted and goes back planted, the diagonal pairs together, a lifted leg folding at the knee
+     (or the hock, behind), and the body bobbing a little at each footfall.
+
 **Subtracted:** the moth's shadow (four reviewers read it as a stain); the face's drips; the band's slider strip;
 twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's

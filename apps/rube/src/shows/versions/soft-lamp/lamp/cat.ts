@@ -412,8 +412,12 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const s0 = stretchAt(t)
   const st = { up: Math.max(s0.up, c.up), out: Math.max(s0.out, c.out), yawn: s0.yawn }
   // Walking, the legs go by turns.
-  const step = (i: number) => c.walk * 0.07 * Math.sin(c.phase + i * Math.PI)
-  const L = 0.27 * st.up
+  // Walking: each foot swings forward lifted and goes back planted, the diagonal pairs together (near hind with far fore),
+  // and the body bobs a little at each footfall.
+  const gait = (i: number) => c.phase + (i % 2 === 0 ? 0 : Math.PI) + (i >= 2 ? Math.PI : 0)
+  const step = (i: number) => c.walk * 0.11 * Math.cos(gait(i))
+  const raise = (i: number) => c.walk * 0.07 * Math.max(0, Math.sin(gait(i)))
+  const L = 0.27 * st.up + c.walk * 0.015 * Math.abs(Math.cos(c.phase))
   const tipF = 0.17 * st.out
   const long = 1 + 0.14 * st.out
   const REAR = x0 + 0.12
@@ -448,12 +452,14 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   // Its legs, when it is up: the hind pair straight down under its rear, the fore pair under its chest, stretched out
   // along the desk at full stretch, the near of each pair a shade lighter.
   if (st.up > 0.01) {
-    const leg = (from: { x: number; y: number }, to: { x: number; y: number }, w: number, k: number, bend = 0) => {
+    const leg = (from: { x: number; y: number }, to: { x: number; y: number }, w: number, k: number, bend = 0, knee = 0) => {
       ctx.lineCap = 'round'
       ctx.beginPath()
       ctx.moveTo(from.x, from.y)
       // Reaching out, a foreleg bends at the elbow, low, and lies along the desk to the paw.
       if (bend > 0) ctx.quadraticCurveTo(from.x + (to.x - from.x) * 0.3, to.y - 0.02, to.x, to.y)
+      // A lifted foot folds at the knee (forward) or hock (back).
+      else if (knee !== 0) ctx.quadraticCurveTo((from.x + to.x) / 2 + knee, (from.y + to.y) / 2, to.x, to.y)
       else ctx.lineTo(to.x, to.y)
       ctx.lineWidth = w
       ctx.strokeStyle = 'rgba(26, 21, 38, 1)'
@@ -470,11 +476,11 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     }
     for (const [i, [hx, k]] of ([[x0 + 0.42, 0.45], [x0 + 0.24, 0.6]] as const).entries()) {
       const hip = T(hx, -0.08)
-      leg(hip, { x: hip.x - 0.02 + step(i), y: -0.005 }, 0.15, k)
+      leg(hip, { x: hip.x - 0.02 + step(i), y: -0.005 - raise(i) }, 0.15, k, 0, -0.9 * raise(i))
     }
     for (const [i, [fx, k, ahead]] of ([[chest - 0.06, 0.7, 0.04], [chest - 0.2, 0.95, 0]] as const).entries()) {
       const sh = T(fx, -0.08)
-      leg(sh, { x: sh.x + (0.42 + ahead) * st.out + 0.02 + step(i + 1), y: -0.005 }, 0.13, k, st.out)
+      leg(sh, { x: sh.x + (0.42 + ahead) * st.out + 0.02 + step(i + 2), y: -0.005 - raise(i + 2) }, 0.13, k, st.out, 0.9 * raise(i + 2))
     }
   }
 
