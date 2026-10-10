@@ -728,18 +728,28 @@ function drawFace(ctx: C2D, c: Ctx, x0: number, x1: number): void {
   // Snow overhanging both lips.
   fill(ctx, [[cv.x0 - 0.45, cv.top - 0.02], [cv.x0 + 0.14, cv.top - 0.02], [cv.x0 + 0.06, cv.top + 0.16], [cv.x0 - 0.4, cv.top + 0.2]], k, SNOW.snow)
   fill(ctx, [[cv.x1 - 0.16, far - 0.02], [cv.x1 + 0.5, far - 0.02], [cv.x1 + 0.45, far + 0.2], [cv.x1 - 0.08, far + 0.16]], k, SNOW.snow)
-  // The pines at the hairpin, and a boulder in its bend.
-  fill(
-    ctx,
-    [
-      [TRACK.HAIR.pts[20][0] + 0.9, TRACK.HAIR.pts[20][1] + 0.1],
-      [TRACK.HAIR.pts[20][0] + 1.25, TRACK.HAIR.pts[20][1] - 0.25],
-      [TRACK.HAIR.pts[20][0] + 1.75, TRACK.HAIR.pts[20][1] - 0.2],
-      [TRACK.HAIR.pts[20][0] + 1.95, TRACK.HAIR.pts[20][1] + 0.2],
-    ],
-    k,
-    SNOW.rock,
-  )
+  // The pines at the hairpin, and a boulder in its bend: bedded in the snow, lit on its west, its east in shade, snow
+  // on its crown, and its shadow long on the slope like the pines' (it was a bare flat slab, floating).
+  {
+    const [hx, hy] = TRACK.HAIR.pts[20]
+    const bx = hx + 1.45
+    const foot = hy + 0.2
+    longShadow(ctx, k, bx + 0.2, foot, 0.5, 1.0)
+    const body: Pt[] = [
+      [bx - 0.6, foot + 0.04],
+      [bx - 0.5, foot - 0.22],
+      [bx - 0.22, foot - 0.42],
+      [bx + 0.12, foot - 0.46],
+      [bx + 0.42, foot - 0.3],
+      [bx + 0.56, foot - 0.04],
+      [bx + 0.5, foot + 0.06],
+    ]
+    fill(ctx, body, k, SHADE_ROCK)
+    fill(ctx, [body[0], body[1], body[2], body[3], [bx + 0.02, foot - 0.12], [bx - 0.2, foot + 0.05]], k, SUN_ROCK)
+    fill(ctx, [[bx - 0.36, foot - 0.33], [bx - 0.2, foot - 0.45], [bx + 0.12, foot - 0.5], [bx + 0.36, foot - 0.33], [bx + 0.1, foot - 0.37], [bx - 0.15, foot - 0.3]], k, SNOW.snow)
+    // The snow drifted up round its foot.
+    fill(ctx, [[bx - 0.75, foot + 0.08], [bx - 0.5, foot - 0.04], [bx + 0.5, foot - 0.02], [bx + 0.72, foot + 0.1]], k, SNOW.snow)
+  }
   for (const [x, foot, h] of HAIR_PINES) {
     if (x < x0 - 2 || x > x1 + 2) continue
     longShadow(ctx, k, x, foot, h, h * 0.42)

@@ -400,6 +400,9 @@ each world, and changed:
   dark iron, so his choice had no gesture; a viewer new to it saw him simply stay with her, then be on the roof (a cold
   critic's note). It is longer now, its knob pale, catching the lamp; it is seen taken, and as it comes home on the
   let-go its knob flares where it strikes the stop.
+- **The boulder in the hairpin** (131 to 138): a bare grey four-sided slab, flat-bottomed, no shade and no shadow,
+  floating on the snow among pines that have both. It is a boulder now, lit on its west and in shade on its east, a
+  little snow on its crown, bedded in a drift, its shadow long on the slope like theirs.
 
 ## Inception nods
 
