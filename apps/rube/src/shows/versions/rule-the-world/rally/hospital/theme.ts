@@ -4,9 +4,9 @@ import type { Theme } from '../../../../../../../../src/core/themes'
 export const HOSPITAL_THEME: Theme = {
   name: 'hospital',
   label: 'The Ward',
-  bg: '#C9CFC6',
-  ink: '#2B302C',
-  colors: ['#C9CFC6', '#2B302C'],
+  bg: '#E4E2CF',
+  ink: '#2E3A34',
+  colors: ['#E4E2CF', '#A9C6B5', '#F2F1EA', '#3E5A4F', '#F6CB86', '#2E3A34'],
   weight: 0.8,
-  note: 'The Ward',
+  note: 'A maternity ward in New York at dawn, 1952: mint and cream, white enamel, a checkerboard corridor, the grey light turning gold.',
 }
