@@ -813,6 +813,15 @@ export function drawSpray(p: p5, k: number, from: Pt, to: Pt, u: number, color =
   p.fill(alpha(p, color, 0.55 * fade * light))
   p.beginShape()
   for (const [x, y] of left) p.vertex(x * k, y * k)
+  // Its end in the head is round, never a square cut where the head is thin enough to show it.
+  const [ex, ey] = at(reach)
+  const [lx, ly] = left[n]
+  const ca = Math.atan2(ly - ey, lx - ex)
+  const cr = Math.hypot(lx - ex, ly - ey)
+  // Round from its left edge through the way it is going to its right.
+  const [px, py] = at(Math.max(0, reach - 0.01))
+  const sweep = Math.sign((lx - ex) * (ey - py) - (ly - ey) * (ex - px)) || 1
+  for (let j = 1; j < 8; j++) p.vertex((ex + Math.cos(ca + sweep * (Math.PI * j) / 8) * cr) * k, (ey + Math.sin(ca + sweep * (Math.PI * j) / 8) * cr) * k)
   for (let j = right.length - 1; j >= 0; j--) p.vertex(right[j][0] * k, right[j][1] * k)
   p.endShape(p.CLOSE)
   // The head: a billow of soft overlapping clouds, opening as it slows: each dense at its middle and nothing at its
