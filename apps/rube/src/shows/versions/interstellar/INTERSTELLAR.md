@@ -231,7 +231,11 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 139 (latest)
+## Polish pass 140 (latest)
+
+No change to the show: whether a viewer's GPU draws the picture these passes have audited. Every frame checked so far came from the software-drawn headless shell, and GPU and software rasterisers can differ (gradient precision, blending, anti-aliasing). The live canvas was read back at 13 moments across all four worlds (20 to 285 s, 1280×720), in GPU Chrome (pass 129's) and in the shell. The mean difference is 0.4 to 0.7 of 255, and at most 0.12% of pixels differ by more than 40 (98 s, edges). It is anti-aliasing, not a different picture, so what has been audited is what a GPU shows.
+
+## Polish pass 139
 
 No change to the show: the held sound in Theater (`/theater/`), which is always a named visit and shuffles every show, under the refusing policy of passes 136 to 138. Six visits landed on Merry-Go-Round, Mountain King, Gymnopédie, Nature of Daylight, Boléro and Relax, from YouTube and from files. Each was playing muted with the sound held and the Sound button up. On Merry-Go-Round, a refused Space was held again, with "Waiting for the music…" between, as on Voyage. One more visit had not reached the hold within 30 s on the loaded machine. Five more all did, so it was the load. As in pass 136, held YouTube shows advance slowly in this headless set-up (about 1.9 s in 8) and file shows at speed.
 
