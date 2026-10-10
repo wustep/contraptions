@@ -19,6 +19,7 @@ import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
 import { DOOR, DOOR_SHUT, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
 import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs/piano-figure'
 import { muted } from '../src/shows/versions/la-la-land/sebs/lens'
+import { emptyAt } from '../src/shows/versions/la-la-land/sebs/theatre/theatre'
 import { HORIZON, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
 import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
 import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
@@ -520,6 +521,13 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     const swapSeen = !!e && inShot(455.0, e) && !!her && inShot(455.0, her) && aim(her.spin, Math.atan2(e.y - her.y, e.x - her.x)) <= Math.PI / 6
     check('sebs: David looks at her at her table, and the swap there is seen: the dream\'s him greyed, and her looking at it', davidLooks && swapSeen,
       `david looks ${davidLooks}, swap seen ${swapSeen}`)
+  }
+  // At her show the empty house of the film's real night shows through only in the lead-in bar, and the full house is
+  // back the moment he springs up (115.52) for the ovation.
+  {
+    let outside = 0
+    for (let t = 90.5; t < 133; t += 0.05) if (t < 113.4 || t > 115.6) outside = Math.max(outside, emptyAt(t))
+    check('sebs: at her show the empty house shows through only in the lead-in, full again when he springs up', outside === 0 && emptyAt(114.6) > 0.7 && emptyAt(115.6) === 0, `outside ${outside}`)
   }
   // The grade: the room as it is muted, the dream in full colour all through, and the colour back at the last frame.
   {
