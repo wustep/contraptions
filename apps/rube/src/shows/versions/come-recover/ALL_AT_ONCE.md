@@ -994,6 +994,10 @@ The notes went back to the builders who made each part, who still had their cont
 - **A regression sweep after the last passes.** The whole show at 48 frames after the mosaic's family, the surf's
   Waymond, the trims and the shared player's changes: every world reads, and nothing has regressed. `npm run build`
   passes again (3,069 checks and the production bundle).
+- **Safari's engine, the whole show.** WebKit had seen only key frames of the director's passes. The whole show was
+  now scrubbed in it every half second, 663 frames, and again with reduced motion asked for: no errors (the one
+  failing request is the analytics' debug script). Page screenshots of the chapters, the step-printed alley, the
+  surf's Waymond, the mosaic's family, the rocks' subtitle and the peak's line match Chrome's.
 
 ## The looks
 
@@ -1185,7 +1189,8 @@ to 332, the washer's window last; the googly eyes go with it (`endDarkAt` in `cr
   the same in every mode.
 - The reduced-motion preference is followed live, and the page's Save PNG and Save video paint from the same show. So a viewer with it set saves a file without the flickers and punches. Telling the show that a frame is
   for a file would take a change to the shared stage and recorder, and that viewer has asked for the calmer show.
-- Only Chrome on macOS has been watched playing. Twelve key frames were rendered in WebKit (Safari's engine, 26.6) as
-  well, and match Chrome's, with no errors. Firefox has not been tried. Its engine would not start in the sandbox the
+- Only Chrome on macOS has been watched playing. In WebKit (Safari's engine) the whole show was scrubbed every half
+  second (663 frames, and the reduced-motion version) with no errors, and key frames of every new picture, word and
+  beat match Chrome's; it has not been watched playing in Safari itself. Firefox has not been tried. Its engine would not start in the sandbox the
   passes ran in, and a later attempt with Playwright's matching Firefox 156 build, outside the sandbox too, exited
   at once ("Could not find profile folder") on this macOS. The recording export has not been re-measured for this take.
