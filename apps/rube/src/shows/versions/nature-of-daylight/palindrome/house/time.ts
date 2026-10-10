@@ -46,8 +46,12 @@ export const ERA = {
 export const TURN = 341.618
 export const NEAR = 345.49
 export const BEGIN = 349.495
-/** Before the cut the empty cradle stands this far to the right of its dawn place, clear of Ian, whole in the frame. */
-export const EMPTY_DX = 1.3
+/**
+ * Before the cut the empty cradle stands this far to the right of its dawn place: none now, it waits where the first
+ * frame has it, so nothing moves across the cut but the time. (A way off to the right, it and Ian each jumped to a new
+ * place on the cut, and fresh readers took the cut for a slip in the edit.)
+ */
+export const EMPTY_DX = 0
 
 export type Era = 'dawn' | 'bed' | 'news' | 'home' | 'none'
 export function eraOf(T: number): Era {
@@ -369,18 +373,21 @@ export const HUG_T = 337.85
 const STEP = 0.0925
 /** Their steps toward the cradle: each begins on its chord and takes a long breath. */
 const steps = (T: number, step = STEP): number => step * (s5((T - TURN + 0.1) / 1.3) + s5((T - NEAR + 0.1) / 1.3))
-/** Ian beside her: when she rolls into him he gives a little with it and comes back against her; then they step
- * together. He looks at her, and from the turn at the cradle. */
+/** Ian beside her: when she rolls into him he gives a little with it and comes back against her; then, from the turn,
+ * he goes round behind the cradle to its far side, so it stands between them as she goes to it, where the cut finds
+ * them both. He looks at her; at the cradle as he goes round it; at her again from its far side. */
+const ROUND: [number, number] = [TURN + 0.4, NEAR + 1.6]
 export function ianX(T: number): number {
   const u = T - HUG_T
   const give = u <= 0 ? 0 : 0.045 * Math.sin((Math.min(u, 1.9) * Math.PI) / 1.9) * Math.exp(-u / 1.6)
-  // He goes a little ahead of her toward it.
-  return IAN_X + give + steps(T - 0.08, 0.14)
+  const base = IAN_X + give
+  return base + (IAN_STAYS_X - base) * s5((T - ROUND[0]) / (ROUND[1] - ROUND[0]))
 }
-export const ianLook = (T: number): number => Math.PI + 0.35 - (Math.PI + 0.6) * ss(T, TURN - 0.1, TURN + 1.2)
+export const ianLook = (T: number): number =>
+  Math.PI + 0.35 - (Math.PI + 0.6) * ss(T, TURN - 0.1, TURN + 1.2) + (Math.PI + 0.5) * ss(T, ROUND[1] - 0.4, ROUND[1] + 0.4)
 /**
- * Ian after the cut to the cradle: on her right still, as he was, the cradle between them now (it stands where he
- * stood), with her as she rocks it on the chord. Then he turns away, stands a moment, looks back at her, and goes, out
+ * Ian after the cut to the cradle: where he was before it, on the cradle's far side, with her as she rocks it on the
+ * chord. Then he turns away, stands a moment, looks back at her, and goes, out
  * of the frame on the right and on out of the room, before the camera draws back, so the last frame is the first and
  * has no Ian. In the film he leaves her. Cut away at the cut, as he was, four fresh readers in nine (four of the last
  * five) took his going for a slip; put on her left across it, he swapped sides and read as a slip again, and gone

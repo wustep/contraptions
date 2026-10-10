@@ -83,12 +83,13 @@ export const houseSet = scenery<null>({
     const lx = louiseX(T)
     if (lx !== null) balls.push([lx, 0])
     const theta = cradleTheta(T)
-    // Before the cut the empty cradle stands a little way off, clear of Ian; from it, at its dawn place.
+    // The cradle at its dawn place throughout, empty before the cut and Hannah in it from it.
     const dx = era === 'home' && T < BEGIN ? EMPTY_DX : 0
     if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)).map(([x, y]) => [x + dx, y] as Pt))
     if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL)
     if (era === 'news') shadows.push(TV_HULL)
     if (era === 'home' && T < BEGIN) balls.push([ianX(T), 0])
+    if (era === 'home' && T >= BEGIN && T < IAN_GONE) balls.push([ianAfter(T), 0])
     drawRoom(p, k, T)
     if (era === 'dawn' || era === 'home') {
       p.push()
