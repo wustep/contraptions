@@ -499,6 +499,12 @@ each world, and changed:
 - **Paris's far bank, seen whole** (31 to 61): the far bank past the bridge's end was a pavement on a plank, its
   building standing on a hairline over open sky down to the river's bed, upright and, once folded, overhead (a critic's
   note in Overview). It is ground now, earth down to the bed, and the bed and the fold's rough cut run on under it.
+- **The far bank's traffic** (69 to 92, 199 to 213): the lights of the cars on the road beyond the river were small
+  lit lozenges with no road and no cars, and under the bridge they hung in the mist like stray specks, a van's lamps
+  without the van (a critic's note). The road is a darker line along the far quay's top now, and each light is at
+  the end of its car, dim in the rain, on it.
+- **The cloud deck's underside** (213.7 to 225): its body's wash stopped on a ruled line at its foot, and the ragged
+  fringe began under it (a critic's note). It fades out over its last stretch into the fringe now.
 
 ## Inception nods
 

@@ -110,10 +110,12 @@ function drawCloudDeck(pen: Pen, t: number, f: Frame): void {
   const x0 = f.x0 - 2
   const x1 = f.x1 + 2
   // The deck's body: a wash from its lit top into its shaded underside.
-  vwash(pen, x0, x1, top + 0.25, bottom, [
+  // Fading out over its last stretch into the ragged underside (it stopped on a ruled line at its foot).
+  vwash(pen, x0, x1, top + 0.25, bottom + 0.4, [
     [0, body, 1],
-    [0.55, body, 0.98],
-    [1, shade, day ? 0.9 : 0.95],
+    [0.5, body, 0.98],
+    [0.82, shade, day ? 0.9 : 0.95],
+    [1, shade, 0],
   ])
   const drift = t * 0.05
   // Its body is not one flat grey: deeper billows in it, each rounded top a little lit, the lower ones in shade.
