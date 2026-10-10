@@ -1326,8 +1326,17 @@ const SOLO_PHRASES: { s: number; m: number }[][] = (() => {
 })()
 const SOLO_BEADS = SOLO_PITCH.filter(([ti, mi]) => mi > 0 && ti >= AT.trumpet - 0.4 && ti < 268.3)
 
-/** Where the bell's mouth is at show time `s`, as the trumpet holds it. */
+/** Where the bell's mouth is at show time `s`, as the trumpet holds it. (Fixed for a given `s`, so kept once worked out:
+ * the threads ask it of every point of every phrase, every frame.) */
+const MOUTH = new Map<number, Pt>()
 function mouthAt(s: number): Pt {
+  const known = MOUTH.get(s)
+  if (known) return known
+  const q = mouthOf(s)
+  MOUTH.set(s, q)
+  return q
+}
+function mouthOf(s: number): Pt {
   const a = bellLift(s)
   const [u, v] = [0.68, 0.16]
   return [HORN[0] + Math.cos(a) * u - Math.sin(a) * v, HORN[1] + Math.sin(a) * u + Math.cos(a) * v]
@@ -1361,24 +1370,29 @@ function drawSolo(p: p5, k: number, t: number, on1: number): void {
   ctx.save()
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
+  // The segments, gathered into a few paths by how bright they are, so a thousand of them are a handful of strokes.
+  const LV = 10
+  const paths: Path2D[] = Array.from({ length: LV }, () => new Path2D())
   for (const phrase of SOLO_PHRASES) {
     if (phrase[0].s > t) break
-    // Two passes: a soft wide haze, and the bright thread in it.
-    for (const [w, a0] of [[0.075, 0.1], [0.018, 0.75]] as const) {
-      ctx.lineWidth = w * k
-      let prev: { x: number; y: number; a: number } | null = null
-      for (const n of phrase) {
-        if (n.s > t) break
-        const q = threadAt(n.s, n.m, t)
-        if (prev && q.a > 0.01) {
-          ctx.strokeStyle = rgba(M.spot, a0 * on1 * Math.min(prev.a, q.a))
-          ctx.beginPath()
-          ctx.moveTo(prev.x * k, prev.y * k)
-          ctx.lineTo(q.x * k, q.y * k)
-          ctx.stroke()
-        }
-        prev = q
+    let prev: { x: number; y: number; a: number } | null = null
+    for (const n of phrase) {
+      if (n.s > t) break
+      const q = threadAt(n.s, n.m, t)
+      if (prev && q.a > 0.01) {
+        const lv = Math.min(LV - 1, Math.floor(Math.min(prev.a, q.a) * LV))
+        paths[lv].moveTo(prev.x * k, prev.y * k)
+        paths[lv].lineTo(q.x * k, q.y * k)
       }
+      prev = q
+    }
+  }
+  // Two passes: a soft wide haze, and the bright thread in it.
+  for (const [w, a0] of [[0.075, 0.1], [0.018, 0.75]] as const) {
+    ctx.lineWidth = w * k
+    for (let lv = 0; lv < LV; lv++) {
+      ctx.strokeStyle = rgba(M.spot, a0 * on1 * ((lv + 0.5) / LV))
+      ctx.stroke(paths[lv])
     }
   }
   // The notes: a bead of light on the thread where each was tongued, bright as it leaves the bell.
