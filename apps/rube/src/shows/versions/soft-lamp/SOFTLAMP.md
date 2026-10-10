@@ -1492,6 +1492,28 @@ its drawing is redone (`lamp/cat.ts`):
 244. **The moonlight on the desk** read as two grey sheets laid on the wood: it is brightest in its middle now and
      falls away to its ends and its far edge, a soft halo round each pane, the wood's grain through it.
 
+### The eighty-sixth pass: headphones at last, and the kitten on its feet
+
+245. **Ear cups, face up** (`cushionPath`, `padFabric`, `cloth`, `scene.ts`). Every reviewer since the first had read the
+     headphones as something else: dishes, bowls, a kettle, pastries ("an éclair or donut sitting in a bowl"). The
+     cushions were drawn side on, a pad with lumpy shoulders round a dip. Now that the desk is seen a little from above,
+     they are drawn so: each cushion's top an oval ring round its dark speaker cloth, lighter where it faces up, the
+     lamp along its far rim; under the ring's front edge the cushion's side, a thin band of the fabric with its seam
+     round it, down to the cream shell. The cloth is where the ball's seat always was, so its route is unchanged, and
+     the lip that the ball sits down behind is the same fabric, drawn again over its foot.
+246. **Pivots, not handles.** A cold look at that read "two teacups joined by a wire handle": the yokes, rings round
+     each cup's side, were mugs' handles. Each cup now turns on a pivot screw on its side, a short slider arm from it
+     down to the band; and the band lies in a shallower U on the wood beside them, as a band does lying flat (the deep
+     U read as hanging off the desk's edge).
+     A second cold look, the crop alone and before anything else: "a pair of over-ear headphones lying on the desk, cups
+     up, with the headband curving toward the viewer." The first reviewer to say so unprompted.
+247. **The kitten on its feet.** Standing, walking to the sill, it kept the loaf's whole length on four straight legs
+     ("a dachshund or a table"): up on its feet its body gathers under it now, shorter, and its hind legs bend back at
+     the hock.
+
+Left as it is: the ball, which every cold look reads as a pearl or a marble on the cup. It is the machine, and the
+machine is the brief.
+
 ## Judgment calls for Stephen
 
 - **The near pothos.** A framing device, the one thing nearer than the room; it is one call (`foreground`, in

@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
 import { BOOKS, CAT, CUP, DESK, FAR_CUP, GLASS, LAMP, MUG, POT, PROPS, R, SILL, WALKMAN, WINDOW, type Book } from './desk'
 import { MUSIC_END, heldAt, smooth } from './music'
-import { LANDINGS, NODS, SHOULDER, ballAt, squashAt } from './route'
+import { LANDINGS, NODS, ballAt, squashAt } from './route'
 import { cat, climbAt } from './cat'
 import { formed, plaster } from './form'
 import { openBook } from './book'
@@ -602,19 +602,73 @@ const SHELL_LIT = '#EDC9AE'
 const PAD = '#221E2A'
 const PAD_LIT = '#4E4858'
 
-/** The near cup's cushion, from the side: a soft pad with rounded shoulders and a hollow between them. */
+/**
+ * A cup's cushion, lying face up, seen a little from above as the desk is: its top an oval ring round the speaker
+ * cloth (the ball's seat, `CLOTH`), and below its front edge, the cushion's side, a thin band of the fabric down to the
+ * shell. `top` is where the cushion's top is pressed to (the kick, the snare).
+ */
+const PAD_RY = 0.075
+const padRX = (): number => CUP.halfW * 0.94 - 0.005
+const cloth = (top: number) => ({ cy: top + 0.035, rx: CUP.halfW * 0.94 * 0.62, ry: 0.042 })
 function cushionPath(ctx: Ctx, top: number, x = CUP.x): void {
-  const w = CUP.halfW
-  const s = SHOULDER
+  const rx = padRX()
+  const cy = top + 0.035
   const base = CUP.top + 0.17
   ctx.beginPath()
-  ctx.moveTo(x - w + 0.02, base)
-  ctx.bezierCurveTo(x - w - 0.03, base - 0.08, x - w + 0.02, top, x - s - 0.02, top)
-  ctx.quadraticCurveTo(x - s * 0.55, top, x - s * 0.4, top + CUP.hollow * 0.45)
-  ctx.quadraticCurveTo(x, top + CUP.hollow * 1.35, x + s * 0.4, top + CUP.hollow * 0.45)
-  ctx.quadraticCurveTo(x + s * 0.55, top, x + s + 0.02, top)
-  ctx.bezierCurveTo(x + w - 0.02, top, x + w + 0.03, base - 0.08, x + w - 0.02, base)
+  ctx.moveTo(x - rx, base - 0.012)
+  ctx.lineTo(x - rx, cy)
+  ctx.ellipse(x, cy, rx, PAD_RY, 0, Math.PI, Math.PI * 2)
+  ctx.lineTo(x + rx, base - 0.012)
+  ctx.quadraticCurveTo(x + rx, base, x + rx - 0.02, base)
+  ctx.lineTo(x - rx + 0.02, base)
+  ctx.quadraticCurveTo(x - rx, base, x - rx, base - 0.012)
   ctx.closePath()
+}
+
+/**
+ * The cushion's fabric, all but the cloth: its side band, its top ring lighter where it faces up, the edge between
+ * them, the stitched seam round its side, and the lamp along its far rim toward it. Drawn whole for the cup, and again
+ * over the ball's foot for the lip.
+ */
+function padFabric(ctx: Ctx, lw: number, x: number, top: number, l: number, side: 1 | -1, warm: string): void {
+  const rx = padRX()
+  const cy = top + 0.035
+  const base = CUP.top + 0.17
+  // The side band.
+  cushionPath(ctx, top, x)
+  const sg = ctx.createLinearGradient(0, cy, 0, base)
+  sg.addColorStop(0, lit(PAD, PAD_LIT, l * 0.75))
+  sg.addColorStop(1, lit(PAD, PAD_LIT, l * 0.35))
+  ctx.fillStyle = sg
+  ctx.fill()
+  // The top ring, facing up into the light.
+  ctx.beginPath()
+  ctx.ellipse(x, cy, rx, PAD_RY, 0, 0, Math.PI * 2)
+  const tg = ctx.createLinearGradient(x - side * rx, 0, x + side * rx, 0)
+  tg.addColorStop(0, lit(PAD, PAD_LIT, l * 0.85 + 0.05))
+  tg.addColorStop(1, lit(PAD, PAD_LIT, Math.min(1, l * 1.15 + 0.1)))
+  ctx.fillStyle = tg
+  ctx.fill()
+  // Its front edge, where the top turns down into the side.
+  ctx.beginPath()
+  ctx.ellipse(x, cy, rx, PAD_RY, 0, 0, Math.PI)
+  ctx.lineWidth = lw * 0.7
+  ctx.strokeStyle = rgba(INK, 0.6)
+  ctx.stroke()
+  // The seam, round the side.
+  ctx.setLineDash([0.025, 0.02])
+  ctx.beginPath()
+  ctx.ellipse(x, cy + (base - cy - PAD_RY) * 0.45 + 0.01, rx - 0.01, PAD_RY, 0, Math.PI * 0.08, Math.PI * 0.92)
+  ctx.lineWidth = lw * 0.5
+  ctx.strokeStyle = rgba('#000000', 0.32)
+  ctx.stroke()
+  ctx.setLineDash([])
+  // The lamp along its far rim, on the side toward it.
+  ctx.beginPath()
+  ctx.ellipse(x, cy, rx - 0.012, PAD_RY - 0.01, 0, side > 0 ? Math.PI * 1.55 : Math.PI * 1.05, side > 0 ? Math.PI * 1.95 : Math.PI * 1.45)
+  ctx.lineWidth = 0.014
+  ctx.strokeStyle = rgba(warm, 0.5 * l)
+  ctx.stroke()
 }
 
 function headphones(ctx: Ctx, lw: number, t: number): void {
@@ -626,33 +680,30 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
   // A pair, set down face up: both cups on their backs, cushions up, the band standing between them from yoke to yoke.
   // Each cup hangs in a yoke, a fork round its middle on the side toward the other.
   const w = CUP.halfW * 0.94
-  const nearYoke = { x: CUP.x + w + 0.01, y: CUP.top + 0.17, r: 0.1 }
   const fx = FAR_CUP.x
   const farTop = -FAR_CUP.h + farPress(t)
-  const farYoke = { x: fx - w - 0.01, y: CUP.top + 0.17, r: 0.1 }
-  const a = { x: nearYoke.x + nearYoke.r, y: nearYoke.y }
-  const b = { x: farYoke.x - farYoke.r, y: farYoke.y }
-  // The band, lying flat on the desk as headphones set down face up lie: from each yoke down onto the wood and round
-  // toward us in a U, the cream of its outside and the dark of its padding along its inner edge, the lamp along its
-  // near rim. Drawn last, over the cups' feet, being nearer.
-  // A half oval on the wood: its ends at the cups' feet, its round toward us.
-  const ex = (a.x + b.x) / 2
-  const erx = (b.x - a.x) / 2 + 0.05
-  const ery = DESK.top * 0.42
-  const ey = DESK.y + 0.035
+  // Each cup hangs by a pivot on its side toward the other, a slider arm from it down to the band.
+  const pivots = [{ x: CUP.x + w - 0.012, y: CUP.top + 0.215 }, { x: fx - w + 0.012, y: CUP.top + 0.215 }]
+  // The band, lying flat on the desk as headphones set down face up lie: from each arm round toward us in a shallow U
+  // on the wood, the cream of its outside and the dark of its padding along its inner edge, the lamp along its near
+  // rim. Drawn last, over the cups' feet, being nearer.
+  const ex = (pivots[0].x + pivots[1].x) / 2
+  const erx = (pivots[1].x - pivots[0].x) / 2 + 0.03
+  const ery = DESK.top * 0.2
+  const ey = DESK.y + 0.04
   const band = (dy = 0) => {
     ctx.beginPath()
     ctx.ellipse(ex, ey + dy, erx, ery, 0, 0, Math.PI)
   }
-  // Each yoke's arm down to it, beside the cup.
+  // The arms: from each pivot, down the cup's side, to the band's ends on the wood.
   const arms = () => {
     ctx.beginPath()
-    ctx.moveTo(a.x - 0.01, a.y + 0.04)
-    ctx.quadraticCurveTo(a.x - 0.04, ey - 0.08, ex - erx + 0.005, ey)
-    ctx.moveTo(b.x + 0.01, b.y + 0.04)
-    ctx.quadraticCurveTo(b.x + 0.04, ey - 0.08, ex + erx - 0.005, ey)
+    ctx.moveTo(pivots[0].x, pivots[0].y)
+    ctx.lineTo(ex - erx + 0.004, ey - 0.005)
+    ctx.moveTo(pivots[1].x, pivots[1].y)
+    ctx.lineTo(ex + erx - 0.004, ey - 0.005)
   }
-  const bl = lightAt((a.x + b.x) / 2, 0.1, 0) * lamp
+  const bl = lightAt(ex, 0.1, 0) * lamp
   const drawBand = () => {
     arms()
     ctx.lineWidth = 0.05
@@ -688,14 +739,14 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
     ctx.stroke()
   }
   // A yoke: a fork round the cup's middle, its arm up into the band.
-  const yoke = (y: { x: number; y: number; r: number }, from: number, to: number, k: number) => {
+  // A pivot: the screw the cup turns on, where its arm meets it.
+  const pivot = (p: { x: number; y: number }, k: number) => {
     ctx.beginPath()
-    ctx.arc(y.x, y.y, y.r, from, to)
-    ctx.lineWidth = 0.05
+    ctx.arc(p.x, p.y, 0.028, 0, Math.PI * 2)
+    ctx.fillStyle = shell(k)
+    ctx.fill()
+    ctx.lineWidth = lw * 0.8
     ctx.strokeStyle = INK
-    ctx.stroke()
-    ctx.lineWidth = 0.05 - lw * 1.6
-    ctx.strokeStyle = shell(k)
     ctx.stroke()
   }
   // One cup on its back: a shallow rounded shell, rim up, the lamp along its rim, and its cushion.
@@ -720,51 +771,28 @@ function headphones(ctx: Ctx, lw: number, t: number): void {
     ctx.lineWidth = 0.014
     ctx.strokeStyle = rgba(warm, 0.55 * l)
     ctx.stroke()
-    cushionPath(ctx, cTop, x)
-    const pg = ctx.createLinearGradient(0, cTop, 0, CUP.top + 0.17)
-    pg.addColorStop(0, lit(PAD, PAD_LIT, l))
-    pg.addColorStop(1, lit(PAD, PAD_LIT, l * 0.5))
-    ctx.fillStyle = pg
+    padFabric(ctx, lw, x, cTop, l, side, warm)
+    // The speaker cloth in the ring's middle, darker: the ball's seat.
+    const c = cloth(cTop)
+    ctx.beginPath()
+    ctx.ellipse(x, c.cy, c.rx, c.ry, 0, 0, Math.PI * 2)
+    ctx.fillStyle = lit('#120E18', '#2E2636', l * 0.6)
     ctx.fill()
-    stroke(ctx, lw)
-    // Its face, seen a little from above: the pad a ring round the darker speaker cloth; and the stitched seam.
-    ctx.save()
+    ctx.lineWidth = lw * 0.7
+    ctx.strokeStyle = rgba(INK, 0.7)
+    ctx.stroke()
     cushionPath(ctx, cTop, x)
-    ctx.clip()
-    {
-      ctx.beginPath()
-      ctx.ellipse(x, cTop + 0.035, w * 0.62, 0.042, 0, 0, Math.PI * 2)
-      ctx.fillStyle = lit('#120E18', '#2E2636', l * 0.6)
-      ctx.fill()
-      ctx.lineWidth = lw * 0.7
-      ctx.strokeStyle = rgba(INK, 0.7)
-      ctx.stroke()
-    }
-    ctx.setLineDash([0.025, 0.02])
-    ctx.beginPath()
-    ctx.moveTo(x - w + 0.05, CUP.top + 0.12)
-    ctx.lineTo(x + w - 0.05, CUP.top + 0.12)
-    ctx.lineWidth = lw * 0.5
-    ctx.strokeStyle = rgba('#000000', 0.35)
-    ctx.stroke()
-    ctx.restore()
-    // The lamp along the pad's shoulder toward it.
-    ctx.beginPath()
-    ctx.moveTo(x + side * SHOULDER * 0.5, cTop + 0.02)
-    ctx.quadraticCurveTo(x + side * (SHOULDER + 0.06), cTop - 0.005, x + side * (CUP.halfW - 0.02), cTop + 0.07)
-    ctx.lineWidth = 0.016
-    ctx.strokeStyle = rgba(warm, 0.45 * l)
-    ctx.stroke()
+    stroke(ctx, lw)
   }
   // The far cup: the near one's twin, its cushion pressed a little by each snare the music strikes.
   const fl = lightAt(fx, -0.15) * lamp
   cup(fx, farTop, fl, -1)
-  yoke(farYoke, Math.PI * 0.55, Math.PI * 1.45, fl * 0.8 + 0.1)
   // The near cup, the ball's seat, its cushion pushed by the kick.
   const l = lightAt(CUP.x, -0.15) * lamp
   cup(CUP.x, top, l, 1)
-  yoke(nearYoke, -Math.PI * 0.45, Math.PI * 0.45, l * 0.9 + 0.12)
   drawBand()
+  pivot(pivots[1], fl * 0.8 + 0.1)
+  pivot(pivots[0], l * 0.9 + 0.12)
 }
 
 /**
@@ -828,45 +856,37 @@ function lip(ctx: Ctx, lw: number, t: number): void {
   if (Math.abs(b.x - CUP.x) > CUP.halfW + R || b.y < CUP.top - 2 * R - 0.05) return
   const lamp = lampAt(t)
   const top = CUP.top + cushion(t)
-  // The front of the cushion's ring, over the ball: everything of the cushion in front of the hollow's near edge (the
-  // front arc of the dark ellipse `headphones` draws), so the ball sits down in it.
-  const w = CUP.halfW * 0.94
+  // The front of the cushion's ring, over the ball: everything of the cushion in front of the cloth's near edge, so the
+  // ball sits down in it.
+  const c = cloth(top)
   const cx = CUP.x
-  const cy = top + 0.035
-  const rx = w * 0.62
-  const ry = 0.042
   ctx.save()
   cushionPath(ctx, top)
   ctx.clip()
   ctx.beginPath()
-  ctx.moveTo(cx - CUP.halfW - 0.1, cy)
-  ctx.lineTo(cx - rx, cy)
-  ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true)
-  ctx.lineTo(cx + CUP.halfW + 0.1, cy)
-  // (Down to just above the shell's bright rim, which stays.)
-  ctx.lineTo(cx + CUP.halfW + 0.1, CUP.top + 0.142)
-  ctx.lineTo(cx - CUP.halfW - 0.1, CUP.top + 0.142)
+  ctx.moveTo(cx - CUP.halfW - 0.1, c.cy)
+  ctx.lineTo(cx - c.rx, c.cy)
+  ctx.ellipse(cx, c.cy, c.rx, c.ry, 0, Math.PI, 0, true)
+  ctx.lineTo(cx + CUP.halfW + 0.1, c.cy)
+  ctx.lineTo(cx + CUP.halfW + 0.1, CUP.top + 0.2)
+  ctx.lineTo(cx - CUP.halfW - 0.1, CUP.top + 0.2)
   ctx.closePath()
-  // The cushion's own shading, top to foot, so the lip is the cushion and not a patch on it.
-  const l = lightAt(CUP.x, -0.15) * lamp
-  const pg = ctx.createLinearGradient(0, top, 0, CUP.top + 0.17)
-  pg.addColorStop(0, lit(PAD, PAD_LIT, l))
-  pg.addColorStop(1, lit(PAD, PAD_LIT, l * 0.5))
-  ctx.fillStyle = pg
-  ctx.fill()
-  // The hollow's near edge, and the stitched seam the lip would otherwise cover.
+  ctx.clip()
+  padFabric(ctx, lw, cx, top, lightAt(CUP.x, -0.15) * lamp, 1, lampColor(t))
+  // The cloth's near edge.
   ctx.beginPath()
-  ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true)
+  ctx.ellipse(cx, c.cy, c.rx, c.ry, 0, Math.PI, 0, true)
   ctx.lineWidth = lw * 0.7
   ctx.strokeStyle = rgba(INK, 0.7)
   ctx.stroke()
-  ctx.setLineDash([0.025, 0.02])
+  ctx.restore()
+  // The cushion's outline over it again, where the clip cut it.
+  ctx.save()
   ctx.beginPath()
-  ctx.moveTo(cx - w + 0.05, CUP.top + 0.12)
-  ctx.lineTo(cx + w - 0.05, CUP.top + 0.12)
-  ctx.lineWidth = lw * 0.5
-  ctx.strokeStyle = rgba('#000000', 0.35)
-  ctx.stroke()
+  ctx.rect(cx - CUP.halfW - 0.1, c.cy, CUP.halfW * 2 + 0.2, 0.3)
+  ctx.clip()
+  cushionPath(ctx, top)
+  stroke(ctx, lw)
   ctx.restore()
 }
 

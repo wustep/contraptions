@@ -498,7 +498,9 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
   const raise = (i: number) => c.walk * 0.07 * Math.max(0, Math.sin(gait(i)))
   const L = 0.27 * st.up + c.walk * 0.015 * Math.abs(Math.cos(c.phase))
   const tipF = 0.17 * st.out
-  const long = 1 + 0.14 * st.out
+  // Up on its feet a cat gathers its length under it: shorter in the body than lying out in a loaf (and longer again
+  // reaching out in a stretch).
+  const long = 1 - 0.16 * st.up * (1 - st.out) + 0.14 * st.out
   const REAR = x0 + 0.12
   const T = (x: number, y: number) => {
     const u = (x - REAR) * long
@@ -586,7 +588,8 @@ function catAt(ctx: Ctx, lw: number, t: number, c: ReturnType<typeof climbAt>): 
     }
     for (const [i, [hx, k]] of ([[x0 + 0.42, 0.45], [x0 + 0.24, 0.6]] as const).entries()) {
       const hip = T(hx, -0.08)
-      leg(hip, { x: hip.x - 0.02 + step(i), y: -0.005 - raise(i) }, 0.17, k, 0, -0.9 * raise(i))
+      // The hind leg bends back at the hock, as a cat's does standing, more as the foot lifts.
+      leg(hip, { x: hip.x - 0.02 + step(i), y: -0.005 - raise(i) }, 0.17, k, 0, -0.07 * st.up - 0.9 * raise(i))
     }
     for (const [i, [fx, k, ahead]] of ([[chest - 0.06, 0.7, 0.04], [chest - 0.2, 0.95, 0]] as const).entries()) {
       const sh = T(fx, -0.08)
