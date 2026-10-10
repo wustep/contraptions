@@ -209,7 +209,8 @@ export const ending = part<null>(
     lane: { ...LOUISE_END, fire: END.touch - slot.begin },
     state: null,
     riders: looking(LOUISE_GAZE.end),
-    company: [hannahSpan(slot, HANNAH_END, SCENES.end.begin, HANNAH_SCALE, HANNAH_GAZE.end)],
+    // On past the slot's end: the player holds the last frame at the show's end, and she is in it.
+    company: [hannahSpan(slot, HANNAH_END, SCENES.end.begin, HANNAH_SCALE, HANNAH_GAZE.end, slot.end + 1)],
   }),
   (slot) => [
     // From the first frame (the score's), a slow push toward the two of them, never stopping, while the tones die.

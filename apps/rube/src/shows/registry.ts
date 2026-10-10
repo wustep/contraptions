@@ -1,3 +1,4 @@
+import type { Box } from '../plan'
 import type { Show } from '../show'
 
 /**
@@ -27,7 +28,85 @@ export interface Framing {
    * or in Overview, the world is square to the frame.
    */
   angle?: number
+  /**
+   * Under Zoom, how far below the frame's middle Zoom holds, as a share of the Zoom frame's half height (negative:
+   * above it): for a shot whose subject sits low or high in the frame (a house under a sky for the credits, a balloon
+   * high over him), which a tighter frame round the same middle would cut. Left out, Zoom holds the middle.
+   */
+  zoomDrop?: number
+  /**
+   * Under Zoom, how far right of the frame's middle Zoom holds, as a share of the Zoom frame's half width (negative:
+   * left of it). Left out, Zoom holds the middle.
+   */
+  zoomSlide?: number
+  /**
+   * Under Zoom, how much of Zoom's closeness applies, 0 to 1: for a stretch composed for the show's own frame (credits
+   * set over its sky), where Zoom eases back to it. Left out, all of it.
+   */
+  zoomFull?: number
+  /**
+   * What the shot is about, in cells. Zoom sits closer about the same middle, and a shot composed for the wide frame
+   * can leave its subject at the edge of the closer one, or past it (the two of them in the rocket's window, at the
+   * top of a frame whose foot holds the tower). Given a focus, Zoom moves over the least it must to keep it well
+   * inside (`zoomed`). Left out, Zoom keeps the middle.
+   */
+  focus?: [number, number]
 }
+
+/**
+ * Where a credit card centred at `cx` (px) and `width` wide goes on a stage `stage` wide: where it is, unless it would
+ * come nearer an edge than `margin`, in which case it slides in just far enough; centred, if it cannot fit at all.
+ */
+export function placeCard(cx: number, width: number, stage: number, margin = 8): number {
+  const half = width / 2
+  if (width > stage - 2 * margin) return stage / 2
+  return Math.min(Math.max(cx, margin + half), stage - margin - half)
+}
+
+/** How far inside the Zoom frame's edges a focus is kept, as a share of the frame's height. */
+const FOCUS_MARGIN = 0.2
+/** The width of the soft knee either side of that margin, as a share of the frame's height. */
+const FOCUS_KNEE = 0.08
+
+/**
+ * The Zoom frame for `cam`, `by` times closer: the same middle, unless the camera names a focus that would sit nearer
+ * an edge than FOCUS_MARGIN, in which case the frame slides over (along the picture's own axes, so a rolled camera
+ * slides square to its screen) by just enough. It is continuous in the camera and the focus: no jumps.
+ */
+export function zoomed(cam: Framing, by: number): Framing {
+  // First where the camera asks Zoom to hold: `zoomFull` of the closeness, off the middle by `zoomDrop` and `zoomSlide`
+  // (shares of the Zoom frame's half height and half width). Without them, the same middle, `by` times as close.
+  const cells = cam.cells / (1 + (by - 1) * Math.max(0, Math.min(1, cam.zoomFull ?? 1)))
+  const hx = cam.x + ((cam.zoomSlide ?? 0) * cells * 16) / 9 / 2
+  const hy = cam.y + ((cam.zoomDrop ?? 0) * cells) / 2
+  const { focus, ...rest } = cam
+  if (!focus) return { ...rest, cells, x: hx, y: hy }
+  const a = cam.angle ?? 0
+  const cs = Math.cos(a)
+  const sn = Math.sin(a)
+  const dx = focus[0] - hx
+  const dy = focus[1] - hy
+  // The focus on the screen, from the middle, in cells.
+  const sx = dx * cs - dy * sn
+  const sy = dx * sn + dy * cs
+  const limX = Math.max(0, (cells * 8) / 9 - FOCUS_MARGIN * cells)
+  const limY = Math.max(0, cells / 2 - FOCUS_MARGIN * cells)
+  // How far past a limit, with a soft knee either side of it, so the frame takes hold of the focus gradually and its
+  // speed never jumps: nothing short of lim - knee, the overshoot itself past lim + knee, a parabola between.
+  const knee = FOCUS_KNEE * cells
+  const past = (v: number, lim: number): number => {
+    const x = Math.abs(v) - lim
+    const e = x <= -knee ? 0 : x >= knee ? x : ((x + knee) * (x + knee)) / (4 * knee)
+    return Math.sign(v) * e
+  }
+  const ex = past(sx, limX)
+  const ey = past(sy, limY)
+  // Back from the screen's axes to the world's.
+  return { ...rest, cells, x: hx + ex * cs + ey * sn, y: hy - ex * sn + ey * cs }
+}
+
+/** Zoom's frame for a framing, by the name Married Life's checks and holds know it: `zoomed`, holds and all. */
+export const zoomFrame = zoomed
 
 export interface SoundtrackSpec {
   /**
@@ -87,6 +166,17 @@ export interface Performance {
   camera?(t: number): Framing
   /** Whether the show's cuts are drawn at `t`: the iris at a portal, the fade up from ink. Left out, they are. */
   cuts?(t: number): boolean
+  /**
+   * The box Overview frames at `t`, in the world's cells: for a show whose worlds hold several sets far apart (the
+   * place in play, not the whole world, most of it empty between them). Left out, the whole world.
+   */
+  overview?(t: number): Box
+  /**
+   * In a stage taller than 16:9 (a phone held upright), what share of the extra picture lies above the composed 16:9
+   * frame: for a show whose sets stand on a floor or the ground, with sky, roof or an upper storey over them and only
+   * ground under them. The title cards go with the picture. Left out, half: the frame in the middle.
+   */
+  tall?: number
   /** The music. Left out, the show is silent and runs on the wall clock. */
   soundtrack?: SoundtrackSpec
   /**
@@ -144,9 +234,9 @@ export interface TitleCard {
   scale?: number
   /**
    * Optional: the least the card's unit (a hundredth of the 16:9 frame, times `scale`) may be on the page, in CSS
-   * pixels, so words that must be read (subtitles) are still read on a small stage, a phone's. A card grown by it is
-   * never wider than the stage and is kept inside its edges. A saved video's frame is always large enough, so its
-   * painter does not need it.
+   * pixels, so words that must be read (subtitles, credits) are still read on a small stage, a phone held upright, where
+   * the frame is about 220px high and a role line would be 4px. A card grown by it is never wider than the stage and is
+   * kept inside its edges. Unset: no least, every show's credits as they were.
    */
   least?: number
   /**
@@ -159,6 +249,11 @@ export interface TitleCard {
   caption?: boolean
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
+  /**
+   * Optional: a soft veil of the dark round its words, this strong at its middle (0 to 1), for a card over a bright or
+   * busy picture. Drawn with the words, wherever they are drawn (the page, and a video's frames), and nowhere else.
+   */
+  shade?: number
 }
 
 /** What a `.show.ts` file exports as its default. */
@@ -176,6 +271,8 @@ export interface ShowVersion {
   about?: string
   /** Seconds of show at which the share card's picture is taken (`scripts/shows/show-cards.mjs`). */
   still?: number
+  /** A favourite take of its work: starred on its tab. */
+  favorite?: boolean
   load(): Promise<Performance>
 }
 
@@ -193,6 +290,8 @@ export interface Work {
   work: string
   title: string
   versions: Version[]
+  /** Where it stands among the favourites (`FAVORITES`), 1 first; left out, it is not one. */
+  favorite?: number
 }
 
 const PATH = /(?:^|\/)versions\/([a-z0-9][a-z0-9-]*)\/([a-z0-9][a-z0-9-]*)\.show\.ts$/
@@ -218,20 +317,35 @@ export const currentTake = (work: string, take: string): string => RENAMED_TAKES
 export const SECTIONS = ['Machine', 'Movies', 'Ambient'] as const
 export type Section = (typeof SECTIONS)[number]
 const SHELVED: Record<string, Section> = {
-  bolero: 'Machine',
   'clair-de-lune': 'Machine',
   'premiere-arabesque': 'Machine',
   'cornfield-chase': 'Machine',
+  bolero: 'Ambient',
   gymnopedie: 'Ambient',
   'soft-lamp': 'Ambient',
 }
 export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
 
-/** The works by shelf, each shelf by title; empty shelves left out. */
+/** The favourite works, by rank. They are starred, pinned to the top of their shelf, and the Shows tab opens the first. */
+const FAVORITES: Record<string, number> = {
+  interstellar: 1,
+  'la-la-land': 2,
+  'come-recover': 3,
+  'clair-de-lune': 4,
+}
+
+/** The favourites, first first. */
+export const favorites = (works: Work[]): Work[] =>
+  works.filter((w) => w.favorite !== undefined).sort((a, b) => a.favorite! - b.favorite!)
+
+/**
+ * The works by shelf: each shelf its favourites by rank, then the rest by title; empty shelves left out.
+ */
 export function shelves(works: Work[]): { section: Section; works: Work[] }[] {
   return SECTIONS.map((section) => ({
     section,
-    works: works.filter((w) => sectionOf(w.work) === section).sort((a, b) => a.title.localeCompare(b.title)),
+    works: works.filter((w) => sectionOf(w.work) === section)
+      .sort((a, b) => (a.favorite ?? Infinity) - (b.favorite ?? Infinity) || a.title.localeCompare(b.title)),
   })).filter((s) => s.works.length > 0)
 }
 
@@ -281,10 +395,10 @@ export function readShows(found: Record<string, unknown>): Registry {
       problems.push(`${path}: the default export is not a show: it needs a title, a label and load()`)
       continue
     }
-    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, about: v.about, still: v.still, load: v.load }
+    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, about: v.about, still: v.still, favorite: v.favorite, load: v.load }
     const work = works.find((w) => w.work === at.work)
     if (!work) {
-      works.push({ work: at.work, title: v.title, versions: [version] })
+      works.push({ work: at.work, title: v.title, versions: [version], favorite: FAVORITES[at.work] })
       continue
     }
     if (work.title !== v.title) problems.push(`${path}: titled "${v.title}", where the other takes of ${at.work} say "${work.title}"`)
@@ -294,24 +408,23 @@ export function readShows(found: Record<string, unknown>): Registry {
   return { works, problems }
 }
 
-/** The Shows tab, with no work in the link: Clair de Lune. */
-export const DEFAULT_WORK = 'clair-de-lune'
 /** Clair de Lune, with no take in the link: Take B. */
+const CLAIR = 'clair-de-lune'
 export const DEFAULT_TAKE = 'take-b'
 
 /**
  * The version a link names. A work that is not there falls to the first
  * work; a take that is not there falls to that work's first, or to Take B
- * on Clair de Lune. A link that names no work opens Clair de Lune, Take B,
- * when it is there.
+ * on Clair de Lune. A link that names no work opens the first favourite
+ * (Voyage), when there is one.
  */
 export function pickVersion(works: Work[], work: string | null, take: string | null): Version | null {
   const w = work
     ? (works.find((o) => o.work === work) ?? works[0])
-    : (works.find((o) => o.work === DEFAULT_WORK) ?? works[0])
+    : (favorites(works)[0] ?? works[0])
   if (!w) return null
   const fallback = (w.versions.find((v) => v.take === PREFERRED_TAKES[w.work]) ??
-    (w.work === DEFAULT_WORK ? w.versions.find((v) => v.take === DEFAULT_TAKE) : undefined) ??
+    (w.work === CLAIR ? w.versions.find((v) => v.take === DEFAULT_TAKE) : undefined) ??
     w.versions[0])
   const named = take && currentTake(w.work, take)
   return w.versions.find((v) => v.take === named) ?? fallback ?? null

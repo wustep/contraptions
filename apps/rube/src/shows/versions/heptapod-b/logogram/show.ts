@@ -1,8 +1,8 @@
-import { ballAt, laneAt, type Pt } from '../../../../parts'
+import { ballAt, laneAt, R, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
-import type { Company, Riders as PartRiders, Who } from './kit'
+import { ease, turnTo, type Company, type Riders as PartRiders, type Who } from './kit'
 import { HANNAH, HANNAH_ID, HANNAH_SCALE, IAN, IAN_ID, LOUISE, WORLDS, type WorldKey } from './worlds'
 
 /**
@@ -55,6 +55,9 @@ function boundsOf(pieces: Placed[]): Box {
   if (!Number.isFinite(b.x0)) return { x0: 0, y0: 0, x1: 1, y1: 1 }
   return b
 }
+
+/** How long her eye takes to come round after a cut, seconds. */
+const EYE_CARRY = 0.35
 
 export class LogogramShow extends Show {
   private readonly keys: WorldKey[]
@@ -157,7 +160,36 @@ export class LogogramShow extends Show {
     return [placed.col + placed.mirror * at.x, placed.row + at.y]
   }
 
+  /**
+   * Where the ball is at `t`, and how it looks. Every cut is a match cut on her, her place on the screen carried; her
+   * eye is carried too: for a moment after a cut it turns from where the last place left it to where this one has it,
+   * instead of jumping (her eye is her roll, and each place counts her roll from its own origin). Not at the shaft's
+   * mouth, where the camera's roll is carried into the new place and the eye already holds on the screen.
+   */
   override at(t: number): ShowPoint {
+    const time = this.clamp(t)
+    const i = this.owner(time)
+    // The last cut, or the last seam between two parts inside a place (where one part's eye hands to the next's).
+    const start = Math.max(this.legs[i].from, this.holder(time).start)
+    const since = time - start
+    const cut = start === this.legs[i].from
+    const mouth = cut && (this.legs[i].world === 'shell' || (i > 0 && this.legs[i - 1].world === 'shell'))
+    if (start > 0 && since < EYE_CARRY && !mouth) {
+      // The difference at the cut, carried and let go: an offset fixed at the cut (so the eye never flips the other
+      // way round as it rolls), fading to nothing.
+      const offset = turnTo(this.heroSpin(this.point(start + 1e-4)), this.heroSpin(this.point(start - 1e-4)))
+      return this.point(time, this.heroSpin(this.point(time)) + offset * (1 - ease(since / EYE_CARRY)))
+    }
+    return this.point(time)
+  }
+
+  /** Her eye in a point: as a rider set it, or her roll as the stage draws it. */
+  private heroSpin(here: ShowPoint): number {
+    const id = here.ball.id
+    return here.balls?.find((b) => b.id === id)?.spin ?? (here.x - (here.universe.pieces[0]?.col ?? 0)) / R
+  }
+
+  private point(t: number, eye?: number): ShowPoint {
     const time = this.clamp(t)
     const owner = this.owner(time)
     const universe = this.worlds[this.keys.indexOf(this.legs[owner].world)]
@@ -178,7 +210,7 @@ export class LogogramShow extends Show {
     const ride = this.riders.find((r) => r.leg === owner && time >= r.from && time < r.to)
     const world = this.legs[owner].world
     const company = [this.companion(time, 'ian', world), this.companion(time, 'hannah', world)].filter((b): b is ShowBall => !!b)
-    if (ride || company.length) {
+    if (ride || company.length || eye !== undefined) {
       const hero: ShowBall = {
         id: ball.id,
         x: here.x,
@@ -188,8 +220,11 @@ export class LogogramShow extends Show {
         scale: point.hidden ? 0 : point.scale,
         stretch: here.stretch,
         angle: here.angle,
+        // Her roll as the stage would draw it (`engine.ts`), so a rider that turns her eye can turn it from where it is.
+        spin: (here.x - (universe.pieces[0]?.col ?? 0)) / R,
       }
-      const balls = ride ? ride.fn(time, hero) : null
+      let balls = ride ? ride.fn(time, hero) : null
+      if (eye !== undefined) balls = (balls ?? [hero]).map((b) => (b.id === hero.id ? { ...b, spin: eye } : b))
       here.balls = company.length ? [...(balls ?? [hero]), ...company] : balls ?? undefined
     }
     return here
@@ -208,8 +243,27 @@ export class LogogramShow extends Show {
   private companion(t: number, who: Who, world: WorldKey): ShowBall | null {
     const time = this.clamp(t)
     const span = this.company.find((s) => s.who === who && s.world === world && time >= s.from && time < s.to)
-    const b = span?.at(time)
+    if (!span) return null
+    const universe = this.worlds[this.keys.indexOf(world)]
+    const col = universe?.pieces[0]?.col ?? 0
+    /** Where a span has them at `u`, their eye resolved: the roll the stage would draw, turned where they look. */
+    const at = (sp: typeof span, u: number) => {
+      const got = sp.at(u)
+      if (!got) return null
+      const { look, ...rest } = got
+      const roll = rest.spin ?? (rest.x - col) / R
+      return { ...rest, spin: (look ? look(roll) : null) ?? roll }
+    }
+    let b = at(span, time)
     if (!b) return null
+    // Handed from one part to the next inside a place, their eye is carried across the seam, as hers is.
+    const since = time - span.from
+    const prev = since < EYE_CARRY ? this.company.find((s) => s.who === who && s.world === world && Math.abs(s.to - span.from) < 1e-6) : undefined
+    if (prev) {
+      const was = at(prev, span.from - 1e-4)
+      const now = at(span, span.from)
+      if (was && now) b = { ...b, spin: b.spin + turnTo(now.spin, was.spin) * (1 - ease(since / EYE_CARRY)) }
+    }
     return who === 'ian' ? { ...b, id: IAN_ID, color: b.color ?? IAN } : { scale: HANNAH_SCALE, ...b, id: HANNAH_ID, color: b.color ?? HANNAH }
   }
 }

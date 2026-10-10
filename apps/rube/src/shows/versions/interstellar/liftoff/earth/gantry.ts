@@ -222,9 +222,14 @@ function drawGantry(p: p5, s: GantryState, c: Ctx): void {
     const on = t >= LAMPS[i] && t < DARK[9 - i]
     const flash = on ? knock(t - LAMPS[i], 0.2) : 0
     const off = t >= DARK[9 - i] ? knock(t - DARK[9 - i], 0.25) : 0
+    // A bulkhead lamp on a bracket: a squared housing with its guard bars, never a disc that could be taken for a ball.
     solid(p, ink, weight * 0.8, on ? '#F4C24E' : DUST.shade)
-    p.circle(X(LEG0 - 0.22), X(y), X(0.19))
-    p.line(X(LEG0 - 0.12), X(y), X(LEG0 - 0.04), X(y))
+    p.rect(X(LEG0 - 0.22), X(y), X(0.15), X(0.11), X(0.025))
+    outline(p, ink, weight * 0.5)
+    p.line(X(LEG0 - 0.22), X(y - 0.055), X(LEG0 - 0.22), X(y + 0.055))
+    p.line(X(LEG0 - 0.295), X(y), X(LEG0 - 0.145), X(y))
+    outline(p, ink, weight * 0.8)
+    p.line(X(LEG0 - 0.145), X(y), X(LEG0 - 0.04), X(y))
     if (on || off > 0.01) {
       const ctx = p.drawingContext as CanvasRenderingContext2D
       const a = on ? 0.55 + 0.4 * flash : 0.45 * off

@@ -13,6 +13,7 @@ import { FIRST, HANNAH_BY, SEAMS } from '../src/shows/versions/nature-of-dayligh
 import type { PalindromeShow } from '../src/shows/versions/nature-of-daylight/palindrome/show'
 import { HANNAH_AGE } from '../src/shows/versions/nature-of-daylight/palindrome/worlds'
 import { GONE, TV_SHELL } from '../src/shows/versions/nature-of-daylight/palindrome/house/house'
+import { COMES } from '../src/shows/versions/nature-of-daylight/palindrome/house/time'
 import { SHELL_CUT, SHELL_DOWN, SHELL_UP, shellAt } from '../src/shows/versions/nature-of-daylight/palindrome/valley/valley'
 import { FALLS, RISES } from '../src/shows/versions/nature-of-daylight/palindrome/twelve/twelve'
 import { R } from '../src/parts'
@@ -216,7 +217,7 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
   check('palindrome: the ball is never hidden for more than 2 s', longest <= 2, `${longest.toFixed(2)} s`)
 
   // Ian, Hannah and Shang: each only in their own places, never jumping, coming and going only out of shot or at a
-  // cut (Hannah also on the swell, when she goes).
+  // cut (Hannah also on the swell, when she goes, and into the cradle at the end, when she comes back).
   const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
     if (!b || (b.scale ?? 1) <= 0.02) return false
     const f = cam(t)
@@ -237,7 +238,7 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
         const d = Math.hypot(b.x - last.x, b.y - last.y)
         if (d > worst) { worst = d; worstAt = t }
       }
-      const going = who === 'hannah' && t >= GONE[0] && t <= GONE[1]
+      const going = who === 'hannah' && ((t >= GONE[0] && t <= GONE[1]) || (t >= COMES[0] && t <= COMES[1]))
       if (!changed && !going && !!b !== !!last && (inShot(t, b) || inShot(t - 0.005, last))) pops.push(t.toFixed(3))
       last = b
       lastLeg = leg
@@ -247,6 +248,14 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
     check(`palindrome: ${who} only comes and goes out of shot, or at a cut`, pops.length === 0, pops.join(', '))
   }
   check('palindrome: Hannah goes on the swell, and is gone from the bed after it', GONE[0] >= SWELL - 0.5 && GONE[1] <= SEAM.news && !show.hannah(SEAM.news - 0.1))
+  // And comes back at the end her going backwards, with no cut: the camera only goes in to the cradle as she comes.
+  const comes = [0.05, 0.25, 0.5, 0.75, 1].map((u) => {
+    const went = show.hannah(GONE[1] - u * (GONE[1] - GONE[0]))
+    const back = show.hannah(COMES[0] + u * (COMES[1] - COMES[0]))
+    return went && back ? Math.abs(back.scale! / HANNAH_AGE.baby - went.scale! / HANNAH_AGE.young) : 1
+  })
+  check('palindrome: Hannah comes into the cradle as she went from the bed, backwards, and with no cut',
+    comes.every((d) => d < 0.01) && !cameraCuts.some((c) => c > SEAM.home + 0.1), comes.map((d) => d.toFixed(3)).join(', '))
   const counts = [2, 30, 80, 110, 160, 205, 220, 240, 253, 270, 300, 330, 360].map((t) => (show.at(t).balls ?? []).filter((b) => b.id !== 0).map((b) => b.id))
   check('palindrome: never two of anyone', counts.every((ids) => new Set(ids).size === ids.length))
   const worldAt = (t: number) => show.legs[show.owner(t)].world

@@ -48,6 +48,8 @@ import { credits } from './credits'
  *   b180    Gargantua (a slingshot, two turns), the tesseract, the last hit on beat 191, the watch, the fall into bed
  */
 
+/** The deck stops being drawn half a second after the whip through the sphere to Miller (beat 166): nothing after it looks back down at it. */
+const CLOUD_GONE = beat(166) + 0.5
 /** Show time at which the rocket is inside the cloud and the stage changes universe. */
 export const SWITCH = PUNCH
 
@@ -123,7 +125,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     const { base, lean } = rocketPose(t)
     return { base: [lift.col + base[0], lift.row + base[1]] as [number, number], lean }
   }
-  const deckCloud = standing(cloud, 0, 0, all, { deck, punch: SWITCH, rocket: pose, length: ROCKET_LENGTH }, DURATION)
+  const deckCloud = standing(cloud, 0, 0, all, { deck, punch: SWITCH, rocket: pose, length: ROCKET_LENGTH, gone: CLOUD_GONE }, DURATION)
   const chainOf = (placed: Placed[]) => placed
   const show = new LiftoffShow(
     [
@@ -176,7 +178,9 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     { t: 15.5, cells: 3.3, w: 0.35, hold: [4.4, -2.3] },
     { t: 17.2, cells: 3.8, w: 0 },
     { t: 20.6, cells: 4.4, off: [0.7, -0.55] },
-    { t: 26.9, cells: 3.6, off: [0.6, -0.5] },
+    // In a little on him in the water, settling as the bank carries him, rather than a punch in and straight out (the
+    // yard's last key is three tenths of a second before 26.9, where this key stood).
+    { t: 27.5, cells: 3.9, off: [0.6, -0.5] },
     { t: 28.4, cells: 5.2, off: [1.6, -0.2] },
     // He is at the wheel from here: the cab a little left of centre, the road (and the drone) ahead of it.
     { t: 31, cells: 4.6, off: [0.8, -0.45] },
@@ -194,9 +198,46 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   // Where a part asks for nothing, the camera follows at a middle distance.
   if (!shots.some((s) => s.t > beat(86))) shots.push({ t: DURATION, cells: 5 })
   const follow = director((t) => show.where(t) as Pt, shots, DURATION)
-  const camera = (t: number): Framing => ({ ...follow(t), angle: rollAt(t) })
+  const smoothed = (t: number): Pt => {
+    let x = 0
+    let y = 0
+    let sum = 0
+    for (let j = -8; j <= 8; j++) {
+      const wj = 1 - Math.abs(j) / 9
+      const [px, py] = show.where(Math.max(0, Math.min(DURATION, t + j * 0.05)))
+      x += px * wj
+      y += py * wj
+      sum += wj
+    }
+    return [x / sum, y / sum]
+  }
+  const camera = (t: number): Framing => {
+    const f = follow(t)
+    // Zoom's focus is Cooper: the shots are composed for the wide frame, and under Zoom some left him on its edge or
+    // past it (the two of them in the rocket's window, over a frame that holds the tower's foot). Not in the three
+    // shots that are about more than him, and eased in and out of those so Zoom never jumps.
+    const w = ZOOM_FREE.reduce((m, [a, b]) => {
+      const [lo, hi] = zoomFreeSpan([a, b])
+      const e = (hi - lo - (b - a)) / 2 || Math.min(1, (b - a) / 3)
+      // A long window eases inside itself, so Zoom has him again by its end; a short one (the whip) eases just outside,
+      // since easing inside it would pull the frame across his jump from one world to the next.
+      return lo < a ? m * (1 - smooth(t, a - e, a) * (1 - smooth(t, b, b + e))) : m * (1 - smooth(t, a, a + e) * (1 - smooth(t, b - e, b)))
+    }, 1)
+    // (Where he has been and is about to be, over about a second, as the follow camera smooths him: a frame locked to
+    // his own jolts would jolt with every strike.)
+    const [hx, hy] = smoothed(t)
+    return { ...f, angle: rollAt(t), focus: [f.x + (hx - f.x) * w, f.y + (hy - f.y) * w] }
+  }
   return { show, camera }
 }
+
+/**
+ * Under Zoom, the shots that are bigger than Cooper: the cage going up out of the top while Murph is kept back at the
+ * tower's foot, the whip through the sphere, and the pull-back from the replica to the whole ring.
+ */
+export const ZOOM_FREE: [number, number][] = [[74.9, 77.3], [103.7, 104.3], [130.4, 137.2]]
+/** The stretch a Zoom-free shot really takes, with its eases: itself if it is long, half a second more each side if it is short. */
+export const zoomFreeSpan = ([a, b]: [number, number]): [number, number] => (b - a >= 2 ? [a, b] : [a - 0.5, b + 0.5])
 
 /**
  * The camera's roll on Cooper Station. The station is drawn end-on and its "down" is outward, so a house on the

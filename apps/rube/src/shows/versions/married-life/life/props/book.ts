@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
 import { alpha } from '../kit'
 import { HOME, INK } from '../worlds'
-import { FALLS } from './falls'
+import { fallStreaks, FALLS } from './falls'
 
 /**
  * Ellie's adventure book (canonical; the director's since the first director pass, from the home builder's). Her
@@ -225,7 +225,7 @@ function popFalls(p: p5, k: number, weight: number, gx: number, base: number, h:
   p.vertex(X(0.95), Y(0.98))
   p.vertex(X(0.78), Y(0.98))
   p.endShape(p.CLOSE)
-  // The falls: a pale ribbon off the lip, widening to the jungle.
+  // The falls: a ribbon of water off the lip, streaked as it falls, widening to the jungle's spray.
   p.stroke(alpha(p, INK, 0.6 * light))
   p.strokeWeight(weight * 0.5)
   p.fill(alpha(p, FALLS.water, light))
@@ -235,6 +235,11 @@ function popFalls(p: p5, k: number, weight: number, gx: number, base: number, h:
   p.vertex(X(0.55), Y(0.86))
   p.vertex(X(0.35), Y(0.86))
   p.endShape(p.CLOSE)
+  fallStreaks(p, X, Y, [0.415, 0.445, 0.475], 0.27, 0.84, [-0.05, -0.01, 0.04], weight * 0.45, light)
+  // Spray where it meets the jungle.
+  p.noStroke()
+  p.fill(alpha(p, FALLS.spray, light))
+  p.ellipse(X(0.45), Y(0.84), K(0.78 * 0.26), K(H * 0.07))
   // The jungle at its foot, over the falls' mist: a cut-paper band of treetops.
   p.stroke(alpha(p, INK, 0.8 * light))
   p.fill(alpha(p, FALLS.jungleFar, light))

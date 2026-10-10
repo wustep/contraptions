@@ -5,7 +5,7 @@ score in MuseScore 4 with Muse Sounds), so it ships with the show. Attribution i
 `apps/rube/src/shows/versions/bolero/ATTRIBUTION.txt`.
 
 Open it at `/shows/bolero/` or `/shows/bolero/opus55/` (`/shows/?show=bolero&take=opus55` works too). In the picker it
-is **Ostinato**, on the **Machine** shelf with Clair de Lune, Cornfield Chase and Première Arabesque: one take,
+is **Ostinato**, on the **Ambient** shelf with Gymnopédie and Soft Lamp: one take,
 **Opus 5.5**. The work's folder is `bolero` (the music); the picker's title is the device the whole piece stands on.
 
 ## What it is
@@ -103,7 +103,7 @@ against the recording: every note of A, and 89 of B's 91, is among the three str
 
 ## Craft notes
 
-- **The Machine's drawing, on the Machine's shelf.** Ink lines over one flat fill, on warm paper: the tower is drawn
+- **The Machine's drawing.** Ink lines over one flat fill, on warm paper: the tower is drawn
   the way the Machine's own pieces are, not painted. Colour is the orchestra: a colour for each storey's pair of
   voices, from the flute's pale sage and the bassoon's straw up through apricot, amber, the horn's bronze, the
   trombone's terracotta, the violins' vermilion and wine, to the tutti's plum and aubergine; the ball is the one cool
