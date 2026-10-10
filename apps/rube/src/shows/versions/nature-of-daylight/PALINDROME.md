@@ -887,6 +887,11 @@ knows she will lose, he leaves her. But with nothing moving across the cut, the 
 baby comes, read as a dropped frame, a jump cut. It is a cut in time; the morning swells through the glass now and falls
 back over it, half a second each way, never near white, the room seen through it.
 
+A ninety-fifth checked the ninety-fourth with a fresh reader: the palindrome came across whole, nothing in the last
+minute a plain slip. A frame a second caught the swell at its height and took it for one overexposed frame; in motion it
+is the half-second it was meant. The doubled post they saw at 350.5 s is one mullion, seen at full size. Nothing to
+change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
