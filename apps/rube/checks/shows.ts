@@ -238,7 +238,7 @@ async function main(): Promise<void> {
   check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55,grok47' && pickVersion(shipped.works, 'cornfield-chase', null)?.take === 'opus55')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
-  check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
+  check('Cornfield Chase takes have no notes', cornfield.every((v) => v.note === undefined))
   // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
   const interstellar = shipped.works.find((w) => w.work === 'interstellar')
   const liftoffTake = interstellar?.versions[0]
@@ -256,7 +256,7 @@ async function main(): Promise<void> {
   check('the build writes a renamed take\'s old address as a page', /RENAMED_TAKES\[w\.work\]/.test(readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')))
   const shelved = shelves(shipped.works).map((s) => `${s.section}: ${s.works.map((w) => w.title).join(', ')}`)
   check('the picker and Theater shelve the works as Machine, Movies and Ambient',
-    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Ostinato, Première Arabesque / Movies: Caravan, Epilogue, Everything, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence, Voyage / Ambient: Gymnopédie, Soft Lamp', shelved.join(' / '))
+    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Caravan, Epilogue, Everything, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence, Voyage / Ambient: Gymnopédie, Ostinato, Soft Lamp', shelved.join(' / '))
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()
@@ -296,11 +296,11 @@ async function main(): Promise<void> {
       }
       if (work.work === 'come-recover' && version.take === 'opus55-all-at-once') checkAllAtOnce(perf, check)
       if (work.work === 'cornfield-chase' && version.take === 'grok47') {
-        check('cornfield: the whole recording, with the demo credit',
+        check('cornfield: the whole recording, credited to Hans Zimmer and Interstellar',
           near(perf.duration, 126.984) &&
           (perf.soundtrack?.offset ?? 0) === 0 &&
           !!perf.soundtrack?.credit?.includes('Hans Zimmer') &&
-          !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+          !/tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
         const endCam = perf.camera?.(perf.duration)
         check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
@@ -445,9 +445,9 @@ async function main(): Promise<void> {
         void BUILD
       }
       if (work.work === 'cornfield-chase' && version.take === 'opus55') {
-        check('cornfield opus55: the whole recording from zero, with the demo credit',
+        check('cornfield opus55: the whole recording from zero, credited to Hans Zimmer and Interstellar',
           near(perf.duration, 126.984) && (perf.soundtrack?.offset ?? 0) === 0 &&
-          !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+          !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !/tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
         const score = (perf.show as StockShow).score
         check('cornfield opus55: Forest, one portal, then the Arcade', score.maps.map((m) => m.world).join(',') === 'garden,arcade' &&

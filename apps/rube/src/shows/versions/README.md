@@ -37,8 +37,8 @@ The folder and file names are addresses, so they are chosen once:
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
-  Lune, Première Arabesque, Cornfield Chase, Ostinato), **Movies** and **Ambient**
-  (Gymnopédie, Soft Lamp). A work is Movies unless `SHELVED` in `../registry.ts` names it.
+  Lune, Première Arabesque, Cornfield Chase), **Movies** and **Ambient**
+  (Gymnopédie, Soft Lamp, Ostinato). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Code**: a take that is more than a score file keeps its code in a folder
   named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
   the take id carries a code name, the folder uses the same one. A take's code
@@ -419,7 +419,7 @@ off-beat onto its own attack, with the free onsets of the intro, the drop and th
 `scripts/shows/plans/relax-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/magnum.ts`). The
 report is `apps/rube/src/shows/versions/relax/MAGNUM.md`.
 
-`bolero/opus55` (in the picker, **Ostinato**, on the Machine shelf, one take, **Opus 5.5**) is Ravel's *Boléro*, whole,
+`bolero/opus55` (in the picker, **Ostinato**, on the Ambient shelf, one take, **Opus 5.5**) is Ravel's *Boléro*, whole,
 as one machine that grows with it: a tower of storeys standing on a single side drum, a storey for each pair of the
 tune's eighteen statements (A A B B four times, then one each for the last A and B), each wider than the one under it.
 The recording is Omega13a's, made in MuseScore 4 with Muse Sounds from Ravel's score and released on Wikimedia Commons
