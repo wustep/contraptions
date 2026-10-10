@@ -179,6 +179,10 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 
 ## The polish pass
 
+*A log, in the order the passes were made: what each looked at, what it found and why it changed what it did. For
+the show as it now is, read* In order *above and* The looks, What `check:shows` holds it to *and* How it is built
+*below; the later, larger passes are gathered by theme under* The director's passes.
+
 After the first cut, the whole show was audited in two ways:
 - against the recording, for strong accents with nothing striking them;
 - frame by frame, for readability.
