@@ -774,6 +774,9 @@ window.
     now named as why he climbs ("to fix or change the lamp that just went out", 60%, from never named and 40%); him who
     falls and is bandaged (80%). It thought the lamp lit again by 124.5; it does not (the bulb is dark there, the
     shade back in the frame as the camera moves).
+  - *The lamp's sputter* (the eleventh viewer called its going out "subtle"): 0.36 s from the stroke that shakes it
+    (118.613) to out on the next beat (118.973), four flickers of about a tenth of a second each; plain in motion, one
+    frame of it on a sheet at four a second. Kept on the music.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
