@@ -1,7 +1,8 @@
 import { R, type Pt } from '../../../../parts'
 import { bloom, rgba } from './cast'
 import { box, frame, hash, scenery } from './kit'
-import { DOWN, SLEEP_BANDS, UP, type Crossing } from './stack'
+import { SEAM } from './music'
+import { BAND, DOWN, SLEEP_BANDS, UP, type Crossing } from './stack'
 import { COBB, SLEEP } from './worlds'
 
 /**
@@ -41,16 +42,24 @@ export const sleep = scenery<null>({
     const ctx = p.drawingContext as CanvasRenderingContext2D
     const x0 = (f.x0 - 1) * k
     const w = (f.x1 - f.x0 + 2) * k
+    // The prologue is limbo alone: nothing is dreamt over it yet, so a frame on it (a tall one sees well over the
+    // tower) finds the dark of sleep going on up over limbo's sky, not the levels the job will go through. Overview,
+    // the stack seen whole, still sees all four.
+    const alone = t < SEAM.paris && f.y0 > BAND.snow.top
     for (const band of SLEEP_BANDS) {
-      const top = band.top - FEATHER
+      const sealed = alone && band.below === 'limbo'
+      const top = sealed ? Math.min(band.top - FEATHER, f.y0 - 1) : band.top - FEATHER
       const bottom = band.bottom + FEATHER
       if (bottom < f.y0 - 1 || top > f.y1 + 1) continue
       const g = ctx.createLinearGradient(0, top * k, 0, bottom * k)
-      const edge = FEATHER / (bottom - top)
-      g.addColorStop(0, rgba(SLEEP.mid, 0))
-      g.addColorStop(edge, rgba(SLEEP.mid, 0.96))
-      g.addColorStop(0.5, rgba(SLEEP.deep, 1))
-      g.addColorStop(1 - edge, rgba(SLEEP.mid, 0.96))
+      const at = (y: number) => (y - top) / (bottom - top)
+      if (sealed) g.addColorStop(0, rgba(SLEEP.deep, 1))
+      else {
+        g.addColorStop(0, rgba(SLEEP.mid, 0))
+        g.addColorStop(at(band.top), rgba(SLEEP.mid, 0.96))
+      }
+      g.addColorStop(at(band.mid), rgba(SLEEP.deep, 1))
+      g.addColorStop(at(band.bottom), rgba(SLEEP.mid, 0.96))
       g.addColorStop(1, rgba(SLEEP.mid, 0))
       ctx.save()
       ctx.fillStyle = g
