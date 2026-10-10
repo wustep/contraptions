@@ -61,8 +61,9 @@ function drawBridge(pen: Pen, t: number, f: Frame): void {
     for (let y = roof - 0.22; y <= floor + 0.001; y += 0.1) pts.push([Math.max(front, hullX(y) - 0.05) + i * 0.055, y])
     polyline(pen, pts, i % 2 ? mixHex(PLANE.night, PLANE.cabin, 0.5) : mixHex(PLANE.caseDark, PLANE.night, 0.4), 2.2)
   }
-  // Its leg and wheels, on the apron, the wheels turning as it comes out.
-  const lx = front + 1.1
+  // Its leg and wheels, on the apron, the wheels turning as it comes out; far enough back along it that, docked,
+  // they stand clear of the plane's outer main gear, not over it.
+  const lx = front + 2.2
   box(pen, lx - 0.08, floor + 0.24, lx + 0.08, GROUND - 0.5, STEEL, 0.6)
   box(pen, lx - 0.3, GROUND - 0.55, lx + 0.3, GROUND - 0.45, STEEL, 0.6)
   const roll = (front - TERM.air) / 0.5
