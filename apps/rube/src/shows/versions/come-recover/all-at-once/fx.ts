@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { R, mixHex, type Pt } from '../../../../parts'
 import type { ShowBall } from '../../../../show'
-import { scenery, smooth } from './kit'
+import { frame, scenery, smooth } from './kit'
 import type { MultiverseShow } from './show'
 import { EYE_PUPIL, EYE_WHITE } from './worlds'
 
@@ -175,10 +175,13 @@ function bead(at: Where, t: number, arrive?: number): { x: number; y: number; hx
  * the ball and fades, clear of the ball itself so its colour stays its own.
  */
 function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: string) => string, color = '#FFC95A', size = 1, strength = 1, others: { x: number; y: number }[] = []): void {
-  if (u < 0 || u > BURST) return
+  // The great hit's burst lasts longer than any other: Joy's at the peak keeps the length it had (the share card's frame
+  // is just after it).
+  const LONG = size >= 1 && strength >= 1 ? BURST : 1.15
+  if (u < 0 || u > LONG) return
   const grow = 1 - Math.exp(-u / 0.12)
-  const outer = R * (2.6 + 9 * size * grow)
-  const a = 0.85 * strength * (1 - u / BURST) ** 1.6
+  const outer = R * (2.6 + 13 * size * grow)
+  const a = 0.85 * strength * (1 - u / LONG) ** 1.6
   const ctx = p.drawingContext as CanvasRenderingContext2D
   // Lantern gold by default: it has to show on the laundromat's pale tile as well as in the dark.
   const warm = lit(color)
@@ -197,13 +200,23 @@ function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: str
     ctx.arc(d.x * k, d.y * k, R * 1.02 * k, 0, Math.PI * 2, true)
     ctx.clip('evenodd')
   }
+  // The great hit, and only it, warms the frame round her for a moment (to the clip's edge, past the frame's): the room
+  // takes the light, softly, and lets it go. A wash, not a flash: never more than a fifth of the way to the gold.
+  if (size >= 1 && strength >= 1) {
+    const wash = 0.2 * (1 - Math.exp(-u / 0.05)) * Math.exp(-u / 0.32)
+    if (wash > 0.004) {
+      const f = frame(p, k)
+      ctx.fillStyle = `rgba(${rgb}, ${wash})`
+      ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+    }
+  }
   // Rays: a sunburst of long and short wedges thrown out from her, turning a little as they fade.
   const reach = 1 - Math.exp(-u / 0.09)
-  const ra = 0.5 * strength * (1 - u / BURST) ** 1.3
+  const ra = 0.5 * strength * (1 - u / LONG) ** 1.3
   const spin = 0.35 * u
   for (let i = 0; i < RAYS; i++) {
     const long = i % 2 === 0
-    const len = R * (long ? 15 : 9.5) * size * reach
+    const len = R * (long ? 25 : 15) * size * reach
     const half = (long ? 0.075 : 0.055) * Math.PI
     const th = (i / RAYS) * Math.PI * 2 + spin + 0.13
     const g = ctx.createRadialGradient(cx, cy, R * 1.4 * k, cx, cy, len * k)
@@ -225,12 +238,13 @@ function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: str
   ctx.beginPath()
   ctx.arc(cx, cy, outer * k, 0, Math.PI * 2)
   ctx.fill()
-  // A ring of light goes out from her on the hit, thinning as it goes.
-  const ru = u / 0.55
-  if (ru < 1) {
-    const rr = R * (1.6 + 17 * size * (1 - (1 - ru) ** 2.4))
+  // Rings of light go out from her on the hit, thinning as they go: a wide one, and a second close behind it.
+  for (const [lag, wide, thick] of [[0, 30, 0.6], [0.09, 21, 0.38]] as const) {
+    const ru = (u - lag) / 0.75
+    if (ru < 0 || ru >= 1) continue
+    const rr = R * (1.6 + wide * size * (1 - (1 - ru) ** 2.4))
     ctx.strokeStyle = `rgba(${rgb}, ${0.9 * strength * (1 - ru) ** 1.4})`
-    ctx.lineWidth = Math.max(1, R * 0.55 * size * (1 - ru) * k)
+    ctx.lineWidth = Math.max(1, R * thick * size * (1 - ru) * k)
     ctx.beginPath()
     ctx.arc(cx, cy, rr * k, 0, Math.PI * 2)
     ctx.stroke()
@@ -238,7 +252,7 @@ function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: str
   ctx.restore()
 }
 /** How long the great hit's burst lasts, and how many rays it throws. */
-const BURST = 1.15
+const BURST = 1.4
 const RAYS = 14
 
 /** One googly eye on a ball at (x, y) in the piece's cells, `r` its radius in cells. */
