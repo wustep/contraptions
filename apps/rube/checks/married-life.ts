@@ -361,7 +361,7 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     const src = (f: string) => readFileSync(join(process.cwd(), `apps/rube/src/shows/${f}`), 'utf8')
     check('married life: the credits keep a readable size on a phone held upright',
       cards.length >= CARDS.length && cards.every((c) => (c.least ?? 0) >= 4) &&
-      /Math\.max\(fh \/ 100, c\.least \?\? 0\)/.test(src('player.ts')) && /Math\.max\(u, c\.least \?\? 0\)/.test(src('words.ts')))
+      /Math\.max\(\(fh \/ 100\) \* \(c\.scale \?\? 1\), c\.least \?\? 0\)/.test(src('player.ts')) && /Math\.max\(u \* \(c\.scale \?\? 1\), c\.least \?\? 0\)/.test(src('words.ts')))
   }
 
   // Under Zoom the two of them keep off the frame's edges, not only inside it (Zoom's own hold, `zoom.ts`): neither is

@@ -101,10 +101,21 @@ export const JOY_ROCK: Stone = {
 }
 
 /**
+ * Colour coming back into a stone from one place on it: a round of `color` about `at` (in the stone's own frame, so
+ * it turns with it), `r` ball radii across, at `alpha`.
+ */
+export interface Flush {
+  at: Pt
+  r: number
+  color: string
+  alpha: number
+}
+
+/**
  * A stone over a ball whose centre is at (x, y), turned by `turn`, in `color` (the ball's own, faded as it is), lying
  * flat on whichever of `ledges` it would otherwise sink into.
  */
-export function paintStone(p: p5, k: number, weight: number, stone: Stone, x: number, y: number, turn: number, color: string, ledges: Ledge[]): void {
+export function paintStone(p: p5, k: number, weight: number, stone: Stone, x: number, y: number, turn: number, color: string, ledges: Ledge[], flush?: Flush): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const c = Math.cos(turn)
   const s = Math.sin(turn)
@@ -164,6 +175,15 @@ export function paintStone(p: p5, k: number, weight: number, stone: Stone, x: nu
   ctx.save()
   trace()
   ctx.clip()
+  if (flush && flush.alpha > 0.005) {
+    const [fx, fy] = world(flush.at)
+    const g = ctx.createRadialGradient(fx * k, fy * k, 0, fx * k, fy * k, flush.r * R * k)
+    g.addColorStop(0, rgba(flush.color, flush.alpha))
+    g.addColorStop(0.55, rgba(flush.color, flush.alpha * 0.7))
+    g.addColorStop(1, rgba(flush.color, 0))
+    ctx.fillStyle = g
+    ctx.fillRect((x - 2.6 * R) * k, (y - 2.6 * R) * k, 5.2 * R * k, 5.2 * R * k)
+  }
   // The shade underneath and the light on top: from the sky, so they do not turn with it.
   ctx.fillStyle = rgba(mixHex(color, ROCKS.stoneDeep, 0.55), 0.55)
   ctx.beginPath()
