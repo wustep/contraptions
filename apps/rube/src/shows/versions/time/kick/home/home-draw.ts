@@ -310,6 +310,32 @@ function porch(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   // on down to the frame's foot, a blank pale column.
   const cut = Math.min(f.y1 + 1, NEAR_EDGE)
   fillBox(ctx, k, x0, FLOOR, x1, cut, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
+  // Laid stone, as the garden's terrace is: courses widening toward us, each joint a half step from the one behind's
+  // (it was one blank pale field beside the door).
+  {
+    const rows = [HOUSE.back, -0.17, FLOOR, FLOOR + 0.42, FLOOR + 1.0, FLOOR + 1.75].filter((y) => y <= NEAR_EDGE)
+    ctx.save()
+    ctx.strokeStyle = rgba(HOME.wallShade, 0.55)
+    ctx.lineWidth = Math.max(1, w * 0.35)
+    ctx.beginPath()
+    rows.forEach((y, i) => {
+      if (i > 0) {
+        ctx.moveTo(x0 * k, y * k)
+        ctx.lineTo(x1 * k, y * k)
+      }
+      const next = rows[i + 1]
+      if (next === undefined) return
+      const slab = 0.36 + 0.12 * i
+      for (let x = x1 - (i % 2 ? slab / 2 : slab); x > x0; x -= slab) {
+        ctx.moveTo(x * k, y * k)
+        ctx.lineTo(x * k, next * k)
+      }
+    })
+    ctx.stroke()
+    ctx.restore()
+  }
+  // The hedge's shade on the stone at its foot, so it stands on the porch and does not end on a ruled line.
+  fillBox(ctx, k, x0, HOUSE.back, x1, HOUSE.back + 0.22, vgrad(ctx, k, HOUSE.back, HOUSE.back + 0.22, [[0, mixHex(LEAVES, INK, 0.3), 0.45], [1, LEAVES, 0]]))
   if (f.y1 + 1 > NEAR_EDGE) {
     const bottom = f.y1 + 1
     fillBox(ctx, k, x0, NEAR_EDGE, x1 + 0.05, bottom, vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
