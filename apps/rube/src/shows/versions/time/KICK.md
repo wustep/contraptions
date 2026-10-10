@@ -416,6 +416,13 @@ each world, and changed:
   crag ended on the face with a hard edge and read as a slab laid on it, as the hairpin's boulder did. Each throws a
   soft shadow on the face under its foot now, a little east of it. (A drift over its foot was tried first: on the
   shaded face it came out a hard white block, brighter than the snow round it.)
+- **The terminal's ground floor** (236 to 244, plainest in a tall frame): near half the picture, it was a flat grey
+  slab with two plain navy rectangles for doors, under a hall drawn in full (a critic's note). Its doors are glazed now
+  in steel frames, a transom and their push bars, the morning on the glass, under a canopy each; the wall has its
+  panels, the soffit's shade under the floor and a plinth along its foot.
+- **The tower's empty floors** (0 to 30, 152 to 183, plainest in a tall frame): their windows were bare dark
+  rectangles under a room drawn in full. They stay dark, the floors empty, but each has a sill, a glazing bar and the
+  dusk sky caught in its top pane.
 
 ## Inception nods
 

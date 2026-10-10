@@ -383,7 +383,17 @@ function drawFrontLower(pen: Pen): void {
   for (let i = 0; i < 3; i++) {
     const fl = FLOORS[i]
     const ceil = FLOORS[i + 1] + FLOOR_SLAB
-    for (const wx of [-0.38, 0.32, 1.0]) box(pen, wx - 0.2, ceil + 0.55, wx + 0.2, fl - 0.75, GLASS_DARK, 0.6)
+    // The empty floors' windows: dark, but each with its sill, a glazing bar, and the dusk sky caught in its top pane.
+    for (const wx of [-0.38, 0.32, 1.0]) {
+      const [wy0, wy1] = [ceil + 0.55, fl - 0.75]
+      box(pen, wx - 0.2, wy0, wx + 0.2, wy1, GLASS_DARK, 0.6)
+      vwash(pen, wx - 0.18, wx + 0.18, wy0 + 0.02, wy0 + (wy1 - wy0) * 0.45, [
+        [0, LIMBO.skyWarm, 0.22],
+        [1, LIMBO.skyWarm, 0],
+      ])
+      line(pen, [wx - 0.2, (wy0 + wy1) / 2], [wx + 0.2, (wy0 + wy1) / 2], mixHex(pen.ink, CONCRETE_DUSK, 0.3), 0.5)
+      box(pen, wx - 0.26, wy1, wx + 0.26, wy1 + 0.07, mixHex(CONCRETE, LIMBO.skyWarm, 0.2), 0.5)
+    }
   }
   boards(pen, x0, x1, top, GROUND)
   // The slit: black under the room's floor, fading into the concrete further down.
