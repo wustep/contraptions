@@ -410,6 +410,11 @@ changed, in the order of the film, and then what runs through it:
   roll, counted from each place's own origin) jumped at the vision cuts and out of the push, as much as half a turn.
   For a moment after a cut it now turns from where the last place left it to where this one has it. (Not at the
   shaft's mouth, where the camera's roll is carried and the eye already holds.)
+- **Three things a ninth fresh critic caught**: on the cut in on the flare (18.0 → 18.5) the near ridge's flank stood
+  at the frame's edge in full green, unfogged, in a frame of mist; close to, its lower face now takes the ground mist.
+  The great ring's halves ended in blunt, notched blocks as they were written (168 → 183); their ends now taper over
+  the ink ahead of the pen, never under her. And out of the white-out (132) Costello's paler pen came down over
+  Abbott's palm; while Abbott holds her it is drawn nearest.
 
 ## Arrival nods
 
