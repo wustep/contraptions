@@ -814,6 +814,12 @@ it is now, rendered at the same eight moments (the ending, the blast, Ian's good
 into the gala, the daylight, the helicopter), in a table at the head of the pull request beside the earlier two. The
 show is unchanged.
 
+An eighty-second filmed the whole show again at four frames a second, as the fifty-third had, after the twenty-odd
+changes since, and ranked every change from one frame to the next against its neighbours. Every jump is a cut, a
+punch, or meant (the blast, the lamp going out, Ian coming into the chamber, the white waking); none of the late
+changes shows among them, and the blast's own jump is smaller than it was, the room seen through it. Nothing to
+change.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
