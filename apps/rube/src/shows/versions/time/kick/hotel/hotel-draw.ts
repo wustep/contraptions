@@ -285,6 +285,37 @@ function drawTopFloor(g: Pen, f: View, t: number): void {
   for (const [i, x] of TOP_SCONCES.entries()) if (seen(f, x - 1, 18.6, x + 1, 21)) sconce(g, x, 19.55, t, i)
 }
 
+/**
+ * A bed in the hotel's rooms, `x0` to `x1` on the floor at `floor`: its shadow on the carpet, its legs, the frame with
+ * its rail in shade, the mattress, and the cover turned down from the foot, its fold catching the lamp. `head` is the
+ * end its headboard is at (drawn by the caller). Without these, once the pillows float off it was two bare slabs.
+ */
+function bed(g: Pen, x0: number, x1: number, floor: number, frameTop: number, mattTop: number, head: 'left' | 'right'): void {
+  pool(g.p, g.k, [(x0 + x1) / 2, floor - 0.01], (x1 - x0) * 0.55, 0.06, H.wallShade, 0.5)
+  for (const lx of [x0 + 0.08, x1 - 0.2]) rect(g, lx, floor - 0.1, lx + 0.07, floor, H.wood)
+  rect(g, x0, frameTop, x1, floor - 0.1, H.wood, g.ink, 0.6)
+  rect(g, x0 + 0.02, frameTop + 0.1, x1 - 0.02, floor - 0.14, mixHex(H.wood, H.wallShade, 0.35))
+  const m0 = x0 + 0.04
+  const m1 = x1 - 0.06
+  rect(g, m0, mattTop, m1, frameTop, C.bedding, g.ink, 0.5)
+  const cover = mixHex(C.curtain, C.bedding, 0.45)
+  const fold = head === 'right' ? lerp(m0, m1, 0.62) : lerp(m0, m1, 0.38)
+  const [c0, c1] = head === 'right' ? [m0, fold] : [fold, m1]
+  rect(g, c0, mattTop + 0.02, c1, frameTop + 0.02, cover, g.ink, 0.5)
+  const [f0, f1] = head === 'right' ? [fold - 0.12, fold] : [fold, fold + 0.12]
+  rect(g, f0, mattTop + 0.02, f1, frameTop + 0.02, mixHex(C.bedding, H.lamp, 0.35), g.ink, 0.4)
+}
+
+/** A nightstand: its top, a drawer and its pull. */
+function nightstand(g: Pen, x0: number, x1: number, top: number, floor: number): void {
+  rect(g, x0, top, x1, floor, H.woodLight, g.ink, 0.5)
+  rect(g, x0 - 0.03, top - 0.03, x1 + 0.03, top + 0.04, H.wood, g.ink, 0.4)
+  const dy = top + (floor - top) * 0.3
+  rect(g, x0 + 0.05, dy, x1 - 0.05, dy + 0.16, mixHex(H.woodLight, H.wood, 0.4), g.ink, 0.35)
+  const cx = (x0 + x1) / 2
+  rect(g, cx - 0.03, dy + 0.07, cx + 0.03, dy + 0.09, H.brass)
+}
+
 function drawMiddle(g: Pen, f: View, t: number): void {
   if (!seen(f, B.left, B.slab, B.right, B.mid)) return
   ROOMS.forEach(([x0, x1], i) => {
@@ -298,12 +329,11 @@ function drawMiddle(g: Pen, f: View, t: number): void {
     // The door on the back wall, and the bed (with its lamp) at the other end.
     door(g, flip ? x1 - 1.55 : x0 + 0.45, B.mid, 2.3, 1.1)
     const bx = flip ? x0 + 0.25 : x1 - 2.35
-    rect(g, bx, 27.85, bx + 2.1, B.mid, H.wood, g.ink, 0.6)
-    rect(g, bx + 0.05, 27.58, bx + 2.05, 27.85, C.bedding, g.ink, 0.5)
+    bed(g, bx, bx + 2.1, B.mid, 27.85, 27.58, flip ? 'left' : 'right')
     const hb = flip ? bx : bx + 1.95
     rect(g, hb, 26.9, hb + 0.15, B.mid, H.wood, g.ink, 0.6)
     const ns = flip ? bx + 2.2 : bx - 0.55
-    rect(g, ns, 27.9, ns + 0.42, B.mid, H.woodLight, g.ink, 0.5)
+    nightstand(g, ns, ns + 0.42, 27.9, B.mid)
     // The bedside lamp: its shade floats off when the hotel goes weightless.
     const shade = floating([ns + 0.21, 27.55], [0.25 - (i % 3) * 0.2, -0.9 - 0.2 * (i % 2)], 5, 0.12 * (i % 2 ? 1 : -1), i, t)
     rect(g, ns + 0.18, 27.6, ns + 0.24, 27.9, H.brass)
@@ -329,7 +359,14 @@ function drawLobby(g: Pen, f: View, t: number): void {
   if (seen(f, 12, 30, 16.5, 36)) {
     rect(g, 12.85, 31.2, 15.85, 32.55, mixHex(H.wood, C.lobby, 0.55), g.ink, 0.4)
     if (g.k > 9) for (let r = 0; r < 3; r++) for (let q = 0; q < 7; q++) rect(g, 13.0 + q * 0.4, 31.33 + r * 0.4, 13.18 + q * 0.4, 31.47 + r * 0.4, rgba(H.wood, 0.28))
+    // The desk: its shadow on the marble, a plinth in shade, its front in raised panels, the brass rail along its top.
+    pool(g.p, g.k, [14.35, B.lobby - 0.01], 2.2, 0.07, H.wallShade, 0.55)
     rect(g, 12.5, 34.95, 16.2, B.lobby, H.wood, g.ink, 0.7)
+    rect(g, 12.5, B.lobby - 0.12, 16.2, B.lobby, mixHex(H.wood, H.wallShade, 0.45))
+    for (let q = 0; q < 4; q++) {
+      const px = 12.62 + q * 0.9
+      rect(g, px, 35.1, px + 0.76, B.lobby - 0.2, mixHex(H.wood, H.woodLight, 0.3), g.ink, 0.35)
+    }
     rect(g, 12.4, 34.85, 16.3, 34.97, H.brass, g.ink, 0.5)
   }
   // A sofa and a floor lamp, left of where they come down through the lobby.
@@ -947,25 +984,13 @@ function drawSuite(g: Pen, f: View, t: number): void {
   rect(g, 14.8, 18.72, 18.1, 18.8, H.brass)
   // The beds.
   for (const [b0, b1] of BEDS) {
-    // Each bed: its shadow on the carpet, its legs, the frame with its rail in shade, the mattress, and the cover
-    // turned down from the foot, its fold catching the lamp (the pillows float off: without these it was two slabs).
-    pool(g.p, g.k, [(b0 + b1) / 2, B.top - 0.01], (b1 - b0) * 0.55, 0.06, H.wallShade, 0.5)
-    for (const lx of [b0 + 0.08, b1 - 0.2]) rect(g, lx, B.top - 0.1, lx + 0.07, B.top, H.wood)
-    rect(g, b0, 20.72, b1, B.top - 0.1, H.wood, g.ink, 0.6)
-    rect(g, b0 + 0.02, 20.82, b1 - 0.14, B.top - 0.14, mixHex(H.wood, H.wallShade, 0.35))
-    rect(g, b0 + 0.04, 20.45, b1 - 0.1, 20.72, C.bedding, g.ink, 0.5)
-    const fold = lerp(b0 + 0.04, b1 - 0.1, 0.62)
-    rect(g, b0 + 0.04, 20.47, fold, 20.74, mixHex(C.curtain, C.bedding, 0.45), g.ink, 0.5)
-    rect(g, fold - 0.12, 20.47, fold, 20.74, mixHex(C.bedding, H.lamp, 0.35), g.ink, 0.4)
+    bed(g, b0, b1, B.top, 20.72, 20.45, 'right')
     rect(g, b1 - 0.12, 19.78, b1, B.top, H.wood, g.ink, 0.6)
     const pil = floating([b1 - 0.42, 20.37], [-0.2, -0.45], 4, 0.05, b0, t)
     at(g, pil.at, pil.turn, () => rect(g, -0.26, -0.08, 0.26, 0.08, H.glass, g.ink, 0.4))
   }
   // The nightstand and the silver case on it.
-  rect(g, 12.72, 20.45, 13.08, B.top, H.woodLight, g.ink, 0.5)
-  rect(g, 12.69, 20.42, 13.11, 20.49, H.wood, g.ink, 0.4)
-  rect(g, 12.77, 20.62, 13.03, 20.78, mixHex(H.woodLight, H.wood, 0.4), g.ink, 0.35)
-  rect(g, 12.87, 20.69, 12.93, 20.71, H.brass)
+  nightstand(g, 12.72, 13.08, 20.45, B.top)
   const cs = floating([12.9, 20.33], [0.05, -0.5], 4, -0.04, 5, t)
   at(g, cs.at, cs.turn, () => {
     rect(g, -0.26, -0.11, 0.26, 0.11, C.steel, g.ink, 0.6)
