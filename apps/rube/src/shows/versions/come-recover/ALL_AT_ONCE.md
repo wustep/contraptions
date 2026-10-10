@@ -832,7 +832,9 @@ watched whole between them. Their order is in git; here they are by what they di
   no bars), reduced motion, the saved video's painted words, and WebKit (the whole show scrubbed every half second
   with no errors, its new pictures matching Chrome's). Firefox would not start where the passes ran.
 - **Frame time:** the heaviest stretches played against the show before these passes (`7f5f9dd3`), both at 16.7 ms
-  a frame; the
+  a frame; after the words, the speech, the captions and the family, the taxes, everywhere at once, the peak and the
+  credits (captions on) played again against it, interleaved, on a machine at a load of 20 to 25: a median frame of
+  16.7 ms in every stretch in both, and 95th percentiles of 19 to 31 ms that went with the load, not the version; the
   mosaic's family measured by direct renders, below the noise. The beams and the panels' looks were each made cheaper
   where a first version cost too much.
 - **Size:** the family is at least 14 px across at 1280×720 everywhere but the hush. (A figure of "about 10 px" in
