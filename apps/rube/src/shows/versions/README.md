@@ -28,7 +28,8 @@ The folder and file names are addresses, so they are chosen once:
   not the picker's title, which is the version file's `title` and can change
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
-  `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**, `step-out` **Quintessence**. The write-up says which is which.
+  `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**, `step-out` **Quintessence**,
+  `rule-the-world` **Rally**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
@@ -483,3 +484,23 @@ one under the volcano's ash, the end credits from `Performance.titles`). The son
 between 143 and 145 bpm), so `scripts/shows/step-out-onsets.py` tracks the pulse beat by beat, each beat on its own
 attack, into `scripts/shows/plans/step-out-onsets.json`; `check:shows` holds every strike to it
 (`apps/rube/checks/quintessence.ts`). The report is `apps/rube/src/shows/versions/step-out/QUINTESSENCE.md`.
+
+`rule-the-world/opus55` (in the picker, **Rally**, one take, **Opus 5.5**) is **Rally · after Marty Supreme**: Tears for
+Fears' *Everybody Wants to Rule the World*, the song the film ends on and runs its credits on, played by YouTube from
+Universal Music Group's upload only (awoFZaSuko4; no recording is shipped:
+`apps/rube/src/shows/versions/rule-the-world/ATTRIBUTION.txt`), with the end credits over its fade and on into the
+quiet. Every piece is new. Marty Mauser is the ball, an orange table-tennis ball, and in every match the bat at his end
+of the table is his own contraption, a sprung arm he cocks by landing on it. It tells the film in order in seven places:
+his uncle's shoe store on the Lower East Side, Rachel (the teal ball) in the stockroom and the safe he robs; the British
+Open in London, Kletzki beaten and the final lost to Endo on "Nothing ever lasts forever"; the hotel, where the tub goes
+through the floor onto Mishkin on "the walls come tumbling down", and the fire escape a step a beat; the bowling alley's
+hustle, with Wally, as the band drops out; the night in New Jersey in Wally's cab, the farmhouse and the barn on fire on
+the guitar, Rachel taken away, and the airfield's indecision; Tokyo, the real match on "never, never, never, never" and
+the winning point on the hook; and the maternity ward, Rachel, and his son (the little orange ball) behind the nursery's
+glass on the last "Everybody wants to rule the world". The code is `rule-the-world/rally/`, on Quintessence's kit
+(parts built to timed slots, an authored camera, match cuts at rest between places, the end credits from
+`Performance.titles`), with film grain over every place (`rally/grain.ts`) and Wally's cab drawn once for both sides of
+its cut (`rally/cab.ts`). The song is a shuffle on a machine-steady pulse, so `scripts/shows/rule-the-world-onsets.py`
+fits one comb (112.05 bpm) and moves every beat, and every beat's shuffled "a", onto its own attack, into
+`scripts/shows/plans/rule-the-world-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/rally.ts`).
+The report is `apps/rube/src/shows/versions/rule-the-world/RALLY.md`.
