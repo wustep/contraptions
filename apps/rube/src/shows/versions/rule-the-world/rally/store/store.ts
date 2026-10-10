@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { box, frame, part, scenery, type PartShot } from '../kit'
 import type { Pen } from '../pen'
 import { SEAMS } from '../seams'
-import { drawBat, drawCurtain, drawFitting, drawLadder, drawLamps, drawLights, drawOfficeDoor, drawPops, drawRoom, drawSafeDoor, drawSafeInside, drawShade } from './draw'
+import { drawBat, drawBills, drawCurtain, drawFitting, drawLadder, drawLamps, drawLights, drawOfficeDoor, drawPops, drawRoom, drawSafeDoor, drawSafeInside, drawShade } from './draw'
 import { END, FIRE, INTRO_HOPS, INTRO_RUN, RACHEL_AT, rachelAt, STORE_STRIKES, T0, T1, WAY } from './geo'
 
 /**
@@ -60,6 +60,7 @@ export const store = part<StoreState>(
       drawLamps(pen, t)
       drawShade(pen, t, f)
       drawLights(pen, t)
+      drawBills(pen, t)
       p.pop()
     },
   },

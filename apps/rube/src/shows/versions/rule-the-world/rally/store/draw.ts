@@ -1,8 +1,14 @@
 import type { Pt } from '../../../../../parts'
 import { hash, lastOf } from '../kit'
 import { ctxOf, ease, ellipse, fillWith, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import { level } from '../music'
 import {
   BANG,
+  BILLS,
+  CLOCK_SIX,
+  billAt,
+  TICKET_UP,
+  TICKET_IN,
   BAT_AT,
   BAT_HINGE,
   BENCH,
@@ -276,14 +282,78 @@ export function drawLights(pen: Pen, t: number): void {
     glow(pen, [PART2[1] + 0.4, 0.4], 2.4, C.lamp, 0.1 * d)
     glow(pen, [SAFE[0] + 0.3, 0.6], 1.5, C.lamp, 0.07 * d)
   }
+  doorLight(pen, t)
   // The safe open: the light falls in on the bills.
   const s = ease((doorDeg(t) - 30) / 110)
   if (s > 0) {
-    glow(pen, [(INNER[0] + INNER[2]) / 2, 0.75], 1.0, C.lamp, 0.28 * s)
+    const breathe = 0.8 + 0.4 * level(t) + 0.08 * Math.sin(t * 2.3)
+    glow(pen, [(INNER[0] + INNER[2]) / 2, 0.75], 1.0, C.lamp, 0.28 * s * breathe)
+    glow(pen, [(INNER[0] + INNER[2]) / 2, FLOOR], 1.3, C.lamp, 0.08 * s * breathe)
     glow(pen, [END_GLINT[0], END_GLINT[1]], 0.3, '#FFF1C8', 0.35 * s)
   }
 }
 const END_GLINT: Pt = [RIGHT_STACK[0] + 0.12, RIGHT_TOP + 0.03]
+
+/**
+ * Murray's office door from the stockroom side: his desk lamp is on behind it, so a line of light shows round the
+ * shut door and under it, brighter as Marty comes; on "Welcome" it is knocked open and the light blooms out through
+ * the doorway and across the stockroom's floor.
+ */
+function doorLight(pen: Pen, t: number): void {
+  const x0 = PART2[0] + POST
+  const x1 = PART2[1] - POST
+  const d = officeDoor(t)
+  const near = ease((t - (WELCOME - 2.2)) / 2.0)
+  const shut = 1 - d
+  // The line round the shut door.
+  if (shut > 0.02) {
+    const a = (0.45 + 0.4 * near) * shut
+    const w = (x1 - x0) * Math.cos(d * 1.35)
+    const left = x1 - w
+    rect(pen, left - 0.02, HEAD + 0.02, left + 0.012, FLOOR - 0.02, rgba(pen, C.lamp, a) as unknown as string)
+    rect(pen, left, FLOOR - 0.025, x1, FLOOR, rgba(pen, C.lamp, a) as unknown as string)
+    rect(pen, left, HEAD, x1, HEAD + 0.025, rgba(pen, C.lamp, a * 0.7) as unknown as string)
+    glow(pen, [(x0 + x1) / 2, FLOOR], 0.9 + 0.4 * near, C.lamp, 0.25 * a)
+    glow(pen, [left, (HEAD + FLOOR) / 2], 0.7, C.lamp, 0.1 * a)
+  }
+  if (d > 0) {
+    // The opening, lit from inside, beside the leaf.
+    const w = (x1 - x0) * Math.cos(d * 1.35)
+    const left = x1 - w
+    const ctx = ctxOf(pen.p)
+    const { k } = pen
+    const g = ctx.createLinearGradient(0, HEAD * k, 0, FLOOR * k)
+    g.addColorStop(0, rgba(pen, C.lamp, 0.3 * d))
+    g.addColorStop(1, rgba(pen, C.lamp, 0.55 * d))
+    fillWith(pen, [[x0, HEAD], [left, HEAD], [left, FLOOR], [x0, FLOOR]], g)
+    // Out across the stockroom's floor.
+    glow(pen, [x0 - 0.6, FLOOR + 0.25], 2.0, C.lamp, 0.16 * d)
+    glow(pen, [x0 - 0.2, FLOOR - 0.6], 1.3, C.lamp, 0.1 * d)
+    // The bloom.
+    const bloom = flash(t - WELCOME, 0.45)
+    glow(pen, [(x0 + x1) / 2, 0.2], 1.6 + 1.2 * bloom, C.lamp, 0.12 * d + 0.3 * bloom)
+  }
+}
+
+/** The bills that come loose: each floats down off the top bundle on the shuffle and lands on the floor on the beat. */
+export function drawBills(pen: Pen, t: number): void {
+  for (let i = 0; i < BILLS.length; i++) {
+    const b = billAt(i, t)
+    if (!b) continue
+    const { p, turn, flat } = b
+    const hw = 0.15
+    const hh = flat ? 0.015 : 0.07 * Math.abs(Math.cos(turn))
+    const tilt = flat ? 0 : 0.35 * Math.sin(turn * 0.7)
+    const pts: Pt[] = [
+      [-hw, -hh],
+      [hw, -hh],
+      [hw, hh],
+      [-hw, hh],
+    ].map(([x, y]) => [p[0] + x * Math.cos(tilt) - y * Math.sin(tilt), p[1] + x * Math.sin(tilt) + y * Math.cos(tilt)] as Pt)
+    shape(pen, pts, Math.cos(turn) > 0 || flat ? C.billLight : C.bill, 0.25, C.billDark)
+    if (hh > 0.02) ellipse(pen, p, 0.025, hh * 0.6, C.billLight)
+  }
+}
 
 /* ------------------------------------------------------------------ the room */
 
@@ -588,8 +658,9 @@ function drawOffice(pen: Pen, t: number, f: F): void {
     const a = (i / 12) * Math.PI * 2
     line(pen, [ck[0] + Math.cos(a) * 0.18, ck[1] + Math.sin(a) * 0.18], [ck[0] + Math.cos(a) * 0.22, ck[1] + Math.sin(a) * 0.22], C.iron, 0.5)
   }
-  // Ten to six, and on.
-  const mins = 50 + t / 60
+  // A minute to six; on the downbeat of bar 23 it clicks over to six, and the store's day begins.
+  const click = t >= CLOCK_SIX ? 1 - 0.08 * Math.exp(-(t - CLOCK_SIX) / 0.1) * Math.cos((t - CLOCK_SIX) * 40) : 0
+  const mins = 59 + click
   const hr = 5 + mins / 60
   const ma = (mins / 60) * Math.PI * 2 - Math.PI / 2
   const ha = (hr / 12) * Math.PI * 2 - Math.PI / 2
@@ -869,14 +940,17 @@ export function drawSafeInside(pen: Pen, t: number): void {
   bundles(pen, RIGHT_STACK, 3, i > 0 ? riffle : 0, 2)
   // The ticket: plain paper, a stub, tucked under the band of the top bundle, standing up beside him.
   const tx = RIGHT_STACK[1] - 0.12
-  const ty = RIGHT_TOP + 0.02
-  const wob = (i > 0 ? 0.12 * riffle : 0) + 0.02 * Math.sin(t * 2.1)
+  let ty = RIGHT_TOP + 0.02
+  // It rises out of the band on a beat; on his last skip he settles it back in, tucked against him.
+  const up = ease((t - TICKET_UP) / 0.18) * (1 - ease((t - TICKET_IN) / 0.2))
+  const wob = (i > 0 ? 0.12 * riffle : 0) + 0.02 * Math.sin(t * 2.1) - 0.22 * up
+  ty -= 0.07 * up
   const tk = (x: number, y: number): Pt => [tx + x * Math.cos(0.3 + wob) - y * Math.sin(0.3 + wob), ty + x * Math.sin(0.3 + wob) + y * Math.cos(0.3 + wob)]
-  shape(pen, [tk(-0.05, 0), tk(0.05, 0), tk(0.05, -0.3), tk(-0.05, -0.3)], C.ticket, 0.3, C.ticketDark)
+  shape(pen, [tk(-0.05, 0.1), tk(0.05, 0.1), tk(0.05, -0.3), tk(-0.05, -0.3)], C.ticket, 0.3, C.ticketDark)
   for (let k = 0; k < 5; k++) ellipse(pen, tk(-0.05 + k * 0.025, -0.2), 0.006, 0.006, C.ticketDark)
   shape(pen, [tk(-0.035, -0.07), tk(0.035, -0.07), tk(0.035, -0.11), tk(-0.035, -0.11)], C.red)
   // The band over the ticket's foot.
-  rect(pen, tx - 0.07, ty + 0.03, tx + 0.07, ty + 0.12, C.band)
+  rect(pen, tx - 0.07, RIGHT_TOP + 0.05, tx + 0.07, RIGHT_TOP + 0.14, C.band)
 }
 
 function bundles(pen: Pen, [x0, x1]: [number, number], n: number, riffle: number, seed: number): void {

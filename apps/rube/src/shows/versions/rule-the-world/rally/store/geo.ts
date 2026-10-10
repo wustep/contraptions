@@ -196,6 +196,25 @@ export const SKIPS: [number, number, number][] = [
   [at(24, 1), a(24, 1), at(24, 2)],
 ]
 
+/** The ticket rises out of the bundle's band, and is tucked back in on his last skip. The clock clicks over to six. */
+export const TICKET_UP = at(22, 1)
+export const TICKET_IN = at(24, 2)
+export const CLOCK_SIX = at(23, 1)
+/** The loose bills: off the top bundle as he lands on the shuffle, down onto the floor on the next downbeat. */
+export const BILLS: { from: number; to: number; a: Pt; b: Pt; spin: number }[] = [
+  { from: a(22, 3), to: at(23, 1), a: [26.35, 0.62], b: [27.05, 1.415], spin: 9 },
+  { from: a(23, 3), to: at(24, 1), a: [26.2, 0.62], b: [25.45, 1.415], spin: -8 },
+]
+export function billAt(i: number, t: number): { p: Pt; turn: number; flat: boolean } | null {
+  const b = BILLS[i]
+  if (t < b.from) return null
+  if (t >= b.to) return { p: b.b, turn: 0, flat: true }
+  const u = (t - b.from) / (b.to - b.from)
+  const x = b.a[0] + (b.b[0] - b.a[0]) * u + 0.12 * Math.sin(u * Math.PI * 3) * (1 - u)
+  const y = b.a[1] - 0.18 * Math.sin(u * Math.PI) + (b.b[1] - b.a[1]) * u * u
+  return { p: [x, y], turn: b.spin * u, flat: false }
+}
+
 /* ------------------------------------------------------------------ the door and the handle */
 
 const easeOut = (u: number) => 1 - (1 - Math.max(0, Math.min(1, u))) ** 3
