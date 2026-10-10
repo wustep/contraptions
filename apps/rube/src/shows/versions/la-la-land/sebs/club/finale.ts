@@ -1,3 +1,4 @@
+import type p5 from 'p5'
 import { laneAt, mixHex, R, type Pt } from '../../../../../parts'
 import { box, glow, part, rgba, route, type Company, type PartShot, type Way } from '../kit'
 import { AT, notes as measured } from '../music'
@@ -304,6 +305,27 @@ export function lastNoteAt(t: number): { x: number; y: number; a: number; flare:
   return { x: from[0] + (to[0] - from[0]) * e, y: from[1] - 0.7 + (to[1] - from[1] + 0.7) * e - lift * 4 * e * (1 - e), a: Math.min(1, (t - t0) / 0.1), flare: 0 }
 }
 
+/** The last note, drawn in the room's own frame (the piano's): gold, the last colour in the grey room, over the grade. */
+export function drawLastNote(p: p5, k: number, t: number): void {
+  const last = lastNoteAt(t)
+  if (!last) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  for (let i = 1; i <= 8 && last.flare === 0; i++) {
+    const b = lastNoteAt(t - i * 0.04)
+    if (!b) break
+    ctx.fillStyle = rgba(GOLD, 0.35 * (1 - i / 9))
+    ctx.beginPath()
+    ctx.arc(b.x * k, b.y * k, 0.032 * (1 - i * 0.06) * k, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  glow(p, k, last.x, last.y, 0.3 + 0.5 * last.flare, GOLD, (0.55 + 0.4 * last.flare) * last.a)
+  ctx.fillStyle = rgba('#FFF6E2', 0.95 * last.a)
+  ctx.beginPath()
+  ctx.arc(last.x * k, last.y * k, 0.045 * k, 0, Math.PI * 2)
+  ctx.fill()
+}
+const GOLD = '#F2C46B'
+
 export const DREAM_CALL = (() => {
   const notes: { t: number; midi: number }[] = []
   for (const n of measured(432.4, 451.2, 0.1)) {
@@ -337,27 +359,6 @@ export const finale = part<FinaleState>(
     },
     over(p, s, c) {
       const t = c.t + s.begin
-      const last = lastNoteAt(t)
-      if (last) {
-        const [ox, oy] = F([0, 0])
-        const k = c.k
-        const ctx = p.drawingContext as CanvasRenderingContext2D
-        const x = last.x + ox
-        const y = last.y + oy
-        for (let i = 1; i <= 8 && last.flare === 0; i++) {
-          const b = lastNoteAt(t - i * 0.04)
-          if (!b) break
-          ctx.fillStyle = rgba('#BCCDF0', 0.3 * (1 - i / 9))
-          ctx.beginPath()
-          ctx.arc((b.x + ox) * k, (b.y + oy) * k, 0.032 * (1 - i * 0.06) * k, 0, Math.PI * 2)
-          ctx.fill()
-        }
-        glow(p, k, x, y, 0.3 + 0.5 * last.flare, '#BCCDF0', (0.55 + 0.4 * last.flare) * last.a)
-        ctx.fillStyle = rgba('#F2F6FF', 0.95 * last.a)
-        ctx.beginPath()
-        ctx.arc(x * k, y * k, 0.045 * k, 0, Math.PI * 2)
-        ctx.fill()
-      }
       if (t < 432.4 || t > 454.5) return
       const drain = 1 - Math.max(0, Math.min(1, (t - 451.45) / 0.7))
       if (drain <= 0) return

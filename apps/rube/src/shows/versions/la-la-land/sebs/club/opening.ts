@@ -145,9 +145,13 @@ const miaAtTable = (t: number): Pt => {
  * At Seb's, now, the theme reaches her where she sits: the notes he plays go out to her table in the club's cold
  * light, the first of them a breath before she lifts her eyes to the stage. She knows it.
  */
-/** Before it reaches her: from his first note the theme rises off the strings into the dark of the club. */
-const RISING = rising(MELODY.filter((n) => n.t < 21.6), '#BCCDF0', 1.5, 4.2)
-export const TABLE_CALL = call(MELODY.filter((n) => n.t > 21.6 && n.t < 30.6), miaAtTable, '#BCCDF0', 0.68)
+/**
+ * Before it reaches her: from his first note the theme rises off the strings into the dark of the club; then it
+ * reaches her at her table. In the room as it is, which is graded grey, his music is the colour: these are gold, and
+ * drawn over the grade (`score.ts`, the colour layer), the only full colour in the room.
+ */
+export const RISING = rising(MELODY.filter((n) => n.t < 21.6), '#F2C46B', 1.5, 4.2)
+export const TABLE_CALL = call(MELODY.filter((n) => n.t > 21.6 && n.t < 30.6), miaAtTable, '#F2C46B', 0.68)
 
 export const opening = part<OpeningState>(
   {
@@ -161,11 +165,7 @@ export const opening = part<OpeningState>(
       const light = liptons ? { color: LIPTONS_MAT.lamp, lit: 1 } : { color: mixHex(cold, SEBS_MAT.candle, 0.45 * (house(t, false) - 0.12)), lit: 1 }
       drawPiano(p, c.k, c.ink, c.weight, t, s.keys, light)
     },
-    over(p, s, c) {
-      const t = c.t + s.begin
-      if (c.theme.name !== 'liptons' && t < 25) RISING(p, c.k, t)
-      if (c.theme.name !== 'liptons' && t > 21.6 && t < 34.5) TABLE_CALL(p, c.k, t)
-    },
+
   },
   (slot) => {
     const plan = slot.begin === 0 ? PLAN : plan0(slot.begin)

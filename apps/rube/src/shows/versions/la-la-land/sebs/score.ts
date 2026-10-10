@@ -2,7 +2,7 @@ import type { Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
-import { box, lay, standing } from './kit'
+import { box, lay, scenery, standing } from './kit'
 import { echoes } from './echo'
 import { lens } from './lens'
 import { AT, DURATION, dream } from './music'
@@ -11,8 +11,8 @@ import { covers, IRIS_OPEN, IRIS_SNAP, RED_LIFT, type Cover } from './transition
 import { CLUB, CLUB_MAT, DRIVE, GLOBE, LIPTONS, MOVIE, NIGHT, SEB, SEBS, SHADOW, STUDIO, STUDIO_MAT, THEATRE, THEATRE_MAT } from './worlds'
 import { city } from './city'
 import { clubRoom, DOOR } from './club/room'
-import { opening } from './club/opening'
-import { finale } from './club/finale'
+import { opening, RISING, TABLE_CALL } from './club/opening'
+import { drawLastNote, finale } from './club/finale'
 import { liptonsRoom } from './liptons/room'
 import { kiss } from './liptons/kiss'
 import { theatre } from './theatre/theatre'
@@ -132,8 +132,31 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
   // The other road, over each place and under its cover: the same cells the lid claims, so it is drawn wherever it is.
   // The lens over the whole picture, under the covers; the other road over it, so the colour it brings is its own.
   const lensOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: lens, state: null })
+  // His music in the room as it is, over the grade: the colour in the grey room. From his first note to her table at
+  // the start (in the piano's frame), and the last note to the door at the end (in the room's, which is the piano's).
+  const colour = scenery<null>({
+    name: 'music-colour',
+    draw: () => {},
+    over(p, _s, c) {
+      const t = c.t
+      const k = c.k
+      if (t < 34.5) {
+        p.push()
+        p.translate(piano0[0] * k, piano0[1] * k)
+        if (t < 25) RISING(p, k, t)
+        if (t > 21.6) TABLE_CALL(p, k, t)
+        p.pop()
+      } else if (t > 463.9 && t < 468.6) {
+        p.push()
+        p.translate(piano1[0] * k, piano1[1] * k)
+        drawLastNote(p, k, t)
+        p.pop()
+      }
+    },
+  })
+  const colourOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: colour, state: null })
   const echoOver = (pieces: Placed[]): Placed => ({ ...lidOver(pieces), piece: echoes, state: { at: (t: number) => show0().echoes(t) } })
-  const stage = (world: typeof SEBS, from: number, chain: Placed[], scenery: Placed[] = []): Stage => ({ world, theme: world.themes[0], scenery, chain, after: [lensOver([...chain, ...scenery]), echoOver([...chain, ...scenery]), lidOver([...chain, ...scenery])], from })
+  const stage = (world: typeof SEBS, from: number, chain: Placed[], scenery: Placed[] = []): Stage => ({ world, theme: world.themes[0], scenery, chain, after: [lensOver([...chain, ...scenery]), colourOver([...chain, ...scenery]), echoOver([...chain, ...scenery]), lidOver([...chain, ...scenery])], from })
 
   const stages: Stage[] = [
     stage(SEBS, 0, [pOpening], [

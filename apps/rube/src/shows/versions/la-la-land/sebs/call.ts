@@ -125,7 +125,7 @@ export function rising(notes: { t: number; midi: number }[], color: string, size
       const q = at(c, t)
       if (!q) continue
       glow(p, k, q.x, q.y, 0.22 * size, color, 0.5 * q.a)
-      ctx.fillStyle = rgba('#F2F6FF', 0.9 * q.a)
+      ctx.fillStyle = rgba('#FFF6E2', 0.9 * q.a)
       ctx.beginPath()
       ctx.arc(q.x * k, q.y * k, 0.035 * size * k, 0, Math.PI * 2)
       ctx.fill()
