@@ -309,11 +309,10 @@ function miaEarly(t: number): Pt {
     const u = (t - RUN[0]) / (RUN[1] - RUN[0])
     return [UP_TO[0] + (MIA_WAIT[0] - UP_TO[0]) * hermite(u, 1, 1, 0.55, 0), ON_STAGE]
   }
-  // She waits; the echo of him as he was brushes her shoulder going by, and she rocks from it. As he comes down she
-  // looks up (a hair back), and leans in to him for the touch.
+  // She waits. As he comes down she looks up (a hair back), and leans in to him for the touch.
   if (t < 65.25) {
     const look = 0.018 * inout((t - 63.2) / 1.2)
-    return [MIA_WAIT[0] + look + jostle(t), ON_STAGE]
+    return [MIA_WAIT[0] + look, ON_STAGE]
   }
   if (t < T.kiss) return [MIA_WAIT[0] + 0.018 + (KISS_MIA[0] - MIA_WAIT[0] - 0.018) * inout((t - 65.25) / (T.kiss - 65.25)), ON_STAGE]
   if (t < OFF) return KISS_MIA
@@ -321,54 +320,6 @@ function miaEarly(t: number): Pt {
   if (t < leave) return [KISS_MIA[0] + (MIA_HOP_FROM[0] - KISS_MIA[0]) * inout((t - OFF) / (leave - OFF)), ON_STAGE]
   if (t < T.hopMia) return flight(MIA_HOP_FROM, [CUP.x + CUP.seat, CUP.low], leave, T.hopMia, t)
   return seat(t, 1)
-}
-
-/* ------------------------------------------------------------------ the way it went */
-
-/**
- * The echo: him as he really was that night. In the hush, as the orchestra drops out, he comes off the top key ahead
- * of himself, down off the piano's end beside her, knocks her shoulder going by, and rolls away along the stage into
- * the dark, toward the door, without a look back. Behind him the one who stays lifts off the key and comes down to her.
- */
-export const ECHO_T = {
-  /** It comes out of him on the key, as the room goes down. */
-  from: 61.82,
-  leave: 62.02,
-  /** Down beside her: the knock. */
-  knock: 62.62,
-  /** Away along the stage, and gone into the dark. */
-  fade: [63.5, 64.35] as [number, number],
-}
-/** Where it lands: against her shoulder. */
-const ECHO_LAND: Pt = [MIA_WAIT[0] - 2 * R - 0.01, ON_STAGE]
-const ECHO_PATH = pathOf([
-  ...sampleBezier([OPENING_END, [OPENING_END[0] + 0.15, -0.95], [ECHO_LAND[0] - 0.05, -1.0], [ECHO_LAND[0], -0.25]], 40),
-  ECHO_LAND,
-])
-
-/** Her rock from the knock: pushed a little toward the end of the stage, and back. */
-function jostle(t: number): number {
-  const s = t - ECHO_T.knock
-  if (s < 0) return 0
-  return 0.07 * inout(s / 0.1) * Math.exp(-Math.max(0, s - 0.1) / 0.32)
-}
-
-/** The echo, in the piano's frame: where it is, how much of it is there, and which way it looks (he never looks at her). */
-export function echo(t: number): { p: Pt; a: number; spin: number } | null {
-  if (t < ECHO_T.from || t > ECHO_T.fade[1]) return null
-  const a = Math.min(1, (t - ECHO_T.from) / 0.22) * (1 - Math.max(0, Math.min(1, (t - ECHO_T.fade[0]) / (ECHO_T.fade[1] - ECHO_T.fade[0]))) ** 1.4)
-  if (t < ECHO_T.leave) return { p: OPENING_END, a, spin: Math.PI / 2 }
-  if (t < ECHO_T.knock) {
-    // Off the key and down, falling the last of it.
-    const u = (t - ECHO_T.leave) / (ECHO_T.knock - ECHO_T.leave)
-    return { p: ECHO_PATH.at(ECHO_PATH.length * u * u * (1.6 - 0.6 * u)), a, spin: 0.3 }
-  }
-  // Away along the stage, gathering to a brisk walk: the one who walked out.
-  const s = t - ECHO_T.knock
-  const v = 3.4
-  const ramp = 0.35
-  const x = ECHO_LAND[0] - (s < ramp ? (v * s * s) / (2 * ramp) : v * (s - ramp / 2))
-  return { p: [x, ON_STAGE], a, spin: Math.PI }
 }
 
 /* ------------------------------------------------------------------ Seb, from the top key to the street */

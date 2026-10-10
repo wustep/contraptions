@@ -16,15 +16,11 @@ import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/la-la-land/s
 import { coverAt } from '../src/shows/versions/la-la-land/sebs/transitions'
 import { DAVID, MIA, SON } from '../src/shows/versions/la-la-land/sebs/worlds'
 import { PIANO } from '../src/shows/versions/la-la-land/sebs/club/geometry'
-import { DOOR, DOOR_SHUT, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
+import { DOOR, ROOM } from '../src/shows/versions/la-la-land/sebs/club/room'
 import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs/piano-figure'
 import { NARROW, aperture, muted, wakingCircle } from '../src/shows/versions/la-la-land/sebs/lens'
 import { emptyAt } from '../src/shows/versions/la-la-land/sebs/theatre/theatre'
 import { HORIZON, SIGN_AT, SIGN_U, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
-import { LIPTONS_CALL } from '../src/shows/versions/la-la-land/sebs/liptons/room'
-import { TABLE_CALL } from '../src/shows/versions/la-la-land/sebs/club/opening'
-import { SONG_COUNT, songAt } from '../src/shows/versions/la-la-land/sebs/audition/shadow'
-import { BAND_RISING, DREAM_CALL, lastNoteAt } from '../src/shows/versions/la-la-land/sebs/club/finale'
 import { HOUSE_SPAN, houseTop } from '../src/shows/versions/la-la-land/sebs/paris/jazz'
 import { HANDOFF, SKYLINE, soloThreads, towerDrawn } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
 
@@ -271,27 +267,6 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       if (roofAt - bottom < creditClear) { creditClear = roofAt - bottom; creditWorst = `${t.toFixed(1)} s` }
     }
   }
-  // His music rising out of the club with the band never runs through a credit card: while a card is up, no bead is in
-  // the band of the frame it is set in (the middle third across, from just above its first line to below its last).
-  {
-    const through: string[] = []
-    for (let t = CARDS[0].at; t < 503; t += 0.1) {
-      const cards = creditsAt(t).filter((c) => c.light > 0.3)
-      if (!cards.length) continue
-      const f = cam(t)
-      for (const q of BAND_RISING.beads(t)) {
-        if (q.a < 0.15) continue
-        const fx = (piano[0] + q.x - (f.x - (f.cells * 16) / 9 / 2)) / ((f.cells * 16) / 9)
-        const fy = (piano[1] + q.y - (f.y - f.cells / 2)) / f.cells
-        for (const c of cards) {
-          const top = (c.at?.[1] ?? 0.16) - 0.03
-          const bottom = top + 0.03 + (c.names.length > 2 ? 0.27 : 0.13)
-          if (fx > 0.33 && fx < 0.67 && fy > top && fy < bottom) { through.push(t.toFixed(1)); break }
-        }
-      }
-    }
-    check('sebs: his music rising out of the club never runs through the credits', through.length === 0, [...new Set(through)].slice(0, 6).join(', '))
-  }
   // The story's beats are seen: at each, everyone it is about is in the picture.
   const beats: [number, string, ('seb' | 'mia' | 'david')[]][] = [
     [28, 'she lifts her eyes to him', ['mia', 'david']], [34, 'he finds her across the room', ['seb', 'mia']],
@@ -336,59 +311,6 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     })
     check('sebs: the solo paints Paris: the skyline and its tower drawn, in the picture, before the iris', towerDrawn(T) === 1 && towerDrawn(264.5) === 0 && off.length === 0, `${off.length} points out`)
   }
-  // His playing reaches her: at her table at the start and across Lipton's, every note that goes out from the keys
-  // arrives where she is, and the ones at her table are seen going to her.
-  {
-    const origin = show.holder(10)
-    const miss: string[] = []
-    let arrivals = 0
-    let seenAtTable = 0
-    for (const [name, c, a, b] of [['the table', TABLE_CALL, 21.6, 31.5], ['Lipton\'s', LIPTONS_CALL, 40, 63.5]] as const) {
-      for (let t = a; t < b; t += 0.05) {
-        for (const q of c.beads(t)) {
-          const wx = origin.col + q.x
-          const wy = origin.row + q.y
-          if (name === 'the table' && !covered(t) && inShot(t, { x: wx, y: wy })) seenAtTable++
-          if (q.u < 0.97) continue
-          arrivals++
-          const m = show.mia(q.arrive)
-          if (!m || Math.hypot(origin.col + q.to[0] - m.x, origin.row + q.to[1] - m.y) > 0.2 || Math.hypot(q.x - q.to[0], q.y - q.to[1]) > 0.2) miss.push(`${name} ${t.toFixed(2)}`)
-        }
-      }
-    }
-    // In the dream's last room the piano's own notes reach her too, every one that lands before the dream drains
-    // (the room stands with its door at the finale's origin, and the piano's frame is the room's).
-    const fin = show.holder(440)
-    let dreamArrivals = 0
-    for (let t = 432.4; t < 451.45; t += 0.05) {
-      for (const q of DREAM_CALL.beads(t)) {
-        if (q.u < 0.97 || q.arrive > 451.45) continue
-        dreamArrivals++
-        const m = show.mia(q.arrive)
-        if (!m || Math.hypot(fin.col + q.to[0] - DOOR[0] - m.x, fin.row + q.to[1] - DOOR[1] - m.y) > 0.2) miss.push(`the dream ${t.toFixed(2)}`)
-      }
-    }
-    // And the last, after she has gone: it reaches the door as it shuts, and goes out there.
-    const atDoor = lastNoteAt(DOOR_SHUT - 0.001)
-    const shut = lastNoteAt(DOOR_SHUT + 0.001)
-    const lastOk = !!atDoor && !!shut && Math.hypot(atDoor.x - shut.x, atDoor.y - shut.y) < 0.05 && Math.abs(shut.x - ROOM.wallL1) < 0.3 && !lastNoteAt(DOOR_SHUT + 0.7)
-    // And at the audition the other way: every note of her song lands on him in his chair.
-    const aud = show.holder(185)
-    let songLands = 0
-    for (let i = 0; i < SONG_COUNT; i++) {
-      for (let t = 180; t < 192; t += 0.02) {
-        const q = songAt(i, t)
-        const next = songAt(i, t + 0.02)
-        if (!q || next) continue
-        songLands++
-        const [sx, sy] = show.where(t)
-        if (Math.hypot(aud.col + q.x - sx, aud.row + q.y - sy) > 0.25) miss.push(`her song ${t.toFixed(2)}`)
-        break
-      }
-    }
-    check('sebs: his playing reaches her, at her table, across Lipton\'s and in the dream, and the last of it the door as it shuts; her song reaches him', songLands > 10 && arrivals > 30 && dreamArrivals > 10 && miss.length === 0 && seenAtTable > 20 && lastOk,
-      `${arrivals} + ${dreamArrivals} arrivals, ${songLands} of her song, ${seenAtTable} seen at the table, last at the door ${lastOk}; ${miss.slice(0, 4).join(', ')}`)
-  }
   // His club in Paris is full, and its house never covers the two of them: their heads stay above everyone's.
   {
     const under: string[] = []
@@ -405,44 +327,6 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     check('sebs: the house in Paris never covers the two of them', under.length === 0, under.slice(0, 6).join(', '))
   }
   check('sebs: the story\'s beats are seen, everyone they are about in the picture', unseenBeats.length === 0, unseenBeats.join(', '))
-  // The other road: the what-if read against what was. Each echo of him is seen, well inside the frame and mostly
-  // there, at the moment it is for; and there are only these, in the places the story turns.
-  {
-    const inside = (t: number, b: { x: number; y: number }) => {
-      if (covered(t)) return false
-      const f = cam(t)
-      return Math.abs(b.x - f.x) < ((f.cells * 16) / 9 / 2) * aperture(t) - 0.3 && Math.abs(b.y - f.y) < f.cells / 2 - 0.3
-    }
-    const roads: [number, string][] = [
-      [33.6, 'as he finds her, the what-if leaves him for her table'],
-      [62.75, 'at Lipton\'s, the one who walked out knocks past her'],
-      [198.4, 'he stays in Los Angeles as the plane goes'],
-      [440.5, 'in the dream\'s last room, the real one plays the piano that plays itself'],
-      [455.45, 'David sits down in the dream\'s place at her table'],
-      [463.05, 'beside her in the doorway as she smiles at him'],
-    ]
-    const unseenRoads: string[] = []
-    for (const [t, what] of roads) {
-      const e = show.echoes(t)
-      if (e.length !== 1 || e[0].a < 0.5 || !inside(t, e[0])) unseenRoads.push(`${what} (${t})`)
-    }
-    let spans = 0
-    let was = false
-    for (let t = 0; t <= DURATION; t += 0.05) {
-      const is = show.echoes(t).length > 0
-      if (is && !was) spans++
-      was = is
-    }
-    // (Waking, the real one at the keys and the dream at her table are both there a moment: one span between them.)
-    check('sebs: the other road is seen where the story turns, and only there', unseenRoads.length === 0 && spans === roads.length - 1 && show.echoList.length === roads.length,
-      `${unseenRoads.join(', ')}; ${spans} spans`)
-    // In the hush, the one who walked out knocks her as he goes by: she rocks from it, and looks after him.
-    const before = show.mia(62.55)
-    const after = show.mia(62.8)
-    const look = show.at(63.1).balls?.find((b) => b.id === show.mia(63.1)?.id)
-    check('sebs: she feels the knock in the hush, and looks after the one who walked out',
-      !!before && !!after && after.x - before.x > 0.03 && !!look && Math.cos((look.spin ?? 0) - Math.PI) > Math.cos(Math.PI / 6))
-  }
   // Hollywood's hill lamps go out one by one, and only then the cloth comes in: each goes out in the open.
   const toShadow = sebsCovers.find((c) => c.down[0] > 168 && c.down[0] < SWITCH.shadow)
   check('sebs: Hollywood\'s lamps go out before the cloth comes in', !!toShadow && HOLLY_OUT.every((t) => t < toShadow.down[0]))
@@ -542,24 +426,20 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     check('sebs: her name in lights over the city at the end, lit before their stars and whole in the picture to the last frame',
       SIGN_AT.length === 9 && Math.max(...SIGN_AT) < THEIRS_AT[0] && Math.min(...SIGN_AT) > AT.band && signOut.length === 0, signOut.slice(0, 5).join(', '))
   }
-  // David, her husband: his eyes on her at her table while hers go to the stage. And the swap at her table is seen: the
-  // dream's him there, greyed, in the picture with her looking at it, before David sits down into it.
+  // David, her husband: his eyes on her at her table while hers go to the stage.
   {
     const ball = (t: number, id: number) => show.at(t).balls?.find((b) => b.id === id)
     const dv = ball(28, show.david(28)?.id ?? -1)
     const mi = ball(28, show.mia(28)?.id ?? -1)
     const davidLooks = !!dv && !!mi && aim(dv.spin, Math.atan2(mi.y - dv.y, mi.x - dv.x)) <= Math.PI / 8
-    const e = show.echoes(455.0).find((x) => (x.turn ?? 0) > 0.6)
-    const her = ball(455.0, show.mia(455.0)?.id ?? -1)
-    const swapSeen = !!e && inShot(455.0, e) && !!her && inShot(455.0, her) && aim(her.spin, Math.atan2(e.y - her.y, e.x - her.x)) <= Math.PI / 6
     // And as the camera finds their table they are leaning in together, touching (close, not pressed), before she draws
     // back and looks up to the stage.
     const m23 = show.mia(23), d23 = show.david(23), m26 = show.mia(26), d26 = show.david(26)
     const gap23 = m23 && d23 ? Math.hypot(m23.x - d23.x, m23.y - d23.y) : Infinity
     const gap26 = m26 && d26 ? Math.hypot(m26.x - d26.x, m26.y - d26.y) : 0
     const together = gap23 < 2 * R + 0.02 && gap23 > 0.9 * 2 * R && gap26 > 2 * R + 0.08
-    check('sebs: she and David lean in together and he looks at her at her table, and the swap there is seen: the dream\'s him greyed, and her looking at it', davidLooks && swapSeen && together,
-      `david looks ${davidLooks}, swap seen ${swapSeen}, together ${gap23.toFixed(3)} then ${gap26.toFixed(3)}`)
+    check('sebs: she and David lean in together and he looks at her at her table', davidLooks && together,
+      `david looks ${davidLooks}, together ${gap23.toFixed(3)} then ${gap26.toFixed(3)}`)
   }
   // At her show the empty house of the film's real night shows through only in the lead-in bar, and the full house is
   // back the moment he springs up (115.52) for the ovation.

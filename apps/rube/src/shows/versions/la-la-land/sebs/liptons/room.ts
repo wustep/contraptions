@@ -3,9 +3,6 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, beam, frame, glow, hash, knock, rgba, ring, scenery, smooth } from '../kit'
 import { LIPTONS_INK, LIPTONS_MAT } from '../worlds'
-import { AT } from '../music'
-import { MELODY } from '../club/opening'
-import { call } from '../call'
 import {
   BELL,
   BULBS,
@@ -943,15 +940,6 @@ function festoon(d: Draw, t: number): void {
   p.circle(hx * k, hy * k, 0.07 * k)
 }
 
-/* ------------------------------------------------------------------ the music, across the room to her */
-
-/**
- * What draws her across the room: his playing. From the moment the light opens on Lipton's, each note of the melody
- * lifts off the strings over its key and goes out across the room to her (`call.ts`). Before she is in they go to
- * the door; as she nears the trips get shorter; on the hush the music stops, and so do they.
- */
-export const LIPTONS_CALL = call(MELODY.filter((n) => n.t > 40.0 && n.t < AT.hush - 0.02), (t) => mia(t), LIPTONS_MAT.lamp)
-
 /* ------------------------------------------------------------------ the room */
 
 export const liptonsRoom = scenery<null>({
@@ -975,8 +963,5 @@ export const liptonsRoom = scenery<null>({
     void R
     void ON_FLOOR
     void beam
-  },
-  over(p, _s, c) {
-    if (c.t > 39.9 && c.t < AT.hush + 4) LIPTONS_CALL(p, c.k, c.t)
   },
 })

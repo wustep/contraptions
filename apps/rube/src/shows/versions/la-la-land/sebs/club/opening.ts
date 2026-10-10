@@ -1,11 +1,10 @@
-import { laneAt, mixHex, type Pt } from '../../../../../parts'
+import { mixHex, type Pt } from '../../../../../parts'
 import { box, part, route, type Companion, type Company, type PartShot, type Way } from '../kit'
 import { AT, notes as measured } from '../music'
 import { LIPTONS_MAT, SEBS_MAT } from '../worlds'
-import { HUSH_KEY, OPENING_END, PIANO } from './geometry'
+import { HUSH_KEY, OPENING_END } from './geometry'
 import { drawPiano, heldOn, keysOf, play, PIANO_CELLS, type Keys, type Note, type Press } from './piano'
 import { house, MIA_SEAT, SIDE_SEAT } from './room'
-import { call, rising } from '../call'
 
 /**
  * The opening: Seb's, now, and he is playing. The camera comes in from the city at night through the club's lit
@@ -133,7 +132,7 @@ function plan0(begin: number) {
 }
 const PLAN = plan0(0)
 
-/** Every note of the melody he plays, show seconds and pitch, the run up to the hush included: what Lipton's sees go out to her. */
+/** Every note of the melody he plays, show seconds and pitch, the run up to the hush included. */
 export const MELODY: { t: number; midi: number }[] = [...theme(0.5, FLOURISH).melody, ...RUN.map(([t, midi]) => ({ t, midi }))]
 
 /** Where she sits at her table at the start, rolling back a hair as she lifts her eyes (the company's own place). */
@@ -150,16 +149,6 @@ export const TOGETHER = (t: number): number => {
   return ease(21.9, 22.5) * (1 - ease(23.9, 24.5))
 }
 const davidAtTable = (t: number): Pt => [SIDE_SEAT[0] - 0.074 * TOGETHER(t), SIDE_SEAT[1] - 0.04 * TOGETHER(t)]
-/**
- * At Seb's, now, the theme reaches her where she sits: the notes he plays go out to her table, the first of them a breath before she lifts her eyes to the stage. She knows it.
- */
-/**
- * Before it reaches her: from his first note the theme rises off the strings into the dark of the club; then it
- * reaches her at her table. In the room as it is, which is graded grey, his music is the colour: these are gold, and
- * drawn over the grade (`score.ts`, the colour layer), the only full colour in the room.
- */
-export const RISING = rising(MELODY.filter((n) => n.t < 21.6), '#F2C46B', 1.5, 4.2, 1.25, 1)
-export const TABLE_CALL = call(MELODY.filter((n) => n.t > 21.6 && n.t < 30.6), miaAtTable, '#F2C46B', 0.68)
 
 export const opening = part<OpeningState>(
   {
@@ -179,39 +168,12 @@ export const opening = part<OpeningState>(
     const plan = slot.begin === 0 ? PLAN : plan0(slot.begin)
     const [x0, y0, x1, y1] = PIANO_CELLS
     const lane = { segs: route(plan.ways), fire: plan.fire - slot.begin }
-    // The what-if, as it begins: while he plays on and finds her across the room, an echo of him comes away from the
-    // keys, over the case's end and down to her table, beside her; it holds there a beat, and comes apart. The dream
-    // starts from that.
-    const E = { from: 32.95, arrive: 34.45, to: 35.3, gone: [34.75, 35.25] as [number, number] }
-    const start = laneAt(lane, E.from - slot.begin)
-    // Up out of the keys, over the case's end, and down to her table, to the place beside her on the side away from
-    // David: a cubic, eased so it slows as it comes. It holds there a beat, looking at her, and comes apart.
-    const BESIDE: Pt = [MIA_SEAT[0] - 0.33, MIA_SEAT[1] - 0.04]
-    const P: Pt[] = [[start.x, start.y], [start.x - 1.2, -0.35], [PIANO.caseX0 - 1.4, -0.4], BESIDE]
-    const bez = (u: number): Pt => {
-      const a = 1 - u
-      const w = [a * a * a, 3 * a * a * u, 3 * a * u * u, u * u * u]
-      return [w.reduce((s, c, i) => s + c * P[i][0], 0), w.reduce((s, c, i) => s + c * P[i][1], 0)]
-    }
-    const echo = {
-      from: E.from,
-      to: E.to,
-      at: (t: number) => {
-        const u = Math.max(0, Math.min(1, (t - E.from) / (E.arrive - E.from)))
-        const [x, y] = bez(1 - (1 - u) ** 2)
-        const a = Math.min(1, (t - E.from) / 0.35)
-        const gone = Math.max(0, Math.min(1, (t - E.gone[0]) / (E.gone[1] - E.gone[0])))
-        const spin = Math.atan2(MIA_SEAT[1] - y, MIA_SEAT[0] - x)
-        return { x, y, a, spin: u < 1 ? spin : 0, gone }
-      },
-    }
     return {
       cells: box(x0, y0, x1, y1),
       exit: [OPENING_END[0] + 0.5, OPENING_END[1]],
       lane,
       state: { begin: slot.begin, keys: plan.keys },
       company: plan.company,
-      echoes: [echo],
     }
   },
   (): PartShot[] => [

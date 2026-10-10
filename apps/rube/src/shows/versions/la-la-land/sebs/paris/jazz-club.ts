@@ -1295,8 +1295,7 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
 /**
  * The solo, written in the air. Each phrase the trumpet plays leaves the bell as a thread of warm light, set at the
  * height of its notes as it goes out (the high ones higher), drifting off through the spot and up into the vault and
- * fading, so the dark fills with the solo while she inches toward him: one thread a phrase, a bead on it where each
- * note was tongued. The last phrase, the run to the top as she rolls down to him, goes highest.
+ * fading, so the dark fills with the solo while she inches toward him: one thread a phrase. The last phrase, the run to the top as she rolls down to him, goes highest.
  */
 const SOLO_DT = 0.025
 /** The line's pitch at `s`: the measured one, eased over a few hundredths so it bends from note to note. */
@@ -1326,7 +1325,6 @@ const SOLO_PHRASES: { s: number; m: number }[][] = (() => {
   if (cur.length) out.push(cur)
   return out
 })()
-const SOLO_BEADS = SOLO_PITCH.filter(([ti, mi]) => mi > 0 && ti >= AT.trumpet - 0.4 && ti < 268.3)
 
 /** Where the bell's mouth is at show time `s`, as the trumpet holds it. (Fixed for a given `s`, so kept once worked out:
  * the threads ask it of every point of every phrase, every frame.) */
@@ -1543,17 +1541,6 @@ function drawSolo(p: p5, k: number, t: number, on1: number): void {
   }
   drawTower(ctx, k, t, on1)
   drawWindows(ctx, k, t, on1)
-  // The notes: a bead of light on the thread where each was tongued, bright as it leaves the bell.
-  for (const [ti, mi] of SOLO_BEADS) {
-    if (ti > t) break
-    const q = threadAt(ti, sungAt(ti) || mi, t)
-    if (q.a < 0.02) continue
-    const fresh = Math.exp(-(t - ti) / 0.35)
-    ctx.fillStyle = rgba(M.spot, on1 * q.a * (0.55 + 0.45 * fresh))
-    ctx.beginPath()
-    ctx.arc(q.x * k, q.y * k, (0.026 + 0.03 * fresh) * k, 0, Math.PI * 2)
-    ctx.fill()
-  }
   ctx.restore()
 }
 

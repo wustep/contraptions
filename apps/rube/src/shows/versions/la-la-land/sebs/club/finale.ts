@@ -1,10 +1,8 @@
-import type p5 from 'p5'
 import { laneAt, mixHex, R, type Pt } from '../../../../../parts'
-import { box, glow, part, rgba, route, type Company, type PartShot, type Way } from '../kit'
+import { box, part, route, type Company, type PartShot, type Way } from '../kit'
 import { AT, notes as measured } from '../music'
 import { hop } from '../physics'
-import { DAVID, SEBS_MAT } from '../worlds'
-import { call, rising } from '../call'
+import { SEBS_MAT } from '../worlds'
 import { fold, keyRest } from './geometry'
 import { DOWN, drawPiano, heldOn, keysOf, play, restOn, type Note, type Press } from './piano'
 import { BAND, BAND_LAMPS, DOOR, DOOR_SHUT, lightsAt, MIA_SEAT, ROOM, SEAT, SIDE_SEAT, TABLE } from './room'
@@ -210,64 +208,6 @@ function plan(begin: number) {
   david.push(...walk(GO - 0.2, 466.6, -13.05, -16.0, 0, -1.4))
   david.push({ at: GONE, p: [-16.0 - 1.4 * (GONE - 466.6), FLOOR_Y] })
 
-  /* -------------------------------------------- the real one, at the keys */
-  // In the dream he sits with her and the piano plays itself; but in the room as it is he is at the piano, playing
-  // their theme. So he is there too, as an echo: the other road, hopping the keys as they go down. On the last chord
-  // the one from her table lands on the key where the echo is, and it goes into him: he is where he really was.
-  const E0 = 432.3
-  const theme: Note[] = []
-  for (const pr of selves) {
-    if (pr.at < E0 + 0.35) continue
-    const prev = tune[theme.length - 1]
-    if (prev && pr.at - prev.t < 0.24) continue
-    theme.push({ t: pr.at, midi: pr.midi, s: pr.s })
-  }
-  theme.push({ t: AT.last, midi: LAST_KEY, s: 0.4 })
-  const atKeys = { at: 0, p: restOn(theme[0].midi) }
-  const keysLane = { segs: route(play(atKeys, theme, E0).ways), fire: 0 }
-  const realOne = {
-    from: E0,
-    to: AT.last + 0.7,
-    at: (t: number) => {
-      const q = laneAt(keysLane, t - E0)
-      const [x, y] = F([q.x, q.y])
-      const a = Math.max(0, Math.min(1, (t - E0) / 0.7))
-      return { x, y, a, spin: -Math.PI / 2 + 0.25, gone: Math.max(0, Math.min(1, (t - AT.last + 0.04) / 0.6)) }
-    },
-  }
-
-  /* -------------------------------------------- beside her, as she smiles at him */
-  // The last of the other road, and the briefest: in her close shot, as she smiles back at him across the silent room,
-  // the one she would have gone home with is there at her side a moment, turned to her; and as the picture cuts to his
-  // nod it comes apart.
-  const besideHer = {
-    from: CUTS.smile,
-    to: CUTS.nod + 0.02,
-    at: (t: number) => {
-      const [x, y] = F([DOORWAY + 0.05 + 2 * R + 0.035, FLOOR_Y])
-      const a = Math.min(1, (t - CUTS.smile) / 0.22)
-      return { x, y, a, spin: Math.PI, gone: Math.max(0, Math.min(1, (t - (CUTS.nod - 0.32)) / 0.32)) }
-    },
-  }
-
-  /* -------------------------------------------- the dream, left in his seat */
-  // As he goes from her side the dream stays a moment where he was: an echo of him at her table, leaning in to her,
-  // paling while David comes back across the room, and coming apart as David sits down in it.
-  const kissed: Pt = [SIDE_SEAT[0] - 0.074, SEAT_Y - 0.045]
-  const echo = {
-    from: LEAVE - 0.05,
-    to: 456.4,
-    at: (t: number) => {
-      const lean = 1 - Math.max(0, Math.min(1, (t - 453.2) / 1.6))
-      const [x, y] = F([kissed[0] + (SIDE_SEAT[0] - kissed[0]) * (1 - lean), kissed[1] + (SIDE_SEAT[1] - kissed[1]) * (1 - lean)])
-      const a = Math.min(1, (t - LEAVE + 0.05) / 0.45) * (1 - 0.35 * Math.max(0, Math.min(1, (t - 452.5) / 2.5)))
-      // As David comes back across the room to the table, it drains from the dream's blue to his grey; it comes apart as
-      // he sits down into it.
-      const turn = Math.max(0, Math.min(1, (t - 453.9) / 1.4))
-      return { x, y, a, spin: Math.PI, gone: Math.max(0, Math.min(1, (t - 455.32) / 1.05)), turn: turn * turn * (3 - 2 * turn), turnTo: DAVID }
-    },
-  }
-
   const miaAt = track(miaWays)
   const davidAt = track(david)
   const company: Company[] = [
@@ -277,82 +217,10 @@ function plan(begin: number) {
   hits.push(DOOR_SHUT, BAND_LAMPS)
 
   const ways = seb.map((w) => ({ ...w, at: w.at - begin, p: F(w.p) }))
-  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, echoes: [realOne, echo, besideHer], hits: [...new Set(hits)].sort((a, b) => a - b) }
+  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, hits: [...new Set(hits)].sort((a, b) => a - b) }
 }
 
 const PLAN = plan(BEGIN)
-
-/** What he plays with the band, from its first hit: the notes that rise from the club as the camera draws back. */
-export const BAND_TUNE: { t: number; midi: number }[] = bandTune().map((n) => ({ t: n.t, midi: n.midi }))
-/**
- * With the band, his notes rise from the keys up out of the club, through its roof and into the night over the city,
- * as the camera draws back, leaning away up toward where their stars will be (and clear of the credits in the sky
- * over the club); on the swell they become them. In the piano's frame, which is the room's.
- */
-export const BAND_RISING = rising(BAND_TUNE.filter((n) => n.t < 494.5), '#F2C46B', 1.4, 8, 19, 1.3, 1.15)
-
-/**
- * In the dream's last room the theme reaches her where she sits, as it did at the start, but warm with the dream's
- * rose: the notes the piano plays by itself go out to her table. When the dream drains on the last chord, the notes
- * still in the air go out before they reach her. (Her place in the piano's frame is the room's.)
- */
-/**
- * The last of it: as The End comes in and she goes, one note he plays goes after her across the empty room to the
- * door, high over the tables, and arrives as the door shuts on its note. It goes out against the shut door in a
- * small flare. His music follows her as far as the door. (Room frame, which is the piano's.)
- */
-const LAST_NOTE = (() => {
-  const n = measured(463.95, 464.9, 0.1).find((m) => m.midi !== null)
-  const t0 = n?.t ?? 464.27
-  return { t0, from: keyRest(fold(n?.midi ?? LAST_KEY)), to: [ROOM.wallL1 + 0.12, 2.42] as Pt }
-})()
-export function lastNoteAt(t: number): { x: number; y: number; a: number; flare: number } | null {
-  const { t0, from, to } = LAST_NOTE
-  if (t < t0 || t > DOOR_SHUT + 0.6) return null
-  if (t >= DOOR_SHUT) {
-    const s = t - DOOR_SHUT
-    return { x: to[0], y: to[1], a: Math.max(0, 1 - s / 0.6), flare: Math.exp(-s / 0.15) }
-  }
-  const u = (t - t0) / (DOOR_SHUT - t0)
-  const e = u * (0.6 + 0.4 * u)
-  const lift = 2.2
-  return { x: from[0] + (to[0] - from[0]) * e, y: from[1] - 0.7 + (to[1] - from[1] + 0.7) * e - lift * 4 * e * (1 - e), a: Math.min(1, (t - t0) / 0.1), flare: 0 }
-}
-
-/** The last note, drawn in the room's own frame (the piano's): gold, the last colour in the grey room, over the grade. */
-export function drawLastNote(p: p5, k: number, t: number): void {
-  const last = lastNoteAt(t)
-  if (!last) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  for (let i = 1; i <= 8 && last.flare === 0; i++) {
-    const b = lastNoteAt(t - i * 0.04)
-    if (!b) break
-    ctx.fillStyle = rgba(GOLD, 0.35 * (1 - i / 9))
-    ctx.beginPath()
-    ctx.arc(b.x * k, b.y * k, 0.032 * (1 - i * 0.06) * k, 0, Math.PI * 2)
-    ctx.fill()
-  }
-  glow(p, k, last.x, last.y, 0.3 + 0.5 * last.flare, GOLD, (0.55 + 0.4 * last.flare) * last.a)
-  ctx.fillStyle = rgba('#FFF6E2', 0.95 * last.a)
-  ctx.beginPath()
-  ctx.arc(last.x * k, last.y * k, 0.045 * k, 0, Math.PI * 2)
-  ctx.fill()
-}
-const GOLD = '#F2C46B'
-
-export const DREAM_CALL = (() => {
-  const notes: { t: number; midi: number }[] = []
-  for (const n of measured(432.4, 451.2, 0.1)) {
-    if (n.midi === null) continue
-    if (notes.length && n.t - notes[notes.length - 1].t < 0.28) continue
-    notes.push({ t: n.t, midi: fold(n.midi) })
-  }
-  const her = PLAN.company[0]
-  return call(notes, (t) => {
-    const m = her.at(t)
-    return m ? [m.x + DOOR[0], m.y + DOOR[1]] : [MIA_SEAT[0], MIA_SEAT[1]]
-  }, '#FFD39A', 0.8)
-})()
 
 interface FinaleState {
   begin: number
@@ -371,20 +239,6 @@ export const finale = part<FinaleState>(
       drawPiano(p, c.k, c.ink, c.weight, t, s.keys, { color: mixHex(L.stage, SEBS_MAT.candle, 0.45 * L.blaze), lit: 1 })
       p.pop()
     },
-    over(p, s, c) {
-      const t = c.t + s.begin
-      if (t < 432.4 || t > 454.5) return
-      const drain = 1 - Math.max(0, Math.min(1, (t - 451.45) / 0.7))
-      if (drain <= 0) return
-      const [ox, oy] = F([0, 0])
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      p.push()
-      p.translate(ox * c.k, oy * c.k)
-      ctx.globalAlpha = drain
-      DREAM_CALL(p, c.k, t)
-      ctx.globalAlpha = 1
-      p.pop()
-    },
   },
   (slot) => {
     const pl = Math.abs(slot.begin - BEGIN) < 1e-9 ? PLAN : plan(slot.begin)
@@ -395,7 +249,6 @@ export const finale = part<FinaleState>(
       lane: { segs: route(pl.ways), fire: AT.last - slot.begin },
       state: { begin: slot.begin, keys: pl.keys },
       company: pl.company,
-      echoes: pl.echoes,
     }
   },
   (): PartShot[] => [
@@ -414,7 +267,7 @@ export const finale = part<FinaleState>(
     { t: 444.9, cells: 1.65, hold: F([TABLE.x, 2.58]) },
     { t: 451.3, cells: 1.55, hold: F([TABLE.x, 2.58]) },
     // With him up to the keys, onto the last chord; the stillness.
-    // Wide enough to keep her table, and the echo of him left at it, in the frame as he goes.
+    // Wide enough to keep her table in the frame as he goes.
     { t: 452.6, cells: 4.6, hold: F([0.9, 1.05]) },
     { t: 453.9, cells: 3.2, hold: F([4.3, -0.3]) },
     { t: 454.13, cells: 3.18, hold: F([4.32, -0.3]) },

@@ -1,10 +1,8 @@
-import { frame, hash, rgba, scenery } from './kit'
+import { frame, rgba, scenery } from './kit'
 
 /**
- * The lens the whole picture is seen through: the corners falling off a little, as a camera lens's do, and a fine
- * grain over everything, crawling frame to frame. Light enough that nothing is hidden by it; enough that the show
- * reads as a picture on film rather than drawn on glass. Not in the home movie, whose eight-millimetre stock has its
- * own. Drawn over each place and under its cover.
+ * The lens the whole picture is seen through: the corners falling off a little, as a camera lens's do. Not in the
+ * home movie, whose gate has its own. Drawn over each place and under its cover.
  */
 const MOVIE: [number, number] = [340.5, 395.3]
 
@@ -12,7 +10,7 @@ const MOVIE: [number, number] = [340.5, 395.3]
  * The grade: the room as it is, muted; the dream, in full colour, as the film's Epilogue does it. The real club at the
  * start is graded colder and greyer, her yellow and his blue with it; the colour comes in as the spotlight's iris
  * opens on Lipton's (39.95 to 41.9) and goes again as the colour drains out at the waking (451.5 to 453.73). Then on
- * The End's swell, as his notes rise to become their stars over the city, it comes back: the music brings it.
+ * The End's swell, as their stars come out over the city, it comes back: the music brings it.
  */
 export function muted(t: number): number {
   const ramp = (a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)))
@@ -79,31 +77,6 @@ export const masking = scenery<null>({
     ctx.restore()
   },
 })
-
-let TILE: HTMLCanvasElement | null = null
-function tile(): HTMLCanvasElement | null {
-  if (TILE || typeof document === 'undefined') return TILE
-  const n = 160
-  const cv = document.createElement('canvas')
-  cv.width = n
-  cv.height = n
-  const g = cv.getContext('2d')
-  if (!g) return null
-  const img = g.createImageData(n, n)
-  for (let i = 0; i < n * n; i++) {
-    const v = hash(i, 91)
-    const light = v > 0.5
-    const a = Math.abs(v - 0.5) * 2
-    const c = light ? 255 : 0
-    img.data[i * 4] = c
-    img.data[i * 4 + 1] = c
-    img.data[i * 4 + 2] = c
-    img.data[i * 4 + 3] = a > 0.6 ? Math.round((a - 0.6) * 2.5 * 255) : 0
-  }
-  g.putImageData(img, 0, 0)
-  TILE = cv
-  return cv
-}
 
 /** A circle the grade lifts inside (the spotlight's iris into the dream; his stage with the band), in world cells, or null. */
 export type IrisAt = (t: number, span: number) => { x: number; y: number; r: number; f: number; dark?: number } | null
@@ -177,20 +150,6 @@ export const lens = scenery<{ iris: IrisAt } | null>({
     g.addColorStop(1, rgba('#000000', 0.2))
     ctx.fillStyle = g
     ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
-    const tl = tile()
-    if (tl) {
-      const fi = Math.floor(t * 24)
-      const m = ctx.getTransform()
-      const scale = Math.hypot(m.a, m.b) || 1
-      const step = (1.4 * p.pixelDensity()) / scale
-      const pat = ctx.createPattern(tl, 'repeat')
-      if (pat) {
-        pat.setTransform(new DOMMatrix().translate(hash(fi, 92) * tl.width * step, hash(fi, 93) * tl.height * step).scale(step))
-        ctx.globalAlpha = 0.06
-        ctx.fillStyle = pat
-        ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
-      }
-    }
     ctx.restore()
   },
 })

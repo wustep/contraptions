@@ -2,8 +2,7 @@ import type p5 from 'p5'
 import { FLOOR, R, type Pt } from '../../../../../parts'
 import { box, frame, knock, part, rgba, ring, route, smooth, type Companion, type PartShot, type Way } from '../kit'
 import { hop } from '../physics'
-import { notes } from '../music'
-import { MIA, SHADOW_MAT } from '../worlds'
+import { SHADOW_MAT } from '../worlds'
 
 /**
  * The audition, in shadow play (172 → 196, `SHADOW`).
@@ -573,65 +572,6 @@ interface ShadowState {
   begin: number
 }
 
-/**
- * The one place it goes the other way: her song reaching him. From when she begins (the metronome's first stop) until
- * he leaps up to her, each note of it goes out from her, up over the stage and down to him in his chair at the side,
- * in her colour, shadow play's one other colour; a phrase strung together as a thread.
- */
-const SONG = (() => {
-  const out: { t: number; trip: number }[] = []
-  for (const n of notes(TICKS[0], LEAP - 1.2, 0.12)) if (!out.length || n.t - out[out.length - 1].t > 0.3) out.push({ t: n.t, trip: 1.15 })
-  return out
-})()
-export function songAt(i: number, t: number): { x: number; y: number; a: number } | null {
-  const c = SONG[i]
-  const s = t - c.t
-  if (s < 0 || s > c.trip) return null
-  const u = s / c.trip
-  const e = 1 - (1 - u) ** 1.5
-  const [fx, fy0] = miaPath(c.t)
-  const fy = fy0 - 0.15
-  const [tx, ty] = [SEAT[0] + 0.05, SEAT[1] - 0.05]
-  const x = fx + (tx - fx) * e
-  const y = fy + (ty - fy) * e - 1.3 * 4 * e * (1 - e)
-  return { x, y, a: Math.min(1, s / 0.08) * (1 - smooth(u, 0.8, 1)) }
-}
-export const SONG_COUNT = SONG.length
-function drawSong(p: p5, k: number, t: number): void {
-  if (t < TICKS[0] || t > LEAP + 1.3) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
-  ctx.lineCap = 'round'
-  for (let i = 1; i < SONG.length; i++) {
-    if (SONG[i].t - SONG[i - 1].t > 0.8) continue
-    const a = songAt(i - 1, t)
-    const b = songAt(i, t)
-    if (!a || !b) continue
-    ctx.strokeStyle = rgba(SHADOW_MAT.gold, 0.55 * Math.min(a.a, b.a))
-    ctx.lineWidth = 0.022 * k
-    ctx.beginPath()
-    ctx.moveTo(a.x * k, a.y * k)
-    ctx.lineTo(b.x * k, b.y * k)
-    ctx.stroke()
-  }
-  for (let i = 0; i < SONG.length; i++) {
-    const q = songAt(i, t)
-    if (!q) continue
-    ctx.fillStyle = rgba(SHADOW_MAT.gold, 0.25 * q.a)
-    ctx.beginPath()
-    ctx.arc(q.x * k, q.y * k, 0.13 * k, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.fillStyle = rgba(MIA, q.a)
-    ctx.strokeStyle = rgba(INK, 0.8 * q.a)
-    ctx.lineWidth = Math.max(1, 0.012 * k)
-    ctx.beginPath()
-    ctx.arc(q.x * k, q.y * k, 0.058 * k, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.stroke()
-  }
-  ctx.restore()
-}
-
 export const shadow = part<ShadowState>(
   {
     name: 'shadow',
@@ -696,7 +636,6 @@ export const shadow = part<ShadowState>(
       jug(p, k, t)
       pen(p, k, penPath(t), penLean(t))
       lamp(p, k, pose)
-      drawSong(p, k, t)
 
       // At the crest the light eats the shapes and the dark round the screen, from the two of them outward: only they
       // are left in it.
