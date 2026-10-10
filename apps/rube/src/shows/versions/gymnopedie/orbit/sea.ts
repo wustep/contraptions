@@ -253,6 +253,9 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
     // warmer streak too, with its path of light on the water.
     mirror(p, c, v, day, water, close)
     const ctx2 = p.drawingContext as Ctx2D
+    // Each lamp's path of light, fewer rows once the camera is far enough off that a row is a pixel or two: in the wide
+    // shots between the pieces the whole thread of lamps is in view, and their strokes were most of the frame's cost.
+    const lampRows = Math.max(2, Math.round(6 * Math.min(1, 14 / v.cells)))
     for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
       if (stone.piece !== 1) continue
       const lit = lampLight(stone, c.t)
@@ -270,7 +273,7 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       const lx = w > 0.42 ? 0.1 : w / 2
       ctx2.fillRect(k * (lx - 0.05 + wob), k * 0.02, k * 0.1, depth * 1.2)
       p.translate(k * (lx + wob), 0)
-      waterLight(p, c, stone.u0 + shift + lx, lit, '255, 206, 132', 6, 0.05, stone.index)
+      waterLight(p, c, stone.u0 + shift + lx, lit, '255, 206, 132', lampRows, 0.05, stone.index)
       p.pop()
     }
     // The sun's and the moon's paths of light on the water, under them.
