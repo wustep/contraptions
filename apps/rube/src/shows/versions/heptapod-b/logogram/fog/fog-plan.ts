@@ -397,6 +397,7 @@ export const FOG34 = (() => {
   const { W0, alpha0, onW, rise } = FOG34
   // The crescent: written before (off the picture), from her place back round its left side; she sits at its tip.
   const L = 1.95
+  const TIP = 0.5
   const W: Ring = {
     ...W0,
     born: 157.2,
@@ -406,7 +407,9 @@ export const FOG34 = (() => {
     // gone before the frame goes back to the whole of the great ring (170.3), where it would sit cut by its bottom edge.
     fade: F4.top + 0.35,
     fadeFor: 1.8,
-    lo: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 - 0.1], [F4.stop + 0.3, alpha0 - 0.1], [F4.closeW, alpha0 + L - TAU]]),
+    // Its tip runs on past her by as much as it tapers over, so she sits on its full thickness, never over the thin
+    // of its point (her place on it is worked out from its whole width).
+    lo: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 - TIP], [F4.stop + 0.3, alpha0 - TIP], [F4.closeW, alpha0 + L - TAU]]),
     hi: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 + L], [F4.stop + 0.3, alpha0 + L], [F4.closeW, alpha0 + L]]),
     by: { who: 'costello', limb: 2, t0: 156.5 },
   }
