@@ -808,6 +808,10 @@ window.
     and an exuberant one". With this every beat has been watched by a fresh viewer at three or four frames a second;
     each misreading that was the picture's was fixed and watched again (the tickets, the waiting-room lean, the falls,
     the lamp, the bedside, the chimney), and the rest read as meant.
+  - *The wedding's petals* (the seventeenth viewer: "they first show up near the upper right window… could be something
+    going wrong at the stained glass"). Thrown at 2.2 to 3.6 cells a second they were up round the windows within half
+    a second, before the camera had the throwers whole. Now 1.4 to 2.2: a burst over the bright family's own heads,
+    drifting toward the aisle and down over the two of them, seen to come from them.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits

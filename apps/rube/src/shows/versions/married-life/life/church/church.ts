@@ -1057,9 +1057,11 @@ const PETALS: Petal[] = (() => {
         out.push({
           x0: hx - 0.04 + 0.08 * h(1),
           y0: hy,
-          // Thrown up and out toward the aisle (left, over the two of them), and some back.
+          // Thrown up and out toward the aisle (left, over the two of them), and some back. A burst over their own heads,
+          // not a fountain: thrown higher, they were up round the windows before the throwers were in the frame, and a
+          // fresh viewer read them as something coming off the stained glass.
           vx: -0.9 + (h(2) - 0.35) * 1.8,
-          vy: -(2.2 + h(3) * 1.4),
+          vy: -(1.4 + h(3) * 0.8),
           at: at + h(4) * 0.1,
           color: colours[Math.floor(h(5) * colours.length)],
           spin: (h(6) - 0.5) * 9,
