@@ -231,7 +231,15 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 149 (latest)
+## Polish pass 150 (latest)
+
+A second subtraction pass, after a fresh look at the whole show. Two more things go:
+- **The glow inside the wormholes' rims** (`lensRim` in `kit.ts`, pass 13). A soft band of light just inside each sphere's rim, too faint to find at 1x; the lensed arcs and the rim's own line already say glass. The helper goes with it.
+- **The station clouds' shading and breathing** (`drawClouds` in `act2/interior.ts`, pass 5). The clouds stay, as flat shapes inked once round the outside like everything else in the station: no lit tops or shaded bases, and no puffs swelling and shrinking. They are drawn opaque now; at 92% the puffs' own outlines showed through the flat fill, which the frame audit caught.
+
+Audited after the cuts: the louvres (151 s), the station whole (145, 166 s), the flight across the axis (171 s), the lights coming up and the three wormholes, at 16:9 and in an upright 9:16 frame. `npm run build` passes, every check included. No strike, cue, camera key or music moved.
+
+## Polish pass 149
 
 A subtraction pass: everything this branch added to the picture was looked at again for whether it earns its place. Three things were cut, all decoration that drew the eye without telling the story:
 - **The dawn wind** (`drawDrift` in `act2/edmunds.ts`, pass 11). The wisps of sand under the credits were faint gold smears at best, an animation for its own sake. The credits' stillness is the point: the flag, the sun coming up and the slow draw-back are enough.

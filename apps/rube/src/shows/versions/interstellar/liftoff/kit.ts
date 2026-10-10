@@ -330,19 +330,6 @@ export function lensedArc(p: p5, cx: number, cy: number, r: number, a: number, l
   }
 }
 
-/** The light the lensing gathers just inside a wormhole's rim: a soft band, nothing at the band's inner edge. In pixels; `rgb` is "r, g, b". */
-export function lensRim(ctx: CanvasRenderingContext2D, cx: number, cy: number, R: number, rgb: string, a: number): void {
-  const g = ctx.createRadialGradient(cx, cy, R * 0.8, cx, cy, R)
-  g.addColorStop(0, `rgba(${rgb}, 0)`)
-  g.addColorStop(0.75, `rgba(${rgb}, ${a * 0.55})`)
-  g.addColorStop(1, `rgba(${rgb}, ${a})`)
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.arc(cx, cy, R, 0, Math.PI * 2)
-  ctx.arc(cx, cy, R * 0.8, Math.PI * 2, 0, true)
-  ctx.fill()
-}
-
 /** A stable hash in [0, 1) for scattering stars and stalks by index. */
 export const hash = (a: number, b = 0, s = 0): number => {
   let h = (a * 374761393 + b * 668265263 + s * 1013904223) | 0

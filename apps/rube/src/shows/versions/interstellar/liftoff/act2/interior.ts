@@ -47,8 +47,6 @@ function drawClouds(p: p5, ax: number, ay: number, k: number, t: number, since: 
   const X = (x: number) => x * k
   const dusk = '#3A4359'
   const body = mixHex(dusk, '#F3EFE5', lit)
-  const top = mixHex(dusk, '#FFFDF6', lit)
-  const shade = mixHex('#2C3346', '#D9CFB8', lit)
   for (const cl of CLOUDS) {
     const a = cl.a + DRIFT * (t - since)
     const r = RIM_R - cl.h
@@ -56,47 +54,36 @@ function drawClouds(p: p5, ax: number, ay: number, k: number, t: number, since: 
     const cy = ay + r * Math.sin(a)
     const { w } = cl
     if (cx + w < f.x0 || cx - w > f.x1 || cy + w < f.y0 || cy - w > f.y1) continue
-    // Puffs along the top, bigger toward the middle, each sitting on the base; and a crown.
+    // Puffs along the top, bigger toward the middle, each sitting on the base; and a crown. Flat, as everything in
+    // the station is: no shading, and they do not breathe.
     const n = 5 + Math.floor(hash(cl.seed, 11) * 3)
     const puffs: [number, number, number][] = []
     for (let i = 0; i < n; i++) {
       const u = (i + 0.5) / n - 0.5
-      const pr = w * (0.1 + 0.1 * (1 - (2 * u) ** 2)) * (0.85 + 0.3 * hash(cl.seed, i, 12)) * (1 + 0.025 * Math.sin(t * 0.3 + i * 1.9 + cl.seed))
+      const pr = w * (0.1 + 0.1 * (1 - (2 * u) ** 2)) * (0.85 + 0.3 * hash(cl.seed, i, 12))
       puffs.push([u * w * 0.82 + (hash(cl.seed, i, 13) - 0.5) * w * 0.06, -pr, pr])
     }
     const cr = w * 0.18
     puffs.push([(hash(cl.seed, 14) - 0.5) * w * 0.3, -cr - w * 0.07, cr])
     const x0 = puffs[0][0]
     const x1 = puffs[n - 1][0]
-    const shape = () => {
-      ctx.beginPath()
-      for (const [x, y, pr] of puffs) {
-        ctx.moveTo(X(x + pr), X(y))
-        ctx.arc(X(x), X(y), X(pr), 0, Math.PI * 2)
-      }
-      ctx.rect(X(x0), X(-w * 0.13), X(x1 - x0), X(w * 0.13))
-    }
     ctx.save()
     ctx.translate(X(cx), X(cy))
     ctx.rotate(a - Math.PI / 2)
-    ctx.globalAlpha = 0.92
-    // Inked once round the outside: stroke the whole body, then fill over the inner half of the line.
-    shape()
+    // Inked once round the outside: stroke the whole body, then fill over the inner half of the line (opaque, so no
+    // puff's own outline shows through).
+    ctx.beginPath()
+    for (const [x, y, pr] of puffs) {
+      ctx.moveTo(X(x + pr), X(y))
+      ctx.arc(X(x), X(y), X(pr), 0, Math.PI * 2)
+    }
+    ctx.rect(X(x0), X(-w * 0.13), X(x1 - x0), X(w * 0.13))
     ctx.lineJoin = 'round'
     ctx.lineWidth = Math.max(1.4, weight * 1.5)
     ctx.strokeStyle = alpha(p, ink, 0.32).toString()
     ctx.stroke()
     ctx.fillStyle = body
     ctx.fill()
-    // Lit tops, and the base in its own shade.
-    ctx.clip()
-    const g = ctx.createLinearGradient(0, X(-w * 0.62), 0, 0)
-    g.addColorStop(0, top)
-    g.addColorStop(0.45, body)
-    g.addColorStop(0.78, body)
-    g.addColorStop(1, shade)
-    ctx.fillStyle = g
-    ctx.fillRect(X(-w), X(-w), X(2 * w), X(w * 1.05))
     ctx.restore()
   }
 }
