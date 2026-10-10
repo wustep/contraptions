@@ -108,7 +108,10 @@ function rain(p: p5, c: Ctx, T: number): void {
   ctx.rect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
   housePath(ctx, k)
   ctx.clip('evenodd')
-  ctx.strokeStyle = `rgba(220, 238, 243, ${0.42 * r})`
+  // No brighter than this: each streak passing a pixel counts as a flash, and on a phone held upright, where the sky
+  // fills the screen, at 0.42 the rain flashed over 4.5% of it more than three times a second (WCAG 2.3.1's general
+  // flash threshold is about 2.8%); at 0.3, 1.1%.
+  ctx.strokeStyle = `rgba(220, 238, 243, ${0.3 * r})`
   ctx.lineWidth = Math.max(1, k * 0.014)
   ctx.beginPath()
   const span = f.x1 - f.x0 + 2

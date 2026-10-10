@@ -223,6 +223,14 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
       highest.every((u) => u >= 0.25) && out.length === 0, `rise ${highest.map((u) => u.toFixed(2)).join(', ')} cells; out ${out.slice(0, 3).join(', ')}`)
   }
 
+  // The storm's rain stays under the photosensitive flash threshold on a phone held upright (measured at 0.3: 1.1% of
+  // the screen flashing more than three times a second, against about 2.8%; at 0.42 it was 4.5%).
+  {
+    const storm = readFileSync(join(process.cwd(), 'apps/rube/src/shows/versions/married-life/life/inside/jar-storm.ts'), 'utf8')
+    const m = storm.match(/rgba\(220, 238, 243, \$\{([0-9.]+) \* r\}\)/)
+    check('married life: the storm\'s rain is soft enough not to flash (its streaks at most 0.3 opaque)', !!m && Number(m[1]) <= 0.3, m ? m[1] : 'not found')
+  }
+
   // A phone held upright (as tall as 9:21) sees far above and beside the composed frame (`stage.ts`, `perf.tall`):
   // wherever the house's inside is on, that whole stage is inside the sky and earth the set paints round it, so the
   // storm's wide has no edge in its sky.
