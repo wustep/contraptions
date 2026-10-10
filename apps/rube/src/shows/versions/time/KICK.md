@@ -516,6 +516,14 @@ A second subtraction pass took back more:
 - **Limbo's windows**: the empty floors' glazing bars, and the transom and the sill's lit line on their window seen
   from outside.
 
+Before the merge, two of Stephen's notes:
+- **The orange glow round his spark** (the great wide, Overview, and any frame out far enough, a tall one in the
+  prologue among them): it flared round the ball itself where the ball was big enough to see. Gone; the spark is
+  his colour and its pale light, and the streak of his climb.
+- **The prologue in a tall frame** (11 to 17): the frame reached over limbo's sky into the dark and the snow's
+  fortress, a level nothing has gone down through yet. Until the cut to Paris, the dark over limbo goes on up to the
+  frame's top. Overview, the stack seen whole, still shows all four levels.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
