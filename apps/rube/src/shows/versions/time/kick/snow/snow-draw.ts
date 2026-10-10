@@ -344,10 +344,30 @@ function drawShots(p: p5, ctx: C2D, c: Ctx, t: number): void {
     const side = Math.sign(tgt[0] - gat[0]) || -1
     // The flash at his shoulder, gone in a tenth of a second.
     if (u < 0.12) bloom(p, k, [gat[0] + side * 0.45, gat[1] - 0.85], 0.45, SNOW.flash, 0.9 * (1 - u / 0.12))
+    // The round in flight: a dark streak coming in from the guard's side to where it strikes, so the spurt reads as a
+    // shot landing and not as their own spray (the guards are mostly out of frame when they fire).
+    const at: Pt = [tgt[0], tgt[1] + R]
+    const dx = gat[0] + side * 0.45 - at[0]
+    const dy = gat[1] - 0.85 - at[1]
+    const dl = Math.hypot(dx, dy) || 1
+    if (u < 0.16) {
+      const w = Math.min(1, u / 0.1)
+      const head: Pt = [at[0] + (dx / dl) * 2.4 * (1 - w), at[1] + (dy / dl) * 2.4 * (1 - w)]
+      const tail: Pt = [head[0] + (dx / dl) * 1.3, head[1] + (dy / dl) * 1.3]
+      const g = ctx.createLinearGradient(head[0] * k, head[1] * k, tail[0] * k, tail[1] * k)
+      g.addColorStop(0, rgba(SNOW.vault, 0.85 * (1 - Math.max(0, u - 0.1) / 0.06)))
+      g.addColorStop(1, rgba(SNOW.vault, 0))
+      ctx.strokeStyle = g
+      ctx.lineWidth = Math.max(1, 0.045 * k)
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(head[0] * k, head[1] * k)
+      ctx.lineTo(tail[0] * k, tail[1] * k)
+      ctx.stroke()
+    }
     // The spurt where it strikes the snow: up and settling, a few flecks thrown.
     const v = u - 0.1
     if (v < 0) continue
-    const at: Pt = [tgt[0], tgt[1] + R]
     const a = Math.exp(-v / 0.22)
     // White on white is lost: the pock it leaves is dark, and the spray in the snow's blue shade.
     ctx.fillStyle = rgba(SNOW.snowDeep, 0.75 * Math.exp(-v / 0.5))
