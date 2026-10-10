@@ -1069,6 +1069,18 @@ Not taken, and put to Stephen: in the closer looks the kitten is out of frame (t
 composed without it; the cat plays to the frames that hold it), and a stage taller than 16:9 sees a dark band under
 the desk (the stage's own policy, centring the composed frame; the room is built down to the floor to fill it).
 
+### The sixty-fourth pass: the room seen mostly whole
+
+169. **Three cold reviews pointed at the camera**: too much of the half hour in the two closer looks that leave the
+     kitten out (the cup close and the lamp's side, 30% between them), and the kitten missing from a glance. Not a new
+     camera; a new balance. Each track now takes the groove's four looks in a cycle of six phrases, the cup close and
+     the lamp's side once each, the desk under the lamp and the window twice each. The cup close and the lamp's side
+     are 22% of the half hour now, and the kitten is in the frame 78% of it (it was 70%).
+170. **Everything played to the camera was worked out again** against the new frames, and lands: the sip at 3:45, the
+     scratch at 9:20, hands round the mug at 11:13, the face in the mist at 13:32, the tea away at 18:52 and back at
+     21:25, the kitten's stretches at 6:03 and 21:38 (the first now looks from the second track on, the check takes
+     "late" as after 20:00). A yawn that landed on a flash of lightning keeps clear of the flashes now.
+
 **Subtracted:** twenty-three moments in the director's cut (sixteen thinking pauses, two trains, two crossings, five
 headlights); the near lights, out-of-focus bulbs across the frame's top corners (flat discs on the wall); the second chin scratch (to make room for the face in the mist); the tea bag dunked by its tag (the hand's first idea); the light cone; the ball's ink mark; the cup of pencils; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones (until the Walkman gave it somewhere to go); a drinking bird that would have lifted the ball (a character, and a gag);
@@ -1101,9 +1113,9 @@ the headphone "U" the ball first rocked in; the beads' dark cover; a quarter of 
   Its spells of the kitten's attention take a little from its nodding along late in the night.
 - **The lightning.** Three far-off flashes, no bolt. They could be fewer, or gone; they are the only sudden light in
   the half hour.
-- **The camera.** A cold reviewer's one big suggestion was to hold the wide room most of the time and let the small
-  moments happen in it, rather than moving between the closer looks. It would be calmer, and the machine smaller in
-  the frame; the closer looks are where the cat, the hand and the cup are seen. Left as built.
+- **The camera.** The cold reviewers' big suggestion was to hold the wide room most of the time. Taken halfway (the
+  sixty-fourth pass): the closer looks are rarer, the whole-desk looks commoner. Holding the wide room most of the time
+  would go further, the machine small in it.
 - **The grain.** At 55% of a light tile; it can be turned down, or off, in `lamp/decor.ts`.
 
 ## Checks

@@ -204,6 +204,7 @@ export const YAWNS: number[] = [2, 4, 6, 8, 9, 10].map((n) => {
   for (let k = 0; k < 40; k++) {
     const at = lap.cup + 10 + k * 4 * tr.period + hash(n, k, 99) * 2
     if (REACHES.some((r) => at > r.at - 8 && at < r.at + r.dur + 10)) continue
+    if (MOMENTS.lightning.some((f) => Math.abs(f - at) < 8)) continue
     if (catInViewAt(at) && catInViewAt(at + 3.2) && (lap.lob === null || at + 4 < lap.lob - 8 * tr.period)) return at
   }
   return -100
@@ -276,7 +277,7 @@ const STRETCH_BOX: [number, number, number, number] = [CAT.x0 - 0.3, -1.25, CAT.
  * it spends watching (never nodding along), while the camera holds the whole of it, the paws stretched out included;
  * clear of its yawns and washes, the hand, the lob, a car's lights and the sky's moments.
  */
-export const STRETCHES: number[] = [[3, 4, 5], [8, 9, 10]].map((tracks) => {
+export const STRETCHES: number[] = [[3, 4, 5, 2, 6], [8, 9, 10]].map((tracks) => {
   for (const n of tracks) {
     const at = stretchIn(n)
     if (at > 0) return at

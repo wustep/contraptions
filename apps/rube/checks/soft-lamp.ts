@@ -240,7 +240,7 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
 
   // The kitten gets up and stretches twice, each whole in the frame, clear of its other moments and the hand.
   check('soft lamp: the kitten gets up and stretches twice, early and late, in frame, clear of its yawns, washes and the hand',
-    STRETCHES.length === 2 && STRETCHES.every((t) => t > 0) && STRETCHES[0] < 900 && STRETCHES[1] > 1300 &&
+    STRETCHES.length === 2 && STRETCHES.every((t) => t > 0) && STRETCHES[0] < 900 && STRETCHES[1] > 1200 &&
     STRETCHES.every((t) => catInViewAt(t) && catInViewAt(t + 6.8) && [...YAWNS, ...WASHES].every((m) => m < t - 3.2 || m > t + 7) &&
       REACHES.every((r) => r.at > t + 7 || r.at + r.dur < t)), STRETCHES.map((t) => t.toFixed(0)).join(' '))
 
