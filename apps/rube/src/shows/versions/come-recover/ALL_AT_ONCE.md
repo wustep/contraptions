@@ -155,7 +155,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 106.73 | flurry | Raccacoonie | A teppanyaki chef who is a machine, and Raccacoonie inside the toque working the levers. The cleaver chops, and the spatula flicks her into the onion volcano, where she rattles like a lid. On 112.71 it erupts, and a shrimp tail is flung into the hat's pocket (113.69). In the breath the raccoon comes out under the brim and eats it, and in the last run an egg cracks on the spatula. |
 | 120.95 | six big hits | the surf | One long flight, and a new world on every hit: a piñata party, a sign spinner on a street corner, the IRS office with its trophies, karaoke under a mirror ball, then a canyon, held, where two stones sit on a ledge in the foreground, faintly vermilion and faintly violet: the rocks, before we know them. Then flashes of every world she came through, backwards, and black. In the IRS office Waymond sits on the auditor's desk, his eye on her as she flies past: the first life in which he is seen with her, before the mosaic has him in nearly all of them. |
 | 127.66 | two hits | the surf's end | Out of the black, every world she flew through comes back at her as slivers, clamps into a ring round her with a flash (127.66), spins, and collapses into her, down to a point (127.79). |
-| 127.79 | the hush | the dark | She drifts down through the dark, seeds and salt passing at three depths, a sliver of colossal rim catching light below. On 133.79 a beam finds Joy, sitting still on the crown of the everything bagel. On 135.64 the whole bagel is lit, and the camera draws back until Joy is tiny on it. Joy speaks first, subtitled: *There you are.* / *Joy? What is this place?* / *Come and see.* |
+| 127.79 | the hush | the dark | She drifts down through the dark, seeds and salt passing at three depths, a sliver of colossal rim catching light below. On 133.79 a soft beam finds Joy, sitting still on the crown of the everything bagel, and a ring of everything gathers round her: Jobu's crown (`void/crown.ts`). Then the show's one conversation in shot and reverse shot: a cut to Jobu, close under her light, the ring going round her, for *There you are.*; to her mother alone in the dark for *Joy? What is this place?*; and back to Jobu for *Come and see.*, from whom the camera draws back and back until the whole lit bagel is in the frame and she is tiny on its crown. |
 | 142 | the pulse | the pull | Everything drifts in on slow spirals and goes over the lip on the beats, one thing a beat: a coat hanger, a sock, a trophy, a dog. Each time the well's violet glow flares and the bagel throbs, hardest on the loudest beats, with dust kicked off the lip. Evelyn is drawn in on a decaying orbit, a step closer each bar. The camera rides the orbit with her, close, the crust streaming past and things going over the lip beside her, with a warm catch-light under her. On beat 56 the lip brakes her to the brink, and in the held break Joy watches from the crown. On 165.62 she tips in. Each thing trails a ribbon of its own life's colour along its spiral for its last second, and as it goes over the lip the ribbon is drawn in after it and a ring of that colour flares round the lip and goes out: thing by thing the dark takes her colours, which the peak gives back. |
 
 ### All at Once (165.6 s to the end)
@@ -836,6 +836,19 @@ watched whole between them. Their order is in git; here they are by what they di
   words, in one long move. A pale sun hangs low over the far canyon, fixed in the frame as the high cloud is
   (`paintSun` in `rocks/ledgeLand.ts`). The two being specks there is on purpose, as in the hush (`REVEAL`, which the
   size check allows); under Zoom they stay in the frame.
+- **Jobu, seen.** Jobu Tupaki was an 8 px violet dot on the bagel's crown. Now, while she is Jobu, a ring of
+  everything goes round her, tilted as the bagel is seen, behind her and in front of her: the bagel's own seeds and a
+  few small things from every life (a sock, a hot dog, a coin, a googly eye, a fan), the bagel in small with her for
+  its hole (`void/crown.ts`). It gathers as the light finds her, goes round quicker on the pulse, is round her in the
+  hole at the peak (round her mother too, as she holds her), and flies apart when her mother gives her the eye.
+  - The hush's lines are now shot and reverse shot, the show's only cuts of the camera inside a world: Jobu close,
+    her mother, and Jobu again, from whom the reveal draws back to the whole bagel (`REVERSES` in `void/pull.ts`). In
+    Jobu's shots the ball is out of the frame, on purpose, the one time it is; the checks that keep it in the frame
+    and that a jump never moves it on the screen allow exactly those spans and cuts.
+  - Her beam was a hard-edged wedge, which seen close read as a flat shape; it is ten nested beams now, soft-sided.
+  - Cost: the ring's things are many shapes each, so they are drawn only on its near side, fading as they go round
+    behind her. Its paint measured 1.2 to 2.5 ms a frame at 4× throttle on a machine at a load of 30 to 60 (so a
+    fraction of a millisecond unthrottled); a cache of the things as images was tried and was slower.
 - **The subtitles' shade.** The soft dark under a subtitle was an ellipse floating mid-frame, which on the rocks' pale
   canyon read as a smudge of dirt. It is now the frame's whole foot in shade, eased up to just over the words (at the
   taxes, its top, down to just under them), as a film's lower frame is under its subtitles.
