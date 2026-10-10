@@ -25,7 +25,7 @@ export const MAL = '#8E2C49'
 export const MAL_ID = 91
 
 /** Ariadne: teal. The architect: she folds Paris, and goes down every level with him, and back up. */
-export const ARIADNE = '#3E9E98'
+export const ARIADNE = '#358C86'
 export const ARIADNE_ID = 92
 
 /** Robert Fischer: pale steel. The mark: taken down through the levels to his father's vault. */

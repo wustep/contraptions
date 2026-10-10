@@ -289,7 +289,7 @@ function leafContent(pen: Pen, t: number, f: Frame): void {
   farRoofs(pen, f)
   farQuai(pen, t, f)
   // Under the deck: the Seine in its bed between its quais, the piers standing in it, the iron arches over it.
-  if (seen(f, L - 0.3, Y_S, L + 44, UNDER)) {
+  if (seen(f, L - 0.3, Y_S, L + 46, UNDER)) {
     // The water, and its surface: sloshing in its bed when the bridge slams home, and settling.
     const slosh = (x: number) => {
       const u = t - LOCK
@@ -311,11 +311,14 @@ function leafContent(pen: Pen, t: number, f: Frame): void {
       if (gl > 0.25) glints.push([[gx - gw, gy], [gx + gw, gy], [gx + gw * 0.7, gy + 0.03], [gx - gw * 0.7, gy + 0.03]])
     }
     fillPaths(pen, glints, PARIS.mirror, 0.45)
-    rect(pen, L - 0.3, BED_Y, L + 44, UNDER, EARTH, 0)
+    // The far bank is ground, not a pavement on a plank: earth under it down to the bed, and the bed and the cut under
+    // it run on to the leaf's end (seen whole, its building stood on a hairline over open sky).
+    rect(pen, L + DECK_END + 1.0, Y_S + 0.3, L + 46, BED_Y, mixHex(EARTH, PARIS.stoneShade, 0.25), 0)
+    rect(pen, L - 0.3, BED_Y, L + 46, UNDER, EARTH, 0)
     // The leaf's underside: the cut the fold made, rough.
     const rough: Pt[] = [[L - 0.3, UNDER - 0.2]]
-    for (let x = L - 0.3; x <= L + 44; x += 0.6) rough.push([x, UNDER + 0.1 + 0.25 * hash(Math.round(x * 5), 95)])
-    rough.push([L + 44, UNDER - 0.2])
+    for (let x = L - 0.3; x <= L + 46; x += 0.6) rough.push([x, UNDER + 0.1 + 0.25 * hash(Math.round(x * 5), 95)])
+    rough.push([L + 46, UNDER - 0.2])
     shape(pen, rough, EARTH, 0)
     // The quais' walls at either end.
     for (const [a, b] of [[L - 0.3, L + 0.8], [L + DECK_END - 0.2, L + DECK_END + 1.0]]) {
@@ -398,15 +401,18 @@ function leafContent(pen: Pen, t: number, f: Frame): void {
     rect(pen, L + DECK_END + 1, Y_S, L + 46, Y_S + 0.3, PARIS.cobble, 0.6)
     const bx0 = L + 30.2
     const bx1 = L + 43.6
-    rect(pen, bx0, Y_S - 6.2, bx1, Y_S, PARIS.stone, 0.7)
+    // One floor over its shops, not three: folded over and hung upside down, a floor more brought its mansard down
+    // through the roofs of the street under it (plainest seen whole).
+    const wall = 3.6
+    rect(pen, bx0, Y_S - wall, bx1, Y_S, PARIS.stone, 0.7)
     const wins: Pt[][] = []
-    for (let fl = 0; fl < 3; fl++) for (let x = bx0 + 0.55; x < bx1 - 0.3; x += 1.15) {
+    for (let fl = 0; fl < 1; fl++) for (let x = bx0 + 0.55; x < bx1 - 0.3; x += 1.15) {
       const y = Y_S - 2.25 - 1.3 * fl - 1.08
       wins.push([[x - 0.21, y], [x + 0.21, y], [x + 0.21, y + 0.86], [x - 0.21, y + 0.86]])
     }
     fillPaths(pen, wins, mixHex(PARIS.slate, PARIS.cafe, 0.45))
     for (let x = bx0 + 0.4; x < bx1 - 1.5; x += 2.4) rect(pen, x, Y_S - 1.7, x + 1.8, Y_S, PARIS.cafe, 0.5)
-    shape(pen, [[bx0 - 0.05, Y_S - 6.2], [bx1 + 0.05, Y_S - 6.2], [bx1 - 0.15, Y_S - 7.15], [bx0 + 0.15, Y_S - 7.15]], PARIS.slate, 0.6)
+    shape(pen, [[bx0 - 0.05, Y_S - wall], [bx1 + 0.05, Y_S - wall], [bx1 - 0.15, Y_S - wall - 0.95], [bx0 + 0.15, Y_S - wall - 0.95]], PARIS.slate, 0.6)
     lampPost(pen, L + DECK_END + 1.6, Y_S)
   }
   // The balustrade along the deck's near edge.

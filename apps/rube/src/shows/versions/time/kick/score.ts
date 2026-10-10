@@ -5,7 +5,7 @@ import { black } from './credits'
 import { box, frame, lay, scenery, standing, type Chain, type Link } from './kit'
 import { DURATION, KICK, PEAK, SEAM, bar } from './music'
 import { FIRST, SEAMS } from './seams'
-import { sleep, SLEEP_CELLS } from './sleep'
+import { beacon, sleep, sparkInWides, SLEEP_CELLS } from './sleep'
 import { KickShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { ORIGIN } from './stack'
 import { COBB, type WorldKey } from './worlds'
@@ -119,7 +119,10 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
     ],
     after: [standing(sleep, 0, 0, SLEEP_CELLS, null, DURATION), standing(cover, 0, 0, claim(-70, -30, 80, 105), null, DURATION)],
   },
-  paris: { scenery: [standing(parisSet, 0, 0, PARIS_CELLS, null, DURATION)], after: [standing(cover, 0, 0, claim(-60, -40, 80, 40), null, DURATION)] },
+  paris: {
+    scenery: [standing(parisSet, 0, 0, PARIS_CELLS, null, DURATION)],
+    after: [standing(beacon, 0, 0, claim(-60, -40, 80, 40), null, DURATION), standing(cover, 0, 0, claim(-60, -40, 80, 40), null, DURATION)],
+  },
   plane: { scenery: [standing(planeSet, 0, 0, PLANE_CELLS, null, DURATION)], after: [standing(cover, 0, 0, claim(-60, -40, 80, 40), null, DURATION)] },
   home: {
     scenery: [standing(homeSet, 0, 0, HOME_CELLS, null, DURATION)],
@@ -221,6 +224,12 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   })
 
   const show = new KickShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
+  sparkInWides(
+    (t) => show.where(t),
+    STACK_WIDES.map((w) => [w.from, w.to]),
+    legs.filter((l) => l.world === 'dream').map((l) => [l.from, l.to]),
+    legs.filter((l) => l.world === 'paris').map((l) => [l.from, l.to]),
+  )
 
   // The camera: one director per leg, each following the ball only inside its own leg, and each leg opening on
   // exactly the framing the last one closed on, carried by the cut: a match cut on Cobb. Inside a leg, at a seam

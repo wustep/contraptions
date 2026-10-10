@@ -1,11 +1,11 @@
 import type p5 from 'p5'
-import type { Pt } from '../../../../../parts'
+import { R, type Pt } from '../../../../../parts'
 import { box, frame, scenery, type Ctx } from '../kit'
 import { BAND, SPLASH } from '../stack'
 import { bloom, rgba } from '../cast'
 import { RAIN } from '../worlds'
 import { deckFace, drawBridge, drawCity, drawLampLight, drawRailing, drawStreet, seen, type Pen, type View } from './rain-city'
-import { MAL_AT, MAL_FROM, MAL_TO, eff, sm, vanPose } from './rain-geo'
+import { MAL_AT, MAL_FROM, MAL_TO, T_A_IN, T_C_IN, T_F_IN, T_TAXI_DOOR, ariadneRain, cobbRain, eff, fischerRain, sm, vanPose } from './rain-geo'
 import { drawSpray, drawTraffic, drawTrain, trainBeam } from './rain-traffic'
 import { drawVanBack, drawVanFront } from './rain-van'
 import { drawRain, drawSplash, drawTicks, overRiver } from './rain-water'
@@ -24,6 +24,13 @@ const vanSeen = (f: View, t: number): boolean => {
   const v = vanPose(t)
   return seen(f, v.x - 4.5, v.x + 5.5, v.y - 1.6, v.y + 1.6)
 }
+
+/** Each of them while outside the van (until they land on its bench): where, and when. */
+const OUTSIDE: [(t: number) => Pt, number, number][] = [
+  [fischerRain, T_TAXI_DOOR, T_F_IN],
+  [cobbRain, T_TAXI_DOOR, T_C_IN],
+  [ariadneRain, T_TAXI_DOOR, T_A_IN],
+]
 
 export const rainSet = scenery<null>({
   name: 'rain-set',
@@ -80,7 +87,24 @@ export const rainSet = scenery<null>({
     const P = pen(p, c)
     const t = c.t
     p.push()
-    if (vanSeen(f, t)) drawVanFront(p, c.k, c.ink, c.weight, vanPose(t), t)
+    if (vanSeen(f, t)) {
+      // Out on the pavement they are on the near side of the van, in front of its body: hopping in from behind it,
+      // each is seen against the rear quarter until they are through the door and on the bench.
+      const ctx = P.ctx
+      const near = OUTSIDE.filter(([, from, to]) => t > from && t < to).map(([at]) => at(t))
+      ctx.save()
+      if (near.length) {
+        ctx.beginPath()
+        ctx.rect((f.x0 - 1) * c.k, (f.y0 - 1) * c.k, (f.x1 - f.x0 + 2) * c.k, (f.y1 - f.y0 + 2) * c.k)
+        for (const [x, y] of near) {
+          ctx.moveTo((x + R + 0.03) * c.k, y * c.k)
+          ctx.arc(x * c.k, y * c.k, (R + 0.03) * c.k + 1, 0, Math.PI * 2)
+        }
+        ctx.clip('evenodd')
+      }
+      drawVanFront(p, c.k, c.ink, c.weight, vanPose(t), t)
+      ctx.restore()
+    }
     if (seen(f, -31, 0.5, -0.2, 0.6)) deckFace(P)
     malLit(P, t)
     overRiver(P, f, t)
@@ -103,15 +127,17 @@ function malLit(P: Pen, t: number): void {
   // Inside the cone at her height?
   const cy = b.from[1] + (b.to[1] - b.from[1]) * s
   const half = (b.w0 + (b.w1 - b.w0) * s) / 2
-  // (The beam is soft: its light spreads half as wide again as its core.)
-  const inside = sm((half * 1.5 - Math.abs(my - cy)) / 0.5)
-  const lit = inside * Math.pow(1 - s, 0.6) * sm(s / 0.06) * b.a
+  // (The beam is soft: its light spreads well past its core, and off the wet street up onto her.)
+  const inside = sm((half * 2.2 + 0.35 - Math.abs(my - cy)) / 0.6)
+  const lit = inside * Math.pow(1 - s, 0.5) * sm(s / 0.06) * b.a
   if (lit < 0.01) return
   const { ctx, k } = P
-  bloom(P.p, k, [mx + 0.1, my - 0.05], 0.75, RAIN.lamp, 0.6 * lit)
+  // A pool of the lamp's light on the wet pavement round her, and on her.
+  bloom(P.p, k, [mx + 0.25, my + 0.08], 1.3, RAIN.lamp, 0.45 * lit)
+  bloom(P.p, k, [mx + 0.1, my - 0.05], 0.75, RAIN.lamp, 0.85 * lit)
   ctx.save()
-  ctx.strokeStyle = rgba(RAIN.windowLit, Math.min(1, 1.6 * lit))
-  ctx.lineWidth = Math.max(1.2, 0.05 * k)
+  ctx.strokeStyle = rgba(RAIN.windowLit, Math.min(1, 2.2 * lit))
+  ctx.lineWidth = Math.max(1.6, 0.07 * k)
   ctx.lineCap = 'round'
   ctx.beginPath()
   ctx.arc(mx * k, my * k, 0.115 * k, -1.1, 1.1)

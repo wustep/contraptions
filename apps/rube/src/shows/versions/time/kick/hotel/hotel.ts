@@ -274,8 +274,8 @@ export const hotel = part<State>(
       hold(113.7, 6.0, [10.6, 20.05]),
       hold(116.5, 5.1, [10.35, 20.45]),
       // Down with them through the floors into the dark.
-      follow(118.7, 6.2, [0.15, 0.85]),
-      follow(121.8, 6.6, [0.1, 1.0]),
+      follow(118.7, 6.2, [0.15, -0.15]),
+      follow(121.8, 6.6, [0.1, 0.15]),
     ]
     return keys.filter((k) => k.t > slot.begin && k.t <= slot.end + 1e-6)
   },

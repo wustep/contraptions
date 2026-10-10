@@ -1,10 +1,10 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { beam, bloom, rgba } from '../cast'
-import { hash } from '../kit'
+import { frame, hash } from '../kit'
 import { SPLASH } from '../stack'
 import { PLANE, RAIN } from '../worlds'
-import { DOOR_U, FLOOR_V, SEAT_U, SEAT_V, UNDER, WHEEL_R, WHEEL_U, caseOpen, doorOpen, eff, lampOn, sm, vanPoint, wheelTurn, type Pose } from './rain-geo'
+import { DOOR_U, FLOOR_V, SEAT_U, SEAT_V, T_SINK, UNDER, WHEEL_R, WHEEL_U, caseOpen, doorOpen, eff, lampOn, sm, vanPoint, wheelTurn, type Pose } from './rain-geo'
 
 /**
  * Yusuf's van: a pale panel van seen side-on, facing right, 2.6 long and 1.15 tall. The three of them ride in its bay on
@@ -101,28 +101,22 @@ export function drawVanBack(p: p5, k: number, ink: string, w: number, pose: Pose
   if (lamp > 0.05 && k > 3) {
     const [lx, ly] = vanPoint(pose, L - 0.02, 0.06)
     const ahead = vanPoint(pose, L + 4.2, 0.9)
+    // On the street and the bridge its light stops at the road's underside (it was painted on into the ground under
+    // it); off the bridge, falling, it goes where it points.
+    const onRoad = pose.y < 0.2
+    if (onRoad) {
+      const f = frame(p, k)
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect((f.x0 - 2) * k, (f.y0 - 2) * k, (f.x1 - f.x0 + 4) * k, (0.6 - f.y0 + 2) * k)
+      ctx.clip()
+    }
     beam(p, k, [lx, ly], ahead, 0.14, 1.5, RAIN.lamp, 0.34 * lamp)
+    if (onRoad) ctx.restore()
   }
   p.push()
   toPose(p, k, pose)
-  // The wheels.
-  const turn = wheelTurn(t)
-  for (const u of [-WHEEL_U, WHEEL_U]) {
-    const cy = X(0.575 - WHEEL_R)
-    p.stroke(ink)
-    p.strokeWeight(w)
-    p.fill(ink)
-    p.circle(X(u), cy, X(WHEEL_R * 2))
-    p.fill(RAIN.kerb)
-    p.circle(X(u), cy, X(WHEEL_R * 1.05))
-    if (k > 14) {
-      p.strokeWeight(w * 0.6)
-      for (let j = 0; j < 3; j++) {
-        const a = turn + (j * Math.PI * 2) / 3
-        p.line(X(u), cy, X(u) + Math.cos(a) * X(WHEEL_R * 0.45), cy + Math.sin(a) * X(WHEEL_R * 0.45))
-      }
-    }
-  }
+  drawWheels(p, k, ink, w, t)
   // Inside: the far wall in shadow, the bench along the bay, the bulkhead, the cab.
   p.noStroke()
   p.fill(INSIDE)
@@ -196,8 +190,74 @@ export function drawVanFront(p: p5, k: number, ink: string, w: number, pose: Pos
   if (t >= SPLASH) return
   p.push()
   toPose(p, k, pose)
+  // On the street and the bridge, its underside and its wheels over whatever is behind it; not once the floor has gone
+  // soft, so the three are seen to sink out through it, and are seen to come back up into it from the river.
+  if (t < T_SINK) {
+    drawUnder(p, k)
+    drawWheels(p, k, ink, w, t)
+  }
   drawShell(p, k, ink, w, t, 0)
   p.pop()
+}
+
+/** The wheels, turning. */
+function drawWheels(p: p5, k: number, ink: string, w: number, t: number): void {
+  const X = (u: number) => u * k
+  const turn = wheelTurn(t)
+  for (const u of [-WHEEL_U, WHEEL_U]) {
+    const cy = X(0.575 - WHEEL_R)
+    p.stroke(ink)
+    p.strokeWeight(w)
+    p.fill(ink)
+    p.circle(X(u), cy, X(WHEEL_R * 2))
+    p.fill(RAIN.kerb)
+    p.circle(X(u), cy, X(WHEEL_R * 1.05))
+    if (k > 14) {
+      p.strokeWeight(w * 0.6)
+      for (let j = 0; j < 3; j++) {
+        const a = turn + (j * Math.PI * 2) / 3
+        p.line(X(u), cy, X(u) + Math.cos(a) * X(WHEEL_R * 0.45), cy + Math.sin(a) * X(WHEEL_R * 0.45))
+      }
+    }
+  }
+}
+
+/**
+ * The van's underside: the dark of its chassis and the shadow it keeps on the wet road, from its sill down to just off
+ * the ground, the wheels drawn again over it. Whatever stands at the kerb behind it (Mal, as it goes by) is hidden
+ * there, as the body hides it above.
+ */
+function drawUnder(p: p5, k: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const X = (u: number) => u * k
+  const ground = 0.575
+  // Its shadow on the wet road, soft, the length of the van (a flat box from bumper to bumper, down to the road, read
+  // as a plinth it stood on).
+  ctx.save()
+  ctx.translate(0, X(ground))
+  ctx.scale(1, 0.09)
+  const sh = ctx.createRadialGradient(0, 0, 0, 0, 0, X(L))
+  sh.addColorStop(0, rgba(RAIN.buildingDark, 0.7))
+  sh.addColorStop(0.75, rgba(RAIN.buildingDark, 0.45))
+  sh.addColorStop(1, rgba(RAIN.buildingDark, 0))
+  ctx.fillStyle = sh
+  ctx.fillRect(-X(L), -X(L), X(2 * L), X(2 * L))
+  ctx.restore()
+  // The chassis between the wheels, in shade, low enough that nothing behind the van shows under it.
+  const P = new Path2D()
+  // Down a little past the road's line, into its own shadow (she stands at the kerb a little lower than the van's road,
+  // and must not show under it): the chassis in shade, deepening into the shadow at its foot.
+  P.rect(X(-WHEEL_U), X(BOT - 0.02), X(2 * WHEEL_U), X(ground + 0.07 - (BOT - 0.02)))
+  const g = ctx.createLinearGradient(0, X(BOT), 0, X(ground + 0.07))
+  g.addColorStop(0, mixHex(RAIN.street, RAIN.buildingDark, 0.75))
+  g.addColorStop(0.7, mixHex(RAIN.street, RAIN.buildingDark, 0.55))
+  g.addColorStop(1, mixHex(RAIN.street, RAIN.buildingDark, 0.7))
+  ctx.fillStyle = g
+  ctx.fill(P)
+  // The wheel wells and a thin underbody along its whole length, dark, under the body and the wheels: the arches show
+  // only the dark of the wells, not what stands behind the van.
+  ctx.fillStyle = mixHex(RAIN.street, RAIN.buildingDark, 0.8)
+  ctx.fillRect(X(-L + 0.08), X(BOT - ARCH_R), X(2 * L - 0.16), X(ARCH_R + 0.05))
 }
 
 function drawShell(p: p5, k: number, ink: string, w: number, t: number, wet: number): void {

@@ -61,11 +61,12 @@ export const HOUSE = {
 
 /**
  * The kitchen table and its chairs are his size (as every table in the show is, and as the one in limbo is: the same
- * table, the top on it): its top a little over a ball's height, a chair at each end, their backs outward.
+ * table, the top on it): its top a little over a ball's height, a chair at each end, their backs outward. The near
+ * one stands pulled out from the table, so he comes up to the table's end beside it and not through it.
  */
 export const TABLE = { x0: 3.0, x1: 4.45, top: FLOOR - 0.32, feet: FLOOR - 0.05 }
 export const CHAIRS = [
-  { x0: 2.52, x1: 2.86, seat: FLOOR - 0.2, top: FLOOR - 0.64, back: 'left' as const },
+  { x0: 2.3, x1: 2.64, seat: FLOOR - 0.2, top: FLOOR - 0.64, back: 'left' as const },
   { x0: 4.59, x1: 4.93, seat: FLOOR - 0.2, top: FLOOR - 0.64, back: 'right' as const },
 ]
 /** The counter along the back wall between the table and the doors, and the window over it. */

@@ -84,13 +84,30 @@ function drawCloudDeck(pen: Pen, t: number, f: Frame): void {
   const x0 = f.x0 - 2
   const x1 = f.x1 + 2
   // The deck's body: a wash from its lit top into its shaded underside.
-  vwash(pen, x0, x1, top + 0.25, bottom, [
+  // Fading out over its last stretch into the ragged underside (it stopped on a ruled line at its foot).
+  vwash(pen, x0, x1, top + 0.25, bottom + 0.4, [
     [0, body, 1],
-    [0.55, body, 0.98],
-    [1, shade, day ? 0.9 : 0.95],
+    [0.5, body, 0.98],
+    [0.82, shade, day ? 0.9 : 0.95],
+    [1, shade, 0],
   ])
-  // Heaps along the top: many sizes, their tops caught by the light; drifting a little on the show's clock.
   const drift = t * 0.05
+  // Its body is not one flat grey: deeper billows in it, each rounded top a little lit, the lower ones in shade.
+  for (let row = 0; row < 4; row++) {
+    const y = top + 1.3 + row * 1.05
+    if (y - 1 > f.y1 || y + 1 < f.y0) continue
+    const s = 1.1 + 0.25 * row
+    const off = drift * (0.6 - 0.1 * row)
+    for (let i = Math.floor((x0 - off) / s) - 2; i <= Math.ceil((x1 - off) / s) + 2; i++) {
+      const h = hash(i, 20 + row, 5)
+      const x = i * s + off + (hash(i, 30 + row, 5) - 0.5) * 0.6
+      const r = 0.6 + 0.7 * h
+      const deep = row / 3
+      puff(pen, [x, y + r * 0.2], r, r * 0.5, mixHex(body, shade, 0.35 + 0.5 * deep), 0.35)
+      puff(pen, [x - r * 0.12, y - r * 0.08], r * 0.65, r * 0.26, mixHex(body, lit, 0.5 - 0.35 * deep), 0.22)
+    }
+  }
+  // Heaps along the top: many sizes, their tops caught by the light; drifting a little on the show's clock.
   const step = 0.55
   for (let i = Math.floor((x0 - drift) / step) - 2; i <= Math.ceil((x1 - drift) / step) + 2; i++) {
     const h = hash(i, 3, 5)
@@ -157,15 +174,41 @@ function drawGroundFar(pen: Pen, t: number, f: Frame): void {
     const ht = 0.25 + 0.7 * h * h
     box(pen, i * 0.9, gy - ht, i * 0.9 + w, gy + 0.05, `${mixHex(haze, PLANE.window, 0.3)}99`, 0)
   }
-  // The runway's concrete, and the earth under it (cut away): flat, to the frame's foot.
+  // The runway's concrete, and the ground under it, cut away to the frame's foot. In a tall frame that is near half
+  // the picture, so it is not one flat grey: the slabs and their joints, a bed under them, then the earth in soft
+  // bands, darker going down.
   const concrete = mixHex(PLANE.hull, PLANE.caseDark, 0.45)
-  box(pen, x0, gy, x1, Math.max(gy + 0.6, f.y1 + 1), mixHex(concrete, PLANE.dawn, 0.12), 0)
+  const bottom = Math.max(gy + 1, f.y1 + 1)
+  box(pen, x0, gy, x1, gy + 0.6, mixHex(concrete, PLANE.dawn, 0.12), 0)
   vwash(pen, x0, x1, gy, gy + 0.12, [
     [0, HOME.sun, 0.35],
     [1, HOME.sun, 0],
   ])
-  box(pen, x0, gy + 0.55, x1, Math.max(gy + 1, f.y1 + 1), mixHex(mixHex(concrete, PLANE.caseDark, 0.2), PLANE.dawn, 0.12), 0)
+  for (let x = Math.ceil(x0 / 2.4) * 2.4; x < x1; x += 2.4) line(pen, [x, gy + 0.12], [x, gy + 0.55], rgba(PLANE.night, 0.16), 0.5)
+  const bed = mixHex(mixHex(concrete, PLANE.caseDark, 0.35), PLANE.dawn, 0.1)
+  box(pen, x0, gy + 0.55, x1, Math.min(bottom, gy + 1.0), bed, 0)
+  const { ctx, k } = pen
+  if (bottom > gy + 1.0) {
+    const top = gy + 1.0
+    const soil = mixHex(mixHex(HOME.floorShade, PLANE.caseDark, 0.4), PLANE.dawn, 0.2)
+    vwash(pen, x0, x1, top, bottom, [
+      [0, soil, 1],
+      [clamp01(3 / (bottom - top)), mixHex(soil, PLANE.night, 0.22), 1],
+      [1, mixHex(soil, PLANE.night, 0.22), 1],
+    ])
+    ;[0.6, 1.5, 2.7, 4.2, 5.9, 7.9, 10.2].forEach((d, i) => {
+      if (top + d > bottom) return
+      ctx.beginPath()
+      ctx.moveTo(x0 * k, bottom * k)
+      for (let x = x0; x <= x1 + 0.2; x += 0.25) ctx.lineTo(x * k, (top + d + 0.07 * Math.sin(x * 1.1 + i * 2.1) + 0.04 * Math.sin(x * 2.9 + i)) * k)
+      ctx.lineTo(x1 * k, bottom * k)
+      ctx.closePath()
+      ctx.fillStyle = rgba(mixHex(soil, PLANE.night, 0.5), 0.1 + 0.02 * i)
+      ctx.fill()
+    })
+  }
   line(pen, [x0, gy + 0.55], [x1, gy + 0.55], rgba(PLANE.night, 0.25), 0.6)
+  line(pen, [x0, gy + 1.0], [x1, gy + 1.0], rgba(PLANE.night, 0.18), 0.5)
 }
 
 /* ------------------------------------------------------------------ the airframe, behind the section */
@@ -188,16 +231,29 @@ export function drawAirframe(pen: Pen, t: number, f: Frame): void {
   for (const s of [-1, 1]) {
     const pts: Pt[] = []
     const lower: Pt[] = []
-    for (let d = 1.8; d <= 34; d += 1) {
+    // From under the hull (at the wing's height it is about 1.45 wide), so the root meets the body and no sky shows
+    // between them.
+    // From well inside the hull, and clipped to outside its outline: the hull is cut through and the wing stands behind
+    // it, so its root goes in under the ring (started at a fixed span, it showed a gap or lay over the ring, ending
+    // square, the hull's edge curving fast so low down).
+    const root = 0.6
+    for (let d = root; d <= 34; d += 1) {
       const thick = 0.34 * (1 - d / 44)
       const fl = flexAt(t, d)
       pts.push([cx + s * d, wingY(d) + fl + dy])
       lower.push([cx + s * d, wingY(d) + fl + thick + dy])
     }
-    const xs = [cx + s * 1.8, cx + s * 34]
+    const xs = [cx + s * root, cx + s * 34]
     if (Math.max(...xs) < f.x0 - 1 || Math.min(...xs) > f.x1 + 1) continue
+    const { ctx, k } = pen
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect((f.x0 - 2) * k, (f.y0 - 2) * k, (f.x1 - f.x0 + 4) * k, (f.y1 - f.y0 + 4) * k)
+    ctx.arc(cx * k, (CAB.cy + dy) * k, (CAB.rOut - 0.02) * k, 0, Math.PI * 2)
+    ctx.clip('evenodd')
     shape(pen, [...pts, ...lower.reverse()], skin, 0.7)
     polyline(pen, lower.map(([x, y]) => [x, y - 0.06] as Pt), under, 1.6)
+    ctx.restore()
   }
   // The main gear: under the body and the wings, behind the nose gear; swung down with it.
   const down = gearDown(t)
@@ -217,8 +273,10 @@ export function drawAirframe(pen: Pen, t: number, f: Frame): void {
 
 function drawEngine(pen: Pen, t: number, x: number, y: number, skin: string, day: boolean): void {
   const r = NACELLE
-  // The pylon up to the wing.
-  shape(pen, [[x - 0.14, y - r + 0.1], [x - 0.08, y - r - 0.62], [x + 0.08, y - r - 0.62], [x + 0.14, y - r + 0.1]], skin, 0.6)
+  // The pylon up to the wing's underside (drawn over the wing to its top edge, on the wing's rise it stood up above
+  // it, and the engine seemed to hang from whatever was over it: the jet bridge, at the gate).
+  // The engine's top sits just under the wing's top edge (y - r is wingY + 0.1), so the pylon is a short stub to it.
+  shape(pen, [[x - 0.14, y - r + 0.1], [x - 0.09, y - r + 0.03], [x + 0.09, y - r + 0.03], [x + 0.14, y - r + 0.1]], skin, 0.6)
   ring(pen, x, y, r * 0.8, r, skin, 0.7)
   const fan = day ? mixHex(PLANE.night, PLANE.cabinLit, 0.6) : PLANE.night
   oval(pen, x, y, r * 0.8, r * 0.8, fan, 0.5)

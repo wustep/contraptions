@@ -115,12 +115,12 @@ export const VAN_PARK = -42.1
 export const WHEEL_U = 0.85
 export const WHEEL_R = 0.19
 /** The bench along the bay: where each sits (van cells, u along from the centre, v down from it, to the ball's centre). */
-export const SEAT_U = { ariadne: -0.55, cobb: 0, fischer: 0.55 } as const
+export const SEAT_U = { ariadne: -0.38, cobb: 0, fischer: 0.55 } as const
 export const SEAT_V = -0.08
 /** Where they come down on the bench, in through the sliding door. */
 const BENCH_IN = -0.3
-/** The sliding door's opening (u), and the bay's floor (v). */
-export const DOOR_U: Pt = [-0.86, 0.28]
+/** The sliding door's opening (u), clear of the rear wheel's arch, and the bay's floor (v). */
+export const DOOR_U: Pt = [-0.58, 0.28]
 export const FLOOR_V = 0.42
 
 /** A point of the van (u along, v down, from its centre) in the world, for a pose. */
@@ -230,10 +230,12 @@ export const TAXI_STOP = -44.0
 export const TAXI_LEN = 2.2
 export const TAXI_SEAT: Pt = [-0.27, -0.8]
 export const TAXI_QUEUE = -38
-const T_TAXI_IN = 68.0
+const T_TAXI_IN = 69.0
 const TAXI_RUN = 8
 const T_TAXI_GO = T_HIT + 0.1
-const T_TAXI_Q = T_CAR1 - 0.2
+// It pulls out briskly, as a cab does once its fare is out: slow off the kerb, it rode along behind Cobb with its wheels
+// under him and Fischer. It waits in the queue from there.
+const T_TAXI_Q = Math.min(T_CAR1 - 0.2, T_TAXI_GO + 1.6)
 export function taxiX(te: number): number {
   if (te < T_TAXI_IN) return TAXI_STOP - TAXI_RUN - ((2 * TAXI_RUN) / (T_TAXI_STOP - T_TAXI_IN)) * (T_TAXI_IN - te)
   if (te < T_TAXI_STOP) {
@@ -309,8 +311,9 @@ export function flungPose(c: Flung, te: number): FlungPose {
   const tau = Math.min(te - c.hit, c.flight)
   const u = tau / c.flight
   const far = sm((u - 0.55) / 0.45)
-  // It comes down on its roof on the far side of the street.
-  const yEnd = -0.2 - 0.56 * (CAR_S - 0.08)
+  // It comes down on its roof on the far side of the street, its crushed roof on the asphalt (it rested 0.17 of a
+  // cell up, in the air, the roof's crush not counted).
+  const yEnd = -0.18 - 0.38 * (CAR_S - 0.08)
   // A throw: up and back the way the train goes, turning end over end, and down behind the train.
   const vy = (CAR_Y - yEnd + 6 * c.flight * c.flight) / c.flight
   const y = CAR_Y - vy * tau + 6 * tau * tau

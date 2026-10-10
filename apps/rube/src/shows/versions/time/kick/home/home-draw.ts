@@ -25,6 +25,8 @@ const SUNLIGHT = mixHex(HOME.sun, HOME.floor, 0.22)
 const CUT = mixHex(HOME.wallShade, HOME.floorShade, 0.5)
 /** The ground, cut: under the house and the lawn. */
 const SOIL = mixHex(HOME.floorShade, HOME.wallShade, 0.3)
+/** How far toward us the garden's ground comes before it is cut. */
+const NEAR_EDGE = FLOOR + 1.75
 const BARK = mixHex(HOME.floorShade, INK, 0.4)
 const WOOD = mixHex(HOME.table, HOME.floor, 0.45)
 const DOORWOOD = mixHex(HOME.table, HOME.floor, 0.3)
@@ -136,7 +138,9 @@ function farTrees(ctx: C2D, k: number, f: Frame, d: number, base: number, h: num
   ctx.save()
   ctx.translate(ox * k, oy * k)
   ctx.fillStyle = color
-  ctx.fillRect(x0 * k, (base - h * 0.35) * k, (x1 - x0) * k, (h * 0.35 + 0.4) * k)
+  // Its body runs well down behind the wall: the layer rides up with the camera (most under Zoom), and a body that
+  // stopped just under its base showed a strip of sky between it and the wall's top.
+  ctx.fillRect(x0 * k, (base - h * 0.35) * k, (x1 - x0) * k, (h * 0.35 + 3) * k)
   const step = 0.3
   for (let i = Math.floor(x0 / step) - 3; i <= Math.ceil(x1 / step) + 3; i++) {
     const r1 = hash(i, seed, 1)
@@ -205,9 +209,47 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   ctx.restore()
   // The lawn comes on toward us, richer in the house's shade; the terrace's stone with it.
   const near = vgrad(ctx, k, FLOOR - 0.02, FLOOR + 2.2, [[0, mixHex(HOME.lawn, HOME.sun, 0.12), 1], [0.35, HOME.lawn, 1], [1, mixHex(HOME.lawnDark, HOME.tree, 0.45), 1]])
-  fillBox(ctx, k, GARDEN.terrace, FLOOR, x1, f.y1 + 1, near)
-  fillBox(ctx, k, x0, FLOOR, GARDEN.terrace, f.y1 + 1, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
-  fillBox(ctx, k, GARDEN.terrace - 0.03, GARDEN.back, GARDEN.terrace + 0.03, f.y1 + 1, rgba(HOME.lawnDark, 0.35))
+  // It ends a little toward us, cut, and under it the earth as under the house: in a tall frame (a phone held
+  // upright) the ground is near half the picture, and the lawn and the terrace's stone ran on down to its foot.
+  const cut = Math.min(f.y1 + 1, NEAR_EDGE)
+  fillBox(ctx, k, GARDEN.terrace, FLOOR, x1, cut, near)
+  fillBox(ctx, k, x0, FLOOR, GARDEN.terrace, cut, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
+  // The terrace is laid stone: its courses widening as they come toward us, each slab's joint a half step from the
+  // course behind's.
+  {
+    const rows = [GARDEN.back, -0.17, FLOOR, FLOOR + 0.42, FLOOR + 1.0, FLOOR + 1.75, FLOOR + 2.7].filter((y) => y <= NEAR_EDGE)
+    ctx.save()
+    ctx.strokeStyle = rgba(HOME.wallShade, 0.55)
+    ctx.lineWidth = Math.max(1, w * 0.35)
+    ctx.beginPath()
+    rows.forEach((y, i) => {
+      if (i > 0) {
+        ctx.moveTo(x0 * k, y * k)
+        ctx.lineTo(GARDEN.terrace * k, y * k)
+      }
+      const next = rows[i + 1]
+      if (next === undefined) return
+      const slab = 0.36 + 0.12 * i
+      for (let x = x0 + (i % 2 ? slab / 2 : slab); x < GARDEN.terrace - 0.08; x += slab) {
+        ctx.moveTo(x * k, y * k)
+        ctx.lineTo(x * k, next * k)
+      }
+    })
+    ctx.stroke()
+    ctx.restore()
+  }
+  fillBox(ctx, k, GARDEN.terrace - 0.03, GARDEN.back, GARDEN.terrace + 0.03, cut, rgba(HOME.lawnDark, 0.35))
+  if (f.y1 + 1 > NEAR_EDGE) {
+    const bottom = f.y1 + 1
+    fillBox(ctx, k, x0 - 0.05, NEAR_EDGE, x1, bottom, vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, NEAR_EDGE * k, (x1 - x0) * k, (bottom - NEAR_EDGE) * k)
+    ctx.clip()
+    earth(ctx, k, x0, x1, bottom)
+    ctx.restore()
+    line(ctx, k, [x0, NEAR_EDGE], [x1, NEAR_EDGE], INK, w * 0.8)
+  }
   tree(ctx, k, f, t, w)
   swing(ctx, k, t, w)
 }
@@ -264,8 +306,47 @@ function porch(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
     foliage(ctx, k, cx, HOUSE.back, 0.75 + 0.3 * hash(i, 22), 0.75 + 0.25 * hash(i, 23), i * 3.1, t, LEAVES, true)
   }
   fillBox(ctx, k, x0, HOUSE.back, x1, FLOOR, vgrad(ctx, k, HOUSE.back, FLOOR, [[0, mixHex(STONE, HOME.wallShade, 0.5), 1], [1, STONE, 1]]))
-  fillBox(ctx, k, x0, FLOOR, x1, f.y1 + 1, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
-  void w
+  // Cut where the garden's ground is cut, the earth under it: seen whole (Overview) or in a tall frame, the stone ran
+  // on down to the frame's foot, a blank pale column.
+  const cut = Math.min(f.y1 + 1, NEAR_EDGE)
+  fillBox(ctx, k, x0, FLOOR, x1, cut, vgrad(ctx, k, FLOOR, FLOOR + 2.2, [[0, STONE, 1], [1, mixHex(STONE, HOME.wallShade, 0.6), 1]]))
+  // Laid stone, as the garden's terrace is: courses widening toward us, each joint a half step from the one behind's
+  // (it was one blank pale field beside the door).
+  {
+    const rows = [HOUSE.back, -0.17, FLOOR, FLOOR + 0.42, FLOOR + 1.0, FLOOR + 1.75].filter((y) => y <= NEAR_EDGE)
+    ctx.save()
+    ctx.strokeStyle = rgba(HOME.wallShade, 0.55)
+    ctx.lineWidth = Math.max(1, w * 0.35)
+    ctx.beginPath()
+    rows.forEach((y, i) => {
+      if (i > 0) {
+        ctx.moveTo(x0 * k, y * k)
+        ctx.lineTo(x1 * k, y * k)
+      }
+      const next = rows[i + 1]
+      if (next === undefined) return
+      const slab = 0.36 + 0.12 * i
+      for (let x = x1 - (i % 2 ? slab / 2 : slab); x > x0; x -= slab) {
+        ctx.moveTo(x * k, y * k)
+        ctx.lineTo(x * k, next * k)
+      }
+    })
+    ctx.stroke()
+    ctx.restore()
+  }
+  // The hedge's shade on the stone at its foot, so it stands on the porch and does not end on a ruled line.
+  fillBox(ctx, k, x0, HOUSE.back, x1, HOUSE.back + 0.22, vgrad(ctx, k, HOUSE.back, HOUSE.back + 0.22, [[0, mixHex(LEAVES, INK, 0.3), 0.45], [1, LEAVES, 0]]))
+  if (f.y1 + 1 > NEAR_EDGE) {
+    const bottom = f.y1 + 1
+    fillBox(ctx, k, x0, NEAR_EDGE, x1 + 0.05, bottom, vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, NEAR_EDGE * k, (x1 - x0) * k, (bottom - NEAR_EDGE) * k)
+    ctx.clip()
+    earth(ctx, k, x0, x1, bottom)
+    ctx.restore()
+    line(ctx, k, [x0, NEAR_EDGE], [x1, NEAR_EDGE], INK, w * 0.8)
+  }
 }
 
 /* ------------------------------------------------------------------ the house */
@@ -276,7 +357,12 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   const slabTop = HOUSE.ceil - 0.28
   const foot = FLOOR + HOUSE.slab
   // The ground under everything, cut: warm, darkening as it goes down.
-  shape(ctx, k, box(fx0, FLOOR, ex1, f.y1 + 1), vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]), INK, w * 0.8)
+  shape(ctx, k, box(fx0, FLOOR, ex1, f.y1 + 1), vgrad(ctx, k, FLOOR, FLOOR + 3, [[0, SOIL, 1], [1, mixHex(HOME.floorShade, INK, 0.2), 1]]))
+  // Its cut edges in ink only down to where the porch's and the garden's ground is cut: below that it is one earth.
+  const edge = Math.min(f.y1 + 1, NEAR_EDGE)
+  line(ctx, k, [fx0, FLOOR], [fx0, edge], INK, w * 0.8)
+  line(ctx, k, [ex1, FLOOR], [ex1, edge], INK, w * 0.8)
+  ground(ctx, k, f, w, foot)
   // The roof: its section, eave to eave, and the loft inside it.
   const e = HOUSE.eave
   const mid = (fx0 + ex1) / 2
@@ -300,7 +386,20 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   shade.addColorStop(1, rgba(dim, 0))
   ctx.fillStyle = shade
   ctx.fillRect((TOP_AT[0] - 2.2) * k, (HOUSE.back - 2.4) * k, 2.82 * k, 2.4 * k)
-  fillBox(ctx, k, TOP_AT[0] - 2.2, HOUSE.back - 2.4, TOP_AT[0] + 0.62, HOUSE.back - 1.2, vgrad(ctx, k, HOUSE.back - 2.4, HOUSE.back - 1.2, [[0, HOME.wall, 0.5], [1, HOME.wall, 0]]))
+  // A little of the morning's bounce high on the wall over it, soft on every side (a box of it read as a pale panel).
+  {
+    const c: Pt = [TOP_AT[0] - 0.8, HOUSE.back - 2.1]
+    const r = 1.5
+    ctx.save()
+    ctx.translate(c[0] * k, c[1] * k)
+    ctx.scale(1, 0.6)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * k)
+    g.addColorStop(0, rgba(HOME.wall, 0.45))
+    g.addColorStop(1, rgba(HOME.wall, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(-r * k, -r * k, 2 * r * k, 2 * r * k)
+    ctx.restore()
+  }
   hallWindow(ctx, k, w)
   // The skirting, and the floor running back to it: warm boards, a little darker at the back.
   fillBox(ctx, k, fx1, HOUSE.back - 0.1, ex0, HOUSE.back, mixHex(HOME.wall, HOME.wallShade, 0.7))
@@ -316,6 +415,46 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   // The thresholds.
   for (const [a, b] of [[fx0, fx1], [ex0, ex1]]) fillBox(ctx, k, a, HOUSE.back, b, FLOOR, mixHex(STONE, HOME.floorShade, 0.25))
   line(ctx, k, [fx0, FLOOR], [ex1, FLOOR], INK, w * 0.8)
+}
+
+/**
+ * The earth under the house, cut: in a tall frame it is near half the picture, so it is not a blank. The footings go
+ * down under the two walls; the earth lies in soft bands, darker as it goes down.
+ */
+function ground(ctx: C2D, k: number, f: Frame, w: number, foot: number): void {
+  const [fx0, fx1] = HOUSE.front
+  const [ex0, ex1] = HOUSE.end
+  const bottom = f.y1 + 1
+  if (bottom <= foot) return
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(fx0 * k, foot * k, (ex1 - fx0) * k, (bottom - foot) * k)
+  ctx.clip()
+  earth(ctx, k, fx0, ex1, bottom)
+  // The footings, a little wider than their walls.
+  const depth = 1.1
+  for (const [a, b] of [[fx0, fx1 + 0.12], [ex0 - 0.12, ex1]]) shape(ctx, k, box(a, foot, b, foot + depth), mixHex(STONE, HOME.floorShade, 0.45), INK, w * 0.6)
+  ctx.restore()
+}
+
+/**
+ * The earth's soft bands, darker going down, across `xa` to `xb`. The bands lie from one origin wherever it is cut
+ * (under the house's slab), so the earth under the house, the porch and the garden is one ground, its strata running
+ * on across, not three pasted panels. Callers clip to their cut.
+ */
+const EARTH_AT = FLOOR + HOUSE.slab
+function earth(ctx: C2D, k: number, xa: number, xb: number, bottom: number): void {
+  // The bands: each a little darker, their tops wandering gently.
+  const bands = [0.55, 1.35, 2.4, 3.8]
+  bands.forEach((d, i) => {
+    ctx.beginPath()
+    ctx.moveTo(xa * k, bottom * k)
+    for (let x = xa; x <= xb + 0.2; x += 0.2) ctx.lineTo(x * k, (EARTH_AT + d + 0.07 * Math.sin(x * 1.3 + i * 2.1) + 0.04 * Math.sin(x * 3.1 + i)) * k)
+    ctx.lineTo(xb * k, bottom * k)
+    ctx.closePath()
+    ctx.fillStyle = rgba(mixHex(HOME.floorShade, INK, 0.35), 0.1 + 0.03 * i)
+    ctx.fill()
+  })
 }
 
 /** A window in the hall's back wall, onto the side of the garden: sky and leaves, and its light on the sill. */
@@ -378,10 +517,11 @@ function sunOnFloor(ctx: C2D, k: number): void {
 /* ------------------------------------------------------------------ the things in it */
 
 /** A door leaf swinging about a hinge at the doorway's far side: `phi` 0 shut (in the doorway), π/2 back flat. */
-function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number, fill: string, w: number, glass: boolean): void {
+function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number, fill: string, w: number, glass: boolean, depth = 0.33): void {
   const s = Math.sin(phi)
-  const depth = 0.33
-  const hb = HOUSE.back
+  // The glass door hangs in the doorway's front plane, as the wall it opens out of is cut (on the floor's back line it
+  // stood a third of a cell higher than its own opening, and folded open it rose past the wall over it).
+  const hb = glass ? FLOOR : HOUSE.back
   const fb = FLOOR - depth * (1 - Math.cos(phi))
   const A: Pt = [hx, hb]
   const B: Pt = [hx, hb - H]
@@ -395,7 +535,8 @@ function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number
       const x = hx - 0.05
       const hw = GLASS.half
       glow(ctx, k, [x, FLOOR - H * 0.55], 0.5, HOME.sun, 0.35)
-      shape(ctx, k, box(x - hw, FLOOR - H, x + hw, FLOOR), DOORWOOD, INK, w * 0.8)
+      // Up to the doorway's head (it stopped a little short of it, sky between).
+      shape(ctx, k, box(x - hw, HOUSE.endHead, x + hw, FLOOR), DOORWOOD, INK, w * 0.8)
       // The pane in its frame, catching the light, between the rails.
       for (const [v0, v1] of [[0.07, 0.31], [0.37, 0.64], [0.7, 0.92]] as const) shape(ctx, k, box(x - hw * 0.45, FLOOR - H * v1, x + hw * 0.45, FLOOR - H * v0), mixHex(HOME.glass, HOME.sun, 0.55), INK, w * 0.35)
       return
@@ -532,13 +673,17 @@ export function drawHome(p: p5, c: Ctx): void {
   porch(ctx, k, f, t, w)
   house(ctx, k, f, t, w)
   // Inside: the front door back against the wall, the counter, the chairs, the table and the top.
-  leaf(ctx, k, HOUSE.front[1] - 0.08, 1.15, 2.42, frontDoor(t), DOORWOOD, w * 0.8, false)
+  // The front door swings back less deep into the hall, so its foot stays low behind him as he comes in under it,
+  // and not on his crown.
+  leaf(ctx, k, HOUSE.front[1] - 0.08, 1.15, 2.42, frontDoor(t), DOORWOOD, w * 0.8, false, 0.18)
   counter(ctx, k, w)
   for (const c of CHAIRS) chair(ctx, k, w, c)
   table(ctx, k, w)
   drawTop(p, ctx, k, t)
   // The glass door onto the garden, swinging out as he goes through.
-  leaf(ctx, k, GLASS.hinge, GLASS.w, 2.47, glassDoor(t), HOME.glass, w * 0.7, true)
+  leaf(ctx, k, GLASS.hinge, GLASS.w, FLOOR - HOUSE.endHead, glassDoor(t), HOME.glass, w * 0.7, true)
+  // The end wall over the doorway is cut in front of it: swinging out, the leaf goes behind it, not over it.
+  shape(ctx, k, box(HOUSE.end[0], HOUSE.ceil - 0.28, HOUSE.end[1], HOUSE.endHead), CUT, INK, w)
   shades(p, k, t)
   ctx.restore()
 }

@@ -57,18 +57,19 @@ export const home = part<null>(
     on(OUT - 0.5, 4.4, [6.2, -1.15]),
     // Out onto the lawn with him, toward them.
     on(OUT + 1.9, 3.7, [7.55, -1.02]),
-    // They turn: close on them, him at the edge of it.
-    on(TURN, 2.95, [8.42, -0.84]),
-    on(TURN + 1.9, 2.95, [8.12, -0.82]),
+    // They turn: close on them, him at the edge of it. Held a little low on the lawn, so the tighter Zoom keeps them
+    // clear of the frame's foot too.
+    on(TURN, 2.95, [8.42, -0.7]),
+    on(TURN + 1.9, 2.95, [8.12, -0.68]),
     // They come to him, and he and they are together: a slow push in on the three of them.
-    on(MEET, 2.85, [7.86, -0.76]),
-    on(HOLD, 2.55, [7.76, -0.7]),
+    on(MEET, 2.85, [7.86, -0.6]),
+    on(HOLD, 2.55, [7.76, -0.55]),
     // The camera leaves them, back in through the glass doors to the table, and does not stop: from the first of the
     // top's chords it pushes in on it, slowly and all the way to the last chord, where the top fills a fifth of the
-    // frame's height, a little below its middle.
+    // frame's height and more, a little below its middle.
     on(TICKS[0], 2.5, [TOP_AT[0] + 0.4, TOP_AT[1] - 0.44]),
     on(TICKS[1], 1.92, [TOP_AT[0] + 0.2, TOP_AT[1] - 0.37]),
-    on(TICKS[2], 1.45, [TOP_AT[0] + 0.1, TOP_AT[1] - 0.3]),
+    on(TICKS[2], 1.2, [TOP_AT[0] + 0.08, TOP_AT[1] - 0.26]),
   ],
 )
 

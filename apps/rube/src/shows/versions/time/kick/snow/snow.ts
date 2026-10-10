@@ -115,14 +115,14 @@ function snowShots(begin: number): PartShot[] {
     hold(T.land + 0.35, 6.4, 9.4, 46.3),
     hold(T.dropC, 7.2, 7.4, 47.0),
     // Close after them down the face, leading them, the fortress's roof going by under them.
-    follow(T.dropF + 0.7, 7.4, -1.8, 0.6),
-    follow(T.j1 - 0.4, 7.6, -2.2, 0.6),
+    follow(T.dropF + 0.7, 7.4, -1.1, 0.6),
+    follow(T.j1 - 0.4, 7.6, -1.2, 0.6),
     // The rock step: cut wide for the air, the summit over them, the fortress under them; back in as Fischer lands.
     cut(hold(T.j1, 11.8, -5.6, 48.4)),
     hold(T.cutJ1 - 0.05, 11.8, -7.1, 48.9),
-    cut(follow(T.cutJ1, 7.6, -2.2, 0.4)),
+    cut(follow(T.cutJ1, 7.6, -0.6, 0.4)),
     // The long traverse, the hairpin (the guards over the ridge behind them), and back along the face.
-    follow(T.h1 - 1.0, 7.4, -1.4, 0.4),
+    follow(T.h1 - 1.0, 7.4, -0.4, 0.4),
     follow(T.h1, 7.2, 0.4, 0.5),
     follow(T.h1 + 1.1, 7.4, 2.0, 0.4),
     follow(T.j2 - 0.5, 7.6, 2.2, 0.4),

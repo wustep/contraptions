@@ -206,8 +206,8 @@ function wakingShots(slot: Slot): PartShot[] {
     hold(at, LET_GO + 0.3, 3.45, [0.05, -0.3]),
     hold(at, LID + 0.2, 3.2, [-0.2, -0.16]),
     // Across the aisle to Fischer as he stirs, and the sun he lets in.
-    hold(at, STIR + 0.3, 3.6, [1.55, -0.36]),
-    hold(at, SHADE + 0.35, 3.95, [1.4, -0.36]),
+    hold(at, STIR + 0.3, 3.6, [1.35, -0.36]),
+    hold(at, SHADE + 0.35, 3.95, [1.2, -0.36]),
     // Out: the whole plane in the morning sky, going down through the cloud; the gear; the runway coming up; the touch.
     hold(at, SHADE + 1.25, 5.3, [1.1, -0.25]),
     hold(at, GEAR - 0.45, 11.0, [-0.45, 0.95]),
@@ -218,7 +218,9 @@ function wakingShots(slot: Slot): PartShot[] {
     hold(at, DOCK, 6.2, [3.1, -0.2]),
     hold(at, DOOR + 0.3, 5.0, [2.4, -0.4]),
     // With him out, along the bridge, into the hall.
-    hold(at, OUT + 0.2, 4.7, [1.75, -0.35]),
+    // Held a little to her side of him until her goodbye is over, so under Zoom too she is seen to see him off.
+    hold(at, OUT + 0.2, 4.7, [1.3, -0.35]),
+    hold(at, OUT + 1.25, 4.7, [1.45, -0.4]),
     follow(OUT + 1.8, 4.5, [1.15, -0.72]),
     follow(INSIDE + 0.6, 4.4, [1.25, -0.72]),
     // At the booth; in close on the passport for the stamp, a beat on the mark it leaves; then on with him.
