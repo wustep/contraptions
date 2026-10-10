@@ -2,7 +2,6 @@ import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { beam, bloom, rgba, sink, tear } from '../cast'
 import { hash, type Ctx } from '../kit'
-import { beat } from '../music'
 import { FISCHER_DOWN } from '../stack'
 import { SNOW } from '../worlds'
 import {
@@ -324,74 +323,6 @@ function drawGuards(p: p5, ctx: C2D, c: Ctx, t: number): void {
     const lit = i === 0 ? 1 - ss((t - GUARD_DOWN) / 0.4) * 0.8 : 1 - ss((t - (T.gate + 1)) / 2) * 0.5
     snowmobile(p, ctx, c, at, h, lit)
   })
-  drawShots(p, ctx, c, t)
-}
-
-/**
- * The guards fire on them down the face (the chase had no threat that landed): on alternate beats of it, a flash at the
- * rider's shoulder and, a tenth of a second on, a spurt of snow kicked up on Fischer's track just ahead of him, the
- * last of the three, that he rides through (behind him, it fell off a tight frame). Never a hit: Mal's shot is the one that lands.
- */
-const SHOTS: [number, number][] = [138, 139, 140, 141, 142, 143, 144, 145, 146].map((b, j) => [beat(b) + 0.04, j % 2])
-function drawShots(p: p5, ctx: C2D, c: Ctx, t: number): void {
-  const { k } = c
-  for (const [ts, gi] of SHOTS) {
-    const u = t - ts
-    if (u < 0 || u > 0.7) continue
-    const g = GUARDS[gi]
-    const gat = g.at(ts)
-    const tgt = FISCHER_SNOW.at(ts + 0.22)
-    const side = Math.sign(tgt[0] - gat[0]) || -1
-    // The flash at his shoulder, gone in a tenth of a second.
-    const gun: Pt = [gat[0] + side * 0.45, gat[1] - 0.85]
-    if (u < 0.12) {
-      bloom(p, k, gun, 0.45, SNOW.flash, 0.9 * (1 - u / 0.12))
-      const aim = [tgt[0] - gun[0], tgt[1] + R - gun[1]]
-      const al = Math.hypot(aim[0], aim[1]) || 1
-      muzzleStar(p, c, gun, [aim[0] / al, aim[1] / al], 1 - u / 0.12, 0.8)
-    }
-    // The round in flight: a dark streak coming in from the guard's side to where it strikes, so the spurt reads as a
-    // shot landing and not as their own spray (the guards are mostly out of frame when they fire).
-    const at: Pt = [tgt[0], tgt[1] + R]
-    const dx = gat[0] + side * 0.45 - at[0]
-    const dy = gat[1] - 0.85 - at[1]
-    const dl = Math.hypot(dx, dy) || 1
-    if (u < 0.16) {
-      const w = Math.min(1, u / 0.1)
-      const head: Pt = [at[0] + (dx / dl) * 2.4 * (1 - w), at[1] + (dy / dl) * 2.4 * (1 - w)]
-      const tail: Pt = [head[0] + (dx / dl) * 1.3, head[1] + (dy / dl) * 1.3]
-      const g = ctx.createLinearGradient(head[0] * k, head[1] * k, tail[0] * k, tail[1] * k)
-      g.addColorStop(0, rgba(SNOW.vault, 0.85 * (1 - Math.max(0, u - 0.1) / 0.06)))
-      g.addColorStop(1, rgba(SNOW.vault, 0))
-      ctx.strokeStyle = g
-      ctx.lineWidth = Math.max(1, 0.045 * k)
-      ctx.lineCap = 'round'
-      ctx.beginPath()
-      ctx.moveTo(head[0] * k, head[1] * k)
-      ctx.lineTo(tail[0] * k, tail[1] * k)
-      ctx.stroke()
-    }
-    // The spurt where it strikes the snow: up and settling, a few flecks thrown.
-    const v = u - 0.1
-    if (v < 0) continue
-    const a = Math.exp(-v / 0.22)
-    // White on white is lost: the pock it leaves is dark, and the spray in the snow's blue shade.
-    ctx.fillStyle = rgba(SNOW.snowDeep, 0.75 * Math.exp(-v / 0.5))
-    ctx.beginPath()
-    ctx.ellipse(at[0] * k, at[1] * k, 0.14 * k, 0.05 * k, 0, 0, Math.PI * 2)
-    ctx.fill()
-    bloom(p, k, [at[0], at[1] - 0.18 - 0.4 * Math.min(1, v / 0.15)], 0.35 + 0.45 * Math.min(1, v / 0.2), SNOW.snowShade, a)
-    ctx.fillStyle = rgba(SNOW.snowDeep, 0.85 * a)
-    for (let q = 0; q < 9; q++) {
-      const ang = -Math.PI / 2 + (hash(q, Math.round(ts * 10), 7) - 0.5) * 1.6
-      const sp = 1.8 + 2.0 * hash(q, Math.round(ts * 10), 8)
-      const x = at[0] + Math.cos(ang) * sp * v
-      const y = at[1] + Math.sin(ang) * sp * v + 4 * v * v
-      ctx.beginPath()
-      ctx.arc(x * k, y * k, Math.max(1.2, (0.04 + 0.03 * hash(q, 3, 9)) * k), 0, Math.PI * 2)
-      ctx.fill()
-    }
-  }
 }
 
 /**
