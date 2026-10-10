@@ -343,7 +343,13 @@ function drawShots(p: p5, ctx: C2D, c: Ctx, t: number): void {
     const tgt = FISCHER_SNOW.at(ts + 0.22)
     const side = Math.sign(tgt[0] - gat[0]) || -1
     // The flash at his shoulder, gone in a tenth of a second.
-    if (u < 0.12) bloom(p, k, [gat[0] + side * 0.45, gat[1] - 0.85], 0.45, SNOW.flash, 0.9 * (1 - u / 0.12))
+    const gun: Pt = [gat[0] + side * 0.45, gat[1] - 0.85]
+    if (u < 0.12) {
+      bloom(p, k, gun, 0.45, SNOW.flash, 0.9 * (1 - u / 0.12))
+      const aim = [tgt[0] - gun[0], tgt[1] + R - gun[1]]
+      const al = Math.hypot(aim[0], aim[1]) || 1
+      muzzleStar(p, c, gun, [aim[0] / al, aim[1] / al], 1 - u / 0.12, 0.8)
+    }
     // The round in flight: a dark streak coming in from the guard's side to where it strikes, so the spurt reads as a
     // shot landing and not as their own spray (the guards are mostly out of frame when they fire).
     const at: Pt = [tgt[0], tgt[1] + R]
@@ -424,6 +430,33 @@ function drawHit(p: p5, ctx: C2D, k: number, t: number): void {
 
 /* ------------------------------------------------------------------ Mal */
 
+/** A muzzle flash's shape: a star of flame along the aim `d`, gold with a white heart and a thin ink edge. */
+function muzzleStar(p: p5, c: Ctx, ctr: Pt, d: Pt, sc: number, size: number): void {
+  const { k } = c
+  const c2 = p.drawingContext as C2D
+  const [nx, ny] = [-d[1], d[0]]
+  const star: Pt[] = []
+  for (let q = 0; q < 10; q++) {
+    const a = (q / 10) * Math.PI * 2
+    const r = (q % 2 ? 0.07 : Math.cos(a) > 0.5 ? 0.42 : 0.2) * (0.6 + 0.4 * sc) * size
+    star.push([ctr[0] + (d[0] * Math.cos(a) + nx * Math.sin(a)) * r, ctr[1] + (d[1] * Math.cos(a) + ny * Math.sin(a)) * r])
+  }
+  c2.save()
+  c2.beginPath()
+  star.forEach(([x, y], q) => (q ? c2.lineTo(x * k, y * k) : c2.moveTo(x * k, y * k)))
+  c2.closePath()
+  c2.fillStyle = SNOW.pinwheel
+  c2.fill()
+  c2.strokeStyle = SNOW.vault
+  c2.lineWidth = Math.max(1, c.weight * 0.6)
+  c2.stroke()
+  c2.beginPath()
+  c2.arc(ctr[0] * k, ctr[1] * k, 0.06 * size * k, 0, Math.PI * 2)
+  c2.fillStyle = SNOW.flash
+  c2.fill()
+  c2.restore()
+}
+
 /** Mal's rifle on Fischer at the vault door, and its flash on the chord. */
 function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
   if (t < MAL_FROM || t > MAL_TO) return
@@ -482,36 +515,8 @@ function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
     beam(p, k, muzzle, [muzzle[0] + d[1] * 0.5, muzzle[1] - d[0] * 0.5], 0.05, 0.28, core, 0.7 * f)
     beam(p, k, muzzle, [muzzle[0] - d[1] * 0.5, muzzle[1] + d[0] * 0.5], 0.05, 0.28, core, 0.7 * f)
     bloom(p, k, [muzzle[0] + d[0] * 0.25, muzzle[1] + d[1] * 0.25], 0.9, SNOW.flash, 0.8 * f)
-    // The muzzle flash's own shape, crisp, for its first tenth of a second: a star of flame along the aim, gold with
-    // a white heart and a thin ink edge (a soft glow alone was pale on the pale snow).
-    if (u < 0.12) {
-      const c2 = p.drawingContext as C2D
-      const nx = -d[1]
-      const ny = d[0]
-      const sc = 1 - u / 0.12
-      const ctr: Pt = [muzzle[0] + d[0] * 0.12, muzzle[1] + d[1] * 0.12]
-      const star: Pt[] = []
-      for (let q = 0; q < 10; q++) {
-        const a = (q / 10) * Math.PI * 2
-        const along = Math.cos(a)
-        const r = (q % 2 ? 0.07 : along > 0.5 ? 0.42 : 0.2) * (0.6 + 0.4 * sc)
-        star.push([ctr[0] + (d[0] * Math.cos(a) + nx * Math.sin(a)) * r, ctr[1] + (d[1] * Math.cos(a) + ny * Math.sin(a)) * r])
-      }
-      c2.save()
-      c2.beginPath()
-      star.forEach(([x, y], q) => (q ? c2.lineTo(x * k, y * k) : c2.moveTo(x * k, y * k)))
-      c2.closePath()
-      c2.fillStyle = SNOW.pinwheel
-      c2.fill()
-      c2.strokeStyle = SNOW.vault
-      c2.lineWidth = Math.max(1, c.weight * 0.6)
-      c2.stroke()
-      c2.beginPath()
-      c2.arc(ctr[0] * k, ctr[1] * k, 0.06 * k, 0, Math.PI * 2)
-      c2.fillStyle = SNOW.flash
-      c2.fill()
-      c2.restore()
-    }
+    // The muzzle flash's own shape, crisp, for its first tenth of a second (a soft glow alone was pale on the snow).
+    if (u < 0.12) muzzleStar(p, c, [muzzle[0] + d[0] * 0.12, muzzle[1] + d[1] * 0.12], d, 1 - u / 0.12, 1)
   }
   const smoke = ss(u / 0.15) * (1 - ss((u - 0.5) / 1.1))
   if (smoke > 0.01) {
