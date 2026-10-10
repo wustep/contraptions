@@ -730,6 +730,12 @@ window.
     run down the tin chute and out through the wall's slot. Its funnel at the jar's mouth and its two brackets (read
     as joints) make a grabber of it. Kept: both took the beat's meaning from it all the same ("life takes the
     savings"), and only the mechanism was misread; redrawing it would redesign the show's central machine.
+  - *The thrown tickets, re-watched* by a third viewer who has never seen Up (150 to 180 s, told only that the two of
+    them had saved for the falls): "it makes tickets", "probably for the trip to the waterfall", a surprise picnic to
+    give them to her there (65% sure); before, both viewers had read the press as a slot machine or a camera. From a
+    sheet a frame a second it read the hill as him too old for the climb; the critic who had the dense strip of the
+    fall read it as she fell and he came after her, so this is taken as the sheet's sampling (three frames of a
+    three-second beat), not restaged.
   - *Not measured.* The YouTube cue's sync at real speed, by ear.
 
 ## Known limits
