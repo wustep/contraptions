@@ -46,7 +46,7 @@ export const performance: Performance = {
     offset: 0,
     credit: 'Michael Giacchino · Married Life · Up (2009)',
     href: 'https://www.youtube.com/watch?v=2rn-vMbFglI',
-    // The label's upload the file was fetched from, whole: the same clock, sample for sample.
+    // The label's upload, whole: the recording the onsets were measured on, the same clock sample for sample.
     youtube: [{ id: '2rn-vMbFglI' }],
   },
 }

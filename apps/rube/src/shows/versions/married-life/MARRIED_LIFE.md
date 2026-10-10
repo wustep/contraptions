@@ -35,8 +35,9 @@ the credits over the house.
 
 - **The file.** `married-life-demo.mp3` was removed from the repo (copyrighted). Live playback is YouTube only. Rebuild locally with yt-dlp if needed for measurement; it was demo-only:
   `ATTRIBUTION.txt` says so.
-- **The YouTube cue.** The soundtrack also plays the upload itself (`youtube: [{ id: '2rn-vMbFglI' }]`), on the same
-  clock. The file is the fallback, and what an export records.
+- **The YouTube cue.** The soundtrack is the upload itself (`youtube: [{ id: '2rn-vMbFglI' }]`), and it drives the show's
+  clock. With no file there is no fallback: if YouTube cannot play, the show runs silent on the wall clock, and an
+  export records silent (its credits drawn in).
 - **Measured once**, by `scripts/shows/married-life-onsets.py` into `scripts/shows/plans/married-life-onsets.json`.
   The waltz does not keep one tempo: it ritards at phrase ends, halts for the loss, comes back slower, and presses on
   before the tickets. So there is no comb. A beat tracker with a drifting tempo prior follows it beat by beat. Each
@@ -423,7 +424,8 @@ window.
 
 - `npm run dev`, then open `/shows/married-life/`. Space plays and pauses; Z is Zoom (1.5× closer).
 - `npm run check:shows` runs its checks with every other show's; `npm run build` runs every check.
-- `python3 scripts/shows/married-life-onsets.py` measures the mp3 again and rewrites the onsets file.
+- `python3 scripts/shows/married-life-onsets.py` measures the recording again and rewrites the onsets file (it needs the
+  mp3 rebuilt locally first; it is not in the repo).
 
 ## How it was made
 
