@@ -418,6 +418,13 @@ changed, in the order of the film, and then what runs through it:
 - **A tenth critic, at four frames a second** over the valley and the meadow: as the lift rises (45 → 65) each stage's
   latch, a little pawl by its X's right end, hung past the beam's end while the stage was barely open (its X spreads
   wider than the beam then), a loose bar beside the folded pack. It hangs from the beam now, never past its end.
+- **Two more critics at four frames a second**, on the shell, the fog and the lake house. At the glass the first
+  logogram's longest tendril grew into the palm's forearm (128.4 → 130), its drop dark on the dark limb: that one is
+  cleared. The palm's finger that points up the limb curled its pad out past the wrist, a knob on the limb: it stays
+  hidden under the wrist. In the fog she hung a few pixels off the crescent the whole of its ride (160 → 166.7), as
+  she sat over the thin of its tip: the tip runs on past her. As the great ring began she floated over its first
+  stroke (168.6 → 170.3), its tail's taper reaching under her: the taper is held to the ink on both sides of her. And
+  one long jet ended in a square block inside its own cloud (153.35): the stream ends round.
 
 ## Arrival nods
 
