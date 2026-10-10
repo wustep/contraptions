@@ -3,7 +3,7 @@ import { canvasOf, downloadBlob } from '../../../../src/core/capture'
 import { drawWorld, drawingModes, followCamera, setupCanvas } from '../engine'
 import { overviewCamera } from '../overview'
 import { recordShow } from './record'
-import type { Performance } from './registry'
+import { zoomed, type Performance } from './registry'
 import { wordPainter } from './words'
 
 /**
@@ -75,7 +75,8 @@ export function paintShow(
   const here = perf.show.at(time)
   const cam = perf.camera?.(time) ?? followCamera(perf.show, time, here)
   // Zoom is a tighter follow. Overview is the whole world and wins if both are asked.
-  const follow = zoom && !overview ? { ...cam, cells: cam.cells / FOLLOW_ZOOM } : cam
+  // Zoom slides over, if it must, to keep a focus the camera names well inside its closer frame (`zoomed`).
+  const follow = zoom && !overview ? zoomed(cam, FOLLOW_ZOOM) : cam
   const x = dest?.x ?? 0
   const y = dest?.y ?? 0
   const W = dest?.w ?? p.width
