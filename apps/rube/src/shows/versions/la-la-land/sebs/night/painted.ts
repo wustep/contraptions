@@ -3,6 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
 import { box, carried, frame, glow, knock, part, rgba, smooth, type PartShot } from '../kit'
 import { NIGHT_MAT } from '../worlds'
+import { IRIS_OPEN } from '../transitions'
 import {
   barPhase,
   BARS,
@@ -306,6 +307,30 @@ function farBank(p: p5, k: number, T: number): void {
       glow(p, k, w[0], w[1], 0.22, NIGHT_MAT.gold, 0.3)
       ctx.fillStyle = NIGHT_MAT.gold
       ctx.fillRect((w[0] - 0.045) * k, (w[1] - 0.07) * k, 0.09 * k, 0.13 * k)
+    }
+  }
+  // As the iris opens, the trumpet's gold drawing of the city is still on it a moment: a line of gold along the roofs
+  // and up the tower, going out as the waltz begins. The drawing became the painting.
+  const traced = smooth(T, IRIS_OPEN, IRIS_OPEN + 0.5) * (1 - smooth(T, IRIS_OPEN + 3.0, IRIS_OPEN + 5.0))
+  if (traced > 0.01) {
+    const trace = new Path2D()
+    for (const h of HOUSES) {
+      if (!vis(h)) continue
+      trace.moveTo(h.x0 * k, BANK * k)
+      trace.lineTo(h.x0 * k, h.wall * k)
+      trace.lineTo((h.x0 + 0.16) * k, h.roof * k)
+      trace.lineTo((h.x1 - 0.16) * k, h.roof * k)
+      trace.lineTo(h.x1 * k, h.wall * k)
+    }
+    const x = TOWER_X
+    trace.moveTo((x - 1.0) * k, BANK * k)
+    trace.quadraticCurveTo((x - 0.25) * k, (BANK - 2.6) * k, x * k, (BANK - 5.3) * k)
+    trace.quadraticCurveTo((x + 0.25) * k, (BANK - 2.6) * k, (x + 1.0) * k, BANK * k)
+    ctx.lineJoin = 'round'
+    for (const [w, a0] of [[0.14, 0.18], [0.035, 1]] as const) {
+      ctx.lineWidth = w * k
+      ctx.strokeStyle = rgba(NIGHT_MAT.gold, a0 * traced)
+      ctx.stroke(trace)
     }
   }
   ctx.restore()
