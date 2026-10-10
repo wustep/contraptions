@@ -898,9 +898,7 @@ const onKey = (e: KeyboardEvent) => {
     case 'm':
       if (!perf?.soundtrack) break
       if (soundHeld) {
-        soundHeld = false
-        setMuted(false)
-        if (transport) void music.play(transport.now())
+        void soundIn()
         break
       }
       setMuted(!muted)
