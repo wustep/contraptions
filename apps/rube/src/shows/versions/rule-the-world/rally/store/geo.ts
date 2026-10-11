@@ -1,6 +1,6 @@
 import { laneAt, type Pt, type Seg } from '../../../../../parts'
 import { carried, route, type Way } from '../kit'
-import { a, at, SEAM } from '../music'
+import { a, at, BAR, SEAM } from '../music'
 import { hop } from '../physics'
 
 /**
@@ -187,19 +187,71 @@ const WAIT_FROM = at(20, 2)
 export const INTO = at(21, 1)
 export const ONTO = at(21, 3)
 const ONTO_FROM = at(21, 2)
-/** On the bills, with the ticket: little skips on the shuffle, then still. */
+/** On the bills, with the ticket: little skips on the shuffle, until Murray's shadow comes; then still. */
 export const SKIPS: [number, number, number][] = [
   [at(22, 1), a(22, 1), at(22, 2)],
   [at(22, 3), a(22, 3), at(22, 4)],
   [at(23, 1), a(23, 1), at(23, 2)],
   [at(23, 3), a(23, 3), at(23, 4)],
-  [at(24, 1), a(24, 1), at(24, 2)],
 ]
 
 /** The ticket rises out of the bundle's band, and is tucked back in on his last skip. The clock clicks over to six. */
 export const TICKET_UP = at(22, 1)
 export const TICKET_IN = at(24, 2)
 export const CLOCK_SIX = at(23, 1)
+
+/**
+ * Six o'clock, and Murray is coming to open up: his shadow comes in at the office door and up its wall, a step a beat,
+ * bigger with each, until on the last its hand reaches out over the safe. Marty freezes on the bills (bar 24).
+ */
+export const MURRAY_STEPS = [at(23, 2), at(23, 3), at(23, 4), at(24, 1), at(24, 2), at(24, 3), at(24, 4)]
+/** How near he is, 0 (first seen at the door) to 1 (the hand over the safe). */
+export function murrayNear(t: number): number {
+  let s = 0
+  MURRAY_STEPS.forEach((ti) => {
+    if (t >= ti) s += easeOut((t - ti) / 0.24) / MURRAY_STEPS.length
+  })
+  return s
+}
+
+/** The city waking across the street through the intro: a window lights on each beat here (column, row). */
+export const WAKE: [number, number, number][] = [
+  [at(1, 3), 5, 1],
+  [at(2, 1), 1, 0],
+  [at(2, 3), 6, 0],
+  [at(3, 1), 3, 1],
+  [at(3, 3), 0, 1],
+  [at(4, 1), 4, 0],
+  [at(4, 3), 2, 1],
+]
+
+/**
+ * The stockroom's bulb, set swinging on its long cord by the draught as the curtain is flung open: its x off the
+ * plumb, swinging out to a side on every second beat and dying away through the pause, so the light and the two of
+ * them's shadows sway together.
+ */
+export function stockSway(t: number): number {
+  const u = t - CURTAIN
+  if (u <= 0) return 0
+  return 0.17 * Math.exp(-u / 7) * Math.sin((u * 2 * Math.PI) / BAR) * Math.min(1, u / 0.25)
+}
+
+/** The lock, seen in section under the dial: three wheels, one set a bar (15, 16, 17), each turned by the dial's clicks
+ * until its gate is up under the fence; the fence drops into the gates as the handle turns, and the bolts go back. */
+const barClicks = (bar: number): number[] => DIAL_AT.filter((x) => x >= at(bar, 1) - 0.01 && (bar === 17 || x < at(bar + 1, 1) - 0.01))
+export const WHEEL_CLICKS = [barClicks(15), barClicks(16), barClicks(17)]
+/** Each wheel's set: the bar's last click, when its gate comes up. */
+export const GATES = WHEEL_CLICKS.map((c) => c[c.length - 1])
+/** A wheel's turn off its gate-up angle, radians; 0 once set. */
+export function wheelTurn(i: number, t: number): number {
+  const clicks = WHEEL_CLICKS[i]
+  const dir = i === 1 ? -1 : 1
+  let done = 0
+  for (const c of clicks) if (t >= c) done += easeOut((t - c) / 0.06)
+  return -dir * 0.55 * (clicks.length - done)
+}
+/** How far the fence has dropped into the gates, 0 to 1, as the handle turns. */
+export const fenceDrop = (t: number): number => smoothU((t - HANDLE_LAND) / (BOLTS - HANDLE_LAND))
 
 /* ------------------------------------------------------------------ the door and the handle */
 
@@ -433,6 +485,8 @@ export const STORE_STRIKES: number[] = [
   INTO,
   ONTO,
   ...SKIPS.flat(),
+  ...MURRAY_STEPS,
+  ...WAKE.map((w) => w[0]),
 ]
   .filter((t, i, all) => all.findIndex((u) => Math.abs(u - t) < 1e-6) === i)
   .sort((x, y) => x - y)

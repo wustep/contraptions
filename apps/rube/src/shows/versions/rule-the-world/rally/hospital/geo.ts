@@ -46,10 +46,33 @@ export const REACH = at(104, 1)
 export const LIFT = at(105, 1)
 export const LIFTED = at(106, 1)
 
+/**
+ * Their first rally, through the glass, as soon as the nurse has him up beside Marty (bars 106 and 107): Marty hops
+ * and lands on beats 2 and 4, and his son, bounced in her hands, answers on 3 and 1, the bat and the table. Each is a
+ * hop from the beat before to its landing.
+ */
+export const TAPS: [number, number][] = [
+  [at(106, 1), at(106, 2)],
+  [at(106, 3), at(106, 4)],
+  [at(107, 1), at(107, 2)],
+  [at(107, 3), at(107, 4)],
+]
+export const ANSWERS: [number, number][] = [
+  [at(106, 2), at(106, 3)],
+  [at(106, 4), at(107, 1)],
+  [at(107, 2), at(107, 3)],
+  [at(107, 4), at(108, 1)],
+]
+/** The nurse waves to him through the glass, a wave a beat (bar 102). */
+export const WAVE: [number, number] = [at(102, 1), at(103, 1)]
+/** The sun clears the rooftops in the nursery's own window and its light comes across onto the boy (bars 101 to 104). */
+export const SUNRISE: [number, number] = [at(101, 1), at(104, 1)]
+export const SUN_CLEAR = at(103, 1)
+
 /** Marty trembles at the glass (he is crying): on these. Tears on some. */
 export const TREMBLES: number[] = (() => {
   const out = [at(100, 4)]
-  for (let bar = 101; bar <= 111; bar++) out.push(at(bar, 2))
+  for (let bar = 101; bar <= 111; bar++) if (bar !== 106 && bar !== 107) out.push(at(bar, 2))
   for (let bar = 112; bar <= 114; bar++) out.push(at(bar, 3))
   out.push(at(115, 1))
   return out
@@ -167,6 +190,15 @@ const trembleAt = (t: number): number => {
   return x
 }
 
+/** A low hop's lift: up and back down between `a` and `b`, `h` cells at the top. */
+const hopOf = (list: [number, number][], t: number, h: number): number => {
+  for (const [a, b] of list) if (t > a && t < b) {
+    const u = (t - a) / (b - a)
+    return h * 4 * u * (1 - u)
+  }
+  return 0
+}
+
 /** Where Marty is, show time. The lane is sampled from this. */
 export function martyAt(t: number): Pt {
   if (t < SET_OFF) return START
@@ -188,7 +220,7 @@ export function martyAt(t: number): Pt {
       return [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u - arc * 4 * u * (1 - u)]
     }
   }
-  return [AT_GLASS[0] + trembleAt(t), AT_GLASS[1]]
+  return [AT_GLASS[0] + trembleAt(t), AT_GLASS[1] - hopOf(TAPS, t, 0.16)]
 }
 
 export function hospitalWay(): Seg[] {
@@ -206,10 +238,11 @@ export function hospitalWay(): Seg[] {
   for (const [a, b, , q] of HOPS) ways.push({ at: b, p: q, arc: (G * (b - a) ** 2) / 8 })
   segs.push(...route(ways))
   let t = SON
-  for (const ti of TREMBLES) {
-    rest(t, ti, AT_GLASS)
-    segs.push(...carried(martyAt, ti, ti + 0.6, 30))
-    t = ti + 0.6
+  const moves: [number, number][] = [...TREMBLES.map((ti): [number, number] => [ti, ti + 0.6]), ...TAPS].sort((x, y) => x[0] - y[0])
+  for (const [a, b] of moves) {
+    rest(t, a, AT_GLASS)
+    segs.push(...carried(martyAt, a, b, 30))
+    t = b
   }
   // The last tremble has died away to nothing: settle exactly on the sill, and hold there to the end.
   segs.push({ from: martyAt(t), to: AT_GLASS, dur: 0.2, ease: 'inout' })
@@ -244,7 +277,7 @@ export function babyAt(t: number): Pt {
   const up = smooth(t, LIFT, LIFT + (LIFTED - LIFT) * 0.6)
   const over = smooth(t, LIFT + (LIFTED - LIFT) * 0.25, LIFTED)
   const rock = 0.02 * rockOf(t)
-  return [SON_BED[0] + (HELD[0] - SON_BED[0]) * over + wx + rock, SON_BED[1] + (HELD[1] - SON_BED[1]) * up - 0.2 * Math.sin(Math.PI * over) - Math.abs(rock) * 0.25]
+  return [SON_BED[0] + (HELD[0] - SON_BED[0]) * over + wx + rock, SON_BED[1] + (HELD[1] - SON_BED[1]) * up - 0.2 * Math.sin(Math.PI * over) - Math.abs(rock) * 0.25 - hopOf(ANSWERS, t, 0.09)]
 }
 
 /* ------------------------------------------------------------------ strikes */
@@ -266,6 +299,10 @@ export const HOSPITAL_STRIKES: number[] = [
   LIFTED,
   ...TREMBLES,
   ...WRIGGLES,
+  ...TAPS.map((x) => x[1]),
+  ...ANSWERS.map((x) => x[1]),
+  WAVE[0],
+  SUN_CLEAR,
 ]
   .filter((t, i, all) => all.findIndex((u) => Math.abs(u - t) < 1e-6) === i)
   .sort((a, b) => a - b)

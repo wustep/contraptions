@@ -77,8 +77,9 @@ export const nursery = part<WardState>(
 
 /**
  * The camera: from the seam's hold, a slow push in on the two of them on the pillow; then away with him off the bed,
- * out of the door and down the corridor; on SON a hold on him at the glass, his son beside him behind it; and through
- * the outro a slow ease back to the still picture the credits sit over: the window low, the pale wall high.
+ * out of the door and down the corridor; on SON a hold on him at the glass, his son behind it, easing in through the
+ * nurse's wave, over to the nursery's window as the sun comes up over the roofs and back with its light to the boy; and from the lift, as the two of them play their first rally, a slow ease back to the
+ * still picture the credits sit over: the window low, the pale wall high.
  */
 function shots(): PartShot[] {
   const hold = (t: number, cells: number, h: Pt): PartShot => ({ t, cells, hold: h, w: 1 })
@@ -89,8 +90,13 @@ function shots(): PartShot[] {
     hold(at(98, 2), 3.8, [-2.3, 0.15]),
     hold(at(98, 4), 4.0, [-5.4, 0.2]),
     hold(SON, 4.2, [-8.2, -0.55]),
-    hold(LIFT, 4.7, [-8.4, -0.85]),
-    hold(at(107, 1), 5.2, [-8.7, -1.3]),
+    hold(at(101, 1), 3.8, [-8.6, -0.62]),
+    hold(at(102, 3), 3.55, [-9.35, -0.72]),
+    hold(at(103, 2), 3.55, [-9.3, -0.72]),
+    hold(at(104, 1), 3.55, [-8.65, -0.66]),
+    hold(LIFT, 3.7, [-8.55, -0.68]),
+    hold(at(106, 1), 3.6, [-8.35, -0.62]),
+    hold(at(107, 2), 4.0, [-8.45, -0.85]),
     hold(CREDITS_AT, 6.2, [-8.9, -1.85]),
     hold(259, 5.3, [-8.6, -1.7]),
     hold(T1, 4.6, [-8.3, -1.42]),

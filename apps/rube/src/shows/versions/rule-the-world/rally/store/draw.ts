@@ -94,6 +94,13 @@ import {
   officeDoor,
   rungY,
   WAY,
+  WAKE,
+  GATES,
+  MURRAY_STEPS,
+  fenceDrop,
+  murrayNear,
+  stockSway,
+  wheelTurn,
 } from './geo'
 
 /**
@@ -189,11 +196,12 @@ export function lightAt(x: number, t: number): number {
     L += 0.85 * on * Math.exp(-(((x - lx) / 2.1) ** 2))
   })
   // The stockroom's bulb: on before he comes.
-  if (x > PART1[0] - 0.3 && x < PART2[1] + 0.2) L += 0.72 * Math.exp(-(((x - STOCK_BULB[0]) / 3.2) ** 2))
+  if (x > PART1[0] - 0.3 && x < PART2[1] + 0.2) L += 0.72 * Math.exp(-(((x - STOCK_BULB[0] - stockSway(t)) / 3.2) ** 2))
   // The office: dark, but for its door.
   if (x > PART2[0]) {
     const d = officeDoor(t)
-    L += 0.22 + 0.42 * d * Math.exp(-Math.max(0, x - PART2[1]) / 3.2)
+    // Murray in the doorway takes some of its light.
+    L += 0.22 + 0.42 * d * (1 - 0.3 * murrayNear(t)) * Math.exp(-Math.max(0, x - PART2[1]) / 3.2)
     const s = ease((doorDeg(t) - 20) / 100)
     L += 0.18 * s * Math.exp(-(((x - (SAFE[0] + SAFE[1]) / 2) / 1.4) ** 2))
   }
@@ -264,9 +272,10 @@ export function drawLights(pen: Pen, t: number): void {
     glow(pen, [lx, FLOOR + 0.15], 1.6, C.lamp, 0.12 * on)
     ellipse(pen, [lx, LAMP_Y + 0.04], 0.2, 0.05, mix(C.lampIn, '#FFFFFF', 0.4))
   })
-  // The stockroom's bulb.
-  glow(pen, STOCK_BULB, 1.8, C.bulb, 0.24)
-  glow(pen, STOCK_BULB, 0.3, '#FFF6DA', 0.7)
+  // The stockroom's bulb, swinging.
+  const sb: Pt = [STOCK_BULB[0] + stockSway(t), STOCK_BULB[1]]
+  glow(pen, sb, 1.8, C.bulb, 0.24)
+  glow(pen, sb, 0.3, '#FFF6DA', 0.7)
   // The office: the light through its door, along the floor and up the safe.
   const d = officeDoor(t)
   if (d > 0) {
@@ -340,7 +349,7 @@ export function drawRoom(pen: Pen, t: number, f: F): void {
   drawCeiling(pen, f)
   drawFloor(pen, f)
   drawBoxWall(pen, f)
-  drawStock(pen, f)
+  drawStock(pen, t, f)
   drawOffice(pen, t, f)
   drawPartition(pen, PART1, false)
   drawPartition(pen, PART2, true)
@@ -373,8 +382,12 @@ function drawStreet(pen: Pen, t: number, f: F): void {
     for (let j = 0; j < 4; j++) {
       const wy = roof + 0.45 + j * 0.45
       if (wy > y1 - 0.75) continue
-      const lit = hash(i, j, 7) > 0.8
-      rect(pen, wx, wy, wx + 0.16, wy + 0.25, lit ? mix('#D9A85A', '#8E8A78', dawn * 0.7) : mix('#111921', '#2A343C', dawn))
+      // A few lit all night; the rest wake on the intro's beats, each catching with a flicker.
+      const wake = WAKE.find((w) => w[1] === i && w[2] === j)
+      const u = wake ? t - wake[0] : -1
+      const on = hash(i, j, 7) > 0.8 ? 1 : u < 0 ? 0 : u < 0.05 ? 1 : u < 0.1 ? 0.3 : 1
+      rect(pen, wx, wy, wx + 0.16, wy + 0.25, mix(mix('#111921', '#2A343C', dawn), mix('#D9A85A', '#8E8A78', dawn * 0.7), on))
+      if (u >= 0 && u < 0.6) glow(pen, [wx + 0.08, wy + 0.12], 0.3, '#FFD48A', 0.35 * flash(u, 0.18))
     }
   }
   for (let j = 0; j < 3; j++) {
@@ -550,7 +563,7 @@ function drawPartition(pen: Pen, [x0, x1]: [number, number], door: boolean): voi
   rect(pen, x0 + POST, HEAD, x1 - POST, FLOOR, '#0F0B08')
 }
 
-function drawStock(pen: Pen, f: F): void {
+function drawStock(pen: Pen, t: number, f: F): void {
   const x0 = PART1[1]
   const x1 = PART2[0]
   if (f.x1 < x0 || f.x0 > x1) return
@@ -595,9 +608,11 @@ function drawStock(pen: Pen, f: F): void {
   line(pen, [21.1, FLOOR - 0.92], [21.8, FLOOR - 0.92], C.cartonDark, 0.4)
   line(pen, [15.95, FLOOR - 0.05], [16.45, -1.2], C.woodLight, 1)
   shape(pen, [[15.8, FLOOR], [16.15, FLOOR], [16.08, FLOOR - 0.3], [15.9, FLOOR - 0.3]], '#8A7A50')
-  line(pen, [STOCK_BULB[0], CEIL], [STOCK_BULB[0], STOCK_BULB[1] - 0.08], C.iron, 0.6)
-  rect(pen, STOCK_BULB[0] - 0.035, STOCK_BULB[1] - 0.12, STOCK_BULB[0] + 0.035, STOCK_BULB[1] - 0.05, C.chromeDark)
-  ellipse(pen, STOCK_BULB, 0.06, 0.08, '#FFF0C8')
+  const sw = stockSway(t)
+  const sb: Pt = [STOCK_BULB[0] + sw, STOCK_BULB[1]]
+  line(pen, [STOCK_BULB[0], CEIL], [sb[0], sb[1] - 0.08], C.iron, 0.6)
+  rect(pen, sb[0] - 0.035, sb[1] - 0.12, sb[0] + 0.035, sb[1] - 0.05, C.chromeDark)
+  ellipse(pen, sb, 0.06, 0.08, '#FFF0C8')
   // The carton they sit on: a long one, its flaps tucked, and an open box of tissue beside it.
   const [b0, b1] = BENCH
   rect(pen, b0, BENCH_TOP, b1, FLOOR, C.carton)
@@ -659,8 +674,9 @@ function drawOffice(pen: Pen, t: number, f: F): void {
   rect(pen, 29.5 + dx, -0.12, 29.8 + dx, 0.1, '#D9CDAE')
   line(pen, [31.2, FLOOR], [31.2, -1.6], C.woodDark, 1.4)
   line(pen, [30.95, FLOOR], [31.45, FLOOR], C.woodDark, 1.2)
-  shape(pen, [[30.95, -1.55], [31.45, -1.55], [31.38, -1.72], [31.02, -1.72]], '#2A2622')
-  rect(pen, 30.85, -1.6, 31.55, -1.55, '#2A2622')
+  // Its hooks bare: Murray has his hat on, and he is on his way.
+  line(pen, [31.2, -1.6], [30.98, -1.45], C.woodDark, 0.8)
+  line(pen, [31.2, -1.6], [31.42, -1.45], C.woodDark, 0.8)
   // The safe's body: squat, black, on its feet, its edges catching what light there is.
   const [s0, s1] = SAFE
   rect(pen, s0, SAFE_TOP, s1, FLOOR - SAFE_FEET, C.safe)
@@ -985,13 +1001,8 @@ export function drawSafeDoor(pen: Pen, t: number): void {
   for (const [x, y, sx, sy] of [[HINGE_X + 0.15, yT + 0.13, 1, 1], [edge - 0.15, yT + 0.13, -1, 1], [HINGE_X + 0.15, yB - 0.13, 1, -1], [edge - 0.15, yB - 0.13, -1, -1]] as const) {
     path(pen, [P(x + sx * 0.02, y + sy * 0.18), P(x + sx * 0.1, y + sy * 0.1), P(x + sx * 0.18, y + sy * 0.02)], C.gilt, 0.5)
   }
-  // A gilt oval over the dial with a little scene in it: hills and a sky.
-  const oc = P(HINGE_X + DOOR_W / 2, yB - 0.38)
-  if (c > 0.3) {
-    ellipse(pen, oc, 0.36 * c, 0.15, C.giltDark)
-    ellipse(pen, oc, 0.33 * c, 0.13, '#3A4A44')
-    shape(pen, [[oc[0] - 0.25 * c, oc[1] + 0.03], [oc[0] - 0.1 * c, oc[1] - 0.04], [oc[0] + 0.05 * c, oc[1] + 0.01], [oc[0] + 0.25 * c, oc[1] - 0.03], [oc[0] + 0.25 * c, oc[1] + 0.06], [oc[0] - 0.25 * c, oc[1] + 0.06]], '#2A3A2E')
-  }
+  // Under the dial, the door in section where its lock is: three wheels on the dial's spindle, the fence over them.
+  if (c > 0.3) drawLock(pen, t, P)
   // The dial: a silver ring of ticks round a black knob, turning.
   const dc = P(DIAL[0], DIAL[1])
   const dth = dialTurn(t)
@@ -1033,6 +1044,110 @@ export function drawSafeDoor(pen: Pen, t: number): void {
   const sh = lastOf(SHOVES, t)
   if (sh.ago < 0.3) glow(pen, P(edge, yB - 0.1), 0.2, C.label, 0.25 * Math.exp(-sh.ago / 0.1))
   if (t >= SWUNG && t < SWUNG + 0.4) glow(pen, P(edge, (yT + yB) / 2), 0.4, C.label, 0.2 * flash(t - SWUNG, 0.12))
+}
+
+/**
+ * The lock, cut open under the dial: three brass wheels side by side, each with its gate (a notch), turned by the
+ * dial's clicks a bar each until the gate comes up under the fence, with a glint; the fence drops into the three gates
+ * as the handle turns, and the bolts go back.
+ */
+function drawLock(pen: Pen, t: number, P: (x: number, y: number) => Pt): void {
+  const q = (pts: Pt[]) => pts.map(([x, y]) => P(x, y))
+  const [x0, x1, y0, y1] = [25.32, 26.26, 0.66, 1.08]
+  shape(pen, q([[x0 - 0.03, y0 - 0.03], [x1 + 0.03, y0 - 0.03], [x1 + 0.03, y1 + 0.03], [x0 - 0.03, y1 + 0.03]]), C.giltDark)
+  shape(pen, q([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]), '#0D0B0A')
+  // The spindle, from the dial down through the wheels.
+  const cy = 0.91
+  shape(pen, q([[x0 + 0.05, cy - 0.012], [x1 - 0.05, cy - 0.012], [x1 - 0.05, cy + 0.012], [x0 + 0.05, cy + 0.012]]), C.chromeDark)
+  const drop = fenceDrop(t)
+  for (let i = 0; i < 3; i++) {
+    const cx = x0 + 0.17 + i * 0.3
+    const c = P(cx, cy)
+    const rr = 0.115
+    const th = -Math.PI / 2 + wheelTurn(i, t)
+    const set = t >= GATES[i]
+    ellipse(pen, c, rr * (c[0] - P(cx - 1, cy)[0]), rr, set ? C.brass : C.brassDark)
+    ellipse(pen, c, rr * 0.35 * (c[0] - P(cx - 1, cy)[0]), rr * 0.35, '#2A2420')
+    // The gate: a notch cut in the rim.
+    const sx = c[0] - P(cx - 1, cy)[0]
+    const g = (a: number, r: number): Pt => [c[0] + Math.cos(a) * r * sx, c[1] + Math.sin(a) * r]
+    shape(pen, [g(th - 0.32, rr * 1.02), g(th + 0.32, rr * 1.02), g(th + 0.2, rr * 0.7), g(th - 0.2, rr * 0.7)], '#0D0B0A')
+    // The tick on the rim that shows it turning.
+    line(pen, g(th + Math.PI * 0.75, rr * 0.55), g(th + Math.PI * 0.75, rr * 0.95), C.brassDark, 0.5)
+    if (t >= GATES[i] && t < GATES[i] + 0.5) glow(pen, g(-Math.PI / 2, rr), 0.12, '#FFF1C8', 0.8 * flash(t - GATES[i], 0.14))
+  }
+  // The fence: a bar over the wheels, its teeth dropping into the gates as the handle turns.
+  const fy = y0 + 0.07 + 0.045 * drop
+  shape(pen, q([[x0 + 0.04, fy - 0.03], [x1 - 0.04, fy - 0.03], [x1 - 0.04, fy], [x0 + 0.04, fy]]), C.chrome)
+  for (let i = 0; i < 3; i++) {
+    const cx = x0 + 0.17 + i * 0.3
+    shape(pen, q([[cx - 0.03, fy], [cx + 0.03, fy], [cx + 0.015, fy + 0.04], [cx - 0.015, fy + 0.04]]), C.chrome)
+  }
+}
+
+/**
+ * Murray's shadow, at six: in at the office door from the store's light behind him and up the wall, a step a beat
+ * and bigger with each, his hat on; on the last steps his arm comes up and out over the safe. Cast on everything in
+ * the office, the safe and the bills too (Marty, drawn last, stays orange in it).
+ */
+export function drawMurray(pen: Pen, t: number): void {
+  if (t < MURRAY_STEPS[0] - 0.05) return
+  const s = murrayNear(t)
+  const fade = ease((t - MURRAY_STEPS[0] + 0.05) / 0.3)
+  const { ago } = lastOf(MURRAY_STEPS, t)
+  const bob = ago < 0.4 ? 0.05 * Math.sin(Math.min(1, ago / 0.24) * Math.PI) : 0
+  const h = (2.0 + 1.25 * s) / 3
+  const cx = 23.75 + 1.0 * s
+  const F = FLOOR + 0.02
+  const top = F - 2.35 * h + bob
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect((PART2[1] - 0.02) * k, CEIL * k, (31.6 - PART2[1]) * k, (FLOOR + 1 - CEIL) * k)
+  ctx.clip()
+  const col = rgba(pen, C.shade, 0.58 * fade) as unknown as string
+  ctx.fillStyle = col
+  const poly = (pts: Pt[]) => {
+    ctx.beginPath()
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+    ctx.closePath()
+    ctx.fill()
+  }
+  // The coat, the head, the hat; one shape, so where they overlap it is no darker.
+  ctx.beginPath()
+  const coat: Pt[] = [[cx - 0.4 * h, F], [cx + 0.4 * h, F], [cx + 0.36 * h, top + 0.25 * h], [cx + 0.22 * h, top], [cx - 0.22 * h, top], [cx - 0.36 * h, top + 0.25 * h]]
+  coat.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  ctx.closePath()
+  const head: Pt = [cx + 0.03 * h, top - 0.2 * h]
+  ctx.moveTo((head[0] + 0.17 * h) * k, head[1] * k)
+  ctx.ellipse(head[0] * k, head[1] * k, 0.17 * h * k, 0.2 * h * k, 0, 0, Math.PI * 2)
+  ctx.rect((head[0] - 0.32 * h) * k, (head[1] - 0.17 * h) * k, 0.64 * h * k, 0.06 * h * k)
+  ctx.rect((head[0] - 0.18 * h) * k, (head[1] - 0.42 * h) * k, 0.36 * h * k, 0.27 * h * k)
+  ctx.fill('nonzero')
+  // The arm: up and out toward the safe on the last two steps.
+  const reach = ease((t - MURRAY_STEPS[5]) / 0.5)
+  if (reach > 0) {
+    const sh: Pt = [cx + 0.3 * h, top + 0.18 * h]
+    const hand: Pt = [sh[0] + (0.35 + 0.75 * reach) * h * 1.4, sh[1] + (0.6 - 0.2 * reach) * h]
+    const n = 0.09 * h
+    poly([[sh[0], sh[1] - n], [hand[0], hand[1] - n * 0.8], [hand[0] + 0.1 * h, hand[1]], [hand[0], hand[1] + n * 0.8], [sh[0], sh[1] + n * 1.4]])
+  }
+  ctx.restore()
+}
+
+/** The two of them on the carton: their shadows from the swinging bulb, swaying the other way. */
+export function drawPairShadows(pen: Pen, t: number, rachel: Pt): void {
+  if (t < CURTAIN || t > WELCOME) return
+  const bulbX = STOCK_BULB[0] + stockSway(t)
+  const marty = WAY.at(t)
+  for (const b of [marty, rachel]) {
+    const lift = BENCH_TOP - 0.13 - b[1]
+    if (b[0] < BENCH[0] || b[0] > BENCH[1] || lift < -0.01 || lift > 0.6) continue
+    const x = b[0] - (bulbX - b[0]) * 0.12
+    const a = 0.32 * (1 - lift / 0.6)
+    ellipse(pen, [x, BENCH_TOP + 0.012], 0.14 + 0.08 * lift, 0.025, rgba(pen, C.shade, a) as unknown as string)
+  }
 }
 
 /** The hanging lamps: their cords and green enamel shades (their light is drawn over the shade). */
