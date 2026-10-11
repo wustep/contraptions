@@ -18,7 +18,7 @@ import {
   toneMarty,
   toneMish,
 } from './draw'
-import { END, HOTEL_STRIKES, hotelShots, LAND, mishkin, STANDS, WAY } from './geo'
+import { BONK, END, FOOT, HOTEL_STRIKES, hotelShots, LAND, mishkin, STANDS, WAY } from './geo'
 
 /**
  * The hotel on the Upper West Side (91.016 → 121.018, bars 43 to 56), the building cut open at night. He comes in at
@@ -105,5 +105,8 @@ export const HOTEL_HITS: readonly number[] = HOTEL_STRIKES
 
 export const HOTEL_WIDE: [number, number][] = []
 
-/** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
-export const HOTEL_PUNCHES: [number, number][] = []
+/** The camera's punches in on this place's big moments (`score.ts`): the bonk on Mishkin's head, the ladder hitting the street. */
+export const HOTEL_PUNCHES: [number, number][] = [
+  [BONK, 0.35],
+  [FOOT, 0.3],
+]

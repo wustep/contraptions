@@ -1,10 +1,14 @@
 import type { Pt } from '../../../../../parts'
 import { box, frame, part, scenery, type PartShot } from '../kit'
+import { at } from '../music'
 import { SEAMS } from '../seams'
 import type { Pen } from '../pen'
 import { drawAirfield, drawAmbDoor, drawAmbulance, drawBarn, drawFar, drawGround, drawHouse, drawRoadside, drawSky, drawTheCab } from './draw'
 import {
   AMB_STOP,
+  DOOR_OPEN,
+  FLARE,
+  SHOTS,
   COT_IN0,
   DOOR_HITS,
   GB,
@@ -130,7 +134,11 @@ function shots(): PartShot[] {
   void rachelAt
   return [
     follow(T0 + 1.2, 4.2, [1.0, -0.75]),
-    follow(T0 + 3.4, 5.0, [1.5, -0.95]),
+    // Along the cab as it goes: forward past Wally at the wheel to the headlights on the road and the dark ahead, wider
+    // as it gets up to speed, then back to the two of them as it slows for the farmhouse.
+    follow(at(66, 3), 4.8, [2.2, -0.95]),
+    follow(at(67, 3), 6.2, [3.1, -1.3]),
+    follow(at(68, 3), 5.4, [2.0, -1.05]),
     follow(HALT - 0.3, 5.0, [1.5, -0.95]),
     follow(LAND_R + 0.2, 5.6, [1.6, -1.3]),
     follow(IN_BARN - 1.6, 6.4, [2.2, -1.7]),
@@ -141,8 +149,9 @@ function shots(): PartShot[] {
     hold(AMB_STOP - 0.6, 11.5, [S + 19.8, ROAD - 3.4]),
     hold(AMB_STOP + 1.3, 6.6, [RS - 0.3, ROAD - 2.1]),
     hold(STOPS[0] + 0.1, 6.6, [RS - 0.3, ROAD - 2.1]),
-    hold(STOPS[1], 8.4, [S + 27.4, ROAD - 2.7]),
-    hold(STOPS[2] + 0.2, 8.4, [S + 27.0, ROAD - 2.7]),
+    // The indecision: the camera half goes with him, toward the tail lights and back toward the plane.
+    { t: STOPS[1], cells: 7.4, hold: [S + 27.4, ROAD - 2.5], off: [0, -2.35], w: 0.45 },
+    { t: STOPS[2] + 0.2, cells: 7.4, hold: [S + 27.0, ROAD - 2.5], off: [0, -2.35], w: 0.45 },
     follow(STEP_TIMES[0], 6.6, [0.6, -1.3]),
     follow(STEP_TIMES[2], 6.0, [0.9, -1.1]),
     follow(STEP_TIMES[5], 4.4, [0.7, -0.7]),
@@ -156,5 +165,9 @@ export const JERSEY_WIDE: [number, number][] = []
 
 void GB
 
-/** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
-export const JERSEY_PUNCHES: [number, number][] = []
+/** The camera's punches in on this place's big moments (`score.ts`): the first shot, the barn going up, the hay door giving. */
+export const JERSEY_PUNCHES: [number, number][] = [
+  [SHOTS[0], 0.3],
+  [FLARE, 0.4],
+  [DOOR_OPEN, 0.45],
+]

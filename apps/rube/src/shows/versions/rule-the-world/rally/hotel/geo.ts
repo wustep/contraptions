@@ -448,11 +448,15 @@ export const HOTEL_STRIKES: number[] = [
 
 const hold = (t: number, cells: number, p: Pt, cut = false): PartShot => ({ t, cells, hold: p, w: 1, ...(cut ? { cut } : {}) })
 
+const follow = (t: number, cells: number, off: Pt): PartShot => ({ t, cells, off, w: 0 })
+
 /**
- * Close on him inside the door; out to the room as he crosses it; in on him in the tub in the moonlight; out again to
- * both rooms, the floor between them cracking; through the fall held still on the two (the score punches in on the
- * crash); in on Mishkin and the tub; along with him to the window and down the stair; out for the ladder and the drop;
- * and in to the seam's framing on the pavement.
+ * Close on him inside the door; out to the room as he crosses it; in on him in the tub in the moonlight; out to both
+ * rooms, and then creeping in on them as the floor between them cracks a beat at a time, till the tub goes through
+ * (the score punches in on the crash); in on Mishkin and the tub (a punch on the bonk); along with him to the window;
+ * then down the fire escape with him, the camera going down the stair a tread a beat at his side, Mishkin raging at
+ * the window above, and on down the last ladder as it slides (a punch as it hits the street); out for the drop; and in
+ * to the seam's framing on the pavement.
  */
 export function hotelShots(): PartShot[] {
   const seam = SEAMS.alley
@@ -461,16 +465,16 @@ export function hotelShots(): PartShot[] {
     hold(at(44, 1), 4.8, [1.9, -1.15]),
     hold(at(44, 4), 4.8, [4.1, -1.2]),
     hold(BULB_OUT + 0.3, 4.3, [4.9, -1.05]),
-    hold(at(46, 3), 7.0, [5.0, 1.2]),
-    hold(at(47, 3), 7.6, [5.0, 1.6]),
-    hold(LAND + 0.3, 7.6, [5.0, 1.6]),
+    hold(at(46, 3), 7.6, [5.0, 1.4]),
+    hold(LOOK_UP, 6.5, [5.05, 1.55]),
+    hold(BREAK, 6.5, [5.05, 1.6]),
+    hold(LAND + 0.3, 7.0, [5.0, 1.8]),
     hold(OUT_OF_TUB + 0.1, 5.5, [5.2, 2.4]),
     hold(STANDS, 5.5, [6.3, 2.5]),
     hold(at(51, 1), 6.4, [8.4, 3.3]),
-    hold(at(52, 2), 14.5, [6.8, 5.3]),
-    hold(at(53, 1), 14.5, [6.9, 5.3]),
-    hold(DOWN, 9.0, [11.0, 6.5]),
-    hold(SLIDE, 9.2, [12.0, 8.3]),
+    follow(at(51, 4), 5.4, [0.2, -0.75]),
+    follow(at(53, 3), 5.4, [0.35, -0.6]),
+    follow(SLIDE, 5.8, [0.3, -0.2]),
     hold(LET_GO + 0.2, 8.6, [12.7, 9.3]),
     hold(T1, seam.cells, [END[0] + seam.frame[0], END[1] + seam.frame[1]]),
   ]
