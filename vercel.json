@@ -1,5 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build:site",
+  "ignoreCommand": "bash scripts/vercel-ignore-build.sh",
   "redirects": [
     { "source": "/", "destination": "/machine/", "permanent": false },
     { "source": "/rube{/}?", "destination": "/machine/", "permanent": false },
