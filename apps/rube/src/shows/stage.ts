@@ -2,7 +2,7 @@ import p5 from 'p5'
 import { canvasOf, downloadBlob } from '../../../../src/core/capture'
 import { drawWorld, drawingModes, followCamera, setupCanvas } from '../engine'
 import { overviewCamera } from '../overview'
-import { installAdditiveGradients } from './additive'
+import { installBlendedGradients } from './blend'
 import { recordShow } from './record'
 import { zoomed, type Framing, type Performance } from './registry'
 import { wordPainter } from './words'
@@ -131,7 +131,7 @@ export interface ShowStage {
 }
 
 export function createShowStage(host: HTMLElement, clock: { time(): number }): ShowStage {
-  installAdditiveGradients()
+  installBlendedGradients()
   let overview = false
   let zoom = false
   let perf: Performance | null = null
