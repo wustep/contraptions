@@ -44,7 +44,8 @@ import type { LiftoffShow } from '../src/shows/versions/interstellar/liftoff/sho
 import { checkSebs } from './sebs'
 import { checkGymnopedie } from './gymnopedie'
 import { checkMountainKing } from './mountain-king'
-import { checkCaravan } from './caravan'
+// Caravan: hidden from the picker for now (Stephen, Oct 10)
+// import { checkCaravan } from './caravan'
 import { checkMarriedLife } from './married-life'
 import { checkSpark } from './spark'
 import { checkMerryGoRound } from './merry-go-round'
@@ -309,8 +310,8 @@ async function main(): Promise<void> {
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune\'s and Première\'s one takes are called Take A', ['clair-de-lune', 'premiere-arabesque'].every((w) => shipped.works.find((x) => x.work === w)?.versions[0]?.label === 'Take A'))
-  check('in the picker the works are Caravan, Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Ostinato, Palindrome, Première Arabesque, Quintessence, Rally, Soft Lamp and Voyage',
-    shipped.works.map((w) => w.title).sort().join('|') === 'Caravan|Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Kick|Logogram|Magnum|Married Life|Merry-Go-Round|Mountain King|Ostinato|Palindrome|Première Arabesque|Quintessence|Rally|Soft Lamp|Voyage', shipped.works.map((w) => w.title).join('|'))
+  check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Ostinato, Palindrome, Première Arabesque, Quintessence, Rally, Soft Lamp and Voyage',
+    shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Kick|Logogram|Magnum|Married Life|Merry-Go-Round|Mountain King|Ostinato|Palindrome|Première Arabesque|Quintessence|Rally|Soft Lamp|Voyage', shipped.works.map((w) => w.title).join('|'))
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
 
   // Credits live are the page's DOM; a video has them painted into its frame (`words.ts`). The two are one look.
@@ -325,12 +326,14 @@ async function main(): Promise<void> {
     !!cardFace && words.includes(`'${cardFace}'`) && ['#ECE5D3', '#D9A441'].every((c) => css.includes(c) && words.includes(`'${c}'`)), cardFace)
   check('only a video\'s frame paints credits, and both canvases still refuse type',
     (stageSrc.match(/wordPainter\(/g) ?? []).length === 1 && /const words = shown && !full/.test(stageSrc) && (stageSrc.match(/refuseType\((p|s)\)/g) ?? []).length === 2)
-  check('the shows are Boléro, Caravan, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Heptapod B, Interstellar, La La Land, Married Life, Merry-Go-Round, Mountain King, On the Nature of Daylight, Première, Relax, Rule the World, Soft Lamp, Step Out and Time', shipped.works.map((w) => w.work).sort().join(',') === 'bolero,caravan,clair-de-lune,come-recover,cornfield-chase,gymnopedie,heptapod-b,interstellar,la-la-land,married-life,merry-go-round,mountain-king,nature-of-daylight,premiere-arabesque,relax,rule-the-world,soft-lamp,step-out,time')
+  check('the shows are Boléro, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Heptapod B, Interstellar, La La Land, Married Life, Merry-Go-Round, Mountain King, On the Nature of Daylight, Première, Relax, Rule the World, Soft Lamp, Step Out and Time', shipped.works.map((w) => w.work).sort().join(',') === 'bolero,clair-de-lune,come-recover,cornfield-chase,gymnopedie,heptapod-b,interstellar,la-la-land,married-life,merry-go-round,mountain-king,nature-of-daylight,premiere-arabesque,relax,rule-the-world,soft-lamp,step-out,time')
   const ostinato = shipped.works.find((w) => w.work === 'bolero')?.versions ?? []
   check('bolero is Ostinato, one take, Opus 5.5, with no note',
     ostinato.map((v) => v.take).join(',') === 'opus55' && ostinato[0].title === 'Ostinato' && ostinato[0].label === 'Opus 5.5' && ostinato[0].note === undefined)
-  const caravan = shipped.works.find((w) => w.work === 'caravan')?.versions ?? []
-  check('caravan is Caravan, one take, Opus 5.5, with no note', caravan.map((v) => v.take).join(',') === 'opus55' && caravan[0].title === 'Caravan' && caravan[0].label === 'Opus 5.5' && caravan[0].note === undefined)
+  // Caravan: hidden from the picker for now (Stephen, Oct 10)
+  check('caravan is not in the picker', !shipped.works.some((w) => w.work === 'caravan'))
+  // const caravan = shipped.works.find((w) => w.work === 'caravan')?.versions ?? []
+  // check('caravan is Caravan, one take, Opus 5.5, with no note', caravan.map((v) => v.take).join(',') === 'opus55' && caravan[0].title === 'Caravan' && caravan[0].label === 'Opus 5.5' && caravan[0].note === undefined)
   const marriedLife = shipped.works.find((w) => w.work === 'married-life')?.versions ?? []
   check('married-life is Married Life, one take, Opus 5.5, with no note',
     marriedLife.map((v) => v.take).join(',') === 'opus55' && marriedLife[0].title === 'Married Life' && marriedLife[0].label === 'Opus 5.5' && marriedLife[0].note === undefined)
@@ -389,7 +392,7 @@ async function main(): Promise<void> {
   check('the build writes a renamed take\'s old address as a page', /RENAMED_TAKES\[w\.work\]/.test(readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')))
   const shelved = shelves(shipped.works).map((s) => `${s.section}: ${s.works.map((w) => w.title).join(', ')}`)
   check('the picker shelves the works as Machine, Movies and Ambient, each with its favourites pinned first',
-    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Voyage, Epilogue, Everything, Caravan, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence, Rally / Ambient: Gymnopédie, Ostinato, Soft Lamp', shelved.join(' / '))
+    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Voyage, Epilogue, Everything, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence, Rally / Ambient: Gymnopédie, Ostinato, Soft Lamp', shelved.join(' / '))
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()
@@ -606,7 +609,8 @@ async function main(): Promise<void> {
       if (work.work === 'la-la-land' && version.take === 'opus5-5') checkSebs(perf, version, check)
       if (work.work === 'gymnopedie' && version.take === 'opus55') checkGymnopedie(perf, version, check)
       if (work.work === 'mountain-king' && version.take === 'opus55') checkMountainKing(perf, version, check)
-      if (work.work === 'caravan' && version.take === 'opus55') checkCaravan(perf, version, check)
+      // Caravan: hidden from the picker for now (Stephen, Oct 10)
+      // if (work.work === 'caravan' && version.take === 'opus55') checkCaravan(perf, version, check)
       if (work.work === 'married-life' && version.take === 'opus55') checkMarriedLife(perf, version, check)
       if (work.work === 'mountain-king' && version.take === 'opus55-spark') checkSpark(perf, version, check)
       if (work.work === 'merry-go-round' && version.take === 'opus55') checkMerryGoRound(perf, version, check)

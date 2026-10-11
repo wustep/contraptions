@@ -331,7 +331,7 @@ plant pot. The lamp comes on with the first chord and goes down as the last trac
 desk watches the ball, nods along through some phrases, and falls asleep at the end. The code is `soft-lamp/lamp/`; `check:shows` holds it to the music and every held frame
 to a composed crop (`apps/rube/checks/soft-lamp.ts`). The report is `apps/rube/src/shows/versions/soft-lamp/SOFTLAMP.md`.
 
-`caravan/opus55` (in the picker, **Caravan**, one take, **Opus 5.5**) is "Caravan" from the *Whiplash* soundtrack
+`caravan/opus55` (hidden from the picker for now, Oct 10: its file is `opus55.ts`, not `opus55.show.ts`; was **Caravan**, one take, **Opus 5.5**) is "Caravan" from the *Whiplash* soundtrack
 (Juan Tizol, Duke Ellington and Irving Mills, arranged by John Wasson), the film's finale and drum solo, played whole
 from its first sample and demo only (`apps/rube/src/shows/versions/caravan/ATTRIBUTION.txt`), with the credits after
 it in silence: 576 s. It tells the film in order over the recording, in three universes on one clock with a match
