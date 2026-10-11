@@ -2,8 +2,10 @@ import type { Pen } from './skins-pen'
 
 /**
  * What every skin shares: the one machine's geometry, the moment a skin's backdrop answers, and the shape of a skin.
- * The skins themselves are in `skins.ts` (the worlds she has been to, and the first she never saw) and in
- * `skins-film.ts`, `skins-far.ts` and `skins-odd.ts` (more lives she never saw), which all draw from here.
+ * The skins themselves are in `skins.ts` (the worlds she has been to, and the first she never saw), in
+ * `skins-film.ts`, `skins-montage.ts`, `skins-flash.ts` and `skins-verse.ts` (more of the film's lives), and in
+ * `skins-far.ts`, `skins-odd.ts`, `skins-shop.ts`, `skins-play.ts`, `skins-wild.ts`, `skins-sky.ts`, `skins-past.ts`
+ * and `skins-toy.ts` (lives she might have had), which all draw from here.
  */
 
 /* ------------------------------------------------------------------ the machine's geometry (shared by every skin) */

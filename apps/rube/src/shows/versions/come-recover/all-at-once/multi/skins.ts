@@ -5,6 +5,15 @@ import { flashOf, PL, ring, TH, WEIGHT_H, type Moment, type Skin, type View } fr
 import { FILM_SKINS } from './skins-film'
 import { FAR_SKINS } from './skins-far'
 import { ODD_SKINS } from './skins-odd'
+import { MONTAGE_SKINS } from './skins-montage'
+import { FLASH_SKINS } from './skins-flash'
+import { VERSE_SKINS } from './skins-verse'
+import { SHOP_SKINS } from './skins-shop'
+import { PLAY_SKINS } from './skins-play'
+import { WILD_SKINS } from './skins-wild'
+import { SKY_SKINS } from './skins-sky'
+import { PAST_SKINS } from './skins-past'
+import { TOY_SKINS } from './skins-toy'
 
 export { HP, LE, LW, PL, TH, TILT, WEDGE, WEIGHT_H, type Moment, type Skin, type View } from './skins-kit'
 
@@ -773,68 +782,133 @@ const newyear: Skin = {
 
 /* ------------------------------------------------------------------ the table */
 
-export const SKINS = { home, premiere, dojo, hotdog, hibachi, void: dark, rocks, pinata, karaoke, irs, spinner, alley, newyear, ...FILM_SKINS, ...FAR_SKINS, ...ODD_SKINS } as const
-export type SkinKey = keyof typeof SKINS
+const FILM = { home, premiere, dojo, hotdog, hibachi, void: dark, rocks, pinata, karaoke, irs, spinner, alley, newyear }
+const NEW_FILM = { ...MONTAGE_SKINS, ...FLASH_SKINS, ...VERSE_SKINS }
+const NEW_ODD = [SHOP_SKINS, PLAY_SKINS, WILD_SKINS, SKY_SKINS, PAST_SKINS, TOY_SKINS] as Record<string, Skin>[]
+export const SKINS: Record<string, Skin> & typeof FILM = { ...FILM, ...FILM_SKINS, ...FAR_SKINS, ...ODD_SKINS, ...NEW_FILM, ...Object.assign({}, ...NEW_ODD) }
 
 /**
- * The worlds round the wall. The middle sixteen are set by hand, in the order the panels open: home in the middle,
- * the premiere beside it, the dojo and the hot dogs under them; then the kitchen, the dark and the rocks, the party
- * and the karaoke; then the first of the worlds she never saw. The rest are filled outward ring by ring, each the
- * least used world, and of those the one farthest from where it already is, never one of its eight neighbours. There
- * are more worlds than the six-by-six wall has panels, so up to there no world is seen twice; on the eight-by-eight
- * none is seen more than twice, and its two are far apart, and not in one row or column.
+ * Every screen of the wall is a new set of worlds. The wall splits 2, 4, 9, 16, 36, 64 and 144 (`STEPS` in
+ * `mosaic.ts`), and on each break every panel but home's becomes a life not seen on any screen before it: the film's
+ * own lives first, while the panels are big (the premiere at two; the dojo, the hot dogs and the kitchen at four; the
+ * rest of her jumps at nine; the lives from the film's montage at sixteen and thirty-six), then the lives she might
+ * have had. At 144 every world is there once, all at once, with the film's nearest home, where the dive lingers.
  */
-const ORDER = Object.keys(SKINS) as SkinKey[]
-const MIDDLE: Record<string, SkinKey> = {
-  '-1,-1': 'hibachi', '0,-1': 'void', '1,-1': 'rocks', '2,-1': 'irs',
-  '-1,0': 'pinata', '0,0': 'home', '1,0': 'premiere', '2,0': 'spinner',
-  '-1,1': 'karaoke', '0,1': 'dojo', '1,1': 'hotdog', '2,1': 'alley',
-  '-1,2': 'newyear', '0,2': 'opera', '1,2': 'monolith', '2,2': 'mahjong',
+const FIRST_SEEN: string[][] = [
+  ['premiere'],
+  ['dojo', 'hotdog', 'hibachi'],
+  ['void', 'rocks', 'pinata', 'karaoke', 'irs', 'spinner', 'alley', 'newyear'],
+  ['opera', 'monolith', 'alpha', 'pug', 'lobby', 'trophy', 'pinky', 'elvis', 'bagel', 'googly', 'temple', 'riot', 'arrest', 'rainbow', 'spotlight'],
+]
+/** The grids, as `mosaic.ts` lays them: the panels each one shows, home at (0, 0). */
+export const SCREENS: { i0: number; i1: number; j0: number; j1: number }[] = [
+  { i0: 0, i1: 1, j0: 0, j1: 0 },
+  { i0: 0, i1: 1, j0: 0, j1: 1 },
+  { i0: -1, i1: 1, j0: -1, j1: 1 },
+  { i0: -1, i1: 2, j0: -1, j1: 2 },
+  { i0: -2, i1: 3, j0: -2, j1: 3 },
+  { i0: -3, i1: 4, j0: -3, j1: 4 },
+  { i0: -5, i1: 6, j0: -5, j1: 6 },
+]
+const cellsOf = (s: number): [number, number][] => {
+  const g = SCREENS[s]
+  const out: [number, number][] = []
+  for (let j = g.j0; j <= g.j1; j++) for (let i = g.i0; i <= g.i1; i++) if (i || j) out.push([i, j])
+  // Nearest home first.
+  return out.sort((a, b) => Math.hypot(a[0] - 0.3, a[1] - 0.3) - Math.hypot(b[0] - 0.3, b[1] - 0.3) || hash(a[0], a[1], 3) - hash(b[0], b[1], 3))
 }
-const SPAN = 12
-const TABLE = (() => {
-  const at = new Map<string, number>()
-  const used = new Array(ORDER.length).fill(0)
-  const where: [number, number][][] = ORDER.map(() => [])
-  const put = (i: number, j: number, n: number) => {
-    at.set(`${i},${j}`, n)
-    used[n]++
-    where[n].push([i, j])
+
+/** How unlike two worlds look at a glance: their paper and their floor. */
+function rgbOf(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+const unlike = (a: Skin, b: Skin): number => {
+  const d = (x: string, y: string) => {
+    const p = rgbOf(x)
+    const q = rgbOf(y)
+    return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
   }
-  for (const [key, skin] of Object.entries(MIDDLE)) {
-    const [i, j] = key.split(',').map(Number)
-    if (ORDER.includes(skin)) put(i, j, ORDER.indexOf(skin))
+  return d(a.bg, b.bg) + 0.5 * d(a.floor, b.floor)
+}
+
+const TABLES: Map<string, string>[] = (() => {
+  // The pool, in the order the screens take it: the film's lives (by hand for the first four screens, then the rest),
+  // then the made-up lives, the new ones dealt round their groups so a screen gets a mix.
+  const order: string[] = FIRST_SEEN.flat()
+  const add = (k: string) => {
+    if (!order.includes(k) && k !== 'home') order.push(k)
   }
-  const cells: [number, number][] = []
-  for (let j = -SPAN; j <= SPAN + 1; j++) for (let i = -SPAN; i <= SPAN + 1; i++) if (!at.has(`${i},${j}`)) cells.push([i, j])
-  cells.sort((a, b) => Math.max(Math.abs(a[0] - 0.5), Math.abs(a[1] - 0.5)) - Math.max(Math.abs(b[0] - 0.5), Math.abs(b[1] - 0.5)) || hash(a[0], a[1], 3) - hash(b[0], b[1], 3))
-  for (const [i, j] of cells) {
-    const near = new Set<number>()
-    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
-      const v = at.get(`${i + di},${j + dj}`)
-      if (v !== undefined) near.add(v)
+  for (const k of Object.keys(NEW_FILM)) add(k)
+  for (const k of Object.keys(FILM_SKINS)) add(k)
+  for (const k of [...Object.keys(FAR_SKINS), ...Object.keys(ODD_SKINS)]) add(k)
+  const groups = NEW_ODD.map((g) => Object.keys(g))
+  for (let n = 0; groups.some((g) => n < g.length); n++) for (const g of groups) if (n < g.length) add(g[n])
+  const all = order.filter((k) => SKINS[k])
+
+  const tables: Map<string, string>[] = []
+  const shown = new Set<string>(['home'])
+  let next = 0
+  for (let s = 0; s < SCREENS.length; s++) {
+    const cells = cellsOf(s)
+    const last = s === SCREENS.length - 1
+    // Each screen takes the next of the pool, as many as it has panels; the last takes every world there is.
+    const pool = last ? [...all] : all.slice(next, next + cells.length)
+    next += pool.length
+    const at = new Map<string, string>([['0,0', 'home']])
+    const rank = new Map(pool.map((k, n) => [k, n]))
+    for (const [i, j] of cells) {
+      let best = -1
+      let score = -Infinity
+      for (let n = 0; n < pool.length; n++) {
+        // Unlike its neighbours already laid, and the earlier in the pool the nearer home.
+        let near = Infinity
+        for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+          const v = at.get(`${i + di},${j + dj}`)
+          if (v) near = Math.min(near, unlike(SKINS[pool[n]], SKINS[v]) * (di && dj ? 1.3 : 1))
+        }
+        const sc = Math.min(near, 260) - 1.6 * (rank.get(pool[n]) ?? 0)
+        if (sc > score) {
+          score = sc
+          best = n
+        }
+      }
+      if (best < 0) break
+      at.set(`${i},${j}`, pool[best])
+      pool.splice(best, 1)
     }
-    let best = 0
-    let score = Infinity
-    for (let n = 0; n < ORDER.length; n++) {
-      if (near.has(n) || ORDER[n] === 'home') continue
-      // Fewest uses first; then the farthest from its nearest self (as far as six panels counts), a self in the same
-      // row or column counting as nearer, since the eye runs along those; a little hash so ties do not fall in order.
-      let gap = 6
-      for (const [x, y] of where[n]) gap = Math.min(gap, Math.hypot(x - i, y - j) * (x === i || y === j ? 0.5 : 1))
-      const sc = used[n] * 100 - gap * 4 + hash(i, j, n + 7)
-      if (sc < score) {
-        score = sc
-        best = n
+    // Past the grid's own edges (a wider stage, the slide before the dive): worlds not yet seen if there are any, else
+    // any not on this screen, never one of a panel's neighbours.
+    for (const v of at.values()) shown.add(v)
+    const fresh = all.filter((k) => !shown.has(k))
+    const spare = fresh.length ? fresh : all.filter((k) => ![...at.values()].includes(k))
+    const g = SCREENS[s]
+    let n = 0
+    for (let j = g.j0 - 3; j <= g.j1 + 3; j++) for (let i = g.i0 - 4; i <= g.i1 + 4; i++) {
+      if (at.has(`${i},${j}`)) continue
+      const near = new Set<string>()
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        const v = at.get(`${i + di},${j + dj}`)
+        if (v) near.add(v)
+      }
+      for (let k = 0; k < spare.length; k++) {
+        const c = spare[(n + k) % spare.length]
+        if (near.has(c) && k < spare.length - 1) continue
+        at.set(`${i},${j}`, c)
+        n += k + 1
+        break
       }
     }
-    put(i, j, best)
+    tables.push(at)
   }
-  return at
+  return tables
 })()
 
-/** The world of panel (i, j). */
-export function skinAt(i: number, j: number): Skin {
-  const n = TABLE.get(`${i},${j}`) ?? (((i + 5 * j) % ORDER.length) + ORDER.length) % ORDER.length
-  return SKINS[ORDER[n]]
+/** The world of panel (i, j) on screen `s` (0 the first split into two, 6 the wall of 144). */
+export function skinAt(s: number, i: number, j: number): Skin {
+  const t = TABLES[Math.max(0, Math.min(TABLES.length - 1, s))]
+  const k = t.get(`${i},${j}`)
+  if (k) return SKINS[k]
+  const keys = Object.keys(SKINS)
+  return SKINS[keys[(((i * 7 + j * 13) % keys.length) + keys.length) % keys.length]]
 }
