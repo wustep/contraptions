@@ -857,7 +857,7 @@ const saidKeys = new Set<string>()
 const cardText = (c: TitleCard): string => [c.role, ...c.names.map((n) => (typeof n === 'string' ? n : `${n[0]}, ${n[1]}`)), ...(c.notes ?? [])].filter(Boolean).join('. ')
 
 function buildCard(c: TitleCard): HTMLElement {
-  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}${c.shade ? ' shaded' : ''}${c.caption ? ' caption' : ''}` })
+  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}${c.dark ? ' dark' : ''}${c.shade ? ' shaded' : ''}${c.caption ? ' caption' : ''}` })
   if (c.shade) {
     node.style.setProperty('--shade', String(c.shade))
     node.append(el('div', { class: 'veil' }))
@@ -1114,6 +1114,9 @@ if (import.meta.env.DEV) {
     state: () => ({ version: current ? `${current.work}/${current.take}` : null, playing: transport?.playing ?? false, speed, muted, soundHeld, overview, zoom, blocked, loading, failed, music: music.state(), source: music.source(), fellBack: music.fellBack(), heard: music.position(), duration: perf?.duration ?? 0, recording: recording !== null }),
     togglePanel: () => shell.toggle(),
     canvas: () => stageRoot.querySelector('canvas') as HTMLCanvasElement,
+    /** Profiling (`hold`, `paintAt`): stop the live loop and paint one frame at `t` on demand. */
+    hold: (on: boolean) => stage.hold(on),
+    paintAt: (t: number) => stage.paintAt(t),
     /** The version that is up, at `t`, as a PNG data URL `w` × `h`: share cards and their contact sheets. */
     still: async (t: number, w: number, h: number) => {
       const blob = await stage.png({ label: 'card', w, h }, t)

@@ -285,7 +285,23 @@ const MOTION = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-m
 export const prefersCalm = (): boolean => !!MOTION?.matches
 
 /** The look of each world as a panel of everywhere at once (by its skin's key), and as the surf flies through it. */
-export const PANEL_LOOKS: Record<string, Look> = { premiere: 'scope', alley: 'scope', dojo: 'print', hotdog: 'dream', karaoke: 'tape', irs: 'tube' }
+export const PANEL_LOOKS: Record<string, Look> = {
+  premiere: 'scope',
+  alley: 'scope',
+  dojo: 'print',
+  hotdog: 'dream',
+  karaoke: 'tape',
+  irs: 'tube',
+  // The film's other lives: the movie star's in scope, the IRS building's under its tubes, the old photograph in print,
+  // and the thumbnail and the anime city on tape.
+  spotlight: 'scope',
+  set: 'scope',
+  riot: 'tube',
+  maid: 'tube',
+  sepia: 'print',
+  conspiracy: 'tape',
+  cyberpunk: 'tape',
+}
 
 /* ------------------------------------------------------------------ irises */
 

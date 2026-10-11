@@ -11,8 +11,9 @@ import { cherylAt, COVER_X, FINAL, IN, MEET, ON, STOP, STREET_STRIKES, WALTER_LA
  * over a pair of cellar doors (two clanks, as the band begins to fall away), and slows: Cheryl is coming to him along
  * the pavement from the right, and on the strong beat of bar 132 they stop, touching. They go on together toward the
  * newsstand, which is opening: its shutter goes up in two hauls, and the man inside puts the morning's issues out on
- * the wire, flipping each down: the last of them is Life, its red box, and on its cover the photograph of a slate
- * ball sitting by a lit strip in the dark: the show's first frame. On the last chord they stop before it.
+ * the wire, flipping each down: the last of them is Life, its red box, and on its cover the photograph of him, the red
+ * ball, sitting by a lit strip in the dark: the show's first frame, with him as he is now. On the last chord they stop
+ * before it, he right under himself.
  *
  * They look a while. Then they go on up the street together, close, and the camera lets them go, drawing back to
  * the whole street and holding: the stand, the fronts, the pale sky over the low building in the middle (where the

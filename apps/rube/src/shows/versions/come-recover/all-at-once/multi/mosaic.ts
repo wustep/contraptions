@@ -35,7 +35,8 @@ import { at, circle, glow, hash, lodFor, mix, poly, rect, rgba, type Pen } from 
  * The part draws everything in its `over`, in the screen's own place: a panel is a world (`skins.ts`) with its own
  * little camera on the machine. At one panel that camera is the stage's own, so the leg opens and closes on the
  * show's framing exactly; the stage's ball is under the paint, and each panel draws its own Evelyn from the same
- * function the lane is sampled from. A panel's detail drops as it gets small.
+ * function the lane is sampled from. A panel's detail drops as it gets small. Every break brings a new screen of
+ * worlds, none seen on a screen before it (`skinAt`); only home's panel stays.
  */
 
 const B = fight
@@ -222,6 +223,13 @@ function blend(a: Grid, b: Grid, u: number): Grid {
     ox: lerp(a.ox, b.ox, u),
     oy: lerp(a.oy, b.oy, u),
   }
+}
+
+/** Which screen of worlds the wall shows at `t`: each break brings a new one (`skinAt`). */
+function screenAt(t: number): number {
+  let s = 0
+  for (let j = 0; j < STEPS.length; j++) if (t >= STEPS[j].at) s = j
+  return s
 }
 
 /** How long the breath before step `i` takes: less when the steps come quick. */
@@ -627,6 +635,7 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
   ctx.lineJoin = 'round'
 
   const { g, split } = early ? { g: STEPS[5].g, split: 1 } : gridAt(t)
+  const screen = early ? 5 : screenAt(t)
   // The dive into home's panel: how far (0..1), how much closer the wall is, and how far home's panel has become the
   // stage's own view (its scale and its middle), which it is wholly on the great hit.
   const dv = early ? 0 : diveAt(t)
@@ -698,7 +707,7 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
       const home = i === 0 && j === 0
       // From the dive, home's panel is home itself, drawn after the rest (below).
       if (home && t >= DIVE[0]) continue
-      const skin = home ? SKINS.home : skinAt(i, j, 0)
+      const skin = home ? SKINS.home : skinAt(screen, i, j)
       const dark = home ? 0.97 * (1 - lights(t)) : 0
       // The family in every life but home's own panel.
       panel(ctx, F, skin, b, qD, scD, 1, mc, back, dark, home ? undefined : [i, j])

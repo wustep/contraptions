@@ -60,7 +60,8 @@ function glide(w: Way, dist: number, up: number, down: number, until: number): W
   return w
 }
 
-const WALTER_STOP = COVER_X - 0.15
+/** Where he stops before the cover: right under himself in its photograph (`life()` in `draw.ts`), a match. */
+export const WALTER_STOP = COVER_X - 0.15
 const WALTER_CORNER = CORNER.x - 0.3
 
 function walterWay(): Way {

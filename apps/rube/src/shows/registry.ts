@@ -250,6 +250,11 @@ export interface TitleCard {
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
   /**
+   * Optional: the words in graphite with a pale glow, not cream, for credits over a pale picture (a morning sky) where
+   * cream would vanish; its role and "as" lines a softer graphite. Unset: cream, every show's credits as they were.
+   */
+  dark?: boolean
+  /**
    * Optional: a soft veil of the dark round its words, this strong at its middle (0 to 1), for a card over a bright or
    * busy picture. Drawn with the words, wherever they are drawn (the page, and a video's frames), and nowhere else.
    */

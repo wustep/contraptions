@@ -1,5 +1,21 @@
 import { DOJO, HIBACHI, HOME, HOTDOG, LAUNDROMAT, PREMIERE, ROCKS, STAR, VOID, DOJO_THEME, HOTDOG_THEME, HIBACHI_THEME, VOID_THEME, ROCKS_THEME } from '../worlds'
 import { at, beam, circle, ellipse, glow, hash, line, mix, poly, rect, round, type Pen, type Pt } from './skins-pen'
+import { flashOf, PL, ring, TH, WEIGHT_H, type Moment, type Skin, type View } from './skins-kit'
+
+import { FILM_SKINS } from './skins-film'
+import { FAR_SKINS } from './skins-far'
+import { ODD_SKINS } from './skins-odd'
+import { MONTAGE_SKINS } from './skins-montage'
+import { FLASH_SKINS } from './skins-flash'
+import { VERSE_SKINS } from './skins-verse'
+import { SHOP_SKINS } from './skins-shop'
+import { PLAY_SKINS } from './skins-play'
+import { WILD_SKINS } from './skins-wild'
+import { SKY_SKINS } from './skins-sky'
+import { PAST_SKINS } from './skins-past'
+import { TOY_SKINS } from './skins-toy'
+
+export { HP, LE, LW, PL, TH, TILT, WEDGE, WEIGHT_H, type Moment, type Skin, type View } from './skins-kit'
 
 /**
  * The worlds as skins: every universe Evelyn has been to, and some she has not, each as the materials and the one
@@ -14,68 +30,6 @@ import { at, beam, circle, ellipse, glow, hash, line, mix, poly, rect, round, ty
  * A skin draws in scene cells: x right, y down, the ground under the seesaw's pivot at 0,0, the ground's top at
  * y = 0. The machine spans x -1.15..1.15 and rises to about y = -1.6 at the top of Evelyn's throw.
  */
-
-/* ------------------------------------------------------------------ the machine's geometry (shared by every skin) */
-
-/** The pivot's height over the ground. */
-export const HP = 0.36
-/** Half the plank's length, and its thickness. */
-export const PL = 1.15
-export const TH = 0.09
-/** How far from the pivot Evelyn and the weight sit on the plank. */
-export const LE = 0.98
-export const LW = 0.92
-/** The wedge's half-width at the ground. */
-export const WEDGE = 0.25
-/** The plank's tilt when one end is down on the ground. */
-export const TILT = Math.asin((HP - TH / 2) / PL)
-/** The weight's height: it stands this tall on the plank. */
-export const WEIGHT_H = 0.34
-
-/** What the moment is, for a skin's backdrop to answer: the last slam of the plank, and how loud. */
-export interface Moment {
-  /** Show seconds. */
-  t: number
-  /** Seconds since the plank last slammed (Infinity before the first). */
-  since: number
-  /** That slam's strength in the recording (0 to 2.4). */
-  s: number
-  /** Which end slammed: Evelyn's (true) or the weight's. */
-  e: boolean
-}
-
-/** The box of the scene the panel shows, in scene cells. */
-export interface View {
-  x0: number
-  y0: number
-  x1: number
-  y1: number
-}
-
-export interface Skin {
-  key: string
-  bg: string
-  ink: string
-  /** The ground from y = 0 down, and a band along its top edge. */
-  floor: string
-  edge?: string
-  plank: string
-  fulcrum: string
-  /** Everything behind the machine: the walls, the sky, the one big silhouette. */
-  back(pen: Pen, m: Moment, v: View): void
-  /** The weight, standing with its foot at 0,0 and WEIGHT_H tall. */
-  weight(pen: Pen): void
-  /** The plank's own look, in its frame (x -PL..PL, y -TH/2..TH/2); a plain bar of `plank` when unset. */
-  board?(pen: Pen): void
-  /** Over the machine and Evelyn: rain, a flash. */
-  front?(pen: Pen, m: Moment, v: View): void
-}
-
-/* ------------------------------------------------------------------ helpers */
-
-const flashOf = (m: Moment, min = 1.1, decay = 0.14): number => (m.since < 0 || m.s < min ? 0 : Math.exp(-m.since / decay) * Math.min(1, (m.s - min + 0.4) / 0.9))
-/** A damped ring after a slam: what a hanging thing does when the floor it hangs over is struck. */
-const ring = (m: Moment, period = 0.36, decay = 0.35): number => (m.since < 0 || !Number.isFinite(m.since) ? 0 : Math.exp(-m.since / decay) * Math.sin((m.since / period) * Math.PI * 2))
 
 function ground(pen: Pen, skin: Skin, v: View): void {
   rect(pen, v.x0 - 0.1, 0, v.x1 - v.x0 + 0.2, Math.max(0.05, v.y1 + 0.1), skin.floor, 0)
@@ -828,60 +782,133 @@ const newyear: Skin = {
 
 /* ------------------------------------------------------------------ the table */
 
-export const SKINS = { home, premiere, dojo, hotdog, hibachi, void: dark, rocks, pinata, karaoke, irs, spinner, alley, newyear } as const
-export type SkinKey = keyof typeof SKINS
+const FILM = { home, premiere, dojo, hotdog, hibachi, void: dark, rocks, pinata, karaoke, irs, spinner, alley, newyear }
+const NEW_FILM = { ...MONTAGE_SKINS, ...FLASH_SKINS, ...VERSE_SKINS }
+const NEW_ODD = [SHOP_SKINS, PLAY_SKINS, WILD_SKINS, SKY_SKINS, PAST_SKINS, TOY_SKINS] as Record<string, Skin>[]
+export const SKINS: Record<string, Skin> & typeof FILM = { ...FILM, ...FILM_SKINS, ...FAR_SKINS, ...ODD_SKINS, ...NEW_FILM, ...Object.assign({}, ...NEW_ODD) }
 
 /**
- * The worlds round the wall. The middle sixteen are set by hand, in the order the panels open: home in the middle,
- * the premiere beside it, the dojo and the hot dogs under them; then the kitchen, the dark and the rocks, the party
- * and the karaoke; then the worlds she never saw. The rest are filled outward ring by ring, each the least used
- * world that none of its eight neighbours already is, so no two panels side by side or corner to corner match and
- * no world lines up with itself in stripes. A turn of the whole wall (the crescendo's) moves every panel on by the
- * same step through the list, which keeps neighbours apart.
+ * Every screen of the wall is a new set of worlds. The wall splits 2, 4, 9, 16, 36, 64 and 144 (`STEPS` in
+ * `mosaic.ts`), and on each break every panel but home's becomes a life not seen on any screen before it: the film's
+ * own lives first, while the panels are big (the premiere at two; the dojo, the hot dogs and the kitchen at four; the
+ * rest of her jumps at nine; the lives from the film's montage at sixteen and thirty-six), then the lives she might
+ * have had. At 144 every world is there once, all at once, with the film's nearest home, where the dive lingers.
  */
-const ORDER: SkinKey[] = ['home', 'premiere', 'dojo', 'hotdog', 'hibachi', 'void', 'rocks', 'pinata', 'karaoke', 'irs', 'spinner', 'alley', 'newyear']
-const MIDDLE: Record<string, SkinKey> = {
-  '-1,-1': 'hibachi', '0,-1': 'void', '1,-1': 'rocks', '2,-1': 'irs',
-  '-1,0': 'pinata', '0,0': 'home', '1,0': 'premiere', '2,0': 'spinner',
-  '-1,1': 'karaoke', '0,1': 'dojo', '1,1': 'hotdog', '2,1': 'alley',
-  '-1,2': 'newyear', '0,2': 'irs', '1,2': 'void', '2,2': 'rocks',
+const FIRST_SEEN: string[][] = [
+  ['premiere'],
+  ['dojo', 'hotdog', 'hibachi'],
+  ['void', 'rocks', 'pinata', 'karaoke', 'irs', 'spinner', 'alley', 'newyear'],
+  ['opera', 'monolith', 'alpha', 'pug', 'lobby', 'trophy', 'pinky', 'elvis', 'bagel', 'googly', 'temple', 'riot', 'arrest', 'rainbow', 'spotlight'],
+]
+/** The grids, as `mosaic.ts` lays them: the panels each one shows, home at (0, 0). */
+export const SCREENS: { i0: number; i1: number; j0: number; j1: number }[] = [
+  { i0: 0, i1: 1, j0: 0, j1: 0 },
+  { i0: 0, i1: 1, j0: 0, j1: 1 },
+  { i0: -1, i1: 1, j0: -1, j1: 1 },
+  { i0: -1, i1: 2, j0: -1, j1: 2 },
+  { i0: -2, i1: 3, j0: -2, j1: 3 },
+  { i0: -3, i1: 4, j0: -3, j1: 4 },
+  { i0: -5, i1: 6, j0: -5, j1: 6 },
+]
+const cellsOf = (s: number): [number, number][] => {
+  const g = SCREENS[s]
+  const out: [number, number][] = []
+  for (let j = g.j0; j <= g.j1; j++) for (let i = g.i0; i <= g.i1; i++) if (i || j) out.push([i, j])
+  // Nearest home first.
+  return out.sort((a, b) => Math.hypot(a[0] - 0.3, a[1] - 0.3) - Math.hypot(b[0] - 0.3, b[1] - 0.3) || hash(a[0], a[1], 3) - hash(b[0], b[1], 3))
 }
-const SPAN = 12
-const TABLE = (() => {
-  const at = new Map<string, number>()
-  const used = new Array(ORDER.length).fill(0)
-  for (const [key, skin] of Object.entries(MIDDLE)) {
-    const n = ORDER.indexOf(skin)
-    at.set(key, n)
-    used[n]++
+
+/** How unlike two worlds look at a glance: their paper and their floor. */
+function rgbOf(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+const unlike = (a: Skin, b: Skin): number => {
+  const d = (x: string, y: string) => {
+    const p = rgbOf(x)
+    const q = rgbOf(y)
+    return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
   }
-  const cells: [number, number][] = []
-  for (let j = -SPAN; j <= SPAN + 1; j++) for (let i = -SPAN; i <= SPAN + 1; i++) if (!at.has(`${i},${j}`)) cells.push([i, j])
-  cells.sort((a, b) => Math.max(Math.abs(a[0] - 0.5), Math.abs(a[1] - 0.5)) - Math.max(Math.abs(b[0] - 0.5), Math.abs(b[1] - 0.5)) || hash(a[0], a[1], 3) - hash(b[0], b[1], 3))
-  for (const [i, j] of cells) {
-    const near = new Set<number>()
-    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
-      const v = at.get(`${i + di},${j + dj}`)
-      if (v !== undefined) near.add(v)
+  return d(a.bg, b.bg) + 0.5 * d(a.floor, b.floor)
+}
+
+const TABLES: Map<string, string>[] = (() => {
+  // The pool, in the order the screens take it: the film's lives (by hand for the first four screens, then the rest),
+  // then the made-up lives, the new ones dealt round their groups so a screen gets a mix.
+  const order: string[] = FIRST_SEEN.flat()
+  const add = (k: string) => {
+    if (!order.includes(k) && k !== 'home') order.push(k)
+  }
+  for (const k of Object.keys(NEW_FILM)) add(k)
+  for (const k of Object.keys(FILM_SKINS)) add(k)
+  for (const k of [...Object.keys(FAR_SKINS), ...Object.keys(ODD_SKINS)]) add(k)
+  const groups = NEW_ODD.map((g) => Object.keys(g))
+  for (let n = 0; groups.some((g) => n < g.length); n++) for (const g of groups) if (n < g.length) add(g[n])
+  const all = order.filter((k) => SKINS[k])
+
+  const tables: Map<string, string>[] = []
+  const shown = new Set<string>(['home'])
+  let next = 0
+  for (let s = 0; s < SCREENS.length; s++) {
+    const cells = cellsOf(s)
+    const last = s === SCREENS.length - 1
+    // Each screen takes the next of the pool, as many as it has panels; the last takes every world there is.
+    const pool = last ? [...all] : all.slice(next, next + cells.length)
+    next += pool.length
+    const at = new Map<string, string>([['0,0', 'home']])
+    const rank = new Map(pool.map((k, n) => [k, n]))
+    for (const [i, j] of cells) {
+      let best = -1
+      let score = -Infinity
+      for (let n = 0; n < pool.length; n++) {
+        // Unlike its neighbours already laid, and the earlier in the pool the nearer home.
+        let near = Infinity
+        for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+          const v = at.get(`${i + di},${j + dj}`)
+          if (v) near = Math.min(near, unlike(SKINS[pool[n]], SKINS[v]) * (di && dj ? 1.3 : 1))
+        }
+        const sc = Math.min(near, 260) - 1.6 * (rank.get(pool[n]) ?? 0)
+        if (sc > score) {
+          score = sc
+          best = n
+        }
+      }
+      if (best < 0) break
+      at.set(`${i},${j}`, pool[best])
+      pool.splice(best, 1)
     }
-    let best = 0
-    let score = Infinity
-    for (let n = 0; n < ORDER.length; n++) {
-      if (near.has(n)) continue
-      const sc = used[n] + hash(i, j, n + 7) * 0.9
-      if (sc < score) {
-        score = sc
-        best = n
+    // Past the grid's own edges (a wider stage, the slide before the dive): worlds not yet seen if there are any, else
+    // any not on this screen, never one of a panel's neighbours.
+    for (const v of at.values()) shown.add(v)
+    const fresh = all.filter((k) => !shown.has(k))
+    const spare = fresh.length ? fresh : all.filter((k) => ![...at.values()].includes(k))
+    const g = SCREENS[s]
+    let n = 0
+    for (let j = g.j0 - 3; j <= g.j1 + 3; j++) for (let i = g.i0 - 4; i <= g.i1 + 4; i++) {
+      if (at.has(`${i},${j}`)) continue
+      const near = new Set<string>()
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        const v = at.get(`${i + di},${j + dj}`)
+        if (v) near.add(v)
+      }
+      for (let k = 0; k < spare.length; k++) {
+        const c = spare[(n + k) % spare.length]
+        if (near.has(c) && k < spare.length - 1) continue
+        at.set(`${i},${j}`, c)
+        n += k + 1
+        break
       }
     }
-    at.set(`${i},${j}`, best)
-    used[best]++
+    tables.push(at)
   }
-  return at
+  return tables
 })()
 
-/** The world of panel (i, j), after `turns` turns of the whole wall. */
-export function skinAt(i: number, j: number, turns = 0): Skin {
-  const n = TABLE.get(`${i},${j}`) ?? (((i + 5 * j) % 13) + 13) % 13
-  return SKINS[ORDER[(n + 5 * turns) % ORDER.length]]
+/** The world of panel (i, j) on screen `s` (0 the first split into two, 6 the wall of 144). */
+export function skinAt(s: number, i: number, j: number): Skin {
+  const t = TABLES[Math.max(0, Math.min(TABLES.length - 1, s))]
+  const k = t.get(`${i},${j}`)
+  if (k) return SKINS[k]
+  const keys = Object.keys(SKINS)
+  return SKINS[keys[(((i * 7 + j * 13) % keys.length) + keys.length) % keys.length]]
 }

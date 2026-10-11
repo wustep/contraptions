@@ -9,7 +9,9 @@
   "description": "A generator for grids of tiny animated machines.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && npm run check:playground && npm run check:shows && npm run check:premiere && npm run check:clair && vite build",
+    "build": "npm run verify && vite build",
+    "build:site": "vite build",
+    "verify": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && npm run check:playground && npm run check:shows && npm run check:premiere && npm run check:clair",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "new": "node scripts/new-contraption.mjs",

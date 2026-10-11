@@ -11,8 +11,10 @@ import { CHERYL, SEAN, WALTER_WARM } from './worlds'
  * comes up, holds, and goes as the next comes, and the last goes in the quiet after the song.
  *
  * The words are the page's: a show's canvas sets no type, and a saved frame or a recorded video has none
- * (`shows/stage.ts`), so the player sets them over the frame from `creditsAt` in its own face. The canvas's half is
- * only a soft shade under them, so they read over the pale morning.
+ * (`shows/stage.ts`), so the player sets them over the frame from `creditsAt` in its own face. Over the pale morning
+ * the page's usual cream all but vanished, so they are set dark (`TitleCard.dark`): graphite, the street's own ink, with
+ * a pale glow. The canvas's half is a soft morning haze under them, so they read where they cross a building's front
+ * as well as over the sky.
  */
 
 export interface Card {
@@ -32,9 +34,9 @@ const GO = 0.95
 const OVERLAP = 0.25
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 3.0, role: 'Directed by', names: ['Claude Opus 5.5'] },
+  { hold: 3.4, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 4.4,
+    hold: 5.0,
     role: 'With',
     names: [
       ['Walter Mitty', 'the slate ball, then the red', WALTER_WARM],
@@ -43,13 +45,13 @@ const script: Omit<Card, 'at'>[] = [
     ],
   },
   {
-    hold: 4.2,
+    hold: 4.8,
     role: 'Music',
     names: ['José González'],
     notes: ['“Step Out”, written by Theodore Shapiro and Craig Wedren', 'Republic Records (2013)'],
   },
   {
-    hold: 4.0,
+    hold: 4.4,
     role: 'After',
     names: ['The Secret Life of Walter Mitty'],
     notes: ['a film by Ben Stiller (2013)'],
@@ -75,6 +77,8 @@ export const LAST_GONE = (() => {
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: high and centred, over the sky. */
 const AT: [number, number] = [0.5, 0.1]
+/** The least the cards' unit may be on the page, CSS pixels: so a phone held upright still reads the role and the notes. */
+const LEAST = 4.5
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -91,15 +95,15 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `quintessence-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT })
+    out.push({ key: `quintessence-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT, dark: true, least: LEAST })
   })
   return out
 }
 
-/** How deep the shade under the words is at `t`: up with the first card, down after the last. */
+/** How deep the haze under the words is at `t`: up with the first card, down after the last. */
 const bedAt = (t: number): number => clamp((t - CREDITS_AT + 0.4) / 1.6) * (1 - clamp((t - LAST_GONE + 0.4) / 1.8))
 
-/** The canvas's half: a soft shade where the words come. */
+/** The canvas's half: a soft morning haze where the words come, paler than what it lies over. */
 export const credits = scenery<null>({
   name: 'credits',
   draw: () => {},
@@ -114,15 +118,15 @@ export const credits = scenery<null>({
     const bx = (f.x0 + f.x1) / 2 - w / 2
     const by = (f.y0 + f.y1) / 2 - h / 2
     const cx = (bx + w * AT[0]) * k
-    const cy = (by + h * (AT[1] + 0.13)) * k
-    const rx = w * 0.36 * k
+    const cy = (by + h * (AT[1] + 0.12)) * k
+    const rx = w * 0.4 * k
     ctx.save()
     ctx.translate(cx, cy)
-    ctx.scale(1, 0.42)
+    ctx.scale(1, 0.48)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(30, 36, 40, ${0.09 * bed})`)
-    g.addColorStop(0.6, `rgba(30, 36, 40, ${0.04 * bed})`)
-    g.addColorStop(1, 'rgba(30, 36, 40, 0)')
+    g.addColorStop(0, `rgba(250, 248, 242, ${0.5 * bed})`)
+    g.addColorStop(0.55, `rgba(250, 248, 242, ${0.3 * bed})`)
+    g.addColorStop(1, 'rgba(250, 248, 242, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
     ctx.restore()

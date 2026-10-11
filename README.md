@@ -40,6 +40,8 @@ npm run build
 
 `npm run dev` serves Machine at [http://localhost:8791/machine/](http://localhost:8791/machine/). `npm run build` writes one `dist/` with the same paths. One Vite app serves every mode, in dev and in the build.
 
+`npm run build` is the full verification: the typecheck, every check suite (`npm run verify`), then the site build. Run it before you push. Vercel runs only the site build (`npm run build:site`, set in `vercel.json`), and skips the build entirely when a push changes only docs and notes (`*.md`, `ideas/`, `docs/`, `notes/`; `scripts/vercel-ignore-build.sh`). When it can't tell, as on a branch's first deployment, it builds. The checks run on GitHub Actions instead: the `build` check (`.github/workflows/build.yml`) runs `npm run build` on every pull request to `main` and every push to `main`. Each push to GitHub starts a paid Vercel build, so commit locally and push once per round of work, not after every commit.
+
 ## Addresses
 
 | Path | What is there |
@@ -69,7 +71,7 @@ apps/rube/                    Machine, and the modes built on it
   src/playground/             pieces and worlds waiting to be let in; REJECTED.md
   src/builder/                the Builder (hidden)
   builds/                     the Builder's shipped builds
-  checks/                     headless checks, run by npm run build
+  checks/                     headless checks, run by npm run build and CI (not on Vercel)
 scripts/                      Explorations' check, and new-contraption
   shows/                      arrangements, onset measurements, audio mixes, share cards
     plans/                    piece orders and measured onsets the shows are built from
