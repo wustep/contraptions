@@ -1,8 +1,8 @@
 import type p5 from 'p5'
 import { frame, hash } from '../kit'
-import { LIFE_RED, WALTER } from '../worlds'
+import { LIFE_RED, WALTER_WARM } from '../worlds'
 import { contact, INK, knock, mix, pool, ramp, rgba, rule, settle, slab } from '../negatives/hand'
-import { CELLAR, cherylAt, CLANKS, CORNER, COVER, FLIPS, HAULS, IN, KERB, PAVE, SLOT_W, SLOTS, STAND, STOP, walterAt } from './plan'
+import { CELLAR, cherylAt, CLANKS, CORNER, COVER, FLIPS, HAULS, IN, KERB, PAVE, SLOT_W, SLOTS, STAND, STOP, WALTER_STOP, walterAt } from './plan'
 
 /**
  * The street, drawn (the B1 builder's): the negatives room's hand in a pale morning. Flat values and the one
@@ -47,9 +47,12 @@ function issue(ctx: C2, k: number, x0: number, y0: number, w: number, h: number,
 }
 
 /**
- * The last issue of Life: the red box with its white rule, and the photograph: Walter, small and slate, sitting
- * outside the building looking at a contact sheet. The picture is the show's first frame again: the dark, a strip of
- * light, him at its near end.
+ * The last issue of Life: the red box with its white rule, and the photograph: Walter sitting outside the building
+ * looking at a contact sheet. The picture is the show's first frame again (the dark, a strip of light, him at its near
+ * end), but he is in it as he is now: the red ball, ringed and marked as he rolls, big enough to know at a glance, and
+ * against the strip's light so he is the first thing on the cover the eye finds. He is red there from the first flip,
+ * never warming: the photograph is of who he became. He sits right over the place the live ball stops (`WALTER_STOP`),
+ * so on the chord the two are one above the other.
  */
 function life(ctx: C2, k: number, x0: number, y0: number, w: number, h: number): void {
   slab(ctx, k, x0, y0, x0 + w, y0 + h, S.paper, { color: rgba(INK, 0.9), w: 0.9 })
@@ -63,17 +66,28 @@ function life(ctx: C2, k: number, x0: number, y0: number, w: number, h: number):
     const x = px0 + (px1 - px0) * (0.12 + i * 0.26)
     slab(ctx, k, x, py0, x + (px1 - px0) * 0.07, py1 - h * 0.28, '#383D41')
   }
-  // A step he sits on, and the contact sheet's light on his knees: a strip, lit.
+  // A step he sits on, and the contact sheet's light on his knees: a strip, lit, starting just behind him.
   const sy = py0 + (py1 - py0) * 0.7
+  const r = w * 0.095
+  const wx = WALTER_STOP
   slab(ctx, k, px0, sy + h * 0.06, px1, py1, '#41474B')
   const g = ctx.createLinearGradient(0, (sy - h * 0.035) * k, 0, (sy + h * 0.035) * k)
   g.addColorStop(0, '#EEF3F0')
   g.addColorStop(1, '#CED8D4')
-  slab(ctx, k, px0 + (px1 - px0) * 0.32, sy - h * 0.045, px0 + (px1 - px0) * 0.9, sy + h * 0.045, g)
-  pool(ctx, k, px0 + (px1 - px0) * 0.6, sy, w * 0.5, '#E4ECE8', 0.4, 0.55)
-  ctx.fillStyle = WALTER
+  slab(ctx, k, wx - r * 0.2, sy - h * 0.045, px0 + (px1 - px0) * 0.9, sy + h * 0.045, g)
+  pool(ctx, k, wx + w * 0.12, sy, w * 0.5, '#E4ECE8', 0.45, 0.55)
+  // Him: the ball as he rolls, an ink ring, Life's red, his mark.
+  ctx.fillStyle = INK
   ctx.beginPath()
-  ctx.arc((px0 + (px1 - px0) * 0.24) * k, (sy + h * 0.005) * k, w * 0.06 * k, 0, Math.PI * 2)
+  ctx.arc(wx * k, sy * k, r * k, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = WALTER_WARM
+  ctx.beginPath()
+  ctx.arc(wx * k, sy * k, r * 0.8 * k, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = INK
+  ctx.beginPath()
+  ctx.arc((wx - r * 0.02) * k, (sy - r * 0.42) * k, r * 0.17 * k, 0, Math.PI * 2)
   ctx.fill()
   // The red box, top left, with its white rule.
   const bx0 = x0 + w * 0.08

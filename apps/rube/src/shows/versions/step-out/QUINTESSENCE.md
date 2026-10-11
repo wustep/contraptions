@@ -19,7 +19,8 @@ machine, and every machine strikes the music.
 - **Walter Mitty** is the thread. He starts **slate** (`#7D8FA3`), the grey-blue of the basement and of a man who
   daydreams. At the hinge in Nuuk, when the Cheryl he has imagined leads him out of the bar and he goes after her for
   real, he warms over two seconds to **Life's red** (`#D23A2E`) and stays it. Nothing else in the show is that red but
-  the Life logo's box, which is the point: the last issue's cover is him.
+  the Life logo's box, which is the point: the last issue's cover is him, and he is red on it from the first flip
+  (the photograph is of who he became, so it never warms there).
 - **Cheryl Melhoff** is the **marigold** ball (`#E8B04A`). She is company only in the office, in the daydream, on the
   little stage at Nuuk (imagined), and on the street at the end.
 - **Sean O'Connell** is the **khaki** ball (`#9C8F6A`), only in the Himalayas, and still.
@@ -185,15 +186,17 @@ Times are show seconds. `n.p` is bar n, beat p.
 | ---: | --- | --- |
 | 226.384 | 131.1, the fall | He rolls along a New York street on a pale morning, clanking over two cellar doors. |
 | 228.903 | 132.3 | Cheryl comes to him from out of shot. They stop, touching, and go on together. |
-| 229.873 to 232.572 | | The newsstand's shutter goes up in two hauls. The vendor's hand, up from behind the ledge, pulls three issues down onto the wire, and Life comes last. Its cover is the red box with its white rule, and a photograph: a dark room, a lit strip, a small slate dot at its near end. It is the show's first frame, and it is him. |
-| 233.048 | the last chord | They stop before the cover, and the issue settles. |
+| 229.873 to 232.572 | | The newsstand's shutter goes up in two hauls. The vendor's hand, up from behind the ledge, pulls three issues down onto the wire, and Life comes last. Its cover is the red box with its white rule, and a photograph: a dark room, a lit strip, and at its near end, against its light, the red ball, ringed and marked as he rolls. It is the show's first frame, and it is him as he is now. |
+| 233.048 | the last chord | They stop before the cover, and the issue settles. He stops right under himself: the ball on the cover and the ball on the pavement are one above the other. |
 | 235.3 to 245.6 | it rings out | They go on up the street side by side to the corner, and wait by the crossing signal. The camera draws back and holds on the stand, the street, the avenue's towers in the haze and the far corner. |
 | 236.2 to 270 | then quiet | The end credits. |
 
 ## End credits
 
-The words are the page's (`Performance.titles(t)`); a show's canvas sets no type. The canvas lays only a soft shade
-under them.
+The words are the page's (`Performance.titles(t)`); a show's canvas sets no type. Over the pale morning the page's
+usual cream all but vanished, so they are set dark (`TitleCard.dark`): graphite, the street's own ink, with a pale
+glow, at least 4.5 px a unit on a phone. The canvas lays a soft morning haze under them, so they read where they cross
+a building's front as well as over the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
 
 | Role | Names | Fine print |
 | --- | --- | --- |
@@ -226,6 +229,7 @@ under them.
   - can always be found;
   - stands still in the hush.
 - **His colour:** slate until he runs out of the bar at Nuuk, and red from the helipad to the end.
+- **The cover:** he stops on the last chord right under his own place on the last issue's cover.
 - **Every strike lands on the recording:**
   - 329 strikes, each within 30 ms of a tracked beat or a measured onset;
   - every place strikes;
@@ -304,11 +308,19 @@ under them.
     seat now catches the lamp, and she is plainly on its far end with Walter landing on its near end;
   - the press hall stopped at the loading door in a thin dark bar, like a cutaway. It now ends in a brick wall
     cut through at the door, with a stone lintel the strip curtain hangs from, and a threshold.
+- **The cover pass** (Stephen: the last cover did not read as Walter, and the credits were hard to read):
+  - on the cover he was a small slate dot on a dark photograph, though viewers had followed him red since the
+    helipad. He is now the red ball as it rolls (an ink ring and his mark), about 1.6 times the size, against the lit
+    strip's near end, and right over where the live ball stops: a match on the chord. He does not warm there;
+  - the credits were the page's cream over a pale sky under a 9% shade, and the names all but disappeared. They are
+    graphite now over a pale haze, held a little longer, with a floor on their size for phones.
 
 ## Judgment calls
 
 - **The title.** Sean's note calls negative 25 "the quintessence of Life". The show ends on what it was.
-- **Red for Walter.** He becomes the colour of the magazine's box, so the cover is him before it is shown.
+- **Red for Walter.** He becomes the colour of the magazine's box, so the cover is him before it is shown. On the
+  cover he is red, not slate: it is the opening's picture, but viewers have known him red for two and a half minutes,
+  and the payoff only lands if he is recognised at once.
 - **The ash as the one cover.** Every other cut is a match cut on him. Under the ash the world is gone for a moment, as
   it is for him.
 - **Things left out on purpose:**

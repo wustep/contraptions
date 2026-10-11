@@ -857,7 +857,7 @@ const saidKeys = new Set<string>()
 const cardText = (c: TitleCard): string => [c.role, ...c.names.map((n) => (typeof n === 'string' ? n : `${n[0]}, ${n[1]}`)), ...(c.notes ?? [])].filter(Boolean).join('. ')
 
 function buildCard(c: TitleCard): HTMLElement {
-  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}${c.shade ? ' shaded' : ''}${c.caption ? ' caption' : ''}` })
+  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}${c.dark ? ' dark' : ''}${c.shade ? ' shaded' : ''}${c.caption ? ' caption' : ''}` })
   if (c.shade) {
     node.style.setProperty('--shade', String(c.shade))
     node.append(el('div', { class: 'veil' }))
