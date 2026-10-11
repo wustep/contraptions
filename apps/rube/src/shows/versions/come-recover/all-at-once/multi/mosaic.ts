@@ -698,7 +698,7 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
       const home = i === 0 && j === 0
       // From the dive, home's panel is home itself, drawn after the rest (below).
       if (home && t >= DIVE[0]) continue
-      const skin = home ? SKINS.home : skinAt(i, j, 0)
+      const skin = home ? SKINS.home : skinAt(i, j)
       const dark = home ? 0.97 * (1 - lights(t)) : 0
       // The family in every life but home's own panel.
       panel(ctx, F, skin, b, qD, scD, 1, mc, back, dark, home ? undefined : [i, j])

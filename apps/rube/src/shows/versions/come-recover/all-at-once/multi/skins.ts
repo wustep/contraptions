@@ -1,5 +1,12 @@
 import { DOJO, HIBACHI, HOME, HOTDOG, LAUNDROMAT, PREMIERE, ROCKS, STAR, VOID, DOJO_THEME, HOTDOG_THEME, HIBACHI_THEME, VOID_THEME, ROCKS_THEME } from '../worlds'
 import { at, beam, circle, ellipse, glow, hash, line, mix, poly, rect, round, type Pen, type Pt } from './skins-pen'
+import { flashOf, PL, ring, TH, WEIGHT_H, type Moment, type Skin, type View } from './skins-kit'
+
+import { FILM_SKINS } from './skins-film'
+import { FAR_SKINS } from './skins-far'
+import { ODD_SKINS } from './skins-odd'
+
+export { HP, LE, LW, PL, TH, TILT, WEDGE, WEIGHT_H, type Moment, type Skin, type View } from './skins-kit'
 
 /**
  * The worlds as skins: every universe Evelyn has been to, and some she has not, each as the materials and the one
@@ -14,68 +21,6 @@ import { at, beam, circle, ellipse, glow, hash, line, mix, poly, rect, round, ty
  * A skin draws in scene cells: x right, y down, the ground under the seesaw's pivot at 0,0, the ground's top at
  * y = 0. The machine spans x -1.15..1.15 and rises to about y = -1.6 at the top of Evelyn's throw.
  */
-
-/* ------------------------------------------------------------------ the machine's geometry (shared by every skin) */
-
-/** The pivot's height over the ground. */
-export const HP = 0.36
-/** Half the plank's length, and its thickness. */
-export const PL = 1.15
-export const TH = 0.09
-/** How far from the pivot Evelyn and the weight sit on the plank. */
-export const LE = 0.98
-export const LW = 0.92
-/** The wedge's half-width at the ground. */
-export const WEDGE = 0.25
-/** The plank's tilt when one end is down on the ground. */
-export const TILT = Math.asin((HP - TH / 2) / PL)
-/** The weight's height: it stands this tall on the plank. */
-export const WEIGHT_H = 0.34
-
-/** What the moment is, for a skin's backdrop to answer: the last slam of the plank, and how loud. */
-export interface Moment {
-  /** Show seconds. */
-  t: number
-  /** Seconds since the plank last slammed (Infinity before the first). */
-  since: number
-  /** That slam's strength in the recording (0 to 2.4). */
-  s: number
-  /** Which end slammed: Evelyn's (true) or the weight's. */
-  e: boolean
-}
-
-/** The box of the scene the panel shows, in scene cells. */
-export interface View {
-  x0: number
-  y0: number
-  x1: number
-  y1: number
-}
-
-export interface Skin {
-  key: string
-  bg: string
-  ink: string
-  /** The ground from y = 0 down, and a band along its top edge. */
-  floor: string
-  edge?: string
-  plank: string
-  fulcrum: string
-  /** Everything behind the machine: the walls, the sky, the one big silhouette. */
-  back(pen: Pen, m: Moment, v: View): void
-  /** The weight, standing with its foot at 0,0 and WEIGHT_H tall. */
-  weight(pen: Pen): void
-  /** The plank's own look, in its frame (x -PL..PL, y -TH/2..TH/2); a plain bar of `plank` when unset. */
-  board?(pen: Pen): void
-  /** Over the machine and Evelyn: rain, a flash. */
-  front?(pen: Pen, m: Moment, v: View): void
-}
-
-/* ------------------------------------------------------------------ helpers */
-
-const flashOf = (m: Moment, min = 1.1, decay = 0.14): number => (m.since < 0 || m.s < min ? 0 : Math.exp(-m.since / decay) * Math.min(1, (m.s - min + 0.4) / 0.9))
-/** A damped ring after a slam: what a hanging thing does when the floor it hangs over is struck. */
-const ring = (m: Moment, period = 0.36, decay = 0.35): number => (m.since < 0 || !Number.isFinite(m.since) ? 0 : Math.exp(-m.since / decay) * Math.sin((m.since / period) * Math.PI * 2))
 
 function ground(pen: Pen, skin: Skin, v: View): void {
   rect(pen, v.x0 - 0.1, 0, v.x1 - v.x0 + 0.2, Math.max(0.05, v.y1 + 0.1), skin.floor, 0)
@@ -828,32 +773,37 @@ const newyear: Skin = {
 
 /* ------------------------------------------------------------------ the table */
 
-export const SKINS = { home, premiere, dojo, hotdog, hibachi, void: dark, rocks, pinata, karaoke, irs, spinner, alley, newyear } as const
+export const SKINS = { home, premiere, dojo, hotdog, hibachi, void: dark, rocks, pinata, karaoke, irs, spinner, alley, newyear, ...FILM_SKINS, ...FAR_SKINS, ...ODD_SKINS } as const
 export type SkinKey = keyof typeof SKINS
 
 /**
  * The worlds round the wall. The middle sixteen are set by hand, in the order the panels open: home in the middle,
  * the premiere beside it, the dojo and the hot dogs under them; then the kitchen, the dark and the rocks, the party
- * and the karaoke; then the worlds she never saw. The rest are filled outward ring by ring, each the least used
- * world that none of its eight neighbours already is, so no two panels side by side or corner to corner match and
- * no world lines up with itself in stripes. A turn of the whole wall (the crescendo's) moves every panel on by the
- * same step through the list, which keeps neighbours apart.
+ * and the karaoke; then the first of the worlds she never saw. The rest are filled outward ring by ring, each the
+ * least used world, and of those the one farthest from where it already is, never one of its eight neighbours. There
+ * are more worlds than the six-by-six wall has panels, so up to there no world is seen twice; on the eight-by-eight
+ * none is seen more than twice, and its two are far apart, and not in one row or column.
  */
-const ORDER: SkinKey[] = ['home', 'premiere', 'dojo', 'hotdog', 'hibachi', 'void', 'rocks', 'pinata', 'karaoke', 'irs', 'spinner', 'alley', 'newyear']
+const ORDER = Object.keys(SKINS) as SkinKey[]
 const MIDDLE: Record<string, SkinKey> = {
   '-1,-1': 'hibachi', '0,-1': 'void', '1,-1': 'rocks', '2,-1': 'irs',
   '-1,0': 'pinata', '0,0': 'home', '1,0': 'premiere', '2,0': 'spinner',
   '-1,1': 'karaoke', '0,1': 'dojo', '1,1': 'hotdog', '2,1': 'alley',
-  '-1,2': 'newyear', '0,2': 'irs', '1,2': 'void', '2,2': 'rocks',
+  '-1,2': 'newyear', '0,2': 'opera', '1,2': 'monolith', '2,2': 'mahjong',
 }
 const SPAN = 12
 const TABLE = (() => {
   const at = new Map<string, number>()
   const used = new Array(ORDER.length).fill(0)
-  for (const [key, skin] of Object.entries(MIDDLE)) {
-    const n = ORDER.indexOf(skin)
-    at.set(key, n)
+  const where: [number, number][][] = ORDER.map(() => [])
+  const put = (i: number, j: number, n: number) => {
+    at.set(`${i},${j}`, n)
     used[n]++
+    where[n].push([i, j])
+  }
+  for (const [key, skin] of Object.entries(MIDDLE)) {
+    const [i, j] = key.split(',').map(Number)
+    if (ORDER.includes(skin)) put(i, j, ORDER.indexOf(skin))
   }
   const cells: [number, number][] = []
   for (let j = -SPAN; j <= SPAN + 1; j++) for (let i = -SPAN; i <= SPAN + 1; i++) if (!at.has(`${i},${j}`)) cells.push([i, j])
@@ -867,21 +817,24 @@ const TABLE = (() => {
     let best = 0
     let score = Infinity
     for (let n = 0; n < ORDER.length; n++) {
-      if (near.has(n)) continue
-      const sc = used[n] + hash(i, j, n + 7) * 0.9
+      if (near.has(n) || ORDER[n] === 'home') continue
+      // Fewest uses first; then the farthest from its nearest self (as far as six panels counts), a self in the same
+      // row or column counting as nearer, since the eye runs along those; a little hash so ties do not fall in order.
+      let gap = 6
+      for (const [x, y] of where[n]) gap = Math.min(gap, Math.hypot(x - i, y - j) * (x === i || y === j ? 0.5 : 1))
+      const sc = used[n] * 100 - gap * 4 + hash(i, j, n + 7)
       if (sc < score) {
         score = sc
         best = n
       }
     }
-    at.set(`${i},${j}`, best)
-    used[best]++
+    put(i, j, best)
   }
   return at
 })()
 
-/** The world of panel (i, j), after `turns` turns of the whole wall. */
-export function skinAt(i: number, j: number, turns = 0): Skin {
-  const n = TABLE.get(`${i},${j}`) ?? (((i + 5 * j) % 13) + 13) % 13
-  return SKINS[ORDER[(n + 5 * turns) % ORDER.length]]
+/** The world of panel (i, j). */
+export function skinAt(i: number, j: number): Skin {
+  const n = TABLE.get(`${i},${j}`) ?? (((i + 5 * j) % ORDER.length) + ORDER.length) % ORDER.length
+  return SKINS[ORDER[n]]
 }
