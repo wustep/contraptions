@@ -114,3 +114,6 @@ function shots(): PartShot[] {
 export const STORE_HITS: readonly number[] = STORE_STRIKES
 
 export const STORE_WIDE: [number, number][] = []
+
+/** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
+export const STORE_PUNCHES: [number, number][] = []

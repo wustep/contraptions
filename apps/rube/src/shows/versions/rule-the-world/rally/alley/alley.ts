@@ -94,3 +94,6 @@ export const ALLEY_HITS: readonly number[] = ALLEY_STRIKES
 
 /** The ride back under the floor, through the cut to the marks: too quick for any camera to keep him. */
 export const ALLEY_WIDE: [number, number][] = [[135.36, POP]]
+
+/** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
+export const ALLEY_PUNCHES: [number, number][] = []

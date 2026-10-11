@@ -85,3 +85,6 @@ export const LONDON_HITS: readonly number[] = LONDON_STRIKES
 
 /** The cut to the hall on Kletzki's miss, roof and all, until the final's first rally is under way. */
 export const LONDON_WIDE: [number, number][] = [[at(31, 4), 69.9]]
+
+/** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
+export const LONDON_PUNCHES: [number, number][] = []

@@ -2,19 +2,19 @@ import type { BallState, Pt } from '../../../../parts'
 import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
-import { grain } from './grain'
+import { vignette } from './vignette'
 import { lay, standing, type Chain, type Link } from './kit'
 import { CRASH, DURATION, SEAM, WIN } from './music'
 import { FIRST, SEAMS } from './seams'
 import { RallyShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { MARTY, type WorldKey } from './worlds'
-import { storeSet, STORE_CELLS, STORE_AT, store } from './store/store'
-import { londonSet, LONDON_CELLS, LONDON_AT, open } from './london/london'
-import { hotelSet, HOTEL_CELLS, HOTEL_AT, tub } from './hotel/hotel'
-import { alleySet, ALLEY_CELLS, ALLEY_AT, hustle } from './alley/alley'
-import { jerseySet, JERSEY_CELLS, JERSEY_AT, night } from './jersey/jersey'
-import { tokyoSet, TOKYO_CELLS, TOKYO_AT, rematch } from './tokyo/tokyo'
-import { hospitalSet, HOSPITAL_CELLS, HOSPITAL_AT, nursery } from './hospital/hospital'
+import { storeSet, STORE_CELLS, STORE_AT, store, STORE_PUNCHES } from './store/store'
+import { londonSet, LONDON_CELLS, LONDON_AT, open, LONDON_PUNCHES } from './london/london'
+import { hotelSet, HOTEL_CELLS, HOTEL_AT, tub, HOTEL_PUNCHES } from './hotel/hotel'
+import { alleySet, ALLEY_CELLS, ALLEY_AT, hustle, ALLEY_PUNCHES } from './alley/alley'
+import { jerseySet, JERSEY_CELLS, JERSEY_AT, night, JERSEY_PUNCHES } from './jersey/jersey'
+import { tokyoSet, TOKYO_CELLS, TOKYO_AT, rematch, TOKYO_PUNCHES } from './tokyo/tokyo'
+import { hospitalSet, HOSPITAL_CELLS, HOSPITAL_AT, nursery, HOSPITAL_PUNCHES } from './hospital/hospital'
 
 /**
  * The whole show, in order: which place has Marty from when to when, and which part has him in each. Every part is
@@ -48,34 +48,42 @@ const PLAN = (): LegPlan[] => [
   { key: 'hospital', world: 'hospital', at: HOSPITAL_AT, links: [{ part: nursery, end: DURATION }] },
 ]
 
-/** A big, sparse claim of cells round a place, so its after-drawings (the grain, the credits' shade) are drawn wherever the camera is. */
+/** A big, sparse claim of cells round a place, so its after-drawings (the vignette, the credits' shade) are drawn wherever the camera is. */
 const claim = (x0: number, y0: number, x1: number, y1: number): Pt[] => {
   const out: Pt[] = []
   for (let x = x0; x <= x1; x += 3) for (let y = y0; y <= y1; y += 3) out.push([x, y])
   return out
 }
 const AROUND = claim(-80, -60, 80, 40)
-const GRAIN = standing(grain, 0, 0, AROUND, null, DURATION)
+const VIGNETTE = standing(vignette, 0, 0, AROUND, null, DURATION)
 
-/** Each place's standing scenery, and what is drawn over everything (the film's grain, the credits' shade). */
+/** Each place's standing scenery, and what is drawn over everything (the vignette, the credits' shade). */
 const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
-  store: { scenery: [standing(storeSet, 0, 0, STORE_CELLS, null, DURATION)], after: [GRAIN] },
-  london: { scenery: [standing(londonSet, 0, 0, LONDON_CELLS, null, DURATION)], after: [GRAIN] },
-  hotel: { scenery: [standing(hotelSet, 0, 0, HOTEL_CELLS, null, DURATION)], after: [GRAIN] },
-  alley: { scenery: [standing(alleySet, 0, 0, ALLEY_CELLS, null, DURATION)], after: [GRAIN] },
-  jersey: { scenery: [standing(jerseySet, 0, 0, JERSEY_CELLS, null, DURATION)], after: [GRAIN] },
-  tokyo: { scenery: [standing(tokyoSet, 0, 0, TOKYO_CELLS, null, DURATION)], after: [GRAIN] },
-  hospital: { scenery: [standing(hospitalSet, 0, 0, HOSPITAL_CELLS, null, DURATION)], after: [GRAIN, standing(credits, 0, 0, AROUND, null, DURATION)] },
+  store: { scenery: [standing(storeSet, 0, 0, STORE_CELLS, null, DURATION)], after: [VIGNETTE] },
+  london: { scenery: [standing(londonSet, 0, 0, LONDON_CELLS, null, DURATION)], after: [VIGNETTE] },
+  hotel: { scenery: [standing(hotelSet, 0, 0, HOTEL_CELLS, null, DURATION)], after: [VIGNETTE] },
+  alley: { scenery: [standing(alleySet, 0, 0, ALLEY_CELLS, null, DURATION)], after: [VIGNETTE] },
+  jersey: { scenery: [standing(jerseySet, 0, 0, JERSEY_CELLS, null, DURATION)], after: [VIGNETTE] },
+  tokyo: { scenery: [standing(tokyoSet, 0, 0, TOKYO_CELLS, null, DURATION)], after: [VIGNETTE] },
+  hospital: { scenery: [standing(hospitalSet, 0, 0, HOSPITAL_CELLS, null, DURATION)], after: [VIGNETTE, standing(credits, 0, 0, AROUND, null, DURATION)] },
 })
 
 /**
  * The looks the camera takes: on each it pushes in, at once (18 ms), and eases back slowly (τ 1 s, gone by 3.5 s).
- * Two: the tub through the floor, and the last point in Tokyo.
+ * The tub through the floor and the last point in Tokyo, and the big shots each place asks for (`<PLACE>_PUNCHES`):
+ * time and strength, 1 the winning point's.
  */
-export const PUNCHES: [number, number][] = [
+export const PUNCHES: [number, number][] = ([
   [CRASH, 0.8],
   [WIN, 1.0],
-]
+  ...STORE_PUNCHES,
+  ...LONDON_PUNCHES,
+  ...HOTEL_PUNCHES,
+  ...ALLEY_PUNCHES,
+  ...JERSEY_PUNCHES,
+  ...TOKYO_PUNCHES,
+  ...HOSPITAL_PUNCHES,
+] as [number, number][]).sort((x, y) => x[0] - y[0])
 const PUNCH_TAU = 1
 const PUNCH_FOR = 3.5
 function punch(t: number): number {

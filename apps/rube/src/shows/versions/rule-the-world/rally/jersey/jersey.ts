@@ -155,3 +155,6 @@ export const JERSEY_HITS: readonly number[] = JERSEY_STRIKES
 export const JERSEY_WIDE: [number, number][] = []
 
 void GB
+
+/** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
+export const JERSEY_PUNCHES: [number, number][] = []

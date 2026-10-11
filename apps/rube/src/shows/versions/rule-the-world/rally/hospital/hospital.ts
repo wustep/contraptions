@@ -100,3 +100,5 @@ function shots(): PartShot[] {
 export const HOSPITAL_HITS: readonly number[] = HOSPITAL_STRIKES
 export const HOSPITAL_WIDE: [number, number][] = []
 
+/** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
+export const HOSPITAL_PUNCHES: [number, number][] = []

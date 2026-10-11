@@ -105,4 +105,5 @@ export const HOTEL_HITS: readonly number[] = HOTEL_STRIKES
 
 export const HOTEL_WIDE: [number, number][] = []
 
-
+/** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
+export const HOTEL_PUNCHES: [number, number][] = []

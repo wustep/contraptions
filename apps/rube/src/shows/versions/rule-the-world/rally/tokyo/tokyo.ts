@@ -102,3 +102,5 @@ export const TOKYO_HITS: readonly number[] = TOKYO_STRIKES
 /** The arena erupting, wide, from the smash. */
 export const TOKYO_WIDE: [number, number][] = [[WIN, WIN + 3.95]]
 
+/** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
+export const TOKYO_PUNCHES: [number, number][] = []
