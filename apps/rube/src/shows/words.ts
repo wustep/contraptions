@@ -16,6 +16,10 @@ const FACE = '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", 
 const INK = '#ECE5D3'
 const GOLD = '#D9A441'
 const GLOW = 'rgba(244, 238, 223, 0.28)'
+/** A dark card's (`TitleCard.dark`): graphite words, their small lines softer, and a pale glow, as the stylesheet sets them. */
+const DARK_INK = '#23272B'
+const DARK_ACCENT = '#4A5055'
+const DARK_GLOW = 'rgba(250, 248, 242, 0.9)'
 /** The page's own line height, which the role and the notes inherit. */
 const LEADING = 1.5
 
@@ -40,10 +44,10 @@ function baseline(ctx: CanvasRenderingContext2D, lead: number): number {
 }
 
 /** One line, centred on `cx`, its box's top at `y`. Returns the box's height. */
-function line(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number, f: Face, lead: number, color: string, glow: number): number {
+function line(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number, f: Face, lead: number, color: string, glow: number, halo = GLOW): number {
   font(ctx, f)
   ctx.fillStyle = color
-  ctx.shadowColor = glow ? GLOW : 'transparent'
+  ctx.shadowColor = glow ? halo : 'transparent'
   ctx.shadowBlur = glow
   ctx.textAlign = 'center'
   // CSS spaces after every letter, the last too, and centres the lot; so does this.
@@ -54,9 +58,12 @@ function line(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number
 /** One card, whole, at full light: its top middle at (cx, y). */
 /** Draws a card from its top middle, and says where its words end. */
 function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number, u: number): number {
-  const glow = u * 1.4
-  // A plain card (over a light sky) sets its role and "as" lines in its own cream, as the page does.
-  const accent = c.plain ? INK : GOLD
+  const glow = u * (c.dark ? 1.2 : 1.4)
+  // A plain card (over a light sky) sets its role and "as" lines in its own cream, as the page does; a dark one (over a
+  // pale picture) all its words in graphite.
+  const ink = c.dark ? DARK_INK : INK
+  const halo = c.dark ? DARK_GLOW : GLOW
+  const accent = c.dark ? DARK_ACCENT : c.plain ? INK : GOLD
   if (c.role) {
     y += line(ctx, c.role.toUpperCase(), cx, y, { size: u * 1.9, weight: 600, spacing: 0.34 }, LEADING, accent, 0)
     y += u * 1.6
@@ -65,7 +72,7 @@ function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number
   for (const n of c.names) {
     if (typeof n === 'string') {
       const f = c.title ? { size: u * 7.4, weight: 500, spacing: 0.16 } : { size: u * 5.6, spacing: 0.01 }
-      y += line(ctx, n, cx, y, f, 1.2, INK, glow)
+      y += line(ctx, n, cx, y, f, 1.2, ink, glow, halo)
       after = 'name'
       continue
     }
@@ -76,12 +83,12 @@ function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number
     font(ctx, who)
     const base = y + baseline(ctx, 1.42 * who.size)
     ctx.textAlign = 'right'
-    ctx.fillStyle = INK
-    ctx.shadowColor = GLOW
+    ctx.fillStyle = ink
+    ctx.shadowColor = halo
     ctx.shadowBlur = glow
     ctx.fillText(n[0], cx - gap / 2, base)
     let x = cx + gap / 2
-    if (n[2]) swatch(ctx, n[2], x, base, as.size, u)
+    if (n[2]) swatch(ctx, n[2], x, base, as.size, u, c.dark ? DARK_ACCENT : GOLD)
     if (n[2]) x += as.size * (0.78 + 0.45)
     font(ctx, as)
     ctx.textAlign = 'left'
@@ -96,8 +103,8 @@ function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number
     const fine = i === notes.length - 1 && !c.title && notes.length > 2
     const f: Face = c.title ? { size: u * 2.1, spacing: 0.12 } : { size: u * (fine ? 1.65 : 1.95), italic: true }
     y += i === 0 && after === 'name' ? u * 1.6 : fine ? u * 1.4 : u * 0.9
-    ctx.globalAlpha = fine ? 0.58 : 0.8
-    y += line(ctx, text, cx, y, f, LEADING, INK, glow)
+    ctx.globalAlpha = c.dark ? (fine ? 0.75 : 0.9) : fine ? 0.58 : 0.8
+    y += line(ctx, text, cx, y, f, LEADING, ink, glow, halo)
     ctx.globalAlpha = 1
   })
   return y
@@ -123,7 +130,7 @@ function veil(into: CanvasRenderingContext2D, cx: number, top: number, bottom: n
 }
 
 /** The ball they are: a disc with an ink ring and a little glow, or 'slab:' and a colour for a bar in its footprint. */
-function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: number, em: number, u: number): void {
+function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: number, em: number, u: number, edge = GOLD): void {
   const slab = spec.startsWith('slab:')
   const side = em * 0.78
   // CSS sits its bottom 0.08em under the baseline.
@@ -140,8 +147,9 @@ function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: nu
   shape(ring)
   ctx.fill()
   ctx.shadowColor = 'transparent'
-  // A ring in the gold of its line inside the disc, a share of the card's unit, as the stylesheet draws it.
-  ctx.fillStyle = GOLD
+  // A ring in the colour of its line (gold, or a dark card's graphite) inside the disc, a share of the card's unit, as
+  // the stylesheet draws it (its border is the line's `currentColor`).
+  ctx.fillStyle = edge
   shape(0)
   ctx.fill()
   ctx.fillStyle = slab ? spec.slice(5) : spec

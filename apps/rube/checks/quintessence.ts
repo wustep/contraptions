@@ -14,6 +14,7 @@ import type { QuintessenceShow } from '../src/shows/versions/step-out/quintessen
 import type { Who } from '../src/shows/versions/step-out/quintessence/kit'
 import { WALTER, WALTER_WARM } from '../src/shows/versions/step-out/quintessence/worlds'
 import { WIDE } from '../src/shows/versions/step-out/quintessence/wides'
+import { ON, STOP, WALTER_STOP, walterAt } from '../src/shows/versions/step-out/quintessence/street/plan'
 import { R } from '../src/parts'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -81,6 +82,9 @@ export function checkQuintessence(perf: Performance, version: ShowVersion, check
   check('quintessence: Walter is slate until he runs out of the bar at Nuuk, and Life\'s red from the helipad to the end',
     [1, 20, 30, 40].every((t) => colourAt(t) === WALTER.toUpperCase()) && [SEAM.sky + 0.01, 80, 120, 170, 200, 240].every((t) => colourAt(t) === WALTER_WARM.toUpperCase()),
     [1, 40, SEAM.sky + 0.01, 240].map((t) => `${t}: ${colourAt(t)}`).join(', '))
+  // The last cover: he is on it red (drawn at `WALTER_STOP`), and on the chord the live ball stops right under it.
+  check('quintessence: on the last chord he stops right under himself on the cover, and stays while they look',
+    [STOP, (STOP + ON) / 2, ON].every((t) => near(walterAt(t)[0], WALTER_STOP, 1e-3)), [STOP, ON].map((t) => walterAt(t)[0].toFixed(4)).join(', '))
 
   // Every strike lands on something the recording has: a tracked beat or a measured onset.
   const onBeat = (t: number, eps: number) => BEATS.some((b) => Math.abs(b.t - t) <= eps)
@@ -221,6 +225,9 @@ export function checkQuintessence(perf: Performance, version: ShowVersion, check
     CARDS.some((c) => c.role === 'After' && c.names.join() === 'The Secret Life of Walter Mitty' && (c.notes ?? []).join().includes('Ben Stiller (2013)')) &&
     ['Walter Mitty', 'Cheryl Melhoff', "Sean O'Connell", 'José González', 'Step Out', 'Theodore Shapiro', 'Craig Wedren', 'p5.js'].every((w) => said.includes(w)) &&
     !/private tech demo|inspired by/i.test(said), said)
+  // Over the pale morning the page's cream vanished: every card is set dark, with a floor on its size for a phone.
+  check('quintessence: the end credits are set dark over the pale street, with a least size',
+    CARDS.every((c) => creditsAt(c.at + 2).some((t) => t.dark && (t.least ?? 0) >= 4)))
 
   // The measured file is the one the parts were timed to.
   const m = measured as { duration: number; youtube: string }
