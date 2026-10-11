@@ -138,3 +138,9 @@ it hits the boards. The rest of the match is framed stroke by stroke, as close a
 springs off the dial on every beat and comes down on its notch on the "a", and the camera goes in with him on the
 handle and along the door's edge as he heaves it open. In the ward, as soon as the blind is up, he knocks twice on the
 glass for his son, which is why the nurse looks up, and he hops for joy when the boy wriggles back at him.
+
+A third look found London's two decisive points still played in the rally's middle distance. Now the semifinal's
+winning smash cuts in close on his bat as it fires, with the gallery's arms going up behind it, before the cut to the
+hall. The final's last bar is cut close on every stroke, his bat and then Endo with Kay watching behind him. Endo's
+dead shot is seen in close on his sponge, and the camera then goes low on Marty's end as the ball dies short, his bat
+swings over it, and the ball rolls off the end to the floor.

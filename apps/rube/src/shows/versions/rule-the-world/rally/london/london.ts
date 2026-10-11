@@ -4,7 +4,7 @@ import { box, frame, part, scenery, type PartShot } from '../kit'
 import type { Pen } from '../pen'
 import { SEAMS } from '../seams'
 import { drawHall, drawPlay } from './draw'
-import { ballAt, CATCH, EXIT, FEED, FEED_BOUNCE, IN_PAN_B2, LONDON_STRIKES, LUNGE, OUT, REST, SEGS, SMASHES, STROKES, T0, T1, WINNER } from './geo'
+import { A, B, ballAt, CATCH, DEAD, DIES, FLOOR_HITS, OFF_END, EXIT, FEED, FEED_BOUNCE, IN_PAN_B2, LONDON_STRIKES, LUNGE, OUT, REST, SEGS, SMASHES, STROKES, T0, T1, WINNER } from './geo'
 
 /**
  * London: the British Open, 1952 (bar 25 → bar 43). A big cold hall under an iron and glass roof, two green tables
@@ -77,6 +77,31 @@ function angle(from: number, to: number, base: Pt, c0: number, c1: number, sway:
 
 const beat = (bar: number, pos: number) => at(bar, pos)
 
+/** The semifinal's winner: Marty's last stroke on table A. */
+const SEMI_WIN = Math.max(...STROKES.filter((s) => s.who === 'marty' && s.table === A).map((s) => s.t))
+/** The final's last bar, from its second stroke: cut close on every stroke, and the dead shot. */
+const CLOSE_FROM = beat(40, 2)
+
+/**
+ * The end of the final, in close: Marty's bat and Endo, a cut on each stroke, each a little closer; Endo's dead shot
+ * in close on his sponge; then low on Marty's end as it dies short and his bat swings over it, and down with it off
+ * the end to the floorboards.
+ */
+function closing(): PartShot[] {
+  const MARTY: Pt = [B.x0 + 0.25, -0.35]
+  const ENDO: Pt = [B.x1 + 0.85, -1.3]
+  const keys = STROKES.filter((s) => s.table === B && s.t >= CLOSE_FROM - 1e-6 && s.t < DEAD - 1e-6).map((s, k) =>
+    hold(s.t, (s.who === 'marty' ? 3.8 : 4.3) - 0.12 * k, s.who === 'marty' ? MARTY : ENDO, true),
+  )
+  return [
+    ...keys,
+    hold(DEAD, 3.8, [ENDO[0] - 0.1, ENDO[1] + 0.05], true),
+    hold(DIES, 3.0, [B.x0 + 1.15, -0.12], true),
+    hold(OFF_END, 3.1, [B.x0 + 0.5, 0.1]),
+    hold(FLOOR_HITS[1], 3.3, [B.x0 - 1.05, 0.55]),
+  ]
+}
+
 /**
  * The camera, cut like a match: the seam's close hold on him on the corner as the lamp comes on, out to the
  * semifinal; then an angle every bar or two, cut on Marty's strokes: the table square on, in tight on Kletzki's end,
@@ -101,7 +126,9 @@ function shots(): PartShot[] {
     // Wide on the house, every head going with the ball.
     ...angle(beat(29, 1), beat(29, 4), [2.2, -1.55], 8.6, 8.3, 0.3, true),
     // In tight for the end of it: square on, low.
-    ...angle(beat(30, 1), beat(31, 3), [2.15, -0.38], 6.0, 5.8, 0.2, true),
+    ...angle(beat(30, 1), SEMI_WIN - 0.01, [2.15, -0.38], 6.0, 6.1, 0.2, true),
+    // The winning smash, in close on his bat as it fires.
+    hold(SEMI_WIN, 3.3, [A.x0 - 0.05, -0.38], true),
     // Kletzki's miss: the hall.
     hold(at(31, 4), 11, [7.2, -1.95], true),
     hold(68.0, 10.2, [7.7, -1.6]),
@@ -119,10 +146,7 @@ function shots(): PartShot[] {
     // The last point: square on; then wide as Endo backs off to lob; in tight as he runs back in.
     ...angle(beat(37, 1), beat(37, 4), [11.4, -0.5], 6.3, 6.6, 0.22, false),
     ...angle(beat(38, 1), beat(39, 4), [12.55, -1.0], 8.4, 8.0, 0.32, true),
-    ...angle(beat(40, 2), beat(40, 4), [11.5, -0.5], 6.35, 6.15, 0.2, true),
-    hold(at(41, 1), 6.0, [11.35, -0.5]),
-    hold(88.4, 5.9, [10.6, -0.2]),
-    hold(89.4, 5.4, [9.0, 0.15]),
+    ...closing(),
     hold(T1 - 0.17, seam.cells, end),
     hold(T1, seam.cells, end),
   ]
@@ -131,7 +155,10 @@ function shots(): PartShot[] {
 export const LONDON_HITS: readonly number[] = LONDON_STRIKES
 
 /** The cut to the hall on Kletzki's miss, roof and all, until the final's first rally is under way. */
-export const LONDON_WIDE: [number, number][] = [[at(31, 4), 69.9]]
+export const LONDON_WIDE: [number, number][] = [
+  [SEMI_WIN, 69.9],
+  [CLOSE_FROM, DIES],
+]
 
 /**
  * The camera's punches in on this place's big moments (`score.ts`): show time and strength. Every smash: Kletzki's
