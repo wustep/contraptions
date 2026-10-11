@@ -2,6 +2,7 @@ import p5 from 'p5'
 import { canvasOf, downloadBlob } from '../../../../src/core/capture'
 import { drawWorld, drawingModes, followCamera, setupCanvas } from '../engine'
 import { overviewCamera } from '../overview'
+import { installBlendedGradients } from './blend'
 import { recordShow } from './record'
 import { zoomed, type Framing, type Performance } from './registry'
 import { wordPainter } from './words'
@@ -122,17 +123,24 @@ export interface ShowStage {
    * Overview live has none.
    */
   saveVideo(filename: string, size: FrameSize, speed: number, monitor: boolean, signal: AbortSignal, progress?: (done: number) => void): Promise<boolean>
+  /** Dev: stop (or restart) the live stage's own loop, so a profiler can paint frames itself (`paintAt`). */
+  hold(on: boolean): void
+  /** Dev: one frame of the live stage at `t`, painted now. */
+  paintAt(t: number): void
   destroy(): void
 }
 
 export function createShowStage(host: HTMLElement, clock: { time(): number }): ShowStage {
+  installBlendedGradients()
   let overview = false
   let zoom = false
   let perf: Performance | null = null
   let release = () => {}
   let lastPaper = ''
+  let liveP: p5 | null = null
 
   const live = new p5((p: p5) => {
+    liveP = p
     p.setup = () => {
       release = setupCanvas(p, host).release
       refuseType(p)
@@ -241,6 +249,13 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
       } finally {
         f.remove()
       }
+    },
+    hold(on) {
+      if (on) liveP?.noLoop()
+      else liveP?.loop()
+    },
+    paintAt(t) {
+      if (perf && liveP) paintShow(liveP, perf, t, overview, zoom)
     },
     destroy() {
       release()
