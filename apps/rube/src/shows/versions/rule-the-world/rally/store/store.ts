@@ -3,7 +3,7 @@ import { box, frame, part, scenery, type PartShot } from '../kit'
 import type { Pen } from '../pen'
 import { SEAMS } from '../seams'
 import { drawBat, drawCurtain, drawFitting, drawLadder, drawLamps, drawLights, drawMurray, drawOfficeDoor, drawPairShadows, drawPops, drawRoom, drawSafeDoor, drawSafeInside, drawShade } from './draw'
-import { DIAL_AT, END, FIRE, HANDLE_LAND, INTRO_HOPS, INTRO_RUN, RACHEL_AT, rachelAt, STORE_STRIKES, SWUNG, T0, T1, WAY } from './geo'
+import { BOLTS, DIAL_AT, END, FIRE, HANDLE_LAND, SHOVES, INTRO_HOPS, INTRO_RUN, RACHEL_AT, rachelAt, STORE_STRIKES, SWUNG, T0, T1, WAY } from './geo'
 import { at } from '../music'
 
 /**
@@ -110,9 +110,15 @@ function shots(): PartShot[] {
     hold(27.0, 3.0, [17.42, 0.42]),
     follow(28.6, 4.0, [0.8, -0.3]),
     hold(30.5, 3.8, [25.65, 0.55]),
-    { ...hold(DIAL_AT[0], 2.5, [25.72, 0.35]), cut: true },
-    hold(at(17, 4), 2.5, [25.88, 0.36]),
-    { ...hold(HANDLE_LAND, 3.8, [25.65, 0.55]), cut: true },
+    { ...hold(DIAL_AT[0], 2.6, [25.72, 0.15]), cut: true },
+    hold(at(17, 4), 2.4, [25.85, 0.12]),
+    // In on the handle as it goes down under him, then with him along the door's edge as he heaves it a beat at a
+    // time, and back as it swings onto its stop.
+    { ...hold(HANDLE_LAND, 3.0, [26.15, 0.45]), cut: true },
+    hold(BOLTS, 3.0, [26.2, 0.5]),
+    hold(SHOVES[0], 3.2, [26.25, 0.55]),
+    hold(SHOVES[SHOVES.length - 1], 2.95, [25.9, 0.6]),
+    hold(SWUNG, 3.35, [25.7, 0.55]),
     hold(43.9, 3.8, [25.65, 0.55]),
     hold(46.6, 3.9, [25.25, 0.05]),
     hold(T1, seam.cells, last),

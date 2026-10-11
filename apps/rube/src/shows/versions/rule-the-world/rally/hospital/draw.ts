@@ -24,6 +24,7 @@ import {
   GLASS,
   HEAD_TOP,
   HEAD_X,
+  KNOCKS,
   LANDS,
   LEAN,
   LOOK,
@@ -700,6 +701,15 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
     [1, C.glass, 0.03],
   ])
   ctx.restore()
+  // His knocks on the pane: a ring in the glass where he meets it, gone in a breath.
+  for (const [, ti] of KNOCKS) {
+    const s = t - ti
+    if (s < 0 || s > 0.45) continue
+    ctx.save()
+    ctx.globalAlpha = 0.5 * (1 - s / 0.45)
+    ellipse(pen, [AT_GLASS[0], AT_GLASS[1] - 0.02], 0.16 + 0.32 * s, 0.16 + 0.32 * s, null, 0.9, C.woodDark)
+    ctx.restore()
+  }
   // His tears: a drop down his side to the sill, and the bead it leaves.
   for (const ti of TEARS) {
     const s = t - ti

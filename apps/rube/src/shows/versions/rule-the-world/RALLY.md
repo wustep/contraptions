@@ -130,3 +130,11 @@ turns; and at six Murray's shadow comes in at the office door a step a beat, his
 safe as Marty freezes on the bills, to the cut. In the ward the nurse waves to him through the glass, the sun clears
 the roofs in the nursery's window and the camera follows its light to the boy, and once she has him up at the glass,
 father and son play their first rally through it, Marty on two and four, his son on three and one.
+
+Then a second look at the result. Tokyo's last bar had still been one wide view, with the two of them small at either
+end of the table. Now it is cut close on every stroke, his bat and then Endo, each shot a little closer than the last.
+The winner holds on his bat as it fires, cuts to Endo lunging as it goes past him, and cuts wide to the whole house as
+it hits the boards. The rest of the match is framed stroke by stroke, as close as each flight allows. At the safe he
+springs off the dial on every beat and comes down on its notch on the "a", and the camera goes in with him on the
+handle and along the door's edge as he heaves it open. In the ward, as soon as the blind is up, he knocks twice on the
+glass for his son, which is why the nurse looks up, and he hops for joy when the boy wriggles back at him.

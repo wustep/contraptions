@@ -1,6 +1,6 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { carried, route, smooth, type Way } from '../kit'
-import { at, DURATION, SEAM, SON } from '../music'
+import { a, at, DURATION, SEAM, SON } from '../music'
 import { G } from '../physics'
 import { ring } from '../pen'
 
@@ -39,6 +39,15 @@ export const SPRING = at(97, 4)
 export const LANDS = [at(98, 2), at(98, 3), at(98, 4)]
 /** At the glass: the blind goes up, and there he is. */
 export const BLIND_TOP = at(99, 2)
+/**
+ * As soon as the blind is up he knocks on the glass for him, twice (a hop off the sill against the pane, landing on
+ * beats 3 and 4), and the nurse looks up at the knock. When the boy wriggles back at him on bar 101 he hops for joy.
+ */
+export const KNOCKS: [number, number][] = [
+  [a(99, 2), at(99, 3)],
+  [a(99, 3), at(99, 4)],
+]
+export const JOY: [number, number][] = [[a(101, 3), at(101, 4)]]
 /** The nurse looks up at the glass. */
 export const LOOK = at(100, 1)
 /** She reaches into the bassinet; lifts him; holds him up to the glass. */
@@ -220,7 +229,7 @@ export function martyAt(t: number): Pt {
       return [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u - arc * 4 * u * (1 - u)]
     }
   }
-  return [AT_GLASS[0] + trembleAt(t), AT_GLASS[1] - hopOf(TAPS, t, 0.16)]
+  return [AT_GLASS[0] + trembleAt(t), AT_GLASS[1] - hopOf(TAPS, t, 0.16) - hopOf(KNOCKS, t, 0.1) - hopOf(JOY, t, 0.22)]
 }
 
 export function hospitalWay(): Seg[] {
@@ -238,7 +247,7 @@ export function hospitalWay(): Seg[] {
   for (const [a, b, , q] of HOPS) ways.push({ at: b, p: q, arc: (G * (b - a) ** 2) / 8 })
   segs.push(...route(ways))
   let t = SON
-  const moves: [number, number][] = [...TREMBLES.map((ti): [number, number] => [ti, ti + 0.6]), ...TAPS].sort((x, y) => x[0] - y[0])
+  const moves: [number, number][] = [...TREMBLES.map((ti): [number, number] => [ti, ti + 0.6]), ...TAPS, ...KNOCKS, ...JOY].sort((x, y) => x[0] - y[0])
   for (const [a, b] of moves) {
     rest(t, a, AT_GLASS)
     segs.push(...carried(martyAt, a, b, 30))
@@ -300,6 +309,8 @@ export const HOSPITAL_STRIKES: number[] = [
   ...TREMBLES,
   ...WRIGGLES,
   ...TAPS.map((x) => x[1]),
+  ...KNOCKS.map((x) => x[1]),
+  ...JOY.map((x) => x[1]),
   ...ANSWERS.map((x) => x[1]),
   WAVE[0],
   SUN_CLEAR,

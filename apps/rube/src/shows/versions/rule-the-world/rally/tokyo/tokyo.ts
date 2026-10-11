@@ -4,7 +4,7 @@ import { WIN } from '../music'
 import type { Pen } from '../pen'
 import { SEAMS } from '../seams'
 import { drawArena, drawEndo, drawEndoOver, drawImpacts, drawLamp, drawSprungBat, drawStreamers, drawTable } from './draw'
-import { BACK2, END, IN_PAN, LEAVE, P0, PICK, POWER, RALLY, SET, STOMPS, T0, T1, TOKYO_STRIKES, WAY } from './geo'
+import { BACK2, END, IN_PAN, LEAVE, P0, PICK, POWER, RALLY, SET, STROKES, LUNGE, BOARDS, STOMPS, T0, T1, TOKYO_STRIKES, WAY } from './geo'
 
 /**
  * Tokyo (176.689 → 202.391, bars 83 to 94): the exhibition he is meant to lose, and the real match he forces.
@@ -83,29 +83,69 @@ export const rematch = part<MatchState>(
  * the last bar as the drives come in hard. The score's punch on the winner, wide on the arena erupting; in on Endo
  * picking him up and carrying him; and closing on him at the end line as the lights go down.
  */
+/**
+ * The match as broadcast: a key on every stroke, framed on the flight it sends off (the ball from just before the bat
+ * to the next bat), the camera going with the ball where Endo is driven deep or it goes up, as close as keeps the
+ * ball in the Zoom frame and no wider than it must be. Cuts where the rally turns (`RALLY_CUTS`); the last bar is `closing`'s.
+ */
+const RALLY_CUTS = [0, 4, 7, 10, 12]
+/** The closest each stretch of the rally may be: bar 85, the lob from deep, the dig, the counter. */
+const RALLY_CELLS = (i: number): number => (i < 4 ? 5.3 : i < 7 ? 5.6 : i < 10 ? 5.2 : 5.5)
+function rally(): PartShot[] {
+  const out: PartShot[] = []
+  const TABLE: Pt = [1.85, -0.6]
+  for (let i = 0; i < RALLY.length; i++) {
+    const a = RALLY[i] - 0.25
+    const b = i + 1 < RALLY.length ? RALLY[i + 1] : WIN
+    let x0 = Infinity
+    let x1 = -Infinity
+    let y0 = Infinity
+    let y1 = -Infinity
+    for (let t = a; t <= b; t += 0.01) {
+      const [x, y] = WAY.at(t)
+      x0 = Math.min(x0, x)
+      x1 = Math.max(x1, x)
+      y0 = Math.min(y0, y)
+      y1 = Math.max(y1, y)
+    }
+    // Mostly the flight, a little the table: it goes with the ball where Endo is driven deep or it goes up.
+    const c: Pt = [0.15 * TABLE[0] + 0.85 * ((x0 + x1) / 2), 0.15 * TABLE[1] + 0.85 * ((y0 + y1) / 2)]
+    // Under Zoom (half as close again) the ball must stay in: 16:9, so a cell of height is 16/9 of width.
+    const need = 1.06 * Math.max((Math.max(c[0] - x0, x1 - c[0]) * 1.5) / (16 / 9 / 2), (Math.max(c[1] - y0, y1 - c[1]) * 1.5) / 0.5)
+    out.push({ t: RALLY[i], cells: Math.max(RALLY_CELLS(i), need), hold: c, w: 1, ...(RALLY_CUTS.includes(i) ? { cut: true } : {}) })
+  }
+  return out
+}
+
+/** From the last bar (`CLOSE_FROM`): in close, cut on every stroke, his bat and then Endo, each closer than the last. */
+const CLOSE_FROM = 12
+const MARTY_CLOSE: Pt = [-0.35, -0.55]
+const ENDO_CLOSE: Pt = [5.55, -0.85]
+function closing(): PartShot[] {
+  const out: PartShot[] = []
+  for (let i = CLOSE_FROM; i < RALLY.length; i++) {
+    const marty = STROKES.find((s) => s.i === i)?.who === 'marty'
+    const k = i - CLOSE_FROM
+    out.push({ t: RALLY[i], cells: (marty ? 3.7 : 4.1) - 0.15 * k, hold: marty ? MARTY_CLOSE : ENDO_CLOSE, w: 1, cut: true })
+  }
+  // The winner: on his bat as it fires, on Endo as it goes past him, and on the boards, the whole house.
+  out.push({ t: WIN, cells: 3.2, hold: [MARTY_CLOSE[0] + 0.15, MARTY_CLOSE[1]], w: 1, cut: true })
+  out.push({ t: LUNGE, cells: 3.6, hold: [ENDO_CLOSE[0] - 0.1, ENDO_CLOSE[1] + 0.1], w: 1, cut: true })
+  out.push({ t: BOARDS, cells: 9.3, hold: [3.0, -1.95], w: 1, cut: true })
+  return out
+}
+
 function shots(): PartShot[] {
   const hold = (t: number, cells: number, at: Pt, cut = false): PartShot => ({ t, cells, hold: at, w: 1, ...(cut ? { cut } : {}) })
   const seamIn = SEAMS.tokyo
   const seamOut = SEAMS.hospital
-  const r = (i: number) => RALLY[i]
   return [
     hold(T0 + 0.42, seamIn.cells, [P0[0] + seamIn.frame[0], P0[1] + seamIn.frame[1]]),
     hold(STOMPS[0] - 0.2, 5.4, [1.8, -0.9]),
     hold(STOMPS[2], 3.9, [-0.75, -0.4], true),
     hold(IN_PAN + 0.3, 3.75, [-0.8, -0.42]),
-    hold(r(0), 6.3, [2.3, -0.75], true),
-    hold(r(1), 6.3, [2.42, -0.76]),
-    hold(r(2), 6.35, [2.3, -0.76]),
-    hold(r(3), 6.45, [2.5, -0.78]),
-    hold(r(4), 8.6, [3.1, -1.7], true),
-    hold(r(6), 8.4, [3.3, -1.6]),
-    hold(r(7), 7.4, [2.9, -0.45], true),
-    hold(r(9), 7.4, [2.95, -0.55]),
-    hold(r(10), 8.0, [3.15, -1.3], true),
-    hold(r(11), 7.9, [3.05, -1.2]),
-    hold(r(12), 7.0, [2.8, -0.8], true),
-    hold(WIN - 0.3, 6.1, [2.0, -0.72]),
-    hold(WIN + 0.08, 6.0, [2.0, -0.72]),
+    ...rally().filter((k) => k.t < RALLY[CLOSE_FROM] - 1e-6),
+    ...closing(),
     hold(WIN + 1.7, 9.5, [3.0, -2.0]),
     hold(WIN + 3.05, 9.5, [3.2, -2.0]),
     hold(PICK - 0.7, 6.0, [5.6, 0.1]),
@@ -118,8 +158,8 @@ function shots(): PartShot[] {
 
 export const TOKYO_HITS: readonly number[] = TOKYO_STRIKES
 
-/** The arena erupting, wide, from the smash. */
-export const TOKYO_WIDE: [number, number][] = [[WIN, WIN + 3.95]]
+/** The last bar in close (the ball leaves the frame between the two ends), and the arena erupting, wide, from the smash. */
+export const TOKYO_WIDE: [number, number][] = [[RALLY[CLOSE_FROM], WIN + 3.95]]
 
 /** The camera's punches in on this place's big moments (`score.ts`): show time and strength. */
 export const TOKYO_PUNCHES: [number, number][] = [

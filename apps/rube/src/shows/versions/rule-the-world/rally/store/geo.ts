@@ -1,7 +1,7 @@
 import { laneAt, type Pt, type Seg } from '../../../../../parts'
 import { carried, route, type Way } from '../kit'
 import { a, at, BAR, SEAM } from '../music'
-import { hop } from '../physics'
+import { G, hop } from '../physics'
 
 /**
  * Uncle Murray's shoe store, 1952, before it opens: the clock, the ground and the way (0 → 52.455, bars 1 to 24), in
@@ -173,6 +173,8 @@ export const ON_STEP = at(14, 3)
 export const STEP_BOUNCE = at(14, 4)
 /** The dial: a click under every landing, bars 15 to 17 on the shuffle, one way, the other, and back. */
 export const DIAL_AT = shuffle(15, 17, [17, 4])
+/** How much higher than a plain hop he bounces off the dial on each beat: about half a cell. */
+const DIAL_SPRING = 3
 /** The handle: he lands on it, it turns down under him and the bolts throw, and he drops off. */
 export const HANDLE_LAND = at(18, 1)
 export const BOLTS = at(18, 2)
@@ -379,10 +381,11 @@ export function storeWay(): { segs: Seg[]; at: (t: number) => Pt } {
   w.push({ at: STEP_HOP, p: [23.5, FLOOR_Y], ramp: [2.45, 2.2] })
   go(ON_STEP, [24.22, STEP_TOP - R])
   go(STEP_BOUNCE, [24.3, STEP_TOP - R])
-  // The dial: onto its top, and the clicks.
+  // The dial: onto its top, and the clicks: off each beat he springs high and comes down on the "a" (the dial's
+  // notch), and off the "a" a quick tap down onto the beat.
   const dialTop: Pt = [DIAL[0], DIAL[1] - DIAL_R - R]
   go(DIAL_AT[0], dialTop)
-  for (const t of DIAL_AT.slice(1)) go(t, dialTop)
+  DIAL_AT.slice(1).forEach((t, k) => w.push(hop(last(), dialTop, t, k % 2 === 0 ? DIAL_SPRING * G : G)))
   // The handle: carried down on its end as it turns; off onto the floor.
   go(HANDLE_LAND, onLever(0))
   w.push(...carriedWays(HANDLE_LAND, BOLTS, 8, (t) => onLever(handleTurn(t))))
