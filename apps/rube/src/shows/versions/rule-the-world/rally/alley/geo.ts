@@ -1,6 +1,6 @@
 import { laneAt, R, type Pt, type Seg } from '../../../../../parts'
 import { CAB } from '../cab'
-import { carried, hash, route, type Way } from '../kit'
+import { carried, route, smooth, type Way } from '../kit'
 import { a, at, SEAM } from '../music'
 import { G } from '../physics'
 
@@ -128,27 +128,56 @@ export const LIGHTS = a(64, 4)
 /** Where he kicks up off the sidewalk behind the cab. */
 export const KICK_X = -9.4
 
+/**
+ * The real rally's shots, in order, alternating from Marty's on 60.2: what kind each is. Marty's sprung bat is fixed,
+ * so his variety is in the flight (a flat drive, a smash off the high ball); the mark's is in where he has to be: in
+ * close to block, back off the table to fish up a lob, stretched out low for one that kicks away from him.
+ */
+export type Shot = 'serve' | 'drive' | 'smash' | 'winner' | 'push' | 'lob' | 'block' | 'stretch'
+export const RALLY: { t: number; bounce: number; kind: Shot }[] = [
+  { t: HITS[0], bounce: BOUNCES[0], kind: 'serve' },
+  { t: HITS[1], bounce: BOUNCES[1], kind: 'push' },
+  { t: HITS[2], bounce: BOUNCES[2], kind: 'drive' },
+  { t: HITS[3], bounce: BOUNCES[3], kind: 'lob' },
+  { t: HITS[4], bounce: BOUNCES[4], kind: 'smash' },
+  { t: HITS[5], bounce: BOUNCES[5], kind: 'block' },
+  { t: HITS[6], bounce: BOUNCES[6], kind: 'drive' },
+  { t: HITS[7], bounce: BOUNCES[7], kind: 'stretch' },
+  { t: HITS[8], bounce: BOUNCES[8], kind: 'drive' },
+  { t: HITS[9], bounce: BOUNCES[9], kind: 'push' },
+  { t: HITS[10], bounce: BOUNCES[10], kind: 'winner' },
+]
+/** Marty's power shots: the camera punches in on them (`ALLEY_PUNCHES`). */
+export const SMASH = HITS[4]
+
 /** The fires of Marty's bat, and which kind. */
-export const FIRES: { t: number; kind: 'serve' | 'clumsy' | 'hit' | 'winner' }[] = [
+export const FIRES: { t: number; kind: 'serve' | 'clumsy' | 'hit' | 'smash' | 'winner' }[] = [
   { t: SERVE, kind: 'serve' },
   { t: CLUMSY, kind: 'clumsy' },
-  ...HITS.filter((_, i) => i % 2 === 0).map((t) => ({ t, kind: t === WINNER ? ('winner' as const) : ('hit' as const) })),
+  ...RALLY.filter((_, i) => i % 2 === 0).map((r) => ({ t: r.t, kind: r.kind === 'winner' ? ('winner' as const) : r.kind === 'smash' ? ('smash' as const) : ('hit' as const) })),
 ]
-/** The mark's strokes: where his bat meets the ball (or misses it). */
+/** The mark's strokes: where his bat meets the ball (or misses it), and how. */
 export interface Stroke {
   t: number
   p: Pt
   miss?: boolean
+  kind?: Shot
 }
 
 /* ------------------------------------------------------------------ the rally's places */
 
-const markBat = (i: number): Pt => [8.82 + 0.1 * (hash(i, 3) - 0.5), -2.58 + 0.16 * (hash(i, 4) - 0.5)]
-const markSide = (i: number): number => 6.95 + 0.6 * (hash(i, 5) - 0.5)
-const martySide = (i: number): number => 4.75 + 0.5 * (hash(i, 6) - 0.5)
 /** How high a crossing flies over the net, and the little rise off the table up to the bat. */
 const CROSS = 0.6
 const RISE = 0.1
+/** How high each kind of shot flies over the net. */
+const ARC: Record<Shot, number> = { serve: 0.6, drive: 0.36, smash: 0.24, winner: 0.5, push: 0.55, lob: 1.55, block: 0.4, stretch: 0.62 }
+/** Where the mark meets the ball, shot by shot (the first is his return of the given point's serve). */
+const MARK_AT: Pt[] = [[8.84, -2.6], [8.86, -2.56], [9.78, -2.08], [8.62, -2.44], [9.5, -2.16], [8.92, -2.74]]
+/** Where each of Marty's shots lands on the mark's side, and each of the mark's on his. */
+const ON_MARK = [7.0, 7.95, 6.55, 8.05, 7.55]
+const ON_MARTY = [4.85, 3.85, 5.3, 4.2, 4.7]
+/** How high the ball kicks up off his side to the pan: the lob's comes down steep and sits up high. */
+const KICK = [RISE, 0.55, RISE, 0.16, RISE]
 
 /** The winner: low over the net, deep on his side, past him and down onto the near lane. */
 const WIN_BOUNCE: Pt = [7.75, CT]
@@ -157,7 +186,11 @@ export const LAND_X = 13.9
 export const STRIKE_X = HEADPIN - R - 0.09
 
 /** The mark's strokes, in order. */
-export const STROKES: Stroke[] = [{ t: at(58, 4), p: markBat(0) }, ...HITS.map((t, i) => ({ t, p: markBat(i + 1) })).filter((_, i) => i % 2 === 1), { t: WHIFF, p: [9.0, -2.92], miss: true }]
+export const STROKES: Stroke[] = [
+  { t: at(58, 4), p: MARK_AT[0], kind: 'push' },
+  ...RALLY.map((r, i) => ({ r, i })).filter(({ i }) => i % 2 === 1).map(({ r, i }) => ({ t: r.t, p: MARK_AT[(i + 1) / 2], kind: r.kind })),
+  { t: WHIFF, p: [9.0, -2.92], miss: true },
+]
 
 /* ------------------------------------------------------------------ the way */
 
@@ -191,9 +224,9 @@ export function alleyWay(): { segs: Seg[]; at: (t: number) => Pt } {
     { at: PAN_IN, p: PAN, arc: 1.4 },
     { at: SERVE, p: PAN },
     // The first point: a soft serve, the mark's return, back onto his half and into the pan.
-    { at: a(58, 3), p: [markSide(0), CT], arc: CROSS + 0.15 },
-    { at: at(58, 4), p: markBat(0), arc: RISE },
-    { at: a(58, 4), p: [martySide(0), CT], arc: CROSS },
+    { at: a(58, 3), p: [6.95, CT], arc: CROSS + 0.15 },
+    { at: at(58, 4), p: MARK_AT[0], arc: RISE },
+    { at: a(58, 4), p: [4.75, CT], arc: CROSS },
     { at: CLUMSY, p: PAN, arc: RISE },
   ])
   // The clumsy fire: a wobbling pop that dies in the net.
@@ -209,10 +242,13 @@ export function alleyWay(): { segs: Seg[]; at: (t: number) => Pt } {
   ])
   // The real rally.
   const ways: Way[] = [{ at: HITS[0], p: PAN }]
-  for (let i = 0; i < HITS.length - 1; i++) {
+  for (let i = 0; i < RALLY.length - 1; i++) {
     const marty = i % 2 === 0
-    ways.push({ at: BOUNCES[i], p: [marty ? markSide(i + 1) : martySide(i + 1), CT], arc: CROSS })
-    ways.push({ at: HITS[i + 1], p: marty ? markBat(Math.floor(i / 2) + 1) : PAN, arc: RISE })
+    const j = Math.floor(i / 2)
+    ways.push({ at: RALLY[i].bounce, p: [marty ? ON_MARK[j] : ON_MARTY[j], CT], arc: ARC[RALLY[i].kind] })
+    // Up off the table to the next bat: to the mark's, which is further off it the further back he is.
+    const to = marty ? MARK_AT[j + 1] : PAN
+    ways.push({ at: RALLY[i + 1].t, p: to, arc: marty ? RISE + 0.12 * Math.max(0, to[0] - 9) : KICK[j] })
   }
   // The winner: low over the net, deep, past the mark's late swing, down onto the near lane and along it.
   ways.push({ at: BOUNCES[HITS.length - 1], p: WIN_BOUNCE, arc: 0.5 })
@@ -245,6 +281,34 @@ export function alleyWay(): { segs: Seg[]; at: (t: number) => Pt } {
   }
 }
 export const WAY = alleyWay()
+
+/* ------------------------------------------------------------------ the mark's feet */
+
+/**
+ * The mark who plays: where he stands (his feet's x), how far he leans into the shot, how low he gets. He is driven
+ * back off the table by Marty's drives and comes in again for the short ones, a step to every stroke; stretched out
+ * low for the one that kicks away; and after the whiff he stands where it left him.
+ */
+export function markPose(t: number): { x: number; lean: number; crouch: number } {
+  const keys: [number, number, number, number][] = [[T0, MARK_X, 0.12, 0]]
+  for (const st of STROKES) {
+    const stretch = st.kind === 'stretch'
+    const low = st.kind === 'lob' || stretch
+    keys.push([st.t - 0.12, st.p[0] + 0.86 + (stretch ? 0.3 : 0), stretch ? 0.38 : 0.2, low ? 0.2 : 0.06])
+    keys.push([st.t + 0.16, st.p[0] + 0.86 + (stretch ? 0.3 : 0), st.miss ? 0.3 : 0.12, low ? 0.08 : 0])
+  }
+  keys.sort((p, q) => p[0] - q[0])
+  let i = 0
+  while (i + 1 < keys.length && keys[i + 1][0] <= t) i++
+  if (i + 1 >= keys.length || t <= keys[0][0]) {
+    const k = keys[Math.min(i, keys.length - 1)]
+    return { x: k[1], lean: k[2], crouch: k[3] }
+  }
+  const [t0, x0, l0, c0] = keys[i]
+  const [t1, x1, l1, c1] = keys[i + 1]
+  const u = smooth(t, t0, t1)
+  return { x: x0 + (x1 - x0) * u, lean: l0 + (l1 - l0) * u, crouch: c0 + (c1 - c0) * u }
+}
 
 /* ------------------------------------------------------------------ Wally's walk out */
 

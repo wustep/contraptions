@@ -35,9 +35,9 @@ screen across, so he holds still while the world round him becomes somewhere els
 | 176.689 | 83–94 | **Tokyo** (`tokyo/`) | On "Everybody wants to rule the -", broken off: the exhibition he is meant to throw, one table under one lamp in a packed arena, GIs in a block of the stands. He stamps and the house lights come up; on "never, never, never, never" the real match, all sixteen beats bats and all sixteen shuffles bounces; the winning smash on the "Everybody" (bar 89, the camera punches in), caps in the air, streamers, flash bulbs. Then quiet: Endo picks him off the floor, sets him on the end line, bows, and the lights go down to the one lamp. |
 | 202.391 | 95–end | **The ward** (`hospital/`) | On "All for freedom and for pleasure": the foot of Rachel's bed at dawn; he rolls up to her, a warm glow between them, and goes down the corridor's checkerboard. On the last "Everybody wants to rule the world" (bar 99) he lands on the nursery window's sill and the blind goes up: his son, in the nursery's one warm light, the other babies asleep. The nurse lifts him right up to the glass beside Marty, Marty trembles on the beats. Under the credits the hall's light goes down round the lit window and the camera pushes in slowly on the two of them, and holds. |
 
-The camera is authored (holds, follows and a few cuts on strikes), punches in twice (the tub, the winning point), and
-whips nowhere. Over every place lie a 35 mm grain and a soft vignette (`rally/grain.ts`), baked once per canvas size
-into a few frames so that a software canvas pays one plain draw for them.
+The camera is authored (holds, follows and a few cuts on strikes), punches in on the tub, the winning point and each place's big shots (`<PLACE>_PUNCHES`), and
+whips nowhere. Over every place lies a soft vignette (`rally/vignette.ts`), baked once per canvas size so that a software
+canvas pays one plain draw for it; the 35 mm grain that once lay with it is gone (see the dynamic pass).
 
 ## The clock
 
@@ -98,3 +98,49 @@ Then a look end to end on the live page as well as in stills, fixing what it sho
 deepened so their small amber fine print reads over the pale wall, and tied to the cards, so that once the last has
 gone no dark smudge is left over the window; and Wally, walking round to his cab, steps off the curb into the road on
 its far side, so the roof comes to his chest and the camera following Marty no longer cuts off his head.
+
+## The dynamic pass
+
+Then a pass for life, measured: every stretch of the show sampled for how much of the picture changes, the stillest
+ones filled with story on the music, and the matches played and shot as matches. The grain went first: the picture is
+clean, and only the vignette is left over it.
+
+London's matches are now played point by point, and shot that way. Kletzki attacks from close in and smashes off
+Marty's loops until, stretched wide, he floats one up for the winner. In the final Marty takes a point past Endo's lunge
+and the umpire turns his card level, before Endo lobs from deeper and deeper and kills the last point dead. The camera
+cuts between angles on the strokes and leans with each one, the gallery's heads follow the ball and rise on the big
+points, Kay applauds, and every stroke and bounce lands with a pop of light.
+
+Tokyo's real match turns on the music: drives at the table, Endo driven off it to lob from deep, a smash he digs off the
+floor, his counter, and four flat drives coming in hard to the winner. The camera cuts on the strokes (in close on the
+cocked bat as he hops into its pan, side on, wide and high for the lob, low under the smashes, then in on the table
+through the last bar) and punches in on the stomps and the power shots. Every head in the house follows the ball, and
+the front rows rise through the last bar.
+
+In the bowling alley the hustle is played like the money match it is: once the point is given away the camera cuts to
+the raise going into Wally's palm, and the rally is cut on its strikes, in tight on Marty's bat, in tight on the mark as
+he is driven back for a lob and stretched out low, and back to the table for the smash and the winner. At the hotel the
+camera creeps in as the floor cracks and then goes down the fire escape at his side. In New Jersey the road's joints
+throw the two of them off the seat on the beats and settle Rachel nearer him.
+
+The store's waits are given their life: across the street the tenements wake a window a beat through the intro; the
+curtain's draught sets the stockroom's bulb swinging, so the light and their two shadows sway through the pause; the
+dial is seen close, the lock under it cut open, its three wheels set a bar apiece and the fence dropping as the handle
+turns; and at six Murray's shadow comes in at the office door a step a beat, his hat on, his arm reaching out over the
+safe as Marty freezes on the bills, to the cut. In the ward the nurse waves to him through the glass, the sun clears
+the roofs in the nursery's window and the camera follows its light to the boy, and once she has him up at the glass,
+father and son play their first rally through it, Marty on two and four, his son on three and one.
+
+Then a second look at the result. Tokyo's last bar had still been one wide view, with the two of them small at either
+end of the table. Now it is cut close on every stroke, his bat and then Endo, each shot a little closer than the last.
+The winner holds on his bat as it fires, cuts to Endo lunging as it goes past him, and cuts wide to the whole house as
+it hits the boards. The rest of the match is framed stroke by stroke, as close as each flight allows. At the safe he
+springs off the dial on every beat and comes down on its notch on the "a", and the camera goes in with him on the
+handle and along the door's edge as he heaves it open. In the ward, as soon as the blind is up, he knocks twice on the
+glass for his son, which is why the nurse looks up, and he hops for joy when the boy wriggles back at him.
+
+A third look found London's two decisive points still played in the rally's middle distance. Now the semifinal's
+winning smash cuts in close on his bat as it fires, with the gallery's arms going up behind it, before the cut to the
+hall. The final's last bar is cut close on every stroke, his bat and then Endo with Kay watching behind him. Endo's
+dead shot is seen in close on his sponge, and the camera then goes low on Marty's end as the ball dies short, his bat
+swings over it, and the ball rolls off the end to the floor.

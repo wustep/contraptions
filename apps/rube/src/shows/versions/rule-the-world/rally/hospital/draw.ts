@@ -24,6 +24,7 @@ import {
   GLASS,
   HEAD_TOP,
   HEAD_X,
+  KNOCKS,
   LANDS,
   LEAN,
   LOOK,
@@ -35,10 +36,13 @@ import {
   SILL,
   SILL_TOP,
   SPRING,
+  SUN_CLEAR,
+  SUNRISE,
   STAND,
   STAND_TOP,
   TEARS,
   T0,
+  WAVE,
   WALL,
   WARD_WIN,
   liftOf,
@@ -529,6 +533,14 @@ export function nurseOf(t: number, baby: Pt): { lean: number; head: Pt; shoulder
     [rest[0][0] + (on[0][0] - rest[0][0]) * reach, rest[0][1] + (on[0][1] - rest[0][1]) * reach],
     [rest[1][0] + (on[1][0] - rest[1][0]) * reach, rest[1][1] + (on[1][1] - rest[1][1]) * reach],
   ]
+  // Her wave to him through the glass: the hand up by her face, side to side a beat at a time.
+  const up = smooth(t, WAVE[0] - 0.3, WAVE[0]) * (1 - smooth(t, WAVE[1] - 0.25, WAVE[1] + 0.2))
+  if (up > 0) {
+    const beat = (WAVE[1] - WAVE[0]) / 4
+    const sway = 0.07 * Math.sin(((t - WAVE[0]) / beat) * Math.PI)
+    const wave: Pt = [x + 0.42 + sway, -1.5 + 0.02 * Math.abs(Math.sin(((t - WAVE[0]) / beat) * Math.PI))]
+    hands[1] = [hands[1][0] + (wave[0] - hands[1][0]) * up, hands[1][1] + (wave[1] - hands[1][1]) * up]
+  }
   return { lean, head, shoulders, hands, look }
 }
 
@@ -589,6 +601,14 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt): void {
     [0, mix(C.skyTop, C.skyTopWarm, w), 1],
     [1, mix(C.skyLow, C.skyLowWarm, w), 1],
   ])
+  // The sun, coming up over the rooftops (bars 101 to 104) and clearing them on bar 103.
+  const rise = smooth(t, SUNRISE[0], SUNRISE[1])
+  const sun: Pt = [-10.32, -1.0 - 0.62 * rise]
+  if (t > SUNRISE[0] - 0.5) {
+    const clear = flash(t - SUN_CLEAR, 0.6)
+    glow(pen, sun, 0.55 + 0.3 * clear, '#FFD27A', 0.45 * rise + 0.35 * clear)
+    ellipse(pen, sun, 0.14, 0.14, mix('#FFC874', '#FFF0C8', 0.4 + 0.4 * rise))
+  }
   shape(pen, [[wx0, -0.9], [wx0, -1.2], [wx0 + 0.3, -1.2], [wx0 + 0.3, -1.32], [wx0 + 0.7, -1.32], [wx0 + 0.7, -1.15], [wx1, -1.15], [wx1, -0.9]], mix(C.roofs, C.roofsWarm, w))
   rect(pen, wx0 - 0.05, -2.0, wx1 + 0.05, -1.92, C.frame)
   rect(pen, wx0 - 0.05, -0.95, wx1 + 0.05, -0.88, C.frame)
@@ -599,6 +619,12 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt): void {
     bassinet(pen, x, BACK_RIM, 0.8, true)
     newborn(pen, x, BACK_RIM, 0.8, i % 2 ? C.hoodPink : C.hoodBlue)
   })
+  // Once it is over the roofs, its light comes in through the window and across the room onto his bassinet.
+  const beam = smooth(t, SUN_CLEAR - 0.2, SUN_CLEAR + 1.6)
+  if (beam > 0.003) {
+    fillWith(pen, [[wx0 + 0.2, -1.85], [wx1 - 0.05, -1.85], [baby[0] + 0.45, baby[1] + 0.25], [baby[0] - 0.55, baby[1] + 0.25]], rgba(pen, '#FFD58A', 0.16 * beam))
+    glow(pen, [baby[0], baby[1] + 0.05], 0.9, '#FFD58A', 0.18 * beam)
+  }
   drawNurse(pen, t, baby)
   // His own light: the one warm light in the nursery, on him from the moment the blind goes up.
   const lit = smooth(t, SON - 0.1, SON + 0.6)
@@ -675,6 +701,15 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
     [1, C.glass, 0.03],
   ])
   ctx.restore()
+  // His knocks on the pane: a ring in the glass where he meets it, gone in a breath.
+  for (const [, ti] of KNOCKS) {
+    const s = t - ti
+    if (s < 0 || s > 0.45) continue
+    ctx.save()
+    ctx.globalAlpha = 0.5 * (1 - s / 0.45)
+    ellipse(pen, [AT_GLASS[0], AT_GLASS[1] - 0.02], 0.16 + 0.32 * s, 0.16 + 0.32 * s, null, 0.9, C.woodDark)
+    ctx.restore()
+  }
   // His tears: a drop down his side to the sill, and the bead it leaves.
   for (const ti of TEARS) {
     const s = t - ti

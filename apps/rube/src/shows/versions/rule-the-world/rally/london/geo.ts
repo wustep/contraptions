@@ -1,6 +1,6 @@
 import { laneAt, type Pt, type Seg } from '../../../../../parts'
-import { hash, route, type Way } from '../kit'
-import { a, at, BEATS, LOSS, SEAM } from '../music'
+import { carried, route, smooth, type Way } from '../kit'
+import { a, at, LOSS, SEAM } from '../music'
 import { G } from '../physics'
 
 /**
@@ -12,9 +12,14 @@ import { G } from '../physics'
  * between them where Kletzki stands. Behind them the low barrier, the gallery and the hall.
  *
  *   bar 25    the lamp clicks on; Kletzki knocks his bat on the table; Marty hops into his pan; the toss
- *   26 – 31   the semifinal: bat on the beat, the table on the "a"; Marty's smash on 31.3, Kletzki misses on 31.4
+ *   26 – 31   the semifinal, one long rally: bat on the beat, the table on the "a". Kletzki attacks from in close,
+ *             flat and hard, and smashes off each of Marty's loops; Marty blocks, drives deeper and flatter, and when
+ *             a stretched Kletzki floats one up, smashes it on 31.3; Kletzki misses on 31.4
  *   32        the smash's kick carries him over the gap into his pan on table B; the umpire's card; Endo's tap
- *   33 – 40   the final: Endo's soft high loops, three of them lobs a beat long
+ *   33 – 36   the final's first point, Marty's: Endo loops and lobs, Marty smashes on 34.4 past Endo's lunge; the
+ *             umpire turns Marty's card level; Endo catches the ball on his bat and pats it back to the pan
+ *   37 – 40   the last point: Endo backs off the table and lobs, from deeper each time, and Marty smashes each one;
+ *             then Endo comes running back in
  *   41.1      LOSS: Endo's dead shot; it dies on Marty's side, his bat swings over it; it trickles off the end
  *   42        on the floorboards, three bounces and a roll to rest; Endo bows; Kay's glove has fallen
  */
@@ -92,6 +97,21 @@ export const TOSS_B = at(32, 4)
 export const KLETZKI_GONE = 75
 export const A_DIM: [number, number] = [75, 77]
 
+/**
+ * The final's first point, Marty's: his smash (34.4) goes by Endo's lunge (35.1) and twice off the floorboards; the
+ * umpire turns Marty's card level (35.3); Endo, turned round, catches it on his bat (35.4), carries it back, and pats
+ * it over the net (36.1), a bounce, into Marty's pan (36.3), which tosses him for the last point (36.4).
+ */
+export const WINNER = at(34, 4)
+export const LUNGE = at(35, 1)
+export const OUT = [at(35, 2), at(35, 3)]
+export const CATCH = at(35, 4)
+export const FEED = at(36, 1)
+export const FEED_BOUNCE = at(36, 2)
+export const IN_PAN_B2 = at(36, 3)
+export const TOSS_B2 = at(36, 4)
+export const FLIP_M = at(35, 3)
+
 /** The last point. */
 export const DEAD = LOSS
 export const DIES = at(41, 2)
@@ -106,24 +126,29 @@ export const REST_AT = at(42, 3) + 0.62
 /* ------------------------------------------------------------------ the rallies */
 
 export type Who = 'marty' | 'kletzki' | 'endo'
-export type Kind = 'serve' | 'drive' | 'smash' | 'lob' | 'dead' | 'miss'
-/** A stroke: who, when, where the ball is on the bat, and what kind. Marty's also carries the arm's angle. */
+export type Kind = 'serve' | 'drive' | 'loop' | 'block' | 'smash' | 'lob' | 'dead' | 'miss' | 'catch' | 'feed'
+/**
+ * A stroke: who, when, where the ball is on the bat, what kind, and how hard (0 to 1: what the contact's pop and the
+ * crowd go by). Marty's also carries the arm's angle.
+ */
 export interface Stroke {
   t: number
   who: Who
   p: Pt
   kind: Kind
   table: Table
+  power: number
   arm?: number
 }
-/** A bounce on the table (or the floor). */
+/** A bounce on the table (or the floor), and how hard it lands. */
 export interface Bounce {
   t: number
   p: Pt
+  power: number
+  floor?: boolean
 }
 
-const beatAt = (bar: number, pos: number) => BEATS.find((b) => b.bar === bar && b.pos === pos)!
-const beatList = (b0: number, b1: number) => BEATS.filter((b) => b.bar >= b0 && b.bar <= b1)
+const POWER: Record<Kind, number> = { serve: 0.3, drive: 0.55, loop: 0.4, block: 0.35, smash: 1, lob: 0.3, dead: 0.12, miss: 0, catch: 0.05, feed: 0.15 }
 
 /** The ball's centre clears the net by this much: the arc a flight needs, at least. */
 function clearArc(from: Pt, to: Pt, net: number, min: number): number {
@@ -139,120 +164,180 @@ export const STROKES: Stroke[] = []
 export const BOUNCES: Bounce[] = []
 const push = (w: Way) => ways.push(w)
 const lastWay = () => ways[ways.length - 1]
-
-const martyStroke = (table: Table, t: number, phi: number, kind: Kind): Pt => {
-  const p = contactAt(table, phi)
-  STROKES.push({ t, who: 'marty', p, kind, table, arm: armFor(phi) })
-  return p
-}
+const stroke = (s: Omit<Stroke, 'power'> & { power?: number }) => STROKES.push({ ...s, power: s.power ?? POWER[s.kind] })
 
 /** A flight to `p` at `t` with the arc it needs (at least `min`), from wherever the ball is. */
-function flyTo(t: number, p: Pt, table: Table | null, min: number, extra = 0): void {
+function flyTo(t: number, p: Pt, table: Table | null, min: number): void {
   const from = lastWay().p
-  const arc = table ? clearArc(from, p, table.net, min) + extra : min
-  push({ at: t, p, arc })
+  push({ at: t, p, arc: table ? clearArc(from, p, table.net, min) : min })
 }
+/** A flight from where the ball is to `p` at `t` under gravity, scaled (`k` under 1 for a tired bounce). */
+function hopTo(t: number, p: Pt, k = 1): void {
+  const T = t - lastWay().at
+  push({ at: t, p, arc: (k * G * T * T) / 8 })
+}
+
+/**
+ * A shot: who plays it, on which beat, how, from where (an opponent's bat; Marty's from the angle `phi` his arm meets
+ * it at), and where it lands on the other side (`land`, at `bt`: the beat's "a", or the next beat's for a lob), over
+ * the net with at least `arc` of lift: low and flat for a drive or a smash, high for a loop, higher for a lob.
+ */
+interface Shot {
+  who: Who
+  t: number
+  kind: Kind
+  p?: Pt
+  phi?: number
+  land: number
+  bt: number
+  arc: number
+}
+
+/** Play a run of shots on a table, the first off the pan's toss (or off the bounce the last flight ended on). */
+function play(table: Table, shots: Shot[], fromPan: boolean): void {
+  shots.forEach((s, k) => {
+    const p: Pt = s.who === 'marty' ? contactAt(table, s.phi!) : s.p!
+    stroke({ t: s.t, who: s.who, p, kind: s.kind, table, ...(s.who === 'marty' ? { arm: armFor(s.phi!) } : {}) })
+    const T = s.t - lastWay().at
+    // Off the toss, a plain throw; off a bounce, up off the table onto the bat (a lob's bounce kicks higher).
+    const lobbed = k > 0 && shots[k - 1].kind === 'lob'
+    push({ at: s.t, p, arc: k === 0 && fromPan ? (G * T * T) / 8 : (lobbed ? 0.22 : 0.06) + (G * T * T) / 16 })
+    flyTo(s.bt, [s.land, 0], table, s.arc)
+    BOUNCES.push({ t: s.bt, p: [s.land, 0], power: s.kind === 'smash' ? 1 : s.kind === 'lob' ? 0.2 : s.kind === 'drive' ? 0.5 : 0.35 })
+  })
+}
+
+/** A shot on beat `pos` of bar `bar`, landing on that beat's "a" (or on the next beat's, for a lob a beat longer). */
+function shot(who: Who, bar: number, pos: number, kind: Kind, from: Pt | number, land: number, arc: number): Shot {
+  const nb = kind === 'lob' ? (pos === 4 ? [bar + 1, 1] : [bar, pos + 1]) : [bar, pos]
+  return { who, t: at(bar, pos), kind, ...(typeof from === 'number' ? { phi: from } : { p: from }), land, bt: a(nb[0], nb[1]), arc }
+}
+const M = (bar: number, pos: number, kind: Kind, phi: number, land: number, arc: number) => shot('marty', bar, pos, kind, phi, land, arc)
+const K = (bar: number, pos: number, kind: Kind, p: Pt, land: number, arc: number) => shot('kletzki', bar, pos, kind, p, land, arc)
+const E = (bar: number, pos: number, kind: Kind, p: Pt, land: number, arc: number) => shot('endo', bar, pos, kind, p, land, arc)
 
 /* ---- bar 25: on the corner; into the pan; the toss ---- */
 push({ at: T0, p: [-0.5, 0] })
 push({ at: HOP_OFF, p: [-0.5, 0] })
-{
-  const T = IN_PAN_A - HOP_OFF
-  push({ at: IN_PAN_A, p: panOf(A), arc: (G * T * T) / 8 })
-}
+hopTo(IN_PAN_A, panOf(A))
 push({ at: TOSS_A, p: panOf(A) })
 
-/* ---- the semifinal, bars 26 to 31 ---- */
-{
-  const bs = beatList(26, 31)
-  for (let i = 0; i < bs.length; i++) {
-    const b = bs[i]
-    const h1 = hash(i, 3, 7)
-    const h2 = hash(i, 5, 11)
-    const marty = i % 2 === 0
-    if (i === bs.length - 1) {
-      // Kletzki swings at it and misses: the smash's kick has it over his bat.
-      STROKES.push({ t: b.t, who: 'kletzki', p: [A.x1 + 0.45, -0.22], kind: 'miss', table: A })
-      break
-    }
-    let p: Pt
-    if (marty) {
-      const kind: Kind = i === 0 ? 'serve' : i === bs.length - 2 ? 'smash' : 'drive'
-      p = martyStroke(A, b.t, kind === 'smash' ? 256 : 238 + 14 * h1, kind)
-    } else {
-      p = [A.x1 + 0.42 + 0.18 * h1, -0.32 - 0.26 * h2]
-      STROKES.push({ t: b.t, who: 'kletzki', p, kind: 'drive', table: A })
-    }
-    if (i === 0) {
-      // The toss up out of the pan and down onto the bat's face.
-      const T = b.t - TOSS_A
-      push({ at: b.t, p, arc: (G * T * T) / 8 })
-    } else {
-      const prev = BOUNCES[BOUNCES.length - 1]
-      const T = b.t - prev.t
-      push({ at: b.t, p, arc: 0.06 + 0.12 * h2 + (G * T * T) / 16 })
-    }
-    // Over the net onto the other side, on the "a".
-    const ta = a(b.bar, b.pos)
-    const smash = i === bs.length - 2
-    const bx = marty ? (smash ? A.x0 + 4.55 : A.x0 + 3.55 + 0.95 * h2) : A.x0 + 0.55 + 1.05 * h1
-    const bp: Pt = [bx, 0]
-    flyTo(ta, bp, A, smash ? 0.12 : marty ? 0.18 : 0.26, smash ? 0.04 : 0.06 + 0.1 * h1)
-    BOUNCES.push({ t: ta, p: bp })
-  }
-}
+/*
+ * ---- the semifinal, bars 26 to 31: one rally, every beat a bat ----
+ *
+ * Kletzki plays from in close, flat and hard, and smashes off each of Marty's loops; Marty blocks them short, then
+ * drives deeper and flatter as it goes on, until Kletzki, stretched wide, floats one up, and Marty smashes it.
+ */
+play(
+  A,
+  [
+    M(26, 1, 'serve', 240, 3.6, 0.2),
+    K(26, 2, 'drive', [5.25, -0.35], 0.2, 0.2),
+    M(26, 3, 'drive', 244, 4.1, 0.17),
+    K(26, 4, 'drive', [5.55, -0.28], -0.3, 0.18),
+    M(27, 1, 'drive', 238, 3.3, 0.16),
+    K(27, 2, 'drive', [5.05, -0.4], 1.45, 0.16),
+    M(27, 3, 'loop', 232, 3.9, 0.6),
+    K(27, 4, 'smash', [5.0, -0.9], 0.0, 0.05),
+    M(28, 1, 'block', 236, 2.9, 0.13),
+    K(28, 2, 'drive', [4.9, -0.3], 0.4, 0.17),
+    M(28, 3, 'drive', 248, 4.3, 0.14),
+    K(28, 4, 'drive', [5.6, -0.25], -0.45, 0.12),
+    M(29, 1, 'drive', 242, 3.5, 0.14),
+    K(29, 2, 'drive', [5.2, -0.4], 0.9, 0.14),
+    M(29, 3, 'drive', 250, 4.35, 0.12),
+    K(29, 4, 'drive', [5.65, -0.22], -0.2, 0.12),
+    M(30, 1, 'loop', 236, 4.0, 0.55),
+    K(30, 2, 'smash', [5.0, -0.95], 0.25, 0.05),
+    M(30, 3, 'block', 240, 3.0, 0.12),
+    K(30, 4, 'drive', [4.95, -0.32], -0.4, 0.1),
+    M(31, 1, 'drive', 252, 4.4, 0.1),
+    K(31, 2, 'loop', [5.75, -0.15], 0.6, 0.6),
+    M(31, 3, 'smash', 258, 4.3, 0.06),
+  ],
+  true,
+)
+// Kletzki swings at it and misses: the smash's kick has it over his bat.
+stroke({ t: at(31, 4), who: 'kletzki', p: [5.25, -0.25], kind: 'miss', table: A })
 
 /* ---- bar 32: the smash's kick over Kletzki and the gap, into table B's pan ---- */
+hopTo(IN_PAN_B, panOf(B))
+push({ at: TOSS_B, p: panOf(B) })
+
+/* ---- the final's first point, bars 33 to 36: Marty's ---- */
+play(
+  B,
+  [
+    M(33, 1, 'serve', 240, 13.2, 0.2),
+    E(33, 2, 'loop', [14.6, -0.42], 9.3, 0.45),
+    M(33, 3, 'drive', 244, 13.5, 0.16),
+    E(33, 4, 'loop', [14.9, -0.35], 9.6, 0.5),
+    M(34, 1, 'drive', 238, 13.7, 0.15),
+    E(34, 2, 'lob', [15.55, 0.02], 9.4, 1.3),
+    M(34, 4, 'smash', 258, 13.55, 0.06),
+  ],
+  false,
+)
+/** Where the winner passes Endo, where it comes off the floor, where he catches it, and where he pats it back from. */
+const PASS: Pt = [15.3, -0.62]
+const FLOOR_OUT: Pt[] = [
+  [16.65, FLOOR - R],
+  [17.15, FLOOR - R],
+]
+export const CAUGHT: Pt = [17.5, 0.28]
+export const FED: Pt = [16.75, -0.2]
+/** The ball on Endo's bat as he turns round and carries it back to the end of the table. */
+export const carryAt = (t: number): Pt => {
+  const u = smooth(t, CATCH, FEED - 0.05)
+  return [CAUGHT[0] + (FED[0] - CAUGHT[0]) * u, CAUGHT[1] + (FED[1] - CAUGHT[1]) * u - 0.12 * Math.sin(Math.PI * u)]
+}
 {
-  const T = IN_PAN_B - lastWay().at
-  push({ at: IN_PAN_B, p: panOf(B), arc: (G * T * T) / 8 })
-  push({ at: TOSS_B, p: panOf(B) })
+  // He lunges, and it goes over his bat.
+  push({ at: LUNGE, p: PASS, arc: 0.04 })
+  stroke({ t: LUNGE, who: 'endo', p: [15.35, -0.3], kind: 'miss', table: B })
+  hopTo(OUT[0], FLOOR_OUT[0])
+  BOUNCES.push({ t: OUT[0], p: FLOOR_OUT[0], power: 0.5, floor: true })
+  hopTo(OUT[1], FLOOR_OUT[1], 0.55)
+  BOUNCES.push({ t: OUT[1], p: FLOOR_OUT[1], power: 0.3, floor: true })
+  hopTo(CATCH, CAUGHT)
+  stroke({ t: CATCH, who: 'endo', p: CAUGHT, kind: 'catch', table: B })
+  // Carried round on the bat, then patted back over the net, a bounce, and into the pan.
+  let tc = CATCH
+  for (const seg of carried(carryAt, CATCH, FEED, 16)) {
+    tc += seg.dur
+    push({ at: tc, p: seg.to })
+  }
+  stroke({ t: FEED, who: 'endo', p: FED, kind: 'feed', table: B })
+  flyTo(FEED_BOUNCE, [10.4, 0], B, 0.5)
+  BOUNCES.push({ t: FEED_BOUNCE, p: [10.4, 0], power: 0.2 })
+  hopTo(IN_PAN_B2, panOf(B))
+  push({ at: TOSS_B2, p: panOf(B) })
 }
 
-/* ---- the final, bars 33 to 40, and Endo's dead shot on bar 41 ---- */
-/** Endo's lobs: high and slow, a beat longer than a drive (each turns the rally over a beat). */
-export const LOBS = [5, 14, 21]
-{
-  const bs = [...beatList(33, 40), beatAt(41, 1)]
-  let j = 0
-  let marty = true
-  let first = true
-  while (j < bs.length) {
-    const b = bs[j]
-    const h1 = hash(j, 13, 2)
-    const h2 = hash(j, 17, 9)
-    const last = j === bs.length - 1
-    if (last) {
-      if (marty) throw new Error('london: the dead shot must be Endo\'s')
-      break
-    }
-    const lob = !marty && LOBS.includes(j)
-    let p: Pt
-    if (marty) p = martyStroke(B, b.t, 236 + 16 * h1, first ? 'serve' : 'drive')
-    else {
-      p = lob ? [B.x1 + 0.72, -0.12] : [B.x1 + 0.45 + 0.2 * h1, -0.36 - 0.22 * h2]
-      STROKES.push({ t: b.t, who: 'endo', p, kind: lob ? 'lob' : 'drive', table: B })
-    }
-    if (first) {
-      const T = b.t - TOSS_B
-      push({ at: b.t, p, arc: (G * T * T) / 8 })
-    } else {
-      const prev = BOUNCES[BOUNCES.length - 1]
-      const T = b.t - prev.t
-      push({ at: b.t, p, arc: 0.06 + 0.12 * h2 + (G * T * T) / 16 })
-    }
-    first = false
-    const nb = lob ? bs[j + 1] : b
-    const ta = a(nb.bar, nb.pos)
-    const bx = marty ? B.x0 + 3.55 + 0.95 * h2 : lob ? B.x0 + 0.95 + 0.5 * h1 : B.x0 + 0.55 + 1.0 * h1
-    const bp: Pt = [bx, 0]
-    // Endo's sponge loops them high and soft; his lobs higher.
-    flyTo(ta, bp, B, marty ? 0.18 : lob ? 1.25 : 0.42, marty ? 0.05 + 0.08 * h1 : 0.12 + 0.12 * h2)
-    BOUNCES.push({ t: ta, p: bp })
-    j += lob ? 2 : 1
-    marty = !marty
-  }
-}
+/*
+ * ---- the last point, bars 37 to 41 ----
+ *
+ * Endo backs off the table and lobs, from deeper each time, and Marty smashes each one; then Endo comes running in.
+ */
+play(
+  B,
+  [
+    M(37, 1, 'serve', 242, 13.3, 0.2),
+    E(37, 2, 'loop', [14.55, -0.4], 9.2, 0.42),
+    M(37, 3, 'drive', 246, 13.6, 0.15),
+    E(37, 4, 'loop', [15.05, -0.3], 9.7, 0.5),
+    M(38, 1, 'drive', 250, 13.8, 0.12),
+    E(38, 2, 'lob', [15.75, 0.05], 9.3, 1.4),
+    M(38, 4, 'smash', 258, 13.7, 0.06),
+    E(39, 1, 'lob', [16.45, 0.15], 9.6, 1.6),
+    M(39, 3, 'smash', 260, 13.85, 0.05),
+    E(39, 4, 'lob', [16.95, 0.2], 9.0, 1.7),
+    M(40, 2, 'smash', 260, 13.4, 0.05),
+    E(40, 3, 'loop', [14.8, -0.45], 9.8, 0.35),
+    M(40, 4, 'drive', 248, 13.2, 0.12),
+  ],
+  false,
+)
 
 /* ---- the last point: the dead shot, the miss, off the end, the floorboards ---- */
 export const DEAD_AT: Pt = [B.x1 + 0.55, -0.3]
@@ -268,14 +353,14 @@ const FLOORS: Pt[] = [
 ]
 {
   const prev = BOUNCES[BOUNCES.length - 1]
-  STROKES.push({ t: DEAD, who: 'endo', p: DEAD_AT, kind: 'dead', table: B })
+  stroke({ t: DEAD, who: 'endo', p: DEAD_AT, kind: 'dead', table: B })
   push({ at: DEAD, p: DEAD_AT, arc: 0.06 + (G * (DEAD - prev.t) ** 2) / 16 })
   flyTo(DIES, DIE_AT, B, 0.7)
-  BOUNCES.push({ t: DIES, p: DIE_AT })
+  BOUNCES.push({ t: DIES, p: DIE_AT, power: 0.1 })
   push({ at: MISS, p: SECOND, arc: 0.07 })
-  BOUNCES.push({ t: MISS, p: SECOND })
+  BOUNCES.push({ t: MISS, p: SECOND, power: 0.05 })
   // The bat fires at where the ball should have been, and stays up, spent.
-  STROKES.push({ t: MISS, who: 'marty', p: contactAt(B, 244), kind: 'miss', table: B, arm: armFor(244) })
+  stroke({ t: MISS, who: 'marty', p: contactAt(B, 244), kind: 'miss', table: B, arm: armFor(244) })
   // It trickles to the end, slowing, and goes over.
   const L = SECOND[0] - EDGE[0]
   const v = L / (OFF_END - MISS)
@@ -310,7 +395,49 @@ export const ballAt = (t: number): Pt => {
   return [q.x, q.y]
 }
 
+/* ------------------------------------------------------------------ the players' feet */
+
+/**
+ * Where an opponent's hips are: an arm's length behind each ball he plays, so he is always on his way to the next:
+ * in close for a drive, back off the table for a loop or a lob, wide and low for the one he misses. Endo's first point
+ * ends in a lunge, a turn to go after the ball, the catch, and the turn back.
+ */
+const REACH: Partial<Record<Kind, number>> = { lob: 0.85, miss: 0.75, catch: -0.55, feed: 0.95 }
+function hipKeys(who: 'kletzki' | 'endo'): [number, number][] {
+  const home = who === 'kletzki' ? KLETZKI_X : ENDO_X
+  const keys: [number, number][] = [[T0, home]]
+  for (const s of STROKES) if (s.who === who) keys.push([s.t, s.p[0] + (REACH[s.kind] ?? 0.95)])
+  if (who === 'endo') keys.push([OUT[0], 16.75], [OUT[1], 17.05], [FEED - 0.3, 17.6])
+  keys.sort((x, y) => x[0] - y[0])
+  // Between two balls he gets to the next in good time, and waits there for it.
+  const out: [number, number][] = [keys[0]]
+  for (let i = 1; i < keys.length; i++) {
+    const [t, x] = keys[i]
+    const t0 = keys[i - 1][0]
+    out.push([Math.max(t0 + 0.02, t - Math.min(0.42, (t - t0) * 0.8)), x], [t, x])
+  }
+  return out
+}
+const HIP: Record<'kletzki' | 'endo', [number, number][]> = { kletzki: hipKeys('kletzki'), endo: hipKeys('endo') }
+export function hipAt(who: 'kletzki' | 'endo', t: number): number {
+  const keys = HIP[who]
+  if (t <= keys[0][0]) return keys[0][1]
+  for (let i = 1; i < keys.length; i++) {
+    const [t1, x1] = keys[i]
+    if (t <= t1) {
+      const [t0, x0] = keys[i - 1]
+      return x0 + (x1 - x0) * smooth(t, t0, t1)
+    }
+  }
+  return keys[keys.length - 1][1]
+}
+/** Endo turns his back to go after the ball he missed, and round again to carry it back. */
+export const endoFace = (t: number): 1 | -1 => (t > LUNGE + 0.2 && t < CATCH + 0.32 ? -1 : 1)
+
 /* ------------------------------------------------------------------ strikes */
+
+/** The big shots, which the camera punches in on: Marty's smashes and Kletzki's. */
+export const SMASHES = STROKES.filter((s) => s.kind === 'smash')
 
 export const LONDON_STRIKES: number[] = [
   LAMP_ON,
@@ -323,6 +450,9 @@ export const LONDON_STRIKES: number[] = [
   ENDO_TAP,
   BAT_DOWN,
   TOSS_B,
+  FLIP_M,
+  IN_PAN_B2,
+  TOSS_B2,
   FLIP_B,
   BOW,
   ...FLOOR_HITS,

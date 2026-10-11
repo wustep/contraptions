@@ -72,6 +72,7 @@ import {
   WAY,
   WHIFF,
   doorOpen,
+  markPose,
   wallyAt,
 } from './geo'
 
@@ -910,7 +911,8 @@ function armAngle(t: number): { th: number; wob: number } {
         wob = ring(s, 6, 0.3)
       } else th = 205 + (COCKED - 205) * ease((s - 0.75) / 0.4)
     } else {
-      const far = f.kind === 'winner' ? 300 : 282
+      const big = f.kind === 'winner' || f.kind === 'smash'
+      const far = f.kind === 'winner' ? 300 : big ? 294 : 282
       const back = f.kind === 'winner' ? 0.9 : 0.4
       if (s < 0.05) th = AT_BALL + (far - AT_BALL) * (s / 0.05)
       else if (f.kind === 'winner' && s < 0.55) th = far + 6 * ring(s - 0.05, 7, 0.15)
@@ -969,24 +971,26 @@ function contraption(pen: Pen, t: number): void {
   ellipse(pen, PIVOT, 0.06, 0.06, C.iron)
   ellipse(pen, PIVOT, 0.025, 0.025, C.ironHi)
   // A crack of light off the rubber when it strikes.
-  const hit = Math.max(...FIRES.map((f) => flash(t - f.t, f.kind === 'winner' ? 0.2 : 0.09) * (f.kind === 'clumsy' ? 0.4 : 1)))
+  const hit = Math.max(...FIRES.map((f) => flash(t - f.t, f.kind === 'winner' ? 0.2 : f.kind === 'smash' ? 0.15 : 0.09) * (f.kind === 'clumsy' ? 0.4 : 1)))
   if (hit > 0.02) glow(pen, [PAN[0], PAN[1]], 0.5, C.warm, 0.45 * hit)
 }
 
 /* ------------------------------------------------------------------ the mark who plays */
 
 const PICKUP: [number, number] = [CLACK - 0.15, PAN_IN - 0.05]
-const READY: Pt = [9.15, -2.6]
+const READY_DY = -2.6
 
 function markBatAt(t: number): { face: Pt; rot: number } {
+  // Where his bat waits, wherever his feet have taken him.
+  const ready: Pt = [markPose(t).x - 0.55, READY_DY]
   // Picking it up off the table.
   const rest: Pt = [7.9, MID - 0.02]
   if (t < PICKUP[0]) return { face: rest, rot: 0 }
   if (t < PICKUP[1]) {
     const u = ease((t - PICKUP[0]) / (PICKUP[1] - PICKUP[0]))
-    return { face: lerp(rest, READY, u), rot: (1 - u) * 0 + u * 1.2 }
+    return { face: lerp(rest, ready, u), rot: (1 - u) * 0 + u * 1.2 }
   }
-  let face: Pt = [READY[0] + 0.03 * Math.sin(t * 2.3), READY[1] + 0.03 * Math.sin(t * 3.1)]
+  let face: Pt = [ready[0] + 0.03 * Math.sin(t * 2.3), ready[1] + 0.03 * Math.sin(t * 3.1)]
   let rot = 1.2
   // The taps on the table's end.
   for (const tap of TAPS) {
@@ -998,22 +1002,24 @@ function markBatAt(t: number): { face: Pt; rot: number } {
       rot = 1.2 + 0.4 * u
     }
   }
-  // The strokes.
+  // The strokes: back, through the ball, and up the way the shot goes (a lob scoops high, a block barely moves).
   for (const st of STROKES) {
     const s = t - st.t
     if (s < -0.32 || s > 0.4) continue
     const contact: Pt = [st.p[0] + R + 0.06, st.p[1] + 0.02]
-    const back: Pt = st.miss ? [9.6, -2.55] : [9.6, -2.3]
-    const through: Pt = st.miss ? [8.55, -3.3] : [8.7, -3.05]
+    const lob = st.kind === 'lob'
+    const block = st.kind === 'block'
+    const back: Pt = st.miss ? [contact[0] + 0.6, -2.55] : [contact[0] + (block ? 0.35 : 0.72), contact[1] + (lob ? 0.45 : 0.28)]
+    const through: Pt = st.miss ? [8.55, -3.3] : [contact[0] - (block ? 0.12 : 0.3), contact[1] - (lob ? 1.0 : block ? 0.18 : 0.5)]
     if (s < -0.24) face = lerp(face, back, ease((s + 0.32) / 0.08))
     else if (s < 0) face = lerp(back, contact, ease((s + 0.24) / 0.24))
     else if (s < 0.2) face = lerp(contact, through, ease(s / 0.2))
-    else face = lerp(through, st.miss ? [9.35, -1.95] : face, ease((s - 0.2) / 0.2))
+    else face = lerp(through, st.miss ? [ready[0] + 0.2, -1.95] : face, ease((s - 0.2) / 0.2))
     rot = 1.2 - 0.6 * clamp01(1 - Math.abs(s) / 0.25)
   }
   // After the miss, it hangs from his hand.
   if (t > WHIFF + 0.4) {
-    face = [9.35 + 0.02 * Math.sin(t * 1.4), -1.95]
+    face = [ready[0] + 0.2 + 0.02 * Math.sin(t * 1.4), -1.95]
     rot = 1.5
   }
   return { face, rot }
@@ -1025,8 +1031,11 @@ function player(pen: Pen, t: number): void {
   const laughing = t > NET_HIT + 0.1 && t < PAN_BACK + 0.5 ? clamp01(Math.min(t - NET_HIT - 0.1, PAN_BACK + 0.5 - t) / 0.2) : 0
   const bob = laughing * 0.035 * Math.abs(Math.sin((t - NET_HIT) * Math.PI * 4.4)) + 0.015 * Math.sin(t * 1.9)
   const stunned = t > WHIFF ? clamp01((t - WHIFF) / 0.4) : 0
+  const pose = markPose(t)
+  // His feet step when he moves: a stride's phase from how far he has come.
+  const moving = Math.abs(markPose(t + 0.04).x - markPose(t - 0.04).x) > 0.02
   const head = figure(pen, {
-    x: MARK_X,
+    x: pose.x,
     y: FB,
     face: -1,
     coat: C.grey,
@@ -1035,11 +1044,12 @@ function player(pen: Pen, t: number): void {
     hat: t < HATS ? 'fedora' : null,
     hatCol: C.hat,
     tie: C.tie2,
-    lean: 0.12 - 0.12 * stunned,
-    bob: bob - 0.03 * stunned,
+    lean: pose.lean - 0.12 * stunned,
+    bob: bob + pose.crouch - 0.03 * stunned,
+    walk: moving ? (pose.x - MARK_X) * 7 : null,
     laugh: laughing * (0.5 + 0.5 * Math.abs(Math.sin((t - NET_HIT) * 9))),
     near: hand,
-    far: [MARK_X + 0.12, FB - 1.55],
+    far: [pose.x + 0.12, FB - 1.55 + pose.crouch],
     rim: C.warm,
     holding: () => {
       line(pen, hand, [bat.face[0] + Math.cos(bat.rot) * 0.18, bat.face[1] + Math.sin(bat.rot) * 0.18], C.handle, 2.2)
@@ -1054,8 +1064,19 @@ const HEADS: { player: Pt; bettor: Pt } = { player: [MARK_X - 0.27, FB - 2.93], 
 
 /* ------------------------------------------------------------------ the mark who bets, and Wally */
 
+/**
+ * How the two by the counter watch the money point: leaning in to the table, their bodies going with the ball, out to
+ * the mark's end and back to Marty's, from the serve to the winner.
+ */
+function watching(t: number): number {
+  const on = clamp01((t - (HITS[0] - 0.4)) / 0.4) * (1 - clamp01((t - LANE_LAND) / 0.4))
+  if (on <= 0) return 0
+  const x = WAY.at(t)[0]
+  return on * (0.07 + 0.08 * Math.max(-1, Math.min(1, (x - NET_X) / 3.2)))
+}
+
 /** How much is in Wally's hand: the first stake, then the raise. */
-const stakes = (t: number): number => (t < RAISE ? 1 : 2)
+const stakes = (t: number): number => (t < RAISE ? 1 : 3)
 
 function wad(pen: Pen, hand: Pt, n: number): void {
   for (let i = 0; i < n + 1; i++) {
@@ -1081,6 +1102,9 @@ function bettor(pen: Pen, t: number): void {
     near = lerp(near, [0.22, -2.06], u)
   }
   if (t >= RAISE) holds = 0
+  // The strike: both hands up to his head.
+  const dismay = t > STRIKE ? clamp01((t - STRIKE) / 0.2) * (1 - clamp01((t - HATS - 0.6) / 0.4)) : 0
+  if (dismay > 0) near = lerp(near, [MARK2_X + 0.22, FB - 3.25], dismay)
   const laughing = t > NET_HIT + 0.1 && t < PAN_BACK - 0.2 ? clamp01(Math.min(t - NET_HIT - 0.1, PAN_BACK - 0.2 - t) / 0.2) : 0
   const sore = t > STRIKE ? clamp01((t - STRIKE) / 0.5) : 0
   const head = figure(pen, {
@@ -1094,7 +1118,7 @@ function bettor(pen: Pen, t: number): void {
     hatCol: C.hat2,
     tie: C.tie,
     girth: 1.3,
-    lean: -0.04 + 0.08 * sore,
+    lean: -0.04 + 0.08 * sore + watching(t),
     bob: laughing * 0.04 * Math.abs(Math.sin((t - NET_HIT) * Math.PI * 4)) + 0.012 * Math.sin(t * 1.3 + 1),
     laugh: laughing * (0.5 + 0.5 * Math.abs(Math.sin((t - NET_HIT) * 8))),
     near,
@@ -1156,7 +1180,7 @@ function wally(pen: Pen, t: number): void {
     hat: 'cap',
     hatCol: C.cap,
     leather: true,
-    lean: walking ? 0.08 : -0.06,
+    lean: walking ? 0.08 : -0.06 + watching(t) * 0.7,
     bob: walking ? -0.03 * Math.abs(Math.sin(phase ?? 0)) : 0.01 * Math.sin(t * 1.1),
     walk: phase,
     grin,
@@ -1261,6 +1285,8 @@ function hitMarks(pen: Pen, t: number): void {
     if (s < 0 || s > 0.3) continue
     glow(pen, [st.p[0] + 0.1, st.p[1]], 0.35, C.warm, 0.5 * flash(s, 0.08))
   }
+  // The raise slapped into Wally's palm.
+  if (t >= RAISE && t < RAISE + 0.3) glint(pen, [0.24, -2.1], 0.2, C.creamHi, 0.85 * flash(t - RAISE, 0.08))
   // The mark's knocks on the table's end.
   for (const tap of TAPS) {
     const s = t - tap

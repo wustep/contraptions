@@ -6,38 +6,52 @@ import {
   A,
   A_DIM,
   B,
+  ballAt,
   BAT_DOWN,
+  BOUNCES,
   BOW,
+  CATCH,
+  carryAt,
   DEAD,
+  DIES,
+  endoFace,
   ENDO_H,
   ENDO_TAP,
-  ENDO_X,
+  FEED,
   FLIP_A,
   FLIP_B,
+  FLIP_M,
   FLOOR,
   FLOOR_BACK,
   GLOVE,
+  hipAt,
   hubOf,
   IN_PAN_A,
   IN_PAN_B,
+  IN_PAN_B2,
   KAY_X,
   KLETZKI_GONE,
   KLETZKI_H,
-  KLETZKI_X,
   KNOCK,
   LAMP_ON,
+  LUNGE,
   NET_H,
+  OUT,
   PARAPET,
   panOf,
   POST,
   ARM,
+  R,
+  SMASHES,
   STROKES,
   TOP,
   TOSS_A,
   TOSS_B,
+  TOSS_B2,
   UMP_A,
   UMP_B,
   WALK,
+  WINNER,
   type Stroke,
   type Table,
 } from './geo'
@@ -218,9 +232,35 @@ function wall(pen: Pen, x0: number, x1: number): void {
   rect(pen, x0, GALLERY_TOP - 0.12, x1, GALLERY_TOP, C.iron)
 }
 
+/**
+ * The house's mood. A cheer (up off the benches, arms up) after the big shots: Marty's smash that wins the semifinal
+ * and the one that wins him the final's first point, a smaller one for the others; and a groan as the last point dies.
+ */
+const CHEERS: [number, number, number][] = SMASHES.map((s): [number, number, number] =>
+  s.who !== 'marty' ? [s.t, 0.3, 0.9] : s.table === A || Math.abs(s.t - WINNER) < 1e-6 ? [s.t, 1, 2.6] : [s.t, 0.4, 1.0],
+)
+export function cheer(t: number): number {
+  let v = 0
+  for (const [t0, amt, dur] of CHEERS) {
+    const u = t - t0 - 0.06
+    if (u < 0 || u > dur) continue
+    v = Math.max(v, amt * smooth(u, 0, 0.16) * (1 - smooth(u, dur * 0.45, dur)))
+  }
+  return v
+}
+const groan = (t: number): number => smooth(t, DIES, DIES + 0.45) * (1 - smooth(t, DIES + 2.4, DIES + 4))
+
+/** What the house is watching: the ball, as each spectator's eyes catch up with it (three lags), and its height. */
+interface Watch {
+  at: Pt[]
+  cheer: number
+  groan: number
+}
+
 /** The gallery: tiered rows of spectators in the shadow, and Kay Stone in the front row. */
 function gallery(pen: Pen, t: number, x0: number, x1: number): void {
   rect(pen, x0, GALLERY_TOP, x1, PARAPET + 0.6, C.gallery)
+  const watch: Watch = { at: [ballAt(t - 0.1), ballAt(t - 0.18), ballAt(t - 0.28)], cheer: cheer(t), groan: groan(t) }
   for (let r = 3; r >= 0; r--) {
     const y = PARAPET - ROW * r
     // The bench back in front of this row's knees.
@@ -231,7 +271,7 @@ function gallery(pen: Pen, t: number, x0: number, x1: number): void {
       if (hx < -11 || hx > 25) continue
       if (r === 0 && Math.abs(hx - KAY_X) < 0.62) continue
       if (hash(i, r, 9) < 0.12) continue
-      spectator(pen, hx, y, i, r, dim, t)
+      spectator(pen, hx, y, i, r, dim, t, watch)
     }
     if (r === 0) kay(pen, t, y)
   }
@@ -240,30 +280,63 @@ function gallery(pen: Pen, t: number, x0: number, x1: number): void {
   rect(pen, x0, PARAPET - 0.04, x1, PARAPET + 0.05, C.parapetTop)
 }
 
-function spectator(pen: Pen, x: number, y: number, i: number, r: number, dim: number, t: number): void {
+/**
+ * A spectator, face on: his head turned after the ball (his face toward it, the back of his hair away), tipped up
+ * when it goes high; up off the bench with his arms in the air in a cheer, and slumped in the groan.
+ */
+function spectator(pen: Pen, x: number, y: number, i: number, r: number, dim: number, t: number, w: Watch): void {
   const coat = [C.blazer, '#34302A', '#2C3533', '#3D3A36', '#283040'][Math.floor(hash(i, r, 2) * 5)]
-  const bob = 0.012 * Math.sin(t * (1.2 + hash(i, r, 3)) + i) + 0.02 * level(t) * Math.sin(t * 6 + i * 1.7)
-  const hy = y - 0.62 + bob
+  const ball = w.at[Math.floor(hash(i, r, 7) * 3)]
+  const look = Math.max(-1, Math.min(1, (ball[0] - x) / 4))
+  const tip = Math.max(0, Math.min(1, (-0.3 - ball[1]) / 1.6))
+  const keen = 0.55 + 0.45 * hash(i, r, 8)
+  const rise = w.cheer * keen
+  const bob = 0.012 * Math.sin(t * (1.2 + hash(i, r, 3)) + i) + 0.02 * level(t) * Math.sin(t * 6 + i * 1.7) + 0.035 * rise * Math.sin(t * 13 + i * 2.3)
+  const hy = y - 0.62 + bob - 0.16 * rise + 0.05 * w.groan
+  const hx = x + 0.035 * look
   const col = mix(C.gallery, coat, dim + 0.15)
   shape(pen, [[x - 0.27, y + 0.05], [x - 0.24, hy + 0.22], [x - 0.08, hy + 0.13], [x + 0.08, hy + 0.13], [x + 0.24, hy + 0.22], [x + 0.27, y + 0.05]], col)
-  ellipse(pen, [x, hy], 0.13, 0.15, mix(C.gallery, C.skinDim, dim))
+  if (rise > 0.12 && r <= 1 && hash(i, r, 4) < 0.55) {
+    // Arms up, waving: the front rows only, sleeves a shade lighter than the dark behind them.
+    const wave = 0.06 * Math.sin(t * 11 + i * 1.3)
+    const reach = Math.min(1, (rise - 0.12) / 0.4)
+    const sleeve = mix(col, C.whiteShade, 0.18)
+    for (const sd of [-1, 1]) {
+      const sh: Pt = [x + sd * 0.18, hy + 0.22]
+      const elbow: Pt = [x + sd * 0.34, hy + 0.05 - 0.15 * reach]
+      const hand: Pt = [x + sd * (0.3 + wave * sd), hy + 0.2 - 0.6 * reach]
+      path(pen, [sh, elbow, hand], sleeve, 7)
+      ellipse(pen, hand, 0.055, 0.055, mix(C.gallery, C.skin, dim + 0.1))
+    }
+  }
+  const skin = mix(C.gallery, C.skinDim, dim)
+  ellipse(pen, [hx, hy], 0.13, 0.15, skin)
+  // The nose, toward the ball: a turned head reads at any size.
+  ellipse(pen, [hx + 0.085 * look, hy + 0.03 - 0.03 * tip], 0.03, 0.035, mix(C.gallery, C.skin, dim))
+  const back = -0.045 * look
   if (hash(i, r, 5) < 0.45) {
-    // A hat.
+    // A hat, tipped back as he looks up.
     const hc = mix(C.gallery, '#26241F', dim + 0.3)
-    ellipse(pen, [x, hy - 0.08], 0.21, 0.035, hc)
-    shape(pen, [[x - 0.13, hy - 0.08], [x - 0.11, hy - 0.2], [x - 0.03, hy - 0.22], [x, hy - 0.19], [x + 0.03, hy - 0.22], [x + 0.11, hy - 0.2], [x + 0.13, hy - 0.08]], hc)
-  } else ellipse(pen, [x, hy - 0.07], 0.135, 0.09, mix(C.gallery, hash(i, r, 6) < 0.3 ? C.hairGrey : '#2A221B', dim))
+    const by = hy - 0.08 - 0.03 * tip
+    ellipse(pen, [hx + back, by], 0.21, 0.035, hc)
+    const cx = hx + back
+    shape(pen, [[cx - 0.13, by], [cx - 0.11, by - 0.12], [cx - 0.03, by - 0.14], [cx, by - 0.11], [cx + 0.03, by - 0.14], [cx + 0.11, by - 0.12], [cx + 0.13, by]], hc)
+  } else ellipse(pen, [hx + back, hy - 0.07 - 0.025 * tip], 0.135, 0.09, mix(C.gallery, hash(i, r, 6) < 0.3 ? C.hairGrey : '#2A221B', dim))
 }
 
 /** Kay's lean, 0 to 1: forward over the parapet through the final, and back as the last point dies. */
 const kayLean = (t: number) => smooth(t, 70, 84) * (1 - 0.75 * smooth(t, DEAD + 0.5, DEAD + 1.8))
+/** Kay's applause for Marty's point: her gloved hands up and together, a clap on the beats. */
+const kayClap = (t: number) => smooth(t, LUNGE, LUNGE + 0.2) * (1 - smooth(t, OUT[1] + 0.6, OUT[1] + 1.2))
 
 /** Kay Stone in the front row, face on: platinum waves, pearls, a fur stole, her forearms on the parapet. */
 function kay(pen: Pen, t: number, y: number): void {
   const x = KAY_X
   const L = kayLean(t)
-  const sh: Pt = [x - 0.03 * L, y - 0.55 + 0.1 * L]
-  const head: Pt = [sh[0] - 0.02 * L, sh[1] - 0.36 + 0.03 * L]
+  const clap = kayClap(t)
+  const look = t > 69 && t < DEAD + 0.5 ? Math.max(-1, Math.min(1, (ballAt(t - 0.15)[0] - x) / 4)) : 0
+  const sh: Pt = [x - 0.03 * L, y - 0.55 + 0.1 * L - 0.08 * clap]
+  const head: Pt = [sh[0] - 0.02 * L + 0.03 * look, sh[1] - 0.36 + 0.03 * L]
   // A spill of the table's light on her.
   glow(pen, [x, y - 0.75], 1.0, C.lamp, 0.14)
   // The black dress.
@@ -285,11 +358,13 @@ function kay(pen: Pen, t: number, y: number): void {
   ellipse(pen, [head[0] - 0.05, head[1] + 0.01], 0.022, 0.01, '#3A302C')
   ellipse(pen, [head[0] + 0.05, head[1] + 0.01], 0.022, 0.01, '#3A302C')
   ellipse(pen, [head[0], head[1] + 0.09], 0.032, 0.013, '#8E3236')
-  // Her forearms on the parapet, the gloved hands together.
+  // Her forearms on the parapet, the gloved hands together; up under her chin, clapping, for Marty's point.
+  const apart = 0.07 + 0.06 * clap * Math.abs(Math.sin((t - LUNGE) * Math.PI * 1.87))
   for (const sd of [-1, 1]) {
-    const elbow: Pt = [x + sd * 0.3, y - 0.06]
-    path(pen, [[sh[0] + sd * 0.25, sh[1] + 0.12], elbow, [x + sd * 0.07, y - 0.05]], C.dress, 5.5)
-    ellipse(pen, [x + sd * 0.07, y - 0.06], 0.055, 0.045, C.glove)
+    const elbow: Pt = [x + sd * 0.3, y - 0.06 - 0.08 * clap]
+    const hand: Pt = [x + sd * lerp(0.07, apart, clap), lerp(y - 0.06, head[1] + 0.32, clap)]
+    path(pen, [[sh[0] + sd * 0.25, sh[1] + 0.12], elbow, hand], C.dress, 5.5)
+    ellipse(pen, hand, 0.055, 0.045, C.glove)
   }
   // The spare glove in her hand, hanging over the ledge, until it slips.
   if (t < GLOVE[0]) rotEllipse(pen, [x + 0.12, y + 0.08], 0.035, 0.12, 0.15, C.glove)
@@ -344,10 +419,13 @@ function floor(pen: Pen, f: { y1: number }, x0: number, x1: number): void {
 
 /* ------------------------------------------------------------------ the umpire and his cards */
 
-/** The cards' values: bars for games, Marty's and the opponent's. */
-function cardsOf(tb: Table, t: number): { m: number; o: number; flip: number; side: 0 | 1 } {
-  if (tb === A) return { m: t < FLIP_A ? 2 : 3, o: 2, flip: t - FLIP_A, side: 0 }
-  return { m: 1, o: t < FLIP_B ? 2 : 3, flip: t - FLIP_B, side: 1 }
+/**
+ * The cards' values (pips for games, Marty's and the opponent's) and the times each turns: the semifinal won 3–2; in
+ * the final Marty, a game down, levels it on his point, and loses the last.
+ */
+function cardsOf(tb: Table, t: number): { m: number; o: number; mFlip: number; oFlip: number } {
+  if (tb === A) return { m: t < FLIP_A ? 2 : 3, o: 2, mFlip: t - FLIP_A, oFlip: -9 }
+  return { m: t < FLIP_M ? 1 : 2, o: t < FLIP_B ? 2 : 3, mFlip: t - FLIP_M, oFlip: t - FLIP_B }
 }
 
 function umpire(pen: Pen, tb: Table, t: number, x: number): void {
@@ -364,17 +442,23 @@ function umpire(pen: Pen, tb: Table, t: number, x: number): void {
   shape(pen, [[x - 0.26, seat], [x - 0.28, sh[1] + 0.12], [x - 0.12, sh[1]], [x + 0.18, sh[1]], [x + 0.3, sh[1] + 0.14], [x + 0.26, seat]], C.blazer)
   shape(pen, [[x - 0.2, seat + 0.02], [x - 0.42, 0.42], [x - 0.3, 0.45], [x - 0.05, seat + 0.05]], C.blazer)
   shape(pen, [[x - 0.06, sh[1] - 0.02], [x + 0.08, sh[1] - 0.02], [x + 0.01, sh[1] + 0.14]], C.white)
-  const head: Pt = [x + 0.01, sh[1] - 0.25]
+  const ball = ballAt(t - 0.08)
+  const look = Math.max(-1, Math.min(1, (ball[0] - x) / 2.2))
+  const head: Pt = [x + 0.01 + 0.04 * look, sh[1] - 0.25]
   ellipse(pen, head, 0.17, 0.2, C.skinDim)
-  ellipse(pen, add(head, [0.03, -0.1]), 0.17, 0.11, C.hairGrey)
+  ellipse(pen, add(head, [0.03 - 0.06 * look, -0.1]), 0.17, 0.11, C.hairGrey)
+  ellipse(pen, add(head, [0.12 * look, 0.04]), 0.04, 0.045, mix(C.skinDim, C.skin, 0.4))
   // The board of flip-cards on its pole by his right hand.
-  const { m, o, flip, side } = cardsOf(tb, t)
+  const { m, o, mFlip, oFlip } = cardsOf(tb, t)
+  // The hand goes to whichever card is turning (or about to).
+  const side = oFlip > -0.25 && oFlip < 1.5 ? 1 : 0
+  const flip = side ? oFlip : mFlip
   const bx = x + 0.95
   const by = -2.05
   line(pen, [bx, by + 0.5], [bx - 0.05, FLOOR_BACK], C.iron, 1.6)
   rect(pen, bx - 0.4, by - 0.05, bx + 0.4, by + 0.5, C.iron)
-  card(pen, bx - 0.2, by, m, side === 0 ? flip : -1, side === 0 ? m - 1 : m)
-  card(pen, bx + 0.2, by, o, side === 1 ? flip : -1, side === 1 ? o - 1 : o)
+  card(pen, bx - 0.2, by, m, mFlip, m - 1)
+  card(pen, bx + 0.2, by, o, oFlip, o - 1)
   // His hand comes up to turn the card.
   const reach = Math.max(flash(flip + 0.25, 0.3) * (flip < -0.25 ? 0 : 1), flip >= -0.25 && flip < 0 ? smooth(flip, -0.25, 0) : 0)
   const rest: Pt = [x + 0.25, seat - 0.15]
@@ -478,10 +562,64 @@ function lamps(pen: Pen, tb: Table, t: number): void {
 /* ------------------------------------------------------------------ the play: Marty's bats, Kletzki, Endo */
 
 export function drawPlay(pen: Pen, t: number): void {
-  contraption(pen, A, t, TOSS_A, IN_PAN_A)
-  contraption(pen, B, t, TOSS_B, IN_PAN_B)
+  contraption(pen, A, t, [TOSS_A], [IN_PAN_A])
+  contraption(pen, B, t, [TOSS_B, TOSS_B2], [IN_PAN_B, IN_PAN_B2])
   if (t < KLETZKI_GONE) kletzki(pen, t)
   endo(pen, t)
+  impacts(pen, t)
+}
+
+/* ---- the sound of it, seen: a pop off the bat, a flash off the table ---- */
+
+const POP = 0.13
+const MARK = 0.3
+
+/** A ring of light, stroked, with alpha (p5's own stroke takes no alpha through the pen). */
+function ringOf(pen: Pen, c: Pt, r: number, col: string, a: number, lw: number): void {
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  ctx.save()
+  ctx.strokeStyle = rgba(pen, col, a)
+  ctx.lineWidth = lw * pen.w
+  ctx.beginPath()
+  ctx.arc(c[0] * k, c[1] * k, r * k, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.restore()
+}
+
+/**
+ * Every stroke a crisp pop where bat meets ball (a ring and a few ticks, bigger the harder it is hit), every bounce a
+ * flash on the table's top under it. Only the last few are ever live, so this costs a handful of shapes a frame.
+ */
+function impacts(pen: Pen, t: number): void {
+  for (const s of STROKES) {
+    const u = t - s.t
+    if (u < 0 || u > POP || s.power <= 0.04) continue
+    const f = 1 - u / POP
+    const grow = 1 - Math.exp(-u / 0.035)
+    const r = (0.09 + 0.22 * s.power) * (0.35 + 0.65 * grow)
+    if (s.power > 0.5) glow(pen, s.p, r * 1.6, C.bulb, 0.35 * f * s.power)
+    ringOf(pen, s.p, r, C.bulb, 0.85 * f, 0.9 + 1.4 * s.power)
+    const n = s.power > 0.7 ? 8 : 5
+    for (let j = 0; j < n; j++) {
+      const ang = (j / n) * Math.PI * 2 + hash(Math.round(s.t * 100), j) * 0.6
+      const r0 = r * 1.15
+      const r1 = r0 + (0.06 + 0.16 * s.power) * f
+      line(pen, [s.p[0] + Math.cos(ang) * r0, s.p[1] + Math.sin(ang) * r0], [s.p[0] + Math.cos(ang) * r1, s.p[1] + Math.sin(ang) * r1], mix(C.lamp, C.bulb, f), 0.7 + 0.8 * s.power)
+    }
+  }
+  for (const b of BOUNCES) {
+    const u = t - b.t
+    if (u < 0 || u > MARK) continue
+    const f = 1 - u / MARK
+    const y = b.floor ? FLOOR - 0.04 : TOP + 0.01
+    const w = (0.18 + 0.3 * b.power) * (0.5 + 0.5 * (1 - f))
+    oval(pen, [b.p[0], y], w * 1.6, 0.18, C.bulb, 0.5 * f * (0.4 + 0.6 * b.power))
+    // Two sparks off the surface, either side.
+    const sp = (0.08 + 0.2 * b.power) * (1 - f * f)
+    const col = mix(b.floor ? C.floorHi : C.tableTop, C.bulb, f)
+    for (const sd of [-1, 1]) line(pen, [b.p[0] + sd * (w * 0.5), y - 0.01], [b.p[0] + sd * (w * 0.5 + sp), y - 0.05 - 0.08 * b.power * (1 - f)], col, 0.8 * f + 0.2)
+  }
 }
 
 /* ---- Marty's sprung bat ---- */
@@ -497,28 +635,34 @@ function armAngle(tb: Table, t: number): number {
     const d = t - s.t
     if (s.kind === 'miss' && d >= 0) return tc + THROUGH * ease(Math.min(1, d / 0.1)) + 0.04 * ring(d - 0.1, 4, 0.3)
     if (d < -0.32 || d > 0.55) continue
-    if (d < -0.1) return lerp(READY, COCK, ease((d + 0.32) / 0.22))
+    // A smash is cocked right back and goes right through, and the arm shudders after it; a block barely swings.
+    const cock = s.kind === 'smash' ? COCK - 0.32 : s.kind === 'block' ? COCK + 0.12 : COCK
+    const through = THROUGH * (s.kind === 'smash' ? 1.45 : s.kind === 'block' ? 0.5 : 1)
+    if (d < -0.1) return lerp(READY, cock, ease((d + 0.32) / 0.22))
     if (d < 0) {
       const u = (d + 0.1) / 0.1
-      return lerp(COCK, tc, u * u)
+      return lerp(cock, tc, u * u)
     }
     if (d < 0.1) {
       const u = d / 0.1
-      return tc + THROUGH * (1 - (1 - u) * (1 - u))
+      return tc + through * (1 - (1 - u) * (1 - u))
     }
-    return lerp(tc + THROUGH, READY, ease((d - 0.1) / 0.45))
+    return lerp(tc + through, READY, ease((d - 0.1) / 0.45)) + (s.kind === 'smash' ? 0.07 * ring(d - 0.1, 7, 0.18) : 0)
   }
   return READY
 }
 
-function contraption(pen: Pen, tb: Table, t: number, toss: number, inPan: number): void {
+function contraption(pen: Pen, tb: Table, t: number, tosses: number[], inPans: number[]): void {
   const hub = hubOf(tb)
   const post = POST(tb)
   const pan0 = panOf(tb)
-  // The pan's lever: flicked up on the toss, and dipping as he lands in it.
-  const dt = t - toss
-  const kick = dt >= 0 ? (dt < 0.07 ? dt / 0.07 : Math.exp(-(dt - 0.07) / 0.12)) : 0
-  const dip = flash(t - inPan, 0.12) * (t >= inPan ? 1 : 0)
+  // The pan's lever: flicked up on each toss, and dipping as he lands in it.
+  let kick = 0
+  for (const toss of tosses) {
+    const dt = t - toss
+    kick = Math.max(kick, dt >= 0 ? (dt < 0.07 ? dt / 0.07 : Math.exp(-(dt - 0.07) / 0.12)) : 0)
+  }
+  const dip = inPans.reduce((m, at) => Math.max(m, t >= at ? flash(t - at, 0.12) : 0), 0)
   const rel: Pt = [pan0[0] - post[0], pan0[1] + 0.13 - post[1]]
   const ang = Math.atan2(rel[1], rel[0]) + 0.42 * kick - 0.06 * dip
   const len = Math.hypot(rel[0], rel[1])
@@ -588,53 +732,79 @@ function track(keys: Key[], t: number): Pt {
   return keys[keys.length - 1].p
 }
 
-function strokeKeys(strokes: Stroke[], ready: Pt): Key[] {
+/** The bat's swing through a stroke, from behind the ball to past it, by kind: Kletzki's flat and hard, Endo's soft and up. */
+function swing(s: Stroke): { back: Pt; thru: Pt } {
+  const C0: Pt = [s.p[0] + 0.15, s.p[1] + 0.02]
+  const off = (dx: number, dy: number): Pt => [C0[0] + dx, C0[1] + dy]
+  switch (s.kind) {
+    case 'smash':
+      return { back: off(0.3, -0.5), thru: off(-0.55, 0.38) }
+    case 'loop':
+      return { back: off(0.3, 0.42), thru: off(-0.22, -0.6) }
+    case 'lob':
+      return { back: off(0.18, 0.38), thru: off(-0.14, -0.6) }
+    case 'dead':
+      return { back: off(0.08, 0.03), thru: off(-0.1, -0.04) }
+    case 'miss':
+      return s.who === 'endo' ? { back: off(0.3, -0.35), thru: off(-0.15, 0.3) } : { back: off(0.35, 0.1), thru: off(-0.45, -0.25) }
+    default:
+      return s.who === 'kletzki' ? { back: off(0.4, 0.08), thru: off(-0.45, -0.26) } : { back: off(0.34, 0.16), thru: off(-0.34, -0.36) }
+  }
+}
+
+/** Where an opponent's bat waits between strokes: out in front of him, wherever his feet have got to. */
+const readyOf = (who: 'kletzki' | 'endo', t: number): Pt => [hipAt(who, t) - 0.85, who === 'kletzki' ? -0.3 : -0.25]
+
+function strokeKeys(strokes: Stroke[], who: 'kletzki' | 'endo'): Key[] {
   const keys: Key[] = []
   for (const s of strokes) {
-    // The bat's face behind the ball, the ball on its face.
     const C0: Pt = [s.p[0] + 0.15, s.p[1] + 0.02]
-    let back: Pt = [C0[0] + 0.34, C0[1] + 0.16]
-    let thru: Pt = [C0[0] - 0.34, C0[1] - 0.36]
-    if (s.kind === 'lob') {
-      back = [C0[0] + 0.18, C0[1] + 0.38]
-      thru = [C0[0] - 0.14, C0[1] - 0.6]
-    } else if (s.kind === 'dead') {
-      back = [C0[0] + 0.08, C0[1] + 0.03]
-      thru = [C0[0] - 0.1, C0[1] - 0.04]
-    }
-    keys.push({ t: s.t - 0.3, p: ready }, { t: s.t - 0.11, p: back, lin: true }, { t: s.t, p: C0, lin: true }, { t: s.t + 0.11, p: thru, lin: true }, { t: s.t + 0.42, p: ready })
+    const { back, thru } = swing(s)
+    keys.push({ t: s.t - 0.3, p: readyOf(who, s.t - 0.3) }, { t: s.t - 0.11, p: back, lin: true }, { t: s.t, p: C0, lin: true }, { t: s.t + 0.11, p: thru, lin: true }, { t: s.t + 0.42, p: readyOf(who, s.t + 0.42) })
   }
   return keys
 }
 
-const KL_READY: Pt = [KLETZKI_X - 0.85, -0.3]
-const KL_LOW: Pt = [KLETZKI_X - 0.32, 0.12]
 const KL_BAT_DOWN: Pt = [A.x1 - 0.32, TOP - 0.03]
 const KL_KEYS: Key[] = (() => {
+  const ready = (t: number) => readyOf('kletzki', t)
   const ks: Key[] = [
-    { t: 0, p: KL_READY },
-    { t: KNOCK - 0.22, p: KL_READY },
+    { t: 0, p: ready(0) },
+    { t: KNOCK - 0.22, p: ready(KNOCK) },
     { t: KNOCK, p: [A.x1 - 0.12, TOP - 0.08], lin: true },
-    { t: KNOCK + 0.25, p: KL_READY },
+    { t: KNOCK + 0.25, p: ready(KNOCK) },
   ]
-  ks.push(...strokeKeys(STROKES.filter((s) => s.who === 'kletzki'), KL_READY))
+  ks.push(...strokeKeys(STROKES.filter((s) => s.who === 'kletzki'), 'kletzki'))
   // After the miss: the bat drops to his side, and then he lays it on the table.
   const miss = STROKES.find((s) => s.who === 'kletzki' && s.kind === 'miss')!
-  ks.splice(ks.length - 1, 1, { t: miss.t + 0.5, p: KL_LOW }, { t: BAT_DOWN - 0.3, p: KL_LOW }, { t: BAT_DOWN, p: KL_BAT_DOWN })
+  const low: Pt = [hipAt('kletzki', miss.t + 0.5) - 0.32, 0.12]
+  ks.splice(ks.length - 1, 1, { t: miss.t + 0.5, p: low }, { t: BAT_DOWN - 0.3, p: low }, { t: BAT_DOWN, p: KL_BAT_DOWN })
   return ks
 })()
 
-const EN_READY: Pt = [ENDO_X - 0.85, -0.25]
+/** Endo's bat under the ball he caught, as he carries it round. */
+const onBat = (t: number): Pt => {
+  const c = carryAt(t)
+  return [c[0] + 0.02, c[1] + R + 0.07]
+}
 const EN_KEYS: Key[] = (() => {
+  const ready = (t: number) => readyOf('endo', t)
   const ks: Key[] = [
-    { t: 0, p: EN_READY },
-    { t: ENDO_TAP - 0.25, p: EN_READY },
+    { t: 0, p: ready(0) },
+    { t: ENDO_TAP - 0.25, p: ready(ENDO_TAP) },
     { t: ENDO_TAP, p: [B.x1 - 0.14, TOP - 0.1], lin: true },
-    { t: ENDO_TAP + 0.3, p: EN_READY },
+    { t: ENDO_TAP + 0.3, p: ready(ENDO_TAP) },
   ]
-  ks.push(...strokeKeys(STROKES.filter((s) => s.who === 'endo'), EN_READY))
+  ks.push(...strokeKeys(STROKES.filter((s) => s.who === 'endo' && s.kind !== 'catch' && s.kind !== 'feed'), 'endo'))
+  // After the lunge: turned round, the bat out low after the ball, and under it as it comes up off the floor.
+  const lunge = ks.findIndex((k) => k.t > LUNGE + 0.3)
+  ks.splice(lunge, 1, { t: OUT[0], p: [17.25, 0.55] }, { t: CATCH - 0.12, p: [onBat(CATCH)[0] + 0.05, onBat(CATCH)[1] + 0.1] }, { t: CATCH, p: onBat(CATCH) })
+  // The pat back over the net: a flick off the face.
+  const feed = STROKES.find((s) => s.who === 'endo' && s.kind === 'feed')!
+  ks.push({ t: FEED, p: onBat(FEED), lin: true }, { t: FEED + 0.12, p: [feed.p[0] - 0.3, feed.p[1] - 0.25], lin: true }, { t: FEED + 0.45, p: ready(FEED + 0.45) })
+  ks.sort((x, y) => x.t - y.t)
   // The bow: the bat to his side.
-  ks.push({ t: BOW, p: EN_READY }, { t: BOW + 0.3, p: [ENDO_X - 0.25, 0.25] }, { t: BOW + 1.6, p: [ENDO_X - 0.25, 0.25] })
+  ks.push({ t: BOW, p: ready(BOW) }, { t: BOW + 0.3, p: [hipAt('endo', BOW) - 0.25, 0.25] }, { t: BOW + 1.6, p: [hipAt('endo', BOW) - 0.25, 0.25] })
   return ks
 })()
 
@@ -652,6 +822,23 @@ interface Figure {
   /** How far the knees bend (cells the hip drops), and how far the front foot steps in. */
   crouch?: number
   step?: number
+  /** His feet, when his footwork has them (else the stance or the stride). */
+  feet?: [Pt, Pt]
+}
+
+/**
+ * Footwork: each foot follows the hips a moment behind (the trailing foot later), and is lifted while it moves, so a
+ * quick shift across reads as the side-step it is and a run in as a run.
+ */
+function footwork(who: 'kletzki' | 'endo', t: number, x: number, step = 0, face = 1): [Pt, Pt] {
+  const dx = x - hipAt(who, t)
+  const foot = (lag: number, off: number): Pt => {
+    const f0 = hipAt(who, t - lag) + dx
+    const f1 = hipAt(who, t - lag - 0.06) + dx
+    const lift = Math.min(0.16, Math.abs(f0 - f1) * 1.1)
+    return [f0 + off, FLOOR - lift]
+  }
+  return [foot(0.04, (-0.3 - step) * face), foot(0.15, 0.25 * face)]
 }
 
 function figure(pen: Pen, f: Figure): void {
@@ -662,12 +849,12 @@ function figure(pen: Pen, f: Figure): void {
   // Legs: the stance, or the stride.
   const st = f.stride
   const swing = st === null ? 0 : 0.28 * Math.sin(st)
-  const feet: Pt[] = st === null ? [[f.x - 0.3 - (f.step ?? 0), FLOOR], [f.x + 0.25, FLOOR]] : [[f.x - swing, FLOOR], [f.x + swing, FLOOR]]
+  const feet: Pt[] = f.feet ?? (st === null ? [[f.x - 0.3 - (f.step ?? 0), FLOOR], [f.x + 0.25, FLOOR]] : [[f.x - swing, FLOOR], [f.x + swing, FLOOR]])
   for (const [i, ft] of feet.entries()) {
-    const knee: Pt = [(hip[0] + ft[0]) / 2 - (0.08 + 1.1 * crouch) * f.face, (hip[1] + FLOOR) / 2 + 0.02]
+    const knee: Pt = [(hip[0] + ft[0]) / 2 - (0.08 + 1.1 * crouch) * f.face, (hip[1] + ft[1]) / 2 + 0.02]
     const col = i === 0 ? C.trouser : mix(C.trouser, C.whiteShade, 0.6)
     path(pen, [[hip[0] + (i ? 0.06 : -0.06), hip[1]], knee, [ft[0], ft[1] - 0.08]], col, 7.5 * s)
-    shape(pen, [[ft[0] - 0.17, FLOOR], [ft[0] - 0.15, FLOOR - 0.1], [ft[0] + 0.1, FLOOR - 0.11], [ft[0] + 0.1, FLOOR]], '#E8E5DA')
+    shape(pen, [[ft[0] - 0.17, ft[1]], [ft[0] - 0.15, ft[1] - 0.1], [ft[0] + 0.1, ft[1] - 0.11], [ft[0] + 0.1, ft[1]]], '#E8E5DA')
   }
   // The body: the white shirt, a cold shade down its back.
   const sh = up(1.05 * s, 0)
@@ -722,8 +909,16 @@ function kletzki(pen: Pen, t: number): void {
   const miss = STROKES.find((s) => s.who === 'kletzki' && s.kind === 'miss')!
   const walking = t >= WALK[0] && t < WALK[1]
   const u = smooth(t, WALK[0], WALK[1])
-  const x = KLETZKI_X - 1.0 * u
-  const hit = STROKES.filter((s) => s.who === 'kletzki').reduce((m, s) => Math.max(m, flash(t - s.t, 0.2) * (t >= s.t ? 1 : 0)), 0)
+  const x = hipAt('kletzki', t) - 1.0 * u
+  // Into every ball, the smashes from up on his toes and right over it; low and wide for the one he misses.
+  let hit = 0
+  let crouch = 0.04
+  for (const s of STROKES) {
+    if (s.who !== 'kletzki' || t < s.t - 0.5 || t > s.t + 0.8) continue
+    const d = t - s.t
+    hit = Math.max(hit, (s.kind === 'smash' ? 2.2 : 1) * (d >= 0 ? flash(d, 0.2) : smooth(d, -0.25, 0) * 0.5))
+    crouch += (s.kind === 'miss' ? 0.22 : s.kind === 'loop' ? 0.16 : 0.07) * Math.exp(-((d + 0.05) * (d + 0.05)) / (2 * 0.14 * 0.14))
+  }
   // Beaten: his head goes down after the miss.
   const beaten = smooth(t, miss.t + 0.3, miss.t + 1.2)
   const lean = 0.14 + 0.1 * hit + 0.12 * beaten
@@ -736,7 +931,9 @@ function kletzki(pen: Pen, t: number): void {
     batKind: 'kletzki',
     hair: 'bald',
     stride: walking ? ((t - WALK[0]) / 0.5) * Math.PI : null,
-    face: t >= WALK[0] ? 1 : 1,
+    face: 1,
+    crouch: walking || t >= WALK[1] ? 0 : crouch,
+    feet: walking ? undefined : footwork('kletzki', t, x),
   })
   if (down) {
     // His bat lies on the end of the table where he put it.
@@ -745,6 +942,8 @@ function kletzki(pen: Pen, t: number): void {
     line(pen, [KL_BAT_DOWN[0] + 0.2, TOP - 0.03], [KL_BAT_DOWN[0] + 0.42, TOP - 0.03], C.wood, 3.2)
   }
 }
+
+const ENDO_DIP: Partial<Record<Stroke['kind'], number>> = { lob: 0.26, dead: 0.06, miss: 0.34, catch: 0.22, feed: 0.04 }
 
 /** Endo's small life: a knee bend and a shift of weight into each stroke, a step in to each lob, a slow breath. */
 function endoBody(t: number): { crouch: number; shift: number; step: number } {
@@ -756,8 +955,9 @@ function endoBody(t: number): { crouch: number; shift: number; step: number } {
     const d = t - s.t
     if (d < -0.6 || d > 0.9) continue
     const into = Math.exp(-((d + 0.05) * (d + 0.05)) / (2 * 0.12 * 0.12))
-    crouch += (s.kind === 'lob' ? 0.2 : s.kind === 'dead' ? 0.06 : 0.12) * into
-    shift -= (s.kind === 'dead' ? 0.02 : 0.08) * into
+    // Low under his lobs, deep in the lunge, bent to the catch; hardly moving for the dead shot.
+    crouch += (ENDO_DIP[s.kind] ?? 0.12) * into
+    shift -= (s.kind === 'dead' || s.kind === 'catch' || s.kind === 'feed' ? 0.02 : 0.08) * into
     if (s.kind === 'lob') step = Math.max(step, smooth(d, -0.5, -0.12) * (1 - smooth(d, 0.25, 0.85)))
   }
   return { crouch, shift, step: 0.32 * step }
@@ -767,16 +967,18 @@ function endo(pen: Pen, t: number): void {
   // The bow: down on the beat, held, and up.
   const bow = t < BOW ? 0 : t < BOW + 0.3 ? ease((t - BOW) / 0.3) : t < BOW + 1.0 ? 1 : 1 - ease((t - BOW - 1.0) / 0.6)
   const b = endoBody(t)
+  const face = endoFace(t)
+  const x = hipAt('endo', t) + b.shift * face - 0.5 * b.step
   figure(pen, {
-    x: ENDO_X + b.shift - 0.5 * b.step,
+    x,
     h: ENDO_H,
     lean: 0.06 + 0.12 * b.crouch + 0.7 * bow,
-    bat: track(EN_KEYS, t),
+    bat: t >= CATCH && t <= FEED ? onBat(t) : track(EN_KEYS, t),
     batKind: 'endo',
     hair: 'black',
     stride: null,
-    face: 1,
+    face,
     crouch: b.crouch,
-    step: 0.5 * b.step,
+    feet: footwork('endo', t, x, 0.5 * b.step, face),
   })
 }

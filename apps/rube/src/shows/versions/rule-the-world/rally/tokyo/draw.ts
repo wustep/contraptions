@@ -7,6 +7,7 @@ import {
   BAT_STRIKE,
   BELL,
   BOARD,
+  BOW1,
   BOARD_TOP,
   CAPS,
   carryHand,
@@ -15,6 +16,7 @@ import {
   endoBat,
   endoFace,
   endoLean,
+  endoLunge,
   endoSquat,
   endoX,
   FLASH_IN,
@@ -22,6 +24,7 @@ import {
   FLOOR,
   GI,
   houseLight,
+  IMPACTS,
   IN_PAN,
   JUDGE,
   LAMP,
@@ -30,6 +33,8 @@ import {
   NET_X,
   PICK,
   PIVOT,
+  POWER,
+  RALLY,
   SECTIONS,
   SERVE,
   SET,
@@ -37,6 +42,7 @@ import {
   T1,
   TURN,
   TOP,
+  WAY,
   XL,
   XR,
 } from './geo'
@@ -108,17 +114,21 @@ const ctxRot = (pen: Pen, c: Pt, ang: number, fn: () => void): void => {
 
 /* ------------------------------------------------------------------ the crowd's mood */
 
-const HARD = BEATS.filter((b) => b.bar >= 85 && b.bar <= 88 && b.s >= 0.4).map((b) => b.t)
 const ERUPT = BEATS.filter((b) => b.bar >= 89 && b.bar <= 90).map((b) => b.t)
 
 /** How far the crowd is up off its seats, 0 to 1. */
 function risen(t: number): number {
   return smooth(t, WIN, WIN + 0.25) * (1 - smooth(t, TURN - 0.3, TURN + 2.2))
 }
-/** The surge on the rally's hard beats, and the eruption's. */
+/** The front of the house coming up off its seats through the last bar of the rally, before the winner has them all up. */
+function swell(t: number): number {
+  return 0.6 * smooth(t, RALLY[11], WIN - 0.1)
+}
+/** The surge on every bat in the rally, a bigger one on his power shots, and the eruption's. */
 function surge(t: number): number {
   let v = 0
-  for (const h of HARD) v = Math.max(v, knock(t - h, 0.16))
+  for (const h of RALLY) v = Math.max(v, 0.45 * knock(t - h, 0.14))
+  for (const h of POWER) v = Math.max(v, knock(t - h, 0.3))
   for (const h of ERUPT) v = Math.max(v, knock(t - h, 0.22))
   return v
 }
@@ -198,8 +208,9 @@ export function drawArena(pen: Pen, t: number, f: { x0: number; y0: number; x1: 
   glow(pen, [NET_X, FLOOR + 0.05], 3.6, C.lamp, 0.12)
   drawJudges(pen, t)
   drawBoard(pen, t)
-  // Flash bulbs in the stands: one as he comes in, and the arena's as it erupts.
-  for (const [i, ft] of [FLASH_IN, ...FLASH_WIN].entries()) {
+  // Flash bulbs in the stands: one as he comes in, the press on the exhibition's bell and bow, one on each of his
+  // smashes, and the arena's as it erupts.
+  for (const [i, ft] of [FLASH_IN, ...FLASH_WIN, ...POWER, BELL, BOW1].entries()) {
     const u = t - ft
     if (u < 0 || u > 0.6) continue
     const pos: Pt = i === 0 ? [1.3, -1.05] : [-3 + 12.5 * hash(i + 3, 71), -5.4 + 5 * hash(i + 3, 72)]
@@ -255,6 +266,9 @@ function drawStands(pen: Pen, t: number, f: { x0: number; y0: number; x1: number
   const up = risen(t)
   const sg = surge(t)
   const lv = level(t)
+  const sw = swell(t)
+  // Every head in the house follows the ball, a moment behind it.
+  const [bx, by] = WAY.at(t - 0.09)
   const ctx = ctxOf(pen.p)
   const k = pen.k
   ctx.save()
@@ -285,8 +299,8 @@ function drawStands(pen: Pen, t: number, f: { x0: number; y0: number; x1: number
       const L = Math.min(1.15, lit(sec, t)) * fade * 0.68 + spill(hx, y) * fade
       const tone = (c: string) => mix(C.dark, c, 0.05 + 0.85 * Math.min(1, L))
       // Up: the GIs from the first serve, everyone at the smash; the surges on the beats.
-      const stand = gi ? Math.max(smooth(t, SERVE - 0.3, SERVE + 0.2) * (1 - smooth(t, TURN, TURN + 3)), up) : up
       const ph = hash(j, r, 7)
+      const stand = gi ? Math.max(smooth(t, SERVE - 0.3, SERVE + 0.2) * (1 - smooth(t, TURN, TURN + 3)), up) : Math.max(up, r < 9 && ph > 0.4 ? sw : 0)
       const bob = (0.05 * sg * (0.5 + ph) + 0.03 * lv * Math.sin(t * 7 + ph * 6)) * (stand > 0.3 || gi ? 1 : 0.5)
       const yy = y - 0.12 - stand * 0.22 - bob
       const body = gi ? C.olive : CLOTHES[Math.floor(hash(j, r, 11) * CLOTHES.length)]
@@ -314,7 +328,9 @@ function drawStands(pen: Pen, t: number, f: { x0: number; y0: number; x1: number
       ctx.lineTo((hx + 0.15) * k, (yy - 0.2) * k)
       ctx.lineTo((hx + 0.16) * k, yy * k)
       ctx.fill()
-      const head: Pt = [hx, yy - 0.36]
+      const look = Math.max(-1, Math.min(1, (bx - hx) / 2.2))
+      const lift = Math.max(0, Math.min(1, -(by + 0.6) / 1.6))
+      const head: Pt = [hx + 0.035 * look, yy - 0.36 - 0.025 * lift]
       ctx.fillStyle = pen.tone(tone(hash(j, r, 13) > 0.2 ? C.skin : C.skinDark))
       ctx.beginPath()
       ctx.ellipse(head[0] * k, head[1] * k, 0.095 * k, 0.105 * k, 0, 0, Math.PI * 2)
@@ -329,9 +345,10 @@ function drawStands(pen: Pen, t: number, f: { x0: number; y0: number; x1: number
         ctx.lineTo((head[0] - 0.09) * k, (head[1] - 0.11) * k)
         ctx.fill()
       } else {
+        // The hair over the back of the head: the face turned toward the ball, and up at a lob.
         ctx.fillStyle = pen.tone(tone(C.hair))
         ctx.beginPath()
-        ctx.ellipse(head[0] * k, (head[1] - (gi ? 0.06 : 0.05)) * k, 0.095 * k, (gi ? 0.06 : 0.065) * k, 0, 0, Math.PI * 2)
+        ctx.ellipse((head[0] - 0.04 * look) * k, (head[1] - (gi ? 0.06 : 0.05) + 0.02 * lift) * k, 0.095 * k, (gi ? 0.06 : 0.065) * k, 0, 0, Math.PI * 2)
         ctx.fill()
       }
     }
@@ -595,7 +612,7 @@ export function drawEndo(pen: Pen, t: number): void {
     return v
   }
   const q = endoSquat(t)
-  const lunge = smooth(t, 189.9, 190.08) * (1 - smooth(t, 190.3, 191.0))
+  const lunge = endoLunge(t)
   const feet: Pt[] = [
     [x - face * (0.22 + 0.1 * q), FLOOR - lift(0)],
     [x + face * (0.24 + 0.12 * q + 0.35 * lunge), FLOOR - lift(1)],
@@ -700,5 +717,52 @@ export function drawStreamers(pen: Pen, t: number): void {
     }
     const fade = 1 - smooth(t, LIGHTS_DOWN[0], LIGHTS_DOWN[3] + 0.5) * 0.7
     path(pen, pts, mix(C.dark, col, 0.85 * fade), 1.1)
+  }
+}
+
+/* ------------------------------------------------------------------ the impacts */
+
+/**
+ * The ball on a bat, or on the table: a crisp pop of light and a ring going out from a bat, a flat flash and a kick of
+ * light off the green from a bounce; bigger and longer on the power shots.
+ */
+export function drawImpacts(pen: Pen, t: number): void {
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  for (const h of IMPACTS) {
+    const u = t - h.t
+    if (u < 0) break
+    const life = 0.18 + 0.14 * h.power
+    if (u > life) continue
+    const s = 0.6 + h.power
+    const fade = 1 - u / life
+    ctx.save()
+    if (h.bat) {
+      glow(pen, h.p, 0.42 * s, '#FFFFFF', 0.6 * flash(u, 0.045))
+      ctx.strokeStyle = rgba(pen, '#FFF6E0', 0.75 * fade)
+      ctx.lineWidth = pen.w * (0.6 + 0.9 * h.power) * fade
+      ctx.beginPath()
+      ctx.arc(h.p[0] * k, h.p[1] * k, (0.16 + 1.5 * u) * s * k, 0, Math.PI * 2)
+      ctx.stroke()
+    } else {
+      const y = TOP - 0.02
+      ctx.fillStyle = rgba(pen, '#F4F8EE', 0.55 * flash(u, 0.07))
+      ctx.beginPath()
+      ctx.ellipse(h.p[0] * k, y * k, (0.18 + 0.9 * u) * s * k, 0.045 * s * k, 0, 0, Math.PI * 2)
+      ctx.fill()
+      if (h.power >= 0.5) {
+        // A kick of light either side off the green.
+        ctx.strokeStyle = rgba(pen, '#FFFFFF', 0.7 * fade)
+        ctx.lineWidth = pen.w * 0.7
+        ctx.beginPath()
+        for (const d of [-1, 1]) {
+          const r0 = 0.12 + 1.1 * u
+          ctx.moveTo((h.p[0] + d * r0) * k, (y - 0.03 - 0.4 * u) * k)
+          ctx.lineTo((h.p[0] + d * (r0 + 0.16 * s)) * k, (y - 0.1 - 0.7 * u) * k)
+        }
+        ctx.stroke()
+      }
+    }
+    ctx.restore()
   }
 }

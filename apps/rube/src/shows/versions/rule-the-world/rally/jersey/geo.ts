@@ -1,7 +1,7 @@
 import { laneAt, R, type Pt, type Seg } from '../../../../../parts'
 import { CAB } from '../cab'
 import { carried, route, type Way } from '../kit'
-import { a, at, beats, SEAM } from '../music'
+import { a, at, BEATS, beats, SEAM } from '../music'
 import { hop } from '../physics'
 
 /**
@@ -252,8 +252,29 @@ class Path {
   }
 }
 
-/** On the seat, riding with the cab exactly. */
-const seated = (dx: number) => (t: number): Pt => [cabX(t) + dx, bob(t)]
+/**
+ * The joints throw them up off the seat: Marty on every beat, highest on the bar's first, and Rachel on the first and
+ * third, a little less; each hop comes down on the shuffle's "a". Every downbeat's bump settles her a little nearer him.
+ */
+export const SEAT_HOPS = BEATS.filter((b) => b.bar >= 65 && b.bar <= 68 && b.t > T0 + 0.01).map((b) => ({ t: b.t, pos: b.pos, land: a(b.bar, b.pos) }))
+function seatHop(t: number, who: 'marty' | 'rachel'): number {
+  for (const h of SEAT_HOPS) {
+    if (t < h.t || t > h.land) continue
+    if (who === 'rachel' && h.pos % 2 === 0) return 0
+    const big = h.pos === 1 ? 0.26 : h.pos === 3 ? 0.16 : 0.07
+    const u = (t - h.t) / (h.land - h.t)
+    return 4 * big * (who === 'rachel' ? 0.8 : 1) * u * (1 - u)
+  }
+  return 0
+}
+/** How far Rachel sits from him: 0.6 at the cut, and nearer on each downbeat's bump. */
+function rachelDx(t: number): number {
+  let dx = 0.6
+  for (const h of SEAT_HOPS) if (h.pos === 1 && t > h.t) dx -= 0.045 * Math.min(1, (t - h.t) / (h.land - h.t))
+  return dx
+}
+/** On the seat, riding with the cab exactly, thrown up by its joints. */
+const seated = (dx: number | null) => (t: number): Pt => [cabX(t) + (dx ?? rachelDx(t)), bob(t) - seatHop(t, dx === null ? 'rachel' : 'marty')]
 const RIDE_N = (t0: number, t1: number) => Math.ceil((t1 - t0) * 90)
 
 /** The run from the gate to the barn: up to speed in a beat and a third, then flat out. */
@@ -306,8 +327,8 @@ function martyWay(): Seg[] {
 
 /** Rachel's lane: the same, her own way, until she is inside the ambulance. */
 function rachelWay(): Seg[] {
-  const ride = carried(seated(0.6), T0, HOP_R, RIDE_N(T0, HOP_R))
-  const p = new Path(HOP_R, seated(0.6)(HOP_R))
+  const ride = carried(seated(null), T0, HOP_R, RIDE_N(T0, HOP_R))
+  const p = new Path(HOP_R, seated(null)(HOP_R))
   p.hop(LAND_R, [OUT_R, GB])
   p.hold(PORCH_ON)
   p.roll(GATE_T, GATE_X + 0.55)
@@ -357,6 +378,7 @@ export const RACHEL_GONE = SHUT + 0.06
 export const JERSEY_STRIKES: number[] = [
   PULL,
   ...BUMPS,
+  ...SEAT_HOPS.map((h) => h.land),
   HALT,
   HOP_M,
   HOP_R,
