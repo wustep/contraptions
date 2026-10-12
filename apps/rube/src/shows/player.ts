@@ -140,6 +140,13 @@ function loadOf(version: Version): Promise<Performance> {
   return load
 }
 
+/** Under a host, a take that would not load is passed over after this long: long enough to read why. */
+const SKIP_AFTER = 4000
+/** How many takes in a row may fail before a host stops passing over them. */
+const SKIP_FAILED = 4
+let failedInARow = 0
+let skipTimer = 0
+
 /** The host's next take, readied in the background so the handover to it is not cold. */
 let warmTimer = 0
 function warmNext(): void {
@@ -362,6 +369,7 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
     lastT = 0
     music.load(loaded.soundtrack ?? null)
     stage.set(loaded)
+    failedInARow = 0
     if (host?.upNext) warmNext()
   } catch (err) {
     if (!alive || mine !== generation) return
@@ -372,6 +380,14 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
     playerHost.classList.remove('yt-loading')
     console.error(err)
     failed = err instanceof Error ? err.message : String(err)
+    // Under a host nobody is choosing: the stage says it would not load, then the next one goes on, as it would have
+    // at the end. Not round and round a pool where nothing loads (offline): after a few, it waits for a reload.
+    if (host && ++failedInARow < SKIP_FAILED) {
+      window.clearTimeout(skipTimer)
+      skipTimer = window.setTimeout(() => {
+        if (alive && mine === generation) advance()
+      }, SKIP_AFTER)
+    }
   }
   loading = false
   sync()
@@ -971,6 +987,13 @@ let stallT = -1
 let stallSince = 0
 let stalled = false
 let raf = 0
+/** Played through: at the end, or, for a loop, round its seam (a seek resets `lastT`, so a jump back is not one). */
+function playedThrough(t: number): boolean {
+  if (!transport) return false
+  const through = transport.playing && (transport.loop ? t < lastT - transport.duration / 2 : t >= transport.duration)
+  lastT = t
+  return through
+}
 function tick(): void {
   if (!alive) return
   if (transport) {
@@ -986,10 +1009,7 @@ function tick(): void {
       stalled = nowStalled
       sync()
     }
-    // Played through: at the end, or, for a loop, round its seam (a seek resets `lastT`, so a jump back is not one).
-    const through = transport.playing && (transport.loop ? t < lastT - transport.duration / 2 : t >= transport.duration)
-    lastT = t
-    if (through && host) {
+    if (playedThrough(t) && host) {
       advance()
       raf = requestAnimationFrame(tick)
       return
@@ -1017,6 +1037,15 @@ function tick(): void {
   raf = requestAnimationFrame(tick)
 }
 raf = requestAnimationFrame(tick)
+
+// A tab in the background draws no frames, so `tick` never sees a show end there, and Theater, which is meant to be
+// left on, stood silent after its first show until it was looked at again. Hidden, a slow timer watches for the end
+// instead (the music keeps its own time meanwhile, `youtube.ts`), and the next show goes on as it would have.
+const behind = host
+  ? window.setInterval(() => {
+      if (alive && document.hidden && transport && playedThrough(transport.now())) advance()
+    }, 500)
+  : 0
 
 /* ------------------------------------------------------------------ keys */
 
@@ -1142,6 +1171,8 @@ if (import.meta.env.DEV) {
     alive = false
     besideFrame.disconnect()
     window.clearTimeout(warmTimer)
+    window.clearInterval(behind)
+    window.clearTimeout(skipTimer)
     releaseSound()
     shell.holdHandle(false)
     cancelAnimationFrame(raf)
@@ -1150,7 +1181,7 @@ if (import.meta.env.DEV) {
     window.removeEventListener('pointercancel', endScrub)
     window.removeEventListener('keydown', onKey)
     recording?.abort()
-    music.load(null)
+    music.destroy()
     stage.destroy()
     if (import.meta.env.DEV) delete (window as unknown as Record<string, unknown>).shows
   }

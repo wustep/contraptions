@@ -42,6 +42,12 @@ const TRUE = 0.02
 /** How long a play may sit unstarted before it counts as refused. One still buffering is waited for, to a limit. */
 const PATIENCE = 2500
 const PATIENCE_BUFFERING = 12000
+/**
+ * How long the players may take to be ready before they count as failed. A blocker that lets the API script through
+ * but stops the embed (or a request that hangs) sends no error at all: without a limit the shimmer stood for good, a
+ * press of play waited on it for ever, and the site's own file, where there is one, never took over.
+ */
+const READY_WITHIN = 15000
 /** How long after our own word to a player its news is taken as the answer to it, not as the viewer's doing. */
 const ECHO = 800
 
@@ -458,6 +464,8 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     })
   }
 
+  /** Gives up on players that never say they are ready (`READY_WITHIN`). */
+  let readyBy = 0
   /** When the show's time was last followed, so a hidden tab can carry it on. */
   let followedAt = 0
   let api: YouTubeSoundtrack
@@ -510,6 +518,13 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
         return { cue: settle(c), player: null, box, ready: false, state: UNSTARTED, running: false, early: false, volume: -1, toldAt: 0, lead: 0, movingAt: 0, warm: 'no', blessed: false, heardAt: 0, ear: listener() }
       })
       raise(null)
+      window.clearTimeout(readyBy)
+      readyBy = window.setTimeout(() => {
+        if (mine !== generation || status !== 'loading') return
+        console.warn(`shows: YouTube's player was not ready within ${READY_WITHIN / 1000}s`)
+        settleRefusal('silent')
+        set('failed')
+      }, READY_WITHIN)
       loadApi().then(
         (YT) => {
           if (mine !== generation) return
@@ -532,7 +547,8 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
               },
               events: {
                 onReady: () => {
-                  if (mine !== generation) return
+                  // Too late: given up on, and the show has gone on without it.
+                  if (mine !== generation || status === 'failed') return
                   d.ready = true
                   d.player!.getIframe().title = 'The music, on YouTube'
                   if (decks.every((x) => x.ready)) set('ready')

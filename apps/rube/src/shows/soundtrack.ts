@@ -96,8 +96,16 @@ export interface ShowSoundtrack extends Soundtrack {
  * the file when one is shipped, and says so. Copyrighted scores ship YouTube
  * only: without a local `src`, a failed embed leaves the show silent.
  */
-export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtube'): ShowSoundtrack {
-  return combineSoundtracks(createFileSoundtrack(), createYouTubeSoundtrack(host), prefer)
+export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtube'): ShowSoundtrack & { destroy(): void } {
+  const file = createFileSoundtrack()
+  const music = combineSoundtracks(file, createYouTubeSoundtrack(host), prefer)
+  // Put down for good, at the end of a visit: the file's element is in the document, and each visit makes its own.
+  return Object.assign(music, {
+    destroy() {
+      music.load(null)
+      file.destroy()
+    },
+  })
 }
 
 /** The file and YouTube, as one: which plays, and handing over between them. Apart from the players, so a check can hand it stand-ins. */
@@ -295,7 +303,7 @@ function decode(src: string): Promise<AudioBuffer> {
 }
 
 /** The music as a file the site serves, in one audio element. */
-function createFileSoundtrack(): Soundtrack {
+function createFileSoundtrack(): Soundtrack & { destroy(): void } {
   const audio = new Audio()
   audio.preload = 'auto'
   audio.preservesPitch = true
@@ -388,6 +396,11 @@ function createFileSoundtrack(): Soundtrack {
 
   /** Plays asked for while the recording was still loading. */
   let waiting: (() => void)[] = []
+  /**
+   * Counts plays and pauses, so a play that waited (for canplay, or for the context to run) knows a pause came in
+   * meanwhile: without it, pausing a show whose file was still loading froze the picture and then started the music.
+   */
+  let asked = 0
   const set = (next: SoundtrackState) => {
     if (next === status) return
     status = next
@@ -483,6 +496,7 @@ function createFileSoundtrack(): Soundtrack {
     },
     async play(at) {
       if (!spec || status === 'failed') return 'silent'
+      const ask = ++asked
       // YouTube waits for its players; the file must wait for canplay too. A play asked
       // for on a deep link lands in the same breath as load(), and a NotAllowedError on an
       // empty element looks like an autoplay block — the visit then never retries once ready.
@@ -492,16 +506,17 @@ function createFileSoundtrack(): Soundtrack {
           waiting.push(resolve)
         })
         // Read again: the wait may have changed it (TypeScript narrowed it to 'loading' above).
-        if (spec !== mine || (status as SoundtrackState) !== 'ready') return 'silent'
+        if (spec !== mine || (status as SoundtrackState) !== 'ready' || ask !== asked) return 'silent'
       }
       if (buffered()) {
         const mine = spec
         if (await startBuffer(at)) {
-          if (spec !== mine) stopBuffer()
+          if (spec !== mine || ask !== asked) stopBuffer()
           audio.pause()
           return 'playing'
         }
         // Not allowed to start the context yet: the element, which a muted page may still play.
+        if (ask !== asked) return 'silent'
       }
       // Seek before play drops readyState back to HAVE_METADATA in Chromium, and a play on that
       // empty-looking element is refused even when muted. Play first, then put it where the show is.
@@ -526,6 +541,7 @@ function createFileSoundtrack(): Soundtrack {
     },
     follow() {},
     pause() {
+      asked++
       stopBuffer()
       audio.pause()
       takeWhole()
@@ -564,6 +580,15 @@ function createFileSoundtrack(): Soundtrack {
     },
     onChange(fn) {
       changed = fn
+    },
+    destroy() {
+      stopBuffer()
+      gain?.disconnect()
+      gain = null
+      audio.pause()
+      audio.removeAttribute('src')
+      audio.load()
+      audio.remove()
     },
   }
 }
