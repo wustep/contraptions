@@ -4,7 +4,7 @@ import { createListbox } from '../../../../src/ui/listbox'
 import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
 import { recordingFormat } from './record'
-import { performanceProblems, pickVersion, placeCard, shelves, type Performance, type TitleCard, type Version } from './registry'
+import { musicOnYouTube, performanceProblems, pickVersion, placeCard, shelves, type Performance, type TitleCard, type Version } from './registry'
 import { showCard as shareCard, showFromPath, showPath } from './share'
 import { createSoundtrack, prefetchSoundtrack } from './soundtrack'
 import './youtube.css'
@@ -336,6 +336,11 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
   releaseSound()
   music.load(null)
   stage.set(null)
+  // Hold YouTube's box open, at its final size and shimmering, while the show loads, so the card does not jump
+  // when the music turns out to be YouTube's (`youtube.css`).
+  const tube = musicPrefer === 'youtube' && musicOnYouTube(version.work)
+  playerHost.hidden = !tube
+  playerHost.classList.toggle('yt-loading', tube)
   perf = null
   transport = null
   current = version
@@ -362,6 +367,9 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
     if (!alive || mine !== generation) return
     // A version that would not load may load next time; one that loaded wrong will not.
     loads.delete(version)
+    // No show, no music: the box held open for it closes.
+    playerHost.hidden = true
+    playerHost.classList.remove('yt-loading')
     console.error(err)
     failed = err instanceof Error ? err.message : String(err)
   }
@@ -571,8 +579,8 @@ if (host) {
   doorBtn.title = 'Back to Shows, on the show that is on (T)'
   doorBtn.replaceChildren(icon(ICON.shows), 'Leave theater', el('kbd', {}, ['T']))
 } else {
-  doorBtn.title = 'Theater: every show, shuffled, one after another, starting with this one (T)'
-  doorBtn.replaceChildren(icon(ICON.theater), 'Theater', el('span', { class: 'door-note' }, ['every show, shuffled']), el('kbd', {}, ['T']))
+  doorBtn.title = 'Theater: the ticked shows (the favourites to begin with), shuffled, one after another, starting with this one (T)'
+  doorBtn.replaceChildren(icon(ICON.theater), 'Theater', el('span', { class: 'door-note' }, ['shows, shuffled']), el('kbd', {}, ['T']))
 }
 function goThrough(): void {
   if (!alive || recording) return

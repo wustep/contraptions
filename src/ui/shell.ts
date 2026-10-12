@@ -33,7 +33,7 @@
  * stage stay where they are, so the panel away or ` leaves the picture on its
  * own. The switch is four
  * icon-only buttons beside the brand, each named on hover. The Builder is off it for now.
- * Theater (every show, shuffled, one after another) is not a tab: it is a way
+ * Theater (the ticked shows, the favourites to begin with, shuffled, one after another) is not a tab: it is a way
  * of watching Shows, so its door is on the Shows player, and while it is on
  * the Shows tab stays lit.
  */

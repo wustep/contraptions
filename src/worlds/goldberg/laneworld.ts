@@ -159,7 +159,7 @@ export interface LaneRun {
   journey: number
   /** Tokens in flight: the journey divided by the gap between them. */
   tokens: number
-  /** Colour of each token, in emit order. The feeder randomises; nothing locks one colour. */
+  /** Colour of each emission slot in the loop. See `tokenColor`: a token keeps its slot's colour for its whole journey. */
   colors: string[]
   cells: LaneCell[]
   stacks: LaneStack[]
@@ -397,7 +397,7 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
 
   const journey = acc
   const tokens = Math.max(1, Math.ceil(journey / world.emit))
-  const colors = emitColors(rng, theme.colors, tokens)
+  const colors = emitColors(rng, theme.colors, world.emit)
   const run: LaneRun = {
     size,
     emit: world.emit,
@@ -430,17 +430,33 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
 }
 
 /**
- * The one drawing of everything that moves: every car (loaded or climbing back
- * empty) and then every token, from the same clock.
+ * One colour per emission slot in the loop. A loop lets `1 / emit` tokens go,
+ * and the loop has to close on itself, so the token let go at slot `n` and the
+ * one let go a loop later must look the same: that is the only freedom there
+ * is. Cascade (one token a loop) runs one colour; workshop (two) alternates.
  */
-function emitColors(rng: Rng, palette: string[], n: number): string[] {
+function emitColors(rng: Rng, palette: string[], emit: number): string[] {
   const pick = rng.fork('emit')
+  const slots = Math.max(1, Math.round(1 / emit))
   const out: string[] = []
-  for (let i = 0; i < n; i++) {
-    const pool = palette.filter((c) => c !== out[i - 1])
+  for (let i = 0; i < slots; i++) {
+    // Neighbours differ, including across the loop's seam.
+    const pool = palette.filter((c) => c !== out[i - 1] && (i < slots - 1 || slots < 3 || c !== out[0]))
     out.push(pick.pick(pool.length ? pool : palette))
   }
   return out
+}
+
+/**
+ * The colour of the token that is `j` emits old at loop position `u`. A token
+ * keeps its colour for its whole journey: it is keyed by when it was let go,
+ * not by its place in the queue. Keying it by `j` (as this did) repainted
+ * every token in flight each time a new one was let go.
+ */
+export function tokenColor(run: Pick<LaneRun, 'emit' | 'colors'>, u: number, j: number): string {
+  const { emit, colors } = run
+  const born = Math.floor(mod(u, 1) / emit + 1e-9) - j
+  return colors[mod(born, colors.length)] ?? colors[0]
 }
 
 function lookAt(run: LaneRun, world: WorldSpec, t: number, color: string): TokenLook {
@@ -453,26 +469,20 @@ function lookAt(run: LaneRun, world: WorldSpec, t: number, color: string): Token
   return look
 }
 
-function riderColor(run: LaneRun, u: number, stack: LaneStack): string {
-  const { emit, journey, colors } = run
-  for (let j = 0; j < run.tokens; j++) {
-    const t = mod(u, emit) + j * emit
-    if (t > journey) continue
-    const here = run.at(t)
-    if (!here.ride) continue
-    if (
-      Math.abs(here.x - stack.cell.x) < run.size * 0.8 &&
-      here.y > stack.cell.y - run.size * 0.6 &&
-      here.y < stack.cell.y + run.size * (stack.floors + 0.4)
-    ) {
-      return colors[j] ?? colors[0]
-    }
-  }
-  return colors[0]
+/**
+ * The car wears the colour of the last token to board it, and keeps it while
+ * it climbs back empty. Snapping back to a house colour the moment the rider
+ * stepped off (as this did) made the car and its counterweight blink.
+ */
+export function riderColor(run: LaneRun, u: number, stack: LaneStack): string {
+  const { emit } = run
+  // The newest token that has reached this stack's boarding point.
+  const j = Math.max(0, Math.ceil((stack.board - mod(u, emit)) / emit - 1e-9))
+  return tokenColor(run, u, j)
 }
 
 function drawRun(run: LaneRun, world: WorldSpec): Overlay {
-  const { size, emit, journey, colors } = run
+  const { size, emit, journey } = run
   return (p: p5, loopFrame: number, { theme, weight }: { theme: Theme; weight: (size: number) => number }) => {
     const u = loopFrame / LOOP
     const w = weight(size)
@@ -496,7 +506,7 @@ function drawRun(run: LaneRun, world: WorldSpec): Overlay {
       const t = mod(u, emit) + j * emit
       if (t > journey) continue
       const { x, y } = run.at(t)
-      const look = lookAt(run, world, t, colors[j] ?? colors[0])
+      const look = lookAt(run, world, t, tokenColor(run, u, j))
       world.token(p, size, theme.ink, w, look.color, x, y, look)
     }
   }

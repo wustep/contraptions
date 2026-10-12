@@ -992,6 +992,9 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .pool-play svg { width: 9px; height: 9px; fill: currentColor; flex: none; opacity: 0; transition: opacity 120ms ease-out; }
 .pool-play:hover svg, .pool-play:focus-visible svg { opacity: 1; }
 .pool-row.on { color: var(--accent); }
+/* A favourite's star, as in the Shows picker (`.lb-mark`). */
+.pool-star { display: inline-block; margin-left: 5px; }
+.pool-play .pool-star svg { width: 9px; height: 9px; fill: var(--accent); opacity: 1; vertical-align: 0; }
 .pool-row.on .pool-play:hover { color: var(--accent); }
 /* On the stage now: a steady dot where the play mark would be. */
 .pool-row.on .pool-play svg { display: none; }
