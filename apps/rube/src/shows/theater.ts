@@ -158,7 +158,7 @@ function mount(shell: Shell): () => void {
             icon(ICON.play),
           ])
           name.addEventListener('click', () => play(v))
-          const row = el('div', { class: 'pool-row' }, [box, name])
+          const row = el('div', { class: 'pool-row' }, [el('label', { class: 'pool-tick' }, [box]), name])
           group.append(row)
           return { id, box, row }
         })

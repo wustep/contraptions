@@ -12,7 +12,7 @@ import {
   type Options,
 } from '../core/composition'
 import { createListbox } from './listbox'
-import { ICON, copyButton, credit, el, field, icon, guardWheel, section as sectionIn, seedCard, segmented, speedPicker, type Shell } from './shell'
+import { copyButton, credit, el, field, guardWheel, playButton, section as sectionIn, seedCard, segmented, setOn, speedPicker, type Shell } from './shell'
 import { EXPORT_SCALES, type ViewState } from './view'
 
 export interface PanelHandlers {
@@ -296,10 +296,13 @@ export function createPanel(
     const [spanLabel, spanHint] = SPAN_COPY[mode]
     const spanName = labelOf(spans.node)
     if (spanName) spanName.textContent = spanLabel
+    // The slider is named by what it is called on screen, so a voice saying the word it reads reaches it.
+    spans.node.querySelector('input')?.setAttribute('aria-label', spanLabel)
     spans.node.title = spanHint
     const [chainLabel, chainHint] = CHAIN_COPY[mode]
     const chainName = labelOf(chains.node)
     if (chainName) chainName.textContent = chainLabel
+    chains.node.querySelector('input')?.setAttribute('aria-label', chainLabel)
     chains.node.title = chainHint
   }
 
@@ -321,7 +324,7 @@ export function createPanel(
     handlers.onScrub(Number(scrub.value) / 1000)
   })
   guardWheel(shell.root, scrub)
-  const play = el('button', { class: 'tbtn play', title: 'Play / pause (K)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+  const { node: play, set: showPaused } = playButton('K')
   play.addEventListener('click', () => handlers.onView({ paused: !lastView.paused }))
   const speedBox = speedPicker((v) => handlers.onView({ speed: v }))
   // Play sits with the speeds: one row for "is it running and how fast".
@@ -390,8 +393,6 @@ export function createPanel(
   // A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
   window.addEventListener('pointercancel', endScrub)
 
-  const playIcon = icon(ICON.play)
-  const pauseIcon = icon(ICON.pause)
 
   return {
     sync(comp, view) {
@@ -410,9 +411,8 @@ export function createPanel(
       chains.set(comp.options.chains)
       catalog.textContent = comp.options.catalog ? 'Exit catalog' : 'Catalog'
       catalog.classList.toggle('on', comp.options.catalog)
-      gridBtn.classList.toggle('on', view.grid)
-      play.replaceChildren(view.paused ? playIcon : pauseIcon)
-      play.classList.toggle('paused', view.paused)
+      setOn(gridBtn, view.grid)
+      showPaused(view.paused)
       speedBox.set(view.speed)
       scaleSeg.set(view.exportScale)
       const edge = handlers.exportSize(view.exportScale)

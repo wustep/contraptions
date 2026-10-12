@@ -1,5 +1,5 @@
 import '../../../../src/ui/styles.css'
-import { ICON, el, guardWheel, icon, section, segmented, speedPicker, type Shell } from '../../../../src/ui/shell'
+import { ICON, el, guardWheel, icon, section, playButton, segmented, setOn, speedPicker, type Shell } from '../../../../src/ui/shell'
 import { createListbox } from '../../../../src/ui/listbox'
 import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
@@ -524,7 +524,7 @@ const endScrub = () => { scrubbing = false }
 window.addEventListener('pointerup', endScrub)
 // A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
 window.addEventListener('pointercancel', endScrub)
-const playBtn = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+const { node: playBtn, set: showPaused } = playButton('space')
 playBtn.addEventListener('click', toggle)
 const speedBox = speedPicker(setSpeed)
 const musicBtn = el('button', { type: 'button', class: 'tbtn music', 'aria-label': 'Music' })
@@ -683,8 +683,6 @@ videoBtn.addEventListener('click', () => {
 })
 exportSec.append(el('div', { class: 'row export-row frames' }, [sizeSeg.node, pngBtn, videoBtn]), exportNote)
 
-const playIcon = icon(ICON.play)
-const pauseIcon = icon(ICON.pause)
 const soundIcon = icon(ICON.sound)
 const mutedIcon = icon(ICON.muted)
 music.onChange(() => sync())
@@ -743,7 +741,7 @@ function sync(): void {
     takeRow.replaceChildren(...takeChips.map((c) => c.b))
   }
   for (const { version, b } of takeChips) {
-    b.classList.toggle('on', version === current)
+    setOn(b, version === current)
     b.disabled = busy
   }
   // Under the title, in the panel's own face: what this take is, and whose music. The title is not said again.
@@ -771,8 +769,7 @@ function sync(): void {
   transportSec.hidden = exportSec.hidden = works.length === 0
   // Theater is for watching: no export.
   if (host) exportSec.hidden = true
-  playBtn.replaceChildren(playing ? pauseIcon : playIcon)
-  playBtn.classList.toggle('paused', !playing)
+  showPaused(!playing)
   playBtn.disabled = restartBtn.disabled = scrub.disabled = !ready || busy
   cameraSeg.set(overview ? 0 : zoom ? 2 : 1)
   for (const b of cameraButtons) b.disabled = !ready || busy

@@ -90,12 +90,16 @@ async function activate(mode: ShellMode): Promise<void> {
   } finally {
     stop = null
   }
+  // A press inside the old mode's panel (Theater's door, its Next) is about to lose its button. The keyboard goes to
+  // the lit tab of the mode switch, where the panel begins, and not to the top of the page.
+  const focusWasHere = shell.body.contains(document.activeElement)
   shell.body.replaceChildren()
   clearStage()
   shell.root.scrollTop = 0
   target = mode
   pending = false
   stop = mount(shell)
+  if (focusWasHere && !shell.hidden()) shell.root.querySelector<HTMLElement>('.mode-tab[aria-current="page"]')?.focus()
 }
 
 function onPop(): void {

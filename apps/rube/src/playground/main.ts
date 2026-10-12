@@ -3,7 +3,7 @@ import { webmMime } from '../../../../src/core/capture'
 import { randomSeed } from '../../../../src/core/seed'
 import { registerMode } from '../../../../src/ui/mode-host'
 import { modeFromPath } from '../../../../src/ui/mode-path'
-import { ICON, copyButton, el, guardWheel, icon, section, seedCard, segmented, speedPicker, type Shell } from '../../../../src/ui/shell'
+import { copyButton, el, guardWheel, playButton, section, seedCard, segmented, setOn, speedPicker, type Shell } from '../../../../src/ui/shell'
 import { EXPORT_SCALES, loadView, saveView } from '../../../../src/ui/view'
 import { catalogOrder, createCatalog, type Entry } from '../catalog'
 import { createStage } from '../engine'
@@ -381,7 +381,7 @@ const endScrub = () => { scrubbing = false }
 window.addEventListener('pointerup', endScrub)
 // A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
 window.addEventListener('pointercancel', endScrub)
-const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+const { node: play, set: showPaused } = playButton('space')
 play.addEventListener('click', () => setPaused(!paused))
 const speedBox = speedPicker(setSpeed)
 transport.append(scrub, el('div', { class: 'row deck' }, [play, speedBox.node]))
@@ -443,15 +443,12 @@ saveLoopBtn.addEventListener('click', () => {
 })
 exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, saveBtn, saveLoopBtn]))
 
-const playIcon = icon(ICON.play)
-const pauseIcon = icon(ICON.pause)
 
 function sync(): void {
   if (document.activeElement !== seedInput) seedInput.value = seed
-  play.replaceChildren(paused ? playIcon : pauseIcon)
-  play.classList.toggle('paused', paused)
+  showPaused(paused)
   speedBox.set(speed)
-  overviewBtn.classList.toggle('on', overview)
+  setOn(overviewBtn, overview)
   const v = viewName()
   stagedTitle.textContent = v === 'sheet' ? 'Staged' : v === 'piece' ? 'Piece' : 'World'
   document.title = v === 'sheet' ? 'contraptions · playground' : `${solo ?? shelves.get(world!)?.world.label.toLowerCase() ?? world} · playground`
@@ -463,7 +460,7 @@ function sync(): void {
   crumbBack.title = 'Back to the sheet (esc)'
   crumbHere.textContent = solo ?? shelves.get(world ?? '')?.world.label ?? ''
   crumbPrev.hidden = crumbNext.hidden = v !== 'piece'
-  for (const { s, b } of chips) b.classList.toggle('on', v === 'world' && world === s.name)
+  for (const { s, b } of chips) setOn(b, v === 'world' && world === s.name)
   steps.hidden = v !== 'piece'
   maps.hidden = v !== 'world'
   overviewBtn.hidden = v !== 'world'

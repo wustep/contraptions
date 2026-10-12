@@ -2,7 +2,7 @@ import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
 import { registerMode } from '../../../src/ui/mode-host'
 import { modeFromPath } from '../../../src/ui/mode-path'
-import { ICON, copyButton, el, guardWheel, icon, section, seedCard, segmented, speedPicker, type Shell } from '../../../src/ui/shell'
+import { copyButton, el, guardWheel, playButton, section, seedCard, segmented, setOn, speedPicker, type Shell } from '../../../src/ui/shell'
 import { webmMime } from '../../../src/core/capture'
 import { EXPORT_SCALES, loadView, saveView } from '../../../src/ui/view'
 import { folderBuilds } from './builder/discover'
@@ -395,7 +395,7 @@ const endScrub = () => { scrubbing = false }
 window.addEventListener('pointerup', endScrub)
 // A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
 window.addEventListener('pointercancel', endScrub)
-const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+const { node: play, set: showPaused } = playButton('space')
 play.addEventListener('click', () => setPaused(!paused))
 // The same five stops as Explorations; the clock is continuous, so any rate is fine.
 const speedBox = speedPicker(setSpeed)
@@ -468,15 +468,12 @@ saveLoopBtn.addEventListener('click', () => {
 })
 exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, saveBtn, saveLoopBtn]))
 
-const playIcon = icon(ICON.play)
-const pauseIcon = icon(ICON.pause)
 
 function sync(): void {
   if (document.activeElement !== seedInput) seedInput.value = seed
-  play.replaceChildren(paused ? playIcon : pauseIcon)
-  play.classList.toggle('paused', paused)
+  showPaused(paused)
   speedBox.set(speed)
-  overviewBtn.classList.toggle('on', overview)
+  setOn(overviewBtn, overview)
   pinBtn.textContent = world ? 'Unpin' : 'Pin'
   pinBtn.classList.toggle('on', !!world)
   // The way back says where it goes, the same words in the panel and on the stage.
@@ -503,7 +500,7 @@ function sync(): void {
   // through pieces instead; the sheet has no world to jump between or scrub.
   loop.hidden = v !== 'show'
   buildsRow.hidden = v !== 'show' || !buildChips.length
-  for (const { w, b } of buildChips) b.classList.toggle('on', world === w.name)
+  for (const { w, b } of buildChips) setOn(b, world === w.name)
   jumps.hidden = v !== 'show'
   overviewBtn.hidden = v !== 'show'
   steps.hidden = v !== 'solo'
