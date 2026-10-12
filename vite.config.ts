@@ -12,7 +12,7 @@ import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/sh
  *   /shows/          Machine set to music (apps/rube/src/shows), and a page per show:
  *                    /shows/<work>/ and /shows/<work>/<take>/ (`showPages`, `share.ts`), and a
  *                    renamed take's old address as well
- *   /theater/        the favourites (or every show), shuffled; off the mode switch until visited (`shell.ts`)
+ *   /theater/        the ticked shows (the favourites to begin with), shuffled; off the mode switch until visited (`shell.ts`)
  *   /playground/     pieces and worlds waiting to be let into Machine (apps/rube/src/playground)
  *   /builder/        where new pieces and worlds are made (apps/rube/src/builder); not on the switch
  *

@@ -120,7 +120,9 @@ export function checkTheater(check: Check, works: Work[]): void {
     check('Epilogue plays its Opus 5.5 take, not Fable\'s', !epilogue || (ids.includes('la-la-land/opus5-5') && !ids.some((id) => id.startsWith('la-la-land/') && id !== 'la-la-land/opus5-5')), ids.filter((id) => id.startsWith('la-la-land/')).join())
     check('every favourite take is a shipped take', ids.every((id) => takes.includes(id)))
     const theater = readFileSync(join(process.cwd(), 'apps/rube/src/shows/theater.ts'), 'utf8')
-    check('Theater draws from the favourites unless All shows was chosen', /localStorage\.getItem\(SET_STORE\) === 'all' \|\| !favoriteIds\.size \? 'all' : 'favorites'/.test(theater) && /favoriteTakes\(works\)/.test(theater))
-    check('the choice is one click away and remembered', /segmented\(\[0, 1\], \(v\) => \(v === 0 \? 'Favourites' : 'All shows'\)/.test(theater) && /writeSet\(set\)/.test(theater))
+    check('every take is listed; a first visit has only the favourites ticked', /const ON_STORE = 'contraptions:theater:on'/.test(theater) && /if \(!v\) return defaultOn\(\)/.test(theater) && /new Set\(favoriteIds\.size \? favoriteIds : takes\.map\(idOf\)\)/.test(theater) && /favoriteTakes\(works\)/.test(theater))
+    check('no separate Favourites / All shows switch', !/segmented|SET_STORE|All shows/.test(theater))
+    check('favourites are starred in the list, as in the picker', /favoriteIds\.has\(id\) \? \[el\('span', \{ class: 'pool-star'/.test(theater) && /icon\(ICON\.star\)/.test(theater))
+    check('the ticked set is remembered, and never empty', /writeOn\(on\)/.test(theater) && /else if \(on\.size > 1\) on\.delete\(id\)/.test(theater) && /return on\.size \? on : defaultOn\(\)/.test(theater))
   }
 }

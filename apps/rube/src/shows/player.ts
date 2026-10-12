@@ -579,8 +579,8 @@ if (host) {
   doorBtn.title = 'Back to Shows, on the show that is on (T)'
   doorBtn.replaceChildren(icon(ICON.shows), 'Leave theater', el('kbd', {}, ['T']))
 } else {
-  doorBtn.title = 'Theater: the favourites (or every show), shuffled, one after another, starting with this one (T)'
-  doorBtn.replaceChildren(icon(ICON.theater), 'Theater', el('span', { class: 'door-note' }, ['favourites, shuffled']), el('kbd', {}, ['T']))
+  doorBtn.title = 'Theater: the ticked shows (the favourites to begin with), shuffled, one after another, starting with this one (T)'
+  doorBtn.replaceChildren(icon(ICON.theater), 'Theater', el('span', { class: 'door-note' }, ['shows, shuffled']), el('kbd', {}, ['T']))
 }
 function goThrough(): void {
   if (!alive || recording) return

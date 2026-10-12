@@ -51,7 +51,7 @@ npm run build
 | `/shows/` | Shows, opening on Clair de Lune |
 | `/shows/<work>/` | a show: the work's first take, with its own share card |
 | `/shows/<work>/<take>/` | one take of a show, with its own share card |
-| `/theater/` | the favourite shows (each in its starred take), shuffled, one after another; All shows in its panel plays every take instead, and is remembered. It joins the mode switch only once you have been there |
+| `/theater/` | every show is listed with a box, shuffled one after another over the ticked ones; the favourites (starred, each in its starred take) are ticked to begin with, and what is ticked is remembered. It joins the mode switch only once you have been there |
 | `/playground/` | Playground |
 | `/builder/` | the Builder (hidden) |
 
