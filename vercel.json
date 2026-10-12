@@ -6,5 +6,8 @@
     { "source": "/", "destination": "/machine/", "permanent": false },
     { "source": "/rube{/}?", "destination": "/machine/", "permanent": false },
     { "source": "/sandbox{/}?", "destination": "/explorations/", "permanent": false }
+  ],
+  "headers": [
+    { "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
   ]
 }

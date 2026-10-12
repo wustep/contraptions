@@ -3,7 +3,7 @@ import '../../../../src/ui/styles.css'
 import { downloadBlob } from '../../../../src/core/capture'
 import { makeRng } from '../../../../src/core/rng'
 import { randomSeed } from '../../../../src/core/seed'
-import { ICON, copyButton, createShell, el, field, icon, section } from '../../../../src/ui/shell'
+import { copyButton, createShell, el, field, playButton, section, setOn } from '../../../../src/ui/shell'
 import { createCatalog } from '../catalog'
 import { createStage } from '../engine'
 import { Show } from '../show'
@@ -852,7 +852,7 @@ const modeBtns = VIEW_MODES.map((m) => {
   modeSeg.append(b)
   return { m, b }
 })
-const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+const { node: play, set: showPaused } = playButton('space')
 play.addEventListener('click', () => setPaused(!paused))
 const rerollBtn = el('button', { title: 'Another seed: another palette, another map (R)' }, ['Reroll', el('kbd', {}, ['R'])])
 rerollBtn.addEventListener('click', reroll)
@@ -976,8 +976,6 @@ fileSec.append(storeWarn, el('div', { class: 'row' }, [exportBtn, importBtn, cop
 
 /* ------------------------------------------------------------------ sync */
 
-const playIcon = icon(ICON.play)
-const pauseIcon = icon(ICON.pause)
 
 /** A make button: its label, or Stop while it is one making. */
 function labelButton(b: HTMLButtonElement, what: Making | Making[], label: string, key?: string): void {
@@ -1036,14 +1034,14 @@ function sync(): void {
       return chip
     }),
   )
-  for (const { name, b } of railBtns) b.classList.toggle('on', world.rail === name)
-  for (const { name, b } of backdropBtns) b.classList.toggle('on', world.backdrops.includes(name))
+  for (const { name, b } of railBtns) setOn(b, world.rail === name)
+  for (const { name, b } of backdropBtns) setOn(b, world.backdrops.includes(name))
   castNote.textContent = world.borrow.length ? world.borrow.join(' · ') : 'none: the build’s own pieces alone'
   plainBtn.disabled = !build.world
   worldPane.refresh()
 
   const { provider } = settings
-  for (const { name, b } of providerBtns) b.classList.toggle('on', name === provider)
+  for (const { name, b } of providerBtns) setOn(b, name === provider)
   modelField.hidden = keyField.hidden = keyRow.hidden = provider === 'offline'
   if (provider === 'offline') say(genNote, `No key, no network. The prompt picks one of ${ARCHETYPES.length} mechanisms.`)
   else {
@@ -1064,11 +1062,10 @@ function sync(): void {
 
   const shown = shownMode()
   for (const { m, b } of modeBtns) {
-    b.classList.toggle('on', m === shown)
+    setOn(b, m === shown)
     b.disabled = m !== 'world' && !build.pieces.length
   }
-  play.replaceChildren(paused ? playIcon : pauseIcon)
-  play.classList.toggle('paused', paused)
+  showPaused(paused)
   seedNote.textContent = seed
   storeWarn.hidden = storeKept()
   machineLink.href = `/machine/?seed=${encodeURIComponent(seed)}&world=${encodeURIComponent(build.name)}`

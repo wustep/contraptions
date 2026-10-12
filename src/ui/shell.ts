@@ -167,6 +167,36 @@ export function section(root: HTMLElement, title: string, cls = ''): HTMLElement
 }
 
 /**
+ * A button's on/off, said twice: lit for the eye (`.on`), and pressed for a
+ * screen reader, which cannot see the light. For a button whose label stays
+ * the same either way; one that changes its words (Pin/Unpin) says it there.
+ */
+export function setOn(b: HTMLElement, on: boolean): void {
+  b.classList.toggle('on', on)
+  b.setAttribute('aria-pressed', String(on))
+}
+
+/**
+ * The transport's play button, the same in every mode. Its icon is what a
+ * press will do, and so is its name, so a screen reader hears "Play" on a
+ * paused piece and "Pause" on a running one. `key` is the mode's own key for
+ * it, in its tooltip. `set` is handed whether the piece is paused.
+ */
+export function playButton(key: string): { node: HTMLButtonElement; set(paused: boolean): void } {
+  const playIcon = icon(ICON.play)
+  const pauseIcon = icon(ICON.pause)
+  const node = el('button', { type: 'button', class: 'tbtn play', title: `Play / pause (${key})`, 'aria-label': 'Pause' }, [pauseIcon])
+  return {
+    node,
+    set(paused) {
+      node.replaceChildren(paused ? playIcon : pauseIcon)
+      node.classList.toggle('paused', paused)
+      node.setAttribute('aria-label', paused ? 'Play' : 'Pause')
+    },
+  }
+}
+
+/**
  * A one-hot row of buttons. Cheaper to reason about than a select for a dial
  * with three to five known stops, and it reads at a glance.
  */
@@ -185,7 +215,7 @@ export function segmented(
   return {
     node,
     set(current) {
-      for (const { v, b } of buttons) b.classList.toggle('on', v === current)
+      for (const { v, b } of buttons) setOn(b, v === current)
     },
   }
 }
@@ -621,6 +651,10 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
       document.body.classList.toggle('hide-panel', !open)
       syncHandle()
       hideTip()
+      // As in toggle: what has just left the screen gives up the keyboard. A phone puts the panel away as a show
+      // starts (`player.ts`); a Play pressed in it kept focus on a hidden button, which the next Space pressed again.
+      const focused = document.activeElement
+      if (!open && focused instanceof HTMLElement && scroll.contains(focused)) focused.blur()
     },
     holdHandle(on) {
       document.body.classList.toggle('handle-hold', on)

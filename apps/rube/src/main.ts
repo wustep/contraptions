@@ -2,7 +2,7 @@ import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
 import { registerMode } from '../../../src/ui/mode-host'
 import { modeFromPath } from '../../../src/ui/mode-path'
-import { ICON, copyButton, el, guardWheel, icon, section, seedCard, segmented, speedPicker, type Shell } from '../../../src/ui/shell'
+import { copyButton, el, guardWheel, playButton, section, seedCard, segmented, setOn, speedPicker, type Shell } from '../../../src/ui/shell'
 import { webmMime } from '../../../src/core/capture'
 import { EXPORT_SCALES, loadView, saveView } from '../../../src/ui/view'
 import { folderBuilds } from './builder/discover'
@@ -395,7 +395,7 @@ const endScrub = () => { scrubbing = false }
 window.addEventListener('pointerup', endScrub)
 // A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
 window.addEventListener('pointercancel', endScrub)
-const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+const { node: play, set: showPaused } = playButton('space')
 play.addEventListener('click', () => setPaused(!paused))
 // The same five stops as Explorations; the clock is continuous, so any rate is fine.
 const speedBox = speedPicker(setSpeed)
@@ -468,15 +468,12 @@ saveLoopBtn.addEventListener('click', () => {
 })
 exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, saveBtn, saveLoopBtn]))
 
-const playIcon = icon(ICON.play)
-const pauseIcon = icon(ICON.pause)
 
 function sync(): void {
   if (document.activeElement !== seedInput) seedInput.value = seed
-  play.replaceChildren(paused ? playIcon : pauseIcon)
-  play.classList.toggle('paused', paused)
+  showPaused(paused)
   speedBox.set(speed)
-  overviewBtn.classList.toggle('on', overview)
+  setOn(overviewBtn, overview)
   pinBtn.textContent = world ? 'Unpin' : 'Pin'
   pinBtn.classList.toggle('on', !!world)
   // The way back says where it goes, the same words in the panel and on the stage.
@@ -503,7 +500,7 @@ function sync(): void {
   // through pieces instead; the sheet has no world to jump between or scrub.
   loop.hidden = v !== 'show'
   buildsRow.hidden = v !== 'show' || !buildChips.length
-  for (const { w, b } of buildChips) b.classList.toggle('on', world === w.name)
+  for (const { w, b } of buildChips) setOn(b, world === w.name)
   jumps.hidden = v !== 'show'
   overviewBtn.hidden = v !== 'show'
   steps.hidden = v !== 'solo'
@@ -554,10 +551,11 @@ function tick(): void {
       ? `WebM of this world, cut to cut: ${u.journey.toFixed(1)}s at the current canvas size. Scale is for PNG only.`
       : 'WebM export needs a browser that can record the canvas.'
   }
-  if (!catalogOn && !scrubbing) {
-    const p = here.local / u.journey
-    scrub.value = String(Math.round(p * 1000))
-    scrub.style.setProperty('--p', `${p * 100}%`)
+  // Written only when the bar moves a step: a style written every frame is a style recalculated every frame.
+  const step = String(Math.round((here.local / u.journey) * 1000))
+  if (!catalogOn && !scrubbing && scrub.value !== step) {
+    scrub.value = step
+    scrub.style.setProperty('--p', `${Number(step) / 10}%`)
   }
   // The stage behind the canvas is this world's paper, so a resize never
   // flashes the panel's dark behind the picture.
@@ -571,6 +569,8 @@ raf = requestAnimationFrame(tick)
 
 /* ------------------------------------------------------------------ keys */
 
+/** Keys that turn something on or off, which a held key must not keep doing (`onKey`). */
+const HELD_ONCE = new Set([' ', 'o', 'c', 'p'])
 const onKey = (e: KeyboardEvent) => {
   if (!alive) return
   // Never shadow browser chrome (cmd+S, ctrl+R, ...).
@@ -580,6 +580,11 @@ const onKey = (e: KeyboardEvent) => {
   // focused button keeps only its activation keys, so the rest still work.
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
+  // A held toggle is one press: play, Overview, the catalog and the panel do not strobe. Steps (R, N, the arrows) repeat.
+  if (e.repeat && HELD_ONCE.has(e.key.toLowerCase())) {
+    if (e.key === ' ') e.preventDefault()
+    return
+  }
   // N / n are deliberate opposites (previous / next world). Caps Lock must
   // not silence every other key on the panel.
   if (e.key === 'N') {

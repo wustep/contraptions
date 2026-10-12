@@ -1,5 +1,5 @@
 import '../../../../src/ui/styles.css'
-import { ICON, el, guardWheel, icon, section, segmented, speedPicker, type Shell } from '../../../../src/ui/shell'
+import { ICON, el, guardWheel, icon, section, playButton, segmented, setOn, speedPicker, type Shell } from '../../../../src/ui/shell'
 import { createListbox } from '../../../../src/ui/listbox'
 import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
@@ -139,6 +139,13 @@ function loadOf(version: Version): Promise<Performance> {
   }
   return load
 }
+
+/** Under a host, a take that would not load is passed over after this long: long enough to read why. */
+const SKIP_AFTER = 4000
+/** How many takes in a row may fail before a host stops passing over them. */
+const SKIP_FAILED = 4
+let failedInARow = 0
+let skipTimer = 0
 
 /** The host's next take, readied in the background so the handover to it is not cold. */
 let warmTimer = 0
@@ -362,6 +369,7 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
     lastT = 0
     music.load(loaded.soundtrack ?? null)
     stage.set(loaded)
+    failedInARow = 0
     if (host?.upNext) warmNext()
   } catch (err) {
     if (!alive || mine !== generation) return
@@ -372,6 +380,14 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
     playerHost.classList.remove('yt-loading')
     console.error(err)
     failed = err instanceof Error ? err.message : String(err)
+    // Under a host nobody is choosing: the stage says it would not load, then the next one goes on, as it would have
+    // at the end. Not round and round a pool where nothing loads (offline): after a few, it waits for a reload.
+    if (host && ++failedInARow < SKIP_FAILED) {
+      window.clearTimeout(skipTimer)
+      skipTimer = window.setTimeout(() => {
+        if (alive && mine === generation) advance()
+      }, SKIP_AFTER)
+    }
   }
   loading = false
   sync()
@@ -508,7 +524,7 @@ const endScrub = () => { scrubbing = false }
 window.addEventListener('pointerup', endScrub)
 // A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
 window.addEventListener('pointercancel', endScrub)
-const playBtn = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+const { node: playBtn, set: showPaused } = playButton('space')
 playBtn.addEventListener('click', toggle)
 const speedBox = speedPicker(setSpeed)
 const musicBtn = el('button', { type: 'button', class: 'tbtn music', 'aria-label': 'Music' })
@@ -560,6 +576,7 @@ function toggleDialogue(): void {
     localStorage.setItem(DIALOGUE_KEY, dialogue ? '1' : '0')
   } catch {}
   perf?.dialogue?.(dialogue)
+  stage.repaint()
   sync()
   if (transport) renderWords(transport.now())
 }
@@ -667,8 +684,6 @@ videoBtn.addEventListener('click', () => {
 })
 exportSec.append(el('div', { class: 'row export-row frames' }, [sizeSeg.node, pngBtn, videoBtn]), exportNote)
 
-const playIcon = icon(ICON.play)
-const pauseIcon = icon(ICON.pause)
 const soundIcon = icon(ICON.sound)
 const mutedIcon = icon(ICON.muted)
 music.onChange(() => sync())
@@ -727,7 +742,7 @@ function sync(): void {
     takeRow.replaceChildren(...takeChips.map((c) => c.b))
   }
   for (const { version, b } of takeChips) {
-    b.classList.toggle('on', version === current)
+    setOn(b, version === current)
     b.disabled = busy
   }
   // Under the title, in the panel's own face: what this take is, and whose music. The title is not said again.
@@ -755,8 +770,7 @@ function sync(): void {
   transportSec.hidden = exportSec.hidden = works.length === 0
   // Theater is for watching: no export.
   if (host) exportSec.hidden = true
-  playBtn.replaceChildren(playing ? pauseIcon : playIcon)
-  playBtn.classList.toggle('paused', !playing)
+  showPaused(!playing)
   playBtn.disabled = restartBtn.disabled = scrub.disabled = !ready || busy
   cameraSeg.set(overview ? 0 : zoom ? 2 : 1)
   for (const b of cameraButtons) b.disabled = !ready || busy
@@ -809,12 +823,14 @@ function sync(): void {
   const waiting = stalled && !soundHeld
   stageNote.hidden = !current || !(loading || failed || waiting)
   stageNote.classList.toggle('bad', !!failed)
+  // Under a host a failed take is passed over (`SKIP_AFTER`), so there is nothing to press: it says what comes instead.
+  const passing = !!failed && !!host && failedInARow < SKIP_FAILED
   stageNoteText.textContent = failed
-    ? `${current?.title ?? 'This show'} would not load.`
+    ? `${current?.title ?? 'This show'} would not load.${passing ? ' On to the next…' : ''}`
     : loading
       ? `Loading ${current?.title ?? 'the show'}…`
       : 'Waiting for the music…'
-  retryBtn.hidden = !failed
+  retryBtn.hidden = !failed || passing
 
   // The stage's own play button: at the top, at the end, where the browser is waiting for a press,
   // or where a deep link is playing with the sound held — the panel may be hidden on a phone, so
@@ -971,6 +987,13 @@ let stallT = -1
 let stallSince = 0
 let stalled = false
 let raf = 0
+/** Played through: at the end, or, for a loop, round its seam (a seek resets `lastT`, so a jump back is not one). */
+function playedThrough(t: number): boolean {
+  if (!transport) return false
+  const through = transport.playing && (transport.loop ? t < lastT - transport.duration / 2 : t >= transport.duration)
+  lastT = t
+  return through
+}
 function tick(): void {
   if (!alive) return
   if (transport) {
@@ -986,10 +1009,7 @@ function tick(): void {
       stalled = nowStalled
       sync()
     }
-    // Played through: at the end, or, for a loop, round its seam (a seek resets `lastT`, so a jump back is not one).
-    const through = transport.playing && (transport.loop ? t < lastT - transport.duration / 2 : t >= transport.duration)
-    lastT = t
-    if (through && host) {
+    if (playedThrough(t) && host) {
       advance()
       raf = requestAnimationFrame(tick)
       return
@@ -1003,10 +1023,11 @@ function tick(): void {
       lastTime = text
       time.textContent = text
     }
-    if (!scrubbing) {
-      const p = t / transport.duration
-      scrub.value = String(Math.round(p * 1000))
-      scrub.style.setProperty('--p', `${p * 100}%`)
+    // Written only when the bar moves a step: a style written every frame is a style recalculated every frame.
+    const step = String(Math.round((t / transport.duration) * 1000))
+    if (!scrubbing && scrub.value !== step) {
+      scrub.value = step
+      scrub.style.setProperty('--p', `${Number(step) / 10}%`)
     }
     // Leaving the top hides the stage's play button, and coming back to it shows it.
     const wantBig = !recording && (soundHeld || (!transport.playing && (blocked || t <= 0 || (!transport.loop && t >= transport.duration))))
@@ -1018,8 +1039,19 @@ function tick(): void {
 }
 raf = requestAnimationFrame(tick)
 
+// A tab in the background draws no frames, so `tick` never sees a show end there, and Theater, which is meant to be
+// left on, stood silent after its first show until it was looked at again. Hidden, a slow timer watches for the end
+// instead (the music keeps its own time meanwhile, `youtube.ts`), and the next show goes on as it would have.
+const behind = host
+  ? window.setInterval(() => {
+      if (alive && document.hidden && transport && playedThrough(transport.now())) advance()
+    }, 500)
+  : 0
+
 /* ------------------------------------------------------------------ keys */
 
+/** Keys that turn something on or off (or leave for Theater), which a held key must not keep doing. */
+const HELD_ONCE = new Set([' ', 'p', 'm', 'c', 'd', 'o', 'z', 't'])
 const onKey = (e: KeyboardEvent) => {
   if (!alive) return
   // Never shadow browser chrome (cmd+S, ctrl+R, ...).
@@ -1029,6 +1061,12 @@ const onKey = (e: KeyboardEvent) => {
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
   // Letter keys are case-blind: Caps Lock must not silence P, M, C, D, O or Z.
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
+  // A held toggle is one press: holding space started and stopped the show and its music over and over. Steps (the
+  // arrows, [ and ], N) repeat.
+  if (e.repeat && HELD_ONCE.has(key)) {
+    if (key === ' ') e.preventDefault()
+    return
+  }
   if (key === 'p') {
     shell.toggle()
     return
@@ -1142,6 +1180,8 @@ if (import.meta.env.DEV) {
     alive = false
     besideFrame.disconnect()
     window.clearTimeout(warmTimer)
+    window.clearInterval(behind)
+    window.clearTimeout(skipTimer)
     releaseSound()
     shell.holdHandle(false)
     cancelAnimationFrame(raf)
@@ -1150,7 +1190,7 @@ if (import.meta.env.DEV) {
     window.removeEventListener('pointercancel', endScrub)
     window.removeEventListener('keydown', onKey)
     recording?.abort()
-    music.load(null)
+    music.destroy()
     stage.destroy()
     if (import.meta.env.DEV) delete (window as unknown as Record<string, unknown>).shows
   }

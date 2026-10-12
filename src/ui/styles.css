@@ -7,13 +7,18 @@
   --line-soft: #23252d;
   --text: #e8e8ec;
   --dim: #8e909c;
-  --faint: #62646f;
+  /* Small print (the byline, the clock, a credit) at 10-11px: 4.6:1 on the
+     panel, the least AA asks of text that size. */
+  --faint: #7f818d;
   --accent: #f0b429;
   --accent-soft: rgba(240, 180, 41, 0.14);
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
   /* The face of a show's credits (`.stage-words`), and of its title in the panel. */
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-  --panel-w: 320px;
+  /* A phone on its side is wider than the stacked layout's 820px, so the
+     panel stands at its right edge, where the notch may be: it grows by the
+     inset, and its controls keep their width inside it (`.panel-scroll`). */
+  --panel-w: calc(320px + env(safe-area-inset-right, 0px));
   /* The panel's motion, from one press of its handle (or P):
 
          0ms  the panel's track opens or closes; the stage gives up its room with it
@@ -85,6 +90,9 @@ body {
    the slide is seen. Bare closes it the same way. */
 body.hide-panel,
 body.bare { grid-template-columns: minmax(0, 1fr) 0px; }
+/* With the panel away its handle is on the window's edge: clear of a phone's
+   notch, held on its side. */
+body.hide-panel .panel-handle { margin-right: env(safe-area-inset-right, 0px); }
 
 /* The panel is a frame that slides, with a column inside it that scrolls.
    The frame carries the handle on its edge, outside the column's clip. */
@@ -236,7 +244,7 @@ body.bare .stage-note { display: none; }
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: manipulation;
-  padding: 13px 14px 10px;
+  padding: 13px calc(14px + env(safe-area-inset-right, 0px)) 10px 14px;
   display: flex;
   flex-direction: column;
   gap: 9px;
@@ -563,7 +571,11 @@ input[type='range']:hover::-webkit-slider-thumb,
 input[type='range']:focus-visible::-webkit-slider-thumb { background: var(--accent); }
 input[type='range']:hover::-moz-range-thumb,
 input[type='range']:focus-visible::-moz-range-thumb { background: var(--accent); }
+/* A thumb turning the accent is no focus cue on the scrub bar, whose thumb is
+   the accent already: a ring round the thumb, on every slider, says it. */
 input[type='range']:focus-visible { outline: none; }
+input[type='range']:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--panel), 0 0 0 4px var(--accent); }
+input[type='range']:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--panel), 0 0 0 4px var(--accent); }
 
 /* The scrub bar carries a progress fill, painted from --p by the panel. */
 input[type='range'].scrub { height: 24px; }
@@ -780,7 +792,8 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   animation: stage-note-in 200ms ease-out 450ms both;
 }
-.stage-note.bad { color: #f0a08a; border-color: #5a3c34; padding: 5px 5px 5px 16px; animation-delay: 0s; }
+.stage-note.bad { color: #f0a08a; border-color: #5a3c34; animation-delay: 0s; }
+.stage-note.bad:has(button:not([hidden])) { padding: 5px 5px 5px 16px; }
 .stage-note button { flex: none; padding: 4px 11px; border-radius: 999px; }
 @keyframes stage-note-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
@@ -969,10 +982,18 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
    is the way to put it on now: a play mark comes up on it under the pointer.
    The one on the stage is lit. */
 .pool { display: flex; flex-direction: column; gap: 1px; background: var(--sunken); border: 1px solid var(--line); border-radius: 6px; padding: 3px; }
-.pool-row { display: flex; align-items: center; gap: 2px; padding: 0 0 0 6px; border-radius: 4px; font-size: 12px; color: var(--dim); }
+.pool-row { display: flex; align-items: stretch; gap: 2px; border-radius: 4px; font-size: 12px; color: var(--dim); }
 .pool-row:hover { background: var(--raised); color: var(--text); }
-.pool-row input { margin: 0 4px 0 0; accent-color: var(--accent); cursor: pointer; flex: none; }
-.pool-row input:disabled { cursor: default; }
+/* The box is small; its cell is what takes the press, the row's full height
+   and a finger's width on a touch screen, so a near miss ticks it rather than
+   putting the show on. */
+.pool-tick { display: flex; align-items: center; flex: none; padding: 0 4px 0 6px; cursor: pointer; }
+.pool-tick:has(input:disabled) { cursor: default; }
+.pool-row input { margin: 0; accent-color: var(--accent); cursor: inherit; flex: none; }
+@media (pointer: coarse) {
+  .pool-tick { min-width: 40px; justify-content: center; padding: 0; }
+  .pool-play { min-height: 40px; }
+}
 .pool-play {
   flex: 1;
   min-width: 0;
