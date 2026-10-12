@@ -512,10 +512,11 @@ function tick(): void {
       saveLoopBtn.title = canWebm ? 'WebM of this map, cut to cut, at the current canvas size. Scale is for PNG only.' : 'WebM export needs a browser that can record the canvas.'
     }
   }
-  if (u && here && !scrubbing) {
-    const p = here.local / u.journey
-    scrub.value = String(Math.round(p * 1000))
-    scrub.style.setProperty('--p', `${p * 100}%`)
+  // Written only when the bar moves a step: a style written every frame is a style recalculated every frame.
+  const step = u && here ? String(Math.round((here.local / u.journey) * 1000)) : null
+  if (step !== null && !scrubbing && scrub.value !== step) {
+    scrub.value = step
+    scrub.style.setProperty('--p', `${Number(step) / 10}%`)
   }
   const paper = u?.theme.bg ?? sheetWorlds()[0]?.themes[0].bg
   if (paper && paper !== lastPaper) {

@@ -551,10 +551,11 @@ function tick(): void {
       ? `WebM of this world, cut to cut: ${u.journey.toFixed(1)}s at the current canvas size. Scale is for PNG only.`
       : 'WebM export needs a browser that can record the canvas.'
   }
-  if (!catalogOn && !scrubbing) {
-    const p = here.local / u.journey
-    scrub.value = String(Math.round(p * 1000))
-    scrub.style.setProperty('--p', `${p * 100}%`)
+  // Written only when the bar moves a step: a style written every frame is a style recalculated every frame.
+  const step = String(Math.round((here.local / u.journey) * 1000))
+  if (!catalogOn && !scrubbing && scrub.value !== step) {
+    scrub.value = step
+    scrub.style.setProperty('--p', `${Number(step) / 10}%`)
   }
   // The stage behind the canvas is this world's paper, so a resize never
   // flashes the panel's dark behind the picture.

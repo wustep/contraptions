@@ -123,6 +123,8 @@ export interface ShowStage {
    * Overview live has none.
    */
   saveVideo(filename: string, size: FrameSize, speed: number, monitor: boolean, signal: AbortSignal, progress?: (done: number) => void): Promise<boolean>
+  /** Paint the live frame again though its time, camera and size are the same: the show changed what it draws (dialogue). */
+  repaint(): void
   /** Dev: stop (or restart) the live stage's own loop, so a profiler can paint frames itself (`paintAt`). */
   hold(on: boolean): void
   /** Dev: one frame of the live stage at `t`, painted now. */
@@ -138,6 +140,10 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
   let release = () => {}
   let lastPaper = ''
   let liveP: p5 | null = null
+  /** What the live canvas last painted (`p.draw`), and a count `repaint` turns to paint it again. */
+  let paintedKey = ''
+  let paintedPerf: Performance | null = null
+  let touched = 0
 
   const live = new p5((p: p5) => {
     liveP = p
@@ -146,11 +152,19 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
       refuseType(p)
     }
     p.draw = () => {
+      // A frame is the show at its time, by this camera, at this size: no piece reads the wall clock. So a stage
+      // standing still (paused, waiting for a press or for the music, or empty) is not painted again sixty times a
+      // second; it is painted when one of those changes, when told to (`repaint`), and once a second regardless.
+      const t = clock.time()
+      const key = perf ? `${t}|${overview}|${zoom}|${p.width}|${p.height}|${p.pixelDensity()}|${touched}|${Math.floor(performance.now() / 1000)}` : `none|${touched}`
+      if (key === paintedKey && perf === paintedPerf) return
+      paintedKey = key
+      paintedPerf = perf
       if (!perf) {
         p.clear()
         return
       }
-      paintShow(p, perf, clock.time(), overview, zoom)
+      paintShow(p, perf, t, overview, zoom)
       // The stage behind the canvas is the world's paper, so a resize never flashes the panel's dark.
       const paper = perf.show.at(Math.min(perf.duration, Math.max(0, clock.time()))).universe.theme.bg
       if (paper !== lastPaper) {
@@ -256,6 +270,10 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
     },
     paintAt(t) {
       if (perf && liveP) paintShow(liveP, perf, t, overview, zoom)
+      touched++
+    },
+    repaint() {
+      touched++
     },
     destroy() {
       release()

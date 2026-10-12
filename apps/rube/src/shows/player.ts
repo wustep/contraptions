@@ -576,6 +576,7 @@ function toggleDialogue(): void {
     localStorage.setItem(DIALOGUE_KEY, dialogue ? '1' : '0')
   } catch {}
   perf?.dialogue?.(dialogue)
+  stage.repaint()
   sync()
   if (transport) renderWords(transport.now())
 }
@@ -1022,10 +1023,11 @@ function tick(): void {
       lastTime = text
       time.textContent = text
     }
-    if (!scrubbing) {
-      const p = t / transport.duration
-      scrub.value = String(Math.round(p * 1000))
-      scrub.style.setProperty('--p', `${p * 100}%`)
+    // Written only when the bar moves a step: a style written every frame is a style recalculated every frame.
+    const step = String(Math.round((t / transport.duration) * 1000))
+    if (!scrubbing && scrub.value !== step) {
+      scrub.value = step
+      scrub.style.setProperty('--p', `${Number(step) / 10}%`)
     }
     // Leaving the top hides the stage's play button, and coming back to it shows it.
     const wantBig = !recording && (soundHeld || (!transport.playing && (blocked || t <= 0 || (!transport.loop && t >= transport.duration))))
