@@ -1050,6 +1050,8 @@ const behind = host
 
 /* ------------------------------------------------------------------ keys */
 
+/** Keys that turn something on or off (or leave for Theater), which a held key must not keep doing. */
+const HELD_ONCE = new Set([' ', 'p', 'm', 'c', 'd', 'o', 'z', 't'])
 const onKey = (e: KeyboardEvent) => {
   if (!alive) return
   // Never shadow browser chrome (cmd+S, ctrl+R, ...).
@@ -1059,6 +1061,12 @@ const onKey = (e: KeyboardEvent) => {
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
   // Letter keys are case-blind: Caps Lock must not silence P, M, C, D, O or Z.
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
+  // A held toggle is one press: holding space started and stopped the show and its music over and over. Steps (the
+  // arrows, [ and ], N) repeat.
+  if (e.repeat && HELD_ONCE.has(key)) {
+    if (key === ' ') e.preventDefault()
+    return
+  }
   if (key === 'p') {
     shell.toggle()
     return

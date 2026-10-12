@@ -529,12 +529,19 @@ raf = requestAnimationFrame(tick)
 
 /* ------------------------------------------------------------------ keys */
 
+/** Keys that turn something on or off, which a held key must not keep doing (`onKey`). */
+const HELD_ONCE = new Set([' ', 'o', 'c', 'p'])
 const onKey = (e: KeyboardEvent) => {
   if (!alive) return
   if (e.metaKey || e.ctrlKey || e.altKey) return
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
+  // A held toggle is one press: play, Overview, the catalog and the panel do not strobe. Steps (R, N, the arrows) repeat.
+  if (e.repeat && HELD_ONCE.has(e.key.toLowerCase())) {
+    if (e.key === ' ') e.preventDefault()
+    return
+  }
   // N / n are deliberate opposites (previous / next map). Caps Lock must
   // not silence every other key on the panel.
   if (e.key === 'N') {

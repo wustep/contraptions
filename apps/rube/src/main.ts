@@ -569,6 +569,8 @@ raf = requestAnimationFrame(tick)
 
 /* ------------------------------------------------------------------ keys */
 
+/** Keys that turn something on or off, which a held key must not keep doing (`onKey`). */
+const HELD_ONCE = new Set([' ', 'o', 'c', 'p'])
 const onKey = (e: KeyboardEvent) => {
   if (!alive) return
   // Never shadow browser chrome (cmd+S, ctrl+R, ...).
@@ -578,6 +580,11 @@ const onKey = (e: KeyboardEvent) => {
   // focused button keeps only its activation keys, so the rest still work.
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
+  // A held toggle is one press: play, Overview, the catalog and the panel do not strobe. Steps (R, N, the arrows) repeat.
+  if (e.repeat && HELD_ONCE.has(e.key.toLowerCase())) {
+    if (e.key === ' ') e.preventDefault()
+    return
+  }
   // N / n are deliberate opposites (previous / next world). Caps Lock must
   // not silence every other key on the panel.
   if (e.key === 'N') {
