@@ -825,12 +825,14 @@ function sync(): void {
   const waiting = stalled && !soundHeld
   stageNote.hidden = !current || !(loading || failed || waiting)
   stageNote.classList.toggle('bad', !!failed)
+  // Under a host a failed take is passed over (`SKIP_AFTER`), so there is nothing to press: it says what comes instead.
+  const passing = !!failed && !!host && failedInARow < SKIP_FAILED
   stageNoteText.textContent = failed
-    ? `${current?.title ?? 'This show'} would not load.`
+    ? `${current?.title ?? 'This show'} would not load.${passing ? ' On to the next…' : ''}`
     : loading
       ? `Loading ${current?.title ?? 'the show'}…`
       : 'Waiting for the music…'
-  retryBtn.hidden = !failed
+  retryBtn.hidden = !failed || passing
 
   // The stage's own play button: at the top, at the end, where the browser is waiting for a press,
   // or where a deep link is playing with the sound held — the panel may be hidden on a phone, so
