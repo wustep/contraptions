@@ -335,12 +335,12 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
   }
   releaseSound()
   music.load(null)
+  stage.set(null)
   // Hold YouTube's box open, at its final size and shimmering, while the show loads, so the card does not jump
   // when the music turns out to be YouTube's (`youtube.css`).
   const tube = musicPrefer === 'youtube' && musicOnYouTube(version.work)
   playerHost.hidden = !tube
   playerHost.classList.toggle('yt-loading', tube)
-  stage.set(null)
   perf = null
   transport = null
   current = version

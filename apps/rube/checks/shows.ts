@@ -110,7 +110,7 @@ async function main(): Promise<void> {
     const ytCss = readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.css'), 'utf8')
     const playerSrc = readFileSync(join(process.cwd(), 'apps/rube/src/shows/player.ts'), 'utf8')
     check('YouTube\'s box is held open at its size while a show loads, and shimmers until its players are ready',
-      /playerHost\.hidden = !tube\s*\n\s*playerHost\.classList\.toggle\('yt-loading', tube\)\s*\n\s*stage\.set\(null\)/.test(playerSrc) &&
+      /stage\.set\(null\)[\s\S]{0,300}?playerHost\.hidden = !tube\s*\n\s*playerHost\.classList\.toggle\('yt-loading', tube\)\s*\n\s*perf = null/.test(playerSrc) &&
       /\.yt-host\.yt-loading::before \{[^}]*animation: yt-shimmer/.test(ytCss) && /aspect-ratio: 16 \/ 9/.test(ytCss))
     check('the shimmer stands still for reduced motion', /prefers-reduced-motion: reduce\)[^@]*\.yt-host\.yt-loading::before \{ animation: none; \}/.test(ytCss))
   }
