@@ -162,6 +162,10 @@ export function wireChain(chain: Instance[], rng: Rng): Wire[] {
     inst.phase = Math.round((inst.contraption.fireAt ?? 0) * inst.period - fireFrame)
   })
 
+  // One bead runs the whole chain, so it keeps one colour: the source's.
+  // Taking each sender's colour (as this did) repainted the bead at every
+  // junction it passed through.
+  const color = colorOf(chain[0])
   const wires: Wire[] = []
   for (let k = 0; k < chain.length - 1; k++) {
     wires.push({
@@ -169,7 +173,7 @@ export function wireChain(chain: Instance[], rng: Rng): Wire[] {
       to: chain[k + 1].cell,
       start: chain[k].fireFrame,
       end: chain[k].fireFrame + LINK_DELAY,
-      color: colorOf(chain[k]),
+      color,
       last: k === chain.length - 2,
     })
   }

@@ -16,6 +16,7 @@ import { makeRng } from '../src/core/rng'
 import { parseOptions, rollOptions, serializeOptions } from '../src/core/seed'
 import { themeByName } from '../src/core/themes'
 import { registry } from '../src/contraptions'
+import { flip } from '../src/contraptions/flip'
 import type { Contraption, DrawCtx, Instance } from '../src/core/types'
 import { LINK_DELAY } from '../src/core/wiring'
 import { portsCatalog } from '../src/worlds/ports/build'
@@ -23,7 +24,7 @@ import { portMachines, STEADY } from '../src/worlds/ports/machines'
 import type { Link } from '../src/worlds/ports/types'
 import { CASCADE } from '../src/worlds/goldberg/cascade'
 import { carCycle } from '../src/worlds/goldberg/elevator'
-import type { LaneCell } from '../src/worlds/goldberg/laneworld'
+import { riderColor, tokenColor, type LaneCell } from '../src/worlds/goldberg/laneworld'
 import { WORKSHOP } from '../src/worlds/goldberg/workshop'
 import { tracksCatalog } from '../src/worlds/tracks/build'
 import { reactors } from '../src/worlds/tracks/reactors'
@@ -916,6 +917,90 @@ function runDraw(name: string, state: unknown, draw: (p: p5, u: number) => void)
     return
   }
   check(`draw ${name}`, snapshot(state) === before)
+}
+
+
+/**
+ * Colour continuity. A thing that moves keeps its colour: a bead runs a whole
+ * chain in one colour, a token keeps its colour from feeder to sink, and a
+ * card only changes face while it is edge-on. Each of these once popped to a
+ * different colour mid-motion.
+ */
+console.log('\ncolour continuity')
+{
+  const beadErrors: string[] = []
+  for (const mode of ['classic', 'circus'] as const) {
+    for (const seed of ['chains', 'amber-flywheel-812', 'lazy-axle-404']) {
+      const comp = build({ ...defaultOptions, seed, mode, res: 14, chains: 1 }, 900)
+      for (const w of comp.wires) {
+        const prev = comp.wires.find((o) => o.to === w.from)
+        if (prev && prev.color !== w.color) beadErrors.push(`${mode}/${seed}: ${prev.color} -> ${w.color}`)
+      }
+    }
+  }
+  check('a chain bead keeps one colour from source to sink', beadErrors.length === 0, beadErrors.slice(0, 2).join(' | '))
+
+  const tokenErrors: string[] = []
+  const carErrors: string[] = []
+  for (const mode of ['cascade', 'workshop'] as const) {
+    for (const seed of ['first-look', 'amber-flywheel-812', 'brass-cam-101', 'lazy-axle-404']) {
+      const comp = build({ ...defaultOptions, seed, mode, chains: 0.6 }, 900)
+      const run = comp.lanes
+      if (!run) continue
+      const slots = Math.round(1 / run.emit)
+      if (run.colors.length !== slots) tokenErrors.push(`${mode}/${seed}: ${run.colors.length} colours for ${slots} slots`)
+      // Walk every frame: the token `j` emits old now is `j + 1` emits old one
+      // emit later (or, across a let-go, the same token one frame on).
+      for (let f = 0; f < LOOP; f++) {
+        const u = f / LOOP
+        const v = (f + 1) / LOOP
+        const crossed = Math.floor(v / run.emit + 1e-9) !== Math.floor(u / run.emit + 1e-9)
+        for (let j = 0; j < run.tokens; j++) {
+          const now = tokenColor(run, u, j)
+          const next = tokenColor(run, v % 1, crossed ? j + 1 : j)
+          if (now !== next) tokenErrors.push(`${mode}/${seed}: token ${j} at f${f}`)
+        }
+        for (const stack of run.stacks) {
+          // A car changes colour only when a token boards it.
+          const a = riderColor(run, u, stack)
+          const b = riderColor(run, v % 1, stack)
+          const boards = Math.floor((v - stack.board) / run.emit + 1e-9) !== Math.floor((u - stack.board) / run.emit + 1e-9)
+          if (a !== b && !boards) carErrors.push(`${mode}/${seed}: car at f${f}`)
+        }
+      }
+    }
+  }
+  check('a token keeps its colour for its whole journey', tokenErrors.length === 0, tokenErrors.slice(0, 2).join(' | '))
+  check('an elevator car changes colour only as a token boards', carErrors.length === 0, carErrors.slice(0, 2).join(' | '))
+
+  // Record the card's fill and width at every frame of the flip.
+  const state = flip.setup({
+    rng: makeRng('flip-check'),
+    size: 60,
+    w: 60,
+    h: 60,
+    theme: drawTheme,
+    cell: { x: 0, y: 0, size: 60, w: 60, h: 60, col: 0, row: 0, index: 0, depth: 0 },
+    color: drawTheme.colors[0],
+  })
+  const faces: { fill: string; w: number }[] = []
+  const period = flip.period ?? LOOP
+  for (let f = 0; f <= period; f++) {
+    let fill = ''
+    let last = { fill: '', w: 0 }
+    const rec = new Proxy(stubP5() as unknown as Record<string, unknown>, {
+      get(target, prop) {
+        if (prop === 'fill') return (c: string) => ((fill = c), rec)
+        if (prop === 'rect') return (_x: number, _y: number, w: number) => ((last = { fill, w }), rec)
+        return target[prop as string]
+      },
+    }) as unknown as p5
+    flip.draw(rec, state, { ...drawCtx(f / period, 60, 60, 60), t: f })
+    faces.push(last)
+  }
+  const card = Math.max(...faces.map((c) => c.w))
+  const pops = faces.filter((c, i) => i > 0 && c.fill !== faces[i - 1].fill && Math.max(c.w, faces[i - 1].w) > card * 0.15)
+  check('flip changes face only while edge-on', pops.length === 0, `${pops.length} face changes on an open card`)
 }
 
 console.log('\nlistbox')
