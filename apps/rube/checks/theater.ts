@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { modeFromPath } from '../../../src/ui/mode-path'
 import { HIDDEN_LINKS, MODE_LINKS, tabOf } from '../../../src/ui/shell'
 import { createPlaylist } from '../src/shows/playlist'
-import type { Work } from '../src/shows/registry'
+import { favoriteTakes, favorites, type Work } from '../src/shows/registry'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 
@@ -105,5 +105,22 @@ export function checkTheater(check: Check, works: Work[]): void {
     list.play('b')
     const round = [list.next(), list.next()]
     check('a take put on out of turn has had its turn this round', !round.includes('b') && new Set(round).size === 2, round.join(','))
+  }
+
+  console.log('\ntheater: favourites by default')
+  {
+    const favs = favoriteTakes(works)
+    const ids = favs.map((v) => `${v.work}/${v.take}`)
+    check('one take for each favourite work, in rank order', favs.length > 0 && favs.map((v) => v.work).join() === favorites(works).map((w) => w.work).join(), ids.join(', '))
+    check('a favourite work plays its starred take, where one is starred', favorites(works).every((w) => {
+      const starred = w.versions.find((v) => v.favorite)
+      return !starred || ids.includes(`${w.work}/${starred.take}`)
+    }))
+    const epilogue = works.find((w) => w.work === 'la-la-land')
+    check('Epilogue plays its Opus 5.5 take, not Fable\'s', !epilogue || (ids.includes('la-la-land/opus5-5') && !ids.some((id) => id.startsWith('la-la-land/') && id !== 'la-la-land/opus5-5')), ids.filter((id) => id.startsWith('la-la-land/')).join())
+    check('every favourite take is a shipped take', ids.every((id) => takes.includes(id)))
+    const theater = readFileSync(join(process.cwd(), 'apps/rube/src/shows/theater.ts'), 'utf8')
+    check('Theater draws from the favourites unless All shows was chosen', /localStorage\.getItem\(SET_STORE\) === 'all' \|\| !favoriteIds\.size \? 'all' : 'favorites'/.test(theater) && /favoriteTakes\(works\)/.test(theater))
+    check('the choice is one click away and remembered', /segmented\(\[0, 1\], \(v\) => \(v === 0 \? 'Favourites' : 'All shows'\)/.test(theater) && /writeSet\(set\)/.test(theater))
   }
 }

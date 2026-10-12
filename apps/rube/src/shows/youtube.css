@@ -12,6 +12,35 @@
   overflow: hidden;
   background: #000;
 }
+/* While the players load: the box is already its final size (the player reserves it before the show's music is
+   known, `player.ts`), with a quiet shimmer in it, and the players fade in over it once every one is ready. */
+.yt-host::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.055) 50%, transparent 70%) var(--sunken, #121318);
+  background-size: 250% 100%;
+  border: 1px solid var(--line, #2c2e37);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.yt-host.yt-loading::before {
+  opacity: 1;
+  animation: yt-shimmer 1.6s linear infinite;
+}
+.yt-host.yt-loading .yt-deck { opacity: 0; }
+@keyframes yt-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -150% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* A still placeholder: no sweep, and the players come in without a fade. */
+  .yt-host.yt-loading::before { animation: none; }
+  .yt-host::before, .yt-deck { transition: none; }
+}
 .yt-host[hidden] { display: none; }
 .yt-deck {
   position: absolute;

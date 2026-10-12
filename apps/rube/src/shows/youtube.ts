@@ -242,6 +242,8 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
   const set = (next: SoundtrackState) => {
     if (next === status) return
     status = next
+    // The shimmer stands until every player is ready (or none will be); then the players fade in over it.
+    host.classList.toggle('yt-loading', next === 'loading')
     if (next !== 'loading') {
       const now = waiting
       waiting = []
@@ -492,10 +494,12 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       shown = 0
       host.hidden = !spec?.youtube?.length
       if (!spec?.youtube?.length) {
+        host.classList.remove('yt-loading')
         set('none')
         return
       }
       status = 'loading'
+      host.classList.add('yt-loading')
       changed()
       decks = spec.youtube.map((c) => {
         const box = document.createElement('div')

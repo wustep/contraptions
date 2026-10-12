@@ -1,11 +1,11 @@
 import { registerMode } from '../../../../src/ui/mode-host'
-import { ICON, el, icon, section, type Shell } from '../../../../src/ui/shell'
+import { ICON, el, icon, section, segmented, type Shell } from '../../../../src/ui/shell'
 import { start, works } from './player'
 import { createPlaylist } from './playlist'
-import { currentTake, SECTIONS, sectionOf, type Version } from './registry'
+import { currentTake, favoriteTakes, SECTIONS, sectionOf, type Version } from './registry'
 
 /**
- * Theater: every show, one after another, for leaving on. It is the Shows
+ * Theater: the favourites, one after another, for leaving on. It is the Shows
  * player (`player.ts`) with the choosing taken over: the running order is
  * every take in the pool, shuffled, each once before any comes round again
  * (`playlist.ts`), and a show that plays through puts the next one on. The
@@ -22,15 +22,50 @@ import { currentTake, SECTIONS, sectionOf, type Version } from './registry'
  * `/theater/?show=<work>&take=<take>` opens on that take, and the shuffle
  * carries on from there.
  *
+ * What it draws from is a choice at the top of the panel: Favourites (the
+ * default: each favourite work's starred take, `favoriteTakes`) or All shows
+ * (every take). The choice is kept in this browser, as the pool is.
+ *
  * Fullscreen is the shell's, as in every mode (`shell.ts`).
  */
 
 /** The takes left out of the pool, kept in this browser: a list of `work/take`. */
 const OFF_STORE = 'contraptions:theater:off'
+/** Which shows Theater draws from, kept in this browser: `favorites` (the default) or `all`. */
+const SET_STORE = 'contraptions:theater:set'
+type ShowSet = 'favorites' | 'all'
 
 const idOf = (v: Version): string => `${v.work}/${v.take}`
 const takes = works.flatMap((w) => w.versions)
 const byId = new Map(takes.map((v) => [idOf(v), v]))
+const favoriteIds = new Set(favoriteTakes(works).map(idOf))
+
+function readSet(): ShowSet {
+  try {
+    // No favourites (a fork with none starred) would leave nothing to choose: every show, then.
+    return localStorage.getItem(SET_STORE) === 'all' || !favoriteIds.size ? 'all' : 'favorites'
+  } catch {
+    return 'favorites'
+  }
+}
+
+function writeSet(set: ShowSet): void {
+  try {
+    localStorage.setItem(SET_STORE, set)
+  } catch {
+    // Best effort, as the pool.
+  }
+}
+
+/** The takes a set draws from, before any are left out. */
+const candidatesOf = (set: ShowSet): string[] => takes.map(idOf).filter((id) => set === 'all' || favoriteIds.has(id))
+
+/** The running order's pool: the set, less what is left out. Never empty: with all of it left out, all of it. */
+function poolOf(set: ShowSet, off: Set<string>): string[] {
+  const candidates = candidatesOf(set)
+  const pool = candidates.filter((id) => !off.has(id))
+  return pool.length ? pool : candidates
+}
 
 /** A take's name in the list: the work, and the take where the work has more than one. */
 function nameOf(v: Version): string {
@@ -63,7 +98,10 @@ function writeOff(off: Set<string>): void {
 
 function mount(shell: Shell): () => void {
   const off = readOff()
-  const playlist = createPlaylist(takes.map(idOf).filter((id) => !off.has(id)))
+  let set = readSet()
+  const playlist = createPlaylist(poolOf(set, off))
+  let setSeg: { node: HTMLElement; set(current: number): void } | null = null
+  let groups: { head: HTMLElement; ids: string[] }[] = []
 
   let nextName: HTMLElement | null = null
   let count: HTMLElement | null = null
@@ -72,9 +110,14 @@ function mount(shell: Shell): () => void {
   function sync(): void {
     const up = playlist.peek()
     if (nextName) nextName.textContent = up ? nameOf(byId.get(up)!) : '—'
-    if (count) count.textContent = `${playlist.pool.length} of ${takes.length}`
+    const candidates = candidatesOf(set)
+    if (count) count.textContent = `${playlist.pool.length} of ${candidates.length}`
+    setSeg?.set(set === 'favorites' ? 0 : 1)
+    const shown = new Set(candidates)
+    for (const { head, ids } of groups) head.parentElement!.hidden = !ids.some((id) => shown.has(id))
     for (const { id, box, row } of rows) {
-      box.checked = !off.has(id)
+      row.hidden = !shown.has(id)
+      box.checked = playlist.pool.includes(id)
       // The last one in stays in: an empty pool has nothing to play.
       box.disabled = box.checked && playlist.pool.length === 1
       row.classList.toggle('on', id === playlist.current)
@@ -85,7 +128,16 @@ function mount(shell: Shell): () => void {
     if (on) off.delete(id)
     else off.add(id)
     writeOff(off)
-    playlist.setPool(takes.map(idOf).filter((t) => !off.has(t)))
+    playlist.setPool(poolOf(set, off))
+    sync()
+  }
+
+  function setSet(next: ShowSet): void {
+    if (next === set) return
+    set = next
+    writeSet(set)
+    // The show on keeps playing; the running order is drawn from the new set from the next one on.
+    playlist.setPool(poolOf(set, off))
     sync()
   }
 
@@ -120,6 +172,10 @@ function mount(shell: Shell): () => void {
       const nextBtn = el('button', { type: 'button', class: 'chip', title: 'Skip to the next show (N)' }, [icon(ICON.next), 'Next', el('kbd', {}, ['N'])])
       nextBtn.addEventListener('click', skip)
       const upNext = el('div', { class: 'row up-next' }, [el('div', { class: 'readout' }, ['Up next', el('br'), nextName]), nextBtn])
+      // Favourites first and by default; All shows is one click away and is remembered.
+      setSeg = segmented([0, 1], (v) => (v === 0 ? 'Favourites' : 'All shows'), (v) => setSet(v === 0 ? 'favorites' : 'all'))
+      setSeg.node.setAttribute('aria-label', 'Which shows Theater plays')
+      setSeg.node.classList.add('theater-set')
       const list = el('div', { class: 'pool', role: 'group', 'aria-label': 'Shows in the running order' })
       // On the picker's shelves (Machine, Movies, Ambient), and by title on each, as it reads: a work's folder is
       // not always its title. Within a work, keep the registry's take order so the preferred take leads here too.
@@ -135,6 +191,7 @@ function mount(shell: Shell): () => void {
         const head = el('div', { class: 'pool-group-head', id: `pool-${shelf.toLowerCase()}` }, [shelf])
         const group = el('div', { class: 'pool-group', role: 'group', 'aria-labelledby': head.id }, [head])
         list.append(group)
+        groups.push({ head, ids: on.map(idOf) })
         return on.map((v) => {
           const id = idOf(v)
           // The box says whether it is in the running order; the name puts it on now, in or out.
@@ -150,14 +207,16 @@ function mount(shell: Shell): () => void {
           return { id, box, row }
         })
       })
-      sec.append(upNext, list)
+      sec.append(setSeg.node, upNext, list)
       sync()
     },
   })
   return () => {
     stop()
     nextName = count = null
+    setSeg = null
     rows = []
+    groups = []
   }
 }
 

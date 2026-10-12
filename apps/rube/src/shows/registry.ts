@@ -331,6 +331,15 @@ const SHELVED: Record<string, Section> = {
 }
 export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
 
+/**
+ * Works whose music is the site's own recording (public domain), not a YouTube upload. Every other work plays its
+ * music through YouTube's player, so the Show card keeps the player's box open while its show loads, rather than
+ * opening it once the music is known (`player.ts`). `check:shows` holds this to what each take actually loads.
+ */
+const OWN_RECORDINGS = new Set(['clair-de-lune', 'premiere-arabesque', 'bolero', 'gymnopedie'])
+/** Whether a work's music comes from YouTube's player, known before its show loads. */
+export const musicOnYouTube = (work: string): boolean => !OWN_RECORDINGS.has(work)
+
 /** The favourite works, by rank. They are starred, pinned to the top of their shelf, and the Shows tab opens the first. */
 const FAVORITES: Record<string, number> = {
   interstellar: 1,
@@ -433,6 +442,18 @@ export function pickVersion(works: Work[], work: string | null, take: string | n
     w.versions[0])
   const named = take && currentTake(w.work, take)
   return w.versions.find((v) => v.take === named) ?? fallback ?? null
+}
+
+/**
+ * The favourite takes, by their work's rank: each favourite work's starred take (`favorite: true`), or, where none
+ * of its takes is starred, the take a link to the work opens (`pickVersion`). Epilogue is its Opus 5.5 take, not
+ * Fable's, because that is the one starred. Theater's default running order.
+ */
+export function favoriteTakes(works: Work[]): Version[] {
+  return favorites(works).flatMap((w) => {
+    const v = w.versions.find((o) => o.favorite) ?? pickVersion(works, w.work, null)
+    return v ? [v] : []
+  })
 }
 
 /** A loaded version that cannot be played, said plainly; empty when it can. */

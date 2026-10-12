@@ -11,7 +11,7 @@ import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
-import { RENAMED_TAKES, favorites, performanceProblems, pickVersion, placeCard, readShows, sectionOf, shelves, versionPath, zoomed, type Performance, type ShowVersion } from '../src/shows/registry'
+import { RENAMED_TAKES, favorites, performanceProblems, pickVersion, placeCard, readShows, sectionOf, shelves, versionPath, zoomed, type Performance, type ShowVersion, musicOnYouTube } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
 import { ranOut } from '../src/shows/youtube'
 import { combineSoundtracks } from '../src/shows/soundtrack'
@@ -106,6 +106,14 @@ async function main(): Promise<void> {
   check('a visit starts the show', /if \(current\) void open\(current, linked \? 'link' : true\)/.test(player) && /else void play\(\)/.test(player))
   check('a named show link plays, and holds the sound only when the browser refuses it', /const linked = !!pathShow \|\| !!params\.get\('show'\)/.test(player) && /async function playLinked/.test(player) && /soundHeld = true/.test(player) && player.includes('The browser is holding the sound'))
   const soundtrack = readFileSync(join(process.cwd(), 'apps/rube/src/shows/soundtrack.ts'), 'utf8')
+  {
+    const ytCss = readFileSync(join(process.cwd(), 'apps/rube/src/shows/youtube.css'), 'utf8')
+    const playerSrc = readFileSync(join(process.cwd(), 'apps/rube/src/shows/player.ts'), 'utf8')
+    check('YouTube\'s box is held open at its size while a show loads, and shimmers until its players are ready',
+      /playerHost\.hidden = !tube\s*\n\s*playerHost\.classList\.toggle\('yt-loading', tube\)\s*\n\s*stage\.set\(null\)/.test(playerSrc) &&
+      /\.yt-host\.yt-loading::before \{[^}]*animation: yt-shimmer/.test(ytCss) && /aspect-ratio: 16 \/ 9/.test(ytCss))
+    check('the shimmer stands still for reduced motion', /prefers-reduced-motion: reduce\)[^@]*\.yt-host\.yt-loading::before \{ animation: none; \}/.test(ytCss))
+  }
   check('a file play waits for canplay, as YouTube waits for its players', soundtrack.includes('status === \'loading\'') && soundtrack.includes('waiting.push') && soundtrack.includes('deep link'))
   check('a deep link with the sound held keeps a Sound button on the stage, and lights the panel\'s', player.includes("soundHeld ? 'Sound'") && /musicBtn\.classList\.toggle\('held', hasMusic && soundHeld\)/.test(player))
   // On a stage much wider than 16:9 the stage's button stands beside the composed frame, where there is room, not over
@@ -398,6 +406,8 @@ async function main(): Promise<void> {
       const perf = await version.load()
       const wrong = performanceProblems(perf)
       check(`${work.work}/${version.take}: loads, and can be played`, wrong.length === 0, wrong.join(' · '))
+      check(`${work.work}/${version.take}: the Show card knows before it loads whether its music is YouTube's`,
+        musicOnYouTube(work.work) === !!perf.soundtrack?.youtube?.length)
       if (wrong.length) continue
       if (work.work === 'premiere-arabesque' || work.work === 'clair-de-lune') {
         const premiere = work.work === 'premiere-arabesque'
