@@ -185,15 +185,24 @@ function checkWorld(name: string, own: string[]): void {
   let detail = ''
   for (let i = 0; i < 6; i++) {
     const u = show.universe(i)
-    if (u.world !== w) (ok = false), (detail = 'left its world')
+    if (u.world !== w) {
+      ok = false
+      detail = 'left its world'
+    }
     const seen = new Set<string>()
     for (const placed of u.pieces) {
       used.add(placed.piece.name)
       for (const [c, r] of placed.cells) {
         const key = `${c}:${r}`
-        if (seen.has(key)) (ok = false), (detail = `two pieces share ${key}`)
+        if (seen.has(key)) {
+          ok = false
+          detail = `two pieces share ${key}`
+        }
         seen.add(key)
-        if (c < u.box.x0 || c > u.box.x1 || r < u.box.y0 || r > u.box.y1) (ok = false), (detail = `${placed.piece.name} is outside the box`)
+        if (c < u.box.x0 || c > u.box.x1 || r < u.box.y0 || r > u.box.y1) {
+          ok = false
+          detail = `${placed.piece.name} is outside the box`
+        }
       }
     }
     for (let j = 0; j + 1 < u.pieces.length; j++) {
@@ -201,19 +210,37 @@ function checkWorld(name: string, own: string[]): void {
       const b = u.pieces[j + 1]
       const end = a.lane.segs[a.lane.segs.length - 1].to
       const start = b.lane.segs[0].from
-      if (!eq([a.col + a.mirror * end[0], a.row + end[1]], [b.col + b.mirror * start[0], b.row + start[1]])) (ok = false), (detail = `${a.piece.name} does not hand off to ${b.piece.name}`)
+      if (!eq([a.col + a.mirror * end[0], a.row + end[1]], [b.col + b.mirror * start[0], b.row + start[1]])) {
+        ok = false
+        detail = `${a.piece.name} does not hand off to ${b.piece.name}`
+      }
       const left = ballAt(a.ballIn, a.changes, Infinity)
-      if (left.color !== b.ballIn.color || left.id !== b.ballIn.id) (ok = false), (detail = 'the ball\'s state is not carried')
+      if (left.color !== b.ballIn.color || left.id !== b.ballIn.id) {
+        ok = false
+        detail = 'the ball\'s state is not carried'
+      }
     }
     // No part of a built piece is the colour the ball arrives in, and a repaint is always a change.
     for (const placed of u.pieces) {
       if (!own.includes(placed.piece.name)) continue
       const s = placed.state as { color: string; accent: string; paint: string }
-      if (s.color === placed.ballIn.color || s.accent === placed.ballIn.color) (ok = false), (detail = `${placed.piece.name} wears the ball's colour`)
-      if (placed.changes.length && ballAt(placed.ballIn, placed.changes, Infinity).color === placed.ballIn.color) (ok = false), (detail = `${placed.piece.name} repaints the ball its own colour`)
-      if (placed.changes.some((c) => c.at < 0 || c.at > placed.span)) (ok = false), (detail = `${placed.piece.name} changes the ball outside itself`)
+      if (s.color === placed.ballIn.color || s.accent === placed.ballIn.color) {
+        ok = false
+        detail = `${placed.piece.name} wears the ball's colour`
+      }
+      if (placed.changes.length && ballAt(placed.ballIn, placed.changes, Infinity).color === placed.ballIn.color) {
+        ok = false
+        detail = `${placed.piece.name} repaints the ball its own colour`
+      }
+      if (placed.changes.some((c) => c.at < 0 || c.at > placed.span)) {
+        ok = false
+        detail = `${placed.piece.name} changes the ball outside itself`
+      }
     }
-    if (u.pieces[0].piece.name !== 'portal' || u.pieces[u.pieces.length - 1].piece.name !== 'portal' || beatCount(u.pieces) < 1) (ok = false), (detail = 'not a map from a portal to a portal')
+    if (u.pieces[0].piece.name !== 'portal' || u.pieces[u.pieces.length - 1].piece.name !== 'portal' || beatCount(u.pieces) < 1) {
+      ok = false
+      detail = 'not a map from a portal to a portal'
+    }
   }
   check(`${name}: six maps hold together: no overlaps, exact hand-offs, the ball carried, no body in the ball's colour`, ok, detail)
   const unplayed = own.filter((n) => !used.has(n))

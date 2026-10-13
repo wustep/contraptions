@@ -26,9 +26,6 @@ export const P = 0.22
 /** Loop time since the moment `at`, wrapped, so the beat just gone reads as just gone. */
 export const since = (u: number, at: number) => mod(u - at, 1)
 
-/** Unclamped progress through [a, b]. */
-export const lin = (u: number, a: number, b: number) => (u - a) / (b - a)
-
 /**
  * A knock: what a prop does when the ball hits it at `at`. Out fast, then back
  * with a settle. 0 at rest, 1 at full deflection.
