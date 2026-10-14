@@ -1,7 +1,7 @@
 import type { Rng } from './rng'
 import type { Cell } from './types'
 
-export interface LayoutArgs {
+interface LayoutArgs {
   /** Top-left corner of the art area, in canvas pixels. */
   x: number
   y: number
@@ -12,7 +12,7 @@ export interface LayoutArgs {
   rng: Rng
 }
 
-export interface Layout {
+interface Layout {
   name: string
   label: string
   note: string

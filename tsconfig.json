@@ -11,6 +11,8 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": false,
@@ -25,6 +27,7 @@
   "include": [
     "src",
     "scripts",
-    "apps"
+    "apps",
+    "vite.config.ts"
   ]
 }

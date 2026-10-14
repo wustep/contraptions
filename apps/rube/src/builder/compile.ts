@@ -41,20 +41,20 @@ import { uniqueName, type Build, type ClockName, type Fill, type LaneStep, type 
  */
 
 /** What a built piece keeps from its placement: the colours it was handed. */
-export interface BuiltState {
+interface BuiltState {
   color: string
   accent: string
   paint: string
 }
 
 /** A lane from its steps, with the second each step begins at, and ends. */
-export interface BuiltLane {
+interface BuiltLane {
   lane: Lane
   starts: number[]
   ends: number[]
 }
 
-export function buildLane(steps: LaneStep[]): BuiltLane {
+function buildLane(steps: LaneStep[]): BuiltLane {
   const segs: Seg[] = []
   const starts: number[] = []
   const ends: number[] = []
@@ -332,7 +332,7 @@ export function mendBuild(build: Build): { build: Build; notes: string[] } {
   return { build: { ...build, pieces, ...(world ? { world } : {}) }, notes }
 }
 
-export interface Compiled {
+interface Compiled {
   world: World | null
   errors: string[]
 }
