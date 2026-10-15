@@ -673,7 +673,9 @@ function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void 
   vgrad(p, k, fr.x0 - pad, floor, fr.x1 + pad, fr.y1 + pad, [[0, rgba(M.warm, 0.06)], [0.4, rgba(M.warm, 0)]])
   // The room, just seen by the picture's light: an armchair turned to the screen, empty, a little table beside it with
   // a cup, and two frames on the wall; each with the screen's light along its edges toward it.
-  if (img === IMG1) darkRoom(p, k, weight, img.x0, floor, t < TAIL ? 1 : 1.6)
+  if (img === IMG1) darkRoom(p, k, weight, img.x0, floor, t < TAIL ? 1 : 1.6, t)
+  // The screen's light lying on the floor in front of it.
+  glow(p, k, sx, floor + 0.12, (img.x1 - img.x0) * 0.6, M.cream, 0.1 * lit, 1, 0.1)
   // The projector: its lens level with the picture's middle, well back from it.
   const lx = img.x0 - 5.2
   const ly = cy
@@ -684,9 +686,45 @@ function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void 
 }
 
 /** The room round the projector, in the dark: shapes only, lit along their edges toward the screen at `sx`. */
-function darkRoom(p: p5, k: number, weight: number, sx: number, floor: number, lit: number): void {
+function darkRoom(p: p5, k: number, weight: number, sx: number, floor: number, lit: number, t: number): void {
   const body = '#211A24'
   const rim = alpha(p, M.beam, 0.22 * lit)
+  // The window behind the projector, its curtains drawn but for a gap: the street's night in it, a streetlamp and a
+  // few windows across the way, the curtains stirring a little.
+  const wx0 = sx - 9.7
+  const wx1 = sx - 7.3
+  const wy0 = -5.6
+  const wy1 = -3.3
+  box2(p, k, wx0, wy0, wx1, wy1, '#1A2244', null)
+  p.noStroke()
+  for (const [x, y, c] of [[wx0 + 1.32, wy0 + 1.05, M.sun], [wx0 + 1.05, wy0 + 1.6, M.orange], [wx0 + 1.5, wy0 + 1.7, M.orange], [wx0 + 0.95, wy0 + 0.7, M.orange]] as const) {
+    p.fill(alpha(p, c, 0.8))
+    p.rect((x - 0.03) * k, (y - 0.04) * k, 0.06 * k, 0.08 * k)
+  }
+  const gap = 0.32 + 0.04 * Math.sin(t * 0.6)
+  const mid = wx0 + 1.25
+  shape(p, k, [[wx0 - 0.15, wy0 - 0.12], [mid - gap / 2, wy0 - 0.12], [mid - gap / 2 - 0.05, wy1 + 0.25], [wx0 - 0.2, wy1 + 0.25]], '#2A1E2E', null)
+  shape(p, k, [[mid + gap / 2, wy0 - 0.12], [wx1 + 0.15, wy0 - 0.12], [wx1 + 0.2, wy1 + 0.25], [mid + gap / 2 + 0.05, wy1 + 0.25]], '#2A1E2E', null)
+  seg(p, k, [wx0 - 0.3, wy0 - 0.14], [wx1 + 0.3, wy0 - 0.14], alpha(p, M.warm, 0.18), weight * 1.2)
+  p.stroke(alpha(p, '#1A2244', 0.9))
+  p.strokeWeight(weight * 0.6)
+  for (const f of [0.35, 0.7]) p.line((mid - gap / 2 - 0.03) * k, (wy0 + (wy1 - wy0) * f) * k, (mid - gap / 2 - 0.4) * k, (wy0 + (wy1 - wy0) * f + 0.1) * k)
+  // Under it, a low sideboard: the film's tins stacked on it, and a lamp, off; the screen's light along their edges.
+  const bx0 = sx - 10.8
+  const bx1 = sx - 8.2
+  const btop = floor - 0.85
+  box2(p, k, bx0, btop, bx1, floor, body, null)
+  seg(p, k, [bx1, btop], [bx1, floor], rim, weight * 0.9)
+  seg(p, k, [bx0, btop], [bx1, btop], rim, weight * 0.8)
+  for (let i = 0; i < 4; i++) {
+    const y1 = btop - i * 0.09
+    box2(p, k, bx0 + 0.3 + 0.02 * (i % 2), y1 - 0.08, bx0 + 1.0 - 0.03 * (i % 2), y1, '#2E2533', null)
+    seg(p, k, [bx0 + 1.0 - 0.03 * (i % 2), y1 - 0.08], [bx0 + 1.0 - 0.03 * (i % 2), y1], rim, weight * 0.7)
+  }
+  const lmp = bx1 - 0.5
+  seg(p, k, [lmp, btop], [lmp, btop - 0.75], body, weight * 1.4)
+  shape(p, k, [[lmp - 0.25, btop - 0.75], [lmp + 0.25, btop - 0.75], [lmp + 0.17, btop - 1.05], [lmp - 0.17, btop - 1.05]], '#2E2533', null)
+  seg(p, k, [lmp + 0.25, btop - 0.75], [lmp + 0.17, btop - 1.05], rim, weight * 0.8)
   // The armchair, side on, its back to the projector: a back, an arm, a seat, short legs.
   const x = sx - 2.6
   shape(p, k, [[x - 0.85, floor - 0.12], [x - 0.95, floor - 1.55], [x - 0.6, floor - 1.62], [x - 0.5, floor - 0.95], [x + 0.55, floor - 0.95], [x + 0.62, floor - 1.2], [x + 0.78, floor - 1.18], [x + 0.75, floor - 0.12]], body, null)
