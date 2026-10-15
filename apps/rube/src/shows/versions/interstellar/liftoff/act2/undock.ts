@@ -633,7 +633,7 @@ const BANDS: [number, number, string, number][] = [
   [-32, -40, BELT_GREY, 0.32],
   [-50, -90, BELT, 0.25],
   [-10, -30, DARK.deep, 0.16],
-  [-30, -90, DARK.deep, 0.42],
+  [-30, -90, DARK.deep, 0.3],
 ]
 /** How far a band's edge wanders (degrees), and its soft edge. */
 const WOBBLE = 0.3
