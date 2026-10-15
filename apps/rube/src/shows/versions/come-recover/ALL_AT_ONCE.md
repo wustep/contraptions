@@ -156,7 +156,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 120.95 | six big hits | the surf | One long flight, and a new world on every hit: a piñata party, a sign spinner on a street corner, the IRS office with its trophies, karaoke under a mirror ball, then a canyon, held, where two stones sit on a ledge in the foreground, faintly vermilion and faintly violet: the rocks, before we know them. Then flashes of every world she came through, backwards, and black. |
 | 127.66 | two hits | the surf's end | Out of the black, every world she flew through comes back at her as slivers, clamps into a ring round her (127.66), spins, and collapses into her, down to a point (127.79). |
 | 127.79 | the hush | the dark | She drifts down through the dark, Jobu's nothing. Seeds and salt pass at three depths, a sliver of colossal rim catching light below. On 133.79 a soft beam finds Joy, sitting still on the crown of the everything bagel, and a ring of everything gathers round her: Jobu's crown (`void/crown.ts`). Then the show's one conversation in shot and reverse shot: a cut to Jobu, close under her light, the ring going round her, for *There you are.*; to her mother alone in the dark for *Joy? What is this place?*; and back to Jobu for *Come and see.*, from whom the camera draws back and back until the whole lit bagel is in the frame and she is tiny on its crown. |
-| 142 | the pulse | the pull | Everything drifts in on slow spirals and goes over the lip on the beats, one thing a beat: a coat hanger, a sock, a trophy, a dog. Each time the well's violet glow flares and the bagel throbs, hardest on the loudest beats, with dust kicked off the lip. Evelyn is drawn in on a decaying orbit, a step closer each bar. The camera rides the orbit with her, close, the crust streaming past and things going over the lip beside her, with a warm catch-light under her. On beat 56 the lip brakes her to the brink, and in the held break Joy watches from the crown. On 165.62 she tips in. Each thing trails a ribbon of its own life's colour along its spiral for its last second, and as it goes over the lip the ribbon is drawn in after it and a ring of that colour flares round the lip and goes out: thing by thing the dark takes her colours, which the peak gives back. |
+| 142 | the pulse | the pull | Everything drifts in on slow spirals and goes over the lip on the beats, one thing a beat: a coat hanger, a sock, a trophy, a dog. Each time the well's violet glow flares and the bagel throbs, hardest on the loudest beats, with dust kicked off the lip. Evelyn is drawn in on a decaying orbit, a step closer each bar. The camera rides the orbit with her, close, the crust streaming past and things going over the lip beside her, with a warm catch-light under her. On beat 56 the lip brakes her to the brink, and in the held break Joy watches from the crown. On 165.62 she tips in. |
 
 ### All at Once (165.6 s to the end)
 
@@ -169,7 +169,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 200.16 | the drop | the rocks | Silence. Two stones on a ledge over a vast canyon, lumpy and flat-bottomed, the colour drained out of them: Evelyn's with her eye, Joy's beside it, where Waymond was. A pale sun hangs low over the far canyon. Pebbles fall from the lip and take forever to land; with the last, the camera draws back down the wall after it, and on, until the two stones are two specks on the rim of a canyon as big as the world, and holds them there in the silence (204.4 to 207.0); then it comes back in, in one long move, under Joy's first words. Joy's stone teeters forward on its flat underside (207.56, 208.36) and rolls out to the brink (209.96). On 213.96, the strongest note in the quiet, it goes over. Evelyn rolls to where she was (214.76), flinches back (216.36), and goes after her (219.56). The stones speak in subtitles, as the film's do, plain words low in the frame (this show's own lines, Evelyn's in roman and Joy's in italic): *It is quiet here. Nothing has to mean anything.* / *You don't have to follow me.* Nothing as she goes over; then *Joy —* and *I'm coming.* |
 | 220 to 241.8 | a soft swell | the rocks | The long way down, on the beats, ledge by ledge. The camera goes over the brink after her and stays close, the wall's strata going up past. On a bench halfway down Joy is waiting, and Evelyn comes to rest against her (226.56) in a close two-shot, looking at her: where the stones touch, each one's colour comes back first and spreads over it. Joy goes on (227.76) and the camera goes down the gorge with them, Joy a bound ahead. On the long talus it draws back for a breath, the canyon most of the frame and the two of them small on the scree, then comes in again for the last bounds. At the bottom a dark ring lies in the sand: the bagel. Joy drops into it, and on 241.76 Evelyn follows. On the bench: *You came all this way.* / *Where else would I be?* |
 | 241.76 | a breath | the dark | They fall into the bagel's hole. Joy is drawn up into its dark, shrinking and dimming, and Evelyn holds her at the lip. |
-| 247.35 | the peak | the dark | A line comes down from a pulley high above: Waymond's. He drops as the counterweight, and on every beat the line turns the bagel backwards, a ratchet kick of the whole crust. On 118½ Evelyn heaves back, and on 122 Joy pops out of the dark. From 123 everything the bagel swallowed bursts back out of the hole, one thing a beat, last in first out, each with a googly eye, and a spray of seeds goes out on every eighth. On 136 an eye rises out of the hole and lands on Joy. The bagel shrinks as it gives, until its hole is exactly a washer's window, and the hole fills with glass light. As each thing comes out, a beam of its own life's colour shoots from the hole and stays: the carpet's red and gold, the dojo's lacquer, the hot dog's pink and mustard, the griddle's flame, the canyon's sand, the laundromat's lantern gold. Beat by beat the dark fills, until the bagel stands black in a radiance of every life she has been, wheeling slowly as it turns back. As it closes into the window, the radiance draws in and dims. Once Joy has her eye, her mother says to her what Waymond said to her in the alley: *Here. With me.* |
+| 247.35 | the peak | the dark | A line comes down from a pulley high above: Waymond's. He drops as the counterweight, and on every beat the line turns the bagel backwards, a ratchet kick of the whole crust. On 118½ Evelyn heaves back, and on 122 Joy pops out of the dark. From 123 everything the bagel swallowed bursts back out of the hole, one thing a beat, last in first out, each with a googly eye, and a spray of seeds goes out on every eighth. On 136 an eye rises out of the hole and lands on Joy. The bagel shrinks as it gives, until its hole is exactly a washer's window, and the hole fills with glass light. On the loud beats what comes out is flung past the lens; on the others the dark drags it to a stop past the rim, and it hangs there, turning slowly on the open side away from the iron, its eye coming round to the two of them in the hole. Beat by beat the dark fills with what she had: a hanger, mustard, a fan, a hot dog, a sock, a report. As the bagel closes into the window the camera goes in through them, and the dark takes them back. Once Joy has her eye, her mother says to her what Waymond said to her in the alley: *Here. With me.* |
 | 264.14 | the peak's end | home | Through the window: they are inside the drum of the washer by the door, where the morning started. The cycle ends, the door swings open (268.39), and they drop out. Waymond leaps the foot lever and touches Joy, and the touch runs through to Evelyn. |
 | 275.2 | a hush | home | The camera closes slowly on the three of them together at the washer's foot, the window's glow behind them, and holds. Outside, a neighbour's cat comes along the pavement and sits at the door's glass, looking in at them, until Evelyn sets off. Joy nestles against her mother on a soft note (279.84). He asks what he asked in the alley, *Stay a little?*, and this time she can: *I'm staying.* |
 | 282.2 | home's pulse | home | The family portrait. A wooden box camera with a bellows stands on a tripod by the door, facing them. Joy and Waymond straighten up on two small hops. Evelyn rolls to a foot switch under the window and presses it on 286.20: a string of lanterns over the family lights one a beat, and the camera draws back to take in the whole portrait. The self-timer's red lamp blinks faster and faster while she hurries back beside Joy (290.38). |
@@ -807,7 +807,8 @@ watched whole between them. Their order is in git; here they are by what they di
   stones touch on the bench each one's colour comes back first (`flushOf` in `rocks/ledge.ts`).
 - **The dark takes her colours, and gives them back.** In the pull each thing trails a ribbon of its life's colour
   into the hole (`drain` in `void/radiance.ts`); at the peak each thing given back comes out with a beam of that
-  colour (by `THING_WORLD`), until the bagel stands black in a radiance of every life (`radiance`).
+  colour (by `THING_WORLD`), until the bagel stands black in a radiance of every life (`radiance`). (Cut in the third
+  fullness round, below: the dark now fills with the things themselves.)
 - **Kindness up close.** The camera comes in on each eye she gives, opens out for the lob, holds the cradle as a
   two-shot with Waymond, and closes on the two of them.
 - **He is in every life.** In everywhere at once Waymond drops in beside her machine in more and more of her lives, Joy in some, eyeless yet
@@ -951,7 +952,8 @@ share card (255.75 s) is pixel-identical.
   brass star, lit from a truss of lamps along its top, on black stands at its ends. Every hat and camera reads
   against it. Between the big flashes the pen never stops: on the recording's other onsets a gun or two near her
   pops, small and local, and lights the board behind its shooter (`TWINKLES`): never within a tenth of a second of
-  a big flash, never closer than 0.12 s to the last, none for a viewer who asks for less motion. The lobby behind the
+  a big flash, never closer than 0.12 s to the last, none for a viewer who asks for less motion. (Cut in the third
+  fullness round: they carried no story, and the board's stars are now printed, not glints.) The lobby behind the
   glass doors is gold-lit, the warm light at the end of the rope line, so their bursting open is into light.
 - **The dojo is an afternoon hall.** The sun is low outside: the paper glows with the yard's bamboo shadowed on it,
   the beam and the plaster stand back in shade, and shafts of sun come in under the beam and slant down through the
@@ -1161,6 +1163,72 @@ bamboo is a shadow on its paper and moves with the paper, as a shadow does.
 The share card (255.75 s, `public/shows/come-recover/`) is outside the show's folder and was not regenerated; its frame
 has changed only slightly: the camera's float, and the peak's faint far iron at its edges.
 
+### Fuller: a third round
+
+The brief once more, with a firmer rule: cut and refine as much as is added, and nothing that shines for its own sake.
+
+**What the third audit found.** Ten frames on new offsets (8, 41.2, 74.4, 107.6, 140.8, 174, 207.2, 240.4, 273.6 and
+306.8 s), and the four-second sweep:
+- The peak's give-back (249 to 262 s) carried the show's last big piece of gloss: a sunburst of screen-blended beams
+  behind the bagel, each flaring as its thing came out, with a soft bloom round the bagel. Without it the frame's right
+  half was black.
+- In the pull each thing trailed a comet's ribbon into the hole, and set off a ring of light round the lip.
+- The first panels of everywhere at once (170 to 177 s) were diagrams: one seesaw on a bare wall, four times over.
+- The rocks had two birds in the sky and grass at the rim, added in the first round. But this is the universe where
+  life never formed.
+- Between the story's flashes, the red carpet's press popped on every onset, "so the press sparkles with the music";
+  the board's stars were four-pointed glints.
+- Smaller shine: a halo round the eye given back to Joy, the dojo gong flaring with light when struck, a star
+  twinkling in the washer window's premiere, and a bloom past that window's rim.
+
+**Cut.**
+- The peak's beams and their bloom, and the pull's ribbons and lip rings: `void/radiance.ts` is gone.
+- The rocks' birds and grass. The wind still moves the cloud and lifts the sand: nothing else moves there.
+- The carpet's in-between pops. Its board's stars are printed brass now.
+- The halo round Joy's eye; the twinkle; the window's rim bloom (its light stays in its glass, and its light on the
+  room is the light map's pool).
+- The gong's flare. Struck, the bronze shivers instead: its hammered rings tremble against each other as the note dies.
+- In the panels, the kitchen's flame halo and the premiere's flash glows and sparkles.
+
+**Added.**
+- **At the peak the dark fills with what she had.** The seven things on the loud beats are still flung past the lens.
+  The other twenty-two are dragged to a stop past the rim and left hanging, turning slowly, on the open side, away
+  from the headframe, the pulley and his line. Each one's eye comes round to the two of them in the hole. By the
+  release the frame is the iron on the left, the bagel in the middle and everything given back on the right. As the
+  bagel closes into the window the camera goes in through them, and the dark takes them back (`hangs` in
+  `void/peakClock.ts`).
+- **The first panels are places.** At one, two and four panels each life has its place round the seesaw:
+  - the laundromat: its lantern garland, rocking on the slams;
+  - the premiere: a crowd behind the rope, up on their toes at a loud landing, the press lifting their cameras;
+  - the dojo: a rack of staffs and spears that rattle;
+  - the kitchen: diners along the griddle in front of it, the flame along their crowns, rocking back at the volcano;
+  - the recital: drapes, and an audience who clap with floppy fingers.
+
+  The surf flies through the same backdrops, so its stage has its drapes and its carpet its crowd.
+
+**Checked.** `npm run build` passes. Frame time, measured as before and against the show before all three rounds
+(`002e3359`), the after column now the third round's:
+
+| Stretch (s) | Paint median, before → after (ms) | Paint p95, before → after (ms) | Worst warm frame, after (ms) |
+| --- | ---: | ---: | ---: |
+| the laundromat (0–58) | 0.9 → 0.8 | 1.3 → 1.2 | 4.9 |
+| the premiere and the alley (58–87) | 0.8 → 1.2 | 1.5 → 2.4 | 4.0 |
+| the dojo, the piano, the kitchen (87–121) | 0.5 → 0.9 | 1.0 → 1.2 | 1.7 |
+| the surf and the hush (121–142) | 0.5 → 0.6 | 1.4 → 1.6 | 2.1 |
+| the pull (142–166) | 1.2 → 1.3 | 2.0 → 1.6 | 2.6 |
+| everywhere and kindness (166–200) | 0.8 → 0.7 | 2.3 → 2.2 | 7.2 |
+| the rocks (200–242) | 0.6 → 0.7 | 1.1 → 1.0 | 3.8 |
+| the peak (242–264) | 1.7 → 1.6 | 3.4 → 3.3 | 4.9 |
+| home (264–297) | 1.2 → 1.2 | 1.7 → 2.1 | 2.9 |
+| the credits and the shop (297–332) | 1.4 → 1.5 | 2.0 → 2.0 | 2.4 |
+
+Every stretch holds 60 fps, with a median frame of 16.7 ms and a 95th percentile of 18.0 to 18.5 ms. The peak is cheaper
+than after the second round (its worst warm frame was 10.3 ms, now 4.9): the beams were large screen-blended gradients,
+and the things that hang are a few small paths each.
+
+The share card (255.75 s) falls in the peak's give-back, so its frame is now further from the show (no beams; things
+hanging round the bagel). It is outside the show's folder, and still not regenerated.
+
 ### For every viewer
 
 - **Heard.** The page's words layer is `aria-hidden`, as its cards fade and blur, so a card can be spoken (`TitleCard.said`): once,
@@ -1363,8 +1431,7 @@ googly eyes go with it (`endDarkAt` in `credits.ts`, `shopLit` in `home/finale-s
     (`hotdog/fingers-room.ts`), the restaurant (`hibachi/raccacoonie-room.ts`), the rocks' light and wind
     (`rocks/ledgeLight.ts`, `rocks/ledgeWind.ts`), and the peak's headframe and escapement (`void/peakRig.ts`).
   - `multi/`: 144 worlds as skins for one seesaw. `skins.ts` holds the first thirteen and the table of which world is in which panel on each screen (`skinAt`). The rest are in `skins-film.ts`, `skins-montage.ts`, `skins-flash.ts` and `skins-verse.ts` (the film's), and in `skins-far.ts`, `skins-odd.ts`, `skins-shop.ts`, `skins-play.ts`, `skins-wild.ts`, `skins-sky.ts`, `skins-past.ts` and `skins-toy.ts` (lives she might have had). They share `skins-kit.ts` and `skins-pen.ts`. Parts: `surf`, `mosaic`.
-  - `void/`: `radiance.ts` is the pull's ribbons of colour drawn into the hole, over the bagel, and the peak's beams
-    of every life's colour given back, behind it. `bagel.ts` is the everything bagel, driven by the pull and then by the peak, plus the drawings of the
+  - `void/`: `bagel.ts` is the everything bagel, driven by the pull and then by the peak, plus the drawings of the
     things it swallows. Parts: `pull`, `peak`.
 - **The shared files.** The hooks in `registry.ts`, `main.ts`, `styles.css` and `engine.ts` came in with Liftoff
   (PR #88):
