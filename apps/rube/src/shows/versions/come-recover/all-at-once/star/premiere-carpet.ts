@@ -108,8 +108,9 @@ function flashOf(c: Shooter, t: number): { pop: number; after: number } {
 const FLASHES: { x: number; y: number; t: number }[] = PRESS.flatMap((c) => c.flashes.map((t) => ({ x: reflectorOf(c)[0], y: reflectorOf(c)[1], t })))
 
 /**
- * Between the big flashes the pen never stops: on the recording's other onsets a gun or two goes off along it, near
- * her, a small pop of its own, so the press sparkles with the music the way a red carpet does. A pop lights its own
+ * Between the big flashes the pen keeps on: on the recording's other clear onsets (the faintest left out, so the
+ * louder runs sparkle and the quiet between them does not) a gun or two goes off along it, near her, a small pop of
+ * its own, so the press sparkles with the music the way a red carpet does. A pop lights its own
  * corner and the wall behind its shooter, never the frame. None comes within a tenth of a second of a big flash, nor
  * closer than 0.12 s to the one before, so the pen twinkles and never strobes; and none for a viewer who has asked
  * for less motion, since they carry no story.
@@ -120,7 +121,7 @@ const TWINKLES: { i: number; t: number; s: number }[] = (() => {
   let last = -Infinity
   let lastShooter = -1
   for (const o of ONSETS) {
-    if (o.t < BEGIN + 0.05 || o.t > EDGE_T + 0.6 || o.s < 0.12) continue
+    if (o.t < BEGIN + 0.05 || o.t > EDGE_T + 0.6 || o.s < 0.3) continue
     if (big.some((b) => Math.abs(b - o.t) < 0.1) || o.t - last < 0.12) continue
     // The shooters about her and a little ahead of her, where the camera is looking.
     const near = herX(o.t) + 1.4
@@ -484,9 +485,13 @@ function drawFacade(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
  * that fires lights the board behind its shooter.
  */
 const BOARD = { x0: PEN.x0 - 0.55, x1: PEN.x1 + 0.7, top: CARPET - 4.7 }
-/** The board's face as its lamps light it, and in the dark between them and at its foot. */
+/**
+ * The board's face as its lamps light it, and in the dark between them and at its foot. It is a backdrop lit in the
+ * dark, not a lit wall: the lamps' scallops are the light on it, so the spotlight's beam still shows across it and
+ * its pool, the flashes and she are the brightest things in the frame.
+ */
 const BOARD_LIT = mixHex(STAR.spot, STAR.cream, 0.45)
-const BOARD_DIM = mixHex(BOARD_LIT, STAR.velvet, 0.32)
+const BOARD_DIM = mixHex(BOARD_LIT, STAR.velvet, 0.62)
 /** Its lamps along the truss. */
 const BOARD_LAMPS = (() => {
   const n = Math.round((BOARD.x1 - BOARD.x0) / 2.3)
@@ -512,8 +517,8 @@ function drawBoard(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
   ctx.clip()
   for (const lx of BOARD_LAMPS) {
     if (lx < x0 - 2.5 || lx > x1 + 2.5) continue
-    pool(p, X(lx), X(BOARD.top + 1.25), X(1.75), X(2.3), BOARD_LIT, 1)
-    glow(p, X(lx), X(BOARD.top + 0.5), X(1.3), STAR.spot, 0.35)
+    pool(p, X(lx), X(BOARD.top + 1.1), X(1.45), X(2.1), BOARD_LIT, 0.8)
+    glow(p, X(lx), X(BOARD.top + 0.5), X(1.1), STAR.spot, 0.3)
   }
   // The marks, row on row, every other row half a step along: the moon-and-ridges, and the star between.
   for (let row = 0; ; row++) {
