@@ -91,8 +91,9 @@ const FAR: { x: number; w: number; h: number; roof: number; tree: boolean; chimn
       chimney: hash(i, 88) < 0.5 ? 0.25 + hash(i, 89) * 0.4 : -1,
     })
   }
-  // Houses first, so the trees stand in front of them.
-  return out.sort((a, b) => Number(a.tree) - Number(b.tree))
+  // Trees first, so each house stands whole in front of them (behind a tall tree a house was a chimney poking up
+  // beside it, a stray post in a close).
+  return out.sort((a, b) => Number(b.tree) - Number(a.tree))
 })()
 
 function far(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
@@ -124,6 +125,11 @@ function far(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
       p.rect(x0 * k, eave * k, b.w * k, (G - eave) * k)
       p.triangle((x0 - 0.12) * k, (eave + 0.02) * k, b.x * k, ridge * k, (x1 + 0.12) * k, (eave + 0.02) * k)
       if (b.chimney > 0) p.rect((b.x + b.w * 0.18) * k, (ridge + b.roof * 0.25 - b.chimney) * k, 0.18 * k, (b.chimney + b.roof * 0.4) * k)
+      // Its windows and door, faint in the haze (a close sees a neighbour's wall, not a grey slab); dark at night.
+      p.fill(mixHex(house, dusky > 0.5 ? '#232A40' : '#EEF4F4', 0.32))
+      const ww = Math.min(0.32, b.w * 0.17)
+      for (const u of [-0.27, 0.27]) p.rect((b.x + u * b.w - ww / 2) * k, (eave + b.h * 0.22) * k, ww * k, b.h * 0.26 * k)
+      p.rect((b.x - 0.12) * k, (G - b.h * 0.42) * k, 0.24 * k, b.h * 0.42 * k)
     }
   }
 }
