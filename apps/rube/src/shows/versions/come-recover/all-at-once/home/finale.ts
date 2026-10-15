@@ -5,6 +5,7 @@ import { LIGHTS, lightAt, penOf, shade, STREET, type Glow } from './set'
 import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, SWELL, waymondAt, windowLight } from './finale-plan'
 import { HOME } from '../worlds'
 import { FIRST as LIVES_FIRST, LAST_OUT as LIVES_OUT } from './finale-lives'
+import { drawShop, SHOP_FROM, SHOP_TO } from './finale-shop'
 import { drawCamera, drawContactShadows, drawFlash, drawFlashShadows, drawLanternString, drawPhoto, drawSwitch, drawTripodFront, drawWasher, drawWasherDoor, drawWindowGlow, fireworkFloor, fireworkLight, fireworks, lightColor, stringGlows } from './finale-draw'
 
 /**
@@ -173,6 +174,7 @@ export const finale = part<FinaleState>(
       drawWindowGlow(pen, t, 1 - lightAt(PORT[0], PORT[1], t))
       fireworkFloor(pen, t)
       const f = frame(p, k)
+      drawShop(p.drawingContext as CanvasRenderingContext2D, k, t, f.x0, f.x1)
       drawFlash(pen, t, f)
       p.pop()
     },
@@ -256,12 +258,15 @@ export const finale = part<FinaleState>(
       { t: 296.1, cells: 5.15, hold: H(-3.35, -1.38), w: 1 },
       { t: LIVES_FIRST - 0.2, cells: 2.75, hold: H(PORT[0] - 0.7, -0.62), w: 1 },
       { t: LIVES_OUT, cells: 2.6, hold: H(PORT[0] - 0.66, -0.62), w: 1 },
-      // The swell, and they look at one another: held. Then back, slowly, to the shop at night, and the end's dark.
-      // Low enough that Zoom keeps the family whole on a strip of floor, and high enough that the frame still takes in
-      // the lucky cat's shelf.
+      // The swell, and they look at one another: held. Then back, slowly, as the light goes on down the shop
+      // (`finale-shop.ts`): first to the room round them, then on and out along the row of machines as they light,
+      // until the row of them runs out of the frame's right edge: the storefront's glass at its left, the family small
+      // under their own window a sixth of the way in, and the credits over the dark above. No wider than keeps the
+      // three of them 16 px across at 1280×720, and centred near enough to her that Zoom's closer frame keeps her.
       { t: SWELL + 1.05, cells: 2.58, hold: H(PORT[0] - 0.65, -0.62), w: 1 },
-      { t: SWELL + 7.5, cells: 5.45, hold: H(-3.1, -1.5), w: 1 },
-      { t: END - 0.05, cells: 5.45, hold: H(-3.1, -1.5), w: 1 },
+      { t: SHOP_FROM + 0.4, cells: 4.6, hold: H(-1.45, -1.2), w: 1 },
+      { t: SHOP_TO + 2.6, cells: 11.2, hold: H(3.9, -2.7), w: 1 },
+      { t: END - 0.05, cells: 11.2, hold: H(3.9, -2.7), w: 1 },
     ]
     return shots.filter((k) => k.t > slot.begin + 0.39 && k.t <= slot.end + 1e-6)
   },

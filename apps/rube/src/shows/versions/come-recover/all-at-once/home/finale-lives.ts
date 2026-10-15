@@ -21,7 +21,7 @@ import { PANEL_LOOKS, paintPicture, pixelOf, prefersCalm } from '../film'
  * Each life comes and goes over most of a second: nothing in it flashes.
  */
 
-type Life = 'bagel' | 'rocks' | 'raccoon' | 'hotdog' | 'dojo' | 'premiere'
+export type Life = 'bagel' | 'rocks' | 'raccoon' | 'hotdog' | 'dojo' | 'premiere'
 
 const ORDER: Life[] = ['bagel', 'rocks', 'raccoon', 'hotdog', 'dojo', 'premiere']
 /** The first comes up a little after the credits begin; each holds about two seconds; the last has gone well before the swell. */
@@ -60,7 +60,7 @@ const rgba = (hex: string, a: number): string => {
 type Ctx = CanvasRenderingContext2D
 
 /** The three of them, small, side by side on a line at `y` (shares of the radius), each with an eye. */
-function family(ctx: Ctx, r: number, x0: number, y: number, size: number, ink: string, stones = false): void {
+export function family(ctx: Ctx, r: number, x0: number, y: number, size: number, ink: string, stones = false): void {
   const who = [EVELYN, JOY, WAYMOND]
   const gap = size * 2.25
   who.forEach((c, i) => {
@@ -110,7 +110,7 @@ function rect(ctx: Ctx, r: number, x0: number, y0: number, x1: number, y1: numbe
 }
 
 /** One life, painted in the glass's own frame: centre at the origin, `r` the glass's radius in pixels, `u` its drift. */
-function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number): void {
+export function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number): void {
   // Seen going past: the picture drifts a little across the glass.
   ctx.translate((0.12 - 0.24 * u) * r, 0)
   switch (life) {
