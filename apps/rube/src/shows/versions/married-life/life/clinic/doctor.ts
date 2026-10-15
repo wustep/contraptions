@@ -140,10 +140,14 @@ function light(p: p5, c: Ctx, T: number, strength = 1, shadowed = false): void {
       ctx.closePath()
     }
   }
-  // Each bar four times, from a little wide and faint to its own width: a soft edge, narrow, not a ruled one.
-  for (let pass = 0; pass < 4; pass++) {
-    ctx.globalAlpha = 0.33
-    bars(0.06 - pass * 0.02)
+  // Each bar three times, from a little wide and faint to its own width: a soft edge, narrow, not a ruled one. (Four
+  // passes at a third cost a quarter more in the close, for an edge no one could tell from this one; the core is as
+  // bright.) The faint layers, over the chairs and over the two of them, once at the middle width: at a third of the
+  // light or less, their edge cannot be told from a soft one, and each pass is a screen over half the frame.
+  const soft = strength >= 0.5
+  for (let pass = 0; pass < (soft ? 3 : 1); pass++) {
+    ctx.globalAlpha = soft ? 0.415 : 0.8
+    bars(soft ? 0.06 - pass * 0.03 : 0.03)
     ctx.fill()
   }
   // On the wall, what stands in the sun's way takes its light back: within the bars only, soft at the edge.
