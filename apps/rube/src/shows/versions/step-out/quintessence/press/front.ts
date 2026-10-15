@@ -184,12 +184,12 @@ function air(ctx: C2, v: View, t: number, xr: number): void {
   const lift = 0.04 * thump(t, 0.3)
   const box = { x0: v.x0 - 1, y0: v.y0 - 1, x1: Math.min(v.x1 + 1, xr), y1: FLOOR }
   // Dust everywhere in the hall, catching what light there is.
-  motes(ctx, v, t, { n: 34, seed: 41, tile: [4, 3.2], r: [0.007, 0.016], v: [0.05, -0.04 - lift], sway: [0.08, 0.13], color: rgbaOf('#E9D8B8', 0.32 + 0.2 * on), twinkle: 0.5, square: true, within: box })
+  motes(ctx, v, t, { n: 34, seed: 41, tile: [4, 3.2], r: [0.007, 0.016], v: [0.05, -0.04 - lift], sway: [0.08, 0.13], color: rgbaOf('#E9D8B8', 0.32 + 0.2 * on), twinkle: 0.5, within: box })
   // Thicker in the lamps' cones: paper dust warm, ink mist cool.
   for (const lx of LAMPS) {
     if (lx - 2 > v.x1 || lx + 2 < v.x0 || lx > xr + 1) continue
     const cone = { x0: lx - 1.5, y0: LAMP_Y + 0.4, x1: lx + 1.5, y1: FLOOR - 0.1 }
-    motes(ctx, v, t, { n: 22, seed: 51 + lx, tile: [3, 4.2], r: [0.008, 0.02], v: [0.04, -0.06 - lift * 2], sway: [0.06, 0.25], color: rgbaOf('#FFD79A', 0.45 * on), square: true, within: cone })
+    motes(ctx, v, t, { n: 22, seed: 51 + lx, tile: [3, 4.2], r: [0.008, 0.02], v: [0.04, -0.06 - lift * 2], sway: [0.06, 0.25], color: rgbaOf('#FFD79A', 0.45 * on), within: cone })
     motes(ctx, v, t, { n: 14, seed: 61 + lx, tile: [3, 4.2], r: [0.012, 0.03], v: [-0.03, 0.02], sway: [0.1, 0.11], color: rgbaOf('#9CC2CC', 0.18 * on), square: true, within: cone })
   }
 }

@@ -521,16 +521,27 @@ function marks(t: number): { d: number; layers: number }[] {
 
 function drawWeb(g: C2, k: number, t: number): void {
   const run = runAt(t)
-  // The web along the line and down the board.
+  // The web along the line and down the board, and the lamps' light thrown back off it: the brightest thing in the
+  // hall after him.
+  const web = new Path2D()
+  web.moveTo(G0.c[0] * k, (WEB_Y + WEB_T / 2) * k)
+  web.lineTo(G4.c[0] * k, (WEB_Y + WEB_T / 2) * k)
+  web.arc(G4.c[0] * k, G4.c[1] * k, (G4.r - WEB_T / 2) * k, -Math.PI / 2, -Math.PI / 2 + BOARD)
+  web.lineTo((NOSE[0] - Math.sin(BOARD) * WEB_T * 0.5) * k, (NOSE[1] + Math.cos(BOARD) * WEB_T * 0.5) * k)
+  const lit = lampsOn(t, 0)
+  g.save()
+  g.globalCompositeOperation = 'lighter'
+  g.lineCap = 'round'
+  for (const [w, a] of [[0.34, 0.035], [0.18, 0.05]] as const) {
+    g.strokeStyle = hexA('#FFE9C4', a * (0.4 + 0.6 * Math.min(1, lit)))
+    g.lineWidth = w * k
+    g.stroke(web)
+  }
+  g.restore()
   g.strokeStyle = PAL.paper
   g.lineWidth = WEB_T * k
   g.lineCap = 'butt'
-  g.beginPath()
-  g.moveTo(G0.c[0] * k, (WEB_Y + WEB_T / 2) * k)
-  g.lineTo(G4.c[0] * k, (WEB_Y + WEB_T / 2) * k)
-  g.arc(G4.c[0] * k, G4.c[1] * k, (G4.r - WEB_T / 2) * k, -Math.PI / 2, -Math.PI / 2 + BOARD)
-  g.lineTo((NOSE[0] - Math.sin(BOARD) * WEB_T * 0.5) * k, (NOSE[1] + Math.cos(BOARD) * WEB_T * 0.5) * k)
-  g.stroke()
+  g.stroke(web)
   // Its grain, running: faint ticks that show it moving.
   for (let d = G0.c[0] + ((-run % 0.32) + 0.32) % 0.32; d < WEB_END; d += 0.32) {
     const [x, y, a] = webAt(d)
