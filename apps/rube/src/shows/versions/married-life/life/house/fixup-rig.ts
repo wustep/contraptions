@@ -312,7 +312,28 @@ function wetBand(p: p5, k: number, T: number): void {
   ctx.restore()
 }
 
+/**
+ * The sun is high on the left: under the cart its shadow on the lawn, thrown a little to the right, and one under his
+ * chair while it waits on the grass. Soft flat ovals, no outline.
+ */
+function shadows(p: p5, k: number, T: number): void {
+  const w = W(T)
+  p.push()
+  p.noStroke()
+  p.fill(alpha(p, '#2F3D2C', 0.16))
+  p.ellipse((w + CART.mid + 0.2) * k, (G + 0.1) * k, 2.9 * k, 0.16 * k)
+  p.fill(alpha(p, '#2F3D2C', 0.1))
+  p.ellipse((w + CART.mid + 0.45) * k, (G + 0.12) * k, 3.4 * k, 0.22 * k)
+  for (const f of FLIGHTS) {
+    if (f.lawn === undefined || T >= f.lift) continue
+    p.fill(alpha(p, '#2F3D2C', 0.16))
+    p.ellipse((f.lawn + 0.12) * k, (G + 0.1) * k, 0.85 * k, 0.14 * k)
+  }
+  p.pop()
+}
+
 export function drawRig(p: p5, k: number, weight: number, T: number): void {
+  shadows(p, k, T)
   wetBand(p, k, T)
   drawChairsFlying(p, k, weight, T)
   const w = W(T)
