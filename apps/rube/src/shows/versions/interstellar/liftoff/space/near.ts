@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { alpha, frame, hash, scenery, smooth } from '../kit'
+import { frame, hash, scenery, smooth } from '../kit'
 import { beat } from '../music'
 import { DARK } from '../worlds'
 
@@ -73,68 +73,85 @@ export function cells(f: Frame, t: number, L: Layer, fn: (x: number, y: number, 
   }
 }
 
+/** "r, g, b" of a hex colour, for the canvas's own fills (cheaper than a p5 colour per fleck). */
+const rgb = (hex: string): string => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')
+const ICE = rgb(DARK.ice)
+const BONE = rgb('#ECE5D3')
+const GOLD = rgb(DARK.gold)
+const HULL = rgb(DARK.hull)
+const SLATE = rgb(DARK.slate)
+
+/** A closed outline through points (pixels, about the origin), turned by `a` and moved to `x, y`. */
+function poly(ctx: CanvasRenderingContext2D, x: number, y: number, a: number, pts: [number, number][]): void {
+  const c = Math.cos(a)
+  const s = Math.sin(a)
+  ctx.beginPath()
+  pts.forEach(([px, py], n) => (n ? ctx.lineTo : ctx.moveTo).call(ctx, x + px * c - py * s, y + px * s + py * c))
+  ctx.closePath()
+}
+
 function drawDebris(p: p5, k: number, ink: string, weight: number, f: Frame, t: number, on: number): void {
   const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const INK = rgb(ink)
+  ctx.save()
   // Ice: flecks, the farthest of the three.
-  p.noStroke()
   cells(f, t, DEBRIS[0], (x, y, i, j) => {
     const a = on * edge(f, x, y, 0.04) * (0.3 + 0.4 * hash(i, j, 5))
     if (a < 0.02) return
-    p.fill(alpha(p, hash(i, j, 6) < 0.5 ? DARK.ice : '#ECE5D3', a))
-    const s = 0.012 + 0.018 * hash(i, j, 7)
-    p.push()
-    p.translate(X(x), X(y))
-    p.rotate(hash(i, j, 8) * 6.3 + t * (hash(i, j, 9) - 0.5) * 3)
-    p.rect(0, 0, X(s * 2.4), X(s))
-    p.pop()
+    const s = X(0.012 + 0.018 * hash(i, j, 7))
+    ctx.fillStyle = `rgba(${hash(i, j, 6) < 0.5 ? ICE : BONE}, ${a})`
+    poly(ctx, X(x), X(y), hash(i, j, 8) * 6.3 + t * (hash(i, j, 9) - 0.5) * 3, [[-1.2 * s, -0.5 * s], [1.2 * s, -0.5 * s], [1.2 * s, 0.5 * s], [-1.2 * s, 0.5 * s]])
+    ctx.fill()
   })
   // Bolts and scraps of foil, tumbling.
+  ctx.lineWidth = Math.max(0.6, weight * 0.5)
+  ctx.lineJoin = 'round'
   cells(f, t, DEBRIS[1], (x, y, i, j) => {
     const a = on * edge(f, x, y, 0.12)
     if (a < 0.02) return
-    const s = 0.05 + 0.07 * hash(i, j, 21)
-    p.push()
-    p.translate(X(x), X(y))
-    p.rotate(hash(i, j, 22) * 6.3 + t * (hash(i, j, 23) - 0.5) * 2.4)
-    p.strokeWeight(Math.max(0.6, weight * 0.5))
-    p.stroke(alpha(p, ink, 0.7 * a))
+    const s = X(0.05 + 0.07 * hash(i, j, 21))
+    const turn = hash(i, j, 22) * 6.3 + t * (hash(i, j, 23) - 0.5) * 2.4
+    ctx.strokeStyle = `rgba(${INK}, ${0.7 * a})`
     if (hash(i, j, 24) < 0.55) {
       // A scrap of gold foil, crumpled: a quad with one corner turned.
-      p.fill(alpha(p, DARK.gold, 0.9 * a))
-      p.beginShape()
-      p.vertex(X(-s), X(-s * 0.6))
-      p.vertex(X(s * 0.9), X(-s * 0.8))
-      p.vertex(X(s * 0.6 + s * 0.4 * Math.sin(t * 2 + i)), X(s * 0.7))
-      p.vertex(X(-s * 0.8), X(s * 0.5))
-      p.endShape(p.CLOSE)
+      ctx.fillStyle = `rgba(${GOLD}, ${0.9 * a})`
+      poly(ctx, X(x), X(y), turn, [[-s, -s * 0.6], [s * 0.9, -s * 0.8], [s * 0.6 + s * 0.4 * Math.sin(t * 2 + i), s * 0.7], [-s * 0.8, s * 0.5]])
+      ctx.fill()
+      ctx.stroke()
     } else {
       // A bolt: a hex head on a short shank.
-      p.fill(alpha(p, DARK.hull, a))
-      p.rect(X(s * 0.55), 0, X(s * 1.1), X(s * 0.36))
-      p.beginShape()
-      for (let q = 0; q < 6; q++) p.vertex(X(Math.cos((q * Math.PI) / 3) * s * 0.42), X(Math.sin((q * Math.PI) / 3) * s * 0.42))
-      p.endShape(p.CLOSE)
+      ctx.fillStyle = `rgba(${HULL}, ${a})`
+      poly(ctx, X(x), X(y), turn, [[0, -s * 0.18], [s * 1.1, -s * 0.18], [s * 1.1, s * 0.18], [0, s * 0.18]])
+      ctx.fill()
+      ctx.stroke()
+      const hex: [number, number][] = []
+      for (let q = 0; q < 6; q++) hex.push([Math.cos((q * Math.PI) / 3) * s * 0.42, Math.sin((q * Math.PI) / 3) * s * 0.42])
+      poly(ctx, X(x), X(y), turn, hex)
+      ctx.fill()
+      ctx.stroke()
     }
-    p.pop()
   })
-  // Nearest: a few dark panels off the interstage, edge-lit, turning slowly.
+  // Nearest: a few dark panels off the interstage, edge-lit, turning slowly, ribbed.
+  ctx.lineWidth = Math.max(0.8, weight * 0.7)
   cells(f, t, DEBRIS[2], (x, y, i, j) => {
     const a = on * edge(f, x, y, 0.3, 0.6)
     if (a < 0.02) return
-    const w = 0.22 + 0.2 * hash(i, j, 31)
+    const w = X(0.22 + 0.2 * hash(i, j, 31)) / 2
     const h = w * (0.35 + 0.3 * hash(i, j, 32))
-    p.push()
-    p.translate(X(x), X(y))
-    p.rotate(hash(i, j, 33) * 6.3 + t * (hash(i, j, 34) - 0.5) * 0.9)
-    p.strokeWeight(Math.max(0.8, weight * 0.7))
-    p.stroke(alpha(p, ink, 0.55 * a))
-    p.fill(alpha(p, DARK.slate, 0.95 * a))
-    p.rect(0, 0, X(w), X(h))
-    // Its ribs.
-    p.stroke(alpha(p, ink, 0.3 * a))
-    for (const u of [-0.25, 0.25]) p.line(X(u * w), X(-h / 2), X(u * w), X(h / 2))
-    p.pop()
+    const turn = hash(i, j, 33) * 6.3 + t * (hash(i, j, 34) - 0.5) * 0.9
+    ctx.fillStyle = `rgba(${SLATE}, ${0.95 * a})`
+    ctx.strokeStyle = `rgba(${INK}, ${0.55 * a})`
+    poly(ctx, X(x), X(y), turn, [[-w, -h], [w, -h], [w, h], [-w, h]])
+    ctx.fill()
+    ctx.stroke()
+    ctx.strokeStyle = `rgba(${INK}, ${0.3 * a})`
+    for (const u of [-0.5, 0.5]) {
+      poly(ctx, X(x), X(y), turn, [[u * w, -h], [u * w, h]])
+      ctx.stroke()
+    }
   })
+  ctx.restore()
 }
 
 /** Gargantua's disk, near: streams of its matter going by along its plane, fast, at the top and foot of the frame. */

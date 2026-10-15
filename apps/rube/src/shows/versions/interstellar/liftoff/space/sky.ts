@@ -63,10 +63,12 @@ export const voidSky = scenery<VoidState>({
           const twinkle = 0.88 + 0.12 * Math.sin(t * (0.7 + hash(i, j, l)) + i)
           const strength = L.a * shown * sparse * twinkle * (0.5 + hash(i, j, l * 7 + 4) * 0.5)
           const size = L.size * (0.6 + hash(i, j, l * 7 + 5) * 0.7)
-          const tint = hash(i, j, 31) < 0.3 ? DARK.ice : '#F4EEDF'
-          // Pinpoints, all of them: no star blooms.
-          p.fill(alpha(p, tint, strength))
-          p.circle(X(x), X(y), size)
+          // Pinpoints, all of them: no star blooms. (Painted straight onto the canvas: a p5 colour a star is the costliest
+          // thing in the frame.)
+          ctx.fillStyle = `rgba(${hash(i, j, 31) < 0.3 ? '143, 198, 230' : '244, 238, 223'}, ${Math.min(1, strength)})`
+          ctx.beginPath()
+          ctx.arc(X(x), X(y), size / 2, 0, Math.PI * 2)
+          ctx.fill()
         }
       }
     }
@@ -146,32 +148,32 @@ function drawEarth(p: p5, c: Drawn, f: Frame, s: VoidState, gone: number): void 
   // Land: long low shapes along the curve, squeezed toward the limb, sliding back under the orbit.
   const LAND = 9
   const towns: [number, number, number][] = []
-  p.noStroke()
   for (let i = Math.floor((u0 - ground) / LAND) - 1; i <= Math.ceil((u1 - ground) / LAND); i++) {
     if (hash(i, 3, 61) > 0.62) continue
     const mid = ground + (i + 0.2 + 0.6 * hash(i, 4, 61)) * LAND
     const len = (0.3 + 0.45 * hash(i, 5, 61)) * LAND
     const d0 = 0.08 + 0.5 * hash(i, 6, 61) ** 2
     const d1 = d0 + 0.25 + 1.6 * hash(i, 7, 61)
-    p.fill(alpha(p, hash(i, 8, 61) < 0.4 ? '#7D7457' : '#4F6C60', 0.7 * on))
-    p.beginShape()
+    ctx.fillStyle = `rgba(${hash(i, 8, 61) < 0.4 ? '125, 116, 87' : '79, 108, 96'}, ${0.7 * on})`
+    ctx.beginPath()
     const N = 14
     for (let j = 0; j <= N; j++) {
       const e = Math.sin((Math.PI * j) / N)
       const [x, y] = at(mid - len / 2 + (len * j) / N, d0 + (d1 - d0) * 0.5 * (1 - e) + 0.12 * (hash(i, j, 62) - 0.5) * e)
-      p.vertex(X(x), X(y))
+      ctx.lineTo(X(x), X(y))
     }
     for (let j = N; j >= 0; j--) {
       const e = Math.sin((Math.PI * j) / N)
       const [x, y] = at(mid - len / 2 + (len * j) / N, d1 - (d1 - d0) * 0.5 * (1 - e) + 0.3 * (hash(i, j, 63) - 0.5) * e)
-      p.vertex(X(x), X(y))
+      ctx.lineTo(X(x), X(y))
     }
-    p.endShape(p.CLOSE)
+    ctx.closePath()
+    ctx.fill()
     // Its towns, for the night side.
     for (let j = 0; j < 9; j++) towns.push([mid + (hash(i, j, 64) - 0.5) * len * 0.8, d0 + (0.15 + 0.5 * hash(i, j, 65)) * (d1 - d0), hash(i, j, 66)])
   }
   // Weather: rows of broken cloud over it, each row drifting at its own pace, and here and there a heap of cumulus.
-  p.strokeCap(p.ROUND)
+  ctx.lineCap = 'round'
   for (let row = 0; row < 8; row++) {
     const d = 0.12 + 0.18 * row + 0.05 * row * row
     const P = 2.4 + 0.5 * row
@@ -183,25 +185,24 @@ function drawEarth(p: p5, c: Drawn, f: Frame, s: VoidState, gone: number): void 
       const thick = (0.016 + 0.05 * hash(i, row, 75)) * (0.6 + 0.25 * row)
       const a = (0.16 + 0.22 * hash(i, row, 76)) * on
       const am = -Math.PI / 2 + um / R
-      p.noFill()
-      p.stroke(alpha(p, '#D3E3E8', a))
-      p.strokeWeight(X(thick))
-      const r = R - d
-      p.arc(X(cx), X(cy), X(r * 2), X(r * 2), am - len / 2 / R, am + len / 2 / R)
+      ctx.strokeStyle = `rgba(211, 227, 232, ${a})`
+      ctx.lineWidth = X(thick)
+      ctx.beginPath()
+      ctx.arc(X(cx), X(cy), X(R - d), am - len / 2 / R, am + len / 2 / R)
+      ctx.stroke()
       if (row >= 1 && hash(i, row, 77) > 0.72) {
         // A heap of cumulus on the band: flat lobes, squashed toward the limb.
-        p.noStroke()
-        p.fill(alpha(p, '#E4EEF0', Math.min(1, a * 1.3)))
+        ctx.fillStyle = `rgba(228, 238, 240, ${Math.min(1, a * 1.3)})`
         const squash = 0.22 + 0.1 * row
+        const turn = am + Math.PI / 2
+        ctx.beginPath()
         for (let j = 0; j < 4; j++) {
           const [x, y] = at(um + (j - 1.5) * len * 0.16, d - 0.02 * j)
           const big = (0.12 + 0.12 * hash(i, j, 78)) * (0.7 + 0.2 * row)
-          ctx.save()
-          ctx.translate(X(x), X(y))
-          ctx.rotate(am + Math.PI / 2)
-          p.ellipse(0, 0, X(big * 2), X(big * 2 * squash))
-          ctx.restore()
+          ctx.moveTo(X(x + big * Math.cos(turn)), X(y + big * Math.sin(turn)))
+          ctx.ellipse(X(x), X(y), X(big), X(big * squash), turn, 0, Math.PI * 2)
         }
+        ctx.fill()
       }
     }
   }
@@ -214,13 +215,14 @@ function drawEarth(p: p5, c: Drawn, f: Frame, s: VoidState, gone: number): void 
   ctx.fillStyle = `rgba(8, 14, 32, ${0.62 * on})`
   ctx.fillRect(0, X(-2), X(2 * R + 4), X(2 * R + 4))
   ctx.restore()
-  p.noStroke()
   for (const [u, d, h] of towns) {
     const [x, y] = at(u, d)
     const into = night(x, y)
     if (into < 0.15) continue
-    p.fill(alpha(p, h < 0.7 ? '#E9A85A' : '#F2D598', (0.3 + 0.35 * h) * smooth(into, 0.15, 0.9) * on))
-    p.circle(X(x), X(y), Math.max(1, X(0.02 + 0.018 * h)))
+    ctx.fillStyle = `rgba(${h < 0.7 ? '233, 168, 90' : '242, 213, 152'}, ${(0.3 + 0.35 * h) * smooth(into, 0.15, 0.9) * on})`
+    ctx.beginPath()
+    ctx.arc(X(x), X(y), Math.max(0.5, X(0.01 + 0.009 * h)), 0, Math.PI * 2)
+    ctx.fill()
   }
   ctx.restore()
 
