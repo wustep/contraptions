@@ -1,7 +1,8 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash, type frame } from '../kit'
-import { EYE_WHITE, ROCKS, ROCKS_THEME, VOID, VOID_THEME } from '../worlds'
+import { ROCKS, ROCKS_THEME, VOID, VOID_THEME } from '../worlds'
+import { NOON, type Light } from './ledgeLight'
 import { groundAt, LIP, Q, RI, RIM, RO, SLAB, SLAB_BACK, TOP, type Ledge, type Plan } from './ledgePath'
 
 /**
@@ -258,42 +259,43 @@ const path = (ctx: Ctx2D, pts: Pt[], k: number, close = true, map?: (p: Pt) => P
   if (close) ctx.closePath()
 }
 
-/** The sky: pale at the top, warm with haze down at the eye's height (the frame's middle). */
-export function paintSky(p: p5, k: number, f: Frame): void {
+/** The sky: pale at the top, warm with haze down at the eye's height (the frame's middle); graded by the hour (`light`). */
+export function paintSky(p: p5, k: number, f: Frame, light: Light = NOON): void {
   const ctx = p.drawingContext as Ctx2D
   const H = f.y1 - f.y0
   const g = ctx.createLinearGradient(0, (f.cy - H * 0.75) * k, 0, f.cy * k)
-  g.addColorStop(0, ROCKS.sky)
-  g.addColorStop(0.65, mixHex(ROCKS.sky, HAZE, 0.5))
-  g.addColorStop(1, HAZE)
+  g.addColorStop(0, light.sky[0])
+  g.addColorStop(0.65, light.sky[1])
+  g.addColorStop(1, light.sky[2])
   ctx.fillStyle = g
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
-  paintSun(ctx, k, f)
+  paintSun(ctx, k, f, light)
 }
 
 /**
- * The sun: low and pale over the far canyon, a white disc gone soft in the haze, and the sky warm round it. So far
- * off it keeps its place in the frame however the camera moves, as the cloud does; the walls come up over it.
+ * The sun: over the far canyon, a disc gone soft in the haze, and the sky warm round it. So far off it keeps its place
+ * in the frame however the camera moves, as the cloud does; the walls come up over it. High and white at noon, it
+ * goes down the frame and warms with the hour (`light.sun`).
  */
-function paintSun(ctx: Ctx2D, k: number, f: Frame): void {
+function paintSun(ctx: Ctx2D, k: number, f: Frame, light: Light): void {
   const W = f.x1 - f.x0
   const H = f.y1 - f.y0
   // Sized to the frame's height on a 16:9 stage (read off its width), so a taller stage does not grow it.
   const S = Math.min(H, (W * 9) / 16)
-  const cx = (f.x0 + W * 0.74) * k
-  const cy = (f.cy - S * 0.27) * k
-  const r = S * 0.05 * k
-  const warm = mixHex(ROCKS.sand, '#FFFFFF', 0.55)
+  const sun = light.sun
+  const cx = (f.x0 + W * sun.u) * k
+  const cy = (f.cy - S * sun.v) * k
+  const r = S * sun.r * k
   const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 9)
-  glow.addColorStop(0, rgba(warm, 0.55))
-  glow.addColorStop(0.25, rgba(warm, 0.22))
-  glow.addColorStop(1, rgba(warm, 0))
+  glow.addColorStop(0, rgba(sun.warm, sun.glow))
+  glow.addColorStop(0.25, rgba(sun.warm, sun.glow * 0.4))
+  glow.addColorStop(1, rgba(sun.warm, 0))
   ctx.fillStyle = glow
   ctx.fillRect(cx - r * 9, cy - r * 9, r * 18, r * 18)
   const disc = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 1.25)
-  disc.addColorStop(0, 'rgba(255, 253, 246, 0.95)')
-  disc.addColorStop(0.78, 'rgba(255, 251, 240, 0.85)')
-  disc.addColorStop(1, rgba(warm, 0))
+  disc.addColorStop(0, rgba(sun.disc, 0.95))
+  disc.addColorStop(0.78, rgba(sun.disc, 0.85))
+  disc.addColorStop(1, rgba(sun.warm, 0))
   ctx.fillStyle = disc
   ctx.fillRect(cx - r * 1.3, cy - r * 1.3, r * 2.6, r * 2.6)
 }
@@ -302,7 +304,7 @@ function paintSun(ctx: Ctx2D, k: number, f: Frame): void {
  * High cloud: a few long thin streaks, so far off they keep their place in the frame however the camera moves, and
  * drift on the wind, slowly. The one thing in the sky, and the wind's only mark on it.
  */
-export function paintCloud(p: p5, k: number, f: Frame, t: number): void {
+export function paintCloud(p: p5, k: number, f: Frame, t: number, light: Light = NOON): void {
   const ctx = p.drawingContext as Ctx2D
   const W = f.x1 - f.x0
   const H = f.y1 - f.y0
@@ -318,7 +320,7 @@ export function paintCloud(p: p5, k: number, f: Frame, t: number): void {
     const cy = f.y0 + H * c.v
     const L = W * c.l
     const h = H * c.h
-    ctx.fillStyle = rgba(mixHex(ROCKS.sky, EYE_WHITE, 0.7), c.a)
+    ctx.fillStyle = rgba(light.cloud, c.a)
     ctx.beginPath()
     // A long lens, fuller at its head, its underside flat.
     const n = 24
@@ -342,7 +344,7 @@ export function paintCloud(p: p5, k: number, f: Frame, t: number): void {
 /** How finely bedding is drawn for a frame: every painting of the rock in one frame samples it on the same grid, so they meet exactly. */
 export const beddingStep = (f: Frame): number => Math.max(0.2, (f.x1 - f.x0) / 90)
 
-function paintBands(ctx: Ctx2D, k: number, x0: number, x1: number, y0: number, y1: number, step: number, map?: (p: Pt) => Pt, tint?: { c: string; f: number }, lines = 0): void {
+function paintBands(ctx: Ctx2D, k: number, x0: number, x1: number, y0: number, y1: number, step: number, map?: (p: Pt) => Pt, tint?: { c: string; f: number }, lines = 0, grade?: (hex: string) => string): void {
   const first = Math.floor(x0 / step)
   const last = Math.ceil(x1 / step) + 1
   // Each band's top, on the grid; the band itself is the strip down to the next one's top, so no two bands ever
@@ -371,7 +373,8 @@ function paintBands(ctx: Ctx2D, k: number, x0: number, x1: number, y0: number, y
     line.forEach(([px, py], j) => (j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)))
     for (let j = under.length - 1; j >= 0; j--) ctx.lineTo(under[j][0], under[j][1])
     ctx.closePath()
-    ctx.fillStyle = tint ? mixHex(STRATA[i].c, tint.c, tint.f) : STRATA[i].c
+    const c = grade ? grade(STRATA[i].c) : STRATA[i].c
+    ctx.fillStyle = tint ? mixHex(c, tint.c, tint.f) : c
     ctx.fill()
     drawn.push(line)
     below = line
@@ -388,30 +391,38 @@ function paintBands(ctx: Ctx2D, k: number, x0: number, x1: number, y0: number, y
   }
 }
 
-/** The far slices, back to front, each in its own perspective about the eye, with the haze pooled in their depths. */
-export function paintSlices(p: p5, k: number, f: Frame, land: Land): void {
+/**
+ * The far slices, back to front, each in its own perspective about the eye, with the haze pooled in their depths, and
+ * graded by the hour: warmed in the gold, and at dusk each one a silhouette against the light, the farther the paler.
+ * `between(i, map)` paints whatever stands just in front of slice `i` (the birds, the dust off a far rim), in that
+ * slice's perspective.
+ */
+export function paintSlices(p: p5, k: number, f: Frame, land: Land, light: Light = NOON, between?: (i: number, s: number, map: (q: Pt) => Pt) => void): void {
   const ctx = p.drawingContext as Ctx2D
   const Z = f.y1 - f.y0
-  for (const sl of land.slices) {
+  land.slices.forEach((sl, i) => {
     const s = Z / (Z + sl.D)
     const map = ([x, y]: Pt): Pt => [f.cx + (x - f.cx) * s, f.cy + (y - f.cy) * s]
+    // How near it is, for its grade: the horizon none, the nearest slice most.
+    const near = Math.min(1, 12 / (12 + sl.D)) * 2.2
+    const fill = light.far(sl.fill, near)
     // What of the slice's own cells is in the frame: the frame taken back through the perspective.
     const lx0 = f.cx + (f.x0 - f.cx) / s
     const lx1 = f.cx + (f.x1 - f.cx) / s
     const ly0 = f.cy + (f.y0 - f.cy) / s
     const ly1 = f.cy + (f.y1 - f.cy) / s
     path(ctx, sl.pts, k, true, map)
-    ctx.fillStyle = sl.fill
+    ctx.fillStyle = fill
     ctx.fill()
     if (sl.haze < 1) {
       ctx.save()
       ctx.clip()
-      paintBands(ctx, k, lx0, lx1, ly0, ly1, Math.max(0.2, (lx1 - lx0) / 90), map, { c: sl.fill, f: sl.haze })
+      paintBands(ctx, k, lx0, lx1, ly0, ly1, Math.max(0.2, (lx1 - lx0) / 90), map, { c: fill, f: sl.haze }, 0, (c) => light.far(c, near))
       ctx.restore()
     }
     for (const b of sl.buttes) {
       path(ctx, b, k, true, map)
-      ctx.fillStyle = mixHex(sl.fill, ROCKS.canyonShade, 0.12)
+      ctx.fillStyle = mixHex(fill, ROCKS.canyonShade, 0.12)
       ctx.fill()
     }
     if (sl.line > 0) {
@@ -430,26 +441,39 @@ export function paintSlices(p: p5, k: number, f: Frame, land: Land): void {
     const floorY = f.cy + (36 - f.cy) * s
     if (floorY > f.y0 && topY < f.y1) {
       const g = ctx.createLinearGradient(0, topY * k, 0, floorY * k)
-      g.addColorStop(0, rgba(HAZE, 0))
-      g.addColorStop(1, rgba(HAZE, 0.42))
+      g.addColorStop(0, rgba(light.haze, 0))
+      g.addColorStop(1, rgba(light.haze, 0.42))
       ctx.fillStyle = g
       ctx.fillRect((f.x0 - 1) * k, topY * k, (f.x1 - f.x0 + 2) * k, (floorY - topY) * k)
     }
-  }
+    between?.(i, s, map)
+  })
 }
 
 /** The near wall: its rock in strata, the shade under each cliff and the light on each ledge, sand where it lies, and one ink line along its edge. */
-export function paintWall(p: p5, k: number, f: Frame, land: Land, weight: number): void {
+export function paintWall(p: p5, k: number, f: Frame, land: Land, weight: number, light: Light = NOON): void {
   const ctx = p.drawingContext as Ctx2D
   const body: Pt[] = [...land.edge, [6000, DEEP], [land.edge[0][0], DEEP]]
   path(ctx, body, k)
-  ctx.fillStyle = STRATA[0].c
+  ctx.fillStyle = light.lit(STRATA[0].c)
   ctx.fill()
   ctx.save()
   ctx.clip()
-  paintBands(ctx, k, f.x0 - 0.5, f.x1 + 0.5, f.y0, f.y1, beddingStep(f), undefined, undefined, Math.max(0.6, weight * 0.4))
-  // The shade in under each cliff: a band of it down the face, and a wedge under the lip where it overhangs.
-  ctx.fillStyle = rgba(ROCKS.stoneDeep, 0.3)
+  paintBands(ctx, k, f.x0 - 0.5, f.x1 + 0.5, f.y0, f.y1, beddingStep(f), undefined, undefined, Math.max(0.6, weight * 0.4), light.lit)
+  // At dusk the far wall across the floor, facing us with the sun behind it, goes into its own shade.
+  if (light.dusk > 0.01) {
+    const fx = land.ring.x + 6
+    if (f.x1 > fx - 3) {
+      const g = ctx.createLinearGradient((fx - 3) * k, 0, (fx + 2) * k, 0)
+      g.addColorStop(0, rgba(ROCKS.stoneDeep, 0))
+      g.addColorStop(1, rgba(mixHex(ROCKS.stoneDeep, '#5E5566', 0.5), 0.34 * light.dusk))
+      ctx.fillStyle = g
+      ctx.fillRect((fx - 3) * k, (f.y0 - 1) * k, (Math.max(f.x1, fx) - fx + 4) * k, (f.y1 - f.y0 + 2) * k)
+    }
+  }
+  // The shade in under each cliff: a band of it down the face, and a wedge under the lip where it overhangs. Deeper
+  // as the sun goes down.
+  ctx.fillStyle = rgba(ROCKS.stoneDeep, 0.3 + 0.12 * light.dusk)
   for (const face of land.faces) {
     const top = face[0]
     const foot = face[face.length - 1]
@@ -480,7 +504,7 @@ export function paintWall(p: p5, k: number, f: Frame, land: Land, weight: number
   // The light along the top of each ledge, and sand lying on the ones that hold it.
   for (const [a, b] of land.tops) {
     if (b[0] < f.x0 - 1 || a[0] > f.x1 + 1) continue
-    ctx.fillStyle = rgba(mixHex(ROCKS.sand, ROCKS.far, 0.4), 0.75)
+    ctx.fillStyle = rgba(light.ledgeTop, 0.75 + 0.1 * light.dusk)
     ctx.beginPath()
     ctx.moveTo(a[0] * k, a[1] * k)
     ctx.lineTo(b[0] * k, b[1] * k)
@@ -489,7 +513,7 @@ export function paintWall(p: p5, k: number, f: Frame, land: Land, weight: number
     ctx.closePath()
     ctx.fill()
   }
-  ctx.fillStyle = ROCKS.sand
+  ctx.fillStyle = light.lit(ROCKS.sand)
   for (const [a, b] of land.sand) {
     if (b[0] < f.x0 - 1 || a[0] > f.x1 + 1) continue
     ctx.beginPath()
