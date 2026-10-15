@@ -4,7 +4,7 @@ import { drawInk, drawScreen, inkRing, mix, PLACES, rgba } from '../cast'
 import { heavy } from '../chamber/ink'
 import { LOGOS } from '../chamber/plan'
 import { SHANG, TENT } from '../worlds'
-import { closeFlare, linkDrop, linkLit, linkSpan, panelAngle, redCast, screenFlash, screenOn, shareAt, shareFlare, sharePulse, sharing } from './timeline'
+import { closeFlare, leaving, linkDrop, linkLit, linkSpan, panelAngle, redCast, screenFlash, screenOn, shareAt, shareFlare, sharePulse, sharing } from './timeline'
 
 /**
  * The ring: twelve screens on one circular rig like a clock face, each showing a shell over its own place, each
@@ -223,7 +223,7 @@ function drawPanel(p: p5, k: number, i: number, t: number, th: number, on: numbe
   ctx.rotate(tilt(th))
   ctx.fillStyle = TENT.frame
   ctx.fillRect(0, -PH * k, PW * k, PH * k)
-  drawScreen(p, k, FR, -PH + FR, GW, GH, { on, place: PLACES[i], t, glow: 0, bezel: TENT.frame })
+  drawScreen(p, k, FR, -PH + FR, GW, GH, { on, place: PLACES[i], t, glow: 0, bezel: TENT.frame, away: leaving(i, t) })
   if (on < 0.99) {
     // Dead, it is still a screen: dull glass with the room in it, and a sheen across it.
     const dead = 1 - on

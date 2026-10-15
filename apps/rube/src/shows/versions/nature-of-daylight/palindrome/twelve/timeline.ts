@@ -88,13 +88,31 @@ export const shareFlare = (t: number): number => (t >= SHARE_MEET && t < SEAM.da
 /** The share's strikes: her key, the word into Montana, the halves meeting. */
 export const SHARE_HITS = [SHARE_KEY, SHARE_IN, SHARE_MEET]
 
+/**
+ * The shells leaving (after the loudest bar, the world mended): on every screen but Montana's the shell goes back up
+ * into its cloud the way it came down, a pair a beat, from the top of the ring down both sides to Montana's neighbours.
+ * Montana's own goes in the valley, for real, after the cut.
+ */
+const LEAVE_BEATS = [304.785, 305.662, 306.561, 307.513, 308.442, 309.348].map(B)
+/** When screen i's shell starts to go, or null (Montana). */
+export const leaveAt = (i: number): number | null => (i === 0 ? null : LEAVE_BEATS[Math.abs(6 - i)])
+const LEAVE_FOR = 0.95
+/** How far screen i's shell has gone, 0 there to 1 gone up into the cloud. */
+export function leaving(i: number, t: number): number {
+  const at = leaveAt(i)
+  return at === null ? 0 : clamp01((t - at) / LEAVE_FOR)
+}
+export const LEAVE_HITS = LEAVE_BEATS
+
 /** The falls and rises, as the check reads them: the eleven screens in the order they went, and came back. */
 export const FALLS: { screen: number; t: number }[] = Array.from({ length: 11 }, (_, n) => ({ screen: n + 1, t: release(n + 1) }))
 export const RISES: { screen: number; t: number }[] = Array.from({ length: 11 }, (_, n) => ({ screen: 11 - n, t: lock(11 - n) }))
 
 /** Every strike of the tent: each on a beat (the dark strikes all fourteen of its beats; the call every beat from the wake). */
 export const DARK_HITS: number[] = [...F.slice(1), ...SLIPS[1]].sort((a, b) => a - b)
-export const CALL_HITS: number[] = [WAKE, ...PRESSES, CALL_KEY, ...S.slice(1), ...STEPS[11], ...STEPS[1], ...VOICE.filter((v) => v > WHOLE)].sort((a, b) => a - b)
+export const CALL_HITS: number[] = [WAKE, ...PRESSES, CALL_KEY, ...S.slice(1), ...STEPS[11], ...STEPS[1], ...VOICE.filter((v) => v > WHOLE), ...LEAVE_HITS]
+  .filter((t, i, all) => all.indexOf(t) === i)
+  .sort((a, b) => a - b)
 
 /* ------------------------------------------------------------------ motion */
 

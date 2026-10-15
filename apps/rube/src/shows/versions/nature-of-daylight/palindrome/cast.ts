@@ -663,9 +663,10 @@ const SCENE: Record<Place, { sky: string; far: string; ground: string; shade: st
 /**
  * A place with a shell over it, as a screen shows it: sky, the land's line, the shell hanging over it. Drawn into the
  * rect (x, y, w, h) in cells, top-left corner. `t` is show time (the land's light breathes, the shell turns a hair).
- * `descend` 0..1 lowers the shell out of cloud (0 hidden in it, 1 at its height), for the news.
+ * `descend` 0..1 lowers the shell out of cloud (0 hidden in it, 1 at its height), for the news. `away` 0..1 takes it back
+ * up into the cloud the way it came and out of the picture, for the shells leaving.
  */
-export function drawShellScene(p: p5, k: number, x: number, y: number, w: number, h: number, place: Place, t = 0, descend = 1): void {
+export function drawShellScene(p: p5, k: number, x: number, y: number, w: number, h: number, place: Place, t = 0, descend = 1, away = 0): void {
   const ctx = ctxOf(p)
   const c = SCENE[place]
   const X = x * k
@@ -707,15 +708,23 @@ export function drawShellScene(p: p5, k: number, x: number, y: number, w: number
     ctx.fillRect(X, hz, W, H)
     if (place === 'island') land(hz + H * 0.02, H * 0.06, c.far, 3, 0.2)
   } else land(hz + H * 0.04, H * 0.05, c.ground, 7, 2.1)
-  // The shell: hanging over the land, coming down out of the top on the news.
-  const spot = shellOnScreen(x, y, w, h, descend)
+  // The shell: hanging over the land, coming down out of the top on the news (and going back up into it at the end).
+  const up = clamp01(away)
+  const d = descend * (1 - up * up * (3 - 2 * up))
+  const spot = shellOnScreen(x, y, w, h, d)
   const sh = spot.h
   const scy = spot.c[1]
-  drawShell(p, k, spot.c[0], scy, sh, { light: 0.5, mist: place === 'snow' || place === 'sea' ? 0.3 : 0.15, mistColor: c.sky })
-  if (descend < 1) {
+  const gone = up <= 0.5 ? 0 : clamp01((up - 0.5) / 0.5)
+  if (gone < 1) {
+    const a0 = ctx.globalAlpha
+    ctx.globalAlpha = a0 * (1 - gone)
+    drawShell(p, k, spot.c[0], scy, sh, { light: 0.5, mist: place === 'snow' || place === 'sea' ? 0.3 : 0.15, mistColor: c.sky })
+    ctx.globalAlpha = a0
+  }
+  if (d < 1) {
     // The cloud it comes out of: the top of the screen soft white.
     const cl = ctx.createLinearGradient(0, Y, 0, Y + H * 0.35)
-    cl.addColorStop(0, rgba('#F1F3F0', 0.95))
+    cl.addColorStop(0, rgba('#F1F3F0', 0.95 * (1 - 0.4 * up)))
     cl.addColorStop(1, rgba('#F1F3F0', 0))
     ctx.fillStyle = cl
     ctx.fillRect(X, Y, W, H * 0.35)
@@ -741,6 +750,8 @@ export interface ScreenLook {
   t?: number
   /** For the news: the shell coming down (see drawShellScene). */
   descend?: number
+  /** Going: 0 there, 1 gone back up into its cloud (the shells leaving, at the end). */
+  away?: number
   /** The bezel's colour. */
   bezel?: string
   /** How much it glows onto what is round it, 0 to 1. Default 0.5. */
@@ -776,7 +787,7 @@ export function drawScreen(p: p5, k: number, x: number, y: number, w: number, h:
   ctx.fillRect(X, Y, W, H)
   if (on > 0.01) {
     ctx.globalAlpha *= on
-    drawShellScene(p, k, x, y, w, h, o.place ?? 'montana', o.t ?? 0, o.descend ?? 1)
+    drawShellScene(p, k, x, y, w, h, o.place ?? 'montana', o.t ?? 0, o.descend ?? 1, o.away ?? 0)
     // The glass: a cool cast over the picture and a faint sheen across its top.
     ctx.fillStyle = rgba(TENT.screenOn, 0.12)
     ctx.fillRect(X, Y, W, H)
