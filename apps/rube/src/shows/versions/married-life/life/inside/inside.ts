@@ -3,6 +3,7 @@ import { mixHex } from '../../../../../parts'
 import { alpha, frame, scenery } from '../kit'
 import { AGE, CUT } from '../music'
 import { HOME, INK } from '../worlds'
+import { drawPapers } from './papers'
 
 /**
  * The house, inside (the director's set): the house cut open like a doll's house, from the back yard on the left to
@@ -135,11 +136,19 @@ export const inside = scenery<null>({
     rect(p, k, mid, H.ceilUp, H.landing[1], H.groundUp)
     p.fill(nurseryPaper)
     rect(p, k, H.nursery[0], H.ceilUp, mid, H.groundUp)
-    // A chair rail round the living room and the hall, and their skirting.
-    p.stroke(alpha(p, ink, 0.28))
-    p.strokeWeight(weight * 0.6)
-    p.line(H.living[0] * k, -0.95 * k, H.living[1] * k, -0.95 * k)
-    p.line(H.hall[0] * k, -0.95 * k, H.hall[1] * k, -0.95 * k)
+    // Their patterns, and the panelling to the chair rail round the living room and the hall (`papers.ts`); then the
+    // skirting.
+    drawPapers(p.drawingContext as CanvasRenderingContext2D, k, f, {
+      living: { x0: H.living[0], x1: mid, y0: H.ceil, y1: H.ground },
+      hall: { x0: mid, x1: H.hall[1], y0: H.ceil, y1: H.ground },
+      landing: { x0: mid, x1: H.landing[1], y0: H.ceilUp, y1: H.groundUp },
+      nursery: { x0: H.nursery[0], x1: mid, y0: H.ceilUp, y1: H.groundUp },
+      paper,
+      hallPaper,
+      nurseryPaper,
+      age,
+      nurseryFade: Math.max(0, Math.min(1, (t - CUT.doctor) / 30)),
+    })
     p.noStroke()
     p.fill(mixHex(HOME.woodDark, '#6A5040', age))
     rect(p, k, H.living[0], H.ground - 0.12, H.living[1], H.ground)
