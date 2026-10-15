@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { flicker, layer, motes, shade, sway, type Frame } from '../depth'
+import { flicker, lastBeat, layer, motes, shade, sway, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
 import { clamp01, ctxOf, ease, line, mix, rect, rgba, ring, shape, type Pen } from '../pen'
 import { CAB } from '../cab'
@@ -996,12 +996,67 @@ export function crawlLight(pen: Pen, t: number, f: Frame): void {
   ctx.restore()
 }
 
+/** A stroke with round ends, `w` cells wide: a limb. */
+function bone(pen: Pen, a: Pt, b: Pt, hex: string, w: number): void {
+  const ctx = ctxOf(pen.p)
+  ctx.lineCap = 'round'
+  seg(pen, a, b, hex, w)
+  ctx.lineCap = 'butt'
+}
+
+/**
+ * The mechanic under the floor, on his back on a creeper beneath the near work light, his cap on: one knee up and
+ * rocking, his near arm up to the return's track with a wrench on it, a pull on every beat and the ratchet back.
+ */
+function mechanic(pen: Pen, t: number, f: Frame): void {
+  const y = 1.84
+  if (f.y1 < y - 0.6 || f.x0 > 6.4 || f.x1 < 2.9) return
+  const coat = '#28323A'
+  const coatHi = '#3C4A52'
+  const skin = '#6E5040'
+  // The creeper: its board and casters.
+  box(pen, 3.15, y, 5.95, y + 0.05, '#1A1412')
+  for (const cx of [3.35, 5.75]) disc(pen, [cx, y + 0.1], 0.05, '#0E0A0A')
+  // Legs: hips to knees up, knees to feet flat on the ground beyond the board's end; the far knee rocks.
+  const hip: Pt = [4.4, y - 0.12]
+  const rock = 0.08 * sway(t, 51, 3.4)
+  const kneeF: Pt = [3.82 + rock, y - 0.66]
+  const kneeN: Pt = [3.95, y - 0.6]
+  bone(pen, hip, kneeF, mix(coat, '#000000', 0.35), 0.2)
+  bone(pen, kneeF, [3.3 + rock * 0.5, y + 0.02], mix(coat, '#000000', 0.35), 0.16)
+  bone(pen, hip, kneeN, coat, 0.21)
+  bone(pen, kneeN, [3.45, y + 0.03], coat, 0.17)
+  // The body along the board, and his head on its rest, his cap's peak up.
+  const sh: Pt = [5.3, y - 0.17]
+  bone(pen, hip, sh, coat, 0.34)
+  seg(pen, [hip[0] + 0.1, y - 0.3], [sh[0] - 0.05, y - 0.33], coatHi, 0.02)
+  const head: Pt = [5.62, y - 0.18]
+  disc(pen, head, 0.16, skin)
+  poly(pen, [[head[0] - 0.12, head[1] - 0.1], [head[0] + 0.06, head[1] - 0.2], [head[0] + 0.17, head[1] - 0.04], [head[0] + 0.1, head[1] + 0.02]], '#20262C')
+  poly(pen, [[head[0] - 0.02, head[1] - 0.17], [head[0] + 0.02, head[1] - 0.36], [head[0] + 0.07, head[1] - 0.35], [head[0] + 0.06, head[1] - 0.17]], '#181C20')
+  // The far arm on his chest.
+  bone(pen, [sh[0] - 0.05, y - 0.22], [4.85, y - 0.36], mix(coat, '#000000', 0.35), 0.13)
+  // The near arm up to the track, the wrench on its bolt: pulled on the beat, ratcheted back after.
+  const b = lastBeat(t)
+  const u = Number.isFinite(b.ago) ? b.ago : 1
+  const pull = u < 0.16 ? Math.sin((u / 0.16) * (Math.PI / 2)) : Math.max(0, 1 - (u - 0.16) / 0.3)
+  const bolt: Pt = [5.12, TRACK + 0.13]
+  const ang = -0.35 + 0.75 * pull
+  const grip: Pt = [bolt[0] - Math.cos(ang) * 0.24, bolt[1] + Math.sin(ang) * 0.24]
+  const elbow: Pt = [(sh[0] + grip[0]) / 2 + 0.22, (sh[1] + grip[1]) / 2 + 0.05]
+  bone(pen, [sh[0] - 0.02, sh[1] - 0.05], elbow, coat, 0.14)
+  bone(pen, elbow, grip, coat, 0.12)
+  seg(pen, grip, bolt, '#8C8A84', 0.035)
+  disc(pen, grip, 0.06, skin)
+}
+
 /**
  * Under the floor: the work lights swinging on their cords (their light and the posts' shadows on the wall behind,
- * `crawlLight`), a little dust, the lift wheel turning.
+ * `crawlLight`), a mechanic at the return's track, a little dust, the lift wheel turning.
  */
 export function underFloor(pen: Pen, t: number, f: Frame): void {
   if (f.y1 < EDGE) return
+  mechanic(pen, t, f)
   const bulbs = workBulbs(t)
   for (const [i, b] of bulbs.entries()) {
     seg(pen, [WORK[i].x, EDGE + 0.1], b, '#0A0607', 0.012)
