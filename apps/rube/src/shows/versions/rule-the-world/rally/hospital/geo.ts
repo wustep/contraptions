@@ -9,8 +9,9 @@ import { ring } from '../pen'
  * (-0.5, 0), at rest on the foot of Rachel's bed.
  *
  * Right to left: the curtained partition, the nightstand, the bed under its tall window with Rachel on the pillow at
- * its head, the ward's wall (in section) with its door standing open, and the corridor: its checkerboard floor, the
- * bench, and the nursery's wide window, the bassinets behind it. y is down; the floor is at FLOOR.
+ * its head, the ward's wall (in section) with its door standing open, and the corridor: its checkerboard floor, its
+ * window over the bench, the bench, and the nursery's wide window, the bassinets behind it. y is down; the floor is at
+ * FLOOR.
  */
 
 export const T0 = SEAM.hospital
@@ -133,6 +134,8 @@ export const BENCH_TOP = 0.55
 export const GLASS = { x0: -11.6, x1: -7.2, y0: -2.2, y1: 0.05 }
 export const SILL: [number, number] = [-11.75, -7.05]
 export const SILL_TOP = 0.05
+/** The corridor's window, over the bench, between the nursery's glass and the ward's door: it looks out across the court. */
+export const CORRIDOR_WIN = { x0: -6.62, x1: -5.38, y0: -3.25, y1: -0.5 }
 /** The corridor's far door. */
 export const FAR_DOOR: [number, number] = [-14.7, -13.4]
 

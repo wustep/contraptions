@@ -17,7 +17,9 @@ import { AT_GLASS, babyAt, HOSPITAL_STRIKES, hospitalWay, LIFT, martyAt, NUDGE, 
  * back to a still picture of the corridor's window, the wall above it pale and quiet for the credits, the morning
  * warming to gold until the end.
  *
- * See `geo.ts` for the clock and the ground, `draw.ts` for the drawing.
+ * See `geo.ts` for the clock and the ground, `draw.ts` for the drawing; `dawn.ts` for the morning's colour (grey-blue,
+ * rose, then gold once the sun clears the roofs), `outside.ts` for the city waking through the windows, `light.ts` for
+ * the shafts, the patches on the floor and the dust in them, and `props.ts` for the small life and the foreground.
  */
 
 export const HOSPITAL_AT: Pt = [0, 0]
