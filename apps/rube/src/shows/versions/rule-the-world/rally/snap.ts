@@ -10,13 +10,13 @@ let engine: Engine | null = null
 if (typeof window !== 'undefined') void import('../../../../engine').then((m) => (engine = m))
 
 /**
- * A place, painted once into a picture of its own: what the finale hangs in the rooms of the machine (`finale.ts`).
+ * A place, painted into a picture of its own: what the finale hangs in the rooms of the machine (`finale.ts`).
  *
  * Each picture is the place as the stage would paint it at one moment of its story (`t`), framed on a point of its
  * own cells (`at`) and `cells` tall, with Marty and the company left out (he is at the nursery's glass by then) and
  * the show's own light on him (his glow, the blooms) asleep while it is painted; the place's grade and vignette are
- * kept, so each room keeps its own colour. They are painted on a hidden canvas of their own and kept: a picture is a
- * pure function of its moment and its framing, so it is the same every time it is made.
+ * kept, so each room keeps its own colour. They are painted on one hidden canvas and copied out: a picture is a pure
+ * function of its moment and its framing, so it is the same every time it is made, and the ones made ahead are kept.
  */
 
 export interface Snap {
@@ -72,9 +72,24 @@ export function snapshot(snap: Snap, w: number, h: number, like: p5): HTMLCanvas
   const id = `${snap.key}|${snap.t}|${snap.at.join(',')}|${snap.cells}|${w}x${h}`
   const have = made.get(id)
   if (have) return have
+  if (typeof document === 'undefined') return null
+  const out = document.createElement('canvas')
+  out.width = w
+  out.height = h
+  if (!paintInto(out, snap, like)) return null
+  made.set(id, out)
+  return out
+}
+
+/**
+ * Paint `snap` into `dest` (its size), now, keeping nothing: what a room that is running repaints itself with
+ * (`finale.ts`). False if it could not be painted.
+ */
+export function paintInto(dest: HTMLCanvasElement, snap: Snap, like: p5): boolean {
   const show = live.show
+  const { width: w, height: h } = dest
   const P = getPainter(like, w, h)
-  if (!show || !P || !engine) return null
+  if (!show || !P || !engine) return false
   const { drawWorld } = engine
   const here = { ...show.at(snap.t), hidden: true, balls: undefined }
   const k = h / snap.cells
@@ -90,17 +105,16 @@ export function snapshot(snap: Snap, w: number, h: number, like: p5): HTMLCanvas
     }
   }
   P.p.redraw()
-  // A place that cannot be painted leaves its room empty rather than the show stopped; it is said, and tried again.
+  // A place that cannot be painted leaves its room as it was rather than the show stopped; it is said, and tried again.
   if (failed) {
     console.error(`rally: the ${snap.key} room could not be painted`, failed)
-    return null
+    return false
   }
-  const out = document.createElement('canvas')
-  out.width = w
-  out.height = h
-  out.getContext('2d')?.drawImage(P.p.drawingContext.canvas as HTMLCanvasElement, 0, 0)
-  made.set(id, out)
-  return out
+  const g = dest.getContext('2d')
+  if (!g) return false
+  g.clearRect(0, 0, w, h)
+  g.drawImage(P.p.drawingContext.canvas as HTMLCanvasElement, 0, 0)
+  return true
 }
 
 /** Whether `snap` is painted at that size already. */
@@ -128,25 +142,17 @@ export function prepare(snaps: Snap[], w: number, h: number, like: p5): void {
     const next = left.shift()
     if (next && !painted(next, w, h)) snapshot(next, w, h, like)
     if (left.length) idle(step, { timeout: 3000 })
-    else rest()
   }
   idle(step, { timeout: 3000 })
 }
 
-/** Let the painter go once every picture is made. */
-export function rest(): void {
-  if (!painter) return
-  painter.p.remove()
-  painter.holder.remove()
-  painter = null
-}
-
 // Dev: a picture on demand, to frame the rooms by eye.
 if (typeof window !== 'undefined' && (import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
-  ;(window as unknown as Record<string, unknown>).__rallySnap = (key: string, t: number, x: number | null, y: number | null, cells: number, w: number, h: number) => {
+  ;(window as unknown as Record<string, unknown>).__rallySnap = (key: string, t: number, x: number | null, y: number | null, cells: number, w: number, h: number, encode = true) => {
     const cam = live.camera?.(t)
     const at: [number, number] = [x ?? cam?.x ?? 0, y ?? cam?.y ?? 0]
     const like = painter?.p ?? live.stage
-    return { at, url: like ? snapshot({ key: `${key}?`, t, at, cells }, w, h, like)?.toDataURL('image/png') ?? null : null }
+    const pic = like ? snapshot({ key: `${key}?`, t, at, cells }, w, h, like) : null
+    return { at, url: encode ? pic?.toDataURL('image/png') ?? null : null }
   }
 }

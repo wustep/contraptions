@@ -6,7 +6,7 @@ import { bloom, confetti, flicker, motes, pulse, rising, shaft } from './depth'
 import { live } from './live'
 import { BAR, CREDITS_AT, DURATION, at } from './music'
 import { ctxOf, rgb } from './pen'
-import { painted, prepare, rest, snapshot, type Snap } from './snap'
+import { paintInto, painted, prepare, snapshot, type Snap } from './snap'
 
 /**
  * The finale: the machine, whole.
@@ -60,8 +60,14 @@ export const WARD_ROOM = roomBox(2, 0)
 interface Room {
   key: string
   box: Box
-  /** The place painted into it, or none for the ward (itself). */
+  /** The place painted into it, or none for the ward (itself): framed as `snap` says, from the start of `loop`. */
   snap?: Snap
+  /**
+   * The stretch of its place the room plays over and over once his light has woken it (show seconds), and whether its
+   * framing follows that place's camera across (the road, which goes by).
+   */
+  loop?: [number, number]
+  follow?: boolean
   /** Which way his path crosses it: 1 left to right, -1 right to left. */
   dir: 1 | -1
   /** The room's own life over its picture. */
@@ -76,19 +82,19 @@ interface Lens {
   at: (u: number, v: number) => Pt
 }
 
-const PIC_W = 1150
-const PIC_H = 400
+const PIC_W = 920
+const PIC_H = 320
 
 /** The rooms in the order his path runs through them, bottom to top. */
 const ROOMS: Room[] = [
-  { key: 'store', box: roomBox(0, 2), dir: 1, snap: { key: 'store', t: 15.5, at: [9.1, -0.25], cells: 8.5 }, life: storeLife },
-  { key: 'london', box: roomBox(1, 2), dir: 1, snap: { key: 'london', t: 62, at: [2.0, -1.5], cells: 10 }, life: londonLife },
-  { key: 'hotel', box: roomBox(2, 2), dir: 1, snap: { key: 'hotel', t: 101.5, at: [5.0, 1.6], cells: 8.5 }, life: hotelLife },
-  { key: 'alley', box: roomBox(2, 1), dir: -1, snap: { key: 'alley', t: 129.6, at: [6.1, -2.6], cells: 8.5 }, life: alleyLife },
-  { key: 'road', box: roomBox(1, 1), dir: -1, snap: { key: 'road', t: 144, at: [22.05, -1.32], cells: 7.5 }, life: roadLife },
-  { key: 'barn', box: roomBox(0, 1), dir: -1, snap: { key: 'barn', t: 160, at: [46.6, -2.6], cells: 10 }, life: jerseyLife },
-  { key: 'airfield', box: roomBox(0, 0), dir: 1, snap: { key: 'airfield', t: 171, at: [60.5, -1.3], cells: 8.5 }, life: airfieldLife },
-  { key: 'tokyo', box: roomBox(1, 0), dir: 1, snap: { key: 'tokyo', t: 190.0, at: [2.9, -2.0], cells: 9.5 }, life: tokyoLife },
+  { key: 'store', box: roomBox(0, 2), dir: 1, snap: { key: 'store', t: 10.4, at: [9.1, -0.25], cells: 8.5 }, loop: [10.4, 18.4], life: storeLife },
+  { key: 'london', box: roomBox(1, 2), dir: 1, snap: { key: 'london', t: 60.4, at: [2.0, -1.5], cells: 10 }, loop: [60.4, 66.4], life: londonLife },
+  { key: 'hotel', box: roomBox(2, 2), dir: 1, snap: { key: 'hotel', t: 112, at: [5.0, 1.6], cells: 8.5 }, loop: [112, 120], life: hotelLife },
+  { key: 'alley', box: roomBox(2, 1), dir: -1, snap: { key: 'alley', t: 124, at: [6.1, -2.6], cells: 8.5 }, loop: [124, 132], life: alleyLife },
+  { key: 'road', box: roomBox(1, 1), dir: -1, snap: { key: 'road', t: 140, at: [22.05, -1.32], cells: 7.5 }, loop: [140, 146.6], follow: true, life: roadLife },
+  { key: 'barn', box: roomBox(0, 1), dir: -1, snap: { key: 'barn', t: 157.5, at: [46.6, -2.6], cells: 10 }, loop: [157.5, 163.5], life: jerseyLife },
+  { key: 'airfield', box: roomBox(0, 0), dir: 1, snap: { key: 'airfield', t: 166.5, at: [60.5, -1.3], cells: 8.5 }, loop: [166.5, 172.5], life: airfieldLife },
+  { key: 'tokyo', box: roomBox(1, 0), dir: 1, snap: { key: 'tokyo', t: 190.2, at: [2.9, -2.0], cells: 9.5 }, loop: [190.2, 197.2], life: tokyoLife },
   { key: 'ward', box: WARD_ROOM, dir: 1, life: () => {} },
 ]
 
@@ -652,9 +658,56 @@ function litAt(i: number, t: number): number {
 
 let lastPainted = -1
 
+/**
+ * The rooms run: once his light has woken a room, it plays its stretch of its place over and over, repainted a dozen
+ * times a second (a diorama's pace; the rooms' turns staggered, so a frame repaints two at most), and at each
+ * turn of its loop the last of it dissolves into the start again.
+ */
+const ROOM_FPS = 12
+const DISSOLVE = 0.5
+const running = new Map<string, { pic: HTMLCanvasElement; at: number }>()
+/** The room's place at `t` (show time of the finale): its framing, at the moment its loop has reached. */
+function roomSnap(room: Room, i: number, t: number): { snap: Snap; within: number; turns: number } | null {
+  const { snap, loop } = room
+  if (!snap || !loop) return null
+  const L = loop[1] - loop[0]
+  // Every room on one grid, each an eighth of a step after the last, so no frame repaints more than two.
+  const q = Math.floor((t - FINALE) * ROOM_FPS - i / ROOMS.length)
+  const u = Math.max(0, FINALE + (q + i / ROOMS.length) / ROOM_FPS - WAKES[i])
+  const turns = Math.floor(u / L)
+  const within = u - turns * L
+  const at = loop[0] + within
+  const cam = room.follow ? live.camera?.(at) : null
+  return { snap: { ...snap, key: `${snap.key}-run`, t: at, at: cam ? [cam.x, snap.at[1]] : snap.at }, within, turns }
+}
+/** The end of a room's loop, kept: what dissolves into its start at each turn. */
+const endOf = (room: Room): Snap | null =>
+  room.snap && room.loop ? { ...room.snap, key: `${room.snap.key}-end`, t: room.loop[1], at: room.follow ? [live.camera?.(room.loop[1]).x ?? room.snap.at[0], room.snap.at[1]] : room.snap.at } : null
+/** The room's picture at `t`: its still until it wakes, then its place running. */
+function roomPicture(p: p5, room: Room, i: number, t: number): { pic: HTMLCanvasElement | null; end: HTMLCanvasElement | null; fade: number } {
+  if (!room.snap) return { pic: null, end: null, fade: 0 }
+  const still = snapshot(room.snap, PIC_W, PIC_H, p)
+  const run = t >= WAKES[i] ? roomSnap(room, i, t) : null
+  if (!run || typeof document === 'undefined') return { pic: still, end: null, fade: 0 }
+  let r = running.get(room.key)
+  if (!r) {
+    const pic = document.createElement('canvas')
+    pic.width = PIC_W
+    pic.height = PIC_H
+    r = { pic, at: NaN }
+    running.set(room.key, r)
+  }
+  if (r.at !== run.snap.t) {
+    if (!paintInto(r.pic, run.snap, p)) return { pic: still, end: null, fade: 0 }
+    r.at = run.snap.t
+  }
+  const endSnap = run.turns > 0 && run.within < DISSOLVE ? endOf(room) : null
+  return { pic: r.pic, end: endSnap ? snapshot(endSnap, PIC_W, PIC_H, p) : null, fade: 1 - run.within / DISSOLVE }
+}
+
 /** Paint the rooms' pictures ahead, in the page's idle time, from the show's first frame (`snap.prepare`). */
 export function prepareRooms(p: p5): void {
-  prepare(ROOMS.flatMap((r) => (r.snap ? [r.snap] : [])), PIC_W, PIC_H, p)
+  prepare(ROOMS.flatMap((r) => (r.snap ? [r.snap, ...(live.camera ? [endOf(r)!] : [])] : [])), PIC_W, PIC_H, p)
 }
 
 export const finale = scenery<null>({
@@ -679,7 +732,6 @@ export const finale = scenery<null>({
     const w = WARD_ROOM
     // Nothing to do while the frame is all ward.
     if (f.x0 >= w.x0 && f.x1 <= w.x1 && f.y0 >= w.y0 && f.y1 <= w.y1) return
-    if (ROOMS.every((r) => !r.snap || painted(r.snap, PIC_W, PIC_H))) rest()
     const ctx = ctxOf(p)
     ctx.save()
     // Everywhere but the ward itself.
@@ -701,8 +753,13 @@ export const finale = scenery<null>({
       if (!room.snap) return
       const b = room.box
       if (b.x1 < f.x0 || b.x0 > f.x1 || b.y1 < f.y0 || b.y0 > f.y1) return
-      const pic = snapshot(room.snap, PIC_W, PIC_H, p)
+      const { pic, end, fade } = roomPicture(p, room, i, t)
       if (pic) ctx.drawImage(pic, b.x0 * k, b.y0 * k, (b.x1 - b.x0) * k, (b.y1 - b.y0) * k)
+      if (end && fade > 0) {
+        ctx.globalAlpha = fade
+        ctx.drawImage(end, b.x0 * k, b.y0 * k, (b.x1 - b.x0) * k, (b.y1 - b.y0) * k)
+        ctx.globalAlpha = 1
+      }
       const lit = litAt(i, t)
       ctx.save()
       ctx.beginPath()
