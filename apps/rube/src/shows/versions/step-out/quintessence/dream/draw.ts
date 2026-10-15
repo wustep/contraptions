@@ -303,10 +303,13 @@ export function drawGround(pen: Pen, t: number): void {
     courses.rect((FENCE + 0.02) * k0, y * k0, (BX1 + 7.9 - FENCE) * k0, 0.018 * k0)
     for (let x = FENCE + 0.1 + (row % 2) * 0.22; x < BX1 + 8; x += 0.44) courses.rect(x * k0, (y - 0.13) * k0, 0.018 * k0, 0.13 * k0)
   }
-  for (let x = PLAT_X0 + 0.3; x < LIP - 0.1; x += 0.6) courses.rect(x * k0, (DECK + 0.32) * k0, 0.02 * k0, (BED + 3) * k0)
-  for (let y = DECK + 0.6; y < BED + 3; y += 0.3) courses.rect(PLAT_X0 * k0, y * k0, (LIP - 0.04 - PLAT_X0) * k0, 0.015 * k0)
   ctx0.fillStyle = rgba(pen, '#2C2244', 0.65)
   ctx0.fill(courses)
+  const panels = new Path2D()
+  for (let x = PLAT_X0 + 0.3; x < LIP - 0.1; x += 0.6) panels.rect(x * k0, (DECK + 0.32) * k0, 0.025 * k0, (BED + 3) * k0)
+  for (let y = DECK + 0.6; y < BED + 3; y += 0.3) panels.rect(PLAT_X0 * k0, y * k0, (LIP - 0.04 - PLAT_X0) * k0, 0.02 * k0)
+  ctx0.fillStyle = rgba(pen, '#16112A', 0.8)
+  ctx0.fill(panels)
   // The street lamp she waits under.
   // A short iron lamp by the shop's door, its arm out over where she waits.
   const sx = 3.68
@@ -434,7 +437,7 @@ function shop(pen: Pen, inner: number): void {
   boards.rect(inner * k, 0.04 * k, (SX0 - inner) * k, 0.04 * k)
   const shelves = new Path2D()
   const goods: Path2D[] = [new Path2D(), new Path2D(), new Path2D()]
-  const s0 = inner + 1.25
+  const s0 = inner + 0.3
   const s1 = SX0 - 0.25
   for (const [row, y] of [-1.0, -0.72, -0.44, -0.16].entries()) {
     shelves.rect(s0 * k, y * k, (s1 - s0) * k, 0.04 * k)
@@ -650,7 +653,14 @@ export function drawDoor(pen: Pen, t: number): void {
   }
   shape(pen, [[BX + 0.1 - w, y0 + 0.05], [BX + 0.1, y0], [BX + 0.1, y1], [BX + 0.1 - w, y1 - 0.04]], C.wood, 0.6, C.woodDark)
   rect(pen, BX + 0.1 - w * 0.82, y0 + 0.2, BX + 0.1 - w * 0.18, (y0 + y1) / 2 - 0.05, C.woodDark)
-  ellipse(pen, [BX + 0.1 - w * 0.88, (y0 + y1) / 2 + 0.1], 0.03, 0.03, C.flame3)
+  // Its two lower panels, their mouldings catching the fire, and a kick plate.
+  const mid = (y0 + y1) / 2
+  for (const [a, b] of [[mid + 0.05, mid + 0.55], [mid + 0.65, y1 - 0.2]]) {
+    rect(pen, BX + 0.1 - w * 0.8, a, BX + 0.1 - w * 0.2, b, null, 0.5, C.woodDark)
+    line(pen, [BX + 0.1 - w * 0.78, a + 0.03], [BX + 0.1 - w * 0.22, a + 0.03], C.flame3, 0.4)
+  }
+  rect(pen, BX + 0.1 - w * 0.92, y1 - 0.14, BX + 0.1 - w * 0.08, y1 - 0.06, '#9A7A52')
+  ellipse(pen, [BX + 0.1 - w * 0.88, mid + 0.1], 0.03, 0.03, C.flame3)
 }
 
 /* ------------------------------------------------------------------ the dog */

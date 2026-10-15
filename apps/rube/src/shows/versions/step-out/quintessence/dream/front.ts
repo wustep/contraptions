@@ -107,9 +107,9 @@ function fireOnThings(ctx: C2, pen: Pen, k: number, t: number): void {
 
 /* ------------------------------------------------------------------ the near plane */
 
-/** The near platform's pillar, its benches and its lamp, in the near plane's cells. */
+/** The near platform's pillar, a bench and a lamp, in the near plane's cells: each where the camera passes it at an edge. */
 const PILLAR = -3.6
-const BENCHES = [0.0, 7.6]
+const BENCHES = [-2.5]
 const LAMP: Pt = [-2.6, -1.0]
 
 function nearPlane(ctx: C2, pen: Pen, v: View, t: number): void {
@@ -119,6 +119,22 @@ function nearPlane(ctx: C2, pen: Pen, v: View, t: number): void {
     const near = rgba(pen, '#0C0818', 0.96)
     const rim = rgba(pen, '#FF9A3C', Math.min(0.6, 0.18 + 0.3 * f))
     const cold = rgba(pen, '#9FB6C8', 0.16)
+    for (const bx of BENCHES) {
+      if (bx < inner.x0 - 2 || bx > inner.x1 + 2) continue
+      // A bench: the slats of its back on their two posts, its seat, its iron arm; the fire along their tops.
+      const seat = 1.42
+      ctx.fillStyle = near
+      ctx.beginPath()
+      for (let i = 0; i < 3; i++) ctx.roundRect((bx - 1.0) * k, (seat - 0.58 + i * 0.15) * k, 2.0 * k, 0.09 * k, 0.03 * k)
+      ctx.roundRect((bx - 1.1) * k, seat * k, 2.2 * k, 0.12 * k, 0.04 * k)
+      for (const dx of [-0.75, 0.65]) ctx.rect((bx + dx) * k, (seat - 0.62) * k, 0.06 * k, 1.4 * k)
+      ctx.rect((bx + 0.95) * k, (seat - 0.24) * k, 0.06 * k, 0.9 * k)
+      ctx.rect((bx + 0.7) * k, (seat - 0.26) * k, 0.35 * k, 0.05 * k)
+      ctx.fill()
+      ctx.fillStyle = rim
+      for (let i = 0; i < 3; i++) ctx.fillRect((bx - 0.98) * k, (seat - 0.58 + i * 0.15) * k, 1.96 * k, 0.016 * k)
+      ctx.fillRect((bx - 1.08) * k, seat * k, 2.16 * k, 0.02 * k)
+    }
     if (PILLAR > inner.x0 - 1 && PILLAR < inner.x1 + 1) {
       // A riveted column: a soft edge (it is close to the lens), the fire's light down its far side.
       const w = 0.42
@@ -141,22 +157,6 @@ function nearPlane(ctx: C2, pen: Pen, v: View, t: number): void {
       }
       ctx.fillStyle = rgba(pen, '#7A5236', 0.5 * (0.5 + 0.5 * f))
       ctx.fill(rivets)
-    }
-    for (const bx of BENCHES) {
-      if (bx < inner.x0 - 2 || bx > inner.x1 + 2) continue
-      // A bench's end: the slats of its seat and back seen end-on, its iron arm, the fire along its top.
-      const seat = 1.32
-      ctx.fillStyle = near
-      ctx.beginPath()
-      ctx.roundRect((bx - 1.1) * k, seat * k, 2.2 * k, 0.14 * k, 0.04 * k)
-      ctx.roundRect((bx - 1.0) * k, (seat - 0.5) * k, 2.0 * k, 0.1 * k, 0.04 * k)
-      for (const dx of [-0.75, 0.65]) ctx.rect((bx + dx) * k, (seat - 0.42) * k, 0.06 * k, 1.2 * k)
-      ctx.rect((bx + 0.95) * k, (seat - 0.2) * k, 0.06 * k, 0.9 * k)
-      ctx.rect((bx + 0.7) * k, (seat - 0.22) * k, 0.35 * k, 0.05 * k)
-      ctx.fill()
-      ctx.fillStyle = rim
-      ctx.fillRect((bx - 1.08) * k, seat * k, 2.16 * k, 0.022 * k)
-      ctx.fillRect((bx - 0.98) * k, (seat - 0.5) * k, 1.96 * k, 0.018 * k)
     }
     const [lx, ly] = LAMP
     if (lx > inner.x0 - 1 && lx < inner.x1 + 1) {

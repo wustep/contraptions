@@ -108,6 +108,8 @@ function skyline(x0: number, x1: number, base: number, low: number, high: number
     for (let wy = top + gy; wy < Math.min(base - gy, hidden); wy += gy) {
       for (let wx = x + (w - Math.floor((w - 0.06) / gx) * gx) / 2; wx + ww < x + w - 0.04; wx += gx) {
         const h = hash(Math.round(wx * 100), Math.round(wy * 100), seed)
+        // Every window has its sill, a line of the night's light under it.
+        box(edge, wx - ww * 0.1, wy + wh, wx + ww * 1.1, wy + wh + wh * 0.18)
         if (h > lit) {
           box(dark, wx, wy, wx + ww, wy + wh)
           continue

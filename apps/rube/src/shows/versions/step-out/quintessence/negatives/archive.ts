@@ -184,6 +184,16 @@ function made(): Plane[] {
   far.rect('dark', -3, -4.4, 8, -2.2, 2)
   for (const y of [-2.28, -2.22]) far.rect('steel', -3, y, 8, y + 0.02, 2)
   for (let x = -2.6; x < 8; x += 1.3) far.rect('steel', x, -2.32, x + 0.02, -2.2, 2)
+  // The ceiling over the far end: its joists, a duct along it in ribbed lengths, the sprinkler line and its heads.
+  for (let x = -3; x < 8; x += 0.24) {
+    far.rect('steel', x, -4.4, x + 0.05, -2.36, 2)
+    far.rect('edge', x, -2.4, x + 0.05, -2.36, 2)
+  }
+  far.rect('box', -3, -2.9, 8, -2.66, 2)
+  for (let x = -2.9; x < 8; x += 0.36) far.rect('edge', x, -2.9, x + 0.025, -2.66, 2)
+  far.rect('edge', -3, -2.67, 8, -2.65, 2)
+  far.rect('steel', -3, -2.52, 8, -2.49, 2)
+  for (let x = -2.5; x < 8; x += 0.9) far.rect('edge', x, -2.49, x + 0.04, -2.44, 2)
   far.rect('dark', 0.68, -1.42, 1.14, 0.6, 2)
   far.rect('steel', 0.65, -1.45, 1.17, -1.42, 2)
   // A riser pipe and the fuse boxes on the back wall, beside the window.
@@ -195,6 +205,14 @@ function made(): Plane[] {
   far.rect('steel', 2.75, -1.62, 4.1, -1.58, 2)
   for (let x = 2.78; x < 4.08; x += 0.045) far.rect('steel', x, -1.58, x + 0.024, -1.3, 2)
   far.rect('steel', 2.75, -1.3, 4.1, -1.27, 2)
+  // Under it, a plan chest of shallow drawers, each with its pull.
+  far.rect('box', 2.5, -1.18, 4.95, 0.6, 2)
+  for (let y = -1.12; y < 0.55; y += 0.13) {
+    far.rect('rim', 2.53, y + 0.1, 4.92, y + 0.12, 2)
+    far.rect('edge', 2.53, y + 0.12, 4.92, y + 0.13, 2)
+    for (const x of [3.05, 4.25]) far.rect('edge', x, y + 0.05, x + 0.14, y + 0.07, 2)
+  }
+  far.rect('edge', 2.46, -1.22, 4.99, -1.18, 2)
   shelving(far, -3, 0.5, -2.05, 0.6, 0.22, 0.3, 21, true)
   shelving(far, 1.3, 2.25, -2.05, 0.6, 0.22, 0.3, 22, true)
   shelving(far, 5.1, 8, -2.05, 0.6, 0.22, 0.3, 23, true)
@@ -203,8 +221,16 @@ function made(): Plane[] {
   shelving(mid, -3.2, -0.05, -1.6, 1.1, 0.3, 0.45, 31)
   shelving(mid, 4.5, 7.7, -1.6, 1.1, 0.3, 0.45, 33)
   shelving(mid, 8.7, 9.6, -1.6, 1.1, 0.3, 0.45, 34)
+  // A filing cabinet in the aisle toward the window, its drawers' pulls and label holders.
+  mid.rect('steel', 2.6, -1.38, 3.32, 1.1, 1)
+  for (let y = -1.32; y < 1.0; y += 0.48) {
+    mid.rect('box', 2.64, y, 3.28, y + 0.44, 1)
+    mid.rect('label', 2.86, y + 0.08, 3.06, y + 0.14, 1)
+    mid.rect('edge', 2.84, y + 0.2, 3.08, y + 0.235, 1)
+  }
   // The ceiling over them: a beam, and the long fixtures hanging off it on their chains, unlit.
   mid.rect('dark', -3.2, -3.6, 9.6, -2.78, 2)
+  for (let x = -3.2; x < 9.6; x += 0.32) mid.rect('steel', x, -3.6, x + 0.06, -2.8, 2)
   mid.rect('steel', -3.2, -2.8, 9.6, -2.7, 2)
   for (let x = -2.7; x < 9.6; x += 3.4) {
     for (const cx of [x + 0.15, x + 1.15]) mid.rect('steel', cx, -2.7, cx + 0.012, -2.36, 2)
@@ -218,7 +244,7 @@ function made(): Plane[] {
   ladder(near, -1.3, [-1.62, -1.95], 1.6, 0.62)
   ladder(near, 6.4, [6.75, -1.95], 1.6, 0.62)
   planes = [
-    { z: 0.3, spill: 0.38, flash: 0.75, columns: far.columns },
+    { z: 0.3, spill: 0.46, flash: 0.75, columns: far.columns },
     { z: 0.55, spill: 0.6, flash: 0.88, columns: mid.columns },
     { z: 0.8, spill: 0.8, flash: 1, columns: near.columns },
   ]
