@@ -18,8 +18,8 @@ import { ALONE, CHAIR_LIFT, darkAt, G, HALT, HOUSE, LAMPS, SHOVE, STAR, SWINGS, 
  *
  * Round the house, the world: clouds drifting by day, birds, the trees across the street in the wind and their
  * chimneys smoking at dusk; past them a far ridge with the places of their whole life on it (`far.ts`); his neighbours
- * either side of him, dark, seen only as the camera draws back at the end; and at the frame's foot, nearer than the
- * house, our side of the road: its kerb and verge, the gardens' fences and hedges, a parked car.
+ * either side of him, seen only as the camera draws back at the end, putting their lights out one by one; and at the
+ * frame's foot, nearer than the house, our side of the road: its kerb and verge, the gardens' fences and hedges.
  *
  * What is where, and when, is `front-plan.ts`; the house itself is `front-house.ts`.
  */
@@ -153,7 +153,7 @@ function beyondLook(T: number): BeyondLook {
   }
 }
 
-/** Birds now and then: by day out from behind the house and away; at dusk going to roost in the far trees. */
+/** Birds now and then: by day out from behind the house and away; at dusk the last of them going to roost in the far trees, home before the night and the snow. */
 const DAY_BIRD = '#68757C'
 const DUSK_BIRD = '#2A3048'
 const FLIGHTS: Flight[] = [
@@ -162,12 +162,6 @@ const FLIGHTS: Flight[] = [
   { t0: 38.4, from: [13.8, -2.7], v: [-0.95, -0.08], dur: 6.2, n: 3, span: 0.18, color: DAY_BIRD, seed: 3 },
   { t0: 227.5, from: [17, -6.8], v: [-1.3, 0.42], dur: 16, n: 8, span: 0.24, color: DUSK_BIRD, seed: 4, beat: 2.8 },
   { t0: 233.0, from: [26, -6.2], v: [-1.6, 0.3], dur: 19, n: 12, span: 0.25, color: DUSK_BIRD, seed: 8, beat: 2.7 },
-  { t0: 236.5, from: [-27, -9.6], v: [1.45, 0.01], dur: 40, n: 9, vee: true, span: 0.32, color: DUSK_BIRD, seed: 5, beat: 1.7 },
-  { t0: 239.0, from: [-26, -6.6], v: [1.5, 0.3], dur: 20, n: 10, span: 0.26, color: DUSK_BIRD, seed: 9, beat: 2.6 },
-  { t0: 243, from: [31, -5.6], v: [-1.5, 0.36], dur: 15, n: 6, span: 0.26, color: DUSK_BIRD, seed: 6, beat: 2.6 },
-  { t0: 246.5, from: [33, -7.2], v: [-1.7, 0.4], dur: 18, n: 9, span: 0.27, color: DUSK_BIRD, seed: 10, beat: 2.5 },
-  { t0: 249.5, from: [-23, -5.0], v: [1.3, 0.5], dur: 9.8, n: 4, span: 0.26, color: DUSK_BIRD, seed: 7, beat: 2.6 },
-  { t0: 251.0, from: [-30, -7.4], v: [1.8, 0.0], dur: 30, n: 7, vee: true, span: 0.3, color: DUSK_BIRD, seed: 11, beat: 1.8 },
 ]
 
 function far(p: p5, k: number, weight: number, f: Frame, T: number): void {
@@ -738,7 +732,7 @@ function snowLayer(n: number, seed: number, fall: number, r: [number, number], d
 const SNOW: SnowLayer[] = [
   snowLayer(700, 31, 1 / 26, [0.0012, 0.0018], 0.01, 0.0025, 0.5, 0.6, false),
   snowLayer(520, 32, 1 / 9.5, [0.0026, 0.0038], 0.02, 0.005, 0.72, 0, true),
-  snowLayer(45, 33, 1 / 5, [0.0055, 0.0085], 0.04, 0.01, 0.88, -0.5, true),
+  snowLayer(45, 33, 1 / 5, [0.0045, 0.0065], 0.04, 0.01, 0.78, -0.5, true),
 ]
 /** The flakes of a layer at each of three strengths (fading in as the fall thickens, or out under a card): x, y, r. */
 const FLAKE_BUF = [0, 1, 2].map(() => new Float32Array(3 * 6000))
@@ -820,7 +814,7 @@ const NEAR_AT = 4.25
  * What stands along our side (house cells, as seen from the last frame): the hydrant on the verge (well clear of the
  * mailbox, under the hill); and, out where only the credits' draw-back sees (so the fix-up's and his coming home's
  * frames are as they were, this layer sliding faster than the house as they pan), the gardens' picket fences with their
- * gates and a car parked at the kerb; the hedges at the ends.
+ * gates; the hedges at the ends.
  */
 const HYDRANT = -3.2
 const HEDGES: [number, number][] = [
@@ -831,7 +825,6 @@ const FENCES: { x0: number; x1: number; gate: number }[] = [
   { x0: -21.2, x1: -16.0, gate: -18.1 },
   { x0: 20.0, x1: 23.9, gate: 22.0 },
 ]
-const PARKED = { x: 19.3, body: mixHex(HOME.pink, '#6E5A62', 0.55) }
 
 /**
  * Our own side of the road, at the frame's foot whenever the camera looks low enough to see it: the near kerb, its
@@ -858,8 +851,6 @@ function drawNear(p: p5, k: number, weight: number, T: number): void {
   p.push()
   p.rectMode(p.CORNER)
   p.translate(shift * k, 0)
-  // The car parked at our kerb, on the road just beyond the verge (its wheels' feet at the kerb's line).
-  if (PARKED.x > x0 - 2 && PARKED.x < x1 + 2 && top - 1.45 > G) parkedCar(p, k, weight, PARKED.x, top - 0.05, dark, white, settled)
   p.noStroke()
   p.fill(tone(mixHex(HOME.stone, '#A79D8C', 0.45)))
   p.rect(x0 * k, top * k, (x1 - x0) * k, kerb * k)
@@ -881,51 +872,6 @@ function drawNear(p: p5, k: number, weight: number, T: number): void {
   tufts(p, k, T, x0, x1, top + kerb + 0.02, 0.24 * Math.min(1, h / 0.25), tone(mixHex(HOME.grass, '#3C5530', 0.55)), weight * 0.9)
   // The gardens' picket fences, nearest of all, standing up from the frame's foot.
   if (f.y1 - 0.9 > G + 0.3) for (const fence of FENCES) if (fence.x1 > x0 && fence.x0 < x1) picket(p, k, weight, fence, f.y1 + 0.05, dark, white, settled)
-  p.pop()
-}
-
-/** A round family car parked at the kerb, side on, its wheels' feet at `y`: dark at this hour, the first snow on its roof. */
-function parkedCar(p: p5, k: number, weight: number, x: number, y: number, tone: (hex: string) => string, white: string, settled: number): void {
-  const R = 0.21
-  const wy = y - R
-  const sill = wy - 0.27
-  // (Nearer than the house, so a little larger than a car would be beside it.)
-  const s = 1.15
-  p.push()
-  p.translate(x * k, y * k)
-  p.scale(s)
-  p.translate(0, -y * k)
-  p.stroke(tone(INK))
-  p.strokeWeight((weight * 0.8) / s)
-  p.fill(tone(INK))
-  for (const wx of [-0.82, 0.8]) p.circle(wx * k, wy * k, 2 * R * k)
-  p.fill(tone(mixHex(PARKED.body, '#FFFFFF', 0.15)))
-  p.beginShape()
-  p.vertex(-0.92 * k, sill * k)
-  p.bezierVertex(-0.8 * k, (sill - 0.5) * k, -0.48 * k, (sill - 0.6) * k, -0.08 * k, (sill - 0.6) * k)
-  p.bezierVertex(0.3 * k, (sill - 0.6) * k, 0.48 * k, (sill - 0.47) * k, 0.66 * k, sill * k)
-  p.endShape(p.CLOSE)
-  p.noStroke()
-  p.fill(tone(mixHex(HOME.glass, '#5C6A78', 0.6)))
-  p.quad(-0.72 * k, (sill - 0.04) * k, -0.55 * k, (sill - 0.42) * k, -0.13 * k, (sill - 0.5) * k, -0.13 * k, (sill - 0.04) * k)
-  p.quad(0.0, (sill - 0.04) * k, 0.0, (sill - 0.5) * k, 0.32 * k, (sill - 0.43) * k, 0.47 * k, (sill - 0.04) * k)
-  p.stroke(tone(INK))
-  p.fill(tone(PARKED.body))
-  p.rect(-1.28 * k, sill * k, 2.56 * k, 0.47 * k, 0.2 * k)
-  if (settled > 0) {
-    // The snow gathering: a cap on the roof, a line along the bonnet and the boot.
-    const d = 0.02 + 0.12 * settled
-    p.noStroke()
-    p.fill(white)
-    p.beginShape()
-    p.vertex(-0.62 * k, (sill - 0.5 + 0.02) * k)
-    p.bezierVertex(-0.45 * k, (sill - 0.6) * k, 0.25 * k, (sill - 0.62) * k, 0.4 * k, (sill - 0.5 + 0.02) * k)
-    p.vertex(0.4 * k, (sill - 0.5 + 0.02 - d * 0.2) * k)
-    p.bezierVertex(0.25 * k, (sill - 0.62 - d) * k, -0.45 * k, (sill - 0.6 - d) * k, -0.62 * k, (sill - 0.5 + 0.02 - d * 0.2) * k)
-    p.endShape(p.CLOSE)
-    p.rect(-1.2 * k, (sill - d * 0.6) * k, 0.3 * k, (d * 0.6 + 0.02) * k, 0.05 * k)
-    p.rect(0.66 * k, (sill - d * 0.6) * k, 0.55 * k, (d * 0.6 + 0.02) * k, 0.05 * k)
-  }
   p.pop()
 }
 

@@ -868,10 +868,11 @@ export function drawHouse(p: p5, k: number, weight: number, L: Look, chairsIn: {
  *
  * They stand beyond the widest frame of the fix-up and of every frame of his coming home (out past the street lamps,
  * clear of a 2:1 screen's frame too), so the camera's last draw-back is the first time they are seen, and each comes
- * into the frame in turn as it widens. By then it is night: they are dark, silhouettes against the afterglow a little
- * lighter than the street's far side so they stand in front of it, every window a flat dark pane, every porch light
- * off. The one lit window in the street is his. (By day, were a wide screen ever to show one, they are in their
- * pastels.)
+ * into the frame in turn as it widens. By then it is night: they are silhouettes against the afterglow a little
+ * lighter than the street's far side so they stand in front of it, their porch lights off. A window or two in the
+ * first three is still lit as it comes in, a flat warm pane, and in the quiet after the piano's last note the street
+ * goes to bed: the lights go out one at a time, the last some four seconds before the end, until the one lit window
+ * in the street is his. (By day, were a wide screen ever to show one, they are in their pastels.)
  */
 interface Neighbour {
   kind: 'cottage' | 'gable' | 'bungalow' | 'bay'
@@ -883,23 +884,29 @@ interface Neighbour {
   path: number
   /** Its paint by day: walls, roof. */
   day: [string, string]
+  /** Its windows still lit as it comes in (each by its place in the order they are drawn), and when each goes out. */
+  lit?: [number, number][]
 }
 
 /**
  * Where they stand, nearest first: the cottage past the right lamp, the bungalow past the left one (long and low, so the
  * hospital on the far ridge stands clear over its roof), the gable house at the right edge of the last frame, the house
  * with the bay out at its left. All of them out past the frame of the cut from the church (to -9.42) and of the fix-up's
- * reveal (to 15.41), with room for a 2:1 screen. They come into the frame at about 237, 241, 249 and 254 s.
+ * reveal (to 15.41), with room for a 2:1 screen. They come into the frame at about 237, 241, 249 and 254 s; their
+ * lights go out at 244.6 (the cottage's front room), 247.4 (its dormer), 250.6 (the bungalow) and 253.9 (the gable
+ * house's landing), and the house with the bay comes in dark.
  */
 export const NEIGHBOURS: Neighbour[] = [
-  { kind: 'cottage', x0: 16.9, x1: 21.5, lot: [16.6, 22.0], fence: 'picket', path: 18.15, day: ['#EAD9A6', '#8A6A5A'] },
-  { kind: 'bungalow', x0: -16.7, x1: -10.6, lot: [-17.1, -10.3], fence: 'hedge', path: -13.1, day: ['#C9D3B4', '#8C5E4A'] },
-  { kind: 'gable', x0: 22.5, x1: 28.0, lot: [22.2, 28.6], fence: 'hedge', path: 26.9, day: ['#B9C6D0', '#6F6670'] },
+  { kind: 'cottage', x0: 16.9, x1: 21.5, lot: [16.6, 22.0], fence: 'picket', path: 18.15, day: ['#EAD9A6', '#8A6A5A'], lit: [[2, 244.6], [0, 247.4]] },
+  { kind: 'bungalow', x0: -16.7, x1: -10.6, lot: [-17.1, -10.3], fence: 'hedge', path: -13.1, day: ['#C9D3B4', '#8C5E4A'], lit: [[2, 250.6]] },
+  { kind: 'gable', x0: 22.5, x1: 28.0, lot: [22.2, 28.6], fence: 'hedge', path: 26.9, day: ['#B9C6D0', '#6F6670'], lit: [[1, 253.9]] },
   { kind: 'bay', x0: -24.8, x1: -18.0, lot: [-25.4, -17.5], fence: 'picket', path: -23.55, day: ['#E3C0BA', '#6E5A55'] },
 ]
 
 /** The night's tones they go to: a little lighter than the far side of the street. */
 const NB = { wall: '#3A4160', roof: '#30364F', trim: '#4A516E', pane: '#1D2131', door: '#2A2F46', found: '#2D3247', hedge: '#29353F', fence: '#4B5271', path: '#454A60' }
+/** A neighbour's lit window: a room's light through a blind, warmer and lower than his lamp. */
+const NB_LIT = mixHex(HOME.lamp, '#C98F5A', 0.4)
 
 /** Every neighbour whose lot lies between x0 and x1, in the light (and the settled snow) of `L`. */
 export function drawNeighbours(p: p5, k: number, weight: number, L: Look, x0: number, x1: number): void {
@@ -921,6 +928,9 @@ export function drawNeighbours(p: p5, k: number, weight: number, L: Look, x0: nu
       ink: tone(INK, '#1C1F30'),
       white,
       snow,
+      // Which panes are lit: on until their time (put out, not faded), and only once it is dark enough to see them.
+      on: Object.fromEntries((n.lit ?? []).map(([i, out]) => [i, dusky * (L.T < out ? 1 : 0)])) as Record<number, number>,
+      next: 0,
     }
     neighbour(p, k, weight, n, c)
     lot(p, k, weight, L, n, c, tone)
@@ -928,7 +938,7 @@ export function drawNeighbours(p: p5, k: number, weight: number, L: Look, x0: nu
   p.pop()
 }
 
-type NPal = { wall: string; roof: string; trim: string; pane: string; door: string; found: string; ink: string; white: string; snow: number }
+type NPal = { wall: string; roof: string; trim: string; pane: string; door: string; found: string; ink: string; white: string; snow: number; on: Record<number, number>; next: number }
 
 function poly(p: p5, k: number, pts: [number, number][]): void {
   p.beginShape()
@@ -936,14 +946,15 @@ function poly(p: p5, k: number, pts: [number, number][]): void {
   p.endShape(p.CLOSE)
 }
 
-/** A window: its frame in the trim, a flat dark pane, one bar across. */
+/** A window: its frame in the trim, a flat pane (dark, or lit while its light is on), one bar across. */
 function pane(p: p5, k: number, weight: number, c: NPal, x0: number, y0: number, x1: number, y1: number): void {
+  const on = c.on[c.next++] ?? 0
   p.stroke(c.ink)
   p.strokeWeight(weight * 0.6)
   p.fill(c.trim)
   rect(p, k, x0 - 0.07, y0 - 0.07, x1 + 0.07, y1 + 0.06)
   p.noStroke()
-  p.fill(c.pane)
+  p.fill(on > 0 ? mixHex(c.pane, NB_LIT, on) : c.pane)
   rect(p, k, x0, y0, x1, y1)
   p.fill(c.trim)
   rect(p, k, (x0 + x1) / 2 - 0.025, y0, (x0 + x1) / 2 + 0.025, y1)
@@ -1123,7 +1134,6 @@ function neighbour(p: p5, k: number, weight: number, n: Neighbour, c: NPal): voi
     if (c.snow > 0) rect(p, k, x1 - 2.35, top - 0.45 - c.snow * 0.8, x1 - 1.8, top - 0.44)
     pane(p, k, weight, c, x0 + 0.5, -1.85, x0 + 1.9, -0.95)
     pane(p, k, weight, c, x0 + 2.25, -1.85, n.path - 0.7, -0.95)
-    pane(p, k, weight, c, n.path + 0.95, -1.85, x1 - 2.0, -0.95)
     pane(p, k, weight, c, x1 - 1.7, -1.85, x1 - 0.5, -0.95)
     doorway2(p, k, weight, c, n.path - 0.37, n.path + 0.37, -1.95, floor)
     line(0.6)
