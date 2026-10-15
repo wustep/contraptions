@@ -6,7 +6,7 @@ import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, 
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
-import { clearOfFarm, dawnBands, drawCirrus, drawDevils, drawSettlement, drawSkeins, RANGES, type Site } from './edmunds-farm'
+import { clearOfFarm, dawnBands, drawCirrus, drawDevils, drawPlainStory, drawSettlement, drawSkeins, RANGES, type Site } from './edmunds-farm'
 
 /**
  * Edmunds' planet: the end of the show.
@@ -849,6 +849,7 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
   ctx.fillRect(X(f.x0 - 1), X(E), X(f.x1 - f.x0 + 2), X(bottom - E + 1))
   // Nearer ranges on the plain, lower and darker; dust devils walking far off.
   for (const r of RANGES) drawRange(p, c, v, r.s, r.gap, r.tall, r.seed, r.fill, r.lit, sunX)
+  drawPlainStory(p, c, v, siteOf(v, T))
   drawDevils(p, c, v, siteOf(v, T))
 
   // The plain: long drifts of sand, then stones, cracks and craters, at their depths.

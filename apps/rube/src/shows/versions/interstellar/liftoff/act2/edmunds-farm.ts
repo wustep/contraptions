@@ -146,7 +146,7 @@ export function drawDevils(p: p5, c: Ctx, v: Plain, site: Site): void {
   const { k, weight } = c
   const X = (x: number) => x * k
   const LIFE = 22
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 6; i++) {
     // Staggered lives, each at its own depth and place.
     const age = (site.T + hash(i, 501) * LIFE) % LIFE
     const n = Math.floor((site.T + hash(i, 501) * LIFE) / LIFE)
@@ -166,7 +166,7 @@ export function drawDevils(p: p5, c: Ctx, v: Plain, site: Site): void {
       const r = (0.08 + 0.55 * u * u) * s * 1.6
       const cy = y - H * u
       const cx = x + lean * u + 0.06 * s * Math.sin(site.T * 3 + j * 1.3)
-      p.stroke(alpha(p, SAND, 0.32 * life * (1 - 0.6 * u)))
+      p.stroke(alpha(p, SAND, 0.4 * life * (1 - 0.55 * u)))
       p.arc(X(cx), X(cy), X(2 * r), X(r * 0.5), Math.PI * (0.1 + 0.2 * Math.sin(site.T * 2 + j)), Math.PI * (1.6 + 0.2 * Math.sin(site.T * 2 + j)))
     }
     // Its skirt on the ground.
@@ -211,6 +211,159 @@ export function drawSkeins(p: p5, c: Ctx, v: Plain, site: Site): void {
       p.endShape()
     }
   }
+}
+
+/* ------------------------------------------------------------------ the plain's story, seen from the air */
+
+/**
+ * The plain on the ground's own terms: a place along it (cells from touchdown) and a distance out (cells, the site
+ * itself at `SITE` out), so a river and a track can wind across it and keep their width as they go away. The eye's
+ * nearness `s` is SITE / distance.
+ */
+const SITE = 12
+type Ground = [number, number]
+/** A smooth line through ground points (Catmull-Rom), `n` samples a span. */
+function winding(pts: Ground[], n: number): Ground[] {
+  const out: Ground[] = []
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)]
+    const p1 = pts[i]
+    const p2 = pts[i + 1]
+    const p3 = pts[Math.min(pts.length - 1, i + 2)]
+    for (let j = 0; j < n; j++) {
+      const u = j / n
+      const u2 = u * u
+      const u3 = u2 * u
+      const f = (a: number, b: number, c: number, d: number) => 0.5 * (2 * b + (-a + c) * u + (2 * a - 5 * b + 4 * c - d) * u2 + (-a + 3 * b - 3 * c + d) * u3)
+      out.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])])
+    }
+  }
+  out.push(pts[pts.length - 1])
+  return out
+}
+/** The two sides of a line `w` wide across the ground, on the screen. */
+function sides(v: Plain, lx: number, line: Ground[], w: number): [Pt[], Pt[]] {
+  const left: Pt[] = []
+  const right: Pt[] = []
+  for (let i = 0; i < line.length; i++) {
+    const a = line[Math.max(0, i - 1)]
+    const b = line[Math.min(line.length - 1, i + 1)]
+    const dx = b[0] - a[0]
+    const dz = b[1] - a[1]
+    const l = Math.hypot(dx, dz) || 1
+    const nx = (-dz / l) * (w / 2)
+    const nz = (dx / l) * (w / 2)
+    const [gx, z] = line[i]
+    left.push(at(v, lx + gx + nx, SITE / Math.max(1, z + nz)))
+    right.push(at(v, lx + gx - nx, SITE / Math.max(1, z - nz)))
+  }
+  return [left, right]
+}
+
+/** A dry river winding across the plain behind the camp: what her windmill draws its water from, under the sand. */
+const RIVER = winding([[-70, 260], [-44, 140], [-30, 92], [-17, 118], [-6, 74], [3, 52], [13, 62], [25, 45], [41, 34], [64, 30]], 10)
+/** Her rover's ways out of the camp and back, worn into the plain: to the river, and out to his lander. */
+const ROUTES: Ground[][] = [
+  winding([[-1.6, 9.3], [-3.2, 15], [-7, 23], [-13, 32], [-20, 41], [-26, 49], [-29.4, 53.5]], 8),
+  winding([[-1.4, 9.3], [1.5, 16], [5, 24], [7.5, 34], [9.5, 45], [12, 56]], 8),
+]
+/** Edmunds' lander, where he came down: far out on the plain, half in the sand. */
+const EDMUNDS: Ground = [-31, 55]
+
+/** The river, the ways, and his lander: laid on the plain before the stones and the near ground. */
+export function drawPlainStory(p: p5, c: Ctx, v: Plain, site: Site): void {
+  const { k, weight } = c
+  const X = (x: number) => x * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const poly = (pts: Pt[]) => pts.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), X(y)) : ctx.moveTo(X(x), X(y))))
+  // The river's bed: a darker band, its sunward bank caught by the dawn, a pale streak of salt down its middle.
+  const [l, r] = sides(v, site.lx, RIVER, 3.2)
+  ctx.fillStyle = mixHex(LAND, VOID.bg, 0.32)
+  ctx.beginPath()
+  poly(l)
+  for (let i = r.length - 1; i >= 0; i--) ctx.lineTo(X(r[i][0]), X(r[i][1]))
+  ctx.closePath()
+  ctx.fill()
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = Math.max(0.8, weight * 0.55)
+  ctx.strokeStyle = `rgba(217, 164, 65, ${0.28 + 0.2 * site.dawn})`
+  ctx.beginPath()
+  poly(r)
+  ctx.stroke()
+  ctx.strokeStyle = 'rgba(11, 15, 29, 0.35)'
+  ctx.beginPath()
+  poly(l)
+  ctx.stroke()
+  const [sl] = sides(v, site.lx, RIVER, 0.5)
+  ctx.strokeStyle = `rgba(236, 229, 211, ${0.1 + 0.06 * site.dawn})`
+  ctx.beginPath()
+  poly(sl)
+  ctx.stroke()
+  // Her ways: two ruts each, worn by many runs out and back.
+  ctx.strokeStyle = 'rgba(11, 15, 29, 0.24)'
+  ctx.lineWidth = Math.max(0.7, weight * 0.45)
+  ctx.beginPath()
+  for (const route of ROUTES) {
+    for (const off of [0.42, -0.42]) {
+      const [a] = sides(v, site.lx + off, route, 0)
+      poly(a)
+    }
+  }
+  ctx.stroke()
+  drawLander(p, c, v, site)
+}
+
+/** His lander: a squat stage on splayed legs, one buckled, a panel torn off and lying by it, sand drifted up its side. */
+function drawLander(p: p5, c: Ctx, v: Plain, site: Site): void {
+  const { k, ink, weight } = c
+  const X = (x: number) => x * k
+  const s = SITE / EDMUNDS[1]
+  const [x, y] = at(v, site.lx + EDMUNDS[0], s)
+  if (x < v.f.x0 - 1 || x > v.f.x1 + 1 || y > v.f.y1 + 0.5) return
+  const u = 1.5 * s
+  shadow(p, c, v, site, x - 1.1 * u, x + 1.1 * u, s, 4)
+  const line = alpha(p, ink, 0.5)
+  p.stroke(line)
+  p.strokeWeight(Math.max(0.7, weight * 0.5))
+  // The legs: three seen, the near right one buckled under, so it sits askew.
+  p.noFill()
+  p.line(X(x - 0.55 * u), X(y - 0.45 * u), X(x - 1.05 * u), X(y))
+  p.line(X(x + 0.5 * u), X(y - 0.4 * u), X(x + 0.85 * u), X(y - 0.05 * u))
+  p.line(X(x - 0.05 * u), X(y - 0.4 * u), X(x + 0.05 * u), X(y))
+  // The stage, tipped a little, its top module and its hatch open.
+  p.push()
+  p.translate(X(x), X(y - 0.5 * u))
+  p.rotate(0.12)
+  p.fill(far(mixHex(DARK.hull, LAND, 0.2), s + 0.15))
+  p.beginShape()
+  p.vertex(X(-0.7 * u), X(0.12 * u))
+  p.vertex(X(-0.55 * u), X(-0.32 * u))
+  p.vertex(X(0.55 * u), X(-0.32 * u))
+  p.vertex(X(0.7 * u), X(0.12 * u))
+  p.endShape(p.CLOSE)
+  p.fill(far(DARK.hull, s + 0.2))
+  p.rect(X(-0.32 * u), X(-0.62 * u), X(0.6 * u), X(0.3 * u), X(0.04 * u))
+  p.fill(far(VOID.bg, s + 0.3))
+  p.rect(X(0.02 * u), X(-0.56 * u), X(0.16 * u), X(0.2 * u))
+  // A mast with its dish, still pointed at a sky he never heard back from.
+  p.noFill()
+  p.line(X(-0.2 * u), X(-0.62 * u), X(-0.32 * u), X(-1.1 * u))
+  p.arc(X(-0.36 * u), X(-1.12 * u), X(0.26 * u), X(0.16 * u), Math.PI * 1.1, Math.PI * 2.1)
+  p.stroke(alpha(p, DARK.gold, 0.4 + 0.2 * site.dawn))
+  p.line(X(-0.55 * u), X(-0.32 * u), X(0.55 * u), X(-0.32 * u))
+  p.pop()
+  // The torn panel, lying on the sand beside it.
+  p.stroke(line)
+  p.fill(far(mixHex(DARK.slate, VOID.bg, 0.25), s + 0.15))
+  p.quad(X(x + 1.0 * u), X(y), X(x + 1.9 * u), X(y - 0.04 * u), X(x + 1.95 * u), X(y - 0.16 * u), X(x + 1.08 * u), X(y - 0.14 * u))
+  // Sand drifted up its windward side.
+  p.noStroke()
+  p.fill(far(SAND, s + 0.2))
+  p.beginShape()
+  p.vertex(X(x - 1.3 * u), X(y + 0.02 * u))
+  p.quadraticVertex(X(x - 0.9 * u), X(y - 0.32 * u), X(x - 0.35 * u), X(y - 0.18 * u))
+  p.vertex(X(x - 0.2 * u), X(y + 0.02 * u))
+  p.endShape(p.CLOSE)
 }
 
 /* ------------------------------------------------------------------ the settlement */
