@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { clamp, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { R, type Pt } from '../../../../../parts'
-import { box, carried, frame, hash, part, type Company, type PartShot } from '../kit'
+import { mixHex, R, type Pt } from '../../../../../parts'
+import { box, carried, depth, frame, hash, part, type Company, type PartShot } from '../kit'
 import { JUMPS } from '../music'
 import { SEAMS } from '../seams'
 import { VOID } from '../worlds'
@@ -67,6 +67,7 @@ export const pull = part<PullState>(
       const { k, ink, weight } = c
       const ctx = p.drawingContext as CanvasRenderingContext2D
       const pose = bagelPose(t)
+      drawStrata(p, k, t)
       drawDust(p, k, t, pose)
       drawCatch(p, k, t, pose)
       // Joy's light: a narrow beam from far above onto the crown, struck on 133.79.
@@ -117,6 +118,12 @@ export const pull = part<PullState>(
         drawThing(p, k, ink, weight, w.thing, x, y, size, spin, dark, w.variant)
       })
       drawKick(p, k, t)
+    },
+    // Over everything, the big seeds that drift past close to the lens in the hush.
+    over: (p, s, c) => {
+      const t = c.t + s.begin
+      if (t < T0 - 0.5 || t > NEAR_OUT + 0.1) return
+      drawNear(p, c.k, t, bagelPose(t))
     },
   },
   (slot) => {
@@ -194,8 +201,8 @@ function cut(t: number, cells: number, hold: Pt): PartShot[] {
 /* ------------------------------------------------------------------ her catch-light, and the heavy swallows' kick */
 
 /**
- * The great light, caught on the crust where she is: a soft warm glow under her as she goes round, warmer on the lit
- * upper side, so in all that black the eye goes to her. Only on the dough (not out in the dark, not down the well).
+ * The great light, caught on the crust where she is: a small, faint warmth on the dough under her as she goes round,
+ * warmer on the lit upper side, so in all that black the eye goes to her (kept close and low, a pool, not a halo). Only on the dough (not out in the dark, not down the well).
  */
 function drawCatch(p: p5, k: number, t: number, pose: BagelPose): void {
   if (pose.lit < 0.01 || t > TIP_IN) return
@@ -204,16 +211,16 @@ function drawCatch(p: p5, k: number, t: number, pose: BagelPose): void {
   const on = (1 - ss(r, BAGEL.r * pose.scale - 0.15, BAGEL.r * pose.scale + 0.45)) * ss(r, BAGEL.hole * pose.scale, BAGEL.hole * pose.scale + 0.12)
   if (on < 0.01) return
   const up = (1 - Math.sin(Math.atan2(ey, ex))) / 2
-  const a = pose.lit * on * (0.12 + 0.16 * up)
+  const a = pose.lit * on * (0.07 + 0.09 * up)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const [x, y] = toPart([ex, ey])
-  const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, 0.62 * k)
+  const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, 0.42 * k)
   g.addColorStop(0, rgba(VOID.rimLight, a))
   g.addColorStop(0.4, rgba(VOID.rimLight, a * 0.45))
   g.addColorStop(1, rgba(VOID.rimLight, 0))
   ctx.fillStyle = g
   ctx.beginPath()
-  ctx.arc(x * k, y * k, 0.62 * k, 0, Math.PI * 2)
+  ctx.arc(x * k, y * k, 0.42 * k, 0, Math.PI * 2)
   ctx.fill()
 }
 
@@ -389,6 +396,175 @@ function drawDust(p: p5, k: number, t: number, pose: BagelPose): void {
     ctx.fillStyle = rgba(VOID.salt, L.a * 1.4 * fade * (0.7 + 0.3 * Math.sin(T * 1.7 + L.seed)))
     ctx.fill(glints)
   }
+}
+
+/* ------------------------------------------------------------------ the dark's depth, in the hush */
+
+/**
+ * The hush is nothing, and it is deep. Far behind the dust, strata of a darker dark drift slowly by, a breath of the
+ * bagel's violet in some and of the great light's warmth in others, so the black has distance in it and not one
+ * flat tone; they slide at a third of the camera's speed.
+ */
+interface Stratum {
+  x: number
+  y: number
+  rx: number
+  ry: number
+  tilt: number
+  warm: boolean
+  a: number
+}
+const STRATA_TILE: Pt = [34, 26]
+const STRATA: Stratum[] = Array.from({ length: 6 }, (_, i) => ({
+  x: hash(i, 1, 131) * STRATA_TILE[0],
+  y: hash(i, 2, 131) * STRATA_TILE[1],
+  rx: 7 + 6 * hash(i, 3, 131),
+  ry: 1.3 + 1.4 * hash(i, 4, 131),
+  tilt: -0.35 + 0.3 * hash(i, 5, 131),
+  warm: i % 3 === 1,
+  a: 0.1 + 0.06 * hash(i, 6, 131),
+}))
+/** From the jump in, gone as the great light takes the dark over. */
+const strataAt = (t: number): number => ss(t, T0 - 0.4, T0 + 2.2) * (1 - ss(t, REVEAL + 2, 142.6))
+
+function drawStrata(p: p5, k: number, t: number): void {
+  const fade = strataAt(t)
+  if (fade < 0.01) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const T = t - T0
+  depth(p, k, 0.3, [0, 0], (fr) => {
+    for (const s of STRATA) {
+      // Sinking toward the bagel, slower than the dust.
+      const lx = s.x + SINK[0] * 0.05 * T
+      const ly = s.y + SINK[1] * 0.05 * T
+      const [W, H] = STRATA_TILE
+      for (let nx = Math.floor((fr.x0 - s.rx - lx) / W); nx <= Math.floor((fr.x1 + s.rx - lx) / W); nx++) {
+        for (let ny = Math.floor((fr.y0 - s.rx - ly) / H); ny <= Math.floor((fr.y1 + s.rx - ly) / H); ny++) {
+          const x = lx + nx * W
+          const y = ly + ny * H
+          ctx.save()
+          ctx.translate(x * k, y * k)
+          ctx.rotate(s.tilt)
+          ctx.scale(1, s.ry / s.rx)
+          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, s.rx * k)
+          const col = s.warm ? mixHex(VOID.rimLight, VOID.bagel, 0.6) : mixHex(VOID.glow, VOID.bagel, 0.3)
+          g.addColorStop(0, rgba(col, s.a * fade))
+          g.addColorStop(0.55, rgba(col, s.a * 0.45 * fade))
+          g.addColorStop(1, rgba(col, 0))
+          ctx.fillStyle = g
+          ctx.fillRect(-s.rx * k, -s.rx * k, 2 * s.rx * k, 2 * s.rx * k)
+          ctx.restore()
+        }
+      }
+    }
+  })
+}
+
+/**
+ * Close to the lens, a few of the bagel's own sesame seeds go by, big and slow and out of focus, each a dark shape lit
+ * only along the edge that faces the light (the far glint on the rim
+ * while the dark is dark, the great light above once it is lit). They slide past at two and a half times the
+ * camera's speed and tumble as they sink, so in the hush there is something near and something far. Near the family
+ * they go thin, as a thing that close to a lens does, and never hide them.
+ */
+interface Near {
+  x: number
+  y: number
+  size: number
+  vx: number
+  vy: number
+  spin: number
+  turn: number
+}
+const NEAR_F = 2.5
+const NEAR_TILE = 10
+const NEAR: Near[] = Array.from({ length: 7 }, (_, i) => {
+  const h = (n: number) => hash(i, n, 157)
+  const v = 0.11 + 0.1 * h(5)
+  return {
+    x: h(1) * NEAR_TILE,
+    y: h(2) * NEAR_TILE,
+    size: 0.95 + 1.0 * h(3),
+    vx: SINK[0] * v + 0.05 * (h(6) - 0.5),
+    vy: SINK[1] * v + 0.05 * (h(7) - 0.5),
+    spin: (h(8) - 0.5) * 0.5,
+    turn: h(9) * Math.PI * 2,
+  }
+})
+/** When the near seeds go: as the camera draws back off Jobu to the whole of the bagel. */
+const NEAR_OUT = 142.3
+const nearAt = (t: number): number => ss(t, T0 - 0.2, T0 + 1.6) * (1 - ss(t, 140.6, NEAR_OUT))
+const NEAR_BODY = mixHex(VOID.bagel, DARK, 0.4)
+
+/** A sesame seed, `l` long: a teardrop, pointed at one end. */
+function seedPath(ctx: CanvasRenderingContext2D, l: number): void {
+  ctx.beginPath()
+  ctx.moveTo(l * 0.5, 0)
+  ctx.bezierCurveTo(l * 0.2, l * 0.2, -l * 0.42, l * 0.22, -l * 0.48, 0)
+  ctx.bezierCurveTo(-l * 0.42, -l * 0.22, l * 0.2, -l * 0.2, l * 0.5, 0)
+}
+
+function drawNear(p: p5, k: number, t: number, pose: BagelPose): void {
+  const fade = nearAt(t)
+  if (fade < 0.01) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const world = frame(p, k)
+  const H = world.y1 - world.y0
+  // Seen close (Jobu's shots), they are smaller in the frame, so a seed never takes the picture.
+  const sz = Math.max(0.45, Math.min(1.15, H / 5.8))
+  // The light they are lit by: the far glint, low and to the right, until the great light comes on above.
+  const lit = Math.max(pose.lit, pose.pool * 0.6)
+  const lx0 = 0.55 * (1 - lit)
+  const ly0 = 0.83 * (1 - lit) - lit
+  const lm = Math.hypot(lx0, ly0) || 1
+  const [lx, ly] = [lx0 / lm, ly0 / lm]
+  const rim = 0.16 + 0.22 * (pose.glint ?? 0) + 0.18 * lit
+  const T = t - T0
+  // Who they must not hide, in the near layer's cells.
+  const [ex, ey] = toPart(evelyn(t))
+  const who: Pt[] = [[ex, ey]]
+  if (t >= JOY_LIGHT) who.push(toPart(joyAt(t)))
+  depth(p, k, NEAR_F, [0, 0], (fr) => {
+    const dx = world.cx - fr.cx
+    const dy = world.cy - fr.cy
+    const people = who.map(([x, y]): Pt => [x - dx, y - dy])
+    for (const n of NEAR) {
+      const l = n.size * sz
+      const px = n.x + n.vx * T
+      const py = n.y + n.vy * T
+      for (let ix = Math.floor((fr.x0 - l - px) / NEAR_TILE); ix <= Math.floor((fr.x1 + l - px) / NEAR_TILE); ix++) {
+        for (let iy = Math.floor((fr.y0 - l - py) / NEAR_TILE); iy <= Math.floor((fr.y1 + l - py) / NEAR_TILE); iy++) {
+          const x = px + ix * NEAR_TILE
+          const y = py + iy * NEAR_TILE
+          let clear = 1
+          for (const [qx, qy] of people) clear = Math.min(clear, ss(Math.hypot(x - qx, y - qy), l * 0.35, l * 0.35 + 0.9))
+          const a = fade * (0.3 + 0.7 * clear)
+          const ang = n.turn + n.spin * T
+          ctx.save()
+          ctx.translate(x * k, y * k)
+          ctx.rotate(ang)
+          // The light's way, in the seed's own turn.
+          const c = Math.cos(-ang)
+          const s2 = Math.sin(-ang)
+          const ox = (lx * c - ly * s2) * l * 0.07 * k
+          const oy = (lx * s2 + ly * c) * l * 0.07 * k
+          // Its lit edge: the shape a little toward the light, under the dark body.
+          ctx.translate(ox, oy)
+          seedPath(ctx, l * k)
+          ctx.fillStyle = rgba(VOID.rimLight, rim * a)
+          ctx.fill()
+          ctx.translate(-ox, -oy)
+          // The body, its edge soft as a thing out of focus: two wider, fainter passes under the core.
+          for (const [grow, alpha] of [[1.14, 0.2], [1.06, 0.4], [1, 0.94]] as const) {
+            seedPath(ctx, l * k * grow)
+            ctx.fillStyle = rgba(NEAR_BODY, alpha * a)
+            ctx.fill()
+          }
+          ctx.restore()
+        }
+      }
+    }
+  })
 }
 
 /**
