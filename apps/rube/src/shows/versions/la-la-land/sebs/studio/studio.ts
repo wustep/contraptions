@@ -695,10 +695,9 @@ function drawGrid(p: p5, c: Ctx, t: number): void {
   p.line(X(k, -6), X(k, y), X(k, 9.2), X(k, y))
   for (const x of [-4.2, -0.6, 3.1, 6.6]) {
     p.line(X(k, x), X(k, y), X(k, x), X(k, y - 3))
-    // A work light hanging off the pipe, and the pale cone it throws down the flats.
+    // A work light hanging off the pipe: the stage is lit white by them, and they hang in it as lamps, no cone.
     solid(p, ink, weight * 0.6, M.shadow)
     p.rect(X(k, x + 0.55), X(k, y + 0.04), X(k, 0.26), X(k, 0.2), X(k, 0.04))
-    beam(p, k, x + 0.68, y + 0.24, x + 0.95, Y_BACK - 0.4, 0.2, 1.5, M.flat, 0.35)
   }
   // The specials: a lamp on the pipe over each cut-out, dark until its cut-out stands, then switched on and left
   // burning: its lens lit, and its light a warm pool on the floor at the cut-out's foot. The set is lit as it builds.

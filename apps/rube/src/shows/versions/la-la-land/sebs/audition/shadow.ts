@@ -370,30 +370,6 @@ function officeFloor(p: p5, k: number, t: number, F: number): void {
   ctx.restore()
 }
 
-/** A soft cone of light on the screen from a lamp's mouth to what it looks at. */
-function cone(p: p5, k: number, from: Pt, to: Pt, w0: number, w1: number, color: string, a: number): void {
-  if (a <= 0.003) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const dx = to[0] - from[0]
-  const dy = to[1] - from[1]
-  const L = Math.hypot(dx, dy) || 1
-  const nx = -dy / L
-  const ny = dx / L
-  ctx.save()
-  const g = ctx.createLinearGradient(from[0] * k, from[1] * k, to[0] * k, to[1] * k)
-  g.addColorStop(0, rgba(color, a))
-  g.addColorStop(1, rgba(color, a * 0.45))
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo((from[0] + (nx * w0) / 2) * k, (from[1] + (ny * w0) / 2) * k)
-  ctx.lineTo((to[0] + (nx * w1) / 2) * k, (to[1] + (ny * w1) / 2) * k)
-  ctx.lineTo((to[0] - (nx * w1) / 2) * k, (to[1] - (ny * w1) / 2) * k)
-  ctx.lineTo((from[0] - (nx * w0) / 2) * k, (from[1] - (ny * w0) / 2) * k)
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
-}
-
 /** How far the flood is in, 0..1. */
 const flood = (t: number): number => {
   const u = smooth(t, FLOOD[0], FLOOD[1])
@@ -1108,14 +1084,14 @@ export const shadow = part<ShadowState>(
       clock(p, k, t)
       panel(p, k, t)
 
-      // The spot on her, down from the pelmet: it opens on the accent and holds; it follows her.
+      // The spot on her, from the pelmet: it opens on the accent and holds, and follows her. Its light is where it falls:
+      // a circle on the screen behind her and a pool on the boards round her feet, nothing in the air between.
       if (t >= SPOT - 0.04) {
         const a = smooth(t, SPOT - 0.04, SPOT) * 0.8
         const mx = miaPath(t)[0]
-        const top: Pt = [(RISER[0] + RISER[1]) / 2 + (mx - MARK[0]) * 0.35, PEL_Y + 0.1]
-        cone(p, k, top, [mx, RISER_Y], 0.5, 1.35, SHADOW_MAT.warm, a * 0.62)
-        cone(p, k, top, [mx, RISER_Y], 0.3, 0.95, SHADOW_MAT.screen, a * 0.42)
-        pool(p, k, mx, RISER_Y - 0.08, 0.95, SHADOW_MAT.screen, a * 0.55, 0.32)
+        pool(p, k, mx, ON_RISER - 0.12, 0.72, SHADOW_MAT.warm, a * 0.5, 1, 0.9)
+        pool(p, k, mx, ON_RISER - 0.12, 0.6, SHADOW_MAT.screen, a * 0.4, 1, 0.9)
+        pool(p, k, mx, RISER_Y - 0.06, 0.8, SHADOW_MAT.screen, a * 0.55, 0.28, 0.8)
       }
 
       // The lamp's light: low over the papers; brighter as it comes round; full on her when it finds her.
@@ -1124,8 +1100,7 @@ export const shadow = part<ShadowState>(
       const mouth: Pt = [j2[0] + d[0] * 0.27, j2[1] + d[1] * 0.27]
       const on = t < LAMP[3] ? 0.3 + 0.25 * smooth(t, LAMP[0] - 0.6, LAMP[2]) : 0.55 + 0.25 * smooth(t, LAMP[3], LAMP[3] + 0.2)
       const reach = Math.hypot(pose.at[0] - mouth[0], pose.at[1] - mouth[1])
-      cone(p, k, mouth, pose.at, 0.24, 0.35 + reach * 0.34, SHADOW_MAT.screen, on * 0.55)
-      pool(p, k, pose.at[0], pose.at[1], 0.28 + reach * 0.2, SHADOW_MAT.screen, on * 0.7, 0.9)
+      pool(p, k, pose.at[0], pose.at[1], 0.3 + reach * 0.16, SHADOW_MAT.screen, on * 0.7, 0.9, 0.85)
 
       // The flood: the lamp behind the screen opened all the way, from behind the two of them outward.
       if (F > 0) {
