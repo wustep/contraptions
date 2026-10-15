@@ -190,8 +190,9 @@ function drawCover(p: p5, k: number, c: Cover, f: number, t: number): void {
     const least = closing ? c.r0 : c.r1
     let r = least + (1 - f) * Math.max(0, span - least)
     if (closing && c.snap !== undefined && t >= c.down[1]) r = c.r0 * (1 - smooth(t, c.snap, c.snap + SNAP_TIME))
-    // A soft lip a fifth of a cell wide (a stage light's edge), or less on a small opening.
-    const lip = Math.min(0.2, r * 0.3)
+    // The edge an iris, or a stage light, has: hard, softened over a few pixels only, however close the camera is (a
+    // fifth of a cell's lip read as a blur round the keys in the close shot).
+    const lip = Math.min(0.2, r * 0.3, 4 / k)
     const dark = c.color ?? '#000000'
     if (r * k < 0.5) {
       // Shut: all dark. (A gradient's hair of an edge would leave a speck of the world showing through.)
