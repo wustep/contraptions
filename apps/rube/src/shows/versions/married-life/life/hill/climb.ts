@@ -461,9 +461,10 @@ function basketAt(t: number): { x: number; y: number; tilt: number; open: number
 
 /**
  * The tickets, his surprise, spilling out as the basket lands askew on the strike (`T.fall`, its lid jolted open): two
- * of them slip from its mouth and slide away down the straw toward the two of them, one after the other, and lie on
- * the slope as he hurries down to her, in the frame for his first second. What the fall interrupted is seen: he was
- * about to give them to her. Each ticket's middle and its turn, in the hill's cells.
+ * of them slip from its mouth onto the straw, one after the other, and lie there by it as he hurries down past them,
+ * in the frame for his first second. What the fall interrupted is seen: he was about to give them to her. They stay
+ * with the basket, out of the close on the two of them (slid a little way down the slope, they sat half in at the
+ * close's edge, the brightest thing in it). Each ticket's middle and its turn, in the hill's cells.
  */
 function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
   const out: { x: number; y: number; angle: number }[] = []
@@ -472,7 +473,7 @@ function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
   // Out of the downhill side of its mouth.
   const mx = land.x + Math.sin(land.tilt) * BASKET.h * 0.6 + BASKET.w * 0.35
   // The first slips out on the strike itself; the second on the next onset (174.916).
-  for (const [delay, reach, spin] of [[0.08, 0.3, -0.9], [174.916 - T.fall, 0.5, 0.7]] as [number, number, number][]) {
+  for (const [delay, reach, spin] of [[0.08, 0.0, -0.9], [174.916 - T.fall, 0.07, 0.7]] as [number, number, number][]) {
     const s = t - T.fall - delay
     if (s <= 0) continue
     const u = 1 - Math.exp(-s / 0.22)

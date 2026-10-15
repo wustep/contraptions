@@ -11,10 +11,11 @@ import { CEIL, D_IN, D_OUT, drawVisitorChair, FLOOR, hexA, lean, OFFICE, OFFICE_
  *
  * They sit side by side in two of the clinic's chairs, a little apart, facing us, in bars of sun from blinds we never
  * see. Through the held note the sun moves: its bars slide off him, then off her. On the first of four soft notes
- * (80.469) she draws herself up a little; on the third (81.136) she sinks, rolling a little away from him, her gaze
- * falling; on the fourth (81.508) he leans to her. A cloud takes the last of the sun, the room goes cold, and in the
- * near silence he sits back, alone with it, and the camera, close on them since her sinking, drifts off her to the
- * left of him, where on the far side of the cut the back door opens on the yard, and she is out there by herself.
+ * (80.469) she draws herself up a little; on the third (81.136) she sinks, slumping as she will on the hill, rolling a
+ * little away from him, her gaze falling to the floor; on the fourth (81.508) he leans to her. A cloud takes the last
+ * of the sun, the room goes cold, and in the near silence he sits back, alone with it, and the camera, close on them
+ * since her sinking, drifts off her to the left of him, where on the far side of the cut the back door opens on the
+ * yard, and she is out there by herself.
  *
  * Frame: Carl's seat is (-0.5, 0) (he enters there at rest, and leaves there at rest: `exit` is [0, 0]); the set
  * draws the room from the same point (`OFFICE`).
@@ -31,7 +32,7 @@ const O = -0.5
 /** The first of four soft notes: she draws herself up, hearing it. */
 const TENSE = 80.469
 /** The third, the strongest: she sinks. */
-const SLUMP = 81.136
+export const SLUMP = 81.136
 /** The fourth: he leans to her. */
 const LEAN = 81.508
 /** The two soft notes in the near silence (83.064, 83.406): he sits back between them and the cut. */
@@ -54,9 +55,17 @@ function sink(T: number): number {
   return up + 0.078 * settle((T - SLUMP) / 1.45)
 }
 /** How far she has rolled away from him in it: her dot turns from up and away to down and away. */
-const roll = (T: number): number => 0.09 * settle((T - SLUMP - 0.05) / 1.7)
-/** She is a little less, sunk: 1 to 0.965. */
-const small = (T: number): number => 1 - 0.035 * settle((T - SLUMP) / 1.6)
+const roll = (T: number): number => 0.1 * settle((T - SLUMP - 0.05) / 1.7)
+/**
+ * Her shape as she sinks: the hill's slump (`slumpOf`), most of it, lower and wider, settling into her seat as the
+ * heart goes out of her. Only a little less (to 0.965), she stayed round and upright, and a fresh viewer saw two
+ * people in a waiting room: his lean read, her sinking (the news) did not.
+ */
+function slump(T: number): { scale: number; stretch: number } {
+  const s = settle((T - SLUMP) / 1.6)
+  return { scale: 1 - 0.085 * s, stretch: 1 + 0.22 * s }
+}
+const small = (T: number): number => slump(T).scale
 
 /**
  * Carl's lean to her (radians, clockwise): out on the fourth note, held, and back in the near silence. About 14°: at
@@ -81,9 +90,10 @@ function carl(T: number): Pt {
 /* ------------------------------------------------------------------ the light over them */
 
 /**
- * The sun's bars: light, not lines. A few broad bars, each a soft parallelogram whose ends lean with the sun's slant
- * (no upright edge anywhere), laid on the wall, the floor and the chairs under the two of them (`strength` 1, in the
- * part's draw, so they keep their colour), and once more very faintly over them (in its over), so they sit in it.
+ * The sun's bars: light, not lines. Slats' bars, each a parallelogram with a narrow soft edge whose ends lean with the
+ * sun's slant (no upright edge anywhere), laid on the wall and the floor and, lighter, the chairs under the two of them
+ * (in the part's draw, so they keep their colour), and once more very faintly over them (in its over), so they sit in
+ * it.
  */
 function light(p: p5, c: Ctx, T: number, strength = 1): void {
   const { k } = c
@@ -111,13 +121,16 @@ function light(p: p5, c: Ctx, T: number, strength = 1): void {
   const drop = w * b.slope
   // The ends lean with the sun: each bar's ends are further left the lower the bar.
   const LEAN = 0.55
-  const n = 6
-  const pitch = 0.36
-  const lit = 0.19
-  // Each bar six times, from wide and faint to its own width: a soft edge all round, not a ruled one.
-  for (let pass = 0; pass < 6; pass++) {
-    const grow = 0.15 - pass * 0.034
-    ctx.globalAlpha = 0.24
+  // Eight slats' bars over the same stack (eight at 0.27 is the six at 0.36 it was), each with a clear shadow between
+  // it and the next: with six broad bars and wide soft edges the shadows filled in, and the light read as a smear
+  // over the chairs rather than sun through blinds sliding away from them.
+  const n = 8
+  const pitch = 0.27
+  const lit = 0.145
+  // Each bar four times, from a little wide and faint to its own width: a soft edge, narrow, not a ruled one.
+  for (let pass = 0; pass < 4; pass++) {
+    const grow = 0.06 - pass * 0.02
+    ctx.globalAlpha = 0.33
     ctx.beginPath()
     for (let i = 0; i < n; i++) {
       const y = b.top + 0.05 + i * pitch - grow / 2
@@ -163,10 +176,12 @@ export const doctor = part<DoctorState>(
       const T = c.t + s.begin
       const { k, weight } = c
       const [ex, ey] = ellieDoctor(Math.max(D_IN, Math.min(D_OUT, T)))
-      // His chair and hers, her seat pressed where she has sunk into it.
+      // The sun on the wall and the floor; his chair and hers, her seat pressed where she has sunk into it; and the sun
+      // on them, lighter, so the bars cross the chairs without washing out their lines.
+      light(p, c, T, 0.75)
       drawVisitorChair(p, k, weight, O)
       drawVisitorChair(p, k, weight, O + OFFICE_APART, Math.max(0, ey) * 0.9, ex)
-      light(p, c, T)
+      light(p, c, T, 0.3)
       cold(p, c, T)
     },
     over: (p, s, c) => light(p, c, c.t + s.begin, 0.16),
@@ -176,7 +191,7 @@ export const doctor = part<DoctorState>(
     const lane = carried((t) => carl(slot.begin + t), 0, dur, Math.max(1, Math.round(dur / 0.04)))
     const her = (T: number): Companion => {
       const [x, y] = ellieDoctor(T)
-      return { x, y, scale: small(T) }
+      return { x, y, ...slump(T) }
     }
     const pose: Pose[] = [{ from: slot.begin, to: slot.end, at: (T) => ({ tilt: tilt(T) }) }]
     return {

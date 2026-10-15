@@ -5,6 +5,7 @@ import { CARD_ZONE, CREDITS_AT, LAST_GONE, LIFT } from '../credits'
 import { AGE } from '../music'
 import { HOME, INK } from '../worlds'
 import { drawHouse, dusk, type Look } from './front-house'
+import { drawFar, farRow } from './far'
 import { ALONE, CHAIR_LIFT, darkAt, G, HALT, HOUSE, LAMPS, SHOVE, STAR, SWINGS, W } from './front-plan'
 
 /**
@@ -37,19 +38,24 @@ export const FRONT_OVER = 42.0
 /** Which chairs stand in the room at T. */
 export const chairsIn = (T: number) => ({ carl: T >= CHAIR_LIFT.carl[2], ellie: T >= CHAIR_LIFT.ellie[2] })
 
-/** The sky: a day's blue for the fix-up; for the end, an evening's warmth low down going to night. */
-function skyAt(T: number): { top: string; low: string } {
+/**
+ * The sky: a day's blue for the fix-up; for the end, an evening's warmth low down going to night, and under it, along
+ * the horizon behind the street's far trees, the last of the afterglow, which stays warm a little longer than the
+ * sky over it and is the last of the day to go.
+ */
+function skyAt(T: number): { top: string; low: string; glow: string } {
   const d = darkAt(T)
-  if (d <= 0) return { top: '#A8CFE3', low: '#DDEDF1' }
+  if (d <= 0) return { top: '#A8CFE3', low: '#DDEDF1', glow: '#E6F1EF' }
   const u = Math.max(0, Math.min(1, (d - 0.3) / 0.52))
   return {
     top: mixHex('#7C86AE', HOME.night, u),
     low: mixHex(HOME.dusk, '#4E5277', Math.pow(u, 0.8)),
+    glow: mixHex('#F2C49C', '#6A6189', Math.pow(u, 1.5)),
   }
 }
 
 function sky(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
-  const { top, low } = skyAt(T)
+  const { top, low, glow } = skyAt(T)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const y0 = Math.min(f.y0, G)
   const y1 = Math.min(f.y1, G)
@@ -57,10 +63,31 @@ function sky(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
   ctx.save()
   const g = ctx.createLinearGradient(0, -13 * k, 0, G * k)
   g.addColorStop(0, top)
-  g.addColorStop(1, low)
+  g.addColorStop(0.8, low)
+  g.addColorStop(1, glow)
   ctx.fillStyle = g
   ctx.fillRect(f.x0 * k, y0 * k, (f.x1 - f.x0) * k, (y1 - y0) * k)
   ctx.restore()
+}
+
+/**
+ * The street's far side, along the horizon behind the lawn: the neighbours' roofs among their trees, soft and
+ * unlined like the church's far trees, so the house stands in a town and not on a stage. Hazy sage and slate by day;
+ * at dusk they go to one silhouette against the afterglow, darker than the sky over them, every window in them dark:
+ * the one lit window in the picture is his.
+ */
+const FAR = farRow(-32, 44)
+
+function far(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
+  if (f.y1 < G - 4) return
+  const d = darkAt(T)
+  const dusky = Math.max(0, Math.min(1, (d - 0.25) / 0.5))
+  const treeDay = mixHex('#DDEDF1', HOME.leaf, 0.42)
+  const houseDay = mixHex('#DDEDF1', '#8E9BA8', 0.48)
+  const sil = '#343B57'
+  const tree = mixHex(treeDay, mixHex(sil, '#3C4A52', 0.35), dusky)
+  const house = mixHex(houseDay, sil, dusky)
+  drawFar(p, k, FAR, G, f.x0, f.x1, tree, house, mixHex(house, dusky > 0.5 ? '#232A40' : '#EEF4F4', 0.32))
 }
 
 /**
@@ -190,6 +217,7 @@ function drawFront(p: p5, k: number, weight: number, T: number): void {
   p.rectMode(p.CORNER)
   sky(p, k, f, T)
   stars(p, k, f, T)
+  far(p, k, f, T)
   ground(p, k, f, T)
   for (const lamp of LAMPS) if (lamp.x > f.x0 - 3 && lamp.x < f.x1 + 3) lampPost(p, k, weight, lamp.x, lamp.at, T)
   const chairs = chairsIn(T)

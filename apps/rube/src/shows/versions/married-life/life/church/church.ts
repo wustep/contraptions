@@ -1198,15 +1198,13 @@ function drawTower(p: p5, k: number, c: Paint, weight: number, t: number): void 
   // The ringing floor and the belfry floor.
   box2(p, k, tx0 + w, bFloor, tx1 - w, bFloor + 0.12)
   box2(p, k, tx0 + w, -3.0, tx1 - w, -2.9)
-  // The arch's soffit: a curve under the inner wall.
-  p.noStroke()
-  p.fill(c.section)
-  p.beginShape()
-  p.vertex(tx0 * k, CH.archTop * k)
-  p.vertex((tx0 + w) * k, CH.archTop * k)
-  p.vertex((tx0 + w) * k, (CH.archTop + 0.28) * k)
-  p.bezierVertex((tx0 + w) * k, (CH.archTop + 0.1) * k, tx0 * k, (CH.archTop + 0.1) * k, tx0 * k, (CH.archTop + 0.28) * k)
-  p.endShape(p.CLOSE)
+  // The arch's head, cased like the house's doorways: a moulding under the inner wall's end, a little wider than the
+  // wall, so the stub reads as the wall over an opening. (A curved soffit hanging under it, two points and a hollow
+  // between them, read as a drip.)
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.6)
+  p.fill(c.outside)
+  box2(p, k, tx0 - 0.05, CH.archTop, tx0 + w + 0.05, CH.archTop + 0.08)
   // The tower's outer faces: white clapboard, a cornice under the belfry and over it.
   p.stroke(INK)
   p.strokeWeight(weight * 0.8)

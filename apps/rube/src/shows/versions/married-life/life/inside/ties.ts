@@ -7,7 +7,7 @@ import { BOW_FROM, HALF } from '../cast'
 import { CARL, CHURCH, ELLIE, HOME, INK } from '../worlds'
 import { BASKET, drawBasket } from '../props/basket'
 import { CUTS } from '../seams'
-import { DESK, DOOR, drawDesk, drawDoor, drawDusk, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, MACHINE, PEDAL, WHEEL } from './ties-set'
+import { DESK, DOOR, drawDesk, drawDoor, drawDusk, drawSnapshot, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, GALLERY, MACHINE, PEDAL, WHEEL } from './ties-set'
 import { BOW, drawTie } from './ties-tie'
 
 /**
@@ -1053,6 +1053,9 @@ export const ties = part<TiesState>(
       drawPool(p, k, pairAt(T) + 0.2 + 0.5 * TURN_OUT * turnOutAt(T), poolAt(T))
       drawCrestLight(p, k, crestAt(T))
       drawPainting(p, k, weight, age)
+      // Their snapshots under the stairs: the first since they moved in, then one a decade, each hung as she knots
+      // that morning's tie (out of shot: the camera is on the wheel).
+      GALLERY.forEach((_, n) => drawSnapshot(p, k, weight, n, n === 0 ? 1 : smooth(T, CINCH[n - 1], CINCH[n - 1] + 0.3), age))
       drawWeddingPhoto(p, k, weight, age)
       const [cx] = carlAt(T)
       drawWheelFrame(p, k, weight, wheelTurn(T), pawlAt(T), plateY(T, cx), age)
