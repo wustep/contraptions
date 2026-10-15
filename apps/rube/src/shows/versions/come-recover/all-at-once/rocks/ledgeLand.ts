@@ -286,12 +286,13 @@ function paintSun(ctx: Ctx2D, k: number, f: Frame, light: Light): void {
   const cx = (f.x0 + W * sun.u) * k
   const cy = (f.cy - S * sun.v) * k
   const r = S * sun.r * k
-  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 9)
-  glow.addColorStop(0, rgba(sun.warm, sun.glow))
-  glow.addColorStop(0.25, rgba(sun.warm, sun.glow * 0.4))
+  // The haze warm close round it, and no further: a sun in a haze, not a bloom.
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 4)
+  glow.addColorStop(0, rgba(sun.warm, sun.glow * 0.55))
+  glow.addColorStop(0.4, rgba(sun.warm, sun.glow * 0.2))
   glow.addColorStop(1, rgba(sun.warm, 0))
   ctx.fillStyle = glow
-  ctx.fillRect(cx - r * 9, cy - r * 9, r * 18, r * 18)
+  ctx.fillRect(cx - r * 4, cy - r * 4, r * 8, r * 8)
   const disc = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 1.25)
   disc.addColorStop(0, rgba(sun.disc, 0.95))
   disc.addColorStop(0.78, rgba(sun.disc, 0.85))
