@@ -3,7 +3,7 @@ import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
-import { frame, lay, scenery, smooth, standing, type Chain, type Link } from './kit'
+import { lay, scenery, smooth, standing, type Chain, type Link } from './kit'
 import { DURATION, PEAK, SEAM } from './music'
 import { FIRST, SEAMS } from './seams'
 import { QuintessenceShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
@@ -29,7 +29,7 @@ import { himalayaFront } from './himalaya/front'
 import { pressFront } from './press/front'
 import { streetFront } from './street/front'
 import { passages } from './passage'
-import { sway } from './depth'
+import { motes, rgbaOf, sway, view, wash } from './depth'
 
 /**
  * The whole show, in order: which place has Walter from when to when, and which part has him in each. Every part is
@@ -92,15 +92,15 @@ const ashCut = scenery<null>({
   over: (p, _s, c) => {
     const a = ashAt(c.t)
     if (a <= 0.001) return
-    const f = frame(p, c.k)
-    const col = p.color(ASH.color)
-    col.setAlpha(255 * a)
-    p.push()
-    p.noStroke()
-    p.rectMode(p.CORNER)
-    p.fill(col)
-    p.rect((f.x0 - 1) * c.k, (f.y0 - 1) * c.k, (f.x1 - f.x0 + 2) * c.k, (f.y1 - f.y0 + 2) * c.k)
-    p.pop()
+    const v = view(p, c.k)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    // The ash is a weather, not a card: thicker overhead, still falling in two planes of flakes over the grey.
+    wash(ctx, v, rgbaOf(ASH.color, Math.min(1, a * 1.08)), rgbaOf(ASH.color, a * 0.97))
+    ctx.save()
+    ctx.globalAlpha = 0.4 + 0.5 * Math.sin(Math.PI * Math.min(1, a * 1.4))
+    motes(ctx, v, c.t, { n: 70, seed: 41, tile: [6, 5], r: [0.02, 0.05], v: [0.25, 0.55], sway: [0.12, 0.35], color: '#A9A49B', square: true })
+    motes(ctx, v, c.t, { n: 26, seed: 42, tile: [6, 5], r: [0.05, 0.1], v: [0.4, 0.9], sway: [0.2, 0.25], color: '#BDB8AF' })
+    ctx.restore()
   },
 })
 

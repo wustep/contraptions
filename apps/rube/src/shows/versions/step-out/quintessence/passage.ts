@@ -158,33 +158,43 @@ const projector: Shape = {
   },
 }
 
-/** The bar's door thrown open on the daylight: the light comes in as a slab from him, and opens to both sides. */
+/** The bar's door thrown open on the daylight: the light comes in as a slab from him, blinding, and opens to both sides. */
+const doorAt = (u: number, W: number, him: Pt) => ({
+  left: him[0] - (him[0] + 40) * easeIn(u * 1.05) - 4,
+  right: him[0] + (W - him[0] + 40) * easeOut(u) + 4,
+})
 const door: Shape = {
   region(u, W, H, him) {
-    const left = him[0] - (him[0] + 40) * easeIn(u * 1.05) - 4
-    const right = him[0] + (W - him[0] + 40) * easeOut(u) + 4
+    const { left, right } = doorAt(u, W, him)
     const path = new Path2D()
     path.rect(left, -10, right - left, H + 20)
     return path
   },
   deco(ctx, u, W, H, him, s) {
-    const left = him[0] - (him[0] + 40) * easeIn(u * 1.05) - 4
-    const right = him[0] + (W - him[0] + 40) * easeOut(u) + 4
+    const { left, right } = doorAt(u, W, him)
     const a = Math.sin(Math.PI * clamp(u * 1.1))
     if (a <= 0.01) return
     ctx.save()
+    // The bar goes darker beside the light: the eye stopping down for the day outside.
+    ctx.fillStyle = `rgba(14, 10, 8, ${0.45 * a})`
+    ctx.fillRect(-10, -10, Math.max(0, left + 10), H + 20)
+    ctx.fillRect(right, -10, W + 10 - right, H + 20)
     ctx.globalCompositeOperation = 'lighter'
-    for (const x of [left, right]) {
-      const g = ctx.createLinearGradient(x - 0.5 * s, 0, x + 0.5 * s, 0)
-      g.addColorStop(0, 'rgba(255, 252, 240, 0)')
-      g.addColorStop(0.5, `rgba(255, 252, 240, ${0.75 * a})`)
-      g.addColorStop(1, 'rgba(255, 252, 240, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(x - 0.5 * s, 0, s, H)
-    }
-    // The daylight's overexposure, strongest as the door opens.
-    ctx.fillStyle = `rgba(255, 252, 244, ${0.22 * a * (1 - u)})`
+    // The day, blown out where it first comes in, and settling to the pad as the eye adjusts.
+    const g0 = ctx.createLinearGradient(0, 0, 0, H)
+    g0.addColorStop(0, `rgba(250, 252, 255, ${0.85 * a * (1 - u * 0.8)})`)
+    g0.addColorStop(1, `rgba(250, 252, 255, ${0.55 * a * (1 - u * 0.8)})`)
+    ctx.fillStyle = g0
     ctx.fillRect(left, 0, right - left, H)
+    // Light spilling round the jambs.
+    for (const x of [left, right]) {
+      const g = ctx.createLinearGradient(x - 1.2 * s, 0, x + 1.2 * s, 0)
+      g.addColorStop(0, 'rgba(255, 250, 236, 0)')
+      g.addColorStop(0.5, `rgba(255, 250, 236, ${0.85 * a})`)
+      g.addColorStop(1, 'rgba(255, 250, 236, 0)')
+      ctx.fillStyle = g
+      ctx.fillRect(x - 1.2 * s, 0, 2.4 * s, H)
+    }
     ctx.restore()
   },
 }
@@ -393,9 +403,10 @@ const shutter: Shape = {
       ctx.lineTo(e0[0], e0[1])
       ctx.closePath()
       const g = ctx.createLinearGradient(p0[0], p0[1], e0[0], e0[1])
-      g.addColorStop(0, i % 2 ? '#2A2D31' : '#25282C')
-      g.addColorStop(0.08, '#1B1D20')
-      g.addColorStop(1, '#141517')
+      g.addColorStop(0, i % 2 ? '#3A3D42' : '#33363B')
+      g.addColorStop(0.05, '#24262A')
+      g.addColorStop(0.4, '#1A1C1F')
+      g.addColorStop(1, '#111214')
       ctx.fillStyle = g
       ctx.fill()
       ctx.strokeStyle = 'rgba(150, 156, 162, 0.55)'
@@ -405,13 +416,21 @@ const shutter: Shape = {
       ctx.lineTo(p1[0], p1[1])
       ctx.stroke()
     }
+    // The blades' shadow falling inward on the picture, so the opening has depth.
+    const sh = ctx.createRadialGradient(him[0], him[1], r * 0.7, him[0], him[1], r * 1.02)
+    sh.addColorStop(0, 'rgba(10, 11, 13, 0)')
+    sh.addColorStop(1, `rgba(10, 11, 13, ${0.55 * Math.min(1, (1 - Math.abs(u - 0.5) * 2) * 2)})`)
+    ctx.fillStyle = sh
+    ctx.beginPath()
+    ctx.arc(him[0], him[1], r * 1.02, 0, Math.PI * 2)
+    ctx.fill()
     // The glint on the glass as it closes.
     const shut = 1 - Math.abs(u - 0.5) * 2
     if (shut > 0.6) {
       ctx.globalCompositeOperation = 'lighter'
       const g = ctx.createRadialGradient(him[0], him[1], r * 0.6, him[0], him[1], r * 1.4)
       g.addColorStop(0, 'rgba(255, 255, 255, 0)')
-      g.addColorStop(0.5, `rgba(240, 236, 226, ${0.3 * (shut - 0.6) / 0.4})`)
+      g.addColorStop(0.5, `rgba(240, 236, 226, ${0.16 * (shut - 0.6) / 0.4})`)
       g.addColorStop(1, 'rgba(255, 255, 255, 0)')
       ctx.fillStyle = g
       ctx.fillRect(him[0] - r * 1.5, him[1] - r * 1.5, r * 3, r * 3)
@@ -420,43 +439,58 @@ const shutter: Shape = {
   },
 }
 
-/** The loading door's strip curtain: the morning comes in through it a strip at a time, left to right. */
-const STRIPS = 9
-const stripOpen = (u: number, i: number) => smooth(u * 1.7 - (i / STRIPS) * 0.7)
+/**
+ * The loading door's strip curtain: he goes through it on the cut, and the morning is on the other side. The curtain's
+ * plane sweeps across the frame from the right, passing him on the cut; ahead of it is the street, behind it the hall.
+ * Its strips hang in front, clear plastic catching the light, pushed aside where he goes through.
+ */
+const CUT_U = 0.3 / 1.15
+const curtainX = (u: number, W: number, him: Pt) => him[0] + (CUT_U - u) * W * 1.7
 const strips: Shape = {
-  region(u, W, H) {
+  region(u, W, H, him) {
+    const x = curtainX(u, W, him)
     const path = new Path2D()
-    const w = W / STRIPS
-    for (let i = 0; i < STRIPS; i++) {
-      const o = stripOpen(u, i)
-      if (o <= 0) continue
-      const cx = (i + 0.5) * w
-      const hw = (w / 2 + 2) * o
-      // A strip swings as it parts: its foot is pushed further than its head.
-      path.moveTo(cx - hw * 0.8, -10)
-      path.lineTo(cx + hw * 0.8, -10)
-      path.lineTo(cx + hw * 1.2, H + 10)
-      path.lineTo(cx - hw * 1.2, H + 10)
-      path.closePath()
-    }
+    path.rect(x, -10, W + 10 - x + Math.max(0, -x), H + 20)
     return path
   },
-  deco(ctx, u, W, H) {
+  deco(ctx, u, W, H, him, s, t) {
     if (u <= 0 || u >= 1) return
-    const w = W / STRIPS
+    const x = curtainX(u, W, him)
+    const fade = 1 - smooth((u - 0.75) / 0.25)
     ctx.save()
+    // The morning pouring in at the curtain's edge.
     ctx.globalCompositeOperation = 'lighter'
-    for (let i = 0; i < STRIPS; i++) {
-      const o = stripOpen(u, i)
-      if (o <= 0 || o >= 1) continue
-      const cx = (i + 0.5) * w
-      const a = Math.sin(Math.PI * o) * 0.55
-      const g = ctx.createLinearGradient(cx - w * 0.6, 0, cx + w * 0.6, 0)
-      g.addColorStop(0, 'rgba(255, 244, 220, 0)')
-      g.addColorStop(0.5, `rgba(255, 244, 220, ${a})`)
-      g.addColorStop(1, 'rgba(255, 244, 220, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(cx - w * 0.6, 0, w * 1.2, H)
+    const g = ctx.createLinearGradient(x - 0.4 * s, 0, x + 2.2 * s, 0)
+    g.addColorStop(0, 'rgba(255, 238, 205, 0)')
+    g.addColorStop(0.2, `rgba(255, 238, 205, ${0.7 * fade})`)
+    g.addColorStop(1, 'rgba(255, 238, 205, 0)')
+    ctx.fillStyle = g
+    ctx.fillRect(x - 0.4 * s, 0, 2.6 * s, H)
+    ctx.globalCompositeOperation = 'source-over'
+    // The strips: a curtain a cell and a half deep about the plane, each swinging, parted round him.
+    const w = 0.42 * s
+    for (let i = -5; i <= 5; i++) {
+      const cx = x + i * w * 0.86
+      const near = Math.max(0, 1 - Math.abs(cx - him[0]) / (1.1 * s))
+      const push = (cx < him[0] ? -1 : 1) * near * 0.5 * s * Math.sin(Math.PI * clamp((u - CUT_U + 0.2) / 0.5))
+      const swing = 0.08 * s * Math.sin(t * 5 + i * 1.7)
+      const foot = cx + push + swing
+      const a = 0.32 * fade * (1 - Math.abs(i) / 6)
+      if (a <= 0.01) continue
+      ctx.fillStyle = `rgba(214, 226, 230, ${a})`
+      ctx.beginPath()
+      ctx.moveTo(cx - w / 2, -10)
+      ctx.lineTo(cx + w / 2, -10)
+      ctx.quadraticCurveTo(cx + w / 2 + push * 0.3, H * 0.6, foot + w / 2, H + 10)
+      ctx.lineTo(foot - w / 2, H + 10)
+      ctx.quadraticCurveTo(cx - w / 2 + push * 0.3, H * 0.6, cx - w / 2, -10)
+      ctx.fill()
+      ctx.strokeStyle = `rgba(255, 255, 255, ${a * 1.6})`
+      ctx.lineWidth = Math.max(1, 0.015 * s)
+      ctx.beginPath()
+      ctx.moveTo(cx + w / 2, -10)
+      ctx.quadraticCurveTo(cx + w / 2 + push * 0.3, H * 0.6, foot + w / 2, H + 10)
+      ctx.stroke()
     }
     ctx.restore()
   },
