@@ -1,7 +1,7 @@
 import type { Pt, Seg } from '../../../../../parts'
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
-import { beam, box, carried, frame, part, rgba, smooth, type PartShot } from '../kit'
+import { box, carried, frame, part, rgba, smooth, type PartShot } from '../kit'
 import { LIPTONS_MAT } from '../worlds'
 import { bloomFront, K0, KISS_MIA, KISS_SEB, mia, ROOM, seb, T } from './kiss-plan'
 import { cupFront, lampAt } from './room'
@@ -176,11 +176,11 @@ export const kiss = part<null>(
       p.pop()
       // Nearest of all, our own table: the edges of the tables near us along the foot of the picture.
       nearTables(p, k, t)
-      // The hush: the room goes dark round a pool of light on the piano's end, and a soft shaft down into it.
+      // The hush: the room goes dark round a pool of light on the piano's end, coming down with him to her: the light is
+      // what is left lit in the dark, and nothing in the air over it.
       const a = hush(t)
       if (a <= 0.003) return
       const [px, py] = toK(poolAt(t))
-      beam(p, k, px + 0.1, py - 6.8, px, py + 1.4, 0.5, 2.3, LIPTONS_MAT.lamp, 0.1 * (a / 0.8))
       const f = frame(p, k)
       const ctx = p.drawingContext as CanvasRenderingContext2D
       ctx.save()

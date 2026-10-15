@@ -3,6 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, beam, frame, glow, hash, rgba, ring, scenery, smooth } from '../kit'
 import { LIPTONS_INK, LIPTONS_MAT } from '../worlds'
+import { DREAM_PERIOD, dream } from '../music'
 import {
   BELL,
   BULBS,
@@ -365,8 +366,152 @@ function wall(d: Draw, t: number): void {
   p.noStroke()
   p.fill(alpha(p, M.gold, 0.7))
   box(d, x0, ROOM.ceil + 0.23, x1, ROOM.ceil + 0.26)
-  // The lamps' light up the wall behind each table.
-  for (const x of TABLES) glow(p, d.k, x, TABLE.top - 0.4, 1.9, M.lamp, 0.16 * lampAt(x, t), 1, 1.25)
+  // The lamps' light up the wall behind each table: a wash on the paper above the shade, not a halo round it.
+  for (const x of TABLES) glow(p, d.k, x, TABLE.top - 0.95, 1.4, M.lamp, 0.12 * lampAt(x, t), 1, 0.85)
+}
+
+/**
+ * High on the wall, under the cornice, what a supper club this old has hung there: four dark old paintings in gilt
+ * frames, each on two cords from a hook on the picture rail (the sea with a sail on it, the hills, a vase of flowers,
+ * a woman in profile, a winter field, a man in his hat), and between the windows a regulator clock, its pendulum swinging in the dream's own time from
+ * the first, so that when the band comes in on the kiss it comes in on the clock. Painted dim: the lamps are low.
+ */
+const PICTURES: { x: number; w: number; h: number; kind: 'sea' | 'hills' | 'flowers' | 'lady' | 'snow' | 'man' }[] = [
+  { x: -11.05, w: 1.35, h: 1.0, kind: 'hills' },
+  { x: -8.8, w: 1.7, h: 1.15, kind: 'sea' },
+  { x: -4.4, w: 1.15, h: 1.3, kind: 'lady' },
+  { x: -2.15, w: 1.3, h: 1.0, kind: 'flowers' },
+  { x: 2.2, w: 1.6, h: 1.05, kind: 'snow' },
+  { x: 6.0, w: 1.0, h: 1.25, kind: 'man' },
+]
+const HANG = -4.75
+const CLOCK = { x: -6.6, y: -3.95, r: 0.36 }
+function pictures(d: Draw, t: number): void {
+  const { p, k, ink, w } = d
+  const rail = ROOM.ceil + 0.3
+  const dim = (c: string, a = 0.55) => mixHex(c, M.panel, a)
+  const gilt = dim(M.gold, 0.35)
+  for (const pic of PICTURES) {
+    const x0 = pic.x - pic.w / 2
+    const x1 = pic.x + pic.w / 2
+    const y0 = HANG
+    const y1 = HANG + pic.h
+    // The cords, from the hook on the rail to the frame's top corners.
+    outline(p, rgba(M.gold, 0.5), w * 0.35)
+    p.line(pic.x * k, rail * k, (x0 + 0.15) * k, y0 * k)
+    p.line(pic.x * k, rail * k, (x1 - 0.15) * k, y0 * k)
+    // The frame, and the canvas in it.
+    solid(p, ink, w * 0.5, gilt)
+    box(d, x0, y0, x1, y1)
+    const cx0 = x0 + 0.1
+    const cx1 = x1 - 0.1
+    const cy0 = y0 + 0.1
+    const cy1 = y1 - 0.1
+    const cw = cx1 - cx0
+    const ch = cy1 - cy0
+    const at = (u: number, v: number): Pt => [cx0 + u * cw, cy0 + v * ch]
+    p.noStroke()
+    if (pic.kind === 'sea' || pic.kind === 'hills') {
+      fillRect(d, cx0, cy0, cx1, cy1, dim('#8C6A52'))
+      p.fill(dim('#B98B5E'))
+      poly(d, [at(0, 0.45), at(1, 0.38), at(1, 0.62), at(0, 0.66)])
+      if (pic.kind === 'sea') {
+        p.fill(dim('#3E5A5E'))
+        poly(d, [at(0, 0.62), at(1, 0.6), at(1, 1), at(0, 1)])
+        // A sail on it, and a far headland.
+        p.fill(dim('#4A3A30'))
+        poly(d, [at(0.7, 0.62), at(1, 0.5), at(1, 0.62)])
+        p.fill(dim(M.cloth, 0.45))
+        poly(d, [at(0.38, 0.58), at(0.44, 0.22), at(0.5, 0.58)])
+        poly(d, [at(0.33, 0.62), at(0.53, 0.62), at(0.5, 0.67), at(0.36, 0.67)])
+      } else {
+        p.fill(dim('#4F5A3E'))
+        poly(d, [at(0, 0.55), at(0.3, 0.35), at(0.6, 0.52), at(1, 0.3), at(1, 1), at(0, 1)])
+        p.fill(dim('#3B4530'))
+        poly(d, [at(0, 0.82), at(0.45, 0.6), at(1, 0.78), at(1, 1), at(0, 1)])
+      }
+    } else if (pic.kind === 'flowers') {
+      fillRect(d, cx0, cy0, cx1, cy1, dim('#3A2A24'))
+      p.fill(dim('#7C6A50'))
+      poly(d, [at(0.4, 0.62), at(0.6, 0.62), at(0.64, 0.95), at(0.36, 0.95)])
+      // Each bloom a ring of petals round its heart, so none of them is a disc.
+      for (const [u, v, r, c] of [[0.38, 0.42, 0.13, M.shade], [0.56, 0.32, 0.15, '#C98A5A'], [0.66, 0.5, 0.11, M.cloth], [0.46, 0.55, 0.1, M.shade]] as const) {
+        const [fx, fy] = at(u, v)
+        const rr = r * Math.min(cw, ch)
+        p.fill(dim(c, 0.5))
+        for (let j = 0; j < 6; j++) {
+          const a = (j / 6) * Math.PI * 2 + u * 5
+          p.circle((fx + Math.cos(a) * rr * 0.6) * k, (fy + Math.sin(a) * rr * 0.6) * k, rr * 0.9 * k)
+        }
+        p.fill(dim('#3A2A24', 0.2))
+        p.circle(fx * k, fy * k, rr * 0.55 * k)
+      }
+    } else if (pic.kind === 'snow') {
+      // A winter field at dusk: a pale sky, the snow, a line of dark trees and a lit window far off.
+      fillRect(d, cx0, cy0, cx1, cy1, dim('#7D7488'))
+      p.fill(dim(M.cloth, 0.42))
+      poly(d, [at(0, 0.62), at(0.5, 0.55), at(1, 0.6), at(1, 1), at(0, 1)])
+      p.fill(dim('#2E2A26'))
+      for (const [u, h] of [[0.12, 0.3], [0.2, 0.22], [0.66, 0.34], [0.74, 0.26], [0.82, 0.3]] as const) poly(d, [at(u - 0.04, 0.6), at(u, 0.6 - h), at(u + 0.04, 0.6)])
+      p.fill(dim(M.lamp, 0.35))
+      p.rect(at(0.42, 0.5)[0] * k, at(0.42, 0.5)[1] * k, 0.05 * cw * k, 0.06 * ch * k)
+    } else if (pic.kind === 'man') {
+      fillRect(d, cx0, cy0, cx1, cy1, dim('#4A3A2E'))
+      // A gentleman in profile, the other way from the lady across the room: his hat, his collar.
+      p.fill(dim('#241A16'))
+      poly(d, [at(0.18, 1), at(0.22, 0.76), at(0.38, 0.66), at(0.36, 0.56), at(0.3, 0.52), at(0.34, 0.42), at(0.32, 0.36), at(0.68, 0.36), at(0.66, 0.5), at(0.6, 0.62), at(0.66, 0.7), at(0.82, 0.8), at(0.86, 1)])
+      poly(d, [at(0.24, 0.37), at(0.76, 0.37), at(0.7, 0.32), at(0.66, 0.16), at(0.36, 0.16), at(0.32, 0.32)])
+      p.fill(dim(M.cloth, 0.5))
+      poly(d, [at(0.44, 0.7), at(0.58, 0.7), at(0.52, 0.8)])
+    } else {
+      fillRect(d, cx0, cy0, cx1, cy1, dim('#5A3E36'))
+      // A woman in profile, her hair up, her shoulders: the oldest picture in the room.
+      p.fill(dim('#2E211D'))
+      poly(d, [at(0.25, 1), at(0.3, 0.78), at(0.42, 0.68), at(0.42, 0.6), at(0.36, 0.55), at(0.36, 0.42), at(0.42, 0.3), at(0.56, 0.26), at(0.66, 0.34), at(0.66, 0.5), at(0.6, 0.62), at(0.62, 0.7), at(0.78, 0.8), at(0.82, 1)])
+      p.circle(at(0.56, 0.22)[0] * k, at(0.56, 0.22)[1] * k, 0.18 * cw * k)
+    }
+    // A sprig of holly tucked over one corner: it is Christmas.
+    if (pic.kind === 'sea' || pic.kind === 'lady') {
+      p.fill(M.garland)
+      p.ellipse((x1 - 0.12) * k, (y0 + 0.02) * k, 0.24 * k, 0.1 * k)
+      p.ellipse((x1 - 0.26) * k, (y0 - 0.02) * k, 0.2 * k, 0.09 * k)
+      p.fill(M.shade)
+      p.circle((x1 - 0.18) * k, (y0 - 0.02) * k, 0.07 * k)
+    }
+  }
+  // The clock: a case on the wall, its dial, its hands near midnight, and its pendulum behind the glass below.
+  const { x, y, r } = CLOCK
+  solid(p, ink, w * 0.5, M.wood)
+  poly(d, [[x - r - 0.08, y - r - 0.1], [x + r + 0.08, y - r - 0.1], [x + r + 0.08, y + r + 1.2], [x, y + r + 1.42], [x - r - 0.08, y + r + 1.2]])
+  solid(p, ink, w * 0.45, mixHex(M.cloth, M.panel, 0.3))
+  p.circle(x * k, y * k, 2 * r * k)
+  outline(p, rgba(ink, 0.7), w * 0.35)
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2
+    const r0 = i % 3 === 0 ? 0.74 : 0.84
+    p.line((x + Math.sin(a) * r * r0) * k, (y - Math.cos(a) * r * r0) * k, (x + Math.sin(a) * r * 0.92) * k, (y - Math.cos(a) * r * 0.92) * k)
+  }
+  // Eleven minutes to midnight, and going on at a clock's own pace.
+  const minutes = 49 + (t - 39) / 60
+  const hand = (a: number, L: number, wt: number) => {
+    outline(p, ink, w * wt)
+    p.line(x * k, y * k, (x + Math.sin(a) * L) * k, (y - Math.cos(a) * L) * k)
+  }
+  hand(((11 + minutes / 60) / 12) * Math.PI * 2, r * 0.5, 0.75)
+  hand((minutes / 60) * Math.PI * 2, r * 0.78, 0.5)
+  // The pendulum: one swing a beat of the dream's comb, its bob at the end of each swing on the beat.
+  const ph = (t - dream(0)) / DREAM_PERIOD
+  const swing = 0.2 * Math.cos(Math.PI * ph)
+  const px = x
+  const py = y + r + 0.12
+  const L = 0.9
+  const bx = px + Math.sin(swing) * L
+  const by = py + Math.cos(swing) * L
+  fillRect(d, x - r + 0.02, y + r + 0.05, x + r - 0.02, y + r + 1.15, mixHex(M.panel, '#000000', 0.25))
+  outline(p, mixHex(M.gold, M.panel, 0.2), w * 0.45)
+  p.line(px * k, py * k, bx * k, by * k)
+  solid(p, ink, w * 0.35, mixHex(M.gold, M.panel, 0.15))
+  p.circle(bx * k, by * k, 0.17 * k)
 }
 
 /**
@@ -1385,6 +1530,7 @@ export const liptonsRoom = scenery<null>({
     night(d, t)
     shell(d)
     wall(d, t)
+    pictures(d, t)
     sconces(d, t)
     windows(d, t)
     hungFlakes(d, t)
