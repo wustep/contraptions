@@ -73,10 +73,13 @@ const read = (a: Float32Array, s: Spot, t: number): number => {
 
 /** The night over the floors off the ball's, drawn over the machine in the world's cells. */
 export function follow(p: p5, c: PieceCtx, line: number, t: number, s: Spot, night: string, depth = 0.5): void {
-  const strength = read(s.strength, s, t)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // Not over a frame of the whole fair (Overview), where the route is the point and every floor is a hair's width.
+  const m = ctx.getTransform()
+  const cells = Math.min(ctx.canvas.height, (ctx.canvas.width * 9) / 16) / (Math.hypot(m.a, m.b) * c.k)
+  const strength = read(s.strength, s, t) * (1 - smooth(cells, 9, 14))
   if (strength < 0.01) return
   const y = (read(s.y, s, t) - line) * c.k
-  const ctx = p.drawingContext as CanvasRenderingContext2D
   const reach = c.k * 60
   const g = ctx.createLinearGradient(0, y - c.k * 2, 0, y + c.k * 2)
   const a = depth * strength

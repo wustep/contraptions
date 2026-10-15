@@ -292,10 +292,13 @@ export interface Rows {
  * frame, and turns up the leaves' pale side.
  */
 export function rows(s: Screen, t: number, hy: number, r: Rows): void {
-  const { ctx, cx, f, w, h } = s
-  const foot = Math.max(s.cy + 0.56 * f, h + 0.02 * f)
-  const frameW = (f * 16) / 9
+  const { ctx, cx, w, h } = s
+  const foot = Math.max(s.cy + 0.56 * s.f, h + 0.02 * s.f)
+  const frameW = (s.f * 16) / 9
   const left = cx - frameW / 2
+  // The rows are sized by the depth of field they fill: the frame's height in a 16:9 frame, more on a canvas taller
+  // than it (a phone held upright), where the field runs on down to the foot and its near rows are nearer.
+  const f = Math.max(s.f, (foot - hy) / 0.37)
   // Rows by their distance, the nearest 1: each lies 1/d of the way from the horizon to the foot.
   const depths: number[] = []
   for (let d = 1; d < 13; d *= 1.3) depths.push(d)

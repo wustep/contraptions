@@ -89,7 +89,7 @@ export function exposure(p: p5, c: PieceCtx, col: number, line: number, t: numbe
   const Y = (i: number) => (e.pts[i * 2 + 1] - line) * k
   // Thick enough to read at the widest, never thicker than the ball close up.
   const px = 1 / Math.hypot(ctx.getTransform().a, ctx.getTransform().b)
-  const core = Math.max(1.4 * px, k * 0.035)
+  const core = Math.max(1.8 * px, k * 0.05)
   ctx.save()
   ctx.globalCompositeOperation = 'lighter'
   ctx.lineCap = 'round'
@@ -104,10 +104,13 @@ export function exposure(p: p5, c: PieceCtx, col: number, line: number, t: numbe
     path.moveTo(X(i), Y(i))
     for (let m = i + 1; m <= j; m++) path.lineTo(X(m), Y(m))
     const hex = /^#[0-9a-f]{6}$/i.test(color) ? color : '#FFFFFF'
-    ctx.strokeStyle = rgba(hex, 0.16)
-    ctx.lineWidth = core * 5
+    ctx.strokeStyle = rgba(hex, 0.1)
+    ctx.lineWidth = core * 9
     ctx.stroke(path)
-    ctx.strokeStyle = rgba(hex, 0.85)
+    ctx.strokeStyle = rgba(hex, 0.22)
+    ctx.lineWidth = core * 3.5
+    ctx.stroke(path)
+    ctx.strokeStyle = rgba(hex, 0.9)
     ctx.lineWidth = core
     ctx.stroke(path)
     i = j
