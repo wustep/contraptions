@@ -825,12 +825,11 @@ function stand(at: number, t: number): { up: number; knock: number } {
  * A cut-out, drawn about its hinge with its heights squashed by `sy`: lying back on the floor it is a sliver
  * (the floor seen from a little above), standing it is itself. `paint` is how much colour the flood has put on it.
  */
-function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number, lit: number, shade?: string): void {
+function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number, shade?: string): void {
   const { k, weight } = c
-  // As a shadow: every shape in one flat colour, no line, no light.
+  // As a shadow: every shape in one flat colour, no line.
   const ink = shade ?? c.ink
   const P = (a: string) => shade ?? mixHex(M.flat, a, paint)
-  if (shade) lit = 0
   const V = (px: number, py: number): [number, number] => [X(k, x + px), X(k, HINGE + py * sy)]
   const poly = (pts: [number, number][], fill: string, w = weight * 0.8) => {
     solid(p, ink, w, fill)
@@ -946,10 +945,10 @@ function drawCuts(p: p5, c: Ctx, t: number): void {
       p.push()
       p.drawingContext.globalCompositeOperation = 'darken'
       p.translate(X(k, 0.12), X(k, -0.05))
-      drawCut(p, c, cut.kind, cut.x, sy, 0, 0, mixHex(M.flat, mixHex(M.shadow, M.purple, 0.35), 0.28 * smooth(up, 0.6, 1)))
+      drawCut(p, c, cut.kind, cut.x, sy, 0, mixHex(M.flat, mixHex(M.shadow, M.purple, 0.35), 0.28 * smooth(up, 0.6, 1)))
       p.pop()
     }
-    drawCut(p, c, cut.kind, cut.x, sy, paint, paint)
+    drawCut(p, c, cut.kind, cut.x, sy, paint)
   }
 }
 
