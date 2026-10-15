@@ -305,6 +305,26 @@ export function frame(p: p5, k: number): { x0: number; y0: number; x1: number; y
   return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }
 }
 
+/** The frame, in a drawing's own cells (`frame`'s answer). */
+export type Frame = ReturnType<typeof frame>
+
+/**
+ * A layer at another depth than the world's own plane: a far skyline that slides by slower than the street, or a
+ * near post that sweeps past faster. `f` is how fast it moves with the camera: 1 is the world's plane, under 1 is
+ * behind it (0 stays put in the frame, like the sky), over 1 is in front of it. At the camera centre `ref` (cells) the
+ * layer sits where it is drawn. `draw` runs with the canvas moved for the layer and is handed the frame in the layer's
+ * own cells, to cull and tile by. The camera's zoom is a lens, so it scales every layer alike.
+ */
+export function depth(p: p5, k: number, f: number, ref: Pt, draw: (fr: Frame) => void): void {
+  const fr = frame(p, k)
+  const dx = (fr.cx - ref[0]) * (1 - f)
+  const dy = (fr.cy - ref[1]) * (1 - f)
+  p.push()
+  p.translate(dx * k, dy * k)
+  draw({ x0: fr.x0 - dx, x1: fr.x1 - dx, y0: fr.y0 - dy, y1: fr.y1 - dy, cx: fr.cx - dx, cy: fr.cy - dy })
+  p.pop()
+}
+
 /** A colour with an alpha, 0..1. */
 export function alpha(p: p5, hex: string, a: number): p5.Color {
   const c = p.color(hex)
