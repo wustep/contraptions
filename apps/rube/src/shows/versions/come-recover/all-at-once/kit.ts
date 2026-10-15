@@ -315,13 +315,14 @@ export type Frame = ReturnType<typeof frame>
  * layer sits where it is drawn. `draw` runs with the canvas moved for the layer and is handed the frame in the layer's
  * own cells, to cull and tile by. The camera's zoom is a lens, so it scales every layer alike.
  */
-export function depth(p: p5, k: number, f: number, ref: Pt, draw: (fr: Frame) => void): void {
+export function depth(p: p5, k: number, f: number, ref: Pt, draw: (fr: Frame, shift: Pt) => void): void {
   const fr = frame(p, k)
   const dx = (fr.cx - ref[0]) * (1 - f)
   const dy = (fr.cy - ref[1]) * (1 - f)
   p.push()
   p.translate(dx * k, dy * k)
-  draw({ x0: fr.x0 - dx, x1: fr.x1 - dx, y0: fr.y0 - dy, y1: fr.y1 - dy, cx: fr.cx - dx, cy: fr.cy - dy })
+  // The frame in the layer's cells, and how far the layer is moved off the world's (to cull what a clip shows).
+  draw({ x0: fr.x0 - dx, x1: fr.x1 - dx, y0: fr.y0 - dy, y1: fr.y1 - dy, cx: fr.cx - dx, cy: fr.cy - dy }, [dx, dy])
   p.pop()
 }
 

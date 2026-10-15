@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
 import { FLOOR, mixHex, type Pt } from '../../../../../parts'
-import { alpha, frame, hash, knock, scenery, smooth } from '../kit'
+import { alpha, depth, frame, hash, knock, scenery, smooth } from '../kit'
 import { GREAT, HOME_HITS, home } from '../music'
 import { HOME_CIRCLE } from '../seams'
 import { KNOTS, WIRE_A, WIRE_B, lanternAt } from './set-garland'
@@ -983,6 +983,12 @@ export function tube(pen: Pen, x: number, level: number): void {
 /** Where the neon washer hangs in the window. */
 const NEON_AT: Pt = [-5.72, -2.55]
 
+/**
+ * How far off the street's two layers are: the block across it moves at `far` of the camera's speed and the lanterns
+ * strung over it at `lines`, each sitting where it is drawn when the camera is at `ref` (the opening's wide shot).
+ */
+const STREET_DEPTH = { far: 0.55, lines: 0.78, ref: [-2.6, -2.1] as Pt }
+
 /** The block across the street, on past the shop's end wall to the left: fronts of their own widths and heights. */
 const FAR_FRONTS: [number, number, number][] = (() => {
   const out: [number, number, number][] = []
@@ -1002,34 +1008,38 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
   p.fill(NIGHT)
   p.rect(((x0 + x1) / 2) * k, ((y0 + y1) / 2) * k, (x1 - x0) * k, (y1 - y0) * k)
   // The block across the street: building fronts in two night tones, each with a grid of windows, a few lit warm.
-  // Further left the block goes on, past the shop's end wall, for a frame wide enough to look out past it.
-  const fronts: [number, number, number][] = [...FAR_FRONTS, [-9.6, -8.2, -3.9], [-8.2, -6.9, -3.3], [-6.9, -5.6, -4.2], [-5.6, -4.3, -3.6], [-4.3, -2.9, -4.0]]
-  fronts.forEach(([a0, a1, roof], at) => {
-    if (a1 < x0 || a0 > x1) return
-    // Each front's own number, the original block's 0 to 4 as they always were, so its tones and lit windows are
-    // unchanged; the fronts further left count back from there.
-    const i = at - FAR_FRONTS.length
-    p.fill(mixHex(HOME.night, HOME.steelDark, Math.abs(i) % 2 ? 0.22 : 0.34))
-    p.rect(((a0 + a1) / 2) * k, ((roof + FLOOR - 0.6) / 2) * k, (a1 - a0) * k, (FLOOR - 0.6 - roof) * k)
-    p.fill(mixHex(HOME.night, HOME.steelDark, 0.5))
-    p.rect(((a0 + a1) / 2) * k, roof * k, (a1 - a0 + 0.06) * k, 0.08 * k)
-    for (let r = 0; r < 4; r++) {
-      const wy = roof + 0.45 + r * 0.62
-      if (wy > -1.3) break
-      for (let c = 0; c < 3; c++) {
-        const wx = a0 + 0.25 + c * ((a1 - a0 - 0.5) / 2)
-        const on = hash(i * 7 + r, c, 3) < 0.34
-        if (on) p.fill(alpha(p, HOME.gold, 0.62))
-        else p.fill(mixHex(HOME.night, HOME.steelDark, 0.12))
-        p.rect(wx * k, wy * k, 0.2 * k, 0.3 * k, 0.02 * k)
+  // Further left the block goes on, past the shop's end wall, for a frame wide enough to look out past it; and right,
+  // past the door, so the far side always fills the glass. It is across the street, so it moves slower than the shop
+  // as the camera goes by (`STREET_DEPTH`): the glass is a window onto somewhere.
+  depth(p, k, STREET_DEPTH.far, STREET_DEPTH.ref, (_fr, [sx]) => {
+    const fronts: [number, number, number][] = [...FAR_FRONTS, [-9.6, -8.2, -3.9], [-8.2, -6.9, -3.3], [-6.9, -5.6, -4.2], [-5.6, -4.3, -3.6], [-4.3, -2.9, -4.0], [-2.9, -1.5, -3.7], [-1.5, 0.2, -4.1]]
+    fronts.forEach(([a0, a1, roof], at) => {
+      if (a1 < x0 - sx || a0 > x1 - sx) return
+      // Each front's own number, the original block's 0 to 4 as they always were, so its tones and lit windows are
+      // unchanged; the fronts further left count back from there.
+      const i = at - FAR_FRONTS.length
+      p.fill(mixHex(HOME.night, HOME.steelDark, Math.abs(i) % 2 ? 0.22 : 0.34))
+      p.rect(((a0 + a1) / 2) * k, ((roof + FLOOR - 0.6) / 2) * k, (a1 - a0) * k, (FLOOR - 0.6 - roof) * k)
+      p.fill(mixHex(HOME.night, HOME.steelDark, 0.5))
+      p.rect(((a0 + a1) / 2) * k, roof * k, (a1 - a0 + 0.06) * k, 0.08 * k)
+      for (let r = 0; r < 4; r++) {
+        const wy = roof + 0.45 + r * 0.62
+        if (wy > -1.3) break
+        for (let c = 0; c < 3; c++) {
+          const wx = a0 + 0.25 + c * ((a1 - a0 - 0.5) / 2)
+          const on = hash(i * 7 + r, c, 3) < 0.34
+          if (on) p.fill(alpha(p, HOME.gold, 0.62))
+          else p.fill(mixHex(HOME.night, HOME.steelDark, 0.12))
+          p.rect(wx * k, wy * k, 0.2 * k, 0.3 * k, 0.02 * k)
+        }
       }
-    }
   })
   // A shop across the way, still lit: its window's warm light, behind the door.
   p.fill(alpha(p, HOME.gold, 0.3))
   p.rect(-4.2 * k, -1.2 * k, 1.1 * k, 0.9 * k)
   p.fill(alpha(p, HOME.light, 0.38))
   p.rect(-4.2 * k, -1.2 * k, 0.9 * k, 0.7 * k)
+  })
   // The pavement and the kerb.
   p.fill(mixHex(HOME.night, HOME.steelDark, 0.45))
   p.rect(((x0 + x1) / 2) * k, (FLOOR - 0.3) * k, (x1 - x0) * k, 0.62 * k)
@@ -1047,29 +1057,32 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
   p.fill(HOME.light)
   p.ellipse((lx + 0.36) * k, -3.02 * k, 0.22 * k, 0.08 * k)
   // Strings of new year lanterns across the street, small and far, on their line: the one seen through the glass, and
-  // more spans of it on down the street to the left, so a wide frame never sees it end in the air.
-  for (let span = 0; span < 4; span++) {
-    const off = -6.4 * span
-    if (-3.0 + off < x0 || -9.4 + off > x1) continue
-    p.noFill()
-    p.stroke(alpha(p, HOME.steelDark, 0.9))
-    p.strokeWeight(Math.max(1, k * 0.01))
-    p.beginShape()
-    for (let i = 0; i <= 16; i++) {
-      const sx = -9.4 + (i / 16) * 6.4
-      p.vertex((sx + off) * k, (-3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI)) * k)
+  // more spans of it on down the street to the left, so a wide frame never sees it end in the air. Strung over the
+  // middle of the street, they move between the far side and the pavement.
+  depth(p, k, STREET_DEPTH.lines, STREET_DEPTH.ref, (_fr, [shift]) => {
+    for (let span = -1; span < 4; span++) {
+      const off = -6.4 * span
+      if (-3.0 + off < x0 - shift || -9.4 + off > x1 - shift) continue
+      p.noFill()
+      p.stroke(alpha(p, HOME.steelDark, 0.9))
+      p.strokeWeight(Math.max(1, k * 0.01))
+      p.beginShape()
+      for (let i = 0; i <= 16; i++) {
+        const sx = -9.4 + (i / 16) * 6.4
+        p.vertex((sx + off) * k, (-3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI)) * k)
+      }
+      p.endShape()
+      p.noStroke()
+      for (let i = 0; i < 6; i++) {
+        const sx = -8.9 + i * 1.08
+        const sy = -3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI) + 0.1
+        p.fill(alpha(p, HOME.red, 0.85))
+        p.ellipse((sx + off) * k, sy * k, 0.17 * k, 0.14 * k)
+        p.fill(alpha(p, HOME.gold, 0.7))
+        p.rect((sx + off) * k, (sy - 0.075) * k, 0.07 * k, 0.025 * k)
+      }
     }
-    p.endShape()
-    p.noStroke()
-    for (let i = 0; i < 6; i++) {
-      const sx = -8.9 + i * 1.08
-      const sy = -3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI) + 0.1
-      p.fill(alpha(p, HOME.red, 0.85))
-      p.ellipse((sx + off) * k, sy * k, 0.17 * k, 0.14 * k)
-      p.fill(alpha(p, HOME.gold, 0.7))
-      p.rect((sx + off) * k, (sy - 0.075) * k, 0.07 * k, 0.025 * k)
-    }
-  }
+  })
   for (const f of STREET) f(pen.p, k, t)
 }
 
@@ -1548,8 +1561,11 @@ function calendar(pen: Pen): void {
   p.circle((x - cw / 2 + 0.1 + 3 * 0.105 + 0.02) * k, (y - ch / 2 + 0.52) * k, 0.1 * k)
 }
 
-/** The washers that are running someone's washing all night. */
+/** The washers that are running someone's washing all night, and the stacked dryer tumbling. */
 const RUNNING = [2, 5]
+const TUMBLING = 1
+/** A running washer's shudder on its feet, cells: a fast small buzz, swelling and easing with the load. */
+const shudder = (t: number, i: number): number => 0.007 * Math.sin(t * 31 + i * 2.1) * (0.6 + 0.4 * Math.sin(t * 0.9 + i))
 
 /** The great hit shakes the room: everything loose hops, and settles. */
 const jolt = (t: number): number => knock(t - GREAT, 0.12) * Math.sin(Math.max(0, t - GREAT) * 38)
@@ -1681,7 +1697,8 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
   WASHERS.forEach((wa, i) => {
     if (i === 0 || !see(wa.x - 0.8, wa.x + 0.8)) return
     const near = Math.abs(wa.x - WASHERS[0].x) < 9
-    // Two of them are running: someone's washing, turning slowly all night.
+    // Two of them are running: someone's washing, turning slowly all night, the machine shuddering a little on its
+    // feet with the load.
     const running = RUNNING.includes(i)
     washer(pen, wa.x, {
       turn: 0.4 + i + (running ? t * 0.9 : 0),
@@ -1689,13 +1706,15 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
       water: running ? 0.18 : 0,
       slosh: running ? 0.12 * Math.sin(t * 1.3 + i) : 0,
       lamp2: running ? 1 : 0,
+      dx: running ? shudder(t, i) : 0,
       dy: near ? -Math.abs(j) * 0.03 * (1 - Math.abs(wa.x - WASHERS[0].x) / 9) : 0,
     })
   })
-  // The stacked dryers.
+  // The stacked dryers: one of them tumbling someone's towels, its lamp on.
   STACKS.forEach((x, i) => {
     if (!see(x - 0.8, x + 0.8)) return
-    dryer(pen, x, false, { turn: i * 1.3 }, FLOOR)
+    const tumbling = i === TUMBLING
+    dryer(pen, x, false, tumbling ? { turn: -t * 1.7, load: [HOME.rose, HOME.paper, HOME.butter], lamp: 0.8, lamp2: 1 } : { turn: i * 1.3 }, FLOOR)
     dryer(pen, x, false, { turn: i * 0.7 + 2 }, FLOOR - DRYER.h)
   })
   // The folding table, a stack of folded laundry on it, two stools by it.
@@ -1719,14 +1738,17 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
   for (const b of TOP_BAGS) {
     if (!see(b.x - 0.5, b.x + 0.5)) continue
     const near = clamp(1 - Math.abs(b.x - WASHERS[0].x) / 10)
-    const hop = Math.max(0, j) * 0.08 * near
-    let swing = 0.8 * j * near
+    // A bag on a running washer rides its shudder: it jiggles, and its googly eyes wobble with it.
+    const under = WASHERS.findIndex((wa) => Math.abs(wa.x - b.x) < WASHER.w / 2)
+    const ride = RUNNING.includes(under) ? 1 : 0
+    const hop = Math.max(0, j) * 0.08 * near + ride * 0.012 * Math.abs(Math.sin(t * 11 + b.x))
+    let swing = 0.8 * j * near + ride * 0.35 * Math.sin(t * 2.3 + b.x) * Math.sin(t * 0.7)
     if (seen) {
       // How far it is turned to her (`w`, eased in and out), its pupils drawn the short way round.
       const a = Math.atan2(seen.p[1] - (WASHER.top - 0.3 * b.size), seen.p[0] - b.x) - Math.PI / 2
       swing += Math.atan2(Math.sin(a), Math.cos(a)) * seen.w
     }
-    bag(pen, b.x, WASHER.top - hop, { color: b.color, size: b.size, swing, lift: clamp(j * 1.5) * near })
+    bag(pen, b.x + (ride ? shudder(t, under) : 0), WASHER.top - hop, { color: b.color, size: b.size, swing, lift: clamp(j * 1.5) * near })
   }
   // The tubes, over all of it.
   TUBES.forEach((tb, i) => {
