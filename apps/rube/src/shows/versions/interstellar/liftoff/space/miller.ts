@@ -338,6 +338,7 @@ export const miller = part<MillerState>(
     name: 'miller',
     flight: true,
     draw: (p, s, c) => drawMiller(p, s, c),
+    over: (p, s, c) => drawNear(p, s, c),
   },
   (slot) => {
     const at = (t: number) => t - slot.begin
@@ -459,6 +460,59 @@ function drawMiller(p: p5, s: MillerState, c: Ctx): void {
   p.pop()
 }
 
+/**
+ * The near water, between the camera and the things on it: the swells, nearer still, rolling under the frame's foot
+ * faster than anything out on the sea, their backs catching the haze. They draw down and go as the wave comes.
+ */
+function drawNear(p: p5, s: MillerState, c: Ctx): void {
+  if (c.t < 0) return
+  const t = c.t + s.begin
+  const on = presence(t, s) * (1 - smooth(waveS(t), 0.55, 0.9))
+  if (on <= 0.01) return
+  const { k } = c
+  const X = (v: number) => v * k
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const G = 1.2
+  const phase = (t * 0.45) % 1
+  ctx.lineCap = 'round'
+  for (let j = 0; j < 6; j++) {
+    const sd = 1.3 * Math.pow(G, j + phase)
+    const y = depthY(sd)
+    if (y > f.y1 + 0.3) break
+    const fade = on * smooth(j + phase, 0, 0.8)
+    if (fade <= 0.01) continue
+    // Nearer than the machine: it slides with the camera more than the world does, and runs on its own way too.
+    const slide = -(sd - 1) * (0.35 * (f.cx - 152) + 0.5 * t)
+    const amp = 0.035 * sd
+    const step = 0.25
+    const yAt = (x: number) => {
+      const u = (x - slide) / sd
+      return y + amp * Math.sin(u * 2.1 + j * 1.9) * (0.55 + 0.45 * Math.sin(u * 0.6 + j * 0.7))
+    }
+    // The trough: a dark band under the swell's back.
+    ctx.fillStyle = rgba(DARK.deep, 0.28 * fade)
+    ctx.beginPath()
+    ctx.moveTo(X(f.x0 - 0.5), X(yAt(f.x0 - 0.5)))
+    for (let x = f.x0 - 0.5; x <= f.x1 + 0.5; x += step) ctx.lineTo(X(x), X(yAt(x)))
+    for (let x = f.x1 + 0.5; x >= f.x0 - 0.5; x -= step) ctx.lineTo(X(x), X(yAt(x) + 0.05 * sd))
+    ctx.closePath()
+    ctx.fill()
+    // The back, catching the haze in broken lengths.
+    ctx.strokeStyle = rgba(HAZE, 0.3 * fade)
+    ctx.lineWidth = Math.max(0.8, X(0.02 * sd))
+    ctx.beginPath()
+    for (let i = Math.floor((f.x0 - slide) / 1.1) - 1; i <= Math.ceil((f.x1 - slide) / 1.1); i++) {
+      if (hash(i, j, 15) > 0.6) continue
+      const xa = slide + (i + hash(i, j, 16) * 0.5) * 1.1
+      const len = (0.3 + 0.5 * hash(i, j, 17)) * sd
+      ctx.moveTo(X(xa), X(yAt(xa) - 0.01))
+      for (let x = xa + 0.1; x <= xa + len; x += 0.1) ctx.lineTo(X(x), X(yAt(x) - 0.01))
+    }
+    ctx.stroke()
+  }
+}
+
 /* ------------------------------------------------------------------ the sky */
 
 function drawSky(p: p5, c: Ctx, f: Frame, t: number): void {
@@ -472,8 +526,8 @@ function drawSky(p: p5, c: Ctx, f: Frame, t: number): void {
   const g = ctx.createLinearGradient(0, X(top), 0, X(HZ))
   g.addColorStop(0, c.bg)
   g.addColorStop(0.55, mixHex(c.bg, DARK.deep, 0.9))
-  g.addColorStop(0.85, mixHex(DARK.deep, DARK.ice, 0.16))
-  g.addColorStop(1, mixHex(DARK.deep, DARK.ice, 0.36))
+  g.addColorStop(0.85, mixHex(DARK.deep, HAZE, 0.18))
+  g.addColorStop(1, mixHex(DARK.deep, HAZE, 0.4))
   ctx.fillStyle = g
   ctx.fillRect(X(f.x0 - 0.5), X(top), X(f.x1 - f.x0 + 1), X(HZ - top))
   // A few stars through it, far, going out in the haze.
@@ -490,6 +544,30 @@ function drawSky(p: p5, c: Ctx, f: Frame, t: number): void {
       if (a <= 0.02) continue
       p.fill(alpha(p, '#F4EEDF', a))
       p.circle(X(x), X(y), 1.2 + 1.2 * hash(i, j, 95))
+    }
+  }
+  // Mist: long thin banks of it in layers over the water, the far ones low and fine, the near ones higher and broader,
+  // each drifting at its own pace and moving with the camera by how near it is.
+  ctx.lineCap = 'round'
+  for (let m = 0; m < 4; m++) {
+    const F = 0.12 + 0.12 * m
+    const P = 2.6 + 0.9 * m
+    const lo = HZ - 0.25 - 0.55 * m
+    const hi = HZ - 1.1 - 0.9 * m
+    const ox2 = f.cx * (1 - F) - (0.04 + 0.03 * m) * t
+    for (let i = Math.floor((f.x0 - ox2) / P) - 1; i <= Math.ceil((f.x1 - ox2) / P); i++) {
+      for (let r = 0; r < 2; r++) {
+        if (hash(i, r, 101 + m) > 0.58) continue
+        const x = ox2 + (i + hash(i, r, 102 + m)) * P
+        const y = lo + (hi - lo) * hash(i, r, 103 + m)
+        const len = (0.5 + 0.7 * hash(i, r, 104 + m)) * P
+        ctx.strokeStyle = rgba(HAZE, (0.05 + 0.06 * hash(i, r, 105 + m)) * (1 - 0.15 * m))
+        ctx.lineWidth = Math.max(1, X(0.03 + 0.03 * m + 0.03 * hash(i, r, 106 + m)))
+        ctx.beginPath()
+        ctx.moveTo(X(x), X(y))
+        ctx.lineTo(X(x + len), X(y - 0.02 * len))
+        ctx.stroke()
+      }
     }
   }
 }
@@ -512,7 +590,6 @@ function drawStation(p: p5, c: Ctx, t: number): void {
   // their outer edges on its side. The years go by in it: its windows are dark when he goes down, and on each beat
   // she is up there one more module lights, going round from the catch the way she runs, until on the twelfth the
   // ring is lit all round, the hour struck, and the catch locks.
-  const ctx = p.drawingContext as CanvasRenderingContext2D
   const rw = (RING_IN + RING_OUT) / 2
   outline(p, ink, weight * 0.55)
   p.circle(X(cx), X(cy), X(2 * RING_IN))
@@ -540,19 +617,10 @@ function drawStation(p: p5, c: Ctx, t: number): void {
       outline(p, alpha(p, DARK.hull, 0.85 * sun).toString(), weight * 0.9)
       p.arc(X(cx), X(cy), X(2 * RING_OUT), X(2 * RING_OUT), a0 + 0.03, a1 - 0.03)
     }
-    // Its two windows, and the light they give.
+    // Its two windows, lit or dark.
     for (const off of [-0.085, 0.085]) {
       const wx = cx + rw * Math.cos(mid + off)
       const wy = cy + rw * Math.sin(mid + off)
-      if (on) {
-        const g = ctx.createRadialGradient(X(wx), X(wy), 0, X(wx), X(wy), X(0.09 + 0.14 * fl))
-        g.addColorStop(0, rgba(DARK.amber, 0.45 + 0.5 * fl))
-        g.addColorStop(1, rgba(DARK.amber, 0))
-        ctx.save()
-        ctx.fillStyle = g
-        ctx.fillRect(X(wx - 0.25), X(wy - 0.25), X(0.5), X(0.5))
-        ctx.restore()
-      }
       p.noStroke()
       p.fill(on ? mixHex(DARK.amber, VOID.ink, 0.25 + 0.6 * fl) : DARK.deep)
       p.circle(X(wx), X(wy), Math.max(1.5, X(0.048)))
@@ -568,17 +636,10 @@ function drawStation(p: p5, c: Ctx, t: number): void {
   const outer: Pt = [px + 0.09 * Math.cos(rock), py + 0.09 * Math.sin(rock)]
   outline(p, ink, weight * 0.7)
   p.line(X(inner[0]), X(inner[1]), X(outer[0]), X(outer[1]))
-  solid(p, ink, weight * 0.4, locked ? DARK.gold : DARK.hull)
+  // The pivot is its lamp: gold on each lap's click, and steady once it holds.
+  const blink = locked || knock(last.ago, 0.06) > 0.3
+  solid(p, ink, weight * 0.4, blink ? DARK.gold : DARK.hull)
   p.circle(X(px), X(py), X(0.06))
-  // A lamp at the pivot: a blink each lap, steady once it holds.
-  if (locked || last.ago < 0.15) {
-    const a = locked ? 0.45 : knock(last.ago, 0.06)
-    const g = ctx.createRadialGradient(X(px), X(py), 0, X(px), X(py), X(0.18))
-    g.addColorStop(0, rgba(DARK.gold, 0.75 * a))
-    g.addColorStop(1, rgba(DARK.gold, 0))
-    ctx.fillStyle = g
-    ctx.fillRect(X(px - 0.18), X(py - 0.18), X(0.36), X(0.36))
-  }
 }
 
 function lastClick(t: number): { i: number; ago: number } {
@@ -589,26 +650,72 @@ function lastClick(t: number): { i: number; ago: number } {
 
 /* ------------------------------------------------------------------ the sea */
 
+/** Miller's colours: a cold slate-teal sea, and a haze over it gone green-grey, not the orbit's blue. */
+const SEA = mixHex('#2C474C', DARK.deep, 0.42)
+const HAZE = '#86B4AC'
+
+/**
+ * The swells: long low lines rolling in from the horizon, a row after a row, spreading and thickening as they come,
+ * each with a dark trough under its bright back. Their pace is the planet's, not the music's: the sea is never still.
+ */
+function drawSwells(p: p5, c: Ctx, f: Frame, t: number, bottom: number): void {
+  const { k } = c
+  const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const G = 1.24
+  const phase = (t * 0.32) % 1
+  ctx.lineCap = 'round'
+  for (let j = 0; j < 15; j++) {
+    const s = 0.1 * Math.pow(G, j + phase)
+    const y = depthY(s)
+    if (y > bottom + 0.2) break
+    // Born out of the haze on the horizon, gone into the near water below the frame.
+    const fade = smooth(j + phase, 0, 1.5) * (1 - smooth(s, 1.6, 2.4))
+    if (fade <= 0.01) continue
+    const amp = 0.022 * Math.min(1.6, s)
+    const step = 0.35
+    const x0 = f.x0 - 0.5
+    const x1 = f.x1 + 0.5
+    const line = (dy: number) => {
+      ctx.beginPath()
+      for (let x = x0; x <= x1 + step; x += step) {
+        const u = (x - VPX) / s
+        const yy = y + dy + amp * Math.sin(u * 1.7 + j * 2.3 + t * 0.6) * (0.6 + 0.4 * Math.sin(u * 0.43 + j))
+        if (x === x0) ctx.moveTo(X(x), X(yy))
+        else ctx.lineTo(X(x), X(yy))
+      }
+      ctx.stroke()
+    }
+    ctx.strokeStyle = rgba(DARK.deep, 0.45 * fade)
+    ctx.lineWidth = Math.max(0.6, X(0.035 * Math.min(1.8, s)))
+    line(0.03 * s)
+    ctx.strokeStyle = rgba(HAZE, (0.1 + 0.12 * Math.min(1, s)) * fade)
+    ctx.lineWidth = Math.max(0.6, X(0.016 * Math.min(1.8, s)))
+    line(0)
+  }
+}
+
 function drawSea(p: p5, c: Ctx, f: Frame, t: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const bottom = f.y1 + 0.5
-  ctx.fillStyle = mixHex(DARK.slate, DARK.deep, 0.5)
+  ctx.fillStyle = SEA
   ctx.fillRect(X(f.x0 - 0.5), X(HZ), X(f.x1 - f.x0 + 1), X(bottom - HZ))
   // The sky in it, bright at the horizon.
   const g = ctx.createLinearGradient(0, X(HZ), 0, X(HZ + 1.1))
-  g.addColorStop(0, rgba(DARK.ice, 0.3))
-  g.addColorStop(1, rgba(DARK.ice, 0))
+  g.addColorStop(0, rgba(HAZE, 0.32))
+  g.addColorStop(1, rgba(HAZE, 0))
   ctx.fillStyle = g
   ctx.fillRect(X(f.x0 - 0.5), X(HZ), X(f.x1 - f.x0 + 1), X(1.1))
+  drawSwells(p, c, f, t, bottom)
   // Glints, closer together as they go off.
   ctx.lineCap = 'round'
   for (let j = 0; j < 16; j++) {
     const sd = 2.3 * Math.pow(0.79, j)
     const y = depthY(sd)
     if (y > bottom) continue
-    ctx.strokeStyle = rgba(DARK.ice, 0.1 + 0.1 * (1 - sd / 2.3))
+    ctx.strokeStyle = rgba(HAZE, 0.1 + 0.1 * (1 - sd / 2.3))
     ctx.lineWidth = Math.max(0.6, k * 0.022 * Math.min(1, sd))
     ctx.beginPath()
     const a = VPX + (f.x0 - VPX) / sd
@@ -673,8 +780,8 @@ function drawWave(p: p5, c: Ctx, f: Frame, t: number): void {
   ctx.closePath()
   ctx.fill()
   // The body: far off it is the blue of hills in haze; near, the dark of deep water.
-  const far = mixHex(DARK.slate, DARK.ice, 0.42)
-  const body = mixHex(far, mixHex(DARK.deep, DARK.ice, 0.24), near)
+  const far = mixHex(DARK.slate, HAZE, 0.42)
+  const body = mixHex(far, mixHex(DARK.deep, HAZE, 0.24), near)
   ctx.fillStyle = body
   ctx.beginPath()
   ctx.moveTo(X(x0), X(base + 0.01))
@@ -696,7 +803,7 @@ function drawWave(p: p5, c: Ctx, f: Frame, t: number): void {
     })
     const dOf = (i: number) => VPX + (pts[i][0] - VPX) / s - xc
     // Light through the face under the crest.
-    ctx.fillStyle = rgba(DARK.ice, 0.26 * near)
+    ctx.fillStyle = rgba(HAZE, 0.26 * near)
     ctx.beginPath()
     let first = true
     const band: Pt[] = []
@@ -714,7 +821,7 @@ function drawWave(p: p5, c: Ctx, f: Frame, t: number): void {
     // Lines that run with the face, inside it.
     ctx.lineCap = 'round'
     for (const [off, al] of [[0.16, 0.3], [0.34, 0.22], [0.56, 0.14]] as Pt[]) {
-      ctx.strokeStyle = rgba(DARK.ice, al * near)
+      ctx.strokeStyle = rgba(HAZE, al * near)
       ctx.lineWidth = Math.max(0.6, k * 0.02)
       ctx.beginPath()
       let pen = false
@@ -785,7 +892,7 @@ function drawWave(p: p5, c: Ctx, f: Frame, t: number): void {
       [xc - 0.55 * L, cy + 0.2 * L + 0.7 * drop],
       [xc - 0.35, cy + 0.3],
     ]
-    solid(p, ink, weight * 0.8, mixHex(body, DARK.ice, 0.25))
+    solid(p, ink, weight * 0.8, mixHex(body, HAZE, 0.25))
     p.beginShape()
     p.curveVertex(X(lipPts[0][0]), X(lipPts[0][1]))
     for (const [x, y] of lipPts) p.curveVertex(X(x), X(y))
@@ -1006,21 +1113,6 @@ function poly(p: p5, k: number, pts: Pt[]): void {
   p.endShape(p.CLOSE)
 }
 
-/** A soft light (pixels), saved and restored so p5's idea of the fill stays true. */
-function glowAt(p: p5, x: number, y: number, r: number, hex: string, a: number): void {
-  if (a <= 0.005 || r <= 0) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r)
-  g.addColorStop(0, rgba(hex, a))
-  g.addColorStop(1, rgba(hex, 0))
-  ctx.save()
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.arc(x, y, r, 0, TAU)
-  ctx.fill()
-  ctx.restore()
-}
-
 /** The bubble, from the windscreen over the seat to its back: the cockpit's well, and the glass that closes over it. */
 function bubble(p: p5, k: number): void {
   const X = (v: number) => v * k
@@ -1049,7 +1141,6 @@ export function drawRangerShip(p: p5, c: Ctx, look: RangerLook): void {
     const flick = 0.88 + 0.12 * Math.sin(look.at * 61)
     const len = (0.5 + 2.2 * look.burn) * flick
     const w = 0.08 + 0.03 * look.burn
-    glowAt(p, X(TAIL - 0.1), X(0.19), X(0.35 + 0.45 * look.burn), DARK.ice, 0.55 * look.burn)
     ctx.save()
     for (const [y0, y1] of BELLS) {
       const yc = (y0 + y1) / 2
@@ -1087,7 +1178,6 @@ export function drawRangerShip(p: p5, c: Ctx, look: RangerLook): void {
     const th = look.thrust
     if (th > 0.01) {
       const len = (0.4 + 0.9 * th) * (0.88 + 0.12 * Math.sin(look.at * 67 + x * 9))
-      glowAt(p, X(x), X(JET_Y + len * 0.4), X(0.4 + 0.45 * th), DARK.amber, 0.55 * th)
       solid(p, alpha(p, ink, 0.6).toString(), weight * 0.5, DARK.amber)
       poly(p, k, [
         [x - 0.08, JET_Y],
@@ -1139,7 +1229,6 @@ export function drawRangerShip(p: p5, c: Ctx, look: RangerLook): void {
   solid(p, ink, weight * 0.6, DARK.deep)
   bubble(p, k)
   ctx.restore()
-  glowAt(p, 0, 0, X(0.42), DARK.amber, 0.28 * (1 - 0.6 * open))
   if (look.detail > 0.02) {
     for (const [x, y, col] of [
       [0.4, 0.04, DARK.amber],
@@ -1169,7 +1258,6 @@ export function drawRangerShip(p: p5, c: Ctx, look: RangerLook): void {
     outline(p, faint, weight * 0.5)
     p.line(X(-0.75), X(0.47), X(-2.02), X(0.47))
   }
-  if (look.blink > 0.02) glowAt(p, X(WINGTIP[0]), X(WINGTIP[1]), X(0.28), DARK.red, 0.8 * look.blink)
   solid(p, ink, weight * 0.5, look.blink > 0.3 ? DARK.amber : DARK.red)
   p.circle(X(WINGTIP[0]), X(WINGTIP[1]), X(0.075))
   // The hood's glass, its windscreen frame, a glint: slid back along the spine while it is open.
@@ -1275,14 +1363,6 @@ function drawBuoy(p: p5, c: Ctx, t: number, i: number): void {
   lit = Math.max(lit, 1.3 * knock(t - BUOY_AT[i], 0.3))
   solid(p, ink, weight * 0.5, lit > 0.05 ? mixHex(DARK.slate, DARK.red, Math.min(1, lit)) : DARK.slate)
   p.circle(X(lx), X(ly), X(0.07))
-  if (lit > 0.03) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createRadialGradient(X(lx), X(ly), 0, X(lx), X(ly), X(0.3))
-    g.addColorStop(0, rgba(DARK.red, 0.55 * Math.min(1, lit)))
-    g.addColorStop(1, rgba(DARK.red, 0))
-    ctx.fillStyle = g
-    ctx.fillRect(X(lx - 0.3), X(ly - 0.3), X(0.6), X(0.6))
-  }
 }
 
 /* ------------------------------------------------------------------ TARS */
@@ -1402,7 +1482,6 @@ function drawOut(p: p5, c: Ctx, t: number): void {
   const e = t - OUT
   if (e < -0.45 || e > 1.4) return
   const [qx, qy] = Q
-  const ctx = p.drawingContext as CanvasRenderingContext2D
   // The mouth: a small glass sphere, the stars bent round its edge.
   const open = smooth(e, -0.45, -0.1) * (1 - smooth(e, 0.1, 0.7))
   if (open > 0) {
@@ -1413,7 +1492,7 @@ function drawOut(p: p5, c: Ctx, t: number): void {
     p.stroke(alpha(p, DARK.ice, 0.35 * open))
     p.arc(X(qx), X(qy), X(0.5), X(0.5), Math.PI * 1.1, Math.PI * 1.6)
   }
-  // Its own colour closing on a point, then the flash as it comes through.
+  // Its own colour closing on a point; then, as it comes through, the mouth's rim thrown out and gone: a ring, not a flash.
   if (e < 0) {
     const u = smooth(e, -0.4, 0)
     p.noFill()
@@ -1422,11 +1501,10 @@ function drawOut(p: p5, c: Ctx, t: number): void {
     p.circle(X(qx), X(qy), X(0.62 - 0.4 * u))
   } else {
     const fl = knock(e, 0.22)
-    const g = ctx.createRadialGradient(X(qx), X(qy), 0, X(qx), X(qy), X(0.7))
-    g.addColorStop(0, rgba(DARK.hull, 0.75 * fl))
-    g.addColorStop(1, rgba(DARK.hull, 0))
-    ctx.fillStyle = g
-    ctx.fillRect(X(qx - 0.7), X(qy - 0.7), X(1.4), X(1.4))
+    p.noFill()
+    p.stroke(alpha(p, DARK.hull, 0.8 * fl))
+    p.strokeWeight(Math.max(1, k * 0.03 * fl))
+    p.circle(X(qx), X(qy), X(0.62 + 0.9 * (1 - fl)))
   }
 }
 
