@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, lensedArc, part, smooth, type Companion, type Ctx } from '../kit'
+import { alpha, box, carried, farSide, frame, knock, lastOf, part, smooth, type Companion, type Ctx } from '../kit'
 import { beat } from '../music'
 import { brandDrift } from '../rocket'
 import { G_LOW } from '../physics'
@@ -936,39 +936,11 @@ function drawSphere(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   const [sx, sy] = s.sphere
   const X = (v: number) => v * k
   glow(p, X(sx), X(sy), X(RS * 1.75), ICE_RGB, 0.2)
+  farSide(p, X(sx), X(sy), X(RS), -0.5 + T * 0.03 + (f.cy - sy) * 0.02, ((f.cx - sx) * -0.08) / RS, 11, 120, ink)
   ctx.save()
   ctx.beginPath()
   ctx.arc(X(sx), X(sy), X(RS), 0, TAU)
   ctx.clip()
-  p.noStroke()
-  p.fill(DARK.deep)
-  p.circle(X(sx), X(sy), X(RS * 2))
-  const shift = (f.cx - sx) * -0.08
-  const turn = T * 0.03 + (f.cy - sy) * 0.02
-  ctx.save()
-  ctx.translate(X(sx + shift * 0.5), X(sy))
-  ctx.rotate(-0.5 + turn)
-  const band = ctx.createLinearGradient(0, X(-RS * 0.5), 0, X(RS * 0.5))
-  band.addColorStop(0, 'rgba(110, 99, 201, 0)')
-  band.addColorStop(0.5, 'rgba(110, 99, 201, 0.32)')
-  band.addColorStop(1, 'rgba(110, 99, 201, 0)')
-  ctx.fillStyle = band
-  ctx.fillRect(X(-RS * 1.3), X(-RS * 0.5), X(RS * 2.6), X(RS))
-  ctx.restore()
-  for (let j = 0; j < 120; j++) {
-    const rho = hash(j, 11) ** 0.38
-    const a = hash(j, 12) * TAU + turn + shift * (1 - rho) * 0.6
-    const r = RS * rho * 0.98
-    const bright = 0.35 + 0.65 * hash(j, 13)
-    const len = 0.02 + 0.5 * rho ** 8
-    if (len < 0.06) {
-      p.noStroke()
-      p.fill(alpha(p, ink, bright * 0.85))
-      p.circle(X(sx + Math.cos(a) * r), X(sy + Math.sin(a) * r), Math.max(1.2, X(0.025) * (0.6 + bright)))
-    } else {
-      lensedArc(p, X(sx), X(sy), X(r), a, len, ink, bright * 0.8, Math.max(1, X(0.022)))
-    }
-  }
   p.noFill()
   p.stroke(alpha(p, DARK.hull, 0.22))
   p.strokeWeight(X(0.07))

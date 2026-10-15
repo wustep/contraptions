@@ -330,6 +330,76 @@ export function lensedArc(p: p5, cx: number, cy: number, r: number, a: number, l
   }
 }
 
+/**
+ * The far side as a wormhole's glass shows it: another galaxy's sky, bent round a ball. Its band is bowed by the lens
+ * and has a warm core, its stars are squeezed toward the rim and drawn out along it, and this side's light piles up at
+ * the limb, so the glass reads as a ball of light rather than a dark plate. In pixels: `cx`, `cy`, `r`. `turn` turns the
+ * far sky (radians), `shift` slides it with the camera (in radii), `seed` and `n` scatter its stars. The rim is the
+ * caller's.
+ */
+export function farSide(p: p5, cx: number, cy: number, r: number, turn: number, shift: number, seed: number, n: number, ink: string): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.clip()
+  const paint = (g: CanvasGradient) => {
+    ctx.fillStyle = g
+    ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
+  }
+  // The glass: the far sky's dark, lighter toward the middle where its galaxy is.
+  const body = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+  body.addColorStop(0, '#2A2F5C')
+  body.addColorStop(0.6, '#161C34')
+  body.addColorStop(1, '#141A2E')
+  paint(body)
+  // Its galaxy: a band round a centre well off the glass, so the lens bows it.
+  const ax = Math.cos(turn), ay = Math.sin(turn)
+  const bow = r * 2.6
+  const ox = cx - ay * (bow + shift * r * 0.3), oy = cy + ax * (bow + shift * r * 0.3)
+  const band = ctx.createRadialGradient(ox, oy, bow - r * 0.55, ox, oy, bow + r * 0.55)
+  for (const [at, a] of [[0, 0], [0.2, 0.07], [0.35, 0.25], [0.5, 0.4], [0.65, 0.25], [0.8, 0.07], [1, 0]]) band.addColorStop(at, `rgba(130, 118, 214, ${a})`)
+  paint(band)
+  // Its core, warm, on the band a little off the middle.
+  const kx = cx + ax * r * 0.22 - ay * shift * r * 0.3, ky = cy + ay * r * 0.22 + ax * shift * r * 0.3
+  ctx.save()
+  ctx.translate(kx, ky)
+  ctx.rotate(turn)
+  ctx.scale(1, 0.42)
+  const core = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.62)
+  core.addColorStop(0, 'rgba(255, 240, 214, 0.85)')
+  core.addColorStop(0.18, 'rgba(246, 206, 148, 0.5)')
+  core.addColorStop(0.5, 'rgba(214, 150, 120, 0.16)')
+  core.addColorStop(1, 'rgba(214, 150, 120, 0)')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(0, 0, r * 0.62, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+  // Its stars: squeezed toward the rim, and drawn out along it there.
+  for (let j = 0; j < n; j++) {
+    const rho = hash(j, seed) ** 0.38
+    const a = hash(j, seed + 1) * Math.PI * 2 + turn + shift * (1 - rho) * 0.6
+    const rr = r * rho * 0.98
+    const bright = 0.35 + 0.65 * hash(j, seed + 2)
+    const len = 0.02 + 0.45 * rho ** 8
+    if (len < 0.06) {
+      p.noStroke()
+      p.fill(alpha(p, ink, bright * 0.85))
+      p.circle(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, Math.max(1.2, r * 0.009 * (0.6 + bright)))
+    } else {
+      lensedArc(p, cx, cy, rr, a, len, ink, bright * 0.8, Math.max(1, r * 0.0075))
+    }
+  }
+  // This side's light, bent round and piled up at the limb: the Einstein ring.
+  const limb = ctx.createRadialGradient(cx, cy, r * 0.78, cx, cy, r)
+  limb.addColorStop(0, 'rgba(143, 198, 230, 0)')
+  limb.addColorStop(0.75, 'rgba(143, 198, 230, 0.12)')
+  limb.addColorStop(1, 'rgba(206, 230, 244, 0.55)')
+  paint(limb)
+  ctx.restore()
+}
+
 /** A stable hash in [0, 1) for scattering stars and stalks by index. */
 export const hash = (a: number, b = 0, s = 0): number => {
   let h = (a * 374761393 + b * 668265263 + s * 1013904223) | 0
