@@ -617,12 +617,12 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
     p.endShape()
   }
 
+  // The wall is the cellar's: brick in courses where the plaster has come away, and the club's posters pasted on it.
+  drawCourses(ctx, k, L)
+  drawPosters(ctx, k, L)
+
   // The bulbs strung across the vault, in two swags. Their light is the room's.
   drawBulbs(p, k, weight, L)
-
-  // The band's light: a warm wash on the wall behind the see-saw and the kit once it plays, steady.
-  const band = smooth(t, SOLO[0][0] - 0.05, SOLO[0][0] + 0.1) * (1 - smooth(t, DARK[0], DARK[1]))
-  if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND - 1.1, 3.0, M.bulb, band * 0.12, 1.2, 0.8)
 
   // The floor: old boards, wine-dark, the room's light lying on them and dying into the black under the frame.
   p.noStroke()
@@ -649,9 +649,8 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
       p.stroke(rgba(INK, 0.03 + 0.03 * L))
       p.line(S(x + o), S(GROUND + 0.4), S(x + o), S(GROUND + 0.6))
     }
-    // The bulbs' and the band's warmth on the boards.
+    // The bulbs' warmth on the boards.
     glow(p, k, (WALL_L + WALL_R) / 2, GROUND + 0.05, 5.5, M.bulb, 0.06 + 0.06 * L, 1.4, 0.12)
-    if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND + 0.06, 2.4, M.bulb, band * 0.14, 1.3, 0.12)
   }
   p.stroke(rgba(M.brass, 0.18 + 0.2 * L))
   p.strokeWeight(lw)
@@ -717,19 +716,203 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
   drawSnare(p, k, weight, t, L)
   drawSeesaw(p, k, weight, t, L)
 
-  // The balloons, in their net and let go.
+  // The balloons, in their net and let go. (Each flash is its gun's bulb going white and spent: no burst on the wall.)
   drawBalloons(p, k, weight, t, L)
+}
 
-  // The flashes: each lights the landing and the wall behind her for an instant (the gun's own bulb goes white, then
-  // milky, on the gun). Light on the stone, not a burst round the gun.
-  for (let i = 0; i < FLASHES.length; i++) {
-    const s = t - FLASHES[i]
-    if (s < -0.01 || s > 0.6) continue
-    const g = GUNS[i % GUNS.length]
-    const f = knock(s, 0.11)
-    const [hx] = gunHead(g, t)
-    glow(p, k, hx + 0.1, -0.35, 1.7, M.spot, 0.3 * f, 1.3, 0.75)
-    glow(p, k, hx + 0.1, FLOOR + 0.02, 1.4, M.spot, 0.3 * f, 1.4, 0.2)
+/* ------------------------------------------------------------------ the wall: brick, and the club's posters */
+
+/** The courses of brick in the lit wall, where the plaster has come away: the same courses the spot finds in the dark. */
+function drawCourses(ctx: CanvasRenderingContext2D, k: number, L: number): void {
+  if (L < 0.01) return
+  const S = X(k)
+  const path = new Path2D()
+  for (const c of COURSES) {
+    path.moveTo(S(c.x0), S(c.y))
+    path.lineTo(S(c.x1), S(c.y))
+    const o = (Math.round(c.y * 100) % 2) * 0.17
+    for (let x = c.x0 + 0.1 + o; x < c.x1 - 0.05; x += 0.34) {
+      path.moveTo(S(x), S(c.y))
+      path.lineTo(S(x), S(c.y + 0.27))
+    }
+  }
+  ctx.save()
+  ctx.lineCap = 'butt'
+  ctx.lineWidth = S(0.014)
+  ctx.strokeStyle = rgba(M.black, 0.2 * L)
+  ctx.stroke(path)
+  ctx.restore()
+}
+
+/**
+ * The club's posters, pasted on the brick: by the door, her premiere's (a figure in a yellow dress on rose); over the
+ * stair, a night of the bass; and by the band, pasted over an older bill, a horn's night and a piano's.
+ * Pictures, no letters. They are as lit as the wall, and go with it into the dark.
+ */
+interface Poster {
+  x: number
+  y: number
+  w: number
+  h: number
+  tilt: number
+  field: string
+  art: (ctx: CanvasRenderingContext2D, k: number, w: number, h: number, c: (hex: string) => string) => void
+  /** A torn foot, for the old bill the others are pasted over. */
+  torn?: boolean
+}
+const PAPER = '#E9DCC0'
+const POSTERS: Poster[] = [
+  // The old bill, half pasted over.
+  {
+    x: 6.42, y: 0.18, w: 0.62, h: 0.62, tilt: -0.04, field: PAPER, torn: true,
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(M.red)
+      ctx.fillRect(-w * 0.38 * k, -h * 0.4 * k, w * 0.76 * k, h * 0.34 * k)
+    },
+  },
+  // A horn's night: a player in black on deep blue, his horn up in cream, a red block behind him.
+  {
+    x: 6.02, y: 0.45, w: 0.6, h: 0.86, tilt: 0.025, field: '#1E3460',
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(M.red)
+      ctx.fillRect(-w * 0.02 * k, -h * 0.42 * k, w * 0.4 * k, h * 0.34 * k)
+      ctx.fillStyle = c(M.black)
+      ctx.beginPath()
+      ctx.ellipse(-w * 0.1 * k, -h * 0.1 * k, w * 0.09 * k, h * 0.065 * k, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.16 * k, -h * 0.02 * k)
+      ctx.lineTo(-w * 0.03 * k, -h * 0.02 * k)
+      ctx.lineTo(w * 0.16 * k, h * 0.14 * k)
+      ctx.lineTo(w * 0.2 * k, h * 0.5 * k)
+      ctx.lineTo(-w * 0.42 * k, h * 0.5 * k)
+      ctx.lineTo(-w * 0.34 * k, h * 0.1 * k)
+      ctx.closePath()
+      ctx.fill()
+      // The horn, up from his mouth: its pipe, its valves, its bell.
+      ctx.strokeStyle = c(PAPER)
+      ctx.lineCap = 'round'
+      ctx.lineWidth = w * 0.045 * k
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.02 * k, -h * 0.09 * k)
+      ctx.lineTo(w * 0.26 * k, -h * 0.3 * k)
+      ctx.stroke()
+      ctx.fillStyle = c(PAPER)
+      ctx.beginPath()
+      ctx.moveTo(w * 0.22 * k, -h * 0.29 * k)
+      ctx.lineTo(w * 0.33 * k, -h * 0.42 * k)
+      ctx.lineTo(w * 0.42 * k, -h * 0.3 * k)
+      ctx.closePath()
+      ctx.fill()
+      for (let i = 0; i < 3; i++) {
+        const u = 0.35 + 0.13 * i
+        ctx.fillRect((-w * 0.02 + w * 0.28 * u) * k - w * 0.015 * k, (-h * 0.09 - h * 0.21 * u) * k - h * 0.05 * k, w * 0.03 * k, h * 0.04 * k)
+      }
+    },
+  },
+  // A piano's night: a black lid over a run of keys on ochre.
+  {
+    x: 6.8, y: 0.56, w: 0.5, h: 0.66, tilt: -0.03, field: '#C9953F',
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(M.black)
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.36 * k, h * 0.02 * k)
+      ctx.quadraticCurveTo(-w * 0.3 * k, -h * 0.36 * k, w * 0.36 * k, -h * 0.3 * k)
+      ctx.lineTo(w * 0.36 * k, h * 0.02 * k)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillStyle = c(PAPER)
+      ctx.fillRect(-w * 0.36 * k, h * 0.06 * k, w * 0.72 * k, h * 0.16 * k)
+      ctx.fillStyle = c(M.black)
+      for (let i = 0; i < 7; i++) if (i % 7 !== 2 && i % 7 !== 6) ctx.fillRect((-w * 0.36 + w * 0.72 * ((i + 0.7) / 7)) * k, h * 0.06 * k, w * 0.045 * k, h * 0.09 * k)
+    },
+  },
+  // Over the stair: the bass, black on cream, a red band down its side.
+  {
+    x: 2.55, y: 0.36, w: 0.5, h: 0.72, tilt: 0.035, field: PAPER,
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(M.red)
+      ctx.fillRect(-w * 0.5 * k, -h * 0.5 * k, w * 0.2 * k, h * k)
+      ctx.fillStyle = c(M.black)
+      ctx.beginPath()
+      ctx.ellipse(w * 0.08 * k, h * 0.2 * k, w * 0.2 * k, h * 0.15 * k, 0, 0, Math.PI * 2)
+      ctx.ellipse(w * 0.08 * k, -h * 0.02 * k, w * 0.15 * k, h * 0.11 * k, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillRect(w * 0.055 * k, -h * 0.4 * k, w * 0.05 * k, h * 0.34 * k)
+    },
+  },
+  // By the door, her premiere: a figure in a yellow dress on rose.
+  {
+    x: -1.6, y: -0.82, w: 0.48, h: 0.68, tilt: -0.02, field: '#B9475E',
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(PAPER)
+      ctx.fillRect(-w * 0.5 * k, h * 0.3 * k, w * k, h * 0.2 * k)
+      ctx.fillStyle = c(MIA_DRESS)
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.05 * k, -h * 0.16 * k)
+      ctx.lineTo(w * 0.05 * k, -h * 0.16 * k)
+      ctx.lineTo(w * 0.2 * k, h * 0.24 * k)
+      ctx.lineTo(-w * 0.2 * k, h * 0.24 * k)
+      ctx.closePath()
+      ctx.fill()
+      ctx.strokeStyle = c(MIA_DRESS)
+      ctx.lineCap = 'round'
+      ctx.lineWidth = w * 0.045 * k
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.04 * k, -h * 0.12 * k)
+      ctx.lineTo(-w * 0.2 * k, -h * 0.32 * k)
+      ctx.moveTo(w * 0.04 * k, -h * 0.12 * k)
+      ctx.lineTo(w * 0.2 * k, -h * 0.32 * k)
+      ctx.stroke()
+      ctx.fillStyle = c(M.black)
+      ctx.beginPath()
+      ctx.ellipse(0, -h * 0.23 * k, w * 0.055 * k, h * 0.045 * k, 0, 0, Math.PI * 2)
+      ctx.fill()
+    },
+  },
+]
+/** Her dress on her poster: her yellow, a little warmer, as printed. */
+const MIA_DRESS = '#E8B630'
+function drawPosters(ctx: CanvasRenderingContext2D, k: number, L: number): void {
+  // As lit as the wall round them, and a little under the bulbs' brightest: dim with it, all but gone in the dark,
+  // where the solo's gold line is the only picture on the wall.
+  const lit = 0.06 + 0.8 * L
+  const dark = mixHex(BG, M.redDeep, 0.35)
+  const c = (hex: string) => mixHex(dark, hex, lit)
+  const S = X(k)
+  for (const q of POSTERS) {
+    ctx.save()
+    ctx.translate(S(q.x), S(q.y))
+    ctx.rotate(q.tilt)
+    const hw = q.w / 2
+    const hh = q.h / 2
+    const sheet = new Path2D()
+    sheet.moveTo(S(-hw), S(-hh))
+    sheet.lineTo(S(hw), S(-hh))
+    if (q.torn) {
+      // Torn along its foot where the paste gave.
+      for (let i = 0; i <= 8; i++) sheet.lineTo(S(hw - (q.w * i) / 8), S(hh * (0.55 + 0.35 * hash(i, 97))))
+    } else {
+      sheet.lineTo(S(hw), S(hh))
+      sheet.lineTo(S(-hw), S(hh))
+    }
+    sheet.closePath()
+    ctx.fillStyle = c(PAPER)
+    ctx.fill(sheet)
+    ctx.save()
+    ctx.clip(sheet)
+    // The printed field inside its paper margin, then the picture.
+    const m = q.torn ? 0 : 0.035
+    if (!q.torn) {
+      ctx.fillStyle = c(q.field)
+      ctx.fillRect(S(-hw + m), S(-hh + m), S(q.w - 2 * m), S(q.h - 2 * m))
+    }
+    q.art(ctx, k, q.w - 2 * m, q.h - 2 * m, c)
+    ctx.restore()
+    ctx.strokeStyle = rgba(M.black, 0.08 + 0.42 * L)
+    ctx.lineWidth = Math.max(1, S(0.01))
+    ctx.stroke(sheet)
+    ctx.restore()
   }
 }
 
@@ -1191,9 +1374,10 @@ function drawFlashGuns(p: p5, k: number, weight: number, t: number, L: number): 
     p.strokeWeight(weight * 0.6)
     p.fill(mixHex(M.black, M.brass, 0.25))
     p.rect(S(-0.05), S(-0.08), S(0.1), S(0.12))
-    p.fill(mixHex(M.brass, M.spot, 0.4 + 0.3 * L))
-    p.arc(0, S(0.2), S(0.46), S(0.3), Math.PI, 2 * Math.PI, p.CHORD)
+    // The dish is brass until it fires; for the instant it fires its face is the light, white, and then brass again.
     const since = fired >= 0 ? t - FLASHES[fired] : Infinity
+    p.fill(since < 0.12 ? M.spot : mixHex(M.redDeep, M.brass, 0.6 + 0.4 * L))
+    p.arc(0, S(0.2), S(0.46), S(0.3), Math.PI, 2 * Math.PI, p.CHORD)
     p.noStroke()
     p.fill(since < 0.12 ? M.spot : fired >= 0 ? mixHex(M.skin, M.black, 0.15) : mixHex(M.spot, M.bulb, 0.5))
     p.circle(0, S(0.17), S(0.09))
