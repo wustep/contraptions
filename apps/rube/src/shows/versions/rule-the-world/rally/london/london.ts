@@ -4,6 +4,7 @@ import { box, frame, part, scenery, type PartShot } from '../kit'
 import type { Pen } from '../pen'
 import { SEAMS } from '../seams'
 import { drawHall, drawPlay } from './draw'
+import { drawNear } from './near'
 import { A, B, ballAt, CATCH, DEAD, DIES, FLOOR_HITS, OFF_END, EXIT, FEED, FEED_BOUNCE, IN_PAN_B2, LONDON_STRIKES, LUNGE, OUT, REST, SEGS, SMASHES, STROKES, T0, T1, WINNER } from './geo'
 
 /**
@@ -41,7 +42,10 @@ export const open = part<OpenState>(
     name: 'open',
     draw: (p, s, c) => {
       p.push()
-      drawPlay(penOf(p, c.k, c.ink, c.weight), s.begin + c.t)
+      const pen = penOf(p, c.k, c.ink, c.weight)
+      drawPlay(pen, s.begin + c.t)
+      // The near side of the court, between the lens and the play: under the ball, which the stage draws last.
+      drawNear(pen, s.begin + c.t, frame(p, c.k))
       p.pop()
     },
   },

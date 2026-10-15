@@ -8,8 +8,8 @@ import { AT_GLASS, babyAt, HOSPITAL_STRIKES, hospitalWay, LIFT, martyAt, NUDGE, 
 
 /**
  * The ward (202.391 → 266, bar 95 to the end). On "All for freedom and for pleasure" he is at rest on the foot of
- * Rachel's bed in the grey of dawn; he rolls up the blanket to her, and they rest together on her pillow, a small warm
- * glow between them (he tells her, for the first time, that he loves her). She nudges him: go. He rolls back down the
+ * Rachel's bed in the grey of dawn; he rolls up the blanket to her, and they rest together on her pillow and lean in
+ * (he tells her, for the first time, that he loves her). She nudges him: go. He rolls back down the
  * bed, springs off its foot, and hops out of the ward's door and down the corridor's checkerboard on the beats, onto the
  * bench, onto the nursery's sill; and on the last "Everybody wants to rule the world" the blind goes up and there is his
  * son, in the front row's first bassinet. Through the guitar and the fade he stays at the glass, trembling on the beats
@@ -17,7 +17,9 @@ import { AT_GLASS, babyAt, HOSPITAL_STRIKES, hospitalWay, LIFT, martyAt, NUDGE, 
  * back to a still picture of the corridor's window, the wall above it pale and quiet for the credits, the morning
  * warming to gold until the end.
  *
- * See `geo.ts` for the clock and the ground, `draw.ts` for the drawing.
+ * See `geo.ts` for the clock and the ground, `draw.ts` for the drawing; `dawn.ts` for the morning's colour (grey-blue,
+ * rose, then gold once the sun clears the roofs), `outside.ts` for the city waking through the windows, `light.ts` for
+ * the shafts, the patches on the floor and the dust in them, and `props.ts` for the small life and the foreground.
  */
 
 export const HOSPITAL_AT: Pt = [0, 0]

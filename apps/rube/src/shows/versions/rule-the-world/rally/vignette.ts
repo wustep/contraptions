@@ -7,9 +7,11 @@ import { CREDITS_AT } from './music'
  * is drawn over everything but the ball, which the stage draws last. There is no grain: the picture is clean.
  */
 
-let baked: { w: number; h: number; c: HTMLCanvasElement } | null = null
+/** One per canvas size it has been laid on lately: the stage's, and the finale's rooms' (`snap.ts`). */
+const baked: { w: number; h: number; c: HTMLCanvasElement }[] = []
 function vignetteFor(w: number, h: number): HTMLCanvasElement | null {
-  if (baked && baked.w === w && baked.h === h) return baked.c
+  const have = baked.find((b) => b.w === w && b.h === h)
+  if (have) return have.c
   if (typeof document === 'undefined') return null
   const c = document.createElement('canvas')
   c.width = w
@@ -22,7 +24,8 @@ function vignetteFor(w: number, h: number): HTMLCanvasElement | null {
   v.addColorStop(1, 'rgba(10, 8, 6, 0.32)')
   g.fillStyle = v
   g.fillRect(0, 0, w, h)
-  baked = { w, h, c }
+  baked.unshift({ w, h, c })
+  if (baked.length > 3) baked.pop()
   return c
 }
 

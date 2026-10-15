@@ -2,15 +2,14 @@ import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { at, BEAT } from '../music'
 import { G, G_LOW } from '../physics'
-import { blob, ctxOf, ellipse, flash, glint, glow, line, mix, path, rect, rgb, rgba, ring, shape, toHex, vgrad, type Pen } from '../pen'
+import { sway } from '../depth'
+import { blob, ctxOf, ellipse, flash, glow, line, mix, path, rect, rgb, rgba, ring, shape, toHex, vgrad, type Pen } from '../pen'
 import {
   BED,
   BREAK,
   BULB_HANG,
   BUZZ,
-  CATCH,
   ceilOf,
-  CLAP,
   COLLAPSE,
   CORD,
   CRACKS,
@@ -54,7 +53,6 @@ import {
   STAIR_X0,
   STAIR_X1,
   STAND_TOP,
-  STANDS,
   STOREY,
   T0,
   TUB_HALF,
@@ -64,6 +62,7 @@ import {
   WALL_R,
   TREADS,
   DOWN,
+  OUT_OF_TUB,
   buried,
   bedGive,
   bulbLevel,
@@ -71,28 +70,27 @@ import {
   BULB_POP,
   BOARD_DROP,
   POUNDS,
-  RAIL_HIT,
   ladderDrop,
   tubDrop,
   type Pose,
 } from './geo'
+import { drawLampRain, drawNight, drawPavementRain, moonlight } from './night'
+import { drawElLight, drawHall, drawMartyAir, drawMishAir, drawTap, drawWindow, lampLevel, lampRock } from './room'
 
 /**
  * The hotel: a brick building cut open at night. Marty's room is sick green-yellow paper under one bare bulb, and goes
- * moon-teal when the bulb goes; Mishkin's under it is warmer and browner, by his bedside lamp; the rooms round them are
- * dark; outside, the night is teal, the iron of the fire escape black against it, and the street is wet under a
- * sodium lamp.
+ * moonlight blue when the bulb goes; Mishkin's under it is warmer and browner, by his bedside lamp; the rooms round
+ * them are dark; outside, the night is wet teal, the iron of the fire escape black against it, and the street is wet
+ * under a sodium lamp. Three looks, one after the other, as he comes down through the house. The night past the outer
+ * wall (the moon and its clouds, the city, the houses across, the rain, the cat) is `night.ts`; the rooms' life (the
+ * back window and its view, the moths, the light going over the walls, the crash's dust and water) is `room.ts`.
  */
 
 const C = {
   sky0: '#06141A',
   sky1: '#0E2A30',
   sky2: '#1C4442',
-  moon: '#D9E6DA',
   moonLight: '#9FC9CF',
-  city: '#0A181C',
-  city2: '#0F2226',
-  cityWin: '#D8A955',
   brick: '#6E3426',
   brickHi: '#83432F',
   mortar: '#40201A',
@@ -176,10 +174,18 @@ const night = (hex: string): string => {
   const [r, g, b] = rgb(hex)
   return toHex(r * 0.22 + 4, g * 0.3 + 8, b * 0.38 + 12)
 }
-/** Marty's room under its bulb, or the moon. */
+/** Moonlight: the colour gone out of it, cold blue left, brighter or dimmer as the clouds go over the moon (`c`). */
+const moonTone = (hex: string, c: number): string => {
+  const [r, g, b] = rgb(hex)
+  const y = 0.3 * r + 0.59 * g + 0.11 * b
+  const v = 0.55 + 0.25 * c
+  return toHex((y * 0.32 + r * 0.06) * v + 8, (y * 0.42 + g * 0.08) * v + 14, (y * 0.62 + b * 0.1) * v + 34)
+}
+/** Marty's room under its bulb (sickly: tungsten through green-yellow paper), or the moon once it has gone. */
 export const toneMarty = (t: number) => {
   const L = bulbLevel(t)
-  return (hex: string): string => mix(mix(night(hex), '#3D6066', 0.08), mix(hex, C.tungsten, 0.06), 0.18 + 0.82 * L)
+  const c = moonlight(t)
+  return (hex: string): string => mix(moonTone(hex, c), mix(mix(hex, '#D8D070', 0.07), C.tungsten, 0.06), 0.1 + 0.9 * L)
 }
 /** Mishkin's room by his lamp. */
 export const toneMish = (hex: string): string => mix(night(hex), mix(hex, C.lamp, 0.05), 0.82)
@@ -201,57 +207,25 @@ type Frame = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: n
 /* ------------------------------------------------------------------ outside */
 
 export function drawOutside(pen: Pen, t: number, f: Frame): void {
-  vgrad(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, [
-    [0, C.sky0, 1],
-    [0.55, C.sky1, 1],
-    [1, C.sky2, 1],
-  ])
-  // Fill the frame top to bottom whatever its height in the place.
+  // The sky, from high over the roofs down to the street (below it the street's cut covers the frame); only past the
+  // outer wall, since the building covers the rest.
   const top = Math.min(f.y0, -14)
-  vgrad(pen, f.x0 - 1, top - 1, f.x1 + 1, F_STREET, [
-    [0, C.sky0, 1],
-    [0.6, C.sky1, 1],
-    [1, C.sky2, 1],
-  ])
-  // The moon, low over the roofs.
-  const moon: Pt = [10.3, -1.5]
-  glow(pen, moon, 2.4, C.moonLight, 0.22)
-  ellipse(pen, moon, 0.34, 0.34, C.moon)
-  ellipse(pen, [moon[0] + 0.1, moon[1] - 0.06], 0.07, 0.06, '#C3D1C4')
-  // The city up the block, low and far: roofs and water towers, a few windows still lit.
-  const shift = (f.cx - 8) * 0.3
-  for (let i = 0; i < 22; i++) {
-    const x0 = 7.6 + i * 1.45 + shift - 2
-    const w = 1.1 + hash(i, 3) * 1.1
-    const topY = 0.5 + hash(i, 7) * 6
-    const body = mix(i % 2 ? C.city : C.city2, C.sky1, 0.35)
-    rect(pen, x0, topY, x0 + w, F_STREET, body)
-    if (hash(i, 11) > 0.6) {
-      const tx = x0 + w * 0.5
-      rect(pen, tx - 0.25, topY - 0.9, tx + 0.25, topY - 0.35, body)
-      shape(pen, [[tx - 0.3, topY - 0.9], [tx, topY - 1.15], [tx + 0.3, topY - 0.9]], body)
-      line(pen, [tx - 0.2, topY - 0.35], [tx - 0.25, topY], body, 0.8)
-      line(pen, [tx + 0.2, topY - 0.35], [tx + 0.25, topY], body, 0.8)
-    }
-    for (let r = 0; topY + 0.4 + r * 0.55 < F_STREET - 0.8; r++)
-      for (let c = 0; c * 0.38 + 0.18 < w - 0.2; c++) {
-        const h = hash(i * 31 + r, c, 5)
-        if (h < 0.93) continue
-        const wx = x0 + 0.18 + c * 0.38
-        const wy = topY + 0.4 + r * 0.55
-        rect(pen, wx, wy, wx + 0.14, wy + 0.2, mix(C.cityWin, body, h > 0.975 ? 0.2 : 0.6))
-      }
-  }
-  // Haze over the street.
-  vgrad(pen, f.x0 - 1, F_STREET - 4, f.x1 + 1, F_STREET, [
-    [0, C.sky2, 0],
-    [1, C.sky2, 0.7],
-  ])
+  const x0 = Math.max(f.x0 - 1, WALL_R[0])
+  if (x0 < f.x1 + 1)
+    vgrad(pen, x0, top - 1, f.x1 + 1, F_STREET, [
+      [0, C.sky0, 1],
+      [0.6, C.sky1, 1],
+      [1, C.sky2, 1],
+    ])
+  // The moon and its clouds, the city far off and up the block, the houses across the street, the rain (`night.ts`).
+  drawNight(pen, t, f)
   drawStreet(pen, t, f)
 }
 
 function drawStreet(pen: Pen, t: number, f: Frame): void {
   const y = F_STREET
+  // Nothing of it reaches the frame till the camera is down near the lamp.
+  if (f.y1 < y - 8.6 || f.x1 < WALL_R[1]) return
   // Under the street, cut: the earth, the hotel's footing, a gas main, the vault light's glass in the pavement.
   rect(pen, f.x0 - 1, y, f.x1 + 1, Math.max(f.y1 + 1, y + 3), C.under)
   for (let i = 0; i < 40; i++) {
@@ -266,6 +240,7 @@ function drawStreet(pen: Pen, t: number, f: Frame): void {
     ellipse(pen, [px, py], pr * 0.72, pr * 0.72, '#0E1112')
     ellipse(pen, [px - pr * 0.3, py - pr * 0.3], pr * 0.15, pr * 0.1, '#4B5658')
   }
+  drawSeep(pen, t, f)
   rect(pen, WALL_R[1], y + 0.22, KERB, y + 0.36, '#2B3133')
   rect(pen, WALL_R[1], y, KERB, y + 0.22, C.pave)
   rect(pen, KERB, y + 0.14, f.x1 + 2, y + 0.3, C.road)
@@ -290,13 +265,12 @@ function drawStreet(pen: Pen, t: number, f: Frame): void {
   path(pen, [[LAMP_X, y - 5.0], [LAMP_X, y - 5.3], [LAMP_X - 0.3, y - 5.42], [head[0], head[1] - 0.1]], C.pole, 2.2)
   shape(pen, [[head[0] - 0.3, head[1]], [head[0] + 0.3, head[1]], [head[0] + 0.18, head[1] - 0.15], [head[0] - 0.18, head[1] - 0.15]], C.pole)
   ellipse(pen, [head[0], head[1] + 0.04], 0.17, 0.07, mix(C.pole, C.sodium, lit))
-  glow(pen, [head[0], head[1] + 0.2], 3.4, C.sodium, 0.32 * lit)
-  // Its cone down to the pavement, and the wet gleam it leaves.
+  // Its light down through the rain to the pavement, and the wet gleam it leaves.
   const ctx = ctxOf(pen.p)
   const { k } = pen
   const g = ctx.createLinearGradient(0, head[1] * k, 0, y * k)
-  g.addColorStop(0, rgba(pen, C.sodium, 0.16 * lit))
-  g.addColorStop(1, rgba(pen, C.sodium, 0.03 * lit))
+  g.addColorStop(0, rgba(pen, C.sodium, 0.1 * lit))
+  g.addColorStop(1, rgba(pen, C.sodium, 0.025 * lit))
   ctx.save()
   ctx.fillStyle = g
   ctx.beginPath()
@@ -307,14 +281,18 @@ function drawStreet(pen: Pen, t: number, f: Frame): void {
   ctx.closePath()
   ctx.fill()
   ctx.restore()
+  // The rain lit amber as it falls through the cone.
+  drawLampRain(pen, t, f, head, y)
   // A puddle by the ladder's foot: the lamp in it, and the sky.
   const pud: Pt = [14.6, y + 0.05]
   ellipse(pen, pud, 1.25, 0.06, mix(C.pave, C.sky2, 0.6))
-  ellipse(pen, [pud[0] + 0.3, pud[1]], 0.7, 0.035, mix(C.sodium, C.pave, 0.55 - 0.3 * flash(t - PAVE, 0.25)))
+  ellipse(pen, [pud[0] + 0.3, pud[1]], 0.7, 0.035, mix(C.sodium, C.pave, 0.55))
   for (let i = 0; i < 5; i++) {
     const gx = head[0] - 1.6 + i * 0.75
     line(pen, [gx, y + 0.04], [gx + 0.25, y + 0.04], C.sodium, 0.35)
   }
+  // The rain on the pavement: rings in the wet, drops jumping.
+  drawPavementRain(pen, t, f)
   // The ripple where he lands.
   const sp = t - PAVE
   if (sp > 0 && sp < 1.4) {
@@ -330,29 +308,77 @@ function drawStreet(pen: Pen, t: number, f: Frame): void {
   }
 }
 
+/** The rain through the pavement: drips off its underside into the dark below, each a fleck of the lamp's light. */
+function drawSeep(pen: Pen, t: number, f: Frame): void {
+  const y = F_STREET + 0.36
+  if (y > f.y1 || y + 1.5 < f.y0) return
+  for (let i = 0; i < 7; i++) {
+    const x = 8.6 + i * 1.37 + hash(i, 1, 75) * 0.5
+    if (x < f.x0 || x > f.x1) continue
+    const per = 0.9 + 0.8 * hash(i, 2, 75)
+    const u = (t / per + hash(i, 3, 75)) % 1
+    const s = u * per
+    const swell = 0.45 * per
+    if (s < swell) ellipse(pen, [x, y + 0.015], 0.012 + 0.012 * (s / swell), 0.015 + 0.015 * (s / swell), '#6E8A8A')
+    else {
+      const v = s - swell
+      const dy = 0.5 * G_LOW * 2.5 * v * v
+      if (dy < 1.6) ellipse(pen, [x, y + 0.03 + dy], 0.012, 0.024, mix('#6E8A8A', C.sodium, 0.35))
+    }
+  }
+}
+
 /* ------------------------------------------------------------------ the building */
 
-/** Brick, coursed, over a box (clipped to the frame). */
+/** Boxes [x0, y0, x1, y1, ...] in one fill, through the pen's tone. */
+function boxes(pen: Pen, list: number[], col: string): void {
+  if (!list.length) return
+  const ctx = ctxOf(pen.p)
+  const { k } = pen
+  ctx.fillStyle = rgba(pen, col, 1)
+  ctx.beginPath()
+  for (let i = 0; i < list.length; i += 4) ctx.rect(list[i] * k, list[i + 1] * k, (list[i + 2] - list[i]) * k, (list[i + 3] - list[i + 1]) * k)
+  ctx.fill()
+}
+
+/** Brick, coursed, over a box (clipped to the frame): its odd bricks and its mortar each in one go. */
 function brick(pen: Pen, x0: number, y0: number, x1: number, y1: number, f: Frame): void {
   const a0 = Math.max(x0, f.x0 - 0.5)
   const a1 = Math.min(x1, f.x1 + 0.5)
   const b0 = Math.max(y0, f.y0 - 0.5)
   const b1 = Math.min(y1, f.y1 + 0.5)
   if (a1 <= a0 || b1 <= b0) return
-  rect(pen, a0, b0, a1, b1, C.brick)
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  boxes(pen, [a0, b0, a1, b1], C.brick)
   const H = 0.21
   const W = 0.46
+  const hi: number[] = []
+  const dull: number[] = []
+  ctx.beginPath()
   for (let r = Math.floor(b0 / H); r * H < b1; r++) {
     const y = r * H
-    if (y > b0) line(pen, [a0, y], [a1, y], C.mortar, 0.45)
+    if (y > b0) {
+      ctx.moveTo(a0 * k, y * k)
+      ctx.lineTo(a1 * k, y * k)
+    }
     const off = (r & 1) * W * 0.5
     for (let c = Math.floor((a0 - off) / W); c * W + off < a1; c++) {
       const x = c * W + off
       const h = hash(c, r, 9)
-      if (h > 0.72) rect(pen, Math.max(a0, x + 0.02), Math.max(b0, y + 0.02), Math.min(a1, x + W - 0.02), Math.min(b1, y + H - 0.02), h > 0.9 ? C.brickHi : mix(C.brick, C.mortar, 0.3))
-      if (x > a0 && x < a1) line(pen, [x, Math.max(b0, y)], [x, Math.min(b1, y + H)], C.mortar, 0.45)
+      if (h > 0.72) (h > 0.9 ? hi : dull).push(Math.max(a0, x + 0.02), Math.max(b0, y + 0.02), Math.min(a1, x + W - 0.02), Math.min(b1, y + H - 0.02))
+      if (x > a0 && x < a1) {
+        ctx.moveTo(x * k, Math.max(b0, y) * k)
+        ctx.lineTo(x * k, Math.min(b1, y + H) * k)
+      }
     }
   }
+  ctx.strokeStyle = rgba(pen, C.mortar, 1)
+  ctx.lineWidth = pen.w * 0.45
+  ctx.lineCap = 'round'
+  ctx.stroke()
+  boxes(pen, hi, C.brickHi)
+  boxes(pen, dull, mix(C.brick, C.mortar, 0.3))
 }
 
 /** A floor seen cut: boards on top, the joists, the plaster of the ceiling under. */
@@ -367,22 +393,33 @@ function slab(pen: Pen, x0: number, x1: number, fl: number, f: Frame): void {
   rect(pen, a0, fl + 0.4, a1, fl + 0.47, C.plaster)
 }
 
-/** Wallpaper over a room's back wall: a stripe and a small motif, a skirting board. */
+/** Wallpaper over a room's back wall: a stripe and a small motif, a skirting board. Each in one fill. */
 function paper(pen: Pen, x0: number, x1: number, ceil: number, fl: number, base: string, stripe: string, motif: string, f: Frame): void {
   const a0 = Math.max(x0, f.x0 - 0.5)
   const a1 = Math.min(x1, f.x1 + 0.5)
   if (a1 <= a0) return
-  rect(pen, a0, ceil, a1, fl, base)
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  boxes(pen, [a0, ceil, a1, fl], base)
+  const stripes: number[] = []
+  ctx.beginPath()
   for (let x = Math.floor((a0 - x0) / 0.5) * 0.5 + x0; x < a1; x += 0.5) {
-    rect(pen, x, ceil, x + 0.07, fl, stripe)
+    stripes.push(x, ceil, x + 0.07, fl)
     for (let y = ceil + 0.3; y < fl - 0.3; y += 0.5) {
       const yy = y + ((Math.round((x - x0) / 0.5) & 1) * 0.25)
-      shape(pen, [[x + 0.25, yy - 0.07], [x + 0.32, yy], [x + 0.25, yy + 0.07], [x + 0.18, yy]], motif)
+      ctx.moveTo((x + 0.25) * k, (yy - 0.07) * k)
+      ctx.lineTo((x + 0.32) * k, yy * k)
+      ctx.lineTo((x + 0.25) * k, (yy + 0.07) * k)
+      ctx.lineTo((x + 0.18) * k, yy * k)
+      ctx.closePath()
     }
   }
-  rect(pen, a0, fl - 0.16, a1, fl, C.skirting)
-  // The picture rail.
-  rect(pen, a0, ceil + 0.42, a1, ceil + 0.47, mix(base, C.skirting, 0.5))
+  ctx.fillStyle = rgba(pen, motif, 1)
+  ctx.fill()
+  boxes(pen, stripes, stripe)
+  // The skirting, and the picture rail.
+  boxes(pen, [a0, fl - 0.16, a1, fl], C.skirting)
+  boxes(pen, [a0, ceil + 0.42, a1, ceil + 0.47], mix(base, C.skirting, 0.5))
 }
 
 /** A window in the outer wall, seen cut: the opening, the sashes on the glass's line, the sky through it. */
@@ -413,17 +450,17 @@ export function drawBuilding(pen: Pen, t: number, f: Frame): void {
   const mish = withTone(pen, toneMish)
   const dark = withTone(pen, toneDark)
   const top = -16
-  // The whole block in brick, from the hall to the outer wall.
-  brick(pen, f.x0 - 1, top, WALL_R[1], F_STREET, f)
+  // The outer wall in brick (the rooms and the hall cover the rest of the block).
+  brick(pen, WALL_R[0] - 0.02, top, WALL_R[1], F_STREET, f)
   // Rooms floor by floor: the hall to the left of the party wall, the room right of it.
   const floors = [F_MARTY - 2 * STOREY, F_MARTY - STOREY, F_MARTY, F_MISH, F_SECOND, F_STREET]
   for (const fl of floors) {
     const ceil = ceilOf(fl)
     if (fl < f.y0 - 1 || ceil > f.y1 + 1) continue
     const room = fl === F_MARTY ? marty : fl === F_MISH ? mish : dark
-    // The hall: dim paper and a hall light.
+    // The hall: dim paper, and the hall light's pool on it.
     paper(dark, f.x0 - 1, WALL_L[0], ceil, fl, '#6A5A3E', '#5C4E36', '#7A6A4A', f)
-    glow(dark, [-4, ceil + 0.8], 2.4, C.tungsten, fl === F_MARTY || fl === F_MISH ? 0.5 : 0.25)
+    glow(dark, [-4, ceil + 1.2], 2.2, C.tungsten, fl === F_MARTY || fl === F_MISH ? 0.3 : 0.15)
     if (fl === F_MARTY) paper(room, WALL_L[1], WALL_R[0], ceil, fl, C.paper, C.paperStripe, C.paperMotif, f)
     else if (fl === F_MISH) paper(room, WALL_L[1], WALL_R[0], ceil, fl, C.mPaper, C.mStripe, C.mMotif, f)
     else paper(room, WALL_L[1], WALL_R[0], ceil, fl, '#7A7458', '#6C6750', '#86805F', f)
@@ -442,8 +479,9 @@ export function drawBuilding(pen: Pen, t: number, f: Frame): void {
     // A doorway through the party wall into each room is round the back: the wall here is solid; only the floors cross it.
     if (fl >= f.y0 - 1 && fl <= f.y1 + 1) slab(dark, WALL_L[0], WALL_L[1], fl, f)
   }
-  drawMartyRoom(marty, t)
-  drawMishRoom(mish)
+  drawMartyRoom(marty, t, f)
+  drawMishRoom(mish, t)
+  drawMishAir(mish, t, f)
   drawFloor(marty, mish, t, f)
 }
 
@@ -457,7 +495,9 @@ function darkRoom(pen: Pen, fl: number): void {
     const lamp: Pt = [4.1, fl - 1.55]
     rect(pen, lamp[0] - 0.03, lamp[1], lamp[0] + 0.03, fl - 1.25, C.lampBase)
     shape(pen, [[lamp[0] - 0.18, lamp[1]], [lamp[0] + 0.18, lamp[1]], [lamp[0] + 0.1, lamp[1] - 0.2], [lamp[0] - 0.1, lamp[1] - 0.2]], '#5E6E3A')
-    glow({ ...pen, tone: (h) => h }, [lamp[0], lamp[1] + 0.1], 2.6, '#C9B060', 0.2)
+    // Its light, under the shade and on the desk.
+    line({ ...pen, tone: (h) => h }, [lamp[0] - 0.16, lamp[1]], [lamp[0] + 0.16, lamp[1]], '#C9B060', 0.8)
+    ellipse({ ...pen, tone: (h) => h }, [lamp[0] - 0.1, fl - 1.25], 0.55, 0.035, mix('#C9B060', C.door, 0.55))
     // A potted palm, gone brown.
     rect(pen, 5.6, fl - 0.5, 6.0, fl, C.suitcase)
     for (const a of [-0.9, -0.4, 0.2, 0.7, 1.1]) path(pen, [[5.8, fl - 0.5], [5.8 + 0.3 * Math.sin(a), fl - 1.0], [5.8 + 0.6 * Math.sin(a), fl - 0.9 + 0.2 * Math.abs(a)]], '#4A5A34', 1.4)
@@ -475,18 +515,23 @@ function darkRoom(pen: Pen, fl: number): void {
 
 /* ------------------------------------------------------------------ Marty's room */
 
-function drawMartyRoom(pen: Pen, t: number): void {
+function drawMartyRoom(pen: Pen, t: number, f: Frame): void {
   const fl = F_MARTY
   const ceil = ceilOf(fl)
-  // The paper peeling: a seam come away at the top and curling forward, the plaster's backing behind it; a stain.
-  for (const [x, w, d] of [[-0.55, 0.3, 0.55], [2.45, 0.34, 0.75], [6.45, 0.3, 0.6]] as const) {
+  // The paper peeling: a seam come away at the top and curling forward, the plaster's backing behind it; a stain. The
+  // loose flaps stir in the draught from the window.
+  for (const [i, [x, w, d]] of ([[-0.55, 0.3, 0.55], [2.45, 0.34, 0.75], [6.85, 0.3, 0.6]] as const).entries()) {
     const y = ceil + 0.47
+    const st = 0.05 * sway(t, i * 3 + 1, 2.6 + i * 0.7) + 0.03 * Math.max(0, Math.sin((t - 93.35) * 1.3)) * (t > 93.35 && t < 95.8 ? 1 : 0)
     shape(pen, [[x, y], [x + w, y], [x + w * 0.92, y + d], [x + w * 0.4, y + d * 0.8], [x + 0.02, y + d * 0.95]], mix(C.paperBack, C.paper, 0.35))
     // The loose flap, its paler underside out, curling.
-    shape(pen, [[x + 0.02, y + d * 0.95], [x + w * 0.92, y + d], [x + w * 1.05, y + d + 0.22], [x + w * 0.7, y + d + 0.36], [x + w * 0.15, y + d + 0.26]], mix(C.paperBack, C.dark, 0.12))
-    path(pen, [[x + w * 0.15, y + d + 0.26], [x + w * 0.7, y + d + 0.36], [x + w * 1.05, y + d + 0.22]], mix(C.paperStripe, C.dark, 0.45), 0.6)
+    const lip: Pt[] = [[x + w * 1.05 + st, y + d + 0.22 - st * 0.6], [x + w * 0.7 + st * 1.2, y + d + 0.36 - st], [x + w * 0.15 + st * 0.6, y + d + 0.26 - st * 0.5]]
+    shape(pen, [[x + 0.02, y + d * 0.95], [x + w * 0.92, y + d], ...lip], mix(C.paperBack, C.dark, 0.12))
+    path(pen, [lip[2], lip[1], lip[0]], mix(C.paperStripe, C.dark, 0.45), 0.6)
     line(pen, [x + 0.02, y + d * 0.95], [x + w * 0.92, y + d], mix(C.paper, C.dark, 0.35), 0.5)
   }
+  // The window in the back wall over the tub, and the night through it.
+  drawWindow(pen, t, f)
   blob(pen, [[0.8, ceil + 0.05], [2.0, ceil + 0.1], [2.3, ceil + 0.7], [1.6, ceil + 1.1], [0.9, ceil + 0.75]], C.stain, 0.35)
   // The door, a transom over it lit from the hall, light under it.
   const [d0, d1] = DOOR
@@ -500,6 +545,8 @@ function drawMartyRoom(pen: Pen, t: number): void {
   rect(pen, d0, DOOR_TOP - 0.5, d1, DOOR_TOP - 0.16, C.doorDark)
   rect(pen, d0 + 0.06, DOOR_TOP - 0.45, d1 - 0.06, DOOR_TOP - 0.2, mix(C.transom, C.dark, 0.25))
   rect(pen, d0 + 0.02, fl - 0.04, d1 - 0.02, fl, C.transom)
+  // Someone going by out in the hall.
+  drawHall(pen, t, DOOR)
   // A coat on a nail by the door.
   jacket(pen, [d1 + 0.32, DOOR_TOP + 0.3], '#3E3A33')
   // The radiator: its sections, its pipe; it knocks.
@@ -542,15 +589,15 @@ function drawMartyRoom(pen: Pen, t: number): void {
   limb(pen, [BED[1], m0 - 0.85], [BED[1] - 0.06, m0 - 0.85], 0.05, C.iron)
   // The window (in the cut wall), and the moonlight through it once the bulb has gone.
   const L = bulbLevel(t)
-  const moon = 1 - L
+  const moon = (1 - L) * (0.35 + 0.65 * moonlight(t))
   if (moon > 0.01) {
     const s = sillOf(fl)
     const h = headOf(fl)
     const ctx = ctxOf(pen.p)
     const { k } = pen
     const g = ctx.createLinearGradient(WALL_R[0] * k, 0, 3.6 * k, 0)
-    g.addColorStop(0, `rgba(170,215,220,${0.2 * moon})`)
-    g.addColorStop(1, `rgba(170,215,220,0)`)
+    g.addColorStop(0, `rgba(168,204,240,${0.12 * moon})`)
+    g.addColorStop(1, `rgba(168,204,240,0)`)
     ctx.save()
     ctx.fillStyle = g
     ctx.beginPath()
@@ -562,10 +609,13 @@ function drawMartyRoom(pen: Pen, t: number): void {
     ctx.fill()
     ctx.restore()
     // The window's pattern on the floor.
-    for (const x of [3.3, 4.2, 5.1]) rect(pen, x, fl - 0.02, x + 0.7, fl + 0.02, mix(C.moonLight, C.board, 0.45))
+    for (const x of [3.3, 4.2, 5.1]) rect(pen, x, fl - 0.02, x + 0.7, fl + 0.02, mix(C.moonLight, C.board, 0.85 - 0.4 * moon))
   }
-  // The bulb on its cord, swinging; out on the bridge.
+  // The El's lit windows going over the paper as it passes.
+  drawElLight(pen, t)
+  // The bulb on its cord, swinging; out on the bridge; its moths, the dust in its light (and then in the moon's).
   drawBulb(pen, t)
+  drawMartyAir(pen, t, f, bulbAt(t))
 }
 
 /** A jacket hung by its collar from `hook`: shoulders, the body, a sleeve, the lapels. */
@@ -579,36 +629,39 @@ function jacket(pen: Pen, hook: Pt, col: string): void {
   rect(pen, x + 0.08, y + 0.7, x + 0.24, y + 0.74, mix(col, C.dark, 0.5))
 }
 
+/** The bulb's swing: slow, fed by the knocks, hard after the crash. */
+const bulbSwing = (t: number): number => {
+  const s = t - T0
+  const crash = t > BREAK ? 0.35 * Math.exp(-(t - BREAK) / 3) * Math.sin((t - BREAK) * 4.2) : 0
+  return 0.08 * Math.sin((s * Math.PI * 2) / (BEAT * 4)) + KNOCKS.reduce((a, k) => a + (t > k ? 0.03 * Math.exp(-(t - k) / 0.6) * Math.sin((t - k) * 9) : 0), 0) + crash
+}
+/** Where the bulb's glass is at `t`, on its cord. */
+function bulbAt(t: number): Pt {
+  const ang = bulbSwing(t)
+  return [BULB_HANG[0] + Math.sin(ang) * (CORD + 0.17), BULB_HANG[1] + Math.cos(ang) * (CORD + 0.17)]
+}
+
 function drawBulb(pen: Pen, t: number): void {
   const L = bulbLevel(t)
-  const s = t - T0
-  // A slow swing that the knocks feed; it swings hard after the crash.
-  const crash = t > BREAK ? 0.35 * Math.exp(-(t - BREAK) / 3) * Math.sin((t - BREAK) * 4.2) : 0
-  const ang = 0.08 * Math.sin((s * Math.PI * 2) / (BEAT * 4)) + KNOCKS.reduce((a, k) => a + (t > k ? 0.03 * Math.exp(-(t - k) / 0.6) * Math.sin((t - k) * 9) : 0), 0) + crash
+  const ang = bulbSwing(t)
   const end: Pt = [BULB_HANG[0] + Math.sin(ang) * CORD, BULB_HANG[1] + Math.cos(ang) * CORD]
   line(pen, BULB_HANG, end, C.cord, 0.9)
   rect(pen, BULB_HANG[0] - 0.07, BULB_HANG[1], BULB_HANG[0] + 0.07, BULB_HANG[1] + 0.06, C.iron)
-  const c: Pt = [end[0] + Math.sin(ang) * 0.17, end[1] + Math.cos(ang) * 0.17]
+  const c = bulbAt(t)
   rect(pen, end[0] - 0.05, end[1] - 0.02, end[0] + 0.05, end[1] + 0.1, C.ironHi)
-  if (L > 0.02) {
-    glow(pen, c, 4.4, C.tungsten, 0.34 * L)
-    glow(pen, c, 1.0, C.bulb, 0.6 * L)
-  }
+  // The glass, lit or dead; its filament hot while it burns. The bulb is the light: nothing hangs round it.
   ellipse(pen, c, 0.11, 0.13, mix(C.bulbOff, C.bulb, L))
   if (L > 0.3) ellipse(pen, c, 0.05, 0.06, '#FFF4D8')
-  // The filament's last flash as it goes, each time.
+  // The filament going, each time: the glass white for a moment, and dead.
   for (const k of [BULB_POP, BULB_OUT]) {
-    const m = flash(t - k, 0.09)
-    if (m > 0.02) {
-      glint({ ...pen, tone: (h) => h }, c, 0.32, '#FFF1C8', m)
-      glow({ ...pen, tone: (h) => h }, c, 2.2, C.tungsten, 0.35 * m)
-    }
+    const m = flash(t - k, 0.06)
+    if (m > 0.05) ellipse({ ...pen, tone: (h) => h }, c, 0.11, 0.13, mix(C.bulb, '#FFF6E2', m))
   }
 }
 
 /* ------------------------------------------------------------------ Mishkin's room */
 
-function drawMishRoom(pen: Pen): void {
+function drawMishRoom(pen: Pen, t: number): void {
   const fl = F_MISH
   const ceil = ceilOf(fl)
   // His door, a picture over the bed's head.
@@ -635,11 +688,31 @@ function drawMishRoom(pen: Pen): void {
   rect(pen, n0 - 0.05, STAND_TOP - 0.06, n1 + 0.05, STAND_TOP, mix(C.stand, C.mBedHi, 0.5))
   rect(pen, n0 + 0.08, STAND_TOP + 0.15, n1 - 0.08, STAND_TOP + 0.4, mix(C.stand, C.dark, 0.3))
   const lx = (n0 + n1) / 2 - 0.1
-  rect(pen, lx - 0.05, STAND_TOP - 0.5, lx + 0.05, STAND_TOP, C.lampBase)
+  // It rocks on its base when the tub comes down by it, and its light stutters.
+  const rock = lampRock(t)
+  const lv = lampLevel(t)
+  const up = (u: number, v: number): Pt => [lx + u * Math.cos(rock) + v * Math.sin(rock), STAND_TOP - v * Math.cos(rock) + u * Math.sin(rock)]
+  // Its shade lit from inside: the light is the shade, and what it falls on. Down on the nightstand round its foot; up
+  // the wall over the shade's open top, fading as it spreads.
+  ellipse(pen, [lx, STAND_TOP - 0.035], 0.36, 0.03, mix(mix(C.stand, C.mBedHi, 0.5), C.lamp, 0.4 * lv))
+  shape(pen, [up(-0.05, 0), up(0.05, 0), up(0.05, 0.5), up(-0.05, 0.5)], C.lampBase)
   ellipse(pen, [lx, STAND_TOP - 0.04], 0.18, 0.05, C.lampBase)
-  shape(pen, [[lx - 0.22, STAND_TOP - 0.5], [lx + 0.22, STAND_TOP - 0.5], [lx + 0.14, STAND_TOP - 0.85], [lx - 0.14, STAND_TOP - 0.85]], C.shade)
-  glow(pen, [lx, STAND_TOP - 0.65], 3.6, C.lamp, 0.36)
-  glow(pen, [lx, STAND_TOP - 0.45], 0.8, C.lamp, 0.55)
+  const lit = { ...pen, tone: (h: string) => h }
+  const ctx = ctxOf(pen.p)
+  const { k } = pen
+  const g = ctx.createLinearGradient(0, up(0, 0.85)[1] * k, 0, up(0, 2.0)[1] * k)
+  g.addColorStop(0, rgba(lit, C.lamp, 0.16 * lv))
+  g.addColorStop(1, rgba(lit, C.lamp, 0))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  for (const [i, q] of [up(-0.14, 0.85), up(0.14, 0.85), up(0.75, 2.0), up(-0.75, 2.0)].entries()) (i ? ctx.lineTo(q[0] * k, q[1] * k) : ctx.moveTo(q[0] * k, q[1] * k))
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+  shape(pen, [up(-0.22, 0.5), up(0.22, 0.5), up(0.14, 0.85), up(-0.14, 0.85)], mix(C.shade, C.lamp, 0.25 * lv))
+  // The shade's lit lower rim, where the bulb shows through the cloth.
+  line(lit, up(-0.2, 0.53), up(0.2, 0.53), mix(C.shade, C.lamp, 0.5 + 0.5 * lv), 0.8)
   // A glass and an ashtray.
   rect(pen, n1 - 0.25, STAND_TOP - 0.2, n1 - 0.12, STAND_TOP, '#9DB0A4')
   ellipse(pen, [n0 + 0.2, STAND_TOP - 0.02], 0.12, 0.03, '#2A2420')
@@ -685,6 +758,8 @@ function drawFloor(marty: Pen, mish: Pen, t: number, f: Frame): void {
     path(marty, pts, C.boardHi, 0.6)
     shape(mish, [...pb.map(([x, y]) => [x, y - 0.07] as Pt), ...[...pb].reverse()], C.plaster)
   }
+  // The void in the floor, behind its boards and joists: what shows where the boards sag and where they are torn.
+  rect(marty, x0, fl, x1, fl + 0.47, mix(C.joist, C.dark, 0.6))
   if (t < BREAK) draw(top, bot)
   else {
     draw(top.filter(([x]) => x <= hole[0]), bot.filter(([x]) => x <= hole[0]))
@@ -714,8 +789,6 @@ function drawFloor(marty: Pen, mish: Pen, t: number, f: Frame): void {
     const n = Math.min(pts.length, 1 + (pts.length - 1) * Math.min(1, s / 0.12))
     const shown = pts.slice(0, Math.ceil(n)).map(([x, y]) => [x, y + at(x)] as Pt)
     path(mish, shown, C.dark, 1.0)
-    // The fresh crack catches the lamp light for a moment.
-    if (s < 0.25) path(mish, shown, C.plasterHi, 0.5 * (1 - s / 0.25))
     // Dust sifts from it.
     for (let j = 0; j < 4; j++) {
       const ds = s - j * 0.08
@@ -725,11 +798,11 @@ function drawFloor(marty: Pen, mish: Pen, t: number, f: Frame): void {
       ellipse(mish, [px, py], 0.025, 0.025, C.plasterHi)
     }
   }
-  // The creak before them: the boards under the tub's feet flex.
+  // The creak before them: the boards under the tub's feet flex, a seam opening dark between them.
   const cs = t - CREAK
   if (cs >= 0 && cs < 0.5 && t < BREAK) {
     const m = flash(cs, 0.15)
-    for (const fx of [TUB_X - 0.8, TUB_X + 0.8]) path(marty, [[fx - 0.25, fl + 0.02], [fx, fl + 0.02 + 0.04 * m], [fx + 0.25, fl + 0.02]], C.plasterHi, 0.7 * m)
+    for (const fx of [TUB_X - 0.8, TUB_X + 0.8]) path(marty, [[fx - 0.25, fl + 0.02], [fx, fl + 0.02 + 0.04 * m], [fx + 0.25, fl + 0.02]], C.dark, 0.7 * m)
   }
 }
 
@@ -775,7 +848,8 @@ function flight(pen: Pen, top: Pt, bottom: Pt, n: number, col: string): void {
   ironLimb(pen, [bottom[0], bottom[1] - 1.0], [bottom[0], bottom[1]], 0.03, col)
 }
 
-export function drawFireEscape(pen: Pen, t: number): void {
+export function drawFireEscape(pen: Pen, t: number, f: Frame): void {
+  if (f.x1 < WALL_R[1]) return
   const back = mix(C.fe, C.sky1, 0.45)
   const L5 = sillOf(F_MARTY - STOREY)
   // The flights that go the other way, behind.
@@ -793,15 +867,15 @@ export function drawFireEscape(pen: Pen, t: number): void {
   // The flights down to the right: the one he takes, and the one above it.
   flight(pen, [STAIR_X0, L5], [STAIR_X1, L_MARTY], RISERS, C.fe)
   flight(pen, [STAIR_X0, L_MISH], [STAIR_X1, L_SECOND], RISERS, C.fe)
-  // Tread rings: each tread he lands on shivers.
+  // Each tread he lands on shivers: its moonlit edge rocks, and settles.
   for (let n = 1; n <= 13; n++) {
     const tt = n <= 12 ? TREADS[n - 1] : DOWN
     const s = t - tt
-    if (s < 0 || s > 0.5) continue
+    if (s < 0 || s > 0.4) continue
     const x = STAIR_X0 + RUN * n
     const y = L_MISH + RISE * n
-    const m = flash(s, 0.12)
-    line(pen, [x - 0.2, y + 0.01 + 0.03 * ring(s, 14, 0.12)], [x + 0.2, y + 0.01 - 0.03 * ring(s, 14, 0.12)], '#9FB4B0', 1.4 * m)
+    const r = 0.03 * ring(s, 14, 0.12)
+    line(pen, [x - 0.2, y + 0.01 + r], [x + 0.2, y + 0.01 - r], mix(C.fe, C.moonLight, 0.42), 0.5)
   }
   drawLadder(pen, t)
 }
@@ -829,14 +903,15 @@ function drawLadder(pen: Pen, t: number): void {
   ironLimb(pen, [xl, y0], [xl, y1], 0.06, C.fe)
   ironLimb(pen, [xr, y0], [xr, y1], 0.06, C.fe)
   for (let y = y0; y <= y1 - 0.1; y += RUNG) ironLimb(pen, [xl, y], [xr, y], 0.045, C.fe)
-  // Its catch gives; its feet ring on the pavement.
-  const cs = t - CATCH
-  if (cs >= 0 && cs < 0.4) for (const a of [-1, 1]) line(pen, [gx + 0.1, L_SECOND - 0.9], [gx + 0.1 + 0.2 * a, L_SECOND - 1.0 - 0.1], '#9FB4B0', 0.7 * flash(cs, 0.12))
+  // Its feet hit the wet pavement: the water they throw up.
   const fs = t - FOOT
-  if (fs >= 0 && fs < 0.6) {
-    const m = flash(fs, 0.15)
-    for (const a of [-1.2, -0.6, 0.6, 1.2]) line(pen, [LADDER_X + 0.35 * Math.sin(a), F_STREET - 0.05 - 0.1 * Math.cos(a)], [LADDER_X + 0.6 * Math.sin(a), F_STREET - 0.05 - 0.3 * Math.cos(a)], '#C9D6D0', 0.8 * m)
-    glow(pen, [LADDER_X, F_STREET], 0.6, C.sodium, 0.25 * m)
+  if (fs >= 0 && fs < 0.45) {
+    for (const [i, x] of [xl, xr, xl, xr, xl, xr].entries()) {
+      const vx = (i % 2 ? 1 : -1) * (0.5 + 0.9 * hash(i, 1, 76))
+      const vy = -1.4 - 1.2 * hash(i, 2, 76)
+      const y = F_STREET - 0.02 + vy * fs + 0.5 * G * fs * fs
+      if (y < F_STREET) ellipse(pen, [x + vx * fs, y], 0.022, 0.03, '#7E9C9E')
+    }
   }
 }
 
@@ -887,19 +962,33 @@ export function drawTub(pen: Pen, t: number): void {
   ellipse(pen, at([1.32, TUB_RIM]), 0.07, 0.07, C.tubCut)
   // The outside's paint where it rounds under.
   path(pen, [at([-1.2, -0.7]), at([-1.0, -0.36]), at([-0.6, -0.24])], C.tubOut, 0.8)
-  // The water, till the fall throws it out; it is drawn again over him.
-  if (t < LAND) shape(pen, below(TUB_IN, WATER).map(at), mix(C.water, C.enamel, 0.35))
+  // The tap at its head, dripping.
+  drawTap(pen, t, at, WATER)
+  // The water, drawn again over him; the fall throws half of it out, and the rest slops from end to end.
+  const w = waterIn(t)
+  shape(pen, w.map(at), mix(C.water, C.enamel, 0.35))
+}
+
+/** The water's surface in the tub: level, then after the landing lower and slopping, tilted as it runs end to end. */
+function waterIn(t: number): Pt[] {
+  if (t < LAND) return below(TUB_IN, WATER)
+  const s = t - LAND
+  const tilt = 0.16 * Math.exp(-s / 0.7) * Math.sin(s * 8.5)
+  const lvl = WATER + 0.1
+  // Cut the tub's inside below a tilted line: lean the shape, cut it level, lean it back.
+  return below(TUB_IN.map(([x, y]) => [x, y - tilt * x] as Pt), lvl).map(([x, y]) => [x, y + tilt * x] as Pt)
 }
 
 /** The water over him: he sits in the bath. */
 export function drawWaterOver(pen: Pen, t: number): void {
-  if (t >= LAND) return
+  // Over him while he is in it: till he hops out after the landing.
+  if (t >= OUT_OF_TUB + 0.1) return
   const [ox, oy] = tubAt(t)
   const sh = CRACKS.reduce((s, c) => s + (t > c && t < BREAK ? 0.02 * ring(t - c, 16, 0.08) : 0), 0)
   const at = ([x, y]: Pt): Pt => [ox + x + sh, oy + y]
   const ctx = ctxOf(pen.p)
   const { k } = pen
-  const pts = below(TUB_IN, WATER).map(at)
+  const pts = waterIn(t).map(at)
   ctx.save()
   ctx.fillStyle = rgba(pen, C.water, 0.42)
   ctx.beginPath()
@@ -910,7 +999,7 @@ export function drawWaterOver(pen: Pen, t: number): void {
   // The surface, rippling out from where he went in.
   const rs = t - 94.773
   const wob = rs > 0 ? 0.03 * Math.exp(-rs / 0.5) * Math.sin(rs * 20) : 0
-  path(pen, [at([-1.02, WATER]), at([-0.3, WATER + wob]), at([0.3, WATER - wob]), at([1.0, WATER])], '#DDEBE6', 0.7)
+  if (t < LAND) path(pen, [at([-1.02, WATER]), at([-0.3, WATER + wob]), at([0.3, WATER - wob]), at([1.0, WATER])], '#DDEBE6', 0.7)
   // The splash as he lands in it.
   if (rs > 0 && rs < 0.6) {
     for (let i = 0; i < 9; i++) {
@@ -1086,36 +1175,53 @@ export function drawDebris(pen: Pen, t: number): void {
     const fall = (b.floor - b.p[1] - 0.04)
     const T = (-b.v[1] + Math.sqrt(b.v[1] * b.v[1] + 2 * G * fall)) / G
     const u = Math.min(s, T)
-    let x = b.p[0] + b.v[0] * u
+    // Once down it skips: a hop or two along the boards, dying.
+    const after = Math.max(0, s - T)
+    let x = b.p[0] + b.v[0] * u + b.v[0] * 0.06 * (1 - Math.exp(-after * 8))
     x = Math.max(WALL_L[1] + 0.1, Math.min(WALL_R[0] - 0.1, x))
-    const y = b.p[1] + b.v[1] * u + 0.5 * G * u * u
-    const ang = s >= T ? (hash(b.w * 100, 8) - 0.5) * 0.5 : b.spin * u
+    const hop = after > 0 ? 0.16 * (0.4 + hash(b.w * 100, 9)) * Math.abs(Math.sin(after * 15)) * Math.exp(-after * 7) : 0
+    const y = b.p[1] + b.v[1] * u + 0.5 * G * u * u - hop
+    const ang = s >= T ? (hash(b.w * 100, 8) - 0.5) * 0.5 + b.spin * 0.04 * (1 - Math.exp(-after * 8)) : b.spin * u
     const ca = Math.cos(ang)
     const sa = Math.sin(ang)
     const pts: Pt[] = [[-b.w / 2, -b.h / 2], [b.w / 2, -b.h / 2], [b.w / 2, b.h / 2], [-b.w / 2, b.h / 2]].map(([px, py]) => [x + px * ca - py * sa, y + px * sa + py * ca])
     shape(pen, pts, b.col)
   }
-  // The burst at the ceiling, and the cloud where it lands; the plaster heaped on him.
-  const puff = (c: Pt, since: number, r0: number, r1: number, life: number, a: number) => {
+  // The dust where the ceiling bursts, and the cloud where the tub lands, billowing out and thinning.
+  const puff = (c: Pt, since: number, r0: number, r1: number, life: number, a: number, seed: number) => {
     if (since < 0 || since > life) return
     const u = since / life
     const r = r0 + (r1 - r0) * (1 - (1 - u) * (1 - u))
-    glow(pen, c, r, C.plasterHi, a * (1 - u))
+    dustCloud(pen, [c[0], c[1] - 0.25 * u], r, a * Math.min(1, since / 0.08) * (1 - u), seed)
   }
-  puff([TUB_X, F_MARTY + 0.45], s, 0.6, 2.6, 1.8, 0.75)
-  puff([TUB_X - 0.6, F_MISH - 0.9], t - LAND, 0.8, 3.4, 2.6, 0.85)
+  puff([TUB_X, F_MARTY + 0.45], s, 0.5, 1.8, 1.8, 0.18, 1)
+  puff([TUB_X - 0.6, F_MISH - 0.9], t - LAND, 0.6, 2.1, 2.4, 0.2, 2)
   // Water thrown out of the tub as it lands.
   const ws = t - LAND
   if (ws > 0 && ws < 1.3) {
-    for (let i = 0; i < 18; i++) {
-      const side = i % 2 ? 1 : -1
-      const vx = side * (1.2 + hash(i, 1, 40) * 2.6)
-      const vy = -2.5 - hash(i, 2, 40) * 2.5
-      const x = TUB_X + side * 1.1 + vx * ws
-      const y = F_MARTY + LANDED + COLLAPSE - 1.1 + vy * ws + 0.5 * G * ws * ws
-      if (y > F_MISH) continue
-      ellipse(pen, [x, y], 0.04, 0.055, C.water)
+    const ctx = ctxOf(pen.p)
+    const { k } = pen
+    ctx.save()
+    ctx.strokeStyle = rgba(pen, C.water, 0.9)
+    ctx.lineCap = 'round'
+    for (const big of [false, true]) {
+      ctx.lineWidth = (big ? 0.07 : 0.045) * k
+      ctx.beginPath()
+      for (let i = big ? 1 : 0; i < 34; i += 2) {
+        const side = i % 4 < 2 ? 1 : -1
+        const vx = side * (1.0 + hash(i, 1, 40) * 3.0)
+        const vy = -2.2 - hash(i, 2, 40) * 3.0
+        const x = TUB_X + side * (0.9 + 0.3 * hash(i, 3, 40)) + vx * ws
+        const y = F_MARTY + LANDED + COLLAPSE - 1.1 + vy * ws + 0.5 * G * ws * ws
+        if (y > F_MISH) continue
+        // A streak along its way, the faster the longer.
+        const vyt = vy + G * ws
+        ctx.moveTo(x * k, y * k)
+        ctx.lineTo((x - vx * 0.03) * k, (y - vyt * 0.03) * k)
+      }
+      ctx.stroke()
     }
+    ctx.restore()
   }
 }
 
@@ -1131,15 +1237,19 @@ function drawBoard(pen: Pen, t: number): void {
   const ang = 1.15 * (1 - u) + (u >= 1 ? 0.06 : 0)
   const h = 0.38
   limb(pen, [c[0] - Math.cos(ang) * h, c[1] - Math.sin(ang) * h], [c[0] + Math.cos(ang) * h, c[1] + Math.sin(ang) * h], 0.07, C.board)
-  const m = flash(t - BOARD_DROP, 0.12)
-  if (t >= BOARD_DROP && m > 0.02) for (const a of [-1, -0.4, 0.4, 1]) line(pen, [c1[0] + 0.45 * Math.sin(a), c1[1] - 0.1 - 0.1 * Math.cos(a)], [c1[0] + 0.62 * Math.sin(a), c1[1] - 0.1 - 0.3 * Math.cos(a)], C.plasterHi, 0.8 * m)
 }
 
 /** The plaster heaped over him, and thrown off as he comes up. */
 export function drawHeap(pen: Pen, t: number): void {
   const b = buried(t)
-  if (b <= 0) return
   const hip: Pt = [4.05, M_MATTRESS + COLLAPSE]
+  // The dust he throws up bursting out of it, hanging over him and thinning.
+  const s = t - RISE_UP
+  if (s > 0 && s < 1.4) {
+    const u = s / 1.4
+    dustCloud(pen, [hip[0] + 0.2, hip[1] - 1.4 - 0.4 * u], 0.6 + 1.2 * (1 - (1 - u) * (1 - u)), 0.18 * Math.min(1, s / 0.1) * (1 - u), 3)
+  }
+  if (b <= 0) return
   const up = t > RISE_UP ? (t - RISE_UP) * 4 : 0
   // A mound of broken plaster and lath over him, angular, a board across it; it flies up as he bursts out.
   const ctx = ctxOf(pen.p)
@@ -1161,8 +1271,32 @@ export function drawHeap(pen: Pen, t: number): void {
   limb(pen, [hip[0] - 0.55, hip[1] - 0.7 - up], [hip[0] + 0.75, hip[1] - 1.2 - up * 1.3], 0.07, C.board)
   limb(pen, [hip[0] - 0.2, hip[1] - 1.25 - up], [hip[0] + 0.55, hip[1] - 0.85 - up], 0.04, mix(C.board, C.plaster, 0.4))
   ctx.restore()
-  const s = t - RISE_UP
-  if (s > 0) glow(pen, [hip[0] + 0.2, hip[1] - 1.4], 1.0 + s * 3, C.plasterHi, 0.6 * (1 - b))
+}
+
+/**
+ * A cloud of plaster dust about `c`, `r` across: lobes of it in one translucent fill, an inner one over an outer, so it
+ * reads as dust hanging in the air rather than a light.
+ */
+function dustCloud(pen: Pen, c: Pt, r: number, a: number, seed: number): void {
+  if (a <= 0.01 || r <= 0) return
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  ctx.save()
+  for (const size of [1, 0.65]) {
+    ctx.fillStyle = rgba(pen, C.plaster, a * 0.55)
+    ctx.beginPath()
+    for (let i = 0; i < 7; i++) {
+      const ang = (i / 7) * Math.PI * 2 + hash(i, seed, 31) * 0.6
+      const d = r * size * (0.25 + 0.35 * hash(i, seed, 32))
+      const lr = r * size * (0.42 + 0.22 * hash(i, seed, 33))
+      const x = c[0] + Math.cos(ang) * d
+      const y = c[1] + Math.sin(ang) * d * 0.6
+      ctx.moveTo((x + lr) * k, y * k)
+      ctx.ellipse(x * k, y * k, lr * k, lr * 0.75 * k, 0, 0, Math.PI * 2)
+    }
+    ctx.fill()
+  }
+  ctx.restore()
 }
 
 /** A flake of the ceiling on its way down to the paper. */
@@ -1178,16 +1312,13 @@ export function drawFlakes(pen: Pen, t: number): void {
   })
 }
 
-/** The man's fist and the boards ring: the jolt of his stamp on the floor as he stands and lunges. */
+/** The rail rings under his fist: each blow sets the landing's top rail shivering along its length, and settling. */
 export function drawStamp(pen: Pen, t: number): void {
-  for (const k of [STANDS, CLAP, ...POUNDS]) {
+  for (const k of POUNDS) {
     const s = t - k
     if (s < 0 || s > 0.4) continue
-    const m = flash(s, 0.12)
-    const c: Pt = k === CLAP ? [8.28, 2.72] : k === STANDS ? [6.1, F_MISH - 0.02] : [RAIL_HIT[0], RAIL_HIT[1] + 0.05]
-    // The rail he pounds shivers along its length.
-    if (k !== CLAP && k !== STANDS) line(pen, [LANDING[0] + 0.1, L_MISH - 1.0 + 0.04 * ring(s, 12, 0.12)], [LANDING[1] - 0.1, L_MISH - 1.0 - 0.04 * ring(s, 12, 0.12)], '#9FB4B0', 1.0 * m)
-    for (const a of [-1, -0.4, 0.4, 1]) line(pen, [c[0] + 0.18 * Math.sin(a), c[1] - 0.18 * Math.cos(a)], [c[0] + 0.36 * Math.sin(a), c[1] - 0.36 * Math.cos(a)], C.plasterHi, 0.8 * m)
+    const r = 0.04 * ring(s, 12, 0.12)
+    line(pen, [LANDING[0] + 0.1, L_MISH - 1.0 + r], [LANDING[1] - 0.1, L_MISH - 1.0 - r], mix(C.fe, C.moonLight, 0.42), 0.6)
   }
 }
 

@@ -1,9 +1,13 @@
 import type { Pt } from '../../../../../parts'
 import { CAB, drawCab } from '../cab'
-import { hash, smooth } from '../kit'
-import { at } from '../music'
-import { blob, ctxOf, ellipse, flash, glint, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import { motes, rising, sway } from '../depth'
+import { hash, lastOf, smooth } from '../kit'
+import { at, BEAT } from '../music'
+import { blob, ctxOf, ellipse, flash, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import { dropTime } from '../physics'
+import { beaconTurn, drawDrift, drawStairLamp, drawWindsock } from './airfield'
+import { fireAt, fireLight, flareAt, smokeBank } from './fire'
+import { bag, blade, box, disc, fill, haze, loop, poly } from './ink'
 import {
   AMB_LEN,
   AMB_ROOF,
@@ -28,7 +32,6 @@ import {
   DOOR_OPEN,
   DOOR_X,
   DOORS_OPEN,
-  FLARE,
   FLOOR,
   GATE_X,
   HAY,
@@ -63,20 +66,17 @@ import {
 
 /**
  * New Jersey at night: teal-green and blue-black, the sodium yellow of headlights and lit windows, the barn's fire
- * red-gold (never his orange), the ambulance's red. Everything is drawn from here; `geo.ts` says where and when.
+ * red-gold (never his orange), the ambulance's red. The road, the farm, the barn, the airliner, the cab and the
+ * ambulance are drawn from here; the sky and the country behind are `sky.ts`, the fire round the barn `fire.ts`, the
+ * airfield round the airliner `airfield.ts`, what passes in front `near.ts`; `geo.ts` says where and when.
+ *
+ * A light here is the lit thing (a window, a bulb, a lamp's lens) and the light it lays on what is near it (a yard, a
+ * porch floor, a wall), never a glow hung in the air round it; the shots are a window gone white for an instant.
  */
 
 export const C = {
-  skyTop: '#03070A',
   skyMid: '#081619',
   skyLow: '#123029',
-  star: '#CFE3DC',
-  moon: '#E4E6D0',
-  moonShade: '#B9C2B2',
-  moonGlow: '#9CC3B8',
-  hillFar: '#0C1E20',
-  hillNear: '#08171A',
-  treeline: '#050D0F',
   field: '#0A1815',
   fieldNear: '#06100E',
   road: '#161E22',
@@ -111,16 +111,12 @@ export const C = {
   fireRed: '#B52A1C',
   fireGold: '#E9AE3C',
   fireCore: '#FFE6A6',
-  smoke: '#14181A',
   white: '#F5F7F2',
   yard: '#0F1714',
   apron: '#19221F',
   apronSeam: '#283337',
   blue: '#7FA6FF',
   runWhite: '#F2EAD0',
-  hangar: '#141C20',
-  hangarRib: '#1D272C',
-  hangarDoor: '#D8BF7C',
   plane: '#76858C',
   planeLight: '#A3B1B6',
   planeDark: '#47545B',
@@ -151,89 +147,7 @@ export const C = {
 
 type Frame = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number }
 
-/** The far layers move with the camera by this much of its move, so they lie behind. */
-const CY0 = ROAD - 1.6
-const par = (f: Frame, fx: number, fy = fx): Pt => [f.cx * fx, (f.cy - CY0) * fy]
-
-/* ------------------------------------------------------------------ the sky and the far */
-
-export function drawSky(pen: Pen, f: Frame): void {
-  const [, oy] = par(f, 0.8)
-  const horizon = ROAD - 1.25 + oy
-  vgrad(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, [
-    [0, C.skyTop, 1],
-    [Math.max(0.05, Math.min(0.9, (horizon - 4 - f.y0 + 1) / (f.y1 - f.y0 + 2))), C.skyMid, 1],
-    [Math.max(0.1, Math.min(0.97, (horizon - f.y0 + 1) / (f.y1 - f.y0 + 2))), C.skyLow, 1],
-    [1, C.skyLow, 1],
-  ])
-  // Stars, nearly fixed.
-  const [sx, sy] = par(f, 0.96)
-  for (let i = 0; i < 160; i++) {
-    const x = sx + (hash(i, 1) - 0.5) * 60 + f.cx * 0 - 0
-    const y = sy + CY0 - 2 - hash(i, 2) * 14
-    const px = ((((x - f.x0) % 60) + 60) % 60) + f.x0
-    if (y > horizon - 0.6 || px > f.x1) continue
-    ellipse(pen, [px, y], 0.012 + hash(i, 4) * 0.018, 0.012 + hash(i, 4) * 0.018, mix(C.skyMid, C.star, 0.4 + 0.5 * hash(i, 3)))
-  }
-  // The moon, high and a little left, all but fixed.
-  const [mx, my] = par(f, 0.94)
-  const m: Pt = [mx - 2.5, my + CY0 - 5.4]
-  glow(pen, m, 2.6, C.moonGlow, 0.16)
-  glow(pen, m, 0.9, C.moon, 0.22)
-  ellipse(pen, m, 0.42, 0.42, C.moon)
-  ellipse(pen, [m[0] + 0.12, m[1] - 0.08], 0.09, 0.07, C.moonShade)
-  ellipse(pen, [m[0] - 0.14, m[1] + 0.1], 0.06, 0.05, C.moonShade)
-}
-
-export function drawFar(pen: Pen, f: Frame): void {
-  // Far hills.
-  {
-    const [ox, oy] = par(f, 0.82, 0.8)
-    const base = ROAD - 1.25 + oy
-    const step = 2.2
-    const pts: Pt[] = []
-    const i0 = Math.floor((f.x0 - ox) / step) - 1
-    const i1 = Math.ceil((f.x1 - ox) / step) + 1
-    for (let i = i0; i <= i1; i++) pts.push([ox + i * step, base - 0.5 - 1.3 * (0.5 + 0.5 * Math.sin(i * 0.7)) * (0.6 + 0.4 * hash(i, 11))])
-    shape(pen, [[ox + i0 * step, f.y1 + 2], ...pts, [ox + i1 * step, f.y1 + 2]], C.hillFar)
-  }
-  // The tree line, and a farm's lights in it here and there.
-  {
-    const [ox, oy] = par(f, 0.62, 0.7)
-    const base = ROAD - 1.0 + oy
-    const step = 0.55
-    const i0 = Math.floor((f.x0 - ox) / step) - 2
-    const i1 = Math.ceil((f.x1 - ox) / step) + 2
-    const pts: Pt[] = []
-    for (let i = i0; i <= i1; i++) {
-      const h = hash(i, 21)
-      const clump = 0.5 + 0.5 * Math.sin(i * 0.31 + 1.7)
-      pts.push([ox + i * step, base - 0.2 - clump * 0.9 - h * 0.35])
-    }
-    shape(pen, [[ox + i0 * step, f.y1 + 2], ...pts, [ox + i1 * step, f.y1 + 2]], C.hillNear)
-    vgrad(pen, f.x0 - 1, base - 0.1, f.x1 + 1, f.y1 + 2, [
-      [0, C.field, 1],
-      [1, C.fieldNear, 1],
-    ])
-    for (let i = Math.floor((f.x0 - ox) / 3.7) - 1; i <= Math.ceil((f.x1 - ox) / 3.7) + 1; i++) {
-      if (hash(i, 23) > 0.45) continue
-      const x = ox + i * 3.7 + hash(i, 24) * 2
-      const y = base - 0.12 - hash(i, 25) * 0.1
-      glow(pen, [x, y], 0.35, C.farmLight, 0.3)
-      ellipse(pen, [x, y], 0.03, 0.03, C.farmLight)
-    }
-  }
-  // Nearer trees, black, at a middle distance.
-  {
-    const [ox, oy] = par(f, 0.35, 0.4)
-    const base = ROAD - 0.55 + oy
-    for (let i = Math.floor((f.x0 - ox) / 2.6) - 2; i <= Math.ceil((f.x1 - ox) / 2.6) + 2; i++) {
-      if (hash(i, 31) > 0.5) continue
-      const x = ox + i * 2.6 + hash(i, 32)
-      tree(pen, x, base, 1.6 + hash(i, 33) * 1.6, C.treeline, i)
-    }
-  }
-}
+/* ------------------------------------------------------------------ the roadside's trees (the far is `sky.ts`) */
 
 /** A black tree: a trunk and a heap of round crowns. */
 function tree(pen: Pen, x: number, base: number, h: number, col: string, seed: number): void {
@@ -252,7 +166,7 @@ function tree(pen: Pen, x: number, base: number, h: number, col: string, seed: n
 const ROAD_END = S + 6.6
 const APRON_FROM = S + 30.5
 
-export function drawGround(pen: Pen, _t: number, f: Frame): void {
+export function drawGround(pen: Pen, f: Frame): void {
   const x0 = f.x0 - 1
   const x1 = f.x1 + 1
   // The near ground, under everything.
@@ -270,7 +184,6 @@ export function drawGround(pen: Pen, _t: number, f: Frame): void {
       if (jx < x0 || jx > rx1) continue
       line(pen, [jx - 0.06, ROAD - 0.42], [jx + 0.06, ROAD + 0.28], C.joint, 0.9)
     }
-    // The headlights' pool on the road ahead, riding with the cab.
   }
   // The farmyard: packed dirt.
   if (x1 > ROAD_END && x0 < APRON_FROM) rect(pen, Math.max(x0, ROAD_END), ROAD - 0.42, Math.min(x1, APRON_FROM), ROAD + 0.28, C.yard)
@@ -300,23 +213,52 @@ export function drawGround(pen: Pen, _t: number, f: Frame): void {
 const cabXAt = (t: number) => cabX(t)
 
 /** The roadside: telephone poles and their wires, the fence and its posts, and black trees close by. */
-export function drawRoadside(pen: Pen, _t: number, f: Frame): void {
+export function drawRoadside(pen: Pen, t: number, f: Frame): void {
   const x0 = Math.max(f.x0 - 3, -40)
   const x1 = Math.min(f.x1 + 3, S + 4)
   if (x1 <= x0) return
   const base = ROAD - 0.42
   // Trees close behind the fence.
   for (let i = Math.floor(x0 / 3.1) - 1; i <= Math.ceil(x1 / 3.1); i++) {
-    if (hash(i, 41) > 0.42) continue
+    if (hash(i, 41) > 0.26) continue
     const x = i * 3.1 + hash(i, 42) * 1.4
     if (x > S + 3) continue
-    tree(pen, x, base - 0.1, 3.2 + hash(i, 43) * 2.2, C.tree, i + 100)
+    tree(pen, x, base - 0.1, 2.4 + hash(i, 43) * 1.4, C.tree, i + 100)
   }
   // The fence: a post a beat and an "a" apart at speed, three wires.
   const posts: number[] = []
   for (let x = Math.floor(x0 / 0.95) * 0.95; x < x1; x += 0.95) posts.push(x + 0.1 * hash(Math.round(x * 10), 44))
   for (const px of posts) shape(pen, [[px - 0.04, base + 0.02], [px - 0.035, base - 0.85], [px + 0.035, base - 0.87], [px + 0.04, base + 0.02]], C.post)
   for (const wy of [0.3, 0.55, 0.78]) line(pen, [x0, base - wy], [x1, base - wy], C.wire, 0.4)
+  // The verge's grass along the road's far edge, in the wind, flattened a moment as the cab goes by.
+  const cabMid = cabX(t) + 1.4
+  const grass = bag()
+  for (let i = Math.floor(x0 / 0.21); i <= Math.ceil(x1 / 0.21); i++) {
+    const x = i * 0.21 + 0.12 * hash(i, 47)
+    if (x > S + 5.5) break
+    const wake = Math.exp(-(((x - cabMid) / 2.6) ** 2)) * (x < cabMid ? 1 : 0.4)
+    const h = 0.16 + 0.24 * hash(i, 48)
+    blade(grass, x, base + 0.03, 0.06, h * (1 - 0.35 * wake), h * (0.12 * sway(t, i * 0.31, 2.8) + 0.05 + 0.5 * wake))
+  }
+  fill(pen, grass, C.verge, 1)
+  // The headlights falling on the posts and the poles just ahead, and on the warning sign.
+  const front = cabX(t) + CAB.front
+  const caught = (x: number) => (x > front + 0.1 && x < front + 5 ? 1 - (x - front) / 5 : 0)
+  const shine = [bag(), bag()]
+  for (const px of posts) {
+    const k = caught(px)
+    if (k > 0.05) box(shine[k > 0.5 ? 1 : 0], px - 0.035, base - 0.85, px - 0.012, base)
+  }
+  for (let i = Math.floor(x0 / SIGN_EVERY); i <= Math.ceil(x1 / SIGN_EVERY); i++) {
+    const sx = i * SIGN_EVERY + 6.1
+    if (sx > S + 2 || sx < x0 - 1 || sx > x1 + 1) continue
+    const k = caught(sx)
+    rect(pen, sx - 0.03, base - 1.15, sx + 0.03, base, C.post)
+    const d: Pt[] = [[sx, base - 1.85], [sx + 0.36, base - 1.5], [sx, base - 1.15], [sx - 0.36, base - 1.5]]
+    shape(pen, d, mix('#2A2616', '#C9A944', 0.15 + 0.6 * k))
+    shape(pen, [[sx, base - 1.74], [sx + 0.25, base - 1.5], [sx, base - 1.26], [sx - 0.25, base - 1.5]], mix('#211E12', '#BE9A36', 0.1 + 0.55 * k))
+    shape(pen, [[sx - 0.05, base - 1.6], [sx + 0.05, base - 1.6], [sx + 0.03, base - 1.45], [sx - 0.03, base - 1.45]], '#141210')
+  }
   // The poles, the crossarm, the insulators, the sag of the wires between.
   const POLE = 4.3
   const poleTop = base - 5.4
@@ -336,8 +278,15 @@ export function drawRoadside(pen: Pen, _t: number, f: Frame): void {
     rect(pen, px - 0.5, poleTop + 0.06, px + 0.5, poleTop + 0.14, C.pole)
     rect(pen, px - 0.35, poleTop + 0.36, px + 0.35, poleTop + 0.43, C.pole)
     for (const ix of [-0.42, -0.15, 0.15, 0.42]) ellipse(pen, [px + ix, poleTop + 0.04], 0.03, 0.04, '#2E3B3A')
+    const k = caught(px)
+    if (k > 0.05) box(shine[k > 0.5 ? 1 : 0], px - 0.07, base - 0.35 - 0.6 * k, px - 0.035, base + 0.05)
   }
+  fill(pen, shine[0], C.winWarm, 0.25)
+  fill(pen, shine[1], C.winWarm, 0.5)
 }
+
+/** A warning sign by the road every so far (a plain painted diamond). */
+const SIGN_EVERY = 13.7
 
 /* ------------------------------------------------------------------ people */
 
@@ -406,18 +355,22 @@ export function drawHouse(pen: Pen, t: number): void {
     rect(pen, cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2, dim ? C.winDim : C.win)
     line(pen, [cx, cy - h / 2], [cx, cy + h / 2], C.trim, 0.5)
     line(pen, [cx - w / 2, cy], [cx + w / 2, cy], C.trim, 0.5)
-    if (!dim) glow(pen, [cx, cy], 1.4, C.win, 0.12)
   }
   for (const [i, cx] of [x0 + 1.0, x0 + 3.3, x0 + 5.6].entries()) win(cx, top + 1.2, 0.75, 1.05, i === 1)
   win(x0 + 0.55, ROAD - 2.0, 0.7, 1.15)
-  // The shot window: white in each burst.
+  // The ground floor's windows' light out on the yard, and a shadow going across one now and then inside.
+  for (const cx of [x0 + 0.55, SHOT_WIN[0]]) haze(pen, [cx, ROAD - 0.05], 1.0, 0.2, C.win, 0.16)
+  const by = (t * 0.23) % 1
+  if (by > 0.55 && by < 0.85) {
+    const cx = x0 + 0.55 - 0.23 + 0.46 * ((by - 0.55) / 0.3)
+    rect(pen, cx - 0.12, ROAD - 2.57, cx + 0.12, ROAD - 1.43, mix(C.winDim, C.win, 0.3))
+    line(pen, [x0 + 0.55, ROAD - 2.575], [x0 + 0.55, ROAD - 1.425], C.trim, 0.5)
+    line(pen, [x0 + 0.2, ROAD - 2.0], [x0 + 0.9, ROAD - 2.0], C.trim, 0.5)
+  }
+  // The shot window: white for an instant with each shot, and nothing round it.
   const sf = SHOT_FLASH(t)
   win(SHOT_WIN[0], SHOT_WIN[1], 0.75, 1.15)
-  if (sf > 0.01) {
-    rect(pen, SHOT_WIN[0] - 0.37, SHOT_WIN[1] - 0.57, SHOT_WIN[0] + 0.37, SHOT_WIN[1] + 0.57, mix(C.win, C.white, sf))
-    glint(pen, [SHOT_WIN[0] - 0.1, SHOT_WIN[1] + 0.05], 0.9 * sf + 0.2, C.white, sf)
-    glow(pen, SHOT_WIN, 3.4, C.white, 0.35 * sf)
-  }
+  if (sf > 0.01) rect(pen, SHOT_WIN[0] - 0.37, SHOT_WIN[1] - 0.57, SHOT_WIN[0] + 0.37, SHOT_WIN[1] + 0.57, mix(C.win, C.white, sf))
   // The porch: its floor, steps, roof on posts, the door, the lamp.
   const [p0, p1] = PORCH
   const proof = ROAD - 4.1
@@ -427,23 +380,56 @@ export function drawHouse(pen: Pen, t: number): void {
   rect(pen, doorX - 0.45, ROAD - 3.05, doorX + 0.45, PORCH_Y, mix(C.winDim, C.win, 0.55))
   rect(pen, doorX - 0.3, ROAD - 2.9, doorX + 0.3, ROAD - 2.1, C.winWarm)
   const on = t >= PORCH_ON ? 1 : 0
-  const lampA = on * (0.8 + 0.2 * flash(t - PORCH_ON, 0.12))
   ellipse(pen, [doorX + 0.85, ROAD - 2.95], 0.08, 0.11, on ? C.winWarm : C.winDim)
   if (on) {
-    glow(pen, [doorX + 0.85, ROAD - 2.95], 2.4 + 0.8 * flash(t - PORCH_ON, 0.15), C.win, 0.3 * lampA)
-    glow(pen, [doorX, PORCH_Y], 2.2, C.win, 0.1 * lampA)
+    // Its light on the porch's boards under it.
+    haze(pen, [doorX + 0.5, PORCH_Y - 0.02], 2.0, 0.3, C.win, 0.18)
+    // Moths round the porch lamp.
+    const lamp: Pt = [doorX + 0.85, ROAD - 2.95]
+    motes(pen, t, {
+      n: 11,
+      seed: 41,
+      box: [lamp[0] - 0.7, lamp[1] - 0.6, lamp[0] + 0.7, lamp[1] + 0.6],
+      size: [0.014, 0.024],
+      color: '#F6E7B8',
+      alpha: 0.8,
+      drift: [0.12, -0.08],
+      wander: 0.32,
+      twinkle: 0.15,
+      light: (x, y) => Math.max(0, 1 - Math.hypot(x - lamp[0], y - lamp[1]) / 0.75),
+    })
   }
   rect(pen, p0, PORCH_Y, p1, PORCH_Y + 0.14, C.porch)
   rect(pen, p0, PORCH_Y + 0.14, p1, ROAD, '#120F0D')
   for (let k = 0; k < 3; k++) rect(pen, p0 - 0.35 * (k + 1), PORCH_Y + 0.18 * k, p0, PORCH_Y + 0.18 * (k + 1), C.porch)
   shape(pen, [[p0 - 0.3, proof], [p0 + 0.2, proof - 0.5], [p1 - 0.2, proof - 0.5], [p1 + 0.3, proof]], C.roof)
   for (const px of [p0 + 0.1, p1 - 0.1]) rect(pen, px - 0.06, proof, px + 0.06, PORCH_Y, C.trim)
-  // Mishkin's men: three dark shapes in hats against the light, waiting.
+  // Mishkin's men: three dark shapes in hats against the light, waiting, breathing; once the barn is alight, its light
+  // on them.
   const fx = SHOT_FLASH(t)
-  const rim = mix(C.rim, C.white, fx)
-  figure(pen, HOUSE[1] + 0.55, ROAD, { coat: '#0D0F12', hat: 'fedora', face: -1, rim, arm: 0.1 })
-  figure(pen, p0 + 0.8, PORCH_Y, { coat: C.man, hat: 'fedora', face: -1, rim })
-  figure(pen, doorX + 1.25, PORCH_Y, { coat: C.man, hat: 'fedora', face: -1, rim, h: 3.3, arm: 0.12 })
+  const fl = Math.min(1, fireLight(t))
+  const rim = mix(mix(C.rim, C.fireGold, 0.7 * fl), C.white, fx)
+  const breathe = (i: number) => 1 + 0.008 * Math.sin(t * 1.6 + i * 2.1)
+  const corner = HOUSE[1] + 0.55 + 0.015 * sway(t, 5, 6)
+  figure(pen, corner, ROAD, { coat: '#0D0F12', hat: 'fedora', face: -1, rim, arm: 0.1, h: 3.2 * breathe(0) })
+  figure(pen, p0 + 0.8 + 0.012 * sway(t, 6, 7), PORCH_Y, { coat: C.man, hat: 'fedora', face: -1, rim, h: 3.2 * breathe(1) })
+  figure(pen, doorX + 1.25, PORCH_Y, { coat: C.man, hat: 'fedora', face: -1, rim, h: 3.3 * breathe(2), arm: 0.12 })
+  // The one at the corner is smoking: the cigarette's end reddening as he draws on it, and the smoke off it.
+  const drag = flash(((t + 1.1) % 4.3) - 0.2, 0.7)
+  const tip: Pt = [corner - 0.27, ROAD - 2.86 * breathe(0)]
+  ellipse(pen, tip, 0.025, 0.02, mix(C.fireRed, C.fireGold, 0.2 + 0.6 * drag))
+  rising(pen, t, { seed: 43, n: 7, from: [tip[0] - 0.02, tip[0] + 0.02, tip[1] - 0.05], rise: 1.4, life: 2.6, spread: 0.35, size: [0.03, 0.07], color: '#5E6A6E', alpha: 0.28 })
+  // The barn's fire on the house's side toward it.
+  if (fl > 0.02) {
+    const ctx = ctxOf(pen.p)
+    const g = ctx.createLinearGradient((x1 - 3.2) * pen.k, 0, (x1 + 0.4) * pen.k, 0)
+    g.addColorStop(0, rgba(pen, C.fireRed, 0))
+    g.addColorStop(1, rgba(pen, C.fireRed, 0.26 * fl * fireAt(t)))
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect((x1 - 3.2) * pen.k, (top - 2.2) * pen.k, 3.6 * pen.k, (ROAD - top + 2.2) * pen.k)
+    ctx.restore()
+  }
   // The gate and a run of fence along the yard.
   const gx = GATE_X - 0.2
   for (let x = gx - 3.2; x < gx + 0.6; x += 0.5) rect(pen, x - 0.04, ROAD - 1.25, x + 0.04, ROAD - 0.4, '#1C1A16')
@@ -455,20 +441,28 @@ const circle = (c: Pt, r: number): Pt[] => Array.from({ length: 8 }, (_, i) => [
 
 /* ------------------------------------------------------------------ the barn */
 
-/** How much of the barn is alight, 0 to 1. */
-export function fireAt(t: number): number {
-  if (t < LANTERN_DOWN) return 0
-  return Math.min(1, 0.12 + 0.88 * smooth(t, LANTERN_DOWN, LANTERN_DOWN + 7.5))
-}
-/** Flares: the lantern bursting, the flare after, the hay landing. */
-function flareAt(t: number): number {
-  let v = flash(t - LANTERN_DOWN, 0.35) + 0.7 * flash(t - FLARE, 0.3)
-  for (const h of HAY) v += (h.big ? 0.6 : 0.35) * flash(t - h.t, 0.25)
-  return v
-}
-
 /** A tongue of flame from `base`, `w` wide and `h` tall, swaying. */
 function tongue(pen: Pen, base: Pt, w: number, h: number, t: number, seed: number): void {
+  const fl = flames()
+  tongueTo(fl, base, w, h, t, seed)
+  burn(pen, fl)
+}
+
+/** Flames gathered by colour, so a barn's worth of them is three fills, each tongue's colours merging with the next's. */
+interface Flames {
+  red: Path2D
+  gold: Path2D
+  core: Path2D
+}
+const flames = (): Flames => ({ red: bag(), gold: bag(), core: bag() })
+function burn(pen: Pen, fl: Flames): void {
+  fill(pen, fl.red, C.fireRed, 0.92)
+  fill(pen, fl.gold, C.fireGold, 0.95)
+  fill(pen, fl.core, C.fireCore, 0.9)
+}
+
+/** A tongue gathered into `fl`: three nested shapes, red, gold and the white-hot core. */
+function tongueTo(fl: Flames, base: Pt, w: number, h: number, t: number, seed: number): void {
   if (h <= 0.02) return
   const sway = 0.12 * h * Math.sin(t * (5 + hash(seed, 1) * 3) + seed)
   const lick = 1 + 0.18 * Math.sin(t * (9 + hash(seed, 2) * 4) + seed * 2)
@@ -487,9 +481,9 @@ function tongue(pen: Pen, base: Pt, w: number, h: number, t: number, seed: numbe
       [x + ww / 2, y],
     ]
   }
-  blob(pen, pts(1), C.fireRed, 0.92)
-  blob(pen, pts(0.66), C.fireGold, 0.95)
-  blob(pen, pts(0.32), C.fireCore, 0.9)
+  loop(fl.red, pts(1))
+  loop(fl.gold, pts(0.66))
+  loop(fl.core, pts(0.32))
 }
 
 export function drawBarn(pen: Pen, t: number): void {
@@ -506,17 +500,44 @@ export function drawBarn(pen: Pen, t: number): void {
   // Its beams.
   rect(pen, BX0 + 0.22, eave - 0.05, BX1 - 0.22, eave + 0.12, C.beam)
   line(pen, [BX0 + 1.25, ROAD - 6.65], [BX1 - 1.25, ROAD - 6.65], C.beam, 1.2)
-  // The back window: night through it; white with the shot.
+  // The back window: night through it; white for an instant with the shot.
   const wf = flash(t - LANTERN_SHOT, 0.09)
   rect(pen, BARN_WIN[0] - 0.42, BARN_WIN[1] - 0.42, BARN_WIN[0] + 0.42, BARN_WIN[1] + 0.42, C.beam)
   rect(pen, BARN_WIN[0] - 0.34, BARN_WIN[1] - 0.34, BARN_WIN[0] + 0.34, BARN_WIN[1] + 0.34, mix(C.skyLow, C.white, wf))
   line(pen, [BARN_WIN[0], BARN_WIN[1] - 0.34], [BARN_WIN[0], BARN_WIN[1] + 0.34], C.beam, 0.6)
-  if (wf > 0.01) {
-    glint(pen, BARN_WIN, 0.8 * wf + 0.2, C.white, wf)
-    glow(pen, BARN_WIN, 2.6, C.white, 0.35 * wf)
+  // The fire's light on the back wall, flickering, kept to the wall it falls on; the smoke gathering under the roof.
+  const light = fireLight(t)
+  if (fire > 0) {
+    const ctx = ctxOf(pen.p)
+    ctx.save()
+    const wall = bag()
+    poly(wall, [...inner, [BX1 - 0.22, ROAD], [BX0 + 0.22, ROAD]])
+    ctx.scale(pen.k, pen.k)
+    ctx.clip(wall)
+    ctx.scale(1 / pen.k, 1 / pen.k)
+    const r = 3 + 5 * fire
+    haze(pen, [S + 17.6, ROAD - 2.2], r, r, C.fireRed, Math.min(0.62, 0.16 + 0.42 * light))
+    ctx.restore()
   }
-  // The fire's light on the walls.
-  if (fire > 0) glow(pen, [S + 17.6, ROAD - 2.2], 3 + 5 * fire, C.fireRed, Math.min(0.75, 0.25 + 0.4 * fire + 0.25 * flare))
+  smokeBank(pen, t)
+  // Before it: the lantern's light on the bales and the floor under it, and a little dust going round in it.
+  if (t < LANTERN_SHOT + 0.4) {
+    const lamp = LANTERN
+    const lit = 1 - smooth(t, LANTERN_SHOT, LANTERN_SHOT + 0.4)
+    haze(pen, [lamp[0], BALES_TOP - 0.05], 1.6, 0.45, C.fireGold, 0.2 * lit)
+    motes(pen, t, {
+      n: 16,
+      seed: 51,
+      box: [lamp[0] - 1.6, lamp[1] - 0.6, lamp[0] + 1.6, ROAD - 0.1],
+      size: [0.01, 0.02],
+      color: C.fireCore,
+      alpha: 0.6 * lit,
+      drift: [0.03, 0.04],
+      wander: 0.2,
+      twinkle: 0.15,
+      light: (x, y) => Math.max(0, 1 - Math.hypot(x - lamp[0], (y - lamp[1]) * 0.8) / 1.7),
+    })
+  }
   // Bales along the back wall.
   const bales: [number, number, number][] = [
     [S + 15.9, S + 18.7, BALES_TOP],
@@ -559,39 +580,27 @@ export function drawBarn(pen: Pen, t: number): void {
   }
   // The fire itself: from the lantern on the bales, up the hay to the loft, along the loft, at last the roof.
   if (fire > 0) {
+    const fl = flames()
     const n = 7
     for (let i = 0; i < n; i++) {
       const x = S + 16.0 + (2.6 * i) / (n - 1) + (hash(i, 64) - 0.5) * 0.3
       const h = (0.5 + 1.4 * fire + 0.5 * flare) * (0.5 + 0.8 * hash(i, 61)) * (0.85 + 0.15 * Math.sin(t * 2.3 + i * 1.9))
-      tongue(pen, [x, BALES_TOP - 0.5 * (i > 0 && i < n - 1 ? 1 : 0)], 0.4 + 0.45 * hash(i, 65), h * smooth(fire, i * 0.04, i * 0.04 + 0.2), t, i)
+      tongueTo(fl, [x, BALES_TOP - 0.5 * (i > 0 && i < n - 1 ? 1 : 0)], 0.4 + 0.45 * hash(i, 65), h * smooth(fire, i * 0.04, i * 0.04 + 0.2), t, i)
     }
     const loft = smooth(fire, 0.2, 0.6)
     for (let i = 0; i < 9; i++) {
       const x = BX0 + 0.7 + ((LOFT_X1 - BX0 - 1.2) * i) / 8 + (hash(i, 66) - 0.5) * 0.35
       const h = (0.6 + 1.6 * loft + 0.4 * flare) * (0.45 + 0.9 * hash(i, 62)) * (0.85 + 0.15 * Math.sin(t * 1.9 + i * 2.7))
-      tongue(pen, [x, LOFT_Y - 0.6 - 0.3 * Math.sin((i / 8) * Math.PI)], 0.5 + 0.5 * hash(i, 67), h * smooth(loft, Math.abs(i - 5) * 0.08, Math.abs(i - 5) * 0.08 + 0.3), t, 20 + i)
+      tongueTo(fl, [x, LOFT_Y - 0.6 - 0.3 * Math.sin((i / 8) * Math.PI)], 0.5 + 0.5 * hash(i, 67), h * smooth(loft, Math.abs(i - 5) * 0.08, Math.abs(i - 5) * 0.08 + 0.3), t, 20 + i)
     }
     const roof = smooth(fire, 0.55, 1)
     for (let i = 0; i < 6; i++) {
       const x = BX0 + 1.6 + ((BX1 - BX0 - 3) * i) / 5
-      tongue(pen, [x + (hash(i, 68) - 0.5) * 0.5, ROAD - 6.4 - 0.4 * Math.sin((i / 5) * Math.PI)], 0.6 + 0.6 * hash(i, 69), (1.0 + 1.6 * roof) * (0.45 + 0.8 * hash(i, 63)) * roof, t, 40 + i)
+      tongueTo(fl, [x + (hash(i, 68) - 0.5) * 0.5, ROAD - 6.4 - 0.4 * Math.sin((i / 5) * Math.PI)], 0.6 + 0.6 * hash(i, 69), (1.0 + 1.6 * roof) * (0.45 + 0.8 * hash(i, 63)) * roof, t, 40 + i)
     }
-    // Smoke up out of it, and sparks.
-    for (let i = 0; i < 9; i++) {
-      const u = (((t - LANTERN_DOWN) * 0.25 + i / 9) % 1 + 1) % 1
-      const x = S + 16 + hash(i, 71) * 4 + u * 2.5
-      const y = ROAD - 7.2 - u * 5
-      blob(pen, circle([x, y], 0.5 + u * 1.3), C.smoke, 0.55 * fire * (1 - u))
-    }
-    for (let i = 0; i < 18; i++) {
-      const u = (((t - LANTERN_DOWN) * (0.5 + hash(i, 81) * 0.4) + hash(i, 82)) % 1 + 1) % 1
-      const x = S + 15.5 + hash(i, 83) * 5 + Math.sin(u * 6 + i) * 0.4
-      const y = LOFT_Y - 0.5 - u * 6
-      ellipse(pen, [x, y], 0.03, 0.03, mix(C.fireGold, C.fireCore, hash(i, 84)))
-    }
-    glow(pen, [(BX0 + BX1) / 2, ROAD - 6.5], 7 * fire, C.fireRed, 0.2 * fire)
+    burn(pen, fl)
   }
-  // The lantern: hanging lit; shot off its hook, falling into the bales, gone in the burst.
+  // The lantern: hanging lit; shot off its hook, falling into the bales, gone as the hay takes.
   const hook: Pt = [LANTERN[0], LOFT_Y + 0.16]
   if (t < LANTERN_SHOT) {
     const sw = 0.03 * Math.sin(t * 1.3)
@@ -601,12 +610,6 @@ export function drawBarn(pen: Pen, t: number): void {
     const T = LANTERN_DOWN - LANTERN_SHOT
     const y = LANTERN[1] + (BALES_TOP - 0.55 - 0.2 - LANTERN[1]) * Math.min(1, (s / T) ** 2)
     lantern(pen, [LANTERN[0] + 0.25 * (s / T), y], null, 1, 0.6 * (s / T))
-  }
-  // The burst as it lands.
-  const burst = flash(t - LANTERN_DOWN, 0.18)
-  if (burst > 0.01) {
-    glow(pen, [LANTERN[0] + 0.25, BALES_TOP - 0.6], 2.2, C.fireGold, 0.8 * burst)
-    glint(pen, [LANTERN[0] + 0.25, BALES_TOP - 0.7], 0.8 * burst, C.fireCore, burst)
   }
   // Burning hay falling from the loft on the beats, and burning where it lands.
   for (const [i, h] of HAY.entries()) {
@@ -636,16 +639,13 @@ export function drawBarn(pen: Pen, t: number): void {
   wallCut(BX0)
   wallCut(BX1 - 0.22)
   hayDoor(pen, t)
-  // The ground outside, lit by it.
-  if (fire > 0) glow(pen, [BX1 + 1.5, ROAD], 4 * fire, C.fireRed, 0.25 * fire)
 }
 
 function lantern(pen: Pen, c: Pt, hook: Pt | null, lit: number, spin = 0): void {
   if (hook) line(pen, hook, [c[0], c[1] - 0.22], '#0A0A0A', 0.6)
-  glow(pen, c, 1.6, C.fireGold, 0.35 * lit)
   const a = spin * 2
   const rot = (p: Pt): Pt => [c[0] + p[0] * Math.cos(a) - p[1] * Math.sin(a), c[1] + p[0] * Math.sin(a) + p[1] * Math.cos(a)]
-  shape(pen, [[-0.11, -0.16], [0.11, -0.16], [0.13, 0.14], [-0.13, 0.14]].map((p) => rot(p as Pt)), C.fireCore)
+  shape(pen, [[-0.11, -0.16], [0.11, -0.16], [0.13, 0.14], [-0.13, 0.14]].map((p) => rot(p as Pt)), mix(C.fireGold, C.fireCore, lit))
   shape(pen, [[-0.14, -0.2], [0.14, -0.2], [0.1, -0.26], [-0.1, -0.26]].map((p) => rot(p as Pt)), '#1A1A1A')
   shape(pen, [[-0.15, 0.14], [0.15, 0.14], [0.15, 0.19], [-0.15, 0.19]].map((p) => rot(p as Pt)), '#1A1A1A')
 }
@@ -692,41 +692,23 @@ export const reveal = (t: number) => smooth(t, STEP_TIMES[4], IN_CABIN)
 
 export function drawAirfield(pen: Pen, t: number, f: Frame): void {
   if (f.x1 < APRON_FROM - 6) return
-  // The hangar, an arched shed, its door a slot of light; a beacon on a mast.
-  const h0 = DOOR_X + 14
-  const h1 = DOOR_X + 27
-  const hy = ROAD - 0.42
-  const arch: Pt[] = []
-  for (let i = 0; i <= 16; i++) {
-    const u = i / 16
-    arch.push([h0 + (h1 - h0) * u, hy - 6.2 * Math.sin(u * Math.PI) ** 0.6])
+  // The windsock on the field's edge.
+  drawWindsock(pen, t, f)
+  // The taxiway's blue lights and the runway's white edge lights, small and steady.
+  const blue = bag()
+  for (let x = Math.ceil(Math.max(f.x0, APRON_FROM + 1) / 1.6) * 1.6; x < f.x1 + 1; x += 1.6) disc(blue, x, ROAD - 0.55, 0.032)
+  fill(pen, blue, C.blue, 0.85)
+  const edge = bag()
+  for (let x = Math.ceil(Math.max(f.x0, APRON_FROM + 3) / 2.4) * 2.4; x < f.x1 + 1; x += 2.4) box(edge, x - 0.045, ROAD + 0.39, x + 0.045, ROAD + 0.47)
+  fill(pen, edge, C.runWhite, 0.8)
+  // The airliner and its stair, once any of it can be in the picture.
+  if (f.x1 > TAIL_X - 2.5) {
+    drawPlane(pen, t)
+    drawStair(pen)
   }
-  shape(pen, [[h0, hy], ...arch, [h1, hy]], C.hangar)
-  for (let i = 1; i < 8; i++) {
-    const u = i / 8
-    line(pen, [h0 + (h1 - h0) * u, hy], [h0 + (h1 - h0) * u, hy - 6.2 * Math.sin(u * Math.PI) ** 0.6], C.hangarRib, 0.6)
-  }
-  rect(pen, h0 + 3, hy - 3.2, h0 + 10, hy, '#0D1316')
-  rect(pen, h0 + 6.2, hy - 3.2, h0 + 6.8, hy, C.hangarDoor)
-  glow(pen, [h0 + 6.5, hy - 1.2], 3, C.hangarDoor, 0.25)
-  const bx = h1 + 3
-  line(pen, [bx, hy], [bx, hy - 7.5], '#0E1416', 1.2)
-  for (let k = 0; k < 6; k++) line(pen, [bx - 0.3 + k * 0.02, hy - k * 1.25], [bx + 0.3 - k * 0.02, hy - (k + 1) * 1.25], '#0E1416', 0.5)
-  const sweep = (t * 0.55) % 1
-  const beacon: Pt = [bx, hy - 7.7]
-  glow(pen, beacon, 0.9, sweep < 0.5 ? C.green : C.runWhite, 0.55 + 0.45 * Math.cos(sweep * Math.PI * 4))
-  ellipse(pen, beacon, 0.1, 0.1, sweep < 0.5 ? C.green : C.runWhite)
-  // Runway lights: a far row and a near row.
-  for (let x = Math.ceil(Math.max(f.x0, APRON_FROM + 1) / 1.6) * 1.6; x < f.x1 + 1; x += 1.6) {
-    glow(pen, [x, ROAD - 0.55], 0.28, C.blue, 0.45)
-    ellipse(pen, [x, ROAD - 0.55], 0.03, 0.025, C.blue)
-  }
-  for (let x = Math.ceil(Math.max(f.x0, APRON_FROM + 3) / 2.4) * 2.4; x < f.x1 + 1; x += 2.4) {
-    glow(pen, [x, ROAD + 0.42], 0.45, C.runWhite, 0.45)
-    rect(pen, x - 0.05, ROAD + 0.38, x + 0.05, ROAD + 0.48, C.runWhite)
-  }
-  drawPlane(pen, t)
-  drawStair(pen, t)
+  drawStairLamp(pen, t, f)
+  // The barn's embers, carried over the field on the wind.
+  drawDrift(pen, t, f)
 }
 
 /** The airliner: a long, slightly curved fuselage, triple tail, four props; unmarked. Facing right. */
@@ -810,6 +792,9 @@ function drawPlane(pen: Pen, t: number): void {
     ellipse(pen, [x, WIN_C[1]], WIN_R + 0.04, WIN_R + 0.04, C.planeDark)
     ellipse(pen, [x, WIN_C[1]], WIN_R, WIN_R, mix(C.winDim, C.win, 0.75))
   }
+  // Its lights, on and steady: the red lamps on its back and its belly, the white light on its tail.
+  for (const at of [[DOOR_X + 3.4, top(DOOR_X + 3.4) - 0.05], [DOOR_X + 3.0, FUS_BOT + 0.05]] as Pt[]) ellipse(pen, at, 0.07, 0.05, mix('#3A2220', C.ambLight, 0.55))
+  ellipse(pen, [TAIL_X - 0.04, ROAD - 4.33], 0.045, 0.045, mix(C.planeLight, C.white, 0.5))
   // The cockpit's glazing.
   shape(pen, [[NOSE_X - 2.6, top(NOSE_X - 2.6) + 0.35], [NOSE_X - 1.4, top(NOSE_X - 1.4) + 0.3], [NOSE_X - 1.0, top(NOSE_X - 1.0) + 0.7], [NOSE_X - 2.6, top(NOSE_X - 2.6) + 0.75]], C.glass)
   // The rear door, open, its leaf folded back against the skin.
@@ -817,7 +802,6 @@ function drawPlane(pen: Pen, t: number): void {
   rect(pen, DOOR_X - 0.02, FLOOR - 2.05, DOOR_X + 0.84, FLOOR, mix('#3B2E26', C.lamp, 0.25))
   rect(pen, DOOR_X - 1.05, FLOOR - 2.1, DOOR_X - 0.12, FLOOR - 0.02, C.planeLight)
   line(pen, [DOOR_X - 1.05, FLOOR - 2.1], [DOOR_X - 0.12, FLOOR - 2.1], C.planeDark, 0.6)
-  glow(pen, [DOOR_X + 0.4, FLOOR - 1], 1.6, C.lamp, 0.22)
   // The near wing and its two engines, in front.
   wing(pen, DOOR_X + 6.6, 0.25, C.plane, t, 1)
   // The landing gear.
@@ -878,9 +862,16 @@ function wing(pen: Pen, x: number, dy: number, col: string, t: number, near: num
       const ww = Math.abs(Math.cos(q)) * 0.06 + 0.03
       if (spin < 0.95) rect(pen, px - ww, ey + Math.min(0, yy), px + ww, ey + Math.max(0, yy), '#15191B')
     }
-    // A cough of flame from the exhaust as each one catches.
-    const cough = flash(t - (STEP_TIMES[4] + i * 0.535), 0.12)
-    if (cough > 0.02 && near > 0.9) glow(pen, [ex + 1.2, ey + 0.3], 0.5, C.fireGold, 0.8 * cough)
+    // A cough of smoke from the exhaust as each one catches, blown back off the wing.
+    const s = t - (STEP_TIMES[4] + i * 0.535)
+    if (s > 0 && s < 1.4 && near > 0.9) {
+      const puff = bag()
+      for (let j = 0; j < 3; j++) {
+        const q = Math.max(0, s - j * 0.08)
+        disc(puff, ex + 1.2 - (0.9 + 0.3 * j) * q, ey + 0.32 - 0.25 * q + 0.08 * j, 0.1 + 0.32 * q + 0.04 * j)
+      }
+      fill(pen, puff, '#4A5256', 0.55 * (1 - s / 1.4))
+    }
   }
 }
 
@@ -917,11 +908,12 @@ function cabin(pen: Pen, t: number, rv: number, top: (x: number) => number, bot:
     rect(pen, wx - 0.36, SILL, wx + 0.36, SILL + 0.07, mix(C.cabinShade, '#000000', 0.2))
     line(pen, [wx - 0.36, SILL], [wx + 0.36, SILL], C.cabinWall, 0.5)
   }
-  // The hat rack and the ceiling's lamps.
+  // The hat rack and the ceiling's lamps, coming on as he gets in, and their light on the wall under them.
   rect(pen, x0, ceil + 0.25, x1, ceil + 0.35, C.rack)
+  const lampsOn = smooth(t, IN_CABIN - 0.02, IN_CABIN + 0.05)
   for (let lx = x0 + 0.9; lx < x1; lx += 1.5) {
-    rect(pen, lx - 0.15, ceil, lx + 0.15, ceil + 0.06, C.lamp)
-    glow(pen, [lx, ceil + 0.2], 1.0, C.lamp, 0.35 * smooth(t, IN_CABIN - 0.02, IN_CABIN + 0.05) + 0.1)
+    rect(pen, lx - 0.15, ceil, lx + 0.15, ceil + 0.06, mix(C.cabinShade, C.lamp, 0.4 + 0.6 * lampsOn))
+    haze(pen, [lx, ceil + 0.75], 0.75, 0.6, C.lamp, 0.06 + 0.16 * lampsOn)
   }
   // The floor, in section.
   rect(pen, x0, FLOOR, x1, FLOOR + 0.12, C.cabinFloor)
@@ -960,17 +952,25 @@ function windowView(pen: Pen, t: number, c: Pt): void {
   for (let i = -3; i <= 3; i++) ellipse(pen, [c[0] + i * 0.11 + 0.03, hy + 0.04], 0.012, 0.01, C.blue)
   const u = ((t - (IN_CABIN - 0.6)) * 0.35 + c[0] * 0.13) % 1.4
   const tx = c[0] + WIN_R + 0.1 - u * 0.9
-  glow(pen, [tx, hy + 0.08], 0.14, C.farmLight, 0.8)
   ellipse(pen, [tx, hy + 0.08], 0.02, 0.02, C.winWarm)
   ellipse(pen, [tx + 0.06, hy + 0.08], 0.02, 0.02, C.winWarm)
-  const sweep = (t * 0.55) % 1
-  glow(pen, [c[0] + 0.15, hy - 0.05], 0.12, sweep < 0.5 ? C.green : C.runWhite, 0.5 + 0.5 * Math.cos(sweep * Math.PI * 4))
-  glow(pen, [c[0], c[1] - 0.12], 0.4, C.white, 0.06)
+  // The tower's beacon, turning.
+  const facing = Math.cos(beaconTurn(t))
+  ctx.globalAlpha = 0.3 + 0.6 * Math.abs(facing) ** 2
+  ellipse(pen, [c[0] + 0.15, hy - 0.05], 0.018, 0.018, facing > 0 ? C.green : C.runWhite)
+  ctx.globalAlpha = 1
+  // The barn still burning far off across the field, low on the left: its flames' tops, small.
+  const fire = fireAt(t)
+  if (fire > 0) {
+    const fh = 0.035 * fire * (0.85 + 0.15 * Math.sin(t * 9 + c[0]))
+    ellipse(pen, [c[0] - 0.22, hy - fh * 0.5], 0.07, fh, C.fireRed)
+    ellipse(pen, [c[0] - 0.22, hy - fh * 0.3], 0.035, fh * 0.55, C.fireGold)
+  }
   ctx.restore()
 }
 
 /** The boarding stair, rolled up to the door: six steps, a rail, its little wheels. */
-function drawStair(pen: Pen, t: number): void {
+function drawStair(pen: Pen): void {
   const head = DOOR_X
   // The stringer and the frame underneath.
   shape(pen, [[SF - 0.05, ROAD - 0.35], [head - 0.02, FLOOR - 0.02], [head - 0.02, FLOOR + 0.25], [SF + 0.35, ROAD - 0.25]], C.stairDark)
@@ -980,13 +980,12 @@ function drawStair(pen: Pen, t: number): void {
     ellipse(pen, [wx, ROAD - 0.17], 0.17, 0.17, C.tyre)
     ellipse(pen, [wx, ROAD - 0.17], 0.06, 0.06, '#6B7275')
   }
-  // The steps: treads and risers, each catching a little light as he lands on it.
+  // The steps: treads and risers.
   for (let k = 1; k <= STEPS; k++) {
     const x0 = SF + STEP * (k - 1)
     const x1 = SF + STEP * k
     const y = ROAD - STEP * k
-    const hit = flash(t - STEP_TIMES[k - 1], 0.15)
-    rect(pen, x0, y, x1 + (k === STEPS ? 0.0 : 0.03), y + 0.07, mix(C.stair, C.white, 0.5 * hit))
+    rect(pen, x0, y, x1 + (k === STEPS ? 0.0 : 0.03), y + 0.07, C.stair)
     rect(pen, x0, y + 0.07, x0 + 0.05, y + STEP, C.stairDark)
   }
   // The rail.
@@ -1000,9 +999,44 @@ function drawStair(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the cab and the ambulance (the part's) */
 
+/**
+ * Wally's cab (`cab.ts`), its headlamps on: drawn here as the lit lamp and a short, plain fall of light on the road ahead,
+ * laid over the night and not added to it, instead of the cab's own lamp with its halo and its long beam.
+ */
 export function drawTheCab(pen: Pen, t: number): void {
   const x = cabX(t)
-  drawCab(pen, [x, 0], { t, rolled: x - START_X, wally: true, lights: 1, bob: bob(t) })
+  const b = bob(t)
+  drawCab(pen, [x, 0], { t, rolled: x - START_X, wally: true, lights: 0, bob: b })
+  const fx = x + CAB.front
+  const ly = (dy: number) => dy + b
+  headBeam(pen, fx, ly(-0.18), ly(-0.04), CAB.road + 0.05, 1, 3.4, CAB_LAMP, 0.15)
+  ellipse(pen, [fx - 0.06, ly(-0.12)], 0.06, 0.1, CAB_LAMP)
+}
+
+/** The cab's headlamp's colour (`cab.ts`'s lamp). */
+const CAB_LAMP = '#FFF1C2'
+
+/**
+ * A headlamp's light on the road ahead: from the lamp's face (`y0` to `y1` at `x`) out `len` cells the way it faces
+ * (`dir` 1 right, -1 left), opening a little and reaching down to the road at `road`, fading out along its length.
+ */
+function headBeam(pen: Pen, x: number, y0: number, y1: number, road: number, dir: 1 | -1, len: number, col: string, a: number): void {
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  const x1 = x + dir * len
+  const g = ctx.createLinearGradient(x * k, 0, x1 * k, 0)
+  g.addColorStop(0, rgba(pen, col, a))
+  g.addColorStop(1, rgba(pen, col, 0))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo(x * k, y0 * k)
+  ctx.lineTo(x1 * k, (y0 - 0.12) * k)
+  ctx.lineTo(x1 * k, road * k)
+  ctx.lineTo(x * k, y1 * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
 }
 
 const ambFront = (t: number) => ambX(t) - AMB_LEN
@@ -1057,7 +1091,7 @@ function doorOpen(t: number): number {
   return 0.62 * (smooth(t, DOORS_OPEN - 0.2, DOORS_OPEN) - smooth(t, SHUT - 0.22, SHUT))
 }
 
-/** The red light's flash: on the beat, and its turning beam. */
+/** The red dome's reddening: on each beat, as its lamp faces the camera. */
 function redFlash(t: number): number {
   let v = 0
   for (const b of RED_FLASHES) v = Math.max(v, flash(t - b, 0.16))
@@ -1072,23 +1106,8 @@ export function drawAmbulance(pen: Pen, t: number, layer: 'all' | 'under' | 'bod
   const ax = attendantX(t)
   const moving = t < AMB_STOP || t > LEAVE
   if (layer !== 'body') {
-    // The headlights' beam ahead (to the left) as it drives.
-    if (moving) {
-      const ctx = ctxOf(pen.p)
-      const g = ctx.createLinearGradient(x0 * pen.k, 0, (x0 - 6) * pen.k, 0)
-      g.addColorStop(0, rgba(pen, C.winWarm, 0.22))
-      g.addColorStop(1, rgba(pen, C.winWarm, 0))
-      ctx.save()
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.moveTo(x0 * pen.k, (ROAD - 0.95) * pen.k)
-      ctx.lineTo((x0 - 6) * pen.k, (ROAD - 1.3) * pen.k)
-      ctx.lineTo((x0 - 6) * pen.k, (ROAD + 0.1) * pen.k)
-      ctx.lineTo(x0 * pen.k, (ROAD - 0.8) * pen.k)
-      ctx.closePath()
-      ctx.fill()
-      ctx.restore()
-    }
+    // The headlamps' light on the road ahead (to the left) as it drives: short and plain.
+    if (moving) headBeam(pen, x0, ROAD - 1.0, ROAD - 0.86, ROAD + 0.05, -1, 3.2, C.winWarm, 0.14)
     cot(pen, t)
     if (ax !== null && ax < A + 0.3) figure(pen, ax, ROAD, { coat: C.coatWhite, hat: 'cap', face: 1, h: 3.1 })
   }
@@ -1096,14 +1115,20 @@ export function drawAmbulance(pen: Pen, t: number, layer: 'all' | 'under' | 'bod
   if (layer !== 'body') {
     if (ax !== null && ax >= A + 0.3) figure(pen, ax, ROAD, { coat: C.coatWhite, hat: 'cap', face: -1, h: 3.1, arm: 0.2 })
   }
-  // The light: a red dome on the roof, its flash on the beats, the beam turning.
-  const fl = redFlash(t)
-  const dome: Pt = [x0 + 2.35, ROAD - AMB_ROOF - 0.16]
-  if (layer !== 'under') {
-    glow(pen, dome, 1.2 + 3.2 * fl, C.ambLight, 0.25 + 0.6 * fl)
-    if (fl > 0.05) glow(pen, [dome[0], ROAD - 0.5], 4 * fl, C.ambLight, 0.18 * fl)
-  }
   void ROAD
+}
+
+/**
+ * The red light's turn inside its dome: once round a beat, its lamp facing the camera on each of them, so the dome
+ * reddens on the beats. Its angle (0 facing the camera), and how much it is on (it stops once she is away).
+ */
+function redTurn(t: number): { th: number; on: number } {
+  const first = RED_FLASHES[0]
+  const last = RED_FLASHES[RED_FLASHES.length - 1]
+  const on = smooth(t, at(75, 1) - 0.3, at(75, 1) + 0.4) * (1 - smooth(t, last + 0.3, last + 1.2))
+  const prev = lastOf(RED_FLASHES, t)
+  const ago = prev.i >= 0 ? prev.ago : ((((t - first) % BEAT) + BEAT) % BEAT)
+  return { th: (2 * Math.PI * Math.min(ago, BEAT)) / BEAT, on }
 }
 
 function ambBody(pen: Pen, t: number, A: number, x0: number): void {
@@ -1130,20 +1155,22 @@ function ambBody(pen: Pen, t: number, A: number, x0: number): void {
   rect(pen, x0 + 0.05, ROAD - 1.12, A, ROAD - 0.98, C.ambRed)
   shape(pen, [[x0 + 1.75, ROAD - 1.32], [x0 + 2.12, roof + 0.18], [x0 + 2.9, roof + 0.18], [x0 + 2.9, ROAD - 1.32]], C.glass)
   rect(pen, x0 + 3.1, roof + 0.22, A - 0.25, ROAD - 1.42, C.frost)
-  glow(pen, [x0 + 4.2, roof + 0.7], 1.2, C.frost, 0.2)
   line(pen, [x0 + 3.0, roof + 0.1], [x0 + 3.0, ROAD - 0.35], C.ambShade, 0.6)
   // Chrome: bumpers, grille, the headlamp; the tail light at the back.
   rect(pen, x0 - 0.12, ROAD - 0.48, x0 + 0.5, ROAD - 0.34, C.chrome)
   rect(pen, A - 0.35, ROAD - 0.48, A + 0.1, ROAD - 0.34, C.chrome)
   for (let i = 0; i < 4; i++) line(pen, [x0 - 0.02, ROAD - 0.92 + i * 0.1], [x0 - 0.02, ROAD - 0.86 + i * 0.1], '#7E8384', 0.8)
   ellipse(pen, [x0 + 0.08, ROAD - 0.95], 0.07, 0.11, C.winWarm)
-  glow(pen, [x0 - 0.05, ROAD - 0.95], 0.8, C.winWarm, 0.45)
-  rect(pen, A - 0.06, ROAD - 1.0, A + 0.04, ROAD - 0.7, '#D23A2A')
-  const tail = t > LEAVE ? 1 : 0.5
-  glow(pen, [A + 0.05, ROAD - 0.85], 0.5 + 0.4 * tail, '#D23A2A', 0.4 + 0.35 * tail)
-  // The dome.
+  // The tail light, brighter as it pulls away.
+  rect(pen, A - 0.06, ROAD - 1.0, A + 0.04, ROAD - 0.7, mix('#8A2018', '#E8402E', t > LEAVE ? 1 : 0.55))
+  // The dome, reddening as its lamp comes round to face the camera on the beats, and the lamp itself going round
+  // inside it: its bright lens crossing the dome and gone behind.
   rect(pen, x0 + 2.2, roof - 0.06, x0 + 2.5, roof, '#5A5A5A')
-  ellipse(pen, [x0 + 2.35, roof - 0.16], 0.13, 0.12, mix('#7A1810', C.ambLight, 0.4 + 0.6 * fl))
+  const dome: Pt = [x0 + 2.35, roof - 0.16]
+  ellipse(pen, dome, 0.13, 0.12, mix('#7A1810', C.ambLight, 0.3 + 0.55 * fl))
+  const { th, on } = redTurn(t)
+  const toward = Math.cos(th)
+  if (on > 0.02 && toward > 0) ellipse(pen, [dome[0] + 0.08 * Math.sin(th), dome[1] + 0.01], 0.045 * (0.4 + 0.6 * toward), 0.075, mix(C.ambLight, '#FFC2B0', 0.5 * toward * on))
   // Wheels, turning as it rolls.
   for (const wx of [x0 + 1.05, A - 1.0]) {
     const c: Pt = [wx, ROAD - 0.38]
@@ -1168,6 +1195,5 @@ export function drawAmbDoor(pen: Pen, t: number): void {
   rect(pen, A + w * 0.18, roof + 0.32, A + w * 0.82, ROAD - 1.45, mix(C.frost, '#FFFFFF', 0.2))
   rect(pen, A, ROAD - 1.12, A + w, ROAD - 0.98, C.ambRed)
   line(pen, [A + w, roof + 0.2], [A + w, ROAD - 0.32], C.ambShade, 0.6)
-  glow(pen, [A + 0.2, ROAD - 1.2], 1.6, C.frost, 0.22)
 }
 
