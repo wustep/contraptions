@@ -978,6 +978,24 @@ share card (255.75 s) is pixel-identical.
   a loaded machine: within noise in every stretch touched (the opening, the premiere, the dojo, the fall, the
   party, the credits), all under 5 ms a frame on the median.
 
+Then two rounds of watching it whole as a viewer, each weighing what to add against what to cut. They ended
+there: past them, what was left to add was density for its own sake.
+
+- **The peak's seeds, a puff (cut).** On each eighth the hole sprayed fifteen to twenty-seven seeds that grew as
+  they flew, several sprays in the air at once: a hundred flakes of confetti over the two of them and over every
+  thing coming back out with its eye. Each spray is now a handful, smaller and quicker (`SPRAYS` in
+  `void/peakClock.ts`), still on its eighth, so the eighths pulse in the hole and the things it gives back are what
+  the eye follows.
+- **The kitchen, lit from below (added).** Raccacoonie's kitchen was a flat dark board for thirteen seconds. The
+  griddle now lights the slats from below the whole length of the counter, rising and falling with the burners, and
+  the hanging tools catch it.
+- **The step-and-repeat steps back (refined).** The board was the brightest thing in the premiere's wide shots, so
+  the spotlight's beam hardly showed across it as it found her. Its face is a deeper rose between narrower lamp
+  scallops, so the beam, its pool, the flashes and she lead; and the press's small pops go off only on the clear
+  onsets (0.3 and up), about 1.8 a second from 2.5, so the louder runs sparkle and the quiet between them does not.
+- **Checked:** the peak, the heaviest stretch, at a mean of 8.5 ms a frame and a 95th percentile of 15 ms, as
+  before the cut; the kitchen as before.
+
 ### For every viewer
 
 - **Heard.** The page's words layer is `aria-hidden`, as its cards fade and blur, so a card can be spoken (`TitleCard.said`): once,
