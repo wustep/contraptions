@@ -123,7 +123,8 @@ export function drawRoom(pen: Pen): void {
   hood(pen)
   glow(pen, 0.2, rig.TOP + 0.1, 4.6, H.flame, 0.07 + 0.09 * level(t))
   const b = blaze(t)
-  if (b > 0) glow(pen, rig.VX, rig.TOP - 1.4, 5.5, H.flame, 0.3 * b)
+  // The fire's light on the room while it burns.
+  if (b > 0) glow(pen, rig.VX, rig.TOP - 1.4, 5.5, H.flame, 0.18 * b)
 }
 
 /** A small gas flame: a rounded tongue from `base` up `h`, leaning `lean`. */
@@ -951,17 +952,15 @@ export function drawVolcano(pen: Pen): void {
     const size = (0.05 + 0.05 * u) * (1 - u * u)
     for (const s of [-1, 1]) vapour(pen, rig.VX + s * (0.16 + u * 0.2), rig.CORK[1] + 0.02 - u * 0.36, size * (s === (n % 2 ? 1 : -1) ? 1 : 0.75), a, H.hat)
   }
-  // The column, its glow, and the embers it throws.
+  // The column, and the embers it throws.
   const hCol = columnHeight(t)
   if (hCol > 0.02) {
     const top = ringAt(rig.RING_W.length - 1, t).y
-    glow(pen, rig.VX, top - hCol * 0.45, hCol * 0.9 + 0.3, H.flameHot, 0.35)
-    // The blast itself: a fireball blooming out of the top on the hit, rolling up into the column.
+    // The blast itself: a fireball out of the top on the hit, rolling up into the column.
     const b = e / 0.42
     if (b < 1) {
       const up = easeOutCubic(b)
       const size = Math.sin(Math.PI * Math.min(1, b * 1.4)) * (1 - 0.5 * b)
-      glow(pen, rig.VX, top - 0.4 - up * 0.5, 1.6, H.flameHot, 0.55 * (1 - b))
       drawFlameTongue(pen, rig.VX, top + 0.08, 0.5 + up * 1.1, 0.62 * size + 0.05, 7.7, H.flame)
       drawFlameTongue(pen, rig.VX, top + 0.05, 0.35 + up * 0.8, 0.42 * size + 0.03, 9.1, H.flameHot)
     }
