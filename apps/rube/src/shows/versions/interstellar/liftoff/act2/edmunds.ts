@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { laneAt, mixHex, puff, R, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, lensedArc, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
+import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
@@ -1012,6 +1012,8 @@ function drawMouth(p: p5, c: Ctx, T: number): void {
   p.stroke(alpha(p, DARK.hull, 0.25))
   p.strokeWeight(X(0.09))
   p.arc(X(mx), X(my), X(RM * 1.6), X(RM * 1.6), Math.PI * 1.1, Math.PI * 1.4)
+  // The same glass as the near mouth's, from this side: Edmunds' sky piled up at its limb.
+  glassLimb(ctx, X(mx), X(my), X(RM))
   ctx.restore()
   outline(p, alpha(p, DARK.hull, 0.95).toString(), weight * 1.1)
   p.circle(X(mx), X(my), X(2 * RM))

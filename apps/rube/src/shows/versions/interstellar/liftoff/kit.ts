@@ -391,13 +391,21 @@ export function farSide(p: p5, cx: number, cy: number, r: number, turn: number, 
       lensedArc(p, cx, cy, rr, a, len, ink, bright * 0.8, Math.max(1, r * 0.0075))
     }
   }
-  // This side's light, bent round and piled up at the limb: the Einstein ring.
+  glassLimb(ctx, cx, cy, r)
+  ctx.restore()
+}
+
+/**
+ * A wormhole's limb: the light of the sky behind it, bent round and piled up at its edge (the Einstein ring), which
+ * gives the glass a body. Either mouth. In pixels; it fills the square round the glass, so the caller clips to it.
+ */
+export function glassLimb(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
   const limb = ctx.createRadialGradient(cx, cy, r * 0.78, cx, cy, r)
   limb.addColorStop(0, 'rgba(143, 198, 230, 0)')
   limb.addColorStop(0.75, 'rgba(143, 198, 230, 0.12)')
   limb.addColorStop(1, 'rgba(206, 230, 244, 0.55)')
-  paint(limb)
-  ctx.restore()
+  ctx.fillStyle = limb
+  ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
 }
 
 /** A stable hash in [0, 1) for scattering stars and stalks by index. */
