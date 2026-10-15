@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { sway, type View } from '../depth'
 import { hash } from '../kit'
-import { CLANKS, STAND, STOP } from './plan'
+import { CLANKS, CORNER, STAND, STOP } from './plan'
 import { INK, clamp01, mix, ramp, rgba } from '../negatives/hand'
 import { AVENUE_FAR } from './fronts'
 import { LANE } from './light'
@@ -33,6 +33,8 @@ interface Vehicle {
 /** When the street's light goes red, near the end: the traffic stops at its lines, and the walk sign comes on. */
 export const RED = 259.6
 export const WALK = RED + 1.1
+/** Near the end, the walker goes out and the hand flashes: the crossing is closing. */
+export const FLASH = 266.6
 /** Where each lane stops for the light: the far lane short of the corner, the near lane at the far side. */
 const STOP_LINE = { far: 13.35, near: AVENUE_FAR + 0.2 }
 
@@ -311,8 +313,8 @@ interface Walker {
 export const WALKERS: Walker[] = [
   // The one who buys a paper: along from the left, up to the stand's side, a paper handed out, and away with it.
   { way: [[244.6, -1.5], [250.1, 4.55], [253.4, 4.55], [258.9, -1.3]], y: 0.3, h: 1.2, coat: '#5B5347', hat: true },
-  // Out of the café's door and away along the street to the left.
-  { way: [[252.0, 10.6], [252.6, 10.6], [264.5, -0.8]], y: 0.24, h: 1.12, coat: '#3D4650', door: true },
+  // Out of the café's door and away briskly along the street to the left, past the stand.
+  { way: [[252.0, 10.6], [252.6, 10.6], [260.8, -0.8]], y: 0.24, h: 1.12, coat: '#3D4650', door: true },
   // Across the avenue: one going along, one coming to the far corner to wait for the light.
   { way: [[237.5, AVENUE_FAR + 0.2], [250.0, AVENUE_FAR + 13]], y: 0.28, h: 1.16, coat: '#6C6A5C' },
   { way: [[246.5, AVENUE_FAR + 12.5], [256.2, AVENUE_FAR + 0.7], [270, AVENUE_FAR + 0.7]], y: 0.32, h: 1.1, coat: '#40465A', hat: true },
@@ -401,6 +403,60 @@ export function drawPeople(ctx: C2, v: View, t: number): void {
       const s = w.h / 1.2
       ctx.fillRect((at.x - 0.06 * at.dir - 0.1) * k, (PAVE + w.y - 0.78 * s) * k, 0.22 * k, 0.12 * k)
     }
+  }
+}
+
+/**
+ * On the walk sign, people cross this street at the corner, on the crossing beside the two of them: one coming down
+ * off the kerb toward the camera and out of the frame's foot, one coming up out of it to the corner, nearer and so
+ * larger as they come down. Seen from the front, a leg lifting at each step.
+ */
+const CROSSERS: { from: Pt; to: Pt; t0: number; t1: number; h: number; coat: string }[] = [
+  { from: [CORNER.kerb + 0.75, PAVE + 0.3], to: [CORNER.kerb + 0.68, 4.2], t0: WALK + 0.3, t1: WALK + 5.0, h: 1.14, coat: '#4B4F44' },
+  { from: [CORNER.kerb + 1.08, 4.2], to: [CORNER.kerb + 1.02, PAVE + 0.34], t0: WALK + 1.0, t1: WALK + 6.2, h: 1.1, coat: '#6E5E4E' },
+]
+
+export function drawCrossers(ctx: C2, v: View, t: number): void {
+  const k = v.k
+  for (const c of CROSSERS) {
+    if (t < c.t0) continue
+    const u = clamp01((t - c.t0) / (c.t1 - c.t0))
+    const x = c.from[0] + (c.to[0] - c.from[0]) * u
+    const y = c.from[1] + (c.to[1] - c.from[1]) * u
+    if (y - c.h * 1.4 > v.y1) continue
+    const s = (c.h / 1.2) * (1 + (y - PAVE) * 0.07)
+    const step = u < 1 ? (t - c.t0) * 1.9 : 0
+    const lift = (side: number) => Math.max(0, Math.sin(step * Math.PI + (side > 0 ? 0 : Math.PI))) * 0.09 * s
+    ctx.lineCap = 'round'
+    ctx.strokeStyle = '#2C3035'
+    ctx.lineWidth = Math.max(1.5, 0.085 * k * s)
+    ctx.beginPath()
+    for (const side of [-1, 1]) {
+      ctx.moveTo((x + side * 0.05 * s) * k, (y - 0.55 * s) * k)
+      ctx.lineTo((x + side * 0.07 * s) * k, (y - lift(side)) * k)
+    }
+    ctx.stroke()
+    ctx.fillStyle = c.coat
+    ctx.beginPath()
+    ctx.moveTo((x - 0.17 * s) * k, (y - 0.96 * s) * k)
+    ctx.lineTo((x + 0.17 * s) * k, (y - 0.96 * s) * k)
+    ctx.lineTo((x + 0.2 * s) * k, (y - 0.3 * s) * k)
+    ctx.lineTo((x - 0.2 * s) * k, (y - 0.3 * s) * k)
+    ctx.closePath()
+    ctx.fill()
+    ctx.strokeStyle = mix(c.coat, INK, 0.25)
+    ctx.lineWidth = Math.max(1.5, 0.07 * k * s)
+    ctx.beginPath()
+    for (const side of [-1, 1]) {
+      ctx.moveTo((x + side * 0.17 * s) * k, (y - 0.92 * s) * k)
+      ctx.lineTo((x + side * 0.21 * s) * k, (y - 0.5 * s + lift(-side) * 0.4) * k)
+    }
+    ctx.stroke()
+    ctx.fillStyle = '#3A3632'
+    ctx.beginPath()
+    ctx.arc(x * k, (y - 1.09 * s) * k, 0.1 * s * k, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.lineCap = 'butt'
   }
 }
 

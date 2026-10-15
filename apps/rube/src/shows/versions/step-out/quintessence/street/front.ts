@@ -150,9 +150,8 @@ function shafts(ctx: C2, v: View, t: number): void {
   const len = v.w * 1.15
   const hex = mix(S.sun, S.gold, 0.35 * gold * (1 - w))
   const beams: [number, number, number][] = [
-    [0.1, 0.09, 0.32],
-    [0.26, 0.07, 0.24],
-    [0.42, 0.09, 0.36],
+    [0.12, 0.1, 0.34],
+    [0.36, 0.1, 0.4],
   ]
   for (const [i, [ang, a, wd]] of beams.entries()) {
     const th = Math.PI + ang + 0.05 * sway(t, 0.03, i) + 0.12 * (1 - open)
@@ -162,8 +161,8 @@ function shafts(ctx: C2, v: View, t: number): void {
 }
 
 /**
- * The grade: the frame's edges falling away warm, in a band along each edge (deepest at the foot, so the street's
- * foot is a little deeper than the sky, and so in the corners where two bands meet), thinning as the morning whitens.
+ * The grade: the frame's edges falling away warm, in a band up each side and along the foot (so the street's foot is
+ * a little deeper than the sky, and the lower corners deepest), thinning as the morning whitens.
  */
 function grade(ctx: C2, v: View, w: number): void {
   const k = v.k
@@ -178,12 +177,10 @@ function grade(ctx: C2, v: View, w: number): void {
     ctx.fillStyle = g
     ctx.fillRect(box[0] * k, box[1] * k, (box[2] - box[0]) * k, (box[3] - box[1]) * k)
   }
-  const bh = v.h * 0.2
-  const th = v.h * 0.12
-  const bw = v.w * 0.11
+  const bh = v.h * 0.17
+  const bw = v.w * 0.08
   const [x0, y0, x1, y1] = [v.x0 - 0.5, v.y0 - 0.5, v.x1 + 0.5, v.y1 + 0.5]
   band(0, v.y1, 0, v.y1 - bh, 0.2, [x0, v.y1 - bh, x1, y1])
-  band(0, v.y0, 0, v.y0 + th, 0.12, [x0, y0, x1, v.y0 + th])
   band(v.x0, 0, v.x0 + bw, 0, 0.16, [x0, y0, v.x0 + bw, y1])
   band(v.x1, 0, v.x1 - bw, 0, 0.16, [v.x1 - bw, y0, x1, y1])
 }

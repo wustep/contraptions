@@ -7,7 +7,7 @@ import { cherylAt, COVER_X, DRIFT, FINAL, IN, MEET, ON, STOP, STREET_STRIKES, WA
 /**
  * The street (the B1 builder's): bar 131 to the end.
  *
- * A New York street on a pale morning. Walter rolls in out of the Life building's doors at the pace he left them,
+ * A New York street in the morning, the low sun gold down the avenue. Walter rolls in out of the Life building's doors at the pace he left them,
  * over a pair of cellar doors (two clanks, as the band begins to fall away), and slows: Cheryl is coming to him along
  * the pavement from the right, and on the strong beat of bar 132 they stop, touching. They go on together toward the
  * newsstand, which is opening: its shutter goes up in two hauls, and the man inside puts the morning's issues out on
@@ -16,8 +16,13 @@ import { cherylAt, COVER_X, DRIFT, FINAL, IN, MEET, ON, STOP, STREET_STRIKES, WA
  * before it, he right under himself.
  *
  * They look a while. Then they go on up the street together, close, and the camera lets them go, drawing back to
- * the whole street and holding: the stand, the fronts, the pale sky over the low building in the middle (where the
- * credits come), and the two of them small at the corner, waiting to cross. Then it is still.
+ * the whole street: the stand, the fronts, the pale sky over the low buildings in the middle (where the credits come),
+ * the avenue's gap with the sun in it, and the two of them small at the corner, waiting to cross. Through the credits
+ * it does not stop: it goes on along toward the avenue, slowly, and the city goes on round them, the traffic, the
+ * people, the pigeons, the steam, the light climbing, until the walk sign comes on.
+ *
+ * The city is drawn in `draw.ts` (the set), `sky.ts` (the planes behind), `fronts.ts` (the buildings along the
+ * street), `city.ts` (what moves in it), `light.ts` (the morning's clock) and `front.ts` (the near plane and the light).
  */
 
 export const STREET_AT: Pt = [0, 0]

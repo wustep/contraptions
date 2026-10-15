@@ -4,15 +4,20 @@ import { glow, sway, view, type View } from '../depth'
 import { hash } from '../kit'
 import { LIFE_RED, WALTER_WARM } from '../worlds'
 import { contact, INK, knock, mix, pool, ramp, rgba, rule, settle, slab } from '../negatives/hand'
-import { drawPeople, drawPigeons, drawSale, drawTraffic, peopleShadows, steam, WALK } from './city'
+import { drawCrossers, drawPeople, drawPigeons, drawSale, drawTraffic, FLASH, peopleShadows, steam, WALK } from './city'
 import { AVENUE_FAR, drawFireEscape, drawFronts, drawGround, drawRoofs, skyShows } from './fronts'
 import { LANE, litAt, morning, S, shadeAt, shadeTint } from './light'
 import { CELLAR, cherylAt, CLANKS, CORNER, COVER, FLIPS, HAULS, IN, KERB, PAVE, SLOT_W, SLOTS, STAND, STOP, WALTER_STOP, walterAt } from './plan'
 import { drawAvenue, drawCity, drawSky } from './sky'
 
 /**
- * The street, drawn (the B1 builder's): the negatives room's hand in a pale morning. Flat values and the one
- * graphite line; the only soft thing is the light. Nothing on it is red but the Life box on the one cover.
+ * The street, drawn (the B1 builder's): the negatives room's hand in a New York morning. Flat values and the one
+ * graphite line; the light is the soft thing, and the shade of the buildings behind the camera lies cool over the
+ * street with the sun coming through it in bands. Nothing on it is red but the Life box on the one cover.
+ *
+ * In order, back to front: the sky and the city behind (`sky.ts`, only where the fronts let it be seen), the fronts
+ * (`fronts.ts`), the pavement and the road, the furniture and the stand, the people and the pigeons, the traffic
+ * (`city.ts`), the shade over all of it (`light.ts`), and the steam rising into the light.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -334,16 +339,19 @@ function drawGroundPlane(ctx: C2, v: View): void {
   slab(ctx, k, AVENUE_FAR, KERB, x1, KERB + 0.1, S.kerb, { color: rgba(INK, 0.6), w: 0.8 })
 }
 
-/** The crossing signal on the near corner: the orange hand, then, when the street's light goes red, the white walker. */
+/**
+ * The crossing signal on the near corner: the orange hand; when the street's light goes red, the white walker; at the
+ * last, the hand flashing.
+ */
 function drawSignal(ctx: C2, k: number, t: number): void {
   const x = CORNER.kerb - 0.16
   slab(ctx, k, x - 0.04, -3.3, x + 0.04, PAVE, '#4E5552', { color: INK, w: 0.8 })
   slab(ctx, k, x - 0.22, -3.75, x + 0.22, -3.15, S.kioskDark, { color: INK, w: 0.9 })
-  const walk = ramp(t, WALK, WALK + 0.08)
-  // The hand steady all the while they wait; then the walker.
+  const walk = ramp(t, WALK, WALK + 0.08) * (t < FLASH ? 1 : 0)
+  // The hand steady all the while they wait; then the walker; then the hand flashing as the crossing closes.
   slab(ctx, k, x - 0.15, -3.66, x + 0.15, -3.44, '#262B29')
   slab(ctx, k, x - 0.15, -3.4, x + 0.15, -3.22, '#262B29')
-  const hand = 1 - walk
+  const hand = t < FLASH ? 1 - walk : (t - FLASH) % 1 < 0.55 ? 1 : 0
   if (hand > 0.01) {
     ctx.fillStyle = rgba('#F2A548', 0.95 * hand)
     ctx.beginPath()
@@ -552,6 +560,7 @@ export function drawStreet(p: p5, k: number, t: number): void {
   drawStack(ctx, v)
   drawTraffic(ctx, v, t, 'far')
   drawTraffic(ctx, v, t, 'near')
+  drawCrossers(ctx, v, t)
   drawShade(ctx, v, t)
   // Steam, always: off the stack, and up out of the manholes, lit by the sun where it rises into it.
   const m = morning(t)

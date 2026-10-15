@@ -2,9 +2,8 @@ import type { Pt } from '../../../../../parts'
 import { layer, motes, sway, type View } from '../depth'
 import { hash } from '../kit'
 import { mix, rgba } from '../negatives/hand'
-import { AVENUE_FAR } from './fronts'
+import { FRONTS } from './fronts'
 import { goldAt, morning, S, skyAt, sunAt, whiteAt } from './light'
-import { CORNER } from './plan'
 
 /**
  * The sky over the street and the city behind it (the street's own): three planes of towers going back into the haze
@@ -134,8 +133,6 @@ function tower(ctx: C2, k: number, t: number, w: Tower, ground: number, body: st
   }
 }
 
-/** Where the sky can be seen past the fronts, in the street's cells: over the low roofs, and down the avenue's gap. */
-const OPEN = { roofs: -4.0, gap: [CORNER.kerb - 0.2, AVENUE_FAR + 0.4] as Pt }
 
 /** A box of the street (cells) in a plane's own cells, at this frame (the inverse of `layer`'s placing). */
 function inPlane(v: View, z: number, x0: number, y0: number, x1: number, y1: number): [number, number, number, number] {
@@ -145,13 +142,28 @@ function inPlane(v: View, z: number, x0: number, y0: number, x1: number, y1: num
   return [ox + (x0 - v.cx) / s, oy + (y0 - v.cy) / s, ox + (x1 - v.cx) / s, oy + (y1 - v.cy) / s]
 }
 
-/** The two boxes of sky to be seen at this frame, in a plane's cells: over the roofs, and the gap down to the street. */
+/**
+ * The boxes of sky to be seen at this frame past the fronts along the street, in a plane's cells: over each front down
+ * to its roof, and down the gaps between them (the avenue's) to the street. What the fronts hide is never painted.
+ */
 function openSky(v: View, z: number): [number, number, number, number][] {
   const out: [number, number, number, number][] = []
-  if (v.y0 < OPEN.roofs) out.push(inPlane(v, z, v.x0 - 0.5, v.y0 - 0.5, v.x1 + 0.5, OPEN.roofs))
-  const gx0 = Math.max(v.x0 - 0.5, OPEN.gap[0])
-  const gx1 = Math.min(v.x1 + 0.5, OPEN.gap[1])
-  if (gx1 > gx0) out.push(inPlane(v, z, gx0, Math.max(v.y0 - 0.5, OPEN.roofs), gx1, 1.0))
+  const top = v.y0 - 0.5
+  let x = v.x0 - 0.5
+  const end = v.x1 + 0.5
+  for (const f of FRONTS) {
+    if (f.x1 <= x) continue
+    if (x >= end) break
+    if (f.x0 > x) {
+      out.push(inPlane(v, z, x, top, Math.min(f.x0, end), 1.0))
+      x = f.x0
+      if (x >= end) break
+    }
+    const floor = f.top - 0.15
+    if (floor > top) out.push(inPlane(v, z, x, top, Math.min(f.x1, end), floor))
+    x = f.x1
+  }
+  if (x < end) out.push(inPlane(v, z, x, top, end, 1.0))
   return out
 }
 
@@ -296,9 +308,9 @@ export function drawCity(ctx: C2, v: View, t: number): void {
     const g = ctx.createLinearGradient(0, -2.2 * k, 0, 0.2 * k)
     g.addColorStop(0, rgba(haze, 0))
     g.addColorStop(1, rgba(haze, 0.45))
-    inOpen(ctx, k, openSky(v, 0.6), ([x0, y0, x1]) => {
+    inOpen(ctx, k, openSky(v, 0.6), ([x0, , x1, y1]) => {
       // Far down the avenue, a cross street: its traffic passing behind the corners.
-      if (y0 > -3) farTraffic(ctx, k, t, haze)
+      if (y1 > -0.5) farTraffic(ctx, k, t, haze)
       const panes = new Path2D()
       const glint = new Path2D()
       for (const tw of NEAR) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, t * 0.8, tw, 0.05, body, lit, panes, glint)
