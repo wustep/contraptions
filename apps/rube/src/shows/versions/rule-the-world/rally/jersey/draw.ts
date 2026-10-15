@@ -8,7 +8,7 @@ import { dropTime } from '../physics'
 import { beaconTurn, drawDrift, drawStairLamp, drawWindsock } from './airfield'
 import { fireAt, fireLight, flareAt, smokeBank } from './fire'
 import { bag, blade, box, disc, fill, haze, loop, poly } from './ink'
-import { drawAboard } from './aboard'
+import { drawAboard, drawAisle, drawReader } from './aboard'
 import { drawApron } from './apron'
 import { drawBreath, drawChaff, drawCurtain, drawHens, drawRifleman, drawVane, gust } from './wind'
 import {
@@ -1026,16 +1026,20 @@ function cabin(pen: Pen, t: number, rv: number, top: (x: number) => number, bot:
   }
   // The floor, in section.
   rect(pen, x0, FLOOR, x1, FLOOR + 0.12, C.cabinFloor)
-  // Seats, in profile, facing the nose: the window's between two.
-  for (let sx = WIN_X + 0.62; sx < x1 - 0.4; sx += 1.5) seat(pen, sx)
+  // Seats, in profile, facing the nose: the window's between two. Taken, as the windows showed them from the stair,
+  // but for the one at his own window; and the stewardess waiting for him in the aisle in front of them (`aboard.ts`).
+  for (let sx = WIN_X + 0.62, n = 0; sx < x1 - 0.4; sx += 1.5, n++) seat(pen, sx, n === 1 ? () => drawReader(pen, t, sx) : undefined)
+  drawAisle(pen, t)
   ctx.restore()
   void t
 }
 
-function seat(pen: Pen, x: number): void {
-  // An airliner's seat in profile, facing the nose: a deep, rounded back, the cushion, the armrest, its pedestal.
+function seat(pen: Pen, x: number, sitter?: () => void): void {
+  // An airliner's seat in profile, facing the nose: a deep, rounded back, the cushion, whoever sits in it, the
+  // armrest on this side, its pedestal.
   blob(pen, [[x - 0.12, FLOOR - 0.5], [x - 0.3, FLOOR - 1.0], [x - 0.36, FLOOR - 1.4], [x - 0.2, FLOOR - 1.5], [x + 0.02, FLOOR - 1.36], [x + 0.08, FLOOR - 0.6]], C.seat)
   blob(pen, [[x - 0.12, FLOOR - 0.42], [x - 0.08, FLOOR - 0.62], [x + 0.52, FLOOR - 0.64], [x + 0.6, FLOOR - 0.5], [x + 0.5, FLOOR - 0.38]], C.seatLight)
+  sitter?.()
   rect(pen, x - 0.05, FLOOR - 0.82, x + 0.42, FLOOR - 0.74, '#3A1D18')
   rect(pen, x + 0.02, FLOOR - 0.4, x + 0.36, FLOOR - 0.06, '#2A1714')
   rect(pen, x - 0.08, FLOOR - 0.08, x + 0.48, FLOOR, '#2A1714')
