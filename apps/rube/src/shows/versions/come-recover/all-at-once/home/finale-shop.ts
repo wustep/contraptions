@@ -82,8 +82,8 @@ export function shopLit(i: number, t: number): number {
 }
 
 /**
- * Each window's light on the room, through the light map: its colour on the machine's own face, and thrown forward and
- * down, laid along the floor in front of it, not up the wall.
+ * Each window's light on the room, through the light map: its colour in the glass and out to the rim, and thrown
+ * forward and down, laid along the floor in front of it; not round the window on the wall, like a halo.
  */
 function shopGlows(t: number): Glow[] {
   if (t < SHOP_FROM) return []
@@ -92,7 +92,7 @@ function shopGlows(t: number): Glow[] {
     const a = shopLit(i, t)
     if (a <= 0.01) return
     const big = w.r > 0.6
-    out.push({ x: w.at[0], y: w.at[1], r: w.r * 1.9, a: 0.45 * a, color: w.light })
+    out.push({ x: w.at[0], y: w.at[1], r: w.r * 1.35, a: 0.45 * a, color: w.light })
     out.push({ x: w.at[0], y: -0.05, r: big ? 2.2 : 1.25, ry: big ? 0.7 : 0.45, a: 0.6 * a, color: w.light })
   })
   return out
