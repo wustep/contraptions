@@ -23,6 +23,7 @@ import { R as BALL_R } from '../src/parts'
 import type { StockShow } from '../src/shows/stock/show'
 import cornfieldOnsets from '../../../scripts/shows/plans/cornfield-opus55-onsets.json'
 import { checkAllAtOnce } from './all-at-once'
+import { checkCornfield } from './cornfield'
 import epilogueOnsets from '../../../scripts/shows/plans/lalaland-epilogue-onsets.json'
 import { STRIKES as EPILOGUE_STRIKES } from '../src/shows/versions/la-la-land/epilogue/hits'
 import { INTO, OUT } from '../src/shows/versions/la-la-land/epilogue/score'
@@ -615,6 +616,7 @@ async function main(): Promise<void> {
         const endCam = perf.camera?.(perf.duration)
         check('cornfield opus55: the closing frame holds the photograph and the ticket', !!endCam && endCam.cells >= 7.5)
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
+        checkCornfield(perf, check)
       }
       if (work.work === 'la-la-land' && version.take === 'opus5-5') checkSebs(perf, version, check)
       if (work.work === 'gymnopedie' && version.take === 'opus55') checkGymnopedie(perf, version, check)

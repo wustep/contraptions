@@ -1,10 +1,11 @@
-import { DROP, FULL, LAST, beatAt } from './music'
+import { DROP, LAST, beatAt } from './music'
 import { hash, rgba, type Screen } from './screen'
 
 /**
- * Fireworks over the fair, far off behind the machine, each bursting on a beat the chase is built on: the drop, the
- * full organ, the one downbeat the machine leaves to rest (beat 180), and the last hit. Never on the rest of the
- * pulse: the machine strikes that, and a shell on every bar would be wallpaper.
+ * Fireworks over the fair, far off behind the machine, each bursting on a beat of the measured pulse the chase is built
+ * on, and only at its landmarks: the drop, the full organ, the one downbeat the machine leaves to rest (beat 180), and
+ * the last hit with the two soft beats after it. Never on the rest of the pulse: the machine strikes that, and a shell
+ * on every bar would be wallpaper.
  */
 
 interface Shell {
@@ -28,12 +29,14 @@ const VIOLET = '#B48AEA'
 
 export const SHELLS: Shell[] = [
   { t: DROP, x: 0.62, y: 0.52, r: 0.15, color: GOLD, fade: PINK },
-  { t: FULL, x: 0.3, y: 0.55, r: 0.14, color: CYAN, fade: VIOLET },
-  { t: FULL + 0.312, x: 0.74, y: 0.48, r: 0.12, color: PINK, fade: GOLD },
+  // The full organ comes in on beat 132: a shell on it and one on the eighth after.
+  { t: beatAt(132), x: 0.3, y: 0.55, r: 0.14, color: CYAN, fade: VIOLET },
+  { t: beatAt(132.5), x: 0.74, y: 0.48, r: 0.12, color: PINK, fade: GOLD },
   { t: beatAt(180), x: 0.5, y: 0.56, r: 0.15, color: GREEN, fade: CYAN },
+  // The last hit, and the pulse's last two beats under its ring.
   { t: LAST, x: 0.42, y: 0.5, r: 0.2, color: GOLD, fade: PINK },
-  { t: LAST + 0.625, x: 0.7, y: 0.44, r: 0.13, color: VIOLET, fade: CYAN },
-  { t: LAST + 1.25, x: 0.2, y: 0.4, r: 0.12, color: CYAN, fade: GREEN },
+  { t: beatAt(192), x: 0.7, y: 0.44, r: 0.13, color: VIOLET, fade: CYAN },
+  { t: beatAt(193), x: 0.2, y: 0.4, r: 0.12, color: CYAN, fade: GREEN },
 ]
 
 /** How long a shell climbs before it bursts, and how long its sparks last. */

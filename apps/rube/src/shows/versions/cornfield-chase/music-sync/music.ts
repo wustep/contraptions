@@ -20,8 +20,6 @@ export const GATHER: Note[] = measured.gather
 export const ORGAN = measured.organ
 /** The drop, on beat 68. */
 export const DROP = measured.drop.t
-/** The full organ, beat 132. */
-export const FULL = 82.508
 /** The last hit, beat 191, the ticket's payout. */
 export const LAST = measured.last.t
 

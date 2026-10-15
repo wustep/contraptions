@@ -11,16 +11,16 @@ import data from './opus55-music-sync.generated.json'
 /** Written by `npm run generate:cornfield:opus55`. Stock placements only; nothing here moves a machine. */
 export const score = data as unknown as StockScore
 
-const fair = score.maps.at(-1)!
-const booth = fair.pieces.find((p) => p.spec.name === 'booth')!
+export const fair = score.maps.at(-1)!
+export const booth = fair.pieces.find((p) => p.spec.name === 'booth')!
 const ticket = fair.pieces.find((p) => p.spec.name === 'ticket')!
-const door = fair.pieces.at(-1)!
+export const door = fair.pieces.at(-1)!
 /** The portal out of the field at sunset, and the one into the fair: the door the night comes down through. */
-const sunset = score.maps[0].pieces.at(-1)!
-const arrival = fair.pieces[0]
+export const sunset = score.maps[0].pieces.at(-1)!
+export const arrival = fair.pieces[0]
 const NIGHT = '#0D0B20'
 /** The photograph: the booth's flash, then once the ball is through the last portal, the long draw back. */
-const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, 97)
+export const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, 97)
 /** The run through the fair, taken once, the first time the photograph is drawn; the follow spot, the first time it is. */
 let run: Exposure | null = null
 let lit: Spot | null = null
