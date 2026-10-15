@@ -7,6 +7,7 @@ import { CUTS } from '../seams'
 import { CHURCH, HILL, HOME, INK } from '../worlds'
 import { TREE_X } from './hill'
 import { FALLS } from '../props/falls'
+import { drawBasket } from '../props/basket'
 
 /**
  * CLOUDS (49.644 to 63.251, waltz bars 32 to 45): the picnic on the hill, a summer afternoon when they were young.
@@ -868,6 +869,21 @@ function drawBlanket(p: p5, k: number, weight: number): void {
   p.pop()
 }
 
+/**
+ * Their picnic basket on the grass at the blanket's head, shut: the same hamper he hides the tickets in fifty years on
+ * and carries up this hill (`climb.ts`). Its shadow falls a little to the right.
+ */
+const PICNIC = { x: -1.58 }
+
+function drawPicnic(p: p5, k: number, weight: number): void {
+  p.push()
+  p.noStroke()
+  p.fill(alpha(p, mixHex(HILL.leaf, INK, 0.5), 0.3))
+  p.ellipse(X(PICNIC.x + 0.06, k), X(R + 0.03, k), X(0.56, k), X(0.06, k))
+  drawBasket(p, k, weight, PICNIC.x, R + 0.02)
+  p.pop()
+}
+
 /* ------------------------------------------------------------------ the butterflies */
 
 /**
@@ -967,6 +983,7 @@ export const clouds = part<CloudsState>(
       if (f.x1 > 2.4) drawShape(p, k, 'falls', t)
       drawShape(p, k, 'baby', t)
       drawBlanket(p, k, weight)
+      drawPicnic(p, k, weight)
       drawEngine(p, k, weight, t)
       drawTrails(p, k, t)
       drawButterflies(p, k, weight, t)
