@@ -6,6 +6,7 @@ import { frame, hash } from '../kit'
 import { SHANG, TENT } from '../worlds'
 import { CENTRE, drawRing, MONTANA } from './ring'
 import { alarm, cablePulses, CALL_KEY, NUMBER, PRESSES, roomLight, SHARE_KEY, sharing, voiceFlash, WAKE } from './timeline'
+import { drawSoldiers } from './door'
 
 /**
  * The command tent at the camp, at night: canvas walls on a frame of poles, the ring on its rig, and before it a long
@@ -352,6 +353,7 @@ function drawTent(p: p5, k: number, t: number): void {
   ctx.fillStyle = rgba(TENT.cable, 0.6)
   ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, 0.05 * k)
   drawAlarm(ctx, k, t, f)
+  drawSoldiers(ctx, k, t)
   ctx.restore()
 
   drawRing(p, k, t)

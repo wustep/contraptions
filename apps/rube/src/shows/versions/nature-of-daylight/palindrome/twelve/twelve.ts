@@ -3,6 +3,7 @@ import { box, part, route, scenery, type PartShot, type Way } from '../kit'
 import { G } from '../physics'
 import { tentDraw, CALL_X, hopFor, KEYS, ON_KEY, SHARE_ON } from './tent'
 import { CALL_HITS, CALL_KEY, DARK_HITS, FALLS as FELL, NUMBER, PRESSES, RISES as ROSE, SHARE_HITS, SHARE_KEY } from './timeline'
+import { DOOR_HITS, ianDoor } from './door'
 
 /**
  * The command tent at night (the TWELVE builder's): the ring of twelve screens, one for every shell on Earth, each
@@ -109,7 +110,8 @@ export const share = part<{ begin: number }>(
 )
 
 /**
- * The call (277.647 → 311.293). Louise on the table, the sat phone on her right where Shang was. It wakes on the
+ * The call (277.647 → 311.293). Louise on the table, the sat phone on her right where Shang was, Ian on her left (he goes
+ * to the door and holds the soldiers off: `door.ts`). It wakes on the
  * chord; she hops along its keys, one a beat, the number he gave her (the camera in close on the keys, cut away on
  * 283.458 to the ring dead but for Montana, and coming back in to her in one move as she dials the last of it), and on
  * 288.554 lands on the call key: the call goes
@@ -138,6 +140,8 @@ export const call = part<{ begin: number }>(
       exit: [end[0] + 0.5, end[1]] as Pt,
       lane: { segs: route(ways), fire: CALL_KEY - slot.begin },
       state: { begin: slot.begin },
+      // Ian, who goes to the door and holds the soldiers off (`door.ts`).
+      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: (t) => { const [x, y] = ianDoor(t); return { x: x - at[0], y: y - at[1] } } }],
     }
   },
   (slot) => {
@@ -152,11 +156,15 @@ export const call = part<{ begin: number }>(
       key(at, PRESSES[5] - 0.25, CLOSE, [keys[0] + 0.08, keys[1]]),
       // on the chord, a cut to what she is calling for: the ring dead, only Montana lit; held a beat,
       key(at, PRESSES[5], 14, [0.3, -4.2], { cut: true }),
-      // and then in to her, all the way, as she dials the last of the number, arriving on the call key: lowering as it
-      // comes, so she stays in even Zoom's tighter frame. (It cut back to her two seconds after the cut out: close,
-      // wide, close, the busiest cutting in the piece.)
-      key(at, PRESSES[7], 10, [(0.3 + keys[0]) / 2, -2.9]),
-      key(at, CALL_KEY, CLOSE, [keys[0] + 0.42, keys[1]]),
+      // and down to the room under it as the soldiers come in at the door: her dialing on the right, Ian on the floor
+      // before the door on the left, in their way (`door.ts`), the red lamp over them; held while she dials the rest;
+      key(at, PRESSES[6] + 0.2, 10, [-1.0, -1.6]),
+      key(at, PRESSES[7] + 0.1, 7.5, [-2.6, 0.5]),
+      key(at, PRESSES[9], 7.4, [-2.6, 0.55]),
+      // easing over with her as she goes for the call key, so she stays in Zoom's frame and they in this one;
+      key(at, CALL_KEY - 0.05, 7.6, [-1.9, 0.55]),
+      // and on the call key, a cut in to her, close.
+      key(at, CALL_KEY, CLOSE + 0.3, [keys[0] + 0.42, keys[1]], { cut: true }),
       // On the call, close still: her at the phone, Montana, China's screen coming up red and standing, the next
       // coming up the right side; opening out as the ring stands again round it,
       on(at, 290.3, 4.6, onCall, [0.18, 0.22]),
@@ -177,4 +185,4 @@ export const call = part<{ begin: number }>(
 export const FALLS: { screen: number; t: number }[] = FELL
 export const RISES: { screen: number; t: number }[] = ROSE
 
-export const TWELVE_HITS: number[] = [...SHARE_HITS, ...DARK_HITS, ...CALL_HITS]
+export const TWELVE_HITS: number[] = [...SHARE_HITS, ...DARK_HITS, ...CALL_HITS, ...DOOR_HITS].filter((t, i, all) => all.indexOf(t) === i)
