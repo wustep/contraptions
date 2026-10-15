@@ -1578,11 +1578,11 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   // The dark: black round the one spot, but not empty. The spot's spill falls off slowly, so the room is still there
   // in it: the band's things and the stair near the light, the vault and the far wall barely, and black at the edges.
   ctx.save()
-  const g = ctx.createRadialGradient(S(pool[0]), S(pool[1]), S(0.6 + 0.3 * fl), S(pool[0]), S(pool[1]), S(4.6 + 0.6 * fl))
+  const g = ctx.createRadialGradient(S(pool[0]), S(pool[1]), S(0.7 + 0.3 * fl), S(pool[0]), S(pool[1]), S(5.4 + 0.6 * fl))
   g.addColorStop(0, rgba(M.black, 0))
-  g.addColorStop(0.22, rgba(M.black, 0.45 * f * (1 - 0.2 * fl)))
-  g.addColorStop(0.55, rgba(M.black, 0.74 * f * (1 - 0.1 * fl)))
-  g.addColorStop(1, rgba(M.black, 0.92 * f))
+  g.addColorStop(0.22, rgba(M.black, 0.36 * f * (1 - 0.2 * fl)))
+  g.addColorStop(0.55, rgba(M.black, 0.64 * f * (1 - 0.1 * fl)))
+  g.addColorStop(1, rgba(M.black, 0.88 * f))
   ctx.fillStyle = g
   ctx.fillRect(S(view.x0 - 2), S(view.y0 - 2), S(view.x1 - view.x0 + 4), S(view.y1 - view.y0 + 4))
   ctx.restore()
