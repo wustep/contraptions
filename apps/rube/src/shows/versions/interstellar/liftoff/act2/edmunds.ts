@@ -560,7 +560,7 @@ interface View {
  * horizon is `tilt` below the frame's middle. Never under the ground.
  */
 function eyeAlt(alt: number, T: number): number {
-  const tilt = 1.85 - 3.35 * smooth(alt, 2.8, 8.5) + 1.9 * smooth(alt, 10, 14.5) - CRANE_PITCH * smooth(T, 266, DURATION + 6)
+  const tilt = 1.85 - 3.35 * smooth(alt, 2.8, 8.5) + 1.9 * smooth(alt, 10, 14.5) - CRANE_PITCH * smooth(T, 262, DURATION + 4)
   return 0.35 + softplus(alt - tilt - 0.35, 0.15)
 }
 /** How far the credits' crane pitches the horizon up the frame, in cells. */
@@ -694,7 +694,7 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
       if (hash(i, j, 61) > 0.42) continue
       const x = ox + (i + hash(i, j, 62)) * cell
       const y = oy + (j + hash(i, j, 63)) * cell
-      const a = sparse * smooth(E - y, 1.3, 4.6) * (1 - 0.35 * dawn) * (0.35 + 0.65 * hash(i, j, 64)) * (0.8 + 0.2 * Math.sin(T * 1.4 + i * 2.3 + j))
+      const a = sparse * smooth(E - y, 1.3, 4.6) * (1 - 0.35 * dawn) * (0.35 + 0.65 * hash(i, j, 64))
       if (a <= 0.03) continue
       p.fill(alpha(p, STAR, a))
       p.circle(X(x), X(y), 1.1 + 1.5 * hash(i, j, 65))

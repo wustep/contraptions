@@ -22,7 +22,7 @@ import { drawFar, drawLensing, drawNear } from './undock-far'
  *
  *   184  the port's red clamps spring open.
  *   185  the umbilical's plug fires out of the Ranger's flank; the cable whips back
- *   187  and seats in its socket on the hub (a spark).
+ *   187  and seats in its socket on the hub.
  *   186  the nose jets fire and the Ranger backs off the port, still turning with it.
  *   188–190  a pair of roll jets at the wingtips on each beat: the spin comes off
  *            in three equal steps and stops dead, level, on the loudest beat.
@@ -1256,25 +1256,12 @@ function drawUmbilical(p: p5, c: Ctx, t: number, near: boolean): void {
     p.rect(e[0], e[1], X(0.18), X(0.15), X(0.03))
   }
   if (!near) return
-  // The pyro that frees the plug, and the spark as it seats on the hub.
+  // The pyro that frees the plug. (It seats on the hub with its own knock, no spark.)
   const pyro = t - UMBILICAL
   if (pyro >= 0 && pyro < 0.7) {
     const a = PORT_A0 + stationTurn(UMBILICAL)
     const at = proj([PORT_X, PORT_R, a])
     jet(p, c, pyro, [at[0] / k, at[1] / k], [0.5, Math.cos(a) > 0 ? -0.6 : 0.6], 0.8)
-  }
-  const sp = t - SEAT
-  if (sp >= 0 && sp < 0.35) {
-    const s = proj([SOCKET[0] + 0.1, SOCKET[1], socket])
-    const u = sp / 0.35
-    p.stroke(alpha(p, DARK.amber, 1 - u))
-    p.strokeWeight(Math.max(1, weight * 0.7))
-    for (let j = 0; j < 5; j++) {
-      const d = -1.2 + j * 0.6
-      const r0 = 0.08 + 0.25 * u
-      const r1 = r0 + 0.12
-      p.line(s[0] + X(Math.cos(d) * r0), s[1] + X(Math.sin(d) * r0), s[0] + X(Math.cos(d) * r1), s[1] + X(Math.sin(d) * r1))
-    }
   }
 }
 

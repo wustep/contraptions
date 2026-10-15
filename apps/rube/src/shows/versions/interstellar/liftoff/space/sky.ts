@@ -60,8 +60,8 @@ export const voidSky = scenery<VoidState>({
           if (hash(i, j, l * 7 + 1) > 0.55) continue
           const x = ox + (i + hash(i, j, l * 7 + 2)) * L.cell
           const y = oy + (j + hash(i, j, l * 7 + 3)) * L.cell
-          const twinkle = 0.88 + 0.12 * Math.sin(t * (0.7 + hash(i, j, l)) + i)
-          const strength = L.a * shown * sparse * twinkle * (0.5 + hash(i, j, l * 7 + 4) * 0.5)
+          // Steady: out here there is no air to make them twinkle.
+          const strength = L.a * shown * sparse * (0.5 + hash(i, j, l * 7 + 4) * 0.5)
           const size = L.size * (0.6 + hash(i, j, l * 7 + 5) * 0.7)
           // Pinpoints, all of them: no star blooms. (Painted straight onto the canvas: a p5 colour a star is the costliest
           // thing in the frame.)
