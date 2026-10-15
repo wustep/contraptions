@@ -7,6 +7,7 @@ import { ACT2, beat, cue, DROP, DURATION, IGNITION, UNDOCK } from './music'
 import { LiftoffShow } from './show'
 import { BALL, EARTH, FARM, SPACE, STATION, VOID } from './worlds'
 import { dawn, sky } from './earth/sky'
+import { near } from './earth/near'
 import { house, porch, shelf, stairs, toy } from './earth/house'
 import { cornrow } from './earth/field'
 import { yard, YARD_END } from './earth/yard'
@@ -18,11 +19,13 @@ import { gantry } from './earth/gantry'
 import { PUNCH, punchHeight, rocket, rocketPose, ROCKET_LENGTH } from './rocket'
 import { cloud } from './cloud'
 import { voidSky } from './space/sky'
+import { spaceNear } from './space/near'
 import { endurance } from './space/endurance'
 import { miller } from './space/miller'
 import { gargantua } from './space/gargantua'
 import { AXIS } from './act2/station'
 import { interior } from './act2/interior'
+import { stationNear } from './act2/near'
 import { replica } from './act2/replica'
 import { rim } from './act2/rim'
 import { ballpark } from './act2/ballpark'
@@ -164,7 +167,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         theme: FARM,
         scenery: [standing(sky, 0, 0, all, { cloud: SWITCH }, DURATION), standing(house, 0, 0, box(-2, -6, 9, 2), null, DURATION)],
         chain: chainOf(earth.placed),
-        after: [standing(drone, 0, 0, all, flight, DURATION), deckCloud, standing(dawn, 0, 0, all, null, DURATION)],
+        after: [standing(drone, 0, 0, all, flight, DURATION), standing(near, 0, 0, all, null, DURATION), deckCloud, standing(dawn, 0, 0, all, null, DURATION)],
         from: 0,
       },
       {
@@ -172,7 +175,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         theme: VOID,
         scenery: [standing(voidSky, 0, 0, all, { deck, leave: beat(160) }, DURATION)],
         chain: [lift, ...space.placed],
-        after: [deckCloud],
+        after: [standing(spaceNear, 0, 0, all, null, DURATION), deckCloud],
         from: SWITCH,
       },
       {
@@ -180,6 +183,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         theme: FARM,
         scenery: [standing(interior, 0, 0, box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2), { axis, lights: ACT2 }, DURATION)],
         chain: station.placed,
+        after: [standing(stationNear, 0, 0, box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2), { axis, lights: ACT2 }, DURATION)],
         from: ACT2,
       },
       {
