@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { flicker, layer, motes, shade, sway, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
-import { clamp01, ctxOf, ease, glow, line, mix, rect, rgba, ring, shape, type Pen } from '../pen'
+import { clamp01, ctxOf, ease, line, mix, rect, rgba, ring, shape, type Pen } from '../pen'
 import { CAB } from '../cab'
 import {
   CURB_KICK,
@@ -415,8 +415,14 @@ function hall(pen: Pen, t: number, g: Frame): void {
   ctx.beginPath()
   for (let x = 5.2; x < 20; x += 3.6) if (x + 1.2 > x0 && x < x1) ctx.rect(x * k, -4.08 * k, 1.2 * k, 0.05 * k)
   ctx.fill()
-  // The tubes' cold light down the panelling.
-  glow(pen, [(x0 + x1) / 2, -3.7], (x1 - x0) * 0.6, '#C8F0D4', 0.07)
+  // The tubes' cold light down the panelling, from under them to the floor.
+  {
+    const g = ctx.createLinearGradient(0, -4.03 * k, 0, WALL_FOOT * k)
+    g.addColorStop(0, css(pen, '#C8F0D4', 0.1))
+    g.addColorStop(1, css(pen, '#C8F0D4', 0))
+    ctx.fillStyle = g
+    ctx.fillRect(x0 * k, -4.03 * k, (x1 - x0) * k, (WALL_FOOT + 4.03) * k)
+  }
   // Its neon: a martini glass, a pin and its ball, a crown. Each hums a little; the pin's ball stutters now and then.
   const hum = (seed: number) => flicker(t, seed, 0.12)
   const stutter = (seed: number) => (hash(Math.floor(t * 7), seed, 9) < 0.035 ? 0.05 : 1)
@@ -448,7 +454,12 @@ function hall(pen: Pen, t: number, g: Frame): void {
     box(pen, DECK_F[0] - 0.35, -3.4, DECK_F[1] + 0.35, -2.8, '#2E1B14')
     box(pen, DECK_F[0] - 0.3, -3.34, DECK_F[1] + 0.3, -2.86, '#3E2618')
     box(pen, DECK_F[0] - 0.35, -2.8, DECK_F[1] + 0.35, -2.77, '#F2FBF4')
-    glow(pen, [(DECK_F[0] + DECK_F[1]) / 2, -2.5], 1.1, '#E8F6EC', 0.13)
+    // Their light straight down on the far decks.
+    const g = ctx.createLinearGradient(0, -2.77 * k, 0, CAP * k)
+    g.addColorStop(0, css(pen, '#E8F6EC', 0.16))
+    g.addColorStop(1, css(pen, '#E8F6EC', 0))
+    ctx.fillStyle = g
+    ctx.fillRect((DECK_F[0] - 0.35) * k, -2.77 * k, (DECK_F[1] - DECK_F[0] + 0.7) * k, (CAP + 2.77) * k)
   }
   // The floor: the concourse's carpet, the approach's maple, the lanes and their gutters, the decks.
   box(pen, x0, WALL_FOOT, x1, CAP + 0.1, '#36101D')
@@ -624,17 +635,8 @@ export function farHall(pen: Pen, t: number, f: Frame): void {
 
 /* ------------------------------------------------------------------ the room's own neon, and its wall */
 
-/** One fluorescent tube over the lanes is going: now and then it stutters. 1 lit, under it out. */
-export function tubeOn(i: number, t: number): number {
-  if (i !== 5) return 1
-  for (const st of [124.62, 130.24, 133.12]) {
-    const s = t - st
-    if (s < 0 || s > 0.26) continue
-    if (s < 0.05) return 0.12
-    if (s < 0.09) return 0.85
-    if (s < 0.19) return 0.08
-    return 0.6 + 2 * (s - 0.19)
-  }
+/** The fluorescent tubes over the lanes: all lit, and steady. 1 lit, under it out. */
+export function tubeOn(_i: number, _t: number): number {
   return 1
 }
 
@@ -1384,7 +1386,7 @@ function nearThing(pen: Pen, t: number, kind: Near, b: Pt, u: number, a: number)
     soft(arc([x, y - 1.0 * u], 0.62 * u, 0.17 * u, 0, Math.PI * 2, 18), '#1C070D')
     rim(arc([x, y - 1.0 * u], 0.62 * u, 0.17 * u, Math.PI * 1.02, Math.PI * 1.75, 10), NEON.red, 0.75)
   } else if (kind === 'glass') {
-    // A glass of beer with the light coming through it: dark glass, the beer glowing amber, its bubbles going up.
+    // A glass of beer, dark against the room: the beer a dull amber in it, its head, its bubbles going up.
     const w = 0.42 * u
     const h = 0.95 * u
     const body: Pt[] = [[x - w / 2, y], [x - w / 2 - 0.04 * u, y - h], [x + w / 2 + 0.04 * u, y - h], [x + w / 2, y]]
@@ -1392,7 +1394,7 @@ function nearThing(pen: Pen, t: number, kind: Near, b: Pt, u: number, a: number)
     ctx.save()
     trace(body)
     ctx.clip()
-    glow(pen, [x, y - h * 0.45], h * 0.7, '#E2B850', 0.6)
+    rect(pen, x - w, y - h * 0.86, x + w, y, '#5A3E16')
     rect(pen, x - w, y - h, x + w, y - h * 0.86, '#6E5A44')
     ctx.restore()
     bubbles(pen, t, [[x, y, h, w]])

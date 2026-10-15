@@ -1,9 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { drawCab } from '../cab'
-import { layer, parallax, type Frame } from '../depth'
+import { layer, parallax, shade, type Frame } from '../depth'
 import { hash } from '../kit'
-import { blob, clamp01, ctxOf, ease, ellipse, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import { blob, clamp01, ctxOf, ease, ellipse, flash, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import {
   BETTOR_GLASS,
   CAP,
@@ -526,7 +526,8 @@ function outside(pen: Pen, t: number, x0: number, x1: number, f: Frame): void {
   path(pen, [[lx, -3.6], [lx + 0.15, -3.85], [lx + 0.6, -3.85]], '#0A0F18', 1.6)
   shape(pen, [[lx + 0.4, -3.88], [lx + 0.85, -3.88], [lx + 0.75, -3.76], [lx + 0.5, -3.76]], '#0A0F18')
   ellipse(pen, [lx + 0.625, -3.75], 0.13, 0.04, C.mercury)
-  glow(pen, [lx + 2.2, ROAD], 3.2, C.mercury, 0.1)
+  // Its pool, flat on the road and the near sidewalk under the head.
+  shade(pen, [lx + 1.1, ROAD + 0.12], 2.6, 0.42, C.mercury, 0.13)
   lampMist(pen, t, x0, x1)
   // The alley's own sign, hung off its front over the sidewalk.
   bladeSign(pen, t)
@@ -556,8 +557,8 @@ function room(pen: Pen, t: number, f: Frame): void {
     rect(pen, px - 0.11, OPEN_TOP, px - 0.06, -1.95, mix(C.creamDark, '#000000', 0.35))
     rect(pen, px + 0.07, OPEN_TOP, px + 0.11, -1.95, mix(C.wood, '#000000', 0.7))
   }
-  // Each tube washes the wall under it, cold.
-  for (const [i, tx] of TUBES.entries()) glow(pen, [tx + 0.85, -3.4], 2.0, C.tubeGlow, 0.13 * tubeOn(i, t))
+  // Each tube washes the wall under it, cold: brightest just under the fitting, gone by the wainscot.
+  for (const [i, tx] of TUBES.entries()) fall(pen, tx, tx + 1.7, CEIL + 0.2, -1.95, 0.8, C.tubeGlow, 0.11 * tubeOn(i, t))
   rect(pen, x0, -1.95, x1, BACK, mix(C.wood, '#000000', 0.2))
   for (let x = x0 + 0.1; x < x1; x += 0.42) rect(pen, x, -1.92, x + 0.025, BACK, C.woodDark)
   rect(pen, x0, -2.03, x1, -1.92, C.trim)
@@ -688,7 +689,7 @@ function room(pen: Pen, t: number, f: Frame): void {
   crown(pen, [(HEADPIN + x1) / 2, -1.88], 0.62)
   if (f.x1 > HEADPIN - 0.6) marquee(pen, HEADPIN - 0.525, -2.335, x1 - 0.075, -1.405)
   // The light under the board, down on the deck and the pins.
-  glow(pen, [HEADPIN + 0.6, -0.9], 1.5, C.tube, 0.15)
+  fall(pen, HEADPIN - 0.55, x1, -1.28, NEAR[1], 0.15, C.tube, 0.16)
   rect(pen, HEADPIN - 0.6, -1.34, x1, -1.28, C.tube)
   // The pinboy, in the dark over the pit, on his perch.
   pinboy(pen, t)
@@ -726,6 +727,30 @@ function room(pen: Pen, t: number, f: Frame): void {
 }
 
 const TUBES = [-0.6, 2.4, 5.4, 8.4, 11.4, 14.4, 17.4]
+
+/**
+ * Light falling from a fitting `x0` to `x1` at `top` down to `bottom`, spreading `spread` either side as it goes and
+ * fading as it falls: laid on the wall or the deck it reaches, never round the fitting.
+ */
+function fall(pen: Pen, x0: number, x1: number, top: number, bottom: number, spread: number, col: string, a: number): void {
+  if (a <= 0.004) return
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  const g = ctx.createLinearGradient(0, top * k, 0, bottom * k)
+  g.addColorStop(0, rgba(pen, col, a))
+  g.addColorStop(0.5, rgba(pen, col, a * 0.35))
+  g.addColorStop(1, rgba(pen, col, 0))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo(x0 * k, top * k)
+  ctx.lineTo(x1 * k, top * k)
+  ctx.lineTo((x1 + spread) * k, bottom * k)
+  ctx.lineTo((x0 - spread) * k, bottom * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
 
 function carpetPattern(pen: Pen, x0: number, y0: number, x1: number, y1: number): void {
   for (let y = y0 + 0.1; y < y1; y += 0.2) {
@@ -780,8 +805,8 @@ function counter(pen: Pen, t: number): void {
   ashtray(pen, t, [1.88, top - 0.1], 0.75)
   beer(pen, [2.66, top - 0.1], 0.2, 0.085, 0, 0.5)
   bubbles(pen, t, [[2.66, top - 0.1, 0.2, 0.085]])
-  // The counter's light: warm, from a shaded bulb over it.
-  glow(pen, [(x0 + x1) / 2, top - 0.6], 2.0, C.warm, 0.14)
+  // The counter's light, from the tube over it: a warm pool along its top.
+  shade(pen, [(x0 + x1) / 2, top - 0.05], (x1 - x0) * 0.55, 0.12, C.warm, 0.2)
   // The stools.
   for (const sx of [0.3, 1.45, 2.55]) {
     rect(pen, sx - 0.03, -1.75, sx + 0.03, FB - 0.08, C.chrome)
@@ -944,8 +969,9 @@ function lampOverTable(pen: Pen, t: number): number {
   ctx.closePath()
   ctx.fill()
   ctx.restore()
-  // Its pool on the table and the men round it.
-  glow(pen, [lx, TOP - 0.3], 3.2, C.warm, 0.12)
+  // Its pool on the table, and on the floor round the men's feet.
+  shade(pen, [lx, TOP + 0.02], 3.0, 0.22, C.warm, 0.16)
+  shade(pen, [lx, FB + 0.04], 4.2, 0.2, C.warm, 0.08)
   return lx + swing
 }
 

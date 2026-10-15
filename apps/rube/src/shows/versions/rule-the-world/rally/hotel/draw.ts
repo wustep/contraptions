@@ -3,7 +3,7 @@ import { hash } from '../kit'
 import { at, BEAT } from '../music'
 import { G, G_LOW } from '../physics'
 import { sway } from '../depth'
-import { blob, ctxOf, ellipse, flash, glow, line, mix, path, rect, rgb, rgba, ring, shape, toHex, vgrad, type Pen } from '../pen'
+import { blob, ctxOf, ellipse, flash, line, mix, path, rect, rgb, rgba, ring, shape, toHex, vgrad, type Pen } from '../pen'
 import {
   BED,
   BREAK,
@@ -458,9 +458,9 @@ export function drawBuilding(pen: Pen, t: number, f: Frame): void {
     const ceil = ceilOf(fl)
     if (fl < f.y0 - 1 || ceil > f.y1 + 1) continue
     const room = fl === F_MARTY ? marty : fl === F_MISH ? mish : dark
-    // The hall: dim paper, and the hall light's pool on it.
+    // The hall: dim paper, its ceiling light, and that light down the paper under it.
     paper(dark, f.x0 - 1, WALL_L[0], ceil, fl, '#6A5A3E', '#5C4E36', '#7A6A4A', f)
-    glow(dark, [-4, ceil + 1.2], 2.2, C.tungsten, fl === F_MARTY || fl === F_MISH ? 0.3 : 0.15)
+    hallLight(pen, ceil, fl, fl === F_MARTY || fl === F_MISH ? 1 : 0.5)
     if (fl === F_MARTY) paper(room, WALL_L[1], WALL_R[0], ceil, fl, C.paper, C.paperStripe, C.paperMotif, f)
     else if (fl === F_MISH) paper(room, WALL_L[1], WALL_R[0], ceil, fl, C.mPaper, C.mStripe, C.mMotif, f)
     else paper(room, WALL_L[1], WALL_R[0], ceil, fl, '#7A7458', '#6C6750', '#86805F', f)
@@ -483,6 +483,28 @@ export function drawBuilding(pen: Pen, t: number, f: Frame): void {
   drawMishRoom(mish, t)
   drawMishAir(mish, t, f)
   drawFloor(marty, mish, t, f)
+}
+
+/** The hall's light on a floor: a frosted bowl under its ceiling, and its light falling down the paper, fading. */
+function hallLight(pen: Pen, ceil: number, fl: number, on: number): void {
+  const x = -4
+  ellipse(withTone(pen, toneDark), [x, ceil + 0.06], 0.22, 0.07, mix(C.doorDark, C.tungsten, 0.55 * on))
+  const ctx = ctxOf(pen.p)
+  const { k } = pen
+  const g = ctx.createLinearGradient(0, (ceil + 0.1) * k, 0, fl * k)
+  g.addColorStop(0, rgba(pen, C.tungsten, 0.2 * on))
+  g.addColorStop(0.6, rgba(pen, C.tungsten, 0.05 * on))
+  g.addColorStop(1, rgba(pen, C.tungsten, 0))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo((x - 0.3) * k, (ceil + 0.1) * k)
+  ctx.lineTo((x + 0.3) * k, (ceil + 0.1) * k)
+  ctx.lineTo(Math.min(x + 1.6, WALL_L[0]) * k, fl * k)
+  ctx.lineTo((x - 1.6) * k, fl * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
 }
 
 /** The rooms nobody is awake in: a bed, a wardrobe, a chair; the lobby's desk, its pigeonholes, a lamp left on. */
