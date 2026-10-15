@@ -378,3 +378,44 @@ with its rain and its fire. In Chrome (headed, 2384 × 1800, every frame of the 
 both passes and after them painted back to back on the same machine) no frame takes 20 ms: the paint on the main
 thread is 2.2 ms a frame on average, 4.7 ms at the 95th percentile and 9.8 ms at worst (2.1, 3.5 and 9.1 before), and
 the finale, the heaviest stretch, 4.2 ms on average (3.1 before).
+
+## The fourth fullness pass
+
+The same brief once more, with the note that a pass should cut and refine as much as it adds. Ten new frames, a
+quarter of the way between the first ten (0:20, 0:47 and so on to 4:19), a still every three seconds of the whole show,
+and the map of every second again. No frame had an empty third that was not meant: the bare wall over the nursery's
+glass as the crane begins is where the credits are set, and the white bed at the pillow is the quiet of "All for
+freedom and for pleasure". The stillest stretches were the ones the last pass found, and each is quiet on purpose: the
+hotel room's first seconds are a pan from the door to the tub (the map holds the camera, so a pan counts as stillness),
+the alley's master shot is where the band drops out, and the crane's first seconds carry the credits. So this pass is
+mostly an edit, of what the last two had added and of the shine the restraint pass had left.
+
+- *The flock* (`flock.ts`): the loft's flock had 440 birds, and on its pass close to the lens over the lit rooms, the
+  finale's high point, they turned their pale undersides over the building's face and covered it with a swarm of pale
+  flecks for four seconds. It now has 180, a loft's worth, and over the building's face they are the slate of a
+  pigeon's back however they turn: a flock going by in front of the rooms, which read through it. High against the
+  night still overhead, their undersides still show pale as they bank.
+- *The ward's other flocks:* the last pass sent a flock off a roof across the street past each of the ward's three
+  windows, eight times in all, before the loft's flock had gone up. They are cut. The pigeons on the sills and the ones
+  that go up into the light as the sun clears the roofs stay, and the loft's flock is the flock.
+- *The store's radiator* spat a puff of steam on every downbeat, the idle puff the hotel's radiator lost in the second
+  subtraction pass. It is cut; the knock, and Murray's scarf lifting at it, stay.
+- *Shine:* Tokyo's two spotlights' shafts through the air over the crowd (their lenses still come on with the stomp, and
+  the lamp's own cone over the table stays); the ring of haze drawn round the ward's near chair, trolley and palm to
+  stand for their being out of focus, which read as a halo; the neon's coloured lines along the alley's near stool,
+  glass, ashtray, ball rack and hydrant; and the pale arc on every head of Tokyo's front row. The near things are
+  silhouettes now, as London's front row always was.
+
+Kept, on a second look: the hotel's mouse, which is a story in that room's stillest seconds rather than the store's
+mouse again, and the thin line down a figure's side where a lit window or a tube is behind it. Not made: a counterman
+behind the alley's lunch counter, whose head would have come up under the tubes in the busiest third of the master
+shot, and a higher camera over the stockroom's dark floor on the way to the office, which would have cropped the rug
+that carries the next two seconds.
+
+**Measured,** against the show as the last pass left it, with the camera held: the edit cost almost nothing in motion
+(the last third 8.4% of the picture moving before and 8.3% after, and 248 separate things moving in a frame against 246,
+the thinned flock no longer merging into a few big blots), and no second is nearly still. In Chrome (headed,
+2384 × 1800, every frame of the show at 60 fps, before and after painted back to back on the same machine) no frame
+takes 20 ms, and the edit made the paint cheaper: 1.8 ms a frame on average, 4.4 ms at the 95th percentile and 11.0 ms
+at worst (2.0, 6.9 and 12.5 before), and the finale 3.9 ms on average (6.0 before), most of it the birds that are no
+longer drawn.
