@@ -366,3 +366,186 @@ export function cat(p: p5, k: number, ink: string, w: number, x: number, foot: n
   seg(p, k, [hx - 0.05, hy], [hx - 0.02, hy + 0.005], ink, w * 0.5)
   seg(p, k, [hx + 0.02, hy + 0.005], [hx + 0.05, hy], ink, w * 0.5)
 }
+
+/* ------------------------------------------------------------------ the pool's own life */
+
+/**
+ * Next door, over the hedge at the back of the pool: a stretch of their fence, their tree over it stirring, and their
+ * sprinkler's arc of water swinging up over the fence and back. Drawn before the hedge, so the hedge stands in front.
+ */
+export function nextDoor(p: p5, k: number, ink: string, w: number, x0: number, x1: number, foot: number, t: number): void {
+  // Their tree, behind the fence.
+  const tx = x0 + 0.75
+  const sway = 0.025 * Math.sin(t * 0.7)
+  seg(p, k, [tx, foot], [tx + sway * 0.4, foot - 0.95], alpha(p, ink, 0.7), w * 1.3)
+  p.stroke(alpha(p, ink, 0.7))
+  p.strokeWeight(w * 0.7)
+  p.fill(alpha(p, M.teal, 0.9))
+  p.ellipse((tx + sway) * k, (foot - 1.2) * k, 0.95 * k, 0.8 * k)
+  p.noStroke()
+  p.fill(alpha(p, M.grass, 0.55))
+  p.ellipse((tx - 0.12 + sway) * k, (foot - 1.3) * k, 0.45 * k, 0.36 * k)
+  // Their sprinkler, out of sight behind the fence: a fan of jets swinging slowly over it, its drops running out along
+  // each arc and falling back behind the boards.
+  const sx = x1 - 0.7
+  const src = foot - 0.35
+  const swing = Math.sin(t * 0.9)
+  p.noStroke()
+  for (let j = 0; j < 5; j++) {
+    const reach = (0.55 + 0.1 * j) * swing
+    const high = 0.75 + 0.06 * j
+    for (let i = 0; i < 10; i++) {
+      const u = (i / 10 + t * 0.85 + j * 0.17) % 1
+      const x = sx + reach * u
+      const y = src - 4 * high * u * (1 - u)
+      if (y > foot - 0.66) continue
+      p.fill(alpha(p, i % 2 ? M.cream : M.sky, 0.8 - 0.5 * u))
+      p.ellipse(x * k, y * k, 0.035 * k, 0.03 * k)
+    }
+  }
+  // The fence: pointed boards, weathered, standing a little taller than the hedge in front of it.
+  const top = foot - 0.72
+  for (let x = x0, i = 0; x < x1; x += 0.13, i++) {
+    const h = 0.02 * hash(i, 77)
+    shape(p, k, [[x, foot], [x, top + 0.05 - h], [x + 0.055, top - h], [x + 0.11, top + 0.05 - h], [x + 0.11, foot]], i % 3 ? M.warm : M.cream, alpha(p, ink, 0.55), w * 0.5)
+  }
+}
+
+/** A car going by on the street beyond the hedge: its cabin and the top of its body showing over the hedge as it passes. */
+export function passingCar(p: p5, k: number, ink: string, w: number, x: number, foot: number): void {
+  const body = '#C2604A'
+  shape(p, k, [[x - 0.55, foot], [x - 0.55, foot - 0.28], [x - 0.3, foot - 0.32], [x - 0.18, foot - 0.52], [x + 0.25, foot - 0.52], [x + 0.38, foot - 0.32], [x + 0.55, foot - 0.28], [x + 0.55, foot]], body, ink, w * 0.7)
+  shape(p, k, [[x - 0.12, foot - 0.33], [x - 0.06, foot - 0.47], [x + 0.03, foot - 0.47], [x + 0.03, foot - 0.33]], M.sky, ink, w * 0.5)
+  shape(p, k, [[x + 0.08, foot - 0.33], [x + 0.08, foot - 0.47], [x + 0.21, foot - 0.47], [x + 0.29, foot - 0.33]], M.sky, ink, w * 0.5)
+}
+
+/**
+ * In the pool: the band of tiles at its waterline, along the long wall the section shows; the dark marks on that wall
+ * under the water, seen through it; a ladder; a pool noodle riding the surface; and, after each of them goes in, the
+ * bubbles coming up. `under` draws what is below the water (after the water, so it is seen through it, and dimmer);
+ * otherwise what is above it.
+ */
+export function poolLife(p: p5, k: number, ink: string, w: number, x0: number, x1: number, lip: number, water: number, floor: number, surface: (x: number) => number, t: number, dives: [number, number][], under: boolean): void {
+  const LADDER = 2.35
+  if (!under) {
+    // The waterline tiles: a band of small squares just above the water, dark and light by turns.
+    for (let x = x0 + 0.04, i = 0; x < x1; x += 0.1, i++) box2(p, k, x, water - 0.11, x + 0.09, water - 0.02, i % 2 ? M.cream : alpha(p, M.teal, 0.6), alpha(p, ink, 0.35), w * 0.3)
+    // The ladder's rails coming up out of the water and over onto the deck, and its top rung.
+    for (const dx of [-0.13, 0.13]) {
+      const x = LADDER + dx
+      p.noFill()
+      p.stroke(M.cream)
+      p.strokeWeight(w * 1.6)
+      p.beginShape()
+      p.vertex(x * k, (water + 0.05) * k)
+      p.bezierVertex(x * k, (lip - 0.5) * k, (x - 0.3) * k, (lip - 0.5) * k, (x - 0.32) * k, lip * k)
+      p.endShape()
+    }
+    return
+  }
+  // Under the water, seen through it: the ladder's rungs; the return jet's current, wavering out from the wall.
+  for (let i = 0; i < 4; i++) {
+    const u = ((t * 0.5 + i / 4) % 1)
+    const x = x0 + 0.15 + 1.4 * u
+    const y = RETURN_Y + 0.05 * Math.sin(t * 2.3 + i * 1.7) + (i - 1.5) * 0.04
+    seg(p, k, [x, y], [x + 0.25, y + 0.01], alpha(p, M.cream, 0.4 * (1 - u)), w * 0.6)
+  }
+  void floor
+  for (const dx of [-0.13, 0.13]) seg(p, k, [LADDER + dx, water + 0.02], [LADDER + dx, water + 0.9], alpha(p, M.cream, 0.55), w * 1.4)
+  for (const y of [0.18, 0.46, 0.74]) seg(p, k, [LADDER - 0.13, water + y], [LADDER + 0.13, water + y], alpha(p, M.cream, 0.55), w * 1.1)
+  // The surface's marks: short strokes just under it, drifting slowly the way the breeze pushes the water.
+  for (let i = 0; i < 9; i++) {
+    const span = x1 - x0
+    const x = x0 + 0.3 + ((i / 9) * span + t * 0.12 + 0.3 * hash(i, 81)) % (span - 0.6)
+    const y = surface(x) + 0.05 + 0.05 * hash(i, 82)
+    seg(p, k, [x, y], [x + 0.22 + 0.1 * hash(i, 83), y + 0.004], alpha(p, M.cream, 0.45), w * 0.7)
+  }
+  // Bubbles after each of them goes in: a short column wobbling up from where they went under, and gone at the top.
+  for (const [at, x] of dives) {
+    const s = t - at
+    if (s < 0.15 || s > 2.6) continue
+    for (let i = 0; i < 8; i++) {
+      const u = (s - 0.15 - 0.22 * i) / 1.3
+      if (u <= 0 || u >= 1) continue
+      const bx = x + 0.12 * (hash(i, 84) - 0.5) + 0.03 * Math.sin(s * 9 + i)
+      const by = water + 0.6 - 0.58 * u
+      p.noFill()
+      p.stroke(alpha(p, M.cream, 0.8 * (1 - u * u)))
+      p.strokeWeight(w * 0.6)
+      p.circle(bx * k, by * k, (0.035 + 0.025 * hash(i, 85)) * k)
+    }
+  }
+}
+
+/** A pink pool noodle riding the surface at x, tipping with the water under its two ends. */
+export function noodle(p: p5, k: number, ink: string, w: number, x: number, surface: (x: number) => number): void {
+  const L = 0.45
+  const a: Pt = [x - L, surface(x - L) + 0.02]
+  const b: Pt = [x + L, surface(x + L) + 0.02]
+  const n = Math.hypot(b[0] - a[0], b[1] - a[1])
+  const ny = (b[0] - a[0]) / n
+  const nx = -(b[1] - a[1]) / n
+  const r = 0.05
+  shape(p, k, [[a[0] + nx * r, a[1] + ny * r], [b[0] + nx * r, b[1] + ny * r], [b[0] - nx * r, b[1] - ny * r], [a[0] - nx * r, a[1] - ny * r]], M.pink, ink, w * 0.6)
+}
+
+/** How deep the return jet comes into the pool, below its wall's top. */
+const RETURN_Y = 0.62
+/**
+ * The pool's plumbing, in the ground the section cuts: the pump in its pit under the deck, its motor humming round,
+ * a pipe from the skimmer at the waterline down to it, and the return pipe out to the jet in the pool wall, the water
+ * running through both as a stream of dashes.
+ */
+export function poolPlumbing(p: p5, k: number, ink: string, w: number, pumpX: number, wall: number, lip: number, water: number, t: number): void {
+  const pump: Pt = [pumpX, 0.5]
+  const pipe = '#D9CDB0'
+  const pw = 0.09
+  // The runs: skimmer (at the wall, just under the waterline) down and along to the pump's top; pump's side out to the
+  // return jet in the wall.
+  const suction: Pt[] = [[wall - 0.05, water + 0.12], [wall - 0.6, water + 0.12], [wall - 0.6, 0.12], [pump[0] + 0.1, 0.12], [pump[0] + 0.1, pump[1] - 0.2]]
+  const back: Pt[] = [[pump[0] + 0.28, pump[1] + 0.1], [wall, pump[1] + 0.1]]
+  for (const run of [suction, back]) {
+    for (let i = 1; i < run.length; i++) {
+      const [a, b] = [run[i - 1], run[i]]
+      const x = Math.min(a[0], b[0]) - pw / 2
+      const y = Math.min(a[1], b[1]) - pw / 2
+      box2(p, k, x, y, Math.max(a[0], b[0]) + pw / 2, Math.max(a[1], b[1]) + pw / 2, pipe, alpha(p, ink, 0.6), w * 0.5)
+    }
+  }
+  // The water running through them: dashes travelling along each run at the pump's pace.
+  const flow = (run: Pt[], dir: number) => {
+    const lens = run.slice(1).map((q, i) => Math.hypot(q[0] - run[i][0], q[1] - run[i][1]))
+    const total = lens.reduce((a, b) => a + b, 0)
+    for (let d = 0; d < total; d += 0.22) {
+      let s = (d + dir * t * 0.55) % total
+      if (s < 0) s += total
+      let i = 0
+      while (i < lens.length - 1 && s > lens[i]) s -= lens[i++]
+      const [a, b] = [run[i], run[i + 1]]
+      const u = s / lens[i]
+      const x = a[0] + (b[0] - a[0]) * u
+      const y = a[1] + (b[1] - a[1]) * u
+      const ux = (b[0] - a[0]) / lens[i]
+      const uy = (b[1] - a[1]) / lens[i]
+      seg(p, k, [x - ux * 0.04, y - uy * 0.04], [x + ux * 0.04, y + uy * 0.04], alpha(p, M.pool, 0.9), w * 0.9)
+    }
+  }
+  flow(suction, 1)
+  flow(back, 1)
+  // The skimmer's mouth in the wall, and the jet's.
+  box2(p, k, wall - 0.12, water + 0.04, wall, water + 0.2, alpha(p, ink, 0.55), null)
+  box2(p, k, wall - 0.06, pump[1] + 0.04, wall, pump[1] + 0.16, alpha(p, ink, 0.55), null)
+  // The pump: its pit, its body, and the motor's fan turning behind its grille.
+  box2(p, k, pump[0] - 0.42, pump[1] - 0.32, pump[0] + 0.42, pump[1] + 0.32, alpha(p, ink, 0.18), null, 0, 0.04)
+  box2(p, k, pump[0] - 0.32, pump[1] - 0.2, pump[0] + 0.3, pump[1] + 0.22, M.teal, ink, w * 0.7, 0.05)
+  p.noFill()
+  p.stroke(alpha(p, ink, 0.7))
+  p.strokeWeight(w * 0.6)
+  p.circle((pump[0] - 0.08) * k, pump[1] * k, 0.26 * k)
+  const a0 = t * 7
+  for (let b = 0; b < 3; b++) {
+    const a = a0 + (b * TAU) / 3
+    seg(p, k, [pump[0] - 0.08, pump[1]], [pump[0] - 0.08 + Math.cos(a) * 0.11, pump[1] + Math.sin(a) * 0.11], alpha(p, ink, 0.7), w * 0.7)
+  }
+  void lip
+}

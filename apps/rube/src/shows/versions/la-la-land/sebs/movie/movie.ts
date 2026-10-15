@@ -4,7 +4,7 @@ import { alpha, box, carried, frame, glow, hash, part, ring, rgba, route, smooth
 import { hop } from '../physics'
 import { MOVIE_MAT as M } from '../worlds'
 import { box2, lerp, seg, shape, soft, trackAt, vgrad, type Key } from './movie-kit'
-import { cat, crab, curtains, dog, dogAt, kite, pinwheel, plane, sandcastle, sprinkler, swell, train, windPump, type DogKey } from './movie-life'
+import { cat, crab, curtains, dog, dogAt, kite, nextDoor, noodle, passingCar, pinwheel, plane, poolLife, poolPlumbing, sandcastle, sprinkler, swell, train, windPump, type DogKey } from './movie-life'
 import { birds, bunting, butterflies, clouds, farTrees, flowerBed, hedge, homeWall, lounger, mailbox, partyTable, poolRing, sailboat, summerSky, tree, umbrella } from './movie-sets'
 
 /**
@@ -646,7 +646,7 @@ function dust(p: p5, k: number, fi: number, v: Rect, weave: number): void {
 
 /* ------------------------------------------------------------------ the room */
 
-/** The projector in the dark, its beam on the screen, the reels turning; drawn outside the gate only. */
+/** The projector in the dark, its picture on the screen, the reels turning; drawn outside the gate only. */
 function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void {
   const { k, weight } = c
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -658,7 +658,6 @@ function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void 
   ctx.clip('evenodd')
   ctx.fillStyle = M.room
   ctx.fillRect((fr.x0 - pad) * k, (fr.y0 - pad) * k, (fr.x1 - fr.x0 + 2 * pad) * k, (fr.y1 - fr.y0 + 2 * pad) * k)
-  const h = img.y1 - img.y0
   const cy = (img.y0 + img.y1) / 2
   const floor = img.y1 + 1.35
   // The screen round the picture: its matte white, lit a little by the spill; its stand down to the floor.
@@ -670,7 +669,7 @@ function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void 
   seg(p, k, [sx, floor - 0.35], [sx - 0.55, floor], alpha(p, M.warm, 0.16), weight * 0.8)
   seg(p, k, [sx, floor - 0.35], [sx + 0.55, floor], alpha(p, M.warm, 0.16), weight * 0.8)
   seg(p, k, [img.x0 - m, img.y0 - m - 0.06], [img.x1 + m, img.y0 - m - 0.06], alpha(p, M.warm, 0.2), weight * 1.2)
-  // The floor, barely: where the beam's spill reaches.
+  // The floor, barely: where the screen's light reaches.
   vgrad(p, k, fr.x0 - pad, floor, fr.x1 + pad, fr.y1 + pad, [[0, rgba(M.warm, 0.06)], [0.4, rgba(M.warm, 0)]])
   // The room, just seen by the picture's light: an armchair turned to the screen, empty, a little table beside it with
   // a cup, and two frames on the wall; each with the screen's light along its edges toward it.
@@ -679,33 +678,7 @@ function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void 
   const lx = img.x0 - 5.2
   const ly = cy
   const run = t < TAIL ? 1 : 1 + 2.2 * smooth(t, TAIL, TAIL + 0.3)
-  // The beam: a soft wedge from the lens to the screen, flickering with the shutter.
-  const shutter = 0.9 + 0.1 * Math.sin(t * 2 * Math.PI * 18)
-  ctx.save()
-  const bg = ctx.createLinearGradient(lx * k, 0, img.x0 * k, 0)
-  const ba = (t < TAIL ? 0.16 : 0.24) * shutter
-  bg.addColorStop(0, rgba(M.beam, ba * 1.6))
-  bg.addColorStop(1, rgba(M.beam, ba * 0.45))
-  ctx.fillStyle = bg
-  ctx.beginPath()
-  ctx.moveTo(lx * k, (ly - 0.05) * k)
-  ctx.lineTo(img.x0 * k, img.y0 * k)
-  ctx.lineTo(img.x0 * k, img.y1 * k)
-  ctx.lineTo(lx * k, (ly + 0.05) * k)
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
-  // Motes turning slowly in the beam.
-  for (let i = 0; i < 9; i++) {
-    const u = (hash(i, 61) + t * 0.012 * (0.5 + hash(i, 62))) % 1
-    const x = lerp(lx + 0.4, img.x0 - 0.2, u)
-    const spread = (x - lx) / (img.x0 - lx)
-    const y = ly + (hash(i, 63) - 0.5) * h * 0.8 * spread + Math.sin(t * 0.4 + i) * 0.05
-    p.noStroke()
-    p.fill(alpha(p, M.beam, 0.28 * (0.5 + 0.5 * Math.sin(t * 0.7 + i * 1.7))))
-    p.circle(x * k, y * k, Math.max(1.2, 0.028 * k))
-  }
-  glow(p, k, lx + 0.05, ly, 0.5, M.beam, 0.42 * shutter)
+  // No beam in the air: the lens is lit, and the picture on the screen is its light, falling on the room round it.
   drawProjector(p, k, weight, lx, ly, floor, t, run)
   ctx.restore()
 }
@@ -760,9 +733,12 @@ function drawProjector(p: p5, k: number, weight: number, lx: number, ly: number,
     const y = ly - 0.1 + i * 0.12
     seg(p, k, [lx - 1.8, y], [lx - 1.56, y], alpha(p, M.beam, 0.5 + 0.12 * Math.sin(t * 9 + i)), weight * 0.9)
   }
-  glow(p, k, lx - 1.68, ly + 0.02, 0.45, M.orange, 0.16)
   box2(p, k, lx - 0.34, ly - 0.1, lx, ly + 0.1, dark, edge, w, 0.02)
   shape(p, k, [[lx - 0.02, ly - 0.1], [lx + 0.02, ly - 0.1], [lx + 0.02, ly + 0.1], [lx - 0.02, ly + 0.1]], alpha(p, M.beam, 0.85), null)
+  // The lamp, seen through the lens: the one point of light the star in the dark became.
+  p.noStroke()
+  p.fill(alpha(p, M.beam, 0.95))
+  p.circle(lx * k, ly * k, Math.max(2, 0.07 * k))
   // The arms and reels: feed at the front, take-up at the back, turning at their own rates as the film goes over.
   const feed: Pt = [lx - 0.62, ly - 1.05]
   const take: Pt = [lx - 1.55, ly - 0.92]
@@ -1285,15 +1261,23 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
   birds(p, k, ink, w, t, -4.2, -2.3, 3)
   // A light plane going over, high, its trail drawn out behind it.
   plane(p, k, ink, w, -8.6 + (t - CUTS[2]) * 1.15, -3.45 + (t - CUTS[2]) * 0.02, 2.6)
+  // Beyond the hedge: a car going by on the street, and next door's fence, tree and sprinkler.
+  if (t > 365.0 && t < 370.2) passingCar(p, k, ink, w, -9.4 + (t - 365.0) * 2.9, LAWN - 0.15)
+  nextDoor(p, k, ink, w, -0.45, 2.25, LAWN - 0.04, t)
   hedge(p, k, ink, w, b.x0, b.x1, LAWN, 0.42)
   // A palm over the far side of the pool.
   palm(p, k, ink, w, 2.6, LAWN, 2.9, t)
   // The deck, terracotta tiles, and the pool sunk in it: its water, its lip, the depth.
   flat(p, k, b, LAWN, M.orange, ink, w)
   for (let x = Math.floor(b.x0); x < b.x1; x += 0.5) if (x < POOL_X0) seg(p, k, [x, LAWN], [x, LAWN + 0.5], alpha(p, ink, 0.18), w * 0.5)
+  // In the ground the section cuts, under the deck: the pool's pump and its pipes, the water running round.
+  poolPlumbing(p, k, ink, w, -5.2, POOL_X0, LAWN, WATER, t)
   const x1 = b.x1 + 1
   shape(p, k, [[POOL_X0, LAWN], [x1, LAWN], [x1, 1.2], [POOL_X0, 1.2]], M.teal, ink, w)
   const water = waterAt(t)
+  const surface = (x: number) => WATER + water(x)
+  const dives: [number, number][] = [[SPLASH, -0.2], [SON_SPLASH, -1.3]]
+  poolLife(p, k, ink, w, POOL_X0, x1, LAWN, WATER, 1.2, surface, t, dives, false)
   p.fill(M.pool)
   p.noStroke()
   p.beginShape()
@@ -1301,7 +1285,9 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
   p.vertex(x1 * k, 1.2 * k)
   p.vertex((POOL_X0 + 0.04) * k, 1.2 * k)
   p.endShape(p.CLOSE)
+  poolLife(p, k, ink, w, POOL_X0, x1, LAWN, WATER, 1.2, surface, t, dives, true)
   poolRing(p, k, ink, w, 1.75 + 0.05 * Math.sin(t * 0.4), WATER + water(1.75), t)
+  noodle(p, k, ink, w, 0.7 + 0.18 * Math.sin(t * 0.27), surface)
   // The light on the pool floor, wavering.
   for (let i = 0; i < 6; i++) {
     const x = POOL_X0 + 0.5 + i * 0.75 + 0.1 * Math.sin(t * 0.9 + i)
@@ -1311,6 +1297,9 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
     p.bezier(x * k, 0.95 * k, (x + 0.15) * k, 0.9 * k, (x + 0.25) * k, 1.0 * k, (x + 0.4) * k, 0.95 * k)
   }
   seg(p, k, [POOL_X0, LAWN], [POOL_X0, 1.2], ink, w)
+  // The coping along the pool's near edge, and a pair of flip-flops left on the tiles.
+  box2(p, k, POOL_X0 - 0.42, LAWN - 0.035, POOL_X0 + 0.06, LAWN + 0.03, M.cream, ink, w * 0.6, 0.015)
+  for (const [fx, tilt] of [[-4.02, -0.05], [-3.86, 0.08]] as const) shape(p, k, [[fx - 0.07, LAWN - 0.005], [fx + 0.07 + tilt * 0.2, LAWN - 0.005], [fx + 0.06 + tilt * 0.2, LAWN - 0.03], [fx - 0.06, LAWN - 0.03]], M.pink, ink, w * 0.4)
   lounger(p, k, ink, w, -5.5, LAWN)
   // The board: its stand on the deck, the plank out over the water, bending at its tip on each landing.
   box2(p, k, BOARD_ROOT - 0.15, LAWN + 0.06, BOARD_ROOT + 0.2, LAWN + 0.2, M.teal, ink, w * 0.8)
@@ -1528,9 +1517,31 @@ function drawHome(p: p5, t: number, c: Ctx, b: Rect): void {
   shape(p, k, [[b.x0, floor], [b.x1, floor], [b.x1, b.y1], [b.x0, b.y1]], M.orange, ink, w)
   // Their room: his piano, the pictures of their life on the wall, the rug, a plant.
   const lampOn = 1 - off
-  homeWall(p, k, ink, w, floor, lampOn)
-  // The lamp: a pole and a shade, its light on the wall.
-  glow(p, k, LAMP_X, -1.45, 2.0, M.sun, 0.55 * lampOn)
+  homeWall(p, k, ink, w, floor)
+  // The lamp: a pole and a shade, its light thrown out of the shade's open top and bottom onto the wall behind it, a
+  // fan up and a fan down, and a pool on the floor at its foot. Nothing round the shade itself.
+  if (lampOn > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const fan = (y0: number, y1: number, w0: number, w1: number, a0: number, a1: number) => {
+      const g = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
+      g.addColorStop(0, rgba(M.sun, a0 * lampOn))
+      g.addColorStop(1, rgba(M.sun, a1 * lampOn))
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.moveTo((LAMP_X - w0) * k, y0 * k)
+      ctx.lineTo((LAMP_X + w0) * k, y0 * k)
+      ctx.lineTo((LAMP_X + w1) * k, y1 * k)
+      ctx.lineTo((LAMP_X - w1) * k, y1 * k)
+      ctx.closePath()
+      ctx.fill()
+    }
+    fan(-1.62, -3.2, 0.13, 0.8, 0.42, 0)
+    fan(-1.33, floor, 0.2, 0.75, 0.3, 0.06)
+    ctx.fillStyle = rgba(M.sun, 0.32 * lampOn)
+    ctx.beginPath()
+    ctx.ellipse(LAMP_X * k, (floor + 0.06) * k, 0.95 * k, 0.1 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
   seg(p, k, [LAMP_X, floor], [LAMP_X, -1.35], ink, w * 1.2)
   box2(p, k, LAMP_X - 0.2, floor - 0.04, LAMP_X + 0.2, floor, M.teal, ink, w * 0.8)
   shape(p, k, [[LAMP_X - 0.2, -1.33], [LAMP_X + 0.2, -1.33], [LAMP_X + 0.13, -1.62], [LAMP_X - 0.13, -1.62]], lampOn > 0.5 ? M.sun : M.orange, ink, w)
