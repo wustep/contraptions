@@ -509,7 +509,7 @@ function drawPicture(ctx: C2, k: number, t: number): void {
   ctx.bezierCurveTo((hx + 0.3) * k, (y0 + 0.9) * k, (hx - 0.2) * k, (y0 + 1.2) * k, (hx + 0.15) * k, (y0 + 1.6) * k)
   ctx.stroke()
   ctx.fillStyle = tone(0.28)
-  for (const [px, py, r] of [[x0 + 1.1, y1 - 0.7, 0.05], [x0 + 4.6, y0 + 0.5, 0.035]] as const) {
+  for (const [px, py, r] of [[x0 + 5.3, y0 + 0.85, 0.032], [x0 + 4.4, y0 + 0.45, 0.024]] as const) {
     ctx.beginPath()
     ctx.arc((px + 0.02 * Math.sin(t * 2.1 + px)) * k, py * k, r * k, 0, Math.PI * 2)
     ctx.fill()
