@@ -1,16 +1,39 @@
 import type { Framing, Performance } from '../../registry'
-import { StockShow } from '../../stock/show'
 import type { StockScore } from '../../stock/types'
+import { expose, exposure, finale, flash, pull, type Exposure } from './music-sync/finale'
+import { dayLand, nightLand } from './music-sync/land'
+import { scenery } from './music-sync/screen'
+import { DressedShow } from './music-sync/show'
 import data from './opus55-music-sync.generated.json'
 
 /** Written by `npm run generate:cornfield:opus55`. Stock placements only; nothing here moves a machine. */
 export const score = data as unknown as StockScore
-export const show = new StockShow(score)
 
-const finale = score.maps.at(-1)!
-const booth = finale.pieces.find((p) => p.spec.name === 'booth')!
-const ticket = finale.pieces.find((p) => p.spec.name === 'ticket')!
-const door = finale.pieces.at(-1)!
+const fair = score.maps.at(-1)!
+const booth = fair.pieces.find((p) => p.spec.name === 'booth')!
+const ticket = fair.pieces.find((p) => p.spec.name === 'ticket')!
+const door = fair.pieces.at(-1)!
+/** The photograph: the booth's flash, then once the ball is through the last portal, the long draw back. */
+const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, 97)
+/** The run through the fair, taken once, the first time the photograph is drawn. */
+let run: Exposure | null = null
+
+/** The machine in a cornfield: the afternoon over the Forest, the night round the Arcade (`music-sync/`). */
+export const show: DressedShow = new DressedShow(score, (i, u) => {
+  const map = score.maps[i]
+  const { col, row } = u.pieces[0]
+  if (map.world === 'garden') return { behind: [scenery('field', (p, c) => dayLand(p, c, col, row, map.begin))], over: [] }
+  return {
+    behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon))],
+    over: [scenery('photograph', () => {}, (p, c) => {
+      const t = map.begin + c.t
+      flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
+      if (t <= photo.from) return
+      run ??= expose(show, 90, door.begin + 0.3)
+      exposure(p, c, col, row, t, run, photo)
+    })],
+  }
+})
 const souvenirs = [...booth.cells, ...ticket.cells]
 const xs = souvenirs.map(([x]) => x), ys = souvenirs.map(([, y]) => y)
 const still = { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 }
@@ -19,15 +42,20 @@ const stillCells = Math.max(7.5, (Math.max(...xs) - Math.min(...xs) + 2) * 1.5 *
 
 const smooth = (u: number): number => { const v = Math.max(0, Math.min(1, u)); return v * v * (3 - 2 * v) }
 
-/** Follow the ball; once the photograph is taken, ease onto the booth and the ticket and stay for the decay. */
+/**
+ * Follow the ball; once the photograph is taken, ease onto the booth and the ticket; once the ball is through the last
+ * portal, draw back across the field until the whole fair is on the horizon.
+ */
 function camera(t: number): Framing {
   const follow = show.camera(t)
   const blend = smooth((t - booth.end) / Math.max(0.5, ticket.begin - booth.end))
-  return {
+  const close = {
     x: follow.x + (still.x - follow.x) * blend,
     y: follow.y + (still.y - follow.y) * blend,
     cells: follow.cells + (stillCells - follow.cells) * blend,
   }
+  const back = photo.back(t)
+  return back > 0 ? pull(close, photo.wide, back) : close
 }
 
 export const performance: Performance = {
