@@ -180,14 +180,14 @@ function swell(g: C2, v: View, t: number, shore: number): void {
   const crests = new Path2D()
   const troughs = new Path2D()
   const near = FLOOR + 0.05
-  for (let r = 0; r < 14; r++) {
-    const u = Math.pow((r + 0.5) / 14, 1.4)
+  for (let r = 0; r < 20; r++) {
+    const u = Math.pow((r + 0.5) / 20, 1.4)
     const y = shore + 0.04 + (near - shore - 0.04) * u
     if (y < v.y0 - 0.1 || y > v.y1 + 0.1) continue
     const z = 0.3 + 0.7 * u
     const shift = (1 - z) * (v.cx - BAR_AT[0])
     const len = 0.12 + 0.45 * u
-    const gap = 0.35 + 0.9 * u
+    const gap = 0.28 + 0.6 * u
     const speed = 0.08 + 0.3 * u
     const off = hash(r, 41) * gap + t * speed * (r % 2 ? 1 : -0.6)
     const i0 = Math.floor((v.x0 - shift - off) / gap) - 1

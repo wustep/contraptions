@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import type { View } from '../depth'
 import { daylight, drawHarbour } from './harbour'
-import { drawDoorDetail, drawGrain, drawSkirt, drawUnderFloor, drawWallThings, drawWindowRain, WIN } from './room'
+import { drawDoorDetail, drawGrain, drawSkirt, drawUnderFloor, drawWallThings, drawWindowRain, lampAt, WIN } from './room'
 import { blob, ctxOf, ellipse, flash, glint, glow, line, path, rect, rgba, ring, shape, type Pen } from '../dream/pen'
 import {
   BELL,
@@ -269,6 +269,16 @@ function pilot(pen: Pen, t: number): void {
   ctx.stroke()
   ctx.restore()
   path(pen, [[sh[0] - 0.33, sh[1] + 0.08], [sh[0] - 0.05, sh[1] - 0.17]], C.rim, 0.5)
+  // And from the lamp hanging over him, a warm rim on his head, brighter as it swings over.
+  const lamp = lampAt(1, t).p
+  const warm = 0.25 + 0.4 * Math.max(0, 1 - Math.abs(lamp[0] - head[0]) / 0.5)
+  ctx.save()
+  ctx.strokeStyle = rgba(pen, C.lamp, warm)
+  ctx.lineWidth = pen.w * 1.3
+  ctx.beginPath()
+  ctx.arc(head[0] * pen.k, head[1] * pen.k, 0.2 * pen.k, -Math.PI * 0.75, -Math.PI * 0.2)
+  ctx.stroke()
+  ctx.restore()
   // The arm: shoulder to the elbow on the counter, the forearm to the hand by the glass.
   const gx = END_L - 0.06
   const handRest: Pt = [gx - 0.22, TOP_L - 0.1]

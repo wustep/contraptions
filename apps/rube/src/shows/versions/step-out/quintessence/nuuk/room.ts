@@ -297,12 +297,12 @@ export function drawUnderFloor(g: C2, v: View, t: number, x0: number, x1: number
   // The water's surface down there, catching the daylight from the open sides.
   const lit = new Path2D()
   const wy = top + 0.42
-  const n = Math.max(6, Math.round((x1 - x0) * 4))
+  const n = Math.max(8, Math.round((x1 - x0) * 9))
   for (let i = 0; i < n; i++) {
     const u = hash(i, 71)
     const span = x1 - x0
     const x = x0 + ((((span * u + t * (0.12 + 0.2 * hash(i, 74)) * (i % 2 ? 1 : -1)) % span) + span) % span)
-    const y = wy + 0.18 * hash(i, 72) + 0.015 * Math.sin(t * 1.6 + i * 2)
+    const y = wy + 0.5 * Math.pow(hash(i, 72), 1.5) + 0.015 * Math.sin(t * 1.6 + i * 2)
     const w = 0.08 + 0.25 * hash(i, 73)
     lit.moveTo(x * k, y * k)
     lit.lineTo((x + w) * k, y * k)

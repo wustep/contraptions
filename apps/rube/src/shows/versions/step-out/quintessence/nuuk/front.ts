@@ -167,6 +167,18 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
     if (c1 > inner.x0 && c0 < inner.x1) {
       g.fillStyle = '#2A1D16'
       g.fillRect(c0 * k, (top + 0.05) * k, (c1 - c0) * k, (inner.y1 - top + 1) * k)
+      // Its boards and their grain, and the lamps' light sliding on its edge.
+      const boards = new Path2D()
+      for (let x = c0 + 0.05; x < c1; x += 0.07) {
+        boards.moveTo(x * k, (top + 0.08) * k)
+        boards.quadraticCurveTo((x + 0.012 * Math.sin(x * 11)) * k, (top + 0.5) * k, (x - 0.006) * k, (inner.y1 + 0.2) * k)
+      }
+      g.lineWidth = Math.max(0.6, 0.008 * k)
+      g.strokeStyle = rgbaOf('#4A3426', 0.7)
+      g.stroke(boards)
+      const sheen = c1 - 0.6 + 0.35 * Math.sin(t * 0.5)
+      g.fillStyle = rgbaOf('#F2C879', 0.12)
+      g.fillRect((sheen - 0.3) * k, (top + 0.08) * k, 0.6 * k, 0.03 * k)
       g.fillStyle = '#6A4A33'
       g.fillRect(c0 * k, top * k, (c1 - c0 + 0.06) * k, 0.07 * k)
       g.fillStyle = rgbaOf('#F2C879', 0.35)
