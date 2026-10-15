@@ -447,9 +447,6 @@ export const inside = scenery<null>({
     for (const [i, [x0, x1, y0, y1]] of H.windows.entries()) {
       if (x1 < f.x0 - 0.2 || x0 > f.x1 + 0.2 || y1 < f.y0 - 0.2 || y0 > f.y1 + 0.2) continue
       view(p, k, f, t, i, H.windows[i], skyAt(t))
-      p.noStroke()
-      p.fill(alpha(p, '#FFFFFF', 0.22))
-      p.quad((x0 + 0.2) * k, y1 * k, (x0 + 0.75) * k, y0 * k, (x0 + 1.05) * k, y0 * k, (x0 + 0.5) * k, y1 * k)
       p.stroke(ink)
       p.strokeWeight(weight * 0.8)
       p.fill(HOME.trim)

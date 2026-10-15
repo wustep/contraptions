@@ -356,10 +356,6 @@ export function drawClock(p: p5, k: number, weight: number, swing: number, hours
   p.strokeWeight(weight * 0.6)
   p.fill(brass)
   p.circle(bx * k, by * k, 0.085 * k)
-  // The glass's sheen.
-  p.noStroke()
-  p.fill(alpha(p, '#FFFFFF', 0.12))
-  p.quad((win.x0 + 0.01) * k, (win.y0 + 0.2) * k, win.x1 * k, (win.y0 + 0.05) * k, win.x1 * k, (win.y0 + 0.12) * k, (win.x0 + 0.01) * k, (win.y0 + 0.27) * k)
   ctx.restore()
   // The dial: a cream face in a brass ring, its hours ticked; the two hands.
   p.stroke(INK)
@@ -579,10 +575,6 @@ export function drawDesk(p: p5, k: number, weight: number, s: DeskState, age: nu
     if (i < 0 || i > 3) continue
     reelPicture(p, k, weight, i, wx0, wy0 + (i - s.reel) * wh, ww, wh)
   }
-  // The glass's sheen.
-  p.noStroke()
-  p.fill(alpha(p, '#FFFFFF', 0.18))
-  p.quad((wx0 + 0.03) * k, (wy0 + wh) * k, (wx0 + 0.11) * k, wy0 * k, (wx0 + 0.16) * k, wy0 * k, (wx0 + 0.08) * k, (wy0 + wh) * k)
   ctx.restore()
   p.noFill()
   p.stroke(INK)
@@ -768,9 +760,6 @@ export function drawSnapshot(p: p5, k: number, weight: number, n: number, shown:
     two(0.18, 0.86)
   }
   ctx.restore()
-  // The glass's sheen.
-  p.fill(alpha(p, '#FFFFFF', 0.18))
-  p.quad((a0 + w * 0.12) * k, b1 * k, (a0 + w * 0.42) * k, b0 * k, (a0 + w * 0.56) * k, b0 * k, (a0 + w * 0.26) * k, b1 * k)
   p.noFill()
   p.stroke(alpha(p, INK, 0.45))
   p.strokeWeight(weight * 0.4)
@@ -846,8 +835,6 @@ export function drawDoor(p: p5, k: number, weight: number, open: number, age: nu
     p.bezierVertex(X(0.72) * k, (top + 0.76) * k, X(0.8) * k, (top + 0.82) * k, X(0.82) * k, (top + 0.83) * k)
     p.vertex(X(0.82) * k, (top + 1.0) * k)
     p.endShape(p.CLOSE)
-    p.fill(alpha(p, '#FFFFFF', 0.16))
-    p.quad(X(0.24) * k, (top + 1.0) * k, X(0.42) * k, (top + 0.2) * k, X(0.52) * k, (top + 0.2) * k, X(0.34) * k, (top + 1.0) * k)
     p.noFill()
     p.stroke(INK)
     p.strokeWeight(weight * 0.5)

@@ -4,7 +4,7 @@ import { alpha, hash, smooth } from '../kit'
 import { HOME, INK, carlAt, ellieAt } from '../worlds'
 import { drawChair, CHAIR } from '../props/chairs'
 import { stripe } from '../inside/papers'
-import { ALONE, CHAIRS, DOOR_HUNG, EDGE, FLAG_AT, G, HOUSE, LAMP_X, MAILBOX, P, PANE_AT, PRINT_AT, PRINTS, TREADS, TREE_AT, type DoorSwing } from './front-plan'
+import { CHAIRS, DOOR_HUNG, EDGE, FLAG_AT, G, HOUSE, LAMP_X, MAILBOX, P, PANE_AT, PRINT_AT, PRINTS, TREADS, TREE_AT, type DoorSwing } from './front-plan'
 
 /**
  * The house from the street, drawn in one of its two conditions: `old` (the derelict clubhouse they bought: grey,
@@ -101,8 +101,58 @@ function siding(p: p5, k: number, weight: number, L: Look, c: Pal, x0: number, x
   }
 }
 
-/** A window: frame, glass (the sky in it, or broken dark on the old house), a sash bar. Shutters where asked. */
-function windowAt(p: p5, k: number, weight: number, L: Look, c: Pal, x0: number, x1: number, y0: number, y1: number, seed: number, opts: { shutters?: boolean; boarded?: boolean; glow?: number } = {}): void {
+/**
+ * What hangs at the house's windows once it is lived in (from his coming home alone; at the fix-up it is new and
+ * empty): the nursery's pink at the two under the gable, drawn shut since the doctor as they are inside; their
+ * bedroom's cream, and the living room's faded green, tied back.
+ */
+const CLOTH = {
+  nursery: mixHex(HOME.pink, HOME.trim, 0.45),
+  bedroom: mixHex(HOME.trim, '#D9C7A8', 0.55),
+  living: mixHex(mixHex(HOME.leaf, HOME.trim, 0.52), '#C9C6B4', 0.7),
+}
+const LIVED_IN = 200
+
+/** Curtains seen through a window's glass, x0..x1 by y0..y1: two panels tied back to the jambs, or drawn across. */
+function curtainsIn(p: p5, k: number, weight: number, L: Look, x0: number, x1: number, y0: number, y1: number, cloth: string, drawn: boolean): void {
+  const w = x1 - x0
+  const h = y1 - y0
+  const fill = dusk(L, mixHex(cloth, HOME.glass, 0.18))
+  const fold = dusk(L, mixHex(cloth, INK, 0.2))
+  p.noStroke()
+  p.fill(fill)
+  if (drawn) {
+    rect(p, k, x0, y0, x1, y1)
+    p.stroke(fold)
+    p.strokeWeight(weight * 0.5)
+    for (let i = 1; i < 8; i++) {
+      if (i === 4) continue
+      const x = x0 + (w * i) / 8
+      p.line(x * k, (y0 + 0.04) * k, x * k, (y1 - 0.02) * k)
+    }
+    return
+  }
+  const tie = y0 + h * 0.6
+  for (const side of [-1, 1]) {
+    const jamb = side < 0 ? x0 : x1
+    const at = (u: number) => jamb - side * u * w
+    p.noStroke()
+    p.fill(fill)
+    p.beginShape()
+    p.vertex(at(0) * k, y0 * k)
+    p.vertex(at(0.27) * k, y0 * k)
+    p.bezierVertex(at(0.25) * k, (y0 + h * 0.3) * k, at(0.11) * k, (tie - h * 0.08) * k, at(0.11) * k, tie * k)
+    p.bezierVertex(at(0.11) * k, (tie + h * 0.12) * k, at(0.2) * k, (y1 - h * 0.12) * k, at(0.21) * k, y1 * k)
+    p.vertex(at(0) * k, y1 * k)
+    p.endShape(p.CLOSE)
+    p.stroke(fold)
+    p.strokeWeight(weight * 0.5)
+    for (const u of [0.09, 0.18]) p.line(at(u) * k, (y0 + 0.04) * k, at(u * 0.45) * k, (tie - 0.02) * k)
+  }
+}
+
+/** A window: frame, glass (the sky in it, or broken dark on the old house), a sash bar. Shutters where asked; curtains once it is lived in. */
+function windowAt(p: p5, k: number, weight: number, L: Look, c: Pal, x0: number, x1: number, y0: number, y1: number, seed: number, opts: { shutters?: boolean; boarded?: boolean; glow?: number; curtain?: { cloth: string; drawn: boolean } } = {}): void {
   p.stroke(c.ink)
   p.strokeWeight(weight * 0.8)
   p.fill(c.trim)
@@ -115,11 +165,8 @@ function windowAt(p: p5, k: number, weight: number, L: Look, c: Pal, x0: number,
     p.fill(alpha(p, HOME.lamp, 0.85 * opts.glow))
     rect(p, k, x0, y0, x1, y1)
   }
-  if (!L.old) {
-    // A soft slant of light across the glass.
-    p.fill(alpha(p, '#FFFFFF', 0.22 * (1 - L.dark)))
-    p.quad((x0 + 0.12) * k, y1 * k, (x0 + 0.42) * k, y0 * k, (x0 + 0.62) * k, y0 * k, (x0 + 0.32) * k, y1 * k)
-  } else {
+  if (opts.curtain && !L.old && L.T > LIVED_IN) curtainsIn(p, k, weight, L, x0, x1, y0, y1, opts.curtain.cloth, opts.curtain.drawn)
+  if (L.old) {
     // Broken: a ragged hole in one pane.
     const cx = x0 + (0.3 + hash(seed, 1) * 0.4) * (x1 - x0)
     const cy = y0 + (0.3 + hash(seed, 2) * 0.4) * (y1 - y0)
@@ -430,7 +477,7 @@ function bayGlass(p: p5, k: number, L: Look): void {
 
 /**
  * What stands in front of anyone indoors: the bay's frame (its head, its sill, the posts between its three faces,
- * the middle pane's mullion) and the glass's sheen, the wall between the bay and the door, and the door's jambs. The
+ * the middle pane's mullion), the wall between the bay and the door, and the door's jambs. The
  * parts draw it in their `over`, so the two of them are indoors behind it.
  */
 export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swings: DoorSwing[] = []): void {
@@ -444,16 +491,6 @@ export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swing
   const { x0, x1, sill, head, facet } = HOUSE.bay
   p.push()
   p.rectMode(p.CORNER)
-  // The glass's sheen: two soft slants, fainter as the room behind it is lit, and half as strong once he is home alone,
-  // so the glass between us and him is felt but does not grey him further.
-  if (!L.old) {
-    p.noStroke()
-    const a = 0.12 * (1 - 0.6 * L.lamp) * (1 - 0.5 * smooth(L.T, ALONE.latch, ALONE.shut))
-    p.fill(alpha(p, '#FFFFFF', a))
-    p.quad((x0 + facet + 0.25) * k, sill * k, (x0 + facet + 0.95) * k, head * k, (x0 + facet + 1.25) * k, head * k, (x0 + facet + 0.55) * k, sill * k)
-    p.fill(alpha(p, '#FFFFFF', a * 0.6))
-    p.quad((x1 - facet - 0.9) * k, sill * k, (x1 - facet - 0.35) * k, head * k, (x1 - facet - 0.2) * k, head * k, (x1 - facet - 0.75) * k, sill * k)
-  }
   // The frame: head, sill, the two posts where the faces turn, the middle pane's mullion. The middle light has no
   // transom: at the end the balloon over her chair spans −2.77 … −2.07, head to lamp, so any bar across it cuts the
   // balloon or the lampshade; its glass runs whole from head to floor, a picture window between two transomed sides.
@@ -773,10 +810,12 @@ export function drawHouse(p: p5, k: number, weight: number, L: Look, chairsIn: {
 
   // Upstairs windows: two under the gable, and one on the right with its shutters.
   const [uy0, uy1] = H.upperY
-  H.upper.forEach(([x0, x1], i) => windowAt(p, k, weight, L, c, x0, x1, uy0, uy1, 20 + i, { shutters: i === 2 }))
+  H.upper.forEach(([x0, x1], i) =>
+    windowAt(p, k, weight, L, c, x0, x1, uy0, uy1, 20 + i, { shutters: i === 2, curtain: i === 2 ? { cloth: CLOTH.bedroom, drawn: false } : { cloth: CLOTH.nursery, drawn: true } }),
+  )
   // The ground floor's side window, boarded up on the old house.
   const [sx0, sx1, sy0, sy1] = H.side
-  windowAt(p, k, weight, L, c, sx0, sx1, sy0, sy1, 30, { boarded: true, glow: 0 })
+  windowAt(p, k, weight, L, c, sx0, sx1, sy0, sy1, 30, { boarded: true, glow: 0, curtain: { cloth: CLOTH.living, drawn: false } })
 
   // The bay: the room behind its glass, the glass, its little roof. (Its frame is `drawFacadeFront`.)
   const b = H.bay
