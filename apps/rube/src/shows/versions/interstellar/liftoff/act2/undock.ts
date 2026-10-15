@@ -579,14 +579,12 @@ function jet(p: p5, c: Ctx, age: number, at: Pt, dir: Pt, size = 1): void {
     ctx.closePath()
     ctx.fill()
   }
-  // The vapour: blown out along the way the jet went, a flat fan from the nozzle that spreads and thins.
-  const a = 0.26 * (1 - u) ** 1.5
-  for (const [reach, spread, share] of [
-    [1, 1, 1],
-    [0.6, 0.55, 0.8],
-  ]) {
+  // The vapour: blown out along the way the jet went, a narrow flat fan from the nozzle that thins as it goes. (Wide
+  // and doubled it read as a grey hourglass over the ship when the roll jets fired both ways.)
+  const a = 0.2 * (1 - u) ** 1.6
+  for (const [reach, spread, share] of [[0.75, 0.6, 1]]) {
     const d = (0.25 + 0.75 * go) * size * reach
-    const w = (0.06 + 0.24 * Math.sqrt(u)) * size * spread
+    const w = (0.05 + 0.2 * Math.sqrt(u)) * size * spread
     const n = 0.03 * size
     ctx.fillStyle = `rgba(${BONE_RGB}, ${(a * share).toFixed(3)})`
     ctx.beginPath()

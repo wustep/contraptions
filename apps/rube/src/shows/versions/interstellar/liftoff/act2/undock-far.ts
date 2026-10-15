@@ -192,11 +192,42 @@ export function drawFar(p: p5, c: Ctx, t: number): void {
   const habs = 1 - smooth(t, SWING - 0.6, SWING + 0.9)
   if (habs > 0) {
     const ref: Pt = [-1.3, 0.1]
-    const A = at(0.35, -0.29, 0.06, ref)
-    const lenA = S * 0.15
-    habitat(ctx, A[0] * k, A[1] * k, lenA * k, S * 0.021 * k, -0.06, t * 1.05, habs)
-    const B = at(0.41, 0.33, 0.05, ref)
-    habitat(ctx, B[0] * k, B[1] * k, S * 0.07 * k, S * 0.011 * k, 0.22, 1.7 + t * 1.4, habs * 0.85)
+    const A = at(0.33, -0.29, 0.06, ref)
+    const lenA = S * 0.2
+    const B = at(0.38, 0.32, 0.05, ref)
+    const lenB = S * 0.11
+    // The station's cargo lines, behind it all: tethers from Cooper Station out across the dark to its sisters, pods
+    // riding them both ways as steady as a conveyor, so the dark round the undock is a working harbour, not a void.
+    const lines: [Pt, Pt, number][] = [
+      [at(-0.62, -0.08, 0.06, ref), [A[0] - (lenA / 2) * Math.cos(-0.06) - S * 0.01, A[1] - (lenA / 2) * Math.sin(-0.06)], 1],
+      [at(-0.62, 0.14, 0.05, ref), [B[0] - (lenB / 2) * Math.cos(0.22) - S * 0.008, B[1] - (lenB / 2) * Math.sin(0.22)], -1],
+    ]
+    for (const [a, b, way] of lines) {
+      ctx.strokeStyle = rgba(DARK.hull, 0.3 * habs)
+      ctx.lineWidth = Math.max(0.8, S * k * 0.0022)
+      ctx.beginPath()
+      ctx.moveTo(a[0] * k, a[1] * k)
+      ctx.lineTo(b[0] * k, b[1] * k)
+      ctx.stroke()
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0])
+      const pw = S * 0.014 * k
+      const ph = S * 0.007 * k
+      for (let j = 0; j < 10; j++) {
+        const u = (((t * 0.045 * way + j / 10) % 1) + 1) % 1
+        // Faded in and out at the ends, where they come off the station and into the port.
+        const e = smooth(u, 0, 0.06) * (1 - smooth(u, 0.94, 1))
+        ctx.save()
+        ctx.translate((a[0] + (b[0] - a[0]) * u) * k, (a[1] + (b[1] - a[1]) * u) * k)
+        ctx.rotate(ang)
+        ctx.fillStyle = rgba(j % 3 === 0 ? mixHex(DARK.red, DARK.slate, 0.35) : DARK.hull, 0.85 * habs * e)
+        ctx.fillRect(-pw / 2, -ph, pw, ph)
+        ctx.fillStyle = rgba(DARK.deep, 0.45 * habs * e)
+        ctx.fillRect(-pw / 2, -ph * 0.35, pw, ph * 0.35)
+        ctx.restore()
+      }
+    }
+    habitat(ctx, A[0] * k, A[1] * k, lenA * k, S * 0.026 * k, -0.06, t * 1.05, habs)
+    habitat(ctx, B[0] * k, B[1] * k, lenB * k, S * 0.016 * k, 0.22, 1.7 + t * 1.4, habs * 0.9)
     // A hauler easing into A's port: in along its axis, slowing, and home on the beat the station's spin is off.
     const home = cue(190.2)
     const u = Math.min(1, Math.max(0, (t - (UNDOCK - 2)) / (home - UNDOCK + 2)))
@@ -230,6 +261,16 @@ export function drawFar(p: p5, c: Ctx, t: number): void {
     ctx.fillStyle = rgba(DARK.deep, 0.45 * habs)
     for (let j = 1; j < 4; j++) ctx.fillRect(box[0] * k - bw + (bw * j) / 4, box[1] * k - bh / 2, Math.max(0.8, bw * 0.04), bh)
     craft(ctx, tg[0] * k, tg[1] * k, S * 0.028 * k, 0, 0.6, habs, 'tug')
+  }
+
+  // Home, behind him: Cooper Station falling away on the left as he burns out over Saturn, smaller every beat, its
+  // window strips still going round.
+  const home = smooth(t, SWING + 0.6, SWING + 2.2) * (1 - smooth(t, cue(206.2), cue(207)))
+  if (home > 0) {
+    const u = Math.min(1, Math.max(0, (t - SWING) / (cue(207) - SWING)))
+    const len = S * (0.14 - 0.095 * Math.sqrt(u))
+    const P = at(-0.4, -0.05 + 0.03 * u, 0.02, [22.8, 8.5])
+    habitat(ctx, P[0] * k, P[1] * k, len * k, len * 0.15 * k, 0.04, t * 1.2, home * 0.95)
   }
 
   // Over Saturn: Enceladus and Mimas, nearer than Titan, sliding against the camera as it runs on.
