@@ -1049,6 +1049,7 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
     glow(p, X(gx), X(gy), X(2.6 * deep), DUST.light, 0.22 + 0.12 * (1 - smooth(dv, 0, 1.5)) * (1 - smooth(T, LAND, LAND + 0.8)))
     ctx.restore()
   }
+  if (lat > 0.002) drawThreads(p, c, T, lat)
   if (lat > 0.002) drawRooms(p, c, T, lat)
   if (lat > 0.002) drawLattice(p, c, T, lat, f)
   if (bk > 0.002) {
@@ -1134,7 +1135,61 @@ function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
   p.pop()
 }
 
-/** One of the tesseract's rooms, Murph's bookcase from behind, in its own (shelf) cells, `a` of it. */
+/**
+ * The tesseract's threads: every room's corners run on back, from the near rooms toward the one point,
+ * past the rooms behind them and on out of sight, so the rooms are not a wall of frames but one lattice going on into
+ * the depth, every way. Drawn under the rooms (the near ones stand in front of the threads behind them); brightest
+ * round Murph's, near, thinning as they go deep. In the pull-back they are what says the rooms go on without end.
+ */
+const THREAD_DEPTHS: [number, number, number][] = [
+  [0, 1.1, 1],
+  [1.1, 5, 0.32],
+]
+function drawThreads(p: p5, c: Ctx, T: number, on: number): void {
+  const { k } = c
+  const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const dv = diveAt(T)
+  const far = smooth(T, AT_WATCH, CLOSE)
+  const fold = 1 - 0.8 * closeAt(T)
+  const PX = 3.1
+  const PY = 2.25
+  // The frame's corners, at the near rooms' depth (the lattice's own measure).
+  const nodes: Pt[] = []
+  for (const x of [back(2.0), back(-0.45)]) for (const y of [BK[1] + SHELF_TOP - 0.665, BK[1] + FLOOR]) nodes.push([x, y])
+  ctx.save()
+  p.push()
+  p.translate(X(BY_WATCH[0]), X(BY_WATCH[1]))
+  p.scale(fold)
+  p.translate(-X(BY_WATCH[0]), -X(BY_WATCH[1]))
+  ctx.lineCap = 'round'
+  for (let i = -5; i <= 5; i++) {
+    for (let j = -3; j <= 4; j++) {
+      if (i === 0 && j === 0) continue
+      const dist = Math.hypot(i, j * 1.3)
+      const a = (on * 0.34 * (dist <= 1.5 ? 1 : far)) / (1 + 0.22 * dist * dist)
+      if (a <= 0.02) continue
+      for (const [d0, d1, fade] of THREAD_DEPTHS) {
+        const s0 = depthScale(dv + d0)
+        const s1 = depthScale(dv + d1)
+        ctx.strokeStyle = `rgba(${GOLD_RGB}, ${(a * fade).toFixed(3)})`
+        ctx.lineWidth = Math.max(0.6, k * 0.013 * (0.4 + 0.6 * s0))
+        ctx.beginPath()
+        for (const [nx, ny] of nodes) {
+          const q: Pt = [nx + i * PX, ny + j * PY]
+          const [ax, ay] = toward(q, s0)
+          const [bx, by] = toward(q, s1)
+          ctx.moveTo(X(ax), X(ay))
+          ctx.lineTo(X(bx), X(by))
+        }
+        ctx.stroke()
+      }
+    }
+  }
+  p.pop()
+  ctx.restore()
+}
+
 /** Whether a box in the current drawing's coordinates lands wholly off the canvas, as it is transformed now. */
 function offCanvas(ctx: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number): boolean {
   const m = ctx.getTransform()
@@ -1154,6 +1209,9 @@ function offCanvas(ctx: CanvasRenderingContext2D, x0: number, y0: number, x1: nu
   return hx < -pad || hy < -pad || lx > ctx.canvas.width + pad || ly > ctx.canvas.height + pad
 }
 
+/** A room's lamplight, seen dim across the dark: amber rather than the grey a pale light goes over navy. */
+const ROOM_LIGHT = mixHex(DUST.light, DARK.amber, 0.58)
+/** One of the tesseract's rooms, Murph's bookcase from behind, in its own (shelf) cells, `a` of it. */
 function miniCase(p: p5, k: number, ink: string, weight: number, a: number): void {
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -1169,7 +1227,7 @@ function miniCase(p: p5, k: number, ink: string, weight: number, a: number): voi
   // seen dim over the dark it goes amber, not grey; small, so a hundred of them do not fog the dark between).
   glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.5), DARK.amber, 0.18)
   p.noStroke()
-  p.fill(mixHex(DUST.light, DARK.amber, 0.4))
+  p.fill(ROOM_LIGHT)
   p.rect(X(0.775), X((CAP + FLOOR) / 2), X(2.35), X(FLOOR - CAP))
   for (const b of ROW) {
     p.fill(mixHex(b.color, ink, 0.62))
