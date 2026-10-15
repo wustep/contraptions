@@ -6,7 +6,7 @@ import { G } from '../physics'
 import { EVELYN, JOY, ROCKS } from '../worlds'
 import { buildLand, INK, paintCloud, paintRing, paintSky, paintSlices, paintWall, type Land } from './ledgeLand'
 import { lightAt, type Light } from './ledgeLight'
-import { paintBanks, paintBirds, paintDust, paintGrass } from './ledgeWind'
+import { paintBanks, paintDust } from './ledgeWind'
 import { PEBBLE_LANDS, pebbleAt, pebbleWays, type Pebble, type PebbleWay } from './ledgePebbles'
 import { EVELYN_ROCK, JOY_ROCK, paintStone, type Flush } from './ledgeStones'
 import {
@@ -192,11 +192,10 @@ export const ledge = part<State>(
       paintSky(p, k, f, light)
       paintCloud(p, k, f, show, light)
       paintBanks(p, k, f, show, light)
-      // In front of the canyon's middle slice, the sand off its rim and the two birds; then its nearest slice over them.
+      // In front of the canyon's middle slice, the sand off its rim; then its nearest slice over it.
       paintSlices(p, k, f, s.land, light, (i, sc, map) => {
         if (i !== 2) return
         paintDust(p, k, f, show, sc, map)
-        paintBirds(p, k, f, show, light)
       })
       paintWall(p, k, f, s.land, weight, light)
       paintRing(p, k, f, s.land, weight * 0.9, false, show)
@@ -239,8 +238,6 @@ export const ledge = part<State>(
       }
       // The ring's near half over them, so what falls in goes down behind its lip.
       paintRing(p, k, f, s.land, weight * 0.9, true, show, weight)
-      // Nearest of all, the dry grass at the rim's edge, in front of the two of them.
-      paintGrass(p, k, show, weight, light)
     },
   },
   (slot) => {
