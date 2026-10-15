@@ -1,4 +1,6 @@
 import type { Pt } from '../../../../../parts'
+import { sway } from '../depth'
+import { BEAT } from '../music'
 import { hash, lastOf } from '../kit'
 import { ctxOf, ease, ellipse, fillWith, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import {
@@ -82,6 +84,7 @@ import {
   SWUNG,
   T1,
   TILL,
+  TRANSOM,
   WELCOME,
   WIN,
   boxTop,
@@ -94,7 +97,6 @@ import {
   officeDoor,
   rungY,
   WAY,
-  WAKE,
   GATES,
   MURRAY_STEPS,
   fenceDrop,
@@ -102,6 +104,7 @@ import {
   stockSway,
   wheelTurn,
 } from './geo'
+import { drawOutside, LAMP_POST, windowSeen } from './street'
 
 /**
  * Uncle Murray's shoe store, before it opens: warm tungsten browns and creams in deep shadow, one cold blue window on
@@ -193,7 +196,7 @@ export function lightAt(x: number, t: number): number {
   // The lamps along the store.
   LAMP_X.forEach((lx, i) => {
     const on = lampOn(i, t)
-    L += 0.85 * on * Math.exp(-(((x - lx) / 2.1) ** 2))
+    if (on > 0) L += 0.85 * on * Math.exp(-(((x - lx - lampFoot(lampSway(i, t)) * 0.5) / 2.1) ** 2))
   })
   // The stockroom's bulb: on before he comes.
   if (x > PART1[0] - 0.3 && x < PART2[1] + 0.2) L += 0.72 * Math.exp(-(((x - STOCK_BULB[0] - stockSway(t)) / 3.2) ** 2))
@@ -204,6 +207,8 @@ export function lightAt(x: number, t: number): number {
     L += 0.22 + 0.42 * d * (1 - 0.3 * murrayNear(t)) * Math.exp(-Math.max(0, x - PART2[1]) / 3.2)
     const s = ease((doorDeg(t) - 20) / 100)
     L += 0.18 * s * Math.exp(-(((x - (SAFE[0] + SAFE[1]) / 2) / 1.4) ** 2))
+    // His desk lamp, left on all night.
+    L += 0.26 * Math.exp(-(((x - DESK_LAMP) / 1.15) ** 2))
   }
   return Math.min(1, L)
 }
@@ -214,6 +219,17 @@ export function bulbOn(t: number): number {
   // It catches with a stutter.
   return u < 0.05 ? 1 : u < 0.12 ? 0.25 : u < 0.18 ? 0.9 : u < 0.24 ? 0.45 : 1
 }
+/**
+ * How far a store lamp's shade is swung off the plumb (cells): a slow swing after it clicks on, dying away, and the
+ * draught's small sway all the while.
+ */
+export function lampSway(i: number, t: number): number {
+  return 0.032 * ring(t - LAMPS_ON[i], 0.85, 1.6) + 0.007 * sway(t, i + 1, 3.6)
+}
+/** How far the foot of a lamp's light swings for a swing `sw` of its shade: further, as the cord is short and the floor far. */
+export const lampFoot = (sw: number): number => (sw * (FLOOR + 0.3 - CEIL)) / (LAMP_Y - CEIL)
+/** Murray's desk lamp, on his desk in the office. */
+export const DESK_LAMP = 27.95
 export function lampOn(i: number, t: number): number {
   const t0 = LAMPS_ON[i]
   if (t < t0) return 0
@@ -264,13 +280,17 @@ export function drawLights(pen: Pen, t: number): void {
     if (on <= 0) return
     const ctx = ctxOf(pen.p)
     const { k } = pen
+    // The cone swings with the shade, its foot further than its head.
+    const sw = lampSway(i, t)
+    const hx = lx + sw
+    const fx = lx + lampFoot(sw)
     const g = ctx.createLinearGradient(0, LAMP_Y * k, 0, (FLOOR + 0.3) * k)
     g.addColorStop(0, rgba(pen, C.lamp, 0.2 * on))
     g.addColorStop(1, rgba(pen, C.lamp, 0.02 * on))
-    fillWith(pen, [[lx - 0.25, LAMP_Y + 0.05], [lx + 0.25, LAMP_Y + 0.05], [lx + 1.5, FLOOR + 0.3], [lx - 1.5, FLOOR + 0.3]], g)
-    glow(pen, [lx, LAMP_Y + 0.05], 0.9, C.lamp, 0.45 * on)
-    glow(pen, [lx, FLOOR + 0.15], 1.6, C.lamp, 0.12 * on)
-    ellipse(pen, [lx, LAMP_Y + 0.04], 0.2, 0.05, mix(C.lampIn, '#FFFFFF', 0.4))
+    fillWith(pen, [[hx - 0.25, LAMP_Y + 0.05], [hx + 0.25, LAMP_Y + 0.05], [fx + 1.5, FLOOR + 0.3], [fx - 1.5, FLOOR + 0.3]], g)
+    glow(pen, [hx, LAMP_Y + 0.05], 0.9, C.lamp, 0.45 * on)
+    glow(pen, [fx, FLOOR + 0.15], 1.6, C.lamp, 0.12 * on)
+    ellipse(pen, [hx, LAMP_Y + 0.04], 0.2, 0.05, mix(C.lampIn, '#FFFFFF', 0.4))
   })
   // The stockroom's bulb, swinging.
   const sb: Pt = [STOCK_BULB[0] + stockSway(t), STOCK_BULB[1]]
@@ -343,7 +363,7 @@ function doorLight(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the room */
 
-export function drawRoom(pen: Pen, t: number, f: F): void {
+export function drawRoom(pen: Pen, t: number, f: F & { cx: number; cy: number }): void {
   rect(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, C.bg)
   drawStreet(pen, t, f)
   drawCeiling(pen, f)
@@ -358,55 +378,35 @@ export function drawRoom(pen: Pen, t: number, f: F): void {
   drawChairs(pen)
 }
 
-const LAMP_POST = -0.45
-
-function drawStreet(pen: Pen, t: number, f: F): void {
+function drawStreet(pen: Pen, t: number, f: F & { cx: number; cy: number }): void {
   const dawn = Math.min(1, t / T1)
   const [x0, y0, x1, y1] = WIN
   // The front wall, the window in it behind the counter.
   rect(pen, f.x0 - 1, CEIL, FRONT, FLOOR, C.wallDark)
-  // Outside: the street at night going to a grey dawn; the tenements across; a street lamp.
-  vgrad(pen, x0, y0, x1, y1, [
-    [0, mix(C.night, C.dawn, dawn * 0.85), 1],
-    [0.6, mix('#1E2C40', '#80909A', dawn * 0.7), 1],
-    [1, mix(C.street, '#4E5A62', dawn * 0.6), 1],
-  ])
-  const across = mix(C.across, '#38444C', dawn * 0.6)
-  const roof = y0 + 0.75
-  shape(pen, [[x0, roof + 0.2], [x0 + 0.9, roof + 0.2], [x0 + 0.9, roof - 0.15], [x0 + 1.9, roof - 0.15], [x0 + 1.9, roof + 0.35], [x1, roof + 0.35], [x1, y1], [x0, y1]], across)
-  // Cornices, a fire escape, a few lit windows across the street.
-  rect(pen, x0, roof + 0.2, x0 + 0.9, roof + 0.26, mix('#0D1218', '#2A3238', dawn))
-  rect(pen, x0 + 0.9, roof - 0.15, x0 + 1.9, roof - 0.09, mix('#0D1218', '#2A3238', dawn))
-  for (let i = 0; i < 8; i++) {
-    const wx = x0 + 0.15 + i * 0.37
-    for (let j = 0; j < 4; j++) {
-      const wy = roof + 0.45 + j * 0.45
-      if (wy > y1 - 0.75) continue
-      // A few lit all night; the rest wake on the intro's beats, each catching with a flicker.
-      const wake = WAKE.find((w) => w[1] === i && w[2] === j)
-      const u = wake ? t - wake[0] : -1
-      const on = hash(i, j, 7) > 0.8 ? 1 : u < 0 ? 0 : u < 0.05 ? 1 : u < 0.1 ? 0.3 : 1
-      rect(pen, wx, wy, wx + 0.16, wy + 0.25, mix(mix('#111921', '#2A343C', dawn), mix('#D9A85A', '#8E8A78', dawn * 0.7), on))
-      if (u >= 0 && u < 0.6) glow(pen, [wx + 0.08, wy + 0.12], 0.3, '#FFD48A', 0.35 * flash(u, 0.18))
-    }
+  // Outside, through the glass, in its layers (`street.ts`).
+  if (windowSeen(f)) {
+    const { k } = pen
+    const ctx = ctxOf(pen.p)
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+    ctx.clip()
+    drawOutside(pen, t, f)
+    ctx.restore()
   }
-  for (let j = 0; j < 3; j++) {
-    const y = roof + 0.75 + j * 0.45
-    if (y > y1 - 0.7) continue
-    path(pen, [[x0 + 1.95, y], [x0 + 2.75, y]], mix('#0A0E12', '#232A30', dawn), 0.7)
-    line(pen, [x0 + 2.0, y], [x0 + 2.7, y - 0.45], mix('#0A0E12', '#232A30', dawn), 0.4)
-  }
-  // The pavement and the kerb.
-  rect(pen, x0, y1 - 0.55, x1, y1, mix('#2C3640', '#5A646A', dawn * 0.6))
-  rect(pen, x0, y1 - 0.58, x1, y1 - 0.53, mix('#1C242C', '#3A444A', dawn))
-  // The street lamp.
+  // The street lamp, on the pavement just outside.
   line(pen, [LAMP_POST, y1 - 0.3], [LAMP_POST, -1.65], '#0F151B', 1.6)
   shape(pen, [[LAMP_POST - 0.17, -1.62], [LAMP_POST + 0.17, -1.62], [LAMP_POST + 0.07, -1.8], [LAMP_POST - 0.07, -1.8]], '#0F151B')
   ellipse(pen, [LAMP_POST, -1.58], 0.1, 0.045, mix(C.sodium, '#BFC2B0', dawn * 0.6))
-  // The display in the window: two shoes on a riser, at the end the counter does not hide.
+  // The display in the window: a pair of shoes on a riser, at the end the counter does not hide (the cat sits by them).
   rect(pen, x0 + 0.05, y1 - 0.15, x0 + 1.05, y1, C.woodDark)
-  shoe(pen, [x0 + 0.12, y1 - 0.15], 0.4, '#3A2014')
-  shoe(pen, [x0 + 0.6, y1 - 0.15], 0.4, '#6A4428')
+  shoe(pen, [x0 + 0.08, y1 - 0.15], 0.36, '#3A2014')
+  shoe(pen, [x0 + 0.45, y1 - 0.15], 0.36, '#6A4428')
+  // Frost along the foot of the glass, the street's cold coming through it.
+  vgrad(pen, x0, y1 - 0.32, x1, y1, [
+    [0, '#C8D4E0', 0],
+    [1, '#C8D4E0', 0.13],
+  ])
   // The glass's frame: a transom over the big panes, its bar, its mullions; a blind part way down.
   const tr = y0 + 0.62
   rect(pen, x0, y0, x1, y0 + 0.4, mix('#4A4030', '#6A6250', dawn * 0.4))
@@ -421,6 +421,38 @@ function drawStreet(pen: Pen, t: number, f: F): void {
   rect(pen, (x0 + x1) / 2 - 0.04, tr, (x0 + x1) / 2 + 0.04, y1, C.wood)
   // Under it, the riser down to the floor.
   rect(pen, f.x0 - 1, y1 + 0.1, FRONT, FLOOR, C.wood)
+  // Above it, up the front wall: a shelf of the season's shoes, and the ceiling fan.
+  if (f.y0 < y0 - 0.2) {
+    const sy = y0 - 0.55
+    rect(pen, x0 - 0.05, sy, x1 + 0.05, sy + 0.05, C.woodLight)
+    for (const bx of [x0 + 0.2, (x0 + x1) / 2, x1 - 0.2]) shape(pen, [[bx - 0.03, sy + 0.05], [bx + 0.03, sy + 0.05], [bx, sy + 0.18]], C.woodDark)
+    const pairs = ['#2A1810', '#6A4428', '#4A1A16', '#8A6A4A', '#1E1A18', '#5A3A22']
+    pairs.forEach((col, i) => shoe(pen, [x0 + 0.12 + i * 0.5 + (i % 2) * -0.08, sy], 0.32, col))
+    drawFan(pen, t)
+  }
+}
+
+/** The ceiling fan over the front of the store: turning lazily in the draught, then spun up when the lamps go on. */
+const FAN: Pt = [-0.2, CEIL + 0.42]
+function drawFan(pen: Pen, t: number): void {
+  // Its angle: a lazy drift, and from the bass on, the switch thrown with the lamps, winding up to speed.
+  const lazy = 0.35 * t
+  const on = Math.max(0, t - FIRE)
+  const th = lazy + 2.6 * (on - 2.2 * (1 - Math.exp(-on / 2.2)))
+  const [hx, hy] = FAN
+  line(pen, [hx, CEIL], [hx, hy - 0.06], C.iron, 1)
+  const blade = (a: number) => {
+    const c = Math.cos(a)
+    const s = Math.sin(a)
+    const tip = hx + c * 0.62
+    const w = 0.02 + 0.03 * Math.abs(s)
+    shape(pen, [[hx + c * 0.1, hy - 0.01], [tip, hy + 0.02 - w], [tip, hy + 0.02 + w], [hx + c * 0.1, hy + 0.02]], s < 0 ? C.woodDark : C.wood)
+  }
+  const angles = [0, 1, 2, 3].map((i) => th + (i * Math.PI) / 2)
+  for (const a of angles) if (Math.sin(a) < 0) blade(a)
+  ellipse(pen, [hx, hy], 0.13, 0.07, C.brassDark)
+  ellipse(pen, [hx, hy - 0.03], 0.09, 0.035, C.brass)
+  for (const a of angles) if (Math.sin(a) >= 0) blade(a)
 }
 
 /** A shoe in profile, toe to the right, its sole on `at`. */
@@ -595,13 +627,21 @@ function drawStock(pen: Pen, t: number, f: F): void {
     rect(pen, sx - 0.04, -3.3, sx, FLOOR, C.shelfSteel)
     rect(pen, sx + sw, -3.3, sx + sw + 0.04, FLOOR, C.shelfSteel)
   }
+  // High in the back wall, a transom on the street, its glass the dawn's cold blue.
+  const [tx0, ty0, tx1, ty1] = TRANSOM
+  rect(pen, tx0 - 0.06, ty0 - 0.06, tx1 + 0.06, ty1 + 0.06, C.woodDark)
+  rect(pen, tx0, ty0, tx1, ty1, mix('#2A3A50', '#7A8C9C', Math.min(1, t / T1)))
+  for (let x = tx0 + (tx1 - tx0) / 3; x < tx1 - 0.05; x += (tx1 - tx0) / 3) rect(pen, x - 0.015, ty0, x + 0.015, ty1, C.woodDark)
+  rect(pen, tx0, (ty0 + ty1) / 2 - 0.012, tx1, (ty0 + ty1) / 2 + 0.012, C.woodDark)
   // Behind the two of them, bare plaster under the bulb: a calendar picture pinned up, a coat on a nail.
   rect(pen, 16.55, -0.9, 17.05, -0.25, '#8E8670')
   shape(pen, [[16.58, -0.45], [16.75, -0.65], [16.9, -0.5], [17.02, -0.6], [17.02, -0.28], [16.58, -0.28]], '#5E6A5A')
   ellipse(pen, [16.8, -0.88], 0.02, 0.02, C.iron)
   ellipse(pen, [18.25, -1.15], 0.025, 0.025, C.iron)
-  shape(pen, [[18.25, -1.15], [18.45, -0.9], [18.5, 0.2], [18.0, 0.2], [18.05, -0.9]], '#2E3436')
-  line(pen, [18.25, -0.9], [18.25, 0.15], '#1E2224', 0.5)
+  // The coat's hem stirs in the draught under the curtain.
+  const hem = 0.025 * sway(t, 6, 3.1) + 0.04 * ring(t - CURTAIN - 0.3, 0.9, 1.2)
+  shape(pen, [[18.25, -1.15], [18.45, -0.9], [18.5 + hem, 0.2], [18.0 + hem * 0.8, 0.2], [18.05, -0.9]], '#2E3436')
+  line(pen, [18.25, -0.9], [18.25 + hem * 0.6, 0.15], '#1E2224', 0.5)
   // Cartons on the floor; a broom; the bulb's cord.
   rect(pen, 21.0, FLOOR - 0.7, 21.9, FLOOR, C.cartonDark)
   rect(pen, 21.1, FLOOR - 1.15, 21.8, FLOOR - 0.7, C.carton)
@@ -644,6 +684,17 @@ function drawOffice(pen: Pen, t: number, f: F): void {
   rect(pen, 28.95, -1.45, 29.55, -1.27, C.red)
   for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) rect(pen, 29.0 + i * 0.11, -1.21 + j * 0.13, 29.08 + i * 0.11, -1.12 + j * 0.13, '#BFB49A')
   const ck: Pt = [24.25, -1.2]
+  // A schoolhouse clock: under its dial a drop case, the brass pendulum swinging through its glass a beat each way.
+  rect(pen, ck[0] - 0.2, ck[1] + 0.2, ck[0] + 0.2, ck[1] + 0.95, C.wood)
+  rect(pen, ck[0] - 0.14, ck[1] + 0.3, ck[0] + 0.14, ck[1] + 0.86, '#1A120C')
+  const swing = 0.2 * Math.cos((Math.PI * (t - BULB_ON)) / BEAT)
+  const pivot: Pt = [ck[0], ck[1] + 0.26]
+  const bob: Pt = [pivot[0] + Math.sin(swing) * 0.46, pivot[1] + Math.cos(swing) * 0.46]
+  line(pen, pivot, bob, C.brassDark, 0.5)
+  ellipse(pen, bob, 0.055, 0.055, C.brass)
+  ellipse(pen, [bob[0] - 0.015, bob[1] - 0.015], 0.018, 0.018, mix(C.brass, '#FFFFFF', 0.45))
+  line(pen, [ck[0] - 0.1, ck[1] + 0.82], [ck[0] + 0.02, ck[1] + 0.34], '#3A2C20', 0.4)
+  ellipse(pen, [ck[0], ck[1] + 0.98], 0.06, 0.03, C.woodDark)
   ellipse(pen, ck, 0.3, 0.3, C.wood)
   ellipse(pen, ck, 0.24, 0.24, '#E4D9BE')
   for (let i = 0; i < 12; i++) {
@@ -668,10 +719,17 @@ function drawOffice(pen: Pen, t: number, f: F): void {
   ellipse(pen, [28.85 + dx, 0.57], 0.04, 0.025, C.brass)
   ellipse(pen, [28.85 + dx, 1.0], 0.04, 0.025, C.brass)
   rect(pen, 28.9 + dx, 0.1, 29.9 + dx, 0.15, C.green)
-  line(pen, [30.35 + dx, 0.15], [30.35 + dx, -0.35], C.brass, 1)
-  shape(pen, [[30.05 + dx, -0.32], [30.65 + dx, -0.32], [30.55 + dx, -0.52], [30.15 + dx, -0.52]], C.green, 0.4, C.iron)
-  ellipse(pen, [30.35 + dx, 0.13], 0.15, 0.03, C.brassDark)
+  // His lamp, a banker's lamp, left on all night (its light is drawn over the dark, in `life.ts`).
+  const dl = DESK_LAMP
+  line(pen, [dl, 0.15], [dl, -0.35], C.brass, 1)
+  shape(pen, [[dl - 0.3, -0.32], [dl + 0.3, -0.32], [dl + 0.2, -0.52], [dl - 0.2, -0.52]], C.green, 0.4, C.iron)
+  ellipse(pen, [dl, 0.13], 0.15, 0.03, C.brassDark)
+  line(pen, [dl + 0.12, -0.32], [dl + 0.13, -0.18], C.brassDark, 0.35)
   rect(pen, 29.5 + dx, -0.12, 29.8 + dx, 0.1, '#D9CDAE')
+  // The ashtray, and the last cigarette of the night still burning in it.
+  ellipse(pen, [ASH[0] + 0.04, 0.135], 0.11, 0.028, '#2A2622')
+  ellipse(pen, [ASH[0] + 0.04, 0.125], 0.08, 0.016, '#1A1714')
+  line(pen, [ASH[0] - 0.1, 0.12], [ASH[0], 0.1], '#E6DCC8', 0.9)
   line(pen, [31.2, FLOOR], [31.2, -1.6], C.woodDark, 1.4)
   line(pen, [30.95, FLOOR], [31.45, FLOOR], C.woodDark, 1.2)
   // Its hooks bare: Murray has his hat on, and he is on his way.
@@ -691,6 +749,9 @@ function drawOffice(pen: Pen, t: number, f: F): void {
   rect(pen, p1 - 0.06, STEP_TOP + 0.06, p1, FLOOR, C.oakDark)
   rect(pen, p0, 1.12, p1, 1.17, C.oakDark)
 }
+
+/** The burning end of the cigarette in Murray's ashtray: where its smoke comes off. */
+export const ASH: Pt = [28.48, 0.098]
 
 /* ------------------------------------------------------------------ the moving things */
 
@@ -860,13 +921,16 @@ export function drawFitting(pen: Pen, t: number): void {
   if (ding > 0.05) glow(pen, [LIP, DEVICE_TOP - 0.08], 0.25, '#FFFFFF', 0.5 * ding)
 }
 
+const breathe = sway
+
 /** The curtain to the stockroom: two halves of oxblood velvet; they part round him in the doorway and swing back. */
 export function drawCurtain(pen: Pen, t: number): void {
   const x0 = PART1[0] + POST
   const x1 = PART1[1] - POST
   const mid = (x0 + x1) / 2
   const open = Math.max(0, Math.min(1, 1 - Math.abs(t - CURTAIN) / 0.45)) ** 0.7
-  const sway = t > CURTAIN ? 0.06 * ring(t - CURTAIN - 0.3, 1.2, 0.8) : 0
+  // It swings back after him, and all the while it breathes a little in the draught from the street.
+  const sway = (t > CURTAIN ? 0.06 * ring(t - CURTAIN - 0.3, 1.2, 0.8) : 0) + 0.014 * breathe(t, 2, 3.3)
   const g = 0.28 * open
   for (const side of [-1, 1]) {
     const inner = mid + side * g + sway
@@ -1153,16 +1217,25 @@ export function drawPairShadows(pen: Pen, t: number, rachel: Pt): void {
 /** The hanging lamps: their cords and green enamel shades (their light is drawn over the shade). */
 export function drawLamps(pen: Pen, t: number): void {
   LAMP_X.forEach((lx, i) => {
-    const sw = 0.02 * ring(t - LAMPS_ON[i], 1.5, 0.6)
+    const sw = lampSway(i, t)
+    // The shade tips as it swings on its cord.
+    const tip = sw * 0.9
     line(pen, [lx, CEIL], [lx + sw, LAMP_Y - 0.2], C.iron, 0.6)
-    shape(pen, [[lx + sw - 0.05, LAMP_Y - 0.22], [lx + sw + 0.05, LAMP_Y - 0.22], [lx + sw + 0.24, LAMP_Y + 0.04], [lx + sw - 0.24, LAMP_Y + 0.04]], C.lampShade, 0.3, C.iron)
-    ellipse(pen, [lx + sw, LAMP_Y + 0.04], 0.24, 0.035, lampOn(i, t) > 0 ? C.lampIn : '#5A5446')
+    shape(pen, [[lx + sw - 0.05, LAMP_Y - 0.22], [lx + sw + 0.05, LAMP_Y - 0.22], [lx + sw + 0.24 + tip, LAMP_Y + 0.04 - tip], [lx + sw - 0.24 + tip, LAMP_Y + 0.04 + tip]], C.lampShade, 0.3, C.iron)
+    ellipse(pen, [lx + sw + tip, LAMP_Y + 0.04], 0.24, 0.035, lampOn(i, t) > 0 ? C.lampIn : '#5A5446')
+    // Its pull chain, swinging a little behind it in the draught.
+    const pc: Pt = [lx + sw + 0.16, LAMP_Y + 0.03]
+    const lag = 0.035 * sway(t - 0.3, i + 7, 2.2) + sw * 1.6
+    line(pen, pc, [pc[0] + lag, pc[1] + 0.3], C.brassDark, 0.35)
+    ellipse(pen, [pc[0] + lag, pc[1] + 0.31], 0.012, 0.012, C.brass)
   })
   // The bare bulb over the counter, on its cord.
   line(pen, [BULB[0], CEIL], [BULB[0], BULB[1] - 0.1], C.iron, 0.6)
   rect(pen, BULB[0] - 0.035, BULB[1] - 0.14, BULB[0] + 0.035, BULB[1] - 0.06, C.chromeDark)
   ellipse(pen, BULB, 0.065, 0.085, bulbOn(t) > 0.5 ? '#FFF2CC' : '#6A6250')
-  // Its pull chain.
-  line(pen, [BULB[0] + 0.03, BULB[1] - 0.08], [BULB[0] + 0.05, BULB[1] + 0.35 + 0.03 * ring(t - BULB_ON, 2, 0.5)], C.brassDark, 0.4)
+  // Its pull chain, stirring in the draught off the window (and set swinging when it is pulled).
+  const draught = 0.035 * sway(t, 3, 2.7) + 0.06 * ring(t - BULB_ON, 1.1, 0.9)
+  line(pen, [BULB[0] + 0.03, BULB[1] - 0.08], [BULB[0] + 0.03 + draught, BULB[1] + 0.35 + 0.03 * ring(t - BULB_ON, 2, 0.5)], C.brassDark, 0.4)
+  ellipse(pen, [BULB[0] + 0.03 + draught * 1.03, BULB[1] + 0.37], 0.015, 0.015, C.brass)
 }
 

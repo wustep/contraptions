@@ -5,6 +5,7 @@ import { SEAMS } from '../seams'
 import { drawBat, drawCurtain, drawFitting, drawLadder, drawLamps, drawLights, drawMurray, drawOfficeDoor, drawPairShadows, drawPops, drawRoom, drawSafeDoor, drawSafeInside, drawShade } from './draw'
 import { BOLTS, DIAL_AT, END, FIRE, HANDLE_LAND, SHOVES, INTRO_HOPS, INTRO_RUN, RACHEL_AT, rachelAt, STORE_STRIKES, SWUNG, T0, T1, WAY } from './geo'
 import { at } from '../music'
+import { drawCat, drawForeground, drawLife } from './life'
 
 /**
  * Uncle Murray's shoe store on the Lower East Side, 1952, before it opens (0 → 52.455, bars 1 to 24).
@@ -61,8 +62,11 @@ export const store = part<StoreState>(
       drawSafeDoor(pen, t)
       drawMurray(pen, t)
       drawLamps(pen, t)
+      drawCat(pen, t)
       drawShade(pen, t, f)
       drawLights(pen, t)
+      drawLife(pen, t, f)
+      drawForeground(pen, t, f)
       p.pop()
     },
   },
