@@ -594,6 +594,45 @@ function murphTruck(s: TruckState, edge: number, t: number): Companion {
   return { x: q[0], y: q[1], scale: MURPH_SMALL, color: MURPH_YOUNG }
 }
 
+/**
+ * The drop: as he floors it, the crows in the corn go up all at once, a ripple of them, beating hard up out of the
+ * tops, then low over the field: the quicker ones away ahead of the truck, the slower dropping back over it as it
+ * goes by under them. In front of the corn, behind the truck and the drone.
+ */
+const FLUSH = { n: 16, at: DROP + 0.04, life: 4.5 }
+function drawFlush(p: p5, s: TruckState, c: Ctx, t: number, f: ReturnType<typeof frame>): void {
+  const age0 = t - FLUSH.at
+  if (age0 < 0 || age0 > FLUSH.life + 0.4) return
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const nose = rearAt(s.b0, FLUSH.at) + LEN
+  p.noFill()
+  p.strokeCap(p.ROUND)
+  p.strokeJoin(p.ROUND)
+  p.stroke(alpha(p, ink, 0.85))
+  p.strokeWeight(Math.max(0.9, weight * 0.6))
+  for (let j = 0; j < FLUSH.n; j++) {
+    const age = age0 - 0.4 * hash(j, 61)
+    if (age < 0 || age > FLUSH.life) continue
+    // Up out of the tops of the tall corn round the nose and ahead of it, hard at first, then low over the tops: the
+    // quicker ones away ahead, the slower dropping back over the truck as it goes by under them.
+    const x = nose - 1.5 + 5 * hash(j, 62) + (2.4 + 2.4 * hash(j, 63)) * age
+    const y = GROUND - 2.45 - 0.3 * hash(j, 64) - (0.55 + 0.45 * hash(j, 65)) * (1 - Math.exp(-age / 0.3)) - 0.08 * age + 0.07 * Math.sin(age * 3.2 + j)
+    const sz = 0.13 + 0.05 * hash(j, 66)
+    if (x < f.x0 - sz || x > f.x1 + sz || y < f.y0 - sz) continue
+    // Beating hard off the ground, then the steadier stroke of a bird on its way.
+    const flap = Math.sin(age * (age < 0.8 ? 15 : 9 + 2 * hash(j, 67)) + j * 1.7)
+    const lift = sz * (0.15 + 0.6 * flap)
+    p.beginShape()
+    p.vertex(X(x - sz), X(y - lift))
+    p.vertex(X(x - sz * 0.45), X(y - lift * 0.35 - sz * 0.12))
+    p.vertex(X(x), X(y))
+    p.vertex(X(x + sz * 0.45), X(y - lift * 0.35 - sz * 0.12))
+    p.vertex(X(x + sz), X(y - lift))
+    p.endShape()
+  }
+}
+
 export const truck = part<TruckState>(
   {
     name: 'pickup',
@@ -685,6 +724,7 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 0.6), x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1], rise: [2.6, 1.2] })
     cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 1.4), x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1] })
   }
+  drawFlush(p, s, c, t, f)
   // The bank the corn track runs along, the same earth as the track's, sloping down to the road.
   const toe = s.b0 + 0.25
   solid(p, ink, weight, DUST.shade)
