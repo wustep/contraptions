@@ -151,7 +151,7 @@ export const CITY_HITS = [SWELL]
  * a few dozen fills, not a thousand.
  */
 const LEVELS = 8
-function batch() {
+export function lightBatch() {
   const paths = new Map<string, Path2D[]>()
   return {
     dot(color: string, a: number, x: number, y: number, r: number) {
@@ -253,7 +253,7 @@ export const city = scenery<CityState>({
     // A star's size is in cells, so in the widest shots it would shrink below a pixel: it keeps a floor, in pixels of a
     // 540-line frame, so the sky is as starry wide as it is close.
     const px = ((fr.y1 - fr.y0) * k) / 540
-    const starDots = batch()
+    const starDots = lightBatch()
     for (const st of STARS) {
       const x = st.x + sx
       const y = st.y + sy
@@ -372,7 +372,7 @@ export const city = scenery<CityState>({
 
     const tx = slide(0.35)
     const ty = lift(0.35)
-    const windows = batch()
+    const windows = lightBatch()
     for (const [i, tw] of TOWERS.entries()) {
       const x = tw.x + tx
       if (x + tw.w < fr.x0 - 1 || x > fr.x1 + 1) continue
@@ -450,7 +450,7 @@ export const city = scenery<CityState>({
     const swellLight = 1 + 0.7 * swell
     // The city's own glow on the air over it.
     glow(p, k, VANISH + slide(0.25), HORIZON + 0.8 + lift(0.25), 26, '#C9795E', 0.16 + 0.26 * swell, 1.6, 0.28 + 0.08 * swell)
-    const lamps = batch()
+    const lamps = lightBatch()
     for (const b of BOULEVARDS) {
       for (let j = 1; j <= b.n; j++) {
         // Lamps evenly spaced along the ground, so closer together on the screen the further off they are.
