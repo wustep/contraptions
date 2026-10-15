@@ -48,7 +48,7 @@ function clipTo(ctx: CanvasRenderingContext2D, k: number, b: Box): void {
  * The living room's paper: a faint warm stripe, a shade of the paper itself (a green one, or hairlines either side,
  * read as drapes hung down the wall), and a rosebud on two leaves down each pale band.
  */
-export function stripe(ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, paper: string, fade: number): void {
+export function stripe(ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, paper: string, fade: number, detail = 1): void {
   const period = 0.44
   const band = 0.13
   const n0 = Math.floor((b.x0 - room.x0) / period) - 1
@@ -59,6 +59,7 @@ export function stripe(ctx: CanvasRenderingContext2D, k: number, room: Box, b: B
     ctx.fillRect(x * k, b.y0 * k, band * k, (b.y1 - b.y0) * k)
   }
   // The rosebuds: a leaf, then the bud on it; every other band half a step down, so they lie on a diagonal.
+  if (detail <= 0.01) return
   const step = 0.5
   const r = 0.03
   const leaves = new Path2D()
@@ -82,14 +83,14 @@ export function stripe(ctx: CanvasRenderingContext2D, k: number, room: Box, b: B
       buds.arc(x * k, y * k, r * k, 0, Math.PI * 2)
     }
   }
-  ctx.fillStyle = mixHex(paper, SAGE, 0.3 * fade)
+  ctx.fillStyle = mixHex(paper, SAGE, 0.3 * fade * detail)
   ctx.fill(leaves)
-  ctx.fillStyle = mixHex(paper, ROSE, 0.3 * fade)
+  ctx.fillStyle = mixHex(paper, ROSE, 0.3 * fade * detail)
   ctx.fill(buds)
 }
 
 /** The hall's paper: a fine dusty-rose trellis of diamonds, a dot where the lines cross. */
-function trellis(ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, paper: string, fade: number): void {
+function trellis(ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, paper: string, fade: number, detail: number): void {
   const w = 0.4
   const h = 0.52
   const slope = h / w
@@ -111,6 +112,7 @@ function trellis(ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, pa
     ctx.lineTo((x - (yb - room.y0) / slope) * k, yb * k)
   }
   ctx.stroke()
+  if (detail <= 0.01) return
   const dots = new Path2D()
   const r = 0.026
   const ci0 = Math.floor((b.x0 - room.x0) / w) - 1
@@ -126,12 +128,13 @@ function trellis(ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, pa
       dots.arc(x * k, y * k, r * k, 0, Math.PI * 2)
     }
   }
-  ctx.fillStyle = mixHex(paper, ROSE, 0.42 * fade)
+  ctx.fillStyle = mixHex(paper, ROSE, 0.42 * fade * detail)
   ctx.fill(dots)
 }
 
 /** The nursery's paper: small five-pointed white stars on an offset grid, each a little turned. */
-function stars(ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, paper: string, fade: number): void {
+function stars(ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, paper: string, fade: number, detail: number): void {
+  if (detail <= 0.01) return
   const w = 0.42
   const h = 0.42
   const path = new Path2D()
@@ -158,7 +161,7 @@ function stars(ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, pape
       path.closePath()
     }
   }
-  ctx.fillStyle = mixHex(paper, '#FFFDF4', 0.55 * fade)
+  ctx.fillStyle = mixHex(paper, '#FFFDF4', 0.55 * fade * detail)
   ctx.fill(path)
 }
 
@@ -227,7 +230,11 @@ export interface Papers {
 export function drawPapers(ctx: CanvasRenderingContext2D, k: number, f: Box, s: Papers): void {
   // Old paper loses its print before its ground: the pattern a third fainter by the last years.
   const fade = 1 - 0.35 * s.age
-  const rooms: [Box, (ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, paper: string, fade: number) => void, string, number, boolean][] = [
+  // The small motifs (the rosebuds, the trellis's dots, the stars) only where they are more than a pixel or two: in
+  // the storm's wide, the one look at every room at once, they faded out to nothing and were the frame's dearest
+  // drawing. They go as the cells get small, smoothly, so a move in or out never pops them.
+  const detail = Math.max(0, Math.min(1, (k - 50) / 30))
+  const rooms: [Box, (ctx: CanvasRenderingContext2D, k: number, room: Box, b: Box, paper: string, fade: number, detail: number) => void, string, number, boolean][] = [
     [s.living, stripe, s.paper, fade, true],
     [s.hall, trellis, s.hallPaper, fade, true],
     [s.landing, trellis, s.hallPaper, fade, false],
@@ -242,7 +249,7 @@ export function drawPapers(ctx: CanvasRenderingContext2D, k: number, f: Box, s: 
     if (above.y1 > above.y0) {
       ctx.save()
       clipTo(ctx, k, above)
-      print(ctx, k, room, above, paper, a)
+      print(ctx, k, room, above, paper, a, detail)
       ctx.restore()
     }
     if (panelled) dado(ctx, k, room, b, paper, a)
