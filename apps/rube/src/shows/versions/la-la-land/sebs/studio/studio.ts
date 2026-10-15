@@ -415,11 +415,16 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   ctx.fillStyle = band
   ctx.fillRect(X(k, x0), X(k, -3.4 + dy), X(k, x1 - x0), X(k, bottom + 3.4 - dy))
   ctx.restore()
-  // The sign, painted, unlit: nine pale blocks on the mountain's face.
+  // The sign, painted, unlit: nine pale blocks on the mountain's face, each standing on the scaffold behind it.
   for (const b of SIGN) {
     p.push()
     p.translate(X(k, H(b.x)), X(k, b.y + dy))
     p.rotate(b.tilt)
+    p.stroke(mixHex(M.mountain, M.hillDeep, 0.3))
+    p.strokeWeight(Math.max(1, X(k, 0.026)))
+    p.line(X(k, -b.w * 0.32), X(k, -0.1), X(k, -b.w * 0.32), X(k, 0.44))
+    p.line(X(k, b.w * 0.32), X(k, -0.1), X(k, b.w * 0.32), X(k, 0.44))
+    p.line(X(k, -b.w * 0.32), X(k, 0.04), X(k, b.w * 0.32), X(k, 0.38))
     p.noStroke()
     p.fill(mixHex(M.sign, M.mountain, 0.42))
     p.rect(X(k, -b.w / 2), X(k, -b.h), X(k, b.w), X(k, b.h))
