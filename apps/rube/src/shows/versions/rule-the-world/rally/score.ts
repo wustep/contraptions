@@ -3,8 +3,8 @@ import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
 import { vignette } from './vignette'
-import { bloom } from './bloom'
-import { glow, grade } from './fx'
+import { iris } from './iris'
+import { grade } from './fx'
 import { crane, finale, FINALE } from './finale'
 import { live } from './live'
 import { lay, standing, type Chain, type Link } from './kit'
@@ -61,11 +61,8 @@ const claim = (x0: number, y0: number, x1: number, y1: number): Pt[] => {
 }
 const AROUND = claim(-80, -60, 80, 40)
 const VIGNETTE = standing(vignette, 0, 0, AROUND, null, DURATION)
-/**
- * The show's own light over every place (`fx.ts`, `bloom.ts`): Marty's glow on what is round him, under him; then over
- * everything the blooms at the seams, the grade, and the vignette.
- */
-const LIGHT = [glow, bloom, grade].map((piece) => standing(piece, 0, 0, AROUND, null, DURATION)).concat(VIGNETTE)
+/** What lies over every place: the irises at the seams (`iris.ts`), the grade (`fx.ts`), and the vignette. */
+const LIGHT = [iris, grade].map((piece) => standing(piece, 0, 0, AROUND, null, DURATION)).concat(VIGNETTE)
 
 /** Each place's standing scenery, and what is drawn over everything (the vignette, the credits' shade). */
 const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
@@ -78,7 +75,7 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
   hospital: {
     scenery: [standing(hospitalSet, 0, 0, HOSPITAL_CELLS, null, DURATION)],
     // The finale's building round the ward (`finale.ts`) goes under the grade, with the credits' shade over all.
-    after: [...LIGHT.slice(0, 2), standing(finale, 0, 0, claim(-130, -70, 110, 60), null, DURATION), ...LIGHT.slice(2), standing(credits, 0, 0, AROUND, null, DURATION)],
+    after: [LIGHT[0], standing(finale, 0, 0, claim(-130, -70, 110, 60), null, DURATION), ...LIGHT.slice(1), standing(credits, 0, 0, AROUND, null, DURATION)],
   },
 })
 
@@ -198,8 +195,8 @@ export function compose(): { show: RallyShow; camera: (t: number) => Framing } {
     cams.push(dir)
   })
   // The lens over the authored camera. At every seam it leans in on him over the bar before the downbeat, as the place
-  // he is leaving gathers in on him, and opens back out over the bars after, as the next place blooms out of him
-  // (`bloom.ts`): a push-in and a pull-back about where he is on the screen, so he holds still in the frame while the
+  // he is leaving closes in on him, and opens back out over the bars after, as the next place opens out of him
+  // (`iris.ts`): a push-in and a pull-back about where he is on the screen, so he holds still in the frame while the
   // world goes in and out round him, and the match cut is kept exactly (both sides have the same lean at the seam).
   const leans = legs.slice(1).map((leg, i) => {
     const before = cams[i](leg.from - 1e-6)
