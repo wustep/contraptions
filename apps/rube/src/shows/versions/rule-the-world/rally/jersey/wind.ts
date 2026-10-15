@@ -36,8 +36,8 @@ const W = {
   dog: '#090B0C',
   rim: '#8F7A4A',
   breath: '#A9B4B4',
-  leaf: '#2C2618',
-  leafLit: '#8C7046',
+  leaf: '#55493A',
+  leafLit: '#7E6842',
   curtain: '#E3D3A4',
   man: '#08090B',
 }
@@ -332,48 +332,65 @@ export function drawCurtain(pen: Pen, t: number, win: Pt, w: number, h: number):
 
 /* ------------------------------------------------------------------ the leaves */
 
-const LEAVES = 165
-/** Where the leaves go over: the farm, from the road's end to the field beyond the barn. */
-const LEAF_BOX: [number, number, number, number] = [S - 7, ROAD - 4.6, S + 33, ROAD + 0.15]
-/** The lit things a leaf going by is lit by: the door, the lit windows, the porch lamp. */
+/**
+ * A few dry leaves, lifted off the yard a handful at a time by a gust, carried low over it a few cells, and let down
+ * again: never up into the sky or the washing. Each handful has its own gust, at its own interval.
+ */
+const HANDFULS = 8
+const PER = 6
+/** Where the handfuls lift from: the yard and the barn's foot. */
+const YARD: [number, number] = [S + 2.5, S + 23]
+/** The lit things a leaf going by is lit by: the door, the lit windows. */
 const LIGHTS: [Pt, number][] = [
-  [[(PORCH[0] + PORCH[1]) / 2, ROAD - 2.4], 1.5],
-  [[HOUSE[0] + 0.55, ROAD - 2.0], 1.1],
-  [SHOT_WIN, 1.1],
+  [[(PORCH[0] + PORCH[1]) / 2, ROAD - 1.2], 1.6],
+  [[HOUSE[0] + 0.55, ROAD - 1.0], 1.1],
+  [[SHOT_WIN[0], ROAD - 1.0], 1.1],
 ]
 
-/** Dry leaves off the yard and the stubble, going over on the wind, tumbling; dark, but where a window lights them. */
 export function drawLeaves(pen: Pen, t: number, f: Frame): void {
-  const [bx0, by0, bx1, by1] = LEAF_BOX
-  if (f.x1 < bx0 || f.x0 > bx1) return
-  const w = bx1 - bx0
-  const hgt = by1 - by0
-  const run = carried(t - T0)
-  const dark = bag()
-  const lit = bag()
-  const fireLit = bag()
+  if (f.x1 < YARD[0] - 1 || f.x0 > YARD[1] + 6) return
+  const dark = [bag(), bag()]
+  const lit = [bag(), bag()]
+  const fireLit = [bag(), bag()]
   const fire = Math.min(1, fireLight(t))
-  for (let i = 0; i < LEAVES; i++) {
-    const h1 = hash(i, 301)
-    const h2 = hash(i, 302)
-    const h3 = hash(i, 303)
-    const x = bx0 + wrap(h1 * w + run * (1.1 + 1.3 * h3), 0, w)
-    if (x < f.x0 - 0.3 || x > f.x1 + 0.3) continue
-    // Low ones skitter along the ground; higher ones are carried, rising and falling on the gusts.
-    const lift = h2 * h2
-    const y = by1 - 0.05 - lift * hgt + (0.35 * lift + 0.04) * Math.sin(t * (1.2 + 1.6 * h3) + i * 2.1) - 0.08 * Math.abs(Math.sin(t * 3.3 + i))
-    if (y < f.y0 - 0.2 || y > f.y1 + 0.2) continue
-    const a = t * (2.5 + 4 * h3) + i
-    const rx = 0.05 + 0.03 * h1
-    const ry = rx * (0.25 + 0.75 * Math.abs(Math.cos(a * 0.7)))
-    let l = 0
-    for (const [c, r] of LIGHTS) l = Math.max(l, Math.exp(-((x - c[0]) ** 2 + (y - c[1]) ** 2) / (r * r)))
-    const fl = fire * Math.exp(-(((x - (BX0 + BX1) / 2) / 7) ** 2))
-    oval(fl > 0.3 && fl > l ? fireLit : l > 0.3 ? lit : dark, x, y, rx, ry, a)
+  for (let k = 0; k < HANDFULS; k++) {
+    const period = 5 + 2.5 * hash(k, 311)
+    const life = 2.2 + 1.2 * hash(k, 312)
+    const phase = (t - T0) / period + hash(k, 313)
+    const gen = Math.floor(phase)
+    const since = (phase - gen) * period
+    if (since > life) continue
+    const u = since / life
+    const cx = YARD[0] + (YARD[1] - YARD[0]) * hash(k, gen, 314)
+    const reach = 2.6 + 2.4 * hash(k, gen, 315)
+    for (let j = 0; j < PER; j++) {
+      const i = k * PER + j
+      const h1 = hash(i, gen, 316)
+      const h2 = hash(i, gen, 317)
+      // Each its own moment into the gust, its own height and its own size.
+      const v = Math.max(0, Math.min(1, (u - 0.12 * h1) / 0.88))
+      if (v <= 0 || v >= 1) continue
+      const x = cx + (h2 - 0.5) * 1.6 + reach * (0.7 + 0.5 * h1) * (v * (2 - v))
+      if (x < f.x0 - 0.2 || x > f.x1 + 0.2) continue
+      const lift = 0.25 + 1.0 * h2 * h2
+      const y = ROAD - 0.04 - lift * Math.sin(Math.PI * v) ** 0.8 + 0.06 * Math.sin(t * 7 + i)
+      const spin = t * (3 + 4 * h1) + i * 1.3
+      const rx = 0.04 + 0.04 * h2 * h1 + 0.015 * hash(i, 318)
+      // Thin, and thinner as it turns edge on.
+      const ry = rx * (0.14 + 0.36 * Math.abs(Math.cos(spin * 0.8)))
+      const fade = Math.min(1, v * 7, (1 - v) * 7)
+      let l = 0
+      for (const [c, r] of LIGHTS) l = Math.max(l, Math.exp(-((x - c[0]) ** 2 + (y - c[1]) ** 2) / (r * r)))
+      const fl = fire * Math.exp(-(((x - (BX0 + BX1) / 2) / 7) ** 2))
+      const set = fl > 0.3 && fl > l ? fireLit : l > 0.35 ? lit : dark
+      oval(set[fade > 0.6 ? 1 : 0], x, y, rx, ry, spin)
+    }
   }
-  fill(pen, dark, W.leaf, 0.95)
-  fill(pen, lit, W.leafLit, 0.95)
-  fill(pen, fireLit, mix(W.leafLit, F.red, 0.45), 0.95)
+  for (const [b, a] of [[0, 0.4], [1, 0.8]] as const) {
+    fill(pen, dark[b], W.leaf, a)
+    fill(pen, lit[b], W.leafLit, a * 0.85)
+    fill(pen, fireLit[b], mix(W.leafLit, F.red, 0.45), a * 0.85)
+  }
 }
 
 /* ------------------------------------------------------------------ the rooster on the barn */
