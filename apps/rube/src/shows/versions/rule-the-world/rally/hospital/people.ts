@@ -37,6 +37,8 @@ const PROUD: Dress = { coat: '#9C7B57', shade: '#7D6043', legs: '#55524C', shoes
 const SLEEPY: Dress = { coat: '#69707A', shade: '#535962', legs: '#5C626B', shoes: '#2B2724', skin: '#DDAE8E', hair: '#2E2620', hat: '#4B433C', band: '#262220' }
 const ORDERLY: Dress = { coat: '#E9EDE6', shade: '#C4CDC5', legs: '#DCE2DB', shoes: '#3A3633', skin: '#C99474', hair: '#2A221D' }
 const DOCTOR: Dress = { coat: '#F3F3EE', shade: '#CFD3CC', legs: '#3F434A', shoes: '#26231F', skin: '#E4B898', hair: '#8C8278', long: true }
+/** A student nurse in the nursery's blue, her apron white. */
+const STUDENT: Dress = { coat: '#AFC3D3', shade: '#8FA5B7', legs: '#EDEAE2', shoes: '#F3F1EA', skin: '#E8BE9C', hair: '#C29A62', long: true }
 const SISTER: Dress = { coat: '#FBFBF6', shade: '#D6DAD3', legs: '#EDEAE2', shoes: '#F3F1EA', skin: '#E2B693', hair: '#6A4A34', long: true }
 
 /* ------------------------------------------------------------------ drawing */
@@ -183,10 +185,11 @@ export function square(pen: Pen, d: Dress, q: Square): void {
   }
   // The neck, the head: from behind its hair and the backs of the ears; in front a face.
   limb(pen, q.neck, lerp(q.neck, q.head, 0.6), 0.1 * s, d.skin)
-  ellipse(pen, [q.head[0] - 0.155 * s, q.head[1] + 0.01 * s], 0.035 * s, 0.05 * s, d.skin)
-  ellipse(pen, [q.head[0] + 0.155 * s, q.head[1] + 0.01 * s], 0.035 * s, 0.05 * s, d.skin)
+  ellipse(pen, [q.head[0] - 0.155 * s, q.head[1] + 0.01 * s], 0.03 * s, 0.045 * s, mix(d.skin, '#8A5A48', 0.2))
+  ellipse(pen, [q.head[0] + 0.155 * s, q.head[1] + 0.01 * s], 0.03 * s, 0.045 * s, mix(d.skin, '#8A5A48', 0.2))
   ellipse(pen, q.head, 0.155 * s, 0.17 * s, q.back ? d.hair : d.skin)
-  if (q.back) shape(pen, [[q.head[0] - 0.12 * s, q.head[1] + 0.09 * s], [q.head[0] + 0.12 * s, q.head[1] + 0.09 * s], [q.head[0] + 0.09 * s, q.head[1] + 0.155 * s], [q.head[0] - 0.09 * s, q.head[1] + 0.155 * s]], d.skin)
+  // From behind, only the nape under the hair.
+  if (q.back) shape(pen, [[q.head[0] - 0.08 * s, q.head[1] + 0.13 * s], [q.head[0] + 0.08 * s, q.head[1] + 0.13 * s], [q.head[0] + 0.065 * s, q.head[1] + 0.17 * s], [q.head[0] - 0.065 * s, q.head[1] + 0.17 * s]], d.skin)
   else {
     ellipse(pen, [q.head[0], q.head[1] - 0.1 * s], 0.15 * s, 0.08 * s, d.hair)
     line(pen, [q.head[0] - 0.08 * s, q.head[1]], [q.head[0] - 0.03 * s, q.head[1]], '#3E332C', 0.6)
@@ -261,7 +264,7 @@ function walk(t: number, t0: number, t1: number, x0: number, x1: number, step = 
 const STAND_Y = FLOOR + 0.18
 
 /* The father at the far end of the glass. */
-const PROUD_X = -12.05
+const PROUD_X = -11.92
 const PROUD_IN: [number, number] = [at(99, 3) + 0.2, at(100, 2)]
 const PROUD_TAPS = [at(100, 3), at(100, 4)]
 const PROUD_POINT: [number, number] = [at(101, 1), at(101, 4)]
@@ -269,6 +272,7 @@ const PROUD_WAVE: [number, number] = [at(102, 1) + 0.25, at(103, 1)]
 const PROUD_HAT: [number, number] = [at(103, 2), at(104, 1)]
 const PROUD_CIGAR = at(103, 3)
 const PROUD_OUT: [number, number] = [at(104, 3), at(105, 4)]
+const PROUD_WIPE: [number, number] = [PROUD_CIGAR + 1.1, at(104, 3) - 0.1]
 
 function proud(pen: Pen, t: number): void {
   if (t < PROUD_IN[0] || t > PROUD_OUT[1]) return
@@ -305,11 +309,19 @@ function proud(pen: Pen, t: number): void {
   const cig = smooth(t, PROUD_CIGAR, PROUD_CIGAR + 0.35) * (1 - smooth(t, PROUD_CIGAR + 0.7, PROUD_CIGAR + 1.0))
   if (hatOff > 0) left = lerp([PROUD_X - 0.3, STAND_Y - 1.2], [PROUD_X - 0.2, top + 0.5], hatOff)
   if (cig > 0) right = lerp([PROUD_X + 0.3, STAND_Y - 1.2], [PROUD_X + 0.08, top - 0.12], cig)
+  // And the glass in front of his own fogged by him: wiped with his handkerchief, round and round.
+  const wipe = smooth(t, PROUD_WIPE[0], PROUD_WIPE[0] + 0.3) * (1 - smooth(t, PROUD_WIPE[1] - 0.3, PROUD_WIPE[1]))
+  let cloth: Pt | null = null
+  if (wipe > 0) {
+    cloth = [-11.45 + 0.1 * Math.cos(t * 7), top + 0.5 + 0.09 * Math.sin(t * 7)]
+    right = lerp(right ?? [PROUD_X + 0.3, STAND_Y - 1.2], cloth, wipe)
+  }
   const settle = 0.03 * sway(t, 31, 3.1)
   const hat: Square['hat'] = hatOff > 0.5 ? 0 : 'head'
   // Rocking up onto his toes and back, pleased with himself, between the rest of it.
-  const rock = 0.045 * Math.max(0, Math.sin((t - PROUD_IN[1]) * 2.6)) * (1 - near) * (1 - wave)
-  square(pen, PROUD, backAt(PROUD_X, STAND_Y - rock, s, { lean: 0.6 + 0.4 * near, sway: settle + 0.04 * point, hands: [left, right], hat }))
+  const rock = 0.045 * Math.max(0, Math.sin((t - PROUD_IN[1]) * 2.6)) * (1 - near) * (1 - wave) * (1 - wipe)
+  square(pen, PROUD, backAt(PROUD_X, STAND_Y - rock, s, { lean: 0.6 + 0.4 * near, sway: settle + 0.04 * point + 0.05 * wipe * Math.cos(t * 7), hands: [left, right], hat }))
+  if (cloth && wipe > 0.5 && right) shape(pen, [[right[0] - 0.09, right[1] - 0.06], [right[0] + 0.08, right[1] - 0.08], [right[0] + 0.1, right[1] + 0.07], [right[0] - 0.07, right[1] + 0.1]], '#F3F1E8')
 }
 
 /** The cigar's smoke over his shoulder once it is lit: he lights it after all, by the end. */
@@ -356,6 +368,8 @@ function sleepy(pen: Pen, t: number): void {
   seated(pen, SLEEPY, { x, seat: hipY, s, slump, doze, breath, up, sit, look })
 }
 const SLEEPY_SLIDE = at(112, 1) + 0.15
+/** The doctor's tap on his shoulder, just before. */
+const SLEEPY_TAP = SLEEPY_SLIDE - 0.1
 const SLEEPY_BACK = at(113, 2)
 
 /** A man sitting on the bench, seen in front: his lap toward us, his back to the wall, the hat over his face once asleep. */
@@ -379,7 +393,7 @@ function seated(pen: Pen, d: Dress, o: { x: number; seat: number; s: number; slu
   ellipse(pen, [knees[0][0], kneeY + 0.04 * s], 0.11 * s, 0.07 * s, d.legs)
   ellipse(pen, [knees[1][0], kneeY + 0.04 * s], 0.11 * s, 0.07 * s, d.legs)
   // His jacket from the shoulders down to the seat, open over the shirt and the loosened tie; leaning back he sinks.
-  const neck: Pt = [x + 0.02 * s * doze, y - (1.02 - 0.12 * slump) * s - 0.012 * s * breath]
+  const neck: Pt = [x + 0.02 * s * doze, y - (1.02 - 0.12 * slump) * s - 0.025 * s * breath]
   const sw = 0.3 * s
   shape(pen, [[neck[0] - 0.1 * s, neck[1]], [neck[0] - sw, neck[1] + 0.09 * s], [x - 0.27 * s, y + 0.02 * s], [x + 0.27 * s, y + 0.02 * s], [neck[0] + sw, neck[1] + 0.09 * s], [neck[0] + 0.1 * s, neck[1]]], d.coat)
   shape(pen, [[neck[0] - 0.08 * s, neck[1]], [neck[0] + 0.08 * s, neck[1]], [neck[0] + 0.03 * s, y - 0.1 * s], [neck[0] - 0.03 * s, y - 0.1 * s]], '#E9E6DC')
@@ -417,7 +431,7 @@ function seated(pen: Pen, d: Dress, o: { x: number; seat: number; s: number; slu
     ellipse(pen, h, 0.05 * s, 0.05 * s, d.skin)
   }
   // The hat: on his knee in his hand, then over his face, lifting a little on each breath.
-  const hc = up < 1 ? lerp([restR[0] + 0.02, restR[1] - 0.1], [head[0] + 0.01 * s, head[1] + 0.06 * s], up) : [head[0] + 0.01 * s, head[1] + 0.06 * s + 0.01 * s * breath]
+  const hc = up < 1 ? lerp([restR[0] + 0.02, restR[1] - 0.1], [head[0] + 0.01 * s, head[1] + 0.06 * s], up) : [head[0] + 0.01 * s, head[1] + 0.06 * s - 0.03 * s * Math.max(0, breath)]
   fedora(pen, d, hc as Pt, (1 - up) * 0.4 + 0.12 * up, s, true)
 }
 
@@ -580,17 +594,34 @@ function reader(pen: Pen, d: Dress, x: number, face: 1 | -1, t: number, seed: nu
   }
 }
 
+/** Late on he goes over to the sleeper on the bench and taps his shoulder (which is what slides the hat off), and back. */
+const DOC_TAP: [number, number] = [SLEEPY_TAP - 1.3, SLEEPY_TAP + 0.9]
+const DOC_GO: [number, number] = [SLEEPY_TAP + 1.0, SLEEPY_TAP + 3.6]
+
 function doctor(pen: Pen, t: number): void {
-  if (t < DOC_IN[0]) return
-  if (t < DOC_IN[1]) {
-    const w = walk(t, DOC_IN[0], DOC_IN[1], -2.4, DOC_X)
+  if (t < DOC_IN[0] || t > DOC_GO[1]) return
+  const walking = (from: number, to: number, x0: number, x1: number, face: 1 | -1) => {
+    const w = walk(t, from, to, x0, x1)
     shade(pen, [w.x, STAND_Y + 0.02], 0.4, 0.06, '#2B3832', 0.14)
-    const q = stand(w.x, STAND_Y, 0.98, -1, { walk: w.ph, nod: 0.5 })
+    const q = stand(w.x, STAND_Y, 0.98, face, { walk: w.ph, nod: 0.5 })
     q.hat = false
+    side(pen, DOCTOR, q)
+  }
+  if (t < DOC_IN[1]) return walking(DOC_IN[0], DOC_IN[1], -2.4, DOC_X, -1)
+  if (t < DOC_TAP[0]) return reader(pen, DOCTOR, DOC_X, -1, t, 2.1, false)
+  if (t < DOC_TAP[0] + 1.2) return walking(DOC_TAP[0], DOC_TAP[0] + 1.2, DOC_X, -5.4, -1)
+  if (t < DOC_GO[0]) {
+    // A hand down to the sleeper's shoulder: a tap, two.
+    const q = stand(-5.4, STAND_Y, 0.98, -1, { lean: 0.12, nod: 0.6 })
+    const tap = 0.04 * Math.max(0, Math.sin((t - SLEEPY_TAP) * 14)) * (t > SLEEPY_TAP - 0.1 && t < SLEEPY_TAP + 0.4 ? 1 : 0)
+    q.hands = [[-5.5, STAND_Y - 1.5], [-5.82, STAND_Y - 1.95 + tap]]
+    q.elbows = [[-5.45, STAND_Y - 1.75], [-5.62, STAND_Y - 1.95]]
+    q.hat = false
+    shade(pen, [-5.4, STAND_Y + 0.02], 0.4, 0.06, '#2B3832', 0.14)
     side(pen, DOCTOR, q)
     return
   }
-  reader(pen, DOCTOR, DOC_X, -1, t, 2.1, false)
+  walking(DOC_GO[0], DOC_GO[1], -5.4, -1.2, 1)
 }
 
 function sister(pen: Pen, t: number): void {
@@ -624,8 +655,8 @@ export function nightNurse(pen: Pen, t: number): void {
   if (t < T0) return
   const s = 0.8
   // To and fro along the back, from the window to just behind the other nurse's shoulder, a slow round of it.
-  const ph = ((t - T0) / 13) * Math.PI * 2
-  const x = -10.5 + 0.78 * Math.sin(ph)
+  const ph = ((t - T0) / 8) * Math.PI * 2
+  const x = -10.08 + 0.48 * Math.sin(ph)
   const face: 1 | -1 = Math.cos(ph) >= 0 ? 1 : -1
   const sw = 0.025 * Math.sin(((t - T0) / 1.9) * Math.PI * 2)
   const foot = 0.05 + 0.95
@@ -643,6 +674,53 @@ export function nightNurse(pen: Pen, t: number): void {
   const b1: Pt = [b0[0] + face * 0.16 * s, b0[1] - 0.1 * s]
   line(pen, b0, b1, '#E9EEF0', 3.2 * s)
   line(pen, lerp(b0, b1, 0.45), b1, '#F4F0DE', 2.6 * s)
+  const h = q.head
+  shape(pen, [[h[0] - 0.12 * s, h[1] - 0.12 * s], [h[0] + 0.14 * s, h[1] - 0.12 * s], [h[0] + 0.11 * s, h[1] - 0.25 * s], [h[0] - 0.09 * s, h[1] - 0.25 * s]], '#FBFBF6')
+  shape(pen, [[h[0] - 0.115 * s, h[1] - 0.15 * s], [h[0] + 0.135 * s, h[1] - 0.15 * s], [h[0] + 0.135 * s, h[1] - 0.18 * s], [h[0] - 0.115 * s, h[1] - 0.18 * s]], '#2C2C2C')
+}
+
+/* A nurse at the back corner under the nursery's window, bathing them one after another in an enamel bath on its
+   stand: washing, lifting each out into a towel and patting it dry, and the next. */
+
+export function bather(pen: Pen, t: number): void {
+  if (t < T0) return
+  const s = 0.78
+  const x = -11.32
+  const foot = 1.0
+  const bath: [number, number, number] = [-11.02, -10.58, -0.86]
+  const P = 6.0
+  const u = (((t - T0) % P) + P) % P
+  const lift = smooth(u, 3.2, 4.0) * (1 - smooth(u, 5.2, 5.9))
+  const q = stand(x, foot, s, 1, { lean: 0.1 + 0.08 * (1 - lift), nod: 0.8 * (1 - lift) })
+  // Washing: her hands going round in the water; lifting: the baby up to her chest in its towel, patted.
+  const scrub = (1 - lift) * 0.06
+  const wash: [Pt, Pt] = [
+    [bath[0] + 0.12 + scrub * Math.cos(t * 6.1), bath[2] + 0.04 + scrub * Math.sin(t * 6.1)],
+    [bath[0] + 0.3 + scrub * Math.cos(t * 5.3 + 2), bath[2] + 0.05 + scrub * Math.sin(t * 5.3 + 2)],
+  ]
+  const chest: Pt = [x + 0.24 * s, foot - 1.88 * s]
+  const pat = 0.03 * Math.max(0, Math.sin(t * 9)) * smooth(u, 4.0, 4.3)
+  const held: [Pt, Pt] = [[chest[0] - 0.08, chest[1] + 0.06], [chest[0] + 0.12, chest[1] - 0.06 - pat]]
+  q.hands = [lerp(wash[0], held[0], lift), lerp(wash[1], held[1], lift)]
+  q.elbows = [[x + 0.02, foot - 1.6 * s], [x + 0.12, foot - 1.55 * s]]
+  q.hat = false
+  q.eyes = 0
+  // The bath on its stand, the water, and the baby in it, or in her arms in a towel.
+  line(pen, [bath[0] + 0.05, bath[2] + 0.1], [bath[0] + 0.05, 0.05], '#9AA39E', 0.8)
+  line(pen, [bath[1] - 0.05, bath[2] + 0.1], [bath[1] - 0.05, 0.05], '#9AA39E', 0.8)
+  shape(pen, [[bath[0], bath[2]], [bath[1], bath[2]], [bath[1] - 0.04, bath[2] + 0.14], [bath[0] + 0.04, bath[2] + 0.14]], '#F2F1EA')
+  rect4(pen, bath[0] - 0.01, bath[2] - 0.015, bath[1] + 0.01, bath[2] + 0.015, '#C7CCC3')
+  side(pen, STUDENT, q)
+  // Her white apron's bib over the blue.
+  shape(pen, [[q.neck[0] + 0.02, q.neck[1] + 0.1], [q.neck[0] + 0.12 * s, q.neck[1] + 0.12], [q.hip[0] + 0.14 * s, q.hip[1] + 0.3], [q.hip[0] + 0.02, q.hip[1] + 0.3]], '#F7F6F0')
+  const babyAt: Pt = lerp([bath[0] + 0.2, bath[2] - 0.02], [chest[0] + 0.04, chest[1] - 0.02 - pat], lift)
+  if (lift > 0.05) ellipse(pen, [babyAt[0], babyAt[1] + 0.03], 0.15 * s, 0.075 * s, '#F4E9D6')
+  ellipse(pen, [babyAt[0] + 0.07 * s, babyAt[1] - 0.02], 0.055 * s, 0.055 * s, '#EFC5AA')
+  if (lift < 0.5) {
+    // A splash of the arms in the water.
+    const kick = Math.sin(t * 7.3)
+    ellipse(pen, [babyAt[0] - 0.05, babyAt[1] - 0.01 - 0.02 * Math.max(0, kick)], 0.025, 0.025, '#EFC5AA')
+  }
   const h = q.head
   shape(pen, [[h[0] - 0.12 * s, h[1] - 0.12 * s], [h[0] + 0.14 * s, h[1] - 0.12 * s], [h[0] + 0.11 * s, h[1] - 0.25 * s], [h[0] - 0.09 * s, h[1] - 0.25 * s]], '#FBFBF6')
   shape(pen, [[h[0] - 0.115 * s, h[1] - 0.15 * s], [h[0] + 0.135 * s, h[1] - 0.15 * s], [h[0] + 0.135 * s, h[1] - 0.18 * s], [h[0] - 0.115 * s, h[1] - 0.18 * s]], '#2C2C2C')

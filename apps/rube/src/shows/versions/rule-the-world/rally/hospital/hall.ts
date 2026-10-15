@@ -2,8 +2,8 @@ import type { Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { sway, type Frame } from '../depth'
 import { ctxOf, ellipse, line, mix, rect, rgba, ring, shape, type Pen } from '../pen'
-import { at } from '../music'
-import { CEIL, CORRIDOR_WIN, CURTAIN, DOOR_HEAD, FAR_DOOR, FLOOR, NUDGE, SUN_CLEAR, T0, WARD_WIN } from './geo'
+import { SON, at } from '../music'
+import { CEIL, CORRIDOR_WIN, CURTAIN, DOOR_HEAD, FAR_DOOR, FLOOR, GLASS, NUDGE, SUN_CLEAR, T0, WARD_WIN } from './geo'
 import { MOP_IN, VISIT_DOOR, wetAt } from './people'
 import { clock } from './props'
 
@@ -255,7 +255,7 @@ export function hallPigeon(pen: Pen, t: number): void {
  */
 export function curtainShadows(pen: Pen, t: number, f: Frame): void {
   const [x0] = CURTAIN
-  if (f.x1 < x0 || t > T0 + 9) return
+  if (f.x1 < x0 || t > T0 + 10) return
   const { k } = pen
   const ctx = ctxOf(pen.p)
   ctx.save()
@@ -264,9 +264,11 @@ export function curtainShadows(pen: Pen, t: number, f: Frame): void {
   ctx.clip()
   const rock = 0.06 * Math.sin(((t - T0) / 1.7) * Math.PI)
   const m: Pt = [3.05 + rock, -0.95]
-  const nurse = smooth(t, T0 + 0.8, T0 + 2.4) * (1 - smooth(t, T0 + 5.6, T0 + 7.2))
-  const bend = smooth(t, T0 + 2.4, T0 + 3.2) * (1 - smooth(t, T0 + 4.6, T0 + 5.4))
-  const nx = 4.3 - 0.75 * nurse
+  // The nurse comes to her, bends, goes; and comes back with a cup for her and bends again.
+  const nurse = smooth(t, T0 + 0.4, T0 + 1.6) * (1 - smooth(t, T0 + 3.6, T0 + 4.6)) + smooth(t, T0 + 5.4, T0 + 6.4)
+  const bend = smooth(t, T0 + 1.6, T0 + 2.2) * (1 - smooth(t, T0 + 3.0, T0 + 3.6)) + smooth(t, T0 + 6.4, T0 + 7.0)
+  const step = 0.05 * Math.abs(Math.sin(t * 5.5)) * (1 - bend)
+  const nx = 4.3 - 0.8 * Math.min(1, nurse) - step
   const paths = (spread: number): Path2D => {
     const p = new Path2D()
     // Her: a head, her shoulders and back sitting up against the pillows, the baby's head at her shoulder.
@@ -303,10 +305,50 @@ export function curtainShadows(pen: Pen, t: number, f: Frame): void {
     }
     return p
   }
-  const fade = 1 - smooth(t, T0 + 7, T0 + 9)
+  const fade = 1 - smooth(t, T0 + 8.5, T0 + 10)
   ctx.fillStyle = rgba(pen, '#6E8679', 0.12 * fade)
   ctx.fill(paths(0.06), 'nonzero')
   ctx.fillStyle = rgba(pen, '#6E8679', 0.2 * fade)
   ctx.fill(paths(0), 'nonzero')
+  ctx.restore()
+}
+
+/**
+ * Before the blind goes up, someone in the nursery going along behind it, her shadow on it from the nursery's own
+ * window: a nurse with her cap, carrying a baby, across as he comes down the corridor to the glass.
+ */
+export function blindShadows(pen: Pen, t: number, down: number): void {
+  const t0 = SON - 4.6
+  const u = (t - t0) / 4.4
+  if (u <= 0 || u >= 1 || down < GLASS.y0 + 0.6) return
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  const x = GLASS.x1 - 0.4 - (GLASS.x1 - GLASS.x0 - 0.8) * u
+  const bob = 0.03 * Math.abs(Math.sin(t * 5.6))
+  const hy = -1.45 - bob
+  const fig = (sp: number): Path2D => {
+    const p = new Path2D()
+    p.ellipse(x * k, hy * k, (0.17 + sp) * k, (0.19 + sp) * k, 0, 0, Math.PI * 2)
+    p.moveTo((x - 0.14) * k, (hy - 0.13 - sp) * k)
+    p.lineTo((x + 0.14) * k, (hy - 0.13 - sp) * k)
+    p.lineTo((x + 0.1) * k, (hy - 0.3 - sp) * k)
+    p.lineTo((x - 0.12) * k, (hy - 0.3 - sp) * k)
+    p.closePath()
+    p.moveTo((x - 0.3 - sp) * k, (hy + 0.26) * k)
+    p.lineTo((x + 0.3 + sp) * k, (hy + 0.26) * k)
+    p.lineTo((x + 0.38 + sp) * k, (down + 0.1) * k)
+    p.lineTo((x - 0.38 - sp) * k, (down + 0.1) * k)
+    p.closePath()
+    // The baby at her shoulder.
+    p.moveTo((x - 0.2 + 0.14 + sp) * k, (hy + 0.38) * k)
+    p.ellipse((x - 0.2) * k, (hy + 0.38) * k, (0.14 + sp) * k, (0.1 + sp) * k, 0, 0, Math.PI * 2)
+    return p
+  }
+  const a = Math.min(1, u * 6, (1 - u) * 6)
+  ctx.save()
+  ctx.fillStyle = rgba(pen, '#9C8C6C', 0.1 * a)
+  ctx.fill(fig(0.06))
+  ctx.fillStyle = rgba(pen, '#9C8C6C', 0.16 * a)
+  ctx.fill(fig(0))
   ctx.restore()
 }

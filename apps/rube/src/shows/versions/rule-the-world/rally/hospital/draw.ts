@@ -6,8 +6,8 @@ import { benchLit, corridorLight, nurseryMotes, wardShafts } from './light'
 import { birds, el, lookIn, lookOut, plane, roofs, sky, snow, towers, wing, type Look } from './outside'
 import { clock, drip, fan, flowers, foreground, mobile } from './props'
 import { daylight, sunUp, warm } from './dawn'
-import { curtainShadows, doorClock, farDoor, globes, hallPigeon, noticeBoard, wardPigeons, wheelchair } from './hall'
-import { drawPeople, nightNurse } from './people'
+import { blindShadows, curtainShadows, doorClock, farDoor, globes, hallPigeon, noticeBoard, wardPigeons, wheelchair } from './hall'
+import { bather, drawPeople, nightNurse } from './people'
 import {
   AT_GLASS,
   BACK,
@@ -232,10 +232,12 @@ function drawWardWindow(pen: Pen, t: number, f: Frame): void {
     plane(pen, L, { t0: T0 - 1, x0: 2.5, v: 0.24, y: -1.86, every: 41 })
     towers(pen, L, 0.15)
     roofs(pen, L, 0.3, { tanks: 0.3, chimneys: 0.42, tall: 0.26, seed: 51, wash: 0.3 })
-    el(pen, L, 0.36)
-    roofs(pen, L, 0.45, { tanks: 0.55, chimneys: 0.2, tall: 0.06, seed: 53, dark: true })
-    snow(pen, L, 0.6, 611)
-    snow(pen, L, 1.2, 612, 0.35, 1.7)
+    el(pen, L, 0.36, { phase: 6.45 })
+    roofs(pen, L, 0.45, { tanks: 0.45, chimneys: 0.4, tall: 0.06, seed: 53, dark: true })
+    // The Third Avenue line, nearer, over the roofs at the foot of the window: a train across it as they lie together.
+    el(pen, { ...L, s: 1.55, base: L.base + 0.08 }, 0.55, { phase: 4.92, every: 6.5, dir: -1 })
+    snow(pen, L, 0.6, 611, 1.5)
+    snow(pen, L, 1.2, 612, 0.7, 1.4)
     birds(pen, L, 0.4, [0.75, -1.58])
     wardPigeons(pen, t)
     lookIn(pen)
@@ -263,7 +265,7 @@ function drawCurtain(pen: Pen, f: Frame, t: number): void {
   line(pen, [x0 - 0.1, -4.55], [x1, -4.55], C.iron, 1.2)
   rect(pen, x0, -4.5, x1, 1.0, C.curtain)
   // The draught: a slow breath, coming along the curtain from its open edge.
-  const breath = (x: number): number => 0.045 * sway(t - (x - x0) * 0.8, 7, 6.5) * Math.exp(-(x - x0) / 2.2)
+  const breath = (x: number): number => 0.085 * sway(t - (x - x0) * 0.8, 7, 4.8) * Math.exp(-(x - x0) / 2.6)
   for (let x = x0; x < x1; x += 0.3) {
     const i = Math.round((x - x0) / 0.3)
     const b = breath(x)
@@ -311,8 +313,8 @@ function drawCorridorWindow(pen: Pen, t: number, f: Frame): void {
     roofs(pen, L, 0.3, { tanks: 0.35, chimneys: 0.4, tall: 0.38, seed: 57, wash: 0.35 })
     birds(pen, L, 0.5, [-6.0, -1.85], 6)
     wing(pen, L, 0.7, -1.25)
-    snow(pen, L, 0.8, 613)
-    snow(pen, L, 1.2, 614, 0.4, 1.8)
+    snow(pen, L, 0.8, 613, 1.5)
+    snow(pen, L, 1.2, 614, 0.7, 1.4)
     // The glass, and the morning's haze in the court, so that the view stays back behind the room.
     const veil = ctxOf(pen.p)
     veil.save()
@@ -533,6 +535,16 @@ function newborn(pen: Pen, x: number, rim: number, s: number, hood: string, t: n
   ellipse(pen, [x - 0.08 * s, rim - (0.055 + 0.006 * br) * s], 0.25 * s, (0.085 + 0.008 * br) * s, C.sheet)
   line(pen, [x - 0.2 * s, rim - (0.06 + 0.012 * br) * s], [x + 0.05 * s, rim - (0.1 + 0.01 * br) * s], C.blanketShade, 0.5)
   const head: Pt = [x + 0.17 * s, rim - (0.08 + 0.004 * br) * s]
+  // Awake for the feed: a kick under the swaddle, and a fist up out of it now and then, waving and going down again.
+  const kick = Math.max(0, Math.sin((t - T0) * (1.7 + 0.3 * seed) + seed * 4.1)) ** 3
+  ellipse(pen, [x - 0.27 * s, rim - (0.07 + 0.05 * kick) * s], 0.07 * s, (0.05 + 0.03 * kick) * s, C.sheet)
+  const up = smooth(Math.sin((t - T0) * 0.55 + seed * 1.9), 0.1, 0.5)
+  if (up > 0.02) {
+    const wave = Math.sin((t - T0) * (5 + seed) + seed)
+    const fist: Pt = [x + (0.04 + 0.04 * wave) * s, rim - (0.1 + 0.11 * up + 0.025 * wave) * s]
+    line(pen, [x + 0.02 * s, rim - 0.1 * s], fist, C.sheet, 2.2 * s)
+    ellipse(pen, fist, 0.032 * s, 0.032 * s, C.babySkin)
+  }
   ellipse(pen, head, 0.072 * s, 0.072 * s, C.babySkin)
   // The cap, over the top and back of the head.
   const { p, k } = pen
@@ -679,6 +691,7 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt, f: Frame): void {
   // The mobile over the bassinets, turning, hung from the ceiling above the glass.
   mobile(pen, t, [-9.85, -1.95], y0)
   // The back row, the nurse, the front row; the son's own bassinet, his blanket over him drawn after (over the ball).
+  bather(pen, t)
   nightNurse(pen, t)
   BACK.forEach((x, i) => {
     bassinet(pen, x, BACK_RIM, 0.8, true)
@@ -741,6 +754,7 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
       [1, mix(C.blind, C.blindShade, 0.4), 1],
     ])
     for (let x = x0 + 0.5; x < x1; x += 0.9) line(pen, [x, y0 + 0.09], [x, down], C.blindShade, 0.35)
+    blindShadows(pen, t, down)
     rect(pen, x0, down - 0.05, x1, down, C.woodDark)
   }
   // Its pull ring, swinging once it is up.

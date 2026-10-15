@@ -374,7 +374,7 @@ function hang(pen: Pen, c: Tones): void {
 }
 
 /** The El, on its girders between the roofs: a train every so often, its windows lit, running along the street. */
-export function el(pen: Pen, L: Look, d: number): void {
+export function el(pen: Pen, L: Look, d: number, o: { phase?: number; every?: number; dir?: 1 | -1 } = {}): void {
   const c = tonesOf(L.t)
   const s = L.s
   within(pen, L, d, (xa, xb) => {
@@ -382,11 +382,11 @@ export function el(pen: Pen, L: Look, d: number): void {
     BODY.push(xa - 0.1, y, xb + 0.1, y + 0.035 * s)
     const step = 0.42 * s
     for (let i = Math.floor(xa / step); i <= Math.ceil(xb / step); i++) BODY.push(i * step, y, i * step + 0.02 * s, L.base + 3)
-    // A train every `P` cells, at `v` cells a second, going right.
-    const P = 8.5 * s
-    const v = 0.55 * s
+    // A train every `P` cells, at `v` cells a second, going right (or left).
+    const P = (o.every ?? 8.5) * s
+    const v = 0.55 * s * (o.dir ?? 1)
     const car = 0.3 * s
-    const head0 = (((v * L.t) % P) + P) % P
+    const head0 = (((v * L.t + (o.phase ?? 0)) % P) + P) % P
     for (let m = Math.floor((xa - head0) / P); m <= Math.ceil((xb + 4 * car - head0) / P); m++) {
       const head = head0 + m * P
       for (let n = 0; n < 4; n++) {
@@ -513,8 +513,10 @@ export function wing(pen: Pen, L: Look, d: number, top: number): void {
     const span = 5.2
     const ox = -4.7 - ((((t - 205) * 0.11) % span) + span) % span
     const nx = -7.9 + ((((t - 214) * 0.13) % span) + span) % span
+    const px = -3.9 - ((((t - 203.2) * 0.42) % 9) + 9) % 9
     walker(ox, b1, s, t, false, -1)
     walker(nx, b1, s, t, true, 1)
+    walker(px, b1, s, t, false, -1)
     fillRects(pen, '#F8F6EF', 1, BODY)
     fillRects(pen, '#4E4A48', 1, TRIM)
     fillRects(pen, '#D9AE8C', 1, LIT)
