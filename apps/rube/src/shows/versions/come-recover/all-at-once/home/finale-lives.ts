@@ -262,19 +262,6 @@ export function paintLife(ctx: Ctx, life: Life, r: number, u: number, t: number)
         ctx.arc(x * r, -0.14 * r, 0.045 * r, 0, Math.PI * 2)
         ctx.fill()
       }
-      // A press camera's bulb far off, glinting slowly: a star, not a flash.
-      const f = 0.5 + 0.5 * Math.sin(t * 2.4)
-      ctx.fillStyle = rgba(STAR.flash, 0.5 + 0.4 * f)
-      ctx.beginPath()
-      for (let i = 0; i < 8; i++) {
-        const a = (i * Math.PI) / 4
-        const q = (i % 2 === 0 ? 0.08 + 0.03 * f : 0.018) * r
-        const x = -0.7 * r + Math.cos(a) * q
-        const y = -0.55 * r + Math.sin(a) * q
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
-      }
-      ctx.closePath()
-      ctx.fill()
       family(ctx, r, -0.2, 0.32, 0.14, PREMIERE.ink)
       break
     }
