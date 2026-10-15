@@ -1,27 +1,25 @@
 import type { Pt } from '../../../../../parts'
-import { bloom, energy, flicker, layer, rising, type Frame } from '../depth'
+import { flicker, layer, rising, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
 import { onsets } from '../music'
-import { flash, glow, mix, type Pen } from '../pen'
+import { flash, mix, type Pen } from '../pen'
 import { BALES_TOP, BX0, BX1, FLARE, HAY, LANTERN_DOWN, LOFT_X1, LOFT_Y, ROAD, S, T1 } from './geo'
-import { bag, disc, fill, haze, loop, seg, stroke, windy } from './ink'
+import { bag, disc, fill, haze, loop, windy } from './ink'
 
 /**
- * The barn on fire, round the barn itself (`draw.ts` has the flames): the light it throws on everything, flickering
- * and jumping on the solo's big notes; its smoke, banking down under the roof inside and laid over by the wind outside
- * in a long plume lit from below; the embers going up out of it in their hundreds and carried off downwind; the sparks
- * that burst out of it on the guitar's hard notes; the air over it wavering. And, once the camera has gone off across
- * the field to the airfield, the same fire seen low on the far side of it, a glow and a plume over the trees.
+ * The barn on fire, round the barn itself (`draw.ts` has the flames): the light it throws on things, flickering, a
+ * plain warm wash on the field and the air behind the farm; its smoke, banking down under the roof inside and laid over
+ * by the wind outside in a long plume lit from below; its embers going up out of it and carried off downwind. And,
+ * once the camera has gone off across the field to the airfield, the same fire seen low on the far side of it, its
+ * flames' tops and its plume over the trees.
  *
- * The fire's red and gold are never Marty's orange: the embers go from near-white gold to a dark red, and the glow on
- * things is the barn's red.
+ * The fire's red and gold are never Marty's orange: the embers go from gold to a dark red, and the light on things is
+ * the barn's red. Nothing here is added light: every wash is laid over what is under it, low.
  */
 
 export const F = {
   red: '#B52A1C',
   gold: '#E9AE3C',
-  core: '#FFE6A6',
-  white: '#FFF4D6',
   ember: '#C8301C',
   smoke: '#13171A',
   smokeLit: '#5A1E16',
@@ -40,22 +38,31 @@ export function fireAt(t: number): number {
   return Math.min(1, 0.12 + 0.88 * smooth(t, LANTERN_DOWN, LANTERN_DOWN + 7.5))
 }
 
-/** The solo's big notes, once the barn is alight: each one throws sparks out of it and makes the flames jump. */
-export const NOTES: readonly number[] = onsets(LANTERN_DOWN + 0.15, T1 + 3, 0.75)
+/** The solo's big notes, once the barn is alight: the flames leap on each one. */
+const NOTES: readonly number[] = onsets(LANTERN_DOWN + 0.15, T1 + 3, 0.75)
 
-/** Flares: the lantern bursting, the flare after, the hay landing, the big notes. */
-export function flareAt(t: number): number {
+/** What the fire itself does: the lantern catching, the flare after it, the hay landing. */
+function catches(t: number): number {
   let v = flash(t - LANTERN_DOWN, 0.35) + 0.7 * flash(t - FLARE, 0.3)
   for (const h of HAY) v += (h.big ? 0.6 : 0.35) * flash(t - h.t, 0.25)
+  return v
+}
+
+/** How the flames leap: as the fire catches, and on the solo's big notes. Their height only, never a light. */
+export function flareAt(t: number): number {
+  let v = catches(t)
   for (const n of NOTES) v += 0.3 * flash(t - n, 0.16)
   return v
 }
 
-/** The fire's light as it falls on things, 0 to about 1.3: its size, flickering, jumping with the flares. */
+/**
+ * The fire's light as it falls on things, 0 to about 1.1: its size, flickering, and a little more as it catches. It
+ * does not jump with the music.
+ */
 export function fireLight(t: number): number {
   const f = fireAt(t)
   if (f <= 0) return 0
-  return f * (0.8 + 0.2 * flicker(t, 3, 0.7)) + 0.3 * Math.min(1, flareAt(t))
+  return f * (0.82 + 0.18 * flicker(t, 3, 0.7)) + 0.12 * Math.min(1, catches(t))
 }
 
 /* ------------------------------------------------------------------ the smoke */
@@ -141,93 +148,45 @@ export function drawPlume(pen: Pen, t: number, f: Frame): void {
     if (age < 6) disc(under, x + 0.1 * r, y + 0.32 * r, r * 0.86)
   }
   if (!any) return
-  fill(pen, under, mix(F.red, F.gold, 0.15), 0.55 * light)
+  fill(pen, under, mix(F.red, F.gold, 0.1), 0.4 * light)
   fill(pen, old, F.smoke, 0.62 * fire)
   fill(pen, warm, mix(F.smoke, F.smokeLit, 0.45), 0.78 * fire)
   fill(pen, young, mix(F.smokeWarm, F.smokeLit, 0.5 * light), 0.86 * fire)
 }
 
-/* ------------------------------------------------------------------ the embers, the sparks, the shimmer, the light */
+/* ------------------------------------------------------------------ the light, and the embers */
 
 /**
- * In front of the barn: the field and everything near it lit by the fire, flickering; the air over the roof wavering;
- * the embers going up and off downwind in their hundreds; the sparks of the big notes.
+ * The fire's light on the field and the air round the barn: one soft warm wash, laid over (not added to) what is
+ * behind the farm, low and wide. Drawn under the farmhouse and the barn, which are lit by it in their own ways.
  */
+export function drawFireWash(pen: Pen, t: number, f: Frame): void {
+  const fire = fireAt(t)
+  if (fire <= 0) return
+  const rx = 4 + 9 * fire
+  if (BARN_MID + rx < f.x0 || BARN_MID - rx > f.x1) return
+  haze(pen, [BARN_MID, ROAD - 1.6], rx, 2.4 + 3.4 * fire, F.red, 0.2 * Math.min(1, fireLight(t)))
+}
+
+/** In front of the barn: its embers, going up out of the loft and the roof and off downwind, and low off the bales. */
 export function drawFireFront(pen: Pen, t: number, f: Frame): void {
   const fire = fireAt(t)
   if (fire <= 0) return
-  const light = fireLight(t)
-  // The fire's light on the field, the trees and the farm round it.
-  bloom(pen, [BARN_MID, ROAD - 2.6], 5 + 9.5 * fire, F.red, 0.2 * light)
-  // The air over the roof, wavering.
-  const roof = smooth(fire, 0.5, 1)
-  if (roof > 0)
-    for (let i = 0; i < 3; i++) {
-      const x = BX0 + 2.2 + ((BX1 - BX0 - 4.4) * i) / 2 + 0.18 * Math.sin(t * 9.1 + i * 2.1)
-      const y = ROAD - 8.1 - 0.5 * roof - 0.25 * Math.sin(t * 6.7 + i * 1.3)
-      glow(pen, [x, y], 0.95 + 0.3 * Math.sin(t * 11.3 + i * 3), F.core, 0.08 * roof * (0.7 + 0.3 * Math.sin(t * 13 + i)))
-    }
-  // The sparks of the solo's big notes: a fan of streaks out of the fire, falling back.
-  sparks(pen, t, f)
-  // Embers: up out of the loft and the roof, and low off the bales; more as the song goes harder.
   if (f.x0 > BX1 + 4 || f.x1 < BX0 - 2) return
-  const more = 0.7 + 0.5 * energy(t)
   windy(pen, LOFT_Y, 0.32, () => {
-    rising(pen, t, { seed: 31, n: Math.round(190 * fire * more), from: [BX0 + 0.6, BX1 - 0.4, LOFT_Y - 0.4], rise: 9, life: 3.4, spread: 1.9, size: [0.022, 0.05], color: F.ember, hot: F.core, alpha: 0.95 })
-    rising(pen, t, { seed: 32, n: Math.round(40 * fire), from: [BX0 + 1, BX1 - 1, LOFT_Y - 1.2], rise: 7, life: 4.2, spread: 2.4, size: [0.05, 0.085], color: F.ember, hot: F.gold, alpha: 0.85 })
+    rising(pen, t, { seed: 31, n: Math.round(80 * fire), from: [BX0 + 0.6, BX1 - 0.4, LOFT_Y - 0.4], rise: 9, life: 3.4, spread: 1.9, size: [0.022, 0.045], color: F.ember, hot: F.gold, alpha: 0.85 })
+    rising(pen, t, { seed: 32, n: Math.round(16 * fire), from: [BX0 + 1, BX1 - 1, LOFT_Y - 1.2], rise: 7, life: 4.2, spread: 2.4, size: [0.045, 0.07], color: F.ember, hot: F.gold, alpha: 0.75 })
   })
   windy(pen, BALES_TOP, 0.18, () => {
-    rising(pen, t, { seed: 33, n: Math.round(50 * fire), from: [S + 15.9, LOFT_X1 - 0.4, BALES_TOP - 0.4], rise: 2.8, life: 1.5, spread: 0.6, size: [0.02, 0.04], color: F.ember, hot: F.core, alpha: 0.9 })
+    rising(pen, t, { seed: 33, n: Math.round(20 * fire), from: [S + 15.9, LOFT_X1 - 0.4, BALES_TOP - 0.4], rise: 2.8, life: 1.5, spread: 0.6, size: [0.02, 0.035], color: F.ember, hot: F.gold, alpha: 0.8 })
   })
-}
-
-/** Where the sparks of the `i`th big note come from: the roof, the loft or the bales, by turns. */
-function sparkFrom(i: number): Pt {
-  const h = hash(i, 401)
-  const where = i % 3
-  if (where === 0) return [BARN_MID + (h - 0.5) * 5, ROAD - 6.6]
-  if (where === 1) return [BX0 + 1.2 + h * (LOFT_X1 - BX0 - 2), LOFT_Y - 0.9]
-  return [S + 16.2 + h * 2.2, BALES_TOP - 0.5]
-}
-
-const SPARK_LIFE = 0.95
-function sparks(pen: Pen, t: number, f: Frame): void {
-  const hot = bag()
-  const mid = bag()
-  const cool = bag()
-  let any = false
-  for (let i = 0; i < NOTES.length; i++) {
-    const s = t - NOTES[i]
-    if (s < 0 || s > SPARK_LIFE) continue
-    const o = sparkFrom(i)
-    if (o[0] < f.x0 - 3 || o[0] > f.x1 + 3 || o[1] < f.y0 - 3 || o[1] > f.y1 + 3) continue
-    any = true
-    const at = (q: number, vx: number, vy: number): Pt => [o[0] + vx * q * (1 - 0.32 * q), o[1] + vy * q * (1 - 0.32 * q) + 2.4 * q * q]
-    for (let j = 0; j < 26; j++) {
-      const a = -Math.PI / 2 + (hash(i, j, 402) - 0.5) * 2.6
-      const v = 2.2 + 3.2 * hash(i, j, 403)
-      const vx = Math.cos(a) * v
-      const vy = Math.sin(a) * v
-      const life = SPARK_LIFE * (0.6 + 0.4 * hash(i, j, 404))
-      if (s > life) continue
-      const u = s / life
-      const [x1, y1] = at(s, vx, vy)
-      const [x0, y0] = at(Math.max(0, s - 0.045), vx, vy)
-      seg(u < 0.34 ? hot : u < 0.67 ? mid : cool, x0, y0, x1, y1)
-    }
-    bloom(pen, o, 1.5, F.gold, 0.45 * flash(s, 0.12))
-  }
-  if (!any) return
-  stroke(pen, hot, F.white, 0.95, 0.9, 'lighter')
-  stroke(pen, mid, F.core, 0.7, 0.8, 'lighter')
-  stroke(pen, cool, F.gold, 0.45, 0.7)
 }
 
 /* ------------------------------------------------------------------ the fire from across the field */
 
 /**
  * From the airfield the barn is out of the picture to the left; its fire is still there, low on the far side of the
- * field: a red glow over the trees, the flames' tops flickering, the plume going off on the wind, sparks going up.
+ * field: a little warmth over the trees, the flames' tops flickering, the plume going off on the wind, a few embers.
  * It comes up only as the barn itself goes out of the picture, so the two are never seen at once.
  */
 export function drawFarFire(pen: Pen, t: number, f: Frame, d: number, anchor: Pt, base: number): void {
@@ -243,7 +202,7 @@ export function drawFarFire(pen: Pen, t: number, f: Frame, d: number, anchor: Pt
     (g) => {
       const c: Pt = [15.4, base]
       if (c[0] + 7 < g.x0 || c[0] - 7 > g.x1) return
-      haze(pen, [c[0] + 0.4, c[1] - 0.5], 4.2, 2.0, F.red, 0.42 * show * Math.min(1, light), 'lighter')
+      haze(pen, [c[0] + 0.4, c[1] - 0.4], 3.2, 1.4, F.red, 0.16 * show * Math.min(1, light))
       // The flames' tops over the trees.
       const flames = bag()
       const hot = bag()
@@ -270,7 +229,7 @@ export function drawFarFire(pen: Pen, t: number, f: Frame, d: number, anchor: Pt
       fill(pen, plume, F.smoke, 0.7 * show)
       fill(pen, lit, mix(F.smoke, F.smokeLit, 0.7), 0.8 * show)
       windy(pen, c[1], 0.5, () => {
-        rising(pen, t, { seed: 37, n: Math.round(26 * show), from: [c[0] - 0.6, c[0] + 0.6, c[1] - 0.2], rise: 2.2, life: 2.2, spread: 0.4, size: [0.012, 0.022], color: F.ember, hot: F.core, alpha: 0.9 })
+        rising(pen, t, { seed: 37, n: Math.round(12 * show), from: [c[0] - 0.6, c[0] + 0.6, c[1] - 0.2], rise: 2.2, life: 2.2, spread: 0.4, size: [0.012, 0.02], color: F.ember, hot: F.gold, alpha: 0.8 })
       })
     },
     anchor,

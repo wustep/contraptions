@@ -113,7 +113,8 @@ export function stroke(pen: Pen, path: Path2D, hex: string, a: number, lw: numbe
 
 /**
  * A soft light in an ellipse: `hex` at `a` in the middle, nothing at the rim. The city's glow along the horizon, a
- * fire's glow on the far side of a field, a bank of mist. `op` 'lighter' adds it onto what is under it.
+ * fire's warmth on a field, a lamp's pool on a floor. Laid over what is under it (`op` can change that; nothing here
+ * does).
  */
 export function haze(pen: Pen, c: Pt, rx: number, ry: number, hex: string, a: number, op: GlobalCompositeOperation = 'source-over'): void {
   if (a <= 0.004 || rx <= 0 || ry <= 0) return
@@ -128,6 +129,32 @@ export function haze(pen: Pen, c: Pt, rx: number, ry: number, hex: string, a: nu
   ctx.globalCompositeOperation = op
   ctx.fillStyle = g
   ctx.fillRect(-1, -1, 2, 2)
+  ctx.restore()
+}
+
+/**
+ * A lamp's light falling from `apex`, down `angle` (radians, 0 straight down, positive to its left), `spread` wide and
+ * `len` long, fading along its length: laid over what it falls on, never added to it, so it lights and does not glare.
+ */
+export function cone(pen: Pen, apex: Pt, angle: number, spread: number, len: number, hex: string, a: number): void {
+  if (a <= 0.004 || len <= 0) return
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  const at = (da: number): Pt => [apex[0] + Math.sin(-angle + da) * len, apex[1] + Math.cos(-angle + da) * len]
+  const l = at(-spread / 2)
+  const r = at(spread / 2)
+  const g = ctx.createLinearGradient(apex[0] * k, apex[1] * k, (apex[0] - Math.sin(angle) * len) * k, (apex[1] + Math.cos(angle) * len) * k)
+  g.addColorStop(0, rgbaOf(pen, hex, a))
+  g.addColorStop(0.55, rgbaOf(pen, hex, a * 0.4))
+  g.addColorStop(1, rgbaOf(pen, hex, 0))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo(apex[0] * k, apex[1] * k)
+  ctx.lineTo(l[0] * k, l[1] * k)
+  ctx.lineTo(r[0] * k, r[1] * k)
+  ctx.closePath()
+  ctx.fill()
   ctx.restore()
 }
 

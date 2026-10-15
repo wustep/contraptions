@@ -1,19 +1,20 @@
 import type { Pt } from '../../../../../parts'
-import { layer, motes, sway, type Frame } from '../depth'
+import { layer, sway, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
-import { flash, glow, mix, vgrad, type Pen } from '../pen'
-import { at } from '../music'
+import { mix, vgrad, type Pen } from '../pen'
 import { AY, BX0, BX1, LANTERN_DOWN, ROAD, T0 } from './geo'
 import { drawFarFire, F, fireAt, fireLight } from './fire'
-import { drawFarField, drawSearchlights } from './airfield'
+import { drawFarField } from './airfield'
 import { bag, box, disc, fill, haze, loop, oval, poly, seg, stroke, wrap } from './ink'
 
 /**
- * New Jersey's night, behind the road: the sky (stars, a low moon, clouds going over on the wind) and the country
- * going by under it in layers, each at its own speed as the camera rides with the cab (`depth.ts`): the city's glow far
- * behind them on the horizon, a far blue ridge, rolling hills with a farm's lit window and a car's lamps on a far road
- * and a train running beside them in the valley, nearer hills with their trees, the black trees nearer still, and
- * fireflies over the fields. Once the barn is alight its fire lights all of it, the clouds' bellies too.
+ * New Jersey's night, behind the road: the sky (still stars, a low moon, clouds going over on the wind) and the
+ * country going by under it in layers, each at its own speed as the camera rides with the cab (`depth.ts`): the city's
+ * glow far behind them on the horizon, a far blue ridge, rolling hills with a farm's lit window and a car's lamps on a
+ * far road and a train running beside them in the valley, nearer hills with their trees, and the black trees nearer
+ * still. Once the barn is alight its fire warms all of it a little, the clouds' bellies too.
+ *
+ * Every light out here is the lit thing itself (a window, a lamp, a tail light), with no glow hung round it.
  *
  * Every layer is laid out against one height (`AY`) so that its horizon is where it should be whichever way the camera
  * goes up or down; `d` is how far off a layer is (`depth.ts`).
@@ -28,7 +29,6 @@ export const N = {
   star: '#D8E6F2',
   moon: '#E8EAD8',
   moonShade: '#BCC5B8',
-  moonGlow: '#A6C4D6',
   cloud: '#0C1826',
   cloudLit: '#6A7F94',
   city: '#D9A65E',
@@ -47,7 +47,6 @@ export const N = {
   farm: '#F2C46A',
   lamp: '#FFF1C2',
   tail: '#D23A2A',
-  fly: '#D5F27C',
   mill: '#050B0E',
   rail: '#0F1D22',
   train: '#09121A',
@@ -55,7 +54,7 @@ export const N = {
 }
 
 const ANCHOR: Pt = [0, AY]
-/** The layers' depths: the sky; the city; the ridge; the hills; the near hills; the black trees; the fireflies. */
+/** The layers' depths: the sky; the city; the ridge; the hills; the near hills; the black trees; the windmill. */
 const D_SKY = 0.03
 const D_CITY = 0.1
 const D_RIDGE = 0.2
@@ -63,7 +62,6 @@ const D_HILLS = 0.4
 const D_NEAR = 0.6
 const D_TREES = 0.7
 const D_MILL = 0.9
-const D_FLIES = 0.85
 /** Each layer's ground, where it meets the one in front (in its own cells). */
 const RIDGE_BASE = ROAD - 1.3
 const HILLS_BASE = ROAD - 1.08
@@ -106,11 +104,9 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
     (g) => {
       // The horizon in this layer's own cells.
       const hz = horizon - (f.cy - AY) * (1 - D_SKY)
-      // Stars: still, each its own size, twinkling, fewer down toward the horizon and round the moon.
-      stars(pen, t, g, hz, span)
-      // The moon, low over the hills, ahead of the cab.
-      glow(pen, MOON, 1.8, N.moonGlow, 0.13)
-      glow(pen, MOON, 0.65, N.moon, 0.22)
+      // Stars: still, each its own size and brightness, fewer down toward the horizon and round the moon.
+      stars(pen, g, hz, span)
+      // The moon, low over the hills, ahead of the cab: the disc and its seas, nothing round it.
       const m = bag()
       disc(m, MOON[0], MOON[1], 0.3)
       fill(pen, m, N.moon, 1)
@@ -120,9 +116,8 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
       disc(maria, MOON[0] + 0.02, MOON[1] + 0.13, 0.035)
       fill(pen, maria, N.moonShade, 1)
       clouds(pen, t, g, f)
-      // A plane coming in to the airfield far off, its landing light on, its beacon blinking; a shooting star.
+      // A plane coming in to the airfield far off, its landing light on.
       landing(pen, t, g)
-      meteor(pen, t, g)
     },
     ANCHOR,
   )
@@ -130,21 +125,21 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
   layer(pen, f, D_CITY, (g) => city(pen, t, g), ANCHOR)
 }
 
-/** The stars, scattered once over the sky's layer: where, how big, how fast each twinkles, how dim round the moon. */
+/** The stars, scattered once over the sky's layer: where, how big, how bright, how dim round the moon. */
 const STARS = Array.from({ length: 240 }, (_, i) => {
   const x = -12 + 28 * hash(i, 7, 1)
   const y = AY - 9.5 + 9.1 * hash(i, 7, 2)
   const dm = (x - MOON[0]) ** 2 + (y - MOON[1]) ** 2
-  return { x, y, s: hash(i, 7, 3), rate: 1.3 + 2.1 * hash(i, 7, 4), dim: 1 - 0.85 * Math.exp(-dm / 1.2) }
+  return { x, y, s: hash(i, 7, 3), b: 0.35 + 0.5 * hash(i, 7, 4), dim: 1 - 0.85 * Math.exp(-dm / 1.2) }
 })
 const STAR_STEPS = 5
 
-function stars(pen: Pen, t: number, g: Frame, hz: number, span: number): void {
+function stars(pen: Pen, g: Frame, hz: number, span: number): void {
   const steps = Array.from({ length: STAR_STEPS }, bag)
   for (let i = 0; i < STARS.length; i++) {
     const st = STARS[i]
     if (st.x < g.x0 || st.x > g.x1 || st.y < g.y0 || st.y > hz - 0.3) continue
-    const a = st.dim * smooth(hz - st.y, 0.3, 2.2) * (0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * st.rate + i * 2.7)))
+    const a = st.dim * smooth(hz - st.y, 0.3, 2.2) * st.b
     if (a < 0.05) continue
     disc(steps[Math.min(STAR_STEPS - 1, Math.floor(a * STAR_STEPS))], st.x, st.y, span * (0.0011 + 0.002 * st.s))
   }
@@ -192,25 +187,12 @@ function clouds(pen: Pen, t: number, g: Frame, f: Frame): void {
   fill(pen, rimFar, N.cloudLit, 0.24)
   fill(pen, rimNear, N.cloudLit, 0.62)
   if (fire > 0) {
-    const l = Math.min(1.1, fireLight(t))
-    fill(pen, bellyFar, F.red, 0.28 * l)
-    fill(pen, bellyNear, mix(F.red, F.gold, 0.2), 0.62 * l)
+    // The fire on their bellies: a plain warm wash, low.
+    const l = Math.min(1, fireLight(t))
+    fill(pen, bellyFar, F.red, 0.18 * l)
+    fill(pen, bellyNear, mix(F.red, F.gold, 0.15), 0.4 * l)
   }
   fill(pen, body, N.cloud, 0.94)
-}
-
-/** A shooting star on the night road, across the sky ahead of the cab, on a downbeat. */
-const METEOR = at(67, 1)
-function meteor(pen: Pen, t: number, g: Frame): void {
-  const s = t - METEOR
-  if (s < 0 || s > 0.55) return
-  const u = s / 0.55
-  const a: Pt = [g.cx + 0.6 + 2.6 * u, g.y0 + 0.45 + 0.7 * u]
-  const tail = 0.9 * Math.sin(Math.PI * Math.min(1, u * 1.4))
-  const streak = bag()
-  seg(streak, a[0] - tail * 0.96, a[1] - tail * 0.27, a[0], a[1])
-  stroke(pen, streak, N.star, 0.85 * (1 - u), 0.7, 'lighter')
-  glow(pen, a, 0.12, N.star, 0.8 * (1 - u))
 }
 
 /** The plane coming in far off: from the upper right, down toward the airfield's runway, from just before it is seen. */
@@ -223,17 +205,13 @@ function landing(pen: Pen, t: number, g: Frame): void {
   const y = AY - 3.9 + 2.1 * u + 0.25 * u * u
   if (x < g.x0 - 1 || x > g.x1 + 1 || y < g.y0 - 1 || y > g.y1 + 1) return
   const on = smooth(t, LAND_FROM, LAND_FROM + 1.5)
-  glow(pen, [x, y], 0.5, N.lamp, 0.35 * on)
+  // Its landing light, a point; its red light, steady, small, just behind it.
   const c = bag()
-  disc(c, x, y, 0.035)
-  fill(pen, c, N.lamp, on)
-  const blink = flash((t + 0.3) % 1.3, 0.12)
-  if (blink > 0.05) {
-    glow(pen, [x + 0.12, y - 0.04], 0.16, N.mast, 0.8 * blink)
-    const b = bag()
-    disc(b, x + 0.12, y - 0.04, 0.016)
-    fill(pen, b, N.mast, blink)
-  }
+  disc(c, x, y, 0.03)
+  fill(pen, c, N.lamp, 0.9 * on)
+  const b = bag()
+  disc(b, x + 0.12, y - 0.04, 0.014)
+  fill(pen, b, N.mast, 0.7 * on)
 }
 
 /** The city's towers, left to right: [x, width, height], from the city's middle, made once. */
@@ -247,8 +225,7 @@ const CITY_X = -1.8
 function city(pen: Pen, t: number, g: Frame): void {
   const base = RIDGE_BASE - 0.02
   if (CITY_X + 5 < g.x0 || CITY_X - 5 > g.x1) return
-  haze(pen, [CITY_X, base - 0.15], 4.6, 1.5, N.city, 0.2)
-  haze(pen, [CITY_X, base - 0.05], 1.8, 0.5, N.city, 0.22)
+  haze(pen, [CITY_X, base - 0.15], 4.6, 1.3, N.city, 0.1)
   const towers = bag()
   const lit = bag()
   const s = (g.y1 - g.y0) * 0.0016
@@ -265,14 +242,15 @@ function city(pen: Pen, t: number, g: Frame): void {
   }
   fill(pen, towers, N.skyline, 1)
   fill(pen, lit, N.cityWin, 0.85)
-  // The tallest's mast, its red light blinking.
+  // The tallest's mast, the red light on its top.
   const [mdx, , mh] = TOWERS[11]
   const top: Pt = [CITY_X + mdx, base - mh - 0.12]
   const mast = bag()
   box(mast, top[0] - 0.006, top[1], top[0] + 0.006, base - mh)
   fill(pen, mast, N.skyline, 1)
-  const blink = flash(t % 1.6, 0.25)
-  glow(pen, top, 0.1 + 0.08 * blink, N.mast, 0.35 + 0.6 * blink)
+  const red = bag()
+  disc(red, top[0], top[1], 0.018)
+  fill(pen, red, N.mast, 0.85)
 }
 
 /* ------------------------------------------------------------------ the country */
@@ -308,8 +286,6 @@ export function drawFar(pen: Pen, t: number, f: Frame): void {
   const fire = fireAt(t)
   // The far ridge, blue with the distance, its crest catching the moon.
   layer(pen, f, D_RIDGE, (g) => range(pen, g, RIDGE_BASE, ridgeH, mix(N.ridge, F.red, 0.12 * fire), N.ridgeRim, 0.45), ANCHOR)
-  // Searchlights from beyond the hills, once the camera is out toward the airfield.
-  drawSearchlights(pen, t, f)
   // The hills: a farm's lit window on them, a car's lamps on a road over them, a train down in the valley.
   layer(
     pen,
@@ -349,35 +325,10 @@ export function drawFar(pen: Pen, t: number, f: Frame): void {
   layer(pen, f, D_MILL, (g) => windmill(pen, t, g, f), ANCHOR)
 }
 
-/** Fireflies over the fields, in front of the trees; drawn after the far airfield's mist. */
-export function drawFlies(pen: Pen, t: number, f: Frame): void {
-  const span = f.y1 - f.y0
-  layer(
-    pen,
-    f,
-    D_FLIES,
-    () => {
-      motes(pen, t, {
-        n: 120,
-        seed: 17,
-        box: [-10, ROAD - 1.45, 24, ROAD - 0.2],
-        size: [span * 0.0016, span * 0.0034],
-        color: N.fly,
-        alpha: 0.9,
-        drift: [0.05, -0.02],
-        wander: 0.35,
-        twinkle: 1,
-      })
-    },
-    ANCHOR,
-  )
-}
-
 /** Farms on the hills, every so far: a house's dark shape, a lit window or two, a barn, a silo. */
 function farms(pen: Pen, t: number, g: Frame): void {
   const dark = bag()
   const lit = bag()
-  const lights: Pt[] = []
   for (let i = Math.floor(g.x0 / 9) - 1; i <= Math.ceil(g.x1 / 9) + 1; i++) {
     if (hash(i, 121) > 0.7) continue
     const x = i * 9 + 3 + 3 * hash(i, 122)
@@ -390,15 +341,11 @@ function farms(pen: Pen, t: number, g: Frame): void {
       disc(dark, x + 0.75, y - 0.42, 0.05)
     }
     const on = hash(i, Math.floor((t + 20 * hash(i, 124)) / 5), 125) > 0.15
-    if (on) {
-      box(lit, x - 0.12, y - 0.1, x - 0.05, y - 0.03)
-      lights.push([x - 0.085, y - 0.065])
-    }
+    if (on) box(lit, x - 0.12, y - 0.1, x - 0.05, y - 0.03)
     if (hash(i, 126) > 0.5) box(lit, x + 0.06, y - 0.1, x + 0.13, y - 0.03)
   }
   fill(pen, dark, N.treesFar, 1)
-  fill(pen, lit, N.farm, 0.95)
-  for (const p of lights.slice(0, 3)) glow(pen, p, 0.3, N.farm, 0.22)
+  fill(pen, lit, N.farm, 0.9)
 }
 
 /** Cars on a road over the hills, far off: one coming, lamps first, one going, its tail lights red. */
@@ -408,18 +355,15 @@ function cars(pen: Pen, t: number, g: Frame): void {
     const x = wrap(10 + 17 * i + dir * 1.3 * (t - T0), -8, 44)
     if (x < g.x0 - 1 || x > g.x1 + 1) continue
     const y = HILLS_BASE - hillsH(x) * 0.42
+    const c = bag()
     if (dir < 0) {
-      glow(pen, [x - 0.06, y], 0.32, N.lamp, 0.4)
-      const c = bag()
       disc(c, x - 0.05, y, 0.016)
       disc(c, x - 0.1, y + 0.005, 0.016)
-      fill(pen, c, N.lamp, 1)
+      fill(pen, c, N.lamp, 0.9)
     } else {
-      glow(pen, [x, y], 0.14, N.tail, 0.5)
-      const c = bag()
       disc(c, x, y, 0.012)
       disc(c, x + 0.05, y, 0.012)
-      fill(pen, c, N.tail, 1)
+      fill(pen, c, N.tail, 0.9)
     }
   }
 }
@@ -453,8 +397,10 @@ function train(pen: Pen, t: number, g: Frame): void {
   }
   fill(pen, body, N.train, 1)
   fill(pen, win, N.trainWin, 0.9)
-  glow(pen, [head + 0.02, y - 0.08], 0.45, N.lamp, 0.35)
-  haze(pen, [head + 1.3, y - 0.06], 1.3, 0.12, N.lamp, 0.16, 'lighter')
+  // Its headlamp, on the engine's nose.
+  const lamp = bag()
+  disc(lamp, head - 0.02, y - 0.09, 0.022)
+  fill(pen, lamp, N.lamp, 0.95)
 }
 
 /** Hedgerows and clumps of trees along the near hills, and a farm's light here and there among them. */
@@ -476,12 +422,11 @@ function hedges(pen: Pen, t: number, g: Frame): void {
   const c = bag()
   for (const p of lights) {
     if (p[0] < g.x0 || p[0] > g.x1) continue
-    // A farm's porch light, and now and then someone passing in front of it.
-    const by = hash(Math.round(p[0] * 7), Math.floor(t / 2.3), 145) < 0.12 ? 0.35 : 1
-    glow(pen, p, 0.32, N.farm, 0.3 * by)
-    disc(c, p[0], p[1], 0.028)
+    // A farm's porch light, now and then gone a moment as someone passes in front of it.
+    if (hash(Math.round(p[0] * 7), Math.floor(t / 2.3), 145) < 0.12) continue
+    disc(c, p[0], p[1], 0.024)
   }
-  fill(pen, c, N.farm, 0.95)
+  fill(pen, c, N.farm, 0.9)
 }
 
 /** The black trees at a middle distance: trunks and heaps of round crowns, swaying; lit by the fire on its side. */
@@ -517,8 +462,8 @@ function trees(pen: Pen, t: number, g: Frame, f: Frame): void {
   }
   if (fire > 0) {
     const l = Math.min(1, fireLight(t))
-    fill(pen, rimWarm, F.red, 0.55 * l)
-    fill(pen, rimHot, mix(F.red, F.gold, 0.35), 0.8 * l)
+    fill(pen, rimWarm, F.red, 0.42 * l)
+    fill(pen, rimHot, mix(F.red, F.gold, 0.3), 0.62 * l)
   }
   fill(pen, dark, N.trees, 1)
 }

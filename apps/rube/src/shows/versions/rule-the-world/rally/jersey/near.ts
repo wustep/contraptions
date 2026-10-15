@@ -1,9 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { layer, sway, type Frame } from '../depth'
 import { hash } from '../kit'
-import { glow, mix, type Pen } from '../pen'
+import { mix, type Pen } from '../pen'
 import { AY, ROAD } from './geo'
-import { chase, drawMistFront } from './airfield'
+import { drawMistFront } from './airfield'
 import { F, fireAt, fireLight } from './fire'
 import { bag, blade, box, disc, fill, poly } from './ink'
 
@@ -103,15 +103,10 @@ export function drawNear(pen: Pen, t: number, f: Frame): void {
       if (fire > 0) fill(pen, soft, mix(N.soft, F.red, 0.5), 0.4 + 0.2 * light * fire)
       else fill(pen, soft, N.soft, 0.42)
       fill(pen, core, N.bank, 0.97)
-      // The edge lights, so near they are only a haze of light round a point: brightest as the flasher goes along
-      // them on the beats.
+      // The edge lights' heads: small blue lamps, steady.
       const heads = bag()
-      for (const [x, y] of lights) {
-        const k = chase(t, x + f.cx * (1 - D))
-        glow(pen, [x, y], 0.32 + 0.25 * k, k > 0.3 ? '#F2F4FF' : '#9FB8FF', 0.16 + 0.36 * k)
-        disc(heads, x, y, 0.03)
-      }
-      fill(pen, heads, '#DCE6FF', 0.9)
+      for (const [x, y] of lights) disc(heads, x, y, 0.035)
+      fill(pen, heads, '#9FB8FF', 0.8)
     },
     ANCHOR,
   )

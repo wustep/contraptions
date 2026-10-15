@@ -1,19 +1,18 @@
 import type { Pt } from '../../../../../parts'
-import { bloom, lastBeat, layer, motes, pulse, shaft, sway, type Frame } from '../depth'
+import { layer, motes, sway, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
-import { at, BAR } from '../music'
-import { flash, glow, type Pen } from '../pen'
+import { type Pen } from '../pen'
 import { AY, BX0, BX1, DOOR_X, FLOOR, ROAD, S, SF } from './geo'
 import { F, fireAt, fireLight } from './fire'
-import { bag, box, disc, fill, haze, oval, poly, seg, stroke, wrap } from './ink'
+import { bag, box, cone, disc, fill, oval, poly, seg, stroke, wrap } from './ink'
 
 /**
  * The airfield at night, round the airliner (`draw.ts` has the plane and its stair): the far side of the field (the
- * hangars with their doors lit, the control tower, the rotating beacon throwing its green and white beams round over
- * the clouds, the runway's lights with their flasher running down them on the beats, a twin-engined plane taxiing with
- * its props turning and its lights blinking, a fuel truck's flasher), searchlights sweeping the sky from beyond the
- * trees, a windsock on the field's edge, mist lying on the field at two depths, and the barn's embers still going over
- * on the wind. "I can't stand this indecision": the field is wide, and all of it is going.
+ * hangars with their doors lit, the control tower, the beacon on its roof turning, green and white by turns, the
+ * runway's lights, a twin-engined plane taxiing with its props turning and its lights on, a fuel truck), a windsock on
+ * the field's edge, mist lying on the field at two depths, and the barn's embers still going over on the wind. "I
+ * can't stand this indecision": the field is wide, and all of it is going. Its lights are lamps, each the lit thing
+ * itself, steady; none chases, pulses or blooms.
  */
 
 export const A = {
@@ -28,7 +27,6 @@ export const A = {
   blue: '#7FA6FF',
   red: '#E0342A',
   amber: '#F2B63A',
-  search: '#C6D6E8',
   mist: '#8EA5B2',
   mistWarm: '#9A6A5A',
   plane: '#5A676E',
@@ -42,39 +40,15 @@ export const A = {
 }
 
 const ANCHOR: Pt = [0, AY]
-/** The airfield's far side, its searchlights, and the mist: how far off each is (`depth.ts`). */
+/** The airfield's far side, and the mist: how far off each is (`depth.ts`). */
 const D_FIELD = 0.65
-const D_SEARCH = 0.3
 const D_MIST = 0.8
 const D_FRONT = 1.25
 /** The far side's ground, in its own cells. */
 const FIELD_BASE = ROAD - 0.72
 
-/** The rotating beacon's turn: half a turn a bar, so a lens faces the camera on every downbeat, green and white by turns. */
-const beaconTurn = (t: number): number => (Math.PI * (t - at(65))) / BAR
-
-/* ------------------------------------------------------------------ searchlights */
-
-/** Two searchlights from beyond the trees, sweeping slowly and crossing, once the camera is out toward the airfield. */
-export function drawSearchlights(pen: Pen, t: number, f: Frame): void {
-  const on = smooth(f.cx, 49, 55)
-  if (on <= 0) return
-  layer(
-    pen,
-    f,
-    D_SEARCH,
-    (g) => {
-      const base = ROAD - 1.2
-      for (const [i, x] of [15, 19.5].entries()) {
-        if (x < g.x0 - 8 || x > g.x1 + 8) continue
-        const a = Math.PI + 0.42 * Math.sin(t * (0.42 + 0.11 * i) + i * 2.4) + (i ? -0.25 : 0.2)
-        shaft(pen, [x, base], a, 0.045, 16, A.search, 0.085 * on)
-        shaft(pen, [x, base], a, 0.016, 13, A.search, 0.07 * on)
-      }
-    },
-    ANCHOR,
-  )
-}
+/** The beacon's turn: once round every five seconds or so, at its own pace, not the song's. */
+export const beaconTurn = (t: number): number => (2 * Math.PI * t) / 5.2
 
 /* ------------------------------------------------------------------ the far side of the field */
 
@@ -119,7 +93,9 @@ export function drawFarField(pen: Pen, t: number, f: Frame): void {
       stroke(pen, sheds, A.shedRib, 1, 0.9)
       fill(pen, sheds, A.shed, 1)
       fill(pen, doors, A.door, 0.55)
-      for (const [x] of SHEDS) if (x > g.x0 - 1 && x < g.x1 + 1) glow(pen, [x, gy - 0.72], 0.55, A.door, 0.3)
+      const lamps = bag()
+      for (const [x] of SHEDS) if (x > g.x0 - 1 && x < g.x1 + 1) box(lamps, x - 0.06, gy - 0.7, x + 0.06, gy - 0.64)
+      fill(pen, lamps, A.lamp, 0.9)
       // The control tower: its shaft, its glass room lit, the red light on its roof.
       if (TOWER_X > g.x0 - 1 && TOWER_X < g.x1 + 1) {
         const tw = bag()
@@ -130,14 +106,13 @@ export function drawFarField(pen: Pen, t: number, f: Frame): void {
         const glass = bag()
         box(glass, TOWER_X - 0.36, gy - 2.26, TOWER_X + 0.36, gy - 1.9)
         fill(pen, glass, A.glass, 0.75)
-        glow(pen, [TOWER_X, gy - 2.08], 0.7, A.glass, 0.18)
         const mast = bag()
         seg(mast, TOWER_X - 0.24, gy - 2.26, TOWER_X - 0.24, gy - 1.9)
         seg(mast, TOWER_X, gy - 2.26, TOWER_X, gy - 1.9)
         seg(mast, TOWER_X + 0.24, gy - 2.26, TOWER_X + 0.24, gy - 1.9)
         stroke(pen, mast, A.steel, 1, 0.5)
       }
-      // The fuel truck, its flasher going round on the beats.
+      // The fuel truck, its amber lamp on the cab's roof.
       if (TRUCK_X > g.x0 - 1.5 && TRUCK_X < g.x1 + 1.5) {
         const tr = bag()
         poly(tr, [[TRUCK_X - 0.75, gy - 0.12], [TRUCK_X - 0.75, gy - 0.48], [TRUCK_X + 0.45, gy - 0.48], [TRUCK_X + 0.45, gy - 0.12]])
@@ -145,11 +120,12 @@ export function drawFarField(pen: Pen, t: number, f: Frame): void {
         disc(tr, TRUCK_X - 0.45, gy - 0.1, 0.1)
         disc(tr, TRUCK_X + 0.7, gy - 0.1, 0.1)
         fill(pen, tr, A.steel, 1)
-        const fl = pulse(t, 0.18)
-        glow(pen, [TRUCK_X + 0.66, gy - 0.56], 0.25 + 0.35 * fl, A.amber, 0.25 + 0.6 * fl)
+        const lamp = bag()
+        disc(lamp, TRUCK_X + 0.66, gy - 0.54, 0.035)
+        fill(pen, lamp, A.amber, 0.85)
       }
-      // The far runway: two rows of lights, and the flasher running down them toward the threshold on every beat.
-      runway(pen, t, g, gy, span)
+      // The far runway: two rows of lights, and the threshold's green.
+      runway(pen, g, gy, span)
       // The twin, taxiing out.
       twin(pen, t, g, gy)
       // The beacon on the tower's roof.
@@ -159,31 +135,18 @@ export function drawFarField(pen: Pen, t: number, f: Frame): void {
   )
 }
 
-function runway(pen: Pen, t: number, g: Frame, gy: number, span: number): void {
-  const dim = bag()
-  const bright = bag()
-  const halo = bag()
+function runway(pen: Pen, g: Frame, gy: number, span: number): void {
+  const lights = bag()
   const ends = bag()
   const r = span * 0.0021
-  const b = lastBeat(t)
-  // The flasher: from the far end to the threshold, every beat.
-  const head = 62 - (Number.isFinite(b.ago) ? b.ago : 9) * 70
   for (let x = Math.max(24, Math.ceil(g.x0 / 0.5) * 0.5); x <= Math.min(62, g.x1 + 0.5); x += 0.5) {
-    const k = Math.exp(-(((x - head) / 0.9) ** 2)) * (x >= head ? 1 : 0.4)
-    for (const y of [gy + 0.05, gy + 0.2]) {
-      if (k > 0.35) {
-        disc(bright, x, y, r * 1.4)
-        disc(halo, x, y, r * 4)
-      } else disc(dim, x, y, r)
-    }
+    for (const y of [gy + 0.05, gy + 0.2]) disc(lights, x, y, r)
   }
   for (const y of [gy + 0.05, gy + 0.2]) {
     if (24 > g.x0 && 24 < g.x1) for (let j = 0; j < 3; j++) disc(ends, 23.8 - j * 0.12, y, r * 1.2)
   }
-  fill(pen, dim, A.runway, 0.7)
-  fill(pen, halo, A.runway, 0.2, 'lighter')
-  fill(pen, bright, '#FFFFFF', 1)
-  fill(pen, ends, A.green, 0.9)
+  fill(pen, lights, A.runway, 0.7)
+  fill(pen, ends, A.green, 0.85)
 }
 
 function twin(pen: Pen, t: number, g: Frame, gy: number): void {
@@ -230,14 +193,18 @@ function twin(pen: Pen, t: number, g: Frame, gy: number): void {
   }
   fill(pen, blur, A.prop, 0.3)
   stroke(pen, blade, A.planeDark, 0.55, 0.5)
-  // Its lights: the wingtips (green near, red far), the tail's white, the red beacon on its back, the taxi light ahead.
-  const blink = flash((t + 0.2) % 1.2, 0.1)
-  glow(pen, [x + 0.62, gy - 0.4], 0.12, A.green, 0.9)
-  glow(pen, [x + 0.5, gy - 0.54], 0.1, A.red, 0.6)
-  glow(pen, [x - 1.17, gy - 0.52], 0.1, A.white, 0.8)
-  glow(pen, [x, gy - 0.74], 0.16 + 0.12 * blink, A.red, 0.25 + 0.7 * blink)
-  haze(pen, [x + 2.1, gy - 0.25], 1.3, 0.16, A.lamp, 0.22, 'lighter')
-  glow(pen, [x + 0.66, gy - 0.44], 0.2, A.lamp, 0.6)
+  // Its lights, small and steady: the wingtips (green near, red far), the tail's white, the red light on its back, the
+  // taxi light under the nose.
+  const lamp = (col: string, px: number, py: number, r: number) => {
+    const c = bag()
+    disc(c, px, py, r)
+    fill(pen, c, col, 0.9)
+  }
+  lamp(A.green, x + 0.62, gy - 0.4, 0.03)
+  lamp(A.red, x + 0.5, gy - 0.54, 0.025)
+  lamp(A.white, x - 1.17, gy - 0.52, 0.025)
+  lamp(A.red, x, gy - 0.74, 0.03)
+  lamp(A.lamp, x + 0.66, gy - 0.44, 0.04)
 }
 
 function beacon(pen: Pen, t: number, g: Frame, gy: number, span: number): void {
@@ -249,28 +216,13 @@ function beacon(pen: Pen, t: number, g: Frame, gy: number, span: number): void {
   box(head, x - 0.025, top, x + 0.025, gy - 2.32)
   box(head, x - 0.09, top - 0.12, x + 0.09, top + 0.04)
   fill(pen, head, A.steel, 1)
-  // Its two lenses, green and white, back to back, going round: each throws its beam off to the side it points to,
-  // longest across the picture, and flashes as it comes round to face the camera.
+  // Its two lenses, green and white, back to back, going round: whichever is toward the camera shows, brightest as it
+  // faces it square. A lamp turning; it throws nothing across the sky.
   const o: Pt = [x, top - 0.02]
-  const th = beaconTurn(t)
-  for (const [lens, col] of [[0, A.green], [Math.PI, A.white]] as [number, string][]) {
-    const phi = th + lens
-    const side = Math.sin(phi)
-    const facing = Math.cos(phi)
-    const reach = Math.abs(side)
-    const dir = side > 0 ? -(Math.PI / 2 + 0.07) : Math.PI / 2 + 0.07
-    if (reach > 0.05) {
-      const a = 0.17 * (0.35 + 0.65 * reach) * (facing < 0 ? 0.5 : 1)
-      shaft(pen, o, dir, 0.075, 15 * reach ** 0.6, col, a)
-      shaft(pen, o, dir, 0.022, 12 * reach ** 0.6, col, a * 0.9)
-    }
-    const face = facing > 0 ? facing ** 14 : 0
-    if (face > 0.02) bloom(pen, o, 0.35 + 0.9 * face, col, 0.6 * face)
-  }
-  const lit = Math.cos(th) > 0 ? A.green : A.white
+  const facing = Math.cos(beaconTurn(t))
   const c = bag()
-  disc(c, o[0], o[1], span * 0.003 + 0.03)
-  fill(pen, c, lit, 1)
+  disc(c, o[0], o[1], span * 0.003 + 0.025)
+  fill(pen, c, facing > 0 ? A.green : A.white, 0.3 + 0.6 * Math.abs(facing) ** 2)
 }
 
 /* ------------------------------------------------------------------ the near edge of the field */
@@ -279,7 +231,7 @@ function beacon(pen: Pen, t: number, g: Frame, gy: number, span: number): void {
 const SOCK_X = S + 30.2
 const SOCK_H = 3.6
 
-/** The windsock: on its pole, streaming off downwind and flapping, gusting with the wind; lit by a lamp on the pole. */
+/** The windsock: on its pole, streaming off downwind and flapping, gusting with the wind; a lamp on the pole's head. */
 export function drawWindsock(pen: Pen, t: number, f: Frame): void {
   if (SOCK_X + 2 < f.x0 || SOCK_X - 1 > f.x1) return
   const foot = ROAD - 0.42
@@ -324,28 +276,27 @@ export function drawWindsock(pen: Pen, t: number, f: Frame): void {
   fill(pen, red, A.sockRed, 1)
   fill(pen, white, A.sockWhite, 1)
   // Its lamp, on the pole's head, turned down on it.
-  glow(pen, [top[0] + 0.15, top[1] - 0.15], 0.8, A.lamp, 0.16)
   const lamp = bag()
   box(lamp, top[0] + 0.03, top[1] - 0.34, top[0] + 0.07, top[1] - 0.28)
   fill(pen, lamp, A.lamp, 1)
 }
 
-/** The lamp on the stair's head, its light down the steps, and the dust going round in it. */
+/** The lamp on the stair's head, its light falling down the steps, and a little dust going round in it. */
 export function drawStairLamp(pen: Pen, t: number, f: Frame): void {
   if (SF + 3 < f.x0 || SF - 3 > f.x1) return
   const o: Pt = [DOOR_X - 0.15, FLOOR - 1.15]
   const aim = -Math.atan2(SF - o[0], ROAD - o[1])
-  shaft(pen, o, aim, 0.55, 4.0, A.lamp, 0.13)
+  cone(pen, o, aim, 0.5, 3.6, A.lamp, 0.07)
   motes(pen, t, {
-    n: 46,
+    n: 18,
     seed: 61,
     box: [SF - 1.2, FLOOR - 1.1, DOOR_X + 0.2, ROAD],
-    size: [0.008, 0.02],
+    size: [0.008, 0.018],
     color: A.dust,
-    alpha: 0.75,
+    alpha: 0.55,
     drift: [0.04, 0.05],
     wander: 0.18,
-    twinkle: 0.6,
+    twinkle: 0.15,
     light: (x, y) => {
       const ang = -Math.atan2(x - o[0], y - o[1])
       const off = Math.abs(ang - aim)
@@ -353,18 +304,9 @@ export function drawStairLamp(pen: Pen, t: number, f: Frame): void {
       return Math.max(0, 1 - off / 0.3) * Math.max(0, 1 - dist / 4)
     },
   })
-  glow(pen, o, 0.45, A.lamp, 0.55)
   const c = bag()
   box(c, o[0] - 0.09, o[1] - 0.06, o[0] + 0.09, o[1] + 0.05)
   fill(pen, c, A.lamp, 1)
-}
-
-/** The runway's near lights: brightest as the flasher comes along them toward the plane, on every beat. */
-export function chase(t: number, x: number): number {
-  const b = lastBeat(t)
-  if (!Number.isFinite(b.ago)) return 0
-  const head = S + 32 + b.ago * 30
-  return Math.exp(-(((x - head) / 1.1) ** 2))
 }
 
 /* ------------------------------------------------------------------ the mist, and the embers on the wind */
@@ -427,15 +369,15 @@ export function drawDrift(pen: Pen, t: number, f: Frame): void {
   if (fire <= 0 || f.x1 < BX1 - 1) return
   const span = f.y1 - f.y0
   motes(pen, t, {
-    n: Math.round(70 * fire),
+    n: Math.round(36 * fire),
     seed: 71,
     box: [BX0 + 2, ROAD - 9, S + 46, ROAD - 0.6],
-    size: [span * 0.0016, span * 0.0032],
+    size: [span * 0.0016, span * 0.003],
     color: F.ember,
-    alpha: 0.95,
+    alpha: 0.85,
     drift: [0.85, -0.16],
     wander: 0.35,
-    twinkle: 0.8,
+    twinkle: 0.3,
     light: (x) => Math.max(0, 1 - Math.max(0, x - BX1) / 22),
   })
 }

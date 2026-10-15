@@ -5,9 +5,9 @@ import { SEAMS } from '../seams'
 import type { Pen } from '../pen'
 import { drawMistBack } from './airfield'
 import { drawAirfield, drawAmbDoor, drawAmbulance, drawBarn, drawGround, drawHouse, drawRoadside, drawTheCab } from './draw'
-import { drawFireFront, drawPlume } from './fire'
+import { drawFireFront, drawFireWash, drawPlume } from './fire'
 import { drawNear } from './near'
-import { drawFar, drawFlies, drawSky } from './sky'
+import { drawFar, drawSky } from './sky'
 import {
   AMB_STOP,
   BX0,
@@ -58,9 +58,10 @@ const penOf = (p: Parameters<typeof frame>[0], k: number, ink: string, w: number
 
 /**
  * The night, the road, the farm and the airfield, far to near: drawn first, on show time. The sky and the country going
- * by in layers behind the road (`sky.ts`), the mist on the field and the fireflies over it; the road, the roadside, the
- * airfield, the farmhouse; the barn's plume behind the barn, the barn, and the fire's light, embers and sparks in front.
- * Over the ball, only what passes at the foot of the picture between it and the camera (`near.ts`).
+ * by in layers behind the road (`sky.ts`), the mist on the field; the road, and the fire's warmth on the field and the
+ * air behind the farm (under the farm itself, which carries its own); the roadside, the airfield, the farmhouse; the
+ * barn's plume behind the barn, the barn, and its embers in front. Over the ball, only what passes at the foot of the
+ * picture between it and the camera (`near.ts`).
  */
 export const jerseySet = scenery<null>({
   name: 'jersey-set',
@@ -72,8 +73,8 @@ export const jerseySet = scenery<null>({
     drawSky(pen, t, f)
     drawFar(pen, t, f)
     drawMistBack(pen, t, f)
-    drawFlies(pen, t, f)
-    drawGround(pen, t, f)
+    drawGround(pen, f)
+    drawFireWash(pen, t, f)
     drawRoadside(pen, t, f)
     drawAirfield(pen, t, f)
     // The farmhouse and the barn only when they (or the barn's light on the walls) can be in the picture.
