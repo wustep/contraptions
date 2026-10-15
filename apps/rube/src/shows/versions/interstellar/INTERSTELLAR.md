@@ -231,7 +231,24 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 156 (latest)
+## Polish pass 157 (latest)
+
+The second fullness pass: the same eight notes, with fresh eyes on the whole show every three seconds after pass 156. The farm, the dark and the station had filled; the weakest stretches left were all in the last third, which is meant to be the busiest, and a little gloss was left over.
+
+- **The descent onto Edmunds' planet** (237 to 243 s) crossed a bare plain. From the air it now has a story, laid on the ground in true perspective (`drawPlainStory` in `act2/edmunds-farm.ts`), so it reads from altitude and flattens to lines from the camp: a dry river winding across the plain behind the camp, which her windmill draws from; the ruts of her rover's runs out and back, to the river and far out to Edmunds' own lander, half in the sand, a leg buckled and a panel torn off beside it, where he came down, the man the cairn is for. More dust devils walk the plain. Then her farm comes up out of it.
+- **The undock** (208 to 219 s) left half the frame dark. Cargo lines now run from Cooper Station across the dark to its sister habitats (larger now), pods riding them both ways: a harbour at work, the two tethers framing the ship as it backs off. Over Saturn (220 to 230 s) the station falls away small on the left behind him, its window strips still turning.
+- **Gloss trimmed.**
+  - The room at night (124 to 127.5 s) was a radial vignette centred on him, a spotlight that read as a halo round the ball. It is an even dusk now, a little less deep by the window, and the warm light he falls toward is gone as he lands in the pillow.
+  - The spoke's lamps each throw one small fan; the lit glass already says lit or dark.
+  - The roll jets' vapour at the undock is one narrow fan: wide and doubled, it read as a grey hourglass over the ship.
+  - The station's near wisps are kept to its air: in the whole-station shots they drew over the dark and read as scratches.
+- **The camera.** The ballpark's wind-up (160 to 163.5 s), held dead while the wheels spin up, closes in a little, so the hit lands on a tighter frame. The credits' crane has its last key past the end of the show, so it is still rising on the last frame instead of settling. What is left still is short and on purpose: the first book (5 to 6.9 s) and the lights striking at the accent (127 to 128.6 s).
+
+Measured against the show before both passes, on the same machine with the same procedure:
+- Driven from `requestAnimationFrame` in a Chrome window on the GPU, ten four-second stretches across the show (2,390 frames): 59.9 frames a second before and after; after, no frame over 20 ms (six to nine before); paint 1.4 to 1.5 ms at the median (1.3 before) and 3.3 to 3.8 ms at the 99th percentile (2.6 to 2.9 before).
+- Painted on demand every 3 s of the show, eight times each: at 1920 × 1080, a median of 1.1 to 1.2 ms (0.9 before) and 3.1 to 3.2 ms at the 99th percentile (2.9); on an upright phone at 3×, 1.1 ms (1.0) and 6.7 ms (3.0). The rare stalls of 30 to 70 ms are in both, and are the browser's, not the drawing's.
+
+## Polish pass 156
 
 A fullness pass (the first of two), on eight notes from Stephen: fill the frame, give every scene a near, a middle and a far layer moving at their own speeds, never stop moving, light and colour it as a colorist would with each section its own look, let the machine grow toward the end so the last third is the busiest, make every change of section an event, move the camera to reveal, and build the thing that would stop someone walking through a gallery. All of it with substance, not gloss: where a glow or a flash was decoration, it went.
 
