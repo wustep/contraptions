@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
-import { parallax, type Frame } from '../depth'
+import { motes, parallax, type Frame } from '../depth'
 import { ctxOf, glow, mix, rgba, type Pen } from '../pen'
 import { gold, rose, sunUp } from './dawn'
 
@@ -487,5 +487,26 @@ export function wing(pen: Pen, L: Look, d: number, top: number): void {
       ctx.fillStyle = rgba(pen, '#FFD7A0', 0.22 * up)
       ctx.fillRect((xa - 0.1) * k, top * k, (xb - xa + 0.2) * k, 4 * k)
     }
+  })
+}
+
+/**
+ * Snow coming down past the window, slow and light, the flakes lit by the morning: the street through the store's
+ * window had it in the dark before it opened, and it is still falling at dawn.
+ */
+export function snow(pen: Pen, L: Look, d: number, seed: number): void {
+  within(pen, L, d, (xa, xb, ya, yb) => {
+    const tn = tonesOf(L.t)
+    motes(pen, L.t, {
+      n: Math.round((xb - xa) * (yb - ya) * 26 / (L.s * L.s)),
+      seed,
+      box: [xa - 0.2, ya - 0.2, xb + 0.2, yb + 0.2],
+      size: [0.009 * L.s, 0.024 * L.s],
+      color: mix(tn.smoke, '#FFFFFF', 0.5),
+      alpha: 0.85,
+      drift: [0.06 * L.s, 0.32 * L.s],
+      wander: 0.08 * L.s,
+      twinkle: 0.35,
+    })
   })
 }

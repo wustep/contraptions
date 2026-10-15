@@ -3,7 +3,7 @@ import { frame, knock, smooth } from '../kit'
 import { sway, type Frame } from '../depth'
 import { blob, ctxOf, ellipse, flash, fillWith, glint, glow, line, mix, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import { benchLit, corridorLight, dapple, glassBloom, nurseryMotes, sunBloom, wardShafts } from './light'
-import { birds, el, lookIn, lookOut, plane, roofs, sky, towers, wing, type Look } from './outside'
+import { birds, el, lookIn, lookOut, plane, roofs, sky, snow, towers, wing, type Look } from './outside'
 import { clock, drip, fan, flowers, foreground, mobile } from './props'
 import { daylight, sunUp, warm } from './dawn'
 import {
@@ -231,6 +231,7 @@ function drawWardWindow(pen: Pen, t: number, f: Frame): void {
     roofs(pen, L, 0.3, { tanks: 0.3, chimneys: 0.42, tall: 0.26, seed: 51 })
     el(pen, L, 0.36)
     roofs(pen, L, 0.45, { tanks: 0.55, chimneys: 0.2, tall: 0.06, seed: 53, dark: true })
+    snow(pen, L, 0.6, 611)
     birds(pen, L, 0.4, [0.75, -1.58])
     lookIn(pen)
   }
@@ -306,6 +307,7 @@ function drawCorridorWindow(pen: Pen, t: number, f: Frame): void {
     roofs(pen, L, 0.3, { tanks: 0.35, chimneys: 0.4, tall: 0.38, seed: 57 })
     birds(pen, L, 0.5, [-6.0, -1.85], 6)
     wing(pen, L, 0.7, -1.25)
+    snow(pen, L, 0.8, 613)
     // The glass, and the morning's haze in the court, so that the view stays back behind the room.
     const veil = ctxOf(pen.p)
     veil.save()
@@ -672,6 +674,7 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt, f: Frame): void {
   }
   if (looking) {
     roofs(pen, L, 0.32, { tanks: 0.3, chimneys: 0.5, tall: 0.42, seed: 59 })
+    snow(pen, L, 0.6, 617)
     lookIn(pen)
   }
   const roofCol = mix(C.roofs, C.roofsWarm, w)
