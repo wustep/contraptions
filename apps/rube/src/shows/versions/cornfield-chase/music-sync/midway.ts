@@ -41,7 +41,7 @@ export const RIDES: Ride[] = [
   { kind: 'swing', u: -0.28, size: 0.05, on: beatAt(100) },
   { kind: 'carousel', u: -0.7, size: 0.05, on: beatAt(100) },
   { kind: 'tower', u: -1.04, size: 0.3, on: beatAt(116) },
-  { kind: 'wheel', u: -1.42, size: 0.15, on: beatAt(116) },
+  { kind: 'wheel', u: -1.42, size: 0.19, on: beatAt(116) },
   { kind: 'tops', u: -1.86, size: 0.09, on: FULL },
   { kind: 'swing', u: -2.22, size: 0.055, on: FULL },
 ]
@@ -353,6 +353,8 @@ function ringAt(t: number, on: number): number {
  * top, and as the camera draws back for the photograph.
  */
 export function festoons(s: Screen, t: number, away: number): void {
+  // Not over a frame of the whole fair (Overview), where the route is the point.
+  away = Math.max(away, smooth(s.f / s.cell, 9, 14))
   if (away >= 0.999) return
   const { ctx, f, w } = s
   const on = (x: number) => smooth(t, 41.55 + 0.6 * clamp(x / w), 41.7 + 0.6 * clamp(x / w))
@@ -394,4 +396,59 @@ export function festoons(s: Screen, t: number, away: number): void {
     caps.fill(ctx)
     lamps.fill(ctx)
   }
+}
+
+interface Balloon {
+  /** Let go at, show time; where along the horizon, at the midway's pace; how quick up and across, frame heights a second. */
+  t: number
+  u: number
+  rise: number
+  drift: number
+  color: string
+}
+
+/**
+ * Balloons let go at the fair: one through the chase, a child's, and on the full organ a bunch of them, rising
+ * through the last third of the song on the wind, smaller as they go. They are far off, over the midway, behind the
+ * machine.
+ */
+const BALLOONS: Balloon[] = [
+  { t: beatAt(76), u: 0.36, rise: 0.016, drift: 0.005, color: '#D8576F' },
+  ...Array.from({ length: 9 }, (_, i) => ({
+    t: FULL + 0.12 * i + 0.2 * hash(i, 41),
+    u: -0.92 + 0.06 * (hash(i, 42) - 0.5),
+    rise: 0.013 + 0.008 * hash(i, 43),
+    drift: 0.003 + 0.004 * hash(i, 44),
+    color: ['#D8576F', '#4FB0BE', '#DDBB4C', '#9C82D2', '#E58C6A'][i % 5],
+  })),
+]
+
+export function balloons(s: Screen, t: number, hy: number): void {
+  const { ctx, cx, f, w } = s
+  const at = (s.camX * Q) / 8
+  const strings = new Path2D()
+  for (const [i, b] of BALLOONS.entries()) {
+    const age = t - b.t
+    if (age <= 0) continue
+    const rise = b.rise * age * (1 - 0.15 * smooth(age, 0, 30))
+    const x = cx + (b.u - at + b.drift * age + 0.012 * Math.sin(age * 0.8 + i)) * f
+    const y = hy - f * 0.06 - rise * f
+    const r = f * 0.0085 * (1 - 0.35 * smooth(age, 0, 35))
+    if (y < -r * 4 || x < -r * 4 || x > w + r * 4) continue
+    // Lit from under by the fair, so its lower half is the brighter.
+    const tilt = 0.1 * Math.sin(age * 1.3 + i)
+    ctx.fillStyle = mixHex(b.color, '#1B1733', 0.35)
+    ctx.beginPath()
+    ctx.ellipse(x, y, r * 0.86, r, tilt, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.fillStyle = mixHex(b.color, '#F3D69C', 0.1)
+    ctx.beginPath()
+    ctx.ellipse(x, y + r * 0.28, r * 0.72, r * 0.62, tilt, 0, Math.PI)
+    ctx.fill()
+    strings.moveTo(x, y + r)
+    strings.quadraticCurveTo(x + r * 0.8 * Math.sin(age * 2 + i), y + r * 2.4, x - r * 0.3, y + r * 3.6)
+  }
+  ctx.strokeStyle = 'rgba(190, 180, 220, 0.45)'
+  ctx.lineWidth = Math.max(1, f * 0.0012)
+  ctx.stroke(strings)
 }

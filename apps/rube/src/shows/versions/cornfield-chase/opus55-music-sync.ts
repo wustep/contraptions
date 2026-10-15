@@ -8,7 +8,7 @@ import { nightfall } from './music-sync/nightfall'
 import { DressedShow } from './music-sync/show'
 import { festoons } from './music-sync/midway'
 import { done, screenOf } from './music-sync/screen'
-import { follow, spot, strengthAt, type Spot } from './music-sync/spot'
+import { follow, spot, stackAt, type Spot } from './music-sync/spot'
 import { lensAt, tiltAt, zoomAt } from './music-sync/lens'
 import data from './opus55-music-sync.generated.json'
 
@@ -52,7 +52,7 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
       // The string lights over the frame, in front of it all; up and away where the fair's floors fill the frame to
       // its top, and as the camera draws back.
       const s = screenOf(p, c, col, row)
-      festoons(s, t, Math.max(strengthAt(lit, t), photo.back(t) * 3))
+      festoons(s, t, Math.max(stackAt(lit, t), photo.back(t) * 3))
       done(s)
       flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
       if (t <= photo.from) return

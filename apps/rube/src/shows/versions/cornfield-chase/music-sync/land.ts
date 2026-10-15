@@ -4,11 +4,11 @@ import { band, body, dayAt, farm, gustAt, haze, rows, sky, sunHeight, type Light
 import { farmwork } from './farmwork'
 import { fireworks, shellLight } from './fireworks'
 import { FULL, tiltAt } from './lens'
-import { midway, midwayAt } from './midway'
+import { balloons, midway, midwayAt } from './midway'
 import { nearCorn } from './near'
 import { DROP, LAST, ORGAN } from './music'
 import { done, hash, rgba, screenOf, smooth, type Screen } from './screen'
-import { birds, clouds, drone, shadows } from './sky'
+import { birds, cirrus, clouds, drone, shadows } from './sky'
 
 /**
  * The land behind the machine, by day and by night. `col`, `row` is where the scenery is placed (the stage hands its
@@ -24,6 +24,7 @@ export function dayLand(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   const hy = sky(s, l)
   const dusk = smooth(t, 30, 40.6)
   body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', '#F6D58A', 0.42 - 0.08 * dusk, 0.2)
+  cirrus(s, t, hy, mixHex('#FFFFFF', '#F4C3B4', smooth(t, ORGAN - 3, 40)), 0.42)
   clouds(s, t, hy, { ...l.cloud, sky: l.low, alpha: 0.9 })
   const ink = mixHex('#46423A', '#3A2A32', smooth(t, ORGAN - 3, 40))
   const up = drone(s, t, hy, ink)
@@ -93,7 +94,8 @@ const nightAt = (t: number, horizon: number): Light => {
     top: mixHex(NIGHT.top, '#0B1430', 0.7 * dawn),
     mid: mixHex(mixHex(NIGHT.mid, '#271F45', 0.6 * flareAt(t)), '#1A2B52', dawn),
     low: mixHex(mixHex(mixHex(NIGHT.low, '#46325F', glowAt(t)), '#7E4E8E', 0.85 * flareAt(t)), '#4A5F86', 0.8 * dawn),
-    rows: { ...NIGHT.rows, flash: shellLight(t) },
+    // The tassels catch the midway's light as it comes on, and go cool with the dawn.
+    rows: { ...NIGHT.rows, line: mixHex(mixHex(NIGHT.rows.line, '#6E4F7C', 0.55 * glowAt(t)), '#4C6088', dawn), flash: shellLight(t) },
     horizon,
   }
 }
@@ -107,6 +109,7 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
   body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', '#B9B0E8', 0.1, 0.12, true)
   clouds(s, t, hy, { ...l.cloud, sky: l.mid, alpha: 0.7 }, true)
   fireworks(s, t, hy)
+  balloons(s, t, hy)
   farm(s, hy, l.farm, '#E3B45C', t * 0.6)
   midway(s, t, hy)
   band(s, hy, l.band)

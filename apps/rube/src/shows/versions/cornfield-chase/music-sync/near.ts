@@ -9,6 +9,8 @@ import { hash, type Screen } from './screen'
  */
 export function nearCorn(s: Screen, t: number, dusk: number, wind: (x: number) => number): void {
   const { ctx, cx, f, w } = s
+  // Not over a frame of the whole field (Overview), where the route is the point.
+  if (f / s.cell > 12) return
   // The foot: the 16:9 frame's, or the canvas's, whichever is lower (a phone held upright sees the field go on).
   const foot = Math.max(s.h, s.cy + 0.5 * f)
   if (foot - f * 0.16 > s.h) return
