@@ -135,6 +135,28 @@ function paintPianoBody(pen: Pen): void {
   c.strokeStyle = rgba(C.string, 0.32)
   c.lineWidth = 0.008 * pen.k
   c.stroke(rest)
+  // The tuning pins in their row, the hammers' felts, and the dampers lying on every other string.
+  const pins = new Path2D()
+  const felts = new Path2D()
+  const dampers = new Path2D()
+  const k = pen.k
+  for (let i = 0; i < STRINGS; i++) {
+    const u = stringU(i)
+    const [px, py] = scr(0.035, u, STRING_H - 0.01)
+    pins.rect((px - 0.008) * k, (py - 0.008) * k, 0.016 * k, 0.016 * k)
+    const [x, y] = scr(HAMMER_D, u, STRING_H + 0.025)
+    felts.rect((x - 0.034) * k, (y - 0.014) * k, 0.068 * k, 0.028 * k)
+    if (i % 2 === 0) {
+      const [dx, dy] = scr(0.32, u, STRING_H - 0.03)
+      dampers.rect((dx - 0.03) * k, (dy - 0.012) * k, 0.06 * k, 0.024 * k)
+    }
+  }
+  c.fillStyle = rgba('#B8A27E', 0.6)
+  c.fill(pins)
+  c.fillStyle = rgba(C.felt, 0.55)
+  c.fill(felts)
+  c.fillStyle = rgba('#2A1E17', 0.85)
+  c.fill(dampers)
   c.restore()
   // The case's wall under the rim, along the curved side, lit along its top by the lamp.
   const front = frontTo(3.9)
@@ -232,36 +254,22 @@ export function drawStrings(pen: Pen, t: number): void {
   const { c } = pen
   c.save()
   const k = pen.k
-  // The tuning pins in their row, the hammers' felts, and the dampers lying on the strings, each lifted for its note.
-  const pins = new Path2D()
+  // The hammers and the dampers that are moving: each lifted for its note (the rest are in the body's picture).
   const felts = new Path2D()
   const dampers = new Path2D()
-  const struck = new Path2D()
-  for (let i = 0; i < STRINGS; i++) {
+  for (const [n, i] of NOTE_STRINGS) {
+    const a = t - n
+    if (a < -0.05 || a > 0.8) continue
     const u = stringU(i)
-    let lift = 0
-    let held = 0
-    for (const [n, s] of NOTE_STRINGS) {
-      if (s !== i) continue
-      lift = Math.max(lift, knock(t - n, 0.09) * (t - n < 0.04 ? (t - n) / 0.04 : 1))
-      if (t >= n - 0.05 && t < n + 0.8) held = 1
-    }
-    const [px, py] = scr(0.035, u, STRING_H - 0.01)
-    pins.rect((px - 0.008) * k, (py - 0.008) * k, 0.016 * k, 0.016 * k)
+    const lift = a < 0 ? 0 : knock(a, 0.09) * (a < 0.04 ? a / 0.04 : 1)
     const [x, y] = scr(HAMMER_D, u, STRING_H + 0.025 - 0.05 * lift)
-    ;(lift > 0.05 ? struck : felts).rect((x - 0.034) * k, (y - 0.014) * k, 0.068 * k, 0.028 * k)
-    if (i % 2 === 0) {
-      const [dx, dy] = scr(0.32, u, STRING_H - 0.03 - 0.04 * held)
-      dampers.rect((dx - 0.03) * k, (dy - 0.012) * k, 0.06 * k, 0.024 * k)
-    }
+    felts.rect((x - 0.034) * k, (y - 0.014) * k, 0.068 * k, 0.028 * k)
+    const [dx, dy] = scr(0.32, u, STRING_H - 0.07)
+    dampers.rect((dx - 0.03) * k, (dy - 0.012) * k, 0.06 * k, 0.024 * k)
   }
-  c.fillStyle = rgba('#B8A27E', 0.6)
-  c.fill(pins)
-  c.fillStyle = rgba(C.felt, 0.55)
-  c.fill(felts)
   c.fillStyle = rgba(C.felt, 0.95)
-  c.fill(struck)
-  c.fillStyle = rgba('#2A1E17', 0.85)
+  c.fill(felts)
+  c.fillStyle = rgba('#2A1E17', 0.9)
   c.fill(dampers)
   // While a note rings the whole set takes it up faintly, the strings by the struck one the most.
   let ring = 0

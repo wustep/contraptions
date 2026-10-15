@@ -12,7 +12,7 @@ import { T0, T1 } from './home-plan'
  *
  * Near, out of focus at the frame's lower corners as the camera goes along the piano: the edge of a box, the leaves
  * of a plant by the boxes, the back of a chair. In the air: dust turning in the lamp's cone. Over all of it, the
- * lamp's flicker, and the corners going dark.
+ * corners going dark.
  */
 
 const sm = (t: number, a: number, b: number): number => {
@@ -76,13 +76,6 @@ export const homeFront = scenery<null>({
     const k = c.k
     const light = lampLight(t)
   
-    // The lamp's flicker over the whole room: where its light dips, the room dims with it.
-    const dip = Math.min(0.12, (1 - light.power) * 0.9)
-    if (dip > 0.004) {
-      ctx.fillStyle = rgbaOf('#000000', dip)
-      ctx.fillRect((v.x0 - 0.5) * k, (v.y0 - 0.5) * k, (v.w + 1) * k, (v.h + 1) * k)
-    }
-
     // Dust turning in the lamp's cone, caught in its light.
     const [sx, sy] = [light.at[0], SHADE[1] + 0.2]
     ctx.save()

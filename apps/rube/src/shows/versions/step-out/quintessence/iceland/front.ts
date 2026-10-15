@@ -79,7 +79,8 @@ function posts(ctx: CanvasRenderingContext2D, inner: View, a: number): void {
   for (let i = i0; i <= i1; i++) {
     const x = i * step + hash(i, 1, 611) * 4
     if (x < inner.x0 - 0.3 || x > inner.x1 + 0.3) continue
-    const top = inner.y1 - inner.h * (0.26 + 0.06 * hash(i, 2, 611))
+    // Only its top in the frame, low down, so it never crosses the road or him.
+    const top = inner.y1 - inner.h * (0.13 + 0.05 * hash(i, 2, 611))
     const w = 0.1
     ctx.save()
     ctx.globalAlpha = a

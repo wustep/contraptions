@@ -241,7 +241,12 @@ function lay(pen: Pen, pic: HTMLCanvasElement, box: { x0: number; x1: number; y0
   const b1 = Math.min(box.y1, f.y1 + 0.1)
   if (a1 <= a0 || b1 <= b0) return
   const k = pen.k
+  // Near its own scale the picture is laid on unsmoothed (cheaper, and the same to the eye); much larger, smoothed.
+  const m = pen.c.getTransform()
+  const smooth = pen.c.imageSmoothingEnabled
+  pen.c.imageSmoothingEnabled = (Math.hypot(m.a, m.b) * k) / box.ppc > 1.4
   pen.c.drawImage(pic, (a0 - box.x0) * box.ppc, (b0 - box.y0) * box.ppc, (a1 - a0) * box.ppc, (b1 - b0) * box.ppc, a0 * k, b0 * k, (a1 - a0) * k, (b1 - b0) * k)
+  pen.c.imageSmoothingEnabled = smooth
 }
 
 /** The floor, boards and rug together, painted once into a picture of the room's floor and laid on scaled. */

@@ -29,7 +29,7 @@ export const farFn = (f: Frame, px: number, py: number) => {
 }
 
 /** How much the ash has taken the light: from the eruption, slowly, to the cut. */
-export const ashLight = (t: number): number => 0.55 * sm(t, ERUPT + 1, 133.3)
+export const ashLight = (t: number): number => 0.6 * sm(t, ERUPT + 0.6, 131.5)
 
 export function drawSet(pen: Pen, t: number, f: Frame): void {
   const ctx = ctxOf(pen.p)

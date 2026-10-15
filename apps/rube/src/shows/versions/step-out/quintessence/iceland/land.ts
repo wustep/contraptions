@@ -325,8 +325,8 @@ export function drawLand(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: 
   ctx.save()
   ctx.clip(hill)
   // The cloud shadows, going over on the wind: bigger and faster than on the far mountains, as nearer things go.
-  shadows(ctx, f, t, 0.42, 9, 1.6, 2.6, 241, 0.09 * (1 - dim * 0.7))
-  shadows(ctx, f, t, 0.42, 9, 5.6, 2.6, 251, 0.09 * (1 - dim * 0.7))
+  shadows(ctx, f, t, 0.42, 9, 1.6, 2.6, 241, 0.13 * (1 - dim * 0.7))
+  shadows(ctx, f, t, 0.42, 9, 5.6, 2.6, 251, 0.13 * (1 - dim * 0.7))
   ctx.restore()
 
   // The cliff, and its fall.

@@ -198,6 +198,7 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
       if (u < 2.8) {
         const trails = new Path2D()
         const stones = new Path2D()
+        const hearts = new Path2D()
         for (let i = 0; i < 18; i++) {
           const a = -Math.PI / 2 + (hash(i, 21) - 0.5) * 1.9
           const sp = 0.1 + 0.08 * hash(i, 22)
@@ -209,13 +210,54 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
           trails.lineTo(x, y)
           stones.moveTo(x + 0.0035, y)
           stones.arc(x, y, 0.0035, 0, Math.PI * 2)
+          hearts.moveTo(x + 0.0018, y)
+          hearts.arc(x, y, 0.0018, 0, Math.PI * 2)
         }
         ctx.lineCap = 'round'
         ctx.strokeStyle = rgbaHex(ICE.fireGold, 0.8 * (1 - sm(u, 1.2, 2.8)))
-        ctx.lineWidth = 1.6 * px
+        ctx.lineWidth = 2 * px
         ctx.stroke(trails)
         ctx.fillStyle = ICE.basalt
         ctx.fill(stones)
+        // Each still glowing at its heart as it flies.
+        ctx.fillStyle = rgbaHex(ICE.fire, 0.95 * (1 - sm(u, 1.5, 2.8)))
+        ctx.fill(hearts)
+      }
+
+      // Lava coming over the crater's lip and down the cone in runnels, slowly, through the hush: amber in the snow,
+      // and steam where it meets it.
+      const run = sm(u, 0.3, 9)
+      if (run > 0.001) {
+        const lava = new Path2D()
+        const steam = new Path2D()
+        for (let r = 0; r < 4; r++) {
+          // Down the cone's face toward us, each runnel finding its own way through the snow.
+          const side = r % 2 ? 1 : -1
+          const x0 = cx + (r - 1.5) * 0.011
+          const len = (0.03 + 0.035 * hash(r, 41)) * run
+          lava.moveTo(x0, cy + 0.002)
+          let x = x0
+          let y = cy + 0.002
+          for (let i = 1; i <= 8; i++) {
+            const f = i / 8
+            x = x0 + side * 0.012 * f + 0.003 * Math.sin(f * 6 + r * 2)
+            y = cy + 0.002 + len * f
+            lava.lineTo(x, y)
+          }
+          const puff = 0.005 + 0.002 * Math.sin(t * 2.3 + r)
+          steam.moveTo(x + puff, y - 0.004)
+          steam.ellipse(x, y - 0.004, puff, puff * 0.8, 0, 0, Math.PI * 2)
+        }
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        ctx.strokeStyle = rgbaHex(ICE.fireDeep, 0.45)
+        ctx.lineWidth = 5 * px
+        ctx.stroke(lava)
+        ctx.strokeStyle = rgbaHex(ICE.fireGold, 0.9 * (0.85 + 0.15 * Math.sin(t * 5.1)))
+        ctx.lineWidth = 1.8 * px
+        ctx.stroke(lava)
+        ctx.fillStyle = rgbaHex(ICE.steam, 0.55)
+        ctx.fill(steam)
       }
     }
 
@@ -227,7 +269,7 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
       const mid = cx + 0.06 * top * 4
       const y0 = cy - top + 0.035
       const fall = new Path2D()
-      for (let i = 0; i < 28; i++) {
+      for (let i = 0; i < 20; i++) {
         const f = hash(i, 1, 511)
         const x = mid + (f - 0.35) * spread * 2
         const sway = 0.006 * Math.sin(t * (0.3 + 0.3 * hash(i, 2, 511)) + i)
@@ -236,11 +278,11 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
         fall.quadraticCurveTo(x + 0.01 + sway, y0 + len * 0.5, x + 0.03 + sway * 2, y0 + len)
       }
       ctx.lineCap = 'round'
-      ctx.strokeStyle = rgbaHex(ICE.plumeLight, 0.16 * curtains)
-      ctx.lineWidth = 6 * px
+      ctx.strokeStyle = rgbaHex(ICE.plumeLight, 0.1 * curtains)
+      ctx.lineWidth = 14 * px
       ctx.stroke(fall)
-      ctx.strokeStyle = rgbaHex(ICE.plume, 0.14 * curtains)
-      ctx.lineWidth = 2 * px
+      ctx.strokeStyle = rgbaHex(ICE.plume, 0.08 * curtains)
+      ctx.lineWidth = 4 * px
       ctx.stroke(fall)
     }
 

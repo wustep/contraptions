@@ -15,7 +15,7 @@ function vignetteFor(W: number, H: number): HTMLCanvasElement | null {
   g.translate(W / 2, H / 2)
   g.scale(1, H / W)
   const r = (W / 2) * 1.42
-  const grad = g.createRadialGradient(0, 0, r * 0.78, 0, 0, r)
+  const grad = g.createRadialGradient(0, 0, r * 0.8, 0, 0, r)
   grad.addColorStop(0, 'rgba(0,0,0,0)')
   grad.addColorStop(1, 'rgba(0,0,0,1)')
   g.fillStyle = grad
@@ -35,8 +35,8 @@ export function edges(ctx: CanvasRenderingContext2D, a: number): void {
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.globalAlpha = a
   // Only the corners carry much of it; the rest is left as it is, and never drawn.
-  const bw = Math.round(W * 0.3)
-  const bh = Math.round(H * 0.34)
+  const bw = Math.round(W * 0.25)
+  const bh = Math.round(H * 0.28)
   for (const [x, y] of [[0, 0], [W - bw, 0], [0, H - bh], [W - bw, H - bh]]) ctx.drawImage(v, x, y, bw, bh, x, y, bw, bh)
   ctx.restore()
 }
