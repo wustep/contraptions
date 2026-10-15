@@ -2,7 +2,8 @@ import type { Pt } from '../../../../../parts'
 import { box, frame, part, scenery, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import { BENCH, HOP1, KEY, NOTES, REST_PT, RIM, SOLVED, homeLane } from './home-plan'
-import { drawBench, drawLamp, drawLandings, drawMother, drawNegative, drawPianoBody, drawRoom, drawStrings } from './home-draw'
+import { drawBench, drawLamp, drawLandings, drawMother, drawNegative, drawPianoBody, drawStrings, lampLight, motherShadow } from './home-draw'
+import { drawRoom } from './room'
 import { penOf } from './pen'
 
 /**
@@ -25,7 +26,7 @@ export const homeSet = scenery<null>({
   name: 'home-set',
   draw: (p, _s, c) => {
     const pen = penOf(p, c.k)
-    drawRoom(pen, frame(p, c.k))
+      drawRoom(pen, frame(p, c.k), c.t, lampLight(c.t), motherShadow(c.t))
     drawBench(pen)
     drawMother(pen, c.t)
     drawPianoBody(pen, c.t)
@@ -43,7 +44,7 @@ export const piano = part<HomeState>(
     draw: (p, s, c) => {
       const pen = penOf(p, c.k)
       const t = s.begin + c.t
-      drawStrings(pen, t)
+          drawStrings(pen, t)
       drawLamp(pen, t)
       drawLandings(pen, t)
     },
@@ -62,8 +63,9 @@ export const piano = part<HomeState>(
 
 /**
  * The camera: still on him on the floor while the ash lifts and she plays; drifting up and right with him onto the
- * bench and the keys, close on her; along the rim with him, the lamp coming into the frame; and settled on the curve,
- * him and the negative together, on the seam's framing at the cut.
+ * bench and the keys, close on her; then pushing in slowly along the rim as her notes carry him, the lamp coming into
+ * the frame; closest on the curve, him and the negative together; and opening a little to the seam's framing at the
+ * cut.
  */
 function shotsFor(begin: number, end: number): PartShot[] {
   const hold = (t: number, cells: number, at: Pt): PartShot => ({ t, cells, hold: at, w: 1 })
@@ -73,9 +75,9 @@ function shotsFor(begin: number, end: number): PartShot[] {
     hold(begin + 1.5, 3.6, [-0.05, -0.45]),
     hold(HOP1, 3.55, [0.25, -0.62]),
     hold(KEY, 3.45, [0.85, -0.95]),
-    hold(RIM + 0.6, 3.35, [1.75, -1.2]),
-    hold(NOTES[NOTES.length - 4], 3.4, [2.85, -1.35]),
-    hold(SOLVED, 3.6, [endHold[0] - 0.05, endHold[1]]),
+    hold(RIM + 0.6, 3.3, [1.75, -1.22]),
+    hold(NOTES[NOTES.length - 4], 3.05, [2.85, -1.42]),
+    hold(SOLVED, 3.1, [endHold[0] - 0.08, endHold[1] + 0.04]),
     hold(end, seam.cells, endHold),
   ]
 }
