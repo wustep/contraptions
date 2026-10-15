@@ -6,6 +6,7 @@ import type { ShellSpot } from '../seams'
 import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME, IAN, LOUISE } from '../worlds'
 import { CLOCK_HULL, CRADLE_HULL, BED_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawTV, drawTVGlow, tvShell } from './props'
 import { drawBallMirror, drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
+import { F, FLASH_HITS, FLASH_X, STOOL_HULL, drawSheet, drawStool, flashX, hannahFlashAt, hannahFlashLook } from './flash'
 import {
   EMPTY_DX,
   NEAR,
@@ -40,9 +41,10 @@ import {
 
 /**
  * The lake house, inside (the HOUSE builder's): one long room of dark concrete and pale oak whose whole side is a
- * window over the grey lake. The same room at four times of her life, which we take for the past and which is the
+ * window over the grey lake. The same room at five times of her life, which we take for the past and which is the
  * future: the cradle at dawn (the show's first frame), the bed by the window on a grey day, the television at night,
- * and at the end the morning after the shells, Ian, the empty cradle, and the first frame again.
+ * an afternoon in the sun when Hannah draws at the window (the flash, in the middle of the language: `flash.ts`), and
+ * at the end the morning after the shells, Ian, the empty cradle, and the first frame again.
  *
  * The room is one standing drawing that changes by show time (`houseSet`); the parts (`dawn`, `bed`, `news`, `home`)
  * give Louise her lane, Hannah and Ian their places, and the camera its keys. Everything that moves is a function of
@@ -63,6 +65,8 @@ function louiseX(T: number): number | null {
       return bedX(T)
     case 'news':
       return NEWS_X
+    case 'flash':
+      return flashX(T)
     case 'home':
       return homeX(T)
     default:
@@ -89,6 +93,7 @@ export const houseSet = scenery<null>({
     if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)).map(([x, y]) => [x + dx, y] as Pt))
     if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL)
     if (era === 'news') shadows.push(TV_HULL)
+    if (era === 'flash') shadows.push(STOOL_HULL)
     if (era === 'home' && T < BEGIN) balls.push([ianX(T), 0])
     if (era === 'home' && T >= BEGIN && T < IAN_GONE) balls.push([ianAfter(T), 0])
     drawRoom(p, k, T)
@@ -103,6 +108,10 @@ export const houseSet = scenery<null>({
       drawClock(p, k, T, L)
     }
     if (era === 'news') drawTV(p, k, T, L)
+    if (era === 'flash') {
+      drawSheet(p, k, T, L)
+      drawStool(p, k, T, L)
+    }
     drawMirror(p, k, T)
     // Louise first, then Ian when he is here: the same order `balls` has them in.
     drawBallMirror(p, k, T, balls.map((b, i) => [b, i === 0 ? LOUISE : IAN] as [Pt, string]))
@@ -131,6 +140,7 @@ export const houseSet = scenery<null>({
 export const DAWN_AT: Pt = [0.5, 0]
 export const BED_AT: Pt = [0.5, 0]
 export const NEWS_AT: Pt = [NEWS_X + 0.5, 0]
+export const FLASH_AT: Pt = [FLASH_X + 0.5, 0]
 export const HOME_AT: Pt = [HOME_X + 0.5, 0]
 
 /** The shell on the television at the cut (house world cells): its centre and height. */
@@ -292,6 +302,39 @@ export const news: Part<HouseState> = part<HouseState>(
   },
 )
 
+/* ------------------------------------------------------------------ the flash */
+
+export const flash: Part<HouseState> = part<HouseState>(
+  { name: 'house-flash', draw: nothing },
+  (slot) => {
+    const o = FLASH_AT
+    const { segs, end } = floorLane(flashX, slot, o, [F.touch])
+    const company: Company[] = [
+      {
+        who: 'hannah',
+        from: slot.begin,
+        to: slot.end,
+        at: (t) => {
+          const [x, y] = hannahFlashAt(t)
+          return { x: x - o[0], y: y - o[1], scale: HANNAH_AGE.child, spin: hannahFlashLook(t) }
+        },
+      },
+    ]
+    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire: F.touch - slot.begin }, state: { begin: slot.begin }, company }
+  },
+  (slot) => {
+    const o = FLASH_AT
+    const w = (x: number, y: number): Pt => [x - o[0], y - o[1]]
+    return [
+      // From the chamber's framing in to the two of them and her sheet on the glass, and held while she draws: a little
+      // high at the end, so the chamber, carrying it, has their ring over the glass in the frame.
+      { t: slot.begin + 2.0, cells: 2.25, hold: w(FLASH_X + 0.66, -0.55) },
+      { t: F.daddy, cells: 2.2, hold: w(FLASH_X + 0.64, -0.56) },
+      { t: slot.end, cells: 2.45, hold: w(FLASH_X + 0.62, -0.68) },
+    ]
+  },
+)
+
 /* ------------------------------------------------------------------ home */
 
 export const home: Part<HouseState> = part<HouseState>(
@@ -371,6 +414,8 @@ export const HOUSE_HITS: number[] = [
   ...CLOCK_STRIKES,
   // The news: the television comes on on the half cadence.
   HALF,
+  // The flash: Hannah's strokes on the beats, and her mother's touch on the stool on the chord.
+  ...FLASH_HITS,
   // Home: the sun through the glass, the touch, the turn to the empty cradle, the step toward it, and the cradle again.
   SEAM.home,
   337.85,

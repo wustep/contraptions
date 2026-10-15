@@ -34,11 +34,13 @@ export function hermite(u: number, d: number, x0: number, v0: number, x1: number
 
 /* ------------------------------------------------------------------ the eras */
 
-/** The house's four times: when the room is what. */
+/** The house's five times: when the room is what. */
 export const ERA = {
   dawn: [0, SEAM.swing] as const,
   bed: [SEAM.bed, SEAM.news] as const,
   news: [SEAM.news, SEAM.arrival] as const,
+  /** A flash in the middle of the language: an afternoon years on, Hannah drawing at the window (`flash.ts`). */
+  flash: [SEAM.flash, SEAM.back] as const,
   home: [SEAM.home, 409] as const,
 }
 /** The last scene's chords: the two of them turn to the empty cradle (TURN) and step toward it (NEAR); then, on the
@@ -54,11 +56,12 @@ export const BEGIN = 349.495
  */
 export const EMPTY_DX = 0
 
-export type Era = 'dawn' | 'bed' | 'news' | 'home' | 'none'
+export type Era = 'dawn' | 'bed' | 'news' | 'flash' | 'home' | 'none'
 export function eraOf(T: number): Era {
   if (T < ERA.dawn[1]) return 'dawn'
   if (T >= ERA.bed[0] && T < ERA.bed[1]) return 'bed'
   if (T >= ERA.news[0] && T < ERA.news[1]) return 'news'
+  if (T >= ERA.flash[0] && T < ERA.flash[1]) return 'flash'
   if (T >= ERA.home[0]) return 'home'
   return 'none'
 }
@@ -282,6 +285,7 @@ export function tvOn(T: number): number {
  *  - `morn`: the morning, the sun coming low through the glass;
  *  - `grey`: an overcast day, flat and cool (the bed);
  *  - `night`: the room dark but for what glows in it (the news).
+ * The flash is an afternoon in full sun: the end's morning light, which it foretells.
  * And `sun`, the direct light through the glass onto the floor; `fog`, how thick the fog is over the lake; `amb`, how
  * lit the room is overall (derived), for what stands in it.
  */
@@ -318,6 +322,7 @@ export function lightAt(T: number): Light {
     return light(0.12 * g, 0, 1 - 0.3 * g, 0.18 * g, 0, 0.8 + 0.2 * g)
   }
   if (T < ERA.news[1] + 1) return light(0, 0, 0, 1, 0, 0.2)
+  if (T >= ERA.flash[0] - 1 && T < ERA.flash[1] + 1) return light(0, 1, 0, 0, 0.95, 0.15)
   if (T < BEGIN) {
     // The morning after: the sun comes through the glass.
     const u = ss(T, SEAM.home, SEAM.home + 2.4)

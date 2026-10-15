@@ -36,24 +36,28 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
 
   // The places, in the order the story goes, each cut on a chord.
   const order = show.legs.map((l) => l.world).join(',')
-  check('palindrome: the lake house (dawn, the swing, the bed, the news), the valley, the shell, the tent, the shell, the fog, the lake house, the fog, the gala, the tent, the valley, the lake house',
-    order === 'house,house,house,house,valley,shell,tent,shell,fog,house,fog,gala,tent,valley,house', order)
+  check('palindrome: the lake house (dawn, the swing, the bed, the news), the valley, the shaft, the shell, the lake house (a flash), the shell, the tent, the shell, the fog, the lake house, the fog, the gala, the tent, the valley, the lake house',
+    order === 'house,house,house,house,valley,shaft,shell,house,shell,tent,shell,fog,house,fog,gala,tent,valley,house', order)
   const onBeat = (t: number, eps: number) => BEATS.some((b) => Math.abs(b.t - t) <= eps)
   const onChord = (t: number, eps: number) => CHORDS.some((c) => Math.abs(c.t - t) <= eps)
   const onOnset = (t: number, eps: number, min = 0.2) => ONSETS.some((o) => o.s >= min && Math.abs(o.t - t) <= eps)
   const cuts = show.legs.slice(1).map((l) => l.from)
   const seams = Object.values(SEAM)
   check('palindrome: every cut between places is on a change of chord',
-    cuts.length === 14 && cuts.every((c) => seams.some((s) => near(s, c, 1e-3))) && seams.every((s) => onChord(s, 1e-3)), cuts.map((t) => t.toFixed(3)).join(', '))
+    cuts.length === 17 && cuts.every((c) => seams.some((s) => near(s, c, 1e-3))) && seams.every((s) => onChord(s, 1e-3)), cuts.map((t) => t.toFixed(3)).join(', '))
   check('palindrome: no portal anywhere, and no cut drawn', [0, 30, 100, 150, 210, 240, 270, 300, 330, 380].every((t) => perf.cuts?.(t) === false))
 
   // One ball, one path: in a place it never jumps; at a cut the camera carries it, so on the screen it holds still
-  // (all but the cut on the shell, which carries the shell instead).
-  const onScreen = (t: number): [number, number] => {
-    const h = show.at(t)
+  // (all but the cut on the shell, which carries the shell instead). Where the camera rolls (the shaft), the screen is
+  // the world turned by its roll.
+  const screenOf = (t: number, b: { x: number; y: number }): [number, number] => {
     const f = cam(t)
-    return [(h.x - f.x) / f.cells, (h.y - f.y) / f.cells]
+    const a = f.angle ?? 0
+    const dx = (b.x - f.x) / f.cells
+    const dy = (b.y - f.y) / f.cells
+    return [dx * Math.cos(a) - dy * Math.sin(a), dx * Math.sin(a) + dy * Math.cos(a)]
   }
+  const onScreen = (t: number): [number, number] => screenOf(t, show.at(t))
   let jump = 0
   let jumpAt = 0
   let screen = 0
@@ -169,15 +173,15 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
     near(f0.cells, FIRST.cells) && !!h0 && near(h0.scale ?? 0, HANNAH_AGE.baby, 1e-6) && near(show.hannah(perf.duration)?.scale ?? 0, HANNAH_AGE.baby, 1e-6) && drift < 0.01,
     `off by ${drift.toFixed(4)}`)
   // Hannah's rhyme: at each cut into or out of the lake house, on Louise's right a little above her (the cradle, the
-  // swing, the bed), growing.
-  const rhyme = (['swing', 'bed', 'sees', 'fog2'] as const).map((key) => {
+  // swing, the bed, the flash), growing.
+  const rhyme = (['swing', 'bed', 'flash', 'back', 'sees', 'fog2'] as const).map((key) => {
     const t = SEAMS[key].t
-    const side = key === 'fog2' ? t - 1e-3 : t + 1e-3
+    const side = key === 'fog2' || key === 'back' ? t - 1e-3 : t + 1e-3
     const h = show.hannah(side)
     const l = show.at(side)
     return h ? Math.hypot(h.x - l.x - HANNAH_BY[0], h.y - l.y - HANNAH_BY[1]) : 9
   })
-  check('palindrome: at the lake house\'s cuts Hannah is on Louise\'s right, a little above her: the cradle, the swing, the bed',
+  check('palindrome: at the lake house\'s cuts Hannah is on Louise\'s right, a little above her: the cradle, the swing, the bed, the flash',
     rhyme.every((d) => d < 0.02), rhyme.map((d) => d.toFixed(3)).join(', '))
 
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen. The
@@ -220,8 +224,8 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
   // cut (Hannah also on the swell, when she goes, and into the cradle at the end, when she comes back).
   const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
     if (!b || (b.scale ?? 1) <= 0.02) return false
-    const f = cam(t)
-    return Math.abs(b.x - f.x) < (f.cells * 16) / 9 / 2 && Math.abs(b.y - f.y) < f.cells / 2
+    const [sx, sy] = screenOf(t, b)
+    return Math.abs(sx) < 16 / 9 / 2 && Math.abs(sy) < 1 / 2
   }
   for (const who of ['ian', 'hannah', 'shang'] as const) {
     const get = (t: number) => (who === 'ian' ? show.ian(t) : who === 'hannah' ? show.hannah(t) : show.shang(t))
@@ -256,7 +260,7 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
   })
   check('palindrome: Hannah comes into the cradle as she went from the bed, backwards, and with no cut',
     comes.every((d) => d < 0.01) && !cameraCuts.some((c) => c > SEAM.home + 0.1), comes.map((d) => d.toFixed(3)).join(', '))
-  const counts = [2, 30, 80, 110, 160, 205, 220, 240, 253, 270, 300, 330, 360].map((t) => (show.at(t).balls ?? []).filter((b) => b.id !== 0).map((b) => b.id))
+  const counts = [2, 30, 80, 110, 132, 160, 173, 205, 220, 240, 253, 270, 300, 330, 360].map((t) => (show.at(t).balls ?? []).filter((b) => b.id !== 0).map((b) => b.id))
   check('palindrome: never two of anyone', counts.every((ids) => new Set(ids).size === ids.length))
   const worldAt = (t: number) => show.legs[show.owner(t)].world
   const samples = Array.from({ length: Math.floor(perf.duration * 4) }, (_, i) => i / 4)

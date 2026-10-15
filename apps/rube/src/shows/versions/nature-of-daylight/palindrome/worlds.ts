@@ -6,10 +6,10 @@ import type { World } from '../../../../worlds'
  * they exist for this show. A world is a palette and a name for the panel; the pieces are laid by the score, so
  * `pieces` stays empty. **Use only these colours** (plus alpha, plus shades mixed from two of them with `mixHex`).
  *
- * Six places: the lake house (Louise's, where Hannah is: her life, which the film lets us take for the past), the
- * valley in Montana where the shell comes down out of the cloud, the inside of the shell (the chamber and the glass),
- * the fog beyond the glass where the heptapods are, the command tent at the camp (the twelve screens: the world), and
- * the gala in the future where General Shang tells her what to say.
+ * Seven places: the lake house (Louise's, where Hannah is: her life, which the film lets us take for the past), the
+ * valley in Montana where the shell comes down out of the cloud, the shaft up into the shell where gravity turns, the
+ * inside of the shell (the chamber and the glass), the fog beyond the glass where the heptapods are, the command tent
+ * at the camp (the twelve screens: the world), and the gala in the future where General Shang tells her what to say.
  *
  * The show's one warm, saturated colour is Louise's gold. Nothing else is that colour: lamps are paler, wood is
  * greyer, the gala's lights are champagne.
@@ -169,6 +169,17 @@ export const SHELL = {
   canary: '#E7D46A',
 }
 
+/** The shaft above the deck: the same dark stone, a tall tunnel up into the shell, the white far up it. */
+export const SHAFT_THEME: Theme = {
+  name: 'shaft',
+  label: 'The Shaft',
+  bg: '#0F1113',
+  ink: '#D8D5CB',
+  colors: ['#212428', '#373C41', '#F3F4F0', '#DADFDC', '#41474C', '#0F1113'],
+  weight: 0.8,
+  note: 'A tall tunnel of dark stone up into the shell, where gravity turns and the wall becomes the floor.',
+}
+
 /* ------------------------------------------------------------------ the fog */
 
 export const FOG_THEME: Theme = {
@@ -260,6 +271,7 @@ const world = (name: string, label: string, note: string, theme: Theme): World =
 export const WORLDS = {
   house: world('house', 'The Lake House', 'Louise and Hannah: the cradle, the swing, the bed by the window.', HOUSE_THEME),
   valley: world('valley', 'Montana', 'The shell comes down out of the cloud over the meadow, and goes back up into it.', VALLEY_THEME),
+  shaft: world('shaft', 'The Shaft', 'Up into the shell, where gravity turns.', SHAFT_THEME),
   shell: world('shell', 'The Shell', 'The chamber and the glass: contact, and the language.', SHELL_THEME),
   fog: world('fog', 'Beyond the Glass', 'The heptapods, and what they show her.', FOG_THEME),
   tent: world('tent', 'The Command Tent', 'Twelve screens, one for every shell: the world.', TENT_THEME),

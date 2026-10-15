@@ -70,6 +70,7 @@ export const swing = part<State>(
   () => {
     const o = AT
     const k = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - o[0], y - o[1]], w: 1 })
+    const cut = (t: number, cells: number, x: number, y: number): PartShot => ({ ...k(t, cells, x, y), cut: true })
     return [
       // Close at the seam, as the dawn left it; held while she goes to the seat and gives the first push.
       k(23.2, 4.6, 60.55, -0.95),
@@ -78,9 +79,18 @@ export const swing = part<State>(
       // Hannah on the seat grows from a child to a girl in plain sight.
       k(30.3, 4.9, 60.35, -1.05),
       k(34.5, 5.1, 60.2, -1.1),
-      k(38.6, 5.3, 60.1, -1.1),
-      // The height: the whole arc, from her on the bank to the leaves Hannah reaches at its front.
-      k(46.4, 5.45, 60.05, -1.1),
+      k(38.5, 5.25, 60.12, -1.1),
+      // Then a year in four shots, each season cut in on her push at the back of the arc, where the swing is still: the
+      // childhood as the film tells it, a montage. (One slow opening for 38 s, the swing read as the show's longest
+      // stretch with nothing new in it.) Autumn, on the second voice: in close and low on the push, the arc running out
+      // of the frame and back into it, the turning leaves at its front knocked loose.
+      cut(38.609, 3.6, 60.2, -1.05),
+      k(46.25, 3.75, 60.15, -1.05),
+      // Winter: out under the whole tree, bare.
+      cut(46.353, 8.0, 59.7, -2.55),
+      k(55.35, 7.6, 59.75, -2.45),
+      // Spring: the whole arc again, from her on the bank to the leaves coming back at its front.
+      cut(55.449, 5.4, 60.1, -1.1),
       k(60.6, 5.55, 60.1, -1.1),
       // The leap's space: out to where she lands, then in again as she runs back.
       k(61.6, 6.25, 60.95, -1.3),

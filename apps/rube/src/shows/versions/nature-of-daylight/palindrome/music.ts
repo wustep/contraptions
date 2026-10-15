@@ -176,8 +176,14 @@ export const SEAM = {
   news: chord(23),
   /** The television's shell → the real one over the valley, on the double bass (c24). A scale match cut. */
   arrival: ARRIVAL,
-  /** The valley → inside the shell: the chamber (c32). */
-  contact: chord(32),
+  /** The valley → inside the shell: the shaft above the deck, where gravity turns (c32). */
+  shaft: chord(32),
+  /** The shaft → the chamber, as the glass wakes (c33). */
+  contact: chord(33),
+  /** The chamber → the lake house: a flash of Hannah, drawing at the window (c42). */
+  flash: chord(42),
+  /** The lake house → the chamber again, a word later (c44). */
+  back: chord(44),
   /** The chamber → the command tent: the bass drops out, the world breaks (c50). */
   dark: TURN,
   /** The tent → the chamber: the bomb (c55). */
