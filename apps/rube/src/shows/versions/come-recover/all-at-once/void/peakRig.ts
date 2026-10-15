@@ -330,9 +330,9 @@ function pendulum(ctx: CanvasRenderingContext2D, k: number, a: number, ink: stri
 
 /**
  * Further back in the dark, behind the bagel, the house the machine stands in: tall lattice columns, X-braced
- * between, going up out of the frame, iron gone almost to the dark's own black. Barely there while the dark is dark; as the beams of
- * every life come up behind the bagel it stands against them, so the light shows how big the place is. It moves at
- * half the camera's speed, so every draw-back and push-in has the near iron sliding past the far.
+ * between, going up out of the frame, iron gone almost to the dark's own black: barely there, but enough that the dark
+ * is a place, and a big one. It moves at half the camera's speed, so every draw-back and push-in has the near iron
+ * sliding past the far.
  */
 const FAR_F = 0.5
 /** Where the camera stands when the far iron is where it is drawn: the peak's wide. */
@@ -371,7 +371,7 @@ export const ROD_TOP = JIB_WHEEL[1] + JR + 0.02
 
 /**
  * The rig, at `T` (show seconds), drawn in the dark's own cells ("rel"): the caller has moved the canvas there. Under
- * the line and the pulley, over the radiance, so the beams pass behind the iron.
+ * the line and the pulley.
  */
 export function drawRig(p: p5, c: Ctx, T: number, view: { x0: number; x1: number; y0: number; y1: number }): void {
   if (T < T_IN - 1.5 || T > T_OUT + 0.6) return
@@ -422,7 +422,7 @@ export function drawRig(p: p5, c: Ctx, T: number, view: { x0: number; x1: number
 
 /**
  * Close to the lens, across the top right, a slack hawser hangs from somewhere above the frame to somewhere off it, out
- * of focus and dark against the beams, its top edge just caught by the great light. It moves at more than one and a
+ * of focus and dark, its top edge just caught by the great light. It moves at more than one and a
  * half times the camera's speed, so the machine has something in front of it as well as behind; it sways, and every
  * tick of the clock goes through the house and shivers it.
  */

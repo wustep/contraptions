@@ -395,7 +395,7 @@ function paintBands(ctx: Ctx2D, k: number, x0: number, x1: number, y0: number, y
 /**
  * The far slices, back to front, each in its own perspective about the eye, with the haze pooled in their depths, and
  * graded by the hour: warmed in the gold, and at dusk each one a silhouette against the light, the farther the paler.
- * `between(i, map)` paints whatever stands just in front of slice `i` (the birds, the dust off a far rim), in that
+ * `between(i, map)` paints whatever stands just in front of slice `i` (the dust off a far rim), in that
  * slice's perspective.
  */
 export function paintSlices(p: p5, k: number, f: Frame, land: Land, light: Light = NOON, between?: (i: number, s: number, map: (q: Pt) => Pt) => void): void {

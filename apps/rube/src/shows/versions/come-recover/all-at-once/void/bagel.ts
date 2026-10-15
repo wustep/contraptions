@@ -808,8 +808,7 @@ function drawSeeds(ctx: CanvasRenderingContext2D, pose: BagelPose, S: number, h:
 }
 
 /**
- * What stands further back in the dark than the bagel, drawn just before it (over the peak's radiance, under the
- * crust): `fn(p, k, ink, weight, t)` in the bagel's own cells (its resting centre at 0, 0). The peak's far ironwork.
+ * What stands further back in the dark than the bagel, drawn just before it (under the crust): `fn(p, k, ink, weight, t)` in the bagel's own cells (its resting centre at 0, 0). The peak's far ironwork.
  */
 export const BEHIND: ((p: p5, k: number, ink: string, weight: number, t: number) => void)[] = []
 
