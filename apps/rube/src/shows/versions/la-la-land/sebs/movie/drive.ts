@@ -777,7 +777,7 @@ const STANDERS: { x: number; h: number; coat: string; facing: number }[] = [
 function figure(ctx: CanvasRenderingContext2D, k: number, x: number, foot: number, h: number, coat: string, facing: number, stride: number, turn: number): void {
   // A person in a coat: legs, the coat's tapered body, the shoulders, a head; lit from the lamps above, a warm edge
   // along the top of the shoulders and head.
-  const legW = 0.05 * h
+  const legW = 0.075 * h
   ctx.fillStyle = '#120E18'
   const s = stride * 0.12 * h
   ctx.beginPath()
