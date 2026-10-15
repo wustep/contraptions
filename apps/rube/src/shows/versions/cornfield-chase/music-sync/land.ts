@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type PieceCtx } from '../../../../parts'
-import { band, body, dayAt, farm, gustAt, haze, rows, sky, sunHeight, type Light } from './field'
+import { band, body, dayAt, farm, gustAt, haze, nightWind, rows, sky, sunHeight, type Light } from './field'
 import { farmwork } from './farmwork'
 import { fireworks, shellLight } from './fireworks'
 import { FULL, tiltAt } from './lens'
@@ -8,7 +8,7 @@ import { balloons, midway, midwayAt } from './midway'
 import { nearCorn } from './near'
 import { DROP, LAST, ORGAN } from './music'
 import { done, hash, rgba, screenOf, smooth, type Screen } from './screen'
-import { birds, cirrus, clouds, drone, shadows } from './sky'
+import { birds, clouds, drone, shadows } from './sky'
 
 /**
  * The land behind the machine, by day and by night. `col`, `row` is where the scenery is placed (the stage hands its
@@ -23,8 +23,7 @@ export function dayLand(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   const l = dayAt(t)
   const hy = sky(s, l)
   const dusk = smooth(t, 30, 40.6)
-  body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', '#F6D58A', 0.42 - 0.08 * dusk, 0.2)
-  cirrus(s, t, hy, mixHex('#FFFFFF', '#F4C3B4', smooth(t, ORGAN - 3, 40)), 0.42)
+  body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', '#F6D58A', 0.26 - 0.06 * dusk, 0.15)
   clouds(s, t, hy, { ...l.cloud, sky: l.low, alpha: 0.9 })
   const ink = mixHex('#46423A', '#3A2A32', smooth(t, ORGAN - 3, 40))
   drone(s, t, hy, ink)
@@ -44,7 +43,8 @@ export function dayNear(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   const t = begin + c.t
   const s = screenOf(p, c, col, line)
   s.cy += tiltAt(t) * s.f
-  nearCorn(s, t, smooth(t, ORGAN - 4, 40.6), (x) => gustAt(t, x))
+  const dusk = smooth(t, ORGAN - 4, 40.6)
+  nearCorn(s, t, mixHex('#5A7A3C', '#4B3238', dusk), mixHex('#3F5A2A', '#352229', dusk), (x) => gustAt(t, x))
   done(s)
 }
 
@@ -56,7 +56,7 @@ const NIGHT: Light = {
   ground: '#0F0D21',
   band: '#0B0A19',
   farm: '#0A0917',
-  rows: { near: '#0A0918', far: '#1D1938', line: '#3B3568', ink: 0.75, lean: 0.03, gust: 0 },
+  rows: { near: '#0A0918', far: '#1D1938', line: '#3B3568', ink: 0.75, lean: 0.03, gust: 1 },
   horizon: 0.8,
   // Lit from under by the fair: dark over, its glow along their foot.
   cloud: { body: '#1A1731', base: '#33284F' },
@@ -96,7 +96,15 @@ const nightAt = (t: number, horizon: number): Light => {
     // The chase under the moon, blue-violet; the full organ under the midway's light, warmer, toward rose.
     low: mixHex(mixHex(mixHex(NIGHT.low, '#56345F', glowAt(t)), '#7E4E8E', 0.85 * flareAt(t)), '#4A5F86', 0.8 * dawn),
     // The tassels catch the midway's light as it comes on, and go cool with the dawn.
-    rows: { ...NIGHT.rows, line: mixHex(mixHex(NIGHT.rows.line, '#6E4F7C', 0.55 * glowAt(t)), '#4C6088', dawn), flash: shellLight(t) },
+    rows: {
+      ...NIGHT.rows,
+      line: mixHex(mixHex(NIGHT.rows.line, '#6E4F7C', 0.55 * glowAt(t)), '#4C6088', dawn),
+      // A gust turns up the leaves' pale side to the moon, and on the full organ to the midway.
+      sheen: mixHex(mixHex('#56528A', '#7A5A86', glowAt(t)), '#5A6C96', dawn),
+      flash: shellLight(t),
+    },
+    // The clouds' undersides take the midway's light as it comes on, and the dawn's.
+    cloud: { body: mixHex(NIGHT.cloud.body, '#1B2443', dawn), base: mixHex(mixHex(NIGHT.cloud.base, '#5C3A63', glowAt(t)), '#3D5079', dawn) },
     horizon,
   }
 }
@@ -122,7 +130,19 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
   midway(s, t, hy, l.low)
   band(s, hy, l.band)
   const up = rise(t)
-  rows(s, t, hy, up > 0 ? { ...l.rows, within: [-Infinity, frontTop(s, hy, up)] } : l.rows)
+  const wind = (x: number) => nightWind(t, x)
+  rows(s, t, hy, up > 0 ? { ...l.rows, wind, within: [-Infinity, frontTop(s, hy, up)] } : { ...l.rows, wind })
+  done(s)
+}
+
+/**
+ * The corn at the foot of the frame by night (`near.ts`), dark against the rows the fair and the moon light, in the
+ * chase's wind. `away` sinks it out of the frame.
+ */
+export function nightNear(p: p5, c: PieceCtx, col: number, line: number, begin: number, away: number): void {
+  const t = begin + c.t
+  const s = screenOf(p, c, col, line)
+  nearCorn(s, t, '#07060F', '#0B0A17', (x) => nightWind(t, x), away)
   done(s)
 }
 
@@ -144,7 +164,7 @@ export function frontField(p: p5, c: PieceCtx, col: number, line: number, begin:
   s.ctx.fillStyle = l.ground
   s.ctx.fillRect(0, top, s.w, s.h - top)
   band(s, hy, l.band)
-  rows(s, t, hy, { ...l.rows, within: [top, s.h] })
+  rows(s, t, hy, { ...l.rows, wind: (x) => nightWind(t, x), within: [top, s.h] })
   done(s)
 }
 

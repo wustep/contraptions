@@ -1,18 +1,19 @@
-import { mixHex } from '../../../../parts'
 import { hash, type Screen } from './screen'
 
 /**
  * The corn at your feet, in front of the machine: a few clumps of big leaves up out of the foot of the frame, by day,
  * going past quicker than the machine does, since they are nearer than it. Low, so they never stand in front of the
  * ball (which the camera keeps in the middle), and in clumps with gaps between, so the machine's lower floors show
- * through. They bend with the same wind as the rows.
+ * through. They bend with the same wind as the rows. `blade` and `rib` are their leaves' colour and their stalks', by the
+ * light they stand in; `away` (0 to 1) sinks them out of the foot of the frame.
  */
-export function nearCorn(s: Screen, t: number, dusk: number, wind: (x: number) => number): void {
+export function nearCorn(s: Screen, t: number, blade: string, rib: string, wind: (x: number) => number, away = 0): void {
+  if (away >= 0.999) return
   const { ctx, cx, f, w } = s
   // Not over a frame of the whole field (Overview), where the route is the point.
   if (f / s.cell > 12) return
   // The foot: the 16:9 frame's, or the canvas's, whichever is lower (a phone held upright sees the field go on).
-  const foot = Math.max(s.h, s.cy + 0.5 * f)
+  const foot = Math.max(s.h, s.cy + 0.5 * f) + away * f * 0.3
   if (foot - f * 0.16 > s.h) return
   const W = (f * 16) / 9
   const pace = s.cell * 1.5
@@ -20,8 +21,6 @@ export function nearCorn(s: Screen, t: number, dusk: number, wind: (x: number) =
   const off = -s.camX * pace
   const k0 = Math.floor((-off - gap) / gap)
   const k1 = Math.ceil((w - off + gap) / gap)
-  const blade = mixHex('#5A7A3C', '#4B3238', dusk)
-  const rib = mixHex('#3F5A2A', '#352229', dusk)
   const leaves = new Path2D()
   const ribs = new Path2D()
   for (let k = k0; k <= k1; k++) {

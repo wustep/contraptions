@@ -503,57 +503,6 @@ function ringAt(t: number, on: number): number {
   return smooth(into, PERIOD, 12 * PERIOD)
 }
 
-/**
- * The string lights over the frame's top, in front of the machine: two strings, the near one quicker past the camera
- * than the far, sagging between poles off the frame and swaying; their bulbs come on in a run from the left as the
- * night's door opens. `away` (0 to 1) takes them up out of the frame: where floors of the fair fill the frame to its
- * top, and as the camera draws back for the photograph.
- */
-export function festoons(s: Screen, t: number, away: number): void {
-  // Not over a frame of the whole fair (Overview), where the route is the point.
-  away = Math.max(away, smooth(s.f / s.cell, 9, 14))
-  if (away >= 0.999) return
-  const { ctx, f, w } = s
-  const on = (x: number) => smooth(t, 41.55 + 0.6 * clamp(x / w), 41.7 + 0.6 * clamp(x / w))
-  for (const [i, near] of [[0, 0.8], [1, 1]] as const) {
-    // Past the camera quicker than the machine: they hang nearer than it.
-    const pace = s.cell * (1.12 + 0.25 * near)
-    const span = f * (0.75 + 0.25 * near)
-    const sag = f * (0.05 + 0.03 * near)
-    const lift = away * f * 0.22
-    const y0 = -f * 0.02 - lift + i * f * 0.01
-    const off = -s.camX * pace
-    const k0 = Math.floor((-off - span) / span)
-    const k1 = Math.ceil((w - off + span) / span)
-    const wire = new Path2D()
-    const r = f * (0.0036 + 0.0018 * near)
-    const lamps = new Bulbs(r)
-    const caps = new Bulbs(r * 0.7)
-    for (let k = k0; k <= k1; k++) {
-      const xa = off + k * span
-      const xb = xa + span
-      if (xb < 0 || xa > w) continue
-      const sway = 1 + 0.08 * Math.sin(t * 0.9 + k * 1.7 + i)
-      const at = (u: number): [number, number] => [xa + (xb - xa) * u + Math.sin(t * 0.7 + k) * f * 0.002 * Math.sin(Math.PI * u), y0 + sag * sway * 4 * u * (1 - u)]
-      wire.moveTo(...at(0))
-      for (let j = 1; j <= 16; j++) wire.lineTo(...at(j / 16))
-      const n = Math.round(span / (f * (0.075 + 0.02 * near)))
-      for (let j = 1; j < n; j++) {
-        const [bx, by] = at(j / n)
-        const lit = on(bx)
-        caps.add(bx, by + r * 0.6, '#16142A')
-        // Warm bulbs, all one colour: a string bought for a fair, not a light show.
-        lamps.add(bx, by + r * 1.7, lit > 0.01 ? mixHex(OFF, BULB, lit * (0.8 + 0.2 * near)) : OFF)
-      }
-    }
-    ctx.strokeStyle = '#16142A'
-    ctx.lineWidth = Math.max(1, f * (0.0014 + 0.001 * near))
-    ctx.stroke(wire)
-    caps.fill(ctx)
-    lamps.fill(ctx)
-  }
-}
-
 interface Balloon {
   /** Let go at, show time; where along the horizon, at the midway's pace; how quick up and across, frame heights a second. */
   t: number

@@ -31,13 +31,14 @@ interface Layer {
 const DAY: Layer[] = [
   { n: 10, loop: 5, q: 0.03, drift: 0.004, lo: 0.035, hi: 0.1, w0: 0.08, w1: 0.17, haze: 0.45 },
   { n: 7, loop: 5.4, q: 0.05, drift: 0.008, lo: 0.2, hi: 0.42, w0: 0.18, w1: 0.32, haze: 0.12 },
-  { n: 6, loop: 5.8, q: 0.07, drift: 0.011, lo: 0.46, hi: 0.9, w0: 0.26, w1: 0.42, haze: 0 },
+  { n: 8, loop: 5.8, q: 0.07, drift: 0.011, lo: 0.42, hi: 0.7, w0: 0.26, w1: 0.42, haze: 0 },
 ]
 
-/** Long, thin, slow: a night's few clouds, and a low bank over the horizon the fair lights from under. */
+/** Long, thin, slow: a night's few clouds, a low bank over the horizon the fair lights from under, and a high deck. */
 const NIGHT: Layer[] = [
   { n: 5, loop: 4.4, q: 0.04, drift: 0.004, lo: 0.1, hi: 0.2, w0: 0.5, w1: 0.8, haze: 0.25 },
   { n: 4, loop: 4.6, q: 0.035, drift: 0.006, lo: 0.3, hi: 0.62, w0: 0.34, w1: 0.6, haze: 0 },
+  { n: 5, loop: 5.2, q: 0.055, drift: 0.009, lo: 0.6, hi: 0.78, w0: 0.5, w1: 0.9, haze: 0 },
 ]
 
 interface Puff {
@@ -125,40 +126,6 @@ export function clouds(s: Screen, t: number, hy: number, light: CloudLight, nigh
     ctx.fill(under)
     ctx.restore()
   }
-}
-
-/**
- * Cirrus, highest of all: a few thin streaks with hooked ends across the top of the afternoon sky, pink at sunset,
- * going over slower than anything under them.
- */
-export function cirrus(s: Screen, t: number, hy: number, color: string, alpha: number): void {
-  if (alpha <= 0.01) return
-  const { ctx, cx, f, w } = s
-  const half = w / 2 / f
-  const at = (s.camX * 0.015) / 8
-  const path = new Path2D()
-  for (let i = 0; i < 7; i++) {
-    const u = wrap(i * 0.83 + 0.4 * hash(i, 31) + 0.003 * t - at, 5.8)
-    const len = (0.25 + 0.25 * hash(i, 32)) * f
-    if (Math.abs(u) > half + len / f) continue
-    const x = cx + u * f
-    const y = hy - (0.5 + 0.35 * hash(i, 33)) * f
-    const lean = (hash(i, 34) - 0.5) * 0.12
-    // A tail of strands, each a long shallow curve hooked up at its end.
-    const strands = 3 + Math.floor(hash(i, 35) * 3)
-    for (let k = 0; k < strands; k++) {
-      const dy = (k - strands / 2) * f * 0.007
-      const x0 = x - len / 2 + hash(i * 7 + k, 36) * len * 0.15
-      const x1 = x + len / 2 - hash(i * 7 + k, 37) * len * 0.25
-      path.moveTo(x0, y + dy + lean * len * 0.5)
-      path.quadraticCurveTo((x0 + x1) / 2, y + dy - f * 0.012, x1, y + dy - lean * len * 0.5)
-      path.quadraticCurveTo(x1 + f * 0.015, y + dy - lean * len * 0.5 - f * 0.004, x1 + f * 0.02, y + dy - lean * len * 0.5 - f * 0.016)
-    }
-  }
-  ctx.strokeStyle = rgba(color, alpha)
-  ctx.lineWidth = Math.max(1, f * 0.0028)
-  ctx.lineCap = 'round'
-  ctx.stroke(path)
 }
 
 /**

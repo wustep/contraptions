@@ -1,14 +1,12 @@
 import type { Framing, Performance } from '../../registry'
 import type { StockScore } from '../../stock/types'
 import { expose, exposure, finale, flash, pull, type Exposure } from './music-sync/finale'
-import { dayLand, dayNear, frontField, nightLand } from './music-sync/land'
+import { dayLand, dayNear, frontField, nightLand, nightNear } from './music-sync/land'
 import { beatAt } from './music-sync/music'
 import { scenery } from './music-sync/screen'
 import { nightfall } from './music-sync/nightfall'
 import { DressedShow } from './music-sync/show'
-import { festoons } from './music-sync/midway'
-import { done, screenOf } from './music-sync/screen'
-import { follow, spot, stackAt, type Spot } from './music-sync/spot'
+import { follow, spot, type Spot } from './music-sync/spot'
 import { lensAt, tiltAt, zoomAt } from './music-sync/lens'
 import data from './opus55-music-sync.generated.json'
 
@@ -51,11 +49,8 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
       // On the full organ the house lights come up: every floor lit on the beat, the spot easing back after.
       lit ??= spot(show, map, booth.begin, [beatAt(132)])
       follow(p, c, row, t, lit, NIGHT)
-      // The string lights over the frame, in front of it all; up and away where the fair's floors fill the frame to
-      // its top, and as the camera draws back.
-      const s = screenOf(p, c, col, row)
-      festoons(s, t, Math.max(stackAt(lit, t), photo.back(t) * 3))
-      done(s)
+      // The corn at your feet, in front of it all; down and away as the camera draws back across the field.
+      nightNear(p, c, col, row, map.begin, Math.min(1, photo.back(t) * 3))
       flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
       if (t <= photo.from) return
       // The corn comes up in front of the fair as the camera draws back across it.

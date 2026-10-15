@@ -1,5 +1,5 @@
 import { mixHex } from '../../../../parts'
-import { GATHER, ORGAN, PIANO, type Note } from './music'
+import { GATHER, ORGAN, ORIGIN, PERIOD, PIANO, beatAt, type Note } from './music'
 import { clamp, hash, rgba, smooth, type Screen } from './screen'
 
 /**
@@ -87,6 +87,38 @@ export function gustAt(t: number, x: number, notes: Note[] = PIANO): number {
   }
   pass(notes, 1.5, 0.5, 1.6)
   if (t > ORGAN - 0.1) pass(GATHER, 2.2, 0.35, 1.8)
+  return Math.min(1, out)
+}
+
+/**
+ * How hard the night's wind blows on beat `b` of the chase: a full gust on the drop and on the full organ, a strong one
+ * on each phrase's downbeat (the beats the rides come on), a bar's on each bar's, growing through the chase, and on the
+ * full organ one on each half bar as well. None after beat 184: the air goes still for the photograph.
+ */
+export function nightGust(b: number): number {
+  if (b < 68 || b > 184 || b % 2) return 0
+  if (b === 68 || b === 132) return 1
+  if (b % 16 === 4) return 0.8
+  if (b % 4 === 0) return b < 132 ? 0.3 + (0.25 * (b - 68)) / 64 : 0.62
+  return b > 132 ? 0.36 : 0
+}
+
+/**
+ * The wind in the corn at night, at show time `t`, `x` across the frame (0 to 1): the chase's own pulse (`nightGust`),
+ * each gust a front crossing the field from the left, slower and longer than the piano's. 0 is still air, 1 a full gust.
+ */
+export function nightWind(t: number, x: number): number {
+  const pace = 1.1
+  const tau = 0.22
+  let out = 0
+  const last = Math.floor((t - ORIGIN) / PERIOD)
+  for (let b = last - Math.ceil((1.6 + 1.2 / pace) / PERIOD); b <= last; b++) {
+    const g = nightGust(b)
+    if (g === 0) continue
+    const u = t - beatAt(b) - x / pace
+    if (u <= 0 || u > 1.6) continue
+    out += g * (u / tau) * Math.exp(1 - u / tau)
+  }
   return Math.min(1, out)
 }
 
