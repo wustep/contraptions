@@ -1,6 +1,6 @@
 import type p5 from 'p5'
-import { R, type Pt, type Seg } from '../../../../../parts'
-import { box, carried, frame, glow, hash, knock, part, rgba, ring, route, smooth, type Companion, type PartShot, type Way } from '../kit'
+import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
+import { box, carried, frame, glow, hash, part, rgba, ring, route, smooth, type Companion, type PartShot, type Way } from '../kit'
 import { hop } from '../physics'
 import { CLUB_MAT, GLOBE_INK, GLOBE_MAT } from '../worlds'
 import { keyed } from './shadow'
@@ -8,7 +8,8 @@ import { keyed } from './shadow'
 /**
  * The globe (196 → 214.877, `GLOBE`): to Paris.
  *
- * An old globe on a brass stand in the dark, lit by a lamp. A toy biplane
+ * An old globe on a brass stand in the night, lit by a paper moon, with painted
+ * clouds hung on wires round it at three depths (`drawSky`). A toy biplane
  * rides on a brass arm hung from the globe's north pole, and the two of them
  * sit in its two cockpits, him behind her. Its engine catches (197.451) and
  * the arm swings it east while the globe turns under it the other way: the
@@ -19,7 +20,7 @@ import { keyed } from './shadow'
  *
  * It lifts off the arm and glides out beyond the globe, and Paris is there in
  * the dark: its streetlamps come on (205.578), then the tower's lights
- * (206.216), then the windows (208.271), and the tower shimmers. The plane
+ * (206.216), then the windows (208.271). The plane
  * comes down onto the street (209.920), drops its tail (210.524), rolls, and
  * stops at a red door (211.940). She hops out (213.229), he hops out
  * (213.705), the door opens (214.065) and she goes in; he follows, and the
@@ -331,6 +332,193 @@ function buildTower(): { x: number; y: number; ph: number }[] {
   return out
 }
 
+/* ------------------------------------------------------------------ the night it flies through */
+
+/**
+ * The night the flight crosses, hung like a stage's: plain stars far off, a paper crescent moon on its wire high on
+ * the left (the light the globe's lit side and the clouds' edges have), and painted cloud cut-outs on wires at three
+ * depths. They drift on a little breeze, and while the plane flies they stream back past it, the far ones slowest and
+ * the near ones, a dark bank low in front of the globe, fastest: so the toy plane reads as flying. Each depth also
+ * slides with the camera by its own share, the near bank by more than the globe. Once the plane is over Paris the
+ * near bank has gone by, and the far and middle ones keep drifting over the city.
+ */
+interface Cloud {
+  x: number
+  y: number
+  /** Its width, and each hump along its top: where it starts (0..1 of the width), how wide, how high. */
+  w: number
+  humps: [number, number, number][]
+}
+/** How far the clouds have streamed back by `t`: a breeze, and the flight (the journey's 0 → 1 is eight cells). */
+const drift = (t: number): number => 8 * journey(Math.min(t, OVER_PARIS))[0] + 0.15 * (t - BEGIN)
+function cloud(i: number, s: number, x: number, y: number, w: number, puff: number): Cloud {
+  const n = 3 + Math.floor(hash(i, s, 1) * 3)
+  // The humps' widths: the middle ones broadest, so it stands up in the middle like a cumulus, flat underneath.
+  const raw = Array.from({ length: n }, (_, j) => (1 - Math.abs((j + 0.5) / n - 0.5) * 1.1) * (0.7 + 0.6 * hash(i, s, j + 2)))
+  const sum = raw.reduce((a, b) => a + b, 0)
+  const humps: [number, number, number][] = []
+  let u = 0
+  for (let j = 0; j < n; j++) {
+    const width = raw[j] / sum
+    // Each hump is near a half-round: as high as about half its own width.
+    humps.push([u, width, width * w * puff * (0.85 + 0.3 * hash(i, s, j + 9))])
+    u += width
+  }
+  return { x, y, w, humps }
+}
+interface Layer {
+  /** How much of the camera's move it takes (1 is the globe's own), how fast it streams back, and its tile. */
+  q: number
+  speed: number
+  period: number
+  body: string
+  rim: number
+  clouds: Cloud[]
+}
+const LAYERS: Layer[] = [
+  // Far: low on the horizon, long and flat, pale with the haze; they pass behind the city's roofs and the tower.
+  {
+    q: 0.3,
+    speed: 0.35,
+    period: 26,
+    body: mixHex(BG, M.sea, 0.3),
+    rim: 0.14,
+    clouds: Array.from({ length: 8 }, (_, i) => cloud(i, 1, (i * 26) / 8 + 1.2 * hash(i, 21), 0.3 - 2.2 * hash(i, 22), 2.0 + 1.6 * hash(i, 23), 0.32)),
+  },
+  // Middle: higher, bigger and rounder, their tops catching the moon.
+  {
+    q: 0.6,
+    speed: 0.85,
+    period: 30,
+    body: mixHex(BG, M.sea, 0.45),
+    rim: 0.4,
+    clouds: Array.from({ length: 7 }, (_, i) => cloud(i, 2, (i * 30) / 7 + 1.6 * hash(i, 31), -0.7 - 2.5 * ((i * 0.618 + 0.3 * hash(i, 32)) % 1), 2.8 + 1.8 * hash(i, 33), 0.42)),
+  },
+]
+/** The near bank: dark, low in front of the globe, a finite row that goes by while the plane flies. */
+const NEAR_Q = 1.35
+const NEAR_SPEED = 2.2
+const NEAR: Cloud[] = [3.4, 8.0, 12.4, 16.6, 21.0].map((x, i) => cloud(i, 3, x, 3.05 + 0.4 * hash(i, 41), 3.6 + 1.6 * hash(i, 42), 0.46))
+const NEAR_BODY = mixHex(BG, M.sea, 0.16)
+/** The stars: steady points far off, in a tile of the sky. */
+const STARS: [number, number, number][] = Array.from({ length: 150 }, (_, i) => [hash(i, 51) * 34, -7 + hash(i, 52) * 8.5, hash(i, 53)])
+const MOON: Pt = [-4.4, -2.75]
+
+/** A cloud cut-out at (x, y), its flat foot on y: body, ink round it, the moon on its top edge, and its wire. */
+function drawCloud(p: p5, k: number, c: Cloud, x: number, y: number, body: string, rim: number, wireTop: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const top = () => {
+    ctx.moveTo(x * k, y * k)
+    for (const [u, w, h] of c.humps) {
+      const a = x + u * c.w
+      const b = a + w * c.w
+      ctx.bezierCurveTo(a * k, (y - h * 1.33) * k, b * k, (y - h * 1.33) * k, b * k, y * k)
+    }
+  }
+  // The wire, from the flies to the hump it hangs by.
+  const [u0, w0, h0] = c.humps[Math.floor(c.humps.length / 2)]
+  const wx = x + (u0 + w0 / 2) * c.w
+  ctx.strokeStyle = rgba(M.parchment, 0.13)
+  ctx.lineWidth = Math.max(1, 0.012 * k)
+  ctx.beginPath()
+  ctx.moveTo(wx * k, wireTop * k)
+  ctx.lineTo(wx * k, (y - h0) * k)
+  ctx.stroke()
+  ctx.beginPath()
+  top()
+  ctx.closePath()
+  ctx.fillStyle = body
+  ctx.fill()
+  if (rim > 0) {
+    // The moon is up on the left: the edge of each hump that faces it is painted lighter, inside the cut-out. (The
+    // first half of each hump's curve, split at its crown.)
+    ctx.save()
+    ctx.clip()
+    ctx.strokeStyle = rgba(M.parchment, rim)
+    ctx.lineWidth = Math.max(1, 0.07 * k)
+    ctx.beginPath()
+    for (const [u, w, h] of c.humps) {
+      const a = x + u * c.w
+      const b = a + w * c.w
+      ctx.moveTo(a * k, y * k)
+      ctx.bezierCurveTo(a * k, (y - 0.665 * h) * k, ((3 * a + b) / 4) * k, (y - 0.9975 * h) * k, ((a + b) / 2) * k, (y - h) * k)
+    }
+    ctx.stroke()
+    ctx.restore()
+    ctx.beginPath()
+    top()
+    ctx.closePath()
+  }
+  ctx.strokeStyle = BG
+  ctx.lineWidth = Math.max(1, 0.022 * k)
+  ctx.stroke()
+}
+
+/** The far night: stars, the moon on its wire, the far and middle clouds. Behind Paris and the globe. */
+function drawSky(p: p5, k: number, t: number, f: { x0: number; x1: number; y0: number; y1: number; cx: number; cy: number }): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const D = drift(t)
+  // The stars: one path, steady.
+  const sq = 0.92
+  const ox = f.cx * sq
+  const oy = f.cy * sq
+  ctx.fillStyle = rgba(M.parchment, 0.55)
+  ctx.beginPath()
+  for (const [sx, sy, m] of STARS) {
+    let x = sx + ox
+    x = x - 34 * Math.floor((x - f.x0 + 1) / 34)
+    if (x > f.x1 + 1) continue
+    const y = sy + oy
+    const r = (0.012 + 0.016 * m) * k
+    ctx.rect(x * k - r, y * k - r, 2 * r, 2 * r)
+  }
+  ctx.fill()
+  // The moon: a paper crescent on its wire, swaying a little on it.
+  {
+    const mx = MOON[0] + f.cx * 0.85
+    const my = MOON[1] + f.cy * 0.85
+    const sway = 0.06 * Math.sin((t - BEGIN) * 1.9)
+    ctx.save()
+    ctx.translate(mx * k, my * k)
+    ctx.strokeStyle = rgba(M.parchment, 0.16)
+    ctx.lineWidth = Math.max(1, 0.012 * k)
+    ctx.beginPath()
+    ctx.moveTo(0, (f.y0 - 1 - my) * k)
+    ctx.lineTo(0, -0.6 * k)
+    ctx.stroke()
+    ctx.rotate(sway)
+    ctx.beginPath()
+    ctx.arc(0, 0, 0.6 * k, -Math.PI / 2, Math.PI / 2, true)
+    ctx.arc(0.24 * k, 0, 0.52 * k, Math.PI / 2 + 0.25, -Math.PI / 2 - 0.25, false)
+    ctx.closePath()
+    ctx.fillStyle = mixHex(M.parchment, M.city, 0.25)
+    ctx.fill()
+    ctx.strokeStyle = BG
+    ctx.lineWidth = Math.max(1, 0.02 * k)
+    ctx.stroke()
+    ctx.restore()
+  }
+  // The far and the middle clouds, each depth tiled across the sky.
+  for (const L of LAYERS) {
+    for (const c of L.clouds) {
+      let x = c.x - L.speed * D + f.cx * (1 - L.q)
+      x = x - L.period * Math.floor((x + c.w - f.x0 + 0.5) / L.period)
+      if (x > f.x1 + 0.5) continue
+      drawCloud(p, k, c, x, c.y + f.cy * (1 - L.q), L.body, L.rim, f.y0 - 1)
+    }
+  }
+}
+
+/** The near bank, in front of the globe and behind the plane: it streams by while the plane flies. */
+function drawNear(p: p5, k: number, t: number, f: { x0: number; x1: number; y0: number; cx: number; cy: number }): void {
+  const D = drift(t)
+  for (const c of NEAR) {
+    const x = c.x - NEAR_SPEED * D + f.cx * (1 - NEAR_Q)
+    if (x > f.x1 + 0.5 || x + c.w < f.x0 - 0.5) continue
+    drawCloud(p, k, c, x, c.y + f.cy * (1 - NEAR_Q), NEAR_BODY, 0.3, f.y0 - 1)
+  }
+}
+
 /* ------------------------------------------------------------------ drawing */
 
 /** The globe itself, turned to `spin`, with its pin and its city lights. */
@@ -416,23 +604,14 @@ function drawGlobe(p: p5, k: number, t: number, spin: number): void {
       ctx.restore()
     }
   }
-  // The cities: a pinpoint each once it is lit, and a short flare as it lights.
+  // The cities: a pinpoint each, which comes on as the plane passes over it.
   for (const c of CITIES) {
     const q = place(c.at[0], c.at[1])
     if (q[2] < 0.3 || t < c.on) continue
-    const age = t - c.on
-    const a = 0.85 * smooth(q[2], 0.3, 1)
+    const a = 0.85 * smooth(q[2], 0.3, 1) * smooth(t - c.on, 0, 0.12)
     p.noStroke()
     p.fill(rgba(M.city, a))
     p.circle(X(q[0]), X(q[1]), X(0.07))
-    const f = knock(age, 0.3)
-    if (f > 0.02) {
-      p.stroke(rgba(M.city, a * f))
-      p.strokeWeight(Math.max(1, 0.025 * k))
-      const L = 0.1 + 0.32 * f
-      p.line(X(q[0] - L), X(q[1]), X(q[0] + L), X(q[1]))
-      p.line(X(q[0]), X(q[1] - L), X(q[0]), X(q[1] + L))
-    }
   }
   // The lamp's light on it, from high on the left; the far side in shadow.
   const g = ctx.createRadialGradient(-0.95 * k, -1.15 * k, 0, -0.5 * k, -0.6 * k, 3.4 * k)
@@ -709,19 +888,13 @@ function drawParis(p: p5, k: number, t: number, s: GlobeState, f: { x0: number; 
   p.stroke(rgba(M.brass, 0.3 + 0.6 * tOn))
   p.strokeWeight(Math.max(1, 0.025 * k))
   tower(0)
-  // Its lights: on with the tower, then shimmering.
+  // Its lights: on with the tower, steady, and the lamp at its top.
   if (tOn > 0) {
-    glow(p, k, TOWER_X, STREET - 0.55 * TOWER_H, 2.4, M.city, 0.14 * tOn, 0.55, 1.4)
-    const sh = smooth(t, TOWER + 0.9, TOWER + 2)
     p.noStroke()
-    for (const q of s.tower) {
-      const tw = 0.5 + 0.5 * Math.sin(t * (9 + 5 * q.ph) + q.ph * TAU)
-      const a = tOn * (0.75 - sh * 0.55 + sh * 0.6 * tw * tw)
-      p.fill(rgba(M.city, a))
-      p.circle(X(q.x), X(q.y), X(0.045 + sh * 0.03 * tw))
-    }
-    const beacon = TOWER_X
-    glow(p, k, beacon, STREET - TOWER_H - 0.05, 0.3, M.city, 0.6 * tOn, 1, 1)
+    p.fill(rgba(M.city, 0.75 * tOn))
+    for (const q of s.tower) p.circle(X(q.x), X(q.y), X(0.045))
+    p.fill(rgba(M.city, 0.9 * tOn))
+    p.circle(X(TOWER_X), X(STREET - TOWER_H - 0.05), X(0.08))
   }
   p.pop()
   // The houses: mansard roofs of zinc, chimneys, windows.
@@ -770,10 +943,7 @@ function drawParis(p: p5, k: number, t: number, s: GlobeState, f: { x0: number; 
     p.noStroke()
     p.fill(lampOn > 0 ? rgba(M.city, 0.3 + 0.7 * lampOn) : BG)
     p.quad(X(x + 0.06), X(STREET - 1.28), X(x + 0.22), X(STREET - 1.28), X(x + 0.19), X(STREET - 1.44), X(x + 0.09), X(STREET - 1.44))
-    if (lampOn > 0) {
-      glow(p, k, x + 0.14, STREET - 1.33, 0.9, M.city, 0.22 * lampOn)
-      glow(p, k, x + 0.14, STREET, 1.1, M.city, 0.16 * lampOn, 1, 0.25)
-    }
+    if (lampOn > 0) glow(p, k, x + 0.14, STREET, 1.1, M.city, 0.16 * lampOn, 1, 0.25)
   }
   // The red door, its lamp, and, once it is open, the light inside.
   const open = smooth(t, DOOR_OPEN - 0.12, DOOR_OPEN + 0.25)
@@ -805,7 +975,8 @@ function drawParis(p: p5, k: number, t: number, s: GlobeState, f: { x0: number; 
   // The lamp over it.
   p.fill(lampOn > 0 ? rgba(M.city, 0.4 + 0.6 * lampOn) : BG)
   p.circle(X(DOOR_X), X(STREET - DOOR_H - 0.16), X(0.12))
-  if (lampOn > 0) glow(p, k, DOOR_X, STREET - DOOR_H - 0.16, 0.7, M.city, 0.3 * lampOn)
+  // Its light on the door's frame and the pavement under it.
+  if (lampOn > 0) glow(p, k, DOOR_X, STREET - 0.1, 0.8, M.city, 0.14 * lampOn, 1, 0.45)
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -829,12 +1000,12 @@ export const globe = part<GlobeState>(
       const X = (v: number) => v * k
       p.translate(X(OFF[0]), X(OFF[1]))
       const f0 = frame(p, k)
-      // The lamp the globe stands in.
-      glow(p, k, -0.9, -0.4, 6.2, M.city, 0.13, 1, 1.1)
+      drawSky(p, k, t, f0)
       drawParis(p, k, t, s, f0)
       drawStand(p, k)
       const j = journey(Math.min(t, OVER_PARIS))[0]
       drawGlobe(p, k, t, spinAt(j))
+      drawNear(p, k, t, f0)
       drawArm(p, k, t)
       drawPlaneBack(p, k, planeAt(t), t)
     },
