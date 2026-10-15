@@ -3,6 +3,7 @@ import type { StockScore } from '../../stock/types'
 import { expose, exposure, finale, flash, pull, type Exposure } from './music-sync/finale'
 import { dayLand, nightLand } from './music-sync/land'
 import { scenery } from './music-sync/screen'
+import { nightfall } from './music-sync/nightfall'
 import { DressedShow } from './music-sync/show'
 import { follow, spot, type Spot } from './music-sync/spot'
 import data from './opus55-music-sync.generated.json'
@@ -14,6 +15,10 @@ const fair = score.maps.at(-1)!
 const booth = fair.pieces.find((p) => p.spec.name === 'booth')!
 const ticket = fair.pieces.find((p) => p.spec.name === 'ticket')!
 const door = fair.pieces.at(-1)!
+/** The portal out of the field at sunset, and the one into the fair: the door the night comes down through. */
+const sunset = score.maps[0].pieces.at(-1)!
+const arrival = fair.pieces[0]
+const NIGHT = '#0D0B20'
 /** The photograph: the booth's flash, then once the ball is through the last portal, the long draw back. */
 const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, 97)
 /** The run through the fair, taken once, the first time the photograph is drawn; the follow spot, the first time it is. */
@@ -24,18 +29,19 @@ let lit: Spot | null = null
 export const show: DressedShow = new DressedShow(score, (i, u) => {
   const map = score.maps[i]
   const { col, row } = u.pieces[0]
-  if (map.world === 'garden') return { behind: [scenery('field', (p, c) => dayLand(p, c, col, row, map.begin))], over: [] }
+  const dusk = scenery('nightfall', () => {}, (p, c) => nightfall(p, c, col, row, show, map.begin + c.t, NIGHT, [sunset.begin, arrival.end]))
+  if (map.world === 'garden') return { behind: [scenery('field', (p, c) => dayLand(p, c, col, row, map.begin))], over: [dusk] }
   return {
     behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon))],
     over: [scenery('photograph', () => {}, (p, c) => {
       const t = map.begin + c.t
-      lit ??= spot(show, map, door.begin)
-      follow(p, c, row, t, lit, '#0D0B20')
+      lit ??= spot(show, map, booth.begin)
+      follow(p, c, row, t, lit, NIGHT)
       flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
       if (t <= photo.from) return
       run ??= expose(show, 90, door.begin + 0.3)
       exposure(p, c, col, row, t, run, photo)
-    })],
+    }), dusk],
   }
 })
 const souvenirs = [...booth.cells, ...ticket.cells]
@@ -64,8 +70,9 @@ function camera(t: number): Framing {
 
 export const performance: Performance = {
   show, duration: score.duration, camera,
-  // The last portal would iris the photograph away; the decay keeps it.
-  cuts: (t) => t < door.begin,
+  // The last portal would iris the photograph away; the decay keeps it. The door from the field to the fair is the
+  // night's, drawn by the show (`music-sync/nightfall.ts`).
+  cuts: (t) => t < door.begin && !(t >= sunset.begin && t <= arrival.end),
   soundtrack: {
     offset: score.audioOffset,
     credit: 'Hans Zimmer · Cornfield Chase · Interstellar (2014)',

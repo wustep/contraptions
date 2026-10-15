@@ -22,6 +22,7 @@ export interface Spot {
   strength: Float32Array
 }
 
+/** The spot over the fair's `map`, worked out up to show time `end`; it is gone after that. */
 export function spot(show: Show, map: StockMap, end: number): Spot {
   const from = map.begin
   const n = Math.ceil((end - from) / STEP) + 1
@@ -48,7 +49,7 @@ export function spot(show: Show, map: StockMap, end: number): Spot {
     }
     raw[i] = near >= 3 ? 1 : 0
   }
-  // Coming down and going up over a second and a half, so it is never a switch.
+  // Coming down and going up over a second and a half, so it is never a switch; and up before `end`.
   const strength = new Float32Array(n)
   const reach = Math.round(1.5 / STEP)
   for (let i = 0; i < n; i++) {
@@ -57,13 +58,14 @@ export function spot(show: Show, map: StockMap, end: number): Spot {
       const v = raw[Math.max(0, Math.min(n - 1, i + j))]
       m = Math.max(m, v * (1 - Math.abs(j) / (reach + 1)))
     }
-    strength[i] = smooth(m, 0, 1)
+    strength[i] = smooth(m, 0, 1) * smooth(n - 1 - i, 0, reach)
   }
   return { from, y: ys, strength }
 }
 
 const read = (a: Float32Array, s: Spot, t: number): number => {
   const u = (t - s.from) / STEP
+  if (u >= a.length - 1) return a[a.length - 1]
   const i = Math.max(0, Math.min(a.length - 2, Math.floor(u)))
   const f = Math.max(0, Math.min(1, u - i))
   return a[i] * (1 - f) + a[i + 1] * f
