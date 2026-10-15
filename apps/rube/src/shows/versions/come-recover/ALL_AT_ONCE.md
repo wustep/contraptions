@@ -149,7 +149,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | Time | Music | World | What happens |
 | ---: | --- | --- | --- |
 | 57.95 | louder | the premiere | The red carpet of her own premiere. Press flash guns fire as she flies in, and she lands and bounces. The marquee's spotlight hunts over the press and finds her (61.06), and a volley of flashes whites out the frame. She clips a brass stanchion and the posts go over like dominoes, one an onset (63.1 to 64.3). The theatre's doors crack and swing wide on 66.21, and a second run of posts goes. |
-| 68.7 | sustained | the alley | Behind the theatre, in the rain, the film's "in another life": a neon washer in a laundromat window stutters on (71.95), and Waymond waits under a streetlamp. She floats down the stone steps and reaches him (76.46). The neon dips twice, and the camera pushes in on the two of them. The drain's iron cover knocks under her four times and gives (82.13), and she slides away from him into the lit shaft. He rolls onto the shut cover where she was, and does not follow. They speak, subtitled in the widescreen's lower bar: *I don't know where I am.* / *Here. With me. Stay a little.* (his, in italic) / *I can't.* |
+| 68.7 | sustained | the alley | Behind the theatre, in the rain, the film's "in another life": a neon washer in a laundromat window stutters on (71.95), and Waymond waits under a streetlamp. She floats down the stone steps and reaches him (76.46). The neon dips twice, and the camera pushes in on the two of them. The drain's iron cover knocks under her four times and gives (82.13), and she slides away from him into the lit shaft, and down the race after a flyer for her picture that the rain has washed off the wall. He rolls onto the shut cover where she was, and does not follow. They speak, subtitled in the widescreen's lower bar: *I don't know where I am.* / *Here. With me. Stay a little.* (his, in italic) / *I can't.* |
 | 86.30 | the flurry | the dojo | The kung fu picture she could have lived. Four wing chun wooden men trade her down their arms, tak-tak-tak, each arm swinging into her and ringing. A bo staff on a rope bats her over their heads, and a high kick sends her up to the bronze gong (95.42). A last kick is the jump. |
 | 97.15 | flurry | hot dog fingers | A pink room and a grand piano, played with the feet. Her shin is posed as the dummy's thigh was. She rides and bounces up the keys, each dipping and blushing lilac as it sounds, into a hand of floppy sausage fingers that drapes over her. On 103.56 she lands on the mustard bottle and it squirts. The index finger sags under her and snaps on 106.73. |
 | 106.73 | flurry | Raccacoonie | A teppanyaki chef who is a machine, and Raccacoonie inside the toque working the levers. The cleaver chops, and the spatula flicks her into the onion volcano, where she rattles like a lid. On 112.71 it erupts, and a shrimp tail is flung into the hat's pocket (113.69). In the breath the raccoon comes out under the brim and eats it, and in the last run an egg cracks on the spatula. |
@@ -171,9 +171,9 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 241.76 | a breath | the dark | They fall into the bagel's hole. Joy is drawn up into its dark, shrinking and dimming, and Evelyn holds her at the lip. |
 | 247.35 | the peak | the dark | A line comes down from a pulley high above: Waymond's. He drops as the counterweight, and on every beat the line turns the bagel backwards, a ratchet kick of the whole crust. On 118½ Evelyn heaves back, and on 122 Joy pops out of the dark. From 123 everything the bagel swallowed bursts back out of the hole, one thing a beat, last in first out, each with a googly eye, and a spray of seeds goes out on every eighth. On 136 an eye rises out of the hole and lands on Joy. The bagel shrinks as it gives, until its hole is exactly a washer's window, and the hole fills with glass light. As each thing comes out, a beam of its own life's colour shoots from the hole and stays: the carpet's red and gold, the dojo's lacquer, the hot dog's pink and mustard, the griddle's flame, the canyon's sand, the laundromat's lantern gold. Beat by beat the dark fills, until the bagel stands black in a radiance of every life she has been, wheeling slowly as it turns back. As it closes into the window, the radiance draws in and dims. Once Joy has her eye, her mother says to her what Waymond said to her in the alley: *Here. With me.* |
 | 264.14 | the peak's end | home | Through the window: they are inside the drum of the washer by the door, where the morning started. The cycle ends, the door swings open (268.39), and they drop out. Waymond leaps the foot lever and touches Joy, and the touch runs through to Evelyn. |
-| 275.2 | a hush | home | The camera closes slowly on the three of them together at the washer's foot, the window's glow behind them, and holds. Joy nestles against her mother on a soft note (279.84). He asks what he asked in the alley, *Stay a little?*, and this time she can: *I'm staying.* |
+| 275.2 | a hush | home | The camera closes slowly on the three of them together at the washer's foot, the window's glow behind them, and holds. Outside, a neighbour's cat comes along the pavement and sits at the door's glass, looking in at them, until Evelyn sets off. Joy nestles against her mother on a soft note (279.84). He asks what he asked in the alley, *Stay a little?*, and this time she can: *I'm staying.* |
 | 282.2 | home's pulse | home | The family portrait. A wooden box camera with a bellows stands on a tripod by the door, facing them. Joy and Waymond straighten up on two small hops. Evelyn rolls to a foot switch under the window and presses it on 286.20: a string of lanterns over the family lights one a beat, and the camera draws back to take in the whole portrait. The self-timer's red lamp blinks faster and faster while she hurries back beside Joy (290.38). |
-| 290.99 | the last great hit | home | The flash: the bulb bursts, the room washes white from the camera's side with their shadows thrown on the washer, and a firework fills the door's glass with gold. The photograph ejects (291.20), flutters down like a leaf and props itself against the washer beside them (292.77). It develops by 293.01: the glowing washer window with the three of them in it, eyes and all. |
+| 290.99 | the last great hit | home | The flash: the bulb bursts, the room washes white from the camera's side with their shadows thrown on the washer, and a firework fills the door's glass with gold; across the street windows light, the neighbours woken, one of them at a window looking out. The photograph ejects (291.20), flutters down like a leaf and props itself against the washer beside them (292.77). It develops by 293.01: the glowing washer window with the three of them in it, eyes and all. |
 | 295.01 | the last hit | home | The tubes go out in the reverse order of the opening, and the neon with them. The three of them rest in the washer window's warm glow. |
 | 297 to 313.6 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes, and the camera comes in close on the washer's window, the credits over the door's dark glass to its left. The dryer's window opened the multiverse; the washer's closes it. In its lit glass the lives she went through come back once, in the order back home, about two seconds each: the bagel, the rocks, Raccacoonie's kitchen, the hot dog piano, the dojo, the red carpet. In each the three of them are there together, small, eyes and all (on the rocks, three stones on the ledge where there were two). The three look up at the window all through them, and the empty drum gives a slow half-turn among them (305.40). Then the glass is only its own warm light; it swells once (312.59), and they look at one another. |
 | 313.6 to 332 | the tail | home | After the swell the light goes on down the shop: from `home(95)` (316.19), a beat apart, the washers, the big dryer and the dryer stacks light one by one away from the family, each with one of her lives turning slowly past in its glass and the three of them in it: the red carpet, the alley, the dojo, the canyon (in the big dryer, three stones), the hot dog piano, the kitchen, the piñata, karaoke, the IRS, the sign spinner, the opera, mahjong. Each throws its colour on the dark floor and the machines round it. The camera draws back from the one window as they light, until the row runs out of the frame's right edge: the storefront's glass at the left, the family small under their own window, and over the shop the family's home in section, asleep, the credits over its dark. From the last card's going the end's dark takes the room, the far machines first, the washer's window last. |
@@ -1097,6 +1097,69 @@ size, every look and the ball under Zoom. Frame time in real Chrome on a 2× dis
 the dev hook: 60 fps in every stretch. The paint's CPU median is 0.6 to 2.2 ms a stretch, and the worst warm frame
 under 10 ms; the peak, the heaviest, has a median of 2.2 ms and a 95th percentile of 4.5. The share card (255.75 s) is
 not regenerated in this round.
+
+### Fuller: a second round
+
+The same brief with fresh eyes: the ten frames and the four-second sweep again, the weakest stretches first, and
+anything glossy the first round had added or left taken off.
+
+**What the second audit found.**
+- The pull's wide shots (142 to 150 s) were a bagel in a field of dead black: the things still to be taken were drawn
+  wholly dark past the bagel's light.
+- In the finale's hold on the family (275 to 282 s), the storefront's glass took a third of the frame, and nothing moved
+  in it until the fireworks.
+- The alley's drain (83 to 86 s) was the weakest of the ten frames: half of it was the race's flat black.
+- The great hit, with its sunburst gone, was the eye's slap and nothing round it.
+
+**What it does now.**
+- **The dark is full of everything on its way in.** Out past the bagel's light, the things the pull will take are dim
+  shapes turning in the dark, out to the widest frame's edges, and the hush's strata go on behind the pull, thinner,
+  to the tip in. There are still no points of light.
+- **The night outside is alive.** While the camera holds on the three of them, a neighbour's cat comes along the
+  pavement, sits down at the door's glass and looks in at the family, its tail going, and gets up and goes on down the
+  street when Evelyn sets off for the switch. The fireworks wake the street. Across it a window lights, then another
+  with someone at it looking out, then a third (`LIGHTS.wake` in `home/set.ts`). Under the credits the one with someone
+  at it goes dark again, back to bed.
+- **The race runs.** Down the drain, the culvert's stone shows in courses where the shaft's light reaches, and fades
+  into the dark either way. The current's lines go out toward the mouth on the alley's own clock, so they step-print
+  with it. Ahead of her, a flyer for her picture, washed off the wall by the rain, floats down the race and out of the
+  mouth: the life she might have had, carried off before she is.
+- **The great hit jolts the party.** As the eye lands on her, the lanterns, the luck card and the plum branch swing and
+  settle, as the opening's washers hop on its great hit.
+- **The machines' light falls where light falls.** The lit machines threw round pools up the wall above them. Their
+  light is now on their own faces and laid forward along the floor in front of each, so the row is lit like a row of
+  lamps in a dark room.
+
+**Gloss off.** The canyon's sun spread a warm bloom nine times its size across the sky. It is now a disc in the haze,
+its warmth close round it. The first round's new layers were checked for glows: none lays one. The lights they add
+are lamps, windows and a television, each falling off from where it is.
+
+**Left as it is.** The hush (128 to 135 s) is still the emptiest stretch of the show, and on purpose: the dark she
+drifts into is the film's nothing. Its near seeds and far strata give it depth; more would make it busy. The dojo's
+bamboo is a shadow on its paper and moves with the paper, as a shadow does.
+
+**Checked, both rounds.**
+- `npm run build` passes: lint, typecheck, every check suite (with `check:shows` holding the family's size, every look
+  and the ball under Zoom), and the site.
+- Frame time, against the show before both rounds (`002e3359`): both builds in the same real Chrome on a 2× display at
+  1280×720, each frame painted by the dev hook in a requestAnimationFrame at 60 steps a second, after a warming pass.
+  Every stretch holds 60 fps in both, with a median frame of 16.7 ms and a 95th percentile of 18.1 to 18.3 ms.
+
+| Stretch (s) | Paint median, before → after (ms) | Paint p95, before → after (ms) | Worst warm frame, after (ms) |
+| --- | ---: | ---: | ---: |
+| the laundromat (0–58) | 0.9 → 1.0 | 1.3 → 1.7 | 5.4 |
+| the premiere and the alley (58–87) | 0.8 → 1.2 | 1.5 → 2.1 | 3.9 |
+| the dojo, the piano, the kitchen (87–121) | 0.5 → 0.7 | 1.0 → 1.0 | 1.4 |
+| the surf and the hush (121–142) | 0.5 → 0.7 | 1.4 → 1.9 | 2.5 |
+| the pull (142–166) | 1.2 → 1.3 | 2.0 → 2.2 | 3.1 |
+| everywhere and kindness (166–200) | 0.8 → 0.7 | 2.3 → 2.1 | 6.1 |
+| the rocks (200–242) | 0.6 → 0.8 | 1.1 → 1.1 | 3.5 |
+| the peak (242–264) | 1.7 → 2.1 | 3.4 → 3.9 | 10.3 |
+| home (264–297) | 1.2 → 1.7 | 1.7 → 2.5 | 4.8 |
+| the credits and the shop (297–332) | 1.4 → 1.9 | 2.0 → 2.7 | 3.1 |
+
+The share card (255.75 s, `public/shows/come-recover/`) is outside the show's folder and was not regenerated; its frame
+has changed only slightly: the camera's float, and the peak's faint far iron at its edges.
 
 ### For every viewer
 
