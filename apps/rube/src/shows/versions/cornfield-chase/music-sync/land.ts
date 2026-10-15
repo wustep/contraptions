@@ -112,14 +112,24 @@ const nightAt = (t: number, horizon: number): Light => {
 /** Where the field in front of the fair has come up to (`frontField`), device pixels down the canvas. */
 const frontTop = (s: Screen, hy: number, rise: number): number => Math.floor(hy + (1 - rise) * (s.h - hy + 2))
 
-/**
- * The land behind the fair at night. `rise` is how far the field in front of the fair has come up (`frontField`): the
- * rows it covers are not drawn here as well. `camAt` is the camera's cell at a show time, for the shells' smoke.
- */
-export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: number, horizon: (t: number) => number, rise: (t: number) => number, camAt: (t: number) => number): void {
+/** What the night's land takes from the take, each at a show time. */
+export interface Take {
+  /** The horizon, as a share of the frame from its top. */
+  horizon(t: number): number
+  /** How far the field in front of the fair has come up (`frontField`): the rows it covers are not drawn here as well. */
+  rise(t: number): number
+  /** The camera's cell, for the shells' smoke. */
+  camAt(t: number): number
+  /** How long the photograph's shutter has been open, seconds, for the trails the midway's lights leave in it. */
+  open(t: number): number
+}
+
+/** The land behind the fair at night. */
+export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: number, take: Take): void {
   const t = begin + c.t
   const s = screenOf(p, c, col, line)
-  const l = nightAt(t, horizon(t))
+  const { camAt } = take
+  const l = nightAt(t, take.horizon(t))
   const hy = sky(s, l)
   stars(s, t, hy, dawnAt(t))
   body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', undefined, true)
@@ -129,9 +139,9 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
   fireworks(s, t, hy)
   balloons(s, t, hy)
   farm(s, hy, l.farm, '#E3B45C', t * 0.6)
-  midway(s, t, hy, l.low)
+  midway(s, t, hy, l.low, take.open(t))
   band(s, hy, l.band)
-  const up = rise(t)
+  const up = take.rise(t)
   const wind = (x: number) => nightWind(t, x)
   rows(s, t, hy, up > 0 ? { ...l.rows, wind, within: [-Infinity, frontTop(s, hy, up)] } : { ...l.rows, wind })
   done(s)

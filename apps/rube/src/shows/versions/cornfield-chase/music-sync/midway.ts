@@ -1,7 +1,7 @@
 import { mixHex } from '../../../../parts'
 import { FULL } from './lens'
 import { DROP, PERIOD, beatAt } from './music'
-import { clamp, hash, smooth, type Screen } from './screen'
+import { clamp, hash, rgba, smooth, type Screen } from './screen'
 
 /**
  * The midway: the rest of the fair, on the horizon beyond the machine. A Ferris wheel, a swing ride, a carousel, a
@@ -249,16 +249,46 @@ class Bulbs {
   }
 }
 
+/**
+ * The lights' trails in the photograph's long exposure: where each bulb on a ride that turns has been since the
+ * shutter opened, one path a colour, stroked once in a clean line a little narrower than the bulb.
+ */
+class Trails {
+  private readonly paths = new Map<string, Path2D>()
+  at(color: string): Path2D {
+    let p = this.paths.get(color)
+    if (!p) this.paths.set(color, (p = new Path2D()))
+    return p
+  }
+  stroke(ctx: CanvasRenderingContext2D, width: number, alpha: number): void {
+    ctx.lineWidth = width
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    for (const [color, p] of this.paths) {
+      ctx.strokeStyle = rgba(color, alpha)
+      ctx.stroke(p)
+    }
+  }
+}
+
+/** The Ferris wheel's angle at `t`: slow, a turn a minute, a little quicker once the full organ is in. */
+const wheelTurn = (t: number, r: Ride): number => (t / 60 + (0.25 * Math.max(0, t - FULL)) / 60) * Math.PI * 2 + r.u * 3
+
 /** A bulb's colour when `lit` (0 to 1), among the colours a ride strings: off, then its own. */
 const bulb = (color: string, lit: number): string => (lit <= 0.01 ? OFF : mixHex(OFF, color, Math.min(1, lit * 1.2)))
 
-/** The midway over the horizon at `hy` (device pixels), `t` show seconds in, against a sky whose foot is `sky`. */
-export function midway(s: Screen, t: number, hy: number, sky: string): void {
+/**
+ * The midway over the horizon at `hy` (device pixels), `t` show seconds in, against a sky whose foot is `sky`. `open`
+ * is how long the photograph's shutter has been open, seconds: the lights that go round leave their trails in it, the
+ * wheels' rims closing into rings and the swings' into ellipses, brighter the longer it is open.
+ */
+export function midway(s: Screen, t: number, hy: number, sky: string, open = 0): void {
   const { ctx, cx, f, w } = s
   const at = (s.camX * Q) / 8
   const half = w / 2 / f
   const W = (f * 16) / 9
   const bulbs = new Bulbs(Math.max(1, f * 0.0026))
+  const trails = open > 0 ? new Trails() : null
   const sil = new Path2D()
   const lines = new Path2D()
   const glass: [Path2D, string][] = []
@@ -287,6 +317,7 @@ export function midway(s: Screen, t: number, hy: number, sky: string): void {
   ctx.lineWidth = Math.max(1, f * 0.0018)
   ctx.lineCap = 'round'
   ctx.stroke(lines)
+  trails?.stroke(ctx, Math.max(1, f * 0.0028), 0.85 * smooth(open, 0, 2.5))
   bulbs.fill(ctx)
 
   /** The Ferris wheel: an A-frame, two rims and their spokes, cars hanging level, bulbs round the rim. */
@@ -294,8 +325,7 @@ export function midway(s: Screen, t: number, hy: number, sky: string): void {
     const R = r.size * f
     const hx = x
     const hyb = hy - R - f * 0.022
-    // Slow, a turn a minute, a little quicker once the full organ is in.
-    const turn = (t / 60 + 0.25 * Math.max(0, t - FULL) / 60) * Math.PI * 2 + r.u * 3
+    const turn = wheelTurn(t, r)
     lines.moveTo(hx, hyb)
     lines.lineTo(hx - R * 0.55, hy)
     lines.moveTo(hx, hyb)
@@ -326,11 +356,18 @@ export function midway(s: Screen, t: number, hy: number, sky: string): void {
     glass.push([cars, lit > 0.01 ? mixHex(SIL, '#8C6A6E', 0.8 * lit) : SIL])
     // Bulbs round the rim, every other one warm and rose, coming on round the wheel from the top.
     const m = 40
+    const since = trails ? turn - wheelTurn(t - open, r) : 0
+    const rim = trails?.at(mixHex(BULB, ROSE, 0.5))
     for (let k = 0; k < m; k++) {
       const a = turn + (k * Math.PI * 2) / m
       const order = ((k / m + 0.25) % 1)
       const here = clamp(lit * 1.6 - order * 0.6)
       bulbs.add(hx + Math.cos(a) * R, hyb + Math.sin(a) * R, bulb(k % 2 ? ROSE : BULB, here))
+      // In the exposure, the arc of the rim it has gone round since the shutter opened.
+      if (rim && here > 0.5) {
+        rim.moveTo(hx + Math.cos(a - since) * R, hyb + Math.sin(a - since) * R)
+        rim.arc(hx, hyb, R, a - since, a)
+      }
     }
   }
 
@@ -339,10 +376,12 @@ export function midway(s: Screen, t: number, hy: number, sky: string): void {
     const S = r.size * f
     const top = hy - f * 0.14
     // At rest until it comes on, then up to speed over a bar; quicker again for the full organ.
-    const run = smooth(t, r.on, r.on + 4 * PERIOD) * (0.8 + 0.2 * smooth(t, FULL, FULL + 4 * PERIOD))
+    const runAt = (u: number) => smooth(u, r.on, r.on + 4 * PERIOD) * (0.8 + 0.2 * smooth(u, FULL, FULL + 4 * PERIOD))
+    const tiltAt = (u: number) => 0.18 * runAt(u) * Math.sin(u * 0.7 + r.u)
+    const run = runAt(t)
     const turn = spin(t, r.on, 0.3) + r.u
     const out = 0.95 * run * run
-    const tilt = 0.18 * run * Math.sin(t * 0.7 + r.u)
+    const tilt = tiltAt(t)
     sil.rect(x - S * 0.08, top, S * 0.16, hy - top)
     // The crown: a shallow cone over a rim.
     sil.moveTo(x, top - S * 0.32)
@@ -366,6 +405,23 @@ export function midway(s: Screen, t: number, hy: number, sky: string): void {
       bulbs.add(rimX, rimY, bulb(k % 3 ? BULB : MINT, lit))
     }
     bulbs.add(x, top - S * 0.32, bulb(ROSE, lit), 1.3)
+    // In the exposure, the rim's bulbs go round into an ellipse of light, wavering as the crown tilts: back over a
+    // turn at most, since the turns before it lie on it.
+    if (trails && lit > 0.5) {
+      const ring = trails.at(mixHex(BULB, MINT, 0.33))
+      const span = Math.min(open, 3.4)
+      const steps = 36
+      for (let k = 0; k < n; k++) {
+        for (let j = 0; j <= steps; j++) {
+          const u = t - span + (span * j) / steps
+          const a = spin(u, r.on, 0.3) + r.u + (k * Math.PI * 2) / n
+          const px = x + S * Math.cos(a)
+          const py = top + S * 0.2 * Math.sin(a) - tiltAt(u) * S * Math.cos(a)
+          if (j) ring.lineTo(px, py)
+          else ring.moveTo(px, py)
+        }
+      }
+    }
   }
 
   /** The carousel: a striped roof on its pole, lit under, the horses going round and up and down. */

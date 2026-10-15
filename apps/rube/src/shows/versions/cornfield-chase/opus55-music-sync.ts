@@ -1,7 +1,7 @@
 import type { Framing, Performance } from '../../registry'
 import type { StockScore } from '../../stock/types'
 import { expose, exposure, finale, flash, pull, type Exposure } from './music-sync/finale'
-import { dayLand, dayNear, frontField, nightLand, nightNear } from './music-sync/land'
+import { dayLand, dayNear, frontField, nightLand, nightNear, type Take } from './music-sync/land'
 import { beatAt } from './music-sync/music'
 import { scenery } from './music-sync/screen'
 import { nightfall } from './music-sync/nightfall'
@@ -27,6 +27,16 @@ const STRETCH = 97
 export const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, STRETCH)
 /** How far the corn has come up in front of the fair as the camera draws back for the photograph. */
 const rise = (t: number): number => (t <= photo.from ? 0 : smooth((t - photo.from) / 2.5))
+/**
+ * What the fair's land takes from the take: the photograph's horizon, the corn coming up in front of it, the camera
+ * for the smoke, and the shutter, open from when the exposure starts to come up (`finale.ts`).
+ */
+const take: Take = {
+  horizon: photo.horizon,
+  rise,
+  camAt: (t) => camera(t).x,
+  open: (t) => Math.max(0, t - photo.from - 0.2),
+}
 /** The run through the fair, taken once, the first time the photograph is drawn; the follow spot, the first time it is. */
 let run: Exposure | null = null
 let lit: Spot | null = null
@@ -43,7 +53,7 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
     }
   }
   return {
-    behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon, rise, (t) => camera(t).x))],
+    behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, take))],
     over: [scenery('photograph', () => {}, (p, c) => {
       const t = map.begin + c.t
       // On the full organ the house lights come up: every floor lit on the beat, the spot easing back after.
