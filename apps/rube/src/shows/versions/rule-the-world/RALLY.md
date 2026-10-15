@@ -325,3 +325,56 @@ and fire fill a lot of the picture, and the ward is still the quietest place in 
 pane of glass. In Chrome (headed, 2384 × 1800, every frame at 60 fps, measured before and after on the same machine)
 there is no frame over 20 ms: up to the credits the paint on the main thread is 1.6 ms a frame on average, 2.4 ms at
 the 95th percentile and 7.6 ms at worst (1.3, 1.9 and 4.5 before), and the finale 4.2, 7.1 and 12.0 (3.0, 5.9 and 8.6).
+
+## The third fullness pass
+
+Then the same brief once more, with fresh eyes: ten new frames, each halfway between two of the last ten, and the map of
+every second again, this time ranked by the stillest five seconds. The weakest were London's lost point running into
+the hotel room's first seconds, the alley's master shot as the hustle begins, the crane's first seconds, the farmhouse,
+the ward at the pillow and at the glass, and the stockroom's end; and two frames were more than a third empty, the
+close shot on the safe (its left third dark panelling and a stool) and the night road (the cab under a bare sky).
+
+- *The store:* the office's radiator, under the clock in the safe's close shot, knocks up for the morning, a spit of
+  steam from its vent on each downbeat, Murray's red scarf over its riser and his gloves drying on top. Each El shivers
+  the stockroom's boxes on their shelves and sifts dust through the bulb's light, and the near lamps over the wall of
+  boxes are hung between the far ones, so the two rows read as near and far rather than a cluster.
+- *London:* after the loss a ball boy runs in along the boards for the ball, as he would for any ball, slows, kneels a
+  step short of it, and leaves it be as the iris opens; two pressmen raise their cameras for the picture of the loss,
+  without a bulb, and a third of the gallery gets up for the gangways.
+- *The hotel:* the El shakes the old room: the bulb swings out on its cord with its moths, the coat shivers on its nail
+  at the radiator's knocks, and plaster sifts from the stain over the bed.
+- *The alley:* the hustle draws a crowd: two regulars come to lean on the ledge by their beers, watch the ball, and wave
+  a hat and slap the ledge for the strike; all three far bowlers are going from the door's slam, a night man carries
+  trays along the far wall, and the slam sets the money table's lamp swinging, its pool going to and fro.
+- *New Jersey:* a telegraph line runs along the road across the fields, and an airliner going their way crosses the
+  moon. At the first shot the farmhouse door is flung open on the lit hall and a fourth man comes out and points after
+  them; starlings go up off the washing line and someone comes to the upstairs window. At the stair the passengers sit
+  in the lit windows against their seats' high backs, one turning the pages of his paper, and the stewardess walks
+  aft to wait by the door; his own window is empty.
+- *The ward:* while he is at the glass the corridor's traffic goes by close to the lens, low in the frame and always
+  under him, as the front rows go by in London and Tokyo: a nurse in her navy cape with the dawn feed's bottles on a
+  tray, a doctor reading his chart the other way, a porter with a crate of milk, a visitor in a cloche with her flowers.
+  None of them comes while the nurse lifts his son to the glass or while the two of them play their first rally, and
+  no one comes to the pillow. A flock off a roof across the street sweeps past the ward's window as he rolls up to
+  Rachel, and again as she sends him off.
+
+**Trimmed.** Nothing glossy had come in with the last pass (its new flashes are a dog's bark, a rifle's kick and a
+cat's ear twitching, not light). Two things read wrong and were put right: the near row of lamps over the boxes, which
+had hung in front of the far one as a cluster, and the airliner's passengers, who read at a glance as faces in its
+round windows (a head over a curve of shoulder); they now sit to one side against their seats' backs, and fade with the
+fuselage as the cabin opens round him.
+
+**Measured,** against the show before both passes, with the camera held:
+
+| | Moving | Things moving | Seconds nearly still |
+| --- | --- | --- | --- |
+| First third | 5.3% → 7.1% | 102 → 130 | 22 → 0 |
+| Middle third | 7.3% → 8.4% | 159 → 181 | 6 → 0 |
+| Last third | 6.5% → 8.4% | 197 → 246 | 21 → 0 |
+
+The ward went from 2.8% of the picture moving to 6.2%, the store from 4.1% to 7.2%, the finale from 3.9% to 6.2%. The
+last third has the most going on at once, nearly twice the opening's, and moves as much of the picture as the middle,
+with its rain and its fire. In Chrome (headed, 2384 × 1800, every frame of the show at 60 fps, the show from before
+both passes and after them painted back to back on the same machine) no frame takes 20 ms: the paint on the main
+thread is 2.2 ms a frame on average, 4.7 ms at the 95th percentile and 9.8 ms at worst (2.1, 3.5 and 9.1 before), and
+the finale, the heaviest stretch, 4.2 ms on average (3.1 before).
