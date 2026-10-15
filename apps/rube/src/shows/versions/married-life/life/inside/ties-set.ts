@@ -854,37 +854,6 @@ export function drawDoor(p: p5, k: number, weight: number, open: number, age: nu
 /* ------------------------------------------------------------------ the evening */
 
 /**
- * The evening sun, low, coming in at the front door and lying along the hall's far wall in a long warm wedge: tall at
- * the door, reaching back down the hall to the floor they dance on. `a` 0..1 its strength; `reach` how far back it
- * lies (it shortens and fades as the sun goes down).
- */
-export function drawSunWedge(p: p5, k: number, a: number, reach: number): void {
-  if (a <= 0.001) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const x1 = 8.2
-  const x0 = x1 - reach
-  // Four layers, each a little lower and shorter, for a soft edge: a penumbra, not a cut.
-  ctx.save()
-  for (let i = 0; i < 4; i++) {
-    const f = i / 3
-    const top = -2.05 + 0.35 * f
-    const left = x0 + reach * 0.12 * f
-    const g = ctx.createLinearGradient(x1 * k, 0, left * k, 0)
-    g.addColorStop(0, `rgba(255, 214, 150, ${0.1 * a})`)
-    g.addColorStop(0.55, `rgba(255, 214, 150, ${0.06 * a})`)
-    g.addColorStop(1, 'rgba(255, 214, 150, 0)')
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(x1 * k, top * k)
-    ctx.lineTo(left * k, FLOOR * k)
-    ctx.lineTo(x1 * k, FLOOR * k)
-    ctx.closePath()
-    ctx.fill()
-  }
-  ctx.restore()
-}
-
-/**
  * The hall darkening into evening, over everything in it (the two of them too: it is the light, not the paint),
  * easing off towards the open front door where the last of the day comes in.
  */
