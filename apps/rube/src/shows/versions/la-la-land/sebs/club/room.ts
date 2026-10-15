@@ -804,17 +804,22 @@ function drawPool(p: p5, k: number, t: number): void {
   const L = lightsAt(t, true)
   const f = frame(p, k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
+  // One gradient, filled once over the picture (close in, it is the whole canvas): the warm light on them at its
+  // middle, clear round them, and the dark beyond.
   const cx = TABLE.x
-  const cy = TABLE.top - 0.3
-  const g = ctx.createRadialGradient(cx * k, cy * k, 0.6 * k, cx * k, cy * k, 2.0 * k)
-  g.addColorStop(0, rgba(M.lacquer, 0))
+  const cy = TABLE.top - 0.33
+  const R = 2.0
+  const warm = mixHex(L.warm, M.ivory, 0.25)
+  const g = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, R * k)
+  g.addColorStop(0, rgba(warm, 0.3 * u))
+  g.addColorStop(0.2 / R, rgba(warm, 0.2 * u))
+  g.addColorStop(0.55 / R, rgba(L.warm, 0.06 * u))
+  g.addColorStop(0.7 / R, rgba(M.lacquer, 0))
   g.addColorStop(1, rgba(M.lacquer, 0.72 * u))
   ctx.save()
   ctx.fillStyle = g
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
   ctx.restore()
-  glow(p, k, TABLE.x, TABLE.top - 0.35, 1.25, L.warm, 0.26 * u, 1.05, 1.15)
-  glow(p, k, TABLE.x, TABLE.top - 0.45, 0.55, M.ivory, 0.1 * u, 1, 1.1)
 }
 
 export const clubRoom = scenery<ClubRoom>({
