@@ -142,14 +142,17 @@ export const interior = scenery<InteriorState>({
       p.stroke(ink)
       p.strokeWeight(Math.max(0.8, weight * 0.6))
       if (kind < 0.45) {
-        // A row of corn.
+        // A row of corn, its tops leaning a little with the breeze.
         p.fill(DUST.sage)
         p.rect(0, X(-0.18), X(0.9), X(0.36), X(0.08))
+        p.line(X(-0.3), X(-0.36), X(-0.3 + 0.04 * Math.sin(t * 1.1 + i)), X(-0.5))
+        p.line(X(0.3), X(-0.36), X(0.3 + 0.04 * Math.sin(t * 1.1 + i + 1)), X(-0.5))
       } else if (kind < 0.75) {
-        // A tree.
-        p.line(0, 0, 0, X(-0.3))
+        // A tree, its crown swaying in the station's breeze.
+        const sway = 0.035 * Math.sin(t * 0.8 + i * 1.3)
+        p.line(0, 0, X(sway), X(-0.3))
         p.fill(DUST.leaf)
-        p.circle(0, X(-0.45), X(0.36))
+        p.circle(X(sway * 1.6), X(-0.45), X(0.36))
       } else {
         // A small house, gable in to the axis.
         p.fill(DUST.bone)
