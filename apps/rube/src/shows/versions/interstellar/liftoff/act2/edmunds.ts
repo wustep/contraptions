@@ -6,7 +6,7 @@ import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, 
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
-import { clearOfFarm, dawnBands, drawCirrus, drawDevils, drawPlainStory, drawSettlement, drawSkeins, RANGES, type Site } from './edmunds-farm'
+import { clearOfFarm, dawnBands, drawCirrus, drawDevils, drawPlainStory, drawSettlement, drawSkeins, RANGES, shadow, sunlight, type Site } from './edmunds-farm'
 
 /**
  * Edmunds' planet: the end of the show.
@@ -533,9 +533,9 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     // Then, under the rest of the credits, a slow crane up and back over the plain: the eye rises, the ground opens
     // out under it, and what she has made here comes into the frame (her field, the channel, the windmill, the
     // hoop house, the panels turning to the sun), until the last frame is a farm at dawn.
-    { t: 278.5, cells: END_CELLS + 1.5, hold: [END_HOLD[0] + 0.3, END_HOLD[1] - 0.85] },
+    { t: 278.5, cells: END_CELLS + 1.5, hold: [END_HOLD[0] + 0.3, END_HOLD[1] - 0.55] },
     // (Its last key is past the end, so it is still going on the last frame rather than settling.)
-    { t: DURATION + 7, cells: END_CELLS + 4.1, hold: [END_HOLD[0] + 0.75, END_HOLD[1] - 2.45] },
+    { t: DURATION + 7, cells: END_CELLS + 4.1, hold: [END_HOLD[0] + 0.75, END_HOLD[1] - 1.6] },
   ]
 }
 
@@ -555,14 +555,18 @@ interface View {
  * where the horizon sits: level with the Ranger as it comes out, then the
  * camera pitches down to the plain as it falls (the horizon rises up the
  * frame), and levels out low for the landing (the horizon sinks behind the
- * camp). The horizon is `tilt` below the frame's middle. Never under the ground.
+ * camp). Under the credits, as it cranes up, it pitches down onto the plain
+ * again, so the horizon climbs the frame and the farm opens out under it. The
+ * horizon is `tilt` below the frame's middle. Never under the ground.
  */
-function eyeAlt(alt: number): number {
-  const tilt = 1.85 - 3.35 * smooth(alt, 2.8, 8.5) + 1.9 * smooth(alt, 10, 14.5)
+function eyeAlt(alt: number, T: number): number {
+  const tilt = 1.85 - 3.35 * smooth(alt, 2.8, 8.5) + 1.9 * smooth(alt, 10, 14.5) - CRANE_PITCH * smooth(T, 266, DURATION + 6)
   return 0.35 + softplus(alt - tilt - 0.35, 0.15)
 }
-function viewOf(f: Frame): View {
-  const A = eyeAlt(G - f.cy)
+/** How far the credits' crane pitches the horizon up the frame, in cells. */
+const CRANE_PITCH = 1.6
+function viewOf(f: Frame, T: number): View {
+  const A = eyeAlt(G - f.cy, T)
   return { f, E: G - A, A }
 }
 /** A point of the ground `s` times nearer than the landing site, at `gx` in the site's own measure, on the screen. */
@@ -598,7 +602,7 @@ function drawAll(p: p5, s: EdmundsState, c: Ctx): void {
   const { k } = c
   const X = (v: number) => v * k
   const f = frame(p, k)
-  const v = viewOf(f)
+  const v = viewOf(f, T)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const rev = revealAt(T)
   const opening = T < BEGIN + 0.62
@@ -651,7 +655,7 @@ function drawOver(p: p5, s: EdmundsState, c: Ctx): void {
   if (c.t < 0) return
   const T = s.begin + c.t
   const f = frame(p, c.k)
-  const v = viewOf(f)
+  const v = viewOf(f, T)
   drawCanopy(p, c, T)
   drawPlateLip(p, c, T)
   drawLampLight(p, c, v, T)
@@ -729,19 +733,23 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   p.scale(far)
   p.rotate(-0.09)
   ctx2.save()
-  // The far side of the disk, lensed over the top of the dark (broad) and under it (thin).
+  // The far side of the disk, lensed over the top of the dark (broad) and under it (thin): crisp bands, white to gold
+  // to amber, as the near one is drawn, not a glow fading into the sky.
   for (const [a0, a1, rout, peak] of [[Math.PI + 0.01, TAU - 0.01, 1.55, 0.9], [0.01, Math.PI - 0.01, 1.28, 0.5]]) {
-    const g = ctx2.createRadialGradient(0, 0, X(r), 0, 0, X(rout * r))
-    g.addColorStop(0, rgba(WHITE, peak))
-    g.addColorStop(0.12, rgba(DARK.gold, 0.9 * peak))
-    g.addColorStop(0.45, rgba(DARK.amber, 0.35 * peak))
-    g.addColorStop(1, rgba(DARK.amber, 0))
-    ctx2.fillStyle = g
-    ctx2.beginPath()
-    ctx2.arc(0, 0, X(rout * r), a0, a1)
-    ctx2.arc(0, 0, X(r), a1, a0, true)
-    ctx2.closePath()
-    ctx2.fill()
+    const bands: [number, number, string, number][] = [
+      [1, 1.09, WHITE, 0.95],
+      [1.09, 1.24, DARK.gold, 0.7],
+      [1.24, 1.55, DARK.amber, 0.28],
+    ]
+    for (const [r0, r1, hex, a] of bands) {
+      if (r0 >= rout) continue
+      ctx2.fillStyle = rgba(hex, a * peak)
+      ctx2.beginPath()
+      ctx2.arc(0, 0, X(Math.min(r1, rout) * r), a0, a1)
+      ctx2.arc(0, 0, X(r0 * r), a1, a0, true)
+      ctx2.closePath()
+      ctx2.fill()
+    }
   }
   ctx2.strokeStyle = rgba(DARK.gold, 0.38)
   ctx2.lineWidth = X(0.004)
@@ -847,6 +855,12 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
   g.addColorStop(1, LAND_NEAR)
   ctx.fillStyle = g
   ctx.fillRect(X(f.x0 - 1), X(E), X(f.x1 - f.x0 + 2), X(bottom - E + 1))
+  // Once the sun is up, its light along the plain: the ground warms, and the shadows on it are cool.
+  const sun = sunlight(siteOf(v, T))
+  if (sun > 0.01) {
+    ctx.fillStyle = rgba(DARK.amber, 0.09 * sun)
+    ctx.fillRect(X(f.x0 - 1), X(E), X(f.x1 - f.x0 + 2), X(bottom - E + 1))
+  }
   // Nearer ranges on the plain, lower and darker; dust devils walking far off.
   for (const r of RANGES) drawRange(p, c, v, r.s, r.gap, r.tall, r.seed, r.fill, r.lit, sunX)
   drawPlainStory(p, c, v, siteOf(v, T))
@@ -1741,17 +1755,13 @@ function drawCamp(p: p5, c: Ctx, v: View, T: number): void {
   if (G < f.y0 - 0.5 || f.x1 < LX + 1 || f.x0 > CAIRN_X + 1) return
   const lampOn = T >= LAMP ? 1 : 0
   const warm = lampOn * (0.85 + 0.15 * knock(T - LAMP, 0.3))
-  // Long dawn shadows, thrown back toward the Ranger.
-  p.noStroke()
-  p.fill(alpha(p, VOID.bg, 0.32))
-  for (const [x, w, len] of [[DOME_X - DOME_R * 0.5, DOME_R * 1.6, 3.2], [FLAG_X, 0.05, 2.4], [CAIRN_X, 0.35, 1.3], [HELMET_X, 0.4, 0.8], [MAST_X, 0.06, 2.6]] as [number, number, number][]) {
-    p.beginShape()
-    p.vertex(X(x + w / 2), X(G - 0.005))
-    p.vertex(X(x - len), X(G + 0.018))
-    p.vertex(X(x - len), X(G + 0.045))
-    p.vertex(X(x - w / 2), X(G + 0.05))
-    p.endShape(p.CLOSE)
+  // What stands here on the ground, and, once the sun is up, its shadow coming back across the plain toward us. The
+  // Ranger's once it is down, from its feet.
+  const site = siteOf(v, T)
+  for (const [x0, x1] of [[DOME_X - DOME_R - 0.62, DOME_X + DOME_R], [FLAG_X - 0.025, FLAG_X + 0.025], [CAIRN_X - 0.3, CAIRN_X + 0.36], [HELMET_X - 0.15, HELMET_X + 0.15], [MAST_X - 0.035, MAST_X + 0.035]] as Pt[]) {
+    shadow(p, c, v, site, x0, x1, 1)
   }
+  if (T > TOUCH) shadow(p, c, v, site, LX - 0.82, LX + 1.14, 1, false)
 
   // The cairn for Edmunds: flat stones laid up, a marker on the top.
   const stones: [number, number, number, number][] = [
@@ -1988,12 +1998,14 @@ function drawLampLight(p: p5, c: Ctx, v: View, T: number): void {
   const ly = LAMP_Y + 0.02
   const flat = Math.max(0.07, Math.min(0.3, v.A * 0.22))
   const reach = (1.1 + 0.9 * smooth(d, 0, 0.5)) * (1 + 0.12 * swell)
+  // As the sun comes up the day takes over from it: the lens stays lit, its light on the ground all but goes.
+  const day = 1 - 0.75 * sunlight(siteOf(v, T))
   p.noStroke()
-  p.fill(alpha(p, DARK.gold, (0.05 + 0.04 * swell) * on))
+  p.fill(alpha(p, DARK.gold, (0.05 + 0.04 * swell) * on * day))
   p.quad(X(lx - 0.05), X(ly + 0.07), X(lx + 0.05), X(ly + 0.07), X(lx + 0.55 * reach), X(G), X(lx - 0.7 * reach), X(G))
-  p.fill(alpha(p, DARK.gold, (0.12 + 0.08 * swell) * on))
+  p.fill(alpha(p, DARK.gold, (0.12 + 0.08 * swell) * on * day))
   p.ellipse(X(lx - 0.08), X(G), X(2 * reach), X(2 * reach * flat))
-  p.fill(alpha(p, mixHex(DARK.gold, VOID.ink, 0.45), (0.12 + 0.08 * swell) * on))
+  p.fill(alpha(p, mixHex(DARK.gold, VOID.ink, 0.45), (0.12 + 0.08 * swell) * on * day))
   p.ellipse(X(lx - 0.08), X(G), X(reach), X(reach * flat))
 }
 
@@ -2002,6 +2014,11 @@ function drawBallShadow(p: p5, s: EdmundsState, c: Ctx, T: number): void {
   const { k } = c
   const X = (x: number) => x * k
   const her = brandAt(T)
+  // Once the sun is up, theirs too, side by side, coming back across the sand toward us.
+  const v = viewOf(frame(p, k), T)
+  const site = siteOf(v, T)
+  const lit = sunlight(site) > 0.01
+  if (lit) shadow(p, c, v, site, her.x - R, her.x + R, 1, false)
   p.noStroke()
   p.fill(alpha(p, VOID.bg, 0.5))
   p.ellipse(X(her.x - 0.04), X(G - 0.005), X(0.3), X(0.05))
@@ -2010,6 +2027,7 @@ function drawBallShadow(p: p5, s: EdmundsState, c: Ctx, T: number): void {
   const h = G - (b.y + R)
   if (b.x < FOOT[0] - 0.2) return
   const a = 1 - smooth(h, 0, 0.35)
+  if (lit && a > 0.5) shadow(p, c, v, site, b.x - R, b.x + R, 1, false)
   p.noStroke()
   p.fill(alpha(p, VOID.bg, 0.5 * a))
   p.ellipse(X(b.x - 0.04), X(G - 0.005), X(0.3), X(0.05))

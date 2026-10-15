@@ -321,7 +321,7 @@ function drawLander(p: p5, c: Ctx, v: Plain, site: Site): void {
   const [x, y] = at(v, site.lx + EDMUNDS[0], s)
   if (x < v.f.x0 - 1 || x > v.f.x1 + 1 || y > v.f.y1 + 0.5) return
   const u = 1.5 * s
-  shadow(p, c, v, site, x - 1.1 * u, x + 1.1 * u, s, 4)
+  shadow(p, c, v, site, x - 1.1 * u, x + 1.1 * u, s)
   const line = alpha(p, ink, 0.5)
   p.stroke(line)
   p.strokeWeight(Math.max(0.7, weight * 0.5))
@@ -368,22 +368,47 @@ function drawLander(p: p5, c: Ctx, v: Plain, site: Site): void {
 
 /* ------------------------------------------------------------------ the settlement */
 
-/** A long flat shadow along the ground at depth `s`, away from the sun, shortening as it comes up. */
-function shadow(p: p5, c: Ctx, v: Plain, site: Site, x0: number, x1: number, s: number, len: number): void {
+/** How much the risen sun lights the plain: nothing until its edge is over the horizon, all of it once it is clear. */
+export const sunlight = (site: Site): number => smooth(site.rise, 0.25, 1.85)
+
+const rgba = (hex: string, a: number): string => {
+  const n = parseInt(hex.slice(1), 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`
+}
+
+/**
+ * What a thing standing on the plain at depth `s`, `x0` to `x1` across the screen, puts on the ground. A dark foot
+ * always: it sits on the sand. And once the sun is up, its shadow. The sun is on the far horizon, so a shadow runs
+ * from the thing straight back toward the eye, and in perspective every shadow points back at the sun's place on
+ * the horizon: a wedge from the thing's foot along the lines from there, out of the bottom of the frame (a sun this
+ * low makes every shadow longer than the plain in front of it). Fainter far off; softer as it runs.
+ */
+export function shadow(p: p5, c: Ctx, v: Plain, site: Site, x0: number, x1: number, s: number, foot = true): void {
   const X = (x: number) => x * c.k
   const y = v.E + v.A * s
-  const away = (x0 + x1) / 2 < site.sunX ? -1 : 1
-  const l = len * s * (1 - 0.4 * Math.min(1, site.rise / 2))
-  const from = away < 0 ? x1 : x0
-  const to = away < 0 ? x0 - l : x1 + l
   p.noStroke()
-  p.fill(alpha(p, VOID.bg, 0.3))
-  p.beginShape()
-  p.vertex(X(from), X(y - 0.004))
-  p.vertex(X(to), X(y + 0.01 * s))
-  p.vertex(X(to), X(y + 0.03 * s))
-  p.vertex(X(from), X(y + 0.035 * s))
-  p.endShape(p.CLOSE)
+  if (foot) {
+    p.fill(alpha(p, VOID.bg, 0.3))
+    p.ellipse(X((x0 + x1) / 2), X(y + 0.01 * s), X((x1 - x0) * 1.15 + 0.04 * s), X(0.05 * s))
+  }
+  const sun = sunlight(site)
+  const bottom = v.f.y1 + 0.3
+  if (sun <= 0.01 || y >= bottom || v.A * s <= 0.01) return
+  const reach = (bottom - v.E) / (v.A * s)
+  const out = (x: number) => site.sunX + (x - site.sunX) * reach
+  const a = 0.4 * sun * (0.4 + 0.6 * Math.min(1, s))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createLinearGradient(0, X(y), 0, X(bottom))
+  g.addColorStop(0, rgba(VOID.bg, a))
+  g.addColorStop(1, rgba(VOID.bg, a * 0.25))
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo(X(x0), X(y))
+  ctx.lineTo(X(x1), X(y))
+  ctx.lineTo(X(out(x1)), X(bottom))
+  ctx.lineTo(X(out(x0)), X(bottom))
+  ctx.closePath()
+  ctx.fill()
 }
 
 /** Everything of hers behind the camp, and the rover in front of it: drawn before the camp. */
@@ -517,10 +542,10 @@ function drawMill(p: p5, c: Ctx, v: Plain, site: Site): void {
   const H = 3.4 * s
   const turn = site.T * 1.9 + 0.5 * Math.sin(site.T * 0.31)
   const line = alpha(p, ink, 0.55)
-  shadow(p, c, v, site, bx - 0.45 * s, bx + 0.45 * s, s, 5.5)
+  shadow(p, c, v, site, bx - 0.45 * s, bx + 0.45 * s, s)
   // The tank by it, on its stand, and the pipe from the mill.
   const [tx, ty] = at(v, site.lx + TANK.gx, TANK.s)
-  shadow(p, c, v, site, tx - 0.35 * s, tx + 0.35 * s, s, 2)
+  shadow(p, c, v, site, tx - 0.35 * TANK.s, tx + 0.35 * TANK.s, TANK.s)
   p.stroke(line)
   p.strokeWeight(Math.max(0.7, weight * 0.5))
   p.fill(far(DARK.hull, s * 1.1))
@@ -613,7 +638,7 @@ function drawHoop(p: p5, c: Ctx, v: Plain, site: Site): void {
   if (x1 < v.f.x0 - 1 || x0 > v.f.x1 + 1) return
   const h = 0.95 * s
   const r = Math.min(h, (x1 - x0) / 2) * 0.55
-  shadow(p, c, v, site, x0, x1, s, 3.2)
+  shadow(p, c, v, site, x0, x1, s)
   const lights = 1 - smooth(site.rise, 1.15, 1.45)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const body = () => {
@@ -703,7 +728,7 @@ function drawPanels(p: p5, c: Ctx, v: Plain, site: Site): void {
     const post = 0.3 * s
     const w = 0.62 * s
     const h = 0.42 * s * Math.cos(lean)
-    shadow(p, c, v, site, x - w / 2, x + w / 2, s, 1.4)
+    shadow(p, c, v, site, x - w / 2, x + w / 2, s)
     p.stroke(alpha(p, ink, 0.55))
     p.strokeWeight(Math.max(0.7, weight * 0.5))
     p.line(X(x), X(y), X(x), X(y - post))
@@ -742,7 +767,7 @@ function drawRover(p: p5, c: Ctx, v: Plain, site: Site): void {
     }
   }
   ctx.stroke()
-  shadow(p, c, v, site, x - 0.45 * s, x + 0.45 * s, s, 1.2)
+  shadow(p, c, v, site, x - 0.45 * s, x + 0.45 * s, s)
   const wr = 0.075 * s
   solid(p, ink, weight * 0.7, mixHex(DARK.hull, LAND, 0.25))
   p.rect(X(x - 0.42 * s), X(y - 0.32 * s), X(0.84 * s), X(0.17 * s), X(0.03 * s))
