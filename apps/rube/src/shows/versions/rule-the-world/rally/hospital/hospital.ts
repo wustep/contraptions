@@ -86,8 +86,8 @@ export const nursery = part<WardState>(
 function shots(): PartShot[] {
   const hold = (t: number, cells: number, h: Pt): PartShot => ({ t, cells, hold: h, w: 1 })
   return [
-    hold(at(96, 1), 3.15, [0.25, -0.45]),
-    hold(at(97, 2), 2.95, [0.25, -0.4]),
+    hold(at(96, 1), 3.15, [0.45, -0.45]),
+    hold(at(97, 2), 2.95, [0.5, -0.4]),
     hold(at(98, 1), 3.45, [-1.6, -0.4]),
     hold(at(98, 2), 3.8, [-2.3, 0.15]),
     hold(at(98, 4), 4.0, [-5.4, 0.2]),
