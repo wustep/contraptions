@@ -100,8 +100,8 @@ export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, t: number, air
     ctx.lineTo(X(far[0] + RIM_R * S_FAR * Math.cos(a)), X(far[1] + RIM_R * S_FAR * Math.sin(a)))
     ctx.stroke()
   }
-  for (const a of ROADS) run(a, 'rgba(236, 226, 200, 0.7)', 0.09)
-  run(CHANNEL, 'rgba(78, 138, 140, 0.75)', 0.12)
+  for (const a of ROADS) run(a, 'rgba(236, 226, 200, 0.45)', 0.08)
+  run(CHANNEL, 'rgba(78, 138, 140, 0.6)', 0.11)
   {
     const s = sAt(RING_ROAD)
     const [cx, cy] = sliceCentre(axis, cam, s)
@@ -146,8 +146,8 @@ export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, t: number, air
     const n = parseInt(hex.slice(1), 16)
     return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`
   }
-  g.addColorStop(0, tint(air.center, 0.95))
-  g.addColorStop(0.3, tint(air.mid, 0.86))
+  g.addColorStop(0, tint(air.center, 0.84))
+  g.addColorStop(0.3, tint(air.mid, 0.82))
   g.addColorStop(0.72, tint(air.edge, 0.72))
   g.addColorStop(1, tint(air.rim, 0.56 + 0.3 * (1 - lit)))
   ctx.fillStyle = g
@@ -156,7 +156,7 @@ export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, t: number, air
   ctx.fill()
 
   // The far end wall in its haze: a rim where the land meets it, and a ring of windows round its middle.
-  ctx.strokeStyle = tint(mixHex(air.rim, ink, 0.25), 0.35)
+  ctx.strokeStyle = tint(mixHex(air.rim, ink, 0.3), 0.45)
   ctx.lineWidth = Math.max(0.8, k * 0.012)
   ctx.beginPath()
   ctx.arc(X(far[0]), X(far[1]), X(RIM_R * S_FAR), 0, TAU)
@@ -164,7 +164,7 @@ export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, t: number, air
   ctx.beginPath()
   ctx.arc(X(far[0]), X(far[1]), X(RIM_R * S_FAR * 0.42), 0, TAU)
   ctx.stroke()
-  ctx.fillStyle = tint(mixHex(air.mid, ink, 0.18), 0.28 * lit)
+  ctx.fillStyle = tint(mixHex(air.mid, ink, 0.25), 0.4 * lit)
   for (let i = 0; i < 16; i++) {
     const a = (i / 16) * TAU
     const r = RIM_R * S_FAR * 0.6
