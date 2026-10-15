@@ -1481,8 +1481,8 @@ function hungFlakes(d: Draw, t: number): void {
 }
 
 /**
- * Brass sconces on the wall between the windows, a small red shade on each like the tables': each throws its light
- * up the wallpaper and a little down, a scallop of warm light on the wall. They go down in the hush and come up on the
+ * Brass sconces on the wall between the windows, a small red shade on each like the tables': each lights a short
+ * scallop of the wallpaper above it and a smaller one below. They go down in the hush and come up on the
  * kiss's wave with the rest.
  */
 const SCONCES = [-11.0, -6.6, -2.25]
@@ -1492,23 +1492,25 @@ function sconces(d: Draw, t: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const x of SCONCES) {
     const lv = Math.min(1.1, lampAt(x, t))
-    // The light on the wall, up and down from the shade: soft-edged fans of it.
-    for (const [dir, len, a] of [[-1, 1.25, 0.09], [1, 0.6, 0.06]] as const) {
+    // The light on the wall, out of the shade's open top and bottom: a short scallop of lit paper each way, a hand or
+    // so high, its curved edge plain, and the paper beyond it in the room's light. Not a fan up to the cornice.
+    for (const [dir, len, a] of [[-1, 0.3, 0.13], [1, 0.16, 0.09]] as const) {
       const y0 = SCONCE_Y + dir * 0.06
       const y1 = y0 + dir * len
       const g = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
       g.addColorStop(0, rgba(M.lamp, a * lv))
-      g.addColorStop(1, rgba(M.lamp, 0))
+      g.addColorStop(1, rgba(M.lamp, a * lv * 0.45))
       ctx.fillStyle = g
-      for (const spread of [1, 0.72, 0.45]) {
-        ctx.beginPath()
-        ctx.moveTo((x - 0.08) * k, y0 * k)
-        ctx.lineTo((x + 0.08) * k, y0 * k)
-        ctx.lineTo((x + 0.08 + 0.42 * len * spread) * k, y1 * k)
-        ctx.quadraticCurveTo(x * k, (y1 + dir * 0.12 * len) * k, (x - 0.08 - 0.42 * len * spread) * k, y1 * k)
-        ctx.closePath()
-        ctx.fill()
-      }
+      // The scallop: its sides bow out from the shade's rim and round over into its edge.
+      const hw = 0.1 + 0.35 * len
+      ctx.beginPath()
+      ctx.moveTo((x - 0.08) * k, y0 * k)
+      ctx.lineTo((x + 0.08) * k, y0 * k)
+      ctx.quadraticCurveTo((x + hw) * k, (y0 + dir * 0.35 * len) * k, (x + hw * 0.8) * k, y1 * k)
+      ctx.quadraticCurveTo(x * k, (y1 + dir * 0.35 * len) * k, (x - hw * 0.8) * k, y1 * k)
+      ctx.quadraticCurveTo((x - hw) * k, (y0 + dir * 0.35 * len) * k, (x - 0.08) * k, y0 * k)
+      ctx.closePath()
+      ctx.fill()
     }
     // The plate, the arm, the shade.
     solid(p, ink, w * 0.35, M.gold)
