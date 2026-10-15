@@ -231,7 +231,45 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 155 (latest)
+## Polish pass 156 (latest)
+
+A fullness pass (the first of two), on eight notes from Stephen: fill the frame, give every scene a near, a middle and a far layer moving at their own speeds, never stop moving, light and colour it as a colorist would with each section its own look, let the machine grow toward the end so the last third is the busiest, make every change of section an event, move the camera to reveal, and build the thing that would stop someone walking through a gallery. All of it with substance, not gloss: where a glow or a flash was decoration, it went.
+
+Ten evenly spaced frames were audited first (13, 39, 66, 92, 118, 145, 171, 197, 223 and 250 s). The empty ones were the dirt and sky round the base, the navy over the Earth, the haze across the station's axis (the flight was two-thirds empty), the dark round the undock, and a final third sparser than the farm. Every glow was looked at.
+
+**The farm** (0 to 88 s).
+- One light for the day (`earth/light.ts`): blue before dawn, pale morning in the yard, bleached noon in the corn, warming afternoon at the combine, then ochre storm light at the base and the launch, under a grade that fades as the rocket climbs into the cloud. The sun comes down on the left and goes orange into the dust.
+- The dust wall grows into a haboob: two bands of billows, lowest on the sun's side, standing in columns behind the launch, up to the rocket's window by the ignition, lit on their sunward sides and inked inside.
+- Far and slower than the machine (`earth/far.ts`): farmsteads with their windmills turning, a grain elevator, a freight along the horizon in the morning, crow flocks (the biggest crosses the countdown, away from the storm). Past the dam, NASA's base as a place: a hangar, a water tower, a turning radar dish, fuel tanks, a blockhouse, a wind sock lifting as the wind rises, crew trucks pulling back from the pad, floodlight masts.
+- Near and faster (`earth/near.ts`): dry grass and seed heads leaning into the wind, stones, tumbleweeds, wire past the dam, dust blowing low, stalk tips whipping past in the chase. Nothing in it rises above the ground the balls roll on.
+- Murph's window looks out on the dawn, the far corn and a windmill turning; the curtain hems stir; Cooper's model plane turns on its thread between the case and the window.
+- Gone: the drone's flash on every downbeat (a tone change on its wing now), the tower lamps' glows (their glass brightens), the glows round TARS's eye, the cable's spark and the switch's beacon (the tunnel lamps light flat pools instead), the sun's halo.
+
+**The dark** (88 to 127.5 s).
+- Orbit: land and cloud slide by under the ring at their own speeds, the night side comes in with its towns, the atmosphere is a thin line at the limb, a small Moon stands far off, three satellites cross at three depths, and from staging to the dock the launch's debris tumbles past at the frame's edges (`space/near.ts`), clear of both balls in every frame shape.
+- Miller is its own world, a cold slate-teal sea under a green-grey haze, swells rolling in row after row, mist in layers, near water under the bottom of the frame.
+- Gargantua is crisp bands, white to gold to amber, with no bloom; stars behind it drawn into slowly turning arcs, the disk's matter streaming past the top and bottom of the frame.
+- Gone: the star blooms, the Endurance's lamp halos and coil flashes, the halos on Miller's windows, buoys and flames, the glows in the tesseract (each book now knocks a puff of dust off the board). Dust drifts in the window light over the bed at night.
+
+**Cooper Station** (127.5 to 207.5 s).
+- The station goes away from the camera down its length (`act2/depth.ts`): its inside surface, farm plots all the way round, recedes toward a far end wall in the haze round the spindle, with roads and the channel along it, a tram doing a lap a minute, farmsteads, swaying tree rows and turning windmills. The far end slides against the near ring as the camera moves, so the depth is seen. The flight across the axis now crosses a world.
+- In the air: eleven clouds at their depths, nearer ones bigger and quicker; four flocks wheeling; an airship round the axis far down the station (clear of the far-side house through the reunion). Faint wisps near the camera at the edges (`act2/near.ts`).
+- The station's day (`act2/daylight.ts`): cool morning cream, whiter noon at the ballpark, a low amber afternoon from the hit through the reunion (Murph's plaster and attic take it, and the windows lay flat shafts on the floor), then cold steel blue-grey up the spoke to the hub.
+- The docking bay is a hall down the axis behind the Ranger (`act2/hub-bay.ts`): ribs crowding to a far bulkhead, a turning collar, cargo pods coming up a rail, a second ship in a berth with a work arm over it, low in contrast so the cockpit leads.
+- Gone: the spindle's radial glow, the hub's glow helper and every use of it (the dial's, the clamps', the catch's and the wingtip's flashes), the scoreboard's flare, the window-break flash. The lamps up the spoke are flat amber beams and the light tower throws flat wedges over the field, so lit and dark still read.
+
+**Outside** (207.5 to 291 s).
+- The undock is no longer a cut: the port's iris (`act2/iris.ts`) closes onto Cooper in the cockpit over the last clamp's beat, the world changes behind its blades, and it opens on the dark on the cue's biggest step.
+- Round the undock and over Saturn (`act2/undock-far.ts`): Titan high and half-lit, two sister habitats turning beyond the station (a hauler easing into one), Enceladus and Mimas over Saturn at their own depths, a shuttle crossing, a tug towing a container, foil and a loose tether drifting past the port, ring ice passing under the ship faster than the rings. Saturn's belts drift and four storms ride them; its limb is three flat bands of air, not thirty glowing strokes. The beacons wake with one flat ring. Three ripples cross the sphere where the nose touches it.
+- Edmunds' planet is her farm (`act2/edmunds-farm.ts`): a windmill (the yard's, again) pumping into a tank, a channel across the plain catching the dawn, a field of young corn in rows, a hoop house with corn in it and its grow lights going off as the sun clears, panels turning to the sun, her rover parked with its tracks running back. Over and round it: cirrus from slate to rose, two nearer bands of mesas, dust devils walking far off, sand blowing low across the near ground. The farm is seen from the air on the way down, and comes in round the camp as the eye rises.
+- The credits' draw-back never stops: from 267.5 s it is a slow crane up and back to the end, the ground opening out under the eye until the last frame is a farm at dawn.
+- Gone: the sun's halos (its light along the horizon is flat steps now), Gargantua's glow in the sky, the porthole's, the mouth's halo and its flash, the engines', retros', cockpit's and wingtip's glows, the clamps' white flash at the undock, the jets' soft blobs, the sphere's halo. The lamp is a flat cone and a flat pool on the ground.
+
+**The camera.** The corn chase closes in on the cab bar by bar (4.8 to 4.25 cells, 44 to 52 s), so the run at the dam is tighter than the drop. The countdown's two-shot, held dead for four seconds, breathes out and rises while the lamps go out, before the push in. The credits crane (above).
+
+Measured in a headless Chrome on the GPU, paint time a frame across the whole show stays low: medians of 1 to 4.4 ms, the worst sample 6.8 ms at 1920 × 1080 and 11.8 ms on an upright phone at 3×.
+
+## Polish pass 155
 
 The third round, and a small one: after passes 153 and 154 the show was watched end to end again, and nothing left fell short of its moment the way those did. One refinement:
 - **The far mouth is the same glass** (`glassLimb` in `kit.ts`, used by `farSide` and by `drawMouth` in `act2/edmunds.ts`, 236.3 to 238 s). Pass 153 gave the near mouth a body, the light behind it piled up at its limb. The far mouth, which the Ranger comes out of on 213, was still a dark plate with a rim, so the two read as different things. It has the same limb now, Edmunds' sky bent round its edge, over the dark by Saturn it shows. The limb is one function, so the two mouths cannot drift apart.
@@ -1232,6 +1270,12 @@ These are visual and mechanical only. There are no stills, no text, and no audio
   - `act2/station.ts` has the station's geometry: the ring, its axis, standing things upright on it.
   - `act2/interior.ts` draws the ring round the parts.
   - `earth/truck.ts` exports the pickup's drawing, so the same truck appears at the dam, the gate and the tower.
+- **The layers round the machine** (pass 156). Each universe has a far layer behind the parts and a near one over them, each moving at its own share of the camera's move (`kit.frame()` says where the frame is):
+  - the farm: `earth/light.ts` (the day's one light, which the sky, the window and the near layer all read), `earth/far.ts` (farms, the freight, crows, the storm, NASA's base) and `earth/near.ts` (grass, stones, tumbleweeds, wire, blowing dust, and the afternoon's grade);
+  - the dark: `space/near.ts` (the launch's debris at the frame's edges), with the Earth, the Moon and the satellites in `space/sky.ts`;
+  - the station: `act2/depth.ts` (the cylinder going away down its length, its farms, tram and haze), `act2/daylight.ts` (its day, which the air and the haze read), `act2/hub-bay.ts` (the bay's hall behind the Ranger) and `act2/near.ts`, over the ring;
+  - outside: `act2/undock-far.ts` (the moons, the sister habitats, the traffic, the ring ice) and `act2/edmunds-farm.ts` (her farm, the cirrus, the nearer mesas, the dust devils, the blowing sand).
+  - `act2/iris.ts` is the port's iris at the undock, drawn in both universes either side of the change of world.
 - **The camera's roll.** `Framing.angle` (optional, in `shows/registry.ts`) turns the picture about its middle. The engine (`drawWorld`) rotates after the backdrop and chooses pieces from the box round the turned view. `kit.frame()` takes the canvas's corners back through the turned transform, so skies and culling still cover the frame. Liftoff's roll curve is `rollAt` in `score.ts`; no other show sets an angle.
 - **Checks.** `apps/rube/checks/shows.ts` has a Liftoff block, run by `npm run check:shows`.
 - **Rebuilding the audio.** `sh scripts/shows/liftoff-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/shows/liftoff-ntfc-onsets.py` measures it again. Neither needs to run unless the mix changes. Neither source is kept in the repository any more (#147): fetch both from the uploads the show plays (the commands are at the top of the script) and give them as its arguments, No Time for Caution first and Cornfield Chase second (it defaults to its old path, `apps/rube/src/shows/versions/cornfield-chase/cornfield-chase-zimmer.mp3`). A missing file is named before ffmpeg runs. If the mix changes, the YouTube cues in `liftoff/index.ts` change with it.
