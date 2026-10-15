@@ -527,10 +527,10 @@ function velvet(p: p5, k: number, x0: number, y0: number, x1: number, y1: number
 
 /**
  * A follow spot's circle lying on a surface: `paint` draws the surface again as it looks in the light, inside the
- * circle, its edge a little soft (the circle laid down in a few passes, each a little smaller). The light is on the
- * thing, not in the air in front of it.
+ * circle. A follow spot's edge is hard (its iris and its lens): two passes, the outer a hair larger, so the edge is
+ * softened over a pixel or two and no more. The light is on the thing, not in the air in front of it.
  */
-const SPOT_EDGE: [number, number][] = [[1.14, 0.18], [1.09, 0.22], [1.045, 0.3], [1, 0.55]]
+const SPOT_EDGE: [number, number][] = [[1.025, 0.3], [1, 0.7]]
 function spotCircle(ctx: CanvasRenderingContext2D, k: number, cx: number, cy: number, rx: number, ry: number, a: number, paint: () => void): void {
   if (a <= 0.01) return
   for (const [grow, strength] of SPOT_EDGE) {
@@ -723,9 +723,10 @@ function drawSet(p: p5, k: number, weight: number, t: number, lit: number, spot:
     ctx.fillStyle = g
     ctx.fillRect(ARCH0 * k, (FLOOR - 2.3) * k, w * k, 2.3 * k)
   }
-  // The spot's circle on the wall behind her: the paper and the panelling as they look in its light.
+  // The spot's circle on the wall behind her, tight on her as a follow spot is: the paper and the panelling as they
+  // look in its light.
   if (spot > 0.01) {
-    spotCircle(ctx, k, spotX(t), -0.42, 0.5, 0.44, spot, () => {
+    spotCircle(ctx, k, spotX(t), -0.3, 0.4, 0.36, spot, () => {
       fill(SET_PAPER_LIT, SET_WOOD_LIT)
       ctx.fillStyle = rgba(SET_STRIPE, 0.22)
       ctx.beginPath()
@@ -1474,7 +1475,7 @@ function drawCurtain(p: p5, k: number, ink: string, weight: number, t: number, l
     ctx.beginPath()
     ctx.rect(x0 * k, top * k, (x1 - x0) * k, (hem - top) * k)
     ctx.clip()
-    spotCircle(ctx, k, spotX(t), -0.5, 0.6, 0.52, spot, () => velvet(p, k, x0, top, x1, hem, lit, 14, speed, true))
+    spotCircle(ctx, k, spotX(t), -0.3, 0.42, 0.38, spot * 0.85, () => velvet(p, k, x0, top, x1, hem, lit, 14, speed, true))
     ctx.restore()
   }
   // The hem's gold fringe, and a band of gold above it.

@@ -1085,13 +1085,12 @@ export const shadow = part<ShadowState>(
       panel(p, k, t)
 
       // The spot on her, from the pelmet: it opens on the accent and holds, and follows her. Its light is where it falls:
-      // a circle on the screen behind her and a pool on the boards round her feet, nothing in the air between.
+      // one circle of lit screen behind her, cut off by the stage's black edge, its edge as hard as a spot's is.
       if (t >= SPOT - 0.04) {
         const a = smooth(t, SPOT - 0.04, SPOT) * 0.8
         const mx = miaPath(t)[0]
-        pool(p, k, mx, ON_RISER - 0.12, 0.72, SHADOW_MAT.warm, a * 0.5, 1, 0.9)
-        pool(p, k, mx, ON_RISER - 0.12, 0.6, SHADOW_MAT.screen, a * 0.4, 1, 0.9)
-        pool(p, k, mx, RISER_Y - 0.06, 0.8, SHADOW_MAT.screen, a * 0.55, 0.28, 0.8)
+        pool(p, k, mx, ON_RISER - 0.12, 0.66, SHADOW_MAT.warm, a * 0.5, 1, 0.97)
+        pool(p, k, mx, ON_RISER - 0.12, 0.66, SHADOW_MAT.screen, a * 0.35, 1, 0.97)
       }
 
       // The lamp's light: low over the papers; brighter as it comes round; full on her when it finds her.
