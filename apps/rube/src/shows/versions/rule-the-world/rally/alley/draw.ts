@@ -1,8 +1,47 @@
 import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { drawCab } from '../cab'
+import { bloom, layer, parallax, type Frame } from '../depth'
 import { hash } from '../kit'
 import { blob, clamp01, ctxOf, ease, ellipse, flash, glint, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import {
+  BETTOR_GLASS,
+  CAP,
+  OPEN0,
+  OPEN_TOP,
+  POSTS,
+  STREET_ANCHOR,
+  STREET_D,
+  ashtray,
+  barSign,
+  beer,
+  bettorDrink,
+  bladeSign,
+  bubbles,
+  cabSheen,
+  carGlare,
+  curl,
+  fans,
+  farHall,
+  foreground,
+  hatTip,
+  lampMist,
+  lampMotes,
+  laneSheen,
+  laneSign,
+  marquee,
+  passingCar,
+  roadWet,
+  secondHand,
+  shift,
+  steam,
+  strata,
+  strikeBurst,
+  tubeOn,
+  underFloor,
+  walkWet,
+  windowsLife,
+} from './life'
 import {
   AISLE,
   ARM,
@@ -79,7 +118,11 @@ import {
 /**
  * The bowling alley in Queens after midnight, 1952: amber lanes under the tube lights' green-white, the deep maroon
  * of the carpet, cream walls gone grey with smoke, a warmer bulb over the money table in the back, and the night's
- * blue past the glass door. The band is out: the place is quiet, cool, and the bat and the table are loud in it.
+ * blue past the glass door. The band is out: the place is quiet, cool, and the bat and the table are loud in it. It is
+ * the show's first neon: the beer sign over the bar, the pin-and-ball over the lanes, the blade sign outside, and on
+ * the main floor beyond the back wall a jukebox and the far wall's signs, all through the cigarette haze. The depth and
+ * the life of the place (the far floor and its late bowlers, the fans, the smoke, the wet street, what passes close in
+ * front of the lens) are drawn in `life.ts`.
  */
 
 const C = {
@@ -272,6 +315,8 @@ interface Fig {
   /** Drawn in the near hand, after the arm. */
   holding?: (hand: Pt) => void
   rim?: string
+  /** The hat pushed back off the brow, 0 to 1. */
+  hatTip?: number
 }
 
 /** A person, about 3.2 cells tall from the feet at (x, y): returns the head's centre. */
@@ -360,7 +405,8 @@ function figure(pen: Pen, f: Fig): Pt {
 
   // The hat, or the hair once it has gone.
   const hatCol = f.hatCol ?? C.hat
-  if (f.hat === 'fedora') drawFedora(pen, [hx + 0.01 * s, hy - 0.14], 0, hatCol)
+  const tip = f.hatTip ?? 0
+  if (f.hat === 'fedora') drawFedora(pen, [hx + 0.01 * s - 0.03 * tip * s, hy - 0.14 - 0.05 * tip], -0.38 * tip * s, hatCol)
   else if (f.hat === 'cap') {
     blob(pen, [[hx - 0.21 * s, hy - 0.05], [hx - 0.19 * s, hy - 0.2], [hx + 0.02 * s, hy - 0.27], [hx + 0.2 * s, hy - 0.2], [hx + 0.24 * s, hy - 0.11]], hatCol)
     shape(pen, [[hx + 0.1 * s, hy - 0.15], [hx + 0.34 * s, hy - 0.1], [hx + 0.32 * s, hy - 0.07], [hx + 0.1 * s, hy - 0.09]], mix(hatCol, '#000000', 0.25))
@@ -395,9 +441,9 @@ function drawFedora(pen: Pen, base: Pt, rot: number, col: string): void {
 /* ------------------------------------------------------------------ the set */
 
 /** The night outside, the room, the lanes, the floor in section: drawn first, on show time. */
-export function drawSet(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
+export function drawSet(pen: Pen, t: number, f: Frame): void {
   rect(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, C.dark)
-  if (f.x0 < WALL[0]) outside(pen, Math.max(f.x0 - 1, -40), WALL[0], f)
+  if (f.x0 < WALL[0]) outside(pen, t, Math.max(f.x0 - 1, -40), WALL[0], f)
   if (f.x1 > WALL[1] && f.x0 < END_WALL) room(pen, t, f)
   if (f.x1 > END_WALL) {
     rect(pen, END_WALL, f.y0 - 1, f.x1 + 1, f.y1 + 1, C.brickDark)
@@ -405,43 +451,55 @@ export function drawSet(pen: Pen, t: number, f: { x0: number; y0: number; x1: nu
   }
 }
 
-function outside(pen: Pen, x0: number, x1: number, f: { y0: number; y1: number }): void {
+function outside(pen: Pen, t: number, x0: number, x1: number, f: Frame): void {
   vgrad(pen, x0, f.y0 - 1, x1, ROAD, [
     [0, C.sky0, 1],
     [0.55, C.sky1, 1],
     [1, C.sky2, 1],
   ])
-  // The El on its trestle, over the far side of the street.
-  const ty = -3.55
-  for (let x = Math.floor(x0 / 3.4) * 3.4; x < x1; x += 3.4) rect(pen, x - 0.07, ty, x + 0.07, -0.5, C.trestle)
-  // Across the street: low brick, a few windows lit.
-  for (let i = Math.floor(x0 / 2.3) - 1; i * 2.3 < x1; i++) {
-    const bx = i * 2.3
-    const top = -2.0 - 1.4 * hash(i, 41)
-    rect(pen, bx, top, bx + 2.3, -0.5, hash(i, 42) > 0.5 ? C.bldg : C.bldg2)
-    rect(pen, bx, top - 0.08, bx + 2.3, top, C.trestle)
-    for (let r = 0; r < 4; r++) {
-      const wy = top + 0.35 + r * 0.55
-      if (wy > -0.9) break
-      for (let c = 0; c < 3; c++) {
-        const wx = bx + 0.3 + c * 0.7
-        const h = hash(i * 7 + c, r, 43)
-        if (h > 0.84) {
-          const col = h > 0.93 ? C.winCool : C.winWarm
-          rect(pen, wx, wy, wx + 0.28, wy + 0.32, col)
-          glow(pen, [wx + 0.14, wy + 0.16], 0.45, col, 0.18)
-        } else rect(pen, wx, wy, wx + 0.28, wy + 0.32, '#090F1B')
+  // The far side of the street stands back (depth 0.85, laid out on the cut's framing on the cab): the El on its
+  // trestle, low brick, a few windows lit, two televisions going.
+  const [sdx] = parallax(f, STREET_D, STREET_ANCHOR)
+  layer(
+    pen,
+    f,
+    STREET_D,
+    (g) => {
+      const bx0 = Math.max(g.x0 - 1, -40)
+      const bx1 = x1 - sdx + 0.5
+      const ty = -3.55
+      for (let x = Math.floor(bx0 / 3.4) * 3.4; x < bx1; x += 3.4) rect(pen, x - 0.07, ty, x + 0.07, -0.3, C.trestle)
+      for (let i = Math.floor(bx0 / 2.3) - 1; i * 2.3 < bx1; i++) {
+        const bx = i * 2.3
+        const top = -2.0 - 1.4 * hash(i, 41)
+        rect(pen, bx, top, bx + 2.3, -0.3, hash(i, 42) > 0.5 ? C.bldg : C.bldg2)
+        rect(pen, bx, top - 0.08, bx + 2.3, top, C.trestle)
+        for (let r = 0; r < 4; r++) {
+          const wy = top + 0.35 + r * 0.55
+          if (wy > -0.9) break
+          for (let c = 0; c < 3; c++) {
+            const wx = bx + 0.3 + c * 0.7
+            const h = hash(i * 7 + c, r, 43)
+            if (h > 0.84) {
+              const col = h > 0.93 ? C.winCool : C.winWarm
+              rect(pen, wx, wy, wx + 0.28, wy + 0.32, col)
+              glow(pen, [wx + 0.14, wy + 0.16], 0.45, col, 0.18)
+            } else rect(pen, wx, wy, wx + 0.28, wy + 0.32, '#090F1B')
+          }
+        }
+        // A shop at the street, its window dark but for a night lamp.
+        if (hash(i, 44) > 0.6) {
+          rect(pen, bx + 0.3, -1.45, bx + 2.0, -0.62, '#0A1424')
+          glow(pen, [bx + 1.1, -1.0], 0.8, C.winWarm, 0.1)
+        }
       }
-    }
-    // A shop at the street, its window dark but for a night lamp.
-    if (hash(i, 44) > 0.6) {
-      rect(pen, bx + 0.3, -1.45, bx + 2.0, -0.62, '#0A1424')
-      glow(pen, [bx + 1.1, -1.0], 0.8, C.winWarm, 0.1)
-    }
-  }
-  rect(pen, x0, ty - 0.3, x1, ty, C.trestle)
-  for (let x = Math.floor(x0 / 0.5) * 0.5; x < x1; x += 0.5) line(pen, [x, ty - 0.3], [x + 0.5, ty], '#0C1424', 0.6)
-  // The far sidewalk; the street; the near sidewalk at the door, and its curb.
+      windowsLife(pen, t, bx0, bx1)
+      rect(pen, bx0, ty - 0.3, bx1, ty, C.trestle)
+      for (let x = Math.floor(bx0 / 0.5) * 0.5; x < bx1; x += 0.5) line(pen, [x, ty - 0.3], [x + 0.5, ty], '#0C1424', 0.6)
+    },
+    STREET_ANCHOR,
+  )
+  // The far sidewalk; the street, wet; the near sidewalk at the door, and its curb.
   rect(pen, x0, -0.62, x1, -0.5, '#2E394A')
   vgrad(pen, x0, -0.5, x1, ROAD + 0.05, [
     [0, C.street, 1],
@@ -452,17 +510,21 @@ function outside(pen: Pen, x0: number, x1: number, f: { y0: number; y1: number }
     [1, C.street, 1],
   ])
   for (let i = Math.floor(x0 / 1.6); i * 1.6 < x1; i++) rect(pen, i * 1.6, -0.08, i * 1.6 + 0.7, -0.05, '#2A3446')
+  roadWet(pen, t, x0, x1, sdx)
+  steam(pen, t, x0, x1)
+  passingCar(pen, t, x0, x1)
   // The near curb, and the sidewalk in front of the cab, its slabs, its face.
   rect(pen, x0, WALK[0] - 0.06, x1, WALK[0], '#56657A')
   rect(pen, x0, WALK[0], x1, WALK[1], C.walkTop)
   line(pen, [x0, (WALK[0] + WALK[1]) / 2 + 0.06], [x1, (WALK[0] + WALK[1]) / 2 + 0.06], C.walk, 0.3)
   for (let x = Math.floor(x0 / 0.9) * 0.9; x < x1; x += 0.9) line(pen, [x, WALK[0]], [x - 0.08, WALK[1]], C.walk, 0.4)
+  walkWet(pen, t, x0, x1)
   rect(pen, x0, WALK[1], x1, WALK[1] + 0.1, C.walkFace)
   rect(pen, x0, WALK[1] + 0.1, x1, f.y1 + 1, C.ground)
   // The stoop at the door, down from the threshold to the sidewalk.
   rect(pen, WALL[0] - 0.45, FLOOR, WALL[0], WALK[0] + 0.05, C.walkFace)
   rect(pen, WALL[0] - 0.45, FLOOR - 0.03, WALL[0], FLOOR + 0.03, C.walkTop)
-  // The streetlamp, a cold mercury light on the cab and the curb.
+  // The streetlamp, a cold mercury light on the cab and the curb, a mist turning in it.
   const lx = -10.6
   rect(pen, lx - 0.05, -3.6, lx + 0.05, (WALK[0] + WALK[1]) / 2, '#0A0F18')
   path(pen, [[lx, -3.6], [lx + 0.15, -3.85], [lx + 0.6, -3.85]], '#0A0F18', 1.6)
@@ -470,39 +532,61 @@ function outside(pen: Pen, x0: number, x1: number, f: { y0: number; y1: number }
   glow(pen, [lx + 0.62, -3.72], 3.8, C.mercury, 0.22)
   glow(pen, [lx + 0.62, -3.72], 0.5, C.mercury, 0.8)
   glow(pen, [lx + 2.2, ROAD], 3.2, C.mercury, 0.1)
+  lampMist(pen, t, x0, x1)
+  // The alley's own sign, hung off its front over the sidewalk.
+  bladeSign(pen, t)
 }
 
-function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
+function room(pen: Pen, t: number, f: Frame): void {
   const x0 = WALL[1]
   const x1 = END_WALL
-  // The back wall: cream over a wood wainscot, a maroon rail between.
-  vgrad(pen, x0, CEIL, x1, -1.95, [
-    [0, mix(C.cream, '#000000', 0.62), 1],
-    [0.6, mix(C.cream, '#000000', 0.38), 1],
-    [1, mix(C.cream, '#000000', 0.28), 1],
-  ])
-  for (let x = x0 + 1.2; x < x1; x += 2.4) {
-    rect(pen, x, -3.75, x + 1.9, -2.2, mix(C.cream, '#000000', 0.36))
-    path(pen, [[x, -2.2], [x, -3.75], [x + 1.9, -3.75]], mix(C.creamDark, '#000000', 0.3), 0.5)
+  // Through the long opening over the wainscot, the main floor beyond, under its haze (`life.ts`).
+  farHall(pen, t, f)
+  // The back wall: over the counter, cream gone dim with smoke; past it only its head over the opening, and its posts.
+  const wall: [number, string, number][] = [
+    [0, mix(C.cream, '#000000', 0.66), 1],
+    [0.6, mix(C.cream, '#000000', 0.46), 1],
+    [1, mix(C.cream, '#000000', 0.38), 1],
+  ]
+  vgrad(pen, x0, CEIL, OPEN0, -1.95, wall)
+  vgrad(pen, OPEN0, CEIL, x1, OPEN_TOP, wall)
+  for (let x = x0 + 1.2; x < OPEN0 - 0.4; x += 2.4) {
+    const xe = Math.min(x + 1.9, OPEN0 - 0.22)
+    rect(pen, x, -3.75, xe, -2.2, mix(C.cream, '#000000', 0.44))
+    path(pen, [[x, -2.2], [x, -3.75], [xe, -3.75]], mix(C.creamDark, '#000000', 0.38), 0.5)
+  }
+  rect(pen, OPEN0, OPEN_TOP - 0.06, x1, OPEN_TOP, C.woodDark)
+  for (const px of [OPEN0 + 0.1, ...POSTS]) {
+    rect(pen, px - 0.11, OPEN_TOP, px + 0.11, -1.95, mix(C.wood, '#000000', 0.45))
+    rect(pen, px - 0.11, OPEN_TOP, px - 0.06, -1.95, mix(C.creamDark, '#000000', 0.35))
+    rect(pen, px + 0.07, OPEN_TOP, px + 0.11, -1.95, mix(C.wood, '#000000', 0.7))
   }
   // Each tube washes the wall under it, cold.
-  for (const tx of TUBES) glow(pen, [tx + 0.85, -3.4], 2.0, C.tubeGlow, 0.16)
+  for (const [i, tx] of TUBES.entries()) glow(pen, [tx + 0.85, -3.4], 2.0, C.tubeGlow, 0.13 * tubeOn(i, t))
   rect(pen, x0, -1.95, x1, BACK, mix(C.wood, '#000000', 0.2))
   for (let x = x0 + 0.1; x < x1; x += 0.42) rect(pen, x, -1.92, x + 0.025, BACK, C.woodDark)
   rect(pen, x0, -2.03, x1, -1.92, C.trim)
-  rect(pen, x0, -2.06, x1, -2.03, C.woodLight)
-  // Pictures and pennants over the counter: shapes only.
-  for (const [px, w, h] of [[-0.3, 0.55, 0.42], [0.55, 0.42, 0.55]] as [number, number, number][]) {
-    rect(pen, px, -3.55, px + w, -3.55 + h, C.woodDark)
-    rect(pen, px + 0.05, -3.5, px + w - 0.05, -3.6 + h, '#3A3A36')
-    glow(pen, [px + w / 2, -3.3], 0.25, C.creamHi, 0.12)
+  rect(pen, x0, CAP, x1, -2.03, C.woodLight)
+  // On the ledge along the opening: the regulars' glasses, an ashtray going.
+  const ledge: [number, number, number, number][] = [
+    [11.55, CAP, 0.22, 0.09],
+    [11.8, CAP, 0.19, 0.085],
+    [16.2, CAP, 0.22, 0.09],
+    [19.55, CAP, 0.2, 0.09],
+  ]
+  if (f.y0 < CAP && f.y1 > CAP - 0.3) {
+    for (const [gx, gb, gh, gw] of ledge) if (gx > f.x0 - 0.3 && gx < f.x1 + 0.3) beer(pen, [gx, gb], gh, gw, 0, gx === 11.8 ? 0.45 : 0.82)
+    bubbles(pen, t, ledge.filter(([gx]) => gx > f.x0 - 0.3 && gx < f.x1 + 0.3))
+    if (f.x0 < 12.6 && f.x1 > 11.9) ashtray(pen, t, [12.3, CAP], 0.8)
   }
+  // The neon beer sign over the back bar, and the pennants by it.
+  barSign(pen, t)
   for (let i = 0; i < 5; i++) {
     const px = 1.3 + i * 0.3
     shape(pen, [[px, -3.62], [px + 0.26, -3.62], [px + 0.13, -3.3]], i % 2 ? C.trim : C.cream)
   }
   path(pen, [[1.25, -3.64], [2.85, -3.64]], C.woodDark, 0.5)
-  // The clock, no numbers: its hands at twenty past one.
+  // The clock, no numbers: its hands at twenty past one, its second hand going round.
   const ck: Pt = [3.6, -3.25]
   ellipse(pen, ck, 0.3, 0.3, C.woodDark)
   ellipse(pen, ck, 0.25, 0.25, C.clock)
@@ -513,29 +597,37 @@ function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: 
   const mins = (20 + (t - 121) / 60) / 60
   line(pen, ck, [ck[0] + Math.sin(mins * Math.PI * 2) * 0.19, ck[1] - Math.cos(mins * Math.PI * 2) * 0.19], '#1A1410', 0.8)
   line(pen, ck, [ck[0] + Math.sin(((1 + mins) / 12) * Math.PI * 2) * 0.12, ck[1] - Math.cos(((1 + mins) / 12) * Math.PI * 2) * 0.12], '#1A1410', 1.1)
+  secondHand(pen, t, ck)
+  ellipse(pen, ck, 0.025, 0.025, '#B5262A')
   // House balls on the back wall's racks, along the lanes.
   for (let x = 10.6; x < 17; x += 3.2) {
     rect(pen, x, -1.62, x + 1.5, -1.55, C.chromeDark)
     for (let j = 0; j < 4; j++) ellipse(pen, [x + 0.2 + j * 0.37, -1.74], 0.16, 0.16, [C.bowl1, C.bowl2, '#5A1E2E', C.bowl1][(j + Math.round(x)) % 4])
   }
+  // The pin-and-ball sign hung in the opening over the lanes.
+  if (f.x1 > 14.6 && f.x0 < 17.1) laneSign(pen, t)
 
-  // The ceiling: low, close, its tiles, and the tubes hung under it.
+  // The ceiling: low, close, its tiles, the fans turning further back, and the tubes hung under it.
   rect(pen, x0, f.y0 - 1, x1, CEIL, C.ceiling)
   for (let i = 1; i < 12; i++) {
     const y = CEIL - 0.18 * Math.pow(i, 1.35)
     if (y < f.y0 - 1) break
     line(pen, [x0, y], [x1, y], C.ceilingLine, 0.5)
   }
+  fans(pen, t, f)
   rect(pen, x0, CEIL, x1, CEIL + 0.06, C.woodDark)
-  for (const tx of TUBES) {
+  // On the strike the tubes over the lanes jump.
+  const jolt = flash(t - STRIKE, 0.12)
+  for (const [i, tx] of TUBES.entries()) {
+    const on = tubeOn(i, t) * (tx > 11 ? 1 + 0.6 * jolt : 1)
     rect(pen, tx - 0.05, CEIL + 0.06, tx + 1.75, CEIL + 0.12, '#3A3530')
-    rect(pen, tx, CEIL + 0.12, tx + 1.7, CEIL + 0.2, C.tube)
-    glow(pen, [tx + 0.85, CEIL + 0.6], 2.6, C.tubeGlow, 0.13)
-    glow(pen, [tx + 0.85, CEIL + 0.16], 0.9, C.tube, 0.35)
+    rect(pen, tx, CEIL + 0.12, tx + 1.7, CEIL + 0.2, on > 0.5 ? C.tube : mix(C.tube, '#3A3530', 0.65))
+    glow(pen, [tx + 0.85, CEIL + 0.6], 2.6, C.tubeGlow, 0.13 * on)
+    glow(pen, [tx + 0.85, CEIL + 0.16], 0.9, C.tube, 0.38 * on)
   }
 
   // The lunch counter, its stools, and what is on it.
-  counter(pen)
+  counter(pen, t)
 
   // The floor: the back aisle, the carpet, the approach, the lanes, the gutters.
   rect(pen, x0, BACK, x1, AISLE[1], C.carpet)
@@ -593,6 +685,7 @@ function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: 
       ctx.restore()
     }
   }
+  if (f.x1 > 14.6 && f.x0 < 17.1) laneSheen(pen, t)
 
   // The pin end: dark behind the decks, the masking board over them with its crown, the far rack of pins.
   rect(pen, HEADPIN - 0.6, -2.4, x1, AISLE[1], C.pitDark)
@@ -601,6 +694,7 @@ function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: 
   rect(pen, HEADPIN - 0.55, -2.36, x1 - 0.05, -1.38, C.maskingHi)
   rect(pen, HEADPIN - 0.5, -2.31, x1 - 0.1, -1.43, C.masking)
   crown(pen, [(HEADPIN + x1) / 2, -1.88], 0.62)
+  if (f.x1 > HEADPIN - 0.6) marquee(pen, t, HEADPIN - 0.525, -2.335, x1 - 0.075, -1.405)
   glow(pen, [HEADPIN + 0.6, -1.2], 1.6, C.tube, 0.2)
   rect(pen, HEADPIN - 0.6, -1.34, x1, -1.28, C.tube)
   // The pinboy, in the dark over the pit, on his perch.
@@ -616,7 +710,6 @@ function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: 
   line(pen, [x0, EDGE], [x1, EDGE], C.woodLight, 0.5)
   for (let x = x0 + 0.8; x < x1; x += 1.6) rect(pen, x, EDGE + 0.1, x + 0.12, f.y1 + 1, C.joist)
   rect(pen, x0, TRACK + 0.32, x1, TRACK + 0.4, C.joist)
-  for (const bx of [4.5, 12.5]) glow(pen, [bx, EDGE + 0.3], 1.1, C.warm, 0.14)
   rect(pen, LIFT_X - 0.02, TRACK + 0.04, PIT[0] + 0.3, TRACK + 0.08, C.rail)
   line(pen, [LIFT_X - 0.02, TRACK], [PIT[0] + 0.3, TRACK], C.railHi, 0.7)
   // The lift's shaft, up through the floor to the hood.
@@ -629,6 +722,7 @@ function room(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: 
   rect(pen, PIT[0] - 0.02, PIT_FLOOR + 0.08, PIT[0] + 0.28, TRACK + 0.08, '#0D0809')
   rect(pen, PIT[1] - 0.12, -1.2, PIT[1], PIT_FLOOR, C.cushion)
   for (let y = -1.1; y < PIT_FLOOR; y += 0.2) line(pen, [PIT[1] - 0.12, y], [PIT[1], y + 0.05], '#24180F', 0.5)
+  underFloor(pen, t, f)
 
   // The front wall, in section, and the threshold.
   rect(pen, WALL[0], f.y0 - 1, WALL[1], HEAD, C.brick)
@@ -663,7 +757,7 @@ function crown(pen: Pen, c: Pt, s: number): void {
   for (const dx of [-0.55, 0, 0.55]) ellipse(pen, [x + dx * s, y - (dx === 0 ? 0.42 : 0.29) * s], 0.05 * s, 0.05 * s, C.crown)
 }
 
-function counter(pen: Pen): void {
+function counter(pen: Pen, t: number): void {
   const [x0, x1] = COUNTER
   const top = -2.42
   // The back bar: a shelf, cups, the pie case, the urn.
@@ -689,6 +783,10 @@ function counter(pen: Pen): void {
   rect(pen, ux + 0.17, top - 0.28, ux + 0.25, top - 0.24, C.chromeDark)
   rect(pen, x0 + 0.6, top - 0.2, x0 + 0.78, top - 0.1, C.chrome)
   rect(pen, x0 + 0.92, top - 0.16, x0 + 1.04, top - 0.1, C.cup)
+  // A cigarette left going in the ashtray, its thread of smoke up through the light; a glass left half drunk.
+  ashtray(pen, t, [1.88, top - 0.1], 0.75)
+  beer(pen, [2.66, top - 0.1], 0.2, 0.085, 0, 0.5)
+  bubbles(pen, t, [[2.66, top - 0.1, 0.2, 0.085]])
   // The counter's light: warm, from a shaded bulb over it.
   glow(pen, [(x0 + x1) / 2, top - 0.6], 2.0, C.warm, 0.14)
   // The stools.
@@ -742,10 +840,12 @@ function pinAt(i: number, t: number): PinFly {
   const t0 = STRIKE + row * 0.03 + hash(i, 61) * 0.02
   if (t < t0) return { base: home, rot: 0, down: false }
   const s = t - t0
-  const vx = 1.6 + 3.2 * hash(i, 62) - row * 0.2
-  const vy = -2.2 - 3.0 * hash(i, 63)
-  const w = (hash(i, 64) > 0.5 ? 1 : -1) * (6 + 8 * hash(i, 65))
-  const x = home[0] + vx * s
+  const vx = 1.4 + 3.8 * hash(i, 62) - row * 0.2
+  const vy = -2.6 - 3.8 * hash(i, 63)
+  const w = (hash(i, 64) > 0.5 ? 1 : -1) * (8 + 10 * hash(i, 65))
+  // Off the cushion at the pit's back, they drop.
+  const wall = PIT[1] - 0.22
+  const x = Math.min(wall, home[0] + vx * s)
   const floorY = x > DECK_END + 0.05 ? PIT_FLOOR - 0.02 : home[1]
   // Up and over, turning, and down: on the deck, or into the pit.
   const T = (-vy + Math.sqrt(vy * vy + 2 * 12 * Math.max(0, floorY - home[1]))) / 12
@@ -753,10 +853,10 @@ function pinAt(i: number, t: number): PinFly {
     const y = home[1] + vy * s + 6 * s * s
     return { base: [x, y], rot: w * s, down: false }
   }
-  const xl = home[0] + vx * T
+  const xl = Math.min(wall, home[0] + vx * T)
   const slide = Math.min(0.25, (s - T) * 0.8)
   const settle = Math.sign(w) * Math.PI / 2
-  return { base: [xl + slide * Math.sign(vx), floorY], rot: settle, down: true }
+  return { base: [Math.min(wall + 0.05, xl + slide * Math.sign(vx)), floorY], rot: settle, down: true }
 }
 
 /* ------------------------------------------------------------------ the pinboy */
@@ -778,10 +878,13 @@ function pinboy(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the part's drawing */
 
-/** Everything that moves, and the people, in the order they overlap. */
-export function drawAlley(pen: Pen, t: number): void {
+/**
+ * Everything that moves, and the people, in the order they overlap; then the air in front of them (the dust in the
+ * lamp, the smoke hanging under the tubes), and last what passes close in front of the lens.
+ */
+export function drawAlley(pen: Pen, t: number, f: Frame): void {
   doorLeaf(pen, t)
-  lampOverTable(pen, t)
+  const lx = lampOverTable(pen, t)
   bettor(pen, t)
   wally(pen, t)
   rack(pen, t)
@@ -789,9 +892,17 @@ export function drawAlley(pen: Pen, t: number): void {
   contraption(pen, t)
   player(pen, t)
   nearPins(pen, t)
+  strikeBurst(pen, t)
   drawCab(pen, SEAT, { t, wally: t >= WALK1 + 0.04, lights: lightsAt(t) })
+  if (f.x0 < WALL[0]) {
+    cabSheen(pen, t)
+    carGlare(pen, t)
+  }
   hats(pen, t)
   hitMarks(pen, t)
+  if (f.x1 > TABLE[0] - 0.6 && f.x0 < TABLE[1] + 0.6 && f.y0 < TOP) lampMotes(pen, t, lx)
+  strata(pen, t, f)
+  foreground(pen, t, f)
 }
 
 function lightsAt(t: number): number {
@@ -822,7 +933,7 @@ function doorLeaf(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the lamp over the money table */
 
-function lampOverTable(pen: Pen, t: number): void {
+function lampOverTable(pen: Pen, t: number): number {
   const lx = NET_X + 0.05
   const swing = 0.03 * Math.sin(t * 0.9)
   line(pen, [lx, CEIL + 0.06], [lx + swing, -3.6], '#141210', 0.7)
@@ -844,6 +955,8 @@ function lampOverTable(pen: Pen, t: number): void {
   ctx.fill()
   ctx.restore()
   glow(pen, [lx, TOP - 0.3], 3.2, C.warm, 0.12)
+  bloom(pen, [lx + swing, -3.28], 0.45, C.warm, 0.35)
+  return lx + swing
 }
 
 /* ------------------------------------------------------------------ the table and the net */
@@ -1034,6 +1147,12 @@ function player(pen: Pen, t: number): void {
   const pose = markPose(t)
   // His feet step when he moves: a stride's phase from how far he has come.
   const moving = Math.abs(markPose(t + 0.04).x - markPose(t - 0.04).x) > 0.02
+  // Laughing at the given point, he pushes his hat back with his free hand.
+  const tip = hatTip(t)
+  const lean = pose.lean - 0.12 * stunned
+  const bobAll = bob + pose.crouch - 0.03 * stunned
+  const brim: Pt = [pose.x - lean - 0.05 - 0.3, FB - 2.93 + bobAll - 0.12]
+  const far: Pt = lerp([pose.x + 0.12, FB - 1.55 + pose.crouch], brim, ease(tip * 1.6))
   const head = figure(pen, {
     x: pose.x,
     y: FB,
@@ -1044,13 +1163,14 @@ function player(pen: Pen, t: number): void {
     hat: t < HATS ? 'fedora' : null,
     hatCol: C.hat,
     tie: C.tie2,
-    lean: pose.lean - 0.12 * stunned,
-    bob: bob + pose.crouch - 0.03 * stunned,
+    lean,
+    bob: bobAll,
     walk: moving ? (pose.x - MARK_X) * 7 : null,
     laugh: laughing * (0.5 + 0.5 * Math.abs(Math.sin((t - NET_HIT) * 9))),
     near: hand,
-    far: [pose.x + 0.12, FB - 1.55 + pose.crouch],
+    far,
     rim: C.warm,
+    hatTip: tip,
     holding: () => {
       line(pen, hand, [bat.face[0] + Math.cos(bat.rot) * 0.18, bat.face[1] + Math.sin(bat.rot) * 0.18], C.handle, 2.2)
       oval(pen, bat.face, 0.215, t < PICKUP[0] ? 0.05 : 0.11, bat.rot + Math.PI / 2, C.bowl1)
@@ -1095,7 +1215,8 @@ function wad(pen: Pen, hand: Pt, n: number): void {
 function bettor(pen: Pen, t: number): void {
   // He reaches across to Wally with the raise, and slaps it into his hand.
   const reach = RAISE - 0.32
-  let near: Pt = [MARK2_X + 0.42, FB - 1.95]
+  const rest: Pt = [MARK2_X + 0.42, FB - 1.95]
+  let near: Pt = rest
   let holds = t < RAISE ? 1 : 0
   if (t > reach && t < RAISE + 0.35) {
     const u = t < RAISE ? ease((t - reach) / 0.32) : 1 - ease((t - RAISE) / 0.35)
@@ -1107,6 +1228,16 @@ function bettor(pen: Pen, t: number): void {
   if (dismay > 0) near = lerp(near, [MARK2_X + 0.22, FB - 3.25], dismay)
   const laughing = t > NET_HIT + 0.1 && t < PAN_BACK - 0.2 ? clamp01(Math.min(t - NET_HIT - 0.1, PAN_BACK - 0.2 - t) / 0.2) : 0
   const sore = t > STRIKE ? clamp01((t - STRIKE) / 0.5) : 0
+  const lean = -0.04 + 0.08 * sore + watching(t) + shift(t, 2)
+  const bob = laughing * 0.04 * Math.abs(Math.sin((t - NET_HIT) * Math.PI * 4)) + 0.012 * Math.sin(t * 1.3 + 1)
+  // His beer: on the counter by him, then, once the raise is down, a long nervous pull at it through the rally.
+  const mouth: Pt = [MARK2_X + lean + 0.05 + 0.22, FB - 2.93 + bob + 0.1]
+  const drink = bettorDrink(t, rest, mouth)
+  if (drink.hand) near = drink.hand
+  if (!drink.held) {
+    beer(pen, BETTOR_GLASS, 0.24, 0.1)
+    bubbles(pen, t, [[BETTOR_GLASS[0], BETTOR_GLASS[1], 0.24, 0.1]])
+  }
   const head = figure(pen, {
     x: MARK2_X,
     y: FB,
@@ -1118,26 +1249,31 @@ function bettor(pen: Pen, t: number): void {
     hatCol: C.hat2,
     tie: C.tie,
     girth: 1.3,
-    lean: -0.04 + 0.08 * sore + watching(t),
-    bob: laughing * 0.04 * Math.abs(Math.sin((t - NET_HIT) * Math.PI * 4)) + 0.012 * Math.sin(t * 1.3 + 1),
+    lean,
+    bob,
     laugh: laughing * (0.5 + 0.5 * Math.abs(Math.sin((t - NET_HIT) * 8))),
     near,
     far: [MARK2_X - 0.15, FB - 1.6],
     rim: C.warm,
     holding: (h) => {
       if (holds) wad(pen, h, 1)
+      else if (drink.held) beer(pen, [h[0] + 0.02, h[1] + 0.12], 0.24, 0.1, drink.tilt)
     },
   })
   HEADS.bettor = head
-  // His cigar, and its smoke going up into the tubes' light.
+  // His cigar (out of his mouth while he drinks), and its smoke going up into the tubes' light.
+  const drinking = drink.held && drink.tilt < -0.3
   const cig: Pt = [head[0] + 0.24, head[1] + 0.12]
-  line(pen, [head[0] + 0.16, head[1] + 0.1], cig, '#4A2E1A', 2.2)
-  glow(pen, cig, 0.08, '#FF7A3A', 0.6 + 0.3 * Math.sin(t * 2.7))
+  if (!drinking) {
+    line(pen, [head[0] + 0.16, head[1] + 0.1], cig, '#4A2E1A', 2.2)
+    glow(pen, cig, 0.08, '#FF7A3A', 0.6 + 0.3 * Math.sin(t * 2.7))
+  }
   for (let i = 0; i < 5; i++) {
     const u = (t * 0.18 + i / 5) % 1
     const sx = cig[0] + 0.1 * u + 0.15 * Math.sin(u * 5 + i + t * 0.6) * u
     blob(pen, [[sx - 0.06 - 0.12 * u, cig[1] - u * 1.6], [sx + 0.04, cig[1] - u * 1.6 - 0.08 - 0.1 * u], [sx + 0.1 + 0.12 * u, cig[1] - u * 1.6 + 0.02]], C.smoke, 0.16 * (1 - u))
   }
+  if (!drinking) curl(pen, t, cig, 1.3, 3, C.smoke, 0.22)
 }
 
 function wally(pen: Pen, t: number): void {
@@ -1180,7 +1316,7 @@ function wally(pen: Pen, t: number): void {
     hat: 'cap',
     hatCol: C.cap,
     leather: true,
-    lean: walking ? 0.08 : -0.06 + watching(t) * 0.7,
+    lean: walking ? 0.08 : -0.06 + watching(t) * 0.7 + shift(t, 5),
     bob: walking ? -0.03 * Math.abs(Math.sin(phase ?? 0)) : 0.01 * Math.sin(t * 1.1),
     walk: phase,
     grin,
@@ -1250,7 +1386,7 @@ function nearPins(pen: Pen, t: number): void {
 
 function hats(pen: Pen, t: number): void {
   if (t < HATS) return
-  for (const [who, v, w, col] of [['player', [0.9, -3.4], -9, C.hat], ['bettor', [-0.6, -3.8], 7, C.hat2]] as ['player' | 'bettor', Pt, number, string][]) {
+  for (const [who, v, w, col] of [['player', [1.2, -4.4], -12, C.hat], ['bettor', [-0.9, -4.8], 10, C.hat2]] as ['player' | 'bettor', Pt, number, string][]) {
     const h = HEADS[who]
     const start: Pt = [h[0], h[1] - 0.15]
     const floor = FB - 0.05
