@@ -952,11 +952,12 @@ function drawDawnPatch(p: p5, k: number, c: Paint, t: number): void {
   const spring = y0 + w * 0.6
   const wx = (x0 + x1) / 2
   const wy = (y0 + y1) / 2
-  // Where the window's middle lands (round the picture), how much larger its image is, and its shear (the low sun
-  // comes from the left, so the image leans that way).
+  // Where the window's middle lands, how much larger its image is, and its shear (the low sun comes from the left, so
+  // the image leans that way). Across the picture's lower right and on down the wall beside it, not round it: centred
+  // on her picture, the window's arch stood behind it like a halo.
   const creep = Math.max(0, t - FUN.from - 2.5)
-  const cx = 0.14 + 0.006 * creep
-  const cy = -1.16 + 0.012 * creep
+  const cx = 0.5 + 0.006 * creep
+  const cy = -0.9 + 0.012 * creep
   const sx = 1.16
   const sy = 1.04
   const shear = -0.2
@@ -1207,10 +1208,10 @@ function shafts(c: Paint, t: number): Shaft[] {
     const a1 = x0 + ((x1 - x0) * (i + 1)) / n
     out.push({ top: [[a0, src], [a1, src]], foot: [[a0 + run * sl, floor], [a1 + run * (sl + 0.08), floor]], hex, a, air })
   }
+  // Thin in the air: what tells the sun is where it lands, on the floor and the pews.
   if (!c.g) {
-    // Thin in the air: what tells the sun is where it lands, on the floor and the pews.
     for (let wi = 0; wi < WINDOWS.length; wi++) for (let i = 0; i < 2; i++) throwFrom(wi, i, 2, c.glass[(wi + i * 2) % 4], 0.13, 0.065)
-  } else if (beamUp(t) > 0.001) throwFrom(1, 0, 1, '#FFFFFF', 0.2 * beamUp(t))
+  } else if (beamUp(t) > 0.001) throwFrom(1, 0, 1, '#FFFFFF', 0.2 * beamUp(t), 0.08 * beamUp(t))
   return out
 }
 
