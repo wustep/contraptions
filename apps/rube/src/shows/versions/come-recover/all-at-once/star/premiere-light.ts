@@ -113,24 +113,3 @@ export function smear(p: p5, x: number, y: number, w: number, h: number, hex: st
     ctx.fill()
   }
 }
-
-/** A four-pointed glint: the star a flashbulb makes, tapered spikes, `r` long (pixels). */
-export function glint(p: p5, x: number, y: number, r: number, hex: string, a: number, turn = 0): void {
-  if (a <= 0.004 || r <= 0.5) return
-  const ctx = ctxOf(p)
-  ctx.save()
-  ctx.translate(x, y)
-  ctx.rotate(turn)
-  ctx.fillStyle = rgba(hex, a)
-  for (let i = 0; i < 4; i++) {
-    const long = i % 2 === 0 ? r : r * 0.62
-    ctx.beginPath()
-    ctx.moveTo(0, -r * 0.07)
-    ctx.lineTo(long, 0)
-    ctx.lineTo(0, r * 0.07)
-    ctx.closePath()
-    ctx.fill()
-    ctx.rotate(Math.PI / 2)
-  }
-  ctx.restore()
-}

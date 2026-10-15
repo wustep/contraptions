@@ -2,9 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
 import { mixHex, type Pt } from '../../../../../parts'
-import { prefersCalm } from '../film'
 import { frame, hash, knock, smooth, type Ctx } from '../kit'
-import { ONSETS } from '../music'
 import { STAR } from '../worlds'
 import {
   BEGIN,
@@ -24,7 +22,7 @@ import {
   carpetX,
   flightIn,
 } from './premiere-clock'
-import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, glint, glow, pool, rgba as rgbaHex, smear } from './premiere-light'
+import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, glow, pool, rgba as rgbaHex, smear } from './premiere-light'
 
 /** The kerb the carpet is laid to: stone, a shade up from the wet street. */
 const KERB = mixHex(STREET, SILVER, 0.1)
@@ -106,54 +104,6 @@ function flashOf(c: Shooter, t: number): { pop: number; after: number } {
 
 /** Every flash, for the wash over the whole scene. */
 const FLASHES: { x: number; y: number; t: number }[] = PRESS.flatMap((c) => c.flashes.map((t) => ({ x: reflectorOf(c)[0], y: reflectorOf(c)[1], t })))
-
-/**
- * Between the big flashes the pen keeps on: on the recording's other clear onsets (the faintest left out, so the
- * louder runs sparkle and the quiet between them does not) a gun or two goes off along it, near her, a small pop of
- * its own, so the press sparkles with the music the way a red carpet does. A pop lights its own
- * corner and the wall behind its shooter, never the frame. None comes within a tenth of a second of a big flash, nor
- * closer than 0.12 s to the one before, so the pen twinkles and never strobes; and none for a viewer who has asked
- * for less motion, since they carry no story.
- */
-const TWINKLES: { i: number; t: number; s: number }[] = (() => {
-  const big = PRESS.flatMap((c) => c.flashes)
-  const out: { i: number; t: number; s: number }[] = []
-  let last = -Infinity
-  let lastShooter = -1
-  for (const o of ONSETS) {
-    if (o.t < BEGIN + 0.05 || o.t > EDGE_T + 0.6 || o.s < 0.3) continue
-    if (big.some((b) => Math.abs(b - o.t) < 0.1) || o.t - last < 0.12) continue
-    // The shooters about her and a little ahead of her, where the camera is looking.
-    const near = herX(o.t) + 1.4
-    let pool = PRESS.map((c, i) => ({ c, i })).filter(({ c, i }) => i !== lastShooter && Math.abs(c.x - near) < 4.2)
-    if (!pool.length) pool = PRESS.map((c, i) => ({ c, i })).slice(-4)
-    const n = o.s >= 0.6 && pool.length > 2 ? 2 : 1
-    const first = Math.floor(hash(Math.round(o.t * 100), 3) * pool.length)
-    for (let j = 0; j < n; j++) {
-      const pick = pool[(first + j * Math.ceil(pool.length / 2)) % pool.length]
-      out.push({ i: pick.i, t: o.t + 0.012 * j, s: o.s })
-      lastShooter = pick.i
-    }
-    last = o.t
-  }
-  return out
-})()
-
-/** How bright shooter `i`'s small pop is at show time `t`, and its afterglow. */
-function twinkleOf(i: number, t: number): { pop: number; after: number } {
-  if (prefersCalm()) return { pop: 0, after: 0 }
-  let pop = 0
-  let after = 0
-  for (const w of TWINKLES) {
-    if (w.i !== i) continue
-    const s = t - w.t
-    if (s < 0 || s > 0.8) continue
-    const strength = 0.6 + 0.4 * Math.min(1, w.s)
-    pop = Math.max(pop, strength * knock(s, 0.045))
-    after = Math.max(after, strength * knock(s, 0.22))
-  }
-  return { pop, after }
-}
 
 /* ------------------------------------------------------------------ the rope line */
 
@@ -538,15 +488,24 @@ function drawBoard(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
         p.fill(STAR.carpetDeep)
         p.triangle(X(x - 0.03), X(y + 0.1), X(x + 0.08), X(y - 0.02), X(x + 0.19), X(y + 0.1))
       } else {
-        glint(p, X(x), X(y), X(0.17), STAR.brass, 0.95)
+        // The star: a flat brass mark, printed, not a glint.
+        p.noStroke()
+        p.fill(STAR.brass)
+        p.beginShape()
+        for (let j = 0; j < 10; j++) {
+          const a = -Math.PI / 2 + (j * Math.PI) / 5
+          const r = j % 2 === 0 ? 0.11 : 0.045
+          p.vertex(X(x + r * Math.cos(a)), X(y + r * Math.sin(a)))
+        }
+        p.endShape(p.CLOSE)
       }
     }
   }
   // Each gun as it fires lights the board behind its shooter.
-  PRESS.forEach((s, i) => {
+  PRESS.forEach((s) => {
     const [rx, ry] = reflectorOf(s)
     if (rx < x0 - 2 || rx > x1 + 2) return
-    const hot = Math.max(flashOf(s, t).pop, twinkleOf(i, t).pop)
+    const hot = flashOf(s, t).pop
     if (hot > 0.01) glow(p, X(rx), X(ry + 0.3), X(1.5), STAR.flash, 0.55 * hot, 0.3)
   })
   ctx.restore()
@@ -703,20 +662,16 @@ function drawPress(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
   outline(p, STAR.gold, Math.max(1, X(0.018)))
   p.line(X(PEN.x0), X(PEN.rail - 0.015), X(PEN.x1), X(PEN.rail - 0.015))
   // The reflectors: dull silver in the dark, white hot when they fire.
-  PRESS.forEach((s, i) => {
+  PRESS.forEach((s) => {
     const [rx, ry] = reflectorOf(s)
     const { pop, after } = flashOf(s, t)
-    const tw = twinkleOf(i, t)
-    const hot = Math.max(pop, tw.pop)
     const r = 0.18
-    solid(p, rgbaHex(INK, 0.6), weight * 0.7, mixHex(mixHex(SILVER, NIGHT, 0.5), STAR.flash, Math.max(hot, after * 0.7, tw.after * 0.6)))
+    solid(p, rgbaHex(INK, 0.6), weight * 0.7, mixHex(mixHex(SILVER, NIGHT, 0.5), STAR.flash, Math.max(pop, after * 0.7)))
     p.circle(X(rx), X(ry), X(2 * r))
     p.noStroke()
-    p.fill(mixHex(mixHex(SILVER, NIGHT, 0.25), STAR.flash, Math.max(hot, after, tw.after)))
+    p.fill(mixHex(mixHex(SILVER, NIGHT, 0.25), STAR.flash, Math.max(pop, after)))
     p.circle(X(rx), X(ry), X(r * 0.75))
     if (pop > 0.01 || after > 0.01) glow(p, X(rx), X(ry), X(1.8), STAR.flash, 0.95 * pop + 0.14 * after)
-    // A small pop: the gun's own light, no more.
-    if (tw.pop > 0.01 || tw.after > 0.01) glow(p, X(rx), X(ry), X(0.85), STAR.flash, 0.8 * tw.pop + 0.12 * tw.after)
   })
 }
 
@@ -781,11 +736,6 @@ function drawStreet(p: p5, c: Ctx, t: number, x0: number, x1: number): void {
   // The spotlight's pool, under her.
   const { x, b } = spotAt(t)
   if (b > 0.01) smear(p, X(x), X(top), X(1.3), X(2.0), STAR.spot, 0.22 * b)
-  // Each small pop, a glint in the wet.
-  PRESS.forEach((s, i) => {
-    const tw = twinkleOf(i, t)
-    if (tw.pop > 0.02) smear(p, X(reflectorOf(s)[0]), X(top), X(0.35), X(1.3), STAR.flash, 0.3 * tw.pop)
-  })
   // Each flash, a beat in the wet.
   for (const fl of FLASHES) {
     const s = t - fl.t
