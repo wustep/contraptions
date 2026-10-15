@@ -262,7 +262,8 @@ function drawSign(p: p5, c: Ctx, t: number): void {
     if (on <= 0) return
     const lift = on + 0.5 * blaze
     const y = hers(i)
-    glow(p, k, b.x, b.y - b.h / 2 + dy, 0.95 + 0.4 * blaze + 0.3 * y, mixHex(M.lamp, MIA, 0.8 * y), (0.42 + 0.2 * y) * lift, 1, 1.15)
+    // Its light on the mountain's face under it.
+    glow(p, k, b.x, b.y + 0.15 + dy, 0.9 + 0.2 * y, mixHex(M.lamp, MIA, 0.8 * y), (0.22 + 0.1 * y) * lift, 1.1, 0.45)
     p.push()
     p.translate(X(k, b.x), X(k, b.y + dy))
     p.rotate(b.tilt)
@@ -289,22 +290,21 @@ function searchlight(i: number, t: number): { a: number; on: number } {
     // Up out of the hill, then a slow sway across the painted sky, the two crossing.
     const swing = side * (0.1 + 0.42 * (1 - Math.cos(s * 1.05 + (side > 0 ? 0.9 : 0))) * smooth(s, 0, 1.4))
     const a = t < lockAt ? swing : FAN[i] + (swing - FAN[i]) * Math.exp(-(t - lockAt) / 0.06)
-    return { a, on: off * (0.75 + 0.25 * knock(s, 0.25)) * smooth(s, -0.02, 0.06) }
+    return { a, on: off * 0.8 * smooth(s, -0.02, 0.06) }
   }
   if (t < lockAt) return { a: FAN[i], on: 0 }
-  return { a: FAN[i], on: off * (0.75 + 0.5 * knock(t - lockAt, 0.22)) }
+  return { a: FAN[i], on: off * 0.8 * smooth(t - lockAt, 0, 0.06) }
 }
 
 function drawBeams(p: p5, c: Ctx, t: number): void {
   const { k } = c
-  const blaze = knock(t - BUTTON, 0.6)
   for (let i = 0; i < 6; i++) {
     const { a, on } = searchlight(i, t)
     if (on <= 0.01) continue
     const L = 17
     const x1 = SL_X[i] + Math.sin(a) * L
     const y1 = SL_Y - Math.cos(a) * L
-    beam(p, k, SL_X[i], SL_Y, x1, y1, 0.16, 2.1, M.lamp, (0.2 + 0.08 * blaze) * on)
+    beam(p, k, SL_X[i], SL_Y, x1, y1, 0.16, 2.1, M.lamp, 0.2 * on)
   }
 }
 
@@ -416,7 +416,9 @@ function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
     const lit = new Path2D()
     const body = new Path2D()
     for (const { lobes } of SCRUB) {
-      for (const [lx, ly, r] of lobes) {
+      for (const [x0, ly, r] of lobes) {
+        // Stirring: a breeze runs along the hedge, the clumps' tops leaning with it.
+        const lx = x0 + 0.03 * Math.sin(t * 1.4 - x0 * 1.1) * (0.4 + r * 4)
         lit.moveTo(X(k, lx + r * 1.17), X(k, ly - r * 0.26))
         lit.arc(X(k, lx + r * 0.22), X(k, ly - r * 0.26), X(k, 0.95 * r), 0, Math.PI * 2)
         body.moveTo(X(k, lx + r), X(k, ly))
@@ -522,10 +524,8 @@ function drawLampHead(p: p5, c: Ctx, t: number, x: number, y: number, on: number
   const { k, ink, weight } = c
   const lit = lampLevel(t, on, off)
   const top = y - LAMP_H
-  if (lit > 0) {
-    glow(p, k, x, top - 0.12, 0.85, M.lamp, 0.55 * lit)
-    glow(p, k, x, y + 0.05, 0.9, M.lamp, 0.3 * lit, 1.3, 0.32)
-  }
+  // Its light on the road under it.
+  if (lit > 0) glow(p, k, x, y + 0.05, 0.9, M.lamp, 0.3 * lit, 1.3, 0.32)
   const head = lit > 0 ? M.lamp : mixHex(M.lamp, M.purple, 0.55)
   solid(p, ink, weight * 0.6, paint(x, t, head))
   p.beginShape()
@@ -660,8 +660,8 @@ function drawStars(p: p5, c: Ctx, t: number): void {
     const f = paintAt(s.x, t)
     if (f <= 0) continue
     const since = t - s.at
-    const lit = since < 0 ? 0 : (0.5 + 0.5 * knock(since, 0.28)) * fade
-    if (lit > 0) glow(p, k, s.x, FLOOR + 0.02, 0.55 + 0.25 * knock(since, 0.2), M.star, 0.55 * lit, 1, 0.45)
+    const lit = since < 0 ? 0 : 0.6 * smooth(since, 0, 0.08) * fade
+    if (lit > 0) glow(p, k, s.x, FLOOR + 0.02, 0.55, M.star, 0.55 * lit, 1, 0.45)
     p.push()
     p.translate(X(k, s.x), X(k, FLOOR + 0.03))
     p.scale(1, 0.34)

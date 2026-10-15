@@ -84,9 +84,9 @@ const RIDGE: Pt[] = [
 ].map(([x, y]) => [H(x), y])
 /** Palms along the foot of the painted mountain (Hollywood frame): where each stands, how tall, its lean. */
 const PALMS = Array.from({ length: 22 }, (_, i) => ({ x: -9 + i * 2.45 + 0.9 * (hash(i, 55) - 0.5), h: 1.6 + 1.1 * hash(i, 56), lean: (hash(i, 57) - 0.5) * 0.25 }))
-/** A palm painted flat: a thin curving trunk and a burst of fronds. */
-function paintedPalm(p: p5, k: number, x: number, foot: number, h: number, lean: number, fill: string): void {
-  const tx = x + lean * h
+/** A palm painted flat: a thin curving trunk and a burst of fronds, stirring by `stir` (radians) in the evening air. */
+function paintedPalm(p: p5, k: number, x: number, foot: number, h: number, lean: number, fill: string, stir = 0): void {
+  const tx = x + lean * h + stir * 0.12 * h
   const ty = foot - h
   p.noFill()
   p.stroke(fill)
@@ -97,7 +97,7 @@ function paintedPalm(p: p5, k: number, x: number, foot: number, h: number, lean:
   p.endShape()
   p.strokeWeight(Math.max(1, X(k, 0.05)))
   for (let j = 0; j < 7; j++) {
-    const a = -Math.PI / 2 + (j - 3) * 0.48
+    const a = -Math.PI / 2 + (j - 3) * 0.48 + stir * (1 + 0.25 * Math.abs(j - 3))
     const L = 0.55 + 0.12 * Math.cos(j * 1.3)
     const ex = tx + Math.cos(a) * L
     const ey = ty + Math.sin(a) * L * 0.6 + 0.2 * Math.abs(j - 3) * 0.12
@@ -116,6 +116,16 @@ const CLOUDS: { x: number; y: number; fill: string; lobes: [number, number, numb
   { x: 34, y: -11.2, fill: mixHex(M.skyLow, M.flat, 0.3), lobes: [[0, 0, 2.2, 0.26], [1.3, -0.2, 1.2, 0.22]] },
   { x: 8, y: -11.7, fill: mixHex(M.skyLow, M.skyTop, 0.35), lobes: [[0, 0, 1.8, 0.2], [-1, -0.14, 0.9, 0.17]] },
 ]
+
+/** The wisps of the marine layer (Hollywood frame, landed): where each is, its half-width and height, its two paints. */
+const WISPS: { x: number; y: number; w: number; h: number; body: string; top: string }[] = [
+  [-4, -6.2, 2.6, 0.32], [5.5, -5.1, 3.4, 0.36], [12, -7.3, 2.2, 0.26], [19.5, -4.6, 3.0, 0.34], [27, -6.6, 2.8, 0.3], [34.5, -5.4, 3.2, 0.34],
+  [2, -13.2, 3.6, 0.36], [16, -13.8, 3.2, 0.3], [30, -12.9, 3.8, 0.38],
+].map(([x, y, w, h]) => ({
+  x, y, w, h: h * 1.5,
+  body: y < -10 ? mixHex(M.skyTop, M.skyMid, 0.4) : mixHex(M.mountain, M.skyMid, 0.38),
+  top: y < -10 ? mixHex(M.skyMid, M.skyCoral, 0.45) : mixHex(M.skyMid, M.skyCoral, 0.3),
+}))
 
 /**
  * The sign: nine white blocks along the mountain's face, never letters. Widths vary the way a word's letters do;
@@ -317,7 +327,6 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   ctx.fillRect(X(k, x0), X(k, y0), X(k, x1 - x0), X(k, bottom - y0))
   ctx.restore()
   // The painted sun, going down behind the far ridge: a flat disc of pale gold, the hour the film is named for.
-  glow(p, k, H(21.8), -9.4 + dy, 7.5, M.horizon, 0.45)
   p.noStroke()
   p.fill(mixHex(M.bush, M.skyCoral, 0.35))
   p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 4.4))
@@ -387,7 +396,46 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
     }
   }
   // A row of palms at the mountain's foot, painted dark against the glow: the city the number is in.
-  for (const pm of PALMS) paintedPalm(p, k, H(pm.x), -1.55 + dy, pm.h, pm.lean, mixHex(M.hillDeep, M.mountain, 0.35))
+  for (const [i, pm] of PALMS.entries()) {
+    // A breeze along the row: each palm stirs a moment after the one before it.
+    const stir = 0.045 * Math.sin(t * 0.9 - pm.x * 0.35) + 0.02 * Math.sin(t * 2.3 + i * 1.9)
+    paintedPalm(p, k, H(pm.x), -1.55 + dy, pm.h, pm.lean, mixHex(M.hillDeep, M.mountain, 0.35), stir)
+  }
+  // The marine layer coming in at dusk: long cut-out wisps hung on wires in front of the cloth, drifting slowly along
+  // the mountain's flank and high in the sky, their undersides in the mountain's shade and their tops in the sunset.
+  for (const w of WISPS) {
+    let wx = H(w.x) - 0.11 * (t - BURST)
+    wx = wx - 56 * Math.floor((wx - H(-12)) / 56)
+    if (wx - w.w > x1 + 1 || wx + w.w < x0 - 1) continue
+    const wy = w.y + dy + 0.04 * Math.sin(t * 0.6 + w.x)
+    p.stroke(rgba(M.flat, 0.12))
+    p.strokeWeight(Math.max(1, X(k, 0.012)))
+    p.line(X(k, wx), X(k, wy - w.h), X(k, wx), X(k, f.y0 - 1))
+    p.noStroke()
+    p.fill(w.body)
+    p.beginShape()
+    p.vertex(X(k, wx - w.w), X(k, wy))
+    for (let j = 0; j <= 10; j++) {
+      const u = j / 10
+      const bump = Math.sin(Math.PI * u) * (0.7 + 0.3 * Math.sin(u * 9 + w.x))
+      p.vertex(X(k, wx - w.w + 2 * w.w * u), X(k, wy - w.h * bump))
+    }
+    p.vertex(X(k, wx + w.w), X(k, wy))
+    p.endShape(p.CLOSE)
+    p.fill(w.top)
+    p.beginShape()
+    for (let j = 1; j <= 9; j++) {
+      const u = j / 10
+      const bump = Math.sin(Math.PI * u) * (0.7 + 0.3 * Math.sin(u * 9 + w.x))
+      p.vertex(X(k, wx - w.w + 2 * w.w * u), X(k, wy - w.h * bump))
+    }
+    for (let j = 9; j >= 1; j--) {
+      const u = j / 10
+      const bump = Math.sin(Math.PI * u) * (0.7 + 0.3 * Math.sin(u * 9 + w.x))
+      p.vertex(X(k, wx - w.w + 2 * w.w * u), X(k, wy - w.h * bump * 0.55))
+    }
+    p.endShape(p.CLOSE)
+  }
   // A soft band of rose light low on the cloth, behind the set: the painted sunset.
   ctx.save()
   const band = ctx.createLinearGradient(0, X(k, -3.4 + dy), 0, X(k, bottom))
