@@ -260,7 +260,7 @@ const NEAR = Array.from({ length: 34 }, (_, i) => ({
   x: -11.3 + i * 0.66 + 0.24 * (hash(i, 81) - 0.5),
   size: 0.85 + 0.3 * hash(i, 82),
   lag: 0.03 + 0.12 * hash(i, 83),
-  real: hash(i, 85) < 0.4,
+  real: hash(i, 85) < 0.5,
   seed: hash(i, 84),
 }))
 /** The strong notes of the piano the real house nods to, and the dream's. */
@@ -304,7 +304,7 @@ export function nearHouse(p: p5, k: number, t: number, L: NearLight): void {
     if (a < 0.01) continue
     const x = f.cx + (h.x - f.cx) * 1.35
     if (x < L.x0 + 0.2 || x > L.x1 - 0.2 || x < f.x0 - 0.5 || x > f.x1 + 0.5) continue
-    const s = 1.25 * h.size * fh
+    const s = 1.1 * h.size * fh
     let nod = 0
     for (let j = lastAt(NODS, t - h.lag); j >= 0; j--) {
       const d = t - NODS[j] - h.lag
@@ -596,6 +596,16 @@ const BASS_X = 6.95
 const KIT_X = 8.75
 const TENOR_X = 10.08
 
+/** The band's first hit at the end, and his count-in before it: four nods a beat apart. */
+const BAND_IN = 478.052
+const COUNT = [0, 1, 2, 3].map((i) => BAND_IN - 0.4515 * (4 - i))
+/** How the count-in lands at `t`: 1 on each nod, decaying; 0 outside it. */
+function counted(t: number): number {
+  let c = 0
+  for (const at of COUNT) if (t >= at && t < at + 0.4) c = Math.max(c, Math.exp(-(t - at) / 0.1))
+  return c
+}
+
 /** The band's strong onsets (the real band's from its first hit, the dream's under the self-playing piano). */
 const BAND_HITS = measured(423, 510, 0.3).map((n) => n.t)
 
@@ -645,7 +655,7 @@ function uprightBass(g: G, k: number, x: number, wood: string, ink: string, lit:
  * how much of them there is; `lamps` the clip lamps' light on them, `blaze` the stage's. In the dream they play soft
  * under the piano; the real band comes on in the dark after she has gone and plays from The End's band.
  */
-export function bandPlayers(p: p5, k: number, t: number, ink: string, there: number, lamps: number, blaze: number, rose: number, playing: number): void {
+export function bandPlayers(p: p5, k: number, t: number, ink: string, there: number, lamps: number, blaze: number, rose: number, playing: number, real = false): void {
   if (there < 0.01) return
   const g = p.drawingContext as G
   g.save()
@@ -682,14 +692,19 @@ export function bandPlayers(p: p5, k: number, t: number, ink: string, there: num
     poly(g, k, [[x - 0.11, top + 0.2], [x + 0.11, top + 0.2], [x + 0.1, STAGE - 0.3], [x - 0.1, STAGE - 0.3]])
     disc(g, k, x - 0.01, top + 0.08 + 0.01 * hit, 0.072)
     g.fill()
-    const lh: Pt = [8.4, 2.0 - 0.06 + 0.06 * hit]
-    const rh: Pt = [9.2, 1.5 + 0.05 * ride]
+    // On his count-in the drummer holds his sticks up over the snare and clicks them together on each nod.
+    const ready = real ? smooth(t, COUNT[0] - 0.5, COUNT[0] - 0.1) * (1 - smooth(t, BAND_IN - 0.08, BAND_IN)) : 0
+    const click = counted(t) * ready
+    const lh: Pt = [8.4 + 0.22 * ready, 2.0 - 0.06 + 0.06 * hit - 0.18 * ready - 0.02 * click]
+    const rh: Pt = [9.2 - 0.38 * ready, 1.5 + 0.05 * ride + 0.12 * ready - 0.02 * click]
     limbs(g, k, tone, 0.05, [[[x - 0.09, top + 0.24], lh], [[x + 0.09, top + 0.24], rh]])
     g.strokeStyle = rgba(M.ivory, 0.55)
     g.lineWidth = Math.max(1, 0.012 * k)
     g.beginPath()
-    seg(g, k, lh, [lh[0] - 0.2, lh[1] + 0.02 - 0.12 * (1 - hit) * playing])
-    seg(g, k, rh, [rh[0] + 0.24, rh[1] - 0.12 + 0.1 * ride])
+    const tipL: Pt = [lh[0] - 0.2 + 0.32 * ready, lh[1] + 0.02 - 0.12 * (1 - hit) * playing - 0.2 * ready]
+    const tipR: Pt = [rh[0] + 0.24 - 0.36 * ready, rh[1] - 0.12 + 0.1 * ride - 0.12 * ready]
+    seg(g, k, lh, tipL)
+    seg(g, k, rh, tipR)
     g.stroke()
     rim(g, k, x - 0.01, top + 0.08 + 0.01 * hit, 0.072, Math.PI * 1.0, Math.PI * 1.6, lit, 0.7 * litA, Math.max(1, 0.012 * k))
   }
@@ -699,6 +714,12 @@ export function bandPlayers(p: p5, k: number, t: number, ink: string, there: num
     const x = TENOR_X
     const lean = groove * (0.03 * Math.sin(t * 1.7) + 0.02)
     stander(g, k, { x: x + lean, feet: STAGE, h: 1.08, face: -1, stride: NaN, arms: 'none', t }, L, 'none')
+    // Waiting, the horn hangs on its strap; on the last two counts he brings it up to play.
+    const down = real ? 1 - smooth(t, COUNT[2], COUNT[3] + 0.1) : 0
+    g.save()
+    g.translate((x + lean) * k, (STAGE - 0.55) * k)
+    g.rotate(-0.35 * down)
+    g.translate(-(x + lean) * k, -(STAGE - 0.55 + 0.12 * down) * k)
     const mouth: Pt = [x + lean - 0.07, STAGE - 1.08 + 0.12]
     g.strokeStyle = mixHex(M.brass, lit, 0.3 * litA)
     g.lineWidth = Math.max(1, 0.035 * k)
@@ -712,7 +733,8 @@ export function bandPlayers(p: p5, k: number, t: number, ink: string, there: num
     g.beginPath()
     poly(g, k, [[x + lean - 0.08, STAGE - 0.54], [x + lean + 0.0, STAGE - 0.7], [x + lean + 0.05, STAGE - 0.64]])
     g.fill()
-    limbs(g, k, tone, 0.045, [[[x + lean - 0.08, STAGE - 0.95], [x + lean - 0.18, STAGE - 0.8]], [[x + lean - 0.06, STAGE - 0.92], [x + lean - 0.15, STAGE - 0.62]]])
+    g.restore()
+    limbs(g, k, tone, 0.045, [[[x + lean - 0.08, STAGE - 0.95], [x + lean - 0.18, STAGE - 0.8 + 0.1 * down]], [[x + lean - 0.06, STAGE - 0.92], [x + lean - 0.15, STAGE - 0.62 + 0.08 * down]]])
   }
   g.restore()
 }

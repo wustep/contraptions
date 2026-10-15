@@ -150,6 +150,9 @@ export function doorAt(t: number, end: boolean): number {
   return 0.06 * Math.exp(-since / 0.12) * Math.abs(Math.sin(since * 22))
 }
 
+/** How far the curtain's fold `i` has stirred at `t`, in the fans' air (cells). */
+const curtainStir = (t: number, i: number): number => 0.06 * Math.sin(t * 0.6 + i * 0.83) + 0.03 * Math.sin(t * 1.3 + i * 2.1)
+
 /** How far up the house lights are at show time `t` (0..1). */
 export const house = (t: number, end: boolean): number => lightsAt(t, end).house
 
@@ -175,6 +178,12 @@ const SPOTS: { x: number; to: Pt }[] = [
 ]
 /** The band's clip lamps on their music stands (x). */
 const STANDS = [7.75, 9.95]
+/**
+ * Who is at her table, where (room cells), as the parts that seat them say: so her table's candle can throw their
+ * shadows on the wall behind them. The opening sets `start`, the finale `end`.
+ */
+export const AT_HER_TABLE: { start: ((t: number) => Pt[]) | null; end: ((t: number) => Pt[]) | null } = { start: null, end: null }
+
 /** The house spot, hung from the ceiling over the floor and turned on her table: the light that finds her. */
 const HOUSE_SPOT: Pt = [-4.3, -5.05]
 const HOUSE_SPOT_TO: Pt = [-2.25, 2.4]
@@ -477,7 +486,35 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     p.stroke(rgba(M.brass, 0.14))
     p.line(X(x + 0.03), X(2.145), X(x + 0.97), X(2.145))
   }
+  // Up close the wainscot is wood: its grain running down each panel, a little warm where the light is on it.
+  {
+    const ka = smooth(k, 30, 70)
+    const gx0 = Math.max(R.wallL1, fr.x0)
+    const gx1 = Math.min(R.stageX0, fr.x1)
+    if (ka > 0.01 && gx1 > gx0 && fr.y1 > 2.0 && fr.y0 < R.floor) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      ctx.save()
+      ctx.lineWidth = Math.max(1, 0.006 * k)
+      for (const [col, a] of [[M.lacquer, 0.26], [M.brass, 0.07]] as const) {
+        ctx.strokeStyle = rgba(col, a * ka)
+        ctx.beginPath()
+        const step = 0.045
+        for (let i = Math.floor(gx0 / step); i * step < gx1; i++) {
+          const h = hash(i, col === M.lacquer ? 1 : 2, 47)
+          if (h < 0.45) continue
+          const x = i * step + 0.03 * hash(i, 5, 47)
+          const y0 = 2.16 + 0.3 * hash(i, 6, 47)
+          const y1 = Math.min(R.floor - 0.13, y0 + 0.25 + 0.55 * hash(i, 7, 47))
+          ctx.moveTo(X(x), X(y0))
+          ctx.quadraticCurveTo(X(x + 0.012 * (h - 0.7)), X((y0 + y1) / 2), X(x), X(y1))
+        }
+        ctx.stroke()
+      }
+      ctx.restore()
+    }
+  }
   vband(p, k, R.wallL1, R.ceil, R.wallR0, R.ceil + 1.6, [[0, rgba(M.deep, 0.75)], [1, rgba(M.deep, 0)]])
+  if (s.end) candleShadows(p, s, k, t, L)
   if (L.rose > 0.005) glow(p, k, (R.wallL1 + R.wallR0) / 2, 0.6, 12, M.rose, 0.2 * L.rose, 1.4, 0.75)
   // The greats on the wall, in their frames, lit by the sconces; and the fans turning under the ceiling.
   gallery(p, k, L.house, SCONCES, SCONCE_Y, L.warm)
@@ -565,8 +602,8 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     const fw = (cx1 - cx0) / folds
     for (let i = 0; i < folds; i++) {
       const x = cx0 + (i + 0.5) * fw
-      // The velvet stirs: its folds' light drifts a little, slowly, in the air of the room.
-      const dx = 0.05 * Math.sin(t * 0.42 + i * 0.83) + 0.03 * Math.sin(t * 0.17 + i * 2.1)
+      // The velvet stirs in the fans' air: its folds' light drifts a little, slowly.
+      const dx = curtainStir(t, i)
       const g = ctx.createLinearGradient(X(x - fw / 2 + dx), 0, X(x + fw / 2 + dx), 0)
       g.addColorStop(0, rgba(M.lacquer, 0.34))
       g.addColorStop(0.45, rgba(M.lacquer, 0))
@@ -574,6 +611,33 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
       g.addColorStop(1, rgba(M.lacquer, 0.3))
       ctx.fillStyle = g
       ctx.fillRect(X(x - fw / 2), X(R.ceil), X(fw), X(R.stage - R.ceil))
+    }
+  }
+  // Up close, the velvet's pile: a dark crease down each fold's valley and a fine light along its crown, moving as it stirs.
+  {
+    const ka = smooth(k, 30, 70)
+    if (ka > 0.01) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      const folds = 22
+      const fw = (cx1 - cx0) / folds
+      const y0 = Math.max(R.ceil, fr.y0)
+      const y1 = Math.min(R.stage, fr.y1)
+      if (y1 > y0) {
+        ctx.save()
+        ctx.lineWidth = Math.max(1, 0.012 * k)
+        for (const [off, col, a] of [[0, M.lacquer, 0.26], [0.6, M.rose, 0.08]] as const) {
+          ctx.strokeStyle = rgba(col, a * ka)
+          ctx.beginPath()
+          for (let i = 0; i <= folds; i++) {
+            const x = cx0 + (i + off - 0.5) * fw + curtainStir(t, i)
+            if (x < fr.x0 - 0.1 || x > fr.x1 + 0.1 || x < cx0 || x > cx1) continue
+            ctx.moveTo(X(x), X(y0))
+            ctx.quadraticCurveTo(X(x + 0.04 * Math.sin(t * 0.5 + i)), X((y0 + y1) / 2), X(x + 0.01), X(y1))
+          }
+          ctx.stroke()
+        }
+        ctx.restore()
+      }
     }
   }
   vband(p, k, cx0, R.ceil, cx1, R.ceil + 3, [[0, rgba(M.lacquer, 0.6)], [1, rgba(M.lacquer, 0)]])
@@ -793,6 +857,47 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
 }
 
 /**
+ * Her table's candle is at their heads' height, between them: it throws the two of them on the wall behind, bigger,
+ * one each side, and as they lean in to each other their shadows lean in too. The flame trembles, and so do they.
+ * (At the start it is drawn over the dark the house goes to, where only her pool lights the wall.)
+ */
+function candleShadows(p: p5, s: ClubRoom, k: number, t: number, L: Lights): void {
+  const X = (v: number) => v * k
+  const R = ROOM
+  const who = (s.end ? AT_HER_TABLE.end : AT_HER_TABLE.start)?.(t) ?? []
+  const fx = TABLE.x + 0.004 * Math.sin(t * 11 + 7)
+  const fy = TABLE.top - 0.06
+  const flick = 0.85 + 0.15 * Math.sin(t * 7.3 + 14.7) * Math.sin(t * 3.1 + 7)
+  const dark = (0.34 + 0.24 * (1 - L.house)) * flick
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  let clipped = false
+  for (const [bx, by] of who) {
+    const dx = bx - fx
+    const dy = by - fy
+    if (Math.hypot(dx, dy) > 0.62 || by > R.floor - 0.2) continue
+    if (!clipped) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(X(R.wallL1), X(R.ceil), X(R.stageX0 - R.wallL1), X(R.floor - R.ceil))
+      ctx.clip()
+      clipped = true
+    }
+    const m = 3.0 * (1 + 0.04 * (flick - 0.92))
+    const cx = fx + dx * m
+    const cy = fy + dy * m - 0.04
+    const r = 0.13 * m
+    const g = ctx.createRadialGradient(X(cx), X(cy), X(r * 0.62), X(cx), X(cy), X(r * 1.1))
+    g.addColorStop(0, rgba(M.lacquer, dark))
+    g.addColorStop(1, rgba(M.lacquer, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(X(cx), X(cy), X(r * 1.1), 0, Math.PI * 2)
+    ctx.fill()
+  }
+  if (clipped) ctx.restore()
+}
+
+/**
  * The people, drawn over the room's dark (the opening's house going down round the piano): each table its own island
  * of candlelight, its candle and the edges of the faces round it, the way a club looks while someone plays.
  */
@@ -801,6 +906,7 @@ function drawPeople(p: p5, s: ClubRoom, k: number, ink: string, weight: number, 
   const L = lightsAt(t, s.end)
   const R = ROOM
   if (!s.end && t < 40 && L.house < 0.99) for (const tb of TABLES) candle(q, tb.x, t, tb.x, 1 - L.house)
+  if (!s.end) candleShadows(p, s, k, t, L)
   // The people. The late-night few are there in both rooms; in the dream's last room everyone else is there too,
   // someone on every chair and at the bar and a second waiter with a tray, and as the dream drains they go.
   {
@@ -841,7 +947,7 @@ function drawBand(q: Pen, L: Lights, t: number, end: boolean): void {
   const real = end && t >= REAL_BAND ? 1 : 0
   const there = Math.max(dream, real)
   const lamps = Math.max(L.band, 0.8 * dream)
-  if (there > 0.01) bandPlayers(p, q.k, t, ink, there, lamps, L.blaze, L.rose, real ? smooth(t, BAND - 0.1, BAND + 0.2) : 0.45)
+  if (there > 0.01) bandPlayers(p, q.k, t, ink, there, lamps, L.blaze, L.rose, real ? smooth(t, BAND - 0.1, BAND + 0.2) : 0.45, real > 0)
   // The stand-up bass, lying on its side: the body's two bouts and waist, the neck, the scroll, the strings.
   if (there <= 0.01) {
     const bx = 6.95
@@ -957,10 +1063,49 @@ function drawSpot(p: p5, k: number, t: number): void {
   const her = onHer(t, false)
   if (her > 0.01) {
     // Its shaft down through the room's air from the house spot, and the pool it makes on her.
-    beam(p, k, HOUSE_SPOT[0] + 0.1, HOUSE_SPOT[1] + 0.2, HOUSE_SPOT_TO[0], HOUSE_SPOT_TO[1] - 0.2, 0.16, 1.7, mixHex(M.candle, M.ivory, 0.5), 0.1 * her * (dark / 0.78))
+    shaft(p, k, t, mixHex(M.candle, M.ivory, 0.5), 0.1 * her * (dark / 0.78))
     glow(p, k, TABLE.x, TABLE.top - 0.35, 1.35, M.candle, 0.3 * her * (dark / 0.78), 1.05, 1.2)
     glow(p, k, TABLE.x, TABLE.top - 0.45, 0.6, M.ivory, 0.12 * her * (dark / 0.78), 1, 1.1)
   }
+}
+
+/**
+ * The house spot's shaft down to her table, seen in the room's haze: the smoke in it drifting slowly across, so the
+ * light is thicker here and thinner there, and moves.
+ */
+function shaft(p: p5, k: number, t: number, color: string, a: number): void {
+  if (a < 0.003) return
+  const [x0, y0] = [HOUSE_SPOT[0] + 0.1, HOUSE_SPOT[1] + 0.2]
+  const [x1, y1] = [HOUSE_SPOT_TO[0], HOUSE_SPOT_TO[1] - 0.2]
+  beam(p, k, x0, y0, x1, y1, 0.16, 1.7, color, a)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const dx = x1 - x0
+  const dy = y1 - y0
+  const L = Math.hypot(dx, dy)
+  const nx = -dy / L
+  const ny = dx / L
+  ctx.save()
+  ctx.beginPath()
+  ctx.moveTo((x0 + nx * 0.08) * k, (y0 + ny * 0.08) * k)
+  ctx.lineTo((x1 + nx * 0.85) * k, (y1 + ny * 0.85) * k)
+  ctx.lineTo((x1 - nx * 0.85) * k, (y1 - ny * 0.85) * k)
+  ctx.lineTo((x0 - nx * 0.08) * k, (y0 - ny * 0.08) * k)
+  ctx.closePath()
+  ctx.clip()
+  // Three slow bands of haze, across the shaft, drifting down it and sideways at their own paces.
+  for (let i = 0; i < 3; i++) {
+    const u = (((t * (0.035 + 0.012 * i) + i * 0.37) % 1) + 1) % 1
+    const cx = x0 + dx * (0.25 + 0.75 * u) + nx * 0.35 * Math.sin(t * 0.21 + i * 2)
+    const cy = y0 + dy * (0.25 + 0.75 * u) + ny * 0.35 * Math.sin(t * 0.21 + i * 2)
+    const r = 0.9 + 0.3 * i
+    const g = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, r * k)
+    const fade = Math.sin(Math.PI * u)
+    g.addColorStop(0, rgba(color, a * 0.55 * fade))
+    g.addColorStop(1, rgba(color, 0))
+    ctx.fillStyle = g
+    ctx.fillRect((cx - r) * k, (cy - r) * k, 2 * r * k, 2 * r * k)
+  }
+  ctx.restore()
 }
 
 /**
@@ -990,7 +1135,7 @@ function drawPool(p: p5, k: number, t: number): void {
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
   ctx.restore()
   // The same house spot that found her at the start, its shaft coming down on the two of them.
-  beam(p, k, HOUSE_SPOT[0] + 0.1, HOUSE_SPOT[1] + 0.2, HOUSE_SPOT_TO[0], HOUSE_SPOT_TO[1] - 0.2, 0.16, 1.5, warm, 0.07 * u)
+  shaft(p, k, t, warm, 0.08 * u)
 }
 
 export const clubRoom = scenery<ClubRoom>({

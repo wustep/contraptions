@@ -4,7 +4,7 @@ import { AT, notes as measured } from '../music'
 import { LIPTONS_MAT, SEBS_MAT } from '../worlds'
 import { HUSH_KEY, OPENING_END } from './geometry'
 import { drawPiano, heldOn, keysOf, play, PIANO_CELLS, type Keys, type Note, type Press } from './piano'
-import { house, MIA_SEAT, SIDE_SEAT } from './room'
+import { AT_HER_TABLE, house, MIA_SEAT, SIDE_SEAT } from './room'
 
 /**
  * The opening: Seb's, now, and he is playing. The camera comes in from the city at night through the club's lit
@@ -149,6 +149,8 @@ export const TOGETHER = (t: number): number => {
   return ease(21.9, 22.5) * (1 - ease(23.9, 24.5))
 }
 const davidAtTable = (t: number): Pt => [SIDE_SEAT[0] - 0.074 * TOGETHER(t), SIDE_SEAT[1] - 0.04 * TOGETHER(t)]
+// The two of them at her table, for its candle's shadows.
+AT_HER_TABLE.start = (t) => (t < COMPANY_TO ? [miaAtTable(t), davidAtTable(t)] : [])
 
 export const opening = part<OpeningState>(
   {

@@ -5,7 +5,7 @@ import { hop } from '../physics'
 import { SEBS_MAT } from '../worlds'
 import { fold, keyRest } from './geometry'
 import { DOWN, drawPiano, heldOn, keysOf, play, restOn, type Note, type Press } from './piano'
-import { BAND, BAND_LAMPS, DOOR, DOOR_SHUT, KISS, LEAN, LEAVE, lightsAt, MIA_SEAT, ROOM, SEAT, SIDE_SEAT, TABLE } from './room'
+import { AT_HER_TABLE, BAND, BAND_LAMPS, DOOR, DOOR_SHUT, KISS, LEAN, LEAVE, lightsAt, MIA_SEAT, ROOM, SEAT, SIDE_SEAT, TABLE } from './room'
 
 /**
  * The finale: Seb's again, and the dream's last room, then the room as it is.
@@ -211,6 +211,16 @@ function plan(begin: number) {
 
   const miaAt = track(miaWays)
   const davidAt = track(david)
+  const sebAt = track(seb)
+  const inRoom = ([x, y]: Pt): Pt => [x + DOOR[0], y + DOOR[1]]
+  /** Who is at her table, in the room's cells: for its candle's shadows. */
+  const atTable = (t: number): Pt[] => {
+    const out: Pt[] = []
+    if (t >= 423.5 && t < GONE) out.push(inRoom(miaAt(t)))
+    if (t >= 451.8 && t < GONE) out.push(inRoom(davidAt(t)))
+    if (t >= begin && t < AT.last) out.push(inRoom(sebAt(t)))
+    return out
+  }
   const company: Company[] = [
     { from: 423.5, to: GONE, who: 'mia', at: (t) => nodded(miaAt(t), t) },
     { from: 451.8, to: GONE, who: 'david', at: (t) => { const [x, y] = davidAt(t); return { x, y } } },
@@ -218,10 +228,11 @@ function plan(begin: number) {
   hits.push(DOOR_SHUT, BAND_LAMPS)
 
   const ways = seb.map((w) => ({ ...w, at: w.at - begin, p: F(w.p) }))
-  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, hits: [...new Set(hits)].sort((a, b) => a - b) }
+  return { ways, keys: keysOf([...selves, last, downbeat, ...played.presses]), company, hits: [...new Set(hits)].sort((a, b) => a - b), atTable }
 }
 
 const PLAN = plan(BEGIN)
+AT_HER_TABLE.end = PLAN.atTable
 
 interface FinaleState {
   begin: number
