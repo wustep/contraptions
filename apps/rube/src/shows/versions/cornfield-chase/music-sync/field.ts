@@ -320,16 +320,17 @@ export interface Rows {
  * frame, and turns up the leaves' pale side.
  */
 export function rows(s: Screen, t: number, hy: number, r: Rows): void {
-  const { ctx, cx, w, h } = s
-  const foot = Math.max(s.cy + 0.56 * s.f, h + 0.02 * s.f)
-  const frameW = (s.f * 16) / 9
+  const { ctx, cx, w, h, f } = s
+  const foot = s.cy + 0.56 * f
+  const frameW = (f * 16) / 9
   const left = cx - frameW / 2
-  // The rows are sized by the depth of field they fill: the frame's height in a 16:9 frame, more on a canvas taller
-  // than it (a phone held upright), where the field runs on down to the foot and its near rows are nearer.
-  const f = Math.max(s.f, (foot - hy) / 0.37)
-  // Rows by their distance, the nearest 1: each lies 1/d of the way from the horizon to the foot.
+  // Rows by their distance, 1 for the one at the 16:9 frame's foot: each lies 1/d of the way from the horizon to it.
+  // On a canvas taller than 16:9 (a phone held upright) the field goes on under the frame in nearer rows, larger, to
+  // the canvas's edge; where the 16:9 picture is letterboxed, the stage's clip keeps them off the bars.
+  let nearest = 1
+  while (hy + (foot - hy) / nearest < h + 0.05 * f) nearest /= 1.3
   const depths: number[] = []
-  for (let d = 1; d < 13; d *= 1.3) depths.push(d)
+  for (let d = nearest; d < 13; d *= 1.3) depths.push(d)
   const ys = depths.map((d) => hy + (foot - hy) / d)
   for (let n = depths.length - 1; n >= 0; n--) {
     const d = depths[n]
