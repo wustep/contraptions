@@ -467,66 +467,6 @@ export function birds(pen: Pen, L: Look, d: number, at: Pt, n = 8, perch?: Perch
   })
 }
 
-/** A flock going by close outside the glass: when, along what (cells, as drawn at the window's anchor), how many. */
-export interface Pass {
-  t0: number
-  t1: number
-  from: Pt
-  to: Pt
-  n: number
-  seed: number
-  /** How far the line sags in the middle (cells), how wide the flock is spread, and how big the birds are (1 a pigeon). */
-  dip?: number
-  spread?: number
-  size?: number
-}
-
-/**
- * A flock off a roof across the street, going by close outside the window in a long dipping sweep: a loose crowd of
- * birds strung out along their line, the leaders ahead, each beating its own wings and gliding, the flock's shape
- * breathing as it goes. Dark against the morning sky, as birds are.
- */
-export function flockPast(pen: Pen, L: Look, d: number, o: Pass): void {
-  const t = L.t
-  if (t < o.t0 - 0.2 || t > o.t1 + 0.2) return
-  const c = tonesOf(t)
-  const s = L.s
-  const T = o.t1 - o.t0
-  within(pen, L, d, () => {
-    const { k } = pen
-    const ctx = ctxOf(pen.p)
-    const spread = (o.spread ?? 0.55) * s
-    const dip = (o.dip ?? 0.35) * s
-    ctx.beginPath()
-    for (let i = 0; i < o.n; i++) {
-      const h1 = hash(i, o.seed, 1)
-      const h2 = hash(i, o.seed, 2)
-      const h3 = hash(i, o.seed, 3)
-      // Strung out along the line: each bird a little behind or ahead of the flock's middle.
-      const u = (t - o.t0 - (h3 - 0.5) * 0.35 * T) / T
-      if (u < -0.15 || u > 1.15) continue
-      const px = o.from[0] + (o.to[0] - o.from[0]) * u
-      const py = o.from[1] + (o.to[1] - o.from[1]) * u + dip * Math.sin(Math.PI * Math.max(0, Math.min(1, u)))
-      const breathe = 1 + 0.25 * Math.sin(t * 1.3 + i * 0.7)
-      const x = px + (h1 - 0.5) * spread * breathe
-      const y = py + (h2 - 0.5) * spread * 0.45 * breathe + 0.03 * s * Math.sin(t * 2.1 + i)
-      const beat = Math.sin(t * (9 + 4 * h1) + i * 2.3) * (0.4 + 0.6 * Math.max(0, Math.sin(t * 1.7 + i)))
-      const ws = ((o.size ?? 1) * (0.06 + 0.03 * h2)) * s
-      // A body, and two wings swept back from it, up or down with the beat.
-      const wy = y - ws * 0.75 * beat
-      ctx.moveTo((x - ws) * k, wy * k)
-      ctx.lineTo((x - 0.12 * ws) * k, (y - 0.12 * ws) * k)
-      ctx.lineTo((x + 0.12 * ws) * k, (y - 0.12 * ws) * k)
-      ctx.lineTo((x + ws) * k, wy * k)
-      ctx.lineTo((x + 0.25 * ws) * k, (y + 0.18 * ws) * k)
-      ctx.lineTo((x - 0.25 * ws) * k, (y + 0.18 * ws) * k)
-      ctx.closePath()
-    }
-    ctx.fillStyle = rgba(pen, c.bird, 0.95)
-    ctx.fill()
-  })
-}
-
 /* ------------------------------------------------------------------ the far wing, across the court */
 
 /** One of the far wing's people going along its corridor: an orderly pushing his trolley, or a nurse. */

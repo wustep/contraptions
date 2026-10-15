@@ -3,7 +3,7 @@ import { frame, knock, smooth } from '../kit'
 import { shade, sway, type Frame } from '../depth'
 import { blob, ctxOf, ellipse, fillWith, line, mix, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import { benchLit, corridorLight, nurseryMotes, wardShafts } from './light'
-import { birds, el, flockPast, lookIn, lookOut, plane, roofs, sky, snow, towers, wing, type Look } from './outside'
+import { birds, el, lookIn, lookOut, plane, roofs, sky, snow, towers, wing, type Look } from './outside'
 import { passers } from './near'
 import { clock, drip, fan, flowers, foreground, mobile } from './props'
 import { daylight, sunUp, warm } from './dawn'
@@ -33,7 +33,6 @@ import {
   LANDS,
   LOOK,
   MAT,
-  NUDGE,
   NURSE_X,
   PILLOW,
   REACH,
@@ -54,7 +53,7 @@ import {
   rockOf,
   pillowTop,
 } from './geo'
-import { SON, at } from '../music'
+import { SON } from '../music'
 
 /**
  * The ward at dawn, 1952: pale institutional mint and cream, white enamel, a checkerboard corridor, and the grey of the
@@ -241,9 +240,6 @@ function drawWardWindow(pen: Pen, t: number, f: Frame): void {
     snow(pen, L, 0.6, 611, 1.5)
     snow(pen, L, 1.2, 612, 0.85, 1.4)
     birds(pen, L, 0.4, [0.75, -1.58])
-    // A flock off a roof across the street, going by close outside: once as he rolls up to her, once as she sends him.
-    flockPast(pen, L, 0.95, { t0: T0 + 0.35, t1: T0 + 2.15, from: [3.4, -1.8], to: [-2.2, -1.45], n: 16, seed: 71, dip: 0.3, size: 1.6 })
-    flockPast(pen, L, 0.95, { t0: NUDGE + 0.15, t1: NUDGE + 2.3, from: [-2.4, -1.25], to: [3.6, -1.9], n: 18, seed: 73, dip: -0.25, size: 1.6 })
     wardPigeons(pen, t)
     lookIn(pen)
   }
@@ -318,12 +314,6 @@ function drawCorridorWindow(pen: Pen, t: number, f: Frame): void {
     roofs(pen, L, 0.3, { tanks: 0.35, chimneys: 0.4, tall: 0.38, seed: 57, wash: 0.35 })
     birds(pen, L, 0.5, [-6.0, -1.85], 6)
     wing(pen, L, 0.7, -1.25)
-    // The same roof's flock going by outside the corridor's window, now and then.
-    for (const [t0, seed, dir] of HALL_PASSES) {
-      const from: Pt = dir > 0 ? [-7.6, -1.7] : [-4.4, -2.3]
-      const to: Pt = dir > 0 ? [-4.4, -2.35] : [-7.6, -1.6]
-      flockPast(pen, L, 0.85, { t0, t1: t0 + 1.9, from, to, n: 13, seed, dip: 0.28, spread: 0.5, size: 1.5 })
-    }
     snow(pen, L, 0.8, 613, 1.5)
     snow(pen, L, 1.2, 614, 1.0, 1.4)
     // The glass, and the morning's haze in the court, so that the view stays back behind the room.
@@ -366,14 +356,6 @@ function drawCorridorWindow(pen: Pen, t: number, f: Frame): void {
   rect(pen, x0 - 0.2, y1 + 0.05, x1 + 0.2, y1 + 0.14, C.enamel)
   rect(pen, x0 - 0.2, y1 + 0.14, x1 + 0.2, y1 + 0.18, C.frameShade)
 }
-
-/** When the flock goes by the corridor's window (show time, its seed, and which way). */
-const HALL_PASSES: [number, number, 1 | -1][] = [
-  [at(100, 2), 75, -1],
-  [at(102, 4) + 0.3, 77, 1],
-  [at(108, 2), 79, -1],
-  [at(109, 3), 87, 1],
-]
 
 /** Depth: where the bed's far side is drawn, up and to the right of its near side. */
 const D: Pt = [0.22, -0.2]
@@ -682,9 +664,6 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt, f: Frame): void {
   if (looking) {
     roofs(pen, L, 0.32, { tanks: 0.3, chimneys: 0.5, tall: 0.42, seed: 59 })
     snow(pen, L, 0.6, 617)
-    // The roof's flock going by this window too, now and then, between the nurse's look up and her reach for him.
-    flockPast(pen, L, 0.8, { t0: at(101, 2), t1: at(101, 2) + 1.7, from: [-9.5, -1.75], to: [-11.9, -1.45], n: 11, seed: 81, dip: 0.2, spread: 0.45 })
-    flockPast(pen, L, 0.8, { t0: at(103, 3), t1: at(103, 3) + 1.7, from: [-11.9, -1.4], to: [-9.5, -1.8], n: 12, seed: 83, dip: -0.15, spread: 0.45 })
     lookIn(pen)
   }
   const roofCol = mix(C.roofs, C.roofsWarm, w)
