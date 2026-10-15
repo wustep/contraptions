@@ -202,16 +202,18 @@ const smoother = (u: number): number => {
 /**
  * The crane over the credits, from the camera's last framing on the glass (`from`, at FINALE): out and down, Marty
  * held on the screen and drifting to the building's top floor as it is found, until the whole building is in the
- * frame with the sky over it for the credits; then a slow drift on out to the end.
+ * frame with the sky over it for the credits; then, through the quiet after the song, a slow push in on him at the
+ * glass (as the camera once pushed in on the two of them there), the building still whole.
  */
 export function crane(t: number, from: Framing): Framing {
   if (t <= FINALE) return from
   const u = (t - FINALE) / (OUT_AT - FINALE)
-  const drift = Math.max(0, t - OUT_AT) / (DURATION - OUT_AT)
-  const cells = Math.exp(Math.log(from.cells) + (Math.log(OUT_CELLS) - Math.log(from.cells)) * smoother(u)) * (1 + 0.07 * drift)
+  const drift = smoother(Math.max(0, t - OUT_AT) / (DURATION - OUT_AT))
+  const cells = Math.exp(Math.log(from.cells) + (Math.log(OUT_CELLS) - Math.log(from.cells)) * smoother(u)) * (1 - 0.11 * drift)
   const start: Pt = [(SILL[0] - from.x) / from.cells, (SILL[1] - from.y) / from.cells]
   const s = smoother(u * 1.15 - 0.1)
-  const o: Pt = [start[0] + (OUT_SCREEN[0] - start[0]) * s, start[1] + (OUT_SCREEN[1] - start[1]) * s]
+  // As it pushes in, he comes a little in from the frame's edge.
+  const o: Pt = [start[0] + (OUT_SCREEN[0] - start[0]) * s - 0.06 * drift, start[1] + (OUT_SCREEN[1] - start[1]) * s]
   return { ...from, x: SILL[0] - o[0] * cells, y: SILL[1] - o[1] * cells, cells }
 }
 /** From when Marty is too small on the screen to be the shot: the finale's wide. */
@@ -284,6 +286,19 @@ function drawSky(p: p5, k: number, f: Box & { cx: number; cy: number }, t: numbe
  * The sun, coming up behind the building on the right: at first all glow and rays round the roof's edge, the building
  * against it; by the end clearing the roof (as it cleared the roofs in the nursery's window).
  */
+/** Searchlights behind the city, sweeping the dawn as for a premiere: everybody wants to rule the world. */
+function drawSearchlights(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number): void {
+  const pen = { p, k, ink: '#000', w: 1, tone: (h: string) => h }
+  const H = f.y1 - f.y0
+  const W = f.x1 - f.x0
+  const on = Math.min(1, Math.max(0, (t - FINALE - 4) / 4))
+  for (let i = 0; i < 4; i++) {
+    const base: Pt = [f.x0 + W * (0.08 + 0.28 * i), f.y1 - 0.12 * H]
+    const a = Math.PI + 0.55 * Math.sin(t * (0.21 + 0.05 * i) + i * 1.9)
+    shaft(pen, base, a, 0.05, H * 1.5, '#FFF2D8', 0.07 * on)
+  }
+}
+
 function drawSun(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number): void {
   const rise = Math.max(0, Math.min(1, (t - FINALE) / (DURATION - FINALE)))
   const H = f.y1 - f.y0
@@ -517,8 +532,10 @@ function drawStreet(p: p5, k: number, f: Box, t: number): void {
     bloom(pen, [x + 0.9, BASE - 3.8], 2.4, '#FFC878', 0.35 * flicker(t, x, 0.1))
   }
   // A cab, early, going past along the street, and another the other way later.
-  for (const [i, from, v, col] of [[0, -90, 9, '#E8B83A'], [1, 60, -7, '#C8C0B0']] as const) {
-    const x = from + v * (t - FINALE - 4 * i)
+  const cars: [number, number, number, string][] = []
+  for (let i = 0; i < 9; i++) cars.push([i, i % 2 ? 70 : -110, (i % 2 ? -1 : 1) * (6 + 5 * hash(i, 1, 77)), ['#E8B83A', '#C8C0B0', '#7A2A2A', '#2A4A6A'][i % 4]])
+  for (const [i, from, v, col] of cars) {
+    const x = from + v * (t - FINALE - 3.7 * i)
     if (x < f.x0 - 6 || x > f.x1 + 6) continue
     ctx.fillStyle = col
     ctx.beginPath()
@@ -557,7 +574,7 @@ function drawEl(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number
   }
   ctx.stroke()
   // Two trains, one each way.
-  for (const [from, v, at0] of [[-140, 22, FINALE + 6], [80, -18, FINALE + 21]] as const) {
+  for (const [from, v, at0] of [[-140, 22, FINALE + 6], [80, -18, FINALE + 15], [-140, 20, FINALE + 24], [80, -21, FINALE + 31]] as const) {
     const x = from + v * (t - at0)
     const len = 26
     if (x + len < f.x0 - 10 || x - len > f.x1 + 10) continue
@@ -740,6 +757,7 @@ export const finale = scenery<null>({
     ctx.rect(w.x0 * k, w.y0 * k, (w.x1 - w.x0) * k, (w.y1 - w.y0) * k)
     ctx.clip('evenodd')
     drawSky(p, k, f, t)
+    drawSearchlights(p, k, f, t)
     drawSun(p, k, f, t)
     drawSkyline(p, k, f, t, FAR, 120, css('#7E7392', 1), css('#FFE6B0', 0.7), 0.05, 1)
     drawSkyline(p, k, f, t, MID, 45, css('#4E4560', 1), css('#FFD890', 0.85), 0.12, 2)
@@ -819,11 +837,17 @@ function drawPath(p: p5, k: number, t: number): void {
     bloom(pen, h, 2.6, '#FF9A4A', 0.8)
     bloom(pen, h, 0.8, '#FFF4E0', 0.9)
   } else {
-    // Arrived: a bead of light up the path every bar, from the store to him.
+    // Arrived: and his whole way runs on, a bead of light leaving the store every half bar and going all the way up
+    // to him, so the path is never still.
     const since = t - RUN_TO
-    const u = (since % (2 * BAR)) / (2 * BAR)
-    const d = LENGTH * u
-    bloom(pen, pointAt(d), 1.4, '#FFB070', 0.55 * Math.sin(Math.PI * u))
+    const trip = 4 * BAR
+    for (let n = Math.floor((since - trip) / (BAR / 2)); n * (BAR / 2) <= since; n++) {
+      const u = (since - n * (BAR / 2)) / trip
+      if (u < 0 || u > 1) continue
+      const pt = pointAt(LENGTH * u)
+      bloom(pen, pt, 1.2, '#FF9A4A', 0.5 * Math.sin(Math.PI * u) ** 0.5)
+      bloom(pen, pt, 0.35, '#FFF0D8', 0.8 * Math.sin(Math.PI * u) ** 0.5)
+    }
     const arrive = Math.exp(-since / 0.5)
     bloom(pen, SILL, 3.5, '#FFB070', 0.7 * arrive)
   }
