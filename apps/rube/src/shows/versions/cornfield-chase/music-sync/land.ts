@@ -23,7 +23,7 @@ export function dayLand(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   const l = dayAt(t)
   const hy = sky(s, l)
   const dusk = smooth(t, 30, 40.6)
-  body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', '#F6D58A', 0.26 - 0.06 * dusk, 0.15)
+  body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', { color: '#F6D58A', a: 0.26 - 0.06 * dusk, r: 0.15 })
   clouds(s, t, hy, { ...l.cloud, sky: l.low, alpha: 0.9 })
   const ink = mixHex('#46423A', '#3A2A32', smooth(t, ORGAN - 3, 40))
   drone(s, t, hy, ink)
@@ -94,7 +94,7 @@ const nightAt = (t: number, horizon: number): Light => {
     top: mixHex(NIGHT.top, '#0B1430', 0.7 * dawn),
     mid: mixHex(mixHex(NIGHT.mid, '#271F45', 0.6 * flareAt(t)), '#1A2B52', dawn),
     // The chase under the moon, blue-violet; the full organ under the midway's light, warmer, toward rose.
-    low: mixHex(mixHex(mixHex(NIGHT.low, '#56345F', glowAt(t)), '#7E4E8E', 0.85 * flareAt(t)), '#4A5F86', 0.8 * dawn),
+    low: mixHex(mixHex(mixHex(NIGHT.low, '#56345F', glowAt(t)), '#7E4E8E', 0.85 * flareAt(t)), '#7187B2', 0.9 * dawn),
     // The tassels catch the midway's light as it comes on, and go cool with the dawn.
     rows: {
       ...NIGHT.rows,
@@ -122,9 +122,10 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
   const l = nightAt(t, horizon(t))
   const hy = sky(s, l)
   stars(s, t, hy, dawnAt(t))
-  body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', '#B9B0E8', 0.1, 0.12, true)
+  body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', undefined, true)
   clouds(s, t, hy, { ...l.cloud, sky: l.mid, alpha: 0.7 }, true)
-  smoke(s, t, hy, camAt, mixHex(mixHex('#6A5A8C', '#9A7896', glowAt(t)), '#7488AE', dawnAt(t)))
+  // The smoke: cool over, rosier along its foot where the midway lights it, and the dawn's blue in the blue hour.
+  smoke(s, t, hy, camAt, mixHex(mixHex('#4E4672', '#5A4A7A', glowAt(t)), '#55678F', dawnAt(t)), mixHex(mixHex('#6A5A8C', '#A87C98', glowAt(t)), '#8296BC', dawnAt(t)))
   fireworks(s, t, hy)
   balloons(s, t, hy)
   farm(s, hy, l.farm, '#E3B45C', t * 0.6)

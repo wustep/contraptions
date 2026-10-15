@@ -121,38 +121,47 @@ export function fireworks(s: Screen, t: number, hy: number): void {
 }
 
 /**
- * The smoke the shells leave: where each burst, a soft drift of it, lit from under by the fair, that spreads and goes
- * east on the wind and thins over half a minute. It hangs over the midway, so it goes past the camera at the midway's
- * pace: `camAt` is the camera's cell at a show time, to find where over the fair a shell burst. Through the climax it
- * gathers, a shell's on the one before's, and the last of it is still there in the blue hour, over the photograph.
- * `color` is the smoke's, by the light it is in.
+ * The smoke the shells leave: where each burst, a soft cloud of it the size the burst opened, lit from under by the
+ * fair, that the wind draws out east and shears, the high side carried the farther, into a long slant of veil that thins
+ * over half a minute. It hangs over the midway, so it goes past the camera at the midway's pace: `camAt` is the
+ * camera's cell at a show time, to find where over the fair a shell burst. Through the climax it gathers, a shell's on
+ * the one before's, and the last of it is still there in the blue hour, over the photograph. `color` is the smoke's
+ * over, `lit` along its foot, by the light it is in.
  */
-export function smoke(s: Screen, t: number, hy: number, camAt: (t: number) => number, color: string): void {
+export function smoke(s: Screen, t: number, hy: number, camAt: (t: number) => number, color: string, lit: string): void {
   const { ctx, cx, f, w } = s
   const at = (s.camX * MIDWAY) / 8
   for (const [n, sh] of SHELLS.entries()) {
     const age = t - sh.t
-    if (age < 0.4 || age > 40) continue
-    const a = 0.12 * smooth(age, 0.4, 3) * Math.exp(-age / 16) * (sh.r / 0.18)
-    if (a < 0.006) continue
+    if (age < 0.3 || age > 40) continue
+    const a = 0.13 * smooth(age, 0.3, 2.5) * Math.exp(-age / 16) * (sh.r / 0.18)
+    if (a < 0.005) continue
     // Where over the fair it burst, and how far the wind has had it since.
     const u = (sh.x - 0.5) * (16 / 9) + (camAt(sh.t) * MIDWAY) / 8 - at + 0.011 * age
-    const spread = sh.r * (0.5 + 0.9 * (1 - Math.exp(-age / 8)))
-    if (Math.abs(u) * f > w / 2 + spread * f * 2) continue
+    const spread = sh.r * (0.7 + 0.6 * (1 - Math.exp(-age / 10)))
+    // Round as the burst left it; drawn out, flattened and sheared by the wind as it goes.
+    const long = 1 + 0.08 * age
+    const flat = 1 - 0.72 * smooth(age, 1, 16)
+    const shear = 0.04 * age
+    if (Math.abs(u) * f > w / 2 + spread * f * (long + shear)) continue
     const bx = cx + u * f
     const by = hy - (sh.y - 0.003 * age) * f
+    // Puffs over the disc the sparks filled, as one cloud: no edges inside it, only its outline.
     const cloud = new Path2D()
-    for (let k = 0; k < 6; k++) {
-      // Thin veils, one over another, drawn out along the wind and sheared by it, the high ones carried the farther.
-      const v = k / 5 - 0.5
-      const rx = spread * f * (0.5 + 0.3 * hash(k, n * 7 + 50)) * (1 + 0.04 * age)
-      const ry = spread * f * (0.11 + 0.05 * hash(k, n * 7 + 52)) * (1 - 0.4 * smooth(age, 1, 15))
-      const dy = v * spread * f * 0.7
-      const dx = (hash(k, n * 7 + 51) - 0.5) * spread * f * 0.5 - v * spread * f * 0.05 * age
-      cloud.moveTo(bx + dx + rx, by + dy)
-      cloud.ellipse(bx + dx, by + dy, rx, ry, 0, 0, Math.PI * 2)
+    for (let k = 0; k < 8; k++) {
+      const turn = hash(k, n * 7 + 50) * Math.PI * 2
+      const from = Math.sqrt(hash(k, n * 7 + 51)) * 0.62 * spread
+      const dy = Math.sin(turn) * from * flat
+      const x = bx + (Math.cos(turn) * from * long - dy * shear) * f
+      const y = by + dy * f
+      const r = spread * (0.3 + 0.16 * hash(k, n * 7 + 52)) * f
+      cloud.moveTo(x + r * long, y)
+      cloud.ellipse(x, y, r * long, r * flat, 0, 0, Math.PI * 2)
     }
-    ctx.fillStyle = rgba(mixHex(color, sh.color, 0.12), a)
+    const g = ctx.createLinearGradient(0, by - spread * flat * f, 0, by + spread * flat * f)
+    g.addColorStop(0, rgba(mixHex(color, sh.color, 0.1), a * 0.55))
+    g.addColorStop(1, rgba(mixHex(lit, sh.color, 0.1), a))
+    ctx.fillStyle = g
     ctx.fill(cloud)
   }
 }

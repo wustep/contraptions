@@ -110,7 +110,10 @@ export function exposure(p: p5, c: PieceCtx, col: number, line: number, t: numbe
   ctx.restore()
 }
 
-/** The booth's flash: the frame lit from the booth out for an instant, and back over a third of a second. */
+/**
+ * The booth's flash: the frame lit for an instant, a little more near the booth than far from it, and back over a
+ * third of a second. The light on the scene, not a burst at the booth: no hot core.
+ */
 export function flash(p: p5, c: PieceCtx, col: number, line: number, t: number, at: number, booth: [number, number]): void {
   const age = t - at
   if (age < 0 || age > 0.4) return
@@ -119,13 +122,9 @@ export function flash(p: p5, c: PieceCtx, col: number, line: number, t: number, 
   const bx = (booth[0] - col) * c.k
   const by = (booth[1] - line) * c.k
   const r = c.k * 9
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const g = ctx.createRadialGradient(bx, by, c.k * 0.1, bx, by, r)
-  g.addColorStop(0, rgba('#FFF8EA', 0.95 * a))
-  g.addColorStop(0.25, rgba('#F4EEFF', 0.5 * a))
-  g.addColorStop(1, rgba('#D8D0FF', 0.14 * a))
+  const g = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+  g.addColorStop(0, rgba('#EEE8FA', 0.5 * a))
+  g.addColorStop(1, rgba('#D8D0F4', 0.22 * a))
   ctx.fillStyle = g
   ctx.fillRect(bx - r * 4, by - r * 4, r * 8, r * 8)
-  ctx.restore()
 }

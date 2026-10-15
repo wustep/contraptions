@@ -181,19 +181,21 @@ function glowOf(r: number, color: string, inner: number): HTMLCanvasElement {
 }
 
 /**
- * A low sun or the moon: a disc and its glow, at `x` of the frame across and `y` frame heights over the horizon,
- * hidden by the field once it is under it. `crescent` cuts the moon's dark side out of it, so the glow shows through
- * there with a trace of earthshine, as the sky does, rather than a disc of the sky's colour laid over the glow.
+ * A low sun or the moon: a disc, at `x` of the frame across and `y` frame heights over the horizon, hidden by the field
+ * once it is under it. The sun has the haze it shines through round it (`haze`: its colour, strength and reach, frame
+ * heights); the moon has none. `crescent` cuts the moon's dark side out of it, a trace of earthshine left there.
  */
-export function body(s: Screen, hy: number, x: number, y: number, r: number, color: string, glow: string, glowA: number, glowR: number, crescent = false): void {
+export function body(s: Screen, hy: number, x: number, y: number, r: number, color: string, haze?: { color: string; a: number; r: number }, crescent = false): void {
   const { ctx, cx, f } = s
   const bx = cx + (x - 0.5) * f * (16 / 9)
   const by = hy - y * f
-  const sprite = glowOf(glowR * f, glow, (r * 0.5) / glowR)
-  ctx.save()
-  ctx.globalAlpha = clamp(glowA)
-  ctx.drawImage(sprite, bx - sprite.width / 2, by - sprite.height / 2)
-  ctx.restore()
+  if (haze) {
+    const sprite = glowOf(haze.r * f, haze.color, (r * 0.5) / haze.r)
+    ctx.save()
+    ctx.globalAlpha = clamp(haze.a)
+    ctx.drawImage(sprite, bx - sprite.width / 2, by - sprite.height / 2)
+    ctx.restore()
+  }
   ctx.save()
   ctx.beginPath()
   ctx.rect(0, 0, s.w, hy)
