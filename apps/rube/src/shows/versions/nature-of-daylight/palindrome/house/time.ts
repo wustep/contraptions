@@ -320,9 +320,11 @@ export function lightAt(T: number): Light {
     return light(1 - 0.78 * u, 0.78 * u, 0, 0, 0.8 * u ** 1.3, 0.85 - 0.35 * u)
   }
   if (T < ERA.news[0]) {
-    // A grey day. On the swell the room greys and the light goes out of it.
+    // The days of her illness, a light each (`DAYS`). On the swell the room greys and the light goes out of it.
+    const d = dayAt(T).L
     const g = ss(T, SWELL, SWELL + 3.6)
-    return light(0.12 * g, 0, 1 - 0.3 * g, 0.18 * g, 0, 0.8 + 0.2 * g)
+    const h = 1 - g
+    return light(d.pre * h + 0.45 * g, d.morn * h, d.grey * h + 0.35 * g, d.night * h + 0.2 * g, d.sun * h, d.fog + (1 - d.fog) * 0.3 * g)
   }
   if (T < ERA.news[1] + 1 || (T >= ERA.recruit[0] - 1 && T < ERA.recruit[1] + 1)) return light(0, 0, 0, 1, 0, 0.2)
   if (T >= ERA.flash[0] - 1 && T < ERA.flash[1] + 1) return light(0, 1, 0, 0, 0.95, 0.15)
@@ -337,6 +339,46 @@ export function lightAt(T: number): Light {
   if (u < 1) return light(u, 1 - u, 0, 0, 1 - u, 0.3 + 0.55 * u)
   return FIRST_LIGHT
 }
+
+/**
+ * The bed is the days of her illness. On each of the clock's strikes the picture cuts (`house.ts`) and it is another
+ * day: another light in the room, another hour on the clock, the lamp by the bed lit at night. The last goes to the
+ * blue hour, the light she came in at dawn, and on the swell she goes and the lamp goes out. (One grey afternoon for
+ * 26 s, the prologue's longest scene read as one held moment; the film tells her illness as a montage of days.)
+ */
+interface Day {
+  t: number
+  L: Light
+  /** The clock's hour as the day begins (24 h). */
+  hour: number
+  /** The lamp by the bed: 0 off, 1 lit. */
+  lamp: number
+}
+export const DAYS: Day[] = [
+  // A grey afternoon.
+  { t: SEAM.bed, L: light(0, 0, 1, 0, 0, 0.8), hour: 15.1, lamp: 0 },
+  // Night, the vigil: the room dark, the lamp lit over the two of them.
+  { t: 76.185, L: light(0, 0, 0.12, 0.88, 0, 0.5), hour: 23.4, lamp: 1 },
+  // A pale morning, the sun low through the glass.
+  { t: 80.376, L: light(0.15, 0.75, 0.1, 0, 0.7, 0.55), hour: 7.2, lamp: 0 },
+  // Another grey day.
+  { t: 85.31, L: light(0, 0.1, 0.9, 0, 0.05, 0.85), hour: 14.4, lamp: 0 },
+  // The last: evening going to the blue hour, the lamp lit again.
+  { t: 89.281, L: light(0.7, 0, 0.12, 0.18, 0, 0.9), hour: 19.4, lamp: 0.9 },
+]
+export function dayAt(T: number): Day {
+  let d = DAYS[0]
+  for (const x of DAYS) if (T >= x.t) d = x
+  return d
+}
+/** The clock's time at T, in hours: the day's hour, going on with the show's seconds; stopped when she goes. */
+export function clockHour(T: number): number {
+  const at = Math.min(T, GONE[0])
+  const d = dayAt(at)
+  return d.hour + (at - d.t) * 0.012
+}
+/** The lamp by the bed: lit at night and on the last evening; going out as she goes. */
+export const lampAt = (T: number): number => dayAt(T).lamp * (1 - ss(T, SWELL, GONE[1]))
 
 /* ------------------------------------------------------------------ Louise */
 

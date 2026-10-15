@@ -4,7 +4,7 @@ import { box, part, scenery, type Company, type Part, type PartShot, type Slot }
 import { HALF, LAST, PLAGAL, SEAM, SWELL, TONIC } from '../music'
 import type { ShellSpot } from '../seams'
 import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME, IAN, LOUISE } from '../worlds'
-import { CLOCK_HULL, CRADLE_HULL, BED_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawTV, drawTVGlow, tvShell } from './props'
+import { CLOCK_HULL, CRADLE_HULL, BED_HULL, LAMP_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawLamp, drawTV, drawTVGlow, tvShell } from './props'
 import { drawBallMirror, drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
 import { F, FLASH_HITS, FLASH_X, STOOL_HULL, drawSheet, drawStool, flashX, hannahFlashAt, hannahFlashLook } from './flash'
 import { RC, RECRUIT_HITS, drawRecruit, drawRecruitOver, recruitX } from './recruit'
@@ -94,7 +94,7 @@ export const houseSet = scenery<null>({
     // The cradle at its dawn place throughout, empty until Hannah comes into it.
     const dx = era === 'home' && T < BEGIN ? EMPTY_DX : 0
     if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)).map(([x, y]) => [x + dx, y] as Pt))
-    if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL)
+    if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL, LAMP_HULL)
     if (era === 'news' || era === 'recruit') shadows.push(TV_HULL)
     if (era === 'flash') shadows.push(STOOL_HULL)
     if (era === 'home' && T < BEGIN) balls.push([ianX(T), 0])
@@ -107,6 +107,7 @@ export const houseSet = scenery<null>({
       p.pop()
     }
     if (era === 'bed') {
+      drawLamp(p, k, T, L)
       drawBed(p, k, T, L)
       drawClock(p, k, T, L)
     }
@@ -269,13 +270,21 @@ export const bed: Part<HouseState> = part<HouseState>(
     const o = BED_AT
     const w = (x: number, y: number): Pt => [x - o[0], y - o[1]]
     return [
-      // In on the two of them by the pillow, the clock's pendulum at the frame's edge; on the swell close on Hannah as
-      // she goes; then the empty pillow and Louise beside it, and back to the room.
-      { t: 76.185, cells: 3.7, hold: w(1.2, -0.72) },
-      { t: 80.376, cells: 3.2, hold: w(1.26, -0.56) },
-      { t: 85.31, cells: 3.05, hold: w(1.3, -0.55) },
-      // The clock whole beside the bed while it runs down: its last notch and its pendulum settling on the swell.
-      { t: 89.281, cells: 3.55, hold: w(1.95, -0.92) },
+      // The days of her illness (`DAYS`), each its own shot, cut in on the clock's strike that begins it: the grey
+      // afternoon, the room and the clock;
+      { t: 75.9, cells: 3.9, hold: w(1.15, -0.75) },
+      // night, close on the two of them under the lamp;
+      { t: 76.185, cells: 2.55, hold: w(0.62, -0.56), cut: true },
+      { t: 80.25, cells: 2.5, hold: w(0.66, -0.55) },
+      // a pale morning, her coming to the bed's side;
+      { t: 80.376, cells: 3.25, hold: w(1.28, -0.6), cut: true },
+      { t: 85.2, cells: 3.1, hold: w(1.3, -0.57) },
+      // another grey day, the clock whole beside the bed, running down;
+      { t: 85.31, cells: 3.6, hold: w(1.95, -0.92), cut: true },
+      { t: 89.18, cells: 3.5, hold: w(1.95, -0.9) },
+      // and the last evening, the lamp lit again, going to the blue hour: the clock's last notch and its pendulum
+      // settling on the swell; then close on Hannah as she goes, and the empty pillow and Louise beside it.
+      { t: 89.281, cells: 3.35, hold: w(1.55, -0.8), cut: true },
       { t: SWELL, cells: 3.45, hold: w(1.92, -0.9) },
       // Then in on her as she goes, close while she pales into the pillow, and held on it empty. (The push came after
       // she had gone: she went in the wide, small under the clock, and the close-up found an empty bed.)
