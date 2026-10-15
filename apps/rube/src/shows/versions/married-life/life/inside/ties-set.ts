@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
 import { alpha } from '../kit'
 import { drawFalls, FALLS } from '../props/falls'
-import { CHURCH, CLINIC, HOME, INK } from '../worlds'
+import { CARL, CARL_OLD as CARL_GREY, CHURCH, CLINIC, ELLIE, ELLIE_OLD as ELLIE_GREY, HOME, INK } from '../worlds'
 
 /**
  * The hall's furniture and machines (the ties builder's; `ties.ts` animates them): pure drawings of a state, in the
@@ -565,6 +565,128 @@ export function drawPainting(p: p5, k: number, weight: number, age: number): voi
   p.line(lx * k, (y0 - 0.08) * k, lx * k, (ly + 0.03) * k)
   p.fill(brass)
   p.quad((lx - 0.2) * k, (ly + 0.06) * k, (lx - 0.14) * k, (ly - 0.02) * k, (lx + 0.14) * k, (ly - 0.02) * k, (lx + 0.2) * k, (ly + 0.06) * k)
+  p.pop()
+}
+
+/**
+ * Their snapshots, on the wall under the stairs beside her painting: the life they had while the falls stayed a
+ * picture. One went up when they moved in (their house, new); one more each decade, on the mornings of the ties (the
+ * camera is on the wheel then, so they are seen only once all are up, beside the painting at the dance's end): the
+ * hill and its tree, the seaside, a winter, the car on the road. Each is the two of them as they were when it was taken,
+ * his blue and her coral greying from picture to picture, in a frame of its own. All of them clear of the stairs'
+ * underside, over the chair rail, and above the dance's close (whose top is about y -1.39), so the crest keeps its one
+ * picture, the wedding.
+ */
+export type Snapshot = 'house' | 'tree' | 'sea' | 'snow' | 'car'
+export const GALLERY: { kind: Snapshot; box: [number, number, number, number]; frame: 'gilt' | 'wood' | 'white'; age: number }[] = [
+  { kind: 'house', box: [4.05, -1.92, 4.5, -1.5], frame: 'white', age: 0 },
+  { kind: 'tree', box: [4.65, -2.42, 5.15, -1.6], frame: 'gilt', age: 0.18 },
+  { kind: 'sea', box: [5.3, -1.98, 6.2, -1.48], frame: 'wood', age: 0.38 },
+  { kind: 'snow', box: [5.4, -2.42, 5.85, -2.05], frame: 'white', age: 0.6 },
+  { kind: 'car', box: [5.98, -2.46, 6.38, -2.08], frame: 'gilt', age: 0.8 },
+]
+
+/** One snapshot in its frame; `shown` 0..1 (it fades up as it is hung), `age` the house's years (the prints fade). */
+export function drawSnapshot(p: p5, k: number, weight: number, n: number, shown: number, age: number): void {
+  if (shown <= 0.001) return
+  const g = GALLERY[n]
+  const [x0, y0, x1, y1] = g.box
+  const r = (a: number, b: number, c: number, d: number, rad = 0) => p.rect(a * k, b * k, (c - a) * k, (d - b) * k, rad * k)
+  const faded = (hex: string) => mixHex(hex, '#E8D6B4', 0.25 + 0.3 * age)
+  const frameC = g.frame === 'gilt' ? mixHex(HOME.brass, '#B9A06A', age * 0.6) : g.frame === 'wood' ? mixHex(HOME.woodDark, '#6A5040', age) : mixHex(HOME.trim, '#E6DAC2', age)
+  const carl = faded(mixHex(CARL, CARL_GREY, g.age))
+  const ellie = faded(mixHex(ELLIE, ELLIE_GREY, g.age))
+  p.push()
+  p.rectMode(p.CORNER)
+  p.drawingContext.globalAlpha = shown
+  // Its shadow on the paper, the frame, a cream mat.
+  p.noStroke()
+  p.fill(alpha(p, INK, 0.1))
+  r(x0 + 0.018, y0 + 0.022, x1 + 0.018, y1 + 0.022, 0.01)
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.6)
+  p.fill(frameC)
+  r(x0, y0, x1, y1, 0.008)
+  p.noStroke()
+  const m = 0.045
+  p.fill(mixHex(HOME.trim, '#EADFC8', age))
+  r(x0 + m, y0 + m, x1 - m, y1 - m)
+  // The picture.
+  const [a0, b0, a1, b1] = [x0 + m + 0.03, y0 + m + 0.03, x1 - m - 0.03, y1 - m - 0.03]
+  const w = a1 - a0
+  const h = b1 - b0
+  const at = (u: number, v: number): [number, number] => [a0 + u * w, b0 + v * h]
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(a0 * k, b0 * k, w * k, h * k)
+  ctx.clip()
+  const sky = { house: HOME.sky, tree: HOME.sky, sea: '#CFE6EE', snow: '#D9DEE2', car: '#E8C9A8' }[g.kind]
+  p.fill(faded(sky))
+  r(a0, b0, a1, b1)
+  const ground = (v: number, hex: string) => {
+    p.fill(faded(hex))
+    r(a0, b0 + v * h, a1, b1)
+  }
+  const fig = Math.min(w, h) * 0.17
+  const two = (u: number, v: number) => {
+    const [cx, cy] = at(u, v)
+    p.fill(carl)
+    r(cx - fig * 1.05, cy - fig, cx - fig * 0.05, cy, fig * 0.2)
+    p.fill(ellie)
+    p.circle((cx + fig * 0.55) * k, (cy - fig * 0.5) * k, fig * k)
+  }
+  if (g.kind === 'house') {
+    ground(0.78, HOME.grass)
+    const [hx, hy] = at(0.62, 0.78)
+    p.fill(faded(HOME.siding))
+    r(hx - w * 0.2, hy - h * 0.34, hx + w * 0.2, hy)
+    p.fill(faded(HOME.roof))
+    p.triangle((hx - w * 0.26) * k, (hy - h * 0.34) * k, hx * k, (hy - h * 0.6) * k, (hx + w * 0.26) * k, (hy - h * 0.34) * k)
+    p.fill(faded(HOME.yellow))
+    r(hx - w * 0.04, hy - h * 0.18, hx + w * 0.04, hy)
+    two(0.24, 0.84)
+  } else if (g.kind === 'tree') {
+    p.fill(faded(HOME.grass))
+    p.ellipse(...at(0.5, 0.95).map((v) => v * k) as [number, number], w * 1.5 * k, h * 0.5 * k)
+    const [tx, ty] = at(0.62, 0.74)
+    p.fill(faded(HOME.bark))
+    r(tx - w * 0.04, ty - h * 0.26, tx + w * 0.04, ty)
+    p.fill(faded(HOME.leaf))
+    p.ellipse(tx * k, (ty - h * 0.36) * k, w * 0.62 * k, h * 0.3 * k)
+    two(0.3, 0.8)
+  } else if (g.kind === 'sea') {
+    ground(0.5, '#6FA3C2')
+    ground(0.74, '#E2CF9F')
+    p.fill(faded('#F2C866'))
+    p.circle(...at(0.8, 0.24).map((v) => v * k) as [number, number], h * 0.22 * k)
+    two(0.42, 0.9)
+  } else if (g.kind === 'snow') {
+    ground(0.7, '#F6F6F2')
+    const [tx, ty] = at(0.72, 0.72)
+    p.fill(faded('#4E6B5A'))
+    p.triangle((tx - w * 0.14) * k, ty * k, tx * k, (ty - h * 0.46) * k, (tx + w * 0.14) * k, ty * k)
+    two(0.32, 0.82)
+  } else {
+    ground(0.72, '#A79B8A')
+    const [cx, cy] = at(0.62, 0.72)
+    p.fill(faded(HOME.yellow))
+    p.rect((cx - w * 0.26) * k, (cy - h * 0.2) * k, w * 0.52 * k, h * 0.16 * k, h * 0.07 * k)
+    p.arc(cx * k, (cy - h * 0.19) * k, w * 0.3 * k, h * 0.3 * k, Math.PI, 0)
+    p.fill(faded('#3A3330'))
+    p.circle((cx - w * 0.15) * k, (cy - h * 0.03) * k, h * 0.11 * k)
+    p.circle((cx + w * 0.15) * k, (cy - h * 0.03) * k, h * 0.11 * k)
+    two(0.18, 0.86)
+  }
+  ctx.restore()
+  // The glass's sheen.
+  p.fill(alpha(p, '#FFFFFF', 0.18))
+  p.quad((a0 + w * 0.12) * k, b1 * k, (a0 + w * 0.42) * k, b0 * k, (a0 + w * 0.56) * k, b0 * k, (a0 + w * 0.26) * k, b1 * k)
+  p.noFill()
+  p.stroke(alpha(p, INK, 0.45))
+  p.strokeWeight(weight * 0.4)
+  r(a0, b0, a1, b1)
+  p.drawingContext.globalAlpha = 1
   p.pop()
 }
 
