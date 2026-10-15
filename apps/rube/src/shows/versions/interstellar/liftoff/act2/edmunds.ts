@@ -534,7 +534,8 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     // out under it, and what she has made here comes into the frame (her field, the channel, the windmill, the
     // hoop house, the panels turning to the sun), until the last frame is a farm at dawn.
     { t: 278.5, cells: END_CELLS + 1.5, hold: [END_HOLD[0] + 0.3, END_HOLD[1] - 0.85] },
-    { t: DURATION, cells: END_CELLS + 3.2, hold: [END_HOLD[0] + 0.6, END_HOLD[1] - 1.9] },
+    // (Its last key is past the end, so it is still going on the last frame rather than settling.)
+    { t: DURATION + 7, cells: END_CELLS + 4.1, hold: [END_HOLD[0] + 0.75, END_HOLD[1] - 2.45] },
   ]
 }
 

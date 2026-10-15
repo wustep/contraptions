@@ -579,14 +579,12 @@ function drawShaft(p: p5, c: Ctx, T: number): void {
     const on = smooth(since, -0.02, 0.14)
     const lx = WALL_L - 0.22
     if (on > 0) {
-      // Its light, thrown out from the slit across the air: a flat beam, warm, with a brighter core; lit or not there.
+      // Its light on the air by the slit: one small flat fan, warm. The lit glass says lit or dark; this only says
+      // which way it shines.
       const ctx = p.drawingContext as CanvasRenderingContext2D
       ctx.save()
-      ctx.fillStyle = alpha(p, LAMP_POOL, 0.2 * on).toString()
-      for (const [reach, spread] of [
-        [0.66, 0.36],
-        [0.42, 0.18],
-      ]) {
+      ctx.fillStyle = alpha(p, LAMP_POOL, 0.16 * on).toString()
+      for (const [reach, spread] of [[0.4, 0.24]]) {
         ctx.beginPath()
         ctx.moveTo(X(lx - 0.02), X(v - 0.03))
         ctx.arc(X(lx - 0.02), X(v), X(reach), Math.PI - spread, Math.PI + spread)

@@ -1274,7 +1274,7 @@ function drawStreaks(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): voi
 
 /** The warm light he drifts toward through the dark: small and far, then near; the room opens out of it. */
 function drawWarmth(p: p5, c: Ctx, T: number): void {
-  const on = smooth(T, GLOW_ON, GLOW_ON + 0.6) * (1 - smooth(T, IN_BED - 0.1, IN_BED + 0.4))
+  const on = smooth(T, GLOW_ON, GLOW_ON + 0.6) * (1 - smooth(T, IN_BED - 0.25, IN_BED + 0.1))
   if (on <= 0.005) return
   const { k } = c
   const X = (v: number) => v * k

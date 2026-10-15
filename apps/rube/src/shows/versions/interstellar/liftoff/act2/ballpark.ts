@@ -722,7 +722,8 @@ export const ballpark = part<BallparkState>(
       { t: CATCH - 0.3, cells: 4.8, hold: wall(2.1, 1.9), w: 0.9 },
       { t: FEED, cells: 5.0, hold: wall(3.0, 2.0), w: 1 },
       { t: SPIN1 + 0.5, cells: 5.5, hold: wall(5.4, 2.1), w: 1 },
-      { t: HIT, cells: 5.5, hold: wall(5.5, 2.1), w: 1 },
+      // In a little while the wheels spin up and the bat is drawn back, so the hit lands on a tighter frame.
+      { t: HIT, cells: 4.95, hold: wall(5.55, 2.1), w: 1 },
       { t: cue(141.6), cells: 13, hold: mid(flightAt(cue(141.6)), tower, 0.3), w: 0.7 },
       // The whole station, once, as he leaves the ballpark's side of it: the scale of the thing.
       { t: cue(143.4), cells: 34, hold: [AX[0] + 0.8, AX[1] + 1.2], w: 1 },
