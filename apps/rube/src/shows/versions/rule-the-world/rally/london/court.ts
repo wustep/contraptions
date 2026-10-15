@@ -1,7 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { ellipse, line, mix, path, rect, shape, type Pen } from '../pen'
-import { ballAt, CATCH, DIES, FEED, FLOOR_BACK, LUNGE, OUT } from './geo'
+import { ballAt, CATCH, DIES, FEED, FLOOR_BACK, LUNGE, OFF_END, OUT, REST, REST_AT } from './geo'
+
+const clamp = (u: number): number => Math.max(0, Math.min(1, u))
 import { C } from './palette'
 
 /**
@@ -34,38 +36,67 @@ export function ballBoys(pen: Pen, t: number, f: { x0: number; x1: number }): vo
   for (let i = 0; i < BOYS.length; i++) {
     const { x, stand, run } = boyAt(i, t)
     if (x < f.x0 - 1 || x > f.x1 + 1) continue
-    const look = Math.max(-1, Math.min(1, (ball[0] - x) / 3))
-    // Kneeling on one knee (stand 0), or up and running (1).
-    const hipY = FEET - 0.36 - 0.3 * stand
-    const shY = hipY - 0.5
-    const lean = -0.06 * look * (1 - stand) - 0.1 * run * Math.sign(look || 1)
-    const hip: Pt = [x, hipY]
-    const sh: Pt = [x + lean, shY]
-    const phase = t * 14
-    const sock = mix(C.whiteShade, C.gallery, 0.35)
-    if (stand < 0.5) {
-      // The knee down behind, the other foot planted in front.
-      path(pen, [hip, [x + 0.14, FEET - 0.04], [x + 0.32, FEET - 0.02]], C.shorts, 5)
-      path(pen, [hip, [x - 0.16, hipY + 0.06], [x - 0.18, FEET - 0.03]], C.shorts, 5)
-      line(pen, [x - 0.18, FEET - 0.2], [x - 0.18, FEET - 0.03], sock, 3.4)
-    } else {
-      for (const sd of [-1, 1]) {
-        const swing = 0.16 * run * Math.sin(phase + (sd > 0 ? 0 : Math.PI))
-        const foot: Pt = [x + sd * 0.07 + swing, FEET - 0.03 - 0.06 * run * Math.max(0, Math.sin(phase + (sd > 0 ? 0 : Math.PI)))]
-        path(pen, [hip, [(hip[0] + foot[0]) / 2 - 0.03, (hip[1] + foot[1]) / 2], foot], C.shorts, 5)
-        line(pen, [foot[0], foot[1] - 0.16], foot, sock, 3.4)
-      }
-    }
-    // The sweater, the arms (hands on his knee, or swinging).
-    shape(pen, [[hip[0] - 0.15, hip[1] + 0.04], [sh[0] - 0.17, sh[1] + 0.04], [sh[0] + 0.17, sh[1] + 0.04], [hip[0] + 0.15, hip[1] + 0.04]], C.sweater)
-    const hand: Pt = stand < 0.5 ? [x - 0.14, hipY + 0.04] : [x + 0.12 * run * Math.sin(phase), hipY + 0.02]
-    path(pen, [[sh[0] - 0.12, sh[1] + 0.06], [sh[0] - 0.16, (sh[1] + hand[1]) / 2], hand], C.sweater, 4)
-    ellipse(pen, hand, 0.035, 0.035, C.skinDim)
-    const head: Pt = [sh[0] + 0.02 * look, sh[1] - 0.17]
-    ellipse(pen, head, 0.1, 0.115, C.skinDim)
-    ellipse(pen, [head[0] - 0.03 * look, head[1] - 0.06], 0.1, 0.065, '#3A2E25')
-    ellipse(pen, [head[0] + 0.07 * look, head[1] + 0.02], 0.022, 0.026, mix(C.skinDim, C.skin, 0.4))
+    boy(pen, t, x, stand, run, Math.max(-1, Math.min(1, (ball[0] - x) / 3)))
   }
+  chaser(pen, t, f)
+}
+
+/**
+ * A ball boy at `x`: kneeling on one knee (`stand` 0) or up (1), running (`run`) toward `dir` (by default away from
+ * where he looks, as the far one runs after the winner), his head toward `look`.
+ */
+function boy(pen: Pen, t: number, x: number, stand: number, run: number, look: number, dir = -Math.sign(look || 1)): void {
+  // Kneeling on one knee (stand 0), or up and running (1).
+  const hipY = FEET - 0.36 - 0.3 * stand
+  const shY = hipY - 0.5
+  const lean = -0.06 * look * (1 - stand) + 0.1 * run * dir
+  const hip: Pt = [x, hipY]
+  const sh: Pt = [x + lean, shY]
+  const phase = t * 14
+  const sock = mix(C.whiteShade, C.gallery, 0.35)
+  if (stand < 0.5) {
+    // The knee down behind, the other foot planted in front.
+    path(pen, [hip, [x + 0.14, FEET - 0.04], [x + 0.32, FEET - 0.02]], C.shorts, 5)
+    path(pen, [hip, [x - 0.16, hipY + 0.06], [x - 0.18, FEET - 0.03]], C.shorts, 5)
+    line(pen, [x - 0.18, FEET - 0.2], [x - 0.18, FEET - 0.03], sock, 3.4)
+  } else {
+    for (const sd of [-1, 1]) {
+      const swing = 0.16 * run * Math.sin(phase + (sd > 0 ? 0 : Math.PI))
+      const foot: Pt = [x + sd * 0.07 + swing, FEET - 0.03 - 0.06 * run * Math.max(0, Math.sin(phase + (sd > 0 ? 0 : Math.PI)))]
+      path(pen, [hip, [(hip[0] + foot[0]) / 2 - 0.03, (hip[1] + foot[1]) / 2], foot], C.shorts, 5)
+      line(pen, [foot[0], foot[1] - 0.16], foot, sock, 3.4)
+    }
+  }
+  // The sweater, the arms (hands on his knee, or swinging).
+  shape(pen, [[hip[0] - 0.15, hip[1] + 0.04], [sh[0] - 0.17, sh[1] + 0.04], [sh[0] + 0.17, sh[1] + 0.04], [hip[0] + 0.15, hip[1] + 0.04]], C.sweater)
+  const hand: Pt = stand < 0.5 ? [x - 0.14, hipY + 0.04] : [x + 0.12 * run * Math.sin(phase), hipY + 0.02]
+  path(pen, [[sh[0] - 0.12, sh[1] + 0.06], [sh[0] - 0.16, (sh[1] + hand[1]) / 2], hand], C.sweater, 4)
+  ellipse(pen, hand, 0.035, 0.035, C.skinDim)
+  const head: Pt = [sh[0] + 0.02 * look, sh[1] - 0.17]
+  ellipse(pen, head, 0.1, 0.115, C.skinDim)
+  ellipse(pen, [head[0] - 0.03 * look, head[1] - 0.06], 0.1, 0.065, '#3A2E25')
+  ellipse(pen, [head[0] + 0.07 * look, head[1] + 0.02], 0.022, 0.026, mix(C.skinDim, C.skin, 0.4))
+}
+
+/**
+ * After the loss a ball boy comes running for the ball, as he would for any ball: in along the boards from behind the
+ * semifinal's table as it rolls off the end, slowing as it comes to rest, and down on one knee a step short of it. He
+ * looks at it, and leaves it be.
+ */
+const CHASE_FROM = OFF_END + 0.2
+const CHASE_AT = REST_AT - 0.2
+const CHASE: [number, number] = [3.5, REST[0] - 0.85]
+function chaser(pen: Pen, t: number, f: { x0: number; x1: number }): void {
+  if (t < CHASE_FROM) return
+  const u = clamp((t - CHASE_FROM) / (CHASE_AT - CHASE_FROM))
+  // A run that eases off into the last steps.
+  const go = u < 0.75 ? u / 0.75 * 0.85 : 0.85 + 0.15 * smooth(u, 0.75, 1)
+  const x = CHASE[0] + (CHASE[1] - CHASE[0]) * go
+  if (x < f.x0 - 1 || x > f.x1 + 1) return
+  const run = u < 1 ? (u < 0.75 ? 1 : 1 - smooth(u, 0.75, 1)) : 0
+  const stand = 1 - smooth(t, CHASE_AT, CHASE_AT + 0.35)
+  const ball = ballAt(t - 0.1)
+  boy(pen, t, x, stand, run, Math.max(-1, Math.min(1, (ball[0] - x) / 1.2)), 1)
 }
 
 /* ------------------------------------------------------------------ the officials */
