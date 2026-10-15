@@ -38,7 +38,7 @@ export const skySet = scenery<null>({
     const g = ctxOf(p)
     g.save()
     drawSkySet(p, c.k, c.t)
-    drawBoat(p, c.k, BOAT_X0)
+    drawBoat(p, c.k, BOAT_X0, c.t)
     g.restore()
   },
 })

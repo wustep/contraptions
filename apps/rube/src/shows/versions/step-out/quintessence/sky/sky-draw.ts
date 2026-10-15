@@ -376,9 +376,9 @@ function drawQuay(g: C2, k: number, f: ReturnType<typeof frame>, t: number): voi
 
 /* ------------------------------------------------------------------ the boat, from the air */
 
-export function drawBoat(p: p5, k: number, x0: number): void {
+export function drawBoat(p: p5, k: number, x0: number, t: number): void {
   const g = ctxOf(p)
-  drawBoatAbove(g, k, x0, SURF, 0)
+  drawBoatAbove(g, k, x0, SURF, 0, 0, t)
 }
 
 /* ------------------------------------------------------------------ the helicopter */

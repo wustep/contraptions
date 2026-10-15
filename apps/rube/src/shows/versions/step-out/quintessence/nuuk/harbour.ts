@@ -39,8 +39,8 @@ const H = {
 }
 const HOUSES = ['#C08A3E', '#4F8C88', '#CFA43E', '#4E6F94', '#E4E6E1', '#C7A15A']
 
-/** The light outside, 0.85 to 1: a cloud going over the sun and off it again, slowly. */
-export const daylight = (t: number): number => 0.9 + 0.1 * sway(t, 1 / 23, 4)
+/** The light outside, 0.8 to 1: cloud going over the sun and off it again, the big banks slowly, the rags quicker. */
+export const daylight = (t: number): number => 0.9 + 0.07 * sway(t, 1 / 23, 4) + 0.03 * Math.sin(t * 0.9)
 
 /** The water's level out in the harbour (where the far shore meets it), on the town's plane. */
 const SHORE_Y = -1.0
@@ -85,7 +85,7 @@ function clouds(g: C2, v: View, t: number): void {
   const dark = new Path2D()
   const span = 14
   for (let i = 0; i < 9; i++) {
-    const gx = hash(i, 1, 5) * span + t * 0.05
+    const gx = hash(i, 1, 5) * span + t * 0.12
     const x = v.x0 - 3 + ((((gx - (v.x0 - 3)) % span) + span) % span)
     const y = -3.4 + 2.0 * hash(i, 2, 5)
     const w = 1.2 + 1.8 * hash(i, 3, 5)

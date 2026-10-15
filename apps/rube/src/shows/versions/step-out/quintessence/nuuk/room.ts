@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { rgbaOf, sway, type View } from '../depth'
 import { hash } from '../kit'
-import { CEIL, COUNTER, COUNTER_TOP, DOOR_IN, FLOOR, GLASS, STOOL_X, WALL_OUT } from './geo'
+import { CEIL, COUNTER, COUNTER_TOP, DOOR_IN, FLOOR, GLASS, HEAD as HEAD_Y, STOOL_X, WALL_OUT } from './geo'
 
 /**
  * The bar's room, more of it (B's): the boards' grain, what hangs on the walls (a net with its glass floats, a
@@ -49,7 +49,7 @@ export function lampAt(i: number, t: number): { p: Pt; a: number } {
   const L = LAMPS[i]
   // A slow swing, nudged a little more each time the pilot sets his glass down hard.
   const knock = t > GLASS ? 0.05 * Math.exp(-(t - GLASS) / 2.5) * Math.sin((t - GLASS) * 2.9) : 0
-  const a = 0.075 * sway(t, 0.21, L.seed) + knock
+  const a = 0.1 * sway(t, 0.21, L.seed) + knock
   return { p: [L.x + Math.sin(a) * L.len, CEIL + Math.cos(a) * L.len], a }
 }
 
@@ -298,7 +298,8 @@ export function drawUnderFloor(g: C2, v: View, t: number, x0: number, x1: number
   const n = Math.max(6, Math.round((x1 - x0) * 4))
   for (let i = 0; i < n; i++) {
     const u = hash(i, 71)
-    const x = x0 + (x1 - x0) * u + 0.15 * Math.sin(t * 0.7 + i)
+    const span = x1 - x0
+    const x = x0 + ((((span * u + t * (0.12 + 0.2 * hash(i, 74)) * (i % 2 ? 1 : -1)) % span) + span) % span)
     const y = wy + 0.18 * hash(i, 72) + 0.015 * Math.sin(t * 1.6 + i * 2)
     const w = 0.08 + 0.25 * hash(i, 73)
     lit.moveTo(x * k, y * k)
@@ -361,4 +362,146 @@ export function drawWindowRain(g: C2, k: number, t: number): void {
   g.stroke(trails)
   g.fillStyle = rgbaOf('#E6ECEB', 0.7)
   g.fill(drops)
+}
+
+/**
+ * The harbour door's leaf, more of it: the grain down it, the raised panel's lit and shaded edges, a notice pinned
+ * between the glass and the panel, a brass kick plate, and on the glass the lamps' reflection and the rain.
+ */
+export function drawDoorDetail(g: C2, k: number, t: number, x: number, w: number): void {
+  const grain = new Path2D()
+  for (let j = 0; j < 7; j++) {
+    const gx = x + w * (0.08 + j * 0.135) + 0.01 * Math.sin(j * 2.3)
+    // Not across the glass.
+    const glass = gx > x + w * 0.2 && gx < x + w * 0.8
+    grain.moveTo(gx * k, (HEAD_Y + 0.15) * k)
+    if (glass) {
+      grain.lineTo(gx * k, (HEAD_Y + 0.35) * k)
+      grain.moveTo((gx + 0.004) * k, -1.2 * k)
+    }
+    grain.lineTo((gx + 0.01) * k, (FLOOR - 0.1) * k)
+  }
+  g.lineWidth = Math.max(0.6, 0.007 * k)
+  g.strokeStyle = rgbaOf('#2E2018', 0.55)
+  g.stroke(grain)
+  // The panel's edges: lit along its top and left, shaded along its bottom and right.
+  const px0 = x + w * 0.2
+  const px1 = x + w * 0.8
+  g.fillStyle = rgbaOf('#8A6444', 0.55)
+  g.fillRect(px0 * k, -0.9 * k, (px1 - px0) * k, 0.022 * k)
+  g.fillRect(px0 * k, -0.9 * k, 0.022 * k, 0.7 * k)
+  g.fillStyle = rgbaOf('#140D09', 0.6)
+  g.fillRect(px0 * k, -0.222 * k, (px1 - px0) * k, 0.022 * k)
+  g.fillRect((px1 - 0.022) * k, -0.9 * k, 0.022 * k, 0.7 * k)
+  // The notice, a little crooked, and its pin.
+  g.save()
+  g.translate((x + w * 0.5) * k, -1.05 * k)
+  g.rotate(-0.05)
+  g.fillStyle = '#D9CFB8'
+  g.fillRect(-0.15 * k, -0.11 * k, 0.3 * k, 0.21 * k)
+  const words = new Path2D()
+  for (let r = 0; r < 4; r++) {
+    const len = 0.22 * (0.5 + 0.5 * hash(r, 41))
+    words.moveTo(-0.11 * k, (-0.06 + r * 0.045) * k)
+    for (let i = 1; i <= 6; i++) words.lineTo((-0.11 + (len * i) / 6) * k, (-0.06 + r * 0.045 + 0.008 * Math.sin(i * 2.7 + r)) * k)
+  }
+  g.lineWidth = Math.max(0.5, 0.006 * k)
+  g.strokeStyle = rgbaOf('#4A443A', 0.8)
+  g.stroke(words)
+  g.fillStyle = '#7E8E95'
+  g.beginPath()
+  g.arc(0, -0.09 * k, 0.012 * k, 0, Math.PI * 2)
+  g.fill()
+  g.restore()
+  // The kick plate.
+  g.fillStyle = rgbaOf('#9C7A45', 0.8)
+  g.fillRect((x + w * 0.06) * k, (FLOOR - 0.2) * k, w * 0.88 * k, 0.1 * k)
+  // On the glass: the lamp's reflection sliding as it swings, and the rain.
+  const gx0 = x + w * 0.2
+  const gx1 = x + w * 0.8
+  const gy0 = HEAD_Y + 0.35
+  const gy1 = -1.2
+  const lamp = lampAt(0, t).p
+  const rx = gx0 + (gx1 - gx0) * (0.55 + 0.25 * Math.max(-1, Math.min(1, (lamp[0] - 1.1) * 3)))
+  g.fillStyle = rgbaOf('#F2C879', 0.35)
+  g.beginPath()
+  g.moveTo((rx - 0.03) * k, gy0 * k)
+  g.lineTo((rx + 0.04) * k, gy0 * k)
+  g.lineTo((rx - 0.06) * k, gy1 * k)
+  g.lineTo((rx - 0.13) * k, gy1 * k)
+  g.closePath()
+  g.fill()
+  const drops = new Path2D()
+  for (let i = 0; i < 12; i++) {
+    const dx = gx0 + 0.03 + (gx1 - gx0 - 0.06) * hash(i, 51)
+    const period = 2.5 + 3 * hash(i, 52)
+    const ph = (((t + hash(i, 53) * period) / period) % 1 + 1) % 1
+    const dy = gy0 + 0.05 + (gy1 - gy0 - 0.1) * Math.min(1, hash(i, 54) * 0.6 + (ph > 0.6 ? (ph - 0.6) * 1.6 : 0))
+    drops.moveTo((dx + 0.01) * k, dy * k)
+    drops.arc(dx * k, dy * k, 0.01 * k, 0, Math.PI * 2)
+  }
+  g.fillStyle = rgbaOf('#EEF2F1', 0.65)
+  g.fill(drops)
+}
+
+/** The counter's front: its boards' grain and the moulding under its top, so it is wood and not a dark slab. */
+export function drawCounterFront(g: C2, k: number): void {
+  const [x0, x1] = COUNTER
+  const grain = new Path2D()
+  for (let x = x0 + 0.06; x < x1 - 0.03; x += 0.1) {
+    grain.moveTo(x * k, (COUNTER_TOP + 0.16) * k)
+    grain.quadraticCurveTo((x + 0.012 * Math.sin(x * 9)) * k, ((COUNTER_TOP + FLOOR) / 2) * k, (x - 0.008) * k, (FLOOR - 0.14) * k)
+  }
+  g.lineWidth = Math.max(0.6, 0.007 * k)
+  g.strokeStyle = rgbaOf('#2A1D16', 0.6)
+  g.stroke(grain)
+  g.fillStyle = rgbaOf('#8A6444', 0.45)
+  g.fillRect(x0 * k, (COUNTER_TOP + 0.1) * k, (x1 - x0) * k, 0.02 * k)
+  g.fillStyle = rgbaOf('#140D09', 0.5)
+  g.fillRect(x0 * k, (COUNTER_TOP + 0.12) * k, (x1 - x0) * k, 0.025 * k)
+}
+
+/** Where the ashtray is on the counter, and the cigarette in it burning down: the smoke's foot. */
+export const ASH: Pt = [1.42, COUNTER_TOP - 0.05]
+
+/** The ashtray on the counter by the pilot, a cigarette in it, its end glowing amber as it burns. */
+export function drawAshtray(g: C2, k: number, t: number): void {
+  const [x, y] = ASH
+  g.fillStyle = '#4C5A5E'
+  g.beginPath()
+  g.ellipse(x * k, (y + 0.02) * k, 0.1 * k, 0.03 * k, 0, 0, Math.PI * 2)
+  g.fill()
+  g.fillRect((x - 0.09) * k, (y + 0.02) * k, 0.18 * k, 0.03 * k)
+  g.fillStyle = '#E6E0D2'
+  g.fillRect((x - 0.02) * k, (y - 0.012) * k, 0.12 * k, 0.018 * k)
+  const ember = 0.75 + 0.25 * Math.sin(t * 2.1) * Math.sin(t * 0.7)
+  g.fillStyle = rgbaOf('#F2A64A', ember)
+  g.fillRect((x + 0.095) * k, (y - 0.012) * k, 0.02 * k, 0.018 * k)
+}
+
+/**
+ * The little stage's skirt: deep green velvet hung in pleats along its front, stirring in the draught from the doors,
+ * its folds catching the lamps (and the spotlight, when it is on).
+ */
+export function drawSkirt(g: C2, k: number, t: number, x0: number, x1: number, top: number, bottom: number, spot: number): void {
+  g.fillStyle = '#1C3434'
+  g.fillRect(x0 * k, top * k, (x1 - x0) * k, (bottom - top) * k)
+  const lit = new Path2D()
+  const dark = new Path2D()
+  const n = Math.round((x1 - x0) / 0.1)
+  for (let i = 0; i < n; i++) {
+    const x = x0 + (i + 0.5) * ((x1 - x0) / n)
+    const stir = 0.012 * Math.sin(t * 1.3 + i * 0.8) + 0.008 * Math.sin(t * 2.9 + i * 1.9)
+    const p = i % 2 ? dark : lit
+    const w = (x1 - x0) / n / 2
+    p.moveTo((x - w * 0.5) * k, top * k)
+    p.lineTo((x + w * 0.5) * k, top * k)
+    p.lineTo((x + w * 0.6 + stir) * k, bottom * k)
+    p.lineTo((x - w * 0.4 + stir) * k, bottom * k)
+    p.closePath()
+  }
+  g.fillStyle = rgbaOf('#3A5C58', 0.75 + 0.25 * Math.min(1, spot))
+  g.fill(lit)
+  g.fillStyle = rgbaOf('#0E1C1C', 0.7)
+  g.fill(dark)
 }

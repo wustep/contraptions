@@ -51,7 +51,7 @@ export function drawHullUnder(g: C2, k: number, x0: number, w: number, fill: str
 }
 
 /** The boat above the water: hull side, deck, wheelhouse, mast, the stern davit. `swing` 0..1 takes the boom from out over the stern to in over the deck. */
-export function drawBoatAbove(g: C2, k: number, x0: number, w: number, swing: number, wet = 0): void {
+export function drawBoatAbove(g: C2, k: number, x0: number, w: number, swing: number, wet = 0, t = 0): void {
   const { len, deck, deckBack, rail, house, mast, post } = BOAT
   const D = w + deck
   const DB = w + deckBack
@@ -162,6 +162,106 @@ export function drawBoatAbove(g: C2, k: number, x0: number, w: number, swing: nu
   g.fillRect((x0 + 0.02) * k, (w - 0.07) * k, (len + 0.3) * k, 0.07 * k)
   g.fillStyle = rgba(HULL_LO, 0.9)
   g.fillRect(x0 * k, (D - 0.04) * k, 0.06 * k, (w - D + 0.06) * k)
+  hullDetail(g, k, x0, w, t, wet)
+  houseDetail(g, k, x0, w, t)
+}
+
+/**
+ * The hull side's wear: the seams of its plates, rust run down from each scupper (brown, never red), old tyres hung on
+ * the rail for fenders, and, once the catch is aboard, the deck's water running out of the scuppers.
+ */
+function hullDetail(g: C2, k: number, x0: number, w: number, t: number, wet: number): void {
+  const { len, deck } = BOAT
+  const D = w + deck
+  const seams = new Path2D()
+  seams.moveTo(x0 * k, (D + 0.3) * k)
+  seams.lineTo((x0 + len + 0.2) * k, (D + 0.3) * k)
+  for (let x = x0 + 0.9; x < x0 + len; x += 0.9) {
+    seams.moveTo(x * k, (D + 0.07) * k)
+    seams.lineTo(x * k, (w - 0.08) * k)
+  }
+  g.lineWidth = Math.max(0.6, 0.01 * k)
+  g.strokeStyle = rgba(HULL_LO, 0.8)
+  g.stroke(seams)
+  const rust = new Path2D()
+  const scuppers: number[] = []
+  for (let i = 0; i < 5; i++) {
+    const sx = x0 + 0.7 + i * 1.25
+    scuppers.push(sx)
+    rust.rect((sx - 0.03) * k, (D + 0.1) * k, 0.06 * k, (0.12 + 0.18 * ((i * 37) % 5) / 5) * k)
+  }
+  g.fillStyle = rgba(RUST, 0.45)
+  g.fill(rust)
+  const holes = new Path2D()
+  for (const sx of scuppers) holes.rect((sx - 0.06) * k, (D + 0.08) * k, 0.12 * k, 0.04 * k)
+  g.fillStyle = HULL_LO
+  g.fill(holes)
+  // Tyres on short ropes over the side.
+  const tyres = new Path2D()
+  for (const tx of [x0 + 1.9, x0 + 4.4]) {
+    const ty = D + 0.24
+    tyres.moveTo((tx + 0.13) * k, ty * k)
+    tyres.ellipse(tx * k, ty * k, 0.13 * k, 0.16 * k, 0, 0, Math.PI * 2)
+    tyres.moveTo((tx + 0.06) * k, ty * k)
+    tyres.ellipse(tx * k, ty * k, 0.06 * k, 0.08 * k, 0, 0, Math.PI * 2, true)
+  }
+  g.fillStyle = '#1A2124'
+  g.fill(tyres)
+  if (wet > 0.01) {
+    // The water running out of the scuppers: a thin fall from each, wavering, drops off its end.
+    const fall = new Path2D()
+    for (let i = 0; i < scuppers.length; i++) {
+      const sx = scuppers[i]
+      const end = w - 0.02
+      fall.moveTo(sx * k, (D + 0.1) * k)
+      fall.quadraticCurveTo((sx + 0.04 + 0.02 * Math.sin(t * 7 + i)) * k, (D + 0.2) * k, (sx + 0.06 + 0.015 * Math.sin(t * 5 + i * 2)) * k, end * k)
+      const drop = (((t * 2.2 + i * 0.37) % 1) + 1) % 1
+      fall.moveTo((sx + 0.07 + 0.012) * k, (D + 0.12 + drop * (end - D - 0.12)) * k)
+      fall.arc((sx + 0.07) * k, (D + 0.12 + drop * (end - D - 0.12)) * k, 0.012 * k, 0, Math.PI * 2)
+    }
+    g.lineWidth = Math.max(0.6, 0.014 * k)
+    g.strokeStyle = rgba('#CFE0E0', 0.55 * wet)
+    g.stroke(fall)
+  }
+}
+
+/** The wheelhouse's own: a porthole in its door, a life ring on its side, and the radar on its roof turning. */
+function houseDetail(g: C2, k: number, x0: number, w: number, t: number): void {
+  const { house, deckBack } = BOAT
+  const DB = w + deckBack
+  const hx = x0 + house.x0
+  // The door at the house's after end, its porthole.
+  g.fillStyle = '#C9CFCD'
+  g.fillRect((hx - 0.02) * k, (w + house.top + 0.85) * k, 0.02 * k, (DB - w - house.top - 0.85) * k)
+  g.strokeStyle = WINDOW
+  g.lineWidth = Math.max(0.8, 0.02 * k)
+  g.beginPath()
+  g.arc((hx + house.x1 - house.x0 - 0.3) * k, (w + house.top + 1.05) * k, 0.1 * k, 0, Math.PI * 2)
+  g.stroke()
+  // A life ring on the house's side, white and the sea's teal.
+  const rx = hx + 1.05
+  const ry = w + house.top + 1.1
+  g.fillStyle = '#E8E9E4'
+  g.beginPath()
+  g.arc(rx * k, ry * k, 0.16 * k, 0, Math.PI * 2)
+  g.arc(rx * k, ry * k, 0.08 * k, 0, Math.PI * 2, true)
+  g.fill('evenodd')
+  g.fillStyle = '#3F7F80'
+  for (let q = 0; q < 4; q++) {
+    const a0 = q * (Math.PI / 2) + 0.4
+    g.beginPath()
+    g.arc(rx * k, ry * k, 0.16 * k, a0, a0 + 0.45)
+    g.arc(rx * k, ry * k, 0.08 * k, a0 + 0.45, a0, true)
+    g.closePath()
+    g.fill()
+  }
+  // The radar on the roof: a bar turning on its post, seen from the side as it comes round.
+  const rdx = hx + 0.55
+  const rdy = w + house.top - 0.12
+  const turn = Math.cos(t * 3.1)
+  g.fillStyle = RAIL
+  g.fillRect((rdx - 0.025) * k, rdy * k, 0.05 * k, 0.12 * k)
+  g.fillRect((rdx - 0.3 * turn - 0.02) * k, (rdy - 0.05) * k, (0.6 * Math.abs(turn) + 0.04) * k, 0.05 * k)
 }
 
 /** Where the davit's boom tip is: out over the stern (swing 0) to in over the deck (1). */

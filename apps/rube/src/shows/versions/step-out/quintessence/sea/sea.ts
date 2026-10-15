@@ -63,7 +63,7 @@ export const seaSet = scenery<null>({
       g.save()
       g.translate(FROM_SKY[0] * k, FROM_SKY[1] * k)
       drawSkySet(p, k, t, true)
-      drawBoatAbove(g, k, SKY_BOAT_X0, SURF, swingAt(t), smooth(t, DECK_ON, DECK_ON + 2.5))
+      drawBoatAbove(g, k, SKY_BOAT_X0, SURF, swingAt(t), smooth(t, DECK_ON, DECK_ON + 2.5), t)
       if (t < BEGIN + 6) drawHeli(p, k, t)
       g.restore()
     }

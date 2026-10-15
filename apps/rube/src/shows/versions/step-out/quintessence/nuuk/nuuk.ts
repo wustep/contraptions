@@ -6,7 +6,7 @@ import { WALTER_WARM } from '../worlds'
 import { drawCounter, drawDoorIn, drawDoorOut, drawGuitar, drawOver, drawPilot, drawQuay, drawRoom, drawSpot, drawStage } from './draw'
 import { CHERYL_FROM, CHERYL_GONE, cherylAt, EXIT_X, HINGE, NUUK_STRIKES, OUT, PLANK, SHE_LANDS, STOP, T0, T1, V_SKY, WAY } from './geo'
 import type { Pen } from '../dream/pen'
-import { drawBottleGlints, drawLamps, drawRail } from './room'
+import { drawAshtray, drawBottleGlints, drawCounterFront, drawLamps, drawRail } from './room'
 
 /**
  * The bar at Nuuk (37.05 → 50.41, bars 17 to 24). He rolls in over the threshold out of the grey harbour into the dark
@@ -34,8 +34,10 @@ export const nuukSet = scenery<null>({
     drawRoom(pen, c.t, frame(p, c.k))
     drawCounter(pen, c.t)
     const g = p.drawingContext as CanvasRenderingContext2D
+    drawCounterFront(g, c.k)
     drawBottleGlints(g, c.k, c.t)
     drawRail(g, c.k, c.t)
+    drawAshtray(g, c.k, c.t)
     // The lamps over the counter, in front of the back bar: low, amber, swinging slowly on their cords.
     drawLamps(g, c.k, c.t)
     drawStage(pen, c.t)
@@ -108,7 +110,7 @@ function shots(): PartShot[] {
   const offEnd: Pt = [EXIT_X + seam.frame[0] - fl[0], seam.frame[1] - fl[1]]
   return [
     hold(STOP + 0.2, 3.3, [1.05, -0.95]),
-    hold(HINGE - 0.25, 2.75, [1.35, -0.86]),
+    hold(HINGE - 0.03, 2.75, [1.22, -0.86]),
     { t: HINGE, cells: 4.6, hold: [2.75, -1.1], w: 1, cut: true },
     hold(SHE_LANDS - 0.3, 4.2, [2.95, -1.0]),
     follow(OUT + 0.3, 4.3, [1.1, -0.75]),

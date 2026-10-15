@@ -42,6 +42,7 @@ import {
 
 export const SEA = {
   skin: '#8FC4BA',
+  web: '#C4E8DA',
   shallow: '#2D6B6E',
   mid: '#174349',
   deep: '#0B272C',
@@ -118,22 +119,48 @@ export function drawUnder(p: p5, k: number, t: number): void {
   // The snow drifting by at his own distance.
   drawSnow(g, v, t, 'mid', 1)
   // The boat's hull from below: dark on the light.
-  drawHullUnderLocal(g, k)
+  drawHullUnderLocal(g, k, t)
   g.restore()
 }
 
-function drawHullUnderLocal(g: C2, k: number): void {
+function drawHullUnderLocal(g: C2, k: number, t: number): void {
   const { len, draft } = BOAT
   const x0 = BOAT_X0
+  const hull = new Path2D()
+  hull.moveTo((x0 + 0.02) * k, (W - 0.1) * k)
+  hull.lineTo((x0 + len + 0.35) * k, (W - 0.1) * k)
+  hull.bezierCurveTo((x0 + len) * k, (W + 0.25) * k, (x0 + len - 1.2) * k, (W + draft) * k, (x0 + len - 2.2) * k, (W + draft) * k)
+  hull.lineTo((x0 + 1.4) * k, (W + draft) * k)
+  hull.bezierCurveTo((x0 + 0.6) * k, (W + draft) * k, (x0 + 0.1) * k, (W + 0.35) * k, (x0 + 0.02) * k, (W - 0.1) * k)
+  hull.closePath()
   g.fillStyle = mix(SEA.deep, SEA.hull, 0.55)
-  g.beginPath()
-  g.moveTo((x0 + 0.02) * k, (W - 0.1) * k)
-  g.lineTo((x0 + len + 0.35) * k, (W - 0.1) * k)
-  g.bezierCurveTo((x0 + len) * k, (W + 0.25) * k, (x0 + len - 1.2) * k, (W + draft) * k, (x0 + len - 2.2) * k, (W + draft) * k)
-  g.lineTo((x0 + 1.4) * k, (W + draft) * k)
-  g.bezierCurveTo((x0 + 0.6) * k, (W + draft) * k, (x0 + 0.1) * k, (W + 0.35) * k, (x0 + 0.02) * k, (W - 0.1) * k)
-  g.closePath()
-  g.fill()
+  g.fill(hull)
+  // The light off the swell playing on its bottom: a loose web that wanders, and the weed along its waterline.
+  const web = new Path2D()
+  const knot = (i: number, r: number): [number, number] => [
+    x0 + 0.2 + i * 0.34 + (hash(i, r, 33) - 0.5) * 0.22 + 0.07 * Math.sin(t * 0.9 + i * 2.1 + r),
+    W + 0.06 + r * 0.17 + (hash(i, r, 34) - 0.5) * 0.08 + 0.03 * Math.sin(t * 1.3 + i * 1.4 + r * 2),
+  ]
+  for (let r = 0; r < 3; r++)
+    for (let i = 0; i < Math.ceil(len / 0.34); i++) {
+      const [ax, ay] = knot(i, r)
+      const [bx, by] = knot(i + 1, r)
+      const [cx, cy] = knot(i + (r % 2), r + 1)
+      web.moveTo(ax * k, ay * k)
+      web.lineTo(bx * k, by * k)
+      if (hash(i, r, 35) < 0.6) {
+        web.moveTo(ax * k, ay * k)
+        web.lineTo(cx * k, cy * k)
+      }
+    }
+  g.save()
+  g.clip(hull)
+  g.lineWidth = Math.max(0.6, 0.01 * k)
+  g.strokeStyle = rgba(SEA.web, 0.13)
+  g.stroke(web)
+  g.fillStyle = rgba('#2F4A3A', 0.6)
+  g.fillRect(x0 * k, (W - 0.1) * k, (len + 0.4) * k, 0.07 * k)
+  g.restore()
   g.fillRect((x0 + 0.18) * k, (W + 0.3) * k, 0.1 * k, 0.42 * k)
   g.beginPath()
   g.ellipse((x0 + 0.45) * k, (W + 0.5) * k, 0.06 * k, 0.17 * k, 0, 0, Math.PI * 2)

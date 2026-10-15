@@ -6,7 +6,7 @@ import { mix } from '../dream/pen'
 import { spotOn } from './draw'
 import { CEIL, CHERYL_AT, COUNTER_TOP, DOOR_IN, FLOOR, HEAD, SPOT, STAGE_TOP, WALL_OUT } from './geo'
 import { BAR_AT, BAR_REF, daylight, flood } from './harbour'
-import { lampAt } from './room'
+import { ASH, lampAt } from './room'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
@@ -49,23 +49,33 @@ function drawAir(g: CanvasRenderingContext2D, v: View, t: number): void {
   g.beginPath()
   g.rect(ROOM.x0 * k, ROOM.y0 * k, (ROOM.x1 - ROOM.x0) * k, (ROOM.y1 - ROOM.y0) * k)
   g.clip()
-  // The haze: flat, faint, overlapping lozenges in bands, each band drifting its own way.
+  // The haze: smoke lying in long thin layers across the room, each wavering and drifting its own way, broken here
+  // and there; and under them a faint body of it.
   const haze = new Path2D()
-  for (let b = 0; b < 4; b++) {
-    const y = CEIL + 0.55 + b * 0.62
-    const drift = t * (0.04 + 0.03 * b) * (b % 2 ? 1 : -1)
-    for (let i = 0; i < 5; i++) {
-      const span = 7
-      const x = ROOM.x0 - 1 + ((((hash(i, b, 11) * span + drift) % span) + span) % span)
-      const w = 0.7 + 0.8 * hash(i, b, 12)
-      const h = 0.1 + 0.08 * hash(i, b, 13)
-      const yy = y + (hash(i, b, 14) - 0.5) * 0.3 + 0.04 * Math.sin(t * 0.3 + i + b)
-      haze.moveTo((x + w) * k, yy * k)
-      haze.ellipse(x * k, yy * k, w * k, h * k, 0, 0, Math.PI * 2)
+  const strands = new Path2D()
+  for (let b = 0; b < 9; b++) {
+    const y0 = CEIL + 0.45 + b * 0.31
+    const drift = t * (0.05 + 0.025 * (b % 3)) * (b % 2 ? 1 : -1)
+    let on = false
+    for (let x = ROOM.x0 - 0.2; x <= ROOM.x1 + 0.2; x += 0.12) {
+      // Each strand is broken into pieces that come and go as it drifts.
+      const piece = hash(Math.floor((x - drift) / 0.9), b, 15) > 0.35
+      const y = y0 + 0.05 * Math.sin(x * 1.3 + t * 0.4 + b) + 0.025 * Math.sin(x * 3.7 - t * 0.6 + b * 2)
+      if (piece && !on) strands.moveTo(x * k, y * k)
+      else if (piece) strands.lineTo(x * k, y * k)
+      on = piece
+    }
+    if (b % 3 === 0) {
+      const x = ROOM.x0 + ((((hash(b, 16) * 6 + drift * 2) % 6) + 6) % 6)
+      haze.moveTo((x + 1.2) * k, y0 * k)
+      haze.ellipse(x * k, y0 * k, 1.2 * k, 0.16 * k, 0, 0, Math.PI * 2)
     }
   }
-  g.fillStyle = rgbaOf('#B89C7E', 0.04)
+  g.fillStyle = rgbaOf('#B89C7E', 0.035)
   g.fill(haze)
+  g.lineWidth = Math.max(0.7, 0.011 * k)
+  g.strokeStyle = rgbaOf('#C4AC8C', 0.13)
+  g.stroke(strands)
   // The lamps' cones down through the haze to the counter, and the dust in them.
   for (let i = 0; i < 2; i++) {
     const { p, a } = lampAt(i, t)
@@ -73,6 +83,23 @@ function drawAir(g: CanvasRenderingContext2D, v: View, t: number): void {
     shaft(g, k, [p[0], p[1] + 0.2], 0.32, foot, 0.95, '#F2C879', 0.11, true)
     motes(g, v, t, { n: 16, seed: 21 + i, tile: [1.2, 1.2], r: [0.006, 0.012], v: [0.02, 0.03], spread: 0.6, sway: [0.05, 0.25], color: rgbaOf('#FFE3A8', 0.7), twinkle: 0.6, within: { x0: foot[0] - 0.5, y0: p[1] + 0.25, x1: foot[0] + 0.5, y1: COUNTER_TOP - 0.02 } })
   }
+  // The cigarette's smoke going up from the ashtray in a few thin ribbons, wavering, drifting toward the lamp and
+  // thinning into the haze.
+  const smoke = new Path2D()
+  for (let j = 0; j < 3; j++) {
+    const [ax, ay] = ASH
+    smoke.moveTo((ax + 0.105) * k, (ay - 0.02) * k)
+    for (let i = 1; i <= 14; i++) {
+      const u = i / 14
+      const rise = 1.35 * u
+      const drift = 0.32 * u * u + 0.05 * j * u
+      const wave = (0.03 + 0.09 * u) * Math.sin(t * (1.3 + 0.2 * j) - u * 7 + j * 2.1)
+      smoke.lineTo((ax + 0.105 + drift + wave) * k, (ay - 0.02 - rise) * k)
+    }
+  }
+  g.lineWidth = Math.max(0.7, 0.012 * k)
+  g.strokeStyle = rgbaOf('#C9BBA5', 0.22)
+  g.stroke(smoke)
   // Dust all through the room's air, faint, catching what light there is.
   motes(g, v, t, { n: 22, seed: 27, tile: [2.2, 1.6], r: [0.005, 0.01], v: [0.03, -0.02], spread: 0.6, sway: [0.06, 0.15], color: rgbaOf('#D9B98A', 0.38), twinkle: 0.7, within: ROOM })
   // The spotlight's beam full of dust while it is on.
@@ -105,7 +132,7 @@ function drawSleet(g: CanvasRenderingContext2D, v: View, t: number): void {
   g.rect(DOOR_IN[1] * k, (v.y0 - 1) * k, 0, 0)
   g.clip()
   layer(g, v, 0.85, BAR_AT, BAR_REF, (inner) => {
-    motes(g, inner, t, { n: 26, seed: 41, tile: [2.2, 1.8], r: [0.0025, 0.004], v: [-1.6, 3.2], spread: 0.3, color: rgbaOf('#E8EDEC', 0.4 * daylight(t)), streak: 0.045 })
+    motes(g, inner, t, { n: 40, seed: 41, tile: [2.2, 1.8], r: [0.0025, 0.004], v: [-1.6, 3.2], spread: 0.3, color: rgbaOf('#E8EDEC', 0.4 * daylight(t)), streak: 0.045 })
   })
   layer(g, v, 1.3, BAR_AT, BAR_REF, (inner) => {
     motes(g, inner, t, { n: 9, seed: 43, tile: [2.4, 2], r: [0.004, 0.0055], v: [-2.2, 4.2], spread: 0.3, color: rgbaOf('#F0F3F2', 0.45), streak: 0.04 })

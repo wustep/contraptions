@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import type { View } from '../depth'
 import { daylight, drawHarbour } from './harbour'
-import { drawGrain, drawUnderFloor, drawWallThings, drawWindowRain, WIN } from './room'
+import { drawDoorDetail, drawGrain, drawSkirt, drawUnderFloor, drawWallThings, drawWindowRain, WIN } from './room'
 import { blob, ctxOf, ellipse, flash, glint, glow, line, path, rect, rgba, ring, shape, type Pen } from '../dream/pen'
 import {
   BELL,
@@ -169,6 +169,7 @@ export function drawDoorIn(pen: Pen, t: number): void {
   shape(pen, [[x, HEAD + 0.05], [x + w, HEAD + 0.12], [x + w, FLOOR - 0.06], [x, FLOOR]], C.door, 0.5, C.doorDark)
   rect(pen, x + w * 0.2, HEAD + 0.35, x + w * 0.8, -1.2, C.sky)
   rect(pen, x + w * 0.2, -0.9, x + w * 0.8, -0.2, C.doorDark)
+  drawDoorDetail(ctxOf(pen.p), pen.k, t, x, w)
   // The bell on its bracket.
   const b: Pt = [DOOR_IN[1] + 0.1, HEAD + 0.02]
   const swing = 0.5 * ring(t - BELL, 3, 0.5)
@@ -313,8 +314,8 @@ function handLift(t: number): number {
 export function drawStage(pen: Pen, t: number): void {
   const [x0, x1] = STAGE
   rect(pen, x0, STAGE_TOP, x1, FLOOR, C.stage)
+  drawSkirt(ctxOf(pen.p), pen.k, t, x0, x1, STAGE_TOP + 0.04, FLOOR, spotOn(t))
   rect(pen, x0 - 0.04, STAGE_TOP - 0.05, x1 + 0.04, STAGE_TOP + 0.04, C.stageTop)
-  for (let x = x0 + 0.35; x < x1; x += 0.35) rect(pen, x, STAGE_TOP + 0.08, x + 0.025, FLOOR, C.seam)
   // The mic stand: a base, a pole, a boom to the mic.
   const m = MIC_X
   const wob = 0.02 * ring(t - SPOT_OFF, 3, 0.4)
