@@ -180,8 +180,8 @@ export const going = part<ValleyState>(
       hold(o, 328.3, 7.0, 14.9, -1.1),
       hold(o, 329.9, 6.8, 14.8, -1.1),
       // They touch: cut in close on the two of them, and hold, breathing back out to the home seam.
-      { ...hold(o, G.touch, 3.6, MEET[0] + 0.62, MEET[1] - 0.55), cut: true },
-      hold(o, 332.2, 3.9, MEET[0] + 0.7, MEET[1] - 0.65),
+      { ...hold(o, G.touch, 3.1, MEET[0] + 0.5, MEET[1] - 0.5), cut: true },
+      hold(o, 332.2, 3.4, MEET[0] + 0.6, MEET[1] - 0.6),
       // The home seam: 4.4 cells, [0.8, -0.8] on her.
       hold(o, slot.end, 4.4, MEET[0] + 0.8, MEET[1] - 0.8),
     ]

@@ -3,7 +3,7 @@ import { mix, rgba } from '../cast'
 import { hash, smooth, softLayer } from '../kit'
 import { SHELL, VALLEY } from '../worlds'
 import { daylight, G, MEADOW, SHELL_X, SUN_BREAK } from './geo'
-import { herGoing, ianGoing } from './paths'
+import { herGoing, ianGoing, MEET } from './paths'
 
 /**
  * The daylight (the VALLEY builder's): the cue's title, and the release of the whole film. It is not the shell's: where
@@ -260,6 +260,22 @@ export function drawSunWash(ctx: Ctx, k: number, f: View, t: number): void {
     // The sky toward the sun, up to their left.
     glow(ctx, k, f.x0, f.y0 + (f.y1 - f.y0) * 0.15, (f.x1 - f.x0) * 0.75, (f.y1 - f.y0) * 0.6, VALLEY.lamp, 0.45 * d.sun * close, 0.1)
   }
+  ctx.restore()
+}
+
+/**
+ * As they touch, the low sun gathers in the air behind them: a pale light (the lamp's, never her gold) widening in the
+ * haze over the grass where they meet, so the two of them stand against it, and holding till the cut home. (At the
+ * touch they were two balls against the dark band of the treeline, the film's whole release in a grey frame.)
+ */
+export function drawMeeting(ctx: Ctx, k: number, t: number): void {
+  const a = smooth(t, G.touch - 0.3, G.touch + 1.6)
+  if (a <= 0.003) return
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  const [x, y] = [MEET[0] + 0.18, MEET[1] - 0.35]
+  glow(ctx, k, x, y, 2.6, 1.3, VALLEY.lamp, 0.32 * a, 0.15)
+  glow(ctx, k, x, y + 0.1, 1.1, 0.45, VALLEY.floodlight, 0.22 * a, 0.25)
   ctx.restore()
 }
 
