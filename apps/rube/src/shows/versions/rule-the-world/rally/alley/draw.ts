@@ -16,6 +16,8 @@ import {
   barSign,
   beer,
   bettorDrink,
+  bettorSays,
+  wallySays,
   bladeSign,
   bubbles,
   cabSheen,
@@ -42,6 +44,7 @@ import {
   walkWet,
   windowsLife,
 } from './life'
+import { watchers } from './watch'
 import {
   AISLE,
   ARM,
@@ -537,8 +540,10 @@ function outside(pen: Pen, t: number, x0: number, x1: number, f: Frame): void {
 function room(pen: Pen, t: number, f: Frame): void {
   const x0 = WALL[1]
   const x1 = END_WALL
-  // Through the long opening over the wainscot, the main floor beyond, under its haze (`life.ts`).
+  // Through the long opening over the wainscot, the main floor beyond, under its haze (`life.ts`); and the two regulars
+  // who come to lean on its ledge to watch the money game (`watch.ts`).
   farHall(pen, t, f)
+  watchers(pen, t, f)
   // The back wall: over the counter, cream gone dim with smoke; past it only its head over the opening, and its posts.
   const wall: [number, string, number][] = [
     [0, mix(C.cream, '#000000', 0.66), 1],
@@ -949,9 +954,18 @@ function doorLeaf(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the lamp over the money table */
 
+/**
+ * The lamp's swing on its cord: hardly at all, until the door slams behind Marty and the old building shakes, and it
+ * swings out and dies back down over the next bars, its pool going to and fro across the table under it.
+ */
+const lampSwing = (t: number): number => {
+  const s = t - DOOR_SHUT
+  return 0.03 * Math.sin(t * 0.9) + (s > 0 ? 0.2 * Math.exp(-s / 2.4) * Math.sin(s * ((Math.PI * 2) / 1.7)) * clamp01(s / 0.15) : 0)
+}
+
 function lampOverTable(pen: Pen, t: number): number {
   const lx = NET_X + 0.05
-  const swing = 0.03 * Math.sin(t * 0.9)
+  const swing = lampSwing(t)
   line(pen, [lx, CEIL + 0.06], [lx + swing, -3.6], '#141210', 0.7)
   shape(pen, [[lx + swing - 0.35, -3.3], [lx + swing + 0.35, -3.3], [lx + swing + 0.12, -3.62], [lx + swing - 0.12, -3.62]], '#2C3A30')
   ellipse(pen, [lx + swing, -3.3], 0.12, 0.04, C.warm)
@@ -966,14 +980,14 @@ function lampOverTable(pen: Pen, t: number): number {
   ctx.beginPath()
   ctx.moveTo((lx + swing - 0.3) * k, -3.3 * k)
   ctx.lineTo((lx + swing + 0.3) * k, -3.3 * k)
-  ctx.lineTo((TABLE[1] + 0.6) * k, (TOP + 0.05) * k)
-  ctx.lineTo((TABLE[0] - 0.6) * k, (TOP + 0.05) * k)
+  ctx.lineTo((TABLE[1] + 0.6 + 2.2 * swing) * k, (TOP + 0.05) * k)
+  ctx.lineTo((TABLE[0] - 0.6 + 2.2 * swing) * k, (TOP + 0.05) * k)
   ctx.closePath()
   ctx.fill()
   ctx.restore()
-  // Its pool on the table, and on the floor round the men's feet.
-  shade(pen, [lx, TOP + 0.02], 3.0, 0.22, C.warm, 0.16)
-  shade(pen, [lx, FB + 0.04], 4.2, 0.2, C.warm, 0.08)
+  // Its pool on the table, and on the floor round the men's feet: going with the shade as it swings.
+  shade(pen, [lx + 2.2 * swing, TOP + 0.02], 3.0, 0.22, C.warm, 0.16)
+  shade(pen, [lx + 3.4 * swing, FB + 0.04], 4.2, 0.2, C.warm, 0.08)
   return lx + swing
 }
 
@@ -1236,13 +1250,16 @@ function bettor(pen: Pen, t: number): void {
     near = lerp(near, [0.22, -2.06], u)
   }
   if (t >= RAISE) holds = 0
+  // Before the first point, talking it over: the stake pointed at the ball and the table, and back.
+  const says = t < NET_HIT ? bettorSays(t) : 0
+  if (says > 0) near = lerp(near, [MARK2_X + 0.8, FB - 2.5 - 0.15 * Math.sin(t * 7)], says)
   // The strike: both hands up to his head.
   const dismay = t > STRIKE ? clamp01((t - STRIKE) / 0.2) * (1 - clamp01((t - HATS - 0.6) / 0.4)) : 0
   if (dismay > 0) near = lerp(near, [MARK2_X + 0.22, FB - 3.25], dismay)
   const laughing = t > NET_HIT + 0.1 && t < PAN_BACK - 0.2 ? clamp01(Math.min(t - NET_HIT - 0.1, PAN_BACK - 0.2 - t) / 0.2) : 0
   const sore = t > STRIKE ? clamp01((t - STRIKE) / 0.5) : 0
   const lean = -0.04 + 0.08 * sore + watching(t) + shift(t, 2)
-  const bob = laughing * 0.04 * Math.abs(Math.sin((t - NET_HIT) * Math.PI * 4)) + 0.012 * Math.sin(t * 1.3 + 1)
+  const bob = laughing * 0.04 * Math.abs(Math.sin((t - NET_HIT) * Math.PI * 4)) + 0.012 * Math.sin(t * 1.3 + 1) + 0.025 * says * Math.abs(Math.sin(t * 9))
   // His beer: on the counter by him, then, once the raise is down, a long nervous pull at it through the rally.
   const mouth: Pt = [MARK2_X + lean + 0.05 + 0.22, FB - 2.93 + bob + 0.1]
   const drink = bettorDrink(t, rest, mouth)
@@ -1311,6 +1328,8 @@ function wally(pen: Pen, t: number): void {
   }
   const grin = t > HATS ? clamp01((t - HATS) / 0.25) : 0.35
   const sink = w.sink * 1.6
+  // His answer, before the first point: a nod, and his free hand opening out.
+  const answers = t < NET_HIT && !walking ? wallySays(t) : 0
   // Behind the cab, only what shows over its body: nothing of him under it.
   const behind = w.x < CURB
   const ctx = ctxOf(pen.p)
@@ -1331,11 +1350,11 @@ function wally(pen: Pen, t: number): void {
     hatCol: C.cap,
     leather: true,
     lean: walking ? 0.08 : -0.06 + watching(t) * 0.7 + shift(t, 5),
-    bob: walking ? -0.03 * Math.abs(Math.sin(phase ?? 0)) : 0.01 * Math.sin(t * 1.1),
+    bob: walking ? -0.03 * Math.abs(Math.sin(phase ?? 0)) : 0.01 * Math.sin(t * 1.1) + 0.035 * answers * Math.abs(Math.sin(t * 6.5)),
     walk: phase,
     grin,
     near,
-    far: walking ? [w.x - 0.35 * Math.sin(phase ?? 0) * w.face, w.y - 1.5] : [w.x - 0.18, w.y - 1.55],
+    far: walking ? [w.x - 0.35 * Math.sin(phase ?? 0) * w.face, w.y - 1.5] : lerp([w.x - 0.18, w.y - 1.55], [w.x - 0.55, w.y - 2.05], answers),
     rim: walking && w.x < WALL[0] ? C.mercury : C.warm,
     holding: (h) => {
       if (holds) wad(pen, h, holds)

@@ -229,7 +229,10 @@ interface FarThrow {
   /** Pins left standing: 0 a strike. */
   left: number
 }
-/** Each late bowler: his lane, where he waits, his look, and his balls (show times of release). Only one is bowling at first. */
+/**
+ * Each late bowler: his lane, where he waits, his look, and his balls (show times of release). They are all at it as
+ * the door shuts behind Marty, a ball going down one lane or another every couple of seconds, the sound of the place.
+ */
 const BOWLERS: { lane: number; home: number; coat: string; hat: boolean; ball: string; throws: FarThrow[] }[] = [
   {
     lane: 0,
@@ -250,11 +253,23 @@ const BOWLERS: { lane: number; home: number; coat: string; hat: boolean; ball: s
     hat: false,
     ball: '#5A1E2E',
     throws: [
-      { at: 126.3, v: 4.8, left: 0 },
-      { at: 132.2, v: 4.4, left: 2 },
+      { at: 121.35, v: 4.6, left: 2 },
+      { at: 127.3, v: 4.8, left: 0 },
+      { at: 133.2, v: 4.4, left: 2 },
     ],
   },
-  { lane: 2, home: 6.8, coat: '#2E3B44', hat: true, ball: '#24505C', throws: [{ at: 129.9, v: 4.9, left: 0 }] },
+  {
+    lane: 2,
+    home: 6.8,
+    coat: '#2E3B44',
+    hat: true,
+    ball: '#24505C',
+    throws: [
+      { at: 121.9, v: 4.9, left: 0 },
+      { at: 129.9, v: 4.9, left: 0 },
+      { at: 135.8, v: 4.7, left: 1 },
+    ],
+  },
 ]
 const hitOf = (th: FarThrow) => th.at + (DECK_F[0] - FOUL_F) / th.v
 
@@ -488,6 +503,16 @@ function hall(pen: Pen, t: number, g: Frame): void {
     disc(pen, smoker, 0.025, '#FF9A70', 0.6 + 0.4 * drag(t, 2.1, 7.5))
     curl(pen, t, smoker, 0.75, 2, SMOKE, 0.22, 0.12)
   }
+  // The night man along the far wall, behind the lanes: down to the decks with a tray of beers for the bowlers, back
+  // with the empties, and down again; never quite still.
+  {
+    const w = nightMan(t)
+    if (w.x > x0 - 0.6 && w.x < x1 + 0.6) {
+      const hand = man(pen, { x: w.x, y: -2.86, s: 0.36, face: w.face, coat: '#4E4A44', lean: 0.03, arm: 1.35, arm2: 0.25 * Math.sin(w.step), step: w.walking ? w.step : undefined })
+      box(pen, hand[0] - 0.14, hand[1] - 0.03, hand[0] + 0.14, hand[1], '#8A8A86')
+      for (let i = 0; i < w.glasses; i++) box(pen, hand[0] - 0.1 + i * 0.07, hand[1] - 0.1, hand[0] - 0.06 + i * 0.07, hand[1] - 0.03, '#DDB24E')
+    }
+  }
   // The late bowlers, the far lanes back to front, each with his ball going down and his pins.
   for (let i = BOWLERS.length - 1; i >= 0; i--) {
     const b = BOWLERS[i]
@@ -507,6 +532,28 @@ function hall(pen: Pen, t: number, g: Frame): void {
     if (ps.x < x0 - 1 || ps.x > x1 + 1) continue
     man(pen, { ...ps, y: ly + 0.02, s, coat: b.coat, hat: b.hat, ball: ps.ball ? b.ball : null })
   }
+}
+
+/** The night man's round along the far wall: where he is, which way he faces, his stride, and what is on his tray. */
+const ROUND: [number, number][] = [
+  [T0 - 2.0, 5.2],
+  [T0 + 4.2, 16.4],
+  [T0 + 5.6, 16.4],
+  [T0 + 11.6, 5.6],
+  [T0 + 12.8, 5.6],
+  [T0 + 19.2, 16.4],
+]
+function nightMan(t: number): { x: number; face: 1 | -1; walking: boolean; step: number; glasses: number } {
+  let i = 0
+  while (i + 2 < ROUND.length && ROUND[i + 1][0] <= t) i++
+  const [t0, a] = ROUND[i]
+  const [t1, b] = ROUND[i + 1]
+  const u = clamp01((t - t0) / (t1 - t0))
+  const walking = a !== b && u > 0 && u < 1
+  const x = a + (b - a) * u
+  // Full going down to the decks, handed out there a glass at a time, empty coming back, loaded again at the bar.
+  const glasses = b > a ? 3 : b < a ? 0 : a > 10 ? Math.max(0, 3 - Math.floor((t - t0) / 0.4)) : 3
+  return { x, face: b < a ? -1 : 1, walking, step: (x / 0.34) * Math.PI, glasses }
 }
 
 /** 0 to 1 and back: a hand going up to the lips every `every` seconds, from a phase `seed`, for a second and a bit. */
@@ -625,9 +672,9 @@ export function farHall(pen: Pen, t: number, f: Frame): void {
   // The haze: thicker under the ceiling, where the smoke hangs, and growing as the night goes on.
   const thick = 0.85 + 0.25 * smooth(t, T0, STRIKE)
   const g = ctx.createLinearGradient(0, OPEN_TOP * k, 0, CAP * k)
-  g.addColorStop(0, css(pen, HAZE, 0.62 * thick))
-  g.addColorStop(0.45, css(pen, HAZE, 0.36 * thick))
-  g.addColorStop(1, css(pen, HAZE, 0.24 * thick))
+  g.addColorStop(0, css(pen, HAZE, 0.6 * thick))
+  g.addColorStop(0.45, css(pen, HAZE, 0.3 * thick))
+  g.addColorStop(1, css(pen, HAZE, 0.16 * thick))
   ctx.fillStyle = g
   ctx.fillRect(x0 * k, OPEN_TOP * k, (x1 - x0) * k, (CAP - OPEN_TOP) * k)
   ctx.restore()
@@ -1569,6 +1616,20 @@ export const hatTip = (t: number): number => {
   const s = t - 126.05
   return s < 0 || s > 0.9 ? 0 : Math.sin((s / 0.9) * Math.PI)
 }
+
+/**
+ * The two at the counter talking it over before the first point, about the ball that has bounced in: the bettor
+ * points his stake at it and at the table, Wally answers with a nod and an open hand. Each is 0 to 1, a gesture's
+ * reach; a bump of about a second at each of their show times.
+ */
+const BETTOR_SAYS = [121.55, 122.75, 123.95, 124.85]
+const WALLY_SAYS = [122.2, 123.4, 124.45]
+const bump = (t: number, at: number, len: number): number => {
+  const u = (t - at) / len
+  return u <= 0 || u >= 1 ? 0 : Math.sin(u * Math.PI) * (0.75 + 0.25 * Math.sin(u * Math.PI * 3))
+}
+export const bettorSays = (t: number): number => BETTOR_SAYS.reduce((m, at) => Math.max(m, bump(t, at, 0.95)), 0)
+export const wallySays = (t: number): number => WALLY_SAYS.reduce((m, at) => Math.max(m, bump(t, at, 0.8)), 0)
 
 /** People never stand quite still: a slow shift of weight, about a share of a cell. */
 export const shift = (t: number, seed: number): number => 0.025 * sway(t, seed, 5.5)
