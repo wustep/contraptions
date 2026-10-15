@@ -1,5 +1,6 @@
 import { mixHex, type Pt } from '../../../../../parts'
 import { frame, hash, rgba, smooth } from '../kit'
+import { picture } from '../lens'
 import { level, notes as measured } from '../music'
 import { SEBS_MAT } from '../worlds'
 import type p5 from 'p5'
@@ -562,7 +563,7 @@ export function fans(p: p5, k: number, t: number, ink: string, lit: string): voi
 }
 
 /** A cigarette's smoke from (x, y): three thin strands curling up and thinning out into the dark. */
-export function smoke(p: p5, k: number, x: number, y: number, t: number, a: number, seed: number): void {
+export function smoke(p: p5, k: number, x: number, y: number, t: number, a: number, seed: number, rise = 1.1): void {
   if (a < 0.02) return
   const g = p.drawingContext as G
   g.save()
@@ -573,19 +574,291 @@ export function smoke(p: p5, k: number, x: number, y: number, t: number, a: numb
     const n = 14
     for (let i = 0; i <= n; i++) {
       const u = i / n
-      const yy = y - u * 1.1
+      const yy = y - u * rise
       // The strand rises, wavering more the higher it goes, and drifts toward the stage.
       const xx = x + 0.06 * s * u + 0.18 * u * u + (0.02 + 0.09 * u) * Math.sin(u * 7 + t * (0.9 + 0.2 * s) + ph)
       if (i === 0) g.moveTo(xx * k, yy * k)
       else g.lineTo(xx * k, yy * k)
     }
-    const grad = g.createLinearGradient(0, y * k, 0, (y - 1.1) * k)
+    const grad = g.createLinearGradient(0, y * k, 0, (y - rise) * k)
     grad.addColorStop(0, rgba('#C9C6D6', 0.32 * a))
     grad.addColorStop(1, rgba('#C9C6D6', 0))
     g.strokeStyle = grad
     g.lineWidth = Math.max(1, (0.012 + 0.006 * s) * k)
     g.stroke()
   }
+  g.restore()
+}
+
+/* ------------------------------------------------------------------ the drink rail */
+
+/**
+ * The dado's rail is a drink rail: a narrow ledge along the back wall at the height of a seated head, where the house
+ * leaves what it is not holding. In the room as it is: a few glasses, an ashtray with someone's cigarette still going,
+ * a small photograph propped against the brick. In the dream the rail is crowded: more glasses, a hat, a rose in a
+ * vase. Each thing is lit along its edge by whatever lights the wall there.
+ */
+type RailKind = 'tumbler' | 'coupe' | 'bottle' | 'ashtray' | 'frame' | 'hat' | 'vase'
+const RAIL_Y = 2.0
+const RAIL: { x: number; kind: RailKind; dream: boolean }[] = [
+  { x: -9.05, kind: 'coupe', dream: false },
+  { x: -8.9, kind: 'vase', dream: true },
+  { x: -8.05, kind: 'tumbler', dream: true },
+  { x: -7.6, kind: 'bottle', dream: false },
+  { x: -6.92, kind: 'tumbler', dream: false },
+  { x: -6.62, kind: 'coupe', dream: true },
+  { x: -5.6, kind: 'tumbler', dream: true },
+  { x: -5.42, kind: 'tumbler', dream: true },
+  { x: -4.18, kind: 'hat', dream: true },
+  { x: -3.68, kind: 'tumbler', dream: false },
+  { x: -3.47, kind: 'ashtray', dream: false },
+  { x: -3.12, kind: 'vase', dream: true },
+  { x: -2.9, kind: 'frame', dream: false },
+  { x: -2.6, kind: 'coupe', dream: true },
+  { x: -2.12, kind: 'coupe', dream: true },
+  { x: -1.98, kind: 'tumbler', dream: false },
+]
+
+/** The rail and what is on it. `dream` is how much of the dream's house is in the room; `lit` the wall's light. */
+export function drinkRail(p: p5, k: number, t: number, x0: number, x1: number, dream: number, lit: number, warm: string, ink: string): void {
+  const g = p.drawingContext as G
+  const f = frame(p, k)
+  if (RAIL_Y + 0.1 < f.y0 || RAIL_Y - 0.4 > f.y1) return
+  g.save()
+  // The ledge: dark wood a few fingers deep, its brass nosing catching the light.
+  g.fillStyle = mixHex(M.brass, M.deep, 0.66)
+  g.fillRect(x0 * k, (RAIL_Y - 0.035) * k, (x1 - x0) * k, 0.05 * k)
+  g.fillStyle = rgba(M.brass, 0.35 + 0.35 * lit)
+  g.fillRect(x0 * k, (RAIL_Y - 0.04) * k, (x1 - x0) * k, Math.max(1, 0.012 * k))
+  const lw = Math.max(1, 0.009 * k)
+  const edge = rgba(warm, 0.25 + 0.45 * lit)
+  for (const it of RAIL) {
+    const a = it.dream ? dream : 1
+    if (a < 0.01 || it.x < f.x0 - 0.3 || it.x > f.x1 + 0.3) continue
+    g.globalAlpha = a
+    const y = RAIL_Y - 0.04
+    const x = it.x
+    g.lineWidth = lw
+    g.strokeStyle = ink
+    if (it.kind === 'tumbler') {
+      g.fillStyle = rgba(M.ivory, 0.2 + 0.15 * lit)
+      g.beginPath()
+      poly(g, k, [[x - 0.034, y - 0.085], [x + 0.034, y - 0.085], [x + 0.028, y], [x - 0.028, y]])
+      g.fill()
+      g.fillStyle = rgba(M.candle, 0.45 + 0.2 * lit)
+      g.beginPath()
+      poly(g, k, [[x - 0.031, y - 0.04], [x + 0.031, y - 0.04], [x + 0.028, y - 0.004], [x - 0.028, y - 0.004]])
+      g.fill()
+      g.strokeStyle = edge
+      g.beginPath()
+      seg(g, k, [x + 0.033, y - 0.083], [x + 0.028, y - 0.003])
+      g.stroke()
+    } else if (it.kind === 'coupe') {
+      g.fillStyle = rgba(M.ivory, 0.28 + 0.15 * lit)
+      g.beginPath()
+      g.moveTo((x - 0.055) * k, (y - 0.13) * k)
+      g.quadraticCurveTo(x * k, (y - 0.06) * k, (x + 0.055) * k, (y - 0.13) * k)
+      g.closePath()
+      g.fill()
+      g.strokeStyle = rgba(M.ivory, 0.35 + 0.2 * lit)
+      g.beginPath()
+      seg(g, k, [x, y - 0.095], [x, y - 0.01])
+      seg(g, k, [x - 0.03, y - 0.004], [x + 0.03, y - 0.004])
+      g.stroke()
+    } else if (it.kind === 'bottle') {
+      g.fillStyle = mixHex(M.velvet, M.lacquer, 0.4)
+      g.beginPath()
+      poly(g, k, [[x - 0.032, y], [x - 0.032, y - 0.15], [x - 0.012, y - 0.19], [x - 0.012, y - 0.25], [x + 0.012, y - 0.25], [x + 0.012, y - 0.19], [x + 0.032, y - 0.15], [x + 0.032, y]])
+      g.fill()
+      g.strokeStyle = edge
+      g.beginPath()
+      seg(g, k, [x + 0.03, y - 0.148], [x + 0.03, y - 0.01])
+      g.stroke()
+    } else if (it.kind === 'ashtray') {
+      g.fillStyle = mixHex(M.brass, M.deep, 0.35)
+      g.beginPath()
+      poly(g, k, [[x - 0.06, y - 0.03], [x + 0.06, y - 0.03], [x + 0.045, y], [x - 0.045, y]])
+      g.fill()
+      // The cigarette across its lip, its ash and its tip.
+      g.strokeStyle = rgba(M.ivory, 0.75)
+      g.lineWidth = Math.max(1, 0.012 * k)
+      g.beginPath()
+      seg(g, k, [x - 0.02, y - 0.032], [x + 0.075, y - 0.05])
+      g.stroke()
+      g.fillStyle = M.candle
+      g.beginPath()
+      disc(g, k, x + 0.078, y - 0.05, 0.007)
+      g.fill()
+    } else if (it.kind === 'frame') {
+      // A small photograph propped against the brick: her, once, on a stage (a figure in a pool), in a dark frame.
+      g.fillStyle = M.lacquer
+      g.beginPath()
+      poly(g, k, [[x - 0.085, y], [x - 0.07, y - 0.21], [x + 0.08, y - 0.21], [x + 0.085, y]])
+      g.fill()
+      g.fillStyle = mixHex(M.ivory, M.wall, 0.55 - 0.3 * lit)
+      g.beginPath()
+      poly(g, k, [[x - 0.062, y - 0.02], [x - 0.052, y - 0.19], [x + 0.062, y - 0.19], [x + 0.065, y - 0.02]])
+      g.fill()
+      g.fillStyle = '#121019'
+      g.beginPath()
+      disc(g, k, x + 0.004, y - 0.135, 0.016)
+      poly(g, k, [[x - 0.022, y - 0.035], [x - 0.012, y - 0.11], [x + 0.02, y - 0.11], [x + 0.03, y - 0.035]])
+      g.fill()
+    } else if (it.kind === 'hat') {
+      // A fedora left on the rail: its crown, its band, its brim.
+      g.fillStyle = '#17131F'
+      g.beginPath()
+      g.ellipse(x * k, (y - 0.012) * k, 0.12 * k, 0.018 * k, 0, 0, Math.PI * 2)
+      poly(g, k, [[x - 0.075, y - 0.012], [x - 0.068, y - 0.1], [x - 0.02, y - 0.115], [x + 0.02, y - 0.105], [x + 0.068, y - 0.11], [x + 0.075, y - 0.012]])
+      g.fill()
+      g.fillStyle = rgba(M.velvet, 0.8)
+      g.fillRect((x - 0.074) * k, (y - 0.04) * k, 0.148 * k, 0.018 * k)
+      g.strokeStyle = edge
+      g.beginPath()
+      seg(g, k, [x - 0.066, y - 0.1], [x - 0.02, y - 0.113])
+      g.stroke()
+    } else {
+      // A bud vase with a red rose: the dream's own flower.
+      g.fillStyle = rgba(M.ivory, 0.3 + 0.15 * lit)
+      g.beginPath()
+      poly(g, k, [[x - 0.022, y], [x - 0.016, y - 0.13], [x + 0.016, y - 0.13], [x + 0.022, y]])
+      g.fill()
+      g.strokeStyle = '#2E5A3A'
+      g.beginPath()
+      seg(g, k, [x, y - 0.12], [x + 0.012, y - 0.26])
+      g.stroke()
+      g.fillStyle = '#B4283C'
+      g.beginPath()
+      disc(g, k, x + 0.014, y - 0.275, 0.024)
+      g.fill()
+    }
+  }
+  g.globalAlpha = 1
+  // The forgotten cigarette's smoke, in the room as it is and the dream alike.
+  g.restore()
+  smoke(p, k, -3.47 + 0.078, RAIL_Y - 0.09, t, 0.55, 3, 0.55)
+}
+
+/* ------------------------------------------------------------------ the waiter in front of us */
+
+/** The waiter who crosses between us and her table at the start, nearer than anything in the room. */
+export const NEAR_WAITER: [number, number] = [23.2, 24.35]
+
+/**
+ * A waiter crossing between the camera and her table, nearer than the room: so near that only his head, his shoulders
+ * and the tray on his raised hand are in the picture, and so much bigger than the room's people, and he crosses the
+ * frame quickly where they would take a while. He wipes past the two of them as she turns from David to the stage.
+ */
+export function nearWaiter(p: p5, k: number, t: number, stage: string, warm: string): void {
+  const [a, b] = NEAR_WAITER
+  if (t < a || t > b) return
+  const v = picture(p, k, t)
+  const f = frame(p, k)
+  const fh = f.y1 - f.y0
+  const u = (t - a) / (b - a)
+  const half = 0.2 * fh
+  const x = v.x0 - half + u * (v.x1 - v.x0 + 2 * half)
+  const stride = u * 9 * Math.PI
+  const bob = 0.012 * fh * Math.abs(Math.sin(stride))
+  const g = p.drawingContext as G
+  const tone = '#09080F'
+  const hy = f.y0 + 0.43 * fh - bob
+  const hr = 0.066 * fh
+  const ny = hy + hr * 0.9
+  const sy = hy + 0.15 * fh
+  const X = (v: number) => v * k
+  g.save()
+  g.fillStyle = tone
+  g.beginPath()
+  disc(g, k, x + 0.008 * fh, hy, hr)
+  // His neck, the round of his shoulders, and his jacket down out of the picture, a little narrower at the waist.
+  g.moveTo(X(x - 0.045 * fh), X(ny))
+  g.lineTo(X(x + 0.05 * fh), X(ny))
+  g.lineTo(X(x + 0.055 * fh), X(sy - 0.035 * fh))
+  g.quadraticCurveTo(X(x + 0.17 * fh), X(sy - 0.04 * fh), X(x + 0.2 * fh), X(sy + 0.05 * fh))
+  g.lineTo(X(x + 0.17 * fh), X(f.y1 + 0.1 * fh))
+  g.lineTo(X(x - 0.17 * fh), X(f.y1 + 0.1 * fh))
+  g.lineTo(X(x - 0.2 * fh), X(sy + 0.05 * fh))
+  g.quadraticCurveTo(X(x - 0.17 * fh), X(sy - 0.04 * fh), X(x - 0.05 * fh), X(sy - 0.035 * fh))
+  g.closePath()
+  g.fill()
+  // The white of his shirt in the jacket's opening, and his bow tie.
+  g.fillStyle = rgba(M.ivory, 0.2)
+  g.beginPath()
+  poly(g, k, [[x - 0.035 * fh, sy - 0.03 * fh], [x + 0.045 * fh, sy - 0.03 * fh], [x + 0.008 * fh, sy + 0.12 * fh]])
+  g.fill()
+  g.fillStyle = tone
+  g.beginPath()
+  poly(g, k, [[x - 0.025 * fh, sy - 0.035 * fh], [x + 0.005 * fh, sy - 0.015 * fh], [x + 0.035 * fh, sy - 0.035 * fh], [x + 0.035 * fh, sy + 0.0 * fh], [x + 0.005 * fh, sy - 0.018 * fh], [x - 0.025 * fh, sy + 0.0 * fh]])
+  g.fill()
+  // The far arm bent up, the tray flat on his hand at his shoulder, two glasses on it.
+  const hand: Pt = [x + 0.29 * fh, sy - 0.05 * fh + bob * 0.3]
+  const elbow: Pt = [x + 0.25 * fh, sy + 0.13 * fh]
+  limbs(g, k, tone, 0.06 * fh, [[[x + 0.16 * fh, sy + 0.03 * fh], elbow], [elbow, hand]])
+  g.fillStyle = mixHex(M.brass, M.lacquer, 0.45)
+  g.fillRect(X(hand[0] - 0.16 * fh), X(hand[1] - 0.012 * fh), X(0.32 * fh), X(0.018 * fh))
+  g.fillStyle = rgba(M.ivory, 0.22)
+  g.beginPath()
+  for (const dx of [-0.08, 0.06]) poly(g, k, [[hand[0] + dx * fh - 0.025 * fh, hand[1] - 0.11 * fh], [hand[0] + dx * fh + 0.025 * fh, hand[1] - 0.11 * fh], [hand[0] + dx * fh + 0.018 * fh, hand[1] - 0.012 * fh], [hand[0] + dx * fh - 0.018 * fh, hand[1] - 0.012 * fh]])
+  g.fill()
+  // The stage's cold light along his far edge, and her candle's warmth low on his near shoulder.
+  const lw = Math.max(1, 0.009 * fh * k)
+  rim(g, k, x + 0.008 * fh, hy, hr, -Math.PI * 0.45, Math.PI * 0.1, stage, 0.45, lw)
+  g.strokeStyle = rgba(stage, 0.3)
+  g.lineWidth = lw
+  g.beginPath()
+  g.moveTo(X(x + 0.06 * fh), X(sy - 0.04 * fh))
+  g.quadraticCurveTo(X(x + 0.17 * fh), X(sy - 0.04 * fh), X(x + 0.2 * fh), X(sy + 0.05 * fh))
+  g.stroke()
+  g.strokeStyle = rgba(warm, 0.3)
+  g.beginPath()
+  seg(g, k, [x - 0.2 * fh, sy + 0.07 * fh], [x - 0.19 * fh, sy + 0.3 * fh])
+  g.stroke()
+  g.restore()
+}
+
+/* ------------------------------------------------------------------ the lamp by her table */
+
+/** The little uplight on its bracket by her table: it stays on when the house goes down, and lights the brick above it. */
+export const NOOK_LAMP: Pt = [-3.2, 1.86]
+export function nookLamp(p: p5, k: number, warm: string, on: number, ink: string): void {
+  const [x, y] = NOOK_LAMP
+  const f = frame(p, k)
+  if (x + 0.6 < f.x0 || x - 0.6 > f.x1 || y - 1 > f.y1 || y + 0.2 < f.y0) return
+  const g = p.drawingContext as G
+  g.save()
+  // Its light, up the brick in a fan from the cup's mouth: on the wall, not round the lamp.
+  for (const [w, a] of [[0.46, 0.13], [0.28, 0.16]] as const) {
+    const top = y - 0.12 - 0.85
+    const gr = g.createLinearGradient(0, (y - 0.12) * k, 0, top * k)
+    gr.addColorStop(0, rgba(warm, a * on))
+    gr.addColorStop(1, rgba(warm, 0))
+    g.fillStyle = gr
+    g.beginPath()
+    g.moveTo((x - 0.06) * k, (y - 0.12) * k)
+    g.lineTo((x + 0.06) * k, (y - 0.12) * k)
+    g.lineTo((x + w) * k, top * k)
+    g.quadraticCurveTo(x * k, (top - 0.18) * k, (x - w) * k, top * k)
+    g.closePath()
+    g.fill()
+  }
+  // The bracket, and the brass cup open at the top, its inside lit.
+  g.strokeStyle = ink
+  g.lineWidth = Math.max(1, 0.012 * k)
+  g.beginPath()
+  seg(g, k, [x, y - 0.04], [x, y + 0.08])
+  g.stroke()
+  // A half-round brass cup on the wall, wider than it is deep, its rim lit from inside.
+  g.fillStyle = mixHex(M.brass, M.deep, 0.35)
+  g.beginPath()
+  g.moveTo((x - 0.11) * k, (y - 0.12) * k)
+  g.lineTo((x + 0.11) * k, (y - 0.12) * k)
+  g.quadraticCurveTo((x + 0.1) * k, (y - 0.02) * k, x * k, (y - 0.02) * k)
+  g.quadraticCurveTo((x - 0.1) * k, (y - 0.02) * k, (x - 0.11) * k, (y - 0.12) * k)
+  g.closePath()
+  g.fill()
+  g.fillStyle = mixHex(M.brass, warm, 0.3 + 0.6 * on)
+  g.fillRect((x - 0.11) * k, (y - 0.135) * k, 0.22 * k, Math.max(1, 0.018 * k))
   g.restore()
 }
 
