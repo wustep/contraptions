@@ -286,6 +286,39 @@ function drawSky(p: p5, k: number, f: Box & { cx: number; cy: number }, t: numbe
  * The sun, coming up behind the building on the right: at first all glow and rays round the roof's edge, the building
  * against it; by the end clearing the roof (as it cleared the roofs in the nursery's window).
  */
+/**
+ * Clouds going over the dawn at a time-lapse's pace, lit rose and gold underneath by the sun that is still below the
+ * roofs and dark on top: so far off they keep their place in the frame, and the sky is never still.
+ */
+function drawClouds(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number): void {
+  const ctx = ctxOf(p)
+  const H = f.y1 - f.y0
+  const W = f.x1 - f.x0
+  const u = t - FINALE
+  ctx.save()
+  for (let i = 0; i < 9; i++) {
+    const h1 = hash(i, 1, 501)
+    const h2 = hash(i, 2, 501)
+    const span = 1.5
+    const x = f.x0 + W * ((((h1 * span + u * (0.012 + 0.012 * h2)) % span) + span) % span - 0.25)
+    const y = f.y0 + H * (0.06 + 0.24 * h2)
+    const w = W * (0.12 + 0.12 * hash(i, 3, 501))
+    const hh = H * (0.018 + 0.02 * hash(i, 4, 501))
+    // Lit from below: a warm belly, a cooler top.
+    for (const [dy, col, a] of [[-0.35, '#5E5684', 0.32], [0.2, '#E8A496', 0.38], [0.45, '#FFD2A0', 0.3]] as const) {
+      ctx.fillStyle = css(col, a)
+      ctx.beginPath()
+      for (let j = 0; j < 5; j++) {
+        const cx = x + w * (j / 4 - 0.5) * 0.9
+        const cy = y + hh * dy + hh * 0.35 * Math.sin(j * 1.9 + i)
+        ctx.ellipse(cx * k, cy * k, w * (0.2 + 0.08 * Math.sin(j + i)) * k, hh * (0.75 - 0.25 * Math.abs(j - 2) / 2) * k, 0, 0, Math.PI * 2)
+      }
+      ctx.fill()
+    }
+  }
+  ctx.restore()
+}
+
 /** Searchlights behind the city, sweeping the dawn as for a premiere: everybody wants to rule the world. */
 function drawSearchlights(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number): void {
   const pen = { p, k, ink: '#000', w: 1, tone: (h: string) => h }
@@ -757,6 +790,7 @@ export const finale = scenery<null>({
     ctx.rect(w.x0 * k, w.y0 * k, (w.x1 - w.x0) * k, (w.y1 - w.y0) * k)
     ctx.clip('evenodd')
     drawSky(p, k, f, t)
+    drawClouds(p, k, f, t)
     drawSearchlights(p, k, f, t)
     drawSun(p, k, f, t)
     drawSkyline(p, k, f, t, FAR, 120, css('#7E7392', 1), css('#FFE6B0', 0.7), 0.05, 1)

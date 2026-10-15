@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { frame, knock, smooth } from '../kit'
 import { sway, type Frame } from '../depth'
 import { blob, ctxOf, ellipse, flash, fillWith, glint, glow, line, mix, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
-import { benchLit, corridorLight, glassBloom, nurseryMotes, sunBloom, wardShafts } from './light'
+import { benchLit, corridorLight, dapple, glassBloom, nurseryMotes, sunBloom, wardShafts } from './light'
 import { birds, el, lookIn, lookOut, plane, roofs, sky, towers, wing, type Look } from './outside'
 import { clock, drip, fan, flowers, foreground, mobile } from './props'
 import { daylight, sunUp, warm } from './dawn'
@@ -156,6 +156,7 @@ export function drawSet(pen: Pen, t: number, f: Frame): void {
   glow(pen, [0.5, -2.2], 6.5, morning, 0.18 + 0.2 * w)
   glow(pen, [-4.6, -0.4], 3.6, morning, 0.1 + 0.18 * w)
   glow(pen, [-9.4, -1.6], 5.5, morning, 0.05 + 0.16 * w)
+  dapple(pen, t, f)
   drawFloor(pen, f, w)
   drawCorridorWindow(pen, t, f)
   corridorLight(pen, t, f)
