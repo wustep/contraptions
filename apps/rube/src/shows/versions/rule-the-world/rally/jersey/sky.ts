@@ -6,6 +6,7 @@ import { AY, BX0, BX1, LANTERN_DOWN, ROAD, T0 } from './geo'
 import { drawFarFire, F, fireAt, fireLight } from './fire'
 import { drawFarField } from './airfield'
 import { bag, box, disc, fill, haze, loop, oval, poly, seg, stroke, wrap } from './ink'
+import { drawScud, gust } from './wind'
 
 /**
  * New Jersey's night, behind the road: the sky (still stars, a low moon, clouds going over on the wind) and the
@@ -123,6 +124,8 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
   )
   // The city, far behind them: its glow along the horizon, its towers small against it.
   layer(pen, f, D_CITY, (g) => city(pen, t, g), ANCHOR)
+  // Under the high clouds, low scud going over faster on the wind.
+  drawScud(pen, t, f)
 }
 
 /** The stars, scattered once over the sky's layer: where, how big, how bright, how dim round the moon. */
@@ -440,7 +443,7 @@ function trees(pen: Pen, t: number, g: Frame, f: Frame): void {
     const x = i * 2.6 + hash(i, 32)
     const h = 1.0 + hash(i, 33) * 1.05
     const wx = worldX(x, f, D_TREES)
-    const lean = 0.035 * h * sway(t, i, 4.5)
+    const lean = 0.055 * h * (0.55 + 0.45 * gust(t)) * sway(t, i, 3.6)
     const crowns = (path: Path2D, dx: number, dy: number, grow: number) => {
       box(path, x - 0.04 * h + dx, TREES_BASE - h * 0.45 + dy, x + 0.04 * h + dx, TREES_BASE)
       for (let j = 0; j < 5; j++) {

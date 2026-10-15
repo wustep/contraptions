@@ -8,6 +8,8 @@ import { dropTime } from '../physics'
 import { beaconTurn, drawDrift, drawStairLamp, drawWindsock } from './airfield'
 import { fireAt, fireLight, flareAt, smokeBank } from './fire'
 import { bag, blade, box, disc, fill, haze, loop, poly } from './ink'
+import { drawApron } from './apron'
+import { drawBreath, drawChaff, drawCurtain, drawHens, drawRifleman, drawVane, gust } from './wind'
 import {
   AMB_LEN,
   AMB_ROOF,
@@ -32,6 +34,7 @@ import {
   DOOR_OPEN,
   DOOR_X,
   DOORS_OPEN,
+  FLARE,
   FLOOR,
   GATE_X,
   HAY,
@@ -149,16 +152,17 @@ type Frame = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: n
 
 /* ------------------------------------------------------------------ the roadside's trees (the far is `sky.ts`) */
 
-/** A black tree: a trunk and a heap of round crowns. */
-function tree(pen: Pen, x: number, base: number, h: number, col: string, seed: number): void {
+/** A black tree: a trunk and a heap of round crowns, the crowns carried `lean` cells over by the wind (more at the top). */
+function tree(pen: Pen, x: number, base: number, h: number, col: string, seed: number, lean = 0): void {
   rect(pen, x - 0.06 * h * 0.5, base - h * 0.45, x + 0.06 * h * 0.5, base, col)
   const n = 5
   for (let j = 0; j < n; j++) {
     const a = (j / n) * Math.PI * 2 + seed
     const r = h * (0.22 + 0.08 * hash(seed, j, 5))
-    ellipse(pen, [x + Math.cos(a) * h * 0.18, base - h * 0.62 + Math.sin(a) * h * 0.16], r, r * 0.95, col)
+    const cy = base - h * 0.62 + Math.sin(a) * h * 0.16
+    ellipse(pen, [x + Math.cos(a) * h * 0.18 + lean * (0.55 + 0.45 * (base - h * 0.45 - cy) / (h * 0.45)), cy], r, r * 0.95, col)
   }
-  ellipse(pen, [x, base - h * 0.85], h * 0.2, h * 0.18, col)
+  ellipse(pen, [x + lean * 1.1, base - h * 0.85], h * 0.2, h * 0.18, col)
 }
 
 /* ------------------------------------------------------------------ the ground */
@@ -223,7 +227,8 @@ export function drawRoadside(pen: Pen, t: number, f: Frame): void {
     if (hash(i, 41) > 0.26) continue
     const x = i * 3.1 + hash(i, 42) * 1.4
     if (x > S + 3) continue
-    tree(pen, x, base - 0.1, 2.4 + hash(i, 43) * 1.4, C.tree, i + 100)
+    const h = 2.4 + hash(i, 43) * 1.4
+    tree(pen, x, base - 0.1, h, C.tree, i + 100, 0.045 * h * gust(t) * (0.6 + 0.4 * sway(t, i * 0.7, 3.3)))
   }
   // The fence: a post a beat and an "a" apart at speed, three wires.
   const posts: number[] = []
@@ -297,6 +302,8 @@ interface Figure {
   rim?: string
   arm?: number
   h?: number
+  /** How far the wind takes the coat's hem over, cells. */
+  wind?: number
 }
 
 /** A person: legs, a coat, shoulders, a head, a hat. About 3.2 cells tall. */
@@ -311,12 +318,13 @@ export function figure(pen: Pen, x: number, foot: number, o: Figure): void {
   rect(pen, x + w(0.04), y(1.0), x + w(0.2), y(0.05), legs)
   ellipse(pen, [x - w(0.12) + face * w(0.05), y(0.04)], w(0.14), w(0.05), C.man)
   ellipse(pen, [x + w(0.12) + face * w(0.05), y(0.04)], w(0.14), w(0.05), C.man)
-  // The coat, to the knee.
-  shape(pen, [[x - w(0.36), y(0.85)], [x - w(0.4), y(2.5)], [x - w(0.3), y(2.66)], [x + w(0.3), y(2.66)], [x + w(0.4), y(2.5)], [x + w(0.36), y(0.85)]], o.coat)
-  // Arms, hanging, one a little forward.
+  // The coat, to the knee, its hem blown over by the wind.
+  const wd = o.wind ?? 0
+  shape(pen, [[x - w(0.36) + wd * 0.8, y(0.85)], [x - w(0.4) + wd * 0.15, y(2.0)], [x - w(0.4), y(2.5)], [x - w(0.3), y(2.66)], [x + w(0.3), y(2.66)], [x + w(0.4), y(2.5)], [x + w(0.4) + wd * 0.35, y(1.7)], [x + w(0.36) + wd * 1.25, y(0.85)]], o.coat)
+  // Arms, hanging, one a little forward, swung a little in the wind.
   const arm = o.arm ?? 0
-  shape(pen, [[x - w(0.42), y(2.55)], [x - w(0.5), y(1.45)], [x - w(0.36), y(1.42)], [x - w(0.3), y(2.4)]], mix(o.coat, '#000000', 0.25))
-  shape(pen, [[x + w(0.3), y(2.4)], [x + w(0.36) + face * w(arm), y(1.45)], [x + w(0.5) + face * w(arm), y(1.48)], [x + w(0.42), y(2.55)]], mix(o.coat, '#000000', 0.25))
+  shape(pen, [[x - w(0.42), y(2.55)], [x - w(0.5) + wd * 0.3, y(1.45)], [x - w(0.36) + wd * 0.3, y(1.42)], [x - w(0.3), y(2.4)]], mix(o.coat, '#000000', 0.25))
+  shape(pen, [[x + w(0.3), y(2.4)], [x + w(0.36) + face * w(arm) + wd * 0.3, y(1.45)], [x + w(0.5) + face * w(arm) + wd * 0.3, y(1.48)], [x + w(0.42), y(2.55)]], mix(o.coat, '#000000', 0.25))
   // Head and neck.
   rect(pen, x - w(0.07), y(2.8), x + w(0.07), y(2.62), o.coat === C.coatWhite ? C.skin : C.man)
   ellipse(pen, [x + face * w(0.02), y(2.95)], w(0.19), w(0.21), o.coat === C.coatWhite ? C.skin : C.man)
@@ -357,6 +365,8 @@ export function drawHouse(pen: Pen, t: number): void {
     line(pen, [cx - w / 2, cy], [cx + w / 2, cy], C.trim, 0.5)
   }
   for (const [i, cx] of [x0 + 1.0, x0 + 3.3, x0 + 5.6].entries()) win(cx, top + 1.2, 0.75, 1.05, i === 1)
+  // The one at the left is open, its curtain out on the wind.
+  drawCurtain(pen, t, [x0 + 1.0, top + 1.2], 0.75, 1.05)
   win(x0 + 0.55, ROAD - 2.0, 0.7, 1.15)
   // The ground floor's windows' light out on the yard, and a shadow going across one now and then inside.
   for (const cx of [x0 + 0.55, SHOT_WIN[0]]) haze(pen, [cx, ROAD - 0.05], 1.0, 0.2, C.win, 0.16)
@@ -371,6 +381,8 @@ export function drawHouse(pen: Pen, t: number): void {
   const sf = SHOT_FLASH(t)
   win(SHOT_WIN[0], SHOT_WIN[1], 0.75, 1.15)
   if (sf > 0.01) rect(pen, SHOT_WIN[0] - 0.37, SHOT_WIN[1] - 0.57, SHOT_WIN[0] + 0.37, SHOT_WIN[1] + 0.57, mix(C.win, C.white, sf))
+  // The man who shoots, up into it against the light.
+  drawRifleman(pen, t)
   // The porch: its floor, steps, roof on posts, the door, the lamp.
   const [p0, p1] = PORCH
   const proof = ROAD - 4.1
@@ -409,11 +421,22 @@ export function drawHouse(pen: Pen, t: number): void {
   const fx = SHOT_FLASH(t)
   const fl = Math.min(1, fireLight(t))
   const rim = mix(mix(C.rim, C.fireGold, 0.7 * fl), C.white, fx)
+  // They shift their weight, their coats blow, and the one by the door points them out as the lamp comes on.
   const breathe = (i: number) => 1 + 0.008 * Math.sin(t * 1.6 + i * 2.1)
-  const corner = HOUSE[1] + 0.55 + 0.015 * sway(t, 5, 6)
-  figure(pen, corner, ROAD, { coat: '#0D0F12', hat: 'fedora', face: -1, rim, arm: 0.1, h: 3.2 * breathe(0) })
-  figure(pen, p0 + 0.8 + 0.012 * sway(t, 6, 7), PORCH_Y, { coat: C.man, hat: 'fedora', face: -1, rim, h: 3.2 * breathe(1) })
-  figure(pen, doorX + 1.25, PORCH_Y, { coat: C.man, hat: 'fedora', face: -1, rim, h: 3.3 * breathe(2), arm: 0.12 })
+  const coat = (i: number) => 0.04 + 0.07 * gust(t) + 0.025 * Math.sin(t * 4.3 + i * 2.2)
+  const corner = HOUSE[1] + 0.55 + 0.05 * sway(t, 5, 3.4)
+  const left = p0 + 0.8 + 0.045 * sway(t, 6, 4.1)
+  const byDoor = doorX + 1.25 + 0.035 * sway(t, 8, 3.7)
+  const point = smooth(t, PORCH_ON + 0.05, PORCH_ON + 0.35) * (1 - smooth(t, SHOTS[0] + 0.3, SHOTS[0] + 0.9))
+  figure(pen, corner, ROAD, { coat: '#0D0F12', hat: 'fedora', face: -1, rim, arm: 0.1, h: 3.2 * breathe(0), wind: coat(0) })
+  figure(pen, left, PORCH_Y, { coat: C.man, hat: 'fedora', face: -1, rim, h: 3.2 * breathe(1), wind: coat(1) })
+  figure(pen, byDoor, PORCH_Y, { coat: C.man, hat: 'fedora', face: -1, rim, h: 3.3 * breathe(2), arm: 0.12 + 0.5 * point, wind: coat(2) })
+  // Their breath in the cold.
+  drawBreath(pen, t, [
+    [corner - 0.16, ROAD - 2.86 * breathe(0)],
+    [left - 0.16, PORCH_Y - 2.86 * breathe(1)],
+    [byDoor - 0.16, PORCH_Y - 2.95 * breathe(2)],
+  ])
   // The one at the corner is smoking: the cigarette's end reddening as he draws on it, and the smoke off it.
   const drag = flash(((t + 1.1) % 4.3) - 0.2, 0.7)
   const tip: Pt = [corner - 0.27, ROAD - 2.86 * breathe(0)]
@@ -493,6 +516,7 @@ export function drawBarn(pen: Pen, t: number): void {
   // The roof, in section: a gambrel, its gable filled with the back wall.
   const roofPts: Pt[] = [[BX0 - 0.35, eave + 0.1], [BX0 + 1.1, ROAD - 6.9], [(BX0 + BX1) / 2, ROAD - 7.8], [BX1 - 1.1, ROAD - 6.9], [BX1 + 0.35, eave + 0.1]]
   shape(pen, roofPts, C.barnDark)
+  drawVane(pen, t)
   const inner: Pt[] = [[BX0 + 0.22, eave], [BX0 + 1.25, ROAD - 6.65], [(BX0 + BX1) / 2, ROAD - 7.5], [BX1 - 1.25, ROAD - 6.65], [BX1 - 0.22, eave]]
   shape(pen, [...inner, [BX1 - 0.22, ROAD], [BX0 + 0.22, ROAD]], C.barn)
   // The back wall's boards.
@@ -524,7 +548,8 @@ export function drawBarn(pen: Pen, t: number): void {
   if (t < LANTERN_SHOT + 0.4) {
     const lamp = LANTERN
     const lit = 1 - smooth(t, LANTERN_SHOT, LANTERN_SHOT + 0.4)
-    haze(pen, [lamp[0], BALES_TOP - 0.05], 1.6, 0.45, C.fireGold, 0.2 * lit)
+    const sw = t < LANTERN_SHOT ? 0.06 * sway(t, 51, 1.6) * gust(t) : 0
+    haze(pen, [lamp[0] + 2.5 * sw, BALES_TOP - 0.05], 1.6, 0.45, C.fireGold, 0.2 * lit)
     motes(pen, t, {
       n: 16,
       seed: 51,
@@ -538,6 +563,8 @@ export function drawBarn(pen: Pen, t: number): void {
       light: (x, y) => Math.max(0, 1 - Math.hypot(x - lamp[0], (y - lamp[1]) * 0.8) / 1.7),
     })
   }
+  // Chaff sifting down off the loft in the draught: by the lantern's light, and then by the fire's.
+  if (t < FLARE + 3) drawChaff(pen, t, t < LANTERN_SHOT ? [LANTERN[0], LANTERN[1]] : [S + 17.4, BALES_TOP - 0.8], 1)
   // Bales along the back wall.
   const bales: [number, number, number][] = [
     [S + 15.9, S + 18.7, BALES_TOP],
@@ -552,6 +579,8 @@ export function drawBarn(pen: Pen, t: number): void {
       line(pen, [x + 0.48, top], [x + 0.48, bot], C.baleDark, 0.5)
     }
   }
+  // The hens, on the floor and the bales.
+  drawHens(pen, t)
   // The loft: its floor on a post, the hay heaped on it.
   rect(pen, BX0 + 0.22, LOFT_Y - 0.02, LOFT_X1, LOFT_Y + 0.16, C.loft)
   rect(pen, LOFT_X1 - 0.22, LOFT_Y + 0.16, LOFT_X1 - 0.08, ROAD, C.beam)
@@ -603,7 +632,8 @@ export function drawBarn(pen: Pen, t: number): void {
   // The lantern: hanging lit; shot off its hook, falling into the bales, gone as the hay takes.
   const hook: Pt = [LANTERN[0], LOFT_Y + 0.16]
   if (t < LANTERN_SHOT) {
-    const sw = 0.03 * Math.sin(t * 1.3)
+    // Swinging on its hook in the draught through the open end.
+    const sw = 0.06 * sway(t, 51, 1.6) * gust(t)
     lantern(pen, [LANTERN[0] + sw, LANTERN[1]], hook, 1)
   } else if (t < LANTERN_DOWN) {
     const s = t - LANTERN_SHOT
@@ -701,6 +731,8 @@ export function drawAirfield(pen: Pen, t: number, f: Frame): void {
   const edge = bag()
   for (let x = Math.ceil(Math.max(f.x0, APRON_FROM + 3) / 2.4) * 2.4; x < f.x1 + 1; x += 2.4) box(edge, x - 0.045, ROAD + 0.39, x + 0.045, ROAD + 0.47)
   fill(pen, edge, C.runWhite, 0.8)
+  // The bags going out to it, and the man at the stair's foot.
+  drawApron(pen, t, f)
   // The airliner and its stair, once any of it can be in the picture.
   if (f.x1 > TAIL_X - 2.5) {
     drawPlane(pen, t)
