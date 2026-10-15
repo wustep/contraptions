@@ -6,7 +6,7 @@ import { bloom, confetti, flicker, motes, pulse, rising, shaft } from './depth'
 import { live } from './live'
 import { BAR, CREDITS_AT, DURATION, at } from './music'
 import { ctxOf, rgb } from './pen'
-import { snapshot, painted, rest, type Snap } from './snap'
+import { painted, prepare, rest, snapshot, type Snap } from './snap'
 
 /**
  * The finale: the machine, whole.
@@ -651,6 +651,11 @@ function litAt(i: number, t: number): number {
 }
 
 let lastPainted = -1
+
+/** Paint the rooms' pictures ahead, in the page's idle time, from the show's first frame (`snap.prepare`). */
+export function prepareRooms(p: p5): void {
+  prepare(ROOMS.flatMap((r) => (r.snap ? [r.snap] : [])), PIC_W, PIC_H, p)
+}
 
 export const finale = scenery<null>({
   name: 'fx-finale',

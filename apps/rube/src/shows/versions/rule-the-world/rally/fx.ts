@@ -3,6 +3,7 @@ import { energy, pulse, sway } from './depth'
 import { live } from './live'
 import { CRASH, CREDITS_AT, SEAM, WIN, at } from './music'
 import { bloomAt } from './bloom'
+import { prepareRooms } from './finale'
 import { ctxOf, mix, rgb } from './pen'
 import type { WorldKey } from './worlds'
 
@@ -32,6 +33,7 @@ export const glow = scenery<null>({
     const show = live.show
     if (!show || live.painting) return
     live.stage = p
+    prepareRooms(p)
     const here = show.at(c.t)
     if (here.hidden || here.scale < 0.2) return
     const world = show.legs[show.owner(c.t)].world

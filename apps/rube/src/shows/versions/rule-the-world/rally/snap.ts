@@ -106,6 +106,33 @@ export function snapshot(snap: Snap, w: number, h: number, like: p5): HTMLCanvas
 /** Whether `snap` is painted at that size already. */
 export const painted = (snap: Snap, w: number, h: number): boolean => made.has(`${snap.key}|${snap.t}|${snap.at.join(',')}|${snap.cells}|${w}x${h}`)
 
+/**
+ * Paint `snaps` ahead of time, one in each spell the page has idle (or, where it cannot say, every few frames' worth
+ * of time), from as soon as the show is on the stage: so that no frame of the show pays for a picture, and every
+ * place's drawing has run once before its first entrance. Asked again, it does nothing.
+ */
+let preparing = false
+export function prepare(snaps: Snap[], w: number, h: number, like: p5): void {
+  if (preparing || typeof window === 'undefined') return
+  preparing = true
+  type Idle = (cb: (d: { timeRemaining(): number; didTimeout: boolean }) => void, o?: { timeout: number }) => number
+  const idle: Idle = (window as unknown as { requestIdleCallback?: Idle }).requestIdleCallback?.bind(window) ??
+    ((cb) => window.setTimeout(() => cb({ timeRemaining: () => 12, didTimeout: true }), 150))
+  const left = [...snaps]
+  const step = (d: { timeRemaining(): number; didTimeout: boolean }) => {
+    // The engine first, then a picture a spell, while a spell has room for one.
+    if (!engine || (d.timeRemaining() < 10 && !d.didTimeout)) {
+      idle(step, { timeout: 3000 })
+      return
+    }
+    const next = left.shift()
+    if (next && !painted(next, w, h)) snapshot(next, w, h, like)
+    if (left.length) idle(step, { timeout: 3000 })
+    else rest()
+  }
+  idle(step, { timeout: 3000 })
+}
+
 /** Let the painter go once every picture is made. */
 export function rest(): void {
   if (!painter) return
