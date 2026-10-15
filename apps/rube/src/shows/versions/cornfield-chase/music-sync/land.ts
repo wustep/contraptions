@@ -60,7 +60,7 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
   const l = nightAt(t, horizon(t))
   const hy = sky(s, l)
   stars(s, t, hy)
-  body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', '#B9B0E8', 0.22, 0.2, mixHex(l.top, l.mid, 0.4))
+  body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', '#B9B0E8', 0.22, 0.2, true)
   fireworks(s, t, hy)
   farm(s, hy, l.farm, '#E3B45C')
   band(s, hy, l.band)

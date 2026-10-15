@@ -130,9 +130,10 @@ function glowOf(r: number, color: string, inner: number): HTMLCanvasElement {
 
 /**
  * A low sun or the moon: a disc and its glow, at `x` of the frame across and `y` frame heights over the horizon,
- * hidden by the field once it is under it. `shade` cuts the moon's dark side out of it in the sky's colour.
+ * hidden by the field once it is under it. `crescent` cuts the moon's dark side out of it, so the glow shows through
+ * there with a trace of earthshine, as the sky does, rather than a disc of the sky's colour laid over the glow.
  */
-export function body(s: Screen, hy: number, x: number, y: number, r: number, color: string, glow: string, glowA: number, glowR: number, shade?: string): void {
+export function body(s: Screen, hy: number, x: number, y: number, r: number, color: string, glow: string, glowA: number, glowR: number, crescent = false): void {
   const { ctx, cx, f } = s
   const bx = cx + (x - 0.5) * f * (16 / 9)
   const by = hy - y * f
@@ -145,22 +146,27 @@ export function body(s: Screen, hy: number, x: number, y: number, r: number, col
   ctx.beginPath()
   ctx.rect(0, 0, s.w, hy)
   ctx.clip()
+  if (crescent) {
+    ctx.fillStyle = rgba(color, 0.07)
+    ctx.beginPath()
+    ctx.arc(bx, by, r * f, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.rect(0, 0, s.w, hy)
+    ctx.arc(bx + r * f * 0.45, by - r * f * 0.2, r * f * 0.9, 0, Math.PI * 2)
+    ctx.clip('evenodd')
+  }
   ctx.fillStyle = color
   ctx.beginPath()
   ctx.arc(bx, by, r * f, 0, Math.PI * 2)
   ctx.fill()
-  if (shade) {
-    ctx.fillStyle = shade
-    ctx.beginPath()
-    ctx.arc(bx + r * f * 0.45, by - r * f * 0.2, r * f * 0.9, 0, Math.PI * 2)
-    ctx.fill()
-  }
   ctx.restore()
 }
 
 /**
  * The farm on the horizon, far off and barely moving: a house with a porch, a barn, two silos, a water tower, a
- * windpump, the power line along the road. `windows` lights the house's at night.
+ * windpump. `windows` lights the house's at night. (No power line: a thin line along the horizon read as one more of
+ * the machine's rails.)
  */
 export function farm(s: Screen, hy: number, color: string, windows?: string): void {
   const { ctx, cx, f, w } = s
@@ -172,21 +178,6 @@ export function farm(s: Screen, hy: number, color: string, windows?: string): vo
   ctx.fillStyle = color
   ctx.strokeStyle = color
   ctx.lineWidth = Math.max(1, f * 0.0016)
-  // The power line: poles every so often, a sagging wire between.
-  const pole = 0.17
-  ctx.beginPath()
-  for (let i = Math.floor(u0 / pole); i <= Math.ceil(u1 / pole); i++) {
-    const x = X(i * pole)
-    const top = hy - f * 0.03
-    ctx.moveTo(x, hy)
-    ctx.lineTo(x, top)
-    ctx.moveTo(x - f * 0.005, top + f * 0.003)
-    ctx.lineTo(x + f * 0.005, top + f * 0.003)
-    const nx = X((i + 1) * pole)
-    ctx.moveTo(x, top + f * 0.003)
-    ctx.quadraticCurveTo((x + nx) / 2, top + f * 0.009, nx, top + f * 0.003)
-  }
-  ctx.stroke()
   const sets = [
     { u: 0.42, kind: 'farm' },
     { u: -0.38, kind: 'tower' },

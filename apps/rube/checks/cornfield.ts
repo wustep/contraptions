@@ -24,8 +24,12 @@ export function checkCornfield(perf: Performance, check: Check): void {
   const pulse = [o.drop.t, o.last.t, ...o.eighths.map((e) => e.t)]
   const off = SHELLS.filter((s) => !pulse.some((t) => Math.abs(t - s.t) <= 0.026))
   check('cornfield opus55: every firework bursts on the measured pulse of the chase', off.length === 0, off.map((s) => s.t.toFixed(3)).join(', '))
-  check('cornfield opus55: fireworks only on the landmarks: the drop, the full organ, the bar the machine rests, the last hit',
-    SHELLS.length <= 8 && SHELLS.some((s) => Math.abs(s.t - o.drop.t) < 1e-6) && SHELLS.some((s) => Math.abs(s.t - o.last.t) < 1e-6))
+  // The landmarks, as beats: the drop (68), the full organ (132, 132½) and its phrases (148, 164, 180), the last hit and
+  // the two beats after it (191 to 193).
+  const landmarks = [68, 132, 132.5, 148, 164, 180, 191, 192, 193].map((b) => beatAt(b))
+  const elsewhere = SHELLS.filter((s) => !landmarks.some((t) => Math.abs(t - s.t) <= 0.03))
+  check('cornfield opus55: fireworks only on the landmarks: the drop, the full organ and its phrases, the last hit; none through the chase',
+    elsewhere.length === 0 && !SHELLS.some((s) => s.t > o.drop.t + 1 && s.t < beatAt(132) - 1), elsewhere.map((s) => s.t.toFixed(3)).join(', '))
   const rest = beatAt(180)
   check('cornfield opus55: the shell on beat 180 fills the one downbeat the machine leaves to rest',
     SHELLS.some((s) => Math.abs(s.t - rest) < 1e-6) && !struck.some((t) => Math.abs(t - rest) < 0.3), struck.filter((t) => Math.abs(t - rest) < 0.5).map((t) => t.toFixed(3)).join(', '))

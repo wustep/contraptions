@@ -3,9 +3,10 @@ import { hash, rgba, type Screen } from './screen'
 
 /**
  * Fireworks over the fair, far off behind the machine, each bursting on a beat of the measured pulse the chase is built
- * on, and only at its landmarks: the drop, the full organ, the one downbeat the machine leaves to rest (beat 180), and
- * the last hit with the two soft beats after it. Never on the rest of the pulse: the machine strikes that, and a shell
- * on every bar would be wallpaper.
+ * on, and only at its landmarks: the drop, the full organ and the downbeat of each of its phrases (the one at beat 180
+ * the machine leaves to rest), and the last hit with the two soft beats after it. None through the chase between the
+ * drop and the full organ, which is the machine's alone, and never on the rest of the pulse: the machine strikes that,
+ * and a shell on every bar would be wallpaper.
  */
 
 interface Shell {
@@ -33,6 +34,10 @@ export const SHELLS: Shell[] = [
   // through the floors of machines that fill the frame there.
   { t: beatAt(132), x: 0.24, y: 0.62, r: 0.22, color: CYAN, fade: VIOLET },
   { t: beatAt(132.5), x: 0.78, y: 0.58, r: 0.19, color: PINK, fade: GOLD },
+  // Each phrase of the full organ opens with one, high in the sky the single floor leaves open: the climax builds where
+  // the chase before it kept to the machine.
+  { t: beatAt(148), x: 0.66, y: 0.6, r: 0.16, color: GOLD, fade: VIOLET },
+  { t: beatAt(164), x: 0.47, y: 0.64, r: 0.17, color: VIOLET, fade: PINK },
   { t: beatAt(180), x: 0.5, y: 0.56, r: 0.15, color: GREEN, fade: CYAN },
   // The last hit, and the pulse's last two beats under its ring.
   { t: LAST, x: 0.42, y: 0.5, r: 0.2, color: GOLD, fade: PINK },
