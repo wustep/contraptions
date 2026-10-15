@@ -302,6 +302,15 @@ export interface Rows {
   gust: number
   /** The gust at `x` across the frame (0 to 1), from the music. */
   wind?: (x: number) => number
+  /** A firework's light on the tassels, strongest under it. */
+  flash?: Flash
+}
+
+/** A firework's light: its colour, where it is across the frame (0 to 1), and how strong (0 to 1). */
+export interface Flash {
+  x: number
+  color: string
+  a: number
 }
 
 /**
@@ -397,6 +406,15 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
     const ink = r.ink * (1 - smooth(d, 1.2, 2.3))
     if (ink < 0.03) continue
     ctx.strokeStyle = rgba(r.line, ink)
+    if (r.flash) {
+      // The burst's colour on the tassels under it, falling off to either side over most of a frame's width.
+      const { x, color, a } = r.flash
+      const lit = ctx.createLinearGradient(left + (x - 0.7) * frameW, 0, left + (x + 0.7) * frameW, 0)
+      lit.addColorStop(0, rgba(r.line, ink))
+      lit.addColorStop(0.5, rgba(mixHex(r.line, color, 0.7 * a), Math.min(1, ink + 0.25 * a)))
+      lit.addColorStop(1, rgba(r.line, ink))
+      ctx.strokeStyle = lit
+    }
     ctx.lineWidth = Math.max(1, 0.0022 * f * Math.sqrt(sc))
     ctx.lineCap = 'butt'
     ctx.beginPath()

@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type PieceCtx } from '../../../../parts'
 import { band, body, dayAt, farm, gustAt, haze, rows, sky, sunHeight, type Light } from './field'
-import { fireworks } from './fireworks'
+import { fireworks, shellLight } from './fireworks'
 import { beatAt } from './music'
 import { done, hash, rgba, screenOf, smooth, type Screen } from './screen'
 
@@ -38,19 +38,25 @@ const NIGHT: Light = {
 
 /**
  * The night has its own arc, as the afternoon had the sun's: the moon climbs the sky through the chase, and the fair's
- * glow on the horizon swells with the full organ and settles for the photograph.
+ * glow on the horizon swells with the full organ and settles for the photograph. The moon starts just over the fair's
+ * floor, not on it: at the floor's height the booths at the drop passed over it.
  */
-const moonHeight = (t: number): number => 0.4 + 0.22 * smooth(t, 41, 117)
+const moonHeight = (t: number): number => 0.5 + 0.17 * smooth(t, 41, 117)
 /** The full organ comes in on beat 132: the glow flares on the beat and settles over a bar to the level it holds. */
 const FULL = beatAt(132)
 const glowAt = (t: number): number => smooth(t, FULL, FULL + 3) * (1 - smooth(t, 116, 120))
 const flareAt = (t: number): number => (t < FULL ? smooth(t, FULL - 0.06, FULL) : Math.exp(-(t - FULL) / 0.9))
 
-/** The night's light at `t`, under a horizon at `horizon` of the frame. */
+/**
+ * The night's light at `t`, under a horizon at `horizon` of the frame. A shell's burst lights the field for a beat, its
+ * colour on the tassels under it, so the landmarks land on the land as well as in the sky. (Not on the sky's glow: the
+ * full organ's magenta is its own cue.)
+ */
 const nightAt = (t: number, horizon: number): Light => ({
   ...NIGHT,
   low: mixHex(mixHex(NIGHT.low, '#46325F', glowAt(t)), '#7E4E8E', 0.85 * flareAt(t)),
   mid: mixHex(NIGHT.mid, '#271F45', 0.6 * flareAt(t)),
+  rows: { ...NIGHT.rows, flash: shellLight(t) },
   horizon,
 })
 

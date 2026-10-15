@@ -1,4 +1,5 @@
 import { DROP, LAST, beatAt } from './music'
+import type { Flash } from './field'
 import { hash, rgba, type Screen } from './screen'
 
 /**
@@ -48,6 +49,21 @@ export const SHELLS: Shell[] = [
 /** How long a shell climbs before it bursts, and how long its sparks last. */
 const CLIMB = 0.85
 const LIFE = 2.1
+
+/**
+ * The light the shells throw on the field at `t`: the brightest burst's colour, where it is across the frame, and how
+ * strong (0 to 1), a flash on the beat that dies over half a second or so, the wider shells throwing more.
+ */
+export function shellLight(t: number): Flash | undefined {
+  let best: Flash | undefined
+  for (const sh of SHELLS) {
+    const age = t - sh.t
+    if (age < 0 || age > LIFE) continue
+    const a = Math.min(1, Math.exp(-age / 0.55) * (sh.r / 0.2))
+    if (!best || a > best.a) best = { x: sh.x, color: sh.color, a }
+  }
+  return best && best.a > 0.02 ? best : undefined
+}
 
 /** Every shell in the air at `t`, over the horizon at `hy` (device pixels). */
 export function fireworks(s: Screen, t: number, hy: number): void {

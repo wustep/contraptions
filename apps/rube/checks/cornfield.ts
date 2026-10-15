@@ -6,7 +6,7 @@ import measured from '../../../scripts/shows/plans/cornfield-opus55-onsets.json'
 import type { Performance } from '../src/shows/registry'
 import { arrival, booth, door, fair, photo, sunset } from '../src/shows/versions/cornfield-chase/opus55-music-sync'
 import { gustAt } from '../src/shows/versions/cornfield-chase/music-sync/field'
-import { SHELLS } from '../src/shows/versions/cornfield-chase/music-sync/fireworks'
+import { SHELLS, shellLight } from '../src/shows/versions/cornfield-chase/music-sync/fireworks'
 import { beatAt, PIANO } from '../src/shows/versions/cornfield-chase/music-sync/music'
 import { spot, strengthAt } from '../src/shows/versions/cornfield-chase/music-sync/spot'
 
@@ -33,6 +33,13 @@ export function checkCornfield(perf: Performance, check: Check): void {
   const rest = beatAt(180)
   check('cornfield opus55: the shell on beat 180 fills the one downbeat the machine leaves to rest',
     SHELLS.some((s) => Math.abs(s.t - rest) < 1e-6) && !struck.some((t) => Math.abs(t - rest) < 0.3), struck.filter((t) => Math.abs(t - rest) < 0.5).map((t) => t.toFixed(3)).join(', '))
+
+  // A burst lights the field: on its beat, in its colour, and never but in the second or two after a shell.
+  const unlit = SHELLS.filter((s) => shellLight(s.t + 0.01)?.color !== s.color)
+  const stray: number[] = []
+  for (let t = 40; t < 128; t += 0.05) if (shellLight(t) && !SHELLS.some((s) => t >= s.t && t < s.t + 2.2)) stray.push(t)
+  check('cornfield opus55: each burst lights the field in its colour on its beat, and nothing else does',
+    unlit.length === 0 && stray.length === 0, [...unlit.map((s) => s.t.toFixed(3)), ...stray.map((t) => t.toFixed(2))].join(', '))
 
   // The corn's wind: from the piano.
   check('cornfield opus55: the corn is still before the piano\'s first note', gustAt(PIANO[0].t - 0.01, 0.5) === 0 && gustAt(0.5, 0) === 0)
