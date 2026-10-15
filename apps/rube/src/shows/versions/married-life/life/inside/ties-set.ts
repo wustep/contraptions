@@ -33,6 +33,12 @@ export const PAINTING = { x0: 6.62, y0: -2.42, w: 1.3, h: 0.94 }
 /** The front door: the middle of the wall it hangs in, and how wide its leaf is when it swings out onto the porch. */
 export const DOOR = { x: 8.4, w: 0.85, top: -2.2 }
 
+/**
+ * The hall's tall clock, standing under the stairs past the gramophone's horn: its middle, half its width, the top of
+ * its hood, and the pendulum's length from its pivot behind the dial.
+ */
+export const CLOCK = { x: 3.32, half: 0.155, top: -1.22, pend: 0.5 }
+
 const IRON = mixHex(INK, HOME.section, 0.45)
 const IRON_LIGHT = mixHex(IRON, CLINIC.steel, 0.35)
 
@@ -294,6 +300,89 @@ export function drawGramophone(p: p5, k: number, weight: number, s: GramState, a
   p.stroke(INK)
   p.fill(brass)
   p.rect((hx - 0.025) * k, (hy - 0.012) * k, 0.045 * k, 0.03 * k, 0.008 * k)
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the tall clock */
+
+/**
+ * The tall clock under the stairs, the house's time: a plinth, a trunk with a glass door on the pendulum, a hood with an
+ * arched top and a cream dial (its hours ticked, never numbered). `swing` is the pendulum's angle (radians), `hours`
+ * the time its hands show (0 to 12, fractional); the wood darkens with `age`.
+ */
+export function drawClock(p: p5, k: number, weight: number, swing: number, hours: number, age: number): void {
+  const { x, half, top, pend } = CLOCK
+  const wood = mixHex(mixHex(HOME.woodDark, HOME.wood, 0.4), '#6A5040', age * 0.7)
+  const dark = mixHex(wood, INK, 0.3)
+  const brass = mixHex(HOME.brass, '#B9A06A', age * 0.6)
+  const hood = top + 0.42
+  const plinth = FLOOR - 0.24
+  const pivot = top + 0.2
+  const win = { x0: x - 0.075, x1: x + 0.075, y0: hood + 0.08, y1: plinth - 0.07 }
+  p.push()
+  p.rectMode(p.CORNER)
+  // A soft shadow on the wainscot behind it, to the left (the evening comes from the door).
+  p.noStroke()
+  p.fill(alpha(p, INK, 0.08))
+  rect(p, k, x - half - 0.05, top + 0.05, x + half - 0.06, FLOOR, 0.02)
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.8)
+  // The plinth, the trunk, the hood with its arch.
+  p.fill(dark)
+  rect(p, k, x - half - 0.02, plinth, x + half + 0.02, FLOOR, 0.01)
+  p.fill(wood)
+  rect(p, k, x - half + 0.03, hood, x + half - 0.03, plinth, 0.008)
+  p.beginShape()
+  p.vertex((x - half) * k, hood * k)
+  p.vertex((x - half) * k, (top + 0.05) * k)
+  p.bezierVertex((x - half) * k, (top - 0.06) * k, (x + half) * k, (top - 0.06) * k, (x + half) * k, (top + 0.05) * k)
+  p.vertex((x + half) * k, hood * k)
+  p.endShape(p.CLOSE)
+  rect(p, k, x - half - 0.02, hood - 0.02, x + half + 0.02, hood + 0.025, 0.008)
+  // The trunk's glass door, dark inside, and the pendulum swinging behind it.
+  p.fill(mixHex(HOME.woodDark, INK, 0.45))
+  rect(p, k, win.x0, win.y0, win.x1, win.y1, 0.03)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(win.x0 * k, win.y0 * k, (win.x1 - win.x0) * k, (win.y1 - win.y0) * k)
+  ctx.clip()
+  const bx = x + Math.sin(swing) * pend
+  const by = pivot + Math.cos(swing) * pend
+  p.stroke(brass)
+  p.strokeWeight(weight * 0.7)
+  p.line(x * k, pivot * k, bx * k, by * k)
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.6)
+  p.fill(brass)
+  p.circle(bx * k, by * k, 0.085 * k)
+  // The glass's sheen.
+  p.noStroke()
+  p.fill(alpha(p, '#FFFFFF', 0.12))
+  p.quad((win.x0 + 0.01) * k, (win.y0 + 0.2) * k, win.x1 * k, (win.y0 + 0.05) * k, win.x1 * k, (win.y0 + 0.12) * k, (win.x0 + 0.01) * k, (win.y0 + 0.27) * k)
+  ctx.restore()
+  // The dial: a cream face in a brass ring, its hours ticked; the two hands.
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.6)
+  p.fill(brass)
+  p.circle(x * k, pivot * k, 0.25 * k)
+  p.fill(mixHex(HOME.trim, '#EADFC8', age))
+  p.circle(x * k, pivot * k, 0.2 * k)
+  p.strokeWeight(weight * 0.35)
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2
+    const r0 = i % 3 === 0 ? 0.07 : 0.08
+    p.line((x + Math.sin(a) * r0) * k, (pivot - Math.cos(a) * r0) * k, (x + Math.sin(a) * 0.092) * k, (pivot - Math.cos(a) * 0.092) * k)
+  }
+  const hand = (a: number, len: number, w: number) => {
+    p.strokeWeight(weight * w)
+    p.line(x * k, pivot * k, (x + Math.sin(a) * len) * k, (pivot - Math.cos(a) * len) * k)
+  }
+  hand(((hours % 12) / 12) * Math.PI * 2, 0.05, 0.7)
+  hand((hours % 1) * Math.PI * 2, 0.078, 0.5)
+  p.noStroke()
+  p.fill(INK)
+  p.circle(x * k, pivot * k, 0.02 * k)
   p.pop()
 }
 
@@ -725,7 +814,7 @@ export function drawLampLight(p: p5, k: number, lamp: number): void {
  * screen door's way), its face widening as it turns towards us: `open` 0..1 is the swing (0 shut, 1 flat open), a
  * little over 1 on its bounce.
  */
-export function drawDoor(p: p5, k: number, weight: number, open: number, age: number): void {
+export function drawDoor(p: p5, k: number, weight: number, open: number, age: number, sky = HOME.glass): void {
   const pink = mixHex(HOME.pink, '#D6A7AC', age * 0.5)
   const trim = HOME.trim
   const { x, w, top } = DOOR
@@ -745,7 +834,23 @@ export function drawDoor(p: p5, k: number, weight: number, open: number, age: nu
     p.strokeWeight(weight * 0.5)
     p.fill(alpha(p, mixHex(pink, INK, 0.12), 1))
     rect(p, k, X(0.18), top + 1.25, X(0.82), FLOOR - 0.15, 0.01)
-    p.fill(HOME.glass)
+    // Through its glass, the evening outside: the sky, and the gardens' trees across the bottom of the panes.
+    p.fill(mixHex(HOME.glass, sky, 0.75))
+    rect(p, k, X(0.18), top + 0.2, X(0.82), top + 1.0, 0.01)
+    p.noStroke()
+    p.fill(mixHex(mixHex(HOME.leaf, '#7D8A86', 0.35), sky, 0.45))
+    p.beginShape()
+    p.vertex(X(0.18) * k, (top + 1.0) * k)
+    p.vertex(X(0.18) * k, (top + 0.84) * k)
+    p.bezierVertex(X(0.35) * k, (top + 0.74) * k, X(0.5) * k, (top + 0.86) * k, X(0.62) * k, (top + 0.8) * k)
+    p.bezierVertex(X(0.72) * k, (top + 0.76) * k, X(0.8) * k, (top + 0.82) * k, X(0.82) * k, (top + 0.83) * k)
+    p.vertex(X(0.82) * k, (top + 1.0) * k)
+    p.endShape(p.CLOSE)
+    p.fill(alpha(p, '#FFFFFF', 0.16))
+    p.quad(X(0.24) * k, (top + 1.0) * k, X(0.42) * k, (top + 0.2) * k, X(0.52) * k, (top + 0.2) * k, X(0.34) * k, (top + 1.0) * k)
+    p.noFill()
+    p.stroke(INK)
+    p.strokeWeight(weight * 0.5)
     rect(p, k, X(0.18), top + 0.2, X(0.82), top + 1.0, 0.01)
     p.stroke(trim)
     p.strokeWeight(weight * 0.9)

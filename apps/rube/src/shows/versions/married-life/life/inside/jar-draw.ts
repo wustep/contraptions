@@ -1,29 +1,32 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { alpha, hash, type Ctx } from '../kit'
+import { along as depthAlong, birds, clouds, smoke, wobble, type Flight, type Frame } from '../depth'
+import { drawFar, farRow } from '../house/far'
+import { alpha, frame, hash, type Ctx } from '../kit'
 import { AGE } from '../music'
-import { HOME, INK } from '../worlds'
+import { CHURCH, HOME, INK } from '../worlds'
 import { drawChairs } from '../props/chairs'
 import { drawJar } from '../props/jar'
 import { INSIDE } from './inside'
 import {
-  AXLE, BOX, CHAIRS_X, CHUTE, CHUTE_LEN, COIN_GAP, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, JAR_H, JAR_W, LAMP, LADDER, LANDS, MANTLE, POURS, SLAMS,
-  SLOT, TREE, TYRE, carAt, clamp01, cupAt, fillAt, jarAt, jarBase, jarMouth, ladderAt, lampAt, onPlank, plankAt, smoothstep, stormAt,
-  sunAt,
+  AXLE, BOX, CHAIRS_X, CHUTE, CHUTE_LEN, COIN_GAP, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, JAR_H, JAR_W, LAMP, LADDER, LANDS, MANTLE, POURS, PUSH2,
+  SLAMS, SLOT, SUN, THUNDER, TREE, TYRE, carAt, clamp01, cupAt, fillAt, jarAt, jarBase, jarMouth, ladderAt, lampAt, onPlank, plankAt,
+  smoothstep, stormAt, sunAt,
 } from './jar-clock'
 
 /**
- * The living room, drawn (the jar builder's): what is seen through its two windows (the car in the drive, the big
- * tree in the garden, the storm), the lamp over the stepladder, the seesaw that throws their savings into the jar, the
- * jar on the mantle and the coins it pours, the two armchairs. Everything here is in the house's INSIDE cells and is
- * handed show time `T`; it draws behind Carl and Ellie (the part's `draw`).
+ * The living room, drawn (the jar builder's): what is seen through its two windows (the street beyond in its layers,
+ * the car in the drive, the big tree in the garden, the storm) and the curtains at them, the lamp over the stepladder,
+ * the fire in the grate, the seesaw that throws their savings into the jar, the jar on the mantle and the coins it
+ * pours, the two armchairs, and the afternoon's sun. Everything here is in the house's INSIDE cells and is handed show
+ * time `T`; it draws behind Carl and Ellie (the part's `draw`).
  */
 
 const X = (k: number) => (v: number) => v * k
 const G = 12
 
-/** A coin seen nearly edge on: a flat brass disc, turning, inked so it reads against brick; its face flashes pale as it turns to us. */
-function coin(p: p5, k: number, weight: number, x: number, y: number, spin: number, turn = 0, a = 1, glint = false): void {
+/** A coin seen nearly edge on: a flat brass disc, turning, inked so it reads against brick; its face pales as it turns to us. */
+function coin(p: p5, k: number, weight: number, x: number, y: number, spin: number, turn = 0, a = 1): void {
   const w = 0.15
   const face = Math.abs(Math.sin(spin))
   const h = 0.022 + 0.07 * face
@@ -34,12 +37,6 @@ function coin(p: p5, k: number, weight: number, x: number, y: number, spin: numb
   p.strokeWeight(weight * 0.45)
   p.fill(alpha(p, mixHex(HOME.brass, HOME.shine, face * face * 0.7), a))
   p.ellipse(0, 0, w * k, h * k)
-  if (glint && face > 0.8) {
-    // As it turns its face to the light: a soft white catch on its upper rim, gone as it turns away.
-    p.noStroke()
-    p.fill(alpha(p, '#FFFFFF', ((face - 0.8) / 0.2) * 0.85 * a))
-    p.ellipse(-w * 0.18 * k, -h * 0.18 * k, w * 0.34 * k, h * 0.3 * k)
-  }
   p.pop()
 }
 
@@ -105,28 +102,216 @@ function weather(p: p5, k: number, T: number, [x0, x1, y0, y1]: number[], seed: 
   }
 }
 
+/* ------------------------------------------------------------------ the view out */
+
+/**
+ * One street seen through both windows, in layers that keep their own depth as the camera moves (`along`), so the far
+ * side slides against the window frame and the room is a room with a world outside it: the sky and its clouds
+ * drifting, the houses across the road among their trees (the street's far side, small and hazed), the far pavement
+ * and the road, the garden hedge; then the drive and the car, or the garden tree, at the glass. All flat and unlined,
+ * hazed toward the sky. A neighbour walks a dog along the far pavement once, hurrying ahead of the storm (never in the
+ * tyre's still frame), and birds cross before the coins and after the sun.
+ */
+const ACROSS = farRow(-30, 110, 0.19, 0.2, 23)
+/** Each layer's depth: how much of the camera's move it keeps (0 the wall, 1 the sky that never moves). */
+const DEPTH = { cloud: 0.6, birds: 0.45, across: 0.35, street: 0.2, hedge: 0.08 }
+/** Where each window's view stands as designed: the frame's middle when it is looked at most (the tyre; the storm's end). */
+const ANCHOR = [4.5, 9.8]
+/** The far side's foot (the far pavement's back edge), the road's far and near kerbs, the hedge's top. */
+const FAR_FOOT = -1.71
+const ROAD = [-1.68, -1.56]
+const HEDGE_TOP = -1.5
+
+const FAR_TREE = mixHex(HOME.sky, mixHex(HOME.leaf, '#7D8A86', 0.3), 0.5)
+const FAR_HOUSE = mixHex(HOME.sky, mixHex(HOME.siding, '#E9D8C2', 0.5), 0.45)
+const FAR_PANE = mixHex(FAR_HOUSE, '#7E8C96', 0.25)
+const PAVEMENT = mixHex(HOME.stone, HOME.sky, 0.25)
+const TARMAC = mixHex('#A39C92', HOME.sky, 0.3)
+const HEDGE = mixHex(HOME.leaf, '#9AAE8A', 0.35)
+const CLOUD = mixHex('#FFFFFF', HOME.sky, 0.2)
+const CLOUD_SHADE = mixHex(HOME.sky, '#A9C2CF', 0.5)
+
+/** The neighbour's walk: when, from where on the far pavement, how fast (cells a second, in the street's own layer). */
+const WALK = { t0: 123.3, t1: 127.2, x: 1.5, v: 0.45 }
+
+/** Birds over the street: a pair as they come in from the yard, a few after the storm. */
+const FLIGHTS: Flight[] = [
+  { t0: 103.8, from: [2.29, -2.42], v: [0.52, -0.03], dur: 3.8, n: 2, span: 0.07, color: mixHex(INK, HOME.sky, 0.45), beat: 3.1, seed: 4, depth: DEPTH.birds, anchor: ANCHOR[0] },
+  { t0: 136.7, from: [12.2, -2.5], v: [-0.5, 0.02], dur: 5.5, n: 4, span: 0.06, color: mixHex(INK, HOME.sky, 0.5), beat: 3.4, seed: 9, depth: DEPTH.birds, anchor: ANCHOR[1] },
+  { t0: 138.0, from: [8.0, -2.2], v: [0.42, -0.02], dur: 5, n: 2, span: 0.06, color: mixHex(INK, HOME.sky, 0.5), beat: 3.0, seed: 12, depth: DEPTH.birds, anchor: ANCHOR[1] },
+]
+
+/** A neighbour in a hat walking a little dog on a lead, both facing right, the walker's feet at (`at`, `foot`). Far: unlined. */
+function neighbour(p: p5, k: number, weight: number, at: number, foot: number, step: number): void {
+  const X = (v: number) => v * k
+  const coat = mixHex('#6B5E73', HOME.sky, 0.25)
+  const dark = mixHex(coat, INK, 0.35)
+  const dog = mixHex('#8A6A4E', HOME.sky, 0.25)
+  const swing = Math.sin(step)
+  const bob = 0.004 * Math.abs(Math.cos(step))
+  p.push()
+  // Drawn at its own size about the walker's feet, a little smaller than the measures below.
+  p.translate(X(at), X(foot))
+  p.scale(0.85)
+  const x = 0
+  const y = 0
+  p.noFill()
+  // The lead, a little slack, from the hand to the dog's collar.
+  const hand: Pt = [x + 0.035, y - 0.075 - bob]
+  const dx = x + 0.15
+  const neck: Pt = [dx + 0.035, y - 0.035]
+  p.stroke(alpha(p, dark, 0.8))
+  p.strokeWeight(Math.max(1, weight * 0.3))
+  p.bezier(X(hand[0]), X(hand[1]), X(hand[0] + 0.04), X(hand[1] + 0.03), X(neck[0] - 0.04), X(neck[1] + 0.01), X(neck[0]), X(neck[1]))
+  // Legs: two strokes scissoring as they walk.
+  p.stroke(dark)
+  p.strokeWeight(Math.max(1, weight * 0.55))
+  p.line(X(x), X(y - 0.05 - bob), X(x + 0.018 * swing), X(y))
+  p.line(X(x), X(y - 0.05 - bob), X(x - 0.018 * swing), X(y))
+  p.noStroke()
+  // The coat, the head, the hat.
+  p.fill(coat)
+  p.rect(X(x - 0.026), X(y - 0.13 - bob), X(0.052), X(0.085), X(0.016), X(0.016), X(0.006), X(0.006))
+  p.fill(mixHex('#D9B8A0', HOME.sky, 0.25))
+  p.circle(X(x + 0.002), X(y - 0.148 - bob), X(0.034))
+  p.fill(dark)
+  p.rect(X(x - 0.03), X(y - 0.164 - bob), X(0.064), X(0.008), X(0.004))
+  p.rect(X(x - 0.016), X(y - 0.186 - bob), X(0.034), X(0.024), X(0.006), X(0.006), 0, 0)
+  // The dog, trotting ahead at twice her pace: legs, body, head, an ear, its tail up.
+  const trot = Math.sin(step * 2)
+  p.stroke(dog)
+  p.strokeWeight(Math.max(1, weight * 0.45))
+  for (const [lx, ph] of [[dx - 0.028, 1], [dx + 0.026, -1]] as [number, number][]) {
+    p.line(X(lx), X(y - 0.022), X(lx + 0.009 * trot * ph), X(y))
+    p.line(X(lx + 0.006), X(y - 0.022), X(lx + 0.006 - 0.009 * trot * ph), X(y))
+  }
+  p.line(X(dx - 0.04), X(y - 0.035), X(dx - 0.058), X(y - 0.06 - 0.006 * trot))
+  p.noStroke()
+  p.fill(dog)
+  p.ellipse(X(dx), X(y - 0.032), X(0.085), X(0.03))
+  p.circle(X(dx + 0.045), X(y - 0.048), X(0.03))
+  p.fill(mixHex(dog, INK, 0.3))
+  p.ellipse(X(dx + 0.038), X(y - 0.052), X(0.012), X(0.022))
+  p.pop()
+}
+
+/**
+ * The far layers of the view through window `w` (0 the left, 1 the right), drawn inside its clip, behind what stands
+ * at the glass: clouds, birds, the houses across, the street and anyone on it, the hedge.
+ */
+function view(p: p5, c: Ctx, T: number, f: Frame, w: 0 | 1): void {
+  const { k, weight } = c
+  const x = X(k)
+  const [x0, x1, y0, y1] = INSIDE.windows[w]
+  const anchor = ANCHOR[w]
+  const shift = (depth: number) => depthAlong(f, depth, anchor)
+  p.push()
+  p.rectMode(p.CORNER)
+  clouds(p, k, f, T, { y0: y0 + 0.12, y1: y0 + 0.42, per: 42, size: 0.5, speed: 0.05, depth: DEPTH.cloud, anchor, body: CLOUD, shade: CLOUD_SHADE, heap: 0.75, seed: 31 })
+  for (const fl of FLIGHTS) birds(p, k, f, T, fl, weight)
+  // The houses across the road, in their gardens.
+  const sa = shift(DEPTH.across)
+  p.push()
+  p.translate(x(sa), 0)
+  drawFar(p, k, ACROSS, FAR_FOOT, x0 - sa, x1 - sa, FAR_TREE, FAR_HOUSE, FAR_PANE, 0.05)
+  p.pop()
+  // The far pavement, then whoever walks it, then the road in front.
+  p.noStroke()
+  p.fill(PAVEMENT)
+  p.rect(x(x0), x(FAR_FOOT - 0.01), x(x1 - x0), x(ROAD[0] - FAR_FOOT + 0.01))
+  if (T > WALK.t0 && T < WALK.t1) {
+    const s = T - WALK.t0
+    const wx = WALK.x + WALK.v * s + shift(DEPTH.street)
+    if (wx > x0 - 0.3 && wx < x1 + 0.3) neighbour(p, k, weight, wx, (FAR_FOOT + ROAD[0]) / 2 + 0.008, (s * WALK.v) / 0.05)
+  }
+  p.noStroke()
+  p.fill(TARMAC)
+  p.rect(x(x0), x(ROAD[0]), x(x1 - x0), x(ROAD[1] - ROAD[0] + 0.02))
+  // The garden hedge, clipped round, its top sliding a little against the frame.
+  const sh = shift(DEPTH.hedge)
+  const i0 = Math.floor((x0 - sh) / 0.24) - 1
+  const i1 = Math.ceil((x1 - sh) / 0.24) + 1
+  p.fill(HEDGE)
+  p.beginShape()
+  p.vertex(x(i0 * 0.24 + sh), x(y1))
+  for (let i = i0; i <= i1; i++) p.vertex(x(i * 0.24 + sh), x(HEDGE_TOP - 0.06 * Math.abs(Math.sin(i * 1.9))))
+  p.vertex(x(i1 * 0.24 + sh), x(y1))
+  p.endShape(p.CLOSE)
+  p.pop()
+}
+
+/**
+ * The curtains at a window: a rod over it and a panel hanging either side, outside the glass, gathered at the top
+ * with soft folds down them. They stir in the room's air, their hems swaying, and blow about in the storm.
+ */
+function curtains(p: p5, c: Ctx, T: number, [x0, x1, y0, y1]: number[], seed: number): void {
+  const { k, weight } = c
+  const x = X(k)
+  const { storm } = stormAt(T)
+  const cloth = mixHex(mixHex(HOME.leaf, HOME.trim, 0.52), '#C9C6B4', AGE(T) * 0.7)
+  const fold = mixHex(cloth, INK, 0.16)
+  const top = y0 - 0.14
+  const hem = y1 + 0.14
+  p.push()
+  p.rectMode(p.CORNER)
+  for (const side of [-1, 1]) {
+    // The draught's sway: a slow stir, and the storm's gusts pulling at the hem; the blow, a start.
+    const s = seed * 2 + side
+    const sway = 0.018 * wobble(T, s, 2.3) + storm * (0.05 * wobble(T, s + 5, 0.7) + 0.025) + 0.04 * Math.exp(-Math.max(0, T - TREE) / 0.5) * (T > TREE ? Math.sin((T - TREE) * 9) : 0)
+    const inner = side < 0 ? x0 + 0.03 : x1 - 0.03
+    const outer = side < 0 ? x0 - 0.36 : x1 + 0.36
+    const a = Math.min(inner, outer)
+    const b = Math.max(inner, outer)
+    const bend = (y: number) => sway * ((y - top) / (hem - top)) ** 2
+    p.stroke(alpha(p, INK, 0.75))
+    p.strokeWeight(weight * 0.6)
+    p.fill(cloth)
+    p.beginShape()
+    // Gathered under the rod: a scalloped head.
+    for (let i = 0; i <= 4; i++) p.vertex(x(a + ((b - a) * i) / 4), x(top + (i % 2 ? 0.025 : 0)))
+    p.bezierVertex(x(b), x(top + 0.6), x(b + bend(hem) * 0.6), x(hem - 0.5), x(b + bend(hem)), x(hem))
+    // The hem, a gentle wave.
+    p.bezierVertex(x(b + bend(hem) - 0.1), x(hem + 0.03), x(a + bend(hem) + 0.1), x(hem - 0.03), x(a + bend(hem)), x(hem))
+    p.bezierVertex(x(a + bend(hem) * 0.6), x(hem - 0.5), x(a), x(top + 0.6), x(a), x(top))
+    p.endShape(p.CLOSE)
+    // Its folds: soft darker lines that swing with it.
+    p.noFill()
+    p.stroke(alpha(p, fold, 0.55))
+    p.strokeWeight(weight * 0.5)
+    for (const u of [0.3, 0.62]) {
+      const fx = a + (b - a) * u
+      p.bezier(x(fx), x(top + 0.06), x(fx), x(top + 0.6), x(fx + bend(hem) * 0.6), x(hem - 0.5), x(fx + bend(hem)), x(hem - 0.02))
+    }
+  }
+  // The rod and its two knobs.
+  p.stroke(alpha(p, INK, 0.85))
+  p.strokeWeight(weight * 0.6)
+  p.fill(HOME.woodDark)
+  p.rect(x(x0 - 0.44), x(top - 0.035), x(x1 - x0 + 0.88), x(0.035), x(0.015))
+  p.circle(x(x0 - 0.46), x(top - 0.018), x(0.06))
+  p.circle(x(x1 + 0.46), x(top - 0.018), x(0.06))
+  p.pop()
+}
+
 /** How far up the glass the drive and the car sit, so the wheels clear the window's sill and frame. */
 const DRIVE_UP = 0.14
 /** The hubcap's width: as big as the hub it comes off and then some, so it is seen to fly. */
 const HUBCAP_D = 0.17
 
-/** The drive through the left-hand window: a hedge, the drive, their car; the tyre that blows, and the hubcap. */
-function driveway(p: p5, c: Ctx, T: number): void {
+/** The drive through the left-hand window: the street beyond, the drive, their car; the tyre that blows, and the hubcap. */
+function driveway(p: p5, c: Ctx, T: number, f: Frame): void {
   const { k, weight } = c
   const x = X(k)
   const [x0, x1, y0, y1] = LEFT_WIN
   void y0
+  void y1
   clipTo(p, k, LEFT_WIN, () => {
     p.push()
     p.rectMode(p.CORNER)
     p.noStroke()
-    // Far off: a soft hedge; then the lawn and the pale drive the car stands on.
-    p.fill(mixHex(HOME.leaf, '#9AAE8A', 0.35))
-    p.beginShape()
-    p.vertex(x(x0 - 0.2), x(y1))
-    for (let i = 0; i <= 12; i++) p.vertex(x(x0 - 0.2 + i * 0.24), x(-1.5 - 0.06 * Math.abs(Math.sin(i * 1.9))))
-    p.vertex(x(x1 + 0.2), x(y1))
-    p.endShape(p.CLOSE)
+    // Far off: the street and the houses across it, the hedge; then the lawn and the pale drive the car stands on.
+    view(p, c, T, f, 0)
+    p.noStroke()
     // The lawn, the drive and all on it sit a little up the glass, so the car's wheels clear the sill and frame: the
     // tyre that goes flat is seen flat, not lost behind the sill under its dust.
     p.push()
@@ -230,18 +415,22 @@ function driveway(p: p5, c: Ctx, T: number): void {
     weather(p, k, T, LEFT_WIN, 1)
   })
   frameOver(p, k, weight, LEFT_WIN)
+  curtains(p, c, T, LEFT_WIN, 1)
 }
 
-/** The garden's big tree through the right-hand window: it sways in the storm, and loses its great limb. */
-function garden(p: p5, c: Ctx, T: number): void {
+/** The garden's big tree through the right-hand window: it stirs in the breeze, sways in the storm, and loses its great limb. */
+function garden(p: p5, c: Ctx, T: number, f: Frame): void {
   const { k, weight } = c
   const x = X(k)
   const [x0, x1] = RIGHT_WIN
   const { storm } = stormAt(T)
-  const sway = storm * (0.07 * Math.sin(T * 2.1) + 0.04 * Math.sin(T * 3.7 + 1))
+  const sway = storm * (0.07 * Math.sin(T * 2.1) + 0.04 * Math.sin(T * 3.7 + 1)) + 0.012 * wobble(T, 17, 2.8)
   clipTo(p, k, RIGHT_WIN, () => {
     p.push()
     p.rectMode(p.CORNER)
+    p.noStroke()
+    // Far off: the street and the houses across it, behind the garden's hedge; the lawn the tree stands in.
+    view(p, c, T, f, 1)
     p.noStroke()
     p.fill(mixHex(HOME.grass, '#A7BC90', 0.3))
     p.rect(x(x0), x(-1.25), x(x1 - x0), x(0.3))
@@ -272,25 +461,27 @@ function garden(p: p5, c: Ctx, T: number): void {
     weather(p, k, T, RIGHT_WIN, 2)
   })
   frameOver(p, k, weight, RIGHT_WIN)
+  curtains(p, c, T, RIGHT_WIN, 2)
 }
 
 /* ------------------------------------------------------------------ the lamp and the ladder */
 
+/**
+ * The pendant's swing: the house's knocks (`lampAt`), and under them a hair of its own, the room's air moving it, so it
+ * is never quite still.
+ */
+const lampSwing = (T: number): number => lampAt(T).swing + 0.011 * Math.sin((2 * Math.PI * T) / 1.85) * (0.6 + 0.4 * wobble(T, 61, 3.1))
+
 function lampLight(p: p5, k: number, T: number): void {
-  const { lit, swing } = lampAt(T)
+  const { lit } = lampAt(T)
   if (lit <= 0.01) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
-  // Hung from the ceiling and swinging with the lamp: a warm bloom round the shade on the wall, and a soft cone of
-  // light down from its rim, so that when it sputters and goes out the room is seen to lose it.
+  // Hung from the ceiling and swinging with the lamp: a soft cone of light down from its rim onto the wall, so that
+  // when it sputters and goes out the room is seen to lose it.
   ctx.translate(LAMP.x * k, LAMP.ceil * k)
-  ctx.rotate(swing)
+  ctx.rotate(lampSwing(T))
   const rim = LAMP.cord + 0.2 * LAMP_SCALE
-  const g = ctx.createRadialGradient(0, (rim + 0.02) * k, 0, 0, (rim + 0.02) * k, 1.5 * k)
-  g.addColorStop(0, `rgba(255, 227, 166, ${0.5 * lit})`)
-  g.addColorStop(1, 'rgba(255, 227, 166, 0)')
-  ctx.fillStyle = g
-  ctx.fillRect(-1.5 * k, (rim - 1.5) * k, 3 * k, 3 * k)
   const cone = ctx.createLinearGradient(0, rim * k, 0, (rim + 1.8) * k)
   cone.addColorStop(0, `rgba(255, 232, 178, ${0.44 * lit})`)
   cone.addColorStop(1, 'rgba(255, 232, 178, 0)')
@@ -311,10 +502,10 @@ const LAMP_SCALE = 1.5
 function lamp(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
   const x = X(k)
-  const { lit, swing } = lampAt(T)
+  const { lit } = lampAt(T)
   p.push()
   p.translate(x(LAMP.x), x(LAMP.ceil))
-  p.rotate(swing)
+  p.rotate(lampSwing(T))
   p.stroke(alpha(p, INK, 0.85))
   p.strokeWeight(weight * 0.5)
   p.line(0, 0, 0, x(LAMP.cord))
@@ -433,7 +624,7 @@ function seesaw(p: p5, c: Ctx, T: number): void {
 
 /**
  * Each handful in the air: five coins off the cup on a stroke, a loose spray that closes up over the room and drops
- * into the lid's slot one after another on the next downbeat, turning and catching the light. Their flight is flatter
+ * into the lid's slot one after another on the next downbeat, turning as they go. Their flight is flatter
  * than a thrown ball's (the cup flings them hard), so the whole of it stays in the frame over the machine.
  */
 const COIN_G = 6.2
@@ -455,7 +646,7 @@ function handfuls(p: p5, c: Ctx, T: number): void {
       const spread = 0.09 * off * Math.sin(Math.PI * u)
       const cx = from[0] + (to[0] - from[0]) * u + spread
       const cy = from[1] + (to[1] - from[1]) * u - arc * 4 * u * (1 - u)
-      coin(p, k, weight, cx, cy, (T - r) * (9 + j * 2.3) + j, 0.25 * off, 1, true)
+      coin(p, k, weight, cx, cy, (T - r) * (9 + j * 2.3) + j, 0.25 * off)
     }
   })
 }
@@ -660,28 +851,134 @@ function spill(p: p5, c: Ctx, T: number): void {
   })
 }
 
-/** The sun back after the storm: warm in both panes, and falling in two soft shafts across the floor. */
+/**
+ * The afternoon's sun through the two windows, lying down the wall under each to the floor: a soft slanted patch the
+ * window's width (three layers, each a little larger, for a soft edge) that leans further and warms as the afternoon
+ * goes on, so it travels slowly through the scene. The storm puts it out; it comes back on its beat when the sun
+ * breaks through, warm in both panes, and settles.
+ */
 function sunlight(p: p5, k: number, T: number): void {
-  const sun = sunAt(T)
+  const before = T < SUN ? 0.55 * (1 - smoothstep((T - (PUSH2 - 0.6)) / 2.2)) : 0
+  const sun = Math.max(before, sunAt(T))
   if (sun <= 0.01) return
+  const u = clamp01((T - 103) / 38)
+  const lean = 0.45 + 0.75 * u
+  const [r, g, b] = [255, Math.round(227 - 14 * u), Math.round(166 - 22 * u)]
+  const a = 0.3 * sun
+  const edge = 0.3 * a
+  const inner = 1 - (1 - a) / ((1 - edge) * (1 - edge))
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   for (const [x0, x1, y0, y1] of [LEFT_WIN, RIGHT_WIN]) {
-    ctx.fillStyle = `rgba(255, 227, 166, ${0.3 * sun})`
-    ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
-    const g = ctx.createLinearGradient(0, y1 * k, 0, INSIDE.ground * k)
-    g.addColorStop(0, `rgba(255, 227, 166, ${0.2 * sun})`)
-    g.addColorStop(1, `rgba(255, 227, 166, ${0.05 * sun})`)
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(x0 * k, y1 * k)
-    ctx.lineTo(x1 * k, y1 * k)
-    ctx.lineTo((x1 + 0.9) * k, INSIDE.ground * k)
-    ctx.lineTo((x0 + 0.9) * k, INSIDE.ground * k)
-    ctx.closePath()
-    ctx.fill()
+    // Once the sun is back, the glass itself is bright with it.
+    if (T >= SUN) {
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.3 * sunAt(T)})`
+      ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+    }
+    const top = y1 + 0.1
+    const foot = INSIDE.ground
+    for (const [grow, f] of [[0.1, edge], [0.05, edge], [0, inner]] as [number, number][]) {
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${f})`
+      ctx.beginPath()
+      ctx.moveTo((x0 - grow) * k, top * k)
+      ctx.lineTo((x1 + grow) * k, top * k)
+      ctx.lineTo((x1 + lean + grow) * k, foot * k)
+      ctx.lineTo((x0 + lean - grow) * k, foot * k)
+      ctx.closePath()
+      ctx.fill()
+    }
   }
   ctx.restore()
+}
+
+/* ------------------------------------------------------------------ the fire */
+
+const FIRE_OUTER = mixHex(mixHex(CHURCH.flame, HOME.roof, 0.42), '#3A2E2A', 0.08)
+const FIRE_INNER = mixHex(HOME.yellow, CHURCH.flame, 0.35)
+/** The tongues of the fire: across from the grate's middle, how tall, how wide. */
+const TONGUES: [number, number, number][] = [[-0.28, 0.3, 0.16], [-0.1, 0.46, 0.22], [0.1, 0.4, 0.2], [0.28, 0.28, 0.16]]
+
+/** How much fire there is (0 out .. 1 burning), and its lean: in the storm the wind down the chimney flattens it, and the rain puts it out. */
+function fireAt(T: number): { life: number; lean: number } {
+  const { storm } = stormAt(T)
+  const knocked = T > TREE ? 0.65 * Math.exp(-(T - TREE) / 0.5) : 0
+  const life = (1 - smoothstep((T - THUNDER) / 1.6)) * (1 - knocked)
+  const lean = storm * (0.07 + 0.05 * wobble(T, 71, 0.6)) * (T < SUN ? 1 : 0)
+  return { life, lean }
+}
+
+/**
+ * A low fire in the grate, in the firebox's dark mouth behind his seesaw: two logs on an iron grate over their coals,
+ * and flames that move in shape (each tongue its own height and sway, never a glow). It burns through their years in
+ * this room until the storm: the wind down the chimney leans it, the blow knocks it flat, the rain puts it out, and a
+ * thread of smoke rises from the wet logs.
+ */
+function hearth(p: p5, c: Ctx, T: number): void {
+  const { k, weight } = c
+  const x = X(k)
+  const fx = INSIDE.fireplace
+  const base = -0.03
+  const { life, lean } = fireAt(T)
+  p.push()
+  // The coals, red while it burns, grey when it is out.
+  p.noStroke()
+  p.fill(mixHex('#5E4A44', '#9A4A32', life))
+  p.ellipse(x(fx), x(0.04), x(0.8), x(0.07))
+  // The flames, behind the near log.
+  if (life > 0.02) {
+    for (const [inside, colour, scale] of [[false, FIRE_OUTER, 1], [true, FIRE_INNER, 0.55]] as [boolean, string, number][]) {
+      p.fill(colour)
+      TONGUES.forEach(([dx, h0, w0], i) => {
+        const h = h0 * scale * life * (0.82 + 0.22 * wobble(T, 40 + i, 0.46) + 0.08 * wobble(T, 50 + i, 0.23))
+        const w = w0 * (inside ? 0.55 : 1) * (0.7 + 0.3 * life)
+        if (h < 0.02) return
+        const bx = fx + dx
+        const tip = bx + 0.045 * wobble(T, 60 + i, 0.52) + lean * 1.4 * (h / 0.3)
+        p.beginShape()
+        p.vertex(x(bx - w / 2), x(base))
+        p.bezierVertex(x(bx - w / 2), x(base - h * 0.5), x(tip - w * 0.18), x(base - h * 0.72), x(tip), x(base - h))
+        p.bezierVertex(x(tip + w * 0.18), x(base - h * 0.72), x(bx + w / 2), x(base - h * 0.5), x(bx + w / 2), x(base))
+        p.endShape(p.CLOSE)
+      })
+    }
+  }
+  // The logs, crossed a little, and the grate's bars in front of them.
+  p.stroke(alpha(p, INK, 0.8))
+  p.strokeWeight(weight * 0.55)
+  p.fill(mixHex(HOME.bark, '#4A3A34', 1 - life))
+  p.push()
+  p.translate(x(fx - 0.12), x(-0.005))
+  p.rotate(-0.08)
+  p.rect(x(-0.24), x(-0.05), x(0.48), x(0.1), x(0.05))
+  p.pop()
+  p.push()
+  p.translate(x(fx + 0.15), x(0.01))
+  p.rotate(0.06)
+  p.rect(x(-0.22), x(-0.045), x(0.44), x(0.09), x(0.045))
+  p.pop()
+  // The basket grate on its short legs.
+  p.stroke(alpha(p, INK, 0.9))
+  p.strokeWeight(weight * 0.6)
+  p.noFill()
+  p.line(x(fx - 0.42), x(0.05), x(fx + 0.42), x(0.05))
+  for (const u of [-0.36, -0.12, 0.12, 0.36]) p.line(x(fx + u), x(0.05), x(fx + u), x(-0.05))
+  for (const u of [-0.38, 0.38]) p.line(x(fx + u), x(0.05), x(fx + u), x(INSIDE.ground))
+  // Out: a thread of smoke from the wet logs, up into the firebox's dark (clipped to its mouth).
+  const wisp = (1 - smoothstep((T - THUNDER - 7) / 2)) * smoothstep((T - THUNDER - 0.4) / 0.8)
+  if (wisp > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo((fx - 0.55) * k, INSIDE.ground * k)
+    ctx.lineTo((fx - 0.55) * k, -0.55 * k)
+    ctx.bezierCurveTo((fx - 0.55) * k, -0.85 * k, (fx + 0.55) * k, -0.85 * k, (fx + 0.55) * k, -0.55 * k)
+    ctx.lineTo((fx + 0.55) * k, INSIDE.ground * k)
+    ctx.closePath()
+    ctx.clip()
+    smoke(p, k, T, fx + 0.02, -0.06, { rate: 1.8, rise: 0.28, life: 2.4, drift: 0.02, size: 0.045, color: '#A49B92', a: 0.5 * wisp, seed: 5 })
+    ctx.restore()
+  }
+  p.pop()
 }
 
 /* ------------------------------------------------------------------ the room, in order */
@@ -700,9 +997,11 @@ function dim(p: p5, k: number, T: number): void {
 
 export function drawRoom(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
-  driveway(p, c, T)
-  garden(p, c, T)
+  const f = frame(p, k)
+  driveway(p, c, T, f)
+  garden(p, c, T, f)
   lampLight(p, k, T)
+  hearth(p, c, T)
   drawChairs(p, k, weight, CHAIRS_X, INSIDE.ground, AGE(T) * 0.8)
   ladder(p, c, T)
   lamp(p, c, T)
