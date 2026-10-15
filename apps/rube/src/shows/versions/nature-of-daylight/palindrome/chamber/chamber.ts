@@ -26,7 +26,7 @@ export const chamberSet = scenery<null>({
 
 /** The contact part's origin in the chamber's cells: she comes in out of the tunnel, rolling, at x = ENTER. */
 export const CONTACT_AT: Pt = [ENTER + 0.5, 0]
-/** The second contact part's, after the flash: she is where she went, flush against the glass. */
+/** The second contact part's, after the flash: she is where she went, flush against the glass. (The third's is below.) */
 export const BACK_AT: Pt = [TOUCH + 0.5, 0]
 /** The bomb's: she is where contact left her, before the glass. */
 export const BOMB_AT: Pt = [REST + 0.5, 0]
@@ -41,9 +41,9 @@ function checkSlot(name: string, slot: Slot, a: number, b: number): void {
 const into = (w: Pt, at: Pt): Pt => [w[0] - at[0], w[1] - at[1]]
 
 /**
- * Contact is cut in two by the flash at the lake house (SEAM.flash to SEAM.back): the two halves are one lane, the
- * chamber's, each leg its share of it, and the chamber goes on in between where nobody sees it (a word later, its
- * card is in the row).
+ * Contact is cut in three by the flash at the lake house (SEAM.flash to SEAM.back) and the share in the tent
+ * (SEAM.share to SEAM.again): the three are one lane, the chamber's, each leg its share of it, and the chamber goes
+ * on in between where nobody sees it (a word later, its card is in the row).
  */
 const contactHalf = (name: string, at: Pt, from: number, to: number) =>
   part<{ begin: number }>(
@@ -74,7 +74,10 @@ const contactHalf = (name: string, at: Pt, from: number, to: number) =>
     () => contactShots().map((s) => ({ ...s, hold: s.hold ? into(s.hold, at) : undefined })),
   )
 export const contact = contactHalf('contact', CONTACT_AT, T.in, SEAM.flash)
-export const contact2 = contactHalf('contact-2', BACK_AT, SEAM.back, T.out)
+export const contact2 = contactHalf('contact-2', BACK_AT, SEAM.back, SEAM.share)
+/** After the share in the tent: she is at the glass for the touch both of them answer at once. */
+export const AGAIN_AT: Pt = [TOUCH + 0.5, 0]
+export const contact3 = contactHalf('contact-3', AGAIN_AT, SEAM.again, T.out)
 
 export const bomb = part<{ begin: number }>(
   { ...nothing, name: 'bomb' },
@@ -141,8 +144,20 @@ function contactShots(): PartShot[] {
     // The first logogram, the two of them side by side before it; it goes in through the slot.
     { t: T.first, cells: THE_GLASS.cells, hold: THE_GLASS.hold, cut: true },
     { t: BOARDS[1].t - 0.1, cells: 8.4, hold: [8.2, -1.85] },
-    // The machine: her plate and board, the rail and its cards, the glass and what they write.
+    // The machine: her plate and board, the rail and its cards, the glass and what they write. Each of its moves its own
+    // shot, cut on the strike that starts it, so no one framing holds the language more than a few seconds (held in
+    // one machine framing from 157 to 186 s, the long middle read as the same shot over and over). The first word sent
+    // down the rail, the whole machine:
     { t: BOARDS[1].t, cells: MACHINE.cells, hold: MACHINE.hold, cut: true },
+    { t: TOUCHES[0] - 0.1, cells: 4.4, hold: [5.7, -1.1] },
+    // her touch at the glass, close, and their answer written over it;
+    { t: TOUCHES[0], cells: 3.9, hold: [7.8, -1.28], cut: true },
+    { t: BOARDS[2].t - 0.1, cells: 3.8, hold: [7.75, -1.25] },
+    // the next word in, close and low on the plate and the rail: her board up, the card run down to the row, Ian
+    // rolling under it to be there as it lands;
+    { t: BOARDS[2].t, cells: 2.8, hold: [5.0, -0.92], cut: true },
+    { t: BOARDS[2].off + 0.6, cells: 2.9, hold: [5.1, -0.95] },
+    // and back out with her to the glass, for the next touch (the cut to the lake house).
     { t: b(169.61), cells: 4.3, hold: [5.75, -1.05] },
     // Back from the lake house (the seam's framing, close on her at the glass): their answer forming over it; then out
     // to the machine again, the row a card longer.
@@ -216,7 +231,7 @@ export const CHAMBER_HITS: number[] = [
   T.shard,
   T.flood,
 ]
-  // While she is at the lake house the chamber goes on unseen: what it strikes then is nobody's.
-  .filter((t) => t <= SEAM.flash + 1e-6 || t >= SEAM.back - 1e-6)
+  // While she is at the lake house and in the tent the chamber goes on unseen: what it strikes then is nobody's.
+  .filter((t) => (t <= SEAM.flash + 1e-6 || t >= SEAM.back - 1e-6) && (t <= SEAM.share + 1e-6 || t >= SEAM.again - 1e-6))
   .filter((t, i, all) => all.findIndex((u) => Math.abs(u - t) < 1e-6) === i)
   .sort((a, b) => a - b)

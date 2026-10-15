@@ -184,6 +184,10 @@ export const SEAM = {
   flash: chord(42),
   /** The lake house → the chamber again, a word later (c44). */
   back: chord(44),
+  /** The chamber → the command tent: the world as one, the word she sends round the ring (c45). */
+  share: chord(45),
+  /** The tent → the chamber, both of them writing at once (c46). */
+  again: chord(46),
   /** The chamber → the command tent: the bass drops out, the world breaks (c50). */
   dark: TURN,
   /** The tent → the chamber: the bomb (c55). */

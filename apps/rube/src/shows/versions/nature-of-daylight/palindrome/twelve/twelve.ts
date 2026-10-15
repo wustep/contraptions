@@ -1,8 +1,8 @@
 import type { Pt } from '../../../../../parts'
 import { box, part, route, scenery, type PartShot, type Way } from '../kit'
 import { G } from '../physics'
-import { tentDraw, CALL_X, hopFor, KEYS, ON_KEY } from './tent'
-import { CALL_HITS, CALL_KEY, DARK_HITS, FALLS as FELL, NUMBER, PRESSES, RISES as ROSE } from './timeline'
+import { tentDraw, CALL_X, hopFor, KEYS, ON_KEY, SHARE_ON } from './tent'
+import { CALL_HITS, CALL_KEY, DARK_HITS, FALLS as FELL, NUMBER, PRESSES, RISES as ROSE, SHARE_HITS, SHARE_KEY } from './timeline'
 
 /**
  * The command tent at night (the TWELVE builder's): the ring of twelve screens, one for every shell on Earth, each
@@ -23,6 +23,7 @@ export const tentSet = scenery<null>({
 /** Where each leg's part stands in the tent (she comes in at (-0.5, 0) from it): the table, under Montana. */
 export const DARK_AT: Pt = [-0.4, 0]
 export const CALL_AT: Pt = [0.5, 0]
+export const SHARE_AT: Pt = [0.5, 0]
 
 /** A camera key in the tent's own cells, handed to a part standing at `at`. */
 const key = (at: Pt, t: number, cells: number, hold: Pt, extra: Partial<PartShot> = {}): PartShot => ({ t, cells, hold: [hold[0] - at[0], hold[1] - at[1]], w: 1, ...extra })
@@ -70,6 +71,40 @@ export const dark = part<{ begin: number }>(
       on(at, slot.end - 0.45, 4.2, her, seam),
       on(at, slot.end, 4.2, her, seam),
     ]
+  },
+)
+
+/**
+ * The world as one (181.133 → 185.080), in the middle of the language, before anything breaks: the tent and the ring
+ * whole, every screen lit and linked, the scale cut opening on all of it. She hops onto a key of the phone on the beat
+ * (182.149) and the word she has just read goes up the cable into Montana and round the ring both ways at once, each
+ * screen taking it up, the halves meeting at the top on the loud note (`timeline.ts`). Ian beside her, on her left.
+ */
+export const share = part<{ begin: number }>(
+  { name: 'share', draw: () => {} },
+  (slot) => {
+    const dur = slot.end - slot.begin
+    const at = SHARE_AT
+    const T = 0.3
+    const onKey: Pt = [KEYS[SHARE_ON] - at[0], ON_KEY - at[1]]
+    const ways: Way[] = [
+      { at: 0, p: [-0.5, 0] },
+      { at: SHARE_KEY - slot.begin - T, p: [-0.5, 0] },
+      { at: SHARE_KEY - slot.begin, p: onKey, arc: (G * T * T) / 8 },
+      { at: dur, p: onKey },
+    ]
+    return {
+      cells: box(-2, -2, 3, 1),
+      exit: [onKey[0] + 0.5, onKey[1]] as Pt,
+      lane: { segs: route(ways), fire: SHARE_KEY - slot.begin },
+      state: { begin: slot.begin },
+      company: [{ who: 'ian', from: slot.begin, to: slot.end, at: () => ({ x: -0.92, y: 0 }) }],
+    }
+  },
+  (slot) => {
+    const at = SHARE_AT
+    // The whole ring, held: she low in it, the word going round over her.
+    return [key(at, slot.begin + 1.0, WIDE[0], WIDE[1]), key(at, slot.end, WIDE[0] - 0.2, [WIDE[1][0], WIDE[1][1] + 0.05])]
   },
 )
 
@@ -142,4 +177,4 @@ export const call = part<{ begin: number }>(
 export const FALLS: { screen: number; t: number }[] = FELL
 export const RISES: { screen: number; t: number }[] = ROSE
 
-export const TWELVE_HITS: number[] = [...DARK_HITS, ...CALL_HITS]
+export const TWELVE_HITS: number[] = [...SHARE_HITS, ...DARK_HITS, ...CALL_HITS]

@@ -1,4 +1,4 @@
-import { BEATS, nearestBeat } from '../music'
+import { BEATS, SEAM, nearestBeat, onset } from '../music'
 
 /**
  * The ring's clock: when each of the twelve screens goes over and comes back, when each link lets go and latches
@@ -56,6 +56,37 @@ export const CALL_KEY = B(288.554)
 export const NUMBER = [1, 4, 2, 2, 5, 0, 3, 3, 1, 4]
 /** She speaks: from the call on, her voice goes up the cable on each beat to the ring. */
 export const VOICE = [CALL_KEY, ...BEATS.filter((b) => b.t > CALL_KEY + 0.5 && b.t < 311).map((b) => b.t)]
+
+/**
+ * The world as one (the share, in the middle of the language: SEAM.share to SEAM.again). Before it breaks, the ring is
+ * the twelve sites working together: she presses a key of the phone, and the word she has just read goes up the cable
+ * into Montana and round the ring both ways at once, screen by screen, each taking it up, the two halves meeting at the
+ * top on the loud note (written from both ends at once, as their ink is), the whole ring flaring with it.
+ */
+export const SHARE_KEY = B(182.149)
+export const SHARE_IN = onset(SHARE_KEY + CALL_UP, 0.5)
+export const SHARE_MEET = onset(184.575, 0.8)
+const SHARE_STEP = (SHARE_MEET - SHARE_IN) / 6
+/** When the word reaches screen i: Montana first, then both ways round, the top (6) last. */
+export const shareAt = (i: number): number => SHARE_IN + SHARE_STEP * Math.min(i, 12 - i)
+/** Whether the share is on: the phone awake for it, the word on the screens (until the ring is next seen, breaking). */
+export const sharing = (t: number): boolean => t >= SEAM.share && t < SEAM.dark - 1
+/**
+ * The word's light along link j at t: where its head is (a share of the link from its latch end, 0, to its hinge end,
+ * 1) and which way it goes; null when it is not on the link. Links 0..5 carry it clockwise from Montana, 6..11 the
+ * other way.
+ */
+export function sharePulse(j: number, t: number): { u: number; dir: 1 | -1 } | null {
+  const cw = j < 6
+  const from = cw ? shareAt(j) : shareAt(j + 1)
+  const u = (t - from) / SHARE_STEP
+  if (u < 0 || u > 1) return null
+  return cw ? { u, dir: 1 } : { u: 1 - u, dir: -1 }
+}
+/** The ring's flare as the halves meet: 1 on the note, dying away. */
+export const shareFlare = (t: number): number => (t >= SHARE_MEET && t < SEAM.dark ? Math.exp(-(t - SHARE_MEET) / 0.7) : 0)
+/** The share's strikes: her key, the word into Montana, the halves meeting. */
+export const SHARE_HITS = [SHARE_KEY, SHARE_IN, SHARE_MEET]
 
 /** The falls and rises, as the check reads them: the eleven screens in the order they went, and came back. */
 export const FALLS: { screen: number; t: number }[] = Array.from({ length: 11 }, (_, n) => ({ screen: n + 1, t: release(n + 1) }))
@@ -267,7 +298,9 @@ export function screenFlash(i: number, t: number): number {
   // Montana flares as the call reaches it up the cable.
   const through = CALL_KEY + CALL_UP
   const home = i === 0 ? (t >= through ? 0.8 * Math.exp(-(t - through) / 0.35) : 0) : t >= lock(i) ? Math.exp(-(t - lock(i)) / 0.2) : 0
-  return Math.min(1, home + 0.45 * closeFlare(t))
+  // And each, in the share, as the word reaches it.
+  const word = sharing(t) && t >= shareAt(i) ? 0.75 * Math.exp(-(t - shareAt(i)) / 0.25) : 0
+  return Math.min(1, home + word + 0.45 * closeFlare(t) + 0.35 * shareFlare(t))
 }
 
 /** How bright link j's light is where it is lit: 1, and above 1 as it flares on latching and as the ring closes. */
@@ -275,7 +308,7 @@ export function linkLit(j: number, t: number): number {
   const b = latch(j)
   const tau = t - b
   const flare = tau < 0 ? 0 : Math.exp(-tau / 0.28)
-  return 1 + 0.9 * flare + 1.3 * closeFlare(t)
+  return 1 + 0.9 * flare + 1.3 * closeFlare(t) + 0.9 * shareFlare(t)
 }
 
 /**
@@ -306,10 +339,10 @@ export const closeFlare = (t: number): number => (t >= WHOLE ? Math.exp(-(t - WH
 /** The lights going up the cable from the phone to Montana: each 0..1 of the way, and how bright (the call's the most). */
 export function cablePulses(t: number): { u: number; a: number }[] {
   const out: { u: number; a: number }[] = []
-  for (const at of VOICE) {
+  for (const at of [SHARE_KEY, ...VOICE]) {
     const tau = t - at
     if (tau < 0 || tau > CALL_UP) continue
-    out.push({ u: tau / CALL_UP, a: at === CALL_KEY ? 1 : 0.7 })
+    out.push({ u: tau / CALL_UP, a: at === CALL_KEY || at === SHARE_KEY ? 1 : 0.7 })
   }
   return out
 }
