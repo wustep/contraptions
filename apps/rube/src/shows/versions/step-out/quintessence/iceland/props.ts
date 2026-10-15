@@ -10,8 +10,6 @@ import {
   CRASH,
   CRASH_X,
   CRESTS,
-  ERUPT,
-  FINAL,
   FLAKES,
   HUSH,
   KIDS,
@@ -19,7 +17,6 @@ import {
   POSTS,
   SADDLE,
   STRETCH,
-  T1,
   TOY_LAND_X,
   bikeLevel,
   bikeX,
@@ -306,16 +303,28 @@ export function drawBoard(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ crests and turns */
 
-/** Each crest and each hairpin's apex on the board: a little spray of grit off the wheels, and the air under them. */
+/**
+ * Each crest and each hairpin's apex on the board: a spray of grit off the wheels, and a cloud of dust kicked up behind,
+ * spreading and thinning on the wind.
+ */
 export function drawCarves(pen: Pen, t: number): void {
   const marks = [...CRESTS, ...APEX]
   for (const m of marks) {
     const u = t - m
-    if (u < 0 || u > 0.55) continue
+    if (u < 0 || u > 1.1) continue
     const r = roadAt(boardS(m))
     const turn = APEX.includes(m)
-    const n = turn ? 9 : 5
     const back = Math.cos(r.dir) >= 0 ? -1 : 1
+    // The dust: a few soft rounds, growing, drifting with the wind, fading.
+    for (let i = 0; i < (turn ? 4 : 2); i++) {
+      const g = u / 1.1
+      const x = r.p[0] + back * (0.08 + 0.25 * g) * (0.6 + 0.8 * hash(i, 3)) + 0.25 * g
+      const y = r.p[1] - 0.06 - 0.22 * g * (0.5 + hash(i, 4))
+      const rr = (0.06 + 0.2 * g) * (0.7 + 0.5 * hash(i, 5))
+      disc(pen, [x, y], rr, rr * 0.7, rgba(ICE.dust, 0.32 * (1 - g) * (turn ? 1 : 0.7)))
+    }
+    if (u > 0.55) continue
+    const n = turn ? 12 : 6
     for (let i = 0; i < n; i++) {
       const v = 0.3 + 0.6 * hash(i, Math.round(m * 10))
       const a = turn ? (hash(i, 7) - 0.5) * Math.PI : Math.PI * (back < 0 ? 1 : 0) + (hash(i, 8) - 0.5) * 1.2
@@ -387,26 +396,6 @@ export function drawPlane(pen: Pen, t: number, f: Frame): void {
 
 /* ------------------------------------------------------------------ the ash */
 
-/** The ash coming down: a few flakes after the hush begins, thickening to the cut. Light grey, slow, drifting. */
-export function drawAsh(pen: Pen, t: number, f: Frame): void {
-  if (t < HUSH + 0.5) return
-  const thick = sm(t, HUSH + 0.5, T1)
-  const N = Math.floor(30 + 280 * thick)
-  const span = 14
-  for (let i = 0; i < N; i++) {
-    const born = HUSH + 0.5 + 11 * hash(i, 61) * (i < 30 ? 0.3 : 1)
-    if (t < born) continue
-    const fall = 0.22 + 0.18 * hash(i, 62)
-    const x0 = FINAL[0] + (hash(i, 63) - 0.5) * span
-    const y = FINAL[1] - 6 + ((t - born) * fall + hash(i, 64) * 8) % 8
-    const x = x0 + 0.15 * Math.sin(t * (0.6 + hash(i, 65)) + i)
-    if (x < f.x0 - 0.2 || x > f.x1 + 0.2 || y < f.y0 - 0.2 || y > f.y1 + 0.2) continue
-    const r = 0.012 + 0.022 * hash(i, 66)
-    const a = 0.85 * sm(t - born, 0, 0.8)
-    disc(pen, [x, y], r, r * 0.8, rgba(hash(i, 67) < 0.3 ? ICE.ashDark : ICE.ash, a))
-  }
-}
-
 /** The flakes that land on the guitar's soft onsets: falling to their place by him, a breath of dust, and staying. */
 export function drawLanding(pen: Pen, t: number, onHim: boolean): void {
   for (const fl of FLAKES) {
@@ -426,11 +415,4 @@ export function drawLanding(pen: Pen, t: number, onHim: boolean): void {
       disc(pen, fl.p, 0.03 + 0.12 * u, 0.012 + 0.04 * u, null, 0.6 * a, rgba(ICE.ash, 0.9 * a))
     }
   }
-}
-
-/** The haze the ash makes of the air as it thickens: the director's cover finishes it. */
-export function drawHaze(pen: Pen, t: number, f: Frame): void {
-  const a = 0.32 * sm(t, ERUPT + 6, T1)
-  if (a <= 0) return
-  shape(pen, [[f.x0 - 1, f.y0 - 1], [f.x1 + 1, f.y0 - 1], [f.x1 + 1, f.y1 + 1], [f.x0 - 1, f.y1 + 1]], rgba(ICE.ash, a))
 }
