@@ -231,7 +231,14 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 154 (latest)
+## Polish pass 155 (latest)
+
+The third round, and a small one: after passes 153 and 154 the show was watched end to end again, and nothing left fell short of its moment the way those did. One refinement:
+- **The far mouth is the same glass** (`glassLimb` in `kit.ts`, used by `farSide` and by `drawMouth` in `act2/edmunds.ts`, 236.3 to 238 s). Pass 153 gave the near mouth a body, the light behind it piled up at its limb. The far mouth, which the Ranger comes out of on 213, was still a dark plate with a rim, so the two read as different things. It has the same limb now, Edmunds' sky bent round its edge, over the dark by Saturn it shows. The limb is one function, so the two mouths cannot drift apart.
+
+Looked at and left: Miller's wave (a ramp he rides up and is thrown off, which a curling wall would spoil); the corn chase's length (the film's chase, with a bump or a fence on most beats); the whole-ring reveal from the replica (its beat 112 tick is inside the house, unseen, and the move is the event); the station's open air (pass 151).
+
+## Polish pass 154
 
 The second creative round. Scored moments that were played but hardly seen:
 - **The station's lamps read lit and dark.** Two runs of lamps on the station's pale air had pass 152's countdown fault, light on light.
