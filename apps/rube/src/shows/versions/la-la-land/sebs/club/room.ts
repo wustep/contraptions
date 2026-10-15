@@ -329,6 +329,76 @@ function wash(p: p5, k: number, x: number, y: number, len: number, spread: numbe
   }
 }
 
+/**
+ * The banquette along the back wall: a buttoned back and a seat, in the club's velvet, between `x0` and `x1`. Its
+ * buttons pull the velvet into diamonds, each with a little light on its upper edge and a crease below.
+ */
+function banquette(p: p5, k: number, x0: number, x1: number, velvet: string, ink: string, weight: number, L: Lights): void {
+  const f = frame(p, k)
+  if (x1 < f.x0 || x0 > f.x1 || ROOM.floor < f.y0 || 2.15 > f.y1) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const X = (v: number) => v * k
+  const top = 2.22
+  const seat = 2.78
+  ctx.save()
+  // The back, its rolled top, the seat's cushion and the plinth under it.
+  ctx.fillStyle = velvet
+  ctx.beginPath()
+  ctx.roundRect(X(x0), X(top), X(x1 - x0), X(seat - top), X(0.05))
+  ctx.fill()
+  ctx.fillStyle = mixHex(velvet, M.ivory, 0.08 + 0.06 * L.house)
+  ctx.fillRect(X(x0 + 0.03), X(top), X(x1 - x0 - 0.06), Math.max(1, X(0.02)))
+  ctx.fillStyle = mixHex(velvet, M.lacquer, 0.15)
+  ctx.beginPath()
+  ctx.roundRect(X(x0 - 0.03), X(seat), X(x1 - x0 + 0.06), X(0.13), X(0.035))
+  ctx.fill()
+  ctx.fillStyle = mixHex(M.lacquer, velvet, 0.25)
+  ctx.fillRect(X(x0), X(seat + 0.13), X(x1 - x0), X(ROOM.floor - seat - 0.13))
+  // The tufting: diamonds of crease between the buttons, and a little light on each puff's upper edge.
+  const dx = 0.15
+  const dy = 0.12
+  const lw = Math.max(1, 0.007 * k)
+  ctx.lineWidth = lw
+  ctx.strokeStyle = rgba(M.lacquer, 0.45)
+  ctx.beginPath()
+  for (let r = 0; top + 0.06 + r * dy < seat - 0.04; r++) {
+    const y = top + 0.07 + r * dy
+    for (let x = x0 + 0.06 + (r % 2) * dx * 0.5; x < x1 - 0.05; x += dx) {
+      if (x < f.x0 - 0.2 || x > f.x1 + 0.2) continue
+      ctx.moveTo(X(x - dx * 0.5), X(y + dy * 0.5))
+      ctx.lineTo(X(x), X(y))
+      ctx.lineTo(X(x + dx * 0.5), X(y + dy * 0.5))
+    }
+  }
+  ctx.stroke()
+  ctx.strokeStyle = rgba(L.warm, 0.1 + 0.08 * L.house)
+  ctx.beginPath()
+  for (let r = 0; top + 0.06 + r * dy < seat - 0.04; r++) {
+    const y = top + 0.07 + r * dy + 0.018
+    for (let x = x0 + 0.06 + (r % 2) * dx * 0.5; x < x1 - 0.05; x += dx) {
+      if (x < f.x0 - 0.2 || x > f.x1 + 0.2) continue
+      ctx.moveTo(X(x - dx * 0.38), X(y + dy * 0.38))
+      ctx.lineTo(X(x), X(y))
+      ctx.lineTo(X(x + dx * 0.38), X(y + dy * 0.38))
+    }
+  }
+  ctx.stroke()
+  ctx.fillStyle = rgba(M.lacquer, 0.6)
+  ctx.beginPath()
+  for (let r = 0; top + 0.06 + r * dy < seat - 0.04; r++) {
+    const y = top + 0.07 + r * dy
+    for (let x = x0 + 0.06 + (r % 2) * dx * 0.5; x < x1 - 0.05; x += dx) {
+      if (x < f.x0 - 0.2 || x > f.x1 + 0.2) continue
+      ctx.moveTo(X(x + 0.012), X(y))
+      ctx.arc(X(x), X(y), X(0.012), 0, Math.PI * 2)
+    }
+  }
+  ctx.fill()
+  ctx.restore()
+  void ink
+  void weight
+}
+
 /** A candle lamp on a table: a small glass, its flame, and its light lying on the table top. */
 function candle(q: Pen, x: number, t: number, seed: number, strength = 1): void {
   const { p } = q
@@ -504,6 +574,8 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.stroke(rgba(M.brass, 0.5))
   p.strokeWeight(weight * 0.5)
   p.line(X(R.wallL1), X(2.0), X(R.stageX0), X(2.0))
+  // Along the wall behind her table and the next, a banquette: a tufted velvet bench, buttoned, under the rail.
+  banquette(p, k, -4.75, -1.82, mixHex(mixHex(M.velvet, M.lacquer, 0.5), M.rose, 0.25 * L.rose), ink, weight, L)
   // The drink rail along it, and what the house has left on it; crowded in the dream.
   {
     const dreamHouse = s.end ? 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6) : 0

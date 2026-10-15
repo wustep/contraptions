@@ -609,9 +609,9 @@ const RAIL: { x: number; kind: RailKind; dream: boolean }[] = [
   { x: -6.62, kind: 'coupe', dream: true },
   { x: -5.6, kind: 'tumbler', dream: true },
   { x: -5.42, kind: 'tumbler', dream: true },
-  { x: -4.18, kind: 'hat', dream: true },
-  { x: -3.68, kind: 'tumbler', dream: false },
-  { x: -3.47, kind: 'ashtray', dream: false },
+  { x: -4.5, kind: 'hat', dream: true },
+  { x: -3.62, kind: 'tumbler', dream: false },
+  { x: -4.02, kind: 'ashtray', dream: false },
   { x: -3.12, kind: 'vase', dream: true },
   { x: -2.9, kind: 'frame', dream: false },
   { x: -2.6, kind: 'coupe', dream: true },
@@ -736,7 +736,7 @@ export function drinkRail(p: p5, k: number, t: number, x0: number, x1: number, d
   g.globalAlpha = 1
   // The forgotten cigarette's smoke, in the room as it is and the dream alike.
   g.restore()
-  smoke(p, k, -3.47 + 0.078, RAIL_Y - 0.09, t, 0.55, 3, 0.55)
+  smoke(p, k, -4.02 + 0.078, RAIL_Y - 0.09, t, 0.55, 3, 0.55)
 }
 
 /* ------------------------------------------------------------------ the waiter in front of us */
@@ -828,8 +828,8 @@ export function nookLamp(p: p5, k: number, warm: string, on: number, ink: string
   const g = p.drawingContext as G
   g.save()
   // Its light, up the brick in a fan from the cup's mouth: on the wall, not round the lamp.
-  for (const [w, a] of [[0.46, 0.13], [0.28, 0.16]] as const) {
-    const top = y - 0.12 - 0.85
+  for (const [w, a] of [[0.62, 0.07], [0.4, 0.08]] as const) {
+    const top = y - 0.12 - 0.7
     const gr = g.createLinearGradient(0, (y - 0.12) * k, 0, top * k)
     gr.addColorStop(0, rgba(warm, a * on))
     gr.addColorStop(1, rgba(warm, 0))
