@@ -709,11 +709,11 @@ function litAt(i: number, t: number): number {
 let lastPainted = -1
 
 /**
- * The rooms run: once his light has woken a room, it plays its stretch of its place over and over, repainted a dozen
+ * The rooms run: once his light has woken a room, it plays its stretch of its place over and over, repainted ten
  * times a second (a diorama's pace; the rooms' turns staggered, so a frame repaints two at most), and at each
  * turn of its loop the last of it dissolves into the start again.
  */
-const ROOM_FPS = 12
+const ROOM_FPS = 10
 const DISSOLVE = 0.5
 const running = new Map<string, { pic: HTMLCanvasElement; at: number }>()
 /** The room's place at `t` (show time of the finale): its framing, at the moment its loop has reached. */
