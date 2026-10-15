@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { frame, rgba, smooth } from '../kit'
 import { NIGHT_MAT } from '../worlds'
-import { APEX, LIFT, POLE, QUIET, scatter, skyAngle, UPSTAGE } from './painted-waltz'
+import { APEX, LIFT, POLE, scatter, skyAngle, UPSTAGE } from './painted-waltz'
 
 /**
  * The planetarium the stars are thrown in, as the film's is: Griffith's, where they float up out of its seats into
@@ -15,8 +15,7 @@ import { APEX, LIFT, POLE, QUIET, scatter, skyAngle, UPSTAGE } from './painted-w
  *   projector once they have pushed off, and sliding by faster than the room as the camera moves. Empty: the two of
  *   them are alone in it.
  * - What the projector throws besides the stars: two planets on their slow paths, a ringed one and a red one, turning
- *   with the sky; and now and then a meteor, a line drawn down the sky on a note of the waltz, more of them as it
- *   swells.
+ *   with the sky.
  */
 
 const TAU = Math.PI * 2
@@ -39,7 +38,7 @@ const COVE: Pt[] = (() => {
   return out
 })()
 /**
- * The towers: downtown's cluster, and a smaller one far off along the cove. Each its width and height, a setback a
+ * The towers: downtown's cluster, a lower one out west, and a smaller one far off along the cove. Each its width and height, a setback a
  * third of the way down from its top for some, a mast on the tallest.
  */
 const TOWERS: { x: number; w: number; h: number; step?: number; mast?: number }[] = [
@@ -54,6 +53,12 @@ const TOWERS: { x: number; w: number; h: number; step?: number; mast?: number }[
   { x: 6.72, w: 0.09, h: 0.27 },
   { x: 6.86, w: 0.12, h: 0.36, step: 0.09 },
   { x: 7.02, w: 0.1, h: 0.22 },
+  // A second, lower cluster further along, under where they float in the quiet: the towers out west.
+  { x: 7.55, w: 0.08, h: 0.17 },
+  { x: 7.67, w: 0.11, h: 0.27, step: 0.06 },
+  { x: 7.8, w: 0.09, h: 0.21 },
+  { x: 7.93, w: 0.13, h: 0.34, mast: 0.08 },
+  { x: 8.07, w: 0.08, h: 0.19 },
   { x: 12.95, w: 0.1, h: 0.26 },
   { x: 13.1, w: 0.12, h: 0.34, step: 0.08 },
   { x: 13.26, w: 0.09, h: 0.22 },
@@ -230,10 +235,11 @@ interface Planet {
 export const PLANETS: Planet[] = [
   // The red one, far out on the wheel: up as they reach the top of the float.
   { r: 2.85, a0: 1.56, w: 0.006, size: 0.11, color: '#C8674A', shade: '#6E2E25', from: APEX + 0.6 },
-  // The ringed one, near the pole: thrown as the waltz goes quiet, so it drifts past over the two of them in each
-  // other's arms, and taken away as the swell begins, before the piano is drawn round them (both orbits are chosen to
-  // keep a ball's width and more from them, and from every star they light).
-  { r: 1.35, a0: 0.04, w: -0.004, size: 0.15, color: '#E6D3A0', shade: '#8E7A55', ring: '#D8C38E', from: 325.5, to: 332.4 },
+  // The ringed one, nearer and larger: thrown as the waltz goes quiet, so it drifts across the sky's upper left over the
+  // two of them in each other's arms, balancing the machine low on the right, and taken away as the swell begins,
+  // before the piano is drawn round them (both orbits are chosen, by search, to keep a ball's width and more from
+  // them, and clear of every star they light).
+  { r: 1.85, a0: 5.32, w: -0.004, size: 0.165, color: '#E6D3A0', shade: '#8E7A55', ring: '#D8C38E', from: 325.5, to: 332.4 },
 ]
 /** A planet's place at `T`, in the NIGHT frame. */
 export function planetAt(q: Planet, T: number): Pt {
@@ -300,63 +306,6 @@ export function drawPlanets(p: p5, k: number, T: number, on: number, mirror: boo
     }
     ctx.restore()
   }
-}
-
-/* ------------------------------------------------------------------ the meteors */
-
-/** A meteor on a note of the waltz: where it starts, which way it goes, how far. More of them as the waltz swells. */
-interface Meteor {
-  t: number
-  at: Pt
-  dir: Pt
-  len: number
-}
-const M = (t: number, at: Pt, a: number, len: number): Meteor => ({ t, at, dir: [Math.cos(a), Math.sin(a)], len })
-export const METEORS: Meteor[] = [
-  M(308.28, [12.9, -4.1], Math.PI - 0.56, 2.2),
-  M(315.33, [7.0, -5.0], 0.5, 2.6),
-  M(318.39, [15.2, -6.0], Math.PI - 0.46, 3.0),
-  M(320.74, [6.0, -6.2], 0.52, 3.0),
-  M(322.28, [13.8, -4.9], Math.PI - 0.6, 2.4),
-  // In the quiet, one, slow, over the two of them.
-  M(330.01, [11.7, -4.4], Math.PI - 0.37, 1.3),
-  // And up the swell, a shower.
-  M(334.2, [5.0, -5.8], 0.56, 3.2),
-  M(334.87, [16.5, -6.2], Math.PI - 0.64, 3.4),
-  M(335.25, [8.0, -6.6], 0.78, 2.8),
-]
-const METEOR_LIFE = 0.75
-
-/** Each meteor: a fine line drawn down the sky, its head running ahead and its tail fading out behind it. */
-export function drawMeteors(p: p5, k: number, T: number, on: number): void {
-  if (on <= 0.01) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
-  ctx.lineCap = 'round'
-  for (const m of METEORS) {
-    const s = T - m.t
-    const life = m.t > QUIET[0] && m.t < QUIET[1] ? METEOR_LIFE * 1.6 : METEOR_LIFE
-    if (s < 0 || s > life) continue
-    const u = s / life
-    const head = Math.min(1, u * 1.35)
-    const tail = Math.max(0, (u - 0.25) / 0.75) ** 1.3
-    const hx = m.at[0] + m.dir[0] * m.len * head
-    const hy = m.at[1] + m.dir[1] * m.len * head
-    const tx = m.at[0] + m.dir[0] * m.len * tail
-    const ty = m.at[1] + m.dir[1] * m.len * tail
-    if (hy > UPSTAGE) continue
-    const fade = (1 - smooth(u, 0.7, 1)) * on
-    const g = ctx.createLinearGradient(tx * k, ty * k, hx * k, hy * k)
-    g.addColorStop(0, rgba(NIGHT_MAT.star, 0))
-    g.addColorStop(1, rgba(NIGHT_MAT.white, 0.85 * fade))
-    ctx.strokeStyle = g
-    ctx.lineWidth = Math.max(1, 0.016 * k)
-    ctx.beginPath()
-    ctx.moveTo(tx * k, ty * k)
-    ctx.lineTo(hx * k, hy * k)
-    ctx.stroke()
-  }
-  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the push-off */
