@@ -1190,7 +1190,9 @@ interface Shaft {
   top: [Pt, Pt]
   foot: [Pt, Pt]
   hex: string
+  /** How strongly it lands (the floor, the wall's foot, the pews), and how much of it shows in the air on the way. */
   a: number
+  air: number
 }
 
 /** The shafts the windows throw at `t`: two coloured ones from each window in the morning; at the funeral, one pale one. */
@@ -1198,16 +1200,17 @@ function shafts(c: Paint, t: number): Shaft[] {
   const floor = CH.floor
   const sl = slant(t)
   const out: Shaft[] = []
-  const throwFrom = (wi: number, i: number, n: number, hex: string, a: number) => {
+  const throwFrom = (wi: number, i: number, n: number, hex: string, a: number, air = a) => {
     const [x0, x1, , y1] = WINDOWS[wi]
     const src = y1 - 0.75
     const run = floor - src
     const a0 = x0 + ((x1 - x0) * i) / n
     const a1 = x0 + ((x1 - x0) * (i + 1)) / n
-    out.push({ top: [[a0, src], [a1, src]], foot: [[a0 + run * sl, floor], [a1 + run * (sl + 0.08), floor]], hex, a })
+    out.push({ top: [[a0, src], [a1, src]], foot: [[a0 + run * sl, floor], [a1 + run * (sl + 0.08), floor]], hex, a, air })
   }
   if (!c.g) {
-    for (let wi = 0; wi < WINDOWS.length; wi++) for (let i = 0; i < 2; i++) throwFrom(wi, i, 2, c.glass[(wi + i * 2) % 4], 0.13)
+    // Thin in the air: what tells the sun is where it lands, on the floor and the pews.
+    for (let wi = 0; wi < WINDOWS.length; wi++) for (let i = 0; i < 2; i++) throwFrom(wi, i, 2, c.glass[(wi + i * 2) % 4], 0.13, 0.065)
   } else if (beamUp(t) > 0.001) throwFrom(1, 0, 1, '#FFFFFF', 0.2 * beamUp(t))
   return out
 }
@@ -1279,7 +1282,7 @@ function drawLight(p: p5, k: number, c: Paint, t: number): void {
   const sl = slant(t)
   // The sun is up on the left: each window throws its colours down and to the right, across the aisle, and they land.
   for (const s of shafts(c, t)) {
-    beam(p, k, s.top, s.foot, s.hex, s.a)
+    beam(p, k, s.top, s.foot, s.hex, s.air)
     landing(p, k, s, sl)
   }
   if (!c.g) {
