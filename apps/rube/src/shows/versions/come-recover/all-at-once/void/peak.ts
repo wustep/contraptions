@@ -44,6 +44,7 @@ import {
   lipAt,
   S0,
 } from './peakClock'
+import { drawNearRope, drawRig, ROD_TOP } from './peakRig'
 
 /**
  * PEAK: the brink, and the pull back (241.755 to 264.144). The machine and its clock are in `peakClock.ts`.
@@ -274,6 +275,12 @@ export const peak = part<PeakState>(
       const xr = X_ROPE + OFF[0]
       const wy = waymondY(T) + OFF[1]
 
+      // The rig the line runs on: the headframe, its jib, the guides and the clock that governs it (`peakRig.ts`).
+      p.push()
+      p.translate(OFF[0] * k, OFF[1] * k)
+      drawRig(p, c, T, { x0: f.x0 - OFF[0], x1: f.x1 - OFF[0], y0: f.y0 - OFF[1], y1: f.y1 - OFF[1] })
+      p.pop()
+
       // Each lurch smears the crust: the bagel as it was a few hundredths of a second ago, faint, over itself.
       for (let kk = 119; kk <= 150; kk++) {
         const x = T - fall(kk)
@@ -380,7 +387,7 @@ export const peak = part<PeakState>(
         drawPin(p, c, wx + wave(0), top - 0.05, -Math.PI / 2 - Math.atan(dx), 1)
       }
       const travel = waymondY(T) - waymondY(T_IN)
-      drawPulley(p, c, P, -travel / RP, f.y0 - 1)
+      drawPulley(p, c, P, -travel / RP, ROD_TOP + OFF[1])
 
       // The close: the hole fills with the washer window's light, a step a beat, and the two of them stand against it.
       const win = windowAt(T)
@@ -515,6 +522,12 @@ export const peak = part<PeakState>(
         ctx.restore()
         googly(p, k, ink, weight, ex, ey + 0.3 * R * sc, spinLook, sc)
       }
+
+      // Close to the lens, in front of all of it: the hawser across the top right (in the dark's own cells).
+      p.push()
+      p.translate(OFF[0] * k, OFF[1] * k)
+      drawNearRope(p, c, T)
+      p.pop()
     },
   },
   (slot) => {
