@@ -101,7 +101,7 @@ function shots(): PartShot[] {
     follow(at(29) - 0.6, 7.0, [0.55, -0.45]),
     follow(WIDE_FROM - 0.25, 6.9, [0.55, -0.4]),
     hold(WIDE_FROM, 16, wide, true),
-    hold(WIDE_TO - 0.4, 14.4, [wide[0] + 0.9, wide[1] + 0.35]),
+    hold(WIDE_TO - 0.02, 14.2, [wide[0] + 0.95, wide[1] + 0.38]),
     hold(WIDE_TO, 5.6, on(WIDE_TO, [0.45, -0.1]), true),
     hold(NO, 4.8, on(NO, [0.85, -0.2])),
     hold(JUMP - 0.45, 5.0, [leave[0] + 0.25, leave[1] + 0.1]),

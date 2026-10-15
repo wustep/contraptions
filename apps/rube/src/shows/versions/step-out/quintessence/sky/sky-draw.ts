@@ -168,10 +168,13 @@ function drawNearWater(g: C2, k: number, f: ReturnType<typeof frame>, t: number)
     [1, SKY.seaDeep],
   ])
   g.fillRect((f.x0 - 1) * k, SURF * k, (f.x1 - f.x0 + 2) * k, (f.y1 - SURF + 2) * k)
+  // The swell's crests running by at the near water's own pace, the nearer the quicker.
   const glints = new Path2D()
-  for (let i = 0; i < 40; i++) {
-    const y = SURF + 0.06 + Math.pow(hash(i, 41), 1.5) * 2.6
-    const x = Math.floor(f.x0) - 2 + hash(i, 42) * (f.x1 - f.x0 + 4) + Math.sin(t * 0.4 + i) * 0.2
+  const span = f.x1 - f.x0 + 4
+  for (let i = 0; i < 70; i++) {
+    const v = Math.pow(hash(i, 41), 1.5)
+    const y = SURF + 0.06 + v * 2.6 + 0.02 * Math.sin(t * 1.5 + i)
+    const x = f.x0 - 2 + ((((hash(i, 42) * span + t * (0.3 + 0.6 * v) * (i % 3 ? 1 : -1)) % span) + span) % span)
     const w = 0.3 + hash(i, 43) * 0.9 * (1 + (y - SURF))
     glints.moveTo(x * k, y * k)
     glints.lineTo((x + w) * k, y * k)

@@ -15,8 +15,8 @@ import { ASH, lampAt } from './room'
  *
  * Inside: the tobacco haze hanging in slow layers, the lamps' cones in it with the dust turning in them, and when the
  * little stage's spotlight comes on, the dust in its beam. Outside the doors, sleet going by on the wind. Nearest the
- * camera, at the frame's foot: the end of the near counter with its beer tap, a stool top, and out on the quay a stack
- * of fish boxes and a coil of rope. Over it all the tungsten warmth of the room closing in at the frame's edges; and
+ * camera, at the frame's foot: the end of the near counter with its beer tap, and out on the quay its near edge, a
+ * stack of fish boxes and a coil of rope. Over it all the tungsten warmth of the room closing in at the frame's edges; and
  * when he bangs the back door open the grey daylight floods in across the boards.
  */
 export const nuukFront = scenery<null>({
@@ -31,7 +31,7 @@ export const nuukFront = scenery<null>({
     drawNear(g, v, t)
     // The room's warm dark at the edges; outside on the quay, a cold grey one.
     const out = smooth(v.cx, WALL_OUT[1] + 0.5, WALL_OUT[1] + 3.5)
-    edgeDark(g, v, mix('#140C08', '#3C474D', out), 0.55 - 0.2 * out, 0.52, 0.05 * (1 - out))
+    edgeDark(g, v, mix('#140C08', '#3C474D', out), 0.6 - 0.25 * out, 0.6, 0.05 * (1 - out))
   },
 })
 
@@ -153,8 +153,8 @@ function drawDaylight(g: CanvasRenderingContext2D, v: View, t: number): void {
 }
 
 /**
- * The near plane, at the frame's foot only: the end of the near counter with its beer tap and a stool top inside;
- * out on the quay, a stack of fish boxes and a coil of rope. They go by faster than the room as the camera moves.
+ * The near plane, at the frame's foot only: the end of the near counter with its beer tap inside; out on the quay,
+ * the near edge of its deck, a stack of fish boxes and a coil of rope. They go by faster than the room as the camera moves.
  */
 function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
   layer(g, v, 1.38, BAR_AT, BAR_REF, (inner) => {
@@ -188,23 +188,6 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
         g.arc((tx + 0.11) * k, (top - 0.38 + drip * 0.9) * k, 0.012 * k, 0, Math.PI * 2)
         g.fill()
       }
-    }
-    // A stool's top inside, at the frame's foot by the stage, its leg going out of the frame.
-    const sx = 5.6
-    if (sx + 0.6 > inner.x0 && sx - 0.6 < inner.x1) {
-      g.fillStyle = '#1E1511'
-      g.fillRect((sx - 0.06) * k, (top + 0.1) * k, 0.12 * k, (inner.y1 - top) * k)
-      g.beginPath()
-      g.ellipse(sx * k, (top + 0.1) * k, 0.48 * k, 0.11 * k, 0, 0, Math.PI * 2)
-      g.fill()
-      g.fillStyle = '#5A3F2C'
-      g.beginPath()
-      g.ellipse(sx * k, (top + 0.05) * k, 0.48 * k, 0.1 * k, 0, 0, Math.PI * 2)
-      g.fill()
-      g.fillStyle = rgbaOf('#F2C879', 0.25)
-      g.beginPath()
-      g.ellipse((sx - 0.1) * k, (top + 0.03) * k, 0.24 * k, 0.035 * k, 0, 0, Math.PI * 2)
-      g.fill()
     }
     // Out on the quay: the near edge of its deck, wet, the rain ringing in its puddles; fish boxes stacked on it, and
     // a coil of rope.

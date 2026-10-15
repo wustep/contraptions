@@ -85,13 +85,14 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
   const sun = sunAt(t)
   const [sx, sy] = sunXY(e)
   const tones = [new Path2D(), new Path2D(), new Path2D(), new Path2D()]
+  const bellies = new Path2D()
   const shake = jolt(t)
   // The cells' spacing goes a little with the framing, so a close frame is not all one cell and the wide is not grit.
   const S = 5.6 * Math.pow(Math.max(0.5, Math.min(2.5, e.fh / 6.6)), 0.35)
   // The nearest row is the one just over the frame's top: the deck fills the sky from there to the horizon.
   const z0 = Math.max(12, (F * Math.abs(DECK_Y - e.hz)) / Math.max(0.5, e.hz - e.y0 + 0.4))
   for (let r = 0; r < 16; r++) {
-    const z = z0 * Math.pow(1.18, r)
+    const z = z0 * Math.pow(1.21, r)
     const s = F / z
     // Past where the cells are this small on the screen, the horizon's haze stands for them.
     if (S * s < 0.42 * (e.fh / 6.6)) break
@@ -100,7 +101,7 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
     const h = Math.max(0.03, 0.55 * S * s * Math.min(0.6, Math.abs(DECK_Y - e.hz) / z) * 1.6)
     if (yRow < e.y0 - h * 2) continue
     // The wind takes the deck along, the far rows slowest on the screen.
-    const drift = t * 1.1
+    const drift = t * 1.6
     const n0 = Math.floor((e.cx - (e.fw / 2 + 2) / s - drift) / S) - 1
     const n1 = Math.ceil((e.cx + (e.fw / 2 + 2) / s - drift) / S) + 1
     for (let n = n0; n <= n1; n++) {
@@ -118,12 +119,21 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
       const tone = near > 0.55 ? 3 : near > 0.22 ? 2 : hash(n, r, 46) < 0.3 ? 0 : 1
       tones[tone].moveTo((x + w) * k, y * k)
       tones[tone].ellipse(x * k, y * k, w * k, hh * k, 0, 0, Math.PI * 2)
+      // The grey cells have a darker belly, low in them: the overcast's underside is lumpy.
+      if (tone === 1 && w > 0.12) {
+        bellies.moveTo((x + 0.15 * w + 0.55 * w) * k, (y + 0.35 * hh) * k)
+        bellies.ellipse((x + 0.15 * w) * k, (y + 0.35 * hh) * k, 0.55 * w * k, 0.4 * hh * k, 0, 0, Math.PI * 2)
+      }
     }
   }
   const fills = ['#9AA4A8', AIR.deck, '#C9CFCF', '#E6EAE6']
   for (let i = 0; i < 4; i++) {
     g.fillStyle = fills[i]
     g.fill(tones[i])
+    if (i === 1) {
+      g.fillStyle = rgba('#8E989D', 0.5)
+      g.fill(bellies)
+    }
   }
 }
 
@@ -140,7 +150,7 @@ export function drawBanks(g: C2, k: number, e: Eye, t: number): void {
   const span = 260
   const shake = jolt(t) * 0.04
   for (let i = -1; i < 9; i++) {
-    const base = (hash(i, 51) + i) * (span / 8) + t * 0.2
+    const base = (hash(i, 51) + i) * (span / 8) + t * 2.5
     const gx = e.cx + ((((base - e.cx) % span) + span * 1.5) % span) - span / 2
     const x = e.cx + (gx - e.cx) * s
     // Sized with the frame as much as with the distance: they are the horizon's, whatever the framing.

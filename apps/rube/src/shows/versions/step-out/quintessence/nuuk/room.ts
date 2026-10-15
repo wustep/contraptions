@@ -208,13 +208,15 @@ export function drawLamps(g: C2, k: number, t: number): void {
     pool.addColorStop(1, rgbaOf(R.lamp, 0))
     g.fillStyle = pool
     g.fillRect((px - 0.75) * k, (COUNTER_TOP - 0.75) * k, 1.5 * k, 0.85 * k)
-    // The glow round the bulb.
-    const glow = g.createRadialGradient(p[0] * k, (p[1] + 0.12) * k, 0, p[0] * k, (p[1] + 0.12) * k, 1.3 * k)
-    glow.addColorStop(0, rgbaOf(R.lamp, 0.3))
-    glow.addColorStop(0.4, rgbaOf(R.lamp, 0.1))
+    // The glow round the bulb (a disc, not its square: the corners would be filled for nothing).
+    const glow = g.createRadialGradient(p[0] * k, (p[1] + 0.12) * k, 0, p[0] * k, (p[1] + 0.12) * k, 0.95 * k)
+    glow.addColorStop(0, rgbaOf(R.lamp, 0.32))
+    glow.addColorStop(0.4, rgbaOf(R.lamp, 0.11))
     glow.addColorStop(1, rgbaOf(R.lamp, 0))
     g.fillStyle = glow
-    g.fillRect((p[0] - 1.3) * k, (p[1] - 1.18) * k, 2.6 * k, 2.6 * k)
+    g.beginPath()
+    g.arc(p[0] * k, (p[1] + 0.12) * k, 0.95 * k, 0, Math.PI * 2)
+    g.fill()
     // The cord, the shade, the bulb's lit rim.
     g.strokeStyle = R.cord
     g.lineWidth = Math.max(0.8, 0.012 * k)
@@ -350,8 +352,7 @@ export function drawWindowRain(g: C2, k: number, t: number): void {
     const start = y0 + 0.04 + h * 0.5 * hash(i, 84)
     const y = start + (h * 0.5) * run * (0.5 + 0.5 * hash(i, 85))
     const wob = 0.01 * Math.sin(y * 30 + i)
-    drops.moveTo((x + wob + 0.012) * k, y * k)
-    drops.arc((x + wob) * k, y * k, 0.012 * k, 0, Math.PI * 2)
+    drops.rect((x + wob - 0.01) * k, (y - 0.012) * k, 0.02 * k, 0.024 * k)
     if (y - start > 0.02) {
       trails.moveTo(x * k, start * k)
       trails.lineTo((x + wob) * k, (y - 0.012) * k)

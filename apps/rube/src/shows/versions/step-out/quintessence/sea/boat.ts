@@ -255,6 +255,14 @@ function houseDetail(g: C2, k: number, x0: number, w: number, t: number): void {
     g.closePath()
     g.fill()
   }
+  // Its edges, so it reads against the white house.
+  g.strokeStyle = '#8E9897'
+  g.lineWidth = Math.max(0.6, 0.012 * k)
+  g.beginPath()
+  g.arc(rx * k, ry * k, 0.16 * k, 0, Math.PI * 2)
+  g.moveTo((rx + 0.08) * k, ry * k)
+  g.arc(rx * k, ry * k, 0.08 * k, 0, Math.PI * 2)
+  g.stroke()
   // The radar on the roof: a bar turning on its post, seen from the side as it comes round.
   const rdx = hx + 0.55
   const rdy = w + house.top - 0.12

@@ -110,7 +110,8 @@ function shots(): PartShot[] {
   const offEnd: Pt = [EXIT_X + seam.frame[0] - fl[0], seam.frame[1] - fl[1]]
   return [
     hold(STOP + 0.2, 3.3, [1.05, -0.95]),
-    hold(HINGE - 0.03, 2.75, [1.22, -0.86]),
+    hold(HINGE - 0.85, 2.98, [1.15, -0.9]),
+    hold(HINGE - 0.03, 2.72, [1.22, -0.86]),
     { t: HINGE, cells: 4.6, hold: [2.75, -1.1], w: 1, cut: true },
     hold(SHE_LANDS - 0.3, 4.2, [2.95, -1.0]),
     follow(OUT + 0.3, 4.3, [1.1, -0.75]),

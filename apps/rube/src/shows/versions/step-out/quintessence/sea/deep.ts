@@ -156,9 +156,9 @@ export function drawSnow(g: C2, inner: View, t: number, plane: 'far' | 'mid', a:
   // Only under the skin.
   const box = { x0: inner.x0 - 1, y0: W + 0.12, x1: inner.x1 + 1, y1: inner.y1 + 1 }
   if (plane === 'far')
-    motes(g, inner, t, { n: 380, seed: 31, tile: [5.5, 4.5], r: [0.008, 0.016], v: [0.035, 0.05], spread: 0.4, sway: [0.06, 0.09], color: rgbaOf(DEEP.snow, 0.55 * a), twinkle: 0.45, square: true, within: box })
+    motes(g, inner, t, { n: 430, seed: 31, tile: [5.5, 4.5], r: [0.008, 0.016], v: [0.035, 0.05], spread: 0.4, sway: [0.06, 0.09], color: rgbaOf(DEEP.snow, 0.55 * a), twinkle: 0.45, square: true, within: box })
   else
-    motes(g, inner, t, { n: 80, seed: 37, tile: [5, 4], r: [0.013, 0.026], v: [0.05, 0.075], spread: 0.35, sway: [0.09, 0.13], color: rgbaOf(DEEP.snow, 0.65 * a), twinkle: 0.5, within: box })
+    motes(g, inner, t, { n: 100, seed: 37, tile: [5, 4], r: [0.013, 0.026], v: [0.05, 0.075], spread: 0.35, sway: [0.09, 0.13], color: rgbaOf(DEEP.snow, 0.65 * a), twinkle: 0.5, within: box })
 }
 
 /* ------------------------------------------------------------------ the school */
