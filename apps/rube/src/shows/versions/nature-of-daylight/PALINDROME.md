@@ -1202,6 +1202,16 @@ to a television at home. Two scenes now, one place:
 Both cost almost nothing to draw. What it would take up next: the hall is drawn plainly (a wall, a screen, rows of
 grey students), and could be warmer; the opening lecture's students might look up from their phones to the screen.
 
+A hundred-and-twenty-third gave the newest place its pass: the lecture hall read as a wall, a screen and steps with
+balls on them, next to rooms drawn as fully as the lake house and the valley. Each row has its desk now, the students
+seated behind it; she stands at a podium whose reading lamp is lit in the dim the day they came; once the news is up,
+the projector's beam comes from the back of the hall over their heads to the screen, dust turning in it; and high
+windows either side of the screen are dark with the blinds down that day and, years on, let in the daylight that
+slants down the wall. Still under a millisecond a frame.
+
+What it would take up next: what is left of the film (Weber's recording in her office; Ian meeting her in the
+helicopter; Ian's work on their writing) is small beside what it would displace.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
