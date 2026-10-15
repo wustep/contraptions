@@ -547,6 +547,11 @@ function drawBay(p: p5, c: Ctx, T: number): void {
 
 /* ---- the shaft: the well through the house, the tube, its landings and lamps */
 
+/** The landings' lamps: dark glass; lit, a warm yellow in an amber pool. */
+const LAMP_DARK = mixHex(DUST.tin, '#2A1F17', 0.55)
+const LAMP_LIT = '#FFE08A'
+const LAMP_POOL = '#F2A23C'
+
 function drawShaft(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
@@ -590,16 +595,18 @@ function drawShaft(p: p5, c: Ctx, T: number): void {
       [fx - 0.1 * Math.cos(fa), fy - 0.1 * Math.sin(fa)],
     ])
     if (!inTube) continue
-    // The landing's lamp: a small caged slit on a bracket, warm white once lit. It comes on, it does not flash.
+    // The landing's lamp: a small caged slit on a bracket. It comes on, it does not flash. Dark glass, and once lit a
+    // warm yellow in an amber pool: the station's air is pale, and a warm white on it read the same lit or dark, so
+    // the lit lamps climbing the spoke behind the car, a beat at a time, were not seen.
     const on = smooth(since, -0.02, 0.14)
-    const lx = WALL_L - 0.2
-    if (on > 0) glow(p, k, lx, v, 0.17, DUST.light, 0.35 * on)
+    const lx = WALL_L - 0.22
+    if (on > 0) glow(p, k, lx, v, 0.36, LAMP_POOL, 0.6 * on)
     outline(p, ink, weight * 0.5)
-    p.line(X(WALL_L - 0.04), X(v), X(lx + 0.05), X(v))
-    solid(p, ink, weight * 0.5, on > 0.5 ? DUST.light : DUST.shade)
-    p.rect(X(lx), X(v), X(0.11), X(0.035), X(0.012))
+    p.line(X(WALL_L - 0.04), X(v), X(lx + 0.07), X(v))
+    solid(p, ink, weight * 0.5, on > 0.5 ? LAMP_LIT : LAMP_DARK)
+    p.rect(X(lx), X(v), X(0.15), X(0.055), X(0.016))
     outline(p, ink, weight * 0.35)
-    for (const dx of [-0.028, 0.028]) p.line(X(lx + dx), X(v - 0.03), X(lx + dx), X(v + 0.03))
+    for (const dx of [-0.036, 0.036]) p.line(X(lx + dx), X(v - 0.04), X(lx + dx), X(v + 0.04))
   }
   // The walls, down into the roof.
   solid(p, ink, weight * 0.8, DUST.tin)

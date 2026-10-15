@@ -1353,6 +1353,10 @@ function drawBoard(p: p5, c: Ctx, T: number): void {
 
 /* ------------------------------------------------------------------ the light tower */
 
+/** Its lamps: dark glass; lit, a warm yellow (as the spoke's landings are). */
+const LAMP_DARK = mixHex(DUST.tin, '#2A1F17', 0.55)
+const LAMP_LIT = '#FFE08A'
+
 function drawTower(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
@@ -1381,19 +1385,21 @@ function drawTower(p: p5, c: Ctx, T: number): void {
       if (on) {
         const ctx = p.drawingContext as CanvasRenderingContext2D
         const r = X(0.9 + 0.8 * knock(since, 0.25))
+        // An amber pool, not a white one: on the station's pale air a white glow, and a lamp a shade lighter than the
+        // bone of an unlit one, read the same lit or dark, and the banks coming on a beat at a time were not seen.
         const g = ctx.createRadialGradient(X(lx), X(ly), 0, X(lx), X(ly), r)
-        g.addColorStop(0, `rgba(255, 244, 214, ${0.55 + 0.35 * knock(since, 0.25)})`)
-        g.addColorStop(1, 'rgba(255, 244, 214, 0)')
+        g.addColorStop(0, `rgba(242, 162, 60, ${0.5 + 0.3 * knock(since, 0.25)})`)
+        g.addColorStop(1, 'rgba(242, 162, 60, 0)')
         // Saved and restored, so p5's own idea of the fill stays true for what it draws next.
         ctx.save()
         ctx.fillStyle = g
         ctx.fillRect(X(lx) - r, X(ly) - r, 2 * r, 2 * r)
         ctx.restore()
       }
-      solid(p, ink, weight * 0.7, on ? DUST.light : DUST.bone)
+      solid(p, ink, weight * 0.7, on ? LAMP_LIT : LAMP_DARK)
       p.circle(X(lx), X(ly), X(0.22))
       for (const dx of [-0.12, 0.12]) {
-        solid(p, ink, weight * 0.5, on ? DUST.light : DUST.bone)
+        solid(p, ink, weight * 0.5, on ? LAMP_LIT : LAMP_DARK)
         p.circle(X(lx + dx), X(ly), X(0.1))
       }
     }
