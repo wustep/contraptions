@@ -31,7 +31,7 @@ const KEEPER_X = -8.7
 
 /** When he sends them up, when they are wheeling, and when he brings them down. */
 const REL = 235.0
-const HOME = 258.4
+const HOME = 259.0
 const WAVE_FROM = REL - 0.6
 const WAVE_TO = HOME - 0.6
 
@@ -93,15 +93,32 @@ function flock(roof: number): Bird[] {
       size: 0.85 + 0.3 * hash(i, 7, 61),
       go: REL + 1.6 * Math.pow(hash(i, 8, 61), 1.3),
       // A few are still flying round the loft at the end.
-      land: i % 9 === 4 ? HOME + 8.4 + 1.5 * hash(i, 9, 61) : HOME + 3.2 + 4.4 * hash(i, 9, 61),
+      land: i % 5 === 2 ? HOME + 8.4 + 1.5 * hash(i, 9, 61) : HOME + 2.6 + 3.8 * hash(i, 9, 61),
       perch: out ? perchOf(i / 13, roof) : null,
     }
   })
   return birds
 }
 
+/** Where in its wheel the flock is as it goes up: off to the right, towards the sun. */
+const PHASE = -0.35
 /** How far down the building's face their first pass in front comes. */
 const DIVE = 13
+/**
+ * The pass over the lit rooms, once the song is over: when it starts and how long it takes, how far down it comes and
+ * how much nearer than the wheel (so the birds go big as they pass the lens), and how much it slows at its height
+ * (radians a second), so it takes its time.
+ */
+const PASS = 249.0
+const PASS_FOR = 9
+const PASS_DIP = 20.5
+const CLOSE = 2.4
+const SLOW = 0.25
+/** How far behind the plain wheel the slowing has left the flock by `t`. */
+function slowed(t: number): number {
+  const u = Math.max(0, Math.min(1, (t - PASS) / PASS_FOR))
+  return (SLOW * PASS_FOR * (1 - Math.cos(Math.PI * u))) / Math.PI
+}
 const bump = (u: number): number => (u <= 0 || u >= 1 ? 0 : Math.sin(Math.PI * u))
 
 const smoother = (u: number): number => {
@@ -116,15 +133,17 @@ const wheel = (a: number, rx: number): [number, number, number] => [X0 + rx * Ma
 function birdAt(b: Bird, i: number, t: number, roof: number): { x: number; y: number; z: number; bank: number; turn: number } | null {
   if (t < b.go || t > b.land) return null
   // The wheel goes round once a lap, its length breathing; each bird is a little behind the one ahead.
-  const theta = ((t - REL) / LAP) * Math.PI * 2 - 0.35
-  const long = 0.42 + 0.14 * Math.sin(t * 0.43 + 0.6)
-  const tall = 1.7 + 0.6 * Math.sin(t * 0.37 + 2.1)
+  const theta = ((t - REL) / LAP) * Math.PI * 2 + PHASE - slowed(t)
+  // Coming near, it opens out.
+  const open = 1 + bump((t - PASS) / PASS_FOR) + 0.6 * bump((t - 236.2) / 5.4)
+  const long = (0.42 + 0.14 * Math.sin(t * 0.43 + 0.6)) * (0.6 + 0.4 * open)
+  const tall = (1.7 + 0.6 * Math.sin(t * 0.37 + 2.1)) * (0.4 + 0.6 * open)
   const rx = RX + 3 * Math.sin(t * 0.21)
   const a = theta - b.lag * long
   let [x, y, z] = wheel(a, rx)
   // Their first time round in front they come down and sweep across the sleeping building's face, as the camera draws
-  // back; the next time, low over the roof.
-  y += Math.pow(Math.max(0, Math.sin(a)), 2) * (DIVE * bump((t - 236.4) / 5) + 9 * bump((t - 248.8) / 5.4))
+  // back; once the rooms are all lit, down over them, close.
+  y += Math.pow(Math.max(0, Math.sin(a)), 2) * (DIVE * bump((t - 236.4) / 5) + PASS_DIP * bump((t - PASS) / PASS_FOR))
   y += 1.6 * Math.sin(t * 0.29 + 0.8)
   // Its place in the flock, and a little of its own.
   const own = 0.22 * Math.sin(t * (0.9 + 0.5 * hash(i, 10, 61)) + i)
@@ -132,36 +151,41 @@ function birdAt(b: Bird, i: number, t: number, roof: number): { x: number; y: nu
   y += b.up * tall + 1.1 * Math.sin(b.lag * 4.2 - t * 0.9) + 0.4 * Math.sin(b.lag * 9 - t * 2.1) + own
   x += 0.5 * Math.sin(t * (0.6 + 0.4 * hash(i, 11, 61)) + i * 1.3)
   z += b.near * 0.3
+  // In front, the swoop comes nearer than the wheel, and the pass over the lit rooms nearer still: past the lens.
+  if (z > 0) z *= 1 + 1.0 * bump((t - 236.2) / 5.4) + CLOSE * bump((t - PASS) / PASS_FOR)
   // Up from the loft into the wheel, and down to it again.
   const loft: Pt = [TRAP[0], roof - 0.5 - LEGS - BODY - 0.4]
-  const into = smoother((t - REL) / 3.4)
+  const into = smoother((t - REL - 0.6) / 3)
   if (into < 1) {
     const u = t - REL
-    const rise: [number, number, number] = [loft[0] - 1.6 * u + b.up * 0.4 * u, loft[1] - 1.9 * u - 0.35 * u * u + b.near * 0.3 * u, 0.25 + 0.15 * u]
+    // Out of the trap they circle the loft first, low over the roof and round the keeper, wider each time round.
+    const c = Math.PI + 2.1 * u - b.lag * 1.6
+    const r = 2.2 + 1.6 * u
+    const rise: [number, number, number] = [loft[0] + 1.5 + r * Math.cos(c), loft[1] + 0.6 - 1.2 * Math.sin(c) * (0.6 + 0.2 * u) + b.up * 0.5, 0.35 * Math.sin(c) + b.near * 0.12]
     x = rise[0] + (x - rise[0]) * into
     y = rise[1] + (y - rise[1]) * into
     z = rise[2] + (z - rise[2]) * into
   }
-  const home = smoother((t - HOME) / 3.6)
+  const home = smoother((t - HOME) / 1.6)
   if (home > 0) {
-    // Low over the roof towards the loft, tightening as they come.
-    const v = smoother((t - HOME) / 6.4)
-    const ax = loft[0] + 7 * (1 - v) + b.lag * 4 * (1 - v)
-    const ay = loft[1] - 2.6 * (1 - v) + b.up * 0.9 * (1 - v)
-    const az = 0.35 * (1 - v) + b.near * 0.1
+    // Home: round from behind the building's left, low and close past the rooms, and up over the roof to the loft.
+    const v = smoother((t - HOME) / 4.2)
+    const ax = -27 + (loft[0] + 1 + 27) * v + b.lag * 5 * (1 - v)
+    const ay = loft[1] - 1.2 + 8.5 * bump(Math.min(1, v * 1.2)) + b.up * 0.9 * (1 - v)
+    const az = 1.1 * bump(Math.min(1, v * 1.1)) + b.near * 0.15
     x += (ax - x) * home
     y += (ay - y) * home
     z += (az - z) * home
   }
   // The last few circle the loft, close, before they come down.
-  const late = smoother((t - (HOME + 4.2)) / 2)
+  const late = smoother((t - (HOME + 3.4)) / 2)
   if (late > 0 && b.land > HOME + 8) {
     const c = (t - HOME) * 1.9 + b.lag * 2.4
-    const lx = loft[0] + 0.6 + 4.2 * Math.cos(c) + b.near * 0.6
-    const ly = loft[1] - 2.6 + 1.1 * Math.sin(c) + b.up * 0.4
+    const lx = loft[0] + 3 + 9 * Math.cos(c) + b.near * 0.8
+    const ly = loft[1] - 1.8 + 1.2 * Math.sin(c) + b.up * 0.6
     x += (lx - x) * late
     y += (ly - y) * late
-    z += (0.6 * Math.sin(c) - z) * late
+    z += (0.45 * Math.sin(c) - 0.15 - z) * late
   }
   // Each from its sitting place, and to it at the end (or to the trap, and in).
   const seat: Pt = b.perch ?? [TRAP[0] + 0.3 * b.near, loft[1] + 0.25]
@@ -184,7 +208,7 @@ function birdAt(b: Bird, i: number, t: number, roof: number): { x: number; y: nu
 export function flockX(t: number): number {
   const loft = TRAP[0]
   if (t < REL) return loft
-  const [x] = wheel(((t - REL) / LAP) * Math.PI * 2 - 0.35 - 0.2, RX)
+  const [x] = wheel(((t - REL) / LAP) * Math.PI * 2 + PHASE - slowed(t) - 0.3, RX)
   const w = smoother((t - REL) / 3.4) * (1 - smoother((t - HOME) / 3.6))
   return loft + (x - loft) * w
 }
@@ -224,7 +248,7 @@ export function drawFlock(ctx: CanvasRenderingContext2D, k: number, v: View, t: 
     if (!at) continue
     if ((at.z >= 0) !== (side === 'front')) continue
     const e = at.z >= 0 ? -at.z * NEAR : -at.z * FAR
-    if (v.H + e < 1) continue
+    if (v.H + e < 5) continue
     const s = v.H / (v.H + e)
     const x = v.cx + (at.x - v.cx) * s
     const y = v.cy + (at.y - v.cy) * s

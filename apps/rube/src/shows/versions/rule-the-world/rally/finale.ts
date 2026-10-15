@@ -8,7 +8,7 @@ import { CREDITS_AT, DURATION, at } from './music'
 import { ctxOf, rgb } from './pen'
 import { paintInto, painted, prepare, snapshot, type Snap } from './snap'
 import { drawFlock, drawLoft, flockX } from './flock'
-import { CHIMNEY, drawMilk, drawNear, drawNextDoor, drawPavement } from './city'
+import { CHIMNEY, STACK, drawMilk, drawNear, drawNextDoor, drawPavement, drawRoofWashing } from './city'
 
 /**
  * The finale: the machine, whole.
@@ -19,11 +19,15 @@ import { CHIMNEY, drawMilk, drawNear, drawNextDoor, drawPavement } from './city'
  * alley, the road and the farm on fire over them, and the airfield and Tokyo beside the ward at the top. It stands in a
  * city at dawn.
  *
- * The building is asleep as the camera finds it, its rooms dark. On the song's last two bars their lights come on a
- * room a beat in the order he went through them, from the store to Tokyo (as the windows across the street from the
- * store woke a beat apiece at the start), and the song's last beat is on the ward, where he is at the glass with his
- * son. Then every room goes on with its own place, and in the quiet after the song the camera comes back in on the top
+ * The building is half asleep as the camera finds it, every room going on with its own place in the dark. On the
+ * song's last two bars their lights come on a room a beat in the order he went through them, from the store to Tokyo
+ * (as the windows across the street from the store woke a beat apiece at the start), and the song's last beat is on
+ * the ward, where he is at the glass with his son; and in the quiet after the song the camera comes back in on the top
  * floor.
+ *
+ * Round it the city wakes (`city.ts`), and over it the pigeons from the loft on its roof wheel and come home
+ * (`flock.ts`): across the sleeping rooms' faces as the camera draws back, and once every room is lit, close past the
+ * lens over them.
  *
  * Everything here is in the ward's own cells (the building is laid round the ward where it stands), drawn over the
  * ward everywhere but in the ward's own room, which is the ward itself, live. There is no light laid over any of it:
@@ -553,6 +557,11 @@ let lastPainted = -1
  * turn of its loop the last of it dissolves into the start again.
  */
 const ROOM_FPS = 10
+/**
+ * From when the rooms go on in the half-dark, before their lights come: as the crane comes out of the ward, so the
+ * building it finds is asleep but not still.
+ */
+const STIR = FINALE + 4
 const DISSOLVE = 0.5
 const running = new Map<string, { pic: HTMLCanvasElement; at: number }>()
 /** The room's place at `t` (show time of the finale): its framing, at the moment its loop has reached. */
@@ -562,7 +571,7 @@ function roomSnap(room: Room, i: number, t: number): { snap: Snap; within: numbe
   const L = loop[1] - loop[0]
   // Every room on one grid, each an eighth of a step after the last, so no frame repaints more than two.
   const q = Math.floor((t - FINALE) * ROOM_FPS - i / ROOMS.length)
-  const u = Math.max(0, FINALE + (q + i / ROOMS.length) / ROOM_FPS - WAKES[i])
+  const u = Math.max(0, FINALE + (q + i / ROOMS.length) / ROOM_FPS - STIR)
   const turns = Math.floor(u / L)
   const within = u - turns * L
   const at = loop[0] + within
@@ -576,7 +585,7 @@ const endOf = (room: Room): Snap | null =>
 function roomPicture(p: p5, room: Room, i: number, t: number): { pic: HTMLCanvasElement | null; end: HTMLCanvasElement | null; fade: number } {
   if (!room.snap) return { pic: null, end: null, fade: 0 }
   const still = snapshot(room.snap, PIC_W, PIC_H, p)
-  const run = t >= WAKES[i] ? roomSnap(room, i, t) : null
+  const run = t >= STIR ? roomSnap(room, i, t) : null
   if (!run || typeof document === 'undefined') return { pic: still, end: null, fade: 0 }
   let r = running.get(room.key)
   if (!r) {
@@ -646,6 +655,18 @@ export const finale = scenery<null>({
     drawStreet(p, k, f, t)
     drawShell(p, k, t)
     drawLoft(ctx, k, t, ROOF)
+    drawRoofWashing(ctx, k, f, t, ROOF)
+    if (f.x0 < STACK[0] + 12 && f.y0 < ROOF) {
+      // The stack's smoke, leaning downwind over the washing.
+      const sx = STACK[0]
+      const sy = ROOF - 3.7
+      ctx.save()
+      ctx.translate(sx * k, sy * k)
+      ctx.transform(1, 0, -0.9, 1, 0, 0)
+      ctx.translate(-sx * k, -sy * k)
+      rising({ p, k, ink: '#000', w: 1, tone: (h: string) => h }, t, { seed: 917, n: 34, from: [sx - 0.3, sx + 0.3, sy], rise: 6.5, life: 5, spread: 1.6, size: [0.35, 1.1], color: '#9A8C9C', hot: '#B8AAB2', alpha: 0.32 })
+      ctx.restore()
+    }
     ctx.imageSmoothingQuality = 'high'
     ROOMS.forEach((room, i) => {
       if (!room.snap) return
@@ -663,8 +684,8 @@ export const finale = scenery<null>({
       ctx.beginPath()
       ctx.rect(b.x0 * k, b.y0 * k, (b.x1 - b.x0) * k, (b.y1 - b.y0) * k)
       ctx.clip()
-      // Dark until its lights come on.
-      const dark = 0.8 * (1 - lit) + 0.04
+      // Dim until its lights come on.
+      const dark = 0.72 * (1 - lit) + 0.04
       ctx.fillStyle = `rgba(8,8,18,${dark})`
       ctx.fillRect(b.x0 * k, b.y0 * k, (b.x1 - b.x0) * k, (b.y1 - b.y0) * k)
       // The ceiling's shade.

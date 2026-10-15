@@ -373,6 +373,75 @@ export function drawNextDoor(ctx: CanvasRenderingContext2D, k: number, f: Frame,
   ctx.restore()
 }
 
+/* ------------------------------------------------------------------ the building's own roof */
+
+/** The roof's chimney stack, left of the washing, for its smoke (`finale.ts`). */
+export const STACK: Pt = [-31.6, 0]
+const LINE_X0 = -29
+const LINE_X1 = -18.6
+
+/**
+ * The washing on the building's roof, beside the loft: sheets, shirts and a row of nappies (there is a new baby on the top
+ * floor), filling and flapping in the dawn wind; and the chimney stack it is downwind of.
+ */
+export function drawRoofWashing(ctx: CanvasRenderingContext2D, k: number, f: Frame, t: number, roof: number): void {
+  const top = roof - 0.5
+  if (f.x1 < STACK[0] - 2 || f.x0 > LINE_X1 + 2 || f.y0 > top) return
+  const line = top - 2.3
+  ctx.save()
+  // The stack.
+  ctx.fillStyle = '#3A2A2C'
+  ctx.fillRect((STACK[0] - 0.6) * k, (top - 2.9) * k, 1.2 * k, 2.9 * k)
+  ctx.fillStyle = '#4C3A3A'
+  ctx.fillRect((STACK[0] - 0.72) * k, (top - 3.05) * k, 1.44 * k, 0.3 * k)
+  // The posts and the line, sagging.
+  ctx.strokeStyle = css('#2A2228', 0.95)
+  ctx.lineWidth = Math.max(1, 0.07 * k)
+  ctx.beginPath()
+  for (const x of [LINE_X0, LINE_X1]) {
+    ctx.moveTo(x * k, top * k)
+    ctx.lineTo(x * k, (line - 0.15) * k)
+  }
+  ctx.stroke()
+  ctx.lineWidth = Math.max(1, 0.03 * k)
+  ctx.beginPath()
+  ctx.moveTo(LINE_X0 * k, line * k)
+  ctx.quadraticCurveTo(((LINE_X0 + LINE_X1) / 2) * k, (line + 0.5) * k, LINE_X1 * k, line * k)
+  ctx.stroke()
+  const at = (x: number): number => {
+    const u = (x - LINE_X0) / (LINE_X1 - LINE_X0)
+    return line + 0.5 * 4 * u * (1 - u) * 0.5
+  }
+  // What hangs on it: [where it starts, how wide, how long, its colour].
+  const pieces: [number, number, number, string][] = [
+    [-28.6, 2.3, 1.55, '#CFC4C8'],
+    [-26.0, 0.9, 1.0, '#7A8CA6'],
+    [-24.8, 0.9, 1.0, '#D8D0C8'],
+    [-23.6, 0.42, 0.42, '#E6E0DA'],
+    [-23.0, 0.42, 0.42, '#E6E0DA'],
+    [-22.4, 0.42, 0.42, '#E6E0DA'],
+    [-21.8, 0.42, 0.42, '#E6E0DA'],
+    [-21.2, 2.2, 1.45, '#C4B8C0'],
+  ]
+  pieces.forEach(([x, w, h, col], i) => {
+    const y0 = at(x)
+    const y1 = at(x + w)
+    // The wind fills it out sideways and lifts its hem, in gusts; the flutter runs along it.
+    const gust = 0.55 + 0.45 * Math.sin(t * 0.9 + 0.4) * Math.sin(t * 0.37 + 1.1)
+    const blow = (0.25 + 0.55 * gust) * h + 0.08 * Math.sin(t * 6.3 + i * 1.9) * h
+    const flut = 0.1 * Math.sin(t * 8.1 + i * 2.3) * h
+    ctx.fillStyle = col
+    ctx.beginPath()
+    ctx.moveTo(x * k, y0 * k)
+    ctx.lineTo((x + w) * k, y1 * k)
+    ctx.quadraticCurveTo((x + w + blow * 0.45) * k, (y1 + h * 0.5) * k, (x + w + blow) * k, (y1 + h - blow * 0.35) * k)
+    ctx.quadraticCurveTo((x + w * 0.5 + blow) * k, (y0 + h - blow * 0.3 + flut) * k, (x + blow * 0.85) * k, (y0 + h - blow * 0.4) * k)
+    ctx.quadraticCurveTo((x + blow * 0.35) * k, (y0 + h * 0.5) * k, x * k, y0 * k)
+    ctx.fill()
+  })
+  ctx.restore()
+}
+
 /* ------------------------------------------------------------------ the street */
 
 /** People going to work along the near pavement under the El, each on their own errand, each their own pace. */
@@ -675,15 +744,37 @@ export function drawNear(ctx: CanvasRenderingContext2D, k: number, f: Frame, t: 
     ctx.beginPath()
     ctx.arc(px * k, (py - 0.8 * s) * k, 0.35 * s * k, 0, Math.PI * 2)
     ctx.fill()
-    const [qx, qy] = at(x0 + 2.2, 17.5 - 1.4)
-    const flap = 0.15 * Math.sin(t * 2.3)
+    // Washing on the rails and on a line out from the upper landing, all of it going in the wind.
     ctx.fillStyle = css('#4A4250', 0.97)
     ctx.beginPath()
-    ctx.moveTo((qx - 0.6 * s) * k, qy * k)
-    ctx.lineTo((qx + 0.6 * s) * k, qy * k)
-    ctx.lineTo((qx + (0.55 + flap) * s) * k, (qy + 1.3 * s) * k)
-    ctx.lineTo((qx + (-0.55 + flap) * s) * k, (qy + 1.3 * s) * k)
-    ctx.closePath()
+    const hang = (hx: number, hy: number, w: number, h: number, seed: number): void => {
+      const blow = (0.25 + 0.2 * Math.sin(t * 1.3 + seed) + 0.12 * Math.sin(t * 5.7 + seed * 2)) * h
+      ctx.moveTo((hx - w / 2) * k, hy * k)
+      ctx.lineTo((hx + w / 2) * k, hy * k)
+      ctx.lineTo((hx + w / 2 + blow) * k, (hy + h - blow * 0.3) * k)
+      ctx.lineTo((hx - w / 2 + blow * 0.8) * k, (hy + h - blow * 0.35 + 0.05 * h * Math.sin(t * 7 + seed)) * k)
+      ctx.closePath()
+    }
+    const [qx, qy] = at(x0 + 2.2, 17.5 - 1.4)
+    hang(qx, qy, 1.2 * s, 1.3 * s, 1)
+    const [lx, ly] = at(x0 + 4.4, 8.5 - 1.4)
+    hang(lx, ly, 1.0 * s, 1.1 * s, 2)
+    const [ax0, ay0] = at(x1, 8.5 - 1.6)
+    const [ax1, ay1] = at(x0 - 12, 5.5)
+    ctx.fill()
+    ctx.lineWidth = Math.max(1, 0.04 * s * k)
+    ctx.beginPath()
+    ctx.moveTo(ax0 * k, ay0 * k)
+    ctx.quadraticCurveTo(((ax0 + ax1) / 2) * k, ((ay0 + ay1) / 2 + 1.2 * s) * k, ax1 * k, ay1 * k)
+    ctx.stroke()
+    ctx.fillStyle = css('#5A4E5C', 0.97)
+    ctx.beginPath()
+    for (let i = 0; i < 4; i++) {
+      const u = 0.2 + i * 0.2
+      const px = ax0 + (ax1 - ax0) * u
+      const py = ay0 + (ay1 - ay0) * u + 1.2 * s * 4 * u * (1 - u) * 0.5
+      hang(px, py, 0.9 * s, (i % 2 ? 1.0 : 1.5) * s, 3 + i)
+    }
     ctx.fill()
   }
   // The telegraph pole and its wires, swinging a little.
@@ -704,7 +795,7 @@ export function drawNear(ctx: CanvasRenderingContext2D, k: number, f: Frame, t: 
       const ox = (j % 2 ? 1 : -1) * (j < 2 ? 2.0 : 1.5)
       const [ax, ay] = at(7.5 + ox, y - 0.1)
       const [bx, by] = at(-40 + j * 3, -26 + j * 0.6)
-      const sag = (3.2 + 0.25 * Math.sin(t * 0.9 + j)) * s
+      const sag = (3.2 + 0.6 * Math.sin(t * 0.9 + j) + 0.2 * Math.sin(t * 2.3 + j * 2)) * s
       ctx.moveTo(ax * k, ay * k)
       ctx.quadraticCurveTo(((ax + bx) / 2) * k, ((ay + by) / 2 + sag) * k, bx * k, by * k)
     }
