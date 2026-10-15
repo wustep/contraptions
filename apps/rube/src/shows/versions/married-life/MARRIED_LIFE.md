@@ -129,6 +129,8 @@ bass, on the one); Ellie, round, answers on the first pah.
   33 and lies by him under all of it, her face turned up to the sky (`LOOKS`); he starts at the baby, she turns her
   face from it to him, he answers with a small lean to her, and she looks back up at it for the cut (`GLANCE`): what
   they want, decided between them. She rolls the last of the way. The camera stays at most 5.5 cells.
+- Their picnic hamper stands shut on the grass at the blanket's head: the one he hides the tickets in fifty years
+  later and carries up this hill.
 
 ### The nursery (63.25 to 73.46 s): the house, inside, upstairs
 
@@ -161,7 +163,9 @@ and the landing a dusty-rose trellis, the nursery small white stars; the living 
 chair rail. The papers fade with the years, and the nursery's once it is given up. Beyond the yard's end and past
 the porch are the gardens behind (`BEHIND`, the street's far side again, `house/far.ts`, lower and hazier): trees and
 a roof or two in the sky's own light, grey through the loss, dusk on the evening of the tickets, kept low behind her
-stump.
+stump. The ground is cut through with the house: topsoil under the grass, the subsoil and a deeper band, stones, the
+yard tree's roots and the old stump's under the yard, and the house's stone footings under its walls, its partition
+and its chimney (`underground` in `inside/inside.ts`); the rain soaks the topsoil dark through the storm.
 
 - **The yard.** The office's cold light carries across the cut, which opens close on Carl at the back door, the
   office door become this one, and Ellie small on a tall stump far to his left in the grey yard, turned away; the camera
@@ -334,9 +338,15 @@ stump.
   light, car lamps move along a road and trains cross the viaduct. As the camera draws back through the credits each
   place comes into the frame in turn: the church where they married, the hill, the hospital. Then his own street
   around him: four neighbours' houses at his scale (a cottage, a bungalow, a gable to the street, a bay), their
-  fences and hedges, every window dark and their porch lights off, the snow settling on them as on his; in front, our
-  side of the street, picket fences and a round car at the kerb gathering snow. His is the one lit window in the
-  street, seen to be. None of it is in any frame before the credits' draw-back.
+  fences and hedges, their porch lights off, the snow settling on them as on his; in front, our side of the street,
+  picket fences and hedges. The first three come in with a window or two still lit, a flat warm pane, and in the
+  quiet after the piano's last note the street goes to bed: the cottage's front room at 244.6, its dormer at 247.4,
+  the bungalow at 250.6, the gable house's landing at 253.9 (`NEIGHBOURS` in `house/front-house.ts`); the house with
+  the bay comes in dark. From then his is the one lit window in the street. None of it is in any frame before the
+  credits' draw-back.
+- **Lived in.** From his coming home the house's windows have curtains behind the glass: the nursery's pink drawn shut
+  under the gable, as it has been inside since the doctor; their bedroom's cream and the living room's faded green
+  tied back. At the fix-up the house is new and its windows bare.
 
 ## End credits
 
@@ -1052,6 +1062,35 @@ window.
     in detail; in motion it is still behind it, because its last 25 s are the credits' wide and slow draw-back, the
     house small under a sky the cards are set in. Filling that sky to win the measure would put clutter under the
     words; it is kept.
+
+- **Fullness pass, round 3 (Opus 5.5).** The same eight points again, cutting and refining as much as adding: the ten
+  frames, three sheets of the whole show, every section measured, each of the earlier rounds' additions looked at for
+  gloss and for clutter, and the frame cost found by section.
+  - *Cut.* The white slants across glass, wherever they were: the house's windows and its bay, the doll's house's
+    windows, the jar's still frames, the hall's pictures, the ticket press's reel, the front door's light (the glass
+    is told by its frame and by what is behind it). The wet paint's white streaks and the roller's shine (its deeper wet
+    edge and its shade stay). The east window's flare on the kiss, a second, stronger shaft over the light already
+    gathering on them, which hazed the pews (the gathering light and the photograph's flash stay). From round 2: the
+    round car at the credits' kerb (a dark dome at the frame's foot, as the fix-up's cars were). From round 1: the
+    flocks still crossing the sky after dark and through the snow (the last dusk flocks are home by about 245 s). A
+    sliver of a pane the bungalow drew backwards between its door and window. The nearest snowflakes made a little
+    smaller and softer, so the last frame's snow does not read as dots.
+  - *Added, from the story.* The street goes to bed: the neighbours come in with lights on and put them out one at a
+    time in the silence after the last note, so his being the one lit window is told, not given. Curtains behind the
+    house's glass once it is lived in, the nursery's drawn shut. Their picnic hamper on the clouds' hill, the one the
+    climb carries up it. The doll's house's ground cut through (above), the flat band under it that is a fifth of the
+    frame through the storm's wide.
+  - *Cost.* The slowest frames were the doctor's close (78 to 83 s): the sun's bars laid three times a frame, each in
+    four screen passes over half the frame. Now three passes for the wall's (the same core, the same soft edge) and
+    one for each faint layer; stills are the same. Measured side by side with round 2 (both served at once, the same
+    frame drawn 50 to 60 times and then made to finish, the median of four alternating rounds, on a machine busy with
+    other work): the office's close 15.7 → 8.4 ms, 16.6 → 8.6, 14.2 → 7.9; the storm's wide, now the heaviest frame,
+    16.7 → 16.3 and 15.4 → 15.6 (the ground under it costs nothing to speak of); the yard 3.6 → 3.7; the credits
+    8.3 → 7.8.
+  - *Measured* (motion / detail at 320×180, round 2 → round 3): 0–86 s 10.5 → 10.5% / 16.4 → 16.5%; 86–172 s
+    9.8 → 10.0% / 15.8 → 16.2%; 172–258 s 8.1 → 8.1% / 15.2 → 15.1%. The final third holds where it was: what was cut
+    from it (night birds, the car, the flakes' size) about matches what came in (the lights going out are a few pixels
+    each at that size). It is still behind the opening in motion for the reason round 2 gives, and kept so.
 
 ## Known limits
 
