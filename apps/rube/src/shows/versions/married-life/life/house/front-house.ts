@@ -3,6 +3,7 @@ import { mixHex } from '../../../../../parts'
 import { alpha, hash, smooth } from '../kit'
 import { HOME, INK, carlAt, ellieAt } from '../worlds'
 import { drawChair, CHAIR } from '../props/chairs'
+import { stripe } from '../inside/papers'
 import { ALONE, CHAIRS, DOOR_HUNG, EDGE, FLAG_AT, G, HOUSE, LAMP_X, MAILBOX, P, PANE_AT, PRINT_AT, PRINTS, TREADS, TREE_AT, type DoorSwing } from './front-plan'
 
 /**
@@ -236,8 +237,9 @@ function door(p: p5, k: number, weight: number, L: Look, c: Pal, swings: DoorSwi
     p.noFill()
     p.stroke(alpha(p, c.ink, 0.45))
     p.strokeWeight(weight * 0.5)
+    // (The lower panel stops short of the leaf's foot: it ran 0.08 past it, onto the porch boards.)
     p.rect(0.12 * (w / w0) * k, -(h - 0.78) * k, (w - 0.24 * (w / w0)) * k, 0.5 * k)
-    p.rect(0.12 * (w / w0) * k, -(h - 1.4) * k, (w - 0.24 * (w / w0)) * k, 0.6 * k)
+    p.rect(0.12 * (w / w0) * k, -(h - 1.36) * k, (w - 0.24 * (w / w0)) * k, 0.46 * k)
     p.noStroke()
     p.fill(dusk(L, HOME.brass))
     p.rect((w - 0.13 * (w / w0)) * k, -1.0 * k, 0.05 * k, 0.05 * k, 0.02 * k)
@@ -316,6 +318,15 @@ function room(p: p5, k: number, weight: number, L: Look, chairsIn: { carl: boole
   p.fill(wall)
   rect(p, k, x0, head - 0.1, x1, P)
   if (!L.old) {
+    // Its paper, the living room's (`inside/papers.ts`): the same room from the street.
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const papered = { x0, x1, y0: head - 0.1, y1: P - 0.1 }
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, papered.y0 * k, (x1 - x0) * k, (papered.y1 - papered.y0) * k)
+    ctx.clip()
+    stripe(ctx, k, papered, papered, wall, 1 - 0.35 * L.age)
+    ctx.restore()
     // The skirting and floor. (No picture rail: at the end the balloon floats over her chair at its height, and a
     // line behind the balloon's lower third read as a cut through it.)
     p.fill(dusk(L, mixHex(HOME.woodDark, HOME.lamp, 0.2 * lit)))
@@ -464,8 +475,28 @@ export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swing
   // corner post (x1 + 0.05): a gap there showed a slit of the balloon between post and wall as he came in.
   const d = HOUSE.door
   siding(p, k, weight, L, c, x1 + 0.05, d.x0, HOUSE.porch.roof, P, 7)
-  // And the wall over the door, up under the porch roof: what anyone indoors (and the balloon) is behind.
-  siding(p, k, weight, L, c, d.x0 - 0.08, d.x1 + 0.08, -2.86, d.top, 8)
+  // And the wall over the door, up under the porch roof: what anyone indoors (and the balloon) is behind. Clipped to the
+  // roof's underside, which slopes across it (drawn square, it covered a notch of the roof's trim), and its laps on the
+  // wall's own (they ran 0.08 off the wall's either side of it, so it read as a patch).
+  {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const { x0: px0, x1: px1, roof } = HOUSE.porch
+    const sag = L.old ? 0.22 : 0
+    const under = (x: number) => roof - 0.12 + ((x - (px0 + 0.1)) / (px1 + 0.1 - px0)) * (0.22 + sag)
+    const wx0 = d.x0 - 0.08
+    const wx1 = d.x1 + 0.08
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo(wx0 * k, under(wx0) * k)
+    ctx.lineTo(wx1 * k, under(wx1) * k)
+    ctx.lineTo(wx1 * k, d.top * k)
+    ctx.lineTo(wx0 * k, d.top * k)
+    ctx.closePath()
+    ctx.clip()
+    const top = P - 0.2 * Math.ceil((P + 2.9) / 0.2)
+    siding(p, k, weight, L, c, wx0, wx1, top, P, 8)
+    ctx.restore()
+  }
   p.stroke(c.ink)
   p.strokeWeight(weight * 0.8)
   p.fill(c.trim)
@@ -473,6 +504,32 @@ export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swing
   rect(p, k, d.x0 - 0.08, d.top, d.x0, P)
   rect(p, k, d.x1, d.top, d.x1 + 0.08, P)
   p.pop()
+}
+
+/**
+ * The lit room's light on the house round the bay at night: a soft warm bloom on the clapboard, the porch and the
+ * lawn, never over the glass (the room behind it is lit already, and he is in it). Drawn last, over the bay's frame.
+ */
+export function drawBayGlow(p: p5, k: number, L: Look): void {
+  const a = L.lamp * Math.max(0, Math.min(1, (L.dark - 0.3) / 0.4))
+  if (a <= 0.01 || L.old) return
+  const { x0, x1, head } = HOUSE.bay
+  const cx = (x0 + x1) / 2
+  const cy = (head + P) / 2
+  const r = 3.2
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect((cx - r) * k, (cy - r) * k, 2 * r * k, 2 * r * k)
+  ctx.rect(x0 * k, head * k, (x1 - x0) * k, (P - head) * k)
+  ctx.clip('evenodd')
+  const g = ctx.createRadialGradient(cx * k, cy * k, 0.6 * k, cx * k, cy * k, r * k)
+  g.addColorStop(0, `rgba(255, 222, 160, ${0.36 * a})`)
+  g.addColorStop(0.45, `rgba(255, 222, 160, ${0.14 * a})`)
+  g.addColorStop(1, 'rgba(255, 222, 160, 0)')
+  ctx.fillStyle = g
+  ctx.fillRect((cx - r) * k, (cy - r) * k, 2 * r * k, 2 * r * k)
+  ctx.restore()
 }
 
 /** The mailbox at the street: a box on a post, the flag on its end; leaning and dull on the old house. The prints once pressed. */

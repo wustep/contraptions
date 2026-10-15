@@ -4,7 +4,7 @@ import { CREDITS_AT } from '../credits'
 import { CUT, DURATION } from '../music'
 import { CUTS } from '../seams'
 import { CHAIR } from '../props/chairs'
-import { drawFacadeFront } from './front-house'
+import { drawBayGlow, drawFacadeFront } from './front-house'
 import { lookAt } from './front'
 import { ALONE, CHAIRS, FOOT_X, LAMP_X, LAMPS, P, STAR, SWINGS, TREADS } from './front-plan'
 import { climbUp, crouch, cubic, pieces, trace, type Path } from './front-motion'
@@ -230,6 +230,7 @@ export const alone = part<AloneState>(
       p.push()
       p.translate(-ALONE_AT[0] * c.k, -ALONE_AT[1] * c.k)
       drawFacadeFront(p, c.k, c.weight, lookAt(T), SWINGS)
+      drawBayGlow(p, c.k, lookAt(T))
       p.pop()
     },
   },
