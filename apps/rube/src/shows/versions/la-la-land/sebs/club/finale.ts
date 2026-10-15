@@ -1,5 +1,5 @@
 import { laneAt, mixHex, R, type Pt } from '../../../../../parts'
-import { box, part, route, type Company, type PartShot, type Way } from '../kit'
+import { box, frame, part, rgba, route, smooth, type Company, type PartShot, type Way } from '../kit'
 import { AT, notes as measured } from '../music'
 import { hop } from '../physics'
 import { SEBS_MAT } from '../worlds'
@@ -46,6 +46,12 @@ const GO = 463.95
 const DOORWAY = -12.3
 /** The cuts between their close shots. */
 const CUTS = { her: 461.02, him: 462.05, smile: 462.75, nod: 463.45, out: 464.27 }
+/**
+ * The waking, told with an iris: on the last chord the circle the dream drained into closes on him at the keys (the
+ * lens draws its colour; this draws its dark), all the way to black; under the black the picture goes to her table,
+ * and an iris opens on her there, looking at the empty seat. The dream went out on him; the room as it is opens on her.
+ */
+const WAKE = { shut: AT.last + 0.38, cut: 454.14, open: 454.95 }
 /** The count-in: four nods, a beat apart, onto the band. */
 const COUNT = [0, 1, 2, 3].map((i) => BAND - 0.4515 * (4 - i))
 /** Where the two of them go out of shot, and are let go. */
@@ -234,6 +240,35 @@ export const finale = part<FinaleState>(
       drawPiano(p, c.k, c.ink, c.weight, t, s.keys, { color: mixHex(L.stage, SEBS_MAT.candle, 0.45 * L.blaze), lit: 1 })
       p.pop()
     },
+    over(p, s, c) {
+      const t = c.t + s.begin
+      if (t < AT.last || t > WAKE.open) return
+      const k = c.k
+      const fr = frame(p, k)
+      const span = Math.hypot(fr.x1 - fr.x0, fr.y1 - fr.y0)
+      const closing = t < WAKE.cut
+      // Closing as the lens's circle closes, round him; opening round her and the seat beside her.
+      const at = closing ? F(plus(keyRest(LAST_KEY), 0, -0.2)) : F([TABLE.x, TABLE.top - 0.2])
+      const r = closing ? 1.1 * (1 - smooth(t, AT.last, WAKE.shut)) : 0.04 + smooth(t, WAKE.cut, WAKE.open) * span
+      const a = closing ? smooth(t, AT.last, AT.last + 0.24) : 1
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      ctx.save()
+      const X0 = (fr.x0 - 1) * k
+      const Y0 = (fr.y0 - 1) * k
+      const W = (fr.x1 - fr.x0 + 2) * k
+      const H = (fr.y1 - fr.y0 + 2) * k
+      if (r * k < 0.5) {
+        ctx.fillStyle = rgba('#000000', a)
+      } else {
+        const lip = Math.min(0.2, r * 0.3)
+        const g = ctx.createRadialGradient(at[0] * k, at[1] * k, Math.max(0, r - lip) * k, at[0] * k, at[1] * k, (r + 0.02) * k)
+        g.addColorStop(0, rgba('#000000', 0))
+        g.addColorStop(1, rgba('#000000', a))
+        ctx.fillStyle = g
+      }
+      ctx.fillRect(X0, Y0, W, H)
+      ctx.restore()
+    },
   },
   (slot) => {
     const pl = Math.abs(slot.begin - BEGIN) < 1e-9 ? PLAN : plan(slot.begin)
@@ -256,17 +291,20 @@ export const finale = part<FinaleState>(
     { t: 434.6, cells: 2.2, hold: F([TABLE.x, 2.46]) },
     // Each way across the room the camera draws back as it goes: the two of them and the piano in one frame.
     { t: 436.3, cells: 5.8, hold: F([-0.4, 1.25]) },
+    // From the piano playing itself the camera draws back along the stage to the band beside it, playing with it
+    // soft; then back across the room to them, and in on the two of them while the room goes down round them to one
+    // pool of light, from the couple at the next table to the kiss.
     { t: 438.0, cells: 3.4, hold: F([2.8, -0.4]) },
-    { t: 441.6, cells: 3.1, hold: F([3.2, -0.35]) },
+    { t: 440.9, cells: 5.6, hold: F([5.4, 0.3]) },
     { t: 443.2, cells: 5.8, hold: F([-0.4, 1.25]) },
-    { t: 444.9, cells: 1.65, hold: F([TABLE.x, 2.58]) },
-    { t: 451.3, cells: 1.55, hold: F([TABLE.x, 2.58]) },
+    { t: 444.9, cells: 2.35, hold: F([TABLE.x - 0.45, 2.42]) },
+    { t: 451.3, cells: 1.45, hold: F([TABLE.x, 2.6]) },
     // With him up to the keys, onto the last chord; the stillness.
     // Wide enough to keep her table in the frame as he goes.
     { t: 452.6, cells: 4.6, hold: F([0.9, 1.05]) },
     { t: 453.9, cells: 3.2, hold: F([4.3, -0.3]) },
     { t: 454.13, cells: 3.18, hold: F([4.32, -0.3]) },
-    // Cut, on the chord's ring, to her table: the dream's kiss's own two-shot, a little wider. We watch the dream's him
+    // Under the iris's black, on the chord's ring, to her table: the dream's kiss's own two-shot, a little wider. We watch the dream's him
     // in the seat beside her drain to grey while she looks at it, and David come in and sit down into it. The dream is
     // over. Then out with her as she follows David to the door.
     { t: 454.15, cells: 2.05, hold: F([TABLE.x - 0.12, 2.5]) },
@@ -289,9 +327,9 @@ export const finale = part<FinaleState>(
     { t: 469.8, cells: 7, hold: F([-2.5, 0.8]) },
     // Him at the keys and the whole bandstand beside him, the piano left of centre and the band right of it, so the lamps come up in the frame as he looks back
     // at the door; and closer still on him for the count-in, his nods to the band.
-    { t: 472.0, cells: 7.3, hold: F([6.0, 0.5]) },
-    { t: 475.6, cells: 7.1, hold: F([6.0, 0.45]) },
-    { t: 477.9, cells: 7.0, hold: F([6.0, 0.43]) },
+    { t: 472.0, cells: 7.6, hold: F([6.0, 0.5]) },
+    { t: 475.6, cells: 7.0, hold: F([5.95, 0.45]) },
+    { t: 477.9, cells: 6.55, hold: F([5.9, 0.42]) },
     { t: 480.0, cells: 7, hold: F([3.6, -1.6]) },
   ],
 )
