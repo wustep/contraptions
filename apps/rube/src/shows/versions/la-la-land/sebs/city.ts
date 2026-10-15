@@ -205,9 +205,7 @@ function drawSign(p: p5, k: number, t: number, end: boolean, ox: number, oy: num
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const [u0, u1] = SIGN_U
   const step = (u1 - u0) / SIGN_BLOCKS
-  // Lit, its yellow lies on the hill under it, more as more of it lights: below the blocks, not round them.
-  const lit = end ? SIGN_AT.reduce((n, a) => n + smooth(t, a, a + 0.25), 0) / SIGN_BLOCKS : 0
-  if (lit > 0.01) glow(p, k, (u0 + u1) / 2 + ox, HORIZON + oy - 3.55, (u1 - u0) * 0.7, MIA, 0.2 * lit, 1, 0.26)
+  // Lit, the blocks are the light: nothing round them, and at this distance nothing seen on the hill under them.
   for (let i = 0; i < SIGN_BLOCKS; i++) {
     const u = u0 + step * (i + 0.5)
     // Level along the hill's face, a little under the crest, the blocks set a hair up and down as the real ones are.
@@ -396,10 +394,11 @@ export const city = scenery<CityState>({
       ctx.arc(ox * k, (oy - 0.45) * k, 0.56 * k, -Math.PI / 2, 0)
       ctx.lineTo(ox * k, (oy - 0.45) * k)
       ctx.fill()
-      // Its windows, and the floods' light on the terrace below it.
+      // Its windows, and the floods' light on the terrace below it: a band of pale paving under the walls.
       ctx.fillStyle = rgba(LIGHT, 0.35 + 0.55 * lit)
       for (let w = -3; w <= 3; w++) ctx.fillRect((ox + w * 0.4 - 0.06) * k, (oy - 0.32) * k, 0.12 * k, 0.16 * k)
-      glow(p, k, ox, oy + 0.15, 1.8, LIGHT, 0.08 + 0.14 * lit, 1.4, 0.3)
+      ctx.fillStyle = rgba(mixHex('#3A3152', '#D9CDB5', 0.2 + 0.35 * lit), 0.9)
+      ctx.fillRect((ox - 1.9) * k, (oy - 0.03) * k, 3.8 * k, 0.07 * k)
     }
 
     // The basin: dark ground from the hills' foot to the street, and on it the lights of the city.
