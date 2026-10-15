@@ -832,6 +832,79 @@ function flat(p: p5, k: number, b: Rect, y: number, fill: string | p5.Color, ink
   seg(p, k, [b.x0, y], [b.x1, y], ink, w)
 }
 
+/**
+ * A mown lawn from `y` (its far edge, at the hedge) down to the box's foot: the mower's stripes, paler and darker,
+ * going back from us toward a point far off over `vx`, which is what lays the lawn down and sends it away.
+ */
+function mown(p: p5, k: number, b: Rect, y: number, vx: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const vy = y - 3.4
+  const spread = (b.y1 - vy) / (y - vy)
+  const near = (x: number) => vx + (x - vx) * spread
+  const step = 0.8
+  // Each stripe is counted from the far point, so it keeps its place as the camera moves; enough of them to cover the
+  // box along the far edge and along the near one.
+  const n0 = Math.floor((Math.min(b.x0, vx + (b.x0 - vx) / spread) - vx) / step) - 1
+  const n1 = Math.ceil((Math.max(b.x1, vx + (b.x1 - vx) / spread) - vx) / step) + 1
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(b.x0 * k, y * k, (b.x1 - b.x0) * k, (b.y1 - y) * k)
+  ctx.clip()
+  ctx.beginPath()
+  for (let n = n0; n <= n1; n++) {
+    if (n % 2 !== 0) continue
+    const x0 = vx + n * step
+    const x1 = x0 + step
+    ctx.moveTo(x0 * k, y * k)
+    ctx.lineTo(x1 * k, y * k)
+    ctx.lineTo(near(x1) * k, b.y1 * k)
+    ctx.lineTo(near(x0) * k, b.y1 * k)
+    ctx.closePath()
+  }
+  ctx.fillStyle = rgba(M.cream, 0.11)
+  ctx.fill()
+  ctx.restore()
+}
+
+/** Where the late sun throws a thing's shadow on the lawn, per cell of its height: toward us, and away from the sun. */
+const SUN_THROW: Pt = [-0.2, 0.3]
+
+/**
+ * The late sun's shadows on the lawn, all thrown the one way, in one flat shade: `walls` stand on the lawn (from x0 to
+ * x1 at `foot`, `h` tall: a hedge, a table, a chair, a box), `crowns` are a tree's or a palm's head held up on its
+ * trunk (at x, its foot, the head's height and its radius), and `feet` are small shadows right under a thing.
+ */
+function lawnShadows(p: p5, k: number, walls: [number, number, number, number][], crowns: [number, number, number, number][], feet: [number, number, number][] = []): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [dx, dy] = SUN_THROW
+  ctx.beginPath()
+  for (const [x0, x1, foot, h] of walls) {
+    ctx.moveTo(x0 * k, foot * k)
+    ctx.lineTo(x1 * k, foot * k)
+    ctx.lineTo((x1 + dx * h) * k, (foot + dy * h) * k)
+    ctx.lineTo((x0 + dx * h) * k, (foot + dy * h) * k)
+    ctx.closePath()
+  }
+  for (const [x, foot, h, r] of crowns) {
+    // The trunk's shadow out to the head's, then the head's, flattened on the ground.
+    ctx.moveTo((x - 0.04) * k, foot * k)
+    ctx.lineTo((x + 0.04) * k, foot * k)
+    ctx.lineTo((x + dx * h + 0.04) * k, (foot + dy * h) * k)
+    ctx.lineTo((x + dx * h - 0.04) * k, (foot + dy * h) * k)
+    ctx.closePath()
+    const cx = x + dx * h
+    const cy = foot + dy * h
+    ctx.moveTo((cx + r * 1.1) * k, cy * k)
+    ctx.ellipse(cx * k, cy * k, r * 1.1 * k, r * 0.26 * k, 0, 0, Math.PI * 2)
+  }
+  for (const [x, foot, r] of feet) {
+    ctx.moveTo((x + dx * 0.15 + r) * k, (foot + 0.02) * k)
+    ctx.ellipse((x + dx * 0.15) * k, (foot + 0.02) * k, r * k, r * 0.22 * k, 0, 0, Math.PI * 2)
+  }
+  ctx.fillStyle = rgba('#3E5A34', 0.2)
+  ctx.fill()
+}
+
 /** Shot one: the house, the path, the gate, the steps; Mia and the pram on the porch. */
 function drawHouse(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
@@ -844,9 +917,11 @@ function drawHouse(p: p5, t: number, c: Ctx, b: Rect): void {
   // The tree beside the house, and the hedge along the back of the garden.
   tree(p, k, ink, w, -2.45, FLOORY, 2.3, 0.75, t)
   hedge(p, k, ink, w, -3.7, b.x1, FLOORY, 0.3)
-  // The lawn and the path.
+  // The lawn, mown, and the path; the late sun's shadows of the hedge, the tree, the palm and the mailbox on them.
   flat(p, k, b, FLOORY, M.grass, ink, w)
+  mown(p, k, b, FLOORY, -2.2)
   shape(p, k, [[STEP_X[0] - 0.1, FLOORY], [b.x1, FLOORY], [b.x1, FLOORY + 0.1], [STEP_X[0] - 0.1, FLOORY + 0.1]], M.warm, null)
+  lawnShadows(p, k, [[-3.7, b.x1, FLOORY, 0.3], [-0.48, -0.42, FLOORY, 0.55]], [[-2.45, FLOORY, 1.85, 0.75], [1.05, FLOORY, 2.6, 0.6], [-0.45, FLOORY, 0.65, 0.17]])
   // The palm on the right of the garden.
   palm(p, k, ink, w, 1.05, FLOORY, 2.7, t)
   // The house: its wall, the window lit warm, the door; the roof. Then the porch in front, and its steps.
@@ -1017,6 +1092,16 @@ function drawParty(p: p5, t: number, c: Ctx, b: Rect): void {
   p.vertex(b.x1 * k, (LAWN + 0.01) * k)
   p.endShape(p.CLOSE)
   flat(p, k, b, LAWN, M.grass, ink, w)
+  // The lawn mown for the party, and the late sun's shadows on it: the hedge's, the tree's, the table's, the high
+  // chair's, the present's, the pinwheels', and the dog's under it wherever it is.
+  mown(p, k, b, LAWN, -3.2)
+  lawnShadows(
+    p,
+    k,
+    [[b.x0, b.x1, LAWN, 0.62], [-2.17, -0.93, LAWN, 0.5], [GIFT.x0, GIFT.x1, LAWN, 0.3]],
+    [[-0.15, LAWN, 1.7, 0.7], [CHAIR_X, LAWN, 0.5, 0.26], [-6.95, LAWN + 0.5, 0.46, 0.1], [-0.95, LAWN + 0.4, 0.52, 0.1]],
+    [[dogAt(DOG_KEYS, t).x, LAWN + 0.34, 0.26]],
+  )
   // Bunting from the house's eave (off to the left) to the tree, and the table with the lemonade behind the party.
   bunting(p, k, ink, w, [-9.2, -2.55], [-0.4, -2.35], 0.32, t)
   partyTable(p, k, ink, w, -1.55, LAWN)
