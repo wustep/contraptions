@@ -41,7 +41,6 @@ const STOP_LINE = { far: 13.35, near: AVENUE_FAR + 0.2 }
 const DIM: Record<Kind, [number, number]> = { cab: [3.0, 0.92], car: [3.1, 0.88], bus: [7.4, 1.78], truck: [4.6, 1.55], bike: [1.15, 1.12] }
 
 export const TRAFFIC: Vehicle[] = [
-  { kind: 'cab', lane: 'far', at: 227.0, v: 6.2 },
   { kind: 'cab', lane: 'far', at: 227.9, v: 7.6 },
   { kind: 'cab', lane: 'far', at: 237.0, v: 6.0 },
   { kind: 'bus', lane: 'near', at: 238.9, v: 4.2 },
