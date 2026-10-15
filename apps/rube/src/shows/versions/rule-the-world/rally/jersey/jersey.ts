@@ -7,7 +7,7 @@ import { drawMistBack } from './airfield'
 import { drawAirfield, drawAmbDoor, drawAmbulance, drawBarn, drawGround, drawHouse, drawRoadside, drawTheCab } from './draw'
 import { drawFireFront, drawFireWash, drawPlume } from './fire'
 import { drawNear } from './near'
-import { drawDog, drawLeaves, drawWash } from './wind'
+import { drawDog, drawLeaves, drawStarlings, drawWash } from './wind'
 import { drawFar, drawSky } from './sky'
 import {
   AMB_STOP,
@@ -78,6 +78,7 @@ export const jerseySet = scenery<null>({
     drawFireWash(pen, t, f)
     drawRoadside(pen, t, f)
     drawWash(pen, t, f)
+    drawStarlings(pen, t, f)
     drawAirfield(pen, t, f)
     // The farmhouse and the barn only when they (or the barn's light on the walls) can be in the picture.
     if (f.x1 > HOUSE[0] - 4 && f.x0 < HOUSE[1] + 3) {

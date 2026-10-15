@@ -6,6 +6,7 @@ import { AY, BX0, BX1, LANTERN_DOWN, ROAD, T0 } from './geo'
 import { drawFarFire, F, fireAt, fireLight } from './fire'
 import { drawFarField } from './airfield'
 import { bag, box, disc, fill, haze, loop, oval, poly, seg, stroke, wrap } from './ink'
+import { drawLine, drawOverhead } from './line'
 import { drawScud, gust } from './wind'
 
 /**
@@ -119,6 +120,8 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
       clouds(pen, t, g, f)
       // A plane coming in to the airfield far off, its landing light on.
       landing(pen, t, g)
+      // And earlier, high over the road, the airliner going their way (`line.ts`).
+      drawOverhead(pen, t, g)
     },
     ANCHOR,
   )
@@ -319,6 +322,8 @@ export function drawFar(pen: Pen, t: number, f: Frame): void {
     },
     ANCHOR,
   )
+  // A telegraph line going along beyond the fence while they drive (`line.ts`).
+  drawLine(pen, t, f)
   // The airfield's far side, out on the flat beyond the field: hangars, the tower, the beacon, the far runway, a plane
   // taxiing out.
   drawFarField(pen, t, f)
@@ -443,7 +448,9 @@ function trees(pen: Pen, t: number, g: Frame, f: Frame): void {
     const x = i * 2.6 + hash(i, 32)
     const h = 1.0 + hash(i, 33) * 1.05
     const wx = worldX(x, f, D_TREES)
-    const lean = 0.055 * h * (0.55 + 0.45 * gust(t)) * sway(t, i, 3.6)
+    // Laid over downwind, harder in the gusts, and tossing.
+    const g0 = gust(t)
+    const lean = h * (0.045 * (g0 - 0.55) + 0.075 * g0 * sway(t, i, 3.6))
     const crowns = (path: Path2D, dx: number, dy: number, grow: number) => {
       box(path, x - 0.04 * h + dx, TREES_BASE - h * 0.45 + dy, x + 0.04 * h + dx, TREES_BASE)
       for (let j = 0; j < 5; j++) {

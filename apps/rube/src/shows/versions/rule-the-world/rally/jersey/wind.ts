@@ -61,9 +61,9 @@ export function solid(path: Path2D, pts: Pt[]): void {
 const ANCHOR: Pt = [0, AY]
 /** Low cloud, nearer than the high clouds (`sky.ts`, at 0.03) and quicker, going over on the wind. */
 const D_SCUD = 0.14
-const SCUD = 19
+const SCUD = 26
 const SCUD_PERIOD = 46
-const SCUD_V = 0.42
+const SCUD_V = 0.52
 
 /** The scud: torn low cloud, lit along its top by the moon, going over (and across the moon) on the wind. */
 export function drawScud(pen: Pen, t: number, f: Frame): void {
@@ -176,6 +176,44 @@ export function drawWash(pen: Pen, t: number, f: Frame): void {
   }
   stroke(pen, shades, W.clothShade, 0.7, 1.4)
   fill(pen, pegs, '#2C2822', 1)
+}
+
+/* ------------------------------------------------------------------ the birds on the line */
+
+/** Starlings roosting on the washing line in its gaps and on the pole's crossbar, along the line (0 the pole). */
+const ROOST = [0.0, 0.035, 0.45, 0.47, 0.635, 0.83, 0.975]
+
+/**
+ * The starlings asleep on the washing line, fluffed against the cold, until the first shot puts them up: they go up
+ * off it all at once, wings going, and away downwind over the house, scattering as they climb.
+ */
+export function drawStarlings(pen: Pen, t: number, f: Frame): void {
+  const up = SHOTS[0]
+  if (t > up + 4 || f.x1 < POLE_X - 1.5 || f.x0 > LINE_B[0] + 8) return
+  const bodies = bag()
+  const wings = bag()
+  for (const [i, u] of ROOST.entries()) {
+    const perch = i === 0 ? ([POLE_X - 0.18, LINE_A[1] - 0.12] as Pt) : i === 1 ? ([POLE_X + 0.2, LINE_A[1] - 0.12] as Pt) : onLine(u, t)
+    const s = t - up - 0.05 * hash(i, 401)
+    if (s <= 0) {
+      // On the line: a fluffed body, its tail down, rocking with the line.
+      oval(bodies, perch[0], perch[1] - 0.06, 0.07, 0.055, -0.2)
+      disc(bodies, perch[0] + 0.05, perch[1] - 0.1, 0.035)
+      solid(bodies, [[perch[0] - 0.05, perch[1] - 0.05], [perch[0] - 0.13, perch[1] + 0.04], [perch[0] - 0.09, perch[1] + 0.05]])
+      continue
+    }
+    // Up and away downwind, each its own way, faster as it gets going.
+    const vx = 0.9 + 1.1 * hash(i, 402)
+    const vy = 1.1 + 0.9 * hash(i, 403)
+    const x = perch[0] + vx * s * (0.6 + 0.4 * s) + 0.3 * (hash(i, 404) - 0.5) * s
+    const y = perch[1] - 0.06 - vy * s + 0.12 * s * s
+    const flap = Math.sin(s * (22 + 6 * hash(i, 405)) + i)
+    oval(bodies, x, y, 0.07, 0.03, -0.35)
+    solid(wings, [[x - 0.02, y], [x - 0.08, y - 0.13 * flap - 0.02], [x + 0.04, y - 0.01]])
+    solid(wings, [[x + 0.01, y], [x + 0.06, y - 0.11 * flap - 0.02], [x + 0.08, y]])
+  }
+  fill(pen, bodies, W.dog, 1)
+  fill(pen, wings, W.dog, 0.95)
 }
 
 /* ------------------------------------------------------------------ the dog */
