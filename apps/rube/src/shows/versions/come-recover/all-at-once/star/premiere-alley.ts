@@ -28,6 +28,7 @@ import {
   WAYMOND_X,
   alleyTime,
   coverAt,
+  raceAt,
   stepFace,
   timeRate,
   waymondAt,
@@ -480,13 +481,53 @@ function drawGround(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
     ctx.fill()
   }
   pool(p, X((COVER_L + COVER_R) / 2), X(WATER + 0.02), X(0.55), X(0.07), STAR.spot, 0.3 + 0.3 * open)
-  // The water in the race, running out to the mouth.
+  // The race's own stone, coursed: seen where the shaft's light reaches down it, and gone into the dark either way.
+  const tau0 = alleyTime(t)
+  const lit = (x: number): number => Math.max(0, 1 - Math.abs(x - (SHAFT_L + SHAFT_R) / 2) / 3.2) * (0.5 + 0.5 * open)
+  for (let row = 0; row < 3; row++) {
+    const y = RACE_ROOF + 0.18 + row * ((WATER - RACE_ROOF - 0.2) / 3)
+    for (let x = RACE_X0 + 0.3 + (row % 2) * 0.28; x < TERRACE_R - 0.2; x += 0.56) {
+      const a = 0.05 + 0.3 * lit(x)
+      p.stroke(rgba(STONE, a))
+      p.strokeWeight(Math.max(1, weight * 0.45))
+      p.line(X(x), X(y), X(x + 0.5), X(y))
+      p.line(X(x + 0.5), X(y), X(x + 0.5), X(y + (WATER - RACE_ROOF - 0.2) / 3))
+    }
+  }
+  // The water in the race, running out to the mouth: its surface, and the current's lines going with it.
   p.noStroke()
   p.fill(mixHex(STAR.wet, STAR.rain, 0.3))
   p.rect(X((RACE_X0 + TERRACE_R) / 2), X((WATER + RACE_BED) / 2), X(TERRACE_R - RACE_X0 - 0.02), X(RACE_BED - WATER))
+  const span = TERRACE_R - RACE_X0 - 0.4
+  for (let i = 0; i < 14; i++) {
+    const u = (tau0 * (0.32 + 0.12 * hash(i, 1, 57)) + hash(i, 2, 57)) % 1
+    const x = RACE_X0 + 0.2 + span * u
+    const y = WATER + 0.035 + 0.05 * (i % 3)
+    p.stroke(rgba(STAR.rain, 0.5 * Math.sin(Math.PI * u) * (0.4 + 0.6 * lit(x) + 0.3)))
+    p.strokeWeight(Math.max(1, weight * 0.5))
+    p.line(X(x), X(y), X(x + 0.22 + 0.12 * hash(i, 3, 57)), X(y))
+  }
+  // A flyer for her picture, washed off the wall by the rain, going down the race ahead of her and out of the mouth:
+  // the life she might have had, carried off before she is.
+  const fx = Math.max(SPLASH_AT[0] + 0.9 + 0.5 * (t - 80.6), raceAt(t)[0] + 0.85)
+  const gone = smooth(fx, TERRACE_R - 0.4, TERRACE_R - 0.08)
+  if (t > 80.6 && gone < 1) {
+    const bob = 0.012 * Math.sin(tau0 * 5.1)
+    p.push()
+    p.translate(X(fx), X(WATER + 0.01 + bob))
+    p.rotate(0.12 * Math.sin(tau0 * 1.7) - 0.05)
+    p.noStroke()
+    p.fill(rgba(mixHex(STAR.cream, STAR.wet, 0.35), 1 - gone))
+    p.rect(0, 0, X(0.32), X(0.06), X(0.01))
+    p.fill(rgba(mixHex(STAR.carpet, STAR.wet, 0.25), 1 - gone))
+    p.rect(X(-0.04), X(-0.005), X(0.14), X(0.035))
+    p.fill(rgba(mixHex(STAR.gold, STAR.wet, 0.3), 1 - gone))
+    p.circle(X(0.08), X(-0.005), X(0.035))
+    p.pop()
+  }
 
   // The stone weeps into the race: drops gathering at its roof's joints and falling into the water, ringing it.
-  const tau = alleyTime(t)
+  const tau = tau0
   for (let i = 0; i < 5; i++) {
     const dx = RACE_X0 + 0.9 + i * ((TERRACE_R - RACE_X0 - 1.3) / 4) + 0.2 * hash(i, 1, 51)
     if (dx > SHAFT_L - 0.2 && dx < SHAFT_R + 0.2) continue
