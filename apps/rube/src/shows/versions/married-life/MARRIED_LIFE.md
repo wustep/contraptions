@@ -146,8 +146,10 @@ bass, on the one); Ellie, round, answers on the first pah.
 - **The machine is light and time.** Sun bars from unseen blinds slide across the room: a few broad, soft bars, ends
   leaning with the sun, laid on the wall, floor and chairs under the two of them, so they keep their colour. The
   camera pushes in slowly through the held note, from the room to the two of them (the coat stand slides out of the
-  frame on the way), so that on 81.14, when she sinks a little and rolls away from him and he leans toward her, the
-  two of them are the whole picture (2.3 cells). It stays with them through his lean and the first soft note of the
+  frame on the way), so that on 81.14, when she sinks and rolls away from him and he leans toward her, the
+  two of them are the whole picture (2.3 cells). She slumps as she does on the hill, lower and wider, settling into
+  the seat, and her gaze falls to the floor and stays there (a span in `LOOKS`), so the news is seen in her: the
+  first loss is shaped like the last. It stays with them through his lean and the first soft note of the
   near silence. A cloud takes the light and the room goes cold; as he sits back the camera drifts a little left, off
   her, onto the office door, toward where the yard will be. Nothing else hits.
 
@@ -960,6 +962,14 @@ window.
     sat half in at the left edge of the close on the two of them after her fall, the brightest thing in the frame;
     they now stay by the basket, seen as he runs past and out of the close. The storm's wide draws about 0.4 ms more
     (headless).
+  - *Round 2.* A fresh viewer, told nothing, read the doctor's office as a waiting room: his lean read, her sinking
+    (the news) did not, as she stayed round and upright, shrinking 3.5%. She now slumps as she does at her fall on the
+    hill (`slump` in `doctor.ts`: most of `slumpOf`, lower and wider, settling into the seat over 1.6 s from 81.136),
+    and her gaze falls to the floor as she sinks and stays down through his lean and the cold, held a little across
+    the cut so it turns from the floor to her looking away on the stump. Same note, same timing, nothing added to the
+    room. The same viewer's other notes were weighed and left: the storm's wide is scale on purpose (above); the jar's
+    chute peeks in at the frame's edge before it is used, and keeping it out would move the handfuls' framing; the
+    storey under the nursery is veiled, not inked, for a phone held upright.
 
 ## Known limits
 

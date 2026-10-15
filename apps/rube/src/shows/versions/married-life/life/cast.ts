@@ -8,6 +8,7 @@ import { drawBalloon, BALLOON_SIZE } from './props/balloon'
 import { drawBowTie } from './inside/ties-tie'
 import { FUN } from './church/church'
 import { GLANCE } from './hill/clouds'
+import { SLUMP } from './clinic/doctor'
 
 /**
  * The two of them, drawn (the stage draws no ball in this show: `LifeShow.at` hands it none).
@@ -96,6 +97,10 @@ export const LOOKS: { from: number; to: number; ease: number; at: number | ((sho
   // The kiss: from the march's slowing steps as they turn to each other, at him (up into his face, not at his middle),
   // easing off as she sets out down the aisle (18.6), so it never lets go at speed.
   { from: 15.2, to: 19.0, ease: 0.6, at: towardHim },
+  // The doctor's office: as she sinks (`SLUMP`, `doctor.ts`) her gaze falls, down and a little away from him, and stays
+  // down; held a little across the cut into the yard, so it turns from the floor to her looking away there, never back
+  // up to him first.
+  { from: SLUMP - 0.05, to: CUT.yard + 0.5, ease: 0.6, at: 1.25 },
   // From the moment she gives way (174.672, `climb.ts`), spent, she looks down, toward the ground on his side, and her
   // face does not roll as she goes back down the flank (`spot`): she slides back limp, not a ball rolling (a fresh
   // viewer read the rolling as the two of them sliding down for fun). Held on the fieldstone; her answer to his lean is
