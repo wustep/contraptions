@@ -37,7 +37,9 @@ import {
   dogAt,
   type DogPose,
 } from './geo'
-import { blob, ctxOf, ellipse, flash, glow, line, path, rect, rgba, ring, shape, vgrad, type Pen } from './pen'
+import { blob, ctxOf, ellipse, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from './pen'
+import { drawCity, drawPlumes, skyFloor } from './city'
+import type { View } from '../depth'
 
 /**
  * The daydream's drawing: the night, the platform, the tracks and the pavement, the burning building cut open, the
@@ -91,7 +93,7 @@ const C = {
 }
 
 /** How hard each fire source is burning at `t`: a base, its flares, and the drain taking it down. */
-function heat(t: number, src: number): number {
+export function heat(t: number, src: number): number {
   const base = [0.55, 0.6, 0.5, 0.45][src]
   let v = base * (0.85 + 0.25 * level(t))
   for (const [ft, s] of FLARES) if (s === src && t >= ft) v += 0.9 * Math.exp(-(t - ft) / 0.45)
@@ -103,30 +105,53 @@ function heat(t: number, src: number): number {
 }
 
 /** Fire's own clock: it slows to a stop as the colour drains, the picture going still. */
-const fireT = (t: number) => (t < DRAIN ? t : DRAIN + (t - DRAIN) * (1 - 0.85 * drained(t)))
+export const fireT = (t: number) => (t < DRAIN ? t : DRAIN + (t - DRAIN) * (1 - 0.85 * drained(t)))
+
+/** The four warm values of a flame, outermost first: [colour, width, height, alpha]. */
+const FLAME_LAYERS: [string, number, number, number][] = [
+  [C.flame1, 1, 1, 0.92],
+  [C.flame2, 0.72, 0.74, 0.95],
+  [C.flame3, 0.46, 0.48, 0.95],
+  [C.flame4, 0.22, 0.24, 0.75],
+]
+
+/** A smooth closed loop through `pts` (Catmull-Rom), added to `path` in pixels. */
+function loop(path: Path2D, pts: Pt[], k: number): void {
+  const n = pts.length
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n]
+    const p1 = pts[i]
+    const p2 = pts[(i + 1) % n]
+    const p3 = pts[(i + 2) % n]
+    if (i === 0) path.moveTo(p1[0] * k, p1[1] * k)
+    path.bezierCurveTo(
+      (p1[0] + (p2[0] - p0[0]) / 6) * k,
+      (p1[1] + (p2[1] - p0[1]) / 6) * k,
+      (p2[0] - (p3[0] - p1[0]) / 6) * k,
+      (p2[1] - (p3[1] - p1[1]) / 6) * k,
+      p2[0] * k,
+      p2[1] * k,
+    )
+  }
+  path.closePath()
+}
 
 /**
- * One fire: a tongue of flame in four warm values, from a base `w` wide, `h` tall, leaning by `lean` (cells of tip
- * shift), alive on `t`.
+ * One tongue of flame, one of its four values (`li`), added to `path`: from a base `w` wide, `h` tall, leaning by
+ * `lean` (cells of tip shift), alive on `t`.
  */
-function flame(pen: Pen, base: Pt, w: number, h: number, t: number, seed: number, lean = 0, a = 1, only = -1): void {
-  if (h <= 0.02) return
-  const layers: [string, number, number, number][] = [
-    [C.flame1, 1, 1, 0.92],
-    [C.flame2, 0.72, 0.74, 0.95],
-    [C.flame3, 0.46, 0.48, 0.95],
-    [C.flame4, 0.22, 0.24, 0.75],
-  ]
+function tongue(path: Path2D, k: number, base: Pt, w: number, h: number, t: number, seed: number, lean: number, li: number): void {
+  const [, sw, sh] = FLAME_LAYERS[li]
   const fl = (f: number, ph: number) => Math.sin(t * f + seed * 2.7 + ph)
-  layers.forEach(([col, sw, sh, alpha], li) => {
-    if (only >= 0 && li !== only) return
-    const W = w * sw
-    const H = h * sh * (0.88 + 0.12 * fl(7.3, 0))
-    const tip = (lean + 0.14 * fl(4.1, 1)) * H
-    const bx = base[0]
-    const by = base[1]
-    // A soft tongue: a round belly low down, drawn up into a tip that sways.
-    const pts: Pt[] = [
+  const W = w * sw
+  const H = h * sh * (0.88 + 0.12 * fl(7.3, 0))
+  const tip = (lean + 0.14 * fl(4.1, 1)) * H
+  const bx = base[0]
+  const by = base[1]
+  // A soft tongue: a round belly low down, drawn up into a tip that sways.
+  loop(
+    path,
+    [
       [bx - W * 0.5, by],
       [bx - W * (0.56 + 0.04 * fl(9, 2)), by - H * 0.22],
       [bx - W * 0.36 + tip * 0.35, by - H * 0.52],
@@ -137,22 +162,42 @@ function flame(pen: Pen, base: Pt, w: number, h: number, t: number, seed: number
       [bx + W * (0.52 + 0.04 * fl(8, 4)), by - H * 0.12],
       [bx + W * 0.4, by + W * 0.05],
       [bx - W * 0.4, by + W * 0.05],
-    ]
-    blob(pen, pts, col, alpha * a)
-  })
+    ],
+    k,
+  )
 }
 
-/** A row of flames along a line: a fire bed. */
+/** Fill the four values of a fire, each in one path: what makes a bed of tongues burn as one fire. */
+function burn(pen: Pen, paths: Path2D[], a = 1): void {
+  const ctx = ctxOf(pen.p)
+  ctx.save()
+  FLAME_LAYERS.forEach(([col, , , alpha], li) => {
+    ctx.fillStyle = rgba(pen, col, alpha * a)
+    ctx.fill(paths[li])
+  })
+  ctx.restore()
+}
+
+/** One fire: a tongue of flame in four warm values, from a base `w` wide, `h` tall, leaning by `lean`. */
+function flame(pen: Pen, base: Pt, w: number, h: number, t: number, seed: number, lean = 0, a = 1): void {
+  if (h <= 0.02) return
+  const paths = FLAME_LAYERS.map(() => new Path2D())
+  for (let li = 0; li < 4; li++) tongue(paths[li], pen.k, base, w, h, t, seed, lean, li)
+  burn(pen, paths, a)
+}
+
+/** A row of flames along a line: a fire bed. Its tongues are filled value by value, so they burn as one fire. */
 function fireBed(pen: Pen, x0: number, x1: number, y: number, h: number, t: number, seed: number, lean = 0, a = 1): void {
   const n = Math.max(2, Math.round((x1 - x0) / 0.32))
-  // Layer by layer across the bed, so its tongues burn as one fire and not as a row of them.
-  for (let layer = 0; layer < 4; layer++)
-    for (let i = 0; i < n; i++) {
-      const u = (i + 0.5) / n
-      const x = x0 + (x1 - x0) * u
-      const hi = h * (0.55 + 0.45 * hash(i, seed)) * (0.85 + 0.15 * Math.sin(t * 3 + i))
-      flame(pen, [x, y], ((x1 - x0) / n) * 1.9, hi, t, seed * 13 + i, lean, a, layer)
-    }
+  const paths = FLAME_LAYERS.map(() => new Path2D())
+  for (let i = 0; i < n; i++) {
+    const u = (i + 0.5) / n
+    const x = x0 + (x1 - x0) * u
+    const hi = h * (0.55 + 0.45 * hash(i, seed)) * (0.85 + 0.15 * Math.sin(t * 3 + i))
+    if (hi <= 0.02) continue
+    for (let li = 0; li < 4; li++) tongue(paths[li], pen.k, [x, y], ((x1 - x0) / n) * 1.9, hi, t, seed * 13 + i, lean, li)
+  }
+  burn(pen, paths, a)
 }
 
 /** Smoke: soft rolls rising from a point, drifting left on the night air. */
@@ -177,33 +222,47 @@ function smoke(pen: Pen, from: Pt, t: number, seed: number, amount: number, rise
 
 /* ------------------------------------------------------------------ the night */
 
-export function drawSky(pen: Pen, f: { x0: number; y0: number; x1: number; y1: number; cx: number }, t: number): void {
-  vgrad(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, [
-    [0, C.skyTop, 1],
-    [0.55, C.skyMid, 1],
-    [1, C.skyLow, 1],
-  ])
-  // The fire's glow on the night.
+/**
+ * The night: the sky (only where it can be seen: over the far towers, beside and above the building), the fire's glow
+ * on it, the window's flash as it goes; then the city on its planes (`city.ts`) and the smoke going away over it.
+ */
+export function drawSky(pen: Pen, v: View, t: number): void {
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
   const fire = Math.max(heat(t, 0), heat(t, 1)) * (t < BURST ? 0.6 : 1)
-  glow(pen, [6.2, -3.4], 10, C.flame1, 0.22 * fire)
-  // The window going, on the band's first downbeat: its light thrown right across the street onto the platform.
-  glow(pen, [BX - 0.2, (WIN[0] + WIN[1]) / 2], 6.5, C.flame2, 0.45 * flash(t - BURST, 0.5))
-  // The far city, a little slower than the near (it is further off): low, dark, a few windows lit.
-  const px = f.cx * 0.55
-  for (let i = -12; i < 28; i++) {
-    const x = i * 0.95 + px + hash(i, 7) * 0.3
-    const h = 1.3 + hash(i, 3) * 2.4 + (hash(i, 8) > 0.85 ? 1.4 : 0)
-    const top = BED - 0.9 - h
-    const w = 0.7 + hash(i, 4) * 0.5
-    rect(pen, x, top, x + w, BED + 2, C.far)
-    for (let j = 0; j < 9; j++) {
-      if (hash(i, j, 9) > 0.16) continue
-      const wx = x + 0.1 + (j % 3) * (w / 3.2)
-      const wy = top + 0.25 + Math.floor(j / 3) * 0.5
-      if (wy > BED - 1.2) continue
-      rect(pen, wx, wy, wx + 0.09, wy + 0.13, C.farLit)
+  const low = Math.min(v.y1, skyFloor(v)) + 0.05
+  const rects: [number, number, number, number][] = []
+  if (v.x0 < BX) rects.push([v.x0 - 0.1, v.y0 - 0.1, Math.min(v.x1, BX + 0.1) + 0.1, low])
+  if (v.x1 > BX && v.y0 < ROOF - 0.4) rects.push([Math.max(v.x0, BX) - 0.1, v.y0 - 0.1, v.x1 + 0.1, Math.min(low, ROOF - 0.4)])
+  // One wash for the sky and the fire's glow on it: dark far off, warming toward the burning building.
+  const warm = 0.22 * fire
+  const sky = ctx.createRadialGradient(6.2 * k, -3.4 * k, 0, 6.2 * k, -3.4 * k, 10 * k)
+  sky.addColorStop(0, pen.tone(mix(C.skyMid, C.flame1, warm)))
+  sky.addColorStop(0.45, pen.tone(mix(C.skyMid, C.flame1, warm * 0.42)))
+  sky.addColorStop(0.75, pen.tone(mix(C.skyTop, C.skyMid, 0.5)))
+  sky.addColorStop(1, pen.tone(C.skyTop))
+  const glowAt = (cx: number, cy: number, r: number, col: string, a: number) => {
+    const g = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, r * k)
+    g.addColorStop(0, rgba(pen, col, a))
+    g.addColorStop(0.45, rgba(pen, col, a * 0.42))
+    g.addColorStop(1, rgba(pen, col, 0))
+    return g
+  }
+  // The window going, on the band's first downbeat.
+  const glows: CanvasGradient[] = []
+  const burst = flash(t - BURST, 0.5)
+  if (burst > 0.01) glows.push(glowAt(BX - 0.2, (WIN[0] + WIN[1]) / 2, 6.5, C.flame2, 0.45 * burst))
+  ctx.save()
+  for (const [x0, y0, x1, y1] of rects) {
+    if (x1 <= x0 || y1 <= y0) continue
+    for (const style of [sky, ...glows]) {
+      ctx.fillStyle = style
+      ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
     }
   }
+  ctx.restore()
+  drawCity(pen, v, t, fire)
+  drawPlumes(pen, v, fireT(t), fire, 1 - 0.5 * drained(t))
 }
 
 /* ------------------------------------------------------------------ platform, tracks, pavement */
@@ -236,12 +295,27 @@ export function drawGround(pen: Pen, t: number): void {
   rect(pen, FENCE, STREET, BX1 + 8, STREET + 0.12, C.pave)
   line(pen, [FENCE, STREET], [BX, STREET], C.paveTop, 0.9)
   rect(pen, FENCE - 0.05, STREET, FENCE + 0.02, BED + 6, C.platFace)
+  // The vault under the pavement in its stone courses, and the platform's face in its panels.
+  const ctx0 = ctxOf(pen.p)
+  const k0 = pen.k
+  const courses = new Path2D()
+  for (let y = STREET + 0.24, row = 0; y < BED + 3; y += 0.13, row++) {
+    courses.rect((FENCE + 0.02) * k0, y * k0, (BX1 + 7.9 - FENCE) * k0, 0.018 * k0)
+    for (let x = FENCE + 0.1 + (row % 2) * 0.22; x < BX1 + 8; x += 0.44) courses.rect(x * k0, (y - 0.13) * k0, 0.018 * k0, 0.13 * k0)
+  }
+  ctx0.fillStyle = rgba(pen, '#2C2244', 0.65)
+  ctx0.fill(courses)
+  const panels = new Path2D()
+  for (let x = PLAT_X0 + 0.3; x < LIP - 0.1; x += 0.6) panels.rect(x * k0, (DECK + 0.32) * k0, 0.025 * k0, (BED + 3) * k0)
+  for (let y = DECK + 0.6; y < BED + 3; y += 0.3) panels.rect(PLAT_X0 * k0, y * k0, (LIP - 0.04 - PLAT_X0) * k0, 0.02 * k0)
+  ctx0.fillStyle = rgba(pen, '#16112A', 0.8)
+  ctx0.fill(panels)
   // The street lamp she waits under.
   // A short iron lamp by the shop's door, its arm out over where she waits.
   const sx = 3.68
   const head: Pt = [2.78, -1.12]
   const lit = 1 - 0.6 * drained(t)
-  glow(pen, [head[0], head[1] + 0.15], 2.0, C.street, 0.24 * lit)
+  glow(pen, [head[0], head[1] + 0.15], 1.3, C.street, 0.28 * lit)
   const ctx = ctxOf(pen.p)
   ctx.save()
   ctx.translate(head[0] * pen.k, STREET * pen.k)
@@ -269,6 +343,7 @@ export function drawBuilding(pen: Pen, t: number): void {
   // The neighbours behind it.
   rect(pen, BX1 - 0.2, ROOF - 2.2, BX1 + 6, STREET, C.mid)
   rect(pen, BX1 + 2.4, ROOF - 3.6, BX1 + 4.6, STREET, C.mid)
+  neighbours(pen, t)
   // Rooms: the top floor ablaze, his room burning, the shop dark with smoke.
   const inner = BX + WALL
   rect(pen, inner, ROOF, BX1, TOP_FLOOR, C.topWall)
@@ -286,8 +361,13 @@ export function drawBuilding(pen: Pen, t: number): void {
     [0.7, C.flame2, 0.18 * h0],
     [1, C.flame2, 0.32 * h0],
   ])
-  // The room's wallpaper: a faint stripe, warm in the light.
-  for (let x = inner + 0.3; x < SX0; x += 0.42) rect(pen, x, CEIL + 0.1, x + 0.05, ROOM, C.topWall)
+  // The room's wallpaper: a fine stripe, warm in the light, and the dado rail under it.
+  const paper = new Path2D()
+  for (let x = inner + 0.1; x < SX0 - 0.03; x += 0.14) paper.rect(x * pen.k, (CEIL + 0.1) * pen.k, 0.035 * pen.k, (ROOM - 0.55 - CEIL - 0.1) * pen.k)
+  for (let x = inner + 0.05; x < SX0 - 0.1; x += 0.28) paper.rect(x * pen.k, (ROOM - 0.5) * pen.k, 0.2 * pen.k, 0.42 * pen.k)
+  ctxOf(pen.p).fillStyle = rgba(pen, C.topWall, 1)
+  ctxOf(pen.p).fill(paper)
+  rect(pen, inner, ROOM - 0.56, SX0, ROOM - 0.52, C.brickCut)
   // A picture on the wall and a lamp knocked over: a room someone lives in.
   rect(pen, 5.25, -3.2, 5.95, -2.65, C.woodDark)
   rect(pen, 5.33, -3.12, 5.87, -2.73, C.flame3)
@@ -296,14 +376,7 @@ export function drawBuilding(pen: Pen, t: number): void {
     [0, C.flame1, 0.16 * h0],
     [1, C.flame1, 0.02],
   ])
-  for (const y of [-0.75, -0.25]) rect(pen, inner + 1.3, y, SX0 - 0.3, y + 0.05, C.slab)
-  for (let i = 0; i < 9; i++) {
-    const x = inner + 1.4 + i * 0.3
-    const y = i % 2 ? -0.75 : -0.25
-    rect(pen, x, y - 0.12 - 0.06 * hash(i, 2), x + 0.13, y, C.brickCut)
-  }
-  rect(pen, inner + 0.5, STREET - 0.55, inner + 1.5, STREET, C.slab)
-  rect(pen, inner + 0.45, STREET - 0.6, inner + 1.55, STREET - 0.55, C.brickCut)
+  shop(pen, inner)
   // The shaft and its two openings.
   rect(pen, SX0, ROOF + 0.3, SX1, STREET, C.shaft)
   // Floors and the roof, cut.
@@ -352,16 +425,116 @@ export function drawBuilding(pen: Pen, t: number): void {
   shards(pen, t, FLARES[1][0], [BX + 0.1, (WIN3[0] + WIN3[1]) / 2], 2)
 }
 
+/**
+ * The shop below the burning room, in the smoke: boarding up its back wall to the dado, shelves of tins and jars and
+ * boxes four high, the counter by the door, a lamp hanging dark from the ceiling.
+ */
+function shop(pen: Pen, inner: number): void {
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  const boards = new Path2D()
+  for (let x = inner + 0.06; x < SX0 - 0.05; x += 0.12) boards.rect(x * k, 0.08 * k, 0.02 * k, (STREET - 0.08) * k)
+  boards.rect(inner * k, 0.04 * k, (SX0 - inner) * k, 0.04 * k)
+  const shelves = new Path2D()
+  const goods: Path2D[] = [new Path2D(), new Path2D(), new Path2D()]
+  const s0 = inner + 0.3
+  const s1 = SX0 - 0.25
+  for (const [row, y] of [-1.0, -0.72, -0.44, -0.16].entries()) {
+    shelves.rect(s0 * k, y * k, (s1 - s0) * k, 0.04 * k)
+    for (const bx of [s0 + 0.1, s1 - 0.14]) shelves.rect(bx * k, y * k, 0.03 * k, 0.1 * k)
+    for (let x = s0 + 0.05, i = 0; x < s1 - 0.1; i++) {
+      const w = 0.07 + 0.08 * hash(row, i, 31)
+      const h = 0.09 + 0.1 * hash(row, i, 32)
+      goods[Math.floor(hash(row, i, 33) * 3)].rect(x * k, (y - h) * k, w * k, h * k)
+      x += w + 0.02 + 0.05 * hash(row, i, 34)
+    }
+  }
+  // The counter by the door.
+  shelves.rect((inner + 0.5) * k, (STREET - 0.55) * k, 1.0 * k, 0.55 * k)
+  // A lamp hanging dark from the ceiling on its flex.
+  const lx = inner + 2.2
+  shelves.rect((lx - 0.006) * k, (ROOM + SLAB) * k, 0.012 * k, 0.32 * k)
+  shelves.moveTo((lx - 0.16) * k, (ROOM + SLAB + 0.44) * k)
+  shelves.lineTo((lx - 0.05) * k, (ROOM + SLAB + 0.32) * k)
+  shelves.lineTo((lx + 0.05) * k, (ROOM + SLAB + 0.32) * k)
+  shelves.lineTo((lx + 0.16) * k, (ROOM + SLAB + 0.44) * k)
+  shelves.closePath()
+  ctx.save()
+  ctx.fillStyle = rgba(pen, '#2A1C35', 1)
+  ctx.fill(boards)
+  ctx.fillStyle = rgba(pen, C.slab, 1)
+  ctx.fill(shelves)
+  for (const [i, col] of [C.brickCut, C.woodDark, '#5E5068'].entries()) {
+    ctx.fillStyle = rgba(pen, col, 1)
+    ctx.fill(goods[i])
+  }
+  ctx.restore()
+  rect(pen, inner + 0.45, STREET - 0.6, inner + 1.55, STREET - 0.55, C.brickCut)
+}
+
+/**
+ * The neighbours' fronts behind the building: rows of dark windows, some catching the fire's light and flickering
+ * with it, some lit from inside; a fire escape down the near one; a cornice.
+ */
+function neighbours(pen: Pen, t: number): void {
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  const ft = fireT(t)
+  const dark = new Path2D()
+  const caught = new Path2D()
+  const lit = new Path2D()
+  const iron = new Path2D()
+  const fronts: [number, number, number][] = [
+    [BX1 + 0.1, BX1 + 2.3, ROOF - 2.0],
+    [BX1 + 2.6, BX1 + 4.4, ROOF - 3.4],
+    [BX1 + 4.7, BX1 + 5.9, ROOF - 2.0],
+  ]
+  for (const [x0, x1, top] of fronts) {
+    for (let y = top + 0.35, row = 0; y < STREET - 0.6; y += 0.62, row++) {
+      for (let x = x0 + 0.12, col = 0; x + 0.22 < x1; x += 0.42, col++) {
+        const h = hash(row, col, Math.round(x0 * 10))
+        const p = h < 0.1 ? lit : h < 0.4 ? caught : dark
+        p.rect(x * k, y * k, 0.18 * k, 0.27 * k)
+      }
+    }
+    iron.rect((x0 - 0.05) * k, (top - 0.02) * k, (x1 - x0 + 0.1) * k, 0.07 * k)
+  }
+  // The fire escape: landings and ladders down the nearest front.
+  for (let y = ROOF - 1.2; y < STREET - 0.8; y += 1.24) {
+    iron.rect((BX1 + 0.2) * k, y * k, 1.3 * k, 0.03 * k)
+    iron.rect((BX1 + 0.2) * k, (y - 0.22) * k, 0.015 * k, 0.22 * k)
+    iron.rect((BX1 + 1.485) * k, (y - 0.22) * k, 0.015 * k, 0.22 * k)
+    iron.moveTo((BX1 + 0.35) * k, (y + 0.03) * k)
+    iron.lineTo((BX1 + 0.4) * k, (y + 0.03) * k)
+    iron.lineTo((BX1 + 1.2) * k, (y + 1.24) * k)
+    iron.lineTo((BX1 + 1.15) * k, (y + 1.24) * k)
+    iron.closePath()
+  }
+  const flick = 0.55 + 0.35 * heat(t, 1) * (0.8 + 0.2 * Math.sin(ft * 9.1) * Math.sin(ft * 3.7))
+  ctx.save()
+  ctx.fillStyle = rgba(pen, '#160F27', 1)
+  ctx.fill(dark)
+  ctx.fillStyle = rgba(pen, C.flame2, Math.min(1, flick * 0.32))
+  ctx.fill(caught)
+  ctx.fillStyle = rgba(pen, C.street, 0.5)
+  ctx.fill(lit)
+  ctx.fillStyle = rgba(pen, '#0E0A18', 1)
+  ctx.fill(iron)
+  ctx.restore()
+}
+
 /** Fire out of a window: tongues from its upper half, licking up the face of the wall. */
 function windowFire(pen: Pen, win: [number, number], h: number, t: number, seed: number): void {
   const [top, bottom] = win
   glow(pen, [BX - 0.3, top], 1.3, C.flame2, 0.3 * Math.min(1, h))
   // Two tongues out of the window's head, side by side, licking up the wall's face.
   const y = top + (bottom - top) * 0.3
-  for (let layer = 0; layer < 4; layer++) {
-    flame(pen, [BX - 0.02, y], 0.7, 1.5 * h, t, seed * 7, 0.18, 1, layer)
-    flame(pen, [BX - 0.42, y + 0.12], 0.55, 1.05 * h, t, seed * 7 + 1, -0.12, 1, layer)
+  const paths = FLAME_LAYERS.map(() => new Path2D())
+  for (let li = 0; li < 4; li++) {
+    if (1.5 * h > 0.02) tongue(paths[li], pen.k, [BX - 0.02, y], 0.7, 1.5 * h, t, seed * 7, 0.18, li)
+    if (1.05 * h > 0.02) tongue(paths[li], pen.k, [BX - 0.42, y + 0.12], 0.55, 1.05 * h, t, seed * 7 + 1, -0.12, li)
   }
+  burn(pen, paths)
 }
 
 function shards(pen: Pen, t: number, at: number, from: Pt, seed: number): void {
@@ -480,7 +653,14 @@ export function drawDoor(pen: Pen, t: number): void {
   }
   shape(pen, [[BX + 0.1 - w, y0 + 0.05], [BX + 0.1, y0], [BX + 0.1, y1], [BX + 0.1 - w, y1 - 0.04]], C.wood, 0.6, C.woodDark)
   rect(pen, BX + 0.1 - w * 0.82, y0 + 0.2, BX + 0.1 - w * 0.18, (y0 + y1) / 2 - 0.05, C.woodDark)
-  ellipse(pen, [BX + 0.1 - w * 0.88, (y0 + y1) / 2 + 0.1], 0.03, 0.03, C.flame3)
+  // Its two lower panels, their mouldings catching the fire, and a kick plate.
+  const mid = (y0 + y1) / 2
+  for (const [a, b] of [[mid + 0.05, mid + 0.55], [mid + 0.65, y1 - 0.2]]) {
+    rect(pen, BX + 0.1 - w * 0.8, a, BX + 0.1 - w * 0.2, b, null, 0.5, C.woodDark)
+    line(pen, [BX + 0.1 - w * 0.78, a + 0.03], [BX + 0.1 - w * 0.22, a + 0.03], C.flame3, 0.4)
+  }
+  rect(pen, BX + 0.1 - w * 0.92, y1 - 0.14, BX + 0.1 - w * 0.08, y1 - 0.06, '#9A7A52')
+  ellipse(pen, [BX + 0.1 - w * 0.88, mid + 0.1], 0.03, 0.03, C.flame3)
 }
 
 /* ------------------------------------------------------------------ the dog */
@@ -539,12 +719,23 @@ function head(pen: Pen, c: Pt, f: number): void {
 
 /* ------------------------------------------------------------------ over the balls */
 
-/** What is in front: the gate, embers, a haze of smoke and heat round the building. */
+/** What is in front of him: the car's gate. */
 export function drawOver(pen: Pen, t: number): void {
   drawGate(pen, t)
-  // Embers, rising from the building and falling on the street.
+}
+
+/**
+ * The air round the building, drawn in the front (`front.ts`) so it is in front of the machine and under the balls:
+ * embers going up from the building and falling on the street, the heat in the burning room, the smoke through the
+ * shop.
+ */
+export function drawAir(pen: Pen, t: number): void {
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
   const ft = fireT(t)
   const d = drained(t)
+  const cores = new Path2D()
+  const halos = new Path2D()
   for (let i = 0; i < 26; i++) {
     const life = 2.4 + hash(i, 1) * 1.6
     const age = ((ft + hash(i, 2) * life) % life) / life
@@ -552,9 +743,17 @@ export function drawOver(pen: Pen, t: number): void {
     const y = ROOF + 3.5 - age * 7 + hash(i, 4) * 3
     const a = Math.sin(age * Math.PI) * (1 - d)
     if (a < 0.05) continue
-    ellipse(pen, [x, y], 0.022, 0.022, C.flame3)
-    glow(pen, [x, y], 0.1, C.flame2, 0.4 * a)
+    cores.moveTo((x + 0.022) * k, y * k)
+    cores.arc(x * k, y * k, 0.022 * k, 0, Math.PI * 2)
+    halos.moveTo((x + 0.07 * a) * k, y * k)
+    halos.arc(x * k, y * k, 0.07 * a * k, 0, Math.PI * 2)
   }
+  ctx.save()
+  ctx.fillStyle = rgba(pen, C.flame2, 0.25)
+  ctx.fill(halos)
+  ctx.fillStyle = rgba(pen, C.flame3, 1)
+  ctx.fill(cores)
+  ctx.restore()
   // Heat on the room's air, in front of him as he crosses it.
   vgrad(pen, BX + WALL, CEIL, SX0, ROOM, [
     [0, C.flame2, 0.0],
