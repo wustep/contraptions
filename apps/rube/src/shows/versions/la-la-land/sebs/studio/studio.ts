@@ -745,12 +745,14 @@ function drawCuts(p: p5, c: Ctx, t: number): void {
     const theta = up * (Math.PI / 2) + 0.05 * knock
     const sy = Math.sin(theta + tilt)
     const paint = flood(cut.x, t)
-    // Standing, it throws a soft shadow up the flat behind it (and later, the cloth).
+    // Standing, it throws a shadow up the flat behind it: one flat shape, so it is drawn darkening, not see-through
+    // (its parts would stack up where they overlap and show its struts like a second print). On the white flat it is
+    // a pale lilac; on the painted cloth after the burst, darker than it, it all but goes.
     if (up > 0.6) {
       p.push()
-      p.drawingContext.globalAlpha = 0.28 * smooth(up, 0.6, 1)
+      p.drawingContext.globalCompositeOperation = 'darken'
       p.translate(X(k, 0.12), X(k, -0.05))
-      drawCut(p, c, cut.kind, cut.x, sy, 0, 0, mixHex(M.shadow, M.purple, 0.35))
+      drawCut(p, c, cut.kind, cut.x, sy, 0, 0, mixHex(M.flat, mixHex(M.shadow, M.purple, 0.35), 0.28 * smooth(up, 0.6, 1)))
       p.pop()
     }
     drawCut(p, c, cut.kind, cut.x, sy, paint, paint)
