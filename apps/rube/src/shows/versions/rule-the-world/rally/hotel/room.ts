@@ -63,7 +63,9 @@ function view(pen: Pen, f: Frame, d: number, shift: Pt, draw: (g: Frame) => void
 }
 
 /** The El's passes behind the house: when the head of the train comes into the window. */
-const ELS = [93.35, 98.6]
+export const ELS = [93.35, 98.6]
+/** The room shaking as an El goes by: 0, up as the train comes level, and down as it goes (2.4 s). */
+export const rumble = (t: number): number => ELS.reduce((s, t0) => s + Math.max(0, Math.sin(Math.max(0, Math.min(1, (t - t0) / 2.4)) * Math.PI)), 0)
 const EL_SPEED = 3.2
 const CARRIAGE = 1.15
 const CARRIAGES = 4
@@ -170,8 +172,7 @@ function drawWetGlass(pen: Pen, t: number): void {
 
 /** How the curtain breathes: the draught through the sash, and harder as an El goes by. */
 export function draught(t: number): number {
-  const el = ELS.reduce((s, t0) => s + Math.max(0, Math.sin(Math.max(0, Math.min(1, (t - t0) / 2.4)) * Math.PI)), 0)
-  return 0.55 + 0.45 * sway(t, 2, 3.6) + 0.5 * el
+  return 0.55 + 0.45 * sway(t, 2, 3.6) + 0.5 * rumble(t)
 }
 
 /** A box of light laid over what is there, in cells: a tint where a light falls. */

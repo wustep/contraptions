@@ -1,7 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { shade, type Frame } from '../depth'
 import { ctxOf, ellipse, type Pen } from '../pen'
+import { hash } from '../kit'
 import { CREAK, F_MARTY, F_MISH, KNOCKS, ceilOf, WALL_L, WALL_R } from './geo'
+import { ELS } from './room'
 
 /**
  * The small life of the two rooms before the floor goes. In Marty's, a mouse lives in the wall by the bed's foot: it
@@ -123,3 +125,40 @@ export function drawMishSmoke(pen: Pen, t: number, f: Frame): void {
   }
 }
 
+/* ------------------------------------------------------------------ the ceiling, sifting */
+
+/**
+ * The ceiling over Marty's bed is not to be trusted, and says so before it goes: as the El goes by, and on the
+ * radiator's hardest knocks, a little plaster sifts down out of the stain, the grains falling to the boards.
+ */
+const SIFTS: [number, number][] = [
+  [ELS[0] + 0.35, 16],
+  [KNOCKS[3], 6],
+  [KNOCKS[5], 8],
+]
+const SIFT_FROM: [number, number] = [0.95, 2.25]
+const FALL = 12
+export function drawSift(pen: Pen, t: number): void {
+  const top = ceilOf(F_MARTY) + 0.12
+  const span = F_MARTY - 0.05 - top
+  const life = Math.sqrt((2 * span) / FALL)
+  const ctx = ctxOf(pen.p)
+  const { k } = pen
+  ctx.save()
+  ctx.fillStyle = pen.tone('#CFC4A2')
+  ctx.beginPath()
+  for (const [i, [at, n]] of SIFTS.entries()) {
+    for (let j = 0; j < n; j++) {
+      const go = at + 0.9 * hash(j, i, 71)
+      const u = t - go
+      if (u < 0 || u > life) continue
+      const x = SIFT_FROM[0] + (SIFT_FROM[1] - SIFT_FROM[0]) * hash(j, i, 72) + 0.04 * Math.sin(u * 7 + j)
+      const y = top + 0.5 * FALL * u * u
+      const r = (0.012 + 0.012 * hash(j, i, 73)) * k
+      ctx.moveTo(x * k + r, y * k)
+      ctx.arc(x * k, y * k, r, 0, Math.PI * 2)
+    }
+  }
+  ctx.fill()
+  ctx.restore()
+}

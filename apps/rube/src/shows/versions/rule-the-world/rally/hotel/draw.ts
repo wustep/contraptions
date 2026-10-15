@@ -75,8 +75,8 @@ import {
   type Pose,
 } from './geo'
 import { drawLampRain, drawNight, drawPavementRain, moonlight } from './night'
-import { draught, drawElLight, drawHall, drawMartyAir, drawMishAir, drawTap, drawWindow, lampLevel, lampRock } from './room'
-import { drawMishSmoke, drawMouse } from './small'
+import { draught, drawElLight, drawHall, drawMartyAir, drawMishAir, drawTap, drawWindow, ELS, lampLevel, lampRock, rumble } from './room'
+import { drawMishSmoke, drawMouse, drawSift } from './small'
 import { drawUnder, drawVaultLights, puddleShiver, TUNNEL_X } from './under'
 
 /**
@@ -585,7 +585,9 @@ function drawMartyRoom(pen: Pen, t: number, f: Frame): void {
     const { k } = pen
     ctx.save()
     ctx.translate(hook[0] * k, hook[1] * k)
-    ctx.rotate(0.035 * (draught(t) - 0.55))
+    // It shivers on its nail at each of the radiator's knocks, and as the El shakes the room.
+    const shiver = KNOCKS.reduce((s, kt) => s + (t >= kt ? ring(t - kt, 13, 0.14) : 0), 0)
+    ctx.rotate(0.035 * (draught(t) - 0.55) + 0.025 * shiver + 0.012 * rumble(t) * Math.sin(t * 21))
     ctx.translate(-hook[0] * k, -hook[1] * k)
     jacket(pen, hook, '#3E3A33')
     ctx.restore()
@@ -654,8 +656,9 @@ function drawMartyRoom(pen: Pen, t: number, f: Frame): void {
     // The window's pattern on the floor.
     for (const x of [3.3, 4.2, 5.1]) rect(pen, x, fl - 0.02, x + 0.7, fl + 0.02, mix(C.moonLight, C.board, 0.85 - 0.4 * moon))
   }
-  // The El's lit windows going over the paper as it passes.
+  // The El's lit windows going over the paper as it passes; the plaster it shakes down.
   drawElLight(pen, t)
+  drawSift(pen, t)
   // The bulb on its cord, swinging; out on the bridge; its moths, the dust in its light (and then in the moon's).
   drawBulb(pen, t)
   drawMartyAir(pen, t, f, bulbAt(t))
@@ -676,7 +679,9 @@ function jacket(pen: Pen, hook: Pt, col: string): void {
 const bulbSwing = (t: number): number => {
   const s = t - T0
   const crash = t > BREAK ? 0.35 * Math.exp(-(t - BREAK) / 3) * Math.sin((t - BREAK) * 4.2) : 0
-  return 0.08 * Math.sin((s * Math.PI * 2) / (BEAT * 4)) + KNOCKS.reduce((a, k) => a + (t > k ? 0.03 * Math.exp(-(t - k) / 0.6) * Math.sin((t - k) * 9) : 0), 0) + crash
+  // The El shakes the old building as it goes by, and sets the bulb going on its cord (a pendulum of its length).
+  const el = ELS.reduce((a, e) => a + (t > e + 0.4 ? 0.1 * Math.exp(-(t - e - 0.4) / 1.8) * Math.sin((t - e - 0.4) * 3.7) * Math.min(1, (t - e - 0.4) / 0.5) : 0), 0)
+  return 0.08 * Math.sin((s * Math.PI * 2) / (BEAT * 4)) + KNOCKS.reduce((a, k) => a + (t > k ? 0.03 * Math.exp(-(t - k) / 0.6) * Math.sin((t - k) * 9) : 0), 0) + el + crash
 }
 /** Where the bulb's glass is at `t`, on its cord. */
 function bulbAt(t: number): Pt {
