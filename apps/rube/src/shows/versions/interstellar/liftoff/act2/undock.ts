@@ -605,11 +605,11 @@ const rgbOf = (hex: string): string => [1, 3, 5].map((i) => parseInt(hex.slice(i
 const DEEP_RGB = rgbOf(DARK.deep)
 
 /** The globe's colours: butterscotch under it all, cream zones, ochre belts, and a blue-grey hood over the pole that leans to us. */
-const SAT_BASE = mixHex(DARK.gold, DARK.hull, 0.5)
+const SAT_BASE = mixHex(DARK.gold, DARK.hull, 0.4)
 const ZONE = mixHex(DARK.hull, DARK.gold, 0.16)
 const BELT = mixHex(mixHex(DARK.gold, DARK.amber, 0.5), DARK.slate, 0.16)
 const BELT_GREY = mixHex(BELT, DARK.slate, 0.35)
-const HOOD = mixHex(mixHex(DARK.hull, DARK.ice, 0.5), DARK.slate, 0.2)
+const HOOD = mixHex(mixHex(ZONE, DARK.ice, 0.4), DARK.slate, 0.12)
 /**
  * Its cloud bands, north to south (degrees of latitude, colour, alpha). Each is soft-edged and a little wavy along
  * its edges, so that skimming a few cells of the limb the Ranger goes over cloud tops, not painted stripes. The broad
@@ -617,8 +617,8 @@ const HOOD = mixHex(mixHex(DARK.hull, DARK.ice, 0.5), DARK.slate, 0.2)
  * B ring, which the light (from above the rings' plane) lays across the whole far south.
  */
 const BANDS: [number, number, string, number][] = [
-  [90, 76, HOOD, 0.28],
-  [90, 84, HOOD, 0.15],
+  [90, 76, HOOD, 0.22],
+  [90, 84, HOOD, 0.12],
   [76, 72, BELT, 0.26],
   [66, 61, BELT, 0.14],
   [56, 52, BELT_GREY, 0.2],
