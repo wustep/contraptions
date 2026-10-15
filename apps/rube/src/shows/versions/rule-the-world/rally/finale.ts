@@ -111,7 +111,7 @@ const OUT_CELLS = 48
 /** His place on the screen with the building whole: high on the right, the top floor, the sky over it for the credits. */
 const OUT_SCREEN: Pt = [(SILL[0] - (LEFT + RIGHT) / 2) / OUT_CELLS, (SILL[1] - 2.6) / OUT_CELLS]
 /** And in the quiet after the song, back in on the top floor: his room whole in the middle, the sky over it. */
-const IN_AT = LAST + 1.5
+const IN_AT = LAST + 6
 const IN_CELLS = 24
 const IN_SCREEN: Pt = [(SILL[0] - (WARD_ROOM.x0 + WARD_ROOM.x1) / 2) / IN_CELLS, 0.12]
 

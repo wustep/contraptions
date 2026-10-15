@@ -5,10 +5,11 @@ import { ctxOf, rgb, type Pen } from './pen'
 
 /**
  * Depth and life, shared by every place of Rally: the layers that make a place a world rather than a diagram (things
- * far off that drift slower than the machine, things close that pass faster), the air between (dust in the light,
- * rain, embers, confetti), and the small motion that keeps a quiet stretch alive (a flame's flicker, a lamp's sway, a
- * glint going round). Everything here draws in cells, in the frame the stage has translated to, through the pen's
- * tone, and batches its particles into a few fills so that a frame full of them stays cheap.
+ * far off that drift slower than the machine, things close that pass faster), the air between (dust, rain, embers,
+ * confetti), and the small motion that keeps a quiet stretch alive (a flame's flicker, a lamp's sway). Everything here
+ * draws in cells, in the frame the stage has translated to, through the pen's tone, and batches its particles into a
+ * few fills so that a frame full of them stays cheap. It has no light of its own to add: no halos, no beams laid on
+ * in light (the restraint pass took them out), only shade.
  */
 
 /** The stage's frame in a drawing's cells (`kit.frame`). */
@@ -330,54 +331,7 @@ export function confetti(pen: Pen, t: number, o: Confetti): void {
   ctx.restore()
 }
 
-/* ------------------------------------------------------------------ light */
-
-/**
- * A shaft of light from `apex`, down `angle` (radians, 0 straight down, positive to the left of it), `spread` wide
- * (radians) and `len` long, fading along its length: the beam from a lamp or a high window. Drawn added, so it lightens
- * what it falls on.
- */
-export function shaft(pen: Pen, apex: Pt, angle: number, spread: number, len: number, color: string, a: number): void {
-  if (a <= 0.004) return
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
-  const dx = -Math.sin(angle)
-  const dy = Math.cos(angle)
-  const l = [apex[0] + Math.sin(-angle - spread / 2) * len, apex[1] + Math.cos(-angle - spread / 2) * len]
-  const r = [apex[0] + Math.sin(-angle + spread / 2) * len, apex[1] + Math.cos(-angle + spread / 2) * len]
-  const g = ctx.createLinearGradient(apex[0] * k, apex[1] * k, (apex[0] + dx * len) * k, (apex[1] + dy * len) * k)
-  const c = rgbOf(pen, color)
-  g.addColorStop(0, css(c, a))
-  g.addColorStop(0.55, css(c, a * 0.4))
-  g.addColorStop(1, css(c, 0))
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo(apex[0] * k, apex[1] * k)
-  ctx.lineTo(l[0] * k, l[1] * k)
-  ctx.lineTo(r[0] * k, r[1] * k)
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
-}
-
-/** A soft light added onto what is under it: a lamp's halo, a fire's glow on a wall. Like `pen.glow`, but it lightens. */
-export function bloom(pen: Pen, c: Pt, r: number, color: string, a: number): void {
-  if (a <= 0.004 || r <= 0) return
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
-  const col = rgbOf(pen, color)
-  const g = ctx.createRadialGradient(c[0] * k, c[1] * k, 0, c[0] * k, c[1] * k, r * k)
-  g.addColorStop(0, css(col, a))
-  g.addColorStop(0.3, css(col, a * 0.45))
-  g.addColorStop(1, css(col, 0))
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  ctx.fillStyle = g
-  ctx.fillRect((c[0] - r) * k, (c[1] - r) * k, 2 * r * k, 2 * r * k)
-  ctx.restore()
-}
+/* ------------------------------------------------------------------ shade */
 
 /** A soft shadow laid over what is under it: an ellipse of dark, for a contact shadow or a pool of shade. */
 export function shade(pen: Pen, c: Pt, rx: number, ry: number, color: string, a: number): void {
