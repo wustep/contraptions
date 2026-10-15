@@ -867,12 +867,8 @@ function sunlight(p: p5, k: number, T: number): void {
   const inner = 1 - (1 - a) / ((1 - edge) * (1 - edge))
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
-  for (const [x0, x1, y0, y1] of [LEFT_WIN, RIGHT_WIN]) {
-    // Once the sun is back, the glass itself is bright with it.
-    if (T >= SUN) {
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.3 * sunAt(T)})`
-      ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
-    }
+  // Where it lands, under each window; not on the glass (washed over, the garden behind it went milky).
+  for (const [x0, x1, , y1] of [LEFT_WIN, RIGHT_WIN]) {
     const top = y1 + 0.1
     const foot = INSIDE.ground
     for (const [grow, f] of [[0.1, edge], [0.05, edge], [0, inner]] as [number, number][]) {
