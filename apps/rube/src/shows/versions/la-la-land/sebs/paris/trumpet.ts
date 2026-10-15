@@ -14,7 +14,7 @@ import { drawDark, FLARE, HANDOFF, HOP_UP, KNOCK, miaAt, seat, SHIVER, VALVE_T }
  * notes, drifting up into the dark and fading (`drawSolo`). In each of the solo's breaths she inches in along
  * her end toward him, and the beam leans his way a little more. Its high
  * accents set the hi-hat's open cymbal shivering at the edge of the light;
- * on its biggest note the lamp flares. Out of the silence at 264.7 he
+ * on its biggest note the spot's pool widens on the boards. Out of the silence at 264.7 he
  * springs up off his end (hers sinks) and comes down hard: the kick sounds
  * in the dark room, the beam slams over to his side, and she rolls down it
  * to him and stops against him. The iris closes on them to a small circle (267.3 → 268.2) and shuts on the second knock (268.655).
@@ -31,7 +31,7 @@ const OX = HANDOFF[0] + 0.5
 const OY = HANDOFF[1]
 const here = ([x, y]: Pt): Pt => [x - OX, y - OY]
 
-/** The valves on the solo's notes, the cymbal's shivers, the lamp's flare, and the knock. */
+/** The valves on the solo's notes, the cymbal's shivers, the lamp's surge, and the knock. */
 export const TRUMPET_HITS: number[] = [...VALVE_T.filter((t) => t >= AT.trumpet && t < 268), ...SHIVER, FLARE, KNOCK].sort((a, b) => a - b)
 
 /** She is company until the iris has closed on the two of them. */

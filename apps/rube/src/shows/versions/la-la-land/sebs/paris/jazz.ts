@@ -121,8 +121,8 @@ function drawHouse(p: p5, k: number, t: number): void {
 
 /**
  * Smoke: a cigarette at one of the near tables, its thread rising slowly off the table, leaning toward the stage and
- * up. In the lit room it is a pale wisp against the red; once the room is dark it is only seen where it climbs
- * through the spot's shaft, a thin line lit in the light and gone again above it.
+ * up. In the lit room it is a pale wisp against the red; once the room is dark it is only seen, faintly, where it
+ * climbs through the spot's light, and gone again above it.
  */
 const SMOKER = 16
 const SMOKE_N = 46
@@ -155,7 +155,7 @@ function drawSmoke(p: p5, k: number, t: number, x0: number, y0: number, s: numbe
       const [sx, half] = shaft(y)
       const inBeam = dark * (1 - smooth(Math.abs(x - sx), half * 0.7, half * 1.05))
       const thin = Math.exp(-h / 0.7) * (1 - smooth(h, 0.6, 1.1)) * (strand ? 0.5 * smooth(h, 0.5, 1.2) : 1)
-      const a = thin * (0.16 * lit * (1 - dark) + 0.015 * dark + 0.55 * inBeam)
+      const a = thin * (0.16 * lit * (1 - dark) + 0.015 * dark + 0.26 * inBeam)
       if (prev && Math.min(a, prevA) > 0.01) {
         const lv = Math.min(LV - 1, Math.floor(Math.min(a, prevA) * LV * 1.6))
         paths[lv].moveTo(prev[0] * k, prev[1] * k)

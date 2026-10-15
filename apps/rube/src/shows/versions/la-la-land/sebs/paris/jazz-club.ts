@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { FLOOR, mixHex, R, type Pt } from '../../../../../parts'
-import { alpha, beam, frame as frameOf, glow, hash, knock, lastOf, ring, rgba, smooth, type Companion } from '../kit'
+import { alpha, frame as frameOf, glow, hash, knock, lastOf, ring, rgba, smooth, type Companion } from '../kit'
 import { AT, level, notes, paris, snap } from '../music'
 import { CLUB_INK, CLUB_MAT } from '../worlds'
 
@@ -620,9 +620,9 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
   // The bulbs strung across the vault, in two swags. Their light is the room's.
   drawBulbs(p, k, weight, L)
 
-  // The band's light: a warm pool on the see-saw and the kit once it plays, breathing with the band.
+  // The band's light: a warm wash on the wall behind the see-saw and the kit once it plays, steady.
   const band = smooth(t, SOLO[0][0] - 0.05, SOLO[0][0] + 0.1) * (1 - smooth(t, DARK[0], DARK[1]))
-  if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND - 1.1, 3.2, M.bulb, band * (0.1 + 0.08 * level(t)), 1.2, 0.8)
+  if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND - 1.1, 3.0, M.bulb, band * 0.12, 1.2, 0.8)
 
   // The floor: old boards, wine-dark, the room's light lying on them and dying into the black under the frame.
   p.noStroke()
@@ -1273,7 +1273,7 @@ function drawHat(p: p5, k: number, weight: number, t: number, L: number): void {
   }
   cym(HAT_Y, 1)
   // The upper cymbal: in the solo, open at the edge of the spot, it shivers on the trumpet's high accents, rocking
-  // on its rod and catching the light on the rim that tips up.
+  // on its rod.
   const sh = lastOf(SHIVER, t)
   const rock = sh.i >= 0 ? ring(sh.ago, 3.4, 0.28) : 0
   p.push()
@@ -1282,13 +1282,6 @@ function drawHat(p: p5, k: number, weight: number, t: number, L: number): void {
   p.translate(-S(HAT_X), -S(HAT_Y - gap))
   cym(HAT_Y - gap, -1)
   p.pop()
-  if (sh.i >= 0 && sh.ago < 0.9) {
-    const f = smooth(sh.ago, 0, 0.012) * (0.75 * Math.exp(-sh.ago / 0.16) + 0.25 * Math.exp(-sh.ago / 0.5))
-    glow(p, k, HAT_X + 0.25, HAT_Y - gap - 0.035 - 0.03 * rock, 0.26, M.spot, 0.6 * f, 1.3, 0.45)
-  }
-  // The chick: a glint off the closed pair.
-  const since = sinceHit(t, -1)
-  if (since < 0.25) glow(p, k, HAT_X, HAT_Y - 0.02, 0.5, M.bulb, 0.45 * knock(since, 0.08) * lit, 1.4, 0.5)
 }
 
 /** Seconds since the see-saw last came down on end `e` (or both). */
@@ -1578,8 +1571,8 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   const S = X(k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const pool: Pt = [PIVOT[0], GROUND - 0.9]
-  // On the solo's biggest note the lamp's filament surges: its pool on the boards widens and brightens, and for a
-  // moment the dark gives back a little more of the room round it.
+  // On the solo's biggest note the lamp's filament surges: its pool on the boards widens, and for a moment the dark
+  // gives back a little more of the room round it.
   const fs = t - FLARE
   const fl = fs < -0.02 ? 0 : smooth(fs, -0.02, 0) * (0.8 * Math.exp(-Math.max(0, fs) / 0.24) + 0.2 * Math.exp(-Math.max(0, fs) / 0.9))
   // The dark: black round the one spot, but not empty. The spot's spill falls off slowly, so the room is still there
@@ -1594,10 +1587,9 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   ctx.fillRect(S(view.x0 - 2), S(view.y0 - 2), S(view.x1 - view.x0 + 4), S(view.y1 - view.y0 + 4))
   ctx.restore()
   drawSpill(p, k, t, f)
-  // The beam, from the lamp in the vault to the floor, and its pool on the boards.
+  // The spot's light: its pool on the boards, and the lit things in it; nothing drawn in the air from the lamp.
   const on1 = f
-  beam(p, k, LAMP[0], LAMP[1] + 0.1, PIVOT[0], GROUND, 0.2, 1.6, M.spot, 0.12 * on1 * (1 + 0.5 * fl))
-  glow(p, k, PIVOT[0], GROUND - 0.02, 1.0 + 0.55 * fl, M.spot, 0.3 * on1 * (1 + 0.8 * fl), 1.3, 0.28)
+  glow(p, k, PIVOT[0], GROUND - 0.02, 1.0 + 0.4 * fl, M.spot, 0.3 * on1, 1.3, 0.28)
   // The arch keeps its light, the bar's beyond, and the bass and the man playing it stand against it.
   if (on1 > 0.01) {
     ctx.save()
@@ -2046,17 +2038,15 @@ function drawTower(ctx: CanvasRenderingContext2D, k: number, t: number, on1: num
     if (i === 0) path.moveTo(x * k, y * k)
     else path.lineTo(x * k, y * k)
   }
-  for (const [w, a0] of [[0.075, 0.1], [0.018, 0.75]] as const) {
-    ctx.lineWidth = w * k
-    ctx.strokeStyle = rgba(M.spot, a0 * on1 * 0.7)
-    ctx.stroke(path)
-  }
-  // The pen: a bright point where it is drawing.
+  ctx.lineWidth = 0.018 * k
+  ctx.strokeStyle = rgba(M.spot, 0.55 * on1)
+  ctx.stroke(path)
+  // The pen: the point where it is drawing, a dot of the line's own light.
   if (d < 1) {
     const [x, y] = skylineAt(u1)
-    ctx.fillStyle = rgba(M.spot, on1)
+    ctx.fillStyle = rgba(M.spot, 0.8 * on1)
     ctx.beginPath()
-    ctx.arc(x * k, y * k, 0.045 * k, 0, Math.PI * 2)
+    ctx.arc(x * k, y * k, 0.022 * k, 0, Math.PI * 2)
     ctx.fill()
   }
 }
