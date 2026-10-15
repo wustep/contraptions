@@ -1,8 +1,10 @@
 import type { Pt, Seg } from '../../../../../parts'
+import type p5 from 'p5'
+import { mixHex } from '../../../../../parts'
 import { beam, box, carried, frame, part, rgba, smooth, type PartShot } from '../kit'
 import { LIPTONS_MAT } from '../worlds'
-import { bloomFront, K0, KISS_MIA, KISS_SEB, mia, seb, T } from './kiss-plan'
-import { cupFront } from './room'
+import { bloomFront, K0, KISS_MIA, KISS_SEB, mia, ROOM, seb, T } from './kiss-plan'
+import { cupFront, lampAt } from './room'
 
 /**
  * The kiss, and the dream it opens: Lipton's, from the hush (61.777) to the curtain (dream(51)).
@@ -53,6 +55,100 @@ function poolAt(t: number): Pt {
   return [POOL[0] + (POOL_KISS[0] - POOL[0]) * u, POOL[1] + (POOL_KISS[1] - POOL[1]) * u]
 }
 
+/**
+ * The tables nearest us, nearer than the room: the edge of each along the foot of the picture, a white cloth over it,
+ * a candle in a red glass, a wine glass, a sprig of holly. They slide past faster than the room as the camera
+ * crosses it, as near things do, and only while the picture has the floor in it (not up among the bulbs). The
+ * candles go down in the hush with the lamps and come up with the kiss.
+ */
+const NEAR = Array.from({ length: 9 }, (_, i) => ({ x: -26 + i * 6.3 + 1.4 * Math.sin(i * 2.3), glass: i % 2 === 0, holly: i % 3 === 1 })).filter((n) => n.x > ROOM.wallL1 + 1.5)
+function nearTables(p: p5, k: number, t: number): void {
+  const f = frame(p, k)
+  const fh = f.y1 - f.y0
+  const floorK = toK([0, ROOM.floor])[1]
+  const there = smooth(f.y1, floorK - 0.1, floorK + 0.6)
+  if (there <= 0.01) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const base = f.y1 + 0.01 * fh
+  const s = fh
+  ctx.save()
+  ctx.globalAlpha = there
+  for (const n of NEAR) {
+    const wx = toK([n.x, 0])[0]
+    const x = f.cx + (wx - f.cx) * 1.3
+    const half = 0.17 * s
+    if (x + half < f.x0 || x - half > f.x1) continue
+    const top = base - 0.075 * s
+    const lv = Math.min(1, lampAt(n.x, t))
+    // The cloth over the table's edge, hanging in folds; its top lit by the candle.
+    ctx.fillStyle = mixHex(LIPTONS_MAT.cloth, '#000000', 0.62 - 0.22 * lv)
+    ctx.beginPath()
+    ctx.moveTo((x - half) * k, top * k)
+    ctx.lineTo((x + half) * k, top * k)
+    ctx.lineTo((x + half + 0.012 * s) * k, base * k)
+    ctx.lineTo((x - half - 0.012 * s) * k, base * k)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = rgba(LIPTONS_MAT.lamp, 0.35 * lv)
+    ctx.fillRect((x - half) * k, top * k, 2 * half * k, 0.006 * s * k)
+    ctx.strokeStyle = rgba(LIPTONS_MAT.panel, 0.5)
+    ctx.lineWidth = Math.max(1, 0.002 * s * k)
+    ctx.beginPath()
+    for (let j = 1; j < 6; j++) {
+      const fx = x - half + (2 * half * j) / 6
+      ctx.moveTo(fx * k, (top + 0.012 * s) * k)
+      ctx.lineTo((fx + 0.004 * s) * k, base * k)
+    }
+    ctx.stroke()
+    // A candle in a red glass, its flame.
+    const cx = x - 0.07 * s
+    ctx.fillStyle = mixHex(LIPTONS_MAT.shade, '#000000', 0.55 - 0.35 * lv)
+    ctx.fillRect((cx - 0.012 * s) * k, (top - 0.026 * s) * k, 0.024 * s * k, 0.026 * s * k)
+    ctx.fillStyle = rgba(LIPTONS_MAT.lamp, 0.25 + 0.7 * lv)
+    ctx.beginPath()
+    ctx.ellipse(cx * k, (top - 0.033 * s) * k, 0.003 * s * k, 0.007 * s * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+    // A wine glass: bowl, stem, foot, as a dark outline with the candle's light on its rim.
+    if (n.glass) {
+      const gx = x + 0.06 * s
+      ctx.strokeStyle = rgba(LIPTONS_MAT.cloth, 0.25 + 0.3 * lv)
+      ctx.lineWidth = Math.max(1, 0.0025 * s * k)
+      ctx.beginPath()
+      ctx.moveTo((gx - 0.012 * s) * k, (top - 0.062 * s) * k)
+      ctx.quadraticCurveTo((gx - 0.012 * s) * k, (top - 0.035 * s) * k, gx * k, (top - 0.032 * s) * k)
+      ctx.quadraticCurveTo((gx + 0.012 * s) * k, (top - 0.035 * s) * k, (gx + 0.012 * s) * k, (top - 0.062 * s) * k)
+      ctx.moveTo(gx * k, (top - 0.032 * s) * k)
+      ctx.lineTo(gx * k, top * k)
+      ctx.moveTo((gx - 0.008 * s) * k, top * k)
+      ctx.lineTo((gx + 0.008 * s) * k, top * k)
+      ctx.stroke()
+      ctx.fillStyle = rgba(LIPTONS_MAT.shade, 0.6)
+      ctx.beginPath()
+      ctx.moveTo((gx - 0.01 * s) * k, (top - 0.048 * s) * k)
+      ctx.quadraticCurveTo(gx * k, (top - 0.03 * s) * k, (gx + 0.01 * s) * k, (top - 0.048 * s) * k)
+      ctx.closePath()
+      ctx.fill()
+    }
+    // A sprig of holly on the cloth.
+    if (n.holly) {
+      const hx = x + 0.11 * s
+      ctx.fillStyle = mixHex(LIPTONS_MAT.pine, '#000000', 0.4 - 0.3 * lv)
+      for (const a of [-0.5, 0.4]) {
+        ctx.beginPath()
+        ctx.ellipse((hx + Math.cos(a) * 0.012 * s) * k, (top - 0.006 * s) * k, 0.014 * s * k, 0.005 * s * k, a, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.fillStyle = mixHex(LIPTONS_MAT.shade, '#000000', 0.3 - 0.2 * lv)
+      for (const dx of [-0.004, 0.004]) {
+        ctx.beginPath()
+        ctx.arc((hx + dx * s) * k, (top - 0.011 * s) * k, 0.0035 * s * k, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+  }
+  ctx.restore()
+}
+
 /** The ball sampled from the plan between breakpoints (show seconds), at `hz`, in this frame. */
 function lane(begin: number, marks: number[], hz: number[]): Seg[] {
   const at = (s: number): Pt => toK(seb(s + begin))
@@ -78,6 +174,8 @@ export const kiss = part<null>(
       p.translate(cup[0] * k, cup[1] * k)
       cupFront(p, k, c.ink, c.weight, t)
       p.pop()
+      // Nearest of all, our own table: the edges of the tables near us along the foot of the picture.
+      nearTables(p, k, t)
       // The hush: the room goes dark round a pool of light on the piano's end, and a soft shaft down into it.
       const a = hush(t)
       if (a <= 0.003) return
