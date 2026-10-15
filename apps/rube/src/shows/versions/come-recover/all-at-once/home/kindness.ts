@@ -5,6 +5,7 @@ import { APPEAR, B, ballAt, E0, FINAL, lidAt, PIECES, waymondAt } from './kindne
 import {
   drawArm,
   drawArmFront,
+  drawBlossoms,
   drawDesk,
   drawGivenEyes,
   drawGiftBox,
@@ -14,6 +15,8 @@ import {
   drawLanterns,
   drawPartyWall,
   drawLid,
+  drawMandarins,
+  drawSteam,
   drawSteamers,
   drawTable,
   drawTrap,
@@ -65,8 +68,11 @@ export const kindness = part<KindnessState>(
       drawDesk(pen)
       drawLanterns(pen, t)
       drawTable(pen)
+      drawBlossoms(pen, t)
       drawKaraoke(pen)
+      drawMandarins(pen)
       drawSteamers(pen)
+      drawSteam(pen, t)
       drawGiftBox(pen)
       if (t >= APPEAR) {
         drawHammer(pen, t)
