@@ -788,9 +788,9 @@ export const nursery = part<NurseryState>(
     // Out from the crib as the two of them go to their stations: the whole room, the winch, the crib and the wall.
     { t: 64.3, cells: 4.02, hold: [-0.5, -1.02], w: 1 },
     { t: 65.7, cells: 4.55, hold: [-0.55, -1.24], w: 1 },
-    // Up a little with her as the mural climbs.
-    { t: 67.8, cells: 4.6, hold: [-0.5, -1.32], w: 1 },
-    { t: 69.4, cells: 4.58, hold: [-0.55, -1.28], w: 1 },
+    // Up with her as the mural climbs, and slowly out, so the room's whole wall comes into the frame as it is painted.
+    { t: 67.8, cells: 4.72, hold: [-0.5, -1.36], w: 1 },
+    { t: 69.4, cells: 4.85, hold: [-0.58, -1.34], w: 1 },
     // Back in to the crib as they come back to it, and on to the two-shot the doctor's office opens on.
     { t: 71.0, cells: 4.3, hold: [-0.42, -0.95], w: 1 },
     { t: 72.4, cells: 4.08, hold: [-0.47, -0.68], w: 1 },
