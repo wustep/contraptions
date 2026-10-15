@@ -197,9 +197,13 @@ export function tubeLevel(i: number, t: number): number {
   return clamp(v * d)
 }
 
-/** The night outside, and the room with no light on. */
+/**
+ * The night outside, and the room with no light on. The dark is a moonlit blue, not the tile's own green gone grey:
+ * so what a lamp still lights in it (the washer's window under the credits, the lanterns, a car's headlights) is
+ * warm against cool, as a night is, and the room at the end is a night and not a murk.
+ */
 const NIGHT = HOME.night
-const AMBIENT = mixHex(HOME.night, HOME.glassDeep, 0.5)
+const AMBIENT = '#36436A'
 const STREET_LIGHT = mixHex(HOME.light, HOME.glass, 0.35)
 
 /** The glows the room itself has in the dark: the street lamp through the glass, and the neon. */
@@ -238,11 +242,74 @@ export function lightAt(x: number, y: number, t: number): number {
   return clamp(v)
 }
 
-/** A colour as the light at (x, y) leaves it: for what a part draws in its `over`, after the room's light map. */
+/**
+ * A pool of light on the room's light map: an ellipse round (x, y), `a` at its heart (no more than full), three
+ * quarters of that a little past halfway out, and nothing at its rim.
+ */
+interface Pool {
+  x: number
+  y: number
+  rx: number
+  ry: number
+  a: number
+  color: string
+}
+
+/** Every pool of light in the room at `t`: the tubes, the room's own glows, and every other part's. */
+let poolsSeen: { t: number; pools: Pool[] } = { t: NaN, pools: [] }
+function poolsAt(t: number): Pool[] {
+  if (poolsSeen.t === t) return poolsSeen.pools
+  const out: Pool[] = []
+  TUBES.forEach((tb, i) => {
+    const l = tubeLevel(i, t)
+    if (l <= 0) return
+    // A pool of light under the tube, down to the floor; and the tube itself.
+    // The pools saturate when the tube is fully on, so a lit room is exactly as drawn; dimmed, they fall off fast.
+    out.push({ x: tb.x, y: TUBE_Y + 1.9, rx: 4.2, ry: 4.0, a: 2.0 * l * Math.sqrt(l), color: HOME.light })
+    out.push({ x: tb.x, y: TUBE_Y + 0.05, rx: 1.8, ry: 0.4, a: 1.4 * l, color: HOME.light })
+  })
+  for (const gl of roomGlows(t)) out.push({ x: gl.x, y: gl.y, rx: gl.r, ry: gl.r, a: gl.a, color: gl.color ?? HOME.light })
+  for (const fn of LIGHTS.glows) for (const gl of fn(t)) out.push({ x: gl.x, y: gl.y, rx: gl.r, ry: gl.r, a: gl.a, color: gl.color ?? HOME.light })
+  poolsSeen = { t, pools: out.filter((q) => q.a > 0.003) }
+  return poolsSeen.pools
+}
+
+/** A pool's strength at a share `u` of the way out to its rim: the light map's gradient, stop for stop. */
+function poolFall(a: number, u: number): number {
+  const top = Math.min(1, a)
+  if (u >= 1) return 0
+  if (u < 0.55) return top * (1 - 0.25 * (u / 0.55))
+  return top * 0.75 * (1 - (u - 0.55) / 0.45)
+}
+
+const rgbOf = (hex: string): [number, number, number] => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number]
+
+/** The light map's colour at (x, y) at `t`, each channel 0..1: the night's, with every pool added in light. */
+function lightRgbAt(x: number, y: number, t: number): [number, number, number] {
+  const out = rgbOf(AMBIENT)
+  for (const q of poolsAt(t)) {
+    const v = poolFall(q.a, Math.hypot((x - q.x) / q.rx, (y - q.y) / q.ry))
+    if (v <= 0) continue
+    const c = rgbOf(q.color)
+    for (let j = 0; j < 3; j++) out[j] += c[j] * v
+  }
+  return out.map((v) => Math.min(1, v)) as [number, number, number]
+}
+
+/**
+ * A colour as the light at (x, y) leaves it: for what a part draws in its `over`, after the room's light map. It is
+ * the light map's own light, so a googly eye in the washer window's warm glow is lit warm as the ball under it is,
+ * and in the dark it is the night's blue; with a fifth of its own colour kept, so an eye still reads in the dark.
+ */
 export function shade(hex: string, x: number, y: number, t: number): string {
-  const l = lightAt(x, y, t)
-  if (l >= 0.999) return hex
-  return mixHex(hex, mixHex(hex, AMBIENT, 0.78), 1 - l)
+  if (lightAt(x, y, t) >= 0.999) return hex
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return mixHex(hex, AMBIENT, 0.6)
+  const l = lightRgbAt(x, y, t)
+  if (l[0] >= 0.999 && l[1] >= 0.999 && l[2] >= 0.999) return hex
+  const c = rgbOf(hex)
+  let out = '#'
+  for (let j = 0; j < 3; j++) out += Math.round(255 * (0.8 * c[j] * l[j] + 0.2 * c[j])).toString(16).padStart(2, '0')
+  return out
 }
 
 /** True when every tube is fully on and nothing dims them: the light map would change nothing. */
@@ -1696,31 +1763,22 @@ function lightMap(p: p5, k: number, t: number): void {
   g.fillRect(0, 0, cw, ch)
   g.setTransform(ctx.getTransform())
   g.globalCompositeOperation = 'lighter'
-  const pool = (x: number, y: number, rx: number, ry: number, a: number, color = '#FFF7DC') => {
-    if (a <= 0.003) return
-    const c = p.color(color)
+  const pool = (q: Pool) => {
+    const c = p.color(q.color)
     const rgb = `${p.red(c)}, ${p.green(c)}, ${p.blue(c)}`
+    const top = Math.min(1, q.a)
     g.save()
-    g.translate(x * k, y * k)
-    g.scale(1, ry / rx)
-    const grad = g.createRadialGradient(0, 0, 0, 0, 0, rx * k)
-    grad.addColorStop(0, `rgba(${rgb}, ${Math.min(1, a)})`)
-    grad.addColorStop(0.55, `rgba(${rgb}, ${Math.min(1, a) * 0.75})`)
+    g.translate(q.x * k, q.y * k)
+    g.scale(1, q.ry / q.rx)
+    const grad = g.createRadialGradient(0, 0, 0, 0, 0, q.rx * k)
+    grad.addColorStop(0, `rgba(${rgb}, ${top})`)
+    grad.addColorStop(0.55, `rgba(${rgb}, ${top * 0.75})`)
     grad.addColorStop(1, `rgba(${rgb}, 0)`)
     g.fillStyle = grad
-    g.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
+    g.fillRect(-q.rx * k, -q.rx * k, 2 * q.rx * k, 2 * q.rx * k)
     g.restore()
   }
-  TUBES.forEach((tb, i) => {
-    const l = tubeLevel(i, t)
-    // A pool of light under the tube, down to the floor; and the tube itself.
-    // The pools saturate when the tube is fully on, so a lit room is exactly as drawn; dimmed, they fall off fast.
-    const a = 2.0 * l * Math.sqrt(l)
-    pool(tb.x, TUBE_Y + 1.9, 4.2, 4.0, a)
-    pool(tb.x, TUBE_Y + 0.05, 1.8, 0.4, 1.4 * l)
-  })
-  for (const gl of roomGlows(t)) pool(gl.x, gl.y, gl.r, gl.r, gl.a, gl.color)
-  for (const fn of LIGHTS.glows) for (const gl of fn(t)) pool(gl.x, gl.y, gl.r, gl.r, gl.a, gl.color)
+  for (const q of poolsAt(t)) pool(q)
   g.restore()
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)

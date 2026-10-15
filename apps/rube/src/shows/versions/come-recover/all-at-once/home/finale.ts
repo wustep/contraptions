@@ -47,12 +47,19 @@ function install<F>(list: Tagged<F>[], tag: string, fn: F): void {
   list.push(tagged)
 }
 
+/**
+ * What the window's light throws on the room: the glass's own colour as it comes out of the bagel's hole, warming
+ * through the evening to a lamp's amber, deeper than the glass looks, so that against the night's blue the pool the
+ * family rests in is warm and not a pale green.
+ */
+const THROWN = '#FFB45C'
+const throwColor = (warm: number): string => mixHex(lightColor(warm), THROWN, 0.85 * warm)
+
 install(LIGHTS.glows, 'finale-window', (t: number): Glow[] => {
   const light = windowLight(t)
   if (light.a <= 0) return []
-  const col = lightColor(light.warm)
   const out: Glow[] = [
-    { x: PORT[0], y: PORT[1] + 0.25, r: 2.1, a: 0.85 * light.a, color: col },
+    { x: PORT[0], y: PORT[1] + 0.25, r: 2.1, a: 0.85 * light.a, color: throwColor(light.warm) },
   ]
   for (const g of stringGlows(t)) if (g.a > 0.01) out.push({ x: g.x, y: g.y, r: 1.3, a: 0.55 * g.a, color: HOME.gold })
   const fw = fireworkLight(t)

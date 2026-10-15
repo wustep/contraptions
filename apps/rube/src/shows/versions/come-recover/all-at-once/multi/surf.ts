@@ -7,6 +7,7 @@ import { DOJO, DOJO_THEME, EVELYN, HIBACHI, HIBACHI_THEME, HOME, HOTDOG, HOTDOG_
 import { backdrop, SKINS, type Moment, type Skin } from './skins'
 import { at, beam, circle, ellipse, glow, hash, line, lodFor, poly, rect, rgba, round, type Pen } from './skins-pen'
 import { PANEL_LOOKS, paintPicture, prefersCalm, type Look } from '../film'
+import { HAZE, paintCloud, paintSky, STRATA } from '../rocks/ledgeLand'
 
 /**
  * The surf: she has learned to jump, and now it comes faster than she can land. The spatula's flip carries on as
@@ -414,18 +415,52 @@ function karaoke(s: Scene): void {
 
 /* ------------------------------------------------------------------ 5. the canyon */
 
+/**
+ * The canyon is the rocks leg's own place, glimpsed (`rocks/ledgeLand.ts`): its hazy sky, its low pale sun and its
+ * high cloud (painted under this, frame-fixed, as the rocks paint them), the far plateau's mesas and spires gone pale
+ * with distance, and the far wall across the gulf in the same strata the rocks come down. So at 200 s it is a place
+ * already seen, not only two stones.
+ */
+const FAR_MESAS = mixHex(HAZE, ROCKS.sky, 0.25)
+const NEAR_MESAS = mixHex(ROCKS.far, HAZE, 0.35)
+/** The far wall's strata, top down, hazed by the gulf between. */
+const FAR_STRATA = [0.75, 1.15, 1.7, 2.2, 2.9, 3.6, 4.6].map((y, i) => ({ y, c: mixHex(STRATA[i + 1].c, HAZE, 0.3) }))
+
 function canyon(s: Scene): void {
   const { pen } = s
-  fill(s, ROCKS.sky)
-  // The far rim, flat-topped, a long way off.
-  layer(s, 0.08, () => {
-    poly(pen, [[-8, 0.9], [-5.6, 0.85], [-5.2, 0.25], [-3.1, 0.2], [-2.8, 0.8], [0.9, 0.75], [1.2, 0.05], [4.4, 0.0], [4.7, 0.65], [9, 0.6], [9, 6], [-8, 6]], ROCKS.far, 0)
+  // The plateau far off, flat, with mesas and a spire stood on it.
+  layer(s, 0.04, () => {
+    poly(pen, [[-9, 0.55], [-7.2, 0.55], [-6.9, 0.05], [-5.4, 0.05], [-5.1, 0.55], [-2.6, 0.55], [-2.5, -0.35], [-2.3, -0.42], [-2.15, -0.35], [-2.05, 0.55], [1.6, 0.55], [1.9, -0.1], [3.6, -0.12], [3.9, 0.55], [6.3, 0.55], [6.4, -0.6], [6.62, -0.66], [6.8, -0.58], [6.9, 0.55], [11, 0.55], [11, 6], [-9, 6]], FAR_MESAS, 0)
   })
-  // The canyon's far wall, across the gulf, in its layers, and the gulf's shadow going down and down.
+  // Nearer, a broken rim of buttes, still pale.
+  layer(s, 0.12, () => {
+    poly(pen, [[-9, 0.95], [-6.3, 0.95], [-6.0, 0.5], [-4.4, 0.45], [-4.1, 0.9], [-0.4, 0.9], [-0.1, 0.25], [0.15, 0.2], [0.35, 0.85], [2.6, 0.82], [2.9, 0.4], [5.2, 0.38], [5.5, 0.8], [11, 0.78], [11, 6], [-9, 6]], NEAR_MESAS, 0)
+  })
+  // The canyon's far wall, across the gulf, in its strata, and the gulf's shadow going down and down.
   layer(s, 0.3, () => {
-    const face = mixHex(ROCKS.canyon, ROCKS.far, 0.25)
-    poly(pen, [[2.1, 7], [2.3, 1.05], [3.0, 0.8], [4.6, 0.85], [5.3, 0.6], [10, 0.65], [10, 7]], face, 1)
-    if (pen.lod <= 1) for (const [y, x0] of [[1.35, 2.25], [1.8, 2.2], [2.4, 2.15], [3.1, 2.1], [4.0, 2.05]] as const) line(pen, x0 + 0.1, y, 10, y - 0.1, ROCKS.canyonShade, pen.lw * 1.1)
+    const face: Pt[] = [[2.1, 7], [2.3, 1.05], [3.0, 0.8], [4.6, 0.85], [5.3, 0.6], [10, 0.65], [10, 7]]
+    poly(pen, face, FAR_STRATA[0].c, 0)
+    const { ctx } = pen
+    ctx.save()
+    ctx.beginPath()
+    face.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    ctx.closePath()
+    ctx.clip()
+    for (const [i, band] of FAR_STRATA.entries()) {
+      const next = FAR_STRATA[i + 1]?.y ?? 7
+      ctx.fillStyle = band.c
+      ctx.beginPath()
+      ctx.moveTo(2, band.y + 0.04)
+      for (let x = 2; x <= 10.01; x += 0.5) ctx.lineTo(x, band.y + 0.04 * Math.sin(1.3 * x + i) - 0.012 * x)
+      ctx.lineTo(10, next + 0.1)
+      ctx.lineTo(2, next + 0.1)
+      ctx.closePath()
+      ctx.fill()
+    }
+    // The wall's top lit by the low sun, and its ledges' lips.
+    if (pen.lod <= 1) for (const band of FAR_STRATA.slice(1)) line(pen, 2.2, band.y, 10, band.y - 0.1, rgba(ROCKS.canyonShade, 0.45), pen.lw * 0.8)
+    ctx.restore()
+    poly(pen, face, null, 1)
     poly(pen, [[-0.6, 1.6], [2.3, 1.05], [2.1, 7], [-0.6, 7]], ROCKS.canyonShade, 0)
     poly(pen, [[0.4, 3.0], [2.2, 2.2], [2.1, 7], [0.2, 7]], mixHex(ROCKS.canyonShade, ROCKS_THEME.ink, 0.25), 0)
   })
@@ -613,6 +648,12 @@ function paint(p: p5, _s: SurfState, c: Ctx): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const f = frame(p, c.k)
   const q = c.k * p.pixelDensity()
+  // The canyon's sky is the rocks' own, painted in the frame as they paint it.
+  const shown = WORLDS.reduce((w, x) => (t >= x.at ? x : w), WORLDS[0])
+  if (shown.kind === 'canyon') {
+    paintSky(p, c.k, f)
+    paintCloud(p, c.k, f, t)
+  }
   ctx.save()
   ctx.scale(c.k, c.k)
   ctx.lineCap = 'round'

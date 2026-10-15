@@ -4,7 +4,7 @@ import { mixHex, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, hash, part, route, type Ctx, type PartShot } from '../kit'
 import { G } from '../physics'
 import { DOJO } from '../worlds'
-import { hall } from './dummies-hall'
+import { hall, sun } from './dummies-hall'
 import {
   ARM,
   ENTRY,
@@ -76,6 +76,23 @@ function stick(p: p5, k: number, ink: string, w: number, a: Pt, b: Pt, r: number
 const lerpV = (a: V, b: V, u: number): V => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]
 
 const ARMWOOD = mixHex(DOJO.wood, DOJO.woodDeep, 0.3)
+
+/** Where a wooden man's foot block stands on the boards, a soft dark spreading round it. */
+function drawFootShadow(p: p5, c: Ctx, m: ManPlan): void {
+  const { k } = c
+  const [x, y] = P([m.x, 0])
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, POST.baseW * 0.95 * k)
+  g.addColorStop(0, 'rgba(43, 27, 18, 0.45)')
+  g.addColorStop(1, 'rgba(43, 27, 18, 0)')
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.scale(1, 0.18)
+  ctx.translate(-x * k, -y * k)
+  ctx.fillStyle = g
+  ctx.fillRect((x - POST.baseW) * k, (y - POST.baseW) * k, 2 * POST.baseW * k, 2 * POST.baseW * k)
+  ctx.restore()
+}
 
 /** One wooden man at show time `t`: his foot block, the far upper arm, the post, the near arms and the leg. */
 function drawMan(p: p5, c: Ctx, m: ManPlan, t: number): void {
@@ -272,11 +289,13 @@ export const dummies = part<DojoState>(
     draw: (p, s, c) => {
       const t = c.t + s.begin
       p.push()
-      hall(p, c.k, c, OX, FY)
+      hall(p, c.k, c, OX, FY, t)
       drawStaff(p, c, s.plan.staff, t)
       drawGong(p, c, s.plan.gong, t)
+      for (const m of s.plan.men) drawFootShadow(p, c, m)
       for (const m of s.plan.men) drawMan(p, c, m, t)
       drawDust(p, c, s.plan, t)
+      sun(p, c.k, OX, FY, t)
       p.pop()
     },
   },
@@ -312,19 +331,20 @@ export const dummies = part<DojoState>(
     const H = (x: number, h: number): Pt => P([x, h])
     const last = PLAN.path[PLAN.path.length - 1].p
     return [
-      // Down out of the rafters with her, opening out onto the first pair.
+      // Down out of the rafters with her, opening out onto the first pair, head to foot on the boards.
       { t: slot.begin + 0.5, cells: 5.0, off: [0.5, 0.7] },
-      { t: 87.25, cells: 5.1, hold: H(1.6, 2.35), w: 0.78 },
-      { t: 89.3, cells: 5.1, hold: H(1.6, 2.4), w: 0.92 },
+      { t: 87.25, cells: 5.6, hold: H(1.6, 2.2), w: 0.78 },
+      { t: 88.0, cells: 5.8, hold: H(1.6, 1.82), w: 0.85 },
+      { t: 89.3, cells: 5.8, hold: H(1.6, 1.82), w: 0.92 },
       // The kick up into the staff: wide enough for its swing.
       { t: 90.2, cells: 6.4, hold: H(1.35, 2.8), w: 0.95 },
       { t: 91.7, cells: 6.4, hold: H(1.8, 2.85), w: 0.95 },
       // Batted over their heads to the second pair.
       { t: 92.45, cells: 5.8, hold: H(4.2, 3.4), w: 0.6 },
-      { t: 93.25, cells: 5.3, hold: H(5.95, 2.3), w: 0.9 },
-      { t: 94.45, cells: 5.0, hold: H(6.15, 2.55), w: 0.9 },
+      { t: 93.25, cells: 5.8, hold: H(5.95, 1.8), w: 0.9 },
+      { t: 94.45, cells: 5.7, hold: H(6.15, 1.76), w: 0.9 },
       // Held on him through the catch and the wind, until the kick; then up with her to the gong.
-      { t: 94.88, cells: 5.2, hold: H(6.15, 2.45), w: 0.9 },
+      { t: 94.88, cells: 5.8, hold: H(6.15, 1.82), w: 0.9 },
       // The high kick and the gong, wide: from his leg to the beam.
       { t: 95.25, cells: 6.1, hold: H(6.5, 5.0), w: 0.85 },
       { t: 95.9, cells: 6.3, hold: H(6.3, 4.45), w: 0.7 },

@@ -932,6 +932,70 @@ both follow the choice. On, all seventeen lines come back as they were, a saved 
   peak, home) was watched both ways; the taxes' tile wall and the rocks' foot simply stay clear.
 - Nothing else changed: the song, the jumps and hits, the chapters, the audio description and the sound captions.
 
+### Sets and light: a fourth round
+
+The whole show was rendered every two seconds and at its key frames at 1280×720, and the places that read as
+unfinished were given a set and a light. Nothing in the song, the jumps, the strikes or the ball's path changed; the
+share card (255.75 s) is pixel-identical.
+
+- **The night is blue, and the window amber.** The laundromat's dark was the tile's own green gone grey, so the 35 s
+  of credits read as an olive murk with the family's colours dulled to grey. The room's night is now a moonlit blue
+  (`AMBIENT` in `home/set.ts`), and the washer's window throws a lamp's amber on the room as the evening warms
+  (`THROWN` in `home/finale.ts`), so the family rests in a warm pool against a cool night. What is drawn over the
+  light map (the googly eyes, the tripod's front legs) is now lit by the light map's own pools (`shade`), so their
+  eyes are warm in the window's light rather than tinted with the night. The opening's dark, before the tubes, is the
+  same blue night.
+- **The premiere's step-and-repeat.** The press were dark silhouettes against the theatre's dark front: one mass of
+  dark for the first five seconds of Everywhere. Behind them now stands a red carpet's step-and-repeat, an ivory
+  board printed over and over with her picture's mark (the gold moon over two ridges, as on the poster cases) and a
+  brass star, lit from a truss of lamps along its top, on black stands at its ends. Every hat and camera reads
+  against it. Between the big flashes the pen never stops: on the recording's other onsets a gun or two near her
+  pops, small and local, and lights the board behind its shooter (`TWINKLES`): never within a tenth of a second of
+  a big flash, never closer than 0.12 s to the last, none for a viewer who asks for less motion. The lobby behind the
+  glass doors is gold-lit, the warm light at the end of the rope line, so their bursting open is into light.
+- **The dojo is an afternoon hall.** The sun is low outside: the paper glows with the yard's bamboo shadowed on it,
+  the beam and the plaster stand back in shade, and shafts of sun come in under the beam and slant down through the
+  hall to the floor, dust turning in them, laid on in light so the wooden men walk through it and stay themselves.
+  Between the pillars the hall keeps its things where the men leave room: a rack of spears, a broadsword and a staff
+  by the first pillar, a scroll in jade silk past the last man, and incense by the first, its smoke going up into
+  the sun. In both exchanges the camera stands back a little and lower, so the men stand on the waxed boards, the
+  paper's light in them.
+- **The surf's canyon is the rocks' own place.** It was a flat grey sky over beige shapes. It now paints the rocks
+  leg's own sky, low pale sun and high cloud, a far plateau of mesas and a spire in the haze, a nearer rim of
+  buttes, and the far wall in the rocks' strata, so at 200 s the canyon is a place already seen.
+- **Into everywhere at once, the room comes up in moonlight.** The four seconds of falling into the laundromat were
+  a flat grey murk until the tubes. The dark now goes from the bagel's black to the room's moonlit blue as she
+  falls, and the room comes up in it, so the tubes flicker on in a room already seen.
+- **The party at the great hit.** It read as a bare kitchen corner in every close shot of the fight: a cream wall
+  over blank tile, and dumpling steamers drawn as tan boxes. The steamers are now bamboo baskets seen side-on, with
+  woven walls between bound rims and a lattice lid on each stack, and a thin curl of steam rises off them. Red
+  paper-cut window flowers are pasted on the tile where the close shots of the glove, the trap and the cradle look.
+  A branch of plum blossom stands in a blue-and-white vase behind Waymond, leaning toward the couplet over it, and a
+  dish of mandarins sits by the karaoke machine. The party's two lanterns come on with the great hit, as she
+  chooses kindness.
+- **Checked:** `npm run build` (lint, typecheck, every check suite, the site). Frame time against `main`, each frame
+  painted by the dev hook in real Chrome at 1280×720 on a 2× display, the two builds alternating frame by frame on
+  a loaded machine: within noise in every stretch touched (the opening, the premiere, the dojo, the fall, the
+  party, the credits), all under 5 ms a frame on the median.
+
+Then two rounds of watching it whole as a viewer, each weighing what to add against what to cut. They ended
+there: past them, what was left to add was density for its own sake.
+
+- **The peak's seeds, a puff (cut).** On each eighth the hole sprayed fifteen to twenty-seven seeds that grew as
+  they flew, several sprays in the air at once: a hundred flakes of confetti over the two of them and over every
+  thing coming back out with its eye. Each spray is now a handful, smaller and quicker (`SPRAYS` in
+  `void/peakClock.ts`), still on its eighth, so the eighths pulse in the hole and the things it gives back are what
+  the eye follows.
+- **The kitchen, lit from below (added).** Raccacoonie's kitchen was a flat dark board for thirteen seconds. The
+  griddle now lights the slats from below the whole length of the counter, rising and falling with the burners, and
+  the hanging tools catch it.
+- **The step-and-repeat steps back (refined).** The board was the brightest thing in the premiere's wide shots, so
+  the spotlight's beam hardly showed across it as it found her. Its face is a deeper rose between narrower lamp
+  scallops, so the beam, its pool, the flashes and she lead; and the press's small pops go off only on the clear
+  onsets (0.3 and up), about 1.8 a second from 2.5, so the louder runs sparkle and the quiet between them does not.
+- **Checked:** the peak, the heaviest stretch, at a mean of 8.5 ms a frame and a 95th percentile of 15 ms, as
+  before the cut; the kitchen as before.
+
 ### For every viewer
 
 - **Heard.** The page's words layer is `aria-hidden`, as its cards fade and blur, so a card can be spoken (`TitleCard.said`): once,
