@@ -7,6 +7,7 @@ import { live } from './live'
 import { CREDITS_AT, DURATION, at } from './music'
 import { ctxOf, rgb } from './pen'
 import { paintInto, painted, prepare, snapshot, type Snap } from './snap'
+import { drawFlock, drawLoft } from './flock'
 
 /**
  * The finale: the machine, whole.
@@ -119,6 +120,10 @@ const smoother = (u: number): number => {
   const v = Math.max(0, Math.min(1, u))
   return v * v * v * (v * (6 * v - 15) + 10)
 }
+const smooth3 = (u: number): number => {
+  const v = Math.max(0, Math.min(1, u))
+  return v * v * (3 - 2 * v)
+}
 
 /**
  * The crane over the credits, from the camera's last framing on the glass (`from`, at FINALE): out and down, Marty
@@ -138,8 +143,16 @@ export function crane(t: number, from: Framing): Framing {
     cells = Math.exp(Math.log(OUT_CELLS) + (Math.log(IN_CELLS) - Math.log(OUT_CELLS)) * v)
     o = [OUT_SCREEN[0] + (IN_SCREEN[0] - OUT_SCREEN[0]) * v, OUT_SCREEN[1] + (IN_SCREEN[1] - OUT_SCREEN[1]) * v]
   }
-  return { ...from, x: SILL[0] - o[0] * cells, y: SILL[1] - o[1] * cells, cells }
+  // Out wide it never quite stops: it goes on drawing back a little, and travels slowly along the building from its
+  // left towards the loft and the sun, so the near things slide against the far ones; then gives the move up to the
+  // way back in.
+  const along = (-0.5 * smoother((t - 235.5) / 3) + smooth3((t - 238) / 18)) * (1 - v)
+  const back = 1 + DRAW_BACK * smoother((t - 238) / 11) * (1 - v)
+  return { ...from, x: SILL[0] - o[0] * cells + TRAVEL * along, y: SILL[1] - o[1] * cells, cells: cells * back }
 }
+/** How far the wide goes on drawing back (a share of the frame), and how far it travels along the building (cells). */
+const DRAW_BACK = 0.05
+const TRAVEL = 5
 /** From when Marty is too small on the screen to be the shot: the finale's wide. */
 export const FINALE_WIDE: [number, number][] = [[FINALE + 0.47 * (OUT_AT - FINALE), DURATION]]
 
@@ -323,47 +336,40 @@ function drawSmoke(p: p5, k: number, f: Box & { cx: number; cy: number }, t: num
   })
 }
 
-/** Pigeons wheeling over the roofs, and a plane going over very high. */
-function drawBirds(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number): void {
+/** A plane going over very high, its light blinking. */
+function drawPlane(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number): void {
   const ctx = ctxOf(p)
-  deep(p, f, k, 30, () => {
-    ctx.save()
-    ctx.strokeStyle = css('#2A2438', 0.85)
-    ctx.lineWidth = Math.max(1, 0.12 * k)
-    ctx.lineCap = 'round'
-    ctx.beginPath()
-    const u = t - FINALE
-    const cx = -20 + 18 * Math.sin(u * 0.11) + u * 0.6
-    const cy = -16 + 3 * Math.sin(u * 0.23)
-    for (let i = 0; i < 16; i++) {
-      const a = i * 2.4 + u * (0.4 + 0.1 * hash(i, 1, 9))
-      const x = cx + 6 * Math.cos(a) * (0.4 + hash(i, 2, 9))
-      const y = cy + 2.5 * Math.sin(a * 1.3) * (0.4 + hash(i, 3, 9))
-      const flap = Math.sin(u * 9 + i * 1.7) * 0.35
-      ctx.moveTo((x - 0.6) * k, (y - flap) * k)
-      ctx.quadraticCurveTo((x - 0.25) * k, (y - 0.25) * k, x * k, y * k)
-      ctx.quadraticCurveTo((x + 0.25) * k, (y - 0.25) * k, (x + 0.6) * k, (y - flap) * k)
-    }
-    ctx.stroke()
-    ctx.restore()
-  })
   // The plane, far up, its light blinking.
   deep(p, f, k, 90, () => {
     const u = t - FINALE
     const x = -150 + u * 6
     const y = -40
     ctx.save()
+    // An airliner side on, nose to the right: the fuselage, the tail's fin and plane, the wing and its two engines.
     ctx.fillStyle = css('#3A3550', 0.9)
     ctx.beginPath()
-    ctx.ellipse(x * k, y * k, 2.6 * k, 0.45 * k, 0, 0, Math.PI * 2)
-    ctx.moveTo((x - 0.5) * k, y * k)
-    ctx.lineTo((x + 0.6) * k, (y + 2.2) * k)
-    ctx.lineTo((x + 1.2) * k, y * k)
+    ctx.moveTo((x + 2.9) * k, y * k)
+    ctx.quadraticCurveTo((x + 2.8) * k, (y - 0.32) * k, (x + 2.2) * k, (y - 0.34) * k)
+    ctx.lineTo((x - 2.0) * k, (y - 0.3) * k)
+    ctx.lineTo((x - 2.7) * k, (y - 1.3) * k)
+    ctx.lineTo((x - 3.15) * k, (y - 1.3) * k)
+    ctx.lineTo((x - 2.95) * k, (y - 0.12) * k)
+    ctx.lineTo((x - 2.6) * k, (y + 0.08) * k)
+    ctx.lineTo((x + 2.2) * k, (y + 0.3) * k)
+    ctx.quadraticCurveTo((x + 2.8) * k, (y + 0.28) * k, (x + 2.9) * k, y * k)
+    ctx.moveTo((x + 0.6) * k, (y + 0.12) * k)
+    ctx.lineTo((x - 0.5) * k, (y + 0.4) * k)
+    ctx.lineTo((x - 1.0) * k, (y + 0.4) * k)
+    ctx.lineTo((x - 0.2) * k, (y + 0.1) * k)
+    ctx.moveTo((x - 2.4) * k, (y - 0.05) * k)
+    ctx.lineTo((x - 3.3) * k, (y + 0.05) * k)
+    ctx.lineTo((x - 3.3) * k, (y - 0.1) * k)
+    for (const ex of [0.55, -0.1]) ctx.rect((x + ex - 0.35) * k, (y + 0.18) * k, 0.55 * k, 0.2 * k)
     ctx.fill()
     if (Math.sin(u * 6) > 0.6) {
       ctx.fillStyle = css('#FF5A4A', 1)
       ctx.beginPath()
-      ctx.arc((x + 0.4) * k, (y + 0.3) * k, 0.45 * k, 0, Math.PI * 2)
+      ctx.arc((x - 0.2) * k, (y + 0.32) * k, 0.22 * k, 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.restore()
@@ -628,9 +634,13 @@ export const finale = scenery<null>({
     drawSkyline(p, k, f, t, MID, 45, css('#4E4560', 1), css('#FFD890', 0.85), 0.12, 2)
     drawSmoke(p, k, f, t)
     drawSkyline(p, k, f, t, NEAR, 16, css('#2E2838', 1), css('#FFCF80', 0.95), 0.2, 3)
-    drawBirds(p, k, f, t)
+    drawPlane(p, k, f, t)
+    const view = { cx: f.cx, cy: f.cy, H: f.y1 - f.y0 }
+    // The flock behind the building's face first, so it hides them as they go round behind it.
+    drawFlock(ctx, k, view, t, ROOF, 'back')
     drawStreet(p, k, f, t)
     drawShell(p, k, t)
+    drawLoft(ctx, k, t, ROOF)
     ctx.imageSmoothingQuality = 'high'
     ROOMS.forEach((room, i) => {
       if (!room.snap) return
@@ -660,6 +670,7 @@ export const finale = scenery<null>({
       ctx.fillRect(b.x0 * k, b.y0 * k, (b.x1 - b.x0) * k, 1.2 * k)
       ctx.restore()
     })
+    drawFlock(ctx, k, view, t, ROOF, 'front')
     drawEl(p, k, f, t)
     ctx.restore()
   },
