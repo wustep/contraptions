@@ -1,7 +1,11 @@
 import type { Pt } from '../../../../../parts'
-import { hash, smooth } from '../kit'
+import { bloom, flicker, motes, sway, type Frame } from '../depth'
+import { hash, lastOf, smooth } from '../kit'
 import { level } from '../music'
 import { ctxOf, ease, ellipse, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, blob, type Pen } from '../pen'
+import { banners, bunting, daylight, GALLERY_TOP, glazing, WALL_TOP, lampPigeon, pigeons, roofIron, scoreboard, wallBack, wallIron } from './above'
+import { ballBoys, officials, programme } from './court'
+import { gangways, inGangway } from './far'
 import {
   A,
   A_DIM,
@@ -35,6 +39,7 @@ import {
   KNOCK,
   LAMP_ON,
   LUNGE,
+  MISS,
   NET_H,
   OUT,
   PARAPET,
@@ -42,7 +47,6 @@ import {
   POST,
   ARM,
   R,
-  SMASHES,
   STROKES,
   TOP,
   TOSS_A,
@@ -55,68 +59,16 @@ import {
   type Stroke,
   type Table,
 } from './geo'
+import { busy, cheer, groan, hush, SEMI_WIN } from './mood'
+import { C } from './palette'
+import { flashes, PRESS_SPAN, pressBox, pressDesk } from './press'
 
 /**
  * London: a big cold hall in grey and green, the daylight gone blue in the glass roof, the gallery in shadow; the only
- * warmth the lamps' pools on the green tables, and the white of the players' kit in them.
+ * warmth the lamps' pools on the green tables, and the white of the players' kit in them. The colours are in
+ * `palette.ts`; the hall above the crowd in `above.ts`, the far hall through the gangways in `far.ts`, the press in
+ * `press.ts`, the court's ball boys and officials in `court.ts`, and the near side of the court in `near.ts`.
  */
-
-const C = {
-  night: '#141A18',
-  glass: '#56656A',
-  glassHi: '#7E8F92',
-  iron: '#151B1A',
-  ironHi: '#2B3532',
-  wall: '#2E3834',
-  wallHi: '#3A4641',
-  window: '#9AAAAA',
-  windowDim: '#6F807F',
-  gallery: '#1C2421',
-  riser: '#232C29',
-  parapet: '#2A3430',
-  parapetTop: '#46524C',
-  barrier: '#1F3329',
-  barrierHi: '#2A4436',
-  barrierPost: '#141F1A',
-  floor: '#3E3A33',
-  floorHi: '#4B463D',
-  floorSeam: '#2A2722',
-  table: '#2D5A44',
-  tableTop: '#4E8A66',
-  tableEdge: '#E4E2D6',
-  apron: '#1C3328',
-  leg: '#1A221F',
-  net: '#2A302D',
-  netTape: '#E8E6DC',
-  shade: '#21392D',
-  shadeIn: '#E9E1C6',
-  bulb: '#FFF1C8',
-  lamp: '#F6DC9A',
-  white: '#ECEAE2',
-  whiteShade: '#B9BDB5',
-  trouser: '#D9D8CF',
-  skin: '#D9B49A',
-  skinDim: '#8F7A6C',
-  hairGrey: '#A9A7A0',
-  hairBlack: '#15130F',
-  rubber: '#B5262B',
-  rubberDark: '#6E1418',
-  wood: '#B08A5A',
-  woodDark: '#5E4428',
-  sponge: '#E9DDB0',
-  spongeDark: '#B8A774',
-  brass: '#B99A55',
-  steel: '#5B6662',
-  blazer: '#1E2530',
-  card: '#EDEBE3',
-  cardInk: '#1A1C1B',
-  platinum: '#EFE8D0',
-  pearl: '#F4F1E8',
-  stole: '#B3A894',
-  stoleDark: '#857B69',
-  dress: '#121315',
-  glove: '#F2EFE6',
-}
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -144,18 +96,32 @@ const lerp = (a: number, b: number, u: number) => a + (b - a) * u
 const lerpPt = (a: Pt, b: Pt, u: number): Pt => [lerp(a[0], b[0], u), lerp(a[1], b[1], u)]
 const add = (a: Pt, b: Pt): Pt => [a[0] + b[0], a[1] + b[1]]
 
-/** How lit table A's lamps are (on at the cut, down once the semifinal is long over); B's are always on. */
+/** How lit table A's lamps are (on at the cut, down once the semifinal is long over). */
 export const lampA = (t: number): number => (t < LAMP_ON ? 0 : 1 - 0.85 * smooth(t, A_DIM[0], A_DIM[1]))
-const lampOf = (tb: Table, t: number): number => (tb === A ? lampA(t) : 1)
+/**
+ * How lit the lamp at `lx` is. Table A's go down after the semifinal; B's stay on, but the one over Marty's end of
+ * it stutters as his bat swings over the dead ball under it, and goes down, flickering, as he rolls off onto the
+ * floorboards.
+ */
+function lampOf(tb: Table, t: number, lx = tb.x0): number {
+  if (tb === A) return lampA(t)
+  if (lx > (B.x0 + B.x1) / 2 || t < MISS) return 1
+  const u = t - MISS
+  const stutter = u > 0.08 && u < 0.14 ? 0.5 : u > 0.24 && u < 0.29 ? 0.68 : 1
+  return stutter * (1 - 0.42 * smooth(t, MISS + 0.3, MISS + 2.4)) * flicker(t, 7, 0.3 * (1 - smooth(t, MISS + 2.6, MISS + 4.5)))
+}
 
 /* ------------------------------------------------------------------ the hall */
 
-const WALL_TOP = -6.2
-const GALLERY_TOP = -4.0
 const ROW = 0.78
 const COLUMNS = [-5.2, 6.62, 18.8]
 
-export function drawHall(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
+/**
+ * The hall, back to front: the glass and the world through it, the wall's iron and its banners and board, the gallery
+ * (and the far hall through its gangways), the bunting, the columns, the daylight and the dust in it, the pigeons, the
+ * flash bulbs; the barrier and the floor, the ball boys and the officials; the umpires, the tables and their lamps.
+ */
+export function drawHall(pen: Pen, t: number, f: Frame): void {
   const x0 = f.x0 - 1
   const x1 = f.x1 + 1
   // The whole frame first: the cold dark of the hall.
@@ -163,16 +129,28 @@ export function drawHall(pen: Pen, t: number, f: { x0: number; y0: number; x1: n
     [0, C.night, 1],
     [1, C.night, 1],
   ])
-  roof(pen, f, x0, x1)
-  wall(pen, x0, x1)
-  gallery(pen, t, x0, x1)
+  wallBack(pen, x0, x1)
+  glazing(pen, t, f, x0, x1)
+  roofIron(pen, f, x0, x1)
+  wallIron(pen, x0, x1)
+  banners(pen, t, f)
+  scoreboard(pen, t, f)
+  gallery(pen, t, f, x0, x1)
+  wisps(pen, t)
+  bunting(pen, t, f)
   for (const cx of COLUMNS) column(pen, cx)
+  daylight(pen, t, f)
+  pigeons(pen, t, f)
+  flashes(pen, t, f)
   barrier(pen, x0, x1)
   glove(pen, t)
   floor(pen, f, x0, x1)
+  officials(pen, t, f)
+  ballBoys(pen, t, f)
+  programme(pen, t)
   // The light the lamps throw on the gallery behind each table.
   for (const tb of [A, B]) {
-    const L = lampOf(tb, t)
+    const L = (lampOf(tb, t, tb.x0) + lampOf(tb, t, tb.x1)) / 2
     if (L <= 0.01) continue
     oval(pen, [(tb.x0 + tb.x1) / 2, -1.4], 4.2, 0.55, C.lamp, 0.09 * L)
   }
@@ -180,148 +158,250 @@ export function drawHall(pen: Pen, t: number, f: { x0: number; y0: number; x1: n
   umpire(pen, B, t, UMP_B)
   for (const tb of [A, B]) {
     table(pen, tb, t)
-    lamps(pen, tb, t)
+    lamps(pen, tb, t, f)
   }
 }
-
-function roof(pen: Pen, f: { y0: number }, x0: number, x1: number): void {
-  if (f.y0 > WALL_TOP + 0.2) return
-  const yTop = f.y0 - 1
-  vgrad(pen, x0, yTop, x1, WALL_TOP, [
-    [0, C.glass, 0.65],
-    [1, C.glassHi, 0.85],
-  ])
-  // Glazing bars, and the iron arches spanning the hall.
-  for (let x = Math.floor(x0 / 0.55) * 0.55; x <= x1; x += 0.55) line(pen, [x, yTop], [x, WALL_TOP], C.iron, 0.6)
-  for (let y = WALL_TOP - 0.9; y > yTop; y -= 0.9) line(pen, [x0, y], [x1, y], C.iron, 0.9)
-  for (let n = Math.floor(x0 / 6); n * 6 <= x1; n++) {
-    const cx = n * 6 + 0.6
-    const pts: Pt[] = []
-    for (let i = 0; i <= 24; i++) {
-      const u = i / 24
-      const x = cx - 3 + 6 * u
-      pts.push([x, WALL_TOP - 0.1 - 2.6 * Math.sin(Math.PI * u)])
-    }
-    path(pen, pts, C.iron, 3.2)
-    const inner = pts.map(([x, y]): Pt => [x, y - 0.32])
-    path(pen, inner, C.iron, 1.4)
-    for (let i = 1; i < 24; i += 2) line(pen, pts[i], inner[i + 1], C.iron, 0.9)
-  }
-  rect(pen, x0, WALL_TOP - 0.15, x1, WALL_TOP + 0.1, C.iron)
-}
-
-function wall(pen: Pen, x0: number, x1: number): void {
-  rect(pen, x0, WALL_TOP, x1, GALLERY_TOP, C.wall)
-  // Tall arched windows, the evening gone blue-grey in them.
-  for (let n = Math.floor(x0 / 2.4) - 1; n * 2.4 <= x1 + 2.4; n++) {
-    const cx = n * 2.4 + 0.3
-    const w = 0.62
-    const yb = GALLERY_TOP - 0.25
-    const ys = WALL_TOP + 0.75
-    rect(pen, cx - w - 0.06, ys, cx + w + 0.06, yb + 0.06, C.wallHi)
-    const pts: Pt[] = [[cx - w, yb], [cx - w, ys]]
-    for (let i = 0; i <= 10; i++) {
-      const a = Math.PI + (Math.PI * i) / 10
-      pts.push([cx + w * Math.cos(a), ys + w * Math.sin(a)])
-    }
-    pts.push([cx + w, yb])
-    shape(pen, pts, mix(C.windowDim, C.window, hash(n, 4) * 0.5))
-    line(pen, [cx, ys - w], [cx, yb], C.iron, 0.8)
-    for (let y = ys + 0.35; y < yb; y += 0.42) line(pen, [cx - w, y], [cx + w, y], C.iron, 0.6)
-  }
-  rect(pen, x0, GALLERY_TOP - 0.12, x1, GALLERY_TOP, C.iron)
-}
-
-/**
- * The house's mood. A cheer (up off the benches, arms up) after the big shots: Marty's smash that wins the semifinal
- * and the one that wins him the final's first point, a smaller one for the others; and a groan as the last point dies.
- */
-const CHEERS: [number, number, number][] = SMASHES.map((s): [number, number, number] =>
-  s.who !== 'marty' ? [s.t, 0.3, 0.9] : s.table === A || Math.abs(s.t - WINNER) < 1e-6 ? [s.t, 1, 2.6] : [s.t, 0.4, 1.0],
-)
-export function cheer(t: number): number {
-  let v = 0
-  for (const [t0, amt, dur] of CHEERS) {
-    const u = t - t0 - 0.06
-    if (u < 0 || u > dur) continue
-    v = Math.max(v, amt * smooth(u, 0, 0.16) * (1 - smooth(u, dur * 0.45, dur)))
-  }
-  return v
-}
-const groan = (t: number): number => smooth(t, DIES, DIES + 0.45) * (1 - smooth(t, DIES + 2.4, DIES + 4))
 
 /** What the house is watching: the ball, as each spectator's eyes catch up with it (three lags), and its height. */
 interface Watch {
   at: Pt[]
   cheer: number
   groan: number
+  busy: number
+  level: number
 }
 
-/** The gallery: tiered rows of spectators in the shadow, and Kay Stone in the front row. */
-function gallery(pen: Pen, t: number, x0: number, x1: number): void {
+/** The smokers in the gallery, gathered as it is drawn (their mouths, in cells), their smoke drawn over it in one go. */
+const smokers: number[] = []
+
+/**
+ * The gallery: tiered rows of spectators in the shadow, the gangways in its upper rows onto the far hall, and in the
+ * front row the press box and Kay Stone.
+ */
+function gallery(pen: Pen, t: number, f: Frame, x0: number, x1: number): void {
   rect(pen, x0, GALLERY_TOP, x1, PARAPET + 0.6, C.gallery)
-  const watch: Watch = { at: [ballAt(t - 0.1), ballAt(t - 0.18), ballAt(t - 0.28)], cheer: cheer(t), groan: groan(t) }
+  const watch: Watch = { at: [ballAt(t - 0.1), ballAt(t - 0.18), ballAt(t - 0.28)], cheer: cheer(t), groan: groan(t), busy: busy(t), level: level(t) }
+  smokers.length = 0
   for (let r = 3; r >= 0; r--) {
+    // The gangways open out of the two upper rows; the lower two sit in front of their mouths.
+    if (r === 1) gangways(pen, t, f)
     const y = PARAPET - ROW * r
     // The bench back in front of this row's knees.
     rect(pen, x0, y - 0.12, x1, y + 0.6, mix(C.riser, C.gallery, r * 0.2))
-    const dim = 0.32 + 0.12 * (3 - r)
     for (let i = Math.floor((x0 + 10) / 0.62) - 2; i * 0.62 - 10 <= x1 + 1; i++) {
       const hx = i * 0.62 - 10 + (hash(i, r, 1) - 0.5) * 0.22 + (r % 2) * 0.3
       if (hx < -11 || hx > 25) continue
       if (r === 0 && Math.abs(hx - KAY_X) < 0.62) continue
+      if (r === 0 && hx > PRESS_SPAN[0] - 0.25 && hx < PRESS_SPAN[1] + 0.25) continue
+      if (r >= 2 && inGangway(hx)) continue
       if (hash(i, r, 9) < 0.12) continue
-      spectator(pen, hx, y, i, r, dim, t, watch)
+      spectator(pen, hx, y, i, r, t, watch)
     }
-    if (r === 0) kay(pen, t, y)
+    if (r === 0) {
+      kay(pen, t, y)
+      pressBox(pen, t, y)
+    }
   }
-  // The parapet the front row leans on.
+  // The parapet the front row leans on, and the press's desk on it.
   rect(pen, x0, PARAPET, x1, PARAPET + 1.6, C.parapet)
   rect(pen, x0, PARAPET - 0.04, x1, PARAPET + 0.05, C.parapetTop)
+  pressDesk(pen)
 }
+
+/** The newspaper readers: when each puts it down to watch (the semifinal's winner, or the final's), and takes it up again. */
+const paperUp = (i: number, r: number, t: number): number => {
+  const down = hash(i, r, 15) < 0.5 ? SEMI_WIN : WINNER
+  const again = DIES + 1.3 + 0.8 * hash(i, r, 16)
+  return 1 - smooth(t, down - 0.05, down + 0.3) + smooth(t, again, again + 0.6)
+}
+
+/** The gallery's colours, a row at a time (the farther back, the more the shadow takes them): worked out once. */
+const COATS = [C.blazer, '#34302A', '#2C3533', '#3D3A36', '#283040']
+const ROW_INK = [0, 1, 2, 3].map((r) => {
+  const dim = 0.32 + 0.12 * (3 - r)
+  const coat = COATS.map((c) => mix(C.gallery, c, dim + 0.15))
+  const paper = mix(C.gallery, C.paper, dim + 0.05)
+  return {
+    coat,
+    sleeve: coat.map((c) => mix(c, C.whiteShade, 0.18)),
+    hand: mix(C.gallery, C.skin, dim + 0.1),
+    skin: mix(C.gallery, C.skinDim, dim),
+    nose: mix(C.gallery, C.skin, dim),
+    hat: mix(C.gallery, '#26241F', dim + 0.3),
+    hair: [mix(C.gallery, C.hairGrey, dim), mix(C.gallery, '#2A221B', dim)],
+    programme: mix(C.gallery, C.programme, dim * 0.85),
+    paper,
+    ink: mix(paper, C.paperInk, 0.55),
+  }
+})
 
 /**
  * A spectator, face on: his head turned after the ball (his face toward it, the back of his hair away), tipped up
- * when it goes high; up off the bench with his arms in the air in a cheer, and slumped in the groan.
+ * when it goes high; up off the bench with his arms in the air in a cheer, a hat or a programme waved in his hand, and
+ * slumped in the groan. Some hold a programme, fanning it when the play gets hot; a few read the paper until the
+ * match takes them, and go back to it after; some smoke. Drawn straight onto the canvas, a fill a part: there are a
+ * hundred and more of them in a frame.
  */
-function spectator(pen: Pen, x: number, y: number, i: number, r: number, dim: number, t: number, w: Watch): void {
-  const coat = [C.blazer, '#34302A', '#2C3533', '#3D3A36', '#283040'][Math.floor(hash(i, r, 2) * 5)]
+function spectator(pen: Pen, x: number, y: number, i: number, r: number, t: number, w: Watch): void {
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  const ink = ROW_INK[r]
+  const ci = Math.floor(hash(i, r, 2) * 5)
   const ball = w.at[Math.floor(hash(i, r, 7) * 3)]
   const look = Math.max(-1, Math.min(1, (ball[0] - x) / 4))
   const tip = Math.max(0, Math.min(1, (-0.3 - ball[1]) / 1.6))
   const keen = 0.55 + 0.45 * hash(i, r, 8)
   const rise = w.cheer * keen
-  const bob = 0.012 * Math.sin(t * (1.2 + hash(i, r, 3)) + i) + 0.02 * level(t) * Math.sin(t * 6 + i * 1.7) + 0.035 * rise * Math.sin(t * 13 + i * 2.3)
+  const bob = 0.012 * Math.sin(t * (1.2 + hash(i, r, 3)) + i) + 0.02 * w.level * Math.sin(t * 6 + i * 1.7) + 0.035 * rise * Math.sin(t * 13 + i * 2.3)
   const hy = y - 0.62 + bob - 0.16 * rise + 0.05 * w.groan
   const hx = x + 0.035 * look
-  const col = mix(C.gallery, coat, dim + 0.15)
-  shape(pen, [[x - 0.27, y + 0.05], [x - 0.24, hy + 0.22], [x - 0.08, hy + 0.13], [x + 0.08, hy + 0.13], [x + 0.24, hy + 0.22], [x + 0.27, y + 0.05]], col)
-  if (rise > 0.12 && r <= 1 && hash(i, r, 4) < 0.55) {
+  const hatted = hash(i, r, 5) < 0.45
+  const prog = hash(i, r, 11) < 0.07
+  // His coat, shoulders to the bench.
+  ctx.fillStyle = pen.tone(ink.coat[ci])
+  ctx.beginPath()
+  ctx.moveTo((x - 0.27) * k, (y + 0.05) * k)
+  ctx.lineTo((x - 0.24) * k, (hy + 0.22) * k)
+  ctx.lineTo((x - 0.08) * k, (hy + 0.13) * k)
+  ctx.lineTo((x + 0.08) * k, (hy + 0.13) * k)
+  ctx.lineTo((x + 0.24) * k, (hy + 0.22) * k)
+  ctx.lineTo((x + 0.27) * k, (y + 0.05) * k)
+  ctx.closePath()
+  ctx.fill()
+  let hatInHand = false
+  const armsUp = rise > 0.12 && r <= 1 && hash(i, r, 4) < 0.55
+  if (armsUp) {
     // Arms up, waving: the front rows only, sleeves a shade lighter than the dark behind them.
     const wave = 0.06 * Math.sin(t * 11 + i * 1.3)
     const reach = Math.min(1, (rise - 0.12) / 0.4)
-    const sleeve = mix(col, C.whiteShade, 0.18)
+    hatInHand = hatted && hash(i, r, 13) < 0.6 && reach > 0.4
+    const hands: Pt[] = []
+    ctx.strokeStyle = pen.tone(ink.sleeve[ci])
+    ctx.lineWidth = pen.w * 7
+    ctx.lineCap = 'round'
+    ctx.beginPath()
     for (const sd of [-1, 1]) {
-      const sh: Pt = [x + sd * 0.18, hy + 0.22]
-      const elbow: Pt = [x + sd * 0.34, hy + 0.05 - 0.15 * reach]
       const hand: Pt = [x + sd * (0.3 + wave * sd), hy + 0.2 - 0.6 * reach]
-      path(pen, [sh, elbow, hand], sleeve, 7)
-      ellipse(pen, hand, 0.055, 0.055, mix(C.gallery, C.skin, dim + 0.1))
+      ctx.moveTo((x + sd * 0.18) * k, (hy + 0.22) * k)
+      ctx.lineTo((x + sd * 0.34) * k, (hy + 0.05 - 0.15 * reach) * k)
+      ctx.lineTo(hand[0] * k, hand[1] * k)
+      hands.push(hand)
+    }
+    ctx.stroke()
+    ctx.fillStyle = pen.tone(ink.hand)
+    ctx.beginPath()
+    for (const h of hands) {
+      ctx.moveTo((h[0] + 0.055) * k, h[1] * k)
+      ctx.arc(h[0] * k, h[1] * k, 0.055 * k, 0, Math.PI * 2)
+    }
+    ctx.fill()
+    // A hat off and waved in one hand, or the programme.
+    if (hatInHand) hat(pen, [hands[0][0], hands[0][1] - 0.04], ink.hat, 0.25 * Math.sin(t * 11 + i))
+    if (prog) rotRect(pen, [hands[1][0], hands[1][1] - 0.1], 0.07, 0.1, 0.4 * Math.sin(t * 12 + i), ink.programme)
+  }
+  disc(pen, hx, hy, 0.13, 0.15, ink.skin)
+  // The nose, toward the ball: a turned head reads at any size.
+  disc(pen, hx + 0.085 * look, hy + 0.03 - 0.03 * tip, 0.03, 0.035, ink.nose)
+  const back = -0.045 * look
+  // A hat, tipped back as he looks up; or his hair.
+  if (hatted && !hatInHand) hat(pen, [hx + back, hy - 0.08 - 0.03 * tip], ink.hat, 0)
+  else disc(pen, hx + back, hy - 0.07 - 0.025 * tip, 0.135, 0.09, ink.hair[hash(i, r, 6) < 0.3 ? 0 : 1])
+  // The programme at his chest, fanned when the play is hot.
+  if (prog && !armsUp) {
+    const fan = hash(i, r, 12) < 0.5 ? w.busy * 0.45 * Math.sin(t * 8.5 + i * 2.1) : 0
+    rotRect(pen, [x + 0.1, hy + 0.34], 0.075, 0.1, 0.15 + fan, ink.programme)
+  }
+  // The paper, held open in front of his face.
+  if (r >= 1 && hash(i, r, 14) < 0.035) {
+    const up = paperUp(i, r, t)
+    if (up > 0.03) {
+      const top = hy - 0.17 + 0.5 * (1 - up)
+      const bot = Math.min(y + 0.05, top + 0.4)
+      rect(pen, x - 0.25, top, x + 0.25, bot, ink.paper)
+      line(pen, [x, top], [x, bot], ink.ink, 0.5)
+      for (let c = 0; c < 4; c++) {
+        const cx = x - 0.2 + c * 0.11 + (c > 1 ? 0.04 : 0)
+        rect(pen, cx, top + 0.05, cx + 0.07, Math.min(bot - 0.03, top + 0.32), ink.ink)
+      }
     }
   }
-  const skin = mix(C.gallery, C.skinDim, dim)
-  ellipse(pen, [hx, hy], 0.13, 0.15, skin)
-  // The nose, toward the ball: a turned head reads at any size.
-  ellipse(pen, [hx + 0.085 * look, hy + 0.03 - 0.03 * tip], 0.03, 0.035, mix(C.gallery, C.skin, dim))
-  const back = -0.045 * look
-  if (hash(i, r, 5) < 0.45) {
-    // A hat, tipped back as he looks up.
-    const hc = mix(C.gallery, '#26241F', dim + 0.3)
-    const by = hy - 0.08 - 0.03 * tip
-    ellipse(pen, [hx + back, by], 0.21, 0.035, hc)
-    const cx = hx + back
-    shape(pen, [[cx - 0.13, by], [cx - 0.11, by - 0.12], [cx - 0.03, by - 0.14], [cx, by - 0.11], [cx + 0.03, by - 0.14], [cx + 0.11, by - 0.12], [cx + 0.13, by]], hc)
-  } else ellipse(pen, [hx + back, hy - 0.07 - 0.025 * tip], 0.135, 0.09, mix(C.gallery, hash(i, r, 6) < 0.3 ? C.hairGrey : '#2A221B', dim))
+  if (hash(i, r, 17) < 0.08) smokers.push(x + 0.09 * look + 0.06, hy + 0.08, i * 7 + r)
+}
+
+/** A filled ellipse, straight onto the canvas. */
+function disc(pen: Pen, cx: number, cy: number, rx: number, ry: number, col: string): void {
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  ctx.fillStyle = pen.tone(col)
+  ctx.beginPath()
+  ctx.ellipse(cx * k, cy * k, rx * k, ry * k, 0, 0, Math.PI * 2)
+  ctx.fill()
+}
+
+/** The hat's crown, from the front, about its brim's middle: a trilby, pinched. */
+const CROWN: Pt[] = [[-0.13, 0], [-0.11, -0.12], [-0.03, -0.14], [0, -0.11], [0.03, -0.14], [0.11, -0.12], [0.13, 0]]
+
+/** A hat (a trilby, from the front): its brim and its pinched crown, at `c` on the brim, tilted. One fill, on the canvas. */
+function hat(pen: Pen, c: Pt, col: string, tilt: number): void {
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  const ca = Math.cos(tilt)
+  const sa = Math.sin(tilt)
+  ctx.fillStyle = rgba(pen, col, 1)
+  ctx.beginPath()
+  ctx.ellipse(c[0] * k, c[1] * k, 0.21 * k, 0.035 * k, tilt, 0, Math.PI * 2)
+  CROWN.forEach(([x, y], j) => {
+    const X = (c[0] + x * ca - y * sa) * k
+    const Y = (c[1] + x * sa + y * ca) * k
+    if (j) ctx.lineTo(X, Y)
+    else ctx.moveTo(X, Y)
+  })
+  ctx.closePath()
+  ctx.fill()
+}
+
+/** A rotated rectangle, `hw` by `hh` either side of `c`: a programme in a hand. One fill, on the canvas. */
+function rotRect(pen: Pen, c: Pt, hw: number, hh: number, ang: number, col: string): void {
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  const ca = Math.cos(ang)
+  const sa = Math.sin(ang)
+  ctx.fillStyle = rgba(pen, col, 1)
+  ctx.beginPath()
+  for (const [x, y] of [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]) ctx.lineTo((c[0] + x * ca - y * sa) * k, (c[1] + x * sa + y * ca) * k)
+  ctx.closePath()
+  ctx.fill()
+}
+
+/**
+ * The smokers' smoke, curling up through the gallery: each a thin ribbon off his cigarette that widens and fades as
+ * it rises, its curls going up it; three strokes for all of them, thicker as the hall warms up.
+ */
+function wisps(pen: Pen, t: number): void {
+  if (!smokers.length) return
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  const thick = 0.6 + 0.4 * busy(t)
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  for (let seg = 0; seg < 3; seg++) {
+    ctx.beginPath()
+    for (let s = 0; s < smokers.length; s += 3) {
+      const [sx, sy, seed] = [smokers[s], smokers[s + 1], smokers[s + 2]]
+      for (let j = seg * 4; j <= seg * 4 + 4; j++) {
+        const u = j / 12
+        const x = sx + 0.22 * u * u + 0.07 * u * Math.sin(u * 9 - t * 1.8 + seed) + 0.015 * Math.sin(t * 0.9 + seed)
+        const y = sy - 1.05 * u
+        if (j === seg * 4) ctx.moveTo(x * k, y * k)
+        else ctx.lineTo(x * k, y * k)
+      }
+    }
+    ctx.strokeStyle = rgba(pen, '#A4ACA8', [0.16, 0.1, 0.05][seg] * thick)
+    ctx.lineWidth = (0.018 + 0.03 * seg) * k
+    ctx.stroke()
+  }
+  ctx.restore()
 }
 
 /** Kay's lean, 0 to 1: forward over the parapet through the final, and back as the last point dies. */
@@ -499,7 +579,7 @@ function card(pen: Pen, cx: number, y: number, n: number, flip: number, was: num
 
 function table(pen: Pen, tb: Table, t: number): void {
   const { x0, x1, net } = tb
-  const L = lampOf(tb, t)
+  const L = (lampOf(tb, t, x0) + lampOf(tb, t, x1)) / 2
   // The far legs, then the near.
   for (const [lx, far] of [[x0 + 0.55, true], [x1 - 0.55, true], [x0 + 0.4, false], [x1 - 0.4, false]] as [number, boolean][]) {
     const foot = far ? FLOOR_BACK + 0.1 : FLOOR
@@ -524,15 +604,50 @@ function table(pen: Pen, tb: Table, t: number): void {
 /** The lamps' x over a table. */
 const lampXs = (tb: Table): number[] => [tb.x0 + 1.45, tb.x1 - 1.45]
 const SHADE_Y = -2.45
+/** Where the lamps hang from, high in the roof: they swing about it. */
+const HUNG = -12
 
-function lamps(pen: Pen, tb: Table, t: number): void {
-  const L = lampOf(tb, t)
+/**
+ * The dust's own clock in the lamps' light: show time until the dead ball dies, then slowing to a settle, so the haze
+ * in the light goes still as the hall does (the integral of `1 - 0.7 hush`).
+ */
+function settle(t: number): number {
+  const L = 2.5
+  const u = (t - DIES) / L
+  if (u <= 0) return t
+  const area = u >= 1 ? L * (0.5 + (u - 1)) : L * (u * u * u - (u * u * u * u) / 2)
+  return t - 0.7 * area
+}
+
+/** How far into a lamp's cone (`dx` across from its axis, at height `y`) a point is: 1 on the axis, 0 at the edge. */
+function inCone(dx: number, y: number): number {
+  if (y < SHADE_Y || y > FLOOR) return 0
+  const half = 0.42 + (1.08 * (y - SHADE_Y)) / (TOP - SHADE_Y)
+  const v = 1 - Math.abs(dx) / half
+  return v > 0 ? Math.sqrt(v) * (1 - 0.55 * smooth(y, TOP, FLOOR)) : 0
+}
+
+/**
+ * The lamps: each swinging a touch on its long cord in the hall's draught (the cone of light, its pool and the dust in
+ * it going with it), the tobacco haze hanging in the light, the dust turning in it, and on the final's far lamp a
+ * pigeon until the house goes up.
+ */
+function lamps(pen: Pen, tb: Table, t: number, f: Frame): void {
   const on = tb === A ? flash(t - LAMP_ON, 0.18) : 0
+  const { p, k } = pen
+  const ctx = ctxOf(p)
+  const hz = busy(t)
+  const calm = hush(t)
   for (const lx of lampXs(tb)) {
+    if (lx + 2.6 < f.x0 || lx - 2.6 > f.x1) continue
+    const L = lampOf(tb, t, lx)
+    const swing = 0.0045 * sway(t, lx, 5.3) + 0.0025 * hz * sway(t, lx + 2, 2.2)
+    p.push()
+    p.translate(lx * k, HUNG * k)
+    p.rotate(swing)
+    p.translate(-lx * k, -HUNG * k)
     // The light down onto the table, and its pool.
     if (L > 0.01) {
-      const ctx = ctxOf(pen.p)
-      const k = pen.k
       const g = ctx.createLinearGradient(0, SHADE_Y * k, 0, TOP * k)
       g.addColorStop(0, rgba(pen, C.lamp, 0.16 * L + 0.2 * on))
       g.addColorStop(1, rgba(pen, C.lamp, 0.03 * L))
@@ -548,14 +663,42 @@ function lamps(pen: Pen, tb: Table, t: number): void {
       ctx.restore()
       oval(pen, [lx, TOP + 0.02], 1.9, 0.12, C.lamp, 0.55 * L + 0.4 * on)
       oval(pen, [lx, FLOOR - 0.05], 2.4, 0.1, C.lamp, 0.1 * L)
+      // The smoke hanging in the light: two slow sheets of it, lit, drifting and sinking as the hall goes quiet.
+      for (const [j, y0] of [[0, SHADE_Y + 0.75], [1, TOP - 0.75]] as const) {
+        const hx = lx + 0.45 * Math.sin(t * 0.11 + lx + j * 2) + 0.2 * sway(t, lx + j, 7)
+        const hy = y0 + 0.08 * Math.sin(t * 0.3 + j + lx) + 0.35 * calm
+        p.push()
+        p.translate(hx * k, hy * k)
+        p.scale(1, 0.24)
+        bloom(pen, [0, 0], 1.05 + 0.2 * j, C.lamp, (0.05 + 0.03 * hz) * L * (1 - 0.4 * calm))
+        p.pop()
+      }
+      // The dust turning in it.
+      motes(pen, settle(t), {
+        n: 46,
+        seed: Math.round(lx * 13),
+        box: [lx - 2.1, SHADE_Y + 0.3 * calm, lx + 2.1, FLOOR + 0.3 * calm],
+        size: [0.01, 0.026],
+        color: C.bulb,
+        alpha: 0.6 * L,
+        drift: [0.035, -0.03],
+        wander: 0.18,
+        twinkle: 0.55,
+        light: (x, y) => (x < f.x0 || x > f.x1 || y < f.y0 || y > f.y1 ? 0 : inCone(x - lx, y)),
+      })
     }
     // The cord, the green enamel cone, its white inside and the bulb.
-    line(pen, [lx, -12], [lx, SHADE_Y - 0.5], C.iron, 0.8)
+    line(pen, [lx, HUNG], [lx, SHADE_Y - 0.5], C.iron, 0.8)
     shape(pen, [[lx - 0.1, SHADE_Y - 0.52], [lx + 0.1, SHADE_Y - 0.52], [lx + 0.45, SHADE_Y], [lx - 0.45, SHADE_Y]], C.shade)
     rect(pen, lx - 0.06, SHADE_Y - 0.6, lx + 0.06, SHADE_Y - 0.5, C.steel)
     ellipse(pen, [lx, SHADE_Y], 0.45, 0.06, mix(C.shade, C.shadeIn, 0.3 + 0.7 * L))
     ellipse(pen, [lx, SHADE_Y + 0.02], 0.11, 0.07, mix('#5C5A50', C.bulb, L))
-    if (L > 0.01) glow(pen, [lx, SHADE_Y + 0.05], 0.7, C.bulb, 0.35 * L + 0.5 * on)
+    if (L > 0.01) {
+      glow(pen, [lx, SHADE_Y + 0.05], 0.7, C.bulb, 0.35 * L + 0.5 * on)
+      bloom(pen, [lx, SHADE_Y + 0.08], 0.55, C.bulb, 0.18 * L + 0.3 * on)
+    }
+    if (tb === B && lx > B.net) lampPigeon(pen, t, [lx, SHADE_Y - 0.6])
+    p.pop()
   }
 }
 
@@ -824,6 +967,34 @@ interface Figure {
   step?: number
   /** His feet, when his footwork has them (else the stance or the stride). */
   feet?: [Pt, Pt]
+  /** Seconds since his last hard stroke: his breath shows in the cold for a moment after it. */
+  breath?: number
+}
+
+/** The hard strokes each opponent breathes out after, in the cold hall. */
+const HARD = (who: 'kletzki' | 'endo'): number[] => STROKES.filter((s) => s.who === who && s.power > 0.3).map((s) => s.t)
+const BREATHS = { kletzki: HARD('kletzki'), endo: HARD('endo') }
+const sinceHard = (who: 'kletzki' | 'endo', t: number): number => lastOf(BREATHS[who], t).ago
+
+/** A breath in the cold: two small clouds out of his mouth, drifting up and off, gone in a second. */
+function breathe(pen: Pen, mouth: Pt, face: number, u: number, s: number): void {
+  if (!(u >= 0 && u < 1.1)) return
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  const a = 0.16 * Math.min(1, u * 7) * (1 - u / 1.1)
+  ctx.save()
+  ctx.fillStyle = rgba(pen, C.breath, a)
+  ctx.beginPath()
+  for (let j = 0; j < 2; j++) {
+    const v = u * (1 - 0.3 * j)
+    const x = mouth[0] - face * (0.08 + 0.32 * v) * s
+    const y = mouth[1] - (0.05 + 0.3 * v * v) * s - 0.04 * j * s
+    const r = (0.05 + 0.13 * v) * s
+    ctx.moveTo((x + r) * k, y * k)
+    ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
+  }
+  ctx.fill()
+  ctx.restore()
 }
 
 /**
@@ -869,6 +1040,7 @@ function figure(pen: Pen, f: Figure): void {
   const head = up(1.42 * s, -0.04 * s * f.face)
   line(pen, sh, neck, C.skin, 7 * s)
   ellipse(pen, head, 0.19 * s, 0.23 * s, C.skin)
+  if (f.breath !== undefined) breathe(pen, add(head, [-0.17 * s * f.face, 0.09 * s]), f.face, f.breath, s)
   if (f.hair === 'bald') {
     // The champion: bald on top, a grey fringe, a hard brow and a long jaw.
     ellipse(pen, add(head, [0.11 * f.face, 0.02]), 0.1 * s, 0.13 * s, C.hairGrey)
@@ -934,6 +1106,7 @@ function kletzki(pen: Pen, t: number): void {
     face: 1,
     crouch: walking || t >= WALK[1] ? 0 : crouch,
     feet: walking ? undefined : footwork('kletzki', t, x),
+    breath: sinceHard('kletzki', t),
   })
   if (down) {
     // His bat lies on the end of the table where he put it.
@@ -980,5 +1153,6 @@ function endo(pen: Pen, t: number): void {
     face,
     crouch: b.crouch,
     feet: footwork('endo', t, x, 0.5 * b.step, face),
+    breath: sinceHard('endo', t),
   })
 }
