@@ -488,6 +488,219 @@ function dinerSign(ctx: CanvasRenderingContext2D, k: number, cx: number, foot: n
   ctx.stroke(cup)
 }
 
+/* ------------------------------------------------------------------ the side street */
+
+/**
+ * The side street between the diner and the club, seen down to its far end: across the cross street there, a row of
+ * low houses, small with the distance and hazed with it, a launderette open all night at the foot of one, a lamp; now
+ * and then a car along the far end, its lamps' light on the road ahead of it, and someone walking. It lags the camera,
+ * as far things do, and shows only in the gap the side street leaves (and through the club's door while it is open).
+ * Late and still at the start; while she stands in the doorway the launderette's window is behind her, through it; as
+ * she goes a car and then a walker pass; from the band on, more windows and cars, as on the block.
+ */
+const GAP: [number, number] = [DINER.x1, ROOM.wallL1]
+/** How big things at the far end are, against the same things here; its pavement's top and its lane. */
+const FAR = 0.24
+const FAR_WALK = WALK - 0.27
+const FAR_ROAD = FAR_WALK + 0.07
+/** How much of the camera's travel the far end follows (the farther, the more), and where it was laid out from. */
+const LAG = 0.62
+const LAG_AT = -12.6
+const HAZE = '#3A3352'
+
+interface FarHouse {
+  x0: number
+  x1: number
+  top: number
+  wall: string
+  wins: { x: number; y: number; h: number; warm: boolean }[]
+  /** Its ground floor: the launderette, a shop shuttered for the night, or a street door. */
+  ground: 'wash' | 'dark' | 'door'
+}
+const GH = GROUND_H * FAR
+const FH = FLOOR_H * FAR
+const FAR_HOUSES: FarHouse[] = (() => {
+  const out: FarHouse[] = []
+  const add = (i: number, x0: number, x1: number, floors: number, ground: FarHouse['ground'], lit: number[]) => {
+    const across = Math.max(1, Math.round((x1 - x0) / (1.9 * FAR)))
+    const wins: FarHouse['wins'] = []
+    for (let f = 0; f < floors; f++) {
+      for (let j = 0; j < across; j++) {
+        const n = f * across + j
+        wins.push({ x: x0 + ((x1 - x0) * (j + 0.5)) / across, y: FAR_WALK - GH - f * FH - 0.45 * FAR, h: lit.includes(n) ? 0.05 : 0.2 + 0.78 * hash(i, n, 72), warm: hash(i, n, 73) < 0.7 })
+      }
+    }
+    const wall = mixHex(['#221D30', '#1E1A2C', '#262036'][i % 3], HAZE, 0.3)
+    out.push({ x0, x1, top: FAR_WALK - GH - floors * FH - 0.1 * FAR, wall, wins, ground })
+  }
+  const floorsOf = (i: number) => (hash(i, 2, 71) < 0.6 ? 1 : hash(i, 2, 71) < 0.85 ? 0 : 2)
+  const groundOf = (i: number): FarHouse['ground'] => (hash(i, 3, 71) < 0.5 ? 'dark' : 'door')
+  let i = 0
+  // Laid out so that while she is in the doorway the launderette's window is behind her and a shuttered shop behind David.
+  for (let x = -36; x < -14.95; i++) {
+    const w = 1.2 + 1.0 * hash(i, 1, 71)
+    const x1 = Math.min(x + w, -14.97)
+    if (x1 - x > 0.6) add(i, x, x1, floorsOf(i), groundOf(i), [])
+    x += w + 0.05
+  }
+  add(i++, -14.9, -12.77, 1, 'dark', [1])
+  add(i++, -12.72, -11.4, 1, 'wash', [1])
+  for (let x = -11.35; x < 2; i++) {
+    const w = 1.2 + 1.0 * hash(i, 1, 71)
+    add(i, x, x + w, floorsOf(i), groundOf(i), [])
+    x += w + 0.05
+  }
+  return out
+})()
+/** The far lamp, on the far pavement. */
+const FAR_LAMP = -15.3
+/**
+ * Cars along the far end: one as she goes, more once the city fills. [start, way]; each starts far enough along the
+ * far end (`FAR_FROM`) to be out of sight wherever the camera is, so the one as she goes is under way well before.
+ */
+const FAR_FROM = (way: number): number => (way > 0 ? -34 : 6)
+const FAR_SPEED = 1.9
+const FAR_RUNS: [number, 1 | -1][] = (() => {
+  const out: [number, 1 | -1][] = [[456.2, 1]]
+  let t = 480.5
+  for (let j = 0; t < 512; j++) {
+    out.push([t, hash(j, 1, 74) < 0.5 ? 1 : -1])
+    t += (6.5 - 3.5 * smooth(t, 480, 498)) * (0.7 + 0.6 * hash(j, 2, 74))
+  }
+  return out
+})()
+
+/** A soft flat pool of light lying on the ground, `rx` by `ry`: light on a surface, not in the air. */
+function pool(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, rx: number, ry: number, col: string, a: number): void {
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.scale(1, ry / rx)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+  g.addColorStop(0, rgba(col, a))
+  g.addColorStop(0.5, rgba(col, a * 0.5))
+  g.addColorStop(1, rgba(col, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
+  ctx.restore()
+}
+
+function sideStreet(ctx: CanvasRenderingContext2D, k: number, t: number, b: number, end: boolean, fr: { x0: number; x1: number; y0: number; y1: number; cx: number }): void {
+  if (GAP[1] < fr.x0 || GAP[0] > fr.x1 || WALK < fr.y0) return
+  const s = FAR
+  const sh = (fr.cx - LAG_AT) * LAG
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(GAP[0] * k, (WALK - 7) * k, (GAP[1] - GAP[0]) * k, 7 * k)
+  ctx.clip()
+  // The ground between here and there: the side street's asphalt and the cross street, the far pavement's kerb.
+  ctx.fillStyle = '#16131E'
+  ctx.fillRect(GAP[0] * k, FAR_WALK * k, (GAP[1] - GAP[0]) * k, (WALK - FAR_WALK) * k)
+  ctx.fillStyle = mixHex('#2A2438', HAZE, 0.3)
+  ctx.fillRect(GAP[0] * k, FAR_WALK * k, (GAP[1] - GAP[0]) * k, 0.035 * k)
+  // The neon's blue on the side street outside the door; the far lamp's light on its pavement.
+  pool(ctx, k, ROOM.wallL0 - 0.45, WALK - 0.06, 1.1, 0.09, D.neon, 0.16)
+  const lampX = FAR_LAMP + sh
+  pool(ctx, k, lampX + 0.06, FAR_WALK + 0.02, 0.45, 0.03, D.sodium, 0.22)
+  // The far row: each house's wall and parapet, its upper windows (the glass is the light), its ground floor.
+  const ww = 0.5 * s
+  const wh = 0.75 * s
+  for (const hs of FAR_HOUSES) {
+    const x0 = hs.x0 + sh
+    const x1 = hs.x1 + sh
+    if (x1 < GAP[0] || x0 > GAP[1]) continue
+    ctx.fillStyle = hs.wall
+    ctx.fillRect(x0 * k, hs.top * k, (x1 - x0) * k, (FAR_WALK - hs.top) * k)
+    ctx.fillStyle = mixHex(hs.wall, '#000000', 0.3)
+    ctx.fillRect((x0 - 0.02) * k, (hs.top - 0.03) * k, (x1 - x0 + 0.04) * k, 0.045 * k)
+    for (const w of hs.wins) {
+      const on = w.h < 0.12 ? 1 : out(b, w.h)
+      const wx = w.x + sh
+      ctx.fillStyle = '#120F1D'
+      ctx.fillRect((wx - ww / 2) * k, w.y * k, ww * k, wh * k)
+      if (on > 0.01) {
+        const glass = w.warm ? '#C99C5C' : '#8396BC'
+        ctx.fillStyle = rgba(glass, 0.65 * on)
+        ctx.fillRect((wx - ww / 2) * k, w.y * k, ww * k, wh * k)
+        ctx.fillStyle = rgba(mixHex(glass, '#3A1E2A', 0.55), on)
+        ctx.fillRect((wx - ww / 2) * k, w.y * k, ww * 0.3 * k, wh * k)
+      }
+    }
+    const gy0 = FAR_WALK - GH + 0.25 * s
+    if (hs.ground === 'wash') {
+      // The launderette: its long window lit a cool white, its machines in a row along the back, one of them at
+      // work; someone on the bench waiting, reading, who looks up now and then. Its light on the pavement before it.
+      const a = x0 + 0.15 * s
+      const c = a + 1.35 * s
+      const wy1 = FAR_WALK - 0.08 * s
+      ctx.fillStyle = '#66766F'
+      ctx.fillRect(a * k, gy0 * k, (c - a) * k, (wy1 - gy0) * k)
+      ctx.fillStyle = '#56645F'
+      ctx.fillRect(a * k, (wy1 - 0.5 * s) * k, (c - a) * k, 0.5 * s * k)
+      ctx.fillStyle = '#3E4A4A'
+      for (let m = 0; m < 3; m++) ctx.fillRect((a + (0.18 + m * 0.3) * s) * k, (wy1 - 0.4 * s) * k, 0.14 * s * k, 0.14 * s * k)
+      const turn = t * 2.4
+      ctx.fillStyle = '#A8916E'
+      ctx.fillRect((a + (0.52 + 0.035 * Math.cos(turn)) * s) * k, (wy1 - (0.36 - 0.035 * Math.sin(turn)) * s) * k, 0.05 * s * k, 0.05 * s * k)
+      const look = Math.sin(t * 0.23 + 1.3) > 0.7 ? 1 : 0
+      figureBust(ctx, k, a + 1.1 * s, wy1 - 0.42 * s, 0.75 * s, '#3C3448', '#1A1220', 0)
+      ctx.fillStyle = '#A9A397'
+      ctx.fillRect((a + 1.06 * s) * k, (wy1 - (0.62 - 0.08 * look) * s) * k, 0.13 * s * k, 0.09 * s * k)
+      ctx.strokeStyle = rgba('#0A0812', 0.8)
+      ctx.lineWidth = Math.max(1, 0.03 * s * k)
+      ctx.strokeRect(a * k, gy0 * k, (c - a) * k, (wy1 - gy0) * k)
+      ctx.fillStyle = rgba('#B9CFC6', 0.12)
+      ctx.fillRect(a * k, FAR_WALK * k, (c - a) * k, 0.035 * k)
+      ctx.fillStyle = '#1A1522'
+      ctx.fillRect((c + 0.2 * s) * k, (gy0 - 0.1 * s) * k, 0.45 * s * k, (FAR_WALK - gy0 + 0.1 * s) * k)
+      ctx.fillStyle = rgba('#66766F', 0.6)
+      ctx.fillRect((c + 0.27 * s) * k, gy0 * k, 0.31 * s * k, 0.28 * s * k)
+    } else if (hs.ground === 'dark') {
+      ctx.fillStyle = '#292532'
+      ctx.fillRect((x0 + 0.25 * s) * k, gy0 * k, (x1 - x0 - 0.5 * s) * k, (FAR_WALK - gy0) * k)
+      ctx.strokeStyle = rgba('#0A0812', 0.45)
+      ctx.lineWidth = Math.max(1, 0.012 * s * k)
+      ctx.beginPath()
+      for (let y = gy0 + 0.11 * s; y < FAR_WALK; y += 0.11 * s) {
+        ctx.moveTo((x0 + 0.25 * s) * k, y * k)
+        ctx.lineTo((x1 - 0.25 * s) * k, y * k)
+      }
+      ctx.stroke()
+    } else {
+      const dx = (x0 + x1) / 2
+      ctx.fillStyle = '#16121D'
+      ctx.fillRect((dx - 0.22 * s) * k, (gy0 - 0.1 * s) * k, 0.44 * s * k, (FAR_WALK - gy0 + 0.1 * s) * k)
+      ctx.fillStyle = rgba('#C99C5C', 0.55)
+      ctx.fillRect((dx - 0.17 * s) * k, (gy0 - 0.06 * s) * k, 0.34 * s * k, 0.1 * s * k)
+    }
+  }
+  // The far lamp on its post.
+  ctx.strokeStyle = '#0A0812'
+  ctx.lineWidth = Math.max(1, 0.05 * s * k)
+  ctx.beginPath()
+  ctx.moveTo(lampX * k, FAR_WALK * k)
+  ctx.lineTo(lampX * k, (FAR_WALK - 3.6 * s) * k)
+  ctx.lineTo((lampX + 0.4 * s) * k, (FAR_WALK - 3.7 * s) * k)
+  ctx.stroke()
+  ctx.fillStyle = '#E9C890'
+  ctx.fillRect((lampX + 0.2 * s) * k, (FAR_WALK - 3.72 * s) * k, 0.32 * s * k, 0.07 * s * k)
+  if (end) {
+    // Someone walking along the far end after the car, as she goes.
+    if (t > 465.2 && t < 474) {
+      const wx = -16.6 + 0.42 * (t - 465.2) + sh
+      figure(ctx, k, wx, FAR_WALK, 0.72 * s, mixHex('#3A2A3E', HAZE, 0.25), 1, Math.sin((t - 465.2) * 6.5), 0)
+    }
+    // The cars along the far end, in the haze.
+    for (const [i, [t0, way]] of FAR_RUNS.entries()) {
+      if (t < t0) break
+      const rear = FAR_FROM(way) + way * FAR_SPEED * (t - t0) + sh
+      if (rear < GAP[0] - 1 || rear > GAP[1] + 1) continue
+      if (i > 0 && out(b, 0.2 + 0.7 * hash(i, 3, 74)) < 0.5) continue
+      car(ctx, k, rear, FAR_ROAD, way, s, mixHex(D.car[Math.floor(hash(i, 4, 74) * 5)], HAZE, 0.5), true, 0.8)
+    }
+  }
+  ctx.restore()
+}
+
 export const block = scenery<StreetState>({
   name: 'block',
   draw(p, s, c) {
@@ -498,6 +711,7 @@ export const block = scenery<StreetState>({
     const fr = frame(p, k)
     const ctx = p.drawingContext as CanvasRenderingContext2D
     ctx.save()
+    sideStreet(ctx, k, t, life(t, s.end), s.end, fr)
     drawHouses(ctx, k, t, life(t, s.end), fr)
     // The palms along the pavement, in front of the houses, against the lit sky.
     for (const pm of PALMS) {

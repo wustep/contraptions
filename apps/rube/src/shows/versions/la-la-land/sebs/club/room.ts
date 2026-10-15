@@ -5,7 +5,7 @@ import { frame, glow, hash, rgba, scenery, smooth } from '../kit'
 import { picture } from '../lens'
 import { DRIVE_MAT, SEBS_MAT } from '../worlds'
 import { PIANO } from './geometry'
-import { bandPlayers, DREAM_BAND, drinkRail, fans, gallery, nearHouse, nearWaiter, nookLamp, REAL_BAND, sitter, smoke, stander, walker, type Light, type Sitter } from './people'
+import { bandPlayers, DREAM_BAND, drinkRail, fans, gallery, nearHouse, nearWaiter, REAL_BAND, sitter, smoke, stander, walker, type Light, type Sitter } from './people'
 import { PIANO_SHADOW } from './piano'
 
 /**
@@ -164,6 +164,8 @@ const TABLES: { x: number; chairs: [number, 1 | -1][] }[] = [
   { x: -6.25, chairs: [[-0.34, 1], [0.47, -1]] },
   { x: -8.25, chairs: [[0.34, -1]] },
 ]
+/** The banquette along the wall behind her table and the next, its ends. */
+const BANQUETTE: [number, number] = [-4.75, -1.82]
 /** The sconces on the back wall: the house lights. */
 const SCONCES = [-10.6, -7.25, -5.3, -3.35]
 const SCONCE_Y = 0.95
@@ -205,7 +207,8 @@ const SITTERS: (Sitter & { real: Real; bar: boolean })[] = [
 ]
 /** The bartender's way along the bar, [show time, x]: at the start, and at the end. */
 const TENDER_START: [number, number][] = [[0, -10.95], [8.5, -10.95], [10.5, -10.05], [23, -10.05], [25.5, -10.95], [40, -10.95]]
-const TENDER_END: [number, number][] = [[423.3, -10.05], [429.5, -10.05], [431.5, -10.95], [441, -10.95], [443, -10.15], [510, -10.15]]
+// (At the end, as the door shuts behind her, he goes down the bar to the man at its end.)
+const TENDER_END: [number, number][] = [[423.3, -10.05], [429.5, -10.05], [431.5, -10.95], [441, -10.95], [443, -10.15], [465.4, -10.15], [467.2, -10.8], [510, -10.8]]
 /**
  * The waiters' ways across the floor, [show time, x]. The real one works both rooms: drinks out to the middle table,
  * a table wiped, back to the bar. The dream has a second, crossing the full room with a tray.
@@ -399,12 +402,27 @@ function banquette(p: p5, k: number, x0: number, x1: number, velvet: string, ink
   void weight
 }
 
-/** A candle lamp on a table: a small glass, its flame, and its light lying on the table top. */
-function candle(q: Pen, x: number, t: number, seed: number, strength = 1): void {
+const flicker = (t: number, seed: number): number => 0.85 + 0.15 * Math.sin(t * 7.3 + seed * 2.1) * Math.sin(t * 3.1 + seed)
+
+/**
+ * A table candle's light, on the wall and the backs of the chairs behind it: warm round the flame and cut off at the
+ * table's top, which shades what is below it. Drawn under the furniture and the people, so nothing in front of the
+ * candle is lit by it as if the air were.
+ */
+function candleLight(q: Pen, x: number, t: number, seed: number, strength = 1): void {
+  const ctx = q.p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(q.X(x - 0.8), q.X(TABLE.top - 0.9), q.X(1.6), q.X(0.9))
+  ctx.clip()
+  glow(q.p, q.k, x, TABLE.top - 0.06, 0.5, M.candle, 0.2 * flicker(t, seed) * strength, 1.15, 0.8)
+  ctx.restore()
+}
+
+/** A candle lamp on a table: a small glass and its flame. */
+function candle(q: Pen, x: number, t: number, seed: number): void {
   const { p } = q
   const y = TABLE.top
-  const flick = 0.85 + 0.15 * Math.sin(t * 7.3 + seed * 2.1) * Math.sin(t * 3.1 + seed)
-  glow(p, q.k, x, y + 0.005, 0.5, M.candle, 0.24 * flick * strength, 1.3, 0.2)
   solid(p, q.ink, q.w * 0.3, rgba(M.candle, 0.3))
   q.rect(x - 0.03, y - 0.085, x + 0.03, y, 0.012, 0.012, 0.004, 0.004)
   p.noStroke()
@@ -417,7 +435,6 @@ function candle(q: Pen, x: number, t: number, seed: number, strength = 1): void 
   p.endShape(p.CLOSE)
 }
 
-/** The neon arrow's tube, as points: the level tail, the bend, the drop; and its chevron's two strokes. */
 /**
  * Seb's sign: a blue neon arrow bent down to the door, and beside it, hung from the same bracket, the note Mia drew
  * for his club's name (no letters, only the note). `tube` and `head` are the arrow, `note` the note's tubes, and
@@ -518,12 +535,14 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
       p.line(X(lx), X(-0.35), X(lx + 0.35), X(-0.5))
       solid(p, ink, weight * 0.5, M.lacquer)
       poly([[lx + 0.22, -0.55], [lx + 0.58, -0.55], [lx + 0.52, -0.43], [lx + 0.28, -0.43]])
-      // Its light is on the pavement under it, not round the lamp.
+      // Its light is on the pavement under it and the side street behind, not round the lamp.
       glow(p, k, lx + 0.4, R.floor, 1.5, M.candle, 0.14, 1, 0.3)
       p.noStroke()
       p.fill(M.candle)
       rect(lx + 0.3, -0.45, lx + 0.5, -0.41, 0.01)
     }
+    // The neon's blue, lying on the pavement under the arrow and outside the door.
+    glow(p, k, R.wallL0 - 0.5, R.floor + 0.03, 0.9, DRIVE_MAT.neon, 0.16, 1.2, 0.1)
   }
 
   // The room's back wall, lit by the house lights; a dado along its foot with a brass rail.
@@ -575,16 +594,18 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.strokeWeight(weight * 0.5)
   p.line(X(R.wallL1), X(2.0), X(R.stageX0), X(2.0))
   // Along the wall behind her table and the next, a banquette: a tufted velvet bench, buttoned, under the rail.
-  banquette(p, k, -4.75, -1.82, mixHex(mixHex(M.velvet, M.lacquer, 0.5), M.rose, 0.25 * L.rose), ink, weight, L)
+  banquette(p, k, BANQUETTE[0], BANQUETTE[1], mixHex(mixHex(M.velvet, M.lacquer, 0.5), M.rose, 0.25 * L.rose), ink, weight, L)
   // The drink rail along it, and what the house has left on it; crowded in the dream.
   {
     const dreamHouse = s.end ? 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6) : 0
     drinkRail(p, k, t, R.wallL1, R.stageX0, dreamHouse, Math.max(L.house, 0.35 * L.rose), L.warm, ink)
   }
-  // The dado is wainscot: tall sunk panels under the rail, the same joinery as the stage's front.
+  // The dado is wainscot: tall sunk panels under the rail, the same joinery as the stage's front (none where the
+  // banquette stands against it).
   p.noFill()
   p.strokeWeight(weight * 0.4)
   for (let x = R.wallL1 + 0.15; x + 1.0 < R.stageX0 - 0.1; x += 1.18) {
+    if (x + 1.0 > BANQUETTE[0] && x < BANQUETTE[1]) continue
     p.stroke(rgba(M.lacquer, 0.5))
     rect(x, 2.14, x + 1.0, R.floor - 0.12, 0.02)
     p.stroke(rgba(M.brass, 0.14))
@@ -607,6 +628,7 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
           const h = hash(i, col === M.lacquer ? 1 : 2, 47)
           if (h < 0.45) continue
           const x = i * step + 0.03 * hash(i, 5, 47)
+          if (x > BANQUETTE[0] && x < BANQUETTE[1]) continue
           const y0 = 2.16 + 0.3 * hash(i, 6, 47)
           const y1 = Math.min(R.floor - 0.13, y0 + 0.25 + 0.55 * hash(i, 7, 47))
           ctx.moveTo(X(x), X(y0))
@@ -622,7 +644,6 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   if (L.rose > 0.005) glow(p, k, (R.wallL1 + R.wallR0) / 2, 0.6, 12, M.rose, 0.2 * L.rose, 1.4, 0.75)
   // The greats on the wall, in their frames, lit by the sconces; and the fans turning under the ceiling.
   gallery(p, k, L.house, SCONCES, SCONCE_Y, L.warm)
-  nookLamp(p, k, L.warm, 0.55 + 0.45 * Math.max(L.house, L.rose), ink)
   fans(p, k, t, ink, mixHex(L.warm, COLD, 0.5))
 
   // The house lights: brass sconces, each throwing its warm fan up and down the wall.
@@ -886,6 +907,8 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   }
 
   // The tables on the floor, their chairs and candles; Mia's table's top and lamp are drawn over the balls.
+  for (const tb of TABLES) candleLight(q, tb.x, t, tb.x)
+  candleLight(q, TABLE.x, t, 7, 1.15)
   for (const tb of TABLES) {
     for (const [dx, face] of tb.chairs) chair(q, tb.x + dx, face)
     table(q, tb.x)
@@ -905,21 +928,17 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.stroke(rgba(M.brass, 0.55))
   p.strokeWeight(weight * 0.7)
   p.line(X(R.wallL0 - 0.12), X(R.roof - 0.02), X(R.wallR1 + 0.12), X(R.roof - 0.02))
-  glow(p, k, R.wallL1 + 0.1, 2.45, 0.9, L.warm, 0.12 * L.house, 0.6, 1)
-  // The doorway through the wall, and the door in it: shut, or swung out onto the street on its closer. Open, it is
-  // the night outside, dark at its head and the street's light low in it, and the neon's blue lies on the threshold
-  // and on whoever stands in it.
+  // The doorway through the wall, and the door in it: shut, or swung out onto the street on its closer. Open, it shows
+  // the side street's night (the block draws it, behind the wall), the reveal dark at its head, and the neon's blue
+  // lying on the threshold.
   const open = doorAt(t, s.end)
-  {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const night = ctx.createLinearGradient(0, X(R.doorTop), 0, X(R.floor))
-    night.addColorStop(0, M.lacquer)
-    night.addColorStop(1, mixHex(M.lacquer, DRIVE_MAT.neon, 0.3))
+  if (open <= 0.01) {
     p.noStroke()
     p.fill(M.lacquer)
-    ctx.fillStyle = night
-    rect(R.wallL0 + 0.02, R.doorTop, R.wallL1 - 0.02, R.floor)
-    if (open > 0.01) glow(p, k, (R.wallL0 + R.wallL1) / 2, R.floor - 0.1, 0.8, DRIVE_MAT.neon, 0.22 * open, 1.25, 0.85)
+    rect(R.wallL0, R.doorTop, R.wallL1, R.floor)
+  } else {
+    vband(p, k, R.wallL0 + 0.02, R.doorTop, R.wallL1 - 0.02, R.doorTop + 0.45, [[0, rgba(M.lacquer, 0.85)], [1, rgba(M.lacquer, 0)]])
+    glow(p, k, (R.wallL0 + R.wallL1) / 2, R.floor - 0.005, 0.5, DRIVE_MAT.neon, 0.3 * open, 1.3, 0.1)
   }
   const dw = (R.wallL1 - R.wallL0) * Math.cos(open * Math.PI / 2)
   if (dw > 0.01) {
@@ -985,7 +1004,7 @@ function candleShadows(p: p5, s: ClubRoom, k: number, t: number, L: Lights): voi
   const who = (s.end ? AT_HER_TABLE.end : AT_HER_TABLE.start)?.(t) ?? []
   const fx = TABLE.x + 0.004 * Math.sin(t * 11 + 7)
   const fy = TABLE.top - 0.06
-  const flick = 0.85 + 0.15 * Math.sin(t * 7.3 + 14.7) * Math.sin(t * 3.1 + 7)
+  const flick = flicker(t, 7)
   const dark = (0.34 + 0.24 * (1 - L.house)) * flick
   const ctx = p.drawingContext as CanvasRenderingContext2D
   let clipped = false
@@ -1023,7 +1042,13 @@ function drawPeople(p: p5, s: ClubRoom, k: number, ink: string, weight: number, 
   const q = pen(p, k, ink, weight)
   const L = lightsAt(t, s.end)
   const R = ROOM
-  if (!s.end && t < 40 && L.house < 0.99) for (const tb of TABLES) candle(q, tb.x, t, tb.x, 1 - L.house)
+  if (!s.end && t < 40 && L.house < 0.99) {
+    candleLight(q, TABLE.x, t, 7, 1.15 * (1 - L.house))
+    for (const tb of TABLES) {
+      candleLight(q, tb.x, t, tb.x, 1 - L.house)
+      candle(q, tb.x, t, tb.x)
+    }
+  }
   if (!s.end) candleShadows(p, s, k, t, L)
   // The people. The late-night few are there in both rooms; in the dream's last room everyone else is there too,
   // someone on every chair and at the bar and a second waiter with a tray, and as the dream drains they go.
@@ -1153,7 +1178,7 @@ function drawOver(p: p5, s: ClubRoom, k: number, ink: string, weight: number, t:
   const q = pen(p, k, ink, weight)
   const L = lightsAt(t, s.end)
   table(q, TABLE.x, 'top', 0.19)
-  candle(q, TABLE.x, t, 7, 1.15)
+  candle(q, TABLE.x, t, 7)
   if (!s.end) nearWaiter(p, k, t, L.stage, L.warm)
   // Nearest of all, between us and the room: the house, its heads along the foot of the picture.
   const there = s.end ? 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6) : 0

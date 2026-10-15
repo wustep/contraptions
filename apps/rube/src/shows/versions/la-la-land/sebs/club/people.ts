@@ -600,6 +600,8 @@ export function smoke(p: p5, k: number, x: number, y: number, t: number, a: numb
  */
 type RailKind = 'tumbler' | 'coupe' | 'bottle' | 'ashtray' | 'frame' | 'hat' | 'vase'
 const RAIL_Y = 2.0
+/** The ashtray with the forgotten cigarette: by her table, so its smoke is in the close shot of her in the dark. */
+const ASHTRAY_X = -3.27
 const RAIL: { x: number; kind: RailKind; dream: boolean }[] = [
   { x: -9.05, kind: 'coupe', dream: false },
   { x: -8.9, kind: 'vase', dream: true },
@@ -611,7 +613,7 @@ const RAIL: { x: number; kind: RailKind; dream: boolean }[] = [
   { x: -5.42, kind: 'tumbler', dream: true },
   { x: -4.5, kind: 'hat', dream: true },
   { x: -3.62, kind: 'tumbler', dream: false },
-  { x: -4.02, kind: 'ashtray', dream: false },
+  { x: ASHTRAY_X, kind: 'ashtray', dream: false },
   { x: -3.12, kind: 'vase', dream: true },
   { x: -2.9, kind: 'frame', dream: false },
   { x: -2.6, kind: 'coupe', dream: true },
@@ -736,7 +738,7 @@ export function drinkRail(p: p5, k: number, t: number, x0: number, x1: number, d
   g.globalAlpha = 1
   // The forgotten cigarette's smoke, in the room as it is and the dream alike.
   g.restore()
-  smoke(p, k, -4.02 + 0.078, RAIL_Y - 0.09, t, 0.55, 3, 0.55)
+  smoke(p, k, ASHTRAY_X + 0.078, RAIL_Y - 0.09, t, 0.55, 3, 0.55)
 }
 
 /* ------------------------------------------------------------------ the waiter in front of us */
@@ -814,51 +816,6 @@ export function nearWaiter(p: p5, k: number, t: number, stage: string, warm: str
   g.beginPath()
   seg(g, k, [x - 0.2 * fh, sy + 0.07 * fh], [x - 0.19 * fh, sy + 0.3 * fh])
   g.stroke()
-  g.restore()
-}
-
-/* ------------------------------------------------------------------ the lamp by her table */
-
-/** The little uplight on its bracket by her table: it stays on when the house goes down, and lights the brick above it. */
-export const NOOK_LAMP: Pt = [-3.2, 1.86]
-export function nookLamp(p: p5, k: number, warm: string, on: number, ink: string): void {
-  const [x, y] = NOOK_LAMP
-  const f = frame(p, k)
-  if (x + 0.6 < f.x0 || x - 0.6 > f.x1 || y - 1 > f.y1 || y + 0.2 < f.y0) return
-  const g = p.drawingContext as G
-  g.save()
-  // Its light, up the brick in a fan from the cup's mouth: on the wall, not round the lamp.
-  for (const [w, a] of [[0.62, 0.07], [0.4, 0.08]] as const) {
-    const top = y - 0.12 - 0.7
-    const gr = g.createLinearGradient(0, (y - 0.12) * k, 0, top * k)
-    gr.addColorStop(0, rgba(warm, a * on))
-    gr.addColorStop(1, rgba(warm, 0))
-    g.fillStyle = gr
-    g.beginPath()
-    g.moveTo((x - 0.06) * k, (y - 0.12) * k)
-    g.lineTo((x + 0.06) * k, (y - 0.12) * k)
-    g.lineTo((x + w) * k, top * k)
-    g.quadraticCurveTo(x * k, (top - 0.18) * k, (x - w) * k, top * k)
-    g.closePath()
-    g.fill()
-  }
-  // The bracket, and the brass cup open at the top, its inside lit.
-  g.strokeStyle = ink
-  g.lineWidth = Math.max(1, 0.012 * k)
-  g.beginPath()
-  seg(g, k, [x, y - 0.04], [x, y + 0.08])
-  g.stroke()
-  // A half-round brass cup on the wall, wider than it is deep, its rim lit from inside.
-  g.fillStyle = mixHex(M.brass, M.deep, 0.35)
-  g.beginPath()
-  g.moveTo((x - 0.11) * k, (y - 0.12) * k)
-  g.lineTo((x + 0.11) * k, (y - 0.12) * k)
-  g.quadraticCurveTo((x + 0.1) * k, (y - 0.02) * k, x * k, (y - 0.02) * k)
-  g.quadraticCurveTo((x - 0.1) * k, (y - 0.02) * k, (x - 0.11) * k, (y - 0.12) * k)
-  g.closePath()
-  g.fill()
-  g.fillStyle = mixHex(M.brass, warm, 0.3 + 0.6 * on)
-  g.fillRect((x - 0.11) * k, (y - 0.135) * k, 0.22 * k, Math.max(1, 0.018 * k))
   g.restore()
 }
 
