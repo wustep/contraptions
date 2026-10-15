@@ -134,8 +134,8 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
   stars(s, t, hy, dawnAt(t))
   body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', undefined, true)
   clouds(s, t, hy, { ...l.cloud, sky: l.mid, alpha: 0.7 }, true)
-  // The smoke: cool over, rosier along its foot where the midway lights it, and the dawn's blue in the blue hour.
-  smoke(s, t, hy, camAt, mixHex(mixHex('#4E4672', '#5A4A7A', glowAt(t)), '#55678F', dawnAt(t)), mixHex(mixHex('#6A5A8C', '#A87C98', glowAt(t)), '#8296BC', dawnAt(t)))
+  // The smoke takes the midway's light as it comes on, and the dawn's blue in the blue hour.
+  smoke(s, t, hy, camAt, mixHex(mixHex('#5E527F', '#86668E', glowAt(t)), '#6E82A8', dawnAt(t)))
   fireworks(s, t, hy)
   balloons(s, t, hy)
   farm(s, hy, l.farm, '#E3B45C', t * 0.6)

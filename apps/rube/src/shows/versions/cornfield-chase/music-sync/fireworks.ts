@@ -121,21 +121,21 @@ export function fireworks(s: Screen, t: number, hy: number): void {
 }
 
 /**
- * The smoke the shells leave: where each burst, a soft cloud of it the size the burst opened, lit from under by the
- * fair, that the wind draws out east and shears, the high side carried the farther, into a long slant of veil that thins
- * over half a minute. It hangs over the midway, so it goes past the camera at the midway's pace: `camAt` is the
- * camera's cell at a show time, to find where over the fair a shell burst. Through the climax it gathers, a shell's on
- * the one before's, and the last of it is still there in the blue hour, over the photograph. `color` is the smoke's
- * over, `lit` along its foot, by the light it is in.
+ * The smoke the shells leave: where each burst, a soft cloud of it the size the burst opened, which the wind draws out
+ * east and shears, the high side carried the farther, into a long slant of veil that thins over half a minute. It hangs
+ * over the midway, so it goes past the camera at the midway's pace: `camAt` is the camera's cell at a show time, to
+ * find where over the fair a shell burst. Through the climax it gathers, a shell's on the one before's, and the last of
+ * it is still there in the blue hour, over the photograph. `color` is the smoke's, by the light it is in: the midway's,
+ * then the dawn's.
  */
-export function smoke(s: Screen, t: number, hy: number, camAt: (t: number) => number, color: string, lit: string): void {
+export function smoke(s: Screen, t: number, hy: number, camAt: (t: number) => number, color: string): void {
   const { ctx, cx, f, w } = s
   const at = (s.camX * MIDWAY) / 8
   for (const [n, sh] of SHELLS.entries()) {
     const age = t - sh.t
     if (age < 0.3 || age > 40) continue
-    const a = 0.13 * smooth(age, 0.3, 2.5) * Math.exp(-age / 16) * (sh.r / 0.18)
-    if (a < 0.005) continue
+    const a = 0.11 * smooth(age, 0.3, 2.5) * Math.exp(-age / 16) * (sh.r / 0.18)
+    if (a < 0.008) continue
     // Where over the fair it burst, and how far the wind has had it since.
     const u = (sh.x - 0.5) * (16 / 9) + (camAt(sh.t) * MIDWAY) / 8 - at + 0.011 * age
     const spread = sh.r * (0.7 + 0.6 * (1 - Math.exp(-age / 10)))
@@ -158,10 +158,7 @@ export function smoke(s: Screen, t: number, hy: number, camAt: (t: number) => nu
       cloud.moveTo(x + r * long, y)
       cloud.ellipse(x, y, r * long, r * flat, 0, 0, Math.PI * 2)
     }
-    const g = ctx.createLinearGradient(0, by - spread * flat * f, 0, by + spread * flat * f)
-    g.addColorStop(0, rgba(mixHex(color, sh.color, 0.1), a * 0.55))
-    g.addColorStop(1, rgba(mixHex(lit, sh.color, 0.1), a))
-    ctx.fillStyle = g
+    ctx.fillStyle = rgba(mixHex(color, sh.color, 0.1), a)
     ctx.fill(cloud)
   }
 }
