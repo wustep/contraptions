@@ -1,9 +1,10 @@
-import type { Pt, Seg } from '../../../../../parts'
+import { laneAt, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { box, carried, part, route, type PartShot, type Way } from '../kit'
 import { hop, throwFor } from '../physics'
 import { SEAMS } from '../seams'
 import * as art from './raccacoonie-draw'
 import * as rig from './raccacoonie-rig'
+import * as room from './raccacoonie-room'
 
 /**
  * HIBACHI: Raccacoonie (106.731 to 120.953). Evelyn the teppanyaki chef, and the raccoon under the hat.
@@ -34,7 +35,7 @@ import * as rig from './raccacoonie-rig'
 /** Every strike this part makes, in show seconds. */
 export const HIBACHI_HITS: number[] = rig.STRIKES
 
-type Kitchen = { begin: number }
+type Kitchen = { begin: number; lane?: Lane }
 
 /** Where the ball is while it rides, for the steam that rises round her. */
 const restAt = (t: number): Pt => (t < rig.ROLL_END ? rig.ride.home(Math.max(rig.SPOON_DOWN, t)) : rig.ride.crook(t))
@@ -52,11 +53,15 @@ export const raccacoonie = part<Kitchen>(
       art.drawSpoon(pen)
       art.drawEgg(pen)
       art.drawSpatula(pen)
+      room.smoke(pen)
       art.drawSizzle(pen, restAt)
     },
     over: (p, s, c) => {
       const pen: art.Pen = { p, k: c.k, ink: c.ink, w: c.weight, t: c.t + s.begin }
       art.drawCorkRing(pen)
+      // The diners at the counter, nearest of all, watching her.
+      const at = s.lane ? laneAt(s.lane, c.t) : null
+      room.diners(pen, at ? [at.x, at.y] : null)
     },
   },
   (slot) => {
@@ -89,11 +94,12 @@ export const raccacoonie = part<Kitchen>(
     segs.push(...carried((u) => rig.ride.crook(u + b), at(rig.TOSSES[3]), at(rig.WIND), 30))
     segs.push(...carried((u) => rig.ride.crook(u + b), at(rig.WIND), at(slot.end), 90))
     const end: Pt = rig.ride.crook(slot.end)
+    const lane: Lane = { segs, fire: at(rig.LAND) }
     return {
       cells: box(-5.5, -5, 5, 4),
       exit: [end[0] + 0.5, end[1]],
-      lane: { segs, fire: at(rig.LAND) },
-      state: { begin: b },
+      lane,
+      state: { begin: b, lane },
     }
   },
   (slot): PartShot[] => {

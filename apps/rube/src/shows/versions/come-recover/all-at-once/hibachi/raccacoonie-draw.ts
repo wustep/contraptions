@@ -6,6 +6,7 @@ import { alpha, frame, hash, lastOf } from '../kit'
 import { level } from '../music'
 import { HIBACHI, HIBACHI_THEME } from '../worlds'
 import * as rig from './raccacoonie-rig'
+import { backWall, hood } from './raccacoonie-room'
 
 /**
  * Raccacoonie's kitchen, drawn: the room, the griddle, the chef of steel with the raccoon under its hat, and the
@@ -102,12 +103,10 @@ export function blaze(t: number): number {
 /** The dark room: only the burners' warmth up the wall, and the volcano's light while it burns. */
 export function drawRoom(pen: Pen): void {
   const { p, k, t } = pen
-  // The back wall: dark wooden slats, barely there, so the room has a far side.
+  // The far wall, a little way back: its slats, the pass to the back kitchen, the sake shelf and the rail of tools
+  // (`raccacoonie-room.ts`).
   const f = frame(p, k)
-  p.noStroke()
-  p.fill(mixHex(BG, H.soy, 0.1))
-  const SL = 0.5
-  for (let i = Math.floor(f.x0 / SL) - 1; i < f.x1 / SL + 1; i++) p.rect(X(pen, i * SL + SL / 2), X(pen, (f.y0 - 1 + rig.TOP) / 2), X(pen, SL - 0.035), X(pen, rig.TOP - f.y0 + 1))
+  backWall(pen)
   // The griddle lights the room from below, as a teppan does after dark: its warmth up the slats the whole length of
   // the counter, strongest just over the plate and gone by the tool rail, rising and falling with the burners.
   const hot = Math.max(level(t), blaze(t))
@@ -120,40 +119,8 @@ export function drawRoom(pen: Pen): void {
   ctx.fillStyle = up
   ctx.fillRect(X(pen, f.x0 - 1), X(pen, rig.TOP - 3.4), X(pen, f.x1 - f.x0 + 2), X(pen, 3.4))
   ctx.restore()
-  // A rail along it, high, hung with the kitchen's tools: ladles, a spatula, a wok, a strainer. Dim, the far side of
-  // the room, with the griddle's light catching their bellies.
-  const RAIL = rig.TOP - 3.35
-  const tool = mixHex(mixHex(BG, H.steel, 0.22), H.flame, 0.12 + 0.1 * hot)
-  p.stroke(mixHex(BG, H.steel, 0.3))
-  p.strokeWeight(Math.max(1, X(pen, 0.05)))
-  p.line(X(pen, f.x0 - 1), X(pen, RAIL), X(pen, f.x1 + 1), X(pen, RAIL))
-  const GAP = 1.3
-  for (let i = Math.floor(f.x0 / GAP) - 1; i < f.x1 / GAP + 1; i++) {
-    const x = i * GAP + 0.35
-    const kind = ((i % 4) + 4) % 4
-    const sway = 0.03 * Math.sin(t * 0.9 + i * 1.7)
-    const hx = x + sway
-    p.stroke(tool)
-    p.strokeWeight(Math.max(1, X(pen, 0.035)))
-    p.noFill()
-    p.circle(X(pen, x), X(pen, RAIL + 0.05), X(pen, 0.08))
-    if (kind === 2) {
-      // The wok, on its handle's ring.
-      p.noStroke()
-      p.fill(tool)
-      p.arc(X(pen, hx), X(pen, RAIL + 0.42), X(pen, 0.78), X(pen, 0.62), 0, Math.PI, p.CHORD)
-      p.stroke(tool)
-      p.line(X(pen, x), X(pen, RAIL + 0.09), X(pen, hx), X(pen, RAIL + 0.42))
-      continue
-    }
-    const len = kind === 0 ? 0.62 : 0.7
-    p.line(X(pen, x), X(pen, RAIL + 0.09), X(pen, hx), X(pen, RAIL + 0.09 + len))
-    p.noStroke()
-    p.fill(tool)
-    if (kind === 0) p.ellipse(X(pen, hx), X(pen, RAIL + 0.15 + len), X(pen, 0.2), X(pen, 0.16))
-    else if (kind === 1) p.rect(X(pen, hx), X(pen, RAIL + 0.16 + len), X(pen, 0.17), X(pen, 0.2), X(pen, 0.02))
-    else p.circle(X(pen, hx), X(pen, RAIL + 0.2 + len), X(pen, 0.26))
-  }
+  // The extractor hood over the volcano's end of the griddle, behind the chef.
+  hood(pen)
   glow(pen, 0.2, rig.TOP + 0.1, 4.6, H.flame, 0.07 + 0.09 * level(t))
   const b = blaze(t)
   if (b > 0) glow(pen, rig.VX, rig.TOP - 1.4, 5.5, H.flame, 0.3 * b)
