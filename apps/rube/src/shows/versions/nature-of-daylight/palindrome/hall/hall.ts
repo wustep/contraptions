@@ -210,9 +210,12 @@ function student(ctx: Ctx, k: number, t: number, s: Student, L: number): void {
   ctx.beginPath()
   ctx.arc(px(x), px(s.y), px(r - 0.007), 0, Math.PI * 2)
   ctx.stroke()
-  // Looking to the stage; the day they came, down at the phone once it lights.
+  // Looking to the stage; the day they came, down at the phone once it lights, and then up at the screen with the news
+  // on it: the whole room turned to it.
   const down = present(t) ? smooth(t, s.phone, s.phone + 0.3) * (1 - smooth(t, H.touch + 0.2, H.touch + 0.8)) : 0
-  const look = Math.PI + 0.15 - 1.0 * down
+  const up = present(t) ? smooth(t, H.touch + 0.2, H.touch + 0.8) : 0
+  const toScreen = Math.atan2(SCREEN.y + SCREEN.h / 2 - s.y, SCREEN.x + SCREEN.w / 2 - x)
+  const look = Math.PI + 0.15 - 1.0 * down + (toScreen - (Math.PI + 0.15)) * up
   ctx.fillStyle = rgba(HALL.dark, 0.75 * (1 - haze))
   ctx.beginPath()
   ctx.arc(px(x + Math.cos(look) * r * 0.5), px(s.y + Math.sin(look) * r * 0.5), Math.max(0.6, px(r * 0.17)), 0, Math.PI * 2)
