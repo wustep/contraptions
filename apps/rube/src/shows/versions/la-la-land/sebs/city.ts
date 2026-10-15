@@ -472,7 +472,7 @@ export const city = scenery<CityState>({
         const y = HORIZON + (STREET - 0.6 - HORIZON) * Math.pow(near, 1.6) + lift(dd)
         if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1) continue
         const tw = 0.8 + 0.2 * Math.sin(t * 0.6 + j * 0.7 + b.ph)
-        lamps.dot('#F7C779', (0.45 + 0.4 * near) * tw * fade, x * k, y * k, Math.max(0.6, 0.045 * (0.5 + 1.5 * near) * k))
+        lamps.dot('#F7C779', (0.45 + 0.4 * near) * tw * fade, x * k, y * k, Math.max(0.6, Math.min(0.045 * (0.5 + 1.5 * near) * k, 2.6 * px)))
       }
     }
     for (const l of LIGHTS) {
@@ -483,8 +483,10 @@ export const city = scenery<CityState>({
       const y = HORIZON + (STREET - 0.6 - HORIZON) * Math.pow(near, 1.6) + lift(dd)
       if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1) continue
       const tw = 0.6 + 0.4 * Math.sin(t * (0.8 + l.d) + l.ph)
+      // Sized in cells, as the stars are, but the lights are miles off: close by the club's door they would swell into
+      // discs, so they keep a ceiling in pixels of a 540-line frame, as the stars keep a floor.
       const r = (l.big ? 0.06 : 0.032) * (0.55 + 1.4 * near)
-      lamps.dot(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near) * swellLight, x * k, y * k, Math.max(0.5, r * k))
+      lamps.dot(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near) * swellLight, x * k, y * k, Math.max(0.5, Math.min(r * k, (l.big ? 3 : 1.8) * px)))
     }
     lamps.fill(ctx)
 

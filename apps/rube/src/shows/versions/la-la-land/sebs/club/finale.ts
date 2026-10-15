@@ -5,7 +5,7 @@ import { hop } from '../physics'
 import { SEBS_MAT } from '../worlds'
 import { fold, keyRest } from './geometry'
 import { DOWN, drawPiano, heldOn, keysOf, play, restOn, type Note, type Press } from './piano'
-import { BAND, BAND_LAMPS, DOOR, DOOR_SHUT, lightsAt, MIA_SEAT, ROOM, SEAT, SIDE_SEAT, TABLE } from './room'
+import { BAND, BAND_LAMPS, DOOR, DOOR_SHUT, KISS, LEAN, LEAVE, lightsAt, MIA_SEAT, ROOM, SEAT, SIDE_SEAT, TABLE } from './room'
 
 /**
  * The finale: Seb's again, and the dream's last room, then the room as it is.
@@ -33,11 +33,6 @@ const FLOOR_Y = ROOM.floor - 0.13
 const SEAT_Y = SEAT - 0.13
 /** The last chord's key, where he lands from the table. */
 const LAST_KEY = 84
-/** The kiss: they lean in, and touch. */
-const LEAN = 446.938
-const KISS = 450.107
-/** The dream drains; he leaves her side. */
-const LEAVE = 451.53
 /**
  * The coda, told the film's way, in close shots cut against each other: she stops and turns back (her close shot); he
  * looks up from the keys (his); she smiles, a dip (hers); he nods (his). Then she goes.
@@ -47,8 +42,8 @@ const LOOK: [number, number] = [462.1, 462.6]
 const NOD_MIA = 462.85
 const NOD = 463.55
 const GO = 463.95
-/** Where she stops and turns back: in the club's doorway, just inside its threshold. */
-const DOORWAY = -12.1
+/** Where she stops and turns back: in the club's doorway, framed by it, the night behind her. */
+const DOORWAY = -12.3
 /** The cuts between their close shots. */
 const CUTS = { her: 461.02, him: 462.05, smile: 462.75, nod: 463.45, out: 464.27 }
 /** The count-in: four nods, a beat apart, onto the band. */
