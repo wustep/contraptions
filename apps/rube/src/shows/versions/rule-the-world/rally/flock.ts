@@ -37,7 +37,7 @@ const WAVE_TO = HOME - 0.6
 
 /* ------------------------------------------------------------------ the flock */
 
-const N = 340
+const N = 440
 /** How far in front of the building (or behind it, negative) the wheel goes, in the depth `deep` uses in `finale.ts`. */
 const NEAR = 9
 const FAR = 10
@@ -83,7 +83,7 @@ let birds: Bird[] | null = null
 function flock(roof: number): Bird[] {
   if (birds) return birds
   birds = Array.from({ length: N }, (_, i): Bird => {
-    const out = i % 10 === 0 && i / 10 < 32
+    const out = i % 13 === 0 && i / 13 < 32
     return {
       lag: hash(i, 4, 61),
       up: gauss(i, 62),
@@ -92,12 +92,17 @@ function flock(roof: number): Bird[] {
       ph: hash(i, 6, 61) * Math.PI * 2,
       size: 0.85 + 0.3 * hash(i, 7, 61),
       go: REL + 1.6 * Math.pow(hash(i, 8, 61), 1.3),
-      land: HOME + 3.2 + 4.4 * hash(i, 9, 61),
-      perch: out ? perchOf(i / 10, roof) : null,
+      // A few are still flying round the loft at the end.
+      land: i % 9 === 4 ? HOME + 8.4 + 1.5 * hash(i, 9, 61) : HOME + 3.2 + 4.4 * hash(i, 9, 61),
+      perch: out ? perchOf(i / 13, roof) : null,
     }
   })
   return birds
 }
+
+/** How far down the building's face their first pass in front comes. */
+const DIVE = 13
+const bump = (u: number): number => (u <= 0 || u >= 1 ? 0 : Math.sin(Math.PI * u))
 
 const smoother = (u: number): number => {
   const v = Math.max(0, Math.min(1, u))
@@ -117,6 +122,9 @@ function birdAt(b: Bird, i: number, t: number, roof: number): { x: number; y: nu
   const rx = RX + 3 * Math.sin(t * 0.21)
   const a = theta - b.lag * long
   let [x, y, z] = wheel(a, rx)
+  // Their first time round in front they come down and sweep across the sleeping building's face, as the camera draws
+  // back; the next time, low over the roof.
+  y += Math.pow(Math.max(0, Math.sin(a)), 2) * (DIVE * bump((t - 236.4) / 5) + 9 * bump((t - 248.8) / 5.4))
   y += 1.6 * Math.sin(t * 0.29 + 0.8)
   // Its place in the flock, and a little of its own.
   const own = 0.22 * Math.sin(t * (0.9 + 0.5 * hash(i, 10, 61)) + i)
@@ -145,6 +153,16 @@ function birdAt(b: Bird, i: number, t: number, roof: number): { x: number; y: nu
     y += (ay - y) * home
     z += (az - z) * home
   }
+  // The last few circle the loft, close, before they come down.
+  const late = smoother((t - (HOME + 4.2)) / 2)
+  if (late > 0 && b.land > HOME + 8) {
+    const c = (t - HOME) * 1.9 + b.lag * 2.4
+    const lx = loft[0] + 0.6 + 4.2 * Math.cos(c) + b.near * 0.6
+    const ly = loft[1] - 2.6 + 1.1 * Math.sin(c) + b.up * 0.4
+    x += (lx - x) * late
+    y += (ly - y) * late
+    z += (0.6 * Math.sin(c) - z) * late
+  }
   // Each from its sitting place, and to it at the end (or to the trap, and in).
   const seat: Pt = b.perch ?? [TRAP[0] + 0.3 * b.near, loft[1] + 0.25]
   const off = smoother((t - b.go) / 0.9)
@@ -160,6 +178,15 @@ function birdAt(b: Bird, i: number, t: number, roof: number): { x: number; y: nu
   const ripple = Math.max(0, Math.sin(b.lag * 6 - t * 2.6 + b.up * 0.8) - 0.55) / 0.45
   const bank = Math.max(Math.pow(Math.abs(Math.cos(a)), 3), ripple * (0.5 + 0.5 * Math.sin(t * 0.31))) * into * (1 - home)
   return { x, y, z, bank, turn: Math.sign(Math.cos(a)) * (Math.sin(a) >= 0 ? 1 : -1) }
+}
+
+/** Where the flock is across the city at `t` (for eyes that follow it), or the loft while they are home. */
+export function flockX(t: number): number {
+  const loft = TRAP[0]
+  if (t < REL) return loft
+  const [x] = wheel(((t - REL) / LAP) * Math.PI * 2 - 0.35 - 0.2, RX)
+  const w = smoother((t - REL) / 3.4) * (1 - smoother((t - HOME) / 3.6))
+  return loft + (x - loft) * w
 }
 
 /* ------------------------------------------------------------------ drawing */
@@ -186,7 +213,7 @@ export interface View {
  * The flock at `t`: the birds behind the building's face (`side` 'back', drawn before it, so it hides them) or in front
  * of it. Each bird is laid at its depth as `finale.ts`'s `deep` would lay it, about the frame's middle.
  */
-export function drawFlock(ctx: CanvasRenderingContext2D, k: number, v: View, t: number, roof: number, side: 'back' | 'front'): void {
+export function drawFlock(ctx: CanvasRenderingContext2D, k: number, v: View, t: number, roof: number, side: 'back' | 'front', face: [number, number] = [0, 0]): void {
   if (t < REL || t > HOME + 8) return
   const list = flock(roof)
   const paths = TONES.map(() => new Path2D())
@@ -209,8 +236,10 @@ export function drawFlock(ctx: CanvasRenderingContext2D, k: number, v: View, t: 
     const roll = 0.45 * at.bank * at.turn * hw
     // How far down the sky it is (0 at the frame's top): the night overhead, the dawn lower.
     const low = (y - (v.cy - v.H / 2)) / v.H
-    // Against the night their turned undersides are pale; against the bright sky low down they only go grey.
-    const tone = low < 0.24 ? (at.bank > 0.55 ? 2 : 1) : at.bank > 0.55 ? 1 : 0
+    // Against the night, or the building's dark face, their backs are grey and their turned undersides pale; against
+    // the bright sky low down they are dark, and only go grey as they turn.
+    const dark = low < 0.24 || (side === 'front' && at.y > roof - 0.6 && at.x > face[0] && at.x < face[1])
+    const tone = dark ? (at.bank > 0.55 ? 2 : 1) : at.bank > 0.55 ? 1 : 0
     const P = paths[tone]
     P.moveTo((x - hw) * k, (y - up + roll) * k)
     P.lineTo((x - 0.2 * hw) * k, (y - 0.13 * hw) * k)

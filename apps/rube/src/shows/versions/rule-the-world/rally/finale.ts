@@ -7,7 +7,8 @@ import { live } from './live'
 import { CREDITS_AT, DURATION, at } from './music'
 import { ctxOf, rgb } from './pen'
 import { paintInto, painted, prepare, snapshot, type Snap } from './snap'
-import { drawFlock, drawLoft } from './flock'
+import { drawFlock, drawLoft, flockX } from './flock'
+import { CHIMNEY, drawMilk, drawNear, drawNextDoor, drawPavement } from './city'
 
 /**
  * The finale: the machine, whole.
@@ -471,11 +472,11 @@ function drawStreet(p: p5, k: number, f: Box, t: number): void {
     ctx.fillStyle = '#F2D08C'
     ctx.fillRect((x + 0.6) * k, (BASE - 3.85) * k, 0.55 * k, 0.22 * k)
   }
-  // A cab, early, going past along the street, and another the other way later.
+  // Cabs and cars going by, more as the morning gets going.
   const cars: [number, number, number, string][] = []
-  for (let i = 0; i < 9; i++) cars.push([i, i % 2 ? 70 : -110, (i % 2 ? -1 : 1) * (6 + 5 * hash(i, 1, 77)), ['#E8B83A', '#C8C0B0', '#7A2A2A', '#2A4A6A'][i % 4]])
+  for (let i = 0; i < 16; i++) cars.push([i, i % 2 ? 70 : -110, (i % 2 ? -1 : 1) * (6 + 5 * hash(i, 1, 77)), ['#E8B83A', '#C8C0B0', '#7A2A2A', '#2A4A6A', '#E8B83A', '#3A4A3A'][i % 6]])
   for (const [i, from, v, col] of cars) {
-    const x = from + v * (t - FINALE - 3.7 * i)
+    const x = from + v * (t - FINALE - 2.1 * i - 1.4 * hash(i, 2, 77))
     if (x < f.x0 - 6 || x > f.x1 + 6) continue
     ctx.fillStyle = col
     ctx.beginPath()
@@ -514,8 +515,8 @@ function drawEl(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number
     ctx.lineTo((x + 6) * k, (y + 0.45) * k)
   }
   ctx.stroke()
-  // Two trains, one each way.
-  for (const [from, v, at0] of [[-140, 22, FINALE + 6], [80, -18, FINALE + 15], [-140, 20, FINALE + 24], [80, -21, FINALE + 31]] as const) {
+  // The trains, one way and the other, closer together as the rush begins.
+  for (const [from, v, at0] of [[-140, 22, FINALE + 4], [80, -18, FINALE + 8.5], [-140, 20, FINALE + 13], [80, -21, FINALE + 17], [-140, 23, FINALE + 21], [80, -19, FINALE + 24.5], [-140, 21, FINALE + 28], [80, -22, FINALE + 31.5]] as const) {
     const x = from + v * (t - at0)
     const len = 26
     if (x + len < f.x0 - 10 || x - len > f.x1 + 10) continue
@@ -638,6 +639,10 @@ export const finale = scenery<null>({
     const view = { cx: f.cx, cy: f.cy, H: f.y1 - f.y0 }
     // The flock behind the building's face first, so it hides them as they go round behind it.
     drawFlock(ctx, k, view, t, ROOF, 'back')
+    drawNextDoor(ctx, k, f, t, FINALE, flockX(t))
+    if (f.x1 > CHIMNEY[0] - 6) {
+      rising({ p, k, ink: '#000', w: 1, tone: (h: string) => h }, t, { seed: 911, n: 30, from: [CHIMNEY[0] - 0.2, CHIMNEY[0] + 0.2, CHIMNEY[1]], rise: 7, life: 6, spread: 3.2, size: [0.3, 0.9], color: '#A898A8', hot: '#C8B8B8', alpha: 0.3 })
+    }
     drawStreet(p, k, f, t)
     drawShell(p, k, t)
     drawLoft(ctx, k, t, ROOF)
@@ -670,8 +675,12 @@ export const finale = scenery<null>({
       ctx.fillRect(b.x0 * k, b.y0 * k, (b.x1 - b.x0) * k, 1.2 * k)
       ctx.restore()
     })
-    drawFlock(ctx, k, view, t, ROOF, 'front')
+    drawMilk(ctx, k, f, t, FINALE, BASE)
+    drawFlock(ctx, k, view, t, ROOF, 'front', [LEFT, RIGHT])
+    drawPavement(ctx, k, f, t, FINALE, BASE, 'ground')
     drawEl(p, k, f, t)
+    drawPavement(ctx, k, f, t, FINALE, BASE, 'people')
+    drawNear(ctx, k, f, t)
     ctx.restore()
   },
 })
