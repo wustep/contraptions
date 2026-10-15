@@ -1,14 +1,10 @@
 import type { Pt } from '../../../../../parts'
-import { bloom, layer, motes, shaft, sway, type Frame } from '../depth'
+import { layer, motes, shade, sway, type Frame } from '../depth'
 import { hash, lastOf } from '../kit'
-import { blob, ctxOf, ease, ellipse, fillWith, flash, glow, mix, rgba, shape, type Pen } from '../pen'
+import { blob, ctxOf, ease, ellipse, fillWith, flash, mix, rect, rgba, shape, type Pen } from '../pen'
 import { ASH, bulbOn, C, DESK_LAMP, lampFoot, lampOn, lampSway } from './draw'
 import {
   BANG,
-  BOX_H,
-  BOX_W,
-  BOX_X0,
-  BOX_X1,
   BULB,
   CLOCK_SIX,
   COUNTER_TOP,
@@ -19,20 +15,15 @@ import {
   INTRO_RUN,
   LAMP_X,
   LAMP_Y,
-  LAMPS_ON,
   MURRAY_STEPS,
   PART1,
   PART2,
-  POPS,
   SAFE,
-  STEP_BOX,
   STOCK_BULB,
   T1,
   TRANSOM,
   WELCOME,
   WIN,
-  boxTop,
-  boxX,
   doorDeg,
   officeDoor,
   stockSway,
@@ -40,19 +31,24 @@ import {
 import { passing } from './street'
 
 /**
- * The store's life, laid over its drawing: what keeps it moving when Marty is not, and gives its lights their light.
- * The cat in the window; the dust turning in every lamp's light; the passing traffic's lamps thrown across the store;
- * the store lamps' blooms and the labels catching them; dust shaken off the wall when the ladder bangs home; the
- * stockroom's moth and its shadow, and the street's blue down from a transom; Murray's desk lamp, his cigarette's
- * smoke, the street's light through his blinds, a car's lamps swept across it and the El's windows strobing through;
- * and in front of it all, the store's clutter going by dark and soft along the foot of the frame.
+ * The store's life, laid over its drawing: what keeps it moving when Marty is not, and the light its lamps lay on
+ * things. The cat in the window; a little dust turning in the lamps' light; the passing traffic's lamps thrown across
+ * the store; dust shaken off the wall when the ladder bangs home; the stockroom's moth and its shadow, and the street's
+ * blue down from a transom; Murray's desk lamp, his cigarette's smoke, the street's light through his blinds, a car's
+ * lamps swept across it and the El's windows going by; and in front of it all, the store's clutter going by dark and
+ * soft along the foot of the frame. The light is laid over things, never added to them: no halo hangs round a lamp,
+ * and nothing flashes when something lands.
  */
 
 const seen = (f: Frame, x0: number, x1: number, y0 = -Infinity, y1 = Infinity) => f.x1 > x0 && f.x0 < x1 && f.y1 > y0 && f.y0 < y1
+/** A pool of light laid on a surface (his desk's top): a flat soft ellipse of the light's colour, over what is there. */
+const pool = shade
 
 /* ------------------------------------------------------------------ the cat */
 
 /** Where the cat sits: the middle of its haunches on the window's display riser, beside the shoes. */
+/** Its eyes: a dull yellow-green, an eye's colour, not a light. */
+const CAT_EYE = '#8E9448'
 const CAT: Pt = [-1.6, WIN[3] - 0.15]
 /** His landings on the counter through the intro: the cat's ears twitch at each. */
 const TICKS = [...INTRO_HOPS.map((h) => h[1]), ...INTRO_RUN]
@@ -119,12 +115,8 @@ export function drawCat(pen: Pen, t: number): void {
   ctx.strokeStyle = rgba(pen, ink, 1)
   ctx.lineWidth = 0.034 * k
   strokePts(ctx, k, tail)
-  // Turned round at the bang: an eye catches the bulb.
-  if (look > 1.1) {
-    const e: Pt = [hx + width * 0.62, hy - 0.005]
-    ellipse(pen, e, 0.012, 0.009, '#C8D070')
-    glow(pen, e, 0.05, '#C8D070', 0.4)
-  }
+  // Turned round at the bang: an eye shows.
+  if (look > 1.1) ellipse(pen, [hx + width * 0.62, hy - 0.005], 0.012, 0.009, CAT_EYE)
   ctx.restore()
 }
 /** Its tail: curled round along the riser to the left, the tip twitching; straight out behind it in the leap. */
@@ -141,23 +133,21 @@ function strokePts(ctx: CanvasRenderingContext2D, k: number, pts: Pt[]): void {
 
 /* ------------------------------------------------------------------ the store */
 
-/** The bulb over the counter: its halation, and the dust turning in its light. */
+/** The bulb over the counter: a little dust turning in its light. */
 function counterBulb(pen: Pen, t: number, f: Frame): void {
   const b = bulbOn(t)
   if (b <= 0 || !seen(f, BULB[0] - 1.8, BULB[0] + 1.8, BULB[1] - 1.5, COUNTER_TOP + 0.4)) return
-  bloom(pen, BULB, 1.7, C.bulb, 0.13 * b)
-  bloom(pen, BULB, 0.32, '#FFF6DA', 0.4 * b)
   const [bx, by] = BULB
   motes(pen, t, {
-    n: 60,
+    n: 26,
     seed: 11,
     box: [bx - 1.5, by - 0.9, bx + 1.5, COUNTER_TOP],
-    size: [0.005, 0.013],
-    color: '#FFE9B8',
-    alpha: 0.65 * b,
+    size: [0.005, 0.011],
+    color: '#E8D6AE',
+    alpha: 0.4 * b,
     drift: [0.03, -0.012],
     wander: 0.1,
-    twinkle: 0.55,
+    twinkle: 0.12,
     light: (x, y) => Math.exp(-((x - bx) ** 2 + ((y - by) * 0.7) ** 2) / 0.45),
   })
 }
@@ -181,19 +171,16 @@ function drawPassing(pen: Pen, t: number, f: Frame): void {
   const mid = (top + foot) / 2
   const g = ctx.createLinearGradient((cx - w / 2 + lean / 2) * k, mid * k, (cx + w / 2 + lean / 2) * k, mid * k)
   const col = mix('#FFE6B0', '#E8F0FF', 1 - p.warm)
-  const a = 0.2 * p.a
+  const a = 0.26 * p.a
   g.addColorStop(0, rgba(pen, col, 0))
   g.addColorStop(0.25, rgba(pen, col, a))
   g.addColorStop(0.75, rgba(pen, col, a))
   g.addColorStop(1, rgba(pen, col, 0))
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
   fillWith(pen, quad(-w / 2, w / 2), g)
-  ctx.restore()
   shape(pen, quad(-0.04, 0.04), rgba(pen, C.shade, 0.5 * p.a) as unknown as string)
 }
 
-/** The store's hanging lamps: their blooms (and a flare as each clicks on), the dust in their cones, labels catching them. */
+/** The store's hanging lamps: a little dust turning in their cones. */
 function storeLamps(pen: Pen, t: number, f: Frame): void {
   const span = FLOOR - LAMP_Y
   LAMP_X.forEach((lx, i) => {
@@ -202,19 +189,16 @@ function storeLamps(pen: Pen, t: number, f: Frame): void {
     const sw = lampSway(i, t)
     const apex: Pt = [lx + sw, LAMP_Y + 0.06]
     const foot = lx + lampFoot(sw)
-    bloom(pen, apex, 0.75, C.lamp, 0.2 * Math.min(1, on))
-    const click = flash(t - LAMPS_ON[i], 0.14)
-    if (click > 0.02) bloom(pen, apex, 1.1, '#FFF1D0', 0.32 * click)
     motes(pen, t, {
-      n: 42,
+      n: 20,
       seed: 20 + i,
       box: [lx - 1.7, LAMP_Y, lx + 1.7, FLOOR],
-      size: [0.005, 0.012],
-      color: '#FFE2A6',
-      alpha: 0.6 * Math.min(1, on),
+      size: [0.005, 0.011],
+      color: '#E8D2A2',
+      alpha: 0.4 * on,
       drift: [0.02, -0.012],
       wander: 0.12,
-      twinkle: 0.5,
+      twinkle: 0.12,
       light: (x, y) => {
         const v = (y - LAMP_Y) / span
         const c = apex[0] + (foot - apex[0]) * v
@@ -222,28 +206,7 @@ function storeLamps(pen: Pen, t: number, f: Frame): void {
         return d >= 1 ? 0 : (1 - d * d) * (1 - 0.6 * v)
       },
     })
-    labels(pen, t, i, lx, on)
   })
-}
-/** A few labels in a lamp's pool catching its light: all at once as it clicks on, and one now and then as it sways. */
-function labels(pen: Pen, t: number, i: number, lx: number, on: number): void {
-  const c0 = Math.round((lx - BOX_X0) / BOX_W)
-  for (let n = 0; n < 8; n++) {
-    const bi = c0 + Math.floor((hash(n, i, 41) - 0.5) * 7)
-    const bj = Math.floor(hash(n, i, 42) * 12)
-    // Only boxes in the wall (not past its end, over the curtain), and not one pulled out as a step.
-    if (boxX(bi) < BOX_X0 + 6 * BOX_W - 1e-6 || boxX(bi) + BOX_W > BOX_X1 + 1e-6) continue
-    if (STEP_BOX.some(([a, b], m) => a === bi && b === bj && t >= POPS[m])) continue
-    const cx = boxX(bi) + BOX_W / 2
-    const cy = boxTop(bj) + BOX_H / 2
-    const h = hash(n, i, 43)
-    const at = flash(t - LAMPS_ON[i] - 0.04 * n, 0.3) * 0.6
-    const now = 0.5 * Math.max(0, Math.sin(t * (0.45 + 0.35 * h) + h * 40)) ** 10
-    const a = Math.min(1, on) * (at + now)
-    if (a < 0.03) continue
-    shape(pen, [[cx + 0.03, cy], [cx + 0.15, cy], [cx + 0.15, cy + 0.07], [cx + 0.03, cy + 0.07]], rgba(pen, '#FFF4DC', a) as unknown as string)
-    if (a > 0.25) glow(pen, [cx + 0.09, cy + 0.035], 0.12, '#FFF1D0', 0.5 * a)
-  }
 }
 
 /** Dust shaken off the boxes when the ladder bangs into its stop, sifting down through the lamps' light. */
@@ -270,86 +233,135 @@ function bangDust(pen: Pen, t: number, f: Frame): void {
   ctx.restore()
 }
 
-/** The cat, having bolted, under the fitting chairs: two eyes in the dark, watching him go, blinking. */
-function catEyes(pen: Pen, t: number, f: Frame): void {
-  const u = t - 18.95
-  if (u < 0 || t > 23 || !seen(f, 13, 14)) return
-  const blink = [19.9, 21.0, 21.25].some((b) => t > b && t < b + 0.13) ? 0.1 : 1
-  const open = ease(u / 0.35) * blink
-  const look = 0.012 * Math.min(1, u / 1.2)
-  for (const dx of [0, 0.065]) {
-    const e: Pt = [13.4 + dx + look, 1.17]
-    ellipse(pen, e, 0.016, 0.011 * open, '#C8D070')
-    glow(pen, e, 0.06, '#C8D070', 0.3 * open)
+/** When the cat comes back: slinking in under the fitting chairs from the left, just after he has gone past them. */
+const CAT_BACK = 18.95
+/**
+ * The cat, having bolted, back under the fitting chairs once he has gone by: it slinks in low from the left behind the
+ * measuring device, settles crouched under the middle chair, its tail-tip going, and opens its eyes on him going away
+ * through the curtain, blinking. Drawn behind the fitting, so the device's plate hides its feet.
+ */
+export function drawCatUnder(pen: Pen, t: number, f: Frame): void {
+  const u = t - CAT_BACK
+  if (u < 0 || t > 23 || !seen(f, 12.4, 14)) return
+  const ink = '#0C0908'
+  const walk = ease(u / 0.7)
+  const going = u < 0.7 ? Math.sin((u / 0.7) * Math.PI) : 0
+  const x = 13.33 - 0.75 * (1 - walk)
+  // Low and long while it slinks; rounder, and breathing, once it is down.
+  const breath = 0.006 * Math.sin(t * 2.3) * walk
+  const rx = 0.125 + 0.03 * going
+  const ry = 0.1 - 0.025 * going + breath
+  ellipse(pen, [x, FLOOR - ry * 0.95], rx, ry, ink)
+  // Its legs under it as it goes.
+  if (going > 0.05) {
+    const step = Math.sin(u * 18)
+    for (const [dx, ph] of [[-0.09, 1], [0.08, -1]]) rect(pen, x + dx + 0.025 * step * ph - 0.012, FLOOR - 0.06, x + dx + 0.025 * step * ph + 0.012, FLOOR, ink)
   }
+  const look = 0.012 * Math.max(0, Math.min(1, (u - 0.7) / 1.2))
+  const hx = x + 0.103 + 0.03 * going + look
+  const hy = 1.185 + 0.03 * going
+  ellipse(pen, [hx, hy], 0.07, 0.06, ink)
+  for (const sd of [-1, 1]) shape(pen, [[hx + sd * 0.062, hy - 0.025], [hx + sd * 0.052, hy - 0.1], [hx + sd * 0.012, hy - 0.05]], ink)
+  // The tail: out behind it as it goes, then round its feet along the boards, the tip lifting and flicking.
+  const tip = 0.02 * sway(t, 4, 1.9) * walk
+  const lie = walk ** 2
+  shape(pen, [
+    [x - 0.1 + 0.13 * lie, FLOOR - 0.06 + 0.025 * lie],
+    [x - 0.32 + 0.59 * lie, FLOOR - 0.1 + 0.07 * lie],
+    [x - 0.36 + 0.69 * lie, FLOOR - 0.13 + 0.07 * lie + tip],
+    [x - 0.34 + 0.65 * lie, FLOOR - 0.14 + 0.065 * lie + tip],
+    [x - 0.3 + 0.55 * lie, FLOOR - 0.08 + 0.068 * lie],
+    [x - 0.1 + 0.13 * lie, FLOOR - 0.03 + 0.03 * lie],
+  ], ink)
+  // Its eyes, open on him once it is down: an eye's dull colour, no shine.
+  if (u < 0.75) return
+  const blink = [19.9, 21.0, 21.25].some((b) => t > b && t < b + 0.13) ? 0.1 : 1
+  const open = ease((u - 0.75) / 0.35) * blink
+  for (const dx of [-0.033, 0.032]) ellipse(pen, [hx + dx, 1.175], 0.014, 0.01 * open, CAT_EYE)
 }
 
 /* ------------------------------------------------------------------ the stockroom */
 
-/** The stockroom: the swinging bulb's halation and the dust in its light, a moth at it, the transom's cold shaft. */
+/** The stockroom: the dust in the swinging bulb's light, a moth at it, the street's blue down from the transom. */
 function stockroom(pen: Pen, t: number, f: Frame): void {
   if (!seen(f, PART1[0] - 0.5, PART2[1] + 0.5)) return
   const dawn = Math.min(1, t / T1)
-  // The street's blue, down from the transom in a shaft, with its own colder dust.
+  // The street's blue, down from the transom in a faint shaft, a little colder dust in it.
   const apex: Pt = [(TRANSOM[0] + TRANSOM[2]) / 2, TRANSOM[3]]
   const ang = 0.36
   const spread = 0.3
-  shaft(pen, apex, ang, spread, 5.2, C.cold, 0.075 + 0.05 * dawn)
+  beam(pen, apex, ang, spread, 5.2, C.cold, 0.05 + 0.04 * dawn)
   motes(pen, t, {
-    n: 46,
+    n: 20,
     seed: 31,
     box: [16.9, apex[1], apex[0] + 0.4, FLOOR],
-    size: [0.004, 0.011],
-    color: '#C4D8EE',
-    alpha: 0.55,
+    size: [0.004, 0.01],
+    color: '#B4C6DA',
+    alpha: 0.4,
     drift: [-0.02, 0.025],
     wander: 0.1,
-    twinkle: 0.5,
+    twinkle: 0.12,
     light: (x, y) => {
       const a = Math.atan2(apex[0] - x, y - apex[1])
       const d = Math.abs(a - ang) / (spread / 2)
       return d >= 1 ? 0 : (1 - d) * (1 - 0.5 * ((y - apex[1]) / 4.5))
     },
   })
-  // The bulb, swinging: its halation and the dust turning in its light.
+  // The bulb, swinging: the dust turning in its light.
   const sb: Pt = [STOCK_BULB[0] + stockSway(t), STOCK_BULB[1]]
-  bloom(pen, sb, 1.4, C.bulb, 0.15)
-  bloom(pen, sb, 0.28, '#FFF6DA', 0.35)
   motes(pen, t, {
-    n: 64,
+    n: 28,
     seed: 32,
     box: [STOCK_BULB[0] - 1.8, STOCK_BULB[1] - 1.2, STOCK_BULB[0] + 1.8, FLOOR - 0.1],
-    size: [0.005, 0.013],
-    color: '#FFE6B4',
-    alpha: 0.6,
+    size: [0.005, 0.011],
+    color: '#E8D4AE',
+    alpha: 0.42,
     drift: [0.035, -0.01],
     wander: 0.14,
-    twinkle: 0.55,
+    twinkle: 0.12,
     light: (x, y) => Math.exp(-((x - sb[0]) ** 2 + ((y - sb[1]) * 0.6) ** 2) / 0.7),
   })
   moth(pen, t, sb)
-  // The office door's light bursting out across the stockroom when it is knocked open, the dust kicked up in it.
+  // The dust the office door kicks up when it is knocked open, drifting out into the stockroom in its light.
   const d = officeDoor(t)
   if (d > 0 && seen(f, 20.5, 23.5)) {
-    const burst = flash(t - WELCOME, 1.4)
+    const gust = Math.exp(-Math.max(0, t - WELCOME) / 1.4)
     const dx = PART2[0] + 0.2
     motes(pen, t, {
-      n: 40,
+      n: 22,
       seed: 33,
       box: [20.6, -1.3, 23.3, FLOOR],
-      size: [0.005, 0.013],
-      color: '#FFE2A6',
-      alpha: 0.6 * d,
-      drift: [-0.06 - 0.25 * burst, -0.03],
+      size: [0.005, 0.011],
+      color: '#E8D2A2',
+      alpha: 0.42 * d,
+      drift: [-0.06 - 0.25 * gust, -0.03],
       wander: 0.12,
-      twinkle: 0.5,
-      light: (x, y) => (0.35 + 0.65 * burst) * Math.exp(-(((x - dx) / 1.0) ** 2 + ((y - 0.5) / 1.3) ** 2)),
+      twinkle: 0.12,
+      light: (x, y) => 0.6 * Math.exp(-(((x - dx) / 1.0) ** 2 + ((y - 0.5) / 1.3) ** 2)),
     })
   }
 }
 
 /**
- * A moth at the stockroom's bulb, never still: in and out of its glare, bumping it now and then; and its shadow, thrown
+ * A shaft of light down from a high window (`depth.shaft`'s shape), laid over what is under it rather than added to it.
+ */
+function beam(pen: Pen, apex: Pt, angle: number, spread: number, len: number, color: string, a: number): void {
+  if (a <= 0.004) return
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  const dx = -Math.sin(angle)
+  const dy = Math.cos(angle)
+  const l: Pt = [apex[0] + Math.sin(-angle - spread / 2) * len, apex[1] + Math.cos(-angle - spread / 2) * len]
+  const r: Pt = [apex[0] + Math.sin(-angle + spread / 2) * len, apex[1] + Math.cos(-angle + spread / 2) * len]
+  const g = ctx.createLinearGradient(apex[0] * k, apex[1] * k, (apex[0] + dx * len) * k, (apex[1] + dy * len) * k)
+  g.addColorStop(0, rgba(pen, color, a))
+  g.addColorStop(0.55, rgba(pen, color, a * 0.4))
+  g.addColorStop(1, rgba(pen, color, 0))
+  fillWith(pen, [apex, l, r], g)
+}
+
+/**
+ * A moth at the stockroom's bulb, never still: in and out of its light, bumping it now and then; and its shadow, thrown
  * three times its size up the back wall behind them, fluttering.
  */
 function moth(pen: Pen, t: number, sb: Pt): void {
@@ -369,29 +381,25 @@ function moth(pen: Pen, t: number, sb: Pt): void {
 
 /* ------------------------------------------------------------------ the office */
 
-/** His desk lamp's light: its green shade aglow, the bulb under it, the pool on the desk, its halation and dust. */
+/** His desk lamp's light: its green glass shade lit through, the mouth of it, the pool on the desk, the ember, some dust. */
 function deskLamp(pen: Pen, t: number, f: Frame): void {
   if (!seen(f, DESK_LAMP - 1.6, DESK_LAMP + 1.6)) return
   const dl = DESK_LAMP
-  const hum = 0.96 + 0.04 * Math.sin(t * 1.3) * Math.sin(t * 3.1)
-  shape(pen, [[dl - 0.3, -0.32], [dl + 0.3, -0.32], [dl + 0.2, -0.52], [dl - 0.2, -0.52]], rgba(pen, '#5E9A6A', 0.45 * hum) as unknown as string)
-  glow(pen, [dl, -0.08], 0.55, C.lamp, 0.22 * hum)
-  glow(pen, [dl, 0.15], 0.8, C.lamp, 0.32 * hum)
+  shape(pen, [[dl - 0.3, -0.32], [dl + 0.3, -0.32], [dl + 0.2, -0.52], [dl - 0.2, -0.52]], rgba(pen, '#5E9A6A', 0.45) as unknown as string)
+  pool(pen, [dl, 0.15], 0.85, 0.2, C.lamp, 0.36)
   ellipse(pen, [dl, -0.315], 0.26, 0.022, '#FFF0C8')
-  bloom(pen, [dl, -0.3], 1.2, C.lamp, 0.17 * hum)
-  bloom(pen, [dl, -0.31], 0.3, '#FFF4DA', 0.3 * hum)
-  // The ember in the ashtray.
-  glow(pen, ASH, 0.05, '#E0503A', 0.5 + 0.25 * Math.sin(t * 0.9))
+  // The ember in the ashtray, breathing slowly.
+  ellipse(pen, ASH, 0.014, 0.011, mix('#8A2A1C', '#E0603A', 0.6 + 0.4 * Math.sin(t * 0.9)))
   motes(pen, t, {
-    n: 34,
+    n: 16,
     seed: 41,
     box: [dl - 1.0, -1.1, dl + 1.0, 0.15],
-    size: [0.004, 0.011],
-    color: '#FFE6B4',
-    alpha: 0.6,
+    size: [0.004, 0.01],
+    color: '#E8D4AE',
+    alpha: 0.4,
     drift: [-0.03, -0.015],
     wander: 0.1,
-    twinkle: 0.55,
+    twinkle: 0.12,
     light: (x, y) => Math.exp(-(((x - dl) / 0.6) ** 2 + ((y + 0.15) / 0.45) ** 2)),
   })
 }
@@ -436,7 +444,7 @@ function smoke(pen: Pen, t: number, f: Frame): void {
 /**
  * The street's light through the office's venetian blind, off to the right: its slats laid in stripes across the back
  * wall, a cold blue, stronger once it is six and the day comes up. A car's lamps sweep a warm copy of them across the
- * wall and away; the El going by strobes them, window after window.
+ * wall and away; the El going by throws them, window after window.
  */
 const CARS = [32.55, 45.0]
 const EL: [number, number] = [38.7, 42.1]
@@ -455,21 +463,21 @@ function blinds(pen: Pen, t: number, f: Frame): void {
   const six = ease((t - CLOCK_SIX) / 3)
   // Murray's shadow takes some of it as he comes in.
   const murray = t > MURRAY_STEPS[0] ? 0.75 : 1
-  slats(pen, 26.8, -2.0, 2.3, 1.85, -0.55, -0.22, C.cold, (0.055 + 0.06 * six) * murray)
+  slats(pen, 26.8, -2.0, 2.3, 1.85, -0.55, -0.22, C.cold, (0.08 + 0.08 * six) * murray)
   for (const c of CARS) {
     const u = (t - c) / 1.9
     if (u <= 0 || u >= 1) continue
-    slats(pen, 30.6 - 9.4 * u, -2.05, 2.1, 1.9, -0.45, -0.2, '#FFE8BC', 0.16 * Math.sin(Math.PI * u) ** 1.2)
+    slats(pen, 30.6 - 9.4 * u, -2.05, 2.1, 1.9, -0.45, -0.2, '#FFE8BC', 0.2 * Math.sin(Math.PI * u) ** 1.2)
   }
   const e = (t - EL[0]) / (EL[1] - EL[0])
   if (e > 0 && e < 1) {
     const env = Math.sin(Math.PI * e) ** 0.8
     const strobe = Math.max(0, Math.min(1, 0.5 + 1.6 * Math.sin(2 * Math.PI * 4.4 * t + 1.3 * Math.sin(2 * Math.PI * 0.9 * t))))
-    slats(pen, 27.2 - 1.1 * e, -2.02, 2.3, 1.9, -0.5, -0.22, mix('#FFE0A0', C.cold, 0.25), 0.12 * env * (0.2 + 0.8 * strobe))
+    slats(pen, 27.2 - 1.1 * e, -2.02, 2.3, 1.9, -0.5, -0.22, mix('#FFE0A0', C.cold, 0.25), 0.14 * env * (0.2 + 0.8 * strobe))
   }
   ctx.restore()
 }
-/** The blind's stripes over a leaning box: `n` slats from (x, y), `w` across and `h` down, its foot moved by `lean`. */
+/** The blind's stripes, laid over the wall, in a leaning box: slats from (x, y), `w` across and `h` down, its foot moved by `lean`. */
 function slats(pen: Pen, x: number, y: number, w: number, h: number, lean: number, slope: number, color: string, a: number): void {
   if (a <= 0.004) return
   const { k } = pen
@@ -481,7 +489,6 @@ function slats(pen: Pen, x: number, y: number, w: number, h: number, lean: numbe
   g.addColorStop(0.8, rgba(pen, color, a))
   g.addColorStop(1, rgba(pen, color, 0))
   ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
   ctx.fillStyle = g
   ctx.beginPath()
   for (let i = 0; i < SLATS; i++) {
@@ -502,15 +509,15 @@ function safeDust(pen: Pen, t: number): void {
   const [x0, y0, x1, y1] = INNER
   const mid = (x0 + x1) / 2
   motes(pen, t, {
-    n: 22,
+    n: 12,
     seed: 51,
     box: [x0 + 0.05, y0 + 0.05, x1 - 0.05, y1 - 0.1],
     size: [0.004, 0.009],
-    color: '#FFEFCC',
-    alpha: 0.5 * s,
+    color: '#E8D8B4',
+    alpha: 0.4 * s,
     drift: [0.015, -0.01],
     wander: 0.06,
-    twinkle: 0.6,
+    twinkle: 0.12,
     light: (x) => Math.max(0, 1 - Math.abs(x - mid) / 0.8),
   })
 }
@@ -521,7 +528,6 @@ export function drawLife(pen: Pen, t: number, f: Frame): void {
   drawPassing(pen, t, f)
   storeLamps(pen, t, f)
   bangDust(pen, t, f)
-  catEyes(pen, t, f)
   stockroom(pen, t, f)
   if (seen(f, PART2[0], 32)) {
     blinds(pen, t, f)

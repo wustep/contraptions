@@ -1,8 +1,8 @@
 import type { Pt } from '../../../../../parts'
-import { sway } from '../depth'
+import { shade, sway } from '../depth'
 import { BEAT } from '../music'
 import { hash, lastOf } from '../kit'
-import { ctxOf, ease, ellipse, fillWith, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import { ctxOf, ease, ellipse, fillWith, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import {
   BANG,
   CLOCK_SIX,
@@ -28,7 +28,6 @@ import {
   DEVICE_LAND,
   DEVICE_TOP,
   DIAL,
-  DIAL_AT,
   DIAL_R,
   DOOR_W,
   FIRE,
@@ -68,7 +67,6 @@ import {
   SAFE_FEET,
   SAFE_TOP,
   SHELF,
-  SHOVES,
   SKIPS,
   SLIDER0,
   SLIDER1,
@@ -81,7 +79,6 @@ import {
   STOCK_BULB,
   STOOL,
   STOOL_SEAT,
-  SWUNG,
   T1,
   TILL,
   TRANSOM,
@@ -209,6 +206,11 @@ export function lightAt(x: number, t: number): number {
     L += 0.18 * s * Math.exp(-(((x - (SAFE[0] + SAFE[1]) / 2) / 1.4) ** 2))
     // His desk lamp, left on all night.
     L += 0.26 * Math.exp(-(((x - DESK_LAMP) / 1.15) ** 2))
+  } else {
+    // The office's light onto the stockroom beside its door, falling away: a little through the gaps round the shut
+    // door, and once it is open, out through the doorway and further.
+    const d = officeDoor(t)
+    L += (0.22 + 0.42 * d * (1 - 0.3 * murrayNear(t))) * Math.exp(-(PART2[0] - x) / (0.4 + 0.5 * d))
   }
   return Math.min(1, L)
 }
@@ -234,7 +236,8 @@ export function lampOn(i: number, t: number): number {
   const t0 = LAMPS_ON[i]
   if (t < t0) return 0
   const u = t - t0
-  return u < 0.06 ? 1.25 : u < 0.12 ? 0.6 : Math.min(1, 0.85 + u)
+  // It catches: on, a dip as the filament settles, and up to full.
+  return u < 0.06 ? 1 : u < 0.12 ? 0.6 : Math.min(1, 0.85 + u)
 }
 
 /** The dark laid over everything the lights do not reach, then the lights themselves. */
@@ -260,21 +263,28 @@ export function drawShade(pen: Pen, t: number, f: F): void {
   ])
 }
 
+/**
+ * A pool of light laid on a surface (the counter's top, the floor under a lamp): a soft ellipse of the light's colour
+ * over what is there, not added to it, and flat, so it lies on the thing lit rather than hanging in the air.
+ */
+const pool = shade
+
+/**
+ * The light the store's lamps throw on things, over the dark: each source drawn as the lit thing itself (the bulb, the
+ * mouth of a shade) with its light on the counter, the wall and the floor round it, and no glow in the air.
+ */
 export function drawLights(pen: Pen, t: number): void {
-  // The window's cold light on the floor and the counter's end.
+  // The window's cold light on the floor and the counter's end, and across the counter's front.
   const dawn = Math.min(1, t / T1)
   glow(pen, [WIN[0] - 0.3, FLOOR], 1.8, C.cold, 0.12 + 0.08 * dawn)
-  // The street lamp outside, through the glass.
-  glow(pen, [LAMP_POST, -1.7], 1.1, C.sodium, 0.2 * (1 - 0.6 * dawn))
-  // The bulb over the counter.
   glow(pen, [(WIN[0] + WIN[2]) / 2, COUNTER_TOP + 0.3], 2.2, C.cold, 0.08 + 0.06 * dawn)
+  // The bulb over the counter: lit, and its light down on the counter's top and front.
   const b = bulbOn(t)
   if (b > 0) {
-    glow(pen, BULB, 2.2, C.bulb, 0.3 * b)
-    glow(pen, BULB, 0.35, '#FFF6DA', 0.8 * b)
-    glow(pen, [BULB[0], COUNTER_TOP], 1.5, C.bulb, 0.12 * b)
+    pool(pen, [BULB[0], COUNTER_TOP + 0.04], 1.6, 0.42, C.bulb, 0.2 * b)
+    litBulb(pen, BULB, b)
   }
-  // The lamps: each a pool of light down onto the floor, and the glare under its shade.
+  // The lamps: each a cone of light down the wall onto the floor, faint, and the lit mouth of its shade.
   LAMP_X.forEach((lx, i) => {
     const on = lampOn(i, t)
     if (on <= 0) return
@@ -285,17 +295,14 @@ export function drawLights(pen: Pen, t: number): void {
     const hx = lx + sw
     const fx = lx + lampFoot(sw)
     const g = ctx.createLinearGradient(0, LAMP_Y * k, 0, (FLOOR + 0.3) * k)
-    g.addColorStop(0, rgba(pen, C.lamp, 0.2 * on))
-    g.addColorStop(1, rgba(pen, C.lamp, 0.02 * on))
+    g.addColorStop(0, rgba(pen, C.lamp, 0.1 * on))
+    g.addColorStop(1, rgba(pen, C.lamp, 0.015 * on))
     fillWith(pen, [[hx - 0.25, LAMP_Y + 0.05], [hx + 0.25, LAMP_Y + 0.05], [fx + 1.5, FLOOR + 0.3], [fx - 1.5, FLOOR + 0.3]], g)
-    glow(pen, [hx, LAMP_Y + 0.05], 0.9, C.lamp, 0.45 * on)
-    glow(pen, [fx, FLOOR + 0.15], 1.6, C.lamp, 0.12 * on)
+    pool(pen, [fx, FLOOR + 0.12], 1.5, 0.55, C.lamp, 0.14 * on)
     ellipse(pen, [hx, LAMP_Y + 0.04], 0.2, 0.05, mix(C.lampIn, '#FFFFFF', 0.4))
   })
-  // The stockroom's bulb, swinging.
-  const sb: Pt = [STOCK_BULB[0] + stockSway(t), STOCK_BULB[1]]
-  glow(pen, sb, 1.8, C.bulb, 0.24)
-  glow(pen, sb, 0.3, '#FFF6DA', 0.7)
+  // The stockroom's bulb, swinging: lit (its light on the room is the dark's lifting round it, in `lightAt`).
+  litBulb(pen, [STOCK_BULB[0] + stockSway(t), STOCK_BULB[1]], 1)
   // The office: the light through its door, along the floor and up the safe.
   const d = officeDoor(t)
   if (d > 0) {
@@ -309,19 +316,23 @@ export function drawLights(pen: Pen, t: number): void {
     glow(pen, [SAFE[0] + 0.3, 0.6], 1.5, C.lamp, 0.07 * d)
   }
   doorLight(pen, t)
-  // The safe open: the light falls in on the bills.
+  // The safe open: the light falls in on the bills, and on the floor before it.
   const s = ease((doorDeg(t) - 30) / 110)
   if (s > 0) {
-    glow(pen, [(INNER[0] + INNER[2]) / 2, 0.75], 1.0, C.lamp, 0.28 * s)
-    glow(pen, [(INNER[0] + INNER[2]) / 2, FLOOR], 1.3, C.lamp, 0.08 * s)
-    glow(pen, [END_GLINT[0], END_GLINT[1]], 0.3, '#FFF1C8', 0.35 * s)
+    glow(pen, [(INNER[0] + INNER[2]) / 2, 0.75], 1.0, C.lamp, 0.24 * s)
+    pool(pen, [(INNER[0] + INNER[2]) / 2, FLOOR + 0.05], 1.3, 0.4, C.lamp, 0.1 * s)
   }
 }
-const END_GLINT: Pt = [RIGHT_STACK[0] + 0.12, RIGHT_TOP + 0.03]
+
+/** A bare bulb, lit: the glass pale and warm, the filament's brighter heart in it. `b` is how lit (0 to 1). */
+function litBulb(pen: Pen, c: Pt, b: number): void {
+  ellipse(pen, c, 0.065, 0.085, mix('#8A8068', '#FFF2CC', b))
+  if (b > 0.5) ellipse(pen, [c[0], c[1] + 0.01], 0.032, 0.04, '#FFFBEC')
+}
 
 /**
  * Murray's office door from the stockroom side: his desk lamp is on behind it, so a line of light shows round the
- * shut door and under it, brighter as Marty comes; on "Welcome" it is knocked open and the light blooms out through
+ * shut door and under it, brighter as Marty comes; on "Welcome" it is knocked open and the light comes out through
  * the doorway and across the stockroom's floor.
  */
 function doorLight(pen: Pen, t: number): void {
@@ -338,8 +349,8 @@ function doorLight(pen: Pen, t: number): void {
     rect(pen, left - 0.02, HEAD + 0.02, left + 0.012, FLOOR - 0.02, rgba(pen, C.lamp, a) as unknown as string)
     rect(pen, left, FLOOR - 0.025, x1, FLOOR, rgba(pen, C.lamp, a) as unknown as string)
     rect(pen, left, HEAD, x1, HEAD + 0.025, rgba(pen, C.lamp, a * 0.7) as unknown as string)
-    glow(pen, [(x0 + x1) / 2, FLOOR], 0.9 + 0.4 * near, C.lamp, 0.25 * a)
-    glow(pen, [left, (HEAD + FLOOR) / 2], 0.7, C.lamp, 0.1 * a)
+    // What comes under it, on the stockroom's boards.
+    pool(pen, [(x0 + x1) / 2, FLOOR + 0.06], 0.9 + 0.4 * near, 0.22, C.lamp, 0.22 * a)
   }
   if (d > 0) {
     // The opening, lit from inside, beside the leaf.
@@ -351,12 +362,9 @@ function doorLight(pen: Pen, t: number): void {
     g.addColorStop(0, rgba(pen, C.lamp, 0.3 * d))
     g.addColorStop(1, rgba(pen, C.lamp, 0.55 * d))
     fillWith(pen, [[x0, HEAD], [left, HEAD], [left, FLOOR], [x0, FLOOR]], g)
-    // Out across the stockroom's floor.
-    glow(pen, [x0 - 0.6, FLOOR + 0.25], 2.0, C.lamp, 0.16 * d)
-    glow(pen, [x0 - 0.2, FLOOR - 0.6], 1.3, C.lamp, 0.1 * d)
-    // The bloom.
-    const bloom = flash(t - WELCOME, 0.45)
-    glow(pen, [(x0 + x1) / 2, 0.2], 1.6 + 1.2 * bloom, C.lamp, 0.12 * d + 0.3 * bloom)
+    // Out across the stockroom's floor, and a little up the wall beside the door.
+    pool(pen, [x0 - 0.6, FLOOR + 0.2], 2.0, 0.6, C.lamp, 0.16 * d)
+    glow(pen, [x0 - 0.2, FLOOR - 0.6], 1.3, C.lamp, 0.05 * d)
   }
 }
 
@@ -824,7 +832,6 @@ export function drawPops(pen: Pen, t: number): void {
     pen.p.pop()
     // A shadow under it on the box below.
     rect(pen, cx - hw, cy + hh, cx + hw, cy + hh + 0.09 * out, C.slot)
-    glow(pen, [cx, cy - hh], 0.35, C.lamp, 0.25 * flash(t - t0, 0.2))
   })
 }
 
@@ -915,10 +922,8 @@ export function drawFitting(pen: Pen, t: number): void {
     const q = WAY.at(Math.min(t, SLIDER_STOP))[0] + 0.15
     sx = Math.max(SLIDER0, Math.min(SLIDER1, q))
   }
-  const ding = t >= SLIDER_STOP ? Math.exp(-(t - SLIDER_STOP) / 0.15) : 0
-  rect(pen, sx - 0.02, DEVICE_TOP - 0.13, sx + 0.05, DEVICE_TOP, mix(C.chrome, '#FFFFFF', 0.4 * ding), 0.3, C.iron)
+  rect(pen, sx - 0.02, DEVICE_TOP - 0.13, sx + 0.05, DEVICE_TOP, C.chrome, 0.3, C.iron)
   rect(pen, sx - 0.03, DEVICE_TOP - 0.16, sx + 0.06, DEVICE_TOP - 0.12, C.iron)
-  if (ding > 0.05) glow(pen, [LIP, DEVICE_TOP - 0.08], 0.25, '#FFFFFF', 0.5 * ding)
 }
 
 const breathe = sway
@@ -967,7 +972,6 @@ export function drawOfficeDoor(pen: Pen, t: number): void {
     rect(pen, a + pad, 0.0, x1 - pad, FLOOR - 0.2, '#3A2418')
     ellipse(pen, [a + 0.08 * (w / (x1 - x0)) + 0.02, 0.0], 0.03, 0.03, C.brass)
   }
-  if (t > WELCOME - 0.05) glow(pen, [x0, FLOOR - 0.15], 0.25, C.lamp, 0.35 * flash(t - WELCOME, 0.15))
 }
 
 /** The safe's inside: the lining, the shelf, a cash box, the bundles of bills and the ticket tucked in the top one. */
@@ -1070,10 +1074,8 @@ export function drawSafeDoor(pen: Pen, t: number): void {
   // The dial: a silver ring of ticks round a black knob, turning.
   const dc = P(DIAL[0], DIAL[1])
   const dth = dialTurn(t)
-  const { ago } = lastOf(DIAL_AT, t)
-  const click = ago < 0.2 ? Math.exp(-ago / 0.06) : 0
   ellipse(pen, dc, DIAL_R * 1.12 * c, DIAL_R * 1.12, C.iron)
-  ellipse(pen, dc, DIAL_R * c, DIAL_R, mix(C.chrome, '#FFFFFF', 0.25 * click))
+  ellipse(pen, dc, DIAL_R * c, DIAL_R, C.chrome)
   for (let i = 0; i < 20; i++) {
     const a = dth + (i / 20) * Math.PI * 2
     const r0 = i % 5 === 0 ? 0.13 : 0.155
@@ -1102,17 +1104,12 @@ export function drawSafeDoor(pen: Pen, t: number): void {
   if (deg < 2) {
     const back = ease((t - BOLTS + 0.15) / 0.2)
     for (const y of [yT + 0.3, (yT + yB) / 2, yB - 0.3]) rect(pen, edge - 0.04 - 0.1 * back, y - 0.035, edge + 0.04 - 0.1 * back, y + 0.035, C.chrome)
-    if (t > BOLTS - 0.05) glow(pen, [edge, (yT + yB) / 2], 0.3, '#FFFFFF', 0.4 * flash(t - BOLTS, 0.12))
   }
-  // The heave: dust off the door's edge on every shove.
-  const sh = lastOf(SHOVES, t)
-  if (sh.ago < 0.3) glow(pen, P(edge, yB - 0.1), 0.2, C.label, 0.25 * Math.exp(-sh.ago / 0.1))
-  if (t >= SWUNG && t < SWUNG + 0.4) glow(pen, P(edge, (yT + yB) / 2), 0.4, C.label, 0.2 * flash(t - SWUNG, 0.12))
 }
 
 /**
  * The lock, cut open under the dial: three brass wheels side by side, each with its gate (a notch), turned by the
- * dial's clicks a bar each until the gate comes up under the fence, with a glint; the fence drops into the three gates
+ * dial's clicks a bar each until the gate comes up under the fence, the wheel's brass then bright; the fence drops into the three gates
  * as the handle turns, and the bolts go back.
  */
 function drawLock(pen: Pen, t: number, P: (x: number, y: number) => Pt): void {
@@ -1138,7 +1135,6 @@ function drawLock(pen: Pen, t: number, P: (x: number, y: number) => Pt): void {
     shape(pen, [g(th - 0.32, rr * 1.02), g(th + 0.32, rr * 1.02), g(th + 0.2, rr * 0.7), g(th - 0.2, rr * 0.7)], '#0D0B0A')
     // The tick on the rim that shows it turning.
     line(pen, g(th + Math.PI * 0.75, rr * 0.55), g(th + Math.PI * 0.75, rr * 0.95), C.brassDark, 0.5)
-    if (t >= GATES[i] && t < GATES[i] + 0.5) glow(pen, g(-Math.PI / 2, rr), 0.12, '#FFF1C8', 0.8 * flash(t - GATES[i], 0.14))
   }
   // The fence: a bar over the wheels, its teeth dropping into the gates as the handle turns.
   const fy = y0 + 0.07 + 0.045 * drop

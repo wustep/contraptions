@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
-import { layer, motes, parallax, type Frame } from '../depth'
+import { layer, motes, parallax, shade, type Frame } from '../depth'
 import { hash } from '../kit'
-import { ctxOf, ellipse, flash, glow, mix, rect, rgba, shape, vgrad, type Pen } from '../pen'
+import { ctxOf, ellipse, mix, rect, rgba, shape, vgrad, type Pen } from '../pen'
 import { T1, WAKE, WIN } from './geo'
 
 /**
@@ -80,7 +80,7 @@ export function drawOutside(pen: Pen, t: number, f: Frame): void {
     const [dx, dy] = parallax(f, d, ANCHOR)
     return [x0 - dx, y0 - dy, x1 - dx, y1 - dy]
   }
-  layer(pen, f, 0.1, () => stars(pen, t, seen(0.1), dawn), ANCHOR)
+  layer(pen, f, 0.1, () => stars(pen, seen(0.1), dawn), ANCHOR)
   layer(pen, f, 0.2, () => city(pen, t, seen(0.2), low), ANCHOR)
   layer(pen, f, 0.3, () => bridge(pen, t, seen(0.3), low), ANCHOR)
   layer(pen, f, 0.55, () => roofs(pen, t, seen(0.55), low, dawn), ANCHOR)
@@ -90,21 +90,20 @@ export function drawOutside(pen: Pen, t: number, f: Frame): void {
 
 type Box = [number, number, number, number]
 
-/** A few last stars, going as the sky greys. */
-function stars(pen: Pen, t: number, w: Box, dawn: number): void {
+/** A few last stars, faint and still over the city's glow, going as the sky greys. */
+function stars(pen: Pen, w: Box, dawn: number): void {
   const fade = Math.max(0, 1 - dawn * 3.2)
   if (fade <= 0.02) return
   const { k } = pen
   const ctx = ctxOf(pen.p)
   ctx.save()
-  ctx.fillStyle = rgba(pen, '#DCE4F0', 0.55 * fade)
+  ctx.fillStyle = rgba(pen, '#C8D0DC', 0.4 * fade)
   ctx.beginPath()
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < 14; i++) {
     const x = -4 + 8 * hash(i, 3, 41)
     const y = -2.65 + 0.85 * hash(i, 4, 41)
     if (x < w[0] || x > w[2] || y < w[1] || y > w[3]) continue
-    const tw = 0.5 + 0.5 * Math.sin(t * (1.7 + 2.3 * hash(i, 5, 41)) + i * 2.1)
-    const r = (0.004 + 0.006 * hash(i, 6, 41)) * (0.6 + 0.4 * tw)
+    const r = 0.003 + 0.004 * hash(i, 6, 41)
     ctx.moveTo((x + r) * k, y * k)
     ctx.arc(x * k, y * k, Math.max(0.5, r * k), 0, Math.PI * 2)
   }
@@ -221,14 +220,13 @@ function bridge(pen: Pen, t: number, w: Box, low: string): void {
     }
     ctx.stroke()
   }
-  // The deck lamps, a string of them, flickering a little in the cold.
-  ctx.fillStyle = rgba(pen, '#F0C878', 0.75)
+  // The deck lamps, a string of them, one or two out.
+  ctx.fillStyle = rgba(pen, '#F0C878', 0.65)
   ctx.beginPath()
   for (let i = Math.ceil(xa / 0.14); i * 0.14 < xb; i++) {
     const x = i * 0.14
-    const on = hash(i, 0, 61) > 0.12 ? 0.75 + 0.25 * Math.sin(t * (3 + 4 * hash(i, 1, 61)) + i) : 0
-    if (on <= 0) continue
-    const r = 0.007 + 0.003 * on
+    if (hash(i, 0, 61) <= 0.12) continue
+    const r = 0.009
     ctx.moveTo((x + r) * k, (DECK - 0.012) * k)
     ctx.arc(x * k, (DECK - 0.012) * k, Math.max(0.6, r * k), 0, Math.PI * 2)
   }
@@ -240,7 +238,6 @@ function bridge(pen: Pen, t: number, w: Box, low: string): void {
   ctx.arc(a * k, (TOP - 0.06) * k, Math.max(0.8, 0.013 * k), 0, Math.PI * 2)
   ctx.fill()
   ctx.restore()
-  glow(pen, [a, TOP - 0.06], 0.09, '#C8402E', 0.3 * blink)
 }
 
 /** The roofs of the blocks behind: parapets, water tanks on their legs, chimneys, two of them smoking; far snow. */
@@ -289,7 +286,7 @@ function roofs(pen: Pen, t: number, w: Box, low: string, dawn: number): void {
 
 /**
  * The tenements across the street: three fronts, their rooflines, two rows of windows. A few are lit all night; the rest
- * wake on the intro's beats (`WAKE`), each catching with a flicker; in one a figure crosses, in another a shade comes
+ * wake on the intro's beats (`WAKE`), a light switched on in each; in one a figure crosses, in another a shade comes
  * down. On the ground floor the shops are shuttered but the bakery, lit since four, its baker going to and fro.
  */
 const FRONTS: [number, number, number][] = [
@@ -326,7 +323,6 @@ function across(pen: Pen, t: number, w: Box, dawn: number): void {
       rect(pen, wx, wy, wx + 0.16, wy + WIN_H, mix(dark, warm, on))
       // Sills.
       rect(pen, wx - 0.02, wy + WIN_H, wx + 0.18, wy + WIN_H + 0.02, cornice)
-      if (u >= 0 && u < 0.6) glow(pen, [wx + 0.08, wy + 0.1], 0.3, '#FFD48A', 0.35 * flash(u, 0.18))
       // A figure crossing the room in one; a shade coming down in another.
       if (i === 3 && j === 1 && u > 0) figure(pen, wx, wy, t, [wake![0] + 0.5, wake![0] + 2.0])
       if (i === 6 && j === 0 && u > 0) {
@@ -360,7 +356,8 @@ function across(pen: Pen, t: number, w: Box, dawn: number): void {
   ellipse(pen, [bx, SHOP + 0.075], 0.025, 0.028, '#3A2A1C')
   rect(pen, bx - 0.03, SHOP + 0.035, bx + 0.03, SHOP + 0.06, '#E8E0CC')
   rect(pen, b0 - 0.02, SHOP + 0.02, b1 + 0.02, SHOP + 0.035, '#2A2018')
-  glow(pen, [(b0 + b1) / 2, SHOP + 0.12], 0.45, '#FFC872', 0.22)
+  // Its light out on the snow of the pavement in front.
+  shade(pen, [(b0 + b1) / 2, -0.15], 0.4, 0.05, '#FFC872', 0.3)
 }
 
 /** Someone crossing a lit room: head and shoulders behind the glass, between `span`. */
@@ -392,7 +389,7 @@ function street(pen: Pen, t: number, w: Box, dawn: number): void {
   for (const y of [-0.07, -0.035, 0.01]) rect(pen, w[0] - 0.1, y, w[2] + 0.1, y + 0.012, mix('#262E36', '#4A5258', dawn * 0.6))
   ellipse(pen, MANHOLE, 0.12, 0.018, mix('#1A2026', '#3A4248', dawn * 0.6))
   // The street lamp's pool on the snow.
-  glow(pen, [LAMP_POST, -0.12], 0.6, '#E8C27A', 0.2 * (1 - 0.6 * dawn))
+  shade(pen, [LAMP_POST, -0.06], 0.6, 0.1, '#E8C27A', 0.24 * (1 - 0.6 * dawn))
   // Steam off the manhole, lit from under by the lamp.
   plume(pen, t, MANHOLE, { seed: 7, n: 54, life: 3.6, rise: 1.5, wind: 0.3, size: [0.05, 0.24], color: mix('#7A8692', '#A6AEB4', dawn), hot: '#C9B48A', alpha: 0.085 })
   for (const p of TRAFFIC) {
@@ -445,7 +442,7 @@ function vehicle(pen: Pen, x: number, p: Passing): void {
     // The windscreen, a little cab light on in it, the milkman's shape at the wheel; crates through the open door.
     shape(pen, [[at(0.8), Y(0.41)], [at(0.92), Y(0.39)], [at(0.98), Y(0.3)], [at(0.8), Y(0.3)]], '#4A3E26')
     ellipse(pen, [at(0.86), Y(0.33)], 0.03, 0.035, '#1A140E')
-    glow(pen, [at(0.87), Y(0.35)], 0.14, '#FFD48A', 0.45)
+    ellipse(pen, [at(0.88), Y(0.39)], 0.012, 0.008, '#E8C27A')
     rect(pen, lo(0.6, 0.72), Y(0.34), hi(0.6, 0.72), Y(0.1), '#2A2620')
     for (let i = 0; i < 3; i++) rect(pen, lo(0.61, 0.71), Y(0.12 + i * 0.07), hi(0.61, 0.71), Y(0.1 + i * 0.07), '#9A9484')
   } else {
@@ -456,7 +453,6 @@ function vehicle(pen: Pen, x: number, p: Passing): void {
     rect(pen, lo(0.02, 0.98), Y(0.07), hi(0.02, 0.98), Y(0.055), '#8A8E90')
     // Its roof light, lit: off duty, going home.
     rect(pen, at(0.49) - 0.05, Y(0.31), at(0.49) + 0.05, Y(0.27), '#E8D8A0')
-    glow(pen, [at(0.49), Y(0.29)], 0.12, '#FFE6A0', 0.3)
   }
   // The wheels, turning.
   for (const u of [0.18, 0.82]) {
@@ -467,13 +463,11 @@ function vehicle(pen: Pen, x: number, p: Passing): void {
     const a = (x / r) * d
     ellipse(pen, [c[0] + Math.cos(a) * r * 0.3, c[1] + Math.sin(a) * r * 0.3], r * 0.1, r * 0.1, '#1A1C1E')
   }
-  // The lamps: its headlamp leading and the beam off it along the snow; a red lamp at the tail.
+  // The lamps: its headlamp leading and its light on the snow ahead; a red lamp at the tail.
   const hy = Y(0.09)
+  shade(pen, [nose + d * 0.5, ROAD - 0.02], 0.55, 0.05, '#FFE6B0', 0.28)
   ellipse(pen, [nose, hy], 0.03, 0.035, '#FFF2CC')
-  glow(pen, [nose, hy], 0.3, '#FFE6B0', 0.5)
-  glow(pen, [nose + d * 0.5, ROAD - 0.02], 0.55, '#FFE6B0', 0.2)
   ellipse(pen, [tail, hy], 0.018, 0.02, '#C0392B')
-  glow(pen, [tail, hy], 0.13, '#C0392B', 0.35)
 }
 
 interface Plume {
