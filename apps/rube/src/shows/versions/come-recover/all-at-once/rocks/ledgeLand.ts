@@ -395,10 +395,19 @@ function paintBands(ctx: Ctx2D, k: number, x0: number, x1: number, y0: number, y
 /**
  * The far slices, back to front, each in its own perspective about the eye, with the haze pooled in their depths, and
  * graded by the hour: warmed in the gold, and at dusk each one a silhouette against the light, the farther the paler.
- * `between(i, map)` paints whatever stands just in front of slice `i` (the dust off a far rim), in that
- * slice's perspective.
+ * `shade(i, s, map)` paints on slice `i`'s rock, clipped to it and under its haze (the cloud's shadows);
+ * `between(i, s, map)` paints whatever stands just in front of it (the dust off a far rim), in that slice's
+ * perspective.
  */
-export function paintSlices(p: p5, k: number, f: Frame, land: Land, light: Light = NOON, between?: (i: number, s: number, map: (q: Pt) => Pt) => void): void {
+export function paintSlices(
+  p: p5,
+  k: number,
+  f: Frame,
+  land: Land,
+  light: Light = NOON,
+  between?: (i: number, s: number, map: (q: Pt) => Pt) => void,
+  shade?: (i: number, s: number, map: (q: Pt) => Pt) => void,
+): void {
   const ctx = p.drawingContext as Ctx2D
   const Z = f.y1 - f.y0
   land.slices.forEach((sl, i) => {
@@ -435,6 +444,15 @@ export function paintSlices(p: p5, k: number, f: Frame, land: Land, light: Light
       for (const b of sl.buttes) {
         path(ctx, b, k, false, map)
         ctx.stroke()
+      }
+    }
+    if (shade) {
+      for (const shape of [sl.pts, ...sl.buttes]) {
+        ctx.save()
+        path(ctx, shape, k, true, map)
+        ctx.clip()
+        shade(i, s, map)
+        ctx.restore()
       }
     }
     // The haze pooled down in its depths: light, so a gradient.

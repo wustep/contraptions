@@ -6,7 +6,7 @@ import { G } from '../physics'
 import { EVELYN, JOY, ROCKS } from '../worlds'
 import { buildLand, INK, paintCloud, paintRing, paintSky, paintSlices, paintWall, type Land } from './ledgeLand'
 import { lightAt, type Light } from './ledgeLight'
-import { paintBanks, paintDust } from './ledgeWind'
+import { paintBanks, paintDust, paintShade } from './ledgeWind'
 import { PEBBLE_LANDS, pebbleAt, pebbleWays, type Pebble, type PebbleWay } from './ledgePebbles'
 import { EVELYN_ROCK, JOY_ROCK, paintStone, type Flush } from './ledgeStones'
 import {
@@ -192,11 +192,22 @@ export const ledge = part<State>(
       paintSky(p, k, f, light)
       paintCloud(p, k, f, show, light)
       paintBanks(p, k, f, show, light)
-      // In front of the canyon's middle slice, the sand off its rim; then its nearest slice over it.
-      paintSlices(p, k, f, s.land, light, (i, sc, map) => {
-        if (i !== 2) return
-        paintDust(p, k, f, show, sc, map)
-      })
+      // In front of the canyon's middle slice, the sand off its rim; then its nearest slice over it. On every slice
+      // but the horizon, the cloud's shadows.
+      paintSlices(
+        p,
+        k,
+        f,
+        s.land,
+        light,
+        (i, sc, map) => {
+          if (i !== 2) return
+          paintDust(p, k, f, show, sc, map)
+        },
+        (i, sc, map) => {
+          if (i > 0) paintShade(p, k, f, show, i, sc, map, light)
+        },
+      )
       paintWall(p, k, f, s.land, weight, light)
       paintRing(p, k, f, s.land, weight * 0.9, false, show)
       for (const w of s.pebbles) {

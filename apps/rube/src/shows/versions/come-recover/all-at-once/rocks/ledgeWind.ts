@@ -7,9 +7,9 @@ import type { Light } from './ledgeLight'
 
 /**
  * What the wind moves in the canyon, the one thing that is never still in the silence: a bank of cloud lower and
- * nearer than the high streaks, sliding across slower than they drift, as far things do; and sand lifting off a far
- * rim in the gusts and blowing out over the drop. Nothing else moves here: this is the universe where life never
- * formed, so no bird crosses its sky and nothing grows at its rim.
+ * nearer than the high streaks, sliding across slower than they drift, as far things do; the cloud's shadows going
+ * over the far walls; and sand lifting off a far rim in the gusts and blowing out over the drop. Nothing else moves
+ * here: this is the universe where life never formed, so no bird crosses its sky and nothing grows at its rim.
  *
  * They are in the canyon's own perspective (`paintSlices`), so they keep their distance when the camera draws back.
  */
@@ -92,6 +92,60 @@ export function paintBanks(p: p5, k: number, f: Frame, t: number, light: Light):
     ctx.closePath()
     ctx.fillStyle = rgba(light.cloudUnder, 0.2 + 0.35 * light.gold + 0.25 * light.dusk)
     ctx.fill()
+  }
+}
+
+/* ------------------------------------------------------------------ the cloud's shadows */
+
+/** How far apart the shadows lie along a wall, in its own cells, before some are left out for the gaps in the cloud. */
+const SHADE_PERIOD = 60
+/** How fast they go over the land, in its cells a second: the wind down at the cloud that casts them, nearer than the banks. */
+const SHADE_DRIFT = 3
+
+/**
+ * The shadows of the cloud going over the far walls on the same wind: wide, rounded patches of shade, laid on each
+ * slice in its own cells and sliding at the same speed over each, so a nearer wall's shadows cross the frame faster than
+ * a farther one's and the canyon's depth shows in how they move. Thin shade, flat, with a paler rim for the soft edge
+ * a shadow has from so high; under the haze, so the far ones are fainter. As the sun goes low the walls go into their
+ * own shade and the shadows go with the light. `paintSlices` clips it to the slice (`map`, scale `s`).
+ */
+export function paintShade(p: p5, k: number, f: Frame, t: number, i: number, s: number, map: (q: Pt) => Pt, light: Light): void {
+  const ctx = p.drawingContext as Ctx2D
+  // How near the slice is (its depth, back from its scale): the nearer, the darker its shadows, as with its grade.
+  const Z = f.y1 - f.y0
+  const near = Math.min(1, (2.2 * 12) / (12 + Z / s - Z))
+  const a = (0.1 + 0.22 * near) * (1 - light.dusk)
+  if (a < 0.01) return
+  const drift = SHADE_DRIFT * (t - 200)
+  const lx0 = f.cx + (f.x0 - f.cx) / s
+  const lx1 = f.cx + (f.x1 - f.cx) / s
+  const ly0 = f.cy + (f.y0 - f.cy) / s
+  const ly1 = f.cy + (f.y1 - f.cy) / s
+  const col = mixHex(ROCKS.canyonShade, light.haze, 0.2)
+  for (let n = Math.floor((lx0 - drift - 40) / SHADE_PERIOD); n <= Math.floor((lx1 - drift + 40) / SHADE_PERIOD); n++) {
+    // A gap in the cloud.
+    if (hash(n, i, 85) < 0.3) continue
+    const cx = drift + (n + 0.5 * hash(n, i, 81)) * SHADE_PERIOD
+    const cy = 6 + 22 * hash(n, i, 83)
+    const L = 26 + 22 * hash(n, i, 87)
+    const H = 5 + 5 * hash(n, i, 89)
+    if (cx + L < lx0 || cx - L > lx1 || cy + 2 * H < ly0 || cy - 2 * H > ly1) continue
+    const p1 = 6.3 * hash(n, i, 91)
+    const p2 = 6.3 * hash(n, i, 93)
+    for (const [grow, alpha] of [[1.18, 0.45], [1, 1]] as const) {
+      ctx.beginPath()
+      for (let j = 0; j < 36; j++) {
+        // A rounded, lumpy patch, as the cloud that casts it: a few slow swells round its edge.
+        const th = (j / 36) * Math.PI * 2
+        const r = grow * (1 + 0.16 * Math.sin(3 * th + p1) + 0.08 * Math.sin(5 * th + p2))
+        const [x, y] = map([cx + Math.cos(th) * L * 0.5 * r, cy + Math.sin(th) * H * r])
+        if (j === 0) ctx.moveTo(x * k, y * k)
+        else ctx.lineTo(x * k, y * k)
+      }
+      ctx.closePath()
+      ctx.fillStyle = rgba(col, a * alpha)
+      ctx.fill()
+    }
   }
 }
 
