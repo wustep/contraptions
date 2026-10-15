@@ -14,9 +14,13 @@ import { BACK, CAT_GO, CAT_IN, CAT_STILL, CAT_STEPS_IN, CAT_STEPS_OUT, GUST, LAN
  * Across the valley the snow leopard comes out onto the rocks, pale on pale; Sean does not take the picture. He lifts
  * his eye from the camera and looks. The cat goes. While the music builds, the picture holds its breath, and only the
  * world round them moves on the beats: snow sifting down off the rock, the strap knocking the tripod's leg, the
- * cat's feet in the snow.
+ * cat's feet in the snow, and the sun coming up over the whole range.
  *
- * See `himalaya-plan.ts` for the clock and the ground, `himalaya-draw.ts` for the drawing.
+ * The build is a sunrise (`dawn.ts`): the blue hour through the climb, first light on the highest far peaks as the
+ * choir comes in, the sun's edge over the far range as the cat comes out, gold-white by the peak.
+ *
+ * See `himalaya-plan.ts` for the clock and the ground, `himalaya-draw.ts` for the mountain they are on, `far.ts` for
+ * everything beyond the valley, `front.ts` for the air.
  */
 
 /** Where this place's first part starts, in the place's own cells (the ball comes in at (-0.5, 0) from it). */
@@ -136,5 +140,8 @@ export const HIMALAYA_HITS: readonly number[] = [GUST, ...LANDINGS, SETTLE, ...S
   .filter((t, i, all) => all.findIndex((u) => Math.abs(u - t) < 1e-6) === i)
   .sort((a, b) => a - b)
 
-/** Where Walter may be small or out of the Zoom frame in this place: the great wides, stretches of show seconds. Keep them few. */
+/**
+ * Where Walter may be small or out of the Zoom frame in this place: the great wides, stretches of show seconds. Keep
+ * them few. The one here is the top of the pull-back, the two of them a speck on their ledge in the whole range.
+ */
 export const HIMALAYA_WIDE: [number, number][] = [[182.5, 185.0]]

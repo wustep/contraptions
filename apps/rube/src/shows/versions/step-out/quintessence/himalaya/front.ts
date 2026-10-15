@@ -7,14 +7,14 @@ import { lastGust, rise, sunAt, tone, VALLEY, REF, wind, type Tone } from './daw
 import { inFace } from './himalaya-draw'
 
 /**
- * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
- * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
- * changes his colour. It is handed show time as `t`.
+ * What stands between the camera and the machine in this place, and the light over all of it: the near plane and the
+ * air. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or changes his
+ * colour. It is handed show time as `t`.
  *
  * The air is full of the wind: spindrift streaming across, thicker as the build climbs; on every gust a sheet of
  * blown snow crosses close to the lens. Once the sun is up the snow in the air glitters, a little more each phrase,
- * and the sun's light comes across the valley in shafts. The grade goes from the blue hour's cold to the morning's
- * gold.
+ * and the sun blooms where it stands over the range. The colour of the hour is in the drawing itself (`dawn.ts`), not
+ * laid over it.
  */
 
 type C2 = CanvasRenderingContext2D
