@@ -25,7 +25,6 @@ import { GIFT_LOOKS } from './home/kindness-draw'
 import { ledge } from './rocks/ledge'
 import { film, IRISES, LOOKS, type Look, type Picture } from './film'
 import { STEP_RATE, stepPrint } from './star/premiere-alley'
-import { drain, radiance } from './void/radiance'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
 import { crown, type CrownState } from './void/crown'
@@ -92,12 +91,9 @@ const SETS = (roomState: RoomState, crownState: CrownState): Partial<Record<Worl
     after: [standing(credits, 0, 0, box(-12, -8, 44, 4, 2), null, DURATION)],
   },
   // Jobu's bagel, where the pull draws everything in and the peak spins it all back out.
-  // Behind it, in the peak, the radiance of every life it gives back; over it, in the pull, the colours it takes.
   void: {
     scenery: [
-      standing(radiance, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
       standing(bagel, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
-      standing(drain, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
     ],
     // Round Joy while she is Jobu, a ring of everything (`void/crown.ts`).
     after: [standing(crown, 0, 0, box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), crownState, DURATION)],

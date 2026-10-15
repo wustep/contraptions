@@ -11,6 +11,7 @@ import {
   GIVEN,
   givenAt,
   gulpAt,
+  hungGone,
   JOY_EYE as EYE_ON,
   joyLook,
   SPRAYS,
@@ -24,6 +25,7 @@ import {
   PULLEY,
   RELEASE,
   RO1,
+  RH1,
   RP,
   scaleAt,
   slackAt,
@@ -466,12 +468,16 @@ export const peak = part<PeakState>(
         } else drawCrust(p, c, px, py, w.size, w.angle, w.dark, ch.seed)
       }
 
-      // Everything it gives back, each with a googly eye.
+      // Everything it gives back, each with a googly eye: flung past us on the loud beats, and otherwise left hanging
+      // in the dark round the bagel, so beat by beat the dark fills with what she had, until it takes them back.
+      const hole = centreAt(T)
+      const view = frame(p, k)
       for (const g of GIVEN) {
         const x = T - g.at
-        if (x < 0 || x > 2.4) continue
+        if (x < 0 || (!g.hangs && x > 2.4) || (g.hangs && hungGone(T) > 0.995)) continue
         const w = givenAt(g, x)
         const [px, py] = F(w.p)
+        if (g.hangs && (px < view.x0 - 2 || px > view.x1 + 2 || py < view.y0 - 2 || py > view.y1 + 2)) continue
         drawThing(p, k, ink, weight, g.thing, px, py, w.size, w.angle, w.dark, g.variant)
         if (x > 0.1) {
           const pop = x < 0.26 ? 1 + 0.35 * Math.sin((Math.PI * (x - 0.1)) / 0.16) : 1
@@ -493,9 +499,23 @@ export const peak = part<PeakState>(
           const m = Math.hypot(lx, ly) || 1
           lx /= m
           ly /= m
+          // One left hanging, once it has stopped, looks back at the hole: at the two of them.
+          if (g.hangs) {
+            const u = ss((x - 0.6) / 0.8)
+            const dx = hole[0] - w.p[0]
+            const dy = hole[1] + 0.6 * RH1 * scaleAt(T) - w.p[1]
+            const d = Math.hypot(dx, dy) || 1
+            lx += (dx / d - lx) * u
+            ly += (dy / d - ly) * u
+          }
           const wob = 0.95 * Math.exp(-(x - 0.1) / 0.5) * Math.sin((x - 0.1) * 21)
           const sc = er / (0.56 * R)
+          // As the dark takes back what hangs, its eye goes with it.
+          const ctx = p.drawingContext as CanvasRenderingContext2D
+          const was = ctx.globalAlpha
+          if (g.hangs) ctx.globalAlpha = was * (1 - hungGone(T))
           googly(p, k, ink, weight, ex, ey + 0.3 * R * sc, { x: lx + wob, y: ly, hx: 0 }, sc)
+          ctx.globalAlpha = was
         }
       }
 
@@ -506,20 +526,6 @@ export const peak = part<PeakState>(
         const u = (T - EYE_UP) / (EYE_ON - EYE_UP)
         const sc = e.grow * (1 + 0.5 * (1 - u))
         const spinLook = { x: Math.sin(u * 9), y: Math.cos(u * 9), hx: 0 }
-        // A soft light round it as it comes up out of the dark, so it reads as given and carried, not a fleck.
-        const ctx = p.drawingContext as CanvasRenderingContext2D
-        const gx = ex * k
-        const gy = (ey + 0.3 * R * sc) * k
-        const gr = R * (2.2 + 1.6 * sc) * k
-        const halo = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr)
-        const ga = 0.55 * Math.min(1, u / 0.2)
-        halo.addColorStop(0, `rgba(226, 214, 250, ${ga})`)
-        halo.addColorStop(0.4, `rgba(201, 178, 242, ${ga * 0.35})`)
-        halo.addColorStop(1, 'rgba(201, 178, 242, 0)')
-        ctx.save()
-        ctx.fillStyle = halo
-        ctx.fillRect(gx - gr, gy - gr, 2 * gr, 2 * gr)
-        ctx.restore()
         googly(p, k, ink, weight, ex, ey + 0.3 * R * sc, spinLook, sc)
       }
 
