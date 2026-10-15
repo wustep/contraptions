@@ -419,3 +419,41 @@ the thinned flock no longer merging into a few big blots), and no second is near
 takes 20 ms, and the edit made the paint cheaper: 1.8 ms a frame on average, 4.4 ms at the 95th percentile and 11.0 ms
 at worst (2.0, 6.9 and 12.5 before), and the finale 3.9 ms on average (6.0 before), most of it the birds that are no
 longer drawn.
+
+## The fifth fullness pass
+
+The brief again, cutting as much as it adds. Ten new frames, three quarters of the way between the first ten (0:07,
+0:33 and so on to 4:06), a still every three seconds set between the last pass's, and the map of every second. No
+second was nearly still and no third was empty that was not meant to be, so this pass looked at every frame at full
+size for what reads wrong, and found it mostly in the ward, where the last two passes had added the most.
+
+- *The ward's snow:* the nearer of its two falls had flakes the size of coins, and at dawn against the rose sky they
+  read as white discs laid over the window, the bokeh the restraint pass had taken out of everywhere else. The near
+  fall is cut, and the far one falls thicker with small flakes: snow across the street, through which the El and the
+  roofs read.
+- *The traffic at the glass:* four people went by close to the lens in the nine seconds with his son, one every two.
+  The porter is cut (his crate of milk was the feed nurse's bottles again, and his head read as a dark blot), and so
+  is the visitor with her flowers, who crossed under the nurse's reach for the baby. The nurse with the feed and the
+  doctor stay, both before the wave, so the wave, the reach, the lift and the first rally have the foot of the frame
+  to themselves.
+- *The near silhouettes:* the last pass drew the ward's near chair, trolley and palm as plain silhouettes, filled
+  even-odd, so wherever a leg crossed a shelf or the chair's hoop the crossing was a hole: the trolley under the father
+  at the glass was a checkerboard. They are filled by winding now, and so are the people going by (the feed nurse,
+  walking right to left, had a hole where her arm crossed her).
+- *The airliner's cabin:* from the stair its windows show passengers in their seats, one turning the pages of his
+  paper, and the stewardess coming aft to wait for him; then the cabin opened round him on empty seats. The seat at
+  his window stays empty. In the next a man reads the evening paper, his hat up on the rack, turning a page as he did
+  in the window, and the stewardess stands in the aisle beside his seat facing the door; as he gets up onto his sill
+  she bows to him, and the iris closes over her. He goes into Tokyo, which ends on Endo's bow, on a bow.
+
+Kept, on a second look: the cigarette smoke curling up into the blind's light over Murray's desk (smoke, not a glint),
+and the shade under the credits, which looks like a smudge on the ward's ceiling in a still but is where the words
+are set.
+
+**Measured,** against the show as the last pass left it, with the camera held: the first and middle thirds are as they
+were, and the last third goes from 8.2% of the picture moving to 7.9% (248 separate things moving in a frame to 239),
+all of it the ward, 6.1% to 5.1%: the near snow and the two people cut. The ward's quietest seconds are still the
+pillow's, and no second in the show is nearly still. In Chrome (headed, 2384 × 1800, every frame of the show at 60 fps,
+before and after painted back to back) no frame takes 20 ms: 1.6 ms a frame on average, 3.9 ms at the 95th percentile
+and 8.6 ms at worst, against 1.8, 4.1 and 13.2 before, a difference within the run's noise (London, which this pass did
+not touch, moved as much). The cabin's two people and the ward's thicker snow cost nothing that shows.
