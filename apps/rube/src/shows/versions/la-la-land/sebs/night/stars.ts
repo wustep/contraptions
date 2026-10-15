@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { R, mixHex, type Pt } from '../../../../../parts'
-import { beam, box, carried, knock, part, rgba, smooth, type PartShot } from '../kit'
+import { beam, box, carried, frame, knock, part, rgba, smooth, type PartShot } from '../kit'
 import { MIA, NIGHT_MAT, SEB } from '../worlds'
 import {
   APEX,
@@ -134,9 +134,14 @@ function star(p: p5, k: number, x: number, y: number, s: Kindled, T: number, mir
   const lit = smooth(since, 0, 0.05)
   const step = knock(since, 0.32) + 0.6 * knock(T - DIP, 0.5)
   const ctx = p.drawingContext as CanvasRenderingContext2D
+  // A point on the dome stays a point when the camera comes in close: its size is in cells in the wide shots, and has
+  // a ceiling in pixels (as a picture 540 high counts them), so in the close shots it never swells into a disc.
+  const fr = frame(p, k)
+  const px = ((fr.y1 - fr.y0) * k) / 540
+  const r = Math.min(s.size * 1.25 * k, 2.6 * px) * (1 + 0.6 * step)
   ctx.fillStyle = rgba(s.color, (mirror ? 0.32 : 0.95) * lit)
   ctx.beginPath()
-  ctx.arc(x * k, y * k, Math.max(1.4, (s.size * 1.25 + 0.03 * step) * k * (mirror ? 0.8 : 1)), 0, Math.PI * 2)
+  ctx.arc(x * k, y * k, Math.max(1.4, r * (mirror ? 0.8 : 1)), 0, Math.PI * 2)
   ctx.fill()
 }
 
