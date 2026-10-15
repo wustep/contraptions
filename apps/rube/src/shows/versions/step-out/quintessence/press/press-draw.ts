@@ -67,22 +67,16 @@ import {
 } from './press-plan'
 
 /**
- * Life, drawn (the PRESS builder's). The set first (the hall, the conference room upstairs, the street through the
- * loading door), then the machine, then what stands in front of the ball. Every moving thing reads the plan's clocks.
- * Nothing here is written: the Life box is a red box with a white rule, the photograph a grey rectangle.
+ * Life, drawn (the PRESS builder's). The set first (the hall in depth, `hall.ts`; Ted's office upstairs, `office.ts`;
+ * the street through the loading door, `outside.ts`), then the machine; the light and the near plane are the front's
+ * (`front.ts`). Every moving thing reads the plan's clocks. Nothing here is written: the Life box is a red box with a
+ * white rule, the photograph a grey rectangle.
  */
 
 /* ------------------------------------------------------------------ the palette */
 
 export const PAL = {
-  void: '#16171A',
   hall: '#202226',
-  hallHigh: '#25282D',
-  window: '#4A5563',
-  windowLit: '#6B7887',
-  mullion: '#1A1C20',
-  room: '#2B2928',
-  roomHigh: '#34302D',
   frame: '#1E1C1B',
   wood: '#3E3029',
   woodTop: '#5A4639',
@@ -99,12 +93,9 @@ export const PAL = {
   ink: '#1F2023',
   lamp: '#F2B25C',
   ted: '#0B0C0E',
-  floor: '#1B1C1F',
-  floorLine: '#34363B',
   outside: '#AFB9C2',
   outsideHigh: '#CBD3D9',
   pavement: '#7C7D7B',
-  pavementLine: '#5F605E',
   strip: '#C9D6DA',
   strap: '#2F3A46',
 }
