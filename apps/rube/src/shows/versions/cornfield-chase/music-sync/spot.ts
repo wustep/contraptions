@@ -79,20 +79,29 @@ export function follow(p: p5, c: PieceCtx, line: number, t: number, s: Spot, nig
   const cells = Math.min(ctx.canvas.height, (ctx.canvas.width * 9) / 16) / (Math.hypot(m.a, m.b) * c.k)
   const strength = read(s.strength, s, t) * (1 - smooth(cells, 9, 14))
   if (strength < 0.01) return
-  const y = (read(s.y, s, t) - line) * c.k
-  const reach = c.k * 60
-  const g = ctx.createLinearGradient(0, y - c.k * 2, 0, y + c.k * 2)
+  // In the canvas's own pixels: the night solid over the floors above and below, a short ramp to the ball's floor,
+  // which is clear from the top of its machines to the foot of their posts. Solid fills, and gradients only on the
+  // ramps, which a big gradient over the whole canvas is not.
+  const scale = Math.hypot(m.a, m.b)
+  const cell = scale * c.k
+  const y = m.f + (read(s.y, s, t) - line) * cell
   const a = depth * strength
-  // The ball's floor clear, from the top of its machines to the foot of their posts; the floors over and under it dark.
-  const at = (cells: number) => (cells + 2) / 4
-  g.addColorStop(0, rgba(night, a))
-  g.addColorStop(at(-1.15), rgba(night, a))
-  g.addColorStop(at(-0.8), rgba(night, 0))
-  g.addColorStop(at(0.2), rgba(night, 0))
-  g.addColorStop(at(0.45), rgba(night, a))
-  g.addColorStop(1, rgba(night, a))
+  const w = ctx.canvas.width
+  const h = ctx.canvas.height
+  const top = [y - 1.15 * cell, y - 0.8 * cell]
+  const foot = [y + 0.2 * cell, y + 0.45 * cell]
   ctx.save()
-  ctx.fillStyle = g
-  ctx.fillRect(-reach * 4, y - reach, reach * 8, reach * 2)
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.fillStyle = rgba(night, a)
+  if (top[0] > 0) ctx.fillRect(0, 0, w, Math.min(h, top[0]))
+  if (foot[1] < h) ctx.fillRect(0, Math.max(0, foot[1]), w, h - Math.max(0, foot[1]))
+  for (const [y0, y1, from, to] of [[top[0], top[1], a, 0], [foot[0], foot[1], 0, a]]) {
+    if (y1 < 0 || y0 > h) continue
+    const g = ctx.createLinearGradient(0, y0, 0, y1)
+    g.addColorStop(0, rgba(night, from))
+    g.addColorStop(1, rgba(night, to))
+    ctx.fillStyle = g
+    ctx.fillRect(0, y0, w, y1 - y0)
+  }
   ctx.restore()
 }

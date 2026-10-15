@@ -82,19 +82,50 @@ export function gustAt(t: number, x: number, notes: Note[] = PIANO): number {
   return Math.min(1, out)
 }
 
-/** The sky, from the top of the canvas to the horizon, and the field under it. */
+/**
+ * The sky, from the top of the canvas to the horizon, and the field under it. Laid in thin level bands, each a shade
+ * of the gradient no more than a level from the next: the same picture as a gradient, at the cost of plain fills,
+ * which a gradient over the whole canvas is not where the canvas is drawn without a GPU.
+ */
 export function sky(s: Screen, l: Light): number {
   const { ctx, w, h, cy, f } = s
   const hy = cy + (l.horizon - 0.5) * f
-  const g = ctx.createLinearGradient(0, cy - 0.5 * f, 0, hy)
-  g.addColorStop(0, l.top)
-  g.addColorStop(0.55, l.mid)
-  g.addColorStop(1, l.low)
-  ctx.fillStyle = g
-  ctx.fillRect(0, 0, w, hy + 1)
+  const top = cy - 0.5 * f
+  const at = (u: number) => (u < 0.55 ? mixHex(l.top, l.mid, u / 0.55) : mixHex(l.mid, l.low, (u - 0.55) / 0.45))
+  ctx.fillStyle = l.top
+  if (top > 0) ctx.fillRect(0, 0, w, top + 1)
+  const n = Math.max(16, Math.min(400, Math.round((hy - top) / 5)))
+  for (let i = 0; i < n; i++) {
+    const y0 = top + ((hy - top) * i) / n
+    const y1 = top + ((hy - top) * (i + 1)) / n
+    ctx.fillStyle = at((i + 0.5) / n)
+    ctx.fillRect(0, Math.floor(y0), w, Math.ceil(y1) - Math.floor(y0))
+  }
   ctx.fillStyle = l.ground
   ctx.fillRect(0, hy, w, h - hy)
   return hy
+}
+
+/** Glows, drawn once each at the size they are wanted and laid on as an image: a radial gradient is slow to fill. */
+const glows = new Map<string, HTMLCanvasElement>()
+function glowOf(r: number, color: string, inner: number): HTMLCanvasElement {
+  const size = Math.max(2, Math.ceil(r))
+  const key = `${size}|${color}|${inner.toFixed(3)}`
+  let c = glows.get(key)
+  if (!c) {
+    if (glows.size > 12) glows.clear()
+    c = document.createElement('canvas')
+    c.width = c.height = size * 2
+    const g = c.getContext('2d')!
+    const grad = g.createRadialGradient(size, size, size * inner, size, size, size)
+    grad.addColorStop(0, rgba(color, 1))
+    grad.addColorStop(0.35, rgba(color, 0.35))
+    grad.addColorStop(1, rgba(color, 0))
+    g.fillStyle = grad
+    g.fillRect(0, 0, size * 2, size * 2)
+    glows.set(key, c)
+  }
+  return c
 }
 
 /**
@@ -105,14 +136,11 @@ export function body(s: Screen, hy: number, x: number, y: number, r: number, col
   const { ctx, cx, f } = s
   const bx = cx + (x - 0.5) * f * (16 / 9)
   const by = hy - y * f
-  const g = ctx.createRadialGradient(bx, by, r * f * 0.5, bx, by, glowR * f)
-  g.addColorStop(0, rgba(glow, glowA))
-  g.addColorStop(0.35, rgba(glow, glowA * 0.35))
-  g.addColorStop(1, rgba(glow, 0))
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.arc(bx, by, glowR * f, 0, Math.PI * 2)
-  ctx.fill()
+  const sprite = glowOf(glowR * f, glow, (r * 0.5) / glowR)
+  ctx.save()
+  ctx.globalAlpha = clamp(glowA)
+  ctx.drawImage(sprite, bx - sprite.width / 2, by - sprite.height / 2)
+  ctx.restore()
   ctx.save()
   ctx.beginPath()
   ctx.rect(0, 0, s.w, hy)
@@ -308,7 +336,8 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
     const y = ys[n]
     const sc = 1 / d
     const below = n > 0 ? ys[n - 1] + 0.02 * f / depths[n - 1] : h + 2
-    const gap = 0.085 * sc
+    // Far rows have fewer, wider mounds than true perspective would give them: at that size it is the same picture.
+    const gap = 0.085 * sc ** 0.75
     const at = (s.camX * (0.62 * sc)) / REF + n * 0.37
     const i0 = Math.floor((at - w / 2 / f) / gap) - 2
     const i1 = Math.ceil((at + w / 2 / f) / gap) + 2
@@ -336,20 +365,26 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
       const gust = r.wind ? r.wind(across - 0.04 * (d - 1)) : 0
       tips.push(x, top, r.lean + sway + r.gust * 0.35 * gust, gust)
     }
+    // The mounds along the crest as a curved shape, the row under them as a plain rectangle: the curves cover only
+    // the thin strip they need.
+    const base = Math.ceil(y)
     const band = new Path2D(canopy)
-    band.lineTo(tips[tips.length - 4], below)
-    band.lineTo(tips[0], below)
+    band.lineTo(tips[tips.length - 4], base + 1)
+    band.lineTo(tips[0], base + 1)
     band.closePath()
     ctx.fillStyle = mixHex(r.near, r.far, haze)
     ctx.fill(band)
-    // The row's crest, a shade darker, so the rows read one behind another.
-    ctx.strokeStyle = rgba(r.line, r.ink * 0.35 * (1 - haze * 0.8))
-    ctx.lineWidth = Math.max(1, 0.0016 * f * Math.sqrt(sc))
-    ctx.stroke(canopy)
+    if (below > base) ctx.fillRect(0, base, w, Math.ceil(below) - base)
+    // The row's crest, a shade darker, so the rows read one behind another; far off, the haze has them.
+    if (d < 5) {
+      ctx.strokeStyle = rgba(r.line, r.ink * 0.35 * (1 - haze * 0.8))
+      ctx.lineWidth = Math.max(1, 0.0016 * f * Math.sqrt(sc))
+      ctx.stroke(canopy)
+    }
     // Where a gust is crossing, the crest catches the light: the leaves turned up, their pale side to the sky.
-    if (r.sheen && r.wind) {
+    if (r.sheen && r.wind && d < 5) {
       ctx.lineWidth = Math.max(1, 0.006 * f * sc)
-      ctx.lineCap = 'round'
+      ctx.lineCap = 'butt'
       for (const level of [0.2, 0.45, 0.7]) {
         ctx.strokeStyle = rgba(r.sheen, (level + 0.15) * 0.75 * (1 - haze * 0.5))
         ctx.beginPath()
@@ -367,11 +402,11 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
       }
     }
     // Leaves and tassels, on the rows near enough to see them.
-    const ink = r.ink * (1 - smooth(d, 1.2, 3.2))
+    const ink = r.ink * (1 - smooth(d, 1.2, 2.3))
     if (ink < 0.03) continue
     ctx.strokeStyle = rgba(r.line, ink)
     ctx.lineWidth = Math.max(1, 0.0022 * f * Math.sqrt(sc))
-    ctx.lineCap = 'round'
+    ctx.lineCap = 'butt'
     ctx.beginPath()
     for (let k = 0; k < tips.length; k += 4) {
       const x = tips[k]
@@ -384,9 +419,9 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
       const ty = top - tall * (1 - 0.1 * bend * bend)
       ctx.moveTo(x, top + 0.012 * f * sc)
       ctx.quadraticCurveTo(x + bend * tall * 0.1, top - tall * 0.5, tx, ty)
-      for (let q = -2; q <= 2; q++) {
-        const a = -Math.PI / 2 + q * 0.28 + bend * 0.8
-        const l = tall * (0.28 + 0.06 * Math.abs(q))
+      for (let q = -1; q <= 1; q++) {
+        const a = -Math.PI / 2 + q * 0.42 + bend * 0.8
+        const l = tall * (0.3 + 0.06 * Math.abs(q))
         ctx.moveTo(tx, ty)
         ctx.lineTo(tx + Math.cos(a) * l, ty + Math.sin(a) * l + Math.abs(q) * l * 0.3)
       }
@@ -423,10 +458,11 @@ export function dust(s: Screen, t: number, hy: number, amount: number, color: st
     ctx.arc(x, y, r, 0, Math.PI * 2)
   }
   ctx.fill()
-  // A haze low over the rows.
-  const g = ctx.createLinearGradient(0, hy - f * 0.25, 0, hy + f * 0.05)
-  g.addColorStop(0, rgba(color, 0))
-  g.addColorStop(1, rgba(color, 0.32 * amount))
-  ctx.fillStyle = g
-  ctx.fillRect(0, hy - f * 0.25, s.w, f * 0.3)
+  // A haze low over the rows, in level bands as the sky is.
+  const bands = 24
+  const edge = (i: number) => Math.floor(hy - f * 0.25 + (f * 0.3 * i) / bands)
+  for (let i = 0; i < bands; i++) {
+    ctx.fillStyle = rgba(color, 0.32 * amount * ((i + 0.5) / bands))
+    ctx.fillRect(0, edge(i), s.w, edge(i + 1) - edge(i))
+  }
 }

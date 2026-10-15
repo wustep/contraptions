@@ -15,7 +15,7 @@ export function dayLand(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   const l = dayAt(t)
   const hy = sky(s, l)
   const dusk = smooth(t, 30, 40.6)
-  body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', '#F6D58A', 0.55 - 0.1 * dusk, 0.32)
+  body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', '#F6D58A', 0.6 - 0.1 * dusk, 0.24)
   farm(s, hy, l.farm)
   band(s, hy, l.band)
   dust(s, t, hy, smooth(t, 34, 40.4), '#C7A07C')
@@ -60,6 +60,7 @@ function stars(s: Screen, t: number, hy: number): void {
   const i1 = Math.ceil((at + w / 2 / f) / step) + 1
   const j0 = Math.floor(-top / f / step) - 1
   const j1 = Math.ceil((hy - top) / f / step)
+  const paths: Path2D[] = []
   for (let i = i0; i <= i1; i++) {
     for (let j = j0; j <= j1; j++) {
       const key = i * 131 + j
@@ -70,10 +71,17 @@ function stars(s: Screen, t: number, hy: number): void {
       const twinkle = 0.65 + 0.35 * Math.sin(t * (1.3 + hash(key, 3) * 2.4) + key)
       const a = (0.25 + 0.6 * hash(key, 4) ** 2) * twinkle * (1 - 0.8 * low)
       const r = f * (0.0011 + 0.0024 * hash(key, 5) ** 3)
-      ctx.fillStyle = rgba('#E6E1F5', a)
-      ctx.beginPath()
-      ctx.arc(x, y, r, 0, Math.PI * 2)
-      ctx.fill()
+      const level = Math.min(LEVELS - 1, Math.round(a * LEVELS))
+      const path = (paths[level] ??= new Path2D())
+      path.moveTo(x + r, y)
+      path.arc(x, y, r, 0, Math.PI * 2)
     }
   }
+  // One fill a level of brightness, not one a star.
+  paths.forEach((path, level) => {
+    ctx.fillStyle = rgba('#E6E1F5', (level + 0.5) / LEVELS)
+    ctx.fill(path)
+  })
 }
+
+const LEVELS = 8
