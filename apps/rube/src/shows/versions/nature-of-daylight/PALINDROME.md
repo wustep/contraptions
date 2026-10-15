@@ -78,10 +78,10 @@ agree without seeing each other.
   television until its picture of the news is most of the frame; the valley opens with the real shell exactly where the
   television's was, the same size on the screen (`score.ts` works the framing out from the house's `TV_SHELL` and
   the valley's `SHELL_CUT`; `cast.ts` `shellOnScreen` is where the picture puts it).
-- **The scale cuts** (106.742, 110.655, 181.133): a match cut on Louise whose other side opens closer or wider, the
+- **The scale cuts** (106.742, 110.655, 177.186): a match cut on Louise whose other side opens closer or wider, the
   carried framing scaled about her (`seams.ts` `open`), so she holds her place on the screen while the picture changes
   size round her: from the valley's great wide, where she is a speck in the helicopter, in to the lake house that night;
-  out of the lake house to the camp's wide as she lands on the meadow; out of the chamber to the whole ring of twelve.
+  out of the lake house to the camp's wide as she lands on the meadow; out of the lake house to the whole ring of twelve, her daughter's ring to the world's.
 - **The roll** (the shaft, 129.556 to 135.442): the one place the camera turns. Gravity turns a quarter toward the
   shaft's wall and the camera follows it like a heavy body on a spring (`shaft/shaft.ts` `rollAt`), so the tunnel lies
   down into a corridor; at the cut into the chamber her place on the screen is carried turned, and the chamber is square.
@@ -111,9 +111,8 @@ Times are show seconds; chord *n* is the *n*th change of harmony.
 | 129.556 | chord 32 | the shaft | **Gravity turns.** The deck comes up against its stops in the mouth of a tall dark shaft, the same deck the valley left, a white far up it. On the beat (130.519) she pushes off, and gravity swings round from down the shaft to the wall on her right; she floats up and across onto that wall, now the floor (131.506), and the camera turns a quarter after gravity, lagging it and settling, so the shaft lies down into a corridor with the white at its end. Ian lets go of the gate and drops after her (132.447). They roll toward the light over two ribs on the beats (133.544, 134.542). |
 | 135.442 | chord 33 | the chamber | In out of the tunnel at her speed, as the glass wakes: a long dark chamber and at its end the glass, a pane before a wall of white. **Abbott looms out of the white (137.381), then Costello (141.224)**, whole in the wide, the two of them tiny at the glass. Her board, which nothing answers; **her suit splits and falls away (145.165)**; she rolls to the glass alone, flush against the pane, and in one long push in the limb comes down behind it and **a hand of seven fingers presses flat on the glass beside her (149.171)**, a warm print blooming between them. Ian comes up beside her; the first logogram (153.060), and the machine is up on the wall: a rail, a catch, a cord to a plate. Then the language as a machine she drives, each move its own shot: the first word sent down the rail into the row of cards (157.211), the whole machine; her touch at the glass and their answer written over it, close (161.025); the next word, close and low on the plate and the rail, Ian rolling under the card as it lands (164.792). |
 | 169.610 | chord 42 | the lake house | **A flash**, on her touch: an afternoon years on, the sun full through the long window, Hannah a child on a tall stool at the glass, drawing on a sheet she has taped to it. On the beats she draws two great grey animals on seven legs; her mother rolls to her and touches the stool (173.441); she draws her mother in gold and her father in blue (174.428, 175.363), and between them and the animals a ring (176.222). "Mommy and Daddy talk with animals." |
-| 177.186 | chord 44 | the chamber | Back on her touch, a word later, close at the glass as Abbott's ring forms; out to the machine, the row a card longer. |
-| 181.133 | chord 45 | the command tent | **The world as one** (a scale cut out to the whole ring): the twelve screens, one for every shell on Earth, all lit and linked. She hops onto a key of the phone (182.149) and the word she has read goes up the cable into Montana (182.584) and round the ring both ways at once, each screen taking it up, **the halves meeting at the top on the loud note (184.575)**, the ring flaring. |
-| 185.080 | chord 46 | the chamber | Wide on both heptapods writing at once, the row complete (189.005), read back close as the cards light in order (190.943), her question on her board in her own gold, two of their rings joined (192.789), and the answer: **a ring with a barb flung out of it, "weapon" (196.795)**. |
+| 177.186 | chord 44 | the command tent | **The world as one** (a scale cut out to the whole ring, her daughter's crayon ring cut to the world's): the twelve screens, one for every shell on Earth, all lit and linked. She hops onto a key of the phone (178.149) and a word they have read, Abbott's answer at the glass, goes up the cable into Montana (178.625) and round the ring both ways at once, each screen taking it up, **the halves meeting at the top (180.744)**, the ring flaring. |
+| 181.133 | chord 45 | the chamber | Wide, as the next word goes down the rail, pushing in to the glass as she goes to it and **both heptapods write at once (185.080)**; the row complete (189.005), read back close as the cards light in order (190.943), her question on her board in her own gold, two of their rings joined (192.789), and the answer: **a ring with a barb flung out of it, "weapon" (196.795)**. |
 | 200.626 | **the bass drops out** | the command tent | Night; the ring of twelve screens, one for every shell on Earth, each linked to the next; a red lamp over the door comes on. **The links fall like dominoes**: one a beat round the ring, each screen tipping over on its hinge to hang dark and its link going slack as cable, knocking the next free, until only Montana is lit (213.595). |
 | 214.657 | chord 55 | the chamber | Another day: Abbott's palm slams the glass. A soldier arms the charge at its foot and leaves, between them and the glass, its light flashing on the beats; a jagged ring written in bursts. **223.370: the blast**: white, the pane blowing out, the two of them thrown down the chamber on arcs, Abbott reeling back into the fog. Shards; the light failing; the last of the glass goes (229.129); white. |
 | 231.039 | chord 60, in white | beyond the glass | Alone in the fog. Costello points; a jet of ink under her, and a great logogram written round her both ways at once on the chords, lifting her. **Abbott dies** on the same strokes: on the hard beat (235.892) he slumps and starts to sink; on the chord (238.713) his last word comes out of him whole, a pale ring round him; from the next (240.582) it comes undone from both ends as hers is written, and he is gone into the white as **hers closes over her (242.480)**: one ring written, one unwritten. It turns, lets her go at its top (246.340); she falls through it and lands where its ends met. A small ring begins at her right. |
@@ -138,7 +137,7 @@ card the room holds to the end, 408 s.
 
 `apps/rube/checks/palindrome.ts`:
 - the recording whole from zero, its credit, the label's upload, and the credits after it;
-- the places in order (22 legs), every cut between places on a change of chord, no portal;
+- the places in order (21 legs), every cut between places on a change of chord, no portal;
 - the ball never jumps in a place, and every cut is a match cut (all but the cut on the shell), on the screen as the
   camera has it, turned by its roll in the shaft;
 - the cut on the shell: the television's picture of it and the real one the same size in the same place on the
@@ -1172,6 +1171,18 @@ The bed costs p95 3.4 ms a frame at 2560 × 1600, the meadow's touch 3.5. What i
 sees (her teaching the language, the film's lecture played forward) has no room where it belongs, before the gala,
 without cutting the tower; and the swing and the bed are both montages now, so the dawn's one long take is the
 prologue's only stillness, which is right.
+
+A hundred-and-twenty-first watched it whole again and found it told the film; what bothered a viewer now was the
+middle's density. Between the flash and the world as one the show went back to the chamber for four seconds:
+chamber, lake house, chamber, tent, chamber in sixteen seconds, the choppiest stretch of the piece, and the bridge
+said nothing the chamber does not say again a moment later. It is gone: the flash ends on Hannah's crayon ring and cuts
+straight to the world's ring of twelve, the word going round it is one the viewer saw written on the glass and run
+down the rail, and the chamber comes back once, wide, pushing in to the glass as both heptapods write. One cut fewer,
+and a rhyme where there was a seam.
+
+What it would take up next: little. The film is told; the quiet stretches (the dawn, the fog, home) breathe; the
+middle moves. The remaining ideas trade something that works for something that would merely be more: the future
+lecture before the gala would cost the tower, and the pod would cost the white-out.
 
 ## Arrival nods
 
