@@ -285,7 +285,7 @@ export function drawJelly(g: C2, k: number, x: number, y: number, s: number, t: 
 export function drawDeepBack(g: C2, v: View, t: number): void {
   const life = underAt(t)
   // Two fans of rays: many thin far ones, fewer and broader nearer.
-  drawRays(g, v, t, { z: 0.4, n: 44, seed: 3, a: 0.13, w: [0.02, 0.12], len: 12, color: DEEP.jade })
+  drawRays(g, v, t, { z: 0.4, n: 36, seed: 3, a: 0.13, w: [0.02, 0.12], len: 12, color: DEEP.jade })
   drawRays(g, v, t, { z: 0.75, n: 13, seed: 5, a: 0.085, w: [0.1, 0.32], len: 9, color: DEEP.jade })
   layer(g, v, 0.32, DEEP_AT, DEEP_REF, (inner) => {
     drawSnow(g, inner, t, 'far', 1)
@@ -301,7 +301,8 @@ export function drawDeepBack(g: C2, v: View, t: number): void {
 /** The near water: the rays nearer than him, and the second jellyfish, nearer and larger. Over the machine, under him. */
 export function drawDeepFront(g: C2, v: View, t: number): void {
   const life = underAt(t)
-  drawRays(g, v, t, { z: 1.3, n: 5, seed: 11, a: 0.07, w: [0.2, 0.55], len: 7, color: DEEP.jade, add: true })
+  drawRays(g, v, t, { z: 1.3, n: 4, seed: 11, a: 0.06, w: [0.2, 0.5], len: 7, color: DEEP.jade })
+  if (life <= 0.01) return
   layer(g, v, 1.25, DEEP_AT, DEEP_REF, (inner) => {
     drawJelly(g, inner.k, 5.0 + 0.25 * Math.sin(t * 0.1 + 1), 4.4 - 0.05 * (t - BEGIN), 0.9, t, 0.65, 0.55 * life)
   })

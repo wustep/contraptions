@@ -2,7 +2,7 @@ import type { Lane, Pt } from '../../../../../parts'
 import { laneAt } from '../../../../../parts'
 import { box, part, scenery, type PartShot } from '../kit'
 import { at, SEAM } from '../music'
-import { BEGIN, BUMPS, END, heli, IN, JUMP, LIFT, onHeli, plan, STEP, STROBES, SURF, WIDE_FROM, WIDE_TO } from './sky-plan'
+import { BEGIN, BUMPS, END, heli, IN, JUMP, LIFT, NO, onHeli, plan, STEP, STROBES, SURF, WIDE_FROM, WIDE_TO } from './sky-plan'
 import { drawBoat, drawHeli, drawParcel, drawSkySet, drawWash, parcelAt } from './sky-draw'
 import { ctxOf } from './paint'
 import { WALTER_WARM } from '../worlds'
@@ -79,7 +79,11 @@ export const helicopter = part<State>(
   () => shots(),
 )
 
-/** The camera: with him to the door, the helicopter whole as it lifts and climbs, out wide, close for the jump. */
+/**
+ * The camera: with him to the door; drawing back slowly as the skids leave the pad, so the helicopter is whole and the
+ * harbour and the sea open round it as it climbs; out wide; close again, pushing in as the pilot looks back and shakes
+ * his head; and out a little for the jump.
+ */
 function shots(): PartShot[] {
   const follow = (t: number, cells: number, off: Pt): PartShot => ({ t, cells, w: 0, off })
   const hold = (t: number, cells: number, p: Pt, cut = false): PartShot => ({ t, cells, hold: p, w: 1, ...(cut ? { cut } : {}) })
@@ -93,13 +97,14 @@ function shots(): PartShot[] {
     follow(BEGIN + 0.9, 4.6, [1.0, -0.55]),
     hold(IN + 0.3, 5.4, on(IN + 0.3, [0.35, -0.5])),
     hold(LIFT - 0.1, 5.6, on(LIFT, [0.35, -0.55])),
-    follow(LIFT + 1.6, 6.0, [0.45, -0.5]),
-    follow(at(29) - 0.6, 6.5, [0.55, -0.45]),
-    follow(WIDE_FROM - 0.25, 6.7, [0.55, -0.4]),
+    follow(LIFT + 1.6, 6.6, [0.45, -0.5]),
+    follow(at(29) - 0.6, 7.0, [0.55, -0.45]),
+    follow(WIDE_FROM - 0.25, 6.9, [0.55, -0.4]),
     hold(WIDE_FROM, 16, wide, true),
-    hold(WIDE_TO - 0.4, 15.6, [wide[0] + 0.6, wide[1] + 0.2]),
+    hold(WIDE_TO - 0.4, 14.4, [wide[0] + 0.9, wide[1] + 0.35]),
     hold(WIDE_TO, 5.6, on(WIDE_TO, [0.45, -0.1]), true),
-    hold(JUMP - 0.45, 5.3, [leave[0] + 0.25, leave[1] + 0.1]),
+    hold(NO, 4.8, on(NO, [0.85, -0.2])),
+    hold(JUMP - 0.45, 5.0, [leave[0] + 0.25, leave[1] + 0.1]),
     follow(JUMP + 0.25, 5.15, [0.2, 0.1]),
     hold(END, 5.0, [SPLASH[0] + 0.2, SPLASH[1] + 0.4]),
   ]

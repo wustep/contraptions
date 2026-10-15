@@ -53,7 +53,11 @@ export const horizon = (cy: number): number => Math.min(cy, SURF - 0.9)
 
 /* ------------------------------------------------------------------ the set */
 
-export function drawSkySet(p: p5, k: number, t: number): void {
+/**
+ * The set: the overcast, the far world and the sea. `under` when the sea draws it from under the skin, where all
+ * below the surface is its own water: then nothing is drawn there.
+ */
+export function drawSkySet(p: p5, k: number, t: number, under = false): void {
   const g = ctxOf(p)
   const f = frame(p, k)
   const x0 = f.x0 - 1
@@ -84,7 +88,7 @@ export function drawSkySet(p: p5, k: number, t: number): void {
     [Math.min(0.95, ed / (ed + 2)), SKY.sea],
     [1, SKY.seaNear],
   ])
-  g.fillRect(x0 * k, hz * k, (x1 - x0) * k, (y1 - hz + 1) * k)
+  g.fillRect(x0 * k, hz * k, (x1 - x0) * k, ((under ? Math.min(y1, SURF + 0.1) : y1) - hz + 1) * k)
   // A haze on the horizon.
   g.fillStyle = vgrad(g, k, hz - 0.35, hz + 0.45, [
     [0, rgba(SKY.low, 0)],
@@ -99,7 +103,7 @@ export function drawSkySet(p: p5, k: number, t: number): void {
   drawFloes(g, k, f, hz, t)
   drawSunShafts(g, k, e, t, SURF)
   drawSkein(g, k, e, t, SKEIN, WIDE_FROM, 30, -8.4, heli(SKEIN).x + 26, -3, 15)
-  drawNearWater(g, k, f, t)
+  if (!under) drawNearWater(g, k, f, t)
   drawQuay(g, k, f, t)
 }
 

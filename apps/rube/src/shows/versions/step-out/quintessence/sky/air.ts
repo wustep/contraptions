@@ -87,9 +87,11 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
   const tones = [new Path2D(), new Path2D(), new Path2D(), new Path2D()]
   const shake = jolt(t)
   // The cells' spacing goes a little with the framing, so a close frame is not all one cell and the wide is not grit.
-  const S = 7 * Math.pow(Math.max(0.5, Math.min(2.5, e.fh / 6.6)), 0.55)
-  for (let r = 0; r < 14; r++) {
-    const z = 30 * Math.pow(1.18, r)
+  const S = 5.6 * Math.pow(Math.max(0.5, Math.min(2.5, e.fh / 6.6)), 0.35)
+  // The nearest row is the one just over the frame's top: the deck fills the sky from there to the horizon.
+  const z0 = Math.max(12, (F * Math.abs(DECK_Y - e.hz)) / Math.max(0.5, e.hz - e.y0 + 0.4))
+  for (let r = 0; r < 16; r++) {
+    const z = z0 * Math.pow(1.18, r)
     const s = F / z
     // Past where the cells are this small on the screen, the horizon's haze stands for them.
     if (S * s < 0.42 * (e.fh / 6.6)) break
@@ -97,8 +99,8 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
     if (yRow > e.y1 + 1) continue
     const h = Math.max(0.03, 0.55 * S * s * Math.min(0.6, Math.abs(DECK_Y - e.hz) / z) * 1.6)
     if (yRow < e.y0 - h * 2) continue
-    // The wind takes the deck along slowly, the far rows slowest on the screen.
-    const drift = t * 0.35
+    // The wind takes the deck along, the far rows slowest on the screen.
+    const drift = t * 1.1
     const n0 = Math.floor((e.cx - (e.fw / 2 + 2) / s - drift) / S) - 1
     const n1 = Math.ceil((e.cx + (e.fw / 2 + 2) / s - drift) / S) + 1
     for (let n = n0; n <= n1; n++) {
@@ -108,8 +110,11 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
       const w = S * s * (0.62 + 0.4 * hash(n, r, 43))
       const hh = h * (0.7 + 0.5 * hash(n, r, 44))
       const d = Math.hypot((x - sx) / e.fw, (y - sy) / e.fh)
-      const near = sun * Math.max(0, 1 - d / 0.3)
+      // Round the sun the light comes and goes on the cells as they pass.
+      const near = sun * Math.max(0, 1 - d / 0.3) * (0.82 + 0.18 * Math.sin(t * 0.9 + n * 1.7 + r * 2.3))
       if (hash(n, r, 45) < 0.16 + 0.5 * near) continue
+      // The break itself: no cell over the sun.
+      if (sun > 0.3 && Math.hypot(x - sx, (y - sy) * 1.4) < w * 0.85 + 0.09 * e.fh) continue
       const tone = near > 0.55 ? 3 : near > 0.22 ? 2 : hash(n, r, 46) < 0.3 ? 0 : 1
       tones[tone].moveTo((x + w) * k, y * k)
       tones[tone].ellipse(x * k, y * k, w * k, hh * k, 0, 0, Math.PI * 2)
@@ -170,7 +175,7 @@ export function drawSun(g: C2, k: number, e: Eye, t: number): void {
   const [sx, sy] = sunXY(e)
   const r = 0.11 * e.fh
   g.save()
-  for (const [rr, a] of [[3.2, 0.1], [2, 0.14], [1.15, 0.22], [0.5, 0.5], [0.28, 0.8]] as [number, number][]) {
+  for (const [rr, a] of [[2.2, 0.14], [1.1, 0.26], [0.36, 0.75]] as [number, number][]) {
     g.fillStyle = rgba('#F7F8F3', a * sun)
     g.beginPath()
     g.arc(sx * k, sy * k, r * rr * k, 0, Math.PI * 2)
@@ -208,8 +213,7 @@ export function drawSunShafts(g: C2, k: number, e: Eye, t: number, surf: number)
     }
   }
   g.save()
-  g.globalCompositeOperation = 'lighter'
-  const a = 0.045 * sun * (0.8 + 0.2 * Math.sin(t * 0.4))
+  const a = 0.07 * sun * (0.8 + 0.2 * Math.sin(t * 0.4))
   for (let j = 0; j < 3; j++) {
     g.fillStyle = rgba('#F4F6F0', a * [1, 0.6, 0.32][j])
     g.fill(steps[j])
@@ -316,8 +320,8 @@ export function drawBergs(g: C2, k: number, e: Eye, t: number, surf: number, sea
   }
 }
 
-const PINNACLE: [number, number][] = [[0, 0], [0.08, -0.32], [0.2, -0.48], [0.36, -1], [0.48, -0.78], [0.6, -0.62], [0.78, -0.4], [0.94, -0.16], [1, 0]]
-const TABLE: [number, number][] = [[0, 0], [0.04, -0.82], [0.28, -0.94], [0.62, -0.9], [0.94, -0.78], [1, 0]]
+const PINNACLE: [number, number][] = [[0, 0], [0.06, -0.28], [0.18, -0.42], [0.3, -0.55], [0.38, -0.95], [0.46, -1], [0.55, -0.7], [0.66, -0.62], [0.8, -0.45], [0.92, -0.3], [1, 0]]
+const TABLE: [number, number][] = [[0, 0], [0.03, -0.75], [0.2, -0.85], [0.45, -0.82], [0.52, -0.66], [0.6, -0.8], [0.9, -0.7], [0.97, -0.4], [1, 0]]
 
 /**
  * The swell on the open sea: long dark troughs and pale crests in rows going away to the horizon, each band of
@@ -328,19 +332,19 @@ export function drawSwell(g: C2, k: number, e: Eye, t: number, surf: number, a =
   const crests = new Path2D()
   const e0 = surf - e.hz
   if (e0 <= 0.05) return
-  const S = 2.6
+  const S = 1.9
   for (let r = 0; r < 20; r++) {
     const z = F * 0.95 * Math.pow(1.16, r)
     const s = F / z
     if (S * s < 0.16) break
-    const speed = r < 6 ? 0.9 : r < 13 ? 0.5 : 0.25
+    const speed = r < 6 ? 1.4 : r < 13 ? 0.7 : 0.3
     const y0 = e.hz + e0 * s
     if (y0 < e.y0 || y0 > e.y1 + 0.2) continue
     const drift = t * speed
     const n0 = Math.floor((e.cx - (e.fw / 2 + 1) / s - drift) / S) - 1
     const n1 = Math.ceil((e.cx + (e.fw / 2 + 1) / s - drift) / S) + 1
     for (let n = n0; n <= n1; n++) {
-      if (hash(n, r, 81) < 0.5) continue
+      if (hash(n, r, 81) < 0.4) continue
       const gx = (n + hash(n, r, 82)) * S + drift
       const x = e.cx + (gx - e.cx) * s
       const len = (0.8 + 1.4 * hash(n, r, 83)) * s
@@ -353,9 +357,9 @@ export function drawSwell(g: C2, k: number, e: Eye, t: number, surf: number, a =
   g.save()
   g.lineCap = 'butt'
   g.lineWidth = Math.max(0.8, 0.014 * k)
-  g.strokeStyle = rgba(AIR.trough, 0.3 * a)
+  g.strokeStyle = rgba(AIR.trough, 0.38 * a)
   g.stroke(troughs)
-  g.strokeStyle = rgba(AIR.crest, 0.3 * a)
+  g.strokeStyle = rgba(AIR.crest, 0.36 * a)
   g.stroke(crests)
   g.restore()
 }
@@ -369,10 +373,10 @@ export function drawGlitter(g: C2, k: number, e: Eye, t: number, surf: number): 
   if (e0 <= 0.05) return
   const path = new Path2D()
   const tick = Math.floor(t * 9)
-  for (let i = 0; i < 44; i++) {
-    const v = Math.pow(hash(i, 91), 1.6)
+  for (let i = 0; i < 70; i++) {
+    const v = Math.pow(hash(i, 91), 1.4)
     const y = e.hz + 0.03 + v * Math.min(e0, e.y1 - e.hz) * 0.9
-    const spread = (0.04 + v * 0.22) * e.fw
+    const spread = (0.06 + v * 0.3) * e.fw
     const x = sx - 0.03 * e.fw + (hash(i, 92) - 0.5) * 2 * spread * (0.4 + 0.6 * hash(i, 93))
     if (hash(i, tick + (i % 7), 94) < 0.45) continue
     const len = (0.04 + 0.12 * v) * (0.6 + 0.8 * hash(i, 95)) * (e.fh / 6.6)

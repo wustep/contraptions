@@ -1,16 +1,17 @@
 import { view } from '../depth'
-import { edgeDark } from './grade'
 import { scenery } from '../kit'
-import { drawDeepFront, underAt } from './deep'
+import { drawDeepFront } from './deep'
 import { W } from './sea-plan'
+import { drawTopside } from './topside'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * Under: the near rays and the near snow, a jellyfish nearer than he is, and the dark closing in from the frame's
- * edges and from below, deeper the deeper the frame is.
+ * Under: the near rays and the near snow, and a jellyfish nearer than he is (the dark below is the water's own
+ * gradient: a vignette over all this would cost as much as the rays). Above, once he is out: gulls, spray, the sun on
+ * the deck.
  */
 export const seaFront = scenery<null>({
   name: 'sea-front',
@@ -18,7 +19,6 @@ export const seaFront = scenery<null>({
     const g = p.drawingContext as CanvasRenderingContext2D
     const v = view(p, c.k)
     const t = c.t
-    const under = underAt(t)
     if (v.y1 > W) {
       g.save()
       // Only under the skin.
@@ -27,9 +27,8 @@ export const seaFront = scenery<null>({
       g.clip()
       drawDeepFront(g, v, t)
       g.restore()
-      // The dark closing in from the edges, and gathering below the deeper the frame is.
-      const deep = Math.max(0, Math.min(1, (v.cy - W - 1) / 4))
-      edgeDark(g, v, '#020B0E', (0.55 + 0.2 * deep) * under, 0.42, 0.12 + 0.12 * deep)
     }
+    // Above: the gulls, the spray, the sun through the cloud onto the deck, the cake's warmth (`topside.ts`).
+    drawTopside(g, v, t)
   },
 })

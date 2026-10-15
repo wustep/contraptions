@@ -97,7 +97,11 @@ export function drawUnder(p: p5, k: number, t: number): void {
     [1, SEA.abyss],
   ])
   g.fill()
+  // Everything under is kept under the skin's mean line: a plain rectangle, which costs nothing to keep to (the wavy
+  // skin itself as a clip would put a mask under every ray and speck).
   g.save()
+  g.beginPath()
+  g.rect(x0 * k, W * k, (x1 - x0) * k, (yb - W) * k)
   g.clip()
   // The far water: its rays, its snow, the school, a jellyfish (`deep.ts`).
   drawDeepBack(g, v, t)

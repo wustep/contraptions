@@ -103,7 +103,9 @@ function drawRain(g: CanvasRenderingContext2D, v: View, t: number): void {
     const i1 = Math.floor(inner.x1 / tw)
     const j0 = Math.floor(inner.y0 / th)
     const j1 = Math.floor(inner.y1 / th)
-    for (let n = 0; n < 24; n++) {
+    // Heavier in the showers out over the sea.
+    const count = Math.round(20 + 22 * fly)
+    for (let n = 0; n < count; n++) {
       const f = 1 + 0.25 * (2 * hash(n, 3, 71) - 1)
       const x = ((((hash(n, 1, 71) * tw + vx * f * t) % tw) + tw) % tw)
       const y = ((((hash(n, 2, 71) * th + vy * f * t) % th) + th) % th)
