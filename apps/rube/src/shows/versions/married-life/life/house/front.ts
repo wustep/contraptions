@@ -5,6 +5,7 @@ import { CARD_ZONE, CREDITS_AT, LAST_GONE, LIFT } from '../credits'
 import { AGE } from '../music'
 import { HOME, INK } from '../worlds'
 import { drawHouse, dusk, type Look } from './front-house'
+import { drawFar, farRow } from './far'
 import { ALONE, CHAIR_LIFT, darkAt, G, HALT, HOUSE, LAMPS, SHOVE, STAR, SWINGS, W } from './front-plan'
 
 /**
@@ -75,26 +76,7 @@ function sky(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
  * at dusk they go to one silhouette against the afterglow, darker than the sky over them, every window in them dark:
  * the one lit window in the picture is his.
  */
-const FAR: { x: number; w: number; h: number; roof: number; tree: boolean; chimney: number }[] = (() => {
-  const out: { x: number; w: number; h: number; roof: number; tree: boolean; chimney: number }[] = []
-  for (let i = -32; i <= 44; i++) {
-    const x = i * 0.85 + hash(i, 81) * 0.4
-    // A neighbour's house now and then, and here and there an old tree standing over the rest.
-    const house = hash(i, 82) < 0.36 && i % 2 === 0
-    const tall = !house && hash(i, 80) < 0.2
-    out.push({
-      x,
-      w: house ? 1.7 + hash(i, 83) * 0.9 : tall ? 1.0 + hash(i, 84) * 0.35 : 1.0 + hash(i, 84) * 0.7,
-      h: house ? 1.05 + hash(i, 85) * 0.6 : tall ? 2.1 + hash(i, 86) * 0.9 : 0.8 + hash(i, 86) * 0.8,
-      roof: 0.55 + hash(i, 87) * 0.35,
-      tree: !house,
-      chimney: hash(i, 88) < 0.5 ? 0.25 + hash(i, 89) * 0.4 : -1,
-    })
-  }
-  // Trees first, so each house stands whole in front of them (behind a tall tree a house was a chimney poking up
-  // beside it, a stray post in a close).
-  return out.sort((a, b) => Number(b.tree) - Number(a.tree))
-})()
+const FAR = farRow(-32, 44)
 
 function far(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
   if (f.y1 < G - 4) return
@@ -105,33 +87,7 @@ function far(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
   const sil = '#343B57'
   const tree = mixHex(treeDay, mixHex(sil, '#3C4A52', 0.35), dusky)
   const house = mixHex(houseDay, sil, dusky)
-  p.noStroke()
-  // The hedges and gardens they stand in: one low band under all of them, so no sky shows between their feet.
-  p.fill(tree)
-  p.rect((f.x0 - 1) * k, (G - 0.32) * k, (f.x1 - f.x0 + 2) * k, 0.34 * k)
-  for (const b of FAR) {
-    if (b.x + b.w < f.x0 - 1 || b.x - b.w > f.x1 + 1) continue
-    if (b.tree) {
-      p.fill(tree)
-      p.ellipse(b.x * k, (G - b.h * 0.42) * k, b.w * k, b.h * k)
-      p.ellipse((b.x + b.w * 0.28) * k, (G - b.h * 0.3) * k, b.w * 0.7 * k, b.h * 0.7 * k)
-    } else {
-      // A gabled house end-on to the street: its wall, its roof over it, a chimney.
-      const x0 = b.x - b.w / 2
-      const x1 = b.x + b.w / 2
-      const eave = G - b.h
-      const ridge = eave - b.roof
-      p.fill(house)
-      p.rect(x0 * k, eave * k, b.w * k, (G - eave) * k)
-      p.triangle((x0 - 0.12) * k, (eave + 0.02) * k, b.x * k, ridge * k, (x1 + 0.12) * k, (eave + 0.02) * k)
-      if (b.chimney > 0) p.rect((b.x + b.w * 0.18) * k, (ridge + b.roof * 0.25 - b.chimney) * k, 0.18 * k, (b.chimney + b.roof * 0.4) * k)
-      // Its windows and door, faint in the haze (a close sees a neighbour's wall, not a grey slab); dark at night.
-      p.fill(mixHex(house, dusky > 0.5 ? '#232A40' : '#EEF4F4', 0.32))
-      const ww = Math.min(0.32, b.w * 0.17)
-      for (const u of [-0.27, 0.27]) p.rect((b.x + u * b.w - ww / 2) * k, (eave + b.h * 0.22) * k, ww * k, b.h * 0.26 * k)
-      p.rect((b.x - 0.12) * k, (G - b.h * 0.42) * k, 0.24 * k, b.h * 0.42 * k)
-    }
-  }
+  drawFar(p, k, FAR, G, f.x0, f.x1, tree, house, mixHex(house, dusky > 0.5 ? '#232A40' : '#EEF4F4', 0.32))
 }
 
 /**

@@ -4,7 +4,7 @@ import { alpha, box, part, smooth, type Companion, type Ctx, type Pose } from '.
 import { AT, bar, beat, beatsIn, CUT, PIANO, SEAM } from '../music'
 import { HOME, INK } from '../worlds'
 import { drawBook } from '../props/book'
-import { INSIDE } from './inside'
+import { clearAt, INSIDE } from './inside'
 import { COCKED, FOOT, HIS, SLAMS, standing, TOUCHDOWN } from './jar-clock'
 import { clamp01, hermite, hopAt, inout, laneOf, pchip, settle } from './home-motion'
 
@@ -378,8 +378,8 @@ function bookAt(T: number): BookAt {
 const px = (p: p5, k: number, x0: number, y0: number, x1: number, y1: number, r = 0) => p.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k, r * k)
 
 /** How grey the yard is: greyed with the sky through the loss, back with the waltz. */
-// The grey lifts slowly as he goes out to her with the book, and is gone as the book opens.
-const greyAt = (T: number): number => smooth(T, B, B + 2) * (1 - smooth(T, 90, 101))
+// The grey lifts a little as he goes out to her with the book, and breaks as the book opens (the sky's `clearAt`).
+const greyAt = (T: number): number => smooth(T, B, B + 2) * (1 - clearAt(T))
 /**
  * The wind, blowing out from the house: it gusts with the piano through the loss. Each of its stronger notes is a
  * breath of wind that follows the note (gathering over half a second, dying away over two), so the sheet, the grass

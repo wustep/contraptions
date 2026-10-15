@@ -1,8 +1,9 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
-import { alpha, frame, scenery } from '../kit'
-import { AGE, CUT } from '../music'
+import { alpha, frame, scenery, smooth } from '../kit'
+import { AGE, AT, CUT } from '../music'
 import { HOME, INK } from '../worlds'
+import { drawFar, farRow } from '../house/far'
 import { drawPapers } from './papers'
 
 /**
@@ -69,19 +70,26 @@ export const INSIDE_SPAN = [-70, 70, -160, 30]
 /** The cells the set claims, [x0, y0, x1, y1] from its origin. */
 export const INSIDE_BOX: [number, number, number, number] = [-18, -13, 27, 3]
 
+/**
+ * How far the yard's grey has cleared, 0 to 1. The yard opens grey (the doctor's office ends cold, and the cut
+ * carries its light across); it lifts a third of the way as he goes out to her with the book, and the rest breaks on
+ * the waltz's return (`AT.book`), as the book opens: the light comes back with the music, not before it.
+ */
+export const clearAt = (t: number): number => 0.35 * smooth(t, 90, 99.6) + 0.65 * smooth(t, AT.book - 0.5, AT.book + 0.6)
+
 /** The sky over the yard and the roof: grey through the loss, clear with the book, warm with the late years. */
 function skyAt(t: number): string {
   const grey = '#C6CDD0'
-  // The yard opens grey (the doctor's office ends cold, and the cut carries its light across), and warms as the
-  // book comes out to her.
   if (t < CUT.doctor) return HOME.sky
-  if (t < 95) return grey
-  if (t < 101) return mixHex(grey, HOME.sky, (t - 95) / 6)
+  if (t < 101) return mixHex(grey, HOME.sky, clearAt(t))
   // The late years go pale; and on the evening of the tickets the sky past the front door warms to dusk, so the
   // porch is an evening outside, not a pale wall.
   const late = mixHex(HOME.sky, '#D9D3C4', Math.max(0, Math.min(1, (t - 140) / 12)))
   return mixHex(late, mixHex(HOME.dusk, '#D9A38C', 0.35), Math.max(0, Math.min(1, (t - 156) / 6)))
 }
+
+/** The gardens behind the house: the street's far side again, a row of its own, farther off and smaller. */
+const BEHIND = farRow(-150, 150, 0.5, 0.55, 16)
 
 function rect(p: p5, k: number, x0: number, y0: number, x1: number, y1: number): void {
   p.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
@@ -108,8 +116,19 @@ export const inside = scenery<null>({
     const Y1 = Math.min(f.y1, INSIDE_SPAN[3])
     if (X1 > X0 && Y1 > Y0) {
       p.noStroke()
-      p.fill(skyAt(t))
+      const sky = skyAt(t)
+      p.fill(sky)
       if (H.ground > Y0) p.rect(X0 * k, Y0 * k, (X1 - X0) * k, (Math.min(H.ground, Y1) - Y0) * k)
+      // Beyond the yard's end and past the porch, the gardens behind: the neighbours' trees and a roof or two, lower
+      // and hazier than the street's, in the sky's own light (grey through the loss, dusk on the evening of the
+      // tickets), so Ellie on her stump has distance behind her and not a wall of grey.
+      if (H.ground > Y0 && Y1 > H.ground - 2) {
+        const tree = mixHex(sky, mixHex(HOME.leaf, '#7D8A86', 0.35), 0.2)
+        const house = mixHex(sky, '#8E9BA8', 0.2)
+        const pane = mixHex(house, '#F4F6F4', 0.14)
+        if (H.backWall[0] > X0) drawFar(p, k, BEHIND, H.ground, X0, Math.min(X1, H.backWall[0]), tree, house, pane, 0.18)
+        if (X1 > H.frontWall[1]) drawFar(p, k, BEHIND, H.ground, Math.max(X0, H.frontWall[1]), X1, tree, house, pane, 0.18)
+      }
       p.fill(mixHex('#B09878', '#A08E78', age))
       if (Y1 > H.ground) p.rect(X0 * k, H.ground * k, (X1 - X0) * k, (Y1 - H.ground) * k)
       // The yard's grass: a band on the earth, and the lawn beyond the porch.

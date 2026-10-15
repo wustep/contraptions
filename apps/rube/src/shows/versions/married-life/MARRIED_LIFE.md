@@ -156,13 +156,18 @@ bass, on the one); Ellie, round, answers on the first pah.
 The doll's house cut open: the yard, the back door, the living room, the hall, the front door. There is no cut for
 83 s. Each room has its own paper (`inside/papers.ts`): the living room a faint warm stripe with rosebuds, the hall
 and the landing a dusty-rose trellis, the nursery small white stars; the living room and the hall are panelled to the
-chair rail. The papers fade with the years, and the nursery's once it is given up.
+chair rail. The papers fade with the years, and the nursery's once it is given up. Beyond the yard's end and past
+the porch are the gardens behind (`BEHIND`, the street's far side again, `house/far.ts`, lower and hazier): trees and
+a roof or two in the sky's own light, grey through the loss, dusk on the evening of the tickets, kept low behind her
+stump.
 
 - **The yard.** The office's cold light carries across the cut, which opens close on Carl at the back door, the
   office door become this one, and Ellie small on a tall stump far to his left in the grey yard, turned away; the camera
   settles slowly out to hold the distance between them. Carl watches from inside the back door through the piano alone.
   Nothing strikes, but the wind gusts with the piano: each of its stronger notes is a breath of wind a moment after
-  it, lifting the sheet on the line, the grass and the tree, and dying away. He leans into the bookcase, the adventure
+  it, lifting the sheet on the line, the grass and the tree, and dying away. The grey lifts a third of the way as he
+  goes out to her, and the rest breaks on the waltz's return as the book opens (`clearAt`): the light comes back with
+  the music. He leans into the bookcase, the adventure
   book tips onto him (a thick old book, a rounded spine, a strap), and he pushes out through the screen door and walks out to her at an
   even pace, round in front of the stump, the book passing under her, easing to a stop where she is looking. **On
   100.36, the waltz's return, the book opens** on his top: its top board swings over on the spine and comes down
@@ -247,8 +252,8 @@ chair rail. The papers fade with the years, and the nursery's once it is given u
   rolling with her (a ball that rolls back reads as play), down in a little over a second and a half, and is still,
   slumped (lower, wider: `slumpOf`), spent. No bounce. The strike is
   the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays there, and
-  its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets to give
-  her, lying on the slope as he passes. Struck, he straightens up out of the slope's lean and stands still for most
+  its lid jolted open, the two tickets slip out onto the straw by it, the surprise he never gets to give
+  her, lying there as he passes, and left with the basket out of the close. Struck, he straightens up out of the slope's lean and stands still for most
   of a second, watching her go, so she is seen
   to fall first; then on the next strong note (175.409, the one the basket tips over on) he bolts down after her, faster than he has gone in years, up out of the slope's lean and
   into the run (`RUN`, `runTilt`: tilted with the slope, a square going downhill
@@ -944,6 +949,17 @@ window.
   - Looked at on a phone held upright (the rooms papered to their edges, the far row only along the horizon) and under
     Zoom (the gallery whole at its close, the crest's photograph alone over them). The share card rebuilt (the card
     path reproduces main's card exactly before the change). No strike, timing or camera key changed.
+
+- **Craft pass, round 5 (Opus 5.5).** Watched end to end as a viewer, one to three changes a round, adding weighed
+  against cutting.
+  - *Round 1.* The yard was the one outside with nothing behind it, a slab of grey behind Ellie through the piano
+    alone; it now has the gardens behind (`BEHIND` in `inside.ts`, the street's far row moved to `house/far.ts` and
+    shared; the street draws exactly as before), a row picked so nothing stands up behind her stump. Its grey cleared
+    on a straight line from 95 s and was mostly gone before the waltz came back; now a third lifts with his walk out
+    (from 90 s, as before) and the rest breaks on the return, as the book opens (`clearAt`). Cut: the spilled tickets
+    sat half in at the left edge of the close on the two of them after her fall, the brightest thing in the frame;
+    they now stay by the basket, seen as he runs past and out of the close. The storm's wide draws about 0.4 ms more
+    (headless).
 
 ## Known limits
 
