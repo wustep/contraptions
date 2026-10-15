@@ -2,6 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { alpha, frame, scenery, smooth } from '../kit'
 import { cue } from '../music'
 import { airAt } from './daylight'
+import { RIM_R } from './station'
 
 /**
  * Cooper Station's near layer: what hangs in the air between the camera and the ring, faster than the world. Drawn
@@ -50,6 +51,10 @@ export const stationNear = scenery<NearState>({
     const air = airAt(t, lit)
     const near = (q: Pt): Pt => [f.cx + (q[0] - f.cx) * NEAR, f.cy + (q[1] - f.cy) * NEAR]
     ctx.save()
+    // Only in the station's air: from outside, in the whole-station shots, a wisp over the dark read as a scratch.
+    ctx.beginPath()
+    ctx.arc(X(ax), X(ay), X(RIM_R), 0, Math.PI * 2)
+    ctx.clip()
     if (clear > 0.01) {
       ctx.fillStyle = alpha(p, '#FFFFFF', 0.26 * lit * clear).toString()
       for (const w of WISPS) {
