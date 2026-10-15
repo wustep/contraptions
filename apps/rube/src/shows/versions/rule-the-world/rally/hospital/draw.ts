@@ -237,8 +237,7 @@ function drawWardWindow(pen: Pen, t: number, f: Frame): void {
     roofs(pen, L, 0.45, { tanks: 0.45, chimneys: 0.4, tall: 0.06, seed: 53, dark: true })
     // The Third Avenue line, nearer, over the roofs at the foot of the window: a train across it as they lie together.
     el(pen, { ...L, s: 1.55, base: L.base + 0.08 }, 0.55, { phase: 4.92, every: 6.5, dir: -1 })
-    snow(pen, L, 0.6, 611, 1.5)
-    snow(pen, L, 1.2, 612, 0.85, 1.4)
+    snow(pen, L, 0.6, 611, 1.5, 0.6)
     birds(pen, L, 0.4, [0.75, -1.58])
     wardPigeons(pen, t)
     lookIn(pen)
@@ -314,8 +313,7 @@ function drawCorridorWindow(pen: Pen, t: number, f: Frame): void {
     roofs(pen, L, 0.3, { tanks: 0.35, chimneys: 0.4, tall: 0.38, seed: 57, wash: 0.35 })
     birds(pen, L, 0.5, [-6.0, -1.85], 6)
     wing(pen, L, 0.7, -1.25)
-    snow(pen, L, 0.8, 613, 1.5)
-    snow(pen, L, 1.2, 614, 1.0, 1.4)
+    snow(pen, L, 0.8, 613, 1.5, 0.6)
     // The glass, and the morning's haze in the court, so that the view stays back behind the room.
     const veil = ctxOf(pen.p)
     veil.save()
