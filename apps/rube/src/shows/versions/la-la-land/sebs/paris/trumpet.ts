@@ -9,8 +9,8 @@ import { drawDark, FLARE, HANDOFF, HOP_UP, KNOCK, miaAt, seat, SHIVER, VALVE_T }
  * dark but for one spot from the vault on the trumpet, high on its stand
  * over the see-saw; the two of them sit on its two ends at the edge of the
  * light, a balance. The valves go down on the solo's notes by themselves,
- * and the bell lifts with its high notes and bows with its low ones; a few
- * motes turn in the beam, and each phrase it plays goes out of the bell as a thread of light, at the height of its
+ * and the bell lifts with its high notes and bows with its low ones;
+ * and each phrase it plays goes out of the bell as a thread of light, at the height of its
  * notes, drifting up into the dark and fading (`drawSolo`). In each of the solo's breaths she inches in along
  * her end toward him, and the beam leans his way a little more. Its high
  * accents set the hi-hat's open cymbal shivering at the edge of the light;
