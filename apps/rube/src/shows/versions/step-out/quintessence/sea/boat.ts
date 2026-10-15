@@ -207,6 +207,8 @@ function hullDetail(g: C2, k: number, x0: number, w: number, t: number, wet: num
   }
   g.fillStyle = '#1A2124'
   g.fill(tyres)
+  // The sea's light thrown up onto the side: broken ripples of pale light, brightest by the water, always moving.
+  waterLight(g, k, x0 + 0.08, x0 + len - 0.3, D + 0.1, w - 0.04, t, '#D6EBE6', 0.24)
   if (wet > 0.01) {
     // The water running out of the scuppers: a thin fall from each, wavering, drops off its end.
     const fall = new Path2D()
@@ -225,11 +227,42 @@ function hullDetail(g: C2, k: number, x0: number, w: number, t: number, wet: num
   }
 }
 
+/**
+ * Light off the water, playing on whatever stands over it between `y0` and `y1`: rows of short ripples, each row
+ * sliding at its own pace, thicker and brighter toward the water (`y1`), all in one path.
+ */
+function waterLight(g: C2, k: number, x0: number, x1: number, y0: number, y1: number, t: number, colour: string, alpha: number): void {
+  const span = x1 - x0
+  const rows = Math.max(3, Math.round((y1 - y0) / 0.08))
+  for (const [lo, a] of [[0, 0.6], [0.5, 1]] as const) {
+    const ripples = new Path2D()
+    for (let r = 0; r < rows; r++) {
+      const f = (r + 0.5) / rows
+      if (f < lo || f >= lo + 0.5) continue
+      const y = y0 + (y1 - y0) * f
+      const pace = 0.35 + 0.22 * ((r * 7) % 5) / 5
+      for (let i = 0; i < 14; i++) {
+        const u = (((i * 0.618 + r * 0.29 + t * pace * (r % 2 ? 1 : -0.7) / span) % 1) + 1) % 1
+        const len = (0.16 + 0.26 * ((i * 13 + r * 5) % 7) / 7) * (0.5 + 0.5 * Math.sin(t * 2.3 + i * 1.7 + r))
+        if (len < 0.04) continue
+        const x = x0 + u * span
+        const yy = y + 0.015 * Math.sin(t * 3.1 + i + r * 0.8)
+        ripples.moveTo((x + len / 2) * k, yy * k)
+        ripples.ellipse(x * k, yy * k, (len / 2) * k, (0.008 + 0.012 * f) * k, 0, 0, Math.PI * 2)
+      }
+    }
+    g.fillStyle = rgba(colour, alpha * a)
+    g.fill(ripples)
+  }
+}
+
 /** The wheelhouse's own: a porthole in its door, a life ring on its side, and the radar on its roof turning. */
 function houseDetail(g: C2, k: number, x0: number, w: number, t: number): void {
   const { house, deckBack } = BOAT
   const DB = w + deckBack
   const hx = x0 + house.x0
+  // On the white house the water's light shows only as its shimmer: faint sea-coloured ripples wavering up its front.
+  waterLight(g, k, hx + 0.05, x0 + house.x1 - 0.05, w + house.top + 0.75, DB - 0.05, t, '#6F9496', 0.16)
   // The door at the house's after end, its porthole.
   g.fillStyle = '#C9CFCD'
   g.fillRect((hx - 0.02) * k, (w + house.top + 0.85) * k, 0.02 * k, (DB - w - house.top - 0.85) * k)
