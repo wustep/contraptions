@@ -22,8 +22,9 @@ Every rally in the show puts the bats on the beats and the bounces on the shuffl
 
 ## The film, in seven places
 
-One ball on one path. Every change of place is a match cut on Marty at rest: the camera carries his place on the
-screen across, so he holds still while the world round him becomes somewhere else (`rally/seams.ts`).
+One ball on one path. Every change of place is made on Marty at rest: the camera carries his place on the screen
+across, so he holds still while the world round him becomes somewhere else (`rally/seams.ts`), and the next place
+blooms open out of him in a ring of its own light (`rally/bloom.ts`, see the fullness pass).
 
 | Show time | Bars | Place | What happens |
 | --- | --- | --- | --- |
@@ -33,11 +34,13 @@ screen across, so he holds still while the world round him becomes somewhere els
 | 121.018 | 57–64 | **The bowling alley** (`alley/`) | As the band drops out: Queens after midnight, and a table in the back for money games. Wally holds the stakes. The hustle: the first point thrown on purpose (the bets go up), then every beat a bat; the winner flies off the table down a lane into all ten pins, the marks' hats come off, Marty rides the ball return back under the floor and pops out of its hood, and rolls along the curb behind Wally's cab to drop in over its trunk. |
 | 138.142 | 65–82 | **New Jersey** (`jersey/`) | As the guitar comes in: the same cab, now on a night road, Rachel beside him on the seat. The farmhouse, Mishkin's men, white bursts at a window; a lantern into the hay and the barn on fire through the solo; Rachel hurt, an ambulance's red light on the beats, the doors close on her. "I can't stand this indecision": across the dark field toward the airfield, back toward the ambulance's tail lights, and across again; up the stair a step a beat, to the round window. |
 | 176.689 | 83–94 | **Tokyo** (`tokyo/`) | On "Everybody wants to rule the -", broken off: the exhibition he is meant to throw, one table under one lamp in a packed arena, GIs in a block of the stands. He stamps and the house lights come up; on "never, never, never, never" the real match, all sixteen beats bats and all sixteen shuffles bounces; the winning smash on the "Everybody" (bar 89, the camera punches in), caps in the air, streamers, flash bulbs. Then quiet: Endo picks him off the floor, sets him on the end line, bows, and the lights go down to the one lamp. |
-| 202.391 | 95–end | **The ward** (`hospital/`) | On "All for freedom and for pleasure": the foot of Rachel's bed at dawn; he rolls up to her, a warm glow between them, and goes down the corridor's checkerboard. On the last "Everybody wants to rule the world" (bar 99) he lands on the nursery window's sill and the blind goes up: his son, in the nursery's one warm light, the other babies asleep. The nurse lifts him right up to the glass beside Marty, Marty trembles on the beats. Under the credits the hall's light goes down round the lit window and the camera pushes in slowly on the two of them, and holds. |
+| 202.391 | 95–end | **The ward** (`hospital/`) | On "All for freedom and for pleasure": the foot of Rachel's bed at dawn; he rolls up to her, a warm glow between them, and goes down the corridor's checkerboard. On the last "Everybody wants to rule the world" (bar 99) he lands on the nursery window's sill and the blind goes up: his son, in the nursery's one warm light, the other babies asleep. The nurse lifts him right up to the glass beside Marty, Marty trembles on the beats. Under the credits the camera comes away from the glass and finds the ward is the top floor of a building cut open, every floor a place he has been, in a city at dawn; the light of his path runs up through it a room a beat on the song's last two bars and comes to him on the last beat (`rally/finale.ts`), and the camera pushes in slowly on him at the glass, and holds. |
 
 The camera is authored (holds, follows and a few cuts on strikes), punches in on the tub, the winning point and each place's big shots (`<PLACE>_PUNCHES`), and
-whips nowhere. Over every place lies a soft vignette (`rally/vignette.ts`), baked once per canvas size so that a software
-canvas pays one plain draw for it; the 35 mm grain that once lay with it is gone (see the dynamic pass).
+whips nowhere; over it lies a lens that leans in on Marty before each seam and opens out after it, and floats a few
+thousandths of the frame throughout (`rally/score.ts`). Over every place lie Marty's own light, a grade for each
+section (`rally/fx.ts`) and a soft vignette (`rally/vignette.ts`), baked once per canvas size so that a software canvas
+pays one plain draw for it; the 35 mm grain that once lay with it is gone (see the dynamic pass).
 
 ## The clock
 
@@ -55,7 +58,7 @@ story's four fixed moments are `LOSS`, `CRASH`, `WIN` and `SON`.
 shuffle or a measured onset; the turns struck (the bass in, "Welcome", each hook, the lost point, the tub, the break,
 the guitar, the broken line, the winning point, "All for freedom", his son); the matches striking most of their beats
 (the Tokyo match all of them); the camera never whipping, cutting only on strikes, and keeping Marty findable and in
-the Zoom frame; Rachel only in the store, New Jersey and the ward, the baby only in the ward and small, neither ever
+the Zoom frame, its wides few before the credits and the crane out over them the one wide after; Rachel only in the store, New Jersey and the ward, the baby only in the ward and small, neither ever
 jumping or popping in shot; Marty orange throughout; the YouTube-only soundtrack; and the credits.
 
 ## How it was made
@@ -144,3 +147,83 @@ winning smash cuts in close on his bat as it fires, with the gallery's arms goin
 hall. The final's last bar is cut close on every stroke, his bat and then Endo with Kay watching behind him. Endo's
 dead shot is seen in close on his sponge, and the camera then goes low on Marty's end as the ball dies short, his bat
 swings over it, and the ball rolls off the end to the floor.
+
+## The fullness pass
+
+Then a pass the other way from the subtractions, on a brief to make the show fuller and more spectacular: fill every
+frame, give every shot a foreground, a middle and a distance moving at their own speeds, let no second stand still,
+light it like a colourist, build in scale so the last third is the densest, make every change of place an event,
+move the camera, and make an ending a gallery would stop for; at sixty frames a second, with the matches still the
+matches, no grain, and the song as it was.
+
+It was audited at ten frames spread evenly over the show. Six of them were more than a third empty or static: the
+office round the safe, the hotel room's wallpaper, the fire escape and the street (the emptiest frames in the middle
+of the show), the night road under an empty sky, the airfield, and the ward under the credits, two thirds pale wall.
+
+**The kit.** `rally/depth.ts` holds what every place shares: parallax layers (a layer at depth `d` drifts `d` times as
+fast as the machine past the frame, so a skyline at 0.2 hangs back and a front row at 1.35 slides by), dust in the
+light, rain, rising embers and steam, falling confetti, light shafts, added bloom and soft shade, flicker and sway,
+and the beat as a pulse; every cloud of particles is batched into a few fills, and all of it is a pure function of
+show time, so a still or a seek is the same frame as playback.
+
+**The places.** Each was filled to its own brief, more as the song goes on:
+
+- *The store:* the street through the window in layers (the last stars, the skyline, the Williamsburg Bridge, rooftops
+  and chimney smoke, the tenements still waking a window a beat, snow and manhole steam), a milk truck and a cab whose
+  lights cross the wall of boxes, the store cat in the window; lamps that swing on after they click on, dust in every
+  cone, a moth at the stockroom's bulb; in the office Murray's lamp, a cigarette's smoke, a pendulum clock on the beat,
+  and blind-slat light that headlamps and the El sweep across the wall.
+- *London:* rain on the glass roof and the fifteen windows over London's roofs; trusses, banners and bunting in the
+  draught; gangways onto the next hall, where the early rounds go on in miniature and then crowd in to watch the final;
+  a press box whose flashes quicken toward the final and hold their breath for the dead shot; ball boys, pigeons,
+  breath in the cold; and a front row along the bottom of the frame that follows the ball and slumps at the loss.
+- *The hotel:* its light an arc from sick yellow to moonlight to wet teal and sodium. A sash window on the night, the
+  El's windows sweeping the wallpaper, moths, the tap on the beats; the moon sliding out as the bulb goes; plaster
+  dust after the crash; and the street filled with rain at two depths, lit windows, a billboard, washing in an
+  airshaft, steam, headlights and puddle rings, and a cat on the fire escape that flinches at each pound on the rail.
+- *The alley,* the show's first neon: the main floor through the back wall with three late bowlers bowling on, fans,
+  smoke in layers, a stuttering beer sign, beer bubbles; a strike that explodes; outside, wet reflections and spray.
+- *New Jersey:* a moon and clouds, three ranges of hills in parallax with a lit train in the valley, poles and fences
+  going by; the fire's embers in hundreds, its plume lit from below and its sparks on the solo's big notes, the
+  ambulance's beacon turning; at the airfield a tower beacon that turns half a turn a bar, searchlights, a windsock, a
+  twin taxiing, runway lights chasing on the beats, mist, and the barn still burning on the horizon.
+- *Tokyo,* the most: an upper tier and the roof's truss, a scoreboard in pips that takes his eleventh, lanterns, flags
+  and fans; six spotlights that meet on the table on every beat, cross between and lock on his bat for the winner; a
+  wall of flash bulbs; confetti and streamers that go on falling through the quiet; a front row on its feet.
+- *The ward:* a city waking outside every window (towers, chimney smoke, the El, pigeons that lift off as the sun
+  clears the roofs, snow, lit gold), a new window on the far wing where a nurse and an orderly pass, dawn going grey to
+  rose to gold in shafts and dust, morning light dappling the walls as leaves move outside, a ticking clock, Rachel's
+  drip, the nursery's mobile turning and the babies breathing.
+
+**The blooms.** Every seam is now an event (`rally/bloom.ts`). For two beats before it the place he is leaving gathers
+in on him, its edges going down and a glow of the next place's colour coming up round him; on the downbeat the next
+place bursts out of him in a ring of its own light, and the place being left, drawn live from its own pieces outside
+the ring, is pushed out past the lens and goes dark as the ring opens: paper white into London, the hotel's sick
+yellow, neon into the alley, headlights into the night, flash-bulb white and bunting red into Tokyo (through the
+airliner's round window), and dawn. The lens leans in on him over the bar before and opens out over the bars after,
+about where he is on the screen, so the match on him is exact and the checks still hold it.
+
+**The light.** Marty carries a little light of his own, strongest in the dark places. Each section has its own grade,
+laid in soft light from the top of the frame to the bottom with two slow leaks of light round the edges (`rally/fx.ts`):
+amber in the store, steel and teal in London, yellow-green to moon blue to wet teal in the hotel, magenta over teal in
+the alley, night blue over fire in New Jersey, white over red in Tokyo flaring gold on the winner, and dawn in the
+ward; it is laid harder as the song builds.
+
+**The finale** (`rally/finale.ts`). Under the credits the camera comes away from the glass, and keeps coming: the ward
+is the top floor of a building cut open like a doll's house, three floors of three, and every other room is a place he
+has been, painted by the show's own stage at its moment (`rally/snap.ts`; Marty and the company left out). It stands in
+a city at dawn, the sun coming up behind it, clouds going over, searchlights in the sky, the El and the cabs at its
+foot. The building is dark as the camera finds it; on the song's last two bars the light of his path runs up through
+it, bounce by bounce and up the pipes on its sides, a room a beat (as the windows across the street from the store
+woke a beat apiece), each room's lights coming on as it passes, and comes to him at the glass on the song's last beat.
+Then every room runs, playing its stretch of its place over and over at ten frames a second (a diorama's pace), a
+bead of light leaves the store every half bar and runs all the way up to him, rings of his orange go out from him at
+the glass, and through the quiet after the song the camera pushes slowly in on him there, the building still whole.
+The rooms are painted ahead in the page's idle time from the show's first frame, so no frame pays for one. The check
+counts the wides before the credits, and holds the crane out as the one wide after them.
+
+**Measured.** In Chrome (headed, vsync, 3024 × 1800, the whole show at 1×) the show holds 60 frames a second before and
+after: 3 frames of 15,951 over 20 ms (8 of 15,956 before), the paint on the main thread 1.8 ms a frame on average,
+4.3 ms at the 95th percentile and 13.5 ms at worst (1.1, 2.1 and 4.5 before); the finale, the heaviest stretch, paints
+in 3.8 ms on average. With the camera held still between two frames 0.2 s apart, so that only what moves in the
+picture counts, the share of essentially still frames in the last third fell from 63% to 15%.
