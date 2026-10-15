@@ -89,6 +89,10 @@ export const DOOR: Pt = [(ROOM.wallL0 + ROOM.wallL1) / 2 + 0.5, ROOM.floor - 0.1
 export const HOUSE_DOWN: [number, number] = [12.35, 15.0]
 /** At the end: the dream's rose drains out of the light; the band's lamps; the band. */
 export const ROSE_OUT: [number, number] = [451.5, 453.73]
+/** The dream's kiss at her table: they lean in, touch, and he leaves her side as the dream drains. */
+export const LEAN = 446.938
+export const KISS = 450.107
+export const LEAVE = 451.53
 export const BAND_LAMPS = 471.546
 export const BAND = 478.052
 
@@ -601,11 +605,21 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.strokeWeight(weight * 0.7)
   p.line(X(R.wallL0 - 0.12), X(R.roof - 0.02), X(R.wallR1 + 0.12), X(R.roof - 0.02))
   glow(p, k, R.wallL1 + 0.1, 2.45, 0.9, L.warm, 0.12 * L.house, 0.6, 1)
-  // The doorway through the wall, dark, and the door in it: shut, or swung out onto the street on its closer.
-  p.noStroke()
-  p.fill(M.lacquer)
-  rect(R.wallL0 + 0.02, R.doorTop, R.wallL1 - 0.02, R.floor)
+  // The doorway through the wall, and the door in it: shut, or swung out onto the street on its closer. Open, it is
+  // the night outside, dark at its head and the street's light low in it, and the neon's blue lies on the threshold
+  // and on whoever stands in it.
   const open = doorAt(t, s.end)
+  {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const night = ctx.createLinearGradient(0, X(R.doorTop), 0, X(R.floor))
+    night.addColorStop(0, M.lacquer)
+    night.addColorStop(1, mixHex(M.lacquer, DRIVE_MAT.neon, 0.3))
+    p.noStroke()
+    p.fill(M.lacquer)
+    ctx.fillStyle = night
+    rect(R.wallL0 + 0.02, R.doorTop, R.wallL1 - 0.02, R.floor)
+    if (open > 0.01) glow(p, k, (R.wallL0 + R.wallL1) / 2, R.floor - 0.1, 0.8, DRIVE_MAT.neon, 0.22 * open, 1.25, 0.85)
+  }
   const dw = (R.wallL1 - R.wallL0) * Math.cos(open * Math.PI / 2)
   if (dw > 0.01) {
     solid(p, ink, weight * 0.6, M.velvet)
@@ -780,11 +794,40 @@ function drawSpot(p: p5, k: number, t: number): void {
   }
 }
 
+/**
+ * The dream's kiss, at the end: as they lean in over her table the room goes down round them to one pool of its rose
+ * light on the two of them, the way a pool of light found her there at the start; it lets them go as he leaves her.
+ */
+function drawPool(p: p5, k: number, t: number): void {
+  const u = smooth(t, LEAN - 1.6, LEAN + 0.6) * (1 - smooth(t, LEAVE, LEAVE + 0.9))
+  if (u < 0.01) return
+  const L = lightsAt(t, true)
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // One gradient, filled once over the picture (close in, it is the whole canvas): the warm light on them at its
+  // middle, clear round them, and the dark beyond.
+  const cx = TABLE.x
+  const cy = TABLE.top - 0.33
+  const R = 2.0
+  const warm = mixHex(L.warm, M.ivory, 0.25)
+  const g = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, R * k)
+  g.addColorStop(0, rgba(warm, 0.3 * u))
+  g.addColorStop(0.2 / R, rgba(warm, 0.2 * u))
+  g.addColorStop(0.55 / R, rgba(L.warm, 0.06 * u))
+  g.addColorStop(0.7 / R, rgba(M.lacquer, 0))
+  g.addColorStop(1, rgba(M.lacquer, 0.72 * u))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+  ctx.restore()
+}
+
 export const clubRoom = scenery<ClubRoom>({
   name: 'club-room',
   draw: (p, s, c) => {
     drawRoom(p, s, c.k, c.ink, c.bg, c.weight, c.t)
     if (!s.end && c.t < 40) drawSpot(p, c.k, c.t)
+    if (s.end && c.t > LEAN - 1.6 && c.t < LEAVE + 0.9) drawPool(p, c.k, c.t)
   },
   over: (p, s, c) => drawOver(p, s, c.k, c.ink, c.weight, c.t),
 })

@@ -5,7 +5,7 @@ import { AT, END_AT, level } from './music'
 import { MIA, NIGHT_MAT, SEBS_MAT } from './worlds'
 import { picture } from './lens'
 import { insideRoom } from './club/room'
-import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, JOIN, KINDLED } from './night/stars'
+import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, KINDLED } from './night/stars'
 import { drawPianoFigure } from './piano-figure'
 import { DIP, POLE, skyAngle } from './night/painted-waltz'
 
@@ -71,8 +71,8 @@ const LIGHTS = Array.from({ length: 1400 }, (_, i) => {
 /**
  * Theirs: the constellation the melody lit round the two of them among the stars, as it stood at the dip, found
  * again in the sky over the city at the end. On The End's swell its stars come out one by one in the order they
- * were lit, each joined to the one it was joined to then, in the night's gold among the city's cool stars: high on
- * the right, clear of the credits. In the piano's frame.
+ * were lit, in the night's gold among the city's cool stars: high on the right, clear of the credits. In the piano's
+ * frame.
  */
 const THEIRS_SCALE = 2.15
 const THEIRS_PTS = (() => {
@@ -80,7 +80,7 @@ const THEIRS_PTS = (() => {
   return KINDLED.map((q) => [q.local[0] * Math.cos(a) - q.local[1] * Math.sin(a), q.local[0] * Math.sin(a) + q.local[1] * Math.cos(a)] as Pt)
 })()
 const THEIRS_C: Pt = [THEIRS_PTS.reduce((s, q) => s + q[0], 0) / THEIRS_PTS.length, THEIRS_PTS.reduce((s, q) => s + q[1], 0) / THEIRS_PTS.length]
-export const THEIRS = THEIRS_PTS.map(([x, y], i) => ({ x: 21.5 + (x - THEIRS_C[0]) * THEIRS_SCALE, y: -25.5 + (y - THEIRS_C[1]) * THEIRS_SCALE, size: KINDLED[i].size, join: i ? JOIN[i] : -1 }))
+export const THEIRS = THEIRS_PTS.map(([x, y], i) => ({ x: 21.5 + (x - THEIRS_C[0]) * THEIRS_SCALE, y: -25.5 + (y - THEIRS_C[1]) * THEIRS_SCALE, size: KINDLED[i].size }))
 /**
  * And the figure the planetarium drew round them at the dip, the grand piano, found again round their stars over the
  * city: where it stood against them then, as big against them as it was. It draws on once the last of theirs has
@@ -280,21 +280,9 @@ export const city = scenery<CityState>({
     }
     starDots.fill(ctx)
     if (s.end && t > THEIRS_AT[0] - 0.1) {
-      // Theirs, coming out over the city: each star with a flare as it comes, then the line back to its neighbour.
+      // Theirs, coming out over the city: each star with a flare as it comes; then the piano drawn round them.
       const at = (i: number): Pt => [THEIRS[i].x + sx, THEIRS[i].y + sy]
       ctx.lineCap = 'round'
-      for (let i = 1; i < THEIRS.length; i++) {
-        const u = smooth(t, THEIRS_AT[i] + 0.1, THEIRS_AT[i] + 0.9)
-        if (u <= 0) continue
-        const [x0, y0] = at(THEIRS[i].join)
-        const [x1, y1] = at(i)
-        ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.3 * u)
-        ctx.lineWidth = Math.max(0.6, 0.8 * px)
-        ctx.beginPath()
-        ctx.moveTo(x0 * k, y0 * k)
-        ctx.lineTo((x0 + (x1 - x0) * u) * k, (y0 + (y1 - y0) * u) * k)
-        ctx.stroke()
-      }
       THEIRS.forEach((q, i) => {
         const since = t - THEIRS_AT[i]
         if (since < 0) return
@@ -455,10 +443,13 @@ export const city = scenery<CityState>({
     basin.addColorStop(1, SEBS_MAT.deep)
     ctx.fillStyle = basin
     ctx.fillRect((fr.x0 - 1) * k, (HORIZON + lift(0.45) + 0.4) * k, (fr.x1 - fr.x0 + 2) * k, (STREET - HORIZON + 2) * k)
-    // Through The End's swell the whole city brightens with the music.
-    const swellLight = s.end ? 1 + 0.45 * smooth(t, SWELL - 2, SWELL + 3) * level(t) : 1
+    // Through The End's swell the whole city brightens with the music: its lights, and the glow of them on the air
+    // over it, which warms with the orchestra, holds through the last chord, and settles as it dies away, so the last
+    // seconds of silence are the city as it was.
+    const swell = s.end ? smooth(t, SWELL - 6, SWELL + 1) * level(t) : 0
+    const swellLight = 1 + 0.7 * swell
     // The city's own glow on the air over it.
-    glow(p, k, VANISH + slide(0.25), HORIZON + 0.8 + lift(0.25), 26, '#C9795E', 0.16, 1.6, 0.28)
+    glow(p, k, VANISH + slide(0.25), HORIZON + 0.8 + lift(0.25), 26, '#C9795E', 0.16 + 0.26 * swell, 1.6, 0.28 + 0.08 * swell)
     const lamps = batch()
     for (const b of BOULEVARDS) {
       for (let j = 1; j <= b.n; j++) {
@@ -472,7 +463,7 @@ export const city = scenery<CityState>({
         const y = HORIZON + (STREET - 0.6 - HORIZON) * Math.pow(near, 1.6) + lift(dd)
         if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1) continue
         const tw = 0.8 + 0.2 * Math.sin(t * 0.6 + j * 0.7 + b.ph)
-        lamps.dot('#F7C779', (0.45 + 0.4 * near) * tw * fade, x * k, y * k, Math.max(0.6, 0.045 * (0.5 + 1.5 * near) * k))
+        lamps.dot('#F7C779', (0.45 + 0.4 * near) * tw * fade, x * k, y * k, Math.max(0.6, Math.min(0.045 * (0.5 + 1.5 * near) * k, 2.6 * px)))
       }
     }
     for (const l of LIGHTS) {
@@ -483,8 +474,10 @@ export const city = scenery<CityState>({
       const y = HORIZON + (STREET - 0.6 - HORIZON) * Math.pow(near, 1.6) + lift(dd)
       if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1) continue
       const tw = 0.6 + 0.4 * Math.sin(t * (0.8 + l.d) + l.ph)
+      // Sized in cells, as the stars are, but the lights are miles off: close by the club's door they would swell into
+      // discs, so they keep a ceiling in pixels of a 540-line frame, as the stars keep a floor.
       const r = (l.big ? 0.06 : 0.032) * (0.55 + 1.4 * near)
-      lamps.dot(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near) * swellLight, x * k, y * k, Math.max(0.5, r * k))
+      lamps.dot(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near) * swellLight, x * k, y * k, Math.max(0.5, Math.min(r * k, (l.big ? 3 : 1.8) * px)))
     }
     lamps.fill(ctx)
 

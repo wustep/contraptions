@@ -335,18 +335,6 @@ function throwStars(p: p5, k: number, T: number): void {
   }
 }
 
-/** For each star after the first, the star it is joined to: the nearest of those lit before it (the sky turns them all
- * together, so the nearest in its own frame is the nearest in the picture). */
-export const JOIN: number[] = KINDLED.map((q, i) => {
-  let best = 0
-  let bd = Infinity
-  for (let j = 0; j < i; j++) {
-    const d = Math.hypot(q.local[0] - KINDLED[j].local[0], q.local[1] - KINDLED[j].local[1])
-    if (d < bd) { bd = d; best = j }
-  }
-  return best
-})
-
 /** How far the piano figure is drawn at `T`: a share of its outline for each star lit, whole (1) and then its keys (to
  * 1.4) through the dip. */
 export function figureDraw(T: number): number {
@@ -387,30 +375,6 @@ export const stars = part<StarsState>(
       projectorBeams(p, k, T)
       drawProjector(p, k, c.ink, c.weight, T, false)
       throwStars(p, k, T)
-      // The constellation they make: each star the melody lights is joined to the nearest of the stars already lit, the
-      // line drawing out from it to the new one as it lights, so the sky gathers one branching figure round them as
-      // the waltz goes on, its lines short and none across another.
-      // It turns with the sky, and goes with the projector's lamps when the lights go.
-      {
-        const ctx = p.drawingContext as CanvasRenderingContext2D
-        const fade = 1 - smooth(T, DARK[0], DARK[0] + 0.6)
-        ctx.save()
-        ctx.lineCap = 'round'
-        ctx.lineWidth = Math.max(0.6, 0.014 * k)
-        for (let i = 1; i < KINDLED.length; i++) {
-          const q = KINDLED[i]
-          const u = smooth(T, q.at, q.at + 0.7)
-          if (u <= 0 || fade <= 0) continue
-          const [x0, y0] = inSky(KINDLED[JOIN[i]].local, T)
-          const [x1, y1] = inSky(q.local, T)
-          ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.22 * fade)
-          ctx.beginPath()
-          ctx.moveTo(x0 * k, y0 * k)
-          ctx.lineTo((x0 + (x1 - x0) * u) * k, (y0 + (y1 - y0) * u) * k)
-          ctx.stroke()
-        }
-        ctx.restore()
-      }
       // The planetarium draws the figure its stars make, as a planetarium does: in fine gold line round the two of them,
       // a grand piano. Held through the touch; it goes with the lamps.
       {

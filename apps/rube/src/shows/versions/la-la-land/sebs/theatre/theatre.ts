@@ -1274,6 +1274,8 @@ export function emptyAt(t: number): number {
   return up * up * back * flicker
 }
 
+/** How much of the stage's light reaches each row's backs, the front row (nearest the stage) first. */
+const ROW_LIGHT = [1, 0.58, 0.36, 0.2]
 function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stage: number): void {
   const empty = emptyAt(t)
   const { k, ink, weight } = c
@@ -1292,7 +1294,12 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
   const shut = Math.max(last.ago < Infinity ? Math.exp(-last.ago / 0.09) : 0, next < Infinity ? soft(1 - (next - t) / 0.1) : 0)
   for (let r = 0; r < ROW_Y.length; r++) {
     const base = ROW_Y[r]
-    // The glow of the stage on the backs of the front rows.
+    // The stage's light on the backs of the house falls off row by row away from it, so the rows nearest us are dark
+    // shapes against the lit ones and the house has depth, not a pattern; with the house lights up, it fills back in.
+    const lit = ROW_LIGHT[r] + (1 - ROW_LIGHT[r]) * warm
+    const rowFill = mixHex(fill, bg, 0.45 * (1 - lit))
+    const rowRim = mixHex(rim, bg, 0.7 * (1 - lit))
+    const rowPaddle = mixHex(paddle, bg, 0.88 * (1 - lit))
     for (const st of s.seats) {
       if (st.r !== r) continue
       const up = risen(t - st.up)
@@ -1309,16 +1316,16 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
         p.fill('#1A0A0E')
         p.circle(st.x * k, hy * k, 2 * hr * k)
         p.noFill()
-        p.stroke(alpha(p, M.bulb, 0.45 + 0.4 * Math.min(1, stage) + 0.15 * warm))
+        p.stroke(alpha(p, M.bulb, (0.4 + 0.35 * Math.min(1, stage) + 0.15 * warm) * lit))
         p.strokeWeight(weight * 0.9)
         p.arc(st.x * k, hy * k, 2 * hr * k, 2 * hr * k, Math.PI * 1.15, Math.PI * 1.85)
         p.drawingContext.globalAlpha = 1
       }
-      p.stroke(alpha(p, ink, 0.28 + 0.2 * warm))
+      p.stroke(alpha(p, ink, (0.28 + 0.2 * warm) * (0.35 + 0.65 * lit)))
       p.strokeWeight(weight * 0.5)
-      p.fill(fill)
+      p.fill(rowFill)
       p.rect(x0 * k, top * k, SEAT_W * k, (h + 0.2) * k, 0.12 * k, 0.12 * k, 0, 0)
-      p.stroke(rim)
+      p.stroke(rowRim)
       p.strokeWeight(weight * 0.7)
       p.noFill()
       p.arc(st.x * k, (top + 0.12) * k, (SEAT_W - 0.04) * k, 0.22 * k, Math.PI * 1.1, Math.PI * 1.9)
@@ -1333,11 +1340,11 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
           const ang = -Math.PI / 2 + sd * (0.06 + open)
           const tx = bx + Math.cos(ang) * len - sd * 0.05 * (1 - open / 0.6)
           const ty = by + Math.sin(ang) * len
-          p.stroke(alpha(p, ink, 0.45))
+          p.stroke(alpha(p, ink, 0.45 * (0.3 + 0.7 * lit)))
           p.strokeWeight(weight * 0.45)
           p.line(bx * k, by * k, tx * k, ty * k)
           p.noStroke()
-          p.fill(paddle)
+          p.fill(rowPaddle)
           p.push()
           p.translate(tx * k, ty * k)
           p.rotate(ang + Math.PI / 2 - sd * 0.25)

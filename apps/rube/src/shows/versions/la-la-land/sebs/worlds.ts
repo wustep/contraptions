@@ -110,8 +110,19 @@ export const STUDIO_MAT = {
   hillDeep: '#211843',
   bush: '#E9C53A',
   bushShade: '#C99E22',
+  /** The hill's bushes are bougainvillea, LA's own: magenta bracts over dark leaves, neither of them anyone's colour. */
+  bloom: '#D63E8C',
+  bloomLit: '#F38CBF',
+  bloomDeep: '#9C2A6A',
+  leaf: '#2C6A4C',
+  leafDeep: '#173F33',
+  /** The chaparral on the near hill, in its shadow. */
+  scrub: '#1A1638',
   palm: '#3E7B57',
-  road: '#4C7BE6',
+  /** The road up the hill, painted catching the sunset: dusty rose, a gold kerb, its underside in shade. */
+  road: '#C9727E',
+  roadKerb: '#F7C48E',
+  roadUnder: '#7A3A63',
   star: '#F4D35E',
   lamp: '#FFE7A8',
   hill: '#8A5AA8',

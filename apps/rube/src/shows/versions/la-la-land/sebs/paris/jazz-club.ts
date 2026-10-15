@@ -1323,7 +1323,19 @@ const SOLO_PHRASES: { s: number; m: number }[][] = (() => {
     }
   }
   if (cur.length) out.push(cur)
-  return out
+  // A thread of light, not a trace of the pitch: within each phrase the line follows the melody's contour, its high
+  // notes higher, but not its vibrato and grace notes, which drawn note for note made a jagged, heart-monitor line.
+  const W = 6
+  return out.map((ph) => ph.map((n, i) => {
+    let acc = 0
+    let w = 0
+    for (let j = Math.max(0, i - W); j <= Math.min(ph.length - 1, i + W); j++) {
+      const q = 1 - Math.abs(j - i) / (W + 1)
+      acc += ph[j].m * q
+      w += q
+    }
+    return { s: n.s, m: acc / w }
+  }))
 })()
 
 /** Where the bell's mouth is at show time `s`, as the trumpet holds it. (Fixed for a given `s`, so kept once worked out:
@@ -1493,7 +1505,12 @@ function threadAt(s: number, m: number, t: number): { x: number; y: number; a: n
   const f = smooth(t, st.from, st.to)
   if (f <= 0) return q
   const [tx, ty] = skylineAt(st.u)
-  return { x: q.x + (tx - q.x) * f, y: q.y + (ty - q.y) * f, a: q.a + (0.7 - q.a) * f }
+  // On its way to its place it goes down to the skyline's height first, out on the bell's open side, and only then
+  // across under the horn into its place: a straight line from where it drifted to (above and right of the trumpet)
+  // to the skyline (below and left of it) went through the trumpet.
+  const down = f < 0.6 ? smooth(f, 0, 0.6) : 1
+  const across = smooth(f, 0.35, 1)
+  return { x: q.x + (tx - q.x) * across, y: q.y + (ty - q.y) * down, a: q.a + (0.7 - q.a) * f }
 }
 
 /** Every point of the solo's threads that is lit at `t` (more than a quarter there), in this frame: what the checks see. */

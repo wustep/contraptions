@@ -82,20 +82,6 @@ const MOUNTAIN: Pt[] = [
 const RIDGE: Pt[] = [
   [-10, -5.2], [-6, -6.8], [-2, -7.6], [2, -8.8], [6, -9.3], [9, -8.6], [24, -8.2], [28, -9.6], [32, -10.3], [36, -9.1], [40, -8.2], [44, -7.4],
 ].map(([x, y]) => [H(x), y])
-/** Lights in the houses low on the mountain, a few dabs of gold (Hollywood frame, landed). */
-const DUSK_LIGHTS: [number, number, number][] = Array.from({ length: 46 }, (_, i): [number, number, number] => {
-  const x = -8 + 50 * hash(i, 51)
-  // Under the mountain's line where it is, and in its lower part.
-  let top = -3.6
-  for (let j = 0; j + 1 < MOUNTAIN.length; j++) {
-    const [ax, ay] = MOUNTAIN[j]
-    const [bx, by] = MOUNTAIN[j + 1]
-    if (H(x) >= ax && H(x) <= bx) top = ay + ((by - ay) * (H(x) - ax)) / (bx - ax)
-  }
-  const y = Math.max(top + 1.2, -1.7 - 2.6 * hash(i, 52) ** 1.6)
-  return [H(x), y, 0.06 + 0.05 * hash(i, 53)]
-}).filter(([, y]) => y < -1.5)
-
 /** Palms along the foot of the painted mountain (Hollywood frame): where each stands, how tall, its lean. */
 const PALMS = Array.from({ length: 22 }, (_, i) => ({ x: -9 + i * 2.45 + 0.9 * (hash(i, 55) - 0.5), h: 1.6 + 1.1 * hash(i, 56), lean: (hash(i, 57) - 0.5) * 0.25 }))
 /** A palm painted flat: a thin curving trunk and a burst of fronds. */
@@ -354,7 +340,7 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   }
   ridge(RIDGE, M.ridge)
   // The mountain: warmer high up, where the sunset catches it, deepening toward its foot; painted, so its shading is
-  // a few soft bands following its shape, and the first lights of the houses on it coming on at dusk.
+  // a few soft bands following its shape.
   const mg = ctx.createLinearGradient(0, X(k, -11.9 + dy), 0, X(k, bottom))
   mg.addColorStop(0, mixHex(M.mountain, M.skyMid, 0.42))
   mg.addColorStop(0.45, M.mountain)
@@ -402,11 +388,6 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   }
   // A row of palms at the mountain's foot, painted dark against the glow: the city the number is in.
   for (const pm of PALMS) paintedPalm(p, k, H(pm.x), -1.55 + dy, pm.h, pm.lean, mixHex(M.hillDeep, M.mountain, 0.35))
-  p.noStroke()
-  for (const [x, y, r] of DUSK_LIGHTS) {
-    p.fill(rgba(M.horizon, 0.75))
-    p.circle(X(k, x), X(k, y + dy), X(k, r))
-  }
   // A soft band of rose light low on the cloth, behind the set: the painted sunset.
   ctx.save()
   const band = ctx.createLinearGradient(0, X(k, -3.4 + dy), 0, X(k, bottom))
@@ -415,11 +396,16 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   ctx.fillStyle = band
   ctx.fillRect(X(k, x0), X(k, -3.4 + dy), X(k, x1 - x0), X(k, bottom + 3.4 - dy))
   ctx.restore()
-  // The sign, painted, unlit: nine pale blocks on the mountain's face.
+  // The sign, painted, unlit: nine pale blocks on the mountain's face, each standing on the scaffold behind it.
   for (const b of SIGN) {
     p.push()
     p.translate(X(k, H(b.x)), X(k, b.y + dy))
     p.rotate(b.tilt)
+    p.stroke(mixHex(M.mountain, M.hillDeep, 0.3))
+    p.strokeWeight(Math.max(1, X(k, 0.026)))
+    p.line(X(k, -b.w * 0.32), X(k, -0.1), X(k, -b.w * 0.32), X(k, 0.44))
+    p.line(X(k, b.w * 0.32), X(k, -0.1), X(k, b.w * 0.32), X(k, 0.44))
+    p.line(X(k, -b.w * 0.32), X(k, 0.04), X(k, b.w * 0.32), X(k, 0.38))
     p.noStroke()
     p.fill(mixHex(M.sign, M.mountain, 0.42))
     p.rect(X(k, -b.w / 2), X(k, -b.h), X(k, b.w), X(k, b.h))
@@ -740,12 +726,14 @@ function drawCuts(p: p5, c: Ctx, t: number): void {
     const theta = up * (Math.PI / 2) + 0.05 * knock
     const sy = Math.sin(theta + tilt)
     const paint = flood(cut.x, t)
-    // Standing, it throws a soft shadow up the flat behind it (and later, the cloth).
+    // Standing, it throws a shadow up the flat behind it: one flat shape, so it is drawn darkening, not see-through
+    // (its parts would stack up where they overlap and show its struts like a second print). On the white flat it is
+    // a pale lilac; on the painted cloth after the burst, darker than it, it all but goes.
     if (up > 0.6) {
       p.push()
-      p.drawingContext.globalAlpha = 0.28 * smooth(up, 0.6, 1)
+      p.drawingContext.globalCompositeOperation = 'darken'
       p.translate(X(k, 0.12), X(k, -0.05))
-      drawCut(p, c, cut.kind, cut.x, sy, 0, 0, mixHex(M.shadow, M.purple, 0.35))
+      drawCut(p, c, cut.kind, cut.x, sy, 0, 0, mixHex(M.flat, mixHex(M.shadow, M.purple, 0.35), 0.28 * smooth(up, 0.6, 1)))
       p.pop()
     }
     drawCut(p, c, cut.kind, cut.x, sy, paint, paint)
