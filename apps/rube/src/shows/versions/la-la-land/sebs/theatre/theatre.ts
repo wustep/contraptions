@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, mixHex, type Pt } from '../../../../../parts'
-import { alpha, beam, box, carried, frame, glow, hash, knock, lastOf, part, rgba, ring, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
+import { alpha, box, carried, frame, glow, hash, lastOf, part, rgba, ring, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { DREAM_PERIOD, dream, level, notes, snap } from '../music'
 import { G, hop } from '../physics'
 import { THEATRE_INK, THEATRE_MAT as M } from '../worlds'
@@ -14,7 +14,7 @@ import { THEATRE_INK, THEATRE_MAT as M } from '../worlds'
  * The velvet parts on a night street: the theatre's side wall, a marquee
  * jutting over the pavement, a blade sign above it. He rolls in under the
  * marquee and over the brass plate at its foot on the big hit (93.26): the
- * marquee blazes and its bulbs chase on the eighths; the blade's three great
+ * marquee lights, all its bulbs on; the blade's three great
  * lamps light top to bottom and the star over them (her name in lights, with
  * no letters). He knocks the stage door open (94.90) and rolls in onto the
  * lift in the wing: its catch lets go (96.07), the sandbag drops past him and
@@ -306,7 +306,7 @@ const houseAt = (t: number): number => 1 - 0.88 * ease((t - ARRIVE) / 0.7) + 0.4
 /** The stage lights on her window: out behind the curtain, up on the thud, up again at the end. */
 const stageAt = (t: number): number => ease((t - THUD) / 0.35) + 0.5 * ease((t - FINAL[0]) / 0.6)
 /** The spot: bang on, and a little over-bright at the end. */
-const spotAt = (t: number): number => (t < SPOT ? 0 : Math.min(1, (t - SPOT) / 0.05) * (1 + 0.12 * Math.exp(-(t - SPOT) / 0.25))) + 0.25 * ease((t - FINAL[0]) / 0.6)
+const spotAt = (t: number): number => (t < SPOT ? 0 : Math.min(1, (t - SPOT) / 0.05)) + 0.25 * ease((t - FINAL[0]) / 0.6)
 /** Where the spot is aimed: her, followed a little late; both of them once he is up beside her. */
 function spotX(t: number): number {
   let sum = 0
@@ -323,8 +323,6 @@ function spotX(t: number): number {
 const curtainLitAt = (t: number): number => Math.min(1, 0.25 + 0.6 * Math.min(1, Math.max(0, houseAt(t))) + 0.3 * stageAt(t))
 /** The curtain is in front of her until it has flown out; once it comes in again it is behind the two of them. */
 const BEHIND = CURTAIN_IN[0] - 0.5
-/** The chase: which eighth of the dream's comb it is. */
-const eighth = (t: number): number => Math.floor((t - dream(0)) / (DREAM_PERIOD / 2) + 1e-6)
 
 /* ------------------------------------------------------------------ the part */
 
@@ -683,7 +681,8 @@ function drawStreet(p: p5, k: number, ink: string, weight: number, t: number, f:
  * The street's own life on the night of her show. Across the road, someone crossing a lit room behind a half-drawn
  * curtain, and a cat on a lit sill, its tail going. On the pavement a newsboy by the lamp, holding up the evening
  * paper on the beat; a couple come along under the marquee and stop to look up at it as it blazes, and go on; a man
- * in a hat hurries the other way. At the kerb a parked car, the marquee's light along its chrome. People, not balls:
+ * in a hat hurries the other way. At the kerb a parked car, the marquee's light along its chrome; once the marquee is
+ * lit its driver starts it, its lamps come on, and it pulls out and away up the street. People, not balls:
  * shapes in the dark, with the light along their edges.
  */
 const LIFE_WIN: [number, number] = [-6.6, -4.6]
@@ -771,10 +770,16 @@ function drawStreetLife(p: p5, k: number, t: number, lit: number): void {
     figure(ctx, k, 6.9 - 10.5 * u, FLOOR, 0.98, (t * 2.3) % 1, -1, fill, true)
   }
   // The parked car at the kerb, nearer than the pavement: its body, its windows, its wheels; chrome along its waist.
-  {
-    const x0 = 0.3
-    const x1 = 3.3
-    const base = FLOOR + 0.98
+  // Started after the marquee lights (a shudder as it catches), its lamps on, it pulls out and goes off up the street.
+  const START = TREADLE + 0.45
+  const GO = START + 0.45
+  const run = Math.max(0, t - GO)
+  const dx = -(run < 1.2 ? 1.6 * run * run : 2.3 + 3.84 * (run - 1.2))
+  if (dx > -9) {
+    const x0 = 0.3 + dx
+    const x1 = 3.3 + dx
+    const shake = t > START && t < GO + 0.2 ? 0.012 * Math.sin((t - START) * 70) * (1 - smooth(t, GO, GO + 0.2)) : 0
+    const base = FLOOR + 0.98 + shake
     ctx.fillStyle = mixHex(bg, '#000000', 0.35)
     ctx.beginPath()
     ctx.moveTo(x0 * k, base * k)
@@ -801,10 +806,25 @@ function drawStreetLife(p: p5, k: number, t: number, lit: number): void {
     ctx.moveTo((x0 + 0.05) * k, (base - 0.3) * k)
     ctx.lineTo((x1 - 0.05) * k, (base - 0.3) * k)
     ctx.stroke()
+    // Its lamps once it is started: a head lamp at the front (it goes off to the left), a tail lamp at the back.
+    if (t > START) {
+      ctx.fillStyle = M.bulb
+      ctx.fillRect((x0 + 0.02) * k, (base - 0.36) * k, 0.07 * k, 0.07 * k)
+      ctx.fillStyle = '#C8352E'
+      ctx.fillRect((x1 - 0.08) * k, (base - 0.35) * k, 0.06 * k, 0.09 * k)
+    }
     ctx.fillStyle = mixHex(bg, '#000000', 0.6)
     for (const wx of [x0 + 0.62, x1 - 0.62]) {
       ctx.beginPath()
       ctx.arc(wx * k, base * k, 0.22 * k, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    // The hubs, turning as it goes.
+    ctx.fillStyle = mixHex(bg, M.gold, 0.35)
+    const turn = dx / 0.22
+    for (const wx of [x0 + 0.62, x1 - 0.62]) {
+      ctx.beginPath()
+      ctx.arc((wx + 0.1 * Math.cos(turn)) * k, (base + 0.1 * Math.sin(turn)) * k, 0.035 * k, 0, Math.PI * 2)
       ctx.fill()
     }
   }
@@ -872,26 +892,29 @@ function drawWindowLife(p: p5, k: number, t: number): void {
   ctx.stroke()
 }
 
-/** The footlights: low hoods on the lip, up with the stage lights, and flaring under her where she lands and leaps. */
+/**
+ * The footlights: low hoods on the lip, up with the stage lights, their light on the boards in front of them. Where she
+ * lands and leaps the boards give a little under her, hoods and all: her landing is the event, not a pop of light.
+ */
 function drawFoot(p: p5, k: number, ink: string, weight: number, t: number, stage: number): void {
   const bg = THEATRE_INK.bg
   const base = Math.min(1, Math.max(0, stage))
   const dim = mixHex(bg, M.gold, 0.4)
   for (const x of FOOT_X) {
-    let fl = 0
-    for (const f of FOOT_AT) fl = Math.max(fl, knock(t - f.t, 0.26) * Math.exp(-(((x - f.x) / 0.75) ** 2)))
-    // Their light on the boards in front of them, brighter for a moment where she lands.
-    if (base + fl > 0.01) glow(p, k, x, FLOOR - 0.02, 0.4 + 0.1 * fl, M.bulb, 0.1 * base + 0.12 * fl, 1.3, 0.45)
+    let give = 0
+    for (const f of FOOT_AT) give = Math.max(give, Math.max(0, ring(t - f.t, 3.2, 0.12)) * Math.exp(-(((x - f.x) / 0.75) ** 2)))
+    const dy = 0.025 * give
+    if (base > 0.01) glow(p, k, x, FLOOR - 0.02, 0.4, M.bulb, 0.1 * base, 1.3, 0.45)
     solid(p, ink, weight * 0.45, mixHex(bg, M.gold, 0.55))
     p.beginShape()
-    p.vertex((x - 0.13) * k, FLOOR * k)
-    p.vertex((x - 0.09) * k, (FLOOR - 0.06) * k)
-    p.vertex((x + 0.09) * k, (FLOOR - 0.06) * k)
-    p.vertex((x + 0.13) * k, FLOOR * k)
+    p.vertex((x - 0.13) * k, (FLOOR + dy) * k)
+    p.vertex((x - 0.09) * k, (FLOOR - 0.06 + dy) * k)
+    p.vertex((x + 0.09) * k, (FLOOR - 0.06 + dy) * k)
+    p.vertex((x + 0.13) * k, (FLOOR + dy) * k)
     p.endShape(p.CLOSE)
     p.noStroke()
-    p.fill(mixHex(dim, M.bulb, Math.min(1, 0.55 * base + fl)))
-    p.ellipse(x * k, (FLOOR - 0.062) * k, 0.15 * k, 0.03 * k)
+    p.fill(mixHex(dim, M.bulb, Math.min(1, 0.55 * base)))
+    p.ellipse(x * k, (FLOOR - 0.062 + dy) * k, 0.15 * k, 0.03 * k)
   }
 }
 
@@ -907,14 +930,13 @@ function drawWork(p: p5, k: number, ink: string, weight: number, t: number): voi
     // The lamp hangs just outside the machine's way, on the far side of its rail.
     const lx = rail + 0.2
     const ly = w.y - 0.26
-    const fl = knock(since, 0.22)
     // Its light down the wall under it.
     if (since >= 0) glow(p, k, lx, ly + 0.45, 0.7, M.bulb, 0.12, 1, 1.2)
     outline(p, alpha(p, ink, 0.7).toString(), weight * 0.45)
     p.line(rail * k, (ly - 0.06) * k, lx * k, (ly - 0.06) * k)
     // The bulb under its shade.
     p.noStroke()
-    p.fill(since >= 0 ? mixHex(M.bulb, M.spot, 0.5 * fl) : mixHex(bg, M.gold, 0.3))
+    p.fill(since >= 0 ? M.bulb : mixHex(bg, M.gold, 0.3))
     p.circle(lx * k, (ly + 0.02) * k, 0.09 * k)
     solid(p, ink, weight * 0.45, mixHex(bg, M.gold, 0.5))
     p.arc(lx * k, (ly + 0.01) * k, 0.2 * k, 0.16 * k, Math.PI, Math.PI * 2, p.CHORD)
@@ -937,7 +959,6 @@ function drawMarquee(p: p5, s: TheatreState, c: Ctx, t: number): void {
   const { k, ink, weight } = c
   const bg = THEATRE_INK.bg
   const lit = t >= TREADLE ? 1 : 0
-  const e = eighth(t)
   const blaze = t >= TREADLE ? 1 : 0
 
   // The pool of light it throws on the pavement.
@@ -978,12 +999,11 @@ function drawMarquee(p: p5, s: TheatreState, c: Ctx, t: number): void {
   p.fill(mixHex(bg, M.gold, 0.4))
   rrect(p, k, MQ.x0 + 0.05, MQ.y1, MQ.x1, MQ.y1 + 0.07)
   const n = 18
-  for (const [row, y] of [[0, MQ.y0 + 0.1], [1, MQ.y1 - 0.1]] as const) {
+  for (const y of [MQ.y0 + 0.1, MQ.y1 - 0.1]) {
     for (let i = 0; i < n; i++) {
       const x = MQ.x0 + 0.12 + ((MQ.x1 - MQ.x0 - 0.2) * (i + 0.5)) / n
-      // Three-phase chase, running toward the wall along the top, back along the bottom.
-      const j = row === 0 ? i : n - 1 - i
-      bulb(p, k, x, y, 0.045, lit && (j - e) % 3 !== 0 ? 1 : 0)
+      // Lit, all of them, and steady: a marquee that is on, not one that chases.
+      bulb(p, k, x, y, 0.045, lit)
     }
   }
   // Its cresting.
@@ -999,7 +1019,7 @@ function drawMarquee(p: p5, s: TheatreState, c: Ctx, t: number): void {
   solid(p, ink, weight * 0.7, M.gold)
   rrect(p, k, px - 0.2, FLOOR - 0.035 + dip, px + 0.34, FLOOR + 0.01 + dip)
 
-  // The blade: a tall sign on the wall, gold-framed, its border of bulbs chasing up, three great lamps, the star.
+  // The blade: a tall sign on the wall, gold-framed, its border of bulbs lit, three great lamps, the star.
   solid(p, ink, weight, M.gold)
   rrect(p, k, BL.x0, BL.y0, BL.x1, BL.y1, 0.06)
   p.noStroke()
@@ -1008,9 +1028,8 @@ function drawMarquee(p: p5, s: TheatreState, c: Ctx, t: number): void {
   const side = 12
   for (let i = 0; i < side; i++) {
     const y = BL.y1 - 0.18 - ((BL.y1 - BL.y0 - 0.36) * i) / (side - 1)
-    const chase = lit && (i - e) % 3 !== 0 ? 1 : 0
-    bulb(p, k, BL.x0 + 0.1, y, 0.038, chase)
-    bulb(p, k, BL.x1 - 0.1, y, 0.038, chase)
+    bulb(p, k, BL.x0 + 0.1, y, 0.038, lit)
+    bulb(p, k, BL.x1 - 0.1, y, 0.038, lit)
   }
   for (let j = 0; j < 3; j++) {
     const y = BL.y0 + 0.62 + j * 0.7
@@ -1106,7 +1125,6 @@ function drawWindow(p: p5, k: number, ink: string, weight: number, stage: number
   p.line((x0 + 0.2) * k, y0 * k, (x0 + 0.2) * k, (ARCH_TOP - 0.2) * k)
   p.line((x1 - 0.2) * k, y0 * k, (x1 - 0.2) * k, (ARCH_TOP - 0.2) * k)
   const lit = Math.min(1, stage)
-  if (lit > 0.01) glow(p, k, MID, (y0 + y1) / 2, 1.7, M.bulb, 0.3 * lit)
   solid(p, ink, weight * 0.9, mixHex(bg, M.boards, 0.6 + 0.4 * lit))
   rrect(p, k, x0, y0, x1, y1)
   p.noStroke()
@@ -1244,7 +1262,7 @@ function drawCurtain(p: p5, k: number, ink: string, weight: number, t: number, l
     ctx.beginPath()
     ctx.rect(x0 * k, top * k, (x1 - x0) * k, (hem - top) * k)
     ctx.clip()
-    glow(p, k, sx, -0.7, 1.15, M.spot, 0.42 * Math.min(1.2, spot), 0.85, 1.1)
+    glow(p, k, sx, -0.5, 1.0, M.spot, 0.3 * Math.min(1.2, spot), 0.9, 0.8)
     ctx.restore()
   }
 }
@@ -1432,14 +1450,8 @@ function overHouse(p: p5, s: TheatreState, c: Ctx): void {
   for (let i = 0; i <= swags; i++) p.circle((ARCH0 + i * sw) * k, (ARCH_TOP + 0.36) * k, 0.1 * k)
   for (const x of [ARCH0 - FRAME_W / 2, ARCH1 + FRAME_W / 2]) sconce(p, k, ink, weight, x, -2.35, house)
 
-  // The spot's lamp on its pipe in front of the arch, turning to follow her; its beam.
-  if (spot > 0.01) {
-    const sx = spotX(t)
-    const a = Math.atan2(FLOOR - LAMP[1], sx - LAMP[0])
-    const ex = LAMP[0] + Math.cos(a) * 0.2
-    const ey = LAMP[1] + Math.sin(a) * 0.2
-    beam(p, k, ex, ey, sx, FLOOR - 0.05, 0.12, 0.95, M.spot, 0.12 * Math.min(1.2, spot))
-  }
+  // The spot's lamp on its pipe in front of the arch, turning to follow her: its light is the pool on the boards and
+  // on her, and nothing in the air between.
   drawLamp(p, k, ink, weight, t)
 
   // The rows of the house, from the front row back, and the rose.
