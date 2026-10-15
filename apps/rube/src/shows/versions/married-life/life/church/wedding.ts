@@ -454,8 +454,8 @@ function drawBreath(p: p5, c: Ctx, T: number): void {
 /**
  * The east window's light on the two of them: as they turn to each other (16.811) the morning through the window
  * over the altar gathers on them, fullest on the kiss, and falls away as they run. Added light (screen), over them,
- * a shaft from the window's sill to the floor where they stand, stronger at the foot; the church draws the window's
- * own flare behind them.
+ * a shaft from the window's sill to the floor where they stand, stronger at the foot. The one light on the kiss: the
+ * window itself does not flare.
  */
 function drawKissLight(p: p5, c: Ctx, T: number): void {
   const a = 0.16 * smooth(T, 16.6, KISS) * (1 - smooth(T, HIS_RUN, HIS_RUN + 1.1)) + 0.06 * knock(T - KISS, 0.4)

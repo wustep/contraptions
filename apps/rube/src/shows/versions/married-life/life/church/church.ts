@@ -1286,12 +1286,7 @@ function drawLight(p: p5, k: number, c: Paint, t: number): void {
     landing(p, k, s, sl)
   }
   if (!c.g) {
-    // On the kiss the east window flares, and its light falls full on the two of them, fading over the swell.
-    if (t >= WED.kiss - 0.05) {
-      const [x0, x1, , y1] = WINDOWS[0]
-      const f = smooth(t, WED.kiss - 0.05, WED.kiss + 0.08) * (0.3 + 0.2 * Math.exp(-(t - WED.kiss) / 0.5)) * (1 - smooth(t, WED.kiss + 0.6, WED.kiss + 3.2))
-      beam(p, k, [[x0 + 0.04, y1 + 0.07], [x1 - 0.02, y1 + 0.07]], [[ALTAR_CARL - 0.3, floor], [ALTAR_ELLIE + 0.4, floor]], CHURCH.candle, f)
-    }
+    // (The kiss's light is the wedding's: it gathers on them as they turn, `drawKissLight`. The window does not flare.)
     // The doors' light, once they are open: the morning pouring in along the floor.
     const o = Math.min(1, doorsOpen(t))
     if (o > 0.01) {
