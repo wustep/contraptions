@@ -591,7 +591,8 @@ function drawOrgan(p: p5, k: number, c: Paint, weight: number, t: number): void 
   const [ox0, ox1] = CH.organ
   const imp = CH.impost
   const lit = (r: number) => (c.g ? tollRing(t) : rankLight(r, t))
-  // The pipes, back row first: body, gleam, mouth, conical foot; lit gold as their rank speaks.
+  // The pipes, back row first: body, mouth, conical foot; lit gold as their rank speaks. (No gleam down each: a white
+  // stripe on every pipe read as shine, and the gold of the rank that speaks is what the eye should go to.)
   for (const pipe of PIPES) {
     const L = lit(pipe.rank)
     const top = imp - pipe.h
@@ -608,8 +609,6 @@ function drawOrgan(p: p5, k: number, c: Paint, weight: number, t: number): void 
     ])
     if (pipe.back) continue
     p.noStroke()
-    p.fill(alpha(p, '#FFFFFF', 0.28 + 0.3 * L))
-    box2(p, k, pipe.x - pipe.w * 0.28, top + 0.05, pipe.x - pipe.w * 0.1, mouth - 0.04)
     // The mouth: a dark slot under an arched lip.
     p.fill(alpha(p, INK, 0.85))
     p.arc(pipe.x * k, (mouth - 0.005) * k, pipe.w * 0.62 * k, 0.1 * k, Math.PI, 2 * Math.PI, p.CHORD)
