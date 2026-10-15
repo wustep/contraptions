@@ -226,4 +226,8 @@ counts the wides before the credits, and holds the crane out as the one wide aft
 after: 3 frames of 15,951 over 20 ms (8 of 15,956 before), the paint on the main thread 1.8 ms a frame on average,
 4.3 ms at the 95th percentile and 13.5 ms at worst (1.1, 2.1 and 4.5 before); the finale, the heaviest stretch, paints
 in 3.8 ms on average. With the camera held still between two frames 0.2 s apart, so that only what moves in the
-picture counts, the share of essentially still frames in the last third fell from 63% to 15%.
+picture counts, the share of the picture moving went from 6% to 14% over the first third and from 6% to 18% over the
+last, whose share of essentially still frames fell from 63% to 7%. The last third is now the fullest: the most detail,
+and the most going on at once (95 separate moving things in a frame on average, against 36 in the store, where the show
+opens, and 70 over the first third, which itself more than doubled). The ward stays the stillest place in it, by
+design: the morning, not the crowd.
