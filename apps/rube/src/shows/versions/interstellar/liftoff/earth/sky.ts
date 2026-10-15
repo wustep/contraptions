@@ -3,7 +3,7 @@ import { mixHex } from '../../../../../parts'
 import { alpha, frame, hash, scenery, smooth } from '../kit'
 import { DUST } from '../worlds'
 import { base, crows, dustWall, farmsteads, freight, groundOf, type Far } from './far'
-import { GHOST_REST } from './house'
+import { WINDOW } from './house'
 import { dayAt, windAt } from './light'
 
 /**
@@ -158,11 +158,11 @@ export const sky = scenery<SkyState>({
 
 /**
  * Before the first light. Over everything, the ball too: the dark lifts over
- * the first bars, and last of all off the window side of the room, where the
- * light comes from.
+ * the first bars, least of all where the first light comes in, by the window,
+ * and he sits at the end of the top shelf nearest it. (It used to be least
+ * round him, a pocket of light on the ball that read as a spotlight.)
  */
-/** The ghost's rest on the top shelf, in world cells (`GHOST_REST` from the shelf entered at 0, -2): the dark is least round it. */
-const GHOST = [GHOST_REST[0], -2 + GHOST_REST[1]]
+const PANE = [(WINDOW.x0 + WINDOW.x1) / 2, (WINDOW.y0 + WINDOW.y1) / 2]
 
 export const dawn = scenery<null>({
   name: 'dawn',
@@ -174,11 +174,11 @@ export const dawn = scenery<null>({
     const f = frame(p, k)
     const X = (x: number) => x * k
     const ctx = p.drawingContext as CanvasRenderingContext2D
-    // Darkest away from the ghost on the top shelf: until the window catches up, it is the room's light.
-    const [gx, gy] = GHOST
-    const g = ctx.createRadialGradient(X(gx), X(gy), X(0.12), X(gx), X(gy), X(3.2))
-    g.addColorStop(0, `rgba(24, 28, 44, ${0.1 * dark})`)
-    g.addColorStop(0.25, `rgba(24, 28, 44, ${0.6 * dark})`)
+    // Darkest away from the window: the room is lit by the dawn coming in at it, not by him.
+    const [wx, wy] = PANE
+    const g = ctx.createRadialGradient(X(wx), X(wy), X(0.3), X(wx), X(wy), X(4.6))
+    g.addColorStop(0, `rgba(24, 28, 44, ${0.12 * dark})`)
+    g.addColorStop(0.3, `rgba(24, 28, 44, ${0.5 * dark})`)
     g.addColorStop(1, `rgba(20, 22, 36, ${0.92 * dark})`)
     ctx.fillStyle = g
     ctx.fillRect(X(f.x0), X(f.y0), X(f.x1 - f.x0), X(f.y1 - f.y0))

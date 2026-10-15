@@ -72,7 +72,7 @@ export interface Pickup {
   turn: number
   /** The near door: 0 shut, 1 wide. */
   door: number
-  /** The headlamp and its beam: 0 dark, 1 lit. */
+  /** The headlamp: 0 dark, 1 lit. */
   lamp: number
 }
 
@@ -98,7 +98,7 @@ function doorShape(open: number): { door: Pt[]; glass: Pt[] } {
 /**
  * The pickup, everything behind the balls: the wheels, the bed's far side and
  * its rail, the cab with its inside (the bench, the far window) showing where
- * the near door is not, the hood, the lamp and its beam, the tailgate.
+ * the near door is not, the hood, the lamp, the tailgate.
  */
 export function drawPickup(p: p5, k: number, ink: string, weight: number, pk: Pickup): void {
   const X = (x: number) => x * k
@@ -148,24 +148,11 @@ export function drawPickup(p: p5, k: number, ink: string, weight: number, pk: Pi
   p.ellipse(0, 0, X(0.07), X(0.32))
   p.pop()
   shape([[HOOD_U, 0.4], [LEN, 0.4], [LEN, HOOD - 0.1], [LEN - 0.12, HOOD], [HOOD_U, HOOD]], DUST.denim)
-  // Bumpers, the lamp and its beam, the mirror, the tailgate.
+  // Bumpers, the lamp, the mirror, the tailgate. (No beam: at noon in the corn a headlamp's light would not show in
+  // the air, so the lamp's glass lighting is the whole of it.)
   shape([[LEN - 0.02, 0.36], [LEN + 0.08, 0.36], [LEN + 0.08, 0.5], [LEN - 0.02, 0.5]], DUST.bone, weight * 0.8)
   shape([[-0.08, 0.36], [0.02, 0.36], [0.02, 0.5], [-0.08, 0.5]], DUST.bone, weight * 0.8)
   const lamp = B(LEN - 0.05, 0.84)
-  if (pk.lamp > 0.01) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createLinearGradient(X(lamp[0]), 0, X(lamp[0] + 2.4), 0)
-    g.addColorStop(0, `rgba(255, 244, 205, ${0.55 * pk.lamp})`)
-    g.addColorStop(1, 'rgba(255, 244, 205, 0)')
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(X(lamp[0]), X(lamp[1] - 0.05))
-    ctx.lineTo(X(lamp[0] + 2.4), X(lamp[1] - 0.25))
-    ctx.lineTo(X(lamp[0] + 2.4), X(lamp[1] + 0.55))
-    ctx.lineTo(X(lamp[0]), X(lamp[1] + 0.05))
-    ctx.closePath()
-    ctx.fill()
-  }
   solid(p, ink, weight * 0.8, pk.lamp > 0.5 ? DUST.light : DUST.shade)
   p.circle(X(lamp[0]), X(lamp[1]), X(0.11))
   const m0 = B(HOOD_U - 0.05, 1.08)

@@ -572,11 +572,9 @@ export function base(F: Far): void {
       const h1 = 0.13 - (0.09 * (j + 1)) / 6
       p.line(X(x - h0), X(y0), X(x + h1), X(y1))
     }
-    // Its light, falling on the ground in front of it: a flat pool, not a glow.
+    // Its light, falling on the ground in front of it: a flat pool, no beam through the air.
     if (on > 0.01) {
       p.noStroke()
-      p.fill(alpha(p, '#FFE6B0', 0.07 * on * (1 - up)))
-      p.quad(X(x - 0.2), X(top + 0.06), X(x + 0.2), X(top + 0.06), X(x + 0.62), X(gy + 0.06), X(x - 0.62), X(gy + 0.06))
       p.fill(alpha(p, '#FFE6B0', 0.16 * on * (1 - up)))
       p.ellipse(X(x), X(gy + 0.06), X(1.3), X(0.14))
     }

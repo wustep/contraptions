@@ -479,16 +479,6 @@ function drawRocket(p: p5, s: RocketState, c: Ctx): void {
       p.ellipse(X(dx), X(dy), X(wide * 0.9), X(0.2))
     }
     p.pop()
-    // Light off the flame on the pad and the smoke.
-    if (farm && t < LIFTOFF + 2.5) {
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const [lx, ly] = body(t, 0, -0.6)
-      const g = ctx.createRadialGradient(X(lx), X(ly), 0, X(lx), X(ly), X(3.2))
-      g.addColorStop(0, `rgba(255, 214, 140, ${0.45 * grow})`)
-      g.addColorStop(1, 'rgba(255, 214, 140, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(X(lx - 3.2), X(ly - 3.2), X(6.4), X(6.4))
-    }
   }
 
   // The stack: the first stage until it goes, the second, and the fairing.

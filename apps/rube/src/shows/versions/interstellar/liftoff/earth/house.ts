@@ -31,7 +31,7 @@ const MID_X = (WALL_L + WALL_R) / 2
 /** The stairwell's edge in the upstairs floor, and where the last step meets the ground floor. */
 const WELL_L = 4.9
 const WELL_R = 6.4
-const WINDOW = { x0: 2.95, x1: 3.8, y0: -3.38, y1: -2.5 }
+export const WINDOW = { x0: 2.95, x1: 3.8, y0: -3.38, y1: -2.5 }
 const DOOR_TOP = -1.02
 
 /* ------------------------------------------------------------------ the kitchen */
