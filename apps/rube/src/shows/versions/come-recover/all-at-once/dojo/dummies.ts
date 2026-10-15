@@ -4,7 +4,7 @@ import { mixHex, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, hash, part, route, type Ctx, type PartShot } from '../kit'
 import { G } from '../physics'
 import { DOJO } from '../worlds'
-import { hall } from './dummies-hall'
+import { hall, sun } from './dummies-hall'
 import {
   ARM,
   ENTRY,
@@ -76,6 +76,23 @@ function stick(p: p5, k: number, ink: string, w: number, a: Pt, b: Pt, r: number
 const lerpV = (a: V, b: V, u: number): V => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]
 
 const ARMWOOD = mixHex(DOJO.wood, DOJO.woodDeep, 0.3)
+
+/** Where a wooden man's foot block stands on the boards, a soft dark spreading round it. */
+function drawFootShadow(p: p5, c: Ctx, m: ManPlan): void {
+  const { k } = c
+  const [x, y] = P([m.x, 0])
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, POST.baseW * 0.95 * k)
+  g.addColorStop(0, 'rgba(43, 27, 18, 0.45)')
+  g.addColorStop(1, 'rgba(43, 27, 18, 0)')
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.scale(1, 0.18)
+  ctx.translate(-x * k, -y * k)
+  ctx.fillStyle = g
+  ctx.fillRect((x - POST.baseW) * k, (y - POST.baseW) * k, 2 * POST.baseW * k, 2 * POST.baseW * k)
+  ctx.restore()
+}
 
 /** One wooden man at show time `t`: his foot block, the far upper arm, the post, the near arms and the leg. */
 function drawMan(p: p5, c: Ctx, m: ManPlan, t: number): void {
@@ -272,11 +289,13 @@ export const dummies = part<DojoState>(
     draw: (p, s, c) => {
       const t = c.t + s.begin
       p.push()
-      hall(p, c.k, c, OX, FY)
+      hall(p, c.k, c, OX, FY, t)
       drawStaff(p, c, s.plan.staff, t)
       drawGong(p, c, s.plan.gong, t)
+      for (const m of s.plan.men) drawFootShadow(p, c, m)
       for (const m of s.plan.men) drawMan(p, c, m, t)
       drawDust(p, c, s.plan, t)
+      sun(p, c.k, OX, FY, t)
       p.pop()
     },
   },
