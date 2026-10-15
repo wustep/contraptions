@@ -51,7 +51,9 @@ export function fireworks(s: Screen, t: number, hy: number): void {
   ctx.save()
   ctx.globalCompositeOperation = 'lighter'
   ctx.lineCap = 'round'
-  for (const [n, sh] of live.entries()) {
+  for (const sh of live) {
+    // Its own index, not its place among the shells in the air, so its sparks keep their way as others burn out.
+    const n = SHELLS.indexOf(sh)
     const bx = cx + (sh.x - 0.5) * f * (16 / 9)
     const by = hy - sh.y * f
     if (t < sh.t) {

@@ -25,10 +25,11 @@ export class DressedShow extends StockShow {
     this.dressed = score.maps.map((_, i) => {
       const u = super.universe(i)
       const { behind, over } = dress(i, u)
-      // Every cell round the map and well past it, so a piece of scenery is on the stage wherever the camera is.
+      // Every third cell round the map and well past it, so a piece of scenery is on the stage wherever the camera is:
+      // the stage draws a piece with a cell within a cell and a half of the frame, and no frame is under three cells.
       const b = u.bounds
       const cells: Pt[] = []
-      for (let x = b.x0 - 40; x <= b.x1 + 40; x++) for (let y = b.y0 - 40; y <= b.y1 + 40; y++) cells.push([x, y])
+      for (let x = b.x0 - 40; x <= b.x1 + 40; x += 3) for (let y = b.y0 - 40; y <= b.y1 + 40; y += 3) cells.push([x, y])
       // Placed at the first piece's cell, so the stage's turn of the ball by its way along the map is unchanged.
       const at = u.pieces[0]
       const place = (piece: Piece<null>): Placed => ({

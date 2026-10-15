@@ -206,7 +206,7 @@ export function farm(s: Screen, hy: number, color: string, windows?: string): vo
       ctx.moveTo(x - 2.6 * e, hy - 3.1 * e)
       ctx.lineTo(x - 0.6 * e, hy - 4.8 * e)
       ctx.lineTo(x + 1.4 * e, hy - 3.1 * e)
-      ctx.rect(x + 1, hy - 1.6 * e, 1.6 * e, 1.6 * e)
+      ctx.rect(x + 1 * e, hy - 1.6 * e, 1.6 * e, 1.6 * e)
       // The barn, gambrel roofed, and two silos behind it.
       const b = x + 5.5 * e
       ctx.moveTo(b - 2.6 * e, hy)
@@ -363,7 +363,7 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
       const across = clamp((x - left) / frameW, -0.2, 1.2)
       // The wind reaches the far rows a moment after the near: a front crossing the field, not a shiver.
       const sway = 0.05 * Math.sin(t * (1.2 + j1 * 0.6) + i * 0.8 + n) + 0.025 * Math.sin(t * 2.6 + i * 2.3)
-      const gust = r.wind ? r.wind(across - 0.04 * (d - 1)) : 0
+      const gust = r.wind ? r.wind(across + 0.04 * (d - 1)) : 0
       tips.push(x, top, r.lean + sway + r.gust * 0.35 * gust, gust)
     }
     // The mounds along the crest as a curved shape, the row under them as a plain rectangle: the curves cover only
@@ -413,7 +413,8 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
       const x = tips[k]
       const top = tips[k + 1]
       const bend = tips[k + 2]
-      const j = hash(k, 90 + n)
+      // Keyed to the mound's own index, not its place in this frame's list, so a tassel is the same one as the camera pans.
+      const j = hash(i0 + k / 4, 90 + n)
       const tall = (0.07 + 0.03 * j) * f * sc
       // The stalk up out of the canopy to the tassel.
       const tx = x + bend * tall
