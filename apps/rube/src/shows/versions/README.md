@@ -398,7 +398,7 @@ the spark and its flame. The accelerando from 104 to 198 bpm has no steady comb,
 `apps/rube/src/shows/versions/mountain-king/SPARK.md`.
 
 
-`heptapod-b/opus55` (in the picker, **Logogram**, one take, **Opus 5.5**) is Jóhann Jóhannsson's *Heptapod B* from
+`heptapod-b/opus55` (hidden from the picker for now, Oct 14: its file is `opus55.ts`, not `opus55.show.ts`; was **Logogram**, one take, **Opus 5.5**) is Jóhann Jóhannsson's *Heptapod B* from
 *Arrival*, whole, demo only (`apps/rube/src/shows/versions/heptapod-b/ATTRIBUTION.txt`), and then the end credits in
 the quiet after it. Every piece is new. It follows the film's spine as a circle: it opens in the lake house by the long
 window, Louise (the orange ball) and her daughter Hannah (the little peach one), which the film lets us take for the
