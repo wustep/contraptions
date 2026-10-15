@@ -128,7 +128,8 @@ const SMOKER = 16
 const SMOKE_N = 46
 function drawSmoke(p: p5, k: number, t: number, x0: number, y0: number, s: number, lit: number, dark: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const top = LAMP[1] + 0.4
+  // A curl, not a line up the picture: it thins out and is gone within a couple of cells of the table.
+  const top = Math.max(LAMP[1] + 0.4, y0 - 1.1)
   if (y0 <= top) return
   // Where the spot's shaft is at a height y: from the lamp (narrow) to the pool on the boards (wide).
   const shaft = (y: number): [number, number] => {
@@ -153,7 +154,7 @@ function drawSmoke(p: p5, k: number, t: number, x0: number, y0: number, s: numbe
       const x = x0 + lean + curl + part
       const [sx, half] = shaft(y)
       const inBeam = dark * (1 - smooth(Math.abs(x - sx), half * 0.7, half * 1.05))
-      const thin = Math.exp(-h / 2.3) * (strand ? 0.5 * smooth(h, 0.5, 1.2) : 1)
+      const thin = Math.exp(-h / 0.7) * (1 - smooth(h, 0.6, 1.1)) * (strand ? 0.5 * smooth(h, 0.5, 1.2) : 1)
       const a = thin * (0.16 * lit * (1 - dark) + 0.015 * dark + 0.55 * inBeam)
       if (prev && Math.min(a, prevA) > 0.01) {
         const lv = Math.min(LV - 1, Math.floor(Math.min(a, prevA) * LV * 1.6))
