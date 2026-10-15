@@ -41,7 +41,7 @@ import {
  * bubbles rising, an ashtray's thread of smoke, a little dust turning in the money table's lamp, and the smoke hanging
  * in layers under the tubes. Under the floor, the work lights swing on their cords and the return's lift wheel turns.
  * Close (d 1.4), soft and dark at the frame's foot: a bar stool, a glass, an ashtray, a rack of house balls; outside, a
- * hydrant and a trash can.
+ * hydrant and a trash can. They are silhouettes: the neon is not caught in lines along their edges.
  *
  * The light is the lights' own, and what they fall on: a neon tube is drawn as its lit glass, a bulb as the bulb, with
  * no halo hung in the air round either; their colour lies on the wet, the lanes and the edges of things, modestly. Nothing
@@ -1523,22 +1523,10 @@ function nearThing(pen: Pen, t: number, kind: Near, b: Pt, u: number, a: number)
     ctx.arc(c[0] * k, c[1] * k, r * k, 0, Math.PI * 2)
     ctx.fill()
   }
-  // The neon's catch along an edge: a thin line of light on it, and nothing round it.
-  const rim = (pts: Pt[], col: string, al: number) => {
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.strokeStyle = css(pen, col, al * 0.8)
-    ctx.lineWidth = 0.028 * u * k
-    ctx.beginPath()
-    pts.forEach(([px, py], i) => (i ? ctx.lineTo(px * k, py * k) : ctx.moveTo(px * k, py * k)))
-    ctx.stroke()
-  }
   if (kind === 'stool') {
     // The seat's round top, red vinyl gone black in the dark, and its chrome post going down out of the frame.
     soft([[x - 0.06 * u, y - 0.9 * u], [x + 0.06 * u, y - 0.9 * u], [x + 0.06 * u, y + 0.3], [x - 0.06 * u, y + 0.3]], dark)
-    rim([[x - 0.03 * u, y - 0.86 * u], [x - 0.03 * u, y]], '#B9D3E2', 0.35)
     soft(arc([x, y - 1.0 * u], 0.62 * u, 0.17 * u, 0, Math.PI * 2, 18), '#1C070D')
-    rim(arc([x, y - 1.0 * u], 0.62 * u, 0.17 * u, Math.PI * 1.02, Math.PI * 1.75, 10), NEON.red, 0.75)
   } else if (kind === 'glass') {
     // A glass of beer, dark against the room: the beer a dull amber in it, its head, its bubbles going up.
     const w = 0.42 * u
@@ -1552,33 +1540,23 @@ function nearThing(pen: Pen, t: number, kind: Near, b: Pt, u: number, a: number)
     rect(pen, x - w, y - h, x + w, y - h * 0.86, '#6E5A44')
     ctx.restore()
     bubbles(pen, t, [[x, y, h, w]])
-    rim([[x + w / 2 + 0.035 * u, y - h + 0.04 * u], [x + w / 2 + 0.005 * u, y - 0.1 * u]], NEON.teal, 0.6)
-    rim([[x - w / 2 - 0.035 * u, y - h + 0.04 * u], [x - w / 2 - 0.035 * u, y - h + 0.3 * u]], NEON.magenta, 0.4)
   } else if (kind === 'ashtray') {
     soft([[x - 0.55 * u, y - 0.18 * u], [x + 0.55 * u, y - 0.18 * u], [x + 0.45 * u, y + 0.1], [x - 0.45 * u, y + 0.1]], dark)
-    rim([[x - 0.52 * u, y - 0.19 * u], [x + 0.52 * u, y - 0.19 * u]], NEON.magenta, 0.55)
     disc([x + 0.42 * u, y - 0.26 * u], 0.03 * u, '#E8805A', 0.7 + 0.2 * Math.sin(t * 2.3))
     curl(pen, t, [x + 0.42 * u, y - 0.28 * u], 2.2 * u, 5, SMOKE, 0.2, 0.3)
   } else if (kind === 'rack') {
-    // House balls on their rack: dark spheres, each with the neon caught along its shoulder.
+    // House balls on their rack: dark spheres.
     soft([[x - 1.1 * u, y - 0.5 * u], [x + 1.1 * u, y - 0.5 * u], [x + 1.1 * u, y + 0.3], [x - 1.1 * u, y + 0.3]], dark)
-    rim([[x - 1.08 * u, y - 0.52 * u], [x + 1.08 * u, y - 0.52 * u]], '#B9D3E2', 0.3)
     for (const [i, dx] of [-0.7, 0, 0.7].entries()) {
       const c: Pt = [x + dx * u, y - 0.84 * u]
-      const col = [NEON.magenta, NEON.teal, NEON.red][i]
       disc(c, 0.4 * u, ['#0C0A12', '#081418', '#14070C'][i], 0.97)
-      rim(arc(c, 0.37 * u, 0.37 * u, Math.PI * 1.1, Math.PI * 1.55, 8), col, 0.6)
     }
   } else if (kind === 'hydrant') {
     soft([[x - 0.3 * u, y + 0.2], [x - 0.26 * u, y - 0.75 * u], [x - 0.18 * u, y - 0.95 * u], [x + 0.18 * u, y - 0.95 * u], [x + 0.26 * u, y - 0.75 * u], [x + 0.3 * u, y + 0.2]], '#0A0B10')
     soft([[x - 0.44 * u, y - 0.62 * u], [x + 0.44 * u, y - 0.62 * u], [x + 0.44 * u, y - 0.47 * u], [x - 0.44 * u, y - 0.47 * u]], '#0A0B10')
-    rim([[x + 0.2 * u, y - 0.93 * u], [x + 0.27 * u, y - 0.75 * u], [x + 0.29 * u, y]], NEON.magenta, 0.55)
-    rim([[x - 0.18 * u, y - 0.97 * u], [x + 0.16 * u, y - 0.97 * u]], '#B9D3E2', 0.55)
   } else {
     soft([[x - 0.48 * u, y + 0.2], [x - 0.52 * u, y - 1.05 * u], [x + 0.52 * u, y - 1.05 * u], [x + 0.48 * u, y + 0.2]], '#0A0C12')
     soft([[x - 0.58 * u, y - 1.05 * u], [x + 0.58 * u, y - 1.05 * u], [x + 0.5 * u, y - 1.18 * u], [x - 0.5 * u, y - 1.18 * u]], '#0D1018')
-    rim([[x - 0.56 * u, y - 1.08 * u], [x + 0.3 * u, y - 1.17 * u]], '#B9D3E2', 0.5)
-    rim([[x - 0.52 * u, y - 1.0 * u], [x - 0.48 * u, y]], NEON.pink, 0.35)
   }
   ctx.restore()
 }

@@ -10,8 +10,8 @@ import { C } from './palette'
  * The front row, in the lens: the backs of heads and shoulders along the bottom of the frame, dark and soft, nearer
  * than anything (1.35 of the table's depth, so they pass faster than the world as the camera goes). Hats, a GI's cap, a
  * press photographer with his camera up over the heads. They shift and turn after the ball, come up on the big points
- * with their arms, and are on their feet roaring on the winner. The light behind them puts a thin rim on their heads.
- * A cigarette's smoke curls up out of them in the dark. Never over the table, never near him: they keep under the
+ * with their arms, and are on their feet roaring on the winner. They are silhouettes and nothing more: no rim of light
+ * is drawn round their heads. A cigarette's smoke curls up out of them in the dark. Never over the table, never near him: they keep under the
  * table's legs, and duck where he is low in the frame.
  */
 
@@ -37,11 +37,8 @@ export function drawFrontRow(pen: Pen, t: number, f: Frame): void {
   const lights = house(t)
   const bottom = f.y1
   const ceiling = bottom - room * 1.25
-  // The rim the light behind them puts on their heads: the lamp, and the house as it comes up.
-  const rimA = 0.14 + 0.18 * lights
   const soft = new Path2D()
   const core = new Path2D()
-  const rim = new Path2D()
   const arms = new Path2D()
   const both = (fn: (p: Path2D, grow: number) => void) => {
     fn(soft, 1.14)
@@ -71,9 +68,6 @@ export function drawFrontRow(pen: Pen, t: number, f: Frame): void {
       oval(p, k, X + 0.4 * lean, hy + r * 2.2, 0.42 * s * g, 0.34 * s * g)
       p.rect((X - 0.2 * s * g) * k, (hy + r * 0.6) * k, 0.4 * s * g * k, r * 1.6 * k)
     })
-    // The rim light along the top of the head.
-    rim.moveTo((hx - r * 0.75) * k, (hy - r * 0.55) * k)
-    rim.ellipse(hx * k, hy * k, r * 0.9 * k, r * 1.1 * k, 0, Math.PI * 1.15, Math.PI * 1.85)
     if (kind < 0.09) {
       // The press photographer: his camera up over the heads, both hands on it, the reflector beside it.
       const lift = smooth(t, LIGHTS_UP[0], SERVE)
@@ -87,8 +81,6 @@ export function drawFrontRow(pen: Pen, t: number, f: Frame): void {
       arms.lineTo((cx - 0.18 * s) * k, (cy + 0.1 * s) * k)
       arms.moveTo((X + 0.3 * s) * k, (hy + r * 1.6) * k)
       arms.lineTo((cx + 0.18 * s) * k, (cy + 0.1 * s) * k)
-      rim.moveTo((cx + 0.12 * s) * k, (cy - 0.14 * s) * k)
-      rim.arc((cx + 0.32 * s) * k, (cy - 0.14 * s) * k, 0.2 * s * k, Math.PI, Math.PI * 2)
     } else if (kind < 0.32) {
       // A hat: a soft felt one, or a GI's cap.
       const gi = kind > 0.25
@@ -135,9 +127,6 @@ export function drawFrontRow(pen: Pen, t: number, f: Frame): void {
   ctx.strokeStyle = rgbaOf(pen, INK, 0.95)
   ctx.lineWidth = 0.13 * s * k
   ctx.stroke(arms)
-  ctx.strokeStyle = rgbaOf(pen, C.beam, 0.55 * rimA)
-  ctx.lineWidth = Math.max(1, pen.w * 0.7)
-  ctx.stroke(rim)
   ctx.restore()
   // In the dark, a cigarette's smoke curling up out of the front row.
   if (smoker) {
