@@ -437,16 +437,10 @@ export function fireworks(p: p5, k: number, t: number): void {
       p.circle(b.x * k, y * k, 0.05 * k)
       continue
     }
-    // Its light on the whole street for a moment, and the bloom where it burst.
-    const bloom = Math.exp(-u / 0.14)
+    // Its light on the whole street for a moment (no bloom where it burst: the sparks are the burst).
     p.noStroke()
-    p.fill(alpha(p, col, 0.32 * bloom))
+    p.fill(alpha(p, col, 0.32 * Math.exp(-u / 0.14)))
     p.rect(-6.4 * k, -2.2 * k, 4 * k, 5 * k)
-    const g = ctx.createRadialGradient(b.x * k, b.y * k, 0, b.x * k, b.y * k, b.r * 2 * k)
-    g.addColorStop(0, rgba(p, col, 0.55 * bloom))
-    g.addColorStop(1, rgba(p, col, 0))
-    ctx.fillStyle = g
-    ctx.fillRect((b.x - b.r * 2) * k, (b.y - b.r * 2) * k, b.r * 4 * k, b.r * 4 * k)
     // The sparks: out fast, slowing, falling, fading, each with a short tail; a ring of them, and a few inside.
     const n = 34
     const fade = clamp(1 - u / 2.5) ** 1.6

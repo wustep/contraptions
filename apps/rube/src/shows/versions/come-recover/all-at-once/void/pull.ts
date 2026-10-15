@@ -358,7 +358,7 @@ function drawDust(p: p5, k: number, t: number, pose: BagelPose): void {
     const y0 = f.y0 - sy - 0.3
     const y1 = f.y1 - sy + 0.3
     const seeds = new Path2D()
-    const glints = new Path2D()
+    const salt = new Path2D()
     for (let j = 0; j < L.n; j++) {
       const h1 = hash(j, L.seed, 41)
       const h2 = hash(j, L.seed, 43)
@@ -382,11 +382,11 @@ function drawDust(p: p5, k: number, t: number, pose: BagelPose): void {
           const l = size * k
           if (hash(j, L.seed, 71) < 0.12) {
             // A grain of salt: a tiny diamond.
-            glints.moveTo(X + ca * l * 0.5, Y + sa * l * 0.5)
-            glints.lineTo(X - sa * l * 0.4, Y + ca * l * 0.4)
-            glints.lineTo(X - ca * l * 0.5, Y - sa * l * 0.5)
-            glints.lineTo(X + sa * l * 0.4, Y - ca * l * 0.4)
-            glints.closePath()
+            salt.moveTo(X + ca * l * 0.5, Y + sa * l * 0.5)
+            salt.lineTo(X - sa * l * 0.4, Y + ca * l * 0.4)
+            salt.lineTo(X - ca * l * 0.5, Y - sa * l * 0.5)
+            salt.lineTo(X + sa * l * 0.4, Y - ca * l * 0.4)
+            salt.closePath()
           } else {
             // A sesame seed: a teardrop.
             const w = l * 0.24
@@ -399,8 +399,9 @@ function drawDust(p: p5, k: number, t: number, pose: BagelPose): void {
     }
     ctx.fillStyle = rgba(VOID.sesame, L.a * fade)
     ctx.fill(seeds)
-    ctx.fillStyle = rgba(VOID.salt, L.a * 1.4 * fade * (0.7 + 0.3 * Math.sin(T * 1.7 + L.seed)))
-    ctx.fill(glints)
+    // Salt is brighter than sesame, and steady: it does not twinkle.
+    ctx.fillStyle = rgba(VOID.salt, L.a * 1.2 * fade)
+    ctx.fill(salt)
   }
 }
 
