@@ -30,6 +30,22 @@ A stock strike is a piece's `lane.fire`. The search may only place a machine whe
 | Chase off-beat eighths | 123 | 5 | 4% | 6.1 | 19.9 |
 | The last hit | 1 | 1 | 100% | 4.5 | 4.5 |
 
+## The field and the fair
+
+The machine is the score's, untouched: every piece, strike and ball is where the arrangement put it. What changed is where it stands (`music-sync/`, drawn as scenery behind and over the stock pieces by `DressedShow`).
+
+- **An afternoon in a cornfield.** The Forest runs in front of a field: a sky, a low sun, a farm on the horizon (house, barn and silos, a water tower, a windpump, the power line), and rows of corn from the horizon to the foot of the frame, each paler, smaller and slower the farther off. The piano's accents (notes struck harder than the run of them) send gusts through the rows from the left, bending the tassels and turning up the leaves' pale side.
+- **Sunset as the organ gathers.** From 29 s the sun goes down and the sky turns to apricot and mauve; under the organ the wind rises, its onsets gust harder, and dust blows off the field.
+- **Nightfall is the door.** The iris from the field to the fair closes in the night's colour rather than the Forest's dark green, with the stage's own timing (`music-sync/nightfall.ts`; the stage's iris is off for that door only).
+- **A fair at night on the same field.** The Arcade stands over the same rows and the same farm, now dark with a lit window, under stars and a crescent moon.
+- **Fireworks on the landmarks**, on the measured pulse: the drop, the full organ (beats 132 and 132½), the one downbeat the machine leaves to rest (beat 180), and the last hit with the soft beats 192 and 193 after it. Seven shells, no more.
+- **A follow spot where the run doubles back.** From 55 to 59 s and 63 to 88 s other stretches of the run share the frame, three and four floors of machines as bright as the ball's. While they do, the night comes down over them and the ball's own floor stays lit. Worked out once from the score; it comes and goes over a second or more.
+- **The photograph.** The booth's flash lights the frame on beat 188. Once the ball is through the last portal the camera draws back across the field until the fair's last stretch stands on the horizon, and the ball's run comes up through it as one line of light, from where it left back toward where it came in: a long exposure of the chase.
+
+The share card is the sunset at 36.5 s. `checks/cornfield.ts` holds the shells to the pulse and the landmarks, the wind to the piano, the door to its one portal, the spot to its stretches, and the draw back to its timing and frame.
+
+Frame cost, headless Chromium's software canvas at 2560×1800 (least of four paints per moment, median over the show): about 10.5 ms, against about 4 ms for the stock frame alone.
+
 ## Sections
 
 | Section | Start | Camera before Zoom | World |
@@ -38,7 +54,7 @@ A stock strike is a piece's `lane.fire`. The search may only place a machine whe
 | The organ gathers | 33.13 s | 6.6 cells | Forest |
 | Cornfield chase | 42.48 s | 4.8 cells | Arcade |
 | Full organ | 82.51 s | 4.3 cells | Arcade |
-| The photograph | 117.02 s | 7.5 cells | Arcade |
+| The photograph | 117.02 s | 7.5 cells, drawn back to the fair's last stretch from 120.3 s | Arcade |
 
 ## Maps
 

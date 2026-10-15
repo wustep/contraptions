@@ -19,8 +19,10 @@ export const door = fair.pieces.at(-1)!
 export const sunset = score.maps[0].pieces.at(-1)!
 export const arrival = fair.pieces[0]
 const NIGHT = '#0D0B20'
+/** The fair's last stretch, from the slingshot that drops the ball to its last floors: what the photograph frames. */
+const STRETCH = 97
 /** The photograph: the booth's flash, then once the ball is through the last portal, the long draw back. */
-export const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, 97)
+export const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, STRETCH)
 /** The run through the fair, taken once, the first time the photograph is drawn; the follow spot, the first time it is. */
 let run: Exposure | null = null
 let lit: Spot | null = null
@@ -39,7 +41,8 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
       follow(p, c, row, t, lit, NIGHT)
       flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
       if (t <= photo.from) return
-      run ??= expose(show, 90, door.begin + 0.3)
+      // The run from a little before the stretch the photograph frames, so the line comes in from past its edge.
+      run ??= expose(show, STRETCH - 7, door.begin + 0.3)
       exposure(p, c, col, row, t, run, photo)
     }), dusk],
   }
@@ -54,15 +57,15 @@ const smooth = (u: number): number => { const v = Math.max(0, Math.min(1, u)); r
 
 /**
  * Follow the ball; once the photograph is taken, ease onto the booth and the ticket; once the ball is through the last
- * portal, draw back across the field until the whole fair is on the horizon.
+ * portal, draw back across the field until the fair's last stretch stands on the horizon.
  */
 function camera(t: number): Framing {
-  const follow = show.camera(t)
+  const ride = show.camera(t)
   const blend = smooth((t - booth.end) / Math.max(0.5, ticket.begin - booth.end))
   const close = {
-    x: follow.x + (still.x - follow.x) * blend,
-    y: follow.y + (still.y - follow.y) * blend,
-    cells: follow.cells + (stillCells - follow.cells) * blend,
+    x: ride.x + (still.x - ride.x) * blend,
+    y: ride.y + (still.y - ride.y) * blend,
+    cells: ride.cells + (stillCells - ride.cells) * blend,
   }
   const back = photo.back(t)
   return back > 0 ? pull(close, photo.wide, back) : close
