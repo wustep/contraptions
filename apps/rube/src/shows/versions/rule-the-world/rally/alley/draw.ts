@@ -1,9 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { drawCab } from '../cab'
-import { bloom, layer, parallax, type Frame } from '../depth'
+import { layer, parallax, type Frame } from '../depth'
 import { hash } from '../kit'
-import { blob, clamp01, ctxOf, ease, ellipse, flash, glint, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import { blob, clamp01, ctxOf, ease, ellipse, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import {
   BETTOR_GLASS,
   CAP,
@@ -19,7 +19,6 @@ import {
   bladeSign,
   bubbles,
   cabSheen,
-  carGlare,
   curl,
   fans,
   farHall,
@@ -46,10 +45,8 @@ import {
   AISLE,
   ARM,
   BACK,
-  BOUNCES,
   BOWL_R,
   BOWLS0,
-  CARPET,
   CEIL,
   CLACK,
   CLUMSY,
@@ -58,7 +55,6 @@ import {
   DECK_END,
   DEPTH,
   DOOR_SHUT,
-  DRIBBLE,
   EDGE,
   END_WALL,
   FAR,
@@ -85,7 +81,6 @@ import {
   PAN_IN,
   PIT,
   PIT_FLOOR,
-  PIT_LAND,
   PIVOT,
   POCKET,
   POP,
@@ -95,9 +90,6 @@ import {
   RAISE,
   ROAD,
   SEAT,
-  SIDEWALK,
-  SKIP,
-  CURB_KICK,
   WALK,
   STRIKE,
   STROKES,
@@ -481,16 +473,19 @@ function outside(pen: Pen, t: number, x0: number, x1: number, f: Frame): void {
             const wx = bx + 0.3 + c * 0.7
             const h = hash(i * 7 + c, r, 43)
             if (h > 0.84) {
+              // A lit window: its blind's lower half a shade darker than the light over it.
               const col = h > 0.93 ? C.winCool : C.winWarm
               rect(pen, wx, wy, wx + 0.28, wy + 0.32, col)
-              glow(pen, [wx + 0.14, wy + 0.16], 0.45, col, 0.18)
+              rect(pen, wx, wy + 0.2, wx + 0.28, wy + 0.32, mix(col, '#090F1B', 0.25))
             } else rect(pen, wx, wy, wx + 0.28, wy + 0.32, '#090F1B')
           }
         }
-        // A shop at the street, its window dark but for a night lamp.
+        // A shop at the street, its window dark but for a night lamp left on at the back: its little shade, and its
+        // light on the counter under it.
         if (hash(i, 44) > 0.6) {
           rect(pen, bx + 0.3, -1.45, bx + 2.0, -0.62, '#0A1424')
-          glow(pen, [bx + 1.1, -1.0], 0.8, C.winWarm, 0.1)
+          rect(pen, bx + 0.75, -0.98, bx + 1.45, -0.62, mix('#0A1424', C.winWarm, 0.18))
+          shape(pen, [[bx + 0.98, -1.12], [bx + 1.22, -1.12], [bx + 1.28, -1.0], [bx + 0.92, -1.0]], mix(C.winWarm, '#0A1424', 0.35))
         }
       }
       windowsLife(pen, t, bx0, bx1)
@@ -524,13 +519,13 @@ function outside(pen: Pen, t: number, x0: number, x1: number, f: Frame): void {
   // The stoop at the door, down from the threshold to the sidewalk.
   rect(pen, WALL[0] - 0.45, FLOOR, WALL[0], WALK[0] + 0.05, C.walkFace)
   rect(pen, WALL[0] - 0.45, FLOOR - 0.03, WALL[0], FLOOR + 0.03, C.walkTop)
-  // The streetlamp, a cold mercury light on the cab and the curb, a mist turning in it.
+  // The streetlamp: its lit glass under the head, and its cold mercury light lying on the road and the curb under it,
+  // a mist turning in it.
   const lx = -10.6
   rect(pen, lx - 0.05, -3.6, lx + 0.05, (WALK[0] + WALK[1]) / 2, '#0A0F18')
   path(pen, [[lx, -3.6], [lx + 0.15, -3.85], [lx + 0.6, -3.85]], '#0A0F18', 1.6)
   shape(pen, [[lx + 0.4, -3.88], [lx + 0.85, -3.88], [lx + 0.75, -3.76], [lx + 0.5, -3.76]], '#0A0F18')
-  glow(pen, [lx + 0.62, -3.72], 3.8, C.mercury, 0.22)
-  glow(pen, [lx + 0.62, -3.72], 0.5, C.mercury, 0.8)
+  ellipse(pen, [lx + 0.625, -3.75], 0.13, 0.04, C.mercury)
   glow(pen, [lx + 2.2, ROAD], 3.2, C.mercury, 0.1)
   lampMist(pen, t, x0, x1)
   // The alley's own sign, hung off its front over the sidewalk.
@@ -616,14 +611,11 @@ function room(pen: Pen, t: number, f: Frame): void {
   }
   fans(pen, t, f)
   rect(pen, x0, CEIL, x1, CEIL + 0.06, C.woodDark)
-  // On the strike the tubes over the lanes jump.
-  const jolt = flash(t - STRIKE, 0.12)
+  // The tubes, hung under it in their fittings: the lit glass, nothing round it (their light is on the wall, laid above).
   for (const [i, tx] of TUBES.entries()) {
-    const on = tubeOn(i, t) * (tx > 11 ? 1 + 0.6 * jolt : 1)
+    const on = tubeOn(i, t)
     rect(pen, tx - 0.05, CEIL + 0.06, tx + 1.75, CEIL + 0.12, '#3A3530')
     rect(pen, tx, CEIL + 0.12, tx + 1.7, CEIL + 0.2, on > 0.5 ? C.tube : mix(C.tube, '#3A3530', 0.65))
-    glow(pen, [tx + 0.85, CEIL + 0.6], 2.6, C.tubeGlow, 0.13 * on)
-    glow(pen, [tx + 0.85, CEIL + 0.16], 0.9, C.tube, 0.38 * on)
   }
 
   // The lunch counter, its stools, and what is on it.
@@ -677,7 +669,7 @@ function room(pen: Pen, t: number, f: Frame): void {
       const k = pen.k
       const g = ctx.createLinearGradient((tx - 0.9) * k, 0, (tx + 2.6) * k, 0)
       g.addColorStop(0, rgba(pen, C.tube, 0))
-      g.addColorStop(0.5, rgba(pen, C.tube, 0.42))
+      g.addColorStop(0.5, rgba(pen, C.tube, 0.26))
       g.addColorStop(1, rgba(pen, C.tube, 0))
       ctx.save()
       ctx.fillStyle = g
@@ -694,8 +686,9 @@ function room(pen: Pen, t: number, f: Frame): void {
   rect(pen, HEADPIN - 0.55, -2.36, x1 - 0.05, -1.38, C.maskingHi)
   rect(pen, HEADPIN - 0.5, -2.31, x1 - 0.1, -1.43, C.masking)
   crown(pen, [(HEADPIN + x1) / 2, -1.88], 0.62)
-  if (f.x1 > HEADPIN - 0.6) marquee(pen, t, HEADPIN - 0.525, -2.335, x1 - 0.075, -1.405)
-  glow(pen, [HEADPIN + 0.6, -1.2], 1.6, C.tube, 0.2)
+  if (f.x1 > HEADPIN - 0.6) marquee(pen, HEADPIN - 0.525, -2.335, x1 - 0.075, -1.405)
+  // The light under the board, down on the deck and the pins.
+  glow(pen, [HEADPIN + 0.6, -0.9], 1.5, C.tube, 0.15)
   rect(pen, HEADPIN - 0.6, -1.34, x1, -1.28, C.tube)
   // The pinboy, in the dark over the pit, on his perch.
   pinboy(pen, t)
@@ -894,12 +887,8 @@ export function drawAlley(pen: Pen, t: number, f: Frame): void {
   nearPins(pen, t)
   strikeBurst(pen, t)
   drawCab(pen, SEAT, { t, wally: t >= WALK1 + 0.04, lights: lightsAt(t) })
-  if (f.x0 < WALL[0]) {
-    cabSheen(pen, t)
-    carGlare(pen, t)
-  }
+  if (f.x0 < WALL[0]) cabSheen(pen, t)
   hats(pen, t)
-  hitMarks(pen, t)
   if (f.x1 > TABLE[0] - 0.6 && f.x0 < TABLE[1] + 0.6 && f.y0 < TOP) lampMotes(pen, t, lx)
   strata(pen, t, f)
   foreground(pen, t, f)
@@ -907,7 +896,7 @@ export function drawAlley(pen: Pen, t: number, f: Frame): void {
 
 function lightsAt(t: number): number {
   if (t < LIGHTS) return 0
-  return Math.min(1, 0.4 + (t - LIGHTS) / 0.08) + 0.3 * flash(t - LIGHTS, 0.12)
+  return Math.min(1, 0.4 + (t - LIGHTS) / 0.08)
 }
 
 /* ------------------------------------------------------------------ the door */
@@ -941,9 +930,10 @@ function lampOverTable(pen: Pen, t: number): number {
   ellipse(pen, [lx + swing, -3.3], 0.12, 0.04, C.warm)
   const ctx = ctxOf(pen.p)
   const k = pen.k
+  // Its light down through the smoke to the table: faint, the air only just showing it.
   const g = ctx.createLinearGradient(0, -3.3 * k, 0, TOP * k)
-  g.addColorStop(0, rgba(pen, C.warm, 0.22))
-  g.addColorStop(1, rgba(pen, C.warm, 0.05))
+  g.addColorStop(0, rgba(pen, C.warm, 0.11))
+  g.addColorStop(1, rgba(pen, C.warm, 0.03))
   ctx.save()
   ctx.fillStyle = g
   ctx.beginPath()
@@ -954,8 +944,8 @@ function lampOverTable(pen: Pen, t: number): number {
   ctx.closePath()
   ctx.fill()
   ctx.restore()
+  // Its pool on the table and the men round it.
   glow(pen, [lx, TOP - 0.3], 3.2, C.warm, 0.12)
-  bloom(pen, [lx + swing, -3.28], 0.45, C.warm, 0.35)
   return lx + swing
 }
 
@@ -980,7 +970,6 @@ function table(pen: Pen, t: number): void {
   line(pen, [x0, TOP], [x0 + dx, TOP + dy], C.tableLine, 0.7)
   line(pen, [x1, TOP], [x1 + dx, TOP + dy], C.tableLine, 0.7)
   line(pen, [x0 + dx / 2, MID], [x1 + dx / 2, MID], mix(C.tableLine, C.tableTop, 0.4), 0.4)
-  // The bounces: a breath of chalk where he hits it.
   // The net, which shakes when the clumsy one dies in it.
   const shake = 0.05 * ring(t - NET_HIT, 5, 0.3)
   const nb: Pt = [NET_X, TOP]
@@ -995,7 +984,6 @@ function table(pen: Pen, t: number): void {
   ctx.restore()
   line(pen, pts[1], pts[2], C.netTop, 1.2)
   rect(pen, nb[0] - 0.03, TOP - ntop - 0.03, nb[0] + 0.03, TOP + 0.08, C.chromeDark)
-  if (t >= NET_HIT && t < NET_HIT + 0.5) glow(pen, [NET_X, MID - 0.2], 0.4, C.white, 0.35 * flash(t - NET_HIT, 0.12))
   // The mark's spare: his bat, lying on the table until he picks it up.
   if (t < PICKUP[0] + 0.25) oval(pen, [7.9, MID - 0.02], 0.22, 0.05, 0, C.bowl1)
 }
@@ -1083,9 +1071,6 @@ function contraption(pen: Pen, t: number): void {
   oval(pen, face, 0.215, Math.abs(thin), a, C.red)
   ellipse(pen, PIVOT, 0.06, 0.06, C.iron)
   ellipse(pen, PIVOT, 0.025, 0.025, C.ironHi)
-  // A crack of light off the rubber when it strikes.
-  const hit = Math.max(...FIRES.map((f) => flash(t - f.t, f.kind === 'winner' ? 0.2 : f.kind === 'smash' ? 0.15 : 0.09) * (f.kind === 'clumsy' ? 0.4 : 1)))
-  if (hit > 0.02) glow(pen, [PAN[0], PAN[1]], 0.5, C.warm, 0.45 * hit)
 }
 
 /* ------------------------------------------------------------------ the mark who plays */
@@ -1266,7 +1251,8 @@ function bettor(pen: Pen, t: number): void {
   const cig: Pt = [head[0] + 0.24, head[1] + 0.12]
   if (!drinking) {
     line(pen, [head[0] + 0.16, head[1] + 0.1], cig, '#4A2E1A', 2.2)
-    glow(pen, cig, 0.08, '#FF7A3A', 0.6 + 0.3 * Math.sin(t * 2.7))
+    // Its coal, breathing.
+    ellipse(pen, cig, 0.025, 0.025, mix('#6A2418', '#D8452A', 0.6 + 0.3 * Math.sin(t * 2.7)))
   }
   for (let i = 0; i < 5; i++) {
     const u = (t * 0.18 + i / 5) % 1
@@ -1345,7 +1331,6 @@ function rack(pen: Pen, t: number): void {
   blob(pen, [[HOOD[0] + 0.08, RAIL - 0.3], [(HOOD[0] + HOOD[1]) / 2, RAIL - 0.56 - 0.05 * pop], [HOOD[1] - 0.12, RAIL - 0.36], [(HOOD[0] + HOOD[1]) / 2, RAIL - 0.42]], C.carpetHi, 0.6)
   for (let i = 0; i < 4; i++) line(pen, [HOOD[0] + 0.1, RAIL - 0.05 - i * 0.07], [HOOD[1] - 0.1, RAIL - 0.05 - i * 0.07], C.chromeDark, 0.5)
   rect(pen, HOOD[0] - 0.02, RAIL + 0.05, HOOD[1] + 0.02, RAIL + 0.12, C.chrome)
-  if (pop > 0.02) glow(pen, [(HOOD[0] + HOOD[1]) / 2, RAIL - 0.6], 0.6, C.warm, 0.5 * pop)
   // The two house balls: he lands against the near one, it rolls into the other.
   const nudge = t < RAIL_LAND ? 0 : t < CLACK ? 0.06 * ease((t - RAIL_LAND) / (CLACK - RAIL_LAND)) : 0.06
   const b1: Pt = [BOWLS0[0] + nudge + 0.008 * ring(t - CLACK, 4, 0.15), RAIL - BOWL_R]
@@ -1357,7 +1342,6 @@ function rack(pen: Pen, t: number): void {
       const an = -1.2 + turn + h * 0.45
       ellipse(pen, [b[0] + Math.cos(an) * 0.09, b[1] + Math.sin(an) * 0.09], 0.025, 0.025, '#050505')
     }
-    glint(pen, [b[0] - 0.07, b[1] - 0.09], 0.05, C.tube, 0.7)
   }
 }
 
@@ -1368,15 +1352,6 @@ function nearPins(pen: Pen, t: number): void {
   for (const i of PIN_ORDER) {
     const pin = pinAt(i, t)
     drawPin(pen, pin.base, pin.rot, 1, pin.down ? 0.6 : 1)
-  }
-  if (t >= STRIKE && t < STRIKE + 0.6) {
-    const k = flash(t - STRIKE, 0.12)
-    glow(pen, [HEADPIN + 0.4, -0.3], 1.2, C.white, 0.5 * k)
-    for (let i = 0; i < 8; i++) {
-      const an = -Math.PI * (0.1 + 0.8 * hash(i, 71))
-      const r = 0.3 + 1.2 * (t - STRIKE)
-      ellipse(pen, [HEADPIN + 0.2 + Math.cos(an) * r, -0.2 + Math.sin(an) * r * 0.7], 0.02, 0.02, C.creamHi)
-    }
   }
   // The pit's front lip, over whatever went into it.
   rect(pen, PIT[0] - 0.02, NEAR[1], PIT[0] + 0.06, EDGE, C.woodDark)
@@ -1394,38 +1369,5 @@ function hats(pen: Pen, t: number): void {
     const T = (-v[1] + Math.sqrt(v[1] * v[1] + 24 * (floor - start[1]))) / 12
     if (s < T) drawFedora(pen, [start[0] + v[0] * s, start[1] + v[1] * s + 6 * s * s], w * s, col)
     else drawFedora(pen, [start[0] + v[0] * T, floor], Math.PI * (w > 0 ? 1 : -1) * 0.04, col)
-  }
-}
-
-/* ------------------------------------------------------------------ the strikes' marks on the table and the lane */
-
-function hitMarks(pen: Pen, t: number): void {
-  // A puff of chalk where the ball meets the table, the net, the lane, the carpet, the sidewalk.
-  const touches: [number, Pt][] = [
-    [CARPET, [WAY.at(CARPET)[0], FLOOR]],
-    ...[...BOUNCES, ...DRIBBLE].map((b): [number, Pt] => [b, [WAY.at(b)[0], WAY.at(b)[1] + R]]),
-    [LANE_LAND, [WAY.at(LANE_LAND)[0], FLOOR]],
-    [PIT_LAND, [WAY.at(PIT_LAND)[0], PIT_FLOOR]],
-    ...[SIDEWALK, SKIP, CURB_KICK].map((b): [number, Pt] => [b, [WAY.at(b)[0], WAY.at(b)[1] + R]]),
-  ]
-  for (const [bt, p] of touches) {
-    const s = t - bt
-    if (s < 0 || s > 0.3) continue
-    const k = flash(s, 0.08)
-    oval(pen, p, 0.12 + 0.3 * s, 0.025, 0, C.creamHi, 0.55 * k)
-  }
-  // The mark's bat meeting him: a crack of light.
-  for (const st of STROKES) {
-    if (st.miss) continue
-    const s = t - st.t
-    if (s < 0 || s > 0.3) continue
-    glow(pen, [st.p[0] + 0.1, st.p[1]], 0.35, C.warm, 0.5 * flash(s, 0.08))
-  }
-  // The raise slapped into Wally's palm.
-  if (t >= RAISE && t < RAISE + 0.3) glint(pen, [0.24, -2.1], 0.2, C.creamHi, 0.85 * flash(t - RAISE, 0.08))
-  // The mark's knocks on the table's end.
-  for (const tap of TAPS) {
-    const s = t - tap
-    if (s >= 0 && s < 0.3) glint(pen, [8.42, TOP - 0.06], 0.14, C.creamHi, 0.8 * flash(s, 0.08))
   }
 }
