@@ -455,9 +455,9 @@ const FLOCKS: Flock[] = [
   // Up off the pavement on the last chord, up out of the frame and round over the street, down by the café as the
   // camera draws back; up again when the bus comes by, and down again.
   {
-    n: 8,
+    n: 10,
     seed: 5,
-    spots: [{ x0: 8.3, x1: 9.9 }, { x0: 9.0, x1: 11.0 }, { x0: 8.4, x1: 10.4 }],
+    spots: [{ x0: 8.0, x1: 9.15 }, { x0: 9.0, x1: 11.0 }, { x0: 8.4, x1: 10.4 }],
     ups: [STOP, 254.55],
     downs: [239.4, 258.4],
     wheels: [[[3.5, -3.8], 2.0], [[11.4, -1.9], 1.35]],
@@ -503,21 +503,22 @@ function bird(p: Plumage, k: number, x: number, y: number, dir: number, flap: nu
     oval(p.sheen, k, x + dir * 0.05, y - 0.078 + 0.035 * peck, 0.018, 0.014, 0)
     return
   }
-  // In the air: the body, the tail fanned behind, the wings beating.
-  oval(p.body, k, x, y, 0.07, 0.03, 0)
-  p.dark.moveTo((x - dir * 0.05) * k, y * k)
-  p.dark.lineTo((x - dir * 0.12) * k, (y - 0.03) * k)
-  p.dark.lineTo((x - dir * 0.12) * k, (y + 0.03) * k)
-  p.dark.closePath()
-  oval(p.dark, k, x + dir * 0.07, y - 0.01, 0.022, 0.02, 0)
-  const wy = -flap * 0.11
-  for (const side of [1, -0.6]) {
-    p.dark.moveTo((x - dir * 0.03) * k, y * k)
-    p.dark.lineTo((x - dir * 0.01) * k, (y + wy * side) * k)
-    p.dark.lineTo((x + dir * 0.045) * k, (y + wy * side * 1.05) * k)
-    p.dark.lineTo((x + dir * 0.03) * k, y * k)
+  // In the air, seen against the light: a small body, and the wings out to either side, bent at the wrist, beating.
+  oval(p.dark, k, x, y, 0.042, 0.03, 0)
+  const lift = -0.09 * flap
+  for (const side of [-1, 1]) {
+    const wx = x + side * 0.07
+    const wy = y + lift * 0.5 - 0.02
+    const tx = x + side * 0.15
+    const ty = y + lift
+    p.dark.moveTo((x + side * 0.02) * k, (y - 0.015) * k)
+    p.dark.quadraticCurveTo((wx - side * 0.01) * k, (wy - 0.03) * k, wx * k, wy * k)
+    p.dark.quadraticCurveTo((wx + side * 0.04) * k, (wy + (ty - wy) * 0.4 - 0.01) * k, tx * k, ty * k)
+    p.dark.quadraticCurveTo((wx + side * 0.03) * k, (wy + (ty - wy) * 0.5 + 0.03) * k, wx * k, (wy + 0.03) * k)
+    p.dark.quadraticCurveTo((x + side * 0.03) * k, (y + 0.02) * k, (x + side * 0.02) * k, (y + 0.015) * k)
     p.dark.closePath()
   }
+  void dir
 }
 
 /** The pigeons at `t`: pecking, going up all at once, wheeling, coming down. */

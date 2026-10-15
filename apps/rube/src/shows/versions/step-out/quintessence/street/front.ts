@@ -11,8 +11,8 @@ import { ANCHOR, REF } from './sky'
  * changes his colour. It is handed show time as `t`.
  *
  * - The near plane: a street tree's leaves over the top and a mailbox at the kerb below as the camera comes along the
- *   pavement; and, for the long view, the leaves of the trees on this side hanging into the top corners and a hydrant
- *   at the kerb, coming in from the frame's edges as the camera draws back and goes on along. All of it at the frame's edges, never over the two of
+ *   pavement; and, for the long view, the leaves of the trees on this side hanging into the top corners, a hydrant and,
+ *   last, a lamp post at the kerb, coming in from the frame's edges as the camera draws back and goes on along. All of it at the frame's edges, never over the two of
  *   them, and none of it tall enough at the bottom to reach the pavement where they roll.
  * - The air: shafts of the low sun down the street through the haze, and the dust turning in them.
  * - The grade: gold from the top, a cool blue in the street's shade, the frame's edges falling away warm; through the
@@ -97,6 +97,28 @@ function hydrant(ctx: C2, k: number, x: number, foot: number): void {
   ctx.fillRect((x - 0.03) * k, (foot - 0.82) * k, 0.06 * k, 0.07 * k)
 }
 
+/** A lamp post at the kerb, near: its fluted foot, the pole, the crook over the street, the lamp out by day; the sun down its right. */
+function lampPost(ctx: C2, k: number, x: number, foot: number, h: number): void {
+  const c = '#33403A'
+  const top = foot - h
+  ctx.fillStyle = c
+  ctx.fillRect((x - 0.16) * k, (foot - 1.1) * k, 0.32 * k, 1.1 * k)
+  ctx.fillRect((x - 0.1) * k, (foot - 1.4) * k, 0.2 * k, 0.3 * k)
+  ctx.fillRect((x - 0.07) * k, top * k, 0.14 * k, (h - 1.4) * k)
+  ctx.strokeStyle = c
+  ctx.lineWidth = 0.12 * k
+  ctx.beginPath()
+  ctx.moveTo(x * k, (top + 0.1) * k)
+  ctx.quadraticCurveTo(x * k, (top - 0.7) * k, (x - 0.8) * k, (top - 0.55) * k)
+  ctx.stroke()
+  ctx.fillRect((x - 1.05) * k, (top - 0.62) * k, 0.5 * k, 0.24 * k)
+  ctx.fillStyle = '#E9E3D2'
+  ctx.fillRect((x - 1.0) * k, (top - 0.38) * k, 0.4 * k, 0.06 * k)
+  ctx.fillStyle = '#6E7C70'
+  ctx.fillRect((x + 0.03) * k, top * k, 0.04 * k, (h - 1.4) * k)
+  ctx.fillRect((x + 0.08) * k, (foot - 1.1) * k, 0.08 * k, 1.1 * k)
+}
+
 /** The near plane at `t`: what passes close to the lens. */
 function near(ctx: C2, v: View, t: number): void {
   const k = v.k
@@ -106,11 +128,12 @@ function near(ctx: C2, v: View, t: number): void {
     leaves(ctx, k, t, [-3.9, -2.45], [1.5, 0.45], 70, 11, [-5.6, -3.0])
     mailbox(ctx, k, 0.4, 1.55)
   })
-  // For the long view: the trees on this side into the top corners, the hydrant at the kerb.
+  // For the long view: the trees on this side into the top corners, the hydrant and a lamp post at the kerb.
   layer(ctx, v, Z, WIDE.anchor, WIDE.ref, () => {
     leaves(ctx, k, t, [1.7, -7.15], [2.0, 0.7], 90, 12, [-0.8, -8.2])
     leaves(ctx, k, t, [23.6, -7.3], [2.0, 0.65], 80, 13, [26.3, -8.4])
     hydrant(ctx, k, 21.6, 1.75)
+    lampPost(ctx, k, 25.3, 2.25, 9.2)
   })
 }
 

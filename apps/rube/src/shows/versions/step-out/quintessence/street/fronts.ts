@@ -192,7 +192,7 @@ export function drawFronts(ctx: C2, v: View, t: number): void {
     ctx.beginPath()
     ctx.rect(wx0 * k, (wy0 + f.win[1] * 0.18) * k, f.win[0] * k, f.win[1] * 0.82 * k)
     ctx.clip()
-    ctx.fillStyle = rgba('#2E3236', 0.42)
+    ctx.fillStyle = rgba('#2E3236', f.far ? 0.22 : 0.32)
     ctx.beginPath()
     ctx.arc(px * k, py * k, 0.11 * k, 0, Math.PI * 2)
     ctx.moveTo((px - 0.24) * k, (py + 0.38) * k)
