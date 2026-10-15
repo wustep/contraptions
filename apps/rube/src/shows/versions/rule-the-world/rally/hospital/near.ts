@@ -3,21 +3,20 @@ import { smooth } from '../kit'
 import { layer, type Frame } from '../depth'
 import { ctxOf, mix, rgba, type Pen } from '../pen'
 import { at } from '../music'
-import { LIFT, REACH } from './geo'
 
 /**
  * The corridor's traffic close to the lens, while he is at the glass: people going by between the camera and the
  * room, cropped by the frame's foot and a little in the shade, a third again as fast as the room, the way the front
- * rows go by in London and Tokyo. A nurse in her navy cape carries the dawn feed's bottles on a tray, a porter brings
- * a crate of milk, a doctor goes by reading, a visitor in her cloche goes down to the far door with her flowers. They are the morning's
- * business: always low, under him, and never while the nurse lifts his son to the glass or while the two of them play
- * their first rally through it. The pillow, earlier, has none: that is theirs.
+ * rows go by in London and Tokyo. A nurse in her navy cape carries the dawn feed's bottles on a tray one way, a doctor
+ * goes by reading the other. They are the morning's business: always low, under him, two and no more, and none of them
+ * while the nurse waves, reaches for his son, lifts him to the glass, or while the two of them play their first rally
+ * through it. The pillow, earlier, has none: that is theirs.
  */
 
 const FG = '#26302B'
 
 /** Who goes by. */
-type Kind = 'porter' | 'visitor' | 'tray' | 'doctor'
+type Kind = 'tray' | 'doctor'
 
 interface Passer {
   kind: Kind
@@ -40,10 +39,6 @@ const PASSERS: Passer[] = [
   { kind: 'tray', t0: at(100, 1) + 0.15, t1: at(101, 2) + 0.2, x0: -3.9, x1: -13.7, top: 0.34, s: 1.38, anchor: HALL_AT },
   // A doctor the other way, his stethoscope round his neck, reading as he goes, before the nurse's wave.
   { kind: 'doctor', t0: at(101, 4), t1: at(102, 4) - 0.1, x0: -13.7, x1: -3.9, top: 0.33, s: 1.42, anchor: HALL_AT },
-  // As the wave ends: the porter with the morning's milk.
-  { kind: 'porter', t0: at(102, 4) + 0.1, t1: at(103, 4) + 0.25, x0: -13.7, x1: -3.9, top: 0.36, s: 1.4, anchor: HALL_AT },
-  // While the nurse reaches for him: a visitor with her flowers, going down to the far door. Gone before the lift.
-  { kind: 'visitor', t0: REACH - 0.25, t1: LIFT - 0.15, x0: -3.9, x1: -13.7, top: 0.35, s: 1.36, anchor: HALL_AT },
 ]
 
 /* ------------------------------------------------------------------ drawing */
@@ -61,8 +56,14 @@ const ell = (k: number, p: Path2D, c: Pt, rx: number, ry: number, rot = 0): void
   p.moveTo((c[0] + rx * Math.cos(rot)) * k, (c[1] + rx * Math.sin(rot)) * k)
   p.ellipse(c[0] * k, c[1] * k, rx * k, ry * k, rot, 0, Math.PI * 2)
 }
+/** Every piece wound the same way round (as an ellipse is drawn), whichever way they walk: an arm across the body adds to it, never cuts it. */
 const poly = (k: number, p: Path2D, pts: Pt[]): void => {
-  pts.forEach(([x, y], i) => (i ? p.lineTo(x * k, y * k) : p.moveTo(x * k, y * k)))
+  const area = pts.reduce((sum, [x, y], i) => {
+    const [nx, ny] = pts[(i + 1) % pts.length]
+    return sum + x * ny - nx * y
+  }, 0)
+  const way = area < 0 ? [...pts].reverse() : pts
+  way.forEach(([x, y], i) => (i ? p.lineTo(x * k, y * k) : p.moveTo(x * k, y * k)))
   p.closePath()
 }
 
@@ -119,25 +120,7 @@ function person(pen: Pen, kind: Kind, x: number, top: number, s: number, dir: 1 
       poly(k, trim, [[bx - 0.045 * s, ty], [bx + 0.045 * s, ty], [bx + 0.045 * s, ty - 0.14 * s], [bx + 0.02 * s, ty - 0.17 * s], [bx + 0.015 * s, ty - 0.21 * s], [bx - 0.015 * s, ty - 0.21 * s], [bx - 0.02 * s, ty - 0.17 * s], [bx - 0.045 * s, ty - 0.14 * s]])
     }
     extra2Col = '#B9B3A6'
-  } else if (kind === 'porter') {
-    // A white jacket and a dark peaked cap; a crate of milk held before him.
-    bodyCol = '#E6E8E0'
-    hairCol = '#3A2F28'
-    ell(k, hair, [head[0] - dir * 0.04 * s, head[1] - 0.02 * s], hr * 0.9, hr * 0.8)
-    poly(k, extra, [[head[0] - 0.17 * s, y + 0.06 * s], [head[0] + 0.15 * s, y + 0.06 * s], [head[0] + 0.13 * s, y - 0.06 * s], [head[0] - 0.15 * s, y - 0.05 * s]])
-    poly(k, extra, [[head[0] + dir * 0.08 * s, y + 0.04 * s], [head[0] + dir * 0.3 * s, y + 0.08 * s], [head[0] + dir * 0.26 * s, y + 0.11 * s], [head[0] + dir * 0.06 * s, y + 0.08 * s]])
-    extraCol = '#2E3238'
-    // The crate held before him at the chest, its bottles' caps showing over its side.
-    const cx = x + dir * 0.3 * s
-    const cy = sh - 0.02 * s
-    poly(k, extra2, [[cx - 0.4 * s, cy], [cx + 0.4 * s, cy], [cx + 0.4 * s, cy + 0.42 * s], [cx - 0.4 * s, cy + 0.42 * s]])
-    extra2Col = '#9A7B55'
-    for (let i = 0; i < 4; i++) {
-      const bx = cx - 0.28 * s + i * 0.19 * s
-      poly(k, trim, [[bx - 0.06 * s, cy + 0.02 * s], [bx + 0.06 * s, cy + 0.02 * s], [bx + 0.05 * s, cy - 0.1 * s], [bx + 0.025 * s, cy - 0.14 * s], [bx - 0.025 * s, cy - 0.14 * s], [bx - 0.05 * s, cy - 0.1 * s]])
-    }
-    poly(k, body, [[x - dir * 0.2 * s, sh + 0.1 * s], [cx - dir * 0.3 * s, cy + 0.12 * s], [cx - dir * 0.28 * s, cy + 0.26 * s], [x - dir * 0.1 * s, sh + 0.35 * s]])
-  } else if (kind === 'doctor') {
+  } else {
     // Grey at the temples, a white coat, the stethoscope's tubes round his neck, a chart held up before him.
     bodyCol = '#EEEFEA'
     hairCol = '#8C8278'
@@ -151,46 +134,17 @@ function person(pen: Pen, kind: Kind, x: number, top: number, s: number, dir: 1 
     extra2Col = '#E6DCC4'
     for (let i = 0; i < 3; i++) poly(k, trim, [[cx - 0.11 * s, sh - 0.13 * s + i * 0.08 * s], [cx + 0.12 * s, sh - 0.14 * s + i * 0.08 * s], [cx + 0.12 * s, sh - 0.125 * s + i * 0.08 * s], [cx - 0.11 * s, sh - 0.115 * s + i * 0.08 * s]])
     trimCol = '#8E8778'
-  } else {
-    // A plum coat with its collar up, a cloche, and her flowers in their paper cone held up against her.
-    bodyCol = '#7A4E58'
-    hairCol = '#B98B5A'
-    ell(k, hair, [head[0] - dir * 0.05 * s, head[1] + 0.06 * s], hr * 0.85, hr * 0.8)
-    extra.moveTo((head[0] - 0.19 * s) * k, (y + 0.11 * s) * k)
-    extra.ellipse(head[0] * k, (y + 0.11 * s) * k, 0.19 * s * k, 0.17 * s * k, 0, Math.PI, 0)
-    extra.closePath()
-    poly(k, extra, [[head[0] - 0.21 * s, y + 0.1 * s], [head[0] + 0.21 * s, y + 0.1 * s], [head[0] + 0.19 * s, y + 0.14 * s], [head[0] - 0.19 * s, y + 0.14 * s]])
-    extraCol = '#3E4A5C'
-    poly(k, trim, [[x - 0.16 * s, sh - 0.02 * s], [x + 0.16 * s, sh - 0.02 * s], [x + 0.2 * s, sh + 0.14 * s], [x, sh + 0.22 * s], [x - 0.2 * s, sh + 0.14 * s]])
-    trimCol = '#5E3C45'
-    const fx = x + dir * 0.32 * s
-    poly(k, extra2, [[fx - 0.08 * s, sh + 0.55 * s], [fx + 0.08 * s, sh + 0.55 * s], [fx + 0.2 * s, sh - 0.05 * s], [fx - 0.2 * s, sh - 0.05 * s]])
-    extra2Col = '#EFE8D6'
   }
 
   const ctx = ctxOf(pen.p)
   ctx.save()
   fill(pen, body, near(bodyCol), a)
-  if (kind !== 'visitor') fill(pen, extra2, near(extra2Col), a)
+  fill(pen, extra2, near(extra2Col), a)
   fill(pen, extra, near(extraCol), a)
   fill(pen, skin, near('#E2B693'), a)
   fill(pen, hair, near(hairCol), a)
   fill(pen, trim, near(trimCol), a)
   fill(pen, band, near('#2C2C2C'), a)
-  if (kind === 'visitor') {
-    fill(pen, extra2, near(extra2Col), a)
-    // The flowers at the cone's mouth.
-    const fx = x + dir * 0.32 * s
-    const blooms = new Path2D()
-    const leaves = new Path2D()
-    for (let i = 0; i < 6; i++) {
-      const bx = fx + (i - 2.5) * 0.07 * s + 0.01 * s * Math.sin(ph + i)
-      const by = sh - 0.08 * s - 0.06 * s * Math.abs(Math.sin(i * 1.7))
-      ell(k, i % 2 ? leaves : blooms, [bx, by], 0.06 * s, 0.05 * s)
-    }
-    fill(pen, leaves, near('#6E8A5A'), a)
-    fill(pen, blooms, near('#D98A8E'), a)
-  }
   ctx.restore()
 }
 
