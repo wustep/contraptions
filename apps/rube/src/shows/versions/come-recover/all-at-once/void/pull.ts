@@ -57,6 +57,12 @@ interface PullState {
 
 /** How far the light round the bagel reaches: things further out are in the dark. */
 const reach = (r: number): number => 1 - ss(r, 9.5, 12.5)
+/**
+ * Out past the light the things still waiting are only just there: dim shapes turning in the dark, out to the edges of
+ * the widest frame, so the dark round the bagel is full of everything on its way in, not empty.
+ */
+const FAR_LIGHT = 0.26
+const seen = (r: number): number => Math.max(reach(r), FAR_LIGHT * (1 - ss(r, 18, 26)))
 
 export const pull = part<PullState>(
   {
@@ -104,7 +110,7 @@ export const pull = part<PullState>(
         const r = Math.hypot(bx, by)
         const sink = u < 0 ? clamp(-u / 0.45) : 0
         const size = w.size * (1 - easeOutCubic(sink))
-        const light = lit * reach(r)
+        const light = lit * seen(r)
         if (light < 0.02 || size < 0.01) return
         const spin = hash(i, 21) * 6.28 + (0.25 + 0.3 * hash(i, 22)) * (t - T0) + 2.2 * Math.max(0, 1 - Math.max(0, u) / 2.5) ** 2
         const [x, y] = toPart([bx, by + bob])
@@ -424,8 +430,8 @@ const STRATA: Stratum[] = Array.from({ length: 6 }, (_, i) => ({
   warm: i % 3 === 1,
   a: 0.1 + 0.06 * hash(i, 6, 131),
 }))
-/** From the jump in, gone as the great light takes the dark over. */
-const strataAt = (t: number): number => ss(t, T0 - 0.4, T0 + 2.2) * (1 - ss(t, REVEAL + 2, 142.6))
+/** From the jump in; thinner once the great light takes the dark over, and on behind the pull to the tip in. */
+const strataAt = (t: number): number => ss(t, T0 - 0.4, T0 + 2.2) * (1 - 0.45 * ss(t, REVEAL + 2, 142.6)) * (1 - ss(t, T1 - 1.2, T1))
 
 function drawStrata(p: p5, k: number, t: number): void {
   const fade = strataAt(t)
