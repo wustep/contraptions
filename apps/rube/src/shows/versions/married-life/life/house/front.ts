@@ -508,9 +508,12 @@ function windRun(t: number): number {
   return RUN_TABLE[i] + (RUN_TABLE[i + 1] - RUN_TABLE[i]) * (u - i)
 }
 
-/** How much snow is falling at T: light as the credits come, thickening to the end. 0 before. */
+/**
+ * How much snow is falling at T: the first flakes as he puts the lamp on, so the lit room is held through them; heavier
+ * as the credits come, thickening to the end. 0 before.
+ */
 function snowAt(T: number): number {
-  return smooth(T, CREDITS_AT - 0.3, CREDITS_AT + 3.5) * (0.18 + 0.82 * smooth(T, CREDITS_AT + 1, 255))
+  return smooth(T, ALONE.lamp + 0.3, ALONE.lamp + 3.5) * (0.16 + 0.84 * smooth(T, CREDITS_AT - 0.3, 255))
 }
 /** How far it has settled: the roofs' edges, the lamps' caps, the mailbox, the lawn and the pavement, over the last twenty seconds. */
 function settleAt(T: number): number {
@@ -635,8 +638,8 @@ const NEAR_LEAVES = leafSeeds(15, 201.5, 234, 0.38, (i) => ({
   land: 0,
 }))
 
-/** All the leaves go together as the snow begins. */
-const leavesOn = (T: number): number => 1 - smooth(T, CREDITS_AT - 1, CREDITS_AT + 3)
+/** The wind drops and the leaves go together as the snow begins. */
+const leavesOn = (T: number): number => 1 - smooth(T, ALONE.lamp + 0.3, ALONE.lamp + 4)
 
 /** One leaf: a pointed oval, turned and tumbling (its width the face it shows), added to the current path. */
 function leafPath(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, size: number, angle: number, face: number): void {
@@ -789,8 +792,8 @@ function snowLayer(n: number, seed: number, fall: number, r: [number, number], d
  */
 const SNOW: SnowLayer[] = [
   snowLayer(700, 31, 1 / 26, [0.0012, 0.0018], 0.01, 0.0025, 0.5, 0.6, false),
-  snowLayer(430, 32, 1 / 9.5, [0.0026, 0.0038], 0.02, 0.005, 0.72, 0, true),
-  snowLayer(30, 33, 1 / 5, [0.0055, 0.0085], 0.04, 0.01, 0.88, -0.5, true),
+  snowLayer(520, 32, 1 / 9.5, [0.0026, 0.0038], 0.02, 0.005, 0.72, 0, true),
+  snowLayer(45, 33, 1 / 5, [0.0055, 0.0085], 0.04, 0.01, 0.88, -0.5, true),
 ]
 /** The flakes of a layer at each of three strengths (fading in as the fall thickens, or out under a card): x, y, r. */
 const FLAKE_BUF = [0, 1, 2].map(() => new Float32Array(3 * 6000))
