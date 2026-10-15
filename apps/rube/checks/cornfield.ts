@@ -41,7 +41,7 @@ export function checkCornfield(perf: Performance, check: Check): void {
     perf.cuts!(sunset.begin - 0.01) && !perf.cuts!((sunset.begin + arrival.end) / 2) && perf.cuts!(arrival.end + 0.01))
 
   // The follow spot: down where floors stack, gone by the photograph.
-  const lit = spot(perf.show, fair, booth.begin)
+  const lit = spot(perf.show, fair, booth.begin, [beatAt(132)])
   let stacked = 0
   for (let t = 66; t <= 80; t += 0.5) if (strengthAt(lit, t) > 0.6) stacked++
   check('cornfield opus55: the follow spot is down where the run doubles back on itself (66 to 80 s)', stacked === 29, `${stacked}/29`)
@@ -50,8 +50,13 @@ export function checkCornfield(perf: Performance, check: Check): void {
   check('cornfield opus55: the follow spot is up for the drop, along the fair\'s last floor, and for the photograph',
     strengthAt(lit, o.drop.t) === 0 && single === 0 && strengthAt(lit, perf.duration) === 0, `${single} moments down after 90 s`)
   let jump = 0
-  for (let t = fair.begin; t < booth.begin; t += 1 / 60) jump = Math.max(jump, Math.abs(strengthAt(lit, t + 1 / 60) - strengthAt(lit, t)))
-  check('cornfield opus55: the follow spot never switches: it comes and goes over a second or more', jump < 0.04, jump.toFixed(3))
+  for (let t = fair.begin; t < booth.begin; t += 1 / 60) {
+    if (Math.abs(t - beatAt(132)) < 0.1) continue
+    jump = Math.max(jump, Math.abs(strengthAt(lit, t + 1 / 60) - strengthAt(lit, t)))
+  }
+  check('cornfield opus55: the follow spot never switches but on the full organ: it comes and goes over a second or more', jump < 0.04, jump.toFixed(3))
+  check('cornfield opus55: on the full organ\'s downbeat the house lights come up: every floor lit, for two beats, then the spot again',
+    strengthAt(lit, beatAt(132) - 0.1) > 0.9 && strengthAt(lit, beatAt(132)) === 0 && strengthAt(lit, beatAt(134)) === 0 && strengthAt(lit, beatAt(138)) > 0.9)
 
   // The photograph: the draw back.
   const close = cam(door.end)

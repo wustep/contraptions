@@ -440,27 +440,10 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
   }
 }
 
-/**
- * Dust off the field as the organ gathers: specks blown left to right across the lower sky, thicker toward the drop.
- */
-export function dust(s: Screen, t: number, hy: number, amount: number, color: string): void {
+/** A haze off the field as the organ gathers, low over the rows and thicker toward the drop, in level bands as the sky is. */
+export function haze(s: Screen, hy: number, amount: number, color: string): void {
   if (amount <= 0.01) return
-  const { ctx, cx, f } = s
-  const frameW = (f * 16) / 9
-  const left = cx - frameW / 2
-  ctx.fillStyle = rgba(color, 0.55 * amount)
-  ctx.beginPath()
-  const n = Math.round(90 * amount)
-  for (let i = 0; i < n; i++) {
-    const speed = 0.25 + hash(i, 41) * 0.35
-    const x = left + ((((hash(i, 42) + t * speed) % 1.2) + 1.2) % 1.2 - 0.1) * frameW
-    const y = hy - f * (0.02 + 0.5 * hash(i, 43) ** 1.6) + Math.sin(t * 1.7 + i) * f * 0.006
-    const r = f * (0.0012 + 0.0018 * hash(i, 44))
-    ctx.moveTo(x + r, y)
-    ctx.arc(x, y, r, 0, Math.PI * 2)
-  }
-  ctx.fill()
-  // A haze low over the rows, in level bands as the sky is.
+  const { ctx, f } = s
   const bands = 24
   const edge = (i: number) => Math.floor(hy - f * 0.25 + (f * 0.3 * i) / bands)
   for (let i = 0; i < bands; i++) {

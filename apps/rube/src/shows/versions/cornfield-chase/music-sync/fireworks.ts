@@ -29,9 +29,10 @@ const VIOLET = '#B48AEA'
 
 export const SHELLS: Shell[] = [
   { t: DROP, x: 0.62, y: 0.52, r: 0.15, color: GOLD, fade: PINK },
-  // The full organ comes in on beat 132: a shell on it and one on the eighth after.
-  { t: beatAt(132), x: 0.3, y: 0.55, r: 0.14, color: CYAN, fade: VIOLET },
-  { t: beatAt(132.5), x: 0.74, y: 0.48, r: 0.12, color: PINK, fade: GOLD },
+  // The full organ comes in on beat 132: a shell on it and one on the eighth after, high and wide, to be seen over and
+  // through the floors of machines that fill the frame there.
+  { t: beatAt(132), x: 0.24, y: 0.62, r: 0.22, color: CYAN, fade: VIOLET },
+  { t: beatAt(132.5), x: 0.78, y: 0.58, r: 0.19, color: PINK, fade: GOLD },
   { t: beatAt(180), x: 0.5, y: 0.56, r: 0.15, color: GREEN, fade: CYAN },
   // The last hit, and the pulse's last two beats under its ring.
   { t: LAST, x: 0.42, y: 0.5, r: 0.2, color: GOLD, fade: PINK },

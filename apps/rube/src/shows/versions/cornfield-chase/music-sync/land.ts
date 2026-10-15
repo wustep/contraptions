@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type PieceCtx } from '../../../../parts'
-import { band, body, dayAt, dust, farm, gustAt, rows, sky, sunHeight, type Light } from './field'
+import { band, body, dayAt, farm, gustAt, haze, rows, sky, sunHeight, type Light } from './field'
 import { fireworks } from './fireworks'
 import { beatAt } from './music'
 import { done, hash, rgba, screenOf, smooth, type Screen } from './screen'
@@ -19,7 +19,7 @@ export function dayLand(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', '#F6D58A', 0.6 - 0.1 * dusk, 0.24)
   farm(s, hy, l.farm)
   band(s, hy, l.band)
-  dust(s, t, hy, smooth(t, 34, 40.4), '#C7A07C')
+  haze(s, hy, smooth(t, 34, 40.4), '#C7A07C')
   rows(s, t, hy, { ...l.rows, wind: (x) => gustAt(t, x) })
   done(s)
 }
@@ -41,17 +41,50 @@ const NIGHT: Light = {
  * glow on the horizon swells with the full organ and settles for the photograph.
  */
 const moonHeight = (t: number): number => 0.4 + 0.22 * smooth(t, 41, 117)
-const glowAt = (t: number): number => smooth(t, beatAt(132) - 1, beatAt(132) + 3) * (1 - smooth(t, 116, 120))
+/** The full organ comes in on beat 132: the glow flares on the beat and settles over a bar to the level it holds. */
+const FULL = beatAt(132)
+const glowAt = (t: number): number => smooth(t, FULL, FULL + 3) * (1 - smooth(t, 116, 120))
+const flareAt = (t: number): number => (t < FULL ? smooth(t, FULL - 0.06, FULL) : Math.exp(-(t - FULL) / 0.9))
+
+/** The night's light at `t`, under a horizon at `horizon` of the frame. */
+const nightAt = (t: number, horizon: number): Light => ({
+  ...NIGHT,
+  low: mixHex(mixHex(NIGHT.low, '#46325F', glowAt(t)), '#7E4E8E', 0.85 * flareAt(t)),
+  mid: mixHex(NIGHT.mid, '#271F45', 0.6 * flareAt(t)),
+  horizon,
+})
 
 export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: number, horizon: (t: number) => number): void {
   const t = begin + c.t
   const s = screenOf(p, c, col, line)
-  const l = { ...NIGHT, low: mixHex(NIGHT.low, '#46325F', glowAt(t)), horizon: horizon(t) }
+  const l = nightAt(t, horizon(t))
   const hy = sky(s, l)
   stars(s, t, hy)
   body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', '#B9B0E8', 0.22, 0.2, mixHex(l.top, l.mid, 0.4))
   fireworks(s, t, hy)
   farm(s, hy, l.farm, '#E3B45C')
+  band(s, hy, l.band)
+  rows(s, t, hy, l.rows)
+  done(s)
+}
+
+/**
+ * The field in front of the fair, for the draw back: the same rows the backdrop has, drawn again over the machine
+ * from the foot of the frame up to the horizon as `rise` goes from 0 to 1, so that as the camera draws back across the
+ * field the fair is seen standing beyond it, and what hangs below the fair's floor (the ticket's paper) is in the corn.
+ */
+export function frontField(p: p5, c: PieceCtx, col: number, line: number, begin: number, horizon: (t: number) => number, rise: number): void {
+  if (rise <= 0) return
+  const t = begin + c.t
+  const s = screenOf(p, c, col, line)
+  const l = nightAt(t, horizon(t))
+  const hy = s.cy + (l.horizon - 0.5) * s.f
+  const top = Math.floor(hy + (1 - rise) * (s.h - hy + 2))
+  s.ctx.beginPath()
+  s.ctx.rect(0, top, s.w, s.h - top)
+  s.ctx.clip()
+  s.ctx.fillStyle = l.ground
+  s.ctx.fillRect(0, top, s.w, s.h - top)
   band(s, hy, l.band)
   rows(s, t, hy, l.rows)
   done(s)

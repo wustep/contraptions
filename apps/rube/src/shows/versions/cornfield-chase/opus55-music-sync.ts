@@ -1,7 +1,8 @@
 import type { Framing, Performance } from '../../registry'
 import type { StockScore } from '../../stock/types'
 import { expose, exposure, finale, flash, pull, type Exposure } from './music-sync/finale'
-import { dayLand, nightLand } from './music-sync/land'
+import { dayLand, frontField, nightLand } from './music-sync/land'
+import { beatAt } from './music-sync/music'
 import { scenery } from './music-sync/screen'
 import { nightfall } from './music-sync/nightfall'
 import { DressedShow } from './music-sync/show'
@@ -37,10 +38,13 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
     behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon))],
     over: [scenery('photograph', () => {}, (p, c) => {
       const t = map.begin + c.t
-      lit ??= spot(show, map, booth.begin)
+      // On the full organ the house lights come up: every floor lit on the beat, the spot easing back after.
+      lit ??= spot(show, map, booth.begin, [beatAt(132)])
       follow(p, c, row, t, lit, NIGHT)
       flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
       if (t <= photo.from) return
+      // The corn comes up in front of the fair as the camera draws back across it.
+      frontField(p, c, col, row, map.begin, photo.horizon, smooth((t - photo.from) / 2.5))
       // The run from a little before the stretch the photograph frames, so the line comes in from past its edge.
       run ??= expose(show, STRETCH - 7, door.begin + 0.3)
       exposure(p, c, col, row, t, run, photo)

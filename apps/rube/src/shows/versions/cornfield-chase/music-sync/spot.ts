@@ -17,13 +17,15 @@ const STEP = 0.1
 
 export interface Spot {
   from: number
+  /** Show times the house lights come up: every floor lit at once on the beat, the spot easing back after. */
+  cues: number[]
   /** Every STEP: the band's middle (cells) and how dark the floors off it go, 0 to 1. */
   y: Float32Array
   strength: Float32Array
 }
 
-/** The spot over the fair's `map`, worked out up to show time `end`; it is gone after that. */
-export function spot(show: Show, map: StockMap, end: number): Spot {
+/** The spot over the fair's `map`, worked out up to show time `end`; it is gone after that. It lifts on `cues`. */
+export function spot(show: Show, map: StockMap, end: number, cues: number[] = []): Spot {
   const from = map.begin
   const n = Math.ceil((end - from) / STEP) + 1
   const raw = new Float32Array(n)
@@ -74,7 +76,7 @@ export function spot(show: Show, map: StockMap, end: number): Spot {
     }
     strength[i] = smooth(m, 0, 1) * smooth(n - 1 - i, 0, reach)
   }
-  return { from, y: ys, strength }
+  return { from, cues, y: ys, strength }
 }
 
 const read = (a: Float32Array, s: Spot, t: number): number => {
@@ -85,8 +87,15 @@ const read = (a: Float32Array, s: Spot, t: number): number => {
   return a[i] * (1 - f) + a[i + 1] * f
 }
 
+/** How far the house lights are up at show time `t` for a cue: up on its beat, held two beats, down over two more. */
+const up = (s: Spot, t: number): number => {
+  let out = 0
+  for (const c of s.cues) out = Math.max(out, smooth(t, c - 0.06, c) * (1 - smooth(t, c + 1.25, c + 3.75)))
+  return out
+}
+
 /** How far down the night is over the floors off the ball's at show time `t`, 0 to 1. */
-export const strengthAt = (s: Spot, t: number): number => read(s.strength, s, t)
+export const strengthAt = (s: Spot, t: number): number => read(s.strength, s, t) * (1 - up(s, t))
 
 /** The night over the floors off the ball's, drawn over the machine in the world's cells. */
 export function follow(p: p5, c: PieceCtx, line: number, t: number, s: Spot, night: string, depth = 0.5): void {
