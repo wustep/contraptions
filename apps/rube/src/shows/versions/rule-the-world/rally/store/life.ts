@@ -20,8 +20,6 @@ import {
   PART2,
   SAFE,
   STOCK_BULB,
-  T1,
-  TRANSOM,
   WELCOME,
   WIN,
   doorDeg,
@@ -33,10 +31,9 @@ import { passing } from './street'
 /**
  * The store's life, laid over its drawing: what keeps it moving when Marty is not, and the light its lamps lay on
  * things. The cat in the window; a little dust turning in the lamps' light; the passing traffic's lamps thrown across
- * the store; dust shaken off the wall when the ladder bangs home; the stockroom's moth and its shadow, and the street's
- * blue down from a transom; Murray's desk lamp, his cigarette's smoke, the street's light through his blinds, a car's
- * lamps swept across it and the El's windows going by; and in front of it all, the store's clutter going by dark and
- * soft along the foot of the frame. The light is laid over things, never added to them: no halo hangs round a lamp,
+ * the store; dust shaken off the wall when the ladder bangs home; the stockroom's moth and its shadow; Murray's desk
+ * lamp, his cigarette's smoke, the street's light through his blinds, the traffic's lamps swept across it and the El's
+ * windows going by; and in front of it all, the store's clutter going by dark and soft along the foot of the frame. The light is laid over things, never added to them: no halo hangs round a lamp,
  * and nothing flashes when something lands.
  */
 
@@ -282,31 +279,9 @@ export function drawCatUnder(pen: Pen, t: number, f: Frame): void {
 
 /* ------------------------------------------------------------------ the stockroom */
 
-/** The stockroom: the dust in the swinging bulb's light, a moth at it, the street's blue down from the transom. */
+/** The stockroom: the dust in the swinging bulb's light, and a moth at it. */
 function stockroom(pen: Pen, t: number, f: Frame): void {
   if (!seen(f, PART1[0] - 0.5, PART2[1] + 0.5)) return
-  const dawn = Math.min(1, t / T1)
-  // The street's blue, down from the transom in a faint shaft, a little colder dust in it.
-  const apex: Pt = [(TRANSOM[0] + TRANSOM[2]) / 2, TRANSOM[3]]
-  const ang = 0.36
-  const spread = 0.3
-  beam(pen, apex, ang, spread, 5.2, C.cold, 0.05 + 0.04 * dawn)
-  motes(pen, t, {
-    n: 20,
-    seed: 31,
-    box: [16.9, apex[1], apex[0] + 0.4, FLOOR],
-    size: [0.004, 0.01],
-    color: '#B4C6DA',
-    alpha: 0.4,
-    drift: [-0.02, 0.025],
-    wander: 0.1,
-    twinkle: 0.12,
-    light: (x, y) => {
-      const a = Math.atan2(apex[0] - x, y - apex[1])
-      const d = Math.abs(a - ang) / (spread / 2)
-      return d >= 1 ? 0 : (1 - d) * (1 - 0.5 * ((y - apex[1]) / 4.5))
-    },
-  })
   // The bulb, swinging: the dust turning in its light.
   const sb: Pt = [STOCK_BULB[0] + stockSway(t), STOCK_BULB[1]]
   motes(pen, t, {
@@ -340,24 +315,6 @@ function stockroom(pen: Pen, t: number, f: Frame): void {
       light: (x, y) => 0.6 * Math.exp(-(((x - dx) / 1.0) ** 2 + ((y - 0.5) / 1.3) ** 2)),
     })
   }
-}
-
-/**
- * A shaft of light down from a high window (`depth.shaft`'s shape), laid over what is under it rather than added to it.
- */
-function beam(pen: Pen, apex: Pt, angle: number, spread: number, len: number, color: string, a: number): void {
-  if (a <= 0.004) return
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
-  const dx = -Math.sin(angle)
-  const dy = Math.cos(angle)
-  const l: Pt = [apex[0] + Math.sin(-angle - spread / 2) * len, apex[1] + Math.cos(-angle - spread / 2) * len]
-  const r: Pt = [apex[0] + Math.sin(-angle + spread / 2) * len, apex[1] + Math.cos(-angle + spread / 2) * len]
-  const g = ctx.createLinearGradient(apex[0] * k, apex[1] * k, (apex[0] + dx * len) * k, (apex[1] + dy * len) * k)
-  g.addColorStop(0, rgba(pen, color, a))
-  g.addColorStop(0.55, rgba(pen, color, a * 0.4))
-  g.addColorStop(1, rgba(pen, color, 0))
-  fillWith(pen, [apex, l, r], g)
 }
 
 /**
@@ -428,10 +385,10 @@ function smoke(pen: Pen, t: number, f: Frame): void {
       const v = (j + 0.5) / N
       const [x, y] = pts[j]
       const lit = 0.4 + 0.6 * Math.exp(-(((x - DESK_LAMP) / 0.8) ** 2 + ((y + 0.25) / 0.55) ** 2))
-      const a = 0.34 * Math.min(1, v * 10) * (1 - v) ** 1.3 * lit * (s === 0 ? 1 : 0.6)
+      const a = 0.4 * Math.min(1, v * 10) * (1 - v) ** 1.2 * lit * (s === 0 ? 1 : 0.65)
       if (a < 0.01) continue
       ctx.strokeStyle = rgba(pen, mix('#C8C2B6', '#FFE8C0', lit - 0.4), a)
-      ctx.lineWidth = (0.008 + 0.045 * v) * k
+      ctx.lineWidth = (0.01 + 0.07 * v) * k
       ctx.beginPath()
       ctx.moveTo(x * k, y * k)
       ctx.lineTo(pts[j + 1][0] * k, pts[j + 1][1] * k)
@@ -441,14 +398,17 @@ function smoke(pen: Pen, t: number, f: Frame): void {
   ctx.restore()
 }
 
+/** When each car crosses the window, and how bright its lamps are (a truck's high and strong, a cab's dimmer). */
+const CARS: [number, number][] = [[30.3, 0.14], [32.55, 0.2], [35.35, 0.26], [43.15, 0.18], [50.1, 0.2]]
+/** The El's trains going by, one each way, as the city starts its day. */
+const ELS: [number, number][] = [[38.7, 42.1], [45.2, 48.5]]
+const SLATS = 9
 /**
  * The street's light through the office's venetian blind, off to the right: its slats laid in stripes across the back
- * wall, a cold blue, stronger once it is six and the day comes up. A car's lamps sweep a warm copy of them across the
- * wall and away; the El going by throws them, window after window.
+ * wall, a cold blue, stronger once it is six and the day comes up. The early traffic's lamps (a car, a delivery truck,
+ * a cab, the milk truck going back) sweep a warm copy of them across the wall and away; the El going by, each way,
+ * throws them window after window.
  */
-const CARS = [32.55, 45.0]
-const EL: [number, number] = [38.7, 42.1]
-const SLATS = 9
 function blinds(pen: Pen, t: number, f: Frame): void {
   const x0 = PART2[1]
   if (!seen(f, x0, 31.6, -2.4, 0.4)) return
@@ -464,13 +424,14 @@ function blinds(pen: Pen, t: number, f: Frame): void {
   // Murray's shadow takes some of it as he comes in.
   const murray = t > MURRAY_STEPS[0] ? 0.75 : 1
   slats(pen, 26.8, -2.0, 2.3, 1.85, -0.55, -0.22, C.cold, (0.08 + 0.08 * six) * murray)
-  for (const c of CARS) {
+  for (const [c, a] of CARS) {
     const u = (t - c) / 1.9
     if (u <= 0 || u >= 1) continue
-    slats(pen, 30.6 - 9.4 * u, -2.05, 2.1, 1.9, -0.45, -0.2, '#FFE8BC', 0.2 * Math.sin(Math.PI * u) ** 1.2)
+    slats(pen, 30.6 - 9.4 * u, -2.05, 2.1, 1.9, -0.45, -0.2, '#FFE8BC', a * Math.sin(Math.PI * u) ** 1.2)
   }
-  const e = (t - EL[0]) / (EL[1] - EL[0])
-  if (e > 0 && e < 1) {
+  for (const [e0, e1] of ELS) {
+    const e = (t - e0) / (e1 - e0)
+    if (e <= 0 || e >= 1) continue
     const env = Math.sin(Math.PI * e) ** 0.8
     const strobe = Math.max(0, Math.min(1, 0.5 + 1.6 * Math.sin(2 * Math.PI * 4.4 * t + 1.3 * Math.sin(2 * Math.PI * 0.9 * t))))
     slats(pen, 27.2 - 1.1 * e, -2.02, 2.3, 1.9, -0.5, -0.22, mix('#FFE0A0', C.cold, 0.25), 0.14 * env * (0.2 + 0.8 * strobe))
