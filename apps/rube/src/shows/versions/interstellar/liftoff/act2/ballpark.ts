@@ -771,12 +771,12 @@ function drawPark(p: p5, s: BallparkState, c: Ctx): void {
  * own colour, which fades as the camera comes in and it is big again. How
  * small it is is judged on the screen, in CSS pixels, not in the canvas's
  * (on a phone's dense screen those are three to one, and the streak held
- * back where the ball was smallest). Where it is a speck it is drawn no
- * smaller than 7px across the screen, a solid dot in his sand with an ink
- * edge, so a phone held upright, whose frame is a fifth of 1080p's, can find
- * it across the whole ring. (It used to carry a soft halo, which read as a
- * glow round him.)
+ * back where the ball was smallest). Where it is a speck it also carries a
+ * soft warm halo, never under 9px across the screen, so a phone held upright,
+ * whose frame is a fifth of 1080p's, can find it across the whole ring.
  */
+/** His sand as "r, g, b", once: the halo is drawn every frame of the flight, and a p5 colour parsed thrice a frame cost a millisecond on a phone's canvas. */
+const BALL_RGB = [1, 3, 5].map((i) => parseInt(BALL.slice(i, i + 2), 16)).join(', ')
 function drawStreak(p: p5, c: Ctx, T: number): void {
   if (T <= HIT + 0.04 || T >= WINDOW) return
   const density = p.pixelDensity()
@@ -789,11 +789,16 @@ function drawStreak(p: p5, c: Ctx, T: number): void {
   const X = (v: number) => v * c.k
   {
     const [hx, hy] = flightAt(T)
-    const r = Math.max(R * c.k, 3.5 * density)
-    p.stroke(alpha(p, c.ink, 0.9 * f))
-    p.strokeWeight(Math.max(1, density))
-    p.fill(alpha(p, BALL, f))
-    p.circle(X(hx), X(hy), 2 * r)
+    const r = Math.max(R * c.k * 2.4, 9 * density)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createRadialGradient(X(hx), X(hy), 0, X(hx), X(hy), r)
+    g.addColorStop(0, `rgba(${BALL_RGB}, ${0.5 * f})`)
+    g.addColorStop(0.45, `rgba(${BALL_RGB}, ${0.2 * f})`)
+    g.addColorStop(1, `rgba(${BALL_RGB}, 0)`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(X(hx), X(hy), r, 0, Math.PI * 2)
+    ctx.fill()
   }
   const n = 16
   const span = 0.55
