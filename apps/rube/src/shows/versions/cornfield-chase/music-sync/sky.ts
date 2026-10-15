@@ -34,11 +34,10 @@ const DAY: Layer[] = [
   { n: 8, loop: 5.8, q: 0.07, drift: 0.011, lo: 0.42, hi: 0.7, w0: 0.26, w1: 0.42, haze: 0 },
 ]
 
-/** Long, thin, slow: a night's few clouds, a low bank over the horizon the fair lights from under, and a high deck. */
+/** Long, thin, slow: a night's few clouds, a low bank over the horizon the fair lights from under, and a few high. */
 const NIGHT: Layer[] = [
   { n: 5, loop: 4.4, q: 0.04, drift: 0.004, lo: 0.1, hi: 0.2, w0: 0.5, w1: 0.8, haze: 0.25 },
-  { n: 4, loop: 4.6, q: 0.035, drift: 0.006, lo: 0.3, hi: 0.62, w0: 0.34, w1: 0.6, haze: 0 },
-  { n: 5, loop: 5.2, q: 0.055, drift: 0.009, lo: 0.6, hi: 0.78, w0: 0.5, w1: 0.9, haze: 0 },
+  { n: 6, loop: 5.6, q: 0.045, drift: 0.007, lo: 0.34, hi: 0.72, w0: 0.34, w1: 0.7, haze: 0 },
 ]
 
 interface Puff {

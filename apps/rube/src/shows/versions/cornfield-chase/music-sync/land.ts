@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type PieceCtx } from '../../../../parts'
 import { band, body, dayAt, farm, gustAt, haze, nightWind, rows, sky, sunHeight, type Light } from './field'
 import { farmwork } from './farmwork'
-import { fireworks, shellLight } from './fireworks'
+import { fireworks, shellLight, smoke } from './fireworks'
 import { FULL, tiltAt } from './lens'
 import { balloons, midway, midwayAt } from './midway'
 import { nearCorn } from './near'
@@ -114,9 +114,9 @@ const frontTop = (s: Screen, hy: number, rise: number): number => Math.floor(hy 
 
 /**
  * The land behind the fair at night. `rise` is how far the field in front of the fair has come up (`frontField`): the
- * rows it covers are not drawn here as well.
+ * rows it covers are not drawn here as well. `camAt` is the camera's cell at a show time, for the shells' smoke.
  */
-export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: number, horizon: (t: number) => number, rise: (t: number) => number = () => 0): void {
+export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: number, horizon: (t: number) => number, rise: (t: number) => number, camAt: (t: number) => number): void {
   const t = begin + c.t
   const s = screenOf(p, c, col, line)
   const l = nightAt(t, horizon(t))
@@ -124,6 +124,7 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
   stars(s, t, hy, dawnAt(t))
   body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', '#B9B0E8', 0.1, 0.12, true)
   clouds(s, t, hy, { ...l.cloud, sky: l.mid, alpha: 0.7 }, true)
+  smoke(s, t, hy, camAt, mixHex(mixHex('#6A5A8C', '#9A7896', glowAt(t)), '#7488AE', dawnAt(t)))
   fireworks(s, t, hy)
   balloons(s, t, hy)
   farm(s, hy, l.farm, '#E3B45C', t * 0.6)

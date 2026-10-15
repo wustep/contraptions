@@ -43,7 +43,7 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
     }
   }
   return {
-    behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon, rise))],
+    behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon, rise, (t) => camera(t).x))],
     over: [scenery('photograph', () => {}, (p, c) => {
       const t = map.begin + c.t
       // On the full organ the house lights come up: every floor lit on the beat, the spot easing back after.

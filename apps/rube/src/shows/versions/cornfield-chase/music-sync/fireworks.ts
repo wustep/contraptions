@@ -1,6 +1,7 @@
+import { mixHex } from '../../../../parts'
 import { DROP, LAST, beatAt } from './music'
 import type { Flash } from './field'
-import { hash, rgba, type Screen } from './screen'
+import { hash, rgba, smooth, type Screen } from './screen'
 
 /**
  * Fireworks over the fair, far off behind the machine, each bursting on a beat of the measured pulse the chase is built
@@ -118,3 +119,44 @@ export function fireworks(s: Screen, t: number, hy: number): void {
   }
   ctx.restore()
 }
+
+/**
+ * The smoke the shells leave: where each burst, a soft drift of it, lit from under by the fair, that spreads and goes
+ * east on the wind and thins over half a minute. It hangs over the midway, so it goes past the camera at the midway's
+ * pace: `camAt` is the camera's cell at a show time, to find where over the fair a shell burst. Through the climax it
+ * gathers, a shell's on the one before's, and the last of it is still there in the blue hour, over the photograph.
+ * `color` is the smoke's, by the light it is in.
+ */
+export function smoke(s: Screen, t: number, hy: number, camAt: (t: number) => number, color: string): void {
+  const { ctx, cx, f, w } = s
+  const at = (s.camX * MIDWAY) / 8
+  for (const [n, sh] of SHELLS.entries()) {
+    const age = t - sh.t
+    if (age < 0.4 || age > 40) continue
+    const a = 0.12 * smooth(age, 0.4, 3) * Math.exp(-age / 16) * (sh.r / 0.18)
+    if (a < 0.006) continue
+    // Where over the fair it burst, and how far the wind has had it since.
+    const u = (sh.x - 0.5) * (16 / 9) + (camAt(sh.t) * MIDWAY) / 8 - at + 0.011 * age
+    const spread = sh.r * (0.5 + 0.9 * (1 - Math.exp(-age / 8)))
+    if (Math.abs(u) * f > w / 2 + spread * f * 2) continue
+    const bx = cx + u * f
+    const by = hy - (sh.y - 0.003 * age) * f
+    const cloud = new Path2D()
+    for (let k = 0; k < 6; k++) {
+      // Thin veils, one over another, drawn out along the wind and sheared by it, the high ones carried the farther.
+      const v = k / 5 - 0.5
+      const rx = spread * f * (0.5 + 0.3 * hash(k, n * 7 + 50)) * (1 + 0.04 * age)
+      const ry = spread * f * (0.11 + 0.05 * hash(k, n * 7 + 52)) * (1 - 0.4 * smooth(age, 1, 15))
+      const dy = v * spread * f * 0.7
+      const dx = (hash(k, n * 7 + 51) - 0.5) * spread * f * 0.5 - v * spread * f * 0.05 * age
+      cloud.moveTo(bx + dx + rx, by + dy)
+      cloud.ellipse(bx + dx, by + dy, rx, ry, 0, 0, Math.PI * 2)
+    }
+    ctx.fillStyle = rgba(mixHex(color, sh.color, 0.12), a)
+    ctx.fill(cloud)
+  }
+}
+
+/** The midway's pace past the camera (`midway.ts`), which the smoke over it keeps. */
+const MIDWAY = 0.1
+
