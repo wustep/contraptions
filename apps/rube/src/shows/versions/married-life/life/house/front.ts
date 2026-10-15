@@ -5,7 +5,7 @@ import { along, birds, clouds, gust, smoke, type Flight } from '../depth'
 import { CARD_ZONE, CREDITS_AT, LAST_GONE, LIFT } from '../credits'
 import { AGE } from '../music'
 import { HOME, INK } from '../worlds'
-import { drawHouse, dusk, snowTone, type Look } from './front-house'
+import { drawHouse, drawNeighbours, dusk, snowTone, type Look } from './front-house'
 import { drawBeyond, drawFar, farRow, type BeyondLook } from './far'
 import { ALONE, CHAIR_LIFT, darkAt, G, HALT, HOUSE, LAMPS, SHOVE, STAR, SWINGS, W } from './front-plan'
 
@@ -16,9 +16,10 @@ import { ALONE, CHAIR_LIFT, darkAt, G, HALT, HOUSE, LAMPS, SHOVE, STAR, SWINGS, 
  * the machine's rollers) and the end (the same house fifty years on, faded and patched, at dusk, the lamp lit in the
  * window, the street lamps coming on, the first stars).
  *
- * Round the house, the world: clouds drifting by day, a car going by, birds, the neighbours' trees in the wind and
- * their chimneys smoking at dusk; past them a far ridge with the places of their whole life on it (`far.ts`); and at
- * the frame's foot, nearer than the house, our side of the road, its kerb and verge.
+ * Round the house, the world: clouds drifting by day, birds, the trees across the street in the wind and their
+ * chimneys smoking at dusk; past them a far ridge with the places of their whole life on it (`far.ts`); his neighbours
+ * either side of him, dark, seen only as the camera draws back at the end; and at the frame's foot, nearer than the
+ * house, our side of the road: its kerb and verge, the gardens' fences and hedges, a parked car.
  *
  * What is where, and when, is `front-plan.ts`; the house itself is `front-house.ts`.
  */
@@ -391,62 +392,6 @@ function spill(p: p5, k: number, T: number): void {
   p.quad((x0 + 0.1) * k, G * k, (x1 - 0.1) * k, G * k, (x1 + 0.25) * k, (G + 0.4) * k, (x0 - 0.25) * k, (G + 0.4) * k)
 }
 
-/** Cars along the road in front, by day, under the lawn: when, from where, how fast (minus: to the left), their paint. */
-const CARS: { t0: number; x0: number; v: number; body: string }[] = [
-  { t0: 23.4, x0: 17.5, v: -3.3, body: mixHex(HOME.pink, '#B9A6A2', 0.3) },
-  { t0: 32.2, x0: -6.5, v: 3.6, body: mixHex(HOME.glass, '#6F98A8', 0.55) },
-]
-/** Where a passing car's wheels meet the road. */
-const ROAD_Y = G + 1.3
-
-/** A round-shouldered family car (theirs is yellow, in their drive: `inside/jar-draw.ts`), side on, facing `dir`. */
-function car(p: p5, k: number, weight: number, x: number, dir: number, body: string, T: number): void {
-  const R = 0.16
-  const wy = ROAD_Y - R
-  p.push()
-  p.translate(x * k, 0)
-  p.scale(dir, 1)
-  p.stroke(INK)
-  p.strokeWeight(weight * 0.75)
-  for (const wx of [-0.62, 0.6]) {
-    p.fill(INK)
-    p.circle(wx * k, wy * k, 2 * R * k)
-    p.noStroke()
-    p.fill(HOME.trim)
-    // The hubs turn: a spot off the middle goes round.
-    const a = (x / R) * dir
-    p.circle((wx + Math.cos(a) * 0.04) * k, (wy + Math.sin(a) * 0.04) * k, 0.1 * k)
-    p.stroke(INK)
-  }
-  void T
-  // The cabin: a rounded dome, a gentle slope behind and a steeper windscreen; its two windows.
-  const sill = wy - 0.22
-  p.fill(mixHex(body, '#FFFFFF', 0.25))
-  p.beginShape()
-  p.vertex(-0.7 * k, sill * k)
-  p.bezierVertex(-0.6 * k, (sill - 0.38) * k, -0.36 * k, (sill - 0.46) * k, -0.06 * k, (sill - 0.46) * k)
-  p.bezierVertex(0.22 * k, (sill - 0.46) * k, 0.36 * k, (sill - 0.36) * k, 0.5 * k, sill * k)
-  p.endShape(p.CLOSE)
-  p.noStroke()
-  p.fill(mixHex(HOME.glass, HOME.sky, 0.4))
-  p.quad(-0.55 * k, (sill - 0.03) * k, -0.42 * k, (sill - 0.32) * k, -0.1 * k, (sill - 0.38) * k, -0.1 * k, (sill - 0.03) * k)
-  p.quad(0.0 * k, (sill - 0.03) * k, 0.0 * k, (sill - 0.38) * k, 0.24 * k, (sill - 0.33) * k, 0.36 * k, (sill - 0.03) * k)
-  p.stroke(INK)
-  p.fill(body)
-  // The body: short and deep, round at both ends, over the wheels' tops.
-  p.rect(-0.98 * k, sill * k, 1.95 * k, 0.36 * k, 0.15 * k)
-  p.pop()
-}
-
-function traffic(p: p5, k: number, weight: number, f: Frame, T: number): void {
-  if (f.y1 < ROAD_Y - 0.9) return
-  for (const c of CARS) {
-    const x = c.x0 + c.v * (T - c.t0)
-    if (T < c.t0 || x < f.x0 - 1.5 || x > f.x1 + 1.5) continue
-    car(p, k, weight, x, Math.sign(c.v), c.body, T)
-  }
-}
-
 function drawFront(p: p5, k: number, weight: number, T: number): void {
   const f = frame(p, k)
   p.push()
@@ -458,6 +403,7 @@ function drawFront(p: p5, k: number, weight: number, T: number): void {
   ground(p, k, f, T)
   sunShadow(p, k, T)
   lawn(p, k, weight, f, T)
+  drawNeighbours(p, k, weight, lookAt(T), f.x0, f.x1)
   for (const lamp of LAMPS) if (lamp.x > f.x0 - 3 && lamp.x < f.x1 + 3) lampPost(p, k, weight, lamp.x, lamp.at, T)
   const chairs = chairsIn(T)
   const here = T < FRONT_OVER
@@ -483,7 +429,6 @@ function drawFront(p: p5, k: number, weight: number, T: number): void {
     ctx.restore()
   }
   spill(p, k, T)
-  traffic(p, k, weight, f, T)
   p.pop()
 }
 
@@ -871,12 +816,22 @@ function drawWeather(p: p5, k: number, T: number): void {
 
 /** Where the near side stands true: the last frame's middle (a pan elsewhere slides it past faster than the house). */
 const NEAR_AT = 4.25
-/** The hydrant on our verge (well clear of the mailbox, under the hill), and the two runs of low hedge along it (house cells, as seen from the last frame). */
+/**
+ * What stands along our side (house cells, as seen from the last frame): the hydrant on the verge (well clear of the
+ * mailbox, under the hill); and, out where only the credits' draw-back sees (so the fix-up's and his coming home's
+ * frames are as they were, this layer sliding faster than the house as they pan), the gardens' picket fences with their
+ * gates and a car parked at the kerb; the hedges at the ends.
+ */
 const HYDRANT = -3.2
 const HEDGES: [number, number][] = [
   [-15.5, -9.6],
-  [19.6, 27.5],
+  [24.2, 29.6],
 ]
+const FENCES: { x0: number; x1: number; gate: number }[] = [
+  { x0: -21.2, x1: -16.0, gate: -18.1 },
+  { x0: 20.0, x1: 23.9, gate: 22.0 },
+]
+const PARKED = { x: 19.3, body: mixHex(HOME.pink, '#6E5A62', 0.55) }
 
 /**
  * Our own side of the road, at the frame's foot whenever the camera looks low enough to see it: the near kerb, its
@@ -894,7 +849,8 @@ function drawNear(p: p5, k: number, weight: number, T: number): void {
   const night = smooth(darkAt(T), 0.3, 0.75)
   const white = snowTone(lookAt(T))
   const settled = settleAt(T)
-  const tone = (hex: string) => mixHex(mixHex(hex, '#191D2B', 0.86 * night), white, 0.45 * settled)
+  const dark = (hex: string) => mixHex(hex, '#191D2B', 0.86 * night)
+  const tone = (hex: string) => mixHex(dark(hex), white, 0.45 * settled)
   const shift = along(f, -0.4, NEAR_AT)
   const x0 = f.x0 - shift - 1
   const x1 = f.x1 - shift + 1
@@ -902,6 +858,8 @@ function drawNear(p: p5, k: number, weight: number, T: number): void {
   p.push()
   p.rectMode(p.CORNER)
   p.translate(shift * k, 0)
+  // The car parked at our kerb, on the road just beyond the verge (its wheels' feet at the kerb's line).
+  if (PARKED.x > x0 - 2 && PARKED.x < x1 + 2 && top - 1.45 > G) parkedCar(p, k, weight, PARKED.x, top - 0.05, dark, white, settled)
   p.noStroke()
   p.fill(tone(mixHex(HOME.stone, '#A79D8C', 0.45)))
   p.rect(x0 * k, top * k, (x1 - x0) * k, kerb * k)
@@ -921,7 +879,95 @@ function drawNear(p: p5, k: number, weight: number, T: number): void {
   }
   if (HYDRANT > x0 && HYDRANT < x1) hydrant(p, k, weight, HYDRANT, top + 0.16, tone)
   tufts(p, k, T, x0, x1, top + kerb + 0.02, 0.24 * Math.min(1, h / 0.25), tone(mixHex(HOME.grass, '#3C5530', 0.55)), weight * 0.9)
+  // The gardens' picket fences, nearest of all, standing up from the frame's foot.
+  if (f.y1 - 0.9 > G + 0.3) for (const fence of FENCES) if (fence.x1 > x0 && fence.x0 < x1) picket(p, k, weight, fence, f.y1 + 0.05, dark, white, settled)
   p.pop()
+}
+
+/** A round family car parked at the kerb, side on, its wheels' feet at `y`: dark at this hour, the first snow on its roof. */
+function parkedCar(p: p5, k: number, weight: number, x: number, y: number, tone: (hex: string) => string, white: string, settled: number): void {
+  const R = 0.21
+  const wy = y - R
+  const sill = wy - 0.27
+  // (Nearer than the house, so a little larger than a car would be beside it.)
+  const s = 1.15
+  p.push()
+  p.translate(x * k, y * k)
+  p.scale(s)
+  p.translate(0, -y * k)
+  p.stroke(tone(INK))
+  p.strokeWeight((weight * 0.8) / s)
+  p.fill(tone(INK))
+  for (const wx of [-0.82, 0.8]) p.circle(wx * k, wy * k, 2 * R * k)
+  p.fill(tone(mixHex(PARKED.body, '#FFFFFF', 0.15)))
+  p.beginShape()
+  p.vertex(-0.92 * k, sill * k)
+  p.bezierVertex(-0.8 * k, (sill - 0.5) * k, -0.48 * k, (sill - 0.6) * k, -0.08 * k, (sill - 0.6) * k)
+  p.bezierVertex(0.3 * k, (sill - 0.6) * k, 0.48 * k, (sill - 0.47) * k, 0.66 * k, sill * k)
+  p.endShape(p.CLOSE)
+  p.noStroke()
+  p.fill(tone(mixHex(HOME.glass, '#5C6A78', 0.6)))
+  p.quad(-0.72 * k, (sill - 0.04) * k, -0.55 * k, (sill - 0.42) * k, -0.13 * k, (sill - 0.5) * k, -0.13 * k, (sill - 0.04) * k)
+  p.quad(0.0, (sill - 0.04) * k, 0.0, (sill - 0.5) * k, 0.32 * k, (sill - 0.43) * k, 0.47 * k, (sill - 0.04) * k)
+  p.stroke(tone(INK))
+  p.fill(tone(PARKED.body))
+  p.rect(-1.28 * k, sill * k, 2.56 * k, 0.47 * k, 0.2 * k)
+  if (settled > 0) {
+    // The snow gathering: a cap on the roof, a line along the bonnet and the boot.
+    const d = 0.02 + 0.12 * settled
+    p.noStroke()
+    p.fill(white)
+    p.beginShape()
+    p.vertex(-0.62 * k, (sill - 0.5 + 0.02) * k)
+    p.bezierVertex(-0.45 * k, (sill - 0.6) * k, 0.25 * k, (sill - 0.62) * k, 0.4 * k, (sill - 0.5 + 0.02) * k)
+    p.vertex(0.4 * k, (sill - 0.5 + 0.02 - d * 0.2) * k)
+    p.bezierVertex(0.25 * k, (sill - 0.62 - d) * k, -0.45 * k, (sill - 0.6 - d) * k, -0.62 * k, (sill - 0.5 + 0.02 - d * 0.2) * k)
+    p.endShape(p.CLOSE)
+    p.rect(-1.2 * k, (sill - d * 0.6) * k, 0.3 * k, (d * 0.6 + 0.02) * k, 0.05 * k)
+    p.rect(0.66 * k, (sill - d * 0.6) * k, 0.55 * k, (d * 0.6 + 0.02) * k, 0.05 * k)
+  }
+  p.pop()
+}
+
+/** A garden's picket fence along our pavement, its feet below the frame's foot at `base`, a shut gate in it; snow along its rail. */
+function picket(p: p5, k: number, weight: number, fence: (typeof FENCES)[number], base: number, tone: (hex: string) => string, white: string, settled: number): void {
+  const top = base - 0.8
+  const paint = tone(mixHex(HOME.trim, '#B9AFA0', 0.3))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const runs: [number, number][] = [
+    [fence.x0, fence.gate - 0.45],
+    [fence.gate + 0.45, fence.x1],
+  ]
+  // The pickets and rails, one shape (one outline round the run).
+  ctx.beginPath()
+  for (const [a, b] of runs) {
+    ctx.rect(a * k, (top + 0.2) * k, (b - a) * k, 0.07 * k)
+    ctx.rect(a * k, (top + 0.5) * k, (b - a) * k, 0.07 * k)
+    for (let x = a + 0.03; x < b - 0.07; x += 0.22) {
+      ctx.moveTo(x * k, base * k)
+      ctx.lineTo(x * k, (top + 0.08) * k)
+      ctx.lineTo((x + 0.05) * k, top * k)
+      ctx.lineTo((x + 0.1) * k, (top + 0.08) * k)
+      ctx.lineTo((x + 0.1) * k, base * k)
+      ctx.closePath()
+    }
+  }
+  // The gate: its two posts, its boards, a brace across.
+  for (const x of [fence.gate - 0.47, fence.gate + 0.35]) ctx.rect(x * k, (top - 0.1) * k, 0.12 * k, (base - top + 0.1) * k)
+  for (let x = fence.gate - 0.3; x < fence.gate + 0.3; x += 0.2) ctx.rect(x * k, (top + 0.06) * k, 0.09 * k, (base - top - 0.06) * k)
+  ctx.rect((fence.gate - 0.35) * k, (top + 0.2) * k, 0.7 * k, 0.07 * k)
+  ctx.rect((fence.gate - 0.35) * k, (top + 0.5) * k, 0.7 * k, 0.07 * k)
+  ctx.fillStyle = paint
+  ctx.fill()
+  ctx.strokeStyle = tone(INK)
+  ctx.lineWidth = weight * 0.6
+  ctx.stroke()
+  if (settled > 0) {
+    p.noStroke()
+    p.fill(white)
+    const d = 0.02 + 0.08 * settled
+    for (const [a, b] of [...runs, [fence.gate - 0.35, fence.gate + 0.35] as [number, number]]) p.rect(a * k, (top + 0.2 - d) * k, (b - a) * k, (d + 0.01) * k)
+  }
 }
 
 /**
