@@ -156,10 +156,33 @@ export const inside = scenery<null>({
     rect(p, k, H.nursery[0], H.groundUp - 0.1, H.landing[1], H.groundUp)
 
     // The windows on the far walls: frames, glass with the sky in it, a sill.
-    for (const [x0, x1, y0, y1] of H.windows) {
+    for (const [i, [x0, x1, y0, y1]] of H.windows.entries()) {
       p.noStroke()
       p.fill(alpha(p, skyAt(t), 1))
       rect(p, k, x0, y0, x1, y1)
+      // The nursery's window looks out over the hills behind the house (the hill the mural paints, and the clouds'
+      // hill), far and soft, a low cloud over them; the rooms downstairs have their own views (the parts draw them).
+      if (i === 2) {
+        const w = x1 - x0
+        const h = y1 - y0
+        const sky = skyAt(t)
+        p.fill(mixHex(HOME.grass, sky, 0.55))
+        p.beginShape()
+        p.vertex(x0 * k, (y1 - h * 0.3) * k)
+        p.bezierVertex((x0 + w * 0.3) * k, (y1 - h * 0.46) * k, (x0 + w * 0.55) * k, (y1 - h * 0.22) * k, x1 * k, (y1 - h * 0.36) * k)
+        p.vertex(x1 * k, y1 * k)
+        p.vertex(x0 * k, y1 * k)
+        p.endShape(p.CLOSE)
+        p.fill(mixHex(HOME.grass, sky, 0.3))
+        p.beginShape()
+        p.vertex(x0 * k, (y1 - h * 0.12) * k)
+        p.bezierVertex((x0 + w * 0.35) * k, (y1 - h * 0.08) * k, (x0 + w * 0.6) * k, (y1 - h * 0.26) * k, x1 * k, (y1 - h * 0.18) * k)
+        p.vertex(x1 * k, y1 * k)
+        p.vertex(x0 * k, y1 * k)
+        p.endShape(p.CLOSE)
+        p.fill(mixHex('#FFFFFF', sky, 0.3))
+        for (const [u, v, r] of [[0.2, 0.3, 0.13], [0.27, 0.27, 0.17], [0.35, 0.31, 0.12]]) p.ellipse((x0 + u * w) * k, (y0 + v * h) * k, r * 2 * k, r * 1.2 * k)
+      }
       p.fill(alpha(p, '#FFFFFF', 0.22))
       p.quad((x0 + 0.2) * k, y1 * k, (x0 + 0.75) * k, y0 * k, (x0 + 1.05) * k, y0 * k, (x0 + 0.5) * k, y1 * k)
       p.stroke(ink)
