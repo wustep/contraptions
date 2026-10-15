@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
-import { box, carried, frame, glow, part, rgba, smooth, type PartShot } from '../kit'
+import { box, carried, frame, part, rgba, smooth, type PartShot } from '../kit'
 import { NIGHT_MAT } from '../worlds'
 import { IRIS_OPEN } from '../transitions'
 import {
@@ -659,8 +659,7 @@ function lamp(p: p5, k: number, ink: string, weight: number, T: number, x: numbe
   const up = lift(T, 2)
   const foot = -0.3 - up
   const light = lampLight(T)
-  // Its light on the wet stones round its foot.
-  glow(p, k, x, foot + 0.05, 1.3, NIGHT_MAT.gold, 0.2 * light, 1.4, 0.3)
+  // (Its light on the wet stones round its foot is the floor's: the cobbles lit in its pool, and its reflection.)
   solid(p, ink, weight * 0.9, NIGHT_MAT.deep)
   p.beginShape()
   p.vertex((x - 0.17) * k, foot * k)

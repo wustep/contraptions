@@ -335,7 +335,7 @@ export function drawFloor(p: p5, k: number, T: number, set: { lift: (T: number, 
     const up = set.lift(T, 2)
     for (const lx of LAMPS) {
       const a = light * Math.max(0, 1 - up / 3)
-      glow(p, k, lx, -0.3, 1.8, NIGHT_MAT.gold, 0.3 * a, 1.5, 0.32)
+      glow(p, k, lx, -0.25, 1.8, NIGHT_MAT.gold, 0.26 * a, 1.5, 0.2)
       glow(p, k, lx, 1.7 + up, 1.9, NIGHT_MAT.gold, 0.3 * a, 0.16, 1.2)
     }
     glow(p, k, CLOCK_X, 2.4 + up, 1.6, NIGHT_MAT.white, 0.16 * light * Math.max(0, 1 - up / 3), 0.26, 1.25)
