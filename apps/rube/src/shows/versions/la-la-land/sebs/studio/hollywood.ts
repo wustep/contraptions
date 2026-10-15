@@ -603,24 +603,29 @@ function drawBush(p: p5, c: Ctx, t: number, i: number): void {
   ctx.fill(all)
   ctx.stroke(all)
   ctx.fill(all)
+  // The bloom is in clusters, not one mass: two of the outer lobes are left in leaf, so the green shows between them.
+  const bare = (u: number, v: number) => BLOOMS[i].findIndex(([a, b]) => a === u && b === v) % 4 !== 1 + (i % 2)
   for (const [path, color] of [
     [lobes(0.02, 0.08, 0.98, (_, v) => v > 0.2), M.leafDeep],
-    [lobes(-0.03, -0.08, 0.86), M.bloomDeep],
-    [lobes(0.04, -0.15, 0.7), M.bloom],
-    [lobes(0.12, -0.24, 0.36, (u, v) => u - v > 0.15), M.bloomLit],
+    [lobes(-0.03, -0.08, 0.86, bare), M.bloomDeep],
+    [lobes(0.04, -0.15, 0.7, bare), M.bloom],
   ] as const) {
     ctx.fillStyle = paint(cx, t, color)
     ctx.fill(path)
   }
-  const florets = new Path2D()
-  for (const [u, v] of BLOOMS[i].slice(1, 7)) {
-    const fx = X(k, cx + (u * 0.8 + 0.05) * w)
-    const fy = X(k, by + (v * 0.8 - 0.12) * h)
-    florets.moveTo(fx + X(k, 0.0175), fy)
-    florets.arc(fx, fy, X(k, 0.0175), 0, Math.PI * 2)
+  // The light on the bracts toward the sunset: small clusters of them on the upper right, not round highlights.
+  const bracts = new Path2D()
+  for (const [u, v, r] of BLOOMS[i]) {
+    if (u - v <= 0.15 || !bare(u, v)) continue
+    for (const [du, dv, dr] of [[0.06, -0.2, 0.2], [0.2, -0.1, 0.16], [0.16, -0.27, 0.13]]) {
+      const ex = X(k, cx + (u + du) * w)
+      const ey = X(k, by + (v + dv) * h)
+      bracts.moveTo(ex + X(k, r * dr * 2 * w), ey)
+      bracts.ellipse(ex, ey, X(k, r * dr * 2 * w), X(k, r * dr * 2 * h), 0, 0, Math.PI * 2)
+    }
   }
-  ctx.fillStyle = rgba(M.flat, 0.9)
-  ctx.fill(florets)
+  ctx.fillStyle = paint(cx, t, M.bloomLit)
+  ctx.fill(bracts)
 }
 
 /** The trap: a plate in the floor, hinged at the door side, that flips up and throws whoever is standing on it. */
@@ -727,56 +732,53 @@ function legPose(t: number): { hip: number; knee: number } {
   return { hip, knee }
 }
 
+/** Where each dancer's standing leg is, behind her kicking one; her torso's height, hip to shoulder; her head. */
+const STAND_DX = -0.13
+const TORSO = 0.78
+const HEAD_R = 0.12
+
 function drawKickLine(p: p5, c: Ctx, t: number): void {
   const { k, ink, weight } = c
-  const x0 = legX(0) - 0.4
-  const x1 = legX(LEGS - 1) + 0.4
+  const x0 = legX(0) - 0.3
+  const x1 = legX(LEGS - 1) + 0.3
   const pose = legPose(t)
-  // The frame: two slim posts and the bar the legs hang from, gold, trimmed red.
-  solid(p, ink, weight * 0.7, paint(x0, t, mixHex(M.purple, ink, 0.45)))
-  p.rect(X(k, x0 - 0.06), X(k, HIP - 0.1), X(k, 0.08), X(k, FLOOR - HIP + 0.1))
-  p.rect(X(k, x1 - 0.02), X(k, HIP - 0.1), X(k, 0.08), X(k, FLOOR - HIP + 0.1))
-  for (let i = 0; i < LEGS; i++) {
-    const hx = legX(i)
-    const color = paint(hx, t, LEG_COLORS[i % LEG_COLORS.length])
-    const dark = mixHex(color, ink, 0.25)
-    // Hip, knee, ankle.
-    const a = pose.hip
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const colorOf = (i: number) => paint(legX(i), t, LEG_COLORS[i % LEG_COLORS.length])
+  const limb = (x0: number, y0: number, x1: number, y1: number, w0: number, w1: number, fill: string) => {
+    const dx = x1 - x0
+    const dy = y1 - y0
+    const L = Math.hypot(dx, dy) || 1
+    const nx = -dy / L
+    const ny = dx / L
+    solid(p, ink, weight * 0.7, fill)
+    p.beginShape()
+    p.vertex(X(k, x0 + (nx * w0) / 2), X(k, y0 + (ny * w0) / 2))
+    p.vertex(X(k, x1 + (nx * w1) / 2), X(k, y1 + (ny * w1) / 2))
+    p.vertex(X(k, x1 - (nx * w1) / 2), X(k, y1 - (ny * w1) / 2))
+    p.vertex(X(k, x0 - (nx * w0) / 2), X(k, y0 - (ny * w0) / 2))
+    p.endShape(p.CLOSE)
+  }
+  /** A leg from the hip at `hx`: swung `a` from straight down, bent `knee` at the knee; tights, garter and pump. */
+  const leg = (hx: number, a: number, knee: number, color: string, pin: boolean) => {
     const kx = hx + Math.sin(a) * THIGH
     const ky = HIP + Math.cos(a) * THIGH
-    const b = a - pose.knee
+    const b = a - knee
     const ax = kx + Math.sin(b) * SHIN
     const ay = ky + Math.cos(b) * SHIN
-    const limb = (x0: number, y0: number, x1: number, y1: number, w0: number, w1: number, fill: string) => {
-      const dx = x1 - x0
-      const dy = y1 - y0
-      const L = Math.hypot(dx, dy) || 1
-      const nx = -dy / L
-      const ny = dx / L
-      solid(p, ink, weight * 0.7, fill)
-      p.beginShape()
-      p.vertex(X(k, x0 + (nx * w0) / 2), X(k, y0 + (ny * w0) / 2))
-      p.vertex(X(k, x1 + (nx * w1) / 2), X(k, y1 + (ny * w1) / 2))
-      p.vertex(X(k, x1 - (nx * w1) / 2), X(k, y1 - (ny * w1) / 2))
-      p.vertex(X(k, x0 - (nx * w0) / 2), X(k, y0 - (ny * w0) / 2))
-      p.endShape(p.CLOSE)
-    }
     limb(kx, ky, ax, ay, 0.12, 0.075, color)
     limb(hx, HIP, kx, ky, 0.17, 0.12, color)
     // The garter, where her stocking ends, just below the skirt.
-    {
-      const gx = hx + Math.sin(a) * THIGH * 0.52
-      const gy = HIP + Math.cos(a) * THIGH * 0.52
-      const nx = Math.cos(a) * 0.075
-      const ny = -Math.sin(a) * 0.075
-      p.strokeCap(p.ROUND)
-      p.stroke(ink)
-      p.strokeWeight(X(k, 0.05) + weight * 0.9)
-      p.line(X(k, gx - nx), X(k, gy - ny), X(k, gx + nx), X(k, gy + ny))
-      p.stroke(paint(hx, t, M.flat))
-      p.strokeWeight(X(k, 0.05))
-      p.line(X(k, gx - nx), X(k, gy - ny), X(k, gx + nx), X(k, gy + ny))
-    }
+    const gx = hx + Math.sin(a) * THIGH * 0.52
+    const gy = HIP + Math.cos(a) * THIGH * 0.52
+    const gnx = Math.cos(a) * 0.075
+    const gny = -Math.sin(a) * 0.075
+    p.strokeCap(p.ROUND)
+    p.stroke(ink)
+    p.strokeWeight(X(k, 0.05) + weight * 0.9)
+    p.line(X(k, gx - gnx), X(k, gy - gny), X(k, gx + gnx), X(k, gy + gny))
+    p.stroke(paint(hx, t, M.flat))
+    p.strokeWeight(X(k, 0.05))
+    p.line(X(k, gx - gnx), X(k, gy - gny), X(k, gx + gnx), X(k, gy + gny))
     // The shoe, a heeled pump: pointing along the foot, which is square to the shin, toe forward; its sole arches up
     // off the floor between the ball of the foot and the heel.
     const fx = Math.cos(b)
@@ -788,22 +790,85 @@ function drawKickLine(p: p5, c: Ctx, t: number): void {
     p.beginShape()
     for (const [f, n] of [[-0.06, -0.02], [0.22, 0.02], [0.22, 0.1], [0.07, 0.1], [0.01, 0.055], [-0.025, 0.1], [-0.06, 0.1]]) p.vertex(...at(f, n))
     p.endShape(p.CLOSE)
-    // The knee's pin.
-    solid(p, ink, weight * 0.5, dark)
-    p.circle(X(k, kx), X(k, ky), X(k, 0.07))
+    // The knee's pin: these are a machine's dancers, hinged.
+    if (pin) {
+      solid(p, ink, weight * 0.5, mixHex(color, ink, 0.25))
+      p.circle(X(k, kx), X(k, ky), X(k, 0.07))
+    }
   }
-  // Each dancer's skirt: a fringe of her colour hung from the bar over her hip, flaring up in front as she kicks.
+  // Each dancer stands on one leg, a little behind, and the line's other legs kick together: the machine part, the
+  // one whose toes he is juggled along.
+  for (let i = 0; i < LEGS; i++) leg(legX(i) + STAND_DX, 0, 0, mixHex(colorOf(i), ink, 0.12), false)
+  for (let i = 0; i < LEGS; i++) leg(legX(i), pose.hip, pose.knee, colorOf(i), true)
+  // Above the line's sash, the dancers: arms linked across the line, each leaning back a little into the kick, in a
+  // bodice of her colour, her head a dark shape with the sunset along it, a plume of her colour above it.
+  const lean = -0.07 * Math.min(1, pose.hip / 1.95)
+  const body = paint(x0, t, mixHex(M.hillDeep, ink, 0.25))
+  const up = (i: number, dy: number, dx = 0): [number, number] => {
+    const hx = legX(i) + STAND_DX / 2
+    return [hx + dx * Math.cos(lean) - dy * Math.sin(lean), HIP - 0.12 + dx * Math.sin(lean) + dy * Math.cos(lean)]
+  }
+  // The linked arms, behind their backs: one line along the shoulders from the first to the last, seen only where it
+  // crosses from one dancer to the next, and the two ends' outer hands on their hips.
+  p.noFill()
+  p.strokeJoin(p.ROUND)
+  for (const [col, w] of [[ink, X(k, 0.06) + weight * 1.2], [body, X(k, 0.06)]] as const) {
+    p.stroke(col)
+    p.strokeWeight(w)
+    p.beginShape()
+    const [ax, ay] = up(0, -TORSO * 0.4, -0.3)
+    const [wx, wy] = up(0, -TORSO * 0.12, -0.12)
+    p.vertex(X(k, wx), X(k, wy))
+    p.vertex(X(k, ax), X(k, ay))
+    for (let i = 0; i < LEGS; i++) {
+      const [sx, sy] = up(i, -TORSO * 0.88)
+      p.vertex(X(k, sx), X(k, sy))
+    }
+    const [ex, ey] = up(LEGS - 1, -TORSO * 0.4, 0.3)
+    const [vx, vy] = up(LEGS - 1, -TORSO * 0.12, 0.12)
+    p.vertex(X(k, ex), X(k, ey))
+    p.vertex(X(k, vx), X(k, vy))
+    p.endShape()
+  }
+  for (let i = 0; i < LEGS; i++) {
+    const color = colorOf(i)
+    // The plume, behind her head: a tall feather leaning back, ribbed.
+    const [bx, by] = up(i, -TORSO - 2 * HEAD_R + 0.02)
+    const [tx, ty] = up(i, -TORSO - 2 * HEAD_R - 0.5, -0.12)
+    solid(p, ink, weight * 0.6, mixHex(color, M.flat, 0.15))
+    p.beginShape()
+    p.vertex(X(k, bx - 0.05), X(k, by))
+    p.quadraticVertex(X(k, bx - 0.2), X(k, (by + ty) / 2), X(k, tx), X(k, ty))
+    p.quadraticVertex(X(k, bx + 0.12), X(k, (by + ty) / 2), X(k, bx + 0.05), X(k, by))
+    p.endShape(p.CLOSE)
+    p.stroke(mixHex(color, ink, 0.3))
+    p.strokeWeight(Math.max(1, weight * 0.5))
+    p.line(X(k, bx), X(k, by), X(k, tx), X(k, ty))
+    // The bodice: narrow at her waist on the sash, out to her shoulders.
+    solid(p, ink, weight * 0.7, mixHex(color, ink, 0.18))
+    p.beginShape()
+    for (const [dx, dy] of [[-0.12, 0], [-0.17, -TORSO * 0.75], [-0.13, -TORSO], [0.13, -TORSO], [0.17, -TORSO * 0.75], [0.12, 0]]) p.vertex(...up(i, dy, dx).map((v) => X(k, v)) as [number, number])
+    p.endShape(p.CLOSE)
+    // Her head on its neck, the sunset along its right.
+    const [nx, ny] = up(i, -TORSO - HEAD_R + 0.02)
+    solid(p, ink, weight * 0.6, body)
+    p.circle(X(k, nx), X(k, ny), X(k, 2 * HEAD_R))
+    p.noFill()
+    p.stroke(rgba(M.skyCoral, 0.8 * paintAt(legX(i), t)))
+    p.strokeWeight(Math.max(1, X(k, 0.025)))
+    p.arc(X(k, nx), X(k, ny), X(k, 2 * HEAD_R - 0.04), X(k, 2 * HEAD_R - 0.04), -Math.PI * 0.45, Math.PI * 0.2)
+  }
+  // Each dancer's skirt: a fringe of her colour hung from the sash over her hips, flaring up in front as she kicks.
   // One path of strands for the ink under them all, and one for each of the three tones.
-  const ctx = p.drawingContext as CanvasRenderingContext2D
   const under = new Path2D()
   const strands = new Map<string, Path2D>()
   for (let i = 0; i < LEGS; i++) {
     const hx = legX(i)
-    const color = paint(hx, t, LEG_COLORS[i % LEG_COLORS.length])
+    const color = colorOf(i)
     const tones = [color, mixHex(color, M.flat, 0.3), mixHex(color, ink, 0.28)]
     for (let j = 0; j <= 12; j++) {
       const u = j / 12
-      const sx = hx - 0.28 + 0.56 * u
+      const sx = hx - 0.31 + 0.56 * u
       const flare = pose.hip * (0.12 + 0.55 * u * u)
       const L = 0.35 + 0.05 * hash(i, j, 71) - 0.08 * Math.abs(u - 0.5)
       const ends = [X(k, sx), X(k, HIP - 0.04), X(k, sx + Math.sin(flare) * L), X(k, HIP - 0.04 + Math.cos(flare) * L)]
@@ -825,16 +890,12 @@ function drawKickLine(p: p5, c: Ctx, t: number): void {
     ctx.strokeStyle = tone
     ctx.stroke(path)
   }
-  // The bar over the hips, and the pins.
+  // The sash along their waists, gold, trimmed red.
   solid(p, ink, weight * 0.8, paint(x0, t, M.bush))
-  p.rect(X(k, x0 - 0.1), X(k, HIP - 0.16), X(k, x1 - x0 + 0.2), X(k, 0.16))
+  p.rect(X(k, x0), X(k, HIP - 0.16), X(k, x1 - x0), X(k, 0.16), X(k, 0.05))
   p.noStroke()
   p.fill(paint(x0, t, M.door))
-  p.rect(X(k, x0 - 0.1), X(k, HIP - 0.05), X(k, x1 - x0 + 0.2), X(k, 0.05))
-  for (let i = 0; i < LEGS; i++) {
-    solid(p, ink, weight * 0.5, paint(legX(i), t, mixHex(M.purple, ink, 0.4)))
-    p.circle(X(k, legX(i)), X(k, HIP), X(k, 0.08))
-  }
+  p.rect(X(k, x0 + 0.03), X(k, HIP - 0.05), X(k, x1 - x0 - 0.06), X(k, 0.04))
 }
 
 function drawHollywood(p: p5, s: HollyState, c: Ctx): void {
