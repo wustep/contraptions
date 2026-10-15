@@ -26,6 +26,7 @@ import { gargantua } from './space/gargantua'
 import { AXIS } from './act2/station'
 import { interior } from './act2/interior'
 import { stationNear } from './act2/near'
+import { irisOpening, irisShut, type IrisState } from './act2/iris'
 import { replica } from './act2/replica'
 import { rim } from './act2/rim'
 import { ballpark } from './act2/ballpark'
@@ -160,6 +161,9 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   }
   const deckCloud = standing(cloud, 0, 0, all, { deck, punch: SWITCH, rocket: pose, length: ROCKET_LENGTH, gone: CLOUD_GONE }, DURATION)
   const chainOf = (placed: Placed[]) => placed
+  // The port's iris round the undock, centred where he is at the change of world (set once the show can say).
+  const iris: IrisState = { at: UNDOCK, center: [0, 0] }
+  const irisBox = box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2)
   const show = new LiftoffShow(
     [
       {
@@ -183,7 +187,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         theme: FARM,
         scenery: [standing(interior, 0, 0, box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2), { axis, lights: ACT2 }, DURATION)],
         chain: station.placed,
-        after: [standing(stationNear, 0, 0, box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2), { axis, lights: ACT2 }, DURATION)],
+        after: [standing(stationNear, 0, 0, box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2), { axis, lights: ACT2 }, DURATION), standing(irisShut, 0, 0, irisBox, iris, DURATION)],
         from: ACT2,
       },
       {
@@ -192,7 +196,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         scenery: [standing(voidSky, 0, 0, box(axis[0] - 60, axis[1] - 120, axis[0] + 260, axis[1] + 60, 2), { deck: axis[1] + 1000, leave: -100 }, DURATION)],
         chain: outside.placed,
         // The end credits, over the camp at dawn once the music has stopped.
-        after: [standing(credits, 0, 0, box(axis[0] - 60, axis[1] - 120, axis[0] + 260, axis[1] + 60, 2), null, DURATION)],
+        after: [standing(irisOpening, 0, 0, irisBox, iris, DURATION), standing(credits, 0, 0, box(axis[0] - 60, axis[1] - 120, axis[0] + 260, axis[1] + 60, 2), null, DURATION)],
         from: UNDOCK,
       },
     ],
@@ -201,6 +205,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     [...earth.company, ...space.company, ...station.company, ...outside.company].sort((a, b) => a.from - b.from),
   )
 
+  iris.center = show.where(UNDOCK) as Pt
   const shots: Shot[] = [
     // Dawn in Murph's room: a slow push in through the piano's first bars on the shelf and her bed under the window,
     // arriving as the first book goes (5.13) and she wakes.
