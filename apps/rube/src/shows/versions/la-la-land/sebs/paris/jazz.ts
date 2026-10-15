@@ -1,11 +1,11 @@
 import type { Pt } from '../../../../../parts'
 import type p5 from 'p5'
-import { box, carried, frame, glow, hash, part, rgba, route, smooth, type Way } from '../kit'
+import { box, carried, frame, hash, part, rgba, route, smooth, type Way } from '../kit'
 import { AT, paris } from '../music'
 import { CLUB_MAT as M } from '../worlds'
 import { hop } from '../physics'
 import {
-  BALLOONS, DARK, drawClub, drawLamp, FLASHES, KNOCK, PIVOT, SOLO_SOUNDING, HANDOFF, J0, LAND_X1, LEAVE, LIGHTS, MEET, MIA_STEPS, miaAt, SEESAW_T, seat, SLAM, SNARE_T,
+  BALLOONS, DARK, drawClub, drawLamp, FLASHES, KNOCK, LAMP, PIVOT, SOLO_SOUNDING, HANDOFF, J0, LAND_X1, LEAVE, LIGHTS, MEET, MIA_STEPS, miaAt, SEESAW_T, seat, SLAM, SNARE_T,
   SOLO_LANDINGS, stepBall, STEP_T, VALVE_T,
 } from './jazz-club'
 
@@ -65,7 +65,7 @@ function drawHouse(p: p5, k: number, t: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const lit = smooth(t, LIGHTS - 0.1, LIGHTS + 0.3) * (1 - smooth(t, DARK[0], DARK[1]))
   const dark = smooth(t, DARK[0], DARK[1])
-  for (const h of HOUSE) {
+  for (const [hi, h] of HOUSE.entries()) {
     // Nearer than the room: it slides past faster.
     const x = f.cx + (h.x - f.cx) * 1.35
     if (x < f.x0 - 0.5 || x > f.x1 + 0.5) continue
@@ -108,15 +108,68 @@ function drawHouse(p: p5, k: number, t: number): void {
       ctx.fillStyle = rgba(M.black, 0.96)
       ctx.fillRect((tx - 0.05 * s) * k, ty * k, 0.1 * s * k, 0.008 * s * k)
       const flame = (1 - 0.7 * dark) * (0.85 + 0.15 * Math.sin(t * 9 + h.x * 3))
-      glow(p, k, tx - 0.02 * s, ty - 0.012 * s, 0.05 * s, M.bulb, 0.5 * flame)
       ctx.fillStyle = rgba(M.bulb, 0.9 * flame)
       ctx.beginPath()
       ctx.arc((tx - 0.02 * s) * k, (ty - 0.01 * s) * k, 0.004 * s * k, 0, Math.PI * 2)
       ctx.fill()
       ctx.fillStyle = rgba(M.brass, 0.55 * flame)
       ctx.fillRect((tx + 0.02 * s) * k, (ty - 0.02 * s) * k, 0.008 * s * k, 0.02 * s * k)
+      if (hi === SMOKER) drawSmoke(p, k, t, tx + 0.05 * s, ty - 0.01 * s, s, lit, dark)
     }
   }
+}
+
+/**
+ * Smoke: a cigarette at one of the near tables, its thread rising slowly off the table, leaning toward the stage and
+ * up. In the lit room it is a pale wisp against the red; once the room is dark it is only seen where it climbs
+ * through the spot's shaft, a thin line lit in the light and gone again above it.
+ */
+const SMOKER = 16
+const SMOKE_N = 46
+function drawSmoke(p: p5, k: number, t: number, x0: number, y0: number, s: number, lit: number, dark: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const top = LAMP[1] + 0.4
+  if (y0 <= top) return
+  // Where the spot's shaft is at a height y: from the lamp (narrow) to the pool on the boards (wide).
+  const shaft = (y: number): [number, number] => {
+    const u = (y - LAMP[1]) / (PIVOT[1] + 0.3 - LAMP[1])
+    return [LAMP[0] + (PIVOT[0] - LAMP[0]) * u, (0.2 + 1.4 * Math.max(0, Math.min(1.1, u))) / 2]
+  }
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.lineWidth = Math.max(1, 0.012 * k)
+  const LV = 5
+  for (const strand of [0, 1]) {
+    const paths: Path2D[] = Array.from({ length: LV }, () => new Path2D())
+    let prev: Pt | null = null
+    let prevA = 0
+    for (let i = 0; i <= SMOKE_N; i++) {
+      const y = y0 - ((y0 - top) * i) / SMOKE_N
+      const h = y0 - y
+      // It leans toward the stage as it rises, and curls; the second strand parts from the first a way up.
+      const lean = (PIVOT[0] - 0.25 - x0) * (1 - Math.exp(-h / 1.1))
+      const curl = 0.07 * Math.pow(h, 0.9) * Math.sin(2.4 * h - 0.8 * t + strand * 1.9) + 0.025 * h * Math.sin(5.3 * h - 1.7 * t + strand)
+      const part = strand ? 0.16 * smooth(h, 0.6, 1.8) * Math.sin(1.4 * h - 0.6 * t) : 0
+      const x = x0 + lean + curl + part
+      const [sx, half] = shaft(y)
+      const inBeam = dark * (1 - smooth(Math.abs(x - sx), half * 0.7, half * 1.05))
+      const thin = Math.exp(-h / 2.3) * (strand ? 0.5 * smooth(h, 0.5, 1.2) : 1)
+      const a = thin * (0.16 * lit * (1 - dark) + 0.015 * dark + 0.55 * inBeam)
+      if (prev && Math.min(a, prevA) > 0.01) {
+        const lv = Math.min(LV - 1, Math.floor(Math.min(a, prevA) * LV * 1.6))
+        paths[lv].moveTo(prev[0] * k, prev[1] * k)
+        paths[lv].lineTo(x * k, y * k)
+      }
+      prev = [x, y]
+      prevA = a
+    }
+    for (let lv = 0; lv < LV; lv++) {
+      ctx.strokeStyle = rgba(M.spot, (lv + 0.5) / LV / 1.6)
+      ctx.stroke(paths[lv])
+    }
+  }
+  ctx.restore()
+  void s
 }
 
 export const jazz = part<JazzState>(
