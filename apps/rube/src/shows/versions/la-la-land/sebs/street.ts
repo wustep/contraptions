@@ -906,6 +906,78 @@ function walkers(ctx: CanvasRenderingContext2D, k: number, t: number, end: boole
   }
 }
 
+/**
+ * Our side of the street, the pavement the camera stands over: the near kerb's edge and what stands along it, a
+ * parking meter, a fire plug, a newspaper box, a litter bin, in silhouette against the lit road, the road's light along
+ * their tops. Nearer than everything, it moves more than the club as the camera moves (`NEAR` of its travel): it rises
+ * into place as the camera comes down to the club at the start and falls away first as the camera climbs back out at
+ * the end, so the crane reads in depth. Nothing on it moves of itself; it is late.
+ */
+const NEAR = 1.35
+const NEAR_KERB = ROOM.floor + 2.62
+const NEAR_AT = -4.5
+type Kerbside = 'meter' | 'plug' | 'box' | 'bin'
+const KERBSIDE: [number, Kerbside][] = (() => {
+  const out: [number, Kerbside][] = []
+  const kinds: Kerbside[] = ['meter', 'meter', 'plug', 'meter', 'box', 'meter', 'bin']
+  let i = 0
+  for (let x = -47; x < 50; i++) {
+    out.push([x, kinds[Math.floor(hash(i, 1, 81) * kinds.length)]])
+    x += 2.6 + 3.2 * hash(i, 2, 81)
+  }
+  return out
+})()
+function nearSide(ctx: CanvasRenderingContext2D, k: number, fr: { x0: number; x1: number; y0: number; y1: number; cx: number; cy: number }): void {
+  // Where our side is drawn: where it stands when the camera is as high as in the widest shot of the club (`NEAR_AT`),
+  // moved by the camera's travel from there, a `NEAR - 1` more than the club moves. Never more than a little up, so
+  // nothing on it comes over the road's far half.
+  const top = NEAR_KERB + Math.max(-0.35, (NEAR_AT - fr.cy) * (NEAR - 1))
+  if (top > fr.y1 + 0.1) return
+  const sc = NEAR
+  const kx = (x: number) => fr.cx + (x - fr.cx) * NEAR
+  // The pavement under us, a shade lighter than the dark beyond the road's near kerb, its edge catching the road.
+  ctx.fillStyle = '#121019'
+  ctx.fillRect((fr.x0 - 1) * k, top * k, (fr.x1 - fr.x0 + 2) * k, (fr.y1 - top + 1) * k)
+  ctx.fillStyle = rgba('#5A5068', 0.5)
+  ctx.fillRect((fr.x0 - 1) * k, top * k, (fr.x1 - fr.x0 + 2) * k, Math.max(1, 0.03 * k))
+  // What stands along it, in one silhouette, and the road's light along the tops.
+  const sil = new Path2D()
+  const rim = new Path2D()
+  const foot = top + 0.18 * sc
+  for (const [x0, kind] of KERBSIDE) {
+    const x = kx(x0)
+    if (x < fr.x0 - 1 || x > fr.x1 + 1) continue
+    const S = (u: number) => (x + u * sc) * k
+    const Y = (v: number) => (foot - v * sc) * k
+    if (kind === 'meter') {
+      sil.rect(S(-0.03), Y(0.8), 0.06 * sc * k, 0.8 * sc * k)
+      sil.roundRect(S(-0.09), Y(1.06), 0.18 * sc * k, 0.28 * sc * k, 0.06 * sc * k)
+      rim.rect(S(-0.08), Y(1.06), 0.16 * sc * k, Math.max(1, 0.025 * sc * k))
+    } else if (kind === 'plug') {
+      sil.rect(S(-0.11), Y(0.36), 0.22 * sc * k, 0.36 * sc * k)
+      sil.rect(S(-0.17), Y(0.27), 0.34 * sc * k, 0.07 * sc * k)
+      sil.ellipse(S(0), Y(0.36), 0.11 * sc * k, 0.07 * sc * k, 0, Math.PI, 0)
+      rim.rect(S(-0.1), Y(0.42), 0.2 * sc * k, Math.max(1, 0.02 * sc * k))
+    } else if (kind === 'box') {
+      sil.rect(S(-0.2), Y(0.78), 0.4 * sc * k, 0.62 * sc * k)
+      sil.rect(S(-0.16), Y(0.16), 0.04 * sc * k, 0.16 * sc * k)
+      sil.rect(S(0.12), Y(0.16), 0.04 * sc * k, 0.16 * sc * k)
+      rim.rect(S(-0.2), Y(0.78), 0.4 * sc * k, Math.max(1, 0.025 * sc * k))
+    } else {
+      sil.moveTo(S(-0.17), Y(0.62))
+      sil.lineTo(S(0.17), Y(0.62))
+      sil.lineTo(S(0.13), Y(0))
+      sil.lineTo(S(-0.13), Y(0))
+      sil.closePath()
+      rim.rect(S(-0.18), Y(0.64), 0.36 * sc * k, Math.max(1, 0.03 * sc * k))
+    }
+  }
+  ctx.fillStyle = '#09080F'
+  ctx.fill(sil)
+  ctx.fillStyle = rgba('#8A7C8E', 0.45)
+  ctx.fill(rim)
+}
+
 /** The light of the lit shopfronts lying on the pavement in front of them. */
 function shopLight(ctx: CanvasRenderingContext2D, k: number, fr: { x0: number; x1: number }): void {
   const pools: [number, number, string, number][] = [
@@ -940,6 +1012,7 @@ export const street = scenery<StreetState>({
     busStop(ctx, k, t, fr)
     walkers(ctx, k, t, s.end, fr)
     drawTraffic(ctx, k, t, s.end, fr)
+    nearSide(ctx, k, fr)
     ctx.restore()
   },
 })
