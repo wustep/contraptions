@@ -228,8 +228,11 @@ and its chimney (`underground` in `inside/inside.ts`); the rain soaks the topsoi
   to arm's length on 52's downbeat, still looking at him, as a dancer spots her partner, as the light comes full on them and the camera, come in with the swell, is closest on the two of them
   (1.9 cells) under their wedding photograph on the hall wall, hung low under the chair rail and large enough to read
   at the close: the two of them at arm's length under the picture of them touching. The low evening sun through the front door's glass
-  lays two long warm shafts down the hall (the glass's cross bar splits it, so it reads as sun through a window): it gathers with the swell and falls full on the two of them on the crest, the
-  light that fell on them at the kiss, and settles as the music falls away. She rolls back in by bar 53, and as they close into each other's arms on bar 55 it cranes out to the desk
+  lands low and long on the wall behind them, the glass's two panes with the cross bar's shadow between them, on down
+  the skirting to the floor (so it reads as sun through a window), and the two of them keep it off the wall behind
+  them: two soft shadows that part as she turns out and close as they come into each other's arms. It gathers with
+  the swell and falls full on the two of them on the crest, the light that fell on them at the kiss, and settles as
+  the music falls away. She rolls back in by bar 53, and as they close into each other's arms on bar 55 it cranes out to the desk
   and her painting.
 - **The tickets.** The picture lamp lights on her painting, and Carl looks up at it. Ellie goes to the front door,
   opens it and stands out at it looking at the evening, her back to the hall: the tickets are his surprise, and she
@@ -290,8 +293,9 @@ and its chimney (`underground` in `inside/inside.ts`); the rain soaks the topsoi
 - The same church, empty. It opens under the hospital's night, dim and blue, the glass dark, and the grey morning
   comes up over it in three seconds, the one pale beam last. Carl sits alone in the front pew, the
   wedding photograph on an easel where they stood: a third larger than the hall's, the two of them in it with a hint
-  of the blue and coral they were that day, and the low sun through the east window landing on it as the window's
-  shape, its leads in shadow, creeping down as the morning comes: the one warm thing at the altar end, between a
+  of the blue and coral they were that day, and the low sun through the east window landing across it as the
+  window's shape (over its lower right and on down the wall beside it, not round it), its leads in shadow, creeping
+  down as the morning comes: the one warm thing at the altar end, between a
   wreath on a stand and an urn of white lilies, where the wedding had its garland and posies. Across the cut the balloon is his again: it holds its place and
   rises back over him as its string is let out. She is gone. The camera drifts slowly across the dawn to the wedding kiss's framing, now
   empty, arriving as he reaches the floor.
@@ -1091,6 +1095,36 @@ window.
     9.8 → 10.0% / 15.8 → 16.2%; 172–258 s 8.1 → 8.1% / 15.2 → 15.1%. The final third holds where it was: what was cut
     from it (night birds, the car, the flakes' size) about matches what came in (the lights going out are a few pixels
     each at that size). It is still behind the opening in motion for the reason round 2 gives, and kept so.
+
+- **Fullness pass, round 4 (Opus 5.5).** The same eight points again, more cut and refined than added: the ten
+  frames, two sheets of the whole show and close sheets of each quiet stretch, and every light looked at for where it
+  is drawn: in the air, on glass, or where it lands.
+  - *Cut and refined.* The hall's crest: the evening sun was drawn three times over the wall (a wedge from the door,
+    two shafts in the air down to the floor, the door's panes on the wainscot), and together they hazed it; now the
+    panes alone, a little stronger, on down the skirting (above). The funeral's dawn on her picture: the east window's
+    image was centred on it, its arch standing behind the photograph like a halo; it now crosses the picture's lower
+    right and runs on down the wall, and the one pale beam is thin in the air, as the wedding's are. The sun back
+    after the storm: no longer washed over the windows' glass as well (the garden behind it went milky), only where
+    it lands under them. The living room's pendant: its cone drawn under the window, so it lands on the paper round
+    the glass, not on the street seen through it. The white gleam down each of the organ's pipes (the gold of the rank
+    that speaks is what the eye should go to) and along the toy engine's boiler.
+  - *Added, from the story.* Their shadows in the crest's light: the two of them keep the low sun off the wall behind
+    them, two soft shapes that part as she turns out and close into one as they come into each other's arms.
+  - *Weighed and left out.* A car's headlights sweeping the bay as he sits in the dusk (the balloon, the lamp and the
+    chairs all stand in its path, and without their shadows it was a flourish); a train in the clouds' valley (the
+    hill's set keeps to its rule that the machines are the parts'). *Looked at and kept:* the church's coloured shafts
+    (thin, and the church's own) and the kiss's light; the hospital lamp's fan on the wall; the picture lamp's throw
+    over her painting; the night veil over the storey under the nursery.
+  - *Cost.* Measured side by side with round 3 (both served at once, the same frame drawn 60 times and made to
+    finish, the median of three alternating rounds, on a machine busy with other work): the crest 6.7 → 2.3 ms (the
+    wedge's and the shafts' gradient layers gone); the funeral, the sun after the storm, the living room, the organ
+    and the engine unchanged. The whole show, every quarter second, swept twice each: median 4.3 and 4.3 → 4.3 and
+    4.5 ms, p99 9.8 and 10.3 → 10.0 and 11.2 ms, worst 13.0 → 13.6 and 12.8 ms (one 30.7 ms hiccup in a round 3
+    sweep), none over 16.7 ms.
+  - *Measured* (motion / detail at 320×180, round 3 → round 4): 0–86 s 10.5 → 10.5% / 16.5 → 16.5%; 86–172 s
+    10.0 → 10.0% / 16.2 → 16.2%; 172–258 s 8.1 → 8.1% / 15.1 → 15.1%; the dance (152 to 162 s) 13.4 → 13.6% /
+    17.4 → 17.4%. A round of refinement, so the thirds hold; the final third is still behind the opening in motion,
+    for the reason round 2 gives.
 
 ## Known limits
 
