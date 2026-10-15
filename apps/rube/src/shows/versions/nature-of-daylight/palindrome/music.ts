@@ -176,6 +176,10 @@ export const SEAM = {
   news: chord(23),
   /** The television's shell → the real one over the valley, on the double bass (c24). A scale match cut. */
   arrival: ARRIVAL,
+  /** The valley → the lake house the same night, the shell come down: a helicopter comes for her (c25, the fog). */
+  recruit: chord(25),
+  /** The lake house → the camp in Montana, as she drops out of that helicopter onto the meadow (c27). */
+  camp: chord(27),
   /** The valley → inside the shell: the shaft above the deck, where gravity turns (c32). */
   shaft: chord(32),
   /** The shaft → the chamber, as the glass wakes (c33). */

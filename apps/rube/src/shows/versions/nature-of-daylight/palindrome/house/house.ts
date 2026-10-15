@@ -7,6 +7,7 @@ import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME, IAN, LOUISE } from '../worlds'
 import { CLOCK_HULL, CRADLE_HULL, BED_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawTV, drawTVGlow, tvShell } from './props'
 import { drawBallMirror, drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
 import { F, FLASH_HITS, FLASH_X, STOOL_HULL, drawSheet, drawStool, flashX, hannahFlashAt, hannahFlashLook } from './flash'
+import { RC, RECRUIT_HITS, drawRecruit, drawRecruitOver, recruitX } from './recruit'
 import {
   EMPTY_DX,
   NEAR,
@@ -65,6 +66,8 @@ function louiseX(T: number): number | null {
       return bedX(T)
     case 'news':
       return NEWS_X
+    case 'recruit':
+      return recruitX(T)
     case 'flash':
       return flashX(T)
     case 'home':
@@ -92,7 +95,7 @@ export const houseSet = scenery<null>({
     const dx = era === 'home' && T < BEGIN ? EMPTY_DX : 0
     if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)).map(([x, y]) => [x + dx, y] as Pt))
     if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL)
-    if (era === 'news') shadows.push(TV_HULL)
+    if (era === 'news' || era === 'recruit') shadows.push(TV_HULL)
     if (era === 'flash') shadows.push(STOOL_HULL)
     if (era === 'home' && T < BEGIN) balls.push([ianX(T), 0])
     if (era === 'home' && T >= BEGIN && T < IAN_GONE) balls.push([ianAfter(T), 0])
@@ -107,7 +110,8 @@ export const houseSet = scenery<null>({
       drawBed(p, k, T, L)
       drawClock(p, k, T, L)
     }
-    if (era === 'news') drawTV(p, k, T, L)
+    if (era === 'news' || era === 'recruit') drawTV(p, k, T, L)
+    if (era === 'recruit') drawRecruit(p, k, T)
     if (era === 'flash') {
       drawSheet(p, k, T, L)
       drawStool(p, k, T, L)
@@ -116,12 +120,13 @@ export const houseSet = scenery<null>({
     // Louise first, then Ian when he is here: the same order `balls` has them in.
     drawBallMirror(p, k, T, balls.map((b, i) => [b, i === 0 ? LOUISE : IAN] as [Pt, string]))
     drawFloorLight(p, k, T, shadows, balls)
-    if (era === 'news') drawTVGlow(p, k, T)
+    if (era === 'news' || era === 'recruit') drawTVGlow(p, k, T)
     drawVignette(p, k, T)
   },
   over: (p, _s, c) => {
     const T = c.t
     const era = eraOf(T)
+    if (era === 'recruit') drawRecruitOver(p, c.k, T)
     if (era === 'bed') drawBedOver(p, c.k, T, lightAt(T))
     if (era === 'dawn' || era === 'home') {
       p.push()
@@ -140,6 +145,7 @@ export const houseSet = scenery<null>({
 export const DAWN_AT: Pt = [0.5, 0]
 export const BED_AT: Pt = [0.5, 0]
 export const NEWS_AT: Pt = [NEWS_X + 0.5, 0]
+export const RECRUIT_AT: Pt = [NEWS_X + 0.5, 0]
 export const FLASH_AT: Pt = [FLASH_X + 0.5, 0]
 export const HOME_AT: Pt = [HOME_X + 0.5, 0]
 
@@ -302,6 +308,33 @@ export const news: Part<HouseState> = part<HouseState>(
   },
 )
 
+/* ------------------------------------------------------------------ they come for her */
+
+export const recruit: Part<HouseState> = part<HouseState>(
+  { name: 'house-recruit', draw: nothing },
+  (slot) => {
+    const o = RECRUIT_AT
+    const { segs, end } = floorLane(recruitX, slot, o, [RC.go])
+    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire: RC.go - slot.begin }, state: { begin: slot.begin } }
+  },
+  (slot) => {
+    const o = RECRUIT_AT
+    // Her on the screen: [right, down], a share of the frame's height from its middle.
+    const on = (t: number, cells: number, s: Pt): PartShot => ({ t, cells, hold: [recruitX(t) - s[0] * cells - o[0], -s[1] * cells - o[1]], w: 1 })
+    return [
+      // From the scale cut, the room at night round her, the television on her right and the long window over them,
+      // as the light comes up over the lake;
+      on(slot.begin + 0.9, 4.3, [0.2, 0.16]),
+      // held as it sweeps in and finds her;
+      on(RC.found, 4.2, [0.12, 0.16]),
+      // and after her as she goes, so at the cut (a scale cut out to the camp in Montana) she is where the camp's wide
+      // has her as she lands on the meadow.
+      on(RC.go + 0.3, 4.2, [0.09, 0.15]),
+      on(slot.end, 4.2, [0.043, 0.145]),
+    ]
+  },
+)
+
 /* ------------------------------------------------------------------ the flash */
 
 export const flash: Part<HouseState> = part<HouseState>(
@@ -414,6 +447,8 @@ export const HOUSE_HITS: number[] = [
   ...CLOCK_STRIKES,
   // The news: the television comes on on the half cadence.
   HALF,
+  // They come for her: the light over the lake, the beam finding her, her going.
+  ...RECRUIT_HITS,
   // The flash: Hannah's strokes on the beats, and her mother's touch on the stool on the chord.
   ...FLASH_HITS,
   // Home: the sun through the glass, the touch, the turn to the empty cradle, the step toward it, and the cradle again.

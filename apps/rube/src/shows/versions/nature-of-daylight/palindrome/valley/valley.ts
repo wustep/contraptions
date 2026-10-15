@@ -1,5 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { box, carried, part, scenery, type PartShot } from '../kit'
+import { SEAM } from '../music'
 import type { ShellSpot } from '../seams'
 import { SHELL_DOWN, SHELL_UP } from '../shell-path'
 import { A, deckAt, G, shellAt } from './geo'
@@ -61,6 +62,11 @@ export const ARRIVE_AT: Pt = (() => {
   const [x, y] = herArrive(A.bass)
   return [x + 0.5, y]
 })()
+/** And where the arrival's second leg starts: down on the meadow, after the lake house (SEAM.camp). */
+export const CAMP_AT: Pt = (() => {
+  const [x, y] = herArrive(SEAM.camp)
+  return [x + 0.5, y]
+})()
 export const GOING_AT: Pt = [HER_START[0] + 0.5, HER_START[1]]
 
 /* ------------------------------------------------------------------ the parts */
@@ -76,10 +82,13 @@ export interface ValleyState {
   begin: number
 }
 
-export const arrive = part<ValleyState>(
-  { name: 'arrive', draw: () => {} },
+/**
+ * The arrival is cut in two by the lake house at night (SEAM.recruit to SEAM.camp), where the helicopter comes for her:
+ * the two are one path, the valley's, each leg its share of it.
+ */
+const arriving = (name: string, o: Pt) => part<ValleyState>(
+  { name, draw: () => {} },
   (slot) => {
-    const o = ARRIVE_AT
     const her = at(o, herArrive)
     const ian = at(o, ianArrive)
     const T = (s: number) => s - slot.begin
@@ -94,7 +103,6 @@ export const arrive = part<ValleyState>(
     }
   },
   (slot) => {
-    const o = ARRIVE_AT
     const deck = (t: number) => deckAt(t)
     const keys: PartShot[] = [
       // The valley opens on the television's picture: the shell's belly just out of the cloud at the top of the
@@ -120,12 +128,16 @@ export const arrive = part<ValleyState>(
       hold(o, A.surge3, 9.6, 0.4, deck(A.surge3) - 3.0),
       hold(o, 127.6, 6.4, 0.9, deck(127.6) - 1.4),
     ]
-    // At rest on the deck in the slot's dark, the camera close: the contact seam (4.2 cells, [0.85, -0.7]).
-    const [hx, hy] = herArrive(slot.end)
-    keys.push(hold(o, slot.end, 4.2, hx + 0.85, hy - 0.7))
+    // At rest on the deck in the slot's dark, the camera close: the shaft seam (4.2 cells, [0.85, -0.7]).
+    if (slot.end === SEAM.shaft) {
+      const [hx, hy] = herArrive(slot.end)
+      keys.push(hold(o, slot.end, 4.2, hx + 0.85, hy - 0.7))
+    }
     return keys.filter((k) => k.t > slot.begin + 0.4 && k.t <= slot.end + 1e-6)
   },
 )
+export const arrive = arriving('arrive', ARRIVE_AT)
+export const arrive2 = arriving('arrive-2', CAMP_AT)
 
 export const going = part<ValleyState>(
   { name: 'going', draw: () => {} },
@@ -183,4 +195,5 @@ export const going = part<ValleyState>(
 export const VALLEY_HITS: number[] = [
   A.bass, A.crest, A.settle, A.flare, A.touch, A.out, A.suited, A.go, A.surge2, A.crack, A.open, A.surge3, A.top,
   G.shut, G.pedal, G.drop1, G.drop2, G.down, G.heave1, G.heave2, G.wake, G.gone, G.sun, G.lit, G.touch,
-]
+  // While she is at the lake house the valley goes on unseen (the helicopter's flare over the pad): nobody's.
+].filter((t) => t <= SEAM.recruit + 1e-6 || t >= SEAM.camp - 1e-6)
