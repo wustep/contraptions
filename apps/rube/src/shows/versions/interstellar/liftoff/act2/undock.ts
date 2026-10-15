@@ -5,6 +5,7 @@ import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, farSide, frame, hash, knock, part, smooth, type Ctx, type PartShot } from '../kit'
 import { cue, UNDOCK } from '../music'
 import { BALL, DARK, VOID } from '../worlds'
+import { drawFar, drawLensing, drawNear } from './undock-far'
 
 /**
  * Undocking: the film's docking run backwards.
@@ -423,6 +424,7 @@ export const undock = part<UndockState>(
       const t = c.t + s.begin
       const f = frame(p, c.k)
       const q = pose(t)
+      drawFar(p, c, t)
       drawSaturn(p, c, t, f)
       drawSphere(p, c, t, f, q)
       drawBeacons(p, c, t, f)
@@ -439,6 +441,7 @@ export const undock = part<UndockState>(
       const q = pose(t)
       drawGlassOver(p, c, t, q)
       drawUmbilical(p, c, t, true)
+      drawNear(p, c, t)
     },
   },
   (slot) => {
@@ -896,7 +899,8 @@ function drawSphere(p: p5, c: Ctx, t: number, f: Frame, q: Pose): void {
   if (f.x1 < sx - RS * 2 || f.x0 > sx + RS * 2 || f.y1 < sy - RS * 2 || f.y0 > sy + RS * 2) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const X = (v: number) => v * k
-  // (Its edge is its own: no glow round it.)
+  // Round it, the stars behind it drawn out along the rim by the lens, more as the ship comes near.
+  drawLensing(p, c, SPHERE, RS, smooth(t, cue(203), CONTACT))
   // Inside: the other side's sky, turning slowly and sliding a little with the camera.
   farSide(p, X(sx), X(sy), X(RS), 0.4 + t * 0.025 + (f.cy - sy) * 0.015, ((f.cx - sx) * -0.06) / RS, 81, 150, ink)
   p.push()
