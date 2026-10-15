@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { easeInQuad, easeOutQuad } from '../../../../../../../../src/core/ease'
 import { mixHex, type Pt } from '../../../../../parts'
-import { glow, rgba, type Way } from '../kit'
+import { rgba, type Way } from '../kit'
 import { G, hop } from '../physics'
 import { SEBS_MAT } from '../worlds'
 import { fold, isBlack, keyRest, keyX, PIANO } from './geometry'
@@ -511,9 +511,6 @@ export function drawPiano(p: p5, k: number, ink: string, weight: number, t: numb
   rect(lx - 0.36, 2.28, lx + 0.36, 2.42, 0.03)
   solid(p, ink, weight * 0.45, M.brass)
   for (const dx of [-0.21, 0, 0.21]) rect(lx + dx - 0.05, 2.4, lx + dx + 0.05, 2.47, 0.02)
-
-  // The light on it: a soft pool over the keys and the fallboard.
-  glow(p, k, KEYS_MID + 0.3, -0.25, 3.4, L, 0.1 * lit, 1.3, 0.55)
 }
 
 /** The i-th white key from the lowest, as MIDI. */

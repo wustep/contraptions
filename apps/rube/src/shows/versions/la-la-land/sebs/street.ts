@@ -1,5 +1,6 @@
+import type p5 from 'p5'
 import { mixHex } from '../../../../parts'
-import { frame, hash, rgba, scenery, smooth } from './kit'
+import { frame, glow, hash, rgba, scenery, smooth } from './kit'
 import { picture } from './lens'
 import { insideRoom, ROOM } from './club/room'
 import { drawPalm, PALMS } from './city'
@@ -570,21 +571,7 @@ const FAR_RUNS: [number, 1 | -1][] = (() => {
   return out
 })()
 
-/** A soft flat pool of light lying on the ground, `rx` by `ry`: light on a surface, not in the air. */
-function pool(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, rx: number, ry: number, col: string, a: number): void {
-  ctx.save()
-  ctx.translate(x * k, y * k)
-  ctx.scale(1, ry / rx)
-  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
-  g.addColorStop(0, rgba(col, a))
-  g.addColorStop(0.5, rgba(col, a * 0.5))
-  g.addColorStop(1, rgba(col, 0))
-  ctx.fillStyle = g
-  ctx.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
-  ctx.restore()
-}
-
-function sideStreet(ctx: CanvasRenderingContext2D, k: number, t: number, b: number, end: boolean, fr: { x0: number; x1: number; y0: number; y1: number; cx: number }): void {
+function sideStreet(p: p5, ctx: CanvasRenderingContext2D, k: number, t: number, b: number, end: boolean, fr: { x0: number; x1: number; y0: number; y1: number; cx: number }): void {
   if (GAP[1] < fr.x0 || GAP[0] > fr.x1 || WALK < fr.y0) return
   const s = FAR
   const sh = (fr.cx - LAG_AT) * LAG
@@ -598,9 +585,9 @@ function sideStreet(ctx: CanvasRenderingContext2D, k: number, t: number, b: numb
   ctx.fillStyle = mixHex('#2A2438', HAZE, 0.3)
   ctx.fillRect(GAP[0] * k, FAR_WALK * k, (GAP[1] - GAP[0]) * k, 0.035 * k)
   // The neon's blue on the side street outside the door; the far lamp's light on its pavement.
-  pool(ctx, k, ROOM.wallL0 - 0.45, WALK - 0.06, 1.1, 0.09, D.neon, 0.16)
+  glow(p, k, ROOM.wallL0 - 0.45, WALK - 0.06, 1.1, D.neon, 0.16, 1, 0.08)
   const lampX = FAR_LAMP + sh
-  pool(ctx, k, lampX + 0.06, FAR_WALK + 0.02, 0.45, 0.03, D.sodium, 0.22)
+  glow(p, k, lampX + 0.06, FAR_WALK + 0.02, 0.45, D.sodium, 0.22, 1, 0.07)
   // The far row: each house's wall and parapet, its upper windows (the glass is the light), its ground floor.
   const ww = 0.5 * s
   const wh = 0.75 * s
@@ -711,7 +698,7 @@ export const block = scenery<StreetState>({
     const fr = frame(p, k)
     const ctx = p.drawingContext as CanvasRenderingContext2D
     ctx.save()
-    sideStreet(ctx, k, t, life(t, s.end), s.end, fr)
+    sideStreet(p, ctx, k, t, life(t, s.end), s.end, fr)
     drawHouses(ctx, k, t, life(t, s.end), fr)
     // The palms along the pavement, in front of the houses, against the lit sky.
     for (const pm of PALMS) {
