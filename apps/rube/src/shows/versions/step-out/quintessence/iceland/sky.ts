@@ -5,9 +5,9 @@ import { ICE } from './theme'
 
 /**
  * Iceland's sky: a cold clear blue going gold at the horizon, a low sun on the left, and weather going by on the
- * wind from the left (the way the plume leans): mares' tails high up, big cumulus lit gold from underneath by
- * the low sun, and long thin cloud low down. After the eruption the ash spreads over
- * all of it and the light goes grey-mauve (`dim`).
+ * wind from the left (the way the plume leans): mares' tails and a dappled veil high up, rolls of stratocumulus, big
+ * cumulus lit gold from underneath by the low sun, and long thin cloud low down. After the eruption the ash spreads
+ * over all of it and the light goes grey-mauve (`dim`).
  *
  * The clouds are painted once into bands (`bake`), one for the high cloud and one for the cumulus, and laid on moving
  * with the wind.

@@ -8,7 +8,7 @@ import { ICE } from './theme'
 /**
  * The mountain the road is cut into, near to (the machine's own plane): moss over black rock, cropped by sheep, with
  * the shadows of the clouds going over it on the wind; the basalt cliff the hairpins hang off, a fall of water coming
- * down it to the fjord; the road's worn asphalt; and the shore's black stones, the fjord lapping at them.
+ * off its lip; the road's worn asphalt; and the shore's black stones, the fjord lapping at them.
  *
  * The moss is a tile painted once and laid as a pattern (one fill a frame), and the road's wear is made once in
  * chunks along it, only the chunks in the frame drawn.

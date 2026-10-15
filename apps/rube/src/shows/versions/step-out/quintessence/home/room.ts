@@ -10,11 +10,12 @@ import { fillPoly, glow, line, mix, rgba, vgrad, type Pen } from './pen'
  * windows coming on one by one, a train going over, a plane's lights, soft snow; sheer curtains moving in the
  * draught; the clock on the wall; the floorboards and the rug the piano stands on; the boxes not yet opened.
  *
- * The paper, the boards and the rug are made once (they are the same at every frame); the city's planes move behind
- * the glass at their own depths.
+ * The wall with its paper and the lamp's light, and the floor with its boards and rug, are each painted once into a
+ * picture (they are the same at every frame) and laid on; the city's planes slide behind the glass at their own
+ * depths.
  */
 
-export const R = {
+const R = {
   wall: '#2A211C',
   wallLit: '#4A3829',
   paperLight: '#6A5440',
@@ -48,16 +49,16 @@ export const R = {
 }
 
 /** The wall's foot: the floor runs from here toward us. */
-export const WALL_FOOT = -1.06
+const WALL_FOOT = -1.06
 
-export interface Glass {
+interface Glass {
   x0: number
   x1: number
   y0: number
   y1: number
 }
 /** The window on the left, by the boxes, and the tall one behind the piano. */
-export const WINDOWS: Glass[] = [
+const WINDOWS: Glass[] = [
   { x0: -3.0, x1: -1.25, y0: -3.45, y1: -1.85 },
   { x0: 1.55, x1: 3.3, y0: -3.62, y1: -2.24 },
 ]
