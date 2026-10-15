@@ -1,8 +1,8 @@
 import type { Pt } from '../../../../../parts'
-import { bloom, lastBeat, layer, parallax, pulse, rain, rising, shaft, sway, type Frame } from '../depth'
+import { layer, parallax, rain, rising, sway, type Frame } from '../depth'
 import { hash } from '../kit'
 import { BEAT } from '../music'
-import { ctxOf, ellipse, mix, rgb, type Pen } from '../pen'
+import { ctxOf, ellipse, mix, rgb, rgba, type Pen } from '../pen'
 import { BULB_OUT, F_STREET, KERB, L_MISH, POUNDS, T0, WALL_R, WAY } from './geo'
 
 /**
@@ -122,6 +122,32 @@ function strokes(pen: Pen, segs: number[], style: string, lw: number): void {
 }
 
 /**
+ * A beam of light from `apex`, down `angle` (radians, 0 straight down, positive to the left of it), `spread` wide and
+ * `len` long, fading along its length: a headlamp's in the rain, the moon's in at a window. Laid over what it falls on
+ * rather than added to it, so it tints and never glares.
+ */
+export function beam(pen: Pen, apex: Pt, angle: number, spread: number, len: number, color: string, a: number): void {
+  if (a <= 0.004) return
+  const ctx = ctxOf(pen.p)
+  const { k } = pen
+  const end = (u: number): Pt => [apex[0] + Math.sin(-angle + u) * len, apex[1] + Math.cos(-angle + u) * len]
+  const [l, r, mid] = [end(-spread / 2), end(spread / 2), end(0)]
+  const g = ctx.createLinearGradient(apex[0] * k, apex[1] * k, mid[0] * k, mid[1] * k)
+  g.addColorStop(0, rgba(pen, color, a))
+  g.addColorStop(0.55, rgba(pen, color, a * 0.4))
+  g.addColorStop(1, rgba(pen, color, 0))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo(apex[0] * k, apex[1] * k)
+  ctx.lineTo(l[0] * k, l[1] * k)
+  ctx.lineTo(r[0] * k, r[1] * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
+
+/**
  * A layer at depth `d` that lies where it is drawn when the camera is centred on `anchor` (`depth.layer`). `draw` is
  * handed the frame in the layer's cells and the left edge of the outside there: what lies left of it is behind the
  * building.
@@ -195,14 +221,10 @@ export function moonlight(t: number): number {
 export const SKY_D = 0.06
 
 /**
- * The sky about the moon at `m` (in the sky layer's cells): a searchlight swinging far off, the moon and its halo, the
- * clouds going over, and a plane's lights crossing.
+ * The sky about the moon at `m` (in the sky layer's cells): the moon, the clouds going over it, and a plane crossing.
  */
-export function drawSky(pen: Pen, t: number, m: Pt, beam = true, g?: Frame): void {
+export function drawSky(pen: Pen, t: number, m: Pt, g?: Frame): void {
   const clear = moonlight(t)
-  // A searchlight swinging over downtown, behind the far city.
-  if (beam) shaft(pen, [m[0] - 5.2, m[1] + 6.5], Math.PI + 0.35 * Math.sin((t / 11) * Math.PI * 2) + 0.25, 0.07, 10, '#BFD8D6', 0.05)
-  bloom(pen, m, 2.6, N.moonGlow, 0.16 * clear)
   ellipse(pen, m, 0.34, 0.34, mix(N.moonGlow, N.moon, 0.35 + 0.65 * clear))
   ellipse(pen, [m[0] + 0.1, m[1] - 0.06], 0.07, 0.06, mix(N.moon, '#B9C8BC', clear))
   ellipse(pen, [m[0] - 0.12, m[1] + 0.09], 0.05, 0.04, mix(N.moon, '#BFCCC0', clear))
@@ -235,11 +257,9 @@ export function drawSky(pen: Pen, t: number, m: Pt, beam = true, g?: Frame): voi
       ctx.stroke()
     }
   }
-  // A plane going over, its red light blinking.
+  // A plane going over, slowly, its red light on.
   const pl: Pt = [m[0] - 9 + 0.22 * (t - T0), m[1] - 2.35 + 0.02 * (t - T0)]
-  const blink = ((t - T0) % 1.15) < 0.12 ? 1 : 0.25
-  ellipse(pen, pl, 0.035, 0.035, mix(N.sky1, N.red, blink))
-  ellipse(pen, [pl[0] - 0.12, pl[1] + 0.01], 0.022, 0.022, mix(N.sky1, '#E8F0E8', ((t - T0 + 0.5) % 1.15) < 0.08 ? 1 : 0.2))
+  ellipse(pen, pl, 0.035, 0.035, mix(N.sky1, N.red, 0.55))
 }
 
 /* ------------------------------------------------------------------ the city */
@@ -304,9 +324,8 @@ function skyline(pen: Pen, t: number, g: Frame, outside: number, list: Block[], 
       const sw = (b.x1 - b.x0) * 0.3
       shapes.push([[cx - sw, b.top], [cx - sw, b.top - b.spire * 0.55], [cx - sw * 0.55, b.top - b.spire * 0.55], [cx - sw * 0.55, b.top - b.spire], [cx + sw * 0.55, b.top - b.spire], [cx + sw * 0.55, b.top - b.spire * 0.55], [cx + sw, b.top - b.spire * 0.55], [cx + sw, b.top]])
       segs.push(cx, b.top - b.spire, cx, b.top - b.spire - 0.45)
-      // Its beacon blinks.
-      const on = ((t + b.i * 0.37) % 1.6) < 0.5
-      box(css(pen, on ? N.red : '#4A2228'), cx - 0.03, b.top - b.spire - 0.5, cx + 0.03, b.top - b.spire - 0.44)
+      // Its warning light, a steady dull red.
+      box(css(pen, mix('#4A2228', N.red, 0.5)), cx - 0.03, b.top - b.spire - 0.5, cx + 0.03, b.top - b.spire - 0.44)
     }
     if (b.tower > 0) tower(b.x0 + (b.x1 - b.x0) * b.tower, b.top, 1, shapes, segs)
     // The windows: the lit ones warm, a few with a television's blue, the rest (near enough) dark glass.
@@ -322,7 +341,8 @@ function skyline(pen: Pen, t: number, g: Frame, outside: number, list: Block[], 
         if (on) {
           const tv = on === 3 && hash(c, r, o.seed + 9) < 0.5
           const col = tv ? N.tv : on === 2 ? N.winWarm : N.win
-          box(css(pen, col, tv ? 0.55 + 0.35 * Math.abs(Math.sin(t * 9 + c * 3 + r)) : 0.92), x, y, x + ww, y + wh)
+          // A television's light shifts slowly with its picture.
+          box(css(pen, col, tv ? 0.62 + 0.14 * Math.sin(t * 1.7 + c * 3 + r) : 0.92), x, y, x + ww, y + wh)
         } else if (o.dark) box(o.dark, x, y, x + ww, y + wh)
       }
     }
@@ -368,15 +388,11 @@ const BAR = { x0: 11.98, x1: 12.85, y0: 9.0, y1: 9.72 }
 const BAR_DOOR: [number, number] = [11.5, 11.88]
 const DINER = { x0: 16.5, x1: 18.9, y0: 9.0, y1: 9.75 }
 
-/** The sign's two colours on the beat: red on one and three, blue on two and four. */
-export function neon(t: number): { red: number; blue: number } {
-  const b = lastBeat(t)
-  const p = pulse(t, 0.3)
-  const odd = b.pos === 1 || b.pos === 3
-  // A stutter as a tube catches.
-  const stut = hash(Math.floor(t * 14), 3, 61) < 0.05 ? 0.45 : 1
-  return { red: (odd ? 0.55 + 0.45 * p : 0.22) * stut, blue: odd ? 0.22 : 0.55 + 0.45 * p }
-}
+/** How lit the sign's two tubes are: both on, and steady. */
+const RED_ON = 0.9
+const BLUE_ON = 0.85
+/** The colour of the sign's light together, red and blue, where it falls in at a window across the street. */
+export const SIGN = mix(N.red, N.blue, 0.4)
 
 /** The cars along the street across, show time to cells: the first going right, the second coming back. */
 const CARS = [
@@ -414,7 +430,7 @@ function drawAcross(pen: Pen, t: number, g: Frame, outside: number): void {
       for (let x = h.x0 + 0.28, c = 0; x + 0.26 < h.x1 - 0.1; x += 0.52, c++) {
         if (x + 0.26 < outside) continue
         const on = clearOfHim(x + 0.13, y + fh * 0.3) ? lit(hi * 50 + c, fl, 71, 0.2, t) : 0
-        box(on ? css(pen, on === 3 ? N.tv : on === 2 ? N.winWarm : N.win, on === 3 ? 0.6 + 0.3 * Math.abs(Math.sin(t * 7 + c)) : 0.95) : darkWin, x, y, x + 0.26, y + fh * 0.55)
+        box(on ? css(pen, on === 3 ? N.tv : on === 2 ? N.winWarm : N.win, on === 3 ? 0.66 + 0.12 * Math.sin(t * 1.4 + c) : 0.95) : darkWin, x, y, x + 0.26, y + fh * 0.55)
         // A lintel.
         box(css(pen, N.nearTop), x - 0.03, y - 0.05, x + 0.29, y - 0.01)
         // Someone crossing a lit room now and then.
@@ -461,13 +477,13 @@ function drawAcross(pen: Pen, t: number, g: Frame, outside: number): void {
   // The shops: the bar's window and its door, the diner's long window, the corner shop's grille.
   drawShops(pen, t)
   drawWashing(pen, t, g)
-  drawBillboard(pen, t, g)
-  drawBlade(pen, t, g)
+  drawBillboard(pen, g)
+  drawBlade(pen, g)
   drawFarLamp(pen, g)
   drawStreetAcross(pen, t, g, outside)
 }
 
-/** The streetlight on the far kerb, by the airshaft: its sodium on the house fronts and down on the wet. */
+/** The streetlight on the far kerb, by the airshaft: its lamp, and its sodium falling on the wet under it. */
 const FAR_LAMP: Pt = [14.92, GROUND]
 function drawFarLamp(pen: Pen, g: Frame): void {
   const [x, y] = FAR_LAMP
@@ -478,10 +494,9 @@ function drawFarLamp(pen: Pen, g: Frame): void {
   const ctx = ctxOf(pen.p)
   const { k } = pen
   const gr = ctx.createLinearGradient(0, head[1] * k, 0, y * k)
-  gr.addColorStop(0, css(pen, N.sodium, 0.16))
-  gr.addColorStop(1, css(pen, N.sodium, 0.05))
+  gr.addColorStop(0, rgba(pen, N.sodium, 0.09))
+  gr.addColorStop(1, rgba(pen, N.sodium, 0.025))
   ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
   ctx.fillStyle = gr
   ctx.beginPath()
   ctx.moveTo((head[0] - 0.1) * k, head[1] * k)
@@ -491,7 +506,6 @@ function drawFarLamp(pen: Pen, g: Frame): void {
   ctx.closePath()
   ctx.fill()
   ctx.restore()
-  bloom(pen, head, 1.1, N.sodium, 0.32)
 }
 
 function drawShops(pen: Pen, t: number): void {
@@ -562,7 +576,7 @@ function drawWashing(pen: Pen, t: number, g: Frame): void {
 }
 
 /** The billboard on the bar's roof, lit from under its hood by two lamps: an ad all picture (a bottle, a red sun). */
-function drawBillboard(pen: Pen, t: number, g: Frame): void {
+function drawBillboard(pen: Pen, g: Frame): void {
   const { x0, x1, y0, y1 } = BILL
   if (x1 < g.x0 - 1 || x0 > g.x1 + 1 || y1 < g.y0 - 1 || y0 > g.y1 + 1) return
   const roof = HOUSES[1].top
@@ -571,8 +585,8 @@ function drawBillboard(pen: Pen, t: number, g: Frame): void {
   for (const x of [x0 + 0.3, (x0 + x1) / 2, x1 - 0.3]) segs.push(x, y1, x, roof, x, y1, x + 0.35, roof)
   segs.push(x0, y1 + 0.08, x1, y1 + 0.08)
   strokes(pen, segs, css(pen, N.iron), 0.6)
-  // The lamps' flicker: one of them is going.
-  const fl = 0.85 + 0.15 * Math.sin(t * 31) * (hash(Math.floor(t * 6), 1, 62) < 0.25 ? 1 : 0)
+  // How well its lamps light it: steadily, not quite all of it.
+  const fl = 0.85
   box(css(pen, mix(N.board, N.sky1, 0.45 - 0.3 * fl)), x0, y0, x1, y1)
   // A band of sky blue along its foot, a red sun going down into it, a slogan's bars (all picture, no words).
   box(css(pen, mix('#6F9AA8', N.sky1, 0.4 - 0.25 * fl)), x0, y1 - 0.34, x1, y1)
@@ -599,40 +613,39 @@ function drawBillboard(pen: Pen, t: number, g: Frame): void {
     strokes(pen, [x, y0 - 0.06, x, y0 - 0.28, x, y0 - 0.28, x + 0.12, y0 - 0.3], css(pen, N.iron), 0.5)
     ellipse(pen, [x + 0.13, y0 - 0.27], 0.05, 0.03, mix(N.sky1, '#FFF1C8', fl))
   }
+  // The lamps' light down its face, from under the hood.
   const ctx = ctxOf(pen.p)
   const { k } = pen
   const gr = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
-  gr.addColorStop(0, css(pen, '#FFE7B0', 0.32 * fl))
-  gr.addColorStop(1, css(pen, '#FFE7B0', 0))
+  gr.addColorStop(0, rgba(pen, '#FFE7B0', 0.16 * fl))
+  gr.addColorStop(1, rgba(pen, '#FFE7B0', 0))
   ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
   ctx.fillStyle = gr
   ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
   ctx.restore()
 }
 
 /** The bar's neon off the corner of its house, on its bracket. */
-function drawBlade(pen: Pen, t: number, g: Frame): void {
+function drawBlade(pen: Pen, g: Frame): void {
   const [x, y] = BLADE
   if (x < g.x0 - 2 || x > g.x1 + 2 || y > g.y1 + 2 || y + 1.9 < g.y0 - 2) return
   strokes(pen, [x + 0.22, y + 0.2, x + 0.45, y + 0.2, x + 0.22, y + 1.6, x + 0.45, y + 1.6], css(pen, N.iron), 0.6)
-  blade(pen, t, BLADE, 1)
+  blade(pen, BLADE, 1)
 }
 
 /**
- * A bar's neon sign: a blade, its red tube round the edge, a blue glass and a red star inside, red and blue on the
- * beat, and their light in the wet air round it. `top` is its top's middle; `s` its size (1 is 1.8 cells tall).
+ * A bar's neon sign: a blade, its red tube round the edge, a blue glass and a red star inside, both lit and steady:
+ * the lit tubes are the light. `top` is its top's middle; `s` its size (1 is 1.8 cells tall).
  */
-export function blade(pen: Pen, t: number, top: Pt, s: number): void {
+export function blade(pen: Pen, top: Pt, s: number): void {
   const [x, y] = top
-  const { red, blue } = neon(t)
   const lw = 0.75 * Math.min(1, 0.4 + s)
   const X = (u: number) => x + u * s
   const Y = (v: number) => y + v * s
   box(css(pen, '#120E10'), X(-0.22), Y(0), X(0.22), Y(1.8))
   flush(pen)
-  const R = mix('#3A1A22', N.red, red)
-  const B = mix('#1A2A3A', N.blue, blue)
+  const R = mix('#3A1A22', N.red, RED_ON)
+  const B = mix('#1A2A3A', N.blue, BLUE_ON)
   strokes(pen, [X(-0.17), Y(0.05), X(0.17), Y(0.05), X(0.17), Y(0.05), X(0.17), Y(1.75), X(0.17), Y(1.75), X(-0.17), Y(1.75), X(-0.17), Y(1.75), X(-0.17), Y(0.05)], css(pen, R), lw)
   // The glass, in blue: its bowl, stem and foot; the olive in red.
   strokes(pen, [X(-0.12), Y(0.3), X(0.12), Y(0.3), X(-0.12), Y(0.3), X(0), Y(0.55), X(0.12), Y(0.3), X(0), Y(0.55), X(0), Y(0.55), X(0), Y(0.82), X(-0.09), Y(0.84), X(0.09), Y(0.84)], css(pen, B), lw)
@@ -646,16 +659,14 @@ export function blade(pen: Pen, t: number, top: Pt, s: number): void {
   }
   strokes(pen, st, css(pen, R), lw * 0.8)
   strokes(pen, [X(-0.13), Y(1.47), X(-0.06), Y(1.41), X(-0.06), Y(1.41), X(0.02), Y(1.49), X(0.02), Y(1.49), X(0.13), Y(1.41)], css(pen, B), lw * 0.8)
-  bloom(pen, [x, Y(0.9)], 1.5 * s, red > blue ? N.red : N.blue, 0.2 * Math.max(red, blue))
 }
 
 /** The street across, wet: the lights in it, the rain rings, a manhole's steam, and the cars going by. */
 function drawStreetAcross(pen: Pen, t: number, g: Frame, outside: number): void {
-  const { red, blue } = neon(t)
   // Reflections: each light a broken streak down the wet road, wavering.
   const lights: [number, number, string, number][] = [
-    [BLADE[0], 0.2, N.red, 0.42 * red],
-    [BLADE[0], 0.12, N.blue, 0.42 * blue],
+    [BLADE[0], 0.2, N.red, 0.4 * RED_ON],
+    [BLADE[0], 0.12, N.blue, 0.4 * BLUE_ON],
     [(BAR.x0 + BAR.x1) / 2, 0.4, N.win, 0.26],
     [(DINER.x0 + DINER.x1) / 2, 0.9, N.diner, 0.2],
     [(BAR_DOOR[0] + BAR_DOOR[1]) / 2, 0.16, N.winDim, 0.2],
@@ -664,7 +675,7 @@ function drawStreetAcross(pen: Pen, t: number, g: Frame, outside: number): void 
     if (x + w < outside || x - w > g.x1) continue
     for (let i = 0; i < 10; i++) {
       // Broken by the rain: a dash here and there missing, each wavering.
-      if (hash(i, Math.floor(t * 6 + li), 69) < 0.25) continue
+      if (hash(i, Math.floor(t * 3 + li), 69) < 0.2) continue
       const y = GROUND + 0.16 + i * 0.1
       const wob = 0.04 * Math.sin(t * 5 + i * 1.7 + x)
       const ww = w * (1 - i * 0.05) * (0.6 + 0.4 * Math.sin(t * 3.3 + i * 2.1 + li))
@@ -699,17 +710,17 @@ function drawStreetAcross(pen: Pen, t: number, g: Frame, outside: number): void 
   const mh: Pt = [16.95, GROUND + 0.55]
   ellipse(pen, mh, 0.32, 0.05, '#071012')
   rising(pen, t, { seed: 5, n: 46, from: [mh[0] - 0.2, mh[0] + 0.2, mh[1]], rise: 3.0, life: 3.6, spread: 0.9, size: [0.16, 0.42], color: N.steam, hot: N.steamLit, alpha: 0.075 })
-  // The cars, their lights on the road ahead and on the house fronts as they pass.
+  // The cars, their lights on the wet road ahead of them and behind.
   for (const car of CARS) {
     if (t < car.from || t > car.to) continue
     const x = car.at(t)
     if (x < outside - 3 || x > g.x1 + 3) continue
-    drawCar(pen, t, x, LANE, car.dir, car.body)
+    drawCar(pen, x, LANE, car.dir, car.body)
   }
 }
 
-/** A sedan on the street across, going `dir`, its wheels on `y`: headlamps, their beams, the tail light. */
-function drawCar(pen: Pen, t: number, x: number, y: number, dir: number, body: string): void {
+/** A sedan on the street across, going `dir`, its wheels on `y`: its headlamp and the rain lit in front of it, the tail light. */
+function drawCar(pen: Pen, x: number, y: number, dir: number, body: string): void {
   const L = 1.5
   const at = (u: number, v: number): Pt => [x + dir * u, y + v]
   const hull: Pt[] = [at(-L / 2, -0.1), at(-L / 2, -0.28), at(-L * 0.3, -0.32), at(-L * 0.2, -0.5), at(L * 0.12, -0.52), at(L * 0.24, -0.33), at(L / 2, -0.3), at(L / 2 + 0.03, -0.12), at(L / 2, -0.1)]
@@ -718,19 +729,15 @@ function drawCar(pen: Pen, t: number, x: number, y: number, dir: number, body: s
   strokes(pen, [...at(-L * 0.19, -0.5), ...at(L * 0.11, -0.515)], css(pen, '#4E6A6C', 0.8), 0.6)
   polys(pen, [[at(-L * 0.17, -0.46), at(L * 0.1, -0.47), at(L * 0.2, -0.34), at(-L * 0.26, -0.33)]], css(pen, '#2A3C3E', 0.9))
   for (const u of [-L * 0.3, L * 0.3]) ellipse(pen, at(u, -0.08), 0.1, 0.1, '#050808')
-  // The headlamp, its beam out along the road, its light thrown on the wet ahead.
+  // The headlamp, the rain it lights out along the road a little way, its light laid on the wet ahead.
   const hl = at(L / 2, -0.24)
-  shaft(pen, hl, dir > 0 ? -Math.PI / 2 + 0.06 : Math.PI / 2 - 0.06, 0.32, 3.4, '#FFF2CC', 0.22)
+  beam(pen, hl, dir > 0 ? -Math.PI / 2 + 0.06 : Math.PI / 2 - 0.06, 0.28, 2.6, '#FFF2CC', 0.09)
   ellipse(pen, hl, 0.05, 0.05, '#FFF6DC')
-  bloom(pen, hl, 0.32, '#FFF2CC', 0.5)
-  for (let i = 0; i < 5; i++) box(css(pen, '#FFF2CC', 0.4 * (1 - i / 5)), hl[0] - 0.08 + dir * i * 0.02, y + 0.06 + i * 0.1, hl[0] + 0.08 + dir * i * 0.02, y + 0.1 + i * 0.1)
+  for (let i = 0; i < 5; i++) box(css(pen, '#FFF2CC', 0.3 * (1 - i / 5)), hl[0] - 0.08 + dir * i * 0.02, y + 0.06 + i * 0.1, hl[0] + 0.08 + dir * i * 0.02, y + 0.1 + i * 0.1)
   const tl = at(-L / 2, -0.22)
   ellipse(pen, tl, 0.035, 0.035, N.red)
-  bloom(pen, tl, 0.22, N.red, 0.45)
-  for (let i = 0; i < 4; i++) box(css(pen, N.red, 0.35 * (1 - i / 4)), tl[0] - 0.05, y + 0.06 + i * 0.1, tl[0] + 0.05, y + 0.1 + i * 0.1)
+  for (let i = 0; i < 4; i++) box(css(pen, N.red, 0.3 * (1 - i / 4)), tl[0] - 0.05, y + 0.06 + i * 0.1, tl[0] + 0.05, y + 0.1 + i * 0.1)
   flush(pen)
-  // The pool of its light along the house fronts, going with it.
-  bloom(pen, at(L / 2 + 2.0, -0.7), 1.6, '#FFF2CC', 0.07 + 0.02 * Math.sin(t * 40))
 }
 
 /* ------------------------------------------------------------------ the whole outside */
@@ -743,7 +750,7 @@ const MOON_CAM: Pt = [5, 1]
 export function drawNight(pen: Pen, t: number, f: Frame): void {
   // Nothing of it is in shot while the camera is inside the rooms.
   if (f.x1 < WALL_R[1]) return
-  deep(pen, f, SKY_D, MOON_CAM, (g) => drawSky(pen, t, MOON_OUT, true, g))
+  deep(pen, f, SKY_D, MOON_CAM, (g) => drawSky(pen, t, MOON_OUT, g))
   deep(pen, f, 0.2, OUT, (g, o) => drawFar(pen, t, g, o))
   deep(pen, f, 0.45, OUT, (g, o) => drawMid(pen, t, g, o))
   // Far rain, over the roofs up the block.
@@ -777,7 +784,7 @@ export function drawLampRain(pen: Pen, t: number, f: Frame, head: Pt, foot: numb
   ctx.lineTo((head[0] - 2.2) * k, foot * k)
   ctx.closePath()
   ctx.clip()
-  rain(pen, t, f, { seed: 17, density: 3.5, speed: 10, slant: 0.1, len: 0.42, color: N.sodium, alpha: 0.42, lw: 0.4, x: [head[0] - 2.3, head[0] + 2.3], y: [head[1], foot] })
+  rain(pen, t, f, { seed: 17, density: 3.5, speed: 10, slant: 0.1, len: 0.42, color: N.sodium, alpha: 0.32, lw: 0.4, x: [head[0] - 2.3, head[0] + 2.3], y: [head[1], foot] })
   ctx.restore()
 }
 
@@ -786,7 +793,7 @@ const CAT: Pt = [10.95, L_MISH]
 /** Its start at each of Mishkin's blows on the rail. */
 const startle = (t: number): number => POUNDS.reduce((s, p) => s + (t >= p ? Math.exp(-(t - p) / 0.25) : 0), 0)
 
-/** A black cat on the landing, its tail going, its head following him down the stair; its eyes catch the light. */
+/** A black cat on the landing, its tail going, its head following him down the stair. */
 export function drawCat(pen: Pen, t: number, f: Frame): void {
   const [x, y] = CAT
   if (x + 1 < f.x0 || x - 1 > f.x1 || y - 1 > f.y1 || y + 0.3 < f.y0) return
@@ -835,13 +842,13 @@ export function drawCat(pen: Pen, t: number, f: Frame): void {
   ctx.ellipse((x + 0.05) * k, (y - 0.15) * k, 0.17 * k, 0.15 * k, 0, Math.PI * 1.15, Math.PI * 1.75)
   ctx.stroke()
   ctx.restore()
-  // Its eyes, when it looks out toward us at all; it blinks now and then.
+  // Its eyes, dull green in the dark, wider when it starts; it blinks now and then.
   const blink = hash(Math.floor(t * 1.7), 2, 66) < 0.1 && (t * 1.7) % 1 < 0.25
   if (!blink) {
     const front = 0.5 + 0.5 * Math.max(0, ly)
     for (const side of [-1, 1]) {
       const e: Pt = [head[0] + lx * 0.05 + side * 0.04, head[1] + 0.005 + ly * 0.03]
-      ellipse(pen, e, 0.022, 0.018 + 0.006 * st, mix(N.cat, N.catEye, 0.55 + 0.45 * front))
+      ellipse(pen, e, 0.022, 0.018 + 0.006 * st, mix(N.cat, N.catEye, 0.3 + 0.2 * front))
     }
   }
   ctx.restore()
@@ -882,13 +889,13 @@ export function drawPavementRain(pen: Pen, t: number, f: Frame): void {
   ctx.restore()
   // The lights across the street, laid on our wet pavement: the sign's red and blue, the bar's and the diner's.
   const [dx] = parallax(f, 0.72, OUT)
-  const { red, blue } = neon(t)
-  const glints: [number, number, string, number][] = [
-    [BLADE[0] + dx, 0.3, red > blue ? N.red : N.blue, 0.5 * Math.max(red, blue)],
+  const reflections: [number, number, string, number][] = [
+    [BLADE[0] + dx, 0.3, N.red, 0.4 * RED_ON],
+    [BLADE[0] + dx, 0.14, N.blue, 0.4 * BLUE_ON],
     [(BAR.x0 + BAR.x1) / 2 + dx, 0.5, N.win, 0.3],
     [(DINER.x0 + DINER.x1) / 2 + dx, 0.9, N.diner, 0.25],
   ]
-  for (const [gx, w, col, a] of glints) {
+  for (const [gx, w, col, a] of reflections) {
     if (gx + w < x0 || gx - w > x1) continue
     const wob = 0.04 * Math.sin(t * 4 + gx)
     box(css(pen, col, a), gx - w / 2 + wob, y + 0.01, gx + w / 2 + wob, y + 0.045)

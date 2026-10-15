@@ -87,7 +87,7 @@ export const tub = part<HotelState>(
         drawWallOver(base, frame(p, c.k))
       }
       drawDebris(mish, t)
-      drawCrash(mish, t, frame(p, c.k))
+      drawCrash(mish, t)
       drawStamp(mish, t)
       p.pop()
     },

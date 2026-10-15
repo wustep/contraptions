@@ -1,9 +1,9 @@
 import type { Pt } from '../../../../../parts'
-import { bloom, flicker, layer, motes, parallax, rain, rising, shaft, sway, type Frame } from '../depth'
+import { motes, parallax, rain, rising, sway, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
 import { at as beatAt, BEAT } from '../music'
 import { G } from '../physics'
-import { ctxOf, ellipse, flash, mix, rect, type Pen } from '../pen'
+import { ctxOf, ellipse, mix, rect, rgba, type Pen } from '../pen'
 import {
   BREAK,
   BULB_OUT,
@@ -25,7 +25,7 @@ import {
   WALL_L,
   WALL_R,
 } from './geo'
-import { css, drawFar, drawMid, drawSky, moonlight, N, neon, blade, SKY_D } from './night'
+import { beam, blade, css, drawFar, drawMid, drawSky, moonlight, N, SIGN, SKY_D } from './night'
 
 /**
  * The two rooms' life. Marty's: a sash window in the back wall over the tub with the night beyond it (the moon behind
@@ -34,7 +34,8 @@ import { css, drawFar, drawMid, drawSky, moonlight, N, neon, blade, SKY_D } from
  * under the door; when the bulb goes, the moon comes out from its cloud and in at the window, and the clouds going
  * over it dim it and give it back. Mishkin's: his cigarette's smoke, a moth at his lamp, the lace at his open window,
  * a car's lights going over his ceiling; then the crash's plaster dust bursting and settling in his lamp's light and
- * the moon's down through the hole, and the bath water everywhere.
+ * the moon's down through the hole, and the bath water everywhere. The light is only ever what falls on things, laid
+ * over them: no halo hangs round a lamp, and nothing glints.
  */
 
 const MOON_BLUE = '#A8CCF0'
@@ -80,7 +81,7 @@ function drawView(pen: Pen, t: number, f: Frame): void {
   g.addColorStop(1, css(pen, N.sky2))
   ctx.fillStyle = g
   ctx.fillRect(WIN.x0 * k, WIN.y0 * k, (WIN.x1 - WIN.x0) * k, (WIN.y1 - WIN.y0) * k)
-  view(pen, f, SKY_D, [0, 0], (g2) => drawSky(pen, t, MOON_IN, false, g2))
+  view(pen, f, SKY_D, [0, 0], (g2) => drawSky(pen, t, MOON_IN, g2))
   // Downtown laid so the moon stands clear over a low roof when the bulb goes, a tower beside it.
   view(pen, f, 0.2, [-6.5, -3.3], (g2) => drawFar(pen, t, g2, g2.x0))
   view(pen, f, 0.42, [-6.9, -5.1], (g2) => drawMid(pen, t, g2, g2.x0))
@@ -107,10 +108,6 @@ function drawView(pen: Pen, t: number, f: Frame): void {
         rect(pen, x0 + 0.03, y - 0.29, x0 + CARRIAGE - 0.03, y - 0.26, '#46585A')
         for (let w = 0; w < 5; w++) rect(pen, x0 + 0.1 + w * 0.2, y - 0.21, x0 + 0.22 + w * 0.2, y - 0.09, mix('#FFF0C0', '#2C3A3C', hash(c, w, 5) < 0.2 ? 0.7 : 0))
       }
-      bloom(pen, [head + 2.2, y - 0.15], 1.6, '#FFF0C0', 0.12)
-      // The shoe sparks off the rail now and then.
-      const sp = hash(Math.floor(t * 5), 7, 51)
-      if (sp < 0.3) bloom(pen, [head + 1.7 + sp * 3, y + 0.02], 0.35, '#CFE6FF', 0.5)
     }
   })
   // The house across the way, and the bar's sign hanging off its corner.
@@ -122,7 +119,7 @@ function drawView(pen: Pen, t: number, f: Frame): void {
         const lit = hash(r, c + Math.floor((t - 91) / (BEAT * 6)), 52) < 0.4
         rect(pen, x0 + 0.12 + c * 0.32, -2.05 + r * 0.42, x0 + 0.27 + c * 0.32, -1.85 + r * 0.42, lit ? N.win : N.glass)
       }
-    blade(pen, t, [x0 - 0.12, -2.2], 0.48)
+    blade(pen, [x0 - 0.12, -2.2], 0.48)
   })
   // The rain beyond the glass.
   view(pen, f, 0.55, [0, 0], (g2) => rain(pen, t, g2, { seed: 21, density: 9, speed: 7, slant: 0.12, len: 0.22, color: N.rain, alpha: 0.22, lw: 0.28 }))
@@ -177,9 +174,21 @@ function breath(t: number): number {
   return 0.55 + 0.45 * sway(t, 2, 3.6) + 0.5 * el
 }
 
+/** A box of light laid over what is there, in cells: a tint where a light falls. */
+function wash(pen: Pen, x0: number, y0: number, x1: number, y1: number, col: string, a: number): void {
+  if (a <= 0.004) return
+  const ctx = ctxOf(pen.p)
+  const { k } = pen
+  ctx.save()
+  ctx.fillStyle = rgba(pen, col, a)
+  ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+  ctx.restore()
+}
+
 /**
  * The back window: its casing, the night through its glass, the rain on it, its sashes, the curtain breathing at it,
- * and the light it gives the room: the sign's red and blue on the paper, and the moon once the bulb has gone.
+ * and the light it gives the room: the sign's across the street on its sill and casing, and the moon once the bulb
+ * has gone.
  */
 export function drawWindow(room: Pen, t: number, f: Frame): void {
   if (WIN.x1 + 2.5 < f.x0 || WIN.x0 - 2.5 > f.x1 || WIN.y1 + 3.5 < f.y0 || WIN.y0 - 2.5 > f.y1) return
@@ -187,10 +196,6 @@ export function drawWindow(room: Pen, t: number, f: Frame): void {
   const L = bulbLevel(t)
   const dark = 1 - L
   const clear = moonlight(t)
-  const { red, blue } = neon(t)
-  // The sign's light on the wallpaper round the window, red and blue on the beat; it tells more once the bulb has gone.
-  const spill = 0.07 + 0.13 * dark
-  bloom(pen, [WIN_C[0] - 0.2, WIN_C[1] + 0.3], 2.6, red > blue ? N.red : N.blue, spill * Math.max(red, blue))
   // The casing.
   rect(room, WIN.x0 - 0.12, WIN.y0 - 0.14, WIN.x1 + 0.12, WIN.y1 + 0.04, '#4E3A28')
   rect(room, WIN.x0 - 0.05, WIN.y0 - 0.06, WIN.x1 + 0.05, WIN.y1, '#32251A')
@@ -198,8 +203,6 @@ export function drawWindow(room: Pen, t: number, f: Frame): void {
     drawView(pen, t, f)
     drawWetGlass(pen, t)
   }
-  // The bulb in the glass while it burns.
-  if (L > 0.05) bloom(pen, [WIN.x0 + 0.35, WIN.y1 - 0.45], 0.25, '#FFE2A0', 0.35 * L)
   // The sashes: the lower one up a crack, so the draught comes in; their bars.
   const mid = (WIN.y0 + WIN.y1) / 2
   const bar = '#634A33'
@@ -211,6 +214,11 @@ export function drawWindow(room: Pen, t: number, f: Frame): void {
   // The sill.
   rect(room, WIN.x0 - 0.2, WIN.y1, WIN.x1 + 0.2, WIN.y1 + 0.08, '#5A4430')
   rect(room, WIN.x0 - 0.16, WIN.y1 + 0.08, WIN.x1 + 0.16, WIN.y1 + 0.12, '#3A2A1C')
+  // The sign's light in at the glass, steady: a tint along the sill and the casing's edge that faces it, which tells
+  // more once the bulb has gone.
+  const sign = 0.1 + 0.16 * dark
+  wash(pen, WIN.x0 - 0.2, WIN.y1, WIN.x1 + 0.2, WIN.y1 + 0.05, SIGN, sign)
+  wash(pen, WIN.x0 - 0.05, WIN.y0 - 0.06, WIN.x0, WIN.y1, SIGN, sign * 0.8)
   // The curtain on its rod, drawn aside, breathing.
   const b = breath(t)
   const rod = WIN.y0 - 0.2
@@ -241,12 +249,8 @@ export function drawWindow(room: Pen, t: number, f: Frame): void {
   ctx.stroke()
   ctx.restore()
   rect(room, cx0 - 0.08, rod - 0.04, WIN.x1 + 0.25, rod + 0.02, '#2B2420')
-  // Once the bulb has gone: the moon on the glass's edges and in a shaft down over the tub; the clouds dim it.
-  if (dark > 0.02) {
-    const m = dark * clear
-    bloom(pen, [MOON_IN[0] - 0.2, MOON_IN[1] + 0.4], 1.6, MOON_BLUE, 0.13 * m)
-    shaft(pen, [WIN_C[0] + 0.1, WIN.y0 + 0.15], 0.12, 0.62, 3.5, MOON_BLUE, 0.15 * m)
-  }
+  // Once the bulb has gone: the moon's light, faint, in a shaft down over the tub; the clouds going over dim it.
+  if (dark > 0.02) beam(pen, [WIN_C[0] + 0.1, WIN.y0 + 0.15], 0.12, 0.62, 3.5, MOON_BLUE, 0.08 * dark * clear)
 }
 
 /** Moonlight in the shaft from the window, 0 to 1: where the dust shows once the bulb has gone. */
@@ -260,7 +264,7 @@ const inShaft = (x: number, y: number): number => {
 
 /* ------------------------------------------------------------------ light going over the walls */
 
-/** The El's lit windows going over the paper, right to left, while it passes. */
+/** The El's lit windows going over the paper, right to left, while it passes: faint, laid on the wall. */
 export function drawElLight(room: Pen, t: number): void {
   const pen = plain(room)
   const ceil = ceilOf(F_MARTY)
@@ -275,8 +279,7 @@ export function drawElLight(room: Pen, t: number): void {
     ctx.beginPath()
     ctx.rect(WALL_L[1] * k, ceil * k, (WALL_R[0] - WALL_L[1]) * k, (F_MARTY - ceil) * k)
     ctx.clip()
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.fillStyle = css(pen, '#E8E0C0', (0.065 + 0.065 * dark) * env)
+    ctx.fillStyle = rgba(pen, '#E8E0C0', (0.02 + 0.025 * dark) * env)
     ctx.beginPath()
     const head = 8.2 - EL_SPEED * 2.2 * s
     for (let c = 0; c < CARRIAGES; c++)
@@ -295,19 +298,16 @@ export function drawElLight(room: Pen, t: number): void {
   }
 }
 
-/** The hall light under the door, and someone going by out there: two feet's shadows across it, the transom dimming. */
-export function drawHall(room: Pen, t: number, door: [number, number], top: number): void {
+/** Someone going by in the hall: two feet's shadows across the light under the door. */
+export function drawHall(room: Pen, t: number, door: [number, number]): void {
   const s = t - 91.35
   const walk = s > 0 && s < 1.6 ? s / 1.6 : -1
+  if (walk < 0) return
   const pen = plain(room)
   const fl = F_MARTY
   const fx = door[1] + 0.3 - (door[1] - door[0] + 0.6) * walk
   const ctx = ctxOf(pen.p)
   const { k } = pen
-  // The transom's light breathes with the hall's old tube.
-  const tube = flicker(t, 4, 0.35)
-  bloom(pen, [(door[0] + door[1]) / 2, top - 0.32], 0.7, '#F2D08A', 0.18 * tube)
-  if (walk < 0) return
   ctx.save()
   ctx.fillStyle = css(pen, '#1A120C', 0.85)
   ctx.beginPath()
@@ -367,27 +367,19 @@ export function drawMartyAir(room: Pen, t: number, f: Frame, bulb: Pt): void {
   if (f.y0 > F_MARTY || f.y1 < ceil) return
   const scatter = smooth(t, BULB_OUT - 0.2, BULB_OUT + 1.6)
   moths(pen, t, 5, 3, bulb, L, [WIN_C[0], WIN.y0 + 0.45], scatter)
+  // The dust in the air, seen only where the light is on it: the bulb's, then the moon's shaft.
   motes(pen, t, {
-    n: 70,
+    n: 40,
     seed: 9,
     box: [WALL_L[1], ceil, WALL_R[0], F_MARTY],
-    size: [0.008, 0.022],
+    size: [0.008, 0.02],
     color: L > 0.5 ? '#FFEFC4' : '#D6E8FF',
-    alpha: 0.6,
+    alpha: 0.42,
     drift: [0.04, 0.025],
     wander: 0.2,
-    twinkle: 0.5,
+    twinkle: 0,
     light: (x, y) => L * Math.exp(-((x - bulb[0]) ** 2 + (y - bulb[1]) ** 2) / 1.6) + (1 - L) * clear * inShaft(x, y) * 1.4,
   })
-  // Out of focus, close to the lens: a few big soft specks drifting past while the camera is in the room.
-  if (t < 98.2)
-    layer(
-      pen,
-      f,
-      1.28,
-      () => motes(pen, t, { n: 9, seed: 19, box: [-3, -4.2, 9.5, 1.2], size: [0.06, 0.12], color: L > 0.5 ? '#FFE3A8' : '#B8D2F0', alpha: 0.09 * (1 - smooth(t, 97.2, 98.2)), drift: [0.1, -0.04], wander: 0.3, twinkle: 0.3 }),
-      ROOM,
-    )
 }
 
 /* ------------------------------------------------------------------ the tub's tap */
@@ -504,9 +496,8 @@ export function drawMishAir(mish: Pen, t: number, f: Frame): void {
   }
   ctx.stroke()
   ctx.restore()
-  // The sign across the street, red and blue on his window's reveal.
-  const { red, blue } = neon(t)
-  bloom(pen, [WALL_R[0] - 0.1, (head + sill) / 2], 1.3, red > blue ? N.red : N.blue, 0.08 * Math.max(red, blue))
+  // The sign across the street, a steady tint on his window's sill.
+  wash(pen, WALL_R[0] - 0.1, sill, WALL_R[1] + 0.12, sill + 0.04, SIGN, 0.16)
   // The cigarette in the ashtray, its smoke going up past the lamp and curling in its warmth.
   const ash: Pt = [NIGHTSTAND[0] + 0.24, STAND_TOP - 0.04]
   ellipse(pen, [ash[0] + 0.09, ash[1] - 0.005], 0.012, 0.012, '#FF5A4A')
@@ -523,11 +514,10 @@ export function drawMishAir(mish: Pen, t: number, f: Frame): void {
     ctx.beginPath()
     ctx.rect(WALL_L[1] * k, ceil * k, (WALL_R[0] - WALL_L[1]) * k, (fl - ceil) * k)
     ctx.clip()
-    ctx.globalCompositeOperation = 'lighter'
     const g = ctx.createLinearGradient((x - 0.7) * k, 0, (x + 0.7) * k, 0)
-    g.addColorStop(0, css(pen, '#FFF0C8', 0))
-    g.addColorStop(0.5, css(pen, '#FFF0C8', 0.14 * env))
-    g.addColorStop(1, css(pen, '#FFF0C8', 0))
+    g.addColorStop(0, rgba(pen, '#FFF0C8', 0))
+    g.addColorStop(0.5, rgba(pen, '#FFF0C8', 0.08 * env))
+    g.addColorStop(1, rgba(pen, '#FFF0C8', 0))
     ctx.fillStyle = g
     ctx.beginPath()
     ctx.moveTo((x - 0.7 - 0.9) * k, ceil * k)
@@ -620,14 +610,14 @@ const HOLE_DRIPS: Pt[] = [
  * After the floor goes: the moon down through the hole, the plaster dust bursting and settling in the light, the bath
  * water off the bed in a spreading puddle, dripping off the mattress and through the hole.
  */
-export function drawCrash(mish: Pen, t: number, f: Frame): void {
+export function drawCrash(mish: Pen, t: number): void {
   if (t < BREAK) return
   const pen = plain(mish)
   const clear = moonlight(t)
   const open = smooth(t, BREAK, BREAK + 0.4)
-  // The moon down through the hole.
+  // The moon down through the hole, faint.
   const apex: Pt = [TUB_X, F_MARTY + 0.47]
-  shaft(pen, apex, 0.06, 0.78, 4.4, MOON_BLUE, 0.14 * open * clear)
+  beam(pen, apex, 0.06, 0.78, 4.4, MOON_BLUE, 0.07 * open * clear)
   const lampAt: Pt = [LAMP[0], LAMP[1] - 0.65]
   const lampL = lampLevel(t)
   const light = (x: number, y: number): number => {
@@ -637,16 +627,6 @@ export function drawCrash(mish: Pen, t: number, f: Frame): void {
     return Math.min(1, dl + 0.8 * inBeam)
   }
   for (const b of BURSTS) dust(pen, t, b, light)
-  // And close to the lens, out of focus: big soft flecks of it drifting down past us for a while after.
-  const near = smooth(t, LAND, LAND + 0.6) * (1 - smooth(t, LAND + 4, LAND + 6.5))
-  if (near > 0.01)
-    layer(
-      pen,
-      f,
-      1.3,
-      () => motes(pen, t, { n: 12, seed: 47, box: [0, -1.2, 9, 5.2], size: [0.07, 0.14], color: '#F6E6C4', alpha: 0.13 * near, drift: [0.05, 0.16], wander: 0.3, twinkle: 0.25 }),
-      [5, 1.8],
-    )
   // The dust left hanging in the light, slowly settling, once the bursts have thinned.
   motes(pen, t, {
     n: 50,
@@ -654,10 +634,10 @@ export function drawCrash(mish: Pen, t: number, f: Frame): void {
     box: [WALL_L[1] + 0.2, ceilOf(F_MISH) + 0.3, WALL_R[0] - 0.2, F_MISH - 0.1],
     size: [0.01, 0.025],
     color: '#F2E8D0',
-    alpha: 0.55 * smooth(t, LAND + 0.5, LAND + 2.5),
+    alpha: 0.45 * smooth(t, LAND + 0.5, LAND + 2.5),
     drift: [0.03, 0.07],
     wander: 0.25,
-    twinkle: 0.5,
+    twinkle: 0,
     light,
   })
   // The bath water: a puddle spreading on the boards under the bed, its gleam; drips off the mattress, through the hole.
@@ -695,7 +675,7 @@ export function drawCrash(mish: Pen, t: number, f: Frame): void {
         const u = (s + hash(i, 1, 46) * per) % (per + fall)
         if (u < per) ellipse(pen, [x, y + 0.02], 0.015 + 0.012 * (u / per), 0.02 + 0.014 * (u / per), '#C8E0E0')
         else ellipse(pen, [x, Math.min(floor, y + 0.5 * G * (u - per) ** 2)], 0.018, 0.03, '#C8E0E0')
-        if (u < 0.3 && s > 0.6 + per) ellipse(pen, [x, floor - 0.01], 0.05 + 0.2 * u, 0.012, mix('#86B3AE', '#E2F0EC', flash(u, 0.12)))
+        if (u < 0.3 && s > 0.6 + per) ellipse(pen, [x, floor - 0.01], 0.05 + 0.2 * u, 0.012, '#9EC2BE')
       })
   }
 }
