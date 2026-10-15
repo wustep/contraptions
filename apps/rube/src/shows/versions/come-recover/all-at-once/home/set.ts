@@ -160,6 +160,11 @@ export const LIGHTS = {
   neonOff: Infinity,
   /** When the garland's lanterns go down to an ember (the finale sets it: with the tubes, on the last hit). */
   lanternsOff: Infinity,
+  /**
+   * Windows across the street that light in the night and go dark again, from other parts: by the far front's number
+   * (the block's own 0 to 4, left to right behind the glass), its row and column; `who` puts someone at it.
+   */
+  wake: [] as { front: number; row: number; col: number; on: number; off: number; who?: boolean }[],
 }
 
 /** How lit the garland's lantern `i` is at `t`, 0..1: lit on its time, and down to an ember from `LIGHTS.lanternsOff`. */
@@ -1031,6 +1036,20 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
           if (on) p.fill(alpha(p, HOME.gold, 0.62))
           else p.fill(mixHex(HOME.night, HOME.steelDark, 0.12))
           p.rect(wx * k, wy * k, 0.2 * k, 0.3 * k, 0.02 * k)
+          // A neighbour's light coming on in the night, and going off again (`LIGHTS.wake`).
+          const woke = on ? undefined : LIGHTS.wake.find((wk) => wk.front === i && wk.row === r && wk.col === c)
+          const wa = woke ? smooth(t, woke.on, woke.on + 0.35) * (1 - smooth(t, woke.off, woke.off + 0.5)) : 0
+          if (woke && wa > 0.01) {
+            p.fill(alpha(p, HOME.gold, 0.62 * wa))
+            p.rect(wx * k, wy * k, 0.2 * k, 0.3 * k, 0.02 * k)
+            // Someone at it, looking out at the street, head and shoulders against the light.
+            if (woke.who) {
+              const lean = 0.02 * Math.sin((t - woke.on) * 0.8)
+              p.fill(alpha(p, mixHex(HOME.night, HOME.steelDark, 0.2), wa))
+              p.circle((wx + lean) * k, (wy - 0.02) * k, 0.09 * k)
+              p.rect((wx + lean * 0.5) * k, (wy + 0.11) * k, 0.16 * k, 0.1 * k, 0.04 * k, 0.04 * k, 0, 0)
+            }
+          }
         }
       }
   })
