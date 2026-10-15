@@ -1,8 +1,8 @@
 import type { Pt } from '../../../../../parts'
 import { frame, knock, smooth } from '../kit'
-import { sway, type Frame } from '../depth'
-import { blob, ctxOf, ellipse, flash, fillWith, glint, glow, line, mix, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
-import { benchLit, corridorLight, dapple, glassBloom, nurseryMotes, sunBloom, wardShafts } from './light'
+import { shade, sway, type Frame } from '../depth'
+import { blob, ctxOf, ellipse, fillWith, glow, line, mix, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import { benchLit, corridorLight, nurseryMotes, wardShafts } from './light'
 import { birds, el, lookIn, lookOut, plane, roofs, sky, snow, towers, wing, type Look } from './outside'
 import { clock, drip, fan, flowers, foreground, mobile } from './props'
 import { daylight, sunUp, warm } from './dawn'
@@ -13,11 +13,9 @@ import {
   BENCH,
   BENCH_TOP,
   BLIND_TOP,
-  BLOOM,
   CEIL,
   CORRIDOR_WIN,
   CURTAIN,
-  CUT,
   DADO,
   DOOR_HEAD,
   DOOR_LEAF,
@@ -30,17 +28,15 @@ import {
   GLASS,
   HEAD_TOP,
   HEAD_X,
-  KNOCKS,
   LANDS,
-  LEAN,
   LOOK,
   MAT,
-  NUDGE,
   NURSE_X,
   PILLOW,
   REACH,
   SILL,
   SILL_TOP,
+  SON_BED,
   SPRING,
   SUN_CLEAR,
   SUNRISE,
@@ -151,12 +147,11 @@ export function drawSet(pen: Pen, t: number, f: Frame): void {
   rect(pen, f.x0 - 1, FLOOR - 0.16, f.x1 + 1, FLOOR, C.base)
   rect(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, CEIL, C.ceiling)
   rect(pen, f.x0 - 1, CEIL, f.x1 + 1, CEIL + 0.08, C.frameShade)
-  // The morning on the walls: grey at first, then gold, coming from the ward's window and out through its door.
+  // The morning in the room: grey at first, then gold, falling from the ward's window over the bed and the floor about
+  // it, and a little out through its door; the corridor has only what comes in at its own window.
   const morning = mix('#C9D3DA', C.gold, w)
-  glow(pen, [0.5, -2.2], 6.5, morning, 0.18 + 0.2 * w)
-  glow(pen, [-4.6, -0.4], 3.6, morning, 0.1 + 0.18 * w)
-  glow(pen, [-9.4, -1.6], 5.5, morning, 0.05 + 0.16 * w)
-  dapple(pen, t, f)
+  glow(pen, [0.0, 0.4], 5.5, morning, 0.08 + 0.1 * w)
+  glow(pen, [-4.6, -0.2], 3.2, morning, 0.05 + 0.08 * w)
   drawFloor(pen, f, w)
   drawCorridorWindow(pen, t, f)
   corridorLight(pen, t, f)
@@ -165,7 +160,7 @@ export function drawSet(pen: Pen, t: number, f: Frame): void {
   drawWardWindow(pen, t, f)
   drawCurtain(pen, f, t)
   drip(pen, t, 2.47)
-  drawStand(pen, t, w)
+  drawStand(pen, t)
   drawBed(pen, w)
   wardShafts(pen, t, f)
   drawWardWall(pen)
@@ -204,8 +199,8 @@ function drawFloor(pen: Pen, f: Frame, w: number): void {
       shape(pen, [[X(a, y0), y0], [X(b, y0), y0], [X(b, y1), y1], [X(a, y1), y1]], C.tileB)
     }
   }
-  // A soft sheen on the floor from the window, and the shade under the wall.
-  glow(pen, [-2.0, FLOOR + 0.4], 3.2, mix('#DDE4E6', C.gold, w), 0.2 + 0.15 * w)
+  // The window's light lying on the ward's floor (flat on it, not up the wall), and the shade under the wall.
+  shade(pen, [-1.2, FLOOR + 0.5], 3.0, 0.42, mix('#DDE4E6', C.gold, w), 0.12 + 0.1 * w)
   vgrad(pen, f.x0 - 1, FLOOR, f.x1 + 1, FLOOR + 0.25, [
     [0, '#2A3530', 0.22],
     [1, '#2A3530', 0],
@@ -273,7 +268,7 @@ function drawCurtain(pen: Pen, f: Frame, t: number): void {
   rect(pen, x0, -4.5, x0 + 0.06, 1.0, C.curtainShade)
 }
 
-function drawStand(pen: Pen, t: number, w: number): void {
+function drawStand(pen: Pen, t: number): void {
   const [x0, x1] = STAND
   const y = STAND_TOP
   shape(pen, [[x0, y], [x1, y], [x1 + 0.12, y - 0.1], [x0 + 0.12, y - 0.1]], C.enamel)
@@ -287,7 +282,6 @@ function drawStand(pen: Pen, t: number, w: number): void {
   const gx = x0 + 0.17
   shape(pen, [[gx - 0.07, y - 0.32], [gx + 0.07, y - 0.32], [gx + 0.06, y - 0.05], [gx - 0.06, y - 0.05]], C.glass)
   rect(pen, gx - 0.06, y - 0.2, gx + 0.06, y - 0.05, mix(C.glass, '#AFC7D0', 0.4))
-  glint(pen, [gx + 0.03, y - 0.25], 0.06, '#FFFFFF', 0.5 + 0.3 * w)
   flowers(pen, t, x1 - 0.2, y - 0.03)
 }
 
@@ -324,7 +318,7 @@ function drawCorridorWindow(pen: Pen, t: number, f: Frame): void {
   rect(pen, x0, y0, x1, down, C.blind)
   const ctx = ctxOf(pen.p)
   ctx.save()
-  ctx.fillStyle = rgba(pen, '#FFD9A0', 0.15 + 0.35 * sunUp(t))
+  ctx.fillStyle = rgba(pen, '#FFD9A0', 0.12 + 0.25 * sunUp(t))
   ctx.fillRect(x0 * pen.k, y0 * pen.k, (x1 - x0) * pen.k, (down - y0) * pen.k)
   ctx.restore()
   for (let x = x0 + 0.3; x < x1; x += 0.6) line(pen, [x, y0], [x, down], C.blindShade, 0.35)
@@ -413,7 +407,7 @@ function drawBed(pen: Pen, w: number): void {
   rect(pen, xf - 0.18, -0.25, xf, 0.03, '#F4F1E4')
   rect(pen, xf - 0.13, -0.32, xf - 0.05, -0.26, C.iron)
   // The window's light on the blanket.
-  glow(pen, [0.2, 0.05], 1.6, mix('#E8ECEE', C.gold, w), 0.2 + 0.18 * w)
+  glow(pen, [0.2, 0.05], 1.6, mix('#E8ECEE', C.gold, w), 0.12 + 0.1 * w)
 }
 
 /** The ward's wall, in section above its open door, and the door folded back against the corridor wall. */
@@ -471,9 +465,6 @@ function shadow(pen: Pen, b: Pt, r: number, a: number): void {
 
 export function drawPart(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): void {
   const w = warm(t)
-  // The first light on the brass knob, on the cut.
-  const knob: Pt = [FOOT_X - 0.015, FOOT_TOP - 0.065]
-  glint(pen, knob, 0.22, '#FFF4D2', 0.95 * flash(t - CUT, 0.45) + 0.15 + 0.2 * w)
   // The blanket gives under him as he springs off the foot.
   const give = knock(t - SPRING, 0.3)
   if (give > 0.01) {
@@ -486,33 +477,17 @@ export function drawPart(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
     ctx.fill()
     ctx.restore()
   }
-  // The glow between them, as he tells her.
-  const on = smooth(t, BLOOM - 0.08, BLOOM + 0.5) * (1 - smooth(t, NUDGE + 0.2, SPRING + 0.8))
-  if (on > 0.003) {
-    const swell = 0.4 * flash(t - BLOOM, 0.35) + 0.5 * flash(t - LEAN, 0.6) + 0.06 * Math.sin((t - BLOOM) * 3.1)
-    const c: Pt = [(marty[0] + rachel[0]) / 2, (marty[1] + rachel[1]) / 2 - 0.02]
-    glow(pen, c, 0.55 + 0.25 * swell, '#FFD69A', 0.55 * on * (0.8 + swell))
-    glow(pen, c, 0.16 + 0.05 * swell, '#FFF1D6', 0.6 * on)
-  }
   // Their shadows, and his on what he crosses.
   shadow(pen, rachel, 0.13, 0.2)
   if (t < SON + 2 || marty[1] < SILL_TOP) shadow(pen, marty, 0.13, 0.28)
   drawBench(pen, t)
-  // The sun through the nursery's glass onto the hall's floor: a little once it is over the roofs, more as the song goes.
-  const sun = Math.max(0.4 * sunUp(t), smooth(t, 232, 264))
-  if (sun > 0.003) {
-    const ctx = ctxOf(pen.p)
-    ctx.save()
-    fillWith(pen, [[GLASS.x0 + 0.3, FLOOR + 0.04], [GLASS.x1 - 0.2, FLOOR + 0.04], [GLASS.x1 + 1.2, FLOOR + 1.4], [GLASS.x0 + 1.4, FLOOR + 1.4]], rgba(pen, C.gold, 0.32 * sun))
-    ctx.restore()
-    glow(pen, [(GLASS.x0 + GLASS.x1) / 2 + 0.6, SILL_TOP + 0.5], 3.0, C.gold, 0.22 * sun)
+  // The nursery's light out through its glass onto the hall's floor: a little from the moment the blind is up, more once
+  // the sun is over the roofs, and more as the song goes. It lies on the floor; the glass itself is only a lit room.
+  const spill = Math.max(0.3 * smooth(t, SON, BLIND_TOP + 0.4), 0.4 * sunUp(t), smooth(t, 232, 264))
+  if (spill > 0.003) {
+    fillWith(pen, [[GLASS.x0 + 0.3, FLOOR + 0.04], [GLASS.x1 - 0.2, FLOOR + 0.04], [GLASS.x1 + 1.2, FLOOR + 1.4], [GLASS.x0 + 1.4, FLOOR + 1.4]], rgba(pen, C.gold, 0.2 * spill))
   }
   drawNursery(pen, t, w, baby, frame(pen.p, pen.k))
-  glassBloom(pen, t, frame(pen.p, pen.k))
-  const out = smooth(t, SON, BLIND_TOP)
-  if (out > 0.002) {
-    glow(pen, [(GLASS.x0 + GLASS.x1) / 2 + 1.2, SILL_TOP + 0.2], 3.2, mix('#FFF6E4', C.gold, w), (0.14 + 0.3 * flash(t - SON, 0.7)) * out)
-  }
 }
 
 function drawBench(pen: Pen, t: number): void {
@@ -667,11 +642,8 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt, f: Frame): void {
     sky(pen, L)
     towers(pen, L, 0.15)
   }
-  if (t > SUNRISE[0] - 0.5) {
-    const clear = flash(t - SUN_CLEAR, 0.6)
-    glow(pen, sun, 0.55 + 0.3 * clear, '#FFD27A', 0.45 * rise + 0.35 * clear)
-    ellipse(pen, sun, 0.14, 0.14, mix('#FFC874', '#FFF0C8', 0.4 + 0.4 * rise))
-  }
+  // The sun itself, a plain disc (no glare round it), paling as it climbs.
+  if (t > SUNRISE[0] - 0.5) ellipse(pen, sun, 0.14, 0.14, mix('#FFC874', '#FFF0C8', 0.4 + 0.4 * rise))
   if (looking) {
     roofs(pen, L, 0.32, { tanks: 0.3, chimneys: 0.5, tall: 0.42, seed: 59 })
     snow(pen, L, 0.6, 617)
@@ -695,13 +667,11 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt, f: Frame): void {
   rect(pen, wx0 - 0.05, -2.0, wx1 + 0.05, -1.92, C.frame)
   rect(pen, wx0 - 0.05, -0.95, wx1 + 0.05, -0.88, C.frame)
   rect(pen, (wx0 + wx1) / 2 - 0.03, -1.95, (wx0 + wx1) / 2 + 0.03, -0.9, C.frame)
-  glow(pen, [-10.6, -1.3], 2.6, mix('#E4ECEC', C.gold, w), 0.2 + 0.3 * w)
   // Pigeons on the near roof's edge, going up into the light as the sun clears it.
   if (looking && lookOut(pen, L)) {
     birds(pen, { ...L, s: 0.8 }, 1, [-10.85, -1.62], 7, { x0: wx0 + 0.78, x1: wx1 - 0.04, y: -1.15, at: SUN_CLEAR - 0.15 })
     lookIn(pen)
   }
-  sunBloom(pen, t, sun)
   // The mobile over the bassinets, turning, hung from the ceiling above the glass.
   mobile(pen, t, [-9.85, -1.95], y0)
   // The back row, the nurse, the front row; the son's own bassinet, his blanket over him drawn after (over the ball).
@@ -709,22 +679,17 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt, f: Frame): void {
     bassinet(pen, x, BACK_RIM, 0.8, true)
     newborn(pen, x, BACK_RIM, 0.8, i % 2 ? C.hoodPink : C.hoodBlue, t, i + 4)
   })
-  // Once it is over the roofs, its light comes in through the window and across the room onto his bassinet.
+  // Once it is over the roofs, its light comes in through the window and across the room onto his bassinet: faint in
+  // the air, a little dust in it (less in the window's light before the sun is up).
   const beam = smooth(t, SUN_CLEAR - 0.2, SUN_CLEAR + 1.6)
   const shaft: Pt[] = [[wx0 + 0.2, -1.85], [wx1 - 0.05, -1.85], [baby[0] + 0.45, baby[1] + 0.25], [baby[0] - 0.55, baby[1] + 0.25]]
-  if (beam > 0.003) {
-    fillWith(pen, shaft, rgba(pen, '#FFD58A', 0.16 * beam))
-    glow(pen, [baby[0], baby[1] + 0.05], 0.9, '#FFD58A', 0.18 * beam)
-  }
-  // Dust turning in it (a little in the window's light before the sun is up).
+  if (beam > 0.003) fillWith(pen, shaft, rgba(pen, '#FFD58A', 0.08 * beam))
   if (t > SON - 1) nurseryMotes(pen, t, shaft, beam)
   drawNurse(pen, t, baby)
-  // His own light: the one warm light in the nursery, on him from the moment the blind goes up.
-  const lit = smooth(t, SON - 0.1, SON + 0.6)
-  if (lit > 0.003) {
-    glow(pen, [baby[0] - 0.05, baby[1] + 0.02], 0.75, '#FFC56A', 0.7 * lit)
-    glow(pen, [baby[0], baby[1]], 0.32, '#FFF0D0', 0.75 * lit)
-  }
+  // The warm light on his bassinet from the moment the blind goes up, and the sun's on it later: lying on his bedding,
+  // not hung round him.
+  const lit = 0.24 * smooth(t, SON - 0.1, SON + 0.6) + 0.1 * beam
+  shade(pen, [SON_BED[0] - 0.05, FRONT_RIM - 0.07], 0.62, 0.2, '#FFD58A', lit)
   FRONT.forEach((x, i) => {
     bassinet(pen, x, FRONT_RIM, 1, false)
     if (i > 0) newborn(pen, x, FRONT_RIM, 1, i % 2 ? C.hoodPink : C.hoodBlue, t, i)
@@ -732,8 +697,6 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt, f: Frame): void {
   drawArms(pen, t, baby)
   // The swaddle's hood behind his head (his face clear of it).
   ellipse(pen, [baby[0] - 0.03, baby[1] + 0.005], 0.1, 0.095, C.sheet)
-  // The morning through the nursery's own window, stronger as the song goes.
-  glow(pen, [-10.7, -1.45], 1.6, '#FFD58A', 0.35 * smooth(t, 232, 264))
   // The blind's roller, under the window's head.
   rect(pen, x0, y0, x1, y0 + 0.09, C.blindShade)
   line(pen, [x0, y0 + 0.09], [x1, y0 + 0.09], C.woodDark, 0.5)
@@ -786,7 +749,7 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
   const refl = mix('#FFFFFF', C.dawn, warm(t))
   for (const [a, wd] of [[-10.9, 0.5], [-9.7, 0.22]] as [number, number][]) {
     ctx.save()
-    fillWith(pen, [[a, y0], [a + wd, y0], [a + wd - 1.4, y1], [a - 1.4, y1]], rgba(pen, refl, 0.13))
+    fillWith(pen, [[a, y0], [a + wd, y0], [a + wd - 1.4, y1], [a - 1.4, y1]], rgba(pen, refl, 0.1))
     ctx.restore()
   }
   vgrad(pen, x0, y0, x1, y1, [
@@ -794,15 +757,6 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
     [1, C.glass, 0.03],
   ])
   ctx.restore()
-  // His knocks on the pane: a ring in the glass where he meets it, gone in a breath.
-  for (const [, ti] of KNOCKS) {
-    const s = t - ti
-    if (s < 0 || s > 0.45) continue
-    ctx.save()
-    ctx.globalAlpha = 0.5 * (1 - s / 0.45)
-    ellipse(pen, [AT_GLASS[0], AT_GLASS[1] - 0.02], 0.16 + 0.32 * s, 0.16 + 0.32 * s, null, 0.9, C.woodDark)
-    ctx.restore()
-  }
   // His tears: a drop down his side to the sill, and the bead it leaves.
   for (const ti of TEARS) {
     const s = t - ti

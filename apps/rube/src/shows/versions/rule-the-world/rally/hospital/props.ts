@@ -1,8 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { layer, sway, type Frame } from '../depth'
-import { ctxOf, ellipse, glint, line, mix, rect, rgba, ring, shape, type Pen } from '../pen'
-import { gold } from './dawn'
+import { ctxOf, ellipse, line, mix, rect, rgba, ring, shape, type Pen } from '../pen'
 import { CEIL, FLOOR, HEAD_X, T0 } from './geo'
 
 /**
@@ -37,8 +36,6 @@ export function clock(pen: Pen, t: number, c: Pt, r: number): void {
   hand(((day / 60) % 60) / 60 * Math.PI * 2, r * 0.74, 1.1, '#2F3532')
   hand((((sec % 60) + snap) / 60) * Math.PI * 2, r * 0.8, 0.45, '#A33A30')
   ellipse(pen, c, 0.018, 0.018, '#2F3532')
-  // The glass over its face, catching the window.
-  glint(pen, [c[0] + r * 0.4, c[1] - r * 0.45], r * 0.35, '#FFFFFF', 0.25 + 0.25 * gold(t))
 }
 
 /**

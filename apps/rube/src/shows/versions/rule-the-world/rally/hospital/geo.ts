@@ -20,7 +20,7 @@ const R = 0.13
 
 /* ------------------------------------------------------------------ the clock */
 
-/** The cut, on "All for freedom and for pleasure": the first light catches the brass knob of the bed's foot. */
+/** The cut, on "All for freedom and for pleasure": he is at rest on the foot of her bed in the grey of dawn. */
 export const CUT = at(95, 1)
 /** Rachel stirs toward him. */
 export const STIR = at(95, 2)
@@ -28,9 +28,9 @@ export const STIR = at(95, 2)
 export const SET_OFF = at(95, 3)
 /** Against her, on the pillow. */
 export const NESTLE = at(96, 1)
-/** The glow between them: he tells her. */
+/** He tells her. */
 export const BLOOM = at(96, 3)
-/** They lean in together; the glow swells. */
+/** They lean in together. */
 export const LEAN = at(97, 1)
 /** She nudges him: go and see him. He rolls back down the bed. */
 export const NUDGE = at(97, 2)

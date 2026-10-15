@@ -152,7 +152,7 @@ function fillTris(pen: Pen, col: string, r: number[]): void {
 
 /* ------------------------------------------------------------------ the layers, far to near */
 
-/** The sky: high grey-blue down to the glow over the roofs, and the sun's light under them (`glowAt`, if given). */
+/** The sky: high grey-blue down to the paler sky over the roofs, a little brighter where the sun is under them (`glowAt`, if given). */
 export function sky(pen: Pen, L: Look, glowAt?: Pt, glowR = 2.2): void {
   const c = tonesOf(L.t)
   within(pen, L, 0.04, (xa, xb, ya, yb) => {
@@ -165,7 +165,7 @@ export function sky(pen: Pen, L: Look, glowAt?: Pt, glowR = 2.2): void {
     g.addColorStop(1, rgba(pen, c.skyLow, 1))
     ctx.fillStyle = g
     ctx.fillRect(xa * k, ya * k, (xb - xa) * k, (yb - ya) * k)
-    if (glowAt) glow(pen, glowAt, glowR * L.s, mix(mix('#DCD5CA', '#FAC9B2', rose(L.t)), '#FFD79A', gold(L.t)), 0.3 + 0.2 * rose(L.t) + 0.4 * gold(L.t))
+    if (glowAt) glow(pen, glowAt, glowR * L.s, mix(mix('#DCD5CA', '#FAC9B2', rose(L.t)), '#FFD79A', gold(L.t)), 0.16 + 0.1 * rose(L.t) + 0.18 * gold(L.t))
   })
 }
 
@@ -491,8 +491,8 @@ export function wing(pen: Pen, L: Look, d: number, top: number): void {
 }
 
 /**
- * Snow coming down past the window, slow and light, the flakes lit by the morning: the street through the store's
- * window had it in the dark before it opened, and it is still falling at dawn.
+ * Snow coming down past the window, slow and light, the flakes pale in the morning (steady, not winking): the street
+ * through the store's window had it in the dark before it opened, and it is still falling at dawn.
  */
 export function snow(pen: Pen, L: Look, d: number, seed: number): void {
   within(pen, L, d, (xa, xb, ya, yb) => {
@@ -506,7 +506,7 @@ export function snow(pen: Pen, L: Look, d: number, seed: number): void {
       alpha: 0.85,
       drift: [0.06 * L.s, 0.32 * L.s],
       wander: 0.08 * L.s,
-      twinkle: 0.35,
+      twinkle: 0,
     })
   })
 }

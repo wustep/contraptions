@@ -8,8 +8,8 @@ import { AT_GLASS, babyAt, HOSPITAL_STRIKES, hospitalWay, LIFT, martyAt, NUDGE, 
 
 /**
  * The ward (202.391 → 266, bar 95 to the end). On "All for freedom and for pleasure" he is at rest on the foot of
- * Rachel's bed in the grey of dawn; he rolls up the blanket to her, and they rest together on her pillow, a small warm
- * glow between them (he tells her, for the first time, that he loves her). She nudges him: go. He rolls back down the
+ * Rachel's bed in the grey of dawn; he rolls up the blanket to her, and they rest together on her pillow and lean in
+ * (he tells her, for the first time, that he loves her). She nudges him: go. He rolls back down the
  * bed, springs off its foot, and hops out of the ward's door and down the corridor's checkerboard on the beats, onto the
  * bench, onto the nursery's sill; and on the last "Everybody wants to rule the world" the blind goes up and there is his
  * son, in the front row's first bassinet. Through the guitar and the fade he stays at the glass, trembling on the beats
