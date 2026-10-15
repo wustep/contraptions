@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../parts'
 import { frame, glow, hash, knock, rgba, scenery, smooth } from './kit'
-import { AT, END_AT, level } from './music'
+import { END_AT, level } from './music'
 import { MIA, NIGHT_MAT, SEBS_MAT } from './worlds'
 import { picture } from './lens'
 import { insideRoom } from './club/room'
@@ -14,13 +14,11 @@ import { DIP, POLE, skyAngle } from './night/painted-waltz'
  * and draws back into at the end. It is drawn in the piano's frame (the
  * club's room stands on the same origin and draws the building and the
  * street in front of it); everything here is beyond the club and further
- * off the higher it stands: the night sky, the stars, the searchlights, the
- * hills with the observatory on the ridge, the basin full of lights, the
- * towers downtown, and the palms and lamps of the street either side of the
- * building. Far things slide against the camera, so a push-in feels deep.
- *
- * At the end (`end`) the searchlights come up with the band (478.05) and
- * cross on The End's last chord.
+ * off the higher it stands: the night sky, the stars, the hills with the
+ * observatory on the ridge, the basin full of lights and the towers
+ * downtown. (The block the club stands on, its houses and the palms along its
+ * pavement, are `street.ts`'s.) Far things slide against the camera, so a
+ * push-in feels deep. Nothing hangs in the sky but the stars: no beams.
  *
  * It is a city that is going somewhere: cars along the boulevards and the
  * cross streets of the basin, white coming and red going, a freeway sweeping
@@ -122,8 +120,8 @@ const TOWERS = [
   { x: 36.1, w: 1.3, h: 7.7 },
 ]
 
-/** Palms along the street either side of the club: x and height. */
-const PALMS = [
+/** Palms along the street either side of the club: x and height. (`street.ts` stands them in front of the houses.) */
+export const PALMS = [
   { x: -23, h: 9.5, lean: -0.05 },
   { x: -19.5, h: 11.2, lean: 0.03 },
   { x: 18.5, h: 10.4, lean: 0.04 },
@@ -140,14 +138,11 @@ const ridge = (x: number, far: boolean): number => {
 
 /** The observatory's ridge: the near hills, left of the club. */
 const OBSERVATORY = -28
-/** Where the searchlights cross on the last chord: across from the beams' bases, and this high above them. */
-const CROSS: Pt = [-4, 20]
-const easeInOut = (u: number): number => u * u * (3 - 2 * u)
 
 /**
- * The End's orchestra arriving (its one clear onset), and the swell it climbs to. On the arrival the searchlights
- * open up; through the swell the city's lights and the beams grow with the music, the traffic fills the basin, and the
- * observatory on its ridge, where the planetarium is, lights up.
+ * The End's orchestra arriving (its one clear onset), and the swell it climbs to: through the swell the city's lights
+ * grow with the music, the traffic fills the basin, and the observatory on its ridge, where the planetarium is, lights
+ * up.
  */
 export const SWELL = END_AT + 32.268
 /** The End's last chord, which the piano in the stars plays (the credits' own reckoning of it). */
@@ -210,9 +205,9 @@ function drawSign(p: p5, k: number, t: number, end: boolean, ox: number, oy: num
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const [u0, u1] = SIGN_U
   const step = (u1 - u0) / SIGN_BLOCKS
-  // Lit, its yellow lies on the hill under it, more as more of it lights.
+  // Lit, its yellow lies on the hill under it, more as more of it lights: below the blocks, not round them.
   const lit = end ? SIGN_AT.reduce((n, a) => n + smooth(t, a, a + 0.25), 0) / SIGN_BLOCKS : 0
-  if (lit > 0.01) glow(p, k, (u0 + u1) / 2 + ox, HORIZON + oy - 4.4, (u1 - u0) * 0.75, MIA, 0.22 * lit, 1, 0.45)
+  if (lit > 0.01) glow(p, k, (u0 + u1) / 2 + ox, HORIZON + oy - 3.55, (u1 - u0) * 0.7, MIA, 0.2 * lit, 1, 0.26)
   for (let i = 0; i < SIGN_BLOCKS; i++) {
     const u = u0 + step * (i + 0.5)
     // Level along the hill's face, a little under the crest, the blocks set a hair up and down as the real ones are.
@@ -303,43 +298,6 @@ export const city = scenery<CityState>({
       }
     }
     ctx.restore()
-
-    // Searchlights: two beams from behind the hills, leaning and slowly sweeping; at the end they come up with the
-    // band and cross on The End's last chord.
-    const band = s.end ? smooth(t, AT.band - 0.2, AT.band + 2.5) : 0.55
-    const last = END_AT + 39.4
-    // On the orchestra's arrival they open up, and stay up through the swell.
-    const open = s.end ? smooth(t, SWELL - 0.1, SWELL + 0.8) : 0
-    const beams: [number, number][] = [[0, 30], [1, -12]]
-    for (const [i, base] of beams) {
-      const side = i % 2 === 0 ? -1 : 1
-      const sweep = s.end
-        ? 0.32 * Math.sin((t - AT.band) * 0.23 + i * 2.2) * (1 - smooth(t, last - 5, last)) + side * 0.16 * smooth(t, last - 5, last)
-        : 0.3 * Math.sin(t * 0.21 + i * 2.2)
-      const free = side * 0.22 + sweep
-      const bx = base + slide(0.3)
-      const by = HORIZON + 1 + lift(0.3)
-      // On The End's last chord every beam swings onto one point in the sky over the city, and they cross there and hold.
-      const cross = s.end ? easeInOut(smooth(t, last - 5, last)) : 0
-      const lean = cross > 0 ? free + (Math.atan2(CROSS[0] + slide(0.3) - bx, CROSS[1]) - free) * cross : free
-      const len = 60
-      const tipX = bx + Math.sin(lean) * len
-      const tipY = by - Math.cos(lean) * len
-      const a = 0.09 * band * (0.7 + 0.3 * level(t)) * (1 + 0.6 * open)
-      const grad = ctx.createLinearGradient(bx * k, by * k, tipX * k, tipY * k)
-      grad.addColorStop(0, rgba('#F4EAD0', a * 1.6))
-      grad.addColorStop(1, rgba('#F4EAD0', 0))
-      ctx.fillStyle = grad
-      const nx = Math.cos(lean)
-      const ny = Math.sin(lean)
-      ctx.beginPath()
-      ctx.moveTo((bx - nx * 0.25) * k, (by - ny * 0.25) * k)
-      ctx.lineTo((tipX - nx * 3.2) * k, (tipY - ny * 3.2) * k)
-      ctx.lineTo((tipX + nx * 3.2) * k, (tipY + ny * 3.2) * k)
-      ctx.lineTo((bx + nx * 0.25) * k, (by + ny * 0.25) * k)
-      ctx.closePath()
-      ctx.fill()
-    }
 
     // The far hills, then the towers downtown, then the near hills with the observatory on the ridge.
     const hills = (far: boolean, color: string, d: number) => {
@@ -495,11 +453,6 @@ export const city = scenery<CityState>({
     ctx.fillStyle = SEBS_MAT.deep
     ctx.fillRect((fr.x0 - 1) * k, (STREET - 0.2) * k, (fr.x1 - fr.x0 + 2) * k, (Math.max(fr.y1, STREET + 6) - STREET + 1) * k)
 
-    // Palms along the street, in silhouette against the lit sky.
-    for (const pm of PALMS) {
-      if (pm.x < fr.x0 - 4 || pm.x > fr.x1 + 4) continue
-      drawPalm(ctx, k, pm.x, STREET, pm.h, pm.lean + 0.012 * Math.sin(t * 0.5 + pm.x))
-    }
   },
 })
 
@@ -788,7 +741,7 @@ function hillLife(p: p5, k: number, t: number, end: boolean, fr: { x0: number; x
   ctx.stroke()
 }
 
-function drawPalm(ctx: CanvasRenderingContext2D, k: number, x: number, ground: number, h: number, lean: number): void {
+export function drawPalm(ctx: CanvasRenderingContext2D, k: number, x: number, ground: number, h: number, lean: number): void {
   const topX = x + lean * h
   const topY = ground - h
   ctx.strokeStyle = PALM
