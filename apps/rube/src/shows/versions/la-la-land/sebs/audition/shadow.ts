@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { FLOOR, R, type Pt } from '../../../../../parts'
-import { box, frame, knock, lastOf, part, rgba, ring, route, smooth, type Companion, type PartShot, type Way } from '../kit'
+import { box, frame, lastOf, part, rgba, ring, route, smooth, type Companion, type PartShot, type Way } from '../kit'
 import { hop } from '../physics'
 import { SHADOW_MAT } from '../worlds'
 
@@ -302,6 +302,71 @@ function pool(p: p5, k: number, x: number, y: number, r: number, color: string, 
   ctx.beginPath()
   ctx.arc(0, 0, r * k, 0, Math.PI * 2)
   ctx.fill()
+  ctx.restore()
+}
+
+/**
+ * The office's floor, below the line the shapes stand on: the boards going away from us in the room's half-light (a
+ * dark grey at the wall, black nearest us), the window's sun lying across them through the blind, dimming with the
+ * same cloud as it does on the wall, and the edge of a rug under the casting table, its fringe toward us.
+ */
+function officeFloor(p: p5, k: number, t: number, F: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const top = FLOOR
+  const deep = 0.85
+  const fade = 1 - F
+  if (fade <= 0.01) return
+  ctx.save()
+  const g = ctx.createLinearGradient(0, top * k, 0, (top + deep) * k)
+  g.addColorStop(0, rgba(SHADOW_MAT.soft, 0.55 * fade))
+  g.addColorStop(1, rgba(SHADOW_MAT.soft, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(SX0 * k, top * k, (SX1 - SX0) * k, deep * k)
+  // The boards' joints, running away from us: faint lines converging a little toward the wall.
+  ctx.strokeStyle = rgba(INK, 0.5 * fade)
+  ctx.lineWidth = Math.max(1, 0.012 * k)
+  ctx.beginPath()
+  for (let x = SX0 + 0.3; x < SX1; x += 0.62) {
+    ctx.moveTo(x * k, top * k)
+    ctx.lineTo((x + (x - 4.4) * 0.18) * k, (top + deep) * k)
+  }
+  ctx.stroke()
+  // The sun through the window, on the floor: a long patch thrown forward and to the right, barred by the slats.
+  const sun = sunAt(t) * fade
+  const ax = WIN.x0 + 0.6
+  const bx = WIN.x1 + 0.9
+  const patch = (u0: number, u1: number) => {
+    const y0 = top + 0.06 + u0 * 0.55
+    const y1 = top + 0.06 + u1 * 0.55
+    ctx.moveTo((ax + u0 * 1.3) * k, y0 * k)
+    ctx.lineTo((bx + u0 * 1.6) * k, y0 * k)
+    ctx.lineTo((bx + u1 * 1.6) * k, y1 * k)
+    ctx.lineTo((ax + u1 * 1.3) * k, y1 * k)
+    ctx.closePath()
+  }
+  ctx.fillStyle = rgba(SHADOW_MAT.warm, 0.2 * sun)
+  ctx.beginPath()
+  for (let i = 0; i < 6; i++) patch(i / 6, i / 6 + 0.11)
+  ctx.fill()
+  // The rug under the table, and its fringe.
+  const [t0, t1] = TABLE
+  ctx.fillStyle = rgba(INK, 0.75 * fade)
+  ctx.beginPath()
+  ctx.moveTo((t0 - 0.4) * k, (top + 0.04) * k)
+  ctx.lineTo((t1 + 0.4) * k, (top + 0.04) * k)
+  ctx.lineTo((t1 + 0.6) * k, (top + 0.42) * k)
+  ctx.lineTo((t0 - 0.6) * k, (top + 0.42) * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.strokeStyle = rgba(SHADOW_MAT.soft, 0.9 * fade)
+  ctx.beginPath()
+  ctx.moveTo((t0 - 0.55) * k, (top + 0.39) * k)
+  ctx.lineTo((t1 + 0.55) * k, (top + 0.39) * k)
+  for (let x = t0 - 0.55; x < t1 + 0.55; x += 0.08) {
+    ctx.moveTo(x * k, (top + 0.42) * k)
+    ctx.lineTo((x + 0.01) * k, (top + 0.5) * k)
+  }
+  ctx.stroke()
   ctx.restore()
 }
 
@@ -1043,9 +1108,9 @@ export const shadow = part<ShadowState>(
       clock(p, k, t)
       panel(p, k, t)
 
-      // The spot on her, down from the pelmet: it opens on the accent, a breath brighter, and settles; it follows her.
+      // The spot on her, down from the pelmet: it opens on the accent and holds; it follows her.
       if (t >= SPOT - 0.04) {
-        const a = smooth(t, SPOT - 0.04, SPOT) * (0.78 + 0.3 * knock(t - SPOT, 0.3))
+        const a = smooth(t, SPOT - 0.04, SPOT) * 0.8
         const mx = miaPath(t)[0]
         const top: Pt = [(RISER[0] + RISER[1]) / 2 + (mx - MARK[0]) * 0.35, PEL_Y + 0.1]
         cone(p, k, top, [mx, RISER_Y], 0.5, 1.35, SHADOW_MAT.warm, a * 0.62)
@@ -1057,7 +1122,7 @@ export const shadow = part<ShadowState>(
       const pose = lampPose(t)
       const { j2, d } = lampJoints(pose)
       const mouth: Pt = [j2[0] + d[0] * 0.27, j2[1] + d[1] * 0.27]
-      const on = t < LAMP[3] ? 0.3 + 0.25 * smooth(t, LAMP[0] - 0.6, LAMP[2]) : 0.75 + 0.35 * knock(t - LAMP[3], 0.25)
+      const on = t < LAMP[3] ? 0.3 + 0.25 * smooth(t, LAMP[0] - 0.6, LAMP[2]) : 0.55 + 0.25 * smooth(t, LAMP[3], LAMP[3] + 0.2)
       const reach = Math.hypot(pose.at[0] - mouth[0], pose.at[1] - mouth[1])
       cone(p, k, mouth, pose.at, 0.24, 0.35 + reach * 0.34, SHADOW_MAT.screen, on * 0.55)
       pool(p, k, pose.at[0], pose.at[1], 0.28 + reach * 0.2, SHADOW_MAT.screen, on * 0.7, 0.9)
@@ -1072,6 +1137,7 @@ export const shadow = part<ShadowState>(
       // The shapes.
       fillInk(p)
       p.rect(X((SX0 + SX1) / 2), X((FLOOR + SY1 + 0.6) / 2), X(SX1 - SX0), X(SY1 + 0.6 - FLOOR))
+      officeFloor(p, k, t, F)
       valance(p, k)
       coatStand(p, k, t)
       cooler(p, k, t)
