@@ -1,7 +1,8 @@
 import type p5 from 'p5'
-import type { PieceCtx } from '../../../../parts'
+import { mixHex, type PieceCtx } from '../../../../parts'
 import { band, body, dayAt, dust, farm, gustAt, rows, sky, sunHeight, type Light } from './field'
 import { fireworks } from './fireworks'
+import { beatAt } from './music'
 import { done, hash, rgba, screenOf, smooth, type Screen } from './screen'
 
 /**
@@ -35,13 +36,20 @@ const NIGHT: Light = {
   horizon: 0.8,
 }
 
+/**
+ * The night has its own arc, as the afternoon had the sun's: the moon climbs the sky through the chase, and the fair's
+ * glow on the horizon swells with the full organ and settles for the photograph.
+ */
+const moonHeight = (t: number): number => 0.4 + 0.22 * smooth(t, 41, 117)
+const glowAt = (t: number): number => smooth(t, beatAt(132) - 1, beatAt(132) + 3) * (1 - smooth(t, 116, 120))
+
 export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: number, horizon: (t: number) => number): void {
   const t = begin + c.t
   const s = screenOf(p, c, col, line)
-  const l = { ...NIGHT, horizon: horizon(t) }
+  const l = { ...NIGHT, low: mixHex(NIGHT.low, '#46325F', glowAt(t)), horizon: horizon(t) }
   const hy = sky(s, l)
   stars(s, t, hy)
-  body(s, hy, 0.17, 0.62, 0.03, '#ECE6F7', '#B9B0E8', 0.22, 0.2, l.mid)
+  body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', '#B9B0E8', 0.22, 0.2, mixHex(l.top, l.mid, 0.4))
   fireworks(s, t, hy)
   farm(s, hy, l.farm, '#E3B45C')
   band(s, hy, l.band)
