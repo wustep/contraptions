@@ -94,9 +94,6 @@ const up = (s: Spot, t: number): number => {
   return out
 }
 
-/** How far the fair's floors stack in the frame at show time `t`, 0 to 1, whatever the house lights are doing. */
-export const stackAt = (s: Spot, t: number): number => read(s.strength, s, t)
-
 /** How far down the night is over the floors off the ball's at show time `t`, 0 to 1. */
 export const strengthAt = (s: Spot, t: number): number => read(s.strength, s, t) * (1 - up(s, t))
 
