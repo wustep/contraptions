@@ -332,8 +332,11 @@ stump.
   `house/far.ts`): the picnic hill and its tree, the church on its rise, the hospital, a town on the slopes, a viaduct
   and a railway. At the fix-up it is faint in the day's haze; at dusk it is one silhouette, where the town's windows
   light, car lamps move along a road and trains cross the viaduct. As the camera draws back through the credits each
-  place comes into the frame in turn: the church where they married, the hill, the hospital, and his the one lit
-  window in his street.
+  place comes into the frame in turn: the church where they married, the hill, the hospital. Then his own street
+  around him: four neighbours' houses at his scale (a cottage, a bungalow, a gable to the street, a bay), their
+  fences and hedges, every window dark and their porch lights off, the snow settling on them as on his; in front, our
+  side of the street, picket fences and a round car at the kerb gathering snow. His is the one lit window in the
+  street, seen to be. None of it is in any frame before the credits' draw-back.
 
 ## End credits
 
@@ -995,7 +998,7 @@ window.
   - *What each place gained.* The church: hills, the town and the picnic hill's tree past it, clouds, a verge in the
     wind; doves off the roof on the first peal, rooks on the toll; lanterns, moving flames, posies and a garland at the
     wedding, a wreath and lilies at the funeral; the windows' light landing on the floor and pews. The street: clouds,
-    birds, cars, smoke, shadows on the lawn, a near verge, and the far ridge with their life's places. The hill: a high
+    birds, smoke, shadows on the lawn, a near verge, and the far ridge with their life's places. The hill: a high
     sheet over the steam's shapes, their house and the spire across the valley, butterflies, the tree's shadow, grass
     and flowers along the foot; years later grey bands, geese leaving, and a gale seen running through the straw,
     dropping to a lull from her give-way until he is beside her. The clinic: a sweeping clock (the office's and the
@@ -1027,6 +1030,28 @@ window.
     credits' wide (2.7% motion) and the climb's plain field carry little at that size. Round 2 takes it up.
   - *Not touched.* The share card (`public/shows/married-life/opus55.png`, outside the show's folder) still shows the
     bay at 47.3 s as it was, without the new sky and lawn shadows.
+
+- **Fullness pass, round 2 (Opus 5.5).** The same eight points with fresh eyes: the ten frames and the whole show's
+  sheets again, every section measured, and what round 1 added looked at for gloss.
+  - *The weakest stretches, made fuller.* The credits' wide, still mostly sky: his street comes into the frame round
+    him as the camera draws back (above, Alone), the one lit window shown. The climb, the sparsest scene in detail: a
+    weathered fence along the lane at the frame's foot, below where the two of them go (its gate where the path
+    leaves the lane), stooks in the stubble at four depths, a farmstead and a row of poplars far off by the town, and
+    crows that lift once on a gust and settle before her give-way; nothing new moves in the lull.
+  - *Gloss trimmed.* The church's coloured shafts thinned in the air to half (the light is told where it lands: the
+    floor, the wall's foot, the pews); the cars that passed along the fix-up's road (only a cabin poked up at the
+    frame's foot, like a dome); round 1's gale on the climb thinned (the leaves to about half, the pale gust streaks
+    to under half: they read as a blizzard and as puddles); the farmstead hazed back where it stood in the closes.
+  - *Measured* (motion / detail at 320×180, original → now): 0–86 s 9.4 → 10.5% / 14.8 → 16.4%; 86–172 s
+    8.6 → 9.8% / 14.2 → 15.8%; 172–258 s 5.9 → 8.1% / 12.1 → 15.2%. The climb 5.2 → 10.2% / 6.4 → 11.4%; the credits
+    0.2 → 2.8% / 5.0 → 10.4%. A frame, drawn and then made to finish (a pixel read back, so the raster is counted),
+    every quarter second of the show in Chrome for Testing at 1280 by 800: median 3.4 → 4.4 ms, p95 8.1 → 9.7, the
+    worst 13.3 → 16.1, none over 16.7. `npm run build` passes.
+  - *Where it stands on the escalation.* The final third now holds the most world (a gale through a harvest, a city
+    lighting up, rooks at the toll, a whole street and town under the first snow), and has nearly caught the opening
+    in detail; in motion it is still behind it, because its last 25 s are the credits' wide and slow draw-back, the
+    house small under a sky the cards are set in. Filling that sky to win the measure would put clutter under the
+    words; it is kept.
 
 ## Known limits
 
