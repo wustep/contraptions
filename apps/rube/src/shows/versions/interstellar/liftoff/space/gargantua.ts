@@ -626,7 +626,7 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
       ctx.fill()
     }
   }
-  band(Math.PI + 0.01, TAU - 0.01, [[1.0, 1.04, WHITE, 1], [1.04, 1.14, DARK.gold, 0.88], [1.14, 1.3, DARK.gold, 0.5], [1.3, 1.5, DARK.amber, 0.2]], Math.min(1, 0.95 * A * (1 + 0.4 * bright)))
+  band(Math.PI + 0.01, TAU - 0.01, [[1.0, 1.04, WHITE, 1], [1.04, 1.14, DARK.gold, 0.88], [1.14, 1.3, DARK.gold, 0.5], [1.3, 1.4, DARK.amber, 0.18]], Math.min(1, 0.95 * A * (1 + 0.4 * bright)))
   band(0.01, Math.PI - 0.01, [[1.0, 1.03, WHITE, 0.9], [1.03, 1.11, DARK.gold, 0.7], [1.11, 1.22, DARK.amber, 0.28]], Math.min(1, 0.5 * A * (1 + 0.4 * bright)))
   // Ribbons within the lensed disk resolve its curve through the glow. The approaching side is hotter.
   if (A > 0.004) {
@@ -1279,8 +1279,19 @@ function drawWarmth(p: p5, c: Ctx, T: number): void {
   const { k } = c
   const X = (v: number) => v * k
   const grow = smooth(T, GLOW_ON, IN_BED)
-  // A light, not a thing: wide and flat, no bright core the size of a ball beside him.
-  vapour(p, X(OPENING[0]), X(OPENING[1]), X(0.45 + 1.4 * grow), DUST.light, 0.9 * on)
+  // A light, not a thing: wide and soft, no bright core the size of a ball beside him. (The one soft light left in the
+  // dark, kept because it is the story here: the room he falls into opens out of it. Drawn flat, it read as a disc.)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  for (const [r, hex, a] of [[0.4 + 1.6 * grow, DUST.light, 0.5 * on], [0.3 + 0.5 * grow, '#FFF6DE', 0.35 * on]] as [number, string, number][]) {
+    const x = X(OPENING[0])
+    const y = X(OPENING[1])
+    const g = ctx.createRadialGradient(x, y, 0, x, y, X(r))
+    g.addColorStop(0, rgba(hex, a))
+    g.addColorStop(0.4, rgba(hex, a * 0.45))
+    g.addColorStop(1, rgba(hex, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(x - X(r), y - X(r), 2 * X(r), 2 * X(r))
+  }
 }
 
 /** The opening's edge, feathered into the dark: drawn inside its clip, last, so the room fades out to it and has no rim. */
