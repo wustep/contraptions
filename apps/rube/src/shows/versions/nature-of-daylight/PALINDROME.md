@@ -116,11 +116,11 @@ Times are show seconds; chord *n* is the *n*th change of harmony.
 | 185.080 | chord 46 | the chamber | Wide on both heptapods writing at once, the row complete (189.005), read back close as the cards light in order (190.943), her question on her board in her own gold, two of their rings joined (192.789), and the answer: **a ring with a barb flung out of it, "weapon" (196.795)**. |
 | 200.626 | **the bass drops out** | the command tent | Night; the ring of twelve screens, one for every shell on Earth, each linked to the next; a red lamp over the door comes on. **The links fall like dominoes**: one a beat round the ring, each screen tipping over on its hinge to hang dark and its link going slack as cable, knocking the next free, until only Montana is lit (213.595). |
 | 214.657 | chord 55 | the chamber | Another day: Abbott's palm slams the glass. A soldier arms the charge at its foot and leaves, between them and the glass, its light flashing on the beats; a jagged ring written in bursts. **223.370: the blast**: white, the pane blowing out, the two of them thrown down the chamber on arcs, Abbott reeling back into the fog. Shards; the light failing; the last of the glass goes (229.129); white. |
-| 231.039 | chord 60, in white | beyond the glass | Alone in the fog. Costello points; a jet of ink under her, and a great logogram written round her both ways at once on the chords, lifting her; Abbott far back, sinking and paling away. The ring closes over her (242.480), turns, lets her go at its top (246.340); she falls through it and lands where its ends met. A small ring begins at her right. |
+| 231.039 | chord 60, in white | beyond the glass | Alone in the fog. Costello points; a jet of ink under her, and a great logogram written round her both ways at once on the chords, lifting her. **Abbott dies** on the same strokes: on the hard beat (235.892) he slumps and starts to sink; on the chord (238.713) his last word comes out of him whole, a pale ring round him; from the next (240.582) it comes undone from both ends as hers is written, and he is gone into the white as **hers closes over her (242.480)**: one ring written, one unwritten. It turns, lets her go at its top (246.340); she falls through it and lands where its ends met. A small ring begins at her right. |
 | 250.120 | chord 66 | the lawn | What she is shown: the swing on a summer evening, Hannah a young woman, well, laughing, on its seat where the small ring was. A push; the leaves. |
 | 257.683 | chord 68 | beyond the glass | The ring she was shown grows on each stroke until it fills the frame, and the white round them goes to a grey dusk; **on 262.374 its ends meet at her touch and the white floods out from it: she knows**. The palm lets it go. |
 | 266.124 | chord 71 | the gala | Years on: an evening reception, champagne light, knots of dark guests. She rolls onto a brass pouring stand and a champagne tower fills a tier a beat; the room raises its glasses (272.869); **Shang** crosses to her, leans in and they touch: the whisper (274.802), and a ghost of the sat phone's keys comes up beside them, lighting the first of his number. |
-| 277.647 | chord 74 | the command tent | The sat phone, the red lamp burning. She hops key to key on the beats, the number he gave her; the dead ring on 283.458; the call key on **288.554, the loudest bars**: the call goes up the cable, China's screen rises red, and **the dominoes stand again, backwards**, one a beat, the last to fall the first to rise, the camera drawing back until **the ring closes whole in the wide on the loudest bar (303.827)**, the lamp going out. |
+| 277.647 | chord 74 | the command tent | The sat phone, the red lamp burning, Ian on her left. She hops key to key on the beats, the number he gave her, and he goes along the table and down off its end to the floor before the door; the dead ring on 283.458, and two soldiers come in out of the night under the red lamp; **Ian stands in their way (285.495)**, her dialing on the right of the frame, the standoff on the left. The call key on **288.554, the loudest bars**: the call goes up the cable, China's screen rises red, and **the dominoes stand again, backwards**, one a beat, the last to fall the first to rise, the camera drawing back until **the ring closes whole in the wide on the loudest bar (303.827)**, the lamp going out as the soldiers go back out into the dark. Then **the shells leave the world**: on every screen but Montana's the shell goes back up into its cloud the way it came down, a pair a beat from the top of the ring down both sides (304.785 to 309.348). |
 | 311.293 | chord 84 | Montana | Morning. The lift's deck comes down; **the shell goes up the way it came down**, into the cloud, **gone as the high violins stop (318.711)**. The hush: the cloud churning where it went. **322.606: the cloud breaks over the left ridge and the low sun rakes across the valley**, its light sweeping along the floor to her on 326.258; Ian comes to her across the light; **they touch (330.170)**, close, and hold. |
 | 334.031 | chord 90 | the lake house | Home, in the morning light: Louise and Ian by the window, close, the empty cradle beside them; after the turn he goes round it to its far side. She rolls into him (337.850); they turn to the cradle (341.618) and go to it (345.490). **349.495: she rocks it and baby Hannah comes into it**, rising pale out of the linen and filling into her rose, her going on the swell played backwards, as the camera goes in close on the cradle; Ian beyond it on her right, the cradle between them: they chose her, in the same morning light. Then he turns away, looks back at her, and goes out of the room. She rocks it on the last chords, fainter and fainter; from the last B-flat the camera draws back, the opening's push in played backwards, and arrives on the first frame on the last attack (371.931). The credits in the silence over the wall above the window. |
 
@@ -1137,6 +1137,26 @@ Chrome; the lake house's end, for comparison, 1.7 ms). What it would take up nex
 death process") is there only as a heptapod paling far back, and could be a moment; and the call has her alone at the
 phone, where in the film Ian holds the soldiers off.
 
+A hundred-and-nineteenth watched the whole show again, a frame every two seconds, and found the first half now told
+the film and the second still thin where the film is hardest:
+
+- **Abbott's death** ("Abbott is death process") was a grey heptapod paling far back in the fog; nobody read a death.
+  It is a moment now, on the strokes her ring is written on: he slumps on the hard beat, his last word comes out of
+  him whole on the chord, and from the next it comes undone from both ends as hers is written round her, and he is
+  gone into the white as hers closes. One ring written, one unwritten, in the one wide.
+- **The call** had her alone at the phone. In the film Ian holds the soldiers off: now he goes along the table and
+  down to the floor before the door as she dials, two soldiers come in under the red lamp as the picture cuts out to
+  the dead ring, and he stands in their way. The camera comes down from the ring to a two-shot, her dialing on the
+  right and the standoff on the left, before it cuts in to her on the call key; the soldiers go back out into the dark
+  as the ring closes and the lamp goes out.
+- **The world mended** held the closed ring seven seconds with nothing new in it, and only Montana's shell was ever
+  seen to go. Now every screen's shell goes back up into its cloud the way it came down, a pair a beat from the top of
+  the ring down both sides, Montana's left for the real one in the valley after the cut.
+
+The fog and the call cost what they did to draw (p95 1.3 ms a frame at 2560 × 1600). What it would take up next: the
+meadow reunion holds the two of them small in a wide field; and the bed, the longest scene in the prologue, holds one
+slow framing for most of its 26 s.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
@@ -1148,7 +1168,8 @@ Visual and mechanical only; no stills, no text, no audio beyond the cue.
   fingers on the glass; their ink blooming into rings; the linguists' walls of pinned logograms; her flashes of
   Hannah as she learns, and Hannah's drawing, "Mommy and Daddy talk with animals"; the twelve sites sharing what they
   learn; "offer weapon".
-- The twelve sites and their links going dark one by one; the bomb; Abbott's death; alone beyond the glass with
-  Costello; "Louise sees future".
-- The gala years on, and Shang's private number and his wife's last words; the sat phone; the world standing down.
+- The twelve sites and their links going dark one by one; the bomb; Abbott's death, his last word coming undone as
+  hers is written; alone beyond the glass with Costello; "Louise sees future".
+- The gala years on, and Shang's private number and his wife's last words; the sat phone, and Ian holding the soldiers
+  off at the door; the world standing down; the shells leaving everywhere at once.
 - The shells going; Ian; "If you could see your whole life laid out in front of you, would you change things?"
