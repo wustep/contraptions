@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { R, mixHex, type Pt } from '../../../../../parts'
-import { beam, box, carried, glow, knock, part, rgba, smooth, type PartShot } from '../kit'
+import { beam, box, carried, knock, part, rgba, smooth, type PartShot } from '../kit'
 import { MIA, NIGHT_MAT, SEB } from '../worlds'
 import {
   APEX,
@@ -27,6 +27,7 @@ import {
 } from './painted-waltz'
 import { lampLight } from './stars-sky'
 import { drawPianoFigure } from '../piano-figure'
+import { drawMeteors, drawNearSeats, drawPlanets, drawPushRings } from './planetarium'
 
 /**
  * The stars: the painted Paris flies out, and they are alone on a dark floor
@@ -123,28 +124,19 @@ export const KINDLED: Kindled[] = (() => {
   return out
 })()
 
-/** A lit star: a point with four fine spikes that flare on its note and settle, and flare again at the top of the swell. */
+/**
+ * A lit star: a crisp point of the projector's light, larger and whiter than the sky's own, that steps up on its note
+ * and settles, and steps up again at the top of the swell. No glint and no halo: it is lit, not shining.
+ */
 function star(p: p5, k: number, x: number, y: number, s: Kindled, T: number, mirror: boolean): void {
   const since = T - s.at
   if (since < 0) return
   const lit = smooth(since, 0, 0.05)
-  const flare = knock(since, 0.28) + 0.9 * knock(T - DIP, 0.45)
-  const tw = 0.85 + 0.15 * Math.sin(T * 2.3 + s.at)
-  const m = mirror ? 0.3 : 1
+  const step = knock(since, 0.32) + 0.6 * knock(T - DIP, 0.5)
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  glow(p, k, x, y, 0.28 + 0.5 * flare, s.color, (0.22 + 0.35 * flare) * lit * m)
-  const spike = (0.14 + 0.55 * flare) * tw * (mirror ? 0.6 : 1)
-  const w = 0.012 + 0.01 * flare
-  ctx.fillStyle = rgba(s.color, 0.9 * lit * m)
+  ctx.fillStyle = rgba(s.color, (mirror ? 0.32 : 0.95) * lit)
   ctx.beginPath()
-  for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]] as const) {
-    ctx.moveTo((x + dy * w) * k, (y - dx * w) * k)
-    ctx.lineTo((x + dx * spike) * k, (y + dy * spike) * k)
-    ctx.lineTo((x - dy * w) * k, (y + dx * w) * k)
-  }
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(x * k, y * k, (s.size + 0.012 * flare) * k, 0, Math.PI * 2)
+  ctx.arc(x * k, y * k, Math.max(1.4, (s.size * 1.25 + 0.03 * step) * k * (mirror ? 0.8 : 1)), 0, Math.PI * 2)
   ctx.fill()
 }
 
@@ -278,7 +270,6 @@ function drawProjector(p: p5, k: number, ink: string, weight: number, T: number,
   const perp: Pt = [-ax[1], ax[0]]
   for (const end of [-1, 1] as const) {
     const g = globeAt(T, end)
-    if (!reflect) glow(p, k, g[0], g[1], 0.9, NIGHT_MAT.star, 0.1 * on)
     solid(p, ink, weight * 0.8, dark)
     p.circle(g[0] * k, g[1] * k, GLOBE_R * 2 * k)
     // A band of brass round its equator.
@@ -308,20 +299,42 @@ function drawProjector(p: p5, k: number, ink: string, weight: number, T: number,
  * (geared to their waltz), so the sky is swept as a lighthouse sweeps the sea: slowly while they float, fast in the
  * whirl. Only the cones pointing up into the night are seen.
  */
-function projectorBeams(p: p5, k: number, T: number): void {
+function projectorCones(T: number): { cones: Pt[][]; a: number[] } {
   const on = lamp(T)
-  if (on <= 0.01) return
+  const cones: Pt[][] = []
+  const a: number[] = []
+  if (on <= 0.01) return { cones, a }
   const g = globeAt(T, 1)
   const base = -Math.PI / 2 + spin(T) * 1.6
   for (let i = 0; i < 2; i++) {
-    const a = base + i * Math.PI
-    const up = -Math.sin(a)
+    const ang = base + i * Math.PI
+    const up = -Math.sin(ang)
     if (up <= 0.05) continue
     const L = 11
-    const ex = g[0] + Math.cos(a) * L
-    const ey = g[1] + Math.sin(a) * L
-    beam(p, k, g[0], g[1], ex, ey, 0.18, 4.2, '#C9D8FF', 0.085 * on * Math.min(1, up * 2))
+    const ex = g[0] + Math.cos(ang) * L
+    const ey = g[1] + Math.sin(ang) * L
+    const nx = -Math.sin(ang)
+    const ny = Math.cos(ang)
+    cones.push([
+      [g[0] + nx * 0.09, g[1] + ny * 0.09],
+      [ex + nx * 2.1, ey + ny * 2.1],
+      [ex - nx * 2.1, ey - ny * 2.1],
+      [g[0] - nx * 0.09, g[1] - ny * 0.09],
+    ])
+    a.push(0.085 * on * Math.min(1, up * 2))
   }
+  return { cones, a }
+}
+
+function projectorBeams(p: p5, k: number, T: number): void {
+  const { cones, a } = projectorCones(T)
+  cones.forEach((c, i) => {
+    const sx = (c[0][0] + c[3][0]) / 2
+    const sy = (c[0][1] + c[3][1]) / 2
+    const ex = (c[1][0] + c[2][0]) / 2
+    const ey = (c[1][1] + c[2][1]) / 2
+    beam(p, k, sx, sy, ex, ey, 0.18, 4.2, '#C9D8FF', a[i])
+  })
 }
 
 function throwStars(p: p5, k: number, T: number): void {
@@ -370,8 +383,13 @@ export const stars = part<StarsState>(
       p.rectMode(p.CORNER)
       p.ellipseMode(p.CENTER)
       p.translate(-s.o[0] * k, -s.o[1] * k)
-      // The projector in the glass, then itself, and the light it throws to each new star.
+      // The projector in the glass; what it throws on the dome besides the stars (the planets, in the glass too, and the
+      // meteors); its cones of light, then itself, and the light it throws to each new star.
       drawProjector(p, k, c.ink, c.weight, T, true)
+      const on = lamp(T)
+      drawPlanets(p, k, T, on, true)
+      drawPlanets(p, k, T, on, false)
+      drawMeteors(p, k, T, on)
       projectorBeams(p, k, T)
       drawProjector(p, k, c.ink, c.weight, T, false)
       throwStars(p, k, T)
@@ -394,12 +412,18 @@ export const stars = part<StarsState>(
       // The two of them in the floor.
       reflection(p, k, c.ink, c.weight, SEB, sebAt(T), groundUnder(T, 'seb'), T)
       if (T >= MIA_SPAN[0] && T < MIA_SPAN[1]) reflection(p, k, c.ink, c.weight, MIA, miaAt(T), groundUnder(T, 'mia'), T)
-      // Where they push off, the glass takes the step: a soft light under them that spreads and goes.
-      const step = knock(T - LIFT, 0.5) * smooth(T, LIFT - 0.05, LIFT)
-      if (step > 0.01) {
-        const cx = centre(LIFT)[0]
-        glow(p, k, cx, 0.2, 0.7 + 1.4 * (1 - step), NIGHT_MAT.swirl, 0.35 * step, 1.8, 0.35)
-      }
+      // Where they push off, the glass takes the step: two rings spread out under them on the dark glass, as their steps
+      // did on the wet quay.
+      drawPushRings(p, k, T, centre(LIFT)[0])
+      p.pop()
+    },
+    over(p, s, c) {
+      const T = s.begin + c.t
+      if (T < NIGHT_FROM) return
+      p.push()
+      p.translate(-s.o[0] * c.k, -s.o[1] * c.k)
+      // The front row of seats, between us and them.
+      drawNearSeats(p, c.k, T)
       p.pop()
     },
   },

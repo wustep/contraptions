@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { frame, glow, rgba, smooth } from '../kit'
 import { NIGHT_MAT } from '../worlds'
+import { drawCove } from './planetarium'
 import { APEX, CLOCK_X, DIP, FLY_SET, FLY_SKY, LAMPS, LIFT, POLE, QUIET, scatter, skyAngle, UPSTAGE } from './painted-waltz'
 
 /**
@@ -59,6 +60,70 @@ const BAND = -0.55
     SPH[i] = scatter(i, 7) * TAU
   }
 })()
+
+/**
+ * The fine stars, the projector's thousands: a tile of them repeated over the sky's own frame and turning with it,
+ * small and faint at any size, and a little deeper than the rest: they lag the camera a little, so the sky has depth.
+ */
+const DN = 520
+const DTILE = 10
+const DX = new Float32Array(DN)
+const DY = new Float32Array(DN)
+const DL = new Uint8Array(DN)
+;(() => {
+  for (let i = 0; i < DN; i++) {
+    DX[i] = scatter(i, 40) * DTILE
+    DY[i] = scatter(i, 41) * DTILE
+    const b = scatter(i, 42)
+    DL[i] = b < 0.55 ? 0 : b < 0.87 ? 1 : 2
+  }
+})()
+/** How far the fine stars lag the camera. */
+const DEEP = 0.12
+
+function deepField(ctx: CanvasRenderingContext2D, k: number, f: { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number }, cs: number, sn: number, mirror: boolean, a: number): void {
+  // Their pole, carried a little way with the camera.
+  const px = POLE[0] + (f.cx - POLE[0]) * DEEP
+  const py0 = POLE[1] + (f.cy - POLE[1]) * DEEP
+  // The part of the sky's own frame the picture shows: the frame's corners turned back.
+  let u0 = Infinity
+  let v0 = Infinity
+  let u1 = -Infinity
+  let v1 = -Infinity
+  const top = mirror ? 2 * UPSTAGE - f.y1 : f.y0
+  const bot = mirror ? 2 * UPSTAGE - Math.max(UPSTAGE, f.y0) : Math.min(UPSTAGE, f.y1)
+  if (bot <= top) return
+  for (const [x, y] of [[f.x0, top], [f.x1, top], [f.x0, bot], [f.x1, bot]]) {
+    const dx = x - px
+    const dy = y - py0
+    const u = dx * cs + dy * sn
+    const v = -dx * sn + dy * cs
+    u0 = Math.min(u0, u)
+    u1 = Math.max(u1, u)
+    v0 = Math.min(v0, v)
+    v1 = Math.max(v1, v)
+  }
+  const paths = [new Path2D(), new Path2D(), new Path2D()]
+  const px1 = Math.max(0.6, 0.006 * k)
+  for (let ty = Math.floor(v0 / DTILE); ty <= Math.floor(v1 / DTILE); ty++)
+    for (let tx = Math.floor(u0 / DTILE); tx <= Math.floor(u1 / DTILE); tx++)
+      for (let i = 0; i < DN; i++) {
+        const u = tx * DTILE + DX[i]
+        const v = ty * DTILE + DY[i]
+        if (u < u0 || u > u1 || v < v0 || v > v1) continue
+        const x = px + u * cs - v * sn
+        const yy = py0 + u * sn + v * cs
+        if (yy > UPSTAGE || x < f.x0 || x > f.x1) continue
+        const y = mirror ? 2 * UPSTAGE - yy : yy
+        if (y < f.y0 || y > f.y1) continue
+        const r = px1 * (1 + 0.35 * DL[i])
+        paths[DL[i]].rect(x * k - r / 2, y * k - r / 2, r, r)
+      }
+  for (let l = 0; l < 3; l++) {
+    ctx.fillStyle = rgba(NIGHT_MAT.star, (0.2 + 0.16 * l) * a)
+    ctx.fill(paths[l])
+  }
+}
 
 /** The band's haze: soft blobs along it. */
 /**
@@ -130,6 +195,8 @@ function starField(p: p5, k: number, T: number, mirror: boolean, fade: number): 
     if (x < f.x0 - 3 || x > f.x1 + 3 || y < f.y0 - 3 || y > f.y1 + 3) continue
     glow(p, k, x, y, d.size, NIGHT_MAT.deep, d.a * fade * m * swell, 1.4, 0.55)
   }
+  // The fine stars, behind the rest.
+  deepField(ctx, k, f, cs, sn, mirror, fade * m)
   // Paths by colour and brightness, so a thousand stars are a dozen fills.
   const LV = 4
   const paths: Path2D[] = []
@@ -205,6 +272,8 @@ export function drawSky(p: p5, k: number, T: number): void {
     ctx.fillRect((f.x0 - 1) * k, (UPSTAGE - 3.2) * k, (f.x1 - f.x0 + 2) * k, 3.2 * k)
   }
   starField(p, k, T, false, shown)
+  // Round the foot of the dome, the cove: the city's skyline, behind painted Paris until it flies.
+  drawCove(p, k, T, shown, false)
 }
 
 /** The wet cobbles of the quay, painted: long broken strokes, lit by the lamps, and gone dark when the lamps go. */
@@ -272,5 +341,8 @@ export function drawFloor(p: p5, k: number, T: number, set: { lift: (T: number, 
     glow(p, k, CLOCK_X, 2.4 + up, 1.6, NIGHT_MAT.white, 0.16 * light * Math.max(0, 1 - up / 3), 0.26, 1.25)
   }
   // The glass: the sky, upside down.
-  if (shown > 0.002) starField(p, k, T, true, shown)
+  if (shown > 0.002) {
+    starField(p, k, T, true, shown)
+    drawCove(p, k, T, shown, true)
+  }
 }
