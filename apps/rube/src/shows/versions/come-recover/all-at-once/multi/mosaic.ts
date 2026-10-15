@@ -486,7 +486,7 @@ function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: n
   seesaw(pen, skin, mc)
   dust(pen, skin, mc)
   if (dark > 0.002) {
-    ctx.fillStyle = rgba(VOID_THEME.bg, dark)
+    ctx.fillStyle = rgba(mix(VOID_THEME.bg, MOONLIT, emerging(mc.m.t)), dark)
     ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0)
   }
   if (cell && dark < 0.5) family(pen, cell[0], cell[1], mc.m.t, mc.e)
@@ -499,10 +499,18 @@ function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: n
   ctx.restore()
 }
 
+/**
+ * How far the laundromat has come up out of Jobu's dark as she falls into it, 0 to 1 over the three seconds before
+ * the tubes: the dark goes from the bagel's black to the room's own moonlit night (`home/set.ts`), and the room shows
+ * in it, the way eyes get used to the dark.
+ */
+const emerging = (t: number): number => smoothstep((t - (FLICKER - 3.2)) / 3.2)
+/** The laundromat's night, as the room's own light map has it with no tube on. */
+const MOONLIT = '#1B2238'
+
 /** The tubes coming on: 0 in the dark, 1 lit. A flicker on the half-beat, then on for good on 69, with a stammer. */
 function lights(t: number): number {
-  // In the dark the room comes up a little as she nears it, the way eyes get used to it.
-  if (t < FLICKER) return 0.02 + 0.12 * smoothstep((t - (FLICKER - 3)) / 3)
+  if (t < FLICKER) return 0.02 + 0.24 * emerging(t)
   if (t < FLICKER + 0.06) return 0.75
   if (t < LIGHTS) return 0.12
   const x = t - LIGHTS
