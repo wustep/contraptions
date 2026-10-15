@@ -1,12 +1,15 @@
 import type { Framing, Performance } from '../../registry'
 import type { StockScore } from '../../stock/types'
 import { expose, exposure, finale, flash, pull, type Exposure } from './music-sync/finale'
-import { dayLand, frontField, nightLand } from './music-sync/land'
+import { dayLand, dayNear, frontField, nightLand } from './music-sync/land'
 import { beatAt } from './music-sync/music'
 import { scenery } from './music-sync/screen'
 import { nightfall } from './music-sync/nightfall'
 import { DressedShow } from './music-sync/show'
-import { follow, spot, type Spot } from './music-sync/spot'
+import { festoons } from './music-sync/midway'
+import { done, screenOf } from './music-sync/screen'
+import { follow, spot, strengthAt, type Spot } from './music-sync/spot'
+import { lensAt, tiltAt, zoomAt } from './music-sync/lens'
 import data from './opus55-music-sync.generated.json'
 
 /** Written by `npm run generate:cornfield:opus55`. Stock placements only; nothing here moves a machine. */
@@ -33,7 +36,12 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
   const map = score.maps[i]
   const { col, row } = u.pieces[0]
   const dusk = scenery('nightfall', () => {}, (p, c) => nightfall(p, c, col, row, show, map.begin + c.t, NIGHT, [sunset.begin, arrival.end]))
-  if (map.world === 'garden') return { behind: [scenery('field', (p, c) => dayLand(p, c, col, row, map.begin))], over: [dusk] }
+  if (map.world === 'garden') {
+    return {
+      behind: [scenery('field', (p, c) => dayLand(p, c, col, row, map.begin))],
+      over: [scenery('near', () => {}, (p, c) => dayNear(p, c, col, row, map.begin)), dusk],
+    }
+  }
   return {
     behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon))],
     over: [scenery('photograph', () => {}, (p, c) => {
@@ -41,6 +49,11 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
       // On the full organ the house lights come up: every floor lit on the beat, the spot easing back after.
       lit ??= spot(show, map, booth.begin, [beatAt(132)])
       follow(p, c, row, t, lit, NIGHT)
+      // The string lights over the frame, in front of it all; up and away where the fair's floors fill the frame to
+      // its top, and as the camera draws back.
+      const s = screenOf(p, c, col, row)
+      festoons(s, t, Math.max(strengthAt(lit, t), photo.back(t) * 3))
+      done(s)
       flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
       if (t <= photo.from) return
       // The corn comes up in front of the fair as the camera draws back across it.
@@ -60,19 +73,25 @@ const stillCells = Math.max(7.5, (Math.max(...xs) - Math.min(...xs) + 2) * 1.5 *
 const smooth = (u: number): number => { const v = Math.max(0, Math.min(1, u)); return v * v * (3 - 2 * v) }
 
 /**
- * Follow the ball; once the photograph is taken, ease onto the booth and the ticket; once the ball is through the last
- * portal, draw back across the field until the fair's last stretch stands on the horizon.
+ * Follow the ball, on the take's own lens (`music-sync/lens.ts`): the tilt down out of the sky at the opening, the
+ * pushes on the organ and the drop, the draw back on the full organ. Once the photograph is taken, ease onto the booth
+ * and the ticket; once the ball is through the last portal, draw back across the field until the fair's last stretch
+ * stands on the horizon.
  */
 function camera(t: number): Framing {
   const ride = show.camera(t)
+  const cells = lensAt(t)
+  const up = tiltAt(t)
   const blend = smooth((t - booth.end) / Math.max(0.5, ticket.begin - booth.end))
+  const y = ride.y - up * cells
   const close = {
     x: ride.x + (still.x - ride.x) * blend,
-    y: ride.y + (still.y - ride.y) * blend,
-    cells: ride.cells + (stillCells - ride.cells) * blend,
+    y: y + (still.y - y) * blend,
+    cells: cells + (stillCells - cells) * blend,
   }
   const back = photo.back(t)
-  return back > 0 ? pull(close, photo.wide, back) : close
+  const framed = back > 0 ? pull(close, photo.wide, back) : close
+  return up > 0 ? { ...framed, zoomFull: zoomAt(t) } : framed
 }
 
 export const performance: Performance = {

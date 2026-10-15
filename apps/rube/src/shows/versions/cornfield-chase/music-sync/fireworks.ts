@@ -97,17 +97,6 @@ export function fireworks(s: Screen, t: number, hy: number): void {
       continue
     }
     const age = t - sh.t
-    // The flash at the burst, gone in a tenth of a second.
-    if (age < 0.18) {
-      const a = 1 - age / 0.18
-      const g = ctx.createRadialGradient(bx, by, 0, bx, by, sh.r * f * 0.6)
-      g.addColorStop(0, rgba('#FFF6E0', 0.55 * a))
-      g.addColorStop(1, rgba(sh.color, 0))
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.arc(bx, by, sh.r * f * 0.6, 0, Math.PI * 2)
-      ctx.fill()
-    }
     // The sparks: out fast and slowing, drooping as they go, each a short streak that dims and turns colour.
     const sparks = 46
     const out = (u: number) => (1 - Math.exp(-3.2 * u)) / (1 - Math.exp(-3.2 * LIFE))

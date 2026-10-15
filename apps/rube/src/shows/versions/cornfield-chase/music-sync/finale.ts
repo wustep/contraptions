@@ -76,7 +76,7 @@ export function expose(show: Show, from: number, to: number): Exposure {
 /**
  * The exposure, drawn over the machine in the world's cells (the stage has the canvas at the scenery's cell,
  * `col`, `row`): from the end of the run back toward its start as the camera draws back, so it is always coming up
- * where the frame is opening. A soft glow under a fine bright line.
+ * where the frame is opening. A clean line in the ball's colours, no halo.
  */
 export function exposure(p: p5, c: PieceCtx, col: number, line: number, t: number, e: Exposure, fin: Finale): void {
   const shown = smooth(t, fin.from + 0.2, fin.to - 0.6)
@@ -89,12 +89,12 @@ export function exposure(p: p5, c: PieceCtx, col: number, line: number, t: numbe
   const Y = (i: number) => (e.pts[i * 2 + 1] - line) * k
   // Thick enough to read at the widest, never thicker than the ball close up.
   const px = 1 / Math.hypot(ctx.getTransform().a, ctx.getTransform().b)
-  const core = Math.max(1.8 * px, k * 0.05)
+  const core = Math.max(2.2 * px, k * 0.06)
   ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
-  // Runs of one colour, each stroked once for its glow and once for its line.
+  ctx.lineWidth = core
+  // Runs of one colour, each stroked once.
   let i = first
   while (i < n - 1) {
     const color = e.colors[i]
@@ -103,28 +103,9 @@ export function exposure(p: p5, c: PieceCtx, col: number, line: number, t: numbe
     const path = new Path2D()
     path.moveTo(X(i), Y(i))
     for (let m = i + 1; m <= j; m++) path.lineTo(X(m), Y(m))
-    const hex = /^#[0-9a-f]{6}$/i.test(color) ? color : '#FFFFFF'
-    ctx.strokeStyle = rgba(hex, 0.1)
-    ctx.lineWidth = core * 9
-    ctx.stroke(path)
-    ctx.strokeStyle = rgba(hex, 0.22)
-    ctx.lineWidth = core * 3.5
-    ctx.stroke(path)
-    ctx.strokeStyle = rgba(hex, 0.9)
-    ctx.lineWidth = core
+    ctx.strokeStyle = rgba(/^#[0-9a-f]{6}$/i.test(color) ? color : '#FFFFFF', 0.92)
     ctx.stroke(path)
     i = j
-  }
-  // The head of the exposure as it travels back along the run: a bright point that fades once it reaches the start.
-  if (shown < 1) {
-    const h = Math.max(0, first)
-    const g = ctx.createRadialGradient(X(h), Y(h), 0, X(h), Y(h), core * 7)
-    g.addColorStop(0, rgba('#FFF6E0', 0.9))
-    g.addColorStop(1, rgba('#FFF6E0', 0))
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.arc(X(h), Y(h), core * 7, 0, Math.PI * 2)
-    ctx.fill()
   }
   ctx.restore()
 }
