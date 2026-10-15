@@ -1,15 +1,17 @@
 import type { Pt } from '../../../../../parts'
-import { hash, knock, smooth } from '../kit'
-import { BEATS, WIN, level } from '../music'
+import { bloom, shade, type Frame } from '../depth'
+import { smooth } from '../kit'
+import { WIN } from '../music'
 import { ctxOf, ellipse, flash, glint, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import { box, Fills, toned } from './batch'
+import { drawThrown } from './confetti'
+import { drawCaps, drawFarStands, drawStands } from './crowd'
 import {
   armAngle,
   BAT_STRIKE,
   BELL,
   BOARD,
-  BOW1,
   BOARD_TOP,
-  CAPS,
   carryHand,
   CM,
   ENDO_STEPS,
@@ -19,88 +21,43 @@ import {
   endoLunge,
   endoSquat,
   endoX,
-  FLASH_IN,
-  FLASH_WIN,
   FLOOR,
-  GI,
-  houseLight,
   IMPACTS,
   IN_PAN,
   JUDGE,
   LAMP,
-  LIGHTS_DOWN,
   NET_TOP,
   NET_X,
   PICK,
   PIVOT,
-  POWER,
-  RALLY,
   SECTIONS,
   SERVE,
   SET,
   STEP1,
   T1,
-  TURN,
   TOP,
-  WAY,
   XL,
   XR,
 } from './geo'
+import { drawBalcony, drawLowLanterns, drawRigging, drawWallBunting } from './house'
+import { drawBeams, drawBokeh, drawFlashes } from './light'
+import { heat, lit, spill } from './mood'
+import { C } from './palette'
+import { drawPress } from './press'
 
 /**
  * Tokyo: one table under a hard white lamp in a packed arena. The stands rise into the dark in dark blues and
  * browns, the GIs' olive in one block of them; red-and-white bunting and paper lanterns; the judge's table. The table's
  * green is the darkest, richest thing in the light; everything else is the crowd, which the house lights find and
  * lose.
+ *
+ * The house is laid in depth (`mood.ts`): the upper tier far back over the balcony and the roof's truss drift slower
+ * than the table as the camera goes, each row of the lower tier a little slower than the one in front, and the front
+ * row in the lens passes faster. This file draws the arena's ground and the match; the house is drawn by `crowd.ts`
+ * (the people), `house.ts` (the truss, the balcony, the banners and lanterns), `light.ts` (the spotlights, the flash
+ * bulbs, the far side out of focus, the dust and smoke), `press.ts` (the photographers), `confetti.ts` (the paper of
+ * the eruption) and `near.ts` (the front row), all gathered into a few fills a frame (`batch.ts`).
  */
-
-export const C = {
-  roof: '#06070A',
-  roofHi: '#11131A',
-  dark: '#07080B',
-  riser: '#2A2622',
-  riserHi: '#5A4C3E',
-  wall: '#5E1A1A',
-  wallHi: '#8C2A24',
-  rail: '#C9C1B0',
-  floorFar: '#3A2A1E',
-  floorFarHi: '#6A4A30',
-  floorNear: '#1A130E',
-  board: '#1D3A2B',
-  boardHi: '#2C5640',
-  table: '#1C4A34',
-  tableTop: '#245C40',
-  tableEdge: '#123224',
-  line: '#EDEBE2',
-  leg: '#15171A',
-  lamp: '#F6F4EC',
-  lampShade: '#22362B',
-  red: '#B8322A',
-  redHi: '#D8483A',
-  white: '#E6DFD0',
-  olive: '#55603A',
-  oliveDark: '#3B4428',
-  skin: '#C99A72',
-  skinDark: '#8A6448',
-  hair: '#121010',
-  shirt: '#E6E0D2',
-  shirtShade: '#B9B2A2',
-  trousers: '#1B2133',
-  shoe: '#0D0D0E',
-  sponge: '#ECDDB0',
-  spongeEdge: '#BFA978',
-  handle: '#8A6440',
-  rubber: '#B3201B',
-  rubberHi: '#D8392E',
-  iron: '#2A2C30',
-  ironHi: '#6E7278',
-  brass: '#C9A04A',
-  cloth: '#E9E3D6',
-  suit: '#1E1F24',
-  card: '#1A1A1C',
-}
-
-const CLOTHES = ['#1E2840', '#2A3350', '#3B2A22', '#4A3526', '#252A33', '#55432F', '#33405E', '#2C2420', '#B9B2A4']
 
 const ctxRot = (pen: Pen, c: Pt, ang: number, fn: () => void): void => {
   const { p, k } = pen
@@ -112,38 +69,16 @@ const ctxRot = (pen: Pen, c: Pt, ang: number, fn: () => void): void => {
   p.pop()
 }
 
-/* ------------------------------------------------------------------ the crowd's mood */
-
-const ERUPT = BEATS.filter((b) => b.bar >= 89 && b.bar <= 90).map((b) => b.t)
-
-/** How far the crowd is up off its seats, 0 to 1. */
-function risen(t: number): number {
-  return smooth(t, WIN, WIN + 0.25) * (1 - smooth(t, TURN - 0.3, TURN + 2.2))
-}
-/** The front of the house coming up off its seats through the last bar of the rally, before the winner has them all up. */
-function swell(t: number): number {
-  return 0.6 * smooth(t, RALLY[11], WIN - 0.1)
-}
-/** The surge on every bat in the rally, a bigger one on his power shots, and the eruption's. */
-function surge(t: number): number {
-  let v = 0
-  for (const h of RALLY) v = Math.max(v, 0.45 * knock(t - h, 0.14))
-  for (const h of POWER) v = Math.max(v, knock(t - h, 0.3))
-  for (const h of ERUPT) v = Math.max(v, knock(t - h, 0.22))
-  return v
-}
-
-function sectionOf(x: number): number {
-  for (let i = 0; i < SECTIONS.length - 1; i++) if (x < SECTIONS[i + 1]) return i
-  return SECTIONS.length - 2
-}
-const lit = (i: number, t: number): number => Math.max(0, Math.min(1.25, houseLight(Math.max(0, Math.min(7, i)), t)))
-/** The lamp's spill off the table, onto the nearest of the crowd and the floor. */
-const spill = (x: number, y: number): number => 0.3 * Math.exp(-(((x - NET_X) / 4.2) ** 2) - (((y - 0.5) / 1.8) ** 2))
-
 /* ------------------------------------------------------------------ the arena (the set) */
 
-export function drawArena(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
+/**
+ * The arena, back to front: the roof's dark; the upper tier over the balcony; the house lights' haze over their
+ * sections, breathing; the roof's truss with its banks, spotlights and scoreboard; the lower tier and everyone in it;
+ * the balcony's front and its banners; the caps in the air; the lanterns; the confetti thrown up out of the stands;
+ * the far side's lights out of focus when the camera is close; the red wall and its bunting; the floor and the table's
+ * shadow on it; the flash bulbs; the press at the court's side; the judges; the boards; and the beams over all of it.
+ */
+export function drawArena(pen: Pen, t: number, f: Frame): void {
   const x0 = f.x0 - 1
   const x1 = f.x1 + 1
   vgrad(pen, x0, f.y0 - 1, x1, f.y1 + 1, [
@@ -151,12 +86,14 @@ export function drawArena(pen: Pen, t: number, f: { x0: number; y0: number; x1: 
     [0.6, C.roofHi, 1],
     [1, C.roof, 1],
   ])
-  // The house lights' banks up in the roof, and the haze they throw down over their sections.
+  drawFarStands(pen, t, f)
+  // The haze the house lights throw down over their sections: thicker as the night gets hotter, never quite still.
+  const hot = heat(t)
   for (let i = 0; i < SECTIONS.length - 1; i++) {
     const a = SECTIONS[i]
     const b = SECTIONS[i + 1]
     if (b < x0 || a > x1) continue
-    const L = Math.min(1, lit(i, t))
+    const L = Math.min(1, lit(i, t)) * (0.85 + 0.15 * Math.sin(t * 0.6 + i * 1.7)) * (1 + 0.45 * hot)
     if (L > 0.01) {
       vgrad(pen, a, -11, b, 0.4, [
         [0, '#E8E4D8', 0.1 * L],
@@ -164,17 +101,14 @@ export function drawArena(pen: Pen, t: number, f: { x0: number; y0: number; x1: 
         [1, '#E8E4D8', 0],
       ])
     }
-    for (let j = 0; j < 4; j++) {
-      const lx = a + ((b - a) * (j + 0.5)) / 4
-      rect(pen, lx - 0.35, -10.15, lx + 0.35, -9.9, C.iron)
-      rect(pen, lx - 0.3, -9.92, lx + 0.3, -9.84, mix('#3A3A3A', C.lamp, Math.min(1, lit(i, t))))
-      glow(pen, [lx, -9.8], 1.4, C.lamp, 0.35 * Math.min(1, lit(i, t)))
-    }
   }
-  drawLanterns(pen, t, x0, x1, -6.6, 1.2, 0)
+  drawRigging(pen, t, f)
   drawStands(pen, t, f)
-  drawCaps(pen, t)
-  drawLanterns(pen, t, x0, x1, -4.3, 0.75, 1)
+  drawBalcony(pen, t, f)
+  drawCaps(pen, t, f)
+  drawLowLanterns(pen, t, f)
+  drawThrown(pen, t, f)
+  drawBokeh(pen, t, f)
   // The front of the stands: a red wall with a pale rail, the bunting along it.
   const W0 = 0.3
   const W1 = 0.66
@@ -186,7 +120,7 @@ export function drawArena(pen: Pen, t: number, f: { x0: number; y0: number; x1: 
     rect(pen, a, W0, b, W1, mix(C.dark, C.wall, 0.25 + 0.75 * L))
     rect(pen, a, W0 - 0.05, b, W0 + 0.02, mix(C.dark, C.rail, 0.15 + 0.7 * L))
   }
-  bunting(pen, t, x0, x1, W0 + 0.02, 1.1, 0.16)
+  drawWallBunting(pen, t, x0, x1, W0 + 0.02)
   // The court's floor going back to the stands, and the near floor.
   for (let i = 0; i < SECTIONS.length - 1; i++) {
     const a = Math.max(SECTIONS[i], x0)
@@ -206,198 +140,24 @@ export function drawArena(pen: Pen, t: number, f: { x0: number; y0: number; x1: 
     [1, C.floorNear, 1],
   ])
   glow(pen, [NET_X, FLOOR + 0.05], 3.6, C.lamp, 0.12)
-  drawJudges(pen, t)
-  drawBoard(pen, t)
-  // Flash bulbs in the stands: one as he comes in, the press on the exhibition's bell and bow, one on each of his
-  // smashes, and the arena's as it erupts.
-  for (const [i, ft] of [FLASH_IN, ...FLASH_WIN, ...POWER, BELL, BOW1].entries()) {
-    const u = t - ft
-    if (u < 0 || u > 0.6) continue
-    const pos: Pt = i === 0 ? [1.3, -1.05] : [-3 + 12.5 * hash(i + 3, 71), -5.4 + 5 * hash(i + 3, 72)]
-    const a = flash(u, 0.12)
-    glow(pen, pos, 2.2, C.lamp, 0.35 * a)
-    glow(pen, pos, 0.4, '#FFFFFF', a)
-  }
-}
-
-/** A string of paper lanterns across the arena, sagging between its posts. */
-function drawLanterns(pen: Pen, t: number, x0: number, x1: number, y: number, sc: number, s: number): void {
-  const span = 4.4 * sc
-  const L = Math.min(1, lit(3, t))
-  for (let a = Math.floor(x0 / span) * span; a < x1; a += span) {
-    const sag = (u: number) => y + 0.5 * sc * 4 * u * (1 - u)
-    const pts: Pt[] = []
-    for (let j = 0; j <= 12; j++) pts.push([a + (span * j) / 12, sag(j / 12)])
-    path(pen, pts, '#2A2522', 0.5)
-    for (let j = 1; j < 4; j++) {
-      const u = j / 4
-      const lx = a + span * u
-      const sway = 0.03 * Math.sin(t * 1.3 + a + j)
-      const ly = sag(u) + 0.12 * sc
-      const red = (Math.round(a / span) + j + s) % 2 === 0
-      const col = red ? C.red : C.white
-      line(pen, [lx, sag(u)], [lx + sway, ly], '#2A2522', 0.4)
-      glow(pen, [lx + sway, ly + 0.2 * sc], 0.7 * sc, red ? '#FF7A50' : '#FFE8C0', 0.08 + 0.16 * L)
-      ellipse(pen, [lx + sway, ly + 0.2 * sc], 0.2 * sc, 0.25 * sc, mix(C.dark, col, 0.32 + 0.6 * L))
-      for (const dy of [-0.08, 0, 0.08]) line(pen, [lx + sway - 0.19 * sc * Math.sqrt(1 - (dy / 0.25) ** 2), ly + (0.2 + dy) * sc], [lx + sway + 0.19 * sc * Math.sqrt(1 - (dy / 0.25) ** 2), ly + (0.2 + dy) * sc], mix(C.dark, col, 0.35), 0.3)
-      rect(pen, lx + sway - 0.08 * sc, ly - 0.04 * sc, lx + sway + 0.08 * sc, ly + 0.0, '#1A1614')
-      rect(pen, lx + sway - 0.08 * sc, ly + 0.43 * sc, lx + sway + 0.08 * sc, ly + 0.47 * sc, '#1A1614')
-    }
-  }
-  bunting(pen, t, x0, x1, y + 0.05, span / 6, 0.14 * sc)
-}
-
-/** Red and white pennants on a line. */
-function bunting(pen: Pen, t: number, x0: number, x1: number, y: number, step: number, h: number): void {
-  const L = 0.4 + 0.6 * Math.min(1, lit(3, t))
-  let n = Math.floor(x0 / step)
-  for (let x = n * step; x < x1; x += step, n++) {
-    const wob = 0.02 * Math.sin(t * 2 + n)
-    const col = n % 2 === 0 ? C.red : C.white
-    shape(pen, [[x + 0.02, y], [x + step - 0.02, y], [x + step / 2 + wob, y + h * 1.6]], mix(C.dark, col, 0.35 + 0.55 * L))
-  }
-  line(pen, [x0, y], [x1, y], '#2A2522', 0.4)
-}
-
-/** The tiers, rising into the dark, and everyone on them. */
-function drawStands(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
-  const ROW = 0.56
-  const SEAT = 0.4
-  const up = risen(t)
-  const sg = surge(t)
-  const lv = level(t)
-  const sw = swell(t)
-  // Every head in the house follows the ball, a moment behind it.
-  const [bx, by] = WAY.at(t - 0.09)
-  const ctx = ctxOf(pen.p)
-  const k = pen.k
-  ctx.save()
-  ctx.lineCap = 'round'
-  ctx.lineWidth = pen.w * 1.6
-  for (let r = 24; r >= 0; r--) {
-    const y = 0.3 - r * ROW
-    if (y < f.y0 - 0.6 || y - ROW > f.y1) continue
-    const fade = Math.exp(-r / 10)
-    // The riser of this row, section by section.
-    for (let i = 0; i < SECTIONS.length - 1; i++) {
-      const a = Math.max(SECTIONS[i], f.x0 - 1)
-      const b = Math.min(SECTIONS[i + 1], f.x1 + 1)
-      if (b <= a) continue
-      const L = Math.min(1, lit(i, t)) * fade * 0.7 + spill((a + b) / 2, y) * fade
-      rect(pen, a, y - ROW, b, y, mix(C.dark, C.riser, 0.12 + 0.8 * L))
-      rect(pen, a, y - 0.06, b, y, mix(C.dark, C.riserHi, 0.2 + 0.8 * L))
-    }
-    // The aisles between sections.
-    for (const a of SECTIONS) if (a > f.x0 - 1 && a < f.x1 + 1) rect(pen, a - 0.12, y - ROW, a + 0.12, y, C.dark)
-    // The people.
-    for (let j = Math.floor((f.x0 - 1) / SEAT); j * SEAT < f.x1 + 1; j++) {
-      const hx = j * SEAT + (hash(j, r, 3) - 0.5) * 0.12
-      const sec = sectionOf(hx)
-      if (SECTIONS.some((a) => Math.abs(hx - a) < 0.22)) continue
-      if (hash(j, r, 5) < 0.06) continue
-      const gi = hx > GI[0] && hx < GI[1] && r < GI[2] && hash(j, r, 9) < 0.86
-      const L = Math.min(1.15, lit(sec, t)) * fade * 0.68 + spill(hx, y) * fade
-      const tone = (c: string) => mix(C.dark, c, 0.05 + 0.85 * Math.min(1, L))
-      // Up: the GIs from the first serve, everyone at the smash; the surges on the beats.
-      const ph = hash(j, r, 7)
-      const stand = gi ? Math.max(smooth(t, SERVE - 0.3, SERVE + 0.2) * (1 - smooth(t, TURN, TURN + 3)), up) : Math.max(up, r < 9 && ph > 0.4 ? sw : 0)
-      const bob = (0.05 * sg * (0.5 + ph) + 0.03 * lv * Math.sin(t * 7 + ph * 6)) * (stand > 0.3 || gi ? 1 : 0.5)
-      const yy = y - 0.12 - stand * 0.22 - bob
-      const body = gi ? C.olive : CLOTHES[Math.floor(hash(j, r, 11) * CLOTHES.length)]
-      // Arms up, cheering, when they are up.
-      if ((up > 0.3 && ph > 0.4) || (gi && stand > 0.3 && (up > 0.3 || sg * (0.4 + ph) > 0.35))) {
-        const wave = Math.sin(t * 9 + ph * 12) * 0.06
-        const ax = ph > 0.7 ? 1 : -1
-        ctx.strokeStyle = pen.tone(tone(body))
-        ctx.beginPath()
-        ctx.moveTo((hx + ax * 0.12) * k, (yy - 0.18) * k)
-        ctx.lineTo((hx + ax * 0.2 + wave) * k, (yy - 0.62 - 0.08 * sg) * k)
-        if (ph > 0.75 || gi) {
-          ctx.moveTo((hx - ax * 0.12) * k, (yy - 0.18) * k)
-          ctx.lineTo((hx - ax * 0.16 - wave) * k, (yy - 0.58) * k)
-        }
-        ctx.stroke()
-      }
-      // The crowd is a thousand people: drawn straight onto the canvas, not through p5's shapes.
-      ctx.fillStyle = pen.tone(tone(body))
-      ctx.beginPath()
-      ctx.moveTo((hx - 0.16) * k, yy * k)
-      ctx.lineTo((hx - 0.15) * k, (yy - 0.2) * k)
-      ctx.lineTo((hx - 0.08) * k, (yy - 0.26) * k)
-      ctx.lineTo((hx + 0.08) * k, (yy - 0.26) * k)
-      ctx.lineTo((hx + 0.15) * k, (yy - 0.2) * k)
-      ctx.lineTo((hx + 0.16) * k, yy * k)
-      ctx.fill()
-      const look = Math.max(-1, Math.min(1, (bx - hx) / 2.2))
-      const lift = Math.max(0, Math.min(1, -(by + 0.6) / 1.6))
-      const head: Pt = [hx + 0.035 * look, yy - 0.36 - 0.025 * lift]
-      ctx.fillStyle = pen.tone(tone(hash(j, r, 13) > 0.2 ? C.skin : C.skinDark))
-      ctx.beginPath()
-      ctx.ellipse(head[0] * k, head[1] * k, 0.095 * k, 0.105 * k, 0, 0, Math.PI * 2)
-      ctx.fill()
-      if (gi && !capUp(j, r, t)) {
-        // The garrison cap, unless it is in the air.
-        ctx.fillStyle = pen.tone(tone(C.oliveDark))
-        ctx.beginPath()
-        ctx.moveTo((head[0] - 0.1) * k, (head[1] - 0.05) * k)
-        ctx.lineTo((head[0] + 0.1) * k, (head[1] - 0.06) * k)
-        ctx.lineTo((head[0] + 0.07) * k, (head[1] - 0.13) * k)
-        ctx.lineTo((head[0] - 0.09) * k, (head[1] - 0.11) * k)
-        ctx.fill()
-      } else {
-        // The hair over the back of the head: the face turned toward the ball, and up at a lob.
-        ctx.fillStyle = pen.tone(tone(C.hair))
-        ctx.beginPath()
-        ctx.ellipse((head[0] - 0.04 * look) * k, (head[1] - (gi ? 0.06 : 0.05) + 0.02 * lift) * k, 0.095 * k, (gi ? 0.06 : 0.065) * k, 0, 0, Math.PI * 2)
-        ctx.fill()
-      }
-    }
-  }
-  ctx.restore()
-}
-
-/** Which GIs throw their caps, and when. */
-function capThrow(j: number, r: number): number | null {
-  if (r > 4) return null
-  const h = hash(j, r, 17)
-  if (h > 0.5) return null
-  return CAPS[Math.floor(h * 8) % CAPS.length]
-}
-function capUp(j: number, r: number, t: number): boolean {
-  const c = capThrow(j, r)
-  return c !== null && t >= c
-}
-
-/** The caps in the air: up off the GIs' heads, turning, and down somewhere among them. */
-function drawCaps(pen: Pen, t: number): void {
-  if (t < WIN || t > WIN + 6) return
-  const ROW = 0.56
-  const SEAT = 0.4
-  for (let r = 0; r <= 4; r++) {
-    for (let j = Math.floor(GI[0] / SEAT); j * SEAT < GI[1]; j++) {
-      const c = capThrow(j, r)
-      if (c === null || t < c) continue
-      const u = t - c
-      const hx = j * SEAT + (hash(j, r, 3) - 0.5) * 0.12
-      const y0 = 0.3 - r * ROW - 0.12 - 0.22 - 0.42
-      const vy = -5.2 - 1.6 * hash(j, r, 19)
-      const vx = (hash(j, r, 21) - 0.5) * 1.6
-      const yy = y0 + vy * u + 6 * u * u
-      if (u > 0.4 && yy > y0 + 0.2) continue
-      const pos: Pt = [hx + vx * u, yy]
-      ctxRot(pen, pos, u * (6 + 6 * hash(j, r, 23)), () => {
-        shape(pen, [[pos[0] - 0.13, pos[1] + 0.03], [pos[0] + 0.13, pos[1] + 0.02], [pos[0] + 0.09, pos[1] - 0.07], [pos[0] - 0.11, pos[1] - 0.05]], C.oliveDark)
-      })
-    }
-  }
+  // The table's own shadow, straight down under the lamp.
+  shade(pen, [NET_X, FLOOR - 0.1], (XR - XL) / 2 + 0.2, 0.2, '#000000', 0.5)
+  drawFlashes(pen, t, f)
+  drawPress(pen, t, f)
+  drawJudges(pen, t, f)
+  drawBoard(pen, t, f)
+  drawBeams(pen, t, f)
 }
 
 /** The judges' table on the floor: a cloth, two judges, the flip-cards (bars, no figures), the bell. */
-function drawJudges(pen: Pen, t: number): void {
+function drawJudges(pen: Pen, t: number, f: Frame): void {
   const [a, b] = JUDGE
+  if (b + 0.4 < f.x0 || a - 0.4 > f.x1) return
   const top = FLOOR - 0.95
   const L = Math.min(1, lit(2, t)) * 0.6 + 0.35
   const tone = (c: string) => mix(C.dark, c, L)
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
   // The judges behind it, seated.
   for (const [jx, s] of [[a + 0.5, 0], [b - 0.55, 1]] as const) {
     const lean = s === 0 ? 0 : 0.04 * Math.sin(t * 0.8)
@@ -410,22 +170,35 @@ function drawJudges(pen: Pen, t: number): void {
   rect(pen, a - 0.1, top, b + 0.1, FLOOR - 0.12, tone(C.cloth))
   rect(pen, a - 0.1, FLOOR - 0.42, b + 0.1, FLOOR - 0.22, tone(C.red))
   rect(pen, a - 0.1, top, b + 0.1, top + 0.05, tone('#FFFFFF'))
-  for (let x = a + 0.1; x < b; x += 0.32) line(pen, [x, top + 0.08], [x + 0.02, FLOOR - 0.13], mix(C.dark, C.cloth, L * 0.8), 0.4)
+  const folds = new Fills()
+  const fold = folds.at(toned(pen, C.cloth, L * 0.8))
+  for (let x = a + 0.1; x < b; x += 0.32) {
+    fold.moveTo(x * k, (top + 0.08) * k)
+    fold.lineTo((x + 0.02) * k, (FLOOR - 0.13) * k)
+  }
+  ctx.save()
+  folds.stroke(ctx, pen.w * 0.4)
+  ctx.restore()
   rect(pen, a - 0.05, FLOOR - 0.12, a + 0.05, FLOOR, tone(C.leg))
   rect(pen, b - 0.05, FLOOR - 0.12, b + 0.05, FLOOR, tone(C.leg))
   // The flip-cards: Endo's on the left, Marty's on the right, bars for points.
   const cx = (a + b) / 2
   shape(pen, [[cx - 0.4, top], [cx - 0.33, top - 0.55], [cx + 0.33, top - 0.55], [cx + 0.4, top]], tone(C.iron))
+  const cards = new Fills()
+  const pip = toned(pen, C.white, L)
   for (const [side, n] of [[-1, 10], [1, t >= WIN ? 11 : 10]] as const) {
     const x0c = cx + (side < 0 ? -0.31 : 0.03)
-    rect(pen, x0c, top - 0.5, x0c + 0.28, top - 0.05, tone(C.card))
+    box(cards.at(toned(pen, C.card, L)), k, x0c, top - 0.5, x0c + 0.28, top - 0.05)
     for (let q = 0; q < n; q++) {
       const col = q % 6
       const row = Math.floor(q / 6)
-      const fresh = side > 0 && q === 10 ? flash(t - WIN, 0.4) : 0
-      rect(pen, x0c + 0.035 + col * 0.04, top - 0.44 + row * 0.2, x0c + 0.06 + col * 0.04, top - 0.28 + row * 0.2, mix(C.dark, fresh > 0 ? mix(C.white, C.redHi, fresh) : C.white, L))
+      const fresh = side > 0 && q === 10 ? Math.round(flash(t - WIN, 0.4) * 8) / 8 : 0
+      box(cards.at(fresh > 0 ? toned(pen, mix(C.white, C.redHi, fresh), L) : pip), k, x0c + 0.035 + col * 0.04, top - 0.44 + row * 0.2, x0c + 0.06 + col * 0.04, top - 0.28 + row * 0.2)
     }
   }
+  ctx.save()
+  cards.fill(ctx)
+  ctx.restore()
   // The bell, rung for the exhibition.
   const swing = 0.45 * ring(t - BELL, 3, 0.35)
   const bx = b - 0.12
@@ -437,8 +210,9 @@ function drawJudges(pen: Pen, t: number): void {
 }
 
 /** The barrier boards behind Endo, which the smash hits. */
-function drawBoard(pen: Pen, t: number): void {
+function drawBoard(pen: Pen, t: number, f: Frame): void {
   const [a, b] = BOARD
+  if (b + 0.5 < f.x0 || a - 0.2 > f.x1) return
   const L = Math.min(1, lit(5, t)) * 0.6 + 0.3
   const hit = ring(t - 190.451, 9, 0.18)
   shape(pen, [[a + hit * 0.03, BOARD_TOP], [b + 0.18, BOARD_TOP - 0.22], [b + 0.18, FLOOR - 0.2], [a, FLOOR]], mix(C.dark, C.board, L))
@@ -472,7 +246,9 @@ export function drawLamp(pen: Pen, t: number): void {
   rect(pen, lx - 0.42, ly + 0.19, lx + 0.42, ly + 0.24, '#E8E6DE')
   glow(pen, [lx, ly + 0.25], 1.0, C.lamp, 0.55)
   ellipse(pen, [lx, ly + 0.23], 0.16, 0.07, '#FFFFFF')
-  void t
+  // Its halation, and on the winner a burst of it.
+  const won = t >= WIN ? Math.exp(-(t - WIN) / 0.4) : 0
+  bloom(pen, [lx, ly + 0.3], 1.5 + 3.4 * won, C.lamp, 0.2 + 0.45 * won)
 }
 
 /** The table: the trestle legs, the slab, the green top with its white lines, the net. */
@@ -617,6 +393,8 @@ export function drawEndo(pen: Pen, t: number): void {
     [x - face * (0.22 + 0.1 * q), FLOOR - lift(0)],
     [x + face * (0.24 + 0.12 * q + 0.35 * lunge), FLOOR - lift(1)],
   ]
+  // His shadow on the floor under him, from the lamp and the house.
+  shade(pen, [x, FLOOR - 0.01], 0.6 + 0.25 * q + 0.2 * lunge, 0.075, '#000000', 0.5)
   const lh = Math.min(1, Math.max(lit(4, t), lit(5, t)))
   const near = Math.exp(-(((x - NET_X) / 3.6) ** 2))
   const light = 0.2 + 0.8 * Math.max(lh * 0.85, near)
@@ -677,47 +455,6 @@ export function drawEndoOver(pen: Pen, t: number): void {
   const h = carryHand(Math.min(t, SET))
   const face = endoFace(t)
   shape(pen, [[h[0] - 0.12, h[1] - 0.1], [h[0] + 0.06 * face, h[1] - 0.16], [h[0] + 0.16 * face, h[1] - 0.04], [h[0] + 0.1 * face, h[1] + 0.02], [h[0] - 0.08, h[1] - 0.02]], mix(C.dark, C.skin, 0.62))
-}
-
-/* ------------------------------------------------------------------ the eruption */
-
-/** Streamers, red and white, thrown down from the stands at the smash; they lie on the floor after. */
-export function drawStreamers(pen: Pen, t: number): void {
-  if (t < WIN) return
-  const g = 2.4
-  for (let i = 0; i < 26; i++) {
-    const t0 = WIN + 0.05 + (i % 8) * 0.27 + hash(i, 41) * 0.15
-    if (t < t0) continue
-    const p0: Pt = [-2.5 + 12 * hash(i, 42), -3.2 + 2.4 * hash(i, 43)]
-    const v: Pt = [(hash(i, 44) - 0.5) * 2.2, -2.2 - 1.5 * hash(i, 45)]
-    const land = 0.75 + 0.65 * hash(i, 46)
-    const posAt = (u: number): Pt => {
-      const yy = p0[1] + v[1] * u + 0.5 * g * u * u
-      return [p0[0] + v[0] * u * Math.exp(-u * 0.5), Math.min(yy, land)]
-    }
-    const u = t - t0
-    const col = i % 2 ? C.red : C.white
-    const pts: Pt[] = []
-    // When it comes down it lies along the floor where it fell.
-    const uLand = (-v[1] + Math.sqrt(v[1] * v[1] + 2 * g * (land - p0[1]))) / g
-    const down = posAt(uLand)
-    const side = hash(i, 47) > 0.5 ? 1 : -1
-    for (let j = 0; j < 14; j++) {
-      const s = Math.max(0, u - j * 0.06)
-      if (u > uLand + 0.4) {
-        pts.push([down[0] + side * (j - 7) * 0.07 + Math.sin(j * 1.3 + i) * 0.04, land + Math.sin(j * 0.8 + i) * 0.03])
-        continue
-      }
-      const [px, py] = posAt(s)
-      const w = Math.sin(s * 9 + j * 0.9 + i) * 0.1
-      const settle = smooth(u, uLand, uLand + 0.4)
-      const flat: Pt = [down[0] + side * (j - 7) * 0.07, land]
-      const air: Pt = [px + w, py - j * 0.015]
-      pts.push([air[0] + (flat[0] - air[0]) * settle, air[1] + (flat[1] - air[1]) * settle])
-    }
-    const fade = 1 - smooth(t, LIGHTS_DOWN[0], LIGHTS_DOWN[3] + 0.5) * 0.7
-    path(pen, pts, mix(C.dark, col, 0.85 * fade), 1.1)
-  }
 }
 
 /* ------------------------------------------------------------------ the impacts */
