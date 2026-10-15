@@ -1,10 +1,9 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { mix } from '../cast'
 import { box, part, scenery, type Company, type Part, type PartShot, type Slot } from '../kit'
-import { HALF, LAST, PLAGAL, SEAM, SWELL, TONIC } from '../music'
-import type { ShellSpot } from '../seams'
+import { LAST, PLAGAL, SEAM, SWELL, TONIC } from '../music'
 import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME, IAN, LOUISE } from '../worlds'
-import { CLOCK_HULL, CRADLE_HULL, BED_HULL, LAMP_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawLamp, drawTV, drawTVGlow, tvShell } from './props'
+import { CLOCK_HULL, CRADLE_HULL, BED_HULL, LAMP_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawLamp, drawTV, drawTVGlow } from './props'
 import { drawBallMirror, drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
 import { F, FLASH_HITS, FLASH_X, STOOL_HULL, drawSheet, drawStool, flashX, hannahFlashAt, hannahFlashLook } from './flash'
 import { RC, RECRUIT_HITS, drawRecruit, drawRecruitOver, recruitX } from './recruit'
@@ -28,7 +27,6 @@ import {
   ianX,
   NEWS_X,
   PATIENT,
-  TV,
   babyAt,
   bedX,
   cradleTheta,
@@ -43,11 +41,12 @@ import {
 /**
  * The lake house, inside (the HOUSE builder's): one long room of dark concrete and pale oak whose whole side is a
  * window over the grey lake. The same room at five times of her life, which we take for the past and which is the
- * future: the cradle at dawn (the show's first frame), the bed by the window on a grey day, the television at night,
- * an afternoon in the sun when Hannah draws at the window (the flash, in the middle of the language: `flash.ts`), and
- * at the end the morning after the shells, Ian, the empty cradle, and the first frame again.
+ * future: the cradle at dawn (the show's first frame), the bed by the window over the days of her illness, the night
+ * the shells came (the television on, a helicopter's searchlight: `recruit.ts`), an afternoon in the sun when Hannah
+ * draws at the window (the flash, in the middle of the language: `flash.ts`), and at the end the morning after the
+ * shells, Ian, the empty cradle, and the first frame again. (The news itself is the lecture hall's: `hall/hall.ts`.)
  *
- * The room is one standing drawing that changes by show time (`houseSet`); the parts (`dawn`, `bed`, `news`, `home`)
+ * The room is one standing drawing that changes by show time (`houseSet`); the parts (`dawn`, `bed`, `recruit`, `flash`, `home`)
  * give Louise her lane, Hannah and Ian their places, and the camera its keys. Everything that moves is a function of
  * show time in `time.ts`, read by both.
  */
@@ -64,8 +63,6 @@ function louiseX(T: number): number | null {
       return dawnX(T)
     case 'bed':
       return bedX(T)
-    case 'news':
-      return NEWS_X
     case 'recruit':
       return recruitX(T)
     case 'flash':
@@ -95,7 +92,7 @@ export const houseSet = scenery<null>({
     const dx = era === 'home' && T < BEGIN ? EMPTY_DX : 0
     if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)).map(([x, y]) => [x + dx, y] as Pt))
     if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL, LAMP_HULL)
-    if (era === 'news' || era === 'recruit') shadows.push(TV_HULL)
+    if (era === 'recruit') shadows.push(TV_HULL)
     if (era === 'flash') shadows.push(STOOL_HULL)
     if (era === 'home' && T < BEGIN) balls.push([ianX(T), 0])
     if (era === 'home' && T >= BEGIN && T < IAN_GONE) balls.push([ianAfter(T), 0])
@@ -111,7 +108,7 @@ export const houseSet = scenery<null>({
       drawBed(p, k, T, L)
       drawClock(p, k, T, L)
     }
-    if (era === 'news' || era === 'recruit') drawTV(p, k, T, L)
+    if (era === 'recruit') drawTV(p, k, T, L)
     if (era === 'recruit') drawRecruit(p, k, T)
     if (era === 'flash') {
       drawSheet(p, k, T, L)
@@ -121,7 +118,7 @@ export const houseSet = scenery<null>({
     // Louise first, then Ian when he is here: the same order `balls` has them in.
     drawBallMirror(p, k, T, balls.map((b, i) => [b, i === 0 ? LOUISE : IAN] as [Pt, string]))
     drawFloorLight(p, k, T, shadows, balls)
-    if (era === 'news' || era === 'recruit') drawTVGlow(p, k, T)
+    if (era === 'recruit') drawTVGlow(p, k, T)
     drawVignette(p, k, T)
   },
   over: (p, _s, c) => {
@@ -141,17 +138,14 @@ export const houseSet = scenery<null>({
 /* ------------------------------------------------------------------ where each time starts */
 
 /** Where each of the room's legs starts (the ball comes in at (-0.5, 0) from it), in the house's world cells. Dawn and
- * the bed are the same place on the floor (the bed stands where the cradle stood); the news is where she ends at the
- * bed; home starts by the window across the room and ends where dawn began. */
+ * the bed are the same place on the floor (the bed stands where the cradle stood); the night they come for her is where
+ * she ends at the bed; home starts by the window across the room and ends where dawn began. */
 export const DAWN_AT: Pt = [0.5, 0]
 export const BED_AT: Pt = [0.5, 0]
-export const NEWS_AT: Pt = [NEWS_X + 0.5, 0]
 export const RECRUIT_AT: Pt = [NEWS_X + 0.5, 0]
 export const FLASH_AT: Pt = [FLASH_X + 0.5, 0]
 export const HOME_AT: Pt = [HOME_X + 0.5, 0]
 
-/** The shell on the television at the cut (house world cells): its centre and height. */
-export const TV_SHELL: ShellSpot = tvShell(SEAM.arrival)
 
 /** When Hannah goes, on the swell: her ball fades out of the bed between these show times. */
 export const GONE: [number, number] = GONE_AT
@@ -297,26 +291,6 @@ export const bed: Part<HouseState> = part<HouseState>(
   },
 )
 
-/* ------------------------------------------------------------------ the news */
-
-export const news: Part<HouseState> = part<HouseState>(
-  { name: 'house-news', draw: nothing },
-  (slot) => {
-    const o = NEWS_AT
-    const dur = slot.end - slot.begin
-    return { cells: partCells(o), exit: [0, 0], lane: { segs: [{ from: [-0.5, 0], to: [-0.5, 0], dur }], fire: 0 }, state: { begin: slot.begin } }
-  },
-  (slot) => {
-    const o = NEWS_AT
-    const c: Pt = [TV.x + TV.w / 2 - o[0], TV.y + TV.h / 2 - o[1]]
-    // Into the screen until its picture fills the frame.
-    return [
-      { t: slot.begin + 1.9, cells: 2.35, hold: [c[0] - 0.42, c[1] + 0.02] },
-      { t: slot.end, cells: TV.h / 0.85, hold: c },
-    ]
-  },
-)
-
 /* ------------------------------------------------------------------ they come for her */
 
 export const recruit: Part<HouseState> = part<HouseState>(
@@ -454,8 +428,6 @@ export const HOUSE_HITS: number[] = [
   ...DAWN_PUSHES.map((q) => q.t),
   // The bed: the clock strikes on the chords, and on the swell it has run down.
   ...CLOCK_STRIKES,
-  // The news: the television comes on on the half cadence.
-  HALF,
   // They come for her: the light over the lake, the beam finding her, her going.
   ...RECRUIT_HITS,
   // The flash: Hannah's strokes on the beats, and her mother's touch on the stool on the chord.

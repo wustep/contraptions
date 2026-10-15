@@ -58,8 +58,9 @@ export const T_BACK = SEAM.fog2
 /** The small ring's strokes: on the chord she comes back on, and on the two strongest beats after it. */
 export const SMALL_STEPS = [SEAM.fog2, beats(259.3, 259.6)[0], beats(260.3, 260.6)[0]]
 /** It closes; and the vision lets her go. */
-export const [T_KNOW, T_DOWN] = chords(SEAM.fog2 + 1, SEAM.gala - 1)
-export const T_GALA = SEAM.gala
+export const [T_KNOW, T_DOWN] = chords(SEAM.fog2 + 1, SEAM.future - 1)
+/** The cut out of the fog (to the lecture hall, years on; the gala after it). */
+export const T_GALA = SEAM.future
 
 /** The hard beat between the first two chords: a stroke of its own. */
 export const T_B1 = nearestBeat(235.9)

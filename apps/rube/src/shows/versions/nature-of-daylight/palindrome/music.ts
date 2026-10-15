@@ -172,9 +172,9 @@ export const SEAM = {
   swing: chord(5),
   /** The swing → the bed by the window: the cellos come in (c17). */
   bed: chord(17),
-  /** The bed → the living room at night, the television (the half cadence, c23). */
+  /** The bed → the lecture hall, the day they came: the phones, the news on the screen (the half cadence, c23). */
   news: chord(23),
-  /** The television's shell → the real one over the valley, on the double bass (c24). A scale match cut. */
+  /** The screen's shell → the real one over the valley, on the double bass (c24). A scale match cut. */
   arrival: ARRIVAL,
   /** The valley → the lake house the same night, the shell come down: a helicopter comes for her (c25, the fog). */
   recruit: chord(25),
@@ -201,8 +201,10 @@ export const SEAM = {
   sees: chord(66),
   /** The lawn → the fog (c68). */
   fog2: chord(68),
-  /** The fog → the gala, years on (c71). */
-  gala: chord(71),
+  /** The fog → the lecture hall, years on: she teaches their writing (c71). */
+  future: chord(71),
+  /** The hall → the gala (c72). */
+  gala: chord(72),
   /** The gala → the tent: the call (c74). */
   call: chord(74),
   /** The tent → the meadow: the shells go (c84). */

@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { R, type Pt } from '../../../../../parts'
-import { drawScreen, mix, rgba, shellOnScreen } from '../cast'
+import { drawScreen, mix, rgba } from '../cast'
 import { shellDown } from '../shell-path'
 import { HANNAH_AGE, HOUSE } from '../worlds'
 import {
@@ -629,10 +629,4 @@ export function drawTVGlow(p: p5, k: number, T: number): void {
   ctx.restore()
 }
 
-/**
- * The shell on the television at show time T, in world cells: where `drawShellScene` puts it on the glass (a fifth of
- * the screen over the land, lowered out of the cloud by `descend`).
- */
-export function tvShell(T: number): { c: Pt; h: number } {
-  return shellOnScreen(TV.x, TV.y, TV.w, TV.h, shellDown(T))
-}
+

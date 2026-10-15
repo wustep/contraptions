@@ -38,7 +38,6 @@ export function hermite(u: number, d: number, x0: number, v0: number, x1: number
 export const ERA = {
   dawn: [0, SEAM.swing] as const,
   bed: [SEAM.bed, SEAM.news] as const,
-  news: [SEAM.news, SEAM.arrival] as const,
   /** The same night, the shell come down: a helicopter comes for her (`recruit.ts`). */
   recruit: [SEAM.recruit, SEAM.camp] as const,
   /** A flash in the middle of the language: an afternoon years on, Hannah drawing at the window (`flash.ts`). */
@@ -58,11 +57,10 @@ export const BEGIN = 349.495
  */
 export const EMPTY_DX = 0
 
-export type Era = 'dawn' | 'bed' | 'news' | 'recruit' | 'flash' | 'home' | 'none'
+export type Era = 'dawn' | 'bed' | 'recruit' | 'flash' | 'home' | 'none'
 export function eraOf(T: number): Era {
   if (T < ERA.dawn[1]) return 'dawn'
   if (T >= ERA.bed[0] && T < ERA.bed[1]) return 'bed'
-  if (T >= ERA.news[0] && T < ERA.news[1]) return 'news'
   if (T >= ERA.recruit[0] && T < ERA.recruit[1]) return 'recruit'
   if (T >= ERA.flash[0] && T < ERA.flash[1]) return 'flash'
   if (T >= ERA.home[0]) return 'home'
@@ -319,14 +317,14 @@ export function lightAt(T: number): Light {
     if (u <= 0) return FIRST_LIGHT
     return light(1 - 0.78 * u, 0.78 * u, 0, 0, 0.8 * u ** 1.3, 0.85 - 0.35 * u)
   }
-  if (T < ERA.news[0]) {
+  if (T < ERA.bed[1]) {
     // The days of her illness, a light each (`DAYS`). On the swell the room greys and the light goes out of it.
     const d = dayAt(T).L
     const g = ss(T, SWELL, SWELL + 3.6)
     const h = 1 - g
     return light(d.pre * h + 0.45 * g, d.morn * h, d.grey * h + 0.35 * g, d.night * h + 0.2 * g, d.sun * h, d.fog + (1 - d.fog) * 0.3 * g)
   }
-  if (T < ERA.news[1] + 1 || (T >= ERA.recruit[0] - 1 && T < ERA.recruit[1] + 1)) return light(0, 0, 0, 1, 0, 0.2)
+  if (T >= ERA.recruit[0] - 1 && T < ERA.recruit[1] + 1) return light(0, 0, 0, 1, 0, 0.2)
   if (T >= ERA.flash[0] - 1 && T < ERA.flash[1] + 1) return light(0, 1, 0, 0, 0.95, 0.15)
   if (T < BEGIN) {
     // The morning after: the sun comes through the glass.

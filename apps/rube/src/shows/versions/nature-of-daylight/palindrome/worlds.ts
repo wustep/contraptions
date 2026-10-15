@@ -233,6 +233,32 @@ export const TENT = {
   keypad: '#A9D8B8',
 }
 
+/* ------------------------------------------------------------------ the lecture hall */
+
+export const HALL_THEME: Theme = {
+  name: 'hall',
+  label: 'The Lecture Hall',
+  bg: '#24211F',
+  ink: '#E3DCCF',
+  colors: ['#2E2A27', '#4B443D', '#6E5A48', '#8A8580', '#F1EFE9', '#131517'],
+  weight: 0.8,
+  note: 'The university: dark wood, rising rows, a screen over the stage; the day they came, and years on.',
+}
+
+export const HALL = {
+  wall: '#2E2A27',
+  wallLit: '#4B443D',
+  dark: '#171514',
+  floor: '#3A3430',
+  wood: '#6E5A48',
+  /** The students: muted, a grey a little above the room, as the gala's guests are. */
+  student: '#8A8580',
+  screen: '#F1EFE9',
+  ink: '#131517',
+  /** The room's lamps years on, paler than her gold. */
+  lamp: '#F2DDB4',
+}
+
 /* ------------------------------------------------------------------ the gala */
 
 export const GALA_THEME: Theme = {
@@ -270,6 +296,7 @@ const world = (name: string, label: string, note: string, theme: Theme): World =
 
 export const WORLDS = {
   house: world('house', 'The Lake House', 'Louise and Hannah: the cradle, the swing, the bed by the window.', HOUSE_THEME),
+  hall: world('hall', 'The Lecture Hall', 'The day they came, her students\' phones lighting with the news; and years on, teaching their language.', HALL_THEME),
   valley: world('valley', 'Montana', 'The shell comes down out of the cloud over the meadow, and goes back up into it.', VALLEY_THEME),
   shaft: world('shaft', 'The Shaft', 'Up into the shell, where gravity turns.', SHAFT_THEME),
   shell: world('shell', 'The Shell', 'The chamber and the glass: contact, and the language.', SHELL_THEME),

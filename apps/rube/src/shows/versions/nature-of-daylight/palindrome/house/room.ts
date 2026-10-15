@@ -3,8 +3,8 @@ import type { Pt } from '../../../../../parts'
 import { mix, rgba } from '../cast'
 import { frame, hash, scratchPair, softLayer } from '../kit'
 import { HOUSE } from '../worlds'
-import { LAST, SEAM } from '../music'
-import { FLOOR, lightAt, ss, type Light } from './time'
+import { LAST } from '../music'
+import { FLOOR, lightAt, type Light } from './time'
 
 /**
  * The room: one long room of dark concrete and pale oak whose whole side is a long window over the lake. We see it in
@@ -643,9 +643,6 @@ export function drawVignette(p: p5, k: number, T: number): void {
   const ctx = p.drawingContext as Ctx
   const f = frame(p, k)
   const L = lightAt(T)
-  // Going into the television, its picture becomes the whole frame: the room's dark leaves the corners.
-  const into = T >= SEAM.news && T < SEAM.arrival ? 1 - ss(T, SEAM.news + 1.6, SEAM.arrival - 0.5) : 1
-  if (into <= 0.001) return
   const w = f.x1 - f.x0
   const h = f.y1 - f.y0
   const cx = (f.x0 + f.x1) / 2
@@ -657,7 +654,7 @@ export function drawVignette(p: p5, k: number, T: number): void {
   const g = ctx.createRadialGradient(0, h * 0.08 * k, r * 0.45, 0, h * 0.08 * k, r)
   const dark = HOUSE.night
   g.addColorStop(0, rgba(dark, 0))
-  g.addColorStop(1, rgba(dark, (0.42 - 0.12 * L.amb + 0.2 * L.night) * into))
+  g.addColorStop(1, rgba(dark, 0.42 - 0.12 * L.amb + 0.2 * L.night))
   ctx.fillStyle = g
   ctx.fillRect(-r * 1.2, -r * 1.2, r * 2.4, r * 2.4)
   ctx.restore()

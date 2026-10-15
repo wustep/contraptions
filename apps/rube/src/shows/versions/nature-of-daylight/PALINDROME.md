@@ -75,9 +75,9 @@ her velocity, the camera's distance and where Ian, Hannah and Shang are at every
 agree without seeing each other.
 
 - **The cut on the shell** (102.110, the double bass). The one cut not on Louise. The camera pushes into the
-  television until its picture of the news is most of the frame; the valley opens with the real shell exactly where the
-  television's was, the same size on the screen (`score.ts` works the framing out from the house's `TV_SHELL` and
-  the valley's `SHELL_CUT`; `cast.ts` `shellOnScreen` is where the picture puts it).
+  lecture hall's screen until its picture of the news is most of the frame; the valley opens with the real shell
+  exactly where the screen's was, the same size on the screen (`score.ts` works the framing out from the hall's
+  `HALL_SHELL` and the valley's `SHELL_CUT`; `cast.ts` `shellOnScreen` is where the picture puts it).
 - **The scale cuts** (106.742, 110.655, 177.186): a match cut on Louise whose other side opens closer or wider, the
   carried framing scaled about her (`seams.ts` `open`), so she holds her place on the screen while the picture changes
   size round her: from the valley's great wide, where she is a speck in the helicopter, in to the lake house that night;
@@ -104,7 +104,7 @@ Times are show seconds; chord *n* is the *n*th change of harmony.
 | 0 | silence; the first chord 1.625 | the lake house | The first frame: blue hour, a long room of glass over a grey lake. Louise on the floor beside a wooden cradle, baby Hannah in it. On each chord she rolls into the rocker and the cradle rocks on its runners, damped; the dawn comes up a step a chord. The camera comes in close on the two of them and goes back out. |
 | 22.111 | chord 5 | the lawn | Years on: the lawn down to the lake, a great tree at the water's edge and a rope swing, Hannah a child on its seat. The swing is a pendulum a bar long: Louise pushes at the back of the arc on each chord, and at the front, half a bar later, Hannah's feet brush the leaves hanging from the limb. The arcs grow; Hannah grows through every season, a small child to a girl near her mother's height by the leap. The year goes round as a montage, each season cut in on a push at the back of the arc: summer close on the two of them; **autumn (38.609) close and low**, the arc running out of the frame and back, the turning leaves knocked loose; **winter (46.353) out under the whole tree, bare**, snow on the limb; **spring (55.449)** the arc whole again. On 61.365 she leaps from the top of the arc, lands and runs back; the swing dies down to dusk with her on it. |
 | 71.953 | chord 17: the cellos | the lake house | Years on: the same room, a bed where the cradle stood, Hannah a young woman in it, ill; Louise beside her; a tall pendulum clock by the bed, its pendulum swinging on every beat, its hammer on the bell and a weight dropping a notch on every chord. **The days of her illness**, one to each of the clock's strikes, each its own shot, its own light and its own hour on the clock's face: a grey afternoon, the room and the clock; **night (76.185), close on the two of them under a lamp lit by the bed**; a pale morning, the sun low across the floor, Louise coming to the bed's side (80.376); another grey day, the clock whole beside the bed, running down (85.310); and the last evening, the lamp lit again, going to the blue hour, the light she came in at dawn (89.281). **On the swell (93.861) the weight reaches the bottom, the pendulum settles, and Hannah goes**, and the lamp goes out with her: the camera comes in close on her as she pales into the pillow, and holds on it empty, Louise beside it. |
-| 98.429 | chord 23: the half cadence | the lake house | Night. The television comes on across the room: the news, a shell hanging under the cloud. The camera pushes in until the picture is most of the frame, the set's bezel still round it. |
+| 98.429 | chord 23: the half cadence | the lecture hall | **The day they came.** The hall dim for the projector, Louise at the lectern, her students up the rising rows. **Their phones light**, one and then another and then all of them, from the back rows down, on the half cadence and the notes after it; on the beat (99.376) she touches the lectern and the screen behind her comes on: the news, a shell hanging under the cloud. The camera pushes into it until the picture is most of the frame, its bezel still round it. |
 | 102.110 | **the double bass** | Montana | The real shell, where the television's was and the same size, and now it comes down: out of the cloud between the mountain walls, settling as the bass swells, the camera drawing back so its height reads against the ridges. A helicopter comes round the ridge, a speck against it; the fog the shell drives down rolls out along the valley floor (106.742). |
 | 106.742 | chord 25 | the lake house | **They come for her**, the same night (a scale cut in from the great wide): the room dark but for the television, still on the news, Louise before it. A light comes up over the lake beyond the long window (107.752), a red light winking under it; its searchlight sweeps in through the glass along the floor and **finds her on the chord (108.716)**, the room white round her; she goes, rolling out to the left (109.679). |
 | 110.655 | chord 27 | Montana | A scale cut out to the camp's wide as she drops out of that helicopter's door onto the meadow, under the shell's belly. It climbs away as she rolls into the decon tent and out in her suit; Ian goes up the scissor lift's ramp before her. The lift surges up under the belly on the chords; a seam of light, and the slot opens (121.754), spilling light down on them; up into it. |
@@ -118,7 +118,8 @@ Times are show seconds; chord *n* is the *n*th change of harmony.
 | 231.039 | chord 60, in white | beyond the glass | Alone in the fog. Costello points; a jet of ink under her, and a great logogram written round her both ways at once on the chords, lifting her. **Abbott dies** on the same strokes: on the hard beat (235.892) he slumps and starts to sink; on the chord (238.713) his last word comes out of him whole, a pale ring round him; from the next (240.582) it comes undone from both ends as hers is written, and he is gone into the white as **hers closes over her (242.480)**: one ring written, one unwritten. It turns, lets her go at its top (246.340); she falls through it and lands where its ends met. A small ring begins at her right. |
 | 250.120 | chord 66 | the lawn | What she is shown: the swing on a summer evening, Hannah a young woman, well, laughing, on its seat where the small ring was. A push; the leaves. |
 | 257.683 | chord 68 | beyond the glass | The ring she was shown grows on each stroke until it fills the frame, and the white round them goes to a grey dusk; **on 262.374 its ends meet at her touch and the white floods out from it: she knows**. The palm lets it go. |
-| 266.124 | chord 71 | the gala | Years on: an evening reception, champagne light, knots of dark guests. She rolls onto a brass pouring stand and a champagne tower fills a tier a beat; the room raises its glasses (272.869); **Shang** crosses to her, leans in and they touch: the whisper (274.802), and a ghost of the sat phone's keys comes up beside them, lighting the first of his number. |
+| 266.124 | chord 71 | the lecture hall | **Years on.** The same hall in daylight through high windows, the rows fuller, the screen white. She touches the lectern (267.012) and their writing comes up on it from both ends, the great logogram she was given beyond the glass, closing on the beat (268.968): she teaches it. The film's first scene played forward. |
+| 269.915 | chord 72 | the gala | Years on: an evening reception, champagne light, knots of dark guests. She is on the pedal of a brass pouring stand and a champagne tower fills a tier a beat; the room raises its glasses (272.869); **Shang** crosses to her, leans in and they touch: the whisper (274.802), and a ghost of the sat phone's keys comes up beside them, lighting the first of his number. |
 | 277.647 | chord 74 | the command tent | The sat phone, the red lamp burning, Ian on her left. She hops key to key on the beats, the number he gave her, and he goes along the table and down off its end to the floor before the door; the dead ring on 283.458, and two soldiers come in out of the night under the red lamp; **Ian stands in their way (285.495)**, her dialing on the right of the frame, the standoff on the left. The call key on **288.554, the loudest bars**: the call goes up the cable, China's screen rises red, and **the dominoes stand again, backwards**, one a beat, the last to fall the first to rise, the camera drawing back until **the ring closes whole in the wide on the loudest bar (303.827)**, the lamp going out as the soldiers go back out into the dark. Then **the shells leave the world**: on every screen but Montana's the shell goes back up into its cloud the way it came down, a pair a beat from the top of the ring down both sides (304.785 to 309.348). |
 | 311.293 | chord 84 | Montana | Morning. The lift's deck comes down; **the shell goes up the way it came down**, into the cloud, **gone as the high violins stop (318.711)**. The hush: the cloud churning where it went. **322.606: the cloud breaks over the left ridge and the low sun rakes across the valley**, its light sweeping along the floor to her on 326.258; Ian comes to her across the light; **they touch (330.170)**, close, the low sun gathering in the air behind them, and hold. |
 | 334.031 | chord 90 | the lake house | Home, in the morning light: Louise and Ian by the window, close, the empty cradle beside them; after the turn he goes round it to its far side. She rolls into him (337.850); they turn to the cradle (341.618) and go to it (345.490). **349.495: she rocks it and baby Hannah comes into it**, rising pale out of the linen and filling into her rose, her going on the swell played backwards, as the camera goes in close on the cradle; Ian beyond it on her right, the cradle between them: they chose her, in the same morning light. Then he turns away, looks back at her, and goes out of the room. She rocks it on the last chords, fainter and fainter; from the last B-flat the camera draws back, the opening's push in played backwards, and arrives on the first frame on the last attack (371.931). The credits in the silence over the wall above the window. |
@@ -140,7 +141,7 @@ card the room holds to the end, 408 s.
 - the places in order (21 legs), every cut between places on a change of chord, no portal;
 - the ball never jumps in a place, and every cut is a match cut (all but the cut on the shell), on the screen as the
   camera has it, turned by its roll in the shaft;
-- the cut on the shell: the television's picture of it and the real one the same size in the same place on the
+- the cut on the shell: the lecture hall screen's picture of it and the real one the same size in the same place on the
   screen, and more than a quarter of the frame tall;
 - the palindromes: the shell's path out is its path in, backwards, and it is gone when the high violins stop; the
   twelve links fall after the bass drops out and stand again in the reverse order, the ring whole on the loudest bar;
@@ -168,13 +169,13 @@ card the room holds to the end, 408 s.
   Merry-Go-Round's): `kit.ts` (each part is handed a slot and builds its lane from timed waypoints, so its strikes land
   where the music is by construction), `show.ts` (the legs), `score.ts` (the order, the cuts, the white-out, the
   punches, the camera's carry across every cut and the shell match), `camera.ts`, `music.ts`, `seams.ts`,
-  `shell-path.ts` (the shell's one journey, read by the television and the valley alike), `hits.ts`, `credits.ts`.
+  `shell-path.ts` (the shell's one journey, read by the screens and the valley alike), `hits.ts`, `credits.ts`.
 - **The canonical drawings** (`cast.ts`): the shell (a smooth dark stone standing on its edge, at any size), the
   heptapods (a heavy body on seven limbs, a palm of seven fingers, always in fog), their ink (`inkRing`/`drawInk`: a
   ring written from both ends at once, thick and thin, with blots and tendrils), and a screen with a shell over one of
   the twelve places.
 - **The parts:** `house/` (the room at dawn, ill, at night, home; `recruit.ts` the helicopter at night, `flash.ts`
-  Hannah drawing), `lawn/` (the swing, the vision), `valley/` (the arrival in two legs, the going, daylight), `shaft/`
+  Hannah drawing), `hall/` (the lecture hall, the day they came and years on), `lawn/` (the swing, the vision), `valley/` (the arrival in two legs, the going, daylight), `shaft/`
   (gravity turning, and the camera's roll), `chamber/` (contact in three legs, the bomb), `fog/` (the fog, the gala),
   `twelve/` (the tent and the ring: the world as one, its breaking, the call).
 - **How it was made:** a director (Claude Opus 5.5) measured the cue, wrote the kit, the seams, the check, the
@@ -1184,12 +1185,30 @@ What it would take up next: little. The film is told; the quiet stretches (the d
 middle moves. The remaining ideas trade something that works for something that would merely be more: the future
 lecture before the gala would cost the tower, and the pod would cost the white-out.
 
+A hundred-and-twenty-second came after a verdict of "at its best", with Stephen's brief to be bold and add scenes
+anyway, and went looking for what the film has that the show still did not. The largest was its first scene: Louise
+walking into her lecture hall, the students' phones going off, the television, the news. The show went from the bed
+to a television at home. Two scenes now, one place:
+
+- **The day they came** (98.429 to 102.110), in place of the television at home: the hall dim, the phones lighting up
+  the rows, the news coming up on the screen behind her at her touch; the camera pushes into the screen and the double
+  bass cuts on the shell to the real one, as the television did. (The television at home is still on that night, in
+  the lake house, when they come for her.)
+- **Years on** (266.124 to 269.915), between the fog and the gala: the same hall in daylight, fuller, and on its screen
+  the great logogram she was given, written from both ends as she teaches it. The first scene played forward: the
+  palindrome the show is named for, in its own places. The gala cuts in now on the next chord, the tower already
+  filling; its first two tiers go unseen.
+
+Both cost almost nothing to draw. What it would take up next: the hall is drawn plainly (a wall, a screen, rows of
+grey students), and could be warmer; the opening lecture's students might look up from their phones to the screen.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
 - The film's structure: it opens on the lake house and Hannah's life, which we take for the past, and ends there;
   her illness as a montage of days.
-- The shell first seen on the news; the shells hanging over the valley in the fog; the helicopter coming for her at
+- The lecture hall the day they came, the phones, the news; the shell first seen on the screen; the shells hanging over
+  the valley in the fog; the helicopter coming for her at
   night, its searchlight in the lake house; the camp and its white tents; the scissor lift into the slot in the belly,
   which opens on its own clock; the shaft where gravity turns and the wall becomes the floor.
 - The chamber's wall of white; the heptapods coming out of the fog; her whiteboard; her suit coming off; a palm of seven
@@ -1198,6 +1217,6 @@ Visual and mechanical only; no stills, no text, no audio beyond the cue.
   learn; "offer weapon".
 - The twelve sites and their links going dark one by one; the bomb; Abbott's death, his last word coming undone as
   hers is written; alone beyond the glass with Costello; "Louise sees future".
-- The gala years on, and Shang's private number and his wife's last words; the sat phone, and Ian holding the soldiers
+- Years on, teaching their language in the same hall; the gala, and Shang's private number and his wife's last words; the sat phone, and Ian holding the soldiers
   off at the door; the world standing down; the shells leaving everywhere at once.
 - The shells going; Ian; "If you could see your whole life laid out in front of you, would you change things?"
