@@ -1072,6 +1072,24 @@ frame-to-frame change is now about its neighbours' (round 97 measured the cut at
 the span is Ian's turn. A new check holds it: Hannah's coming matches her going backwards, and there is no camera cut
 after the cut home. `tsc` and the full `check:shows` pass (687 checks).
 
+A hundred-and-seventeenth watched the whole show cold, a frame every two seconds, then closer where it looked weak,
+and made one cut and one fix, both at moments the show turns on:
+
+- **First contact** (129.6 to 153 s) had the language machine in it already: the rail along the wall with its
+  brackets and catch, and the cord hanging from it to the plate, a long dark bar across the top of the frame over the
+  suits, the board and the hand on the glass, a machine nothing had used yet. The chamber is bare now when they come
+  in: the dark, the glass, the white, the two of them. The rail and its cord come in on the cut to the first word
+  (153.06), over a third of a second, so Overview, which has no cut there, sees them come rather than pop; from then on
+  they are as they were. Her board and its plate stay, since her first try (144.2) is hers.
+- **The daylight** (322.6 to 334 s): each of the five shafts was six widths laid over each other, and every width's
+  edge showed, so each shaft was a stack of ribbons; the far ones behind the reunion were two widths and swayed and
+  shimmered on clocks of their own, stripes moving behind the touch. Each shaft is one band now, the bands blurred
+  together once into a quarter-size scratch layer (`softLayer`), so it is light in haze with a bright core and no edge;
+  the far ones hold still. The frame costs what it did (under 3 ms at 1080p on a GPU, the same as `main`).
+
+What it would take up next: the language (158 to 186 s) is the longest stretch in one framing, and is the next place
+to look for a cut.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
