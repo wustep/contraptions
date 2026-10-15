@@ -51,7 +51,7 @@ function air(ctx: C2, v: View, t: number, light: number, flash: number): void {
     ctx.save()
     ctx.globalAlpha = clamp01(cool)
     motes(ctx, v, t, {
-      n: 26,
+      n: 34,
       seed: 4,
       tile: [3.1, 2.3],
       r: [0.005, 0.012],

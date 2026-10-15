@@ -55,15 +55,16 @@ export const opening = part<null>(
   },
   () => {
     // From the first frame the camera pushes in slowly while the tubes come up, and is closest as they catch on the
-    // second strike; then it goes along the strip with him, a little behind, and settles back a touch on the blank,
-    // framed as the daydream's cut wants it, giving its glow room.
+    // second strike; then it goes along the strip with him, a little behind and drawing back a touch, and as he
+    // stares into the blank it creeps in again, to the framing the daydream's cut wants.
     const on = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x, y], w: 1 })
     return [
       on(TUBE.second + 0.05, 2.86, 0.72, -0.4),
       on(LANDS[0] + 0.3, 2.86, 1.1, -0.38),
-      on(LANDS[1], 2.88, 1.95, -0.35),
-      on(LANDS[2], 2.92, 2.9, -0.32),
-      on(LANDS[4], 2.97, 4.35, IN_BLANK[1] - 0.35),
+      on(LANDS[1], 2.9, 1.95, -0.35),
+      on(LANDS[2], 2.98, 2.9, -0.32),
+      // He stares into the blank, and the camera creeps in on it to the daydream's framing.
+      on(LANDS[3], 3.16, 4.2, IN_BLANK[1] - 0.44),
       on(DREAM, 3.0, IN_BLANK[0] + 0.15, IN_BLANK[1] - 0.35),
     ]
   },
@@ -97,9 +98,9 @@ export const clues = part<null>(
   () => {
     const on = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - CLUES_AT[0], y - CLUES_AT[1]], w: 1 })
     return [
-      // Out a little from the blank to take in the door and Cheryl coming.
-      on(25.3, 3.9, GAP_X + 1.1, -0.75),
-      on(26.35, 3.85, GAP_X + 0.75, -0.7),
+      // Out a little from the blank to take in the door and Cheryl coming, drifting toward the strip as Ted knocks.
+      on(25.3, 3.95, GAP_X + 1.2, -0.78),
+      on(26.35, 3.8, GAP_X + 0.7, -0.68),
       // Back along the strip with the loupe.
       on(CLUE_STEPS[0][3], 3.5, frameX(24) + 0.5, -0.5),
       on(CLUE_STEPS[1][3], 3.4, frameX(23) + 0.45, -0.48),

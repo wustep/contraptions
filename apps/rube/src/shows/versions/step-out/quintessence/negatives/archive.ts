@@ -241,8 +241,11 @@ export function revealAt(t: number): number {
   )
 }
 
-/** The street's daylight through the window: always there, a little brighter once the room's eyes have adjusted. */
-const dayAt = (t: number): number => 0.55 + 0.45 * Math.min(1, t / 4)
+/**
+ * The street's daylight through the window: always there, a little brighter once the room's eyes have adjusted, and
+ * going and coming a little as clouds go over the street.
+ */
+const dayAt = (t: number): number => (0.55 + 0.45 * Math.min(1, t / 4)) * (1 - 0.1 * (0.5 + 0.5 * Math.sin(t * 0.9) * Math.sin(t * 0.37 + 1)))
 
 /* ------------------------------------------------------------------ the street outside */
 

@@ -319,6 +319,13 @@ function drawDoor(ctx: C2, k: number, t: number, light: number, pane_: boolean):
     slab(ctx, k, x0, top, x1, FLOOR, mix(R.wall, R.wallLit, light * spillAt(x0, -1) * 0.7))
     slab(ctx, k, x0 + 0.05, top + 0.05, x1 - 0.05, FLOOR, mix('#202427', '#353C40', light * spillAt(x0, -1)), { color: rgba(INK, 0.9), w: 1 })
     slab(ctx, k, x0 + 0.12, -0.25, x0 + 0.28, -0.2, mix(R.metal, R.glass, light * spillAt(x0, 0) * 0.4))
+    // Its two panels under the pane, their mouldings, and the kick plate worn bright along the bottom.
+    const lit = light * spillAt(x0, 0)
+    for (const [py0, py1] of [[-1.02, 0.36], [0.5, 1.62]]) {
+      slab(ctx, k, x0 + 0.17, py0, x1 - 0.17, py1, mix('#1C2023', '#2E3438', lit), { color: rgba(INK, 0.7), w: 0.8 })
+      slab(ctx, k, x0 + 0.25, py0 + 0.08, x1 - 0.25, py1 - 0.08, null, { color: rgba(mix('#2A3033', '#4A5256', lit), 0.8), w: 0.8 })
+    }
+    slab(ctx, k, x0 + 0.08, 1.72, x1 - 0.08, FLOOR - 0.03, mix('#2B3134', '#59605F', lit), { color: rgba(INK, 0.7), w: 0.8 })
     return
   }
   // The pane: frosted, lit from the corridor; it rattles in its frame when he raps.
@@ -384,6 +391,14 @@ function drawDoor(ctx: C2, k: number, t: number, light: number, pane_: boolean):
     ctx.restore()
   }
   slab(ctx, k, px0, pane.y0, px1, pane.y1, null, { color: rgba(INK, 0.95), w: 1.2 })
+  // The corridor's light under the door, a line along the floor; Ted's feet break it while he is there.
+  const feet = ramp(t, RAPS[0] - 0.75, RAPS[0] - 0.4) * (1 - ramp(t, RAPS[1] + 0.35, RAPS[1] + 0.95))
+  ctx.fillStyle = rgba(mix(R.dark, '#CFDEDC', corridor), 0.85)
+  ctx.fillRect((x0 + 0.06) * k, (FLOOR - 0.035) * k, (x1 - x0 - 0.12) * k, 0.03 * k)
+  if (feet > 0.02) {
+    ctx.fillStyle = rgba('#0E1012', 0.9 * feet)
+    for (const fx of [0.38, 0.62]) ctx.fillRect((x0 + (x1 - x0) * fx - 0.08) * k, (FLOOR - 0.04) * k, 0.16 * k, 0.04 * k)
+  }
 }
 
 /**
@@ -575,7 +590,7 @@ function enlargerLight(ctx: C2, k: number, t: number): void {
  * lifts on an eased curve of their light.
  */
 function darkness(ctx: C2, k: number, f: { x0: number; y0: number; x1: number; y1: number }, tubes: number): void {
-  const light = 1 - (1 - tubes) * (1 - tubes)
+  const light = 1 - (1 - tubes) ** 3
   const cx = (GLASS.x0 + GLASS.x1) / 2
   // Centred a little over the glass: tilted up at the room, it lights what is above it more than what is under it.
   const cy = GLASS.top - 0.25
@@ -655,7 +670,7 @@ function housing(ctx: C2, k: number, light: number, t: number): void {
   ctx.fill(screws)
   ctx.fillStyle = '#0F1214'
   ctx.fill(gaps)
-  ctx.fillStyle = mix('#23282B', '#4E5658', light * 0.7)
+  ctx.fillStyle = mix('#23282B', '#454C4F', light * 0.7)
   ctx.fill(lips)
   void t
   // The maker's plate and the switch with its pilot lamp, at the near end.
@@ -690,7 +705,7 @@ function louvreLight(ctx: C2, k: number, t: number, light: number): void {
     for (let y = LIP + 0.17, row = 0; y < 0.86; y += 0.068, row++) slits.rect(l0 * k, (y + 0.006) * k, (l1 - l0) * k, 0.014 * k)
   }
   const hum = 1 - 0.08 * (0.5 + 0.5 * Math.sin(t * 7.3) * Math.sin(t * 2.9 + 1))
-  ctx.fillStyle = rgba('#8C8270', clamp01(0.55 * light * hum))
+  ctx.fillStyle = rgba('#8C8270', clamp01(0.36 * light * hum))
   ctx.fill(slits)
 }
 
@@ -705,6 +720,14 @@ function drawTable(ctx: C2, k: number, light: number, t: number): void {
   for (const x of [GLASS.x0 + 0.15, GLASS.x1 - 0.3]) slab(ctx, k, x, 0.92, x + 0.12, FLOOR, mix(R.housing, R.housingLit, light * 0.15))
   slab(ctx, k, BENCH.x0, BENCH.top, BENCH.x1, BENCH.top + 0.14, mix(R.wood, '#4D473F', light * spillAt(BENCH.x0 + 1, 0) * 0.8), { color: rgba(INK, 0.9), w: 1 })
   for (const x of [BENCH.x0 + 1.6, BENCH.x1 - 0.5]) slab(ctx, k, x, BENCH.top + 0.14, x + 0.12, FLOOR, mix(R.wood, '#3E3933', light * spillAt(x, 1) * 0.5))
+  // Under the bench, what did not fit on the shelves: archive boxes on the floor, a stack of cans, a reel's tin.
+  const under = light * 0.35
+  const boxes = [[7.3, 0.62, 0.42], [7.95, 0.5, 0.36], [8.5, 0.66, 0.5], [9.25, 0.44, 0.3]]
+  for (const [bx, w, h] of boxes) {
+    slab(ctx, k, bx, FLOOR - h, bx + w, FLOOR, mix(R.shelf, '#4A4740', under), { color: rgba(INK, 0.8), w: 0.8 })
+    slab(ctx, k, bx + w * 0.3, FLOOR - h * 0.7, bx + w * 0.7, FLOOR - h * 0.52, mix('#24292B', '#5E5B50', under))
+  }
+  for (let i = 0; i < 4; i++) slab(ctx, k, 9.75, FLOOR - (i + 1) * 0.07, 10.1, FLOOR - i * 0.07 - 0.012, mix(R.can, R.canLit, under), { color: rgba(INK, 0.7), w: 0.6 })
 }
 
 function drawGlass(ctx: C2, k: number, t: number, light: number): void {
