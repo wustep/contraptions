@@ -11,7 +11,7 @@ import { houseSet, HOUSE_CELLS, DAWN_AT, BED_AT, NEWS_AT, RECRUIT_AT, FLASH_AT, 
 import { lawnSet, LAWN_CELLS, SWING_AT, SEES_AT, swing, sees } from './lawn/lawn'
 import { valleySet, VALLEY_CELLS, ARRIVE_AT, CAMP_AT, GOING_AT, SHELL_CUT, arrive, arrive2, going } from './valley/valley'
 import { shaftSet, SHAFT_CELLS, SHAFT_AT, rollAt, shaft } from './shaft/shaft'
-import { chamberSet, CHAMBER_CELLS, CONTACT_AT, BACK_AT, AGAIN_AT, BOMB_AT, contact, contact2, contact3, bomb } from './chamber/chamber'
+import { chamberSet, CHAMBER_CELLS, CONTACT_AT, AGAIN_AT, BOMB_AT, contact, contact2, bomb } from './chamber/chamber'
 import { fogSet, FOG_CELLS, FOG_AT, FOG2_AT, fog1, fog2 } from './fog/fog'
 import { galaSet, GALA_CELLS, GALA_AT, gala } from './fog/gala'
 import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, SHARE_AT, dark, call, share } from './twelve/twelve'
@@ -31,9 +31,8 @@ import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, SHARE_AT, dark, call, share } fr
  *   129.556  inside: the shaft; gravity turns, and the camera with it
  *   135.442  the chamber, the glass, the heptapods; contact; the language
  *   169.610  a flash: the lake house, Hannah a child drawing at the window, "Mommy and Daddy talk with animals"
- *   177.186  the chamber: the next word
- *   181.133  the tent: the world as one, the word she sends round the ring of twelve
- *   185.080  the chamber: both of them writing at once; the row read back; "weapon"
+ *   177.186  the tent: the world as one, the word she sends round the ring of twelve (her ring, cut to theirs)
+ *   181.133  the chamber: the next word; both of them writing at once; the row read back; "weapon"
  *   200.626  the bass drops out: the command tent, the twelve links falling one by one
  *   214.657  the chamber: the bomb (223.370)
  *   231.039  white: beyond the glass, the fog, Costello; 250.120 what she sees (the swing, Hannah grown); 257.683 fog
@@ -61,10 +60,9 @@ const PLAN = (): LegPlan[] => [
   { key: 'camp', world: 'valley', at: CAMP_AT, links: [{ part: arrive2, end: SEAM.shaft }] },
   { key: 'shaft', world: 'shaft', at: SHAFT_AT, links: [{ part: shaft, end: SEAM.contact }] },
   { key: 'contact', world: 'shell', at: CONTACT_AT, links: [{ part: contact, end: SEAM.flash }] },
-  { key: 'flash', world: 'house', at: FLASH_AT, links: [{ part: flash, end: SEAM.back }] },
-  { key: 'back', world: 'shell', at: BACK_AT, links: [{ part: contact2, end: SEAM.share }] },
+  { key: 'flash', world: 'house', at: FLASH_AT, links: [{ part: flash, end: SEAM.share }] },
   { key: 'share', world: 'tent', at: SHARE_AT, links: [{ part: share, end: SEAM.again }] },
-  { key: 'again', world: 'shell', at: AGAIN_AT, links: [{ part: contact3, end: SEAM.dark }] },
+  { key: 'again', world: 'shell', at: AGAIN_AT, links: [{ part: contact2, end: SEAM.dark }] },
   { key: 'dark', world: 'tent', at: DARK_AT, links: [{ part: dark, end: SEAM.bomb }] },
   { key: 'bomb', world: 'shell', at: BOMB_AT, links: [{ part: bomb, end: SEAM.fog }] },
   { key: 'fog', world: 'fog', at: FOG_AT, links: [{ part: fog1, end: SEAM.sees }] },

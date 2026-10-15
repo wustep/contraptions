@@ -368,8 +368,8 @@ export const flash: Part<HouseState> = part<HouseState>(
     const o = FLASH_AT
     const w = (x: number, y: number): Pt => [x - o[0], y - o[1]]
     return [
-      // From the chamber's framing in to the two of them and her sheet on the glass, and held while she draws: a little
-      // high at the end, so the chamber, carrying it, has their ring over the glass in the frame.
+      // From the chamber's framing in to the two of them and her sheet on the glass, and held while she draws, her ring
+      // last; then the scale cut out to the world's ring of twelve (the share), her place on the screen held.
       { t: slot.begin + 2.0, cells: 2.25, hold: w(FLASH_X + 0.66, -0.55) },
       { t: F.daddy, cells: 2.2, hold: w(FLASH_X + 0.64, -0.56) },
       { t: slot.end, cells: 2.45, hold: w(FLASH_X + 0.62, -0.68) },

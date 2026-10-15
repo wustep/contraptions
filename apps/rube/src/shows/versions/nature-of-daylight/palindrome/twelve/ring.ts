@@ -198,8 +198,11 @@ function drawLink(ctx: CanvasRenderingContext2D, k: number, j: number, t: number
   }
 }
 
-/** The word she sends round the world, which each screen takes up as it reaches it: the fourth of the chamber's. */
-const WORD = heavy(LOGOS[3].seed)
+/**
+ * The word she sends round the world, which each screen takes up as it reaches it: the one seen written on the glass
+ * as their answer to her touch, and run down the rail onto its card (the chamber's second).
+ */
+const WORD = heavy(LOGOS[1].seed)
 
 /** A fallen screen's tilt from its angle in the clock (0 upright, π/2 fallen): its turn on its corner hinge. */
 const tilt = (th: number) => (th / (Math.PI / 2)) * STOP

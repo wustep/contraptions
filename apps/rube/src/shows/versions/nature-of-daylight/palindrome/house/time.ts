@@ -42,7 +42,7 @@ export const ERA = {
   /** The same night, the shell come down: a helicopter comes for her (`recruit.ts`). */
   recruit: [SEAM.recruit, SEAM.camp] as const,
   /** A flash in the middle of the language: an afternoon years on, Hannah drawing at the window (`flash.ts`). */
-  flash: [SEAM.flash, SEAM.back] as const,
+  flash: [SEAM.flash, SEAM.share] as const,
   home: [SEAM.home, 409] as const,
 }
 /** The last scene's chords: the two of them turn to the empty cradle (TURN) and step toward it (NEAR); then, on the

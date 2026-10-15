@@ -63,9 +63,9 @@ export const VOICE = [CALL_KEY, ...BEATS.filter((b) => b.t > CALL_KEY + 0.5 && b
  * into Montana and round the ring both ways at once, screen by screen, each taking it up, the two halves meeting at the
  * top on the loud note (written from both ends at once, as their ink is), the whole ring flaring with it.
  */
-export const SHARE_KEY = B(182.149)
+export const SHARE_KEY = B(178.149)
 export const SHARE_IN = onset(SHARE_KEY + CALL_UP, 0.5)
-export const SHARE_MEET = onset(184.575, 0.8)
+export const SHARE_MEET = onset(180.75, 0.45)
 const SHARE_STEP = (SHARE_MEET - SHARE_IN) / 6
 /** When the word reaches screen i: Montana first, then both ways round, the top (6) last. */
 export const shareAt = (i: number): number => SHARE_IN + SHARE_STEP * Math.min(i, 12 - i)

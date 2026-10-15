@@ -34,7 +34,7 @@ export const F = {
   mommy: b(174.428),
   daddy: b(175.363),
   ring: b(176.222),
-  out: SEAM.back,
+  out: SEAM.share,
 }
 /** Every strike of the flash. */
 export const FLASH_HITS = [F.first, F.second, F.touch, F.mommy, F.daddy, F.ring]

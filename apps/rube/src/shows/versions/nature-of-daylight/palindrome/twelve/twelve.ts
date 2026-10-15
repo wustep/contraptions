@@ -76,10 +76,11 @@ export const dark = part<{ begin: number }>(
 )
 
 /**
- * The world as one (181.133 → 185.080), in the middle of the language, before anything breaks: the tent and the ring
- * whole, every screen lit and linked, the scale cut opening on all of it. She hops onto a key of the phone on the beat
- * (182.149) and the word she has just read goes up the cable into Montana and round the ring both ways at once, each
- * screen taking it up, the halves meeting at the top on the loud note (`timeline.ts`). Ian beside her, on her left.
+ * The world as one (177.186 → 181.133), in the middle of the language, before anything breaks: out of the flash, Hannah's
+ * crayon ring cut to the world's ring of twelve, whole, every screen lit and linked, the scale cut opening on all of it.
+ * She hops onto a key of the phone on the beat (178.149) and a word they have read goes up the cable into Montana and
+ * round the ring both ways at once, each screen taking it up, the halves meeting at the top (`timeline.ts`). Ian
+ * beside her, on her left.
  */
 export const share = part<{ begin: number }>(
   { name: 'share', draw: () => {} },
