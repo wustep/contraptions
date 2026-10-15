@@ -475,7 +475,8 @@ function lampLight(p: p5, k: number, T: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   // Hung from the ceiling and swinging with the lamp: a soft cone of light down from its rim onto the wall, so that
-  // when it sputters and goes out the room is seen to lose it.
+  // when it sputters and goes out the room is seen to lose it. Drawn before the window, which stands over it: the
+  // light lands on the paper round the glass, not on the street seen through it.
   ctx.translate(LAMP.x * k, LAMP.ceil * k)
   ctx.rotate(lampSwing(T))
   const rim = LAMP.cord + 0.2 * LAMP_SCALE
@@ -995,9 +996,9 @@ function dim(p: p5, k: number, T: number): void {
 export function drawRoom(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
   const f = frame(p, k)
+  lampLight(p, k, T)
   driveway(p, c, T, f)
   garden(p, c, T, f)
-  lampLight(p, k, T)
   hearth(p, c, T)
   drawChairs(p, k, weight, CHAIRS_X, INSIDE.ground, AGE(T) * 0.8)
   ladder(p, c, T)
