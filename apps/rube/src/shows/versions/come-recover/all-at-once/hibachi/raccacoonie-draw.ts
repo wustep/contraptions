@@ -108,10 +108,22 @@ export function drawRoom(pen: Pen): void {
   p.fill(mixHex(BG, H.soy, 0.1))
   const SL = 0.5
   for (let i = Math.floor(f.x0 / SL) - 1; i < f.x1 / SL + 1; i++) p.rect(X(pen, i * SL + SL / 2), X(pen, (f.y0 - 1 + rig.TOP) / 2), X(pen, SL - 0.035), X(pen, rig.TOP - f.y0 + 1))
+  // The griddle lights the room from below, as a teppan does after dark: its warmth up the slats the whole length of
+  // the counter, strongest just over the plate and gone by the tool rail, rising and falling with the burners.
+  const hot = Math.max(level(t), blaze(t))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const up = ctx.createLinearGradient(0, X(pen, rig.TOP), 0, X(pen, rig.TOP - 3.4))
+  up.addColorStop(0, `rgba(${rgbOf(H.flame)}, ${0.2 + 0.14 * hot})`)
+  up.addColorStop(0.35, `rgba(${rgbOf(H.flame)}, ${0.08 + 0.06 * hot})`)
+  up.addColorStop(1, `rgba(${rgbOf(H.flame)}, 0)`)
+  ctx.save()
+  ctx.fillStyle = up
+  ctx.fillRect(X(pen, f.x0 - 1), X(pen, rig.TOP - 3.4), X(pen, f.x1 - f.x0 + 2), X(pen, 3.4))
+  ctx.restore()
   // A rail along it, high, hung with the kitchen's tools: ladles, a spatula, a wok, a strainer. Dim, the far side of
   // the room, with the griddle's light catching their bellies.
   const RAIL = rig.TOP - 3.35
-  const tool = mixHex(BG, H.steel, 0.22)
+  const tool = mixHex(mixHex(BG, H.steel, 0.22), H.flame, 0.12 + 0.1 * hot)
   p.stroke(mixHex(BG, H.steel, 0.3))
   p.strokeWeight(Math.max(1, X(pen, 0.05)))
   p.line(X(pen, f.x0 - 1), X(pen, RAIL), X(pen, f.x1 + 1), X(pen, RAIL))

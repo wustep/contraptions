@@ -583,16 +583,21 @@ export interface Spray {
   at: number
   seeds: Seed[]
 }
-/** A spray of seeds out of the hole on each eighth the music has (122½ to 150½), and a smaller one with each thing it gives back. */
+/**
+ * A spray of seeds out of the hole on each eighth the music has (122½ to 150½), and a smaller one with each thing it
+ * gives back. A puff, not a storm: a handful of seeds, small and quick, so the eighths pulse in the hole and the
+ * things it gives back, each with its eye, are what the eye follows. (At fifteen to twenty-seven a spray, several in
+ * the air at once, they were a hundred flakes of confetti over the two of them and over every thing coming out.)
+ */
 export const SPRAYS: Spray[] = (() => {
   const out: Spray[] = []
   let n = 0
   const at: { t: number; count: number }[] = []
   for (let k = 120; k <= 150; k++) {
     const st = strength('fall', k + 0.5)
-    if (st >= 0.4) at.push({ t: fall(k + 0.5), count: 15 + Math.round(12 * Math.min(1.2, st)) })
+    if (st >= 0.4) at.push({ t: fall(k + 0.5), count: 5 + Math.round(4 * Math.min(1.2, st)) })
   }
-  for (const b of OUT_BEATS) at.push({ t: fall(b), count: 8 })
+  for (const b of OUT_BEATS) at.push({ t: fall(b), count: 3 })
   at.sort((x, y) => x.t - y.t)
   for (const { t, count } of at) {
     const seeds: Seed[] = []
@@ -600,7 +605,7 @@ export const SPRAYS: Spray[] = (() => {
       n++
       const h = (v: number) => ((Math.sin(n * 12.9898 + v * 78.233) * 43758.5453) % 1 + 1) % 1
       // A fan over the top, never down across the two of them.
-      seeds.push({ dir: Math.PI / 2 + 1.0 + (2 * Math.PI - 2.0) * h(1), speed: 5 + 6 * h(2), size: 0.16 + 0.14 * h(3), kind: (Math.floor(h(4) * 3) % 3) as 0 | 1 | 2, spin: (h(5) - 0.5) * 12 })
+      seeds.push({ dir: Math.PI / 2 + 1.0 + (2 * Math.PI - 2.0) * h(1), speed: 5 + 6 * h(2), size: 0.11 + 0.08 * h(3), kind: (Math.floor(h(4) * 3) % 3) as 0 | 1 | 2, spin: (h(5) - 0.5) * 12 })
     }
     out.push({ at: t, seeds })
   }
@@ -615,9 +620,9 @@ export function seedAt(sp: Spray, sd: Seed, x: number): { p: Pt; size: number; a
   const r = sd.speed * 0.35 * (1 - Math.exp(-x / 0.35)) + 2 * x
   return {
     p: [c[0] + r * Math.cos(sd.dir), c[1] + r * Math.sin(sd.dir)],
-    size: sd.size * (0.3 + 0.7 * ss(x / 0.15)) * (1 + 0.6 * x),
+    size: sd.size * (0.3 + 0.7 * ss(x / 0.15)) * (1 + 0.25 * x),
     angle: sd.dir + sd.spin * x,
-    fade: 1 - ss((x - 0.55) / 0.5),
+    fade: 1 - ss((x - 0.3) / 0.4),
   }
 }
 
