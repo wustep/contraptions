@@ -794,7 +794,7 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
       ctx.restore()
     }
   }
-  // Close to the lens at the foot of the frame: the soft dark shapes the camera passes, and the people going by.
+  // Close to the lens at the foot of the frame: the dark shapes the camera passes, and the people going by.
   const f = frame(pen.p, pen.k)
   foreground(pen, t, f, marty)
   passers(pen, t, f, marty)

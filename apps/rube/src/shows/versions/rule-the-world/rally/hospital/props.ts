@@ -7,7 +7,7 @@ import { CEIL, FLOOR, HEAD_X, T0 } from './geo'
 /**
  * The ward's small life: the clock on the ward's wall going round toward six, the drip in Rachel's bottle, the flowers
  * on her nightstand nodding in the draught from the window, the corridor's ceiling fan turning, the nursery's mobile
- * turning over the bassinets, and the soft dark shapes close to the lens at the foot of the frame (a visitor's chair by
+ * turning over the bassinets, and the dark shapes close to the lens at the foot of the frame (a visitor's chair by
  * her bed; a trolley and a potted palm in the hall by the nursery) that slide by faster than the room as the camera goes.
  */
 
@@ -182,20 +182,14 @@ export function mobile(pen: Pen, t: number, at: Pt, top: number): void {
 
 const FG = '#26302B'
 
-/** A shape close to the lens, out of focus: its body dark and a little hazed, its edge going soft in two steps. */
-function soft(pen: Pen, path: Path2D, a: number): void {
+/**
+ * A shape close to the lens: a plain dark silhouette, a little lighter than black, as the front rows are in London and
+ * Tokyo. No haze is drawn round its edge to stand for the focus: that ring read as a halo.
+ */
+function silhouette(pen: Pen, path: Path2D, a: number): void {
   const ctx = ctxOf(pen.p)
-  const { k } = pen
   ctx.save()
-  ctx.lineJoin = 'round'
-  ctx.lineCap = 'round'
-  ctx.strokeStyle = rgba(pen, FG, 0.09 * a)
-  ctx.lineWidth = 0.13 * k
-  ctx.stroke(path)
-  ctx.strokeStyle = rgba(pen, FG, 0.2 * a)
-  ctx.lineWidth = 0.065 * k
-  ctx.stroke(path)
-  ctx.fillStyle = rgba(pen, FG, 0.62 * a)
+  ctx.fillStyle = rgba(pen, FG, 0.7 * a)
   ctx.fill(path, 'evenodd')
   ctx.restore()
 }
@@ -280,15 +274,15 @@ export function foreground(pen: Pen, t: number, f: Frame, marty: Pt): void {
   const ward = shiftOf(CHAIR_AT)
   if (f.x1 > 2.0 + ward[0] && f.x0 < 3.0 + ward[0]) {
     const a = vis * clearOf([2.1, 0.2, 3.0, 1.6], ward, marty)
-    if (a > 0.01) layer(pen, f, d, () => soft(pen, chair(pen), a), CHAIR_AT)
+    if (a > 0.01) layer(pen, f, d, () => silhouette(pen, chair(pen), a), CHAIR_AT)
   }
   const hall = shiftOf(HALL_AT)
   if (f.x1 > -12.6 + hall[0] && f.x0 < -11.1 + hall[0]) {
     const a = vis * clearOf([-12.55, 0.55, -11.15, 1.7], hall, marty)
-    if (a > 0.01) layer(pen, f, d, () => soft(pen, trolley(pen), a), HALL_AT)
+    if (a > 0.01) layer(pen, f, d, () => silhouette(pen, trolley(pen), a), HALL_AT)
   }
   if (f.x1 > -6.0 + hall[0] && f.x0 < -4.1 + hall[0]) {
     const a = vis * clearOf([-5.95, 0.3, -4.15, 1.75], hall, marty)
-    if (a > 0.01) layer(pen, f, d, () => soft(pen, palm(pen, t), a), HALL_AT)
+    if (a > 0.01) layer(pen, f, d, () => silhouette(pen, palm(pen, t), a), HALL_AT)
   }
 }
