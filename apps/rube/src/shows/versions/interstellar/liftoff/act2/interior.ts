@@ -2,6 +2,8 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, frame, hash, scenery, smooth } from '../kit'
 import { DUST } from '../worlds'
+import { airAt } from './daylight'
+import { drawAirship, drawClouds, drawCylinder, drawFliers } from './depth'
 import { RIM_R } from './station'
 
 /**
@@ -45,16 +47,25 @@ export const interior = scenery<InteriorState>({
       p.circle(X(ax + Math.cos(a) * r), X(ay + Math.sin(a) * r), 1.6)
     }
 
-    // The air inside: brightest round the spindle, a warm haze down by the land.
+    // The air inside: brightest round the spindle, a warm haze down by the land, graded through the station's day
+    // (`daylight.ts`).
+    const tone = airAt(t, lit)
     const air = ctx.createRadialGradient(X(ax), X(ay), X(0.5), X(ax), X(ay), X(RIM_R))
-    air.addColorStop(0, mixHex('#3B4660', '#F7F4EA', lit))
-    air.addColorStop(0.5, mixHex('#2E3850', '#DCE5E1', lit))
-    air.addColorStop(0.86, mixHex('#2A2E3E', '#E5DDC6', lit))
-    air.addColorStop(1, mixHex('#252938', '#CDBA94', lit))
+    air.addColorStop(0, tone.center)
+    air.addColorStop(0.5, tone.mid)
+    air.addColorStop(0.86, tone.edge)
+    air.addColorStop(1, tone.rim)
     ctx.fillStyle = air
     ctx.beginPath()
     ctx.arc(X(ax), X(ay), X(RIM_R), 0, Math.PI * 2)
     ctx.fill()
+
+    // The rest of the station, going away from the camera down its length (`depth.ts`), and its weather.
+    const cam: Pt = [f.cx, f.cy]
+    drawCylinder(p, k, s.axis, cam, t, tone, lit, ink)
+    drawClouds(p, k, s.axis, cam, t, tone, lit, ink)
+    drawAirship(p, k, s.axis, cam, t, tone, lit, ink)
+    drawFliers(p, k, s.axis, t, lit, ink)
 
     // The spokes, from the hub out to the land: pale tubes seen through the air, so up close they read as a structure
     // going up out of the frame, not a stray line.
@@ -149,12 +160,11 @@ export const interior = scenery<InteriorState>({
       p.pop()
     }
 
-    // The spindle at the axis: the station's light, lit when the lights come up.
-    const glow = ctx.createRadialGradient(X(ax), X(ay), 0, X(ax), X(ay), X(3))
-    glow.addColorStop(0, `rgba(255, 246, 214, ${0.8 * lit})`)
-    glow.addColorStop(1, 'rgba(255, 246, 214, 0)')
-    ctx.fillStyle = glow
-    ctx.fillRect(X(ax - 3), X(ay - 3), X(6), X(6))
+    // The spindle at the axis: the station's light, lit when the lights come up. Its light is the air's own brightness
+    // round it; the lamp itself is a flat pale collar.
+    p.noStroke()
+    p.fill(alpha(p, DUST.light, 0.5 * lit))
+    p.circle(X(ax), X(ay), X(1.7))
     p.stroke(ink)
     p.strokeWeight(weight)
     p.fill(lit > 0.5 ? DUST.light : '#8A8578')
