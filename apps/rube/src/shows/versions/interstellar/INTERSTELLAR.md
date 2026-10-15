@@ -190,8 +190,8 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 | 235.5 | 212 to 227 | Edmunds' planet | On 212 the far side opens at the sphere's centre, and the camera whips through to a desert world at dawn: a dark sky, a thin gold band, Gargantua small and high. The Ranger comes out of the far mouth on 213 and lands in the real order, one stage a beat. A pitch-up, four retro burns, the drogue mortar, and the chute opening reefed and then in two steps. The heat shield drops, the chute is cut and the belly engines light, a landing leg comes down on each of 225 and 226, and the flare. |
 | 251.5 | 228 | Edmunds' planet | Touchdown on the cue's loudest bar. It throws a skirt of dust out hard and low both ways, which rolls up as it slows and hangs in the dawn light, thinning, until the lamp. |
 | 252.5 | 229 to 232 | Brand's camp | The canopy swings open, the ramp slams down (230), and **Brand**, the blue ball, sets off from the cairn she built for Edmunds, across her camp toward him. The seat kicks him out over the nose (230½), he lands on the ramp (231½), rolls down it and stops at the foot of the lamp, and on the last hit (232) the lamp lights. |
-| 255.5 to 262.7 | the stop | Cooper meets Amelia | The music stops dead. He rolls off the lamp's plate toward her, and **they meet under the lamp** on the next beat (256.49 s), easing into each other; the lamp swells once. They rest together while the camera draws back over the camp: the dome with its porthole lit, the flag, the cairn, her helmet set down on a rock. The sun's edge comes up behind the cairn. |
-| 261.4 to 291 | silence | the credits | Over the two of them at the camp at dawn, while the camera goes on drawing back, the sun clears the horizon. |
+| 255.5 to 262.7 | the stop | Cooper meets Amelia | The music stops dead. He rolls off the lamp's plate toward her, and **they meet under the lamp** on the next beat (256.49 s), easing into each other; the lamp's pool swells once. They rest together while the camera draws back over the camp: the dome with its porthole lit, the flag, the cairn, her helmet set down on a rock. The sun's edge comes up on the horizon. |
+| 261.4 to 291 | silence | the credits | Over the two of them at the camp at dawn. The camera goes on drawing back and cranes slowly up over the plain to the end, so the ground opens out under the eye and what she has made here comes into the frame: her windmill pumping into its tank, the channel across the plain catching the dawn, a field of young corn in rows, a hoop house, panels turning to the sun as it clears the horizon, her rover and its tracks. The last frame is a farm at dawn. |
 
 Eight Act II beats are unstruck, on purpose:
 - **113:** the camera swoops back in from the whole ring to the house, and the move is the event. A mechanism small enough to fit the kitchen would not read at that distance.
@@ -201,7 +201,7 @@ Eight Act II beats are unstruck, on purpose:
 
 ## End credits
 
-The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a few seconds later. At 261.4 s, as the dome's porthole lights, the credits begin. They run in silence to 291 s, while the camera keeps drawing back into the sky and the sun comes all the way over the horizon behind the cairn.
+The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a few seconds later. At 261.4 s, as the dome's porthole lights, the credits begin. They run in silence to 291 s, while the camera draws back and cranes up over her farm on the plain and the sun comes all the way over the horizon.
 
 **How a card plays.**
 - The stars nearest the card's place drift together into a small, faintly lit cloud, high on the right of the sky; Gargantua hangs on the left.
