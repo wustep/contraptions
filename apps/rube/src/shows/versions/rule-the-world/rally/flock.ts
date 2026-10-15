@@ -37,7 +37,8 @@ const WAVE_TO = HOME - 0.6
 
 /* ------------------------------------------------------------------ the flock */
 
-const N = 440
+/** A loft's flock, as a boy on a roof kept it: enough to wheel as one, few enough to read as birds when they pass. */
+const N = 180
 /** How far in front of the building (or behind it, negative) the wheel goes, in the depth `deep` uses in `finale.ts`. */
 const NEAR = 9
 const FAR = 10
@@ -83,7 +84,7 @@ let birds: Bird[] | null = null
 function flock(roof: number): Bird[] {
   if (birds) return birds
   birds = Array.from({ length: N }, (_, i): Bird => {
-    const out = i % 13 === 0 && i / 13 < 32
+    const out = i % 6 === 0 && i / 6 < 30
     return {
       lag: hash(i, 4, 61),
       up: gauss(i, 62),
@@ -94,7 +95,7 @@ function flock(roof: number): Bird[] {
       go: REL + 1.6 * Math.pow(hash(i, 8, 61), 1.3),
       // A few are still flying round the loft at the end.
       land: i % 5 === 2 ? HOME + 8.4 + 1.5 * hash(i, 9, 61) : HOME + 2.6 + 3.8 * hash(i, 9, 61),
-      perch: out ? perchOf(i / 13, roof) : null,
+      perch: out ? perchOf(i / 6, roof) : null,
     }
   })
   return birds
@@ -223,8 +224,8 @@ const css = (hex: string, a: number) => {
  * The birds' tones: dark against the dawn low down, the grey of their backs against the night still overhead, and their
  * undersides as they bank.
  */
-const TONES = ['#2E2838', '#8A7C94', '#E0D2D4']
-const TONE_A = [0.94, 0.95, 0.95]
+const TONES = ['#2E2838', '#8A7C94', '#E0D2D4', '#58525F']
+const TONE_A = [0.94, 0.95, 0.95, 0.95]
 
 export interface View {
   cx: number
@@ -260,10 +261,11 @@ export function drawFlock(ctx: CanvasRenderingContext2D, k: number, v: View, t: 
     const roll = 0.45 * at.bank * at.turn * hw
     // How far down the sky it is (0 at the frame's top): the night overhead, the dawn lower.
     const low = (y - (v.cy - v.H / 2)) / v.H
-    // Against the night, or the building's dark face, their backs are grey and their turned undersides pale; against
-    // the bright sky low down they are dark, and only go grey as they turn.
-    const dark = low < 0.24 || (side === 'front' && at.y > roof - 0.6 && at.x > face[0] && at.x < face[1])
-    const tone = dark ? (at.bank > 0.55 ? 2 : 1) : at.bank > 0.55 ? 1 : 0
+    // Against the night still overhead their backs are grey and their turned undersides pale; against the bright sky
+    // low down they are dark, and only go grey as they turn. Across the building's face, with its rooms behind them,
+    // dark and lit, they are the slate of a pigeon's back however they turn: nothing pale over the rooms.
+    const onFace = side === 'front' && at.y > roof - 0.6 && at.x > face[0] && at.x < face[1]
+    const tone = onFace ? 3 : low < 0.24 ? (at.bank > 0.55 ? 2 : 1) : at.bank > 0.55 ? 1 : 0
     const P = paths[tone]
     P.moveTo((x - hw) * k, (y - up + roll) * k)
     P.lineTo((x - 0.2 * hw) * k, (y - 0.13 * hw) * k)
