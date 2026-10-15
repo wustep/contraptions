@@ -361,6 +361,22 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   for (const [x, y] of MOUNTAIN) p.vertex(X(k, x), X(k, y + dy))
   p.vertex(X(k, MOUNTAIN[MOUNTAIN.length - 1][0]), X(k, bottom))
   p.endShape(p.CLOSE)
+  // The evening coming on: as the number nears its end the cloth's light goes from the mountain's foot up, its face
+  // going into shade a little at a time, so the hour passes while they climb (the lamps go out into the dark).
+  const shade = smooth(t, BURST + 8, 171.2)
+  if (shade > 0.01) {
+    const edge = -3.2 - 7.4 * shade + dy
+    const sg = ctx.createLinearGradient(0, X(k, edge - 1.8), 0, X(k, edge + 0.6))
+    sg.addColorStop(0, rgba(M.hillDeep, 0))
+    sg.addColorStop(1, rgba(M.hillDeep, 0.34 * shade))
+    p.fill(M.hillDeep)
+    ctx.fillStyle = sg
+    p.beginShape()
+    p.vertex(X(k, MOUNTAIN[0][0]), X(k, bottom))
+    for (const [x, y] of MOUNTAIN) p.vertex(X(k, x), X(k, y + dy))
+    p.vertex(X(k, MOUNTAIN[MOUNTAIN.length - 1][0]), X(k, bottom))
+    p.endShape(p.CLOSE)
+  }
   p.noFill()
   for (const [down, a] of [[1.1, 0.22], [2.6, 0.16], [4.4, 0.12]] as const) {
     p.stroke(rgba(M.skyMid, a))
@@ -531,7 +547,8 @@ function drawFloor(p: p5, c: Ctx, t: number): void {
     for (let x = Math.ceil((x0 + 0.2) / step) * step; x < x1 - 0.2; x += step) {
       const on = smooth(reach - Math.abs(x - DOOR_X), 0.6, 2.2)
       if (on <= 0.01) continue
-      glow(p, k, x, front + 0.08, 0.75, M.lamp, 0.22 * on, 1.1, 1.0)
+      // Its light falls down the dark face under it: on the face, not round the lamp.
+      glow(p, k, x, front + 0.32, 0.5, M.lamp, 0.16 * on, 1.0, 0.75)
       solid(p, ink, weight * 0.45, mixHex(M.skyTop, ink, 0.4))
       p.arc(X(k, x), X(k, front + 0.02), X(k, 0.3), X(k, 0.22), Math.PI, Math.PI * 2, p.CHORD)
       p.noStroke()
@@ -556,8 +573,8 @@ function drawGrid(p: p5, c: Ctx, t: number): void {
     p.rect(X(k, x + 0.55), X(k, y + 0.04), X(k, 0.26), X(k, 0.2), X(k, 0.04))
     beam(p, k, x + 0.68, y + 0.24, x + 0.95, Y_BACK - 0.4, 0.2, 1.5, M.flat, 0.35)
   }
-  // The specials: a lamp on the pipe over each cut-out, dark until its cut-out stands, then struck on with a flash and
-  // left burning warm on it. The set is lit as it builds.
+  // The specials: a lamp on the pipe over each cut-out, dark until its cut-out stands, then switched on and left
+  // burning: its lens lit, and its light a warm pool on the floor at the cut-out's foot. The set is lit as it builds.
   for (const cut of CUTS) {
     const lx = cut.x + 0.25
     const since = t - cut.at
@@ -565,7 +582,7 @@ function drawGrid(p: p5, c: Ctx, t: number): void {
     p.stroke(mixHex(M.shadow, ink, 0.5))
     p.strokeWeight(Math.max(1, weight * 0.6))
     p.line(X(k, lx), X(k, y), X(k, lx), X(k, y + 0.16))
-    if (on > 0) beam(p, k, lx, y + 0.38, cut.x, HINGE - 0.1, 0.16, 1.9, M.lamp, 0.2 * on)
+    if (on > 0) glow(p, k, cut.x, FLOOR + 0.04, 0.85, M.lamp, 0.2 * on, 1.3, 0.3)
     p.push()
     p.translate(X(k, lx), X(k, y + 0.24))
     p.rotate(Math.atan2(HINGE - y, cut.x - lx) - Math.PI / 2)
