@@ -4,6 +4,7 @@ import { expose, exposure, finale, flash, pull, type Exposure } from './music-sy
 import { dayLand, nightLand } from './music-sync/land'
 import { scenery } from './music-sync/screen'
 import { DressedShow } from './music-sync/show'
+import { follow, spot, type Spot } from './music-sync/spot'
 import data from './opus55-music-sync.generated.json'
 
 /** Written by `npm run generate:cornfield:opus55`. Stock placements only; nothing here moves a machine. */
@@ -15,8 +16,9 @@ const ticket = fair.pieces.find((p) => p.spec.name === 'ticket')!
 const door = fair.pieces.at(-1)!
 /** The photograph: the booth's flash, then once the ball is through the last portal, the long draw back. */
 const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, 97)
-/** The run through the fair, taken once, the first time the photograph is drawn. */
+/** The run through the fair, taken once, the first time the photograph is drawn; the follow spot, the first time it is. */
 let run: Exposure | null = null
+let lit: Spot | null = null
 
 /** The machine in a cornfield: the afternoon over the Forest, the night round the Arcade (`music-sync/`). */
 export const show: DressedShow = new DressedShow(score, (i, u) => {
@@ -27,6 +29,8 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
     behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon))],
     over: [scenery('photograph', () => {}, (p, c) => {
       const t = map.begin + c.t
+      lit ??= spot(show, map, door.begin)
+      follow(p, c, row, t, lit, '#0D0B20')
       flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
       if (t <= photo.from) return
       run ??= expose(show, 90, door.begin + 0.3)
