@@ -3,7 +3,7 @@ import { laneAt } from '../../../../../parts'
 import { box, part, scenery, type PartShot } from '../kit'
 import { at, SEAM } from '../music'
 import { BEGIN, BUMPS, END, heli, IN, JUMP, LIFT, onHeli, plan, STEP, STROBES, SURF, WIDE_FROM, WIDE_TO } from './sky-plan'
-import { drawBoat, drawHeli, drawParcel, drawSkySet, drawWash, drawWisps, parcelAt } from './sky-draw'
+import { drawBoat, drawHeli, drawParcel, drawSkySet, drawWash, parcelAt } from './sky-draw'
 import { ctxOf } from './paint'
 import { WALTER_WARM } from '../worlds'
 
@@ -62,12 +62,6 @@ export const helicopter = part<State>(
       const w = laneAt(s.lane, c.t)
       const q = parcelAt(t, [w.x, w.y])
       if (!q.local) drawParcel(g, c.k, q.p[0], q.p[1], q.rot)
-      g.restore()
-    },
-    over: (p, _s, c) => {
-      const g = ctxOf(p)
-      g.save()
-      drawWisps(p, c.k, BEGIN + c.t, at(28), WIDE_FROM)
       g.restore()
     },
   },

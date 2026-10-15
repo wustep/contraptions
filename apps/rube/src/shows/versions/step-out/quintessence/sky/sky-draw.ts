@@ -2,8 +2,9 @@ import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { frame, hash, knock, lastOf, smooth } from '../kit'
 import { drawBoatAbove } from '../sea/boat'
-import { beatPhase, BEGIN, BUMPS, H, heli, IN, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF } from './sky-plan'
+import { beatPhase, BEGIN, BUMPS, H, heli, IN, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF, WIDE_FROM } from './sky-plan'
 import { ctxOf, glow, mix, oval, poly, rgba, rrect, vgrad, type C2 } from './paint'
+import { drawBanks, drawBergs, drawDeck, drawGlitter, drawRanges, drawSkein, drawSun, drawSunShafts, drawSwell, drawTown, F, type Eye } from './air'
 
 /**
  * How the sky is drawn (B3's): the harbour and its pad, the overcast, the grey-green sea going away to the ice and
@@ -16,7 +17,7 @@ import { ctxOf, glow, mix, oval, poly, rgba, rrect, vgrad, type C2 } from './pai
  */
 
 export const SKY = {
-  top: '#8B979E',
+  top: '#B9C1C3',
   low: '#CDD3D1',
   cloud: '#B4BDBF',
   cloudDark: '#97A2A6',
@@ -44,10 +45,11 @@ export const SKY = {
   pilot: '#11181C',
 }
 
+/** When the skein of birds comes in from ahead, flying the other way. */
+const SKEIN = LIFT + 3.4
+
 /** The camera's eye: where the horizon is (cells), from the frame; never under the water's near edge. */
 export const horizon = (cy: number): number => Math.min(cy, SURF - 0.9)
-/** The plane the action is in, as a distance from the eye. */
-const F = 10
 
 /* ------------------------------------------------------------------ the set */
 
@@ -60,21 +62,26 @@ export function drawSkySet(p: p5, k: number, t: number): void {
   const y1 = f.y1 + 1
   const hz = horizon(f.cy)
   const fh = f.y1 - f.y0
-  // The overcast.
-  g.fillStyle = vgrad(g, k, hz - fh * 0.9, hz, [
-    [0, SKY.top],
-    [0.75, mix(SKY.top, SKY.low, 0.7)],
-    [1, SKY.low],
-  ])
-  g.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (hz - y0 + 0.05) * k)
-  drawClouds(g, k, f, hz, t)
-  drawCoast(g, k, f, hz)
+  const e: Eye = { ...f, hz, fh, fw: f.x1 - f.x0 }
+  // The overcast: pearl, brightening toward the horizon.
+  if (hz > f.y0) {
+    g.fillStyle = vgrad(g, k, hz - fh * 0.9, hz, [
+      [0, SKY.top],
+      [0.75, mix(SKY.top, SKY.low, 0.7)],
+      [1, SKY.low],
+    ])
+    g.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (hz - y0 + 0.05) * k)
+    drawSun(g, k, e, t)
+    drawDeck(g, k, e, t)
+    drawBanks(g, k, e, t)
+    drawRanges(g, k, e, t)
+  }
   // The sea, from the horizon to the near water.
-  const e = SURF - hz
+  const ed = SURF - hz
   g.fillStyle = vgrad(g, k, hz, SURF + 2, [
     [0, SKY.seaFar],
     [0.12, mix(SKY.seaFar, SKY.sea, 0.6)],
-    [Math.min(0.95, e / (e + 2)), SKY.sea],
+    [Math.min(0.95, ed / (ed + 2)), SKY.sea],
     [1, SKY.seaNear],
   ])
   g.fillRect(x0 * k, hz * k, (x1 - x0) * k, (y1 - hz + 1) * k)
@@ -85,119 +92,28 @@ export function drawSkySet(p: p5, k: number, t: number): void {
     [1, rgba(SKY.seaFar, 0)],
   ])
   g.fillRect(x0 * k, (hz - 0.35) * k, (x1 - x0) * k, 0.8 * k)
-  drawHarbourFar(g, k, f, hz)
+  drawTown(g, k, e, t, SURF, SKY.seaFar)
+  drawBergs(g, k, e, t, SURF, SKY.seaFar)
+  drawSwell(g, k, e, t, SURF)
+  drawGlitter(g, k, e, t, SURF)
   drawFloes(g, k, f, hz, t)
+  drawSunShafts(g, k, e, t, SURF)
+  drawSkein(g, k, e, t, SKEIN, WIDE_FROM, 30, -8.4, heli(SKEIN).x + 26, -3, 15)
   drawNearWater(g, k, f, t)
   drawQuay(g, k, f, t)
 }
 
-function drawClouds(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t: number): void {
-  // Long low bands of cloud, slower than anything: the overcast's own texture.
-  for (let i = 0; i < 9; i++) {
-    const depth = 0.9 + 0.08 * hash(i, 1)
-    const span = 26
-    const base = (hash(i, 2) - 0.5) * span + t * 0.05
-    let x = base + f.cx * depth
-    // Keep the bands round the frame: wrap them every `span`.
-    x = f.cx + ((((x - f.cx) % span) + span * 1.5) % span) - span / 2
-    const y = hz - 0.6 - hash(i, 3) * 4.5
-    const w = 3.5 + hash(i, 4) * 6
-    const h = 0.3 + hash(i, 5) * 0.5
-    // Soft-edged: a round glow stretched long.
-    g.save()
-    g.translate(x * k, y * k)
-    g.scale(w / h, 1)
-    const gr = g.createRadialGradient(0, 0, 0, 0, 0, h * k)
-    const col = i % 3 === 0 ? SKY.cloudDark : SKY.cloud
-    const a = 0.3 + 0.25 * hash(i, 6)
-    gr.addColorStop(0, rgba(col, a))
-    gr.addColorStop(0.6, rgba(col, a * 0.6))
-    gr.addColorStop(1, rgba(col, 0))
-    g.fillStyle = gr
-    g.beginPath()
-    g.arc(0, 0, h * k, 0, Math.PI * 2)
-    g.fill()
-    g.restore()
-  }
-}
-
-function drawCoast(g: C2, k: number, f: ReturnType<typeof frame>, hz: number): void {
-  // The far coast of Greenland: low rock under its ice, on the horizon, all but still.
-  const par = 0.985
-  const step = 0.35
-  const xa = Math.floor((f.x0 - 1 - f.cx * par) / step) * step
-  const pts: [number, number][] = []
-  const peaks: [number, number][] = []
-  for (let u = xa; u <= f.x1 + 1 - f.cx * par + step; u += step) {
-    const i = Math.round(u / step)
-    const ridge = 0.25 + 0.55 * Math.max(0, Math.sin(i * 0.13 + 1.3)) * (0.5 + 0.5 * hash(i >> 3, 7)) + 0.12 * hash(i, 8)
-    pts.push([u + f.cx * par, hz - ridge])
-    peaks.push([u + f.cx * par, ridge])
-  }
-  g.fillStyle = mix(SKY.coast, SKY.low, 0.35)
-  g.beginPath()
-  g.moveTo(pts[0][0] * k, (hz + 0.05) * k)
-  for (const [x, y] of pts) g.lineTo(x * k, y * k)
-  g.lineTo(pts[pts.length - 1][0] * k, (hz + 0.05) * k)
-  g.closePath()
-  g.fill()
-  // The ice on the high ground.
-  g.fillStyle = rgba(SKY.snow, 0.85)
-  g.beginPath()
-  g.moveTo(pts[0][0] * k, pts[0][1] * k)
-  for (let i = 0; i < pts.length; i++) {
-    const [x, y] = pts[i]
-    const r = peaks[i][1]
-    g.lineTo(x * k, (y + Math.max(0, r - 0.3) * 0.55) * k)
-  }
-  for (let i = pts.length - 1; i >= 0; i--) g.lineTo(pts[i][0] * k, pts[i][1] * k)
-  g.closePath()
-  g.fill()
-}
-
-/** A point of the sea plane `z` cells from the eye and `gx` along: where it is drawn, and how big. */
-function project(f: ReturnType<typeof frame>, hz: number, gx: number, z: number): { x: number; y: number; s: number } {
-  const s = F / z
-  return { x: f.cx + (gx - f.cx) * s, y: hz + (SURF - hz) * s, s }
-}
-
-function drawHarbourFar(g: C2, k: number, f: ReturnType<typeof frame>, hz: number): void {
-  // Across the harbour from the pad: a low dark shore and a few small houses, muted: Nuuk behind him as he goes.
-  const z = F * 2.4
-  const a = project(f, hz, -34, z)
-  const b = project(f, hz, 16, z)
-  if (b.x < f.x0 - 1 || a.x > f.x1 + 1) return
-  const top = a.y - 0.75 * a.s
-  g.fillStyle = mix(SKY.coast, SKY.seaFar, 0.3)
-  g.beginPath()
-  g.moveTo(a.x * k, (a.y + 0.05) * k)
-  g.lineTo(a.x * k, (top + 0.2 * a.s) * k)
-  g.quadraticCurveTo(((a.x + b.x) / 2) * k, (top - 0.4 * a.s) * k, (b.x - 1.4 * a.s) * k, (top + 0.25 * a.s) * k)
-  g.lineTo(b.x * k, (a.y + 0.05) * k)
-  g.closePath()
-  g.fill()
-  const HOUSES = ['#6F8497', '#A99A6A', '#6E8A78', '#8E9AA4', '#9C8D74', '#E2E4DE']
-  for (let i = 0; i < 16; i++) {
-    const gx = -30 + i * 2.6 + hash(i, 11) * 1.4
-    const q = project(f, hz, gx, z + hash(i, 12) * 4)
-    const w = (0.6 + 0.5 * hash(i, 13)) * q.s
-    const h = (0.45 + 0.4 * hash(i, 14)) * q.s
-    const base = q.y - 0.1 * q.s - hash(i, 15) * 0.35 * q.s
-    g.fillStyle = mix(HOUSES[i % HOUSES.length], SKY.low, 0.35)
-    g.fillRect((q.x - w / 2) * k, (base - h) * k, w * k, h * k)
-    g.fillStyle = mix('#3E4A50', SKY.low, 0.4)
-    poly(g, k, [
-      [q.x - w / 2 - 0.05 * q.s, base - h],
-      [q.x, base - h - 0.3 * q.s],
-      [q.x + w / 2 + 0.05 * q.s, base - h],
-    ])
-    g.fill()
-  }
-}
-
 function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t: number): void {
   const e = SURF - hz
-  // From the far ones in: layer by layer, each a row of floes at its own distance.
+  // From the far ones in: layer by layer, each a row of floes at its own distance. They are gathered by how lost in
+  // the haze they are, five bands, and each band is two fills (the slabs' shaded edges, then their lit tops).
+  const BANDS = 5
+  const shades = Array.from({ length: BANDS }, () => new Path2D())
+  const tops = Array.from({ length: BANDS }, () => new Path2D())
+  const ring = (path: Path2D, pts: [number, number][], dy: number) => {
+    pts.forEach(([x, y], i) => (i ? path.lineTo(x * k, (y + dy) * k) : path.moveTo(x * k, (y + dy) * k)))
+    path.closePath()
+  }
   for (let L = 44; L >= 1; L--) {
     const z = F * Math.pow(1.09, L) + 0.4
     const s = F / z
@@ -205,32 +121,37 @@ function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t:
     const halfW = (f.x1 - f.x0) / 2 + 2
     const n0 = Math.floor((f.cx - halfW / s) / spacing)
     const n1 = Math.ceil((f.cx + halfW / s) / spacing)
+    const y = hz + e * s
+    if (y < f.y0 - 1 || y > f.y1 + 1) continue
     const fog = Math.pow(1 - s, 1.6)
+    const band = Math.min(BANDS - 1, Math.floor(fog * BANDS))
     // The ice thins out away from the coast: floes are fewer near, more toward the far ice.
     const density = 0.22 + 0.4 * (1 - s)
+    const squash = Math.max(0.07, Math.min(0.6, e / z))
     for (let n = n0; n <= n1; n++) {
       if (hash(n, L, 21) > density) continue
       const gx = (n + hash(n, L, 22)) * spacing + Math.sin(t * 0.15 + n) * 0.05
-      const q = project(f, hz, gx, z)
+      const x = f.cx + (gx - f.cx) * s
       const w = (0.35 + 1.4 * Math.pow(hash(n, L, 23), 2)) * s
-      const squash = Math.max(0.07, Math.min(0.6, e / z))
+      if (x + w < f.x0 - 0.5 || x - w > f.x1 + 0.5) continue
       const h = w * squash
-      const fill = mix(SKY.floe, SKY.seaFar, fog * 0.75)
-      const shade = mix(SKY.floeShade, SKY.seaFar, fog * 0.7)
       // An uneven slab: its top lit, its near edge in shadow.
       const pts: [number, number][] = []
       for (let i = 0; i < 7; i++) {
         const a = (i / 7) * Math.PI * 2
         const r = 0.75 + 0.35 * hash(n, L, 30 + i)
-        pts.push([q.x + Math.cos(a) * w * r, q.y + Math.sin(a) * h * r])
+        pts.push([x + Math.cos(a) * w * r, y + Math.sin(a) * h * r])
       }
-      poly(g, k, pts.map(([x, y]) => [x, y + h * 0.45]))
-      g.fillStyle = shade
-      g.fill()
-      poly(g, k, pts)
-      g.fillStyle = fill
-      g.fill()
+      ring(shades[band], pts, h * 0.45)
+      ring(tops[band], pts, 0)
     }
+  }
+  for (let b = BANDS - 1; b >= 0; b--) {
+    const fog = (b + 0.5) / BANDS
+    g.fillStyle = mix(SKY.floeShade, SKY.seaFar, fog * 0.7)
+    g.fill(shades[b])
+    g.fillStyle = mix(SKY.floe, SKY.seaFar, fog * 0.75)
+    g.fill(tops[b])
   }
 }
 
@@ -243,17 +164,102 @@ function drawNearWater(g: C2, k: number, f: ReturnType<typeof frame>, t: number)
     [1, SKY.seaDeep],
   ])
   g.fillRect((f.x0 - 1) * k, SURF * k, (f.x1 - f.x0 + 2) * k, (f.y1 - SURF + 2) * k)
-  g.strokeStyle = rgba(SKY.low, 0.28)
-  g.lineWidth = Math.max(0.8, 0.02 * k)
+  const glints = new Path2D()
   for (let i = 0; i < 40; i++) {
     const y = SURF + 0.06 + Math.pow(hash(i, 41), 1.5) * 2.6
     const x = Math.floor(f.x0) - 2 + hash(i, 42) * (f.x1 - f.x0 + 4) + Math.sin(t * 0.4 + i) * 0.2
     const w = 0.3 + hash(i, 43) * 0.9 * (1 + (y - SURF))
-    g.beginPath()
-    g.moveTo(x * k, y * k)
-    g.lineTo((x + w) * k, y * k)
-    g.stroke()
+    glints.moveTo(x * k, y * k)
+    glints.lineTo((x + w) * k, y * k)
   }
+  g.strokeStyle = rgba(SKY.low, 0.28)
+  g.lineWidth = Math.max(0.8, 0.02 * k)
+  g.stroke(glints)
+}
+
+/**
+ * The quay's face: its courses of stone and their joints, old tyres hung on chains for fenders, an iron ladder down to
+ * the water, and the wet dark of it running down from the top. One stroke for the joints, one fill for the tyres.
+ */
+function drawQuayFace(g: C2, k: number, xa: number, xb: number, top: number, t: number): void {
+  if (xb <= xa) return
+  const foot = SURF + 0.3
+  const joints = new Path2D()
+  let row = 0
+  for (let y = top + 0.3; y < foot; y += 0.3, row++) {
+    joints.moveTo(xa * k, y * k)
+    joints.lineTo(xb * k, y * k)
+    for (let x = Math.floor(xa / 1.1) * 1.1 + (row % 2) * 0.55; x < xb; x += 1.1) {
+      joints.moveTo(x * k, (y - 0.3) * k)
+      joints.lineTo(x * k, y * k)
+    }
+  }
+  g.strokeStyle = rgba('#3E4744', 0.32)
+  g.lineWidth = Math.max(0.8, 0.018 * k)
+  g.stroke(joints)
+  // Wet streaks down from the edge.
+  const wet = new Path2D()
+  for (let i = Math.floor(xa / 0.45); i * 0.45 < xb; i++) {
+    if (hash(i, 111) < 0.55) continue
+    const x = i * 0.45 + hash(i, 112) * 0.3
+    wet.rect(x * k, (top + 0.04) * k, (0.03 + 0.05 * hash(i, 113)) * k, (0.2 + 0.7 * hash(i, 114)) * k)
+  }
+  g.fillStyle = rgba('#2F3735', 0.22)
+  g.fill(wet)
+  // Tyres on chains, and the ladder.
+  const tyres = new Path2D()
+  const chains = new Path2D()
+  for (let x = Math.ceil((xa - 1.75) / 3.5) * 3.5 + 1.75; x < xb; x += 3.5) {
+    if (x > 6.8) continue
+    const sw = 0.015 * Math.sin(t * 1.1 + x)
+    tyres.moveTo((x + 0.24 + sw) * k, (top + 0.62) * k)
+    tyres.ellipse((x + sw) * k, (top + 0.62) * k, 0.24 * k, 0.3 * k, 0, 0, Math.PI * 2)
+    tyres.moveTo((x + 0.12 + sw) * k, (top + 0.62) * k)
+    tyres.ellipse((x + sw) * k, (top + 0.62) * k, 0.12 * k, 0.17 * k, 0, 0, Math.PI * 2, true)
+    chains.moveTo(x * k, top * k)
+    chains.lineTo((x + sw) * k, (top + 0.33) * k)
+  }
+  g.fillStyle = '#23292A'
+  g.fill(tyres)
+  const lx = 5.7
+  if (lx > xa && lx < xb) {
+    for (const rx of [lx - 0.14, lx + 0.14]) {
+      chains.moveTo(rx * k, (top - 0.12) * k)
+      chains.lineTo(rx * k, (SURF + 0.25) * k)
+    }
+    for (let y = top + 0.12; y < SURF + 0.2; y += 0.17) {
+      chains.moveTo((lx - 0.14) * k, y * k)
+      chains.lineTo((lx + 0.14) * k, y * k)
+    }
+  }
+  g.strokeStyle = '#3A4244'
+  g.lineWidth = Math.max(1, 0.03 * k)
+  g.stroke(chains)
+}
+
+/** Rain lying on the quay's top in puddles that hold the sky; the rotor's wash shivers them into rings as it lifts. */
+function drawPuddles(g: C2, k: number, f: ReturnType<typeof frame>, top: number, back: number, t: number): void {
+  const wash = smooth(t, LIFT - 1.6, LIFT - 0.2) * (1 - smooth(t, LIFT + 1.5, LIFT + 3.5))
+  const pools = new Path2D()
+  const rings = new Path2D()
+  const y = (top + back) / 2 + 0.03
+  for (const [x, w] of [[-8.6, 0.9], [-6.1, 0.6], [-1.6, 1.1], [6.9, 0.35], [-11.8, 0.8]] as [number, number][]) {
+    if (x + w < f.x0 || x - w > f.x1) continue
+    pools.moveTo((x + w) * k, y * k)
+    pools.ellipse(x * k, y * k, w * k, 0.06 * k, 0, 0, Math.PI * 2)
+    // Rings going out from the middle of each, quicker as the wash comes on; a slow few from the drizzle anyway.
+    for (let j = 0; j < 3; j++) {
+      const u = (((t * (0.5 + 1.6 * wash) + j / 3 + x * 0.37) % 1) + 1) % 1
+      const r = 0.08 + u * w * 0.85
+      rings.moveTo((x + r) * k, y * k)
+      rings.ellipse(x * k, y * k, r * k, r * 0.07 * k, 0, 0, Math.PI * 2)
+    }
+  }
+  g.fillStyle = rgba(SKY.low, 0.7)
+  g.fill(pools)
+  g.strokeStyle = rgba('#7F8A89', 0.35 + 0.3 * wash)
+  g.lineWidth = Math.max(0.6, 0.012 * k)
+  g.stroke(rings)
 }
 
 /** The quay at the harbour's edge, the pad on it, the windsock. */
@@ -281,6 +287,8 @@ function drawQuay(g: C2, k: number, f: ReturnType<typeof frame>, t: number): voi
   g.fillRect(xa * k, (SURF - 0.45) * k, (QUAY_X - xa) * k, 0.45 * k)
   g.fillStyle = rgba(SKY.white, 0.22)
   g.fillRect(xa * k, top * k, (QUAY_X - xa) * k, 0.04 * k)
+  drawQuayFace(g, k, Math.max(xa, f.x0 - 1), Math.min(QUAY_X, f.x1 + 1), top, t)
+  drawPuddles(g, k, f, top, back, t)
   // Bollards on the edge.
   for (const bx of [-9.5, -4.5, 6.6]) {
     rrect(g, k, bx - 0.11, top - 0.3, bx + 0.11, top + 0.01, 0.06)
@@ -332,6 +340,34 @@ function drawQuay(g: C2, k: number, f: ReturnType<typeof frame>, t: number): voi
   const m = 4
   poly(g, k, [pts[m], pts[m + 1], lower[8 - m - 1], lower[8 - m]])
   g.fill()
+  // The harbour's flag on its mast at the quay's far end: white with a band of the sea's blue, snapping in the wind
+  // and harder in the wash.
+  const fx = -7.2
+  if (fx > f.x0 - 2 && fx < f.x1 + 1) {
+    g.strokeStyle = '#4A5355'
+    g.lineWidth = Math.max(1, 0.035 * k)
+    g.beginPath()
+    g.moveTo(fx * k, (back + 0.05) * k)
+    g.lineTo(fx * k, -3.1 * k)
+    g.stroke()
+    const hard = 1 + 1.5 * smooth(t, LIFT - 1.2, LIFT + 0.4) * (1 - smooth(t, LIFT + 2, LIFT + 4))
+    const top: [number, number][] = []
+    const bot: [number, number][] = []
+    for (let i = 0; i <= 10; i++) {
+      const u = i / 10
+      const wave = 0.07 * Math.sin(t * 7 * hard - u * 7) * u
+      top.push([fx + u * 1.0, -3.05 + wave + u * 0.06 * (1 - lift)])
+      bot.push([fx + u * 0.95, -2.5 + wave * 1.1 + u * 0.12 * (1 - lift)])
+    }
+    poly(g, k, [...top, ...bot.reverse()])
+    g.fillStyle = '#E6E8E3'
+    g.fill()
+    const mid = top.map(([x, y], i): [number, number] => [x, y + (bot[10 - i][1] - y) * 0.42])
+    const mid2 = top.map(([x, y], i): [number, number] => [x, y + (bot[10 - i][1] - y) * 0.62])
+    poly(g, k, [...mid, ...mid2.reverse()])
+    g.fillStyle = '#4E6F94'
+    g.fill()
+  }
 }
 
 /* ------------------------------------------------------------------ the boat, from the air */
@@ -693,38 +729,3 @@ export function parcelAt(t: number, walter: Pt): { p: Pt; rot: number; local: bo
 }
 
 export { BUMPS, IN, H }
-
-/* ------------------------------------------------------------------ the going */
-
-/**
- * Wisps of low cloud between us and the helicopter in the cruise, going by fast at the frame's top and foot: what
- * says how quick it is when the sea below hardly moves. Never across the middle, where he is.
- */
-export function drawWisps(p: p5, k: number, t: number, from: number, to: number): void {
-  const a = smooth(t, from, from + 1) * (1 - smooth(t, to - 1, to))
-  if (a <= 0.01) return
-  const g = ctxOf(p)
-  const f = frame(p, k)
-  const fh = f.y1 - f.y0
-  const fw = f.x1 - f.x0
-  for (let i = 0; i < 5; i++) {
-    const period = 2.6 + hash(i, 91) * 1.4
-    const u = (((t - from) / period + hash(i, 92)) % 1 + 1) % 1
-    const x = f.x1 + 3 - u * (fw + 9)
-    const band = i % 2 ? 0.08 + 0.08 * hash(i, 93) : 0.86 + 0.1 * hash(i, 93)
-    const y = f.y0 + fh * band
-    const w = 2.2 + hash(i, 94) * 2.5
-    const h = 0.25 + hash(i, 95) * 0.3
-    g.save()
-    g.translate(x * k, y * k)
-    g.scale(w / h, 1)
-    const gr = g.createRadialGradient(0, 0, 0, 0, 0, h * k)
-    gr.addColorStop(0, rgba('#E4E8E7', 0.42 * a))
-    gr.addColorStop(1, rgba('#E4E8E7', 0))
-    g.fillStyle = gr
-    g.beginPath()
-    g.arc(0, 0, h * k, 0, Math.PI * 2)
-    g.fill()
-    g.restore()
-  }
-}

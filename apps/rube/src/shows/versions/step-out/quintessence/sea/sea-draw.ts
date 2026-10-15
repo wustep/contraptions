@@ -1,7 +1,9 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
-import { frame, hash, smooth } from '../kit'
+import { hash, smooth } from '../kit'
+import { view } from '../depth'
+import { drawDeepBack, drawSnow, drawWeb } from './deep'
 import { G } from '../physics'
 import { ctxOf, glow, mix, oval, poly, rgba, scribble, vgrad, type C2 } from '../sky/paint'
 import { drawParcel } from '../sky/sky-draw'
@@ -39,13 +41,13 @@ import {
  */
 
 export const SEA = {
-  skin: '#86AEBB',
-  shallow: '#3B6B80',
-  mid: '#1D4257',
-  deep: '#0E2636',
-  abyss: '#06131C',
-  shaft: '#A9CBD4',
-  snow: '#9DBCC6',
+  skin: '#8FC4BA',
+  shallow: '#2D6B6E',
+  mid: '#174349',
+  deep: '#0B272C',
+  abyss: '#041315',
+  shaft: '#A9DEC9',
+  snow: '#A7CBC2',
   bubble: '#D3E6EA',
   hull: '#0B1A22',
   shark: '#08141B',
@@ -77,15 +79,15 @@ export const skinY = (x: number, t: number): number => W + 0.028 * Math.sin(x * 
 
 export function drawUnder(p: p5, k: number, t: number): void {
   const g = ctxOf(p)
-  const f = frame(p, k)
-  if (f.y1 < W - 0.1) return
-  const x0 = f.x0 - 1
-  const x1 = f.x1 + 1
-  const yb = f.y1 + 1
+  const v = view(p, k)
+  if (v.y1 < W - 0.1) return
+  const x0 = v.x0 - 1
+  const x1 = v.x1 + 1
+  const yb = v.y1 + 1
   // The water, from the skin down, its edge the surface's line.
   g.beginPath()
   g.moveTo(x0 * k, yb * k)
-  for (let x = x0; x <= x1 + 0.2; x += 0.2) g.lineTo(x * k, skinY(x, t) * k)
+  for (let x = x0; x <= x1 + 0.25; x += 0.25) g.lineTo(x * k, skinY(x, t) * k)
   g.lineTo(x1 * k, yb * k)
   g.closePath()
   g.fillStyle = vgrad(g, k, W, W + 9, [
@@ -97,54 +99,20 @@ export function drawUnder(p: p5, k: number, t: number): void {
   g.fill()
   g.save()
   g.clip()
-  // The light coming down: slanted shafts, moving slowly, gone by the depths.
-  for (let i = 0; i < 9; i++) {
-    const span = 22
-    let sx = (hash(i, 71) - 0.5) * span + Math.sin(t * 0.11 + i * 1.7) * 0.8
-    sx = f.cx + ((((sx - f.cx * 0.2 - f.cx) % span) + span * 1.5) % span) - span / 2
-    const w = 0.25 + hash(i, 72) * 0.7
-    const lean = 0.22
-    const len = 6 + hash(i, 73) * 3
-    const a = 0.05 + 0.05 * (0.5 + 0.5 * Math.sin(t * 0.4 + i))
-    const gr = g.createLinearGradient(0, W * k, 0, (W + len) * k)
-    gr.addColorStop(0, rgba(SEA.shaft, a))
-    gr.addColorStop(1, rgba(SEA.shaft, 0))
-    g.fillStyle = gr
-    poly(g, k, [
-      [sx, W],
-      [sx + w, W],
-      [sx + w * 1.8 + lean * len, W + len],
-      [sx + lean * len - w * 0.4, W + len],
+  // The far water: its rays, its snow, the school, a jellyfish (`deep.ts`).
+  drawDeepBack(g, v, t)
+  // Under the skin: its light, and the web the swell makes of the sun on it.
+  if (v.y0 < W + 0.8) {
+    g.fillStyle = vgrad(g, k, W, W + 0.5, [
+      [0, rgba(SEA.skin, 0.7)],
+      [0.3, rgba(SEA.skin, 0.2)],
+      [1, rgba(SEA.skin, 0)],
     ])
-    g.fill()
+    g.fillRect(x0 * k, (W - 0.1) * k, (x1 - x0) * k, 0.6 * k)
+    drawWeb(g, v, t, 1)
   }
-  // Under the skin: its light, rippling.
-  g.fillStyle = vgrad(g, k, W, W + 0.5, [
-    [0, rgba(SEA.skin, 0.7)],
-    [0.3, rgba(SEA.skin, 0.2)],
-    [1, rgba(SEA.skin, 0)],
-  ])
-  g.fillRect(x0 * k, (W - 0.1) * k, (x1 - x0) * k, 0.6 * k)
-  g.strokeStyle = rgba(SEA.skin, 0.35)
-  g.lineWidth = Math.max(0.8, 0.02 * k)
-  for (let i = 0; i < 30; i++) {
-    const x = Math.floor(f.x0) - 1 + hash(i, 74) * (f.x1 - f.x0 + 2) + Math.sin(t * 0.7 + i) * 0.15
-    const y = W + 0.05 + hash(i, 75) * 0.25
-    g.beginPath()
-    g.moveTo(x * k, y * k)
-    g.quadraticCurveTo((x + 0.15) * k, (y - 0.04) * k, (x + 0.3 + hash(i, 76) * 0.3) * k, y * k)
-    g.stroke()
-  }
-  // The drift of the sea's snow, slower than him.
-  for (let i = 0; i < 90; i++) {
-    const span = 16
-    const px = ((hash(i, 81) * span + t * 0.05 - f.cx * 0.15) % span + span) % span
-    const py = ((hash(i, 82) * 12 + t * 0.06) % 12 + 12) % 12
-    const x = f.cx - span / 2 + px
-    const y = Math.max(W + 0.2, f.cy - 6) + py
-    if (y < W + 0.15) continue
-    oval(g, k, x, y, 0.012 + 0.018 * hash(i, 83), 0.012 + 0.018 * hash(i, 83), rgba(SEA.snow, 0.18 + 0.2 * hash(i, 84)))
-  }
+  // The snow drifting by at his own distance.
+  drawSnow(g, v, t, 'mid', 1)
   // The boat's hull from below: dark on the light.
   drawHullUnderLocal(g, k)
   g.restore()
@@ -182,16 +150,41 @@ function drawHullUnderLocal(g: C2, k: number): void {
 
 /* ------------------------------------------------------------------ bubbles */
 
-function bubble(g: C2, k: number, x: number, y: number, r: number, a: number): void {
-  if (a <= 0.01) return
-  g.strokeStyle = rgba(SEA.bubble, 0.75 * a)
-  g.lineWidth = Math.max(0.7, r * 0.35 * k)
-  g.beginPath()
-  g.arc(x * k, y * k, r * k, 0, Math.PI * 2)
-  g.stroke()
-  g.fillStyle = rgba(SEA.bubble, 0.18 * a)
-  g.fill()
-  oval(g, k, x - r * 0.35, y - r * 0.35, r * 0.28, r * 0.28, rgba('#FFFFFF', 0.7 * a))
+/**
+ * The bubbles of a frame, gathered and drawn together: a ring, a faint fill and a glint each, in three bands of
+ * brightness, so fifty bubbles are nine paths and not a hundred and fifty fills.
+ */
+class Bubbles {
+  private rings = [new Path2D(), new Path2D(), new Path2D()]
+  private glints = new Path2D()
+  constructor(private k: number) {}
+  add(x: number, y: number, r: number, a: number): void {
+    if (a <= 0.05) return
+    const k = this.k
+    const ring = this.rings[a > 0.7 ? 2 : a > 0.4 ? 1 : 0]
+    ring.moveTo((x + r) * k, y * k)
+    ring.arc(x * k, y * k, r * k, 0, Math.PI * 2)
+    if (a > 0.4) {
+      const gx = x - r * 0.35
+      const gy = y - r * 0.35
+      this.glints.moveTo((gx + r * 0.28) * k, gy * k)
+      this.glints.arc(gx * k, gy * k, r * 0.28 * k, 0, Math.PI * 2)
+    }
+  }
+  draw(g: C2): void {
+    g.save()
+    g.lineWidth = Math.max(0.7, 0.013 * this.k)
+    for (let b = 0; b < 3; b++) {
+      const a = [0.3, 0.6, 1][b]
+      g.fillStyle = rgba(SEA.bubble, 0.18 * a)
+      g.fill(this.rings[b])
+      g.strokeStyle = rgba(SEA.bubble, 0.75 * a)
+      g.stroke(this.rings[b])
+    }
+    g.fillStyle = rgba('#FFFFFF', 0.65)
+    g.fill(this.glints)
+    g.restore()
+  }
 }
 
 /** A bubble let go at `t0` from `p`, its `j`-th: where it is at `t`, and its size; null once it has reached the skin. */
@@ -208,20 +201,22 @@ function rising(t: number, t0: number, p: Pt, j: number, seed: number): { x: num
 
 export function drawBubbles(p: p5, k: number, t: number): void {
   const g = ctxOf(p)
+  const out = new Bubbles(k)
   // The dive: a column of air along his way in, let go as he passed.
   for (let j = 0; j < 46; j++) {
     const te = BEGIN + 0.02 + Math.pow(j / 46, 1.6) * 1.0
     const at = sinking(te)
     const b = rising(t, te, [at[0] + (hash(j, 3) - 0.5) * 0.3, at[1]], j, 91)
-    if (b) bubble(g, k, b.x, b.y, b.r * 1.2, 1 - smooth(t, te + 2.5, te + 4))
+    if (b) out.add(b.x, b.y, b.r * 1.2, 1 - smooth(t, te + 2.5, te + 4))
   }
   // A breath on each of the strong lows.
   PUFFS.forEach((te, i) => {
+    if (t < te || t > te + 6) return
     const at = sinking(te)
     const n = 5 + (i % 3)
     for (let j = 0; j < n; j++) {
       const b = rising(t, te + j * 0.035, [at[0] + 0.02, at[1] - R * 0.8], j, 100 + i)
-      if (b) bubble(g, k, b.x, b.y, b.r, 1)
+      if (b) out.add(b.x, b.y, b.r, 1)
     }
   })
   // The haul: air dragged up with him.
@@ -232,9 +227,10 @@ export function drawBubbles(p: p5, k: number, t: number): void {
       const frac = (te - NET_ON) / (OUT - NET_ON)
       const y0 = at[1] * (1 - frac * frac)
       const b = rising(t, te, [LINE_X + (hash(j, 5) - 0.5) * 0.35, y0 + 0.2], j, 140)
-      if (b) bubble(g, k, b.x, b.y, b.r, 1)
+      if (b) out.add(b.x, b.y, b.r, 1)
     }
   }
+  out.draw(g)
 }
 
 /* ------------------------------------------------------------------ splashes */
@@ -348,7 +344,15 @@ export function drawShark(p: p5, k: number, t: number, front: boolean): void {
   const d = s.y - W
   // Far is faint, nearly the water; near is the darkest thing in the sea.
   const col = mix(waterAt(d), SEA.shark, s.a)
-  if (s.a < 0.6) g.filter = `blur(${Math.max(1, 0.03 * k).toFixed(1)}px)`
+  if (s.a < 0.6) {
+    // Far off, its edge lost in the water: a fainter, larger shape round it.
+    g.save()
+    g.scale(1.045, 1.09)
+    sharkPath(g, k, t)
+    g.fillStyle = rgba(col, 0.45)
+    g.fill()
+    g.restore()
+  }
   sharkPath(g, k, t)
   g.fillStyle = col
   g.fill()

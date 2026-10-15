@@ -1,6 +1,6 @@
 import type { Lane, Pt } from '../../../../../parts'
 import { laneAt } from '../../../../../parts'
-import { box, part, scenery, type PartShot } from '../kit'
+import { box, frame, part, scenery, type PartShot } from '../kit'
 import { WALTER_WARM } from '../worlds'
 import { ctxOf } from '../sky/paint'
 import { drawHeli, drawSkySet } from '../sky/sky-draw'
@@ -57,13 +57,16 @@ export const seaSet = scenery<null>({
     const g = ctxOf(p)
     const t = c.t
     const k = c.k
-    // Above the water: the sky's own overcast, far sea and ice, and the boat, exactly as the sky left them.
-    g.save()
-    g.translate(FROM_SKY[0] * k, FROM_SKY[1] * k)
-    drawSkySet(p, k, t)
-    drawBoatAbove(g, k, SKY_BOAT_X0, SURF, swingAt(t), smooth(t, DECK_ON, DECK_ON + 2.5))
-    if (t < BEGIN + 6) drawHeli(p, k, t)
-    g.restore()
+    // Above the water: the sky's own overcast, far sea and ice, and the boat, exactly as the sky left them. Not drawn
+    // at all while the whole frame is under the skin, where none of it can be seen.
+    if (frame(p, k).y0 < 0.1) {
+      g.save()
+      g.translate(FROM_SKY[0] * k, FROM_SKY[1] * k)
+      drawSkySet(p, k, t)
+      drawBoatAbove(g, k, SKY_BOAT_X0, SURF, swingAt(t), smooth(t, DECK_ON, DECK_ON + 2.5))
+      if (t < BEGIN + 6) drawHeli(p, k, t)
+      g.restore()
+    }
     // And under it.
     g.save()
     drawUnder(p, k, t)
