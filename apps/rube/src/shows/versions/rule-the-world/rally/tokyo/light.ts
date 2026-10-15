@@ -10,9 +10,9 @@ import { C } from './palette'
 
 /**
  * The arena's working light, over and through the house: the spotlights on the roof's truss, of which only the inner
- * pair is ever lit, put on the table with the first stomp and left there, still and faint, until the house goes down;
- * the dust and the cigarette smoke in the one lamp's cone; and the one press flash in the dark stands on the broken-off
- * line. The flash bulbs of the match are the press photographers' at the court's side (`press.ts`), nobody else's.
+ * pair is ever lit, their lenses coming on with the first stomp and going out as the house goes down (their light is
+ * the table's, not a shaft through the air to it); the dust and the cigarette smoke in the one lamp's cone; and the one
+ * press flash in the dark stands on the broken-off line. The flash bulbs of the match are the press photographers' at the court's side (`press.ts`), nobody else's.
  */
 
 /* ------------------------------------------------------------------ the spotlights */
@@ -26,7 +26,6 @@ export const SPOTS = [NET_X - 9.5, NET_X - 5.8, NET_X - 2.6, NET_X + 2.6, NET_X 
 const LIT = [2, 3]
 const ON = STOMPS[0]
 const OFF = LIGHTS_DOWN[2]
-const SPREAD = 0.085
 
 export interface Beam {
   from: Pt
@@ -46,43 +45,6 @@ export function beamsAt(t: number, f: Frame): Beam[] {
   const [dx, dy] = parallax(f, TRUSS_D, HIGH)
   const lit = t < ON ? 0 : Math.min(1, (t - ON) / 0.06) * (1 - smooth(t, OFF, OFF + 0.15))
   return SPOTS.map((x, i) => ({ from: [x + dx, TRUSS_Y + 0.22 + dy] as Pt, to: AIM[i], a: LIT.includes(i) ? lit : 0 }))
-}
-
-/** The lit pair's beams, faint through the house's air, down onto the table: laid over what is behind the table. */
-export function drawBeams(pen: Pen, t: number, f: Frame): void {
-  const beams = beamsAt(t, f)
-  if (!beams.some((b) => b.a > 0.01)) return
-  const ctx = ctxOf(pen.p)
-  const { k } = pen
-  const half = Math.tan(SPREAD / 2)
-  ctx.save()
-  for (const b of beams) {
-    if (b.a <= 0.01) continue
-    const ux = b.to[0] - b.from[0]
-    const uy = b.to[1] - b.from[1]
-    const l = Math.hypot(ux, uy) || 1
-    const dxn = ux / l
-    const dyn = uy / l
-    // On down through the table to the floor.
-    const len = Math.min(16, (FLOOR + 0.3 - b.from[1]) / Math.max(0.1, dyn))
-    const ex = b.from[0] + dxn * len
-    const ey = b.from[1] + dyn * len
-    if (Math.max(b.from[0], ex) + len * half < f.x0 || Math.min(b.from[0], ex) - len * half > f.x1) continue
-    const w = len * half
-    const g = ctx.createLinearGradient(b.from[0] * k, b.from[1] * k, ex * k, ey * k)
-    g.addColorStop(0, rgbaOf(pen, C.beam, 0.08 * b.a))
-    g.addColorStop(0.4, rgbaOf(pen, C.beam, 0.04 * b.a))
-    g.addColorStop(1, rgbaOf(pen, C.beam, 0.02 * b.a))
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo((b.from[0] - dyn * 0.06) * k, (b.from[1] + dxn * 0.06) * k)
-    ctx.lineTo((b.from[0] + dyn * 0.06) * k, (b.from[1] - dxn * 0.06) * k)
-    ctx.lineTo((ex + dyn * w) * k, (ey - dxn * w) * k)
-    ctx.lineTo((ex - dyn * w) * k, (ey + dxn * w) * k)
-    ctx.closePath()
-    ctx.fill()
-  }
-  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the lamp's air */
