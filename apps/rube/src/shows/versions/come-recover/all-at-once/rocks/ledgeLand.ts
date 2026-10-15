@@ -447,13 +447,20 @@ export function paintSlices(
       }
     }
     if (shade) {
+      // One clip for the slice and the buttes on its floor together (all wound the same way, so they add).
+      ctx.save()
+      ctx.beginPath()
       for (const shape of [sl.pts, ...sl.buttes]) {
-        ctx.save()
-        path(ctx, shape, k, true, map)
-        ctx.clip()
-        shade(i, s, map)
-        ctx.restore()
+        shape.forEach((q, j) => {
+          const [x, y] = map(q)
+          if (j === 0) ctx.moveTo(x * k, y * k)
+          else ctx.lineTo(x * k, y * k)
+        })
+        ctx.closePath()
       }
+      ctx.clip()
+      shade(i, s, map)
+      ctx.restore()
     }
     // The haze pooled down in its depths: light, so a gradient.
     const topY = f.cy + (4 - f.cy) * s

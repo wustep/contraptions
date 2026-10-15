@@ -121,6 +121,8 @@ export function paintShade(p: p5, k: number, f: Frame, t: number, i: number, s: 
   const lx1 = f.cx + (f.x1 - f.cx) / s
   const ly0 = f.cy + (f.y0 - f.cy) / s
   const ly1 = f.cy + (f.y1 - f.cy) / s
+  // Only the part of the slice that is rock: above its rim is sky.
+  if (ly1 < 0) return
   const col = mixHex(ROCKS.canyonShade, light.haze, 0.2)
   for (let n = Math.floor((lx0 - drift - 40) / SHADE_PERIOD); n <= Math.floor((lx1 - drift + 40) / SHADE_PERIOD); n++) {
     // A gap in the cloud.
