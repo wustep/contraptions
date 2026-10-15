@@ -3,7 +3,7 @@ import { parallax, pulse, sway, type Frame } from '../depth'
 import { hash } from '../kit'
 import { WIN } from '../music'
 import { ctxOf, type Pen } from '../pen'
-import { box, Fills, Glows, oval, poly, toned } from './batch'
+import { box, Fills, oval, poly, toned } from './batch'
 import { FASCIA, rowDepth, LOWER } from './crowd'
 import { SECTIONS } from './geo'
 import { ANCHOR, heat, HIGH, house, lit, sectionOf, surge } from './mood'
@@ -13,8 +13,9 @@ import { beamsAt, SPOTS, TRUSS_D, TRUSS_Y } from './light'
 /**
  * The arena's build: the roof's truss over the upper tier with the house lights' banks, the spotlights and the
  * scoreboard hung from it; the balcony's front over the lower tier, its bunting
- * and the long banners hanging from it; and the lower string of lanterns over the stands. Everything sways, bobs or
- * lights with the house: the lanterns on the beat once the lights are up, the banners in the draught and on the surges.
+ * and the long banners hanging from it; and the lower string of lanterns over the stands. Everything sways or bobs,
+ * and is seen as the house lights find it: the lanterns on the beat once the lights are up, the banners in the draught
+ * and on the surges. A lamp here is its lit lens or its lit paper, never a glow round it.
  */
 
 /* ------------------------------------------------------------------ the roof's truss */
@@ -61,10 +62,9 @@ export function drawRigging(pen: Pen, t: number, f: Frame): void {
   iron.stroke(ctx, pen.w * 2.4)
   ctx.restore()
 
-  // The house lights' banks under it, four to a section, lit with their sections.
+  // The house lights' banks under it, four to a section, their lenses lit with their sections.
   const housings = new Fills()
   const lenses = new Fills()
-  const glows = new Glows(pen)
   for (let i = 0; i < SECTIONS.length - 1; i++) {
     const a = SECTIONS[i]
     const b = SECTIONS[i + 1]
@@ -74,11 +74,10 @@ export function drawRigging(pen: Pen, t: number, f: Frame): void {
       const lx = a + ((b - a) * (j + 0.5)) / 4 + dx
       box(housings.at(toned(pen, C.iron, 0.6)), k, lx - 0.3, yb, lx + 0.3, yb + 0.2)
       box(lenses.at(toned(pen, '#E8E4D8', 0.12 + 0.88 * L)), k, lx - 0.25, yb + 0.18, lx + 0.25, yb + 0.25)
-      glows.add(lx, yb + 0.25, 0.55, C.lamp, 0.45 * L)
     }
   }
 
-  // The spotlights: a drum on a yoke, turned along its beam, its lens bright while it is on.
+  // The spotlights: a drum on a yoke, turned where it is pointed, its lens lit while it is on (the inner pair).
   const beams = beamsAt(t, f)
   for (let i = 0; i < SPOTS.length; i++) {
     const sx = SPOTS[i] + dx
@@ -94,11 +93,10 @@ export function drawRigging(pen: Pen, t: number, f: Frame): void {
     for (let q = 0; q < pts.length; q += 2) out.push(pts[q] * ca + pts[q + 1] * sa, -pts[q] * sa + pts[q + 1] * ca)
     poly(housings.at(toned(pen, C.iron, 0.7)), k, c[0], c[1], out)
     box(housings.at(toned(pen, C.iron, 0.5)), k, sx - 0.04, yb, sx + 0.04, yb + 0.22)
-    oval(lenses.at(toned(pen, C.beam, 0.2 + 0.8 * bm.a)), k, bm.from[0], bm.from[1], 0.15, 0.15)
-    glows.add(bm.from[0], bm.from[1], 0.9, C.beam, 0.75 * bm.a)
+    oval(lenses.at(toned(pen, C.beam, 0.2 + 0.7 * bm.a)), k, bm.from[0], bm.from[1], 0.15, 0.15)
   }
 
-  // The scoreboard: two panels of lamps, ten lit a side, and his eleventh on the winner; its border chases.
+  // The scoreboard: two panels of lamps, ten lit a side, and his eleventh on the winner.
   const bx0 = BOARD_X[0] + dx
   const bx1 = BOARD_X[1] + dx
   const by0 = BOARD_Y[0] + dy
@@ -121,21 +119,6 @@ export function drawRigging(pen: Pen, t: number, f: Frame): void {
         const y = by0 + 0.2 + Math.floor(q / 6) * 0.2
         const on = q < n
         oval(lenses.at(on ? toned(pen, C.bulbWarm, 0.45 + 0.55 * lights) : toned(pen, C.dark, 1)), k, x, y, 0.055, 0.055)
-        if (on && side > 0 && q === 10) glows.add(x, y, 0.3, C.bulbWarm, 0.9 * Math.exp(-(t - WIN) / 0.6))
-      }
-    }
-    // The border's bulbs chase round through the eruption.
-    const chase = Math.max(0, 1 - Math.abs(t - WIN - 2) / 2.2)
-    if (chase > 0.01) {
-      const per = 2 * (bx1 - bx0 + by1 - by0)
-      const n = 26
-      for (let q = 0; q < n; q++) {
-        const s = (q / n) * per
-        const w = bx1 - bx0
-        const h = by1 - by0
-        const p: Pt = s < w ? [bx0 + s, by0] : s < w + h ? [bx1, by0 + s - w] : s < 2 * w + h ? [bx1 - (s - w - h), by1] : [bx0, by1 - (s - 2 * w - h)]
-        const on = (q + Math.floor(t * 14)) % 3 === 0
-        if (on) glows.add(p[0], p[1], 0.14, C.bulbWarm, 0.8 * chase)
       }
     }
   }
@@ -144,17 +127,16 @@ export function drawRigging(pen: Pen, t: number, f: Frame): void {
   housings.fill(ctx)
   lenses.fill(ctx)
   ctx.restore()
-  glows.draw(ctx)
 }
 
 /* ------------------------------------------------------------------ the lanterns and the bunting */
 
 /**
- * Paper lanterns on a sagging string, red and white by turns, each with its little glow: they sway on their cords and
- * bob with the beat once the house is lit. Gathered into the caller's fills (`cords` to stroke, `caps` and `face` to
- * fill) and its glows.
+ * Paper lanterns on a sagging string, red and white by turns, their paper paler as the house lights come up: they sway
+ * on their cords and bob with the beat once the house is lit. Gathered into the caller's fills (`cords` to stroke,
+ * `caps` and `face` to fill).
  */
-function lanterns(pen: Pen, t: number, dx: number, y: number, sc: number, span: number, seed: number, f: Frame, cords: Fills, caps: Fills, face: Fills, glows: Glows): void {
+function lanterns(pen: Pen, t: number, dx: number, y: number, sc: number, span: number, seed: number, f: Frame, cords: Fills, caps: Fills, face: Fills): void {
   const { k } = pen
   const L = Math.min(1, lit(3, t))
   const beat = pulse(t, 0.3) * house(t)
@@ -185,7 +167,6 @@ function lanterns(pen: Pen, t: number, dx: number, y: number, sc: number, span: 
       const cy = ly + 0.22 * sc
       p.moveTo(lx * k, sag(u) * k)
       p.lineTo(cx * k, ly * k)
-      glows.add(cx, cy, 0.8 * sc, red ? C.lantern : C.lanternPale, 0.1 + 0.2 * L)
       oval(face.at(toned(pen, col, 0.32 + 0.6 * L)), k, cx, cy, 0.2 * sc, 0.25 * sc)
       box(caps.at(cord), k, cx - 0.08 * sc, ly - 0.03 * sc, cx + 0.08 * sc, ly + 0.01 * sc)
       box(caps.at(cord), k, cx - 0.08 * sc, cy + 0.22 * sc, cx + 0.08 * sc, cy + 0.27 * sc)
@@ -319,9 +300,7 @@ export function drawLowLanterns(pen: Pen, t: number, f: Frame): void {
   const cords = new Fills()
   const caps = new Fills()
   const face = new Fills()
-  const glows = new Glows(pen)
-  lanterns(pen, t, dx, y, 0.75, 3.3, 1, f, cords, caps, face, glows)
-  glows.draw(ctx)
+  lanterns(pen, t, dx, y, 0.75, 3.3, 1, f, cords, caps, face)
   ctx.save()
   cords.stroke(ctx, pen.w * 0.45)
   caps.fill(ctx)

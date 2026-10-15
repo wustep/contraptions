@@ -2,22 +2,22 @@ import type { Pt } from '../../../../../parts'
 import { parallax, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
 import { WIN } from '../music'
-import { ctxOf, mix, type Pen } from '../pen'
-import { events, Fills, Glows, toned } from './batch'
+import { ctxOf, type Pen } from '../pen'
+import { events, Fills, toned } from './batch'
 import { rowDepth } from './crowd'
-import { FLOOR, LAMP, LIGHTS_DOWN, TOP, TURN, WAY, XL, XR } from './geo'
+import { FLOOR, LAMP, LIGHTS_DOWN, TOP, TURN, XL, XR } from './geo'
 import { ANCHOR, house } from './mood'
 import { C } from './palette'
 
 /**
  * The paper of the eruption: confetti thrown up out of the stands on the winner and falling back into them; confetti
  * let go from the roof, a cloud of it on the winner and then a slow fall that never quite stops through the quiet,
- * turning and flashing gold, white and red as it comes down through the lamp's cone and lying on the floor once it is
- * down; the streamers thrown down from the stands; and, in front of the lens, a few big soft pieces drifting past.
+ * gold, white and red, turning as it comes down through the lamp's cone and lying on the floor once it is down; and
+ * the streamers thrown down from the stands.
  */
 
 const COLORS = [C.gold, C.paper, C.redHi, C.goldHi, C.paper, C.red]
-/** Its light: the house's, or the lamp's where it is under it; a piece face-on to the light flashes. */
+/** Its light: the house's, or the lamp's where it is under it. */
 function light(x: number, y: number, lights: number): number {
   const top = LAMP[1] + 0.22
   let cone = 0
@@ -29,13 +29,13 @@ function light(x: number, y: number, lights: number): number {
   return Math.min(1, 0.12 + 0.78 * lights + 0.75 * cone)
 }
 
-/** One turning piece into its colour's path: a little card flipping as it falls, so it flashes. */
+/** One turning piece into its colour's path: a little card flipping as it falls, darker as it turns edge-on. */
 function piece(pen: Pen, fills: Fills, x: number, y: number, size: number, spin: number, tilt: number, base: string, f: number): void {
   const { k } = pen
   const face = Math.abs(Math.cos(spin))
   const cw = Math.max(0.15, face) * size
   const chh = size * 0.6
-  const col = face > 0.92 ? toned(pen, mix(base, '#FFFFFF', 0.35), Math.min(1, f + 0.25)) : toned(pen, base, f)
+  const col = toned(pen, base, f * (0.7 + 0.3 * face))
   const ca = Math.cos(tilt)
   const sa = Math.sin(tilt)
   const p = fills.at(col)
@@ -126,29 +126,6 @@ export function drawDropped(pen: Pen, t: number, f: Frame): void {
   lying.fill(ctx)
   fills.fill(ctx)
   ctx.restore()
-}
-
-/**
- * In front of the lens: a few pieces so near they are out of focus, soft discs of gold, white and red that flash as
- * they turn, drifting down faster than the rest. At 1.35 of the table's depth, so they pass the frame faster than the
- * world as the camera goes; never over him.
- */
-export function drawNearPaper(pen: Pen, t: number, f: Frame): void {
-  if (t < WIN + 0.25) return
-  const [dx, dy] = parallax(f, 1.35, ANCHOR)
-  const [mx, my] = WAY.at(t)
-  const lights = house(t)
-  const glows = new Glows(pen)
-  events(t, 151, 0.25, 4, 11, (s) => (s < WIN + 2.5 ? 6 : s < TURN + 2 ? 2.6 : 1.6), (u, id) => {
-    const x = -8 + 21 * hash(id, 152) + 0.35 * Math.sin(u * (1.1 + hash(id, 153)) + id) + dx
-    const y = -6 + fall(u, -1.5, 1.0 + 0.5 * hash(id, 154), 0.6) + dy
-    const r = 0.1 + 0.08 * hash(id, 156)
-    if (x < f.x0 - r || x > f.x1 + r || y < f.y0 - r || y > f.y1 + r) return
-    if (Math.hypot(x - mx, y - my) < 0.75) return
-    const face = Math.abs(Math.cos(u * (2.5 + 3 * hash(id, 155)) + id))
-    glows.add(x, y, r, COLORS[id % COLORS.length], (0.12 + 0.3 * face) * (0.35 + 0.65 * lights), true)
-  })
-  glows.draw(ctxOf(pen.p))
 }
 
 /* ------------------------------------------------------------------ the streamers */

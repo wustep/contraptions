@@ -1,6 +1,6 @@
 /**
  * Tokyo's colours: the lamp's hard white on the dark-green table, the arena's dark, the red and white of the bunting and
- * the lanterns, the crowd in dark blues and browns, the GIs' olive; and for the night's light, the flash bulbs' white,
+ * the lanterns, the crowd in dark blues and browns, the GIs' olive; and for the night's light, the press bulbs' white,
  * the confetti's gold, and the haze the house lights find.
  */
 
@@ -48,7 +48,7 @@ export const C = {
   cloth: '#E9E3D6',
   suit: '#1E1F24',
   card: '#1A1A1C',
-  /** The night's light: flash bulbs, the spotlights, the haze they find, the confetti's gold, a cigarette's end. */
+  /** The night's light: the press bulbs, the spotlights, the haze they find, the confetti's gold, a cigarette's end. */
   bulb: '#FFFFFF',
   bulbWarm: '#FFF1D6',
   beam: '#F4F1E6',
@@ -59,8 +59,6 @@ export const C = {
   ember: '#E2402C',
   smoke: '#A9A7A0',
   navy: '#24305E',
-  lantern: '#FF7A50',
-  lanternPale: '#FFE8C0',
   /** Far off, as the house lights find them: the upper tier, the roof. */
   farRiser: '#231F1D',
   truss: '#16171B',

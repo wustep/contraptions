@@ -3,7 +3,7 @@ import { parallax, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
 import { WIN } from '../music'
 import { ctxOf, type Pen } from '../pen'
-import { box, crown, disc, Fills, Glows, oval, poly, toned } from './batch'
+import { box, crown, disc, Fills, oval, poly, toned } from './batch'
 import { CAPS, GI, LIGHTS_UP, SECTIONS, SERVE, TURN, WAY } from './geo'
 import { ANCHOR, closeness, heat, HIGH, house, lit, risen, sectionOf, spill, surge, swell } from './mood'
 import { C, CLOTHES } from './palette'
@@ -13,8 +13,8 @@ import { C, CLOTHES } from './palette'
  * red wall at the court's edge, each row a little farther off than the one in front (the front row moves with the
  * table as the camera goes, the ninth at 0.85 of its speed), up to the balcony's front; over the balcony the upper
  * tier, far back across the arena at 0.6. Every head in the house follows the ball, a moment behind it. Through the
- * dark exhibition the house is alive without its lights: paper fans going, programmes, the ends of cigarettes glowing
- * and brightening on a draw. With the lights the flags come out, small Japanese and American ones, and wave harder as
+ * dark exhibition the house is alive without its lights: paper fans going, programmes, the red ends of cigarettes
+ * brightening on a draw. With the lights the flags come out, small Japanese and American ones, and wave harder as
  * the match goes; the GIs are up from the serve, the front rows rise through the last bar, and on the winner everyone
  * is up, arms and flags and programmes in the air, and the GIs' caps go up.
  *
@@ -108,7 +108,6 @@ export function drawStands(pen: Pen, t: number, f: Frame): void {
   const props = new Fills()
   const sticks = new Fills()
   const flags = new Fills()
-  const embers = new Glows(pen)
   const dark = toned(pen, C.dark, 1)
   for (let r = LOWER - 1; r >= 0; r--) {
     const [dx, dy] = parallax(f, rowDepth(r), ANCHOR)
@@ -180,10 +179,9 @@ export function drawStands(pen: Pen, t: number, f: Frame): void {
           p.moveTo((X + side * 0.12) * k, (yy - 0.16) * k)
           p.lineTo(hand[0] * k, (hand[1] + 0.03) * k)
         }
-        // The end: a red point, and its glow while it is bright enough to see (in the dark, or on a draw).
+        // The end: a red point, brighter on a draw.
         const glow = (0.3 + 0.7 * draw) * (1 - 0.65 * lights)
         oval(props.at(toned(pen, C.ember, 0.55 + 0.45 * glow)), k, hand[0] + side * 0.03, hand[1], 0.014, 0.014)
-        if (glow > 0.12) embers.add(hand[0] + side * 0.03, hand[1], 0.09, C.ember, glow)
       } else if (holds < 0.1) {
         // A paper fan going in front of the face, quicker as the night gets hotter.
         const sweep = Math.sin(t * (2.6 + 6 * hot) + ph * 30)
@@ -229,7 +227,6 @@ export function drawStands(pen: Pen, t: number, f: Frame): void {
   sticks.stroke(ctx, pen.w * 0.5)
   flags.fill(ctx)
   ctx.restore()
-  embers.draw(ctx)
 }
 
 /**

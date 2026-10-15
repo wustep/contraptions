@@ -1,9 +1,8 @@
 import { parallax, pulse, rising, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
-import { WIN } from '../music'
 import { ctxOf, type Pen } from '../pen'
-import { Glows, oval, rgbaOf } from './batch'
-import { BOW2, FLASH_WIN, LIGHTS_UP, POWER, RALLY, SERVE, WAY } from './geo'
+import { oval, rgbaOf } from './batch'
+import { BOW2, LIGHTS_UP, SERVE, WAY } from './geo'
 import { ANCHOR, heat, house, risen, surge, swell } from './mood'
 import { C } from './palette'
 
@@ -11,17 +10,14 @@ import { C } from './palette'
  * The front row, in the lens: the backs of heads and shoulders along the bottom of the frame, dark and soft, nearer
  * than anything (1.35 of the table's depth, so they pass faster than the world as the camera goes). Hats, a GI's cap, a
  * press photographer with his camera up over the heads. They shift and turn after the ball, come up on the big points
- * with their arms, and are on their feet roaring on the winner; the photographer fires on the power shots and the
- * winner. A cigarette's smoke curls up out of them in the dark. Never over the table, never near him: they keep under
- * the table's legs, and duck where he is low in the frame.
+ * with their arms, and are on their feet roaring on the winner. The light behind them puts a thin rim on their heads.
+ * A cigarette's smoke curls up out of them in the dark. Never over the table, never near him: they keep under the
+ * table's legs, and duck where he is low in the frame.
  */
 
 const D = 1.35
 const GAP = 0.8
 const INK = '#060608'
-
-/** When the photographer in the front row fires. */
-const SNAPS = [...POWER, RALLY[14], WIN + 0.02, FLASH_WIN[1], FLASH_WIN[4], FLASH_WIN[7], BOW2 + 0.05]
 
 export function drawFrontRow(pen: Pen, t: number, f: Frame): void {
   const fh = f.y1 - f.y0
@@ -41,16 +37,12 @@ export function drawFrontRow(pen: Pen, t: number, f: Frame): void {
   const lights = house(t)
   const bottom = f.y1
   const ceiling = bottom - room * 1.25
-  let snap = -Infinity
-  for (const sn of SNAPS) if (sn <= t) snap = sn
-  const fired = Math.exp(-(t - snap) / 0.1)
-  // The rim the light behind them puts on their heads: the lamp, the house, a flash.
-  const rimA = Math.min(1, 0.16 + 0.22 * lights + 0.5 * fired + 0.25 * sg)
+  // The rim the light behind them puts on their heads: the lamp, and the house as it comes up.
+  const rimA = 0.14 + 0.18 * lights
   const soft = new Path2D()
   const core = new Path2D()
   const rim = new Path2D()
   const arms = new Path2D()
-  const glows = new Glows(pen)
   const both = (fn: (p: Path2D, grow: number) => void) => {
     fn(soft, 1.14)
     fn(core, 1)
@@ -95,10 +87,6 @@ export function drawFrontRow(pen: Pen, t: number, f: Frame): void {
       arms.lineTo((cx - 0.18 * s) * k, (cy + 0.1 * s) * k)
       arms.moveTo((X + 0.3 * s) * k, (hy + r * 1.6) * k)
       arms.lineTo((cx + 0.18 * s) * k, (cy + 0.1 * s) * k)
-      if (fired > 0.01) {
-        glows.add(cx + 0.32 * s, cy - 0.14 * s, 2.2 * s, C.bulbWarm, 0.55 * fired)
-        glows.add(cx + 0.32 * s, cy - 0.14 * s, 0.35 * s, C.bulb, fired)
-      }
       rim.moveTo((cx + 0.12 * s) * k, (cy - 0.14 * s) * k)
       rim.arc((cx + 0.32 * s) * k, (cy - 0.14 * s) * k, 0.2 * s * k, Math.PI, Math.PI * 2)
     } else if (kind < 0.32) {
@@ -151,7 +139,6 @@ export function drawFrontRow(pen: Pen, t: number, f: Frame): void {
   ctx.lineWidth = Math.max(1, pen.w * 0.7)
   ctx.stroke(rim)
   ctx.restore()
-  glows.draw(ctx)
   // In the dark, a cigarette's smoke curling up out of the front row.
   if (smoker) {
     const dark = 1 - Math.min(1, lights * 1.5)

@@ -1,8 +1,8 @@
 import type { Pt } from '../../../../../parts'
 import type { Frame } from '../depth'
 import { knock, smooth } from '../kit'
-import { BEAT, BEATS, WIN } from '../music'
-import { houseLight, LIGHTS_DOWN, LIGHTS_UP, NET_X, POWER, RALLY, SECTIONS, SERVE, T0, TURN } from './geo'
+import { BEATS, WIN } from '../music'
+import { houseLight, LIGHTS_DOWN, LIGHTS_UP, NET_X, POWER, RALLY, SECTIONS, SERVE, TURN } from './geo'
 
 /**
  * The house's mood, which every drawing of the arena reads: how bright each section's lights are, how far the crowd is
@@ -45,17 +45,14 @@ export function heat(t: number): number {
   return Math.min(0.75 + 0.25 * smooth(t, WIN, WIN + 0.08), after)
 }
 
-/** The beats since Tokyo began, continuous: whole on every beat. */
-export const beats = (t: number): number => (t - T0) / BEAT
-
 /* ------------------------------------------------------------------ the house lights */
 
 export function sectionOf(x: number): number {
   for (let i = 0; i < SECTIONS.length - 1; i++) if (x < SECTIONS[i + 1]) return i
   return SECTIONS.length - 2
 }
-/** The house lights on section `i` (clamped to the eight), 0 to a little over 1 as they flare on. */
-export const lit = (i: number, t: number): number => Math.max(0, Math.min(1.25, houseLight(Math.max(0, Math.min(7, i)), t)))
+/** The house lights on section `i` (clamped to the eight), 0 to 1. */
+export const lit = (i: number, t: number): number => Math.max(0, Math.min(1, houseLight(Math.max(0, Math.min(7, i)), t)))
 /** The house lights over the whole arena, 0 to 1. */
 export function house(t: number): number {
   let s = 0

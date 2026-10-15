@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { WIN } from '../music'
 import { ctxOf, type Pen } from '../pen'
-import { box, Fills, Glows, oval, poly, toned } from './batch'
+import { box, Fills, oval, poly, toned } from './batch'
 import { BELL, BOW1, BOW2, BOW2_UP, FLASH_WIN, FLOOR, LIGHTS_DOWN, PICK, POWER, RALLY, SERVE, SET } from './geo'
 import { lit, sectionOf } from './mood'
 import { C } from './palette'
@@ -11,7 +11,8 @@ import { C } from './palette'
  * The press at the court's side: two photographers past the judges' table and two past the barrier boards, one of each
  * pair kneeling, in dark suits and hats, each with his press camera and the round reflector of its flash. They shoot
  * the exhibition's bell and bow, Marty's power shots and a stroke here and there, everything on the winner, and the
- * bow at the end; after each shot the hand goes to the reflector for a new bulb.
+ * bow at the end; after each shot the hand goes to the reflector for a new bulb. A shot is the bulb white in its
+ * reflector for a tenth of a second, a little light on the man behind it, and nothing hanging in the air.
  */
 
 interface Snapper {
@@ -62,7 +63,6 @@ export function drawPress(pen: Pen, t: number, f: { x0: number; x1: number; y0: 
   const fills = new Fills()
   const lines = new Fills()
   const thin = new Fills()
-  const glows = new Glows(pen)
   let any = false
   PRESS.forEach((p, n) => {
     if (p.x + 1 < f.x0 || p.x - 1 > f.x1 || FEET - 2 > f.y1) return
@@ -74,7 +74,7 @@ export function drawPress(pen: Pen, t: number, f: { x0: number; x1: number; y0: 
     const swap = Math.max(0, Math.sin(Math.PI * Math.max(0, Math.min(1, (t - last - 0.25) / 0.7))))
     const aim = smooth(t, BELL - 0.7, BELL - 0.25) * (1 - smooth(t, LIGHTS_DOWN[2], LIGHTS_DOWN[3] + 0.5))
     const L = Math.min(1, lit(sectionOf(p.x), t)) * 0.55 + 0.22
-    const lightUp = Math.min(1, L + 0.75 * fl)
+    const lightUp = Math.min(1, L + 0.35 * fl)
     const s = SCALE
     const fx = p.face
     const X = (x: number) => p.x + fx * x * s
@@ -118,16 +118,11 @@ export function drawPress(pen: Pen, t: number, f: { x0: number; x1: number; y0: 
     arms.lineTo(free[0] * k, free[1] * k)
     box(fills.at(toned(pen, '#121214', 0.8 + 0.2 * lightUp)), k, cam[0] - 0.15 * s, cam[1] - 0.12 * s, cam[0] + 0.15 * s, cam[1] + 0.12 * s)
     oval(fills.at(toned(pen, C.ironHi, lightUp)), k, cam[0] + fx * 0.15 * s, cam[1], 0.04 * s, 0.08 * s)
-    // The reflector on its bracket, edge-on; white hot as it fires.
+    // The reflector on its bracket, edge-on; the bulb in it white as it fires.
     const br = thin.at(toned(pen, C.ironHi, lightUp))
     br.moveTo(cam[0] * k, (cam[1] - 0.12 * s) * k)
     br.lineTo(dish[0] * k, dish[1] * k)
-    oval(fills.at(fl > 0.3 ? toned(pen, C.bulb, 1) : toned(pen, '#C8CCD0', 0.35 + 0.5 * lightUp)), k, dish[0] + fx * 0.04 * s, dish[1], 0.06 * s, 0.19 * s)
-    if (fl > 0.01) {
-      glows.add(dish[0] + fx * 0.08 * s, dish[1], 1.7, C.bulbWarm, 0.6 * fl)
-      glows.add(dish[0] + fx * 0.08 * s, dish[1], 0.3, C.bulb, fl)
-      glows.add(p.x + fx * 0.8, FEET + 0.1, 1.4, C.bulbWarm, 0.25 * fl)
-    }
+    oval(fills.at(fl > 0.33 ? toned(pen, C.bulb, 1) : toned(pen, '#C8CCD0', 0.35 + 0.5 * lightUp)), k, dish[0] + fx * 0.04 * s, dish[1], 0.06 * s, 0.19 * s)
   })
   if (!any) return
   const ctx = ctxOf(pen.p)
@@ -137,5 +132,4 @@ export function drawPress(pen: Pen, t: number, f: { x0: number; x1: number; y0: 
   thin.stroke(ctx, pen.w * 0.8)
   fills.fill(ctx)
   ctx.restore()
-  glows.draw(ctx)
 }

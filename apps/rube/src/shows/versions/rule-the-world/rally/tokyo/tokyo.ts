@@ -3,8 +3,8 @@ import { box, frame, part, scenery, type PartShot } from '../kit'
 import { WIN } from '../music'
 import type { Pen } from '../pen'
 import { SEAMS } from '../seams'
-import { drawDropped, drawNearPaper, drawStreamers } from './confetti'
-import { drawArena, drawEndo, drawEndoOver, drawImpacts, drawLamp, drawSprungBat, drawTable } from './draw'
+import { drawDropped, drawStreamers } from './confetti'
+import { drawArena, drawEndo, drawEndoOver, drawLamp, drawSprungBat, drawTable } from './draw'
 import { BACK2, END, IN_PAN, LEAVE, P0, PICK, POWER, RALLY, SET, STROKES, LUNGE, BOARDS, STOMPS, T0, T1, TOKYO_STRIKES, WAY } from './geo'
 import { drawLampAir } from './light'
 import { drawFrontRow } from './near'
@@ -18,8 +18,9 @@ import { drawFrontRow } from './near'
  * Endo's thick sponge bat against Marty's sprung one: Endo driven off the table, lobbing from deep, digging a smash
  * off the floor, countering, and the flat drives coming in hard; every head in the house following the ball, the GIs
  * on their feet, the front rows rising through the last bar. On "Everybody" (WIN)
- * his bat fires with everything and the ball goes past Endo into the boards; the arena erupts (every spotlight on his
- * bat, a wall of flash bulbs, caps, streamers, confetti from the stands and the roof). In the quiet, Endo turns, picks
+ * his bat fires with everything and the ball goes past Endo into the boards; the arena erupts (the whole house on its
+ * feet, arms and flags up, the press firing, the GIs' caps in the air, streamers, confetti from the stands and the
+ * roof). In the quiet, Endo turns, picks
  * him up off the floor, carries him back and sets him on the end line of the table, steps back and bows; the lights go
  * down section by section to the one lamp, the paper still coming down through it, and Endo walks off into the dark.
  *
@@ -33,8 +34,8 @@ const penOf = (p: Parameters<typeof frame>[0], k: number, ink: string, w: number
 
 /**
  * The arena: the roof and its truss, both tiers of the stands and everyone in them, the lanterns, banners and bunting,
- * the floor, the press, the judges, the boards, the flash bulbs and the beams; and over everything, in the lens, the
- * front row and the paper drifting past it.
+ * the floor, the press, the judges, the boards and the spotlights' still pair; and over everything, in the lens, the
+ * front row.
  */
 export const tokyoSet = scenery<null>({
   name: 'tokyo-set',
@@ -48,7 +49,6 @@ export const tokyoSet = scenery<null>({
     const pen = penOf(p, c.k, c.ink, c.weight)
     const f = frame(p, c.k)
     p.push()
-    drawNearPaper(pen, c.t, f)
     drawFrontRow(pen, c.t, f)
     p.pop()
   },
@@ -66,13 +66,12 @@ export const rematch = part<MatchState>(
       const t = s.begin + c.t
       const pen = penOf(p, c.k, c.ink, c.weight)
       p.push()
-      drawLamp(pen, t)
+      drawLamp(pen)
       drawLampAir(pen, t)
       drawStreamers(pen, t)
-      drawTable(pen, t)
+      drawTable(pen)
       drawSprungBat(pen, t)
       drawEndo(pen, t)
-      drawImpacts(pen, t)
       drawDropped(pen, t, frame(p, c.k))
       p.pop()
     },
