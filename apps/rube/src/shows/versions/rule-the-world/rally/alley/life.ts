@@ -942,8 +942,8 @@ export function ashtray(pen: Pen, t: number, at: Pt, s = 1): void {
 
 /** The crawlspace's work lights: where each hangs from the floor, how long its cord, how fast it swings. */
 const WORK: { x: number; L: number; period: number; phase: number }[] = [
-  { x: 4.5, L: 0.3, period: 1.12, phase: 0.4 },
-  { x: 12.5, L: 0.34, period: 1.21, phase: 2.1 },
+  { x: 4.5, L: 0.36, period: 1.2, phase: 0.4 },
+  { x: 12.5, L: 0.4, period: 1.27, phase: 2.1 },
 ]
 /** The posts under the floor, a joist apart (as `draw.ts` lays them). */
 const POST_X0 = WALL[1] + 0.8
@@ -953,9 +953,9 @@ const POST_STEP = 1.6
  * hustle, never quite still.
  */
 function workBulbs(t: number): Pt[] {
-  const kick = Math.exp(-Math.max(0, t - T0) / 5.5)
+  const kick = Math.exp(-Math.max(0, t - T0) / 8)
   return WORK.map((w, i) => {
-    const a = (0.09 + 0.3 * kick) * Math.sin(((t - T0) / w.period) * Math.PI * 2 + w.phase) + 0.03 * sway(t, 31 + i, 2.6)
+    const a = (0.1 + 0.32 * kick) * Math.sin(((t - T0) / w.period) * Math.PI * 2 + w.phase) + 0.03 * sway(t, 31 + i, 2.6)
     return [w.x + Math.sin(a) * w.L, EDGE + 0.1 + Math.cos(a) * w.L] as Pt
   })
 }
@@ -979,10 +979,11 @@ export function crawlLight(pen: Pen, t: number, f: Frame): void {
       const px = POST_X0 + n * POST_STEP + 0.06
       const d = px - b[0]
       if (Math.abs(d) > 2.6 || px < f.x0 - 1 || px > f.x1 + 1) continue
-      // Thrown away from the bulb, the further the post the further its shadow, spreading down the wall.
+      // Thrown away from the bulb, which hangs close in front of the posts: the further the post the further its
+      // shadow, spreading down the wall, and swinging the other way as the bulb swings.
       const near = 1 - Math.abs(d) / 2.6
       const top = EDGE + 0.1
-      const at = (y: number) => px + d * (0.3 + 0.25 * (y - top))
+      const at = (y: number) => px + d * (0.45 + 0.55 * (y - top))
       const w = 0.07 + 0.04 * (1 - near)
       ctx.moveTo((at(top) - w) * k, top * k)
       ctx.lineTo((at(top) + w) * k, top * k)
