@@ -1,5 +1,5 @@
 import type { Pt, Seg } from '../../../../../parts'
-import { beam, box, carried, frame, part, rgba, type PartShot } from '../kit'
+import { beam, box, carried, frame, part, rgba, smooth, type PartShot } from '../kit'
 import { LIPTONS_MAT } from '../worlds'
 import { bloomFront, K0, KISS_MIA, KISS_SEB, mia, seb, T } from './kiss-plan'
 import { cupFront } from './room'
@@ -42,8 +42,16 @@ function hush(t: number): number {
   return down * (1 - Math.min(1, Math.max(0, (t - T.kiss) / (end - T.kiss))) ** 1.6)
 }
 
-/** Where the light stays in the hush: round the piano's end, from the top key down to her. */
+/**
+ * Where the light stays in the hush: round the piano's end as he lifts off the top key, and down with him as he
+ * floats to her, so that when they touch the two of them are the middle of it.
+ */
 const POOL: Pt = [(KISS_SEB[0] + KISS_MIA[0]) / 2 - 0.2, 1.1]
+const POOL_KISS: Pt = [(KISS_SEB[0] + KISS_MIA[0]) / 2, (KISS_SEB[1] + KISS_MIA[1]) / 2 - 0.15]
+function poolAt(t: number): Pt {
+  const u = smooth(t, T.lift, T.kiss - 0.15)
+  return [POOL[0] + (POOL_KISS[0] - POOL[0]) * u, POOL[1] + (POOL_KISS[1] - POOL[1]) * u]
+}
 
 /** The ball sampled from the plan between breakpoints (show seconds), at `hz`, in this frame. */
 function lane(begin: number, marks: number[], hz: number[]): Seg[] {
@@ -73,7 +81,7 @@ export const kiss = part<null>(
       // The hush: the room goes dark round a pool of light on the piano's end, and a soft shaft down into it.
       const a = hush(t)
       if (a <= 0.003) return
-      const [px, py] = toK(POOL)
+      const [px, py] = toK(poolAt(t))
       beam(p, k, px + 0.1, py - 6.8, px, py + 1.4, 0.5, 2.3, LIPTONS_MAT.lamp, 0.1 * (a / 0.8))
       const f = frame(p, k)
       const ctx = p.drawingContext as CanvasRenderingContext2D

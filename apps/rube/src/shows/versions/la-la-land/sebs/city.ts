@@ -5,7 +5,7 @@ import { AT, END_AT, level } from './music'
 import { MIA, NIGHT_MAT, SEBS_MAT } from './worlds'
 import { picture } from './lens'
 import { insideRoom } from './club/room'
-import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, JOIN, KINDLED } from './night/stars'
+import { FIGURE_AT, FIGURE_SIZE, FIGURE_TURN, KINDLED } from './night/stars'
 import { drawPianoFigure } from './piano-figure'
 import { DIP, POLE, skyAngle } from './night/painted-waltz'
 
@@ -71,8 +71,8 @@ const LIGHTS = Array.from({ length: 1400 }, (_, i) => {
 /**
  * Theirs: the constellation the melody lit round the two of them among the stars, as it stood at the dip, found
  * again in the sky over the city at the end. On The End's swell its stars come out one by one in the order they
- * were lit, each joined to the one it was joined to then, in the night's gold among the city's cool stars: high on
- * the right, clear of the credits. In the piano's frame.
+ * were lit, in the night's gold among the city's cool stars: high on the right, clear of the credits. In the piano's
+ * frame.
  */
 const THEIRS_SCALE = 2.15
 const THEIRS_PTS = (() => {
@@ -80,7 +80,7 @@ const THEIRS_PTS = (() => {
   return KINDLED.map((q) => [q.local[0] * Math.cos(a) - q.local[1] * Math.sin(a), q.local[0] * Math.sin(a) + q.local[1] * Math.cos(a)] as Pt)
 })()
 const THEIRS_C: Pt = [THEIRS_PTS.reduce((s, q) => s + q[0], 0) / THEIRS_PTS.length, THEIRS_PTS.reduce((s, q) => s + q[1], 0) / THEIRS_PTS.length]
-export const THEIRS = THEIRS_PTS.map(([x, y], i) => ({ x: 21.5 + (x - THEIRS_C[0]) * THEIRS_SCALE, y: -25.5 + (y - THEIRS_C[1]) * THEIRS_SCALE, size: KINDLED[i].size, join: i ? JOIN[i] : -1 }))
+export const THEIRS = THEIRS_PTS.map(([x, y], i) => ({ x: 21.5 + (x - THEIRS_C[0]) * THEIRS_SCALE, y: -25.5 + (y - THEIRS_C[1]) * THEIRS_SCALE, size: KINDLED[i].size }))
 /**
  * And the figure the planetarium drew round them at the dip, the grand piano, found again round their stars over the
  * city: where it stood against them then, as big against them as it was. It draws on once the last of theirs has
@@ -280,21 +280,9 @@ export const city = scenery<CityState>({
     }
     starDots.fill(ctx)
     if (s.end && t > THEIRS_AT[0] - 0.1) {
-      // Theirs, coming out over the city: each star with a flare as it comes, then the line back to its neighbour.
+      // Theirs, coming out over the city: each star with a flare as it comes; then the piano drawn round them.
       const at = (i: number): Pt => [THEIRS[i].x + sx, THEIRS[i].y + sy]
       ctx.lineCap = 'round'
-      for (let i = 1; i < THEIRS.length; i++) {
-        const u = smooth(t, THEIRS_AT[i] + 0.1, THEIRS_AT[i] + 0.9)
-        if (u <= 0) continue
-        const [x0, y0] = at(THEIRS[i].join)
-        const [x1, y1] = at(i)
-        ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.3 * u)
-        ctx.lineWidth = Math.max(0.6, 0.8 * px)
-        ctx.beginPath()
-        ctx.moveTo(x0 * k, y0 * k)
-        ctx.lineTo((x0 + (x1 - x0) * u) * k, (y0 + (y1 - y0) * u) * k)
-        ctx.stroke()
-      }
       THEIRS.forEach((q, i) => {
         const since = t - THEIRS_AT[i]
         if (since < 0) return
