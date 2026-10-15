@@ -399,7 +399,7 @@ function hillOutline(k: number): Path2D {
 function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
   const { k, ink, weight } = c
   // The near hill stands in its own shadow against the sunset: deep indigo at its foot, a little lighter toward the
-  // crest, the flank away from the sun deeper still, and a rim of the sun's coral along the side and crest facing it.
+  // crest, and a rim of the sun's coral along the side and the crest that face it.
   const hill = paint(15, t, M.hillLit)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const path = hillOutline(k)
@@ -412,23 +412,24 @@ function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
   ctx.save()
   ctx.clip(path)
   if (rim > 0.02) {
-    // Across it: the shadow side on the left, the sunset's warmth coming round the right.
-    const side = ctx.createLinearGradient(X(k, HILL[0][0]), 0, X(k, HILL[HILL.length - 1][0]), 0)
-    side.addColorStop(0, rgba(M.scrub, 0.5 * rim))
-    side.addColorStop(0.45, rgba(M.scrub, 0))
-    side.addColorStop(0.75, rgba(M.skyMid, 0))
-    side.addColorStop(1, rgba(M.skyMid, 0.22 * rim))
-    ctx.fillStyle = side
-    ctx.fillRect(X(k, HILL[0][0]), X(k, YC + FLOOR - 0.2), X(k, HILL[HILL.length - 1][0] - HILL[0][0]), X(k, FLOOR - YC + 0.3))
-    // The chaparral, each clump catching the sunset on its upper right, more on the sunward side.
-    p.noStroke()
-    for (const { x, lobes } of SCRUB) {
-      const lit = rim * (0.45 + 0.5 * smooth(x, 12.5, 18.5))
-      p.fill(rgba(mixHex(M.hillLit, M.skyCoral, 0.5), lit))
-      for (const [lx, ly, r] of lobes) p.circle(X(k, lx + r * 0.22), X(k, ly - r * 0.26), X(k, 1.9 * r))
-      p.fill(rgba(mixHex(M.scrub, M.hillLit, 0.3), rim))
-      for (const [lx, ly, r] of lobes) p.circle(X(k, lx), X(k, ly), X(k, 2 * r))
+    // The chaparral, each clump catching the sunset on its upper right, more on the sunward side. One path a layer.
+    const lit = new Path2D()
+    const body = new Path2D()
+    for (const { lobes } of SCRUB) {
+      for (const [lx, ly, r] of lobes) {
+        lit.moveTo(X(k, lx + r * 1.17), X(k, ly - r * 0.26))
+        lit.arc(X(k, lx + r * 0.22), X(k, ly - r * 0.26), X(k, 0.95 * r), 0, Math.PI * 2)
+        body.moveTo(X(k, lx + r), X(k, ly))
+        body.arc(X(k, lx), X(k, ly), X(k, r), 0, Math.PI * 2)
+      }
     }
+    const sun = ctx.createLinearGradient(X(k, 12.5), 0, X(k, 18.5), 0)
+    sun.addColorStop(0, rgba(mixHex(M.hillLit, M.skyCoral, 0.5), 0.45 * rim))
+    sun.addColorStop(1, rgba(mixHex(M.hillLit, M.skyCoral, 0.5), 0.95 * rim))
+    ctx.fillStyle = sun
+    ctx.fill(lit)
+    ctx.fillStyle = rgba(mixHex(M.scrub, M.hillLit, 0.3), rim)
+    ctx.fill(body)
     // The shade each stretch of road casts on the slope just below it: deepest under its middle, soft at its ends.
     for (const [x0, x1, y] of ROAD) {
       const half = (x1 - x0) / 2 + 0.3
@@ -582,23 +583,44 @@ function drawBush(p: p5, c: Ctx, t: number, i: number): void {
   }
   // The bush: bougainvillea, a round clump of magenta bloom over dark leaves, inked round its outside only. The bloom is
   // in shade low on the left and lit on its upper right, toward the sunset; the leaves show at its foot.
-  const lobes = (dx: number, dy: number, s: number, fill: string, only?: (u: number, v: number) => boolean) => {
-    p.fill(fill)
+  // Each layer is one path of its lobes, filled once.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const lobes = (dx: number, dy: number, s: number, only?: (u: number, v: number) => boolean): Path2D => {
+    const path = new Path2D()
     for (const [u, v, r] of BLOOMS[i]) {
       if (only && !only(u, v)) continue
-      p.ellipse(X(k, cx + (u + dx) * w), X(k, by + (v + dy) * h), X(k, 2 * r * s * w), X(k, 2 * r * s * h))
+      const ex = X(k, cx + (u + dx) * w)
+      const ey = X(k, by + (v + dy) * h)
+      path.moveTo(ex + X(k, r * s * w), ey)
+      path.ellipse(ex, ey, X(k, r * s * w), X(k, r * s * h), 0, 0, Math.PI * 2)
     }
+    return path
   }
-  solid(p, ink, weight * 2, paint(cx, t, M.leaf))
-  lobes(0, 0, 1, paint(cx, t, M.leaf))
-  p.noStroke()
-  lobes(0, 0, 1, paint(cx, t, M.leaf))
-  lobes(0.02, 0.08, 0.98, paint(cx, t, M.leafDeep), (_, v) => v > 0.2)
-  lobes(-0.03, -0.08, 0.86, paint(cx, t, M.bloomDeep))
-  lobes(0.04, -0.15, 0.7, paint(cx, t, M.bloom))
-  lobes(0.12, -0.24, 0.36, paint(cx, t, M.bloomLit), (u, v) => u - v > 0.15)
-  p.fill(rgba(M.flat, 0.9))
-  for (const [u, v] of BLOOMS[i].slice(1, 7)) p.circle(X(k, cx + (u * 0.8 + 0.05) * w), X(k, by + (v * 0.8 - 0.12) * h), X(k, 0.035))
+  const all = lobes(0, 0, 1)
+  ctx.fillStyle = paint(cx, t, M.leaf)
+  ctx.strokeStyle = ink
+  ctx.lineWidth = weight * 2
+  ctx.fill(all)
+  ctx.stroke(all)
+  ctx.fill(all)
+  for (const [path, color] of [
+    [lobes(0.02, 0.08, 0.98, (_, v) => v > 0.2), M.leafDeep],
+    [lobes(-0.03, -0.08, 0.86), M.bloomDeep],
+    [lobes(0.04, -0.15, 0.7), M.bloom],
+    [lobes(0.12, -0.24, 0.36, (u, v) => u - v > 0.15), M.bloomLit],
+  ] as const) {
+    ctx.fillStyle = paint(cx, t, color)
+    ctx.fill(path)
+  }
+  const florets = new Path2D()
+  for (const [u, v] of BLOOMS[i].slice(1, 7)) {
+    const fx = X(k, cx + (u * 0.8 + 0.05) * w)
+    const fy = X(k, by + (v * 0.8 - 0.12) * h)
+    florets.moveTo(fx + X(k, 0.0175), fy)
+    florets.arc(fx, fy, X(k, 0.0175), 0, Math.PI * 2)
+  }
+  ctx.fillStyle = rgba(M.flat, 0.9)
+  ctx.fill(florets)
 }
 
 /** The trap: a plate in the floor, hinged at the door side, that flips up and throws whoever is standing on it. */
@@ -771,22 +793,37 @@ function drawKickLine(p: p5, c: Ctx, t: number): void {
     p.circle(X(k, kx), X(k, ky), X(k, 0.07))
   }
   // Each dancer's skirt: a fringe of her colour hung from the bar over her hip, flaring up in front as she kicks.
-  p.strokeCap(p.ROUND)
+  // One path of strands for the ink under them all, and one for each of the three tones.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const under = new Path2D()
+  const strands = new Map<string, Path2D>()
   for (let i = 0; i < LEGS; i++) {
     const hx = legX(i)
     const color = paint(hx, t, LEG_COLORS[i % LEG_COLORS.length])
     const tones = [color, mixHex(color, M.flat, 0.3), mixHex(color, ink, 0.28)]
-    const strand = (j: number, w: number, tone: string) => {
+    for (let j = 0; j <= 12; j++) {
       const u = j / 12
       const sx = hx - 0.28 + 0.56 * u
       const flare = pose.hip * (0.12 + 0.55 * u * u)
       const L = 0.35 + 0.05 * hash(i, j, 71) - 0.08 * Math.abs(u - 0.5)
-      p.stroke(tone)
-      p.strokeWeight(w)
-      p.line(X(k, sx), X(k, HIP - 0.04), X(k, sx + Math.sin(flare) * L), X(k, HIP - 0.04 + Math.cos(flare) * L))
+      const ends = [X(k, sx), X(k, HIP - 0.04), X(k, sx + Math.sin(flare) * L), X(k, HIP - 0.04 + Math.cos(flare) * L)]
+      under.moveTo(ends[0], ends[1])
+      under.lineTo(ends[2], ends[3])
+      const tone = tones[j % 3]
+      let path = strands.get(tone)
+      if (!path) strands.set(tone, (path = new Path2D()))
+      path.moveTo(ends[0], ends[1])
+      path.lineTo(ends[2], ends[3])
     }
-    for (let j = 0; j <= 12; j++) strand(j, X(k, 0.045) + weight * 0.9, ink)
-    for (let j = 0; j <= 12; j++) strand(j, X(k, 0.045), tones[j % 3])
+  }
+  ctx.lineCap = 'round'
+  ctx.strokeStyle = ink
+  ctx.lineWidth = X(k, 0.045) + weight * 0.9
+  ctx.stroke(under)
+  ctx.lineWidth = X(k, 0.045)
+  for (const [tone, path] of strands) {
+    ctx.strokeStyle = tone
+    ctx.stroke(path)
   }
   // The bar over the hips, and the pins.
   solid(p, ink, weight * 0.8, paint(x0, t, M.bush))
