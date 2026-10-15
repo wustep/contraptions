@@ -129,8 +129,9 @@ export { lanternAt }
 export interface Glow {
   x: number
   y: number
-  /** Radius, cells. */
+  /** Radius, cells; and its height, for light laid along a floor (the radius when left out). */
   r: number
+  ry?: number
   /** 0..1. */
   a: number
   color?: string
@@ -273,8 +274,8 @@ function poolsAt(t: number): Pool[] {
     out.push({ x: tb.x, y: TUBE_Y + 1.9, rx: 4.2, ry: 4.0, a: 2.0 * l * Math.sqrt(l), color: HOME.light })
     out.push({ x: tb.x, y: TUBE_Y + 0.05, rx: 1.8, ry: 0.4, a: 1.4 * l, color: HOME.light })
   })
-  for (const gl of roomGlows(t)) out.push({ x: gl.x, y: gl.y, rx: gl.r, ry: gl.r, a: gl.a, color: gl.color ?? HOME.light })
-  for (const fn of LIGHTS.glows) for (const gl of fn(t)) out.push({ x: gl.x, y: gl.y, rx: gl.r, ry: gl.r, a: gl.a, color: gl.color ?? HOME.light })
+  for (const gl of roomGlows(t)) out.push({ x: gl.x, y: gl.y, rx: gl.r, ry: gl.ry ?? gl.r, a: gl.a, color: gl.color ?? HOME.light })
+  for (const fn of LIGHTS.glows) for (const gl of fn(t)) out.push({ x: gl.x, y: gl.y, rx: gl.r, ry: gl.ry ?? gl.r, a: gl.a, color: gl.color ?? HOME.light })
   poolsSeen = { t, pools: out.filter((q) => q.a > 0.003) }
   return poolsSeen.pools
 }
