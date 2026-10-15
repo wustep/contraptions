@@ -28,6 +28,21 @@ const CARS = 5
 const CAR = 0.5
 const SPEED = 1.15
 
+/**
+ * How hard a passing train is shaking the building, 0 to 1: the old walls carry it from the end of the block, from as
+ * it comes into the window's view to after it has gone, strongest as the middle of it goes by.
+ */
+export function elRumble(t: number): number {
+  let r = 0
+  const pass = (YARD[2] - YARD[0] + CARS * CAR) / SPEED
+  for (const train of TRAINS) {
+    const u = (t - train.t0 + 0.4) / (pass + 0.9)
+    if (u <= 0 || u >= 1) continue
+    r = Math.max(r, Math.sin(Math.PI * u) ** 1.5)
+  }
+  return r
+}
+
 export function drawYard(pen: Pen, t: number, f: Frame): void {
   const [x0, y0, x1, y1] = YARD
   if (f.x1 < x0 - 0.2 || f.x0 > x1 + 0.2 || f.y0 > y1 || f.y1 < y0) return

@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { shade, sway } from '../depth'
+import { motes, shade, sway } from '../depth'
 import { BEAT } from '../music'
 import { hash, lastOf } from '../kit'
 import { ctxOf, ease, ellipse, fillWith, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
@@ -103,7 +103,8 @@ import {
 } from './geo'
 import { drawOutside, LAMP_POST, windowSeen } from './street'
 import { catPart } from './cat'
-import { drawYard } from './yard'
+import { drawRadiator } from './heat'
+import { drawYard, elRumble } from './yard'
 
 /**
  * Uncle Murray's shoe store, before it opens: warm tungsten browns and creams in deep shadow, one cold blue window on
@@ -623,6 +624,7 @@ function drawStock(pen: Pen, t: number, f: F & { cx: number; cy: number }): void
   rect(pen, x0, CEIL, x1, FLOOR, C.plaster)
   for (let y = CEIL + 0.8; y < FLOOR; y += 1.4) line(pen, [x0, y], [x1, y + 0.05], C.plasterDark, 0.4)
   // Steel shelving full of boxes, stacked any way.
+  const rumble = elRumble(t)
   for (const [sx, sw] of [[15.95, 0.95], [18.95, 2.6]] as const) {
     for (let r = 0; r < 4; r++) {
       const y = FLOOR - 0.15 - r * 1.15
@@ -634,11 +636,16 @@ function drawStock(pen: Pen, t: number, f: F & { cx: number; cy: number }): void
         const h = 0.24 + 0.22 * hash(r, n, 12)
         const col = C.boxes[Math.floor(hash(r, n, 13) * C.boxes.length)]
         if (hash(r, n, 14) > 0.15) {
-          rect(pen, bx, y - 0.04 - h, bx + w, y - 0.04, mix(col, C.plasterDark, 0.25))
-          rect(pen, bx, y - 0.04 - h, bx + w, y - 0.04 - h + 0.04, mix(col, '#000000', 0.3))
+          // A train going by on the El shivers the boxes on their shelves, the loose ones on top most.
+          const jx = 0.012 * rumble * Math.sin(t * 37 + n * 1.7 + r * 2.3)
+          const jy = -0.01 * rumble * Math.abs(Math.sin(t * 23 + n * 2.9 + r))
+          rect(pen, bx + jx, y - 0.04 - h + jy, bx + w + jx, y - 0.04, mix(col, C.plasterDark, 0.25))
+          rect(pen, bx + jx, y - 0.04 - h + jy, bx + w + jx, y - 0.04 - h + 0.04 + jy, mix(col, '#000000', 0.3))
           if (hash(r, n, 15) > 0.5) {
             const h2 = 0.2 + 0.15 * hash(r, n, 16)
-            rect(pen, bx + 0.04, y - 0.04 - h - h2, bx + w - 0.05, y - 0.04 - h, mix(C.boxes[(n + r) % C.boxes.length], C.plasterDark, 0.3))
+            const kx = jx + 0.022 * rumble * Math.sin(t * 31 + n * 4.1 + r * 1.3)
+            const ky = jy - 0.018 * rumble * Math.abs(Math.sin(t * 19 + n * 3.7 + r * 2))
+            rect(pen, bx + 0.04 + kx, y - 0.04 - h - h2 + ky, bx + w - 0.05 + kx, y - 0.04 - h + jy, mix(C.boxes[(n + r) % C.boxes.length], C.plasterDark, 0.3))
           }
         }
         bx += w + 0.04
@@ -647,6 +654,12 @@ function drawStock(pen: Pen, t: number, f: F & { cx: number; cy: number }): void
     }
     rect(pen, sx - 0.04, -3.3, sx, FLOOR, C.shelfSteel)
     rect(pen, sx + sw, -3.3, sx + sw + 0.04, FLOOR, C.shelfSteel)
+  }
+  // And the dust it shakes down off the shelves, sifting through the bulb's light.
+  if (rumble > 0.05) {
+    for (const [sx, sw] of [[15.95, 0.95], [18.95, 2.6]] as const) {
+      motes(pen, t, { n: Math.round(14 * sw), seed: Math.round(sx * 7), box: [sx, FLOOR - 4.7, sx + sw, FLOOR - 0.2], size: [0.008, 0.016], color: '#D8C8A4', alpha: 0.5 * rumble, drift: [0.01, 0.45], wander: 0.05, twinkle: 0, light: (x) => lightAt(x, t) })
+    }
   }
   // High in the back wall, a transom on the street, its glass the dawn's cold blue.
   const [tx0, ty0, tx1, ty1] = TRANSOM
@@ -729,6 +742,8 @@ function drawOffice(pen: Pen, t: number, f: F): void {
   const ha = (hr / 12) * Math.PI * 2 - Math.PI / 2
   line(pen, ck, [ck[0] + Math.cos(ma) * 0.19, ck[1] + Math.sin(ma) * 0.19], C.iron, 0.7)
   line(pen, ck, [ck[0] + Math.cos(ha) * 0.12, ck[1] + Math.sin(ha) * 0.12], C.iron, 1)
+  // The radiator under the clock, coming up for the morning, and his scarf over its riser (`heat.ts`).
+  drawRadiator(pen, t)
   // Murray's desk, his lamp (off), his chair; the coat stand with his hat.
   const dx = -0.85
   rect(pen, 28.4 + dx, 0.15, 30.8 + dx, 0.28, C.woodLight)
