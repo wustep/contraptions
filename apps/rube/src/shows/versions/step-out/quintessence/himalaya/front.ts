@@ -59,7 +59,7 @@ function sheets(ctx: C2, v: View, t: number, tn: Tone): void {
     const yc = s.y0 + s.h * (0.3 + 0.5 * hash(g.i, 3, 5))
     const th = s.h * (0.1 + 0.12 * hash(g.i, 4, 5))
     const tilt = -0.06 * s.h
-    const a = 0.3 * strength * Math.sin(Math.PI * Math.min(1, u * 1.2))
+    const a = 0.32 * strength * Math.sin(Math.PI * Math.min(1, u * 1.2))
     if (a <= 0.01) return
     const c = mix('#FFFFFF', tn.faceLit, 0.5 * tn.light)
     ctx.save()
@@ -85,8 +85,19 @@ function sheets(ctx: C2, v: View, t: number, tn: Tone): void {
     ctx.closePath()
     ctx.fill()
     ctx.restore()
-    // Its streaks: the snow in it, racing.
-    motes(ctx, s, t, { n: 70, seed: 20 + (g.i % 5), tile: [s.w * 0.5, th * 2], r: [0.01, 0.018], v: [s.w * 1.4, -0.05 * s.h], spread: 0.3, color: rgba(c, Math.min(0.85, a * 2.4)), streak: 0.05, within: { x0: head - len * 0.85, y0: yc - th + tilt, x1: head, y1: yc + th } })
+    // Its streaks: the snow in it racing ahead of the veil, each its own length, fine as hairlines.
+    const streaks = new Path2D()
+    for (let i = 0; i < 46; i++) {
+      const q = hash(i, 1, g.i)
+      const x = head - len * (0.05 + 0.85 * q) + s.w * 0.25 * hash(i, 2, g.i) * u
+      const y = yc + tilt * (1 - q) + th * (hash(i, 3, g.i) - 0.5) * 1.8 + Math.sin(t * 6 + i) * th * 0.06
+      const l = len * (0.05 + 0.18 * hash(i, 4, g.i))
+      streaks.moveTo(x * k, y * k)
+      streaks.lineTo((x - l) * k, (y + l * 0.04) * k)
+    }
+    ctx.strokeStyle = rgba(c, Math.min(0.8, a * 2.2))
+    ctx.lineWidth = 1 / ctx.getTransform().a
+    ctx.stroke(streaks)
   })
 }
 
@@ -102,10 +113,10 @@ function sunlight(ctx: C2, v: View, t: number, tn: Tone): void {
   ctx.globalCompositeOperation = 'lighter'
   // The bloom: rings of light, the flat hand's glow.
   const a = 0.22 * up * tn.light * hidden
-  ctx.fillStyle = rgba(tn.sun, a / 16)
-  for (let i = 0; i < 16; i++) {
+  ctx.fillStyle = rgba(tn.sun, a / 12)
+  for (let i = 0; i < 12; i++) {
     ctx.beginPath()
-    ctx.arc(at[0] * k, at[1] * k, 1.1 * s * k * (1 - i / 16) ** 1.6, 0, Math.PI * 2)
+    ctx.arc(at[0] * k, at[1] * k, 1.1 * s * k * (1 - i / 12) ** 1.6, 0, Math.PI * 2)
     ctx.fill()
   }
   ctx.restore()

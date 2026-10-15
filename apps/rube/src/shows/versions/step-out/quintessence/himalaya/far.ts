@@ -7,11 +7,11 @@ import { litY, sunAt, SUN_R, tone, VALLEY, REF, wind, type LitPlane, type Tone }
 
 /**
  * Everything beyond the valley, on its own planes behind the mountain he climbs: the sky (painted at depth 0, with the
- * last stars, high cirrus and the sun); the great range at 0.08, its highest summit streaming a long plume; a second
- * range at 0.2 and a third at 0.35, each with spindrift off its ridges and cloud at its feet; the sea of cloud at
- * 0.55 filling the valley under the ledge; and a pair of choughs wheeling over it, far below the ledge. Each plane
- * moves and scales less than the world as the camera goes, so the climb raises the far peaks over the near ridges and
- * the pull-back opens on all of them.
+ * last stars, cirrus and lenticular cloud, a skein of geese and the sun); the great range at 0.08, its highest summit streaming a long
+ * plume; a second range at 0.2 and a third at 0.35, each with spindrift off its ridges and cloud at its feet; the sea
+ * of cloud at 0.55 filling the valley under the ledge; and a pair of choughs wheeling over it, far below the ledge.
+ * Each plane moves and scales less than the world as the camera goes, so the climb raises the far peaks over the near
+ * ridges and the pull-back opens on all of them.
  *
  * The light comes down the planes one after another (`dawn.ts`): every plane is drawn in the blue of the hour and then
  * lit, above the line the sun has reached, in rose-gold, then gold, then gold-white; the flanks away from the sun stay
@@ -145,7 +145,7 @@ function build(s: Spec): Range {
     const [tx, ty] = ridge[top]
     tops.push({ x: tx, y: ty, size: Math.min(1, Math.max(0.2, (s.base - ty) / 3.2)) })
     // The ice on its faces: short crevasse and serac lines across the snow, and couloirs down it.
-    for (let r = 0; r < 14; r++) {
+    for (let r = 0; r < 22; r++) {
       const lx = tx + (h(n * 19 + r, 30) - 0.5) * 2 * (r % 2 ? p.wr : p.wl) * 0.9
       const top = ridgeY(s, lx)
       const ly = top + 0.12 + h(n * 19 + r, 31) * Math.max(0.1, bottom - top - 0.3)
@@ -229,7 +229,7 @@ function inCells(ctx: C2, k: number, fn: () => void): void {
   ctx.restore()
 }
 
-/** The sky: its gradient, the dawn's glow under where the sun will be, the last stars, the high cirrus, the sun. */
+/** The sky: its gradient, the dawn's glow under where the sun will be, the last stars, the cirrus, the geese, the sun. */
 function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
   const sun = sunAt(t)
   inCells(ctx, s.k, () => {
@@ -276,11 +276,12 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
     // Mares' tails: fine strands of ice cloud high up, combed out by the wind aloft, rose and then gold.
     const tails = new Path2D()
     const tspan = s.w + 6
-    for (let i = 0; i < 24; i++) {
-      const x = s.x0 - 3 + ((hash(i, 41) * tspan + t * (0.06 + 0.05 * hash(i, 42))) % tspan)
-      const y = s.y0 + 0.15 + hash(i, 43) ** 1.2 * s.h * 0.5
+    for (let i = 0; i < 44; i++) {
+      // The jet stream is up there: they race, faster as the build climbs.
+      const x = s.x0 - 3 + ((hash(i, 41) * tspan + t * (0.16 + 0.12 * hash(i, 42))) % tspan)
+      const y = s.y0 + 0.12 + hash(i, 43) ** 1.4 * s.h * 0.55
       const len = 0.8 + 2.2 * hash(i, 44)
-      const strands = 2 + Math.floor(hash(i, 45) * 4)
+      const strands = 2 + Math.floor(hash(i, 45) * 3)
       for (let j = 0; j < strands; j++) {
         const dy = j * 0.045 + hash(i, j + 50) * 0.02
         const l = len * (0.6 + 0.4 * hash(i, j + 60))
@@ -291,8 +292,46 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
       }
     }
     ctx.lineWidth = 1 / ctx.getTransform().a
-    ctx.strokeStyle = rgba(mix(tn.high, mix(tn.lit, '#FFFFFF', 0.3), 0.35 + 0.6 * lit), 0.4 + 0.2 * lit)
+    ctx.strokeStyle = rgba(mix(tn.high, mix(tn.lit, '#FFFFFF', 0.3), 0.35 + 0.6 * lit), 0.28 + 0.14 * lit)
     ctx.stroke(tails)
+    // Lenticular clouds standing over the highest summits in the wind, stacked lenses, catching the light first.
+    const lens = new Path2D()
+    for (const [lx, ly, lw] of [[10.4, -13.05, 1.5], [18.3, -12.85, 1.2], [3.2, -12.7, 0.9]] as const) {
+      for (let j = 0; j < 3; j++) {
+        const w = lw * (1 - j * 0.22) * (1 + 0.04 * Math.sin(t * 0.5 + j + lx))
+        const cx = lx + Math.sin(t * 0.23 + j * 1.3 + lx) * 0.08
+        const cy = ly - j * 0.11
+        const th = 0.045 + 0.012 * Math.sin(t * 0.7 + j)
+        lens.moveTo(cx - w, cy)
+        lens.quadraticCurveTo(cx, cy - th * 2, cx + w, cy)
+        lens.quadraticCurveTo(cx, cy + th * 1.2, cx - w, cy)
+        lens.closePath()
+      }
+    }
+    ctx.fillStyle = rgba(mix(tn.high, mix(tn.lit, '#FFFFFF', 0.3), 0.3 + 0.7 * lit), 0.5)
+    ctx.fill(lens)
+    ctx.strokeStyle = rgba(mix(tn.lit, '#FFFFFF', 0.4), 0.35 + 0.3 * lit)
+    ctx.stroke(lens)
+    // A skein of geese, very high, crossing the range while the two of them wait: a long, loose V, the wings beating.
+    if (t > 168 && t < 191.2) {
+      const u = (t - 168) / 23
+      const lx = s.x0 - 1 + (s.w + 2.5) * u
+      const ly = s.y0 + s.h * 0.2 - u * 0.5
+      const geese = new Path2D()
+      for (let i = 0; i < 11; i++) {
+        const side = i % 2 ? 1 : -1
+        const rank = Math.ceil(i / 2)
+        const gx = lx - rank * 0.16 + Math.sin(t * 0.7 + i) * 0.02
+        const gy = ly + side * rank * 0.075 + Math.sin(t * 0.9 + i * 1.3) * 0.015
+        const beat = Math.sin(t * 7 + i * 0.9) * 0.022
+        geese.moveTo(gx - 0.045, gy - beat)
+        geese.lineTo(gx, gy + 0.008)
+        geese.lineTo(gx + 0.045, gy - beat)
+      }
+      ctx.strokeStyle = rgba(mix(tn.ink, tn.high, 0.35), 0.75)
+      ctx.lineWidth = 1.4 / ctx.getTransform().a
+      ctx.stroke(geese)
+    }
     // The sun: a corona that comes up before it shows, then the disc.
     const up = smooth(t, 166, 180)
     if (up > 0) {
@@ -367,7 +406,7 @@ export function plumes(ctx: C2, list: Plume[], col: string, a: number, t: number
     ctx.closePath()
     ctx.fill()
     // A second, thinner veil inside the first for the big ones, rippling at its own pace: the plume's body.
-    if (p.thick > 0.12) {
+    if (p.thick > 0.16) {
       ctx.beginPath()
       for (let j = 0; j <= n; j++) {
         const u = j / n
@@ -416,7 +455,7 @@ function clouds(ctx: C2, s: View, t: number, tn: Tone, cy: number, flow: number,
   ctx.fillStyle = top
   ctx.fill(bill)
   const stops: [number, string][] = [[0, top], [0.3, hz(mix(tn.cloud, tn.cloudUnder, 0.3))], [1, hz(tn.cloudUnder)]]
-  bands(ctx, lo, hi, cy, foot, (y) => along(stops, (y - cy) / 2.1))
+  bands(ctx, lo, hi, cy, foot, (y) => along(stops, (y - cy) / 2.1), undefined, 8)
   // Rows of billows going back in the sea of cloud, each row's tops a hairline of light, as the front row's are.
   for (const [dy, sc] of (rowsToo ? [[0.3, 0.75], [0.62, 0.55], [0.95, 0.4]] : []) as [number, number][]) {
     if (cy + dy > foot - 0.05) continue
@@ -442,29 +481,31 @@ function drawRange(ctx: C2, s: View, t: number, tn: Tone, r: Range): void {
   const ly = litY(t, sp.plane)
   const wnd = wind(t)
   inCells(ctx, s.k, () => {
-    // Snow in the hour's blue, then the light down to its line, with a soft edge.
-    ctx.fillStyle = hz(tn.snow)
-    ctx.fill(r.body)
-    if (ly > r.top) {
-      // Lit: flat above the line, and a soft edge on it.
-      const litC = hz(tn.lit)
+    // Snow in the hour's blue below the line the light has come down to, flat light above it, and a soft edge on it:
+    // each laid only where it shows.
+    const clipY = (y0: number, y1: number, fill: string | CanvasGradient) => {
+      if (y1 <= y0) return
       ctx.save()
       ctx.beginPath()
-      ctx.rect(s.x0 - 1, r.top - 0.1, s.w + 2, ly - 0.15 - r.top + 0.1)
+      ctx.rect(s.x0 - 1, y0, s.w + 2, y1 - y0)
       ctx.clip()
-      ctx.fillStyle = litC
+      ctx.fillStyle = fill
       ctx.fill(r.body)
       ctx.restore()
+    }
+    const lit = ly > r.top
+    const snow = hz(tn.snow)
+    if (!lit) {
+      ctx.fillStyle = snow
+      ctx.fill(r.body)
+    } else {
+      const litC = hz(tn.lit)
+      clipY(r.top - 0.2, ly - 0.15, litC)
+      clipY(ly - 0.15, sp.cloud + 1, snow)
       const g = ctx.createLinearGradient(0, ly - 0.15, 0, ly + 0.3)
       g.addColorStop(0, rgba(litC, 1))
       g.addColorStop(1, rgba(litC, 0))
-      ctx.save()
-      ctx.beginPath()
-      ctx.rect(s.x0 - 1, ly - 0.15, s.w + 2, 0.45)
-      ctx.clip()
-      ctx.fillStyle = g
-      ctx.fill(r.body)
-      ctx.restore()
+      clipY(ly - 0.15, ly + 0.3, g)
     }
     // The flanks away from the sun, the rock, and the lines on the snow.
     ctx.fillStyle = rgba(mix(tn.shade, tn.haze, sp.haze * 0.5), 0.6 + 0.25 * tn.light)

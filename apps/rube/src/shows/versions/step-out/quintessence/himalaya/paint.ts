@@ -16,7 +16,7 @@ type C2 = CanvasRenderingContext2D
  * only its edges stay put on the screen). With `shape`, each band fills only that shape (a rectangle clip on whole
  * pixels is free). Only what is in the canvas is drawn.
  */
-export function bands(c: C2, x0: number, x1: number, y0: number, y1: number, at: (y: number) => string, shape?: Path2D, px = shape ? 16 : 4): void {
+export function bands(c: C2, x0: number, x1: number, y0: number, y1: number, at: (y: number) => string, shape?: Path2D, px = shape ? 32 : 4): void {
   const m = c.getTransform()
   if (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9 || m.d <= 0) return
   const H = c.canvas.height

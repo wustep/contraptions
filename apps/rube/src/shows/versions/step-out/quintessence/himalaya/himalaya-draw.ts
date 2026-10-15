@@ -213,7 +213,7 @@ function tileOf(fs: FieldSpec, li: number, g: number, tx: number, ty: number): {
         tile.ripples.lineTo(x + len / 2, y + (fs.tilt * len) / 2 + bow)
         tile.ripples.lineTo(x + len, y + fs.tilt * len)
       }
-      if (h(20) < 0.35) {
+      if (li < 4 && h(20) < 0.35) {
         const x = (gx + h(21)) * g
         const y = (gy + h(22)) * g
         const r = g * 0.07 * (0.4 + h(23))
@@ -235,14 +235,14 @@ function grain(c: C2, fs: FieldSpec, f: Frame, tn: Tone, rock: string): void {
   const y0 = Math.max(fs.y0, f.y0 - 0.5)
   const y1 = Math.min(fs.y1, f.y1 + 0.5)
   if (x1 <= x0 || y1 <= y0) return
-  // How far apart a level's grid squares are on the screen: each level is drawn while that is between 22 and 34
+  // How far apart a level's grid squares are on the screen: each level is drawn while that is between 18 and 28
   // pixels or more, fading in over that, so the grain on the snow is about as fine wherever the camera is.
   const kpx = c.getTransform().d
   c.lineWidth = 1 / c.getTransform().a
   c.lineCap = 'butt'
   LEVELS.forEach((lv, li) => {
     const g = lv / Math.max(0.35, fs.density)
-    const a = smooth(g * kpx, 22, 34)
+    const a = smooth(g * kpx, 18, 28)
     if (a < 0.05 || g * kpx > 260) return
     const ripples = new Path2D()
     const stones = new Path2D()
@@ -417,10 +417,11 @@ export function openings(f: Frame): { beyond: Path2D | null; far: boolean } {
     top = Math.min(top, f.y0 + (j - 1) * dy)
     bottom = Math.max(bottom, f.y0 + (j + 1) * dy)
   }
+  // It runs on down to the frame's foot: the gorge between the face and the spur narrows below what the grid can see.
   let path: Path2D | null = null
   if (a <= b) {
     path = new Path2D()
-    path.rect(a - dx, top, b - a + 2 * dx, bottom - top)
+    path.rect(a - dx, top, b - a + 2 * dx, Math.max(bottom, f.y1 + 0.1) - top)
   }
   return { beyond: path, far }
 }

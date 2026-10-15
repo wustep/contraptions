@@ -152,9 +152,11 @@ export const VALLEY: Pt = [10.6, -10.0]
 export const REF = 7
 
 /** The sun on the sky's plane: below the far range through the climb, its edge over the ridge as the cat comes out, climbing on into the peak. */
+const SUN: [number, number][] = [[150, -9.0], [176, -10.2], [178, -10.88], [191.4, -12.9]]
 export function sunAt(t: number): Pt {
-  const y = t < 178 ? -9.2 - (t - 150) * 0.06 : -10.88 - (t - 178) * 0.15
-  return [14.15, Math.max(-12.9, y)]
+  if (t <= SUN[0][0]) return [14.15, SUN[0][1]]
+  for (let i = 1; i < SUN.length; i++) if (t < SUN[i][0]) return [14.15, SUN[i - 1][1] + ((SUN[i][1] - SUN[i - 1][1]) * (t - SUN[i - 1][0])) / (SUN[i][0] - SUN[i - 1][0])]
+  return [14.15, SUN[SUN.length - 1][1]]
 }
 export const SUN_R = 0.3
 
