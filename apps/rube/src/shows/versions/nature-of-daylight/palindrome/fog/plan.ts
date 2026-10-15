@@ -339,8 +339,24 @@ export const ABBOTT = { at: [WIDE_C[0] - 3.4 / ABBOTT_D, WIDE_C[1] + 2.5 / ABBOT
 // as a second heptapod standing off, not as Abbott dying.
 // Out of the blast as dark as it was at the glass, so it reads as Abbott: coming up out of the white first, it read as a
 // new, smaller heptapod rising into view.
-export const abbottFog = (t: number): number => 0.5 + 0.5 * smooth(t, T_S2 - 0.5, T_LAND - 3.2)
-export const abbottSink = (t: number): number => 4.2 * smooth(t, T_S2 - 2, T_OUT + 1)
+/**
+ * Abbott dies ("Abbott is death process"), on the strokes her ring is written on: on the hard beat he slumps and starts
+ * to sink; on the next chord his last word comes out of him whole, a ring round him; from the chord after, it comes
+ * undone from both ends back to where it began, as hers is written round her from both ends, and he is gone into the
+ * white as hers closes. One ring written, one unwritten. (Paling far back on his own, he read as a second heptapod
+ * standing off; nobody saw a death.)
+ */
+export const abbottFog = (t: number): number => 0.5 + 0.16 * smooth(t, T_B1, T_S2) + 0.34 * smooth(t, T_S3 - 0.2, T_CLOSE + 0.15)
+export const abbottSink = (t: number): number => 0.9 * smooth(t, T_B1, T_CLOSE) + 3.3 * smooth(t, T_CLOSE, T_OUT + 1)
+export const abbottSlump = (t: number): number => smooth(t, T_B1, T_S2 + 0.8)
+/** His last word: a ring round his body, written out of him at once, then unwritten. */
+export const ABBOTT_WORD: Ring = inkRing(271)
+export const ABBOTT_WORD_R = 0.31
+export function abbottWordU(t: number): number {
+  if (t < T_S2) return 0
+  return easeOut((t - T_S2) / 0.45) * (1 - smooth(t, T_S3, T_CLOSE))
+}
+export const abbottWordFade = (t: number): number => 0.25 * smooth(t, T_S2, T_S3) + 0.75 * smooth(t, T_S3, T_CLOSE + 0.2)
 
 /* ------------------------------------------------------------------ the camera, in world cells */
 
