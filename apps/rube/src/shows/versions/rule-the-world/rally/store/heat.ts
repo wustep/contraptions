@@ -1,15 +1,14 @@
 import type { Pt } from '../../../../../parts'
 import { sway } from '../depth'
-import { hash } from '../kit'
 import { at } from '../music'
-import { ctxOf, ellipse, line, mix, rect, rgba, shape, type Pen } from '../pen'
+import { ellipse, line, mix, rect, shape, type Pen } from '../pen'
 import { CEIL, FLOOR } from './geo'
 
 /**
  * The office's left wall, by the door: the radiator under the clock, coming up for the morning. The super has the
- * boiler going before six, and the steam comes up the riser in knocks, a knock on the bar's downbeat; at each one the
- * air vent on its end column spits a little steam, which goes up the wall and away. Murray's scarf, left over the riser
- * last night, hangs over it and stirs in the warm air going up. It gives no light: the door's light and the lamp's are
+ * boiler going before six, and the steam comes up the riser in knocks, a knock on the bar's downbeat that jolts the
+ * columns a hair. Murray's scarf, left over the riser last night, hangs over it, stirs in the warm air going up, and
+ * lifts at each knock. No steam is seen: the hotel's radiator lost its puffs as idle motion, and so does this one. It gives no light: the door's light and the lamp's are
  * on it, and it is dark iron in the dark.
  */
 
@@ -21,7 +20,6 @@ const VENT: Pt = [X1 - 0.08, TOP - 0.06]
 const IRON = '#3A362F'
 const IRON_HI = '#5A5446'
 const IRON_DARK = '#1E1B17'
-const STEAM = '#C8C2B4'
 const SCARF = '#5E2A22'
 const SCARF_BAND = '#A88A5A'
 
@@ -58,7 +56,6 @@ export function drawRadiator(pen: Pen, t: number): void {
   shape(pen, [[X0 + 0.25, TOP - 0.01], [X0 + 0.28, TOP - 0.06], [X0 + 0.52, TOP - 0.07], [X0 + 0.56, TOP - 0.01]], '#2A2018')
   shape(pen, [[X0 + 0.4, TOP - 0.06], [X0 + 0.44, TOP - 0.11], [X0 + 0.65, TOP - 0.1], [X0 + 0.67, TOP - 0.05]], '#33271D')
   drawScarf(pen, t)
-  drawSteam(pen, t)
 }
 
 /** The scarf over the riser: two ends hanging, stirring in the warm air off the radiator, lifting a little at a knock. */
@@ -84,40 +81,4 @@ function drawScarf(pen: Pen, t: number): void {
     for (let f = -2; f <= 2; f++) line(pen, [end[0] + f * 0.022, end[1]], [end[0] + f * 0.022 + 0.01 * sway(t, f + seed, 1.3), end[1] + 0.06], SCARF, 0.4)
   }
   ellipse(pen, hook, 0.06, 0.04, mix(SCARF, '#000000', 0.25))
-}
-
-/** The vent's spit of steam at each knock, going up the wall and thinning. */
-function drawSteam(pen: Pen, t: number): void {
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
-  const STEPS = 4
-  const buckets: number[][] = Array.from({ length: STEPS }, () => [])
-  for (const kt of KNOCKS) {
-    const s = t - kt
-    if (s < 0 || s > 2.2) continue
-    for (let i = 0; i < 14; i++) {
-      // Each wisp leaves the vent in the first moment, then rises and spreads on the warm air.
-      const born = 0.25 * hash(i, kt | 0, 41)
-      const u = (s - born) / 1.9
-      if (u <= 0 || u >= 1) continue
-      const x = VENT[0] + 0.03 + 0.18 * u + (hash(i, kt | 0, 42) - 0.5) * 0.22 * u + 0.04 * Math.sin(u * 6 + i)
-      const y = VENT[1] - 0.06 - 1.1 * u * (0.7 + 0.5 * hash(i, kt | 0, 43))
-      const a = Math.min(1, u * 8) * (1 - u) ** 1.3
-      const r = 0.035 + 0.12 * u
-      buckets[Math.min(STEPS - 1, Math.floor(a * STEPS))].push(x * k, y * k, r * k)
-    }
-  }
-  ctx.save()
-  for (let b = 0; b < STEPS; b++) {
-    const list = buckets[b]
-    if (!list.length) continue
-    ctx.fillStyle = rgba(pen, STEAM, 0.3 * ((b + 0.6) / STEPS))
-    ctx.beginPath()
-    for (let i = 0; i < list.length; i += 3) {
-      ctx.moveTo(list[i] + list[i + 2], list[i + 1])
-      ctx.arc(list[i], list[i + 1], list[i + 2], 0, Math.PI * 2)
-    }
-    ctx.fill()
-  }
-  ctx.restore()
 }
