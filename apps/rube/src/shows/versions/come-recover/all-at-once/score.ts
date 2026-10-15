@@ -185,6 +185,22 @@ function punch(t: number, calm: () => boolean): number {
 }
 
 /**
+ * The camera is held, not bolted down: it floats a little all the time, a slow drift of its place and a breath of its
+ * scale, so even a held frame is never quite still. Each is a sum of slow waves that never line up, about a hundredth
+ * of the frame at most. It is one function of the clock over the whole show, so at a jump both sides have the same
+ * float and the match cut holds. Not for a viewer who asks for less motion.
+ */
+function float(t: number, calm: () => boolean): { x: number; y: number; z: number } {
+  if (calm()) return { x: 0, y: 0, z: 0 }
+  const TAU = Math.PI * 2
+  return {
+    x: 0.0055 * Math.sin((TAU * t) / 17.3 + 0.4) + 0.0025 * Math.sin((TAU * t) / 7.1 + 2.1),
+    y: 0.0045 * Math.sin((TAU * t) / 13.7 + 1.3) + 0.002 * Math.sin((TAU * t) / 5.9 + 0.2),
+    z: 0.008 * Math.sin((TAU * t) / 23.1 + 0.9) + 0.003 * Math.sin((TAU * t) / 9.7 + 2.6),
+  }
+}
+
+/**
  * The show, composed. `calm` fixes the reduced-motion version (true) or the show as made (false); left out, it follows
  * the viewer's own preference, live.
  */
@@ -391,7 +407,13 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     const owner = show.owner(t)
     const f = cams[owner](t)
     const [ox, oy] = show.offset(t)
-    return { ...f, x: f.x + ox, y: f.y + oy, cells: f.cells * (1 - punch(t, isCalm)) }
+    // The float is a share of the frame: the same small drift in a close shot and a wide one.
+    const d = float(t, isCalm)
+    const framing: Framing = { ...f, x: f.x + ox + d.x * f.cells, y: f.y + oy + d.y * f.cells, cells: f.cells * (1 - punch(t, isCalm)) * (1 + d.z) }
+    // The last draw-back takes in the whole shop with the family at its left edge: Zoom, a closer look at her, slides
+    // over to keep her in it rather than holding the middle of the row.
+    if (t > SWELL) framing.focus = show.where(t)
+    return framing
   }
   return { show, camera, eyes: specs }
 }
