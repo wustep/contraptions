@@ -38,6 +38,7 @@ import {
   strikeBurst,
   tubeOn,
   underFloor,
+  crawlLight,
   walkWet,
   windowsLife,
 } from './life'
@@ -700,6 +701,7 @@ function room(pen: Pen, t: number, f: Frame): void {
 
   // The floor's front edge, and under it, in section, the crawlspace and the return's track.
   rect(pen, x0, EDGE, x1, f.y1 + 1, C.section)
+  crawlLight(pen, t, f)
   rect(pen, x0, EDGE, x1, EDGE + 0.1, C.woodDark)
   line(pen, [x0, EDGE], [x1, EDGE], C.woodLight, 0.5)
   for (let x = x0 + 0.8; x < x1; x += 1.6) rect(pen, x, EDGE + 0.1, x + 0.12, f.y1 + 1, C.joist)

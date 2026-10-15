@@ -940,21 +940,72 @@ export function ashtray(pen: Pen, t: number, at: Pt, s = 1): void {
 
 /* ------------------------------------------------------------------ under the floor */
 
+/** The crawlspace's work lights: where each hangs from the floor, how long its cord, how fast it swings. */
+const WORK: { x: number; L: number; period: number; phase: number }[] = [
+  { x: 4.5, L: 0.3, period: 1.12, phase: 0.4 },
+  { x: 12.5, L: 0.34, period: 1.21, phase: 2.1 },
+]
+/** The posts under the floor, a joist apart (as `draw.ts` lays them). */
+const POST_X0 = WALL[1] + 0.8
+const POST_STEP = 1.6
 /**
- * Under the floor: the work lights swinging on their cords (their light on the joists and the track swinging with
- * them), a little dust, the lift wheel turning.
+ * Where each work light's bulb is: the door's slam as he comes in sets them swinging harder, and they settle over the
+ * hustle, never quite still.
+ */
+function workBulbs(t: number): Pt[] {
+  const kick = Math.exp(-Math.max(0, t - T0) / 5.5)
+  return WORK.map((w, i) => {
+    const a = (0.09 + 0.3 * kick) * Math.sin(((t - T0) / w.period) * Math.PI * 2 + w.phase) + 0.03 * sway(t, 31 + i, 2.6)
+    return [w.x + Math.sin(a) * w.L, EDGE + 0.1 + Math.cos(a) * w.L] as Pt
+  })
+}
+
+/**
+ * The work lights' light on the crawlspace's back wall, behind the posts: a pool round each, and each post's shadow
+ * thrown away from it, sliding as the bulb swings. Drawn before the posts, the track and the lift, so it is on the wall.
+ */
+export function crawlLight(pen: Pen, t: number, f: Frame): void {
+  if (f.y1 < EDGE) return
+  const bulbs = workBulbs(t)
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  const bottom = Math.min(f.y1 + 0.5, 3.0)
+  for (const b of bulbs) shade(pen, [b[0], b[1] + 0.5], 1.9, 1.1, '#FFD08A', 0.24)
+  ctx.save()
+  ctx.fillStyle = css(pen, '#050304', 0.62)
+  ctx.beginPath()
+  for (const b of bulbs) {
+    for (let n = Math.floor((b[0] - 3 - POST_X0) / POST_STEP); n <= Math.ceil((b[0] + 3 - POST_X0) / POST_STEP); n++) {
+      const px = POST_X0 + n * POST_STEP + 0.06
+      const d = px - b[0]
+      if (Math.abs(d) > 2.6 || px < f.x0 - 1 || px > f.x1 + 1) continue
+      // Thrown away from the bulb, the further the post the further its shadow, spreading down the wall.
+      const near = 1 - Math.abs(d) / 2.6
+      const top = EDGE + 0.1
+      const at = (y: number) => px + d * (0.3 + 0.25 * (y - top))
+      const w = 0.07 + 0.04 * (1 - near)
+      ctx.moveTo((at(top) - w) * k, top * k)
+      ctx.lineTo((at(top) + w) * k, top * k)
+      ctx.lineTo((at(bottom) + w * 1.6) * k, bottom * k)
+      ctx.lineTo((at(bottom) - w * 1.6) * k, bottom * k)
+      ctx.closePath()
+    }
+  }
+  ctx.fill()
+  ctx.restore()
+}
+
+/**
+ * Under the floor: the work lights swinging on their cords (their light and the posts' shadows on the wall behind,
+ * `crawlLight`), a little dust, the lift wheel turning.
  */
 export function underFloor(pen: Pen, t: number, f: Frame): void {
   if (f.y1 < EDGE) return
-  const bulbs: Pt[] = []
-  for (const [i, bx] of [4.5, 12.5].entries()) {
-    const a = 0.12 * sway(t, 31 + i, 2.6)
-    const L = 0.3
-    const b: Pt = [bx + Math.sin(a) * L, EDGE + 0.1 + Math.cos(a) * L]
-    bulbs.push(b)
-    seg(pen, [bx, EDGE + 0.1], b, '#0A0607', 0.012)
-    // Its light lies on the crawlspace's back wall and the joists under it (thrown the way it swings), not round it.
-    shade(pen, [b[0] + Math.sin(a) * 0.5, b[1] + 0.5], 1.1, 0.7, '#FFD08A', 0.09)
+  const bulbs = workBulbs(t)
+  for (const [i, b] of bulbs.entries()) {
+    seg(pen, [WORK[i].x, EDGE + 0.1], b, '#0A0607', 0.012)
+    // A little of its light on the posts and the track in front of it.
+    shade(pen, [b[0], b[1] + 0.4], 0.9, 0.6, '#FFD08A', 0.05)
     disc(pen, b, 0.05, '#FFE6B0', 0.9)
   }
   if (f.y1 > EDGE + 0.4)

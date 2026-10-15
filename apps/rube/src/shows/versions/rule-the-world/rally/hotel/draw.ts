@@ -75,7 +75,9 @@ import {
   type Pose,
 } from './geo'
 import { drawLampRain, drawNight, drawPavementRain, moonlight } from './night'
-import { drawElLight, drawHall, drawMartyAir, drawMishAir, drawTap, drawWindow, lampLevel, lampRock } from './room'
+import { draught, drawElLight, drawHall, drawMartyAir, drawMishAir, drawTap, drawWindow, lampLevel, lampRock } from './room'
+import { drawMishSmoke, drawMouse } from './small'
+import { drawUnder, drawVaultLights, puddleShiver, TUNNEL_X } from './under'
 
 /**
  * The hotel: a brick building cut open at night. Marty's room is sick green-yellow paper under one bare bulb, and goes
@@ -226,27 +228,23 @@ function drawStreet(pen: Pen, t: number, f: Frame): void {
   const y = F_STREET
   // Nothing of it reaches the frame till the camera is down near the lamp.
   if (f.y1 < y - 8.6 || f.x1 < WALL_R[1]) return
-  // Under the street, cut: the earth, the hotel's footing, a gas main, the vault light's glass in the pavement.
+  // Under the street, cut: the earth, the hotel's footing, the mains, and the IRT's tunnel under Broadway (`under.ts`).
   rect(pen, f.x0 - 1, y, f.x1 + 1, Math.max(f.y1 + 1, y + 3), C.under)
-  for (let i = 0; i < 40; i++) {
-    const sx = WALL_R[1] + hash(i, 1, 60) * 12
+  for (let i = 0; i < 16; i++) {
+    const sx = WALL_R[1] + 0.2 + hash(i, 1, 60) * (TUNNEL_X - WALL_R[1] - 0.3)
     const sy = y + 0.45 + hash(i, 2, 60) * 2.2
     ellipse(pen, [sx, sy], 0.05 + hash(i, 3, 60) * 0.08, 0.04 + hash(i, 4, 60) * 0.05, '#231E1A')
   }
   rect(pen, f.x0 - 1, y, WALL_R[1] + 0.2, y + 2.6, '#2A2622')
   for (let r = 0; r < 5; r++) line(pen, [f.x0 - 1, y + 0.5 * r + 0.5], [WALL_R[1] + 0.2, y + 0.5 * r + 0.5], '#1A1714', 0.5)
-  for (const [px, py, pr] of [[11.6, y + 1.05, 0.26], [15.8, y + 0.85, 0.18]] as const) {
-    ellipse(pen, [px, py], pr, pr, '#2E3436')
-    ellipse(pen, [px, py], pr * 0.72, pr * 0.72, '#0E1112')
-    ellipse(pen, [px - pr * 0.3, py - pr * 0.3], pr * 0.15, pr * 0.1, '#4B5658')
-  }
-  drawSeep(pen, t, f)
+  drawUnder(pen, t, f)
   rect(pen, WALL_R[1], y + 0.22, KERB, y + 0.36, '#2B3133')
   rect(pen, WALL_R[1], y, KERB, y + 0.22, C.pave)
   rect(pen, KERB, y + 0.14, f.x1 + 2, y + 0.3, C.road)
   rect(pen, KERB - 0.12, y, KERB + 0.02, y + 0.3, C.kerb)
-  // Paving joints.
+  // Paving joints, and the vault lights' glass set in the slab.
   for (let x = WALL_R[1] + 0.9; x < KERB - 0.2; x += 1.6) line(pen, [x, y + 0.02], [x - 0.04, y + 0.2], C.under, 0.5)
+  drawVaultLights(pen, t, f)
   line(pen, [WALL_R[1], y], [KERB, y], C.paveHi, 0.6)
   // A hydrant at the kerb.
   const hx = KERB - 0.55
@@ -291,8 +289,11 @@ function drawStreet(pen: Pen, t: number, f: Frame): void {
     const gx = head[0] - 1.6 + i * 0.75
     line(pen, [gx, y + 0.04], [gx + 0.25, y + 0.04], C.sodium, 0.35)
   }
+  puddleShiver(pen, t, pud, 1.1)
   // The rain on the pavement: rings in the wet, drops jumping.
   drawPavementRain(pen, t, f)
+  // A sheet of newspaper the wind takes along the pavement in fits, past him.
+  drawNewspaper(pen, t, f)
   // The ripple where he lands.
   const sp = t - PAVE
   if (sp > 0 && sp < 1.4) {
@@ -308,24 +309,31 @@ function drawStreet(pen: Pen, t: number, f: Frame): void {
   }
 }
 
-/** The rain through the pavement: drips off its underside into the dark below, each a fleck of the lamp's light. */
-function drawSeep(pen: Pen, t: number, f: Frame): void {
-  const y = F_STREET + 0.36
-  if (y > f.y1 || y + 1.5 < f.y0) return
-  for (let i = 0; i < 7; i++) {
-    const x = 8.6 + i * 1.37 + hash(i, 1, 75) * 0.5
-    if (x < f.x0 || x > f.x1) continue
-    const per = 0.9 + 0.8 * hash(i, 2, 75)
-    const u = (t / per + hash(i, 3, 75)) % 1
-    const s = u * per
-    const swell = 0.45 * per
-    if (s < swell) ellipse(pen, [x, y + 0.015], 0.012 + 0.012 * (s / swell), 0.015 + 0.015 * (s / swell), '#6E8A8A')
-    else {
-      const v = s - swell
-      const dy = 0.5 * G_LOW * 2.5 * v * v
-      if (dy < 1.6) ellipse(pen, [x, y + 0.03 + dy], 0.012, 0.024, mix('#6E8A8A', C.sodium, 0.35))
-    }
+/** The wind's fits along the street, on the second and fourth beats of the last bars: each takes the paper on a way. */
+const FITS = [at(55, 2), at(55, 4), at(56, 2), at(56, 4)]
+const FIT = 0.62
+
+/** A sheet of newspaper on the wet pavement, taken along by the wind in fits: it lifts, turns over, and lies again. */
+function drawNewspaper(pen: Pen, t: number, f: Frame): void {
+  let x = 21.6
+  let u = 0
+  for (const fit of FITS) {
+    const v = Math.max(0, Math.min(1, (t - fit) / FIT))
+    x -= 2.1 * (1 - (1 - v) * (1 - v))
+    if (v > 0 && v < 1) u = v
   }
+  const y = F_STREET
+  if (x < f.x0 - 1 || x > f.x1 + 1 || y < f.y0 - 1 || y > f.y1 + 1) return
+  const lift = 0.26 * Math.sin(u * Math.PI)
+  const turn = Math.sin(u * Math.PI * 2)
+  const w = 0.3
+  const h = 0.05 + 0.16 * Math.abs(turn) * Math.min(1, lift * 6)
+  const cy = y - 0.02 - lift
+  const tilt = 0.3 * turn * Math.min(1, lift * 8)
+  const pts: Pt[] = [[x - w, cy + tilt * w], [x + w, cy - tilt * w], [x + w * 0.9, cy - tilt * w - h], [x - w * 0.85, cy + tilt * w - h * 0.7]]
+  shape(pen, pts, mix('#AFA894', C.sodium, 0.18))
+  line(pen, pts[0], pts[1], mix('#7E786A', C.road, 0.3), 0.5)
+  line(pen, [(pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2], [(pts[2][0] + pts[3][0]) / 2, (pts[2][1] + pts[3][1]) / 2], '#8C8676', 0.4)
 }
 
 /* ------------------------------------------------------------------ the building */
@@ -481,6 +489,7 @@ export function drawBuilding(pen: Pen, t: number, f: Frame): void {
   }
   drawMartyRoom(marty, t, f)
   drawMishRoom(mish, t)
+  drawMishSmoke(mish, t, f)
   drawMishAir(mish, t, f)
   drawFloor(marty, mish, t, f)
 }
@@ -569,8 +578,18 @@ function drawMartyRoom(pen: Pen, t: number, f: Frame): void {
   rect(pen, d0 + 0.02, fl - 0.04, d1 - 0.02, fl, C.transom)
   // Someone going by out in the hall.
   drawHall(pen, t, DOOR)
-  // A coat on a nail by the door.
-  jacket(pen, [d1 + 0.32, DOOR_TOP + 0.3], '#3E3A33')
+  // A coat on a nail by the door, stirring in the draught from the window.
+  {
+    const hook: Pt = [d1 + 0.32, DOOR_TOP + 0.3]
+    const ctx = ctxOf(pen.p)
+    const { k } = pen
+    ctx.save()
+    ctx.translate(hook[0] * k, hook[1] * k)
+    ctx.rotate(0.035 * (draught(t) - 0.55))
+    ctx.translate(-hook[0] * k, -hook[1] * k)
+    jacket(pen, hook, '#3E3A33')
+    ctx.restore()
+  }
   // The radiator: its sections, its pipe; it knocks.
   const kn = KNOCKS.reduce((s, k) => s + (t >= k ? ring(t - k, 18, 0.09) : 0), 0)
   const dx = 0.025 * kn
@@ -584,6 +603,8 @@ function drawMartyRoom(pen: Pen, t: number, f: Frame): void {
   limb(pen, [r1 + dx, fl - 0.3], [r1 + 0.22, fl - 0.3], 0.07, C.radiatorDark)
   limb(pen, [r1 + 0.22, fl - 0.3], [r1 + 0.22, fl], 0.07, C.radiatorDark)
   ellipse(pen, [r1 + 0.22, fl - 0.42], 0.06, 0.06, C.iron)
+  // The mouse that lives in the wall behind the bed's foot (`small.ts`).
+  drawMouse(pen, t)
   // The suitcase under the bed (back from London), the iron bed, its mattress.
   rect(pen, BED[0] + 0.5, fl - 0.42, BED[0] + 1.75, fl - 0.02, C.suitcase)
   rect(pen, BED[0] + 0.8, fl - 0.42, BED[0] + 0.88, fl - 0.02, C.strap)
