@@ -1,6 +1,10 @@
 import type p5 from 'p5'
-import { R } from '../../../../../parts'
 import { frame, hash, knock, lastOf, smooth, type Ctx } from '../kit'
+import { view } from '../depth'
+import { drawHall } from './hall'
+import { drawOffice, OFFICE, PANES } from './office'
+import { drawOutside } from './outside'
+import { lampsOn } from './pulse'
 import { LIFE_RED } from '../worlds'
 import {
   BOARD,
@@ -60,7 +64,6 @@ import {
   V_WEB,
   WEB_T,
   WEB_Y,
-  PAVEMENT,
 } from './press-plan'
 
 /**
@@ -84,17 +87,17 @@ export const PAL = {
   wood: '#3E3029',
   woodTop: '#5A4639',
   woodEdge: '#6E5848',
-  iron: '#3A3D43',
-  ironHi: '#555A62',
-  ironLo: '#2A2C31',
-  steel: '#8C9199',
-  steelHi: '#B5BAC1',
-  paper: '#E4DDCB',
-  paperShade: '#B9B19F',
+  iron: '#2F3E46',
+  ironHi: '#4F6872',
+  ironLo: '#1F2A30',
+  steel: '#86A0A9',
+  steelHi: '#C4DADF',
+  paper: '#EEE8D9',
+  paperShade: '#BDB5A3',
   paperEdge: '#9B9483',
   photo: '#7F8286',
   ink: '#1F2023',
-  lamp: '#E6C688',
+  lamp: '#F2B25C',
   ted: '#0B0C0E',
   floor: '#1B1C1F',
   floorLine: '#34363B',
@@ -198,112 +201,46 @@ export function cover(g: C2, k: number, x: number, y: number, w: number, h: numb
 
 /* ------------------------------------------------------------------ the set */
 
-const HALL_TOP = -3.6
-const ROOM_X1 = 2.15
+const ROOM_X1 = OFFICE.x1
+/** The lamps hung over the machine's own line. */
+export const LAMPS = [9.4, 13.2, 17.0, 20.6]
+export const LAMP_Y = -0.15
 
 export function drawSet(p: p5, c: Ctx, t: number): void {
   const k = c.k
   const g = cx(p)
-  const f = frame(p, k)
-  const x0 = f.x0 - 1
-  const x1 = f.x1 + 1
-  const y0 = Math.min(f.y0 - 1, HALL_TOP - 1)
-  const y1 = Math.max(f.y1 + 1, FLOOR + 2)
+  const v = view(p, k)
+  const x0 = v.x0 - 1
+  const x1 = v.x1 + 1
+  const y0 = v.y0 - 1
   g.save()
-  // The hall: dark, a little lighter high up where the windows are.
-  const wall = g.createLinearGradient(0, HALL_TOP * k, 0, FLOOR * k)
-  wall.addColorStop(0, PAL.hallHigh)
-  wall.addColorStop(1, PAL.hall)
-  g.fillStyle = wall
-  g.fillRect(x0 * k, y0 * k, (Math.min(x1, DOOR_X) - x0) * k, (y1 - y0) * k)
-  // Tall windows high in the back wall, the morning grey in them, and their light falling long across the hall.
-  const dawn = 0.75 + 0.25 * smooth(t, TREADLE - 1, TREADLE + 6)
-  for (let i = 0; i < 6; i++) {
-    const wx = 3.3 + i * 3.1
-    if (wx + 1 < x0 || wx - 1 > x1 || wx > DOOR_X - 1.2) continue
-    const wy0 = HALL_TOP + 0.6
-    const wy1 = 1.9
-    rect(g, k, wx - 0.62, wy0, 1.24, wy1 - wy0, mix(mix(PAL.window, PAL.hall, 0.35), PAL.windowLit, 0.2 * dawn))
-    // The arch at its top.
-    g.fillStyle = mix(mix(PAL.window, PAL.hall, 0.35), PAL.windowLit, 0.2 * dawn)
-    g.beginPath()
-    g.arc(wx * k, wy0 * k, 0.62 * k, Math.PI, 0)
-    g.fill()
-    for (let m = 1; m < 3; m++) line(g, k, wx - 0.62 + (1.24 * m) / 3, wy0 - 0.5, wx - 0.62 + (1.24 * m) / 3, wy1, PAL.mullion, 0.035)
-    for (let m = 1; m < 4; m++) line(g, k, wx - 0.62, wy0 + ((wy1 - wy0) * m) / 4, wx + 0.62, wy0 + ((wy1 - wy0) * m) / 4, PAL.mullion, 0.035)
-    // A shaft of the window's light, down and to the right, very faint.
-    g.fillStyle = hexA(PAL.windowLit, 0.05 * dawn)
-    g.beginPath()
-    g.moveTo((wx - 0.62) * k, wy1 * k)
-    g.lineTo((wx + 0.62) * k, wy1 * k)
-    g.lineTo((wx + 2.3) * k, FLOOR * k)
-    g.lineTo((wx + 0.4) * k, FLOOR * k)
-    g.closePath()
-    g.fill()
-  }
-  // The roof's girders and the crane rail.
-  rect(g, k, x0, HALL_TOP - 0.25, Math.min(x1, DOOR_X) - x0, 0.25, PAL.ironLo)
-  for (let gx = Math.floor(x0 / 2.4) * 2.4; gx < Math.min(x1, DOOR_X); gx += 2.4) {
-    line(g, k, gx, HALL_TOP, gx + 1.2, HALL_TOP + 0.45, PAL.ironLo, 0.05)
-    line(g, k, gx + 1.2, HALL_TOP + 0.45, gx + 2.4, HALL_TOP, PAL.ironLo, 0.05)
-  }
-  rect(g, k, Math.max(x0, ROOM_X1), HALL_TOP + 0.45, Math.min(x1, DOOR_X) - Math.max(x0, ROOM_X1), 0.08, PAL.ironLo)
-  // The lamps hung over the press, coming up as the press starts.
-  const lampOn = smooth(t, TREADLE - 0.05, TREADLE + 0.6)
-  for (const lx of [9.4, 13.2, 17.0, 20.6]) {
-    if (lx + 3 < x0 || lx - 3 > x1) continue
-    const ly = -0.15
-    line(g, k, lx, HALL_TOP + 0.5, lx, ly - 0.1, PAL.ironLo, 0.03)
-    poly(g, k, [[lx - 0.3, ly + 0.08], [lx + 0.3, ly + 0.08], [lx + 0.12, ly - 0.12], [lx - 0.12, ly - 0.12]], PAL.ironLo)
-    const a = 0.08 + 0.1 * lampOn
-    g.fillStyle = hexA(PAL.lamp, a * 0.55)
-    g.beginPath()
-    g.moveTo((lx - 0.28) * k, (ly + 0.08) * k)
-    g.lineTo((lx + 0.28) * k, (ly + 0.08) * k)
-    g.lineTo((lx + 1.7) * k, FLOOR * k)
-    g.lineTo((lx - 1.7) * k, FLOOR * k)
-    g.closePath()
-    g.fill()
-    glow(g, k, lx, ly + 0.1, 0.5, PAL.lamp, 0.25 + 0.4 * lampOn)
-  }
-  // The floor.
-  rect(g, k, x0, FLOOR, Math.min(x1, DOOR_X) - x0, y1 - FLOOR, PAL.floor)
-  line(g, k, x0, FLOOR + 0.01, Math.min(x1, DOOR_X), FLOOR + 0.01, PAL.floorLine, 0.03)
-
-  // The street, through the loading door: the morning, the far side's buildings pale, the pavement.
-  if (x1 > DOOR_X - 1) {
-    const sky = g.createLinearGradient(0, -3 * k, 0, FLOOR * k)
-    sky.addColorStop(0, PAL.outsideHigh)
-    sky.addColorStop(1, PAL.outside)
-    g.fillStyle = sky
-    g.fillRect(DOOR_X * k, y0 * k, (x1 - DOOR_X) * k, (FLOOR - y0) * k)
-    // Across the street: the fronts of the buildings opposite, pale in the morning haze, their rows of windows.
-    const far = FLOOR - 1.05
-    let bx = DOOR_X + 0.3
-    for (let i = 0; bx < x1; i++) {
-      const bw = 2.2 + 1.3 * hash(i, 11)
-      const bh = 4.2 + 3 * hash(i, 7)
-      const face = mix(PAL.outside, '#8C97A1', 0.3 + 0.3 * hash(i, 9))
-      rect(g, k, bx, far - bh, bw - 0.08, bh, face)
-      const winC = mix(face, '#5D6873', 0.32)
-      for (let wy = far - bh + 0.4; wy < far - 0.95; wy += 0.46) for (let wx = bx + 0.25; wx < bx + bw - 0.35; wx += 0.34) rect(g, k, wx, wy, 0.15, 0.24, winC)
-      // The shop front at its foot, a little darker, and its awning's shadow.
-      rect(g, k, bx, far - 0.75, bw - 0.08, 0.75, mix(face, '#6F7A84', 0.5))
-      bx += bw
+  // The hall in depth, wherever the office and the street leave it to be seen.
+  if (v.x1 > ROOM_X1 - 0.5 || v.y0 < OFFICE.top || v.y1 > FLOOR) {
+    g.save()
+    if (v.x0 < ROOM_X1 && v.y0 > OFFICE.top && v.y1 < FLOOR + 0.2) {
+      g.beginPath()
+      g.rect(ROOM_X1 * k, (v.y0 - 1) * k, (v.x1 - ROOM_X1 + 1) * k, (v.h + 2) * k)
+      g.clip()
     }
-    // The road, the far kerb, the near kerb; the pavement he comes out onto.
-    rect(g, k, DOOR_X, far, x1 - DOOR_X, 0.12, mix(PAL.outside, PAL.pavement, 0.3))
-    rect(g, k, DOOR_X, far + 0.12, x1 - DOOR_X, FLOOR - 0.28 - far - 0.12, '#666A6E')
-    rect(g, k, DOOR_X, FLOOR - 0.28, x1 - DOOR_X, 0.28, mix(PAL.pavement, PAL.outsideHigh, 0.25))
-    rect(g, k, DOOR_X, FLOOR, x1 - DOOR_X, y1 - FLOOR, PAL.pavement)
-    rect(g, k, DOOR_X, FLOOR, x1 - DOOR_X, 0.04, mix(PAL.pavement, PAL.outsideHigh, 0.45))
-    for (let px = DOOR_X + 1.5; px < x1; px += 1.5) line(g, k, px, FLOOR + 0.04, px - 0.25, y1, PAL.pavementLine, 0.02)
-    // The low sun from down the street, warm on the pavement.
-    const sun = g.createLinearGradient(DOOR_X * k, 0, (DOOR_X + 8) * k, 0)
-    sun.addColorStop(0, hexA(PAL.lamp, 0))
-    sun.addColorStop(1, hexA(PAL.lamp, 0.16))
-    g.fillStyle = sun
-    g.fillRect(DOOR_X * k, (FLOOR - 0.28) * k, (x1 - DOOR_X) * k, (y1 - FLOOR + 0.28) * k)
+    drawHall(g, v, t)
+    g.restore()
+  }
+  // The lamps hung over the press: their cords, their shades; their light is thrown in front of the machine.
+  const lamp = new Path2D()
+  for (const lx of LAMPS) {
+    if (lx + 1 < x0 || lx - 1 > x1) continue
+    lamp.rect((lx - 0.015) * k, (-5.2) * k, 0.03 * k, (LAMP_Y - 0.1 + 5.2) * k)
+    lamp.moveTo((lx - 0.34) * k, (LAMP_Y + 0.1) * k)
+    lamp.quadraticCurveTo((lx - 0.3) * k, (LAMP_Y - 0.14) * k, lx * k, (LAMP_Y - 0.16) * k)
+    lamp.quadraticCurveTo((lx + 0.3) * k, (LAMP_Y - 0.14) * k, (lx + 0.34) * k, (LAMP_Y + 0.1) * k)
+    lamp.closePath()
+  }
+  g.fillStyle = PAL.ironLo
+  g.fill(lamp)
+
+  // The street, through the loading door, in the morning.
+  if (x1 > DOOR_X - 1) {
+    drawOutside(g, v, t)
     // The hall's end wall, cut through at the door: brick, its outer face catching the morning; a stone lintel
     // over the opening, the curtain hung from it; the threshold at its foot.
     const WALL = 0.52
@@ -316,39 +253,8 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
     rect(g, k, DOOR_X - 0.14, FLOOR - 0.02, WALL + 0.06, 0.07, mix(PAL.pavement, '#3A3C40', 0.5))
   }
 
-  // Upstairs: the conference room, warmer, on the mezzanine over the hall's left end.
-  if (x0 < ROOM_X1 + 0.5) {
-    const rx0 = x0
-    rect(g, k, rx0, HALL_TOP, ROOM_X1 - rx0, UP - HALL_TOP, PAL.room)
-    const warm = g.createRadialGradient(-1 * k, -2.6 * k, 0, -1 * k, -2.6 * k, 4.5 * k)
-    warm.addColorStop(0, hexA(PAL.lamp, 0.12))
-    warm.addColorStop(1, hexA(PAL.lamp, 0))
-    g.fillStyle = warm
-    g.fillRect(rx0 * k, HALL_TOP * k, (ROOM_X1 - rx0) * k, (UP - HALL_TOP) * k)
-    // The covers on the wall, framed, in a row: the magazine's past, dim.
-    for (let i = 0; i < 6; i++) {
-      const fx = -7.6 + i * 1.5
-      if (fx > ROOM_X1 - 0.9 || fx + 1 < x0) continue
-      rect(g, k, fx - 0.06, -2.26, 0.72, 0.94, PAL.frame)
-      g.save()
-      g.globalAlpha = 0.42
-      cover(g, k, fx, -2.2, 0.6, 0.82)
-      g.restore()
-    }
-    // A pendant over the table.
-    line(g, k, -1.1, HALL_TOP, -1.1, -2.85, PAL.frame, 0.025)
-    poly(g, k, [[-1.45, -2.7], [-0.75, -2.7], [-0.95, -2.88], [-1.25, -2.88]], PAL.frame)
-    glow(g, k, -1.1, -2.6, 1.8, PAL.lamp, 0.16)
-    // The partition at the room's end: a door frame, and glass over the stairhead.
-    rect(g, k, ROOM_X1 - 0.08, HALL_TOP, 0.12, UP - 2.3 - HALL_TOP, PAL.frame)
-    rect(g, k, ROOM_X1 - 0.08, UP - 2.36, 0.5, 0.08, PAL.frame)
-    // The mezzanine's slab, and the dark under it.
-    rect(g, k, rx0, UP, STAIR.x0 - rx0, 0.32, PAL.ironLo)
-    rect(g, k, rx0, UP + 0.32, STAIR.x0 - rx0, FLOOR - UP - 0.32, mix(PAL.void, PAL.hall, 0.4))
-    rect(g, k, rx0, UP - 0.02, STAIR.x0 - rx0, 0.04, PAL.woodEdge)
-    // Columns under the mezzanine.
-    for (const px of [-3.6, -0.4]) if (px > x0 - 1) rect(g, k, px - 0.1, UP + 0.32, 0.2, FLOOR - UP - 0.32, PAL.ironLo)
-  }
+  // Upstairs: Ted's office, on the mezzanine over the hall's left end.
+  if (x0 < ROOM_X1 + 0.5) drawOffice(g, v, t, cover)
   g.restore()
 }
 
@@ -365,8 +271,16 @@ function drawTable(g: C2, k: number, t: number): void {
   rect(g, k, TABLE.x0, TABLE.top, TABLE.x1 - TABLE.x0, 0.12, PAL.wood)
   line(g, k, TABLE.x0, TABLE.top, TABLE.x1, TABLE.top, PAL.woodEdge, 0.02)
   for (const lx of [TABLE.x0 + 0.25, TABLE.x1 - 0.3]) rect(g, k, lx, TABLE.top + 0.12, 0.1, TABLE.h - 0.12, PAL.wood)
-  // The table's light: a sheen where the pendant falls.
+  // The table's light: a sheen where the pendant falls; the windows in its top, long and pale; the grain of its front.
   glow(g, k, -1.1, TABLE.top - 0.1, 1.5, PAL.lamp, 0.08)
+  for (const [a, b] of PANES) {
+    if (b < TABLE.x0 || a > TABLE.x1) continue
+    const xa = Math.max(a, TABLE.x0 + 0.2)
+    const xb = Math.min(b, TABLE.x1 - 0.15)
+    if (xb <= xa) continue
+    poly(g, k, [[xa + 0.04, TABLE.top - 0.21], [xb - 0.04, TABLE.top - 0.21], [xb + 0.05, TABLE.top - 0.01], [xa + 0.1, TABLE.top - 0.01]], hexA('#A9C1C8', 0.13))
+  }
+  for (const [y, a] of [[0.03, 0.35], [0.06, 0.25], [0.095, 0.3]] as const) line(g, k, TABLE.x0 + 0.05, TABLE.top + y, TABLE.x1 - 0.05, TABLE.top + y + 0.004, hexA('#2A1F19', a), 0.008)
   // Negative 25, flat on the top, in its sleeve; laid down on the downbeat.
   const since = t - LAID
   const drop = since < 0 ? 0 : Math.max(0, 0.06 * Math.exp(-since / 0.03) * Math.cos(since * 50))
@@ -438,26 +352,58 @@ function drawTed(g: C2, k: number, t: number): void {
   g.quadraticCurveTo(-0.05 * k, -2.58 * k, -0.07 * k, -2.66 * k)
   g.closePath()
   g.fill()
+  // The window behind him, catching his edges: the back of his head, his shoulder, his arm; less on the side
+  // toward the room.
+  g.strokeStyle = hexA('#E9D2A6', 0.5)
+  g.lineWidth = 0.02 * k
+  g.lineCap = 'round'
+  g.beginPath()
+  g.ellipse(0, -2.88 * k, 0.15 * k, 0.19 * k, 0, Math.PI * 0.62, Math.PI * 1.32)
+  g.moveTo(-0.37 * k, -2.0 * k)
+  g.lineTo(-0.38 * k, -2.32 * k)
+  g.quadraticCurveTo(-0.36 * k, -2.5 * k, -0.18 * k, -2.52 * k)
+  g.moveTo(-0.47 * k, -2.3 * k)
+  g.lineTo(-0.47 * k, -1.45 * k)
+  g.stroke()
+  g.strokeStyle = hexA('#9FC0CB', 0.3)
+  g.lineWidth = 0.014 * k
+  g.beginPath()
+  g.moveTo(0.47 * k, -2.3 * k)
+  g.lineTo(0.47 * k, -1.45 * k)
+  g.moveTo(0.18 * k, -2.52 * k)
+  g.quadraticCurveTo(0.36 * k, -2.5 * k, 0.38 * k, -2.32 * k)
+  g.stroke()
   g.restore()
 }
 
 /* ------------------------------------------------------------------ the stair and the treadle */
 
-function drawStair(g: C2, k: number): void {
+function drawStair(g: C2, k: number, t: number): void {
   const { x0, run, n } = STAIR
   // The far stringer, treads, the near stringer, a rail.
   const xs = x0
   const xe = x0 + run * (n - 1)
   line(g, k, xs - 0.05, UP + 0.15, xe + 0.05, FLOOR - 0.1, PAL.ironLo, 0.12)
+  // The light on its edges: the dawn's, until the lamps come up.
+  const edge = mix('#8FB0BA', '#F2C27A', lampsOn(t, 0) > 0.5 ? 1 : 0)
   for (let i = 1; i < n; i++) {
     const tx = x0 + run * (i - 1)
     const ty = treadY(i)
     rect(g, k, tx, ty, run + 0.04, 0.06, PAL.ironHi)
     rect(g, k, tx, ty + 0.06, run + 0.04, 0.03, PAL.ironLo)
+    rect(g, k, tx, ty - 0.008, run + 0.04, 0.016, hexA(edge, 0.75))
     line(g, k, tx + run, ty + 0.09, tx + run, ty + STAIR.rise, hexA(PAL.ironLo, 0.6), 0.02)
   }
-  // The rail and its posts.
+  // The near stringer: a channel along under the treads' fronts, so they stand up from it as steps; its bolts.
+  const slope = STAIR.rise / run
+  const sy = (x: number) => treadY(1) + 0.09 + (x - (x0 + run)) * slope
+  const foot = x0 + run + (FLOOR - treadY(1) - 0.09) / slope
+  poly(g, k, [[xs - 0.04, sy(xs - 0.04)], [foot, FLOOR], [foot - 0.34, FLOOR], [xs - 0.04, sy(xs - 0.04) + 0.24]], PAL.ironLo)
+  line(g, k, xs - 0.04, sy(xs - 0.04), foot, FLOOR, hexA(edge, 0.35), 0.012)
+  for (let x = xs + 0.25; x < foot - 0.2; x += 0.42) disc(g, k, x, sy(x) + 0.12, 0.016, PAL.steel)
+  // The rail and its posts, the rail's top catching the light.
   line(g, k, xs + 0.05, UP - 0.95, xe + 0.3, FLOOR - 1.05, PAL.iron, 0.05)
+  line(g, k, xs + 0.05, UP - 0.97, xe + 0.3, FLOOR - 1.07, hexA(edge, 0.55), 0.014)
   for (let i = 1; i < n; i += 2) {
     const tx = x0 + run * (i - 1) + 0.1
     line(g, k, tx, treadY(i), tx, treadY(i) - 1.0, PAL.iron, 0.03)
@@ -598,6 +544,69 @@ function drawWeb(g: C2, k: number, t: number): void {
   }
 }
 
+/** A highlight on a turning cylinder's upper left, where the lamps catch it: it stays put while the cylinder turns. */
+function glint(g: C2, k: number, x: number, y: number, r: number): void {
+  g.strokeStyle = hexA(PAL.steelHi, 0.7)
+  g.lineWidth = Math.max(0.6, r * 0.09 * k)
+  g.beginPath()
+  g.arc(x * k, y * k, r * 0.86 * k, -2.55, -1.75)
+  g.stroke()
+}
+
+/** A unit's side frame's face, in cells from its middle: pure geometry, made once. */
+let FACE: { panels: Path2D; rivets: Path2D; lit: Path2D; rim: Path2D } | null = null
+function unitFace(): NonNullable<typeof FACE> {
+  if (FACE) return FACE
+  const top = WEB_Y - 1.55
+  const panels = new Path2D()
+  const rivets = new Path2D()
+  // The frame's outline, inset: its panel, and stiffening ribs across it.
+  const inset: [number, number][] = [[-0.75, FLOOR - 0.18], [-0.615, top + 0.09], [0.615, top + 0.09], [0.75, FLOOR - 0.18]]
+  panels.moveTo(inset[0][0], inset[0][1])
+  for (const q of inset.slice(1)) panels.lineTo(q[0], q[1])
+  panels.closePath()
+  const across = (y: number): [number, number] => {
+    const u = (y - top) / (FLOOR - top)
+    const w = 0.615 + (0.75 - 0.615) * u
+    return [-w, w]
+  }
+  for (const y of [top + 0.5, FLOOR - 0.62]) {
+    const [a, b] = across(y)
+    panels.moveTo(a, y)
+    panels.lineTo(b, y)
+  }
+  // Rivets along the panel's edges and its ribs.
+  for (let j = 0; j < 4; j++) {
+    const [ax, ay] = inset[j]
+    const [bx, by] = inset[(j + 1) % 4]
+    const len = Math.hypot(bx - ax, by - ay)
+    for (let d = 0.07; d < len; d += 0.15) {
+      const px = ax + ((bx - ax) * d) / len - (Math.sign(ax + bx) || 0) * 0.04
+      const py = ay + ((by - ay) * d) / len + (j === 1 ? 0.045 : j === 3 ? -0.045 : 0)
+      rivets.moveTo(px + 0.016, py)
+      rivets.arc(px, py, 0.016, 0, Math.PI * 2)
+    }
+  }
+  for (const y of [top + 0.5, FLOOR - 0.62]) {
+    const [a, b] = across(y)
+    for (let x = a + 0.1; x < b - 0.05; x += 0.15) {
+      rivets.moveTo(x + 0.014, y - 0.04)
+      rivets.arc(x, y - 0.04, 0.014, 0, Math.PI * 2)
+    }
+  }
+  // The lamp's light along its top, and the window's cool light down its right edge.
+  const lit = new Path2D()
+  lit.rect(-0.7, top, 1.4, 0.025)
+  const rim = new Path2D()
+  rim.moveTo(0.7, top + 0.03)
+  rim.lineTo(0.85, FLOOR)
+  rim.lineTo(0.82, FLOOR)
+  rim.lineTo(0.675, top + 0.03)
+  rim.closePath()
+  FACE = { panels, rivets, lit, rim }
+  return FACE
+}
+
 /** Unit i: the impression cylinder under the web, the plate and its inking over it on an arm that lifts. */
 function drawUnit(g: C2, k: number, i: number, t: number, front: boolean): void {
   const x = UNITS[i]
@@ -608,16 +617,60 @@ function drawUnit(g: C2, k: number, i: number, t: number, front: boolean): void 
   const impY = WEB_Y + WEB_T + IMP_R
   const plY = WEB_Y - PLATE_R - lift + 0.015 * hit
   if (!front) {
-    // The side frame: a heavy plate behind, with its foot.
+    // The side frame: a heavy plate behind, with its foot; its panels, their rivets, the lamp's light on its top.
     poly(g, k, [[x - 0.85, FLOOR], [x - 0.7, WEB_Y - 1.55], [x + 0.7, WEB_Y - 1.55], [x + 0.85, FLOOR]], PAL.ironLo)
     rect(g, k, x - 0.95, FLOOR - 0.12, 1.9, 0.12, PAL.iron)
-    // The gear on the frame, turning with the press.
+    g.save()
+    g.translate(x * k, 0)
+    g.scale(k, k)
+    const face = unitFace()
+    g.strokeStyle = hexA(PAL.ironHi, 0.55)
+    g.lineWidth = 0.018
+    g.stroke(face.panels)
+    g.fillStyle = hexA(PAL.steel, 0.5)
+    g.fill(face.rivets)
+    const on = lampsOn(t, 0)
+    g.fillStyle = hexA(PAL.lamp, 0.15 + 0.5 * on)
+    g.fill(face.lit)
+    g.fillStyle = hexA(PAL.steelHi, 0.35)
+    g.fill(face.rim)
+    // The gauge on the frame: its needle kicks on each impression.
+    const gx = -0.44
+    const gy = WEB_Y - 1.0
+    g.fillStyle = PAL.iron
+    g.beginPath()
+    g.arc(gx, gy, 0.125, 0, Math.PI * 2)
+    g.fill()
+    g.fillStyle = '#D9D3C3'
+    g.beginPath()
+    g.arc(gx, gy, 0.1, 0, Math.PI * 2)
+    g.fill()
+    const needle = -2.3 + (t >= UNIT_START[i] ? 1.6 + 0.5 * hit + 0.05 * Math.sin(t * 9 + i) : 0.2)
+    g.strokeStyle = PAL.ink
+    g.lineWidth = 0.014
+    g.beginPath()
+    g.moveTo(gx, gy)
+    g.lineTo(gx + Math.cos(needle) * 0.085, gy + Math.sin(needle) * 0.085)
+    g.stroke()
+    // The running light by its foot: dark until the unit runs, then green.
+    const running = t >= UNIT_START[i]
+    g.fillStyle = running ? '#8FE3A0' : '#24352B'
+    g.beginPath()
+    g.arc(-0.55, FLOOR - 0.36, 0.035, 0, Math.PI * 2)
+    g.fill()
+    g.restore()
+    if (running) glow(g, k, x - 0.55, FLOOR - 0.36, 0.16, '#8FE3A0', 0.35 + 0.25 * hit)
+    // The gears on the frame, turning with the press, one driving the other.
+    disc(g, k, x - 0.28, impY + 0.98, 0.19, PAL.iron)
+    spokes(g, k, x - 0.28, impY + 0.98, 0.19, run / 0.19, 5, PAL.ironHi, 0.03)
     disc(g, k, x + 0.42, impY + 0.62, 0.3, PAL.iron)
     spokes(g, k, x + 0.42, impY + 0.62, 0.3, -run / 0.3, 6, PAL.ironHi, 0.04)
+    glint(g, k, x + 0.42, impY + 0.62, 0.3)
     // The impression cylinder.
     disc(g, k, x, impY, IMP_R, PAL.iron)
     ring(g, k, x, impY, IMP_R - 0.03, PAL.ironHi, 0.02)
     spokes(g, k, x, impY, IMP_R, run / IMP_R, 4, PAL.ironHi, 0.035)
+    glint(g, k, x, impY, IMP_R)
     return
   }
   // The arm the plate rides on, from its pivot on the frame's back.
@@ -642,6 +695,7 @@ function drawUnit(g: C2, k: number, i: number, t: number, front: boolean): void 
   g.stroke()
   spokes(g, k, x, plY, PLATE_R, -run / PLATE_R, 3, PAL.ironLo, 0.03)
   disc(g, k, x, plY, 0.06, PAL.ironLo)
+  glint(g, k, x, plY, PLATE_R)
   // The impression: the ink's colour, struck into the paper at the nip.
   if (hit > 0.02 && lift < 0.05) glow(g, k, x, WEB_Y + 0.02, 0.4, i === 1 ? PAL.paper : ink, 0.55 * hit)
 }
@@ -893,7 +947,7 @@ export function drawMachine(p: p5, c: Ctx, t: number): void {
     drawTed(g, k, t)
     drawTable(g, k, t)
   }
-  if (vis(STAIR.x0 - 0.5, STAIR.x0 + 4)) drawStair(g, k)
+  if (vis(STAIR.x0 - 0.5, STAIR.x0 + 4)) drawStair(g, k, t)
   if (vis(REEL.c[0] - 2, REEL.c[0] + 2)) {
     drawTreadle(g, k, t)
     drawReel(g, k, t)
@@ -912,27 +966,10 @@ export function drawMachine(p: p5, c: Ctx, t: number): void {
     drawFalling(g, k, t)
   }
   if (vis(bundleX(t) - 1, bundleX(t) + 1)) drawBundle(g, k, t)
-  g.restore()
-}
-
-export function drawFront(p: p5, c: Ctx, t: number): void {
-  const g = cx(p)
-  const k = c.k
-  const f = frame(p, k)
-  g.save()
-  g.lineCap = 'butt'
-  if (DOOR_X + 1 >= f.x0 && DOOR_X - 1 <= f.x1) drawCurtain(g, k, t)
-  // The hall's dust in the lamp light, lifting a little on the loudest hits.
-  if (t > TREADLE && f.x0 < DOOR_X) {
-    for (let i = 0; i < 40; i++) {
-      const x = 7 + hash(i, 1) * 16 + Math.sin(t * 0.2 + i) * 0.3
-      const y = -0.5 + hash(i, 2) * 4.2 - ((t * 0.05 + hash(i, 4) * 4) % 4.2) * 0.2
-      if (x < f.x0 || x > f.x1 || x > DOOR_X) continue
-      disc(g, k, x, y, 0.01 + 0.008 * hash(i, 3), hexA(PAL.lamp, 0.18))
-    }
+  // The strip curtain last, behind him: he goes through it, and it never lies over him.
+  if (vis(DOOR_X - 1, DOOR_X + 1)) {
+    g.lineCap = 'butt'
+    drawCurtain(g, k, t)
   }
   g.restore()
-  void R
-  void PAVEMENT
-  void FULL
 }

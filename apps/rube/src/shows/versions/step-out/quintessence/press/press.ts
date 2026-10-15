@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { laneAt } from '../../../../../parts'
 import { box, part, scenery, type PartShot } from '../kit'
 import { WALTER_WARM } from '../worlds'
-import { drawFront, drawMachine, drawSet } from './press-draw'
+import { drawMachine, drawSet } from './press-draw'
 import {
   buildLane,
   CINCH,
@@ -18,6 +18,7 @@ import {
   LIFTS,
   OFF_NOSE,
   ON_STACK,
+  passAt,
   ON_WEB,
   PAVEMENT,
   RAMS,
@@ -34,6 +35,7 @@ import {
   T0,
   T1,
   TREADLE,
+  UNITS,
 } from './press-plan'
 
 /**
@@ -84,11 +86,6 @@ export const press = part<null>(
       drawMachine(p, c, c.t + T0)
       p.pop()
     },
-    over: (p, _s, c) => {
-      p.push()
-      drawFront(p, c, c.t + T0)
-      p.pop()
-    },
   },
   () => ({
     cells: box(-6, -6, 30, 6, 1),
@@ -101,32 +98,44 @@ export const press = part<null>(
   () => shots(),
 )
 
-/** The camera: Ted and the negative; with him down the stair; the press as it starts; along the web; the folder and the stack; the bundle out; the street. */
+/**
+ * The camera: Ted and the negative against the city; with him down the stair; drawn back as the treadle starts the
+ * press and the hall's lamps come up; along the web, pushing in on each impression as its plate lifts over him; the
+ * folder; then, while the stack grows under him, all the way back until the whole hall is in the picture, every line
+ * running, and in again for the bundle; the bundle out; the street.
+ */
 function shots(): PartShot[] {
   const hold = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x, y], w: 1 })
   const on = (t: number, cells: number, dx: number, dy: number, y?: number): PartShot => {
     const [x, hy] = him(t)
     return hold(t, cells, x + dx, y ?? hy + dy)
   }
+  const nip = UNITS.map((x) => passAt(x))
   return [
-    // Upstairs: the negative laid down, Ted at the far end; holding while he stands; then off.
-    hold(T0 + 1.0, 3.5, -0.75, -0.55),
-    hold(STEPS[0] - 1.6, 3.6, -0.3, -0.35),
+    // Upstairs: the negative laid down, Ted at the far end against the window; holding while he stands; then off.
+    hold(T0 + 0.9, 3.55, -0.8, -0.62),
+    hold(STEPS[0] - 1.6, 3.95, -0.2, -0.5),
     on(FLOOR_HIT, 3.9, 0.7, -0.35),
     // Down the stair with him, opening out as the hall comes into view.
-    on(STEPS[3], 4.3, 0.75, -0.45),
-    on(STEPS[6], 4.8, 1.0, -0.6),
-    // The treadle, the reel and the first unit, as the press starts.
-    hold(TREADLE + 0.3, 5.0, 8.1, 2.45),
-    hold(ON_WEB, 4.9, 9.9, 2.2),
-    // Along the web, through the three units.
-    on(ON_WEB + 1.6, 4.6, 0.9, 0.35),
-    on(ON_WEB + 4.5, 4.6, 0.9, 0.35),
-    on(OFF_NOSE - 2.2, 4.8, 0.7, 0.35),
-    // The folder and the stack: he comes down to it, and it grows under him.
+    on(STEPS[3], 4.3, 0.75, -0.5),
+    on(STEPS[6], 4.9, 1.0, -0.7),
+    // The treadle: the press starts, and the lamps come up round him, plane by plane back into the dark.
+    hold(TREADLE + 0.45, 6.3, 8.3, 1.9),
+    hold(ON_WEB + 0.35, 5.6, 10.2, 1.75),
+    // Along the web: in on each impression as its plate lifts over him, out between.
+    on(nip[0], 4.3, 0.55, 0.15),
+    on((nip[0] + nip[1]) / 2, 4.9, 0.8, 0.05),
+    on(nip[1], 4.3, 0.55, 0.15),
+    on((nip[1] + nip[2]) / 2, 4.9, 0.8, 0.05),
+    on(nip[2], 4.3, 0.55, 0.15),
+    on(OFF_NOSE - 1.6, 4.9, 0.8, 0.3),
+    // The folder and the stack: he comes down to it.
     hold(OFF_NOSE, 5.2, 17.7, 2.75),
     hold(ON_STACK + 0.6, 5.0, 18.0, 2.85),
-    hold(JOG[0], 4.1, STACK_X + 0.05, 2.75),
+    // The whole hall, while the stack lifts him: back until every line is in the picture, and in again.
+    hold(REVEAL[0], 15.5, 12.6, -0.2),
+    hold(REVEAL[1], 14.8, 13.2, 0.0),
+    hold(JOG[0], 4.6, STACK_X + 0.05, 2.75),
     hold(SHOVE, 4.0, STACK_X + 0.15, 2.7),
     // Out on the conveyor, through the door, and onto the pavement.
     on(RIDE + 0.4, 4.1, 0.9, 0, 2.35),
@@ -135,6 +144,9 @@ function shots(): PartShot[] {
     hold(T1, 4.2, EXIT_X - 0.5 + 0.9, 4 - 0.5),
   ]
 }
+
+/** The widest the camera goes, and how long it holds there: the whole hall, while the stack grows. */
+const REVEAL = [213.5, 214.8]
 
 /** Every strike, in show seconds. */
 export const PRESS_HITS: readonly number[] = (() => {
@@ -168,5 +180,5 @@ export const PRESS_HITS: readonly number[] = (() => {
   return out
 })()
 
-/** No wides: he is always the thing in the frame. */
+/** No wides: he is always the thing in the frame, even with the whole hall round him. */
 export const PRESS_WIDE: [number, number][] = []
