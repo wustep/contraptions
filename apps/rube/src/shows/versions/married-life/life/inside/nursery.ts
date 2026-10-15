@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, box, part, type Companion, type Ctx, type Pose } from '../kit'
+import { wobble } from '../depth'
 import { AT, bar, beat, BEATS, CUT, onsets } from '../music'
 import { G_EARTH } from '../physics'
 import { CARL, HILL, HOME, INK } from '../worlds'
@@ -379,7 +380,9 @@ function curtains(p: p5, c: Ctx, T: number, light: number): void {
   p.strokeWeight(weight * 0.7)
   p.fill(alpha(p, HOME.woodDark, light))
   px(p, k, x0 - 0.3, top - 0.04, x1 + 0.3, top + 0.01, 0.02)
-  const panel = (a: number, b: number, tie: number | null) => {
+  // Each panel stirs a hair at its hem, on its own breath: the room is still, but not airless.
+  const panel = (a: number, b: number, tie: number | null, seed: number) => {
+    const s = 0.016 * wobble(T, seed, 1.9) + 0.006 * Math.sin(T * 1.3 + seed)
     p.stroke(alpha(p, INK, 0.55 * light))
     p.strokeWeight(weight * 0.6)
     p.fill(cloth)
@@ -387,17 +390,17 @@ function curtains(p: p5, c: Ctx, T: number, light: number): void {
     if (tie === null) {
       p.vertex(a * k, top * k)
       p.vertex(b * k, top * k)
-      p.bezierVertex((b + 0.02) * k, (top + 0.8) * k, (b - 0.02) * k, (hem - 0.6) * k, b * k, hem * k)
-      p.bezierVertex(((a + b) / 2) * k, (hem + 0.04) * k, ((a + b) / 2) * k, (hem - 0.03) * k, a * k, hem * k)
+      p.bezierVertex((b + 0.02) * k, (top + 0.8) * k, (b - 0.02 + s * 0.5) * k, (hem - 0.6) * k, (b + s) * k, hem * k)
+      p.bezierVertex(((a + b) / 2 + s) * k, (hem + 0.04) * k, ((a + b) / 2 + s) * k, (hem - 0.03) * k, (a + s) * k, hem * k)
     } else {
       // Gathered at the tie: narrow there, spreading to the hem.
       const m = (a + b) / 2
       p.vertex(a * k, top * k)
       p.vertex(b * k, top * k)
       p.bezierVertex(b * k, (tie - 0.3) * k, (m + 0.06) * k, (tie - 0.1) * k, (m + 0.06) * k, tie * k)
-      p.bezierVertex((m + 0.06) * k, (tie + 0.15) * k, (b + 0.03) * k, (hem - 0.3) * k, (b + 0.03) * k, hem * k)
-      p.vertex((a - 0.03) * k, hem * k)
-      p.bezierVertex((a - 0.03) * k, (hem - 0.3) * k, (m - 0.06) * k, (tie + 0.15) * k, (m - 0.06) * k, tie * k)
+      p.bezierVertex((m + 0.06) * k, (tie + 0.15) * k, (b + 0.03 + s * 0.6) * k, (hem - 0.3) * k, (b + 0.03 + s) * k, hem * k)
+      p.vertex((a - 0.03 + s) * k, hem * k)
+      p.bezierVertex((a - 0.03 + s * 0.6) * k, (hem - 0.3) * k, (m - 0.06) * k, (tie + 0.15) * k, (m - 0.06) * k, tie * k)
       p.bezierVertex((m - 0.06) * k, (tie - 0.1) * k, a * k, (tie - 0.3) * k, a * k, top * k)
     }
     p.endShape(p.CLOSE)
@@ -407,18 +410,18 @@ function curtains(p: p5, c: Ctx, T: number, light: number): void {
     const n = tie === null ? 5 : 2
     for (let i = 1; i <= n; i++) {
       const x = a + ((b - a) * i) / (n + 1)
-      if (tie === null) p.line(x * k, (top + 0.06) * k, (x + 0.02) * k, (hem - 0.04) * k)
+      if (tie === null) p.line(x * k, (top + 0.06) * k, (x + 0.02 + s * 0.8) * k, (hem - 0.04) * k)
       else p.line(x * k, (top + 0.06) * k, ((a + b) / 2 + (x - (a + b) / 2) * 0.3) * k, (tie - 0.05) * k)
     }
   }
   if (T < E) {
     const tie = (y0 + y1) / 2 + 0.2
-    panel(x0 - 0.28, x0 + 0.1, tie)
-    panel(x1 - 0.1, x1 + 0.28, tie)
+    panel(x0 - 0.28, x0 + 0.1, tie, 17)
+    panel(x1 - 0.1, x1 + 0.28, tie, 23)
   } else {
     const mid = (x0 + x1) / 2
-    panel(x0 - 0.28, mid + 0.02, null)
-    panel(mid - 0.02, x1 + 0.28, null)
+    panel(x0 - 0.28, mid + 0.02, null, 17)
+    panel(mid - 0.02, x1 + 0.28, null, 23)
   }
 }
 
@@ -671,12 +674,11 @@ function mobile(p: p5, c: Ctx, T: number, light: number): void {
   p.noStroke()
   p.fill(brass)
   px(p, k, cx0, cy - r, cx1, cy + r, 0.012)
-  p.fill(alpha(p, HOME.shine, 0.55 * light))
-  px(p, k, cx0 + 0.01, cy - r * 0.75, cx1 - 0.01, cy - r * 0.45)
   const now = phi(T)
   const contact = Math.PI / 3
   const toothX = (j: number) => cx0 + 0.02 + ((cx1 - cx0 - 0.04) * j) / 6
-  p.fill(alpha(p, HOME.shine, light))
+  // The pins: steel studs, darker than the brass they stand in (pale, they read as sparkles, not pins).
+  p.fill(alpha(p, mixHex(INK, mixHex(CARL, HOME.trim, 0.4), 0.4), light))
   for (const pin of PINS) {
     const a = contact + (pin.at - now)
     if (a < -Math.PI / 2 || a > Math.PI / 2) continue

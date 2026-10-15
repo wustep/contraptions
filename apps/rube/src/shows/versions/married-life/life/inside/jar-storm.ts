@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, frame, hash, type Ctx } from '../kit'
+import { along as parallax, wobble, wrapNear } from '../depth'
 import { HOME, INK } from '../worlds'
 import {
   BOARDS, FLASH1, FLASH2, HOLE, SUN, THUNDER, TOPPLE, TREE, WINCH, bandageAt, boardAt, clamp01, limbAt, smoothstep, stormAt,
@@ -128,6 +129,212 @@ function rain(p: p5, c: Ctx, T: number): void {
   ctx.restore()
 }
 
+/** `hex` at opacity `a`, as a canvas colour. */
+function rgba(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a))})`
+}
+
+/** An ellipse added to a path as its own closed shape (in cells). */
+function oval(path: Path2D, k: number, x: number, y: number, rx: number, ry: number): void {
+  path.moveTo((x + rx) * k, y * k)
+  path.ellipse(x * k, y * k, rx * k, ry * k, 0, 0, Math.PI * 2)
+}
+
+/**
+ * The storm's clouds: torn masses at three depths over the house and the garden, lower, darker and faster the nearer
+ * they are, scudding to the left (the way the rain drives) and keeping with the frame by their depth as the camera
+ * draws back: the far deck high and slow and a shade lighter than the dark, the scud low over the tree and fast. Each
+ * flash lights their bellies. As the storm goes they break up, each in its own time, and the sky comes back between
+ * them. Each deck is one shape (its lobes filled once together), so it comes and goes without seams.
+ */
+interface Deck {
+  y0: number
+  y1: number
+  per: number
+  size: number
+  speed: number
+  depth: number
+  body: string
+  belly: string
+  heap: number
+  seed: number
+}
+const DECKS: Deck[] = [
+  // High over everything, for a phone held upright (the storm's wide sees far above the roof there).
+  { y0: -62, y1: -21, per: 26, size: 14, speed: -0.5, depth: 0.8, body: '#56627A', belly: '#4A556B', heap: 1, seed: 40 },
+  // Low on the horizon either side of the house: the murk the far rain falls from.
+  { y0: -4.6, y1: -2.2, per: 40, size: 3.2, speed: -0.4, depth: 0.85, body: '#5F6D7D', belly: '#55616F', heap: 0.6, seed: 44 },
+  // The decks: far, middle, and the scud.
+  { y0: -21, y1: -11.2, per: 44, size: 9, speed: -0.75, depth: 0.65, body: '#505C72', belly: '#445066', heap: 1.05, seed: 41 },
+  { y0: -16.5, y1: -8.8, per: 40, size: 6.2, speed: -1.35, depth: 0.42, body: '#465064', belly: '#394255', heap: 0.95, seed: 42 },
+  { y0: -12.8, y1: -7.4, per: 34, size: 4, speed: -2.4, depth: 0.2, body: '#3B4252', belly: '#2F3543', heap: 0.6, seed: 43 },
+]
+/** What a flash lights their bellies with (a little: the flash itself is the frame's, `lightning`). */
+const LIT_BELLY = '#C9D1D8'
+
+function decks(p: p5, c: Ctx, T: number): void {
+  const { storm, flash } = stormAt(T)
+  if (storm <= 0.01) return
+  const { k } = c
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const fl = Math.min(1, flash) ** 2
+  for (const [di, d] of DECKS.entries()) {
+    if (f.y0 > d.y1 + d.size * 0.4 || f.y1 < d.y0 - d.size * 0.4) continue
+    const shift = parallax(f, d.depth, INSIDE.ridge[0])
+    const shapes = new Path2D()
+    const bellies = new Path2D()
+    for (let i = 0; i < d.per; i++) {
+      const h = (s: number): number => hash(i, s, d.seed)
+      // Breaking up as the storm goes: each in its own time, the nearer decks first.
+      const part = smoothstep((T - (WINCH + 0.3 + 3.4 * h(9) + 0.25 * (DECKS.length - di))) / 1.5)
+      const w = d.size * (0.6 + 0.8 * h(3)) * (1 - 0.8 * part)
+      if (w < 0.08) continue
+      const x = wrapNear(h(1) * 100 + d.speed * T, f.cx - shift, 100) + shift
+      if (x + w < f.x0 - 1 || x - w > f.x1 + 1) continue
+      const y = d.y0 + (d.y1 - d.y0) * h(2)
+      if (y - w * 0.45 > f.y1 || y + w * 0.15 < f.y0) continue
+      // A flat base; heaped lobes along it, biggest in the middle; a lobe or two towering over those; a torn tail
+      // streaming off one end on the wind.
+      oval(shapes, k, x, y + 0.03 * w, 0.5 * w, 0.08 * w * d.heap)
+      const lumps = 4 + Math.floor(h(4) * 3)
+      for (let j = 0; j < lumps; j++) {
+        const u = (j + 0.5) / lumps - 0.5
+        const r = w * (0.15 + 0.09 * hash(i, 10 + j, d.seed)) * (1 - 0.9 * Math.abs(u))
+        const ry = r * 0.82 * d.heap
+        oval(shapes, k, x + u * 0.84 * w, y - ry * 0.55, r, ry)
+      }
+      if (d.heap > 0.9) {
+        const r = w * (0.11 + 0.06 * h(5))
+        oval(shapes, k, x + (h(6) - 0.5) * 0.36 * w, y - w * 0.16 * d.heap, r, r * 0.8 * d.heap)
+      }
+      oval(shapes, k, x + 0.56 * w, y + 0.02 * w, 0.14 * w, 0.035 * w)
+      oval(shapes, k, x + 0.72 * w, y + 0.035 * w, 0.08 * w, 0.02 * w)
+      oval(bellies, k, x + 0.02 * w, y + 0.05 * w, 0.54 * w, 0.11 * w * d.heap)
+    }
+    // The masses in one colour; their bellies darker, inside their own outline.
+    ctx.fillStyle = rgba(mixHex(d.body, LIT_BELLY, 0.15 * fl), storm)
+    ctx.fill(shapes)
+    ctx.save()
+    ctx.clip(shapes)
+    ctx.fillStyle = rgba(mixHex(d.belly, LIT_BELLY, 0.25 * fl), storm)
+    ctx.fill(bellies)
+    ctx.restore()
+  }
+}
+
+/** The far rain, past the garden tree: finer, fainter and slower than the near rain (it is farther off), on its slant. */
+function farRain(p: p5, c: Ctx, T: number): void {
+  const { rain: r } = stormAt(T)
+  if (r <= 0.01) return
+  const { k } = c
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // Fainter than the near rain's (its 0.3 is the flash limit; this is well under it).
+  ctx.strokeStyle = `rgba(206, 220, 230, ${0.17 * r})`
+  ctx.lineWidth = Math.max(0.8, k * 0.009)
+  ctx.beginPath()
+  const span = f.x1 - f.x0 + 2
+  const n = Math.round(220 * Math.max(1, (f.y1 - f.y0) / ((f.x1 - f.x0) * 0.5625)))
+  for (let i = 0; i < n; i++) {
+    const u = (hash(i, 5, 8) + T * (0.85 + hash(i, 6, 8) * 0.35)) % 1
+    const rx = f.x0 - 1 + hash(i, 7, 8) * span - 0.5 * u
+    const ry = f.y0 - 0.5 + u * (f.y1 - f.y0 + 1)
+    ctx.moveTo(rx * k, ry * k)
+    ctx.lineTo((rx - 0.05) * k, (ry + 0.19) * k)
+  }
+  ctx.stroke()
+}
+
+/**
+ * Leaves the storm tears off the garden tree: a few all the while it blows, a flurry with each hard gust, flying out
+ * to the left with the rain from all over the crown, tumbling end over end, falling as they go.
+ */
+const TORN: { t0: number; m: number; vx: number; vy: number; spin: number; flutter: number; lit: boolean }[] = (() => {
+  const out: { t0: number; m: number; vx: number; vy: number; spin: number; flutter: number; lit: boolean }[] = []
+  const born: number[] = []
+  for (let i = 0; i < 40; i++) born.push(FLASH1 - 0.9 + ((WINCH + 0.8 - (FLASH1 - 0.9)) * (i + hash(i, 1, 61))) / 40)
+  for (const at of [FLASH1, TREE, THUNDER, FLASH2]) for (let j = 0; j < 6; j++) born.push(at + 0.05 + 0.4 * hash(j, at, 62))
+  born.forEach((t0, i) => {
+    out.push({
+      t0,
+      m: Math.floor(hash(i, 2, 63) * 23),
+      vx: -(2.6 + 2.4 * hash(i, 3, 63)),
+      vy: 0.35 + 0.65 * hash(i, 4, 63),
+      spin: (4 + 6 * hash(i, 5, 63)) * (hash(i, 6, 63) < 0.5 ? -1 : 1),
+      flutter: hash(i, 7, 63) * 6.28,
+      lit: hash(i, 8, 63) < 0.7,
+    })
+  })
+  return out
+})()
+
+function torn(p: p5, c: Ctx, T: number): void {
+  const { storm } = stormAt(T)
+  if (storm <= 0.05) return
+  const { k } = c
+  const lean = leanAt(T)
+  const lit = leafTone(LIT, T)
+  const shade = leafTone(SHADE, T)
+  p.noStroke()
+  for (const l of TORN) {
+    const s = T - l.t0
+    if (s < 0 || s > 3.4) continue
+    const [mx, my, rx, ry] = CROWN[l.m]
+    const x0 = mx + bend(lean, my) + rx * 0.6 * (hash(l.m, l.t0, 64) - 0.5)
+    const y0 = my + ry * 0.6 * (hash(l.m, l.t0, 65) - 0.5)
+    const x = x0 + l.vx * s * (1 + 0.25 * Math.sin(s * 2.3 + l.flutter))
+    const y = y0 + l.vy * s + 0.22 * s * s + 0.14 * Math.sin(s * 4.2 + l.flutter)
+    const a = l.spin * s + l.flutter
+    const fade = 1 - smoothstep((s - 3.0) / 0.4)
+    // A leaf, end over end: long one way, thin across (narrower as it turns edge on), a quad round its middle.
+    const lx = Math.cos(a) * 0.11
+    const ly = Math.sin(a) * 0.11
+    const wide = 0.045 * (0.35 + 0.65 * Math.abs(Math.cos(a * 0.7)))
+    const wx = -Math.sin(a) * wide
+    const wy = Math.cos(a) * wide
+    p.fill(alpha(p, l.lit ? lit : shade, fade))
+    p.quad((x + lx) * k, (y + ly) * k, (x + wx) * k, (y + wy) * k, (x - lx) * k, (y - ly) * k, (x - wx) * k, (y - wy) * k)
+  }
+}
+
+/**
+ * The sun back over the garden and the roof once the hole is boarded: the light comes across from the left as the
+ * last of the cloud goes, warming the roof's shingles, the lawns and the garden tree's crown (`leafTone`), and settles
+ * into the afternoon. Light on what it falls on, as a warm fill over each surface; nothing in the air.
+ */
+const sunOut = (T: number): number => (T < SUN - 0.6 ? 0 : (0.55 + 0.45 * Math.exp(-Math.max(0, T - SUN) / 0.5)) * (1 - smoothstep((T - 139) / 2.5)))
+
+function sunBack(p: p5, c: Ctx, T: number): void {
+  const sun = sunOut(T)
+  if (sun <= 0.01) return
+  const { k } = c
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // Where the light has got to, coming across from the left.
+  const front = -8 + (T - (SUN - 0.6)) * 26
+  const [e0, e1] = INSIDE.eaves
+  const [rx, ry] = INSIDE.ridge
+  const ey = INSIDE.eavesY + 0.12
+  const th = 0.42
+  const path = new Path2D()
+  path.moveTo((e0 - 0.3) * k, ey * k)
+  path.lineTo(rx * k, (ry - th) * k)
+  path.lineTo((e1 + 0.3) * k, ey * k)
+  path.lineTo((e1 + 0.3) * k, (ey + th) * k)
+  path.lineTo(rx * k, ry * k)
+  path.lineTo((e0 - 0.3) * k, (ey + th) * k)
+  path.closePath()
+  if (f.x0 < INSIDE.backWall[0]) path.rect((f.x0 - 1) * k, INSIDE.ground * k, (INSIDE.backWall[0] - f.x0 + 1) * k, 0.28 * k)
+  if (f.x1 > INSIDE.porch[1]) path.rect(INSIDE.porch[1] * k, INSIDE.ground * k, (f.x1 - INSIDE.porch[1] + 1) * k, 0.28 * k)
+  const g = ctx.createLinearGradient((front - 4) * k, 0, front * k, 0)
+  g.addColorStop(0, `rgba(255, 214, 150, ${0.2 * sun})`)
+  g.addColorStop(1, 'rgba(255, 214, 150, 0)')
+  ctx.fillStyle = g
+  ctx.fill(path)
+}
+
 /** Inside, the rooms upstairs and the hall take a little of the dark too (the living room has its own, under the two of them). */
 function roomsDark(p: p5, c: Ctx, T: number): void {
   const { storm } = stormAt(T)
@@ -199,6 +406,8 @@ function leanAt(T: number): number {
   const on = smoothstep((T - (FLASH1 - 0.8)) / 0.8) * (1 - smoothstep((T - WINCH) / (SUN - WINCH)))
   // A breeze as the storm gathers, then the wind: a steady push that breathes, and a hard gust with each flash.
   let lean = 0.05 * storm * Math.sin(T * 1.3) - on * (0.12 + 0.05 * Math.sin(T * 1.7) + 0.04 * Math.sin(T * 2.9 + 1.1))
+  // On a still day, a breeze: the old crown never quite at rest.
+  lean += 0.045 * (1 - storm) * wobble(T, 13, 2.6)
   for (const [at, a] of [[FLASH1, 0.26], [(FLASH1 + TREE) / 2, 0.12], [TREE, 0.34], [THUNDER, 0.28], [FLASH2, 0.18]] as [number, number][]) {
     lean -= on * a * gust(T - at, 0.08, 0.85)
   }
@@ -212,7 +421,8 @@ const bend = (lean: number, y: number): number => lean * Math.pow(Math.max(0, Ma
 function leafTone(hex: string, T: number): string {
   const { storm, flash } = stormAt(T)
   const w = Math.min(1, flash * 1.15)
-  return mixHex(mixHex(hex, HOME.night, 0.28 * storm), '#DDE6E2', 0.62 * w * w)
+  // And warmed by the sun when it comes back (`sunBack`).
+  return mixHex(mixHex(mixHex(hex, HOME.night, 0.28 * storm), '#DDE6E2', 0.62 * w * w), '#D9C27A', 0.22 * sunOut(T))
 }
 
 /** The crown's masses of one tone (shade, or lit), each leant by the wind at its height, fluttering a little on its own. */
@@ -628,7 +838,14 @@ function bandage(p: p5, c: Ctx, T: number, carl: Figure): void {
 export function drawStormOver(p: p5, c: Ctx, T: number, carl: Figure | null): void {
   const pose = limbPose(T)
   stormSky(p, c, T)
+  // The weather behind the house and the tree: the clouds' decks, the far rain.
+  behind(p, c, () => {
+    decks(p, c, T)
+    farRain(p, c, T)
+  })
   gardenTree(p, c, T, pose)
+  behind(p, c, () => torn(p, c, T))
+  sunBack(p, c, T)
   rain(p, c, T)
   roomsDark(p, c, T)
   holes(p, c, T)

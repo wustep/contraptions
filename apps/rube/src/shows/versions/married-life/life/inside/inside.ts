@@ -1,9 +1,11 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
-import { alpha, frame, scenery, smooth } from '../kit'
-import { AGE, AT, CUT } from '../music'
+import { alpha, frame, hash, scenery, smooth } from '../kit'
+import { along, birds, clouds, wobble, type Flight, type Frame } from '../depth'
+import { AGE, AT, CUT, PIANO } from '../music'
 import { HOME, INK } from '../worlds'
-import { drawFar, farRow } from '../house/far'
+import { farRow, type Lot } from '../house/far'
+import { stormAt } from './jar-clock'
 import { drawPapers } from './papers'
 
 /**
@@ -95,6 +97,263 @@ function rect(p: p5, k: number, x0: number, y0: number, x1: number, y1: number):
   p.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
 }
 
+/* ------------------------------------------------------------------ the world round the house */
+
+/** The piano's stronger notes through the loss: each is a breath of wind in the yard (`yardWind`). */
+export const GUSTS = PIANO.filter((n) => n.t > 84 && n.t < 100.5 && n.s >= 0.45)
+
+/**
+ * The wind in the yard, blowing out from the house (to the left): it gusts with the piano through the loss. Each of
+ * its stronger notes is a breath of wind that follows the note (gathering over half a second, dying away over two),
+ * so the sheet, the grass, the tree and the gardens behind move with the music and nothing strikes; it falls away as
+ * the waltz comes back.
+ */
+export function yardWind(T: number): number {
+  let g = 0
+  for (const n of GUSTS) {
+    const u = (T - n.t) / 0.55
+    if (u > 0) g += Math.min(1.3, n.s) * u * u * Math.exp(2 * (1 - u))
+  }
+  return (0.4 + 0.32 * Math.min(1.6, g)) * (1 - 0.6 * smooth(T, 98.5, 101.5))
+}
+
+/** The wind over the gardens: the yard's through the loss, the storm's, and otherwise a light breeze that comes and goes. */
+function windAt(t: number): number {
+  const yard = smooth(t, 83, 84.4) * (1 - smooth(t, 102.5, 104.5))
+  const calm = 0.18 + 0.1 * wobble(t, 5, 3)
+  return calm + (yardWind(t) - calm) * yard + stormAt(t).storm * (0.8 + 0.3 * wobble(t, 9, 0.9))
+}
+
+/** How far the gardens keep with the frame as it moves (they are farther off than the yard), and where they stand true. */
+const GARDENS = { depth: 0.25, anchor: -2 }
+
+/**
+ * The gardens (`BEHIND`), drawn as `house/far.ts` draws a far side but bowing to the wind: each tree's crown carried
+ * over from its foot, its top the most, each on its own breath; the houses stand. Between `x0` and `x1` on the
+ * screen, slid by `shift` for their depth.
+ */
+function gardens(p: p5, k: number, G: number, x0: number, x1: number, shift: number, wind: number, t: number, tree: string, house: string, pane: string): void {
+  p.noStroke()
+  p.fill(tree)
+  p.rect((x0 - 1) * k, (G - 0.18) * k, (x1 - x0 + 2) * k, 0.2 * k)
+  const drawHouse = (b: Lot, x: number): void => {
+    const l = x - b.w / 2
+    const r = x + b.w / 2
+    const eave = G - b.h
+    const ridge = eave - b.roof
+    const s = b.s
+    p.fill(house)
+    p.rect(l * k, eave * k, b.w * k, (G - eave) * k)
+    p.triangle((l - 0.12 * s) * k, (eave + 0.02 * s) * k, x * k, ridge * k, (r + 0.12 * s) * k, (eave + 0.02 * s) * k)
+    if (b.chimney > 0) p.rect((x + b.w * 0.18) * k, (ridge + b.roof * 0.25 - b.chimney) * k, 0.18 * s * k, (b.chimney + b.roof * 0.4) * k)
+    p.fill(pane)
+    const ww = Math.min(0.32 * s, b.w * 0.17)
+    for (const u of [-0.27, 0.27]) p.rect((x + u * b.w - ww / 2) * k, (eave + b.h * 0.22) * k, ww * k, b.h * 0.26 * k)
+    p.rect((x - 0.12 * s) * k, (G - b.h * 0.42) * k, 0.24 * s * k, b.h * 0.42 * k)
+  }
+  for (const b of BEHIND) {
+    const x = b.x + shift
+    if (x + b.w < x0 - 1 || x - b.w > x1 + 1) continue
+    if (!b.tree) {
+      drawHouse(b, x)
+      continue
+    }
+    // Leaning out from the house with the wind (to the left), more at the top.
+    const lean = -wind * b.h * (0.12 + 0.04 * Math.sin(t * 1.7 + b.x * 2.3))
+    p.fill(tree)
+    p.ellipse((x + lean * 0.4) * k, (G - b.h * 0.42) * k, b.w * k, b.h * k)
+    p.ellipse((x + b.w * 0.28 + lean * 0.3) * k, (G - b.h * 0.3) * k, b.w * 0.7 * k, b.h * 0.7 * k)
+    p.ellipse((x - b.w * 0.08 + lean) * k, (G - b.h * 0.74) * k, b.w * 0.62 * k, b.h * 0.5 * k)
+  }
+}
+
+/**
+ * The far country past the gardens: a low line of hills in the haze, keeping with the frame most of the way. On it,
+ * seen from the yard, their hill with its tree, out where she is looking; and seen past the porch, the church's
+ * spire among a few roofs. Their places, in sight of the house, small and pale.
+ */
+const COUNTRY = { depth: 0.72, hill: -2.4, church: 8.2 }
+const ridgeAt = (u: number): number => 0.4 + 0.16 * Math.sin(u * 0.29 + 0.6) + 0.1 * Math.sin(u * 0.77 + 2.1) + 0.42 * Math.exp(-(((u - COUNTRY.hill) / 1.1) ** 2))
+
+function country(p: p5, k: number, f: Frame, G: number, x0: number, x1: number, sky: string): void {
+  const shift = along(f, COUNTRY.depth)
+  p.noStroke()
+  p.fill(mixHex(sky, '#7E9282', 0.17))
+  p.beginShape()
+  p.vertex((x0 - 0.5) * k, (G + 0.05) * k)
+  for (let x = x0 - 0.5; x < x1 + 0.9; x += 0.35) p.vertex(x * k, (G - ridgeAt(x - shift)) * k)
+  p.vertex((x1 + 0.9) * k, (G + 0.05) * k)
+  p.endShape(p.CLOSE)
+  // Their tree on the hill's crest: a trunk and a round crown, a speck.
+  const hx = COUNTRY.hill + shift
+  if (hx > x0 - 1 && hx < x1 + 1) {
+    const top = G - ridgeAt(COUNTRY.hill) + 0.02
+    p.fill(mixHex(sky, '#5E7458', 0.24))
+    p.rect((hx - 0.011) * k, (top - 0.1) * k, 0.022 * k, 0.11 * k)
+    p.ellipse(hx * k, (top - 0.13) * k, 0.2 * k, 0.11 * k)
+    p.ellipse((hx + 0.055) * k, (top - 0.1) * k, 0.12 * k, 0.07 * k)
+  }
+  // The church: its nave's roof, its tower and the spire, a roof or two by it.
+  const sx = COUNTRY.church + shift
+  if (sx > x0 - 2 && sx < x1 + 1) {
+    const base = G - ridgeAt(COUNTRY.church) + 0.1
+    const q = 0.75
+    p.fill(mixHex(sky, '#76808C', 0.2))
+    p.rect((sx + 0.05 * q) * k, (base - 0.3 * q) * k, 0.56 * q * k, 0.3 * q * k)
+    p.triangle((sx + 0.03 * q) * k, (base - 0.29 * q) * k, (sx + 0.33 * q) * k, (base - 0.45 * q) * k, (sx + 0.63 * q) * k, (base - 0.29 * q) * k)
+    p.rect((sx - 0.075 * q) * k, (base - 0.5 * q) * k, 0.15 * q * k, 0.5 * q * k)
+    p.triangle((sx - 0.09 * q) * k, (base - 0.49 * q) * k, sx * k, (base - 0.95 * q) * k, (sx + 0.09 * q) * k, (base - 0.49 * q) * k)
+    for (const [dx, w, hh] of [[-0.6, 0.38, 0.2], [1.0, 0.44, 0.24]]) {
+      const cx = sx + dx * q
+      p.rect((cx - (w * q) / 2) * k, (base - hh * q) * k, w * q * k, hh * q * k)
+      p.triangle((cx - (w * q) / 2 - 0.02) * k, (base - hh * q) * k, cx * k, (base - (hh + 0.14) * q) * k, (cx + (w * q) / 2 + 0.02) * k, (base - hh * q) * k)
+    }
+  }
+}
+
+/**
+ * The doll's house's sky: clouds at depth, keeping with the frame most of the way and drifting on the wind, in the
+ * sky's own light (white by day, peach at dusk). Through the loss an overcast hangs low and grey over the yard, darker
+ * than its sky; it breaks as the book opens: its own clouds go, and the ones that stay whiten into a fair sky. Small
+ * and flat near the horizon, heaped overhead (a phone held upright sees them). The storm brings its own (the jar's,
+ * `jar-storm.ts`), and these go under them.
+ */
+function weather(p: p5, k: number, f: Frame, t: number, sky: string): void {
+  if (f.y0 > INSIDE.ground) return
+  const grey = t > CUT.doctor && t < AT.book + 2 ? 1 - clearAt(t) : 0
+  const { storm } = stormAt(t)
+  if (storm > 0.99) return
+  const dull = mixHex(sky, '#A1A9AD', 0.42)
+  const dullShade = mixHex(sky, '#8A9398', 0.5)
+  const body = mixHex(mixHex(mixHex(sky, '#FFFFFF', 0.62), dull, grey), sky, storm)
+  const shade = mixHex(mixHex(mixHex(sky, '#8C98AC', 0.3), dullShade, grey), sky, storm)
+  if (grey > 0.01) {
+    // The overcast's own, which go as it breaks: drawn first, so the clouds that stay pass over them.
+    const b = mixHex(sky, dull, grey)
+    const s = mixHex(sky, dullShade, grey)
+    clouds(p, k, f, t, { y0: -16, y1: -3.6, per: 46, size: 4.6, speed: -0.13, depth: 0.85, body: b, shade: s, heap: 0.95, seed: 62 })
+    clouds(p, k, f, t, { y0: -3.4, y1: -1.5, per: 80, size: 1.9, speed: -0.1, depth: 0.9, body: mixHex(b, sky, 0.15), shade: mixHex(s, sky, 0.15), heap: 0.85, seed: 61 })
+  }
+  clouds(p, k, f, t, { y0: -17, y1: -4.2, per: 30, size: 3.6, speed: -0.11, depth: 0.85, body, shade, heap: 0.95, seed: 64 })
+  clouds(p, k, f, t, { y0: -3.2, y1: -1.6, per: 34, size: 1.35, speed: -0.07, depth: 0.92, body: mixHex(body, sky, 0.3), shade: mixHex(shade, sky, 0.3), heap: 0.6, seed: 63 })
+  // At dusk, on the evening of the tickets, long thin streaks low in the west, their undersides lit by the low sun.
+  const dusk = smooth(t, 152, 158)
+  if (dusk > 0.01) {
+    const lit = mixHex(sky, mixHex('#F6D2AE', sky, 1 - dusk), 0.7)
+    const under = mixHex(sky, mixHex('#B98990', sky, 1 - dusk), 0.55)
+    clouds(p, k, f, t, { y0: -3.6, y1: -1.5, per: 70, size: 2.1, speed: -0.05, depth: 0.9, body: under, shade: lit, heap: 0.32, seed: 65 })
+  }
+}
+
+/**
+ * Birds by day, where the sky is seen: back over the yard as the grey breaks; over the house when the storm has
+ * gone; a few going home past the porch at dusk. None through the loss but the one on the line (`yard.ts`).
+ */
+const FLIGHTS: Omit<Flight, 'color'>[] = [
+  { t0: 100.9, from: [-6.9, -1.42], v: [1.6, -0.07], dur: 8, n: 4, span: 0.12, beat: 2.6, seed: 3, depth: 0.5, anchor: -3.1 },
+  { t0: 64.5, from: [-2, -9.5], v: [1.3, -0.05], dur: 16, n: 5, span: 0.22, beat: 2.2, seed: 5, depth: 0.6, anchor: 7 },
+  { t0: 136.6, from: [-6, -10], v: [2.1, -0.12], dur: 14, n: 6, span: 0.3, beat: 2.4, seed: 7, depth: 0.5, anchor: 10 },
+  { t0: 160.6, from: [20.4, -2.9], v: [0.75, -0.06], dur: 10, n: 3, span: 0.11, beat: 2.2, seed: 9, depth: 0.5, anchor: 19.5 },
+]
+
+/** A small cloud seen through a window: three soft lobes on a flat, shaded base. */
+function puff(p: p5, k: number, x: number, y: number, w: number, body: string, shade: string): void {
+  p.fill(shade)
+  p.ellipse(x * k, (y + w * 0.05) * k, w * 0.9 * k, w * 0.2 * k)
+  p.fill(body)
+  for (const [u, v, r] of [[-0.27, -0.02, 0.25], [0.02, -0.07, 0.33], [0.28, -0.01, 0.22]]) p.ellipse((x + u * w) * k, (y + v * w) * k, r * 2 * w * k, r * 1.15 * w * k)
+}
+
+/** A line of far trees on the horizon `base`, their tops about `h` over it: soft lumps in the haze, slid by `shift`. */
+function treeline(p: p5, k: number, x0: number, x1: number, base: number, h: number, shift: number, tone: string): void {
+  p.fill(tone)
+  p.beginShape()
+  p.vertex(x0 * k, (base + 0.4) * k)
+  for (let x = x0; x <= x1 + 0.08; x += 0.08) {
+    const u = x - shift
+    p.vertex(x * k, (base - h * (0.55 + 0.22 * Math.sin(u * 2.3) + 0.23 * Math.abs(Math.sin(u * 6.1 + 1)))) * k)
+  }
+  p.vertex(x1 * k, (base + 0.4) * k)
+  p.endShape(p.CLOSE)
+}
+
+/**
+ * The view through a window on a far wall: its sky, a cloud or two crossing on the wind, and its far side (a line of
+ * trees in the haze; through the nursery's, the hills behind the house, and on the farther one their tree), each at
+ * its own depth, so that as the camera moves the view slides against the wall: a room with a world outside it. The
+ * living room's two go on under what the jar builder paints in them (the drive and the car, the garden tree): only
+ * their skies and horizons are these.
+ */
+function view(p: p5, k: number, f: Frame, t: number, i: number, win: [number, number, number, number], sky: string): void {
+  const [x0, x1, y0, y1] = win
+  const w = x1 - x0
+  const h = y1 - y0
+  // Where the view stands true: the nursery's from the crib, where the camera keeps; the living room's from in front.
+  const mid = i === 2 ? 7.0 : (x0 + x1) / 2
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(x0 * k, y0 * k, w * k, h * k)
+  ctx.clip()
+  p.noStroke()
+  p.fill(sky)
+  rect(p, k, x0, y0, x1, y1)
+  // Clouds, far off: they keep with the frame nearly all the way, and cross the glass slowly on the wind.
+  const far = along(f, 0.85, mid)
+  const body = mixHex(sky, '#FFFFFF', 0.66)
+  const shade = mixHex(sky, '#8C98AC', 0.28)
+  if (i === 2) {
+    // Over the hills, on the left of the glass, clear of the mobile in front of its right half: one a little nearer,
+    // one small and low on the horizon, drifting slower.
+    puff(p, k, x0 + 0.95 - 0.06 * (t - 68) + far, y0 + h * 0.24, 0.88, body, shade)
+    puff(p, k, x0 + 0.3 - 0.03 * (t - 68) + far, y0 + h * 0.5, 0.46, mixHex(body, sky, 0.35), mixHex(shade, sky, 0.35))
+  } else {
+    const span = w + 3
+    for (let j = 0; j < 2; j++) {
+      const cw = 0.62 + 0.3 * hash(i, j, 72)
+      const x = x0 - 1.5 + ((((hash(i, j, 71) * span - 0.05 * (1 + 0.6 * j) * t + far - x0) % span) + span) % span)
+      puff(p, k, x, y0 + h * (0.2 + 0.16 * j + 0.08 * hash(i, j, 73)), cw, body, shade)
+    }
+  }
+  if (i === 2) {
+    // The nursery's: the hills behind the house, the farther one with their tree on it (the clouds' hill, which the
+    // mural paints), the nearer one's hedges, a pair of birds crossing once while the room is made.
+    const backShift = along(f, 0.5, mid)
+    const frontShift = along(f, 0.25, mid)
+    const backY = (x: number): number => {
+      const u = x - backShift - x0
+      return y1 - h * (0.3 + 0.09 * Math.sin(u * 1.5 + 0.4) + 0.12 * Math.exp(-(((u - 0.95) / 0.7) ** 2)))
+    }
+    p.fill(mixHex(HOME.grass, sky, 0.55))
+    p.beginShape()
+    p.vertex((x0 - 0.1) * k, y1 * k)
+    for (let x = x0 - 0.1; x <= x1 + 0.2; x += 0.1) p.vertex(x * k, backY(x) * k)
+    p.vertex((x1 + 0.2) * k, y1 * k)
+    p.endShape(p.CLOSE)
+    const tx = x0 + 0.95 + backShift
+    const sway = 0.012 * wobble(t, 31, 1.4)
+    p.fill(mixHex(HOME.leaf, sky, 0.5))
+    p.rect((tx - 0.014) * k, (backY(tx) - 0.12) * k, 0.028 * k, 0.14 * k)
+    p.ellipse((tx + sway) * k, (backY(tx) - 0.17) * k, 0.26 * k, 0.15 * k)
+    p.ellipse((tx + 0.07 + sway) * k, (backY(tx) - 0.13) * k, 0.15 * k, 0.1 * k)
+    p.fill(mixHex(HOME.grass, sky, 0.3))
+    p.beginShape()
+    p.vertex((x0 - 0.1) * k, y1 * k)
+    for (let x = x0 - 0.1; x <= x1 + 0.2; x += 0.1) {
+      const u = x - frontShift - x0
+      p.vertex(x * k, (y1 - h * (0.15 + 0.06 * Math.sin(u * 1.9 + 2.2) + 0.03 * Math.sin(u * 4.3))) * k)
+    }
+    p.vertex((x1 + 0.2) * k, y1 * k)
+    p.endShape(p.CLOSE)
+    birds(p, k, f, t, { t0: 66.2, from: [x0 - 0.25, y0 + h * 0.62], v: [0.34, -0.15], dur: 7.5, n: 2, span: 0.09, beat: 2.4, seed: 11, depth: 0.6, anchor: mid, color: mixHex(INK, sky, 0.45) }, 1.4)
+  } else {
+    // The living room's: a line of trees on the far side, over the hedge (the drive's window) and the lawn (the
+    // garden's), in the haze.
+    treeline(p, k, x0 - 0.1, x1 + 0.1, i === 0 ? -1.4 : -1.18, 0.42, along(f, 0.5, mid), mixHex(sky, mixHex(HOME.leaf, '#7D8A86', 0.3), 0.32))
+  }
+  ctx.restore()
+}
+
 export const inside = scenery<null>({
   name: 'inside',
   draw: (p, _s, c) => {
@@ -119,16 +378,26 @@ export const inside = scenery<null>({
       const sky = skyAt(t)
       p.fill(sky)
       if (H.ground > Y0) p.rect(X0 * k, Y0 * k, (X1 - X0) * k, (Math.min(H.ground, Y1) - Y0) * k)
-      // Beyond the yard's end and past the porch, the gardens behind: the neighbours' trees and a roof or two, lower
-      // and hazier than the street's, in the sky's own light (grey through the loss, dusk on the evening of the
-      // tickets), so Ellie on her stump has distance behind her and not a wall of grey.
-      if (H.ground > Y0 && Y1 > H.ground - 2) {
+      // Its clouds, at depth (only round the house: they are the doll's house's weather).
+      if (H.ground > Y0) weather(p, k, { ...f, x0: X0, x1: X1, y0: Y0, y1: Y1 }, t, sky)
+      // Beyond the yard's end and past the porch, the far country and the gardens behind: the neighbours' trees and a
+      // roof or two, lower and hazier than the street's, in the sky's own light (grey through the loss, dusk on the
+      // evening of the tickets), so Ellie on her stump has distance behind her and not a wall of grey. Each keeps with
+      // the frame by its depth as the camera moves, and the gardens' trees bow to the wind.
+      if (H.ground > Y0 && Y1 > H.ground - 2.2) {
         const tree = mixHex(sky, mixHex(HOME.leaf, '#7D8A86', 0.35), 0.2)
         const house = mixHex(sky, '#8E9BA8', 0.2)
         const pane = mixHex(house, '#F4F6F4', 0.14)
-        if (H.backWall[0] > X0) drawFar(p, k, BEHIND, H.ground, X0, Math.min(X1, H.backWall[0]), tree, house, pane, 0.18)
-        if (X1 > H.frontWall[1]) drawFar(p, k, BEHIND, H.ground, Math.max(X0, H.frontWall[1]), X1, tree, house, pane, 0.18)
+        const shift = along(f, GARDENS.depth, GARDENS.anchor)
+        const wind = windAt(t)
+        for (const [a, b] of [[X0, Math.min(X1, H.backWall[0])], [Math.max(X0, H.frontWall[1]), X1]]) {
+          if (b <= a) continue
+          country(p, k, f, H.ground, a, b, sky)
+          gardens(p, k, H.ground, a, b, shift, wind, t, tree, house, pane)
+        }
       }
+      // Birds by day, crossing the sky (behind the house: it hides them as they pass it).
+      for (const b of FLIGHTS) birds(p, k, f, t, { ...b, color: mixHex(INK, sky, 0.4) }, weight)
       p.fill(mixHex('#B09878', '#A08E78', age))
       if (Y1 > H.ground) p.rect(X0 * k, H.ground * k, (X1 - X0) * k, (Y1 - H.ground) * k)
       // The yard's grass: a band on the earth, and the lawn beyond the porch.
@@ -174,34 +443,11 @@ export const inside = scenery<null>({
     rect(p, k, H.hall[0], H.ground - 0.12, H.hall[1], H.ground)
     rect(p, k, H.nursery[0], H.groundUp - 0.1, H.landing[1], H.groundUp)
 
-    // The windows on the far walls: frames, glass with the sky in it, a sill.
+    // The windows on the far walls: frames, glass with the view in it (`view`), a sill.
     for (const [i, [x0, x1, y0, y1]] of H.windows.entries()) {
+      if (x1 < f.x0 - 0.2 || x0 > f.x1 + 0.2 || y1 < f.y0 - 0.2 || y0 > f.y1 + 0.2) continue
+      view(p, k, f, t, i, H.windows[i], skyAt(t))
       p.noStroke()
-      p.fill(alpha(p, skyAt(t), 1))
-      rect(p, k, x0, y0, x1, y1)
-      // The nursery's window looks out over the hills behind the house (the hill the mural paints, and the clouds'
-      // hill), far and soft, a low cloud over them; the rooms downstairs have their own views (the parts draw them).
-      if (i === 2) {
-        const w = x1 - x0
-        const h = y1 - y0
-        const sky = skyAt(t)
-        p.fill(mixHex(HOME.grass, sky, 0.55))
-        p.beginShape()
-        p.vertex(x0 * k, (y1 - h * 0.3) * k)
-        p.bezierVertex((x0 + w * 0.3) * k, (y1 - h * 0.46) * k, (x0 + w * 0.55) * k, (y1 - h * 0.22) * k, x1 * k, (y1 - h * 0.36) * k)
-        p.vertex(x1 * k, y1 * k)
-        p.vertex(x0 * k, y1 * k)
-        p.endShape(p.CLOSE)
-        p.fill(mixHex(HOME.grass, sky, 0.3))
-        p.beginShape()
-        p.vertex(x0 * k, (y1 - h * 0.12) * k)
-        p.bezierVertex((x0 + w * 0.35) * k, (y1 - h * 0.08) * k, (x0 + w * 0.6) * k, (y1 - h * 0.26) * k, x1 * k, (y1 - h * 0.18) * k)
-        p.vertex(x1 * k, y1 * k)
-        p.vertex(x0 * k, y1 * k)
-        p.endShape(p.CLOSE)
-        p.fill(mixHex('#FFFFFF', sky, 0.3))
-        for (const [u, v, r] of [[0.2, 0.3, 0.13], [0.27, 0.27, 0.17], [0.35, 0.31, 0.12]]) p.ellipse((x0 + u * w) * k, (y0 + v * h) * k, r * 2 * k, r * 1.2 * k)
-      }
       p.fill(alpha(p, '#FFFFFF', 0.22))
       p.quad((x0 + 0.2) * k, y1 * k, (x0 + 0.75) * k, y0 * k, (x0 + 1.05) * k, y0 * k, (x0 + 0.5) * k, y1 * k)
       p.stroke(ink)

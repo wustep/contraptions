@@ -1,11 +1,12 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { alpha, box, part, smooth, type Companion, type Ctx, type Pose } from '../kit'
-import { AT, bar, beat, beatsIn, CUT, PIANO, SEAM } from '../music'
+import { alpha, box, frame, hash, part, smooth, type Companion, type Ctx, type Pose } from '../kit'
+import { along } from '../depth'
+import { AT, bar, beat, beatsIn, CUT, SEAM } from '../music'
 import { HOME, INK } from '../worlds'
 import { drawBook } from '../props/book'
-import { clearAt, INSIDE } from './inside'
-import { COCKED, FOOT, HIS, SLAMS, standing, TOUCHDOWN } from './jar-clock'
+import { clearAt, GUSTS, INSIDE, yardWind } from './inside'
+import { COCKED, FOOT, HIS, SLAMS, standing, stormAt, TOUCHDOWN } from './jar-clock'
 import { clamp01, hermite, hopAt, inout, laneOf, pchip, settle } from './home-motion'
 
 /**
@@ -381,19 +382,11 @@ const px = (p: p5, k: number, x0: number, y0: number, x1: number, y1: number, r 
 // The grey lifts a little as he goes out to her with the book, and breaks as the book opens (the sky's `clearAt`).
 const greyAt = (T: number): number => smooth(T, B, B + 2) * (1 - clearAt(T))
 /**
- * The wind, blowing out from the house: it gusts with the piano through the loss. Each of its stronger notes is a
- * breath of wind that follows the note (gathering over half a second, dying away over two), so the sheet, the grass
- * and the tree move with the music and nothing strikes; it falls away as the waltz comes back.
+ * The wind, blowing out from the house: it gusts with the piano through the loss (`yardWind`, the set's, so the
+ * gardens behind bow to the same breaths), so the sheet, the grass and the tree move with the music and nothing
+ * strikes; it falls away as the waltz comes back.
  */
-const GUSTS = PIANO.filter((n) => n.t > 84 && n.t < 100.5 && n.s >= 0.45)
-const windAt = (T: number): number => {
-  let g = 0
-  for (const n of GUSTS) {
-    const u = (T - n.t) / 0.55
-    if (u > 0) g += Math.min(1.3, n.s) * u * u * Math.exp(2 * (1 - u))
-  }
-  return (0.4 + 0.32 * Math.min(1.6, g)) * (1 - 0.6 * smooth(T, 98.5, 101.5))
-}
+const windAt = yardWind
 const grey = (hex: string, g: number): string => mixHex(hex, '#A9AEA8', 0.32 * g)
 
 /** The big tree: a trunk and two limbs, and a canopy of soft masses, swaying a little. */
@@ -475,15 +468,182 @@ function stump(p: p5, c: Ctx, g: number): void {
   for (const f of [-0.14, 0.02, 0.15]) p.line((x + f) * k, (top + 0.07) * k, (x + f + 0.015) * k, (GROUND - 0.06) * k)
 }
 
+/**
+ * A sparrow hunched on the line over her, its back to the house as hers is; on a strong breath of wind (the one after
+ * the note he steps toward the door on, and stops) it lets go and flies off, out over the gardens, and the line
+ * springs under where it sat.
+ */
+const PERCH = { x: -2.6, off: 86.639 + 0.5 }
+
+/** The line's height at `x`: its sag, a hair more under the bird, and its spring when the bird lets go. */
+function lineAt(x: number, T: number): number {
+  const [[ax, ay], [bx, by]] = LINE
+  const u = (x - ax) / (bx - ax)
+  const s = T - PERCH.off
+  const load = s < 0 ? 0.012 : 0.012 * Math.exp(-s / 0.3) * Math.cos(s * 17)
+  return ay + (by - ay) * u + 0.1 * 4 * u * (1 - u) + load * Math.sin(Math.PI * u)
+}
+
+/** The bird: on the line, its feathers lifting in each gust; then off and away, wings beating, smaller as it goes. */
+function sparrow(p: p5, c: Ctx, T: number, g: number, w: number): void {
+  const s = T - PERCH.off
+  if (s > 2.2) return
+  const { k, weight } = c
+  const y0 = lineAt(PERCH.x, T) - 0.072
+  const flying = s > 0
+  // Off: a little drop as it lets go, then up and away to the left, over the tree and out.
+  const x = PERCH.x - (flying ? 1.25 * s + 0.55 * s * s : 0)
+  const y = y0 + (flying ? 0.12 * s - 0.95 * s * s : 0)
+  const scale = flying ? 1 - 0.38 * Math.min(1, s / 1.6) : 1
+  const fade = flying ? 1 - smooth(s, 1.8, 2.2) : 1
+  const plumage = grey(mixHex('#8F8C88', HOME.woodDark, 0.18), g)
+  p.push()
+  p.translate(x * k, y * k)
+  p.scale(scale)
+  p.rotate(flying ? 0.35 * Math.min(1, s / 0.2) : 0)
+  p.stroke(alpha(p, INK, 0.9 * fade))
+  p.strokeWeight(weight * 0.5)
+  p.fill(alpha(p, plumage, fade))
+  // The tail, lifting a little in the wind; the body, hunched, puffing up in the gusts; the head sunk into it.
+  const ruffle = flying ? 0 : 0.05 * Math.max(0, w - 0.45)
+  p.triangle(0.05 * k, -0.005 * k, 0.15 * k, (0.035 - ruffle) * k, 0.14 * k, (0.065 - ruffle * 0.5) * k)
+  p.ellipse(0, 0, 0.17 * (1 + ruffle) * k, 0.12 * (1 + ruffle * 1.4) * k)
+  p.circle(-0.065 * k, -0.045 * k, 0.095 * k)
+  p.noStroke()
+  p.fill(alpha(p, INK, 0.9 * fade))
+  p.triangle(-0.11 * k, -0.055 * k, -0.15 * k, -0.04 * k, -0.11 * k, -0.03 * k)
+  p.circle(-0.08 * k, -0.055 * k, 0.018 * k)
+  if (flying) {
+    // The wings, beating.
+    const beat = Math.sin(s * 2 * Math.PI * 7)
+    p.stroke(alpha(p, INK, 0.9 * fade))
+    p.strokeWeight(weight * 0.5)
+    p.fill(alpha(p, mixHex(plumage, INK, 0.15), fade))
+    p.triangle(-0.03 * k, -0.02 * k, 0.06 * k, -0.02 * k, 0.03 * k, (-0.04 - 0.13 * beat) * k)
+  } else {
+    // Its feet on the line.
+    p.stroke(alpha(p, INK, 0.9))
+    p.strokeWeight(weight * 0.45)
+    for (const dx of [-0.02, 0.025]) p.line(dx * k, 0.055 * k, dx * k, 0.072 * k)
+  }
+  p.pop()
+}
+
+/**
+ * Leaves the gusts tear off the tree: one on a strong note, two on the strongest (a dozen in all), from the canopy's side over the
+ * yard. Each comes down as a leaf does, rocking from side to side and tipping as it rocks, carried out on the wind,
+ * and lies a while on the grass where it lands. Behind the two of them, always.
+ */
+interface Leaf {
+  t0: number
+  x0: number
+  y0: number
+  vx: number
+  vy: number
+  swing: number
+  rate: number
+  phase: number
+  land: number
+  lit: boolean
+}
+const LEAVES: Leaf[] = (() => {
+  const out: Leaf[] = []
+  GUSTS.forEach((n, i) => {
+    const m = n.s >= 1.3 ? 2 : n.s >= 0.9 ? 1 : 0
+    for (let j = 0; j < m; j++) {
+      const h = (s: number): number => hash(i, j, s)
+      const y0 = TREE.cy + 0.3 + 0.3 * h(2)
+      const vy = 0.36 + 0.14 * h(3)
+      out.push({
+        t0: n.t + 0.4 + 0.3 * j + 0.15 * h(4),
+        x0: TREE.cx + 0.15 + 0.95 * h(1),
+        y0,
+        vx: -(0.15 + 0.12 * h(5)) * Math.min(1.3, n.s),
+        vy,
+        swing: 0.11 + 0.08 * h(6),
+        rate: 2.2 + 0.8 * h(7),
+        phase: h(8) * Math.PI * 2,
+        land: (GROUND - 0.02 - y0) / vy,
+        lit: h(9) < 0.5,
+      })
+    }
+  })
+  return out
+})()
+
+function leaves(p: p5, c: Ctx, T: number, g: number): void {
+  const { k } = c
+  const lit = grey(mixHex(HOME.leaf, HOME.grass, 0.45), g)
+  const dark = grey(mixHex(HOME.leaf, INK, 0.12), g)
+  p.noStroke()
+  for (const l of LEAVES) {
+    const s = T - l.t0
+    if (s < 0 || s > l.land + 7) continue
+    const q = Math.min(s, l.land)
+    const a = l.rate * q + l.phase
+    const x = l.x0 + l.vx * q + l.swing * (Math.sin(a) - Math.sin(l.phase))
+    const y = q < l.land ? l.y0 + l.vy * q - 0.04 * Math.cos(2 * a) : GROUND - 0.015
+    const tip = q < l.land ? 0.8 * Math.cos(a) : 0.12 * Math.sign(Math.cos(a))
+    const fade = 1 - smooth(s, l.land + 4, l.land + 7)
+    p.fill(alpha(p, l.lit ? lit : dark, fade))
+    p.push()
+    p.translate(x * k, y * k)
+    p.rotate(tip)
+    p.ellipse(0, 0, 0.1 * k, (q < l.land ? 0.045 : 0.03) * k)
+    p.pop()
+  }
+}
+
+/** As the light comes back with the book, the tree and the stump stand on their own soft shadows on the grass. */
+function shadows(p: p5, c: Ctx, T: number): void {
+  const sun = clearAt(T) ** 2 * (1 - stormAt(T).storm)
+  if (sun <= 0.01) return
+  const { k } = c
+  p.noStroke()
+  p.fill(alpha(p, mixHex(HOME.leaf, INK, 0.5), 0.16 * sun))
+  p.ellipse((TREE.cx - 0.45) * k, (GROUND + 0.1) * k, 3.1 * k, 0.15 * k)
+  p.ellipse((STUMP.x - 0.22) * k, (GROUND + 0.06) * k, 0.95 * k, 0.08 * k)
+}
+
+/**
+ * The foreground: tall grass along the lawn's near edge, nearer than the yard, so it slides past a little faster
+ * than the yard as the camera moves, bowing out from the house with each gust. Below the ground they stand on: never
+ * over them.
+ */
+function nearGrass(p: p5, c: Ctx, T: number, g: number, w: number): void {
+  const { k } = c
+  const f = frame(p, k)
+  const x1 = Math.min(f.x1, INSIDE.backWall[0] - 0.15)
+  if (x1 <= f.x0) return
+  const shift = along(f, -0.18, -2.2)
+  const y = GROUND + 0.27
+  p.noStroke()
+  p.fill(grey(mixHex(HOME.leaf, INK, 0.22), g))
+  // A tuft every so often (a gap here and there), three or four tapering blades to each, the tallest in the middle.
+  const i0 = Math.floor((f.x0 - shift) / 0.34) - 1
+  const i1 = Math.ceil((x1 - shift) / 0.34) + 1
+  for (let i = i0; i <= i1; i++) {
+    if (hash(i, 1, 77) < 0.3) continue
+    const x = i * 0.34 + 0.2 * hash(i, 2, 77) + shift
+    if (x > x1 || x < f.x0 - 0.3) continue
+    const h0 = 0.16 + 0.12 * hash(i, 3, 77)
+    const n = 3 + Math.floor(hash(i, 4, 77) * 2)
+    for (let j = 0; j < n; j++) {
+      const u = j / (n - 1) - 0.5
+      const h = h0 * (1 - 0.45 * Math.abs(u))
+      const bx = x + u * 0.07
+      // Out from the house with the wind, each blade on its own sway, the gust running along the row.
+      const lean = -(0.06 + 0.16 * w) * h / 0.2 * (0.8 + 0.2 * Math.sin(T * 2.2 + i * 1.3 + j)) + u * 0.06
+      p.triangle((bx - 0.018) * k, y * k, (bx + 0.018) * k, y * k, (bx + lean) * k, (y - h) * k)
+    }
+  }
+}
+
 /** The line and the sheet on it, billowing out from the house on the wind. */
 function sheet(p: p5, c: Ctx, T: number, w: number): void {
   const { k, weight } = c
-  const [[ax, ay], [bx, by]] = LINE
-  const sag = 0.1
-  const lineY = (x: number) => {
-    const u = (x - ax) / (bx - ax)
-    return ay + (by - ay) * u + sag * 4 * u * (1 - u)
-  }
+  const [[ax], [bx]] = LINE
+  const lineY = (x: number) => lineAt(x, T)
   p.noFill()
   p.stroke(alpha(p, INK, 0.7))
   p.strokeWeight(weight * 0.55)
@@ -653,10 +813,13 @@ export const yard = part<YardState>(
       p.push()
       p.translate(-OX * k, 0)
       p.rectMode(p.CORNER)
+      shadows(p, c, T)
       tree(p, c, T, g, w)
       stump(p, c, g)
       grass(p, c, T, g, w)
+      leaves(p, c, T, g)
       sheet(p, c, T, w)
+      sparrow(p, c, T, g, w)
       bookcase(p, c, T, 0.12)
       const b = bookAt(T)
       if (!b.front) drawBookAt(p, c, b, 0.15)
@@ -666,11 +829,11 @@ export const yard = part<YardState>(
     over: (p, s, c) => {
       const T = c.t + s.begin
       const b = bookAt(T)
-      if (!b.front) return
       p.push()
       p.translate(-OX * c.k, 0)
       p.rectMode(p.CORNER)
-      drawBookAt(p, c, b, 0.15)
+      nearGrass(p, c, T, greyAt(T), windAt(T))
+      if (b.front) drawBookAt(p, c, b, 0.15)
       p.pop()
     },
   },
