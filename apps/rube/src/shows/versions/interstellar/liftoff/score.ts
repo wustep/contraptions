@@ -226,8 +226,9 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     // Out wide as it pulls away and the drone comes over; in with it along the road, a little ahead of it.
     { t: 35, cells: 6, off: [0.9, -1.2] },
     { t: 40, cells: 5, off: [1.0, -0.55] },
+    // Through the chase the camera closes in on the cab a little a bar, so the run at the dam is tighter than the drop.
     { t: 44, cells: 4.8, off: [1.1, -0.4] },
-    { t: 52, cells: 4.8, off: [1.1, -0.4] },
+    { t: 52, cells: 4.25, off: [0.95, -0.35] },
     { t: beat(86) - 0.3, cells: 5.4 },
     ...earth.shots,
     ...space.shots,
