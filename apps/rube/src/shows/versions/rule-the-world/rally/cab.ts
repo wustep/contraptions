@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../parts'
 import { R } from '../../../../parts'
-import { ellipse, glow, line, path, rect, rgba, shape, ctxOf, type Pen } from './pen'
+import { ellipse, line, path, rect, rgba, shape, ctxOf, type Pen } from './pen'
 
 /**
  * Wally's cab: the one thing drawn on both sides of a cut (the bowling alley's curb, and the road in New Jersey), so
@@ -114,7 +114,6 @@ export function drawCab(pen: Pen, seat: Pt, look: CabLook): void {
   shape(pen, backWin, C.interior)
   const frontWin: Pt[] = [[x(1.45), beltY], [x(1.45), roofY + 0.12], [x(2.5), roofY + 0.12], [x(2.9), beltY]]
   shape(pen, frontWin, C.glass)
-  glow(pen, [x(2.1), roofY + 0.5], 0.5, '#9FB3BD', 0.12)
   // The back seat, seen through: its back and its cushion.
   rect(pen, x(-0.74), roofY + 0.4, x(-0.45), y(R), C.seat)
   rect(pen, x(CAB.cushion[0] - 0.2), y(R), x(CAB.cushion[1] + 0.05), sill, C.seatLight)
@@ -143,24 +142,23 @@ export function drawCab(pen: Pen, seat: Pt, look: CabLook): void {
   // The lamps.
   const lights = Math.max(0, Math.min(1, look.lights ?? 0))
   ellipse(pen, [x(CAB.front - 0.06), y(-0.12)], 0.06, 0.1, lights > 0 ? C.lamp : C.chrome)
+  // Lit, its light thrown a little way down the road ahead: no halo round the lamp.
   if (lights > 0) {
-    glow(pen, [x(CAB.front + 0.1), y(-0.12)], 0.9, C.lamp, 0.55 * lights)
-    const beam = ctx.createLinearGradient(x(CAB.front) * pen.k, 0, x(CAB.front + 6) * pen.k, 0)
-    beam.addColorStop(0, rgba(pen, C.lamp, 0.22 * lights))
+    const beam = ctx.createLinearGradient(x(CAB.front) * pen.k, 0, x(CAB.front + 3.2) * pen.k, 0)
+    beam.addColorStop(0, rgba(pen, C.lamp, 0.14 * lights))
     beam.addColorStop(1, rgba(pen, C.lamp, 0))
     ctx.save()
     ctx.fillStyle = beam
     ctx.beginPath()
     ctx.moveTo(x(CAB.front) * pen.k, y(-0.18) * pen.k)
-    ctx.lineTo(x(CAB.front + 6) * pen.k, y(-0.5) * pen.k)
-    ctx.lineTo(x(CAB.front + 6) * pen.k, (road + 0.05) * pen.k)
+    ctx.lineTo(x(CAB.front + 3.2) * pen.k, y(-0.4) * pen.k)
+    ctx.lineTo(x(CAB.front + 3.2) * pen.k, (road + 0.05) * pen.k)
     ctx.lineTo(x(CAB.front) * pen.k, y(-0.04) * pen.k)
     ctx.closePath()
     ctx.fill()
     ctx.restore()
   }
   rect(pen, x(CAB.rear), y(-0.18), x(CAB.rear + 0.08), y(0.02), C.tail)
-  if (lights > 0) glow(pen, [x(CAB.rear - 0.05), y(-0.08)], 0.4, C.tail, 0.4 * lights)
 
   // The wheel arches and the wheels, turning by how far it has rolled.
   const turn = (look.rolled ?? 0) / CAB.wheel

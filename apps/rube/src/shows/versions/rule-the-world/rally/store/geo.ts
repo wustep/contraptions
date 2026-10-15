@@ -82,6 +82,8 @@ export const BENCH_TOP = 0.98
 export const RACHEL_AT: Pt = [17.18, BENCH_TOP - R]
 export const SEAT: Pt = [17.5, BENCH_TOP - R]
 export const STOCK_BULB: Pt = [17.62, -1.0]
+/** A transom high in the stockroom's back wall, on the street (x0, y0, x1, y1). */
+export const TRANSOM: [number, number, number, number] = [19.5, -3.42, 20.6, -3.08]
 
 /** The partition with the office door; the office, its step stool, the safe. */
 export const PART2: [number, number] = [22.2, 23.4]

@@ -229,20 +229,6 @@ function tokyoWay(): { segs: Seg[]; at: (t: number) => Pt } {
 }
 export const WAY = tokyoWay()
 
-/** What the drawing lights up: every bat on the ball and every bounce, with how hard. */
-export interface Impact {
-  t: number
-  p: Pt
-  bat: boolean
-  power: number
-}
-export const IMPACTS: Impact[] = [
-  ...STROKES.map((s) => ({ t: s.t, p: s.at, bat: true, power: s.power })),
-  ...STROKES.map((s) => ({ t: s.lands, p: s.bounce, bat: false, power: s.power })),
-  { t: WIN, p: CM, bat: true, power: 1.2 },
-  { t: SMASH_BOUNCE, p: SMASH_AT, bat: false, power: 1.2 },
-].sort((x, y) => x.t - y.t)
-
 /* ------------------------------------------------------------------ Marty's sprung bat */
 
 /**
@@ -394,16 +380,15 @@ export function endoBat(t: number): Pt | null {
 
 /* ------------------------------------------------------------------ the lights */
 
-/** The house lights on section `i` (0 to 7, left to right; 3 and 4 over the table), 0 dark to 1. */
+/** The house lights on section `i` (0 to 7, left to right; 3 and 4 over the table), 0 dark to 1: on in a moment, no flare. */
 export function houseLight(i: number, t: number): number {
   const ring = Math.min(Math.abs(i - 3.5) - 0.5, 3)
   const up = LIGHTS_UP[ring]
   const down = LIGHTS_DOWN[3 - ring]
   if (t < up) return 0
   const on = Math.min(1, (t - up) / 0.06)
-  const flare = 0.25 * Math.exp(-(t - up) / 0.12)
-  if (t < down) return on + flare
-  return Math.max(0, 1 - (t - down) / 0.12) * 1
+  if (t < down) return on
+  return Math.max(0, 1 - (t - down) / 0.12)
 }
 /** The stands' sections, by their x edges. */
 export const SECTIONS = [-17, -11.5, -6.5, -1.8, 2.6, 7.2, 11.5, 16, 21]
