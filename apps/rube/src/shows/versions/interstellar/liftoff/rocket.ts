@@ -306,7 +306,11 @@ export const rocket = part<RocketState>(
       // Thrown wide by the ignition (the push in on the window runs to it, earth/gantry.ts).
       { t: IGNITION + 0.55, cells: 10.6, hold: [hx - 0.3, hy - 4.1] },
       { t: LIFTOFF + 0.2, cells: 10.8, hold: [hx - 0.1, hy - 4.0] },
-      { t: LIFTOFF + 1.6, cells: 9.5, off: [0.2, 2.6] },
+      // The climb: the whole stack on its flame, and the smoke it leaves going down out of the frame, so that the
+      // surge on each beat is seen (the window high in the frame, the two of them in it); then in on the window for
+      // the cloud.
+      { t: LIFTOFF + 1.6, cells: 12.2, off: [0.2, 4.0] },
+      { t: beat(140) + 0.15, cells: 11.6, off: [0.15, 3.8] },
       { t: PUNCH - 0.4, cells: 8.2, off: [0.1, 1.8] },
       { t: STAGING + 0.4, cells: 8.6, off: [0.3, 1.6] },
       { t: OPEN - 0.5, cells: 6.2, off: [0.6, 0.4] },

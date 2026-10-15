@@ -1,10 +1,10 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
-import { FLOOR, laneAt, R, type Lane, type Pt } from '../../../../../parts'
+import { FLOOR, laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
 import { alpha, box, carried, knock, part, route, type Companion, type Ctx } from '../kit'
 import { beat, IGNITION } from '../music'
-import { DUST } from '../worlds'
+import { DUST, FARM } from '../worlds'
 
 /**
  * The gantry. The ball rolls into the cage at the foot of the tower on beat
@@ -114,6 +114,9 @@ function cageY(t: number): number {
 
 /** Height of lamp i: where the cage is at its eighth. */
 const lampY = (i: number): number => cageY(LAMPS[i]) - 0.35
+/** A lamp's glass, lit and dark. */
+const LAMP_LIT = '#FFE7A0'
+const LAMP_DARK = mixHex(DUST.shade, FARM.ink, 0.55)
 
 interface GantryState {
   begin: number
@@ -223,7 +226,9 @@ function drawGantry(p: p5, s: GantryState, c: Ctx): void {
     const flash = on ? knock(t - LAMPS[i], 0.2) : 0
     const off = t >= DARK[9 - i] ? knock(t - DARK[9 - i], 0.25) : 0
     // A bulkhead lamp on a bracket: a squared housing with its guard bars, never a disc that could be taken for a ball.
-    solid(p, ink, weight * 0.8, on ? '#F4C24E' : DUST.shade)
+    // Lit, it is near white; dark, its glass is dark, so that against the dust-pale sky each one going out on its beat
+    // is seen to go, not only its glow.
+    solid(p, ink, weight * 0.8, on ? LAMP_LIT : LAMP_DARK)
     p.rect(X(LEG0 - 0.22), X(y), X(0.15), X(0.11), X(0.025))
     outline(p, ink, weight * 0.5)
     p.line(X(LEG0 - 0.22), X(y - 0.055), X(LEG0 - 0.22), X(y + 0.055))
@@ -232,12 +237,12 @@ function drawGantry(p: p5, s: GantryState, c: Ctx): void {
     p.line(X(LEG0 - 0.145), X(y), X(LEG0 - 0.04), X(y))
     if (on || off > 0.01) {
       const ctx = p.drawingContext as CanvasRenderingContext2D
-      const a = on ? 0.55 + 0.4 * flash : 0.45 * off
-      const g = ctx.createRadialGradient(X(LEG0 - 0.22), X(y), 0, X(LEG0 - 0.22), X(y), X(0.5))
-      g.addColorStop(0, `rgba(255, 214, 120, ${a})`)
-      g.addColorStop(1, 'rgba(255, 214, 120, 0)')
+      const a = on ? 0.6 + 0.35 * flash : 0.5 * off
+      const g = ctx.createRadialGradient(X(LEG0 - 0.22), X(y), 0, X(LEG0 - 0.22), X(y), X(0.55))
+      g.addColorStop(0, `rgba(255, 196, 92, ${a})`)
+      g.addColorStop(1, 'rgba(255, 196, 92, 0)')
       ctx.fillStyle = g
-      ctx.fillRect(X(LEG0 - 0.72), X(y - 0.5), X(1.0), X(1.0))
+      ctx.fillRect(X(LEG0 - 0.77), X(y - 0.55), X(1.1), X(1.1))
     }
   }
 

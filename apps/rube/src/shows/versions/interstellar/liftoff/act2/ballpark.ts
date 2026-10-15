@@ -779,6 +779,7 @@ function drawStreak(p: p5, c: Ctx, T: number): void {
   if (T <= HIT + 0.04 || T >= WINDOW) return
   const density = p.pixelDensity()
   const px = (2 * R * c.k) / density
+  drawWay(p, c, T, px)
   // Not over the far house in the last instant: by then the camera is in close anyway.
   // (Faded in off the bat over a third of a second: on a phone he is already small at the hit, and it popped on.)
   const f = clamp((18 - px) / 9) * smooth(T, HIT + 0.04, HIT + 0.38) * (1 - smooth(T, WINDOW - 0.6, WINDOW - 0.25))
@@ -809,6 +810,40 @@ function drawStreak(p: p5, c: Ctx, T: number): void {
     p.stroke(alpha(p, BALL, f * 0.6 * u))
     p.strokeWeight(Math.max(2 * density, R * c.k * 1.8) * (0.35 + 0.65 * u))
     p.line(X(a[0]), X(a[1]), X(b[0]), X(b[1]))
+  }
+}
+
+/**
+ * His way since the bat, dotted, behind the streak. He flies straight and the ring turns under him, so seen from the
+ * ring his way bends round under the hub: that is the gag, and a short streak never showed it. The dots are fixed on
+ * the way (one every `WAY_GAP` s of flight) so they stay put as it grows, and they fade with age, in a few steps, each
+ * step one path. Gone with the streak as he comes down to the far house.
+ */
+const WAY_GAP = 0.06
+/** The dots' colour as "r, g, b": his sand taken down toward the ink, since sand alone is lost on the pale air. */
+const WAY_RGB = (() => {
+  const h = mixHex(BALL, '#2A1F17', 0.35)
+  return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(', ')
+})()
+function drawWay(p: p5, c: Ctx, T: number, px: number): void {
+  const f = clamp((30 - px) / 12) * smooth(T, HIT + 0.3, HIT + 1) * (1 - smooth(T, WINDOW - 1.4, WINDOW - 0.5))
+  if (f <= 0) return
+  const density = p.pixelDensity()
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const r = Math.max(1.3 * density, R * c.k * 0.28)
+  const last = T - 0.45
+  const n = Math.floor((last - HIT) / WAY_GAP)
+  if (n < 1) return
+  const STEPS = 5
+  for (let k = 0; k < STEPS; k++) {
+    ctx.beginPath()
+    for (let i = Math.floor((n * k) / STEPS); i < Math.floor((n * (k + 1)) / STEPS); i++) {
+      const [x, y] = flightAt(HIT + (i + 1) * WAY_GAP)
+      ctx.moveTo(x * c.k + r, y * c.k)
+      ctx.arc(x * c.k, y * c.k, r, 0, Math.PI * 2)
+    }
+    ctx.fillStyle = `rgba(${WAY_RGB}, ${f * (0.15 + (0.5 * (k + 1)) / STEPS)})`
+    ctx.fill()
   }
 }
 
@@ -1318,6 +1353,10 @@ function drawBoard(p: p5, c: Ctx, T: number): void {
 
 /* ------------------------------------------------------------------ the light tower */
 
+/** Its lamps: dark glass; lit, a warm yellow (as the spoke's landings are). */
+const LAMP_DARK = mixHex(DUST.tin, '#2A1F17', 0.55)
+const LAMP_LIT = '#FFE08A'
+
 function drawTower(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
@@ -1346,19 +1385,21 @@ function drawTower(p: p5, c: Ctx, T: number): void {
       if (on) {
         const ctx = p.drawingContext as CanvasRenderingContext2D
         const r = X(0.9 + 0.8 * knock(since, 0.25))
+        // An amber pool, not a white one: on the station's pale air a white glow, and a lamp a shade lighter than the
+        // bone of an unlit one, read the same lit or dark, and the banks coming on a beat at a time were not seen.
         const g = ctx.createRadialGradient(X(lx), X(ly), 0, X(lx), X(ly), r)
-        g.addColorStop(0, `rgba(255, 244, 214, ${0.55 + 0.35 * knock(since, 0.25)})`)
-        g.addColorStop(1, 'rgba(255, 244, 214, 0)')
+        g.addColorStop(0, `rgba(242, 162, 60, ${0.5 + 0.3 * knock(since, 0.25)})`)
+        g.addColorStop(1, 'rgba(242, 162, 60, 0)')
         // Saved and restored, so p5's own idea of the fill stays true for what it draws next.
         ctx.save()
         ctx.fillStyle = g
         ctx.fillRect(X(lx) - r, X(ly) - r, 2 * r, 2 * r)
         ctx.restore()
       }
-      solid(p, ink, weight * 0.7, on ? DUST.light : DUST.bone)
+      solid(p, ink, weight * 0.7, on ? LAMP_LIT : LAMP_DARK)
       p.circle(X(lx), X(ly), X(0.22))
       for (const dx of [-0.12, 0.12]) {
-        solid(p, ink, weight * 0.5, on ? DUST.light : DUST.bone)
+        solid(p, ink, weight * 0.5, on ? LAMP_LIT : LAMP_DARK)
         p.circle(X(lx + dx), X(ly), X(0.1))
       }
     }

@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { laneAt, mixHex, puff, R, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, lensedArc, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
+import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
@@ -1012,6 +1012,8 @@ function drawMouth(p: p5, c: Ctx, T: number): void {
   p.stroke(alpha(p, DARK.hull, 0.25))
   p.strokeWeight(X(0.09))
   p.arc(X(mx), X(my), X(RM * 1.6), X(RM * 1.6), Math.PI * 1.1, Math.PI * 1.4)
+  // The same glass as the near mouth's, from this side: Edmunds' sky piled up at its limb.
+  glassLimb(ctx, X(mx), X(my), X(RM))
   ctx.restore()
   outline(p, alpha(p, DARK.hull, 0.95).toString(), weight * 1.1)
   p.circle(X(mx), X(my), X(2 * RM))
@@ -1652,14 +1654,15 @@ const LOBES: [number, number, number][] = [
   [0.15, -0.45, 0.62],
 ]
 /** Soft, low lobes of dust, with the light toward their sunward edge. */
-function cloud(p: p5, k: number, x: number, y: number, r: number, a: number): void {
+function cloud(p: p5, k: number, x: number, y: number, r: number, a: number, lobes = LOBES.length): void {
   if (a <= 0.01) return
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   ctx.translate(X(x), X(y))
   ctx.scale(1, 0.52)
-  for (const [dx, dy, f] of LOBES) {
+  for (let j = 0; j < lobes; j++) {
+    const [dx, dy, f] = LOBES[j]
     const radius = X(r * f * 1.3)
     const cx = X(dx * r)
     const cy = X(dy * r)
@@ -1692,18 +1695,20 @@ function drawDust(p: p5, c: Ctx, T: number, layer: number): void {
     const r = (0.07 + 0.17 * Math.sqrt(age)) * (0.6 + 0.6 * w)
     cloud(p, k, x, y, r, (layer ? 0.26 : 0.42) * (1 - age / 2.4) * w)
   }
-  // Touchdown: a skirt of it thrown out low along the ground, and hanging a while.
+  // Touchdown, on the cue's loudest bar: a skirt of it thrown out hard and low along the ground both ways, rolling up
+  // as it slows, and hanging a while in the dawn light. (It was a faint haze round the feet, and the peak went soft.)
   const td = T - TOUCH
-  if (td >= 0 && td < 4) {
-    for (let i = 0; i < 16; i++) {
+  if (td >= 0 && td < 4.5) {
+    for (let i = 0; i < 24; i++) {
       if (i % 2 !== layer) continue
       const side = i % 4 < 2 ? -1 : 1
-      const sp = 1.3 + 2.2 * hash(i, 31)
-      const dist = sp * 0.5 * (1 - Math.exp(-td / 0.45))
-      const x = LX + side * (0.55 + dist)
-      const y = G - 0.08 - (0.06 + 0.22 * hash(i, 32)) * Math.sqrt(td)
-      const r = (0.08 + 0.14 * hash(i, 33)) * (0.8 + 0.9 * Math.sqrt(Math.min(td, 2)))
-      cloud(p, k, x, y, r, (layer ? 0.3 : 0.5) * Math.pow(1 - td / 4, 1.6))
+      const sp = 2 + 3.2 * hash(i, 31)
+      const dist = sp * 0.42 * (1 - Math.exp(-td / 0.28))
+      const x = LX + side * (0.5 + dist)
+      const y = G - 0.06 - (0.08 + 0.26 * hash(i, 32)) * Math.sqrt(td)
+      const r = (0.12 + 0.18 * hash(i, 33)) * (1 + 1.3 * Math.sqrt(Math.min(td, 2)))
+      // Two lobes each, not four: there are many of them, and they overlap into one skirt anyway.
+      cloud(p, k, x, y, r, (layer ? 0.45 : 0.75) * smooth(td, 0, 0.05) * Math.pow(1 - td / 4.5, 1.5), 2)
     }
   }
   // Grains skim out of the wash, then settle. Their birth times also work when seeking backwards.
