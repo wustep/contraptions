@@ -736,16 +736,10 @@ function oncoming(p: p5, k: number, ink: string, w: number, t: number, fr: { x0:
     x = ((((x + 20) % OPP_SPAN) + OPP_SPAN) % OPP_SPAN) - 20
     const len = LEN * OPP_S
     if (x > fr.x1 + 2 || x + len < fr.x0 - 2) continue
-    // Facing left: its nose at x, its headlamps' light on the road ahead.
-    const g = ctx.createLinearGradient(x * k, 0, (x - 1.5) * k, 0)
-    g.addColorStop(0, rgba(D.head, 0.26))
-    g.addColorStop(1, rgba(D.head, 0))
-    ctx.fillStyle = g
+    // Facing left: its nose at x, its headlamps' light lying on the road ahead of it.
+    ctx.fillStyle = rgba(D.head, 0.14)
     ctx.beginPath()
-    ctx.moveTo(x * k, (OPP_Y - 0.22) * k)
-    ctx.lineTo((x - 1.5) * k, (OPP_Y - 0.3) * k)
-    ctx.lineTo((x - 1.5) * k, (OPP_Y + 0.08) * k)
-    ctx.lineTo(x * k, (OPP_Y - 0.1) * k)
+    ctx.ellipse((x - 0.75) * k, (OPP_Y + 0.02) * k, 0.75 * k, 0.05 * k, 0, 0, Math.PI * 2)
     ctx.fill()
     const U = (u: number) => x + (LEN - u) * OPP_S
     const V = (v: number) => OPP_Y + v * OPP_S
@@ -774,7 +768,7 @@ const STANDERS: { x: number; h: number; coat: string; facing: number }[] = [
   { x: 26.0, h: 0.68, coat: '#3A2131', facing: -1 },
   { x: 26.5, h: 0.71, coat: '#22283A', facing: -1 },
 ]
-function figure(ctx: CanvasRenderingContext2D, k: number, x: number, foot: number, h: number, coat: string, facing: number, stride: number, turn: number): void {
+export function figure(ctx: CanvasRenderingContext2D, k: number, x: number, foot: number, h: number, coat: string, facing: number, stride: number, turn: number): void {
   // A person in a coat: legs, the coat's tapered body, the shoulders, a head; lit from the lamps above, a warm edge
   // along the top of the shoulders and head.
   const legW = 0.075 * h
@@ -923,17 +917,15 @@ function sedan(p: p5, k: number, ink: string, w: number, x: number, i: number, t
   p.rotate(dip)
   const X = (u: number) => u - WB[0]
   const line = rgba(ink, 0.35)
-  // The headlamp's throw along the deck to the car ahead.
+  // The headlamps' light lying on the deck between it and the car ahead, not a beam in the air.
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createLinearGradient(X(LEN) * k, 0, X(LEN + 1.4) * k, 0)
-  g.addColorStop(0, rgba(D.head, 0.3))
-  g.addColorStop(1, rgba(D.head, 0))
-  ctx.fillStyle = g
+  ctx.fillStyle = rgba(D.head, 0.16)
   ctx.beginPath()
-  ctx.moveTo(X(LEN) * k, -0.3 * k)
-  ctx.lineTo(X(LEN + 1.4) * k, -0.45 * k)
-  ctx.lineTo(X(LEN + 1.4) * k, 0)
-  ctx.lineTo(X(LEN) * k, -0.2 * k)
+  ctx.ellipse(X(LEN + 0.7) * k, 0.01 * k, 0.7 * k, 0.06 * k, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = rgba(D.head, 0.12)
+  ctx.beginPath()
+  ctx.ellipse(X(LEN + 0.4) * k, 0.01 * k, 0.38 * k, 0.04 * k, 0, 0, Math.PI * 2)
   ctx.fill()
   shape(p, k, [[X(0), -0.16], [X(LEN), -0.16], [X(LEN), -0.36], [X(LEN - 0.55), -0.46], [X(1.55), -0.47], [X(1.3), -0.78], [X(0.62), -0.78], [X(0.35), -0.48], [X(0), -0.45]], col, line, w * 0.8)
   shape(p, k, [[X(0.7), -0.5], [X(1.2), -0.5], [X(1.2), -0.72], [X(0.72), -0.72]], alpha(p, D.asphalt, 0.9), null)
@@ -1047,7 +1039,7 @@ function club(p: p5, k: number, ink: string, w: number, t: number, fr: { x0: num
   const s = t - NEON
   // Dark glass until its note; then it buzzes on, a stutter, and holds.
   const lit = s < 0 ? 0 : s < 0.06 ? 1 : s < 0.14 ? 0.2 : s < 0.2 ? 0.9 : s < 0.26 ? 0.4 : 0.92 + 0.08 * Math.sin(t * 13) * Math.sin(t * 5.3)
-  if (lit > 0) glow(p, k, WALL - 1.0, DOOR_TOP - 0.97, 1.5, D.neon, 0.2 * lit, 1.2, 0.9)
+  // (The tube is its own light: no halo round it.)
   const pass: [string, number][] = lit > 0 ? [[rgba(D.neon, 0.25 + 0.65 * lit), 0.085], [rgba(D.neonCore, lit), 0.03]] : [[rgba(D.neon, 0.18), 0.085]]
   for (const [col, sw] of pass) {
     p.stroke(col)
@@ -1079,21 +1071,18 @@ function carBody(p: p5, c: Ctx, t: number, front: boolean): void {
   const line = rgba(ink, 0.45)
   const brake = t < PULL ? 0.75 + 0.25 * Math.max(knock(t - P1[5], 0.5), knock(t - P2[5], 0.5)) : t > STOP - 0.4 ? 0.8 + 0.2 * knock(t - STOP, 0.5) : 0.3
   if (!front) {
-    // Headlamp beam, once they are rolling at night on the street.
-    const hl = B(LEN, 0.3)
+    // Its headlamps' light lying on the road ahead of it (brighter once they are rolling on the street), not a beam.
     const on = t > PULL ? 1 : 0.6
     const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createLinearGradient(hl[0] * k, 0, (hl[0] + 1.8) * k, 0)
-    g.addColorStop(0, rgba(D.head, 0.35 * on))
-    g.addColorStop(1, rgba(D.head, 0))
-    ctx.fillStyle = g
+    const ahead = B(LEN + 0.95, -0.02)
+    const near = B(LEN + 0.5, -0.02)
+    ctx.fillStyle = rgba(D.head, 0.15 * on)
     ctx.beginPath()
-    const e0 = B(LEN + 1.8, 0.5)
-    const e1 = B(LEN + 1.8, -0.05)
-    ctx.moveTo(hl[0] * k, (hl[1] - 0.04) * k)
-    ctx.lineTo(e0[0] * k, e0[1] * k)
-    ctx.lineTo(e1[0] * k, e1[1] * k)
-    ctx.lineTo(hl[0] * k, (hl[1] + 0.04) * k)
+    ctx.ellipse(ahead[0] * k, ahead[1] * k, 0.95 * k, 0.07 * k, ps.a, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.fillStyle = rgba(D.head, 0.12 * on)
+    ctx.beginPath()
+    ctx.ellipse(near[0] * k, near[1] * k, 0.5 * k, 0.045 * k, ps.a, 0, Math.PI * 2)
     ctx.fill()
     // The bench's back, the far side's inside, the wheel, the windscreen.
     shape(p, k, at([[0.62, BELT - 0.02], [0.8, BELT - 0.02], [0.78, 0.66], [0.68, 0.7], [0.6, 0.62]]), D.head, line, w * 0.8)
