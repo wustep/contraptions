@@ -452,13 +452,15 @@ Daylight*, the *Blue Notebooks* recording that *Arrival* opens and closes on, wh
 Every piece is new. It tells the whole film in order, and ends on its own first frame: the lake house at dawn, Louise
 (the gold ball) and baby Hannah (the rose ball, who grows); the swing by the lake; the bed by the window, where Hannah
 goes on the lament's swell; the television at night, whose picture of a shell becomes the real one over Montana on the
-double bass (a match cut on the shell); the camp, the chamber and the glass, the heptapods, contact and the language;
-the world's twelve links falling like dominoes when the bass drops out; the bomb; the fog beyond the glass, where she is
+double bass (a match cut on the shell); the helicopter coming for her at the lake house that night; the camp; the
+shaft up into the shell, where gravity turns and the camera with it; the chamber and the glass, the heptapods, contact
+and the language, with a flash of Hannah drawing at the window and the world's twelve sites sharing a word round their
+ring; that ring falling like dominoes when the bass drops out; the bomb; the fog beyond the glass, where she is
 shown Hannah grown; the gala years on, where General Shang (the red ball) tells her what to say; the call, on the
 loudest bars, when the dominoes stand again in the order they fell, backwards; the shell going up the way it came
 down; daylight; Ian (the blue ball); and home. The code is `nature-of-daylight/palindrome/`, on the same kit as Logogram
-(parts built to timed slots, an authored camera, match cuts between six places, a white-out, the end credits from
-`Performance.titles`). The playing is free (a beat is 0.87 to 1.1 s), so `scripts/shows/nature-of-daylight-onsets.py`
+(parts built to timed slots, an authored camera with a roll, match and scale cuts between seven places, a white-out,
+the end credits from `Performance.titles`). The playing is free (a beat is 0.87 to 1.1 s), so `scripts/shows/nature-of-daylight-onsets.py`
 tracks the beats one by one and finds every change of chord from the harmony itself, into
 `scripts/shows/plans/nature-of-daylight-onsets.json`; `check:shows` holds every strike to it, nearly every change of
 chord to a strike, and the palindromes to their mirror (`apps/rube/checks/palindrome.ts`). The report is
