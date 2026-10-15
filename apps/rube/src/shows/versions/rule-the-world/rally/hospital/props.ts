@@ -184,17 +184,24 @@ const FG = '#26302B'
 
 /**
  * A shape close to the lens: a plain dark silhouette, a little lighter than black, as the front rows are in London and
- * Tokyo. No haze is drawn round its edge to stand for the focus: that ring read as a halo.
+ * Tokyo. No haze is drawn round its edge to stand for the focus: that ring read as a halo. One fill, so where its parts
+ * cross (a leg through a shelf) it is one shade, not two; and filled by winding, so a crossing is never a hole.
  */
 function silhouette(pen: Pen, path: Path2D, a: number): void {
   const ctx = ctxOf(pen.p)
   ctx.save()
   ctx.fillStyle = rgba(pen, FG, 0.7 * a)
-  ctx.fill(path, 'evenodd')
+  ctx.fill(path)
   ctx.restore()
 }
+/** A piece of one, always wound the same way round (as an ellipse is drawn), so that it adds to the rest and never cuts. */
 const poly = (k: number, pts: Pt[], into = new Path2D()): Path2D => {
-  pts.forEach(([x, y], i) => (i ? into.lineTo(x * k, y * k) : into.moveTo(x * k, y * k)))
+  const area = pts.reduce((sum, [x, y], i) => {
+    const [nx, ny] = pts[(i + 1) % pts.length]
+    return sum + x * ny - nx * y
+  }, 0)
+  const way = area < 0 ? [...pts].reverse() : pts
+  way.forEach(([x, y], i) => (i ? into.lineTo(x * k, y * k) : into.moveTo(x * k, y * k)))
   into.closePath()
   return into
 }
@@ -214,10 +221,12 @@ function chair(pen: Pen): Path2D {
   poly(k, [[2.18, 0.86], [2.86, 0.86], [2.86, 0.93], [2.18, 0.93]], p)
   poly(k, [[2.22, 0.9], [2.27, 0.9], [2.22, 1.6], [2.17, 1.6]], p)
   poly(k, [[2.74, 0.25], [2.8, 0.25], [2.86, 1.6], [2.8, 1.6]], p)
-  // The bentwood hoop of its back: a ring.
+  // The bentwood hoop of its back: a ring, its inside wound the other way round so that it is open.
   const h = new Path2D()
   h.ellipse(2.83 * k, 0.55 * k, 0.14 * k, 0.33 * k, 0.12, 0, Math.PI * 2)
-  h.ellipse(2.83 * k, 0.55 * k, 0.09 * k, 0.27 * k, 0.12, 0, Math.PI * 2)
+  h.closePath()
+  h.ellipse(2.83 * k, 0.55 * k, 0.09 * k, 0.27 * k, 0.12, Math.PI * 2, 0, true)
+  h.closePath()
   p.addPath(h)
   return p
 }
@@ -253,8 +262,8 @@ function palm(pen: Pen, t: number): Path2D {
     const ny = (tip[0] - base[0]) / len
     const w = 0.06 + 0.03 * h
     p.moveTo(base[0] * k, (base[1] - 0.05) * k)
-    p.quadraticCurveTo((mid[0] + nx * w) * k, (mid[1] + ny * w) * k, tip[0] * k, tip[1] * k)
-    p.quadraticCurveTo((mid[0] - nx * w) * k, (mid[1] - ny * w) * k, base[0] * k, (base[1] - 0.05) * k)
+    p.quadraticCurveTo((mid[0] - nx * w) * k, (mid[1] - ny * w) * k, tip[0] * k, tip[1] * k)
+    p.quadraticCurveTo((mid[0] + nx * w) * k, (mid[1] + ny * w) * k, base[0] * k, (base[1] - 0.05) * k)
     p.closePath()
   }
   return p
