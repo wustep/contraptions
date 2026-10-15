@@ -18,7 +18,9 @@ import { CHURCH, HILL, HOME, INK } from '../worlds'
  * green grass, the tree in full leaf, their house small on the far ridge, birds now and then low over the valley, and
  * the near grass and its flowers along the frame's foot. Years later, autumn for the climb (167.7 to 180.4 s): a pale
  * grey sky in slow bands at two depths, a skein of geese leaving, the grass gone to straw, the tree turning and its
- * leaves coming down. Everything here moves only with the wind and the seasons: the machines are the parts'.
+ * leaves coming down; the harvest stooked in the valley's stubble with crows in it, a farmstead by the town, and a
+ * weathered fence along the near side of the lane. Everything here moves only with the wind and the seasons: the
+ * machines are the parts'.
  *
  * Heights are given where a ball's centre sits (`ridge`, `LANE_Y`); the ground's surface is `R` below that.
  */
@@ -474,6 +476,327 @@ function lullFade(f: Frame, t: number): ((x: number, y: number) => number) | und
   return (x, y) => 1 - lull * (1 - smooth(Math.hypot((x - f.cx) / hw, (y - f.cy) / hh), 0.4, 0.75))
 }
 
+/* ------------------------------------------------------------------ the harvest, the farm, the fence */
+
+/**
+ * The harvest left standing in the stubble: stooks, sheaves leaning together, tied at the waist and splayed at the top,
+ * in rows across the valley field, smaller and hazier the farther the row. Flat shapes with a shaded side and no ink;
+ * the wind tugs their tops a little (and lets them be in the lull). Each row: how far past the horizon it lies, its
+ * parallax, the stooks' height, how far apart, and how hazed. A strip of the field is left unstooked where the close
+ * looks from her give-way to his reaching her (`STOOK_CLEAR`, the camera's middle then), so nothing stands behind them.
+ */
+const STOOK_CLEAR = { from: 7.0, to: 8.55, margin: 1.0 }
+const STOOK_ROWS: { below: number; depth: number; size: number; gap: number; haze: number }[] = [
+  { below: 0.42, depth: 0.76, size: 0.1, gap: 0.55, haze: 0.5 },
+  { below: 0.64, depth: 0.71, size: 0.13, gap: 0.68, haze: 0.4 },
+  { below: 0.92, depth: 0.64, size: 0.17, gap: 0.82, haze: 0.3 },
+  { below: 1.26, depth: 0.55, size: 0.22, gap: 1.0, haze: 0.2 },
+]
+
+function stooks(p: p5, k: number, f: Frame, t: number, au: number, horizon: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const blown = windBlown(t)
+  const s0 = windStrength(t)
+  const straw = mixHex(HILL.grassAutumn, HOME.yellow, 0.25)
+  p.noStroke()
+  STOOK_ROWS.forEach((row, j) => {
+    const y = horizon + row.below
+    if (y < f.y0 - 0.3 || y - row.size > f.y1) return
+    const shift = along(f, row.depth)
+    const body: [number, number, number][] = []
+    for (let m = Math.floor((f.x0 - shift - 0.5) / row.gap); m * row.gap + shift < f.x1 + 0.5; m++) {
+      if (hash(m, j, 201) < 0.22) continue
+      const lx = (m + 0.7 * hash(m, j, 202)) * row.gap
+      const d = 1 - row.depth
+      if (lx > d * STOOK_CLEAR.from - STOOK_CLEAR.margin && lx < d * STOOK_CLEAR.to + STOOK_CLEAR.margin) continue
+      const x = lx + shift
+      const s = row.size * (0.85 + 0.3 * hash(m, j, 203))
+      body.push([x, y + 0.04 * row.size * (hash(m, j, 204) - 0.5), s])
+    }
+    if (!body.length) return
+    const tug = (x: number, s: number) => s * 0.14 * s0 * (0.4 + gustIn(REACH.field, x, blown))
+    // The stook: sheaves splayed at the foot, tied at the waist, their heads fanned at the top.
+    const shape = (x: number, yb: number, s: number, half: boolean) => {
+      const g = tug(x, s)
+      if (half) {
+        ctx.moveTo(X(x + 0.02 * s, k), X(yb, k))
+        ctx.lineTo(X(x + 0.02 * s + g * 0.6, k), X(yb - 0.52 * s, k))
+        ctx.lineTo(X(x + 0.04 * s + g, k), X(yb - 1.02 * s, k))
+        ctx.lineTo(X(x + 0.13 * s + g, k), X(yb - 0.96 * s, k))
+        ctx.lineTo(X(x + 0.23 * s + g * 0.8, k), X(yb - 0.82 * s, k))
+        ctx.lineTo(X(x + 0.14 * s + g * 0.5, k), X(yb - 0.52 * s, k))
+        ctx.lineTo(X(x + 0.35 * s, k), X(yb, k))
+        ctx.closePath()
+        return
+      }
+      ctx.moveTo(X(x - 0.35 * s, k), X(yb, k))
+      ctx.lineTo(X(x - 0.15 * s + g * 0.5, k), X(yb - 0.52 * s, k))
+      ctx.lineTo(X(x - 0.24 * s + g * 0.8, k), X(yb - 0.84 * s, k))
+      ctx.lineTo(X(x - 0.12 * s + g, k), X(yb - 1.0 * s, k))
+      ctx.lineTo(X(x + 0.01 * s + g * 1.15, k), X(yb - 1.08 * s, k))
+      ctx.lineTo(X(x + 0.13 * s + g, k), X(yb - 0.96 * s, k))
+      ctx.lineTo(X(x + 0.23 * s + g * 0.8, k), X(yb - 0.82 * s, k))
+      ctx.lineTo(X(x + 0.14 * s + g * 0.5, k), X(yb - 0.52 * s, k))
+      ctx.lineTo(X(x + 0.35 * s, k), X(yb, k))
+      ctx.closePath()
+    }
+    const lit = mixHex(straw, HILL.skyGrey, row.haze)
+    const dark = mixHex(mixHex(straw, HILL.bark, 0.42), HILL.skyGrey, row.haze)
+    p.fill(alpha(p, lit, au))
+    ctx.beginPath()
+    for (const [x, yb, s] of body) shape(x, yb, s, false)
+    ctx.fill()
+    p.fill(alpha(p, dark, au))
+    ctx.beginPath()
+    for (const [x, yb, s] of body) shape(x, yb, s, true)
+    ctx.fill()
+    // The band that ties each at its waist.
+    p.fill(alpha(p, mixHex(mixHex(HILL.bark, straw, 0.3), HILL.skyGrey, row.haze), au))
+    ctx.beginPath()
+    for (const [x, yb, s] of body) {
+      const g = tug(x, s) * 0.5
+      ctx.rect(X(x - 0.15 * s + g, k), X(yb - 0.56 * s, k), X(0.3 * s, k), X(0.07 * s, k))
+    }
+    ctx.fill()
+  })
+}
+
+/** The farmstead's place on the far slope, at that fold's own depth (0.82), in the hill's cells: just short of the town. */
+const FARM_X = 3.2
+
+/**
+ * A farmstead far off on the far slope, near the town and its spire: a barn under its roof, a silo, and a line of
+ * poplars gone gold, bending in the wind. Hazed toward the grey sky, flat, no ink.
+ */
+function farmstead(p: p5, k: number, f: Frame, t: number, au: number, top: (x: number) => number): void {
+  const x0 = FARM_X + along(f, 0.82)
+  if (x0 + 1 < f.x0 || x0 - 0.8 > f.x1) return
+  // Small, as far things are: everything below at this size.
+  const S = 0.72
+  const haze = (c: string, h = 0.78) => alpha(p, mixHex(c, HILL.skyGrey, h), au)
+  const blown = windBlown(t)
+  const s0 = windStrength(t)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  p.noStroke()
+  // The poplars: a row of tall narrow crowns, their tips bent over downwind as each gust comes.
+  p.fill(haze(mixHex(HILL.leafAutumn, HOME.yellow, 0.45), 0.7))
+  ctx.beginPath()
+  for (let i = 0; i < 6; i++) {
+    const x = x0 + S * (-0.75 + i * 0.13 + 0.03 * hash(i, 211))
+    const yb = top(x) + 0.03
+    const h = S * (0.36 + 0.1 * hash(i, 212))
+    const bendTo = h * 0.16 * s0 * (0.5 + gustIn(REACH.mid, x, blown))
+    ctx.moveTo(X(x - 0.035 * S, k), X(yb, k))
+    ctx.quadraticCurveTo(X(x - 0.05 * S, k), X(yb - h * 0.55, k), X(x + bendTo, k), X(yb - h, k))
+    ctx.quadraticCurveTo(X(x + 0.05 * S + bendTo * 0.4, k), X(yb - h * 0.55, k), X(x + 0.035 * S, k), X(yb, k))
+    ctx.closePath()
+  }
+  ctx.fill()
+  // The barn: its walls, its roof, and the dark of its open door.
+  const bx = x0
+  const by = Math.max(top(bx - 0.2 * S), top(bx + 0.2 * S)) + 0.02
+  p.fill(haze(mixHex(HOME.roof, HILL.blanket, 0.35)))
+  ctx.beginPath()
+  ctx.rect(X(bx - 0.2 * S, k), X(by - 0.15 * S, k), X(0.4 * S, k), X(0.15 * S, k))
+  ctx.fill()
+  p.fill(haze(mixHex(HOME.roofOld, INK, 0.25)))
+  ctx.beginPath()
+  ctx.moveTo(X(bx - 0.24 * S, k), X(by - 0.14 * S, k))
+  ctx.lineTo(X(bx - 0.13 * S, k), X(by - 0.26 * S, k))
+  ctx.lineTo(X(bx + 0.13 * S, k), X(by - 0.26 * S, k))
+  ctx.lineTo(X(bx + 0.24 * S, k), X(by - 0.14 * S, k))
+  ctx.closePath()
+  ctx.rect(X(bx - 0.04 * S, k), X(by - 0.09 * S, k), X(0.08 * S, k), X(0.09 * S, k))
+  ctx.fill()
+  // The silo: a tall drum with a domed cap, beside it.
+  const sx = x0 + 0.33 * S
+  const sy = top(sx) + 0.02
+  p.fill(haze(mixHex(HOME.stone, HILL.skyGrey, 0.2)))
+  ctx.beginPath()
+  ctx.rect(X(sx - 0.05 * S, k), X(sy - 0.34 * S, k), X(0.1 * S, k), X(0.34 * S, k))
+  ctx.moveTo(X(sx + 0.05 * S, k), X(sy - 0.34 * S, k))
+  ctx.arc(X(sx, k), X(sy - 0.34 * S, k), X(0.05 * S, k), 0, Math.PI, true)
+  ctx.fill()
+}
+
+/**
+ * Crows in the stubble, small and far: they stand, take off together on a gust (171.15), wheel up and downwind and come
+ * down again a little way on, settled by 173.1 and still after. Standing, a dark body with its head; flying, a pair of
+ * strokes flapping. Their spots in the field's own depth, at the frame's look when they rise.
+ */
+const CROWS = { at: 9.7, depth: 0.7, lift: 171.15, n: 7 }
+function crows(p: p5, k: number, f: Frame, t: number, au: number, horizon: number, weight: number): void {
+  if (t > CROWS.lift + 6) return
+  const shift = along(f, CROWS.depth, 7.2)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const ink = alpha(p, mixHex(INK, HILL.skyGrey, 0.35), au)
+  const standing: [number, number, number][] = []
+  const flying: [number, number, number][] = []
+  for (let i = 0; i < CROWS.n; i++) {
+    const x0 = CROWS.at + 0.95 * hash(i, 221) + shift
+    const y0 = horizon + 0.48 + 0.16 * hash(i, 222)
+    const off = CROWS.lift + 0.07 * i + 0.05 * hash(i, 223)
+    const dur = 1.45 + 0.4 * hash(i, 224)
+    const u = Math.max(0, Math.min(1, (t - off) / dur))
+    const x = x0 + (0.75 + 0.3 * hash(i, 225)) * (u * u * (3 - 2 * u))
+    const y = y0 - (0.42 + 0.2 * hash(i, 226)) * Math.sin(Math.PI * u) - 0.04 * Math.sin(Math.PI * 2 * u)
+    if (x < f.x0 - 0.2 || x > f.x1 + 0.2 || y < f.y0 - 0.2 || y > f.y1 + 0.2) continue
+    const facing = hash(i, 227) < 0.5 ? -1 : 1
+    if (u > 0 && u < 1) flying.push([x, y, t - off])
+    else standing.push([x, y, facing])
+  }
+  p.noStroke()
+  p.fill(ink)
+  ctx.beginPath()
+  for (const [x, y, d] of standing) {
+    ctx.moveTo(X(x + 0.032, k), X(y - 0.022, k))
+    ctx.ellipse(X(x, k), X(y - 0.022, k), X(0.032, k), X(0.018, k), d * 0.25, 0, Math.PI * 2)
+    ctx.moveTo(X(x + d * 0.03 + 0.012, k), X(y - 0.04, k))
+    ctx.arc(X(x + d * 0.03, k), X(y - 0.04, k), X(0.012, k), 0, Math.PI * 2)
+  }
+  ctx.fill()
+  if (!flying.length) return
+  p.noFill()
+  p.stroke(ink)
+  p.strokeWeight(Math.max(1, weight * 0.4))
+  ctx.beginPath()
+  for (const [x, y, s] of flying) {
+    const flap = Math.sin(s * Math.PI * 2 * 3.2)
+    const half = 0.045
+    const lift = half * (0.15 + 0.5 * flap)
+    ctx.moveTo(X(x - half, k), X(y - lift, k))
+    ctx.lineTo(X(x, k), X(y + half * 0.15, k))
+    ctx.lineTo(X(x + half, k), X(y - lift, k))
+  }
+  ctx.stroke()
+}
+
+/** The fence's line along the lane's near side, in the hill's cells: its posts' tops, how far apart, the gate's gap. */
+const FENCE = { top: LANE_Y + R + 0.32, gap: 1.05, depth: -0.45, anchor: 8.6, gate: 8 }
+
+/**
+ * A weathered fence along the near side of the lane, at the frame's foot and nearer than the set (it slides past
+ * faster as the camera moves): split grey posts, each a little askew and one leaning hard, two sagging rails between,
+ * one here and there dropped at an end; across from where the path leaves the lane, a gap with its gate hung open. Its
+ * tops stay well under the lane, so it never comes near the two of them, the stone or the basket. Inked, as near
+ * things are.
+ */
+function fence(p: p5, k: number, f: Frame, au: number, weight: number): void {
+  const top = FENCE.top
+  if (f.y1 < top + 0.02) return
+  const shift = along(f, FENCE.depth, FENCE.anchor)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const post = mixHex(mixHex(HOME.woodDark, HILL.skyGrey, 0.5), HILL.grassAutumn, 0.12)
+  const shade = mixHex(post, INK, 0.3)
+  const rail = mixHex(HOME.wood, HILL.skyGrey, 0.48)
+  const foot = top + 0.62
+  const ink = weight * 0.8
+  const m0 = Math.floor((f.x0 - shift - 1.2) / FENCE.gap)
+  const m1 = Math.ceil((f.x1 - shift + 1.2) / FENCE.gap)
+  // Where each post stands, its top, and its lean.
+  const posts: [number, number, number, number][] = []
+  for (let m = m0; m <= m1; m++) {
+    const gatepost = m === FENCE.gate || m === FENCE.gate + 1
+    const x = m * FENCE.gap + (gatepost ? 0 : 0.18 * (hash(m, 231) - 0.5)) + shift
+    const lean = hash(m, 232) < 0.14 && !gatepost ? 0.2 + 0.1 * hash(m, 233) : 0.05 * (hash(m, 234) - 0.5)
+    posts.push([x, top + (gatepost ? -0.07 : 0.035 * hash(m, 235)), lean, m])
+  }
+  // The rails, behind the posts: each from one post to the next, sagging; a few dropped at one end; none at the gate.
+  const at = (x: number, y: number, lean: number) => x + Math.tan(lean) * (foot - y)
+  const rails: [number, number, number, number][] = []
+  for (let i = 0; i + 1 < posts.length; i++) {
+    const [xa, ya, la, m] = posts[i]
+    const [xb, yb, lb] = posts[i + 1]
+    if (m === FENCE.gate) continue
+    for (const [n, drop] of [[0, 0.1], [1, 0.3]] as const) {
+      const r = hash(m, 236 + n)
+      if (r < 0.06) continue
+      const y1 = ya + drop
+      const y2 = r < 0.16 ? foot - 0.08 : yb + drop
+      rails.push([at(xa, y1, la), y1, at(xb, y2, lb), y2])
+    }
+  }
+  p.noFill()
+  ctx.lineCap = 'butt'
+  for (const [w, color] of [[0.034 + (2 * ink) / k, INK], [0.034, rail]] as const) {
+    p.stroke(alpha(p, color, au))
+    p.strokeWeight(w * k)
+    ctx.beginPath()
+    for (const [x1, y1, x2, y2] of rails) {
+      ctx.moveTo(X(x1, k), X(y1, k))
+      ctx.quadraticCurveTo(X((x1 + x2) / 2, k), X((y1 + y2) / 2 + 0.035, k), X(x2, k), X(y2, k))
+    }
+    ctx.stroke()
+  }
+  ctx.lineCap = 'round'
+  // The gate, hung open from its post toward us: narrow (seen nearly end on), three bars and a brace.
+  const g = posts.find((q) => q[3] === FENCE.gate)
+  if (g) {
+    const [gx, gy] = g
+    const w = 0.34
+    const y0 = gy + 0.13
+    const y1 = gy + 0.48
+    p.stroke(alpha(p, INK, au))
+    p.strokeWeight(ink)
+    p.fill(alpha(p, rail, au))
+    for (const v of [0, 0.5, 1]) {
+      const y = y0 + (y1 - y0) * v
+      ctx.beginPath()
+      ctx.rect(X(gx + 0.04, k), X(y - 0.016 + v * 0.05, k), X(w, k), X(0.032, k))
+      ctx.fill()
+      ctx.stroke()
+    }
+    ctx.beginPath()
+    ctx.moveTo(X(gx + 0.06, k), X(y1, k))
+    ctx.lineTo(X(gx + 0.04 + w, k), X(y0 + 0.05, k))
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.rect(X(gx + 0.04 + w - 0.03, k), X(y0 - 0.02, k), X(0.03, k), X(y1 - y0 + 0.1, k))
+    ctx.fill()
+    ctx.stroke()
+  }
+  // The posts: split, so a little uneven in width; their tops cut on a slant; shaded down their right side.
+  for (const [x, y, lean, m] of posts) {
+    if (x < f.x0 - 0.3 || x > f.x1 + 0.3) continue
+    const hw = (m === FENCE.gate || m === FENCE.gate + 1 ? 0.05 : 0.034) * (0.9 + 0.2 * hash(m, 238))
+    const dx = Math.tan(lean) * (foot - y)
+    const corners: [number, number][] = [
+      [x - hw + dx, y - 0.012],
+      [x + hw + dx, y + 0.014],
+      [x + hw * 1.1, foot],
+      [x - hw * 1.1, foot],
+    ]
+    const trace = () => {
+      ctx.beginPath()
+      corners.forEach(([cx, cy], i) => (i ? ctx.lineTo(X(cx, k), X(cy, k)) : ctx.moveTo(X(cx, k), X(cy, k))))
+      ctx.closePath()
+    }
+    p.noStroke()
+    p.fill(alpha(p, post, au))
+    trace()
+    ctx.fill()
+    p.fill(alpha(p, shade, au))
+    ctx.beginPath()
+    ctx.moveTo(X(x + hw * 0.3 + dx, k), X(y + 0.005, k))
+    ctx.lineTo(X(x + hw + dx, k), X(y + 0.014, k))
+    ctx.lineTo(X(x + hw * 1.1, k), X(foot, k))
+    ctx.lineTo(X(x + hw * 0.35, k), X(foot, k))
+    ctx.closePath()
+    ctx.fill()
+    p.noFill()
+    p.stroke(alpha(p, INK, au))
+    p.strokeWeight(ink)
+    trace()
+    ctx.stroke()
+    // A split down its face.
+    p.strokeWeight(Math.max(1, ink * 0.5))
+    ctx.beginPath()
+    ctx.moveTo(X(x - hw * 0.2 + dx * 0.9, k), X(y + 0.06, k))
+    ctx.lineTo(X(x - hw * 0.1 + dx * 0.5, k), X(y + 0.26, k))
+    ctx.stroke()
+  }
+}
+
 /* ------------------------------------------------------------------ the sky, the far side, the near grass */
 
 /** The ground's drawn line at `x`, its surface: the hill's skyline, the stone's top, the lane beyond. */
@@ -860,6 +1183,8 @@ export const hillSet = scenery<null>({
     const ridge2 = fold(f.cx * 0.82, 0.05, 0.22, 0.52, 4)
     band(ridge2, hill2)
     streaks(ridge2, f.cx * 0.82, REACH.mid, 0.15, 8, hill2)
+    // Years later a farmstead on the far slope, short of the town.
+    if (windy) farmstead(p, k, f, t, au, ridge2)
     const ridge3 = fold(f.cx * 0.75, -0.35, 0.05, 0.9, 7)
     band(ridge3, field)
     streaks(ridge3, f.cx * 0.75, REACH.field, 0.19, 12, field)
@@ -902,8 +1227,12 @@ export const hillSet = scenery<null>({
       p.vertex(X(tx0 + 0.16 + 8 * 0.3 + 0.2), X(ty))
       p.endShape(p.CLOSE)
     }
+    // The harvest standing in the valley's stubble, and the crows in it.
+    if (windy) {
+      stooks(p, k, f, t, au, horizon)
+      crows(p, k, f, t, au, horizon, weight)
+    }
 
-    // How far a tuft of height `h` at `x` bends: with the wind's gust as it runs along (harder years later), and a flutter.
     // How far a tuft of height `h` at `x` bends: in summer with the breeze's gust as it runs along; years later laid over
     // by the gusts of the autumn wind as they cross, fluttering, and standing up again in the lull.
     const blown = windBlown(t)
@@ -1182,6 +1511,7 @@ export const hillSet = scenery<null>({
     }
     p.push()
     fallingLeaves(p, k, t, au, f)
+    if (au > 0.5) fence(p, k, f, au, weight)
     nearGrass(p, k, f, t, au)
     p.pop()
   },
