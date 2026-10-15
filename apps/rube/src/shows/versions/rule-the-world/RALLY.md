@@ -254,3 +254,74 @@ Every place's paint got cheaper for it. In Chrome (headed, vsync, 3024 × 1800, 
 frames a second with 1 frame of 15,958 over 20 ms, the paint on the main thread 1.5 ms a frame on average, 3.2 ms at
 the 95th percentile and 9.0 ms at worst (1.8, 4.3 and 13.5 after the fullness pass); the finale paints in 2.6 ms on
 average.
+
+## The second fullness pass
+
+Then the fullness brief again, on the show as the restraint pass had left it: fuller and more impressive, from
+substance and never from gloss, with the matches still the matches and sixty frames a second.
+
+It was audited two ways: the ten frames spread evenly over the show, as before, and a map of every second of it, the
+camera held still between two frames 0.2 s apart at 640 × 360, counting the share of the picture that moves and the
+separate things moving in it. The map found 49 seconds in which almost nothing moved (under 1.5% of the picture):
+most of the stockroom and Murray's office, the farmhouse in New Jersey, the ward, and the crane's first seconds over
+the credits. So the last third, which is to be the busiest, held the stillest stretch of the show. The frames found
+the office's bare floor, the stockroom's dark back wall, the hotel street's dark lower half, the night road's empty
+sky and the ward's pale walls. London and Tokyo were full already, and were left as they were.
+
+**The places.**
+
+- *The store:* through the stockroom's barred back window, the yard: snow, the backs of the tenements (a window
+  waking on a beat), washing on a line, a chimney's smoke, and the El crossing on its trestle, slower than the room,
+  so the camera's small drift as it closes on the two of them shows the depth. A mouse comes out from under the
+  shelving and bolts as the store cat puts its head through the curtain; the cat follows him into the office, watches
+  the safe from Murray's desk by the lamp, its ears back at the bolts, and at six trots out to meet Murray's shadow.
+  Murray's worn rug fills the floor, the blind's slats rock in the radiator's air, early traffic and a second El sweep
+  the wall. Past the counter's window a man walks his dog in the snow and the bakery's boy goes by on his bicycle; a
+  nearer row of lamps hangs into the wall of boxes, and both rows swing in the fan's draught.
+- *The hotel:* the IRT a few feet under the street, cut open. As he comes down the last ladder a local runs under him,
+  its riders' hats sliding along under the pavement, the vault lights catching each window, the puddle by the ladder
+  shivering. Umbrellas cross on the far pavement, a sheet of newspaper skips along on the beats, a mouse in his room
+  freezes at the radiator's knocks, and headlamps sweep Mishkin's ceiling.
+- *The alley:* under its floor, a crawlspace whose work lights swing at the door's slam, and a mechanic on a creeper
+  pulling his wrench on the beats.
+- *New Jersey:* one wind, from the left, the way the windmill's vane points: scud across the moon, washing cracking on
+  a line, a curtain out of an upstairs window, a few dry leaves on the gusts. A chained dog gets up for the cab's
+  lamps and barks on the backbeat; the men shift their weight, their breath going off on the wind; a man rises into
+  the lit window with a rifle before the shots. Hens scatter in the barn, and at the airfield bags are towed out to
+  the hold and a ground man waves the pilot on.
+- *The ward:* a maternity floor at dawn, its life kept round the two of them and never across them. The next bed's
+  mother rocks her baby in shadow on the partition curtain. At the far end of the glass another father taps, points,
+  waves back at the nurse's wave (it was for Marty), wipes the glass with his handkerchief, and goes off with an
+  unlit cigar; a father up all night falls asleep under his hat on the bench until the doctor taps it off. Behind the
+  glass a student nurse bathes the babies and the night nurse walks one with its bottle, and fists and kicks show
+  through the swaddles. Under the credits the orderly mops the checkerboard and the father comes back with his mother.
+- *The finale* (`rally/flock.ts`, `rally/city.ts`): a pigeon loft on the roof over the ward, and a boy keeping it with
+  a long pole and a rag, the Lower East Side's own dawn sport. As the crane comes away from the glass he sends the
+  flock up; it sweeps across the face of the sleeping building, wheels round it under the credits, and once every room
+  is lit comes round close to the lens over the lit rooms before going home to the loft. Their light is only their
+  pale undersides as they bank. Next door a tenement wakes in its windows (a man shaving, a rug shaken out, a man
+  behind his paper, a boy whose eyes follow the pigeons); in the street a milk truck pulls up and people go to work
+  under the El; a fire escape and a telegraph pole pass close to the lens, and out wide the crane no longer locks but
+  goes on drawing back along the building. The rooms are no longer dark as the camera finds them: they play dimly,
+  asleep, and on the song's last two bars still light a room a beat.
+
+**The shine.** The restraint pass had left a few glows, and these went too: the halos round the alley's tubes (now
+their light washing down the wall behind), its glowing beer glass and the stutter of the tube over the lanes; the soft
+light round the hotel hall's bulb (now a fixture, its light down the paper); the store's window and safe glows (now
+plain light where it falls), the halos on the office wall and the stockroom transom's cold shaft; and in the ward the
+glows on the walls, the gold one round Rachel's pillow, the halo round the sun and the last glints on the brass.
+
+**Measured.** With the camera held, the share of the picture moving and the separate moving things in a frame, on
+average over each third of the show:
+
+| | Moving, before → after | Things moving, before → after | Seconds nearly still |
+| --- | --- | --- | --- |
+| First third | 5.3% → 6.9% | 102 → 125 | 22 → 0 |
+| Middle third | 7.3% → 8.1% | 159 → 174 | 6 → 0 |
+| Last third | 6.5% → 8.0% | 197 → 243 | 21 → 0 |
+
+The last third has the most going on at once, twice the opening's; by area it is level with the middle, whose rain
+and fire fill a lot of the picture, and the ward is still the quietest place in it, the morning round two balls at a
+pane of glass. In Chrome (headed, 2384 × 1800, every frame at 60 fps, measured before and after on the same machine)
+there is no frame over 20 ms: up to the credits the paint on the main thread is 1.6 ms a frame on average, 2.4 ms at
+the 95th percentile and 7.6 ms at worst (1.3, 1.9 and 4.5 before), and the finale 4.2, 7.1 and 12.0 (3.0, 5.9 and 8.6).
