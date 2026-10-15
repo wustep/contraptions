@@ -258,8 +258,7 @@ function drawSign(p: p5, c: Ctx, t: number): void {
     if (on <= 0) return
     const lift = on / 0.8
     const y = hers(i)
-    // Its light lying on the slope just under it, a little: the block is the light.
-    glow(p, k, b.x, b.y + 0.2 + dy, 0.55, mixHex(M.lamp, MIA, 0.8 * y), (0.1 + 0.04 * y) * lift, 1.0, 0.35)
+    // The block is the light: nothing round it.
     p.push()
     p.translate(X(k, b.x), X(k, b.y + dy))
     p.rotate(b.tilt)

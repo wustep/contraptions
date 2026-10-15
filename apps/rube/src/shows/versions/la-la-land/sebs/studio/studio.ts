@@ -82,6 +82,141 @@ const MOUNTAIN: Pt[] = [
 const RIDGE: Pt[] = [
   [-10, -5.2], [-6, -6.8], [-2, -7.6], [2, -8.8], [6, -9.3], [9, -8.6], [24, -8.2], [28, -9.6], [32, -10.3], [36, -9.1], [40, -8.2], [44, -7.4],
 ].map(([x, y]) => [H(x), y])
+/** The mountain's skyline at x (this frame, landed). */
+function mountainTop(x: number): number {
+  for (let j = 0; j + 1 < MOUNTAIN.length; j++) {
+    const [ax, ay] = MOUNTAIN[j]
+    const [bx, by] = MOUNTAIN[j + 1]
+    if (x >= ax && x <= bx) return ay + ((by - ay) * (x - ax)) / (bx - ax)
+  }
+  return MOUNTAIN[x < MOUNTAIN[0][0] ? 0 : MOUNTAIN.length - 1][1]
+}
+/** How far down the face the scenic painter's brushwork goes (landed): to the palms' feet. */
+const FACE_FOOT = -1.9
+/**
+ * The mountain's face as a scenic painter lays it in, in this frame, landed: the spurs running down from the crest and
+ * fanning out over the flanks, each with a gully of darker brush down its shaded side and its edge toward the low sun
+ * lit; the chaparral as low mounds of dabs, dark in the gullies and rose where the sun finds it along the spurs,
+ * thicker toward the foot; and the rock along the crest. Built once, as paths in cells.
+ */
+let FACE: { gully: Path2D; lit: Path2D; scrub: Path2D; sunlit: Path2D; rock: Path2D; rockLit: Path2D } | null = null
+function face(): NonNullable<typeof FACE> {
+  if (FACE) return FACE
+  const gully = new Path2D()
+  const lit = new Path2D()
+  const scrub = new Path2D()
+  const sunlit = new Path2D()
+  const rock = new Path2D()
+  const rockLit = new Path2D()
+  const summit = H(14.6)
+  const N = 12
+  // A clump of brush: a low mound of small dabs heaped on the slope, flat along its foot and bumpy along its top, as the
+  // hill's own hedge is.
+  const clump = (into: Path2D, x: number, y: number, s: number, seed: number) => {
+    const n = 4 + Math.floor(hash(seed, 224) * 4)
+    const span = (0.08 + 0.07 * hash(seed, 225)) * s
+    for (let j = 0; j < n; j++) {
+      const u = j / (n - 1) - 0.5
+      const r = (0.06 + 0.045 * hash(seed, 250 + j)) * s * (1 - 0.55 * Math.abs(u))
+      const cx = x + 2 * span * u + 0.02 * s * (hash(seed, 230 + j) - 0.5)
+      into.moveTo(cx + r, y - r * 0.5)
+      into.ellipse(cx, y - r * 0.5, r, r * 0.85, 0, 0, Math.PI * 2)
+    }
+  }
+  // The spurs: from just under the skyline down to the foot, swinging out over the flanks away from the summit.
+  const tops = [-7, -2.5, 1.5, 5, 8.2, 11.2, 13.6, 16.4, 19, 22, 25.5, 29.5, 34, 39]
+  for (const [i, hx] of tops.entries()) {
+    const x0 = H(hx)
+    const y0 = mountainTop(x0) + 0.35
+    const x1 = x0 + (x0 - summit) * 0.7 + 1.2 * (hash(i, 211) - 0.5)
+    const line = Array.from({ length: N + 1 }, (_, j): Pt => {
+      const u = j / N
+      return [x0 + (x1 - x0) * (0.4 * u + 0.6 * u * u), y0 + (FACE_FOOT - y0) * u]
+    })
+    // The gully down its shaded side: narrow under the crest, opening toward the foot, its far edge ragged.
+    const wide = 0.45 + 0.35 * hash(i, 213)
+    gully.moveTo(line[0][0], line[0][1])
+    for (const [x, y] of line) gully.lineTo(x, y)
+    for (let j = N; j >= 0; j--) {
+      const u = j / N
+      const w = (0.04 + wide * Math.pow(u, 1.1)) * (1 + 0.3 * Math.sin(j * 2.3 + i * 1.7))
+      gully.lineTo(line[j][0] - w, line[j][1] + 0.06 * u)
+    }
+    gully.closePath()
+    // Its lit edge, the low sun along it, thinning out toward the foot.
+    lit.moveTo(line[0][0], line[0][1])
+    for (const [x, y] of line.slice(0, 9)) lit.lineTo(x, y)
+    for (let j = 8; j >= 0; j--) {
+      const u = j / N
+      lit.lineTo(line[j][0] + 0.025 + 0.09 * Math.sin(Math.PI * u * 1.4), line[j][1])
+    }
+    lit.closePath()
+    // Brush gathered in the gully, more and bigger toward the foot; and lighter, sunlit brush along the spur's crest.
+    for (let j = 0; j < 12; j++) {
+      const u = 0.15 + 0.85 * ((j + hash(i * 12 + j, 214)) / 12)
+      const q = u * N
+      const a = line[Math.floor(q)]
+      const b = line[Math.min(N, Math.floor(q) + 1)]
+      const f = q - Math.floor(q)
+      const w = 0.04 + wide * Math.pow(u, 1.1)
+      const x = a[0] + (b[0] - a[0]) * f
+      const y = a[1] + (b[1] - a[1]) * f
+      clump(scrub, x - w * (0.2 + 0.6 * hash(i * 12 + j, 215)), y, 0.9 + 0.9 * u, i * 12 + j)
+      if (j % 2 === 0) clump(sunlit, x + 0.12 + 0.25 * hash(i * 12 + j, 216), y + 0.15, 0.7 + 0.7 * u, 300 + i * 12 + j)
+    }
+  }
+  // And scattered over the open slope, thin high up and thicker low down.
+  for (let i = 0, n = 0; i < 500 && n < 90; i++) {
+    const x = H(-9 + 52 * hash(i, 221))
+    const top = mountainTop(x) + 0.7
+    if (top >= FACE_FOOT - 0.3) continue
+    const v = Math.sqrt(hash(i, 222))
+    if (hash(i, 223) > 0.2 + 0.7 * v) continue
+    n++
+    clump(hash(i, 226) < 0.3 ? sunlit : scrub, x, top + (FACE_FOOT - 0.15 - top) * v, 0.8 + 0.9 * v, 500 + i)
+  }
+  // Rock along the crest, either side of the summit: low angular outcrops just under the skyline, the face to the sun lit.
+  for (const [i, hx] of [7.2, 10.4, 12.6, 16.2, 18.9, 22.4].entries()) {
+    const x = H(hx)
+    const y = mountainTop(x) + 0.4 + 0.2 * hash(i, 261)
+    const w = 0.3 + 0.25 * hash(i, 262)
+    const h = 0.12 + 0.08 * hash(i, 263)
+    const peak = x + w * (0.1 + 0.25 * hash(i, 264))
+    rock.moveTo(x - w / 2, y)
+    rock.lineTo(x - w * 0.25, y - h * 0.65)
+    rock.lineTo(peak, y - h)
+    rock.lineTo(x + w / 2, y - h * 0.25)
+    rock.lineTo(x + w / 2 + 0.04, y)
+    rock.closePath()
+    rockLit.moveTo(peak, y - h)
+    rockLit.lineTo(x + w / 2, y - h * 0.25)
+    rockLit.lineTo(x + w / 2 + 0.04, y)
+    rockLit.lineTo(peak + 0.03, y)
+    rockLit.closePath()
+  }
+  FACE = { gully, lit, scrub, sunlit, rock, rockLit }
+  return FACE
+}
+/** The face's brushwork on the cloth: paths in cells, so drawn scaled and dropped with the cloth. */
+function drawFace(ctx: CanvasRenderingContext2D, k: number, dy: number): void {
+  const f = face()
+  ctx.save()
+  ctx.translate(0, dy * k)
+  ctx.scale(k, k)
+  ctx.fillStyle = rgba(M.hillDeep, 0.14)
+  ctx.fill(f.gully)
+  ctx.fillStyle = rgba(M.skyCoral, 0.12)
+  ctx.fill(f.lit)
+  ctx.fillStyle = rgba(M.hillDeep, 0.22)
+  ctx.fill(f.scrub)
+  ctx.fillStyle = rgba(M.ridge, 0.2)
+  ctx.fill(f.sunlit)
+  ctx.fillStyle = rgba(M.hillDeep, 0.3)
+  ctx.fill(f.rock)
+  ctx.fillStyle = rgba(M.horizon, 0.25)
+  ctx.fill(f.rockLit)
+  ctx.restore()
+}
 /** Palms along the foot of the painted mountain (Hollywood frame): where each stands, how tall, its lean. */
 const PALMS = Array.from({ length: 22 }, (_, i) => ({ x: -9 + i * 2.45 + 0.9 * (hash(i, 55) - 0.5), h: 1.6 + 1.1 * hash(i, 56), lean: (hash(i, 57) - 0.5) * 0.25 }))
 /** A palm painted flat: a thin curving trunk and a burst of fronds, stirring by `stir` (radians) in the evening air. */
@@ -326,12 +461,10 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(X(k, x0), X(k, y0), X(k, x1 - x0), X(k, bottom - y0))
   ctx.restore()
-  // The painted sun, going down behind the far ridge: a flat disc of pale gold, the hour the film is named for.
+  // The painted sun, going down behind the far ridge: one flat disc of gold, the hour the film is named for.
   p.noStroke()
-  p.fill(mixHex(M.bush, M.skyCoral, 0.35))
-  p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 4.4))
-  p.fill(mixHex(M.bush, M.flat, 0.45))
-  p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 3.3))
+  p.fill(mixHex(mixHex(M.bush, M.skyCoral, 0.3), M.flat, 0.22))
+  p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 4.0))
   // Painted clouds: long flat banks of rose and lavender, the brush's own shapes, no ink.
   for (const cl of CLOUDS) {
     p.fill(cl.fill)
@@ -361,6 +494,8 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   for (const [x, y] of MOUNTAIN) p.vertex(X(k, x), X(k, y + dy))
   p.vertex(X(k, MOUNTAIN[MOUNTAIN.length - 1][0]), X(k, bottom))
   p.endShape(p.CLOSE)
+  // Its face, brushed in: the spurs and their shade, the chaparral, the rock along the crest.
+  drawFace(ctx, k, dy)
   // The evening coming on: as the number nears its end the cloth's light goes from the mountain's foot up, its face
   // going into shade a little at a time, so the hour passes while they climb (the lamps go out into the dark).
   const shade = smooth(t, BURST + 8, 171.2)
@@ -376,14 +511,6 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
     for (const [x, y] of MOUNTAIN) p.vertex(X(k, x), X(k, y + dy))
     p.vertex(X(k, MOUNTAIN[MOUNTAIN.length - 1][0]), X(k, bottom))
     p.endShape(p.CLOSE)
-  }
-  p.noFill()
-  for (const [down, a] of [[1.1, 0.22], [2.6, 0.16], [4.4, 0.12]] as const) {
-    p.stroke(rgba(M.skyMid, a))
-    p.strokeWeight(X(k, 0.09))
-    p.beginShape()
-    for (const [x, y] of MOUNTAIN) p.curveVertex(X(k, x), X(k, Math.min(bottom - 0.4, y + dy + down * (1 + 0.15 * Math.sin(x * 0.7)))))
-    p.endShape()
   }
   // The observatory on the far ridge, catching the last of the sun: a long low building, a dome at each end and the
   // great one in the middle. Painted flat, a shade darker than the ridge, its domes rimmed with the sunset.
