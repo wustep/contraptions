@@ -430,7 +430,8 @@ export function balloons(s: Screen, t: number, hy: number): void {
   for (const [i, b] of BALLOONS.entries()) {
     const age = t - b.t
     if (age <= 0) continue
-    const rise = b.rise * age * (1 - 0.15 * smooth(age, 0, 30))
+    // Up quickly off the ground, clear of the fair's floors in a few seconds, then on the wind.
+    const rise = b.rise * age * (1 - 0.15 * smooth(age, 0, 30)) + 0.09 * (1 - Math.exp(-age / 1.8))
     const x = cx + (b.u - at + b.drift * age + 0.012 * Math.sin(age * 0.8 + i)) * f
     const y = hy - f * 0.06 - rise * f
     const r = f * 0.0085 * (1 - 0.35 * smooth(age, 0, 35))
