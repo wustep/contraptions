@@ -933,6 +933,42 @@ function drawParis(p: p5, k: number, t: number, s: GlobeState, f: { x0: number; 
   p.strokeWeight(Math.max(1, 0.02 * k))
   p.line(X(-4), X(STREET), X(24), X(STREET))
   const lampOn = smooth(t, LAMPS - 0.04, LAMPS + 0.08)
+  // The street is wet: its setts in courses, wider apart as they come nearer; and once the lamps are lit each one lies on
+  // the wet tops of the setts under it, broken by them, fainter as they come nearer.
+  {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const ROWS = [0.14, 0.34, 0.6, 0.94, 1.36]
+    ctx.save()
+    ctx.lineWidth = Math.max(1, 0.03 * k)
+    ctx.strokeStyle = rgba(M.parchment, 0.07)
+    ctx.beginPath()
+    for (const [row, y] of ROWS.entries()) {
+      const step = 0.34 + 0.14 * row
+      for (let i = Math.floor((f.x0 - 1) / step); i * step < Math.min(24, f.x1 + 1); i++) {
+        const x = i * step + (row % 2) * step * 0.5
+        ctx.moveTo(X(x), X(STREET + y))
+        ctx.lineTo(X(x + step * (0.45 + 0.3 * hash(i, 600 + row))), X(STREET + y))
+      }
+    }
+    ctx.stroke()
+    if (lampOn > 0) {
+      ctx.lineWidth = Math.max(1, 0.045 * k)
+      ctx.lineCap = 'round'
+      for (const [row, y] of ROWS.entries()) {
+        ctx.strokeStyle = rgba(M.city, (0.28 - 0.045 * row) * lampOn)
+        ctx.beginPath()
+        for (const x of [...LAMPS_X, DOOR_X]) {
+          if (x < f.x0 - 1 || x > f.x1 + 1) continue
+          const lx = (x === DOOR_X ? x : x + 0.14) + 0.03 * Math.sin(x * 7 + row * 2.1)
+          const w = 0.1 + 0.05 * row
+          ctx.moveTo(X(lx - w), X(STREET + y))
+          ctx.lineTo(X(lx + w), X(STREET + y))
+        }
+        ctx.stroke()
+      }
+    }
+    ctx.restore()
+  }
   for (const x of LAMPS_X) {
     if (x < f.x0 - 2 || x > f.x1 + 2) continue
     p.stroke(BG)
