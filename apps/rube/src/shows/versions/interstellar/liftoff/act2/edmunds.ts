@@ -735,11 +735,11 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   ctx2.save()
   // The far side of the disk, lensed over the top of the dark (broad) and under it (thin): crisp bands, white to gold
   // to amber, as the near one is drawn, not a glow fading into the sky.
-  for (const [a0, a1, rout, peak] of [[Math.PI + 0.01, TAU - 0.01, 1.55, 0.9], [0.01, Math.PI - 0.01, 1.28, 0.5]]) {
+  for (const [a0, a1, rout, peak] of [[Math.PI + 0.01, TAU - 0.01, 1.3, 0.9], [0.01, Math.PI - 0.01, 1.16, 0.5]]) {
     const bands: [number, number, string, number][] = [
-      [1, 1.09, WHITE, 0.95],
-      [1.09, 1.24, DARK.gold, 0.7],
-      [1.24, 1.55, DARK.amber, 0.28],
+      [1, 1.07, WHITE, 0.95],
+      [1.07, 1.16, DARK.gold, 0.6],
+      [1.16, 1.3, DARK.amber, 0.16],
     ]
     for (const [r0, r1, hex, a] of bands) {
       if (r0 >= rout) continue
