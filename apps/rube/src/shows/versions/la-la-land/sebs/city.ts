@@ -455,10 +455,13 @@ export const city = scenery<CityState>({
     basin.addColorStop(1, SEBS_MAT.deep)
     ctx.fillStyle = basin
     ctx.fillRect((fr.x0 - 1) * k, (HORIZON + lift(0.45) + 0.4) * k, (fr.x1 - fr.x0 + 2) * k, (STREET - HORIZON + 2) * k)
-    // Through The End's swell the whole city brightens with the music.
-    const swellLight = s.end ? 1 + 0.45 * smooth(t, SWELL - 2, SWELL + 3) * level(t) : 1
+    // Through The End's swell the whole city brightens with the music: its lights, and the glow of them on the air
+    // over it, which warms with the orchestra, holds through the last chord, and settles as it dies away, so the last
+    // seconds of silence are the city as it was.
+    const swell = s.end ? smooth(t, SWELL - 6, SWELL + 1) * level(t) : 0
+    const swellLight = 1 + 0.7 * swell
     // The city's own glow on the air over it.
-    glow(p, k, VANISH + slide(0.25), HORIZON + 0.8 + lift(0.25), 26, '#C9795E', 0.16, 1.6, 0.28)
+    glow(p, k, VANISH + slide(0.25), HORIZON + 0.8 + lift(0.25), 26, '#C9795E', 0.16 + 0.26 * swell, 1.6, 0.28 + 0.08 * swell)
     const lamps = batch()
     for (const b of BOULEVARDS) {
       for (let j = 1; j <= b.n; j++) {
