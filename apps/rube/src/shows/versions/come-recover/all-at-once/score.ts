@@ -294,7 +294,6 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
       who: 'evelyn' as const,
       from: JUMPS.eye,
       arrive: true,
-      burst: true,
       gaze: [
         ...GIFT_LOOKS,
         { from: fight(140), to: JUMPS.rocks, at: 'waymond' as const },
@@ -310,8 +309,8 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
         SWELLED('joy'),
       ],
     },
-    // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
-    { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 },
+    // Joy's arrives as her mother's did, slapped on and whirling.
+    { who: 'joy' as const, from: JOY_EYE, arrive: true,
       // Once its fling has settled, her new eye looks into her mother's; and at home she looks up at her as she nestles.
       gaze: [{ from: 255.3, to: 257.2, at: 'evelyn' as const }, { from: JUMPS.home + 0.3, to: T_DOOR + 0.5, at: 'waymond' as const }, { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'waymond' as const }, { from: 279.6, to: 282.3, at: 'evelyn' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
   ]

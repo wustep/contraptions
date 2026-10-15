@@ -13,9 +13,8 @@ import type { WorldKey } from './worlds'
  * - **The kung fu picture** (the dojo) is an old print in scope: faded warm, its blacks lifted, heavy grain that
  *   dances a frame at a time, a scratch or two down the emulsion, dust, and a darker edge.
  *
- * - **The hot dog life** is a soft-focus romance: the full frame, its edges gone to a glowing pink haze as if the
- *   lens were gauzed, and a faint bloom over it. It ends as an old romance does, the picture closing on her in a
- *   heart.
+ * - **The hot dog life** is a soft-focus romance: the full frame, its edges gone to a soft pink haze as if the
+ *   lens were gauzed. It ends as an old romance does, the picture closing on her in a heart.
  * - **Raccacoonie** is a cartoon, drawn clean; it opens on her the way a cartoon does, in a round iris that blooms
  *   out to the frame, and ends with the iris closing on her.
  *
@@ -234,19 +233,14 @@ export function paintPicture(ctx: CanvasRenderingContext2D, look: Look, x: numbe
       paintVignette(ctx, x, y + top, w, bottom - top, 0.5, true)
     }
   } else if (look === 'dream') {
-    // A faint bloom over all of it, and the edges gone soft into a glowing haze.
-    ctx.save()
-    ctx.globalCompositeOperation = 'screen'
-    ctx.fillStyle = 'rgba(255, 228, 232, 0.08)'
-    ctx.fillRect(x, y, w, h)
-    ctx.restore()
+    // The edges gone soft into a pink haze, as through a gauzed lens; the room still there under it.
     ctx.save()
     ctx.translate(x + w / 2, y + h / 2)
     ctx.scale(1, h / w)
-    const g = ctx.createRadialGradient(0, 0, 0.3 * w, 0, 0, 0.66 * w)
+    const g = ctx.createRadialGradient(0, 0, 0.34 * w, 0, 0, 0.68 * w)
     g.addColorStop(0, 'rgba(255, 236, 238, 0)')
-    g.addColorStop(0.6, 'rgba(255, 236, 238, 0.32)')
-    g.addColorStop(1, 'rgba(255, 244, 245, 0.78)')
+    g.addColorStop(0.6, 'rgba(255, 236, 238, 0.2)')
+    g.addColorStop(1, 'rgba(255, 240, 242, 0.5)')
     ctx.fillStyle = g
     ctx.fillRect(-w / 2, -w / 2, w, w)
     ctx.restore()

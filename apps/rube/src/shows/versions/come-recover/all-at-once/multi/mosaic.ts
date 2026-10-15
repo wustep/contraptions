@@ -10,7 +10,7 @@ import { lidAt } from '../home/kindness-plan'
 import { KINDNESS_AT } from '../home/kindness'
 import { PANEL_LOOKS, paintPicture, pixelOf, prefersCalm } from '../film'
 import { backdrop, HP, LE, LW, PL, SKINS, skinAt, TH, TILT, WEDGE, type Moment, type Skin, type View } from './skins'
-import { at, circle, glow, hash, lodFor, mix, poly, rect, rgba, type Pen } from './skins-pen'
+import { at, circle, hash, lodFor, mix, poly, rect, rgba, type Pen } from './skins-pen'
 
 /**
  * ALL AT ONCE. Evelyn tips into the bagel's hole (a violet flare off her, the bagel's seeds flung wide) and falls,
@@ -781,8 +781,8 @@ function drawHome(p: p5, ctx: CanvasRenderingContext2D, F: Frame, s: MosaicState
 
 /**
  * The bagel's seeds she falls past in the dark, drifting down slower than she does. On the tip in (the first
- * instant of the leg, fight 59) she comes through the hole with a violet flare off her, and the seeds round her are
- * flung outward, with a spray of new ones from where she broke through; they slow in the dark and drift on.
+ * instant of the leg, fight 59) she comes through the hole, and the seeds round her are flung outward, with a spray
+ * of new ones from where she broke through; they slow in the dark and drift on.
  */
 function seedsInDark(ctx: CanvasRenderingContext2D, F: Frame, s: MosaicState, t: number, q: number, sc: Pt, c: Pt, e: Pt, ink: string): void {
   const pen = penFor(ctx, F, c[0], c[1], q, sc, VOID.sesame)
@@ -817,8 +817,5 @@ function seedsInDark(ctx: CanvasRenderingContext2D, F: Frame, s: MosaicState, t:
     ctx.ellipse(sx, sy, 0.05 * size, 0.024 * size, a + x * 3 * (hash(i, 7, 43) - 0.5), 0, Math.PI * 2)
     ctx.fill()
   }
-  // The flare: violet, off her, gone in a moment; a hot core for the first frames.
-  glow(pen, hit[0], hit[1] + 0.9 * x, 2.1, VOID.glow, 0.9 * Math.exp(-x / 0.16))
-  glow(pen, hit[0], hit[1] + 0.9 * x, 0.7, VOID.rimLight, 0.8 * Math.exp(-x / 0.06))
   evelyn(pen, e, null, ink)
 }
