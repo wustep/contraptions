@@ -5,7 +5,7 @@ import { along, birds, clouds, wobble, type Flight, type Frame } from '../depth'
 import { AGE, AT, CUT, PIANO } from '../music'
 import { HOME, INK } from '../worlds'
 import { farRow, type Lot } from '../house/far'
-import { stormAt } from './jar-clock'
+import { BOARDS, FLASH1, stormAt } from './jar-clock'
 import { drawPapers } from './papers'
 
 /**
@@ -95,6 +95,135 @@ const BEHIND = farRow(-150, 150, 0.5, 0.55, 16)
 
 function rect(p: p5, k: number, x0: number, y0: number, x1: number, y1: number): void {
   p.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+}
+
+/* ------------------------------------------------------------------ the ground under it */
+
+/** The yard tree's trunk and her stump (the yard's, in this set's cells): where their roots go down from. */
+const ROOTED: { x: number; reach: number; n: number; seed: number }[] = [
+  { x: -4.4, reach: 2.1, n: 5, seed: 3 },
+  { x: -2.77, reach: 0.9, n: 3, seed: 7 },
+]
+
+/**
+ * The ground cut through with the house, as a doll's house is cut: dark topsoil under the grass, the subsoil, a
+ * deeper band; stones in it; the yard tree's roots and the old stump's spreading under the yard; and the house's
+ * stone footings under its walls and its chimney, the porch's piers. All of it still: the one thing that changes is
+ * the rain, soaking the topsoil dark through the storm and drying out after it. Only round the house, and only
+ * where the frame looks below the ground.
+ */
+function underground(p: p5, k: number, weight: number, t: number, X0: number, X1: number, Y1: number, earth: string): void {
+  const H = INSIDE
+  const g = H.ground
+  if (Y1 <= g + 0.05) return
+  const wet = smooth(t, FLASH1 - 1, FLASH1 + 4) * (1 - smooth(t, BOARDS[1] + 2, BOARDS[1] + 16))
+  const top = mixHex(earth, '#6B4A36', 0.32 + 0.22 * wet)
+  const deep = mixHex(earth, '#7A6150', 0.22)
+  const ink = alpha(p, INK, 0.35)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const slab: [number, number] = [H.backWall[0], H.frontWall[1]]
+  p.noStroke()
+  // The deeper band, its top wavering.
+  const deepAt = (x: number) => g + 1.55 + 0.08 * Math.sin(x * 0.7 + 2) + 0.04 * Math.sin(x * 2.3)
+  if (Y1 > g + 1.4) {
+    p.fill(deep)
+    p.beginShape()
+    p.vertex((X0 - 0.2) * k, (Y1 + 0.2) * k)
+    for (let x = X0 - 0.2; x <= X1 + 0.2; x += 0.2) p.vertex(x * k, deepAt(x) * k)
+    p.vertex((X1 + 0.2) * k, (Y1 + 0.2) * k)
+    p.endShape(p.CLOSE)
+  }
+  // The topsoil, where the ground is open (not under the slab): its foot wavering.
+  const soilAt = (x: number) => g + 0.36 + 0.05 * Math.sin(x * 1.3) + 0.03 * Math.sin(x * 3.1 + 1)
+  p.fill(top)
+  for (const [a, b] of [
+    [X0 - 0.2, Math.min(X1 + 0.2, slab[0])],
+    [Math.max(X0 - 0.2, slab[1]), X1 + 0.2],
+  ]) {
+    if (b <= a) continue
+    p.beginShape()
+    p.vertex(a * k, g * k)
+    for (let x = a; x <= b; x += 0.2) p.vertex(x * k, soilAt(x) * k)
+    p.vertex(b * k, soilAt(b) * k)
+    p.vertex(b * k, g * k)
+    p.endShape(p.CLOSE)
+  }
+  // Stones: a scatter, a few in each stretch of ground, rounded, a shade off the earth round them.
+  const stone = mixHex(HOME.stone, earth, 0.35)
+  p.stroke(ink)
+  p.strokeWeight(weight * 0.45)
+  for (let i = Math.floor(X0 / 1.3) - 1; i <= Math.ceil(X1 / 1.3) + 1; i++) {
+    for (let j = 0; j < 4; j++) {
+      if (hash(i, j, 81) > 0.45) continue
+      const x = i * 1.3 + hash(i, j, 82) * 1.3
+      const y = g + 0.55 + j * 0.6 + hash(i, j, 83) * 0.45
+      if (y > Y1 + 0.2 || x < X0 - 0.3 || x > X1 + 0.3) continue
+      if (x > slab[0] - 0.3 && x < slab[1] + 0.3 && y < g + 0.6) continue
+      const w = 0.1 + hash(i, j, 84) * 0.14
+      p.fill(mixHex(stone, earth, hash(i, j, 85) * 0.4))
+      p.ellipse(x * k, y * k, w * k, w * (0.55 + 0.25 * hash(i, j, 86)) * k)
+    }
+  }
+  // Roots: from the trunk's foot down and out under the yard, each a curve tapering to a point.
+  p.noStroke()
+  p.fill(mixHex(HOME.bark, earth, 0.3))
+  for (const r of ROOTED) {
+    if (r.x + r.reach < X0 || r.x - r.reach > X1) continue
+    for (let i = 0; i < r.n; i++) {
+      const side = i % 2 === 0 ? -1 : 1
+      const u = (i + 0.5) / r.n
+      const ex = r.x + side * r.reach * (0.35 + 0.65 * hash(i, r.seed, 87)) * (0.5 + u * 0.5)
+      const ey = g + 0.35 + r.reach * 0.45 * (0.4 + 0.6 * hash(i, r.seed, 88))
+      // Down steeply from the trunk, then out along the ground: a quadratic through a bend under the trunk's edge.
+      const [ax, ay] = [r.x + side * 0.1, g]
+      const [bx, by] = [r.x + (ex - r.x) * 0.25, ey - 0.05]
+      const w0 = (r.reach > 1.5 ? 0.075 : 0.05) * (0.8 + 0.4 * hash(i, r.seed, 89))
+      const left: [number, number][] = []
+      const right: [number, number][] = []
+      for (let j = 0; j <= 8; j++) {
+        const s = j / 8
+        const x = (1 - s) * (1 - s) * ax + 2 * (1 - s) * s * bx + s * s * ex
+        const y = (1 - s) * (1 - s) * ay + 2 * (1 - s) * s * by + s * s * ey
+        const dx = 2 * (1 - s) * (bx - ax) + 2 * s * (ex - bx)
+        const dy = 2 * (1 - s) * (by - ay) + 2 * s * (ey - by)
+        const len = Math.hypot(dx, dy) || 1
+        const w = w0 * (1 - s) ** 1.3
+        left.push([x - (dy / len) * w, y + (dx / len) * w])
+        right.push([x + (dy / len) * w, y - (dx / len) * w])
+      }
+      p.beginShape()
+      for (const [x, y] of left) p.vertex(x * k, y * k)
+      for (let j = right.length - 1; j >= 0; j--) p.vertex(right[j][0] * k, right[j][1] * k)
+      p.endShape(p.CLOSE)
+    }
+  }
+  // The footings: stone courses under the back wall, the partition, the chimney and the front wall, below the slab
+  // and a little wider than what they carry; the porch's piers at its outer end.
+  const foot = g + 1.05
+  const courses = (x0: number, x1: number, y0: number, y1: number) => {
+    if (x1 < X0 || x0 > X1 || y0 > Y1) return
+    p.stroke(alpha(p, INK, 0.7))
+    p.strokeWeight(weight * 0.7)
+    p.fill(mixHex(HOME.stone, '#9C8F7C', 0.45))
+    rect(p, k, x0, y0, x1, y1)
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+    ctx.clip()
+    p.stroke(ink)
+    p.strokeWeight(weight * 0.45)
+    const h = 0.18
+    for (let y = y0 + h, row = 0; y < y1 + h; y += h, row++) {
+      p.line(x0 * k, y * k, x1 * k, y * k)
+      for (let x = x0 + (row % 2 ? 0.14 : 0.3); x < x1; x += 0.32) p.line(x * k, (y - h) * k, x * k, y * k)
+    }
+    ctx.restore()
+  }
+  courses(H.backWall[0] - 0.14, H.backWall[1] + 0.14, g + 0.3, foot)
+  courses(H.partition[0] - 0.1, H.partition[1] + 0.1, g + 0.3, foot - 0.2)
+  courses(H.fireplace - 0.75, H.fireplace + 0.75, g + 0.3, foot + 0.15)
+  courses(H.frontWall[0] - 0.14, H.frontWall[1] + 0.14, g + 0.3, foot)
+  courses(H.porch[1] - 0.38, H.porch[1] - 0.04, g + 0.2, g + 0.8)
 }
 
 /* ------------------------------------------------------------------ the world round the house */
@@ -398,8 +527,11 @@ export const inside = scenery<null>({
       }
       // Birds by day, crossing the sky (behind the house: it hides them as they pass it).
       for (const b of FLIGHTS) birds(p, k, f, t, { ...b, color: mixHex(INK, sky, 0.4) }, weight)
-      p.fill(mixHex('#B09878', '#A08E78', age))
+      const earth = mixHex('#B09878', '#A08E78', age)
+      p.fill(earth)
       if (Y1 > H.ground) p.rect(X0 * k, H.ground * k, (X1 - X0) * k, (Y1 - H.ground) * k)
+      underground(p, k, weight, t, X0, X1, Y1, earth)
+      p.noStroke()
       // The yard's grass: a band on the earth, and the lawn beyond the porch.
       p.fill(mixHex(HOME.grass, '#9DAA78', age * 0.6))
       if (H.backWall[0] > X0) p.rect(X0 * k, H.ground * k, (H.backWall[0] - X0) * k, 0.28 * k)
