@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { bloom, type Frame } from '../depth'
+import type { Frame } from '../depth'
 import { hash, smooth } from '../kit'
 import { at } from '../music'
 import { ctxOf, rgba, type Pen } from '../pen'
@@ -11,8 +11,9 @@ import { C } from './palette'
  * The near side of the court, between the lens and the play: the front row's heads and shoulders along the bottom of
  * the frame (d 1.35, so they slide past faster than the hall as the camera goes), soft and dark against the lit court,
  * every head turning after the ball and the row coming up off its seats on the big points, slumping at the loss; the
- * rope on its brass posts just beyond them (d 1.2); and two press photographers among them, cameras up for the big
- * moments, whose flashes burst big and soft this close. After the loss people get up and go along in front of them.
+ * rope on its brass posts just beyond them (d 1.2); and two press photographers among them, cameras up at their eyes
+ * for the big moments, the backs of their flash dishes toward us (the bulbs face the play; the flashes seen are the
+ * press box's, small, across the court). After the loss people get up and go along in front of them.
  *
  * All of it keeps to the bottom of the frame and below a line it never crosses: under the table, its bats and Marty,
  * wherever the camera is (it sinks out of the way, never over them). It is drawn before the ball, so even so he is on
@@ -27,21 +28,20 @@ const GAP = 1.06
 /** The two photographers, by their seat in the row. */
 const PRESS_SEATS: Record<number, number> = { 4: 0, 16: 1 }
 /**
- * Their flashes, and whose: on Kletzki's last smash and as the hall is seen whole after his miss; on Marty's winner in
+ * Their shots, and whose: on Kletzki's last smash and as the hall is seen whole after his miss; on Marty's winner in
  * the final, and on two of his smashes off Endo's lobs.
  */
-const NEAR_FLASHES: [number, number][] = [
+const NEAR_SHOTS: [number, number][] = [
   [at(30, 2) + 0.06, 0],
   [at(31, 4) + 0.1, 0],
   [WINNER + 0.04, 1],
   [at(38, 4) + 0.06, 1],
   [at(39, 3) + 0.06, 1],
 ]
-const lit = (u: number): number => (u < 0 || u > 0.5 ? 0 : Math.exp(-u / 0.06) + 0.1 * Math.exp(-u / 0.22))
-/** A photographer's camera at his eye: up a while before his flash, and down again after. */
+/** A photographer's camera at his eye: up a while before his shot, and down again after. */
 function aim(who: number, t: number): number {
   let v = 0
-  for (const [ft, w] of NEAR_FLASHES) {
+  for (const [ft, w] of NEAR_SHOTS) {
     if (w !== who) continue
     const u = t - ft
     if (u < -1.6 || u > 1.1) continue
@@ -126,7 +126,6 @@ export function drawNear(pen: Pen, t: number, f: Frame): void {
   const quiet = 1 - 0.8 * still(t)
   const heads = new Path2D()
   const arms = new Path2D()
-  const dishes: [Pt, number, number][] = []
   for (let i = i0; i <= i1; i++) {
     const px = i * GAP + (hash(i, 1, 91) - 0.5) * 0.42 - sx
     const kind = hash(i, 2, 91)
@@ -214,7 +213,6 @@ export function drawNear(pen: Pen, t: number, f: Frame): void {
       const dish: Pt = [hx - 0.95 * S, Math.max(cap + 0.4 * S, cy - 0.62 * S)]
       heads.moveTo((dish[0] + 0.38 * S) * k, dish[1] * k)
       heads.ellipse(dish[0] * k, dish[1] * k, 0.38 * S * k, 0.4 * S * k, 0, 0, Math.PI * 2)
-      dishes.push([dish, press, up])
     }
   }
   ctx.save()
@@ -234,19 +232,6 @@ export function drawNear(pen: Pen, t: number, f: Frame): void {
   ctx.lineWidth = 0.36 * S * k
   ctx.stroke(arms)
   ctx.restore()
-
-  // The photographers' flashes: big and soft this near, and the whole frame lit a moment.
-  for (const [dish, who, up] of dishes) {
-    // The bulb's dish catches the light.
-    bloom(pen, dish, 0.5 * S, C.whiteShade, 0.12 * up)
-    for (const [ft, w] of NEAR_FLASHES) {
-      if (w !== who) continue
-      const I = lit(t - ft)
-      if (I <= 0.01) continue
-      bloom(pen, dish, 2.4 * S, C.flash, 0.95 * I)
-      bloom(pen, [f.cx, f.cy], 0.6 * h, C.flash, 0.12 * I)
-    }
-  }
 
   // After the loss: people up and going, along in front of the row, nearer still.
   leaving(pen, t, f, S, capAt)

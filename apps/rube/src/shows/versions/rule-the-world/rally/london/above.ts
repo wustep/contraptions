@@ -13,8 +13,8 @@ import { C } from './palette'
  * to 0.3), their smoke blowing the same way as the clouds, and the rain on the glass. Under the roof a second row of
  * iron trusses (d 0.7) behind the near one, so the roof moves as the camera does. On the wall, the long banners hanging
  * in the draught, the tournament board with its flip cards; strung along the front of the gallery, the bunting. The
- * daylight comes down from the roof in cold shafts with the dust in them, and brightens and dims as the clouds go by;
- * pigeons that have got in cross the hall now and then.
+ * daylight comes down from the roof in a few faint cold shafts with a little dust in them, brightening and dimming as
+ * the clouds go by; pigeons that have got in cross the hall now and then.
  */
 
 export const WALL_TOP = -6.2
@@ -519,10 +519,13 @@ const SHAFT_BOT = 0.7
 const SLANT = 0.3
 const SHAFT_PITCH = 4.6
 const shaftW = (n: number) => 0.7 + 0.8 * hash(n, 3, 5)
+/** Whether the roof lets a shaft down at `n`: only here and there, where a pane is clean and the sun finds it. */
+const shafted = (n: number) => hash(n, 4, 5) < 0.5
 
 /**
- * The cold daylight down from the roof in long slanting shafts through the hall's haze (a little behind the play,
- * d 0.85), each brightening and dimming as the clouds go over, with the dust turning in them.
+ * The cold daylight down from the roof in a few long slanting shafts through the hall's haze (a little behind the
+ * play, d 0.85), faint, laid over the hall rather than added to it, each brightening and dimming as the clouds go
+ * over, with a little dust turning in them.
  */
 export function daylight(pen: Pen, t: number, f: Frame): void {
   if (f.y1 < SHAFT_TOP || f.y0 > SHAFT_BOT) return
@@ -534,15 +537,15 @@ export function daylight(pen: Pen, t: number, f: Frame): void {
     0.85,
     (g) => {
       const grad = ctx.createLinearGradient(0, SHAFT_TOP * k, 0, SHAFT_BOT * k)
-      grad.addColorStop(0, rgba(pen, C.day, 0.11))
-      grad.addColorStop(0.5, rgba(pen, C.day, 0.05))
+      grad.addColorStop(0, rgba(pen, C.day, 0.06))
+      grad.addColorStop(0.5, rgba(pen, C.day, 0.025))
       grad.addColorStop(1, rgba(pen, C.day, 0))
       ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
       ctx.fillStyle = grad
       const dx = SLANT * (SHAFT_BOT - SHAFT_TOP)
       for (let n = Math.floor((g.x0 - dx - 2) / SHAFT_PITCH); n * SHAFT_PITCH <= g.x1 + 1; n++) {
         const x = n * SHAFT_PITCH + 0.8
+        if (!shafted(n)) continue
         const w = shaftW(n)
         const a = sun(t, n)
         if (a < 0.03) continue
@@ -556,23 +559,23 @@ export function daylight(pen: Pen, t: number, f: Frame): void {
         ctx.fill()
       }
       ctx.restore()
-      // The dust in them.
+      // A little dust in them, fine and steady.
       motes(pen, t, {
-        n: 260,
+        n: 120,
         seed: 61,
         box: [-12, -6.6, 26, 0.6],
-        size: [0.012, 0.03],
+        size: [0.008, 0.018],
         color: C.day,
-        alpha: 0.5,
+        alpha: 0.3,
         drift: [0.05, -0.02],
         wander: 0.2,
-        twinkle: 0.6,
+        twinkle: 0,
         light: (x, y) => {
           if (x < g.x0 || x > g.x1 || y < g.y0 || y > g.y1) return 0
           const s = x - SLANT * (y - SHAFT_TOP)
           const n = Math.floor((s - 0.8) / SHAFT_PITCH)
           const u = (s - 0.8 - n * SHAFT_PITCH) / shaftW(n)
-          if (u < 0 || u > 1) return 0
+          if (u < 0 || u > 1 || !shafted(n)) return 0
           return Math.sin(Math.PI * u) * sun(t, n) * (1 - smooth(y, -2, SHAFT_BOT))
         },
       })

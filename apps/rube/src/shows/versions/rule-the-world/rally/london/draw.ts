@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { bloom, flicker, motes, sway, type Frame } from '../depth'
+import { flicker, motes, sway, type Frame } from '../depth'
 import { hash, lastOf, smooth } from '../kit'
 import { level } from '../music'
 import { ctxOf, ease, ellipse, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, blob, type Pen } from '../pen'
@@ -12,7 +12,6 @@ import {
   B,
   ballAt,
   BAT_DOWN,
-  BOUNCES,
   BOW,
   CATCH,
   carryAt,
@@ -61,7 +60,7 @@ import {
 } from './geo'
 import { busy, cheer, groan, hush, SEMI_WIN } from './mood'
 import { C } from './palette'
-import { flashes, PRESS_SPAN, pressBox, pressDesk } from './press'
+import { PRESS_SPAN, pressBox, pressDesk } from './press'
 
 /**
  * London: a big cold hall in grey and green, the daylight gone blue in the glass roof, the gallery in shadow; the only
@@ -118,8 +117,9 @@ const COLUMNS = [-5.2, 6.62, 18.8]
 
 /**
  * The hall, back to front: the glass and the world through it, the wall's iron and its banners and board, the gallery
- * (and the far hall through its gangways), the bunting, the columns, the daylight and the dust in it, the pigeons, the
- * flash bulbs; the barrier and the floor, the ball boys and the officials; the umpires, the tables and their lamps.
+ * (and the far hall through its gangways, and the press's flash bulbs in it), the bunting, the columns, the daylight
+ * and the dust in it, the pigeons; the barrier and the floor, the ball boys and the officials; the umpires, the tables
+ * and their lamps.
  */
 export function drawHall(pen: Pen, t: number, f: Frame): void {
   const x0 = f.x0 - 1
@@ -141,7 +141,6 @@ export function drawHall(pen: Pen, t: number, f: Frame): void {
   for (const cx of COLUMNS) column(pen, cx)
   daylight(pen, t, f)
   pigeons(pen, t, f)
-  flashes(pen, t, f)
   barrier(pen, x0, x1)
   glove(pen, t)
   floor(pen, f, x0, x1)
@@ -417,8 +416,6 @@ function kay(pen: Pen, t: number, y: number): void {
   const look = t > 69 && t < DEAD + 0.5 ? Math.max(-1, Math.min(1, (ballAt(t - 0.15)[0] - x) / 4)) : 0
   const sh: Pt = [x - 0.03 * L, y - 0.55 + 0.1 * L - 0.08 * clap]
   const head: Pt = [sh[0] - 0.02 * L + 0.03 * look, sh[1] - 0.36 + 0.03 * L]
-  // A spill of the table's light on her.
-  glow(pen, [x, y - 0.75], 1.0, C.lamp, 0.14)
   // The black dress.
   shape(pen, [[sh[0] - 0.27, sh[1] + 0.05], [sh[0] + 0.27, sh[1] + 0.05], [x + 0.25, y + 0.1], [x - 0.25, y + 0.1]], C.dress)
   // The neck, and the pearls at her throat.
@@ -628,12 +625,12 @@ function inCone(dx: number, y: number): number {
 }
 
 /**
- * The lamps: each swinging a touch on its long cord in the hall's draught (the cone of light, its pool and the dust in
- * it going with it), the tobacco haze hanging in the light, the dust turning in it, and on the final's far lamp a
- * pigeon until the house goes up.
+ * The lamps: each swinging a touch on its long cord in the hall's draught (its light, its pools and the dust in it
+ * going with it), a thin sheet of tobacco smoke hanging in the light over the table, a little dust turning in it, and
+ * on the final's far lamp a pigeon until the house goes up. The lamp is its lit bulb and the white inside of its shade,
+ * and the light is what it falls on (the green top, the floor): no aura round the bulb, and the cone in the air faint.
  */
 function lamps(pen: Pen, tb: Table, t: number, f: Frame): void {
-  const on = tb === A ? flash(t - LAMP_ON, 0.18) : 0
   const { p, k } = pen
   const ctx = ctxOf(p)
   const hz = busy(t)
@@ -646,11 +643,11 @@ function lamps(pen: Pen, tb: Table, t: number, f: Frame): void {
     p.translate(lx * k, HUNG * k)
     p.rotate(swing)
     p.translate(-lx * k, -HUNG * k)
-    // The light down onto the table, and its pool.
+    // The light down onto the table, faint in the smoky air, and its pools on the green top and the boards.
     if (L > 0.01) {
       const g = ctx.createLinearGradient(0, SHADE_Y * k, 0, TOP * k)
-      g.addColorStop(0, rgba(pen, C.lamp, 0.16 * L + 0.2 * on))
-      g.addColorStop(1, rgba(pen, C.lamp, 0.03 * L))
+      g.addColorStop(0, rgba(pen, C.lamp, 0.08 * L))
+      g.addColorStop(1, rgba(pen, C.lamp, 0.015 * L))
       ctx.save()
       ctx.fillStyle = g
       ctx.beginPath()
@@ -660,43 +657,41 @@ function lamps(pen: Pen, tb: Table, t: number, f: Frame): void {
       ctx.lineTo((lx - 1.5) * k, TOP * k)
       ctx.closePath()
       ctx.fill()
+      // The pool on the table: on its top and its apron, not in the air over it.
+      ctx.beginPath()
+      ctx.rect(tb.x0 * k, TOP * k, (tb.x1 - tb.x0) * k, 0.2 * k)
+      ctx.clip()
+      oval(pen, [lx, TOP + 0.04], 1.9, 0.12, C.lamp, 0.42 * L)
       ctx.restore()
-      oval(pen, [lx, TOP + 0.02], 1.9, 0.12, C.lamp, 0.55 * L + 0.4 * on)
       oval(pen, [lx, FLOOR - 0.05], 2.4, 0.1, C.lamp, 0.1 * L)
-      // The smoke hanging in the light: two slow sheets of it, lit, drifting and sinking as the hall goes quiet.
-      for (const [j, y0] of [[0, SHADE_Y + 0.75], [1, TOP - 0.75]] as const) {
-        const hx = lx + 0.45 * Math.sin(t * 0.11 + lx + j * 2) + 0.2 * sway(t, lx + j, 7)
-        const hy = y0 + 0.08 * Math.sin(t * 0.3 + j + lx) + 0.35 * calm
-        p.push()
-        p.translate(hx * k, hy * k)
-        p.scale(1, 0.24)
-        bloom(pen, [0, 0], 1.05 + 0.2 * j, C.lamp, (0.05 + 0.03 * hz) * L * (1 - 0.4 * calm))
-        p.pop()
-      }
-      // The dust turning in it.
+      // The smoke hanging in the light over the table: one thin slow sheet, drifting and sinking as the hall goes quiet.
+      const hx = lx + 0.45 * Math.sin(t * 0.11 + lx + 2) + 0.2 * sway(t, lx + 1, 7)
+      const hy = TOP - 0.75 + 0.08 * Math.sin(t * 0.3 + 1 + lx) + 0.35 * calm
+      p.push()
+      p.translate(hx * k, hy * k)
+      p.scale(1, 0.24)
+      glow(pen, [0, 0], 1.25, C.lamp, (0.035 + 0.02 * hz) * L * (1 - 0.4 * calm))
+      p.pop()
+      // A little dust turning in it, fine and steady.
       motes(pen, settle(t), {
-        n: 46,
+        n: 18,
         seed: Math.round(lx * 13),
         box: [lx - 2.1, SHADE_Y + 0.3 * calm, lx + 2.1, FLOOR + 0.3 * calm],
-        size: [0.01, 0.026],
+        size: [0.006, 0.013],
         color: C.bulb,
-        alpha: 0.6 * L,
+        alpha: 0.35 * L,
         drift: [0.035, -0.03],
         wander: 0.18,
-        twinkle: 0.55,
+        twinkle: 0,
         light: (x, y) => (x < f.x0 || x > f.x1 || y < f.y0 || y > f.y1 ? 0 : inCone(x - lx, y)),
       })
     }
-    // The cord, the green enamel cone, its white inside and the bulb.
+    // The cord, the green enamel cone, its white inside and the bulb, lit.
     line(pen, [lx, HUNG], [lx, SHADE_Y - 0.5], C.iron, 0.8)
     shape(pen, [[lx - 0.1, SHADE_Y - 0.52], [lx + 0.1, SHADE_Y - 0.52], [lx + 0.45, SHADE_Y], [lx - 0.45, SHADE_Y]], C.shade)
     rect(pen, lx - 0.06, SHADE_Y - 0.6, lx + 0.06, SHADE_Y - 0.5, C.steel)
     ellipse(pen, [lx, SHADE_Y], 0.45, 0.06, mix(C.shade, C.shadeIn, 0.3 + 0.7 * L))
     ellipse(pen, [lx, SHADE_Y + 0.02], 0.11, 0.07, mix('#5C5A50', C.bulb, L))
-    if (L > 0.01) {
-      glow(pen, [lx, SHADE_Y + 0.05], 0.7, C.bulb, 0.35 * L + 0.5 * on)
-      bloom(pen, [lx, SHADE_Y + 0.08], 0.55, C.bulb, 0.18 * L + 0.3 * on)
-    }
     if (tb === B && lx > B.net) lampPigeon(pen, t, [lx, SHADE_Y - 0.6])
     p.pop()
   }
@@ -709,60 +704,6 @@ export function drawPlay(pen: Pen, t: number): void {
   contraption(pen, B, t, [TOSS_B, TOSS_B2], [IN_PAN_B, IN_PAN_B2])
   if (t < KLETZKI_GONE) kletzki(pen, t)
   endo(pen, t)
-  impacts(pen, t)
-}
-
-/* ---- the sound of it, seen: a pop off the bat, a flash off the table ---- */
-
-const POP = 0.13
-const MARK = 0.3
-
-/** A ring of light, stroked, with alpha (p5's own stroke takes no alpha through the pen). */
-function ringOf(pen: Pen, c: Pt, r: number, col: string, a: number, lw: number): void {
-  const ctx = ctxOf(pen.p)
-  const k = pen.k
-  ctx.save()
-  ctx.strokeStyle = rgba(pen, col, a)
-  ctx.lineWidth = lw * pen.w
-  ctx.beginPath()
-  ctx.arc(c[0] * k, c[1] * k, r * k, 0, Math.PI * 2)
-  ctx.stroke()
-  ctx.restore()
-}
-
-/**
- * Every stroke a crisp pop where bat meets ball (a ring and a few ticks, bigger the harder it is hit), every bounce a
- * flash on the table's top under it. Only the last few are ever live, so this costs a handful of shapes a frame.
- */
-function impacts(pen: Pen, t: number): void {
-  for (const s of STROKES) {
-    const u = t - s.t
-    if (u < 0 || u > POP || s.power <= 0.04) continue
-    const f = 1 - u / POP
-    const grow = 1 - Math.exp(-u / 0.035)
-    const r = (0.09 + 0.22 * s.power) * (0.35 + 0.65 * grow)
-    if (s.power > 0.5) glow(pen, s.p, r * 1.6, C.bulb, 0.35 * f * s.power)
-    ringOf(pen, s.p, r, C.bulb, 0.85 * f, 0.9 + 1.4 * s.power)
-    const n = s.power > 0.7 ? 8 : 5
-    for (let j = 0; j < n; j++) {
-      const ang = (j / n) * Math.PI * 2 + hash(Math.round(s.t * 100), j) * 0.6
-      const r0 = r * 1.15
-      const r1 = r0 + (0.06 + 0.16 * s.power) * f
-      line(pen, [s.p[0] + Math.cos(ang) * r0, s.p[1] + Math.sin(ang) * r0], [s.p[0] + Math.cos(ang) * r1, s.p[1] + Math.sin(ang) * r1], mix(C.lamp, C.bulb, f), 0.7 + 0.8 * s.power)
-    }
-  }
-  for (const b of BOUNCES) {
-    const u = t - b.t
-    if (u < 0 || u > MARK) continue
-    const f = 1 - u / MARK
-    const y = b.floor ? FLOOR - 0.04 : TOP + 0.01
-    const w = (0.18 + 0.3 * b.power) * (0.5 + 0.5 * (1 - f))
-    oval(pen, [b.p[0], y], w * 1.6, 0.18, C.bulb, 0.5 * f * (0.4 + 0.6 * b.power))
-    // Two sparks off the surface, either side.
-    const sp = (0.08 + 0.2 * b.power) * (1 - f * f)
-    const col = mix(b.floor ? C.floorHi : C.tableTop, C.bulb, f)
-    for (const sd of [-1, 1]) line(pen, [b.p[0] + sd * (w * 0.5), y - 0.01], [b.p[0] + sd * (w * 0.5 + sp), y - 0.05 - 0.08 * b.power * (1 - f)], col, 0.8 * f + 0.2)
-  }
 }
 
 /* ---- Marty's sprung bat ---- */
@@ -778,7 +719,8 @@ function armAngle(tb: Table, t: number): number {
     const d = t - s.t
     if (s.kind === 'miss' && d >= 0) return tc + THROUGH * ease(Math.min(1, d / 0.1)) + 0.04 * ring(d - 0.1, 4, 0.3)
     if (d < -0.32 || d > 0.55) continue
-    // A smash is cocked right back and goes right through, and the arm shudders after it; a block barely swings.
+    // A smash is cocked right back and goes right through; a block barely swings. The sprung arm shudders after the
+    // ball leaves it, hardest after a smash: the stroke is felt in the iron, not lit.
     const cock = s.kind === 'smash' ? COCK - 0.32 : s.kind === 'block' ? COCK + 0.12 : COCK
     const through = THROUGH * (s.kind === 'smash' ? 1.45 : s.kind === 'block' ? 0.5 : 1)
     if (d < -0.1) return lerp(READY, cock, ease((d + 0.32) / 0.22))
@@ -790,7 +732,7 @@ function armAngle(tb: Table, t: number): number {
       const u = d / 0.1
       return tc + through * (1 - (1 - u) * (1 - u))
     }
-    return lerp(tc + through, READY, ease((d - 0.1) / 0.45)) + (s.kind === 'smash' ? 0.07 * ring(d - 0.1, 7, 0.18) : 0)
+    return lerp(tc + through, READY, ease((d - 0.1) / 0.45)) + (s.kind === 'smash' ? 0.07 : 0.05 * s.power) * ring(d - 0.1, 7, 0.18)
   }
   return READY
 }

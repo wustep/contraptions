@@ -1,8 +1,8 @@
 import type { Pt } from '../../../../../parts'
-import { lastBeat, layer, type Frame } from '../depth'
+import { lastBeat, layer, shade, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
 import { BEAT } from '../music'
-import { ctxOf, flash, glow, line, mix, rect, rgba, shape, type Pen } from '../pen'
+import { ctxOf, ellipse, flash, line, mix, rect, rgba, shape, type Pen } from '../pen'
 import { DIES, T0 } from './geo'
 import { GALLERY_TOP } from './above'
 import { C } from './palette'
@@ -116,13 +116,13 @@ function farTable(pen: Pen, t: number, n: number): void {
   const cx = n * PITCH + 0.9
   const end = endOf(n)
   const L = 1 - 0.8 * smooth(t, end + 0.6, end + 1.8)
-  // The lamp's light first, under everything.
+  // The lamp's light first, under everything: its pool on the floor round the table, and its faint cone.
   if (L > 0.05) {
-    glow(pen, [cx, TOP], 0.55, C.lamp, 0.2 * L)
+    shade(pen, [cx, FLOOR], 0.7, 0.05, C.lamp, 0.22 * L)
     const ctx = ctxOf(pen.p)
     const { k } = pen
     ctx.save()
-    ctx.fillStyle = rgba(pen, C.lamp, 0.07 * L)
+    ctx.fillStyle = rgba(pen, C.lamp, 0.05 * L)
     ctx.beginPath()
     ctx.moveTo((cx - 0.06) * k, SHADE * k)
     ctx.lineTo((cx + 0.06) * k, SHADE * k)
@@ -141,7 +141,7 @@ function farTable(pen: Pen, t: number, n: number): void {
   line(pen, [cx, -6.5], [cx, SHADE - 0.07], C.iron, 0.35)
   rect(pen, cx - 0.026, SHADE - 0.07, cx + 0.026, SHADE, C.shade)
   rect(pen, cx - 0.07, SHADE - 0.022, cx + 0.07, SHADE, C.shade)
-  if (L > 0.05) glow(pen, [cx, SHADE + 0.012], 0.11, C.bulb, 0.6 * L)
+  ellipse(pen, [cx, SHADE + 0.002], 0.04, 0.012, mix(C.shade, C.bulb, L))
   // The players, at the ends: in play until the match ends, then off out of the lamp.
   const off = smooth(t, end, end + 1.6)
   if (off >= 1) return
