@@ -898,8 +898,9 @@ function drawPlane(pen: Pen, t: number): void {
     ellipse(pen, [x, WIN_C[1]], WIN_R + 0.04, WIN_R + 0.04, C.planeDark)
     ellipse(pen, [x, WIN_C[1]], WIN_R, WIN_R, mix(C.winDim, C.win, 0.75))
   }
-  // The passengers in them, and the stewardess going aft (`aboard.ts`).
-  drawAboard(pen, t, NOSE_X)
+  // The passengers in them, and the stewardess going aft (`aboard.ts`), gone as the cabin opens round him: inside,
+  // the windows look out on the field.
+  drawAboard(pen, t, NOSE_X, 1 - reveal(t))
   // Its lights, on and steady: the red lamps on its back and its belly, the white light on its tail.
   for (const at of [[DOOR_X + 3.4, top(DOOR_X + 3.4) - 0.05], [DOOR_X + 3.0, FUS_BOT + 0.05]] as Pt[]) ellipse(pen, at, 0.07, 0.05, mix('#3A2220', C.ambLight, 0.55))
   ellipse(pen, [TAIL_X - 0.04, ROAD - 4.33], 0.045, 0.045, mix(C.planeLight, C.white, 0.5))

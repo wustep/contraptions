@@ -15,6 +15,8 @@ import { bag, box, disc, fill, oval } from './ink'
  */
 
 const HEAD = '#2E251C'
+/** The seats' high backs, a shade under the cabin's lamps: what makes a head in a round window a passenger. */
+const SEAT = '#7A5E3C'
 const PAPER = '#CBBF9E'
 /** The windows the passengers are seen in: every one aft of his, to short of the nose. */
 const SEATS = 7
@@ -46,10 +48,12 @@ function stewardess(t: number): number | null {
   return x
 }
 
-export function drawAboard(pen: Pen, t: number, nose: number): void {
+export function drawAboard(pen: Pen, t: number, nose: number, a = 1): void {
+  if (a <= 0.01) return
   const cy = WIN_C[1]
   const r = WIN_R
   const heads = bag()
+  const seats = bag()
   const paper = bag()
   for (let i = 0; i < SEATS; i++) {
     const x = at(i)
@@ -58,11 +62,16 @@ export function drawAboard(pen: Pen, t: number, nose: number): void {
     if (i > 1 && hash(i, 31, 7) < 0.22) continue
     const look = Math.max(0, Math.sin((t + 9 * hash(i, 32, 7)) * (0.55 + 0.25 * hash(i, 33, 7))))
     const peer = smooth(look, 0.55, 0.95)
-    const hx = x + (hash(i, 34, 7) - 0.5) * 0.18 + 0.035 * sway(t, i * 1.7, 5 + 2 * hash(i, 35, 7)) + 0.06 * peer
-    const hy = cy + 0.07 - 0.03 * peer + 0.012 * sway(t, i * 2.3, 3.1)
-    // Shoulders, the head, and a hat or a head of hair.
-    oval(heads, hx - 0.02, hy + 0.27, 0.2, 0.12)
-    disc(heads, hx, hy, 0.085)
+    // Each sits to the fore side of the window against his seat's high back, never in its middle: a head and its
+    // shoulders in one piece, so that a round window with a head in it reads as a seat and a passenger, not a face.
+    const hx = x - 0.08 + (hash(i, 34, 7) - 0.5) * 0.06 + 0.035 * sway(t, i * 1.7, 5 + 2 * hash(i, 35, 7)) + 0.06 * peer
+    const hy = cy - 0.01 - 0.03 * peer + 0.012 * sway(t, i * 2.3, 3.1)
+    oval(seats, x + 0.13, cy - 0.1, 0.11, 0.07)
+    box(seats, x + 0.02, cy - 0.1, x + 0.24, cy + 0.4)
+    // The shoulders, the neck, the head, and a hat or a head of hair.
+    oval(heads, hx - 0.03, hy + 0.3, 0.25, 0.17)
+    box(heads, hx - 0.04, hy, hx + 0.035, hy + 0.2)
+    disc(heads, hx, hy, 0.095)
     const kind = Math.floor(hash(i, 36, 7) * 3)
     if (kind === 0) {
       oval(heads, hx, hy - 0.07, 0.13, 0.025)
@@ -95,7 +104,8 @@ export function drawAboard(pen: Pen, t: number, nose: number): void {
     ctx.arc(x * k, cy * k, r * k, 0, Math.PI * 2)
   }
   ctx.clip()
-  fill(pen, heads, HEAD, 0.82)
-  fill(pen, paper, PAPER, 0.85)
+  fill(pen, seats, SEAT, 0.5 * a)
+  fill(pen, heads, HEAD, 0.8 * a)
+  fill(pen, paper, PAPER, 0.85 * a)
   ctx.restore()
 }
