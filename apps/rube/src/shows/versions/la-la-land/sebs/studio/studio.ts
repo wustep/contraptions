@@ -513,22 +513,20 @@ function drawGrid(p: p5, c: Ctx, t: number): void {
   for (const cut of CUTS) {
     const lx = cut.x + 0.25
     const since = t - cut.at
-    const on = since < 0 ? 0 : 0.75 + 0.25 * Math.exp(-since / 0.35)
-    const flash = since < 0 ? 0 : Math.exp(-since / 0.12)
+    const on = since < 0 ? 0 : smooth(since, 0, 0.08)
     p.stroke(mixHex(M.shadow, ink, 0.5))
     p.strokeWeight(Math.max(1, weight * 0.6))
     p.line(X(k, lx), X(k, y), X(k, lx), X(k, y + 0.16))
-    if (on > 0) beam(p, k, lx, y + 0.38, cut.x, HINGE - 0.1, 0.16, 1.9, M.lamp, 0.2 * on + 0.25 * flash)
+    if (on > 0) beam(p, k, lx, y + 0.38, cut.x, HINGE - 0.1, 0.16, 1.9, M.lamp, 0.2 * on)
     p.push()
     p.translate(X(k, lx), X(k, y + 0.24))
     p.rotate(Math.atan2(HINGE - y, cut.x - lx) - Math.PI / 2)
     solid(p, ink, weight * 0.6, mixHex(M.shadow, ink, 0.55))
     p.rect(X(k, -0.12), X(k, -0.1), X(k, 0.24), X(k, 0.24), X(k, 0.05))
     p.noStroke()
-    p.fill(on > 0 ? mixHex(M.lamp, M.flat, 0.5 * flash) : mixHex(M.shadow, ink, 0.3))
+    p.fill(on > 0 ? M.lamp : mixHex(M.shadow, ink, 0.3))
     p.ellipse(0, X(k, 0.15), X(k, 0.2), X(k, 0.06))
     p.pop()
-    if (flash > 0.02) glow(p, k, lx, y + 0.4, 0.6, M.lamp, 0.5 * flash)
   }
 }
 
@@ -581,13 +579,183 @@ function drawCamera(p: p5, c: Ctx, t: number): void {
   }
   p.pop()
   // Its red light, on while it runs.
-  const tally = run * (0.85 + 0.15 * Math.sin(t * 5))
+  const tally = run
   if (tally > 0.01) {
-    glow(p, k, cx + 0.02, head - 0.33, 0.28, M.door, 0.55 * tally)
     p.noStroke()
     p.fill(mixHex(mixHex(M.shadow, ink, 0.4), M.door, tally))
     p.circle(X(k, cx + 0.02), X(k, head - 0.33), X(k, 0.08))
   }
+}
+
+/* ------------------------------------------------------------------ the working stage */
+
+/*
+ * The sound stage round the white set, at work, every piece of it in the studio's own greys so the white stays white:
+ * upstage, a far rank of taller flats, and one of them being walked across behind the set by a grip, its top going by
+ * over the near flats a step at a time; the work lights' cables looping off the pipe; a cable along the floor from the
+ * camera; a stepladder against the first flat with a can of paint on it; a boom mic in from the top of the frame,
+ * following them, flown out before the cloth comes down; and in front of the stage, nearest us, the director's chair,
+ * empty, which slides by faster than the set as the camera goes along.
+ */
+const FAR_Q = 0.8
+const FAR: [number, number, number][] = [
+  [-8.4, -5.9, 4.5], [-5.8, -3.2, 4.85], [-3.1, -0.9, 4.4], [-0.8, 1.9, 4.9], [2.0, 4.3, 4.45], [4.4, 6.9, 4.8], [7.0, 9.6, 4.5], [9.7, 12.2, 4.9],
+]
+/** The flat being carried across, upstage: where its middle is at show time `t`. */
+const carriedX = (t: number): number => 6.8 - 0.62 * (t - BEGIN)
+const LADDER_X = -3.95
+const CHAIR_X = -2.4
+const CHAIR_Q = 1.45
+
+function drawUpstage(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const f = frame(p, k)
+  const shift = f.cx * (1 - FAR_Q)
+  const far = mixHex(M.paper, M.shadow, 0.75)
+  for (const [x0, x1, h] of FAR) {
+    const a = x0 + shift
+    const b = x1 + shift
+    if (b < f.x0 - 1 || a > f.x1 + 1) continue
+    solid(p, rgba(ink, 0.35), weight * 0.45, far)
+    p.rect(X(k, a), X(k, Y_BACK - h), X(k, b - a), X(k, h))
+    p.noStroke()
+    p.fill(rgba(ink, 0.06))
+    p.rect(X(k, a + 0.02), X(k, Y_BACK - h + 0.02), X(k, 0.06), X(k, h - 0.04))
+    // A stencilled batten across its top: the back of a flat, framed.
+    p.stroke(rgba(ink, 0.18))
+    p.strokeWeight(Math.max(1, weight * 0.4))
+    p.line(X(k, a + 0.08), X(k, Y_BACK - h + 0.28), X(k, b - 0.08), X(k, Y_BACK - h + 0.28))
+  }
+  // The one being walked across: a step at a time, its top bobbing with the grip's stride, leaning a little.
+  const cx = carriedX(t) + f.cx * (1 - 0.9)
+  const bob = 0.05 * Math.abs(Math.sin(Math.PI * 1.7 * (t - BEGIN)))
+  const top = Y_BACK - 3.95 - bob
+  p.push()
+  p.translate(X(k, cx), X(k, Y_BACK))
+  p.rotate(-0.025)
+  solid(p, rgba(ink, 0.5), weight * 0.5, mixHex(M.flat, M.shadow, 0.65))
+  p.rect(X(k, -0.95), X(k, top - Y_BACK), X(k, 1.9), X(k, 3.95))
+  p.stroke(rgba(ink, 0.25))
+  p.strokeWeight(Math.max(1, weight * 0.4))
+  p.line(X(k, -0.95), X(k, top - Y_BACK + 0.22), X(k, 0.95), X(k, top - Y_BACK + 0.22))
+  p.pop()
+}
+
+/** The work lights' cables, looping from each lamp along the pipe, swaying a little in the air off the flats. */
+function drawCables(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const y = -4.35
+  ctx.strokeStyle = rgba(ink, 0.45)
+  ctx.lineWidth = Math.max(1, weight * 0.5)
+  ctx.beginPath()
+  for (const [i, x] of [-4.2, -0.6, 3.1, 6.6].entries()) {
+    const sag = 0.55 + 0.04 * Math.sin(t * 0.9 + i * 1.3)
+    ctx.moveTo(X(k, x + 0.62), X(k, y + 0.2))
+    ctx.bezierCurveTo(X(k, x + 0.7), X(k, y + 0.2 + sag), X(k, x + 1.5), X(k, y + sag), X(k, x + 1.75), X(k, y))
+  }
+  // Along the floor's back from the camera's base, round the brace's sandbag, under the door's flat.
+  ctx.moveTo(X(k, CAM[0] - 0.4), X(k, Y_BACK - 0.05))
+  ctx.bezierCurveTo(X(k, CAM[0] - 0.9), X(k, Y_BACK + 0.12), X(k, 8.9), X(k, Y_BACK - 0.02), X(k, 8.4), X(k, Y_BACK + 0.06))
+  ctx.bezierCurveTo(X(k, 8.0), X(k, Y_BACK + 0.12), X(k, 7.9), X(k, Y_BACK + 0.02), X(k, 7.6), X(k, Y_BACK + 0.02))
+  ctx.stroke()
+}
+
+/** A stepladder against the first flats, a can of paint and its brush on the top step. */
+function drawLadder(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const x = LADDER_X
+  const top = Y_BACK - 1.95
+  const wood = mixHex(M.shadow, ink, 0.3)
+  outline(p, ink, weight * 0.6)
+  p.stroke(rgba(ink, 0.7))
+  p.strokeWeight(Math.max(1, X(k, 0.05)))
+  p.line(X(k, x - 0.05), X(k, top), X(k, x - 0.45), X(k, Y_BACK))
+  p.line(X(k, x + 0.05), X(k, top), X(k, x + 0.45), X(k, Y_BACK))
+  p.stroke(rgba(ink, 0.55))
+  p.strokeWeight(Math.max(1, X(k, 0.035)))
+  for (let i = 1; i <= 4; i++) {
+    const u = i / 5
+    p.line(X(k, x - 0.05 - 0.4 * u), X(k, top + u * 1.95), X(k, x - 0.05 - 0.4 * u + 0.2), X(k, top + u * 1.95))
+  }
+  solid(p, ink, weight * 0.6, wood)
+  p.rect(X(k, x - 0.2), X(k, top - 0.06), X(k, 0.4), X(k, 0.07), X(k, 0.02))
+  solid(p, ink, weight * 0.6, mixHex(M.flat, M.purple, 0.25))
+  p.rect(X(k, x - 0.12), X(k, top - 0.3), X(k, 0.22), X(k, 0.24), X(k, 0.03))
+  p.stroke(rgba(ink, 0.6))
+  p.line(X(k, x + 0.06), X(k, top - 0.3), X(k, x + 0.18), X(k, top - 0.52))
+}
+
+/** The boom: a mic on a long pole in from the top right, held by someone out of shot, following him with a lag. */
+function drawBoom(p: p5, c: Ctx, t: number): void {
+  const out = smooth(t, DOOR_AT - 0.2, BURST - 0.5)
+  const into = smooth(t, BEGIN + 0.4, BEGIN + 1.6)
+  if (out >= 1 || into <= 0) return
+  const { k, ink, weight } = c
+  const f = frame(p, k)
+  const dip = POP_AT.reduce((a, at) => a + 0.1 * Math.max(0, ring(t - at + 0.1, 0.9, 0.45)), 0)
+  const mx = sebX(t - 0.55) + 0.2
+  const my = -3.5 + dip - 3.2 * out - 3 * (1 - into) + 0.04 * Math.sin(t * 1.1)
+  const anchor: Pt = [f.x1 + 1.6, f.y0 - 1.2]
+  const dx = anchor[0] - mx
+  const dy = anchor[1] - my
+  const L = Math.hypot(dx, dy)
+  const ux = dx / L
+  const uy = dy / L
+  const grey = mixHex(M.shadow, ink, 0.62)
+  // The pole, and the cable taped along it.
+  p.stroke(rgba(ink, 0.8))
+  p.strokeWeight(Math.max(1, X(k, 0.05)))
+  p.line(X(k, mx - ux * 0.25), X(k, my - uy * 0.25), X(k, anchor[0]), X(k, anchor[1]))
+  p.stroke(rgba(ink, 0.45))
+  p.strokeWeight(Math.max(1, X(k, 0.02)))
+  p.noFill()
+  p.beginShape()
+  for (let i = 0; i <= 10; i++) {
+    const u = i / 10
+    const sag = 0.06 * Math.sin(Math.PI * u * 5)
+    p.vertex(X(k, mx + ux * L * u - uy * sag), X(k, my + uy * L * u + ux * sag + 0.04))
+  }
+  p.endShape()
+  // The mic in its windshield, hung under the pole's end, aimed down at them.
+  p.push()
+  p.translate(X(k, mx - ux * 0.25), X(k, my - uy * 0.25 + 0.1))
+  p.rotate(-0.22 + 0.06 * (sebX(t) - mx))
+  p.stroke(rgba(ink, 0.8))
+  p.strokeWeight(Math.max(1, X(k, 0.02)))
+  p.line(0, X(k, -0.1), 0, 0)
+  solid(p, ink, weight * 0.6, grey)
+  p.rect(X(k, -0.32), X(k, -0.02), X(k, 0.64), X(k, 0.15), X(k, 0.075))
+  p.stroke(rgba(ink, 0.35))
+  p.strokeWeight(Math.max(1, X(k, 0.012)))
+  for (let i = 1; i < 6; i++) p.line(X(k, -0.32 + i * 0.107), X(k, -0.01), X(k, -0.32 + i * 0.107), X(k, 0.12))
+  p.pop()
+}
+
+/** The director's chair in front of the stage, empty, its back to us: the nearest thing, it moves the most. */
+function drawChair(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const f = frame(p, k)
+  const x = CHAIR_X - (CHAIR_Q - 1) * (f.cx - 0.4)
+  if (x > f.x1 + 1.2 || x < f.x0 - 1.2) return
+  const foot = FLOOR + 1.9
+  const wood = mixHex(M.shadow, ink, 0.5)
+  const canvas = mixHex(M.shadow, ink, 0.32)
+  // The legs crossed under the seat, the arms, the two back posts and the canvas slung between them.
+  p.stroke(wood)
+  p.strokeWeight(Math.max(1, X(k, 0.08)))
+  p.line(X(k, x - 0.52), X(k, foot), X(k, x + 0.5), X(k, foot - 0.75))
+  p.line(X(k, x + 0.52), X(k, foot), X(k, x - 0.5), X(k, foot - 0.75))
+  for (const s of [-1, 1]) p.line(X(k, x + s * 0.5), X(k, foot - 0.75), X(k, x + s * 0.5), X(k, foot - 1.85))
+  solid(p, ink, weight * 0.6, wood)
+  for (const s of [-1, 1]) p.rect(X(k, x + s * 0.5 - (s > 0 ? 0.04 : 0.32)), X(k, foot - 1.2), X(k, 0.36), X(k, 0.07), X(k, 0.03))
+  solid(p, ink, weight * 0.6, canvas)
+  p.rect(X(k, x - 0.5), X(k, foot - 0.82), X(k, 1.0), X(k, 0.12))
+  p.rect(X(k, x - 0.54), X(k, foot - 1.82), X(k, 1.08), X(k, 0.42), X(k, 0.03))
 }
 
 /* ------------------------------------------------------------------ the cut-outs */
@@ -684,7 +852,6 @@ function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number
       }
       solid(p, ink, weight * 0.6, P(M.door))
       p.circle(...V(mx, -h - 0.06), X(k, 0.12))
-      if (lit > 0) glow(p, k, x + mx, HINGE + (-h - 0.06) * sy, 0.35, M.door, 0.5 * lit)
     }
   } else if (kind === 'tower') {
     // The round tower: a drum of stacked floors, each with its sunshade, a spire, a light on the spire.
@@ -705,7 +872,6 @@ function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number
     line(0, -h, 0, -h - 0.62, weight * 0.8)
     solid(p, ink, weight * 0.5, P(M.door))
     p.circle(...V(0, -h - 0.64), X(k, 0.1))
-    if (lit > 0) glow(p, k, x, HINGE + (-h - 0.64) * sy, 0.3, M.door, 0.55 * lit)
   } else {
     // A streetlamp: a fluted post on a plinth, a lantern on a curled bracket.
     poly([[-0.14, 0], [-0.1, -0.2], [0.1, -0.2], [0.14, 0]], P(mixHex(M.purple, ink, 0.4)))
@@ -713,7 +879,6 @@ function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number
     poly([[-0.2, -1.78], [-0.13, -2.08], [0.13, -2.08], [0.2, -1.78]], P(M.lamp))
     poly([[-0.22, -1.72], [0.22, -1.72], [0.16, -1.8], [-0.16, -1.8]], P(mixHex(M.purple, ink, 0.4)), weight * 0.6)
     poly([[-0.16, -2.08], [0, -2.2], [0.16, -2.08]], P(mixHex(M.purple, ink, 0.4)), weight * 0.6)
-    if (lit > 0) glow(p, k, x, HINGE - 1.94 * sy, 0.9, M.lamp, 0.55 * lit)
   }
 }
 
@@ -744,13 +909,18 @@ function drawStudio(p: p5, s: StudioState, c: Ctx): void {
   const t = c.t + s.begin
   p.rectMode(p.CORNER)
   p.ellipseMode(p.CENTER)
+  drawUpstage(p, c, t)
   drawGrid(p, c, t)
+  drawCables(p, c, t)
   drawFlats(p, c, t)
+  drawLadder(p, c, t)
   drawCamera(p, c, t)
   drawCloth(p, c, t)
   drawFloor(p, c, t)
   drawSpill(p, c, t)
   drawCuts(p, c, t)
+  drawBoom(p, c, t)
+  drawChair(p, c, t)
 }
 
 export const studio = part<StudioState>(
