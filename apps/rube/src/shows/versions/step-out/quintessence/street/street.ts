@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { box, part, scenery, type PartShot } from '../kit'
 import { DURATION } from '../music'
 import { drawStreet } from './draw'
-import { cherylAt, COVER_X, FINAL, IN, MEET, ON, STOP, STREET_STRIKES, WALTER_LANE, walterAt } from './plan'
+import { cherylAt, COVER_X, DRIFT, FINAL, IN, MEET, ON, STOP, STREET_STRIKES, WALTER_LANE, walterAt } from './plan'
 
 /**
  * The street (the B1 builder's): bar 131 to the end.
@@ -61,13 +61,14 @@ export const newsstand = part<null>(
       { t: IN + 0.8, cells: 4.1, off: [0.8, -0.5], w: 0 },
       on(MEET, 3.7, mx + 0.75, -0.78),
       on(MEET + 1.7, 3.6, mx + 1.9, -0.84),
-      // On to the cover with them; closer on the chord, and a breath closer while they look.
+      // On to the cover with them; closer on the chord, and a breath closer, easing along, while they look.
       on(STOP, 3.1, COVER_X + 0.05, -0.86),
-      on(ON, 2.95, COVER_X + 0.05, -0.86),
+      on(ON, 2.95, COVER_X + 0.22, -0.9),
       // They go; the camera draws back to the whole street and holds.
       on(ON + 1.4, 3.5, COVER_X + 1.0, -0.95),
       on(241.8, FINAL.cells, FINAL.x, FINAL.y),
-      on(DURATION, FINAL.cells, FINAL.x, FINAL.y),
+      // Through the credits it does not stop: it goes on drawing back and along, slowly, toward the avenue.
+      ...DRIFT.map((d) => on(d.t, d.cells, d.x, d.y)),
     ]
   },
 )
