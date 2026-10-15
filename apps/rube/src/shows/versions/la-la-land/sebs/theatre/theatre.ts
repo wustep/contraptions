@@ -495,25 +495,74 @@ function star(p: p5, k: number, cx: number, cy: number, r: number): void {
   p.endShape(p.CLOSE)
 }
 
-/** Velvet: a panel with soft vertical folds, darker in the troughs. The folds' phase can drift so it sways. */
-function velvet(p: p5, k: number, x0: number, y0: number, x1: number, y1: number, lit: number, folds: number, sway = 0): void {
+/**
+ * Velvet: a panel with soft vertical folds, darker in the troughs. The folds' phase can drift so it sways. `inLight`
+ * draws it as it looks in the spot: the cloth a brighter red and its folds' crests catching the light.
+ */
+const VELVET_LIT = '#C93A48'
+const VELVET_CREST = '#EE7A76'
+function velvet(p: p5, k: number, x0: number, y0: number, x1: number, y1: number, lit: number, folds: number, sway = 0, inLight = false): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   if (y1 - y0 < 0.01) return
   ctx.save()
-  ctx.fillStyle = mixHex(M.velvetDeep, M.velvet, 0.35 + 0.65 * lit)
+  const base = mixHex(M.velvetDeep, M.velvet, 0.35 + 0.65 * lit)
+  ctx.fillStyle = inLight ? VELVET_LIT : base
   ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
   const w = (x1 - x0) / folds
   const g = ctx.createLinearGradient(x0 * k, 0, x1 * k, 0)
+  const trough = rgba(M.velvetDeep, inLight ? 0.62 : 0.75)
+  const crest = inLight ? rgba(VELVET_CREST, 0.55) : rgba(M.velvet, 0.25 * lit)
   for (let i = 0; i <= folds; i++) {
     const u = i / folds
     const o = Math.min(1, Math.max(0, u + sway * Math.sin(i * 1.7) * 0.01))
-    g.addColorStop(o, rgba(M.velvetDeep, 0.75))
+    g.addColorStop(o, trough)
     if (i < folds) {
-      g.addColorStop(Math.min(1, (i + 0.5) / folds), rgba(M.velvet, 0.25 * lit))
+      g.addColorStop(Math.min(1, (i + 0.5) / folds), crest)
     }
   }
   ctx.fillStyle = g
   ctx.fillRect(x0 * k, y0 * k, w * folds * k, (y1 - y0) * k)
+  ctx.restore()
+}
+
+/**
+ * A follow spot's circle lying on a surface: `paint` draws the surface again as it looks in the light, inside the
+ * circle, its edge a little soft (the circle laid down in a few passes, each a little smaller). The light is on the
+ * thing, not in the air in front of it.
+ */
+const SPOT_EDGE: [number, number][] = [[1.14, 0.18], [1.09, 0.22], [1.045, 0.3], [1, 0.55]]
+function spotCircle(ctx: CanvasRenderingContext2D, k: number, cx: number, cy: number, rx: number, ry: number, a: number, paint: () => void): void {
+  if (a <= 0.01) return
+  for (const [grow, strength] of SPOT_EDGE) {
+    ctx.save()
+    ctx.beginPath()
+    ctx.ellipse(cx * k, cy * k, rx * grow * k, ry * grow * k, 0, 0, Math.PI * 2)
+    ctx.clip()
+    ctx.globalAlpha = Math.min(1, a) * strength
+    paint()
+    ctx.restore()
+  }
+}
+
+/**
+ * Light lying on a wall from a shaded lamp: even across most of its width and falling off only at its edge (not a
+ * glow's bright middle), cut off sharply on the side the shade hides.
+ */
+function shadeLight(ctx: CanvasRenderingContext2D, k: number, x: number, edge: number, dir: -1 | 1, rx: number, ry: number, color: string, a: number): void {
+  if (a <= 0.003) return
+  const cy = edge + dir * ry * 0.35
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect((x - rx) * k, Math.min(edge, edge + dir * ry * 2) * k, 2 * rx * k, ry * 2 * k)
+  ctx.clip()
+  ctx.translate(x * k, cy * k)
+  ctx.scale(1, ry / rx)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+  g.addColorStop(0, rgba(color, a))
+  g.addColorStop(0.6, rgba(color, a * 0.8))
+  g.addColorStop(1, rgba(color, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
   ctx.restore()
 }
 
@@ -559,26 +608,16 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
     ctx.fillStyle = g
     ctx.fillRect(WALL_IN * k, ROOF * k, (RIGHT - WALL_IN) * k, (ARCH_TOP - ROOF) * k)
   }
-  // Behind the arch: the stage's back wall, dark velvet, and her window flown in against it.
-  p.fill(mixHex(bg, M.velvetDeep, 0.55))
-  rrect(p, k, ARCH0, ARCH_TOP, ARCH1, FLOOR)
-  // While she plays, her window's light breathes with the music: up as a phrase swells, down in its rests, so the set
-  // plays with her. Steady again for the ovation.
+  // Behind the arch: her play's set, a room, lit from below by the footlights and by the spot where she stands, and
+  // her window flown in against it. While she plays, the stage's light on it breathes with the music: up as a phrase
+  // swells, down in its rests, so the set plays with her. Steady again for the ovation.
   const playing = Math.min(1, (t - THUD) / 1.2) * (1 - Math.min(1, Math.max(0, (t - SPRING + 0.8) / 0.8)))
   const breath = t > THUD && t < SPRING ? 1 + 0.45 * (level(t) - 0.55) * Math.max(0, playing) : 1
   const lit = stage * breath
-  if (lit > 0.01) {
-    glow(p, k, MID, -1.9, 3.6, M.bulb, 0.22 * Math.min(1.3, lit), 1.25, 0.85)
-  }
-  drawWindow(p, k, ink, weight, lit, t)
-
-  // The spot's pool on the stage floor (under the curtain as it rises), and on the curtain once it is in behind them.
   const spot = spotAt(t)
-  if (spot > 0.01) {
-    const sx = spotX(t)
-    glow(p, k, sx, FLOOR - 0.02, 0.95, M.spot, 0.5 * Math.min(1.2, spot), 1, 0.28)
-    glow(p, k, sx, -0.35, 0.8, M.spot, 0.16 * Math.min(1.2, spot), 0.8, 1.1)
-  }
+  drawSet(p, k, weight, t, lit, spot)
+  drawWindow(p, k, ink, weight, lit, t)
+  drawDressing(p, k, ink, weight, t, lit)
 
   /* ---- the fly loft: the grid, the blocks, the lines; the curtain, once it is behind them */
   drawLoft(p, k, ink, weight, t)
@@ -598,6 +637,12 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
   const lip1 = ARCH1 + FRAME_W + 0.2
   solid(p, ink, weight * 0.8, mixHex(bg, M.boards, 0.55 + 0.35 * Math.min(1, Math.max(house, stage * 0.6))))
   rrect(p, k, lip0, FLOOR, lip1, APRON)
+  // The face is panelled, with a moulding along its foot.
+  outline(p, alpha(p, M.gold, 0.16 + 0.22 * Math.min(1, house)).toString(), weight * 0.5)
+  const panels = Math.floor((lip1 - lip0 - 0.3) / 0.95)
+  const panel0 = lip0 + (lip1 - lip0 - (panels * 0.95 - 0.2)) / 2
+  for (let i = 0; i < panels; i++) rrect(p, k, panel0 + i * 0.95, FLOOR + 0.17, panel0 + i * 0.95 + 0.75, APRON - 0.11)
+  p.line(lip0 * k, (APRON - 0.05) * k, lip1 * k, (APRON - 0.05) * k)
   p.noStroke()
   p.fill(M.gold)
   rrect(p, k, lip0, FLOOR, lip1, FLOOR + 0.05)
@@ -607,9 +652,19 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
   outline(p, ink, weight)
   p.line(WALL_IN * k, FLOOR * k, lip0 * k, FLOOR * k)
   p.line(lip1 * k, FLOOR * k, RIGHT * k, FLOOR * k)
+  // The spot's light on the boards at her feet: a stretch of the stage's lip lit under her, and nothing round her.
+  if (spot > 0.01) {
+    const sx = spotX(t)
+    const a = 0.5 * Math.min(1, spot)
+    const g = ctx.createLinearGradient((sx - 0.72) * k, 0, (sx + 0.72) * k, 0)
+    g.addColorStop(0, rgba(M.spot, 0))
+    g.addColorStop(0.3, rgba(M.spot, a))
+    g.addColorStop(0.7, rgba(M.spot, a))
+    g.addColorStop(1, rgba(M.spot, 0))
+    ctx.fillStyle = g
+    ctx.fillRect((sx - 0.72) * k, (FLOOR - 0.022) * k, 1.44 * k, 0.072 * k)
+  }
   drawFoot(p, k, ink, weight, t, stage)
-  // A light on the stage's boards where the spot and the stage lights fall.
-  if (stage > 0.01) glow(p, k, MID, FLOOR, 3.4, M.bulb, 0.12 * Math.min(1, stage), 1, 0.12)
 
   /* ---- the building's shell, in section: the left wall with its door, the roof, the right wall */
   const cut = mixHex(M.velvetDeep, bg, 0.3)
@@ -624,6 +679,176 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
   outline(p, ink, weight)
   p.line(WALL * k, FLOOR * k, WALL * k, 3.0 * k)
   drawDoor(p, k, ink, weight, t)
+}
+
+/**
+ * Her play's set: a room in the small town she is leaving. A papered wall, panelling below a dado rail; at one side a
+ * picture of the desert, a little table with a lamp and a chair turned to the window; at the other her coat and hat on
+ * their pegs and her suitcase packed on the floor under them. The room is dark until the stage lights come up on the
+ * thud (the spot alone finds her as the curtain flies out), and its lamp burns brighter while her window is at night.
+ */
+const SET_PAPER = '#7A4150'
+const SET_STRIPE = '#5A2A38'
+const SET_WOOD = '#5C3A2C'
+/** The paper and the panelling in the spot. */
+const SET_PAPER_LIT = '#C47A78'
+const SET_WOOD_LIT = '#A06E4E'
+const DADO = -0.62
+/** What of the set catches the stage's light, `l` of the way up from the dark. */
+const setLit = (c: string, l: number): string => mixHex(mixHex(THEATRE_INK.bg, c, 0.3), c, l)
+
+function drawSet(p: p5, k: number, weight: number, t: number, lit: number, spot: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const l = Math.min(1, lit)
+  const paper = setLit(SET_PAPER, l)
+  const wood = setLit(SET_WOOD, l)
+  const w = ARCH1 - ARCH0
+  const fill = (top: string, foot: string): void => {
+    ctx.fillStyle = top
+    ctx.fillRect(ARCH0 * k, ARCH_TOP * k, w * k, (DADO - ARCH_TOP) * k)
+    ctx.fillStyle = foot
+    ctx.fillRect(ARCH0 * k, DADO * k, w * k, (FLOOR - DADO) * k)
+  }
+  fill(paper, wood)
+  // The paper's broad stripe.
+  ctx.fillStyle = rgba(SET_STRIPE, 0.22)
+  ctx.beginPath()
+  for (let x = ARCH0 + 0.12; x < ARCH1; x += 0.36) ctx.rect(x * k, ARCH_TOP * k, 0.14 * k, (DADO - ARCH_TOP) * k)
+  ctx.fill()
+  // The footlights' light up the wall from the boards, fading as it climbs.
+  if (lit > 0.01) {
+    const g = ctx.createLinearGradient(0, FLOOR * k, 0, (FLOOR - 2.3) * k)
+    g.addColorStop(0, rgba(M.bulb, 0.18 * Math.min(1.3, lit)))
+    g.addColorStop(1, rgba(M.bulb, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(ARCH0 * k, (FLOOR - 2.3) * k, w * k, 2.3 * k)
+  }
+  // The spot's circle on the wall behind her: the paper and the panelling as they look in its light.
+  if (spot > 0.01) {
+    spotCircle(ctx, k, spotX(t), -0.42, 0.5, 0.44, spot, () => {
+      fill(SET_PAPER_LIT, SET_WOOD_LIT)
+      ctx.fillStyle = rgba(SET_STRIPE, 0.22)
+      ctx.beginPath()
+      for (let x = ARCH0 + 0.12; x < ARCH1; x += 0.36) ctx.rect(x * k, ARCH_TOP * k, 0.14 * k, (DADO - ARCH_TOP) * k)
+      ctx.fill()
+    })
+  }
+  // The dado rail, the panels under it, the skirting.
+  p.noStroke()
+  p.fill(setLit(mixHex(SET_WOOD, M.gold, 0.3), l))
+  rrect(p, k, ARCH0, DADO - 0.035, ARCH1, DADO + 0.03)
+  p.fill(setLit(mixHex(SET_WOOD, '#000000', 0.25), l))
+  rrect(p, k, ARCH0, FLOOR - 0.08, ARCH1, FLOOR)
+  outline(p, rgba(mixHex(SET_WOOD, '#000000', 0.45), 0.7), weight * 0.45)
+  for (let x = ARCH0 + 0.1; x + 0.62 < ARCH1; x += 0.74) rrect(p, k, x, DADO + 0.1, x + 0.62, FLOOR - 0.15)
+}
+
+/** The things on her set, either side of the window, clear of where she plays. */
+function drawDressing(p: p5, k: number, ink: string, weight: number, t: number, lit: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const l = Math.min(1, lit)
+  const line = rgba(ink, 0.25 + 0.3 * l)
+  const w = weight * 0.5
+  // A picture of the desert on a wire from its nail: a pale sky, a mesa, the sand.
+  {
+    const x0 = 13.78
+    const x1 = 14.3
+    const y0 = -2.42
+    const y1 = -2.02
+    outline(p, line, w)
+    p.line(((x0 + x1) / 2) * k, (y0 - 0.3) * k, (x0 + 0.06) * k, y0 * k)
+    p.line(((x0 + x1) / 2) * k, (y0 - 0.3) * k, (x1 - 0.06) * k, y0 * k)
+    solid(p, line, w, setLit(M.gold, 0.6 * l))
+    rrect(p, k, x0, y0, x1, y1)
+    p.noStroke()
+    p.fill(setLit('#E7BE8E', l))
+    rrect(p, k, x0 + 0.05, y0 + 0.05, x1 - 0.05, y1 - 0.05)
+    p.fill(setLit('#C98B5C', l))
+    rrect(p, k, x0 + 0.05, y1 - 0.13, x1 - 0.05, y1 - 0.05)
+    p.fill(setLit('#8E4B3A', l))
+    poly(p, k, [[x0 + 0.08, y1 - 0.13], [x0 + 0.14, y1 - 0.25], [x0 + 0.3, y1 - 0.25], [x0 + 0.36, y1 - 0.13]])
+  }
+  // The little table, its lamp on it. The lamp is lit with the stage, and brighter while her window is at night: its
+  // light lies on the wall above and below the shade and on the table top, and the shade is the lamp.
+  {
+    const tx = 13.7
+    const top = -0.36
+    const on = smooth(t, THUD - 0.05, THUD + 0.3)
+    const night = on * viewAt(t).night
+    const glowA = on * (0.55 + 0.45 * night) * Math.min(1.2, Math.max(0.6, lit))
+    const shadeTop = -0.8
+    const shadeFoot = -0.61
+    shadeLight(ctx, k, tx, shadeTop, -1, 0.24, 0.26, M.bulb, 0.11 * glowA)
+    shadeLight(ctx, k, tx, shadeFoot, 1, 0.34, 0.125, M.bulb, 0.1 * glowA)
+    solid(p, line, w, setLit(SET_WOOD, 0.4 + 0.6 * l))
+    rrect(p, k, tx - 0.04 - 0.24, top + 0.04, tx - 0.24, FLOOR)
+    rrect(p, k, tx + 0.24, top + 0.04, tx + 0.24 + 0.04, FLOOR)
+    rrect(p, k, tx - 0.34, top, tx + 0.34, top + 0.045)
+    p.noStroke()
+    p.fill(rgba(M.bulb, 0.35 * glowA))
+    rrect(p, k, tx - 0.3, top, tx + 0.3, top + 0.012)
+    // The lamp: a turned base, its stem, the shade.
+    solid(p, line, w, setLit(M.gold, 0.5 * l))
+    p.ellipse(tx * k, (top - 0.03) * k, 0.16 * k, 0.06 * k)
+    p.rect((tx - 0.012) * k, shadeFoot * k, 0.024 * k, (top - 0.04 - shadeFoot) * k)
+    solid(p, line, w, mixHex(setLit('#C9A47E', 0.5 * l), M.bulb, 0.85 * glowA))
+    poly(p, k, [[tx - 0.15, shadeFoot], [tx - 0.09, shadeTop], [tx + 0.09, shadeTop], [tx + 0.15, shadeFoot]])
+  }
+  // A chair turned to the window: its back on the far side, its seat, its legs.
+  {
+    const cx0 = 14.32
+    const cx1 = 14.66
+    const seat = -0.24
+    const wood = setLit(mixHex(SET_WOOD, M.boards, 0.5), 0.4 + 0.6 * l)
+    solid(p, line, w, wood)
+    rrect(p, k, cx0, seat, cx1, seat + 0.035)
+    poly(p, k, [[cx0, FLOOR], [cx0 + 0.035, FLOOR], [cx0 + 0.035, seat], [cx0 - 0.015, seat - 0.36], [cx0 - 0.05, seat - 0.36]])
+    rrect(p, k, cx1 - 0.035, seat + 0.035, cx1, FLOOR)
+    p.line((cx0 - 0.02) * k, (seat - 0.2) * k, (cx0 + 0.03) * k, (seat - 0.2) * k)
+  }
+  // Her coat and hat on their pegs, her suitcase packed under them.
+  {
+    const rail = -1.12
+    const px = [17.95, 18.42]
+    solid(p, line, w, setLit(SET_WOOD, 0.4 + 0.6 * l))
+    rrect(p, k, 17.75, rail - 0.04, 18.62, rail + 0.03)
+    p.noStroke()
+    p.fill(setLit(M.gold, 0.6 * l))
+    for (const x of px) p.circle(x * k, (rail + 0.05) * k, 0.045 * k)
+    // The coat: hung by its collar, falling to its hem, a belt across it.
+    const coat = setLit('#8C6A3A', 0.4 + 0.6 * l)
+    const cx = px[0]
+    solid(p, line, w, coat)
+    poly(p, k, [[cx - 0.06, rail + 0.06], [cx + 0.06, rail + 0.06], [cx + 0.15, rail + 0.2], [cx + 0.19, rail + 0.7], [cx - 0.19, rail + 0.7], [cx - 0.15, rail + 0.2]])
+    outline(p, rgba(mixHex('#8C6A3A', '#000000', 0.5), 0.6), w)
+    p.line(cx * k, (rail + 0.16) * k, cx * k, (rail + 0.7) * k)
+    p.line((cx - 0.06) * k, (rail + 0.06) * k, cx * k, (rail + 0.16) * k)
+    p.line((cx + 0.06) * k, (rail + 0.06) * k, cx * k, (rail + 0.16) * k)
+    for (const sd of [-1, 1]) p.line((cx + sd * 0.13) * k, (rail + 0.2) * k, (cx + sd * 0.12) * k, (rail + 0.5) * k)
+    p.line((cx - 0.17) * k, (rail + 0.38) * k, (cx + 0.17) * k, (rail + 0.38) * k)
+    // The hat: a crown and a brim, a band round it.
+    const hx = px[1]
+    solid(p, line, w, setLit(M.velvetDeep, 0.5 + 0.5 * l))
+    p.arc(hx * k, (rail + 0.13) * k, 0.2 * k, 0.2 * k, Math.PI, Math.PI * 2, p.CHORD)
+    p.ellipse(hx * k, (rail + 0.14) * k, 0.32 * k, 0.05 * k)
+    p.noStroke()
+    p.fill(setLit(M.rose, 0.4 + 0.6 * l))
+    p.rect((hx - 0.1) * k, (rail + 0.09) * k, 0.2 * k, 0.03 * k)
+    // The suitcase on the floor: its straps, its handle, its clasps.
+    const s0 = 18.08
+    const s1 = 18.56
+    const sTop = -0.27
+    outline(p, line, w)
+    p.noFill()
+    p.arc(((s0 + s1) / 2) * k, sTop * k, 0.14 * k, 0.1 * k, Math.PI, Math.PI * 2)
+    solid(p, line, w, setLit('#6E4530', 0.4 + 0.6 * l))
+    rrect(p, k, s0, sTop, s1, FLOOR, 0.03)
+    p.noStroke()
+    p.fill(setLit('#9B6A44', 0.4 + 0.6 * l))
+    for (const x of [s0 + 0.11, s1 - 0.15]) p.rect(x * k, sTop * k, 0.04 * k, -sTop * k)
+    p.fill(setLit(M.gold, 0.6 * l))
+    for (const x of [s0 + 0.08, s1 - 0.08]) p.rect((x - 0.02) * k, (sTop + 0.03) * k, 0.04 * k, 0.03 * k)
+  }
 }
 
 /** The street across from the theatre: a row of buildings in the dark, a few windows lit, and a lamp at the kerb. */
@@ -893,8 +1118,9 @@ function drawWindowLife(p: p5, k: number, t: number): void {
 }
 
 /**
- * The footlights: low hoods on the lip, up with the stage lights, their light on the boards in front of them. Where she
- * lands and leaps the boards give a little under her, hoods and all: her landing is the event, not a pop of light.
+ * The footlights: low hoods on the lip, up with the stage lights; their light is on the set's wall behind her
+ * (`drawSet`), and their mouths are the lamps. Where she lands and leaps the boards give a little under her, hoods and
+ * all: her landing is the event, not a pop of light.
  */
 function drawFoot(p: p5, k: number, ink: string, weight: number, t: number, stage: number): void {
   const bg = THEATRE_INK.bg
@@ -904,7 +1130,6 @@ function drawFoot(p: p5, k: number, ink: string, weight: number, t: number, stag
     let give = 0
     for (const f of FOOT_AT) give = Math.max(give, Math.max(0, ring(t - f.t, 3.2, 0.12)) * Math.exp(-(((x - f.x) / 0.75) ** 2)))
     const dy = 0.025 * give
-    if (base > 0.01) glow(p, k, x, FLOOR - 0.02, 0.4, M.bulb, 0.1 * base, 1.3, 0.45)
     solid(p, ink, weight * 0.45, mixHex(bg, M.gold, 0.55))
     p.beginShape()
     p.vertex((x - 0.13) * k, (FLOOR + dy) * k)
@@ -930,8 +1155,6 @@ function drawWork(p: p5, k: number, ink: string, weight: number, t: number): voi
     // The lamp hangs just outside the machine's way, on the far side of its rail.
     const lx = rail + 0.2
     const ly = w.y - 0.26
-    // Its light down the wall under it.
-    if (since >= 0) glow(p, k, lx, ly + 0.45, 0.7, M.bulb, 0.12, 1, 1.2)
     outline(p, alpha(p, ink, 0.7).toString(), weight * 0.45)
     p.line(rail * k, (ly - 0.06) * k, lx * k, (ly - 0.06) * k)
     // The bulb under its shade.
@@ -1055,8 +1278,8 @@ function drawDoor(p: p5, k: number, ink: string, weight: number, t: number): voi
     if (t > shut) open = Math.max(0, 1 - soft((t - shut) / 0.9)) + 0.03 * Math.max(0, ring(t - shut - 0.9, 2, 0.15))
     open = Math.max(0, Math.min(1.05, open))
   }
-  // The lamp over it, in its cage, its light down the wall to the step.
-  glow(p, k, WALL - 0.12, DOOR_TOP + 0.4, 0.75, M.bulb, 0.14, 0.7, 1.4)
+  // The lamp over it, in its cage, its light on the step and the pavement under it.
+  glow(p, k, WALL - 0.3, FLOOR, 0.85, M.bulb, 0.16, 1, 0.25)
   solid(p, ink, weight * 0.6, M.bulb)
   p.circle((WALL - 0.12) * k, (DOOR_TOP - 0.25) * k, 0.1 * k)
   outline(p, ink, weight * 0.6)
@@ -1173,8 +1396,7 @@ function drawWindow(p: p5, k: number, ink: string, weight: number, stage: number
       for (let i = 0; i < 14; i++) {
         const sx = px0 + pw * hash(i, 61)
         const sy = py0 + ph * 0.75 * hash(i, 62)
-        const tw = 0.6 + 0.4 * Math.sin(t * 3 + i * 1.7)
-        ctx.fillStyle = rgba('#FFFFFF', 0.85 * v.night * lit * tw)
+        ctx.fillStyle = rgba('#FFFFFF', 0.85 * v.night * lit)
         ctx.beginPath()
         ctx.arc(sx * k, sy * k, (0.018 + 0.014 * hash(i, 63)) * k, 0, Math.PI * 2)
         ctx.fill()
@@ -1244,6 +1466,17 @@ function drawCurtain(p: p5, k: number, ink: string, weight: number, t: number, l
   // A little sway as it travels.
   const speed = Math.abs(hemAt(t + 0.02) - hemAt(t - 0.02)) / 0.04
   velvet(p, k, x0, top, x1, hem, lit, 14, speed)
+  // The spot on the velvet, where it is still in the beam: a circle of the cloth as it looks in the light.
+  const spot = spotAt(t)
+  if (spot > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, top * k, (x1 - x0) * k, (hem - top) * k)
+    ctx.clip()
+    spotCircle(ctx, k, spotX(t), -0.5, 0.6, 0.52, spot, () => velvet(p, k, x0, top, x1, hem, lit, 14, speed, true))
+    ctx.restore()
+  }
   // The hem's gold fringe, and a band of gold above it.
   p.noStroke()
   p.fill(alpha(p, M.gold, 0.55 + 0.4 * lit))
@@ -1253,18 +1486,6 @@ function drawCurtain(p: p5, k: number, ink: string, weight: number, t: number, l
   // The batten.
   solid(p, ink, weight * 0.6, mixHex(THEATRE_INK.bg, M.boards, 0.6))
   rrect(p, k, x0 - 0.05, top - 0.06, x1 + 0.05, top + 0.02)
-  // The spot on the velvet, where it is still in the beam.
-  const spot = spotAt(t)
-  if (spot > 0.01) {
-    const sx = spotX(t)
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    ctx.save()
-    ctx.beginPath()
-    ctx.rect(x0 * k, top * k, (x1 - x0) * k, (hem - top) * k)
-    ctx.clip()
-    glow(p, k, sx, -0.5, 1.0, M.spot, 0.3 * Math.min(1.2, spot), 0.9, 0.8)
-    ctx.restore()
-  }
 }
 
 /** The wing: the lift and its sandbag, the house-light switch, the gallery, the arbor on its track, the work light. */
@@ -1304,8 +1525,7 @@ function drawSets(p: p5, k: number, ink: string, weight: number, t: number): voi
 function drawWing(p: p5, c: Ctx, t: number): void {
   const { k, ink, weight } = c
   const bg = THEATRE_INK.bg
-  // A work light on the wing's wall; the lamps the machines switch on as they pass.
-  glow(p, k, 10.3, -2.6, 2.6, M.bulb, 0.13)
+  // The lamps the machines switch on as they pass.
   drawSets(p, k, ink, weight, t)
   drawWork(p, k, ink, weight, t)
   // The lift's block, high on its hanger.
@@ -1560,8 +1780,8 @@ function drawBoxes(p: p5, k: number, t: number, house: number, stage: number): v
 
 function sconce(p: p5, k: number, ink: string, weight: number, x: number, y: number, on: number): void {
   const lit = Math.min(1, on)
-  // Its light up the pillar, and a little down.
-  if (lit > 0.05) glow(p, k, x, y - 0.6, 0.9, M.bulb, 0.16 * lit, 0.6, 1.4)
+  // Its light up the pillar from the cup's rim.
+  if (lit > 0.05) shadeLight(p.drawingContext as CanvasRenderingContext2D, k, x, y - 0.22, -1, 0.19, 0.7, M.bulb, 0.18 * lit)
   solid(p, ink, weight * 0.6, M.gold)
   p.beginShape()
   p.vertex((x - 0.13) * k, (y - 0.22) * k)
@@ -1627,8 +1847,11 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
   }
   // How shut the paddles are: closing just before a clap, meeting on it, opening after.
   const shut = Math.max(last.ago < Infinity ? Math.exp(-last.ago / 0.09) : 0, next < Infinity ? soft(1 - (next - t) / 0.1) : 0)
+  // Through her show the house follows her across the stage, each row a moment after the one in front of it.
+  const follow = smooth(t, SEAT - 0.2, SEAT + 0.8) * (1 - smooth(t, SPRING - 0.25, SPRING + 0.1))
   for (let r = 0; r < ROW_Y.length; r++) {
     const base = ROW_Y[r]
+    const her = follow > 0.01 ? miaAt(t - 0.12 - 0.07 * r).x : 0
     // The stage's light on the backs of the house falls off row by row away from it, so the rows nearest us are dark
     // shapes against the lit ones and the house has depth, not a pattern; with the house lights up, it fills back in.
     const lit = ROW_LIGHT[r] + (1 - ROW_LIGHT[r]) * warm
@@ -1647,13 +1870,14 @@ function drawRows(p: p5, s: TheatreState, c: Ctx, t: number, house: number, stag
         const hr = 0.115
         p.drawingContext.globalAlpha = 1 - empty
         const hy = top - 0.05 - 0.06 * up
+        const hx = st.x + (follow > 0.01 ? follow * 0.05 * Math.max(-1, Math.min(1, (her - st.x) / 2.2)) : 0)
         p.noStroke()
         p.fill('#1A0A0E')
-        p.circle(st.x * k, hy * k, 2 * hr * k)
+        p.circle(hx * k, hy * k, 2 * hr * k)
         p.noFill()
         p.stroke(alpha(p, M.bulb, (0.4 + 0.35 * Math.min(1, stage) + 0.15 * warm) * lit))
         p.strokeWeight(weight * 0.9)
-        p.arc(st.x * k, hy * k, 2 * hr * k, 2 * hr * k, Math.PI * 1.15, Math.PI * 1.85)
+        p.arc(hx * k, hy * k, 2 * hr * k, 2 * hr * k, Math.PI * 1.15, Math.PI * 1.85)
         p.drawingContext.globalAlpha = 1
       }
       p.stroke(alpha(p, ink, (0.28 + 0.2 * warm) * (0.35 + 0.65 * lit)))
