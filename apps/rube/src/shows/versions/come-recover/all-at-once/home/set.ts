@@ -1602,27 +1602,8 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     storefront(pen, t)
     frontDoor(pen, t)
   }
-  // Over the ceiling, the storey above in section: the same cut tone as the ground under the floor, going up into
-  // the night, so a camera that sees over the ceiling sees the building go on rather than a black band.
-  if (f.y0 < C - 0.4) {
-    const ux0 = Math.max(R0 - 0.3, f.x0 - 1)
-    const ux1 = Math.min(R1 + 0.3, f.x1 + 1)
-    if (ux1 > ux0) {
-      const cut = mixHex(HOME.floor, HOME.night, 0.62)
-      const deep = 1.4
-      const fade = 1.0
-      p.noStroke()
-      p.fill(cut)
-      p.rect(((ux0 + ux1) / 2) * k, (C - 0.4 - deep / 2) * k, (ux1 - ux0) * k, deep * k)
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const e = (a: number) => `rgba(${parseInt(cut.slice(1, 3), 16)}, ${parseInt(cut.slice(3, 5), 16)}, ${parseInt(cut.slice(5, 7), 16)}, ${a})`
-      const g = ctx.createLinearGradient(0, (C - 0.4 - deep) * k, 0, (C - 0.4 - deep - fade) * k)
-      g.addColorStop(0, e(1))
-      g.addColorStop(1, e(0))
-      ctx.fillStyle = g
-      ctx.fillRect(ux0 * k, (C - 0.4 - deep - fade) * k, (ux1 - ux0) * k, (fade + 0.01) * k)
-    }
-  }
+  // Over the ceiling, the family's home above the shop, in section, asleep (`upstairs`).
+  if (f.y0 < C - 0.4) upstairs(pen, t, f)
   // The ceiling and the floor, cut.
   solid(p, ink, w, CEILING_FILL)
   p.rect(((R0 + R1) / 2) * k, (C - 0.2) * k, (R1 - R0 + 0.6) * k, 0.4 * k)
@@ -1757,6 +1738,238 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
   })
 }
 
+/* ------------------------------------------------------------------ upstairs */
+
+/**
+ * Over the shop, the family's home, cut open as the shop is: rooms in the night, everyone asleep at two in the
+ * morning. The front room over the storefront, Gong Gong's armchair turned to a television left on, flickering; the
+ * kitchen, the rice cooker's keep-warm lamp; Joy's old room as she left it; her parents' room and the family altar's
+ * small red lamp; then the boxes of receipts the taxes come out of. Each room is lit only by its own small lights, never
+ * by the shop's tubes under its floor (the light map leaves it be), and the roof goes up into the night. It is seen
+ * where the camera looks over the ceiling: in the party's high shots, and above the credits as the last draw-back takes
+ * in the whole shop.
+ */
+export const UPSTAIRS = { floor: ROOM.ceiling - 0.4, ceiling: ROOM.ceiling - 3.1, roof: ROOM.ceiling - 3.45 }
+const UP_SHADE = '#1F2740'
+const UP_WALL = mixHex(HOME.tile, UP_SHADE, 0.9)
+const UP_PAPER = mixHex(HOME.paper, UP_SHADE, 0.86)
+const UP_FLOOR = mixHex(HOME.wood, UP_SHADE, 0.82)
+const UP_THING = mixHex(HOME.steelDark, UP_SHADE, 0.74)
+const UP_DEEP = mixHex(HOME.night, UP_SHADE, 0.51)
+/** The partitions between the rooms, and the rooms' far walls' windows (x0, x1). */
+const WALLS = [-3.2, 4.8, 12.2, 20.2, 27.5]
+const UP_WINDOWS: [number, number][] = [[-6.7, -5.4], [-1.9, -0.7], [8.7, 9.8], [15.9, 17.0], [31.0, 32.2]]
+
+/** The television's picture at `t`: a shot that changes every few seconds, how bright, and how blue. */
+function tvAt(t: number): { a: number; cool: number } {
+  const shot = Math.floor(t / 2.7 + hash(Math.floor(t / 2.7), 3, 91) * 0.6)
+  const cool = hash(shot, 1, 91)
+  const a = 0.55 + 0.25 * hash(shot, 2, 91) + 0.08 * Math.sin(t * 9.3) * Math.sin(t * 3.1)
+  return { a, cool }
+}
+
+function softLight(p: p5, k: number, x: number, y: number, r: number, rgb: string, a: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
+  g.addColorStop(0, `rgba(${rgb}, ${a})`)
+  g.addColorStop(0.5, `rgba(${rgb}, ${a * 0.45})`)
+  g.addColorStop(1, `rgba(${rgb}, 0)`)
+  ctx.fillStyle = g
+  ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
+}
+
+function upstairs(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; y1: number }): void {
+  const { p, k, w } = pen
+  const ink = mixHex(pen.ink, UP_SHADE, 0.51)
+  const U = UPSTAIRS
+  const x0 = Math.max(ROOM.x0 - 0.3, f.x0 - 1)
+  const x1 = Math.min(ROOM.x1 + 0.3, f.x1 + 1)
+  if (x1 <= x0) return
+  const see = (a: number, b: number) => b >= f.x0 - 0.3 && a <= f.x1 + 0.3
+  const rect = (a: number, b: number, top: number, bot: number) => p.rect(((a + b) / 2) * k, ((top + bot) / 2) * k, (b - a) * k, (bot - top) * k)
+  // The rooms' far wall, a skirting, and the floorboards' edge.
+  p.noStroke()
+  p.fill(UP_WALL)
+  rect(x0, x1, U.ceiling, U.floor)
+  p.fill(UP_FLOOR)
+  rect(x0, x1, U.floor - 0.12, U.floor)
+  // Windows in the far wall, onto the night behind the block: a deeper sky, and a far roofline with a lit window.
+  for (const [a, b] of UP_WINDOWS) {
+    if (!see(a, b)) continue
+    const top = U.ceiling + 0.55
+    const bot = U.floor - 1.1
+    solid(p, ink, w * 0.6, UP_DEEP)
+    rect(a, b, top, bot)
+    p.noStroke()
+    p.fill(mixHex(UP_DEEP, '#000000', 0.25))
+    p.beginShape()
+    p.vertex(a * k, bot * k)
+    for (let i = 0; i <= 4; i++) {
+      const x = a + ((b - a) * i) / 4
+      p.vertex(x * k, (bot - 0.25 - 0.3 * hash(Math.round(a * 10) + i, 4, 92)) * k)
+      p.vertex((x + (b - a) / 8) * k, (bot - 0.25 - 0.3 * hash(Math.round(a * 10) + i, 4, 92)) * k)
+    }
+    p.vertex(b * k, bot * k)
+    p.endShape(p.CLOSE)
+    p.fill(alpha(p, HOME.gold, 0.55))
+    p.rect((a + (b - a) * (0.3 + 0.4 * hash(Math.round(a * 10), 5, 92))) * k, (bot - 0.18) * k, 0.08 * k, 0.1 * k)
+    outline(p, ink, w * 0.5)
+    p.line(((a + b) / 2) * k, top * k, ((a + b) / 2) * k, bot * k)
+    p.line(a * k, ((top + bot) / 2) * k, b * k, ((top + bot) / 2) * k)
+    // A curtain pulled to one side.
+    solid(p, ink, w * 0.4, UP_PAPER)
+    p.rect((b + 0.08) * k, ((top - 0.08 + bot + 0.15) / 2) * k, 0.16 * k, (bot + 0.15 - top + 0.08) * k, 0.03 * k)
+    // The night's light through it, on the wall below and the floor.
+    softLight(p, k, (a + b) / 2, U.floor - 0.6, 1.3, '150, 172, 226', 0.1)
+  }
+  const floor = U.floor - 0.12
+  // The front room: the television on its cabinet, left on, and the armchair turned to it, a blanket over its arm.
+  if (see(-8, -3.2)) {
+    const tv = tvAt(t)
+    const tvCol = mixHex('#E8EEFF', '#A9C2FF', tv.cool)
+    solid(p, ink, w * 0.6, UP_THING)
+    rect(-4.75, -3.75, floor - 0.42, floor)
+    solid(p, ink, w * 0.6, mixHex(UP_THING, '#000000', 0.2))
+    p.rect(-4.25 * k, (floor - 0.72) * k, 0.72 * k, 0.56 * k, 0.06 * k)
+    p.noStroke()
+    p.fill(alpha(p, tvCol, 0.35 + 0.5 * tv.a))
+    p.rect(-4.25 * k, (floor - 0.72) * k, 0.56 * k, 0.42 * k, 0.04 * k)
+    // The armchair, side-on, facing it.
+    solid(p, ink, w * 0.7, mixHex(HOME.red, UP_SHADE, 0.82))
+    p.rect(-6.1 * k, (floor - 0.28) * k, 0.95 * k, 0.4 * k, 0.08 * k)
+    p.rect(-6.48 * k, (floor - 0.62) * k, 0.22 * k, 0.9 * k, 0.08 * k)
+    p.rect(-5.72 * k, (floor - 0.42) * k, 0.2 * k, 0.32 * k, 0.06 * k)
+    solid(p, ink, w * 0.5, mixHex(HOME.butter, UP_SHADE, 0.78))
+    p.rect(-5.72 * k, (floor - 0.5) * k, 0.26 * k, 0.24 * k, 0.04 * k)
+    // Its light on the room: blue-white, flickering with the picture.
+    softLight(p, k, -4.25, floor - 0.6, 2.1, tv.cool > 0.5 ? '169, 194, 255' : '220, 228, 255', 0.16 + 0.12 * tv.a)
+  }
+  // The kitchen: the table and two chairs, the counter along the far wall, the rice cooker keeping warm.
+  if (see(-3.2, 4.8)) {
+    solid(p, ink, w * 0.6, UP_THING)
+    rect(2.2, 4.5, floor - 0.62, floor)
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.76))
+    rect(2.1, 4.6, floor - 0.7, floor - 0.62)
+    solid(p, ink, w * 0.6, mixHex(HOME.enamel, UP_SHADE, 0.82))
+    p.rect(3.0 * k, (floor - 0.86) * k, 0.38 * k, 0.3 * k, 0.1 * k)
+    p.noStroke()
+    p.fill('#FF5A3C')
+    p.circle(3.08 * k, (floor - 0.82) * k, 0.045 * k)
+    softLight(p, k, 3.08, floor - 0.82, 0.5, '255, 90, 60', 0.22)
+    // The kettle.
+    solid(p, ink, w * 0.5, mixHex(HOME.steel, UP_SHADE, 0.71))
+    p.ellipse(3.9 * k, (floor - 0.82) * k, 0.3 * k, 0.24 * k)
+    // The table and chairs.
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.78))
+    rect(-0.2, 1.4, floor - 0.68, floor - 0.6)
+    for (const lx of [0.0, 1.2]) rect(lx - 0.04, lx + 0.04, floor - 0.6, floor)
+    for (const [cx, s] of [[-0.55, -1], [1.75, 1]] as const) {
+      rect(cx - 0.18, cx + 0.18, floor - 0.42, floor - 0.36)
+      rect(cx + s * 0.14 - 0.03, cx + s * 0.14 + 0.03, floor - 0.86, floor)
+      rect(cx - s * 0.14 - 0.03, cx - s * 0.14 + 0.03, floor - 0.42, floor)
+    }
+    // A bowl of oranges on the table.
+    solid(p, ink, w * 0.4, mixHex(HOME.gold, UP_SHADE, 0.66))
+    for (const ox of [0.5, 0.66, 0.58]) p.circle(ox * k, (floor - 0.75 - (ox === 0.58 ? 0.08 : 0)) * k, 0.13 * k)
+  }
+  // Joy's old room as she left it: a narrow bed, a desk and its lamp, a poster, a paper star in the window.
+  if (see(4.8, 12.2)) {
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.78))
+    rect(5.4, 5.55, floor - 0.95, floor)
+    rect(5.4, 7.6, floor - 0.42, floor - 0.2)
+    solid(p, ink, w * 0.6, mixHex(JOY, UP_SHADE, 0.78))
+    p.rect(6.55 * k, (floor - 0.5) * k, 1.9 * k, 0.2 * k, 0.08 * k)
+    solid(p, ink, w * 0.5, UP_PAPER)
+    p.rect(5.85 * k, (floor - 0.62) * k, 0.4 * k, 0.16 * k, 0.06 * k)
+    // The poster over the bed.
+    solid(p, ink, w * 0.5, mixHex(JOY, UP_SHADE, 0.66))
+    rect(6.0, 6.9, U.ceiling + 0.75, U.ceiling + 1.85)
+    solid(p, ink, w * 0.35, mixHex(HOME.butter, UP_SHADE, 0.66))
+    p.circle(6.45 * k, (U.ceiling + 1.2) * k, 0.36 * k)
+    // The desk and its lamp, off.
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.76))
+    rect(10.4, 11.8, floor - 0.68, floor - 0.6)
+    for (const lx of [10.5, 11.7]) rect(lx - 0.04, lx + 0.04, floor - 0.6, floor)
+    solid(p, ink, w * 0.5, UP_THING)
+    p.line(11.4 * k, (floor - 0.68) * k, 11.3 * k, (floor - 1.05) * k)
+    p.triangle(11.15 * k, (floor - 1.12) * k, 11.45 * k, (floor - 1.12) * k, 11.3 * k, (floor - 1.0) * k)
+    // A paper star hung in the window, turning on its thread.
+    const sx = 9.25
+    const sy = U.ceiling + 1.25
+    outline(p, ink, w * 0.3)
+    p.line(sx * k, (U.ceiling + 0.55) * k, sx * k, (sy - 0.12) * k)
+    solid(p, ink, w * 0.35, mixHex(HOME.butter, UP_SHADE, 0.51))
+    p.push()
+    p.translate(sx * k, sy * k)
+    p.scale(Math.cos(t * 0.6), 1)
+    p.beginShape()
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5
+      const r = i % 2 ? 0.05 : 0.12
+      p.vertex(Math.cos(a) * r * k, Math.sin(a) * r * k)
+    }
+    p.endShape(p.CLOSE)
+    p.pop()
+  }
+  // Her parents' room: their bed, the wardrobe, and high on the wall the family altar, its little red lamp lit.
+  if (see(12.2, 20.2)) {
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.78))
+    rect(12.8, 12.98, floor - 1.0, floor)
+    rect(12.8, 15.6, floor - 0.42, floor - 0.2)
+    solid(p, ink, w * 0.6, mixHex(HOME.rose, UP_SHADE, 0.78))
+    p.rect(14.35 * k, (floor - 0.5) * k, 2.3 * k, 0.2 * k, 0.08 * k)
+    solid(p, ink, w * 0.5, UP_PAPER)
+    for (const px of [13.3, 13.8]) p.rect(px * k, (floor - 0.62) * k, 0.38 * k, 0.15 * k, 0.06 * k)
+    solid(p, ink, w * 0.6, UP_THING)
+    rect(17.6, 18.9, U.ceiling + 0.5, floor)
+    outline(p, ink, w * 0.4)
+    p.line(18.25 * k, (U.ceiling + 0.6) * k, 18.25 * k, (floor - 0.1) * k)
+    // The altar: a red shelf, two cups, an orange, a photograph, and its lamp.
+    const ax = 19.45
+    const ay = U.ceiling + 1.2
+    solid(p, ink, w * 0.5, mixHex(HOME.red, UP_SHADE, 0.61))
+    rect(ax - 0.45, ax + 0.45, ay, ay + 0.08)
+    solid(p, ink, w * 0.4, UP_PAPER)
+    rect(ax - 0.12, ax + 0.12, ay - 0.36, ay)
+    solid(p, ink, w * 0.35, mixHex(HOME.gold, UP_SHADE, 0.56))
+    p.circle((ax + 0.28) * k, (ay - 0.06) * k, 0.12 * k)
+    const flick = 0.85 + 0.15 * Math.sin(t * 7.1) * Math.sin(t * 2.3)
+    p.noStroke()
+    p.fill('#FF6A48')
+    p.ellipse((ax - 0.3) * k, (ay - 0.1) * k, 0.07 * k, 0.11 * k)
+    softLight(p, k, ax - 0.3, ay - 0.1, 0.95, '255, 96, 64', 0.24 * flick)
+  }
+  // The store room: boxes of receipts, years of them, paper at their lids.
+  if (see(20.2, 27.5)) {
+    for (let i = 0; i < 9; i++) {
+      const bx = 20.8 + (i % 5) * 0.7 + (i >= 5 ? 0.35 : 0)
+      const row = i >= 5 ? 1 : 0
+      const by = floor - row * 0.5
+      solid(p, ink, w * 0.5, mixHex(HOME.wood, UP_SHADE, 0.5 + 0.1 * hash(i, 1, 93)))
+      rect(bx - 0.32, bx + 0.32, by - 0.5, by)
+      solid(p, ink, w * 0.35, UP_PAPER)
+      rect(bx - 0.18 + 0.1 * hash(i, 2, 93), bx + 0.08 + 0.1 * hash(i, 2, 93), by - 0.58, by - 0.5)
+    }
+  }
+  // The partitions between the rooms, cut, each with a doorway, and the ceiling and roof over all of it.
+  p.noStroke()
+  for (const x of WALLS) {
+    if (!see(x - 0.2, x + 0.2)) continue
+    solid(p, ink, w * 0.7, SECTION)
+    rect(x - 0.09, x + 0.09, U.ceiling, U.floor - 2.0)
+  }
+  solid(p, ink, w, SECTION)
+  rect(x0, x1, U.roof, U.ceiling)
+  // Above the roof, the night, the cut fading into it.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const e = (a: number) => `rgba(${parseInt(SECTION.slice(1, 3), 16)}, ${parseInt(SECTION.slice(3, 5), 16)}, ${parseInt(SECTION.slice(5, 7), 16)}, ${a})`
+  const g = ctx.createLinearGradient(0, U.roof * k, 0, (U.roof - 0.8) * k)
+  g.addColorStop(0, e(0.6))
+  g.addColorStop(1, e(0))
+  ctx.fillStyle = g
+  ctx.fillRect(x0 * k, (U.roof - 0.8) * k, (x1 - x0) * k, 0.81 * k)
+}
+
 /* ------------------------------------------------------------------ the light map */
 
 let lightCanvas: HTMLCanvasElement | null = null
@@ -1801,6 +2014,10 @@ function lightMap(p: p5, k: number, t: number): void {
     g.restore()
   }
   for (const q of poolsAt(t)) pool(q)
+  // Upstairs is not the shop's to light: its rooms keep their own lamps, whatever the tubes under the floor do.
+  g.globalCompositeOperation = 'source-over'
+  g.fillStyle = '#FFFFFF'
+  g.fillRect((ROOM.x0 - 0.3) * k, UPSTAIRS.roof * k, (ROOM.x1 - ROOM.x0 + 0.6) * k, (UPSTAIRS.floor - UPSTAIRS.roof) * k)
   g.restore()
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
