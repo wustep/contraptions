@@ -24,7 +24,7 @@ import {
   carpetX,
   flightIn,
 } from './premiere-clock'
-import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, flare, glint, glow, pool, rgba as rgbaHex, smear } from './premiere-light'
+import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, glint, glow, pool, rgba as rgbaHex, smear } from './premiere-light'
 
 /** The kerb the carpet is laid to: stone, a shade up from the wet street. */
 const KERB = mixHex(STREET, SILVER, 0.1)
@@ -714,15 +714,9 @@ function drawPress(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
     p.noStroke()
     p.fill(mixHex(mixHex(SILVER, NIGHT, 0.25), STAR.flash, Math.max(hot, after, tw.after)))
     p.circle(X(rx), X(ry), X(r * 0.75))
-    if (pop > 0.01 || after > 0.01) {
-      glow(p, X(rx), X(ry), X(1.8), STAR.flash, 0.95 * pop + 0.14 * after)
-      glint(p, X(rx), X(ry), X(1.0 * (0.55 + 0.45 * pop)), STAR.flash, pop)
-    }
-    // A small pop: the gun's own light and its star, no more.
-    if (tw.pop > 0.01 || tw.after > 0.01) {
-      glow(p, X(rx), X(ry), X(0.85), STAR.flash, 0.8 * tw.pop + 0.12 * tw.after)
-      glint(p, X(rx), X(ry), X(0.62 * (0.6 + 0.4 * tw.pop)), STAR.flash, tw.pop, 0.25 * hash(i, 4))
-    }
+    if (pop > 0.01 || after > 0.01) glow(p, X(rx), X(ry), X(1.8), STAR.flash, 0.95 * pop + 0.14 * after)
+    // A small pop: the gun's own light, no more.
+    if (tw.pop > 0.01 || tw.after > 0.01) glow(p, X(rx), X(ry), X(0.85), STAR.flash, 0.8 * tw.pop + 0.12 * tw.after)
   })
 }
 
@@ -827,23 +821,11 @@ export function premiereOver(p: p5, c: Ctx, t: number): void {
   const f = frame(p, c.k)
   if (f.x0 > EDGE_X + 2) return
   const X = (v: number) => v * c.k
-  // Each gun the press fires, as it pops: a shorter streak from its reflector.
-  PRESS.forEach((s, i) => {
-    const { pop } = flashOf(s, t)
-    const tw = twinkleOf(i, t).pop
-    if (pop <= 0.02 && tw <= 0.02) return
-    const [rx, ry] = reflectorOf(s)
-    if (pop > 0.02) flare(p, X(rx), X(ry), X(3.2), X(0.05), 0.55 * pop)
-    // A small pop's streak: short, and faint.
-    if (tw > 0.02) flare(p, X(rx), X(ry), X(1.5), X(0.035), 0.35 * tw)
-  })
   for (const fl of FLASHES) {
     const s = t - fl.t
     if (s < 0 || s > 0.8) continue
     const a = knock(s, 0.08)
     glow(p, X(fl.x), X(fl.y), X(4.5), STAR.flash, 0.4 * a, 0.2)
-    // The widescreen lens's flare: a streak across the frame from the gun.
-    flare(p, X(fl.x), X(fl.y), X(Math.max(6, (f.x1 - f.x0) * 0.75)), X(0.07), 0.7 * a)
     // The frame's flash: a wide wash of light falling off from the gun, not a flat sheet over the frame, so the
     // dark under the carpet stays dark and the room is lit from where the flash went off.
     glow(p, X(fl.x), X(fl.y), X(Math.max(f.x1 - f.x0, f.y1 - f.y0) * 0.9), '#FFFFFF', 0.2 * a, 0.45)
