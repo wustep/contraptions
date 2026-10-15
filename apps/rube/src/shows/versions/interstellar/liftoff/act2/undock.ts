@@ -39,7 +39,9 @@ import { drawFar, drawLensing, drawNear } from './undock-far'
  *            bottom of the frame, banded, its rings across it and the globe's
  *            shadow thrown back over them, and the ship small along its top,
  *            lighting its beacons; then in again over the cloud tops on 200.
- *   206–209  engine off; the nose jets brake, a beat at a time, down to a crawl.
+ *   206–209  engine off; the nose jets brake, a beat at a time, down to a crawl,
+ *            and on each a last beacon wakes under it, the line running on to
+ *            the sphere's rim.
  *   210  the nose touches the wormhole and it ripples.
  *   211  the cockpit goes in: the ball's light wraps the rim; the ship sinks
  *        toward the centre as an image in the glass.
@@ -242,13 +244,16 @@ function pose(t: number): Pose {
  * beacons along it, asleep; each wakes as the Ranger burns over it, on the
  * beat of its burn: a ring goes out from its lamp (as wide as the kick was
  * hard), the lamp stays lit, and the two vanes swing open. Behind the ship
- * the line stays lit.
+ * the line stays lit. It runs on past the burn to the door: one under each
+ * of the four braking beats, closer and closer together as the ship slows,
+ * the last a ship's length short of the sphere, so the lit line reaches all the
+ * way to it.
  */
-const BEACONS = PULSES.map((when, i) => {
+const BEACONS = [...PULSES.map((when, i) => ({ when, s: PULSE_S[i] })), ...BRAKES.map((when) => ({ when, s: 0.3 }))].map(({ when, s }, i) => {
   const { p, h } = pathAt(flown(when))
   // Just under the ship's way (on Saturn's side), where the ship is on its beat.
   const n: Pt = [-Math.sin(h), Math.cos(h)]
-  return { when, s: PULSE_S[i], at: [p[0] + n[0] * 1.2, p[1] + n[1] * 1.2] as Pt, h, tilt: (hash(i, 31) - 0.5) * 0.5 }
+  return { when, s, at: [p[0] + n[0] * 1.2, p[1] + n[1] * 1.2] as Pt, h, tilt: (hash(i, 31) - 0.5) * 0.5 }
 })
 
 function drawBeacons(p: p5, c: Ctx, t: number, f: Frame): void {
@@ -489,11 +494,12 @@ export const undock = part<UndockState>(
       // small over it, lighting its line of beacons one a beat.
       { t: cue(197.4), cells: REVEAL_CELLS, hold: REVEAL, w: 1 },
       { t: cue(199.1), cells: REVEAL_CELLS * 1.06, hold: [REVEAL[0] + 0.8, REVEAL[1]], w: 1 },
-      // Back in over the cloud tops, close; then out over the rings.
+      // Back in over the cloud tops, close; then out wider over the rings as Saturn falls behind, so its limb and
+      // rings fill the low side of the frame and the sleeping beacons ahead mark the way across the dark.
       { t: cue(200.8), cells: 7.8, off: [1.9, 0.8], w: 0 },
-      { t: cue(203.2), cells: 8.4, off: [2.1, 1.0], w: 0 },
+      { t: cue(203.2), cells: 9.6, off: [2.6, 1.5], w: 0 },
       // Looking ahead as the engine stops: the sphere comes up on the right.
-      { t: cue(205.3), cells: 9, off: [2.8, 0.9], w: 0 },
+      { t: cue(205.3), cells: 11.2, off: [3.4, 1.6], w: 0 },
       // The two in one frame as it brakes, then in on the sphere.
       { t: cue(207), cells: 10.8, hold: [(near[0] + SPHERE[0]) / 2 - 0.25, (near[1] + SPHERE[1]) / 2 + 0.4], w: 0.9 },
       { t: cue(208.6), cells: 9.6, hold: [SPHERE[0] - DIR_IN[0] * 1.9, SPHERE[1] - DIR_IN[1] * 1.9], w: 0.9 },
