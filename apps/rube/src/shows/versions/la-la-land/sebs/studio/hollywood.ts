@@ -429,13 +429,22 @@ function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
       p.fill(rgba(mixHex(M.scrub, M.hillLit, 0.3), rim))
       for (const [lx, ly, r] of lobes) p.circle(X(k, lx), X(k, ly), X(k, 2 * r))
     }
-    // The shade each stretch of road casts on the slope just below it.
+    // The shade each stretch of road casts on the slope just below it: deepest under its middle, soft at its ends.
     for (const [x0, x1, y] of ROAD) {
-      const g = ctx.createLinearGradient(0, X(k, y + ROAD_W), 0, X(k, y + ROAD_W + 0.42))
+      const half = (x1 - x0) / 2 + 0.3
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(X(k, x0 - 0.5), X(k, y + ROAD_W), X(k, x1 - x0 + 1), X(k, 0.6))
+      ctx.clip()
+      ctx.translate(X(k, (x0 + x1) / 2), X(k, y + ROAD_W))
+      ctx.scale(1, 0.45 / half)
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, X(k, half))
       g.addColorStop(0, rgba(M.scrub, 0.55 * rim))
+      g.addColorStop(0.75, rgba(M.scrub, 0.4 * rim))
       g.addColorStop(1, rgba(M.scrub, 0))
       ctx.fillStyle = g
-      ctx.fillRect(X(k, x0), X(k, y + ROAD_W), X(k, x1 - x0), X(k, 0.42))
+      ctx.fillRect(X(k, -half), X(k, -half), X(k, 2 * half), X(k, 2 * half))
+      ctx.restore()
     }
   }
   // The road, one painted ribbon up the face: inked at its edges, the sunset's dusty rose on it, a dashed line down its
