@@ -67,6 +67,169 @@ export function midwayAt(t: number): number {
   return sum / RIDES.length
 }
 
+/**
+ * The roller coaster, behind the rides: a wooden one, its lift hill, its big drop and two camelbacks, on a lattice of
+ * bents. Its train is hauled up the lift through the last bars of each phrase of the chase from beat 100 on and
+ * crests on the downbeat, so it goes over the top and down the drop with the music: first on beat 100, and on the full
+ * organ, beat 132, the plunge the climax opens on. Then it runs the hills into the brake shed and is back in the
+ * station for the next phrase.
+ */
+const COASTER = { u: -1.3, span: 0.95, height: 0.22, crests: [100, 116, 132, 148, 164, 180, 196].map(beatAt) }
+/** The lift takes six beats; the train waits in the station before it. */
+const LIFT = 6 * PERIOD
+
+/** The track's height (0 to 1 of the coaster's) at `x` (0 to 1 of its span). */
+function trackY(x: number): number {
+  const bump = (a: number, b: number) => Math.sin(Math.PI * clamp((x - a) / (b - a)))
+  if (x < 0.1) return 0.1
+  if (x < 0.36) return 0.1 + 0.9 * smooth(x, 0.1, 0.36) ** 0.85
+  if (x < 0.385) return 1
+  if (x < 0.53) return 0.06 + 0.94 * (1 + Math.cos(Math.PI * (x - 0.385) / 0.145)) / 2
+  if (x < 0.72) return 0.06 + 0.56 * bump(0.53, 0.72)
+  if (x < 0.87) return 0.06 + 0.32 * bump(0.72, 0.87)
+  return 0.06
+}
+
+interface Track {
+  /** Samples along the track: across and up, frame heights from its station end and its foot; the length along it. */
+  x: Float32Array
+  y: Float32Array
+  s: Float32Array
+  /** The time since the crest the train is at each sample, for those past the crest. */
+  run: Float32Array
+  crest: number
+  shed: number
+}
+
+/** The track sampled once, and how long the train takes from the crest to each sample, falling under gravity. */
+const TRACK: Track = (() => {
+  const n = 480
+  const x = new Float32Array(n)
+  const y = new Float32Array(n)
+  const s = new Float32Array(n)
+  for (let i = 0; i < n; i++) {
+    const u = i / (n - 1)
+    x[i] = u * COASTER.span
+    y[i] = trackY(u) * COASTER.height
+    if (i) s[i] = s[i - 1] + Math.hypot(x[i] - x[i - 1], y[i] - y[i - 1])
+  }
+  const crest = Math.round(0.375 * (n - 1))
+  const shed = Math.round(0.9 * (n - 1))
+  // Over the top at the lift's pace, then as fast as the fall from the crest makes it: v² = v0² + 2g(h0 - h).
+  const v0 = 0.08
+  const g = 0.5
+  const run = new Float32Array(n)
+  for (let i = crest + 1; i < n; i++) {
+    const v = Math.sqrt(v0 * v0 + 2 * g * Math.max(0, y[crest] - y[i]))
+    run[i] = run[i - 1] + (s[i] - s[i - 1]) / v
+  }
+  return { x, y, s, run, crest, shed }
+})()
+
+/** How far along the track the train's lead car is at `t` (frame heights), or null while it is in the brake shed. */
+function trainAt(t: number): number | null {
+  const T = TRACK
+  const station = T.s[Math.round(0.07 * (T.s.length - 1))]
+  const lift0 = T.s[Math.round(0.1 * (T.s.length - 1))]
+  let next = COASTER.crests.find((c) => t < c + T.run[T.shed])
+  if (next === undefined) next = COASTER.crests[COASTER.crests.length - 1] + 1e9
+  if (t < next - LIFT - 0.8) return station
+  if (t < next - LIFT) return station + (lift0 - station) * smooth(t, next - LIFT - 0.8, next - LIFT)
+  if (t < next) return lift0 + (T.s[T.crest] - lift0) * (t - (next - LIFT)) / LIFT
+  const since = t - next
+  if (since >= T.run[T.shed]) return null
+  let i = T.crest
+  while (i < T.shed && T.run[i + 1] < since) i++
+  const f = (since - T.run[i]) / Math.max(1e-6, T.run[i + 1] - T.run[i])
+  return T.s[i] + (T.s[i + 1] - T.s[i]) * f
+}
+
+/** The track's point and slope at length `along` (frame heights). */
+function onTrack(along: number): [number, number, number] {
+  const T = TRACK
+  let lo = 0
+  let hi = T.s.length - 1
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1
+    if (T.s[mid] < along) lo = mid
+    else hi = mid
+  }
+  const f = clamp((along - T.s[lo]) / Math.max(1e-6, T.s[hi] - T.s[lo]))
+  return [T.x[lo] + (T.x[hi] - T.x[lo]) * f, T.y[lo] + (T.y[hi] - T.y[lo]) * f, Math.atan2(T.y[hi] - T.y[lo], T.x[hi] - T.x[lo])]
+}
+
+/** The coaster at `x0` (its station end, device pixels) over the horizon at `hy`, in `ink`, a shade off the rides'. */
+function coaster(ctx: CanvasRenderingContext2D, t: number, x0: number, hy: number, f: number, ink: string): void {
+  const T = TRACK
+  const X = (v: number) => x0 + v * f
+  const Y = (v: number) => hy - v * f
+  const track = new Path2D()
+  const frame = new Path2D()
+  track.moveTo(X(T.x[0]), Y(T.y[0]))
+  for (let i = 1; i < T.x.length; i += 2) track.lineTo(X(T.x[i]), Y(T.y[i]))
+  // The bents under it, every so far along, braced to the next.
+  const step = 0.028
+  let prev: [number, number] | null = null
+  for (let v = 0.12 * COASTER.span; v < 0.87 * COASTER.span; v += step) {
+    const h = trackY(v / COASTER.span) * COASTER.height
+    frame.moveTo(X(v), Y(h))
+    frame.lineTo(X(v), hy)
+    if (prev) {
+      frame.moveTo(X(prev[0]), Y(prev[1] * 0.5))
+      frame.lineTo(X(v), hy)
+      frame.moveTo(X(prev[0]), Y(prev[1]))
+      frame.lineTo(X(v), Y(h * 0.5))
+    }
+    prev = [v, h]
+  }
+  ctx.strokeStyle = ink
+  ctx.lineCap = 'round'
+  ctx.lineWidth = Math.max(1, f * 0.0012)
+  ctx.stroke(frame)
+  ctx.lineWidth = Math.max(1.5, f * 0.0028)
+  ctx.stroke(track)
+  // The station at one end and the brake shed at the other, which the train goes into out of sight.
+  ctx.fillStyle = ink
+  for (const [a, b] of [[0, 0.12], [0.87, 0.99]]) {
+    const xa = X(a * COASTER.span)
+    const xb = X(b * COASTER.span)
+    const top = Y(COASTER.height * 0.2)
+    ctx.beginPath()
+    ctx.rect(xa, top, xb - xa, hy - top)
+    ctx.moveTo(xa - f * 0.004, top)
+    ctx.lineTo((xa + xb) / 2, top - f * 0.014)
+    ctx.lineTo(xb + f * 0.004, top)
+    ctx.closePath()
+    ctx.fill()
+  }
+  // The train: four cars on the rails, each with its riders' heads over the side.
+  const lead = trainAt(t)
+  if (lead === null) return
+  const car = 0.016
+  const cars = new Path2D()
+  for (let k = 0; k < 4; k++) {
+    const along = lead - k * car
+    if (along < T.s[Math.round(0.1 * (T.s.length - 1))] - 0.001 || along > T.s[T.shed]) continue
+    const [cx, cy, a] = onTrack(along)
+    const c = Math.cos(a)
+    const sn = Math.sin(a)
+    const px = X(cx)
+    const py = Y(cy)
+    // A point `dx` along the rail and `dy` up off it, square to it.
+    const corner = (dx: number, dy: number): [number, number] => [px + (dx * c - dy * sn) * f, py - (dx * sn + dy * c) * f]
+    const pts = [corner(-car * 0.45, 0.002), corner(car * 0.45, 0.002), corner(car * 0.45, 0.009), corner(-car * 0.45, 0.009)]
+    cars.moveTo(...pts[0])
+    for (const p of pts.slice(1)) cars.lineTo(...p)
+    cars.closePath()
+    for (const dx of [-0.2, 0.2]) {
+      const [hx, hyy] = corner(car * dx, 0.012)
+      cars.moveTo(hx + f * 0.0028, hyy)
+      cars.arc(hx, hyy, f * 0.0028, 0, Math.PI * 2)
+    }
+  }
+  ctx.fill(cars)
+}
+
 /** The bulbs of one colour, as one path, filled once. */
 class Bulbs {
   private readonly paths = new Map<string, Path2D>()
@@ -89,8 +252,8 @@ class Bulbs {
 /** A bulb's colour when `lit` (0 to 1), among the colours a ride strings: off, then its own. */
 const bulb = (color: string, lit: number): string => (lit <= 0.01 ? OFF : mixHex(OFF, color, Math.min(1, lit * 1.2)))
 
-/** The midway over the horizon at `hy` (device pixels), `t` show seconds in. */
-export function midway(s: Screen, t: number, hy: number): void {
+/** The midway over the horizon at `hy` (device pixels), `t` show seconds in, against a sky whose foot is `sky`. */
+export function midway(s: Screen, t: number, hy: number, sky: string): void {
   const { ctx, cx, f, w } = s
   const at = (s.camX * Q) / 8
   const half = w / 2 / f
@@ -99,6 +262,9 @@ export function midway(s: Screen, t: number, hy: number): void {
   const sil = new Path2D()
   const lines = new Path2D()
   const glass: [Path2D, string][] = []
+  // The coaster first, behind the rides, a shade into the sky, as it stands farther off.
+  const cu = COASTER.u - at
+  if (cu < half + 0.1 && cu + COASTER.span > -half - 0.1) coaster(ctx, t, cx + cu * f, hy, f, mixHex(SIL, sky, 0.18))
   for (const r of RIDES) {
     const u = r.u - at
     if (Math.abs(u) > half + 0.25) continue
@@ -123,7 +289,7 @@ export function midway(s: Screen, t: number, hy: number): void {
   ctx.stroke(lines)
   bulbs.fill(ctx)
 
-  /** The Ferris wheel: an A-frame, two rims and their spokes, cars hanging level; bulbs round the rim, then the spokes. */
+  /** The Ferris wheel: an A-frame, two rims and their spokes, cars hanging level, bulbs round the rim. */
   function wheel(x: number, r: Ride, lit: number): void {
     const R = r.size * f
     const hx = x
@@ -165,14 +331,6 @@ export function midway(s: Screen, t: number, hy: number): void {
       const order = ((k / m + 0.25) % 1)
       const here = clamp(lit * 1.6 - order * 0.6)
       bulbs.add(hx + Math.cos(a) * R, hyb + Math.sin(a) * R, bulb(k % 2 ? ROSE : BULB, here))
-    }
-    // Along the spokes once it is all the way up.
-    const spokes = smooth(lit, 0.7, 1)
-    if (spokes > 0) {
-      for (let k = 0; k < n; k++) {
-        const a = turn + (k * Math.PI * 2) / n
-        for (let j = 1; j <= 3; j++) bulbs.add(hx + Math.cos(a) * R * j * 0.22, hyb + Math.sin(a) * R * j * 0.22, bulb(MINT, spokes), 0.8)
-      }
     }
   }
 
@@ -258,7 +416,6 @@ export function midway(s: Screen, t: number, hy: number): void {
     const ry = hy - f * 0.03 - h * (H - f * 0.06)
     sil.rect(x - half * 3.2, ry - f * 0.008, half * 6.4, f * 0.016)
     for (let k = 0; k < 5; k++) bulbs.add(x - half * 2.6 + (k * half * 5.2) / 4, ry, bulb(k % 2 ? MINT : BULB, lit), 0.8)
-    for (let y = hy - f * 0.04; y > top; y -= f * 0.035) bulbs.add(x + half, y, bulb(BULB, lit * 0.8), 0.7)
     // A steady red light on its top, as a mast has.
     bulbs.add(x, top - f * 0.016, mixHex(OFF, '#E0504A', 0.4 + 0.6 * lit), 1.1)
   }
@@ -380,14 +537,13 @@ export function festoons(s: Screen, t: number, away: number): void {
       const at = (u: number): [number, number] => [xa + (xb - xa) * u + Math.sin(t * 0.7 + k) * f * 0.002 * Math.sin(Math.PI * u), y0 + sag * sway * 4 * u * (1 - u)]
       wire.moveTo(...at(0))
       for (let j = 1; j <= 16; j++) wire.lineTo(...at(j / 16))
-      const n = Math.round(span / (f * (0.06 + 0.02 * near)))
+      const n = Math.round(span / (f * (0.075 + 0.02 * near)))
       for (let j = 1; j < n; j++) {
         const [bx, by] = at(j / n)
         const lit = on(bx)
         caps.add(bx, by + r * 0.6, '#16142A')
-        // Warm bulbs, the odd one rose: a string bought for a fair, not a light show.
-        const tone = hash(k * 31 + j, 9 + i)
-        lamps.add(bx, by + r * 1.7, lit > 0.01 ? mixHex(OFF, tone < 0.86 ? BULB : ROSE, lit * (0.8 + 0.2 * near)) : OFF)
+        // Warm bulbs, all one colour: a string bought for a fair, not a light show.
+        lamps.add(bx, by + r * 1.7, lit > 0.01 ? mixHex(OFF, BULB, lit * (0.8 + 0.2 * near)) : OFF)
       }
     }
     ctx.strokeStyle = '#16142A'

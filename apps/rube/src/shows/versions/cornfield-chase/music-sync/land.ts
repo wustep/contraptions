@@ -27,11 +27,11 @@ export function dayLand(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   cirrus(s, t, hy, mixHex('#FFFFFF', '#F4C3B4', smooth(t, ORGAN - 3, 40)), 0.42)
   clouds(s, t, hy, { ...l.cloud, sky: l.low, alpha: 0.9 })
   const ink = mixHex('#46423A', '#3A2A32', smooth(t, ORGAN - 3, 40))
-  const up = drone(s, t, hy, ink)
+  drone(s, t, hy, ink)
   farm(s, hy, l.farm, undefined, t * 1.3)
   band(s, hy, l.band)
   haze(s, hy, smooth(t, 34, 40.4), '#C7A07C')
-  const among = farmwork(s, t, { near: l.rows.near, far: l.rows.far, dusk: smooth(t, ORGAN - 4, 40.6), drone: up })
+  const among = farmwork(s, t, { near: l.rows.near, far: l.rows.far, dusk: smooth(t, ORGAN - 4, 40.6) }, gustAt(t, 0.5))
   rows(s, t, hy, { ...l.rows, wind: (x) => gustAt(t, x), among })
   // The high clouds' shadows go over the rows; low sun, long and faint, then none.
   shadows(s, t, hy, '#41502A', 1 - smooth(t, ORGAN - 6, ORGAN + 2))
@@ -52,7 +52,7 @@ export function dayNear(p: p5, c: PieceCtx, col: number, line: number, begin: nu
 const NIGHT: Light = {
   top: '#09081A',
   mid: '#15132A',
-  low: '#2C2350',
+  low: '#25254F',
   ground: '#0F0D21',
   band: '#0B0A19',
   farm: '#0A0917',
@@ -93,14 +93,22 @@ const nightAt = (t: number, horizon: number): Light => {
     ...NIGHT,
     top: mixHex(NIGHT.top, '#0B1430', 0.7 * dawn),
     mid: mixHex(mixHex(NIGHT.mid, '#271F45', 0.6 * flareAt(t)), '#1A2B52', dawn),
-    low: mixHex(mixHex(mixHex(NIGHT.low, '#46325F', glowAt(t)), '#7E4E8E', 0.85 * flareAt(t)), '#4A5F86', 0.8 * dawn),
+    // The chase under the moon, blue-violet; the full organ under the midway's light, warmer, toward rose.
+    low: mixHex(mixHex(mixHex(NIGHT.low, '#56345F', glowAt(t)), '#7E4E8E', 0.85 * flareAt(t)), '#4A5F86', 0.8 * dawn),
     // The tassels catch the midway's light as it comes on, and go cool with the dawn.
     rows: { ...NIGHT.rows, line: mixHex(mixHex(NIGHT.rows.line, '#6E4F7C', 0.55 * glowAt(t)), '#4C6088', dawn), flash: shellLight(t) },
     horizon,
   }
 }
 
-export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: number, horizon: (t: number) => number): void {
+/** Where the field in front of the fair has come up to (`frontField`), device pixels down the canvas. */
+const frontTop = (s: Screen, hy: number, rise: number): number => Math.floor(hy + (1 - rise) * (s.h - hy + 2))
+
+/**
+ * The land behind the fair at night. `rise` is how far the field in front of the fair has come up (`frontField`): the
+ * rows it covers are not drawn here as well.
+ */
+export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: number, horizon: (t: number) => number, rise: (t: number) => number = () => 0): void {
   const t = begin + c.t
   const s = screenOf(p, c, col, line)
   const l = nightAt(t, horizon(t))
@@ -111,9 +119,10 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
   fireworks(s, t, hy)
   balloons(s, t, hy)
   farm(s, hy, l.farm, '#E3B45C', t * 0.6)
-  midway(s, t, hy)
+  midway(s, t, hy, l.low)
   band(s, hy, l.band)
-  rows(s, t, hy, l.rows)
+  const up = rise(t)
+  rows(s, t, hy, up > 0 ? { ...l.rows, within: [-Infinity, frontTop(s, hy, up)] } : l.rows)
   done(s)
 }
 
@@ -128,14 +137,14 @@ export function frontField(p: p5, c: PieceCtx, col: number, line: number, begin:
   const s = screenOf(p, c, col, line)
   const l = nightAt(t, horizon(t))
   const hy = s.cy + (l.horizon - 0.5) * s.f
-  const top = Math.floor(hy + (1 - rise) * (s.h - hy + 2))
+  const top = frontTop(s, hy, rise)
   s.ctx.beginPath()
   s.ctx.rect(0, top, s.w, s.h - top)
   s.ctx.clip()
   s.ctx.fillStyle = l.ground
   s.ctx.fillRect(0, top, s.w, s.h - top)
   band(s, hy, l.band)
-  rows(s, t, hy, l.rows)
+  rows(s, t, hy, { ...l.rows, within: [top, s.h] })
   done(s)
 }
 

@@ -1,7 +1,7 @@
 import { mixHex } from '../../../../parts'
 import { GATHER, ORGAN } from './music'
 import { groundAlong, groundY } from './field'
-import { clamp, hash, rgba, smooth, type Screen } from './screen'
+import { hash, rgba, smooth, type Screen } from './screen'
 
 /**
  * What crosses the sky: the clouds, the birds and the drone. Each moves with the wind or under its own power, and
@@ -31,7 +31,7 @@ interface Layer {
 const DAY: Layer[] = [
   { n: 10, loop: 5, q: 0.03, drift: 0.004, lo: 0.035, hi: 0.1, w0: 0.08, w1: 0.17, haze: 0.45 },
   { n: 7, loop: 5.4, q: 0.05, drift: 0.008, lo: 0.2, hi: 0.42, w0: 0.18, w1: 0.32, haze: 0.12 },
-  { n: 5, loop: 5.8, q: 0.07, drift: 0.011, lo: 0.52, hi: 0.95, w0: 0.26, w1: 0.42, haze: 0 },
+  { n: 6, loop: 5.8, q: 0.07, drift: 0.011, lo: 0.46, hi: 0.9, w0: 0.26, w1: 0.42, haze: 0 },
 ]
 
 /** Long, thin, slow: a night's few clouds, and a low bank over the horizon the fair lights from under. */
@@ -276,19 +276,26 @@ export function birds(s: Screen, t: number, hy: number, ink: string): void {
   ctx.stroke(path)
 }
 
+/** The drone's time over the field: in from the west at the end of the piano, down toward the far rows by the door. */
+const DRONE = [27, 41.2]
+
+/** Where the drone is across the frame (0 to 1) at `t`, or null when it is not up: in from beyond the left edge, slowing. */
+export function droneAcross(t: number): number | null {
+  if (t < DRONE[0] || t > DRONE[1]) return null
+  const u = (t - DRONE[0]) / (DRONE[1] - DRONE[0])
+  return -0.12 + 1.02 * (1 - (1 - u) * (1 - u) * 0.6 - 0.4 * (1 - u))
+}
+
 /**
  * The drone, as in the film: a long slender wing high over the field, out of the west at the end of the piano and
  * coming down across the sunset toward the far rows as the organ gathers, with the pickup on the ground after it.
- * Returns where it is across the frame (0 to 1), so the truck can chase it, or null when it is not up.
  */
-export function drone(s: Screen, t: number, hy: number, ink: string): number | null {
-  const from = 27
-  if (t < from || t > 41.2) return null
+export function drone(s: Screen, t: number, hy: number, ink: string): void {
+  const across = droneAcross(t)
+  if (across === null) return
   const { ctx, cx, f } = s
   const W = (f * 16) / 9
-  const u = (t - from) / (41.2 - from)
-  // Across the frame from beyond its left edge, slowing as it comes down.
-  const across = -0.12 + 1.02 * (1 - (1 - u) * (1 - u) * 0.6 - 0.4 * (1 - u))
+  const u = (t - DRONE[0]) / (DRONE[1] - DRONE[0])
   const x = cx - W / 2 + across * W
   const y = hy - (0.46 - 0.34 * smooth(u, 0.15, 1)) * f + 0.006 * f * Math.sin(t * 0.9)
   const span = f * 0.07
@@ -319,5 +326,4 @@ export function drone(s: Screen, t: number, hy: number, ink: string): number | n
   ctx.lineTo(-span * 0.38, span * 0.0)
   ctx.stroke()
   ctx.restore()
-  return clamp(across, -0.2, 1.2)
 }

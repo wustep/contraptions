@@ -27,6 +27,8 @@ const NIGHT = '#0D0B20'
 const STRETCH = 97
 /** The photograph: the booth's flash, then once the ball is through the last portal, the long draw back. */
 export const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, STRETCH)
+/** How far the corn has come up in front of the fair as the camera draws back for the photograph. */
+const rise = (t: number): number => (t <= photo.from ? 0 : smooth((t - photo.from) / 2.5))
 /** The run through the fair, taken once, the first time the photograph is drawn; the follow spot, the first time it is. */
 let run: Exposure | null = null
 let lit: Spot | null = null
@@ -43,7 +45,7 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
     }
   }
   return {
-    behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon))],
+    behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon, rise))],
     over: [scenery('photograph', () => {}, (p, c) => {
       const t = map.begin + c.t
       // On the full organ the house lights come up: every floor lit on the beat, the spot easing back after.
@@ -57,7 +59,7 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
       flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
       if (t <= photo.from) return
       // The corn comes up in front of the fair as the camera draws back across it.
-      frontField(p, c, col, row, map.begin, photo.horizon, smooth((t - photo.from) / 2.5))
+      frontField(p, c, col, row, map.begin, photo.horizon, rise(t))
       // The run from a little before the stretch the photograph frames, so the line comes in from past its edge.
       run ??= expose(show, STRETCH - 7, door.begin + 0.3)
       exposure(p, c, col, row, t, run, photo)

@@ -44,9 +44,10 @@ export function dayAt(t: number): Light {
   const late = smooth(t, 12, ORGAN)
   const tone = (a: string, b: string, c: string) => mixHex(mixHex(a, b, late), c, dusk)
   return {
-    zenith: tone('#D5DEDF', '#D9DCD6', '#9E97B8'),
-    top: tone('#EDEFE4', '#ECE7DA', '#CBBFD0'),
-    mid: tone('#F3F1E4', '#F2EEDD', '#E9C9B6'),
+    // A little blue up high in the early afternoon, so the clouds stand white against it; cream by late afternoon.
+    zenith: tone('#C3D3D8', '#D3D8D2', '#9E97B8'),
+    top: tone('#DCE5E2', '#E6E3D6', '#CBBFD0'),
+    mid: tone('#EEF0E4', '#F1EDDC', '#E9C9B6'),
     low: tone('#F6EBCB', '#F5DFAF', '#F0A06A'),
     ground: tone('#E4E3C2', '#E2DBB4', '#D29D78'),
     band: tone('#D9DDBB', '#D7D3A9', '#B98A78'),
@@ -331,6 +332,8 @@ export interface Rows {
   flash?: Flash
   /** Things standing in the field, each drawn after the rows behind it and before the rows in front. */
   among?: Among[]
+  /** Only the rows that reach into this band of the canvas, device pixels down it: the rest are hidden. */
+  within?: [number, number]
 }
 
 /** A thing in the field at `depth` (1 the 16:9 frame's foot, the horizon at infinity), drawn on the ground at `y`. */
@@ -381,6 +384,8 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
     }
     const sc = 1 / d
     const below = n > 0 ? ys[n - 1] + 0.02 * f / depths[n - 1] : h + 2
+    // A row wholly outside the band asked for, its tassels and all, is covered by something else.
+    if (r.within && (below < r.within[0] || y - 0.13 * f * sc > r.within[1])) continue
     // Far rows have fewer, wider mounds than true perspective would give them: at that size it is the same picture.
     const gap = 0.085 * sc ** 0.75
     const at = (s.camX * (0.62 * sc)) / REF + n * 0.37
