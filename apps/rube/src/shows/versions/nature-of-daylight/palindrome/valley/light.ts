@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { mix, rgba } from '../cast'
-import { hash, smooth } from '../kit'
+import { hash, smooth, softLayer } from '../kit'
 import { SHELL, VALLEY } from '../worlds'
 import { daylight, G, MEADOW, SHELL_X, SUN_BREAK } from './geo'
 import { herGoing, ianGoing } from './paths'
@@ -313,30 +313,40 @@ export function drawFarShafts(ctx: Ctx, k: number, f: View, t: number): void {
   const cx = (f.x0 + f.x1) / 2
   const dx = Math.min(1.8, (cx - bx) / (MEADOW - by))
   const tall = f.y1 - f.y0
-  ctx.save()
-  ctx.globalCompositeOperation = 'screen'
+  const y0 = f.y0 - 1
+  const y1 = MEADOW
+  const shafts: { x: number; w: number; a: number }[] = []
   for (let i = -5; i <= 5; i++) {
     const h = hash(i + 40, 67, 1)
     if (h < 0.3) continue
-    const x = cx + i * tall * 0.34 + (hash(i + 40, 67, 2) - 0.5) * tall * 0.2 + 0.3 * Math.sin(t * 0.25 + i)
-    const w = tall * (0.05 + 0.1 * hash(i + 40, 67, 3))
-    const y0 = f.y0 - 1
-    const y1 = MEADOW
-    const a = 0.26 * d.sun * close * (0.5 + 0.5 * h) * (0.85 + 0.15 * Math.sin(t * 0.7 + i * 1.3)) * sunAt(t, x)
-    for (const [wide, share] of [[1, 0.45], [0.5, 0.55]] as [number, number][]) {
-      const g = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
-      g.addColorStop(0, rgba(VALLEY.floodlight, a * share * 0.6))
-      g.addColorStop(1, rgba(VALLEY.floodlight, a * share))
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.moveTo((x - dx * (y1 - y0) - w * wide) * k, y0 * k)
-      ctx.lineTo((x - dx * (y1 - y0) + w * wide) * k, y0 * k)
-      ctx.lineTo((x + w * wide) * k, y1 * k)
-      ctx.lineTo((x - w * wide) * k, y1 * k)
-      ctx.closePath()
-      ctx.fill()
-    }
+    // Still: light through haze does not sway. (It swayed and shimmered on clocks of its own, motion for its own sake.)
+    const x = cx + i * tall * 0.34 + (hash(i + 40, 67, 2) - 0.5) * tall * 0.2
+    const a = 0.26 * d.sun * close * (0.5 + 0.5 * h) * sunAt(t, x)
+    if (a > 0.003) shafts.push({ x, w: tall * (0.05 + 0.1 * hash(i + 40, 67, 3)), a })
   }
+  if (!shafts.length) return
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  // Each one band, blurred once with the rest at a quarter size: two widths laid over each other showed their edges,
+  // a streak with a stripe down it.
+  const lean = dx * (y1 - y0)
+  const xs = shafts.flatMap((s) => [s.x - lean - s.w, s.x + s.w])
+  softLayer(ctx, [Math.min(...xs) * k, y0 * k, Math.max(...xs) * k, y1 * k], 0.012 * tall * k * ctx.getTransform().a, (c) => {
+    c.globalCompositeOperation = 'screen'
+    for (const { x, w, a } of shafts) {
+      const g = c.createLinearGradient(0, y0 * k, 0, y1 * k)
+      g.addColorStop(0, rgba(VALLEY.floodlight, a * 0.6))
+      g.addColorStop(1, rgba(VALLEY.floodlight, a))
+      c.fillStyle = g
+      c.beginPath()
+      c.moveTo((x - lean - 0.7 * w) * k, y0 * k)
+      c.lineTo((x - lean + 0.7 * w) * k, y0 * k)
+      c.lineTo((x + 0.7 * w) * k, y1 * k)
+      c.lineTo((x - 0.7 * w) * k, y1 * k)
+      c.closePath()
+      c.fill()
+    }
+  }, 0.25)
   ctx.restore()
 }
 
@@ -366,8 +376,6 @@ export function drawRays(ctx: Ctx, k: number, t: number, far = 1): void {
   const [bx, by] = SUN_BREAK
   const { rx, ry } = breakAt(t)
   const reach = Math.max(bx + 30, d.edge)
-  ctx.save()
-  ctx.globalCompositeOperation = 'screen'
   const rays = [
     { from: -0.45, to: 0.08, w: 3.2, a: 0.75, dy: 0.5 },
     { from: -0.12, to: 0.33, w: 4.6, a: 1, dy: 2.6 },
@@ -375,44 +383,48 @@ export function drawRays(ctx: Ctx, k: number, t: number, far = 1): void {
     { from: 0.42, to: 0.78, w: 4, a: 0.85, dy: 3.8 },
     { from: 0.7, to: 0.96, w: 2.8, a: 0.6, dy: 1.8 },
   ]
-  for (let i = 0; i < rays.length; i++) {
-    const r = rays[i]
+  const shafts = rays.map((r) => {
     // From all along the tear, so the shafts fan out of the cloud's edge rather than falling from one bright spot.
     const xa = bx + (r.from - 0.25) * rx * 1.7
     const ya = by + ry * 0.25 + 1 + r.dy
     // Landing along the floor between the ridge's foot and the light's edge.
     const xb = bx + 22 + (reach - bx - 22) * r.to
     const yb = MEADOW + 0.5
-    const a = r.a * d.sun * far
     const len = Math.hypot(xb - xa, yb - ya) || 1
-    const nx = -(yb - ya) / len
-    const ny = (xb - xa) / len
-    // Feathered: many widths laid over each other, faint at the widest.
-    const n = 6
-    for (let j = 0; j < n; j++) {
-      const wide = 1 - j / n
-      const w0 = r.w * 0.35 * wide
-      const w1 = r.w * wide
-      const share = 1 / n
-      const g = ctx.createLinearGradient(xa * k, ya * k, xb * k, yb * k)
-      // Out of the break's own glow, so a shaft has no end up there: it comes on over its first stretch.
-      g.addColorStop(0, rgba(VALLEY.floodlight, 0))
-      g.addColorStop(0.18, rgba(VALLEY.floodlight, 0.85 * a * share))
-      g.addColorStop(0.55, rgba(VALLEY.floodlight, 0.5 * a * share))
-      // And gone by its foot, into the light on the floor: cut off square at its full strength, the nested widths'
-      // ends stepped down the meadow, a staircase in a tall frame.
-      g.addColorStop(0.86, rgba(VALLEY.lamp, 0.26 * a * share))
-      g.addColorStop(1, rgba(VALLEY.lamp, 0))
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.moveTo((xa + nx * w0) * k, (ya + ny * w0) * k)
-      ctx.lineTo((xb + nx * w1) * k, (yb + ny * w1) * k)
-      ctx.lineTo((xb - nx * w1) * k, (yb - ny * w1) * k)
-      ctx.lineTo((xa - nx * w0) * k, (ya - ny * w0) * k)
-      ctx.closePath()
-      ctx.fill()
+    return { xa, ya, xb, yb, nx: -(yb - ya) / len, ny: (xb - xa) / len, w: r.w, a: r.a * d.sun * far }
+  })
+  const xs = shafts.flatMap((s) => [s.xa - s.w, s.xb - s.w, s.xb + s.w])
+  const ys = shafts.flatMap((s) => [s.ya - s.w, s.yb + s.w])
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  // Each shaft one band, the bands blurred together once at a quarter size so their sides are light fading into haze.
+  // (They were six widths laid over each other, and every width's edge showed: ribbons stacked along each shaft.)
+  softLayer(ctx, [Math.min(...xs) * k, Math.min(...ys) * k, Math.max(...xs) * k, Math.max(...ys) * k], 0.6 * k * ctx.getTransform().a, (c) => {
+    c.globalCompositeOperation = 'screen'
+    for (const { xa, ya, xb, yb, nx, ny, w, a } of shafts) {
+      // A narrow core inside a wider band, so each shaft is brightest along its middle once blurred.
+      for (const [wide, share] of [[0.8, 0.42], [0.38, 0.5]] as [number, number][]) {
+        const w0 = w * 0.35 * wide
+        const w1 = w * wide
+        const g = c.createLinearGradient(xa * k, ya * k, xb * k, yb * k)
+        // Out of the break's own glow, so a shaft has no end up there: it comes on over its first stretch.
+        g.addColorStop(0, rgba(VALLEY.floodlight, 0))
+        g.addColorStop(0.18, rgba(VALLEY.floodlight, 0.85 * a * share))
+        g.addColorStop(0.55, rgba(VALLEY.floodlight, 0.5 * a * share))
+        // And gone by its foot, into the light on the floor, never cut off square there.
+        g.addColorStop(0.86, rgba(VALLEY.lamp, 0.26 * a * share))
+        g.addColorStop(1, rgba(VALLEY.lamp, 0))
+        c.fillStyle = g
+        c.beginPath()
+        c.moveTo((xa + nx * w0) * k, (ya + ny * w0) * k)
+        c.lineTo((xb + nx * w1) * k, (yb + ny * w1) * k)
+        c.lineTo((xb - nx * w1) * k, (yb - ny * w1) * k)
+        c.lineTo((xa - nx * w0) * k, (ya - ny * w0) * k)
+        c.closePath()
+        c.fill()
+      }
     }
-  }
+  }, 0.25)
   ctx.restore()
 }
 
