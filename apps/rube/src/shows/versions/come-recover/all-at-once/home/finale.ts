@@ -59,8 +59,11 @@ const throwColor = (warm: number): string => mixHex(lightColor(warm), THROWN, 0.
 install(LIGHTS.glows, 'finale-window', (t: number): Glow[] => {
   const light = windowLight(t)
   if (light.a <= 0) return []
+  // In the glass and on the three of them at its foot, and thrown forward down the floor: not a round halo on the wall.
+  const color = throwColor(light.warm)
   const out: Glow[] = [
-    { x: PORT[0], y: PORT[1] + 0.25, r: 2.1, a: 0.85 * light.a, color: throwColor(light.warm) },
+    { x: PORT[0], y: PORT[1] + 0.2, r: 0.95, a: 0.85 * light.a, color },
+    { x: PORT[0], y: -0.02, r: 2.2, ry: 0.45, a: 0.7 * light.a, color },
   ]
   for (const g of stringGlows(t)) if (g.a > 0.01) out.push({ x: g.x, y: g.y, r: 1.3, a: 0.55 * g.a, color: HOME.gold })
   const fw = fireworkLight(t)
