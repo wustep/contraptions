@@ -1,6 +1,6 @@
 import type { Lane, Pt } from '../../../../../parts'
 import { laneAt } from '../../../../../parts'
-import { box, part, scenery, type PartShot } from '../kit'
+import { box, frame, part, scenery, type PartShot } from '../kit'
 import { WALTER_WARM } from '../worlds'
 import { ctxOf } from '../sky/paint'
 import { drawHeli, drawSkySet } from '../sky/sky-draw'
@@ -57,13 +57,16 @@ export const seaSet = scenery<null>({
     const g = ctxOf(p)
     const t = c.t
     const k = c.k
-    // Above the water: the sky's own overcast, far sea and ice, and the boat, exactly as the sky left them.
-    g.save()
-    g.translate(FROM_SKY[0] * k, FROM_SKY[1] * k)
-    drawSkySet(p, k, t)
-    drawBoatAbove(g, k, SKY_BOAT_X0, SURF, swingAt(t), smooth(t, DECK_ON, DECK_ON + 2.5))
-    if (t < BEGIN + 6) drawHeli(p, k, t)
-    g.restore()
+    // Above the water: the sky's own overcast, far sea and ice, and the boat, exactly as the sky left them. Not drawn
+    // at all while the whole frame is under the skin, where none of it can be seen.
+    if (frame(p, k).y0 < 0.1) {
+      g.save()
+      g.translate(FROM_SKY[0] * k, FROM_SKY[1] * k)
+      drawSkySet(p, k, t, true)
+      drawBoatAbove(g, k, SKY_BOAT_X0, SURF, swingAt(t), smooth(t, DECK_ON, DECK_ON + 2.5), t)
+      if (t < BEGIN + 6) drawHeli(p, k, t)
+      g.restore()
+    }
     // And under it.
     g.save()
     drawUnder(p, k, t)
@@ -117,7 +120,11 @@ export const sea = part<State>(
   () => shots(),
 )
 
-/** The camera: down with him; wider for the shark; up with the net; onto the deck, and in to him and the cake. */
+/**
+ * The camera: down with him; wider for the shark's far passes, and in slowly as it comes nearest, under him; up with
+ * the net; out of the water and back, so the boat and the sea round it are seen as he drops to the deck; and in to
+ * him and the cake.
+ */
 function shots(): PartShot[] {
   const follow = (t: number, cells: number, off: Pt): PartShot => ({ t, cells, w: 0, off })
   const hold = (t: number, cells: number, p: Pt): PartShot => ({ t, cells, hold: p, w: 1 })
@@ -128,12 +135,12 @@ function shots(): PartShot[] {
     follow(PUFFS[3], 6.4, [0.5, -0.45]),
     follow(PUFFS[6], 6.8, [0.6, 0.35]),
     follow(PUFFS[10], 6.7, [0.5, 0.5]),
-    follow(NET_IN - 0.6, 6.4, [0.4, 0.2]),
+    follow(NET_IN - 0.6, 5.6, [0.4, 0.65]),
     hold(NET_ON, 6.2, [deep[0] + 0.4, deep[1] - 1.2]),
     follow(OUT + 0.15, 6.2, [0.5, -0.2]),
     hold(TOP + 0.5, 5.4, [1.45, -1.75]),
-    hold(DECK_ON + 0.3, 4.8, [REST_X + 0.1, DECK_Y - 0.65]),
-    hold(CAKE + 0.2, 4.3, [REST_X + 0.45, DECK_Y - 0.55]),
+    hold(DECK_ON + 0.3, 7.2, [REST_X + 0.6, DECK_Y - 1.3]),
+    hold(CAKE + 0.2, 4.6, [REST_X + 0.45, DECK_Y - 0.55]),
     hold(BY_CAKE, 3.9, [REST_X + 0.5, DECK_Y - 0.45]),
     hold(END, 3.6, [REST_X + 0.5, DECK_Y - 0.4]),
   ]

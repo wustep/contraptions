@@ -1,6 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { blob, ctxOf, ellipse, flash, glint, glow, line, path, rect, rgba, ring, shape, vgrad, type Pen } from '../dream/pen'
+import type { View } from '../depth'
+import { daylight, drawHarbour } from './harbour'
+import { drawDoorDetail, drawGrain, drawSkirt, drawUnderFloor, drawWallThings, drawWindowRain, lampAt, WIN } from './room'
+import { blob, ctxOf, ellipse, flash, glint, glow, line, path, rect, rgba, ring, shape, type Pen } from '../dream/pen'
 import {
   BELL,
   CEIL,
@@ -84,98 +87,71 @@ const C = {
 /* ------------------------------------------------------------------ the room */
 
 export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
-  // Outside both doors: the harbour's grey day, and the water.
-  vgrad(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, [
-    [0, C.sky, 1],
-    [0.6, C.grey, 1],
-    [1, C.greyDark, 1],
-  ])
-  outside(pen, -12, DOOR_IN[0], t)
-  outside(pen, WALL_OUT[1], EXIT_X + 12, t)
-  // The back wall: vertical boards.
+  const g = ctxOf(pen.p)
+  const k = pen.k
+  const v: View = { ...f, cx: (f.x0 + f.x1) / 2, cy: (f.y0 + f.y1) / 2, w: f.x1 - f.x0, h: f.y1 - f.y0, k }
   const x0 = DOOR_IN[1]
   const x1 = WALL_OUT[0]
-  rect(pen, x0, CEIL, x1, FLOOR, C.wall)
+  // Outside both doors: the harbour (`harbour.ts`), on its own planes behind the room.
+  g.save()
+  g.beginPath()
+  g.rect((f.x0 - 1) * k, (f.y0 - 1) * k, (x0 - f.x0 + 1) * k, (f.y1 - f.y0 + 2) * k)
+  g.rect(x1 * k, (f.y0 - 1) * k, (f.x1 - x1 + 1) * k, (f.y1 - f.y0 + 2) * k)
+  g.clip()
+  drawHarbour(g, v, t)
+  g.restore()
+  quay(pen, v, t, -12, DOOR_IN[0])
+  quay(pen, v, t, WALL_OUT[1], EXIT_X + 12)
+  // The back wall: vertical boards, their grain.
+  g.fillStyle = C.wall
+  g.fillRect(x0 * k, CEIL * k, (x1 - x0) * k, (FLOOR - CEIL) * k)
+  const seams = new Path2D()
+  const planks = new Path2D()
   for (let x = x0 + 0.05; x < x1; x += 0.34) {
-    rect(pen, x, CEIL, x + 0.03, FLOOR, C.seam)
-    if (hash(Math.round(x * 10), 1) > 0.6) rect(pen, x + 0.03, CEIL, x + 0.31, FLOOR, C.plank)
+    seams.rect(x * k, CEIL * k, 0.03 * k, (FLOOR - CEIL) * k)
+    if (hash(Math.round(x * 10), 1) > 0.6) planks.rect((x + 0.03) * k, CEIL * k, 0.28 * k, (FLOOR - CEIL) * k)
   }
-  // The window on the water, behind the stage.
-  const wx0 = 2.95
-  const wx1 = 4.55
-  const wy0 = -2.75
-  const wy1 = -1.55
+  g.fillStyle = C.plank
+  g.fill(planks)
+  g.fillStyle = C.seam
+  g.fill(seams)
+  drawGrain(g, k, x0, x1, CEIL, FLOOR, WIN)
+  // The window on the water, behind the stage: the harbour through it, rain on its glass, its frame.
+  const { x0: wx0, x1: wx1, y0: wy0, y1: wy1 } = WIN
   rect(pen, wx0 - 0.08, wy0 - 0.08, wx1 + 0.08, wy1 + 0.1, C.beam)
-  vgrad(pen, wx0, wy0, wx1, wy1, [
-    [0, C.sky, 1],
-    [0.5, C.grey, 1],
-    [0.52, C.sea, 1],
-    [1, C.seaDark, 1],
-  ])
-  // The far shore, low, and a berg.
-  shape(pen, [[wx0, wy0 + 0.62], [wx0 + 0.4, wy0 + 0.5], [wx0 + 0.9, wy0 + 0.56], [wx1, wy0 + 0.48], [wx1, wy0 + 0.62]], C.shore)
-  shape(pen, [[wx0 + 1.0, wy0 + 0.66], [wx0 + 1.12, wy0 + 0.55], [wx0 + 1.3, wy0 + 0.57], [wx0 + 1.38, wy0 + 0.66]], C.sky)
-  for (let i = 0; i < 3; i++) {
-    const y = wy0 + 0.75 + i * 0.13
-    const dx = Math.sin(t * 0.7 + i) * 0.08
-    line(pen, [wx0 + 0.15 + dx + i * 0.2, y], [wx0 + 0.6 + dx + i * 0.2, y], C.grey, 0.5)
-  }
+  g.save()
+  g.beginPath()
+  g.rect(wx0 * k, wy0 * k, (wx1 - wx0) * k, (wy1 - wy0) * k)
+  g.clip()
+  drawHarbour(g, v, t)
+  g.restore()
+  drawWindowRain(g, k, t)
   rect(pen, (wx0 + wx1) / 2 - 0.03, wy0, (wx0 + wx1) / 2 + 0.03, wy1, C.beam)
   rect(pen, wx0, (wy0 + wy1) / 2 - 0.03, wx1, (wy0 + wy1) / 2 + 0.03, C.beam)
   // The cold daylight off the window on the boards.
-  glow(pen, [(wx0 + wx1) / 2, wy1 + 0.4], 1.6, C.grey, 0.12)
+  glow(pen, [(wx0 + wx1) / 2, wy1 + 0.4], 1.6, C.grey, 0.12 * daylight(t))
+  drawWallThings(g, k, t)
   // The ceiling and its beams.
   rect(pen, x0, CEIL - 3, x1, CEIL, C.beam)
   for (let x = x0 + 0.4; x < x1; x += 1.3) rect(pen, x, CEIL, x + 0.18, CEIL + 0.22, C.beam)
-  // The floor.
-  rect(pen, DOOR_IN[0] - 0.05, FLOOR, x1 + 0.3, FLOOR + 3, C.floorCut)
+  // The floor, and the piles and the water under it.
+  drawUnderFloor(g, v, t, DOOR_IN[0] - 0.05, x1 + 0.3)
   rect(pen, DOOR_IN[0] - 0.05, FLOOR, x1 + 0.3, FLOOR + 0.12, C.floor)
-  for (let x = DOOR_IN[0] + 0.4; x < x1; x += 1.1) rect(pen, x, FLOOR + 0.12, x + 0.12, FLOOR + 3, C.beam)
   line(pen, [DOOR_IN[0], FLOOR], [x1 + 0.3, FLOOR], C.counterEdge, 0.6)
   // The walls either side, cut, with their doors.
   wallWithDoor(pen, DOOR_IN[0], DOOR_IN[1])
   wallWithDoor(pen, WALL_OUT[0], WALL_OUT[1])
-  // The lamps over the counter: low, amber.
-  for (const lx of [1.1, 2.6]) {
-    line(pen, [lx, CEIL], [lx, -2.35], C.iron, 0.7)
-    shape(pen, [[lx - 0.17, -2.15], [lx + 0.17, -2.15], [lx + 0.08, -2.35], [lx - 0.08, -2.35]], C.counter)
-    glow(pen, [lx, -2.05], 1.5, C.lamp, 0.26)
-    rect(pen, lx - 0.13, -2.17, lx + 0.13, -2.14, C.lamp)
-  }
 }
 
-function outside(pen: Pen, x0: number, x1: number, t: number): void {
-  // Across the water: the mountain over the town, in the haze, and the town's painted houses along the shore.
-  for (let m = Math.floor(x0 / 7) * 7; m < x1; m += 7) {
-    shape(pen, [[m - 1, -1.0], [m + 1.2, -2.3], [m + 2.0, -2.0], [m + 2.9, -3.1], [m + 3.6, -2.6], [m + 5.2, -1.6], [m + 6.5, -1.0]], C.haze)
-  }
-  rect(pen, x0, -1.12, x1, -0.98, C.shore)
-  const HOUSES = [C.h1, C.h2, C.h3, C.h4]
-  for (let i = Math.floor(x0 / 0.55); i * 0.55 < x1; i++) {
-    if (hash(i, 31) > 0.55) continue
-    const hx = i * 0.55 + hash(i, 32) * 0.2
-    const hy = -1.1 - 0.12 * hash(i, 33)
-    rect(pen, hx, hy - 0.11, hx + 0.16, hy, HOUSES[Math.floor(hash(i, 34) * 4)])
-    shape(pen, [[hx - 0.02, hy - 0.11], [hx + 0.08, hy - 0.17], [hx + 0.18, hy - 0.11]], C.shore)
-  }
-  // The harbour: water below the quay's edge.
-  rect(pen, x0, -1.0, x1, FLOOR + 3, C.sea)
-  rect(pen, x0, -1.0, x1, -0.97, C.grey)
-  for (let i = 0; i < 5; i++) {
-    const y = -0.8 + i * 0.18
-    const dx = Math.sin(t * 0.6 + i * 1.3) * 0.2
-    for (let x = Math.ceil(x0); x < x1; x += 1.7) line(pen, [x + dx + i * 0.3, y], [x + dx + i * 0.3 + 0.5, y], C.grey, 0.5)
-  }
-  // The quay: a deck of planks on piles over the water, level with the bar's floor.
-  vgrad(pen, x0, FLOOR + 0.14, x1, FLOOR + 3, [
-    [0, C.pile, 1],
-    [0.25, C.seaDark, 1],
-    [1, C.seaDeep, 1],
-  ])
-  for (let x = Math.ceil(x0 / 1.8) * 1.8; x < x1; x += 1.8) rect(pen, x - 0.04, FLOOR + 0.1, x + 0.04, FLOOR + 1.2, C.pile)
-  rect(pen, x0, FLOOR, x1, FLOOR + 0.14, C.quay)
-  rect(pen, x0, FLOOR + 0.1, x1, FLOOR + 0.14, C.quayDark)
-  for (let x = Math.ceil(x0 * 2) / 2; x < x1; x += 0.5) line(pen, [x, FLOOR], [x, FLOOR + 0.1], C.quayDark, 0.5)
+/** The quay past either door: a deck of planks on piles over the water, level with the bar's floor. */
+function quay(pen: Pen, v: View, t: number, x0: number, x1: number): void {
+  const a = Math.max(x0, v.x0 - 1)
+  const b = Math.min(x1, v.x1 + 1)
+  if (b <= a) return
+  drawUnderFloor(ctxOf(pen.p), v, t, a, b, 1)
+  rect(pen, a, FLOOR, b, FLOOR + 0.14, C.quay)
+  rect(pen, a, FLOOR + 0.1, b, FLOOR + 0.14, C.quayDark)
+  for (let x = Math.ceil(a * 2) / 2; x < b; x += 0.5) line(pen, [x, FLOOR], [x, FLOOR + 0.1], C.quayDark, 0.5)
 }
 
 function wallWithDoor(pen: Pen, x0: number, x1: number): void {
@@ -193,6 +169,7 @@ export function drawDoorIn(pen: Pen, t: number): void {
   shape(pen, [[x, HEAD + 0.05], [x + w, HEAD + 0.12], [x + w, FLOOR - 0.06], [x, FLOOR]], C.door, 0.5, C.doorDark)
   rect(pen, x + w * 0.2, HEAD + 0.35, x + w * 0.8, -1.2, C.sky)
   rect(pen, x + w * 0.2, -0.9, x + w * 0.8, -0.2, C.doorDark)
+  drawDoorDetail(ctxOf(pen.p), pen.k, t, x, w)
   // The bell on its bracket.
   const b: Pt = [DOOR_IN[1] + 0.1, HEAD + 0.02]
   const swing = 0.5 * ring(t - BELL, 3, 0.5)
@@ -292,6 +269,16 @@ function pilot(pen: Pen, t: number): void {
   ctx.stroke()
   ctx.restore()
   path(pen, [[sh[0] - 0.33, sh[1] + 0.08], [sh[0] - 0.05, sh[1] - 0.17]], C.rim, 0.5)
+  // And from the lamp hanging over him, a warm rim on his head, brighter as it swings over.
+  const lamp = lampAt(1, t).p
+  const warm = 0.25 + 0.4 * Math.max(0, 1 - Math.abs(lamp[0] - head[0]) / 0.5)
+  ctx.save()
+  ctx.strokeStyle = rgba(pen, C.lamp, warm)
+  ctx.lineWidth = pen.w * 1.3
+  ctx.beginPath()
+  ctx.arc(head[0] * pen.k, head[1] * pen.k, 0.2 * pen.k, -Math.PI * 0.75, -Math.PI * 0.2)
+  ctx.stroke()
+  ctx.restore()
   // The arm: shoulder to the elbow on the counter, the forearm to the hand by the glass.
   const gx = END_L - 0.06
   const handRest: Pt = [gx - 0.22, TOP_L - 0.1]
@@ -337,8 +324,8 @@ function handLift(t: number): number {
 export function drawStage(pen: Pen, t: number): void {
   const [x0, x1] = STAGE
   rect(pen, x0, STAGE_TOP, x1, FLOOR, C.stage)
+  drawSkirt(ctxOf(pen.p), pen.k, t, x0, x1, STAGE_TOP + 0.04, FLOOR, spotOn(t))
   rect(pen, x0 - 0.04, STAGE_TOP - 0.05, x1 + 0.04, STAGE_TOP + 0.04, C.stageTop)
-  for (let x = x0 + 0.35; x < x1; x += 0.35) rect(pen, x, STAGE_TOP + 0.08, x + 0.025, FLOOR, C.seam)
   // The mic stand: a base, a pole, a boom to the mic.
   const m = MIC_X
   const wob = 0.02 * ring(t - SPOT_OFF, 3, 0.4)
