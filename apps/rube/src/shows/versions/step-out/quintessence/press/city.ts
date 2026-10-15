@@ -59,6 +59,68 @@ function tower(pl: Towers, i: number): { x: number; w: number; top: number; crow
   return { x, w, top: HORIZON - h, crown: hash(i, 5, pl.seed) }
 }
 
+/**
+ * The city through the hall's high windows, without a clip: each pane (world cells, a rectangle under a round head)
+ * filled with the dawn sky, and the two farther skylines cut to each pane by hand. Through old glass, high up, that is
+ * all there is to see: the sky and the tops of the towers.
+ */
+export function cityThrough(ctx: C2, v: View, panes: { x: number; y0: number; y1: number; w: number }[]): void {
+  const k = v.k
+  if (!panes.length) return
+  const glass = new Path2D()
+  let bottom = -Infinity
+  for (const w of panes) {
+    const r = w.w / 2
+    glass.moveTo(w.x * k, w.y1 * k)
+    glass.lineTo(w.x * k, (w.y0 + r) * k)
+    glass.arc((w.x + r) * k, (w.y0 + r) * k, r * k, Math.PI, 0)
+    glass.lineTo((w.x + w.w) * k, w.y1 * k)
+    glass.closePath()
+    bottom = Math.max(bottom, w.y1)
+  }
+  // The sky, by where the city's horizon is at this frame.
+  const at = (z: number, y: number) => {
+    const s = Math.pow(v.h / REF, 1 - z)
+    const oy = ANCHOR[1] + z * (v.cy - ANCHOR[1])
+    return v.cy + (y - oy) * s
+  }
+  const g = ctx.createLinearGradient(0, at(0.02, SKY[0][0]) * k, 0, at(0.02, HORIZON) * k)
+  const span = SKY[SKY.length - 1][0] - SKY[0][0]
+  for (const [y, c] of SKY) g.addColorStop((y - SKY[0][0]) / span, c)
+  ctx.fillStyle = g
+  ctx.fill(glass)
+  // The towers of the two farther planes, cut to each pane.
+  for (const pl of PLANES.slice(0, 2)) {
+    const s = Math.pow(v.h / REF, 1 - pl.z)
+    const ox = ANCHOR[0] + pl.z * (v.cx - ANCHOR[0])
+    const oy = ANCHOR[1] + pl.z * (v.cy - ANCHOR[1])
+    const wx = (x: number) => v.cx + (x - ox) * s
+    const wy = (y: number) => v.cy + (y - oy) * s
+    const step = pl.w[0] + pl.w[1] * 0.5
+    const px0 = ox + (v.x0 - v.cx) / s
+    const px1 = ox + (v.x1 - v.cx) / s
+    const body = new Path2D()
+    for (let i = Math.floor((px0 - 1.5) / step); i <= Math.ceil((px1 + 0.5) / step); i++) {
+      const tw = tower(pl, i)
+      const a = wx(tw.x)
+      const b = wx(tw.x + tw.w)
+      const y = wy(tw.top)
+      if (y > bottom) continue
+      for (const w of panes) {
+        const l = Math.max(a, w.x)
+        const r = Math.min(b, w.x + w.w)
+        if (r <= l) continue
+        const yt = Math.max(y, w.y0 + w.w / 2)
+        if (yt >= w.y1) continue
+        body.rect(l * k, yt * k, (r - l) * k, (w.y1 - yt) * k)
+      }
+    }
+    ctx.fillStyle = pl.body
+    ctx.fill(body)
+  }
+}
+
+/** The city at `t`, whole, as Ted's windows show it: drawn under the caller's clip. */
 export function drawCity(ctx: C2, v: View, t: number): void {
   const k = v.k
   // The sky, a plane all but on the lens.
@@ -82,11 +144,11 @@ export function drawCity(ctx: C2, v: View, t: number): void {
     const i0 = Math.floor((s.x0 - 2 - t * 0.09) / tile)
     const i1 = Math.ceil((s.x1 + 2 - t * 0.09) / tile)
     for (let i = i0; i <= i1; i++) {
-      for (let j = 0; j < 3; j++) {
+      for (let j = 0; j < 6; j++) {
         const x = i * tile + hash(i, j, 21) * tile + t * 0.09 * (1 + 0.3 * j)
-        const y = -2.9 + j * 0.55 + hash(i, j, 22) * 0.35
-        const w = 0.9 + 1.4 * hash(i, j, 23)
-        const h = 0.07 + 0.06 * hash(i, j, 24)
+        const y = -3.3 + j * 0.42 + hash(i, j, 22) * 0.3
+        const w = 0.5 + 1.5 * hash(i, j, 23)
+        const h = 0.04 + 0.06 * hash(i, j, 24)
         dim.roundRect(x, y, w, h, h / 2)
         lit.roundRect(x + w * 0.12, y + h * 0.55, w * 0.76, h * 0.5, h / 4)
       }
@@ -160,6 +222,31 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       ctx.restore()
     })
   }
+  // Pigeons wheeling over the roofs: a loose flock going round, each bird's wings beating.
+  layer(ctx, v, 0.08, ANCHOR, REF, (s) => {
+    ctx.save()
+    ctx.scale(k, k)
+    const birds = new Path2D()
+    const cx = -1.6 + 1.2 * Math.sin(t * 0.21)
+    const cy = -2.0 + 0.35 * Math.sin(t * 0.33)
+    for (let i = 0; i < 14; i++) {
+      const a = t * (0.5 + 0.2 * hash(i, 1, 33)) + hash(i, 2, 33) * 6.283
+      const r = 0.25 + 0.5 * hash(i, 3, 33)
+      const x = cx + Math.cos(a) * r * 1.6
+      const y = cy + Math.sin(a) * r * 0.45
+      if (x < s.x0 - 0.2 || x > s.x1 + 0.2) continue
+      const flap = Math.sin(t * 11 + i * 1.7) * 0.025
+      const w = 0.035
+      birds.moveTo(x - w, y - flap)
+      birds.lineTo(x, y + 0.008)
+      birds.lineTo(x + w, y - flap)
+      birds.lineTo(x, y + 0.02)
+      birds.closePath()
+    }
+    ctx.fillStyle = '#26343C'
+    ctx.fill(birds)
+    ctx.restore()
+  })
   // A helicopter crossing the morning above the towers, its white light winking.
   layer(ctx, v, 0.11, ANCHOR, REF, (s) => {
     const x = 3.2 - 0.62 * (t - 190.8)

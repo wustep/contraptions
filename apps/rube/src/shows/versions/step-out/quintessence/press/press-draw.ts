@@ -114,6 +114,7 @@ export const PAL = {
 type C2 = CanvasRenderingContext2D
 const cx = (p: p5): C2 => p.drawingContext as C2
 
+
 function hexA(hex: string, a: number): string {
   const h = hex.replace('#', '')
   const r = parseInt(h.slice(0, 2), 16)
@@ -281,6 +282,12 @@ function drawTable(g: C2, k: number, t: number): void {
     poly(g, k, [[xa + 0.04, TABLE.top - 0.21], [xb - 0.04, TABLE.top - 0.21], [xb + 0.05, TABLE.top - 0.01], [xa + 0.1, TABLE.top - 0.01]], hexA('#A9C1C8', 0.13))
   }
   for (const [y, a] of [[0.03, 0.35], [0.06, 0.25], [0.095, 0.3]] as const) line(g, k, TABLE.x0 + 0.05, TABLE.top + y, TABLE.x1 - 0.05, TABLE.top + y + 0.004, hexA('#2A1F19', a), 0.008)
+  // The grain along its top, foreshortened.
+  for (let j = 1; j < 6; j++) {
+    const u = j / 6
+    const y = TABLE.top - 0.22 * (1 - u)
+    line(g, k, TABLE.x0 + 0.15 * (1 - u) + 0.05, y, TABLE.x1 - 0.1 * (1 - u) - 0.05, y + 0.003 * (j % 2), hexA(j % 2 ? '#3A2C24' : '#6E5848', 0.45), 0.007)
+  }
   // Negative 25, flat on the top, in its sleeve; laid down on the downbeat.
   const since = t - LAID
   const drop = since < 0 ? 0 : Math.max(0, 0.06 * Math.exp(-since / 0.03) * Math.cos(since * 50))

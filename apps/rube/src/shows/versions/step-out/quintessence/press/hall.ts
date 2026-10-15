@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { layer, onLayer, rgbaOf, sway, type View } from '../depth'
-import { drawCity } from './city'
+import { cityThrough } from './city'
 import { DOOR_X, FLOOR, TREADLE } from './press-plan'
 import { downbeat, lampsOn, runOf, thump } from './pulse'
 
@@ -18,6 +18,7 @@ import { downbeat, lampsOn, runOf, thump } from './pulse'
  */
 
 type C2 = CanvasRenderingContext2D
+
 
 /** Where the hall's planes coincide with the machine: mid-hall at the web, at the camera's usual distance. */
 export const ANCHOR: Pt = [14, 2.2]
@@ -110,27 +111,25 @@ export function floorAt(v: View, z: number): number {
   return v.cy + s * z * (FLOOR - v.cy)
 }
 
-function farWall(ctx: C2, v: View, t: number): void {
+function farWall(ctx: C2, v: View): void {
   const k = v.k
-  // The city first, inside the windows only: the clip is set in the wall's plane and outlasts its transform.
-  const m = ctx.getTransform()
-  ctx.save()
-  const s0 = enter(ctx, v, FW.z)
-  const xs = farWindowsIn(s0.x0, s0.x1)
-  ctx.clip(windowPath(xs))
-  ctx.setTransform(m)
-  if (xs.length) drawCity(ctx, v, t)
-  ctx.restore()
+  const world = ctx.getTransform()
+  // The window panes in this frame, in the wall's own cells.
+  let xs: number[] = []
+  layer(ctx, v, FW.z, ANCHOR, REF, (s0) => {
+    xs = farWindowsIn(s0.x0, s0.x1)
+  })
   layer(ctx, v, FW.z, ANCHOR, REF, (s) => {
     ctx.save()
     ctx.scale(k, k)
     const fy = floorOf(FW.z)
-    // The wall, less its windows.
-    const wall = new Path2D()
-    wall.rect(s.x0 - 0.1, s.y0 - 0.1, s.w + 0.2, fy - s.y0 + 0.1)
-    wall.addPath(windowPath(xs))
+    // The wall; the dawn and the city through its panes (drawn back in the world's cells, without a clip).
     ctx.fillStyle = HP.wall
-    ctx.fill(wall, 'evenodd')
+    ctx.fillRect(s.x0 - 0.1, s.y0 - 0.1, s.w + 0.2, fy - s.y0 + 0.1)
+    ctx.save()
+    ctx.setTransform(world)
+    cityThrough(ctx, v, farWindows(v))
+    ctx.restore()
     // Its brick, course by course, between and round the windows: thin filled rules (cheaper to raster than strokes).
     const brick = new Path2D()
     const course = 0.13
@@ -643,7 +642,7 @@ function floorLines(ctx: C2, v: View, z0: number, z1: number, color: string): vo
 
 /** The hall behind the machine, back to front: the far wall, the lines, the overhead, the roof and columns, the floor. */
 export function drawHall(ctx: C2, v: View, t: number): void {
-  farWall(ctx, v, t)
+  farWall(ctx, v)
   let zPrev = FW.z
   for (const L of LINES) {
     floorLines(ctx, v, zPrev, L.z, HP.floorFar)

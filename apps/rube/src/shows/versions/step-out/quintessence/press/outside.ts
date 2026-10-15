@@ -120,7 +120,7 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
       const vx = (hash(j, 1, 95) < 0.5 ? -1 : 1) * (0.18 + 0.1 * hash(j, 2, 95))
       const span = 9
       const px = (((hash(j, 3, 95) * span + vx * t - s.x0) % span) + span) % span + s.x0 - 0.5
-      figure(men, px, base + 0.02, 0.62, Math.sin(t * 5 + j), vx)
+      figure(men, px, base + 0.02 - 0.012 * Math.abs(Math.sin(t * 5 + j)), 0.5, Math.sin(t * 5 + j), vx)
     }
     ctx.fillStyle = rgbaOf('#4A4440', 0.85)
     ctx.fill(men)
@@ -256,7 +256,7 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
   ctx.restore()
   // A lamppost at the kerb, and its long morning shadow raking across the pavement.
   layer(ctx, v, 0.93, ANCHOR, REF, (s) => {
-    const px = 25.1
+    const px = 22.6
     if (px < s.x0 - 3 || px > s.x1 + 0.5) return
     const fy = floorOf(0.93)
     ctx.save()

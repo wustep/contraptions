@@ -4,7 +4,7 @@ import { hash, scenery } from '../kit'
 import { glow, layer, motes, rgbaOf, shaft, sway, view, type View } from '../depth'
 import { ANCHOR, farWindows, REF } from './hall'
 import { LAMP_Y, LAMPS } from './press-draw'
-import { CUT_START, CUTS, DOOR_TOP, DOOR_X, FLOOR, LAID, NOSE, T0, TABLE, TREADLE, UP } from './press-plan'
+import { CUT_START, CUTS, DOOR_TOP, DOOR_X, FLOOR, LAID, NOSE, SHOVE, T0, TABLE, TREADLE, UP } from './press-plan'
 import { lampsOn, lastDown, thump } from './pulse'
 import { OFFICE } from './office'
 
@@ -26,6 +26,7 @@ type C2 = CanvasRenderingContext2D
 const SODIUM = '#F2A94E'
 const DAWN = '#E9CC9C'
 const INK = '#06080A'
+
 
 /* ------------------------------------------------------------------ upstairs */
 
@@ -51,11 +52,13 @@ function office(ctx: C2, v: View, t: number): void {
 function lamps(ctx: C2, v: View, t: number, xr: number): void {
   const k = v.k
   const on = lampsOn(t, 0)
-  const beat = thump(t, 0.11)
+  // The loudest hit of the stretch, the shove: every lamp flares with it.
+  const loud = t >= SHOVE ? Math.exp(-(t - SHOVE) / 0.3) : 0
+  const beat = thump(t, 0.11) + 1.2 * loud
   for (const lx of LAMPS) {
     if (lx - 2.2 > v.x1 || lx + 2.2 < v.x0 || lx > xr + 1) continue
-    cone(ctx, k, lx, LAMP_Y + 0.1, 0.6, FLOOR, 3.8, SODIUM, on * (0.1 + 0.07 * beat))
-    glow(ctx, k, lx, LAMP_Y + 0.12, 0.9 + 0.2 * beat, '#FFD38C', Math.min(0.9, 0.25 * on + 0.25 * beat), true, 0.6)
+    cone(ctx, k, lx, LAMP_Y + 0.1, 0.6, FLOOR, 3.8, SODIUM, on * (0.09 + 0.11 * beat))
+    glow(ctx, k, lx, LAMP_Y + 0.12, 0.9 + 0.25 * beat, '#FFD38C', Math.min(0.95, 0.25 * on + 0.3 * beat), true, 0.6)
   }
 }
 
@@ -144,7 +147,7 @@ function sweep(ctx: C2, v: View, t: number): void {
   const { ago, w } = lastDown(t)
   if (!w || ago > 0.5) return
   const k = v.k
-  const a = 0.07 * w * (1 - ago / 0.5)
+  const a = 0.11 * w * (1 - ago / 0.5)
   const x = v.x0 - 1.2 + (v.w + 2.4) * (ago / 0.5)
   const y0 = (v.y0 - 0.5) * k
   const h = (Math.min(v.y1, FLOOR) - v.y0 + 0.5) * k
@@ -181,12 +184,12 @@ function air(ctx: C2, v: View, t: number, xr: number): void {
   const lift = 0.04 * thump(t, 0.3)
   const box = { x0: v.x0 - 1, y0: v.y0 - 1, x1: Math.min(v.x1 + 1, xr), y1: FLOOR }
   // Dust everywhere in the hall, catching what light there is.
-  motes(ctx, v, t, { n: 34, seed: 41, tile: [4, 3.2], r: [0.007, 0.016], v: [0.05, -0.04 - lift], sway: [0.08, 0.13], color: rgbaOf('#E9D8B8', 0.32 + 0.2 * on), twinkle: 0.5, within: box })
+  motes(ctx, v, t, { n: 34, seed: 41, tile: [4, 3.2], r: [0.007, 0.016], v: [0.05, -0.04 - lift], sway: [0.08, 0.13], color: rgbaOf('#E9D8B8', 0.32 + 0.2 * on), twinkle: 0.5, square: true, within: box })
   // Thicker in the lamps' cones: paper dust warm, ink mist cool.
   for (const lx of LAMPS) {
     if (lx - 2 > v.x1 || lx + 2 < v.x0 || lx > xr + 1) continue
     const cone = { x0: lx - 1.5, y0: LAMP_Y + 0.4, x1: lx + 1.5, y1: FLOOR - 0.1 }
-    motes(ctx, v, t, { n: 22, seed: 51 + lx, tile: [3, 4.2], r: [0.008, 0.02], v: [0.04, -0.06 - lift * 2], sway: [0.06, 0.25], color: rgbaOf('#FFD79A', 0.45 * on), within: cone })
+    motes(ctx, v, t, { n: 22, seed: 51 + lx, tile: [3, 4.2], r: [0.008, 0.02], v: [0.04, -0.06 - lift * 2], sway: [0.06, 0.25], color: rgbaOf('#FFD79A', 0.45 * on), square: true, within: cone })
     motes(ctx, v, t, { n: 14, seed: 61 + lx, tile: [3, 4.2], r: [0.012, 0.03], v: [-0.03, 0.02], sway: [0.1, 0.11], color: rgbaOf('#9CC2CC', 0.18 * on), square: true, within: cone })
   }
 }
@@ -231,8 +234,9 @@ const SWINGER: Pt = [14.8, 0.05]
 
 function near(ctx: C2, v: View, t: number, xr: number): void {
   const k = v.k
-  // It is close to the lens: as the camera draws back it goes out of the picture over the top.
-  const fade = 1 - Math.max(0, Math.min(1, (v.h - 5.6) / 1.2))
+  // It is close to the lens: as the camera draws back it goes out of the picture over the top, and with the camera up
+  // at the mezzanine it would cut across the middle of the hall, so it is only there once the camera is down.
+  const fade = (1 - Math.max(0, Math.min(1, (v.h - 5.6) / 1.2))) * Math.max(0, Math.min(1, (v.cy - 1.2) / 0.7))
   if (fade <= 0) return
   layer(ctx, v, NEAR, ANCHOR, REF, (s) => {
     if (s.y0 > GIRDER_Y + 1.2) return
@@ -374,7 +378,7 @@ export const pressFront = scenery<null>({
       }
     }
     // The edges falling away into ink.
-    ring(ctx, v, INK, 0.6, 0.62)
+    ring(ctx, v, INK, 0.62, 0.66)
     ctx.restore()
   },
 })

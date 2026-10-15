@@ -23,8 +23,8 @@ export const PANES: [number, number][] = [
 const WIN = { y0: OFFICE.top + 0.32, y1: UP - 0.12, transom: OFFICE.top + 1.15 }
 
 export const OP = {
-  wall: '#201C1A',
-  panel: '#2B2522',
+  wall: '#1E1A18',
+  panel: '#3A302B',
   ceiling: '#171413',
   mullion: '#0E0D0D',
   frame: '#1E1C1B',
@@ -60,7 +60,7 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
   const panel = new Path2D()
   for (let x = Math.ceil(x0 / 0.13) * 0.13; x < x1; x += 0.13) {
     if (PANES.some(([a, b]) => x > a - 0.05 && x < b + 0.05)) continue
-    panel.rect(x, WIN.y0, 0.01, WIN.y1 - WIN.y0)
+    panel.rect(x, WIN.y0, 0.016, WIN.y1 - WIN.y0)
   }
   panel.rect(x0, WIN.y0 - 0.06, x1 - x0, 0.02)
   panel.rect(x0, OFFICE.top, x1 - x0, 0.14)
@@ -79,6 +79,8 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
     bars.rect(b - 0.02, WIN.y0, 0.07, WIN.y1 - WIN.y0)
     bars.rect((a + b) / 2 - 0.02, WIN.y0, 0.04, WIN.y1 - WIN.y0)
     bars.rect(a, WIN.transom - 0.025, b - a, 0.05)
+    // Glazing bars across, a pane every half cell or so.
+    for (let y = WIN.transom + 0.62; y < WIN.y1 - 0.3; y += 0.62) bars.rect(a, y - 0.012, b - a, 0.024)
     bars.rect(a - 0.05, WIN.y1 - 0.02, b - a + 0.12, 0.09)
     glint.rect(a + 0.02, WIN.y0, 0.025, WIN.y1 - WIN.y0)
   }
