@@ -224,11 +224,12 @@ export function bulbOn(t: number): number {
   return u < 0.05 ? 1 : u < 0.12 ? 0.25 : u < 0.18 ? 0.9 : u < 0.24 ? 0.45 : 1
 }
 /**
- * How far a store lamp's shade is swung off the plumb (cells): a slow swing after it clicks on, dying away, and the
- * draught's small sway all the while.
+ * How far a store lamp's shade is swung off the plumb (cells): a slow swing after it clicks on, dying away, the
+ * draught's small sway all the while, and once the fan is spun up with the lamps, its draught keeping them going.
  */
 export function lampSway(i: number, t: number): number {
-  return 0.032 * ring(t - LAMPS_ON[i], 0.85, 1.6) + 0.007 * sway(t, i + 1, 3.6)
+  const fan = ease((t - FIRE) / 3)
+  return 0.032 * ring(t - LAMPS_ON[i], 0.85, 1.6) + 0.007 * sway(t, i + 1, 3.6) + 0.022 * fan * sway(t, i + 11, 2.7)
 }
 /** How far the foot of a lamp's light swings for a swing `sw` of its shade: further, as the cord is short and the floor far. */
 export const lampFoot = (sw: number): number => (sw * (FLOOR + 0.3 - CEIL)) / (LAMP_Y - CEIL)
@@ -317,10 +318,12 @@ export function drawLights(pen: Pen, t: number): void {
   if (d > 0) {
     const ctx = ctxOf(pen.p)
     const { k } = pen
-    const g = ctx.createLinearGradient(PART2[1] * k, 0, (PART2[1] + 4.2) * k, 0)
+    // Thrown by the stockroom's bulb behind it, so as the bulb swings the light's far end swings the other way.
+    const reach = 4.2 - 3.2 * stockSway(t)
+    const g = ctx.createLinearGradient(PART2[1] * k, 0, (PART2[1] + reach) * k, 0)
     g.addColorStop(0, rgba(pen, C.lamp, 0.22 * d))
     g.addColorStop(1, rgba(pen, C.lamp, 0))
-    fillWith(pen, [[PART2[1] - 0.1, FLOOR], [PART2[1] + 4.2, FLOOR], [PART2[1] + 4.2, FLOOR + 0.9], [PART2[1] - 0.1, FLOOR + 0.25]], g)
+    fillWith(pen, [[PART2[1] - 0.1, FLOOR], [PART2[1] + reach, FLOOR], [PART2[1] + reach + 0.4 * stockSway(t), FLOOR + 0.9], [PART2[1] - 0.1, FLOOR + 0.25]], g)
   }
   doorLight(pen, t)
   // The safe open: the light falls in on the bills and the lining, inside its walls, and on the floor before it.
@@ -656,7 +659,7 @@ function drawStock(pen: Pen, t: number, f: F & { cx: number; cy: number }): void
   const nail = 18.66
   ellipse(pen, [nail, -1.15], 0.025, 0.025, C.iron)
   // The coat's hem stirs in the draught off the window and under the curtain.
-  const hem = 0.035 * sway(t, 6, 3.1) + 0.04 * ring(t - CURTAIN - 0.3, 0.9, 1.2)
+  const hem = 0.06 * sway(t, 6, 2.6) + 0.04 * ring(t - CURTAIN - 0.3, 0.9, 1.2)
   shape(pen, [[nail, -1.15], [nail + 0.2, -0.9], [nail + 0.25 + hem, 0.2], [nail - 0.25 + hem * 0.8, 0.2], [nail - 0.2, -0.9]], '#2E3436')
   line(pen, [nail, -0.9], [nail + hem * 0.6, 0.15], '#1E2224', 0.5)
   // Cartons on the floor; a broom; the bulb's cord.
@@ -1004,7 +1007,7 @@ export function drawCurtain(pen: Pen, t: number): void {
     const n = 4
     for (let i = 1; i < n; i++) {
       const x = a + ((b - a) * i) / n
-      const ripple = t > FIRE ? 0.035 * Math.min(1, (t - FIRE) / 3) * breathe(t - i * 0.35, 9 + i + side, 2.4) : 0
+      const ripple = t > FIRE ? 0.05 * Math.min(1, (t - FIRE) / 3) * breathe(t - i * 0.35, 9 + i + side, 2.1) : 0
       const foot = x + sway * 0.5 + ripple
       line(pen, [x, HEAD + 0.1], [foot, FLOOR - 0.04], C.velvetDark, 0.9)
       line(pen, [x + 0.04, HEAD + 0.1], [foot + 0.04, FLOOR - 0.04], C.velvetLight, 0.4)
@@ -1214,7 +1217,9 @@ export function drawMurray(pen: Pen, t: number): void {
   const { ago } = lastOf(MURRAY_STEPS, t)
   const bob = ago < 0.4 ? 0.05 * Math.sin(Math.min(1, ago / 0.24) * Math.PI) : 0
   const h = (2.0 + 1.25 * s) / 3
-  const cx = 23.75 + 1.0 * s
+  // Between his steps he is still coming: his weight rolling from foot to foot, his shadow never quite still.
+  const roll = 0.035 * Math.sin((t - MURRAY_STEPS[0]) * Math.PI / BEAT) * fade
+  const cx = 23.75 + 1.0 * s + roll
   const F = FLOOR + 0.02
   const top = F - 2.35 * h + bob
   const { k } = pen
@@ -1261,7 +1266,7 @@ export function drawPairShadows(pen: Pen, t: number, rachel: Pt): void {
   for (const b of [marty, rachel]) {
     const lift = BENCH_TOP - 0.13 - b[1]
     if (b[0] < BENCH[0] || b[0] > BENCH[1] || lift < -0.01 || lift > 0.6) continue
-    const x = b[0] - (bulbX - b[0]) * 0.12
+    const x = b[0] - (bulbX - b[0]) * 0.3
     const a = 0.32 * (1 - lift / 0.6)
     ellipse(pen, [x, BENCH_TOP + 0.012], 0.14 + 0.08 * lift, 0.025, rgba(pen, C.shade, a) as unknown as string)
   }

@@ -31,7 +31,7 @@ export function drawNear(pen: Pen, t: number, f: Frame): void {
       // Hung so that only the shade comes into the frame, however high or low the camera is.
       const mouth = g.y0 + 0.07 * h
       const on = t >= LAMPS_ON[i] ? 1 : 0
-      const sw = 0.05 * sway(t, 20 + i, 3.4) + 0.06 * ring(t - LAMPS_ON[i], 0.8, 1.4)
+      const sw = 0.085 * sway(t, 20 + i, 2.9) + 0.06 * ring(t - LAMPS_ON[i], 0.8, 1.4)
       const x = lx + sw
       if (x < g.x0 - 1 || x > g.x1 + 1) return
       const w = 0.42

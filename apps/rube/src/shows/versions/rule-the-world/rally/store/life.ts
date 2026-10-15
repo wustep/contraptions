@@ -282,8 +282,9 @@ export function drawCatUnder(pen: Pen, t: number, f: Frame): void {
 /** The stockroom: the dust in the swinging bulb's light, and a moth at it. */
 function stockroom(pen: Pen, t: number, f: Frame): void {
   if (!seen(f, PART1[0] - 0.5, PART2[1] + 0.5)) return
-  // The bulb, swinging: the dust turning in its light.
+  // The bulb, swinging: its light on the back wall behind it swinging with it, and the dust turning in its light.
   const sb: Pt = [STOCK_BULB[0] + stockSway(t), STOCK_BULB[1]]
+  pool(pen, [sb[0] + 0.4 * stockSway(t), sb[1] + 0.75], 1.5, 1.1, C.lamp, 0.07)
   motes(pen, t, {
     n: 28,
     seed: 32,
@@ -379,7 +380,7 @@ function smoke(pen: Pen, t: number, f: Frame): void {
     for (let j = 0; j <= N; j++) {
       const v = j / N
       const curl = (0.012 + 0.1 * v ** 1.7) * Math.sin(8.5 * v - 2.0 * t + s * 2.2)
-      pts.push([ASH[0] - 0.62 * v ** 1.5 + curl + 0.06 * v * sway(t, s + 3, 5.5) + 0.01 * s * v, ASH[1] - H * v])
+      pts.push([ASH[0] - (0.62 + 0.15 * sway(t, 9, 6.5)) * v ** 1.5 + curl + 0.15 * v * sway(t, s + 3, 4.2) + 0.01 * s * v, ASH[1] - H * v])
     }
     for (let j = 0; j < N; j++) {
       const v = (j + 0.5) / N
@@ -423,23 +424,27 @@ function blinds(pen: Pen, t: number, f: Frame): void {
   const six = ease((t - CLOCK_SIX) / 3)
   // Murray's shadow takes some of it as he comes in.
   const murray = t > MURRAY_STEPS[0] ? 0.75 : 1
-  slats(pen, 26.8, -2.0, 2.3, 1.85, -0.55, -0.22, C.cold, (0.08 + 0.08 * six) * murray)
+  // The blind stirring in the warm air off the radiator under it: its slats rocking, so the stripes lift and settle, and
+  // open and close a little, never quite still.
+  const tr = 0.03 * sway(t, 31, 1.3) + 0.012 * Math.sin(t * 4.1)
+  const open = 0.52 + 0.07 * sway(t, 33, 1.7)
+  slats(pen, 26.8, -1.7 + tr, 2.3, 1.85, -0.55, -0.22, C.cold, (0.08 + 0.08 * six) * murray, open)
   for (const [c, a] of CARS) {
     const u = (t - c) / 1.9
     if (u <= 0 || u >= 1) continue
-    slats(pen, 30.6 - 9.4 * u, -2.05, 2.1, 1.9, -0.45, -0.2, '#FFE8BC', a * Math.sin(Math.PI * u) ** 1.2)
+    slats(pen, 30.6 - 9.4 * u, -1.75 + tr, 2.1, 1.9, -0.45, -0.2, '#FFE8BC', a * Math.sin(Math.PI * u) ** 1.2, open)
   }
   for (const [e0, e1] of ELS) {
     const e = (t - e0) / (e1 - e0)
     if (e <= 0 || e >= 1) continue
     const env = Math.sin(Math.PI * e) ** 0.8
     const strobe = Math.max(0, Math.min(1, 0.5 + 1.6 * Math.sin(2 * Math.PI * 4.4 * t + 1.3 * Math.sin(2 * Math.PI * 0.9 * t))))
-    slats(pen, 27.2 - 1.1 * e, -2.02, 2.3, 1.9, -0.5, -0.22, mix('#FFE0A0', C.cold, 0.25), 0.14 * env * (0.2 + 0.8 * strobe))
+    slats(pen, 27.2 - 1.1 * e, -1.72 + tr, 2.3, 1.9, -0.5, -0.22, mix('#FFE0A0', C.cold, 0.25), 0.14 * env * (0.2 + 0.8 * strobe), open)
   }
   ctx.restore()
 }
 /** The blind's stripes, laid over the wall, in a leaning box: slats from (x, y), `w` across and `h` down, its foot moved by `lean`. */
-function slats(pen: Pen, x: number, y: number, w: number, h: number, lean: number, slope: number, color: string, a: number): void {
+function slats(pen: Pen, x: number, y: number, w: number, h: number, lean: number, slope: number, color: string, a: number, open = 0.52): void {
   if (a <= 0.004) return
   const { k } = pen
   const ctx = ctxOf(pen.p)
@@ -454,7 +459,7 @@ function slats(pen: Pen, x: number, y: number, w: number, h: number, lean: numbe
   ctx.beginPath()
   for (let i = 0; i < SLATS; i++) {
     const v0 = i / SLATS
-    const v1 = (i + 0.52) / SLATS
+    const v1 = (i + open) / SLATS
     const q = [P(0, v0), P(1, v0), P(1, v1), P(0, v1)]
     q.forEach(([px, py], j) => (j ? ctx.lineTo(px * k, py * k) : ctx.moveTo(px * k, py * k)))
     ctx.closePath()

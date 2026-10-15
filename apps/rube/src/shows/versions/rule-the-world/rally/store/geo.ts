@@ -238,7 +238,7 @@ export const WAKE: [number, number, number][] = [
 export function stockSway(t: number): number {
   const u = t - CURTAIN
   if (u <= 0) return 0
-  const reach = 0.17 * Math.exp(-u / 7) + 0.04 * (1 - Math.exp(-u / 5))
+  const reach = 0.22 * Math.exp(-u / 8) + 0.085 * (1 - Math.exp(-u / 4))
   return reach * Math.sin((u * 2 * Math.PI) / BAR) * Math.min(1, u / 0.25)
 }
 

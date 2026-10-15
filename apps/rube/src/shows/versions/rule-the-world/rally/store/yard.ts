@@ -8,8 +8,8 @@ import { plume } from './street'
 /**
  * The stockroom's back window, behind the two of them over the carton: barred, on the yard. Through it the backs of the
  * tenements across the yard, a window or two lit and one coming on, washing left out on a line stiff in the cold and
- * swaying, the snow coming down, and over the sheds the El on its trestle at the end of the block, a train going by
- * one way and, later in their pause, the other. Each of those far things moves slower than the room as the camera
+ * swaying, a chimney's smoke, the snow coming down, and over the sheds the El on its trestle at the end of the block,
+ * its trains going by one way and the other as he comes in and through their pause. Each of those far things moves slower than the room as the camera
  * drifts: the washing a little, the tenements less, the El least.
  */
 
@@ -20,7 +20,8 @@ const MID = (YARD[0] + YARD[2]) / 2
 /** The El's deck across it, and its trains: when each comes into the window's view, from which side. */
 const DECK = -0.6
 const TRAINS: { t0: number; dir: 1 | -1 }[] = [
-  { t0: at(10, 1), dir: -1 },
+  { t0: at(8, 3), dir: 1 },
+  { t0: at(10, 4), dir: -1 },
   { t0: at(12, 3), dir: 1 },
 ]
 const CARS = 5
@@ -109,8 +110,10 @@ export function drawYard(pen: Pen, t: number, f: Frame): void {
   ;[[-0.45, 0.16, 0.2], [-0.2, 0.12, 0.13], [0.06, 0.18, 0.24], [0.38, 0.14, 0.17]].forEach(([dx, w, h], i) => {
     const cx = MID + dx + lx
     const top = -0.47 + 0.03 * Math.abs(dx)
-    const swing = 0.022 * sway(t, 11 + i, 2.3 + i * 0.4)
-    shape(pen, [[cx - w / 2, top], [cx + w / 2, top], [cx + w / 2 + swing, top + h], [cx - w / 2 + swing * 0.8, top + h]], mix(pale, i === 1 ? '#8A7A64' : pale, 0.5))
+    // Swinging on the line, and flapping as the wind gusts across the yard.
+    const swing = 0.05 * sway(t, 11 + i, 1.9 + i * 0.3)
+    const flap = 0.015 * Math.sin(t * (5.5 + i) + i) * (0.5 + 0.5 * sway(t, 21 + i, 3.1))
+    shape(pen, [[cx - w / 2, top], [cx + w / 2, top], [cx + w / 2 + swing + flap, top + h - Math.abs(flap)], [cx - w / 2 + swing * 0.8 - flap, top + h]], mix(pale, i === 1 ? '#8A7A64' : pale, 0.5))
     ellipse(pen, [cx - w / 2 + 0.01, top], 0.008, 0.012, '#1A1A1A')
     ellipse(pen, [cx + w / 2 - 0.01, top], 0.008, 0.012, '#1A1A1A')
   })
