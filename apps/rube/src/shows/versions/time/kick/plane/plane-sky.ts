@@ -3,7 +3,7 @@ import { rgba } from '../cast'
 import { hash, type frame } from '../kit'
 import { HOME, PLANE } from '../worlds'
 import { CAB, CLOUD_DEPTH, ENGINES, GEAR, GROUND, HOME as LEAVE_T, NACELLE, TOUCH, WAKE, cloudAt, clamp01, flexAt, gearDown, groundAt, jolt, wingY } from './plane-geo'
-import { box, glow, line, oval, polyline, puff, rbox, ring, shape, vwash, type Pen } from './plane-kit'
+import { box, line, oval, polyline, puff, rbox, ring, shape, vwash, type Pen } from './plane-kit'
 
 /**
  * Outside the cabin (the PLANE builder's): the sky (night over a moonlit cloud deck; a gold morning), the cloud deck
@@ -17,8 +17,6 @@ export const isDay = (t: number): boolean => t > 150
 
 /* ------------------------------------------------------------------ the sky */
 
-const SUN: Pt = [17, -0.4]
-
 export function drawSky(pen: Pen, t: number, f: Frame): void {
   const x0 = f.x0 - 1
   const x1 = f.x1 + 1
@@ -31,8 +29,6 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
       [clamp01((0.9 - y0) / (y1 - y0)), mixHex(PLANE.night, PLANE.window, 0.75), 1],
       [1, mixHex(PLANE.night, PLANE.window, 0.75), 1],
     ])
-    // The moon, off to the left and high: its light, never its disc.
-    glow(pen, [-9, -6], 9, PLANE.dawnHigh, 0.13)
     // Stars, sparse, twinkling slowly; none low down in the haze over the clouds.
     const { ctx, k } = pen
     for (let cx = Math.floor(x0); cx <= x1; cx++) {
@@ -63,8 +59,6 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
     [clamp01((1.5 - y0) / (y1 - y0)), mixHex(low, PLANE.dawnHigh, 0.25 * under), 1],
     [1, mixHex(low, PLANE.dawnHigh, 0.3 * under), 1],
   ])
-  glow(pen, SUN, 16, PLANE.lamp, 0.55)
-  glow(pen, SUN, 6, HOME.sun, 0.55)
   drawGroundFar(pen, t, f)
   drawCloudDeck(pen, t, f)
 }

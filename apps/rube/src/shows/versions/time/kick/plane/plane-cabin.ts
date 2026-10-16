@@ -31,7 +31,7 @@ import {
   teamNod,
   wallAt,
 } from './plane-geo'
-import { arcPts, asP5, box, clipCircle, clipTo, glow, line, oval, polyline, puff, rbox, shape, type Pen } from './plane-kit'
+import { arcPts, asP5, box, clipCircle, clipTo, line, oval, polyline, puff, rbox, shape, type Pen } from './plane-kit'
 import { isDay, spinAt, treads } from './plane-sky'
 
 /**
@@ -189,11 +189,6 @@ function drawInside(pen: Pen, t: number, p: Pal): void {
       shape(pen, band(wallPts(s, CAB.bin, CAB.floor, 10)), p.wall, 0.5)
       // The window at the section, the day or the night in it (Fischer's, on the right, is in the door).
       if (s < 0) shape(pen, windowQuad(s, WINDOWS[0]), day ? mixHex(PLANE.dawnHigh, PLANE.dawn, 0.45) : mixHex(PLANE.window, PLANE.night, 0.35), 0.6)
-      // Along the wall aft, the windows' light on it (the panes themselves are edge-on from here).
-      if (day && s > 0) for (let i = 1; i < WINDOWS.length; i++) {
-        const q = windowQuad(s, WINDOWS[i])
-        glow(pen, [(q[0][0] + q[2][0]) / 2, (q[0][1] + q[2][1]) / 2], 0.34 * WINDOWS[i][0], HOME.sun, 0.5 * aft)
-      }
     }
     shape(pen, band([[wallAt(CAB.floor)[0], CAB.floor], [wallAt(CAB.floor)[1], CAB.floor]]), p.floor, 0.5)
     // The far bulkhead, and the galley's doorway in it at the aisle's end.
@@ -209,10 +204,6 @@ function drawInside(pen: Pen, t: number, p: Pal): void {
         beam(asP5(pen), pen.k, from, to, 0.4 * sm0, 1.0 * sm0, PLANE.lamp, 0.32 * aft)
         puff(pen, proj([0.4, CAB.floor], sm0 * 0.93), 0.9 * sm0, 0.22 * sm0, PLANE.lamp, 0.35 * aft)
       }
-      glow(pen, V, 1.4, HOME.sun, 0.18 * aft)
-    } else {
-      // Night aft: dark, and the galley's glow faint at the far end.
-      glow(pen, proj([cx, -0.3], S_FAR), 0.35, PLANE.dawnHigh, 0.12)
     }
     // The bins' cut ends at the section, and the ceiling's.
     for (const s of [-1, 1] as const) {
@@ -276,7 +267,6 @@ function drawDoor(pen: Pen, t: number, p: Pal): void {
       const tab: Pt = [(shade[2][0] + shade[3][0]) / 2, (shade[2][1] + shade[3][1]) / 2]
       rbox(pen, tab[0] - 0.045, tab[1] - 0.008, tab[0] + 0.045, tab[1] + 0.03, 0.012, PLANE.seatShade, 0.5)
       if (up < 0.5) line(pen, [tab[0], tab[1] + 0.03], [tab[0] - 0.01, tab[1] + 0.13], PLANE.seatShade, 0.7)
-      if (up > 0.02) glow(pen, mid, 0.42, HOME.sun, 0.7 * up)
     }
     // The handle.
     const h0 = lift(proj([wallAt(-0.95)[1], -0.98], 0.94))
@@ -454,7 +444,6 @@ function drawChamber(pen: Pen, t: number, dy: number, up: number): void {
   const h = (c1 - c0) * up
   const top = bottom - h
   const w = 0.045
-  if (!day) glow(pen, [cx, bottom - 0.08], 0.22, PLANE.drip, 0.22 + 0.1 * (t > PLUNGE ? 1 : 0))
   rbox(pen, cx - w, top, cx + w, bottom, 0.015, rgba(PLANE.drip, 0.16), 0.55, day ? PLANE.caseDark : mixHex(PLANE.drip, PLANE.cabin, 0.45))
   const pool = bottom - 0.065
   const last = DRIPS.filter((d) => d <= t).pop()

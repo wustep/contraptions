@@ -128,22 +128,7 @@ export function polyline(pen: Pen, pts: Pt[], col: string, lw = 0.7): void {
   ctx.stroke()
 }
 
-/** A soft round light or haze: `a` at its middle, nothing at `r`. Air, never a disc. */
-export function glow(pen: Pen, c: Pt, r: number, col: string, a: number): void {
-  if (a <= 0.003 || r <= 0) return
-  const { ctx, k } = pen
-  const x = c[0] * k
-  const y = c[1] * k
-  const R = r * k
-  const g = ctx.createRadialGradient(x, y, 0, x, y, R)
-  g.addColorStop(0, rgba(col, a))
-  g.addColorStop(0.4, rgba(col, a * 0.5))
-  g.addColorStop(1, rgba(col, 0))
-  ctx.fillStyle = g
-  ctx.fillRect(x - R, y - R, 2 * R, 2 * R)
-}
-
-/** A soft flattened glow (a puff of cloud or smoke, a pool of light): `rx` by `ry`. */
+/** A soft flattened puff of cloud or smoke, or a pool of light on a surface: `rx` by `ry`. */
 export function puff(pen: Pen, c: Pt, rx: number, ry: number, col: string, a: number): void {
   if (a <= 0.003 || rx <= 0 || ry <= 0) return
   const { ctx, k } = pen

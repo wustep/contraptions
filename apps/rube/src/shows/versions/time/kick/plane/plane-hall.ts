@@ -3,7 +3,7 @@ import { beam, rgba } from '../cast'
 import { hash, type frame } from '../kit'
 import { HOME, PLANE } from '../worlds'
 import { AT_BOOTH, BRIDGE, CAB, CLEAR, DOCK, GLASS, GROUND, HOME as HOME_T, INSIDE, STAMP, TERM, TOUCH, clamp01, cobbAt, lerp, sm } from './plane-geo'
-import { asP5, box, glow, line, oval, polyline, puff, rbox, shape, vwash, type Pen } from './plane-kit'
+import { asP5, box, line, oval, polyline, puff, rbox, shape, vwash, type Pen } from './plane-kit'
 
 /**
  * Off the plane (the PLANE builder's): the jet bridge that swings out from the terminal and closes on the door; the
@@ -133,7 +133,6 @@ function drawOutside(pen: Pen, t: number, f: Frame): void {
       [(TERM.roof - top) / (floor + 0.35 - top), HOME.sun, 0.85 * g],
       [1, HOME.sun, 0.85 * g],
     ])
-    glow(pen, [x0 + 0.6, -0.6], 3.2, HOME.sun, 0.8 * g)
   }
 }
 
@@ -339,7 +338,6 @@ function drawBooth(pen: Pen, t: number, f: Frame): void {
   // The canopy: two slim posts and a roof, dark; the lamp under it, the one warm light of the hall.
   box(pen, x0 + 0.02, -1.02, x0 + 0.06, ledge, wood, 0.5)
   box(pen, x1 - 0.06, -1.02, x1 - 0.02, ledge, wood, 0.5)
-  glow(pen, [x0 + 0.45, -0.8], 0.9, PLANE.lamp, 0.55)
   puff(pen, [x0 + 0.3, ledge - 0.08], 0.6, 0.22, PLANE.lamp, 0.6)
   // The officer, seated behind his counter: head and shoulders, one dark shape, rimmed by his lamp.
   const nod = 0.035 * (sm(t, STAMP + 0.3, STAMP + 0.55) - sm(t, STAMP + 0.7, STAMP + 1.05))
