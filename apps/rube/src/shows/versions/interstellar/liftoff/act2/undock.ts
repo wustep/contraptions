@@ -5,7 +5,7 @@ import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, farSide, frame, hash, knock, part, smooth, type Ctx, type PartShot } from '../kit'
 import { cue, UNDOCK } from '../music'
 import { BALL, DARK, VOID } from '../worlds'
-import { drawFar, drawNear } from './undock-far'
+import { drawFar } from './undock-far'
 
 /**
  * Undocking: the film's docking run backwards.
@@ -446,7 +446,6 @@ export const undock = part<UndockState>(
       const q = pose(t)
       drawGlassOver(p, c, t, q)
       drawUmbilical(p, c, t, true)
-      drawNear(p, c, t)
     },
   },
   (slot) => {

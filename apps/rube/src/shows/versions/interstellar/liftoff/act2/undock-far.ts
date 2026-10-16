@@ -1,22 +1,21 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { frame, hash, smooth, type Ctx } from '../kit'
+import { frame, smooth, type Ctx } from '../kit'
 import { cue, UNDOCK } from '../music'
 import { DARK } from '../worlds'
 
 /**
  * What is round the undock and the run to the sphere, besides the station, Saturn, the beacons and the ship
- * (`undock.ts`): the depths in front of and behind them.
+ * (`undock.ts`): the depth behind them.
  *
  * - Far, behind everything: Titan, a small orange world in its haze, there from the cut to the sphere; two sister
  *   habitats off past Cooper Station while it lets the Ranger go, turning, their window strips going round, with a
  *   hauler easing into one of them; and, out over Saturn, Enceladus and Mimas. They keep their place in the frame and
  *   slide a little against the camera (Titan least, Mimas most), as far things do.
- * - Near, over everything and kept to the frame's foot: as the ship runs out over the rings, chunks of ring ice going
- *   by under it, fast.
  *
  * (The port's traffic, a shuttle and a tug with its container, and the foil and loose tether drifting past it, went:
- * round the undock they were six more things in a frame that is about one ship leaving.)
+ * round the undock they were six more things in a frame that is about one ship leaving. So did the near layer along
+ * the frame's foot, chunks of ring ice tumbling by under the ship over the rings: the rings themselves say where it is.)
  *
  * Flat paint and no ink round the far things (balls have ink round them; nothing here is a ball). No glow.
  */
@@ -250,76 +249,6 @@ export function drawFar(p: p5, c: Ctx, t: number): void {
     world(ctx, ex, ey, S * k * 0.009, ICE_MOON, moons)
     const [mx, my] = px(at(0.18, 0.36, 0.18, ref))
     world(ctx, mx, my, S * k * 0.012, ROCK_MOON, moons, undefined, [0.35, -0.2])
-  }
-  ctx.restore()
-}
-
-/* ------------------------------------------------------------------ near */
-
-/** A chunk of ring ice or rock: a lumpy polygon, lit on its upper left, tumbling. In pixels. */
-function chunk(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, turn: number, seed: number, fill: string, a: number, ink: string): void {
-  const N = 7
-  ctx.save()
-  ctx.translate(x, y)
-  ctx.rotate(turn)
-  ctx.beginPath()
-  for (let i = 0; i < N; i++) {
-    const ang = (i / N) * TAU
-    const rr = r * (0.7 + 0.45 * hash(seed, i, 5))
-    if (i === 0) ctx.moveTo(Math.cos(ang) * rr, Math.sin(ang) * rr)
-    else ctx.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr)
-  }
-  ctx.closePath()
-  ctx.fillStyle = rgba(fill, a)
-  ctx.fill()
-  ctx.strokeStyle = rgba(ink, 0.55 * a)
-  ctx.lineWidth = Math.max(1, r * 0.08)
-  ctx.stroke()
-  ctx.clip()
-  // Its shade, away from the light (which stays high on the left as it tumbles).
-  ctx.rotate(-turn)
-  ctx.fillStyle = rgba(DARK.deep, 0.5 * a)
-  ctx.beginPath()
-  ctx.rect(-2 * r, -2 * r, 4 * r, 4 * r)
-  ctx.arc(LIGHT[0] * r * 0.5, LIGHT[1] * r * 0.5, r * 1.05, 0, TAU, true)
-  ctx.fill('evenodd')
-  ctx.restore()
-}
-
-const RINGS_ON = cue(203.3)
-const RINGS_OFF = cue(207.3)
-
-/** Over everything in the part: the ring ice the ship runs out over. `t` is show time. */
-export function drawNear(p: p5, c: Ctx, t: number): void {
-  if (t > END - 0.05) return
-  const f = frame(p, c.k)
-  const { W, H, S } = view(f)
-  const k = c.k
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
-
-  // Over the rings: ice and rock going by under the ship, near, so twice and more as fast as the rings themselves.
-  const rings = smooth(t, RINGS_ON - 0.6, RINGS_ON + 0.4) * (1 - smooth(t, RINGS_OFF - 0.6, RINGS_OFF + 0.3))
-  if (rings > 0) {
-    for (const [F, gap, big, layer] of [
-      [1.6, 1.3, 0.016, 1],
-      [2.4, 2.6, 0.03, 2],
-    ] as const) {
-      // Each chunk lives at a place along a near copy of the rings, and is drawn where the camera's travel puts it:
-      // F times as far across the frame as the rings go.
-      const lo = Math.floor((F * f.cx - W * 0.6) / gap) - 1
-      const hi = Math.ceil((F * f.cx + W * 0.6) / gap) + 1
-      for (let i = lo; i <= hi; i++) {
-        if (hash(i, layer, 21) < 0.4) continue
-        const xl = (i + hash(i, layer, 22)) * gap
-        const x = xl + f.cx * (1 - F)
-        const v = 0.4 + 0.08 * hash(i, layer, 23) + (layer === 2 ? 0.04 : 0)
-        const y = f.cy + v * H
-        const r = S * big * (0.45 + 0.55 * hash(i, layer, 24))
-        const ice = hash(i, layer, 25) < 0.7
-        chunk(ctx, x * k, y * k, r * k, t * (0.6 + hash(i, layer, 26)) * (hash(i, layer, 27) < 0.5 ? -1 : 1), i * 7 + layer, ice ? mixHex(DARK.hull, DARK.gold, 0.18) : mixHex(DARK.slate, DARK.gold, 0.3), rings * (layer === 1 ? 0.75 : 0.9), c.ink)
-      }
-    }
   }
   ctx.restore()
 }

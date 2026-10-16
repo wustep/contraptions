@@ -7,7 +7,7 @@ import { ACT2, beat, cue, DROP, DURATION, IGNITION, UNDOCK } from './music'
 import { LiftoffShow } from './show'
 import { BALL, EARTH, FARM, SPACE, STATION, VOID } from './worlds'
 import { dawn, sky } from './earth/sky'
-import { near } from './earth/near'
+import { grade } from './earth/grade'
 import { house, porch, shelf, stairs, toy } from './earth/house'
 import { cornrow } from './earth/field'
 import { yard, YARD_END } from './earth/yard'
@@ -170,7 +170,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         theme: FARM,
         scenery: [standing(sky, 0, 0, all, { cloud: SWITCH }, DURATION), standing(house, 0, 0, box(-2, -6, 9, 2), null, DURATION)],
         chain: chainOf(earth.placed),
-        after: [standing(drone, 0, 0, all, flight, DURATION), standing(near, 0, 0, all, null, DURATION), deckCloud, standing(dawn, 0, 0, all, null, DURATION)],
+        after: [standing(drone, 0, 0, all, flight, DURATION), standing(grade, 0, 0, all, null, DURATION), deckCloud, standing(dawn, 0, 0, all, null, DURATION)],
         from: 0,
       },
       {
