@@ -228,12 +228,16 @@ Fullness from substance, light that falls on things, and as much cut as added:
 - **The stars are points**, coming out one by one, steady.
 - **Derelicte's wall at eye level**, which every close on the runway is seen against, was bare brick in a haze: a pipe
   run under the windows, a downpipe at each pier, a steel roller door shut in the bay behind the runway's far half, and
-  rows of fly-posters in the others (newsprint, a photograph, Derelicte's own), pale only where the banks' light
-  reaches them.
+  fly-posters in some of the others (newsprint, a photograph, Derelicte's own; never behind the tower), pale only
+  where the banks' light reaches them, so they are texture in the wides and something to see in the closes.
+- **The spa's pool** had three soft spots of light under its water: they are gone, and each candle's flame lies on
+  the water instead, a few short warm strokes under the lip, wavering and guttering with the gust.
 - **The Center's forecourt:** a paved walk from the stair out toward us, growing with the building. At dusk each lit
   window lays a pane of light on the grass with its bars' shadows across it, and the open doors lay a strip down the
   walk.
 - **The credits' camera** wandered from side to side: it draws back and up, square on the door, over all thirty seconds.
+- **The plug's own frame** stalled: the lead that whips loose was simulated on first use, the first frame after the
+  band stops dead (a 42 ms paint). It is simulated while the show loads, and that frame paints like any other.
 
 ## Zoolander nods
 

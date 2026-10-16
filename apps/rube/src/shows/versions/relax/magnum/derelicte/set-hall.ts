@@ -287,18 +287,18 @@ function drawDressing(p: p5, k: number, x0: number, x1: number, y0: number, y1: 
   // The pipe and its brackets; a downpipe beside each pier.
   if (y0 < PIPE_Y + 0.2) {
     p.noStroke()
-    p.fill(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.62))
-    p.rect(X(x0), X(PIPE_Y - 0.09), X(x1 - x0), X(0.18))
-    p.fill(rgba(DERELICTE.chain, 0.16))
-    p.rect(X(x0), X(PIPE_Y - 0.09), X(x1 - x0), X(0.03))
-    p.fill(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.5))
+    p.fill(mixHex(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.62), WALL, 0.35))
+    p.rect(X(x0), X(PIPE_Y - 0.08), X(x1 - x0), X(0.16))
+    p.fill(rgba(DERELICTE.chain, 0.09))
+    p.rect(X(x0), X(PIPE_Y - 0.08), X(x1 - x0), X(0.025))
+    p.fill(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.55))
     for (let x = Math.floor(x0 / 1.5) * 1.5; x < x1; x += 1.5) p.rect(X(x - 0.04), X(PIPE_Y - 0.13), X(0.08), X(0.26))
   }
   for (let i = Math.floor(x0 / 6) - 1; i <= Math.ceil(x1 / 6) + 1; i++) {
     const x = i * 6 + 1 + 0.6
     if (x < x0 - 0.2 || x > x1 + 0.2 || x < HALL.x0 || x > HALL.x1) continue
-    p.fill(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.66))
-    p.rect(X(x - 0.06), X(PIPE_Y), X(0.12), X(FLOOR_Y - PIPE_Y))
+    p.fill(mixHex(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.66), WALL, 0.35))
+    p.rect(X(x - 0.05), X(PIPE_Y), X(0.1), X(FLOOR_Y - PIPE_Y))
     p.fill(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.5))
     for (let y = PIPE_Y + 1.2; y < FLOOR_Y; y += 1.4) p.rect(X(x - 0.1), X(y), X(0.2), X(0.06))
   }
