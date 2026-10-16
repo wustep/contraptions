@@ -35,7 +35,7 @@ import {
   dogAt,
   type DogPose,
 } from './geo'
-import { blob, ctxOf, ease, ellipse, flash, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from './pen'
+import { blob, ctxOf, ease, ellipse, flash, line, loop, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from './pen'
 import { drawCity, drawPlumes, skyFloor } from './city'
 import type { View } from '../depth'
 
@@ -115,27 +115,6 @@ const FLAME_LAYERS: [string, number, number, number][] = [
   [C.flame3, 0.46, 0.48, 0.95],
   [C.flame4, 0.22, 0.24, 0.75],
 ]
-
-/** A smooth closed loop through `pts` (Catmull-Rom), added to `path` in pixels. */
-function loop(path: Path2D, pts: Pt[], k: number): void {
-  const n = pts.length
-  for (let i = 0; i < n; i++) {
-    const p0 = pts[(i - 1 + n) % n]
-    const p1 = pts[i]
-    const p2 = pts[(i + 1) % n]
-    const p3 = pts[(i + 2) % n]
-    if (i === 0) path.moveTo(p1[0] * k, p1[1] * k)
-    path.bezierCurveTo(
-      (p1[0] + (p2[0] - p0[0]) / 6) * k,
-      (p1[1] + (p2[1] - p0[1]) / 6) * k,
-      (p2[0] - (p3[0] - p1[0]) / 6) * k,
-      (p2[1] - (p3[1] - p1[1]) / 6) * k,
-      p2[0] * k,
-      p2[1] * k,
-    )
-  }
-  path.closePath()
-}
 
 /**
  * One tongue of flame, one of its four values (`li`), added to `path`: from a base `w` wide, `h` tall, leaning by
@@ -356,6 +335,17 @@ export function drawBuilding(pen: Pen, t: number): void {
   rect(pen, inner, ROOF, BX1, TOP_FLOOR, C.topWall)
   rect(pen, inner, CEIL, SX0, ROOM, C.roomWall)
   rect(pen, inner, ROOM + SLAB, SX0, STREET, C.shopWall)
+  // The room's wallpaper, a fine stripe, and the dado under its rail; a picture on the wall, a landscape in a dark
+  // frame: a room someone lives in. The fire's light falls on all of it.
+  const paper = new Path2D()
+  for (let x = inner + 0.1; x < SX0 - 0.03; x += 0.14) paper.rect(x * pen.k, (CEIL + 0.1) * pen.k, 0.035 * pen.k, (ROOM - 0.55 - CEIL - 0.1) * pen.k)
+  for (let x = inner + 0.05; x < SX0 - 0.1; x += 0.28) paper.rect(x * pen.k, (ROOM - 0.5) * pen.k, 0.2 * pen.k, 0.42 * pen.k)
+  ctxOf(pen.p).fillStyle = rgba(pen, '#4F2647', 1)
+  ctxOf(pen.p).fill(paper)
+  rect(pen, inner, ROOM - 0.56, SX0, ROOM - 0.52, C.brickCut)
+  rect(pen, 5.25, -3.2, 5.95, -2.65, C.woodDark)
+  rect(pen, 5.33, -3.12, 5.87, -2.73, '#9A7458')
+  shape(pen, [[5.33, -2.73], [5.33, -2.88], [5.5, -2.97], [5.66, -2.86], [5.87, -2.92], [5.87, -2.73]], '#5A3F44')
   // The fire's light in each.
   const h1 = heat(t, 1)
   const h0 = heat(t, 0)
@@ -368,16 +358,32 @@ export function drawBuilding(pen: Pen, t: number): void {
     [0.7, C.flame2, 0.18 * h0],
     [1, C.flame2, 0.32 * h0],
   ])
-  // The room's wallpaper: a fine stripe, warm in the light, and the dado rail under it.
-  const paper = new Path2D()
-  for (let x = inner + 0.1; x < SX0 - 0.03; x += 0.14) paper.rect(x * pen.k, (CEIL + 0.1) * pen.k, 0.035 * pen.k, (ROOM - 0.55 - CEIL - 0.1) * pen.k)
-  for (let x = inner + 0.05; x < SX0 - 0.1; x += 0.28) paper.rect(x * pen.k, (ROOM - 0.5) * pen.k, 0.2 * pen.k, 0.42 * pen.k)
-  ctxOf(pen.p).fillStyle = rgba(pen, C.topWall, 1)
-  ctxOf(pen.p).fill(paper)
-  rect(pen, inner, ROOM - 0.56, SX0, ROOM - 0.52, C.brickCut)
-  // A picture on the wall and a lamp knocked over: a room someone lives in.
-  rect(pen, 5.25, -3.2, 5.95, -2.65, C.woodDark)
-  rect(pen, 5.33, -3.12, 5.87, -2.73, C.flame3)
+  // Smoke rolling along under the room's ceiling toward the street, in from behind the shaft.
+  const k = pen.k
+  const ctx = ctxOf(pen.p)
+  const span = SX0 - inner + 1.6
+  const bank = new Path2D()
+  for (let i = 0; i < 5; i++) {
+    const x = SX0 + 0.8 - ((ft * 0.14 + (i / 5) * span) % span)
+    const y = CEIL + 0.2 + 0.08 * hash(i, 43) + 0.03 * Math.sin(ft * 0.7 + i)
+    const r = 0.32 + 0.14 * hash(i, 44)
+    loop(
+      bank,
+      Array.from({ length: 7 }, (_, j) => {
+        const a = (j / 7) * Math.PI * 2
+        const rr = r * (0.82 + 0.2 * Math.sin(a * 3 + i * 1.9 + ft * 0.4))
+        return [x + Math.cos(a) * rr * 1.5, y + Math.sin(a) * rr * 0.55] as Pt
+      }),
+      k,
+    )
+  }
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(inner * k, CEIL * k, (SX0 - inner) * k, (ROOM - CEIL) * k)
+  ctx.clip()
+  ctx.fillStyle = rgba(pen, C.smoke, 0.42 * (1 - 0.4 * drained(t)))
+  ctx.fill(bank)
+  ctx.restore()
   // The shop below: the fire's light coming down its back, shelves and a counter in the smoke.
   vgrad(pen, inner, ROOM + SLAB, SX0, STREET, [
     [0, C.flame1, 0.16 * h0],
@@ -430,8 +436,8 @@ export function drawBuilding(pen: Pen, t: number): void {
 }
 
 /**
- * The shop below the burning room, in the smoke: boarding up its back wall to the dado, shelves of tins and jars and
- * boxes four high, the counter by the door, a lamp hanging dark from the ceiling.
+ * The shop below the burning room, in the smoke: boarding up its back wall to the dado, shelves of tins and jars,
+ * the counter by the door, a lamp hanging dark from the ceiling.
  */
 function shop(pen: Pen, inner: number): void {
   const ctx = ctxOf(pen.p)
@@ -440,16 +446,17 @@ function shop(pen: Pen, inner: number): void {
   for (let x = inner + 0.06; x < SX0 - 0.05; x += 0.12) boards.rect(x * k, 0.08 * k, 0.02 * k, (STREET - 0.08) * k)
   boards.rect(inner * k, 0.04 * k, (SX0 - inner) * k, 0.04 * k)
   const shelves = new Path2D()
-  const goods: Path2D[] = [new Path2D(), new Path2D(), new Path2D()]
+  const goods: Path2D[] = [new Path2D(), new Path2D()]
   const s0 = inner + 0.3
   const s1 = SX0 - 0.25
   for (const [row, y] of [-1.0, -0.72, -0.44, -0.16].entries()) {
     shelves.rect(s0 * k, y * k, (s1 - s0) * k, 0.04 * k)
     for (const bx of [s0 + 0.1, s1 - 0.14]) shelves.rect(bx * k, y * k, 0.03 * k, 0.1 * k)
+    // Jars and tins and boxes along it, all one dim plum in the smoke.
     for (let x = s0 + 0.05, i = 0; x < s1 - 0.1; i++) {
       const w = 0.07 + 0.08 * hash(row, i, 31)
       const h = 0.09 + 0.1 * hash(row, i, 32)
-      goods[Math.floor(hash(row, i, 33) * 3)].rect(x * k, (y - h) * k, w * k, h * k)
+      goods[hash(row, i, 33) < 0.6 ? 0 : 1].rect(x * k, (y - h) * k, w * k, h * k)
       x += w + 0.02 + 0.05 * hash(row, i, 34)
     }
   }
@@ -466,12 +473,12 @@ function shop(pen: Pen, inner: number): void {
   ctx.save()
   ctx.fillStyle = rgba(pen, '#2A1C35', 1)
   ctx.fill(boards)
-  ctx.fillStyle = rgba(pen, C.slab, 1)
-  ctx.fill(shelves)
-  for (const [i, col] of [C.brickCut, C.woodDark, '#5E5068'].entries()) {
+  for (const [i, col] of ['#6E5470', '#574060'].entries()) {
     ctx.fillStyle = rgba(pen, col, 1)
     ctx.fill(goods[i])
   }
+  ctx.fillStyle = rgba(pen, C.slab, 1)
+  ctx.fill(shelves)
   ctx.restore()
   rect(pen, inner + 0.45, STREET - 0.6, inner + 1.55, STREET - 0.55, C.brickCut)
 }
