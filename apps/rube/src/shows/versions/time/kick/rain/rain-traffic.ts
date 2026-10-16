@@ -1,5 +1,5 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, bloom, pool, rgba } from '../cast'
+import { beam, pool, puff, rgba } from '../cast'
 import { hash } from '../kit'
 import { RAIN } from '../worlds'
 import { seen, type Pen, type View } from './rain-city'
@@ -22,7 +22,6 @@ import {
   taxiDoor,
   taxiX,
   trainNose,
-  type Flung,
 } from './rain-geo'
 
 /**
@@ -77,6 +76,15 @@ function car(pen: Pen, x: number, y: number, angle: number, s: number, len: numb
   p.vertex(X(h - 0.58 - nose), X(-0.15))
   p.endShape(p.CLOSE)
   p.line(X(-0.02), X(-0.45), X(-0.02), X(-0.14))
+  // Its lamps: a lit lens at the nose and the tail lamp at the back, until it is hit (their light is the beam ahead).
+  if (wreck < 0.5) {
+    p.rectMode(p.CORNER)
+    p.strokeWeight(w * 0.5)
+    p.fill(lamps > 0.02 ? RAIN.lamp : mixHex(RAIN.lamp, body, 0.5))
+    p.rect(X(h - nose - 0.11), X(-0.05), X(0.1), X(0.08))
+    p.fill(mixHex(RAIN.trainRust, RAIN.lamp, lamps > 0.02 ? 0.3 : 0))
+    p.rect(X(-h + 0.005), X(-0.02), X(0.07), X(0.1))
+  }
   if (door > 0.02) {
     // The rear door swung open toward us about its front edge: the dark of the car inside, the door foreshortened.
     p.fill(mixHex(GLASS, ink, 0.55))
@@ -92,12 +100,6 @@ function car(pen: Pen, x: number, y: number, angle: number, s: number, len: numb
     p.rect(X(-0.05), X(-0.56 + wreck * 0.1), X(0.34), X(0.1), X(0.02))
   }
   p.pop()
-  if (lamps > 0.02 && wreck < 0.5) {
-    const c = Math.cos(angle)
-    const sn = Math.sin(angle)
-    bloom(p, k, [x + (h - 0.03) * s * c - 0.05 * sn, y + (h - 0.03) * s * sn + 0.05 * c], 0.28, RAIN.lamp, 0.35 * lamps)
-    bloom(p, k, [x - (h - 0.03) * s * c, y - (h - 0.03) * s * sn], 0.2, RAIN.trainRust, 0.3 * lamps)
-  }
 }
 
 /** The two cars at the head of the bridge and the taxi, before the train and after. */
@@ -124,34 +126,6 @@ export function drawTraffic(pen: Pen, f: View, te: number): void {
 }
 /** The street's underside: light from the street's traffic stops here. */
 const STREET_FOOT = 0.6
-
-/** Sparks off the locomotive's nose as it meets each car. */
-function sparks(pen: Pen, te: number, c: Flung): void {
-  const { p, k, ctx } = pen
-  const a = te - c.hit
-  if (a < 0 || a > 0.9) return
-  const x0 = c.x + c.len / 2
-  bloom(p, k, [x0, -0.7], c.taxi ? 2.4 : 1.4, RAIN.lamp, (c.taxi ? 0.8 : 0.55) * Math.exp(-a / 0.14))
-  // Sparks: short bright streaks along their flight.
-  const m = c.taxi ? 40 : 18
-  const path = new Path2D()
-  for (let i = 0; i < m; i++) {
-    const vx = -2 - hash(i, 1, 99) * (c.taxi ? 10 : 7)
-    const vy = -1.5 - hash(i, 2, 99) * (c.taxi ? 7 : 5)
-    const life = 0.35 + 0.5 * hash(i, 3, 99)
-    if (a > life) continue
-    const x = x0 + vx * a
-    const y = -0.4 + vy * a + 6 * a * a
-    path.moveTo(x * k, y * k)
-    path.lineTo((x - vx * 0.03) * k, (y - (vy + 12 * a) * 0.03) * k)
-  }
-  ctx.save()
-  ctx.strokeStyle = rgba(RAIN.windowLit, 0.9 * (1 - a / 0.9))
-  ctx.lineWidth = Math.max(0.8, 0.025 * k)
-  ctx.lineCap = 'round'
-  ctx.stroke(path)
-  ctx.restore()
-}
 
 /** The locomotive's headlamp: its beam, cutting the rain ahead of it down the street, rocking as it comes. */
 export interface Beam {
@@ -306,19 +280,16 @@ export function drawTrain(pen: Pen, f: View, te: number): void {
       const age = ((te * 2.2 + i / 5) % 1)
       const ex = n0 + LOCO_LEN * 0.62 + age * 3.2
       const ey = base - 2.3 - age * 0.9
-      bloom(p, k, [ex, ey], 0.45 + age * 0.9, RAIN.far, 0.3 * (1 - age) * appear)
+      puff(p, k, [ex, ey], 0.45 + age * 0.9, RAIN.far, 0.3 * (1 - age) * appear)
     }
   }
   p.stroke(ink)
   for (const u of [1.3, 2.0, 2.7, LOCO_LEN - 2.7, LOCO_LEN - 2.0, LOCO_LEN - 1.3]) wheel(nose + u, 0.3)
+  // The headlamp on its nose: a lens, dark until it comes on, then lit (its light is the beam down the street).
+  p.strokeWeight(w * 0.6)
+  p.fill(mixHex(mixHex(RAIN.train, RAIN.steel, 0.4), RAIN.lamp, lamp))
+  p.circle(X(nose + 0.15), X(base - 1.55), X(0.24))
   p.pop()
-  if (lamp > 0.01) {
-    bloom(p, k, [nose + 0.15, base - 1.55], 0.8, RAIN.lamp, 0.85 * lamp * appear)
-    // The flare as it comes on.
-    const flare = te - T_LAMP
-    if (flare > -0.05 && flare < 0.8) bloom(p, k, [nose + 0.15, base - 1.55], 2.6, RAIN.lamp, 0.5 * Math.exp(-Math.max(0, flare) / 0.18))
-  }
-  for (const c of FLUNG) sparks(pen, te, c)
 }
 
 /** The spray the van's front wheels throw where they go through the puddles, on the beats. */
@@ -328,7 +299,7 @@ export function drawSpray(pen: Pen, te: number): void {
     const a = te - T_PUDDLES[j]
     if (a < 0 || a > 1.1) continue
     const x0 = PUDDLES[j]
-    bloom(p, k, [x0 - 0.2, -0.25], 0.8, RAIN.rain, 0.25 * Math.exp(-a / 0.25))
+    puff(p, k, [x0 - 0.2, -0.25], 0.8, RAIN.rain, 0.25 * Math.exp(-a / 0.25))
     ctx.fillStyle = rgba(RAIN.rain, 0.75 * (1 - a / 1.1))
     const drops = new Path2D()
     for (let i = 0; i < 26; i++) {

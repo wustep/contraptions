@@ -1,9 +1,8 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { bloom } from '../cast'
 import { hash } from '../kit'
 import { PARIS } from '../worlds'
-import { H, R, Y_S } from './paris-geo'
+import { H, Y_S } from './paris-geo'
 import { fillPaths, line, rect, seen, shape, strokePaths, vwash, type Pen } from './paris-pen'
 
 /**
@@ -27,8 +26,6 @@ export const ROOF = CORNICE - MANSARD
 export const CAFE = { x0: -3.05, x1: 2.55 }
 
 const SKY_WARM = mixHex(PARIS.sky, PARIS.lamp, 0.35)
-/** Where the sun is: in the gap the fold opens, a little beyond its curve. */
-const SUN: Pt = [H + R * 0.55, Y_S - R * 1.05]
 const FAR = mixHex(PARIS.sky, PARIS.slate, 0.2)
 const HAZE_STONE = mixHex(PARIS.sky, PARIS.stoneShade, 0.32)
 const HAZE_SLATE = mixHex(PARIS.sky, PARIS.slate, 0.28)
@@ -52,9 +49,6 @@ export function drawParisSet(p: p5, k: number, t: number, ink: string, w: number
     [1, SKY_WARM, 0.5],
   ])
   if (f.y1 > Y_S) vwash(pen, f.x0 - 1, f.x1 + 1, Y_S, Math.max(f.y1, Y_S + 12) + 1, [[0, SKY_WARM, 0.35], [1, PARIS.skyHigh, 0.45]])
-  // The sun, low in the fold's gap: once the street is over, it shines between the two halves of Paris.
-  bloom(p, k, SUN, 7.5, PARIS.lamp, 0.34)
-  bloom(p, k, SUN, 3.2, PARIS.lamp, 0.18)
   if (seen(f, -40, Y_S - 6, H + 1, Y_S)) skyline(pen, f)
   if (seen(f, -30, ROOF - 1, BLOCK.x0, Y_S)) plainBlock(pen, -26, BLOCK.x0, f)
   if (seen(f, BLOCK.x0, ROOF - 1, BLOCK.x1 + 0.3, Y_S)) cafeBlock(pen, f)

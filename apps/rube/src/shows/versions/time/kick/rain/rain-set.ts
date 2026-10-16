@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { R, type Pt } from '../../../../../parts'
 import { box, frame, scenery, type Ctx } from '../kit'
 import { BAND, SPLASH } from '../stack'
-import { bloom, rgba } from '../cast'
+import { pool, rgba } from '../cast'
 import { RAIN } from '../worlds'
 import { deckFace, drawBridge, drawCity, drawLampLight, drawRailing, drawStreet, seen, type Pen, type View } from './rain-city'
 import { MAL_AT, MAL_FROM, MAL_TO, T_A_IN, T_C_IN, T_F_IN, T_TAXI_DOOR, ariadneRain, cobbRain, eff, fischerRain, sm, vanPose } from './rain-geo'
@@ -132,9 +132,8 @@ function malLit(P: Pen, t: number): void {
   const lit = inside * Math.pow(1 - s, 0.5) * sm(s / 0.06) * b.a
   if (lit < 0.01) return
   const { ctx, k } = P
-  // A pool of the lamp's light on the wet pavement round her, and on her.
-  bloom(P.p, k, [mx + 0.25, my + 0.08], 1.3, RAIN.lamp, 0.45 * lit)
-  bloom(P.p, k, [mx + 0.1, my - 0.05], 0.75, RAIN.lamp, 0.85 * lit)
+  // A pool of the lamp's light on the wet pavement round her feet, and its catch on her edge toward it.
+  pool(P.p, k, [mx + 0.25, my + 0.11], 1.2, 0.16, RAIN.lamp, 0.55 * lit)
   ctx.save()
   ctx.strokeStyle = rgba(RAIN.windowLit, Math.min(1, 2.2 * lit))
   ctx.lineWidth = Math.max(1.6, 0.07 * k)

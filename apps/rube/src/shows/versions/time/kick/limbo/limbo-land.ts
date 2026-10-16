@@ -141,15 +141,32 @@ export function drawFarSea(pen: Pen, t: number, f: Frame): void {
     [0.4, LIMBO.skyWarm, 0.35],
     [1, LIMBO.skyWarm, 0],
   ])
-  // A few soft glints drifting on the far water, of many lengths.
+  // The swell rolling in toward the shore: long low ridges on the far water, close together and faint out by the
+  // horizon, opening out and firmer as they come on (the sea's depth, and its slow breathing under the opening). Each
+  // is a broken line of long streaks, a trough in shade with the sky on the back of the ridge over it. Seen from far
+  // out they are under a pixel, and not drawn.
+  if (x1 - x0 > 34) return
   const c = clock('limbo', t)
-  for (let i = 0; i < 70; i++) {
-    const q = hash(i, 2, 11)
-    const y = HORIZON + 0.15 + q * q * 2.8
-    const x = -70 + hash(i, 1, 11) * 150 + f.cx * PARALLAX * (1 - q) + Math.sin(c * 0.3 + i) * 0.4
-    if (x < x0 - 4 || x > x1 + 4) continue
-    const a = (0.08 + 0.12 * Math.sin(c * (0.4 + hash(i, 3, 11) * 0.5) + i * 2.1) ** 2) * (1 - 0.4 * q)
-    soft(pen, x, y, (0.5 + hash(i, 4, 11) * 3.2) * (1 - 0.5 * q), 0.02 + 0.03 * q + 0.015 * hash(i, 5, 11), LIMBO.foam, a)
+  const ROWS = 7
+  const B = 2.6
+  for (let i = 0; i < ROWS; i++) {
+    const run = c * 0.05 + i / ROWS
+    const q = ((run % 1) + 1) % 1
+    const cycle = Math.floor(run)
+    const d = q * q
+    const y = HORIZON + 0.18 + d * (SEA - HORIZON - 0.5)
+    const a = Math.sin(Math.PI * Math.min(1, q * 1.15)) * (0.4 + 0.6 * q)
+    if (a < 0.02) continue
+    const shift = f.cx * PARALLAX * (1 - d)
+    const th = 0.014 + 0.05 * d
+    for (let j = Math.floor((x0 - shift) / B) - 1; j <= Math.floor((x1 - shift) / B) + 1; j++) {
+      const seed = cycle * 7 + i * 101
+      if (hash(i, j, seed + 5) < 0.2) continue
+      const len = (0.55 + 0.6 * hash(i, j, seed + 13)) * B * (0.65 + 0.35 * d)
+      const x = (j + 0.5 + (hash(i, j, seed + 11) - 0.5) * 0.4) * B + shift
+      soft(pen, x, y + th * 0.6, len / 2, th, mixHex(NEAR_SEA, LIMBO.seaDeep, 0.35), 0.3 * a)
+      soft(pen, x + 0.15, y - th * 0.4, len / 2.3, th * 0.6, LIMBO.foam, 0.26 * a)
+    }
   }
 }
 
@@ -724,6 +741,20 @@ export function drawGarden(pen: Pen, t: number, f: Frame): void {
   const c = clock('limbo', t)
   const x0 = GARDEN.x0
   const x1 = GARDEN.x1
+  // The low sun behind the children, over the wall: his memory of the garden has its own light, and it comes up when
+  // we look at them, the far city dissolving behind them into a pale warm sky: an even veil over it, not a glow.
+  const mem = memory(t)
+  if (mem > 0.01) {
+    const vx0 = SUN_AT[0] - 9
+    const vx1 = SUN_AT[0] + 9
+    const veil = mixHex(LIMBO.foam, LIMBO.skyWarm, 0.4)
+    hgradFill(pen, [[vx0, f.y0 - 1], [vx1, f.y0 - 1], [vx1, GARDEN.wallTop], [vx0, GARDEN.wallTop]], vx0, vx1, [
+      [0, veil, 0],
+      [0.25, veil, 0.85 * mem],
+      [0.75, veil, 0.85 * mem],
+      [1, veil, 0],
+    ])
+  }
   // The house at the garden's end: pale, a pitched roof, its back door onto the garden, its windows dark.
   shape(
     pen,
@@ -743,12 +774,6 @@ export function drawGarden(pen: Pen, t: number, f: Frame): void {
     box(pen, wx, GROUND - 1.35, wx + 0.55, GROUND - 0.6, mixHex(dark, LIMBO.sky, 0.25), 0.6)
   }
   box(pen, HOUSE.x0 - 0.1, GROUND - 0.12, HOUSE.x0 + 1.05, GROUND, LIMBO.house, 0.5)
-  // The low sun behind the children, over the wall: his memory of the garden has its own light, and it comes up when
-  // we look at them, the far city dissolving in it.
-  const mem = memory(t)
-  soft(pen, SUN_AT[0], SUN_AT[1], 2.6 + 1.6 * mem, 1.5 + 1.0 * mem, LIMBO.skyWarm, 0.5 + 0.45 * mem)
-  soft(pen, SUN_AT[0], SUN_AT[1] + 0.15, 1.0 + 0.5 * mem, 0.55 + 0.25 * mem, LIMBO.lamp, 0.55 + 0.35 * mem)
-  if (mem > 0.01) soft(pen, SUN_AT[0], SUN_AT[1] - 0.6, 7.5, 3.4, LIMBO.foam, 0.6 * mem)
   // The wall round the garden, in its own shade; its coping catching the sun along its top.
   vwash(pen, x0, x1, GARDEN.wallTop, GARDEN.back, [
     [0, WALL_SHADE, 1],
@@ -756,9 +781,11 @@ export function drawGarden(pen: Pen, t: number, f: Frame): void {
   ])
   line(pen, [x1, GARDEN.wallTop], [x1, GARDEN.back], mixHex(pen.ink, WALL_SHADE, 0.3), 0.5)
   box(pen, x0, GARDEN.wallTop - 0.08, x1 + 0.04, GARDEN.wallTop, COPING, 0.6)
-  // The sun's light on the coping, strongest behind them.
-  vwash(pen, SUN_AT[0] - 1.6, SUN_AT[0] + 1.6, GARDEN.wallTop - 0.08, GARDEN.wallTop + 0.25, [
-    [0, LIMBO.lamp, 0.45],
+  // The sun's light along the coping's top, strongest behind them and fading along it either way (a box of it, hard at
+  // its ends and down the wall's face, read as a pasted panel).
+  hgradFill(pen, [[x0, GARDEN.wallTop - 0.075], [x1, GARDEN.wallTop - 0.075], [x1, GARDEN.wallTop - 0.01], [x0, GARDEN.wallTop - 0.01]], SUN_AT[0] - 3.5, SUN_AT[0] + 3.5, [
+    [0, LIMBO.lamp, 0],
+    [0.5, LIMBO.lamp, 0.55],
     [1, LIMBO.lamp, 0],
   ])
   // Shrubs of a few sizes at its foot.
@@ -768,13 +795,12 @@ export function drawGarden(pen: Pen, t: number, f: Frame): void {
     [SWING.x + 1.98, 1.1, 0.72],
   ]
   shrubs.forEach(([cx, rx, ry], i) => foliage(pen, cx, GARDEN.back + 0.03, rx, ry, i * 1.9, c, LEAVES, true, 0.5))
-  // The lawn, running back to the wall's foot, glowing where the low sun comes through the grass behind them.
+  // The lawn, running back to the wall's foot.
   vwash(pen, x0, x1, GARDEN.back, GROUND, [
     [0, mixHex(LAWN, LIMBO.gardenDark, 0.45), 1],
     [0.4, LAWN, 1],
     [1, LAWN, 1],
   ])
-  soft(pen, SUN_AT[0], GARDEN.back + 0.12, 3.0, 0.22, LAWN_GLOW, 0.75 + 0.25 * mem)
   // The lawn comes on toward us to the ground's line, a lip of it over the sand (no further: carried down onto the
   // beach it read as a green patch pasted on it, below the line the house stands on).
   vwash(pen, x0, x1, GROUND - 0.01, GROUND + 0.18, [

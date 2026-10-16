@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { beam, bloom, rgba, sink, tear } from '../cast'
+import { beam, puff, rgba, sink, tear } from '../cast'
 import { hash, type Ctx } from '../kit'
 import { FISCHER_DOWN } from '../stack'
 import { SNOW } from '../worlds'
@@ -326,15 +326,13 @@ function drawGuards(p: p5, ctx: C2D, c: Ctx, t: number): void {
 }
 
 /**
- * Where Mal's shot strikes Fischer at the vault's door: a hard white flash on the shot, and a ring going out from him
- * across the floor, still fading when the camera cuts back to him, so the hit is seen and not only his going under.
+ * Where Mal's shot strikes Fischer at the vault's door: a ring going out from him across the floor, still fading when
+ * the camera cuts back to him, so the hit is seen and not only his going under.
  */
-function drawHit(p: p5, ctx: C2D, k: number, t: number): void {
+function drawHit(ctx: C2D, k: number, t: number): void {
   const u = t - T.shot
   if (u < 0 || u > 1.6) return
   const at: Pt = [SHOT_X, FLOOR_Y - R]
-  bloom(p, k, at, 0.9, SNOW.flash, 0.95 * Math.exp(-u / 0.12))
-  bloom(p, k, at, 0.5, SNOW.flash, 0.55 * Math.exp(-u / 0.45))
   // The ring, out along the floor (seen a little from above: flattened).
   const r = 0.2 + 1.1 * (1 - Math.exp(-u / 0.35))
   ctx.save()
@@ -402,7 +400,6 @@ function drawRifle(p: p5, ctx: C2D, c: Ctx, t: number, over: boolean): void {
     beam(p, k, muzzle, [muzzle[0] + d[0] * 0.8, muzzle[1] + d[1] * 0.8], 0.06, 0.35, SNOW.flash, f)
     beam(p, k, muzzle, [muzzle[0] + d[1] * 0.5, muzzle[1] - d[0] * 0.5], 0.05, 0.28, core, 0.7 * f)
     beam(p, k, muzzle, [muzzle[0] - d[1] * 0.5, muzzle[1] + d[0] * 0.5], 0.05, 0.28, core, 0.7 * f)
-    bloom(p, k, [muzzle[0] + d[0] * 0.25, muzzle[1] + d[1] * 0.25], 0.9, SNOW.flash, 0.8 * f)
   }
   const smoke = ss(u / 0.15) * (1 - ss((u - 0.5) / 1.1))
   if (smoke > 0.01) {
@@ -442,7 +439,7 @@ export function drawSnowPart(p: p5, c: Ctx, t: number, o: Pt): void {
     drawRifle(p, ctx, c, t, false)
     // The floor goes soft under them: Fischer where he is shot; Cobb and Ariadne by the gate as the case opens.
     sink(p, k, [SHOT_X, FLOOR_Y], t - T.shot - 0.3, F_THROUGH - T.shot - 0.3, 0.8)
-    drawHit(p, ctx, k, t)
+    drawHit(ctx, k, t)
     sink(p, k, [LIE_C, FLOOR_Y], t - T.sink, C_THROUGH - T.sink, 0.75)
     sink(p, k, [LIE_A, FLOOR_Y], t - T.sink, A_THROUGH - T.sink, 0.7)
     drawCaseLines(ctx, c, t)
@@ -483,11 +480,12 @@ export function drawVaultPart(p: p5, c: Ctx, t: number, o: Pt): void {
   const ctx = p.drawingContext as C2D
   const { k } = c
   at(ctx, k, o, () => {
-    // The charges blow under the floor: flashes at the pillars, then the floor goes.
+    // The charges blow under the floor: dust bursts out at the pillars, then the floor goes.
     const u = t - T.charges
-    if (u >= 0 && u < 0.9) {
-      const a = Math.exp(-u / 0.18)
-      for (const px of [-5.2, -2.1, 1.0, 4.1]) bloom(p, k, [px, FLOOR_Y + 0.95 + fortDrop(t)], 1.1, SNOW.flash, 0.85 * a)
+    if (u >= 0 && u < 1.6) {
+      const a = Math.min(1, u / 0.05) * Math.exp(-u / 0.5)
+      const r = 0.5 + 0.9 * (1 - Math.exp(-u / 0.25))
+      for (const px of [-5.2, -2.1, 1.0, 4.1]) puff(p, k, [px, FLOOR_Y + 0.95 + fortDrop(t) - 0.2 * u], r, mixHex(SNOW.snowShade, SNOW.concreteDark, 0.45), 0.8 * a)
     }
   })
 }
