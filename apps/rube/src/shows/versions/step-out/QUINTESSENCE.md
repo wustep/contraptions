@@ -341,6 +341,32 @@ a building's front as well as over the sky. Each card holds 3.4 to 5 s; the last
   - after it, the same ten frames are 11% to 32% flat or still. Motion times detail (the share of pixels changing in
     a fifteenth of a second, times the share on an edge) went from 47 to 135 in the opening and from 47 to 392 in the
     last third, which is now 2.9 times the opening.
+- **The restraint pass** (Stephen: the same eight points again with fresh eyes, cutting and refining as much as is
+  added, fixing what pops or jitters, and no bloom, glow, sparkle or flourish):
+  - the lead looked over the whole show at full size, and a scan of every frame at thirty a second for blocks that
+    change once with calm either side found 44 pops;
+  - six builders went over the places again, each from a list for its places. Every additive fill went, with the
+    halos round the suns, the moon, the lamps, the windows, the pilot lights and the balls; the searchlights, the
+    bokeh, the glints, the twinkle, the eruption's shock ring, the sun's rings over the Himalayas, the cones and
+    shafts across the bar, the press hall and the street, and the flashes on strikes. Lamps are lit shades with their
+    pools on the floor; a fire lights what is round it as one warm wash;
+  - where that left a gap it was filled with things: washing, steam and pigeons in the daydream; a trawler at Nuuk's
+    quay and a boat going out; gulls on the helipad's quay; shoals drawn as fish, a berg's keel and a hand line in
+    the deep; the fisherman coming up through a hatch; cirrus over Iceland and a waterfall that reads as water; a
+    fixed rope, altocumulus and a sea of cloud in the Himalayas; chain drives and roof steam at the press; steam as
+    billows and bundles of papers in the street;
+  - the bugs: the moon's halo clipped into a box; a hard vertical seam in the Himalayas; Nuuk's houses showing
+    through the sea behind the helicopter; the cake there before the fisherman; a cover appearing from nowhere at the
+    press's delivery on every cut; the loupe's glare going off in one frame; the shutter and the vendor's hand
+    jumping; a post ghosting in on the road; Cheryl's guitar there before her; the overcast flickering by the sun; and
+    a resize between two passages stopping the next one (p5's `remove` on a 2D graphics throws). Of the 44 pops, 12
+    are left, all meant: the tubes striking, the enlarger coming on, the three cuts on strikes, the eruption, a
+    plate on its beat;
+  - the lead took the bloom out of the passages: plain edges, a burn that starts beside Walter instead of ringing
+    him, doors with dark edges, and no flare, glint or glare; and the kit's glow, shaft and twinkle, which nothing
+    used any more;
+  - after it, the same ten frames are 16% to 30% flat or still, and the last third is 2.8 times as busy as the
+    opening (370 against 134).
 
 ## Judgment calls
 
@@ -373,10 +399,11 @@ a building's front as well as over the sky. Each card holds 3.4 to 5 s; the last
 - In the wides Walter is a few pixels across: the burning building (about 15.5 to 17 s), the helicopter's (63.7 to
   67.1 s), the longboard's (110.4 to 115.5 s) and the whole range (182.5 to 185 s), 12.5 s in all.
 - **Frame rate**, measured on an Apple M5 Pro in Chrome with its GPU, a 1280 × 800 window at 2× (a 2560 × 1600
-  canvas), playing the whole show in real time: 60 frames a second throughout; of 16,199 frames one came more than 20
-  ms after the last (a stall of the machine, with a 0.9 ms paint); the paint takes 1.0 ms at the median, 2.9 ms at the
-  99th percentile, and 18.8 ms at most (the first frame of Iceland, which builds its pictures of the sky and the
-  land). `main` before the fullness pass took 0.5, 1.7 and 3.5 ms.
-- **Without a GPU** (a software canvas, 1280 × 800 at 1×) a frame takes 13 ms at the median against 10 before. A
-  passage paints two places at once for about a second, and there a frame takes 25 to 47 ms; Iceland's and home's
-  first frames take 100 and 62 ms.
+  canvas), playing the whole show in real time: 59.9 frames a second; of 16,184 frames three came more than 20 ms
+  after the last, one as the page started and two as his mother's room first came out of the ash, each with a paint
+  under a millisecond (the GPU's first sight of new drawing; the build before the restraint pass had five, at other
+  places). The paint takes 1.0 ms at the median, 2.6 ms at the 99th percentile and 19.2 ms at most, on the first
+  frame of the passage into Iceland, which builds its pictures of the sky and the land.
+- **Without a GPU** (Chrome with its canvas forced to software, 1280 × 800 at 1×) a frame takes 6.0 ms at the median,
+  14 ms at the 99th percentile and 60 ms at most (the same first frame of Iceland); before the restraint pass it took
+  7.4 to 8.1, 22 to 24 and 75 to 81 ms. A passage paints two places at once for about a second.
