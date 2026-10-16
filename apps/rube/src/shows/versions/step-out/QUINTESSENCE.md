@@ -80,13 +80,13 @@ Times are show seconds. `n.p` is bar n, beat p.
 | 0 | silence | The negative assets room under the Life building, in the dark. Walter sits on frame 20 at the near end of an unlit light table. Behind it the archive goes back on three planes (shelving, cans on edge, boxes, rolling ladders), and high on the back wall a street-level window lets in daylight and passing feet. |
 | 0.088 | the swell | The tubes strike, flash, die back, stutter twice (0.343, 0.622) and catch, and each strike lights the whole archive cool for a moment. On the second hit (3.356) they come fully up. The strip shows frames 20 to 27, with a blank where 25 should be. The camera pushes in as the light comes up. |
 | 3.519 to 7.780 | the lead, −3.1 to −1.3 | He rolls along the strip frame by frame. Each frame lights under him as he lands on its beat: the water with a ship, the curve, the thumb, the water again. |
-| 8.639 | 0.1 | He drops into the blank where frame 25 should be. It glows whiter as he stares into it. He is zoning out. |
+| 8.639 | 0.1 | He drops into the blank where frame 25 should be. The rest of the strip dims as he stares into it. He is zoning out. |
 
 ### The daydream (10.363 to 23.74)
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 10.363 | the band in | Match cut: the blank frame opens out to the screen's edges, and he sits on the lip of a subway platform at night, the colour turned up past true. The window across the street blows out. Behind it the city goes back on three planes under a big moon in magenta haze: towers with amber beacons, two searchlights, an elevated train crossing on every other downbeat, traffic on the avenue. Embers rise through it all. |
+| 10.363 | the band in | Match cut: the blank frame opens out to the screen's edges, and he sits on the lip of a subway platform at night, the colour turned up past true. The window across the street blows out. Behind it the city goes back on three planes under a big moon in magenta haze, thin cloud drifting across it: towers with amber beacons, an elevated train crossing on every other downbeat, traffic on the avenue, washing swinging on a roof line, steam off two chimneys and pigeons wheeling over the roofs. Embers rise through it all. |
 | 11.222 to 12.087 | 1.3, 2.1 | He arcs off the lip, over the tracks, into the burning room. A joist comes down behind him (12.900). |
 | 13.724 to 16.226 | 3.1 to 4.3 | He rolls into a dumbwaiter car beside the three-legged dog. The gate drops shut, the brake lets go, and the car goes down on his weight. The counterweight rises and the pulley turns, while the fire flares on the downbeats. The camera draws back to the whole burning building and the city as the car goes down. |
 | 16.644 to 18.757 | 4.4 to 6.1 | Out through the shop door onto the pavement. The dog lopes past him and lands its last hop at Cheryl's side, under the street lamp. |
@@ -107,8 +107,8 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 37.054 | 17.1 | Through a projector's iris, burning at its edge, into a bar on the harbour at Nuuk. The door settles and the bell over it rings. Its lamps swing on their cords. Through the doors and the window the harbour moves on its own planes: the town's coloured houses under Sermitsiaq, five moored boats riding the swell, gulls, sleet. |
-| 38.743 to 42.923 | 18.1 to 20.3 | The helicopter pilot, hunched drunk at the bar, sets his glass down hard. His thumb comes up and its ring catches the light: the thumb from the negative. It taps the counter while Walter edges toward the door and back. He hesitates. |
+| 37.054 | 17.1 | The film burns through in the gate: a hole opens in the ship's picture beside him and spreads till it takes him, and he is in a bar on the harbour at Nuuk. The door settles and the bell over it rings. Its lamps swing on their cords, their light lying on the boards and the counter. Through the doors and the window the harbour moves on its own planes: the town's coloured houses under Sermitsiaq with low cloud across it, a trawler tied up at the quay, a boat going out with its wake, five moored boats riding the swell, gulls, sleet. |
+| 38.743 to 42.923 | 18.1 to 20.3 | The helicopter pilot, hunched drunk at the bar, sets his glass down hard. His thumb comes up into the lamp's light and its brass ring goes gold: the thumb from the negative. It taps the counter while Walter edges toward the door and back. He hesitates. |
 | 43.747 | 21.1, the hinge | The little stage's spotlight comes on, and Cheryl is on it with a guitar. She is imagined. She sways on the beats. |
 | 46.238 to 47.056 | 22.3 to 23.1 | She rolls off the stage and out of the back door, and the spotlight goes off. He goes after her. |
 | 48.316 | 23.4 | He bangs the door open and turns red. A plank knocks under him (24.1), the door slams behind him (24.3), and he runs. |
@@ -117,8 +117,8 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 50.411 | 25.1 | The bar's door blazes open onto the helipad. The postal helicopter (white, a grey belly, one dark stripe) has its rotor turning once a beat. Its strobe flashes on every downbeat. |
-| 51.665 to 53.732 | 25.4 to 27.1 | He leaps in through the open side door beside the parcel, and the skids leave the pad. A cold silver sun breaks through the overcast, and its shafts come down onto the sea. |
+| 50.411 | 25.1 | The bar's doors open on the daylight, pale at first, and the helipad is beyond them. The postal helicopter (white, a grey belly, one dark stripe) has its rotor turning once a beat. Its strobe lamp blinks on every downbeat. Gulls on the quay's end go up one after another in the rotor's wash. |
+| 51.665 to 53.732 | 25.4 to 27.1 | He leaps in through the open side door beside the parcel, and the skids leave the pad. A cold silver sun shows through a break in the overcast. |
 | 55.41 to 63.740 | 28 to 33 | Out over the grey-green sea and the floes. The air drops from under the cabin twice (29.1, 31.1), and he floats up and lands. On 33.1 the one wide: the helicopter small in a big sky, coming down toward a trawler among the ice. |
 | 65.417 to 68.749 | 34.1 to 36.1 | The pilot looks back at him. Walter steps down onto the skid with the parcel. The pilot shakes his head: he will not land. |
 | 69.574 | 36.3 | He pushes off. |
@@ -128,22 +128,22 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 70.398 | 37.1 | The water rises over the frame, and he is under the skin. The overcast, the floes and the boat line up above the surface. Below it is cold teal-black, with jade shafts swaying, marine snow on three planes, jellyfish, and two schools of fish that wheel over on each strong low. |
+| 70.398 | 37.1 | The water rises over the frame, and he is under the skin. The overcast, the floes and the boat line up above the surface. Below it is cold teal-black in flat steps, with jade shafts swaying, marine snow on three planes, jellyfish, a berg's keel far off, a hand line with its jigs down from the hull, and shoals of small fish (a dark one above him, a ribbon of pale capelin below) that turn about together on each strong low. |
 | 70.4 to 77 | kick and bass | He sinks. The parcel goes on down without him, turning, into the dark: the radio is lost. A breath of bubbles goes up from him on each of thirteen strong lows. |
 | 76.2 to 86.9 | 40 to 47 | A blurred shape crosses far off: a porpoise, he thinks. It comes back nearer, then in front and under him, nearest and slowest: a shark. Its menace is its shape, not its teeth. |
 | 86.948, 87.784 | 47.1, 47.3 | A weighted net drops off the stern and closes round him, the shark right below. |
 | 88.620 | 48.1, the band back | Hauled out through a crown of spray. The boom swings him in, and he drops onto the deck (49.1). |
-| 89.3 to 93.4 | 49 to 51 | A fisherman in a dark oilskin and a knitted cap comes out round the wheelhouse holding a clementine cake. On 50.1 (91.894) he stoops and sets it down beside Walter on its paper wrapper, straightens, and stays to watch. Sean's notes are on the paper, in scribbles. |
+| 89.3 to 93.4 | 49 to 51 | A fisherman in a dark oilskin and a knitted cap comes up out of the hatch in front of the wheelhouse holding a clementine cake. On 50.1 (91.894) he stoops and sets it down beside Walter on its paper wrapper, straightens, and stays to watch. Sean's notes are on the paper, in scribbles. |
 
 ### Iceland (95.23 to 133.278)
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 95.226 to 100.189 | 52.1 to 55.1 | The cake's wrapper folds over into the top of a ridge road in East Iceland, under a low gold sun: cumulus lit from below, a glacier coming down to the fjord, waterfalls, sheep on the moss. He hops onto a bicycle and rolls off. Reflector posts flare as he passes. A flock wheels over and, for about a second, pulls into one round shape before it breaks up. |
+| 95.226 to 100.189 | 52.1 to 55.1 | The cake's wrapper folds over into the top of a ridge road in East Iceland, under a low gold sun: cumulus lit from below, cirrus high over it, a glacier coming down to the fjord, sheep on the moss. He hops onto a bicycle and rolls off. The reflectors on the posts light as he passes. A flock wheels over and, for about a second, pulls into one round shape before it breaks up. |
 | 101.826 | 56.1 | The bike hits a road sign and goes down. He tumbles past it. |
 | 102.691 to 105.153 | 56.3 to 58.1 | The trade. Three kids, his stretchy toy for their longboard: the toy lands at their feet, its arms are pulled out wide, the board is swung down, and he is on it. |
-| 106.807 to 118.405 | 59 to 66 | The longboard, the film's Step Out moment. Down the mountain's face in switchbacks: hairpins on 59, 61, 63 and 65, crests on 60, 62, 64 and 66. Grit flies at every turn and a post flares on every beat. From 110.4 to 115.5 the camera draws back: the whole zigzag, the cliff, the fjord, and the volcano smoking past it. |
-| 119.845 | the band's last hit | He is out on the shore road. The volcano bursts: an amber flash, a shock ring, glowing stones thrown, the column shooting up, lit orange from under. Lava creeps down the snow, and lightning forks in the column on the guitar's onsets. |
+| 106.807 to 118.405 | 59 to 66 | The longboard, the film's Step Out moment. Down the mountain's face in switchbacks: hairpins on 59, 61, 63 and 65, crests on 60, 62, 64 and 66. Grit flies at every turn and a post's reflector lights on every beat. From 110.4 to 115.5 the camera draws back: the whole zigzag, the cliff, the fjord, and the volcano smoking past it. |
+| 119.845 | the band's last hit | He is out on the shore road. The volcano bursts: the land goes amber, stones are thrown, the column shoots up, lit orange from under, and the warmth fades off the land over the next seconds as the ash comes. Lava creeps down the snow, and lightning forks in the column on the guitar's onsets. |
 | 120.06 to 126.06 | the hush | Silence in the picture too. He rolls to a stop. A small plane crosses toward the plume and is gone inside it: Sean, and Walter has missed him. |
 | 122.54 to 133.28 | soft picking | Ash comes down, 22 flakes landing on the guitar's onsets, four of them on him. From 126.06 he holds completely still. The ash thickens over the whole frame. |
 
@@ -151,7 +151,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 133.278 | the pulse | The one cut under a cover: the ash lifts off his mother's new apartment at evening. There is a lamp, boxes not yet opened, and her piano. She is a soft silhouette at the bench, playing the pulse, one low note at a time. Through two windows the city's lights come on at dusk, a train crosses, and it snows. |
+| 133.278 | the pulse | The one cut under a cover: the ash lifts off his mother's new apartment at evening. There is a lamp, its light lying on the wall, the rug and the piano, boxes not yet opened, and her piano. She is a soft silhouette at the bench, playing the pulse, one low note at a time. Through two windows the city's lights come on at dusk, a train crosses, and it snows. |
 | 133.7 to 145.7 | 75 to 82 | He goes up beside her: the bench, a key of his own, the rim. Her notes carry him along the rim of the curved side, each struck string ending under him and its ring moving him on. |
 | 146.12 | 82.4 | At the curve he touches the last negative, which hangs from the lamp turning on its thread, and stops it face on. The curve in it is the curve under him. The clue is solved without a word. |
 
@@ -178,7 +178,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 | 203.054 on | 117.1 | The folder: a cut every beat. Copies fall face on into the stacker, and the stack rises a copy a beat. |
 | 209.3 to 217 | 120.4 to 125 | He goes off the former's nose onto the stack. The stack is fed from below and lifts him. The camera draws back to the whole building: the office upstairs, the stair, every press line running, the catwalks, the paper racing under the roof, the window wall, and the street through the door. |
 | 218.04 to 220.15 | 126.1 to 127.2 | The joggers square it, the strap goes over, cinches, and the seal is crimped. |
-| 220.573 | 127.3, the loudest | The pusher shoves the bundle, with him on it, out onto the conveyor, and every lamp flares. The bundle goes through the loading door's strip curtain (128.3), and he drops onto the pavement in the morning (130.1). |
+| 220.573 | 127.3, the loudest | The pusher shoves the bundle, with him on it, out onto the conveyor, and the caged lamp over it switches on. The bundle goes through the loading door's strip curtain (128.3), and he drops onto the pavement in the morning (130.1). |
 
 ### The street (226.384 to the end)
 
@@ -261,8 +261,7 @@ a building's front as well as over the sky. Each card holds 3.4 to 5 s; the last
   - `passage.ts`: the passages. At each cut the place coming is painted into its own picture by the camera carried
     across the cut, and laid over the place going through a shape that grows round him, with Walter drawn again on
     top, untouched.
-  - `depth.ts`: the depth kit the places draw with: parallax planes (`layer`), motes, glows, shafts, vignettes and
-    washes.
+  - `depth.ts`: the depth kit the places draw with: parallax planes (`layer`), motes, vignettes and washes.
   - `seams.ts`: what Walter is doing at each cut: his velocity, the camera's distance and his place in the frame.
   - `music.ts`: the clock read from the onset file.
   - `worlds.ts`: the cast's colours.
@@ -355,11 +354,12 @@ a building's front as well as over the sky. Each card holds 3.4 to 5 s; the last
   Every place's grade is drawn under the balls, and the passages draw him again over the place coming. His warming
   from slate to red at Nuuk is the story, and the checks hold it, so it stays.
 - **Passages, and still match cuts.** At every cut he still holds still on the screen and the camera carries across;
-  the passage is the world changing round him: the blank frame opening, a frame closing in, an iris, a door blazing,
-  the water rising, the wrapper folding, the negative growing, a shutter, a curtain of strips. The ash stays the one
+  the passage is the world changing round him: the blank frame opening, a frame closing in, the film burning, the
+  doors opening on the day, the water rising, the wrapper folding, the negative growing, a shutter, a curtain of strips. The ash stays the one
   cover.
-- **Flat light, for speed.** Without a GPU a gradient over a large area costs many times a flat fill, and a blend mode
-  more. The shafts, cones and blooms are flat steps and rings, and the vignettes leave their middles unfilled.
+- **Light that falls on things.** A lamp is a lit shade and the pool it lays on the floor, the wall or the table; a
+  sun or a moon is a plain disc; a fire lights what is round it as a plain warm wash. Nothing is added light, nothing
+  has a halo, nothing sparkles or twinkles, and no strike flashes. Flat fills are also the fast path without a GPU.
 - **The lightning.** In the eruption's column it flickers at most twice a second, under the three a second that is
   the line for flashing light.
 - **Things left out on purpose:**
