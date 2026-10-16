@@ -103,10 +103,14 @@ export function drawGardenBack(b: Brush, t: number): void {
   drawCypress(b, t, 31.5, -3.4, 15, 1)
   drawCypress(b, t, 67, -3.4, 17, 2)
   drawCypress(b, t, 76.5, -3.4, 13, 3)
-  const wall = mix(c.plaster, c.stone, 0.45)
-  rect(b, 28, -3.6, 82, GARDEN.lower, mix(wall, c.hill, 0.25))
-  rect(b, 28, -3.95, 82, -3.55, mix(c.tile, c.hill, 0.3))
-  rect(b, 28, -3.55, 82, -3.4, mix(c.tileShade, c.hill, 0.3))
+  // The wall: shoulder high along the upper garden, stepping down with the steps to a low one along the lower.
+  const wall = mix(mix(c.plaster, c.stone, 0.45), c.hill, 0.25)
+  const cap = mix(c.tile, c.hill, 0.3)
+  rect(b, 28, -3.6, 45, GARDEN.lower, wall)
+  rect(b, 28, -3.95, 45.3, -3.55, cap)
+  rect(b, 45, 1.3, 82, GARDEN.lower, wall)
+  rect(b, 44.7, 0.95, 82, 1.35, cap)
+  rect(b, 45, -3.6, 45.4, 1.3, mix(wall, c.ink, 0.15))
   // A doorway through it, shut, by the steps.
   rect(b, 40.2, -2.6, 42, 0.2, mix(c.wood, c.hill, 0.35))
 }

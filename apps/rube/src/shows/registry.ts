@@ -326,6 +326,7 @@ const SHELVED: Record<string, Section> = {
   'clair-de-lune': 'Machine',
   'premiere-arabesque': 'Machine',
   'cornfield-chase': 'Machine',
+  raindrop: 'Machine',
   bolero: 'Ambient',
   gymnopedie: 'Ambient',
   'soft-lamp': 'Ambient',
@@ -337,7 +338,7 @@ export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
  * music through YouTube's player, so the Show card keeps the player's box open while its show loads, rather than
  * opening it once the music is known (`player.ts`). `check:shows` holds this to what each take actually loads.
  */
-const OWN_RECORDINGS = new Set(['clair-de-lune', 'premiere-arabesque', 'bolero', 'gymnopedie'])
+const OWN_RECORDINGS = new Set(['clair-de-lune', 'premiere-arabesque', 'bolero', 'gymnopedie', 'raindrop'])
 /** Whether a work's music comes from YouTube's player, known before its show loads. */
 export const musicOnYouTube = (work: string): boolean => !OWN_RECORDINGS.has(work)
 

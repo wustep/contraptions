@@ -97,7 +97,7 @@ export function drawBehind(b: Brush, t: number): void {
   const pts: Pt[] = []
   const x0 = f.x0 - 2
   const x1 = f.x1 + 2
-  const back = (x: number) => groundY(x * 1.04 - 6) - 7 - 4 * Math.sin(x * 0.031) - (x > 150 ? (x - 150) * 0.05 : 0)
+  const back = (x: number) => groundY(x * 1.04 - 6) - 7 - 4 * Math.sin(x * 0.031) - (x > 150 ? (x - 150) * 0.05 : 0) + (x > 166 ? (x - 166) * 1.3 : 0)
   for (let x = x0; x <= x1; x += 2) pts.push([x, back(x)])
   pts.push([x1, 500], [x0, 500])
   poly(b, pts, col)

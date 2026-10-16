@@ -5,6 +5,7 @@ import { GATE, SPUR } from './geo'
 import { drawWall } from './land'
 import { FORM, NOTES, at } from './music'
 import { tones } from './look'
+import { drawTravelers } from './travelers'
 
 /**
  * The gate on the far bank, where the road comes up: a wall across the spur with a round-arched door, a pent roof
@@ -148,6 +149,16 @@ export function drawGate(b: Brush, t: number): void {
   if (open > 0) {
     // The lit passage: a floor going in, a far wall.
     rect(b, door.x0, door.y1 - 1.4, door.x1, door.y1, mix(c.room, c.ink, 0.25))
+  }
+  // Whoever is going in, up the lit passage: inside the doorway, under the leaf as it shuts.
+  if (open > 0) {
+    b.g.save()
+    b.g.beginPath()
+    for (const [x, y] of hole) b.g.lineTo(x, y)
+    b.g.closePath()
+    b.g.clip()
+    drawTravelers(b, t, true)
+    b.g.restore()
   }
   const wood = mix(c.wood, c.ink, 0.22)
   const w = (door.x1 - door.x0) * Math.cos((open * Math.PI) / 2.15)

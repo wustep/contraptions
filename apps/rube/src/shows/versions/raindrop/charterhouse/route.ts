@@ -3,6 +3,11 @@ import { CISTERN, GATE, GUTTER, PIPE, RILL, SPUR, T1CH, T2CH, T3CH, chanY, gutte
 import { DOWN_TO } from './garden'
 import { FLOAT_FROM, OUT, OVER_LIP, STEPS, afloat, stepAt } from './cistern'
 import { OVER as HAMMER_OVER, inHammer, onChute } from './terraces'
+
+/** Down the wall from each hammer onto the next terrace's channel: a beat after it goes over. */
+const HAMMER_LAND = [at(46, 1), at(48, 1)]
+/** Into each hammer's trough off its channel's end: the first offstage, the others a beat before they go over. */
+const HAMMER_IN = [at(39, 3.5), at(47, 3), at(49, 3)]
 import { BOARD, LET_GO, SPILL, inPot, spoonAt } from './noria'
 import { AT_DOOR, IN_CATCH, IN_CUP, ON_ROOF, OPENS, TO_CHUTE, TO_STEP, cupAt, inCatch, roofY } from './gate'
 import { INTO_BUCKET, LANDS, TIPS, bucketTop, onTile } from './garden'
@@ -72,11 +77,11 @@ export function route(end: number): BallPath {
   // Bar 35: out through the outlet in the terrace wall, into the storm, onto the first terrace's channel.
   r.roll(OUT - 0.04, [[CISTERN.outlet[0], CISTERN.outlet[1] - 0.02 - R]], 1.4, 2.2)
   const t1 = T1CH.x0 + 0.5
-  r.fly(OUT + 0.3, [t1, chanY(T1CH, t1) - R])
+  r.fly(at(35, 0.5), [t1, chanY(T1CH, t1) - R])
   // Bars 35 to 39: along the first terrace in the rising storm, to the first hammer, and into it.
   const t1e = T1CH.x1 - 0.08
-  r.roll(at(40, 0) - 0.55, [[t1e, chanY(T1CH, t1e) - R]], 1.4, 2.4)
-  r.fly(at(40, 0) - 0.25, inHammer(0, at(40, 0) - 0.25))
+  r.roll(at(39, 3.5) - 0.3, [[t1e, chanY(T1CH, t1e) - R]], 1.4, 2.4)
+  r.fly(at(39, 3.5), inHammer(0, at(39, 3.5)))
   // Bars 44 to 50: the hammers. Each goes over on a downbeat; the ball goes with the water down the wall, along the
   // next terrace, and into the next.
   const chans = [T2CH, T3CH]
@@ -85,14 +90,14 @@ export function route(end: number): BallPath {
     if (i < 2) {
       const ch = chans[i]
       const x0 = ch.x0 + 0.55
-      r.fly(HAMMER_OVER[i] + 0.75, [x0, chanY(ch, x0) - R])
+      r.fly(HAMMER_LAND[i], [x0, chanY(ch, x0) - R])
       const xe = ch.x1 - 0.08
-      r.roll(HAMMER_OVER[i + 1] - 1.05, [[xe, chanY(ch, xe) - R]], 2.0, 4.0)
-      r.fly(HAMMER_OVER[i + 1] - 0.8, inHammer(i + 1, HAMMER_OVER[i + 1] - 0.8))
+      r.roll(HAMMER_IN[i + 1] - 0.25, [[xe, chanY(ch, xe) - R]], 2.0, 4.0)
+      r.fly(HAMMER_IN[i + 1], inHammer(i + 1, HAMMER_IN[i + 1]))
     }
   }
   // Bar 50: the last hammer empties it into the chute down the gully's wall, and the chute into the wheel's lowest pot.
-  r.fly(HAMMER_OVER[2] + 0.3, onChute(0.04))
+  r.fly(at(50, 0.5), onChute(0.04))
   const chute: Pt[] = []
   for (let k = 1; k <= 12; k++) chute.push(onChute(0.04 + (0.96 * k) / 12))
   r.roll(BOARD - 0.22, chute, 1.5, 9)
@@ -100,7 +105,7 @@ export function route(end: number): BallPath {
   // Bars 51 to 55: up the wheel, as the crescendo goes up.
   r.ride(SPILL, inPot)
   // Over the top: spilt into the sling's spoon.
-  r.fly(SPILL + 0.42, spoonAt(SPILL + 0.42))
+  r.fly(at(55, 3.5), spoonAt(at(55, 3.5)))
   r.ride(LET_GO, spoonAt)
   // Bar 56: thrown. Over the gully onto the gate's roof, a bounce, then along the roof's ridge to the catch.
   const roof1 = 168.9
@@ -123,8 +128,8 @@ export function route(end: number): BallPath {
   r.ride(TO_STEP, inCup)
   // The bell done: out onto the doorstep, a bounce, and still against the door.
   const step: Pt = [GATE.door.x0 + 0.6, SPUR.y - R]
-  r.fly(TO_STEP + 0.52, step)
-  r.fly(TO_STEP + 0.8, [step[0] + 0.45, step[1]])
+  r.fly(at(67, 3), step)
+  r.fly(at(67, 3.5), [step[0] + 0.45, step[1]])
   r.roll(AT_DOOR, [[GATE.door.x0 + 1.5, SPUR.y - R]], 1.4, 0)
   r.rest(OPENS + 0.35)
   // Bar 79: the door opens and it goes in, first.

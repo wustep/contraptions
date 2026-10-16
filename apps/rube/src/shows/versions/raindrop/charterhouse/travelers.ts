@@ -39,21 +39,21 @@ export const IN = at(80, 0)
 
 /** How far up the road she is, cells from its east end. The boy keeps two cells behind her. */
 const PLAN: [number, number][] = [
-  [0, 250],
-  [bar(5), 262],
-  [bar(8), 281],
-  [bar(20), 300],
-  [bar(24), 330],
-  [GUST, 352],
-  [OUT + 0.6, 353.5],
-  [bar(44), 356],
-  [LOOK - 2, 466],
-  [LOOK, 468],
-  [CLIMB, 468.5],
-  [bar(76), 497],
-  [AT_GATE, 507.5],
-  [IN, 508.5],
-  [IN + 1.2, 511.8],
+  [0, 252],
+  [bar(5), 256],
+  [bar(8), 265],
+  [bar(20), 276],
+  [bar(24), 289],
+  [GUST, 299],
+  [OUT + 0.6, 300.2],
+  [bar(44), 301],
+  [LOOK - 3, 305],
+  [LOOK, 305.6],
+  [CLIMB, 306],
+  [bar(76), 335.5],
+  [AT_GATE, 345.6],
+  [IN, 346.5],
+  [IN + 1.2, 347.6],
 ]
 export function along(t: number): number {
   if (t <= PLAN[0][0]) return PLAN[0][1]
@@ -76,8 +76,10 @@ export const theirLight = (t: number): number => 1 - smooth(t, OUT - 0.25, OUT +
 export function woman(t: number): { p: Pt; dir: number } {
   return onRoad(along(t))
 }
+/** The boy keeps a couple of paces behind her, closing up at the door. */
+const behind = (t: number): number => 2.2 - 1.4 * smooth(t, AT_GATE - 1, IN + 0.4)
 export function boy(t: number): { p: Pt; dir: number } {
-  return onRoad(along(t) - 2.2)
+  return onRoad(along(t) - behind(t))
 }
 
 /** How far into the doorway each has gone, 0 to 1 (`IN` on). */
@@ -198,7 +200,7 @@ function drawBoy(b: Brush, f: Figure, dark: string): void {
 
 function figure(t: number, which: 'woman' | 'boy'): Figure {
   const w = which === 'woman' ? woman(t) : boy(t)
-  const s = along(t) - (which === 'boy' ? 2.2 : 0)
+  const s = along(t) - (which === 'boy' ? behind(t) : 0)
   const stride = clamp(pace(t) / 1.6)
   const up = smooth(t, LOOK + (which === 'boy' ? 0.5 : 0), LOOK + 1.6) * (1 - smooth(t, CLIMB + 1.2, CLIMB + 3)) + smooth(t, AT_GATE - 1, AT_GATE + 0.4) * 0.4 * (1 - smooth(t, IN, IN + 0.5))
   // At the door they turn to face it: west, toward the doorway.
@@ -206,19 +208,29 @@ function figure(t: number, which: 'woman' | 'boy'): Figure {
   return { x: w.p[0], y: w.p[1], dir, phase: s * 1.45, stride, up, gone: inside(t, which === 'boy' ? 0.45 : 0) }
 }
 
-/** Both of them, the boy a step behind. */
-export function drawTravelers(b: Brush, t: number): void {
-  if (t > IN + 2.2) return
+/**
+ * Both of them, the boy a step behind. Outside, they are drawn over everything; once they are going in at the
+ * door (`inside`), the gate draws them itself, between its lit passage and its door's leaf, smaller as they go up
+ * the passage away from us, so the door shuts on them.
+ */
+export function drawTravelers(b: Brush, t: number, inside = false): void {
+  if (t > IN + 3) return
   const c = tones(t)
   const dark = mix(c.ink, '#000000', 0.25)
   const rim = mix(c.skyLow, c.ink, 0.4)
   const wf = figure(t, 'woman')
   const bf = figure(t, 'boy')
   for (const [f, draw] of [[bf, () => drawBoy(b, bf, dark)], [wf, () => drawWoman(b, t, wf, dark, rim)]] as const) {
-    if (f.gone >= 1) continue
-    b.g.globalAlpha = 1 - f.gone * 0.9
-    draw()
-    b.g.globalAlpha = 1
+    if ((f.gone > 0) !== inside) continue
+    if (inside) {
+      const k = 1 - 0.3 * f.gone
+      b.g.save()
+      b.g.translate(f.x, f.y - 1.0 * f.gone)
+      b.g.scale(k, k)
+      b.g.translate(-f.x, -f.y)
+      draw()
+      b.g.restore()
+    } else draw()
   }
 }
 

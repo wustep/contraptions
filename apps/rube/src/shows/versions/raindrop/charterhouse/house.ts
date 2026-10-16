@@ -293,12 +293,7 @@ export function drawNeighbours(b: Brush, t: number): void {
   const dome: Pt[] = arc(tx, -54, 3.6, 4.8, Math.PI, Math.PI * 2, 14)
   poly(b, [...dome, [tx + 3.6, -54], [tx - 3.6, -54]], mix('#4F7A6A', c.mtNear, 0.45))
   rect(b, tx - 0.6, -61.5, tx + 0.6, -58.4, mix(wall, c.ink, 0.1))
-  // The cells: a row of low houses, each its own roof.
-  for (let i = 0; i < 3; i++) {
-    const x1 = -1.5 - i * 15
-    const x0 = x1 - 14
-    rect(b, x0, -10.5, x1, 0.4, wall)
-    rect(b, x0 - 0.5, -12.5, x1 + 0.5, -10.4, roof)
-    rect(b, x0 + 6, -7.6, x0 + 8, -4.4, mix(c.ink, wall, 0.25))
-  }
+  // The church's roof running west from the tower, low.
+  rect(b, tx + 4, -16, tx + 15, 0, mix(wall, c.ink, 0.2))
+  rect(b, tx + 3.6, -18.5, tx + 15.5, -15.8, roof)
 }

@@ -21,7 +21,7 @@ export const CUT_TO = bar(36)
 export const cutOn = (t: number): boolean => t >= CUT_FROM && t < CUT_TO
 
 /** The ball's float: from where the bucket tips it to the weir's lip, by bar 32. */
-export const FLOAT_FROM = DOWN_TO + 0.55
+export const FLOAT_FROM = at(28, 1)
 export const OVER_LIP = at(32, 0)
 /** The steps of the overflow's channel, each a drop on a downbeat, and the outlet. */
 export const STEPS = [at(32, 0), at(33, 0), at(34, 0)]

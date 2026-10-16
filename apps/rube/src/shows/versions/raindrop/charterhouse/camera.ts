@@ -1,8 +1,9 @@
 import type { Pt } from '../../../../parts'
 import type { Framing } from '../../../registry'
 import { lerp, smooth } from './brush'
-import { CISTERN, GATE, NORIA, PIPE } from './geo'
-import { Camera, follow, glide, hold, smoothed, type Frame, type Shot } from './lens'
+import { CISTERN, GATE, HAMMERS, NORIA, PIPE } from './geo'
+import { OVER } from './terraces'
+import { Camera, blend, follow, glide, hold, smoothed, type Frame, type Shot } from './lens'
 import { FORM, at, bar } from './music'
 import { LOOK } from './show'
 import { theirMiddle } from './travelers'
@@ -38,31 +39,53 @@ export function makeCamera(where: (t: number) => Pt, duration: number): (t: numb
   }
   const shots: Shot[] = [
     { from: 0, frame: glide(0, bar(5), { x: 3.7, y: -9.2, cells: 8.6 }, { x: 3.5, y: -9.35, cells: 7.9 }) },
-    { from: bar(5), frame: glide(bar(5), bar(8), { x: 128, y: 27, cells: 150 }, { x: 130, y: 28, cells: 144 }) },
-    { from: bar(8), frame: hold(3.4, -9.6, 7) },
-    { from: at(9, 0) + 0.5, frame: follow(where, 7.2, 1.6, 1.4, 0.7, 0.15, { y1: -9.4 }) },
-    { from: at(10, 0) - 0.35, frame: hold(PIPE.x + 0.4, -6.2, 13) },
-    { from: at(11, 0) + 0.7, frame: follow(where, 10, 2.6, -3.0, 1.0, 0.2, { x1: 45 }) },
-    { from: at(14, 0) - 1.4, frame: glide(at(14, 0) - 1.4, at(19, 0), { x: 50.5, y: -0.6, cells: 12.5 }, { x: 53.5, y: -0.9, cells: 12 }) },
+    { from: bar(5), frame: glide(bar(5), bar(8), { x: 136, y: 30, cells: 160 }, { x: 138, y: 31, cells: 154 }) },
+    // Bar 8: back on the jar, nearly full; the tip, and away along the gutter after the ball, the camera easing in behind.
+    { from: bar(8), frame: blend(hold(3.4, -9.6, 7), follow(where, 7.2, 1.6, 1.4, 0.7, 0.15, { y1: -9.4 }), at(9, 0) + 0.1, at(9, 0) + 1.6) },
+    // Bar 10: the head and the pipe, the whole height of the wall; then along the rill, and on to the chime.
+    { from: at(10, 0), frame: blend(hold(PIPE.x + 0.4, -6.2, 13), follow(where, 10, 2.6, -3.0, 1.0, 0.2, { x1: 45 }), at(11, 0) + 0.3, at(11, 0) + 2.2) },
+    { from: bar(14), frame: glide(bar(14) - 0.01, bar(19), { x: 50.5, y: -0.6, cells: 12.5 }, { x: 53.5, y: -0.9, cells: 12 }) },
     // The road.
     { from: bar(20), frame: them, focus: theirMiddle },
     // The bucket, then down.
     { from: bar(24), frame: glide(bar(24), bar(27), { x: 59.8, y: -1.0, cells: 9 }, { x: 59.8, y: -0.6, cells: 8.4 }) },
-    { from: bar(27), frame: glide(bar(27), bar(28) + 0.6, { x: 59.8, y: -0.6, cells: 8.4 }, { x: 62.5, y: 10.2, cells: 15 }) },
-    // The cistern: the ground's face above, the water below, the ball crossing.
+    // Bar 27: down with the bucket into the cistern, and along it, the ball crossing the water.
     {
-      from: bar(28) + 0.6,
-      frame: (t) => {
-        const [x] = smoothed(where, t, 1.5, 0)
-        return { x: Math.max(62.5, Math.min(x + 1.5, CISTERN.x1 - 1)), y: 10.2 + 1.2 * smooth(t, bar(32), bar(35)), cells: 15 }
-      },
+      from: bar(27),
+      frame: blend(
+        glide(bar(27), bar(28) + 0.6, { x: 59.8, y: -0.6, cells: 8.4 }, { x: 62.5, y: 10.2, cells: 15 }),
+        (t) => {
+          const [x] = smoothed(where, t, 1.5, 0)
+          return { x: Math.max(62.5, Math.min(x + 1.5, CISTERN.x1 - 1)), y: 10.2 + 1.2 * smooth(t, bar(32), bar(35)), cells: 15 }
+        },
+        bar(28) + 0.6,
+        bar(29),
+      ),
     },
     // The first terrace, in the storm: following, the frame opening out as the rain thickens.
-    { from: bar(35), frame: (t) => ({ ...follow(where, 13, 2.5, -2.2, 1.0, 0.2)(t), cells: lerp(13, 20, smooth(t, bar(36), bar(39.5))) }) },
+    { from: bar(35), frame: (t) => ({ ...follow(where, 10, 2.4, -1.9, 1.0, 0.2)(t), cells: lerp(10, 14, smooth(t, bar(36), at(39, 2))) }) },
     // The road: the gust.
     { from: bar(40), frame: (t) => ({ ...them(t), cells: 13 }), focus: theirMiddle },
     // The hammers.
-    { from: bar(44), frame: follow(where, 17, 2.5, -2.5, 1.4, 0.3) },
+    {
+      from: bar(44),
+      frame: (t) => {
+        // Each hammer framed as it goes over, with the wall it pours down; between, over to the next.
+        const at = (k: number) => ({ x: HAMMERS[k].x - 1.2, y: HAMMERS[k].y + 3.4, cells: 11.5 })
+        let f = at(0)
+        for (let k = 0; k < 2; k++) {
+          const t0 = OVER[k] + 1.0
+          const t1 = OVER[k + 1] - 1.3
+          if (t > t0) {
+            const u = smooth(t, t0, t1)
+            const a = at(k)
+            const b = at(k + 1)
+            f = { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), cells: 11.5 }
+          }
+        }
+        return f
+      },
+    },
     // The wheel: the whole of it in the gully, closing a little as it climbs.
     { from: bar(51), frame: glide(bar(51), bar(56), { x: NORIA.x + 1, y: NORIA.y - 2.5, cells: 22 }, { x: NORIA.x + 1.5, y: NORIA.y - 4, cells: 19 }) },
     // Over the gully: the wheel, the gully, the gate across it.
@@ -87,7 +110,7 @@ export function makeCamera(where: (t: number) => Pt, duration: number): (t: numb
     // The rain stops: the whole mountainside, the gate's light and the window.
     { from: FORM.still, frame: glide(FORM.still, bar(84), { x: 120, y: 24, cells: 140 }, { x: 116, y: 23, cells: 132 }) },
     // The eave again.
-    { from: bar(84), frame: glide(bar(84), duration, { x: 3.9, y: -8.6, cells: 9.6 }, { x: 4.1, y: -8.4, cells: 10.4 }) },
+    { from: bar(84), frame: glide(bar(84), duration, { x: 2.2, y: -8.2, cells: 9.6 }, { x: 1.6, y: -8.0, cells: 10.2 }) },
   ]
   const cam = new Camera(shots)
   return (t: number) => {

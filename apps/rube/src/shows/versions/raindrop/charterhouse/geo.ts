@@ -141,29 +141,28 @@ export const GULLY = { x0: 140, bed: 54.5, x1: 166, mid: 153 }
 export const SPUR = { x0: 166, x1: 194, y: 40 }
 
 /**
- * The road up from the valley: east along the valley floor, over the river's bridge, then in hairpins up the far
- * bank's face to the gate. Seen from across the gully, its bends lie one over another on the slope.
+ * The road up from the valley: along the valley floor, over the river's bridge, then up the far bank's ridge to the
+ * gate. It keeps to the ridge, so whoever is on it stands against the sky.
  */
 export const ROAD: readonly (readonly [number, number])[] = [
-  [520, 102],
-  [415, 99],
-  [333, 97],
-  [295, 95],
-  [257, 93.5],
-  [235, 93.5],
-  [223, 90],
-  [247, 82],
-  [209, 74.5],
-  [239, 67],
-  [203, 59],
-  [231, 52],
-  [199, 45],
+  [520, 99],
+  [420, 98],
+  [406, 97],
+  [384, 97],
+  [372, 95],
+  [340, 89],
+  [312, 81],
+  [286, 72],
+  [262, 63],
+  [240, 55],
+  [222, 48.5],
+  [206, 43.5],
   [194, 40],
-  [181, 40],
+  [181, 40]
 ]
 
 /** The valley: its floor, the river and the bridge over it (the road's deck between `x0` and `x1`). */
-export const VALLEY = { floor: 99, river: 246, bridge: { x0: 235, x1: 257, y: 93.5 } }
+export const VALLEY = { floor: 99, river: 395, bridge: { x0: 384, x1: 406, y: 97 } }
 
 /**
  * The ground's top along the section, west to east: the hill rising behind the charterhouse, the garden's two
@@ -200,14 +199,17 @@ export const PROFILE: readonly (readonly [number, number])[] = [
   [164.5, 41],
   [166, 40],
   [194, 40],
-  [217, 36],
-  [245, 37],
-  [277, 44],
-  [315, 58],
-  [365, 76],
-  [425, 90],
-  [520, 96],
-  [800, 98],
+  [206, 43.5],
+  [222, 48.5],
+  [240, 55],
+  [262, 63],
+  [286, 72],
+  [312, 81],
+  [340, 89],
+  [372, 95],
+  [420, 98],
+  [520, 99],
+  [800, 100]
 ]
 
 /** The ground's top at `x`. */

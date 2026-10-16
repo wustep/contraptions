@@ -20,8 +20,8 @@ export const OVER = [at(46, 0), at(48, 0), at(50, 0)]
 export const KNOCK = [at(46, 2), at(48, 2), at(50, 2)]
 
 /** The trough: its pin at its hammer's place, its closed west end and open east end (local cells). */
-const WEST = -1.25
-const EAST = 1.55
+const WEST = -1.55
+const EAST = 1.95
 const FLOOR = -0.12
 /** Resting with the closed end down on its stone; over, with the open end down. */
 const REST = -0.27
