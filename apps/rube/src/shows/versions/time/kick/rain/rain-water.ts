@@ -1,5 +1,5 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, puff, rgba } from '../cast'
+import { puff, rgba } from '../cast'
 import { hash } from '../kit'
 import { BAND, RAIN_GEO, SPLASH, clock, rate, vanAt } from '../stack'
 import { RAIN } from '../worlds'
@@ -182,16 +182,6 @@ export function overRiver(pen: Pen, f: View, t: number): void {
   ctx.save()
   ctx.fillStyle = g
   ctx.fill(body)
-  // Light down through it, the rays drifting: only close enough to see.
-  if (k > 9) {
-    ctx.clip(body)
-    const c = clock('rain', t)
-    for (let i = 0; i < 9; i++) {
-      const x = x0 + ((hash(i, 1, 17) * 60 + c * 0.25) % 60)
-      if (x < f.x0 - 2 || x > f.x1 + 2) continue
-      beam(pen.p, k, [x, RAIN_GEO.river], [x - 0.9, RAIN_GEO.bed], 0.5, 1.6, RAIN.riverLight, 0.1 + 0.05 * Math.sin(c * 0.7 + i))
-    }
-  }
   ctx.restore()
   // The surface: a pale line where it meets the air, and the air's grey on it.
   const line = new Path2D()
