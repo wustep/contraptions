@@ -111,7 +111,11 @@ export const WAY = nuukWay()
 
 /* ------------------------------------------------------------------ Cheryl */
 
-/** She is there before the light comes on (out of shot), and gone out of shot after she leaves. */
+/**
+ * She comes before the light does, out of shot: down out of the dark over the stage, landing on it on the hinge as
+ * the light comes on (a frame wider than 16:9 has the stage in it before the cut). She goes out of shot after she
+ * leaves.
+ */
 export const CHERYL_FROM = HINGE - 0.6
 const EDGE: Pt = [STAGE[1] + 0.05, CHERYL_AT[1]]
 const LAND: Pt = [DOOR_X + 0.35, -0.0]
@@ -120,7 +124,10 @@ export const CHERYL_GONE = SHE_LANDS + 1.05
 
 export function cherylAt(t: number): Pt | null {
   if (t < CHERYL_FROM || t >= CHERYL_GONE) return null
-  if (t < HINGE) return CHERYL_AT
+  if (t < HINGE) {
+    const u = (HINGE - t) / (HINGE - CHERYL_FROM)
+    return [CHERYL_AT[0], CHERYL_AT[1] - 2.8 * u * u]
+  }
   // The sway: a little lean to the beat while she plays.
   if (t < OFF_STAGE) {
     const sway = 0.035 * Math.sin(((t - HINGE) / ((OFF_STAGE - HINGE) / 6)) * Math.PI)
