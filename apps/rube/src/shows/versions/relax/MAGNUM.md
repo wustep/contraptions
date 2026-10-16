@@ -99,7 +99,7 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | **27.394** | the hook, round one | the day spa | *A photographer in the wings fires: a flash cut.* Mugatu shows him onto the line. |
 | 28.4 → 52.4 | the hook's lines | | **A car wash for models**, a treatment a line under brass arches: the towel rollers, a trough of mud (he goes mud-brown), the teal rinse (back to steel blue), a slicer and two cucumber slices landing on him as eyes, the steam cabinet, a hot-towel turban, the dryer hood. The steam over the room drifts and thins as the vents open. |
 | 52.356 → 64.8 | the hook, round two | | **The conditioning.** Into the recliner; Mugatu at his console pushes his lever over and the chair flings him across the room into a crimson target (the Prime Minister's colour) on the hook's line; he rolls back down the chute; again (53.395, 57.551, 61.713), each nearer the middle. |
-| 65.342 → 66.648 | the fourth line | | Mugatu's hand comes off the lever and stays away; the chair stays latched; on the line Derek gathers and **springs by himself**, straight and exact, and hits. Mugatu's look. |
+| 65.342 → 66.648 | the fourth line | | Mugatu's hand comes off the lever and stays away; the chair stays latched; on the line Derek gathers and **springs by himself**, straight and exact, and hits. Mugatu watches it. |
 | **71.071** | the sung call, a crash | | A stiff ratchet of a wind-up on the fill, and dead centre: the target is knocked flat. Conditioned. |
 | 73.7 → 83.552 | the breaks | | The big dryer comes down out of the ceiling and blows him down the robes, through the towel strips and out through the door into the night. |
 | **83.552** | the verse | the walk-off | *A photographer outside fires: a flash cut.* Underground: concrete, smoke, a crowd, lasers. Hansel waits in the judge's lamp. |
@@ -238,6 +238,19 @@ Fullness from substance, light that falls on things, and as much cut as added:
 - **The credits' camera** wandered from side to side: it draws back and up, square on the door, over all thirty seconds.
 - **The plug's own frame** stalled: the lead that whips loose was simulated on first use, the first frame after the
   band stops dead (a 42 ms paint). It is simulated while the show loads, and that frame paints like any other.
+
+A second look, the same way:
+- **The awards house** was dark air over the stalls in the opening frames: a dress circle hangs over the back of them,
+  its gilt front catching the stage as the house comes up, a dim row of heads over it, the dark under it.
+- **The bulb wall** had a halo round every bulb and a marquee chase running through them: lit points, steady,
+  breathing a little with the room. The press's flash guns, pale even unlit in the dark house, take only the light
+  that reaches them, and a flash's ember is gone in a third of a second.
+- **The spa's black marble** was flat black: each slab has a long faint vein or two, kept inside its own stone.
+- **The lasers** lost the wide glow round their soft edge: crisp beams in the smoke.
+- **Derelicte's window shafts** carried a haze even under the house lights: they belong to the dark now.
+- **The Center's lawn** was two flat bands under most of the finale: mown in stripes across, each wider than the one
+  beyond, a shade apart. Under the credits the kids at the lit sills drift on their own slow clocks, each inside its
+  pane, looking the way they go.
 
 ## Zoolander nods
 
