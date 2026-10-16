@@ -2,7 +2,6 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { beam, flashBurst, pool, rgba } from '../cast'
 import { hash } from '../kit'
-import { level } from '../music'
 import { CLUB, SPA } from '../worlds'
 import { BALCONY, CAB, clamp01, DOOR_X, DOORS, DRYER, FLOOR_Y, PRESS_FLASH, ROBES, sm, STRIPS, STRIPS_X, windAt, X_END, XT } from './spa-geo'
 import { ctxOf, box, hwash, line, polyline, shape, vwash, type Pen } from './spa-kit'
@@ -351,11 +350,21 @@ export function drawSet(p: p5, k: number, t: number, ink: string, weight: number
       [Math.min(1, 1.1 / (pb - FLOOR_LIP)), POOL_DEEP, 1],
       [1, POOL_DEEP, 1],
     ])
-    for (let x = Math.floor(x0 / 2.8) * 2.8 + 1.1; x < inX1; x += 2.8) {
-      const i = Math.round(x / 2.8)
-      const glow = 0.22 + 0.05 * Math.sin(t * 0.9 + i) + 0.08 * level(t)
-      pool(p, k, [x, FLOOR_LIP + 0.45], 0.4, 0.1, SPA.waterLight, glow * 0.8)
-    }
+    // Each candle's flame on the water: a few short warm strokes under the lip, wavering on the swell.
+    p.push()
+    p.noStroke()
+    CANDLES.forEach((cx, i) => {
+      if (cx < x0 - 1 || cx > inX1 + 1) return
+      const f = flameAt(i, t) * (1 - 0.3 * windAt(cx, t))
+      for (let j = 0; j < 4; j++) {
+        const y = FLOOR_LIP + 0.11 + j * 0.1
+        const w = 0.2 * (1 - j * 0.16) * (0.7 + 0.3 * Math.sin(t * 1.3 + j * 1.7 + i))
+        const dx = 0.035 * Math.sin(t * 0.9 + j * 2.1 + i * 1.3) + 0.012 * j
+        p.fill(rgba(SPA.candle, (0.38 - 0.07 * j) * f))
+        p.rect((cx + dx - w / 2) * k, (y - 0.012) * k, w * k, Math.max(1, 0.024 * k), 0.012 * k)
+      }
+    })
+    p.pop()
     // The shine on its surface: soft bands drifting along under the lip.
     const ctx = ctxOf(p)
     ctx.save()
