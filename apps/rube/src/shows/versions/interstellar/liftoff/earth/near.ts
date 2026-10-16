@@ -10,7 +10,8 @@ import { dayAt, groundAt, windAt, windPace } from './light'
  *
  * Outdoors, from the porch to the launch: dry weeds and seed heads along the bottom of the frame, swaying in the wind
  * and leaning with it as the storm's outflow gets up; in the corn chase, stalk tips whipping past; past the dam, fence
- * posts with a sagging wire, stones, a tumbleweed now and then, and dust blowing low and fast across the ground.
+ * posts with a sagging wire, stones, and dust blowing low and fast across the ground. (Tumbleweeds went: drawn as a
+ * tangle of arcs, they read as a scribble on the frame.)
  *
  * Last, the day's grade over the whole frame (`light.ts`): nothing in the morning and at noon, warming through the
  * afternoon, and the ochre of the storm light by the launch, eased off as the rocket climbs toward the cloud.
@@ -61,7 +62,7 @@ type Frame = ReturnType<typeof frame>
 /** The near plane's foot under the frame: further down than the near ground, by more the further the camera is above it. */
 const footOf = (f: Frame) => f.cy + (groundAt(f.cx) + 0.22 - f.cy) * DROP
 
-/** Weeds, seed heads and stones, fence posts past the dam, and a tumbleweed now and then. */
+/** Weeds, seed heads and stones, and fence posts past the dam. */
 function ground(p: p5, c: Ctx, f: Frame, seen: number): void {
   const { k, t, ink, weight } = c
   const X = (x: number) => x * k
@@ -149,49 +150,6 @@ function ground(p: p5, c: Ctx, f: Frame, seen: number): void {
         p.bezier(X(ax), X(ay + dy), X(ax + 0.8), X(ay + dy + sag), X(bx - 0.8), X(by + dy + sag), X(bx), X(by + dy))
       }
     }
-  }
-  tumbleweeds(p, c, f, foot, shift, seen)
-}
-
-/**
- * Tumbleweeds: one through the yard on the morning air, and the storm's outflow sending them bowling past the base.
- * Each is placed by where the frame is when it comes in (its own x is its place on the screen then, plus NEAR times the
- * camera's middle), so it crosses the frame.
- */
-const WEEDS = [
-  { t0: 21.0, t1: 27.6, x0: -4.5 + NEAR * 14.0, v: 3.0, r: 0.2, seed: 1 },
-  { t0: 62.6, t1: 66.0, x0: 5.5 + NEAR * 86.0, v: -1.2, r: 0.24, seed: 2 },
-  { t0: 68.3, t1: 71.4, x0: 5.6 + NEAR * 100.4, v: -1.4, r: 0.2, seed: 3 },
-]
-
-function tumbleweeds(p: p5, c: Ctx, f: Frame, foot: number, shift: number, seen: number): void {
-  const { k, t, ink, weight } = c
-  const X = (x: number) => x * k
-  for (const w of WEEDS) {
-    if (t < w.t0 || t > w.t1) continue
-    const u = t - w.t0
-    // Its own x on the near plane (where it stands is its own x plus `shift`), bounding as it rolls.
-    const x = shift + w.x0 + w.v * u
-    if (x < f.x0 - 1 || x > f.x1 + 1) continue
-    const hop = Math.abs(Math.sin(u * 3.1 + w.seed)) * 0.22 * (0.6 + 0.4 * Math.sin(u * 1.3))
-    const y = Math.max(groundAt(f.cx) + 0.06 + w.r, foot - w.r - hop)
-    const spin = (-w.v * u) / w.r
-    const fade = smooth(t, w.t0, w.t0 + 0.3) * (1 - smooth(t, w.t1 - 0.3, w.t1))
-    p.noFill()
-    p.stroke(alpha(p, mixHex(DUST.wood, ink, 0.45), 0.9 * seen * fade))
-    p.strokeWeight(Math.max(0.8, weight * 0.55))
-    // A tangle of twigs: arcs round its middle at every angle, turning with it; not a solid ball.
-    for (let j = 0; j < 9; j++) {
-      const a = spin + hash(j, w.seed, 421) * Math.PI * 2
-      const rr = w.r * (0.55 + 0.45 * hash(j, w.seed, 422))
-      const ox = Math.cos(a) * w.r * 0.25
-      const oy = Math.sin(a) * w.r * 0.25
-      p.arc(X(x + ox), X(y + oy), X(2 * rr), X(1.7 * rr), a, a + 2.2 + hash(j, w.seed, 423))
-    }
-    // Its shadow, on the near ground.
-    p.noStroke()
-    p.fill(alpha(p, ink, 0.12 * seen * fade * (1 - hop * 2)))
-    p.ellipse(X(x + 0.06), X(foot + 0.02), X(w.r * 2.2), X(0.06))
   }
 }
 

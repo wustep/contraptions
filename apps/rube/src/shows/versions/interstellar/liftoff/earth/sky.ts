@@ -53,13 +53,11 @@ export const sky = scenery<SkyState>({
     ctx.fillRect(X(f.x0), X(f.y0), X(f.x1 - f.x0), X(f.y1 - f.y0))
 
     // The sun: a flat disc behind the dust, low on the left in the morning, overhead at noon, coming down on the left
-    // and going orange into the wall by the launch. A thin step of haze round it, no glow.
+    // and going orange into the wall by the launch. The disc alone: a step of haze round it read as a halo.
     const lit = smooth(t, 0, 14) * (1 - up)
     const sunX = f.cx + day.sunX
     const sunY = hy - day.sunUp - 0.4 * (1 - smooth(t, 2, 30))
     p.noStroke()
-    p.fill(alpha(p, day.sun, 0.16 * lit))
-    p.circle(X(sunX), X(sunY), X(day.sunR * 3.1))
     p.fill(alpha(p, mixHex(day.sun, '#FFFFFF', 0.25), 0.62 * lit + 0.25 * day.warm * (1 - up)))
     p.circle(X(sunX), X(sunY), X(day.sunR * 2))
 
@@ -103,7 +101,8 @@ export const sky = scenery<SkyState>({
     farmsteads(far)
     freight(far)
 
-    // A road's telegraph poles, and a water tower, all far and slow.
+    // A road's telegraph poles, far and slow. (A water tower stood here too, an old saucer on two legs that hung in the
+    // sky over the horizon as the camera rose and fell; the base has its own.)
     const poles = 0.45
     const pshift = f.cx * (1 - poles)
     const py = groundOf(far, poles)
@@ -127,13 +126,6 @@ export const sky = scenery<SkyState>({
       }
       p.endShape()
     }
-    const tx = 14 + f.cx * (1 - 0.15)
-    p.stroke(alpha(p, ink, 0.45))
-    p.fill(alpha(p, DUST.shade, 0.6))
-    const ty = f.cy + (HORIZON - f.cy) * 0.22
-    for (const dx of [-0.25, 0.25]) p.line(X(tx + dx), X(ty), X(tx + dx * 0.6), X(ty - 0.9))
-    p.ellipse(X(tx), X(ty - 1.05), X(0.8), X(0.36))
-    p.line(X(tx - 0.4), X(ty - 1.05), X(tx - 0.4), X(ty - 0.95))
 
     // Past the dam, NASA's base: its hangar, water tower, radar, tanks, blockhouse, the crews' road and the floodlights.
     base(far)
