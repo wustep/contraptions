@@ -3,6 +3,7 @@ import { layer, motes, parallax, shade, type Frame } from '../depth'
 import { hash } from '../kit'
 import { ctxOf, ellipse, mix, rect, rgba, shape, vgrad, type Pen } from '../pen'
 import { T1, WAKE, WIN } from './geo'
+import { drawEarly, drawPigeons } from './early'
 
 /**
  * The street through the store's front window, Lower East Side, before six on a winter morning in 1952: a world going on
@@ -10,8 +11,9 @@ import { T1, WAKE, WIN } from './geo'
  * goes: the sky and a few last stars; the far side of the city low on the horizon and the Williamsburg Bridge strung
  * across it, its deck lamps still lit; the roofs of the blocks behind, water tanks on their legs and a chimney or two
  * smoking; the tenements across the street, waking a window a beat, the bakery's window lit since four; and the street
- * itself, snow coming down through the street lamp's light, steam off a manhole, a milk truck and then a cab going by,
- * whose lamps throw the window's light across the store inside (`life.ts`, `drawPassing`).
+ * itself, snow coming down through the street lamp's light, steam off a manhole, a man walking his dog, the bakery's
+ * boy riding off with the bread, a milk truck and then a cab going by, whose lamps throw the window's light across the
+ * store inside (`life.ts`, `drawPassing`); and nearest of all, the snow past the glass.
  */
 
 /** The street lamp outside, on the pavement in front of the window; its head. */
@@ -86,6 +88,8 @@ export function drawOutside(pen: Pen, t: number, f: Frame): void {
   layer(pen, f, 0.55, () => roofs(pen, t, seen(0.55), low, dawn), ANCHOR)
   layer(pen, f, 0.85, () => across(pen, t, seen(0.85), dawn), ANCHOR)
   layer(pen, f, STREET_D, () => street(pen, t, seen(STREET_D), dawn), ANCHOR)
+  // And the nearest snow, big and quick past the glass itself.
+  motes(pen, t, { n: 64, seed: 93, box: [x0 - 0.2, y0, x1 + 0.2, y1], size: [0.014, 0.03], color: '#E8EEF4', alpha: 0.55, drift: [0.13, 0.55], wander: 0.12, twinkle: 0.1 })
 }
 
 type Box = [number, number, number, number]
@@ -358,6 +362,8 @@ function across(pen: Pen, t: number, w: Box, dawn: number): void {
   rect(pen, b0 - 0.02, SHOP + 0.02, b1 + 0.02, SHOP + 0.035, '#2A2018')
   // Its light out on the snow of the pavement in front.
   shade(pen, [(b0 + b1) / 2, -0.15], 0.4, 0.05, '#FFC872', 0.3)
+  // Pigeons along the right-hand front's cornice (`early.ts`).
+  drawPigeons(pen, t, w, FRONTS[2][2] - 0.03, dawn)
 }
 
 /** Someone crossing a lit room: head and shoulders behind the glass, between `span`. */
@@ -391,7 +397,9 @@ function street(pen: Pen, t: number, w: Box, dawn: number): void {
   // The street lamp's pool on the snow.
   shade(pen, [LAMP_POST, -0.06], 0.6, 0.1, '#E8C27A', 0.24 * (1 - 0.6 * dawn))
   // Steam off the manhole, lit from under by the lamp.
-  plume(pen, t, MANHOLE, { seed: 7, n: 54, life: 3.6, rise: 1.5, wind: 0.3, size: [0.05, 0.24], color: mix('#7A8692', '#A6AEB4', dawn), hot: '#C9B48A', alpha: 0.085 })
+  plume(pen, t, MANHOLE, { seed: 7, n: 70, life: 3.6, rise: 1.6, wind: 0.4, size: [0.05, 0.3], color: mix('#7A8692', '#A6AEB4', dawn), hot: '#C9B48A', alpha: 0.13 })
+  // The early risers on the far pavement and in the far lane (`early.ts`).
+  drawEarly(pen, t, w, dawn)
   for (const p of TRAFFIC) {
     const x = vehicleX(p, t)
     if (x !== null) vehicle(pen, x, p)
@@ -400,7 +408,7 @@ function street(pen: Pen, t: number, w: Box, dawn: number): void {
   const pass = passing(t)
   const head = LAMP_HEAD
   motes(pen, t, {
-    n: 48,
+    n: 96,
     seed: 92,
     box: [-2.9, -2.8, 1.0, 0.2],
     size: [0.008, 0.017],

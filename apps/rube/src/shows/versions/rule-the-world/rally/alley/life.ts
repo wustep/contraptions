@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
-import { flicker, layer, motes, shade, sway, type Frame } from '../depth'
+import { flicker, lastBeat, layer, motes, shade, sway, type Frame } from '../depth'
 import { hash, smooth } from '../kit'
-import { clamp01, ctxOf, ease, glow, line, mix, rect, rgba, ring, shape, type Pen } from '../pen'
+import { clamp01, ctxOf, ease, line, mix, rect, rgba, ring, shape, type Pen } from '../pen'
 import { CAB } from '../cab'
 import {
   CURB_KICK,
@@ -41,7 +41,7 @@ import {
  * bubbles rising, an ashtray's thread of smoke, a little dust turning in the money table's lamp, and the smoke hanging
  * in layers under the tubes. Under the floor, the work lights swing on their cords and the return's lift wheel turns.
  * Close (d 1.4), soft and dark at the frame's foot: a bar stool, a glass, an ashtray, a rack of house balls; outside, a
- * hydrant and a trash can.
+ * hydrant and a trash can. They are silhouettes: the neon is not caught in lines along their edges.
  *
  * The light is the lights' own, and what they fall on: a neon tube is drawn as its lit glass, a bulb as the bulb, with
  * no halo hung in the air round either; their colour lies on the wet, the lanes and the edges of things, modestly. Nothing
@@ -229,7 +229,10 @@ interface FarThrow {
   /** Pins left standing: 0 a strike. */
   left: number
 }
-/** Each late bowler: his lane, where he waits, his look, and his balls (show times of release). Only one is bowling at first. */
+/**
+ * Each late bowler: his lane, where he waits, his look, and his balls (show times of release). They are all at it as
+ * the door shuts behind Marty, a ball going down one lane or another every couple of seconds, the sound of the place.
+ */
 const BOWLERS: { lane: number; home: number; coat: string; hat: boolean; ball: string; throws: FarThrow[] }[] = [
   {
     lane: 0,
@@ -250,11 +253,23 @@ const BOWLERS: { lane: number; home: number; coat: string; hat: boolean; ball: s
     hat: false,
     ball: '#5A1E2E',
     throws: [
-      { at: 126.3, v: 4.8, left: 0 },
-      { at: 132.2, v: 4.4, left: 2 },
+      { at: 121.35, v: 4.6, left: 2 },
+      { at: 127.3, v: 4.8, left: 0 },
+      { at: 133.2, v: 4.4, left: 2 },
     ],
   },
-  { lane: 2, home: 6.8, coat: '#2E3B44', hat: true, ball: '#24505C', throws: [{ at: 129.9, v: 4.9, left: 0 }] },
+  {
+    lane: 2,
+    home: 6.8,
+    coat: '#2E3B44',
+    hat: true,
+    ball: '#24505C',
+    throws: [
+      { at: 121.9, v: 4.9, left: 0 },
+      { at: 129.9, v: 4.9, left: 0 },
+      { at: 135.8, v: 4.7, left: 1 },
+    ],
+  },
 ]
 const hitOf = (th: FarThrow) => th.at + (DECK_F[0] - FOUL_F) / th.v
 
@@ -415,8 +430,14 @@ function hall(pen: Pen, t: number, g: Frame): void {
   ctx.beginPath()
   for (let x = 5.2; x < 20; x += 3.6) if (x + 1.2 > x0 && x < x1) ctx.rect(x * k, -4.08 * k, 1.2 * k, 0.05 * k)
   ctx.fill()
-  // The tubes' cold light down the panelling.
-  glow(pen, [(x0 + x1) / 2, -3.7], (x1 - x0) * 0.6, '#C8F0D4', 0.07)
+  // The tubes' cold light down the panelling, from under them to the floor.
+  {
+    const g = ctx.createLinearGradient(0, -4.03 * k, 0, WALL_FOOT * k)
+    g.addColorStop(0, css(pen, '#C8F0D4', 0.1))
+    g.addColorStop(1, css(pen, '#C8F0D4', 0))
+    ctx.fillStyle = g
+    ctx.fillRect(x0 * k, -4.03 * k, (x1 - x0) * k, (WALL_FOOT + 4.03) * k)
+  }
   // Its neon: a martini glass, a pin and its ball, a crown. Each hums a little; the pin's ball stutters now and then.
   const hum = (seed: number) => flicker(t, seed, 0.12)
   const stutter = (seed: number) => (hash(Math.floor(t * 7), seed, 9) < 0.035 ? 0.05 : 1)
@@ -448,7 +469,12 @@ function hall(pen: Pen, t: number, g: Frame): void {
     box(pen, DECK_F[0] - 0.35, -3.4, DECK_F[1] + 0.35, -2.8, '#2E1B14')
     box(pen, DECK_F[0] - 0.3, -3.34, DECK_F[1] + 0.3, -2.86, '#3E2618')
     box(pen, DECK_F[0] - 0.35, -2.8, DECK_F[1] + 0.35, -2.77, '#F2FBF4')
-    glow(pen, [(DECK_F[0] + DECK_F[1]) / 2, -2.5], 1.1, '#E8F6EC', 0.13)
+    // Their light straight down on the far decks.
+    const g = ctx.createLinearGradient(0, -2.77 * k, 0, CAP * k)
+    g.addColorStop(0, css(pen, '#E8F6EC', 0.16))
+    g.addColorStop(1, css(pen, '#E8F6EC', 0))
+    ctx.fillStyle = g
+    ctx.fillRect((DECK_F[0] - 0.35) * k, -2.77 * k, (DECK_F[1] - DECK_F[0] + 0.7) * k, (CAP + 2.77) * k)
   }
   // The floor: the concourse's carpet, the approach's maple, the lanes and their gutters, the decks.
   box(pen, x0, WALL_FOOT, x1, CAP + 0.1, '#36101D')
@@ -477,6 +503,16 @@ function hall(pen: Pen, t: number, g: Frame): void {
     disc(pen, smoker, 0.025, '#FF9A70', 0.6 + 0.4 * drag(t, 2.1, 7.5))
     curl(pen, t, smoker, 0.75, 2, SMOKE, 0.22, 0.12)
   }
+  // The night man along the far wall, behind the lanes: down to the decks with a tray of beers for the bowlers, back
+  // with the empties, and down again; never quite still.
+  {
+    const w = nightMan(t)
+    if (w.x > x0 - 0.6 && w.x < x1 + 0.6) {
+      const hand = man(pen, { x: w.x, y: -2.86, s: 0.36, face: w.face, coat: '#4E4A44', lean: 0.03, arm: 1.35, arm2: 0.25 * Math.sin(w.step), step: w.walking ? w.step : undefined })
+      box(pen, hand[0] - 0.14, hand[1] - 0.03, hand[0] + 0.14, hand[1], '#8A8A86')
+      for (let i = 0; i < w.glasses; i++) box(pen, hand[0] - 0.1 + i * 0.07, hand[1] - 0.1, hand[0] - 0.06 + i * 0.07, hand[1] - 0.03, '#DDB24E')
+    }
+  }
   // The late bowlers, the far lanes back to front, each with his ball going down and his pins.
   for (let i = BOWLERS.length - 1; i >= 0; i--) {
     const b = BOWLERS[i]
@@ -496,6 +532,28 @@ function hall(pen: Pen, t: number, g: Frame): void {
     if (ps.x < x0 - 1 || ps.x > x1 + 1) continue
     man(pen, { ...ps, y: ly + 0.02, s, coat: b.coat, hat: b.hat, ball: ps.ball ? b.ball : null })
   }
+}
+
+/** The night man's round along the far wall: where he is, which way he faces, his stride, and what is on his tray. */
+const ROUND: [number, number][] = [
+  [T0 - 2.0, 5.2],
+  [T0 + 4.2, 16.4],
+  [T0 + 5.6, 16.4],
+  [T0 + 11.6, 5.6],
+  [T0 + 12.8, 5.6],
+  [T0 + 19.2, 16.4],
+]
+function nightMan(t: number): { x: number; face: 1 | -1; walking: boolean; step: number; glasses: number } {
+  let i = 0
+  while (i + 2 < ROUND.length && ROUND[i + 1][0] <= t) i++
+  const [t0, a] = ROUND[i]
+  const [t1, b] = ROUND[i + 1]
+  const u = clamp01((t - t0) / (t1 - t0))
+  const walking = a !== b && u > 0 && u < 1
+  const x = a + (b - a) * u
+  // Full going down to the decks, handed out there a glass at a time, empty coming back, loaded again at the bar.
+  const glasses = b > a ? 3 : b < a ? 0 : a > 10 ? Math.max(0, 3 - Math.floor((t - t0) / 0.4)) : 3
+  return { x, face: b < a ? -1 : 1, walking, step: (x / 0.34) * Math.PI, glasses }
 }
 
 /** 0 to 1 and back: a hand going up to the lips every `every` seconds, from a phase `seed`, for a second and a bit. */
@@ -614,9 +672,9 @@ export function farHall(pen: Pen, t: number, f: Frame): void {
   // The haze: thicker under the ceiling, where the smoke hangs, and growing as the night goes on.
   const thick = 0.85 + 0.25 * smooth(t, T0, STRIKE)
   const g = ctx.createLinearGradient(0, OPEN_TOP * k, 0, CAP * k)
-  g.addColorStop(0, css(pen, HAZE, 0.62 * thick))
-  g.addColorStop(0.45, css(pen, HAZE, 0.36 * thick))
-  g.addColorStop(1, css(pen, HAZE, 0.24 * thick))
+  g.addColorStop(0, css(pen, HAZE, 0.6 * thick))
+  g.addColorStop(0.45, css(pen, HAZE, 0.3 * thick))
+  g.addColorStop(1, css(pen, HAZE, 0.16 * thick))
   ctx.fillStyle = g
   ctx.fillRect(x0 * k, OPEN_TOP * k, (x1 - x0) * k, (CAP - OPEN_TOP) * k)
   ctx.restore()
@@ -624,17 +682,8 @@ export function farHall(pen: Pen, t: number, f: Frame): void {
 
 /* ------------------------------------------------------------------ the room's own neon, and its wall */
 
-/** One fluorescent tube over the lanes is going: now and then it stutters. 1 lit, under it out. */
-export function tubeOn(i: number, t: number): number {
-  if (i !== 5) return 1
-  for (const st of [124.62, 130.24, 133.12]) {
-    const s = t - st
-    if (s < 0 || s > 0.26) continue
-    if (s < 0.05) return 0.12
-    if (s < 0.09) return 0.85
-    if (s < 0.19) return 0.08
-    return 0.6 + 2 * (s - 0.19)
-  }
+/** The fluorescent tubes over the lanes: all lit, and steady. 1 lit, under it out. */
+export function tubeOn(_i: number, _t: number): number {
   return 1
 }
 
@@ -938,21 +987,128 @@ export function ashtray(pen: Pen, t: number, at: Pt, s = 1): void {
 
 /* ------------------------------------------------------------------ under the floor */
 
+/** The crawlspace's work lights: where each hangs from the floor, how long its cord, how fast it swings. */
+const WORK: { x: number; L: number; period: number; phase: number }[] = [
+  { x: 4.5, L: 0.36, period: 1.2, phase: 0.4 },
+  { x: 12.5, L: 0.4, period: 1.27, phase: 2.1 },
+]
+/** The posts under the floor, a joist apart (as `draw.ts` lays them). */
+const POST_X0 = WALL[1] + 0.8
+const POST_STEP = 1.6
 /**
- * Under the floor: the work lights swinging on their cords (their light on the joists and the track swinging with
- * them), a little dust, the lift wheel turning.
+ * Where each work light's bulb is: the door's slam as he comes in sets them swinging harder, and they settle over the
+ * hustle, never quite still.
+ */
+function workBulbs(t: number): Pt[] {
+  const kick = Math.exp(-Math.max(0, t - T0) / 8)
+  return WORK.map((w, i) => {
+    const a = (0.1 + 0.32 * kick) * Math.sin(((t - T0) / w.period) * Math.PI * 2 + w.phase) + 0.03 * sway(t, 31 + i, 2.6)
+    return [w.x + Math.sin(a) * w.L, EDGE + 0.1 + Math.cos(a) * w.L] as Pt
+  })
+}
+
+/**
+ * The work lights' light on the crawlspace's back wall, behind the posts: a pool round each, and each post's shadow
+ * thrown away from it, sliding as the bulb swings. Drawn before the posts, the track and the lift, so it is on the wall.
+ */
+export function crawlLight(pen: Pen, t: number, f: Frame): void {
+  if (f.y1 < EDGE) return
+  const bulbs = workBulbs(t)
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  const bottom = Math.min(f.y1 + 0.5, 3.0)
+  for (const b of bulbs) shade(pen, [b[0], b[1] + 0.5], 1.9, 1.1, '#FFD08A', 0.24)
+  ctx.save()
+  ctx.fillStyle = css(pen, '#050304', 0.62)
+  ctx.beginPath()
+  for (const b of bulbs) {
+    for (let n = Math.floor((b[0] - 3 - POST_X0) / POST_STEP); n <= Math.ceil((b[0] + 3 - POST_X0) / POST_STEP); n++) {
+      const px = POST_X0 + n * POST_STEP + 0.06
+      const d = px - b[0]
+      if (Math.abs(d) > 2.6 || px < f.x0 - 1 || px > f.x1 + 1) continue
+      // Thrown away from the bulb, which hangs close in front of the posts: the further the post the further its
+      // shadow, spreading down the wall, and swinging the other way as the bulb swings.
+      const near = 1 - Math.abs(d) / 2.6
+      const top = EDGE + 0.1
+      const at = (y: number) => px + d * (0.45 + 0.55 * (y - top))
+      const w = 0.07 + 0.04 * (1 - near)
+      ctx.moveTo((at(top) - w) * k, top * k)
+      ctx.lineTo((at(top) + w) * k, top * k)
+      ctx.lineTo((at(bottom) + w * 1.6) * k, bottom * k)
+      ctx.lineTo((at(bottom) - w * 1.6) * k, bottom * k)
+      ctx.closePath()
+    }
+  }
+  ctx.fill()
+  ctx.restore()
+}
+
+/** A stroke with round ends, `w` cells wide: a limb. */
+function bone(pen: Pen, a: Pt, b: Pt, hex: string, w: number): void {
+  const ctx = ctxOf(pen.p)
+  ctx.lineCap = 'round'
+  seg(pen, a, b, hex, w)
+  ctx.lineCap = 'butt'
+}
+
+/**
+ * The mechanic under the floor, on his back on a creeper beneath the near work light, his cap on: one knee up and
+ * rocking, his near arm up to the return's track with a wrench on it, a pull on every beat and the ratchet back.
+ */
+function mechanic(pen: Pen, t: number, f: Frame): void {
+  const y = 1.84
+  if (f.y1 < y - 0.6 || f.x0 > 6.4 || f.x1 < 2.9) return
+  const coat = '#28323A'
+  const coatHi = '#3C4A52'
+  const skin = '#6E5040'
+  // The creeper: its board and casters.
+  box(pen, 3.15, y, 5.95, y + 0.05, '#1A1412')
+  for (const cx of [3.35, 5.75]) disc(pen, [cx, y + 0.1], 0.05, '#0E0A0A')
+  // Legs: hips to knees up, knees to feet flat on the ground beyond the board's end; the far knee rocks.
+  const hip: Pt = [4.4, y - 0.12]
+  const rock = 0.08 * sway(t, 51, 3.4)
+  const kneeF: Pt = [3.82 + rock, y - 0.66]
+  const kneeN: Pt = [3.95, y - 0.6]
+  bone(pen, hip, kneeF, mix(coat, '#000000', 0.35), 0.2)
+  bone(pen, kneeF, [3.3 + rock * 0.5, y + 0.02], mix(coat, '#000000', 0.35), 0.16)
+  bone(pen, hip, kneeN, coat, 0.21)
+  bone(pen, kneeN, [3.45, y + 0.03], coat, 0.17)
+  // The body along the board, and his head on its rest, his cap's peak up.
+  const sh: Pt = [5.3, y - 0.17]
+  bone(pen, hip, sh, coat, 0.34)
+  seg(pen, [hip[0] + 0.1, y - 0.3], [sh[0] - 0.05, y - 0.33], coatHi, 0.02)
+  const head: Pt = [5.62, y - 0.18]
+  disc(pen, head, 0.16, skin)
+  poly(pen, [[head[0] - 0.12, head[1] - 0.1], [head[0] + 0.06, head[1] - 0.2], [head[0] + 0.17, head[1] - 0.04], [head[0] + 0.1, head[1] + 0.02]], '#20262C')
+  poly(pen, [[head[0] - 0.02, head[1] - 0.17], [head[0] + 0.02, head[1] - 0.36], [head[0] + 0.07, head[1] - 0.35], [head[0] + 0.06, head[1] - 0.17]], '#181C20')
+  // The far arm on his chest.
+  bone(pen, [sh[0] - 0.05, y - 0.22], [4.85, y - 0.36], mix(coat, '#000000', 0.35), 0.13)
+  // The near arm up to the track, the wrench on its bolt: pulled on the beat, ratcheted back after.
+  const b = lastBeat(t)
+  const u = Number.isFinite(b.ago) ? b.ago : 1
+  const pull = u < 0.16 ? Math.sin((u / 0.16) * (Math.PI / 2)) : Math.max(0, 1 - (u - 0.16) / 0.3)
+  const bolt: Pt = [5.12, TRACK + 0.13]
+  const ang = -0.35 + 0.75 * pull
+  const grip: Pt = [bolt[0] - Math.cos(ang) * 0.24, bolt[1] + Math.sin(ang) * 0.24]
+  const elbow: Pt = [(sh[0] + grip[0]) / 2 + 0.22, (sh[1] + grip[1]) / 2 + 0.05]
+  bone(pen, [sh[0] - 0.02, sh[1] - 0.05], elbow, coat, 0.14)
+  bone(pen, elbow, grip, coat, 0.12)
+  seg(pen, grip, bolt, '#8C8A84', 0.035)
+  disc(pen, grip, 0.06, skin)
+}
+
+/**
+ * Under the floor: the work lights swinging on their cords (their light and the posts' shadows on the wall behind,
+ * `crawlLight`), a mechanic at the return's track, a little dust, the lift wheel turning.
  */
 export function underFloor(pen: Pen, t: number, f: Frame): void {
   if (f.y1 < EDGE) return
-  const bulbs: Pt[] = []
-  for (const [i, bx] of [4.5, 12.5].entries()) {
-    const a = 0.12 * sway(t, 31 + i, 2.6)
-    const L = 0.3
-    const b: Pt = [bx + Math.sin(a) * L, EDGE + 0.1 + Math.cos(a) * L]
-    bulbs.push(b)
-    seg(pen, [bx, EDGE + 0.1], b, '#0A0607', 0.012)
-    // Its light lies on the crawlspace's back wall and the joists under it (thrown the way it swings), not round it.
-    shade(pen, [b[0] + Math.sin(a) * 0.5, b[1] + 0.5], 1.1, 0.7, '#FFD08A', 0.09)
+  mechanic(pen, t, f)
+  const bulbs = workBulbs(t)
+  for (const [i, b] of bulbs.entries()) {
+    seg(pen, [WORK[i].x, EDGE + 0.1], b, '#0A0607', 0.012)
+    // A little of its light on the posts and the track in front of it.
+    shade(pen, [b[0], b[1] + 0.4], 0.9, 0.6, '#FFD08A', 0.05)
     disc(pen, b, 0.05, '#FFE6B0', 0.9)
   }
   if (f.y1 > EDGE + 0.4)
@@ -1367,24 +1523,12 @@ function nearThing(pen: Pen, t: number, kind: Near, b: Pt, u: number, a: number)
     ctx.arc(c[0] * k, c[1] * k, r * k, 0, Math.PI * 2)
     ctx.fill()
   }
-  // The neon's catch along an edge: a thin line of light on it, and nothing round it.
-  const rim = (pts: Pt[], col: string, al: number) => {
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.strokeStyle = css(pen, col, al * 0.8)
-    ctx.lineWidth = 0.028 * u * k
-    ctx.beginPath()
-    pts.forEach(([px, py], i) => (i ? ctx.lineTo(px * k, py * k) : ctx.moveTo(px * k, py * k)))
-    ctx.stroke()
-  }
   if (kind === 'stool') {
     // The seat's round top, red vinyl gone black in the dark, and its chrome post going down out of the frame.
     soft([[x - 0.06 * u, y - 0.9 * u], [x + 0.06 * u, y - 0.9 * u], [x + 0.06 * u, y + 0.3], [x - 0.06 * u, y + 0.3]], dark)
-    rim([[x - 0.03 * u, y - 0.86 * u], [x - 0.03 * u, y]], '#B9D3E2', 0.35)
     soft(arc([x, y - 1.0 * u], 0.62 * u, 0.17 * u, 0, Math.PI * 2, 18), '#1C070D')
-    rim(arc([x, y - 1.0 * u], 0.62 * u, 0.17 * u, Math.PI * 1.02, Math.PI * 1.75, 10), NEON.red, 0.75)
   } else if (kind === 'glass') {
-    // A glass of beer with the light coming through it: dark glass, the beer glowing amber, its bubbles going up.
+    // A glass of beer, dark against the room: the beer a dull amber in it, its head, its bubbles going up.
     const w = 0.42 * u
     const h = 0.95 * u
     const body: Pt[] = [[x - w / 2, y], [x - w / 2 - 0.04 * u, y - h], [x + w / 2 + 0.04 * u, y - h], [x + w / 2, y]]
@@ -1392,37 +1536,27 @@ function nearThing(pen: Pen, t: number, kind: Near, b: Pt, u: number, a: number)
     ctx.save()
     trace(body)
     ctx.clip()
-    glow(pen, [x, y - h * 0.45], h * 0.7, '#E2B850', 0.6)
+    rect(pen, x - w, y - h * 0.86, x + w, y, '#5A3E16')
     rect(pen, x - w, y - h, x + w, y - h * 0.86, '#6E5A44')
     ctx.restore()
     bubbles(pen, t, [[x, y, h, w]])
-    rim([[x + w / 2 + 0.035 * u, y - h + 0.04 * u], [x + w / 2 + 0.005 * u, y - 0.1 * u]], NEON.teal, 0.6)
-    rim([[x - w / 2 - 0.035 * u, y - h + 0.04 * u], [x - w / 2 - 0.035 * u, y - h + 0.3 * u]], NEON.magenta, 0.4)
   } else if (kind === 'ashtray') {
     soft([[x - 0.55 * u, y - 0.18 * u], [x + 0.55 * u, y - 0.18 * u], [x + 0.45 * u, y + 0.1], [x - 0.45 * u, y + 0.1]], dark)
-    rim([[x - 0.52 * u, y - 0.19 * u], [x + 0.52 * u, y - 0.19 * u]], NEON.magenta, 0.55)
     disc([x + 0.42 * u, y - 0.26 * u], 0.03 * u, '#E8805A', 0.7 + 0.2 * Math.sin(t * 2.3))
     curl(pen, t, [x + 0.42 * u, y - 0.28 * u], 2.2 * u, 5, SMOKE, 0.2, 0.3)
   } else if (kind === 'rack') {
-    // House balls on their rack: dark spheres, each with the neon caught along its shoulder.
+    // House balls on their rack: dark spheres.
     soft([[x - 1.1 * u, y - 0.5 * u], [x + 1.1 * u, y - 0.5 * u], [x + 1.1 * u, y + 0.3], [x - 1.1 * u, y + 0.3]], dark)
-    rim([[x - 1.08 * u, y - 0.52 * u], [x + 1.08 * u, y - 0.52 * u]], '#B9D3E2', 0.3)
     for (const [i, dx] of [-0.7, 0, 0.7].entries()) {
       const c: Pt = [x + dx * u, y - 0.84 * u]
-      const col = [NEON.magenta, NEON.teal, NEON.red][i]
       disc(c, 0.4 * u, ['#0C0A12', '#081418', '#14070C'][i], 0.97)
-      rim(arc(c, 0.37 * u, 0.37 * u, Math.PI * 1.1, Math.PI * 1.55, 8), col, 0.6)
     }
   } else if (kind === 'hydrant') {
     soft([[x - 0.3 * u, y + 0.2], [x - 0.26 * u, y - 0.75 * u], [x - 0.18 * u, y - 0.95 * u], [x + 0.18 * u, y - 0.95 * u], [x + 0.26 * u, y - 0.75 * u], [x + 0.3 * u, y + 0.2]], '#0A0B10')
     soft([[x - 0.44 * u, y - 0.62 * u], [x + 0.44 * u, y - 0.62 * u], [x + 0.44 * u, y - 0.47 * u], [x - 0.44 * u, y - 0.47 * u]], '#0A0B10')
-    rim([[x + 0.2 * u, y - 0.93 * u], [x + 0.27 * u, y - 0.75 * u], [x + 0.29 * u, y]], NEON.magenta, 0.55)
-    rim([[x - 0.18 * u, y - 0.97 * u], [x + 0.16 * u, y - 0.97 * u]], '#B9D3E2', 0.55)
   } else {
     soft([[x - 0.48 * u, y + 0.2], [x - 0.52 * u, y - 1.05 * u], [x + 0.52 * u, y - 1.05 * u], [x + 0.48 * u, y + 0.2]], '#0A0C12')
     soft([[x - 0.58 * u, y - 1.05 * u], [x + 0.58 * u, y - 1.05 * u], [x + 0.5 * u, y - 1.18 * u], [x - 0.5 * u, y - 1.18 * u]], '#0D1018')
-    rim([[x - 0.56 * u, y - 1.08 * u], [x + 0.3 * u, y - 1.17 * u]], '#B9D3E2', 0.5)
-    rim([[x - 0.52 * u, y - 1.0 * u], [x - 0.48 * u, y]], NEON.pink, 0.35)
   }
   ctx.restore()
 }
@@ -1460,6 +1594,20 @@ export const hatTip = (t: number): number => {
   const s = t - 126.05
   return s < 0 || s > 0.9 ? 0 : Math.sin((s / 0.9) * Math.PI)
 }
+
+/**
+ * The two at the counter talking it over before the first point, about the ball that has bounced in: the bettor
+ * points his stake at it and at the table, Wally answers with a nod and an open hand. Each is 0 to 1, a gesture's
+ * reach; a bump of about a second at each of their show times.
+ */
+const BETTOR_SAYS = [121.55, 122.75, 123.95, 124.85]
+const WALLY_SAYS = [122.2, 123.4, 124.45]
+const bump = (t: number, at: number, len: number): number => {
+  const u = (t - at) / len
+  return u <= 0 || u >= 1 ? 0 : Math.sin(u * Math.PI) * (0.75 + 0.25 * Math.sin(u * Math.PI * 3))
+}
+export const bettorSays = (t: number): number => BETTOR_SAYS.reduce((m, at) => Math.max(m, bump(t, at, 0.95)), 0)
+export const wallySays = (t: number): number => WALLY_SAYS.reduce((m, at) => Math.max(m, bump(t, at, 0.8)), 0)
 
 /** People never stand quite still: a slow shift of weight, about a share of a cell. */
 export const shift = (t: number, seed: number): number => 0.025 * sway(t, seed, 5.5)

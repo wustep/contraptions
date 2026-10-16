@@ -231,13 +231,15 @@ export const WAKE: [number, number, number][] = [
 
 /**
  * The stockroom's bulb, set swinging on its long cord by the draught as the curtain is flung open: its x off the
- * plumb, swinging out to a side on every second beat and dying away through the pause, so the light and the two of
- * them's shadows sway together.
+ * plumb, swinging out to a side on every second beat and dying away through the pause, but never quite to rest, since
+ * the yard window's loose sash lets a draught in all the while; so the light and the two of them's shadows sway
+ * together.
  */
 export function stockSway(t: number): number {
   const u = t - CURTAIN
   if (u <= 0) return 0
-  return 0.17 * Math.exp(-u / 7) * Math.sin((u * 2 * Math.PI) / BAR) * Math.min(1, u / 0.25)
+  const reach = 0.22 * Math.exp(-u / 8) + 0.085 * (1 - Math.exp(-u / 4))
+  return reach * Math.sin((u * 2 * Math.PI) / BAR) * Math.min(1, u / 0.25)
 }
 
 /** The lock, seen in section under the dial: three wheels, one set a bar (15, 16, 17), each turned by the dial's clicks

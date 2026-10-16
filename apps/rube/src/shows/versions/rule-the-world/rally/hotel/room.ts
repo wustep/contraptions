@@ -63,7 +63,9 @@ function view(pen: Pen, f: Frame, d: number, shift: Pt, draw: (g: Frame) => void
 }
 
 /** The El's passes behind the house: when the head of the train comes into the window. */
-const ELS = [93.35, 98.6]
+export const ELS = [93.35, 98.6]
+/** The room shaking as an El goes by: 0, up as the train comes level, and down as it goes (2.4 s). */
+export const rumble = (t: number): number => ELS.reduce((s, t0) => s + Math.max(0, Math.sin(Math.max(0, Math.min(1, (t - t0) / 2.4)) * Math.PI)), 0)
 const EL_SPEED = 3.2
 const CARRIAGE = 1.15
 const CARRIAGES = 4
@@ -169,9 +171,8 @@ function drawWetGlass(pen: Pen, t: number): void {
 }
 
 /** How the curtain breathes: the draught through the sash, and harder as an El goes by. */
-function breath(t: number): number {
-  const el = ELS.reduce((s, t0) => s + Math.max(0, Math.sin(Math.max(0, Math.min(1, (t - t0) / 2.4)) * Math.PI)), 0)
-  return 0.55 + 0.45 * sway(t, 2, 3.6) + 0.5 * el
+export function draught(t: number): number {
+  return 0.55 + 0.45 * sway(t, 2, 3.6) + 0.5 * rumble(t)
 }
 
 /** A box of light laid over what is there, in cells: a tint where a light falls. */
@@ -220,7 +221,7 @@ export function drawWindow(room: Pen, t: number, f: Frame): void {
   wash(pen, WIN.x0 - 0.2, WIN.y1, WIN.x1 + 0.2, WIN.y1 + 0.05, SIGN, sign)
   wash(pen, WIN.x0 - 0.05, WIN.y0 - 0.06, WIN.x0, WIN.y1, SIGN, sign * 0.8)
   // The curtain on its rod, drawn aside, breathing.
-  const b = breath(t)
+  const b = draught(t)
   const rod = WIN.y0 - 0.2
   room.p.noStroke()
   const ctx = ctxOf(room.p)
@@ -298,14 +299,21 @@ export function drawElLight(room: Pen, t: number): void {
   }
 }
 
+/** Who goes by in the hall, and which way: one going along it as he comes in, and back again as the bulb goes. */
+const HALL: [number, number][] = [
+  [91.35, -1],
+  [95.6, 1],
+]
+
 /** Someone going by in the hall: two feet's shadows across the light under the door. */
 export function drawHall(room: Pen, t: number, door: [number, number]): void {
-  const s = t - 91.35
-  const walk = s > 0 && s < 1.6 ? s / 1.6 : -1
-  if (walk < 0) return
+  const pass = HALL.find(([at]) => t > at && t < at + 1.6)
+  if (!pass) return
+  const walk = (t - pass[0]) / 1.6
   const pen = plain(room)
   const fl = F_MARTY
-  const fx = door[1] + 0.3 - (door[1] - door[0] + 0.6) * walk
+  const across = door[1] - door[0] + 0.6
+  const fx = pass[1] < 0 ? door[1] + 0.3 - across * walk : door[0] - 0.3 + across * walk
   const ctx = ctxOf(pen.p)
   const { k } = pen
   ctx.save()
@@ -452,8 +460,8 @@ export function drawTap(pen: Pen, t: number, at: (p: Pt) => Pt, water: number): 
 
 /* ------------------------------------------------------------------ Mishkin's room */
 
-/** The car going by in the street, its lights coming in at his window and over his wall and ceiling. */
-const CAR_SWEEP = 99.9
+/** The cars going by in the street, their lights coming in at his window and over his wall and ceiling. */
+const CAR_SWEEPS = [92.2, 95.25, 99.9]
 
 /** His lamp: where it is, and how it rocks after the tub lands by it. */
 const LAMP: Pt = [(NIGHTSTAND[0] + NIGHTSTAND[1]) / 2 - 0.1, STAND_TOP]
@@ -505,8 +513,9 @@ export function drawMishAir(mish: Pen, t: number, f: Frame): void {
   // A moth at his lamp.
   const lamp: Pt = [LAMP[0] + lampRock(t) * 0.6, LAMP[1] - 0.72]
   moths(pen, t, 2, 7, lamp, 1, null, 0)
-  // The car's lights coming in at the window and going over the wall and the ceiling, right to left.
-  const s = t - CAR_SWEEP
+  // A car's lights coming in at the window and going over the wall and the ceiling, right to left.
+  const sweep = CAR_SWEEPS.find((at) => t > at && t < at + 1.6)
+  const s = sweep === undefined ? -1 : t - sweep
   if (s > 0 && s < 1.6) {
     const x = WALL_R[0] - (WALL_R[0] - WALL_L[1] + 1) * (s / 1.6)
     const env = Math.sin((s / 1.6) * Math.PI)

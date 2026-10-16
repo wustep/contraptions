@@ -1,6 +1,6 @@
 import { smooth } from '../kit'
 import { at } from '../music'
-import { A, DEAD, DIES, SMASHES, T0, WINNER } from './geo'
+import { A, DEAD, DIES, REST_AT, SMASHES, T0, WINNER } from './geo'
 
 /**
  * The house's mood, which everything in the hall goes by: the gallery, the front row, the press, the air.
@@ -35,3 +35,5 @@ export const busy = (t: number): number => 0.3 + 0.7 * smooth(t, T0 + 1, at(40, 
 export const hush = (t: number): number => smooth(t, DIES, DIES + 2.5)
 /** Just the dead shot and the ball dying: nothing in the hall competes with it. */
 export const still = (t: number): number => smooth(t, DEAD - 0.6, DEAD - 0.15) * (1 - smooth(t, DIES + 0.1, DIES + 0.5))
+/** The hall getting up to go, once he has come to rest on the boards: 0 to 1. */
+export const leaving = (t: number): number => smooth(t, REST_AT - 1.3, REST_AT + 0.5)

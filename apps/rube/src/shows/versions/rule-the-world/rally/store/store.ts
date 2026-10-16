@@ -6,6 +6,8 @@ import { drawBat, drawCurtain, drawFitting, drawLadder, drawLamps, drawLights, d
 import { BOLTS, DIAL_AT, END, FIRE, HANDLE_LAND, SHOVES, INTRO_HOPS, INTRO_RUN, RACHEL_AT, rachelAt, STORE_STRIKES, SWUNG, T0, T1, WAY } from './geo'
 import { at } from '../music'
 import { drawCat, drawCatUnder, drawForeground, drawLife } from './life'
+import { drawCatAbout, drawCatThrough, drawMouse } from './cat'
+import { drawNear } from './near'
 
 /**
  * Uncle Murray's shoe store on the Lower East Side, 1952, before it opens (0 → 52.455, bars 1 to 24).
@@ -57,10 +59,13 @@ export const store = part<StoreState>(
       drawCatUnder(pen, t, f)
       drawFitting(pen, t)
       drawPairShadows(pen, t, rachelAt(t))
+      drawMouse(pen, t)
       drawCurtain(pen, t)
+      drawCatThrough(pen, t)
       drawOfficeDoor(pen, t)
       drawSafeInside(pen, t)
       drawSafeDoor(pen, t)
+      drawCatAbout(pen, t)
       drawMurray(pen, t)
       drawLamps(pen, t)
       drawCat(pen, t)
@@ -68,6 +73,7 @@ export const store = part<StoreState>(
       drawLights(pen, t)
       drawLife(pen, t, f)
       drawForeground(pen, t, f)
+      drawNear(pen, t, f)
       p.pop()
     },
   },
@@ -112,7 +118,8 @@ function shots(): PartShot[] {
     follow(16.0, 4.4, [0.8, -0.35]),
     follow(18.6, 4.2, [0.8, -0.45]),
     hold(20.9, 3.4, [17.45, 0.45]),
-    hold(27.0, 3.0, [17.42, 0.42]),
+    // Drifting a little to the right as it closes on them, the window and the yard going by behind slower than the room.
+    hold(27.0, 3.0, [17.6, 0.4]),
     follow(28.6, 4.0, [0.8, -0.3]),
     hold(30.5, 3.8, [25.65, 0.55]),
     { ...hold(DIAL_AT[0], 2.6, [25.72, 0.15]), cut: true },

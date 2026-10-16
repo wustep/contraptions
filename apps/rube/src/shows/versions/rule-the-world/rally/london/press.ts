@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { ellipse, mix, rect, shape, type Pen } from '../pen'
-import { ballAt, BOW, DEAD, MISS, PARAPET, SMASHES, T0, WINNER } from './geo'
+import { ballAt, BOW, DEAD, FLOOR_HITS, MISS, PARAPET, REST_AT, SMASHES, T0, WINNER } from './geo'
 import { busy, SEMI_WIN } from './mood'
 import { C } from './palette'
 
@@ -38,6 +38,9 @@ export const SHOTS: Shot[] = (() => {
   press(lastSmash + 0.07, 1, true)
   press(MISS + 0.3, 1, true)
   press(BOW + 0.3, 0, true)
+  // And no bulb, but two of them up again as he goes off the end and over the boards, for the picture of the loss.
+  press(FLOOR_HITS[1] + 0.15, 2)
+  press(REST_AT - 0.1, 1)
   // Otherwise up for the smashes, and now and then for the play, more as the final comes on: up, and down again.
   for (const s of SMASHES) if (Math.abs(s.t - SEMI_WIN) > 0.1 && Math.abs(s.t - WINNER) > 0.1 && Math.abs(s.t - lastSmash) > 0.1) press(s.t + 0.07, Math.floor(hash(Math.round(s.t * 100), 3, 81) * 3))
   for (let i = 0; T0 + 1.5 + i * 0.41 < DEAD - 1; i++) {

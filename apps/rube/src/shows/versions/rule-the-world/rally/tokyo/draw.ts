@@ -39,7 +39,7 @@ import {
   XR,
 } from './geo'
 import { drawBalcony, drawLowLanterns, drawRigging, drawWallBunting } from './house'
-import { drawBeams, drawFlashIn } from './light'
+import { drawFlashIn } from './light'
 import { lit, spill } from './mood'
 import { C } from './palette'
 import { drawPress } from './press'
@@ -148,7 +148,6 @@ export function drawArena(pen: Pen, t: number, f: Frame): void {
   drawPress(pen, t, f)
   drawJudges(pen, t, f)
   drawBoard(pen, t, f)
-  drawBeams(pen, t, f)
 }
 
 /** The judges' table on the floor: a cloth, two judges, the flip-cards (bars, no figures), the bell. */

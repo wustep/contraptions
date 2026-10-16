@@ -1,11 +1,14 @@
 import type { Pt } from '../../../../../parts'
 import { frame, knock, smooth } from '../kit'
 import { shade, sway, type Frame } from '../depth'
-import { blob, ctxOf, ellipse, fillWith, glow, line, mix, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import { blob, ctxOf, ellipse, fillWith, line, mix, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import { benchLit, corridorLight, nurseryMotes, wardShafts } from './light'
 import { birds, el, lookIn, lookOut, plane, roofs, sky, snow, towers, wing, type Look } from './outside'
+import { passers } from './near'
 import { clock, drip, fan, flowers, foreground, mobile } from './props'
 import { daylight, sunUp, warm } from './dawn'
+import { blindShadows, curtainShadows, doorClock, farDoor, globes, hallPigeon, noticeBoard, wardPigeons, wheelchair } from './hall'
+import { bather, drawPeople, nightNurse } from './people'
 import {
   AT_GLASS,
   BACK,
@@ -19,7 +22,6 @@ import {
   DADO,
   DOOR_HEAD,
   DOOR_LEAF,
-  FAR_DOOR,
   FLOOR,
   FOOT_TOP,
   FOOT_X,
@@ -147,11 +149,13 @@ export function drawSet(pen: Pen, t: number, f: Frame): void {
   rect(pen, f.x0 - 1, FLOOR - 0.16, f.x1 + 1, FLOOR, C.base)
   rect(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, CEIL, C.ceiling)
   rect(pen, f.x0 - 1, CEIL, f.x1 + 1, CEIL + 0.08, C.frameShade)
-  // The morning in the room: grey at first, then gold, falling from the ward's window over the bed and the floor about
-  // it, and a little out through its door; the corridor has only what comes in at its own window.
-  const morning = mix('#C9D3DA', C.gold, w)
-  glow(pen, [0.0, 0.4], 5.5, morning, 0.08 + 0.1 * w)
-  glow(pen, [-4.6, -0.2], 3.2, morning, 0.05 + 0.08 * w)
+  // The morning in the ward: its walls take the window's light evenly, grey at first and then gold, the whole room at
+  // once (no pool of it hung round the bed); the corridor has only what comes in at its own window.
+  const ctx = ctxOf(pen.p)
+  ctx.save()
+  ctx.fillStyle = rgba(pen, mix('#C9D3DA', C.gold, w), 0.05 + 0.08 * w)
+  ctx.fillRect(WALL[1] * pen.k, (f.y0 - 1) * pen.k, (Math.max(f.x1, WALL[1]) + 1 - WALL[1]) * pen.k, (FLOOR - f.y0 + 1) * pen.k)
+  ctx.restore()
   drawFloor(pen, f, w)
   drawCorridorWindow(pen, t, f)
   corridorLight(pen, t, f)
@@ -159,12 +163,17 @@ export function drawSet(pen: Pen, t: number, f: Frame): void {
   clock(pen, t, [-2.05, -1.55], 0.2)
   drawWardWindow(pen, t, f)
   drawCurtain(pen, f, t)
+  curtainShadows(pen, t, f)
   drip(pen, t, 2.47)
   drawStand(pen, t)
   drawBed(pen, w)
   wardShafts(pen, t, f)
   drawWardWall(pen)
-  drawFarDoor(pen)
+  farDoor(pen, t, C)
+  doorClock(pen, t, f)
+  noticeBoard(pen, t, f)
+  wheelchair(pen, f)
+  globes(pen, t, f)
   fan(pen, t, [-5.0, -2.25], f)
 }
 
@@ -220,14 +229,17 @@ function drawWardWindow(pen: Pen, t: number, f: Frame): void {
   const L: Look = { f, win: WARD_WIN, anchor: [0.25, -0.45], base: y1 + 0.08, s: 1, t }
   if (lookOut(pen, L)) {
     // The sun, still under the roofs, lifting the sky over them.
-    sky(pen, L, [x0 + 1.8, y1 - 0.3])
+    sky(pen, L)
     plane(pen, L, { t0: T0 - 1, x0: 2.5, v: 0.24, y: -1.86, every: 41 })
     towers(pen, L, 0.15)
-    roofs(pen, L, 0.3, { tanks: 0.3, chimneys: 0.42, tall: 0.26, seed: 51 })
-    el(pen, L, 0.36)
-    roofs(pen, L, 0.45, { tanks: 0.55, chimneys: 0.2, tall: 0.06, seed: 53, dark: true })
-    snow(pen, L, 0.6, 611)
+    roofs(pen, L, 0.3, { tanks: 0.3, chimneys: 0.42, tall: 0.26, seed: 51, wash: 0.3 })
+    el(pen, L, 0.36, { phase: 6.45 })
+    roofs(pen, L, 0.45, { tanks: 0.45, chimneys: 0.4, tall: 0.06, seed: 53, dark: true })
+    // The Third Avenue line, nearer, over the roofs at the foot of the window: a train across it as they lie together.
+    el(pen, { ...L, s: 1.55, base: L.base + 0.08 }, 0.55, { phase: 4.92, every: 6.5, dir: -1 })
+    snow(pen, L, 0.6, 611, 2.4, 0.75)
     birds(pen, L, 0.4, [0.75, -1.58])
+    wardPigeons(pen, t)
     lookIn(pen)
   }
   // The sashes and their bars.
@@ -253,7 +265,7 @@ function drawCurtain(pen: Pen, f: Frame, t: number): void {
   line(pen, [x0 - 0.1, -4.55], [x1, -4.55], C.iron, 1.2)
   rect(pen, x0, -4.5, x1, 1.0, C.curtain)
   // The draught: a slow breath, coming along the curtain from its open edge.
-  const breath = (x: number): number => 0.045 * sway(t - (x - x0) * 0.8, 7, 6.5) * Math.exp(-(x - x0) / 2.2)
+  const breath = (x: number): number => 0.085 * sway(t - (x - x0) * 0.8, 7, 4.8) * Math.exp(-(x - x0) / 2.6)
   for (let x = x0; x < x1; x += 0.3) {
     const i = Math.round((x - x0) / 0.3)
     const b = breath(x)
@@ -295,19 +307,20 @@ function drawCorridorWindow(pen: Pen, t: number, f: Frame): void {
   rect(pen, x0 - 0.13, y0 - 0.13, x1 + 0.13, y1 + 0.16, C.frameShade)
   const L: Look = { f, win: CORRIDOR_WIN, anchor: [-8.6, -0.65], base: -1.05, s: 0.8, t }
   if (lookOut(pen, L)) {
-    sky(pen, L, [x0 - 1.4, -1.0], 2.6)
+    sky(pen, L)
     plane(pen, L, { t0: 217, x0: -4.9, v: 0.16, y: -2.15, every: 43 })
     towers(pen, L, 0.15)
-    roofs(pen, L, 0.3, { tanks: 0.35, chimneys: 0.4, tall: 0.38, seed: 57 })
+    roofs(pen, L, 0.3, { tanks: 0.35, chimneys: 0.4, tall: 0.38, seed: 57, wash: 0.35 })
     birds(pen, L, 0.5, [-6.0, -1.85], 6)
     wing(pen, L, 0.7, -1.25)
-    snow(pen, L, 0.8, 613)
+    snow(pen, L, 0.8, 613, 2.4, 0.75)
     // The glass, and the morning's haze in the court, so that the view stays back behind the room.
     const veil = ctxOf(pen.p)
     veil.save()
     veil.fillStyle = rgba(pen, mix('#E9ECEA', '#FBE6C4', warm(t)), 0.3)
     veil.fillRect(x0 * pen.k, y0 * pen.k, (x1 - x0) * pen.k, (y1 - y0) * pen.k)
     veil.restore()
+    hallPigeon(pen, t)
     const refl = mix('#FFFFFF', C.dawn, warm(t))
     fillWith(pen, [[x0 + 0.3, y0], [x0 + 0.62, y0], [x0 - 0.3, y1], [x0 - 0.62, y1]], rgba(pen, refl, 0.1))
     fillWith(pen, [[x1 - 0.2, y0], [x1 - 0.06, y0], [x1 - 0.86, y1], [x1 - 1.0, y1]], rgba(pen, refl, 0.08))
@@ -350,7 +363,7 @@ function drawBed(pen: Pen, w: number): void {
   const xf = FOOT_X
   const xh = HEAD_X
   // Under the bed: its shadow on the floor.
-  glow(pen, [(xf + xh) / 2, FLOOR + 0.02], 1.8, '#2B3832', 0.22)
+  shade(pen, [(xf + xh) / 2, FLOOR + 0.02], 1.8, 0.4, '#2B3832', 0.24)
   // The far posts and boards.
   const far = C.enamelShade
   limb(pen, [xf + D[0], FOOT_TOP + D[1]], [xf + D[0], FLOOR - 0.05 + D[1]], 0.06, far)
@@ -400,14 +413,14 @@ function drawBed(pen: Pen, w: number): void {
   line(pen, [xh + 0.03, HEAD_TOP], [xh + 0.03, FLOOR - 0.1], C.enamelShade, 0.6)
   for (const [x, y] of [[xf, FOOT_TOP], [xh, HEAD_TOP], [xf + D[0], FOOT_TOP + D[1]], [xh + D[0], HEAD_TOP + D[1]]] as Pt[]) {
     ellipse(pen, [x, y - 0.05], 0.055, 0.055, C.brass)
-    ellipse(pen, [x - 0.015, y - 0.065], 0.02, 0.02, mix(C.brass, '#FFF3C8', 0.6))
   }
   // A blank chart on a clipboard, hung on the foot.
   rect(pen, xf - 0.2, -0.3, xf + 0.02, 0.05, C.woodDark)
   rect(pen, xf - 0.18, -0.25, xf, 0.03, '#F4F1E4')
   rect(pen, xf - 0.13, -0.32, xf - 0.05, -0.26, C.iron)
-  // The window's light on the blanket.
-  glow(pen, [0.2, 0.05], 1.6, mix('#E8ECEE', C.gold, w), 0.12 + 0.1 * w)
+  // The window's light on the blanket: its lower panes laid across the top of it, plain-edged.
+  const lit = rgba(pen, mix('#E8ECEE', C.gold, w), 0.1 + 0.1 * w)
+  for (const [a, b] of [[-0.55, 0.15], [0.3, 1.0]] as Pt[]) fillWith(pen, [[a, nearY], [b, nearY], [b + D[0], nearY + D[1]], [a + D[0], nearY + D[1]]], lit)
 }
 
 /** The ward's wall, in section above its open door, and the door folded back against the corridor wall. */
@@ -427,16 +440,6 @@ function drawWardWall(pen: Pen): void {
   rect(pen, w0, DOOR_HEAD - 0.12, w1, DOOR_HEAD, C.sectionDark)
   rect(pen, w0 - 0.1, DOOR_HEAD - 0.16, w0, FLOOR, C.frame)
   rect(pen, w1, DOOR_HEAD - 0.16, w1 + 0.1, FLOOR, C.frame)
-}
-
-function drawFarDoor(pen: Pen): void {
-  const [a, b] = FAR_DOOR
-  rect(pen, a - 0.1, DOOR_HEAD - 0.1, b + 0.1, FLOOR, C.frame)
-  rect(pen, a, DOOR_HEAD, b, FLOOR - 0.02, C.door)
-  rect(pen, a + 0.12, DOOR_HEAD + 1.45, b - 0.12, FLOOR - 0.15, C.doorDark)
-  ellipse(pen, [(a + b) / 2, DOOR_HEAD + 0.7], 0.25, 0.25, C.frame)
-  ellipse(pen, [(a + b) / 2, DOOR_HEAD + 0.7], 0.19, 0.19, mix(C.glass, '#8FA6AE', 0.45))
-  ellipse(pen, [a + 0.13, DOOR_HEAD + 1.35], 0.045, 0.045, C.brass)
 }
 
 /* ------------------------------------------------------------------ the part, under the balls */
@@ -488,13 +491,15 @@ export function drawPart(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
     fillWith(pen, [[GLASS.x0 + 0.3, FLOOR + 0.04], [GLASS.x1 - 0.2, FLOOR + 0.04], [GLASS.x1 + 1.2, FLOOR + 1.4], [GLASS.x0 + 1.4, FLOOR + 1.4]], rgba(pen, C.gold, 0.2 * spill))
   }
   drawNursery(pen, t, w, baby, frame(pen.p, pen.k))
+  // The floor's people, in front of the wall: the fathers, the orderly, the doctor and the sister.
+  drawPeople(pen, t)
 }
 
 function drawBench(pen: Pen, t: number): void {
   const [a, b] = BENCH
   const dy = 0.02 * ring(t - LANDS[2], 9, 0.16)
   const y = BENCH_TOP + dy
-  glow(pen, [(a + b) / 2, FLOOR], 1.3, '#2B3832', 0.16)
+  shade(pen, [(a + b) / 2, FLOOR], 1.2, 0.3, '#2B3832', 0.18)
   rect(pen, a + 0.15, y + 0.08, a + 0.25, FLOOR - 0.02, C.woodDark)
   rect(pen, b - 0.25, y + 0.08, b - 0.15, FLOOR - 0.02, C.woodDark)
   rect(pen, a + 0.2, 0.95, b - 0.2, 1.0, C.woodDark)
@@ -529,6 +534,16 @@ function newborn(pen: Pen, x: number, rim: number, s: number, hood: string, t: n
   ellipse(pen, [x - 0.08 * s, rim - (0.055 + 0.006 * br) * s], 0.25 * s, (0.085 + 0.008 * br) * s, C.sheet)
   line(pen, [x - 0.2 * s, rim - (0.06 + 0.012 * br) * s], [x + 0.05 * s, rim - (0.1 + 0.01 * br) * s], C.blanketShade, 0.5)
   const head: Pt = [x + 0.17 * s, rim - (0.08 + 0.004 * br) * s]
+  // Awake for the feed: a kick under the swaddle, and a fist up out of it now and then, waving and going down again.
+  const kick = Math.max(0, Math.sin((t - T0) * (1.7 + 0.3 * seed) + seed * 4.1)) ** 3
+  ellipse(pen, [x - 0.27 * s, rim - (0.07 + 0.05 * kick) * s], 0.07 * s, (0.05 + 0.03 * kick) * s, C.sheet)
+  const up = smooth(Math.sin((t - T0) * 0.55 + seed * 1.9), 0.1, 0.5)
+  if (up > 0.02) {
+    const wave = Math.sin((t - T0) * (5 + seed) + seed)
+    const fist: Pt = [x + (0.04 + 0.04 * wave) * s, rim - (0.1 + 0.11 * up + 0.025 * wave) * s]
+    line(pen, [x + 0.02 * s, rim - 0.1 * s], fist, C.sheet, 2.2 * s)
+    ellipse(pen, fist, 0.032 * s, 0.032 * s, C.babySkin)
+  }
   ellipse(pen, head, 0.072 * s, 0.072 * s, C.babySkin)
   // The cap, over the top and back of the head.
   const { p, k } = pen
@@ -675,6 +690,8 @@ function drawNursery(pen: Pen, t: number, w: number, baby: Pt, f: Frame): void {
   // The mobile over the bassinets, turning, hung from the ceiling above the glass.
   mobile(pen, t, [-9.85, -1.95], y0)
   // The back row, the nurse, the front row; the son's own bassinet, his blanket over him drawn after (over the ball).
+  bather(pen, t)
+  nightNurse(pen, t)
   BACK.forEach((x, i) => {
     bassinet(pen, x, BACK_RIM, 0.8, true)
     newborn(pen, x, BACK_RIM, 0.8, i % 2 ? C.hoodPink : C.hoodBlue, t, i + 4)
@@ -736,6 +753,7 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
       [1, mix(C.blind, C.blindShade, 0.4), 1],
     ])
     for (let x = x0 + 0.5; x < x1; x += 0.9) line(pen, [x, y0 + 0.09], [x, down], C.blindShade, 0.35)
+    blindShadows(pen, t, down)
     rect(pen, x0, down - 0.05, x1, down, C.woodDark)
   }
   // Its pull ring, swinging once it is up.
@@ -765,7 +783,6 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
     if (s < 0.53) {
       const d: Pt = [marty[0] + 0.14 * Math.cos(ang), marty[1] + 0.14 * Math.sin(ang)]
       ellipse(pen, d, 0.024, 0.03, C.glass)
-      ellipse(pen, [d[0] - 0.007, d[1] - 0.01], 0.008, 0.008, '#FFFFFF')
     } else {
       const a = 1 - smooth(s, 1.4, 2.2)
       const c: Pt = [AT_GLASS[0] + 0.14 * Math.cos(1.35), SILL_TOP - 0.012]
@@ -775,6 +792,8 @@ export function drawOver(pen: Pen, t: number, marty: Pt, rachel: Pt, baby: Pt): 
       ctx.restore()
     }
   }
-  // Close to the lens at the foot of the frame: the soft dark shapes the camera passes.
-  foreground(pen, t, frame(pen.p, pen.k), marty)
+  // Close to the lens at the foot of the frame: the dark shapes the camera passes, and the people going by.
+  const f = frame(pen.p, pen.k)
+  foreground(pen, t, f, marty)
+  passers(pen, t, f, marty)
 }

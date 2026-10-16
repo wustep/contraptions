@@ -1,9 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { drawCab } from '../cab'
-import { layer, parallax, type Frame } from '../depth'
+import { layer, parallax, shade, type Frame } from '../depth'
 import { hash } from '../kit'
-import { blob, clamp01, ctxOf, ease, ellipse, flash, glow, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
+import { blob, clamp01, ctxOf, ease, ellipse, flash, line, mix, path, rect, rgba, ring, shape, vgrad, type Pen } from '../pen'
 import {
   BETTOR_GLASS,
   CAP,
@@ -16,6 +16,8 @@ import {
   barSign,
   beer,
   bettorDrink,
+  bettorSays,
+  wallySays,
   bladeSign,
   bubbles,
   cabSheen,
@@ -38,9 +40,11 @@ import {
   strikeBurst,
   tubeOn,
   underFloor,
+  crawlLight,
   walkWet,
   windowsLife,
 } from './life'
+import { watchers } from './watch'
 import {
   AISLE,
   ARM,
@@ -526,7 +530,8 @@ function outside(pen: Pen, t: number, x0: number, x1: number, f: Frame): void {
   path(pen, [[lx, -3.6], [lx + 0.15, -3.85], [lx + 0.6, -3.85]], '#0A0F18', 1.6)
   shape(pen, [[lx + 0.4, -3.88], [lx + 0.85, -3.88], [lx + 0.75, -3.76], [lx + 0.5, -3.76]], '#0A0F18')
   ellipse(pen, [lx + 0.625, -3.75], 0.13, 0.04, C.mercury)
-  glow(pen, [lx + 2.2, ROAD], 3.2, C.mercury, 0.1)
+  // Its pool, flat on the road and the near sidewalk under the head.
+  shade(pen, [lx + 1.1, ROAD + 0.12], 2.6, 0.42, C.mercury, 0.13)
   lampMist(pen, t, x0, x1)
   // The alley's own sign, hung off its front over the sidewalk.
   bladeSign(pen, t)
@@ -535,8 +540,10 @@ function outside(pen: Pen, t: number, x0: number, x1: number, f: Frame): void {
 function room(pen: Pen, t: number, f: Frame): void {
   const x0 = WALL[1]
   const x1 = END_WALL
-  // Through the long opening over the wainscot, the main floor beyond, under its haze (`life.ts`).
+  // Through the long opening over the wainscot, the main floor beyond, under its haze (`life.ts`); and the two regulars
+  // who come to lean on its ledge to watch the money game (`watch.ts`).
   farHall(pen, t, f)
+  watchers(pen, t, f)
   // The back wall: over the counter, cream gone dim with smoke; past it only its head over the opening, and its posts.
   const wall: [number, string, number][] = [
     [0, mix(C.cream, '#000000', 0.66), 1],
@@ -556,8 +563,8 @@ function room(pen: Pen, t: number, f: Frame): void {
     rect(pen, px - 0.11, OPEN_TOP, px - 0.06, -1.95, mix(C.creamDark, '#000000', 0.35))
     rect(pen, px + 0.07, OPEN_TOP, px + 0.11, -1.95, mix(C.wood, '#000000', 0.7))
   }
-  // Each tube washes the wall under it, cold.
-  for (const [i, tx] of TUBES.entries()) glow(pen, [tx + 0.85, -3.4], 2.0, C.tubeGlow, 0.13 * tubeOn(i, t))
+  // Each tube washes the wall under it, cold: brightest just under the fitting, gone by the wainscot.
+  for (const [i, tx] of TUBES.entries()) fall(pen, tx, tx + 1.7, CEIL + 0.2, -1.95, 0.8, C.tubeGlow, 0.11 * tubeOn(i, t))
   rect(pen, x0, -1.95, x1, BACK, mix(C.wood, '#000000', 0.2))
   for (let x = x0 + 0.1; x < x1; x += 0.42) rect(pen, x, -1.92, x + 0.025, BACK, C.woodDark)
   rect(pen, x0, -2.03, x1, -1.92, C.trim)
@@ -688,7 +695,7 @@ function room(pen: Pen, t: number, f: Frame): void {
   crown(pen, [(HEADPIN + x1) / 2, -1.88], 0.62)
   if (f.x1 > HEADPIN - 0.6) marquee(pen, HEADPIN - 0.525, -2.335, x1 - 0.075, -1.405)
   // The light under the board, down on the deck and the pins.
-  glow(pen, [HEADPIN + 0.6, -0.9], 1.5, C.tube, 0.15)
+  fall(pen, HEADPIN - 0.55, x1, -1.28, NEAR[1], 0.15, C.tube, 0.16)
   rect(pen, HEADPIN - 0.6, -1.34, x1, -1.28, C.tube)
   // The pinboy, in the dark over the pit, on his perch.
   pinboy(pen, t)
@@ -699,6 +706,7 @@ function room(pen: Pen, t: number, f: Frame): void {
 
   // The floor's front edge, and under it, in section, the crawlspace and the return's track.
   rect(pen, x0, EDGE, x1, f.y1 + 1, C.section)
+  crawlLight(pen, t, f)
   rect(pen, x0, EDGE, x1, EDGE + 0.1, C.woodDark)
   line(pen, [x0, EDGE], [x1, EDGE], C.woodLight, 0.5)
   for (let x = x0 + 0.8; x < x1; x += 1.6) rect(pen, x, EDGE + 0.1, x + 0.12, f.y1 + 1, C.joist)
@@ -726,6 +734,30 @@ function room(pen: Pen, t: number, f: Frame): void {
 }
 
 const TUBES = [-0.6, 2.4, 5.4, 8.4, 11.4, 14.4, 17.4]
+
+/**
+ * Light falling from a fitting `x0` to `x1` at `top` down to `bottom`, spreading `spread` either side as it goes and
+ * fading as it falls: laid on the wall or the deck it reaches, never round the fitting.
+ */
+function fall(pen: Pen, x0: number, x1: number, top: number, bottom: number, spread: number, col: string, a: number): void {
+  if (a <= 0.004) return
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  const g = ctx.createLinearGradient(0, top * k, 0, bottom * k)
+  g.addColorStop(0, rgba(pen, col, a))
+  g.addColorStop(0.5, rgba(pen, col, a * 0.35))
+  g.addColorStop(1, rgba(pen, col, 0))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo(x0 * k, top * k)
+  ctx.lineTo(x1 * k, top * k)
+  ctx.lineTo((x1 + spread) * k, bottom * k)
+  ctx.lineTo((x0 - spread) * k, bottom * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
 
 function carpetPattern(pen: Pen, x0: number, y0: number, x1: number, y1: number): void {
   for (let y = y0 + 0.1; y < y1; y += 0.2) {
@@ -780,8 +812,8 @@ function counter(pen: Pen, t: number): void {
   ashtray(pen, t, [1.88, top - 0.1], 0.75)
   beer(pen, [2.66, top - 0.1], 0.2, 0.085, 0, 0.5)
   bubbles(pen, t, [[2.66, top - 0.1, 0.2, 0.085]])
-  // The counter's light: warm, from a shaded bulb over it.
-  glow(pen, [(x0 + x1) / 2, top - 0.6], 2.0, C.warm, 0.14)
+  // The counter's light, from the tube over it: a warm pool along its top.
+  shade(pen, [(x0 + x1) / 2, top - 0.05], (x1 - x0) * 0.55, 0.12, C.warm, 0.2)
   // The stools.
   for (const sx of [0.3, 1.45, 2.55]) {
     rect(pen, sx - 0.03, -1.75, sx + 0.03, FB - 0.08, C.chrome)
@@ -922,9 +954,18 @@ function doorLeaf(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the lamp over the money table */
 
+/**
+ * The lamp's swing on its cord: hardly at all, until the door slams behind Marty and the old building shakes, and it
+ * swings out and dies back down over the next bars, its pool going to and fro across the table under it.
+ */
+const lampSwing = (t: number): number => {
+  const s = t - DOOR_SHUT
+  return 0.03 * Math.sin(t * 0.9) + (s > 0 ? 0.2 * Math.exp(-s / 2.4) * Math.sin(s * ((Math.PI * 2) / 1.7)) * clamp01(s / 0.15) : 0)
+}
+
 function lampOverTable(pen: Pen, t: number): number {
   const lx = NET_X + 0.05
-  const swing = 0.03 * Math.sin(t * 0.9)
+  const swing = lampSwing(t)
   line(pen, [lx, CEIL + 0.06], [lx + swing, -3.6], '#141210', 0.7)
   shape(pen, [[lx + swing - 0.35, -3.3], [lx + swing + 0.35, -3.3], [lx + swing + 0.12, -3.62], [lx + swing - 0.12, -3.62]], '#2C3A30')
   ellipse(pen, [lx + swing, -3.3], 0.12, 0.04, C.warm)
@@ -939,13 +980,14 @@ function lampOverTable(pen: Pen, t: number): number {
   ctx.beginPath()
   ctx.moveTo((lx + swing - 0.3) * k, -3.3 * k)
   ctx.lineTo((lx + swing + 0.3) * k, -3.3 * k)
-  ctx.lineTo((TABLE[1] + 0.6) * k, (TOP + 0.05) * k)
-  ctx.lineTo((TABLE[0] - 0.6) * k, (TOP + 0.05) * k)
+  ctx.lineTo((TABLE[1] + 0.6 + 2.2 * swing) * k, (TOP + 0.05) * k)
+  ctx.lineTo((TABLE[0] - 0.6 + 2.2 * swing) * k, (TOP + 0.05) * k)
   ctx.closePath()
   ctx.fill()
   ctx.restore()
-  // Its pool on the table and the men round it.
-  glow(pen, [lx, TOP - 0.3], 3.2, C.warm, 0.12)
+  // Its pool on the table, and on the floor round the men's feet: going with the shade as it swings.
+  shade(pen, [lx + 2.2 * swing, TOP + 0.02], 3.0, 0.22, C.warm, 0.16)
+  shade(pen, [lx + 3.4 * swing, FB + 0.04], 4.2, 0.2, C.warm, 0.08)
   return lx + swing
 }
 
@@ -1208,13 +1250,16 @@ function bettor(pen: Pen, t: number): void {
     near = lerp(near, [0.22, -2.06], u)
   }
   if (t >= RAISE) holds = 0
+  // Before the first point, talking it over: the stake pointed at the ball and the table, and back.
+  const says = t < NET_HIT ? bettorSays(t) : 0
+  if (says > 0) near = lerp(near, [MARK2_X + 0.8, FB - 2.5 - 0.15 * Math.sin(t * 7)], says)
   // The strike: both hands up to his head.
   const dismay = t > STRIKE ? clamp01((t - STRIKE) / 0.2) * (1 - clamp01((t - HATS - 0.6) / 0.4)) : 0
   if (dismay > 0) near = lerp(near, [MARK2_X + 0.22, FB - 3.25], dismay)
   const laughing = t > NET_HIT + 0.1 && t < PAN_BACK - 0.2 ? clamp01(Math.min(t - NET_HIT - 0.1, PAN_BACK - 0.2 - t) / 0.2) : 0
   const sore = t > STRIKE ? clamp01((t - STRIKE) / 0.5) : 0
   const lean = -0.04 + 0.08 * sore + watching(t) + shift(t, 2)
-  const bob = laughing * 0.04 * Math.abs(Math.sin((t - NET_HIT) * Math.PI * 4)) + 0.012 * Math.sin(t * 1.3 + 1)
+  const bob = laughing * 0.04 * Math.abs(Math.sin((t - NET_HIT) * Math.PI * 4)) + 0.012 * Math.sin(t * 1.3 + 1) + 0.025 * says * Math.abs(Math.sin(t * 9))
   // His beer: on the counter by him, then, once the raise is down, a long nervous pull at it through the rally.
   const mouth: Pt = [MARK2_X + lean + 0.05 + 0.22, FB - 2.93 + bob + 0.1]
   const drink = bettorDrink(t, rest, mouth)
@@ -1283,6 +1328,8 @@ function wally(pen: Pen, t: number): void {
   }
   const grin = t > HATS ? clamp01((t - HATS) / 0.25) : 0.35
   const sink = w.sink * 1.6
+  // His answer, before the first point: a nod, and his free hand opening out.
+  const answers = t < NET_HIT && !walking ? wallySays(t) : 0
   // Behind the cab, only what shows over its body: nothing of him under it.
   const behind = w.x < CURB
   const ctx = ctxOf(pen.p)
@@ -1303,11 +1350,11 @@ function wally(pen: Pen, t: number): void {
     hatCol: C.cap,
     leather: true,
     lean: walking ? 0.08 : -0.06 + watching(t) * 0.7 + shift(t, 5),
-    bob: walking ? -0.03 * Math.abs(Math.sin(phase ?? 0)) : 0.01 * Math.sin(t * 1.1),
+    bob: walking ? -0.03 * Math.abs(Math.sin(phase ?? 0)) : 0.01 * Math.sin(t * 1.1) + 0.035 * answers * Math.abs(Math.sin(t * 6.5)),
     walk: phase,
     grin,
     near,
-    far: walking ? [w.x - 0.35 * Math.sin(phase ?? 0) * w.face, w.y - 1.5] : [w.x - 0.18, w.y - 1.55],
+    far: walking ? [w.x - 0.35 * Math.sin(phase ?? 0) * w.face, w.y - 1.5] : lerp([w.x - 0.18, w.y - 1.55], [w.x - 0.55, w.y - 2.05], answers),
     rim: walking && w.x < WALL[0] ? C.mercury : C.warm,
     holding: (h) => {
       if (holds) wad(pen, h, holds)
