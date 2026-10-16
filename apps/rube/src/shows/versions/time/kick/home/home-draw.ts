@@ -77,21 +77,6 @@ function vgrad(ctx: C2D, k: number, y0: number, y1: number, stops: [number, stri
   for (const [at, c, a] of stops) g.addColorStop(at, rgba(c, a))
   return g
 }
-/**
- * A soft round light that falls off smoothly (a gaussian in many stops, so a big faint one shows no rings): the sun's
- * glow, the glare.
- */
-function glow(ctx: C2D, k: number, at: Pt, r: number, color: string, a: number): void {
-  if (a <= 0.003 || r <= 0) return
-  const [x, y] = [at[0] * k, at[1] * k]
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r * k)
-  for (let i = 0; i <= 12; i++) {
-    const u = i / 12
-    g.addColorStop(u, rgba(color, a * Math.exp(-4.2 * u * u) * (1 - u * u * u)))
-  }
-  ctx.fillStyle = g
-  ctx.fillRect(x - r * k, y - r * k, 2 * r * k, 2 * r * k)
-}
 /** A soft mass of leaves: a lobed blob about (cx, cy), `rx` by `ry`, its lobes stirring a little. */
 function foliage(ctx: C2D, k: number, cx: number, cy: number, rx: number, ry: number, seed: number, t: number, fill: string, flatBottom = false): void {
   ctx.beginPath()
@@ -193,20 +178,14 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
     if (cx + rx < f.x0 - 1 || cx - rx > f.x1 + 1) return
     foliage(ctx, k, cx, GARDEN.back + 0.03, rx, ry, i * 1.9, t, LEAVES, true)
   })
-  // The ground: the terrace's stone by the doors, then the lawn, glowing where the low sun comes through the grass.
+  // The ground: the terrace's stone by the doors, then the lawn, brighter toward the low sun behind it.
   fillBox(ctx, k, x0, GARDEN.back, GARDEN.terrace, FLOOR, vgrad(ctx, k, GARDEN.back, FLOOR, [[0, mixHex(STONE, HOME.wallShade, 0.5), 1], [1, STONE, 1]]))
   const lawn = ctx.createLinearGradient((sun[0] - 5) * k, 0, (sun[0] + 5) * k, 0)
   lawn.addColorStop(0, HOME.lawn)
-  lawn.addColorStop(0.5, mixHex(HOME.lawn, HOME.sun, 0.62))
+  lawn.addColorStop(0.5, mixHex(HOME.lawn, HOME.sun, 0.4))
   lawn.addColorStop(1, HOME.lawn)
   fillBox(ctx, k, GARDEN.terrace, GARDEN.back, x1, FLOOR, lawn)
   fillBox(ctx, k, GARDEN.terrace, GARDEN.back, x1, FLOOR, vgrad(ctx, k, GARDEN.back, FLOOR, [[0, HOME.lawnDark, 0.45], [0.35, HOME.lawnDark, 0], [1, HOME.lawnDark, 0]]))
-  // The low sun through the grass behind the children: a warm glare along the lawn.
-  ctx.save()
-  ctx.translate(sun[0] * k, (GARDEN.back + 0.12) * k)
-  ctx.scale(1, 0.16)
-  glow(ctx, k, [0, 0], 3.0, HOME.sun, 0.75)
-  ctx.restore()
   // The lawn comes on toward us, richer in the house's shade; the terrace's stone with it.
   const near = vgrad(ctx, k, FLOOR - 0.02, FLOOR + 2.2, [[0, mixHex(HOME.lawn, HOME.sun, 0.12), 1], [0.35, HOME.lawn, 1], [1, mixHex(HOME.lawnDark, HOME.tree, 0.45), 1]])
   // It ends a little toward us, cut, and under it the earth as under the house: in a tall frame (a phone held
@@ -386,20 +365,6 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   shade.addColorStop(1, rgba(dim, 0))
   ctx.fillStyle = shade
   ctx.fillRect((TOP_AT[0] - 2.2) * k, (HOUSE.back - 2.4) * k, 2.82 * k, 2.4 * k)
-  // A little of the morning's bounce high on the wall over it, soft on every side (a box of it read as a pale panel).
-  {
-    const c: Pt = [TOP_AT[0] - 0.8, HOUSE.back - 2.1]
-    const r = 1.5
-    ctx.save()
-    ctx.translate(c[0] * k, c[1] * k)
-    ctx.scale(1, 0.6)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * k)
-    g.addColorStop(0, rgba(HOME.wall, 0.45))
-    g.addColorStop(1, rgba(HOME.wall, 0))
-    ctx.fillStyle = g
-    ctx.fillRect(-r * k, -r * k, 2 * r * k, 2 * r * k)
-    ctx.restore()
-  }
   hallWindow(ctx, k, w)
   // The skirting, and the floor running back to it: warm boards, a little darker at the back.
   fillBox(ctx, k, fx1, HOUSE.back - 0.1, ex0, HOUSE.back, mixHex(HOME.wall, HOME.wallShade, 0.7))
@@ -534,7 +499,6 @@ function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number
     if (s < 0.05 && c > 0) {
       const x = hx - 0.05
       const hw = GLASS.half
-      glow(ctx, k, [x, FLOOR - H * 0.55], 0.5, HOME.sun, 0.35)
       // Up to the doorway's head (it stopped a little short of it, sky between).
       shape(ctx, k, box(x - hw, HOUSE.endHead, x + hw, FLOOR), DOORWOOD, INK, w * 0.8)
       // The pane in its frame, catching the light, between the rails.
@@ -547,16 +511,6 @@ function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number
       return
     }
     shape(ctx, k, [A, B, C, D], rgba(HOME.glass, 0.3))
-    // The sun on the glass as it turns: a glint that slides across it, brightest as it faces the sun.
-    const glint = Math.exp(-(((phi - 1.2) / 0.35) ** 2))
-    if (glint > 0.02) {
-      const u = 0.1 + 0.8 * Math.min(1, phi / Math.PI)
-      const g = ctx.createLinearGradient(at(u - 0.3, 0.5)[0] * k, 0, at(u + 0.3, 0.5)[0] * k, 0)
-      g.addColorStop(0, rgba(HOME.sun, 0))
-      g.addColorStop(0.5, rgba(HOME.sun, 0.9 * glint))
-      g.addColorStop(1, rgba(HOME.sun, 0))
-      shape(ctx, k, [A, B, C, D], g)
-    }
     // Its wooden frame: stiles and rails round the glass, and the two bars across it.
     const fu = Math.min(0.5, 0.07 / Math.max(0.05, s))
     const fv = 0.03
@@ -620,20 +574,18 @@ function table(ctx: C2D, k: number, w: number): void {
 }
 
 /**
- * The top on the table: the wall behind it in soft shade and the morning lying across the tabletop round it as a warm
- * pool, so its shine and its ink read against them; and its long shadow across the table.
+ * The top on the table, against the wall's soft shade behind it, and its long shadow across the tabletop from the low
+ * sun in at the doors (the morning lies on the top's side of the table already; no glare on it).
  */
 function drawTop(p: p5, ctx: C2D, k: number, t: number): void {
   const s = topAt(t)
   const [x, y] = s.tip
-  pool(p, k, [x + 0.12, y - 0.025], 0.62, 0.045, SUNLIGHT, 0.85)
-  pool(p, k, [x + 0.05, y - 0.025], 0.3, 0.03, HOME.sun, 0.7)
   // The low sun from the doors lays its shadow long to the left over the table's top; it swings as the top leans.
   const lean = Math.max(-1, Math.min(1, s.sway))
   const L = Math.max(0.2, Math.min(x - TABLE.x0 + 0.02, 1.05 + 0.45 * lean))
   const g = ctx.createLinearGradient(x * k, 0, (x - L) * k, 0)
-  g.addColorStop(0, rgba(TOP.shade, 0.55))
-  g.addColorStop(0.5, rgba(TOP.shade, 0.25))
+  g.addColorStop(0, rgba(TOP.shade, 0.7))
+  g.addColorStop(0.6, rgba(TOP.shade, 0.4))
   g.addColorStop(1, rgba(TOP.shade, 0))
   shape(ctx, k, [[x + 0.03, y - 0.004], [x - L, y - 0.022], [x - L, y - 0.05], [x - 0.05, y - 0.045]], g)
   top(p, k, [x, y], s.phase, s.lean, s.prec, INK, 1, s.blur)
@@ -659,13 +611,9 @@ export function drawHome(p: p5, c: Ctx): void {
   ctx.lineJoin = 'round'
   ctx.lineCap = 'round'
   sky(ctx, k, f)
-  // The sun, low over the garden wall, behind the far trees, and its glow on them.
-  const sun = sunAt(f)
-  glow(ctx, k, sun, 7.5, SUNLIGHT, 0.8)
+  // The far trees over the garden wall, two rows in the morning haze, the further the paler.
   farTrees(ctx, k, f, 0.55, -1.1, 1.1, mixHex(HOME.tree, HOME.sky, 0.66), 0.7, true)
-  glow(ctx, k, sun, 3.6, HOME.sun, 0.7)
   farTrees(ctx, k, f, 0.3, -1.05, 0.75, mixHex(HOME.tree, HOME.sky, 0.45), 2.9, false)
-  glow(ctx, k, sun, 1.8, HOME.sun, 0.95)
   garden(ctx, k, f, t, w)
   // The light coming round onto the children as they turn: warm on the lawn round them.
   const e = Math.max(turned(0, t), turned(1, t))
@@ -688,22 +636,13 @@ export function drawHome(p: p5, c: Ctx): void {
   ctx.restore()
 }
 
-/** Over everything: the morning in the air through the doors, and the sun's glare in the garden. */
+/** Over everything: the last shot's dimming round the top. */
 export function drawHomeOver(p: p5, c: Ctx): void {
   const { k } = c
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const t = c.t
   if (t > LAST + 0.1) return
   const f = frame(p, k)
-  const [ex0] = HOUSE.end
-  // The morning spilling in at the glass doors.
-  if (f.x0 < ex0 + 2 && f.x1 > ex0 - 3) {
-    ctx.save()
-    ctx.translate((ex0 + 0.1) * k, -1.1 * k)
-    ctx.scale(0.55, 1)
-    glow(ctx, k, [0, 0], 2.4, SUNLIGHT, 0.32)
-    ctx.restore()
-  }
   // The last shot: as the camera settles on the top the room falls a little dim round it, like a lens.
   const v = Math.min(smooth(t, HOLD + 1.6, TICKS[0] + 1.2), 1)
   if (v > 0.001) {
@@ -715,8 +654,4 @@ export function drawHomeOver(p: p5, c: Ctx): void {
     ctx.fillStyle = g
     ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
   }
-  const sun = sunAt(f)
-  // The glare: a little less once the children have turned (the light has come round onto them).
-  const e = Math.max(turned(0, t), turned(1, t))
-  glow(ctx, k, sun, 2.6, HOME.sun, 0.22 * (1 - 0.4 * e))
 }
