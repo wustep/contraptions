@@ -86,7 +86,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 10.363 | the band in | Match cut: the blank frame opens out to the screen's edges, and he sits on the lip of a subway platform at night, the colour turned up past true. The window across the street blows out. Behind it the city goes back on three planes under a big moon in magenta haze, thin cloud drifting across it: towers with amber beacons, an elevated train crossing on every other downbeat, traffic on the avenue, washing swinging on a roof line, steam off two chimneys and pigeons wheeling over the roofs. Embers rise through it all. |
+| 10.363 | the band in | Match cut: the blank frame opens out to the screen's edges, and he sits on the lip of a subway platform at night, the colour turned up past true. The window across the street blows out. Behind it the city goes back on three planes under a big moon in magenta haze, clear of the smoke, three streaks of cloud by it: towers with amber beacons, an elevated train crossing on every other downbeat, traffic on the avenue, washing swinging on a roof line, steam off a chimney and five pigeons wheeling over the roofs in one flock. Embers rise through it all. |
 | 11.222 to 12.087 | 1.3, 2.1 | He arcs off the lip, over the tracks, into the burning room. A joist comes down behind him (12.900). |
 | 13.724 to 16.226 | 3.1 to 4.3 | He rolls into a dumbwaiter car beside the three-legged dog. The gate drops shut, the brake lets go, and the car goes down on his weight. The counterweight rises and the pulley turns, while the fire flares on the downbeats. The camera draws back to the whole burning building and the city as the car goes down. |
 | 16.644 to 18.757 | 4.4 to 6.1 | Out through the shop door onto the pavement. The dog lopes past him and lands its last hop at Cheryl's side, under the street lamp. |
@@ -100,7 +100,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 | 23.738 | 9.1 | Match cut back into the blank frame, as if he never moved. Cheryl rolls in from the right, pushing the loupe on its rail. |
 | 25.833, 26.269 | 10.2, 10.3 | Ted, a dark silhouette with his beard, raises his fist to the frosted door, raps twice, and blurs away. |
 | 27.075 to 32.074 | 11.1 to 14.1 | Working backwards, one frame a bar, the loupe clicking down on each: the water, the thumb, the curve, and the water again, closer, with a ship's reflection in it. |
-| 33.745 to 35.411 | 15.1 to 16.1 | He goes onto the enlarger's tray, which rises up the column with a ratchet tick on each beat. The lamp comes on and throws the ship large on the far wall. |
+| 33.745 to 35.411 | 15.1 to 16.1 | He goes onto the enlarger's tray, which rises up the column with a ratchet tick on each beat. The lamp comes on, and the ship is large on the far wall. |
 | 36.247 | 16.3 | The focus knob turns and the picture comes sharp. He rolls into its grey water. |
 
 ### Nuuk (37.05 to 50.41)
@@ -109,7 +109,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 | ---: | --- | --- |
 | 37.054 | 17.1 | The film burns through in the gate: a hole opens in the ship's picture beside him and spreads till it takes him, and he is in a bar on the harbour at Nuuk. The door settles and the bell over it rings. Its lamps swing on their cords, their light lying on the boards and the counter. Through the doors and the window the harbour moves on its own planes: the town's coloured houses under Sermitsiaq with low cloud across it, a trawler tied up at the quay, a boat going out with its wake, five moored boats riding the swell, gulls, sleet. |
 | 38.743 to 42.923 | 18.1 to 20.3 | The helicopter pilot, hunched drunk at the bar, sets his glass down hard. His thumb comes up into the lamp's light and its brass ring goes gold: the thumb from the negative. It taps the counter while Walter edges toward the door and back. He hesitates. |
-| 43.747 | 21.1, the hinge | The little stage's spotlight comes on, and Cheryl is on it with a guitar. She is imagined. She sways on the beats. |
+| 43.747 | 21.1, the hinge | Cheryl drops out of the dark onto the little stage as its spotlight comes on, its light on the boards, and she has a guitar. She is imagined. She sways on the beats. |
 | 46.238 to 47.056 | 22.3 to 23.1 | She rolls off the stage and out of the back door, and the spotlight goes off. He goes after her. |
 | 48.316 | 23.4 | He bangs the door open and turns red. A plank knocks under him (24.1), the door slams behind him (24.3), and he runs. |
 
@@ -118,7 +118,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 | Time | Music | What happens |
 | ---: | --- | --- |
 | 50.411 | 25.1 | The bar's doors open on the daylight, pale at first, and the helipad is beyond them. The postal helicopter (white, a grey belly, one dark stripe) has its rotor turning once a beat. Its strobe lamp blinks on every downbeat. Gulls on the quay's end go up one after another in the rotor's wash. |
-| 51.665 to 53.732 | 25.4 to 27.1 | He leaps in through the open side door beside the parcel, and the skids leave the pad. A cold silver sun shows through a break in the overcast. |
+| 51.665 to 53.732 | 25.4 to 27.1 | He leaps in through the open side door beside the parcel, and the skids leave the pad. The overcast lies in long rolls going away to the horizon, and a cold silver sun shows through a break in them. |
 | 55.41 to 63.740 | 28 to 33 | Out over the grey-green sea and the floes. The air drops from under the cabin twice (29.1, 31.1), and he floats up and lands. On 33.1 the one wide: the helicopter small in a big sky, coming down toward a trawler among the ice. |
 | 65.417 to 68.749 | 34.1 to 36.1 | The pilot looks back at him. Walter steps down onto the skid with the parcel. The pilot shakes his head: he will not land. |
 | 69.574 | 36.3 | He pushes off. |
@@ -128,7 +128,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 70.398 | 37.1 | The water rises over the frame, and he is under the skin. The overcast, the floes and the boat line up above the surface. Below it is cold teal-black in flat steps, with jade shafts swaying, marine snow on three planes, jellyfish, a berg's keel far off, a hand line with its jigs down from the hull, and shoals of small fish (a dark one above him, a ribbon of pale capelin below) that turn about together on each strong low. |
+| 70.398 | 37.1 | The water rises over the frame, and he is under the skin. The overcast, the floes and the boat line up above the surface. Below it is cold teal-black in flat steps, with jade shafts swaying, marine snow drifting in the current, three jellyfish trailing long veils, a berg's keel far off, a hand line with its jigs down from the hull, and three compact shoals and a ribbon of capelin low in the dark, each turning about as one on each strong low. |
 | 70.4 to 77 | kick and bass | He sinks. The parcel goes on down without him, turning, into the dark: the radio is lost. A breath of bubbles goes up from him on each of thirteen strong lows. |
 | 76.2 to 86.9 | 40 to 47 | A blurred shape crosses far off: a porpoise, he thinks. It comes back nearer, then in front and under him, nearest and slowest: a shark. Its menace is its shape, not its teeth. |
 | 86.948, 87.784 | 47.1, 47.3 | A weighted net drops off the stern and closes round him, the shark right below. |
@@ -139,13 +139,13 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 95.226 to 100.189 | 52.1 to 55.1 | The cake's wrapper folds over into the top of a ridge road in East Iceland, under a low gold sun: cumulus lit from below, cirrus high over it, a glacier coming down to the fjord, sheep on the moss. He hops onto a bicycle and rolls off. The reflectors on the posts light as he passes. A flock wheels over and, for about a second, pulls into one round shape before it breaks up. |
+| 95.226 to 100.189 | 52.1 to 55.1 | The cake's wrapper folds over into the top of a ridge road in East Iceland, under a low gold sun: cumulus lit from below and built up into towers, cirrus high over it, a glacier coming down to the fjord, sheep on the moss. He hops onto a bicycle and rolls off. The reflectors on the posts light as he passes. A flock wheels over and, for about a second, pulls into one round shape before it breaks up. |
 | 101.826 | 56.1 | The bike hits a road sign and goes down. He tumbles past it. |
 | 102.691 to 105.153 | 56.3 to 58.1 | The trade. Three kids, his stretchy toy for their longboard: the toy lands at their feet, its arms are pulled out wide, the board is swung down, and he is on it. |
 | 106.807 to 118.405 | 59 to 66 | The longboard, the film's Step Out moment. Down the mountain's face in switchbacks: hairpins on 59, 61, 63 and 65, crests on 60, 62, 64 and 66. Grit flies at every turn and a post's reflector lights on every beat. From 110.4 to 115.5 the camera draws back: the whole zigzag, the cliff, the fjord, and the volcano smoking past it. |
 | 119.845 | the band's last hit | He is out on the shore road. The volcano bursts: the land goes amber, stones are thrown, the column shoots up, lit orange from under, and the warmth fades off the land over the next seconds as the ash comes. Lava creeps down the snow, and lightning forks in the column on the guitar's onsets. |
 | 120.06 to 126.06 | the hush | Silence in the picture too. He rolls to a stop. A small plane crosses toward the plume and is gone inside it: Sean, and Walter has missed him. |
-| 122.54 to 133.28 | soft picking | Ash comes down, 22 flakes landing on the guitar's onsets, four of them on him. From 126.06 he holds completely still. The ash thickens over the whole frame. |
+| 122.54 to 133.28 | soft picking | Ash comes down in grey specks, 22 flakes landing on the guitar's onsets, four of them on him. From 126.06 he holds completely still. The ash thickens over the whole frame. |
 
 ### Home (133.278 to 146.519)
 
@@ -160,12 +160,12 @@ Times are show seconds. `n.p` is bar n, beat p.
 | Time | Music | What happens |
 | ---: | --- | --- |
 | 146.519 | 83.1, the build | The negative grows to fill the frame, snow driven through it, and he is at the foot of a snow face at eighteen thousand feet, in the blue hour. A gust tears the snow off the rock over him. The build is a sunrise. |
-| 147.3 to 168.08 | 83 to 96 | The climb, up three legs of a switchback to a ledge, an old fixed rope clipped up the last pitch. A step every other beat, then one on every beat as the choir comes up. The range rises behind the near ridges as he climbs, the wind builds, rows of altocumulus take the dawn on their undersides, and as the choir comes up the highest peaks take a rose-gold first light. |
+| 147.3 to 168.08 | 83 to 96 | The climb, up three legs of a switchback to a ledge, an old fixed rope clipped up the last pitch. A step every other beat, then one on every beat as the choir comes up. The range rises behind the near ridges as he climbs, the wind builds, a few rows of altocumulus take the dawn on their undersides, and as the choir comes up the highest peaks take a rose-gold first light. |
 | 168.08 | 96.1 | On the ledge, Sean sits behind his long lens, still. Walter stops beside him. They wait. |
 | 169.74 to 174.75 | 97 to 99 | While the music builds, they hold still. The world round them moves on the beats: snow sifting off the rock, spindrift off the highest summits, the camera strap knocking the tripod's leg and shaking rime off it. |
 | 174.75 to 176.79 | 100.1 to 101.2 | Across the valley, the snow leopard comes out onto the rocks, pale on pale, one soft step a beat, and stops. The sun's edge clears the far ridge. |
 | 178.91 | 102.3 | Sean does not take the picture. He comes back off the eyepiece to Walter's side, and the camera stands alone while they look. The camera draws back until the two of them are a speck on the ledge in the whole range (183.3), then comes back in past the cat. |
-| 185.15 to 188.91 | 106.2 to 108.3 | The cat goes. They are left side by side on the ledge in gold-white light, over a sea of cloud with the summits' long shadows across it. |
+| 185.15 to 188.91 | 106.2 to 108.3 | The cat goes. They are left side by side on the ledge in gold-white light, over a sea of cloud heaped in clusters, the summits' long shadows across it, and a farthest range pale in the gaps. |
 
 ### Life (191.409 to 226.384)
 
@@ -189,7 +189,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 | 229.873 to 232.572 | | The newsstand's shutter goes up in two hauls. The vendor's hand, up from behind the ledge, pulls three issues down onto the wire, and Life comes last. Its cover is the red box with its white rule, and a photograph: a dark room, a lit strip, and at its near end, against its light, the red ball, ringed and marked as he rolls. It is the show's first frame, and it is him as he is now. |
 | 233.048 | the last chord | They stop before the cover, and the issue settles. He stops right under himself: the ball on the cover and the ball on the pavement are one above the other. Ten pigeons go straight up beside the stand. |
 | 235.3 to 245.6 | it rings out | They go on up the street side by side to the corner, and wait by the crossing signal. The camera draws back to the stand, the street with traffic in both lanes, the avenue's towers in the haze and the far corner, and keeps drifting toward the avenue to the end. |
-| 236.2 to 270 | then quiet | The end credits. The street goes on under them: a man buys a paper at the stand, the bus scares the pigeons up (254.5), the traffic stops at the light (259.6), two people cross on the walk sign (260.7), and the hand flashes from 266.6. The light keeps rising. |
+| 236.2 to 270 | then quiet | The end credits. The street goes on under them: a man buys a paper at the stand, a bicycle stands chained to the lamp post, the bus scares the pigeons up (254.5), a man walks down the avenue out of the haze, the traffic stops at the light (259.6), two people cross on the walk sign (260.7), and the hand flashes from 266.6. The light keeps rising. |
 
 ## End credits
 
@@ -367,6 +367,30 @@ a building's front as well as over the sky. Each card holds 3.4 to 5 s; the last
     used any more;
   - after it, the same ten frames are 16% to 30% flat or still, and the last third is 2.8 times as busy as the
     opening (370 against 134).
+- **The second restraint pass** (Stephen: the same again, with fresh eyes):
+  - the lead looked over the whole show at full size again. Some of what the first pass had added to fill its gaps
+    now read as pattern or noise: the sea's shoals spread into a field of dashes, the Himalayas' clouds in a dozen
+    parallel rows over a sea of cloud in ruled bands, the sky's overcast in polka dots, four plumes of steam at once
+    in the street, a cluster of poles at the avenue's end. Six builders went over the places again from a list each,
+    to cut and refine at least as much as they added, and to fix what they found;
+  - fewer, clearer things: three compact shoals and one ribbon; four rows of cloud and a sea of cloud in heaps; the
+    overcast in seven long rolls; one or two plumes of steam drawn as puffs; one signal and two lamps down the
+    avenue; three clouds by the moon, one flock of five pigeons; the basement's dust and the enlarger's beam gone;
+    the berg and the hull flat, without their nets of light; Iceland's striated bands and its curtains of ash cut;
+    the lamp's cone gone at home, and its light soft-edged on the wallpaper;
+  - more shine went: the only soft-focus thing left (a reel on the near desk), the tail rotor's disc, a halo round
+    the pilot's head, the spotlight's cone and its pools under Cheryl, the whole-frame flash on every bolt of
+    lightning, the ring round each flake of ash, the cake's glaze, the gold crystals in the Himalayan air, the knife's
+    chips at the press, the helicopter's wink, the street's motes and its leaves' shadows on the paving;
+  - the bugs: Cheryl appearing on the dark stage in a frame wider than 16:9 (she now drops onto it on the hinge); a
+    gorge between two summits whose flanks fell straight down like posts; a bundle of posts standing one over another
+    in a grid on the longboard's face; the enlarger's head drawn see-through; the first man to cross the street
+    appearing at the kerb; the steam drawn in front of the traffic; the spray at the boat's bow repeating every 1.9 s;
+    the light over the Himalayas pausing at a key so the top of the pull-back froze; the ash's flakes hanging in his
+    mother's room after the ash had lifted;
+  - after it, the show is 340 lines shorter, the same ten frames are 16% to 33% flat or still, the last third is 2.7
+    times as busy as the opening (343 against 128; the middle is calmer than it was), and the pops left are the same
+    twelve, all meant.
 
 ## Judgment calls
 
@@ -399,11 +423,10 @@ a building's front as well as over the sky. Each card holds 3.4 to 5 s; the last
 - In the wides Walter is a few pixels across: the burning building (about 15.5 to 17 s), the helicopter's (63.7 to
   67.1 s), the longboard's (110.4 to 115.5 s) and the whole range (182.5 to 185 s), 12.5 s in all.
 - **Frame rate**, measured on an Apple M5 Pro in Chrome with its GPU, a 1280 × 800 window at 2× (a 2560 × 1600
-  canvas), playing the whole show in real time: 59.9 frames a second; of 16,184 frames three came more than 20 ms
-  after the last, one as the page started and two as his mother's room first came out of the ash, each with a paint
-  under a millisecond (the GPU's first sight of new drawing; the build before the restraint pass had five, at other
-  places). The paint takes 1.0 ms at the median, 2.6 ms at the 99th percentile and 19.2 ms at most, on the first
-  frame of the passage into Iceland, which builds its pictures of the sky and the land.
-- **Without a GPU** (Chrome with its canvas forced to software, 1280 × 800 at 1×) a frame takes 6.0 ms at the median,
-  14 ms at the 99th percentile and 60 ms at most (the same first frame of Iceland); before the restraint pass it took
-  7.4 to 8.1, 22 to 24 and 75 to 81 ms. A passage paints two places at once for about a second.
+  canvas), playing the whole show in real time: 60.0 frames a second, and of 16,201 frames none came more than 20 ms
+  after the last (the build before the second restraint pass had four, one of them an 80 ms paint in Iceland). The
+  paint takes 1.4 ms at the median, 3.0 ms at the 99th percentile, and 19 to 23 ms once, on the first frame of the
+  passage into Iceland, which builds its pictures of the sky and the land.
+- **Without a GPU** (Chrome with its canvas forced to software, 1280 × 800 at 1×) a frame takes 5.5 ms at the median,
+  13 to 14 ms at the 99th percentile and about 60 ms at most (the same first frame of Iceland). A passage paints two
+  places at once for about a second.
