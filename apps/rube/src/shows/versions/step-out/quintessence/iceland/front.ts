@@ -150,9 +150,9 @@ export const icelandFront = scenery<null>({
       })
     }
 
-    // The eruption's light: the fire's, a plain warm wash over the land that comes up with the burst and stays,
-    // fading, through the hush; and the lightning's, the whole frame going pale for an instant.
-    const warm = 0.12 * fireLight(t)
+    // The eruption's light: the fire's, a plain warm wash over the land that comes up with the burst and fades as the
+    // ash takes the light; and the lightning's, the whole frame going pale for an instant.
+    const warm = 0.12 * fireLight(t) * (1 - sm(t, ERUPT + 5, ERUPT + 9))
     const bolt = (t < ERUPT + 9 ? 0.16 : 0.12) * lightning(t)
     for (const [hex, a] of [[ICE.fire, warm], [ICE.flash, bolt]] as const) {
       if (a <= 0.004) continue
