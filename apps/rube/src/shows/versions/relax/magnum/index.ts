@@ -2,8 +2,11 @@ import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION } from './music'
 import { compose } from './score'
+import { warmLead } from './derelicte/tower-plan'
 
 const { show, camera } = compose()
+// The lead that whips loose on the plug is simulated once; do it while loading, not on the plug's own frame.
+warmLead()
 
 export { show }
 
