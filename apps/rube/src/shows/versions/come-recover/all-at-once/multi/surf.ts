@@ -5,7 +5,7 @@ import { JUMPS } from '../music'
 import { SEAMS } from '../seams'
 import { DOJO, DOJO_THEME, EVELYN, HIBACHI, HIBACHI_THEME, HOME, HOTDOG, HOTDOG_THEME, JOY, LAUNDROMAT, MULTI_THEME, PREMIERE, ROCKS, ROCKS_THEME, STAR } from '../worlds'
 import { backdrop, SKINS, type Moment, type Skin } from './skins'
-import { at, beam, circle, ellipse, glow, hash, line, lodFor, poly, rect, rgba, round, type Pen } from './skins-pen'
+import { at, beam, circle, ellipse, hash, line, lodFor, poly, rect, rgba, round, type Pen } from './skins-pen'
 import { PANEL_LOOKS, paintPicture, prefersCalm, type Look } from '../film'
 import { HAZE, paintCloud, paintSky, STRATA } from '../rocks/ledgeLand'
 
@@ -164,7 +164,6 @@ function pinata(s: Scene): void {
     // The rope, cut, springs up.
     const up = easeOut(x / 0.35) * 1.6
     line(pen, 0, -4, 0, -0.5 - up, pen.ink, pen.lw)
-    glow(pen, 0, 0, 2.2, HOME.light, 0.95 * Math.exp(-x / 0.12))
     // The five points, and the body in pieces, flying apart and turning as they fall.
     for (let i = 0; i < 11; i++) {
       const a = -Math.PI / 2 + (i * Math.PI * 2) / 11 + 0.3
@@ -324,10 +323,6 @@ function irs(s: Scene): void {
     rect(pen, 0.38, sy - 0.26, 0.44, 0.12, HOME.steelDark, 1)
     rect(pen, 0.54, sy - 0.66, 0.12, 0.4, HOME.wood, 1)
     ellipse(pen, 0.6, sy - 0.74, 0.18, 0.12, HOME.wood, 1)
-    for (const at0 of STAMPS) {
-      const dx = x - at0
-      if (dx >= 0 && dx < 0.25) glow(pen, 0.6, top, 0.9, HOME.light, 0.6 * (1 - dx / 0.25))
-    }
   })
 }
 
@@ -384,7 +379,6 @@ function karaoke(s: Scene): void {
       g.restore()
       circle(pen, bx, by, 0.62, null, 1)
     }
-    glow(pen, bx, by, 1.4, STAR.flash, (0.2 + 0.6 * flare) * on)
     // Flecks of light thrown on the walls.
     if (pen.lod <= 1 && on > 0.1) {
       for (let i = 0; i < 22; i++) {
@@ -629,10 +623,6 @@ function ring(s: Scene): void {
         pen.ctx.stroke()
       })
     }
-    // The clamp on the hit: a hard white light off all of them at once; then, as it collapses into her, their light
-    // gathered, going out with it.
-    const x = t - RING_AT
-    if (x >= 0) glow(pen, 0, 0, 2.0 * shrink + 0.3, HOME.light, 0.65 * Math.exp(-x / 0.04) + 0.35 * collapse * shrink)
   })
 }
 

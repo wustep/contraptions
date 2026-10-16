@@ -28,11 +28,14 @@ import {
   WAYMOND_X,
   alleyTime,
   coverAt,
+  raceAt,
   stepFace,
   timeRate,
   waymondAt,
 } from './premiere-clock'
-import { INK, IRON, NIGHT, STONE, STONE_DEEP, STREET, WALL, WALL_FAR, WET, flare, glow, pool, rgba, smear } from './premiere-light'
+import { INK, IRON, NIGHT, STONE, STONE_DEEP, STREET, WALL, WET, glow, pool, rgba, smear } from './premiere-light'
+import { prefersCalm } from '../film'
+import { CORNER, JOINT, ROOF, drawCity, drawNear, laneShine, poster, ripples, steam, vent } from './premiere-city'
 
 /**
  * The alley behind the theatre, in the rain: the film's "in another life", lit like In the Mood for Love.
@@ -108,30 +111,76 @@ function drawWalls(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
   const { k, weight } = c
   const X = (v: number) => v * k
   const x0 = Math.max(EDGE_X, f.x0 - 1)
-  const x1 = f.x1 + 1
+  const x1 = Math.min(f.x1 + 1, CORNER)
   if (x1 <= x0) return
   const top = f.y0 - 1
-  // The back wall, down to the lower lane.
-  p.noStroke()
-  p.fill(WALL)
-  p.rect(X((x0 + x1) / 2), X((top + LOWER) / 2), X(x1 - x0), X(LOWER - top))
-  // Past the terrace, the lane drops away between walls further back.
-  if (x1 > TERRACE_R + 1.6) {
-    p.fill(WALL_FAR)
-    const a = Math.max(x0, TERRACE_R + 1.6)
-    p.rect(X((a + x1) / 2), X((top + LOWER) / 2), X(x1 - a), X(LOWER - top))
-    outline(p, rgba(INK, 0.25), weight * 0.5)
-    p.line(X(a), X(top), X(a), X(LOWER))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The back wall, down to the lower lane: the tall building over the steps, its top out of sight, and the
+  // laundromat, one storey, its roof just over its window. Past its corner the lane opens deep (`premiere-city.ts`).
+  const tallTo = Math.min(x1, JOINT)
+  const shopFrom = Math.max(x0, JOINT)
+  const shape = () => {
+    ctx.beginPath()
+    if (tallTo > x0) ctx.rect(X(x0), X(top), X(tallTo - x0), X(LOWER - top))
+    if (x1 > shopFrom) ctx.rect(X(shopFrom), X(ROOF), X(x1 - shopFrom), X(LOWER - ROOF))
   }
-  // The light on the wall: the lamp's warm pool round the lantern and down, the neon's pink, the window's cold.
+  p.noStroke()
+  ctx.fillStyle = WALL
+  shape()
+  ctx.fill()
+  // The light on the wall: the lamp's warm pool round the lantern and down, the neon's pink, the window's cold. Only
+  // on the wall: over the roof is the night.
+  ctx.save()
+  shape()
+  ctx.clip()
   glow(p, X(LANTERN[0]), X(LANTERN[1] + 1.8), X(5.2), STAR.gold, 0.2, 0.3)
   glow(p, X(LANTERN[0]), X(LANDING - 0.5), X(3.0), STAR.spot, 0.18, 0.3)
   const nb0 = neonAt(t)
   if (nb0 > 0.01) glow(p, X(NEON[0]), X(NEON[1]), X(3.6), STAR.neonPink, 0.2 * nb0, 0.25)
-  // One string course along the wall, faint.
+  // Its courses of brick, barely there but where the lamp shows them.
+  p.strokeWeight(Math.max(1, weight * 0.4))
+  for (let y = Math.max(top, ROOF - 6) + 0.02; y < LANDING; y += 0.26) {
+    const near = inCone(LANTERN[0], y) > 0 ? 1 : 0
+    p.stroke(rgba(INK, 0.025 + 0.03 * near))
+    p.line(X(x0), X(y), X(x1), X(y))
+  }
+  ctx.restore()
+  // One string course along the tall building, faint; the joint where the laundromat stands against it.
   p.stroke(rgba(INK, 0.1))
   p.strokeWeight(Math.max(1, weight * 0.5))
-  p.line(X(x0), X(LANDING - 4.4), X(Math.min(x1, TERRACE_R + 1.6)), X(LANDING - 4.4))
+  if (tallTo > x0) p.line(X(x0), X(LANDING - 4.4), X(tallTo), X(LANDING - 4.4))
+  if (JOINT > x0 && JOINT < x1) {
+    p.stroke(rgba(NIGHT, 0.5))
+    p.strokeWeight(Math.max(1, X(0.05)))
+    p.line(X(JOINT), X(top), X(JOINT), X(ROOF))
+    p.stroke(rgba(INK, 0.14))
+    p.strokeWeight(Math.max(1, weight * 0.5))
+    p.line(X(JOINT), X(ROOF), X(JOINT), X(LANDING))
+  }
+  // The laundromat's parapet and its coping, its gutter, and its corner bound in stone short of the lower lane.
+  if (x1 > shopFrom) {
+    solid(p, rgba(INK, 0.45), weight * 0.6, STONE)
+    p.rect(X((shopFrom + x1) / 2), X(ROOF + 0.04), X(x1 - shopFrom + 0.06), X(0.1))
+    p.noStroke()
+    p.fill(rgba(NIGHT, 0.35))
+    p.rect(X((shopFrom + x1) / 2), X(ROOF + 0.13), X(x1 - shopFrom), X(0.06))
+  }
+  if (CORNER < f.x1 + 1 && CORNER > x0) {
+    p.noStroke()
+    p.fill(mixHex(WALL, NIGHT, 0.25))
+    p.rect(X(CORNER - 0.04), X((ROOF + LOWER) / 2), X(0.08), X(LOWER - ROOF))
+    const quoin = mixHex(WALL, STONE, 0.28)
+    for (let i = 0, y = ROOF + 0.12; y < LOWER - 0.1; i++, y += 0.4) {
+      solid(p, rgba(INK, 0.1), weight * 0.35, quoin)
+      const w = i % 2 ? 0.26 : 0.42
+      p.rect(X(CORNER - w / 2), X(y + 0.18), X(w), X(0.34))
+    }
+  }
+  // Her picture's bill on the tall building's wall, by the last step.
+  poster(p, c, t)
+  // The theatre's stage door, at the top of the steps: steel, shut, under a caged bulb that lights its own patch of
+  // wet wall.
+  stageDoor(p, c)
 
   // The fire escape: a landing high on the wall, its railing, and its stair going up out of sight.
   if (f.y0 < ESCAPE.y + 0.6) {
@@ -171,18 +220,23 @@ function drawWalls(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
 
   // The neon washer, hung in the window: pink glass tubes, dark until it comes on.
   drawNeon(p, c, nb)
+  // The laundromat's dryer vent, low by the window.
+  vent(p, c, t)
 
   // The downspout, down the wall to its shoe, and the water it lets out.
   const sx = SPOUT_X
+  const head = Math.max(top, ROOF + 0.12)
   solid(p, rgba(INK, 0.55), weight * 0.7, IRON)
-  p.rect(X(sx), X((top + LANDING - 0.42) / 2), X(0.13), X(LANDING - 0.42 - top))
+  p.rect(X(sx), X((head + LANDING - 0.42) / 2), X(0.13), X(LANDING - 0.42 - head))
+  // Its hopper head under the gutter.
+  p.quad(X(sx - 0.17), X(ROOF + 0.12), X(sx + 0.17), X(ROOF + 0.12), X(sx + 0.08), X(ROOF + 0.36), X(sx - 0.08), X(ROOF + 0.36))
   p.beginShape()
   p.vertex(X(sx - 0.065), X(LANDING - 0.42))
   p.quadraticVertex(X(sx - 0.065), X(LANDING - 0.2), X(sx + 0.22), X(LANDING - 0.22))
   p.vertex(X(sx + 0.22), X(LANDING - 0.35))
   p.quadraticVertex(X(sx + 0.065), X(LANDING - 0.35), X(sx + 0.065), X(LANDING - 0.42))
   p.endShape(p.CLOSE)
-  for (let y = LANDING - 1.6; y > top; y -= 1.5) {
+  for (let y = LANDING - 1.6; y > head + 0.3; y -= 1.5) {
     solid(p, rgba(INK, 0.55), weight * 0.5, IRON)
     p.rect(X(sx), X(y), X(0.22), X(0.07))
   }
@@ -198,6 +252,49 @@ function drawWalls(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
   p.endShape()
 }
 
+const STAGE_DOOR = { x: 21.68, w: 0.52, h: 1.12 }
+
+function stageDoor(p: p5, c: Ctx): void {
+  const { k, weight } = c
+  const X = (v: number) => v * k
+  const { x, w, h } = STAGE_DOOR
+  const foot = stepFace(2)
+  const lampY = foot - h - 0.22
+  glow(p, X(x), X(lampY + 0.35), X(1.0), STAR.gold, 0.16, 0.25)
+  solid(p, rgba(INK, 0.45), weight * 0.7, mixHex(IRON, STAR.wet, 0.4))
+  p.rect(X(x), X(foot - h / 2), X(w), X(h), X(0.02))
+  outline(p, rgba(INK, 0.25), weight * 0.5)
+  p.rect(X(x), X(foot - h / 2), X(w - 0.12), X(h - 0.12))
+  // Its push bar, and the light catching its top edge.
+  solid(p, rgba(INK, 0.4), weight * 0.5, mixHex(IRON, STAR.rain, 0.35))
+  p.rect(X(x), X(foot - h * 0.48), X(w - 0.1), X(0.05), X(0.02))
+  p.stroke(rgba(STAR.gold, 0.35))
+  p.strokeWeight(Math.max(1, X(0.015)))
+  p.line(X(x - w / 2), X(foot - h), X(x + w / 2), X(foot - h))
+  // The bulb in its wire cage, on a short arm.
+  outline(p, rgba(INK, 0.5), weight * 0.5)
+  p.line(X(x), X(lampY - 0.12), X(x), X(lampY - 0.04))
+  solid(p, rgba(INK, 0.5), weight * 0.5, mixHex(STAR.gold, STAR.spot, 0.55))
+  p.ellipse(X(x), X(lampY + 0.04), X(0.12), X(0.15))
+  outline(p, rgba(IRON, 0.9), Math.max(1, X(0.012)))
+  for (const dx of [-0.04, 0, 0.04]) p.line(X(x + dx), X(lampY - 0.04), X(x + dx), X(lampY + 0.12))
+}
+
+/** A cellar's grating low in the stair's stone, a boiler's warm light behind its bars. */
+function cellar(p: p5, c: Ctx): void {
+  const { k, weight } = c
+  const X = (v: number) => v * k
+  const gx = 22.55
+  const gy = LANDING - 0.35
+  p.noStroke()
+  p.fill(rgba(mixHex(STAR.gold, STAR.carpet, 0.3), 0.32))
+  p.rect(X(gx), X(gy), X(0.62), X(0.3))
+  outline(p, rgba(IRON, 0.95), Math.max(1, X(0.03)))
+  for (let i = 0; i <= 5; i++) p.line(X(gx - 0.31 + i * 0.124), X(gy - 0.15), X(gx - 0.31 + i * 0.124), X(gy + 0.15))
+  outline(p, rgba(INK, 0.3), weight * 0.5)
+  p.rect(X(gx), X(gy), X(0.62), X(0.3))
+}
+
 function drawNeon(p: p5, c: Ctx, b: number): void {
   const { k, weight } = c
   const X = (v: number) => v * k
@@ -205,7 +302,6 @@ function drawNeon(p: p5, c: Ctx, b: number): void {
   const w = 0.92
   const h = 1.0
   if (b > 0.01) glow(p, X(nx), X(ny), X(2.4), STAR.neonPink, 0.3 * b, 0.25)
-  if (b > 0.01) flare(p, X(nx), X(ny), X(2.2), X(0.04), 0.22 * b, STAR.neonPink)
   // Its chains to the window's head.
   outline(p, mixHex(INK, NIGHT, 0.5), weight * 0.5)
   p.line(X(nx - 0.35), X(WIN.y0), X(nx - 0.35), X(ny - h / 2))
@@ -262,8 +358,6 @@ function drawLamp(p: p5, c: Ctx): void {
   ctx.closePath()
   ctx.fill()
   glow(p, X(lx), X(ly + 0.1), X(1.1), STAR.spot, 0.55)
-  // In widescreen the lamp flares as that lens has it: a faint streak through the rain.
-  flare(p, X(lx), X(ly + 0.1), X(2.8), X(0.045), 0.3)
   // The post: a fluted foot, a column, and its crook.
   solid(p, INK, weight, IRON)
   p.rect(X(POST_X), X(LANDING - 0.25), X(0.3), X(0.5), X(0.04))
@@ -308,7 +402,7 @@ function drawGround(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
   p.vertex(X(EDGE_X), X(foot))
   p.endShape(p.CLOSE)
   // The terrace's big dressed blocks, barely there.
-  p.stroke(rgba(STONE, 0.22))
+  p.stroke(rgba(STONE, 0.28))
   p.strokeWeight(Math.max(1, weight * 0.5))
   for (let row = 0; row < 7; row++) {
     const y = LANDING + PAVE + 0.62 * (row + 1)
@@ -346,6 +440,8 @@ function drawGround(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
   p.rect(X((TERRACE_R + f.x1 + 1) / 2), X((LOWER + foot) / 2), X(f.x1 + 1 - TERRACE_R), X(foot - LOWER))
   outline(p, rgba(INK, 0.4), weight * 0.7)
   p.line(X(TERRACE_R), X(LOWER), X(f.x1 + 1), X(LOWER))
+  // The tenement's shop and its sign, given back by the lane's wet.
+  laneShine(p, c, t, f)
 
   // The drain, cut open: the shaft under the cover, and the arched race it drops into, lined with stone.
   const lining = mixHex(STONE_DEEP, STONE, 0.35)
@@ -385,10 +481,88 @@ function drawGround(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
     ctx.fill()
   }
   pool(p, X((COVER_L + COVER_R) / 2), X(WATER + 0.02), X(0.55), X(0.07), STAR.spot, 0.3 + 0.3 * open)
-  // The water in the race, running out to the mouth.
+  // The race's own stone, coursed: seen where the shaft's light reaches down it, and gone into the dark either way.
+  const tau0 = alleyTime(t)
+  const lit = (x: number): number => Math.max(0, 1 - Math.abs(x - (SHAFT_L + SHAFT_R) / 2) / 3.2) * (0.5 + 0.5 * open)
+  for (let row = 0; row < 3; row++) {
+    const y = RACE_ROOF + 0.18 + row * ((WATER - RACE_ROOF - 0.2) / 3)
+    for (let x = RACE_X0 + 0.3 + (row % 2) * 0.28; x < TERRACE_R - 0.2; x += 0.56) {
+      const a = 0.05 + 0.3 * lit(x)
+      p.stroke(rgba(STONE, a))
+      p.strokeWeight(Math.max(1, weight * 0.45))
+      p.line(X(x), X(y), X(x + 0.5), X(y))
+      p.line(X(x + 0.5), X(y), X(x + 0.5), X(y + (WATER - RACE_ROOF - 0.2) / 3))
+    }
+  }
+  // The water in the race, running out to the mouth: its surface, and the current's lines going with it.
   p.noStroke()
   p.fill(mixHex(STAR.wet, STAR.rain, 0.3))
   p.rect(X((RACE_X0 + TERRACE_R) / 2), X((WATER + RACE_BED) / 2), X(TERRACE_R - RACE_X0 - 0.02), X(RACE_BED - WATER))
+  const span = TERRACE_R - RACE_X0 - 0.4
+  for (let i = 0; i < 14; i++) {
+    const u = (tau0 * (0.32 + 0.12 * hash(i, 1, 57)) + hash(i, 2, 57)) % 1
+    const x = RACE_X0 + 0.2 + span * u
+    const y = WATER + 0.035 + 0.05 * (i % 3)
+    p.stroke(rgba(STAR.rain, 0.5 * Math.sin(Math.PI * u) * (0.4 + 0.6 * lit(x) + 0.3)))
+    p.strokeWeight(Math.max(1, weight * 0.5))
+    p.line(X(x), X(y), X(x + 0.22 + 0.12 * hash(i, 3, 57)), X(y))
+  }
+  // A flyer for her picture, washed off the wall by the rain, going down the race ahead of her and out of the mouth:
+  // the life she might have had, carried off before she is.
+  const fx = Math.max(SPLASH_AT[0] + 0.9 + 0.5 * (t - 80.6), raceAt(t)[0] + 0.85)
+  const gone = smooth(fx, TERRACE_R - 0.4, TERRACE_R - 0.08)
+  if (t > 80.6 && gone < 1) {
+    const bob = 0.012 * Math.sin(tau0 * 5.1)
+    p.push()
+    p.translate(X(fx), X(WATER + 0.01 + bob))
+    p.rotate(0.12 * Math.sin(tau0 * 1.7) - 0.05)
+    p.noStroke()
+    p.fill(rgba(mixHex(STAR.cream, STAR.wet, 0.35), 1 - gone))
+    p.rect(0, 0, X(0.32), X(0.06), X(0.01))
+    p.fill(rgba(mixHex(STAR.carpet, STAR.wet, 0.25), 1 - gone))
+    p.rect(X(-0.04), X(-0.005), X(0.14), X(0.035))
+    p.fill(rgba(mixHex(STAR.gold, STAR.wet, 0.3), 1 - gone))
+    p.circle(X(0.08), X(-0.005), X(0.035))
+    p.pop()
+  }
+
+  // The stone weeps into the race: drops gathering at its roof's joints and falling into the water, ringing it.
+  const tau = tau0
+  for (let i = 0; i < 5; i++) {
+    const dx = RACE_X0 + 0.9 + i * ((TERRACE_R - RACE_X0 - 1.3) / 4) + 0.2 * hash(i, 1, 51)
+    if (dx > SHAFT_L - 0.2 && dx < SHAFT_R + 0.2) continue
+    const cyc = tau * (0.55 + 0.3 * hash(i, 2, 51)) + hash(i, 3, 51)
+    const u = cyc - Math.floor(cyc)
+    const fall = Math.max(0, (u - 0.55) / 0.45)
+    p.noStroke()
+    p.fill(rgba(STAR.rain, 0.55))
+    if (fall <= 0) p.circle(X(dx), X(RACE_ROOF + 0.03), X(0.025 + 0.025 * (u / 0.55)))
+    else if (fall < 0.8) p.circle(X(dx), X(RACE_ROOF + 0.03 + (WATER - RACE_ROOF) * (fall / 0.8) ** 2), X(0.04))
+    else {
+      const r = (fall - 0.8) / 0.2
+      p.noFill()
+      p.stroke(rgba(STAR.rain, 0.5 * (1 - r)))
+      p.strokeWeight(Math.max(1, weight * 0.5))
+      p.ellipse(X(dx), X(WATER + 0.02), X(0.06 + 0.22 * r), X(0.02 + 0.04 * r))
+    }
+  }
+  // An old iron main through the stone under the race, its flanged joints, one of them weeping.
+  const mainY = RACE_BED + 0.62
+  const mx0 = Math.max(EDGE_X + 0.4, f.x0 - 1)
+  const mx1 = Math.min(TERRACE_R - 0.05, f.x1 + 1)
+  if (mx1 > mx0 && mainY < f.y1 + 0.3) {
+    solid(p, rgba(INK, 0.3), weight * 0.5, mixHex(IRON, STONE_DEEP, 0.3))
+    p.rect(X((mx0 + mx1) / 2), X(mainY), X(mx1 - mx0), X(0.16))
+    for (let x = Math.ceil(mx0 / 1.3) * 1.3; x < mx1; x += 1.3) {
+      solid(p, rgba(INK, 0.3), weight * 0.45, mixHex(IRON, STONE, 0.25))
+      p.rect(X(x), X(mainY), X(0.07), X(0.24), X(0.015))
+    }
+    const lx = Math.round(26.7 / 1.3) * 1.3
+    const d = (tau * 0.8) % 1
+    p.noStroke()
+    p.fill(rgba(STAR.rain, 0.5 * (1 - d)))
+    p.circle(X(lx + 0.03), X(mainY + 0.13 + 0.9 * d * d), X(0.035))
+  }
 
   // The mouth: a pipe out of the terrace wall, and the water falling from it to the lane.
   const my = MOUTH[1] + 0.02
@@ -566,11 +740,24 @@ function rainAt(p: p5, c: Ctx, t: number, at: number, f: ReturnType<typeof frame
 export function drawAlley(p: p5, c: Ctx, t: number, her: Pt | null): void {
   const f = frame(p, c.k)
   if (f.x1 < EDGE_X - 0.5) return
+  drawCity(p, c, t, f)
   drawWalls(p, c, t, f)
+  steam(p, c, t, litAt(t))
   drawLamp(p, c)
   drawGround(p, c, t, f)
+  cellar(p, c)
   drawReflections(p, c, t, her)
+  ripples(p, c, rainTime(t, prefersCalm()), f, litAt(t))
   drawCover(p, c, t)
+}
+
+/** How lit the alley is at (x, y) at `t`, 0..1: the lamp's cone, and the neon close by. */
+const litAt = (t: number) => (x: number, y: number): number => Math.max(inCone(x, y), 0.6 * neonAt(t) * clamp(1 - Math.hypot(x - NEON[0], y - NEON[1]) / 2.2))
+
+/** The rain's own time: the held step while the picture is step-printed, the show's otherwise. */
+function rainTime(t: number, calm = false): number {
+  const step = calm ? 0 : stepPrint(t)
+  return step > 0.5 ? Math.floor(t * STEP_RATE) / STEP_RATE : t
 }
 
 /** In front of the ball: the race's water over her, the splashes, and the rain. */
@@ -594,4 +781,7 @@ export function alleyOver(p: p5, c: Ctx, t: number, calm = false): void {
   }
   drawSplashes(p, c, t)
   drawRain(p, c, t, f, calm)
+  // Nearer the lens than the alley: the washing line, the bin, and the nearer rain, step-printed as the rain is.
+  const step = calm ? 0 : stepPrint(t)
+  drawNear(p, c, t, Math.floor(t * STEP_RATE) / STEP_RATE, step, litAt(t), groundAt)
 }

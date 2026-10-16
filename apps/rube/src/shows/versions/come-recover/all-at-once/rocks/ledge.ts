@@ -5,6 +5,8 @@ import { fall } from '../music'
 import { G } from '../physics'
 import { EVELYN, JOY, ROCKS } from '../worlds'
 import { buildLand, INK, paintCloud, paintRing, paintSky, paintSlices, paintWall, type Land } from './ledgeLand'
+import { lightAt, type Light } from './ledgeLight'
+import { paintBanks, paintDust, paintShade } from './ledgeWind'
 import { PEBBLE_LANDS, pebbleAt, pebbleWays, type Pebble, type PebbleWay } from './ledgePebbles'
 import { EVELYN_ROCK, JOY_ROCK, paintStone, type Flush } from './ledgeStones'
 import {
@@ -115,7 +117,7 @@ const rgba = (hex: string, a: number): string => {
 }
 
 /** A puff of sand where a rock comes down: a few low, soft wisps that spread along the ground, lift, drift off on the wind, and thin away. */
-function paintPuff(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, since: number, size: number, seed: number): void {
+function paintPuff(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, since: number, size: number, seed: number, light?: Light): void {
   const life = 1.0 + size * 0.8
   if (since < 0 || since > life) return
   const u = since / life
@@ -127,7 +129,7 @@ function paintPuff(ctx: CanvasRenderingContext2D, k: number, x: number, y: numbe
     const px = x + side * spread + since * 0.2
     const py = y + R - 0.02 - (1 - Math.exp(-since / 0.45)) * (0.05 + 0.07 * hash(i, seed, 2)) * (0.5 + size)
     const rx = (0.06 + 0.1 * (1 - Math.exp(-since / 0.3))) * (0.5 + size) * (0.8 + 0.4 * hash(i, seed, 3))
-    ctx.fillStyle = rgba(DUST, 0.42 * fade * (0.7 + 0.3 * hash(i, seed, 4)))
+    ctx.fillStyle = rgba(light ? light.lit(DUST) : DUST, 0.42 * fade * (0.7 + 0.3 * hash(i, seed, 4)))
     ctx.beginPath()
     ctx.ellipse(px * k, py * k, rx * k, rx * 0.42 * k, 0, 0, Math.PI * 2)
     ctx.fill()
@@ -186,10 +188,27 @@ export const ledge = part<State>(
       const show = t + BEGIN
       const f = frame(p, k)
       const ctx = p.drawingContext as CanvasRenderingContext2D
-      paintSky(p, k, f)
-      paintCloud(p, k, f, show)
-      paintSlices(p, k, f, s.land)
-      paintWall(p, k, f, s.land, weight)
+      const light = lightAt(show)
+      paintSky(p, k, f, light)
+      paintCloud(p, k, f, show, light)
+      paintBanks(p, k, f, show, light)
+      // In front of the canyon's middle slice, the sand off its rim; then its nearest slice over it. On every slice
+      // but the horizon, the cloud's shadows.
+      paintSlices(
+        p,
+        k,
+        f,
+        s.land,
+        light,
+        (i, sc, map) => {
+          if (i !== 2) return
+          paintDust(p, k, f, show, sc, map)
+        },
+        (i, sc, map) => {
+          if (i > 0) paintShade(p, k, f, show, i, sc, map, light)
+        },
+      )
+      paintWall(p, k, f, s.land, weight, light)
       paintRing(p, k, f, s.land, weight * 0.9, false, show)
       for (const w of s.pebbles) {
         const at = pebbleAt(w, show)
@@ -205,13 +224,14 @@ export const ledge = part<State>(
         const since = show - l.t
         if (since < 0 || since > 2.5) continue
         if (l.p[0] < f.x0 - 2 || l.p[0] > f.x1 + 2 || l.p[1] < f.y0 - 2 || l.p[1] > f.y1 + 2) continue
-        paintPuff(ctx, k, l.p[0], l.p[1], since, Math.min(1.2, l.hard / 9), Math.round(l.t * 10))
+        paintPuff(ctx, k, l.p[0], l.p[1], since, Math.min(1.2, l.hard / 9), Math.round(l.t * 10), light)
       }
     },
     over: (p, s, c) => {
       const { k, weight } = c
       const show = c.t + BEGIN
       const f = frame(p, k)
+      const light = lightAt(show)
       const seen = (x: number, y: number) => x > f.x0 - 0.5 && x < f.x1 + 0.5 && y > f.y0 - 0.5 && y < f.y1 + 0.5
       // The two of them as stones, over their balls: Joy, then Evelyn (whose eye goes on after all of this).
       const [jx, jy] = wayAt(s.plan.joy, show)
@@ -219,13 +239,13 @@ export const ledge = part<State>(
       const [mex] = wayAt(s.plan.evelyn, MEET)
       if (show < END + 1e-6 && seen(jx, jy)) {
         const flush = flushOf(-1, (mjx - JOY_SEAT) / R, JOY, show)
-        paintStone(p, k, weight, JOY_ROCK, jx, jy, joyTilt(show) || (jx - JOY_SEAT) / R, mixHex(JOY_STONE, JOY, recovered(show)), s.plan.ledges, flush)
+        paintStone(p, k, weight, JOY_ROCK, jx, jy, joyTilt(show) || (jx - JOY_SEAT) / R, mixHex(JOY_STONE, JOY, recovered(show)), s.plan.ledges, flush, light)
       }
       if (s.lane && s.changes && c.t >= 0) {
         const at = laneAt(s.lane, c.t)
         const color = ballAt({ color: c.color, ghost: false, id: 0 }, s.changes, c.t).color
         const flush = flushOf(1, (mex - EVELYN_SEAT) / R, EVELYN, show)
-        if (!at.hidden && seen(at.x, at.y)) paintStone(p, k, weight, EVELYN_ROCK, at.x, at.y, (at.x - EVELYN_SEAT) / R, color, s.plan.ledges, flush)
+        if (!at.hidden && seen(at.x, at.y)) paintStone(p, k, weight, EVELYN_ROCK, at.x, at.y, (at.x - EVELYN_SEAT) / R, color, s.plan.ledges, flush, light)
       }
       // The ring's near half over them, so what falls in goes down behind its lip.
       paintRing(p, k, f, s.land, weight * 0.9, true, show, weight)
