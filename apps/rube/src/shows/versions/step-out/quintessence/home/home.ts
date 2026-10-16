@@ -26,7 +26,7 @@ export const homeSet = scenery<null>({
   name: 'home-set',
   draw: (p, _s, c) => {
     const pen = penOf(p, c.k)
-      drawRoom(pen, frame(p, c.k), c.t, lampLight(c.t), motherShadow(c.t))
+    drawRoom(pen, frame(p, c.k), c.t, lampLight(c.t), motherShadow(c.t))
     drawBench(pen)
     drawMother(pen, c.t)
     drawPianoBody(pen, c.t)
@@ -44,7 +44,7 @@ export const piano = part<HomeState>(
     draw: (p, s, c) => {
       const pen = penOf(p, c.k)
       const t = s.begin + c.t
-          drawStrings(pen, t)
+      drawStrings(pen, t)
       drawLamp(pen, t)
       drawLandings(pen, t)
     },

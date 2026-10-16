@@ -4,7 +4,6 @@ import { ONSETS } from '../music'
 import { PLANE, onPlane, type Frame } from './far'
 import { ERUPT, HUSH, T1 } from './geo'
 import { CRATER, CRATER_SX, rgbaHex, volcanoCap } from './ranges'
-import { HZ } from './sky'
 import { ICE } from './theme'
 
 /**
@@ -82,7 +81,7 @@ export function plumeMid(t: number): [number, number] {
 /* ------------------------------------------------------------------ lightning */
 
 /** The strikes: two on the burst, then on the guitar's onsets, often while the column is young and seldom after. */
-export const BOLTS: readonly number[] = (() => {
+const BOLTS: readonly number[] = (() => {
   const out = [ERUPT + 0.1, ERUPT + 0.42]
   let last = out[1]
   for (const o of ONSETS) {
@@ -96,18 +95,12 @@ export const BOLTS: readonly number[] = (() => {
 })()
 
 /** A bolt's light over its life: a stroke, a flicker off, a return stroke, gone. */
-export function boltLight(age: number): number {
+function boltLight(age: number): number {
   if (age < 0 || age > 0.4) return 0
   if (age < 0.04) return 1
   if (age < 0.08) return 0.2
   if (age < 0.12) return 0.85
   return Math.exp(-(age - 0.12) / 0.05)
-}
-/** How bright the bolts are at `t`, all together (for the land's flicker). */
-export function lightning(t: number): number {
-  let v = 0
-  for (const b of BOLTS) v = Math.max(v, boltLight(t - b) * boltStrength(b))
-  return v
 }
 const boltStrength = (at: number): number => (at < HUSH + 3 ? 1 : 0.5)
 
@@ -153,8 +146,8 @@ export function fireLight(t: number): number {
 }
 
 /**
- * The volcano's part of the far plane: the fire's light on the snow, the vent, the stones, the lava, the ash falling,
- * the plume, the fountain and the lightning. Drawn over the far range, before the nearer planes.
+ * The volcano's part of the far plane: the fire's light on the snow, the vent, the stones, the lava, the plume, the
+ * fountain and the lightning. Drawn over the far range, before the nearer planes.
  */
 export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: number): void {
   const u = t - ERUPT
@@ -240,31 +233,6 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
         ctx.fillStyle = rgbaHex(ICE.steam, 0.55)
         ctx.fill(steam)
       }
-    }
-
-    // Ash falling out of the spreading umbrella in curtains, leaning on the wind, down to the far ranges.
-    const curtains = sm(t, ERUPT + 2.5, ERUPT + 8)
-    if (curtains > 0.01) {
-      const top = plumeTop(t)
-      const spread = 0.05 + 0.05 * (t - ERUPT)
-      const mid = cx + 0.06 * top * 4
-      const y0 = cy - top + 0.035
-      const fall = new Path2D()
-      for (let i = 0; i < 20; i++) {
-        const f = hash(i, 1, 511)
-        const x = mid + (f - 0.35) * spread * 2
-        const sway = 0.006 * Math.sin(t * (0.3 + 0.3 * hash(i, 2, 511)) + i)
-        const len = (HZ - 0.005 - y0) * (0.5 + 0.5 * hash(i, 3, 511))
-        fall.moveTo(x, y0 + 0.01 * hash(i, 4, 511))
-        fall.quadraticCurveTo(x + 0.01 + sway, y0 + len * 0.5, x + 0.03 + sway * 2, y0 + len)
-      }
-      ctx.lineCap = 'round'
-      ctx.strokeStyle = rgbaHex(ICE.plumeLight, 0.1 * curtains)
-      ctx.lineWidth = 14 * px
-      ctx.stroke(fall)
-      ctx.strokeStyle = rgbaHex(ICE.plume, 0.08 * curtains)
-      ctx.lineWidth = 4 * px
-      ctx.stroke(fall)
     }
 
     // The plume, in its three greys (steam's before the burst); after it, its underside takes the fire's light.

@@ -122,12 +122,12 @@ function mossCanvas(lod: number): HTMLCanvasElement | null {
     path.moveTo(x + r, y)
     path.ellipse(x, y, r, r * 0.55, 0, 0, Math.PI * 2)
   }))
-  fill(ICE.mossLight, 0.7, (path) => each(560, 20, (x, y, m) => {
+  fill(ICE.mossLight, 0.5, (path) => each(420, 20, (x, y, m) => {
     const r = (0.022 + 0.045 * hash(m, 22, seed)) * s
     path.moveTo(x + r, y)
     path.ellipse(x, y, r, r * 0.6, 0, 0, Math.PI * 2)
   }))
-  fill(ICE.mossSun, 0.75, (path) => each(420, 25, (x, y, m) => {
+  fill(ICE.mossSun, 0.55, (path) => each(300, 25, (x, y, m) => {
     const r = (0.012 + 0.022 * hash(m, 27, seed)) * s
     path.moveTo(x + r, y - r * 0.2)
     path.ellipse(x, y - r * 0.2, r, r * 0.5, 0, 0, Math.PI * 2)
@@ -188,20 +188,23 @@ function mossPattern(ctx: CanvasRenderingContext2D, lod: number): CanvasPattern 
 
 /* ------------------------------------------------------------------ the sheep */
 
-/** Where the sheep graze: on the moss under the ridge road, and in the moss between the road's tiers. */
+/** Where the sheep graze, a ewe and her lambs together: on the moss under the ridge road, and between the road's tiers. */
 const FLOCK: { x: number; y: number; room: number; ph: number }[] = (() => {
   const road = roadLine(0.08)
   const out: { x: number; y: number; room: number; ph: number }[] = []
-  const xs = [-3.2, -1.6, 1.4, 3.1, 6.2, 8.4, 11.6, 12.4, 13.1, 15.2, 16.4, 18.6, 19.2, 14.8, 11.9, 17.6, 13.6, 16.9]
-  xs.forEach((x, i) => {
-    // The road's crossings at this x, top to bottom: graze in the gap the sheep's index picks.
+  // Each group: where it is along the hill, which gap down the hill it grazes in, and how many there are.
+  const groups: [number, number, number][] = [[-2.6, 0, 2], [1.4, 0, 1], [6.3, 1, 3], [11.9, 2, 2], [16.4, 4, 3], [18.6, 1, 2]]
+  groups.forEach(([x, gap, n], i) => {
+    // The road's crossings at this x, top to bottom, and the moss between them.
     const ys = road.filter(([rx], q) => q > 0 && (road[q - 1][0] - x) * (rx - x) <= 0).map(([, ry]) => ry).sort((a, b) => a - b)
     const gaps: [number, number][] = []
     for (let q = 0; q < ys.length; q++) gaps.push([ys[q], q + 1 < ys.length ? ys[q + 1] : Math.min(ys[q] + 2.2, shoreY(x) - 0.2)])
     const usable = gaps.filter(([a, b]) => b - a > 0.6)
     if (!usable.length) return
-    const [a, b] = usable[i % usable.length]
-    out.push({ x, y: a + 0.3 + (b - a - 0.55) * hash(i, 211), room: Math.min(0.5, (b - a) * 0.25), ph: hash(i, 212) * 6.283 })
+    const [a, b] = usable[gap % usable.length]
+    const y = a + 0.3 + (b - a - 0.55) * hash(i, 211)
+    const ph = hash(i, 212) * 6.283
+    for (let m = 0; m < n; m++) out.push({ x: x + (m - (n - 1) / 2) * 0.24, y: y + 0.05 * (m % 2), room: Math.min(0.5, (b - a) * 0.25), ph: ph + 0.4 * m })
   })
   return out
 })()

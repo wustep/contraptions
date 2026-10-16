@@ -25,7 +25,7 @@ import {
   roadAt,
 } from './geo'
 import { about, clamp01, disc, lerp, rgba, shape, sm, stroke, type Pen } from './pen'
-import { FAR_P, HZ, farFn, plumeMid, plumeTop } from './set'
+import { FAR_P, HZ, farFn, plumeMid } from './set'
 import { ICE } from './theme'
 
 type Frame = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number }
@@ -390,12 +390,11 @@ export function drawPlane(pen: Pen, t: number, f: Frame): void {
     stroke(pen, [[-s * 0.1, -s * 0.05], [-s * 0.25, -s * 0.5]], rgba(ICE.plane, fade), 0, 1)
     stroke(pen, [[-s * 0.85, 0], [-s * 1.0, -s * 0.4]], rgba(ICE.plane, fade), 0, 0.9)
   })
-  void plumeTop
 }
 
 /* ------------------------------------------------------------------ the ash */
 
-/** The flakes that land on the guitar's soft onsets: falling to their place by him, a breath of dust, and staying. */
+/** The flakes that land on the guitar's soft onsets: falling to their place by him, and staying. */
 export function drawLanding(pen: Pen, t: number, onHim: boolean): void {
   for (const fl of FLAKES) {
     if (fl.onHim !== onHim) continue
@@ -409,9 +408,5 @@ export function drawLanding(pen: Pen, t: number, onHim: boolean): void {
       continue
     }
     disc(pen, fl.p, r * 1.05, r * 0.6, rgba(ICE.ash, 0.95))
-    if (u < 0.5) {
-      const a = 1 - u / 0.5
-      disc(pen, fl.p, 0.03 + 0.12 * u, 0.012 + 0.04 * u, null, 0.6 * a, rgba(ICE.ash, 0.9 * a))
-    }
   }
 }

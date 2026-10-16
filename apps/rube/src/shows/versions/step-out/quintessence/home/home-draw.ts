@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { flicker, sway } from '../depth'
+import { sway } from '../depth'
 import { knock } from '../kit'
 import { frontTo, BENCH, CURVE_PT, KEY, NOTES, OUTLINE, PX, REST_PT, RIM_Y, rimAt, scr, SOLVED, stringEnd, W, WALL, KEY_DROP, KEY_LEN, EARLY_NOTES, LAST_NOTE, RIM } from './home-plan'
 import { bez, ellipse, fillPoly, glow, line, mix, rgba, trace, vgrad, type Pen } from './pen'
@@ -7,8 +7,8 @@ import type { Light } from './room'
 
 /**
  * Home, drawn: the baby grand seen from its curved side, his mother at the bench, and the lamp with the negative hung
- * from its shade (the room round them is `room.ts`). The room is dim and warm; the lamp is the only light, it
- * flickers a little, and it falls on the curve.
+ * from its shade (the room round them is `room.ts`). The room is dim and warm; the lamp is the only light, and it
+ * falls on the curve.
  */
 
 export const C = {
@@ -25,7 +25,6 @@ export const C = {
   black: '#0C0908',
   mother: '#16110F',
   motherRim: '#C08A52',
-  lamp: '#F5D9A0',
   shade: '#E7C48A',
   brass: '#7A6040',
   film: '#3A2414',
@@ -271,26 +270,7 @@ export function drawStrings(pen: Pen, t: number): void {
   c.fill(felts)
   c.fillStyle = rgba('#2A1E17', 0.9)
   c.fill(dampers)
-  // While a note rings the whole set takes it up faintly, the strings by the struck one the most.
-  let ring = 0
-  for (const n of NOTES) {
-    const a = t - n
-    if (a >= 0 && a < 2.6) ring = Math.max(ring, Math.exp(-a / 0.9))
-  }
-  if (ring > 0.02) {
-    const all = new Path2D()
-    for (let i = 0; i < STRINGS; i++) {
-      const u = stringU(i)
-      const a = scr(HAMMER_D + 0.04, u, STRING_H)
-      const b = scr(stringEnd(u) - 0.04, u, STRING_H)
-      const wob = 0.005 * ring * Math.sin(t * 61 + i * 1.7)
-      all.moveTo(a[0] * k, a[1] * k)
-      all.quadraticCurveTo(((a[0] + b[0]) / 2) * k, ((a[1] + b[1]) / 2 + wob) * k, b[0] * k, b[1] * k)
-    }
-    c.strokeStyle = rgba('#F6D79A', 0.2 * ring)
-    c.lineWidth = 0.007 * k
-    c.stroke(all)
-  }
+  // While a note rings the strings either side of it take it up, the nearest the most.
   for (const [n, s] of NOTE_STRINGS) {
     const age = t - n
     if (age < 0 || age > 1.6) continue
@@ -310,7 +290,7 @@ export function drawStrings(pen: Pen, t: number): void {
       line(pen, pts, rgba('#F6D79A', (0.5 / Math.abs(nb)) * Math.exp(-age / 0.6)), 0.008)
     }
   }
-  // Each note: its string lights and shivers from the hammer to its end, and dies away.
+  // Each note: its string shivers from the hammer to its end, catching the lamp, and dies away.
   for (const [n, s] of NOTE_STRINGS) {
     const age = t - n
     if (age < 0 || age > 2.2) continue
@@ -325,8 +305,7 @@ export function drawStrings(pen: Pen, t: number): void {
       const [x, y] = scr(d0 + (d1 - d0) * f, u, STRING_H)
       pts.push([x, y + amp * Math.sin(Math.PI * f) * Math.sin(age * 70 + f * 2)])
     }
-    line(pen, pts, rgba('#F6D79A', 0.85 * lit), 0.018)
-    line(pen, pts, rgba('#FFF4DC', 0.95 * lit), 0.008)
+    line(pen, pts, rgba('#F6D79A', 0.8 * lit), 0.012)
   }
   c.restore()
   drawRimBand(pen)
@@ -461,10 +440,9 @@ export function drawMother(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the lamp and the negative */
 
-/** The lamp's light at `t`: where it comes from (the shade stirs a little on its stem), and how bright it is now. */
+/** The lamp's light at `t`: where it comes from (the shade stirs a little on its stem). */
 export function lampLight(t: number): Light {
-  const warm = t >= SOLVED ? knock(t - SOLVED, 0.9) : 0
-  return { at: [SHADE[0] + 0.014 * sway(t, 0.11, 4), SHADE[1] + 0.3], power: flicker(t, 6, 0.07) * (1 + 0.12 * warm) }
+  return { at: [SHADE[0] + 0.014 * sway(t, 0.11, 4), SHADE[1] + 0.3] }
 }
 
 export function drawLamp(pen: Pen, t: number): void {
@@ -478,14 +456,8 @@ export function drawLamp(pen: Pen, t: number): void {
   const sx = light.at[0]
   const sy = SHADE[1]
   line(pen, [LAMP_FOOT, [STEM_X, sy + 0.2], [sx + 0.04, sy + 0.1]], C.brass, 0.035)
-  // The cone it throws down past the piano's curve to the floor, faint in the air.
-  const cone = c.createLinearGradient(0, (sy + sh / 2) * pen.k, 0, 0.5 * pen.k)
-  cone.addColorStop(0, rgba(C.lamp, 0.05 * light.power))
-  cone.addColorStop(1, rgba(C.lamp, 0))
-  fillPoly(pen, [[sx - sw * 0.95, sy + sh / 2], [sx + sw * 0.95, sy + sh / 2], [sx + 1.25, 0.5], [sx - 1.45, 0.5]], cone)
-  // The shade, lit through; warmer for a moment when the clue is solved.
-  const warm = t >= SOLVED ? knock(t - SOLVED, 0.9) : 0
-  fillPoly(pen, [[sx - sw * 0.62, sy - sh / 2], [sx + sw * 0.62, sy - sh / 2], [sx + sw, sy + sh / 2], [sx - sw, sy + sh / 2]], vgrad(pen, sy - sh / 2, sy + sh / 2, [[0, mix('#B8925A', C.shade, 0.3 * warm)], [1, mix(C.shade, '#F7DDA8', 0.5 * warm)]]))
+  // The shade, lit through.
+  fillPoly(pen, [[sx - sw * 0.62, sy - sh / 2], [sx + sw * 0.62, sy - sh / 2], [sx + sw, sy + sh / 2], [sx - sw, sy + sh / 2]], vgrad(pen, sy - sh / 2, sy + sh / 2, [[0, '#B8925A'], [1, C.shade]]))
   // The shade's seams, and the bulb's light at its open foot.
   for (const f of [-0.5, 0, 0.5]) line(pen, [[sx + f * sw * 0.62, sy - sh / 2], [sx + f * sw, sy + sh / 2]], rgba('#8A6A40', 0.35), 0.008)
   ellipse(pen, sx, sy + sh / 2, sw, 0.035, rgba('#FFF0C8', 0.95))

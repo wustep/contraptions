@@ -8,7 +8,7 @@ import { ctxOf, sm, type Pen } from './pen'
 import { drawSky } from './sky'
 
 export { HZ } from './sky'
-export { plumeMid, plumeTop } from './erupt'
+export { plumeMid } from './erupt'
 
 /**
  * Iceland's standing set, handed show time, far to near: the sky and its weather (`sky.ts`); the far range with the

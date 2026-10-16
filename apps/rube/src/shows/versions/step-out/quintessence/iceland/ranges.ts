@@ -9,8 +9,8 @@ import { ICE } from './theme'
  * Everything past the shore, on three planes: the far range with the volcano (its ice cap, its glacier's tongues);
  * a nearer massif under its own ice cap, whose outlet glacier comes down a valley to the fjord, calving; and the
  * mountains across the fjord, stepped in the East Fjords' layers of basalt, a harbour at their foot and a boat going
- * out. Under them the fjord: their reflections, the sun's path of glitter, and its skin shimmering all the way to the
- * near shore.
+ * out. Under them the fjord: their reflections, the sun's path on it, and its skin of ripples drifting all the way
+ * to the near shore.
  *
  * Each plane is drawn in its own measure (`far.ts`): its outlines are made once.
  */
@@ -316,17 +316,16 @@ const SKIN = cached(() =>
         x: (i + hash(i, r, 91) * 0.8) * gap,
         len: (0.01 + 0.06 * d) * (0.5 + hash(i, r, 92)),
         dark: hash(i, r, 93) < 0.4,
-        ph: hash(i, r, 94) * 6.283,
-        rate: 0.6 + 1.4 * hash(i, r, 95),
-      })),
+        bright: hash(i, r, 94) > 0.5,
+      })).filter((_, i) => hash(i, r, 95) > 0.3),
     }
   }),
 )
 
 /**
  * The fjord: its colour from the far shore to the near, the mountains' reflections, and its skin: rows of streaks of
- * the sky's light and the ripples' shade, each row sliding as a plane at its own distance would, the sun's glitter in
- * a path under it and, after the eruption, the fire's.
+ * the sky's light and the ripples' shade, each row sliding as a plane at its own distance would and drifting on the
+ * wind, the sun's light in a path under it and, after the eruption, the fire's.
  */
 export function drawWater(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: number, dim: number): void {
   const fv = seen(f, PLANE.far)
@@ -417,7 +416,7 @@ export function drawWater(ctx: CanvasRenderingContext2D, f: Frame, k: number, t:
       const sy = -0.07 * d * d * (f.cy - CY0)
       const y = row.y + sy
       if (y < fv.y0 - 0.02 || y > fv.y1 + 0.02 || y < HZ + 0.003) continue
-      const drift = t * (0.004 + 0.018 * d) + sx
+      const drift = t * (0.006 + 0.036 * d) + sx
       const lo = fv.x0 - 0.1 - drift
       const hi = fv.x1 + 0.1 - drift
       const near = d > 0.4 ? 1 : 0
@@ -426,11 +425,9 @@ export function drawWater(ctx: CanvasRenderingContext2D, f: Frame, k: number, t:
           const x = it.x + w * ROW_SPAN
           if (x < lo || x > hi) continue
           const at = x + drift
-          const tw = 0.5 + 0.5 * Math.sin(t * it.rate + it.ph)
           const kind = it.dark ? 1 : fire > 0 && Math.abs(at - CRATER_SX) < 0.02 + 0.09 * d ? 3 : Math.abs(at - sunAt) < 0.03 + 0.12 * d ? 2 : 0
-          if (tw < 0.33 && kind < 2) continue
           const len = it.len * (kind >= 2 ? 0.7 : 1)
-          const p = paths[kind * 4 + (tw > 0.66 ? 2 : 0) + near]
+          const p = paths[kind * 4 + (it.bright ? 2 : 0) + near]
           p.moveTo(at, y)
           p.lineTo(at + len, y)
         }
