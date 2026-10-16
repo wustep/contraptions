@@ -501,35 +501,37 @@ export function drawCity(pen: Pen, v: View, t: number, fire: number): void {
 }
 
 /**
- * The fire's smoke lying across the city lower down (z 0.45, in front of the middle blocks): a few long rolls
- * drifting left on the night air, thin enough to see the windows through, lit amber underneath.
+ * The fire's smoke lying across the city (z 0.45, in front of the middle blocks): a few long rolls drifting left on
+ * the night air, thin enough to see the windows through, lit amber underneath, and thinning to nothing as they go
+ * away from the fire, before they reach the moon.
  */
 function drift(ctx: C2, pen: Pen, v: View, t: number, fire: number): void {
   const amount = 1 - 0.5 * drained(t)
   layer(ctx, v, 0.45, ANCHOR, REF, (inner) => {
     const k = inner.k
     const span = 16
-    const body = new Path2D()
-    const under = new Path2D()
     const ft = fireT(t)
     for (let i = 0; i < 6; i++) {
       const x = 9 - ((((ft * 0.22 + hash(i, 1, 61) * span) % span) + span) % span)
       const y = -2.2 - 1.3 * hash(i, 2, 61) + 0.12 * Math.sin(ft * 0.4 + i)
       const r = 0.45 + 0.5 * hash(i, 3, 61)
-      if (x + r * 1.6 < inner.x0 || x - r * 1.6 > inner.x1) continue
-      for (const [p, oy] of [[under, 0.18], [body, 0]] as const) {
-        const pts: Pt[] = Array.from({ length: 8 }, (_, j) => {
-          const a = (j / 8) * Math.PI * 2
-          const rr = r * (0.8 + 0.25 * Math.sin(a * 3 + i * 1.9 + ft * 0.3))
-          return [x + Math.cos(a) * rr * 1.6, y + oy * r + Math.sin(a) * rr * 0.42]
-        })
-        loop(p, pts, k)
+      const thin = Math.min(1, Math.max(0, (x - 1.5) / 2.5)) * amount
+      if (thin <= 0.01 || x + r * 1.6 < inner.x0 || x - r * 1.6 > inner.x1) continue
+      for (const [oy, col, a] of [[0.18, K.smokeLit, 0.05 + 0.08 * fire], [0, K.smoke, 0.24]] as const) {
+        const roll = new Path2D()
+        loop(
+          roll,
+          Array.from({ length: 8 }, (_, j) => {
+            const an = (j / 8) * Math.PI * 2
+            const rr = r * (0.8 + 0.25 * Math.sin(an * 3 + i * 1.9 + ft * 0.3))
+            return [x + Math.cos(an) * rr * 1.6, y + oy * r + Math.sin(an) * rr * 0.42] as Pt
+          }),
+          k,
+        )
+        ctx.fillStyle = rgba(pen, col, a * thin)
+        ctx.fill(roll)
       }
     }
-    ctx.fillStyle = rgba(pen, K.smokeLit, (0.05 + 0.08 * fire) * amount)
-    ctx.fill(under)
-    ctx.fillStyle = rgba(pen, K.smoke, 0.24 * amount)
-    ctx.fill(body)
   })
 }
 

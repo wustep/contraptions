@@ -473,7 +473,7 @@ function shop(pen: Pen, inner: number): void {
   ctx.save()
   ctx.fillStyle = rgba(pen, '#2A1C35', 1)
   ctx.fill(boards)
-  for (const [i, col] of ['#5E4660', '#4A3446'].entries()) {
+  for (const [i, col] of ['#6E5470', '#574060'].entries()) {
     ctx.fillStyle = rgba(pen, col, 1)
     ctx.fill(goods[i])
   }
