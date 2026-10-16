@@ -233,7 +233,7 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 
 ## Polish pass 161 (latest)
 
-Stephen: Miller's water "is a little too busy. Calm and simplify it: fewer ripples and elements, less motion noise, while keeping the giant wave beat clearly readable." And two more for the same round: when Cooper gets into the ship, the bottom of the ball drew in front of it; and the moving lines on the ground in the last scene were excessive.
+Stephen: Miller's water "is a little too busy. Calm and simplify it: fewer ripples and elements, less motion noise, while keeping the giant wave beat clearly readable." And three more for the same round: when Cooper gets into the ship, the bottom of the ball drew in front of it; the moving lines on the ground in the last scene were excessive; and the front layer along the bottom of the frame had visual issues, in every scene that had one (fix it or remove it).
 
 **Miller's water** (104 to 114 s, `space/miller.ts`). Seven things moved on it at once; now the sea is calm and the wave is the one big thing that moves.
 - The swells: nine rows instead of fifteen, rolling in at half the pace, each one still dark line of trough. Each row had been a trough and a bright back, both wobbling on their own.
@@ -247,9 +247,14 @@ Stephen: Miller's water "is a little too busy. Calm and simplify it: fewer rippl
 
 **Her plain, still** (236 s to the end, `act2/edmunds.ts` and `act2/edmunds-farm.ts`). The skeins of sand blowing low across the ground, thin wavy lines that came, ran and went all the way to the last frame, are gone. A third of the plain's cracks and ripples are left, so the ground is not hatched with lines sliding under the crane. The stones, the drifts, her rover's ruts and the long sunrise shadows stay.
 
+**No foreground strip along the frame's foot.** Every scene that had one was looked at again.
+- The farm's near ground (`earth/near.ts`, from the porch to the launch) is gone: dry weeds and seed heads, stones, stalk tips whipping past in the corn chase, fence posts and a sagging wire past the dam, dust blowing low. Drawn over the machine, its stems reached up into the truck and the channel's ramp (31 s), the stalks cut across the road and the dam's post (45 to 53 s), and the wire ran over the cattle grid's pit and the machines' feet (62 to 72 s). The afternoon's grade, which lived in the same layer, stays as `earth/grade.ts`.
+- The ring ice tumbling by under the ship over Saturn's rings (226 to 231 s) is gone; the rings say where it is.
+- Miller's near water went with the rest of its busyness (above). The station's near layer is two birds high in the frame, not along its foot; the camp's foreground is the plain's own pebbles, fixed to the ground.
+
 **The bible's heading.** Pass 160 had been headed "Polish pass 160 (latest): less is more", which the check on these headings does not read, so `check:shows` failed on the head of that round (it was run before the bible was written). It is "Polish pass 160" now, and this pass is the latest.
 
-Measured against pass 160 with both builds served at once: driven from `requestAnimationFrame` in a Chrome window on the GPU (2,390 frames), 59.9 frames a second before and after, no frame over 20 ms in either, paint 1.3 ms at the median (1.4 before) and 2.6 ms at the 99th percentile (3.1). Painted on demand at 1920 × 1080 every 60th of a second through Miller (104 to 113 s), 1.1 to 1.3 ms at the median in both; through the landing and the camp (250 to 262 s), 1.2 ms in both.
+Measured against pass 160 with both builds served at once, with everything in: driven from `requestAnimationFrame` in a Chrome window on the GPU (2,390 frames, twice each), 59.9 frames a second before and after, no frame over 20 ms after (0 and 6 before), paint 1.5 to 1.6 ms at the median (1.7 before) and 2.9 to 3.1 ms at the 99th percentile (3.1 to 3.2). Painted on demand at 1920 × 1080 every 60th of a second: through Miller (104 to 113 s), 1.1 to 1.3 ms at the median in both; through the chase, the combine and the fence (42 to 72 s), 0.7 ms (0.8); through the landing and the camp (250 to 262 s), 1.2 ms in both.
 
 ## Polish pass 160
 
@@ -1367,11 +1372,11 @@ These are visual and mechanical only. There are no stills, no text, and no audio
   - `act2/station.ts` has the station's geometry: the ring, its axis, standing things upright on it.
   - `act2/interior.ts` draws the ring round the parts.
   - `earth/truck.ts` exports the pickup's drawing, so the same truck appears at the dam, the gate and the tower.
-- **The layers round the machine** (pass 156, thinned in pass 160). The farm and the station have a far layer behind the parts and a near one over them, each moving at its own share of the camera's move (`kit.frame()` says where the frame is); the dark and the outside have their depth in their own parts:
-  - the farm: `earth/light.ts` (the day's one light, which the sky, the window and the near layer all read), `earth/far.ts` (farms, the freight, crows, the storm, NASA's base) and `earth/near.ts` (grass, stones, wire, blowing dust, and the afternoon's grade);
+- **The layers round the machine** (pass 156, thinned in passes 160 and 161). The farm and the station have a far layer behind the parts, and the station a near one over them, each moving at its own share of the camera's move (`kit.frame()` says where the frame is); the dark and the outside have their depth in their own parts:
+  - the farm: `earth/light.ts` (the day's one light, which the sky, the window and the grade all read), `earth/far.ts` (farms, the freight, crows, the storm, NASA's base) and `earth/grade.ts` (the afternoon's grade over the frame; nothing along its foot since pass 161);
   - the dark: the Earth and the Moon in `space/sky.ts`, and nothing over the machine;
   - the station: `act2/depth.ts` (the cylinder going away down its length, its fields and haze, the clouds, two flocks and the airship), `act2/daylight.ts` (its day, which the air and the haze read), `act2/hub-bay.ts` (the bay's hall behind the Ranger) and `act2/near.ts` (two birds crossing close), over the ring;
-  - outside: `act2/undock-far.ts` (the moons, the sister habitats and their cargo lines, the ring ice) and `act2/edmunds-farm.ts` (her farm, the cirrus, the nearer mesas, her rover's way out to his lander).
+  - outside: `act2/undock-far.ts` (the moons, the sister habitats and their cargo lines) and `act2/edmunds-farm.ts` (her farm, the cirrus, the nearer mesas, her rover's way out to his lander).
   - `act2/iris.ts` is the port's iris at the undock, drawn in both universes either side of the change of world.
 - **The camera's roll.** `Framing.angle` (optional, in `shows/registry.ts`) turns the picture about its middle. The engine (`drawWorld`) rotates after the backdrop and chooses pieces from the box round the turned view. `kit.frame()` takes the canvas's corners back through the turned transform, so skies and culling still cover the frame. Liftoff's roll curve is `rollAt` in `score.ts`; no other show sets an angle.
 - **Checks.** `apps/rube/checks/shows.ts` has a Liftoff block, run by `npm run check:shows`.
