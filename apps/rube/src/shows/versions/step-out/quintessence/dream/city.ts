@@ -318,15 +318,25 @@ function chimneys(ctx: C2, pen: Pen, k: number, t: number): void {
 }
 
 /** Pigeons the fire has put up off the roofs, wheeling as one flock over them and drifting left (middle plane). */
+const FLOCK: Pt[] = [
+  [0, 0],
+  [-0.2, 0.07],
+  [0.19, 0.05],
+  [-0.38, -0.03],
+  [0.36, -0.06],
+]
 function pigeons(ctx: C2, pen: Pen, k: number, t: number): void {
   const s = t - T0
   const cx = 0.8 - 0.04 * s
   const cy = -1.9
   const birds = new Path2D()
-  for (let i = 0; i < 5; i++) {
-    const a = s * 0.42 + i * 0.32 + hash(i, 1, 85) * 0.2
-    const x = cx + 0.8 * Math.cos(a) + (hash(i, 2, 85) - 0.5) * 0.2
-    const y = cy + 0.22 * Math.sin(a) + (hash(i, 3, 85) - 0.5) * 0.14
+  // The flock goes round together; each bird keeps its place in it, bobbing a little on its own.
+  const a = s * 0.42
+  const fx = cx + 0.8 * Math.cos(a)
+  const fy = cy + 0.22 * Math.sin(a)
+  for (const [i, [dx, dy]] of FLOCK.entries()) {
+    const x = fx + dx + 0.02 * Math.sin(s * 1.3 + i * 2.1)
+    const y = fy + dy + 0.025 * Math.sin(s * 1.7 + i * 1.4)
     // Its wings: down, then up, a few times a second.
     const flap = 0.035 * Math.sin(s * 8.5 + i * 1.7)
     const span = 0.06

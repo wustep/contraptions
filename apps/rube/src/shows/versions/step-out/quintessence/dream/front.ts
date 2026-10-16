@@ -4,7 +4,7 @@ import { layer, view, type View } from '../depth'
 import { BEATS } from '../music'
 import { drawAir, fireT, heat } from './draw'
 import { BED, BX, BX1, DECK, drained, FENCE, LIP, STREET, T0, T1, toneAt } from './geo'
-import { ctxOf, rgba, type Pen } from './pen'
+import { ctxOf, ease, rgba, type Pen } from './pen'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
@@ -131,8 +131,11 @@ function nearPlane(ctx: C2, pen: Pen, v: View, t: number): void {
       ctx.fill(rivets)
     }
     const [lx, ly] = LAMP
-    if (lx > inner.x0 - 1 && lx < inner.x1 + 1) {
+    // The lamp is the camera's only while it is close: in the pull-back it would be a sliver at the frame's edge.
+    const close = 1 - ease((v.h - 6) / 1.5)
+    if (close > 0 && lx > inner.x0 - 1 && lx < inner.x1 + 1) {
       // A lamp hanging on its rod from the platform's roof: an enamel shade, lit under its rim, swinging a little.
+      ctx.globalAlpha = close
       const sw = 0.03 * Math.sin(t * 1.3) + 0.015 * Math.sin(t * 3.1 + 1)
       const bx = lx + sw * (ly - inner.y0)
       ctx.strokeStyle = near
@@ -151,6 +154,7 @@ function nearPlane(ctx: C2, pen: Pen, v: View, t: number): void {
       ctx.fill()
       ctx.fillStyle = rgba(pen, '#D9F0E0', 0.9)
       ctx.fillRect((bx - 0.28) * k, ly * k, 0.56 * k, 0.03 * k)
+      ctx.globalAlpha = 1
     }
   })
 }
