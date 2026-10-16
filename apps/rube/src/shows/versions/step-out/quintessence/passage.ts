@@ -217,7 +217,7 @@ const waterline: Shape = {
     // Bubbles carried down under the skin, and spray thrown up over it.
     const bubbles = new Path2D()
     const spray = new Path2D()
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 36; i++) {
       const x = hash(i, 1, 31) * W
       const y0 = waterAt(u, H, s, x)
       const d = (hash(i, 2, 31) * 1.6 + 0.1) * s
@@ -225,7 +225,7 @@ const waterline: Shape = {
       const by = y0 + d + Math.sin(t * 9 + i) * 0.03 * s
       bubbles.moveTo(x + r, by)
       bubbles.arc(x, by, r, 0, Math.PI * 2)
-      if (i < 40) {
+      if (i < 20) {
         const sy = y0 - (hash(i, 4, 31) * 0.9) * s * Math.sin(Math.PI * u)
         spray.moveTo(x + r * 0.7, sy)
         spray.arc(x, sy, r * 0.7, 0, Math.PI * 2)
