@@ -319,7 +319,8 @@ and the flowers it opens under the moon stay lit and open until dawn, so the sea
 its night. The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
 
-`soft-lamp/opus55` (in the picker, **Soft Lamp**, one take, **Opus 5.5**, on the **Ambient** shelf) is half an hour of
+`soft-lamp/opus55-still` (in the picker, **Soft Lamp**, one take, **Opus 5.5**, on the **Ambient** shelf; the moving
+camera, `soft-lamp/opus55`, is hidden for now, Oct 15: its file is `opus55.ts`, not `opus55.show.ts`) is half an hour of
 Lofi Girl's *Best of lofi hip hop 2021*, its first twelve tracks, played from the label's upload only (YouTube
 n61ULEU7CO0, from the video's zero to 30:12.4; `apps/rube/src/shows/versions/soft-lamp/ATTRIBUTION.txt`), round a small
 machine on a study desk by a window, from dusk into a rainy night, in the manner of a lofi stream. `scripts/shows/soft-lamp-onsets.py` measures the mix once from a
