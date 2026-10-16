@@ -525,17 +525,26 @@ export function drawFarRocks(pen: Pen, t: number): void {
  */
 /** The summits standing out of the cloud: x, how far into the sea (below its far edge), width, height. */
 const ISLANDS: [number, number, number, number][] = [[22.6, 0.25, 2.6, 0.9], [30.2, 0.62, 3.4, 1.1], [16.6, 1.1, 2.6, 0.85], [26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
+/**
+ * The masses of cloud in the sea, past the far edge's small heaps: x, how far into the sea, and how big. Each is a big
+ * heap with a lesser one behind it on its left and another before it on its right, so the sea is lumped in masses with
+ * open floor between them, not dotted with heaps.
+ */
+const MASSES: [number, number, number][] = [
+  [21.0, 0.4, 1.3], [35.6, 0.5, 1.4], [13.6, 0.7, 1.0], [27.2, 0.8, 1.5], [23.8, 1.1, 1.0], [17.6, 1.4, 1.5], [31.6, 1.7, 1.7],
+  [11.8, 1.8, 1.2], [39.4, 2.0, 1.7], [27.8, 2.2, 1.3], [20.0, 2.4, 1.2], [23.6, 2.6, 2.4], [36.4, 2.9, 1.5], [14.0, 3.4, 2.2],
+  [33.4, 3.6, 2.6], [20.4, 4.3, 1.8], [26.6, 5.0, 2.8], [17.4, 6.2, 3.2], [38.8, 6.4, 3.4], [27.6, 8.4, 3.6],
+]
 /** The heaps of cloud: x, how far into the sea, how big, and how much taller than the rest (the two welling up in the gorge under the ledge, which stay where they are). */
 const HEAPS: [number, number, number, number?][] = [
   [10.9, 0.25, 0.8, 2.4], [11.75, 0.12, 0.5, 2],
-  // Far off: small and flat, close together, as the sea goes away from the lens.
+  // The far edge: small and flat, close together, as the sea goes away from the lens.
   [13.4, 0.15, 0.55], [15.2, 0.2, 0.7], [17.6, 0.12, 0.6], [21.6, 0.18, 0.75], [24.0, 0.1, 0.5], [29.4, 0.15, 0.7], [31.5, 0.25, 1.0],
-  [20.0, 0.35, 1.4], [35.0, 0.4, 1.6], [12.2, 0.45, 1.0], [25.8, 0.4, 0.9], [27.5, 0.55, 1.8], [16.9, 0.6, 0.9], [22.6, 0.7, 1.0],
-  [38.0, 0.75, 1.3], [14.4, 0.9, 1.1], [11.0, 0.95, 0.8], [24.4, 1.0, 1.3], [30.4, 1.05, 1.2], [18.6, 1.4, 1.6], [12.8, 1.5, 1.4],
-  // Nearer: fewer, bigger and rounder, in twos and threes.
-  [38.6, 1.8, 2.0], [29.6, 1.9, 1.6], [23.0, 2.2, 3.0], [26.6, 2.6, 2.0], [36.0, 2.6, 1.8], [16.4, 2.9, 2.2], [33.5, 3.0, 3.4],
-  [12.4, 3.4, 1.8], [27.4, 3.5, 2.6], [20.2, 3.6, 2.0], [31.4, 4.2, 2.2], [15.6, 4.6, 3.2], [38.4, 4.4, 3.0], [22.0, 5.4, 3.4],
-  [25.4, 6.1, 2.6], [34.6, 5.7, 2.8], [30.0, 6.6, 4.2], [18.4, 6.9, 2.8], [40.0, 7.6, 4.6], [14.6, 7.6, 3.4], [22.4, 8.4, 3.8],
+  ...MASSES.flatMap(([x, d, r], i): [number, number, number][] => [
+    [x - (0.8 + 0.2 * hash(i, 1, 79)) * r, d - 0.06 * r, r * (0.5 + 0.15 * hash(i, 2, 79))],
+    [x, d, r],
+    [x + (0.75 + 0.2 * hash(i, 3, 79)) * r, d + 0.08 * r, r * (0.45 + 0.15 * hash(i, 4, 79))],
+  ]),
 ]
 /** Everything standing up out of the sea, furthest first: so each lies over the feet of what is behind it. */
 const STANDING = [...HEAPS.map((h, i) => ({ d: h[1], i, heap: true })), ...ISLANDS.map((h, i) => ({ d: h[1], i, heap: false }))].sort((a, b) => a.d - b.d)
@@ -597,7 +606,8 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
     // The crowns are only a little lighter than the floor until the sun is on the sea, and then lit.
     const crown = mix(body, mix(top, '#FFFFFF', 0.25), 0.5 + 0.5 * sea)
     const foot = (px: number) => base + 0.05 * r * Math.sqrt(Math.max(0, 1 - ((px - x) / (1.3 * r)) ** 2))
-    for (const [cx, cy, rx, ry] of lobes) lobe(c, cx, cy, rx, ry, foot, side, body, crown)
+    // Only the top and the dome are high enough to catch the light on a crown.
+    lobes.forEach(([cx, cy, rx, ry], i) => lobe(c, cx, cy, rx, ry, foot, side, body, i < 2 ? crown : null))
   }
   inCells(pen, (c) => {
     bands(c, lo, hi, DECK, f.y1 + 0.5, floor, undefined, 8)

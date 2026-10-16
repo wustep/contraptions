@@ -7,8 +7,9 @@ import { litY, sunAt, SUN_R, tone, VALLEY, REF, wind, type LitPlane, type Tone }
 
 /**
  * Everything beyond the valley, on its own planes behind the mountain he climbs: the sky (painted at depth 0, with the
- * last stars, rolls of high cloud lit from under, a skein of geese and the sun); the great range at 0.08, its highest
- * summit streaming a long plume; a second range at 0.2 and a third at 0.35, a few of their highest summits streaming
+ * last stars, rolls of high cloud lit from under, a skein of geese and the sun); the farthest range at 0.03, pale with
+ * the air, its summits in the gaps of the great range in front of it; the great range at 0.08, its highest summit
+ * streaming a plume; a second range at 0.2 and a third at 0.35, a few of their highest summits streaming
  * spindrift, and cloud at their feet; and the sea of cloud at 0.55 filling the valley under the ledge.
  * Each plane moves and scales less than the world as the camera goes, so the climb raises the far peaks over the near
  * ridges and the pull-back opens on all of them.
@@ -57,6 +58,10 @@ const P = (x: number, y: number, wl: number, wr = wl): Peak => ({ x, y, wl, wr }
 /** The great summit: the highest thing in the world, its plume streaming toward the sun. */
 const GREAT = 4
 const SPECS: Spec[] = [
+  {
+    z: 0.03, seed: 5, x0: -9, x1: 33, base: -9.5, jag: 0.04, rocky: 0.15, cloud: -9.55, flow: 0.015, haze: 0.6, plane: 'far', plumed: [],
+    peaks: [P(-6.0, -11.3, 2.0), P(-2.2, -11.45, 2.1), P(1.9, -11.55, 2.2), P(5.6, -11.3, 2.0), P(8.6, -11.65, 1.8), P(16.7, -11.45, 1.9), P(20.4, -11.7, 2.2), P(24.2, -11.4, 2.0), P(28.0, -11.75, 2.3)],
+  },
   {
     z: 0.08, seed: 11, x0: -8, x1: 32, base: -9.2, jag: 0.05, rocky: 0.35, cloud: -9.28, flow: 0.025, haze: 0.32, plane: 'far', plumed: [3, GREAT, 7],
     peaks: [P(-4.2, -11.2, 2.8), P(-0.2, -11.75, 3.0), P(3.9, -11.35, 2.4), P(7.1, -11.7, 2.2, 1.9), P(10.3, -12.45, 3.0, 2.3), P(12.6, -11.55, 1.5, 1.3), P(14.45, -11.7, 1.7, 2.2), P(18.4, -12.05, 2.6), P(22.2, -11.5, 2.4), P(26.0, -11.9, 2.8), P(30, -11.4, 2.5)],
@@ -349,8 +354,8 @@ function rolls(ctx: C2, s: View, t: number, tn: Tone, sky: (y: number) => string
         const q = k / n
         ts[k] = th * Math.sin(Math.PI * q) ** 0.6 * (sun ? smooth(Math.abs(x0 + L * q - 14.15), 0.45, 0.85) : 1)
       }
-      // Its cloudlets: about as long as the roll is thick and a little more, each its own size. The roll is not
-      // quite level: it sags or lifts a little along its length.
+      // Its cloudlets: about as long as the roll is thick and a little more, each its own size, slowly changing as the
+      // wind works on them. The roll is not quite level: it sags or lifts a little along its length.
       const ph = hash(i, 4, 100 + j) * 6
       const lump = Math.PI / (th * 2.6)
       const lean = (hash(i, 6, 100 + j) - 0.5) * 0.16
@@ -359,7 +364,7 @@ function rolls(ctx: C2, s: View, t: number, tn: Tone, sky: (y: number) => string
       bodies.moveTo(x0, at(0))
       for (let k = 1; k <= n; k++) {
         const u = (L * k) / n
-        bodies.lineTo(x0 + u, at(k) - ts[k] * (0.3 + 0.7 * Math.abs(Math.sin(u * lump + ph + 0.4 * Math.sin(u * 2.3)))))
+        bodies.lineTo(x0 + u, at(k) - ts[k] * (0.3 + 0.7 * Math.abs(Math.sin(u * lump + ph + 0.4 * Math.sin(u * 2.3 + t * 0.2) - t * 0.3))))
       }
       for (let k = n; k >= 0; k--) bodies.lineTo(x0 + (L * k) / n, at(k) + ts[k] * (lit > 0.01 ? 0.14 : 0.4))
       bodies.closePath()
@@ -519,7 +524,7 @@ function drawRange(ctx: C2, s: View, t: number, tn: Tone, r: Range): void {
     const list: Plume[] = []
     r.tops.forEach((tp, n) => {
       if (!sp.plumed.includes(n)) return
-      const great = sp.z < 0.1 && n === GREAT
+      const great = sp.seed === 11 && n === GREAT
       const len = great ? 2.2 + 1.6 * wnd : (0.6 + 1.4 * wnd) * (0.35 + 0.9 * tp.size)
       if (tp.x + len < lo || tp.x > hi) return
       list.push({ x: tp.x - 0.03, y: tp.y + 0.04, len, thick: (great ? 0.22 : 0.08 + 0.12 * tp.size) * (0.75 + 0.45 * wnd), seed: n * 7 + sp.seed })
