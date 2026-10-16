@@ -112,6 +112,8 @@ const xy = (q: Pt): { x: number; y: number } => ({ x: q[0], y: q[1] })
 /** The trapdoor comes down on its stop. */
 const STOP = cue(153.5)
 
+/** The flight across the axis, bat to window: nothing trails him through it (`LiftoffShow.trailOff`). */
+export const IN_FLIGHT: readonly [number, number] = [HIT, WINDOW]
 export const BALLPARK_HITS = [IN, CATCH, TOSS, FEED, cue(135.5), SPIN1, COCK1, SPIN2, COCK2, PITCH, HIT, ...LAMPS, POPLAR, TREE, WINDOW, HATCH, STOP, SEAT, DOWN, STEP, TOUCH, NUDGE]
 
 /* ------------------------------------------------------------------ the geometry */

@@ -5,6 +5,7 @@ import type { Universe } from '../../../../universe'
 import type { World } from '../../../../worlds'
 import type { Theme } from '../../../../../../../src/core/themes'
 import { BALL, BRAND, BRAND_ID, MURPH, MURPH_ID } from './worlds'
+import { IN_FLIGHT } from './act2/ballpark'
 
 /**
  * Liftoff as a `Show`: four universes on one clock (the farm, the dark, the
@@ -77,6 +78,15 @@ export class LiftoffShow extends Show {
         journey: duration,
       }
     })
+  }
+
+  /**
+   * No trail behind him across the axis, bat to window. The flight is fast, so the stage's fading discs spread out
+   * behind him into a string of sand-coloured ghosts; he is a speck with his halo there, and the ring turning under
+   * him is the gag.
+   */
+  override trailOff(t: number): boolean {
+    return t > IN_FLIGHT[0] && t < IN_FLIGHT[1]
   }
 
   clamp(t: number): number {
