@@ -600,10 +600,12 @@ export function drawStreet(p: p5, k: number, t: number): void {
   drawPigeons(ctx, v, t)
   drawStack(ctx, v)
   drawTraffic(ctx, v, t, 'far')
-  // Steam, always: off the stack, and up out of the manhole in the far lane by the café; the near lane goes by in
-  // front of it, and the shade falls across it.
+  // Steam, always: off the stack, and up out of the manholes in the far lane; the near lane goes by in front of it,
+  // and the shade falls across it. Never more than two plumes in the frame.
+  const m = morning(t)
   steam(ctx, v, t, -1.75, -1.0, 2.4, 5, 1, 1.2)
-  steam(ctx, v, t, 11.6, KERB + 0.4, 2.2, 5, 3, 1.0 + 0.3 * morning(t))
+  steam(ctx, v, t, 3.75, KERB + 0.4, 1.8, 5, 2, 1.0 + 0.3 * m)
+  steam(ctx, v, t, 11.6, KERB + 0.4, 2.2, 5, 3, 1.0 + 0.3 * m)
   drawTraffic(ctx, v, t, 'near')
   drawCrossers(ctx, v, t)
   drawShade(ctx, v, t)

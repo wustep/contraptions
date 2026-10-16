@@ -1,20 +1,19 @@
 import type { Pt } from '../../../../../parts'
-import { layer, motes, sway, view, type View } from '../depth'
+import { layer, sway, view, type View } from '../depth'
 import { hash, scenery } from '../kit'
 import { rgba } from '../negatives/hand'
 import { whiteAt } from './light'
 
 /**
- * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
- * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
- * changes his colour. It is handed show time as `t`.
+ * What stands between the camera and the machine in this place, and the light over all of it: the near plane and the
+ * grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or changes his
+ * colour. It is handed show time as `t`.
  *
  * - The near plane: a street tree's leaves over the top and a mailbox at the kerb below as the camera comes along the
  *   pavement; and, for the long view, the leaves of the trees on this side hanging into the top corners and, last, a
  *   lamp post at the kerb, coming in from the frame's edges as the camera draws back and goes on along. All of it at
  *   the frame's edges, never over the two of them, and none of it tall enough at the bottom to reach the pavement
  *   where they roll.
- * - The air: a few motes of dust turning near the lens.
  * - The grade: the frame's edges falling away warm, thinning as the morning whitens through the credits.
  */
 
@@ -153,10 +152,6 @@ export const streetFront = scenery<null>({
     const t = c.t
     const w = whiteAt(t)
     ctx.save()
-    // Dust turning near the lens.
-    layer(ctx, v, 1.15, WIDE.anchor, WIDE.ref, (f) => {
-      motes(ctx, f, t, { n: 6, seed: 21, tile: [3.2, 2.4], r: [0.006, 0.014], v: [-0.12, -0.05], spread: 0.5, sway: [0.08, 0.15], color: rgba('#FFF3D8', 0.5) })
-    })
     near(ctx, v, t)
     // The grade: the edges falling away warm, less so as the morning whitens.
     grade(ctx, v, w)
