@@ -182,6 +182,25 @@ export function carlBearing(show: LifeShow, t: number, years = bearingOfAge(show
   return { tilt: (pose?.tilt ?? slopeAt(show, t)) + years.stoop, squash: (pose?.squash ?? 0) + years.settle }
 }
 
+/**
+ * Their breath: while one of them stands still, a slow rise and settle (a few percent of their height, about the
+ * bottom), slower with the years, so no quiet stretch is a still picture of them. 0 while moving, eased in and out
+ * with stillness; `phase` keeps the two of them out of step.
+ */
+function breath(at: (u: number) => Pt | null, show: LifeShow, t: number, phase: number): number {
+  const leg = show.legs[show.owner(t)]
+  const a = Math.max(leg.from, t - 0.15)
+  const b = Math.min(leg.to - 1e-4, t + 0.15)
+  const p0 = at(a)
+  const p1 = at(b)
+  if (!p0 || !p1 || b - a < 0.05) return 0
+  const v = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / (b - a)
+  const still = 1 - Math.max(0, Math.min(1, (v - 0.03) / 0.12))
+  if (still <= 0) return 0
+  const period = 3.4 + 1.2 * AGE(t)
+  return still * 0.5 * (1 - Math.cos((2 * Math.PI * t) / period + phase))
+}
+
 /** Carl, a rounded square, at (x, y) in pixels, turned `tilt`, flattened `squash` onto his bottom. */
 export function drawCarl(p: p5, k: number, weight: number, color: string, x: number, y: number, tilt = 0, squash = 0, scale = 1, light = 1, corner = CORNER): void {
   if (scale <= 0.02) return
@@ -460,9 +479,10 @@ export const cast = scenery<CastState>({
       // Settled a little onto the floor with the years: flattened on the vertical about her bottom, under whatever
       // squash or stretch a part gives her.
       const foot = (ellie.y + R * size) * k
+      const rise = 0.022 * breath((u) => { const e = show.ellie(u); return e ? [e.x, e.y] : null }, show, t, 2.1)
       p.push()
       p.translate(0, foot)
-      p.scale(1, 1 - years.ellie)
+      p.scale(1, 1 - years.ellie + rise)
       p.translate(0, -foot)
       ball(p, k, INK, weight, ellie.color, ellie.x * k, ellie.y * k, spin, size, ellie.stretch ?? 1, ellie.angle ?? 0, false)
       p.pop()
@@ -489,7 +509,9 @@ export const cast = scenery<CastState>({
         p.pop()
       },
     )
-    const { tilt, squash } = carlBearing(show, t, years)
+    const bearing = carlBearing(show, t, years)
+    const tilt = bearing.tilt
+    const squash = bearing.squash - 0.02 * breath((u) => show.where(u), show, t, 0)
     drawCarl(p, k, weight, color, here.x * k, here.y * k, tilt, squash, here.scale, 1, years.corner)
     if (t >= BOW_FROM) drawBowTie(p, k, weight, here.x * k, here.y * k, tilt, squash, here.scale)
   },

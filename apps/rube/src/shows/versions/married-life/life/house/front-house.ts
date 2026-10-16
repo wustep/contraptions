@@ -4,7 +4,7 @@ import { alpha, hash, smooth } from '../kit'
 import { HOME, INK, carlAt, ellieAt } from '../worlds'
 import { drawChair, CHAIR } from '../props/chairs'
 import { stripe } from '../inside/papers'
-import { ALONE, CHAIRS, DOOR_HUNG, EDGE, FLAG_AT, G, HOUSE, LAMP_X, MAILBOX, P, PANE_AT, PRINT_AT, PRINTS, TREADS, TREE_AT, type DoorSwing } from './front-plan'
+import { CHAIRS, DOOR_HUNG, EDGE, FLAG_AT, G, HOUSE, LAMP_X, MAILBOX, P, PANE_AT, PRINT_AT, PRINTS, TREADS, TREE_AT, type DoorSwing } from './front-plan'
 
 /**
  * The house from the street, drawn in one of its two conditions: `old` (the derelict clubhouse they bought: grey,
@@ -24,6 +24,8 @@ export interface Look {
   /** 0 off .. 1 on: the lamp by his chair. */
   lamp: number
   T: number
+  /** 0 .. 1: how far the first snow has settled (the end only). */
+  snow?: number
 }
 
 const NIGHT = '#27304A'
@@ -32,13 +34,16 @@ const DUST = '#8F8B82'
 /** A colour under the dusk. */
 export const dusk = (L: Look, hex: string): string => mixHex(hex, NIGHT, L.dark * 0.78)
 
+/** Settled snow in the light of the hour: pale, and dimmed by the night less than what it lies on. */
+export const snowTone = (L: Look): string => mixHex('#E9EDF4', NIGHT, L.dark * 0.5)
+
 function palette(L: Look) {
   const a = L.age
   const s = (h: string) => dusk(L, h)
   return {
     siding: s(L.old ? mixHex(HOME.sidingOld, DUST, 0.62) : mixHex(HOME.siding, HOME.sidingOld, a)),
     trim: s(L.old ? mixHex(HOME.trim, DUST, 0.55) : mixHex(HOME.trim, '#E6DAC2', a)),
-    roof: s(L.old ? mixHex(HOME.roofOld, '#6A625C', 0.55) : mixHex(HOME.roof, HOME.roofOld, a)),
+    roof: mixHex(s(L.old ? mixHex(HOME.roofOld, '#6A625C', 0.55) : mixHex(HOME.roof, HOME.roofOld, a)), snowTone(L), 0.3 * (L.snow ?? 0)),
     gable: s(L.old ? mixHex(HOME.yellow, DUST, 0.7) : mixHex(HOME.yellow, '#D9C08A', a)),
     pink: s(L.old ? mixHex(HOME.pink, DUST, 0.65) : mixHex(HOME.pink, '#C7A5A6', a)),
     door: s(L.old ? mixHex(HOME.yellow, DUST, 0.72) : mixHex(HOME.yellow, '#D8BF86', a)),
@@ -96,8 +101,58 @@ function siding(p: p5, k: number, weight: number, L: Look, c: Pal, x0: number, x
   }
 }
 
-/** A window: frame, glass (the sky in it, or broken dark on the old house), a sash bar. Shutters where asked. */
-function windowAt(p: p5, k: number, weight: number, L: Look, c: Pal, x0: number, x1: number, y0: number, y1: number, seed: number, opts: { shutters?: boolean; boarded?: boolean; glow?: number } = {}): void {
+/**
+ * What hangs at the house's windows once it is lived in (from his coming home alone; at the fix-up it is new and
+ * empty): the nursery's pink at the two under the gable, drawn shut since the doctor as they are inside; their
+ * bedroom's cream, and the living room's faded green, tied back.
+ */
+const CLOTH = {
+  nursery: mixHex(HOME.pink, HOME.trim, 0.45),
+  bedroom: mixHex(HOME.trim, '#D9C7A8', 0.55),
+  living: mixHex(mixHex(HOME.leaf, HOME.trim, 0.52), '#C9C6B4', 0.7),
+}
+const LIVED_IN = 200
+
+/** Curtains seen through a window's glass, x0..x1 by y0..y1: two panels tied back to the jambs, or drawn across. */
+function curtainsIn(p: p5, k: number, weight: number, L: Look, x0: number, x1: number, y0: number, y1: number, cloth: string, drawn: boolean): void {
+  const w = x1 - x0
+  const h = y1 - y0
+  const fill = dusk(L, mixHex(cloth, HOME.glass, 0.18))
+  const fold = dusk(L, mixHex(cloth, INK, 0.2))
+  p.noStroke()
+  p.fill(fill)
+  if (drawn) {
+    rect(p, k, x0, y0, x1, y1)
+    p.stroke(fold)
+    p.strokeWeight(weight * 0.5)
+    for (let i = 1; i < 8; i++) {
+      if (i === 4) continue
+      const x = x0 + (w * i) / 8
+      p.line(x * k, (y0 + 0.04) * k, x * k, (y1 - 0.02) * k)
+    }
+    return
+  }
+  const tie = y0 + h * 0.6
+  for (const side of [-1, 1]) {
+    const jamb = side < 0 ? x0 : x1
+    const at = (u: number) => jamb - side * u * w
+    p.noStroke()
+    p.fill(fill)
+    p.beginShape()
+    p.vertex(at(0) * k, y0 * k)
+    p.vertex(at(0.27) * k, y0 * k)
+    p.bezierVertex(at(0.25) * k, (y0 + h * 0.3) * k, at(0.11) * k, (tie - h * 0.08) * k, at(0.11) * k, tie * k)
+    p.bezierVertex(at(0.11) * k, (tie + h * 0.12) * k, at(0.2) * k, (y1 - h * 0.12) * k, at(0.21) * k, y1 * k)
+    p.vertex(at(0) * k, y1 * k)
+    p.endShape(p.CLOSE)
+    p.stroke(fold)
+    p.strokeWeight(weight * 0.5)
+    for (const u of [0.09, 0.18]) p.line(at(u) * k, (y0 + 0.04) * k, at(u * 0.45) * k, (tie - 0.02) * k)
+  }
+}
+
+/** A window: frame, glass (the sky in it, or broken dark on the old house), a sash bar. Shutters where asked; curtains once it is lived in. */
+function windowAt(p: p5, k: number, weight: number, L: Look, c: Pal, x0: number, x1: number, y0: number, y1: number, seed: number, opts: { shutters?: boolean; boarded?: boolean; glow?: number; curtain?: { cloth: string; drawn: boolean } } = {}): void {
   p.stroke(c.ink)
   p.strokeWeight(weight * 0.8)
   p.fill(c.trim)
@@ -110,11 +165,8 @@ function windowAt(p: p5, k: number, weight: number, L: Look, c: Pal, x0: number,
     p.fill(alpha(p, HOME.lamp, 0.85 * opts.glow))
     rect(p, k, x0, y0, x1, y1)
   }
-  if (!L.old) {
-    // A soft slant of light across the glass.
-    p.fill(alpha(p, '#FFFFFF', 0.22 * (1 - L.dark)))
-    p.quad((x0 + 0.12) * k, y1 * k, (x0 + 0.42) * k, y0 * k, (x0 + 0.62) * k, y0 * k, (x0 + 0.32) * k, y1 * k)
-  } else {
+  if (opts.curtain && !L.old && L.T > LIVED_IN) curtainsIn(p, k, weight, L, x0, x1, y0, y1, opts.curtain.cloth, opts.curtain.drawn)
+  if (L.old) {
     // Broken: a ragged hole in one pane.
     const cx = x0 + (0.3 + hash(seed, 1) * 0.4) * (x1 - x0)
     const cy = y0 + (0.3 + hash(seed, 2) * 0.4) * (y1 - y0)
@@ -307,7 +359,16 @@ function porch(p: p5, k: number, weight: number, L: Look, c: Pal): void {
   p.vertex((x1 + 0.2) * k, (roof + 0.1 + sag) * k)
   p.vertex((x0 + 0.1) * k, (roof - 0.12) * k)
   p.endShape(p.CLOSE)
+  const th = snowDepth(L)
+  if (th > 0) {
+    p.noStroke()
+    p.fill(snowTone(L))
+    p.quad((x0 + 0.12) * k, (roof - 0.36 - th) * k, (x1 + 0.18) * k, (roof - 0.12 + sag - th) * k, (x1 + 0.2) * k, (roof - 0.11 + sag) * k, (x0 + 0.1) * k, (roof - 0.35) * k)
+  }
 }
+
+/** How deep the settled snow lies on a roof's top edge (cells), growing from a line. */
+const snowDepth = (L: Look): number => ((L.snow ?? 0) > 0 ? 0.015 + 0.11 * (L.snow ?? 0) : 0)
 
 /** The room seen through the bay: its papered back wall, the floor, the lamp by his chair, the two chairs once they are in. */
 function room(p: p5, k: number, weight: number, L: Look, chairsIn: { carl: boolean; ellie: boolean }): void {
@@ -395,12 +456,6 @@ function bayGlass(p: p5, k: number, L: Look): void {
     const tint = L.old ? alpha(p, dusk(L, '#565B5E'), 0.62) : alpha(p, dusk(L, HOME.glass), 0.16 + 0.2 * L.dark * (1 - L.lamp))
     p.fill(tint)
     rect(p, k, a, head, b, sill - drop)
-    if (middle && !L.old && T >= PANE_AT - 0.42 && T < PANE_AT + 0.5) {
-      // A glint running up the new glass as it lands.
-      const g = Math.max(0, 1 - Math.abs(T - PANE_AT) / 0.5)
-      p.fill(alpha(p, '#FFFFFF', 0.35 * g))
-      rect(p, k, a + 0.1, head, a + 0.3, sill - drop)
-    }
   }
   if (L.old) {
     // The side panes, dust-dark and holed.
@@ -422,7 +477,7 @@ function bayGlass(p: p5, k: number, L: Look): void {
 
 /**
  * What stands in front of anyone indoors: the bay's frame (its head, its sill, the posts between its three faces,
- * the middle pane's mullion) and the glass's sheen, the wall between the bay and the door, and the door's jambs. The
+ * the middle pane's mullion), the wall between the bay and the door, and the door's jambs. The
  * parts draw it in their `over`, so the two of them are indoors behind it.
  */
 export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swings: DoorSwing[] = []): void {
@@ -436,16 +491,6 @@ export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swing
   const { x0, x1, sill, head, facet } = HOUSE.bay
   p.push()
   p.rectMode(p.CORNER)
-  // The glass's sheen: two soft slants, fainter as the room behind it is lit, and half as strong once he is home alone,
-  // so the glass between us and him is felt but does not grey him further.
-  if (!L.old) {
-    p.noStroke()
-    const a = 0.12 * (1 - 0.6 * L.lamp) * (1 - 0.5 * smooth(L.T, ALONE.latch, ALONE.shut))
-    p.fill(alpha(p, '#FFFFFF', a))
-    p.quad((x0 + facet + 0.25) * k, sill * k, (x0 + facet + 0.95) * k, head * k, (x0 + facet + 1.25) * k, head * k, (x0 + facet + 0.55) * k, sill * k)
-    p.fill(alpha(p, '#FFFFFF', a * 0.6))
-    p.quad((x1 - facet - 0.9) * k, sill * k, (x1 - facet - 0.35) * k, head * k, (x1 - facet - 0.2) * k, head * k, (x1 - facet - 0.75) * k, sill * k)
-  }
   // The frame: head, sill, the two posts where the faces turn, the middle pane's mullion. The middle light has no
   // transom: at the end the balloon over her chair spans −2.77 … −2.07, head to lamp, so any bar across it cuts the
   // balloon or the lampshade; its glass runs whole from head to floor, a picture window between two transomed sides.
@@ -507,29 +552,28 @@ export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swing
 }
 
 /**
- * The lit room's light on the house round the bay at night: a soft warm bloom on the clapboard, the porch and the
- * lawn, never over the glass (the room behind it is lit already, and he is in it). Drawn last, over the bay's frame.
+ * The lit room's light out through the bay at night, where it falls: across the porch floor beside the bay (through
+ * the bay's side light, which faces the porch) and on the floor's edge by the door, fading as it goes. Not on the
+ * clapboard round the window, which faces the same way the glass does and so gets none of it; the lawn's share is the
+ * set's (`front.ts`). Flat warm layers, no gradient.
  */
-export function drawBayGlow(p: p5, k: number, L: Look): void {
+export function drawBayLight(p: p5, k: number, L: Look): void {
   const a = L.lamp * Math.max(0, Math.min(1, (L.dark - 0.3) / 0.4))
   if (a <= 0.01 || L.old) return
-  const { x0, x1, head } = HOUSE.bay
-  const cx = (x0 + x1) / 2
-  const cy = (head + P) / 2
-  const r = 3.2
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect((cx - r) * k, (cy - r) * k, 2 * r * k, 2 * r * k)
-  ctx.rect(x0 * k, head * k, (x1 - x0) * k, (P - head) * k)
-  ctx.clip('evenodd')
-  const g = ctx.createRadialGradient(cx * k, cy * k, 0.6 * k, cx * k, cy * k, r * k)
-  g.addColorStop(0, `rgba(255, 222, 160, ${0.36 * a})`)
-  g.addColorStop(0.45, `rgba(255, 222, 160, ${0.14 * a})`)
-  g.addColorStop(1, 'rgba(255, 222, 160, 0)')
-  ctx.fillStyle = g
-  ctx.fillRect((cx - r) * k, (cy - r) * k, 2 * r * k, 2 * r * k)
-  ctx.restore()
+  const { x1 } = HOUSE.bay
+  const { x1: px1 } = HOUSE.porch
+  p.push()
+  p.noStroke()
+  // The floor's front edge, lit from the bay's corner and fading toward the steps.
+  for (const [to, f] of [
+    [px1, 0.12],
+    [x1 + 1.0, 0.14],
+    [x1 + 0.45, 0.16],
+  ] as [number, number][]) {
+    p.fill(alpha(p, HOME.lamp, f * a))
+    rect(p, k, x1 + 0.08, P, to, P + 0.12)
+  }
+  p.pop()
 }
 
 /** The mailbox at the street: a box on a post, the flag on its end; leaning and dull on the old house. The prints once pressed. */
@@ -554,6 +598,14 @@ function mailbox(p: p5, k: number, weight: number, L: Look, c: Pal): void {
   const body = L.old ? dusk(L, mixHex('#9A948A', '#7E6E62', 0.4)) : dusk(L, mixHex(HOME.yellow, '#D9C08A', L.age))
   p.fill(body)
   p.rect(X(bx0), Y(top), (bx1 - bx0) * k, (bottom - top) * k, 0.14 * k, 0.14 * k, 0.02 * k, 0.02 * k)
+  const cap = snowDepth(L)
+  if (cap > 0 && !L.old) {
+    p.push()
+    p.noStroke()
+    p.fill(snowTone(L))
+    p.rect(X(bx0 + 0.03), Y(top - cap * 0.7), (bx1 - bx0 - 0.06) * k, (cap * 0.7 + 0.03) * k, 0.1 * k, 0.1 * k, 0, 0)
+    p.pop()
+  }
   // The door at its street end, and the flag on its arm at the house end.
   p.stroke(alpha(p, c.ink, 0.45))
   p.strokeWeight(weight * 0.5)
@@ -663,6 +715,22 @@ export function drawHouse(p: p5, k: number, weight: number, L: Look, chairsIn: {
     p.strokeWeight(weight * 0.45)
     for (let y = py0 + 0.23; y < py1 - 0.05; y += 0.23) p.line((px0 + 0.04) * k, y * k, (px1 - 0.04) * k, y * k)
   }
+  // The first snow, settling: a line along the ridge and down the roof's ends (behind the chimney), and on its cap.
+  const th = snowDepth(L)
+  if (th > 0 && !L.old) {
+    p.noStroke()
+    p.fill(snowTone(L))
+    p.beginShape()
+    p.vertex(r0 * k, (H.eaves + 0.04) * k)
+    p.vertex((r0 + 0.3) * k, H.ridge * k)
+    p.vertex((r1 - 0.3) * k, H.ridge * k)
+    p.vertex(r1 * k, (H.eaves + 0.04) * k)
+    p.vertex((r1 - 0.06) * k, (H.eaves + 0.04) * k)
+    p.vertex((r1 - 0.3 - 0.4 * th) * k, (H.ridge + th) * k)
+    p.vertex((r0 + 0.3 + 0.4 * th) * k, (H.ridge + th) * k)
+    p.vertex((r0 + 0.06) * k, (H.eaves + 0.04) * k)
+    p.endShape(p.CLOSE)
+  }
   const [c0, c1, ctop] = H.chimney
   p.stroke(c.ink)
   p.strokeWeight(weight)
@@ -683,6 +751,11 @@ export function drawHouse(p: p5, k: number, weight: number, L: Look, chairsIn: {
   p.stroke(alpha(p, c.ink, 0.25))
   p.strokeWeight(weight * 0.45)
   for (let y = ctop + 0.25; y < H.ridge + 0.55; y += 0.2) p.line(c0 * k, y * k, c1 * k, y * k)
+  if (th > 0 && !L.old) {
+    p.noStroke()
+    p.fill(snowTone(L))
+    rect(p, k, c0 - 0.1, ctop - 0.16 - th * 0.8, c1 + 0.1, ctop - 0.15)
+  }
 
   // The walls: the ground floor and upstairs in clapboard, a band between, corner boards.
   siding(p, k, weight, L, c, H.x0, H.x1, H.eaves, P, 1)
@@ -723,13 +796,26 @@ export function drawHouse(p: p5, k: number, weight: number, L: Look, chairsIn: {
   p.fill(c.trim)
   rect(p, k, r0, H.eaves - 0.02, g.x0 - 0.15, H.eaves + 0.12)
   rect(p, k, g.x1 + 0.15, H.eaves - 0.02, r1, H.eaves + 0.12)
+  if (th > 0 && !L.old) {
+    // Snow along the gable's rakes and the eaves.
+    p.noStroke()
+    p.fill(snowTone(L))
+    for (const side of [-1, 1]) {
+      const ex = side < 0 ? g.x0 - 0.2 : g.x1 + 0.2
+      p.quad(ex * k, (H.eaves + 0.05) * k, gm * k, (g.apex - 0.14) * k, gm * k, (g.apex - 0.14 - th) * k, ex * k, (H.eaves + 0.05 - th) * k)
+    }
+    rect(p, k, r0, H.eaves - 0.02 - th * 0.6, g.x0 - 0.15, H.eaves - 0.02)
+    rect(p, k, g.x1 + 0.15, H.eaves - 0.02 - th * 0.6, r1, H.eaves - 0.02)
+  }
 
   // Upstairs windows: two under the gable, and one on the right with its shutters.
   const [uy0, uy1] = H.upperY
-  H.upper.forEach(([x0, x1], i) => windowAt(p, k, weight, L, c, x0, x1, uy0, uy1, 20 + i, { shutters: i === 2 }))
+  H.upper.forEach(([x0, x1], i) =>
+    windowAt(p, k, weight, L, c, x0, x1, uy0, uy1, 20 + i, { shutters: i === 2, curtain: i === 2 ? { cloth: CLOTH.bedroom, drawn: false } : { cloth: CLOTH.nursery, drawn: true } }),
+  )
   // The ground floor's side window, boarded up on the old house.
   const [sx0, sx1, sy0, sy1] = H.side
-  windowAt(p, k, weight, L, c, sx0, sx1, sy0, sy1, 30, { boarded: true, glow: 0 })
+  windowAt(p, k, weight, L, c, sx0, sx1, sy0, sy1, 30, { boarded: true, glow: 0, curtain: { cloth: CLOTH.living, drawn: false } })
 
   // The bay: the room behind its glass, the glass, its little roof. (Its frame is `drawFacadeFront`.)
   const b = H.bay
@@ -744,6 +830,11 @@ export function drawHouse(p: p5, k: number, weight: number, L: Look, chairsIn: {
   if (b.sill + 0.1 < P + 0.02) rect(p, k, b.x0 - 0.12, b.sill + 0.1, b.x1 + 0.12, P + 0.02)
   p.fill(c.roof)
   p.quad((b.x0 - 0.22) * k, (b.head - 0.12) * k, (b.x1 + 0.22) * k, (b.head - 0.12) * k, (b.x1 - 0.15) * k, b.top * k, (b.x0 + 0.15) * k, b.top * k)
+  if (th > 0 && !L.old) {
+    p.noStroke()
+    p.fill(snowTone(L))
+    rect(p, k, b.x0 + 0.15, b.top - th * 0.8, b.x1 - 0.15, b.top + 0.01)
+  }
 
   // The door, the porch, the steps. Once anyone goes in, the leaf is the parts' to draw whenever it is not open.
   doorway(p, k, L)
@@ -766,4 +857,402 @@ export function drawHouse(p: p5, k: number, weight: number, L: Look, chairsIn: {
 
   mailbox(p, k, weight, L, c)
   p.pop()
+}
+
+/* ------------------------------------------------------------------ the neighbours */
+
+/**
+ * His neighbours, on his own side of the street, at his house's depth and scale: a cottage with a porch and a dormer,
+ * a two-storey with its gable to the street, a long low bungalow, and one with a bay. Each on its lot with its lawn,
+ * a front path, a picket fence or a hedge along the pavement, and a porch light by the door.
+ *
+ * They stand beyond the widest frame of the fix-up and of every frame of his coming home (out past the street lamps,
+ * clear of a 2:1 screen's frame too), so the camera's last draw-back is the first time they are seen, and each comes
+ * into the frame in turn as it widens. By then it is night: they are silhouettes against the afterglow a little
+ * lighter than the street's far side so they stand in front of it, their porch lights off. A window or two in the
+ * first three is still lit as it comes in, a flat warm pane, and in the quiet after the piano's last note the street
+ * goes to bed: the lights go out one at a time, the last some four seconds before the end, until the one lit window
+ * in the street is his. (By day, were a wide screen ever to show one, they are in their pastels.)
+ */
+interface Neighbour {
+  kind: 'cottage' | 'gable' | 'bungalow' | 'bay'
+  x0: number
+  x1: number
+  /** The lot's front along the pavement, what runs along it, and its path's middle (the door's). */
+  lot: [number, number]
+  fence: 'picket' | 'hedge'
+  path: number
+  /** Its paint by day: walls, roof. */
+  day: [string, string]
+  /** Its windows still lit as it comes in (each by its place in the order they are drawn), and when each goes out. */
+  lit?: [number, number][]
+}
+
+/**
+ * Where they stand, nearest first: the cottage past the right lamp, the bungalow past the left one (long and low, so the
+ * hospital on the far ridge stands clear over its roof), the gable house at the right edge of the last frame, the house
+ * with the bay out at its left. All of them out past the frame of the cut from the church (to -9.42) and of the fix-up's
+ * reveal (to 15.41), with room for a 2:1 screen. They come into the frame at about 237, 241, 249 and 254 s; their
+ * lights go out at 244.6 (the cottage's front room), 247.4 (its dormer), 250.6 (the bungalow) and 253.9 (the gable
+ * house's landing), and the house with the bay comes in dark.
+ */
+export const NEIGHBOURS: Neighbour[] = [
+  { kind: 'cottage', x0: 16.9, x1: 21.5, lot: [16.6, 22.0], fence: 'picket', path: 18.15, day: ['#EAD9A6', '#8A6A5A'], lit: [[2, 244.6], [0, 247.4]] },
+  { kind: 'bungalow', x0: -16.7, x1: -10.6, lot: [-17.1, -10.3], fence: 'hedge', path: -13.1, day: ['#C9D3B4', '#8C5E4A'], lit: [[2, 250.6]] },
+  { kind: 'gable', x0: 22.5, x1: 28.0, lot: [22.2, 28.6], fence: 'hedge', path: 26.9, day: ['#B9C6D0', '#6F6670'], lit: [[1, 253.9]] },
+  { kind: 'bay', x0: -24.8, x1: -18.0, lot: [-25.4, -17.5], fence: 'picket', path: -23.55, day: ['#E3C0BA', '#6E5A55'] },
+]
+
+/** The night's tones they go to: a little lighter than the far side of the street. */
+const NB = { wall: '#3A4160', roof: '#30364F', trim: '#4A516E', pane: '#1D2131', door: '#2A2F46', found: '#2D3247', hedge: '#29353F', fence: '#4B5271', path: '#454A60' }
+/** A neighbour's lit window: a room's light through a blind, warmer and lower than his lamp. */
+const NB_LIT = mixHex(HOME.lamp, '#C98F5A', 0.4)
+
+/** Every neighbour whose lot lies between x0 and x1, in the light (and the settled snow) of `L`. */
+export function drawNeighbours(p: p5, k: number, weight: number, L: Look, x0: number, x1: number): void {
+  const dusky = Math.max(0, Math.min(1, (L.dark - 0.25) / 0.5))
+  const tone = (day: string, night: string) => mixHex(dusk(L, day), night, dusky)
+  const snow = snowDepth(L)
+  const white = snowTone(L)
+  p.push()
+  p.rectMode(p.CORNER)
+  for (const n of NEIGHBOURS) {
+    if (n.lot[1] < x0 - 1 || n.lot[0] > x1 + 1) continue
+    const c = {
+      wall: tone(n.day[0], NB.wall),
+      roof: mixHex(tone(n.day[1], NB.roof), white, 0.3 * (L.snow ?? 0)),
+      trim: tone(HOME.trim, NB.trim),
+      pane: tone(mixHex(HOME.glass, HOME.sky, 0.35), NB.pane),
+      door: tone(mixHex(n.day[0], HOME.woodDark, 0.6), NB.door),
+      found: tone('#8C7B6A', NB.found),
+      ink: tone(INK, '#1C1F30'),
+      white,
+      snow,
+      // Which panes are lit: on until their time (put out, not faded), and only once it is dark enough to see them.
+      on: Object.fromEntries((n.lit ?? []).map(([i, out]) => [i, dusky * (L.T < out ? 1 : 0)])) as Record<number, number>,
+      next: 0,
+    }
+    neighbour(p, k, weight, n, c)
+    lot(p, k, weight, L, n, c, tone)
+  }
+  p.pop()
+}
+
+type NPal = { wall: string; roof: string; trim: string; pane: string; door: string; found: string; ink: string; white: string; snow: number; on: Record<number, number>; next: number }
+
+function poly(p: p5, k: number, pts: [number, number][]): void {
+  p.beginShape()
+  for (const [x, y] of pts) p.vertex(x * k, y * k)
+  p.endShape(p.CLOSE)
+}
+
+/** A window: its frame in the trim, a flat pane (dark, or lit while its light is on), one bar across. */
+function pane(p: p5, k: number, weight: number, c: NPal, x0: number, y0: number, x1: number, y1: number): void {
+  const on = c.on[c.next++] ?? 0
+  p.stroke(c.ink)
+  p.strokeWeight(weight * 0.6)
+  p.fill(c.trim)
+  rect(p, k, x0 - 0.07, y0 - 0.07, x1 + 0.07, y1 + 0.06)
+  p.noStroke()
+  p.fill(on > 0 ? mixHex(c.pane, NB_LIT, on) : c.pane)
+  rect(p, k, x0, y0, x1, y1)
+  p.fill(c.trim)
+  rect(p, k, (x0 + x1) / 2 - 0.025, y0, (x0 + x1) / 2 + 0.025, y1)
+}
+
+/** A door, with its porch light beside it: a small lantern, dark. */
+function doorway2(p: p5, k: number, weight: number, c: NPal, x0: number, x1: number, top: number, floor: number): void {
+  p.stroke(c.ink)
+  p.strokeWeight(weight * 0.7)
+  p.fill(c.trim)
+  rect(p, k, x0 - 0.07, top - 0.08, x1 + 0.07, floor)
+  p.fill(c.door)
+  rect(p, k, x0, top, x1, floor)
+  p.fill(c.pane)
+  rect(p, k, x1 + 0.14, top + 0.3, x1 + 0.27, top + 0.52)
+  p.fill(c.trim)
+  rect(p, k, x1 + 0.12, top + 0.25, x1 + 0.29, top + 0.3)
+}
+
+/** A cap of settled snow along a roof's top edge, from a to b (a line of points), `d` deep. */
+function capAlong(p: p5, k: number, c: NPal, pts: [number, number][]): void {
+  if (c.snow <= 0) return
+  p.noStroke()
+  p.fill(c.white)
+  p.beginShape()
+  for (const [x, y] of pts) p.vertex(x * k, y * k)
+  for (let i = pts.length - 1; i >= 0; i--) p.vertex(pts[i][0] * k, (pts[i][1] - c.snow) * k)
+  p.endShape(p.CLOSE)
+}
+
+function neighbour(p: p5, k: number, weight: number, n: Neighbour, c: NPal): void {
+  const { x0, x1 } = n
+  const cx = (x0 + x1) / 2
+  const floor = G - 0.45
+  const line = (w: number) => {
+    p.stroke(c.ink)
+    p.strokeWeight(weight * w)
+  }
+  if (n.kind === 'cottage') {
+    // A storey and a half: a steep side-gabled roof with a dormer, the chimney, a porch along the left.
+    line(0.8)
+    p.fill(c.found)
+    rect(p, k, x0 - 0.05, floor, x1 + 0.05, G)
+    p.fill(c.roof)
+    rect(p, k, x1 - 1.3, -5.75, x1 - 0.9, -4.4)
+    poly(p, k, [
+      [x0 - 0.3, -2.75],
+      [x0 + 0.95, -5.15],
+      [x1 - 0.95, -5.15],
+      [x1 + 0.3, -2.75],
+    ])
+    p.fill(c.wall)
+    rect(p, k, x0, -2.75, x1, floor)
+    capAlong(p, k, c, [
+      [x0 - 0.3, -2.75],
+      [x0 + 0.95, -5.15],
+      [x1 - 0.95, -5.15],
+      [x1 + 0.3, -2.75],
+    ])
+    if (c.snow > 0) rect(p, k, x1 - 1.35, -5.75 - c.snow * 0.8, x1 - 0.85, -5.74)
+    // The dormer.
+    line(0.7)
+    p.fill(c.wall)
+    rect(p, k, cx - 0.5, -4.45, cx + 0.5, -3.35)
+    p.fill(c.roof)
+    p.triangle((cx - 0.68) * k, -4.4 * k, cx * k, -4.95 * k, (cx + 0.68) * k, -4.4 * k)
+    capAlong(p, k, c, [
+      [cx - 0.68, -4.4],
+      [cx, -4.95],
+      [cx + 0.68, -4.4],
+    ])
+    pane(p, k, weight, c, cx - 0.3, -4.2, cx + 0.3, -3.55)
+    // The porch: its floor, two posts, its roof; the door under it, a window beside.
+    const px0 = x0 + 0.15
+    const px1 = x0 + 2.75
+    doorway2(p, k, weight, c, n.path - 0.37, n.path + 0.37, -2.05, floor - 0.12)
+    pane(p, k, weight, c, px1 - 0.95, -1.95, px1 - 0.25, -0.95)
+    pane(p, k, weight, c, x1 - 1.55, -2.1, x1 - 0.45, -0.9)
+    line(0.75)
+    p.fill(c.trim)
+    rect(p, k, px0, floor - 0.12, px1, floor + 0.02)
+    for (const x of [px0 + 0.1, px1 - 0.18]) rect(p, k, x, -2.3, x + 0.08, floor - 0.12)
+    p.fill(c.roof)
+    poly(p, k, [
+      [px0 - 0.1, -2.62],
+      [px1 + 0.12, -2.62],
+      [px1 + 0.12, -2.4],
+      [px0 - 0.1, -2.4],
+    ])
+    capAlong(p, k, c, [
+      [px0 - 0.1, -2.62],
+      [px1 + 0.12, -2.62],
+    ])
+    // Two steps down to the path.
+    line(0.6)
+    p.fill(c.found)
+    rect(p, k, n.path - 0.45, floor + 0.02, n.path + 0.45, floor + 0.22)
+    rect(p, k, n.path - 0.5, floor + 0.22, n.path + 0.5, G)
+  } else if (n.kind === 'gable') {
+    // Two storeys, its gable to the street: the chimney behind the rake, a band between the floors, an attic light.
+    line(0.8)
+    p.fill(c.found)
+    rect(p, k, x0 - 0.05, floor, x1 + 0.05, G)
+    p.fill(c.roof)
+    rect(p, k, x0 + 0.9, -7.5, x0 + 1.35, -6.0)
+    const apex = -8.05
+    p.fill(c.wall)
+    poly(p, k, [
+      [x0, floor],
+      [x0, -5.3],
+      [cx, apex + 0.25],
+      [x1, -5.3],
+      [x1, floor],
+    ])
+    p.fill(c.roof)
+    for (const side of [-1, 1]) {
+      const ex = side < 0 ? x0 - 0.3 : x1 + 0.3
+      poly(p, k, [
+        [ex, -5.2],
+        [cx, apex],
+        [cx, apex + 0.28],
+        [ex + side * -0.05, -4.92],
+      ])
+    }
+    capAlong(p, k, c, [
+      [x0 - 0.3, -5.2],
+      [cx, apex],
+      [x1 + 0.3, -5.2],
+    ])
+    if (c.snow > 0) rect(p, k, x0 + 0.85, -7.5 - c.snow * 0.8, x0 + 1.4, -7.49)
+    line(0.7)
+    p.fill(c.trim)
+    rect(p, k, x0 - 0.05, -2.95, x1 + 0.05, -2.78)
+    pane(p, k, weight, c, cx - 0.35, -6.9, cx + 0.35, -6.15)
+    pane(p, k, weight, c, x0 + 0.6, -4.75, x0 + 1.75, -3.45)
+    pane(p, k, weight, c, x1 - 1.75, -4.75, x1 - 0.6, -3.45)
+    pane(p, k, weight, c, x0 + 0.6, -2.3, x0 + 2.0, -0.95)
+    doorway2(p, k, weight, c, n.path - 0.38, n.path + 0.38, -2.2, floor)
+    // A hood over the door.
+    line(0.7)
+    p.fill(c.roof)
+    poly(p, k, [
+      [n.path - 0.62, -2.32],
+      [n.path + 0.62, -2.32],
+      [n.path + 0.5, -2.55],
+      [n.path - 0.5, -2.55],
+    ])
+    capAlong(p, k, c, [
+      [n.path - 0.5, -2.55],
+      [n.path + 0.5, -2.55],
+    ])
+    p.fill(c.found)
+    rect(p, k, n.path - 0.5, floor, n.path + 0.5, G)
+  } else if (n.kind === 'bungalow') {
+    // Long and low under a shallow hipped roof, the chimney through it, a stoop at the door.
+    const eave = -2.3
+    const top = -3.4
+    line(0.8)
+    p.fill(c.found)
+    rect(p, k, x0 - 0.05, floor, x1 + 0.05, G)
+    p.fill(c.roof)
+    rect(p, k, x1 - 2.3, top - 0.45, x1 - 1.85, top + 0.6)
+    poly(p, k, [
+      [x0 - 0.35, eave],
+      [x0 + 1.5, top],
+      [x1 - 1.5, top],
+      [x1 + 0.35, eave],
+    ])
+    p.fill(c.wall)
+    rect(p, k, x0, eave, x1, floor)
+    capAlong(p, k, c, [
+      [x0 - 0.35, eave],
+      [x0 + 1.5, top],
+      [x1 - 1.5, top],
+      [x1 + 0.35, eave],
+    ])
+    if (c.snow > 0) rect(p, k, x1 - 2.35, top - 0.45 - c.snow * 0.8, x1 - 1.8, top - 0.44)
+    pane(p, k, weight, c, x0 + 0.5, -1.85, x0 + 1.9, -0.95)
+    pane(p, k, weight, c, x0 + 2.25, -1.85, n.path - 0.7, -0.95)
+    pane(p, k, weight, c, x1 - 1.7, -1.85, x1 - 0.5, -0.95)
+    doorway2(p, k, weight, c, n.path - 0.37, n.path + 0.37, -1.95, floor)
+    line(0.6)
+    p.fill(c.found)
+    rect(p, k, n.path - 0.55, floor, n.path + 0.55, G)
+  } else {
+    // Two storeys, side-gabled, a canted bay on the ground floor right, the door on the left.
+    line(0.8)
+    p.fill(c.found)
+    rect(p, k, x0 - 0.05, floor, x1 + 0.05, G)
+    p.fill(c.roof)
+    rect(p, k, x1 - 1.5, -7.75, x1 - 1.05, -6.6)
+    poly(p, k, [
+      [x0 - 0.3, -5.1],
+      [x0 + 1.05, -7.25],
+      [x1 - 1.05, -7.25],
+      [x1 + 0.3, -5.1],
+    ])
+    p.fill(c.wall)
+    rect(p, k, x0, -5.1, x1, floor)
+    capAlong(p, k, c, [
+      [x0 - 0.3, -5.1],
+      [x0 + 1.05, -7.25],
+      [x1 - 1.05, -7.25],
+      [x1 + 0.3, -5.1],
+    ])
+    if (c.snow > 0) rect(p, k, x1 - 1.55, -7.75 - c.snow * 0.8, x1 - 1.0, -7.74)
+    line(0.7)
+    p.fill(c.trim)
+    rect(p, k, x0 - 0.05, -2.95, x1 + 0.05, -2.8)
+    for (const [a, b] of [
+      [x0 + 0.6, x0 + 1.55],
+      [cx - 0.5, cx + 0.5],
+      [x1 - 1.55, x1 - 0.6],
+    ]) pane(p, k, weight, c, a, -4.6, b, -3.45)
+    doorway2(p, k, weight, c, n.path - 0.37, n.path + 0.37, -2.15, floor)
+    p.fill(c.found)
+    rect(p, k, n.path - 0.5, floor, n.path + 0.5, G)
+    // The bay: three lights, its little roof.
+    const b0 = x1 - 2.75
+    const b1 = x1 - 0.55
+    line(0.75)
+    p.fill(c.wall)
+    rect(p, k, b0, -2.45, b1, floor)
+    pane(p, k, weight, c, b0 + 0.12, -2.2, b0 + 0.45, -0.85)
+    pane(p, k, weight, c, b0 + 0.62, -2.2, b1 - 0.62, -0.85)
+    pane(p, k, weight, c, b1 - 0.45, -2.2, b1 - 0.12, -0.85)
+    line(0.75)
+    p.fill(c.roof)
+    poly(p, k, [
+      [b0 - 0.15, -2.42],
+      [b1 + 0.15, -2.42],
+      [b1 - 0.2, -2.75],
+      [b0 + 0.2, -2.75],
+    ])
+    capAlong(p, k, c, [
+      [b0 + 0.2, -2.75],
+      [b1 - 0.2, -2.75],
+    ])
+  }
+}
+
+/** The lot's front: its path across the lawn, and the picket fence or the hedge along the pavement, a gap at the path. */
+function lot(p: p5, k: number, weight: number, L: Look, n: Neighbour, c: NPal, tone: (day: string, night: string) => string): void {
+  const base = G + 0.24
+  const [a, b] = n.lot
+  const gap: [number, number] = [n.path - 0.42, n.path + 0.42]
+  p.noStroke()
+  p.fill(mixHex(tone(HOME.stone, NB.path), c.white, 0.5 * (L.snow ?? 0)))
+  rect(p, k, n.path - 0.32, G, n.path + 0.32, base)
+  const runs: [number, number][] = [
+    [a, gap[0]],
+    [gap[1], b],
+  ]
+  if (n.fence === 'picket') {
+    const top = base - 0.5
+    const fence = tone(HOME.trim, NB.fence)
+    for (const [r0, r1] of runs) {
+      p.stroke(c.ink)
+      p.strokeWeight(weight * 0.55)
+      p.fill(fence)
+      rect(p, k, r0, top + 0.12, r1, top + 0.18)
+      rect(p, k, r0, top + 0.36, r1, top + 0.42)
+      for (let x = r0 + 0.04; x < r1 - 0.06; x += 0.19) {
+        poly(p, k, [
+          [x, base],
+          [x, top + 0.06],
+          [x + 0.04, top],
+          [x + 0.08, top + 0.06],
+          [x + 0.08, base],
+        ])
+      }
+      if (c.snow > 0) {
+        p.noStroke()
+        p.fill(c.white)
+        rect(p, k, r0, top + 0.12 - c.snow * 0.5, r1, top + 0.13)
+      }
+    }
+    // The gate across the path, shut, with its posts.
+    p.stroke(c.ink)
+    p.strokeWeight(weight * 0.55)
+    p.fill(fence)
+    for (const x of [gap[0] - 0.05, gap[1] - 0.05]) rect(p, k, x, top - 0.08, x + 0.1, base)
+    for (let x = gap[0] + 0.1; x < gap[1] - 0.12; x += 0.17) rect(p, k, x, top + 0.04, x + 0.07, base - 0.04)
+    rect(p, k, gap[0] + 0.06, top + 0.14, gap[1] - 0.06, top + 0.19)
+    rect(p, k, gap[0] + 0.06, top + 0.36, gap[1] - 0.06, top + 0.41)
+  } else {
+    const hedge = tone(mixHex(HOME.leaf, '#4B6A40', 0.4), NB.hedge)
+    for (const [r0, r1] of runs) {
+      const top = base - 0.62
+      p.stroke(c.ink)
+      p.strokeWeight(weight * 0.6)
+      p.fill(hedge)
+      p.rect(r0 * k, top * k, (r1 - r0) * k, (base - top) * k, 0.18 * k, 0.18 * k, 0, 0)
+      if (c.snow > 0) {
+        p.noStroke()
+        p.fill(c.white)
+        p.rect((r0 + 0.04) * k, (top - c.snow * 0.6) * k, (r1 - r0 - 0.08) * k, (c.snow * 0.6 + 0.08) * k, 0.12 * k, 0.12 * k, 0.02 * k, 0.02 * k)
+      }
+    }
+  }
 }

@@ -1,13 +1,14 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, part, smooth, type Companion, type Ctx, type PartShot, type Pose, type Slot } from '../kit'
-import { AGE, AT, bar, beat, SEAM } from '../music'
+import { birds, type Flight, wobble } from '../depth'
+import { alpha, box, carried, frame, hash, part, smooth, type Companion, type Ctx, type PartShot, type Pose, type Slot } from '../kit'
+import { AGE, AT, bar, beat, downbeats, SEAM } from '../music'
 import { G_EARTH } from '../physics'
 import { BOW_FROM, HALF } from '../cast'
 import { CARL, CHURCH, ELLIE, HOME, INK } from '../worlds'
 import { BASKET, drawBasket } from '../props/basket'
 import { CUTS } from '../seams'
-import { DESK, DOOR, drawDesk, drawDoor, drawDusk, drawSnapshot, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, GALLERY, MACHINE, PEDAL, WHEEL } from './ties-set'
+import { DESK, DOOR, drawClock, drawDesk, drawDoor, drawDusk, drawSnapshot, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, GALLERY, MACHINE, PEDAL, WHEEL } from './ties-set'
 import { BOW, drawTie } from './ties-tie'
 
 /**
@@ -25,14 +26,15 @@ import { BOW, drawTie } from './ties-tie'
  * step on every downbeat, morning to evening and season to season; his steps shorten, her rolls slow.
  *
  * The dance. She bumps the gramophone's lever (bar 49); the needle drops (bar 50); they meet (bar 51) as the waltz
- * swells and waltz the length of the hall in a pool of warm light, in hold, she at his right, her side against his:
+ * swells and waltz the length of the hall in the evening sun, in hold, she at his right, her side against his:
  * a rise on every downbeat, a sway on the two and three. The swell crests from 51's third beat into 52's downbeat
  * (156.75–157.5, the loudest of the second half; by 53 it is 8–10 dB down): through it she turns out from his side,
- * rolling away along the floor to arm's length on 52's downbeat, as the pool of light brightens and the camera, come
- * in with the swell, lands at its closest on the two of them under their wedding photograph on the wall, and she
- * rolls back in to his side by 53. They come to rest in each other's arms on the accent of bar 55. The camera has the
- * gramophone whole at the start and the desk and her painting whole at the end, craning out to them as the two close
- * into the embrace.
+ * rolling away along the floor to arm's length on 52's downbeat, as the sun through the door falls full on them and
+ * the camera, come in with the swell, lands at its closest on the two of them under their wedding photograph on the
+ * wall, and she rolls back in to his side by 53. They come to rest in each other's arms on the accent of bar 55. The
+ * camera has the gramophone whole at the start and the desk and her painting whole at the end, craning out to them as
+ * the two close into the embrace. A tall clock stands under the stairs past the gramophone, its pendulum swinging a
+ * bar a swing: the house's time, kept with the waltz.
  *
  * The tickets. The evening comes in, and the lamp over her painting of Paradise Falls lights (bar 56): he sees it, a
  * long look. He steps onto the pedal in the floor by the desk (bar 57); the desk's leaf lets go and the picnic basket
@@ -439,15 +441,6 @@ function swayAt(T: number): number {
 }
 /** How much they are in the dance: in from the approach, out through the embrace. */
 const inDanceAt = (T: number): number => smooth(T, DANCE[0] - 0.3, DANCE[0] + 0.15) * (1 - smooth(T, EMBRACE - 0.4, EMBRACE + 0.3))
-/**
- * The warm pool of light they dance in: it gathers as the needle drops, swells with the music to its brightest on 52's
- * downbeat (the crest), settles as the swell falls away, and gives way to the picture lamp.
- */
-const poolAt = (T: number): number => {
-  const swell = smooth(T, DANCE[0] + 0.25, DANCE[1]) * (1 - smooth(T, DANCE[1], DANCE[2] + 0.2))
-  return smooth(T, NEEDLE + 0.2, DANCE[0] + 0.5) * (1 - smooth(T, EMBRACE + 0.4, LAMP + 0.6)) * (1 + 0.4 * swell)
-}
-
 /* ------------------------------------------------------------------ Carl */
 
 const TAKEOFF = PLATE - 0.3
@@ -718,12 +711,14 @@ interface Light {
   top: number
   h: number
   skew: number
+  /** Whose outside it carries (`outsideIn`): 0 the spring, 1 the summer, 2 the autumn, 3 the winter, 4 the spring again. */
+  season: number
 }
 type RGB = [number, number, number]
 /** High sun: a tall patch up the wall, its foot just clear of the stairs' treads. */
-const MORN = (rgb: RGB, a: number): Light => ({ rgb, a, x0: 1.74, w: 0.5, top: -1.74, h: 0.56, skew: 0.16 })
+const MORN = (rgb: RGB, a: number, season: number): Light => ({ rgb, a, x0: 1.74, w: 0.5, top: -1.74, h: 0.56, skew: 0.16, season })
 /** Low sun: flatter and longer, leaning back towards the wheel. */
-const EVE = (rgb: RGB, a: number): Light => ({ rgb, a, x0: 1.8, w: 0.74, top: -1.62, h: 0.44, skew: 0.46 })
+const EVE = (rgb: RGB, a: number, season: number): Light => ({ rgb, a, x0: 1.8, w: 0.74, top: -1.62, h: 0.44, skew: 0.46, season })
 /** The evening's light is the season's, warmed. */
 const warm = ([r, g, b]: RGB, f: number): RGB => [r + (255 - r) * f, g + (196 - g) * f, b + (120 - b) * f].map(Math.round) as RGB
 const SEASONS: RGB[] = [
@@ -735,16 +730,62 @@ const SEASONS: RGB[] = [
 ]
 const LIGHTS: { t: number; l: Light }[] = [
   // The first dawn, soft, as he steps onto the plate.
-  { t: -Infinity, l: MORN(SEASONS[0], 0.3) },
+  { t: -Infinity, l: MORN(SEASONS[0], 0.3, 0) },
   ...SEASONS.flatMap((rgb, j) => [
-    { t: TURNS[j], l: MORN(rgb, 0.5) },
-    { t: CINCH[j], l: EVE(warm(rgb, 0.22), 0.44) },
+    { t: TURNS[j], l: MORN(rgb, 0.5, j) },
+    { t: CINCH[j], l: EVE(warm(rgb, 0.22), 0.44, j) },
   ]),
 ]
+
+/** A shadow in the patch, in the patch's own measure: across (0 its left .. 1 its right), down (0 its top .. 1 its foot), its two radii, its turn. */
+type Shade = [number, number, number, number, number]
+/** The spring bough's blossom at the glass's top corner, and the summer bough's leaf masses across its top: [across, down, radius]. */
+const BLOSSOM: [number, number, number][] = [[0.93, 0.06, 0.07], [0.78, 0.1, 0.06], [0.88, 0.24, 0.065], [0.68, 0.22, 0.05], [0.97, 0.36, 0.05], [0.8, 0.36, 0.045]]
+const LEAVES: [number, number, number][] = [[0.06, 0.04, 0.09], [0.24, 0.03, 0.075], [0.12, 0.22, 0.07], [0.36, 0.14, 0.055], [0.47, 0.04, 0.035], [0.03, 0.38, 0.04]]
+
+/**
+ * The outside, seen in the door's light: the shadows each season's morning casts through the glass into the patch on
+ * the wall, moving as they do out there, so the years are seen passing outside although the door is out of the frame.
+ * Spring, a blossoming bough's tip at the glass's corner, stirring, and petals drifting down past it; summer, a leafy
+ * bough's shade over its top corner, stirring, the sun between its leaves; autumn, leaves blowing past; winter, snow
+ * falling past the glass. Each keeps its own lane, so no two ever overlap (where two shadows crossed, the light would show again).
+ */
+function outsideIn(season: number, T: number): Shade[] {
+  const out: Shade[] = []
+  if (season === 0 || season === 4) {
+    const sx = 0.03 * wobble(T, 81, 1.6)
+    const sy = 0.015 * wobble(T, 82, 1.9)
+    for (const [u, v, r] of BLOSSOM) out.push([u + sx * (1 - v), v + sy, r, r * 0.9, 0])
+    for (let i = 0; i < 3; i++) {
+      const ph = (((T + i * 0.9 + hash(i, 3, 7) * 2) % 2.6) + 2.6) % 2.6 / 2.6
+      out.push([0.12 + 0.17 * i + 0.035 * Math.sin(ph * 6 + i), ph * 1.12 - 0.06, 0.035, 0.022, ph * 4 + i])
+    }
+  } else if (season === 1) {
+    const sx = 0.035 * wobble(T, 83, 1.4)
+    const sy = 0.02 * wobble(T, 84, 1.7)
+    for (const [u, v, r] of LEAVES) out.push([u + sx * (1 - 0.5 * v), v + sy, r, r * 0.88, 0.3])
+  } else if (season === 2) {
+    // Gusts carry them across at their own pace, each tumbling.
+    for (let i = 0; i < 3; i++) {
+      const ph = ((((T * 0.55 + hash(i, 5, 9) * 1.6) % 1.6) + 1.6) % 1.6) / 1.6
+      const v = 0.18 + 0.3 * i + 0.03 * Math.sin(ph * 7 + i * 2)
+      out.push([1.15 - ph * 1.35, v, 0.1, 0.05, T * 2.6 + i * 1.7])
+    }
+  } else {
+    for (let i = 0; i < 6; i++) {
+      for (let j = 0; j < 2; j++) {
+        const speed = 0.3 + 0.06 * hash(i, 7, 3)
+        const ph = ((((T * speed + hash(i, 8, 3) + j * 0.5) % 1) + 1) % 1)
+        out.push([0.08 + 0.16 * i + 0.025 * Math.sin(ph * 9 + i), ph * 1.12 - 0.06, 0.045, 0.04, 0])
+      }
+    }
+  }
+  return out
+}
 /** The patch is there while the mornings are (from the hall's first sight to the sun wedge of the dance). */
 const lightEnv = (T: number): number => smooth(T, ENTER - 0.3, ENTER + 0.9) * (1 - smooth(T, 153.7, 154.9))
 
-function drawLightPatch(p: p5, k: number, l: Light, a: number): void {
+function drawLightPatch(p: p5, k: number, l: Light, a: number, T: number): void {
   if (a <= 0.002) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const H = l.h
@@ -754,29 +795,47 @@ function drawLightPatch(p: p5, k: number, l: Light, a: number): void {
     const lum = 0.3 * r0 + 0.59 * g0 + 0.11 * b0
     return [r0, g0, b0].map((c) => Math.round(c + (lum - c) * 0.5)) as RGB
   })()
+  const shades = outsideIn(l.season, T)
   ctx.save()
   // Three layers, each a little larger: a soft edge, a wide penumbra, not a cut. The outer two each lay a quarter of
-  // `a`; the inner one makes up the rest, so the middle, under all three, takes `a` exactly.
+  // `a`; the inner one makes up the rest, so the middle, under all three, takes `a` exactly. The outside's shadows are
+  // holes in each (smaller in the outer two), so they too have soft edges, and only take the light away.
   const edge = 0.25 * a
   const inner = 1 - (1 - a) / ((1 - edge) * (1 - edge))
-  for (const [grow, f] of [
-    [0.1, edge],
-    [0.05, edge],
-    [0, inner],
-  ] as [number, number][]) {
+  for (const [grow, f, shrink] of [
+    [0.1, edge, 0.55],
+    [0.05, edge, 0.78],
+    [0, inner, 1],
+  ] as [number, number, number][]) {
     ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${f})`
-    ctx.beginPath()
     const y0 = l.top - grow
     const y1 = l.top + H + grow
     const sx = (y: number) => -l.skew * ((y - l.top) / H)
     const x0 = l.x0 - grow
     const x1 = l.x0 + l.w + grow
-    ctx.moveTo((x0 + sx(y0)) * k, y0 * k)
-    ctx.lineTo((x1 + sx(y0)) * k, y0 * k)
-    ctx.lineTo((x1 + sx(y1)) * k, y1 * k)
-    ctx.lineTo((x0 + sx(y1)) * k, y1 * k)
-    ctx.closePath()
-    ctx.fill()
+    const outline = () => {
+      ctx.moveTo((x0 + sx(y0)) * k, y0 * k)
+      ctx.lineTo((x1 + sx(y0)) * k, y0 * k)
+      ctx.lineTo((x1 + sx(y1)) * k, y1 * k)
+      ctx.lineTo((x0 + sx(y1)) * k, y1 * k)
+      ctx.closePath()
+    }
+    ctx.save()
+    ctx.beginPath()
+    outline()
+    ctx.clip()
+    ctx.beginPath()
+    outline()
+    for (const [u, v, ru, rv, turn] of shades) {
+      const cx = l.x0 + u * l.w - l.skew * v
+      const cy = l.top + v * H
+      const rx = ru * l.w * shrink
+      const ry = rv * H * shrink
+      ctx.moveTo((cx + rx * Math.cos(turn)) * k, (cy + rx * Math.sin(turn)) * k)
+      ctx.ellipse(cx * k, cy * k, rx * k, ry * k, turn, 0, Math.PI * 2)
+    }
+    ctx.fill('evenodd')
+    ctx.restore()
   }
   ctx.restore()
 }
@@ -788,88 +847,87 @@ function drawDoorLight(p: p5, k: number, T: number): void {
   while (n + 1 < LIGHTS.length && T >= LIGHTS[n + 1].t - 0.02) n++
   // Each step is quick, on its downbeat: the last light going as the new one comes.
   const s = n === 0 ? 1 : smooth(T, LIGHTS[n].t - 0.02, LIGHTS[n].t + 0.1)
-  if (n > 0 && s < 1) drawLightPatch(p, k, LIGHTS[n - 1].l, LIGHTS[n - 1].l.a * env * (1 - s))
-  drawLightPatch(p, k, LIGHTS[n].l, LIGHTS[n].l.a * env * s)
-}
-
-/** The warm pool they dance in: on the wall behind them, following them down the hall. */
-function drawPool(p: p5, k: number, x: number, a: number): void {
-  if (a <= 0.002) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect((x - 2.2) * k, -2.6 * k, 4.4 * k, (2.6 + FLOOR) * k)
-  ctx.clip()
-  ctx.translate(x * k, -0.4 * k)
-  ctx.scale(1, 0.72)
-  const r = 1.9 * k
-  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
-  g.addColorStop(0, `rgba(255, 227, 166, ${0.4 * a})`)
-  g.addColorStop(0.4, `rgba(255, 227, 166, ${0.24 * a})`)
-  g.addColorStop(1, 'rgba(255, 227, 166, 0)')
-  ctx.fillStyle = g
-  ctx.fillRect(-r, -r, 2 * r, 2 * r)
-  ctx.restore()
+  if (n > 0 && s < 1) drawLightPatch(p, k, LIGHTS[n - 1].l, LIGHTS[n - 1].l.a * env * (1 - s), T)
+  drawLightPatch(p, k, LIGHTS[n].l, LIGHTS[n].l.a * env * s, T)
 }
 
 /**
- * The crest's light: the low evening sun through the front door's glass, a long warm shaft down the hall onto the floor
- * they dance on (the glass's top lands behind him, its foot in front of her as she turns out). It gathers with the
- * swell, falls full on the two of them on 52's downbeat, the loudest of the second waltz, and settles as the music
- * falls away, going with the evening as they close into the embrace: the light that fell on them at the kiss, years
- * later.
+ * The crest's light: the low evening sun through the front door's glass. It gathers with the swell, falls full on the
+ * two of them on 52's downbeat, the loudest of the second waltz, and settles as the music falls away, going with the
+ * evening as they close into the embrace: the light that fell on them at the kiss, years later. It is told where it
+ * lands, behind them (`drawCrestPatch`), and by what they keep from it: drawn in the air as well, as shafts down the
+ * hall and a wedge over the wall, it hazed the whole wainscot.
  */
-const CREST = { from: 3.6, to: 5.35 }
 const crestAt = (T: number): number => {
   const come = smooth(T, DANCE[0] - 0.3, DANCE[1])
-  const bloom = T >= DANCE[1] ? 0.5 * Math.min(1, (T - DANCE[1]) / 0.04) * Math.exp(-(T - DANCE[1]) / 0.55) : 0
   const settle = 1 - 0.45 * smooth(T, DANCE[1] + 0.3, DANCE[2] + 0.4)
-  return (come * settle + bloom) * (1 - smooth(T, EMBRACE - 0.3, LAMP + 0.4))
+  return come * settle * (1 - smooth(T, EMBRACE - 0.3, LAMP + 0.4))
 }
-function drawCrestLight(p: p5, k: number, a: number): void {
+
+/**
+ * Their shadows in it: the two of them stand between the door and the wall, so where the light would land behind them
+ * it does not. Each is thrown a little behind and below its owner (back down the hall, away from the low sun) and a
+ * touch larger, so the light lies round two dark shapes that dance as they do: apart as she turns out, one as they
+ * close into each other's arms. Each comes as its own path with the whole frame round it, for an even-odd clip that
+ * keeps the light off it (one clip each, so where the two overlap it stays dark); `pad` grows them (cells) for the
+ * penumbra's steps.
+ */
+const THROWN = { dx: -0.34, dy: 0.05, s: 1.06 }
+function shadowClips(k: number, T: number, pad: number): Path2D[] {
+  const clip = (shape: Path2D, x: number, y: number, turn: number): Path2D => {
+    const q = new Path2D()
+    q.rect(-20 * k, -20 * k, 60 * k, 40 * k)
+    q.addPath(shape, new DOMMatrix().translate((x + THROWN.dx) * k, (y + THROWN.dy) * k).rotate((turn * 180) / Math.PI).scale(k))
+    return q
+  }
+  // Him: his square as the cast draws it (flattened onto its bottom edge), leaning as he leans.
+  const [cx, cy] = carlAt(T)
+  const { tilt, squash } = carlPose(T)
+  const s = 2 * HALF * THROWN.s
+  const h = s * (1 - squash)
+  const w = s * (1 + squash * 0.6)
+  const his = new Path2D()
+  his.roundRect(-w / 2 - pad, -h / 2 + (s - h) / 2 - pad, w + 2 * pad, h + 2 * pad, Math.max(0, 0.075 * THROWN.s + pad))
+  // Her: round, as tall as she stands.
+  const e = ellieAt(T)
+  const r = R * THROWN.s
+  const hers = new Path2D()
+  hers.ellipse(0, 0, r + pad, r * (e.stretch ?? 1) + pad, 0, 0, Math.PI * 2)
+  return [clip(his, cx, cy, tilt), clip(hers, e.x, e.y, e.angle ?? 0)]
+}
+
+/**
+ * Where the crest's light lands behind them: the door's glass laid low and long on the wainscot, its two panes (the
+ * bar's shadow between them), the evening's own patch of the house's clock, at its fullest on the crest and lying over
+ * their wedding photograph; the lower pane runs on down the skirting to the floor, round the two of them. Flat and
+ * soft-edged (three layers, each a little larger, and each kept a little further off their shadows), leaning back down
+ * the hall with the low sun.
+ */
+const CREST_PATCH = { x0: 3.88, w: 1.9, top: FLOOR - 0.74, split: FLOOR - 0.43, lean: 0.32 / 0.6 }
+function drawCrestPatch(p: p5, k: number, a: number, T: number): void {
   if (a <= 0.002) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const gx = DOOR.x
-  const gTop = DOOR.top + 0.2
-  const gFoot = DOOR.top + 1.0
-  // The glass's cross bar (its top panes over its bottom ones) splits the sun in two: two parallel shafts with a thin
-  // shadow between them, what makes it read at once as sunlight through a window.
-  const bar = DOOR.top + 0.6
-  const landAt = (y: number) => CREST.from + ((CREST.to - CREST.from) * (y - gTop)) / (gFoot - gTop)
-  const shaft = (y0: number, y1: number, pad: number, alphaNear: number, alphaFar: number) => {
-    const g = ctx.createLinearGradient(gx * k, 0, CREST.from * k, 0)
-    g.addColorStop(0, `rgba(255, 214, 150, ${alphaNear * a})`)
-    g.addColorStop(1, `rgba(255, 214, 150, ${alphaFar * a})`)
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(gx * k, (y0 - pad * 0.5) * k)
-    ctx.lineTo((landAt(y0) - pad) * k, FLOOR * k)
-    ctx.lineTo((landAt(y1) + pad) * k, FLOOR * k)
-    ctx.lineTo(gx * k, (y1 + pad * 0.5) * k)
-    ctx.closePath()
-    ctx.fill()
+  const P = CREST_PATCH
+  // What the middle lays over the paper: a little more than the patch had when shafts and a wedge were laid over it.
+  const full = 0.38 * a
+  const edge = 0.25 * full
+  const inner = 1 - (1 - full) / ((1 - edge) * (1 - edge))
+  const sx = (y: number) => -P.lean * (y - P.top)
+  for (const [grow, f, pad] of [[0.09, edge, -0.018], [0.045, edge, 0], [0, inner, 0.018]] as [number, number, number][]) {
+    ctx.save()
+    for (const c of shadowClips(k, T, pad)) ctx.clip(c, 'evenodd')
+    ctx.fillStyle = `rgba(255, 214, 150, ${f})`
+    for (const [y0, y1] of [[P.top - grow, P.split - 0.025 + grow * 0.25], [P.split + 0.025 - grow * 0.25, FLOOR]]) {
+      ctx.beginPath()
+      ctx.moveTo((P.x0 - grow + sx(y0)) * k, y0 * k)
+      ctx.lineTo((P.x0 + P.w + grow + sx(y0)) * k, y0 * k)
+      ctx.lineTo((P.x0 + P.w + grow + sx(y1)) * k, y1 * k)
+      ctx.lineTo((P.x0 - grow + sx(y1)) * k, y1 * k)
+      ctx.closePath()
+      ctx.fill()
+    }
+    ctx.restore()
   }
-  ctx.save()
-  // A soft penumbra round the whole, then the two shafts crisp inside it, warmest at the glass.
-  shaft(gTop, gFoot, 0.12, 0.05, 0.03)
-  for (const [y0, y1] of [[gTop, bar - 0.035], [bar + 0.035, gFoot]]) {
-    shaft(y0, y1, 0.03, 0.1, 0.07)
-    shaft(y0, y1, 0, 0.21, 0.15)
-  }
-  // Where it lands: a warm glow on the wall low behind them (only the wall: the floor's cut edge stays dark).
-  const mid = (CREST.from + CREST.to) / 2
-  const r = 1.1 * k
-  ctx.beginPath()
-  ctx.rect((mid - 2) * k, (FLOOR - 2) * k, 4 * k, 2 * k)
-  ctx.clip()
-  ctx.translate(mid * k, (FLOOR - 0.25) * k)
-  ctx.scale(1.35, 0.5)
-  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
-  g.addColorStop(0, `rgba(255, 222, 160, ${0.4 * a})`)
-  g.addColorStop(1, 'rgba(255, 222, 160, 0)')
-  ctx.fillStyle = g
-  ctx.fillRect(-r, -r, 2 * r, 2 * r)
-  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ their wedding photograph */
@@ -915,6 +973,48 @@ function drawWeddingPhoto(p: p5, k: number, weight: number, age: number): void {
   p.fill(mixHex(figure, ELLIE, 0.5))
   p.circle((x + 0.042 * s) * k, (top + 0.29 * s) * k, 0.09 * s * k)
   p.pop()
+}
+
+/* ------------------------------------------------------------------ the house's time, and the evening outside */
+
+/** The waltz's downbeats through the hall's years: the tall clock's pendulum keeps them. */
+const DOWNBEATS = downbeats(SEAM.ties - 4, AT.tickets + 2).map((b) => b.t)
+/**
+ * The pendulum: one swing a bar, at the end of each swing on a downbeat, easing through each turn as a pendulum does,
+ * so the house's clock keeps the waltz (and slows and presses on with it).
+ */
+function pendulumAt(T: number): number {
+  const D = DOWNBEATS
+  const A = 0.11
+  if (T < D[0]) return A * Math.cos((Math.PI * (T - D[0])) / (D[1] - D[0]))
+  let i = 0
+  while (i + 1 < D.length && T >= D[i + 1]) i++
+  const L = i + 1 < D.length ? D[i + 1] - D[i] : D[i] - D[i - 1]
+  return A * Math.cos(Math.PI * (i + (T - D[i]) / L))
+}
+/** What its hands say: a morning in the hall, the minute hand creeping round as the years go by under it. */
+const clockHours = (T: number): number => 7.6 + (T - 140) * 0.022
+
+/**
+ * The sky outside the front door, as the set paints it past the porch (`inside.ts` `skyAt`, the late years): paler with
+ * the years, warming to dusk on the evening of the tickets. What the door's glass shows.
+ */
+function skyOutside(T: number): string {
+  const late = mixHex(HOME.sky, '#D9D3C4', clamp01((T - 140) / 12))
+  return mixHex(late, mixHex(HOME.dusk, '#D9A38C', 0.35), clamp01((T - 156) / 6))
+}
+
+/** Three birds going home across the evening past the porch, as she opens the door to it. Only past the front wall. */
+const HOMEWARD: Flight = { t0: 161.6, from: [10.7, -1.72], v: [-0.42, -0.025], dur: 5.4, n: 3, span: 0.075, color: mixHex(INK, HOME.dusk, 0.35), beat: 2.4, seed: 21 }
+function evening(p: p5, k: number, weight: number, T: number): void {
+  if (T < HOMEWARD.t0 || T > HOMEWARD.t0 + HOMEWARD.dur) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect((DOOR.x + 0.25) * k, -6 * k, 8 * k, (6 + FLOOR - 0.9) * k)
+  ctx.clip()
+  birds(p, k, frame(p, k), T, HOMEWARD, weight)
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the machines' states */
@@ -986,8 +1086,6 @@ function deskAt(T: number) {
 const doorAt = (T: number): number => (T <= DOOR_OPEN ? 0 : 1 - Math.exp(-(T - DOOR_OPEN) / 0.15) * Math.cos((T - DOOR_OPEN) * 6))
 /** The lamp over the painting: it catches on the downbeat and warms. */
 const lampAt = (T: number): number => smooth(T, LAMP - 0.01, LAMP + 0.03) * (0.55 + 0.45 * smooth(T, LAMP, LAMP + 0.7))
-/** The low evening sun through the front door, lying along the hall as they dance, going as the dance ends. */
-const sunAt = (T: number): number => smooth(T, 153.4, 155.6) * (1 - smooth(T, 158.8, 161.3))
 /** The evening coming into the hall as the dance ends. */
 const duskAt = (T: number): number => 0.14 * smooth(T, 158.2, 162.2)
 
@@ -1049,19 +1147,19 @@ export const ties = part<TiesState>(
       const { k, weight } = c
       const age = AGE(T)
       drawDoorLight(p, k, T)
-      drawSunWedge(p, k, sunAt(T), 5.6 - 1.4 * smooth(T, 158.6, 161.4))
-      drawPool(p, k, pairAt(T) + 0.2 + 0.5 * TURN_OUT * turnOutAt(T), poolAt(T))
-      drawCrestLight(p, k, crestAt(T))
       drawPainting(p, k, weight, age)
       // Their snapshots under the stairs: the first since they moved in, then one a decade, each hung as she knots
       // that morning's tie (out of shot: the camera is on the wheel).
       GALLERY.forEach((_, n) => drawSnapshot(p, k, weight, n, n === 0 ? 1 : smooth(T, CINCH[n - 1], CINCH[n - 1] + 0.3), age))
       drawWeddingPhoto(p, k, weight, age)
+      drawCrestPatch(p, k, crestAt(T), T)
       const [cx] = carlAt(T)
       drawWheelFrame(p, k, weight, wheelTurn(T), pawlAt(T), plateY(T, cx), age)
+      drawClock(p, k, weight, pendulumAt(T), clockHours(T), age)
       drawGramophone(p, k, weight, gramAt(T), age)
       drawDesk(p, k, weight, deskAt(T), age)
-      drawDoor(p, k, weight, doorAt(T), age)
+      evening(p, k, weight, T)
+      drawDoor(p, k, weight, doorAt(T), age, skyOutside(T))
     },
     over: (p: p5, s: TiesState, c: Ctx) => {
       const T = c.t + s.begin
@@ -1174,8 +1272,8 @@ export const ties = part<TiesState>(
       // The dance, on the swell: the camera goes in with it. On its first downbeat the gramophone is whole in the left
       // third, its record turning, the two of them meeting in front of it; then in, down the hall with them, to land
       // closest on the crest, 52's downbeat, as she rolls out from his side to arm's length: the two of them in the
-      // warm pool as it swells, under their wedding photograph (`PHOTO`, low over them in the frame's upper half; the key a touch
-      // higher than `low` for it, which Zoom still allows). That close sits between the horn's mouth
+      // door's light as it gathers, under their wedding photograph (`PHOTO`, low over them in the frame's upper half;
+      // the key a touch higher than `low` for it, which Zoom still allows). That close sits between the horn's mouth
       // (its rim reaches x 2.98) and the ticket press's hand lever (its grip 6.48), so neither is cut by the frame's
       // edges, and it holds them left of the middle, with the floor they are waltzing into ahead of them. It stays
       // close as the music falls away, drifting on with them more slowly than they go (they come to the middle), and

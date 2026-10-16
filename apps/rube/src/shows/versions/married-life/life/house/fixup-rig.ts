@@ -278,7 +278,7 @@ function helix(p: p5, weight: number, X: (v: number) => number, Y: (v: number) =
 }
 
 /**
- * The wet paint behind the rollers: a glossy band on the new wall that dries as they roll on, so the house is seen
+ * The wet paint behind the rollers: a deeper band on the new wall that dries as they roll on, so the house is seen
  * being painted, not wiped. Over the house's front only (the walls to the eaves), and only while they are on it.
  */
 function wetBand(p: p5, k: number, T: number): void {
@@ -299,20 +299,31 @@ function wetBand(p: p5, k: number, T: number): void {
   g.addColorStop(1, 'rgba(47,138,114,0.42)')
   ctx.fillStyle = g
   ctx.fillRect(x0 * k, topY * k, (x1 - x0) * k, (G - topY) * k)
-  // The gloss: a few long soft streaks the roller's nap left, brightest where it is wettest.
-  const s = ctx.createLinearGradient((edge - dry * 0.6) * k, 0, edge * k, 0)
-  s.addColorStop(0, 'rgba(255,255,255,0)')
-  s.addColorStop(1, 'rgba(255,255,255,0.34)')
-  ctx.fillStyle = s
-  for (let i = 0; i < 7; i++) {
-    const y = topY + 0.35 + i * ((G - topY - 0.7) / 6) + 0.12 * hash(i, 3, 5)
-    const len = dry * (0.35 + 0.35 * hash(i, 9, 2))
-    ctx.fillRect(Math.max(x0, edge - len) * k, y * k, Math.min(len, edge - x0) * k, 0.035 * k)
-  }
   ctx.restore()
 }
 
+/**
+ * The sun is high on the left: under the cart its shadow on the lawn, thrown a little to the right, and one under his
+ * chair while it waits on the grass. Soft flat ovals, no outline.
+ */
+function shadows(p: p5, k: number, T: number): void {
+  const w = W(T)
+  p.push()
+  p.noStroke()
+  p.fill(alpha(p, '#2F3D2C', 0.16))
+  p.ellipse((w + CART.mid + 0.2) * k, (G + 0.1) * k, 2.9 * k, 0.16 * k)
+  p.fill(alpha(p, '#2F3D2C', 0.1))
+  p.ellipse((w + CART.mid + 0.45) * k, (G + 0.12) * k, 3.4 * k, 0.22 * k)
+  for (const f of FLIGHTS) {
+    if (f.lawn === undefined || T >= f.lift) continue
+    p.fill(alpha(p, '#2F3D2C', 0.16))
+    p.ellipse((f.lawn + 0.12) * k, (G + 0.1) * k, 0.85 * k, 0.14 * k)
+  }
+  p.pop()
+}
+
 export function drawRig(p: p5, k: number, weight: number, T: number): void {
+  shadows(p, k, T)
   wetBand(p, k, T)
   drawChairsFlying(p, k, weight, T)
   const w = W(T)
@@ -385,15 +396,12 @@ export function drawRig(p: p5, k: number, weight: number, T: number): void {
     p.strokeWeight(weight * 0.8)
     p.fill(col)
     p.rect(X(-RW / 2), Y(top), RW * k, ROLL * k, 0.1 * k)
-    // Its round: shade on the left, a wet shine on the right.
+    // Its round: shade on the left.
     p.noStroke()
     p.fill(alpha(p, mixHex(col, INK, 0.3), 0.55))
     p.rect(X(-RW / 2 + 0.03), Y(top + 0.06), 0.1 * k, (ROLL - 0.12) * k, 0.04 * k)
     // The seam wound round the drum: its front half seen, a slant that climbs as the drum turns, so the roll reads.
     helix(p, weight, X, Y, top, b, rolled / (RW / 2), mixHex(col, INK, 0.4))
-    p.noStroke()
-    p.fill(alpha(p, '#FFFFFF', 0.4))
-    p.rect(X(RW / 2 - 0.12), Y(top + 0.12), 0.045 * k, (ROLL - 0.24) * k, 0.02 * k)
     // The yoke's caps.
     p.stroke(INK)
     p.strokeWeight(weight * 0.7)
