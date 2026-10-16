@@ -103,8 +103,8 @@ export function along(stops: readonly [number, string][], u: number): string {
 
 /** How many samples across a row of billows can hold. */
 export const SAMPLES = 4096
-/** Scratch for a row of billows' tops and undersides (and their shadows'), sampled across it: filled afresh for every row of every frame. */
-export const ROWS = [new Float64Array(SAMPLES), new Float64Array(SAMPLES), new Float64Array(SAMPLES), new Float64Array(SAMPLES)] as const
+/** Scratch for a row of billows' tops and undersides, sampled across it: filled afresh for every row of every frame. */
+export const ROWS = [new Float64Array(SAMPLES), new Float64Array(SAMPLES)] as const
 
 /** One billow (an ellipse at `cx, cy`, radii `rx, ry`) into a row's samples from `x0`, `dx` apart: the highest top and lowest underside at each. */
 export function billow(tops: Float64Array, lows: Float64Array, x0: number, dx: number, n: number, cx: number, cy: number, rx: number, ry: number): void {
@@ -136,4 +136,34 @@ export function rowOutline(tops: Float64Array, lows: Float64Array, x0: number, d
     path.closePath()
   }
   return path
+}
+
+/** How many samples across a lobe of cloud. */
+const LOBE = 20
+
+/**
+ * One lobe of a heap of cloud (an ellipse at `cx, cy`, radii `rx, ry`), standing in what is under it along `foot`,
+ * sampled across: the whole of it in shadow (`side`); the part the sun reaches, the lobe moved toward it (`body`); and
+ * its crown, a rounded cap up and toward the sun (`crown`), lit. Each part keeps inside the lobe.
+ */
+export function lobe(c: C2, cx: number, cy: number, rx: number, ry: number, foot: (x: number) => number, side: string, body: string, crown: string | null): void {
+  // An ellipse inside the lobe, moved `ox` (of its radius) toward the sun and `oy` up, scaled `sc`: its top (`s` -1) or
+  // its underside (`s` 1) at `u` across the lobe (-1 to 1), kept inside the lobe.
+  const top = (u: number) => cy - ry * Math.sqrt(Math.max(0, 1 - u * u))
+  const low = (u: number) => Math.max(top(u), Math.min(2 * cy - top(u), foot(cx + u * rx)))
+  const edge = (u: number, ox: number, oy: number, sc: number, s: number) =>
+    Math.min(low(u), Math.max(top(u), cy - oy * ry + s * sc * ry * Math.sqrt(Math.max(0, 1 - ((u - ox) / sc) ** 2))))
+  const part = (ox: number, oy: number, sc: number, under: boolean, col: string) => {
+    const u0 = Math.max(-1, ox - sc)
+    const u1 = Math.min(1, ox + sc)
+    const at = (k: number) => u0 + ((u1 - u0) * k) / LOBE
+    c.beginPath()
+    for (let k = 0; k <= LOBE; k++) c.lineTo(cx + at(k) * rx, edge(at(k), ox, oy, sc, -1))
+    for (let k = LOBE; k >= 0; k--) c.lineTo(cx + at(k) * rx, under ? edge(at(k), ox, oy, sc, 1) : low(at(k)))
+    c.fillStyle = col
+    c.fill()
+  }
+  part(0, 0, 1, false, side)
+  part(0.28, 0, 1, false, body)
+  if (crown) part(0.16, 0.3, 0.66, true, crown)
 }

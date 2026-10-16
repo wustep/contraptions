@@ -29,19 +29,28 @@ export function rise(t: number): number {
 
 /* ------------------------------------------------------------------ the colours */
 
-/** When the light changes: the blue hour, the horizon warming, first light on the summits, the alpenglow, the sun's edge, the sun on the ledge, gold-white. */
+/**
+ * When the light changes: the blue hour, the horizon warming, first light on the summits, the alpenglow, the sun's
+ * edge, the sun on the ledge, gold-white. It goes on from one to the next without stopping at any of them, so the
+ * picture is never quite still while the camera holds.
+ */
 const KEYS = [146.5, 157, 166.4, 173, 179, 185, 191.4]
 
+/** Which stretch between keys `t` is in, and how far through it. */
+function between(t: number): [number, number] {
+  let i = 0
+  while (i + 2 < KEYS.length && t >= KEYS[i + 1]) i++
+  return [i, Math.max(0, Math.min(1, (t - KEYS[i]) / (KEYS[i + 1] - KEYS[i])))]
+}
+
 function ramp(t: number, cols: readonly string[]): string {
-  if (t <= KEYS[0]) return cols[0]
-  for (let i = 0; i + 1 < KEYS.length; i++) if (t < KEYS[i + 1]) return mix(cols[i], cols[i + 1], smooth(t, KEYS[i], KEYS[i + 1]))
-  return cols[cols.length - 1]
+  const [i, u] = between(t)
+  return mix(cols[i], cols[i + 1], u)
 }
 
 function num(t: number, vals: readonly number[]): number {
-  if (t <= KEYS[0]) return vals[0]
-  for (let i = 0; i + 1 < KEYS.length; i++) if (t < KEYS[i + 1]) return vals[i] + (vals[i + 1] - vals[i]) * smooth(t, KEYS[i], KEYS[i + 1])
-  return vals[vals.length - 1]
+  const [i, u] = between(t)
+  return vals[i] + (vals[i + 1] - vals[i]) * u
 }
 
 export interface Tone {
@@ -162,8 +171,7 @@ export const SUN_R = 0.3
 
 /**
  * The gusts: on every other downbeat through the slow climb, every downbeat as the choir comes up, and on the third
- * beats too through the hold, so the wind builds with the music. Each one tears snow off every ridge, and sends a
- * sheet of it across the near plane.
+ * beats too through the hold, so the wind builds with the music. Each one tears snow off every ridge.
  */
 export const GUSTS: number[] = (() => {
   const out: number[] = []
@@ -184,11 +192,4 @@ export function wind(t: number): number {
     g = Math.max(g, (1 - Math.exp(-d / 0.1)) * Math.exp(-d / 0.9))
   }
   return 0.25 + 0.5 * rise(t) + g * (0.5 + 0.4 * rise(t))
-}
-
-/** The last gust at or before `t` and how long ago, for a sheet of snow crossing the near plane. */
-export function lastGust(t: number): { at: number; ago: number; i: number } {
-  let i = -1
-  for (let j = 0; j < GUSTS.length; j++) if (GUSTS[j] <= t) i = j
-  return { at: i < 0 ? -Infinity : GUSTS[i], ago: i < 0 ? Infinity : t - GUSTS[i], i }
 }
