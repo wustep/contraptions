@@ -14,6 +14,8 @@ export const BOAT = {
   /** How deep the keel goes. */
   draft: 0.62,
   house: { x0: 3.3, x1: 5.3, top: -2.45 },
+  /** The hatch in the deck in front of the house: its ends, and the top of its coaming's front (what hides a man in it). */
+  hatch: { x0: 4.15, x1: 5.3, rim: -0.92 },
   mast: { x: 4.9, top: -3.9 },
   /** The davit at the stern: its post, and the boom's tip (out over the water, and swung in over the deck). */
   post: { x: 0.85, top: -2.75 },
@@ -164,6 +166,26 @@ export function drawBoatAbove(g: C2, k: number, x0: number, w: number, swing: nu
   g.fillRect(x0 * k, (D - 0.04) * k, 0.06 * k, (w - D + 0.06) * k)
   hullDetail(g, k, x0, w, t, wet)
   houseDetail(g, k, x0, w, t)
+  hatch(g, k, x0, w)
+}
+
+/** The hatch in the deck before the house, its cover off: a low coaming, and the dark below it. */
+function hatch(g: C2, k: number, x0: number, w: number): void {
+  const { hatch: h, deckBack } = BOAT
+  const DB = w + deckBack
+  const rim = w + h.rim
+  const a = x0 + h.x0
+  const b = x0 + h.x1
+  g.fillStyle = '#1E282C'
+  g.fillRect(a * k, (DB - 0.04) * k, (b - a) * k, (rim - DB + 0.04) * k)
+  g.fillStyle = HOUSE_SHADE
+  g.fillRect(a * k, rim * k, (b - a) * k, (DB + 0.15 - rim) * k)
+  g.strokeStyle = RAIL
+  g.lineWidth = Math.max(0.6, 0.015 * k)
+  g.beginPath()
+  g.moveTo(a * k, rim * k)
+  g.lineTo(b * k, rim * k)
+  g.stroke()
 }
 
 /**
@@ -208,7 +230,7 @@ function hullDetail(g: C2, k: number, x0: number, w: number, t: number, wet: num
   g.fillStyle = '#1A2124'
   g.fill(tyres)
   // The sea's light thrown up onto the side: broken ripples of pale light, brightest by the water, always moving.
-  waterLight(g, k, x0 + 0.08, x0 + len - 0.3, D + 0.1, w - 0.04, t, '#D6EBE6', 0.24)
+  waterLight(g, k, x0 + 0.08, x0 + len - 0.3, D + 0.1, w - 0.04, t, '#D6EBE6', 0.2)
   if (wet > 0.01) {
     // The water running out of the scuppers: a thin fall from each, wavering, drops off its end.
     const fall = new Path2D()
@@ -234,7 +256,7 @@ function hullDetail(g: C2, k: number, x0: number, w: number, t: number, wet: num
 function waterLight(g: C2, k: number, x0: number, x1: number, y0: number, y1: number, t: number, colour: string, alpha: number): void {
   const span = x1 - x0
   const rows = Math.max(3, Math.round((y1 - y0) / 0.08))
-  for (const [lo, a] of [[0, 0.6], [0.5, 1]] as const) {
+  for (const [lo, a] of [[0, 0.6], [0.5, 0.85]] as const) {
     const ripples = new Path2D()
     for (let r = 0; r < rows; r++) {
       const f = (r + 0.5) / rows

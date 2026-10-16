@@ -1,15 +1,13 @@
 import type { Pt } from '../../../../../parts'
-import { glow, layer, rgbaOf, type View } from '../depth'
+import { layer, rgbaOf, type View } from '../depth'
 import { hash, smooth } from '../kit'
-import { sunAt } from '../sky/air'
 import { BOAT } from './boat'
-import { BOAT_X0, CAKE, CAKE_X, DECK_ON, OUT, REST_X, W } from './sea-plan'
+import { BOAT_X0, OUT, REST_X, W } from './sea-plan'
 
 /**
  * Above the water, once he is hauled out (B's): gulls following the boat, wheeling over its stern and crying down at
- * the catch; the swell slapping at the hull and throwing spray; a break in the overcast that the sun comes through
- * onto the deck; and the cake, the one warm thing in all that grey-green, with a little light of its own. In the
- * sea's cells, in front of the machine and under Walter.
+ * the catch, and the swell slapping at the hull and throwing spray. In the sea's cells, in front of the machine and
+ * under Walter.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -25,12 +23,6 @@ export function drawTopside(g: C2, v: View, t: number): void {
   const a = topsideAt(t)
   if (a <= 0.01 || v.y0 > W) return
   const k = v.k
-  // The break in the cloud: the sun through it lights a pool on the deck (its shafts are the sky's own).
-  const sun = sunAt(t) * smooth(t, OUT, DECK_ON + 0.8)
-  if (sun > 0.01) glow(g, k, REST_X + 0.9, W + BOAT.deck - 0.1, 1.5, '#F6F0DC', 0.16 * sun, false, 0.3)
-  // The cake's warmth.
-  const c = smooth(t, CAKE - 0.4, CAKE + 0.6)
-  if (c > 0.01) glow(g, k, CAKE_X, W + BOAT.deck - 0.25, 0.75, '#F2A64A', 0.22 * c, true, 0.75)
   drawSpray(g, k, t, a)
   layer(g, v, 0.85, DECK_AT, DECK_REF, (inner) => gulls(g, inner, t, a, 0))
   layer(g, v, 1.3, DECK_AT, DECK_REF, (inner) => gulls(g, inner, t, a, 1))
