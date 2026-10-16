@@ -291,13 +291,26 @@ function drawSkin(pen: Pen, t: number, p: Pal): void {
 
 /* ------------------------------------------------------------------ the seats */
 
-/** A first-class seat seen from ahead, a ball's width in its cushion: back and headrest, cushion, pedestal. */
-function drawSeat(pen: Pen, x: number, p: Pal, arms: [boolean, boolean], dy: number): void {
+/**
+ * A first-class seat seen from ahead, a ball's width in its cushion: back and headrest, cushion, pedestal. `lit`: the
+ * reading lamp over it, warm on the back from the headrest down, fading before the cushion.
+ */
+function drawSeat(pen: Pen, x: number, p: Pal, arms: [boolean, boolean], dy: number, lit = 0): void {
   const y = dy
   box(pen, x - 0.15, 0.24 + y, x + 0.15, CAB.floor, p.seatDark, 0.6)
   rbox(pen, x - 0.2, 0.4 + y, x + 0.2, 0.47 + y, 0.02, p.seatShade, 0.5)
   rbox(pen, x - 0.23, -0.64 + y, x + 0.23, 0.2 + y, [0.1, 0.1, 0.03, 0.03], p.seat, 0.7)
-  rbox(pen, x - 0.19, -0.6 + y, x + 0.19, -0.46 + y, 0.05, p.seatShade, 0.5)
+  if (lit > 0.002) {
+    const { ctx, k } = pen
+    const g = ctx.createLinearGradient(0, (-0.64 + y) * k, 0, (0.05 + y) * k)
+    g.addColorStop(0, rgba(PLANE.lamp, 0.5 * lit))
+    g.addColorStop(0.45, rgba(PLANE.lamp, 0.22 * lit))
+    g.addColorStop(1, rgba(PLANE.lamp, 0))
+    rbox(pen, x - 0.225, -0.635 + y, x + 0.225, 0.195 + y, [0.1, 0.1, 0.03, 0.03], null, 0)
+    ctx.fillStyle = g
+    ctx.fill()
+  }
+  rbox(pen, x - 0.19, -0.6 + y, x + 0.19, -0.46 + y, 0.05, lit > 0.002 ? mixHex(p.seatShade, PLANE.lamp, 0.25 * lit) : p.seatShade, 0.5)
   line(pen, [x - 0.12, -0.28 + y], [x + 0.12, -0.28 + y], rgba(PLANE.night, 0.18), 0.5)
   rbox(pen, x - 0.25, R + y, x + 0.25, 0.27 + y, 0.04, p.seat, 0.7)
   if (arms[0]) rbox(pen, x - 0.33, -0.02 + y, x - 0.24, 0.27 + y, 0.035, p.seatShade, 0.6)
@@ -508,7 +521,7 @@ function drawNoseGear(pen: Pen, t: number, p: Pal): void {
 /* ------------------------------------------------------------------ light */
 
 /**
- * The reading lamp's light where it falls at night, on the seat backs and the case; the sun's through Fischer's window
+ * The reading lamp's light where it falls at night, on the seat tops and the case under it; the sun's through Fischer's window
  * in the morning, on the row and the case. Light on things, not shafts in the air.
  */
 export function drawLight(pen: Pen, t: number, over: boolean): void {
@@ -516,7 +529,7 @@ export function drawLight(pen: Pen, t: number, over: boolean): void {
   const lamp = lampAt(t)
   if (lamp > 0.002) {
     if (!over) {
-      puff(pen, [CASE_X, -0.1], 0.8, 0.45, PLANE.lamp, 0.2 * lamp)
+      // On the case at their feet (the seats' backs under it are lit as they are drawn).
       puff(pen, [CASE_X, CASE.top], 0.6, 0.12, PLANE.lamp, 0.3 * lamp)
       box(pen, CASE_X - 0.06, CAB.bin, CASE_X + 0.06, CAB.bin + 0.03, rgba(PLANE.lamp, 0.95 * lamp), 0)
     }
@@ -549,8 +562,8 @@ export function drawCabin(pen: Pen, t: number, f: Frame): void {
   drawSkin(pen, t, p)
   ctx.restore()
   drawNoseGear(pen, t, p)
-  drawSeat(pen, SEAT.ariadne, p, [true, true], dy)
-  drawSeat(pen, SEAT.cobb, p, [true, true], dy)
+  drawSeat(pen, SEAT.ariadne, p, [true, true], dy, lampAt(t))
+  drawSeat(pen, SEAT.cobb, p, [true, true], dy, lampAt(t))
   drawSeat(pen, SEAT.team, p, [true, false], dy)
   drawSeat(pen, SEAT.fischer, p, [false, true], dy)
   // The console between the team's seat and Fischer's.
