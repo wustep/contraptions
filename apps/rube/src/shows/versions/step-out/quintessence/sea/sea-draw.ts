@@ -196,7 +196,7 @@ function drawHullUnderLocal(g: C2, k: number, t: number): void {
   g.clip(hull)
   const x1 = x0 + len + 0.4
   g.fillStyle = rgba(SEA.skin, 0.06)
-  for (const d of [0.12, 0.24, 0.38]) {
+  for (const d of [0.12, 0.27, 0.46]) {
     g.beginPath()
     g.moveTo(x0 * k, (W - 0.1) * k)
     for (let x = x0; x <= x1; x += 0.4) g.lineTo(x * k, (W + d + 0.05 * Math.sin(x * 1.3 - t * 1.5 + d * 9)) * k)
