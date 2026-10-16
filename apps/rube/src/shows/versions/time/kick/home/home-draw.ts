@@ -4,7 +4,7 @@ import { pool, rgba, top } from '../cast'
 import { frame, hash, smooth, type Ctx } from '../kit'
 import { LAST } from '../music'
 import { HOME, HOME_THEME, TOP } from '../worlds'
-import { CHAIRS, COUNTER, GARDEN, GLASS, HOLD, HOUSE, SUN_CAM, TABLE, TICKS, TOP_AT, cobbAt, frontDoor, glassDoor, kidX, swingAngle, topAt, turned } from './home-plan'
+import { CHAIRS, COUNTER, GARDEN, GLASS, HOLD, HOUSE, SUN_CAM, TABLE, TICKS, TOP_AT, cobbAt, frontDoor, glassDoor, kidX, swingAngle, topAt } from './home-plan'
 
 /**
  * Home, drawn: the house cut open side-on on a bright morning (the porch, the hall, the kitchen table and its chairs,
@@ -615,9 +615,6 @@ export function drawHome(p: p5, c: Ctx): void {
   farTrees(ctx, k, f, 0.55, -1.1, 1.1, mixHex(HOME.tree, HOME.sky, 0.66), 0.7, true)
   farTrees(ctx, k, f, 0.3, -1.05, 0.75, mixHex(HOME.tree, HOME.sky, 0.45), 2.9, false)
   garden(ctx, k, f, t, w)
-  // The light coming round onto the children as they turn: warm on the lawn round them.
-  const e = Math.max(turned(0, t), turned(1, t))
-  if (e > 0) pool(p, k, [(kidX(0, t) + kidX(1, t)) / 2, FLOOR - 0.06], 1.1, 0.18, HOME.sun, 0.4 * e)
   porch(ctx, k, f, t, w)
   house(ctx, k, f, t, w)
   // Inside: the front door back against the wall, the counter, the chairs, the table and the top.
