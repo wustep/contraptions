@@ -1,6 +1,5 @@
 import { mixHex, type Pt } from '../../../../../parts'
 import { frame, hash, rgba, smooth } from '../kit'
-import { picture } from '../lens'
 import { level, notes as measured } from '../music'
 import { SEBS_MAT } from '../worlds'
 import type p5 from 'p5'
@@ -12,10 +11,9 @@ import type p5 from 'p5'
  * them (a candle, the stage light, the band's clip lamps), so nothing here reads as Mia, Seb, David or their son.
  *
  * The room as it is is a working club late at night: a bartender polishing glasses, a waiter, a couple at one table
- * and a man smoking at the bar, a few heads in the house between us and the stage, the band away on its break. The
- * dream's last room is the same room full: every chair, both stools, a full house in front of us and the band
- * playing. At the waking the dream's people go with its rose, and what is left is the late-night few, who were there
- * all along.
+ * and a man smoking at the bar, the band away on its break. The dream's last room is the same room full: every chair,
+ * both stools, and the band playing. At the waking the dream's people go with its rose, and what is left is the
+ * late-night few, who were there all along.
  *
  * Everything here is in the room's own frame (the piano's: the lowest key's left edge is x = 0, a ball on a white key
  * is y = 0), and is drawn with the canvas's own paths, one fill a shape, inside a save and restore.
@@ -248,95 +246,6 @@ export function walker(plan: [number, number][], t: number): { x: number; face: 
   // The stride runs with the distance walked: a step every 0.36 cells.
   const walked = Math.abs(x - x0)
   return { x, face: x1 > x0 ? 1 : -1, stride: (walked / 0.36) * Math.PI }
-}
-
-/* ------------------------------------------------------------------ the near house */
-
-/**
- * The house between us and the stage: heads and shoulders along the foot of the picture, nearer than anything in the
- * room, so they slide a little faster than it as the camera goes, and sink out of the picture as it draws back out of
- * the room. In the room as it is a few are there; in the dream, all of them.
- */
-const NEAR = Array.from({ length: 34 }, (_, i) => ({
-  x: -11.3 + i * 0.66 + 0.24 * (hash(i, 81) - 0.5),
-  size: 0.85 + 0.3 * hash(i, 82),
-  lag: 0.03 + 0.12 * hash(i, 83),
-  real: hash(i, 85) < 0.5,
-  seed: hash(i, 84),
-}))
-/** The strong notes of the piano the real house nods to, and the dream's. */
-const NODS = measured(0, 470, 0.45).map((n) => n.t)
-
-/** The index of the last of sorted `times` at or before `t` (-1 if none). */
-function lastAt(times: number[], t: number): number {
-  let lo = 0
-  let hi = times.length - 1
-  if (hi < 0 || times[0] > t) return -1
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1
-    if (times[mid] <= t) lo = mid
-    else hi = mid - 1
-  }
-  return lo
-}
-
-export interface NearLight {
-  /** How much of the dream's full house is there (0 in the room as it is). */
-  dream: number
-  /** The stage light on the nearest of them, and the candles' warmth. */
-  stage: string
-  warm: string
-  /** The room's walls, left and right, inside which they sit. */
-  x0: number
-  x1: number
-}
-
-export function nearHouse(p: p5, k: number, t: number, L: NearLight): void {
-  const f = frame(p, k)
-  const fh = f.y1 - f.y0
-  const vis = 1 - smooth(fh, 7.2, 9.6)
-  if (vis <= 0.001) return
-  const g = p.drawingContext as G
-  g.save()
-  const lw = Math.max(1, 0.006 * fh * k * 1.2)
-  const loud = level(t)
-  for (const h of NEAR) {
-    const a = h.real ? 1 : L.dream
-    if (a < 0.01) continue
-    const x = f.cx + (h.x - f.cx) * 1.35
-    if (x < L.x0 + 0.2 || x > L.x1 - 0.2 || x < f.x0 - 0.5 || x > f.x1 + 0.5) continue
-    const s = 1.1 * h.size * fh
-    let nod = 0
-    for (let j = lastAt(NODS, t - h.lag); j >= 0; j--) {
-      const d = t - NODS[j] - h.lag
-      if (d > 0.5) break
-      nod = Math.max(nod, Math.exp(-d / 0.14))
-    }
-    // The dream's house sways with the music; the real one is still but for the nods.
-    const sway = L.dream * 0.014 * s * (0.3 + loud) * Math.sin(t * 1.25 + h.seed * 9)
-    const base = f.y1 + 0.01 * fh + (1 - vis) * 0.22 * fh
-    const headY = base - 0.075 * s + 0.005 * s * nod * (h.real ? 1 : 0.5)
-    const xh = x + sway
-    const r = 0.03 * s
-    g.globalAlpha = a
-    g.fillStyle = h.real ? '#0B0A12' : '#140E1C'
-    g.beginPath()
-    g.ellipse(x * k, (base - 0.02 * s) * k, 0.07 * s * k, 0.045 * s * k, 0, Math.PI, Math.PI * 2)
-    disc(g, k, xh, headY, r)
-    g.fill()
-    // The stage light along the top of the heads nearest the piano; the candles' warmth on the others.
-    const near = Math.max(0, 1 - Math.abs(x - 2.7) / 5)
-    g.lineWidth = lw
-    g.strokeStyle = rgba(L.stage, 0.18 + 0.4 * near)
-    g.beginPath()
-    g.arc(xh * k, headY * k, r * k, Math.PI * 1.25, Math.PI * 1.9)
-    g.stroke()
-    g.strokeStyle = rgba(L.warm, 0.22 + 0.25 * L.dream)
-    g.beginPath()
-    g.arc(xh * k, headY * k, r * k, Math.PI * 1.05, Math.PI * 1.25)
-    g.stroke()
-  }
-  g.restore()
 }
 
 /* ------------------------------------------------------------------ the wall */
@@ -741,84 +650,6 @@ export function drinkRail(p: p5, k: number, t: number, x0: number, x1: number, d
   smoke(p, k, ASHTRAY_X + 0.078, RAIL_Y - 0.09, t, 0.55, 3, 0.55)
 }
 
-/* ------------------------------------------------------------------ the waiter in front of us */
-
-/** The waiter who crosses between us and her table at the start, nearer than anything in the room. */
-export const NEAR_WAITER: [number, number] = [23.2, 24.35]
-
-/**
- * A waiter crossing between the camera and her table, nearer than the room: so near that only his head, his shoulders
- * and the tray on his raised hand are in the picture, and so much bigger than the room's people, and he crosses the
- * frame quickly where they would take a while. He wipes past the two of them as she turns from David to the stage.
- */
-export function nearWaiter(p: p5, k: number, t: number, stage: string, warm: string): void {
-  const [a, b] = NEAR_WAITER
-  if (t < a || t > b) return
-  const v = picture(p, k, t)
-  const f = frame(p, k)
-  const fh = f.y1 - f.y0
-  const u = (t - a) / (b - a)
-  const half = 0.2 * fh
-  const x = v.x0 - half + u * (v.x1 - v.x0 + 2 * half)
-  const stride = u * 9 * Math.PI
-  const bob = 0.012 * fh * Math.abs(Math.sin(stride))
-  const g = p.drawingContext as G
-  const tone = '#09080F'
-  const hy = f.y0 + 0.43 * fh - bob
-  const hr = 0.066 * fh
-  const ny = hy + hr * 0.9
-  const sy = hy + 0.15 * fh
-  const X = (v: number) => v * k
-  g.save()
-  g.fillStyle = tone
-  g.beginPath()
-  disc(g, k, x + 0.008 * fh, hy, hr)
-  // His neck, the round of his shoulders, and his jacket down out of the picture, a little narrower at the waist.
-  g.moveTo(X(x - 0.045 * fh), X(ny))
-  g.lineTo(X(x + 0.05 * fh), X(ny))
-  g.lineTo(X(x + 0.055 * fh), X(sy - 0.035 * fh))
-  g.quadraticCurveTo(X(x + 0.17 * fh), X(sy - 0.04 * fh), X(x + 0.2 * fh), X(sy + 0.05 * fh))
-  g.lineTo(X(x + 0.17 * fh), X(f.y1 + 0.1 * fh))
-  g.lineTo(X(x - 0.17 * fh), X(f.y1 + 0.1 * fh))
-  g.lineTo(X(x - 0.2 * fh), X(sy + 0.05 * fh))
-  g.quadraticCurveTo(X(x - 0.17 * fh), X(sy - 0.04 * fh), X(x - 0.05 * fh), X(sy - 0.035 * fh))
-  g.closePath()
-  g.fill()
-  // The white of his shirt in the jacket's opening, and his bow tie.
-  g.fillStyle = rgba(M.ivory, 0.2)
-  g.beginPath()
-  poly(g, k, [[x - 0.035 * fh, sy - 0.03 * fh], [x + 0.045 * fh, sy - 0.03 * fh], [x + 0.008 * fh, sy + 0.12 * fh]])
-  g.fill()
-  g.fillStyle = tone
-  g.beginPath()
-  poly(g, k, [[x - 0.025 * fh, sy - 0.035 * fh], [x + 0.005 * fh, sy - 0.015 * fh], [x + 0.035 * fh, sy - 0.035 * fh], [x + 0.035 * fh, sy + 0.0 * fh], [x + 0.005 * fh, sy - 0.018 * fh], [x - 0.025 * fh, sy + 0.0 * fh]])
-  g.fill()
-  // The far arm bent up, the tray flat on his hand at his shoulder, two glasses on it.
-  const hand: Pt = [x + 0.29 * fh, sy - 0.05 * fh + bob * 0.3]
-  const elbow: Pt = [x + 0.25 * fh, sy + 0.13 * fh]
-  limbs(g, k, tone, 0.06 * fh, [[[x + 0.16 * fh, sy + 0.03 * fh], elbow], [elbow, hand]])
-  g.fillStyle = mixHex(M.brass, M.lacquer, 0.45)
-  g.fillRect(X(hand[0] - 0.16 * fh), X(hand[1] - 0.012 * fh), X(0.32 * fh), X(0.018 * fh))
-  g.fillStyle = rgba(M.ivory, 0.22)
-  g.beginPath()
-  for (const dx of [-0.08, 0.06]) poly(g, k, [[hand[0] + dx * fh - 0.025 * fh, hand[1] - 0.11 * fh], [hand[0] + dx * fh + 0.025 * fh, hand[1] - 0.11 * fh], [hand[0] + dx * fh + 0.018 * fh, hand[1] - 0.012 * fh], [hand[0] + dx * fh - 0.018 * fh, hand[1] - 0.012 * fh]])
-  g.fill()
-  // The stage's cold light along his far edge, and her candle's warmth low on his near shoulder.
-  const lw = Math.max(1, 0.009 * fh * k)
-  rim(g, k, x + 0.008 * fh, hy, hr, -Math.PI * 0.45, Math.PI * 0.1, stage, 0.45, lw)
-  g.strokeStyle = rgba(stage, 0.3)
-  g.lineWidth = lw
-  g.beginPath()
-  g.moveTo(X(x + 0.06 * fh), X(sy - 0.04 * fh))
-  g.quadraticCurveTo(X(x + 0.17 * fh), X(sy - 0.04 * fh), X(x + 0.2 * fh), X(sy + 0.05 * fh))
-  g.stroke()
-  g.strokeStyle = rgba(warm, 0.3)
-  g.beginPath()
-  seg(g, k, [x - 0.2 * fh, sy + 0.07 * fh], [x - 0.19 * fh, sy + 0.3 * fh])
-  g.stroke()
-  g.restore()
-}
-
 /* ------------------------------------------------------------------ the band */
 
 /** The band's places on the stage: the bass, the drummer behind the kit, the tenor at the far stand. */
@@ -834,6 +665,19 @@ function counted(t: number): number {
   let c = 0
   for (const at of COUNT) if (t >= at && t < at + 0.4) c = Math.max(c, Math.exp(-(t - at) / 0.1))
   return c
+}
+
+/** The index of the last of sorted `times` at or before `t` (-1 if none). */
+function lastAt(times: number[], t: number): number {
+  let lo = 0
+  let hi = times.length - 1
+  if (hi < 0 || times[0] > t) return -1
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1
+    if (times[mid] <= t) lo = mid
+    else hi = mid - 1
+  }
+  return lo
 }
 
 /** The band's strong onsets (the real band's from its first hit, the dream's under the self-playing piano). */

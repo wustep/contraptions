@@ -5,7 +5,7 @@ import { frame, glow, hash, rgba, scenery, smooth } from '../kit'
 import { picture } from '../lens'
 import { DRIVE_MAT, SEBS_MAT } from '../worlds'
 import { PIANO } from './geometry'
-import { bandPlayers, DREAM_BAND, drinkRail, fans, gallery, nearHouse, nearWaiter, REAL_BAND, sitter, smoke, stander, walker, type Light, type Sitter } from './people'
+import { bandPlayers, DREAM_BAND, drinkRail, fans, gallery, REAL_BAND, sitter, smoke, stander, walker, type Light, type Sitter } from './people'
 import { PIANO_SHADOW } from './piano'
 
 /**
@@ -1174,15 +1174,10 @@ function drawBand(q: Pen, L: Lights, t: number, end: boolean): void {
 }
 
 /** What stands in front of the balls: Mia's table's top and its lamp, whose light is on their faces. */
-function drawOver(p: p5, s: ClubRoom, k: number, ink: string, weight: number, t: number): void {
+function drawOver(p: p5, k: number, ink: string, weight: number, t: number): void {
   const q = pen(p, k, ink, weight)
-  const L = lightsAt(t, s.end)
   table(q, TABLE.x, 'top', 0.19)
   candle(q, TABLE.x, t, 7)
-  if (!s.end) nearWaiter(p, k, t, L.stage, L.warm)
-  // Nearest of all, between us and the room: the house, its heads along the foot of the picture.
-  const there = s.end ? 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6) : 0
-  nearHouse(p, k, t, { dream: there, stage: L.stage, warm: L.warm, x0: ROOM.wallL1, x1: ROOM.wallR0 })
 }
 
 /** The house spot's pool at her table: an ellipse of its light on the wall behind them, the table and the floor. */
@@ -1280,5 +1275,5 @@ export const clubRoom = scenery<ClubRoom>({
     drawPeople(p, s, c.k, c.ink, c.weight, c.t)
     if (s.end && c.t > LEAN - 1.6 && c.t < LEAVE + 0.9) drawPool(p, c.k, c.t)
   },
-  over: (p, s, c) => drawOver(p, s, c.k, c.ink, c.weight, c.t),
+  over: (p, _s, c) => drawOver(p, c.k, c.ink, c.weight, c.t),
 })
