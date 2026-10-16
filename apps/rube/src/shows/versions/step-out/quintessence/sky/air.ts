@@ -99,7 +99,7 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
     // Between this roll and the next: what its depth on the screen is drawn from.
     const gap = D * s * (1 - 1 / 1.36)
     // Past where the rolls are this thin, the horizon's haze stands for them.
-    if (gap < 0.05 * (e.fh / 6.6)) break
+    if (gap < 0.13 * (e.fh / 6.6)) break
     const yRow = e.hz - D * s + shake * 0.5 * s
     if (yRow - gap > e.y1 || yRow + gap < e.y0 - 0.5) continue
     const body = new Path2D()
@@ -121,7 +121,7 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
       const lo = Math.max(xa, e.x0 - 1)
       const hi = Math.min(xb, e.x1 + 1)
       if (hi <= lo) continue
-      const step = Math.max(0.05, Math.min((hi - lo) / 48, gap * 0.1))
+      const step = Math.max(0.08, Math.min((hi - lo) / 40, gap * 0.14))
       const top: Pt[] = []
       const lit: Pt[] = []
       const mid: Pt[] = []
@@ -135,14 +135,15 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
         const w1 = Math.sin((gx / S) * 2.3 + r * 1.7 + t * 0.25)
         const w2 = Math.sin((gx / S) * 5.1 + r * 0.6 - t * 0.3)
         // Its outline is lumpy: rounded billows along its foot, slowly turning over, and longer, lower ones along its
-        // far edge and its belly.
+        // far edge.
         const q = (gx * s) / gap
-        const d = Math.hypot((xx - sx) / e.fw, (Math.max(0, Math.abs(yRow - sy) - 0.4 * gap) / e.fh) * 1.3)
-        const thin = sun > 0.01 ? smooth(d, 0.03 * sun, 0.09 * sun) : 1
+        const dx = (xx - sx) / e.fw
+        const dy = (Math.max(0, Math.abs(yRow - sy) - 0.4 * gap) / e.fh) * 1.3
+        const thin = sun > 0.01 ? smooth(Math.sqrt(dx * dx + dy * dy), 0.03 * sun, 0.09 * sun) : 1
         const f = end * thin * gap
         top.push([xx, yRow - f * (0.42 + 0.18 * w1 + 0.05 * w2 + 0.2 * billow(q / 1.4 + 0.2, r, 49))])
-        lit.push([xx, yRow - f * (0.12 + 0.1 * w1 - 0.1 * billow(q / 0.8 + 0.3, r, 50))])
-        mid.push([xx, yRow + f * (0.08 + 0.06 * w2 - 0.12 * billow(q / 1.7 + 0.6, r, 48))])
+        lit.push([xx, yRow - f * (0.08 + 0.1 * w1 - 0.06 * w2)])
+        mid.push([xx, yRow + f * (0.02 + 0.08 * w2)])
         low.push([xx, yRow + f * (0.3 + 0.08 * w1 + 0.28 * billow(q / 1.1 + t * 0.3, r, 47))])
       }
       outline(body, k, top, low)

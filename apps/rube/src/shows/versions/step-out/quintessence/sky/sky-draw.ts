@@ -135,9 +135,11 @@ function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t:
     const density = 0.22 + 0.4 * (1 - s)
     const squash = Math.max(0.07, Math.min(0.6, e / z))
     for (let n = n0; n <= n1; n++) {
+      const q = hash(n, L, 21)
+      if (q > density * (s + (1 - s) * 1.4)) continue
       const gx = (n + hash(n, L, 22)) * spacing + Math.sin(t * 0.15 + n) * 0.05
       const stream = Math.sin(gx * 0.09 - z * 0.12 + 1.3) + 0.6 * Math.sin(gx * 0.031 + z * 0.05)
-      if (hash(n, L, 21) > density * (s + (1 - s) * smooth(stream, -0.5, 0.6) * 1.4)) continue
+      if (q > density * (s + (1 - s) * smooth(stream, -0.5, 0.6) * 1.4)) continue
       const x = f.cx + (gx - f.cx) * s
       const w = (0.35 + 1.4 * Math.pow(hash(n, L, 23), 2)) * s
       if (x + w < f.x0 - 0.5 || x - w > f.x1 + 0.5) continue
