@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { layer, onLayer, type View } from '../depth'
+import { layer, onLayer, sway, type View } from '../depth'
 import { BEATS } from '../music'
 import { ctxOf, rgba, type Pen } from './pen'
 import { drained, T0, T1 } from './geo'
@@ -9,12 +9,14 @@ import { fireT } from './draw'
 /**
  * The city behind the daydream: the night past true, on three planes behind the platform and the burning building.
  *
- * - Far (z 0.15): a big moon low in the magenta haze, the towers' silhouettes with their windows pricked out and the
- *   spires' beacons blinking, a water tower, and two searchlights sweeping the sky from behind them.
+ * - Far (z 0.15): a big moon low over the magenta haze, long thin clouds drifting across it, the towers' silhouettes
+ *   with their windows pricked out and the spires' beacons blinking, a water tower.
  * - Middle (z 0.35): the blocks between, their windows sodium-warm and going on and off; water towers on their
- *   roofs; the elevated line on its girders with a train crossing on the downbeats, a streak of lit windows; and under
- *   it the avenue's traffic, headlights and amber tail lights drawn out into streaks.
- * - Near (z 0.6): the dark fronts across the tracks, a fire escape, a few windows.
+ *   roofs; the elevated line on its girders with a train crossing on the downbeats, a streak of lit windows; under it
+ *   the avenue's traffic, headlights and amber tail lights drawn out into streaks; and over the roofs a few pigeons
+ *   the fire has put up, wheeling.
+ * - Near (z 0.6): the dark fronts across the tracks, a fire escape, a few windows, washing on a line across two
+ *   roofs, stirring in the fire's draught, and steam going up off two chimneys and away left.
  *
  * Every colour goes through the pen's tone, so it all drains to grey with the rest in the last bar. Geometry that
  * never changes (the silhouettes, the windows that stay lit) is made once, in cells; what moves is drawn each frame.
@@ -37,7 +39,6 @@ const K = {
   sodium: '#FF9A3C',
   moon: '#F4DCC2',
   moonShade: '#E2C2AC',
-  beam: '#CDBEFF',
   beacon: '#FFC46B',
   train: '#FFE2A6',
   head: '#FFF1D6',
@@ -175,16 +176,10 @@ function made(): Plane[] {
 /** A window going on and off on its own clock. */
 const winOn = (w: Win, t: number): boolean => hash(Math.floor((t + (w.seed % 7)) / w.flick), w.seed, 3) > 0.35
 
-/** The moon, low and big behind the haze, with the haze's bands across it. */
+/** The moon, low and big: a plain disc, its seas a shade darker. */
 const MOON = { x: 1.15, y: -2.85, r: 0.42 }
 function moon(ctx: C2, pen: Pen, k: number): void {
   const { x, y, r } = MOON
-  const halo = ctx.createRadialGradient(x * k, y * k, r * 0.9 * k, x * k, y * k, r * 2.3 * k)
-  halo.addColorStop(0, rgba(pen, K.moon, 0.2))
-  halo.addColorStop(0.4, rgba(pen, '#D88AA0', 0.07))
-  halo.addColorStop(1, rgba(pen, '#D88AA0', 0))
-  ctx.fillStyle = halo
-  ctx.fillRect((x - r * 2.3) * k, (y - r * 2.3) * k, r * 4.6 * k, r * 4.6 * k)
   ctx.fillStyle = rgba(pen, K.moon, 0.88)
   ctx.beginPath()
   ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
@@ -198,40 +193,157 @@ function moon(ctx: C2, pen: Pen, k: number): void {
   ctx.globalAlpha = 0.5
   ctx.fill()
   ctx.globalAlpha = 1
-  // The haze over its lower half, thickening.
-  const haze = ctx.createLinearGradient(0, (y - r * 0.2) * k, 0, (y + r * 1.1) * k)
-  haze.addColorStop(0, rgba(pen, '#6A2C62', 0))
-  haze.addColorStop(1, rgba(pen, '#6A2C62', 0.75))
-  ctx.fillStyle = haze
-  ctx.fillRect((x - r * 1.3) * k, (y - r * 0.2) * k, r * 2.6 * k, r * 1.3 * k)
 }
 
-/** Two searchlights sweeping the sky from behind the far towers. */
-function searchlights(ctx: C2, pen: Pen, k: number, t: number): void {
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  for (const [bx, by, phase, rate] of [[1.6, -1.5, 0.3, 0.33], [6.3, -1.7, 2.2, 0.27]]) {
-    const a = 0.5 * Math.sin(t * rate * Math.PI * 2 * 0.5 + phase) + (bx < 3 ? -0.15 : 0.25)
-    const len = 5.5
-    const dx = Math.sin(a)
-    const dy = -Math.cos(a)
-    const nx = -dy
-    const ny = dx
-    const tx = bx + dx * len
-    const ty = by + dy * len
-    const g = ctx.createLinearGradient(bx * k, by * k, tx * k, ty * k)
-    g.addColorStop(0, rgba(pen, K.beam, 0.16))
-    g.addColorStop(0.5, rgba(pen, K.beam, 0.06))
-    g.addColorStop(1, rgba(pen, K.beam, 0))
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo((bx + nx * 0.04) * k, (by + ny * 0.04) * k)
-    ctx.lineTo((tx + nx * 0.5) * k, (ty + ny * 0.5) * k)
-    ctx.lineTo((tx - nx * 0.5) * k, (ty - ny * 0.5) * k)
-    ctx.lineTo((bx - nx * 0.04) * k, (by - ny * 0.04) * k)
-    ctx.closePath()
-    ctx.fill()
+/** Long thin clouds low over the far towers, a shade lighter than the night: [x, y, length, seed], far plane cells. */
+const CLOUDS: [number, number, number, number][] = [
+  [-3.6, -3.1, 2.4, 1],
+  [-1.2, -3.55, 1.5, 2],
+  [1.0, -2.78, 1.9, 3],
+  [3.4, -3.3, 2.2, 4],
+  [5.9, -2.9, 1.7, 5],
+  [8.2, -3.45, 2.3, 6],
+  [10.4, -3.0, 1.6, 7],
+]
+/** The clouds, drifting slowly left on the same air as the smoke. */
+function clouds(ctx: C2, pen: Pen, k: number, t: number): void {
+  const p = new Path2D()
+  for (const [x0, y, len, seed] of CLOUDS) {
+    const x = x0 - 0.08 * (t - T0)
+    for (let j = 0; j < 3; j++) {
+      const cx = x + (j - 1) * len * 0.28 + (hash(seed, j, 71) - 0.5) * 0.2
+      const cy = y - (j === 1 ? 0.035 : 0)
+      const rx = len * (0.28 + 0.12 * hash(seed, j, 72))
+      const ry = 0.045 + 0.04 * hash(seed, j, 73)
+      p.moveTo(cx + rx, cy)
+      p.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2)
+    }
   }
+  ctx.save()
+  ctx.scale(k, k)
+  ctx.fillStyle = rgba(pen, '#36234F', 0.85)
+  ctx.fill(p)
+  ctx.restore()
+}
+
+/** The washing on the roofs across the tracks (near plane cells): the line's ends, its height, what hangs on it. */
+const LINE = { x0: 1.12, x1: 2.62, y: -0.66, roof: -0.35 }
+const WASHING: [number, number, number, string][] = [
+  // [x, width, drop, colour]: a sheet, a shirt, a towel, a sheet, a shirt.
+  [1.2, 0.34, 0.24, '#6F6582'],
+  [1.6, 0.18, 0.15, '#4C5B6E'],
+  [1.83, 0.2, 0.17, '#7A6C55'],
+  [2.08, 0.3, 0.22, '#5E5674'],
+  [2.43, 0.16, 0.14, '#535C45'],
+]
+function washing(ctx: C2, pen: Pen, k: number, t: number, fire: number): void {
+  const { x0, x1, y, roof } = LINE
+  const sag = (x: number) => y + 0.04 * Math.sin(((x - x0) / (x1 - x0)) * Math.PI)
+  const frame = new Path2D()
+  for (const px of [x0, x1]) frame.rect((px - 0.012) * k, y * k, 0.024 * k, (roof - y) * k)
+  frame.moveTo(x0 * k, y * k)
+  for (let x = x0; x <= x1 + 1e-6; x += 0.15) frame.lineTo(x * k, sag(x) * k)
+  ctx.strokeStyle = rgba(pen, K.edge, 0.9)
+  ctx.lineWidth = Math.max(0.6, 0.01 * k)
+  ctx.stroke(frame)
+  ctx.fillStyle = rgba(pen, K.edge, 0.9)
+  ctx.fill(frame)
+  // Each piece hangs from the line and stirs on its own: its foot swings, its top stays pegged.
+  const lit = rgba(pen, '#C07A45', 0.35 + 0.25 * Math.min(1, fire))
+  for (const [i, [x, w, drop, col]] of WASHING.entries()) {
+    const top = sag(x + w / 2)
+    const swing = 0.05 * sway(t, 0.45 + 0.1 * i, i + 3)
+    const piece = new Path2D()
+    piece.moveTo(x * k, top * k)
+    piece.lineTo((x + w) * k, top * k)
+    piece.lineTo((x + w + swing) * k, (top + drop) * k)
+    piece.lineTo((x + swing) * k, (top + drop * (0.92 + 0.08 * Math.sin(t * 1.7 + i))) * k)
+    piece.closePath()
+    ctx.fillStyle = rgba(pen, col, 1)
+    ctx.fill(piece)
+    // A sheet's fold, a towel's two stripes, a shirt's placket: lines across the cloth, swinging with it.
+    const marks = new Path2D()
+    const at = (u: number, v: number): Pt => [x + w * u + swing * v, top + drop * v]
+    const across = (v: number) => {
+      const [ax, ay] = at(0.05, v)
+      const [bx, by] = at(0.95, v)
+      marks.moveTo(ax * k, ay * k)
+      marks.lineTo(bx * k, by * k)
+    }
+    const down = (u: number) => {
+      const [ax, ay] = at(u, 0.08)
+      const [bx, by] = at(u, 0.95)
+      marks.moveTo(ax * k, ay * k)
+      marks.lineTo(bx * k, by * k)
+    }
+    if (w > 0.25) down(0.5)
+    else if (i % 2) down(0.5)
+    else {
+      across(0.3)
+      across(0.7)
+    }
+    ctx.strokeStyle = rgba(pen, '#22183A', 0.55)
+    ctx.lineWidth = Math.max(0.8, 0.014 * k)
+    ctx.stroke(marks)
+    // The edge toward the fire, lit.
+    ctx.strokeStyle = lit
+    ctx.lineWidth = Math.max(0.6, 0.012 * k)
+    ctx.beginPath()
+    ctx.moveTo((x + w) * k, top * k)
+    ctx.lineTo((x + w + swing) * k, (top + drop) * k)
+    ctx.stroke()
+  }
+}
+
+/** Chimneys on the near roofs, and the steam going up off them and away left on the night air: [x, roof]. */
+const CHIMNEYS: Pt[] = [
+  [-1.45, -0.67],
+  [0.55, -0.78],
+]
+function chimneys(ctx: C2, pen: Pen, k: number, t: number): void {
+  const stacks = new Path2D()
+  const steam = new Path2D()
+  for (const [i, [x, roof]] of CHIMNEYS.entries()) {
+    stacks.rect((x - 0.05) * k, (roof - 0.16) * k, 0.1 * k, 0.17 * k)
+    stacks.rect((x - 0.065) * k, (roof - 0.18) * k, 0.13 * k, 0.03 * k)
+    for (let j = 0; j < 8; j++) {
+      const age = (t * 0.22 + j / 8 + hash(i, j, 81) * 0.05) % 1
+      const r = 0.06 + 0.17 * age
+      const cx = x - 0.9 * age * age - 0.04 * Math.sin(age * 5 + j)
+      const cy = roof - 0.2 - 0.7 * age
+      steam.moveTo((cx + r) * k, cy * k)
+      steam.ellipse(cx * k, cy * k, r * k, r * 0.7 * k, 0, 0, Math.PI * 2)
+    }
+  }
+  ctx.fillStyle = rgba(pen, K.near, 1)
+  ctx.fill(stacks)
+  ctx.fillStyle = rgba(pen, '#7C6A98', 0.16)
+  ctx.fill(steam)
+}
+
+/** Pigeons the fire has put up off the roofs, wheeling in a loose ring over them and drifting left (middle plane). */
+function pigeons(ctx: C2, pen: Pen, k: number, t: number): void {
+  const s = t - T0
+  const cx = 0.8 - 0.04 * s
+  const cy = -1.9
+  const birds = new Path2D()
+  for (let i = 0; i < 9; i++) {
+    const a = s * 0.42 + i * 0.5 + hash(i, 1, 85) * 0.4
+    const x = cx + 1.1 * Math.cos(a) + (hash(i, 2, 85) - 0.5) * 0.4
+    const y = cy + 0.26 * Math.sin(a) + (hash(i, 3, 85) - 0.5) * 0.3
+    // Its wings: down, then up, a few times a second.
+    const flap = 0.035 * Math.sin(s * 8.5 + i * 1.7)
+    const span = 0.06
+    birds.moveTo((x - span) * k, (y - flap) * k)
+    birds.quadraticCurveTo((x - span / 2) * k, (y - 0.012) * k, x * k, y * k)
+    birds.quadraticCurveTo((x + span / 2) * k, (y - 0.012) * k, (x + span) * k, (y - flap) * k)
+  }
+  ctx.save()
+  ctx.strokeStyle = rgba(pen, '#140C26', 0.95)
+  ctx.lineWidth = Math.max(1, 0.016 * k)
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.stroke(birds)
   ctx.restore()
 }
 
@@ -266,17 +378,9 @@ function train(ctx: C2, pen: Pen, k: number, t: number, inner: View): void {
     ctx.fillStyle = rgba(pen, K.train, 0.95)
     ctx.fill(lit)
     ctx.restore()
-    // Its light on the girders under it, and a spark off the rail at the downbeat.
+    // Its light on the girders under it.
     ctx.fillStyle = rgba(pen, K.train, 0.12)
     ctx.fillRect(head * k, (y + 0.27) * k, len * k, 0.12 * k)
-    const spark = Math.exp(-s / 0.12)
-    if (spark > 0.05) {
-      const sx = dir > 0 ? head + len : head
-      ctx.fillStyle = rgba(pen, '#E9E0FF', 0.8 * spark)
-      ctx.beginPath()
-      ctx.arc(sx * k, (y + 0.3) * k, 0.06 * k * (1 + spark), 0, Math.PI * 2)
-      ctx.fill()
-    }
   }
 }
 
@@ -309,7 +413,7 @@ function traffic(ctx: C2, pen: Pen, k: number, t: number, inner: View): void {
   ctx.restore()
 }
 
-/** The beacons on the spires: a slow blink, amber. */
+/** The beacons on the spires: a slow blink, amber, a lamp and nothing round it. */
 function beacons(ctx: C2, pen: Pen, k: number, t: number): void {
   for (const [i, [x, y]] of SPIRES.entries()) {
     const on = Math.pow(0.5 + 0.5 * Math.sin(t * 2.4 + i * 2.1), 6)
@@ -317,10 +421,6 @@ function beacons(ctx: C2, pen: Pen, k: number, t: number): void {
     ctx.fillStyle = rgba(pen, K.beacon, on)
     ctx.beginPath()
     ctx.arc(x * k, y * k, 0.035 * k, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.fillStyle = rgba(pen, K.beacon, 0.18 * on)
-    ctx.beginPath()
-    ctx.arc(x * k, y * k, 0.12 * k, 0, Math.PI * 2)
     ctx.fill()
   }
 }
@@ -339,17 +439,24 @@ export function skyFloor(v: View): number {
 export function drawCity(pen: Pen, v: View, t: number, fire: number): void {
   const ctx = ctxOf(pen.p)
   const all = made()
+  const ft = fireT(t)
+  const flick = 0.8 + 0.2 * Math.sin(ft * 11.3) * Math.sin(ft * 4.7 + 1.3)
   all.forEach((plane, i) => {
     layer(ctx, v, plane.z, ANCHOR, REF, (inner) => {
       const k = inner.k
       if (i === 0) {
         moon(ctx, pen, k)
-        searchlights(ctx, pen, k, t)
+        clouds(ctx, pen, k, t)
       }
       ctx.save()
       ctx.scale(k, k)
       ctx.fillStyle = rgba(pen, plane.color, 1)
       ctx.fill(plane.body)
+      // The fire's light on the fronts that face it, flickering with it: most on the nearest, a little on the middle.
+      if (i > 0 && fire > 0.01) {
+        ctx.fillStyle = rgba(pen, K.sodium, (i === 2 ? 0.07 : 0.035) * Math.min(1.4, fire) * flick)
+        ctx.fill(plane.body)
+      }
       ctx.fillStyle = rgba(pen, '#0A0619', i === 0 ? 0.6 : i === 1 ? 0.7 : 0.85)
       ctx.fill(plane.dark)
       // The fronts' edges toward the fire take its light, and the more as it flares.
@@ -376,6 +483,11 @@ export function drawCity(pen: Pen, v: View, t: number, fire: number): void {
       if (i === 1) {
         train(ctx, pen, k, t, inner)
         traffic(ctx, pen, k, t, inner)
+        pigeons(ctx, pen, k, t)
+      }
+      if (i === 2) {
+        if (LINE.x1 > inner.x0 - 0.5 && LINE.x0 < inner.x1 + 0.5) washing(ctx, pen, k, fireT(t), fire)
+        if (inner.x0 < 1.5) chimneys(ctx, pen, k, t)
       }
     })
     if (i === 1) drift(ctx, pen, v, t, fire)
