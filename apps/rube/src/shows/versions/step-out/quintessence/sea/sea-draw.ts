@@ -545,9 +545,10 @@ const UP_X = BOAT_X0 + BOAT.hatch.x0 + 0.8
 const UP0 = OUT + 0.25
 const UP1 = DECK_ON - 0.35
 const RISE = 1.8
-/** Where he stands, and how far his feet are below the deck's (in the hatch, then on the deck). */
+/** Where he stands, and where his feet are: down in the hatch, up to its rim, and the step down off it onto the deck. */
 const manX = (t: number): number => UP_X + (MAN_X - UP_X) * smooth(t, UP1, DECK_ON + 0.5)
-const footAt = (t: number): number => MAN_FOOT + RISE * (1 - smooth(t, UP0, UP1))
+const RIM = W + BOAT.hatch.rim
+const footAt = (t: number): number => MAN_FOOT + RISE * (1 - smooth(t, UP0, UP1)) + (RIM - MAN_FOOT) * (1 - smooth(t, UP1, UP1 + 0.3))
 /** How much he is walking: from the hatch to his place, easing in and out so his step never stops short. */
 const walking = (t: number): number => smooth(t, UP1, UP1 + 0.2) * (1 - smooth(t, DECK_ON + 0.25, DECK_ON + 0.5))
 /** How far he is stooped, 0 standing to 1 down at the deck. */
@@ -595,7 +596,7 @@ export function drawDeckThings(p: p5, k: number, t: number): void {
   if (t < UP1) {
     // Still in the hatch: nothing of him (or what he holds) below its coaming's top.
     g.beginPath()
-    g.rect(-1e4, -1e4, 2e4, 1e4 + (W + BOAT.hatch.rim) * k)
+    g.rect(-1e4, -1e4, 2e4, 1e4 + RIM * k)
     g.clip()
   }
   // The wrapper: carried under the cake, then lying on the deck, Sean's notes on it.
