@@ -1,5 +1,5 @@
 import type { Placed } from '../../../../plan'
-import { smooth } from './brush'
+import { frame, rgba, smooth } from './brush'
 import { HOUSE, PIPE } from './geo'
 import { drawDoor, drawEave, drawGutterBack, drawGutterFront, drawNeighbours, drawPipe, drawRoof, drawWall, drawWindow } from './house'
 import { drawBehind, drawCypress, drawFaces, drawGround, drawGully, drawRoad, drawTerraces, drawValley } from './land'
@@ -124,5 +124,18 @@ export function scenery(duration: number): Placed[] {
   )
   out.push(standing(drawing('travelers', null, (b, t) => drawTravelers(b, t)), cover(170, 30, 300, 104, 3), duration))
   out.push(everywhere(drawing('rain', null, (b, t) => drawRain(b, t, lightsAt(t))), duration))
+  // The curtain: up from black onto the first note, and down to black at the very end, after the credits.
+  out.push(
+    everywhere(
+      drawing('curtain', null, (b, t) => {
+        const dark = Math.max(1 - smooth(t, 0, bar(1)), smooth(t, duration - 2.2, duration - 0.2))
+        if (dark <= 0) return
+        const f = frame(b)
+        b.g.fillStyle = rgba('#0A0D12', dark)
+        b.g.fillRect(f.x0 - 1, f.y0 - 1, f.x1 - f.x0 + 2, f.y1 - f.y0 + 2)
+      }),
+      duration,
+    ),
+  )
   return out
 }

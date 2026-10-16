@@ -77,10 +77,20 @@ export function woman(t: number): { p: Pt; dir: number } {
   return onRoad(along(t))
 }
 /** The boy keeps a couple of paces behind her, closing up at the door. */
-const behind = (t: number): number => 2.2 - 1.4 * smooth(t, AT_GATE - 1, IN + 0.4)
+const behind = (t: number): number => 2.2 - 1.4 * smooth(t, AT_GATE - 1, IN + 0.4) - 0.9 * held(t, EMBRACE, 1.0, 1.0) - 0.8 * held(t, [GUST, at(43, 2)], 0.6, 1.0)
 export function boy(t: number): { p: Pt; dir: number } {
   return onRoad(along(t) - behind(t))
 }
+
+/**
+ * Her free arm's gestures, each a weight 0 to 1: round the boy as they climb in the rain; over the lantern when the
+ * gust comes; up at the gate's light when she sees it; out to the door.
+ */
+export const EMBRACE: [number, number] = [at(21, 0), at(23, 2)]
+export const SHIELD: [number, number] = [GUST - 0.25, OUT + 0.9]
+export const POINT: [number, number] = [at(68, 2), at(70, 0)]
+export const PUSH: [number, number] = [FORM.run - 0.45, IN + 0.2]
+const held = (t: number, [a, b]: [number, number], up = 0.6, down = 0.8): number => smooth(t, a, a + up) * (1 - smooth(t, b - down, b))
 
 /** How far into the doorway each has gone, 0 to 1 (`IN` on). */
 const inside = (t: number, delay: number): number => smooth(t, IN + delay, IN + delay + 0.9)
@@ -117,9 +127,10 @@ function drawWoman(b: Brush, t: number, f: Figure, dark: string, rim: string): v
   const head: Pt = [x + 0.15 + lean * 2 + f.up * 0.05, top + 0.55 - f.up * 0.05]
   poly(b, [[x - 0.75 + lean, top + 2.7], [x - 0.55 + lean, top + 1.1], [head[0] - 0.42, head[1] - 0.2], [head[0] + 0.2, head[1] - 0.48], [head[0] + 0.5, head[1] + 0.05], [x + 0.6 + lean, top + 1.3], [x + 0.7 + lean, top + 2.7]], dark)
   disc(b, head[0] + 0.05, head[1], 0.4, dark)
-  // The arm out with the lantern.
-  const hx = x + 0.95 + lean
-  const hy = top + 2.5 + Math.sin(f.phase * 2) * 0.05
+  // The arm out with the lantern; drawn in close to her when she shields it.
+  const shield = held(t, SHIELD, 0.25, 0.6)
+  const hx = x + 0.95 + lean - 0.35 * shield
+  const hy = top + 2.5 + Math.sin(f.phase * 2) * 0.05 - 0.3 * shield
   g.strokeStyle = dark
   g.lineWidth = 0.28
   g.lineCap = 'round'
@@ -127,11 +138,34 @@ function drawWoman(b: Brush, t: number, f: Figure, dark: string, rim: string): v
   g.moveTo(x + 0.35 + lean, top + 1.45)
   g.lineTo(hx, hy)
   g.stroke()
+  // Her other arm: at her side, or round the boy, over the flame, up at the light, out to the door.
+  const embrace = held(t, EMBRACE, 1.0, 1.0)
+  const point = held(t, POINT, 0.5, 0.9)
+  const push = held(t, PUSH, 0.35, 0.3)
+  const targets: [number, number, number][] = [
+    [embrace, x - 1.25, top + 1.55],
+    [shield, hx + 0.05, hy - 0.35],
+    [point, x + 1.55 + lean, top - 0.55],
+    [push, x + 1.45, top + 2.0],
+  ]
+  let ax = x + 0.05 + lean
+  let ay = top + 2.55
+  for (const [w, tx, ty] of targets) {
+    ax += (tx - ax) * w
+    ay += (ty - ay) * w
+  }
+  if (Math.hypot(ax - (x + 0.05 + lean), ay - (top + 2.55)) > 0.05) {
+    g.lineWidth = 0.26
+    g.beginPath()
+    g.moveTo(x + 0.15 + lean, top + 1.4)
+    g.lineTo(ax, ay)
+    g.stroke()
+  }
   g.restore()
   // The lantern (in the world's hand, not mirrored): swinging below her hand.
-  const lx = x + dir * (0.95 + lean)
+  const lx = x + dir * (hx - x)
   const ly = hy
-  const swing = (Math.sin(f.phase) * 0.25 * f.stride + (windAt(t) - 0.1) * 1.2 * Math.sin(t * 2.7)) * (t > GUST - 0.3 && t < OUT + 1.5 ? 2.2 : 1)
+  const swing = (Math.sin(f.phase) * 0.25 * f.stride + (windAt(t) - 0.1) * 1.2 * Math.sin(t * 2.7)) * (t > GUST - 0.3 && t < OUT + 1.5 ? 2.2 - 1.6 * shield : 1)
   const lit = theirLight(t)
   g.save()
   g.translate(lx, ly)
