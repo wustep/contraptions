@@ -141,15 +141,32 @@ export function drawFarSea(pen: Pen, t: number, f: Frame): void {
     [0.4, LIMBO.skyWarm, 0.35],
     [1, LIMBO.skyWarm, 0],
   ])
-  // A few soft glints drifting on the far water, of many lengths.
+  // The swell rolling in toward the shore: long low ridges on the far water, close together and faint out by the
+  // horizon, opening out and firmer as they come on (the sea's depth, and its slow breathing under the opening). Each
+  // is a broken line of long streaks, a trough in shade with the sky on the back of the ridge over it. Seen from far
+  // out they are under a pixel, and not drawn.
+  if (x1 - x0 > 34) return
   const c = clock('limbo', t)
-  for (let i = 0; i < 70; i++) {
-    const q = hash(i, 2, 11)
-    const y = HORIZON + 0.15 + q * q * 2.8
-    const x = -70 + hash(i, 1, 11) * 150 + f.cx * PARALLAX * (1 - q) + Math.sin(c * 0.3 + i) * 0.4
-    if (x < x0 - 4 || x > x1 + 4) continue
-    const a = (0.08 + 0.12 * Math.sin(c * (0.4 + hash(i, 3, 11) * 0.5) + i * 2.1) ** 2) * (1 - 0.4 * q)
-    soft(pen, x, y, (0.5 + hash(i, 4, 11) * 3.2) * (1 - 0.5 * q), 0.02 + 0.03 * q + 0.015 * hash(i, 5, 11), LIMBO.foam, a)
+  const ROWS = 7
+  const B = 2.6
+  for (let i = 0; i < ROWS; i++) {
+    const run = c * 0.05 + i / ROWS
+    const q = ((run % 1) + 1) % 1
+    const cycle = Math.floor(run)
+    const d = q * q
+    const y = HORIZON + 0.18 + d * (SEA - HORIZON - 0.5)
+    const a = Math.sin(Math.PI * Math.min(1, q * 1.15)) * (0.4 + 0.6 * q)
+    if (a < 0.02) continue
+    const shift = f.cx * PARALLAX * (1 - d)
+    const th = 0.014 + 0.05 * d
+    for (let j = Math.floor((x0 - shift) / B) - 1; j <= Math.floor((x1 - shift) / B) + 1; j++) {
+      const seed = cycle * 7 + i * 101
+      if (hash(i, j, seed + 5) < 0.2) continue
+      const len = (0.55 + 0.6 * hash(i, j, seed + 13)) * B * (0.65 + 0.35 * d)
+      const x = (j + 0.5 + (hash(i, j, seed + 11) - 0.5) * 0.4) * B + shift
+      soft(pen, x, y + th * 0.6, len / 2, th, mixHex(NEAR_SEA, LIMBO.seaDeep, 0.35), 0.3 * a)
+      soft(pen, x + 0.15, y - th * 0.4, len / 2.3, th * 0.6, LIMBO.foam, 0.26 * a)
+    }
   }
 }
 
