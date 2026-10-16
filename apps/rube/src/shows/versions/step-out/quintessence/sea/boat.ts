@@ -244,9 +244,10 @@ function waterLight(g: C2, k: number, x0: number, x1: number, y0: number, y1: nu
       if (f < lo || f >= lo + 0.5) continue
       const y = y0 + (y1 - y0) * f
       const pace = 0.35 + 0.22 * ((r * 7) % 5) / 5
-      for (let i = 0; i < 14; i++) {
+      for (let i = 0; i < 12; i++) {
         const u = (((i * 0.618 + r * 0.29 + t * pace * (r % 2 ? 1 : -0.7) / span) % 1) + 1) % 1
-        const len = (0.16 + 0.26 * ((i * 13 + r * 5) % 7) / 7) * (0.5 + 0.5 * Math.sin(t * 2.3 + i * 1.7 + r))
+        // Each lengthens and shortens slowly, and is gone at the ends it slides off.
+        const len = (0.16 + 0.26 * ((i * 13 + r * 5) % 7) / 7) * (0.5 + 0.5 * Math.sin(t * 1.2 + i * 1.7 + r)) * Math.min(1, u / 0.06, (1 - u) / 0.06)
         if (len < 0.04) continue
         const x = x0 + u * span
         const yy = y + 0.015 * Math.sin(t * 3.1 + i + r * 0.8)

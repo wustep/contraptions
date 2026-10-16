@@ -28,16 +28,21 @@ export function drawTopside(g: C2, v: View, t: number): void {
   layer(g, v, 1.3, DECK_AT, DECK_REF, (inner) => gulls(g, inner, t, a, 1))
 }
 
-/** The swell slapping at the hull, bow and stern, throwing up a burst of spray every so often, each its own way. */
+/**
+ * The swell slapping at the hull, bow and stern, throwing up a burst of spray every so often, each its own way: some
+ * swells throw more, some less, and now and then one passes without a slap.
+ */
 function drawSpray(g: C2, k: number, t: number, a: number): void {
   const drops = new Path2D()
   for (const [x, dir, period, seed] of [[BOAT_X0 + BOAT.len + 0.3, 1, 1.9, 1], [BOAT_X0 - 0.05, -1, 2.3, 2]] as [number, number, number, number][]) {
-    const u = (((t + seed * 0.7) / period) % 1 + 1) % 1
-    const age = u * period
-    if (age > 1.1) continue
+    const swell = Math.floor((t + seed * 0.7) / period)
+    const age = t + seed * 0.7 - swell * period
+    const slap = hash(swell, seed, 5)
+    if (age > 1.1 || slap < 0.3) continue
+    const strength = 0.6 + 0.6 * slap
     for (let j = 0; j < 14; j++) {
       const vx = dir * (0.3 + 1.1 * hash(j, seed, 1)) * (hash(j, seed, 4) < 0.25 ? -0.5 : 1)
-      const vy = -(1.4 + 1.6 * hash(j, seed, 2))
+      const vy = -(1.4 + 1.6 * hash(j, seed, 2)) * strength
       const px = x + vx * age
       const py = W + vy * age + 0.5 * 9 * age * age
       if (py > W + 0.02) continue

@@ -127,10 +127,10 @@ export function drawUnder(p: p5, k: number, t: number): void {
       [1, rgba(SEA.skin, 0)],
     ])
     g.fillRect(x0 * k, (W - 0.1) * k, (x1 - x0) * k, 0.6 * k)
-    drawWeb(g, v, t, 1)
+    drawWeb(g, v, t)
   }
   // The snow drifting by at his own distance.
-  drawSnow(g, v, t, 'mid', 1)
+  drawSnow(g, v, t, 'mid')
   // A line let down over the boat's far side, and the boat's hull from below: dark on the light.
   drawHandLine(g, k, t)
   drawHullUnderLocal(g, k, t)
@@ -283,11 +283,11 @@ export function drawBubbles(p: p5, k: number, t: number): void {
     const b = rising(t, te, [at[0] + (hash(j, 3) - 0.5) * 0.3, at[1]], j, 91)
     if (b) out.add(b.x, b.y, b.r * 1.2, 1 - smooth(t, te + 2.5, te + 4))
   }
-  // A breath on each of the strong lows.
+  // A breath on each of the strong lows; the last, as the shark comes, the most of all.
   PUFFS.forEach((te, i) => {
     if (t < te || t > te + 6) return
     const at = sinking(te)
-    const n = 5 + (i % 3)
+    const n = i === PUFFS.length - 1 ? 16 : 5 + (i % 3)
     for (let j = 0; j < n; j++) {
       const b = rising(t, te + j * 0.035, [at[0] + 0.02, at[1] - R * 0.8], j, 100 + i)
       if (b) out.add(b.x, b.y, b.r, 1)
@@ -431,17 +431,17 @@ export function drawShark(p: p5, k: number, t: number, front: boolean): void {
   g.fillStyle = col
   g.fill()
   if (s.a > 0.6) {
-    // Nearer, the light from above along its back in one pale edge that follows it, its five gill slits and its small
+    // Nearer, the light from above on its back in two flat steps that follow it, its five gill slits and its small
     // dull eye.
     g.save()
     sharkPath(g, k, t)
     g.clip()
-    g.fillStyle = mix(col, SEA.shallow, 0.3 * s.a)
-    g.fill()
-    g.translate(0, 0.07 * k)
-    sharkPath(g, k, t)
-    g.fillStyle = col
-    g.fill()
+    for (const [dy, f] of [[0, 0.3], [0.07, 0.14], [0.22, 0]]) {
+      g.translate(0, dy * k)
+      sharkPath(g, k, t)
+      g.fillStyle = mix(col, SEA.shallow, f * s.a)
+      g.fill()
+    }
     g.restore()
     const pale = mix(col, SEA.shallow, 0.4 * s.a)
     g.strokeStyle = pale
