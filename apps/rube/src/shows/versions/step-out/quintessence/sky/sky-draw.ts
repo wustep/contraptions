@@ -1,10 +1,10 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
-import { frame, hash, knock, lastOf, smooth } from '../kit'
+import { frame, hash, lastOf, smooth } from '../kit'
 import { drawBoatAbove } from '../sea/boat'
 import { beatPhase, BEGIN, BUMPS, H, heli, IN, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF, WIDE_FROM } from './sky-plan'
-import { ctxOf, glow, mix, oval, poly, rgba, rrect, vgrad, type C2 } from './paint'
-import { drawBanks, drawBergs, drawDeck, drawGlitter, drawRanges, drawSkein, drawSun, drawSunShafts, drawSwell, drawTown, F, type Eye } from './air'
+import { ctxOf, mix, oval, poly, rgba, rrect, vgrad, type C2 } from './paint'
+import { drawBanks, drawBergs, drawDeck, drawGlitter, drawRanges, drawSkein, drawSun, drawSwell, drawTown, F, type Eye } from './air'
 
 /**
  * How the sky is drawn (B3's): the harbour and its pad, the overcast, the grey-green sea going away to the ice and
@@ -101,7 +101,6 @@ export function drawSkySet(p: p5, k: number, t: number, under = false): void {
   drawSwell(g, k, e, t, SURF)
   drawGlitter(g, k, e, t, SURF)
   drawFloes(g, k, f, hz, t)
-  drawSunShafts(g, k, e, t, SURF)
   drawSkein(g, k, e, t, SKEIN, WIDE_FROM, 30, -8.4, heli(SKEIN).x + 26, -3, 15)
   if (!under) drawNearWater(g, k, f, t)
   drawQuay(g, k, f, t)
@@ -302,7 +301,7 @@ function drawQuay(g: C2, k: number, f: ReturnType<typeof frame>, t: number): voi
     g.fillStyle = '#3B4446'
     g.fill()
   }
-  // The pad: a dark disc on the quay's top, a white ring round it, its lights on the near edge.
+  // The pad: a dark disc on the quay's top, a white ring round it, its lamps on the near edge.
   const cx = 3.2
   oval(g, k, cx, (top + back) / 2 + 0.02, 3.1, 0.21, SKY.pad)
   g.strokeStyle = rgba(SKY.white, 0.85)
@@ -317,7 +316,6 @@ function drawQuay(g: C2, k: number, f: ReturnType<typeof frame>, t: number): voi
   g.stroke()
   for (let i = -2; i <= 2; i++) {
     const lx = cx + i * 1.45
-    glow(g, k, lx, top - 0.05, 0.22, '#E9F0D8', 0.45)
     oval(g, k, lx, top - 0.05, 0.05, 0.035, '#F4F7EA')
   }
   // The windsock on its pole, streaming in the wind off the sea; the rotor's wash lifts it after the lift.
@@ -501,11 +499,8 @@ export function drawHeli(p: p5, k: number, t: number): void {
   g.fillStyle = SKY.glass
   g.fill()
   drawPilot(g, k, t)
-  g.fillStyle = vgrad(g, k, b.top, -0.42, [
-    [0, rgba(SKY.glassHi, 0.45)],
-    [0.35, rgba(SKY.glassHi, 0.12)],
-    [1, rgba(SKY.glassHi, 0)],
-  ])
+  // The overcast in the glass: one paler band along its top.
+  g.fillStyle = rgba(SKY.glassHi, 0.22)
   g.beginPath()
   g.moveTo(1.05 * k, (b.top + 0.04) * k)
   g.bezierCurveTo(1.6 * k, (b.top + 0.05) * k, 2.05 * k, -0.95 * k, 2.15 * k, -0.6 * k)
@@ -559,11 +554,9 @@ export function drawHeli(p: p5, k: number, t: number): void {
   if (t < STEP - 0.34) drawParcel(g, k, PARCEL_SEAT[0], PARCEL_SEAT[1], 0)
   // The near half of the rotor, over the mast.
   drawRotor(g, k, t, 1)
-  // The strobe on the fin's top, on every downbeat.
+  // The strobe on the fin's top: a plain lamp, lit for a moment on every downbeat.
   const s = lastOf(STROBES, t)
-  const flash = knock(s.ago, 0.07)
-  oval(g, k, H.boom.x1 - 0.2, -1.78, 0.05, 0.05, flash > 0.1 ? '#FFFFFF' : '#C9CFD0')
-  glow(g, k, H.boom.x1 - 0.2, -1.78, 0.9, '#FFFFFF', 0.85 * flash)
+  oval(g, k, H.boom.x1 - 0.2, -1.78, 0.055, 0.055, s.ago < 0.16 ? '#FFFFFF' : '#9EA7AA')
   g.restore()
 }
 
