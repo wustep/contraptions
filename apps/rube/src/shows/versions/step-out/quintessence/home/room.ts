@@ -204,10 +204,7 @@ const RUG_PATHS = cache(() => {
   return { field, border, diamonds, fringe, outline: (() => { const p = new Path2D(); RUG.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y))); p.closePath(); return p })() }
 })
 
-/**
- * The wall, with the lamp's light on it at its usual strength, the paper and the picture rail, painted once into a
- * picture and laid on scaled (the lamp's flicker is laid over the whole room by the front).
- */
+/** The wall, with the lamp's light on it, the paper and the picture rail, painted once into a picture and laid on scaled. */
 const WALL = { x0: -6, x1: 10, y0: -4.7, y1: WALL_FOOT, ppc: 220 }
 let wallCanvas: HTMLCanvasElement | null | undefined
 function wallPicture(lamp: Pt): HTMLCanvasElement | null {
@@ -222,15 +219,19 @@ function wallPicture(lamp: Pt): HTMLCanvasElement | null {
   const pen: Pen = { c, k: WALL.ppc }
   fillPoly(pen, [[WALL.x0, WALL.y0], [WALL.x1, WALL.y0], [WALL.x1, WALL.y1], [WALL.x0, WALL.y1]], R.wall)
   // The lamp's light on the wall, shaped by its shade: a fan going up from the shade's open top and a wider one
-  // going down from its foot, each fading as it goes and soft at its edges; beside the shade the wall stays dark.
+  // going down from its foot, each fading as it goes. Each is ten thin layers, a little narrower each, so its edge is
+  // a slow fall into the dark and never a line across the paper; beside the shade the wall stays dark.
   const [lx, ly] = lamp
   const fan = (y0: number, y1: number, w0: number, spread: number, a0: number, a1: number) => {
-    const g = vgrad(pen, y0, y1, [[0, rgba(R.wallLit, a0)], [1, rgba(R.wallLit, a1)]])
+    const g = vgrad(pen, y0, y1, [[0, rgba(R.wallLit, a0 / 10)], [1, rgba(R.wallLit, a1 / 10)]])
     const h = Math.abs(y1 - y0)
-    for (const f of [1.12, 1, 0.86]) fillPoly(pen, [[lx - w0 * f, y0], [lx + w0 * f, y0], [lx + (w0 + spread * h) * f, y1], [lx - (w0 + spread * h) * f, y1]], g)
+    for (let i = 0; i < 10; i++) {
+      const f = 1.3 - 0.07 * i
+      fillPoly(pen, [[lx - w0 * f, y0], [lx + w0 * f, y0], [lx + (w0 + spread * h) * f, y1], [lx - (w0 + spread * h) * f, y1]], g)
+    }
   }
-  fan(ly - 0.18, WALL.y0, 0.24, 1.15, 0.42, 0.1)
-  fan(ly + 0.18, WALL.y1, 0.38, 1.9, 0.45, 0.2)
+  fan(ly - 0.18, WALL.y0, 0.24, 1.0, 0.9, 0.15)
+  fan(ly + 0.18, WALL.y1, 0.36, 1.6, 0.9, 0.3)
   const pattern = paper(c)
   if (pattern) {
     c.save()
@@ -292,7 +293,7 @@ function floorPicture(lamp: Pt): HTMLCanvasElement | null {
   c.fill(rug.border)
   c.fillStyle = R.rugBlue
   c.fill(rug.field)
-  c.fillStyle = rgba(R.rugCream, 0.28)
+  c.fillStyle = rgba(R.rugCream, 0.13)
   c.fill(rug.diamonds)
   c.strokeStyle = rgba(R.rugCream, 0.5)
   c.lineWidth = 0.008
@@ -464,10 +465,9 @@ function city(ctx: CanvasRenderingContext2D, v: View, t: number, g: Glass): void
 
 /* ------------------------------------------------------------------ the shadows the lamp throws */
 
-/** The lamp's light, as it falls on the wall: where it comes from, how bright it is now. */
+/** The lamp's light, as it falls on the wall: where it comes from. */
 export interface Light {
   at: Pt
-  power: number
 }
 /**
  * A shadow on the wall: `pts` pushed away from the lamp and up the wall, larger the farther from it. What stands in the
@@ -496,9 +496,9 @@ export function drawRoom(pen: Pen, f: { x0: number; y0: number; x1: number; y1: 
   else fillPoly(pen, [[x0, wallTop], [x1, wallTop], [x1, WALL_FOOT], [x0, WALL_FOOT]], R.wall)
 
   // The shadows the lamp throws on the wall: hers, playing; the piano's; the boxes'.
-  const shade = rgba(R.shadow, 0.3 * light.power)
+  const shade = rgba(R.shadow, 0.3)
   for (const part of her) fillPoly(pen, cast(part, light, 0.55), shade)
-  fillPoly(pen, cast([[1.6, -1.2], [2.04, -2.08], [5.5, -2.08], [5.8, -1.86], [5.4, -1.2]], light, 0.35), rgba(R.shadow, 0.22 * light.power))
+  fillPoly(pen, cast([[1.6, -1.2], [2.04, -2.08], [5.5, -2.08], [5.8, -1.86], [5.4, -1.2]], light, 0.35), rgba(R.shadow, 0.22))
   for (const b of BOXES) fillPoly(pen, cast([[b.x, b.y + b.h], [b.x, b.y - b.dp], [b.x + b.w + b.dp * 0.5, b.y - b.dp], [b.x + b.w + b.dp * 0.5, b.y + b.h]], light, 0.3), shade)
 
   // The windows: the city at dusk behind the glass, the sills and the bars, the curtains moving in the draught.
