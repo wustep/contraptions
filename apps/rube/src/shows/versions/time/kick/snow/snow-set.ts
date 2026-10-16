@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { bloom, pool, rgba } from '../cast'
+import { pool, rgba } from '../cast'
 import { box, frame, hash, scenery, type Ctx } from '../kit'
 import { level } from '../music'
 import { BAND, clock } from '../stack'
@@ -1282,7 +1282,10 @@ function drawGroundFloor(p: p5, ctx: C2D, c: Ctx, t: number, st: number): void {
       ctx.fill()
       inked(ctx, c, 0.5)
       const on = t > T.paddles ? 0.6 + 0.4 * Math.sin((t - T.paddles) * TAU * 1.05) : 0.35
-      bloom(p, k, [px + 0.18, fl + 0.85], 0.12, SNOW.flash, 0.5 * on)
+      ctx.beginPath()
+      ctx.arc((px + 0.18) * k, (fl + 0.85) * k, Math.max(0.8, 0.035 * k), 0, TAU)
+      ctx.fillStyle = mixHex(SNOW.vault, SNOW.flash, on)
+      ctx.fill()
     }
   }
   rect(ctx, k, x0 - 0.2, FORT.foot - 0.35, x1 + 0.2, FORT.foot)
@@ -1306,7 +1309,6 @@ function drawGroundFloor(p: p5, ctx: C2D, c: Ctx, t: number, st: number): void {
     ctx.fillStyle = mixHex(SNOW.concreteDark, mixHex(SNOW.snow, SNOW.flash, 0.3), lamp)
     ctx.fill()
     pool(p, k, [lx, fl], 1.3, 0.22, SNOW.snow, 0.28 * lamp + 0.15 * Math.max(0, surge))
-    bloom(p, k, [lx, FORT.ceil + 0.15], 0.9, SNOW.snow, 0.12 * lamp)
   }
   // As the charges go, dust sifts down out of the ceiling's cracks.
   const sagging = clamp01((t - T.charges) / 0.3)
@@ -1412,7 +1414,6 @@ function drawVaultFace(p: p5, ctx: C2D, c: Ctx, t: number): void {
   if (warm > 0.003) {
     pool(p, k, [dx - 0.25, fl - 0.04], 2.1, 0.32, SNOW.pinwheel, 0.34 * warm)
     pool(p, k, [dx - 0.1, fl - 0.04], 1.0, 0.18, mixHex(SNOW.pinwheel, SNOW.flash, 0.4), 0.3 * warm)
-    bloom(p, k, [dx, dy + 0.35 * r], 1.6 * r, SNOW.pinwheel, 0.12 * warm)
   }
 }
 
@@ -1486,7 +1487,19 @@ function drawVaultInside(p: p5, ctx: C2D, c: Ctx, t: number): void {
   ctx.fillRect((dx - r) * k, (dy - r) * k, 2 * r * k, 2 * r * k)
   // The lamp's light down on the bed: the one warm light in the fortress.
   pool(p, k, [dx + 0.2, fl - 0.55], 1.1, 0.45, SNOW.pinwheel, 0.42)
-  bloom(p, k, [dx + 0.1, dy - r + 0.1], 0.9, SNOW.flash, 0.3)
+  // The lamp itself, on a short drop from the vault's crown: a dark shade, lit under its rim.
+  {
+    const lx = dx + 0.1
+    const ly = dy - r + 0.12
+    ctx.strokeStyle = SNOW.vault
+    ctx.lineWidth = Math.max(1, 0.025 * k)
+    ctx.beginPath()
+    ctx.moveTo(lx * k, (dy - r) * k)
+    ctx.lineTo(lx * k, ly * k)
+    ctx.stroke()
+    fill(ctx, [[lx - 0.07, ly], [lx + 0.07, ly], [lx + 0.14, ly + 0.11], [lx - 0.14, ly + 0.11]], k, SNOW.vault)
+    fill(ctx, [[lx - 0.13, ly + 0.1], [lx + 0.13, ly + 0.1], [lx + 0.14, ly + 0.125], [lx - 0.14, ly + 0.125]], k, mixHex(SNOW.pinwheel, SNOW.flash, 0.5))
+  }
   // The bed: legs, the mattress, the sheet over him, the pillow at the right, by the bedside and its pinwheel.
   const bx0 = dx - 0.75
   const bx1 = dx + 0.55
@@ -1680,8 +1693,8 @@ function drawCollapseDust(ctx: C2D, c: Ctx, t: number): void {
 }
 
 /**
- * The snow falling, on the snow's own clock (while he is in limbo it hangs in the air): flakes of many sizes, soft,
- * sparse, drifting; in `near` a few bigger ones out of focus, in front of everything. While the fortress stands
+ * The snow falling, on the snow's own clock (while he is in limbo it hangs in the air): flakes of many sizes, sparse,
+ * drifting; in `near` a few bigger ones close to us and falling faster, in front of everything. While the fortress stands
  * (`indoors`), none falls in its ground floor: the antechamber, the vault and the footing under them are inside.
  */
 function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: number, near: boolean, indoors: boolean): void {
@@ -1705,18 +1718,8 @@ function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: numb
         const y = j * S + ((h2 * S + st * speed) % S)
         if (indoors && x > FORT.x0 && x < FORT.x1 && y > FORT.ceil && y < FORT.foot + 1.5) continue
         const r = near ? 0.035 + 0.03 * h1 : 0.018 + 0.04 * h3 * h3
-        const a = near ? 0.5 : 0.35 + 0.45 * h1
+        const a = near ? 0.8 : 0.35 + 0.45 * h1
         if (r * k < 0.5 && !near) continue
-        if (near) {
-          // Out of focus, close to the lens: a soft spot, never a disc.
-          const R = r * 2.2 * k
-          const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, R)
-          g.addColorStop(0, rgba(SNOW.snow, a))
-          g.addColorStop(1, rgba(SNOW.snow, 0))
-          ctx.fillStyle = g
-          ctx.fillRect(x * k - R, y * k - R, 2 * R, 2 * R)
-          continue
-        }
         ctx.fillStyle = rgba(SNOW.snow, a)
         ctx.beginPath()
         ctx.arc(x * k, y * k, Math.max(0.6, r * k), 0, TAU)
