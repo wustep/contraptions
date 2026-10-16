@@ -32,7 +32,7 @@ interface Shape {
   region?(u: number, W: number, H: number, him: Pt, s: number): Path2D
   /** The region is a ring (the frame less a hole), filled even-odd. */
   evenodd?: boolean
-  /** What is drawn on the seam: a glow on the edge, the blades, the foam. Over everything, under Walter. */
+  /** What is drawn on the seam: the opening's edge, the blades, the foam. Over everything, under Walter. */
   deco?(ctx: C2, u: number, W: number, H: number, him: Pt, s: number, t: number): void
 }
 
@@ -64,24 +64,24 @@ function rounded(cx: number, cy: number, hw: number, hh: number, r: number): Pat
 /** The distance from `him` to the frame's farthest corner: how big a shape round him has to grow to fill it. */
 const reach = (W: number, H: number, him: Pt) => Math.max(Math.hypot(him[0], him[1]), Math.hypot(W - him[0], him[1]), Math.hypot(him[0], H - him[1]), Math.hypot(W - him[0], H - him[1]))
 
-/** A soft bloom along a path's edge: the light the opening lets through. */
-function edgeGlow(ctx: C2, path: Path2D, color: string, width: number, a: number): void {
+/** An opening's edge: a band of `color` `width` wide along the path, with a hairline of `line` down its middle. */
+function edge(ctx: C2, path: Path2D, color: string, width: number, line: string, a: number): void {
   if (a <= 0.01) return
   ctx.save()
   ctx.globalAlpha = a
-  ctx.strokeStyle = color
   ctx.lineJoin = 'round'
-  for (const [w, al] of [[width * 3.2, 0.18], [width * 1.6, 0.35], [width * 0.5, 0.9]] as const) {
-    ctx.globalAlpha = a * al
-    ctx.lineWidth = w
-    ctx.stroke(path)
-  }
+  ctx.strokeStyle = color
+  ctx.lineWidth = width
+  ctx.stroke(path)
+  ctx.strokeStyle = line
+  ctx.lineWidth = Math.max(1, width * 0.22)
+  ctx.stroke(path)
   ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the shapes */
 
-/** The blank frame he stares into opens, and the daydream pours out of it. */
+/** The blank frame he stares into opens, and the daydream pours out of it, the film's dark edge going with it. */
 const frameOut: Shape = {
   region(u, W, H, him, s) {
     const r = reach(W, H, him)
@@ -90,20 +90,7 @@ const frameOut: Shape = {
     return rounded(him[0], him[1] - 0.12 * s * (1 - u), hw, hh, 0.05 * s)
   },
   deco(ctx, u, W, H, him, s) {
-    const path = this.region!(u, W, H, him, s)
-    edgeGlow(ctx, path, '#FFF6E8', 0.09 * s, Math.sin(Math.PI * clamp(u * 1.15)) * 0.95)
-    // The light table's white, flaring as the frame opens.
-    const flare = Math.max(0, 1 - Math.abs(u - 0.3) / 0.3)
-    if (flare > 0) {
-      ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
-      const g = ctx.createRadialGradient(him[0], him[1], 0, him[0], him[1], 2.4 * s)
-      g.addColorStop(0, `rgba(255, 246, 228, ${0.55 * flare})`)
-      g.addColorStop(1, 'rgba(255, 246, 228, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(0, 0, W, H)
-      ctx.restore()
-    }
+    edge(ctx, this.region!(u, W, H, him, s), '#20262B', 0.07 * s, '#C9CFCC', Math.sin(Math.PI * clamp(u * 1.15)))
   },
 }
 
@@ -127,22 +114,29 @@ const frameIn: Shape = {
     const hw = Math.max(0, 0.5 * s * smooth(v * 3) + (r * 1.2 - 0.5 * s) * easeIn(v))
     const hh = Math.max(0, 0.38 * s * smooth(v * 3) + (r * 1.2 - 0.38 * s) * easeIn(v))
     if (hw < 1) return
-    edgeGlow(ctx, rounded(him[0], him[1] - 0.12 * s * u, hw, hh, 0.05 * s), '#E8ECEC', 0.07 * s, Math.sin(Math.PI * clamp(u)) * 0.85)
+    edge(ctx, rounded(him[0], him[1] - 0.12 * s * u, hw, hh, 0.05 * s), '#20262B', 0.07 * s, '#B8BEBC', Math.sin(Math.PI * clamp(u)))
   },
 }
 
-/** The projector's light: an iris out of the ship's picture, its rim burning amber like film in the gate. */
+/**
+ * The projector's light: film burning in the gate. The hole starts in the ship's picture just up and ahead of him, its
+ * rim charred, and spreads till it takes him and then the frame.
+ */
+const burnAt = (u: number, W: number, H: number, him: Pt, s: number) => {
+  const e = smooth(u * 4)
+  return { cx: him[0] + 1.2 * s * (1 - e), cy: him[1] - 0.6 * s * (1 - e), r: reach(W, H, him) * 1.08 * u }
+}
 const projector: Shape = {
-  region(u, W, H, him) {
-    const r = reach(W, H, him) * 1.08 * u
+  region(u, W, H, him, s) {
+    const { cx, cy, r } = burnAt(u, W, H, him, s)
     const path = new Path2D()
     // A circle that wavers a little, as a burn does.
     const n = 48
     for (let i = 0; i <= n; i++) {
       const a = (i / n) * Math.PI * 2
       const w = 1 + 0.06 * Math.sin(a * 5 + u * 9) + 0.04 * Math.sin(a * 9 - u * 13)
-      const x = him[0] + Math.cos(a) * r * w
-      const y = him[1] + Math.sin(a) * r * w
+      const x = cx + Math.cos(a) * r * w
+      const y = cy + Math.sin(a) * r * w
       if (i === 0) path.moveTo(x, y)
       else path.lineTo(x, y)
     }
@@ -151,14 +145,12 @@ const projector: Shape = {
   },
   deco(ctx, u, W, H, him, s) {
     if (u <= 0 || u >= 1) return
-    const path = this.region!(u, W, H, him, s)
-    const a = Math.sin(Math.PI * u)
-    edgeGlow(ctx, path, '#F2B35A', 0.16 * s, a)
-    edgeGlow(ctx, path, '#FFF1D2', 0.05 * s, a)
+    const { r } = burnAt(u, W, H, him, s)
+    edge(ctx, this.region!(u, W, H, him, s), '#3B2617', Math.min(0.14 * s, 0.4 * r), '#D9914A', Math.sin(Math.PI * u))
   },
 }
 
-/** The bar's door thrown open on the daylight: the light comes in as a slab from him, blinding, and opens to both sides. */
+/** The bar's doors thrown open on the daylight: the day comes in as a slab from him, too bright at first, and opens to both sides. */
 const doorAt = (u: number, W: number, him: Pt) => ({
   left: him[0] - (him[0] + 40) * easeIn(u * 1.05) - 4,
   right: him[0] + (W - him[0] + 40) * easeOut(u) + 4,
@@ -175,26 +167,18 @@ const door: Shape = {
     const a = Math.sin(Math.PI * clamp(u * 1.1))
     if (a <= 0.01) return
     ctx.save()
-    // The bar goes darker beside the light: the eye stopping down for the day outside.
+    // The bar goes darker beside the doorway: the eye stopping down for the day outside.
     ctx.fillStyle = `rgba(14, 10, 8, ${0.45 * a})`
     ctx.fillRect(-10, -10, Math.max(0, left + 10), H + 20)
     ctx.fillRect(right, -10, W + 10 - right, H + 20)
-    ctx.globalCompositeOperation = 'lighter'
-    // The day, blown out where it first comes in, and settling to the pad as the eye adjusts.
-    const g0 = ctx.createLinearGradient(0, 0, 0, H)
-    g0.addColorStop(0, `rgba(250, 252, 255, ${0.85 * a * (1 - u * 0.8)})`)
-    g0.addColorStop(1, `rgba(250, 252, 255, ${0.55 * a * (1 - u * 0.8)})`)
-    ctx.fillStyle = g0
-    ctx.fillRect(left, 0, right - left, H)
-    // Light spilling round the jambs.
-    for (const x of [left, right]) {
-      const g = ctx.createLinearGradient(x - 1.2 * s, 0, x + 1.2 * s, 0)
-      g.addColorStop(0, 'rgba(255, 250, 236, 0)')
-      g.addColorStop(0.5, `rgba(255, 250, 236, ${0.85 * a})`)
-      g.addColorStop(1, 'rgba(255, 250, 236, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(x - 1.2 * s, 0, 2.4 * s, H)
-    }
+    // The day, pale at first, clearing to the pad as the eye adjusts.
+    ctx.fillStyle = `rgba(240, 243, 245, ${0.4 * a * (1 - smooth(u / 0.65))})`
+    ctx.fillRect(left, -10, right - left, H + 20)
+    // The doors' dark edges, either side of the day.
+    ctx.fillStyle = `rgba(40, 29, 21, ${a})`
+    const jamb = 0.14 * s
+    ctx.fillRect(left - jamb, -10, jamb, H + 20)
+    ctx.fillRect(right, -10, jamb, H + 20)
     ctx.restore()
   },
 }
@@ -354,15 +338,16 @@ const negative: Shape = {
     ctx.fillRect(cx - hw - band, cy - hh - band, band, 2 * (hh + band))
     ctx.fillRect(cx + hw, cy - hh - band, band, 2 * (hh + band))
     ctx.restore()
-    edgeGlow(ctx, rounded(cx, cy, hw, hh, 0.03 * s), '#F4F7FA', 0.06 * s, a * 0.8)
-    // The gust: snow driven across the opening.
+    const opening = rounded(cx, cy, hw, hh, 0.03 * s)
+    // The gust: snow driven across the opening, only where the mountain is.
     ctx.save()
+    ctx.clip(opening)
     ctx.fillStyle = `rgba(250, 252, 255, ${0.85 * a})`
     ctx.beginPath()
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 70; i++) {
       const x = ((hash(i, 1, 77) * W * 1.4 + u * W * 1.6 + t * 0) % (W * 1.4)) - W * 0.2
       const y = hash(i, 2, 77) * H + Math.sin(i + u * 6) * 0.2 * s
-      const r = (0.02 + hash(i, 3, 77) * 0.05) * s
+      const r = (0.015 + hash(i, 3, 77) * 0.035) * s
       ctx.moveTo(x + r, y)
       ctx.arc(x, y, r, 0, Math.PI * 2)
     }
@@ -424,17 +409,6 @@ const shutter: Shape = {
     ctx.beginPath()
     ctx.arc(him[0], him[1], r * 1.02, 0, Math.PI * 2)
     ctx.fill()
-    // The glint on the glass as it closes.
-    const shut = 1 - Math.abs(u - 0.5) * 2
-    if (shut > 0.6) {
-      ctx.globalCompositeOperation = 'lighter'
-      const g = ctx.createRadialGradient(him[0], him[1], r * 0.6, him[0], him[1], r * 1.4)
-      g.addColorStop(0, 'rgba(255, 255, 255, 0)')
-      g.addColorStop(0.5, `rgba(240, 236, 226, ${0.16 * (shut - 0.6) / 0.4})`)
-      g.addColorStop(1, 'rgba(255, 255, 255, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(him[0] - r * 1.5, him[1] - r * 1.5, r * 3, r * 3)
-    }
     ctx.restore()
   },
 }
@@ -458,15 +432,6 @@ const strips: Shape = {
     const x = curtainX(u, W, him)
     const fade = 1 - smooth((u - 0.75) / 0.25)
     ctx.save()
-    // The morning pouring in at the curtain's edge.
-    ctx.globalCompositeOperation = 'lighter'
-    const g = ctx.createLinearGradient(x - 0.4 * s, 0, x + 2.2 * s, 0)
-    g.addColorStop(0, 'rgba(255, 238, 205, 0)')
-    g.addColorStop(0.2, `rgba(255, 238, 205, ${0.7 * fade})`)
-    g.addColorStop(1, 'rgba(255, 238, 205, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect(x - 0.4 * s, 0, 2.6 * s, H)
-    ctx.globalCompositeOperation = 'source-over'
     // The strips: a curtain a cell and a half deep about the plane, each swinging, parted round him.
     const w = 0.42 * s
     for (let i = -5; i <= 5; i++) {
@@ -475,7 +440,7 @@ const strips: Shape = {
       const push = (cx < him[0] ? -1 : 1) * near * 0.5 * s * Math.sin(Math.PI * clamp((u - CUT_U + 0.2) / 0.5))
       const swing = 0.08 * s * Math.sin(t * 5 + i * 1.7)
       const foot = cx + push + swing
-      const a = 0.32 * fade * (1 - Math.abs(i) / 6)
+      const a = 0.22 * fade * (1 - Math.abs(i) / 6)
       if (a <= 0.01) continue
       ctx.fillStyle = `rgba(214, 226, 230, ${a})`
       ctx.beginPath()
@@ -485,7 +450,7 @@ const strips: Shape = {
       ctx.lineTo(foot - w / 2, H + 10)
       ctx.quadraticCurveTo(cx - w / 2 + push * 0.3, H * 0.6, cx - w / 2, -10)
       ctx.fill()
-      ctx.strokeStyle = `rgba(255, 255, 255, ${a * 1.6})`
+      ctx.strokeStyle = `rgba(236, 244, 246, ${a * 1.3})`
       ctx.lineWidth = Math.max(1, 0.015 * s)
       ctx.beginPath()
       ctx.moveTo(cx + w / 2, -10)
