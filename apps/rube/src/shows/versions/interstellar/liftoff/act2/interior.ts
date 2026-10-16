@@ -62,7 +62,7 @@ export const interior = scenery<InteriorState>({
 
     // The rest of the station, going away from the camera down its length (`depth.ts`), and its weather.
     const cam: Pt = [f.cx, f.cy]
-    drawCylinder(p, k, s.axis, cam, t, tone, lit, ink)
+    drawCylinder(p, k, s.axis, cam, tone, lit, ink)
     drawClouds(p, k, s.axis, cam, t, tone, lit, ink)
     drawAirship(p, k, s.axis, cam, t, tone, lit, ink)
     drawFliers(p, k, s.axis, t, lit, ink)

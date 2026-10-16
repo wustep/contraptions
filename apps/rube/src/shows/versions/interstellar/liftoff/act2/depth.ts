@@ -9,8 +9,9 @@ import { RIM_R } from './station'
  * Cooper Station is a cylinder, and the show looks down it end-on from its near end. What stood on the near end's ring
  * of land was all there was: past it, pale air. Here the rest of the station goes away from the camera: its inside
  * surface, farmland all the way round, recedes in perspective toward the far end wall, which hangs in the haze round the
- * spindle. Fields in strips and plots, the roads and the channel running the station's length, a ring road, farmsteads,
- * windmills turning, a tram going round. The further off, the more of the air's colour is over it.
+ * spindle: fields in strips and plots, the roads and the channel running the station's length, and a ring road. Nothing
+ * stands on it: at this distance, under this haze, a house or a windmill only read as a speck or a scratch. The further
+ * off, the more of the air's colour is over it.
  *
  * A slice of the station `s` deep (1 at the near ring, smaller further off) is the near ring scaled by `s` about a
  * centre that slides a little toward the camera as it pans, so the far end moves less than the near: the depth is seen
@@ -38,16 +39,10 @@ export function sliceCentre(axis: Pt, cam: Pt, s: number): Pt {
   return [axis[0] + (cam[0] - axis[0]) * w, axis[1] + (cam[1] - axis[1]) * w]
 }
 
-/** A point on the land at angle `a`, `s` deep, `h` cells in from the ground. */
-const onLand = (axis: Pt, cam: Pt, s: number, a: number, h = 0): Pt => {
-  const [cx, cy] = sliceCentre(axis, cam, s)
-  return [cx + (RIM_R - h) * s * Math.cos(a), cy + (RIM_R - h) * s * Math.sin(a)]
-}
-
 /**
  * The land going away, under its haze, and the far end wall. Drawn behind everything in the station but the air.
  */
-export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, t: number, air: Air, lit: number, ink: string): void {
+export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, air: Air, lit: number, ink: string): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const X = (v: number) => v * k
   const TAU = Math.PI * 2
@@ -112,33 +107,6 @@ export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, t: number, air
     ctx.stroke()
   }
 
-  // What stands on the land: farmsteads, rows of trees by the roads, windmills turning. Small and plain; the haze over
-  // them takes them back. Each stands up toward the axis.
-  drawHoldings(p, k, axis, cam, t, ink)
-
-  // The tram: round on the ring road, a lap a minute.
-  {
-    const s = sAt(RING_ROAD)
-    const a = 1.1 - (t / 60) * TAU
-    const [x, y] = onLand(axis, cam, s, a, 0.02)
-    ctx.save()
-    ctx.translate(X(x), X(y))
-    ctx.rotate(a + Math.PI / 2)
-    ctx.scale(s, s)
-    ctx.fillStyle = DUST.corn
-    ctx.strokeStyle = ink
-    ctx.lineWidth = Math.max(0.6, k * 0.012)
-    for (const dx of [-0.62, 0.02]) {
-      ctx.beginPath()
-      ctx.rect(X(dx), X(-0.32), X(0.58), X(0.3))
-      ctx.fill()
-      ctx.stroke()
-    }
-    ctx.fillStyle = DUST.denim
-    for (const dx of [-0.54, -0.36, -0.18, 0.1, 0.28, 0.46]) ctx.fillRect(X(dx), X(-0.27), X(0.12), X(0.1))
-    ctx.restore()
-  }
-
   // The haze: the air between the camera and the land, more of it the further off. One fill, from the far end wall's
   // circle out to the near ring's, so it follows the slices as the far end slides.
   const g = ctx.createRadialGradient(X(far[0]), X(far[1]), X(RIM_R * S_FAR), X(axis[0]), X(axis[1]), X(RIM_R))
@@ -155,7 +123,7 @@ export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, t: number, air
   ctx.arc(X(axis[0]), X(axis[1]), X(RIM_R), 0, TAU)
   ctx.fill()
 
-  // The far end wall in its haze: a rim where the land meets it, and a ring of windows round its middle.
+  // The far end wall in its haze: a rim where the land meets it, and its hub.
   ctx.strokeStyle = tint(mixHex(air.rim, ink, 0.3), 0.45)
   ctx.lineWidth = Math.max(0.8, k * 0.012)
   ctx.beginPath()
@@ -164,12 +132,6 @@ export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, t: number, air
   ctx.beginPath()
   ctx.arc(X(far[0]), X(far[1]), X(RIM_R * S_FAR * 0.42), 0, TAU)
   ctx.stroke()
-  ctx.fillStyle = tint(mixHex(air.mid, ink, 0.25), 0.4 * lit)
-  for (let i = 0; i < 16; i++) {
-    const a = (i / 16) * TAU
-    const r = RIM_R * S_FAR * 0.6
-    ctx.fillRect(X(far[0] + r * Math.cos(a)) - X(0.08), X(far[1] + r * Math.sin(a)) - X(0.05), X(0.16), X(0.1))
-  }
   // The spindle, the station's light, from the near hub to the far wall.
   ctx.strokeStyle = tint(DUST.light, 0.55 + 0.4 * lit)
   ctx.lineWidth = X(0.42)
@@ -181,84 +143,10 @@ export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, t: number, air
   ctx.lineCap = 'butt'
 }
 
-/** The farmsteads, tree rows and windmills on the land, at fixed places. */
-const HOLDINGS = (() => {
-  const out: { a: number; i: number; kind: number }[] = []
-  for (let n = 0; n < 70; n++) {
-    const i = 1 + Math.floor(hash(n, 1, 91) * 9)
-    out.push({ a: hash(n, 2, 91) * Math.PI * 2, i, kind: hash(n, 3, 91) })
-  }
-  // Nearest first is drawn last: far things go behind.
-  return out.sort((a, b) => b.i - a.i)
-})()
-
-function drawHoldings(p: p5, k: number, axis: Pt, cam: Pt, t: number, ink: string): void {
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const X = (v: number) => v * k
-  for (const h of HOLDINGS) {
-    const s = (sAt(h.i) + sAt(h.i + 1)) / 2
-    const [x, y] = onLand(axis, cam, s, h.a)
-    ctx.save()
-    ctx.translate(X(x), X(y))
-    ctx.rotate(h.a + Math.PI / 2)
-    ctx.scale(s, s)
-    ctx.strokeStyle = ink
-    ctx.lineWidth = Math.max(0.5, k * 0.012)
-    if (h.kind < 0.42) {
-      // A farmstead: a house, gable in to the axis, and a barn.
-      ctx.fillStyle = DUST.bone
-      ctx.fillRect(X(-0.25), X(-0.4), X(0.5), X(0.4))
-      ctx.strokeRect(X(-0.25), X(-0.4), X(0.5), X(0.4))
-      ctx.fillStyle = DUST.rust
-      ctx.beginPath()
-      ctx.moveTo(X(-0.32), X(-0.4))
-      ctx.lineTo(X(0), X(-0.66))
-      ctx.lineTo(X(0.32), X(-0.4))
-      ctx.closePath()
-      ctx.fill()
-      ctx.stroke()
-      ctx.fillStyle = mixHex(DUST.rust, DUST.wood, 0.5)
-      ctx.fillRect(X(0.42), X(-0.5), X(0.5), X(0.5))
-      ctx.strokeRect(X(0.42), X(-0.5), X(0.5), X(0.5))
-    } else if (h.kind < 0.8) {
-      // A row of trees along a field's edge, each swaying a little.
-      ctx.fillStyle = DUST.leaf
-      for (let m = 0; m < 4; m++) {
-        const sway = 0.03 * Math.sin(t * 0.9 + h.a * 7 + m)
-        const tx = -0.6 + m * 0.4
-        ctx.beginPath()
-        ctx.moveTo(X(tx), 0)
-        ctx.lineTo(X(tx + sway), X(-0.3))
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.ellipse(X(tx + sway * 1.5), X(-0.48), X(0.17), X(0.22), 0, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.stroke()
-      }
-    } else {
-      // A windmill, turning in the station's breeze.
-      ctx.beginPath()
-      ctx.moveTo(X(-0.12), 0)
-      ctx.lineTo(X(0), X(-1.0))
-      ctx.lineTo(X(0.12), 0)
-      ctx.stroke()
-      const spin = t * (1.2 + hash(h.i, h.a * 100, 92)) + h.a * 5
-      ctx.beginPath()
-      for (let b = 0; b < 6; b++) {
-        const ba = spin + (b / 6) * Math.PI * 2
-        ctx.moveTo(X(0), X(-1.0))
-        ctx.lineTo(X(0.34 * Math.cos(ba)), X(-1.0 + 0.34 * Math.sin(ba)))
-      }
-      ctx.stroke()
-    }
-    ctx.restore()
-  }
-}
-
 /* ------------------------------------------------------------------ the weather and what flies in it */
 
 /** Fair-weather clouds at many depths: the nearer, the larger and the quicker they go round with the air. */
-const CLOUDS = Array.from({ length: 11 }, (_, n) => {
+const CLOUDS = Array.from({ length: 6 }, (_, n) => {
   const s = 0.42 + 0.58 * hash(n, 1, 93)
   return { s, a: hash(n, 2, 93) * Math.PI * 2, r: 0.42 + 0.34 * hash(n, 3, 93), size: 1.1 + 1.4 * hash(n, 4, 93), w: 0.006 + 0.012 * s, puffs: 3 + Math.floor(hash(n, 5, 93) * 3) }
 }).sort((a, b) => a.s - b.s)
@@ -282,8 +170,8 @@ export function drawClouds(p: p5, k: number, axis: Pt, cam: Pt, t: number, air: 
     const under = mixHex(body, air.rim, 0.22 + 0.12 * near)
     ctx.save()
     ctx.translate(X(x), X(y))
-    // Flat base to the land below it (outward), tops to the axis.
-    ctx.rotate(a + Math.PI / 2)
+    // Flat base to the land below it (outward), tops to the axis: turned so the drawing's up is in toward the axis.
+    ctx.rotate(a - Math.PI / 2)
     ctx.globalAlpha = lit
     // A long flat base with domes along its top, the biggest a little off the middle: a cumulus, not a cluster.
     const W = size * 1.5
@@ -314,14 +202,12 @@ export function drawClouds(p: p5, k: number, axis: Pt, cam: Pt, t: number, air: 
 }
 
 /**
- * Birds in loose flocks, wheeling over the land near the ring: each a V of two strokes, its wings beating. And a small
+ * Two loose flocks of birds, wheeling over the land near the ring: each a V of two strokes, its wings beating. And a small
  * airship going round the axis, slowly, a lap in a minute and a half.
  */
 const FLOCKS = [
   { a: 0.3, w: -0.05, r: 16.6, n: 5 },
-  { a: 2.4, w: 0.04, r: 15.8, n: 4 },
-  { a: 4.1, w: -0.035, r: 17.2, n: 6 },
-  { a: 5.3, w: 0.045, r: 16.2, n: 4 },
+  { a: 4.1, w: -0.035, r: 17.2, n: 4 },
 ]
 
 export function drawFliers(p: p5, k: number, axis: Pt, t: number, lit: number, ink: string): void {
@@ -380,7 +266,8 @@ export function drawAirship(p: p5, k: number, axis: Pt, cam: Pt, t: number, air:
   ctx.translate(X(x), X(y))
   // Nose along its way (the angle grows, so it goes round with the angle); its gondola hangs outward, to the land.
   ctx.rotate(a + Math.PI / 2)
-  ctx.scale(SHIP_S, SHIP_S)
+  // (Mirrored across its length, so its gondola hangs out toward the land and not up at the axis.)
+  ctx.scale(SHIP_S, -SHIP_S)
   // A slow pitch in the air.
   ctx.rotate(0.04 * Math.sin(t * 0.6))
   ctx.globalAlpha = lit
