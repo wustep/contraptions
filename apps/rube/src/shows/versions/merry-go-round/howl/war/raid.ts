@@ -1874,11 +1874,7 @@ function drawFeathers(p: p5, k: number, W: number, ink: string, t: number): void
 
 function drawTheBomb(p: p5, k: number, W: number, ink: string, t: number): void {
   const bm = theBomb(t)
-  if (bm) {
-    glow(p, k, bm.p[0], bm.p[1], 0.55, TOWN.fire, 0.22)
-    bomb(p, k, W, ink, bm.p[0], bm.p[1], bm.ang, 1.5)
-  }
-  if (t >= TURNED) sparks(p, k, STRUCK[0], STRUCK[1], t - TURNED, 10, 3.5, 99)
+  if (bm) bomb(p, k, W, ink, bm.p[0], bm.p[1], bm.ang, 1.5)
 }
 
 /** The engine's copper: its bands, and the air vessel between the pump barrels. */
@@ -2280,20 +2276,11 @@ export const raid = part<{ begin: number }>(
       const f = frame(p, k)
       drawRim(p, k, W, t)
       drawSweepPool(p, k, t)
-      // The flashes: the whole picture lit for a moment.
       // The fires' light, flickering, stronger as the street burns: up from the street over the ground floors, never
-      // over the sky (a wash over the whole picture made the night beige).
+      // over the sky (a wash over the whole picture made the night beige). No flat flash over the whole picture: a
+      // burst's light falls from where it is (its own glow on the walls, and over the roofs from above, below).
       const flicker = 0.04 + 0.03 * smooth(t, 220, 232) + 0.016 * wobble(t * 6.3, 3)
       skyGlow(p, k, f.x0, f.x1, GROUND + 0.8, 7.5, TOWN.ember, flicker)
-      const a = flashAt(t)
-      if (a > 0.004) {
-        const ctx = p.drawingContext as CanvasRenderingContext2D
-        ctx.save()
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.fillStyle = `rgba(255, 170, 90, ${Math.min(0.4, a).toFixed(4)})`
-        ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
-        ctx.restore()
-      }
       // Smoke drifting down the street toward the shop, low, in front of everything: soft billows lit from under. It
       // thins where she is, so it never veils her.
       const thick = 0.16 + 0.12 * (1 - smooth(t, 207, 210)) + 0.1 * smooth(t, 219, 230)
@@ -2309,7 +2296,7 @@ export const raid = part<{ begin: number }>(
       }
       // A near burst's light comes over the roofs from above.
       const over = flashAt(t)
-      if (over > 0.02) glow(p, k, f.cx + 0.2 * (f.x1 - f.x0), f.y0, (f.y1 - f.y0) * 0.9, TOWN.fire, Math.min(0.5, over * 1.6), 0.7)
+      if (over > 0.02) glow(p, k, f.cx + 0.2 * (f.x1 - f.x0), f.y0, (f.y1 - f.y0) * 0.9, TOWN.fire, Math.min(0.32, over * 1.3), 0.7)
     },
   },
   (slot) => {
