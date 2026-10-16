@@ -61,11 +61,8 @@ export const CURTAIN = b(128, 3)
 export const PAVEMENT = b(130, 1)
 export const SLAPS = [b(129, 2), b(129, 3)]
 
-/** When each unit starts, the folder, the stacker's ram; when the stack is full, and the ram again for the next. */
+/** When each unit starts; the stacker's ram again for the next stack; the press's last beat. */
 export const UNIT_START = [b(114, 2), b(115, 1), b(116, 1)]
-export const CUT_START = b(117, 1)
-export const RAM_START = b(117, 2)
-export const RAM_PAUSE = b(126, 1)
 export const RAM_AGAIN = b(127, 4)
 export const PRESS_END = b(130, 4)
 
@@ -263,11 +260,6 @@ export const DOOR_TOP = 1.55
 export const WALL = { x0: DOOR_X - 0.12, x1: DOOR_X + 0.4 }
 
 /* ------------------------------------------------------------------ the lane */
-
-export interface LanePlan {
-  segs: Seg[]
-  /** Walter, at show time t, in the part's cells (for checking the lane against the drawing). */
-}
 
 /** Walter's path, show time to cells, exactly as the lane has him. */
 export function buildLane(): Seg[] {

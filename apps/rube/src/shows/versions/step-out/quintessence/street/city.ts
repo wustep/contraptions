@@ -47,7 +47,7 @@ export const TRAFFIC: Vehicle[] = [
   { kind: 'car', lane: 'far', at: 240.3, v: 5.6, color: '#CFC8B6' },
   { kind: 'cab', lane: 'near', at: 242.1, v: 6.4 },
   { kind: 'cab', lane: 'far', at: 243.2, v: 6.1 },
-  { kind: 'truck', lane: 'near', at: 245.2, v: 4.6 },
+  { kind: 'truck', lane: 'near', at: 245.2, v: 4.6, color: '#7E8C84' },
   { kind: 'car', lane: 'far', at: 246.0, v: 5.2, color: '#4F5F52' },
   { kind: 'bike', lane: 'far', at: 249.6, v: 2.3 },
   { kind: 'cab', lane: 'near', at: 248.4, v: 6.0 },
@@ -61,7 +61,7 @@ export const TRAFFIC: Vehicle[] = [
   { kind: 'cab', lane: 'far', at: 261.0, v: 6.0 },
   { kind: 'car', lane: 'far', at: 262.6, v: 5.6, color: '#6E7F95' },
   { kind: 'cab', lane: 'near', at: 260.8, v: 6.2 },
-  { kind: 'truck', lane: 'near', at: 263.0, v: 4.8 },
+  { kind: 'truck', lane: 'near', at: 263.0, v: 4.8, color: '#A3927A' },
 ]
 
 const smin = (a: number, b: number, s: number) => -s * Math.log(Math.exp(-a / s) + Math.exp(-b / s))
@@ -196,20 +196,27 @@ function vehicle(ctx: C2, k: number, car: Vehicle, x: number, y: number, dir: nu
     ctx.strokeStyle = line
     ctx.strokeRect(a * k, (y - h) * k, len * k, (h - r * 0.9) * k)
   } else if (car.kind === 'truck') {
+    // A box truck: the box in its panels, its roof rail, rub rail and rear doors' post darker; the cab before it.
     const cabW = 1.25
+    const bw = len - cabW - 0.05
     const cab0 = dir > 0 ? b - cabW : a
     const box0 = dir > 0 ? a : a + cabW + 0.05
+    const top = y - h
     ctx.fillStyle = color
-    ctx.fillRect(box0 * k, (y - h) * k, (len - cabW - 0.05) * k, (h - r * 0.9) * k)
-    ctx.strokeStyle = rgba(INK, 0.3)
-    for (let yy = y - h + 0.2; yy < body0 - 0.1; yy += 0.2) {
-      ctx.beginPath()
-      ctx.moveTo(box0 * k, yy * k)
-      ctx.lineTo((box0 + len - cabW - 0.05) * k, yy * k)
-      ctx.stroke()
+    ctx.fillRect(box0 * k, top * k, bw * k, (body0 - top) * k)
+    ctx.fillStyle = mix(color, INK, 0.4)
+    ctx.fillRect(box0 * k, top * k, bw * k, 0.1 * k)
+    ctx.fillRect(box0 * k, (body0 - 0.18) * k, bw * k, 0.08 * k)
+    ctx.fillRect((dir > 0 ? box0 : box0 + bw - 0.12) * k, (top + 0.1) * k, 0.12 * k, (body0 - top - 0.28) * k)
+    ctx.strokeStyle = rgba(INK, 0.4)
+    ctx.beginPath()
+    for (let sx = box0 + 0.6; sx < box0 + bw - 0.3; sx += 0.6) {
+      ctx.moveTo(sx * k, (top + 0.1) * k)
+      ctx.lineTo(sx * k, (body0 - 0.18) * k)
     }
+    ctx.stroke()
     ctx.strokeStyle = line
-    ctx.strokeRect(box0 * k, (y - h) * k, (len - cabW - 0.05) * k, (h - r * 0.9) * k)
+    ctx.strokeRect(box0 * k, top * k, bw * k, (body0 - top) * k)
     ctx.fillStyle = '#53687A'
     ctx.fillRect(cab0 * k, (y - h * 0.72) * k, cabW * k, (h * 0.72 - r * 0.9) * k)
     ctx.fillStyle = glass
@@ -406,26 +413,40 @@ export function drawPeople(ctx: C2, v: View, t: number): void {
 }
 
 /**
- * On the walk sign, people cross this street at the corner, on the crossing beside the two of them: one coming down
- * off the kerb toward the camera and out of the frame's foot, one coming up out of it to the corner, nearer and so
- * larger as they come down. Seen from the front, a leg lifting at each step.
+ * On the walk sign, people cross this street at the corner, on the crossing beside the two of them: one who has come
+ * down the avenue toward the camera as the light changed and waits at the kerb, then goes down off it and out of the
+ * frame's foot; one coming up out of it to the corner. Seen from the front, a leg lifting at each step, small far up
+ * the avenue and larger the nearer they come. Each way is [time, x, y] stops, walking between them.
  */
-const CROSSERS: { from: Pt; to: Pt; t0: number; t1: number; h: number; coat: string }[] = [
-  { from: [CORNER.kerb + 0.75, PAVE + 0.3], to: [CORNER.kerb + 0.68, 4.2], t0: WALK + 0.3, t1: WALK + 5.0, h: 1.14, coat: '#4B4F44' },
-  { from: [CORNER.kerb + 1.08, 4.2], to: [CORNER.kerb + 1.02, PAVE + 0.34], t0: WALK + 1.0, t1: WALK + 6.2, h: 1.1, coat: '#6E5E4E' },
+const CROSSERS: { way: [number, number, number][]; h: number; coat: string }[] = [
+  { way: [[255.2, CORNER.kerb + 0.95, -0.35], [259.6, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 5.0, CORNER.kerb + 0.68, 4.2]], h: 1.14, coat: '#4B4F44' },
+  { way: [[WALK + 1.0, CORNER.kerb + 1.08, 4.2], [WALK + 6.2, CORNER.kerb + 1.02, PAVE + 0.34]], h: 1.1, coat: '#6E5E4E' },
 ]
 
 export function drawCrossers(ctx: C2, v: View, t: number): void {
   const k = v.k
+  const kerb = PAVE + 0.3
   for (const c of CROSSERS) {
-    if (t < c.t0) continue
-    const u = clamp01((t - c.t0) / (c.t1 - c.t0))
-    const x = c.from[0] + (c.to[0] - c.from[0]) * u
-    const y = c.from[1] + (c.to[1] - c.from[1]) * u
+    const w = c.way
+    if (t < w[0][0]) continue
+    let [, x, y] = w[w.length - 1]
+    let step = 0
+    for (let i = 0; i + 1 < w.length; i++) {
+      const [ta, xa, ya] = w[i]
+      const [tb, xb, yb] = w[i + 1]
+      if (t > tb) continue
+      const u = (t - ta) / (tb - ta)
+      x = xa + (xb - xa) * u
+      y = ya + (yb - ya) * u
+      if (ya !== yb) step = (t - ta) * 1.9
+      break
+    }
+    const s = (c.h / 1.2) * (y < kerb ? (y + 0.7) / (kerb + 0.7) : 1 + (y - kerb) * 0.07)
     if (y - c.h * 1.4 > v.y1) continue
-    const s = (c.h / 1.2) * (1 + (y - PAVE) * 0.07)
-    const step = u < 1 ? (t - c.t0) * 1.9 : 0
     const lift = (side: number) => Math.max(0, Math.sin(step * Math.PI + (side > 0 ? 0 : Math.PI))) * 0.09 * s
+    ctx.save()
+    // Far up the avenue at first, coming out of the haze.
+    ctx.globalAlpha = Math.min(1, t - w[0][0])
     ctx.lineCap = 'round'
     ctx.strokeStyle = '#2C3035'
     ctx.lineWidth = Math.max(1.5, 0.085 * k * s)
@@ -455,7 +476,7 @@ export function drawCrossers(ctx: C2, v: View, t: number): void {
     ctx.beginPath()
     ctx.arc(x * k, (y - 1.09 * s) * k, 0.1 * s * k, 0, Math.PI * 2)
     ctx.fill()
-    ctx.lineCap = 'butt'
+    ctx.restore()
   }
 }
 
@@ -633,7 +654,7 @@ export function drawPigeons(ctx: C2, v: View, t: number): void {
 
 /* ------------------------------------------------------------------ steam */
 
-/** A billow's round lobes, from its middle in its own radii: [across, down, radius]. The upper ones catch the light. */
+/** A puff's round lobes, from its middle in its own radii: [across, down, radius]. The upper ones catch the light. */
 const LOBES: [number, number, number][] = [
   [-0.45, 0.12, 0.72],
   [0.42, 0.16, 0.66],
@@ -642,36 +663,41 @@ const LOBES: [number, number, number][] = [
 ]
 
 /**
- * Steam: billows rising from `x, y` and leaning off on the air from the east, swelling and thinning as they go. Each
- * is a few round lobes in one flat fill, its upper lobes paler where the light is on them.
+ * Steam: a puff at a time rising from `x, y`, each swelling as it climbs, bending off to the west on the air from
+ * the east and thinning away, so the plume reads as puffs going up and not as one column. Each puff is a few round
+ * lobes in one flat fill, cool grey where it is in its own shade, its sunward lobes warm and paler; each takes its
+ * size and its lean from which puff it is, so no two come up alike.
  */
 export function steam(ctx: C2, v: View, t: number, x: number, y: number, height: number, n: number, seed: number, strength = 1): void {
   const k = v.k
-  if (x + 1.5 < v.x0 || x - height * 0.6 - 1.5 > v.x1 || y + 0.5 < v.y0 || y - height - 1.5 > v.y1) return
+  if (x + 1.5 < v.x0 || x - height * 0.8 - 1.5 > v.x1 || y + 0.5 < v.y0 || y - height - 1.5 > v.y1) return
   for (let i = 0; i < n; i++) {
-    const age = (((t * (0.3 + 0.1 * hash(i, 1, seed)) + i / n) % 1) + 1) % 1
-    const a = Math.min(1, age * 6) * (1 - age) * 0.32 * strength
+    const ph = t * 0.3 + i / n
+    const age = ph - Math.floor(ph)
+    const puff = Math.floor(ph) * n + i
+    const a = Math.min(1, age * 5) * (1 - age) ** 1.5 * 0.6 * strength
     if (a < 0.01) continue
-    const px = x - age * height * 0.55 + 0.25 * sway(t + i, 0.3, i + seed) * age
+    const px = x - age * age * height * (0.45 + 0.3 * hash(puff, 1, seed)) + 0.12 * sway(t, 0.3, puff) * age
     const py = y - age * height
-    const r = 0.16 + age * (0.42 + 0.25 * hash(i, 2, seed))
-    const turn = hash(i, 3, seed) * 6.283
+    const r = (0.14 + 0.55 * age) * (0.8 + 0.4 * hash(puff, 2, seed))
+    const c = Math.cos(hash(puff, 3, seed) * 6.283) * 0.25
     const body = new Path2D()
     const lit = new Path2D()
     for (const [dx, dy, s] of LOBES) {
-      const c = Math.cos(turn) * 0.25
       const lx = px + (dx + c * dy) * r
       const ly = py + dy * r
       body.moveTo((lx + s * r) * k, ly * k)
       body.arc(lx * k, ly * k, s * r * k, 0, Math.PI * 2)
       if (dy < 0.2) {
-        lit.moveTo((lx + 0.05 * r + s * r * 0.75) * k, (ly - 0.12 * r) * k)
-        lit.arc((lx + 0.05 * r) * k, (ly - 0.12 * r) * k, s * r * 0.75 * k, 0, Math.PI * 2)
+        const ox = lx + 0.1 * r
+        const oy = ly - 0.14 * r
+        lit.moveTo((ox + s * r * 0.7) * k, oy * k)
+        lit.arc(ox * k, oy * k, s * r * 0.7 * k, 0, Math.PI * 2)
       }
     }
-    ctx.fillStyle = rgba('#DDD8CE', a)
+    ctx.fillStyle = rgba('#C9CDCC', a)
     ctx.fill(body)
-    ctx.fillStyle = rgba('#FBF8F1', a * 0.8)
+    ctx.fillStyle = rgba('#F6F2EA', a * 0.75)
     ctx.fill(lit)
   }
 }

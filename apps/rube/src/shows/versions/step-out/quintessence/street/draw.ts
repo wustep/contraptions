@@ -16,8 +16,8 @@ import { drawAvenue, drawCity, drawSky } from './sky'
  * street with the sun coming through it in bands. Nothing on it is red but the Life box on the one cover.
  *
  * In order, back to front: the sky and the city behind (`sky.ts`, only where the fronts let it be seen), the fronts
- * (`fronts.ts`), the pavement and the road, the furniture and the stand, the people and the pigeons, the traffic
- * (`city.ts`), the shade over all of it (`light.ts`), and the steam rising into the light.
+ * (`fronts.ts`), the pavement and the road, the furniture and the stand, the people and the pigeons, the traffic and
+ * the steam (`city.ts`), and the shade over all of it (`light.ts`).
  */
 
 type C2 = CanvasRenderingContext2D
@@ -433,6 +433,43 @@ function drawLamp(ctx: C2, k: number): void {
   slab(ctx, k, x + 0.46, -4.62, x + 0.8, -4.58, '#E9E3D2')
 }
 
+/** A bicycle locked to the lamp post, its front wheel past it: the wheels, the frame, the saddle and the bars, the chain round the post. */
+function drawBike(ctx: C2, k: number): void {
+  const r = 0.3
+  const y = PAVE - r
+  const back: Pt = [2.35, y]
+  const front: Pt = [3.42, y]
+  const crank: Pt = [2.86, y + 0.03]
+  const seat: Pt = [2.72, y - 0.5]
+  const head: Pt = [3.27, y - 0.48]
+  const neck: Pt = [3.31, y - 0.34]
+  const line = (pts: Pt[], color: string, w: number) => {
+    ctx.strokeStyle = color
+    ctx.lineWidth = Math.max(1, w * k)
+    ctx.beginPath()
+    pts.forEach(([x, py], i) => (i ? ctx.lineTo(x * k, py * k) : ctx.moveTo(x * k, py * k)))
+    ctx.stroke()
+  }
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  for (const [wx, wy] of [back, front]) {
+    ctx.strokeStyle = '#2A2E31'
+    ctx.lineWidth = Math.max(1, 0.045 * k)
+    ctx.beginPath()
+    ctx.arc(wx * k, wy * k, r * k, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  line([back, crank, seat, back], '#4A5E6A', 0.04)
+  line([seat, head, neck, crank], '#4A5E6A', 0.04)
+  line([head, front], '#4A5E6A', 0.035)
+  line([[seat[0] - 0.02, seat[1]], [seat[0] - 0.04, seat[1] - 0.1]], '#4A5E6A', 0.03)
+  line([[seat[0] - 0.14, seat[1] - 0.11], [seat[0] + 0.08, seat[1] - 0.12]], '#2A2E31', 0.05)
+  line([head, [head[0] - 0.04, head[1] - 0.12], [head[0] - 0.16, head[1] - 0.14]], '#2A2E31', 0.035)
+  line([[2.83, y - 0.42], [2.97, y - 0.36], [2.97, y - 0.3], [2.84, y - 0.25]], '#6E7478', 0.02)
+  ctx.lineJoin = 'miter'
+  ctx.lineCap = 'butt'
+}
+
 /** The steam stack the gas company has put over a manhole, orange and white, steam pouring off its top. */
 function drawStack(ctx: C2, v: View): void {
   const x = -1.75
@@ -476,13 +513,12 @@ function blob(path: Path2D, x: number, y: number, rx: number, ry: number, rot: n
 
 /**
  * A tree's shadow from across the street (cells, about its bough): sprigs out from the bough, leaves along each, in
- * three groups that stir apart. `sy` flattens it, for the shadow lying on the paving. Pure geometry, so each is made
- * once and kept; `skip` leaves out what would fall where it must not (the cover), judged where it hangs at rest.
+ * three groups that stir apart. Pure geometry, so each is made once and kept; `skip` leaves out what would fall where
+ * it must not (the cover), judged where it hangs at rest.
  */
-const canopies = new Map<string, Path2D[]>()
-function canopy(seed: number, sy: number, skip: (x: number, y: number) => boolean, at: Pt): Path2D[] {
-  const key = `${seed}:${sy}`
-  const kept = canopies.get(key)
+const canopies = new Map<number, Path2D[]>()
+function canopy(seed: number, skip: (x: number, y: number) => boolean, at: Pt): Path2D[] {
+  const kept = canopies.get(seed)
   if (kept) return kept
   const groups = [new Path2D(), new Path2D(), new Path2D()]
   for (let s = 0; s < 6; s++) {
@@ -493,32 +529,32 @@ function canopy(seed: number, sy: number, skip: (x: number, y: number) => boolea
       const u = i / 7
       const bend = 0.25 * u * u * (hash(s, 3, seed) - 0.5)
       const x = Math.cos(a + bend) * len * u
-      const y = (Math.sin(a + bend) * len * u * 0.7 + 0.25 * u) * sy
+      const y = Math.sin(a + bend) * len * u * 0.7 + 0.25 * u
       if (skip(at[0] + x, at[1] + y)) continue
       for (const side of [-1, 1]) {
         const r = 0.07 + 0.05 * hash(s * 9 + i, side + 5, seed)
         const rot = a + side * 0.9 + 0.5 * (hash(s * 9 + i, side + 7, seed) - 0.5)
         const lx = x + Math.cos(rot) * r
-        const ly = y + Math.sin(rot) * r * sy
+        const ly = y + Math.sin(rot) * r
         const ex = Math.cos(rot) * r
-        const ey = Math.sin(rot) * r * sy
+        const ey = Math.sin(rot) * r
         // Wound the same way as the shade's boxes, so where a leaf falls in the shade the two are one shade.
         path.moveTo(lx - ex, ly - ey)
-        path.quadraticCurveTo(lx + ey * 0.6, ly - ex * 0.6 * sy, lx + ex, ly + ey)
-        path.quadraticCurveTo(lx - ey * 0.6, ly + ex * 0.6 * sy, lx - ex, ly - ey)
+        path.quadraticCurveTo(lx + ey * 0.6, ly - ex * 0.6, lx + ex, ly + ey)
+        path.quadraticCurveTo(lx - ey * 0.6, ly + ex * 0.6, lx - ex, ly - ey)
         path.closePath()
       }
     }
   }
-  canopies.set(key, groups)
+  canopies.set(seed, groups)
   return groups
 }
 
 /** A tree's shadow added into `into` at `at`, its three groups each stirring on its own. */
-function leafShadow(into: Path2D, t: number, at: Pt, seed: number, sy: number, skip: (x: number, y: number) => boolean): void {
-  canopy(seed, sy, skip, at).forEach((g, i) => {
+function leafShadow(into: Path2D, t: number, at: Pt, seed: number, skip: (x: number, y: number) => boolean): void {
+  canopy(seed, skip, at).forEach((g, i) => {
     const dx = 0.05 * sway(t, 0.21 + 0.07 * i, seed + i)
-    const dy = 0.025 * sway(t, 0.33 + 0.05 * i, seed + i + 3) * sy
+    const dy = 0.025 * sway(t, 0.33 + 0.05 * i, seed + i + 3)
     const turn = 0.035 * sway(t, 0.27, seed + i * 5)
     const c = Math.cos(turn)
     const sn = Math.sin(turn)
@@ -529,7 +565,7 @@ function leafShadow(into: Path2D, t: number, at: Pt, seed: number, sy: number, s
 /**
  * The shade over the street (see `light.ts`): the buildings behind the camera, and the shadows cast long to the left
  * by everything standing in the sun: the stand, the lamp post, the signal, the people, the two of them; the trees
- * across the street dappling the lit bands. Laid on in two fills of a cool blue, lighter on the ground; every shape
+ * across the street dappling the lit fronts. Laid on in two fills of a cool blue, lighter on the ground; every shape
  * in them is wound the same way, so where they overlap they are one shade, not two.
  */
 function drawShade(ctx: C2, v: View, t: number): void {
@@ -554,14 +590,12 @@ function drawShade(ctx: C2, v: View, t: number): void {
   // The two of them: their shadows long on the paving.
   if (t >= IN) for (const [x] of [walterAt(t), cherylAt(t)]) blob(ground, x - 0.42, PAVE + 0.05, 0.44, 0.05, 0)
   peopleShadows(ground, t)
-  // Leaves: the trees across the street, their shadows on the lit fronts (never on the cover) and on the paving.
+  // Leaves: the trees across the street, their shadows on the lit fronts (never on the cover).
   const cover = { x0: COVER.x0 - 0.1, x1: COVER.x1 + 0.1, y0: COVER.y0 - 0.15, y1: COVER.y1 + 0.08 }
   const off = (x: number, y: number) => x > cover.x0 && x < cover.x1 && y > cover.y0 && y < cover.y1
   for (const [cx, cy, seed] of [[0.3, -2.1, 1], [5.3, -2.0, 2], [8.0, -2.2, 3], [13.5, -1.8, 4], [19.6, -2.7, 5], [24.4, -2.4, 6]] as [number, number, number][]) {
     if (cx + 3 < v.x0 || cx - 3 > v.x1) continue
-    leafShadow(walls, t, [cx, cy], seed, 1, off)
-    // On the paving only close in: from far off they are too fine to be seen.
-    if (v.h < 6) leafShadow(ground, t, [cx + 0.9, PAVE + 0.18], seed + 10, 0.22, () => false)
+    leafShadow(walls, t, [cx, cy], seed, off)
   }
   ctx.save()
   ctx.scale(k, k)
@@ -596,6 +630,7 @@ export function drawStreet(p: p5, k: number, t: number): void {
     for (let x = a + 0.08; x < b - 0.04; x += 0.12) rule(ctx, k, x, y + 0.03, x + 0.05, y + 0.07, rgba(INK, 0.4), 0.8)
   }
   drawLamp(ctx, k)
+  drawBike(ctx, k)
   drawStand(ctx, k, t)
   drawPapers(ctx, k, t)
   drawSale(ctx, k, t)
@@ -603,14 +638,15 @@ export function drawStreet(p: p5, k: number, t: number): void {
   drawPigeons(ctx, v, t)
   drawStack(ctx, v)
   drawTraffic(ctx, v, t, 'far')
+  // Steam, always: off the stack, and up out of the manholes in the far lane; the near lane goes by in front of it,
+  // and the shade falls across it. Never more than two plumes in the frame.
+  const m = morning(t)
+  steam(ctx, v, t, -1.75, -1.0, 2.4, 5, 1, 1.2)
+  steam(ctx, v, t, 3.75, KERB + 0.4, 2.1, 5, 2, 1.1 + 0.3 * m)
+  steam(ctx, v, t, 11.6, KERB + 0.4, 2.2, 5, 3, 1.0 + 0.3 * m)
   drawTraffic(ctx, v, t, 'near')
   drawCrossers(ctx, v, t)
   drawShade(ctx, v, t)
-  // Steam, always: off the stack, and up out of the manholes, lit by the sun where it rises into it.
-  const m = morning(t)
-  steam(ctx, v, t, -1.75, -1.0, 3.2, 12, 1, 1.5)
-  steam(ctx, v, t, 3.75, KERB + 0.4, 2.6, 9, 2, 1.1 + 0.3 * m)
-  steam(ctx, v, t, 11.6, KERB + 0.4, 2.4, 9, 3, 1.1 + 0.3 * m)
   // The balls' contact on the pavement, soft.
   if (t >= IN) {
     const [wx] = walterAt(t)

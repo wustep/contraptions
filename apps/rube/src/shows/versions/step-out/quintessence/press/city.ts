@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { layer, rgbaOf, type View } from '../depth'
+import { layer, type View } from '../depth'
 import { steam } from './steam'
 
 /**
@@ -254,7 +254,7 @@ export function drawCity(ctx: C2, v: View, t: number): void {
     ctx.fill(birds)
     ctx.restore()
   })
-  // A helicopter crossing the morning above the towers, its white light winking.
+  // A helicopter crossing the morning above the towers.
   layer(ctx, v, 0.11, ANCHOR, REF, (s) => {
     const x = 3.2 - 0.62 * (t - 190.8)
     const y = -1.75 + 0.06 * Math.sin(t * 0.9)
@@ -267,17 +267,9 @@ export function drawCity(ctx: C2, v: View, t: number): void {
     ctx.fill()
     ctx.fillRect(x + 0.05, y - 0.012, 0.15, 0.022)
     ctx.fillRect(x + 0.18, y - 0.04, 0.02, 0.05)
-    // The rotor, a blur that comes and goes.
-    const rr = 0.13 + 0.03 * Math.sin(t * 40)
-    ctx.fillRect(x - rr, y - 0.06, 2 * rr, 0.008)
+    // The rotor, a flat blur.
+    ctx.fillRect(x - 0.14, y - 0.06, 0.28, 0.008)
     ctx.fillRect(x - 0.006, y - 0.06, 0.012, 0.03)
-    const blink = (t * 1.1) % 1 < 0.12
-    if (blink) {
-      ctx.fillStyle = rgbaOf('#FFFFFF', 0.95)
-      ctx.beginPath()
-      ctx.arc(x, y + 0.045, 0.018, 0, Math.PI * 2)
-      ctx.fill()
-    }
     ctx.restore()
   })
 }

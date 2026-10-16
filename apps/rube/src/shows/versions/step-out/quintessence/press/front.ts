@@ -3,8 +3,8 @@ import type { Pt } from '../../../../../parts'
 import { hash, scenery } from '../kit'
 import { layer, motes, rgbaOf, sway, view, type View } from '../depth'
 import { ANCHOR, REF } from './hall'
-import { BAY, bayOn, LAMP_Y, LAMPS } from './press-draw'
-import { CUT_START, CUTS, DOOR_X, FLOOR, LAID, NOSE, T0, TABLE, UP } from './press-plan'
+import { BAY, bayOn, LAMPS } from './press-draw'
+import { DOOR_X, FLOOR, LAID, T0, TABLE, UP } from './press-plan'
 import { lampsOn, thump } from './pulse'
 import { OFFICE } from './office'
 
@@ -15,8 +15,8 @@ import { OFFICE } from './office'
  *
  * Upstairs, a little dust turning under the pendant. In the hall, the sodium lamps' light lying in pools on the floor
  * under them, the bay lamp's by the door once it is on, and the morning laid in across the floor from the loading
- * door; a little paper dust in the air; the chips off the folder's knife. Near the lens an overhead girder with chains
- * and a lamp swinging from it. Then the frame's edges falling away into ink.
+ * door; a little paper dust in the air. Near the lens an overhead girder with chains and a lamp swinging from it.
+ * Then the frame's edges falling away into ink.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -94,47 +94,11 @@ function door(ctx: C2, v: View): void {
   }
 }
 
-/** The air: a little paper dust, slow, lifting on the beats; a few more motes where each lamp lights it. */
+/** The air: a little paper dust, slow, lifting on the beats. */
 function air(ctx: C2, v: View, t: number, xr: number): void {
-  const on = lampsOn(t, 0)
   const lift = 0.04 * thump(t, 0.3)
   const box = { x0: v.x0 - 1, y0: v.y0 - 1, x1: Math.min(v.x1 + 1, xr), y1: FLOOR }
-  motes(ctx, v, t, { n: 12, seed: 41, tile: [4, 3.2], r: [0.008, 0.016], v: [0.05, -0.04 - lift], sway: [0.08, 0.13], color: rgbaOf('#E9D8B8', 0.3 + 0.15 * on), within: box })
-  for (const lx of LAMPS) {
-    if (lx - 2 > v.x1 || lx + 2 < v.x0 || lx > xr + 1) continue
-    const under = { x0: lx - 1.1, y0: LAMP_Y + 0.6, x1: lx + 1.1, y1: FLOOR - 0.1 }
-    motes(ctx, v, t, { n: 6, seed: 51 + lx, tile: [3, 4.2], r: [0.008, 0.018], v: [0.04, -0.06 - lift * 2], sway: [0.06, 0.25], color: rgbaOf('#FFD79A', 0.4 * on), within: under })
-  }
-}
-
-/** Chips off the folder's knife: on every cut a spray of paper flecks out of its mouth, falling and turning to the floor. */
-function chips(ctx: C2, v: View, t: number): void {
-  if (t < CUT_START || NOSE[0] + 3 < v.x0 || NOSE[0] - 3 > v.x1) return
-  const k = v.k
-  const ox = NOSE[0] - 0.585
-  const oy = NOSE[1] + 0.37
-  const path = new Path2D()
-  for (let c = CUTS.length - 1; c >= 0; c--) {
-    const u = t - CUTS[c]
-    if (u < 0) continue
-    if (u > 0.9) break
-    for (let i = 0; i < 9; i++) {
-      const side = hash(c, i, 74) < 0.5 ? -1 : 1
-      const a = -Math.PI * (0.12 + 0.3 * hash(c, i, 71))
-      const sp = 1.0 + 1.4 * hash(c, i, 73)
-      const x = ox + side * Math.cos(a) * sp * u
-      const y = oy + Math.sin(a) * sp * u + 4.5 * u * u
-      if (y > FLOOR) continue
-      const s = 0.018 + 0.016 * hash(c, i, 75)
-      const turn = u * 14 + i
-      path.moveTo((x + Math.cos(turn) * s) * k, (y + Math.sin(turn) * s * 0.4) * k)
-      path.lineTo((x - Math.sin(turn) * s * 0.5) * k, (y + Math.cos(turn) * s) * k)
-      path.lineTo((x - Math.cos(turn) * s) * k, (y - Math.sin(turn) * s * 0.4) * k)
-      path.closePath()
-    }
-  }
-  ctx.fillStyle = rgbaOf('#F6F1E4', 0.9)
-  ctx.fill(path)
+  motes(ctx, v, t, { n: 5, seed: 41, tile: [4, 3.2], r: [0.008, 0.016], v: [0.05, -0.04 - lift], sway: [0.08, 0.13], color: rgbaOf('#E9D8B8', 0.3 + 0.15 * lampsOn(t, 0)), within: box })
 }
 
 /* ------------------------------------------------------------------ near the lens */
@@ -282,7 +246,6 @@ export const pressFront = scenery<null>({
         pools(ctx, v, t, xr)
         door(ctx, v)
         air(ctx, v, t, xr)
-        chips(ctx, v, t)
         near(ctx, v, t, xr)
         ctx.restore()
       }
