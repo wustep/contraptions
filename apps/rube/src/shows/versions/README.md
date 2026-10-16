@@ -58,8 +58,9 @@ A name already shipped stays, even where it misses these (`come-recover/opus55-a
 is Everything's only take, with its code name in the id). Renaming a take moves a public link
 and its card, so the old name goes in `RENAMED_TAKES` (`../registry.ts`): the page opens the old
 address as the take and writes the new one back, and the build writes a page at the old address
-too. Four have moved: `la-la-land/opus55-sebs` → `opus5-5`, `la-la-land/fable51-epilogue` →
-`fable5-1`, `cornfield-chase/opus55-music-sync` → `opus55`, `cornfield-chase/tech-demo` → `grok47`.
+too. Three have moved: `la-la-land/opus55-sebs` → `opus5-5`, `la-la-land/fable51-epilogue` →
+`fable5-1`, `cornfield-chase/opus55-music-sync` → `opus55`. (`cornfield-chase/tech-demo` → `grok47` is
+commented out while that take is hidden.)
 A work has no such map yet, so renaming one waits for it.
 
 ## The file
@@ -165,7 +166,7 @@ resonance plays over the finished machine. A change to any stock piece's
 lane, or a piece in or out of a world, means rearranging it and running
 `generate:clair` again.
 
-`cornfield-chase/grok47` is a private tech demo for Hans Zimmer's Cornfield Chase, not part of the public catalog tour. `npm run generate:cornfield` writes it from stock lanes: Forest for the piano, one portal on the drop, then the Arcade on the chase pulse. The recording is copyrighted. See `apps/rube/src/shows/versions/cornfield-chase/ARRANGEMENT.md`.
+`cornfield-chase/grok47` (hidden for now, Oct 15: its file is `grok47.ts`, not `grok47.show.ts`) is a private tech demo for Hans Zimmer's Cornfield Chase, not part of the public catalog tour. `npm run generate:cornfield` writes it from stock lanes: Forest for the piano, one portal on the drop, then the Arcade on the chase pulse. The recording is copyrighted. See `apps/rube/src/shows/versions/cornfield-chase/ARRANGEMENT.md`.
 
 `metronome/` is not in the picker. It is a worked example of a time map: a
 procedural machine under a steady beat, and a struck bar on every strike,
@@ -205,7 +206,8 @@ map handoffs, motif placement, native colors, cue precision and the whale's
 open water. Generating Take B never writes Take A's plan, score or report.
 
 `cornfield-chase/grok47` (Grok 4.7; its code is `tech-demo.ts`) is the music-sync take
-that stays in the picker, beside the Opus one. `cornfield-chase/multiball`
+that stood in the picker beside the Opus one; it is hidden for now (Oct 15: its file is
+`grok47.ts`, not `grok47.show.ts`), so Cornfield Chase is its Opus take alone. `cornfield-chase/multiball`
 and `cornfield-chase/voices` are not in the picker. All three are one-shot
 tech demos of Hans Zimmer's Cornfield Chase, not finished public Shows. The
 recording is copyrighted; the credit stays in

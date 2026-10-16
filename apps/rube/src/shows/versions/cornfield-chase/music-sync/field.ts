@@ -1,5 +1,5 @@
 import { mixHex } from '../../../../parts'
-import { GATHER, ORGAN, PIANO, type Note } from './music'
+import { GATHER, ORGAN, ORIGIN, PERIOD, PIANO, beatAt, type Note } from './music'
 import { clamp, hash, rgba, smooth, type Screen } from './screen'
 
 /**
@@ -18,6 +18,8 @@ const REF = 8
 const along = (s: Screen, q: number): number => (s.camX * q) / REF
 
 export interface Light {
+  /** The sky over the frame's top, seen when the camera looks up (`lens.ts`). Left out, the frame's top colour. */
+  zenith?: string
   /** The sky at the frame's top, its middle, and at the horizon. */
   top: string
   mid: string
@@ -32,6 +34,8 @@ export interface Light {
   rows: Omit<Rows, 'wind'>
   /** The horizon, as a share of the frame from its top. */
   horizon: number
+  /** The clouds: their heaps, and their flat bases. */
+  cloud: { body: string; base: string }
 }
 
 /** The day's light at show time `t`: an afternoon through the piano, the sun going down as the organ gathers. */
@@ -40,8 +44,10 @@ export function dayAt(t: number): Light {
   const late = smooth(t, 12, ORGAN)
   const tone = (a: string, b: string, c: string) => mixHex(mixHex(a, b, late), c, dusk)
   return {
-    top: tone('#EDEFE4', '#ECE7DA', '#CBBFD0'),
-    mid: tone('#F3F1E4', '#F2EEDD', '#E9C9B6'),
+    // A little blue up high in the early afternoon, so the clouds stand white against it; cream by late afternoon.
+    zenith: tone('#C3D3D8', '#D3D8D2', '#9E97B8'),
+    top: tone('#DCE5E2', '#E6E3D6', '#CBBFD0'),
+    mid: tone('#EEF0E4', '#F1EDDC', '#E9C9B6'),
     low: tone('#F6EBCB', '#F5DFAF', '#F0A06A'),
     ground: tone('#E4E3C2', '#E2DBB4', '#D29D78'),
     band: tone('#D9DDBB', '#D7D3A9', '#B98A78'),
@@ -56,6 +62,8 @@ export function dayAt(t: number): Light {
       gust: 1 + 0.6 * dusk,
     },
     horizon: 0.69,
+    // White clouds on grey-green bases in the afternoon, cream as it goes on; at sunset rose over, apricot under.
+    cloud: { body: tone('#F9FAF3', '#FFF8E9', '#E2B4AE'), base: tone('#DFE3D9', '#E5DCC9', '#F2B07E') },
   }
 }
 
@@ -83,6 +91,38 @@ export function gustAt(t: number, x: number, notes: Note[] = PIANO): number {
 }
 
 /**
+ * How hard the night's wind blows on beat `b` of the chase: a full gust on the drop and on the full organ, a strong one
+ * on each phrase's downbeat (the beats the rides come on), a bar's on each bar's, growing through the chase, and on the
+ * full organ one on each half bar as well. None after beat 184: the air goes still for the photograph.
+ */
+export function nightGust(b: number): number {
+  if (b < 68 || b > 184 || b % 2) return 0
+  if (b === 68 || b === 132) return 1
+  if (b % 16 === 4) return 0.8
+  if (b % 4 === 0) return b < 132 ? 0.3 + (0.25 * (b - 68)) / 64 : 0.62
+  return b > 132 ? 0.36 : 0
+}
+
+/**
+ * The wind in the corn at night, at show time `t`, `x` across the frame (0 to 1): the chase's own pulse (`nightGust`),
+ * each gust a front crossing the field from the left, slower and longer than the piano's. 0 is still air, 1 a full gust.
+ */
+export function nightWind(t: number, x: number): number {
+  const pace = 1.1
+  const tau = 0.22
+  let out = 0
+  const last = Math.floor((t - ORIGIN) / PERIOD)
+  for (let b = last - Math.ceil((1.6 + 1.2 / pace) / PERIOD); b <= last; b++) {
+    const g = nightGust(b)
+    if (g === 0) continue
+    const u = t - beatAt(b) - x / pace
+    if (u <= 0 || u > 1.6) continue
+    out += g * (u / tau) * Math.exp(1 - u / tau)
+  }
+  return Math.min(1, out)
+}
+
+/**
  * The sky, from the top of the canvas to the horizon, and the field under it. Laid in thin level bands, each a shade
  * of the gradient no more than a level from the next: the same picture as a gradient, at the cost of plain fills,
  * which a gradient over the whole canvas is not where the canvas is drawn without a GPU.
@@ -92,8 +132,20 @@ export function sky(s: Screen, l: Light): number {
   const hy = cy + (l.horizon - 0.5) * f
   const top = cy - 0.5 * f
   const at = (u: number) => (u < 0.55 ? mixHex(l.top, l.mid, u / 0.55) : mixHex(l.mid, l.low, (u - 0.55) / 0.45))
-  ctx.fillStyle = l.top
-  if (top > 0) ctx.fillRect(0, 0, w, top + 1)
+  if (top > 0) {
+    // Over the frame's top, when the camera looks up: deeper toward the zenith, over 0.6 of a frame.
+    const z = top - 0.6 * f
+    ctx.fillStyle = l.zenith ?? l.top
+    if (z > 0) ctx.fillRect(0, 0, w, z + 1)
+    const y0 = Math.max(0, z)
+    const m = Math.max(1, Math.min(120, Math.round((top - y0) / 5)))
+    for (let i = 0; i < m; i++) {
+      const a = y0 + ((top - y0) * i) / m
+      const b = y0 + ((top - y0) * (i + 1)) / m
+      ctx.fillStyle = mixHex(l.zenith ?? l.top, l.top, ((a + b) / 2 - z) / (top - z))
+      ctx.fillRect(0, Math.floor(a), w, Math.ceil(b) - Math.floor(a))
+    }
+  }
   const n = Math.max(16, Math.min(400, Math.round((hy - top) / 5)))
   for (let i = 0; i < n; i++) {
     const y0 = top + ((hy - top) * i) / n
@@ -129,19 +181,21 @@ function glowOf(r: number, color: string, inner: number): HTMLCanvasElement {
 }
 
 /**
- * A low sun or the moon: a disc and its glow, at `x` of the frame across and `y` frame heights over the horizon,
- * hidden by the field once it is under it. `crescent` cuts the moon's dark side out of it, so the glow shows through
- * there with a trace of earthshine, as the sky does, rather than a disc of the sky's colour laid over the glow.
+ * A low sun or the moon: a disc, at `x` of the frame across and `y` frame heights over the horizon, hidden by the field
+ * once it is under it. The sun has the haze it shines through round it (`haze`: its colour, strength and reach, frame
+ * heights); the moon has none. `crescent` cuts the moon's dark side out of it, a trace of earthshine left there.
  */
-export function body(s: Screen, hy: number, x: number, y: number, r: number, color: string, glow: string, glowA: number, glowR: number, crescent = false): void {
+export function body(s: Screen, hy: number, x: number, y: number, r: number, color: string, haze?: { color: string; a: number; r: number }, crescent = false): void {
   const { ctx, cx, f } = s
   const bx = cx + (x - 0.5) * f * (16 / 9)
   const by = hy - y * f
-  const sprite = glowOf(glowR * f, glow, (r * 0.5) / glowR)
-  ctx.save()
-  ctx.globalAlpha = clamp(glowA)
-  ctx.drawImage(sprite, bx - sprite.width / 2, by - sprite.height / 2)
-  ctx.restore()
+  if (haze) {
+    const sprite = glowOf(haze.r * f, haze.color, (r * 0.5) / haze.r)
+    ctx.save()
+    ctx.globalAlpha = clamp(haze.a)
+    ctx.drawImage(sprite, bx - sprite.width / 2, by - sprite.height / 2)
+    ctx.restore()
+  }
   ctx.save()
   ctx.beginPath()
   ctx.rect(0, 0, s.w, hy)
@@ -165,10 +219,10 @@ export function body(s: Screen, hy: number, x: number, y: number, r: number, col
 
 /**
  * The farm on the horizon, far off and barely moving: a house with a porch, a barn, two silos, a water tower, a
- * windpump. `windows` lights the house's at night. (No power line: a thin line along the horizon read as one more of
- * the machine's rails.)
+ * windpump whose wheel is turned `turn` radians by the wind. `windows` lights the house's at night. (No power line: a
+ * thin line along the horizon read as one more of the machine's rails.)
  */
-export function farm(s: Screen, hy: number, color: string, windows?: string): void {
+export function farm(s: Screen, hy: number, color: string, windows?: string, turn = 0): void {
   const { ctx, cx, f, w } = s
   const q = 0.06
   const at = along(s, q)
@@ -260,6 +314,12 @@ export function farm(s: Screen, hy: number, color: string, windows?: string): vo
       ctx.lineTo(x + 0.6 * e, hy - 5 * e)
       ctx.moveTo(x + 1.6 * e, hy - 7.4 * e)
       ctx.arc(x, hy - 7.4 * e, 1.6 * e, 0, Math.PI * 2)
+      // Its vanes, turning; a wheel of the far pair a little behind the near's.
+      for (let v = 0; v < 6; v++) {
+        const a = turn * (set.u < 0 ? 0.9 : 1) + (v * Math.PI) / 3
+        ctx.moveTo(x, hy - 7.4 * e)
+        ctx.lineTo(x + Math.cos(a) * 1.6 * e, hy - 7.4 * e + Math.sin(a) * 1.6 * e)
+      }
       ctx.moveTo(x, hy - 7.4 * e)
       ctx.lineTo(x + 3 * e, hy - 7.2 * e)
       ctx.lineTo(x + 3 * e, hy - 8 * e)
@@ -304,7 +364,22 @@ export interface Rows {
   wind?: (x: number) => number
   /** A firework's light on the tassels, strongest under it. */
   flash?: Flash
+  /** Things standing in the field, each drawn after the rows behind it and before the rows in front. */
+  among?: Among[]
+  /** Only the rows that reach into this band of the canvas, device pixels down it: the rest are hidden. */
+  within?: [number, number]
 }
+
+/** A thing in the field at `depth` (1 the 16:9 frame's foot, the horizon at infinity), drawn on the ground at `y`. */
+export interface Among {
+  depth: number
+  draw: (y: number) => void
+}
+
+/** Where the ground at `depth` has got to under the frame's middle, in frame heights: as the rows there move. */
+export const groundAlong = (s: Screen, depth: number): number => (s.camX * 0.62) / depth / REF
+/** The ground at `depth`, device pixels down the canvas, under a horizon at `hy`. */
+export const groundY = (s: Screen, hy: number, depth: number): number => hy + (s.cy + 0.56 * s.f - hy) / depth
 
 /** A firework's light: its colour, where it is across the frame (0 to 1), and how strong (0 to 1). */
 export interface Flash {
@@ -332,11 +407,19 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
   const depths: number[] = []
   for (let d = nearest; d < 13; d *= 1.3) depths.push(d)
   const ys = depths.map((d) => hy + (foot - hy) / d)
+  const among = [...(r.among ?? [])].sort((a, b) => b.depth - a.depth)
+  let next = 0
   for (let n = depths.length - 1; n >= 0; n--) {
     const d = depths[n]
     const y = ys[n]
+    while (next < among.length && among[next].depth > d) {
+      among[next].draw(hy + (foot - hy) / among[next].depth)
+      next++
+    }
     const sc = 1 / d
     const below = n > 0 ? ys[n - 1] + 0.02 * f / depths[n - 1] : h + 2
+    // A row wholly outside the band asked for, its tassels and all, is covered by something else.
+    if (r.within && (below < r.within[0] || y - 0.13 * f * sc > r.within[1])) continue
     // Far rows have fewer, wider mounds than true perspective would give them: at that size it is the same picture.
     const gap = 0.085 * sc ** 0.75
     const at = (s.camX * (0.62 * sc)) / REF + n * 0.37
@@ -447,6 +530,7 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
     }
     ctx.stroke()
   }
+  for (; next < among.length; next++) among[next].draw(hy + (foot - hy) / among[next].depth)
 }
 
 /** A haze off the field as the organ gathers, low over the rows and thicker toward the drop, in level bands as the sky is. */

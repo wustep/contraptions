@@ -76,7 +76,7 @@ export function expose(show: Show, from: number, to: number): Exposure {
 /**
  * The exposure, drawn over the machine in the world's cells (the stage has the canvas at the scenery's cell,
  * `col`, `row`): from the end of the run back toward its start as the camera draws back, so it is always coming up
- * where the frame is opening. A soft glow under a fine bright line.
+ * where the frame is opening. A clean line in the ball's colours, no halo.
  */
 export function exposure(p: p5, c: PieceCtx, col: number, line: number, t: number, e: Exposure, fin: Finale): void {
   const shown = smooth(t, fin.from + 0.2, fin.to - 0.6)
@@ -89,12 +89,12 @@ export function exposure(p: p5, c: PieceCtx, col: number, line: number, t: numbe
   const Y = (i: number) => (e.pts[i * 2 + 1] - line) * k
   // Thick enough to read at the widest, never thicker than the ball close up.
   const px = 1 / Math.hypot(ctx.getTransform().a, ctx.getTransform().b)
-  const core = Math.max(1.8 * px, k * 0.05)
+  const core = Math.max(2.2 * px, k * 0.06)
   ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
-  // Runs of one colour, each stroked once for its glow and once for its line.
+  ctx.lineWidth = core
+  // Runs of one colour, each stroked once.
   let i = first
   while (i < n - 1) {
     const color = e.colors[i]
@@ -103,33 +103,17 @@ export function exposure(p: p5, c: PieceCtx, col: number, line: number, t: numbe
     const path = new Path2D()
     path.moveTo(X(i), Y(i))
     for (let m = i + 1; m <= j; m++) path.lineTo(X(m), Y(m))
-    const hex = /^#[0-9a-f]{6}$/i.test(color) ? color : '#FFFFFF'
-    ctx.strokeStyle = rgba(hex, 0.1)
-    ctx.lineWidth = core * 9
-    ctx.stroke(path)
-    ctx.strokeStyle = rgba(hex, 0.22)
-    ctx.lineWidth = core * 3.5
-    ctx.stroke(path)
-    ctx.strokeStyle = rgba(hex, 0.9)
-    ctx.lineWidth = core
+    ctx.strokeStyle = rgba(/^#[0-9a-f]{6}$/i.test(color) ? color : '#FFFFFF', 0.92)
     ctx.stroke(path)
     i = j
-  }
-  // The head of the exposure as it travels back along the run: a bright point that fades once it reaches the start.
-  if (shown < 1) {
-    const h = Math.max(0, first)
-    const g = ctx.createRadialGradient(X(h), Y(h), 0, X(h), Y(h), core * 7)
-    g.addColorStop(0, rgba('#FFF6E0', 0.9))
-    g.addColorStop(1, rgba('#FFF6E0', 0))
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.arc(X(h), Y(h), core * 7, 0, Math.PI * 2)
-    ctx.fill()
   }
   ctx.restore()
 }
 
-/** The booth's flash: the frame lit from the booth out for an instant, and back over a third of a second. */
+/**
+ * The booth's flash: the frame lit for an instant, a little more near the booth than far from it, and back over a
+ * third of a second. The light on the scene, not a burst at the booth: no hot core.
+ */
 export function flash(p: p5, c: PieceCtx, col: number, line: number, t: number, at: number, booth: [number, number]): void {
   const age = t - at
   if (age < 0 || age > 0.4) return
@@ -138,13 +122,9 @@ export function flash(p: p5, c: PieceCtx, col: number, line: number, t: number, 
   const bx = (booth[0] - col) * c.k
   const by = (booth[1] - line) * c.k
   const r = c.k * 9
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const g = ctx.createRadialGradient(bx, by, c.k * 0.1, bx, by, r)
-  g.addColorStop(0, rgba('#FFF8EA', 0.95 * a))
-  g.addColorStop(0.25, rgba('#F4EEFF', 0.5 * a))
-  g.addColorStop(1, rgba('#D8D0FF', 0.14 * a))
+  const g = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+  g.addColorStop(0, rgba('#EEE8FA', 0.5 * a))
+  g.addColorStop(1, rgba('#D8D0F4', 0.22 * a))
   ctx.fillStyle = g
   ctx.fillRect(bx - r * 4, by - r * 4, r * 8, r * 8)
-  ctx.restore()
 }

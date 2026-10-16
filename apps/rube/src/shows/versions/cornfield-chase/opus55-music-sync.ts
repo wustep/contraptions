@@ -1,12 +1,13 @@
 import type { Framing, Performance } from '../../registry'
 import type { StockScore } from '../../stock/types'
 import { expose, exposure, finale, flash, pull, type Exposure } from './music-sync/finale'
-import { dayLand, frontField, nightLand } from './music-sync/land'
+import { dayLand, dayNear, frontField, nightLand, nightNear, type Take } from './music-sync/land'
 import { beatAt } from './music-sync/music'
 import { scenery } from './music-sync/screen'
 import { nightfall } from './music-sync/nightfall'
 import { DressedShow } from './music-sync/show'
 import { follow, spot, type Spot } from './music-sync/spot'
+import { lensAt, tiltAt, zoomAt } from './music-sync/lens'
 import data from './opus55-music-sync.generated.json'
 
 /** Written by `npm run generate:cornfield:opus55`. Stock placements only; nothing here moves a machine. */
@@ -24,6 +25,18 @@ const NIGHT = '#0D0B20'
 const STRETCH = 97
 /** The photograph: the booth's flash, then once the ball is through the last portal, the long draw back. */
 export const photo = finale(fair, booth.begin + booth.lane.fire, door.end + 0.1, score.duration - 0.6, STRETCH)
+/** How far the corn has come up in front of the fair as the camera draws back for the photograph. */
+const rise = (t: number): number => (t <= photo.from ? 0 : smooth((t - photo.from) / 2.5))
+/**
+ * What the fair's land takes from the take: the photograph's horizon, the corn coming up in front of it, the camera
+ * for the smoke, and the shutter, open from when the exposure starts to come up (`finale.ts`).
+ */
+const take: Take = {
+  horizon: photo.horizon,
+  rise,
+  camAt: (t) => camera(t).x,
+  open: (t) => Math.max(0, t - photo.from - 0.2),
+}
 /** The run through the fair, taken once, the first time the photograph is drawn; the follow spot, the first time it is. */
 let run: Exposure | null = null
 let lit: Spot | null = null
@@ -33,18 +46,25 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
   const map = score.maps[i]
   const { col, row } = u.pieces[0]
   const dusk = scenery('nightfall', () => {}, (p, c) => nightfall(p, c, col, row, show, map.begin + c.t, NIGHT, [sunset.begin, arrival.end]))
-  if (map.world === 'garden') return { behind: [scenery('field', (p, c) => dayLand(p, c, col, row, map.begin))], over: [dusk] }
+  if (map.world === 'garden') {
+    return {
+      behind: [scenery('field', (p, c) => dayLand(p, c, col, row, map.begin))],
+      over: [scenery('near', () => {}, (p, c) => dayNear(p, c, col, row, map.begin)), dusk],
+    }
+  }
   return {
-    behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, photo.horizon))],
+    behind: [scenery('fair', (p, c) => nightLand(p, c, col, row, map.begin, take))],
     over: [scenery('photograph', () => {}, (p, c) => {
       const t = map.begin + c.t
       // On the full organ the house lights come up: every floor lit on the beat, the spot easing back after.
       lit ??= spot(show, map, booth.begin, [beatAt(132)])
       follow(p, c, row, t, lit, NIGHT)
+      // The corn at your feet, in front of it all; down and away as the camera draws back across the field.
+      nightNear(p, c, col, row, map.begin, Math.min(1, photo.back(t) * 3))
       flash(p, c, col, row, t, photo.flash, [booth.col, booth.row])
       if (t <= photo.from) return
       // The corn comes up in front of the fair as the camera draws back across it.
-      frontField(p, c, col, row, map.begin, photo.horizon, smooth((t - photo.from) / 2.5))
+      frontField(p, c, col, row, map.begin, photo.horizon, rise(t))
       // The run from a little before the stretch the photograph frames, so the line comes in from past its edge.
       run ??= expose(show, STRETCH - 7, door.begin + 0.3)
       exposure(p, c, col, row, t, run, photo)
@@ -60,19 +80,25 @@ const stillCells = Math.max(7.5, (Math.max(...xs) - Math.min(...xs) + 2) * 1.5 *
 const smooth = (u: number): number => { const v = Math.max(0, Math.min(1, u)); return v * v * (3 - 2 * v) }
 
 /**
- * Follow the ball; once the photograph is taken, ease onto the booth and the ticket; once the ball is through the last
- * portal, draw back across the field until the fair's last stretch stands on the horizon.
+ * Follow the ball, on the take's own lens (`music-sync/lens.ts`): the tilt down out of the sky at the opening, the
+ * pushes on the organ and the drop, the draw back on the full organ. Once the photograph is taken, ease onto the booth
+ * and the ticket; once the ball is through the last portal, draw back across the field until the fair's last stretch
+ * stands on the horizon.
  */
 function camera(t: number): Framing {
   const ride = show.camera(t)
+  const cells = lensAt(t)
+  const up = tiltAt(t)
   const blend = smooth((t - booth.end) / Math.max(0.5, ticket.begin - booth.end))
+  const y = ride.y - up * cells
   const close = {
     x: ride.x + (still.x - ride.x) * blend,
-    y: ride.y + (still.y - ride.y) * blend,
-    cells: ride.cells + (stillCells - ride.cells) * blend,
+    y: y + (still.y - y) * blend,
+    cells: cells + (stillCells - cells) * blend,
   }
   const back = photo.back(t)
-  return back > 0 ? pull(close, photo.wide, back) : close
+  const framed = back > 0 ? pull(close, photo.wide, back) : close
+  return up > 0 ? { ...framed, zoomFull: zoomAt(t) } : framed
 }
 
 export const performance: Performance = {
