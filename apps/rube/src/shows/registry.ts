@@ -309,7 +309,8 @@ const PREFERRED_TAKES: Record<string, string> = { 'la-la-land': 'opus5-5', 'corn
  */
 export const RENAMED_TAKES: Record<string, Record<string, string>> = {
   'la-la-land': { 'opus55-sebs': 'opus5-5', 'fable51-epilogue': 'fable5-1' },
-  'cornfield-chase': { 'opus55-music-sync': 'opus55', 'tech-demo': 'grok47' },
+  // Cornfield Chase's Grok 4.7 take: hidden for now (Stephen, Oct 15), and its old name with it.
+  'cornfield-chase': { 'opus55-music-sync': 'opus55' /* , 'tech-demo': 'grok47' */ },
 }
 
 /** A take by its name now, given any name it has shipped under. */

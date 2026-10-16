@@ -379,17 +379,22 @@ async function main(): Promise<void> {
   check('la-la-land is Epilogue, two takes, Opus 5.5 then Fable 5.1, with no notes and Opus as default',
     lalaland.map((v) => v.take).join(',') === 'opus5-5,fable5-1' && lalaland.every((v) => v.title === 'Epilogue' && v.note === undefined) &&
     lalaland.map((v) => v.label).join('|') === 'Opus 5.5|Fable 5.1' && epilogueTake?.label === 'Opus 5.5' && pickVersion(shipped.works, 'la-la-land', null)?.take === 'opus5-5')
-  check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55,grok47' && pickVersion(shipped.works, 'cornfield-chase', null)?.take === 'opus55')
+  // Cornfield Chase's Grok 4.7 take: hidden for now (Stephen, Oct 15). Its link, old or new, opens the Opus take.
+  check('Cornfield Chase is its Opus 5.5 take alone, and every link to it opens that take',
+    shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55' &&
+    [null, 'grok47', 'tech-demo', 'opus55-music-sync'].every((take) => pickVersion(shipped.works, 'cornfield-chase', take)?.take === 'opus55'))
+  // check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55,grok47' && pickVersion(shipped.works, 'cornfield-chase', null)?.take === 'opus55')
   check('Soft Lamp leads with its still take, the moving camera second', shipped.works.find((w) => w.work === 'soft-lamp')?.versions.map((v) => v.take).join(',') === 'opus55-still,opus55' && pickVersion(shipped.works, 'soft-lamp', null)?.take === 'opus55-still')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
-  check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
+  check('Cornfield Chase is labelled for its model', cornfield.map((v) => v.label).join('|') === 'Opus 5.5')
+  // check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
   check('Cornfield Chase takes have no notes', cornfield.every((v) => v.note === undefined))
   // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
   const interstellar = shipped.works.find((w) => w.work === 'interstellar')
   const liftoffTake = interstellar?.versions[0]
   check('interstellar is Voyage, its own work of one take, labelled the same (no subtitle), with no note',
     !!interstellar && interstellar.title === 'Voyage' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined)
-  check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'grok47')?.take === 'grok47')
+  check('a named take is still that take', pickVersion(shipped.works, 'la-la-land', 'fable5-1')?.take === 'fable5-1')
   // A renamed take's old address still opens it, in the page and as a page the build writes (`vite.config.ts`).
   const renamed = Object.entries(RENAMED_TAKES).flatMap(([work, old]) => Object.entries(old).map(([was, now]) => ({ work, was, now })))
   const lost = renamed.filter(({ work, was, now }) => {
@@ -397,7 +402,7 @@ async function main(): Promise<void> {
     return !at || pickVersion(shipped.works, at.work, at.take)?.take !== now || pickVersion(shipped.works, work, now)?.take !== now || !existsSync(join(process.cwd(), `public/shows/${work}/${now}.png`))
   })
   check('a renamed take\'s old address opens the take, and its new name is a shipped take with a card',
-    renamed.length === 4 && lost.length === 0, lost.map((r) => `${r.work}/${r.was}`).join(', '))
+    renamed.length === 3 && lost.length === 0, lost.map((r) => `${r.work}/${r.was}`).join(', '))
   check('the build writes a renamed take\'s old address as a page', /RENAMED_TAKES\[w\.work\]/.test(readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')))
   const shelved = shelves(shipped.works).map((s) => `${s.section}: ${s.works.map((w) => w.title).join(', ')}`)
   check('the picker shelves the works as Machine, Movies and Ambient, each with its favourites pinned first',
@@ -442,17 +447,18 @@ async function main(): Promise<void> {
         check('Clair B: the camera settles with the ball inside the Zoom frame', visible)
       }
       if (work.work === 'come-recover' && version.take === 'opus55-all-at-once') checkAllAtOnce(perf, check)
-      if (work.work === 'cornfield-chase' && version.take === 'grok47') {
-        check('cornfield: the whole recording, credited to Hans Zimmer and Interstellar',
-          near(perf.duration, 126.984) &&
-          (perf.soundtrack?.offset ?? 0) === 0 &&
-          !!perf.soundtrack?.credit?.includes('Hans Zimmer') &&
-          !/tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
-          perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
-        const endCam = perf.camera?.(perf.duration)
-        check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
-        check('cornfield: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
-      }
+      // Cornfield Chase's Grok 4.7 take: hidden for now (Stephen, Oct 15)
+      // if (work.work === 'cornfield-chase' && version.take === 'grok47') {
+      //   check('cornfield: the whole recording, credited to Hans Zimmer and Interstellar',
+      //     near(perf.duration, 126.984) &&
+      //     (perf.soundtrack?.offset ?? 0) === 0 &&
+      //     !!perf.soundtrack?.credit?.includes('Hans Zimmer') &&
+      //     !/tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
+      //     perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
+      //   const endCam = perf.camera?.(perf.duration)
+      //   check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
+      //   check('cornfield: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
+      // }
       if (work.work === 'la-la-land' && version.take === 'fable5-1') {
         check('epilogue: the whole recording from zero, credited to Justin Hurwitz and La La Land, ending after the last chord',
           (perf.soundtrack?.offset ?? 0) === 0 && !perf.soundtrack?.src && perf.soundtrack?.youtube?.[0]?.id === 'jQVvT_UKZ6w' && near(perf.duration, EPILOGUE_END) &&

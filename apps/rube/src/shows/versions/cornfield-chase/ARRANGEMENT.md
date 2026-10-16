@@ -18,7 +18,7 @@ Clair Take B is a catalog tour: four worlds, almost no repeated machines, rails 
 
 ## How to watch
 
-`npm run dev`, then `/shows/cornfield-chase/grok47/`. Leave Zoom on. Overview, if you want the route, is the whole map and turns Zoom off. Record at 1080p with music.
+The take is hidden for now: rename `grok47.ts` to `grok47.show.ts` (see its header), then `npm run dev` and `/shows/cornfield-chase/grok47/`. Leave Zoom on. Overview, if you want the route, is the whole map and turns Zoom off. Record at 1080p with music.
 
 | Section | Start | Camera, before Zoom | What the machines do |
 | --- | ---: | --- | --- |
