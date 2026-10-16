@@ -235,22 +235,6 @@ function glass(pen: Pen, t: number, w: number): void {
       ctx.strokeRect(a[0] * k, a[1] * k, (b[0] - a[0]) * k, (b[1] - a[1]) * k)
     }
   }
-  // The sheen: two soft bands of light across the glass.
-  for (const [o, wd, a] of [[0.25, 0.35, 0.28], [0.62, 0.14, 0.22]] as const) {
-    const sx = gx0 + (gx1 - gx0) * o
-    const gg = ctx.createLinearGradient((sx - wd) * k, 0, (sx + wd) * k, 0)
-    gg.addColorStop(0, rgba(PARIS.mirror, 0))
-    gg.addColorStop(0.5, rgba('#FFFFFF', a))
-    gg.addColorStop(1, rgba(PARIS.mirror, 0))
-    ctx.fillStyle = gg
-    ctx.beginPath()
-    ctx.moveTo((sx - wd + 0.5) * k, gy0 * k)
-    ctx.lineTo((sx + wd + 0.5) * k, gy0 * k)
-    ctx.lineTo((sx + wd - 0.5) * k, gy1 * k)
-    ctx.lineTo((sx - wd - 0.5) * k, gy1 * k)
-    ctx.closePath()
-    ctx.fill()
-  }
   ctx.restore()
 }
 
@@ -286,9 +270,9 @@ function greatMirror(pen: Pen, t: number, f: Frame): void {
     ;(facing > 0.4 && !lying ? lit : plain).push(pts)
   }
   fillPaths(pen, plain, mixHex(PARIS.glass, PARIS.slate, 0.15), 0.8)
-  // A bright face is the sky in the glass, not blank white, and every shard has a firm edge: against the pale
-  // facades a white one with a hairline edge read as a flat cut-out.
-  fillPaths(pen, lit, mixHex('#FFFFFF', PARIS.glass, 0.3), 0.92)
+  // A face turned to the sky is the sky in the glass, a little lighter than the glass, and every shard has a firm
+  // edge: near white, the biggest flashed blank as it turned and read as a flat cut-out against the pale facades.
+  fillPaths(pen, lit, mixHex(PARIS.glass, PARIS.sky, 0.45), 0.92)
   strokePaths(pen, [...plain, ...lit].map((g) => [...g, g[0]]), mixHex(PARIS.slate, PARIS.glass, 0.15), 0.6, 0.95)
 }
 
