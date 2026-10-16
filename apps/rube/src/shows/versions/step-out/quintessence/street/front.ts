@@ -10,9 +10,10 @@ import { whiteAt } from './light'
  * changes his colour. It is handed show time as `t`.
  *
  * - The near plane: a street tree's leaves over the top and a mailbox at the kerb below as the camera comes along the
- *   pavement; and, for the long view, the leaves of the trees on this side hanging into the top corners, a hydrant and,
- *   last, a lamp post at the kerb, coming in from the frame's edges as the camera draws back and goes on along. All of it at the frame's edges, never over the two of
- *   them, and none of it tall enough at the bottom to reach the pavement where they roll.
+ *   pavement; and, for the long view, the leaves of the trees on this side hanging into the top corners and, last, a
+ *   lamp post at the kerb, coming in from the frame's edges as the camera draws back and goes on along. All of it at
+ *   the frame's edges, never over the two of them, and none of it tall enough at the bottom to reach the pavement
+ *   where they roll.
  * - The air: a few motes of dust turning near the lens.
  * - The grade: the frame's edges falling away warm, thinning as the morning whitens through the credits.
  */
@@ -80,21 +81,6 @@ function mailbox(ctx: C2, k: number, x: number, foot: number): void {
   ctx.fillRect((x + w / 2 - 0.1) * k, (foot - 0.18) * k, 0.06 * k, 0.18 * k)
 }
 
-/** A hydrant: ochre, its cap and its two nozzles; the sun on its right. */
-function hydrant(ctx: C2, k: number, x: number, foot: number): void {
-  ctx.fillStyle = '#B98F2E'
-  ctx.fillRect((x - 0.13) * k, (foot - 0.62) * k, 0.26 * k, 0.62 * k)
-  ctx.fillRect((x - 0.19) * k, (foot - 0.08) * k, 0.38 * k, 0.08 * k)
-  ctx.fillRect((x - 0.24) * k, (foot - 0.46) * k, 0.48 * k, 0.12 * k)
-  ctx.beginPath()
-  ctx.arc(x * k, (foot - 0.62) * k, 0.14 * k, Math.PI, 0)
-  ctx.fill()
-  ctx.fillStyle = '#E6C46E'
-  ctx.fillRect((x + 0.07) * k, (foot - 0.6) * k, 0.06 * k, 0.52 * k)
-  ctx.fillStyle = '#4A4436'
-  ctx.fillRect((x - 0.03) * k, (foot - 0.82) * k, 0.06 * k, 0.07 * k)
-}
-
 /** A lamp post at the kerb, near: its fluted foot, the pole, the crook over the street, the lamp out by day; the sun down its right. */
 function lampPost(ctx: C2, k: number, x: number, foot: number, h: number): void {
   const c = '#33403A'
@@ -126,11 +112,10 @@ function near(ctx: C2, v: View, t: number): void {
     leaves(ctx, k, t, [-3.9, -2.45], [1.5, 0.45], 70, 11, [-5.6, -3.0])
     mailbox(ctx, k, 0.4, 1.55)
   })
-  // For the long view: the trees on this side into the top corners, the hydrant and a lamp post at the kerb.
+  // For the long view: the trees on this side into the top corners, and a lamp post at the kerb.
   layer(ctx, v, Z, WIDE.anchor, WIDE.ref, () => {
     leaves(ctx, k, t, [1.7, -7.15], [2.0, 0.7], 90, 12, [-0.8, -8.2])
     leaves(ctx, k, t, [23.6, -7.3], [2.0, 0.65], 80, 13, [26.3, -8.4])
-    hydrant(ctx, k, 21.6, 1.75)
     lampPost(ctx, k, 25.3, 2.25, 9.2)
   })
 }

@@ -2,16 +2,14 @@ import type { Pt } from '../../../../../parts'
 import { layer, sway, type View } from '../depth'
 import { hash } from '../kit'
 import { mix, rgba } from '../negatives/hand'
-import { steam } from './city'
 import { FRONTS } from './fronts'
 import { goldAt, morning, S, skyAt, sunAt, whiteAt } from './light'
 
 /**
  * The sky over the street and the city behind it (the street's own): three planes of towers going back into the haze
  * down the avenue, the low sun in the avenue's gap between them, a plane drawing its contrail across the top, gulls
- * far off, steam off the roofs. Everything far is pale: the credits are set over this sky, so nothing behind them
- * is dark or quick. The planes are composed for the long view at the end (`ANCHOR`, `REF`) and slide under the
- * camera at their own depths.
+ * far off. Everything far is pale: the credits are set over this sky, so nothing behind them is dark or quick. The
+ * planes are composed for the long view at the end (`ANCHOR`, `REF`) and slide under the camera at their own depths.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -255,7 +253,6 @@ export function drawCity(ctx: C2, v: View, t: number): void {
   const sky = skyAt(t)
   const haze = sky.low
   const w = whiteAt(t)
-  const m = morning(t)
   // Far: the tall towers, flat values just darker than the sky, their sunward edges catching; a haze along their feet.
   layer(ctx, v, 0.15, ANCHOR, REF, () => {
     const body = mix(mix(S.far, haze, 0.52), '#F6F3EC', w * 0.2)
@@ -310,7 +307,7 @@ export function drawCity(ctx: C2, v: View, t: number): void {
     ctx.stroke(gulls)
   })
   // Near: the next block's roofs over the low fronts, and down the avenue its corners, the traffic crossing there.
-  layer(ctx, v, 0.6, ANCHOR, REF, (f) => {
+  layer(ctx, v, 0.6, ANCHOR, REF, () => {
     const body = mix(mix('#C7B8A3', haze, 0.2), '#F1EDE4', w * 0.3)
     const lit = mix('#F0DDBC', sky.sun, 0.25 + 0.5 * w)
     const g = ctx.createLinearGradient(0, -2.2 * k, 0, 0.2 * k)
@@ -326,41 +323,45 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       ctx.fillStyle = g
       ctx.fillRect((x0 - 1) * k, -2.2 * k, (x1 - x0 + 2) * k, 2.4 * k)
     })
-    // Steam off a roof, always: a vent on the far side's roofs breathing out.
-    steam(ctx, f, t, 21.2, -4.7, 3.6, 8, 8, 0.75 + 0.25 * m)
   })
 }
 
 /**
- * Down the avenue's gap, at its own depths, the avenue's furniture against the sun: signal masts reaching out over
- * it with their heads hung (seen against the light, unlit), and lamp posts along its kerb, each smaller and paler the
- * further it is, each sliding at its own pace as the camera goes along.
+ * Down the avenue's gap, at their own depths, its furniture against the sun: a signal mast reaching out over it with
+ * its head hung (seen against the light, unlit), and a lamp post on either kerb further down, each smaller and paler
+ * the further it is, each sliding at its own pace as the camera goes along. Drawn far to near; `side` is the kerb.
  */
-const MASTS: [number, number][] = [[0.86, 1], [0.66, -1], [0.48, 1], [0.34, -1], [0.22, 1]]
+const FURNITURE: { z: number; side: number; mast: boolean }[] = [
+  { z: 0.36, side: 1, mast: false },
+  { z: 0.6, side: -1, mast: false },
+  { z: 0.86, side: 1, mast: true },
+]
 export function drawAvenue(ctx: C2, v: View, t: number): void {
   const k = v.k
   const sky = skyAt(t)
-  for (const [z, side] of MASTS) {
+  for (const { z, side, mast } of FURNITURE) {
     const size = 0.25 + 0.75 * z
     const ground = -0.75 + 0.85 * z
-    const fade = 0.75 - 0.55 * z
     layer(ctx, v, z, ANCHOR, REF, () => {
       inOpen(ctx, k, openSky(v, z), () => {
-        const c = mix('#3A3E40', sky.low, fade)
-        const px = AVENUE + side * 1.25 * size
-        const top = ground - 3.1 * size
-        ctx.fillStyle = c
-        ctx.fillRect((px - 0.04 * size) * k, top * k, 0.08 * size * k, (ground - top) * k)
-        // The arm out over the avenue, the head hung from it.
-        const arm = px - side * 1.5 * size
-        ctx.fillRect(Math.min(px, arm) * k, top * k, Math.abs(px - arm) * k, 0.05 * size * k)
-        const hx = px - side * 1.1 * size
-        ctx.fillRect((hx - 0.1 * size) * k, (top + 0.05 * size) * k, 0.2 * size * k, 0.52 * size * k)
-        // A lamp post on the other kerb.
-        const lx = AVENUE - side * 1.35 * size
-        ctx.fillRect((lx - 0.03 * size) * k, (ground - 2.6 * size) * k, 0.06 * size * k, 2.6 * size * k)
-        ctx.fillRect((lx - 0.03 * size + side * 0.0) * k, (ground - 2.6 * size) * k, side * 0.4 * size * k, 0.05 * size * k)
-        ctx.fillRect((lx + side * 0.3 * size - 0.08 * size) * k, (ground - 2.6 * size) * k, 0.16 * size * k, 0.07 * size * k)
+        ctx.fillStyle = mix('#3A3E40', sky.low, 0.75 - 0.55 * z)
+        if (mast) {
+          // The mast, its arm out over the avenue, the head hung from it.
+          const px = AVENUE + side * 1.25 * size
+          const top = ground - 3.1 * size
+          ctx.fillRect((px - 0.04 * size) * k, top * k, 0.08 * size * k, (ground - top) * k)
+          const arm = px - side * 1.5 * size
+          ctx.fillRect(Math.min(px, arm) * k, top * k, Math.abs(px - arm) * k, 0.05 * size * k)
+          const hx = px - side * 1.1 * size
+          ctx.fillRect((hx - 0.1 * size) * k, (top + 0.05 * size) * k, 0.2 * size * k, 0.52 * size * k)
+          return
+        }
+        // A lamp post, its arm and its lamp out toward the avenue's middle.
+        const lx = AVENUE + side * 1.35 * size
+        const top = ground - 2.6 * size
+        ctx.fillRect((lx - 0.03 * size) * k, top * k, 0.06 * size * k, 2.6 * size * k)
+        ctx.fillRect(Math.min(lx, lx - side * 0.4 * size) * k, top * k, 0.4 * size * k, 0.05 * size * k)
+        ctx.fillRect((lx - side * 0.3 * size - 0.08 * size) * k, top * k, 0.16 * size * k, 0.07 * size * k)
       })
     })
   }
