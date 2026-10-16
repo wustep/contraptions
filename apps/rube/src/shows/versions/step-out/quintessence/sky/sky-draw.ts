@@ -4,7 +4,7 @@ import { frame, hash, lastOf, smooth } from '../kit'
 import { drawBoatAbove } from '../sea/boat'
 import { beatPhase, BEGIN, END, H, heli, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF, WIDE_FROM } from './sky-plan'
 import { ctxOf, mix, oval, poly, rgba, rrect, vgrad, type C2 } from './paint'
-import { drawBanks, drawBergs, drawDeck, drawRanges, drawSkein, drawSun, drawSunPath, drawSwell, drawTown, F, type Eye } from './air'
+import { drawBanks, drawBergs, drawDeck, drawRanges, drawSkein, drawSun, drawSwell, drawTown, F, type Eye } from './air'
 
 /**
  * How the sky is drawn (B3's): the harbour and its pad, the overcast, the grey-green sea going away to the ice and
@@ -99,7 +99,6 @@ export function drawSkySet(p: p5, k: number, t: number, under = false): void {
   drawTown(g, k, e, t, SURF, SKY.seaFar)
   drawBergs(g, k, e, t, SURF, SKY.seaFar)
   drawSwell(g, k, e, t, SURF)
-  drawSunPath(g, k, e, t, SURF)
   drawFloes(g, k, f, hz, t)
   drawSkein(g, k, e, t, SKEIN, WIDE_FROM, 30, -8.4, heli(SKEIN).x + 26, -3, 15)
   if (!under) drawNearWater(g, k, f, t)
@@ -132,13 +131,13 @@ function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t:
     if (y < f.y0 - 1 || y > f.y1 + 1) continue
     const fog = Math.pow(1 - s, 1.6)
     const band = Math.min(BANDS - 1, Math.floor(fog * BANDS))
-    // The ice lies in a few long streams with open water between, and is fewer near than toward the far ice.
-    const density = 0.3 + 0.5 * (1 - s)
+    // The ice is fewer near than toward the far ice, and far off it lies in a few long streams with open water between.
+    const density = 0.22 + 0.4 * (1 - s)
     const squash = Math.max(0.07, Math.min(0.6, e / z))
     for (let n = n0; n <= n1; n++) {
       const gx = (n + hash(n, L, 22)) * spacing + Math.sin(t * 0.15 + n) * 0.05
       const stream = Math.sin(gx * 0.09 - z * 0.12 + 1.3) + 0.6 * Math.sin(gx * 0.031 + z * 0.05)
-      if (hash(n, L, 21) > density * smooth(stream, -0.1, 0.9)) continue
+      if (hash(n, L, 21) > density * (s + (1 - s) * smooth(stream, -0.5, 0.6) * 1.4)) continue
       const x = f.cx + (gx - f.cx) * s
       const w = (0.35 + 1.4 * Math.pow(hash(n, L, 23), 2)) * s
       if (x + w < f.x0 - 0.5 || x - w > f.x1 + 0.5) continue

@@ -4,9 +4,9 @@ import { BUMPS, LIFT } from './sky-plan'
 import { mix, rgba, type C2 } from './paint'
 
 /**
- * The sky's world beyond the machine (B's): the overcast's underside going away to the horizon in rows of cloud, the
+ * The sky's world beyond the machine (B's): the overcast's underside going away to the horizon in rolls of cloud, the
  * banks standing on the horizon, the cold sun breaking through as the skids leave the pad, the far mountains of the
- * coast under their snow, icebergs at their own distances, the swell, the sun's light on it, and a skein of birds.
+ * coast under their snow, icebergs at their own distances, the swell, and a skein of birds.
  *
  * Everything is drawn through the one eye the sea is drawn with (`sky-draw.ts`): the horizon at the frame's middle,
  * and a thing `z` from the eye drawn `F / z` of its size, `F` being the distance of the plane the machine is in. So
@@ -50,7 +50,6 @@ export const AIR = {
   bergShade: '#A9BEC4',
   crest: '#D7DFDC',
   trough: '#526660',
-  sunlit: '#FBFBF4',
   bird: '#3B464A',
 }
 
@@ -80,8 +79,8 @@ const DECK_Y = -15.5
 
 /**
  * The underside of the overcast: a few long rolls of cloud going away to the horizon, each nearer one broader and
- * quicker across the screen, with breaks between and along them where the paler sky shows. Each roll is one flat grey
- * with its belly a shade darker. Once the sun is out the rolls thin to nothing round it, so it sits in a break that is
+ * quicker across the screen, with breaks between and along them where the paler sky shows. Each roll is flat grey,
+ * paler along its top where the light comes through it and a shade darker in its belly. Once the sun is out the rolls thin to nothing round it, so it sits in a break that is
  * always there; the wind takes them all along.
  */
 export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
@@ -91,10 +90,10 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
   const D = Math.abs(DECK_Y - e.hz)
   // A roll's unbroken stretches are this long (world cells), a little longer in a wider frame.
   const S = 9 * Math.pow(Math.max(0.5, Math.min(2.5, e.fh / 6.6)), 0.35)
-  // The nearest roll is the one just over the frame's top: the deck fills the sky from there to the horizon.
-  const z0 = Math.max(12, (F * D) / Math.max(0.5, e.hz - e.y0 + 0.4))
+  // The nearest roll hangs just inside the frame's top: the deck fills the sky from there to the horizon.
+  const z0 = Math.max(12, (F * D) / Math.max(0.5, e.hz - e.y0 - 0.25))
   const drift = t * 1.2
-  const rows: { body: Path2D; belly: Path2D; fog: number }[] = []
+  const rows: { body: Path2D; crown: Path2D; belly: Path2D; fog: number }[] = []
   for (let r = 0; r < 7; r++) {
     const s = F / (z0 * Math.pow(1.36, r))
     // Between this roll and the next: what its depth on the screen is drawn from.
@@ -104,24 +103,27 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
     const yRow = e.hz - D * s + shake * 0.5 * s
     if (yRow - gap > e.y1 || yRow + gap < e.y0 - 0.5) continue
     const body = new Path2D()
+    const crown = new Path2D()
     const belly = new Path2D()
-    // Its stretches, and the breaks between them: a run of whole stretches, its ends pulled in a little at random.
+    // Its stretches, and the breaks between them: a run of whole stretches, its ends reaching a little way into the
+    // breaks either side, each its own way.
     const ga = e.cx - (e.fw / 2 + 2) / s
     const gb = e.cx + (e.fw / 2 + 2) / s
     const n0 = Math.floor((ga - drift) / S) - 1
     const n1 = Math.ceil((gb - drift) / S) + 1
-    const broken = (n: number) => hash(n, r, 45) < 0.25
+    const broken = (n: number) => hash(n, r, 45) < 0.2
     for (let n = n0; n <= n1; n++) {
       if (broken(n) || (n > n0 && !broken(n - 1))) continue
       let m = n
       while (m < n1 && !broken(m + 1)) m++
-      const xa = e.cx + ((n + 0.35 * hash(n, r, 41)) * S + drift - e.cx) * s
-      const xb = e.cx + ((m + 1 - 0.35 * hash(m, r, 42)) * S + drift - e.cx) * s
+      const xa = e.cx + ((n - 0.3 + 0.3 * hash(n, r, 41)) * S + drift - e.cx) * s
+      const xb = e.cx + ((m + 1.3 - 0.3 * hash(m, r, 42)) * S + drift - e.cx) * s
       const lo = Math.max(xa, e.x0 - 1)
       const hi = Math.min(xb, e.x1 + 1)
       if (hi <= lo) continue
       const step = Math.max(0.05, Math.min((hi - lo) / 48, gap * 0.1))
       const top: Pt[] = []
+      const lit: Pt[] = []
       const mid: Pt[] = []
       const low: Pt[] = []
       for (let x = lo; x <= hi + step * 0.5; x += step) {
@@ -132,25 +134,30 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
         const gx = e.cx + (xx - e.cx) / s - drift
         const w1 = Math.sin((gx / S) * 2.3 + r * 1.7 + t * 0.25)
         const w2 = Math.sin((gx / S) * 5.1 + r * 0.6 - t * 0.3)
-        // Its outline is lumpy: rounded billows along its foot, and longer, lower ones along its far edge.
+        // Its outline is lumpy: rounded billows along its foot, slowly turning over, and longer, lower ones along its
+        // far edge and its belly.
         const q = (gx * s) / gap
         const d = Math.hypot((xx - sx) / e.fw, (Math.max(0, Math.abs(yRow - sy) - 0.4 * gap) / e.fh) * 1.3)
-        const thin = sun > 0.01 ? smooth(d, 0.04 * sun, 0.11 * sun) : 1
+        const thin = sun > 0.01 ? smooth(d, 0.03 * sun, 0.09 * sun) : 1
         const f = end * thin * gap
-        top.push([xx, yRow - f * (0.46 + 0.2 * w1 + 0.05 * w2 + 0.12 * billow(q / 1.3 + 0.2, r, 49))])
-        mid.push([xx, yRow + f * (0.1 + 0.08 * w2)])
-        low.push([xx, yRow + f * (0.34 + 0.08 * w1 + 0.16 * billow(q / 0.95, r, 47))])
+        top.push([xx, yRow - f * (0.42 + 0.18 * w1 + 0.05 * w2 + 0.2 * billow(q / 1.4 + 0.2, r, 49))])
+        lit.push([xx, yRow - f * (0.12 + 0.1 * w1 - 0.1 * billow(q / 0.8 + 0.3, r, 50))])
+        mid.push([xx, yRow + f * (0.08 + 0.06 * w2 - 0.12 * billow(q / 1.7 + 0.6, r, 48))])
+        low.push([xx, yRow + f * (0.3 + 0.08 * w1 + 0.28 * billow(q / 1.1 + t * 0.3, r, 47))])
       }
       outline(body, k, top, low)
+      outline(crown, k, top, lit)
       outline(belly, k, mid, low)
     }
-    rows.push({ body, belly, fog: r / 6 })
+    rows.push({ body, crown, belly, fog: r / 6 })
   }
   // The far rolls first, so a nearer one lies over the one beyond it.
   for (let i = rows.length - 1; i >= 0; i--) {
-    const { body, belly, fog } = rows[i]
+    const { body, crown, belly, fog } = rows[i]
     g.fillStyle = mix(AIR.deck, AIR.haze, 0.7 * fog)
     g.fill(body)
+    g.fillStyle = mix(AIR.deck, AIR.haze, 0.3 + 0.5 * fog)
+    g.fill(crown)
     g.fillStyle = mix(AIR.deckShade, AIR.haze, 0.7 * fog)
     g.fill(belly)
   }
@@ -361,35 +368,6 @@ export function drawSwell(g: C2, k: number, e: Eye, t: number, surf: number): vo
   g.stroke(troughs)
   g.strokeStyle = rgba(AIR.crest, 0.36)
   g.stroke(crests)
-  g.restore()
-}
-
-/**
- * Under the sun, its light on the sea: a path of pale dashes down the water toward us, the swell's crests where the
- * light lies on them, each going along with the swell.
- */
-export function drawSunPath(g: C2, k: number, e: Eye, t: number, surf: number): void {
-  const sun = sunAt(t)
-  if (sun <= 0.02) return
-  const [sx] = sunXY(e)
-  const e0 = surf - e.hz
-  if (e0 <= 0.05) return
-  const path = new Path2D()
-  for (let i = 0; i < 46; i++) {
-    const v = Math.pow(hash(i, 91), 1.4)
-    const y = e.hz + 0.03 + v * Math.min(e0, e.y1 - e.hz) * 0.9
-    const spread = (0.06 + v * 0.3) * e.fw
-    // Each crest goes along the path with the swell, and is gone at its edge and back at the other, small there.
-    const u = (((hash(i, 92) + t * (0.02 + 0.05 * v)) % 1) + 1) % 1
-    const x = sx - 0.03 * e.fw + (u - 0.5) * 2 * spread * (0.4 + 0.6 * hash(i, 93))
-    const len = (0.04 + 0.12 * v) * (0.6 + 0.8 * hash(i, 95)) * (e.fh / 6.6) * Math.sin(u * Math.PI)
-    path.moveTo((x - len / 2) * k, y * k)
-    path.lineTo((x + len / 2) * k, y * k)
-  }
-  g.save()
-  g.lineWidth = Math.max(1, 0.018 * k)
-  g.strokeStyle = rgba(AIR.sunlit, 0.5 * sun)
-  g.stroke(path)
   g.restore()
 }
 
