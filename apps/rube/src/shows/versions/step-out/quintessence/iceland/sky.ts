@@ -217,8 +217,8 @@ export function drawSky(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: n
   onPlane(ctx, f, k, PLANE.cloud, () => {
     ctx.globalAlpha = fade
     for (const [key, paint, y0, y1, wind] of [
-      ['ice-high', paintHigh, -0.66, -0.24, WIND.high],
-      ['ice-cumulus', paintCumulus, -0.4, 0.0, WIND.cumulus],
+      ['ice-high', paintHigh, -0.66, -0.2, WIND.high],
+      ['ice-cumulus', paintCumulus, -0.46, 0.0, WIND.cumulus],
     ] as const) {
       if (cv.y1 < y0 || cv.y0 > y1) continue
       const band = bake(key, ppu, SPAN, y0, y1, paint)
