@@ -17,7 +17,6 @@ import {
   copiesAt,
   CRIMP,
   CURTAIN,
-  CUT_START,
   CUTS,
   DECK,
   DOOR_TOP,
@@ -62,6 +61,7 @@ import {
   UNITS,
   UP,
   V_WEB,
+  WALL,
   WEB_T,
   WEB_Y,
 } from './press-plan'
@@ -96,7 +96,7 @@ export const PAL = {
   outside: '#AFB9C2',
   outsideHigh: '#CBD3D9',
   pavement: '#7C7D7B',
-  strip: '#C9D6DA',
+  strip: '#8DA0A4',
   strap: '#2F3A46',
 }
 
@@ -197,6 +197,9 @@ const ROOM_X1 = OFFICE.x1
 /** The lamps hung over the machine's own line. */
 export const LAMPS = [9.4, 13.2, 17.0, 20.6]
 export const LAMP_Y = -0.15
+/** The bay lamp, caged on a bracket off the end wall over the conveyor: off until the shove, which switches it on. */
+export const BAY: [number, number] = [DOOR_X - 0.5, DOOR_TOP - 0.3]
+export const bayOn = (t: number): number => (t < SHOVE ? 0 : Math.min(1, (t - SHOVE) / 0.06))
 
 export function drawSet(p: p5, c: Ctx, t: number): void {
   const k = c.k
@@ -204,7 +207,6 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
   const v = view(p, k)
   const x0 = v.x0 - 1
   const x1 = v.x1 + 1
-  const y0 = v.y0 - 1
   g.save()
   // The hall in depth, wherever the office and the street leave it to be seen.
   if (v.x1 > ROOM_X1 - 0.5 || v.y0 < OFFICE.top || v.y1 > FLOOR) {
@@ -217,8 +219,9 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
     drawHall(g, v, t)
     g.restore()
   }
-  // The lamps hung over the press: their cords, their shades; their light is thrown in front of the machine.
+  // The lamps hung over the press: their cords, their shades, the bulb lit under each; their light lies on the floor.
   const lamp = new Path2D()
+  const lit = new Path2D()
   for (const lx of LAMPS) {
     if (lx + 1 < x0 || lx - 1 > x1) continue
     lamp.rect((lx - 0.015) * k, (-5.2) * k, 0.03 * k, (LAMP_Y - 0.1 + 5.2) * k)
@@ -226,28 +229,65 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
     lamp.quadraticCurveTo((lx - 0.3) * k, (LAMP_Y - 0.14) * k, lx * k, (LAMP_Y - 0.16) * k)
     lamp.quadraticCurveTo((lx + 0.3) * k, (LAMP_Y - 0.14) * k, (lx + 0.34) * k, (LAMP_Y + 0.1) * k)
     lamp.closePath()
+    lit.moveTo((lx + 0.27) * k, (LAMP_Y + 0.09) * k)
+    lit.ellipse(lx * k, (LAMP_Y + 0.09) * k, 0.27 * k, 0.05 * k, 0, 0, Math.PI)
   }
   g.fillStyle = PAL.ironLo
   g.fill(lamp)
+  g.fillStyle = hexA('#FFD9A0', 0.3 + 0.65 * lampsOn(t, 0))
+  g.fill(lit)
 
   // The street, through the loading door, in the morning.
   if (x1 > DOOR_X - 1) {
     drawOutside(g, v, t)
-    // The hall's end wall, cut through at the door: brick, its outer face catching the morning; a stone lintel
-    // over the opening, the curtain hung from it; the threshold at its foot.
-    const WALL = 0.52
-    const brick = mix(PAL.hall, '#5A4A44', 0.55)
-    rect(g, k, DOOR_X - 0.12, y0, WALL, DOOR_TOP - y0, brick)
-    for (let by = DOOR_TOP - 0.2; by > y0; by -= 0.2) line(g, k, DOOR_X - 0.12, by, DOOR_X - 0.12 + WALL, by, hexA('#000000', 0.18), 0.012)
-    rect(g, k, DOOR_X - 0.12 + WALL - 0.06, y0, 0.06, DOOR_TOP - y0, mix(brick, PAL.outsideHigh, 0.35))
-    rect(g, k, DOOR_X - 0.18, DOOR_TOP - 0.2, WALL + 0.12, 0.22, mix(PAL.outside, '#5C5F66', 0.55))
-    line(g, k, DOOR_X - 0.18, DOOR_TOP + 0.02, DOOR_X - 0.06 + WALL, DOOR_TOP + 0.02, hexA('#000000', 0.3), 0.02)
-    rect(g, k, DOOR_X - 0.14, FLOOR - 0.02, WALL + 0.06, 0.07, mix(PAL.pavement, '#3A3C40', 0.5))
+    drawDoorway(g, v, t)
   }
 
   // Upstairs: Ted's office, on the mezzanine over the hall's left end.
   if (x0 < ROOM_X1 + 0.5) drawOffice(g, v, t, cover)
   g.restore()
+}
+
+/**
+ * The hall's end wall, cut through at the loading door: brick, its outer face catching the morning; a stone lintel
+ * over the opening, the curtain hung from it; through the opening the far jamb, the wall's thickness in its own
+ * shade; the wall's foot running out under the camera, and the threshold. On a bracket off its inner face, the bay
+ * lamp over the conveyor.
+ */
+function drawDoorway(g: C2, v: ReturnType<typeof view>, t: number): void {
+  const k = v.k
+  const y0 = v.y0 - 1
+  const w = WALL.x1 - WALL.x0
+  const brick = mix(PAL.hall, '#5A4A44', 0.55)
+  const jamb = mix(brick, '#15171A', 0.35)
+  const arris = mix(brick, PAL.outsideHigh, 0.35)
+  rect(g, k, WALL.x0, y0, w, DOOR_TOP - y0, brick)
+  rect(g, k, WALL.x0, DOOR_TOP, w, FLOOR - DOOR_TOP, jamb)
+  for (let by = FLOOR - 0.2; by > y0; by -= 0.2) line(g, k, WALL.x0, by, WALL.x1, by, hexA('#000000', 0.18), 0.012)
+  rect(g, k, WALL.x1 - 0.06, y0, 0.06, FLOOR - y0, arris)
+  // The wall's foot, from the threshold out under the camera, as the floor's lines run back to the eye.
+  const drop = FLOOR - v.cy
+  if (drop > 0.05 && v.y1 > FLOOR) {
+    const yb = v.y1 + 0.5
+    const f = (yb - v.cy) / drop
+    const at = (x: number) => v.cx + (x - v.cx) * f
+    poly(g, k, [[WALL.x0, FLOOR], [WALL.x1, FLOOR], [at(WALL.x1), yb], [at(WALL.x0), yb]], mix(jamb, '#000000', 0.2))
+    poly(g, k, [[WALL.x1 - 0.06, FLOOR], [WALL.x1, FLOOR], [at(WALL.x1), yb], [at(WALL.x1 - 0.06), yb]], hexA(arris, 0.6))
+  }
+  rect(g, k, WALL.x0 - 0.06, DOOR_TOP - 0.2, w + 0.12, 0.22, mix(PAL.outside, '#5C5F66', 0.55))
+  line(g, k, WALL.x0 - 0.06, DOOR_TOP + 0.02, WALL.x1 + 0.06, DOOR_TOP + 0.02, hexA('#000000', 0.3), 0.02)
+  rect(g, k, WALL.x0 - 0.02, FLOOR - 0.02, w + 0.06, 0.07, mix(PAL.pavement, '#3A3C40', 0.5))
+  // The bay lamp: its bracket, its shade, the cage round the bulb; dark until it is switched on.
+  const [bx, by] = BAY
+  const on = bayOn(t)
+  rect(g, k, bx, by - 0.24, WALL.x0 - bx, 0.035, PAL.ironLo)
+  rect(g, k, bx - 0.012, by - 0.24, 0.024, 0.1, PAL.ironLo)
+  poly(g, k, [[bx - 0.15, by - 0.04], [bx - 0.07, by - 0.15], [bx + 0.07, by - 0.15], [bx + 0.15, by - 0.04]], PAL.ironLo)
+  g.fillStyle = on > 0 ? hexA('#FFF0CC', 0.35 + 0.6 * on) : '#33393C'
+  g.beginPath()
+  g.ellipse(bx * k, (by + 0.02) * k, 0.07 * k, 0.065 * k, 0, 0, Math.PI * 2)
+  g.fill()
+  for (const dx of [-0.07, 0, 0.07]) line(g, k, bx + dx * 0.9, by - 0.04, bx + dx, by + 0.1, PAL.iron, 0.012)
 }
 
 /* ------------------------------------------------------------------ upstairs */
@@ -263,8 +303,14 @@ function drawTable(g: C2, k: number, t: number): void {
   rect(g, k, TABLE.x0, TABLE.top, TABLE.x1 - TABLE.x0, 0.12, PAL.wood)
   line(g, k, TABLE.x0, TABLE.top, TABLE.x1, TABLE.top, PAL.woodEdge, 0.02)
   for (const lx of [TABLE.x0 + 0.25, TABLE.x1 - 0.3]) rect(g, k, lx, TABLE.top + 0.12, 0.1, TABLE.h - 0.12, PAL.wood)
-  // The table's light: a sheen where the pendant falls; the windows in its top, long and pale; the grain of its front.
-  glow(g, k, -1.1, TABLE.top - 0.1, 1.5, PAL.lamp, 0.08)
+  // The table's light: the pendant's pool on its top, brighter at the middle; the windows in its top, long and pale;
+  // the grain of its front.
+  for (const [rx, a] of [[1.35, 0.1], [0.7, 0.08]] as const) {
+    g.fillStyle = hexA(PAL.lamp, a)
+    g.beginPath()
+    g.ellipse(-1.1 * k, (TABLE.top - 0.11) * k, rx * k, 0.1 * k, 0, 0, Math.PI * 2)
+    g.fill()
+  }
   for (const [a, b] of PANES) {
     if (b < TABLE.x0 || a > TABLE.x1) continue
     const xa = Math.max(a, TABLE.x0 + 0.2)
@@ -433,8 +479,6 @@ function drawTreadle(g: C2, k: number, t: number): void {
     else g.moveTo(x * k, y * k)
   }
   g.stroke()
-  // The flash when it goes down: the press starts.
-  glow(g, k, pad, FLOOR - 0.1, 0.6, PAL.lamp, 0.5 * knock(t - TREADLE, 0.2))
 }
 
 /* ------------------------------------------------------------------ the press */
@@ -512,23 +556,12 @@ function marks(t: number): { d: number; layers: number }[] {
 
 function drawWeb(g: C2, k: number, t: number): void {
   const run = runAt(t)
-  // The web along the line and down the board, and the lamps' light thrown back off it: the brightest thing in the
-  // hall after him.
+  // The web along the line and down the board: the brightest thing in the hall after him.
   const web = new Path2D()
   web.moveTo(G0.c[0] * k, (WEB_Y + WEB_T / 2) * k)
   web.lineTo(G4.c[0] * k, (WEB_Y + WEB_T / 2) * k)
   web.arc(G4.c[0] * k, G4.c[1] * k, (G4.r - WEB_T / 2) * k, -Math.PI / 2, -Math.PI / 2 + BOARD)
   web.lineTo((NOSE[0] - Math.sin(BOARD) * WEB_T * 0.5) * k, (NOSE[1] + Math.cos(BOARD) * WEB_T * 0.5) * k)
-  const lit = lampsOn(t, 0)
-  g.save()
-  g.globalCompositeOperation = 'lighter'
-  g.lineCap = 'round'
-  for (const [w, a] of [[0.34, 0.035], [0.18, 0.05]] as const) {
-    g.strokeStyle = hexA('#FFE9C4', a * (0.4 + 0.6 * Math.min(1, lit)))
-    g.lineWidth = w * k
-    g.stroke(web)
-  }
-  g.restore()
   g.strokeStyle = PAL.paper
   g.lineWidth = WEB_T * k
   g.lineCap = 'butt'
@@ -553,8 +586,31 @@ function drawWeb(g: C2, k: number, t: number): void {
   }
 }
 
-/** A highlight on a turning cylinder's upper left, where the lamps catch it: it stays put while the cylinder turns. */
-function glint(g: C2, k: number, x: number, y: number, r: number): void {
+/**
+ * A drive chain round two sprockets (centres and pitch radii), its links running at the press's pace: the outer
+ * tangents and the far side of each, dashed into links that move along it.
+ */
+function chain(g: C2, k: number, a: [number, number], ra: number, b: [number, number], rb: number, run: number): void {
+  const th = Math.atan2(b[1] - a[1], b[0] - a[0])
+  const ph = Math.acos((ra - rb) / Math.hypot(b[0] - a[0], b[1] - a[1]))
+  g.save()
+  g.beginPath()
+  g.arc(b[0] * k, b[1] * k, rb * k, th + ph, th - ph, true)
+  g.arc(a[0] * k, a[1] * k, ra * k, th - ph, th + ph, true)
+  g.closePath()
+  g.strokeStyle = PAL.ironLo
+  g.lineWidth = 0.035 * k
+  g.stroke()
+  g.setLineDash([0.035 * k, 0.025 * k])
+  g.lineDashOffset = -run * k
+  g.strokeStyle = hexA(PAL.steel, 0.75)
+  g.lineWidth = 0.022 * k
+  g.stroke()
+  g.restore()
+}
+
+/** The lamps' light along a turning cylinder's upper left rim: it stays put while the cylinder turns. */
+function litRim(g: C2, k: number, x: number, y: number, r: number): void {
   g.strokeStyle = hexA(PAL.steelHi, 0.7)
   g.lineWidth = Math.max(0.6, r * 0.09 * k)
   g.beginPath()
@@ -563,7 +619,7 @@ function glint(g: C2, k: number, x: number, y: number, r: number): void {
 }
 
 /** A unit's side frame's face, in cells from its middle: pure geometry, made once. */
-let FACE: { panels: Path2D; rivets: Path2D; lit: Path2D; rim: Path2D } | null = null
+let FACE: { panels: Path2D; rivets: Path2D; lit: Path2D; rim: Path2D; upper: Path2D; crown: Path2D } | null = null
 function unitFace(): NonNullable<typeof FACE> {
   if (FACE) return FACE
   const top = WEB_Y - 1.55
@@ -603,16 +659,29 @@ function unitFace(): NonNullable<typeof FACE> {
       rivets.arc(x, y - 0.04, 0.014, 0, Math.PI * 2)
     }
   }
-  // The lamp's light along its top, and the window's cool light down its right edge.
+  // The lamp's light along its top and falling down its face, brightest nearest the lamp; the window's cool light
+  // down its right edge.
   const lit = new Path2D()
   lit.rect(-0.7, top, 1.4, 0.025)
+  const band = (d: number): Path2D => {
+    const w = 0.7 + ((0.85 - 0.7) * d) / (FLOOR - top)
+    const p = new Path2D()
+    p.moveTo(-0.7, top)
+    p.lineTo(0.7, top)
+    p.lineTo(w, top + d)
+    p.lineTo(-w, top + d)
+    p.closePath()
+    return p
+  }
+  const upper = band(1.0)
+  const crown = band(0.45)
   const rim = new Path2D()
   rim.moveTo(0.7, top + 0.03)
   rim.lineTo(0.85, FLOOR)
   rim.lineTo(0.82, FLOOR)
   rim.lineTo(0.675, top + 0.03)
   rim.closePath()
-  FACE = { panels, rivets, lit, rim }
+  FACE = { panels, rivets, lit, rim, upper, crown }
   return FACE
 }
 
@@ -626,19 +695,23 @@ function drawUnit(g: C2, k: number, i: number, t: number, front: boolean): void 
   const impY = WEB_Y + WEB_T + IMP_R
   const plY = WEB_Y - PLATE_R - lift + 0.015 * hit
   if (!front) {
-    // The side frame: a heavy plate behind, with its foot; its panels, their rivets, the lamp's light on its top.
+    // The side frame: a heavy plate behind, with its foot; the lamps' light on its upper face; its panels, their
+    // rivets, the light along its top.
     poly(g, k, [[x - 0.85, FLOOR], [x - 0.7, WEB_Y - 1.55], [x + 0.7, WEB_Y - 1.55], [x + 0.85, FLOOR]], PAL.ironLo)
     rect(g, k, x - 0.95, FLOOR - 0.12, 1.9, 0.12, PAL.iron)
     g.save()
     g.translate(x * k, 0)
     g.scale(k, k)
     const face = unitFace()
+    const on = lampsOn(t, 0)
+    g.fillStyle = hexA(PAL.lamp, 0.05 * on)
+    g.fill(face.upper)
+    g.fill(face.crown)
     g.strokeStyle = hexA(PAL.ironHi, 0.55)
     g.lineWidth = 0.018
     g.stroke(face.panels)
     g.fillStyle = hexA(PAL.steel, 0.5)
     g.fill(face.rivets)
-    const on = lampsOn(t, 0)
     g.fillStyle = hexA(PAL.lamp, 0.15 + 0.5 * on)
     g.fill(face.lit)
     g.fillStyle = hexA(PAL.steelHi, 0.35)
@@ -661,25 +734,28 @@ function drawUnit(g: C2, k: number, i: number, t: number, front: boolean): void 
     g.moveTo(gx, gy)
     g.lineTo(gx + Math.cos(needle) * 0.085, gy + Math.sin(needle) * 0.085)
     g.stroke()
-    // The running light by its foot: dark until the unit runs, then green.
-    const running = t >= UNIT_START[i]
-    g.fillStyle = running ? '#8FE3A0' : '#24352B'
+    // The running light by its foot, in its bezel: dark until the unit runs, then green.
+    g.fillStyle = PAL.ironLo
     g.beginPath()
-    g.arc(-0.55, FLOOR - 0.36, 0.035, 0, Math.PI * 2)
+    g.arc(-0.55, FLOOR - 0.36, 0.045, 0, Math.PI * 2)
+    g.fill()
+    g.fillStyle = t >= UNIT_START[i] ? '#7CC48E' : '#24352B'
+    g.beginPath()
+    g.arc(-0.55, FLOOR - 0.36, 0.028, 0, Math.PI * 2)
     g.fill()
     g.restore()
-    if (running) glow(g, k, x - 0.55, FLOOR - 0.36, 0.16, '#8FE3A0', 0.35 + 0.25 * hit)
-    // The gears on the frame, turning with the press, one driving the other.
+    // The sprockets on the frame, the small one driving the large by a chain, all turning with the press.
     disc(g, k, x - 0.28, impY + 0.98, 0.19, PAL.iron)
     spokes(g, k, x - 0.28, impY + 0.98, 0.19, run / 0.19, 5, PAL.ironHi, 0.03)
     disc(g, k, x + 0.42, impY + 0.62, 0.3, PAL.iron)
-    spokes(g, k, x + 0.42, impY + 0.62, 0.3, -run / 0.3, 6, PAL.ironHi, 0.04)
-    glint(g, k, x + 0.42, impY + 0.62, 0.3)
+    spokes(g, k, x + 0.42, impY + 0.62, 0.3, run / 0.3, 6, PAL.ironHi, 0.04)
+    litRim(g, k, x + 0.42, impY + 0.62, 0.3)
+    chain(g, k, [x - 0.28, impY + 0.98], 0.21, [x + 0.42, impY + 0.62], 0.32, run)
     // The impression cylinder.
     disc(g, k, x, impY, IMP_R, PAL.iron)
     ring(g, k, x, impY, IMP_R - 0.03, PAL.ironHi, 0.02)
     spokes(g, k, x, impY, IMP_R, run / IMP_R, 4, PAL.ironHi, 0.035)
-    glint(g, k, x, impY, IMP_R)
+    litRim(g, k, x, impY, IMP_R)
     return
   }
   // The arm the plate rides on, from its pivot on the frame's back.
@@ -704,9 +780,7 @@ function drawUnit(g: C2, k: number, i: number, t: number, front: boolean): void 
   g.stroke()
   spokes(g, k, x, plY, PLATE_R, -run / PLATE_R, 3, PAL.ironLo, 0.03)
   disc(g, k, x, plY, 0.06, PAL.ironLo)
-  glint(g, k, x, plY, PLATE_R)
-  // The impression: the ink's colour, struck into the paper at the nip.
-  if (hit > 0.02 && lift < 0.05) glow(g, k, x, WEB_Y + 0.02, 0.4, i === 1 ? PAL.paper : ink, 0.55 * hit)
+  litRim(g, k, x, plY, PLATE_R)
 }
 
 /* ------------------------------------------------------------------ the former, the folder, the stacker */
@@ -730,7 +804,6 @@ function drawFormer(g: C2, k: number, t: number): void {
 
 function drawFolder(g: C2, k: number, t: number): void {
   const run = runAt(t)
-  const cut = t >= CUT_START ? hitOf(CUTS, t, 0.09) : 0
   // The folder's box under the nose; through its window the cutting cylinder and the jaw.
   rect(g, k, FOLD.x0, FOLD.y0, FOLD.x1 - FOLD.x0, FOLD.y1 - FOLD.y0, PAL.iron)
   rect(g, k, FOLD.x0 + 0.08, FOLD.y0 + 0.08, FOLD.x1 - FOLD.x0 - 0.16, FOLD.y1 - FOLD.y0 - 0.16, PAL.ironLo)
@@ -742,30 +815,40 @@ function drawFolder(g: C2, k: number, t: number): void {
     const a = ca * dir
     line(g, k, ccx, ccy, ccx + Math.cos(a) * 0.16, ccy + Math.sin(a) * 0.16, PAL.steelHi, 0.025)
   }
-  // The knife's flash on the cut.
-  if (cut > 0.02) glow(g, k, OUTLET_X, (FOLD.y0 + FOLD.y1) / 2, 0.35, PAL.steelHi, 0.6 * cut)
+  // The mouth under the knife that the copies come out of.
+  rect(g, k, OUTLET_X - CW / 2 - 0.04, FOLD.y1 - 0.05, CW + 0.08, 0.05, PAL.ink)
   // The legs, and the chute down to the tray.
   rect(g, k, FOLD.x0 + 0.05, FOLD.y1, 0.08, FLOOR - FOLD.y1, PAL.ironLo)
   rect(g, k, FOLD.x1 - 0.13, FOLD.y1, 0.08, FLOOR - FOLD.y1, PAL.ironLo)
 }
 
-/** The copies falling from the folder to the tray, face on: the cover, turning a little as it drops. */
+/**
+ * The copies out of the folder, face on: each comes down out of the mouth under the knife on its cut, drops clear,
+ * turning a little once it is out, drifts back over the tray, and falls flat in it.
+ */
 function drawFalling(g: C2, k: number, t: number): void {
   const fallH = DECK - FOLD.y1 - 0.02
   const T = Math.sqrt((2 * fallH) / 12)
+  g.save()
+  g.beginPath()
+  g.rect((TRAY_X - 1) * k, FOLD.y1 * k, (FOLD.x1 - TRAY_X + 2) * k, (DECK + 0.2 - FOLD.y1) * k)
+  g.clip()
   for (const ci of CUTS) {
     const u = t - ci
     if (u < 0 || u > T + 0.02) continue
     const y = FOLD.y1 + 6 * u * u
-    const flat = smooth(u, T - 0.06, T)
+    const out = Math.min(1, (y - FOLD.y1) / CH)
+    const flat = smooth(u, T - 0.08, T)
     const h = CH * (1 - flat) + 0.03 * flat
-    const swing = Math.sin(u * 14 + ci) * 0.12 * (1 - flat)
+    const swing = Math.sin(u * 14 + ci) * 0.12 * (1 - flat) * out * out
+    const x = OUTLET_X + (TRAY_X - OUTLET_X) * smooth(u, 0.05, T)
     g.save()
-    g.translate(OUTLET_X * k, (y - h / 2) * k)
+    g.translate(x * k, (y - h / 2) * k)
     g.rotate(swing)
     cover(g, k, -CW / 2, -h / 2, CW, h)
     g.restore()
   }
+  g.restore()
 }
 
 /** The tray, the ram, the stacker's posts, the stack (or the bundle and the next stack), the joggers and the strapper. */
@@ -862,10 +945,7 @@ function drawStrap(g: C2, k: number, x: number, t: number): void {
   if (u > 0) line(g, k, x, DECK, x, DECK - (DECK - top + slack) * Math.min(1, u * 1.6), col, lw)
   if (u > 0.6) line(g, k, x, top - slack, x + 0.0, top - slack, col, lw)
   // The crimp's seal, on the face, struck.
-  if (t >= CRIMP) {
-    rect(g, k, x - 0.07, DECK - 0.38, 0.14, 0.1, PAL.steel)
-    glow(g, k, x, DECK - 0.33, 0.3, PAL.steelHi, 0.6 * knock(t - CRIMP, 0.12))
-  }
+  if (t >= CRIMP) rect(g, k, x - 0.07, DECK - 0.38, 0.14, 0.1, PAL.steel)
 }
 
 /* ------------------------------------------------------------------ the bundle, the conveyor, the door */
@@ -878,9 +958,6 @@ function drawConveyor(g: C2, k: number, t: number): void {
   ROLLERS.forEach((rx) => {
     const ry = DECK + 0.06
     disc(g, k, rx, ry, 0.08, PAL.steel)
-    const front = bundleX(t) + STACK_W / 2
-    const under = t > SHOVE && Math.abs(front - rx) < 0.06
-    if (under) glow(g, k, rx, ry - 0.04, 0.22, PAL.steelHi, 0.5)
     const a = moving ? (bundleX(t) - STACK_X) / 0.08 : 0
     line(g, k, rx, ry, rx + Math.cos(a) * 0.07, ry + Math.sin(a) * 0.07, PAL.ironLo, 0.02)
   })
@@ -912,7 +989,7 @@ function drawCurtain(g: C2, k: number, t: number): void {
   const release = SLAPS[0] - half / 2
   for (let i = 0; i < 3; i++) {
     const sx = DOOR_X + 0.03 + i * 0.03
-    const a = 0.2 + 0.08 * i
+    const a = 0.3 + 0.06 * i
     const pts: [number, number][] = [[sx, DOOR_TOP]]
     if (t >= CURTAIN - 0.05 && t < release && front >= sx - 0.02) {
       // Draped over the bundle (and him): down to its top, along it, and down its front.
@@ -934,11 +1011,15 @@ function drawCurtain(g: C2, k: number, t: number): void {
       }
       pts.push([sx + Math.sin(ang) * len, DOOR_TOP + Math.cos(ang) * len])
     }
-    g.strokeStyle = hexA(PAL.strip, a)
-    g.lineWidth = 0.07 * k
+    // Each strip: the clear plastic, grey-green, and its thick edge darker down the middle of it.
     g.lineJoin = 'round'
     g.beginPath()
     pts.forEach(([x, y], j) => (j ? g.lineTo(x * k, y * k) : g.moveTo(x * k, y * k)))
+    g.strokeStyle = hexA(PAL.strip, a)
+    g.lineWidth = 0.075 * k
+    g.stroke()
+    g.strokeStyle = hexA('#3E4C50', 0.4)
+    g.lineWidth = Math.max(0.6, 0.014 * k)
     g.stroke()
   }
 }

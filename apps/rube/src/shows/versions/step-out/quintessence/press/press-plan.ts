@@ -259,6 +259,8 @@ export const CONVEYOR = { x0: STACK_X + HALF + 0.08, x1: bundleX(STOP) + HALF + 
 /** The loading door: the bundle's front reaches its strip curtain on CURTAIN. */
 export const DOOR_X = bundleX(CURTAIN) + HALF + 0.02
 export const DOOR_TOP = 1.55
+/** The end wall the door goes through, seen cut: its inner and outer faces. */
+export const WALL = { x0: DOOR_X - 0.12, x1: DOOR_X + 0.4 }
 
 /* ------------------------------------------------------------------ the lane */
 

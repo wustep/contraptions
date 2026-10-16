@@ -519,11 +519,11 @@ const FLOCKS: Flock[] = [
   },
 ]
 
-/** The pigeons' paths, a colour each: the grey of them, the slate of their wings, tails and heads, the sheen at the neck. */
+/** The pigeons' paths, a colour each: the grey of them, the slate of their wings, tails and heads, the green at the neck. */
 interface Plumage {
   body: Path2D
   dark: Path2D
-  sheen: Path2D
+  neck: Path2D
 }
 
 /** An oval as its own shape in a path (pixels from cells). */
@@ -555,7 +555,7 @@ function bird(p: Plumage, k: number, x: number, y: number, dir: number, flap: nu
     p.dark.lineTo((hx + dir * 0.045) * k, (hy + 0.006) * k)
     p.dark.lineTo((hx + dir * 0.018) * k, (hy + 0.01) * k)
     p.dark.closePath()
-    oval(p.sheen, k, x + dir * 0.05, y - 0.078 + 0.035 * peck, 0.018, 0.014, 0)
+    oval(p.neck, k, x + dir * 0.05, y - 0.078 + 0.035 * peck, 0.018, 0.014, 0)
     return
   }
   // In the air, seen against the light: a small body, and the wings out to either side, bent at the wrist, beating.
@@ -579,7 +579,7 @@ function bird(p: Plumage, k: number, x: number, y: number, dir: number, flap: nu
 /** The pigeons at `t`: pecking, going up all at once, wheeling, coming down. */
 export function drawPigeons(ctx: C2, v: View, t: number): void {
   const k = v.k
-  const plumage: Plumage = { body: new Path2D(), dark: new Path2D(), sheen: new Path2D() }
+  const plumage: Plumage = { body: new Path2D(), dark: new Path2D(), neck: new Path2D() }
   const foot = PAVE + 0.2
   for (const f of FLOCKS) {
     for (let i = 0; i < f.n; i++) {
@@ -628,43 +628,50 @@ export function drawPigeons(ctx: C2, v: View, t: number): void {
   ctx.fillStyle = '#5F6770'
   ctx.fill(plumage.dark)
   ctx.fillStyle = '#5C8C80'
-  ctx.fill(plumage.sheen)
+  ctx.fill(plumage.neck)
 }
 
 /* ------------------------------------------------------------------ steam */
 
-/** A soft white puff, drawn once: what every breath of steam is made of (pure of time, so kept). */
-let puff: HTMLCanvasElement | null = null
-function puffSprite(): HTMLCanvasElement {
-  if (puff) return puff
-  const c = document.createElement('canvas')
-  c.width = c.height = 64
-  const g = c.getContext('2d')!
-  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32)
-  r.addColorStop(0, 'rgba(252, 249, 243, 1)')
-  r.addColorStop(0.4, 'rgba(252, 249, 243, 0.55)')
-  r.addColorStop(1, 'rgba(252, 249, 243, 0)')
-  g.fillStyle = r
-  g.fillRect(0, 0, 64, 64)
-  puff = c
-  return c
-}
+/** A billow's round lobes, from its middle in its own radii: [across, down, radius]. The upper ones catch the light. */
+const LOBES: [number, number, number][] = [
+  [-0.45, 0.12, 0.72],
+  [0.42, 0.16, 0.66],
+  [0.02, -0.28, 0.8],
+  [-0.1, 0.34, 0.6],
+]
 
 /**
- * Steam: soft puffs rising from `x, y` and leaning off on the air from the east, swelling and thinning as they go.
+ * Steam: billows rising from `x, y` and leaning off on the air from the east, swelling and thinning as they go. Each
+ * is a few round lobes in one flat fill, its upper lobes paler where the light is on them.
  */
 export function steam(ctx: C2, v: View, t: number, x: number, y: number, height: number, n: number, seed: number, strength = 1): void {
   const k = v.k
   if (x + 1.5 < v.x0 || x - height * 0.6 - 1.5 > v.x1 || y + 0.5 < v.y0 || y - height - 1.5 > v.y1) return
-  const img = puffSprite()
-  const base = ctx.globalAlpha
   for (let i = 0; i < n; i++) {
     const age = (((t * (0.3 + 0.1 * hash(i, 1, seed)) + i / n) % 1) + 1) % 1
+    const a = Math.min(1, age * 6) * (1 - age) * 0.32 * strength
+    if (a < 0.01) continue
     const px = x - age * height * 0.55 + 0.25 * sway(t + i, 0.3, i + seed) * age
     const py = y - age * height
-    const r = 0.22 + age * (0.6 + 0.35 * hash(i, 2, seed))
-    ctx.globalAlpha = base * Math.min(1, age * 6) * (1 - age) * 0.5 * strength
-    ctx.drawImage(img, (px - r) * k, (py - r) * k, 2 * r * k, 2 * r * k)
+    const r = 0.16 + age * (0.42 + 0.25 * hash(i, 2, seed))
+    const turn = hash(i, 3, seed) * 6.283
+    const body = new Path2D()
+    const lit = new Path2D()
+    for (const [dx, dy, s] of LOBES) {
+      const c = Math.cos(turn) * 0.25
+      const lx = px + (dx + c * dy) * r
+      const ly = py + dy * r
+      body.moveTo((lx + s * r) * k, ly * k)
+      body.arc(lx * k, ly * k, s * r * k, 0, Math.PI * 2)
+      if (dy < 0.2) {
+        lit.moveTo((lx + 0.05 * r + s * r * 0.75) * k, (ly - 0.12 * r) * k)
+        lit.arc((lx + 0.05 * r) * k, (ly - 0.12 * r) * k, s * r * 0.75 * k, 0, Math.PI * 2)
+      }
+    }
+    ctx.fillStyle = rgba('#DDD8CE', a)
+    ctx.fill(body)
+    ctx.fillStyle = rgba('#FBF8F1', a * 0.8)
+    ctx.fill(lit)
   }
-  ctx.globalAlpha = base
 }

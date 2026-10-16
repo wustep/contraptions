@@ -1,7 +1,8 @@
 import type { Pt } from '../../../../../parts'
-import { layer, motes, sway, type View } from '../depth'
+import { layer, sway, type View } from '../depth'
 import { hash } from '../kit'
 import { mix, rgba } from '../negatives/hand'
+import { steam } from './city'
 import { FRONTS } from './fronts'
 import { goldAt, morning, S, skyAt, sunAt, whiteAt } from './light'
 
@@ -59,8 +60,8 @@ const FAR = towers(31, -6, 30, 0.7, [5.6, 10.5], [0.9, 1.8])
 const MID = towers(47, -6, 30, 1.0, [4.2, 7.4], [1.2, 2.4])
 const NEAR = towers(53, -6, 32, 1.45, [4.4, 6.4], [1.6, 3.2])
 
-/** One tower: its tiers stepping in toward the top, its crown, the sun on its right edge; windows when `win` is given. */
-function tower(ctx: C2, k: number, t: number, w: Tower, ground: number, body: string, lit: string, panes: Path2D | null, glint: Path2D | null): void {
+/** One tower: its tiers stepping in toward the top, its crown, the sun on its right edge; windows when `panes` is given. */
+function tower(ctx: C2, k: number, w: Tower, ground: number, body: string, lit: string, panes: Path2D | null): void {
   const { x0, x1, top, tiers } = w
   // The tiers from the lowest setback up, each stepping further in.
   const n = tiers.length
@@ -114,10 +115,9 @@ function tower(ctx: C2, k: number, t: number, w: Tower, ground: number, body: st
     ctx.fillRect((tx + 0.14) * k, (top - 0.16) * k, 0.04 * k, 0.16 * k)
   }
   if (!panes) return
-  // Windows: rows of faint panes, and those catching the sun as it climbs, one after another across the face.
+  // Windows: rows of faint panes.
   const cols = Math.max(2, Math.round((x1 - x0) / 0.32))
   const cw = (x1 - x0) / cols
-  const sweep = t * 0.55 + w.seed * 1.7
   for (let y = top + 0.35; y < ground - 0.4; y += 0.42) {
     let ins = 0
     for (let j = 0; j < n; j++) if (y < level(j)) ins = inset(j)
@@ -125,10 +125,6 @@ function tower(ctx: C2, k: number, t: number, w: Tower, ground: number, body: st
       const wx = x0 + i * cw + cw * 0.3
       if (wx < x0 + ins || wx + cw * 0.4 > x1 - ins) continue
       panes.rect(wx * k, y * k, cw * 0.4 * k, 0.2 * k)
-      if (glint) {
-        const ph = (((sweep - i * 0.23 + y * 0.31 + hash(i, Math.round(y * 7), w.seed) * 0.6) % 4) + 4) % 4
-        if (ph < 0.25) glint.rect(wx * k, y * k, cw * 0.4 * k, 0.2 * k)
-      }
     }
   }
 }
@@ -180,27 +176,29 @@ function inOpen(ctx: C2, k: number, boxes: [number, number, number, number][], d
   }
 }
 
-/** The sky: pale over the gold of the horizon, the sun's bloom low in the avenue, the contrail across the top. */
+/** The sky: pale over the gold of the horizon, the sun a plain disc low in the avenue, a plane's contrail across the top. */
 export function drawSky(ctx: C2, v: View, t: number): void {
   const k = v.k
   const sky = skyAt(t)
   const boxes = openSky(v, 0.04)
   layer(ctx, v, 0.04, ANCHOR, REF, () => {
-    // The sky and the sun in one fill: the white of the sun, its gold bloom low over the avenue, opening out into
-    // the pale of the sky above (laid only where the sky is seen).
-    const [sx, sy] = sunAt(t)
+    // The sky, laid only where it is seen: pale overhead, warming toward the avenue's end, the warmth climbing as the
+    // sun does.
+    const m = morning(t)
     const gold = goldAt(t)
-    const r = 13
-    const b = ctx.createRadialGradient(sx * k, sy * k, 0, sx * k, sy * k, r * k)
-    b.addColorStop(0, sky.sun)
-    b.addColorStop(0.035, sky.sun)
-    b.addColorStop(0.09, mix(mix(S.gold, sky.sun, 0.45 + 0.4 * whiteAt(t)), sky.low, 0.45 - 0.25 * gold))
-    b.addColorStop(0.3, mix(sky.low, S.gold, 0.22 * gold))
-    b.addColorStop(0.62, sky.low)
-    b.addColorStop(1, sky.high)
-    ctx.fillStyle = b
+    const g = ctx.createLinearGradient(0, -11 * k, 0, -0.6 * k)
+    g.addColorStop(0, sky.high)
+    g.addColorStop(0.62 - 0.22 * m, sky.low)
+    g.addColorStop(1, mix(sky.low, S.gold, 0.3 * gold + 0.15 * m))
+    ctx.fillStyle = g
     for (const [x0, y0, x1, y1] of boxes) ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
-    // The far end of the avenue: low blocks and a tower, pale in the sun's haze, the sun between them.
+    // The sun: a plain disc in the haze.
+    const [sx, sy] = sunAt(t)
+    ctx.fillStyle = sky.sun
+    ctx.beginPath()
+    ctx.arc(sx * k, sy * k, 0.42 * k, 0, Math.PI * 2)
+    ctx.fill()
+    // The far end of the avenue: low blocks and a tower, pale in the haze, the sun between them.
     const end = new Path2D()
     for (const [x0, x1, top] of [[AVENUE - 1.5, AVENUE - 0.9, -1.6], [AVENUE - 0.95, AVENUE - 0.45, -2.6], [AVENUE + 0.55, AVENUE + 1.0, -1.9], [AVENUE + 0.95, AVENUE + 1.6, -3.1], [AVENUE + 1.55, AVENUE + 2.1, -1.4]]) end.rect(x0 * k, top * k, (x1 - x0) * k, (-0.7 - top) * k)
     end.moveTo((AVENUE + 1.27) * k, -3.1 * k)
@@ -208,33 +206,47 @@ export function drawSky(ctx: C2, v: View, t: number): void {
     end.lineTo((AVENUE + 1.31) * k, -3.1 * k)
     ctx.fillStyle = rgba(mix(sky.low, '#A9A598', 0.55), 0.7)
     ctx.fill(end)
-    // The contrail: a plane high up, crossing slowly, its trail spreading and fading behind it.
-    const u = (t - 230) / 40
-    if (u > 0) {
-      const px = -3 + 28 * u
-      const py = -7.8 + 0.5 * u
-      const tail = Math.max(-6, px - 16)
-      const line = ctx.createLinearGradient(tail * k, 0, px * k, 0)
-      line.addColorStop(0, 'rgba(255, 255, 255, 0)')
-      line.addColorStop(0.7, 'rgba(255, 255, 255, 0.55)')
-      line.addColorStop(1, 'rgba(255, 255, 255, 0.85)')
-      ctx.strokeStyle = line
-      ctx.lineCap = 'round'
-      ctx.beginPath()
-      ctx.moveTo(tail * k, (py - 0.5 * (px - tail) / 28 - 0.04) * k)
-      ctx.lineTo(px * k, py * k)
-      ctx.lineWidth = 0.05 * k
-      ctx.stroke()
-      ctx.globalAlpha = 0.35
-      ctx.lineWidth = 0.16 * k
-      ctx.stroke()
-      ctx.globalAlpha = 1
-      ctx.fillStyle = '#FFFFFF'
-      ctx.beginPath()
-      ctx.arc(px * k, py * k, 0.045 * k, 0, Math.PI * 2)
-      ctx.fill()
-    }
+    contrail(ctx, k, t, sky.high)
   })
+}
+
+/** The plane high over the street, from 230 s: where it is `s` seconds into its crossing (the sky's plane's cells). */
+const planeAt = (s: number): Pt => [-3 + 0.7 * s, -7.8 + 0.0125 * s]
+
+/**
+ * A plane crossing high up, and its contrail: laid behind it as it goes, each stretch of it drifting off on the wind
+ * after it is laid, spreading wider and fainter the older it is.
+ */
+function contrail(ctx: C2, k: number, t: number, high: string): void {
+  const s = t - 230
+  if (s <= 0) return
+  const AGE = 24
+  const n = 12
+  const drift: Pt = [0.06, 0.025]
+  const point = (age: number): Pt => {
+    const [x, y] = planeAt(s - age)
+    return [x + drift[0] * age, y + drift[1] * age]
+  }
+  const oldest = Math.min(s, AGE)
+  ctx.lineCap = 'round'
+  for (let i = 0; i < n; i++) {
+    const a0 = (oldest * i) / n
+    const a1 = (oldest * (i + 1)) / n
+    const age = (a0 + a1) / 2
+    const [x0, y0] = point(a0)
+    const [x1, y1] = point(a1)
+    ctx.strokeStyle = rgba('#FFFFFF', 0.75 * (1 - age / AGE))
+    ctx.lineWidth = (0.035 + 0.009 * age) * k
+    ctx.beginPath()
+    ctx.moveTo(x0 * k, y0 * k)
+    ctx.lineTo(x1 * k, y1 * k)
+    ctx.stroke()
+  }
+  // The plane: a speck with its wings, a little darker than the sky.
+  const [px, py] = planeAt(s)
+  ctx.fillStyle = mix(high, '#6E777D', 0.45)
+  ctx.fillRect((px - 0.07) * k, (py - 0.012) * k, 0.14 * k, 0.024 * k)
+  ctx.fillRect((px - 0.015) * k, (py - 0.05) * k, 0.03 * k, 0.1 * k)
 }
 
 /** The city behind the street, on three planes, each paler for its distance; and gulls wheeling far off. */
@@ -256,7 +268,7 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       const ribs = new Path2D()
       for (const tw of FAR) {
         if (tw.x1 <= x0 || tw.x0 >= x1) continue
-        tower(ctx, k, t, tw, -0.6, body, lit, null, null)
+        tower(ctx, k, tw, -0.6, body, lit, null)
         // Its piers, faint, up the narrowest of its tiers.
         const ins = tw.tiers.length ? tw.tiers[tw.tiers.length - 1][0] : 0
         for (let x = tw.x0 + ins + 0.12; x < tw.x1 - ins - 0.1; x += 0.3) ribs.rect(x * k, (tw.top + 0.25) * k, 0.05 * k, (-0.6 - tw.top - 0.25) * k)
@@ -267,8 +279,7 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       ctx.fillRect((x0 - 1) * k, -4.5 * k, (x1 - x0 + 2) * k, 4.2 * k)
     })
   })
-  // Middle: the next towers, windows in rows catching the sun one after another; gulls wheeling low in the avenue's
-  // gap, across the sun.
+  // Middle: the next towers, their windows in rows; gulls wheeling low in the avenue's gap, across the sun.
   layer(ctx, v, 0.35, ANCHOR, REF, () => {
     const body = mix(mix('#BABDBB', haze, 0.42), '#F3F0E8', w * 0.2)
     const lit = mix(mix('#E9D6B4', sky.sun, 0.3), '#FFFFFF', w * 0.3)
@@ -277,12 +288,9 @@ export function drawCity(ctx: C2, v: View, t: number): void {
     g.addColorStop(1, rgba(haze, 0.7))
     inOpen(ctx, k, openSky(v, 0.35), ([x0, , x1]) => {
       const panes = new Path2D()
-      const glint = new Path2D()
-      for (const tw of MID) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, t, tw, -0.3, body, lit, panes, glint)
+      for (const tw of MID) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, tw, -0.3, body, lit, panes)
       ctx.fillStyle = rgba(mix(body, '#7F8C96', 0.35), 0.55)
       ctx.fill(panes)
-      ctx.fillStyle = rgba(sky.sun, 0.85)
-      ctx.fill(glint)
       ctx.fillStyle = g
       ctx.fillRect((x0 - 1) * k, -3.2 * k, (x1 - x0 + 2) * k, 3.1 * k)
     })
@@ -312,20 +320,14 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       // Far down the avenue, a cross street: its traffic passing behind the corners.
       if (y1 > -0.5) farTraffic(ctx, k, t, haze)
       const panes = new Path2D()
-      const glint = new Path2D()
-      for (const tw of NEAR) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, t * 0.8, tw, 0.05, body, lit, panes, glint)
+      for (const tw of NEAR) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, tw, 0.05, body, lit, panes)
       ctx.fillStyle = rgba(mix(body, '#6E7C86', 0.45), 0.6)
       ctx.fill(panes)
-      ctx.fillStyle = rgba(sky.sun, 0.9)
-      ctx.fill(glint)
       ctx.fillStyle = g
       ctx.fillRect((x0 - 1) * k, -2.2 * k, (x1 - x0 + 2) * k, 2.4 * k)
     })
     // Steam off a roof, always: a vent on the far side's roofs breathing out.
-    motes(ctx, { ...f, x0: 19.2, x1: 21.6, y0: -9, y1: -4.6 }, t, {
-      n: 14, seed: 8, tile: [2.4, 4.4], r: [0.14, 0.32], v: [-0.18, -0.42], spread: 0.35, sway: [0.12, 0.2], color: rgba('#FFFFFF', 0.13 + 0.05 * m),
-      within: { x0: 19.2, x1: 21.6, y0: -9, y1: -4.6 },
-    })
+    steam(ctx, f, t, 21.2, -4.7, 3.6, 8, 8, 0.75 + 0.25 * m)
   })
 }
 

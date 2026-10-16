@@ -1,7 +1,8 @@
 import { hash } from '../kit'
 import { layer, rgbaOf, type View } from '../depth'
 import { ANCHOR, figure, floorAt, floorOf, REF } from './hall'
-import { DOOR_X, FLOOR } from './press-plan'
+import { DOOR_X, FLOOR, WALL } from './press-plan'
+import { steam } from './steam'
 
 /**
  * The street through the loading door (the PRESS builder's): the New York morning he is shoved out into. A pale gold
@@ -26,9 +27,21 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
   if (v.x1 < DOOR_X) return
   const k = v.k
   ctx.save()
+  // Right of the door; under the floor's line, right of the end wall's foot as it runs out toward the eye.
   ctx.beginPath()
-  ctx.rect(DOOR_X * k, (v.y0 - 1) * k, (v.x1 - DOOR_X + 1) * k, (v.h + 2) * k)
+  const drop = FLOOR - v.cy
+  const yb = v.y1 + 1
+  const xb = drop > 0.05 ? v.cx + (WALL.x1 - v.cx) * ((yb - v.cy) / drop) : WALL.x1
+  ctx.moveTo(DOOR_X * k, (v.y0 - 1) * k)
+  ctx.lineTo((Math.max(v.x1, xb) + 1) * k, (v.y0 - 1) * k)
+  ctx.lineTo((Math.max(v.x1, xb) + 1) * k, yb * k)
+  ctx.lineTo(xb * k, yb * k)
+  ctx.lineTo(WALL.x1 * k, FLOOR * k)
+  ctx.lineTo(DOOR_X * k, FLOOR * k)
+  ctx.closePath()
   ctx.clip()
+  // Where the street's ground starts, left of the clip's edge wherever that is.
+  const x0 = Math.min(DOOR_X, xb) - 0.5
   // The sky, near the lens.
   const g = ctx.createLinearGradient(0, (v.y0 - 0.2) * k, 0, floorAt(v, 0.3) * k)
   for (const [u, c] of SKY) g.addColorStop(u, c)
@@ -140,17 +153,14 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
     for (let x = Math.floor(s.x0 / 0.9) * 0.9; x < s.x1 + 0.5; x += 0.9) dash.rect(x, mid - 0.02, 0.45, 0.035)
     ctx.fillStyle = rgbaOf('#ECE6D6', 0.7)
     ctx.fill(dash)
-    // Steam off a manhole in the road.
-    const steam = new Path2D()
-    const mx = Math.floor((s.x0 + s.w * 0.6) / 7) * 7 + 3.5
-    for (let j = 0; j < 7; j++) {
-      const u = (t * 0.35 + j / 7) % 1
-      const r = 0.12 + 0.35 * u
-      steam.moveTo(mx + 0.3 * Math.sin(t * 0.6 + j) * u + r, mid + 0.25 - 1.6 * u)
-      steam.arc(mx + 0.3 * Math.sin(t * 0.6 + j) * u, mid + 0.25 - 1.6 * u, r, 0, Math.PI * 2)
+    // Steam off the manholes in the road, one every seven cells.
+    for (let mx = Math.floor((s.x0 - 1) / 7) * 7 + 3.5; mx < s.x1 + 2; mx += 7) {
+      ctx.fillStyle = '#56524E'
+      ctx.beginPath()
+      ctx.ellipse(mx, mid + 0.25, 0.3, 0.05, 0, 0, Math.PI * 2)
+      ctx.fill()
+      steam(ctx, t, mx, mid + 0.22, mx, 1)
     }
-    ctx.fillStyle = rgbaOf('#F2E9DA', 0.12)
-    ctx.fill(steam)
     ctx.restore()
   })
   // A taxi going by in the far lane while he rides out, gone before he is on the pavement.
@@ -192,24 +202,23 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
   ctx.scale(k, k)
   const kerb = floorAt(v, 0.88)
   ctx.fillStyle = '#C9BBA4'
-  ctx.fillRect(DOOR_X, kerb - 0.03, v.x1 - DOOR_X + 1, 0.06)
+  ctx.fillRect(x0, kerb - 0.03, v.x1 - x0 + 1, 0.06)
   // Warm stone, the low sun full on it.
   ctx.fillStyle = '#B4A68F'
-  ctx.fillRect(DOOR_X, kerb + 0.03, v.x1 - DOOR_X + 1, v.y1 - kerb + 1)
+  ctx.fillRect(x0, kerb + 0.03, v.x1 - x0 + 1, v.y1 - kerb + 1)
   const joints = new Path2D()
-  const drop = FLOOR - v.cy
   if (drop > 0.05) {
     for (let z = 0.9; z < 12; z *= 1.32) {
       const y = floorAt(v, z)
       if (y < kerb || y > v.y1 + 0.2) continue
-      joints.rect(DOOR_X, y, v.x1 - DOOR_X + 1, 0.012)
+      joints.rect(x0, y, v.x1 - x0 + 1, 0.012)
     }
     const fa = (kerb - v.cy) / drop
     const fb = (v.y1 + 0.2 - v.cy) / drop
-    for (let x = Math.floor((DOOR_X - 8) / 0.9) * 0.9; x < v.x1 + 8; x += 0.9) {
+    for (let x = Math.floor((x0 - 8) / 0.9) * 0.9; x < v.x1 + 8; x += 0.9) {
       const ax = v.cx + (x - v.cx) * fa
       const bx = v.cx + (x - v.cx) * fb
-      if (Math.max(ax, bx) < DOOR_X || Math.min(ax, bx) > v.x1 + 0.5) continue
+      if (Math.max(ax, bx) < x0 || Math.min(ax, bx) > v.x1 + 0.5) continue
       joints.moveTo(ax, kerb)
       joints.lineTo(bx, v.y1 + 0.2)
       joints.lineTo(bx + 0.015, v.y1 + 0.2)
@@ -232,14 +241,14 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
     for (let j = 0; j + 1 < rows.length; j++) {
       const fa = (rows[j] - v.cy) / drop
       const fb = (rows[j + 1] - v.cy) / drop
-      for (let x = Math.floor((DOOR_X - 8) / 0.9) * 0.9; x < v.x1 + 8; x += 0.9) {
+      for (let x = Math.floor((x0 - 8) / 0.9) * 0.9; x < v.x1 + 8; x += 0.9) {
         const h = hash(Math.round(x / 0.9), j, 97)
         if (h > 0.25 && h < 0.75) continue
         const a0 = v.cx + (x - v.cx) * fa
         const a1 = v.cx + (x + 0.9 - v.cx) * fa
         const b0 = v.cx + (x - v.cx) * fb
         const b1 = v.cx + (x + 0.9 - v.cx) * fb
-        if (Math.max(a1, b1) < DOOR_X || Math.min(a0, b0) > v.x1 + 0.5) continue
+        if (Math.max(a1, b1) < x0 || Math.min(a0, b0) > v.x1 + 0.5) continue
         const p = h < 0.25 ? dark : light
         p.moveTo(a0, rows[j])
         p.lineTo(a1, rows[j])

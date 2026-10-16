@@ -1,12 +1,12 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
-import { glow, sway, view, type View } from '../depth'
+import { sway, view, type View } from '../depth'
 import { hash } from '../kit'
 import { LIFE_RED, WALTER_WARM } from '../worlds'
-import { contact, INK, knock, mix, pool, ramp, rgba, rule, settle, slab } from '../negatives/hand'
+import { contact, INK, knock, mix, ramp, rgba, rule, settle, slab } from '../negatives/hand'
 import { drawCrossers, drawPeople, drawPigeons, drawSale, drawTraffic, FLASH, peopleShadows, steam, WALK } from './city'
 import { AVENUE_FAR, drawFireEscape, drawFronts, drawGround, drawRoofs, skyShows } from './fronts'
-import { LANE, litAt, morning, S, shadeAt, shadeTint } from './light'
+import { LANE, morning, S, shadeAt, shadeTint } from './light'
 import { CELLAR, cherylAt, CLANKS, CORNER, COVER, FLIPS, HAULS, IN, KERB, PAVE, SLOT_W, SLOTS, STAND, STOP, WALTER_STOP, walterAt } from './plan'
 import { drawAvenue, drawCity, drawSky } from './sky'
 
@@ -63,8 +63,12 @@ function life(ctx: C2, k: number, x0: number, y0: number, w: number, h: number):
   const g = ctx.createLinearGradient(0, (sy - h * 0.035) * k, 0, (sy + h * 0.035) * k)
   g.addColorStop(0, '#EEF3F0')
   g.addColorStop(1, '#CED8D4')
+  // The strip's light lying on the step round it, flat.
+  ctx.fillStyle = rgba('#E4ECE8', 0.16)
+  ctx.beginPath()
+  ctx.ellipse((wx + w * 0.16) * k, (sy + h * 0.05) * k, w * 0.4 * k, h * 0.07 * k, 0, 0, Math.PI * 2)
+  ctx.fill()
   slab(ctx, k, wx - r * 0.2, sy - h * 0.045, px0 + (px1 - px0) * 0.9, sy + h * 0.045, g)
-  pool(ctx, k, wx + w * 0.12, sy, w * 0.5, '#E4ECE8', 0.45, 0.55)
   // Him: the ball as he rolls, an ink ring, Life's red, his mark.
   ctx.fillStyle = INK
   ctx.beginPath()
@@ -87,22 +91,64 @@ function life(ctx: C2, k: number, x0: number, y0: number, w: number, h: number):
   slab(ctx, k, bx0 + bw * 0.1, by0 + bh * 0.14, bx0 + bw * 0.9, by0 + bh * 0.86, null, { color: '#FFFFFF', w: Math.max(1, 0.012 * k) })
 }
 
-/** The shutter's bottom edge at `t`: down, then up in two hauls, the second to the top, latched. */
+/** How long each haul of the shutter takes, up to its strike. */
+const HAUL = 0.55
+
+/** The shutter's bottom edge at `t`: down, then up in two hauls, the second to the top, latched; each eases up and settles on its strike. */
 function shutterAt(t: number): number {
   const { open } = STAND
   const half = open.top + (PAVE - open.top) * 0.48
-  const haul = (from: number, to: number, a: number) => from + (to - from) * ramp(t, a - 0.22, a) + 0.05 * settle(t, a, 5, 0.12)
-  if (t < HAULS[1] - 0.22) return haul(PAVE, half, HAULS[0])
+  const haul = (from: number, to: number, a: number) => from + (to - from) * ramp(t, a - HAUL, a) + 0.05 * settle(t, a, 5, 0.12)
+  if (t < HAULS[1] - HAUL) return haul(PAVE, half, HAULS[0])
   return haul(half, open.top, HAULS[1])
 }
 
 /** An issue's flip down onto the rack: 0 folded up, 1 down; it slaps and settles. Life settles again on the chord. */
 /** Which flip each slot takes: the left, then the right, and Life, in the middle, last. */
 const FLIP_OF = [0, 2, 1]
+/** How long his hand takes to pull an issue down off its fold, landing on the flip's strike. */
+const FLIP = 0.36
 function flipAt(i: number, t: number): number {
   const a = FLIPS[FLIP_OF[i]]
-  const down = ramp(t, a - 0.16, a)
+  const down = ramp(t, a - FLIP, a)
   return down + (t > a ? 0.06 * settle(t, a, 4, 0.18) : 0) + (i === 1 && t > STOP ? 0.03 * settle(t, STOP, 3, 0.3) : 0)
+}
+
+/** The man's two hands and the issues each puts out, in order: [which flip, which slot]. The left does the left, then Life. */
+const HANDS: [number, number][][] = [
+  [
+    [0, 0],
+    [2, 1],
+  ],
+  [[1, 2]],
+]
+
+/**
+ * Where one of his hands is at `t` (cells), or null while it is down behind the ledge: up out of sight to an issue's
+ * fold, down with it as it flips, on to the next, and down out of sight after the last.
+ */
+function handAt(jobs: [number, number][], t: number): Pt | null {
+  const h = COVER.y1 - COVER.y0
+  const hid = COVER.y0 + 1.3
+  const top = COVER.y0 + 0.02
+  const gx = (s: number) => SLOTS[s] + SLOT_W * 0.62
+  const at = (s: number, u: number): number => top + (h * 0.92 - 0.02) * Math.max(0, Math.min(1, flipAt(s, u)))
+  let from: Pt = [gx(jobs[0][1]), hid]
+  let since = FLIPS[jobs[0][0]] - FLIP - 0.46
+  if (t < since) return null
+  for (const [fi, s] of jobs) {
+    const a = FLIPS[fi]
+    const grip = a - FLIP - 0.06
+    if (t < grip) {
+      const u = ramp(t, since, grip)
+      return [from[0] + (gx(s) - from[0]) * u, from[1] + (top - from[1]) * u]
+    }
+    if (t < a + 0.05) return [gx(s), at(s, t)]
+    from = [gx(s), at(s, a + 0.05)]
+    since = a + 0.05
+  }
+  const u = ramp(t, since, since + 0.45)
+  return u >= 1 ? null : [from[0], from[1] + (hid - from[1]) * u]
 }
 
 function drawStand(ctx: C2, k: number, t: number): void {
@@ -115,6 +161,12 @@ function drawStand(ctx: C2, k: number, t: number): void {
   ctx.lineTo((x0 + 1.2) * k, (PAVE + 0.32) * k)
   ctx.lineTo(x0 * k, PAVE * k)
   ctx.fill()
+  // This morning's delivery by its side, two bundles off the van in their straps, waiting to be cut open.
+  for (const [bx, by] of [[x1 + 0.08, PAVE], [x1 + 0.12, PAVE - 0.25]] as [number, number][]) {
+    slab(ctx, k, bx, by - 0.25, bx + 0.56, by, '#E6E1D5', { color: rgba(INK, 0.8), w: 0.8 })
+    for (let y = by - 0.05; y > by - 0.24; y -= 0.05) rule(ctx, k, bx + 0.02, y, bx + 0.54, y, rgba(INK, 0.22), 0.6)
+    slab(ctx, k, bx + 0.25, by - 0.25, bx + 0.29, by, '#3A4247')
+  }
   slab(ctx, k, x0, roof, x1, PAVE, S.kiosk, { color: INK, w: 1 })
   slab(ctx, k, x0 - 0.18, eave, x1 + 0.18, roof, S.kioskDark, { color: INK, w: 1 })
   // Inside: dark, the back racks of issues, the front rack's ledge and its three slots.
@@ -170,14 +222,11 @@ function drawStand(ctx: C2, k: number, t: number): void {
     // The clothes-peg holding it.
     slab(ctx, k, sx + SLOT_W / 2 - 0.03, COVER.y0 - 0.1, sx + SLOT_W / 2 + 0.03, COVER.y0 + 0.06, '#A89C86', { color: INK, w: 0.8 })
   })
-  // The man inside: only his hand and sleeve, up out of the dark to pull each issue down off its fold.
-  SLOTS.forEach((sx, i) => {
-    const a = FLIPS[FLIP_OF[i]]
-    const reach = ramp(t, a - 0.42, a - 0.18) * (1 - ramp(t, a + 0.04, a + 0.4))
-    if (reach <= 0.01) return
-    const f = Math.max(0, Math.min(1, flipAt(i, t)))
-    const hx = sx + SLOT_W * 0.62
-    const hy = COVER.y0 + (COVER.y1 - COVER.y0) * f * 0.92 + (1 - reach) * 1.1
+  // The man inside: only his hands and sleeves, up from behind the ledge to pull each issue down off its fold.
+  for (const jobs of HANDS) {
+    const hand = handAt(jobs, t)
+    if (!hand) continue
+    const [hx, hy] = hand
     const elbow: [number, number] = [hx + 0.3, -0.5]
     ctx.save()
     // From behind the ledge: nothing of him below it.
@@ -185,19 +234,19 @@ function drawStand(ctx: C2, k: number, t: number): void {
     ctx.rect(open.x0 * k, open.top * k, (open.x1 - open.x0) * k, (-0.36 - open.top) * k)
     ctx.clip()
     ctx.lineCap = 'round'
-    ctx.strokeStyle = rgba('#1E2421', reach)
+    ctx.strokeStyle = '#1E2421'
     ctx.lineWidth = 0.13 * k
     ctx.beginPath()
     ctx.moveTo((elbow[0] + 0.08) * k, 0)
     ctx.lineTo(elbow[0] * k, elbow[1] * k)
     ctx.lineTo((hx + 0.05) * k, (hy + 0.06) * k)
     ctx.stroke()
-    ctx.fillStyle = rgba('#B39478', reach)
+    ctx.fillStyle = '#B39478'
     ctx.beginPath()
     ctx.ellipse(hx * k, hy * k, 0.07 * k, 0.055 * k, -0.5, 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
-  })
+  }
   // The shutter, rolled up to its drum.
   const bottom = shutterAt(t)
   if (bottom > open.top + 0.01) {
@@ -357,7 +406,6 @@ function drawSignal(ctx: C2, k: number, t: number): void {
     ctx.beginPath()
     ctx.ellipse(x * k, -3.53 * k, 0.07 * k, 0.085 * k, 0, 0, Math.PI * 2)
     ctx.fill()
-    glow(ctx, k, x, -3.55, 0.5, '#F2A548', 0.35 * hand)
   }
   if (walk > 0.01) {
     ctx.fillStyle = rgba('#F7F4EA', walk)
@@ -366,7 +414,6 @@ function drawSignal(ctx: C2, k: number, t: number): void {
     ctx.beginPath()
     ctx.arc(x * k, -3.39 * k, 0.025 * k, 0, Math.PI * 2)
     ctx.fill()
-    glow(ctx, k, x, -3.31, 0.5, '#F7F4EA', 0.45 * walk)
   }
 }
 
@@ -540,16 +587,13 @@ export function drawStreet(p: p5, k: number, t: number): void {
   drawGround(ctx, v, t)
   drawGroundPlane(ctx, v)
   drawSignal(ctx, k, t)
-  // The cellar doors in the pavement: two plates that clank as he goes over, catching the sun as they do.
-  const dip = (a: number) => 0.02 * knock(t, a, 0.06)
+  // The cellar doors in the pavement: two plates that clank as he goes over, dipping and rattling in their frame.
+  const dip = (a: number) => 0.02 * knock(t, a, 0.06) + 0.008 * settle(t, a, 9, 0.15)
   slab(ctx, k, CELLAR.x0 - 0.06, PAVE, CELLAR.x1 + 0.06, PAVE + 0.16, '#7E8282', { color: INK, w: 0.9 })
   for (const [a, b, c] of [[CELLAR.x0, CELLAR.mid, CLANKS[0]], [CELLAR.mid, CELLAR.x1, CLANKS[1]]]) {
     const y = PAVE + dip(c)
     slab(ctx, k, a, y, b, y + 0.1, S.steel, { color: INK, w: 0.9 })
     for (let x = a + 0.08; x < b - 0.04; x += 0.12) rule(ctx, k, x, y + 0.03, x + 0.05, y + 0.07, rgba(INK, 0.4), 0.8)
-    const flash = knock(t, c, 0.12)
-    if (flash > 0.01) rule(ctx, k, a, y, b, y, rgba('#FFFFFF', 0.8 * flash), 1.6)
-    if (flash > 0.01 && litAt(t, (a + b) / 2, y)) glow(ctx, k, (a + b) / 2, y, 0.5, '#FFF4DA', 0.5 * flash, true, 0.4)
   }
   drawLamp(ctx, k)
   drawStand(ctx, k, t)
