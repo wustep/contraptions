@@ -491,13 +491,15 @@ export function passageAt(t: number): { passage: Passage; u: number } | null {
 
 /* ------------------------------------------------------------------ the drawing */
 
-/** A second canvas the size of the frame, one per p5 sketch, made again when the frame changes size. */
+/**
+ * A second canvas the size of the frame, one per p5 sketch, sized again when the frame changes size (in place: p5's
+ * `remove` on a 2D graphics throws, so a new one cannot replace it).
+ */
 const spares = new WeakMap<p5, p5.Graphics>()
 function spareFor(p: p5): p5.Graphics {
   const d = p.pixelDensity()
   let g = spares.get(p)
-  if (!g || g.width !== p.width || g.height !== p.height || g.pixelDensity() !== d) {
-    g?.remove()
+  if (!g) {
     g = p.createGraphics(p.width, p.height)
     g.pixelDensity(d)
     // The modes every piece is drawn in (the stage's `drawingModes`).
@@ -507,6 +509,8 @@ function spareFor(p: p5): p5.Graphics {
     g.strokeJoin(g.ROUND)
     spares.set(p, g)
   }
+  if (g.width !== p.width || g.height !== p.height) g.resizeCanvas(p.width, p.height, true)
+  if (g.pixelDensity() !== d) g.pixelDensity(d)
   return g
 }
 
