@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, bloom, rgba } from '../cast'
+import { beam, rgba } from '../cast'
 import { frame, hash } from '../kit'
 import { SPLASH } from '../stack'
 import { PLANE, RAIN } from '../worlds'
@@ -353,10 +353,6 @@ function drawShell(p: p5, k: number, ink: string, w: number, t: number, wet: num
     p.line(X(foot[0]), X(foot[1]), X(foot[0] + Math.cos(a) * 0.3), X(foot[1] + Math.sin(a) * 0.3))
   }
   p.pop()
-  if (lamp > 0.05) {
-    bloom(p, k, [L, 0.08], 0.32, RAIN.lamp, 0.4 * lamp)
-    bloom(p, k, [-L, 0.02], 0.18, RAIN.trainRust, 0.35 * lamp)
-  }
 }
 
 /** The body's outline's box in world cells, for claiming cells. */
