@@ -567,6 +567,25 @@ motion probe found the one still stretch. Every glow in the show went, and what 
   main-thread paint is unchanged (0.87 ms mean, 7.0 ms at worst), and on a software canvas (CPU raster, the heavier
   case) a frame costs a quarter less (27.2 to 19.8 ms mean), home and the plane most.
 
+A second restraint pass read the show again with fresh eyes: offset frames every three seconds, a tall frame and Zoom
+every six, every section change either side, and a probe of every thirtieth of a second for pops (none: every jump in
+the picture is a cut or the train's lamp stabbing on). It found light still hanging in the air, and a few last shines:
+- **Shafts in the air** (61.3 to 68.9, 213.7 to 244.2): the reading lamp's cone over the case and a moon shaft at
+  night; shafts from every window across the aisle and two across the row in the morning; shafts across the arrivals
+  hall. Stacked translucent cones, they also showed a screen-door dither. The lamp now lights the two seat backs under
+  it, warm from the headrest down (its leftover wash had sat behind Cobb and Ariadne like a halo), and the case; the
+  sun is its warmth on the floor, the seat backs and the case.
+- **Rays under the river** (89 to 92, 206 to 213.7): rays of light drifting down from the surface, a pale dithered
+  band as the three go under in the grey rain. The river is its murk.
+- **The mirror** (49.9 to 56): two diagonal bands of white sheen across it; and a shard turned to the sky flashed near
+  white, the biggest a blank cut-out against the facades. The mirror is its silver and the corridor in it; a shard
+  turned to the sky is the glass a little lighter.
+- **Glints on the Seine** under the fold, **a sheen on the van's glass**, **the stars' twinkle** over the night
+  cloud deck, and **a flat flash at limbo's kicks** (179.6, 183.2), lost on the pale sky behind the streak that already
+  marks the throw.
+- **Home's hedges** (251 to 265) were the last flat cut-outs in the garden once the glare had gone: their crowns catch
+  the morning now and their feet sit in their own shade.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
