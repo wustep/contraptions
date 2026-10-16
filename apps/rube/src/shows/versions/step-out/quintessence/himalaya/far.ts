@@ -7,9 +7,9 @@ import { litY, sunAt, SUN_R, tone, VALLEY, REF, wind, type LitPlane, type Tone }
 
 /**
  * Everything beyond the valley, on its own planes behind the mountain he climbs: the sky (painted at depth 0, with the
- * last stars, cirrus and lenticular cloud, a skein of geese and the sun); the great range at 0.08, its highest summit streaming a long
- * plume; a second range at 0.2 and a third at 0.35, each with spindrift off its ridges and cloud at its feet; the sea
- * of cloud at 0.55 filling the valley under the ledge; and a pair of choughs wheeling over it, far below the ledge.
+ * last stars, rolls of high cloud lit from under, a skein of geese and the sun); the great range at 0.08, its highest summit
+ * streaming a long plume; a second range at 0.2 and a third at 0.35, a few of their highest summits streaming
+ * spindrift, and cloud at their feet; and the sea of cloud at 0.55 filling the valley under the ledge.
  * Each plane moves and scales less than the world as the camera goes, so the climb raises the far peaks over the near
  * ridges and the pull-back opens on all of them.
  *
@@ -48,6 +48,8 @@ interface Spec {
   /** How far the air has paled it toward the sky. */
   haze: number
   plane: LitPlane
+  /** The summits (by index in `peaks`) the wind streams spindrift off: the highest. */
+  plumed: number[]
 }
 
 const P = (x: number, y: number, wl: number, wr = wl): Peak => ({ x, y, wl, wr })
@@ -56,15 +58,15 @@ const P = (x: number, y: number, wl: number, wr = wl): Peak => ({ x, y, wl, wr }
 const GREAT = 4
 const SPECS: Spec[] = [
   {
-    z: 0.08, seed: 11, x0: -8, x1: 32, base: -9.2, jag: 0.05, rocky: 0.35, cloud: -9.28, flow: 0.025, haze: 0.32, plane: 'far',
+    z: 0.08, seed: 11, x0: -8, x1: 32, base: -9.2, jag: 0.05, rocky: 0.35, cloud: -9.28, flow: 0.025, haze: 0.32, plane: 'far', plumed: [1, 3, GREAT, 6, 7, 9],
     peaks: [P(-4.2, -11.2, 2.8), P(-0.2, -11.75, 3.0), P(3.9, -11.35, 2.4), P(7.1, -11.7, 2.2, 1.9), P(10.3, -12.45, 3.0, 2.3), P(12.6, -11.55, 1.5, 1.3), P(14.45, -11.7, 1.7, 2.2), P(18.4, -12.05, 2.6), P(22.2, -11.5, 2.4), P(26.0, -11.9, 2.8), P(30, -11.4, 2.5)],
   },
   {
-    z: 0.2, seed: 23, x0: -10, x1: 34, base: -9.0, jag: 0.045, rocky: 0.5, cloud: -9.02, flow: 0.04, haze: 0.2, plane: 'mid',
+    z: 0.2, seed: 23, x0: -10, x1: 34, base: -9.0, jag: 0.045, rocky: 0.5, cloud: -9.02, flow: 0.04, haze: 0.2, plane: 'mid', plumed: [3, 5, 6, 8],
     peaks: [P(-6.5, -10.3, 2.0), P(-2.8, -10.75, 2.2), P(0.9, -10.25, 1.8), P(4.4, -10.9, 2.3), P(8.0, -10.4, 1.9), P(11.6, -10.75, 2.0, 1.6), P(16.8, -10.9, 2.0), P(20.4, -10.35, 1.8), P(24.0, -11.0, 2.3), P(28.2, -10.5, 2.1), P(32, -10.8, 2)],
   },
   {
-    z: 0.35, seed: 37, x0: -14, x1: 38, base: -8.7, jag: 0.045, rocky: 0.75, cloud: -8.68, flow: 0.06, haze: 0.1, plane: 'near',
+    z: 0.35, seed: 37, x0: -14, x1: 38, base: -8.7, jag: 0.045, rocky: 0.75, cloud: -8.68, flow: 0.06, haze: 0.1, plane: 'near', plumed: [3, 7, 9],
     peaks: [P(-10, -9.6, 1.8), P(-6.4, -10.05, 2.0), P(-2.6, -9.55, 1.6), P(1.0, -10.2, 2.1), P(4.8, -9.7, 1.7), P(8.4, -9.95, 1.6, 1.4), P(11.4, -9.6, 1.3), P(17.6, -10.25, 2.2), P(21.6, -9.7, 1.8), P(25.4, -10.35, 2.2), P(29.6, -9.8, 1.9), P(33.6, -10.2, 2)],
   },
 ]
@@ -229,89 +231,30 @@ function inCells(ctx: C2, k: number, fn: () => void): void {
   ctx.restore()
 }
 
-/** The sky: its gradient, the dawn's glow under where the sun will be, the last stars, the cirrus, the geese, the sun. */
+/** The sky: its gradient, the last stars, the high cloud, the geese, the sun. */
 function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
   const sun = sunAt(t)
   inCells(ctx, s.k, () => {
     // The sky in level bands, deep overhead to pale at the horizon.
     const stops: [number, string][] = [[0, tn.zenith], [0.42, tn.high], [0.8, tn.low], [1, tn.horizon]]
-    bands(ctx, s.x0 - 1, s.x1 + 1, s.y0 - 1, s.y1 + 1, (y) => along(stops, (y - s.y0) / (-9.0 - s.y0)))
-    // The glow on the horizon where the sun is coming: wide and low, warming and growing as it comes.
-    const a = 0.3 + 0.55 * smooth(t, 150, 180)
-    const r = 2.6 + 0.9 * smooth(t, 160, 188)
-    rings(ctx, sun[0], -9.8, r, 0.38, tn.dawnGlow, a, 12)
-    // The last stars, going out one by one.
+    const skyAt = (y: number) => along(stops, (y - s.y0) / (-9.0 - s.y0))
+    bands(ctx, s.x0 - 1, s.x1 + 1, s.y0 - 1, s.y1 + 1, skyAt)
+    // The last stars, steady, going out one by one.
     if (tn.night > 0.01) {
       const path = new Path2D()
       for (let i = 0; i < 60; i++) {
         if (tn.night < 1 - (0.15 + 0.85 * hash(i, 3, 7))) continue
         const x = s.x0 + hash(i, 1, 7) * s.w
         const y = s.y0 + hash(i, 2, 7) ** 1.5 * s.h * 0.55
-        const r = 0.008 + 0.014 * hash(i, 4, 7) * (0.6 + 0.4 * Math.sin(t * (2 + hash(i, 5, 7) * 3) + i))
+        const r = 0.008 + 0.011 * hash(i, 4, 7)
         path.moveTo(x + r, y)
         path.arc(x, y, r, 0, Math.PI * 2)
       }
       ctx.fillStyle = rgba('#F4F0FF', 0.9 * tn.night)
       ctx.fill(path)
     }
-    // High cirrus drifting: the first thing the light finds, rose before anything else is.
-    const wisps = new Path2D()
-    const span = s.w + 8
-    for (let i = 0; i < 7; i++) {
-      const len = 1.8 + 2.4 * hash(i, 31)
-      const x = s.x0 - 4 + ((hash(i, 32) * span + t * (0.04 + 0.05 * hash(i, 33))) % span)
-      const y = s.y0 + 0.3 + hash(i, 34) * s.h * 0.4
-      const th = 0.035 + 0.05 * hash(i, 35)
-      const curl = 0.25 + 0.3 * hash(i, 36)
-      const n = 12
-      const at = (u: number, side: number): Pt => [x + len * u, y - curl * u * u + Math.sin(u * 5 + i + t * 0.25) * 0.03 + side * th * Math.sin(Math.PI * u) ** 0.8]
-      wisps.moveTo(...at(0, -1))
-      for (let j = 1; j <= n; j++) wisps.lineTo(...at(j / n, -1))
-      for (let j = n; j >= 0; j--) wisps.lineTo(...at(j / n, 0.6))
-      wisps.closePath()
-    }
-    const lit = smooth(t, 152, 170)
-    ctx.fillStyle = rgba(mix(tn.high, mix(tn.lit, '#FFFFFF', 0.2), 0.25 + 0.7 * lit), 0.4 + 0.25 * lit)
-    ctx.fill(wisps)
-    // Mares' tails: fine strands of ice cloud high up, combed out by the wind aloft, rose and then gold.
-    const tails = new Path2D()
-    const tspan = s.w + 6
-    for (let i = 0; i < 44; i++) {
-      // The jet stream is up there: they race, faster as the build climbs.
-      const x = s.x0 - 3 + ((hash(i, 41) * tspan + t * (0.16 + 0.12 * hash(i, 42))) % tspan)
-      const y = s.y0 + 0.12 + hash(i, 43) ** 1.4 * s.h * 0.55
-      const len = 0.8 + 2.2 * hash(i, 44)
-      const strands = 2 + Math.floor(hash(i, 45) * 3)
-      for (let j = 0; j < strands; j++) {
-        const dy = j * 0.045 + hash(i, j + 50) * 0.02
-        const l = len * (0.6 + 0.4 * hash(i, j + 60))
-        tails.moveTo(x, y + dy)
-        tails.lineTo(x + l * 0.4, y + dy - l * 0.02)
-        tails.lineTo(x + l * 0.75, y + dy - l * 0.07)
-        tails.lineTo(x + l, y + dy - l * 0.16 - 0.08 * hash(i, j + 70))
-      }
-    }
-    ctx.lineWidth = 1 / ctx.getTransform().a
-    ctx.strokeStyle = rgba(mix(tn.high, mix(tn.lit, '#FFFFFF', 0.3), 0.35 + 0.6 * lit), 0.28 + 0.14 * lit)
-    ctx.stroke(tails)
-    // Lenticular clouds standing over the highest summits in the wind, stacked lenses, catching the light first.
-    const lens = new Path2D()
-    for (const [lx, ly, lw] of [[10.4, -13.05, 1.5], [18.3, -12.85, 1.2], [3.2, -12.7, 0.9]] as const) {
-      for (let j = 0; j < 3; j++) {
-        const w = lw * (1 - j * 0.22) * (1 + 0.04 * Math.sin(t * 0.5 + j + lx))
-        const cx = lx + Math.sin(t * 0.23 + j * 1.3 + lx) * 0.08
-        const cy = ly - j * 0.11
-        const th = 0.045 + 0.012 * Math.sin(t * 0.7 + j)
-        lens.moveTo(cx - w, cy)
-        lens.quadraticCurveTo(cx, cy - th * 2, cx + w, cy)
-        lens.quadraticCurveTo(cx, cy + th * 1.2, cx - w, cy)
-        lens.closePath()
-      }
-    }
-    ctx.fillStyle = rgba(mix(tn.high, mix(tn.lit, '#FFFFFF', 0.3), 0.3 + 0.7 * lit), 0.5)
-    ctx.fill(lens)
-    ctx.strokeStyle = rgba(mix(tn.lit, '#FFFFFF', 0.4), 0.35 + 0.3 * lit)
-    ctx.stroke(lens)
+    // The high cloud, lit from under before the sun is up.
+    rolls(ctx, t, tn, skyAt)
     // A skein of geese, very high, crossing the range while the two of them wait: a long, loose V, the wings beating.
     if (t > 168 && t < 191.2) {
       const u = (t - 168) / 23
@@ -332,13 +275,8 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
       ctx.lineWidth = 1.4 / ctx.getTransform().a
       ctx.stroke(geese)
     }
-    // The sun: a corona that comes up before it shows, then the disc.
-    const up = smooth(t, 166, 180)
-    if (up > 0) {
-      ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
-      rings(ctx, sun[0], sun[1], 0.7 + 0.6 * tn.light, 1, tn.dawnGlow, 0.3 * up, 10)
-      ctx.restore()
+    // The sun: a plain disc, gold and then gold-white, behind the range until its edge clears the ridge.
+    if (t > 166) {
       ctx.beginPath()
       ctx.arc(sun[0], sun[1], SUN_R, 0, Math.PI * 2)
       ctx.fillStyle = mix(tn.sun, '#FFFFFF', 0.5 * tn.light)
@@ -348,17 +286,58 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
 }
 
 /**
- * A glow as rings of flat colour, each a little stronger toward the middle: the flat hand's way with light, and far
- * cheaper than a gradient over that much sky. `a` is the strength at the middle; `squash` flattens it.
+ * The high cloud: long rolls of altocumulus in rows across the sky going off toward the horizon, thinner and closer
+ * together, broken into lengths with sky between and in patches, a little paler than the sky round them. The sun
+ * lights each roll's underside before it is up (rose, then gold, then white), and the rolls drift with the wind aloft.
+ * The sun's way up is left clear.
  */
-function rings(ctx: C2, x: number, y: number, r: number, squash: number, col: string, a: number, n: number): void {
-  if (a <= 0.005) return
-  ctx.fillStyle = rgba(col, a / n)
-  for (let i = 0; i < n; i++) {
-    const rr = r * (1 - i / n) ** 1.3
-    ctx.beginPath()
-    ctx.ellipse(x, y, rr, rr * squash, 0, 0, Math.PI * 2)
-    ctx.fill()
+function rolls(ctx: C2, t: number, tn: Tone, sky: (y: number) => string): void {
+  const lit = smooth(t, 155, 168)
+  const under = mix(tn.lit, '#FFFFFF', 0.1 + 0.55 * tn.light)
+  const bodies = new Path2D()
+  const lights = new Path2D()
+  let y = -13.66
+  for (let j = 0; j < 15; j++) {
+    const f = 0.92 ** j
+    const th = Math.max(0.045, 0.1 * f)
+    const drift = t * 0.12 * f
+    let x = -2 + hash(j, 1, 97) * 2 + (drift % 40)
+    if (x > -2) x -= 40
+    for (let i = 0; x < 19; i++) {
+      const h = (n: number) => hash(i, n, 100 + j)
+      const L = (0.8 + 2.6 * h(1)) * (0.6 + 0.4 * f)
+      const x0 = x
+      x += L + (0.15 + 0.5 * h(2)) * f
+      if (x < -1) continue
+      // In patches: a slow field of where the cloud is.
+      const u = x0 + L / 2 - drift
+      const where = 0.55 * Math.sin(u * 0.5 + 1.1 + j * 0.3) + 0.45 * Math.sin(u * 1.13 - j * 0.9 + 0.4)
+      if (where < -0.55 + 0.4 * h(3)) continue
+      const mid = x0 + L / 2
+      if (mid > 12.9 && mid < 15.4 && y > -13.35) continue
+      const yy = y + 0.05 * Math.sin(u * 0.6 + j)
+      const n = Math.max(5, Math.round(L * 10 / f))
+      const T = (q: number) => th * Math.sin(Math.PI * q) ** 0.6
+      const top = (q: number): Pt => [x0 + L * q, yy - T(q) * (0.5 + 0.5 * (0.5 + 0.5 * Math.sin(q * L * 16 / f + h(4) * 6)))]
+      const base = (q: number): Pt => [x0 + L * q, yy + T(q) * 0.4]
+      const lift = (q: number): Pt => [x0 + L * q, yy]
+      bodies.moveTo(...top(0))
+      for (let k = 1; k <= n; k++) bodies.lineTo(...top(k / n))
+      for (let k = n; k >= 0; k--) bodies.lineTo(...base(k / n))
+      bodies.closePath()
+      lights.moveTo(...lift(0))
+      for (let k = 1; k <= n; k++) lights.lineTo(...lift(k / n))
+      for (let k = n; k >= 0; k--) lights.lineTo(...base(k / n))
+      lights.closePath()
+    }
+    y += 0.22 * f
+  }
+  const body = mix(mix(sky(-13), tn.cloudUnder, 0.3), '#FFFFFF', 0.1 + 0.22 * tn.light)
+  ctx.fillStyle = body
+  ctx.fill(bodies)
+  if (lit > 0.01) {
+    ctx.fillStyle = mix(body, under, 0.8 * lit)
+    ctx.fill(lights)
   }
 }
 
@@ -515,17 +494,18 @@ function drawRange(ctx: C2, s: View, t: number, tn: Tone, r: Range): void {
     ctx.strokeStyle = rgba(hz(tn.shade), 0.5)
     ctx.lineWidth = 1 / ctx.getTransform().a
     ctx.stroke(r.lines)
-    // Spindrift off the summits, more of it and longer as the build climbs and on every gust.
+    // Spindrift off the highest summits, longer as the build climbs and on every gust.
     const lo = s.x0 - 1
     const hi = s.x1 + 1
     const list: Plume[] = []
     r.tops.forEach((tp, n) => {
+      if (!sp.plumed.includes(n)) return
       const great = sp.z < 0.1 && n === GREAT
-      const len = great ? 2.6 + 2.8 * wnd : (0.5 + 1.5 * wnd) * (0.35 + 0.9 * tp.size)
-      if (tp.x + len < lo || tp.x > hi || (!great && sp.z < 0.3 && tp.size < 0.45)) return
-      list.push({ x: tp.x - 0.03, y: tp.y + 0.04, len, thick: (great ? 0.2 : 0.06 + 0.1 * tp.size) * (0.75 + 0.45 * wnd), seed: n * 7 + sp.seed })
+      const len = great ? 2.6 + 2.8 * wnd : (0.7 + 1.9 * wnd) * (0.35 + 0.9 * tp.size)
+      if (tp.x + len < lo || tp.x > hi) return
+      list.push({ x: tp.x - 0.03, y: tp.y + 0.04, len, thick: (great ? 0.22 : 0.08 + 0.12 * tp.size) * (0.75 + 0.45 * wnd), seed: n * 7 + sp.seed })
     })
-    plumes(ctx, list, hz(mix('#FFFFFF', tn.lit, 0.6 * smooth(ly, r.top, r.top + 1.5))), 0.55 * (0.6 + 0.4 * Math.min(1, wnd)), t)
+    plumes(ctx, list, hz(mix('#FFFFFF', tn.lit, 0.6 * smooth(ly, r.top, r.top + 1.5))), 0.65 * (0.6 + 0.4 * Math.min(1, wnd)), t)
     // The cloud at its feet, and the long shadows the summits throw across it once the light is down to it.
     const cl = smooth(ly, sp.cloud - 0.4, sp.cloud + 0.5)
     clouds(ctx, s, t, tn, sp.cloud, sp.flow, sp.seed, hz, cl, 1.2, sp.z > 0.1)
@@ -554,9 +534,9 @@ function drawLowCloud(ctx: C2, s: View, t: number, tn: Tone): void {
   inCells(ctx, s.k, () => clouds(ctx, s, t, tn, -7.9, 0.12, 71, (c) => c, smooth(ly, -8.4, -7.4)))
 }
 
-/** The pair of choughs, wheeling far below the ledge over the cloud, dark against it. */
-function drawChoughs(ctx: C2, s: View, t: number, tn: Tone): void {
-  const k = s.k
+/** The pair of choughs, wheeling far below the ledge over the sea of cloud, dark against it (on the machine's plane). */
+export function drawChoughs(ctx: C2, k: number, t: number): void {
+  const tn = tone(t)
   const path = new Path2D()
   for (let b = 0; b < 2; b++) {
     const ph = t * 0.42 + b * 2.3
@@ -587,5 +567,4 @@ export function drawBeyond(ctx: C2, v: View, t: number): void {
   layer(ctx, v, 0, VALLEY, REF, (s) => drawSky(ctx, s, t, tn))
   for (const r of rangesOf()) layer(ctx, v, r.spec.z, VALLEY, REF, (s) => drawRange(ctx, s, t, tn, r))
   layer(ctx, v, 0.55, VALLEY, REF, (s) => drawLowCloud(ctx, s, t, tn))
-  layer(ctx, v, 0.7, VALLEY, REF, (s) => drawChoughs(ctx, s, t, tn))
 }
