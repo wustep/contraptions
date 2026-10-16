@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { FLOOR, R, type Pt } from '../../../../../parts'
-import { box, frame, knock, part, rgba, ring, route, smooth, type Companion, type PartShot, type Way } from '../kit'
+import { box, frame, lastOf, part, rgba, ring, route, smooth, type Companion, type PartShot, type Way } from '../kit'
 import { hop } from '../physics'
 import { SHADOW_MAT } from '../worlds'
 
@@ -305,27 +305,68 @@ function pool(p: p5, k: number, x: number, y: number, r: number, color: string, 
   ctx.restore()
 }
 
-/** A soft cone of light on the screen from a lamp's mouth to what it looks at. */
-function cone(p: p5, k: number, from: Pt, to: Pt, w0: number, w1: number, color: string, a: number): void {
-  if (a <= 0.003) return
+/**
+ * The office's floor, below the line the shapes stand on: the boards going away from us in the room's half-light (a
+ * dark grey at the wall, black nearest us), the window's sun lying across them through the blind, dimming with the
+ * same cloud as it does on the wall, and the edge of a rug under the casting table, its fringe toward us.
+ */
+function officeFloor(p: p5, k: number, t: number, F: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const dx = to[0] - from[0]
-  const dy = to[1] - from[1]
-  const L = Math.hypot(dx, dy) || 1
-  const nx = -dy / L
-  const ny = dx / L
+  const top = FLOOR
+  const deep = 0.85
+  const fade = 1 - F
+  if (fade <= 0.01) return
   ctx.save()
-  const g = ctx.createLinearGradient(from[0] * k, from[1] * k, to[0] * k, to[1] * k)
-  g.addColorStop(0, rgba(color, a))
-  g.addColorStop(1, rgba(color, a * 0.45))
+  const g = ctx.createLinearGradient(0, top * k, 0, (top + deep) * k)
+  g.addColorStop(0, rgba(SHADOW_MAT.soft, 0.55 * fade))
+  g.addColorStop(1, rgba(SHADOW_MAT.soft, 0))
   ctx.fillStyle = g
+  ctx.fillRect(SX0 * k, top * k, (SX1 - SX0) * k, deep * k)
+  // The boards' joints, running away from us: faint lines converging a little toward the wall.
+  ctx.strokeStyle = rgba(INK, 0.5 * fade)
+  ctx.lineWidth = Math.max(1, 0.012 * k)
   ctx.beginPath()
-  ctx.moveTo((from[0] + (nx * w0) / 2) * k, (from[1] + (ny * w0) / 2) * k)
-  ctx.lineTo((to[0] + (nx * w1) / 2) * k, (to[1] + (ny * w1) / 2) * k)
-  ctx.lineTo((to[0] - (nx * w1) / 2) * k, (to[1] - (ny * w1) / 2) * k)
-  ctx.lineTo((from[0] - (nx * w0) / 2) * k, (from[1] - (ny * w0) / 2) * k)
+  for (let x = SX0 + 0.3; x < SX1; x += 0.62) {
+    ctx.moveTo(x * k, top * k)
+    ctx.lineTo((x + (x - 4.4) * 0.18) * k, (top + deep) * k)
+  }
+  ctx.stroke()
+  // The sun through the window, on the floor: a long patch thrown forward and to the right, barred by the slats.
+  const sun = sunAt(t) * fade
+  const ax = WIN.x0 + 0.6
+  const bx = WIN.x1 + 0.9
+  const patch = (u0: number, u1: number) => {
+    const y0 = top + 0.06 + u0 * 0.55
+    const y1 = top + 0.06 + u1 * 0.55
+    ctx.moveTo((ax + u0 * 1.3) * k, y0 * k)
+    ctx.lineTo((bx + u0 * 1.6) * k, y0 * k)
+    ctx.lineTo((bx + u1 * 1.6) * k, y1 * k)
+    ctx.lineTo((ax + u1 * 1.3) * k, y1 * k)
+    ctx.closePath()
+  }
+  ctx.fillStyle = rgba(SHADOW_MAT.warm, 0.2 * sun)
+  ctx.beginPath()
+  for (let i = 0; i < 6; i++) patch(i / 6, i / 6 + 0.11)
+  ctx.fill()
+  // The rug under the table, and its fringe.
+  const [t0, t1] = TABLE
+  ctx.fillStyle = rgba(INK, 0.75 * fade)
+  ctx.beginPath()
+  ctx.moveTo((t0 - 0.4) * k, (top + 0.04) * k)
+  ctx.lineTo((t1 + 0.4) * k, (top + 0.04) * k)
+  ctx.lineTo((t1 + 0.6) * k, (top + 0.42) * k)
+  ctx.lineTo((t0 - 0.6) * k, (top + 0.42) * k)
   ctx.closePath()
   ctx.fill()
+  ctx.strokeStyle = rgba(SHADOW_MAT.soft, 0.9 * fade)
+  ctx.beginPath()
+  ctx.moveTo((t0 - 0.55) * k, (top + 0.39) * k)
+  ctx.lineTo((t1 + 0.55) * k, (top + 0.39) * k)
+  for (let x = t0 - 0.55; x < t1 + 0.55; x += 0.08) {
+    ctx.moveTo(x * k, (top + 0.42) * k)
+    ctx.lineTo((x + 0.01) * k, (top + 0.5) * k)
+  }
+  ctx.stroke()
   ctx.restore()
 }
 
@@ -566,6 +607,445 @@ function valance(p: p5, k: number): void {
   p.endShape(p.CLOSE)
 }
 
+/* ------------------------------------------------------------------ the room the screen is the wall of */
+
+/*
+ * The casting office the shadow play is set in, every piece of it a shadow too, its value saying how far it is from
+ * the screen: what stands against the screen is black and sharp (the coat stand, the water cooler, the props on the
+ * table), what stands back toward the lamp behind it is larger and grey (the casting panel, the clock, the fan), and
+ * the window's sun on the wall is the faintest of all. A foreground fern stands in front of the screen, between it and
+ * us, so it moves more than the screen as the camera does.
+ */
+
+/** The window's sun on the wall, sheared by its slant: its corners (bottom-left first), and how the light falls. */
+const WIN = { x0: -1.25, x1: 1.55, y0: -4.35, y1: -2.15, shear: 0.55 }
+/** A cloud goes over the sun while the music holds its breath, and the sun comes back as she begins. */
+const sunAt = (t: number): number => 1 - 0.6 * (smooth(t, 177.3, 178.6) - smooth(t, 179.9, 181.2))
+/** The ceiling fan: its hub, and how far its blades reach. */
+const FAN: Pt = [4.2, -3.95]
+const FAN_L = 1.05
+/** The wall clock: an open wire clock, its centre and radius. */
+const CLOCK: Pt = [7.95, -3.25]
+const CLOCK_R = 0.38
+/** The casting panel, behind the table: where each sits. */
+const PANEL = [7.45, 8.55, 9.55]
+/** The page turns (on the metronome's stops), her sip (in the silence), and the third's lean in. */
+const PAGES = [TICKS[2], TICKS[7], TICKS[11]]
+const SIP: [number, number] = [177.7, 179.35]
+const LEAN_IN = LAMP[3]
+/** The water cooler, against the screen at the right. */
+const COOLER_X = 10.32
+/** Bubbles up the cooler's bottle: a gulp now and then, then on every fourth stop of the metronome. */
+const BUBBLES = [174.4, 176.9, 179.0, ...TICKS.filter((_, i) => i % 4 === 1), 192.2]
+/** The coat stand, and the fern in front of the screen (where it stands when the camera is at the screen's middle). */
+const STAND_X = -0.42
+const FERN_X = -1.45
+const FERN_Q = 1.35
+
+const shade = (a: number): string => rgba(INK, a)
+
+/** The window's sun on the wall: a lit patch with the blind's slats across it and a palm's frond stirring beyond. */
+function windowSun(p: p5, k: number, t: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const sun = sunAt(t)
+  const { x0, x1, y0, y1, shear } = WIN
+  const sx = (x: number, y: number) => (x + ((y1 - y) / (y1 - y0)) * shear) * k
+  const patch = () => {
+    ctx.beginPath()
+    ctx.moveTo(sx(x0, y1), y1 * k)
+    ctx.lineTo(sx(x1, y1), y1 * k)
+    ctx.lineTo(sx(x1, y0), y0 * k)
+    ctx.lineTo(sx(x0, y0), y0 * k)
+    ctx.closePath()
+  }
+  ctx.save()
+  patch()
+  ctx.fillStyle = rgba(SHADOW_MAT.warm, 0.4 * sun)
+  ctx.fill()
+  ctx.clip()
+  // The frond beyond the glass, in the wind: a rachis bowing down, its leaflets hanging from it.
+  const sway = 0.07 * Math.sin(t * 0.8) + 0.035 * Math.sin(t * 2.1 + 1)
+  ctx.translate(sx(x1 + 0.2, y0 + 0.3), (y0 + 0.3) * k)
+  ctx.rotate(0.35 + sway)
+  ctx.strokeStyle = shade(0.16 + 0.08 * sun)
+  ctx.lineWidth = Math.max(1, 0.05 * k)
+  ctx.beginPath()
+  const rach = (u: number): Pt => [-2.6 * u, 1.1 * u * u]
+  ctx.moveTo(0, 0)
+  for (let i = 1; i <= 12; i++) {
+    const [x, y] = rach(i / 12)
+    ctx.lineTo(x * k, y * k)
+  }
+  ctx.stroke()
+  ctx.lineWidth = Math.max(1, 0.035 * k)
+  ctx.beginPath()
+  for (let i = 1; i < 14; i++) {
+    const u = i / 14
+    const [x, y] = rach(u)
+    const L = 0.55 * Math.sin(Math.PI * Math.min(1, u * 1.15)) + 0.12
+    const flick = 0.12 * Math.sin(t * 2.4 + i)
+    for (const side of [-1, 1]) {
+      ctx.moveTo(x * k, y * k)
+      ctx.lineTo((x - 0.18 * L) * k, (y + side * 0.25 * L + 0.75 * L + side * flick * L * 0.2) * k)
+    }
+  }
+  ctx.stroke()
+  ctx.restore()
+  // The blind's slats and the window's frame and bars, thrown across it: shadows within the light.
+  ctx.fillStyle = shade(0.1 + 0.12 * sun)
+  ctx.beginPath()
+  for (let y = y0 + 0.1; y < y1 - 0.02; y += 0.15) {
+    ctx.moveTo(sx(x0, y), y * k)
+    ctx.lineTo(sx(x1, y), y * k)
+    ctx.lineTo(sx(x1, y + 0.055), (y + 0.055) * k)
+    ctx.lineTo(sx(x0, y + 0.055), (y + 0.055) * k)
+  }
+  ctx.fill()
+  ctx.strokeStyle = shade(0.2 + 0.12 * sun)
+  ctx.lineWidth = Math.max(1, 0.1 * k)
+  patch()
+  ctx.stroke()
+  ctx.lineWidth = Math.max(1, 0.07 * k)
+  ctx.beginPath()
+  const xm = (x0 + x1) / 2
+  ctx.moveTo(sx(xm, y0), y0 * k)
+  ctx.lineTo(sx(xm, y1), y1 * k)
+  ctx.stroke()
+  // The blind's cord, hanging from its head down the side, swinging a little.
+  ctx.lineWidth = Math.max(1, 0.02 * k)
+  ctx.beginPath()
+  const cx = sx(x0 + 0.2, y0)
+  ctx.moveTo(cx, y0 * k)
+  ctx.lineTo(cx + 0.08 * Math.sin(t * 1.3) * k, (y1 + 0.35) * k)
+  ctx.stroke()
+}
+
+/** The ceiling fan, from the side: its downrod from the valance, the motor, four blades sweeping round, the pull chain. */
+function fan(p: p5, k: number, t: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [hx, hy] = FAN
+  const a = shade(0.34)
+  ctx.fillStyle = a
+  ctx.strokeStyle = a
+  ctx.lineWidth = Math.max(1, 0.06 * k)
+  ctx.beginPath()
+  ctx.moveTo(hx * k, (SY0 + 0.3) * k)
+  ctx.lineTo(hx * k, (hy - 0.12) * k)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.ellipse(hx * k, hy * k, 0.24 * k, 0.13 * k, 0, 0, Math.PI * 2)
+  ctx.fill()
+  // The blades: seen edge-on as they come round, broad as they cross.
+  const turn = t * 2 * Math.PI * 0.9
+  ctx.beginPath()
+  for (let i = 0; i < 4; i++) {
+    const th = turn + (i * Math.PI) / 2
+    const x = FAN_L * Math.cos(th)
+    const depth = Math.sin(th)
+    const y = hy + 0.06 + 0.06 * depth
+    const w = 0.035 + 0.06 * Math.abs(depth)
+    const x0 = 0.2 * Math.sign(x)
+    ctx.moveTo((hx + x0) * k, (hy + 0.03) * k)
+    ctx.lineTo((hx + x) * k, (y - w) * k)
+    ctx.lineTo((hx + x) * k, (y + w) * k)
+    ctx.lineTo((hx + x0) * k, (hy + 0.09) * k)
+  }
+  ctx.fill()
+  // The chain, swinging with the air the blades push.
+  const sw = 0.05 * Math.sin(t * 2.7)
+  ctx.lineWidth = Math.max(1, 0.018 * k)
+  ctx.beginPath()
+  ctx.moveTo(hx * k, (hy + 0.12) * k)
+  ctx.lineTo((hx + sw) * k, (hy + 0.5) * k)
+  ctx.stroke()
+  ctx.fillRect((hx + sw - 0.02) * k, (hy + 0.5) * k, 0.04 * k, 0.08 * k)
+}
+
+/** The wall clock, an open wire one: its ring, its twelve marks and its hands; the second hand keeps the metronome's time. */
+function clock(p: p5, k: number, t: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [cx, cy] = CLOCK
+  const ink = shade(0.48)
+  ctx.strokeStyle = ink
+  ctx.lineWidth = Math.max(1, 0.05 * k)
+  ctx.beginPath()
+  ctx.arc(cx * k, cy * k, CLOCK_R * k, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.lineWidth = Math.max(1, 0.03 * k)
+  ctx.beginPath()
+  for (let i = 0; i < 12; i++) {
+    const a = (i * Math.PI) / 6
+    const r0 = i % 3 === 0 ? 0.26 : 0.3
+    ctx.moveTo((cx + r0 * Math.sin(a)) * k, (cy - r0 * Math.cos(a)) * k)
+    ctx.lineTo((cx + 0.35 * Math.sin(a)) * k, (cy - 0.35 * Math.cos(a)) * k)
+  }
+  // The hour and minute hands: ten to four, and creeping.
+  const minute = ((50 + (t - 172) / 60) / 60) * Math.PI * 2
+  const hour = ((3 + (50 + (t - 172) / 60) / 60) / 12) * Math.PI * 2
+  ctx.moveTo(cx * k, cy * k)
+  ctx.lineTo((cx + 0.18 * Math.sin(hour)) * k, (cy - 0.18 * Math.cos(hour)) * k)
+  ctx.moveTo(cx * k, cy * k)
+  ctx.lineTo((cx + 0.3 * Math.sin(minute)) * k, (cy - 0.3 * Math.cos(minute)) * k)
+  ctx.stroke()
+  // The second hand: a step a second, and from the tap a step on every stop of the metronome; each step settles.
+  let steps: number
+  let since: number
+  if (t < TAP) {
+    steps = Math.floor(t - 172)
+    since = t - 172 - steps
+  } else {
+    const n = lastOf(TICKS, t)
+    steps = Math.floor(TAP - 172) + (n.i + 1)
+    since = n.i < 0 ? t - TAP : n.ago
+    if (t > TICKS[TICKS.length - 1]) {
+      const after = Math.floor(t - TICKS[TICKS.length - 1])
+      steps += after
+      since = t - TICKS[TICKS.length - 1] - after
+    }
+  }
+  const sa = ((steps + 0.12 * ring(since, 6, 0.06)) / 60) * Math.PI * 2 + 1.1
+  ctx.lineWidth = Math.max(1, 0.016 * k)
+  ctx.beginPath()
+  ctx.moveTo((cx - 0.08 * Math.sin(sa)) * k, (cy + 0.08 * Math.cos(sa)) * k)
+  ctx.lineTo((cx + 0.33 * Math.sin(sa)) * k, (cy - 0.33 * Math.cos(sa)) * k)
+  ctx.stroke()
+}
+
+/**
+ * One of the casting panel, seated behind the table facing the stage (left): head in profile, shoulders, an arm.
+ * `lean` tips them toward the stage from the hips; `nod` drops the head; `hand` is where the near hand is (null: in
+ * the lap, out of sight below the table).
+ */
+function sitter(p: p5, k: number, x: number, lean: number, nod: number, breath: number, hair: 'bun' | 'short' | 'bob', hand: Pt | null, ink: string): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const hip: Pt = [x, TT + 0.05]
+  ctx.save()
+  ctx.translate(hip[0] * k, hip[1] * k)
+  ctx.rotate(-lean)
+  ctx.fillStyle = ink
+  ctx.beginPath()
+  // The torso, up from the table's edge: rounded shoulders, a little higher on each breath.
+  const sh = -0.62 - breath
+  ctx.moveTo(-0.3 * k, 0)
+  ctx.lineTo(-0.3 * k, (sh + 0.16) * k)
+  ctx.quadraticCurveTo(-0.3 * k, sh * k, -0.1 * k, sh * k)
+  ctx.lineTo(0.12 * k, sh * k)
+  ctx.quadraticCurveTo(0.32 * k, sh * k, 0.32 * k, (sh + 0.18) * k)
+  ctx.lineTo(0.32 * k, 0)
+  ctx.closePath()
+  ctx.fill()
+  // The neck, and the head, nodding forward (toward the stage).
+  ctx.translate(-0.02 * k, (sh + 0.02) * k)
+  ctx.rotate(-nod)
+  ctx.fillRect(-0.06 * k, -0.12 * k, 0.12 * k, 0.14 * k)
+  ctx.beginPath()
+  ctx.ellipse(-0.01 * k, -0.27 * k, 0.15 * k, 0.18 * k, 0, 0, Math.PI * 2)
+  ctx.fill()
+  // The nose and the chin, to say which way they face.
+  ctx.beginPath()
+  ctx.moveTo(-0.15 * k, -0.31 * k)
+  ctx.lineTo(-0.21 * k, -0.23 * k)
+  ctx.lineTo(-0.14 * k, -0.2 * k)
+  ctx.fill()
+  ctx.beginPath()
+  if (hair === 'bun') ctx.arc(0.13 * k, -0.37 * k, 0.08 * k, 0, Math.PI * 2)
+  else if (hair === 'bob') ctx.ellipse(0.04 * k, -0.27 * k, 0.17 * k, 0.17 * k, 0, Math.PI * 1.1, Math.PI * 2.4)
+  else ctx.ellipse(0.02 * k, -0.36 * k, 0.15 * k, 0.07 * k, 0.2, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+  if (hand) {
+    // The near arm, from the shoulder to the hand.
+    const sx = hip[0] - 0.12 + Math.sin(lean) * -0.6
+    const sy = hip[1] - 0.5
+    ctx.strokeStyle = ink
+    ctx.lineCap = 'round'
+    ctx.lineWidth = Math.max(1, 0.1 * k)
+    ctx.beginPath()
+    ctx.moveTo(sx * k, sy * k)
+    const ex = (sx + hand[0]) / 2 + 0.06
+    const ey = Math.max(sy, hand[1]) + 0.12
+    ctx.quadraticCurveTo(ex * k, ey * k, hand[0] * k, hand[1] * k)
+    ctx.stroke()
+    ctx.lineCap = 'butt'
+  }
+}
+
+/** The casting panel, behind the table: one turns the pages, one sips from a cup in the silence, one leans in. */
+function panel(p: p5, k: number, t: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const ink = shade(0.42)
+  const breath = (i: number) => 0.012 * Math.sin(t * 1.7 + i * 2.1)
+  // They look up as she presents herself, and down again; all three nod when the pen signs.
+  const look = 0.12 * (1 - smooth(t, PRESENT[0] - 0.3, PRESENT[0] + 0.2)) + 0.1 * smooth(t, 181.5, 182.3) * (1 - smooth(t, LAMP[2] - 0.3, LAMP[2] + 0.3))
+  const sign = PEN.slice(0, 3).reduce((a, x) => a + 0.12 * Math.max(0, ring(t - x, 2.2, 0.22)), 0)
+  // The first turns a page on three of the stops: her hand goes to the stack's corner, and the leaf goes over.
+  const turning = PAGES.find((x) => t > x - 0.6 && t < x + 0.5)
+  const reach: Pt | null = turning !== undefined ? [PAPER[1] - 0.05 - 0.55 * smooth(t, turning - 0.2, turning + 0.25), PAPER_Y - 0.08 - 0.25 * Math.sin(Math.PI * smooth(t, turning - 0.2, turning + 0.25))] : null
+  sitter(p, k, PANEL[0], 0.06, look + 0.08 + sign, breath(0), 'bun', reach, ink)
+  if (turning !== undefined) {
+    const u = smooth(t, turning - 0.2, turning + 0.25)
+    const a = Math.PI * u
+    ctx.strokeStyle = ink
+    ctx.lineWidth = Math.max(1, 0.025 * k)
+    ctx.beginPath()
+    const L = (PAPER[1] - PAPER[0]) / 2
+    const mx = (PAPER[0] + PAPER[1]) / 2
+    ctx.moveTo(mx * k, PAPER_Y * k)
+    ctx.quadraticCurveTo((mx + L * Math.cos(a) * 0.6) * k, (PAPER_Y - L * Math.sin(a) * 0.9) * k, (mx + L * Math.cos(a)) * k, (PAPER_Y - L * Math.sin(a) * 0.55) * k)
+    ctx.stroke()
+  }
+  // The second lifts a cup to drink in the silence, and sets it down as she begins.
+  const sip = smooth(t, SIP[0], SIP[0] + 0.5) - smooth(t, SIP[1] - 0.4, SIP[1])
+  const cup: Pt = [PANEL[1] - 0.32 + 0.12 * sip, TT - 0.12 - 0.72 * sip]
+  sitter(p, k, PANEL[1], 0.02 - 0.12 * sip, look - 0.25 * sip + sign, breath(1), 'short', cup, ink)
+  ctx.fillStyle = ink
+  ctx.beginPath()
+  ctx.moveTo((cup[0] - 0.07) * k, (cup[1] - 0.06) * k)
+  ctx.lineTo((cup[0] + 0.07) * k, (cup[1] - 0.06) * k)
+  ctx.lineTo((cup[0] + 0.055) * k, (cup[1] + 0.1) * k)
+  ctx.lineTo((cup[0] - 0.055) * k, (cup[1] + 0.1) * k)
+  ctx.fill()
+  // The third leans in on her when the light finds her, chin on hand, and stays there.
+  const lean = smooth(t, LEAN_IN - 0.5, LEAN_IN + 0.4)
+  sitter(p, k, PANEL[2], 0.04 + 0.3 * lean, look * (1 - lean) + 0.1 * lean + sign, breath(2), 'bob', lean > 0.05 ? [PANEL[2] - 0.32 - 0.38 * lean, TT - 0.5 - 0.35 * lean] : null, ink)
+}
+
+/** The coat stand, against the screen: a pole on three feet, a hat and a coat on its hooks; the coat swings when he leaps. */
+function coatStand(p: p5, k: number, t: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const X = STAND_X
+  ctx.fillStyle = INK
+  ctx.strokeStyle = INK
+  ctx.lineWidth = Math.max(1, 0.05 * k)
+  ctx.beginPath()
+  ctx.moveTo(X * k, FLOOR * k)
+  ctx.lineTo(X * k, -2.05 * k)
+  for (const s of [-1, 1]) {
+    ctx.moveTo(X * k, (FLOOR - 0.12) * k)
+    ctx.lineTo((X + s * 0.28) * k, FLOOR * k)
+    ctx.moveTo(X * k, -1.9 * k)
+    ctx.quadraticCurveTo((X + s * 0.2) * k, -1.95 * k, (X + s * 0.24) * k, -2.08 * k)
+  }
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.arc(X * k, -2.1 * k, 0.05 * k, 0, Math.PI * 2)
+  ctx.fill()
+  // The hat on the left hook.
+  ctx.beginPath()
+  ctx.ellipse((X - 0.26) * k, -2.05 * k, 0.2 * k, 0.04 * k, -0.2, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.ellipse((X - 0.27) * k, -2.14 * k, 0.12 * k, 0.1 * k, -0.2, Math.PI, 0)
+  ctx.fill()
+  // The coat on the right hook: hung from its shoulders, swinging out and back when the chair is kicked.
+  const swing = 0.16 * ring(t - LEAP, 1.3, 0.6)
+  ctx.save()
+  ctx.translate((X + 0.2) * k, -2.0 * k)
+  ctx.rotate(swing)
+  ctx.beginPath()
+  ctx.moveTo(-0.1 * k, 0)
+  ctx.quadraticCurveTo(-0.26 * k, 0.1 * k, -0.24 * k, 0.5 * k)
+  ctx.lineTo(-0.28 * k, 1.15 * k)
+  ctx.lineTo(0.22 * k, 1.15 * k)
+  ctx.lineTo(0.2 * k, 0.5 * k)
+  ctx.quadraticCurveTo(0.24 * k, 0.1 * k, 0.08 * k, 0)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
+
+/** The water cooler, against the screen: a cabinet, its tap, and the glass bottle upside down on it with a bubble going up. */
+function cooler(p: p5, k: number, t: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const x = COOLER_X
+  ctx.fillStyle = INK
+  ctx.fillRect((x - 0.24) * k, -0.85 * k, 0.48 * k, (FLOOR + 0.85) * k)
+  ctx.fillRect((x - 0.28) * k, -0.9 * k, 0.56 * k, 0.07 * k)
+  ctx.fillRect((x - 0.32) * k, -0.62 * k, 0.1 * k, 0.05 * k)
+  // The bottle: glass throws a paler shadow, the water in it a darker one; its neck down in the cabinet.
+  const b0 = -0.9
+  const b1 = -1.82
+  const glass = () => {
+    ctx.beginPath()
+    ctx.moveTo((x - 0.06) * k, b0 * k)
+    ctx.lineTo((x - 0.06) * k, (b0 - 0.12) * k)
+    ctx.quadraticCurveTo((x - 0.22) * k, (b0 - 0.16) * k, (x - 0.22) * k, (b0 - 0.3) * k)
+    ctx.lineTo((x - 0.22) * k, (b1 + 0.08) * k)
+    ctx.quadraticCurveTo((x - 0.22) * k, b1 * k, (x - 0.14) * k, b1 * k)
+    ctx.lineTo((x + 0.14) * k, b1 * k)
+    ctx.quadraticCurveTo((x + 0.22) * k, b1 * k, (x + 0.22) * k, (b1 + 0.08) * k)
+    ctx.lineTo((x + 0.22) * k, (b0 - 0.3) * k)
+    ctx.quadraticCurveTo((x + 0.22) * k, (b0 - 0.16) * k, (x + 0.06) * k, (b0 - 0.12) * k)
+    ctx.lineTo((x + 0.06) * k, b0 * k)
+    ctx.closePath()
+  }
+  glass()
+  ctx.fillStyle = shade(0.28)
+  ctx.fill()
+  ctx.strokeStyle = INK
+  ctx.lineWidth = Math.max(1, 0.022 * k)
+  ctx.stroke()
+  // The water, up to its line near the top (the air above it), which shivers when a bubble breaks it.
+  const last = lastOf(BUBBLES, t)
+  const rise = 0.9
+  const level = b1 + 0.2 + 0.015 * ring(last.ago - rise, 3, 0.3)
+  ctx.save()
+  glass()
+  ctx.clip()
+  ctx.fillStyle = shade(0.3)
+  ctx.fillRect((x - 0.3) * k, level * k, 0.6 * k, (b0 - level) * k)
+  // The bubble, rising from the neck to the line, wobbling as it goes.
+  if (last.i >= 0 && last.ago < rise) {
+    const u = last.ago / rise
+    const by = b0 - 0.12 + (level - (b0 - 0.12)) * u * u * (1.6 - 0.6 * u)
+    const r = 0.035 + 0.05 * u
+    ctx.fillStyle = rgba(SHADOW_MAT.screen, 0.85)
+    ctx.beginPath()
+    ctx.ellipse((x + 0.03 * Math.sin(u * 14)) * k, by * k, r * k, r * 0.8 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
+
+/** The fern in front of the screen, between it and us: black against the light, it moves more than the screen does. */
+function fern(p: p5, k: number, t: number, f: { cx: number }): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const x = FERN_X - (FERN_Q - 1) * (f.cx - 4.4)
+  const base: Pt = [x, FLOOR + 0.55]
+  ctx.fillStyle = INK
+  ctx.strokeStyle = INK
+  // The pot.
+  ctx.beginPath()
+  ctx.moveTo((x - 0.42) * k, (base[1] - 0.62) * k)
+  ctx.lineTo((x + 0.42) * k, (base[1] - 0.62) * k)
+  ctx.lineTo((x + 0.32) * k, (base[1] + 0.3) * k)
+  ctx.lineTo((x - 0.32) * k, (base[1] + 0.3) * k)
+  ctx.fill()
+  // The fronds: arching out of it, leaflets along each; stirring in the fan's air.
+  ctx.lineWidth = Math.max(1, 0.035 * k)
+  ctx.beginPath()
+  const fronds = [-1.05, -0.65, -0.25, 0.2, 0.6, 1.0]
+  for (const [i, a0] of fronds.entries()) {
+    const a = a0 + 0.05 * Math.sin(t * 1.4 + i * 1.7)
+    const L = 1.3 - 0.25 * Math.abs(a0)
+    const at = (u: number): Pt => [x + Math.sin(a) * L * u + 0.25 * Math.sign(a) * u * u, base[1] - 0.6 - Math.cos(a) * L * u + 0.85 * u * u * Math.abs(Math.sin(a))]
+    const [ax, ay] = at(0)
+    ctx.moveTo(ax * k, ay * k)
+    for (let j = 1; j <= 8; j++) {
+      const [px, py] = at(j / 8)
+      ctx.lineTo(px * k, py * k)
+    }
+    for (let j = 2; j <= 8; j++) {
+      const [px, py] = at(j / 8.5)
+      const l = 0.17 * (1 - j / 10)
+      ctx.moveTo((px - l) * k, (py - l * 0.4) * k)
+      ctx.lineTo(px * k, py * k)
+      ctx.lineTo((px + l) * k, (py - l * 0.4) * k)
+    }
+  }
+  ctx.stroke()
+}
+
 /* ------------------------------------------------------------------ the part */
 
 interface ShadowState {
@@ -598,25 +1078,28 @@ export const shadow = part<ShadowState>(
       p.fill(rgba(SHADOW_MAT.soft, 0.5))
       p.rect(X((SX0 + SX1) / 2), X((SY0 + SY1) / 2), X(SX1 - SX0), X(SY1 - SY0))
       pool(p, k, 4.4, -1.6, 7.5, SHADOW_MAT.warm, 0.55, 0.62, 0.05)
+      // The room's far shadows on the wall: the window's sun, the fan, the clock, and the casting panel.
+      windowSun(p, k, t)
+      fan(p, k, t)
+      clock(p, k, t)
+      panel(p, k, t)
 
-      // The spot on her, down from the pelmet: it opens on the accent, a breath brighter, and settles; it follows her.
+      // The spot on her, from the pelmet: it opens on the accent and holds, and follows her. Its light is where it falls:
+      // one circle of lit screen behind her, cut off by the stage's black edge, its edge as hard as a spot's is.
       if (t >= SPOT - 0.04) {
-        const a = smooth(t, SPOT - 0.04, SPOT) * (0.78 + 0.3 * knock(t - SPOT, 0.3))
+        const a = smooth(t, SPOT - 0.04, SPOT) * 0.8
         const mx = miaPath(t)[0]
-        const top: Pt = [(RISER[0] + RISER[1]) / 2 + (mx - MARK[0]) * 0.35, PEL_Y + 0.1]
-        cone(p, k, top, [mx, RISER_Y], 0.5, 1.35, SHADOW_MAT.warm, a * 0.62)
-        cone(p, k, top, [mx, RISER_Y], 0.3, 0.95, SHADOW_MAT.screen, a * 0.42)
-        pool(p, k, mx, RISER_Y - 0.08, 0.95, SHADOW_MAT.screen, a * 0.55, 0.32)
+        pool(p, k, mx, ON_RISER - 0.12, 0.66, SHADOW_MAT.warm, a * 0.5, 1, 0.97)
+        pool(p, k, mx, ON_RISER - 0.12, 0.66, SHADOW_MAT.screen, a * 0.35, 1, 0.97)
       }
 
       // The lamp's light: low over the papers; brighter as it comes round; full on her when it finds her.
       const pose = lampPose(t)
       const { j2, d } = lampJoints(pose)
       const mouth: Pt = [j2[0] + d[0] * 0.27, j2[1] + d[1] * 0.27]
-      const on = t < LAMP[3] ? 0.3 + 0.25 * smooth(t, LAMP[0] - 0.6, LAMP[2]) : 0.75 + 0.35 * knock(t - LAMP[3], 0.25)
+      const on = t < LAMP[3] ? 0.3 + 0.25 * smooth(t, LAMP[0] - 0.6, LAMP[2]) : 0.55 + 0.25 * smooth(t, LAMP[3], LAMP[3] + 0.2)
       const reach = Math.hypot(pose.at[0] - mouth[0], pose.at[1] - mouth[1])
-      cone(p, k, mouth, pose.at, 0.24, 0.35 + reach * 0.34, SHADOW_MAT.screen, on * 0.55)
-      pool(p, k, pose.at[0], pose.at[1], 0.28 + reach * 0.2, SHADOW_MAT.screen, on * 0.7, 0.9)
+      pool(p, k, pose.at[0], pose.at[1], 0.3 + reach * 0.16, SHADOW_MAT.screen, on * 0.7, 0.9, 0.85)
 
       // The flood: the lamp behind the screen opened all the way, from behind the two of them outward.
       if (F > 0) {
@@ -628,7 +1111,10 @@ export const shadow = part<ShadowState>(
       // The shapes.
       fillInk(p)
       p.rect(X((SX0 + SX1) / 2), X((FLOOR + SY1 + 0.6) / 2), X(SX1 - SX0), X(SY1 + 0.6 - FLOOR))
+      officeFloor(p, k, t, F)
       valance(p, k)
+      coatStand(p, k, t)
+      cooler(p, k, t)
       chair(p, k)
       metronome(p, k, rodAngle(t))
       riser(p, k)
@@ -636,6 +1122,7 @@ export const shadow = part<ShadowState>(
       jug(p, k, t)
       pen(p, k, penPath(t), penLean(t))
       lamp(p, k, pose)
+      fern(p, k, t, f)
 
       // At the crest the light eats the shapes and the dark round the screen, from the two of them outward: only they
       // are left in it.
@@ -681,13 +1168,14 @@ export const shadow = part<ShadowState>(
   (): PartShot[] => [
     // Under the dark, the whole screen; it comes up wide, and closes in on the stage.
     { t: 172.05, cells: 7.2, hold: [4.4, -1.75] },
-    { t: 176.6, cells: 5.4, hold: [4.2, -1.55] },
+    { t: 176.6, cells: 5.4, hold: [4.2, -1.7] },
     // The silence: her and him, and the metronome between them.
     { t: 178.9, cells: 4.0, hold: [2.6, -1.3] },
     { t: 180.7, cells: 4.0, hold: [2.7, -1.3] },
-    // The table answers her, and he watches from his chair: the three of them, chair, stage and table, in one frame.
-    { t: 183.2, cells: 5.4, hold: [5.05, -1.6] },
-    { t: 186.9, cells: 5.4, hold: [5.1, -1.6] },
+    // The table answers her, and he watches from his chair: the three of them, chair, stage and table, in one frame,
+    // and the camera leans in on her as the lamp comes round to find her.
+    { t: 183.2, cells: 5.4, hold: [5.05, -1.75] },
+    { t: 186.9, cells: 4.95, hold: [4.85, -1.6] },
     // In a little as the pen signs, his chair still at the left of the frame: he sees it, and leaps.
     { t: 188.3, cells: 4.75, hold: [4.75, -1.45] },
     { t: 189.4, cells: 4.7, hold: [4.7, -1.45] },

@@ -1,6 +1,5 @@
 import type { Pt, Seg } from '../../../../../parts'
-import { beam, box, carried, frame, part, rgba, smooth, type PartShot } from '../kit'
-import { LIPTONS_MAT } from '../worlds'
+import { box, carried, frame, part, rgba, smooth, type PartShot } from '../kit'
 import { bloomFront, K0, KISS_MIA, KISS_SEB, mia, seb, T } from './kiss-plan'
 import { cupFront } from './room'
 
@@ -78,11 +77,11 @@ export const kiss = part<null>(
       p.translate(cup[0] * k, cup[1] * k)
       cupFront(p, k, c.ink, c.weight, t)
       p.pop()
-      // The hush: the room goes dark round a pool of light on the piano's end, and a soft shaft down into it.
+      // The hush: the room goes dark round a pool of light on the piano's end, coming down with him to her: the light is
+      // what is left lit in the dark, and nothing in the air over it.
       const a = hush(t)
       if (a <= 0.003) return
       const [px, py] = toK(poolAt(t))
-      beam(p, k, px + 0.1, py - 6.8, px, py + 1.4, 0.5, 2.3, LIPTONS_MAT.lamp, 0.1 * (a / 0.8))
       const f = frame(p, k)
       const ctx = p.drawingContext as CanvasRenderingContext2D
       ctx.save()

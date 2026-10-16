@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { R, mixHex, type Pt } from '../../../../../parts'
-import { beam, box, carried, glow, knock, part, rgba, smooth, type PartShot } from '../kit'
+import { box, carried, frame, knock, part, rgba, smooth, type PartShot } from '../kit'
 import { MIA, NIGHT_MAT, SEB } from '../worlds'
 import {
   APEX,
@@ -27,6 +27,7 @@ import {
 } from './painted-waltz'
 import { lampLight } from './stars-sky'
 import { drawPianoFigure } from '../piano-figure'
+import { drawNearSeats, drawPlanets, drawPushRings } from './planetarium'
 
 /**
  * The stars: the painted Paris flies out, and they are alone on a dark floor
@@ -123,28 +124,24 @@ export const KINDLED: Kindled[] = (() => {
   return out
 })()
 
-/** A lit star: a point with four fine spikes that flare on its note and settle, and flare again at the top of the swell. */
+/**
+ * A lit star: a crisp point of the projector's light, larger and whiter than the sky's own, that steps up on its note
+ * and settles, and steps up again at the top of the swell. No glint and no halo: it is lit, not shining.
+ */
 function star(p: p5, k: number, x: number, y: number, s: Kindled, T: number, mirror: boolean): void {
   const since = T - s.at
   if (since < 0) return
   const lit = smooth(since, 0, 0.05)
-  const flare = knock(since, 0.28) + 0.9 * knock(T - DIP, 0.45)
-  const tw = 0.85 + 0.15 * Math.sin(T * 2.3 + s.at)
-  const m = mirror ? 0.3 : 1
+  const step = knock(since, 0.32) + 0.6 * knock(T - DIP, 0.5)
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  glow(p, k, x, y, 0.28 + 0.5 * flare, s.color, (0.22 + 0.35 * flare) * lit * m)
-  const spike = (0.14 + 0.55 * flare) * tw * (mirror ? 0.6 : 1)
-  const w = 0.012 + 0.01 * flare
-  ctx.fillStyle = rgba(s.color, 0.9 * lit * m)
+  // A point on the dome stays a point when the camera comes in close: its size is in cells in the wide shots, and has
+  // a ceiling in pixels (as a picture 540 high counts them), so in the close shots it never swells into a disc.
+  const fr = frame(p, k)
+  const px = ((fr.y1 - fr.y0) * k) / 540
+  const r = Math.min(s.size * 1.25 * k, 2.6 * px) * (1 + 0.6 * step)
+  ctx.fillStyle = rgba(s.color, (mirror ? 0.32 : 0.95) * lit)
   ctx.beginPath()
-  for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]] as const) {
-    ctx.moveTo((x + dy * w) * k, (y - dx * w) * k)
-    ctx.lineTo((x + dx * spike) * k, (y + dy * spike) * k)
-    ctx.lineTo((x - dy * w) * k, (y + dx * w) * k)
-  }
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(x * k, y * k, (s.size + 0.012 * flare) * k, 0, Math.PI * 2)
+  ctx.arc(x * k, y * k, Math.max(1.4, r * (mirror ? 0.8 : 1)), 0, Math.PI * 2)
   ctx.fill()
 }
 
@@ -218,7 +215,7 @@ const LENSES: { lat: number; lon: number }[] = (() => {
 function drawProjector(p: p5, k: number, ink: string, weight: number, T: number, reflect: boolean): void {
   const r = risen(T)
   if (r <= 0.001) return
-  const on = lamp(T) * (1 + 0.6 * knock(T - LAST, 0.5))
+  const on = lamp(T)
   const brass = NIGHT_MAT.gold
   const dark = mixHex(NIGHT_MAT.deep, brass, 0.35)
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -278,7 +275,6 @@ function drawProjector(p: p5, k: number, ink: string, weight: number, T: number,
   const perp: Pt = [-ax[1], ax[0]]
   for (const end of [-1, 1] as const) {
     const g = globeAt(T, end)
-    if (!reflect) glow(p, k, g[0], g[1], 0.9, NIGHT_MAT.star, 0.1 * on)
     solid(p, ink, weight * 0.8, dark)
     p.circle(g[0] * k, g[1] * k, GLOBE_R * 2 * k)
     // A band of brass round its equator.
@@ -302,37 +298,30 @@ function drawProjector(p: p5, k: number, ink: string, weight: number, T: number,
   ctx.restore()
 }
 
-/** Each star the melody lights is thrown from the high globe: a thread of light out to it that flares and goes. */
 /**
- * What it throws: two broad soft cones of light from the high globe, opposite each other, turning with it as it turns
- * (geared to their waltz), so the sky is swept as a lighthouse sweeps the sea: slowly while they float, fast in the
- * whirl. Only the cones pointing up into the night are seen.
+ * Each star the melody lights is thrown from the high globe: a fine thread out to it, drawn from the lens to the star
+ * as it lights and gone in a second. A line, not a beam: nothing of the projector's light hangs in the air.
  */
-function projectorBeams(p: p5, k: number, T: number): void {
-  const on = lamp(T)
-  if (on <= 0.01) return
-  const g = globeAt(T, 1)
-  const base = -Math.PI / 2 + spin(T) * 1.6
-  for (let i = 0; i < 2; i++) {
-    const a = base + i * Math.PI
-    const up = -Math.sin(a)
-    if (up <= 0.05) continue
-    const L = 11
-    const ex = g[0] + Math.cos(a) * L
-    const ey = g[1] + Math.sin(a) * L
-    beam(p, k, g[0], g[1], ex, ey, 0.18, 4.2, '#C9D8FF', 0.085 * on * Math.min(1, up * 2))
-  }
-}
-
 function throwStars(p: p5, k: number, T: number): void {
   const g = globeAt(T, 1)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.lineWidth = Math.max(1, 0.012 * k)
   for (const q of KINDLED) {
     const since = T - q.at
     if (since < -0.02 || since > 1.4) continue
     const [x, y] = inSky(q.local, T)
-    const f = knock(since, 0.42) * smooth(since, -0.02, 0.03)
-    beam(p, k, g[0], g[1], x, y, 0.04, 0.16, NIGHT_MAT.star, 0.28 * f)
+    // Drawn out from the lens to the star in its first tenth of a second, then fading where it stands.
+    const reach = smooth(since, -0.02, 0.1)
+    const f = Math.exp(-Math.max(0, since) / 0.42)
+    ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.5 * f)
+    ctx.beginPath()
+    ctx.moveTo(g[0] * k, g[1] * k)
+    ctx.lineTo((g[0] + (x - g[0]) * reach) * k, (g[1] + (y - g[1]) * reach) * k)
+    ctx.stroke()
   }
+  ctx.restore()
 }
 
 /** How far the piano figure is drawn at `T`: a share of its outline for each star lit, whole (1) and then its keys (to
@@ -370,9 +359,12 @@ export const stars = part<StarsState>(
       p.rectMode(p.CORNER)
       p.ellipseMode(p.CENTER)
       p.translate(-s.o[0] * k, -s.o[1] * k)
-      // The projector in the glass, then itself, and the light it throws to each new star.
+      // The projector in the glass; what it throws on the dome besides the stars (the planets, in the glass too); then
+      // itself, and the thread it throws to each new star.
       drawProjector(p, k, c.ink, c.weight, T, true)
-      projectorBeams(p, k, T)
+      const on = lamp(T)
+      drawPlanets(p, k, T, on, true)
+      drawPlanets(p, k, T, on, false)
       drawProjector(p, k, c.ink, c.weight, T, false)
       throwStars(p, k, T)
       // The planetarium draws the figure its stars make, as a planetarium does: in fine gold line round the two of them,
@@ -394,12 +386,18 @@ export const stars = part<StarsState>(
       // The two of them in the floor.
       reflection(p, k, c.ink, c.weight, SEB, sebAt(T), groundUnder(T, 'seb'), T)
       if (T >= MIA_SPAN[0] && T < MIA_SPAN[1]) reflection(p, k, c.ink, c.weight, MIA, miaAt(T), groundUnder(T, 'mia'), T)
-      // Where they push off, the glass takes the step: a soft light under them that spreads and goes.
-      const step = knock(T - LIFT, 0.5) * smooth(T, LIFT - 0.05, LIFT)
-      if (step > 0.01) {
-        const cx = centre(LIFT)[0]
-        glow(p, k, cx, 0.2, 0.7 + 1.4 * (1 - step), NIGHT_MAT.swirl, 0.35 * step, 1.8, 0.35)
-      }
+      // Where they push off, the glass takes the step: two rings spread out under them on the dark glass, as their steps
+      // did on the wet quay.
+      drawPushRings(p, k, T, centre(LIFT)[0])
+      p.pop()
+    },
+    over(p, s, c) {
+      const T = s.begin + c.t
+      if (T < NIGHT_FROM) return
+      p.push()
+      p.translate(-s.o[0] * c.k, -s.o[1] * c.k)
+      // The front row of seats, between us and them.
+      drawNearSeats(p, c.k, T)
       p.pop()
     },
   },
@@ -432,6 +430,8 @@ export const stars = part<StarsState>(
       const c = centre(t)
       return here([(c[0] + PX) / 2, PBASE - 2.8])
     }
+    /** Close on the two of them, with the cove's skyline and its reflection along the foot of the frame. */
+    const over = (t: number): Pt => here([centre(t)[0] - 0.2, UPSTAGE - 1.1])
     /** Halfway between the two of them and the projector they rise from: both in the picture. */
     const mid = (t: number, bias = 0.5): Pt => {
       const c = centre(t)
@@ -446,20 +446,21 @@ export const stars = part<StarsState>(
       { t: APEX - 0.4, cells: 5.4, hold: mid(APEX - 0.4, 0.45) },
       { t: 309.0, cells: 5.0, hold: mid(309.0, 0.4) },
       { t: 313.6, cells: 5.2, hold: mid(313.6, 0.4) },
-      // The scale of it: out, the two of them small in the turning sky and its nebula, the machine sweeping it, and all
+      // The scale of it: out, the two of them small in the turning sky and its nebula, the machine turning under it, and all
       // of it again in the glass.
       { t: 316.8, cells: 8.0, hold: high(316.8) },
       { t: 319.6, cells: 8.3, hold: high(319.6) },
       { t: 323.6, cells: 5.4, hold: mid(323.6, 0.4) },
       // (Held a beat, so the last star the melody lights is in the picture its second.)
       { t: 325.2, cells: 5.2, hold: mid(325.2, 0.35) },
-      // And close, in the quiet: the two of them in each other's arms, filling the frame, with the open sky round them.
-      { t: QUIET[0] + 1.2, cells: 2.5, hold: on(QUIET[0] + 1.2, -0.6) },
-      { t: QUIET[1], cells: 2.35, hold: on(QUIET[1], -0.6) },
+      // And close, in the quiet: the two of them in each other's arms over the city, its skyline and their sky in the glass
+      // along the foot of the frame, the machine standing whole to the right.
+      { t: QUIET[0] + 1.2, cells: 3.7, hold: over(QUIET[0] + 1.2) },
+      { t: QUIET[1], cells: 3.55, hold: over(QUIET[1]) },
       // The swell: out to the whole wheel of the sky round them, the projector whirling under them.
       { t: 334.4, cells: 9.5, hold: mid(334.4, 0.45) },
       { t: DIP, cells: 6.2, hold: mid(DIP, 0.35) },
-      // In on the held dip, and on the touch, the projector whole under them: its lamps flare on the touch and go out.
+      // In on the held dip, and on the touch, the projector whole under them: its lamps go out after the touch.
       { t: LAST, cells: 5.0, hold: mid(LAST, 0.4) },
       { t: DARK[1], cells: 4.8, hold: mid(DARK[1], 0.4) },
     ]
