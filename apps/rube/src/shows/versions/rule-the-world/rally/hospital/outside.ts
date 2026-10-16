@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { motes, parallax, type Frame } from '../depth'
-import { ctxOf, glow, mix, rgba, type Pen } from '../pen'
+import { ctxOf, mix, rgba, type Pen } from '../pen'
 import { gold, rose, sunUp } from './dawn'
 
 /**
@@ -152,8 +152,8 @@ function fillTris(pen: Pen, col: string, r: number[]): void {
 
 /* ------------------------------------------------------------------ the layers, far to near */
 
-/** The sky: high grey-blue down to the paler sky over the roofs, a little brighter where the sun is under them (`glowAt`, if given). */
-export function sky(pen: Pen, L: Look, glowAt?: Pt, glowR = 2.2): void {
+/** The sky: high grey-blue down to the paler sky over the roofs, the low sky taking the dawn's colour first. */
+export function sky(pen: Pen, L: Look): void {
   const c = tonesOf(L.t)
   within(pen, L, 0.04, (xa, xb, ya, yb) => {
     const { k } = pen
@@ -165,7 +165,6 @@ export function sky(pen: Pen, L: Look, glowAt?: Pt, glowR = 2.2): void {
     g.addColorStop(1, rgba(pen, c.skyLow, 1))
     ctx.fillStyle = g
     ctx.fillRect(xa * k, ya * k, (xb - xa) * k, (yb - ya) * k)
-    if (glowAt) glow(pen, glowAt, glowR * L.s, mix(mix('#DCD5CA', '#FAC9B2', rose(L.t)), '#FFD79A', gold(L.t)), 0.16 + 0.1 * rose(L.t) + 0.18 * gold(L.t))
   })
 }
 
@@ -285,7 +284,7 @@ function tank(tx: number, top: number, ts: number): void {
  * Tenement roofs: a row of them along the street, each with its cornice, and on them water tanks and chimneys, the
  * chimneys smoking. `tanks` and `chimneys` are shares of the roofs that carry one; `tall` lifts the row.
  */
-export function roofs(pen: Pen, L: Look, d: number, o: { tanks: number; chimneys: number; tall: number; seed: number; dark?: boolean }): void {
+export function roofs(pen: Pen, L: Look, d: number, o: { tanks: number; chimneys: number; tall: number; seed: number; dark?: boolean; wash?: number }): void {
   const c = tonesOf(L.t)
   const s = L.s
   const up = sunUp(L.t)
@@ -304,6 +303,7 @@ export function roofs(pen: Pen, L: Look, d: number, o: { tanks: number; chimneys
       TRIM.push(x - 0.014 * s, top, x + w + 0.014 * s, top + 0.03 * s)
       RIM.push(x - 0.014 * s, top - 0.01 * s, x + w + 0.014 * s, top + 0.004 * s)
       if (h2 < o.tanks) tank(x + w * (0.25 + 0.5 * h3), top, 0.1 * s * (0.75 + 0.5 * h1) * (o.dark ? 1.35 : 1))
+      else if (o.wash && h2 < o.tanks + o.wash) washing(x + w * 0.1, x + w * 0.9, top, s, t, i)
       else if (h2 > 1 - o.chimneys) {
         const cx = x + w * (0.12 + 0.76 * h3)
         BODY.push(cx - 0.024 * s, top - 0.1 * s, cx + 0.024 * s, top)
@@ -316,11 +316,65 @@ export function roofs(pen: Pen, L: Look, d: number, o: { tanks: number; chimneys
     fillTris(pen, o.dark ? c.near : c.mid, TRI)
     fillRects(pen, c.cornice, 1, TRIM)
     fillRects(pen, '#FFD9A2', 0.55 * up, RIM)
+    hang(pen, c)
+  })
+}
+
+/* Washing on the roofs, put out the night before and frozen stiff, flapping in the morning wind: a line between two
+   posts and the pieces on it, each a quad whose loose edge goes with the wind. Batched by colour. */
+const WASH = ['#F2EFE6', '#E4E9EE', '#EADCCB', '#E7D3D2']
+const PIECES: number[][] = [[], [], [], []]
+const LINES: number[] = []
+function washing(x0: number, x1: number, top: number, s: number, t: number, seed: number): void {
+  const post = 0.3 * s
+  BODY.push(x0 - 0.008 * s, top - post, x0 + 0.008 * s, top, x1 - 0.008 * s, top - post, x1 + 0.008 * s, top)
+  const y = top - post + 0.02 * s
+  LINES.push(x0, y, x1, y)
+  const n = 4
+  for (let j = 0; j < n; j++) {
+    const h = hash(seed, j, 81)
+    const a = x0 + ((x1 - x0) * (j + 0.15)) / n
+    const b = a + ((x1 - x0) / n) * (0.55 + 0.3 * h)
+    const sag = 0.012 * s * Math.sin((Math.PI * (a + b - 2 * x0)) / 2 / (x1 - x0))
+    const len = s * (0.1 + 0.1 * h)
+    const gust = 0.5 + 0.5 * Math.sin(t * 0.7 + seed)
+    const flap = s * (0.035 + 0.035 * gust) * Math.sin(t * (4.2 + 2 * h) + j * 1.9 + seed)
+    const lift = s * 0.03 * gust * (0.6 + 0.4 * Math.sin(t * 3.1 + j))
+    PIECES[Math.floor(h * 4) % 4].push(a, y + sag, b, y + sag, b + flap, y + sag + len - lift, a + flap * 0.7, y + sag + len - lift * 0.6)
+  }
+}
+function hang(pen: Pen, c: Tones): void {
+  const { k } = pen
+  const ctx = ctxOf(pen.p)
+  if (LINES.length) {
+    ctx.strokeStyle = rgba(pen, c.cornice, 0.8)
+    ctx.lineWidth = Math.max(0.6, pen.w * 0.3)
+    ctx.beginPath()
+    for (let i = 0; i < LINES.length; i += 4) {
+      ctx.moveTo(LINES[i] * k, LINES[i + 1] * k)
+      ctx.lineTo(LINES[i + 2] * k, LINES[i + 3] * k)
+    }
+    ctx.stroke()
+    LINES.length = 0
+  }
+  PIECES.forEach((list, ci) => {
+    if (!list.length) return
+    ctx.fillStyle = rgba(pen, mix(WASH[ci], c.skyLow, 0.25), 1)
+    ctx.beginPath()
+    for (let i = 0; i < list.length; i += 8) {
+      ctx.moveTo(list[i] * k, list[i + 1] * k)
+      ctx.lineTo(list[i + 2] * k, list[i + 3] * k)
+      ctx.lineTo(list[i + 4] * k, list[i + 5] * k)
+      ctx.lineTo(list[i + 6] * k, list[i + 7] * k)
+      ctx.closePath()
+    }
+    ctx.fill()
+    list.length = 0
   })
 }
 
 /** The El, on its girders between the roofs: a train every so often, its windows lit, running along the street. */
-export function el(pen: Pen, L: Look, d: number): void {
+export function el(pen: Pen, L: Look, d: number, o: { phase?: number; every?: number; dir?: 1 | -1 } = {}): void {
   const c = tonesOf(L.t)
   const s = L.s
   within(pen, L, d, (xa, xb) => {
@@ -328,11 +382,11 @@ export function el(pen: Pen, L: Look, d: number): void {
     BODY.push(xa - 0.1, y, xb + 0.1, y + 0.035 * s)
     const step = 0.42 * s
     for (let i = Math.floor(xa / step); i <= Math.ceil(xb / step); i++) BODY.push(i * step, y, i * step + 0.02 * s, L.base + 3)
-    // A train every `P` cells, at `v` cells a second, going right.
-    const P = 8.5 * s
-    const v = 0.55 * s
+    // A train every `P` cells, at `v` cells a second, going right (or left).
+    const P = (o.every ?? 8.5) * s
+    const v = 0.55 * s * (o.dir ?? 1)
     const car = 0.3 * s
-    const head0 = (((v * L.t) % P) + P) % P
+    const head0 = (((v * L.t + (o.phase ?? 0)) % P) + P) % P
     for (let m = Math.floor((xa - head0) / P); m <= Math.ceil((xb + 4 * car - head0) / P); m++) {
       const head = head0 + m * P
       for (let n = 0; n < 4; n++) {
@@ -459,8 +513,10 @@ export function wing(pen: Pen, L: Look, d: number, top: number): void {
     const span = 5.2
     const ox = -4.7 - ((((t - 205) * 0.11) % span) + span) % span
     const nx = -7.9 + ((((t - 214) * 0.13) % span) + span) % span
+    const px = -3.9 - ((((t - 203.2) * 0.42) % 9) + 9) % 9
     walker(ox, b1, s, t, false, -1)
     walker(nx, b1, s, t, true, 1)
+    walker(px, b1, s, t, false, -1)
     fillRects(pen, '#F8F6EF', 1, BODY)
     fillRects(pen, '#4E4A48', 1, TRIM)
     fillRects(pen, '#D9AE8C', 1, LIT)
@@ -494,14 +550,14 @@ export function wing(pen: Pen, L: Look, d: number, top: number): void {
  * Snow coming down past the window, slow and light, the flakes pale in the morning (steady, not winking): the street
  * through the store's window had it in the dark before it opened, and it is still falling at dawn.
  */
-export function snow(pen: Pen, L: Look, d: number, seed: number): void {
+export function snow(pen: Pen, L: Look, d: number, seed: number, amount = 1, size = 1): void {
   within(pen, L, d, (xa, xb, ya, yb) => {
     const tn = tonesOf(L.t)
     motes(pen, L.t, {
-      n: Math.round((xb - xa) * (yb - ya) * 26 / (L.s * L.s)),
+      n: Math.round(((xb - xa) * (yb - ya) * 26 * amount) / (L.s * L.s)),
       seed,
       box: [xa - 0.2, ya - 0.2, xb + 0.2, yb + 0.2],
-      size: [0.009 * L.s, 0.024 * L.s],
+      size: [0.009 * L.s * size, 0.024 * L.s * size],
       color: mix(tn.smoke, '#FFFFFF', 0.5),
       alpha: 0.85,
       drift: [0.06 * L.s, 0.32 * L.s],

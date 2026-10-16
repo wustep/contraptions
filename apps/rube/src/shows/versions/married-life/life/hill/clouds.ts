@@ -1,11 +1,13 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
+import { wobble } from '../depth'
 import { alpha, box, frame, hash, part, route, smooth, type Company, type Pose, type Way } from '../kit'
 import { bar, beat, BEATS, CUT } from '../music'
 import { CUTS } from '../seams'
 import { CHURCH, HILL, HOME, INK } from '../worlds'
 import { TREE_X } from './hill'
 import { FALLS } from '../props/falls'
+import { drawBasket } from '../props/basket'
 
 /**
  * CLOUDS (49.644 to 63.251, waltz bars 32 to 45): the picnic on the hill, a summer afternoon when they were young.
@@ -420,9 +422,10 @@ function clipTo(p: p5, k: number, billows: Billow[]): void {
 }
 
 /**
- * A soft cloud from its billows, as one mass: a halo, then the whole of it in shade, then (inside it only) the body
- * lifted off the shade so the shade shows along its underside alone, and the light across its top. No ink. One
- * silhouette, not a heap of bubbles. `tone` darkens it into shadow (the falls' cliff face).
+ * A soft cloud from its billows, as one mass: the whole of it in shade, then (inside it only) the body lifted off the
+ * shade so the shade shows along its underside alone, and the light across its top. No ink, and no halo round it (a
+ * pale rim on the sky read as a glow). One silhouette, not a heap of bubbles. `tone` darkens it into shadow (the
+ * falls' cliff face).
  */
 function cloud(p: p5, k: number, billows: Billow[], tone = 0): void {
   if (!billows.length) return
@@ -431,8 +434,6 @@ function cloud(p: p5, k: number, billows: Billow[], tone = 0): void {
   const litC = mixHex(HILL.cloud, mixHex(HILL.cloudShade, CHURCH.glassBlue, 0.08), tone)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   p.noStroke()
-  p.fill(alpha(p, HILL.cloud, 0.22))
-  for (const b of billows) oval(p, k, b, 1.09)
   p.fill(shadeC)
   for (const b of billows) oval(p, k, b, 1)
   clipTo(p, k, billows)
@@ -444,7 +445,7 @@ function cloud(p: p5, k: number, billows: Billow[], tone = 0): void {
 }
 
 /**
- * The falls' cliff face: a cloud with the sun on its left. A halo; the whole of it in its shadow colour; then (inside
+ * The falls' cliff face: a cloud with the sun on its left. The whole of it in its shadow colour; then (inside
  * it only) the body shifted left and up, so the shadow shows down its right side and under each billow that stands out
  * of the side; the light shifted further left, so each billow of its left side is lit; and last a soft wash across the
  * whole mass, light on the left, shadow on the right, so it turns from the sun as one form. `tone` is how deep in shade
@@ -458,8 +459,6 @@ function cliff(p: p5, k: number, billows: Billow[], tone: number): void {
   const litC = mixHex(HILL.cloud, HILL.cloudShade, 0.08)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   p.noStroke()
-  p.fill(alpha(p, HILL.cloud, 0.22))
-  for (const b of billows) oval(p, k, b, 1.09)
   p.fill(shadeC)
   for (const b of billows) oval(p, k, b, 1)
   clipTo(p, k, billows)
@@ -506,7 +505,7 @@ function cliff(p: p5, k: number, billows: Billow[], tone: number): void {
 }
 
 /**
- * A cloud drawn as ONE smooth mass (the airship, the baby): a halo, the whole of it in shade, then (inside it only)
+ * A cloud drawn as ONE smooth mass (the airship, the baby): the whole of it in shade, then (inside it only)
  * the whole of it again lifted a fixed small way, and the light lifted further, so the shade and the body show only
  * as a band along its underside and under whatever stands out of it, never round each billow: no inner seams, one
  * silhouette.
@@ -515,8 +514,6 @@ function mass(p: p5, k: number, billows: Billow[]): void {
   if (!billows.length) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   p.noStroke()
-  p.fill(alpha(p, HILL.cloud, 0.22))
-  for (const b of billows) oval(p, k, b, 1.07)
   p.fill(mixHex(HILL.cloudShade, CHURCH.glassBlue, 0.14))
   for (const b of billows) oval(p, k, b, 1)
   clipTo(p, k, billows)
@@ -685,6 +682,10 @@ function drawEngine(p: p5, k: number, weight: number, t: number): void {
   p.scale(ENGINE.scale)
   p.translate(-P(E), -P(g))
   p.rectMode(p.CORNER)
+  // Its shadow on the grass, the sun high on the left: a little to the right of its foot.
+  p.noStroke()
+  p.fill(alpha(p, mixHex(HILL.leaf, INK, 0.5), 0.38))
+  p.ellipse(P(E + 0.14), P(g + 0.012), P(1.24), P(0.08))
   p.stroke(INK)
   p.strokeWeight(weight * 0.9)
   // The base board.
@@ -706,9 +707,6 @@ function drawEngine(p: p5, k: number, weight: number, t: number): void {
   p.strokeWeight(weight * 0.9)
   p.fill(HOME.brass)
   p.rect(P(E - 0.5), P(g - 0.52), P(0.52), P(0.28), P(0.12))
-  p.noStroke()
-  p.fill(alpha(p, HOME.shine, 0.55))
-  p.rect(P(E - 0.42), P(g - 0.49), P(0.36), P(0.05), P(0.025))
   p.stroke(mixHex(HOME.brass, INK, 0.45))
   p.strokeWeight(weight * 0.6)
   for (const bx of [E - 0.36, E - 0.12]) p.line(P(bx), P(g - 0.51), P(bx), P(g - 0.25))
@@ -844,6 +842,10 @@ function drawBlanket(p: p5, k: number, weight: number): void {
   }
   p.push()
   p.rectMode(p.CORNER)
+  // Its shadow on the grass, a sliver along its foot and past its far end: the sun is high on the left.
+  p.noStroke()
+  p.fill(alpha(p, mixHex(HILL.leaf, INK, 0.5), 0.34))
+  p.ellipse(P((x0 + x1) / 2 + 0.1), P(bottom + 0.008), P(x1 - x0 + 0.16), P(0.06))
   p.stroke(INK)
   p.strokeWeight(weight * 0.7)
   p.fill(HILL.blanket)
@@ -862,6 +864,61 @@ function drawBlanket(p: p5, k: number, weight: number): void {
     p.rect(P(x0 + 0.02), P(top + (bottom - top) * 0.4), P(x1 - x0 - 0.2), P((bottom - top) * 0.22))
   }
   p.pop()
+}
+
+/**
+ * Their picnic basket on the grass at the blanket's head, shut: the same hamper he hides the tickets in fifty years on
+ * and carries up this hill (`climb.ts`). Its shadow falls a little to the right.
+ */
+const PICNIC = { x: -1.58 }
+
+function drawPicnic(p: p5, k: number, weight: number): void {
+  p.push()
+  p.noStroke()
+  p.fill(alpha(p, mixHex(HILL.leaf, INK, 0.5), 0.3))
+  p.ellipse(X(PICNIC.x + 0.06, k), X(R + 0.03, k), X(0.56, k), X(0.06, k))
+  drawBasket(p, k, weight, PICNIC.x, R + 0.02)
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the butterflies */
+
+/**
+ * Two small butterflies over the grass, slow: one past the blanket's head, under the tree, and one past the engine,
+ * each wandering about its own patch of air, rising and dipping, its wings opening and closing. Never near the two of
+ * them, never across the engine or the steam's line.
+ */
+const BUTTERFLIES = [
+  { x: -1.8, y: -0.34, rx: 0.3, ry: 0.12, color: HOME.yellow, seed: 1 },
+  { x: 2.62, y: -0.3, rx: 0.2, ry: 0.1, color: HOME.trim, seed: 2 },
+]
+
+function drawButterflies(p: p5, k: number, weight: number, t: number): void {
+  const P = (v: number) => X(v, k)
+  for (const b of BUTTERFLIES) {
+    const x = b.x + b.rx * wobble(t, 70 + b.seed, 2.6)
+    const y = b.y + b.ry * wobble(t, 80 + b.seed, 1.8) - 0.025 * Math.abs(Math.sin(t * 2.7 + b.seed))
+    // Its wings, seen from the front: up together, then open, on a slow beat.
+    const open = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * 1.7 + b.seed * 2)
+    const lift = -1.35 + 1.1 * open
+    p.push()
+    p.translate(P(x), P(y))
+    p.noStroke()
+    p.fill(b.color)
+    for (const side of [-1, 1]) {
+      p.push()
+      p.scale(side, 1)
+      p.rotate(lift)
+      p.ellipse(P(0.035), P(-0.012), P(0.07), P(0.045))
+      p.rotate(0.75)
+      p.ellipse(P(0.025), P(0.0), P(0.045), P(0.03))
+      p.pop()
+    }
+    p.stroke(INK)
+    p.strokeWeight(Math.max(1, weight * 0.45))
+    p.line(0, P(-0.018), 0, P(0.02))
+    p.pop()
+  }
 }
 
 /* ------------------------------------------------------------------ the two of them */
@@ -923,8 +980,10 @@ export const clouds = part<CloudsState>(
       if (f.x1 > 2.4) drawShape(p, k, 'falls', t)
       drawShape(p, k, 'baby', t)
       drawBlanket(p, k, weight)
+      drawPicnic(p, k, weight)
       drawEngine(p, k, weight, t)
       drawTrails(p, k, t)
+      drawButterflies(p, k, weight, t)
       p.pop()
     },
   },

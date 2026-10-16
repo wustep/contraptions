@@ -918,7 +918,6 @@ const CAVE = {
   floor: '#3A2E4A',
   edge: '#4C3C60',
   rock: '#5A4E66',
-  glint: '#FFFFFF',
   ink: '#0E0A18',
 }
 
@@ -975,15 +974,11 @@ const crystal: Skin = {
   edge: CAVE.edge,
   plank: CAVE.rock,
   fulcrum: CAVE.wall,
-  back(pen, m, v) {
+  back(pen, _m, v) {
     // The cave's walls, closing in at the sides and over the top.
     const top = v.y0 - 0.1
     poly(pen, [[v.x0 - 0.1, 0], [v.x0 - 0.1, top], [v.x1 + 0.1, top], [v.x1 + 0.1, 0], [3.1, 0], [3.0, -1.4], [2.6, -2.2], [1.6, -2.45], [0, -2.5], [-1.6, -2.45], [-2.7, -2.1], [-3.1, -1.3], [-3.2, 0]], CAVE.wall, 0)
     if (pen.lod <= 1) poly(pen, [[v.x0 - 0.1, 0], [v.x0 - 0.1, -2.4], [-3.0, -1.5], [-2.95, 0]], CAVE.wallDeep, 0)
-    // Light off the crystals, a little brighter after a slam.
-    const f = flashOf(m, 0.9, 0.3)
-    glow(pen, -2.0, -0.8, 1.4, CAVE.amethyst, 0.28 + 0.2 * f)
-    glow(pen, 2.2, -0.7, 1.2, CAVE.teal, 0.24 + 0.2 * f)
     // The crystals: amethyst on the left, teal on the right, and more hanging from the roof.
     cluster(pen, AMETHYST, CAVE.amethyst, CAVE.amethystLight)
     cluster(pen, TEAL, CAVE.teal, CAVE.tealLight)
@@ -992,28 +987,6 @@ const crystal: Skin = {
         for (const [x, y, a, l, w] of HANGING) prism(ctx, x, y, a, l, w)
       }, 0.7)
     }
-    // Glints at the crystals' tips: a slow twinkle, and all at once on the loud landings.
-    if (pen.lod > 1) return
-    const tips = [AMETHYST[0], AMETHYST[1], TEAL[0], TEAL[2], HANGING[1], AMETHYST[3]]
-    fillAll(pen, CAVE.glint, (ctx) => {
-      for (let i = 0; i < tips.length; i++) {
-        const [x, y, a, l] = tips[i]
-        const tw = Math.max(0, Math.sin(m.t * 1.3 + i * 2.4)) ** 6
-        const s = 0.09 * Math.max(tw, f)
-        if (s < 0.01) continue
-        const tx = x + Math.cos(a) * l
-        const ty = y + Math.sin(a) * l
-        ctx.moveTo(tx - s, ty)
-        ctx.lineTo(tx - s * 0.18, ty - s * 0.18)
-        ctx.lineTo(tx, ty - s)
-        ctx.lineTo(tx + s * 0.18, ty - s * 0.18)
-        ctx.lineTo(tx + s, ty)
-        ctx.lineTo(tx + s * 0.18, ty + s * 0.18)
-        ctx.lineTo(tx, ty + s)
-        ctx.lineTo(tx - s * 0.18, ty + s * 0.18)
-        ctx.closePath()
-      }
-    })
   },
   weight(pen) {
     // A cluster of amethyst on its lump of rock.

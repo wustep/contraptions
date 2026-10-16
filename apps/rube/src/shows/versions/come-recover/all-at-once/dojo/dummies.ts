@@ -176,7 +176,7 @@ function drawStaff(p: p5, c: Ctx, s: FightPlan['staff'], t: number): void {
   stick(p, k, ink, weight * 0.6, along(L - 0.2), along(L - 0.02), STAFF.r * 1.08, DOJO.gold)
 }
 
-/** The gong, three-quarters on, hung on two cords from the beam: it jumps on its cords, swings and turns when struck, and its face glows. */
+/** The gong, three-quarters on, hung on two cords from the beam: it jumps on its cords, swings and turns when struck, and its face shivers. */
 function drawGong(p: p5, c: Ctx, g: FightPlan['gong'], t: number): void {
   const { k, ink, weight } = c
   const u = t - g.t
@@ -221,34 +221,21 @@ function drawGong(p: p5, c: Ctx, g: FightPlan['gong'], t: number): void {
   p.ellipse(rx * 0.22 * k, 0, rx * 2 * k, ry * 2 * k)
   solid(p, ink, weight, DOJO.gold)
   p.ellipse(0, 0, rx * 2 * k, ry * 2 * k)
-  // The face: hammered rings, and the boss at its heart.
+  // The face: hammered rings, and the boss at its heart. Struck, the bronze shivers: its rings tremble against each
+  // other, out of step, and still as the note dies.
+  const shiver = u > 0 ? 0.045 * Math.exp(-u / 0.7) * Math.sin(u * 37) : 0
   p.noFill()
   p.stroke(mixHex(DOJO.gold, DOJO.woodDeep, 0.4))
   p.strokeWeight(weight * 0.7)
-  p.ellipse(0, 0, rx * 1.62 * k, ry * 1.62 * k)
+  p.ellipse(0, 0, rx * (1.62 + shiver) * k, ry * (1.62 - shiver) * k)
   p.stroke(alpha(p, DOJO.woodDeep, 0.3))
   p.strokeWeight(weight * 0.5)
-  p.ellipse(0, 0, rx * 1.15 * k, ry * 1.15 * k)
+  p.ellipse(0, 0, rx * (1.15 - shiver) * k, ry * (1.15 + shiver) * k)
   solid(p, ink, weight * 0.8, mixHex(DOJO.gold, DOJO.woodDeep, 0.22))
   p.ellipse(0, 0, rx * 0.56 * k, ry * 0.56 * k)
   p.noStroke()
   p.fill(alpha(p, DOJO.screen, 0.45))
   p.ellipse(-rx * 0.1 * k, -ry * 0.1 * k, rx * 0.2 * k, ry * 0.2 * k)
-  // Struck: the bronze flares with light, and settles back to its own colour.
-  if (u > 0 && u < 2.5) {
-    const glow = Math.exp(-u / 0.55)
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, ry * 1.6 * k)
-    grad.addColorStop(0, `rgba(255, 238, 190, ${0.75 * glow})`)
-    grad.addColorStop(0.45, `rgba(245, 200, 110, ${0.35 * glow})`)
-    grad.addColorStop(1, 'rgba(245, 200, 110, 0)')
-    ctx.save()
-    ctx.fillStyle = grad
-    ctx.beginPath()
-    ctx.ellipse(0, 0, rx * 3.2 * k, ry * 1.6 * k, 0, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.restore()
-  }
   p.pop()
 }
 

@@ -7,7 +7,7 @@ import { CEIL, FLOOR, HEAD_X, T0 } from './geo'
 /**
  * The ward's small life: the clock on the ward's wall going round toward six, the drip in Rachel's bottle, the flowers
  * on her nightstand nodding in the draught from the window, the corridor's ceiling fan turning, the nursery's mobile
- * turning over the bassinets, and the soft dark shapes close to the lens at the foot of the frame (a visitor's chair by
+ * turning over the bassinets, and the dark shapes close to the lens at the foot of the frame (a visitor's chair by
  * her bed; a trolley and a potted palm in the hall by the nursery) that slide by faster than the room as the camera goes.
  */
 
@@ -182,25 +182,26 @@ export function mobile(pen: Pen, t: number, at: Pt, top: number): void {
 
 const FG = '#26302B'
 
-/** A shape close to the lens, out of focus: its body dark and a little hazed, its edge going soft in two steps. */
-function soft(pen: Pen, path: Path2D, a: number): void {
+/**
+ * A shape close to the lens: a plain dark silhouette, a little lighter than black, as the front rows are in London and
+ * Tokyo. No haze is drawn round its edge to stand for the focus: that ring read as a halo. One fill, so where its parts
+ * cross (a leg through a shelf) it is one shade, not two; and filled by winding, so a crossing is never a hole.
+ */
+function silhouette(pen: Pen, path: Path2D, a: number): void {
   const ctx = ctxOf(pen.p)
-  const { k } = pen
   ctx.save()
-  ctx.lineJoin = 'round'
-  ctx.lineCap = 'round'
-  ctx.strokeStyle = rgba(pen, FG, 0.09 * a)
-  ctx.lineWidth = 0.13 * k
-  ctx.stroke(path)
-  ctx.strokeStyle = rgba(pen, FG, 0.2 * a)
-  ctx.lineWidth = 0.065 * k
-  ctx.stroke(path)
-  ctx.fillStyle = rgba(pen, FG, 0.62 * a)
-  ctx.fill(path, 'evenodd')
+  ctx.fillStyle = rgba(pen, FG, 0.7 * a)
+  ctx.fill(path)
   ctx.restore()
 }
+/** A piece of one, always wound the same way round (as an ellipse is drawn), so that it adds to the rest and never cuts. */
 const poly = (k: number, pts: Pt[], into = new Path2D()): Path2D => {
-  pts.forEach(([x, y], i) => (i ? into.lineTo(x * k, y * k) : into.moveTo(x * k, y * k)))
+  const area = pts.reduce((sum, [x, y], i) => {
+    const [nx, ny] = pts[(i + 1) % pts.length]
+    return sum + x * ny - nx * y
+  }, 0)
+  const way = area < 0 ? [...pts].reverse() : pts
+  way.forEach(([x, y], i) => (i ? into.lineTo(x * k, y * k) : into.moveTo(x * k, y * k)))
   into.closePath()
   return into
 }
@@ -220,10 +221,12 @@ function chair(pen: Pen): Path2D {
   poly(k, [[2.18, 0.86], [2.86, 0.86], [2.86, 0.93], [2.18, 0.93]], p)
   poly(k, [[2.22, 0.9], [2.27, 0.9], [2.22, 1.6], [2.17, 1.6]], p)
   poly(k, [[2.74, 0.25], [2.8, 0.25], [2.86, 1.6], [2.8, 1.6]], p)
-  // The bentwood hoop of its back: a ring.
+  // The bentwood hoop of its back: a ring, its inside wound the other way round so that it is open.
   const h = new Path2D()
   h.ellipse(2.83 * k, 0.55 * k, 0.14 * k, 0.33 * k, 0.12, 0, Math.PI * 2)
-  h.ellipse(2.83 * k, 0.55 * k, 0.09 * k, 0.27 * k, 0.12, 0, Math.PI * 2)
+  h.closePath()
+  h.ellipse(2.83 * k, 0.55 * k, 0.09 * k, 0.27 * k, 0.12, Math.PI * 2, 0, true)
+  h.closePath()
   p.addPath(h)
   return p
 }
@@ -259,8 +262,8 @@ function palm(pen: Pen, t: number): Path2D {
     const ny = (tip[0] - base[0]) / len
     const w = 0.06 + 0.03 * h
     p.moveTo(base[0] * k, (base[1] - 0.05) * k)
-    p.quadraticCurveTo((mid[0] + nx * w) * k, (mid[1] + ny * w) * k, tip[0] * k, tip[1] * k)
-    p.quadraticCurveTo((mid[0] - nx * w) * k, (mid[1] - ny * w) * k, base[0] * k, (base[1] - 0.05) * k)
+    p.quadraticCurveTo((mid[0] - nx * w) * k, (mid[1] - ny * w) * k, tip[0] * k, tip[1] * k)
+    p.quadraticCurveTo((mid[0] + nx * w) * k, (mid[1] + ny * w) * k, base[0] * k, (base[1] - 0.05) * k)
     p.closePath()
   }
   return p
@@ -280,15 +283,15 @@ export function foreground(pen: Pen, t: number, f: Frame, marty: Pt): void {
   const ward = shiftOf(CHAIR_AT)
   if (f.x1 > 2.0 + ward[0] && f.x0 < 3.0 + ward[0]) {
     const a = vis * clearOf([2.1, 0.2, 3.0, 1.6], ward, marty)
-    if (a > 0.01) layer(pen, f, d, () => soft(pen, chair(pen), a), CHAIR_AT)
+    if (a > 0.01) layer(pen, f, d, () => silhouette(pen, chair(pen), a), CHAIR_AT)
   }
   const hall = shiftOf(HALL_AT)
   if (f.x1 > -12.6 + hall[0] && f.x0 < -11.1 + hall[0]) {
     const a = vis * clearOf([-12.55, 0.55, -11.15, 1.7], hall, marty)
-    if (a > 0.01) layer(pen, f, d, () => soft(pen, trolley(pen), a), HALL_AT)
+    if (a > 0.01) layer(pen, f, d, () => silhouette(pen, trolley(pen), a), HALL_AT)
   }
   if (f.x1 > -6.0 + hall[0] && f.x0 < -4.1 + hall[0]) {
     const a = vis * clearOf([-5.95, 0.3, -4.15, 1.75], hall, marty)
-    if (a > 0.01) layer(pen, f, d, () => soft(pen, palm(pen, t), a), HALL_AT)
+    if (a > 0.01) layer(pen, f, d, () => silhouette(pen, palm(pen, t), a), HALL_AT)
   }
 }

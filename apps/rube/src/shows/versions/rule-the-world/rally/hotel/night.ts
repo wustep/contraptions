@@ -476,6 +476,7 @@ function drawAcross(pen: Pen, t: number, g: Frame, outside: number): void {
   strokes(pen, segs, css(pen, N.iron), 0.55)
   // The shops: the bar's window and its door, the diner's long window, the corner shop's grille.
   drawShops(pen, t)
+  drawWalkers(pen, t, g)
   drawWashing(pen, t, g)
   drawBillboard(pen, g)
   drawBlade(pen, g)
@@ -532,6 +533,80 @@ function drawShops(pen: Pen, t: number): void {
   box(css(pen, '#141E21'), 7.0, 9.0, 9.6, GROUND)
   for (let x = 7.05; x < 9.6; x += 0.12) box(css(pen, '#1E2B2E'), x, 9.0, x + 0.03, GROUND)
   flush(pen)
+}
+
+/**
+ * Who is out on the far pavement at this hour, in the rain: a man under his umbrella going up the block, a couple under
+ * one coming down it, a man with a newspaper over his hat hurrying for the bar. [where at `at`, cells a second, when].
+ */
+const WALKERS: { x: number; v: number; at: number; kind: 'umbrella' | 'couple' | 'paper' }[] = [
+  { x: 8.0, v: 0.72, at: 112, kind: 'umbrella' },
+  { x: 20.0, v: -0.5, at: 116, kind: 'couple' },
+  { x: 16.0, v: -1.45, at: 117, kind: 'paper' },
+]
+const WALK_H = 0.95
+
+/** One walker at `x` on the far pavement, going `dir`: legs scissoring, a coat, a hat, and what keeps the rain off. */
+function walker(x: number, dir: number, kind: 'umbrella' | 'couple' | 'paper', shapes: Pt[][], segs: number[], rims: number[]): void {
+  const y = GROUND
+  const stride = 0.34
+  const ph = (x / stride) * Math.PI
+  const bob = 0.015 * Math.abs(Math.sin(ph))
+  const people = kind === 'couple' ? [-0.13, 0.13] : [0]
+  for (const [i, dx] of people.entries()) {
+    const px = x + dx
+    const p2 = ph + i * 1.7
+    const hip: Pt = [px, y - WALK_H * 0.45 - bob]
+    for (const s of [1, -1]) segs.push(hip[0], hip[1], px + s * 0.11 * Math.sin(p2), y)
+    const lean = dir * 0.03
+    const sh = y - WALK_H * 0.8 - bob
+    shapes.push([[px - 0.12 + lean, sh], [px + 0.12 + lean, sh], [px + 0.14, hip[1] + 0.12], [px - 0.14, hip[1] + 0.12]])
+    const head: Pt = [px + lean, sh - 0.09]
+    shapes.push([[head[0] - 0.06, head[1] - 0.06], [head[0] + 0.06, head[1] - 0.06], [head[0] + 0.06, head[1] + 0.07], [head[0] - 0.06, head[1] + 0.07]])
+    if (kind !== 'couple' || i === 0) {
+      // A hat: its brim and crown.
+      shapes.push([[head[0] - 0.1, head[1] - 0.05], [head[0] + 0.1, head[1] - 0.05], [head[0] + 0.1, head[1] - 0.03], [head[0] - 0.1, head[1] - 0.03]])
+      shapes.push([[head[0] - 0.06, head[1] - 0.14], [head[0] + 0.06, head[1] - 0.14], [head[0] + 0.065, head[1] - 0.05], [head[0] - 0.065, head[1] - 0.05]])
+    }
+  }
+  const top = y - WALK_H * 1.28 - bob
+  if (kind === 'paper') {
+    // A newspaper held up over his hat, both arms up to it.
+    const p0: Pt = [x - 0.24, top + 0.14]
+    const p1: Pt = [x + 0.24, top + 0.1 + 0.02 * Math.sin(ph * 2)]
+    shapes.push([p0, p1, [p1[0] + 0.02, p1[1] + 0.05], [p0[0] - 0.02, p0[1] + 0.06]])
+    segs.push(x - 0.1, y - WALK_H * 0.76, p0[0] + 0.06, p0[1] + 0.04, x + 0.1, y - WALK_H * 0.76, p1[0] - 0.06, p1[1] + 0.04)
+    rims.push(p0[0], p0[1], p1[0], p1[1])
+    return
+  }
+  // The umbrella: its shaft from the hand, its canopy, the lamp along its top.
+  const w = kind === 'couple' ? 0.5 : 0.38
+  const cx = x + dir * 0.02
+  segs.push(x + dir * 0.06, y - WALK_H * 0.62, cx, top)
+  const canopy: Pt[] = []
+  for (let j = 0; j <= 8; j++) {
+    const u = j / 8
+    const ax = cx - w + 2 * w * u
+    canopy.push([ax, top + 0.16 - 0.16 * Math.sin(u * Math.PI)])
+  }
+  for (let j = 8; j >= 0; j--) canopy.push([cx - w + (2 * w * j) / 8, top + 0.16 + (j % 2 ? 0.035 : 0)])
+  shapes.push(canopy)
+  for (let j = 1; j < 6; j++) rims.push(canopy[j][0], canopy[j][1], canopy[j + 1][0], canopy[j + 1][1])
+}
+
+function drawWalkers(pen: Pen, t: number, g: Frame): void {
+  const shapes: Pt[][] = []
+  const segs: number[] = []
+  const rims: number[] = []
+  for (const w of WALKERS) {
+    const x = w.x + w.v * (t - w.at)
+    if (x < g.x0 - 1 || x > g.x1 + 1) continue
+    walker(x, Math.sign(w.v), w.kind, shapes, segs, rims)
+  }
+  if (!shapes.length) return
+  strokes(pen, segs, css(pen, '#081013'), 1.1)
+  polys(pen, shapes, css(pen, '#081013'))
+  strokes(pen, rims, css(pen, mix(N.sodium, N.rain, 0.4), 0.45), 0.5)
 }
 
 /** Washing on the lines across the airshaft past the bar, swinging in the wind and the rain. */

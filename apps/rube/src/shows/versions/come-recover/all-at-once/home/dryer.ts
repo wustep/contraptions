@@ -304,7 +304,16 @@ const lampAt = (t: number): number => (t < DOOR_TO[1] ? 0 : (0.75 + 0.25 * smoot
 
 /** The shop's lights sag in the last seconds, as the dryer draws on them; they are back once she has gone. */
 LIGHTS.dim.push((t) => (t < 54.5 || t > BURST + 0.5 ? 1 : 1 - 0.78 * smooth(t, 54.5, 57.6)))
-LIGHTS.glows.push((t) => (t > DOOR_TO[1] && t < BURST + 0.5 ? [{ x: C[0], y: C[1], r: 1.9, a: 0.9 * lampAt(t), color: HOME.light }] : []))
+// The lamp is inside the drum: its light is in the glass, out to the rim and no further, and thrown down on the floor
+// in front. It does not ring the window on the dryer's face or the wall round it like a halo.
+LIGHTS.glows.push((t) => {
+  if (t <= DOOR_TO[1] || t >= BURST + 0.5) return []
+  const a = lampAt(t)
+  return [
+    { x: C[0], y: C[1], r: BIG_DRYER.rim * 1.05, a: 0.95 * a, color: HOME.light },
+    { x: C[0], y: C[1] + BIG_DRYER.h * 0.54, r: 1.7, ry: 0.4, a: 0.6 * a, color: HOME.light },
+  ]
+})
 
 /* ------------------------------------------------------------------ other worlds in the glass */
 
@@ -345,7 +354,7 @@ function glimpse(pen: Pen, world: World, cx: number, cy: number, r: number, a0: 
     p.circle(cx * k, cy * k, 2.2 * r * k)
   }
   if (world === 'premiere') {
-    // The red carpet, a brass post and its velvet rope, and a flashbulb going off: a white star.
+    // The red carpet, a brass post and its velvet rope, and a flashbulb going off.
     fill(STAR.carpet)
     p.fill(STAR.carpetDeep)
     p.push()
@@ -362,26 +371,13 @@ function glimpse(pen: Pen, world: World, cx: number, cy: number, r: number, a0: 
       p.rect(sx * r * k, -r * 0.02 * k, r * 0.05 * k, r * 0.32 * k)
       p.circle(sx * r * k, -r * 0.18 * k, r * 0.09 * k)
     }
+    // A press flash gun held up past the rope: its dish, and the bulb in it popping white, flat.
+    const pop = Math.sin(t * 11) > 0.55
+    p.fill(STAR.cream)
+    p.rect(0.08 * r * k, -r * 0.24 * k, r * 0.05 * k, r * 0.2 * k)
+    p.fill(pop ? STAR.flash : STAR.brass)
+    p.arc(0.105 * r * k, -r * 0.24 * k, r * 0.26 * k, r * 0.26 * k, Math.PI, 2 * Math.PI)
     p.pop()
-    const f = Math.max(0, Math.sin(t * 11)) ** 3
-    const sx = cx + Math.cos(mid - 0.35) * r * 0.62
-    const sy = cy + Math.sin(mid - 0.35) * r * 0.62
-    p.fill(STAR.flash)
-    p.noStroke()
-    const a = r * (0.08 + 0.2 * f)
-    const b = a * 0.18
-    p.beginShape()
-    for (let i = 0; i < 8; i++) {
-      const ang = (i * Math.PI) / 4
-      const rr = i % 2 === 0 ? a : b
-      p.vertex((sx + Math.cos(ang) * rr) * k, (sy + Math.sin(ang) * rr) * k)
-    }
-    p.endShape(p.CLOSE)
-    const g = ctx.createRadialGradient(sx * k, sy * k, 0, sx * k, sy * k, r * 0.4 * k)
-    g.addColorStop(0, `rgba(255, 255, 255, ${0.45 * f})`)
-    g.addColorStop(1, 'rgba(255, 255, 255, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect((sx - r * 0.4) * k, (sy - r * 0.4) * k, r * 0.8 * k, r * 0.8 * k)
   } else if (world === 'dojo') {
     fill(DOJO.lacquer)
     p.noFill()

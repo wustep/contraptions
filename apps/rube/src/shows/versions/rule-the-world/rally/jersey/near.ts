@@ -6,6 +6,7 @@ import { AY, ROAD } from './geo'
 import { drawMistFront } from './airfield'
 import { F, fireAt, fireLight } from './fire'
 import { bag, blade, box, disc, fill, poly } from './ink'
+import { gust } from './wind'
 
 /**
  * What passes between the camera and the night, drawn over everything at the foot of the picture, dark and soft: the
@@ -61,7 +62,9 @@ export function drawNear(pen: Pen, t: number, f: Frame): void {
         const base = bank + 0.12 * Math.sin(x * 0.7) + 0.06 * Math.sin(x * 2.3) + 0.04
         const tall = h0 > 0.9 ? 1.5 : 1
         const blades = 2 + Math.floor(hash(i, 603) * 3)
-        const wind = 0.06 * sway(t, i * 0.37, 3.2) + 0.03
+        // The wind going over it in waves, downwind, harder in the gusts.
+        const wave = 0.5 + 0.5 * Math.sin(x * 0.55 - t * 2.4)
+        const wind = 0.035 + 0.075 * gust(t) * wave * wave + 0.04 * sway(t, i * 0.37, 3.2)
         let tallest = 0
         for (let j = 0; j < blades; j++) {
           const h = cap((0.3 + 0.48 * hash(i, j, 604)) * tall) * (0.9 + 0.1 * hash(i, j, 606))

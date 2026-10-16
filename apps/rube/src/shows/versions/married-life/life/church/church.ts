@@ -1,7 +1,8 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
+import { along, clouds, type Frame, grass, gust, smoke, wobble } from '../depth'
 import { alpha, frame, hash, knock, scenery, smooth } from '../kit'
-import { AT, bar, beat, beatsIn } from '../music'
+import { AT, bar, beat, beatsIn, CUT } from '../music'
 import { CARL, CHURCH, CLINIC, ELLIE, HILL, HOME, INK } from '../worlds'
 
 /**
@@ -10,10 +11,16 @@ import { CARL, CHURCH, CLINIC, ELLIE, HILL, HOME, INK } from '../worlds'
  * doors at the right under the bell tower, and outside them the landing and a short flight of stone steps down to the
  * street.
  *
- * The same set in two lights. The wedding (0 to 21.577): morning, warm plaster, the glass lit and throwing its colour,
- * the organ playing the march, the bell pealing, the doors thrown open. The funeral (189.452 to 201.944): grey, the
- * glass dull, the organ silent, white lilies and the wedding photograph on an easel where the two of them stood, and
- * the same bell tolling once.
+ * The same set in two lights. The wedding (0 to 21.577): morning, warm plaster, the glass lit and throwing its colour
+ * onto the floor and the pews, the organ playing the march, posies on the pews and a garland on the altar, the bell
+ * pealing and the doves on the roof wheeling off at it, the doors thrown open. The funeral (189.452 to 201.944): grey,
+ * the glass dull, the organ silent, a wreath and white lilies by the wedding photograph on an easel where the two of
+ * them stood, the dawn through the east window falling on it, and the same bell tolling once, sending the rooks off
+ * the roof.
+ *
+ * It stands in a world: past it the far hills with their picnic hill and its tree, the nearer hills with the town,
+ * a row of trees and a hedge, clouds at two depths, each sliding at its own depth as the camera moves; at its foot
+ * the verge, and across the bottom of the frame a bank nearer than the church.
  *
  * Drawn from show time (`c.t`) in the church world's cells from its origin. The wedding and the funeral parts draw
  * what stands in front of Carl (the near congregation, the photographer, the petals, the flash) in their `over`, and
@@ -128,10 +135,10 @@ export const gloomy = (t: number): boolean => t > 100
 /**
  * The funeral opens under the hospital's night (Stephen's note on transitions: open a cut under the last scene's
  * light before waking it): at the cut the church is dim and blue, the glass dark, no beam; the grey morning comes up
- * over it slowly, and the one pale beam and its dust come last. 0 at the cut, 1 once it is morning.
+ * over it slowly, and the one pale beam comes last. 0 at the cut, 1 once it is morning.
  */
 export const waking = (t: number): number => smooth(t, FUN.from, FUN.from + 2.9)
-/** The beam and the dust in it: the last of the light to come. */
+/** The beam: the last of the light to come. */
 export const beamUp = (t: number): number => smooth(t, FUN.from + 1.3, FUN.from + 3.4)
 
 /** The march's beats and the waltz's: the families' bounce and the organ's pump. */
@@ -277,13 +284,38 @@ export const ease = (t: number, a: number, b: number): number => {
 export function paint(t: number) {
   const g = gloomy(t) ? 1 : 0
   const grey = (hex: string, f: number) => mixHex(hex, HILL.skyGrey, f * g)
+  const sky = g ? mixHex(HILL.skyGrey, CLINIC.wall, 0.35) : HILL.sky
+  // At the funeral the low sky warms a shade as the grey morning comes up.
+  const skyLow = g ? mixHex(mixHex(HILL.skyGrey, CHURCH.plaster, 0.2), HOME.dusk, 0.12 * waking(t)) : mixHex(HILL.sky, CHURCH.candle, 0.5)
+  const grass = g ? mixHex(HILL.grass, HILL.skyGrey, 0.5) : HILL.grass
+  const leaf = g ? mixHex(HILL.leaf, HILL.skyGrey, 0.45) : HILL.leaf
+  // The haze the far things go toward: the sky low down, where they stand.
+  const haze = mixHex(sky, skyLow, 0.6)
   return {
     g,
-    sky: g ? mixHex(HILL.skyGrey, CLINIC.wall, 0.35) : HILL.sky,
-    skyLow: g ? mixHex(HILL.skyGrey, CHURCH.plaster, 0.2) : mixHex(HILL.sky, CHURCH.candle, 0.5),
-    grass: g ? mixHex(HILL.grass, HILL.skyGrey, 0.5) : HILL.grass,
+    sky,
+    skyLow,
+    grass,
     earth: mixHex('#A8927A', HILL.skyGrey, 0.35 * g),
     trees: g ? mixHex(HILL.leaf, HILL.skyGrey, 0.72) : mixHex(HILL.leaf, HILL.sky, 0.5),
+    // The country round the church, hazed as it goes back: the far hills, the nearer ones, a hedge along the lane.
+    hillFar: mixHex(grass, haze, 0.66),
+    hillNear: mixHex(mixHex(grass, leaf, 0.3), haze, 0.5),
+    hedge: mixHex(leaf, haze, 0.3),
+    // Their tree on its far hill: in leaf at the wedding; turned, years later.
+    farLeaf: mixHex(g ? HILL.leafAutumn : HILL.leaf, haze, 0.55),
+    farBark: mixHex(HILL.bark, haze, 0.55),
+    // The town's walls and roofs, small and pale with distance; one house sea-green.
+    townWall: mixHex(HOME.trim, haze, 0.4),
+    townRoof: mixHex(g ? HOME.roofOld : HOME.roof, haze, 0.55),
+    townGreen: mixHex(HOME.siding, haze, 0.45),
+    // A fair summer morning's clouds; the funeral's low grey ones.
+    cloud: g ? mixHex(HILL.cloud, HILL.skyGrey, 0.5) : HILL.cloud,
+    cloudShade: g ? mixHex(HILL.cloudShade, CLINIC.steel, 0.45) : mixHex(HILL.cloudShade, HILL.sky, 0.25),
+    // The verge along the lane, and the bank in front of us: deeper green the nearer it is.
+    tuft: mixHex(grass, leaf, 0.75),
+    bank: mixHex(grass, leaf, 0.72),
+    bankDark: mixHex(leaf, INK, 0.3),
     plaster: grey(CHURCH.plaster, 0.45),
     plasterShade: grey(mixHex(CHURCH.plaster, CHURCH.stone, 0.45), 0.45),
     ceiling: grey(mixHex(HOME.wood, CHURCH.plaster, 0.35), 0.4),
@@ -510,10 +542,23 @@ export const handOf = (x: number, seat: number, s: number, lift: number): Pt => 
  * shadow under the seat's nose. `x` is the seat's centre.
  */
 function pewAt(p: p5, k: number, c: Paint, weight: number, x: number): void {
-  const { floor, seat, pewBack } = CH
+  const { floor, seat } = CH
   p.stroke(alpha(p, INK, 0.9))
   p.strokeWeight(weight * 0.8)
   p.fill(c.pew)
+  pewShape(p, k, x)
+  // The carved panel on the end board's face, and the back's panel.
+  p.noStroke()
+  p.fill(c.pewLight)
+  box2(p, k, x - 0.2, seat + 0.1, x + 0.26, floor - 0.2, 0.03)
+  box2(p, k, x + 0.265, CH.pewBack + 0.18, x + 0.315, seat - 0.06, 0.02)
+  p.fill(alpha(p, INK, 0.28))
+  box2(p, k, x - 0.27, seat + 0.07, x + 0.19, seat + 0.1)
+}
+
+/** The pew's end board and back in profile, one closed shape (in the current fill and stroke). */
+function pewShape(p: p5, k: number, x: number): void {
+  const { floor, seat, pewBack } = CH
   p.beginShape()
   p.vertex((x - 0.27) * k, floor * k)
   p.vertex((x - 0.27) * k, (seat + 0.1) * k)
@@ -526,13 +571,6 @@ function pewAt(p: p5, k: number, c: Paint, weight: number, x: number): void {
   p.vertex((x + 0.25) * k, floor * k)
   p.bezierVertex((x + 0.25) * k, (floor - 0.12) * k, (x - 0.17) * k, (floor - 0.12) * k, (x - 0.17) * k, floor * k)
   p.endShape(p.CLOSE)
-  // The carved panel on the end board's face, and the back's panel.
-  p.noStroke()
-  p.fill(c.pewLight)
-  box2(p, k, x - 0.2, seat + 0.1, x + 0.26, floor - 0.2, 0.03)
-  box2(p, k, x + 0.265, pewBack + 0.18, x + 0.315, seat - 0.06, 0.02)
-  p.fill(alpha(p, INK, 0.28))
-  box2(p, k, x - 0.27, seat + 0.07, x + 0.19, seat + 0.1)
 }
 
 /* ------------------------------------------------------------------ the organ */
@@ -553,7 +591,8 @@ function drawOrgan(p: p5, k: number, c: Paint, weight: number, t: number): void 
   const [ox0, ox1] = CH.organ
   const imp = CH.impost
   const lit = (r: number) => (c.g ? tollRing(t) : rankLight(r, t))
-  // The pipes, back row first: body, gleam, mouth, conical foot; lit gold as their rank speaks.
+  // The pipes, back row first: body, mouth, conical foot; lit gold as their rank speaks. (No gleam down each: a white
+  // stripe on every pipe read as shine, and the gold of the rank that speaks is what the eye should go to.)
   for (const pipe of PIPES) {
     const L = lit(pipe.rank)
     const top = imp - pipe.h
@@ -570,8 +609,6 @@ function drawOrgan(p: p5, k: number, c: Paint, weight: number, t: number): void 
     ])
     if (pipe.back) continue
     p.noStroke()
-    p.fill(alpha(p, '#FFFFFF', 0.28 + 0.3 * L))
-    box2(p, k, pipe.x - pipe.w * 0.28, top + 0.05, pipe.x - pipe.w * 0.1, mouth - 0.04)
     // The mouth: a dark slot under an arched lip.
     p.fill(alpha(p, INK, 0.85))
     p.arc(pipe.x * k, (mouth - 0.005) * k, pipe.w * 0.62 * k, 0.1 * k, Math.PI, 2 * Math.PI, p.CHORD)
@@ -684,6 +721,92 @@ function drawOrgan(p: p5, k: number, c: Paint, weight: number, t: number): void 
 
 /* ------------------------------------------------------------------ the altar, the photograph */
 
+/**
+ * A candle's flame on its wick at (`x`, `y`): a flame, not a glow. Its height, its width and the lean of its tip each
+ * wander on their own slow breath of air (`wobble`), so it never sways like a metronome; a paler core low in it, and the
+ * wick's black stub.
+ */
+function candleFlame(p: p5, k: number, weight: number, x: number, y: number, t: number, seed: number): void {
+  const h = 0.12 * (1 + 0.13 * wobble(t, seed, 0.47) + 0.06 * wobble(t, seed + 10, 0.19))
+  const w = 0.035 * (1 + 0.14 * wobble(t, seed + 20, 0.38))
+  const lean = 0.016 * wobble(t, seed + 30, 0.66) + 0.006 * wobble(t, seed + 40, 0.23)
+  const shape = (s: number, base: number) => {
+    p.beginShape()
+    p.vertex(x * k, (base - 0.005) * k)
+    p.bezierVertex((x - w * s) * k, (base - 0.03 * s) * k, (x - w * 0.6 * s + lean * 0.4) * k, (base - h * 0.66 * s) * k, (x + lean * s) * k, (base - h * s) * k)
+    p.bezierVertex((x + w * 0.6 * s + lean * 0.4) * k, (base - h * 0.66 * s) * k, (x + w * s) * k, (base - 0.03 * s) * k, x * k, (base - 0.005) * k)
+    p.endShape(p.CLOSE)
+  }
+  p.noStroke()
+  p.fill(alpha(p, CHURCH.flame, 0.95))
+  shape(1, y)
+  p.fill(mixHex(CHURCH.candle, CHURCH.flame, 0.25))
+  shape(0.5, y - 0.004)
+  p.stroke(alpha(p, INK, 0.8))
+  p.strokeWeight(Math.max(1, weight * 0.4))
+  p.line(x * k, y * k, (x + lean * 0.1) * k, (y - 0.018) * k)
+  p.noStroke()
+}
+
+/**
+ * The wedding's garland on the altar: a swag of greenery across the cloth's front in two loops, pinned at its ends and
+ * its middle with a rosette, small pink and white flowers along it, and a ribbon's tails at either end.
+ */
+function drawGarland(p: p5, k: number, weight: number, t: number): void {
+  const [ax0, ax1, top] = CH.altar
+  const y = top + 0.075
+  const pins = [ax0 - 0.02, (ax0 + ax1) / 2, ax1 + 0.02]
+  const dip = 0.13
+  // Each loop as points, for the leaves and flowers along it.
+  const along2 = (a: number, b: number, u: number): Pt => [a + (b - a) * u, y + dip * 4 * u * (1 - u)]
+  // The ribbon's tails, stirring a little in the church's air (more as the bell rings).
+  p.stroke(alpha(p, CHURCH.cloth, 0.95))
+  p.strokeWeight(Math.max(1, 0.022 * k))
+  p.noFill()
+  for (const [i, x] of [pins[0], pins[2]].entries()) {
+    const sway = 0.02 * wobble(t, 60 + i, 1.4) + airStir(t, i) * 0.6
+    p.beginShape()
+    p.vertex(x * k, y * k)
+    p.quadraticVertex((x + sway * 0.5) * k, (y + 0.1) * k, (x + sway - 0.02) * k, (y + 0.2) * k)
+    p.endShape()
+  }
+  // The greenery: a thick soft rope of leaf, a little darker underneath.
+  p.strokeCap(p.ROUND)
+  for (const [col, w, dy] of [
+    [mixHex(HOME.leaf, INK, 0.3), 0.06, 0.008],
+    [mixHex(HOME.leaf, CHURCH.cloth, 0.12), 0.045, 0],
+  ] as [string, number, number][]) {
+    p.stroke(col)
+    p.strokeWeight(w * k)
+    for (let j = 0; j < 2; j++) {
+      p.beginShape()
+      for (let i = 0; i <= 8; i++) {
+        const [x, yy] = along2(pins[j], pins[j + 1], i / 8)
+        p.vertex(x * k, (yy + dy) * k)
+      }
+      p.endShape()
+    }
+  }
+  p.noStroke()
+  // Flowers along it, and a rosette at each pin.
+  for (let j = 0; j < 2; j++) {
+    for (let i = 1; i < 6; i++) {
+      const [x, yy] = along2(pins[j], pins[j + 1], i / 6)
+      p.fill(i % 2 ? CHURCH.flowers : CHURCH.cloth)
+      p.circle(x * k, (yy - 0.006) * k, 0.034 * k)
+    }
+  }
+  for (const x of pins) {
+    p.stroke(alpha(p, INK, 0.6))
+    p.strokeWeight(weight * 0.4)
+    p.fill(CHURCH.flowers)
+    p.circle(x * k, y * k, 0.07 * k)
+    p.noStroke()
+    p.fill(CHURCH.cloth)
+    p.circle(x * k, y * k, 0.03 * k)
+  }
+}
+
 function drawAltar(p: p5, k: number, c: Paint, weight: number, t: number): void {
   const [ax0, ax1, top] = CH.altar
   const floor = CH.floor
@@ -722,16 +845,9 @@ function drawAltar(p: p5, k: number, c: Paint, weight: number, t: number): void 
     const tall = c.g ? 0.12 : 0.3
     p.fill(CHURCH.candle)
     box2(p, k, cx - 0.025, top - 0.23 - tall, cx + 0.025, top - 0.23)
-    const fl = top - 0.23 - tall
-    const sway = 0.012 * Math.sin(t * 7.1 + cx * 5) + 0.008 * Math.sin(t * 13.3)
-    p.noStroke()
-    p.fill(alpha(p, CHURCH.flame, 0.95))
-    p.beginShape()
-    p.vertex(cx * k, (fl - 0.005) * k)
-    p.bezierVertex((cx - 0.035) * k, (fl - 0.03) * k, (cx - 0.02) * k, (fl - 0.08) * k, (cx + sway) * k, (fl - 0.12) * k)
-    p.bezierVertex((cx + 0.02) * k, (fl - 0.08) * k, (cx + 0.035) * k, (fl - 0.03) * k, cx * k, (fl - 0.005) * k)
-    p.endShape(p.CLOSE)
+    candleFlame(p, k, weight, cx, top - 0.23 - tall, t, cx < (ax0 + ax1) / 2 ? 1 : 2)
   }
+  if (!c.g) drawGarland(p, k, weight, t)
   // Flowers in a vase at its middle: the wedding's pink and white; the funeral's white lilies.
   const vx = (ax0 + ax1) / 2
   p.stroke(alpha(p, INK, 0.85))
@@ -777,8 +893,9 @@ function drawAltar(p: p5, k: number, c: Paint, weight: number, t: number): void 
  * The wedding photograph on an easel where they stood, at the funeral (the flash at the start of the show took it):
  * in sepia, a square and a round one, touching, each with a hint of the colour they were that day (his young blue,
  * her coral), so it reads as them and as the picture the show opened on, not as a sign. A black ribbon across its
- * corner. As the grey morning comes up, a soft warm light gathers on it, the one warm thing at the altar end: she is
- * there, in the picture. Drawn a third larger than the hall's copy, so it holds the frame from the pew.
+ * corner. As the grey morning comes up, the low sun through the east window lands on it (`drawDawnPatch`), the one warm
+ * thing at the altar end: she is there, in the picture. Drawn a third larger than the hall's copy, so it holds the
+ * frame from the pew.
  */
 const PHOTO_S = 1.3
 function drawPhotograph(p: p5, k: number, c: Paint, weight: number, t: number): void {
@@ -786,19 +903,7 @@ function drawPhotograph(p: p5, k: number, c: Paint, weight: number, t: number): 
   const foot = CH.floor
   const s = PHOTO_S
   const top = -1.25 - 0.48 * (s - 1)
-  const mid = top + 0.24 * s
-  // The morning's warmth on it, behind the frame: a soft glow on the wall round the picture.
   const warm = beamUp(t)
-  if (warm > 0.01) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createRadialGradient(x * k, mid * k, 0.1 * k, x * k, mid * k, 0.75 * k)
-    g.addColorStop(0, `rgba(255, 226, 170, ${0.38 * warm})`)
-    g.addColorStop(1, 'rgba(255, 226, 170, 0)')
-    ctx.save()
-    ctx.fillStyle = g
-    ctx.fillRect((x - 0.8) * k, (mid - 0.8) * k, 1.6 * k, 1.6 * k)
-    ctx.restore()
-  }
   p.stroke(alpha(p, INK, 0.9))
   p.strokeWeight(weight * 0.6)
   p.line((x - 0.22) * k, foot * k, (x - 0.02) * k, (top - 0.06) * k)
@@ -831,6 +936,172 @@ function drawPhotograph(p: p5, k: number, c: Paint, weight: number, t: number): 
     [x + 0.26 * s, top + 0.07 * s],
     [x + 0.26 * s, top + 0.16 * s],
   ])
+}
+
+/**
+ * The funeral's dawn on her picture: the low sun through the east window over the altar lands on the picture and the
+ * wall round it as the window's own shape, its lights of glass laid out sheared and stretched across the plaster, the
+ * lead between them left in shadow, each light faintly tinted by its glass. It comes up with the morning's beam and
+ * creeps down the wall as the sun climbs. Light on a surface, with edges: not a glow.
+ */
+function drawDawnPatch(p: p5, k: number, c: Paint, t: number): void {
+  const up = beamUp(t)
+  if (up <= 0.003) return
+  const [x0, x1, y0, y1] = WINDOWS[0]
+  const w = x1 - x0
+  const spring = y0 + w * 0.6
+  const wx = (x0 + x1) / 2
+  const wy = (y0 + y1) / 2
+  // Where the window's middle lands, how much larger its image is, and its shear (the low sun comes from the left, so
+  // the image leans that way). Across the picture's lower right and on down the wall beside it, not round it: centred
+  // on her picture, the window's arch stood behind it like a halo.
+  const creep = Math.max(0, t - FUN.from - 2.5)
+  const cx = 0.5 + 0.006 * creep
+  const cy = -0.9 + 0.012 * creep
+  const sx = 1.16
+  const sy = 1.04
+  const shear = -0.2
+  const at = (x: number, y: number): Pt => {
+    const v = (y - wy) * sy
+    return [cx + (x - wx) * sx + shear * v, cy + v]
+  }
+  const warm = '#FFD898'
+  const a = 0.26 * up
+  const gap = 0.02
+  p.noStroke()
+  const lights = 3
+  for (let i = 0; i < lights; i++) {
+    const lx0 = x0 + 0.02 + ((w - 0.04) * i) / lights + gap
+    const lx1 = x0 + 0.02 + ((w - 0.04) * (i + 1)) / lights - gap
+    for (let j = 0; j < 4; j++) {
+      const ly0 = spring + ((y1 - spring) * j) / 4 + gap
+      const ly1 = spring + ((y1 - spring) * (j + 1)) / 4 - gap
+      p.fill(alpha(p, mixHex(warm, c.glass[(i + j) % 4], 0.22), a))
+      poly(p, k, [at(lx0, ly0), at(lx1, ly0), at(lx1, ly1), at(lx0, ly1)])
+    }
+  }
+  // The window's head: its pointed arch over the lights, in one piece.
+  p.fill(alpha(p, mixHex(warm, c.glass[1], 0.18), a))
+  const head: Pt[] = []
+  const m = (x0 + x1) / 2
+  for (let i = 0; i <= 10; i++) {
+    const u = i / 10
+    const ang = (Math.PI / 2) * u
+    head.push(at(x0 + 0.02 + gap + (m - x0 - 0.02 - gap) * (1 - Math.cos(ang)), spring - gap - (spring - y0 - 0.03) * Math.sin(ang)))
+  }
+  for (let i = 9; i >= 0; i--) {
+    const u = i / 10
+    const ang = (Math.PI / 2) * u
+    head.push(at(x1 - 0.02 - gap - (x1 - 0.02 - gap - m) * (1 - Math.cos(ang)), spring - gap - (spring - y0 - 0.03) * Math.sin(ang)))
+  }
+  poly(p, k, head)
+}
+
+/**
+ * At the funeral, where the wedding's garland and posies were: a wreath on a stand beside her easel (dark leaves round
+ * a ring, white flowers in it, a black ribbon), and on the other side a stone urn of tall white lilies.
+ */
+function drawMourning(p: p5, k: number, c: Paint, weight: number): void {
+  const floor = CH.floor
+  const leaf = mixHex(mixHex(HOME.leaf, INK, 0.35), HILL.skyGrey, 0.3)
+  const leafLight = mixHex(HOME.leaf, HILL.skyGrey, 0.35)
+  const white = CHURCH.cloth
+  // The wreath's stand: three thin legs from the floor up behind the ring.
+  const wx = -0.28
+  const wy = -0.97
+  const r = 0.17
+  p.stroke(alpha(p, INK, 0.9))
+  p.strokeWeight(weight * 0.55)
+  p.line((wx - 0.16) * k, floor * k, wx * k, (wy - 0.05) * k)
+  p.line((wx + 0.16) * k, floor * k, wx * k, (wy - 0.05) * k)
+  p.line((wx + 0.02) * k, floor * k, wx * k, (wy + r) * k)
+  // The ring: leaves round it, overlapping, darker beneath, and white flowers set into it.
+  p.noFill()
+  p.stroke(alpha(p, INK, 0.85))
+  p.strokeWeight(0.085 * k)
+  p.circle(wx * k, wy * k, 2 * r * k)
+  p.noStroke()
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2
+    p.push()
+    p.translate((wx + Math.cos(a) * r) * k, (wy + Math.sin(a) * r) * k)
+    p.rotate(a + Math.PI / 2 + 0.5)
+    p.fill(i % 2 ? leaf : leafLight)
+    p.ellipse(0, 0, 0.1 * k, 0.05 * k)
+    p.pop()
+  }
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 + 0.3
+    p.fill(white)
+    p.circle((wx + Math.cos(a) * r) * k, (wy + Math.sin(a) * r) * k, 0.055 * k)
+    p.fill(mixHex(CHURCH.flame, white, 0.5))
+    p.circle((wx + Math.cos(a) * r) * k, (wy + Math.sin(a) * r) * k, 0.018 * k)
+  }
+  // The ribbon: a black bow at the ring's foot and its two tails.
+  p.fill(alpha(p, INK, 0.92))
+  const by = wy + r
+  p.triangle((wx - 0.01) * k, by * k, (wx - 0.08) * k, (by - 0.04) * k, (wx - 0.07) * k, (by + 0.04) * k)
+  p.triangle((wx + 0.01) * k, by * k, (wx + 0.08) * k, (by - 0.04) * k, (wx + 0.07) * k, (by + 0.04) * k)
+  p.triangle((wx - 0.015) * k, by * k, (wx - 0.06) * k, (by + 0.2) * k, (wx - 0.025) * k, (by + 0.2) * k)
+  p.triangle((wx + 0.015) * k, by * k, (wx + 0.055) * k, (by + 0.19) * k, (wx + 0.02) * k, (by + 0.19) * k)
+  // The lilies: a stone urn on the floor, tall stems with their leaves, and the white trumpets opening.
+  const ux = 0.86
+  p.stroke(alpha(p, INK, 0.9))
+  p.strokeWeight(weight * 0.6)
+  p.fill(c.stone)
+  poly(p, k, [
+    [ux - 0.07, floor],
+    [ux + 0.07, floor],
+    [ux + 0.05, floor - 0.05],
+    [ux + 0.1, floor - 0.26],
+    [ux - 0.1, floor - 0.26],
+    [ux - 0.05, floor - 0.05],
+  ])
+  box2(p, k, ux - 0.12, floor - 0.3, ux + 0.12, floor - 0.26, 0.01)
+  const stems: [number, number][] = [
+    [-0.2, -0.86],
+    [-0.08, -1.0],
+    [0.04, -1.06],
+    [0.15, -0.92],
+    [0.24, -0.78],
+  ]
+  p.stroke(alpha(p, leaf, 0.95))
+  p.strokeWeight(weight * 0.55)
+  p.noFill()
+  for (const [dx, hy] of stems) {
+    p.beginShape()
+    p.vertex(ux * k, (floor - 0.3) * k)
+    p.quadraticVertex((ux + dx * 0.3) * k, ((floor - 0.3 + hy) / 2) * k, (ux + dx) * k, hy * k)
+    p.endShape()
+  }
+  p.noStroke()
+  p.fill(leaf)
+  for (const [dx, a] of [
+    [-0.09, -0.7],
+    [0.1, 0.6],
+    [-0.04, -0.3],
+  ] as [number, number][]) {
+    p.push()
+    p.translate((ux + dx) * k, (floor - 0.5) * k)
+    p.rotate(a)
+    p.ellipse(0, 0, 0.05 * k, 0.2 * k)
+    p.pop()
+  }
+  for (const [dx, hy] of stems) {
+    p.push()
+    p.translate((ux + dx) * k, hy * k)
+    p.rotate(dx * 1.6)
+    p.fill(white)
+    for (const a of [-0.75, 0, 0.75]) {
+      p.push()
+      p.rotate(a)
+      p.triangle(-0.03 * k, 0, 0.03 * k, 0, 0, -0.13 * k)
+      p.pop()
+    }
+    p.fill(mixHex(CHURCH.flame, white, 0.4))
+    p.circle(0, -0.01 * k, 0.025 * k)
+    p.pop()
+  }
 }
 
 /* ------------------------------------------------------------------ the windows and their light */
@@ -909,26 +1180,113 @@ function drawWindows(p: p5, k: number, c: Paint, weight: number): void {
   })
 }
 
-/** The light the windows throw: coloured beams in the morning; one pale beam at the funeral with dust turning in it. */
+/**
+ * The sun's slant through the glass (cells across for each cell down). It climbs as the morning goes on, so the shafts
+ * steepen and the patches they lay on the floor and the pews creep back toward the wall over the minutes.
+ */
+const slant = (t: number): number => (gloomy(t) ? 0.5 + 0.004 * (t - FUN.from) : 0.53 - 0.003 * t)
+
+interface Shaft {
+  top: [Pt, Pt]
+  foot: [Pt, Pt]
+  hex: string
+  /** How strongly it lands (the floor, the wall's foot, the pews), and how much of it shows in the air on the way. */
+  a: number
+  air: number
+}
+
+/** The shafts the windows throw at `t`: two coloured ones from each window in the morning; at the funeral, one pale one. */
+function shafts(c: Paint, t: number): Shaft[] {
+  const floor = CH.floor
+  const sl = slant(t)
+  const out: Shaft[] = []
+  const throwFrom = (wi: number, i: number, n: number, hex: string, a: number, air = a) => {
+    const [x0, x1, , y1] = WINDOWS[wi]
+    const src = y1 - 0.75
+    const run = floor - src
+    const a0 = x0 + ((x1 - x0) * i) / n
+    const a1 = x0 + ((x1 - x0) * (i + 1)) / n
+    out.push({ top: [[a0, src], [a1, src]], foot: [[a0 + run * sl, floor], [a1 + run * (sl + 0.08), floor]], hex, a, air })
+  }
+  // Thin in the air: what tells the sun is where it lands, on the floor and the pews.
+  if (!c.g) {
+    for (let wi = 0; wi < WINDOWS.length; wi++) for (let i = 0; i < 2; i++) throwFrom(wi, i, 2, c.glass[(wi + i * 2) % 4], 0.13, 0.065)
+  } else if (beamUp(t) > 0.001) throwFrom(1, 0, 1, '#FFFFFF', 0.2 * beamUp(t), 0.08 * beamUp(t))
+  return out
+}
+
+/**
+ * Where a shaft lands: over its last stretch the wall's foot behind it takes the glass's colour more and more strongly,
+ * fullest at the floor (`drawFloorLight` lays the patch on the boards themselves).
+ */
+function landing(p: p5, k: number, s: Shaft, sl: number): void {
+  const d = 0.42
+  const [[f0x, fy], [f1x]] = s.foot
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createLinearGradient(0, (fy - d) * k, 0, fy * k)
+  g.addColorStop(0, rgba(p, s.hex, 0))
+  g.addColorStop(1, rgba(p, s.hex, Math.min(0.3, s.a * 1.7)))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo((f0x - d * sl) * k, (fy - d) * k)
+  ctx.lineTo((f1x - d * (sl + 0.08)) * k, (fy - d) * k)
+  ctx.lineTo(f1x * k, fy * k)
+  ctx.lineTo(f0x * k, fy * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
+
+/**
+ * The patches of sun on the floor: where each shaft meets the boards, a band of its colour along the floor's top,
+ * spread a little wider than the shaft (the floor seen almost edge-on). Drawn over the floor's section.
+ */
+function drawFloorLight(p: p5, k: number, c: Paint, t: number): void {
+  p.noStroke()
+  for (const s of shafts(c, t)) {
+    const [[f0x, fy], [f1x]] = s.foot
+    p.fill(alpha(p, mixHex(s.hex, '#FFFFFF', 0.3), Math.min(0.5, s.a * 3.2)))
+    poly(p, k, [
+      [f0x - 0.03, fy + 0.012],
+      [f1x + 0.03, fy + 0.012],
+      [f1x + 0.12, fy + 0.055],
+      [f0x - 0.1, fy + 0.055],
+    ])
+  }
+}
+
+/** The pews where the shafts cross them: each lit in its shaft's colour, cut to the shaft's edges. */
+function drawLitPews(p: p5, k: number, c: Paint, t: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  p.noStroke()
+  for (const s of shafts(c, t)) {
+    if (s.foot[1][0] < CH.pews[0] - 0.3) continue
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo(s.top[0][0] * k, s.top[0][1] * k)
+    ctx.lineTo(s.top[1][0] * k, s.top[1][1] * k)
+    ctx.lineTo(s.foot[1][0] * k, s.foot[1][1] * k)
+    ctx.lineTo(s.foot[0][0] * k, s.foot[0][1] * k)
+    ctx.closePath()
+    ctx.clip()
+    p.fill(alpha(p, s.hex, Math.min(0.34, s.a * 2.2)))
+    for (const x of CH.pews) pewShape(p, k, x)
+    ctx.restore()
+  }
+}
+
+/** The light the windows throw: coloured beams in the morning; one pale beam at the funeral. */
 function drawLight(p: p5, k: number, c: Paint, t: number): void {
   const floor = CH.floor
+  const sl = slant(t)
+  // The sun is up on the left: each window throws its colours down and to the right, across the aisle, and they land.
+  for (const s of shafts(c, t)) {
+    beam(p, k, s.top, s.foot, s.hex, s.air)
+    landing(p, k, s, sl)
+  }
   if (!c.g) {
-    // The sun is up on the left: each window throws its colours down and to the right, across the aisle.
-    WINDOWS.forEach(([x0, x1, , y1], wi) => {
-      const src = y1 - 0.75
-      const run = floor - src
-      for (let i = 0; i < 2; i++) {
-        const a0 = x0 + ((x1 - x0) * i) / 2
-        const a1 = x0 + ((x1 - x0) * (i + 1)) / 2
-        beam(p, k, [[a0, src], [a1, src]], [[a0 + run * 0.5, floor], [a1 + run * 0.58, floor]], c.glass[(wi + i * 2) % 4], 0.13)
-      }
-    })
-    // On the kiss the east window flares, and its light falls full on the two of them, fading over the swell.
-    if (t >= WED.kiss - 0.05) {
-      const [x0, x1, , y1] = WINDOWS[0]
-      const f = smooth(t, WED.kiss - 0.05, WED.kiss + 0.08) * (0.3 + 0.2 * Math.exp(-(t - WED.kiss) / 0.5)) * (1 - smooth(t, WED.kiss + 0.6, WED.kiss + 3.2))
-      beam(p, k, [[x0 + 0.04, y1 + 0.07], [x1 - 0.02, y1 + 0.07]], [[ALTAR_CARL - 0.3, floor], [ALTAR_ELLIE + 0.4, floor]], CHURCH.candle, f)
-    }
+    // (The kiss's light is the wedding's: it gathers on them as they turn, `drawKissLight`. The window does not flare.)
     // The doors' light, once they are open: the morning pouring in along the floor.
     const o = Math.min(1, doorsOpen(t))
     if (o > 0.01) {
@@ -937,23 +1295,13 @@ function drawLight(p: p5, k: number, c: Paint, t: number): void {
     }
     return
   }
-  // The funeral: one grey beam from the first lancet, and a slow drift of dust in it.
-  const [x0, x1, , y1] = WINDOWS[1]
-  const src = y1 - 0.75
-  const run = floor - src
-  const up = beamUp(t)
-  if (up <= 0.001) return
-  beam(p, k, [[x0, src], [x1, src]], [[x0 + run * 0.5, floor], [x1 + run * 0.58, floor]], '#FFFFFF', 0.2 * up)
-  p.noStroke()
-  for (let i = 0; i < 28; i++) {
-    const u = (hash(i, 3) + t * (0.018 + 0.012 * hash(i, 5))) % 1
-    const along = 1 - u
-    const sx = x0 + (x1 - x0) * hash(i, 7) + run * 0.54 * along + 0.05 * Math.sin(t * 0.7 + i)
-    const sy = src + run * along
-    const a = 0.6 * up * Math.sin(Math.PI * u) * (0.45 + 0.55 * hash(i, 9))
-    p.fill(alpha(p, '#FFFFFF', a))
-    p.circle(sx * k, sy * k, (0.012 + 0.012 * hash(i, 11)) * k)
+  // The funeral: the doors stand open, and the grey morning comes in along the porch floor as it comes up outside.
+  const dawn = waking(t)
+  if (dawn > 0.01) {
+    const dx = CH.tower[1] - CH.wall
+    beam(p, k, [[dx, CH.doorTop + 0.1], [dx, floor]], [[dx - 1.9, floor - 0.2], [dx - 2.7, floor]], c.skyLow, 0.32 * dawn)
   }
+  // And the one grey beam from the first lancet, drawn above.
 }
 
 /* ------------------------------------------------------------------ the families, in the pews */
@@ -1104,6 +1452,183 @@ export function drawPetals(p: p5, k: number, t: number, front: boolean): void {
   }
 }
 
+/* ------------------------------------------------------------------ small life inside */
+
+/** What sets the church's hanging things swinging: each peal (the doors flung open, a draught), and the one toll. */
+const STIRS: [number, number][] = [...WED.peal.map((s): [number, number] => [s, 0.55]), [WED.doors, 0.7]]
+const STIRS_FUNERAL: [number, number][] = [
+  [FUN.toll, 1],
+  [FUN.answer, 0.4],
+]
+
+/**
+ * How far the bell's ringing has set something hanging swinging at `t` (radians, about): every stroke goes through the
+ * timbers, so a lamp or a ribbon takes up a slow swing that dies away over a few seconds. `seed` puts each a little out
+ * of step with the next.
+ */
+function airStir(t: number, seed = 0): number {
+  let a = 0
+  for (const [s, f] of gloomy(t) ? STIRS_FUNERAL : STIRS) {
+    if (t <= s) continue
+    const u = t - s
+    a += f * 0.045 * Math.min(1, u / 0.25) * Math.exp(-u / 2.4) * Math.sin((2 * Math.PI * u) / 1.9 + seed * 0.4)
+  }
+  return a
+}
+
+/**
+ * The two lamps hanging on chains from the tie beam: one at the foot of the middle truss's king post, one over the
+ * second pew (clear of where his balloon floats over the front pew at the funeral, so its chain never seems to hold it).
+ */
+const LAMPS = [-0.05, 2.45]
+const CHAIN = 0.2
+
+/**
+ * A lamp on its chain from the tie beam: a brass cap, a glass lantern with a candle burning in it at the wedding (unlit
+ * and grey at the funeral), a brass foot and its drop. It sways a hair in the church's air, and more after each stroke
+ * of the bell, swinging from the hook.
+ */
+function drawLamps(p: p5, k: number, c: Paint, weight: number, t: number): void {
+  const hook = CH.wallTop + 0.05
+  LAMPS.forEach((x, i) => {
+    const a = 0.01 * wobble(t, 50 + i, 3.3) + airStir(t, i + 1)
+    p.push()
+    p.translate(x * k, hook * k)
+    p.rotate(a)
+    // The chain: a link face-on, then one edge-on, down to the cap.
+    p.stroke(alpha(p, INK, 0.85))
+    p.strokeWeight(Math.max(1, weight * 0.45))
+    p.line(0, 0, 0, CHAIN * k)
+    p.noFill()
+    for (let j = 0; j < 5; j++) {
+      const y = (0.03 + (j * (CHAIN - 0.04)) / 4) * k
+      if (j % 2 === 0) p.ellipse(0, y, 0.026 * k, 0.05 * k)
+    }
+    // The cap, the lantern, the foot, the drop.
+    const y0 = CHAIN
+    p.stroke(INK)
+    p.strokeWeight(weight * 0.6)
+    p.fill(c.bronze)
+    poly(p, k, [
+      [-0.03, y0],
+      [0.03, y0],
+      [0.09, y0 + 0.06],
+      [-0.09, y0 + 0.06],
+    ])
+    const lit = !c.g
+    p.fill(lit ? mixHex(HOME.lamp, CHURCH.plaster, 0.25) : mixHex(CLINIC.blind, HILL.skyGrey, 0.55))
+    box2(p, k, -0.07, y0 + 0.06, 0.07, y0 + 0.25, 0.012)
+    if (lit) candleFlame(p, k, weight * 0.8, 0, y0 + 0.21, t, 170 + i)
+    p.stroke(alpha(p, INK, 0.75))
+    p.strokeWeight(weight * 0.45)
+    p.line(-0.025 * k, (y0 + 0.07) * k, -0.025 * k, (y0 + 0.24) * k)
+    p.line(0.025 * k, (y0 + 0.07) * k, 0.025 * k, (y0 + 0.24) * k)
+    p.stroke(INK)
+    p.strokeWeight(weight * 0.6)
+    p.fill(c.bronze)
+    poly(p, k, [
+      [-0.085, y0 + 0.25],
+      [0.085, y0 + 0.25],
+      [0.03, y0 + 0.3],
+      [-0.03, y0 + 0.3],
+    ])
+    p.circle(0, (y0 + 0.33) * k, 0.04 * k)
+    p.pop()
+  })
+}
+
+/**
+ * What a small church has on its walls: a hymn board by the altar end (an oak board, its slats blank), and at the back,
+ * between the last window and the tower arch, a plain stone memorial tablet on a little bracket, its face left blank.
+ */
+function drawWallFittings(p: p5, k: number, c: Paint, weight: number): void {
+  // The hymn board: a round-headed oak frame, three blank slats in it.
+  const [hx0, hx1, hy0, hy1] = [0.31, 0.61, -2.3, -1.92]
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.6)
+  p.fill(c.pew)
+  p.beginShape()
+  p.vertex(hx0 * k, hy1 * k)
+  p.vertex(hx0 * k, (hy0 + 0.06) * k)
+  p.bezierVertex(hx0 * k, (hy0 - 0.03) * k, hx1 * k, (hy0 - 0.03) * k, hx1 * k, (hy0 + 0.06) * k)
+  p.vertex(hx1 * k, hy1 * k)
+  p.endShape(p.CLOSE)
+  p.noStroke()
+  p.fill(mixHex(c.cloth, c.plaster, 0.3))
+  for (let i = 0; i < 3; i++) {
+    const y = hy0 + 0.07 + i * 0.095
+    box2(p, k, hx0 + 0.04, y, hx1 - 0.04, y + 0.07, 0.008)
+  }
+  // The tablet: a stone slab with a moulded edge, a low pediment over it, a bracket under it.
+  const [mx0, mx1, my0, my1] = [3.3, 3.62, -1.98, -1.62]
+  const mid = (mx0 + mx1) / 2
+  p.stroke(alpha(p, INK, 0.85))
+  p.strokeWeight(weight * 0.55)
+  p.fill(c.stone)
+  poly(p, k, [
+    [mx0 - 0.03, my0],
+    [mid, my0 - 0.1],
+    [mx1 + 0.03, my0],
+  ])
+  box2(p, k, mx0, my0, mx1, my1)
+  poly(p, k, [
+    [mx0 + 0.06, my1],
+    [mx1 - 0.06, my1],
+    [mid + 0.03, my1 + 0.08],
+    [mid - 0.03, my1 + 0.08],
+  ])
+  p.noStroke()
+  p.fill(mixHex(c.stone, CHURCH.cloth, 0.45))
+  box2(p, k, mx0 + 0.035, my0 + 0.035, mx1 - 0.035, my1 - 0.035)
+}
+
+/**
+ * The wedding's posies on the pew ends: a small bunch of pink and white flowers and leaves tied to each pew's back post
+ * with a white bow, the bow's tails hanging and stirring as the bell rings. Gone by the funeral.
+ */
+function drawPosies(p: p5, k: number, weight: number, t: number): void {
+  CH.pews.forEach((px, i) => {
+    const x = px + 0.315
+    const y = CH.pewBack + 0.2
+    const sway = 0.012 * wobble(t, 80 + i, 1.6) + airStir(t, i + 3) * 0.8
+    // The ribbon's tails.
+    p.stroke(alpha(p, CHURCH.cloth, 0.95))
+    p.strokeWeight(Math.max(1, 0.02 * k))
+    p.noFill()
+    for (const dx of [-0.02, 0.02]) {
+      p.beginShape()
+      p.vertex(x * k, (y + 0.03) * k)
+      p.quadraticVertex((x + dx + sway * 1.2) * k, (y + 0.14) * k, (x + dx * 1.6 + sway * 3) * k, (y + 0.26) * k)
+      p.endShape()
+    }
+    // The leaves and flowers, over the bow.
+    p.noStroke()
+    p.fill(mixHex(HOME.leaf, INK, 0.15))
+    p.ellipse((x - 0.045) * k, (y - 0.035) * k, 0.07 * k, 0.04 * k)
+    p.ellipse((x + 0.045) * k, (y - 0.04) * k, 0.07 * k, 0.04 * k)
+    const blooms: [number, number, string][] = [
+      [-0.025, -0.055, CHURCH.flowers],
+      [0.022, -0.065, CHURCH.cloth],
+      [0, -0.095, CHURCH.flowers],
+      [-0.04, -0.09, CHURCH.cloth],
+      [0.04, -0.1, mixHex(CHURCH.flowers, CHURCH.cloth, 0.5)],
+    ]
+    p.stroke(alpha(p, INK, 0.45))
+    p.strokeWeight(weight * 0.3)
+    for (const [dx, dy, col] of blooms) {
+      p.fill(col)
+      p.circle((x + dx) * k, (y + dy) * k, 0.042 * k)
+    }
+    // The bow: two loops and the knot.
+    p.stroke(alpha(p, INK, 0.55))
+    p.strokeWeight(weight * 0.35)
+    p.fill(CHURCH.cloth)
+    p.ellipse((x - 0.03) * k, (y + 0.01) * k, 0.05 * k, 0.032 * k)
+    p.ellipse((x + 0.03) * k, (y + 0.01) * k, 0.05 * k, 0.032 * k)
+    p.circle(x * k, (y + 0.012) * k, 0.022 * k)
+  })
+}
+
 /* ------------------------------------------------------------------ the tower and its bell */
 
 /** The bell in its frame: swung on its headstock, a wheel beside it for the rope, the clapper striking its lip. */
@@ -1185,9 +1710,7 @@ function drawTower(p: p5, k: number, c: Paint, weight: number, t: number): void 
   p.noStroke()
   p.fill(c.plasterShade)
   box2(p, k, tx0, bFloor, tx1 - w, CH.floor)
-  // The sky through the belfry.
-  p.fill(c.sky)
-  box2(p, k, tx0 + w, bTop, tx1 - w, bFloor)
+  // Through the belfry, the sky behind (painted with the world, its clouds passing behind the bell).
   drawBell(p, k, c, weight, t)
   p.stroke(INK)
   p.strokeWeight(weight * 0.8)
@@ -1234,6 +1757,403 @@ function drawTower(p: p5, k: number, c: Paint, weight: number, t: number): void 
   p.circle(((tx0 + tx1) / 2) * k, (CH.spire - 0.03) * k, 0.08 * k)
 }
 
+/* ------------------------------------------------------------------ the world outside */
+
+/**
+ * Where the far layers stand true (`along`): about where the camera looks in the wides that see out (the peal, the
+ * run out of the doors, the toll, the steps), so each is where it was placed there and slides from it as the camera
+ * moves.
+ */
+const FAR_AT = 3.5
+/** How far off each layer is: the clouds, the far hills, the nearer hills and the town, the trees, a hedge; the bank nearer than the set. */
+const DEPTH = { cloudFar: 0.96, cloudNear: 0.9, hillFar: 0.85, hillNear: 0.72, trees: 0.5, hedge: 0.28, bank: -0.45 }
+
+/** Their picnic hill (where its crest stands, at the anchor), far off over the trees. */
+const PICNIC_X = 7.25
+/** The far hills' height over the street at `x` (their own x): a long low swell, and their hill rising out of it. */
+function farHill(x: number): number {
+  const u = (x - PICNIC_X) / 1.15
+  const hill = Math.abs(u) < 1 ? 0.75 * (1 - u * u) * (1 - u * u) : 0
+  return 1.85 + 0.22 * Math.sin(x * 0.42 + 1) + 0.12 * Math.sin(x * 1.05 + 3) + hill
+}
+/** The nearer hills' height: lower, rounder, and level where the town sits on them. */
+const TOWN_X: Pt = [5.15, 7.25]
+function nearHill(x: number): number {
+  const town = smooth(x, TOWN_X[0] - 0.8, TOWN_X[0] + 0.2) * (1 - smooth(x, TOWN_X[1] - 0.2, TOWN_X[1] + 0.9))
+  return 1.22 + 0.16 * Math.sin(x * 0.75 + 2) + 0.09 * Math.sin(x * 1.9) + 0.18 * town
+}
+
+/** The town: its houses along the nearer hills, [x, half width, wall height, roof height, colour (0 white, 1 sea-green)]. */
+const TOWN: [number, number, number, number, number][] = (() => {
+  const out: [number, number, number, number, number][] = []
+  let x = TOWN_X[0] + 0.1
+  for (let i = 0; x < TOWN_X[1] - 0.1; i++) {
+    const hw = 0.09 + 0.05 * hash(i, 21)
+    out.push([x + hw, hw, 0.09 + 0.06 * hash(i, 22), 0.07 + 0.06 * hash(i, 23), i === 2 ? 1 : 0])
+    x += 2 * hw + 0.03 + 0.08 * hash(i, 24)
+  }
+  return out
+})()
+/** Two of its chimneys that smoke: which houses. */
+const SMOKING = [1, 4]
+
+/** The row of far trees behind the church: x, height, width, each a soft dome on the street's line. */
+const TREES: [number, number, number][] = Array.from({ length: 61 }, (_, j) => {
+  const i = j - 30
+  return [i * 0.95 + hash(i, 1) * 0.45, 0.75 + hash(i, 2) * 0.7, 1.0 + hash(i, 4) * 0.5]
+})
+
+/** The country the church stands in, behind it: clouds at two depths, the far hills with their hill and its tree, the
+ * nearer hills with the town, the row of trees, a hedge along the lane. Each layer slides at its own depth. */
+function drawCountry(p: p5, k: number, c: Paint, f: Frame, t: number, X0: number, X1: number): void {
+  const street = CH.street
+  const base = street + 0.3
+  // The clouds. A fair summer morning: small high flat ones, and nearer heaped ones drifting past. The funeral: a low
+  // grey lid in long soft bands, thinning as its morning comes up.
+  if (!c.g) {
+    clouds(p, k, f, t, { y0: -12, y1: -5.4, per: 26, size: 1.5, speed: 0.05, depth: DEPTH.cloudFar, body: mixHex(c.cloud, c.sky, 0.3), shade: mixHex(c.cloudShade, c.sky, 0.4), heap: 0.5, seed: 11, anchor: FAR_AT })
+    clouds(p, k, f, t, { y0: -5.0, y1: -2.7, per: 17, size: 1.8, speed: 0.11, depth: DEPTH.cloudNear, body: c.cloud, shade: c.cloudShade, seed: 12, anchor: FAR_AT })
+  } else {
+    // Thinning as the morning comes up: seen as the camera rises out to the toll and goes down the steps.
+    const thin = smooth(t, FUN.from + 4.5, CUT.home)
+    clouds(p, k, f, t, { y0: -12, y1: -4.6, per: 34, size: 3.4, speed: 0.04, depth: DEPTH.cloudFar, body: c.cloud, shade: c.cloudShade, a: 0.75 - 0.3 * thin, heap: 0.42, seed: 13, anchor: FAR_AT })
+    clouds(p, k, f, t, { y0: -4.4, y1: -1.7, per: 30, size: 2.8, speed: 0.07, depth: DEPTH.cloudNear, body: mixHex(c.cloud, c.sky, 0.25), shade: c.cloudShade, a: 0.85 - 0.45 * thin, heap: 0.55, seed: 14, anchor: FAR_AT })
+  }
+  p.noStroke()
+  // The far hills, and their hill with its lone tree on the crest.
+  const far = along(f, DEPTH.hillFar, FAR_AT)
+  const band = (shift: number, height: (x: number) => number, color: string) => {
+    p.fill(color)
+    p.beginShape()
+    p.vertex((X0 - 0.5) * k, base * k)
+    for (let x = Math.floor(X0 * 4) / 4 - 0.5; x <= X1 + 0.5; x += 0.25) p.vertex(x * k, (street - height(x - shift)) * k)
+    p.vertex((X1 + 0.5) * k, base * k)
+    p.endShape(p.CLOSE)
+  }
+  band(far, farHill, c.hillFar)
+  const tx = PICNIC_X + far
+  if (tx > X0 - 1 && tx < X1 + 1) {
+    const ty = street - farHill(PICNIC_X) + 0.03
+    p.fill(c.farBark)
+    box2(p, k, tx - 0.018, ty - 0.2, tx + 0.018, ty)
+    p.fill(c.farLeaf)
+    p.ellipse((tx - 0.09) * k, (ty - 0.25) * k, 0.2 * k, 0.15 * k)
+    p.ellipse((tx + 0.09) * k, (ty - 0.24) * k, 0.2 * k, 0.14 * k)
+    p.ellipse(tx * k, (ty - 0.32) * k, 0.24 * k, 0.17 * k)
+  }
+  // The nearer hills, and the town along them: roofs and white walls, one house sea-green, two chimneys smoking.
+  const near = along(f, DEPTH.hillNear, FAR_AT)
+  band(near, nearHill, c.hillNear)
+  if (TOWN_X[1] + near > X0 - 1 && TOWN_X[0] + near < X1 + 1) {
+    for (const [i, [hx, hw, wh, rh, green]] of TOWN.entries()) {
+      const x = hx + near
+      const y = street - nearHill(hx) + 0.03
+      p.fill(green ? c.townGreen : c.townWall)
+      box2(p, k, x - hw, y - wh, x + hw, y)
+      p.fill(c.townRoof)
+      p.triangle((x - hw - 0.02) * k, (y - wh) * k, x * k, (y - wh - rh) * k, (x + hw + 0.02) * k, (y - wh) * k)
+      if (SMOKING.includes(i)) {
+        const cx = x + hw * 0.45
+        const cy = y - wh - rh * 0.55
+        box2(p, k, cx - 0.015, cy - 0.06, cx + 0.015, cy + 0.02)
+        smoke(p, k, t, cx, cy - 0.07, { rate: 1.1, rise: 0.11, life: 5, drift: 0.06, size: 0.045, color: mixHex(c.cloud, c.hillNear, 0.25), a: 0.4, seed: i })
+      }
+    }
+  }
+  // The row of trees: soft domes, unlined.
+  const ts = along(f, DEPTH.trees, FAR_AT)
+  p.noStroke()
+  p.fill(c.trees)
+  for (const [x, h, w] of TREES) {
+    const x1 = x + ts
+    if (x1 < X0 - 1 || x1 > X1 + 1) continue
+    p.ellipse(x1 * k, (street - h * 0.42) * k, w * k, h * k)
+  }
+  // A hedge along the lane, low and broken, a shade nearer and greener.
+  const hs = along(f, DEPTH.hedge, FAR_AT)
+  p.fill(c.hedge)
+  const i0 = Math.floor((X0 - hs) / 0.55) - 2
+  const i1 = Math.ceil((X1 - hs) / 0.55) + 2
+  for (let i = i0; i <= i1; i++) {
+    if (hash(i, 31) > 0.62) continue
+    const x = i * 0.55 + hash(i, 32) * 0.3 + hs
+    const h = 0.2 + 0.18 * hash(i, 33)
+    p.ellipse(x * k, (street - h * 0.32) * k, (0.5 + 0.35 * hash(i, 34)) * k, h * k)
+  }
+}
+
+/**
+ * Wildflowers on stalks along a ground line (`ground(x)`): `per` a cell where they grow, leaning with the wind (`gust`,
+ * as the grass does) and nodding on their own; each a few small round heads in its colour.
+ */
+function wildflowers(p: p5, k: number, t: number, x0: number, x1: number, ground: (x: number) => number, o: { per: number; h: number; r: number; colors: string[]; stem: string; weight: number; seed: number }): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const heads: [number, number, number][] = []
+  ctx.save()
+  // The stalks, all in one stroke; then the heads, one fill to a colour.
+  ctx.strokeStyle = o.stem
+  ctx.lineWidth = o.weight
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  const i0 = Math.floor(x0 * o.per)
+  const i1 = Math.ceil(x1 * o.per)
+  for (let i = i0; i <= i1; i++) {
+    if (hash(i, 61, o.seed) > 0.45) continue
+    const x = (i + hash(i, 62, o.seed)) / o.per
+    const g = ground(x)
+    const h = o.h * (0.6 + 0.4 * hash(i, 63, o.seed))
+    const lean = (0.15 + 0.35 * gust(t - x * 0.12, o.seed)) * h + Math.sin(t * 1.7 + i * 2.1) * 0.03 * h
+    const hx = x + lean
+    const hy = g - h * (1 - 0.1 * (lean / h) * (lean / h))
+    ctx.moveTo(x * k, g * k)
+    ctx.quadraticCurveTo((x + lean * 0.2) * k, (g - h * 0.6) * k, hx * k, hy * k)
+    heads.push([hx, hy, i])
+  }
+  ctx.stroke()
+  o.colors.forEach((col, ci) => {
+    ctx.fillStyle = col
+    ctx.beginPath()
+    for (const [hx, hy, i] of heads) {
+      if (Math.floor(hash(i, 64, o.seed) * o.colors.length) !== ci) continue
+      const n = 1 + Math.floor(hash(i, 65, o.seed) * 3)
+      for (let j = 0; j < n; j++) {
+        const cx = (hx + (j - (n - 1) / 2) * o.r * 0.9) * k
+        const cy = (hy - (j % 2) * o.r * 0.6) * k
+        ctx.moveTo(cx + o.r * k, cy)
+        ctx.arc(cx, cy, o.r * k, 0, Math.PI * 2)
+      }
+    }
+    ctx.fill()
+  })
+  ctx.restore()
+}
+
+/** Where the bank in front of us stands (its own x): a low rolling top, below the street. */
+const BANK = 1.2
+const bankTop = (x: number): number => BANK + 0.05 * Math.sin(x * 1.15 + 0.4) + 0.035 * Math.sin(x * 2.9 + 2)
+
+/**
+ * In front of the church: grass and wildflowers along the verge at the street's edge, in the wind; and nearer still, a
+ * grassy bank across the bottom of the frame that slides past faster than the set as the camera moves, its tufts and
+ * flowers taller and darker. Everything it grows stays below the street, so nothing of it ever stands over the two of
+ * them.
+ */
+function drawVerge(p: p5, k: number, c: Paint, f: Frame, t: number, weight: number, X0: number, X1: number, Y1: number): void {
+  const street = CH.street
+  const flowers = c.g
+    ? [mixHex(CHURCH.cloth, HILL.skyGrey, 0.3), mixHex(CHURCH.flowers, HILL.skyGrey, 0.55), mixHex(HOME.yellow, HILL.skyGrey, 0.6)]
+    : [CHURCH.cloth, CHURCH.flowers, HOME.yellow, CHURCH.cloth]
+  grass(p, k, t, X0 - 0.5, X1 + 0.5, street + 0.02, { per: 9, h: 0.11, color: c.tuft, weight: Math.max(1, weight * 0.5), seed: 3 })
+  wildflowers(p, k, t, X0 - 0.5, X1 + 0.5, () => street + 0.03, { per: 1.6, h: 0.13, r: 0.022, colors: flowers, stem: c.tuft, weight: Math.max(1, weight * 0.45), seed: 4 })
+  if (Y1 < BANK - 0.35) return
+  const nb = along(f, DEPTH.bank, FAR_AT)
+  const x0 = X0 - nb - 0.5
+  const x1 = X1 - nb + 0.5
+  p.push()
+  p.translate(nb * k, 0)
+  // The bank, darkening toward us.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createLinearGradient(0, BANK * k, 0, (BANK + 0.8) * k)
+  g.addColorStop(0, rgba(p, c.bank, 1))
+  g.addColorStop(1, rgba(p, mixHex(c.bank, c.bankDark, 0.55), 1))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo(x0 * k, (Y1 + 1) * k)
+  for (let x = Math.floor(x0 * 4) / 4; x <= x1 + 0.25; x += 0.25) ctx.lineTo(x * k, bankTop(x) * k)
+  ctx.lineTo(x1 * k, (Y1 + 1) * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+  // Its tufts, rooted along its top and leaning with the wind as a gust runs along them (one stroke for them all).
+  ctx.save()
+  ctx.strokeStyle = c.bankDark
+  ctx.lineWidth = Math.max(1, weight * 0.7)
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  for (let i = Math.floor(x0 * 7); i <= Math.ceil(x1 * 7); i++) {
+    if (hash(i, 41) > 0.6) continue
+    const x = (i + hash(i, 42)) / 7
+    const gy = bankTop(x) + 0.03
+    const h = 0.12 + 0.11 * hash(i, 43)
+    const lean = (0.2 + 0.45 * gust(t - x * 0.12, 5)) * h + Math.sin(t * 2.1 + i) * 0.04 * h
+    ctx.moveTo(x * k, gy * k)
+    ctx.quadraticCurveTo((x + lean * 0.3) * k, (gy - h * 0.6) * k, (x + lean) * k, (gy - h * (1 - (0.15 * Math.abs(lean)) / h)) * k)
+  }
+  ctx.stroke()
+  ctx.restore()
+  wildflowers(p, k, t, x0, x1, (x) => bankTop(x) + 0.02, { per: 1.3, h: 0.22, r: 0.034, colors: flowers, stem: c.bankDark, weight: Math.max(1, weight * 0.6), seed: 6 })
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the birds: the bell heard in the world */
+
+/** The top of the roof's slates over x: up from the eaves to the ridge, and down from it to the tower. */
+function roofTop(x: number): number {
+  const ex = CH.eaves[0] - 0.3
+  const [px, py] = CH.peak
+  const ridge = py - CH.roofTh - 0.05
+  if (x <= px) {
+    const y0 = roofY(ex) - CH.roofTh
+    return y0 + ((ridge - y0) * (x - ex)) / (px - ex)
+  }
+  const x1 = CH.tower[0]
+  return ridge + ((roofY(x1) - CH.roofTh - ridge) * (x - px)) / (x1 - px)
+}
+
+/**
+ * A bird from the side in flat shapes: body, head, a fanned tail, and the near wing raised or lowered with its beat
+ * (`flap`, 1 up to -1 down) or folded along its back (`fold`). `dir` is the way it faces, narrowing as it turns; `ink`
+ * outlines it (a white dove against a pale sky) or not (a rook is its own dark).
+ */
+function bird(p: p5, k: number, x: number, y: number, s: number, dir: number, flap: number, fold: boolean, tilt: number, fill: string, ink: string | null, weight: number): void {
+  const U = (v: number) => v * s * k
+  const wingTip: Pt = fold ? [-0.075, -0.022] : [-0.035, -0.014 - 0.11 * flap]
+  const parts = () => {
+    p.triangle(U(-0.045), U(-0.006), U(-0.118), U(-0.03), U(-0.115), U(0.014))
+    p.ellipse(0, 0, U(0.12), U(0.056))
+    p.circle(U(0.056), U(-0.022), U(0.05))
+    p.triangle(U(0.03), U(-0.016), U(-0.03), U(-0.016), U(wingTip[0]), U(wingTip[1]))
+  }
+  p.push()
+  p.translate(x * k, y * k)
+  p.scale(dir, 1)
+  p.rotate(tilt)
+  if (ink) {
+    // The outline first, a little larger, then the bird over it: one clean edge round the whole shape.
+    p.stroke(ink)
+    p.strokeWeight(Math.max(1, weight))
+    p.fill(ink)
+    parts()
+  }
+  p.noStroke()
+  p.fill(fill)
+  parts()
+  if (!ink) {
+    p.fill(mixHex(fill, CHURCH.stone, 0.45))
+    p.triangle(U(0.075), U(-0.03), U(0.075), U(-0.014), U(0.105), U(-0.02))
+  }
+  p.pop()
+}
+
+/** A flight as a path in time: x and y through waypoints, each a monotone cubic (so a wheel turns, never overshoots). */
+function flightPath(ts: number[], xs: number[], ys: number[], v0: Pt, v1: Pt): (s: number) => Pt {
+  const fx = pchip(ts, xs, v0[0], v1[0])
+  const fy = pchip(ts, ys, v0[1], v1[1])
+  return (s) => [fx(s), fy(s)]
+}
+
+/**
+ * The doves on the roof by the tower: on the bell's first peal (bar 2) they lift off together, beat out past the tower
+ * below the belfry (never across the bell), climb into the sky to its right, wheel round once and away to the right
+ * over the following bars.
+ */
+const DOVES = 8
+const DOVE_PERCH = Array.from({ length: DOVES }, (_, i): Pt => {
+  const x = 2.42 + 0.14 * i + 0.04 * hash(i, 70)
+  return [x, roofTop(x) - 0.03]
+})
+const dovePath = flightPath(
+  [0, 0.45, 0.9, 1.4, 1.9, 2.4, 2.9, 3.4, 3.9, 4.6, 5.6],
+  [2.95, 4.35, 5.7, 6.9, 7.6, 7.45, 6.85, 6.95, 7.9, 9.6, 12],
+  [-3.38, -3.3, -3.42, -3.8, -4.25, -4.55, -4.38, -3.92, -3.85, -4.3, -5.1],
+  [3, 0.2],
+  [2.4, -0.8],
+)
+
+function drawDoves(p: p5, k: number, f: Frame, t: number, weight: number): void {
+  const up = WED.peal[0]
+  for (let i = 0; i < DOVES; i++) {
+    const lag = 0.05 * i + 0.08 * hash(i, 71)
+    const s = t - up - lag
+    const [px, py] = DOVE_PERCH[i]
+    let x = px
+    let y = py
+    let dir = i % 3 === 0 ? -1 : 1
+    let flap = 0
+    let fold = true
+    let tilt = -0.15 + 0.05 * wobble(t, 90 + i, 1.8)
+    if (s > 0) {
+      const [qx, qy] = dovePath(s)
+      const [nx] = dovePath(s + 0.03)
+      const b = ease(s, 0, 0.55)
+      const ox = (hash(i, 72) - 0.5) * 0.55 + 0.06 * Math.sin(s * 1.3 + i)
+      const oy = (hash(i, 73) - 0.5) * 0.32 + 0.04 * Math.sin(s * 1.7 + i * 2)
+      x = qx + ox * b + (px - 2.95) * (1 - b)
+      y = qy + oy * b + (py + 3.38) * (1 - b)
+      const v = (nx - qx) / 0.03
+      dir = Math.sign(v || 1) * Math.max(0.3, Math.min(1, Math.abs(v) / 0.7))
+      flap = Math.sin(2 * Math.PI * 4.2 * s + 6.3 * hash(i, 74)) * (s < 1.6 ? 1 : 0.6)
+      fold = false
+      tilt = -0.25 * (1 - b) - 0.1 * b
+    }
+    if (x < f.x0 - 0.3 || x > f.x1 + 0.3 || y < f.y0 - 0.3 || y > f.y1 + 0.3) continue
+    bird(p, k, x, y, 1, dir, flap, fold, tilt, CHURCH.cloth, INK, weight * 0.9)
+  }
+}
+
+/**
+ * The rooks on the roof at the funeral: on the toll they burst up off it, dive down the slope and out past the tower
+ * below the belfry, and glide off over the street, smaller as they go, to settle in the tops of the far trees, where
+ * they sit out the rest of it.
+ */
+const ROOKS = 4
+const ROOK_PERCH = [1.0, 1.33, 1.9, 2.22].map((x): Pt => [x, roofTop(x) - 0.04])
+/** The far trees they settle in, and where along each crown. */
+const ROOK_TREE: [number, number][] = [
+  [38, -0.18],
+  [38, 0.14],
+  [39, -0.1],
+  [39, 0.2],
+]
+const rookPath = flightPath([0, 0.3, 0.75, 1.15, 1.5, 1.9], [1.6, 2.0, 2.9, 3.65, 4.4, 5.4], [-4.2, -4.7, -4.35, -3.33, -3.08, -2.85], [1.2, -2.5], [2.6, 0.8])
+
+function drawRooks(p: p5, k: number, c: Paint, f: Frame, t: number): void {
+  const black = mixHex(INK, CLINIC.steel, 0.12)
+  const ts = along(f, DEPTH.trees, FAR_AT)
+  for (let i = 0; i < ROOKS; i++) {
+    const lag = 0.04 * i + 0.1 * hash(i, 81)
+    const s = t - FUN.toll - lag
+    const [px, py] = ROOK_PERCH[i]
+    const [ti, dx] = ROOK_TREE[i]
+    const [tx, th] = TREES[ti]
+    const settle: Pt = [tx + ts + dx, CH.street - th * 0.92 - 0.02]
+    let x = px
+    let y = py
+    let dir = i === 1 ? -1 : 1
+    let flap = 0
+    let fold = true
+    let tilt = -0.35 + 0.06 * wobble(t, 100 + i, 2.1)
+    let size = 1.15
+    let tone = black
+    if (s > 0) {
+      const glide = ease(s, 1.7, 3.3)
+      const [qx, qy] = rookPath(Math.min(s, 1.9))
+      const go = Math.max(0, s - 1.9)
+      // Past the tower, on toward the trees: straight at them, on a shallow arc, slowing to land.
+      const fx = qx + 2.6 * go
+      const fy = qy + 0.8 * go
+      const b = ease(s, 0, 0.3)
+      // Each keeps its own place in the loose group, drifting in it.
+      const ox = (hash(i, 83) - 0.5) * 0.7 + 0.06 * Math.sin(s * 1.9 + i * 2)
+      const oy = (hash(i, 84) - 0.5) * 0.34 + 0.04 * Math.sin(s * 2.3 + i)
+      x = (fx + ox * b + (px - 1.6) * (1 - b)) * (1 - glide) + settle[0] * glide
+      y = (fy + oy * b + (py + 4.2) * (1 - b)) * (1 - glide) + settle[1] * glide - 0.35 * Math.sin(Math.PI * glide)
+      const [nx] = rookPath(Math.min(s + 0.03, 1.9))
+      const v = s < 1.9 ? (nx - qx) / 0.03 : 2.6
+      dir = Math.sign(v || 1) * Math.max(0.35, Math.min(1, Math.abs(v) / 0.8))
+      const landed = smooth(s, 3.15, 3.4)
+      flap = Math.sin(2 * Math.PI * 3.3 * s + 6.3 * hash(i, 82)) * (s < 1.9 ? 1 : 0.7 - 0.5 * glide) * (1 - landed)
+      fold = landed > 0.5
+      tilt = -0.3 * landed - 0.1 * (1 - b)
+      size = 1.15 - 0.6 * glide
+      tone = mixHex(black, c.trees, 0.4 * glide)
+    }
+    if (x < f.x0 - 0.3 || x > f.x1 + 0.3 || y < f.y0 - 0.3 || y > f.y1 + 0.3) continue
+    bird(p, k, x, y, size, dir, flap, fold, tilt, tone, null, 0)
+  }
+}
+
 /* ------------------------------------------------------------------ the set */
 
 export const churchSet = scenery<null>({
@@ -1251,20 +2171,14 @@ export const churchSet = scenery<null>({
     const [tx0, tx1] = CH.tower
     p.push()
 
-    // The sky, paling to the ground; a far line of trees; the grass; the earth.
+    // The sky, paling to the ground; the country behind (clouds, hills, the town, trees, a hedge); the grass; the earth.
     if (X1 > X0 && Y1 > Y0) {
       vgrad(p, k, X0, Y0, X1, Math.min(Y1, CH.street), [
         [0, c.sky, 1],
         [1, c.skyLow, 1],
       ])
+      drawCountry(p, k, c, f, t, X0, X1)
       p.noStroke()
-      p.fill(c.trees)
-      for (let i = -24; i <= 24; i++) {
-        const x = i * 0.95 + hash(i, 1) * 0.45
-        if (x < X0 - 1 || x > X1 + 1) continue
-        const h = 0.75 + hash(i, 2) * 0.7
-        p.ellipse(x * k, (CH.street - h * 0.42) * k, (1.0 + hash(i, 4) * 0.5) * k, h * k)
-      }
       p.fill(c.earth)
       if (Y1 > CH.street) box2(p, k, X0, CH.street, X1, Y1)
       p.fill(c.grass)
@@ -1319,13 +2233,21 @@ export const churchSet = scenery<null>({
     p.strokeWeight(weight * 0.6)
     p.line(ax1 * k, -0.5 * k, tx0 * k, -0.5 * k)
 
+    drawWallFittings(p, k, c, weight)
     drawWindows(p, k, c, weight)
     drawLight(p, k, c, t)
+    drawLamps(p, k, c, weight, t)
     drawOrgan(p, k, c, weight, t)
     drawAltar(p, k, c, weight, t)
-    if (c.g) drawPhotograph(p, k, c, weight, t)
+    if (c.g) {
+      drawMourning(p, k, c, weight)
+      drawPhotograph(p, k, c, weight, t)
+      drawDawnPatch(p, k, c, t)
+    }
     for (const x of CH.pews) pewAt(p, k, c, weight, x)
+    drawLitPews(p, k, c, t)
     drawFolk(p, k, t)
+    if (!c.g) drawPosies(p, k, weight, t)
     drawPetals(p, k, t, false)
 
     // The tower, from the ground: the porch under it, the ringing chamber, the belfry, the spire.
@@ -1351,6 +2273,9 @@ export const churchSet = scenery<null>({
     ])
     p.fill(c.outside)
     box2(p, k, ax0 - 0.08, roofY(ax0) + 0.02, ax0, CH.floor)
+    drawFloorLight(p, k, c, t)
+    p.stroke(INK)
+    p.strokeWeight(weight * 0.8)
     p.fill(c.stone)
     box2(p, k, ax0 - 0.2, CH.floor + 0.26, CH.landing[1], CH.street)
     p.noStroke()
@@ -1394,6 +2319,11 @@ export const churchSet = scenery<null>({
         box2(p, k, tx1 + leaf * 0.2, -0.9, tx1 + leaf * 0.8, CH.floor - 0.15)
       }
     }
+
+    // The birds on the roof, that the bell sends up; the verge at the church's foot and the bank in front of us.
+    if (c.g) drawRooks(p, k, c, f, t)
+    else drawDoves(p, k, f, t, weight)
+    if (X1 > X0) drawVerge(p, k, c, f, t, weight, X0, X1, Y1)
     p.pop()
   },
 })

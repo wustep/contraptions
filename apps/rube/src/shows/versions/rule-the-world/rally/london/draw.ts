@@ -58,7 +58,7 @@ import {
   type Stroke,
   type Table,
 } from './geo'
-import { busy, cheer, groan, hush, SEMI_WIN } from './mood'
+import { busy, cheer, groan, hush, leaving, SEMI_WIN } from './mood'
 import { C } from './palette'
 import { PRESS_SPAN, pressBox, pressDesk } from './press'
 
@@ -168,6 +168,8 @@ interface Watch {
   groan: number
   busy: number
   level: number
+  /** The hall getting up to go after the loss. */
+  leaving: number
 }
 
 /** The smokers in the gallery, gathered as it is drawn (their mouths, in cells), their smoke drawn over it in one go. */
@@ -179,7 +181,7 @@ const smokers: number[] = []
  */
 function gallery(pen: Pen, t: number, f: Frame, x0: number, x1: number): void {
   rect(pen, x0, GALLERY_TOP, x1, PARAPET + 0.6, C.gallery)
-  const watch: Watch = { at: [ballAt(t - 0.1), ballAt(t - 0.18), ballAt(t - 0.28)], cheer: cheer(t), groan: groan(t), busy: busy(t), level: level(t) }
+  const watch: Watch = { at: [ballAt(t - 0.1), ballAt(t - 0.18), ballAt(t - 0.28)], cheer: cheer(t), groan: groan(t), busy: busy(t), level: level(t), leaving: leaving(t) }
   smokers.length = 0
   for (let r = 3; r >= 0; r--) {
     // The gangways open out of the two upper rows; the lower two sit in front of their mouths.
@@ -247,12 +249,15 @@ function spectator(pen: Pen, x: number, y: number, i: number, r: number, t: numb
   const ink = ROW_INK[r]
   const ci = Math.floor(hash(i, r, 2) * 5)
   const ball = w.at[Math.floor(hash(i, r, 7) * 3)]
-  const look = Math.max(-1, Math.min(1, (ball[0] - x) / 4))
-  const tip = Math.max(0, Math.min(1, (-0.3 - ball[1]) / 1.6))
+  // A third of them up off the bench once he has come to rest, turning for the gangways.
+  const goes = hash(i, r, 19) < 0.33 ? w.leaving * (0.6 + 0.4 * hash(i, r, 20)) : 0
+  const toward = hash(i, r, 21) < 0.5 ? -1 : 1
+  const look = Math.max(-1, Math.min(1, (ball[0] - x) / 4)) * (1 - goes) + toward * goes
+  const tip = Math.max(0, Math.min(1, (-0.3 - ball[1]) / 1.6)) * (1 - goes)
   const keen = 0.55 + 0.45 * hash(i, r, 8)
   const rise = w.cheer * keen
   const bob = 0.012 * Math.sin(t * (1.2 + hash(i, r, 3)) + i) + 0.02 * w.level * Math.sin(t * 6 + i * 1.7) + 0.035 * rise * Math.sin(t * 13 + i * 2.3)
-  const hy = y - 0.62 + bob - 0.16 * rise + 0.05 * w.groan
+  const hy = y - 0.62 + bob - 0.16 * rise + 0.05 * w.groan * (1 - goes) - 0.24 * goes
   const hx = x + 0.035 * look
   const hatted = hash(i, r, 5) < 0.45
   const prog = hash(i, r, 11) < 0.07

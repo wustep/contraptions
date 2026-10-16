@@ -7,6 +7,8 @@ import { live } from './live'
 import { CREDITS_AT, DURATION, at } from './music'
 import { ctxOf, rgb } from './pen'
 import { paintInto, painted, prepare, snapshot, type Snap } from './snap'
+import { drawFlock, drawLoft, flockX } from './flock'
+import { CHIMNEY, STACK, drawMilk, drawNear, drawNextDoor, drawPavement, drawRoofWashing } from './city'
 
 /**
  * The finale: the machine, whole.
@@ -17,11 +19,15 @@ import { paintInto, painted, prepare, snapshot, type Snap } from './snap'
  * alley, the road and the farm on fire over them, and the airfield and Tokyo beside the ward at the top. It stands in a
  * city at dawn.
  *
- * The building is asleep as the camera finds it, its rooms dark. On the song's last two bars their lights come on a
- * room a beat in the order he went through them, from the store to Tokyo (as the windows across the street from the
- * store woke a beat apiece at the start), and the song's last beat is on the ward, where he is at the glass with his
- * son. Then every room goes on with its own place, and in the quiet after the song the camera comes back in on the top
+ * The building is half asleep as the camera finds it, every room going on with its own place in the dark. On the
+ * song's last two bars their lights come on a room a beat in the order he went through them, from the store to Tokyo
+ * (as the windows across the street from the store woke a beat apiece at the start), and the song's last beat is on
+ * the ward, where he is at the glass with his son; and in the quiet after the song the camera comes back in on the top
  * floor.
+ *
+ * Round it the city wakes (`city.ts`), and over it the pigeons from the loft on its roof wheel and come home
+ * (`flock.ts`): across the sleeping rooms' faces as the camera draws back, and once every room is lit, close past the
+ * lens over them.
  *
  * Everything here is in the ward's own cells (the building is laid round the ward where it stands), drawn over the
  * ward everywhere but in the ward's own room, which is the ward itself, live. There is no light laid over any of it:
@@ -119,6 +125,10 @@ const smoother = (u: number): number => {
   const v = Math.max(0, Math.min(1, u))
   return v * v * v * (v * (6 * v - 15) + 10)
 }
+const smooth3 = (u: number): number => {
+  const v = Math.max(0, Math.min(1, u))
+  return v * v * (3 - 2 * v)
+}
 
 /**
  * The crane over the credits, from the camera's last framing on the glass (`from`, at FINALE): out and down, Marty
@@ -138,8 +148,16 @@ export function crane(t: number, from: Framing): Framing {
     cells = Math.exp(Math.log(OUT_CELLS) + (Math.log(IN_CELLS) - Math.log(OUT_CELLS)) * v)
     o = [OUT_SCREEN[0] + (IN_SCREEN[0] - OUT_SCREEN[0]) * v, OUT_SCREEN[1] + (IN_SCREEN[1] - OUT_SCREEN[1]) * v]
   }
-  return { ...from, x: SILL[0] - o[0] * cells, y: SILL[1] - o[1] * cells, cells }
+  // Out wide it never quite stops: it goes on drawing back a little, and travels slowly along the building from its
+  // left towards the loft and the sun, so the near things slide against the far ones; then gives the move up to the
+  // way back in.
+  const along = (-0.5 * smoother((t - 235.5) / 3) + smooth3((t - 238) / 18)) * (1 - v)
+  const back = 1 + DRAW_BACK * smoother((t - 238) / 11) * (1 - v)
+  return { ...from, x: SILL[0] - o[0] * cells + TRAVEL * along, y: SILL[1] - o[1] * cells, cells: cells * back }
 }
+/** How far the wide goes on drawing back (a share of the frame), and how far it travels along the building (cells). */
+const DRAW_BACK = 0.05
+const TRAVEL = 5
 /** From when Marty is too small on the screen to be the shot: the finale's wide. */
 export const FINALE_WIDE: [number, number][] = [[FINALE + 0.47 * (OUT_AT - FINALE), DURATION]]
 
@@ -323,47 +341,40 @@ function drawSmoke(p: p5, k: number, f: Box & { cx: number; cy: number }, t: num
   })
 }
 
-/** Pigeons wheeling over the roofs, and a plane going over very high. */
-function drawBirds(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number): void {
+/** A plane going over very high, its light blinking. */
+function drawPlane(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number): void {
   const ctx = ctxOf(p)
-  deep(p, f, k, 30, () => {
-    ctx.save()
-    ctx.strokeStyle = css('#2A2438', 0.85)
-    ctx.lineWidth = Math.max(1, 0.12 * k)
-    ctx.lineCap = 'round'
-    ctx.beginPath()
-    const u = t - FINALE
-    const cx = -20 + 18 * Math.sin(u * 0.11) + u * 0.6
-    const cy = -16 + 3 * Math.sin(u * 0.23)
-    for (let i = 0; i < 16; i++) {
-      const a = i * 2.4 + u * (0.4 + 0.1 * hash(i, 1, 9))
-      const x = cx + 6 * Math.cos(a) * (0.4 + hash(i, 2, 9))
-      const y = cy + 2.5 * Math.sin(a * 1.3) * (0.4 + hash(i, 3, 9))
-      const flap = Math.sin(u * 9 + i * 1.7) * 0.35
-      ctx.moveTo((x - 0.6) * k, (y - flap) * k)
-      ctx.quadraticCurveTo((x - 0.25) * k, (y - 0.25) * k, x * k, y * k)
-      ctx.quadraticCurveTo((x + 0.25) * k, (y - 0.25) * k, (x + 0.6) * k, (y - flap) * k)
-    }
-    ctx.stroke()
-    ctx.restore()
-  })
   // The plane, far up, its light blinking.
   deep(p, f, k, 90, () => {
     const u = t - FINALE
     const x = -150 + u * 6
     const y = -40
     ctx.save()
+    // An airliner side on, nose to the right: the fuselage, the tail's fin and plane, the wing and its two engines.
     ctx.fillStyle = css('#3A3550', 0.9)
     ctx.beginPath()
-    ctx.ellipse(x * k, y * k, 2.6 * k, 0.45 * k, 0, 0, Math.PI * 2)
-    ctx.moveTo((x - 0.5) * k, y * k)
-    ctx.lineTo((x + 0.6) * k, (y + 2.2) * k)
-    ctx.lineTo((x + 1.2) * k, y * k)
+    ctx.moveTo((x + 2.9) * k, y * k)
+    ctx.quadraticCurveTo((x + 2.8) * k, (y - 0.32) * k, (x + 2.2) * k, (y - 0.34) * k)
+    ctx.lineTo((x - 2.0) * k, (y - 0.3) * k)
+    ctx.lineTo((x - 2.7) * k, (y - 1.3) * k)
+    ctx.lineTo((x - 3.15) * k, (y - 1.3) * k)
+    ctx.lineTo((x - 2.95) * k, (y - 0.12) * k)
+    ctx.lineTo((x - 2.6) * k, (y + 0.08) * k)
+    ctx.lineTo((x + 2.2) * k, (y + 0.3) * k)
+    ctx.quadraticCurveTo((x + 2.8) * k, (y + 0.28) * k, (x + 2.9) * k, y * k)
+    ctx.moveTo((x + 0.6) * k, (y + 0.12) * k)
+    ctx.lineTo((x - 0.5) * k, (y + 0.4) * k)
+    ctx.lineTo((x - 1.0) * k, (y + 0.4) * k)
+    ctx.lineTo((x - 0.2) * k, (y + 0.1) * k)
+    ctx.moveTo((x - 2.4) * k, (y - 0.05) * k)
+    ctx.lineTo((x - 3.3) * k, (y + 0.05) * k)
+    ctx.lineTo((x - 3.3) * k, (y - 0.1) * k)
+    for (const ex of [0.55, -0.1]) ctx.rect((x + ex - 0.35) * k, (y + 0.18) * k, 0.55 * k, 0.2 * k)
     ctx.fill()
     if (Math.sin(u * 6) > 0.6) {
       ctx.fillStyle = css('#FF5A4A', 1)
       ctx.beginPath()
-      ctx.arc((x + 0.4) * k, (y + 0.3) * k, 0.45 * k, 0, Math.PI * 2)
+      ctx.arc((x - 0.2) * k, (y + 0.32) * k, 0.22 * k, 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.restore()
@@ -465,11 +476,11 @@ function drawStreet(p: p5, k: number, f: Box, t: number): void {
     ctx.fillStyle = '#F2D08C'
     ctx.fillRect((x + 0.6) * k, (BASE - 3.85) * k, 0.55 * k, 0.22 * k)
   }
-  // A cab, early, going past along the street, and another the other way later.
+  // Cabs and cars going by, more as the morning gets going.
   const cars: [number, number, number, string][] = []
-  for (let i = 0; i < 9; i++) cars.push([i, i % 2 ? 70 : -110, (i % 2 ? -1 : 1) * (6 + 5 * hash(i, 1, 77)), ['#E8B83A', '#C8C0B0', '#7A2A2A', '#2A4A6A'][i % 4]])
+  for (let i = 0; i < 16; i++) cars.push([i, i % 2 ? 70 : -110, (i % 2 ? -1 : 1) * (6 + 5 * hash(i, 1, 77)), ['#E8B83A', '#C8C0B0', '#7A2A2A', '#2A4A6A', '#E8B83A', '#3A4A3A'][i % 6]])
   for (const [i, from, v, col] of cars) {
-    const x = from + v * (t - FINALE - 3.7 * i)
+    const x = from + v * (t - FINALE - 2.1 * i - 1.4 * hash(i, 2, 77))
     if (x < f.x0 - 6 || x > f.x1 + 6) continue
     ctx.fillStyle = col
     ctx.beginPath()
@@ -508,8 +519,8 @@ function drawEl(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number
     ctx.lineTo((x + 6) * k, (y + 0.45) * k)
   }
   ctx.stroke()
-  // Two trains, one each way.
-  for (const [from, v, at0] of [[-140, 22, FINALE + 6], [80, -18, FINALE + 15], [-140, 20, FINALE + 24], [80, -21, FINALE + 31]] as const) {
+  // The trains, one way and the other, closer together as the rush begins.
+  for (const [from, v, at0] of [[-140, 22, FINALE + 4], [80, -18, FINALE + 8.5], [-140, 20, FINALE + 13], [80, -21, FINALE + 17], [-140, 23, FINALE + 21], [80, -19, FINALE + 24.5], [-140, 21, FINALE + 28], [80, -22, FINALE + 31.5]] as const) {
     const x = from + v * (t - at0)
     const len = 26
     if (x + len < f.x0 - 10 || x - len > f.x1 + 10) continue
@@ -546,6 +557,11 @@ let lastPainted = -1
  * turn of its loop the last of it dissolves into the start again.
  */
 const ROOM_FPS = 10
+/**
+ * From when the rooms go on in the half-dark, before their lights come: as the crane comes out of the ward, so the
+ * building it finds is asleep but not still.
+ */
+const STIR = FINALE + 4
 const DISSOLVE = 0.5
 const running = new Map<string, { pic: HTMLCanvasElement; at: number }>()
 /** The room's place at `t` (show time of the finale): its framing, at the moment its loop has reached. */
@@ -555,7 +571,7 @@ function roomSnap(room: Room, i: number, t: number): { snap: Snap; within: numbe
   const L = loop[1] - loop[0]
   // Every room on one grid, each an eighth of a step after the last, so no frame repaints more than two.
   const q = Math.floor((t - FINALE) * ROOM_FPS - i / ROOMS.length)
-  const u = Math.max(0, FINALE + (q + i / ROOMS.length) / ROOM_FPS - WAKES[i])
+  const u = Math.max(0, FINALE + (q + i / ROOMS.length) / ROOM_FPS - STIR)
   const turns = Math.floor(u / L)
   const within = u - turns * L
   const at = loop[0] + within
@@ -569,7 +585,7 @@ const endOf = (room: Room): Snap | null =>
 function roomPicture(p: p5, room: Room, i: number, t: number): { pic: HTMLCanvasElement | null; end: HTMLCanvasElement | null; fade: number } {
   if (!room.snap) return { pic: null, end: null, fade: 0 }
   const still = snapshot(room.snap, PIC_W, PIC_H, p)
-  const run = t >= WAKES[i] ? roomSnap(room, i, t) : null
+  const run = t >= STIR ? roomSnap(room, i, t) : null
   if (!run || typeof document === 'undefined') return { pic: still, end: null, fade: 0 }
   let r = running.get(room.key)
   if (!r) {
@@ -628,9 +644,29 @@ export const finale = scenery<null>({
     drawSkyline(p, k, f, t, MID, 45, css('#4E4560', 1), css('#FFD890', 0.85), 0.12, 2)
     drawSmoke(p, k, f, t)
     drawSkyline(p, k, f, t, NEAR, 16, css('#2E2838', 1), css('#FFCF80', 0.95), 0.2, 3)
-    drawBirds(p, k, f, t)
+    drawPlane(p, k, f, t)
+    const view = { cx: f.cx, cy: f.cy, H: f.y1 - f.y0 }
+    // The flock behind the building's face first, so it hides them as they go round behind it.
+    drawFlock(ctx, k, view, t, ROOF, 'back')
+    drawNextDoor(ctx, k, f, t, FINALE, flockX(t))
+    if (f.x1 > CHIMNEY[0] - 6) {
+      rising({ p, k, ink: '#000', w: 1, tone: (h: string) => h }, t, { seed: 911, n: 30, from: [CHIMNEY[0] - 0.2, CHIMNEY[0] + 0.2, CHIMNEY[1]], rise: 7, life: 6, spread: 3.2, size: [0.3, 0.9], color: '#A898A8', hot: '#C8B8B8', alpha: 0.3 })
+    }
     drawStreet(p, k, f, t)
     drawShell(p, k, t)
+    drawLoft(ctx, k, t, ROOF)
+    drawRoofWashing(ctx, k, f, t, ROOF)
+    if (f.x0 < STACK[0] + 12 && f.y0 < ROOF) {
+      // The stack's smoke, leaning downwind over the washing.
+      const sx = STACK[0]
+      const sy = ROOF - 3.7
+      ctx.save()
+      ctx.translate(sx * k, sy * k)
+      ctx.transform(1, 0, -0.9, 1, 0, 0)
+      ctx.translate(-sx * k, -sy * k)
+      rising({ p, k, ink: '#000', w: 1, tone: (h: string) => h }, t, { seed: 917, n: 34, from: [sx - 0.3, sx + 0.3, sy], rise: 6.5, life: 5, spread: 1.6, size: [0.35, 1.1], color: '#9A8C9C', hot: '#B8AAB2', alpha: 0.32 })
+      ctx.restore()
+    }
     ctx.imageSmoothingQuality = 'high'
     ROOMS.forEach((room, i) => {
       if (!room.snap) return
@@ -648,8 +684,8 @@ export const finale = scenery<null>({
       ctx.beginPath()
       ctx.rect(b.x0 * k, b.y0 * k, (b.x1 - b.x0) * k, (b.y1 - b.y0) * k)
       ctx.clip()
-      // Dark until its lights come on.
-      const dark = 0.8 * (1 - lit) + 0.04
+      // Dim until its lights come on.
+      const dark = 0.72 * (1 - lit) + 0.04
       ctx.fillStyle = `rgba(8,8,18,${dark})`
       ctx.fillRect(b.x0 * k, b.y0 * k, (b.x1 - b.x0) * k, (b.y1 - b.y0) * k)
       // The ceiling's shade.
@@ -660,7 +696,12 @@ export const finale = scenery<null>({
       ctx.fillRect(b.x0 * k, b.y0 * k, (b.x1 - b.x0) * k, 1.2 * k)
       ctx.restore()
     })
+    drawMilk(ctx, k, f, t, FINALE, BASE)
+    drawFlock(ctx, k, view, t, ROOF, 'front', [LEFT, RIGHT])
+    drawPavement(ctx, k, f, t, FINALE, BASE, 'ground')
     drawEl(p, k, f, t)
+    drawPavement(ctx, k, f, t, FINALE, BASE, 'people')
+    drawNear(ctx, k, f, t)
     ctx.restore()
   },
 })
