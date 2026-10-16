@@ -6,8 +6,8 @@ import { IN, KERB, PAVE } from './plan'
 /**
  * The street's morning, as a clock (the street's own): a low sun down the avenue to the east, at the frame's right,
  * raking along the fronts from the right. Through the walk it is gold; through the credits it climbs and warms, then
- * whitens. Everything the street draws asks this file what the light is at `t`, so the sky, the fronts, the shade,
- * the shafts and the grade all move together.
+ * whitens. Everything the street draws asks this file what the light is at `t`, so the sky, the fronts, the shade
+ * and the grade all move together.
  *
  * The buildings across the street, behind the camera, put the foot of every front in a long cool shade; the sun
  * comes through where they stop (a cross street, a low roof) in bands, one of them on the newsstand. As the sun
@@ -129,19 +129,6 @@ export function shadeAt(t: number, x0: number, x1: number, y1: number): { walls:
     }
   }
   return { walls, ground }
-}
-
-/** Whether a point of the street is in the sun at `t` (for what catches it: the cellar plates, the cover's glint). */
-export function litAt(t: number, x: number, y: number): boolean {
-  const m = morning(t)
-  const drop = 2.1 * m
-  const dx = -0.45 * m
-  const xs = y > PAVE ? x - (y - PAVE) * LEAN : x
-  for (const s of ACROSS) {
-    if (xs < s.x0 + dx || xs >= s.x1 + dx) continue
-    return s.top === null || y < s.top + drop
-  }
-  return true
 }
 
 /** The shade's colour, laid over what it falls on: a cool blue, thinning as the sky fills with light; lighter on the ground. */

@@ -1,9 +1,8 @@
 import type { Pt } from '../../../../../parts'
-import { layer, motes, onLayer, shaft, sway, view, type View } from '../depth'
+import { layer, motes, sway, view, type View } from '../depth'
 import { hash, scenery } from '../kit'
-import { mix, ramp, rgba } from '../negatives/hand'
-import { goldAt, S, sunAt, whiteAt } from './light'
-import { ANCHOR, REF } from './sky'
+import { rgba } from '../negatives/hand'
+import { whiteAt } from './light'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
@@ -14,9 +13,8 @@ import { ANCHOR, REF } from './sky'
  *   pavement; and, for the long view, the leaves of the trees on this side hanging into the top corners, a hydrant and,
  *   last, a lamp post at the kerb, coming in from the frame's edges as the camera draws back and goes on along. All of it at the frame's edges, never over the two of
  *   them, and none of it tall enough at the bottom to reach the pavement where they roll.
- * - The air: shafts of the low sun down the street through the haze, and the dust turning in them.
- * - The grade: gold from the top, a cool blue in the street's shade, the frame's edges falling away warm; through the
- *   credits the morning whitens.
+ * - The air: a few motes of dust turning near the lens.
+ * - The grade: the frame's edges falling away warm, thinning as the morning whitens through the credits.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -137,29 +135,6 @@ function near(ctx: C2, v: View, t: number): void {
   })
 }
 
-/** The sun's shafts down the street, from where the sun is (or, close in, from beyond the frame's top right). */
-function shafts(ctx: C2, v: View, t: number): void {
-  const k = v.k
-  const gold = goldAt(t)
-  const w = whiteAt(t)
-  const sun = onLayer(v, 0.04, ANCHOR, REF, sunAt(t))
-  // Close in, the sun is behind the fronts: the shafts come from above the frame's right.
-  const open = ramp(v.h, 4.5, 9)
-  const off: Pt = [v.x1 + v.w * 0.25, v.y0 - v.h * 0.35]
-  const src: Pt = [off[0] + (sun[0] - off[0]) * open, off[1] + (sun[1] - off[1]) * open]
-  const len = v.w * 1.15
-  const hex = mix(S.sun, S.gold, 0.35 * gold * (1 - w))
-  const beams: [number, number, number][] = [
-    [0.12, 0.1, 0.34],
-    [0.36, 0.1, 0.4],
-  ]
-  for (const [i, [ang, a, wd]] of beams.entries()) {
-    const th = Math.PI + ang + 0.05 * sway(t, 0.03, i) + 0.12 * (1 - open)
-    const b: Pt = [src[0] + Math.cos(th) * len, src[1] - Math.sin(th) * len]
-    shaft(ctx, k, src, v.w * 0.02, b, v.w * wd, hex, a * (0.7 + 0.3 * gold) * (0.75 + 0.25 * Math.sin(t * 0.37 + i * 2)))
-  }
-}
-
 /**
  * The grade: the frame's edges falling away warm, in a band up each side and along the foot (so the street's foot is
  * a little deeper than the sky, and the lower corners deepest), thinning as the morning whitens.
@@ -193,13 +168,12 @@ export const streetFront = scenery<null>({
     const t = c.t
     const w = whiteAt(t)
     ctx.save()
-    shafts(ctx, v, t)
-    // Dust turning in the light, near the lens.
+    // Dust turning near the lens.
     layer(ctx, v, 1.15, WIDE.anchor, WIDE.ref, (f) => {
       motes(ctx, f, t, { n: 6, seed: 21, tile: [3.2, 2.4], r: [0.006, 0.014], v: [-0.12, -0.05], spread: 0.5, sway: [0.08, 0.15], color: rgba('#FFF3D8', 0.5) })
     })
     near(ctx, v, t)
-    // The grade: gold from the top, a cool blue in the street's shade; the whitening of the late morning; the edges.
+    // The grade: the edges falling away warm, less so as the morning whitens.
     grade(ctx, v, w)
     ctx.restore()
   },

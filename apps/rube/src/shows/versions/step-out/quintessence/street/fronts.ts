@@ -8,8 +8,8 @@ import { CORNER, PAVE } from './plan'
  * The fronts along the street (the street's own), in the negatives' hand: flat values, the one graphite line, and the
  * morning on them. A stone apartment house with a shop and its awning; a low brick walk-up behind the newsstand with
  * its fire escape; a three-storey with a café; the corner's narrow tower; and across the avenue the far side, a
- * little hazed. Their windows hold the sky, slide a sheen as the camera passes, catch the sun one after another, and
- * here and there someone is behind one.
+ * little hazed. Their windows hold the sky, a blind or a plant or an air conditioner, and here and there someone is
+ * behind one.
  *
  * Shapes are gathered into one path a colour and filled once (`Ink`), so a street of windows is a handful of fills.
  */
@@ -118,7 +118,7 @@ function floors(f: Front): number[] {
   return out
 }
 
-/** The fronts at `t`, seen from `v` (for the windows' sheen, which slides as the camera passes). */
+/** The fronts at `t`, as much of them as `v` sees. */
 export function drawFronts(ctx: C2, v: View, t: number): void {
   const k = v.k
   const ink = new Ink(k)
@@ -171,7 +171,7 @@ export function drawFronts(ctx: C2, v: View, t: number): void {
       if (wx1 < v.x0 - 0.5 || wx0 > v.x1 + 0.5) continue
       fl.forEach((wy0, j) => {
         if (wy0 > v.y1 || wy0 + f.win[1] < v.y0) return
-        pane(ink, t, v, f, fi, b, j, wx0, wy0, wx1, wy0 + f.win[1], sky, haze)
+        pane(ink, f, fi, b, j, wx0, wy0, wx1, wy0 + f.win[1], sky, haze)
       })
     }
   }
@@ -202,8 +202,8 @@ export function drawFronts(ctx: C2, v: View, t: number): void {
   }
 }
 
-/** A window: its glass holding the sky, a blind or a plant, the reveal's shade, the sill, the sheen, the glint. */
-function pane(ink: Ink, t: number, v: View, f: Front, fi: number, b: number, j: number, x0: number, y0: number, x1: number, y1: number, sky: { high: string; low: string; sun: string }, haze: (c: string) => string): void {
+/** A window: its glass holding the sky, a blind or a plant, the reveal's shade, the sill. */
+function pane(ink: Ink, f: Front, fi: number, b: number, j: number, x0: number, y0: number, x1: number, y1: number, sky: { high: string; low: string; sun: string }, haze: (c: string) => string): void {
   const h = (n: number) => hash(fi * 31 + b, j, n)
   const glass = haze(mix(S.glass, sky.high, 0.25))
   ink.rect(glass, x0, y0, x1, y1)
@@ -214,10 +214,6 @@ function pane(ink: Ink, t: number, v: View, f: Front, fi: number, b: number, j: 
   if (r < 0.4) ink.rect(haze(mix('#EDE6D6', sky.low, 0.2)), x0, y0, x1, y0 + (y1 - y0) * (0.15 + 0.5 * h(2)))
   else if (r < 0.55) ink.rect(haze('#9C8E7B'), x0, y0, x0 + (x1 - x0) * 0.22, y1)
   else if (r < 0.62) ink.rect(haze(S.leaf), x0 + (x1 - x0) * 0.2, y1 - 0.22, x0 + (x1 - x0) * 0.55, y1)
-  // The sheen: a pale band across the glass that slides as the camera goes by.
-  const s = (((v.cx * 0.13 + x0 * 0.37 + y0 * 0.11) % 1) + 1) % 1
-  const sx = x0 + (x1 - x0) * s
-  ink.rect(rgba('#FFFFFF', f.far ? 0.12 : 0.2), sx, y0, Math.min(x1, sx + (x1 - x0) * 0.16), y1)
   // The reveal's shade along the head and the sunward side; the sash's bar; the sill catching the sun.
   ink.rect(rgba('#3C4A60', 0.24), x0, y0, x1, y0 + 0.07)
   ink.rect(rgba('#3C4A60', 0.24), x1 - 0.07, y0 + 0.07, x1, y1)
@@ -225,12 +221,6 @@ function pane(ink: Ink, t: number, v: View, f: Front, fi: number, b: number, j: 
   ink.seg(rgba(INK, 0.45), x0, (y0 + y1) / 2, x1, (y0 + y1) / 2)
   ink.rect(haze(mix(f.fill, S.paper, 0.55)), x0 - 0.06, y1, x1 + 0.06, y1 + 0.07)
   ink.rect(rgba(INK, 0.16), x0 - 0.06, y1 + 0.07, x1 + 0.06, y1 + 0.12)
-  // The sun catching the glass: a sweep along the street, a window at a time.
-  const ph = (((t * 0.42 - x0 * 0.21 + j * 0.37 + v.cx * 0.05 + h(3) * 0.3) % 3.2) + 3.2) % 3.2
-  if (ph < 0.3) {
-    const a = Math.sin((ph / 0.3) * Math.PI)
-    ink.rect(rgba(sky.sun, 0.75 * a), x0, y0, x1, y1)
-  }
   // An air conditioner hung out of the lower sash, here and there.
   if (!f.far && h(4) > 0.8 && j > 0) {
     ink.rect('#C9C8C2', x0 + 0.12, y1 - 0.34, x1 - 0.12, y1 + 0.02)
@@ -276,8 +266,8 @@ export function drawGround(ctx: C2, v: View, t: number): void {
   for (const s of SHOPS) {
     if (s.x0 > v.x1 + 0.5 || s.x1 < v.x0 - 0.5) continue
     const haze = (c: string) => (s.far ? mix(c, sky.low, 0.22) : c)
-    // The glass: dark, the street behind the camera in it (its roofline, pale over dark), a sheen sliding as the
-    // camera passes, the stall board and the mullions.
+    // The glass: dark, the street behind the camera in it (its roofline, pale over dark), the stall board and the
+    // mullions.
     const g0 = PAVE - 0.22
     ink.rect(haze('#59656B'), s.x0, s.top, s.x1, g0)
     ink.rect(haze(mix('#8C9AA1', sky.low, 0.25)), s.x0, s.top, s.x1, s.top + 0.35)
@@ -289,10 +279,6 @@ export function drawGround(ctx: C2, v: View, t: number): void {
       roof.rect(x * k, (s.top + 0.35) * k, (x1 - x) * k, h * k)
       x = x1
     }
-    const sh = (((v.cx * 0.11 + s.x0 * 0.29) % 1) + 1) % 1
-    const sx = s.x0 + (s.x1 - s.x0) * sh
-    ink.rect(rgba('#FFFFFF', 0.16), sx, s.top, Math.min(s.x1, sx + 0.35), g0)
-    ink.rect(rgba('#FFFFFF', 0.09), Math.min(s.x1, sx + 0.45), s.top, Math.min(s.x1, sx + 0.55), g0)
     // Things on show inside, dim: two shelves of goods, a counter.
     for (const [sy, n] of [[g0 - 0.62, 5], [g0 - 0.25, 7]] as [number, number][]) {
       ink.seg(haze(rgba(INK, 0.45)), s.x0 + 0.1, sy + 0.02, s.x1 - 0.1, sy + 0.02)
