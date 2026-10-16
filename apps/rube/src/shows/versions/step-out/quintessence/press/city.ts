@@ -1,12 +1,14 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { layer, rgbaOf, type View } from '../depth'
+import { steam } from './steam'
 
 /**
  * Manhattan at dawn, through the windows of the Life building (the PRESS builder's): seen from Ted's office high on the
  * mezzanine, and through the gallery of tall windows on the press hall's far wall. A sky going from steel blue to a
  * low gold, a band of cloud lit underneath, towers on three planes (the far ones pale in the haze, the near ones dark
- * with lit windows, a water tank on a roof here and there), and the postal helicopter's cousin crossing the morning.
+ * with lit windows, a water tank on a roof here and there, steam off a vent on some), pigeons wheeling, and the postal
+ * helicopter's cousin crossing the morning.
  *
  * Drawn only inside a clip the caller sets (a window's panes), so it costs only what is seen of it.
  */
@@ -171,9 +173,12 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       const i0 = Math.floor((s.x0 - 1.5) / step)
       const i1 = Math.ceil((s.x1 + 0.5) / step)
       const bottom = s.y1 + 0.5
+      const vents: [number, number, number][] = []
       for (let i = i0; i <= i1; i++) {
         const tw = tower(pl, i)
-        if (tw.x > s.x1 || tw.x + tw.w < s.x0) continue
+        if (tw.x > s.x1 + 0.8 || tw.x + tw.w < s.x0) continue
+        if (pl === PLANES[2] && tw.crown <= 0.4 && hash(i, 8, pl.seed) > 0.45) vents.push([tw.x + tw.w * (0.3 + 0.4 * hash(i, 9, pl.seed)), tw.top, i])
+        if (tw.x > s.x1) continue
         body.rect(tw.x, tw.top, tw.w, bottom - tw.top)
         // A setback near the top, or a spire, or a water tank on its legs.
         if (tw.crown > 0.7) {
@@ -219,6 +224,8 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       ctx.fill(lit)
       ctx.fillStyle = '#CFE0E4'
       ctx.fill(cool)
+      // Steam off the vents on the near roofs, leaning off on the morning air.
+      for (const [x, y, i] of vents) steam(ctx, t, x, y, i, 0.42)
       ctx.restore()
     })
   }
