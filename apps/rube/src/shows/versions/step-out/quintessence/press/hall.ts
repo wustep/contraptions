@@ -250,18 +250,21 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
           spokes.lineTo(x + Math.cos(b) * r * 0.85, cy + Math.sin(b) * r * 0.85)
         }
       }
-      // Its lamp, on a long cord, and the pool of light it lays on the floor.
-      const ly = fy - 1.3 * h
-      shade.moveTo(x - 0.11 * h, ly + 0.05 * h)
-      shade.lineTo(x + 0.11 * h, ly + 0.05 * h)
-      shade.lineTo(x + 0.04 * h, ly - 0.03 * h)
-      shade.lineTo(x - 0.04 * h, ly - 0.03 * h)
-      shade.closePath()
-      shade.rect(x - 0.004 * h - 0.004, s.y0 - 0.2, 0.008 * h + 0.008, ly - s.y0 + 0.2)
-      bulb.moveTo(x + 0.035 * h, ly + 0.05 * h)
-      bulb.arc(x, ly + 0.05 * h, 0.035 * h, 0, Math.PI * 2)
-      pool.moveTo(x + 0.42 * h, fy)
-      pool.ellipse(x, fy, 0.42 * h, 0.05 * h, 0, 0, Math.PI * 2)
+      // Its lamp, on a long cord, the shade's mouth lit, and the pool of light it lays on the floor: over every unit
+      // of the near line, every other one further back.
+      if (L.i === 1 || i % 2 === 0) {
+        const ly = fy - 1.3 * h
+        shade.moveTo(x - 0.11 * h, ly + 0.05 * h)
+        shade.lineTo(x + 0.11 * h, ly + 0.05 * h)
+        shade.lineTo(x + 0.04 * h, ly - 0.03 * h)
+        shade.lineTo(x - 0.04 * h, ly - 0.03 * h)
+        shade.closePath()
+        shade.rect(x - 0.004 * h - 0.004, s.y0 - 0.2, 0.008 * h + 0.008, ly - s.y0 + 0.2)
+        bulb.moveTo(x + 0.09 * h, ly + 0.05 * h)
+        bulb.ellipse(x, ly + 0.05 * h, 0.09 * h, 0.025 * h, 0, 0, Math.PI)
+        pool.moveTo(x + 0.42 * h, fy)
+        pool.ellipse(x, fy, 0.42 * h, 0.05 * h, 0, 0, Math.PI * 2)
+      }
       // Stacks of finished copies, rising a copy a beat from when the line came up.
       if (L.stacks && i % 2 === 0) {
         const sx = x + 0.5 * L.pitch
@@ -321,7 +324,7 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
     }
     ctx.fillStyle = HP.ink
     ctx.fill(shade)
-    ctx.fillStyle = rgbaOf(HP.bulb, 0.12 + 0.8 * lit)
+    ctx.fillStyle = rgbaOf(HP.bulb, (0.12 + 0.8 * lit) * (L.i === 1 ? 1 : L.i === 2 ? 0.6 : 0.35))
     ctx.fill(bulb)
     // The catwalk over the line, its rail, and the men walking it.
     if (L.walk) {
@@ -645,7 +648,7 @@ export function drawHall(ctx: C2, v: View, t: number): void {
 
 /**
  * On the near floor: the walkway's painted edges, amber, dashed, running the length of the hall in front of the
- * machine; and spoiled sheets lying where the folder throws them.
+ * machine; and spoiled copies lying where the folder throws them.
  */
 function walkway(ctx: C2, v: View): void {
   const drop = FLOOR - v.cy
@@ -667,24 +670,36 @@ function walkway(ctx: C2, v: View): void {
   }
   ctx.fillStyle = rgbaOf('#C98F3E', 0.38)
   ctx.fill(paint)
-  // Spoiled sheets by the folder, flat on the floor, foreshortened.
-  const sheets = new Path2D()
-  for (let i = 0; i < 9; i++) {
-    const z = 1.05 + 0.45 * hash(i, 1, 99)
-    const y = floorAt(v, z)
-    if (y > v.y1 + 0.1) continue
-    const x = v.cx + (16.4 + 3.6 * hash(i, 2, 99) - v.cx) * z
-    if (x > x1 - 0.3) continue
-    const w = 0.22 * z
-    const d = 0.05 * z
-    const sk = (hash(i, 3, 99) - 0.5) * 0.12 * z
-    sheets.moveTo(x, y)
-    sheets.lineTo(x + w, y + sk * 0.3)
-    sheets.lineTo(x + w + sk, y + d + sk * 0.3)
-    sheets.lineTo(x + sk, y + d)
-    sheets.closePath()
+  // Spoiled copies by the folder, flat on the floor, foreshortened, their print a grey block: only once the camera is
+  // close enough for them to read as sheets, coming up as it nears.
+  const show = Math.max(0, Math.min(1, (9 - v.h) / 2))
+  if (show > 0) {
+    const sheets = new Path2D()
+    const print = new Path2D()
+    for (let i = 0; i < 5; i++) {
+      const z = 1.05 + 0.4 * hash(i, 1, 99)
+      const y = floorAt(v, z)
+      if (y > v.y1 + 0.1) continue
+      const x = v.cx + (16.4 + 3.6 * hash(i, 2, 99) - v.cx) * z
+      if (x > x1 - 0.4) continue
+      const w = 0.3 * z
+      const d = 0.07 * z
+      const sk = (hash(i, 3, 99) - 0.5) * 0.14 * z
+      sheets.moveTo(x, y)
+      sheets.lineTo(x + w, y + sk * 0.3)
+      sheets.lineTo(x + w + sk, y + d + sk * 0.3)
+      sheets.lineTo(x + sk, y + d)
+      sheets.closePath()
+      print.moveTo(x + 0.15 * w + 0.2 * sk, y + 0.2 * d + 0.05 * sk)
+      print.lineTo(x + 0.6 * w + 0.2 * sk, y + 0.2 * d + 0.2 * sk)
+      print.lineTo(x + 0.6 * w + 0.8 * sk, y + 0.8 * d + 0.2 * sk)
+      print.lineTo(x + 0.15 * w + 0.8 * sk, y + 0.8 * d + 0.05 * sk)
+      print.closePath()
+    }
+    ctx.fillStyle = rgbaOf(HP.paper, 0.6 * show)
+    ctx.fill(sheets)
+    ctx.fillStyle = rgbaOf('#7A7D7E', 0.5 * show)
+    ctx.fill(print)
   }
-  ctx.fillStyle = rgbaOf(HP.paper, 0.55)
-  ctx.fill(sheets)
   ctx.restore()
 }
