@@ -213,8 +213,9 @@ Christopher Nolan (2010); Drawn with p5.js. There is no title card. After the la
   down and up, the kicks' column, each level's clock, the van, weightlessness and the corridor's turn: the fixed
   geometry and moments every dream builder built to.
 - **The canonical drawings** (`cast.ts`): **the top** (`top`, with `dreamSpin`, which never slows, and `wakingSpin` and
-  `topWobble`, which slow it and let it lean and swing), **going under** (`sink`), **the kick's tear** (`tear`), and
-  light (`bloom`, `pool`, `beam`).
+  `topWobble`, which slow it and let it lean and swing), **going under** (`sink`), **the kick's tear** (`tear`), light
+  where it falls (`pool` on a floor or a wall, `beam` through rain or a door) and matter in the air (`puff`: smoke,
+  dust, spray). There is no glow: a lamp is its lit shade and the light it lays on what is near it.
 - **The parts:** `limbo/` (the prologue and the return), `paris/`, `plane/` (boarding and waking), `rain/` (the rain and
   the river), `hotel/` (the hotel and the lift), `snow/` (the snow and the vault), `home/`.
 - **How it was made:** a director (Claude Opus 5.5) measured the cue, wrote the kit, the stack, the seams, the canonical
@@ -523,6 +524,48 @@ Before the merge, two of Stephen's notes:
 - **The prologue in a tall frame** (11 to 17): the frame reached over limbo's sky into the dark and the snow's
   fortress, a level nothing has gone down through yet. Until the cut to Paris, the dark over limbo goes on up to the
   frame's top. Overview, the stack seen whole, still shows all four levels.
+
+A restraint pass (Opus 5.5, a fullness brief with Stephen's standing taste: fullness from substance, no bloom, glow
+or sparkle, cut as much as is added). Ten frames evenly spaced and a frame every three seconds were read again, and a
+motion probe found the one still stretch. Every glow in the show went, and what light stays falls on something:
+- **The dream's dark** (68.9 to 213.7): no pale wake round him going down, no bright flare thrown up (it hung over
+  the hotel's roof as a round haze on the way up, 199.5), no pale halo round his spark in the great wide; the spark
+  and its streak are still found at a hundred cells. **The tear** is a crisp sliver that opens and closes.
+- **Paris** (30.9 to 61.3): no halo of sun in the fold's gap, no flashes off the café's blasts, the fold's latches or
+  the mirror where she touches it, no glints where the shards land, no light at the mirrors' far end.
+- **The rain** (68.9 to 92, 199 to 213.7): no halos round lit windows, the shop, the streetlamps' heads or the cars'
+  and the van's lamps (the cars have lit lenses now, which they lacked). The train's headlamp is a lens on its nose
+  that comes on; its stab is the beam, without the flare, and its hit is the cars flung, without flash or sparks. Mal
+  in its light is a pool at her feet and the catch on her edge, not a halo on the ball.
+- **The hotel** (91.8 to 122.3, 191 to 199.6): lamps are their lit shades and their light on the walls and floors (the
+  turning corridor's sconces have shades and a wash on the wall now; the standing and floor lamps pools); no halos
+  round shades, chandeliers, pendants or the cabin's light; the charges blow in smoke, the cabin passes the landing
+  without sparks.
+- **The snow** (122.3 to 152.8, 183 to 190.9): the near flakes were soft out-of-focus spots; they are crisp, bigger,
+  falling faster, in front of everything. The vault's lamp over the bed is drawn now (its pool was lit by nothing); the
+  antechamber's tubes and the open door's warmth are their pools; the shot is its cone and smoke and the hit its ring,
+  without white flashes; the charges under the floor burst in dust. The ski grooves' round caps, where one began or
+  ended on open snow (the first landing beside Mal in the cut to her, the branches off the crevasse), read as the
+  ends of a tube laid on the face: each open end thins to nothing over its last cell.
+- **Limbo**: no glow round the room's lamp or its window from outside. In his memory of the garden (23.3 to 27.1, 172.5
+  to 175) the low sun was a bright haze and a warm glow over the lawn, and its light on the coping a box with hard ends
+  down the wall's face, a pasted panel: the far city now dissolves behind them under an even veil, and the coping's top
+  catches the sun along its length, strongest behind the children.
+- **The plane** (61.3 to 68.9, 213.7 to 244.2): no moon or sun halos, no glows on the cabin wall, at the aisle's end,
+  at the raised shade or round the drip; the sun's shafts and their pools stay. The booth's lamp is its lit strip and
+  the pool on the counter; the glare toward the veil is the wash off the glass alone.
+- **Home** (244.2 to 274.6): the sun behind the far trees was three stacked glows, with a glare along the lawn and
+  another over the garden, a glint sliding across the glass door, a glow at the doors, a soft blob high on the back
+  wall, a warm pool that came up round the children as they turned, and a glaring streak on the tabletop round the
+  top. All gone. The far trees stand in their haze, the lawn brightens toward the sun, the morning lies on the floor
+  and the back wall through the doors, the children's turning into their colours is the event, and the top's shadow
+  across the table is firmer.
+- **The opening** (0 to 3.5) was the show's one still stretch: a flat far sea twinkling with soft glints while he lies
+  in the wash. The glints are gone; long low ridges of swell roll in toward the shore out of the haze instead, close
+  together and faint at the horizon, opening out as they come on: the sea's depth and its slow breathing.
+- Frame time: live playback in Chrome at 1920×1080 held 60 fps with no frame over 20 ms, before and after; the
+  main-thread paint is unchanged (0.87 ms mean, 7.0 ms at worst), and on a software canvas (CPU raster, the heavier
+  case) a frame costs a quarter less (27.2 to 19.8 ms mean), home and the plane most.
 
 ## Inception nods
 
