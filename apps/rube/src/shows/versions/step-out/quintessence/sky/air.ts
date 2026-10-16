@@ -405,13 +405,16 @@ export function drawTown(g: C2, k: number, e: Eye, t: number, surf: number, haze
   // Seen from the pad and the first of the climb; below the horizon from any height, it is left behind.
   const seen = 1 - smooth(surf - e.hz, 2.6, 4.2)
   if (seen <= 0.01) return
-  const a = project(e, -40, surf, 26)
-  const b = project(e, 20, surf, 26)
+  // As the helicopter climbs the town falls away behind it: farther off, so its shore stays on the horizon's haze
+  // rather than sinking into the sea in front.
+  const z = Math.max(26, (F * (surf - e.hz)) / 0.45)
+  const a = project(e, -40, surf, z)
+  const b = project(e, 20, surf, z)
   if (b.x < e.x0 - 1 || a.x > e.x1 + 1) return
   g.save()
   g.globalAlpha = seen
   // The mountain, beyond.
-  const m = project(e, -14, surf, 70)
+  const m = project(e, -14, surf, z * (70 / 26))
   const ms = m.s
   const peak: [number, number][] = [
     [m.x - 9 * ms, m.y],
