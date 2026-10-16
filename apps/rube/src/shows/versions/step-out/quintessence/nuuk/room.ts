@@ -1,8 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { rgbaOf, sway, type View } from '../depth'
 import { hash } from '../kit'
-import { CEIL, COUNTER, COUNTER_TOP, DOOR_IN, FLOOR, GLASS, HEAD as HEAD_Y, STOOL_X, WALL_OUT } from './geo'
-import { flood } from './harbour'
+import { CEIL, COUNTER, COUNTER_TOP, DOOR_IN, FLOOR, GLASS, HEAD as HEAD_Y } from './geo'
 
 /**
  * The bar's room, more of it (B's): the boards' grain, what hangs on the walls (a net with its glass floats, a
@@ -198,49 +197,38 @@ export function drawWallThings(g: C2, k: number, t: number): void {
 
 /**
  * The two lamps over the counter, swinging on their cords: each a dark shade lit underneath, its light lying on the
- * boards behind it in a scallop down to the counter, and along the counter's top, both going to and fro as it swings.
- * Flat values, laid on.
+ * boards behind it in a scallop down to the counter, along the counter's top, and on the brass rail, all going to and
+ * fro as it swings. Each pool is flat, brightest under the lamp and gone at its edges.
  */
 export function drawLamps(g: C2, k: number, t: number): void {
   const top = COUNTER_TOP - 0.06
-  const outer = new Path2D()
-  const inner = new Path2D()
-  const counter = new Path2D()
-  const counterHot = new Path2D()
   const [c0, c1] = [COUNTER[0] - 0.08, COUNTER[1] + 0.08]
-  const span = (path: Path2D, x0: number, x1: number) => {
-    const a = Math.max(c0, x0)
-    const b = Math.min(c1, x1)
-    if (b > a) path.rect(a * k, top * k, (b - a) * k, 0.1 * k)
-  }
-  // The scallop: from the shade's rim, round at its head and flaring to the counter, as a cone's light lies on a wall.
-  const scallop = (path: Path2D, head: Pt, foot: number, w: number) => {
-    path.moveTo((foot - w) * k, top * k)
-    path.quadraticCurveTo((head[0] - 0.12 * w) * k, head[1] * k, head[0] * k, head[1] * k)
-    path.quadraticCurveTo((head[0] + 0.12 * w) * k, head[1] * k, (foot + w) * k, top * k)
-    path.closePath()
-  }
   for (let i = 0; i < LAMPS.length; i++) {
     const { p, a } = lampAt(i, t)
     const px = p[0] + Math.tan(a) * (top - p[1])
     const head: Pt = [p[0] + Math.sin(a) * 0.22, p[1] + 0.22]
-    scallop(outer, head, px, 0.8)
-    scallop(inner, [head[0], head[1] + 0.2], px, 0.42)
-    span(counter, px - 0.65, px + 0.65)
-    span(counterHot, px - 0.3, px + 0.3)
+    // The scallop on the boards (not across the window's glass): from the shade's rim, flaring to the counter.
+    const w = 0.8
+    g.save()
+    g.beginPath()
+    g.rect(DOOR_IN[1] * k, CEIL * k, (WIN.x0 - 0.08 - DOOR_IN[1]) * k, (top - CEIL) * k)
+    g.clip()
+    g.fillStyle = across(g, k, px, w, R.lamp, 0.11)
+    g.beginPath()
+    g.moveTo((px - w) * k, top * k)
+    g.quadraticCurveTo((head[0] - 0.12 * w) * k, head[1] * k, head[0] * k, head[1] * k)
+    g.quadraticCurveTo((head[0] + 0.12 * w) * k, head[1] * k, (px + w) * k, top * k)
+    g.closePath()
+    g.fill()
+    g.restore()
+    // Along the counter's top.
+    const a0 = Math.max(c0, px - 0.7)
+    const a1 = Math.min(c1, px + 0.7)
+    if (a1 > a0) {
+      g.fillStyle = across(g, k, px, 0.7, R.lamp, 0.26)
+      g.fillRect(a0 * k, top * k, (a1 - a0) * k, 0.1 * k)
+    }
   }
-  // On the boards only: not across the window's glass.
-  g.save()
-  g.beginPath()
-  g.rect(DOOR_IN[1] * k, CEIL * k, (WIN.x0 - 0.08 - DOOR_IN[1]) * k, (top - CEIL) * k)
-  g.clip()
-  g.fillStyle = rgbaOf(R.lamp, 0.07)
-  g.fill(outer)
-  g.fill(inner)
-  g.restore()
-  g.fillStyle = rgbaOf(R.lamp, 0.16)
-  g.fill(counter)
-  g.fill(counterHot)
   for (let i = 0; i < LAMPS.length; i++) {
     const { p, a } = lampAt(i, t)
     const L = LAMPS[i]
@@ -268,6 +256,15 @@ export function drawLamps(g: C2, k: number, t: number): void {
   }
 }
 
+/** A light lying across a surface: `a` at `x`, falling away evenly to nothing `w` either side. */
+function across(g: C2, k: number, x: number, w: number, hex: string, a: number): CanvasGradient {
+  const gr = g.createLinearGradient((x - w) * k, 0, (x + w) * k, 0)
+  gr.addColorStop(0, rgbaOf(hex, 0))
+  gr.addColorStop(0.5, rgbaOf(hex, a))
+  gr.addColorStop(1, rgbaOf(hex, 0))
+  return gr
+}
+
 /** The brass foot rail along the counter's foot, on its brackets, paler where the lamps' light falls on it. */
 export function drawRail(g: C2, k: number, t: number): void {
   const [x0, x1] = COUNTER
@@ -282,14 +279,11 @@ export function drawRail(g: C2, k: number, t: number): void {
     g.lineTo((x - 0.05) * k, (y - 0.12) * k)
   }
   g.stroke()
-  const lit = new Path2D()
   for (let i = 0; i < 2; i++) {
     const px = lampAt(i, t).p[0]
-    lit.rect((px - 0.35) * k, (y - 0.015) * k, 0.7 * k, 0.03 * k)
+    g.fillStyle = across(g, k, px, 0.45, R.brassLit, 0.75)
+    g.fillRect((px - 0.45) * k, (y - 0.015) * k, 0.9 * k, 0.03 * k)
   }
-  g.fillStyle = rgbaOf(R.brassLit, 0.6)
-  g.fill(lit)
-  void STOOL_X
 }
 
 /**
@@ -366,8 +360,6 @@ export function drawUnderFloor(g: C2, v: View, t: number, x0: number, x1: number
   // The joists' ends under the boards.
   g.fillStyle = R.brace
   g.fillRect(x0 * k, top * k, (x1 - x0) * k, 0.06 * k)
-  void DOOR_IN
-  void WALL_OUT
 }
 
 /**
@@ -531,29 +523,4 @@ export function drawSkirt(g: C2, k: number, t: number, x0: number, x1: number, t
   g.fill(lit)
   g.fillStyle = rgbaOf('#0E1C1C', 0.7)
   g.fill(dark)
-}
-
-/**
- * The grey daylight through the back door once he has banged it open, lying on the boards beside it: a shape sloping
- * from the door's head down to the floor, the nearer part the paler. Laid on, under the counter, the pilot and the stage.
- */
-export function drawDoorLight(g: C2, k: number, t: number): void {
-  const f = flood(t)
-  if (f <= 0.01) return
-  const x = WALL_OUT[0]
-  const near = new Path2D()
-  near.moveTo(x * k, (HEAD_Y + 0.05) * k)
-  near.lineTo(x * k, FLOOR * k)
-  near.lineTo((x - 1.6) * k, FLOOR * k)
-  near.lineTo((x - 0.5) * k, (HEAD_Y + 0.5) * k)
-  near.closePath()
-  const far = new Path2D()
-  far.moveTo((x - 0.5) * k, (HEAD_Y + 0.5) * k)
-  far.lineTo((x - 1.6) * k, FLOOR * k)
-  far.lineTo((x - 3) * k, FLOOR * k)
-  far.closePath()
-  g.fillStyle = rgbaOf('#B7C3C5', 0.16 * f)
-  g.fill(near)
-  g.fillStyle = rgbaOf('#B7C3C5', 0.08 * f)
-  g.fill(far)
 }
