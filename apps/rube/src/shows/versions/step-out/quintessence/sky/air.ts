@@ -48,7 +48,7 @@ export const AIR = {
   bergShade: '#A9BEC4',
   crest: '#D7DFDC',
   trough: '#526660',
-  glitter: '#FBFBF4',
+  sunlit: '#FBFBF4',
   bird: '#3B464A',
 }
 
@@ -102,7 +102,7 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
     const h = Math.max(0.03, 0.55 * S * s * Math.min(0.6, Math.abs(DECK_Y - e.hz) / z) * 1.6)
     if (yRow < e.y0 - h * 2) continue
     // The wind takes the deck along, the far rows slowest on the screen.
-    const drift = t * 1.6
+    const drift = t * 2.2
     const n0 = Math.floor((e.cx - (e.fw / 2 + 2) / s - drift) / S) - 1
     const n1 = Math.ceil((e.cx + (e.fw / 2 + 2) / s - drift) / S) + 1
     for (let n = n0; n <= n1; n++) {
@@ -115,8 +115,8 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
       // The break: a cell is smaller the nearer its edge comes to the sun, and none at all over it; some go
       // farther out than others, so the cloud is thinner all round the break.
       const d = Math.hypot((x - sx) / e.fw, ((y - sy) / e.fh) * 1.3) - (0.8 * w0) / e.fw
-      const far = 1 + 1.6 * (1 - q)
-      const thin = sun > 0.01 ? smooth(d, 0.04 * sun * far, 0.2 * sun * far) : 1
+      const far = 1 + 0.9 * (1 - q)
+      const thin = sun > 0.01 ? smooth(d, 0.03 * sun * far, 0.17 * sun * far) : 1
       if (thin < 0.04) continue
       const w = w0 * thin
       const hh = h * (0.7 + 0.5 * hash(n, r, 44)) * thin
@@ -334,7 +334,7 @@ export function drawSwell(g: C2, k: number, e: Eye, t: number, surf: number, a =
  * Under the sun, its light on the sea: a path of pale dashes down the water toward us, the swell's crests where the
  * light lies on them, each going along with the swell.
  */
-export function drawGlitter(g: C2, k: number, e: Eye, t: number, surf: number): void {
+export function drawSunPath(g: C2, k: number, e: Eye, t: number, surf: number): void {
   const sun = sunAt(t)
   if (sun <= 0.02) return
   const [sx] = sunXY(e)
@@ -354,7 +354,7 @@ export function drawGlitter(g: C2, k: number, e: Eye, t: number, surf: number): 
   }
   g.save()
   g.lineWidth = Math.max(1, 0.018 * k)
-  g.strokeStyle = rgba(AIR.glitter, 0.5 * sun)
+  g.strokeStyle = rgba(AIR.sunlit, 0.5 * sun)
   g.stroke(path)
   g.restore()
 }

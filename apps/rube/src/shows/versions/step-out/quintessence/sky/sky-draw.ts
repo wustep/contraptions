@@ -2,9 +2,9 @@ import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { frame, hash, lastOf, smooth } from '../kit'
 import { drawBoatAbove } from '../sea/boat'
-import { beatPhase, BEGIN, BUMPS, H, heli, IN, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF, WIDE_FROM } from './sky-plan'
+import { beatPhase, BEGIN, BUMPS, END, H, heli, IN, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF, WIDE_FROM } from './sky-plan'
 import { ctxOf, mix, oval, poly, rgba, rrect, vgrad, type C2 } from './paint'
-import { drawBanks, drawBergs, drawDeck, drawGlitter, drawRanges, drawSkein, drawSun, drawSwell, drawTown, F, type Eye } from './air'
+import { drawBanks, drawBergs, drawDeck, drawRanges, drawSkein, drawSun, drawSunPath, drawSwell, drawTown, F, type Eye } from './air'
 
 /**
  * How the sky is drawn (B3's): the harbour and its pad, the overcast, the grey-green sea going away to the ice and
@@ -99,12 +99,16 @@ export function drawSkySet(p: p5, k: number, t: number, under = false): void {
   drawTown(g, k, e, t, SURF, SKY.seaFar)
   drawBergs(g, k, e, t, SURF, SKY.seaFar)
   drawSwell(g, k, e, t, SURF)
-  drawGlitter(g, k, e, t, SURF)
+  drawSunPath(g, k, e, t, SURF)
   drawFloes(g, k, f, hz, t)
   drawSkein(g, k, e, t, SKEIN, WIDE_FROM, 30, -8.4, heli(SKEIN).x + 26, -3, 15)
   if (!under) drawNearWater(g, k, f, t)
   drawQuay(g, k, f, t)
+  if (t < END) drawGulls(g, k, f, t, QUAY_Y)
 }
+
+/** The quay's top, where things stand on it: midway between its near and far edges. */
+const QUAY_Y = -0.095
 
 function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t: number): void {
   const e = SURF - hz
@@ -160,7 +164,7 @@ function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t:
 
 function drawNearWater(g: C2, k: number, f: ReturnType<typeof frame>, t: number): void {
   if (f.y1 < SURF - 0.5) return
-  // The water at the plane of action and nearer: darker, a few long glints on its swell.
+  // The water at the plane of action and nearer: darker, the long pale crests of its swell.
   g.fillStyle = vgrad(g, k, SURF, SURF + 3, [
     [0, SKY.sea],
     [0.4, SKY.seaNear],
@@ -168,19 +172,19 @@ function drawNearWater(g: C2, k: number, f: ReturnType<typeof frame>, t: number)
   ])
   g.fillRect((f.x0 - 1) * k, SURF * k, (f.x1 - f.x0 + 2) * k, (f.y1 - SURF + 2) * k)
   // The swell's crests running by at the near water's own pace, the nearer the quicker.
-  const glints = new Path2D()
+  const crests = new Path2D()
   const span = f.x1 - f.x0 + 4
   for (let i = 0; i < 70; i++) {
     const v = Math.pow(hash(i, 41), 1.5)
     const y = SURF + 0.06 + v * 2.6 + 0.02 * Math.sin(t * 1.5 + i)
     const x = f.x0 - 2 + ((((hash(i, 42) * span + t * (0.3 + 0.6 * v) * (i % 3 ? 1 : -1)) % span) + span) % span)
     const w = 0.3 + hash(i, 43) * 0.9 * (1 + (y - SURF))
-    glints.moveTo(x * k, y * k)
-    glints.lineTo((x + w) * k, y * k)
+    crests.moveTo(x * k, y * k)
+    crests.lineTo((x + w) * k, y * k)
   }
   g.strokeStyle = rgba(SKY.low, 0.28)
   g.lineWidth = Math.max(0.8, 0.02 * k)
-  g.stroke(glints)
+  g.stroke(crests)
 }
 
 /**
@@ -217,7 +221,7 @@ function drawQuayFace(g: C2, k: number, xa: number, xb: number, top: number, t: 
   const chains = new Path2D()
   for (let x = Math.ceil((xa - 1.75) / 3.5) * 3.5 + 1.75; x < xb; x += 3.5) {
     if (x > 6.8) continue
-    const sw = 0.015 * Math.sin(t * 1.1 + x)
+    const sw = 0.04 * Math.sin(t * 1.1 + x)
     tyres.moveTo((x + 0.24 + sw) * k, (top + 0.62) * k)
     tyres.ellipse((x + sw) * k, (top + 0.62) * k, 0.24 * k, 0.3 * k, 0, 0, Math.PI * 2)
     tyres.moveTo((x + 0.12 + sw) * k, (top + 0.62) * k)
@@ -241,6 +245,36 @@ function drawQuayFace(g: C2, k: number, xa: number, xb: number, top: number, t: 
   g.strokeStyle = '#3A4244'
   g.lineWidth = Math.max(1, 0.03 * k)
   g.stroke(chains)
+}
+
+/**
+ * The sea at the quay's foot, in front of its face: the swell running along the stone and rising and falling on it,
+ * a line of foam where it slaps.
+ */
+function drawLapping(g: C2, k: number, f: ReturnType<typeof frame>, xa: number, xb: number, t: number): void {
+  if (xb <= xa || f.y1 < SURF - 0.3) return
+  const wl = (x: number) => SURF - 0.04 + 0.06 * Math.sin(x * 1.3 - t * 1.7) + 0.03 * Math.sin(x * 3.7 + t * 2.4)
+  const water = new Path2D()
+  const foam = new Path2D()
+  const bottom = f.y1 + 1
+  water.moveTo(xa * k, bottom * k)
+  foam.moveTo(xa * k, wl(xa) * k)
+  for (let x = xa; x < xb + 0.1; x += 0.12) {
+    const xx = Math.min(x, xb)
+    water.lineTo(xx * k, wl(xx) * k)
+    foam.lineTo(xx * k, wl(xx) * k)
+  }
+  water.lineTo(xb * k, bottom * k)
+  water.closePath()
+  g.fillStyle = vgrad(g, k, SURF - 0.1, SURF + 3, [
+    [0, SKY.sea],
+    [0.4, SKY.seaNear],
+    [1, SKY.seaDeep],
+  ])
+  g.fill(water)
+  g.strokeStyle = rgba('#DDE4E1', 0.7)
+  g.lineWidth = Math.max(1, 0.025 * k)
+  g.stroke(foam)
 }
 
 /** Rain lying on the quay's top in puddles that hold the sky; the rotor's wash shivers them into rings as it lifts. */
@@ -294,6 +328,7 @@ function drawQuay(g: C2, k: number, f: ReturnType<typeof frame>, t: number): voi
   g.fillStyle = rgba(SKY.white, 0.22)
   g.fillRect(xa * k, top * k, (QUAY_X - xa) * k, 0.04 * k)
   drawQuayFace(g, k, Math.max(xa, f.x0 - 1), Math.min(QUAY_X, f.x1 + 1), top, t)
+  drawLapping(g, k, f, Math.max(xa, f.x0 - 1), Math.min(QUAY_X, f.x1 + 1), t)
   drawPuddles(g, k, f, top, back, t)
   // Bollards on the edge.
   for (const bx of [-9.5, -4.5, 6.6]) {
@@ -373,6 +408,85 @@ function drawQuay(g: C2, k: number, f: ReturnType<typeof frame>, t: number): voi
     g.fillStyle = '#4E6F94'
     g.fill()
   }
+}
+
+/** The gulls on the quay's end: where each stands, when the wash puts it up, and how it goes. */
+const GULLS: { x: number; up: number; vx: number; vy: number }[] = [
+  { x: 5.95, up: LIFT - 1.4, vx: 1.0, vy: -2.4 },
+  { x: 6.3, up: LIFT - 1.15, vx: 1.4, vy: -2.0 },
+  { x: 6.95, up: LIFT - 0.95, vx: 0.8, vy: -2.6 },
+  { x: 7.2, up: LIFT - 0.7, vx: 1.2, vy: -2.2 },
+  { x: 5.6, up: LIFT - 0.5, vx: 0.6, vy: -2.3 },
+  { x: 7.05, up: LIFT - 0.3, vx: 1.1, vy: -2.5 },
+]
+
+/**
+ * Gulls standing about on the quay's end, past the pad. As the rotor's wash comes on they go up one after another,
+ * wings beating, and wheel over the quay on the wind, complaining. Each a white body, grey back and dark wingtips;
+ * one stroke for all the wings in the air.
+ */
+function drawGulls(g: C2, k: number, f: ReturnType<typeof frame>, t: number, y0: number): void {
+  const wings = new Path2D()
+  const tips = new Path2D()
+  for (let i = 0; i < GULLS.length; i++) {
+    const b = GULLS[i]
+    const s = t - b.up
+    const dir = i % 2 ? -1 : 1
+    if (s < 0) {
+      if (b.x < f.x0 - 0.3 || b.x > f.x1 + 0.3) continue
+      // Standing: a body, a folded wing, a head that turns now and then, legs.
+      const look = Math.sin(t * 0.9 + i * 2.3) > 0.4 ? -dir : dir
+      const x = b.x
+      g.fillStyle = '#E9ECE9'
+      g.beginPath()
+      g.ellipse(x * k, (y0 - 0.1) * k, 0.1 * k, 0.05 * k, 0, 0, Math.PI * 2)
+      g.ellipse((x + look * 0.08) * k, (y0 - 0.17) * k, 0.035 * k, 0.032 * k, 0, 0, Math.PI * 2)
+      g.fill()
+      g.fillStyle = '#98A3A6'
+      g.beginPath()
+      g.ellipse((x - look * 0.02) * k, (y0 - 0.12) * k, 0.075 * k, 0.03 * k, 0, 0, Math.PI * 2)
+      g.fill()
+      g.fillStyle = '#2E3538'
+      g.fillRect((x - look * 0.11) * k, (y0 - 0.12) * k, 0.04 * k, 0.025 * k)
+      g.strokeStyle = '#C8A04E'
+      g.lineWidth = Math.max(1, 0.012 * k)
+      g.beginPath()
+      g.moveTo((x - 0.02) * k, (y0 - 0.06) * k)
+      g.lineTo((x - 0.02) * k, y0 * k)
+      g.moveTo((x + 0.02) * k, (y0 - 0.06) * k)
+      g.lineTo((x + 0.02) * k, y0 * k)
+      g.moveTo((x + look * 0.11) * k, (y0 - 0.17) * k)
+      g.lineTo((x + look * 0.15) * k, (y0 - 0.165) * k)
+      g.stroke()
+      continue
+    }
+    // In the air: up off the quay beating hard, then wheeling on the wind, the circle drifting downwind.
+    const climb = Math.min(s, 0.8)
+    const turn = Math.max(0, s - 0.8)
+    const r = 0.9 + 0.4 * (i % 3)
+    const a0 = i * 1.7
+    const a = a0 + turn * (1.1 + 0.15 * i) * dir
+    const x = b.x + b.vx * climb + r * (Math.cos(a) - Math.cos(a0)) + 0.5 * turn
+    const y = y0 - 0.12 + b.vy * climb + 0.45 * climb * climb + 0.35 * r * (Math.sin(a) - Math.sin(a0))
+    if (y < f.y0 - 0.5 || x > f.x1 + 0.5 || x < f.x0 - 0.5) continue
+    const span = 0.2
+    const beat = Math.sin(s * (s < 0.8 ? 30 : 9) + i)
+    const lift = s < 0.8 ? 0.15 + 0.5 * beat : 0.3 + 0.15 * beat
+    wings.moveTo((x - span) * k, (y - span * lift) * k)
+    wings.quadraticCurveTo((x - span * 0.4) * k, (y - span * 0.3) * k, x * k, y * k)
+    wings.quadraticCurveTo((x + span * 0.4) * k, (y - span * 0.3) * k, (x + span) * k, (y - span * lift) * k)
+    tips.moveTo((x - span) * k, (y - span * lift) * k)
+    tips.lineTo((x - span * 0.75) * k, (y - span * lift * 0.85) * k)
+    tips.moveTo((x + span) * k, (y - span * lift) * k)
+    tips.lineTo((x + span * 0.75) * k, (y - span * lift * 0.85) * k)
+  }
+  g.lineCap = 'round'
+  g.lineJoin = 'round'
+  g.lineWidth = Math.max(1.2, 0.03 * k)
+  g.strokeStyle = '#E9ECE9'
+  g.stroke(wings)
+  g.strokeStyle = '#2E3538'
+  g.stroke(tips)
 }
 
 /* ------------------------------------------------------------------ the boat, from the air */

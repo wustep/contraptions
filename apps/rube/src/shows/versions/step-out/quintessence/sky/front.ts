@@ -40,7 +40,7 @@ function drawGrit(g: CanvasRenderingContext2D, v: View, t: number): void {
   const hx = heli(t).x + 0.4
   for (const dir of [-1, 1]) {
     const box = dir < 0 ? { x0: hx - 6, y0: -0.55, x1: hx - 0.8, y1: 0.12 } : { x0: hx + 0.8, y0: -0.55, x1: hx + 6, y1: 0.12 }
-    motes(g, v, t, { n: 26, seed: dir < 0 ? 61 : 67, tile: [2.4, 0.7], r: [0.008, 0.016], v: [dir * 5.5, -0.35], spread: 0.45, color: rgbaOf('#E3E8E5', 0.55 * a), streak: 0.05, within: box })
+    motes(g, v, t, { n: 12, seed: dir < 0 ? 61 : 67, tile: [2.4, 0.7], r: [0.008, 0.016], v: [dir * 5.5, -0.35], spread: 0.45, color: rgbaOf('#E3E8E5', 0.45 * a), streak: 0.05, within: box })
   }
 }
 
