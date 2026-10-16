@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { scenery } from '../kit'
-import { layer, motes, view, type View } from '../depth'
+import { layer, view, type View } from '../depth'
 import { BEATS } from '../music'
 import { drawAir, fireT, heat } from './draw'
 import { BED, BX, BX1, DECK, drained, FENCE, LIP, STREET, T0, T1, toneAt } from './geo'
@@ -11,11 +11,12 @@ import { ctxOf, rgba, type Pen } from './pen'
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * The air round the fire: a few embers going up off it, the heat in the room, the smoke in the shop. The fire's light
- * on what is near it, a plain warm wash along the pavement in front of the building and across the tracks on the
- * platform's edge, flickering with the flames and lifting on every downbeat. Nearest, out of focus, the platform the
- * camera stands on: a pillar, a bench's end, a lamp hanging on its rod. Over all of it, a magenta haze high up and
- * the night closing in at the top. Every colour goes through the daydream's tone, so all of it drains with the rest.
+ * The air round the fire (`drawAir`): embers going up off it, the heat in the room, the smoke in the shop. The fire's
+ * light on what is near it, a plain warm wash along the pavement in front of the building and across the tracks on
+ * the platform's edge, flickering with the flames and lifting on every downbeat. Nearest, out of focus, the platform
+ * the camera stands on: a pillar, a bench's end, a lamp hanging on its rod. Over all of it, a magenta haze high up
+ * and the night closing in at the top. Every colour goes through the daydream's tone, so all of it drains with the
+ * rest.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -41,28 +42,6 @@ function fireLight(t: number): number {
   const flick = 0.85 + 0.15 * Math.sin(ft * 11.3) * Math.sin(ft * 4.7 + 1.3)
   const h = Math.max(heat(t, 0), heat(t, 1)) * flick
   return h * (1 + 0.3 * flareAt(t) * (1 - drained(t)))
-}
-
-/* ------------------------------------------------------------------ the air */
-
-function sparks(ctx: C2, pen: Pen, v: View, t: number): void {
-  const d = drained(t)
-  if (d >= 0.98) return
-  ctx.save()
-  ctx.globalAlpha = 1 - d
-  // A few embers going up off the building, drifting left on the night air.
-  motes(ctx, v, fireT(t), {
-    n: 5,
-    seed: 21,
-    tile: [3.3, 4.1],
-    r: [0.012, 0.024],
-    v: [-0.16, -0.62],
-    spread: 0.5,
-    sway: [0.12, 0.35],
-    color: rgba(pen, '#FFC960', 0.85),
-    within: { x0: BX - 1.8, y0: -10, x1: 10, y1: -0.6 },
-  })
-  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the fire's light */
@@ -200,7 +179,6 @@ export const dreamFront = scenery<null>({
     ctx.save()
     drawAir(pen, t)
     fireOnThings(ctx, pen, c.k, t)
-    sparks(ctx, pen, v, t)
     nearPlane(ctx, pen, v, t)
     grade(ctx, pen, v)
     ctx.restore()

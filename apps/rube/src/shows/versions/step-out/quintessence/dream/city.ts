@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { layer, onLayer, sway, type View } from '../depth'
 import { BEATS } from '../music'
-import { ctxOf, rgba, type Pen } from './pen'
+import { ctxOf, loop, rgba, type Pen } from './pen'
 import { drained, T0, T1 } from './geo'
 import { fireT } from './draw'
 
@@ -13,10 +13,10 @@ import { fireT } from './draw'
  *   with their windows pricked out and the spires' beacons blinking, a water tower.
  * - Middle (z 0.35): the blocks between, their windows sodium-warm and going on and off; water towers on their
  *   roofs; the elevated line on its girders with a train crossing on the downbeats, a streak of lit windows; under it
- *   the avenue's traffic, headlights and amber tail lights drawn out into streaks; and over the roofs a few pigeons
- *   the fire has put up, wheeling.
+ *   the avenue's traffic, headlights and amber tail lights drawn out into streaks; and over the roofs a small flock
+ *   of pigeons the fire has put up, wheeling.
  * - Near (z 0.6): the dark fronts across the tracks, a fire escape, a few windows, washing on a line across two
- *   roofs, stirring in the fire's draught, and steam going up off two chimneys and away left.
+ *   roofs, stirring in the fire's draught, and steam going up off a chimney and away left.
  *
  * Every colour goes through the pen's tone, so it all drains to grey with the rest in the last bar. Geometry that
  * never changes (the silhouettes, the windows that stay lit) is made once, in cells; what moves is drawn each frame.
@@ -195,15 +195,14 @@ function moon(ctx: C2, pen: Pen, k: number): void {
   ctx.globalAlpha = 1
 }
 
-/** Long thin clouds low over the far towers, a shade lighter than the night: [x, y, length, seed], far plane cells. */
+/**
+ * A few long thin clouds low over the far towers, a shade lighter than the night, with open sky between them and
+ * round the moon: [x, y, length, seed], far plane cells.
+ */
 const CLOUDS: [number, number, number, number][] = [
-  [-3.6, -3.1, 2.4, 1],
-  [-1.2, -3.55, 1.5, 2],
-  [1.0, -2.78, 1.9, 3],
-  [3.4, -3.3, 2.2, 4],
-  [5.9, -2.9, 1.7, 5],
-  [8.2, -3.45, 2.3, 6],
-  [10.4, -3.0, 1.6, 7],
+  [-2.8, -3.2, 2.4, 1],
+  [4.4, -3.4, 2.2, 4],
+  [8.6, -3.05, 1.9, 6],
 ]
 /** The clouds, drifting slowly left on the same air as the smoke. */
 function clouds(ctx: C2, pen: Pen, k: number, t: number): void {
@@ -229,12 +228,10 @@ function clouds(ctx: C2, pen: Pen, k: number, t: number): void {
 /** The washing on the roofs across the tracks (near plane cells): the line's ends, its height, what hangs on it. */
 const LINE = { x0: 1.12, x1: 2.62, y: -0.66, roof: -0.35 }
 const WASHING: [number, number, number, string][] = [
-  // [x, width, drop, colour]: a sheet, a shirt, a towel, a sheet, a shirt.
-  [1.2, 0.34, 0.24, '#6F6582'],
-  [1.6, 0.18, 0.15, '#4C5B6E'],
-  [1.83, 0.2, 0.17, '#7A6C55'],
-  [2.08, 0.3, 0.22, '#5E5674'],
-  [2.43, 0.16, 0.14, '#535C45'],
+  // [x, width, drop, colour]: a sheet, a shirt, a towel.
+  [1.24, 0.4, 0.27, '#4E4762'],
+  [1.82, 0.18, 0.16, '#3C4559'],
+  [2.18, 0.24, 0.18, '#544A3E'],
 ]
 function washing(ctx: C2, pen: Pen, k: number, t: number, fire: number): void {
   const { x0, x1, y, roof } = LINE
@@ -295,42 +292,41 @@ function washing(ctx: C2, pen: Pen, k: number, t: number, fire: number): void {
   }
 }
 
-/** Chimneys on the near roofs, and the steam going up off them and away left on the night air: [x, roof]. */
+/** Chimneys on the near roofs, and steam going up off the first and away left on the night air: [x, roof]. */
 const CHIMNEYS: Pt[] = [
-  [-1.45, -0.67],
   [0.55, -0.78],
+  [-1.45, -0.67],
 ]
 function chimneys(ctx: C2, pen: Pen, k: number, t: number): void {
   const stacks = new Path2D()
-  const steam = new Path2D()
-  for (const [i, [x, roof]] of CHIMNEYS.entries()) {
+  for (const [x, roof] of CHIMNEYS) {
     stacks.rect((x - 0.05) * k, (roof - 0.16) * k, 0.1 * k, 0.17 * k)
     stacks.rect((x - 0.065) * k, (roof - 0.18) * k, 0.13 * k, 0.03 * k)
-    for (let j = 0; j < 8; j++) {
-      const age = (t * 0.22 + j / 8 + hash(i, j, 81) * 0.05) % 1
-      const r = 0.06 + 0.17 * age
-      const cx = x - 0.9 * age * age - 0.04 * Math.sin(age * 5 + j)
-      const cy = roof - 0.2 - 0.7 * age
-      steam.moveTo((cx + r) * k, cy * k)
-      steam.ellipse(cx * k, cy * k, r * k, r * 0.7 * k, 0, 0, Math.PI * 2)
-    }
   }
   ctx.fillStyle = rgba(pen, K.near, 1)
   ctx.fill(stacks)
-  ctx.fillStyle = rgba(pen, '#7C6A98', 0.16)
-  ctx.fill(steam)
+  // One plume: each puff swells and thins as it rises.
+  const [x, roof] = CHIMNEYS[0]
+  for (let j = 0; j < 9; j++) {
+    const age = (t * 0.12 + j / 9) % 1
+    const r = 0.08 + 0.34 * age
+    ctx.fillStyle = rgba(pen, '#7C6A98', 0.15 * Math.sin(Math.PI * Math.min(1, age * 1.3)))
+    ctx.beginPath()
+    ctx.ellipse((x - 1.2 * age * age) * k, (roof - 0.22 - 1.3 * age) * k, r * k, r * 0.7 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
 }
 
-/** Pigeons the fire has put up off the roofs, wheeling in a loose ring over them and drifting left (middle plane). */
+/** Pigeons the fire has put up off the roofs, wheeling as one flock over them and drifting left (middle plane). */
 function pigeons(ctx: C2, pen: Pen, k: number, t: number): void {
   const s = t - T0
   const cx = 0.8 - 0.04 * s
   const cy = -1.9
   const birds = new Path2D()
-  for (let i = 0; i < 9; i++) {
-    const a = s * 0.42 + i * 0.5 + hash(i, 1, 85) * 0.4
-    const x = cx + 1.1 * Math.cos(a) + (hash(i, 2, 85) - 0.5) * 0.4
-    const y = cy + 0.26 * Math.sin(a) + (hash(i, 3, 85) - 0.5) * 0.3
+  for (let i = 0; i < 5; i++) {
+    const a = s * 0.42 + i * 0.32 + hash(i, 1, 85) * 0.2
+    const x = cx + 0.8 * Math.cos(a) + (hash(i, 2, 85) - 0.5) * 0.2
+    const y = cy + 0.22 * Math.sin(a) + (hash(i, 3, 85) - 0.5) * 0.14
     // Its wings: down, then up, a few times a second.
     const flap = 0.035 * Math.sin(s * 8.5 + i * 1.7)
     const span = 0.06
@@ -495,8 +491,8 @@ export function drawCity(pen: Pen, v: View, t: number, fire: number): void {
 }
 
 /**
- * The fire's smoke lying across the city lower down (z 0.45, in front of the middle blocks): long rolls drifting
- * left on the night air, thin enough to see the windows through, lit amber underneath.
+ * The fire's smoke lying across the city lower down (z 0.45, in front of the middle blocks): a few long rolls
+ * drifting left on the night air, thin enough to see the windows through, lit amber underneath.
  */
 function drift(ctx: C2, pen: Pen, v: View, t: number, fire: number): void {
   const amount = 1 - 0.5 * drained(t)
@@ -506,21 +502,18 @@ function drift(ctx: C2, pen: Pen, v: View, t: number, fire: number): void {
     const body = new Path2D()
     const under = new Path2D()
     const ft = fireT(t)
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 6; i++) {
       const x = 9 - ((((ft * 0.22 + hash(i, 1, 61) * span) % span) + span) % span)
       const y = -2.2 - 1.3 * hash(i, 2, 61) + 0.12 * Math.sin(ft * 0.4 + i)
       const r = 0.45 + 0.5 * hash(i, 3, 61)
       if (x + r * 1.6 < inner.x0 || x - r * 1.6 > inner.x1) continue
       for (const [p, oy] of [[under, 0.18], [body, 0]] as const) {
-        for (let j = 0; j < 8; j++) {
+        const pts: Pt[] = Array.from({ length: 8 }, (_, j) => {
           const a = (j / 8) * Math.PI * 2
           const rr = r * (0.8 + 0.25 * Math.sin(a * 3 + i * 1.9 + ft * 0.3))
-          const px = x + Math.cos(a) * rr * 1.6
-          const py = y + oy * r + Math.sin(a) * rr * 0.42
-          if (j) p.lineTo(px * k, py * k)
-          else p.moveTo(px * k, py * k)
-        }
-        p.closePath()
+          return [x + Math.cos(a) * rr * 1.6, y + oy * r + Math.sin(a) * rr * 0.42]
+        })
+        loop(p, pts, k)
       }
     }
     ctx.fillStyle = rgba(pen, K.smokeLit, (0.05 + 0.08 * fire) * amount)
@@ -541,8 +534,8 @@ export function drawPlumes(pen: Pen, v: View, t: number, fire: number, amount: n
     const k = inner.k
     const under = new Path2D()
     const body = new Path2D()
-    for (let i = 0; i < 9; i++) {
-      const age = (t * 0.06 + i / 9 + hash(i, 5) * 0.1) % 1
+    for (let i = 0; i < 6; i++) {
+      const age = (t * 0.06 + i / 6 + hash(i, 5) * 0.1) % 1
       const x = 5.2 - age * 7.5 + Math.sin(age * 3 + i) * 0.4
       const y = -6.3 - age * 2.6 + Math.sin(age * 5 + i * 2) * 0.25
       const r = 0.7 + age * 1.6
@@ -553,8 +546,7 @@ export function drawPlumes(pen: Pen, v: View, t: number, fire: number, amount: n
           const rr = r * (0.82 + 0.22 * Math.sin(a * 3 + i * 1.7 + age * 4))
           return [x + Math.cos(a) * rr * 1.3, y + oy * r + Math.sin(a) * rr * 0.6]
         })
-        pts.forEach(([px, py], j) => (j ? p.lineTo(px * k, py * k) : p.moveTo(px * k, py * k)))
-        p.closePath()
+        loop(p, pts, k)
       }
     }
     ctx.fillStyle = rgba(pen, K.smokeLit, (0.1 + 0.12 * fire) * amount)

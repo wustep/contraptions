@@ -101,21 +101,16 @@ export function vgrad(pen: Pen, x0: number, y0: number, x1: number, y1: number, 
   ctx.restore()
 }
 
-/** A smooth closed blob through `pts` (a Catmull-Rom loop), filled. */
-export function blob(pen: Pen, pts: Pt[], fill: string, a = 1): void {
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
+/** A smooth closed loop through `pts` (Catmull-Rom), added to `path` in pixels. */
+export function loop(path: Path2D, pts: Pt[], k: number): void {
   const n = pts.length
-  if (n < 3) return
-  ctx.save()
-  ctx.beginPath()
   for (let i = 0; i < n; i++) {
     const p0 = pts[(i - 1 + n) % n]
     const p1 = pts[i]
     const p2 = pts[(i + 1) % n]
     const p3 = pts[(i + 2) % n]
-    if (i === 0) ctx.moveTo(p1[0] * k, p1[1] * k)
-    ctx.bezierCurveTo(
+    if (i === 0) path.moveTo(p1[0] * k, p1[1] * k)
+    path.bezierCurveTo(
       (p1[0] + (p2[0] - p0[0]) / 6) * k,
       (p1[1] + (p2[1] - p0[1]) / 6) * k,
       (p2[0] - (p3[0] - p1[0]) / 6) * k,
@@ -124,9 +119,18 @@ export function blob(pen: Pen, pts: Pt[], fill: string, a = 1): void {
       p2[1] * k,
     )
   }
-  ctx.closePath()
+  path.closePath()
+}
+
+/** A smooth closed blob through `pts` (a Catmull-Rom loop), filled. */
+export function blob(pen: Pen, pts: Pt[], fill: string, a = 1): void {
+  if (pts.length < 3) return
+  const path = new Path2D()
+  loop(path, pts, pen.k)
+  const ctx = ctxOf(pen.p)
+  ctx.save()
   ctx.fillStyle = rgba(pen, fill, a)
-  ctx.fill()
+  ctx.fill(path)
   ctx.restore()
 }
 
