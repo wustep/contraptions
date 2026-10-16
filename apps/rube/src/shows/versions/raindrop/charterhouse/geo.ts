@@ -121,6 +121,9 @@ export const CISTERN = {
 
 /** The rill along the house and through the upper garden: the ball's foot in it, west to east. */
 export const RILL = { x0: 15.4, x1: 43.95, y0: -0.1, y1: 0.05 }
+/** Low stone sills across the rill and the first terrace's runnel: the ball hops each on a downbeat. */
+export const RILL_SILLS = [23.8, 33.2]
+export const T1_SILLS = [87.4, 92.4, 97.4, 102.4]
 export const rillY = (x: number): number => RILL.y0 + ((RILL.y1 - RILL.y0) * (x - RILL.x0)) / (RILL.x1 - RILL.x0)
 
 export const LEMON = { x: 33.5, y: 0, r: 4.2, top: -10.6 }

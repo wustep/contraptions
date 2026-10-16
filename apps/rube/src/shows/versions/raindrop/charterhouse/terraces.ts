@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../parts'
 import { R } from '../../../../parts'
 import { bar as beam, clamp, disc, easeIn, hash, line, mix, part, poly, rgba, smooth, turn, type Brush } from './brush'
-import { CHUTE, HAMMERS, T1CH, T2CH, T3CH, TERRACES, chanY, type Channel } from './geo'
+import { CHUTE, HAMMERS, T1CH, T1_SILLS, T2CH, T3CH, TERRACES, chanY, type Channel } from './geo'
 import { at, bar } from './music'
 import { rainAt, stormAt, tones } from './look'
 
@@ -100,6 +100,13 @@ function channelBack(b: Brush, c: ReturnType<typeof tones>, ch: Channel, t: numb
 /** A channel's front kerb, in front of the ball's foot. */
 function channelFront(b: Brush, c: ReturnType<typeof tones>, ch: Channel): void {
   const { x0, x1 } = ch
+  // Sills across the first runnel, the water breaking over each.
+  if (ch === T1CH) {
+    for (const x of T1_SILLS) {
+      part(b, [[x - 0.14, chanY(ch, x) + 0.04], [x - 0.1, chanY(ch, x) - 0.13], [x + 0.1, chanY(ch, x) - 0.13], [x + 0.14, chanY(ch, x) + 0.04]], c.stone, mix(c.stoneDeep, c.ink, 0.4), 0.025)
+      line(b, x + 0.16, chanY(ch, x) - 0.08, x + 0.5, chanY(ch, x) - 0.05, rgba(mix(c.waterLight, c.rain, 0.5), 0.7), Math.max(1, b.k * 0.02))
+    }
+  }
   poly(b, [[x0, chanY(ch, x0) - 0.06], [x1, chanY(ch, x1) - 0.06], [x1 + 0.1, chanY(ch, x1) + 0.24], [x0, chanY(ch, x0) + 0.24]], c.stone)
   line(b, x0, chanY(ch, x0) - 0.06, x1, chanY(ch, x1) - 0.06, mix(c.stone, c.skyLow, 0.35), Math.max(1, b.k * 0.02))
 }

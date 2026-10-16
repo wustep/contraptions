@@ -1,5 +1,5 @@
 import { R, type Pt } from '../../../../parts'
-import { CISTERN, GATE, GUTTER, PIPE, RILL, SPUR, T1CH, T2CH, T3CH, chanY, gutterY, rillY } from './geo'
+import { CISTERN, GATE, GUTTER, PIPE, RILL, RILL_SILLS, SPUR, T1CH, T1_SILLS, T2CH, T3CH, chanY, gutterY, rillY } from './geo'
 import { DOWN_TO } from './garden'
 import { FLOAT_FROM, IN_WALL, OUT, OVER_LIP, STEPS, afloat, stepAt } from './cistern'
 import { OVER as HAMMER_OVER, inHammer, onChute } from './terraces'
@@ -45,8 +45,14 @@ export function route(end: number): BallPath {
   const land2 = foot(16.75, rillY(16.75))
   r.fly(at(11, 0.5), land2)
   // Bars 11 to 13: along the rill under the lemon tree, to its end over the first tile.
+  // A hop over each of the rill's two sills, on bar 12's and bar 13's downbeats.
+  const rillHops = [at(12, 0), at(13, 0)]
+  RILL_SILLS.forEach((x, k) => {
+    r.roll(rillHops[k] - 0.2, [foot(x - 0.32, rillY(x - 0.32))], k ? 2.6 : 1.6, 2.6)
+    r.fly(rillHops[k], foot(x + 0.45, rillY(x + 0.45)))
+  })
   const rx = RILL.x1 - 0.05
-  r.roll(LANDS[0] - 0.12, [foot(rx, rillY(rx))], 1.6, 3.0)
+  r.roll(LANDS[0] - 0.12, [foot(rx, rillY(rx))], 2.6, 3.0)
   // Bars 14 to 18: the chime. Off the rill onto the first tile; on each, a rock in its hollow, a run east as it tips,
   // and a toss onto the next.
   r.fly(LANDS[0], onTile(0, LANDS[0]))
@@ -80,8 +86,13 @@ export function route(end: number): BallPath {
   const t1 = T1CH.x0 + 0.5
   r.fly(at(35, 0.5), [t1, chanY(T1CH, t1) - R])
   // Bars 35 to 39: along the first terrace in the rising storm, to the first hammer, and into it.
+  // A hop over each of the runnel's four sills, on the downbeats of bars 36 to 39, as the storm comes up.
+  T1_SILLS.forEach((x, k) => {
+    r.roll(at(36 + k, 0) - 0.2, [[x - 0.32, chanY(T1CH, x - 0.32) - R]], k ? 2.0 : 1.4, 2.0)
+    r.fly(at(36 + k, 0), [x + 0.5, chanY(T1CH, x + 0.5) - R])
+  })
   const t1e = T1CH.x1 - 0.08
-  r.roll(at(39, 3.5) - 0.3, [[t1e, chanY(T1CH, t1e) - R]], 1.4, 2.4)
+  r.roll(at(39, 3.5) - 0.3, [[t1e, chanY(T1CH, t1e) - R]], 2.0, 2.4)
   r.fly(at(39, 3.5), inHammer(0, at(39, 3.5)))
   // Bars 44 to 50: the hammers. Each goes over on a downbeat; the ball goes with the water down the wall, along the
   // next terrace, and into the next.

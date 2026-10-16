@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../parts'
 import { R } from '../../../../parts'
 import { arc, bar, clamp, disc, easeIn, hash, line, mix, oval, part, poly, rect, rgba, smooth, timber, turn, type Brush } from './brush'
-import { CHIME, GARDEN, LEMON, RILL, WELL, rillY } from './geo'
+import { CHIME, GARDEN, LEMON, RILL, RILL_SILLS, WELL, rillY } from './geo'
 import { G } from './path'
 import { drawCypress, drawWall } from './land'
 import { DRIPS, at, dripIndex } from './music'
@@ -194,6 +194,11 @@ export function drawRillBack(b: Brush, t: number): void {
   ]
   poly(b, pts, c.stoneDeep)
   line(b, RILL.x0, rillY(RILL.x0) - 0.02, RILL.x1, rillY(RILL.x1) - 0.02, mix(c.water, c.skyLow, 0.4), Math.max(1, b.k * 0.03))
+  // Its sills: low stones across it, the water breaking white-ish over each.
+  for (const x of RILL_SILLS) {
+    part(b, [[x - 0.14, rillY(x) + 0.02], [x - 0.1, rillY(x) - 0.12], [x + 0.1, rillY(x) - 0.12], [x + 0.14, rillY(x) + 0.02]], c.stone, mix(c.stoneDeep, c.ink, 0.4), 0.025)
+    line(b, x + 0.16, rillY(x) - 0.06, x + 0.45, rillY(x) - 0.03, rgba(mix(c.waterLight, c.rain, 0.5), 0.7), Math.max(1, b.k * 0.02))
+  }
 }
 
 /** The rill's front edge, in front of the ball's foot. */
