@@ -33,25 +33,6 @@ const DECK_BACK = '#77726A'
 const RAIL = '#3A474C'
 const RUST = '#6E5B48'
 
-/** The hull below the water: a dark shape against the light, seen from under it. */
-export function drawHullUnder(g: C2, k: number, x0: number, w: number, fill: string): void {
-  const { len, draft } = BOAT
-  g.fillStyle = fill
-  g.beginPath()
-  g.moveTo((x0 + 0.02) * k, (w - 0.02) * k)
-  g.lineTo((x0 + len + 0.35) * k, (w - 0.02) * k)
-  g.bezierCurveTo((x0 + len) * k, (w + 0.25) * k, (x0 + len - 1.2) * k, (w + draft) * k, (x0 + len - 2.2) * k, (w + draft) * k)
-  g.lineTo((x0 + 1.4) * k, (w + draft) * k)
-  g.bezierCurveTo((x0 + 0.6) * k, (w + draft) * k, (x0 + 0.1) * k, (w + 0.35) * k, (x0 + 0.02) * k, (w - 0.02) * k)
-  g.closePath()
-  g.fill()
-  // The rudder and the propeller's shaft: the little that tells a stern from a bow.
-  g.fillRect((x0 + 0.18) * k, (w + 0.3) * k, 0.1 * k, 0.42 * k)
-  g.beginPath()
-  g.ellipse((x0 + 0.45) * k, (w + 0.5) * k, 0.06 * k, 0.17 * k, 0, 0, Math.PI * 2)
-  g.fill()
-}
-
 /** The boat above the water: hull side, deck, wheelhouse, mast, the stern davit. `swing` 0..1 takes the boom from out over the stern to in over the deck. */
 export function drawBoatAbove(g: C2, k: number, x0: number, w: number, swing: number, wet = 0, t = 0): void {
   const { len, deck, deckBack, rail, house, mast, post } = BOAT

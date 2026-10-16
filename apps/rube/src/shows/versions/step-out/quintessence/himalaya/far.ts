@@ -206,9 +206,6 @@ function build(s: Spec): Range {
 let ranges: Range[] | null = null
 const rangesOf = (): Range[] => (ranges ??= SPECS.map(build))
 
-/** The great range's crest at `x` on its plane: where the sun comes up over it. */
-export const farRidge = (x: number): number => ridgeY(SPECS[0], x)
-
 /* ------------------------------------------------------------------ drawing */
 
 /** Fill or stroke a path made in cells, inside a plane drawn `k` pixels a cell. */

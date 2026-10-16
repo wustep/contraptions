@@ -101,19 +101,6 @@ export function vgrad(pen: Pen, x0: number, y0: number, x1: number, y1: number, 
   ctx.restore()
 }
 
-/** A closed shape filled through a canvas fill (a gradient), in cells. */
-export function fillWith(pen: Pen, pts: Pt[], style: string | CanvasGradient): void {
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
-  ctx.save()
-  ctx.beginPath()
-  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
-  ctx.closePath()
-  ctx.fillStyle = style
-  ctx.fill()
-  ctx.restore()
-}
-
 /** A smooth closed blob through `pts` (a Catmull-Rom loop), filled. */
 export function blob(pen: Pen, pts: Pt[], fill: string, a = 1): void {
   const { k } = pen

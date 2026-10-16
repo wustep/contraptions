@@ -513,6 +513,3 @@ export function archiveLights(ctx: C2, v: View, t: number, light: number): void 
   // The strips hang in front of the window, so they come after it, dark till the light finds them.
   layer(ctx, v, STRIPS_Z, ANCHOR, REF, (inner) => drawStrips(ctx, inner.k, t, light, revealAt(t)))
 }
-
-/** For the front: where the window and the exit are on the screen's far plane (their light in the air). */
-export const ARCHIVE = { anchor: ANCHOR, ref: REF }
