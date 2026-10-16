@@ -339,19 +339,21 @@ const negative: Shape = {
     ctx.fillRect(cx + hw, cy - hh - band, band, 2 * (hh + band))
     ctx.restore()
     const opening = rounded(cx, cy, hw, hh, 0.03 * s)
-    // The gust: snow driven across the opening, only where the mountain is.
+    // The gust: snow driven across the opening in streaks, only where the mountain is.
     ctx.save()
     ctx.clip(opening)
-    ctx.fillStyle = `rgba(250, 252, 255, ${0.85 * a})`
+    ctx.strokeStyle = `rgba(250, 252, 255, ${0.7 * a})`
+    ctx.lineCap = 'round'
+    ctx.lineWidth = Math.max(1, 0.025 * s)
     ctx.beginPath()
     for (let i = 0; i < 70; i++) {
-      const x = ((hash(i, 1, 77) * W * 1.4 + u * W * 1.6 + t * 0) % (W * 1.4)) - W * 0.2
+      const x = ((hash(i, 1, 77) * W * 1.4 + u * W * 1.6) % (W * 1.4)) - W * 0.2
       const y = hash(i, 2, 77) * H + Math.sin(i + u * 6) * 0.2 * s
-      const r = (0.015 + hash(i, 3, 77) * 0.035) * s
-      ctx.moveTo(x + r, y)
-      ctx.arc(x, y, r, 0, Math.PI * 2)
+      const len = (0.12 + hash(i, 3, 77) * 0.22) * s
+      ctx.moveTo(x - len, y + 0.04 * len)
+      ctx.lineTo(x, y)
     }
-    ctx.fill()
+    ctx.stroke()
     ctx.restore()
   },
 }
