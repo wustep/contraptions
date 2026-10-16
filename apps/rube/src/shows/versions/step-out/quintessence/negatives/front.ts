@@ -183,21 +183,42 @@ function nearPlane(ctx: C2, v: View, light: number): void {
         ctx.lineTo((x0 + w - 0.03) * k, (top + 0.008) * k)
         ctx.stroke()
       } else {
-        // Cans lying flat in a short stack, out of focus: soft dark discs edge-on, their rims lit.
+        // Film cans lying flat in a short stack, out of focus: three flat drums, a little askew, soft at the edges,
+        // the top one's lid seen from a little above and its rim catching the table's light.
+        const r = 0.33
+        const h = 0.065
+        const cans = new Path2D()
+        let lx = x
+        let ly = DESK
         for (let i = 0; i < 3; i++) {
-          const cy = DESK - 0.05 - i * 0.075
-          ctx.save()
-          ctx.translate((x + i * 0.03) * k, cy * k)
-          ctx.scale(1, 0.16)
-          softDisc(ctx, 0, 0, 0.36, '#0D1011', 0.95, k)
-          ctx.restore()
-          const g2 = ctx.createLinearGradient(0, (cy - 0.03) * k, 0, (cy + 0.01) * k)
-          g2.addColorStop(0, rgbaOf('#7E7666', 0))
-          g2.addColorStop(0.5, rgbaOf('#7E7666', 0.16 * lit))
-          g2.addColorStop(1, rgbaOf('#7E7666', 0))
-          ctx.fillStyle = g2
-          ctx.fillRect((x + i * 0.03 - 0.3) * k, (cy - 0.03) * k, 0.6 * k, 0.04 * k)
+          const cx = x + [0, 0.035, -0.02][i]
+          const bot = DESK + 0.005 - i * (h + 0.006)
+          cans.moveTo((cx - r) * k, (bot - h) * k)
+          cans.lineTo((cx - r) * k, bot * k)
+          cans.ellipse(cx * k, bot * k, r * k, 0.05 * k, 0, Math.PI, 0, true)
+          cans.lineTo((cx + r) * k, (bot - h) * k)
+          cans.closePath()
+          lx = cx
+          ly = bot - h
         }
+        for (const [a, grow] of [[0.4, 0.04], [0.95, 0]] as const) {
+          ctx.fillStyle = rgbaOf('#0C0F10', a)
+          ctx.fill(cans)
+          if (grow) {
+            ctx.strokeStyle = rgbaOf('#0C0F10', a)
+            ctx.lineWidth = grow * k
+            ctx.stroke(cans)
+          }
+        }
+        ctx.fillStyle = rgbaOf('#1C2224', 0.95)
+        ctx.beginPath()
+        ctx.ellipse(lx * k, ly * k, r * k, 0.05 * k, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.strokeStyle = rgbaOf('#8C836F', 0.28 * lit)
+        ctx.lineWidth = 0.02 * k
+        ctx.beginPath()
+        ctx.ellipse(lx * k, ly * k, r * k, 0.05 * k, 0, Math.PI * 1.05, Math.PI * 1.95)
+        ctx.stroke()
       }
     }
   })

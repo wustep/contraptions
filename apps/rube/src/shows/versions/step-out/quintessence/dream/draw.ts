@@ -354,11 +354,10 @@ const WIN3: [number, number] = [-5.75, -4.75]
 export function drawBuilding(pen: Pen, t: number): void {
   const ft = fireT(t)
   // The neighbours behind it, their fronts warm with the fire's light, most up by the burning roof.
-  rect(pen, BX1 - 0.2, ROOF - 2.2, BX1 + 6, STREET, C.mid)
-  rect(pen, BX1 + 2.4, ROOF - 3.6, BX1 + 4.6, STREET, C.mid)
   const lit = Math.max(heat(t, 1), heat(t, 2))
-  for (const [x0, top] of [[BX1 - 0.2, ROOF - 2.2], [BX1 + 2.4, ROOF - 3.6]] as const) {
-    vgrad(pen, x0, top, x0 === BX1 - 0.2 ? BX1 + 6 : BX1 + 4.6, STREET, [
+  for (const [x0, x1, top] of [[BX1 - 0.2, BX1 + 6, ROOF - 2.2], [BX1 + 2.4, BX1 + 4.6, ROOF - 3.6]] as const) {
+    rect(pen, x0, top, x1, STREET, C.mid)
+    vgrad(pen, x0, top, x1, STREET, [
       [0, C.flame2, 0.14 * Math.min(1.4, lit)],
       [1, C.flame2, 0.03],
     ])
