@@ -1209,7 +1209,6 @@ export const plank = part<PlankState>(
         drawGrate(p, k, W, ink, t, inGrate ? 1 : 0.15 + 0.2 * smooth(t, T0, T0 + 1), cal.weak)
         p.pop()
         steamAndDust(p, k, t, legs)
-        drawSparks(p, k, W, t)
         drawTorn(p, k, W, ink, t, f)
         drawCrumbs(p, k, W, ink, t)
       }
@@ -1362,7 +1361,7 @@ export const plank = part<PlankState>(
       hold(c(8) - 0.05, 21, [BX0 + 0.6, -1.2]),
       // The run: from c8 close on her on the deck, right of the middle, the wreck left behind at the left and Turnip
       // Head springing out of the dust onto the stern behind her; on with it close on the deck as it runs (Calcifer
-      // straining in the grate, the boards shedding at the stern, the sparks off the hips, what the feet throw up
+      // straining in the grate, the boards shedding at the stern, what the feet throw up
       // coming in at the foot); out to the whole machine and the size of the wastes as the bird comes down out of the
       // sky (c18, two bars); in to the two of them on the prow (the stern out of the frame) as he glides down into
       // it and lands on the loudest note, the deck line a little under the middle and open sky over it, so his last
@@ -1470,47 +1469,6 @@ function steamAndDust(p: p5, k: number, t: number, legs: { hip: Pt; foot: Pt }[]
     for (let i = 0; i < 4; i++) {
       puff(p, k, LAND.th - 0.5 - i * 0.4 + ia * 0.2 * i, LAND.ledge - 0.3 - ia * (0.4 + 0.2 * i), 0.35 + ia * 0.7, dustCol, 0.42 * Math.exp(-ia / 0.8), 0.8)
     }
-  }
-}
-
-/** Sparks where the iron hips grind, thrown off on each near footfall while it runs: short hot streaks, never dots. */
-function drawSparks(p: p5, k: number, W: number, t: number) {
-  for (const [fi, ff] of FOOTFALLS.entries()) {
-    const leg = LEGS[ff.leg]
-    if (leg.far) continue
-    const a0 = t - ff.t
-    if (a0 < 0 || a0 > 0.7) continue
-    const [hx, hy] = onDeck(ff.t, leg.u, leg.v, deckAt(ff.t))
-    p.push()
-    // A breath of heat where the iron bites, then the sparks: long hot streaks flying out and falling away.
-    puff(p, k, hx, hy, 0.25 + 0.3 * a0, CALCIFER.body, 0.2 * Math.exp(-a0 / 0.12))
-    // Thrown off behind the running plank in a low fan, each one a hot head with a fading tail, arcing down.
-    const d0 = deckAt(ff.t - 0.03)
-    const d1 = deckAt(ff.t + 0.03)
-    const run = (d1.x - d0.x) / 0.06
-    for (let j = 0; j < 5; j++) {
-      const a = a0 - 0.05 * hash(fi, j, 121)
-      const life = 0.35 + 0.3 * hash(fi, j, 122)
-      if (a <= 0 || a > life) continue
-      const an = Math.PI * (0.88 + 0.3 * hash(fi, j, 123))
-      const sp = 2.4 + 2.2 * hash(fi, j, 124)
-      const vx = run * 0.6 + Math.cos(an) * sp
-      const vy = Math.sin(an) * sp - 1.0
-      const x0 = hx + (hash(fi, j, 125) - 0.5) * 0.4
-      const y0 = hy - 0.05
-      const at = (s: number): Pt => [x0 + vx * s, y0 + vy * s + 7 * s * s]
-      const u = a / life
-      const [x, y] = at(a)
-      const [xm, ym] = at(Math.max(0, a - 0.03))
-      const [xb, yb] = at(Math.max(0, a - 0.1))
-      p.stroke(alpha(p, CALCIFER.edge, 0.7 * (1 - u)))
-      p.strokeWeight(W * 0.7)
-      p.line(xb * k, yb * k, xm * k, ym * k)
-      p.stroke(alpha(p, mixHex(CALCIFER.core, CALCIFER.body, u), 1 - u * u))
-      p.strokeWeight(W * (1.6 - 0.7 * u))
-      p.line(xm * k, ym * k, x * k, y * k)
-    }
-    p.pop()
   }
 }
 
