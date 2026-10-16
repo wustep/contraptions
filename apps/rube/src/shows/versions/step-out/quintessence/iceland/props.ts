@@ -1,4 +1,4 @@
-import type { Pt } from '../../../../../parts'
+import { mixHex, type Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { G } from '../physics'
 import {
@@ -24,7 +24,7 @@ import {
   ridgeY,
   roadAt,
 } from './geo'
-import { about, clamp01, disc, glow, lerp, rgba, shape, sm, stroke, type Pen } from './pen'
+import { about, clamp01, disc, lerp, rgba, shape, sm, stroke, type Pen } from './pen'
 import { FAR_P, HZ, farFn, plumeMid, plumeTop } from './set'
 import { ICE } from './theme'
 
@@ -32,7 +32,10 @@ type Frame = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: n
 
 /* ------------------------------------------------------------------ the posts */
 
-/** A reflector post at the road's far edge; its reflector flares as he goes by. */
+/**
+ * A reflector post at the road's far edge, its reflector set in its black band. The reflector is dull until he comes
+ * by, when it catches the low sun and shows lit, the whole of it at once, then goes dull again.
+ */
 export function drawPosts(pen: Pen, t: number, f: Frame): void {
   for (const post of POSTS) {
     const [x, y] = post.p
@@ -40,14 +43,10 @@ export function drawPosts(pen: Pen, t: number, f: Frame): void {
     const b = y - 0.27
     const h = 0.34
     stroke(pen, [[x, b], [x, b - h]], ICE.post, 0.045, 0, 'butt')
-    stroke(pen, [[x, b - h + 0.02], [x, b - h + 0.09]], ICE.postBand, 0.047, 0, 'butt')
-    disc(pen, [x, b - h + 0.13], 0.018, 0.022, ICE.reflector)
+    stroke(pen, [[x, b - h + 0.02], [x, b - h + 0.13]], ICE.postBand, 0.047, 0, 'butt')
     const since = t - post.t
-    if (since >= -0.03 && since < 0.6) {
-      const a = since < 0 ? (since + 0.03) / 0.03 : Math.exp(-since / 0.16)
-      glow(pen, [x, b - h + 0.13], 0.2, ICE.glint, 0.85 * a)
-      stroke(pen, [[x - 0.09 * a, b - h + 0.13], [x + 0.09 * a, b - h + 0.13]], rgba(ICE.glint, 0.9 * a), 0.012)
-    }
+    const lit = since < -0.04 || since > 0.7 ? 0 : since < 0 ? (since + 0.04) / 0.04 : 1 - sm(since, 0.15, 0.7)
+    stroke(pen, [[x, b - h + 0.045], [x, b - h + 0.105]], lit > 0 ? mixHex(ICE.reflector, ICE.reflectorLit, lit) : ICE.reflector, 0.024, 0, 'butt')
   }
 }
 

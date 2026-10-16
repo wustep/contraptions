@@ -1,6 +1,6 @@
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { CX0, CY0, PLANE, bake, cached, ellipses, layBaked, onPlane, outline, polyline, seen, type Frame } from './far'
+import { CX0, CY0, PLANE, bake, cached, layBaked, onPlane, outline, polyline, seen, type Frame } from './far'
 import { ERUPT } from './geo'
 import { HZ, SUN } from './sky'
 import { ICE } from './theme'
@@ -8,9 +8,9 @@ import { ICE } from './theme'
 /**
  * Everything past the shore, on three planes: the far range with the volcano (its ice cap, its glacier's tongues);
  * a nearer massif under its own ice cap, whose outlet glacier comes down a valley to the fjord, calving; and the
- * mountains across the fjord, stepped in the East Fjords' layers of basalt, snow in their gullies, waterfalls coming
- * off them in white threads, a harbour at their foot and a boat going out. Under them the fjord: their reflections,
- * the sun's path of glitter, and its skin shimmering all the way to the near shore.
+ * mountains across the fjord, stepped in the East Fjords' layers of basalt, a harbour at their foot and a boat going
+ * out. Under them the fjord: their reflections, the sun's path of glitter, and its skin shimmering all the way to the
+ * near shore.
  *
  * Each plane is drawn in its own measure (`far.ts`): its outlines are made once.
  */
@@ -72,6 +72,8 @@ const FAR = cached(() => {
   }
   return { domeLine: polyline(dome), domePath, cap, ribs, ridge, snow, rock }
 })
+/** The volcano's ice cap, for the fire's light on it (`erupt.ts`). */
+export const volcanoCap = (): Path2D => FAR().cap
 
 /* ------------------------------------------------------------------ the glacier's massif */
 
@@ -129,16 +131,7 @@ const GLACIER = cached(() => {
   const snout = tongueEdge(-1, 1)
   const snoutR = tongueEdge(1, 1)
   const face = outline([[snout[0], snout[1] - 0.004], [snoutR[0], snoutR[1] - 0.004], [snoutR[0], snoutR[1] + 0.002], [snout[0], snout[1] + 0.002]])
-  // Snow lying in the massif's gullies.
-  const gullies = new Path2D()
-  for (let i = 0; i < 40; i++) {
-    const sx = -2.3 + 2.4 * hash(i, 83)
-    const top = GB - massifH(sx)
-    const len = massifH(sx) * (0.25 + 0.4 * hash(i, 84))
-    if (Math.abs(sx - TONGUE_X) < 0.08 || len < 0.012) continue
-    polyline([[sx, top + 0.006], [sx + 0.004 * (hash(i, 85) - 0.5), top + 0.006 + len]], gullies)
-  }
-  return { massif, cap, tongue, cracks, moraine, face, gullies, reflection: outline([...left.map(([x, y]): Pt => [x, 2 * GB - y]), ...right.map(([x, y]): Pt => [x, 2 * GB - y])]) }
+  return { massif, cap, tongue, cracks, moraine, face, reflection: outline([...left.map(([x, y]): Pt => [x, 2 * GB - y]), ...right.map(([x, y]): Pt => [x, 2 * GB - y])]) }
 })
 
 /* ------------------------------------------------------------------ the mountains across the fjord */
@@ -150,8 +143,6 @@ const midH = (sx: number): number => {
   // Low on the right, where the volcano is seen over them; cut through on the left, where the glacier comes down.
   return hump * (1 - smooth(sx, -0.05, 0.3)) * (1 - 0.86 * Math.exp(-(((sx + 0.74) / 0.15) ** 2)))
 }
-/** The waterfalls: where each comes off the face, and how far up. */
-const FALLS: [number, number][] = [[-1.47, 0.72], [-1.18, 0.6], [-1.02, 0.78], [-0.46, 0.66], [-0.3, 0.82], [-0.16, 0.58], [0.02, 0.5]]
 const HARBOUR = -1.32
 const MID = cached(() => {
   const top: Pt[] = []
@@ -171,17 +162,6 @@ const MID = cached(() => {
       on = inside
     }
   }
-  // Snow in their gullies: streaks down from the tops.
-  const snow = new Path2D()
-  for (let i = 0; i < 22; i++) {
-    const sx = -2.5 + 2.8 * hash(i, 41)
-    const t0 = MB - midH(sx)
-    if (MB - t0 < 0.05) continue
-    const y0 = t0 + 0.006 + 0.01 * hash(i, 46)
-    const len = (MB - t0) * (0.2 + 0.35 * hash(i, 42))
-    const lean = 0.012 * (hash(i, 44) - 0.5)
-    polyline([[sx, y0], [sx + lean * 0.5, y0 + len * 0.5], [sx + lean, y0 + len]], snow)
-  }
   const reflection = outline([...top.map(([x, y]): Pt => [x, MB + (MB - y) * 0.55]), [2.2, MB], [-2.6, MB]])
   // The harbour: white houses with dark roofs, a pier.
   const walls = new Path2D()
@@ -193,7 +173,7 @@ const MID = cached(() => {
     outline([[sx - s, y], [sx + s, y], [sx + s, y - s * 1.2], [sx - s, y - s * 1.2]], walls)
     outline([[sx - s * 1.15, y - s * 1.2], [sx + s * 1.15, y - s * 1.2], [sx, y - s * 2]], roofs)
   }
-  return { body, green, strata, snow, reflection, walls, roofs }
+  return { body, green, strata, reflection, walls, roofs }
 })
 
 /** The mountains across the fjord, with their weather: drawn after the glacier's massif. */
@@ -208,49 +188,12 @@ export function drawMid(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: n
     ctx.strokeStyle = mixHex(ICE.midDeep, ICE.skyAsh, dim * 0.4)
     ctx.globalAlpha = 0.55
     ctx.stroke(m.strata)
-    ctx.globalAlpha = 0.32 * (1 - dim * 0.5)
-    ctx.strokeStyle = ICE.midSnow
-    ctx.lineWidth = 1.4 * px
-    ctx.lineCap = 'round'
-    ctx.stroke(m.snow)
     // Cloud shadows going over them on the wind.
     ctx.globalAlpha = 1
     ctx.save()
     ctx.clip(m.body)
     shadows(ctx, seen(f, PLANE.mid), t, 0.016, 0.6, MB - 0.09, 0.05, 61)
     ctx.restore()
-    // The waterfalls: white threads, the water going down them, a breath of spray at the foot.
-    const base = new Path2D()
-    const fall = new Path2D()
-    const mist = new Path2D()
-    for (const [sx, up] of FALLS) {
-      const top = MB - midH(sx) * up
-      const foot = MB - 0.003
-      const len = foot - top
-      if (len < 0.01) continue
-      const wob = (y: number) => sx + 0.0012 * Math.sin(y * 60 + sx * 9)
-      base.moveTo(wob(top), top)
-      for (let y = top; y <= foot; y += len / 8) base.lineTo(wob(y), y)
-      for (let j = 0; j < 4; j++) {
-        const y0 = top + ((j / 4 + (t * 0.035) / len + hash(j, Math.round(sx * 100), 87)) % 1) * len
-        const y1 = Math.min(foot, y0 + len * 0.16)
-        fall.moveTo(wob(y0), y0)
-        fall.lineTo(wob(y1), y1)
-      }
-      ellipses(mist, [[sx, foot - 0.001, 0.0045 + 0.001 * Math.sin(t * 3 + sx * 7), 0.0018]])
-    }
-    ctx.lineCap = 'round'
-    ctx.strokeStyle = ICE.fall
-    ctx.globalAlpha = 0.4 * (1 - dim * 0.4)
-    ctx.lineWidth = 1.1 * px
-    ctx.stroke(base)
-    ctx.globalAlpha = 0.85 * (1 - dim * 0.4)
-    ctx.lineWidth = 1.3 * px
-    ctx.stroke(fall)
-    ctx.fillStyle = ICE.fall
-    ctx.globalAlpha = 0.3 * (1 - dim * 0.4)
-    ctx.fill(mist)
-    ctx.globalAlpha = 1
     // The harbour, and a boat going out from it, its wake behind.
     ctx.fillStyle = ICE.house
     ctx.fill(m.walls)
@@ -342,10 +285,6 @@ export function drawGlacier(ctx: CanvasRenderingContext2D, f: Frame, k: number, 
     ctx.fill(g.massif)
     ctx.fillStyle = mixHex(ICE.snow, ICE.skyAsh, dim * 0.5)
     ctx.fill(g.cap)
-    ctx.strokeStyle = rgbaHex(ICE.midSnow, 0.55 * (1 - dim * 0.5))
-    ctx.lineWidth = 1.4 * px
-    ctx.lineCap = 'round'
-    ctx.stroke(g.gullies)
     ctx.fillStyle = mixHex(ICE.glacier, ICE.skyAsh, dim * 0.45)
     ctx.fill(g.tongue)
     ctx.strokeStyle = ICE.crevasse

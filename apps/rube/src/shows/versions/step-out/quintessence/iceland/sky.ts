@@ -5,8 +5,8 @@ import { ICE } from './theme'
 
 /**
  * Iceland's sky: a cold clear blue going gold at the horizon, a low sun on the left, and weather going by on the
- * wind from the left (the way the plume leans): mares' tails and a dappled veil high up, rolls of stratocumulus, big
- * cumulus lit gold from underneath by the low sun, and long thin cloud low down. After the eruption the ash spreads
+ * wind from the left (the way the plume leans): mares' tails high up, rolls of stratocumulus, big cumulus lit gold
+ * from underneath by the low sun, and long thin cloud low down. After the eruption the ash spreads
  * over all of it and the light goes grey-mauve (`dim`).
  *
  * The clouds are painted once into bands (`bake`), one for the high cloud and one for the cumulus, and laid on moving
@@ -34,7 +34,7 @@ function oval(path: Path2D, x: number, y: number, rx: number, ry: number): void 
   }
 }
 
-/** The high cloud: mares' tails, long fine streaks combed out along the wind, lit on top and shaded under. */
+/** The high cloud: mares' tails and cirrus, long fine streaks combed out along the wind, lit on top and shaded under. */
 const paintHigh: Paint = (ctx) => {
   const lit = new Path2D()
   const shade = new Path2D()
@@ -58,20 +58,25 @@ const paintHigh: Paint = (ctx) => {
       oval(lit, x, y, rx * 0.92, ry * 0.85)
     }
   }
-  // And a veil of the thinnest cloud over the whole of the high sky: a fine dappling, thick in places and thin in
-  // others, as a mackerel sky goes.
-  const veil = new Path2D()
-  for (let i = 0; i < 4200; i++) {
-    const x = SPAN * hash(i, 1, 437)
-    const y = -0.58 + 0.42 * hash(i, 2, 437)
-    const thick = 0.7 + 0.2 * Math.sin((x / SPAN) * Math.PI * 2 * 5 + y * 9) + 0.12 * Math.sin((x / SPAN) * Math.PI * 2 * 11 - y * 23)
-    if (hash(i, 5, 437) > thick) continue
-    const s = 1 - 0.5 * Math.max(0, (y + 0.5) / 0.32)
-    oval(veil, x, y, (0.005 + 0.01 * hash(i, 3, 437)) * s, (0.0016 + 0.0016 * hash(i, 4, 437)) * s)
+  // Higher still, cirrus combed out long and thin across the top of the sky, each band rising a little along the
+  // wind and fraying at its tail.
+  const high = 20
+  for (let r = 0; r < high; r++) {
+    const x0 = (r + hash(r, 1, 441)) * (SPAN / high)
+    const y0 = -0.56 + 0.2 * hash(r, 2, 441)
+    const len = 0.3 + 0.3 * hash(r, 3, 441)
+    const rise = -0.04 - 0.05 * hash(r, 4, 441)
+    const n = 40 + Math.round(30 * hash(r, 5, 441))
+    for (let i = 0; i < n; i++) {
+      const u = hash(i, r, 442)
+      const x = x0 + u * len
+      const y = y0 + rise * u + (hash(i, r, 443) - 0.5) * 0.036 * (0.3 + u)
+      const rx = (0.025 + 0.06 * hash(i, r, 444)) * (1 - 0.4 * u)
+      const ry = 0.0014 + 0.0018 * hash(i, r, 445)
+      oval(shade, x + rx * 0.1, y + ry * 1.3, rx, ry)
+      oval(lit, x, y, rx * 0.92, ry * 0.85)
+    }
   }
-  ctx.globalAlpha = 0.3
-  ctx.fillStyle = ICE.cloudLit
-  ctx.fill(veil)
   ctx.globalAlpha = 0.22
   ctx.fillStyle = ICE.cloudShade
   ctx.fill(shade)
@@ -167,19 +172,37 @@ export function drawSky(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: n
   const m = ctx.getTransform()
   const ppu = (f.y1 - f.y0) * k * Math.hypot(m.a, m.b)
   onPlane(ctx, f, k, PLANE.sky, () => {
-    // One gradient for the whole sky, round the low sun: gold-white at it, gold along the horizon, cold blue away
-    // from it. Painted once; the ash is laid over it.
+    // Cold blue overhead going pale toward the horizon, and gold low down on the sun's side, fading out across the
+    // sky away from it: the gold is laid on first, faded upward, and the blue goes in behind it. Painted once; the
+    // ash is laid over it.
     const sky = bake('ice-sky', ppu, 2.4, -0.62, HZ + 0.07, (c) => {
       c.translate(1.2, 0)
-      const g = c.createRadialGradient(SUN[0], SUN[1], 0, SUN[0], SUN[1] + 0.3, 1.7)
-      g.addColorStop(0, ICE.sunCore)
-      g.addColorStop(0.035, ICE.sunGold)
-      g.addColorStop(0.2, ICE.skyLow)
-      g.addColorStop(0.42, ICE.skyMid)
-      g.addColorStop(0.75, ICE.skyTop)
-      g.addColorStop(1, ICE.skyHigh)
-      c.fillStyle = g
-      c.fillRect(-1.2, -0.62, 2.4, HZ + 0.69)
+      const y0 = -0.62
+      const y1 = HZ + 0.07
+      const warm = c.createLinearGradient(-1.2, 0, 1.2, 0)
+      warm.addColorStop(0, rgbaOf(ICE.skyGold, 1))
+      warm.addColorStop(0.3, rgbaOf(ICE.skyGold, 1))
+      warm.addColorStop(0.55, rgbaOf(ICE.skyLow, 0.7))
+      warm.addColorStop(0.9, rgbaOf(ICE.skyLow, 0))
+      c.fillStyle = warm
+      c.fillRect(-1.2, y0, 2.4, y1 - y0)
+      const up = c.createLinearGradient(0, y0, 0, y1)
+      up.addColorStop(0, 'rgba(0,0,0,0)')
+      up.addColorStop(0.3, 'rgba(0,0,0,0.12)')
+      up.addColorStop(0.65, 'rgba(0,0,0,0.75)')
+      up.addColorStop(0.85, 'rgba(0,0,0,1)')
+      c.globalCompositeOperation = 'destination-in'
+      c.fillStyle = up
+      c.fillRect(-1.2, y0, 2.4, y1 - y0)
+      const blue = c.createLinearGradient(0, y0, 0, y1)
+      blue.addColorStop(0, ICE.skyHigh)
+      blue.addColorStop(0.4, ICE.skyTop)
+      blue.addColorStop(0.85, ICE.skyMid)
+      blue.addColorStop(1, ICE.skyMid)
+      c.globalCompositeOperation = 'destination-over'
+      c.fillStyle = blue
+      c.fillRect(-1.2, y0, 2.4, y1 - y0)
+      c.globalCompositeOperation = 'source-over'
     })
     if (sky) layBaked(ctx, sky, -1.2, sv.x0, sv.x1)
     else {
@@ -190,11 +213,12 @@ export function drawSky(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: n
       ctx.fillStyle = rgbaOf(ICE.skyAsh, 0.9 * dim)
       ctx.fillRect(sv.x0 - 0.05, sv.y0 - 0.05, sv.x1 - sv.x0 + 0.1, HZ + 0.12 - sv.y0)
     }
+    // The sun: a plain disc in the low haze, going into the ash.
     const sunA = Math.max(0, 1 - 1.6 * dim)
     if (sunA > 0.01) {
-      ctx.fillStyle = `rgba(255, 247, 226, ${(0.95 * sunA).toFixed(3)})`
+      ctx.fillStyle = rgbaOf(ICE.sun, 0.95 * sunA)
       ctx.beginPath()
-      ctx.arc(SUN[0], SUN[1], 0.02, 0, Math.PI * 2)
+      ctx.arc(SUN[0], SUN[1], 0.024, 0, Math.PI * 2)
       ctx.fill()
     }
   })
@@ -206,7 +230,7 @@ export function drawSky(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: n
   onPlane(ctx, f, k, PLANE.cloud, () => {
     ctx.globalAlpha = fade
     for (const [key, paint, y0, y1, wind] of [
-      ['ice-high', paintHigh, -0.56, -0.24, WIND.high],
+      ['ice-high', paintHigh, -0.66, -0.24, WIND.high],
       ['ice-cumulus', paintCumulus, -0.4, 0.0, WIND.cumulus],
     ] as const) {
       if (cv.y1 < y0 || cv.y0 > y1) continue
