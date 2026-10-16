@@ -41,13 +41,10 @@ import {
 
 export const SEA = {
   skin: '#8FC4BA',
-  web: '#C4E8DA',
   shallow: '#2D6B6E',
   mid: '#174349',
   deep: '#0B272C',
   abyss: '#041315',
-  shaft: '#A9DEC9',
-  snow: '#A7CBC2',
   bubble: '#D3E6EA',
   hull: '#0B1A22',
   shark: '#08141B',
@@ -193,46 +190,43 @@ function drawHullUnderLocal(g: C2, k: number, t: number): void {
   hull.closePath()
   g.fillStyle = mix(SEA.deep, SEA.hull, 0.55)
   g.fill(hull)
-  // The light off the swell playing on its bottom: a loose web that wanders, and the weed along its waterline.
-  const web = new Path2D()
-  const knot = (i: number, r: number): [number, number] => [
-    x0 + 0.2 + i * 0.34 + (hash(i, r, 33) - 0.5) * 0.22 + 0.07 * Math.sin(t * 0.9 + i * 2.1 + r),
-    W + 0.06 + r * 0.17 + (hash(i, r, 34) - 0.5) * 0.08 + 0.03 * Math.sin(t * 1.3 + i * 1.4 + r * 2),
-  ]
-  for (let r = 0; r < 3; r++)
-    for (let i = 0; i < Math.ceil(len / 0.34); i++) {
-      const [ax, ay] = knot(i, r)
-      const [bx, by] = knot(i + 1, r)
-      const [cx, cy] = knot(i + (r % 2), r + 1)
-      web.moveTo(ax * k, ay * k)
-      web.lineTo(bx * k, by * k)
-      if (hash(i, r, 35) < 0.6) {
-        web.moveTo(ax * k, ay * k)
-        web.lineTo(cx * k, cy * k)
-      }
-    }
+  // Along its side just under the skin, the water's light, one soft band in three flat steps whose lower edges lift
+  // and fall with the swell; and the weed along its waterline, its ragged fringe swaying.
   g.save()
   g.clip(hull)
-  g.lineWidth = Math.max(0.6, 0.01 * k)
-  g.strokeStyle = rgba(SEA.web, 0.13)
-  g.stroke(web)
-  g.fillStyle = rgba('#2F4A3A', 0.6)
-  g.fillRect(x0 * k, (W - 0.1) * k, (len + 0.4) * k, 0.07 * k)
+  const x1 = x0 + len + 0.4
+  g.fillStyle = rgba(SEA.skin, 0.06)
+  for (const d of [0.12, 0.24, 0.38]) {
+    g.beginPath()
+    g.moveTo(x0 * k, (W - 0.1) * k)
+    for (let x = x0; x <= x1; x += 0.4) g.lineTo(x * k, (W + d + 0.05 * Math.sin(x * 1.3 - t * 1.5 + d * 9)) * k)
+    g.lineTo(x1 * k, (W - 0.1) * k)
+    g.closePath()
+    g.fill()
+  }
+  g.beginPath()
+  g.moveTo(x0 * k, (W - 0.1) * k)
+  for (let i = 0, x = x0; x <= x1; i++, x += 0.09) g.lineTo((x + 0.02 * Math.sin(t * 1.3 + i)) * k, (W + 0.04 + 0.06 * hash(i, 36)) * k)
+  g.lineTo(x1 * k, (W - 0.1) * k)
+  g.closePath()
+  g.fillStyle = rgba('#2F4A3A', 0.55)
+  g.fill()
   g.restore()
   g.fillRect((x0 + 0.18) * k, (W + 0.3) * k, 0.1 * k, 0.42 * k)
   g.beginPath()
   g.ellipse((x0 + 0.45) * k, (W + 0.5) * k, 0.06 * k, 0.17 * k, 0, 0, Math.PI * 2)
   g.fill()
-  // A soft dark under it: its shadow in the light coming down.
-  const gr = g.createLinearGradient(0, (W + draft) * k, 0, (W + draft + 2.5) * k)
-  gr.addColorStop(0, rgba(SEA.hull, 0.35))
+  // A soft dark under it: its shadow in the light coming down, leaning with the light and lost in the water a little
+  // way under it.
+  const gr = g.createLinearGradient(0, (W + draft) * k, 0, (W + draft + 1.6) * k)
+  gr.addColorStop(0, rgba(SEA.hull, 0.32))
   gr.addColorStop(1, rgba(SEA.hull, 0))
   g.fillStyle = gr
   poly(g, k, [
     [x0 + 0.4, W + draft],
     [x0 + len - 1.6, W + draft],
-    [x0 + len - 0.6, W + draft + 2.5],
-    [x0 + 1.4, W + draft + 2.5],
+    [x0 + len - 1, W + draft + 1.6],
+    [x0 + 1, W + draft + 1.6],
   ])
   g.fill()
 }
@@ -436,17 +430,30 @@ export function drawShark(p: p5, k: number, t: number, front: boolean): void {
   sharkPath(g, k, t)
   g.fillStyle = col
   g.fill()
-  // A trace of the light along its back, from above.
   if (s.a > 0.6) {
+    // Nearer, the light from above along its back in one pale edge that follows it, its five gill slits and its small
+    // dull eye.
     g.save()
     sharkPath(g, k, t)
     g.clip()
-    g.fillStyle = vgrad(g, k, -1, 0.4, [
-      [0, rgba(SEA.shallow, 0.35 * s.a)],
-      [0.55, rgba(SEA.shallow, 0)],
-    ])
-    g.fillRect(-2.2 * k, -1 * k, 4.2 * k, 1.5 * k)
+    g.fillStyle = mix(col, SEA.shallow, 0.3 * s.a)
+    g.fill()
+    g.translate(0, 0.07 * k)
+    sharkPath(g, k, t)
+    g.fillStyle = col
+    g.fill()
     g.restore()
+    const pale = mix(col, SEA.shallow, 0.4 * s.a)
+    g.strokeStyle = pale
+    g.lineWidth = Math.max(0.6, 0.02 * k)
+    g.beginPath()
+    for (let i = 0; i < 5; i++) {
+      const x = 0.98 - i * 0.07
+      g.moveTo(x * k, -0.13 * k)
+      g.quadraticCurveTo((x + 0.03) * k, 0, x * k, 0.12 * k)
+    }
+    g.stroke()
+    oval(g, k, 1.38, -0.1, 0.035, 0.03, pale)
   }
   g.restore()
 }
@@ -566,8 +573,10 @@ function manAt(t: number): Man {
   const x = manX(t)
   const foot = footAt(t)
   const bob = walking(t) * 0.025 * Math.abs(Math.sin((t - DECK_ON) * 9))
-  const hip: Pt = [x + 0.04 * b, foot - 0.74 + 0.16 * b - bob]
-  const lean = 1.15 * b + 0.06
+  // Standing to watch, he shifts his weight slowly from foot to foot.
+  const shift = smooth(t, CAKE + 1.3, CAKE + 2.2) * Math.sin((t - CAKE) * 1.5)
+  const hip: Pt = [x + 0.04 * b + 0.025 * shift, foot - 0.74 + 0.16 * b - bob]
+  const lean = 1.15 * b + 0.06 - 0.03 * shift
   const shoulder: Pt = [hip[0] - 0.6 * Math.sin(lean), hip[1] - 0.6 * Math.cos(lean)]
   const hl = lean + 0.25 * b
   const head: Pt = [shoulder[0] - 0.21 * Math.sin(hl), shoulder[1] - 0.21 * Math.cos(hl)]
@@ -673,7 +682,7 @@ function drawCake(g: C2, k: number, x: number, y: number): void {
   const r = 0.3
   const h = 0.17
   const ry = 0.075
-  // Its side, golden-brown, darker at the foot; its glazed top, and slices of clementine on it.
+  // Its side, golden-brown, darker at the foot; its top, and slices of clementine on it.
   g.fillStyle = vgrad(g, k, y - h, y, [
     [0, SEA.cakeSide],
     [1, SEA.cakeDark],
@@ -686,7 +695,6 @@ function drawCake(g: C2, k: number, x: number, y: number): void {
   g.closePath()
   g.fill()
   oval(g, k, x, y - h, r, ry, SEA.cake)
-  oval(g, k, x - 0.06, y - h - 0.012, r * 0.7, ry * 0.55, rgba('#F6C27A', 0.35))
   for (const [dx, dy] of [
     [-0.13, 0.01],
     [0.03, -0.025],
@@ -774,13 +782,6 @@ function drawMan(g: C2, k: number, t: number, c: Pt): void {
     [m.hip[0] - 0.2, m.hip[1] - 0.2],
   ])
   g.fill()
-  // A wet sheen down his back.
-  g.strokeStyle = rgba('#A8B39A', 0.28)
-  g.lineWidth = Math.max(0.6, 0.025 * k)
-  g.beginPath()
-  g.moveTo((m.hip[0] + 0.17) * k, (m.hip[1] - 0.05) * k)
-  g.lineTo((m.shoulder[0] + 0.17 * Math.cos(m.lean)) * k, (m.shoulder[1] + 0.05 - 0.17 * Math.sin(m.lean)) * k)
-  g.stroke()
   // His head, a beard, and a knitted cap.
   oval(g, k, m.head[0], m.head[1], 0.14, 0.15, '#2A2F2A')
   g.fillStyle = SEA.cuff
@@ -796,5 +797,3 @@ function drawMan(g: C2, k: number, t: number, c: Pt): void {
   g.fill()
   g.restore()
 }
-
-export { TOP }
