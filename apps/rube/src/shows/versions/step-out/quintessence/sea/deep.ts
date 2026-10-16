@@ -152,9 +152,9 @@ export function drawSnow(g: C2, inner: View, t: number, plane: 'far' | 'mid', a:
   // Only under the skin.
   const box = { x0: inner.x0 - 1, y0: W + 0.12, x1: inner.x1 + 1, y1: inner.y1 + 1 }
   if (plane === 'far')
-    motes(g, inner, t, { n: 215, seed: 31, tile: [5.5, 4.5], r: [0.008, 0.016], v: [0.02, 0.03], spread: 0.4, sway: [0.04, 0.06], color: rgbaOf(DEEP.snow, 0.4 * a), square: true, within: box })
+    motes(g, inner, t, { n: 245, seed: 31, tile: [5.5, 4.5], r: [0.008, 0.016], v: [0.02, 0.03], spread: 0.4, sway: [0.04, 0.06], color: rgbaOf(DEEP.snow, 0.4 * a), square: true, within: box })
   else
-    motes(g, inner, t, { n: 50, seed: 37, tile: [5, 4], r: [0.013, 0.026], v: [0.03, 0.045], spread: 0.35, sway: [0.06, 0.08], color: rgbaOf(DEEP.snow, 0.5 * a), within: box })
+    motes(g, inner, t, { n: 55, seed: 37, tile: [5, 4], r: [0.013, 0.026], v: [0.03, 0.045], spread: 0.35, sway: [0.06, 0.08], color: rgbaOf(DEEP.snow, 0.5 * a), within: box })
 }
 
 /* ------------------------------------------------------------------ the shoals */
@@ -171,29 +171,46 @@ function turned(t: number, lag: number): number {
   return n
 }
 
-/** How far a shoal setting off at `dir` (1 right, -1 left) has swum along by `t`, at `v` cells a second. */
-function swum(t: number, v: number, dir: number): number {
-  const dt = 1 / 15
-  let x = 0
-  let u = BEGIN
-  for (; u + dt <= t; u += dt) x += Math.cos(Math.PI * turned(u + dt / 2, 0)) * dt
-  if (t > u) x += Math.cos(Math.PI * turned((u + t) / 2, 0)) * (t - u)
-  return dir * v * x
+/** How far along a turn about has taken a fish, `u` of the way through it, for each second it lasts (it nets nothing). */
+function turning(u: number): number {
+  // Simpson's rule over eight steps of the turn's heading, cos(pi s) for s the smooth step.
+  const f = (w: number): number => Math.cos(Math.PI * smooth(w, 0, 1))
+  const h = u / 8
+  let sum = f(0) + f(u)
+  for (let i = 1; i < 8; i++) sum += f(i * h) * (i % 2 ? 4 : 2)
+  return (sum * h) / 3
 }
 
-/** One small fish, nose along +x, `len` long, at `sx` of its length across the frame (its turn: 1 broadside, near 0 end on, under 0 the other way). */
+/** How far a shoal setting off at `dir` (1 right, -1 left) has swum along by `t`, at `v` cells a second. */
+function swum(t: number, v: number, dir: number): number {
+  let x = 0
+  let from = BEGIN
+  let sign = 1
+  for (const p of TURNS) {
+    if (t <= p) break
+    x += sign * (p - from)
+    if (t < p + TURN) return dir * v * (x + sign * TURN * turning((t - p) / TURN))
+    from = p + TURN
+    sign = -sign
+  }
+  return dir * v * (x + sign * (t - from))
+}
+
+/** A small fish, nose along +x and a unit long: its body tapering to a forked tail. */
+const FISH: Pt[] = [[0.5, 0], [0.12, -0.15], [-0.5, -0.17], [-0.38, 0], [-0.5, 0.17], [0.12, 0.13]]
+
+/** One small fish, `len` long, at `sx` of its length across the frame (its turn: 1 broadside, near 0 end on, under 0 the other way). */
 function fish(p: Path2D, k: number, x: number, y: number, len: number, sx: number, tilt: number): void {
   const c = Math.cos(tilt)
   const s = Math.sin(tilt)
-  const pts: Pt[] = [[0.5, 0], [0.18, -0.15], [-0.26, -0.05], [-0.5, -0.17], [-0.41, 0], [-0.5, 0.17], [-0.26, 0.05], [0.18, 0.13]]
-  pts.forEach(([u, w], i) => {
-    const X = u * len * sx
-    const Y = w * len
+  for (let i = 0; i < FISH.length; i++) {
+    const X = FISH[i][0] * len * sx
+    const Y = FISH[i][1] * len
     const px = (x + X * c - Y * s) * k
     const py = (y + X * s + Y * c) * k
     if (i) p.lineTo(px, py)
     else p.moveTo(px, py)
-  })
+  }
   p.closePath()
 }
 
@@ -218,12 +235,23 @@ export interface Shoal {
  * fish is end on, a short sliver. Between turns it swims a little way along, so it goes back and forth over the same
  * water. One fill.
  */
-export function drawShoal(g: C2, k: number, t: number, o: Shoal, a: number): void {
+export function drawShoal(g: C2, v: View, t: number, o: Shoal, a: number): void {
   if (a <= 0.01) return
+  const k = v.k
   const dir = o.seed % 2 ? -1 : 1
   const cx = o.at[0] + swum(t, 0.16, dir)
   const cy = o.at[1] + 0.18 * Math.sin(t * 0.17 + o.seed)
   const wave = (x: number): number => t * 0.25 + o.seed + x * (5 / o.w)
+  // Only the fish in the frame.
+  const x0 = v.x0 - 0.3 - cx
+  const x1 = v.x1 + 0.3 - cx
+  const y0 = v.y0 - 0.3 - cy
+  const y1 = v.y1 + 0.3 - cy
+  if (x1 < -o.w / 2 || x0 > o.w / 2 || y1 < -o.h / 2 - o.bend || y0 > o.h / 2 + o.bend) return
+  // Each fish turns a little after or before its neighbours (the turn running through the shoal): in a dozen steps of
+  // lag, each worked out once.
+  const LAGS = 12
+  const heads = Array.from({ length: LAGS + 1 }, (_, j) => dir * Math.cos(Math.PI * turned(t, (0.26 * j) / LAGS)))
   const path = new Path2D()
   for (let i = 0; i < o.n; i++) {
     // Evenly through an oval (each fish keeps its distance), and a little give in each place.
@@ -232,8 +260,9 @@ export function drawShoal(g: C2, k: number, t: number, o: Shoal, a: number): voi
     const u = r * Math.cos(th)
     const ox = o.w * 0.5 * u + 0.035 * Math.sin(t * 0.8 + i * 1.7)
     const oy = o.h * 0.5 * r * Math.sin(th) + 0.025 * Math.sin(t * 1.1 + i * 2.3) + o.bend * Math.sin(wave(ox))
+    if (ox < x0 || ox > x1 || oy < y0 || oy > y1) continue
     const lag = 0.1 * (1 + dir * u) + 0.06 * hash(i, 1, o.seed)
-    const head = dir * Math.cos(Math.PI * turned(t, lag))
+    const head = heads[Math.round((lag / 0.26) * LAGS)]
     const sx = head >= 0 ? Math.max(0.16, head) : Math.min(-0.16, head)
     // Along the ribbon's bend, and a little more or less each.
     const tilt = Math.atan(o.bend * (5 / o.w) * Math.cos(wave(ox))) + 0.07 * Math.sin(t * 0.9 + i * 0.7)
@@ -245,77 +274,93 @@ export function drawShoal(g: C2, k: number, t: number, o: Shoal, a: number): voi
 
 /* ------------------------------------------------------------------ the berg */
 
-/** The berg's keel, its outline in its plane's cells: wide at the skin, worn into ledges, down to a blunt foot. */
-const KEEL: Pt[] = [
-  [-6.32, -3],
-  [-2.88, -3],
-  [-2.84, 0.38],
-  [-3.08, 0.89],
-  [-2.88, 1.32],
-  [-3.25, 1.95],
-  [-3.49, 2.55],
-  [-3.29, 2.93],
-  [-3.82, 3.57],
-  [-4.23, 4.12],
-  [-4.56, 3.91],
-  [-4.97, 3.31],
-  [-5.13, 2.72],
-  [-5.54, 2.29],
-  [-5.42, 1.7],
-  [-5.91, 1.27],
-  [-6.03, 0.77],
-  [-6.4, 0.34],
+/** The berg's keel in its plane's cells: its sides, top to bottom, wide at the skin and worn into ledges, and its foot. */
+const KEEL_R: Pt[] = [[-2.88, -3], [-2.84, 0.38], [-3.08, 0.89], [-2.88, 1.32], [-3.25, 1.95], [-3.49, 2.55], [-3.29, 2.93], [-3.82, 3.57], [-4.23, 4.12]]
+const KEEL_L: Pt[] = [[-6.32, -3], [-6.4, 0.34], [-6.03, 0.77], [-5.91, 1.27], [-5.42, 1.7], [-5.54, 2.29], [-5.13, 2.72], [-4.97, 3.31]]
+const FOOT: Pt = [-4.56, 3.91]
+/** The two ledges across it, right side to left, where the light on its faces steps down. */
+const LEDGE_1: Pt[] = [[-3.03, 1], [-3.4, 0.8], [-4.5, 1], [-5.6, 0.6], [-6.13, 0.65]]
+const LEDGE_2: Pt[] = [[-3.37, 2.25], [-3.6, 2], [-4.5, 2.2], [-5.45, 1.85]]
+const above = (side: Pt[], y: number): Pt[] => side.filter((q) => q[1] < y)
+const between = (side: Pt[], y0: number, y1: number): Pt[] => side.filter((q) => q[1] > y0 && q[1] < y1)
+/** Its three faces, each a band from one ledge to the next: lit, half lit, and lost in the water. */
+const KEEL_BANDS: { pts: Pt[]; colour: string; a: number }[] = [
+  {
+    pts: [...above(KEEL_R, LEDGE_1[0][1]), ...LEDGE_1, ...above(KEEL_L, LEDGE_1[LEDGE_1.length - 1][1]).reverse()],
+    colour: '#3A6F6B',
+    a: 0.75,
+  },
+  {
+    pts: [
+      ...between(KEEL_R, LEDGE_1[0][1], LEDGE_2[0][1]),
+      ...LEDGE_2,
+      ...between(KEEL_L, LEDGE_1[LEDGE_1.length - 1][1], LEDGE_2[LEDGE_2.length - 1][1]).reverse(),
+      ...[...LEDGE_1].reverse(),
+    ],
+    colour: '#275A5A',
+    a: 0.7,
+  },
+  {
+    pts: [...KEEL_R.filter((q) => q[1] > LEDGE_2[0][1]), FOOT, ...KEEL_L.filter((q) => q[1] > LEDGE_2[LEDGE_2.length - 1][1]).reverse(), ...[...LEDGE_2].reverse()],
+    colour: '#1C474A',
+    a: 0.6,
+  },
 ]
+
+/** Where a side of the keel is at the height `y`. */
+function sideAt(side: Pt[], y: number): number {
+  for (let i = 1; i < side.length; i++) {
+    if (y > side[i][1]) continue
+    const [x0, y0] = side[i - 1]
+    const [x1, y1] = side[i]
+    return x0 + ((x1 - x0) * (y - y0)) / (y1 - y0)
+  }
+  return side[side.length - 1][0]
+}
 
 /**
  * Far off to the left, the keel of an iceberg: the most of it, under the water, hanging from the skin into the dark.
  * The light from above falls on its upper faces and is lost lower down, so it is three flat values, each a band
  * whose lower edge is a worn, slanting ledge; the lowest is nearly the water's own colour. Over its upper faces the
- * swell's light plays as it does under the skin: a loose net that wanders and is gone by its lowest ledge.
+ * swell's light plays as it does under the skin: a loose net that wanders, fainter the deeper it is.
  */
 function drawKeel(g: C2, k: number, t: number, a: number): void {
   if (a <= 0.01) return
-  const outline = new Path2D()
-  KEEL.forEach(([x, y], i) => (i ? outline.lineTo(x * k, y * k) : outline.moveTo(x * k, y * k)))
-  outline.closePath()
-  g.save()
-  g.fillStyle = rgbaOf('#1C474A', 0.6 * a)
-  g.fill(outline)
-  g.clip(outline)
-  // The upper bands, each down to a ledge.
-  for (const [ledge, colour] of [
-    [[2.35, 2.0, 2.2, 1.75, 1.95], '#275A5A'],
-    [[1.05, 0.8, 1.0, 0.6, 0.7], '#3A6F6B'],
-  ] as [number[], string][]) {
-    const band = new Path2D()
-    band.moveTo(-6.7 * k, -3 * k)
-    band.lineTo(-2.3 * k, -3 * k)
-    ledge.forEach((y, i) => band.lineTo((-2.3 - i * 1.1) * k, y * k))
-    band.closePath()
-    g.fillStyle = rgbaOf(colour, 0.6 * a)
-    g.fill(band)
+  for (const band of KEEL_BANDS) {
+    g.beginPath()
+    band.pts.forEach(([x, y], i) => (i ? g.lineTo(x * k, y * k) : g.moveTo(x * k, y * k)))
+    g.closePath()
+    g.fillStyle = rgbaOf(band.colour, band.a * a)
+    g.fill()
   }
-  const knot = (i: number, r: number): Pt => [
-    -6.9 + i * 0.36 + (r % 2) * 0.18 + (hash(i, r, 41) - 0.5) * 0.2 + 0.08 * Math.sin(t * 1.1 + i * 2.1 + r * 1.3),
-    0.1 + r * 0.32 + (hash(i, r, 42) - 0.5) * 0.12 + 0.05 * Math.sin(t * 1.4 + i * 1.3 + r * 2.2),
-  ]
+  // The net's knots, row by row, each kept within the keel's sides at its height.
+  const N = 11
+  const knot = (i: number, r: number): Pt => {
+    const y = 0.1 + r * 0.32 + (hash(i, r, 42) - 0.5) * 0.12 + 0.05 * Math.sin(t * 1.4 + i * 1.3 + r * 2.2)
+    const l = sideAt(KEEL_L, y)
+    const w = sideAt(KEEL_R, y) - l
+    const f = (i + 0.5 * (r % 2) + (hash(i, r, 41) - 0.5) * 0.5 + (0.08 / w) * Math.sin(t * 1.1 + i * 2.1 + r * 1.3)) / N
+    return [l + w * Math.max(0.02, Math.min(0.98, f)), y]
+  }
   g.lineWidth = Math.max(0.6, 0.012 * k)
-  for (let r = 0; r < 10; r++) {
+  for (const [r0, r1, alpha] of [[0, 4, 0.13], [4, 7, 0.085], [7, 10, 0.05]]) {
     const net = new Path2D()
-    for (let i = 0; i < 12; i++) {
-      const [ax, ay] = knot(i, r)
-      const [bx, by] = knot(i + 1, r)
-      const [cx, cy] = knot(i + (r % 2), r + 1)
-      const m = 0.05 * Math.sin(t * 1.7 + i * 2.9 + r)
-      net.moveTo(ax * k, ay * k)
-      net.quadraticCurveTo(((ax + bx) / 2) * k, ((ay + by) / 2 + m) * k, bx * k, by * k)
-      net.moveTo(ax * k, ay * k)
-      net.quadraticCurveTo(((ax + cx) / 2 + m) * k, ((ay + cy) / 2) * k, cx * k, cy * k)
-    }
-    g.strokeStyle = rgbaOf(DEEP.web, a * 0.14 * (1 - r / 10))
+    for (let r = r0; r < r1; r++)
+      for (let i = 0; i < N; i++) {
+        const [ax, ay] = knot(i, r)
+        const [bx, by] = knot(i + 1, r)
+        const [cx, cy] = knot(i + (r % 2), r + 1)
+        const m = 0.05 * Math.sin(t * 1.7 + i * 2.9 + r)
+        if (i < N - 1) {
+          net.moveTo(ax * k, ay * k)
+          net.quadraticCurveTo(((ax + bx) / 2) * k, ((ay + by) / 2 + m) * k, bx * k, by * k)
+        }
+        net.moveTo(ax * k, ay * k)
+        net.quadraticCurveTo(((ax + cx) / 2 + m) * k, ((ay + cy) / 2) * k, cx * k, cy * k)
+      }
+    g.strokeStyle = rgbaOf(DEEP.web, a * alpha)
     g.stroke(net)
   }
-  g.restore()
 }
 
 /* ------------------------------------------------------------------ jellyfish */
@@ -377,29 +422,28 @@ export function drawDeepBack(g: C2, v: View, t: number): void {
   layer(g, v, 0.22, DEEP_AT, DEEP_REF, (inner) => {
     drawKeel(g, inner.k, t, 1)
     // Low in the dark, a long ribbon of capelin, pale where the light from above still finds their backs.
-    drawShoal(g, inner.k, t, { at: [1.2, 4.6], n: 480, w: 11, h: 1.6, bend: 0.75, len: 0.1, seed: 12, colour: DEEP.capelin }, 0.5 * life)
+    drawShoal(g, inner, t, { at: [1.2, 4.35], n: 380, w: 11, h: 1.6, bend: 0.75, len: 0.1, seed: 12, colour: DEEP.capelin }, 0.5 * life)
   })
   // Two fans of rays: many thin far ones, and a few broader ones nearer, faint, so they never grey the water.
-  drawRays(g, v, t, { z: 0.4, n: 34, seed: 3, a: 0.1, w: [0.02, 0.09], len: 12, color: DEEP.jade })
+  drawRays(g, v, t, { z: 0.4, n: 36, seed: 3, a: 0.1, w: [0.02, 0.09], len: 12, color: DEEP.jade })
   drawRays(g, v, t, { z: 0.75, n: 6, seed: 5, a: 0.06, w: [0.1, 0.28], len: 9, color: DEEP.jade })
   layer(g, v, 0.32, DEEP_AT, DEEP_REF, (inner) => {
     drawSnow(g, inner, t, 'far', 1)
-    drawShoal(g, inner.k, t, { at: [2.4, 1.6], n: 320, w: 9, h: 1, bend: 0.4, len: 0.12, seed: 7, colour: DEEP.fish }, 0.55 * life)
+    drawShoal(g, inner, t, { at: [2.6, 1.7], n: 240, w: 6.5, h: 0.9, bend: 0.35, len: 0.12, seed: 7, colour: DEEP.fish }, 0.55 * life)
   })
   layer(g, v, 0.45, DEEP_AT, DEEP_REF, (inner) => {
-    drawShoal(g, inner.k, t, { at: [3.6, 4.1], n: 70, w: 2.4, h: 0.8, bend: 0.15, len: 0.15, seed: 15, colour: DEEP.fish }, 0.6 * life)
+    drawShoal(g, inner, t, { at: [3.4, 4.1], n: 80, w: 3.2, h: 0.9, bend: 0.2, len: 0.15, seed: 15, colour: DEEP.fish }, 0.6 * life)
   })
   layer(g, v, 0.55, DEEP_AT, DEEP_REF, (inner) => {
-    drawShoal(g, inner.k, t, { at: [-3.4, 3.8], n: 80, w: 2.6, h: 0.8, bend: 0.15, len: 0.17, seed: 20, colour: DEEP.fish }, 0.8 * life)
+    drawShoal(g, inner, t, { at: [-3.4, 3.8], n: 70, w: 2.8, h: 0.9, bend: 0.15, len: 0.17, seed: 20, colour: DEEP.fish }, 0.8 * life)
     // A jellyfish rising very slowly, off to the left of him.
     drawJelly(g, inner.k, -2.4 + 0.2 * Math.sin(t * 0.13), 3.2 - 0.035 * (t - BEGIN), 0.55, t, 0.3, 0.8 * life)
   })
 }
 
-/** The near water: the rays nearer than him, and the second jellyfish, nearer and larger. Over the machine, under him. */
+/** The near water: the second jellyfish, nearer than he is and larger. Over the machine, under him. */
 export function drawDeepFront(g: C2, v: View, t: number): void {
   const life = underAt(t)
-  drawRays(g, v, t, { z: 1.3, n: 2, seed: 11, a: 0.045, w: [0.2, 0.45], len: 7, color: DEEP.jade })
   if (life <= 0.01) return
   layer(g, v, 1.25, DEEP_AT, DEEP_REF, (inner) => {
     drawJelly(g, inner.k, 5.0 + 0.25 * Math.sin(t * 0.1 + 1), 4.4 - 0.05 * (t - BEGIN), 0.9, t, 0.65, 0.55 * life)

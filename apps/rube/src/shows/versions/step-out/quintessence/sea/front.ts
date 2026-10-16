@@ -9,8 +9,8 @@ import { drawTopside } from './topside'
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * Under: the near rays, and a jellyfish nearer than he is (the dark below is the water's own gradient). Above, once
- * he is out: gulls and spray.
+ * Under: a jellyfish nearer than he is (the dark below is the water's own gradient). Above, once he is out: gulls
+ * and spray.
  */
 export const seaFront = scenery<null>({
   name: 'sea-front',

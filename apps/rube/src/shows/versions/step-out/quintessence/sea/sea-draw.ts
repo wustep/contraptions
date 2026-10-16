@@ -72,6 +72,17 @@ export function waterAt(d: number): string {
   return mix(SEA.deep, SEA.abyss, Math.min(1, (d - 4.5) / 4))
 }
 
+/**
+ * The water's colour down from the skin in flat steps, each about a shade from the next (finer near the top, where it
+ * darkens fastest): in software a gradient over the whole frame costs many times these fills.
+ */
+const WATER_STEPS: { y0: number; y1: number; colour: string }[] = []
+for (let d = 0.06; d < 9; ) {
+  const step = d < 1.5 ? 0.05 : d < 4.5 ? 0.12 : 0.22
+  WATER_STEPS.push({ y0: W + d, y1: W + d + step, colour: waterAt(d + step / 2) })
+  d += step
+}
+
 /** The surface's line, a little lift and fall along it. */
 export const skinY = (x: number, t: number): number => W + 0.028 * Math.sin(x * 2.1 + t * 1.3) + 0.016 * Math.sin(x * 5.3 - t * 2.1)
 
@@ -90,13 +101,19 @@ export function drawUnder(p: p5, k: number, t: number): void {
   for (let x = x0; x <= x1 + 0.25; x += 0.25) g.lineTo(x * k, skinY(x, t) * k)
   g.lineTo(x1 * k, yb * k)
   g.closePath()
-  g.fillStyle = vgrad(g, k, W, W + 9, [
-    [0, SEA.shallow],
-    [1.5 / 9, SEA.mid],
-    [4.5 / 9, SEA.deep],
-    [1, SEA.abyss],
-  ])
+  g.fillStyle = SEA.shallow
   g.fill()
+  for (const b of WATER_STEPS) {
+    if (b.y1 < v.y0 || b.y0 > yb) continue
+    g.fillStyle = b.colour
+    // A pixel over into the next step, so no seam of the skin's colour shows between them.
+    g.fillRect(x0 * k, b.y0 * k, (x1 - x0) * k, (b.y1 - b.y0) * k + 1)
+  }
+  const last = WATER_STEPS[WATER_STEPS.length - 1].y1
+  if (yb > last) {
+    g.fillStyle = SEA.abyss
+    g.fillRect(x0 * k, last * k, (x1 - x0) * k, (yb - last) * k)
+  }
   // Everything under is kept under the skin's mean line: a plain rectangle, which costs nothing to keep to (the wavy
   // skin itself as a clip would put a mask under every ray and speck).
   g.save()
