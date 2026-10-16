@@ -60,6 +60,22 @@ function litSnow(tn: Tone, t: number, y: number, shadow: string): string {
 
 /* ------------------------------------------------------------------ the mountain he climbs */
 
+/** The snow the climb starts in: its edge drifted in long low waves, level where he waits at the foot. */
+const FOOT: Pt[] = [
+  ...Array.from({ length: 58 }, (_, i): Pt => {
+    const x = -22 + i * 0.35
+    return [x, R + 0.02 - 0.08 * (0.5 + 0.5 * Math.sin(x * 1.7 + 0.6)) * (0.6 + 0.4 * Math.sin(x * 0.53)) * smooth(-x, 1.6, 2.6)]
+  }),
+  [-1.6, R - 0.02],
+  [-0.2, R],
+  [0.5, R + 0.06],
+  [1.6, R + 0.45],
+  [3.2, R + 1.3],
+  [5.5, R + 2.4],
+  [5.5, 9],
+  [-22, 9],
+]
+
 /** The boulder over the foot, up to his left: the gust takes the snow off its top. */
 const BOULDER: Pt = [-1.6, -1.75]
 
@@ -310,7 +326,7 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
     // The snow the climb starts in, along the foot.
     if (f.y1 > R - 0.5) {
       const foot = new Path2D()
-      ;([[-22, R + 0.02], [-1.6, R - 0.02], [-0.2, R], [0.5, R + 0.06], [1.6, R + 0.45], [3.2, R + 1.3], [5.5, R + 2.4], [5.5, 9], [-22, 9]] as Pt[]).forEach(([x, y], i) => (i ? foot.lineTo(x, y) : foot.moveTo(x, y)))
+      FOOT.forEach(([x, y], i) => (i ? foot.lineTo(x, y) : foot.moveTo(x, y)))
       foot.closePath()
       const top = mix(tn.faceSnow, '#FFFFFF', 0.25)
       bands(c, f.x0 - 1, f.x1 + 1, R - 0.1, 9, (y) => mix(top, tn.faceLow, Math.max(0, Math.min(1, (y - R) / 3))), foot)
@@ -332,11 +348,13 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
 /** The steps: a slab of rock under every landing, capped with snow; the ledge at the top. */
 export function drawSteps(pen: Pen, f: Frame, t: number): void {
   const tn = tone(t)
-  // The trail: a shelf worn along each leg of the switchback, the steps on it.
+  // The trail: a shelf worn along each leg of the switchback, the steps on it, its ends tapering into the snow.
+  const ext = (a: Pt, b: Pt, u: number): Pt => [a[0] + (a[0] - b[0]) * u, a[1] + (a[1] - b[1]) * u]
   for (const [a, b] of [[0, 9], [9, 17], [17, STEPS.length]] as [number, number][]) {
     const leg = STEPS.slice(a, b).map((s) => s.p).sort((p, q) => p[0] - q[0])
-    const top: Pt[] = leg.flatMap(([x, y]): Pt[] => [[x - 0.3, y + R + 0.1], [x + 0.3, y + R + 0.1]])
-    const low = top.map(([x, y]): Pt => [x, y + 0.34]).reverse()
+    const n = leg.length
+    const top = [ext(leg[0], leg[1], 0.8), ...leg, ext(leg[n - 1], leg[n - 2], 0.8)].map(([x, y]): Pt => [x, y + R + 0.1])
+    const low = [ext(leg[0], leg[1], 0.3), ...leg, ext(leg[n - 1], leg[n - 2], 0.3)].map(([x, y]): Pt => [x, y + R + 0.42]).reverse()
     fillPoly(pen, [...top, ...low], rgba(tn.faceRock, 0.22))
   }
   const cap = mix(tn.faceSnow, '#FFFFFF', 0.5)
@@ -603,7 +621,8 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
         const rx = step * (0.5 + 0.45 * h(62))
         // Flattened, seen from above; the far rows heaped up here and there against what stands out of them.
         const ry = rx * (0.2 + 0.1 * h(63)) * (j < 2 ? 1 + 2.4 * h(65) ** 3 : 1)
-        const by = DECK + d + (h(64) - 0.5) * 0.1 * sc
+        // Each row rolls a little, so the sea is not ruled.
+        const by = DECK + d + (h(64) - 0.5) * 0.1 * sc + (j ? 0.12 * sc * Math.sin((bx - go) * 0.55 / sc + j * 1.7) : 0)
         shades.moveTo(bx + rx * 0.98, by + ry * 0.9)
         shades.ellipse(bx - rx * 0.06, by + ry * 0.9, rx * 1.04, ry * 1.1, 0, 0, Math.PI * 2)
         lights.moveTo(bx + rx * 0.94, by)

@@ -297,15 +297,15 @@ function rolls(ctx: C2, t: number, tn: Tone, sky: (y: number) => string): void {
   const bodies = new Path2D()
   const lights = new Path2D()
   let y = -13.66
-  for (let j = 0; j < 15; j++) {
-    const f = 0.92 ** j
-    const th = Math.max(0.045, 0.1 * f)
+  for (let j = 0; j < 10; j++) {
+    const f = 0.9 ** j
+    const th = Math.max(0.06, 0.17 * f)
     const drift = t * 0.12 * f
-    let x = -2 + hash(j, 1, 97) * 2 + (drift % 40)
-    if (x > -2) x -= 40
+    // The row starts far enough left that, drifting right for the whole show, it never leaves the frame.
+    let x = -42 + hash(j, 1, 97) * 2 + drift
     for (let i = 0; x < 19; i++) {
       const h = (n: number) => hash(i, n, 100 + j)
-      const L = (0.8 + 2.6 * h(1)) * (0.6 + 0.4 * f)
+      const L = (1.0 + 2.8 * h(1)) * (0.6 + 0.4 * f)
       const x0 = x
       x += L + (0.15 + 0.5 * h(2)) * f
       if (x < -1) continue
@@ -318,9 +318,9 @@ function rolls(ctx: C2, t: number, tn: Tone, sky: (y: number) => string): void {
       const yy = y + 0.05 * Math.sin(u * 0.6 + j)
       const n = Math.max(5, Math.round(L * 10 / f))
       const T = (q: number) => th * Math.sin(Math.PI * q) ** 0.6
-      const top = (q: number): Pt => [x0 + L * q, yy - T(q) * (0.5 + 0.5 * (0.5 + 0.5 * Math.sin(q * L * 16 / f + h(4) * 6)))]
+      const top = (q: number): Pt => [x0 + L * q, yy - T(q) * (0.5 + 0.5 * (0.5 + 0.5 * Math.sin(q * L * 11 / f + h(4) * 6)))]
       const base = (q: number): Pt => [x0 + L * q, yy + T(q) * 0.4]
-      const lift = (q: number): Pt => [x0 + L * q, yy]
+      const lift = (q: number): Pt => [x0 + L * q, yy + T(q) * 0.12]
       bodies.moveTo(...top(0))
       for (let k = 1; k <= n; k++) bodies.lineTo(...top(k / n))
       for (let k = n; k >= 0; k--) bodies.lineTo(...base(k / n))
@@ -330,13 +330,13 @@ function rolls(ctx: C2, t: number, tn: Tone, sky: (y: number) => string): void {
       for (let k = n; k >= 0; k--) lights.lineTo(...base(k / n))
       lights.closePath()
     }
-    y += 0.22 * f
+    y += 0.33 * f
   }
   const body = mix(mix(sky(-13), tn.cloudUnder, 0.3), '#FFFFFF', 0.1 + 0.22 * tn.light)
   ctx.fillStyle = body
   ctx.fill(bodies)
   if (lit > 0.01) {
-    ctx.fillStyle = mix(body, under, 0.8 * lit)
+    ctx.fillStyle = mix(body, under, 0.6 * lit)
     ctx.fill(lights)
   }
 }
