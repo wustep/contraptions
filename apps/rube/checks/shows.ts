@@ -58,6 +58,7 @@ import { checkKick } from './kick'
 import { checkOstinato } from './ostinato'
 import { checkPalindrome } from './palindrome'
 import { checkSoftLamp, checkSoftLampStill } from './soft-lamp'
+import { performance as softLampMoving } from '../src/shows/versions/soft-lamp/lamp'
 import { checkQuintessence } from './quintessence'
 import { checkRally } from './rally'
 
@@ -384,7 +385,12 @@ async function main(): Promise<void> {
     shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55' &&
     [null, 'grok47', 'tech-demo', 'opus55-music-sync'].every((take) => pickVersion(shipped.works, 'cornfield-chase', take)?.take === 'opus55'))
   // check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55,grok47' && pickVersion(shipped.works, 'cornfield-chase', null)?.take === 'opus55')
-  check('Soft Lamp leads with its still take, the moving camera second', shipped.works.find((w) => w.work === 'soft-lamp')?.versions.map((v) => v.take).join(',') === 'opus55-still,opus55' && pickVersion(shipped.works, 'soft-lamp', null)?.take === 'opus55-still')
+  // Soft Lamp's moving take: hidden for now (Stephen, Oct 15). Its link opens the still take, and the work's own address is the still take's.
+  check('Soft Lamp is its still take alone, labelled for its model, and every link to it opens that take, at /shows/soft-lamp/',
+    shipped.works.find((w) => w.work === 'soft-lamp')?.versions.map((v) => `${v.take}:${v.label}`).join(',') === 'opus55-still:Opus 5.5' &&
+    [null, 'opus55', 'opus55-still'].every((take) => pickVersion(shipped.works, 'soft-lamp', take)?.take === 'opus55-still') &&
+    showPath(shipped.works, 'soft-lamp', 'opus55-still') === '/shows/soft-lamp/')
+  // check('Soft Lamp leads with its still take, the moving camera second', shipped.works.find((w) => w.work === 'soft-lamp')?.versions.map((v) => v.take).join(',') === 'opus55-still,opus55' && pickVersion(shipped.works, 'soft-lamp', null)?.take === 'opus55-still')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase is labelled for its model', cornfield.map((v) => v.label).join('|') === 'Opus 5.5')
   // check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
@@ -637,7 +643,10 @@ async function main(): Promise<void> {
       if (work.work === 'bolero' && version.take === 'opus55') checkOstinato(perf, version, check)
       if (work.work === 'nature-of-daylight' && version.take === 'opus55') checkPalindrome(perf, version, check)
       if (work.work === 'time' && version.take === 'opus55') checkKick(perf, version, check)
-      if (work.work === 'soft-lamp' && version.take === 'opus55') checkSoftLamp(perf, version, check)
+      // Soft Lamp's moving take: hidden for now (Stephen, Oct 15). Its checks hold the show the still take plays too (the
+      // music, the ball, the kitten, the words), so they still run, on its code (`performance` in `lamp/index.ts`).
+      // if (work.work === 'soft-lamp' && version.take === 'opus55') checkSoftLamp(perf, version, check)
+      if (work.work === 'soft-lamp' && version.take === 'opus55-still') checkSoftLamp(softLampMoving, version, check)
       if (work.work === 'soft-lamp' && version.take === 'opus55-still') checkSoftLampStill(perf, version, check)
       if (work.work === 'step-out' && version.take === 'opus55') checkQuintessence(perf, version, check)
       if (work.work === 'rule-the-world' && version.take === 'opus55') checkRally(perf, version, check)

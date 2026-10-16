@@ -1,6 +1,7 @@
 /**
- * The checks for Soft Lamp (`versions/soft-lamp/opus55.show.ts`), run by `check:shows`: half an hour of Lofi Girl's
- * "Best of lofi hip hop 2021" round a small machine on a study desk, a lap a track.
+ * The checks for Soft Lamp (`versions/soft-lamp/opus55-still.show.ts`), run by `check:shows`: half an hour of Lofi Girl's
+ * "Best of lofi hip hop 2021" round a small machine on a study desk, a lap a track. `checkSoftLamp` was the moving take's
+ * (`opus55.ts`, hidden for now); it holds the show both play, so it still runs, on the moving take's code.
  */
 import type { Performance, Version } from '../src/shows/registry'
 import { sectionOf } from '../src/shows/registry'
@@ -253,9 +254,13 @@ export function checkSoftLamp(perf: Performance, version: Version, check: Check)
 
 /** The still take: the same show, the camera held on the room the whole half hour. */
 export function checkSoftLampStill(perf: Performance, version: Version, check: Check): void {
-  check('soft lamp (still): in the picker as Soft Lamp, Opus 5.5 (Still), on the Ambient shelf, with a line and a still',
-    version.title === 'Soft Lamp' && version.label === 'Opus 5.5 (Still)' && sectionOf('soft-lamp') === 'Ambient' && !!version.about &&
+  // Soft Lamp's moving take: hidden for now (Stephen, Oct 15), so this take is the work, labelled for its model alone.
+  check('soft lamp (still): in the picker as Soft Lamp, Opus 5.5, on the Ambient shelf, with a line and a still',
+    version.title === 'Soft Lamp' && version.label === 'Opus 5.5' && sectionOf('soft-lamp') === 'Ambient' && !!version.about &&
     typeof version.still === 'number')
+  // check('soft lamp (still): in the picker as Soft Lamp, Opus 5.5 (Still), on the Ambient shelf, with a line and a still',
+  //   version.title === 'Soft Lamp' && version.label === 'Opus 5.5 (Still)' && sectionOf('soft-lamp') === 'Ambient' && !!version.about &&
+  //   typeof version.still === 'number')
   check('soft lamp (still): the same show and music as the first take', perf.show === show && perf.duration === DURATION &&
     perf.soundtrack?.youtube?.[0]?.id === YOUTUBE)
   // Held: it drifts, but within a few per cent and slower than anyone would see as a move.
