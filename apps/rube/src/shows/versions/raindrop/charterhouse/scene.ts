@@ -9,7 +9,7 @@ import { drawRain, type Lit } from './rain'
 import { KNOCKS } from './route'
 import { cover, drawing, everywhere, standing } from './show'
 import { drawSky, drawVeil } from './sky'
-import { drawCistern, drawCisternWater, drawSunkBucket } from './cistern'
+import { HOLE, cutOn, drawCistern, drawCisternWater, drawSunkBucket } from './cistern'
 import { drawChannels, drawChannelsFront } from './terraces'
 import { drawNoria, drawSling } from './noria'
 import { doorOpen, drawGate, drawGateFront, drawGateLight, lanternY, litAt } from './gate'
@@ -123,7 +123,25 @@ export function scenery(duration: number): Placed[] {
     ),
   )
   out.push(standing(drawing('travelers', null, (b, t) => drawTravelers(b, t)), cover(170, 30, 300, 104, 3), duration))
-  out.push(everywhere(drawing('rain', null, (b, t) => drawRain(b, t, lightsAt(t))), duration))
+  out.push(
+    everywhere(
+      drawing('rain', null, (b, t) => {
+        // No rain in the ground: while the cistern is cut open, the hole in the wall is kept clear of it.
+        if (!cutOn(t)) return drawRain(b, t, lightsAt(t))
+        const f = frame(b)
+        b.g.save()
+        b.g.beginPath()
+        b.g.rect(f.x0 - 1, f.y0 - 1, f.x1 - f.x0 + 2, f.y1 - f.y0 + 2)
+        b.g.moveTo(HOLE[0][0], HOLE[0][1])
+        for (const [x, y] of HOLE) b.g.lineTo(x, y)
+        b.g.closePath()
+        b.g.clip('evenodd')
+        drawRain(b, t, lightsAt(t))
+        b.g.restore()
+      }),
+      duration,
+    ),
+  )
   // The curtain: up from black onto the first note, and down to black at the very end, after the credits.
   out.push(
     everywhere(

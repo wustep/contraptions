@@ -335,7 +335,9 @@ export function drawWellBack(b: Brush, t: number): void {
   // The ropes: down the west side to the bucket, down the east side to the windlass.
   const [bx, by] = bucketTop(t)
   const rope = mix(c.wood, c.plaster, 0.35)
-  line(b, qx - WELL.wheel, qy, bx, by - 0.55, rope, Math.max(1, b.k * 0.03))
+  // Down the shaft, below the curb, the cistern draws the rest of it.
+  const ropeFoot = Math.min(by - 0.55, WELL.curb)
+  line(b, qx - WELL.wheel, qy, qx - WELL.wheel + (bx - (qx - WELL.wheel)) * ((ropeFoot - qy) / Math.max(1e-6, by - 0.55 - qy)), ropeFoot, rope, Math.max(1, b.k * 0.03))
   const drum: Pt = [x + r - 0.55, curb - 0.75]
   line(b, qx + WELL.wheel, qy, drum[0] - 0.3, drum[1], rope, Math.max(1, b.k * 0.03))
   // The windlass: a drum seen end on, its crank going round as the rope pays out.

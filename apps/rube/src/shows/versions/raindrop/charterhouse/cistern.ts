@@ -32,7 +32,7 @@ const STEP_AT: Pt[] = [
 ]
 
 /** The hole broken in the garden wall's face for the camera: a ragged edge round the cistern. */
-const HOLE: Pt[] = (() => {
+export const HOLE: Pt[] = (() => {
   const pts: Pt[] = []
   const [x0, y0, x1, y1] = [53.2, 5.75, 80.0, 17.9]
   const n = 14
