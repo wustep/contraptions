@@ -1,5 +1,5 @@
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { beam, bloom, pool } from '../cast'
+import { beam, pool } from '../cast'
 import { PM, SPA } from '../worlds'
 import {
   BALCONY,
@@ -253,14 +253,13 @@ export function drawHorn(pen: Pen, t: number): void {
     SPA.candle,
     0.7,
   )
-  // The bell's mouth, seen a little from the side: dark inside, a glow in it on each breath.
+  // The bell's mouth, seen a little from the side: dark inside, opening a little on each breath.
   const { p, k } = pen
   p.push()
   p.translate(BELL[0] * k, BELL[1] * k)
   p.rotate(aim)
   disc(pen, [0, 0], 0.11 * breathe, BELL_R * breathe, mixHex(SPA.horn, SPA.marble, 0.7), 0.75)
   p.pop()
-  if (play > 0.01) bloom(p, k, BELL, 0.55, SPA.candle, 0.35 * play)
 }
 
 /* ------------------------------------------------------------------ the target, the chute */
@@ -353,10 +352,9 @@ export function drawBigDryer(pen: Pen, t: number): void {
   }
   shape(pen, dome, CHROME, 0.75)
   line(pen, [-0.4, -0.12], [0.28, -0.2], SPA.steam, 1.0)
-  // Its mouth, edge on: a rim, the glow of its heaters.
+  // Its mouth, edge on: a rim, warm with its heaters.
   disc(pen, [0, 0.22], 0.6, 0.09, mixHex(SPA.steelDark, SPA.candle, 0.4 * d.spin), 0.75)
   p.pop()
-  if (d.spin > 0.02) bloom(p, k, [hood[0] + 0.25, hood[1] + 0.4], 0.8, SPA.candle, 0.35 * d.spin)
   // The blast: hot air rolling out of it along the floor, his way.
   if (d.blow > 0.01) {
     const u = t - BLAST
