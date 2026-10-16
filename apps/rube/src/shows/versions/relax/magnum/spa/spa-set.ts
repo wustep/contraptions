@@ -298,6 +298,49 @@ function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
   // The reflectors: dull steel in the dark.
   for (const s of PRESS.filter((q) => q.cam)) box(pen, reflectorOf(s)[0] - 0.06, reflectorOf(s)[1] - 0.035, reflectorOf(s)[0] + 0.06, reflectorOf(s)[1] + 0.035, SPA.steelDark, 0)
 }
+/** The black marble's veins: in each slab of the upper wall one or two, long, faint, sweeping down across it. */
+const VEIN = mixHex(SPA.marbleVein, SPA.steam, 0.06)
+function drawVeins(pen: Pen, x0: number, x1: number): void {
+  const { p, k } = pen
+  const ctx = ctxOf(p)
+  const top = CEIL + 0.25
+  const bot = RAIL_Y - 0.15
+  ctx.save()
+  ctx.strokeStyle = VEIN
+  ctx.lineCap = 'round'
+  // Each slab is its own stone: its veins never cross its seams.
+  for (let i = Math.floor(x0 / 2.4) - 1; i * 2.4 < x1; i++) {
+    const px = i * 2.4
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect((px + 0.03) * k, top * k, 2.34 * k, (bot - top) * k)
+    ctx.clip()
+    const n = hash(i, 91) > 0.72 ? 2 : 1
+    for (let v = 0; v < n; v++) {
+      const h = (s: number) => hash(i * 4 + v, s)
+      const ax = px + 0.2 + 2.0 * h(92)
+      const ay = top + 0.7 * h(93)
+      const bx = ax + (h(94) > 0.5 ? 1 : -1) * (0.9 + 0.9 * h(95))
+      const by = bot - 0.6 * h(96)
+      const cx = (ax + bx) / 2 + (h(97) - 0.5) * 1.2
+      const cy = (ay + by) / 2 + (h(98) - 0.5) * 0.8
+      ctx.lineWidth = Math.max(0.6, pen.w * (0.3 + 0.2 * h(99)))
+      ctx.beginPath()
+      ctx.moveTo(ax * k, ay * k)
+      ctx.quadraticCurveTo(cx * k, cy * k, bx * k, by * k)
+      // A finer thread off it, partway down.
+      const u = 0.35 + 0.3 * h(100)
+      const mx = (1 - u) * (1 - u) * ax + 2 * u * (1 - u) * cx + u * u * bx
+      const my = (1 - u) * (1 - u) * ay + 2 * u * (1 - u) * cy + u * u * by
+      ctx.moveTo(mx * k, my * k)
+      ctx.quadraticCurveTo((mx + (bx - ax) * -0.25) * k, (my + 0.35) * k, (mx + (bx - ax) * -0.1) * k, (my + 0.9) * k)
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+  ctx.restore()
+}
+
 /** The press's flashes, over them (and over the door's light). */
 function drawFlashes(pen: Pen, t: number): void {
   for (const s of PRESS) for (const f of s.fires) flashBurst(pen.p, pen.k, reflectorOf(s), t - f, 1.5)
@@ -317,6 +360,7 @@ export function drawSet(p: p5, k: number, t: number, ink: string, weight: number
     line(pen, [x + 1.2, RAIL_Y + 0.12], [x + 1.2, FLOOR_Y - 0.1], SPA.marbleVein, 0.35)
   }
   line(pen, [x0, CEIL + 0.2], [inX1, CEIL + 0.2], SPA.marbleVein, 0.5)
+  drawVeins(pen, x0, inX1)
   box(pen, x0, RAIL_Y - 0.05, inX1, RAIL_Y + 0.02, SPA.brass, 0)
   // The pool's light, up from under, on the wall's foot.
   vwash(pen, x0, inX1, RAIL_Y - 0.6, FLOOR_LIP, [
