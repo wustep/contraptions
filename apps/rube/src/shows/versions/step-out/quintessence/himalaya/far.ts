@@ -1,8 +1,8 @@
 import type { Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
-import { layer, type View } from '../depth'
+import { layer, onLayer, type View } from '../depth'
 import { mix, rgba } from '../home/pen'
-import { along, bands } from './paint'
+import { along, bands, billow, ROWS, rowOutline, SAMPLES } from './paint'
 import { litY, sunAt, SUN_R, tone, VALLEY, REF, wind, type LitPlane, type Tone } from './dawn'
 
 /**
@@ -48,7 +48,7 @@ interface Spec {
   /** How far the air has paled it toward the sky. */
   haze: number
   plane: LitPlane
-  /** The summits (by index in `peaks`) the wind streams spindrift off: the highest. */
+  /** The summits (by index in `peaks`) the wind streams spindrift off: a few of the highest. */
   plumed: number[]
 }
 
@@ -58,15 +58,15 @@ const P = (x: number, y: number, wl: number, wr = wl): Peak => ({ x, y, wl, wr }
 const GREAT = 4
 const SPECS: Spec[] = [
   {
-    z: 0.08, seed: 11, x0: -8, x1: 32, base: -9.2, jag: 0.05, rocky: 0.35, cloud: -9.28, flow: 0.025, haze: 0.32, plane: 'far', plumed: [1, 3, GREAT, 6, 7, 9],
+    z: 0.08, seed: 11, x0: -8, x1: 32, base: -9.2, jag: 0.05, rocky: 0.35, cloud: -9.28, flow: 0.025, haze: 0.32, plane: 'far', plumed: [1, 3, GREAT, 6, 7],
     peaks: [P(-4.2, -11.2, 2.8), P(-0.2, -11.75, 3.0), P(3.9, -11.35, 2.4), P(7.1, -11.7, 2.2, 1.9), P(10.3, -12.45, 3.0, 2.3), P(12.6, -11.55, 1.5, 1.3), P(14.45, -11.7, 1.7, 2.2), P(18.4, -12.05, 2.6), P(22.2, -11.5, 2.4), P(26.0, -11.9, 2.8), P(30, -11.4, 2.5)],
   },
   {
-    z: 0.2, seed: 23, x0: -10, x1: 34, base: -9.0, jag: 0.045, rocky: 0.5, cloud: -9.02, flow: 0.04, haze: 0.2, plane: 'mid', plumed: [3, 5, 6, 8],
+    z: 0.2, seed: 23, x0: -10, x1: 34, base: -9.0, jag: 0.045, rocky: 0.5, cloud: -9.02, flow: 0.04, haze: 0.2, plane: 'mid', plumed: [5, 6],
     peaks: [P(-6.5, -10.3, 2.0), P(-2.8, -10.75, 2.2), P(0.9, -10.25, 1.8), P(4.4, -10.9, 2.3), P(8.0, -10.4, 1.9), P(11.6, -10.75, 2.0, 1.6), P(16.8, -10.9, 2.0), P(20.4, -10.35, 1.8), P(24.0, -11.0, 2.3), P(28.2, -10.5, 2.1), P(32, -10.8, 2)],
   },
   {
-    z: 0.35, seed: 37, x0: -14, x1: 38, base: -8.7, jag: 0.045, rocky: 0.75, cloud: -8.68, flow: 0.06, haze: 0.1, plane: 'near', plumed: [3, 7, 9],
+    z: 0.35, seed: 37, x0: -14, x1: 38, base: -8.7, jag: 0.045, rocky: 0.75, cloud: -8.68, flow: 0.06, haze: 0.1, plane: 'near', plumed: [7],
     peaks: [P(-10, -9.6, 1.8), P(-6.4, -10.05, 2.0), P(-2.6, -9.55, 1.6), P(1.0, -10.2, 2.1), P(4.8, -9.7, 1.7), P(8.4, -9.95, 1.6, 1.4), P(11.4, -9.6, 1.3), P(17.6, -10.25, 2.2), P(21.6, -9.7, 1.8), P(25.4, -10.35, 2.2), P(29.6, -9.8, 1.9), P(33.6, -10.2, 2)],
   },
 ]
@@ -177,7 +177,7 @@ function build(s: Spec): Range {
       shade.lineTo(tx + (foot - tx) * u + (h(n * 31 + k, 8) - 0.5) * 0.14 * u, ty + (bottom - ty) * u)
     }
     shade.closePath()
-    // Rock: ribs down from the crest; bands across the shoulders, more of both the lower the range.
+    // Rock: ribs down from the crest, more of them the lower the range.
     const ribs = Math.round(4 + 8 * s.rocky)
     for (let r = 0; r < ribs; r++) {
       const rx = tx + (h(n * 17 + r, 9) - 0.55) * 1.6 * p.wl
@@ -190,18 +190,6 @@ function build(s: Spec): Range {
       rock.lineTo(rx + lean + w * 0.6, ry + len * 0.6)
       rock.lineTo(rx + lean * 1.3 + w * 0.15, ry + len)
       rock.lineTo(rx + lean * 0.8 - w * 0.4, ry + len * 0.55)
-      rock.closePath()
-    }
-    const bands = Math.round(2 + 4 * s.rocky)
-    for (let r = 0; r < bands; r++) {
-      const bx = tx + (h(n * 13 + r, 14) - 0.5) * p.wl * 1.5
-      const by = ridgeY(s, bx) + 0.25 + h(n * 13 + r, 15) * 1.1
-      const bw = 0.2 + 0.5 * h(n * 13 + r, 16)
-      rock.moveTo(bx - bw, by + 0.02)
-      rock.lineTo(bx - bw * 0.4, by - 0.05 - 0.04 * h(r, n))
-      rock.lineTo(bx + bw * 0.5, by - 0.03)
-      rock.lineTo(bx + bw, by + 0.04)
-      rock.lineTo(bx + bw * 0.2, by + 0.09)
       rock.closePath()
     }
   })
@@ -238,7 +226,7 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
     // The sky in level bands, deep overhead to pale at the horizon.
     const stops: [number, string][] = [[0, tn.zenith], [0.42, tn.high], [0.8, tn.low], [1, tn.horizon]]
     const skyAt = (y: number) => along(stops, (y - s.y0) / (-9.0 - s.y0))
-    bands(ctx, s.x0 - 1, s.x1 + 1, s.y0 - 1, s.y1 + 1, skyAt)
+    bands(ctx, s.x0 - 1, s.x1 + 1, s.y0 - 1, s.y1 + 1, skyAt, undefined, 6)
     // The last stars, steady, going out one by one.
     if (tn.night > 0.01) {
       const path = new Path2D()
@@ -254,7 +242,7 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
       ctx.fill(path)
     }
     // The high cloud, lit from under before the sun is up.
-    rolls(ctx, t, tn, skyAt)
+    rolls(ctx, s, t, tn, skyAt)
     // A skein of geese, very high, crossing the range while the two of them wait: a long, loose V, the wings beating.
     if (t > 168 && t < 191.2) {
       const u = (t - 168) / 23
@@ -290,42 +278,45 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
  * together, broken into lengths with sky between and in patches, a little paler than the sky round them. The sun
  * lights each roll's underside before it is up (rose, then gold, then white), and the rolls drift with the wind aloft.
  */
-function rolls(ctx: C2, t: number, tn: Tone, sky: (y: number) => string): void {
+function rolls(ctx: C2, s: View, t: number, tn: Tone, sky: (y: number) => string): void {
   const lit = smooth(t, 155, 168)
   const under = mix(tn.lit, '#FFFFFF', 0.1 + 0.55 * tn.light)
   const bodies = new Path2D()
   const lights = new Path2D()
+  const ts: number[] = []
   let y = -13.66
-  for (let j = 0; j < 10; j++) {
+  for (let j = 0; j < 9; j++) {
     const f = 0.9 ** j
     const th = Math.max(0.06, 0.17 * f)
-    const drift = t * 0.12 * f
+    const drift = t * 0.18 * f
     // The row starts far enough left that, drifting right for the whole show, it never leaves the frame.
-    let x = -42 + hash(j, 1, 97) * 2 + drift
-    for (let i = 0; x < 19; i++) {
+    let x = -52 + hash(j, 1, 97) * 2 + drift
+    for (let i = 0; x < s.x1 + 0.5; i++) {
       const h = (n: number) => hash(i, n, 100 + j)
       const L = (1.0 + 2.8 * h(1)) * (0.6 + 0.4 * f)
       const x0 = x
       x += L + (0.15 + 0.5 * h(2)) * f
-      if (x < -1) continue
+      if (x < s.x0 - 0.5) continue
       // In patches: a slow field of where the cloud is.
       const u = x0 + L / 2 - drift
       const where = 0.55 * Math.sin(u * 0.5 + 1.1 + j * 0.3) + 0.45 * Math.sin(u * 1.13 - j * 0.9 + 0.4)
-      if (where < -0.55 + 0.4 * h(3)) continue
+      if (where < -0.7 + 0.4 * h(3)) continue
       const yy = y + 0.05 * Math.sin(u * 0.6 + j)
-      const n = Math.max(5, Math.round(L * 10 / f))
-      // Thinning to nothing where the sun climbs, so its way up stays clear.
-      const T = (q: number) => th * Math.sin(Math.PI * q) ** 0.6 * (y > -13.35 ? smooth(Math.abs(x0 + L * q - 14.15), 0.6, 1.4) : 1)
-      const top = (q: number): Pt => [x0 + L * q, yy - T(q) * (0.5 + 0.5 * (0.5 + 0.5 * Math.sin(q * L * 11 / f + h(4) * 6)))]
-      const base = (q: number): Pt => [x0 + L * q, yy + T(q) * 0.4]
-      const lift = (q: number): Pt => [x0 + L * q, yy + T(q) * 0.12]
-      bodies.moveTo(...top(0))
-      for (let k = 1; k <= n; k++) bodies.lineTo(...top(k / n))
-      for (let k = n; k >= 0; k--) bodies.lineTo(...base(k / n))
+      const n = Math.max(4, Math.round((L * 4.5) / f))
+      // Its thickness along it, thinning to nothing where the sun climbs, so its way up stays clear.
+      for (let k = 0; k <= n; k++) {
+        const q = k / n
+        ts[k] = th * Math.sin(Math.PI * q) ** 0.6 * (y > -13.35 ? smooth(Math.abs(x0 + L * q - 14.15), 0.6, 1.4) : 1)
+      }
+      const ph = h(4) * 6
+      // Its body down to where the light under it begins, and that light: side by side, neither over the other.
+      bodies.moveTo(x0, yy)
+      for (let k = 1; k <= n; k++) bodies.lineTo(x0 + (L * k) / n, yy - ts[k] * (0.75 + 0.25 * Math.sin((k / n) * L * (8 / f) + ph)))
+      for (let k = n; k >= 0; k--) bodies.lineTo(x0 + (L * k) / n, yy + ts[k] * (lit > 0.01 ? 0.14 : 0.4))
       bodies.closePath()
-      lights.moveTo(...lift(0))
-      for (let k = 1; k <= n; k++) lights.lineTo(...lift(k / n))
-      for (let k = n; k >= 0; k--) lights.lineTo(...base(k / n))
+      lights.moveTo(x0, yy)
+      for (let k = 1; k <= n; k++) lights.lineTo(x0 + (L * k) / n, yy + ts[k] * 0.12)
+      for (let k = n; k >= 0; k--) lights.lineTo(x0 + (L * k) / n, yy + ts[k] * 0.4)
       lights.closePath()
     }
     y += 0.33 * f
@@ -407,25 +398,36 @@ function clouds(ctx: C2, s: View, t: number, tn: Tone, cy: number, flow: number,
   if (cy > s.y1 + 0.5) return
   const lo = s.x0 - 1
   const hi = s.x1 + 1
-  const bill = new Path2D()
-  const rim = new Path2D()
   const step = 0.55
   const shift = (t * flow) % step
   const i0 = Math.floor((lo - shift) / step) - 1
   const i1 = Math.ceil((hi - shift) / step) + 1
-  const base = Math.floor(t * flow / step)
+  const base = Math.floor((t * flow) / step)
+  // The front row's tops, traced as one outline from its billows: each keeps its own shape as it goes (hashed by
+  // which billow it is, not where it is). Its body below is laid over by the bands, so the outline stops at its line.
+  const dx = 0.05
+  const x0 = i0 * step + shift - step
+  const n = Math.min(SAMPLES, Math.ceil(((i1 - i0 + 2) * step) / dx) + 1)
+  const [tops, lows] = ROWS
+  tops.fill(Infinity, 0, n)
+  lows.fill(-Infinity, 0, n)
   for (let i = i0; i <= i1; i++) {
-    // Each billow keeps its own shape as it goes (hashed by which billow it is, not where it is).
     const id = i - base
     const bx = i * step + shift + (hash(id, 61, seed) - 0.5) * 0.2
     const rx = 0.32 + 0.34 * hash(id, 62, seed)
     const ry = 0.09 + 0.12 * hash(id, 63, seed) + 0.025 * Math.sin(t * 0.5 + id)
     const by = cy + (hash(id, 64, seed) - 0.5) * 0.08
-    bill.moveTo(bx + rx, by)
-    bill.ellipse(bx, by, rx, ry, 0, 0, Math.PI * 2)
-    rim.moveTo(bx - rx * 0.8, by - ry * 0.6)
-    rim.ellipse(bx, by, rx, ry, 0, Math.PI * 1.15, Math.PI * 1.85)
+    billow(tops, lows, x0, dx, n, bx, by, rx, ry)
   }
+  for (let k = 0; k < n; k++) {
+    if (tops[k] > cy) tops[k] = cy
+    lows[k] = cy + 0.1
+  }
+  const bill = rowOutline(tops, lows, x0, dx, n)
+  // Its rim: the line of its tops, a hairline of light.
+  const rim = new Path2D()
+  rim.moveTo(x0, tops[0])
+  for (let k = 1; k < n; k++) rim.lineTo(x0 + k * dx, tops[k])
   // The cloud's body goes down until the next plane's cloud is surely over it (or, for the nearest, out of the frame).
   const foot = depth ? cy + depth : s.y1 + 1
   const top = hz(mix(tn.cloud, tn.lit, 0.6 * lit))
@@ -433,14 +435,16 @@ function clouds(ctx: C2, s: View, t: number, tn: Tone, cy: number, flow: number,
   ctx.fill(bill)
   const stops: [number, string][] = [[0, top], [0.3, hz(mix(tn.cloud, tn.cloudUnder, 0.3))], [1, hz(tn.cloudUnder)]]
   bands(ctx, lo, hi, cy, foot, (y) => along(stops, (y - cy) / 2.1), undefined, 8)
-  // Rows of billows going back in the sea of cloud, each row's tops a hairline of light, as the front row's are.
-  for (const [dy, sc] of (rowsToo ? [[0.3, 0.75], [0.62, 0.55], [0.95, 0.4]] : []) as [number, number][]) {
+  // Two rows of billows going back in the sea of cloud, each row's tops a hairline of light, as the front row's are.
+  for (const [dy, sc] of (rowsToo ? [[0.3, 0.75], [0.62, 0.55]] : []) as [number, number][]) {
     if (cy + dy > foot - 0.05) continue
     const st = step * sc * 1.4
-    const sh = (t * flow * (1 + dy)) % st
+    const go = t * flow * (1 + dy)
+    const sh = go % st
+    const back = Math.floor(go / st)
     for (let i = Math.floor((lo - sh) / st) - 1; i <= Math.ceil((hi - sh) / st) + 1; i++) {
       const bx = i * st + sh
-      const rx = st * (0.4 + 0.25 * hash(i, 66, seed))
+      const rx = st * (0.4 + 0.25 * hash(i - back, 66, seed))
       rim.moveTo(bx - rx, cy + dy)
       rim.ellipse(bx, cy + dy, rx, rx * 0.35, 0, Math.PI, Math.PI * 2)
     }
@@ -492,7 +496,7 @@ function drawRange(ctx: C2, s: View, t: number, tn: Tone, r: Range): void {
     ctx.strokeStyle = rgba(hz(tn.shade), 0.5)
     ctx.lineWidth = 1 / ctx.getTransform().a
     ctx.stroke(r.lines)
-    // Spindrift off the highest summits, longer as the build climbs and on every gust.
+    // Spindrift off a few of the highest summits, longer as the build climbs and on every gust.
     const lo = s.x0 - 1
     const hi = s.x1 + 1
     const list: Plume[] = []
@@ -525,6 +529,9 @@ function drawRange(ctx: C2, s: View, t: number, tn: Tone, r: Range): void {
     }
   })
 }
+
+/** The far edge of the sea of cloud filling the valley, on the machine's plane: everything below it there is cloud. */
+export const DECK = -7.9
 
 /** The cloud nearest the ledge, far below it, faster: what the valley is full of. */
 function drawLowCloud(ctx: C2, s: View, t: number, tn: Tone): void {
@@ -564,5 +571,6 @@ export function drawBeyond(ctx: C2, v: View, t: number): void {
   const tn = tone(t)
   layer(ctx, v, 0, VALLEY, REF, (s) => drawSky(ctx, s, t, tn))
   for (const r of rangesOf()) layer(ctx, v, r.spec.z, VALLEY, REF, (s) => drawRange(ctx, s, t, tn, r))
-  layer(ctx, v, 0.55, VALLEY, REF, (s) => drawLowCloud(ctx, s, t, tn))
+  // The nearest cloud, unless the sea of cloud on the machine's plane stands in front of all of it.
+  if (onLayer(v, 0.55, VALLEY, REF, [0, -8.2])[1] < DECK + 0.1) layer(ctx, v, 0.55, VALLEY, REF, (s) => drawLowCloud(ctx, s, t, tn))
 }

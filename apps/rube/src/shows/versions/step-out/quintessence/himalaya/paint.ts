@@ -100,3 +100,40 @@ export function along(stops: readonly [number, string][], u: number): string {
   }
   return stops[stops.length - 1][1]
 }
+
+/** How many samples across a row of billows can hold. */
+export const SAMPLES = 4096
+/** Scratch for a row of billows' tops and undersides (and their shadows'), sampled across it: filled afresh for every row of every frame. */
+export const ROWS = [new Float64Array(SAMPLES), new Float64Array(SAMPLES), new Float64Array(SAMPLES), new Float64Array(SAMPLES)] as const
+
+/** One billow (an ellipse at `cx, cy`, radii `rx, ry`) into a row's samples from `x0`, `dx` apart: the highest top and lowest underside at each. */
+export function billow(tops: Float64Array, lows: Float64Array, x0: number, dx: number, n: number, cx: number, cy: number, rx: number, ry: number): void {
+  const k0 = Math.max(0, Math.ceil((cx - rx - x0) / dx))
+  const k1 = Math.min(n - 1, Math.floor((cx + rx - x0) / dx))
+  for (let k = k0; k <= k1; k++) {
+    const u = (x0 + k * dx - cx) / rx
+    const v = ry * Math.sqrt(Math.max(0, 1 - u * u))
+    if (cy - v < tops[k]) tops[k] = cy - v
+    if (cy + v > lows[k]) lows[k] = cy + v
+  }
+}
+
+/**
+ * The outline of a row of billows from its samples: each run of them that something covers, along its tops and back
+ * along its undersides. One outline fills far faster than the billows overlapping one another.
+ */
+export function rowOutline(tops: Float64Array, lows: Float64Array, x0: number, dx: number, n: number): Path2D {
+  const path = new Path2D()
+  let k = 0
+  while (k < n) {
+    while (k < n && tops[k] === Infinity) k++
+    const a = k
+    while (k < n && tops[k] !== Infinity) k++
+    if (k - a < 2) continue
+    path.moveTo(x0 + a * dx, tops[a])
+    for (let q = a + 1; q < k; q++) path.lineTo(x0 + q * dx, tops[q])
+    for (let q = k - 1; q >= a; q--) path.lineTo(x0 + q * dx, lows[q])
+    path.closePath()
+  }
+  return path
+}

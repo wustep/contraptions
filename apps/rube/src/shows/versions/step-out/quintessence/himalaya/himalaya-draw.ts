@@ -3,8 +3,8 @@ import { hash, smooth } from '../kit'
 import { level } from '../music'
 import { ellipse, fillPoly, line, mix, rgba, type Pen } from '../home/pen'
 import { litY, tone, wind, type Tone } from './dawn'
-import { drawChoughs, plumes, type Plume } from './far'
-import { along, bands, cut, sunOn } from './paint'
+import { DECK, drawChoughs, plumes, type Plume } from './far'
+import { along, bands, billow, cut, ROWS, rowOutline, SAMPLES, sunOn } from './paint'
 import {
   CAT_LOOK,
   CAT_LOOK_AWAY,
@@ -537,7 +537,6 @@ export function drawFarRocks(pen: Pen, t: number): void {
  * and there, catching the sun on their tops and throwing long shadows across it, shorter as the sun climbs. The pair
  * of choughs wheel over it.
  */
-export const DECK = -7.9
 /** The summits standing out of the cloud: x, how far into the sea (below its far edge), width, height. */
 const ISLANDS: [number, number, number, number][] = [[22.6, 0.25, 2.6, 0.9], [30.2, 0.62, 3.4, 1.1], [16.6, 1.1, 2.6, 0.85], [26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
 export function drawDeck(pen: Pen, f: Frame, t: number): void {
@@ -546,8 +545,10 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
   const sea = smooth(litY(t, 'low'), -8.4, -7.4)
   const top = mix(tn.cloud, tn.lit, 0.6 * sea)
   const shade = mix(top, tn.cloudUnder, 0.85)
-  const floor = mix(top, shade, 0.5)
-  const lo = Math.max(9.5, f.x0) - 1
+  const floor = mix(top, shade, 0.3)
+  // Only what the face's flank leaves open is drawn: it runs from about (10, -8.4) down to (11.1, -2.5).
+  const flank = (y: number) => 10.0 + Math.max(0, Math.min(5.9, y + 8.4)) * 0.18
+  const lo = Math.max(9.7, f.x0) - 0.6
   const hi = f.x1 + 1
   const ly = litY(t, 'world')
   const reach = 2 + 9 * (1 - smooth(t, 182, 191.4)) ** 1.5
@@ -608,33 +609,43 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
       for (; next < ISLANDS.length && ISLANDS[next][1] < d; next++) island(c, ISLANDS[next], next)
       const sc = 0.7 + 0.35 * d
       if (DECK + d - 0.5 * sc > f.y1 + 0.2) break
-      const step = 0.75 * sc
+      const step = 0.8 * sc
       const go = t * 0.2 * (1 + 0.6 * d)
       const shift = go % step
       const base = Math.floor(go / step)
-      const lights = new Path2D()
-      const shades = new Path2D()
-      for (let i = Math.floor((lo - shift) / step) - 1; i <= Math.ceil((hi - shift) / step) + 1; i++) {
+      const from = Math.max(lo, flank(DECK + d) - 0.2) - step
+      const i0 = Math.floor((from - shift) / step)
+      const i1 = Math.ceil((hi - shift) / step) + 1
+      // The row traced as one outline: its billows sampled across, the tops and the undersides of their union.
+      const dx = step * 0.12
+      const x0 = i0 * step + shift - step
+      const n = Math.min(SAMPLES, Math.ceil(((i1 - i0 + 2) * step) / dx) + 1)
+      const [lt, lb, st, sb] = ROWS
+      lt.fill(Infinity, 0, n)
+      lb.fill(-Infinity, 0, n)
+      st.fill(Infinity, 0, n)
+      sb.fill(-Infinity, 0, n)
+      for (let i = i0; i <= i1; i++) {
         const id = i - base
-        const h = (n: number) => hash(id, n, 70 + j)
+        const h = (k: number) => hash(id, k, 70 + j)
         const bx = i * step + shift + (h(61) - 0.5) * 0.4 * step
         const rx = step * (0.5 + 0.45 * h(62))
         // Flattened, seen from above; the far rows heaped up here and there against what stands out of them.
         const ry = rx * (0.2 + 0.1 * h(63)) * (j < 2 ? 1 + 2.4 * h(65) ** 3 : 1)
         // Each row rolls a little, so the sea is not ruled.
-        const by = DECK + d + (h(64) - 0.5) * 0.1 * sc + (j ? 0.12 * sc * Math.sin((bx - go) * 0.55 / sc + j * 1.7) : 0)
-        shades.moveTo(bx + rx * 0.98, by + ry * 0.9)
-        shades.ellipse(bx - rx * 0.06, by + ry * 0.9, rx * 1.04, ry * 1.1, 0, 0, Math.PI * 2)
-        lights.moveTo(bx + rx * 0.94, by)
-        lights.ellipse(bx, by, rx * 0.94, ry * 0.88, 0, 0, Math.PI * 2)
+        const by = DECK + d + (h(64) - 0.5) * 0.1 * sc + (j ? 0.12 * sc * Math.sin(((bx - go) * 0.55) / sc + j * 1.7) : 0)
+        billow(lt, lb, x0, dx, n, bx, by, rx * 0.94, ry * 0.88)
+        if (j) billow(st, sb, x0, dx, n, bx - rx * 0.06, by + ry * 0.75, rx * 0.96, ry * 0.85)
       }
-      // The row's undersides in shadow, then its tops in the light over them; nearer rows over farther ones.
+      // The row's undersides in shadow, then its tops in the light over them; nearer rows over farther ones. The
+      // shadow is only drawn where the tops will not cover it.
       if (j) {
+        for (let k = 0; k < n; k++) if (lt[k] !== Infinity && st[k] !== Infinity) st[k] = Math.max(st[k], Math.min(lb[k] - 0.01, sb[k]))
         c.fillStyle = shade
-        c.fill(shades)
+        c.fill(rowOutline(st, sb, x0, dx, n))
       }
       c.fillStyle = top
-      c.fill(lights)
+      c.fill(rowOutline(lt, lb, x0, dx, n))
     }
     for (; next < ISLANDS.length; next++) island(c, ISLANDS[next], next)
   })
