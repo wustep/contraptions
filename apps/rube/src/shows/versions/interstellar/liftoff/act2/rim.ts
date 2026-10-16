@@ -1305,8 +1305,8 @@ function drawLouvres(p: p5, s: Plan, c: Ctx, t: number): void {
       p.fill(alpha(p, DUST.shade, 0.55 * (1 - open)))
       p.rect(X(PANEL / 2), X(-SHADE_H / 2), X(PANEL), X(SHADE_H))
       if (open > 0) {
-        // Down from the spindle, through the slats, onto the tray.
-        const reach = 4.6
+        // Down from the spindle, through the slats, onto the tray: in the bay, not a beam across the station's air.
+        const reach = 1.5
         const g = ctx.createLinearGradient(0, X(-reach), 0, 0)
         g.addColorStop(0, 'rgba(255, 244, 214, 0)')
         g.addColorStop(0.45, `rgba(255, 244, 214, ${0.38 * open})`)

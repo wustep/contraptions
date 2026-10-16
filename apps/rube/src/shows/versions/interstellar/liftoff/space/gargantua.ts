@@ -1683,31 +1683,5 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
     p.pop()
     featherOpening(p, c, T)
     ctx.restore()
-    if (T > IN_BED - 0.4) moonDust(p, c, T, room * roomShows(T))
-  }
-}
-
-/**
- * The room at night is not still: dust turning slowly in the window's light over the bed, a fleck at a time catching
- * it, until the station's lamps come up. In this part's cells (the room's are its exit's).
- */
-function moonDust(p: p5, c: Ctx, T: number, on: number): void {
-  const a = on * smooth(T, IN_BED - 0.4, IN_BED + 0.4) * (1 - smooth(T, ACT2 - 0.15, ACT2))
-  if (a <= 0.01) return
-  const { k } = c
-  const X = (v: number) => v * k
-  const [bx, by] = roomPt(BED_REST)
-  p.noStroke()
-  for (let i = 0; i < 26; i++) {
-    // Each fleck drifts down and across the light on its own slow curl, and comes round again.
-    const life = 5 + 3 * hash(i, 301)
-    const u = ((T * 0.9 + hash(i, 302) * life) % life) / life
-    const [hx, hy] = roomPt([2.75 + 2.0 * hash(i, 303) + 0.35 * u, -3.45 + 1.15 * u])
-    const x = hx + 0.06 * Math.sin(T * (0.7 + hash(i, 304)) + i)
-    const y = hy + 0.03 * Math.cos(T * (0.5 + hash(i, 305)) + i * 2)
-    if (Math.hypot(x - bx, y - by) < 0.28) continue
-    const lit = Math.sin(Math.PI * u) * (0.35 + 0.5 * hash(i, 306))
-    p.fill(alpha(p, '#E9EEF2', a * lit))
-    p.circle(X(x), X(y), Math.max(1, X(0.012 + 0.012 * hash(i, 307))))
   }
 }

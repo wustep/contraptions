@@ -9,9 +9,9 @@ import { RIM_R } from './station'
  * Cooper Station is a cylinder, and the show looks down it end-on from its near end. What stood on the near end's ring
  * of land was all there was: past it, pale air. Here the rest of the station goes away from the camera: its inside
  * surface, farmland all the way round, recedes in perspective toward the far end wall, which hangs in the haze round the
- * spindle: fields in strips and plots, the roads and the channel running the station's length, and a ring road. Nothing
- * stands on it: at this distance, under this haze, a house or a windmill only read as a speck or a scratch. The further
- * off, the more of the air's colour is over it.
+ * spindle: fields in strips and plots, nothing more. Nothing stands on it and nothing runs along it: at this distance,
+ * under this haze, a house or a windmill read as a speck, and a road as a scratch across the air. The further off, the
+ * more of the air's colour is over it.
  *
  * A slice of the station `s` deep (1 at the near ring, smaller further off) is the near ring scaled by `s` about a
  * centre that slides a little toward the camera as it pans, so the far end moves less than the near: the depth is seen
@@ -27,11 +27,6 @@ const BANDS = 15
 const sAt = (i: number): number => 1 / (1 + (i / BANDS) * (1 / S_FAR - 1))
 
 const FIELDS = ['#9BA56C', '#C4AF72', '#ADA867', '#B7A077', '#92A065', '#CFBB7E']
-/** The roads and the channel run the station's length: angles round the ring. */
-const ROADS = [0.35, 1.42, 2.6, 3.55, 4.7, 5.6]
-const CHANNEL = 2.05
-/** The ring road, round the station at this slice. */
-const RING_ROAD = 4.5
 
 /** Where a slice of the station is centred, given the camera. */
 export function sliceCentre(axis: Pt, cam: Pt, s: number): Pt {
@@ -85,27 +80,7 @@ export function drawCylinder(p: p5, k: number, axis: Pt, cam: Pt, air: Air, lit:
     }
   }
   ctx.stroke()
-  // The roads and the channel, the station's length, and the ring road round it.
   const far = sliceCentre(axis, cam, S_FAR)
-  const run = (a: number, hex: string, w: number) => {
-    ctx.strokeStyle = hex
-    ctx.lineWidth = Math.max(1, X(w))
-    ctx.beginPath()
-    ctx.moveTo(X(axis[0] + RIM_R * Math.cos(a)), X(axis[1] + RIM_R * Math.sin(a)))
-    ctx.lineTo(X(far[0] + RIM_R * S_FAR * Math.cos(a)), X(far[1] + RIM_R * S_FAR * Math.sin(a)))
-    ctx.stroke()
-  }
-  for (const a of ROADS) run(a, 'rgba(236, 226, 200, 0.45)', 0.08)
-  run(CHANNEL, 'rgba(78, 138, 140, 0.6)', 0.11)
-  {
-    const s = sAt(RING_ROAD)
-    const [cx, cy] = sliceCentre(axis, cam, s)
-    ctx.strokeStyle = 'rgba(236, 226, 200, 0.7)'
-    ctx.lineWidth = Math.max(1, X(0.09 * s))
-    ctx.beginPath()
-    ctx.arc(X(cx), X(cy), X(RIM_R * s), 0, TAU)
-    ctx.stroke()
-  }
 
   // The haze: the air between the camera and the land, more of it the further off. One fill, from the far end wall's
   // circle out to the near ring's, so it follows the slices as the far end slides.
