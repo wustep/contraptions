@@ -561,9 +561,9 @@ function cragH(s: number): number {
  * under everyone.
  */
 const WISPS: { x: number; y: number; len: number; a: number; v: number }[] = [
-  { x: -3.4, y: -3.3, len: 4.2, a: 0.2, v: 0.12 },
-  { x: -7.6, y: -2.2, len: 3.1, a: 0.16, v: 0.17 },
-  { x: -1.2, y: -4.4, len: 2.6, a: 0.13, v: 0.09 },
+  { x: -3.4, y: -3.3, len: 4.2, a: 0.28, v: 0.24 },
+  { x: -7.6, y: -2.2, len: 3.1, a: 0.22, v: 0.3 },
+  { x: -1.2, y: -4.4, len: 2.6, a: 0.18, v: 0.18 },
 ]
 function drawWisps(p: p5, k: number, t: number, f: View) {
   const on = smooth(t, 278, 281.5) * (1 - smooth(t, 294, 297))
