@@ -7,7 +7,8 @@ import { GLASS, TUBE } from './plan'
  * The archive behind the light table (the B1 builder's): aisles of steel shelving going back into the dark, on
  * three planes, with film cans and labelled boxes on them (flat tones, no lettering), a rolling ladder, the far
  * aisle's end with its green exit sign over a door, and high on the back wall a window at street level, the city's
- * daylight coming in through its grating and lying on the wall under it. In front of them, strips of negatives hang drying on lines.
+ * daylight coming in through its grating and lying on the wall under it. In front of them, strips of negatives hang
+ * drying on a line, a small picture in every frame.
  *
  * The room is lit by the table's spill and nothing else, so the archive is barely there: a can's rim, a box's edge.
  * When the tubes strike and stutter, their flashes light the whole room, and the aisles stand out of the dark for a
@@ -382,8 +383,11 @@ const LINE_Y = -2.2
 /** Where the line runs from and to: hooked between the enlarger and the door. */
 const LINE: [number, number] = [0.0, 6.6]
 const HANGING: [number, number, number][] = [
-  // [x, length, seed]: between the enlarger and the door, clear of the window and the exit where the camera goes.
+  // [x, length, seed]: between the enlarger and the door.
   [0.5, 1.4, 3],
+  [2.05, 1.2, 7],
+  [3.3, 0.55, 9],
+  [4.75, 1.35, 8],
   [6.0, 1.45, 5],
   [6.42, 1.3, 6],
 ]
@@ -412,13 +416,28 @@ function drawStrips(ctx: C2, k: number, t: number, light: number, flash: number)
     ctx.fillRect(-w / 2, 0.05, w, len)
     const fr = new Path2D()
     const ho = new Path2D()
-    for (let f = 0.12; f + 0.22 < len; f += 0.26) fr.rect(-w / 2 + 0.05, f, w - 0.1, 0.22)
+    // In each frame a picture, small and reversed: a horizon, and something standing on it.
+    const clear = new Path2D()
+    const dense = new Path2D()
+    const fw = w - 0.1
+    for (let f = 0.12, i = 0; f + 0.22 < len; f += 0.26, i++) {
+      fr.rect(-w / 2 + 0.05, f, fw, 0.22)
+      const hz = f + 0.22 * (0.3 + 0.45 * hash(i, seed, 91))
+      clear.rect(-w / 2 + 0.05, hz, fw, f + 0.22 - hz)
+      const bw = fw * (0.14 + 0.22 * hash(i, seed, 93))
+      const bh = 0.22 * (0.15 + 0.35 * hash(i, seed, 94))
+      dense.rect(-w / 2 + 0.05 + (fw - bw) * hash(i, seed, 92), hz - bh, bw, bh)
+    }
     for (let f = 0.08; f < len; f += 0.065) {
       ho.rect(-w / 2 + 0.012, f, 0.022, 0.03)
       ho.rect(w / 2 - 0.034, f, 0.022, 0.03)
     }
     ctx.fillStyle = frame
     ctx.fill(fr)
+    ctx.fillStyle = mix(frame, holes, 0.45)
+    ctx.fill(clear)
+    ctx.fillStyle = base
+    ctx.fill(dense)
     ctx.fillStyle = holes
     ctx.fill(ho)
     // The clip it hangs by.

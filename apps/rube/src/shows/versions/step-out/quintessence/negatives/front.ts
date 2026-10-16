@@ -230,7 +230,7 @@ export const negativesFront = scenery<null>({
     // A cold teal over the room's darks, and the top of the frame going into them.
     ctx.fillStyle = 'rgba(30, 64, 66, 0.07)'
     ctx.fillRect((v.x0 - 0.1) * c.k, (v.y0 - 0.1) * c.k, (v.w + 0.2) * c.k, (v.h + 0.2) * c.k)
-    ceiling(ctx, v, '#060A0B', 0.6)
+    ceiling(ctx, v, '#060A0B', 0.4)
     ctx.restore()
   },
 })
