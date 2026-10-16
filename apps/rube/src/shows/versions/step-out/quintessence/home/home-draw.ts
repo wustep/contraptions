@@ -318,27 +318,18 @@ export function drawStrings(pen: Pen, t: number): void {
     const d0 = HAMMER_D + 0.04
     const d1 = stringEnd(u) - 0.04
     const amp = 0.022 * Math.exp(-age / 0.5)
-    const glowA = Math.exp(-age / 0.7)
+    const lit = Math.exp(-age / 0.7)
     const pts: Pt[] = []
     for (let j = 0; j <= 40; j++) {
       const f = j / 40
       const [x, y] = scr(d0 + (d1 - d0) * f, u, STRING_H)
       pts.push([x, y + amp * Math.sin(Math.PI * f) * Math.sin(age * 70 + f * 2)])
     }
-    line(pen, pts, rgba('#F6D79A', 0.3 * glowA), 0.06)
-    line(pen, pts, rgba('#F6D79A', 0.8 * glowA), 0.022)
-    line(pen, pts, rgba('#FFF4DC', 0.95 * glowA), 0.009)
+    line(pen, pts, rgba('#F6D79A', 0.85 * lit), 0.018)
+    line(pen, pts, rgba('#FFF4DC', 0.95 * lit), 0.008)
   }
   c.restore()
   drawRimBand(pen)
-  // Where the string ends under him, the note reaches him: a warm flash at his foot as it moves him on.
-  for (const [n, s] of NOTE_STRINGS) {
-    const age = t - n
-    if (s === 1 || age < 0 || age > 0.5) continue
-    const [x, y] = rimAt(n)
-    const a = Math.exp(-age / 0.16)
-    glow(pen, x, y + 0.15, 0.32, [[0, rgba('#FFE2A8', 0.55 * a)], [1, rgba('#FFE2A8', 0)]], 0.45)
-  }
 }
 
 /** The rim's top: a lacquered lip along the curved side, lit where the lamp is, with the shadow it throws inside. */
@@ -456,8 +447,7 @@ export function drawMother(pen: Pen, t: number): void {
   ellipse(pen, nearHand[0], nearHand[1], 0.06, 0.028, C.mother)
   // The lamp's light along her front: face, the near arm, the lap.
   c.save()
-  c.globalCompositeOperation = 'lighter'
-  const rim = rgba(C.motherRim, 0.28)
+  const rim = rgba(C.motherRim, 0.3)
   c.beginPath()
   c.ellipse(head[0] * pen.k, head[1] * pen.k, 0.125 * pen.k, 0.14 * pen.k, 0, -1.2, 1.0)
   c.strokeStyle = rim
@@ -488,34 +478,17 @@ export function drawLamp(pen: Pen, t: number): void {
   const sx = light.at[0]
   const sy = SHADE[1]
   line(pen, [LAMP_FOOT, [STEM_X, sy + 0.2], [sx + 0.04, sy + 0.1]], C.brass, 0.035)
-  // The light under it, and the cone it throws down past the piano's curve to the floor.
-  glow(pen, sx, sy + 0.25, 1.3, [[0, rgba(C.lamp, 0.5 * light.power)], [1, rgba(C.lamp, 0)]], 0.9)
-  c.save()
-  c.globalCompositeOperation = 'lighter'
+  // The cone it throws down past the piano's curve to the floor, faint in the air.
   const cone = c.createLinearGradient(0, (sy + sh / 2) * pen.k, 0, 0.5 * pen.k)
-  cone.addColorStop(0, rgba(C.lamp, 0.13 * light.power))
+  cone.addColorStop(0, rgba(C.lamp, 0.05 * light.power))
   cone.addColorStop(1, rgba(C.lamp, 0))
   fillPoly(pen, [[sx - sw * 0.95, sy + sh / 2], [sx + sw * 0.95, sy + sh / 2], [sx + 1.25, 0.5], [sx - 1.45, 0.5]], cone)
-  c.restore()
-  fillPoly(pen, [[sx - sw * 0.62, sy - sh / 2], [sx + sw * 0.62, sy - sh / 2], [sx + sw, sy + sh / 2], [sx - sw, sy + sh / 2]], vgrad(pen, sy - sh / 2, sy + sh / 2, [[0, '#B8925A'], [1, C.shade]]))
-  // The shade's seams, and the bulb's light through it.
+  // The shade, lit through; warmer for a moment when the clue is solved.
+  const warm = t >= SOLVED ? knock(t - SOLVED, 0.9) : 0
+  fillPoly(pen, [[sx - sw * 0.62, sy - sh / 2], [sx + sw * 0.62, sy - sh / 2], [sx + sw, sy + sh / 2], [sx - sw, sy + sh / 2]], vgrad(pen, sy - sh / 2, sy + sh / 2, [[0, mix('#B8925A', C.shade, 0.3 * warm)], [1, mix(C.shade, '#F7DDA8', 0.5 * warm)]]))
+  // The shade's seams, and the bulb's light at its open foot.
   for (const f of [-0.5, 0, 0.5]) line(pen, [[sx + f * sw * 0.62, sy - sh / 2], [sx + f * sw, sy + sh / 2]], rgba('#8A6A40', 0.35), 0.008)
   ellipse(pen, sx, sy + sh / 2, sw, 0.035, rgba('#FFF0C8', 0.95))
-  glow(pen, sx, sy + 0.02, 0.32, [[0, rgba('#FFF4D8', 0.35 * light.power)], [1, rgba('#FFF4D8', 0)]], 1)
-  // The solved moment: the lamp warms a little.
-  const warm = t >= SOLVED ? knock(t - SOLVED, 0.9) : 0
-  if (warm > 0) glow(pen, sx, sy + 0.2, 2.2, [[0, rgba(C.lamp, 0.22 * warm)], [1, rgba(C.lamp, 0)]])
-  // The light the turning negative throws back: a small bright patch going over the wall and the lid as it turns.
-  const phi = negTurn(t)
-  const catchA = Math.pow(Math.max(0, Math.cos(phi * 2 - 0.5)), 6) * (1 - Math.min(1, Math.abs(phi) < 0.02 ? 1 : 0))
-  if (catchA > 0.02) {
-    const px = NEG_C[0] - 0.4 + 1.6 * Math.sin(phi * 1.6)
-    const py = NEG_C[1] - 0.75 - 0.25 * Math.cos(phi)
-    c.save()
-    c.globalCompositeOperation = 'lighter'
-    glow(pen, px, py, 0.22, [[0, rgba('#FFE6B0', 0.28 * catchA)], [1, rgba('#FFE6B0', 0)]], 0.6)
-    c.restore()
-  }
   c.restore()
 }
 
@@ -551,7 +524,7 @@ export function drawNegative(pen: Pen, t: number): void {
   c.save()
   trace(pen, frame)
   c.clip()
-  // The picture: everything in the frame inverted. Where the piano's wall is (dark), the film is clear and glows.
+  // The picture: everything in the frame inverted. Where the piano's wall is (dark), the film is clear, lit through.
   const solved = t >= SOLVED ? knock(t - SOLVED, 1.4) : 0
   const img = (x: number, y: number): Pt => [cx + (x - cx) * sx, y]
   const rimLine: Pt[] = []
@@ -568,26 +541,11 @@ export function drawNegative(pen: Pen, t: number): void {
     for (const y of [top + 0.025, top + NEG_H - 0.055]) fillPoly(pen, [[x - 0.018 * Math.abs(sx), y], [x + 0.018 * Math.abs(sx), y], [x + 0.018 * Math.abs(sx), y + 0.03], [x - 0.018 * Math.abs(sx), y + 0.03]], rgba('#0A0605', 0.9))
   }
   c.restore()
-  // Its edge, and the lamp's light through it when it is solved.
+  // Its edge.
   c.strokeStyle = rgba('#0A0605', 0.9)
   c.lineWidth = 0.015 * k
   trace(pen, frame)
   c.stroke()
-  if (solved > 0) {
-    c.globalCompositeOperation = 'lighter'
-    glow(pen, cx, cy, 0.7, [[0, rgba('#F5C77E', 0.25 * solved)], [1, rgba('#F5C77E', 0)]])
-  }
-  // As it turns its face catches the lamp: a sheen goes over the film.
-  const sheen = Math.pow(Math.max(0, Math.cos(phi * 2 - 0.5)), 6) * Math.min(1, Math.abs(phi) * 8)
-  if (sheen > 0.02) {
-    c.save()
-    trace(pen, frame)
-    c.clip()
-    c.globalCompositeOperation = 'lighter'
-    const band = cx - hw + 2 * hw * ((Math.sin(phi * 3) + 1) / 2)
-    fillPoly(pen, [[band - 0.08, top], [band + 0.02, top], [band - 0.06, top + NEG_H], [band - 0.16, top + NEG_H]], rgba('#FFF2D6', 0.45 * sheen))
-    c.restore()
-  }
   c.restore()
 }
 

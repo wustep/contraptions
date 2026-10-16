@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { motes, type View } from '../depth'
 import { hash } from '../kit'
 import { SHADE } from './home-draw'
-import { fillPoly, glow, line, mix, rgba, vgrad, type Pen } from './pen'
+import { fillPoly, line, mix, rgba, vgrad, type Pen } from './pen'
 
 /**
  * His mother's room at evening, behind the piano: the wall in its old striped paper, the lamp's light on it and the
@@ -18,6 +18,7 @@ import { fillPoly, glow, line, mix, rgba, vgrad, type Pen } from './pen'
 const R = {
   wall: '#2A211C',
   wallLit: '#4A3829',
+  floorLit: '#5A4026',
   paperLight: '#6A5440',
   paperDark: '#120C09',
   rail: '#3A2C22',
@@ -220,7 +221,16 @@ function wallPicture(lamp: Pt): HTMLCanvasElement | null {
   c.translate(-WALL.x0 * WALL.ppc, -WALL.y0 * WALL.ppc)
   const pen: Pen = { c, k: WALL.ppc }
   fillPoly(pen, [[WALL.x0, WALL.y0], [WALL.x1, WALL.y0], [WALL.x1, WALL.y1], [WALL.x0, WALL.y1]], R.wall)
-  glow(pen, lamp[0], lamp[1] + 0.3, 4.2, [[0, rgba(R.wallLit, 0.95)], [0.45, rgba(R.wallLit, 0.45)], [1, rgba(R.wallLit, 0)]], 0.8)
+  // The lamp's light on the wall, shaped by its shade: a fan going up from the shade's open top and a wider one
+  // going down from its foot, each fading as it goes and soft at its edges; beside the shade the wall stays dark.
+  const [lx, ly] = lamp
+  const fan = (y0: number, y1: number, w0: number, spread: number, a0: number, a1: number) => {
+    const g = vgrad(pen, y0, y1, [[0, rgba(R.wallLit, a0)], [1, rgba(R.wallLit, a1)]])
+    const h = Math.abs(y1 - y0)
+    for (const f of [1.12, 1, 0.86]) fillPoly(pen, [[lx - w0 * f, y0], [lx + w0 * f, y0], [lx + (w0 + spread * h) * f, y1], [lx - (w0 + spread * h) * f, y1]], g)
+  }
+  fan(ly - 0.18, WALL.y0, 0.24, 1.15, 0.42, 0.1)
+  fan(ly + 0.18, WALL.y1, 0.38, 1.9, 0.45, 0.2)
   const pattern = paper(c)
   if (pattern) {
     c.save()
@@ -287,9 +297,13 @@ function floorPicture(lamp: Pt): HTMLCanvasElement | null {
   c.strokeStyle = rgba(R.rugCream, 0.5)
   c.lineWidth = 0.008
   c.stroke(rug.fringe)
-  // The lamp's pool of light on the boards.
-  c.setTransform(1, 0, 0, 1, -FLOOR.x0 * FLOOR.ppc, -FLOOR.y0 * FLOOR.ppc)
-  glow({ c, k: FLOOR.ppc }, lamp[0] - 0.4, 0.15, 3.4, [[0, rgba('#5A4026', 0.6)], [1, rgba('#5A4026', 0)]], 0.35)
+  // The lamp's pool of light on the boards and the rug under it, in four flat steps.
+  c.fillStyle = rgba(R.floorLit, 0.12)
+  for (const rx of [3.1, 2.4, 1.75, 1.15]) {
+    c.beginPath()
+    c.ellipse(lamp[0] - 0.25, 0.2, rx, rx * 0.3, 0, 0, Math.PI * 2)
+    c.fill()
+  }
   return (floorCanvas = cv)
 }
 
@@ -402,16 +416,19 @@ function city(ctx: CanvasRenderingContext2D, v: View, t: number, g: Glass): void
     ctx.fill(SKYLINE().far)
     const warm = new Path2D()
     const cold = new Path2D()
+    const dim = new Path2D()
     for (const w of LIGHTS()) {
       if (t < w.on) continue
-      // A television's flicker in a few.
-      if (w.tv && hash(Math.floor(t * 6), Math.round(w.x * 100), 816) < 0.25) continue
-      ;(w.tv ? cold : warm).rect(w.x, w.y, w.w, w.h)
+      // A few are televisions, their light going from one picture to the next every second or so.
+      const bright = w.tv && hash(Math.floor(t * 0.8 + w.x * 7), Math.round(w.x * 100), 816) < 0.5
+      ;(w.tv ? (bright ? cold : dim) : warm).rect(w.x, w.y, w.w, w.h)
     }
     ctx.fillStyle = rgba(R.lit, 0.85)
     ctx.fill(warm)
     ctx.fillStyle = rgba(R.tv, 0.8)
     ctx.fill(cold)
+    ctx.fillStyle = rgba(R.tv, 0.55)
+    ctx.fill(dim)
     const blink = (t * 0.8) % 1 < 0.12 ? 1 : 0.2
     ctx.fillStyle = rgba('#FFFFFF', blink)
     ctx.fillRect(MAST[0] - 0.006, MAST[1] - 0.2, 0.012, 0.2)
@@ -489,8 +506,6 @@ export function drawRoom(pen: Pen, f: { x0: number; y0: number; x1: number; y1: 
     if (g.x1 < f.x0 - 0.5 || g.x0 > f.x1 + 0.5) continue
     fillPoly(pen, [[g.x0 - 0.08, g.y0 - 0.08], [g.x1 + 0.08, g.y0 - 0.08], [g.x1 + 0.08, g.y1 + 0.1], [g.x0 - 0.08, g.y1 + 0.1]], R.sill)
     city(c, v, t, g)
-    // The lamp in the glass, faintly.
-    if (i === 1) glow(pen, g.x1 - 0.25, g.y0 + 0.55, 0.35, [[0, rgba('#F5D9A0', 0.18 * light.power)], [1, rgba('#F5D9A0', 0)]], 1.3)
     const mx = (g.x0 + g.x1) / 2
     line(pen, [[mx, g.y0], [mx, g.y1]], R.sill, 0.05)
     line(pen, [[g.x0, (g.y0 + g.y1) / 2 - 0.1], [g.x1, (g.y0 + g.y1) / 2 - 0.1]], R.sill, 0.04)

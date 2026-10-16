@@ -11,8 +11,8 @@ import { T0, T1 } from './home-plan'
  * changes his colour. It is handed show time as `t`.
  *
  * Near, out of focus at the frame's lower corners as the camera goes along the piano: the edge of a box, the leaves
- * of a plant by the boxes, the back of a chair. In the air: dust turning in the lamp's cone. Over all of it, the
- * corners going dark.
+ * of a plant by the boxes, the back of a chair. In the air: a few motes of dust in the lamp's cone. Over all of it,
+ * the corners going dark.
  */
 
 const sm = (t: number, a: number, b: number): number => {
@@ -76,7 +76,7 @@ export const homeFront = scenery<null>({
     const k = c.k
     const light = lampLight(t)
   
-    // Dust turning in the lamp's cone, caught in its light.
+    // A few motes of dust drifting slowly in the lamp's cone, caught in its light.
     const [sx, sy] = [light.at[0], SHADE[1] + 0.2]
     ctx.save()
     ctx.beginPath()
@@ -86,9 +86,8 @@ export const homeFront = scenery<null>({
     ctx.lineTo((sx - 1.45) * k, 0.5 * k)
     ctx.closePath()
     ctx.clip()
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.globalAlpha = 0.75 * light.power
-    motes(ctx, v, t, { n: 60, seed: 911, tile: [2.4, 2.6], r: [0.006, 0.014], v: [0.035, -0.05], spread: 0.6, sway: [0.06, 0.25], color: '#FFE2A8', twinkle: 0.7 })
+    ctx.globalAlpha = 0.45 * light.power
+    motes(ctx, v, t, { n: 7, seed: 911, tile: [2.4, 2.6], r: [0.007, 0.012], v: [0.02, -0.025], spread: 0.5, sway: [0.04, 0.12], color: '#E9CC96' })
     ctx.restore()
 
     // The near plane.
