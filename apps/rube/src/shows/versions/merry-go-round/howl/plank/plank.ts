@@ -1143,7 +1143,7 @@ export const plank = part<PlankState>(
       p.rectMode(p.CORNER)
       const land = PLANK_AFTER.land || t <= T1
       if (land) {
-        drawBack(p, k, W, ink, f)
+        drawBack(p, k, W, ink, f, t)
         drawCrag(p, k, W, ink, f)
         drawGround(p, k, W, ink, f)
         drawTors(p, k, W, ink, f)
