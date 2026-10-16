@@ -3,17 +3,17 @@ import { hash } from '../kit'
 import { ONSETS } from '../music'
 import { PLANE, onPlane, type Frame } from './far'
 import { ERUPT, HUSH, T1 } from './geo'
-import { CRATER, CRATER_SX, rgbaHex } from './ranges'
+import { CRATER, CRATER_SX, rgbaHex, volcanoCap } from './ranges'
 import { HZ } from './sky'
 import { ICE } from './theme'
 
 /**
  * The volcano. It smokes from the first frame, a thin plume leaning on the wind. On the band's last hit (119.845) it
- * bursts: a flash of amber off the crater that lights the whole land (`front.ts` grades it), a ring of shock going out
- * through the air, black stones thrown glowing on their arcs, the column shooting up with its underside lit orange from
- * the fire under it, and lightning forking in the ash: hard and often at first, then through the hush only now and
- * then and fainter, on the guitar's soft onsets. Under it all a fountain of gold sparks keeps playing at the crater.
- * Nothing here is red: the fire is amber, orange and gold.
+ * bursts: the fire comes up in the crater and its light goes over the snow and the land (`front.ts` warms it), black
+ * stones are thrown out hot on their arcs, the column shoots up with its underside lit orange from the fire under it,
+ * lava comes over the lip, and lightning forks in the ash: hard and often at first, then through the hush only now
+ * and then and fainter, on the guitar's soft onsets, each lighting the column from inside. Under it all a fountain of
+ * lava keeps playing at the crater. Nothing here is red: the fire is amber, orange and gold.
  */
 
 const sm = (t: number, a: number, b: number): number => {
@@ -145,56 +145,37 @@ function boltPath(n: number, t: number): Path2D {
 
 /* ------------------------------------------------------------------ drawing */
 
+/** How strongly the fire lights the snow, the plume and the land at `t`: up with the burst, then a long warm tail. */
+export function fireLight(t: number): number {
+  const u = t - ERUPT
+  if (u < 0) return 0
+  return sm(u, 0, 0.12) * (0.55 * Math.exp(-u / 1.6) + 0.3) * (1 - 0.45 * sm(t, HUSH + 4, T1))
+}
+
 /**
- * The volcano's part of the far plane: the glow and the burst, the ring, the stones, the plume, the lightning, the
- * fountain. Drawn over the far range, before the nearer planes.
+ * The volcano's part of the far plane: the fire's light on the snow, the vent, the stones, the lava, the ash falling,
+ * the plume, the fountain and the lightning. Drawn over the far range, before the nearer planes.
  */
 export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: number): void {
   const u = t - ERUPT
+  const fire = fireLight(t)
   onPlane(ctx, f, k, PLANE.far, (px) => {
     const [cx, cy] = CRATER
-    if (u >= -0.02) {
-      ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
-      // The burst's flash, and the fire's steady light in the crater after it.
-      const flash = Math.exp(-Math.max(0, u) / 0.5)
-      if (flash > 0.005) {
-        const r = 0.2 * (1 + Math.max(0, u) * 0.5)
-        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-        g.addColorStop(0, rgbaHex(ICE.fire, 0.9 * flash))
-        g.addColorStop(0.3, rgbaHex(ICE.fireDeep, 0.35 * flash))
-        g.addColorStop(1, rgbaHex(ICE.fireDeep, 0))
-        ctx.fillStyle = g
-        ctx.beginPath()
-        ctx.arc(cx, cy, r, 0, Math.PI * 2)
-        ctx.fill()
-      }
-      const ember = 0.4 * sm(u, 0, 0.3) * (0.82 + 0.18 * Math.sin(t * 7.3) * Math.sin(t * 3.1))
-      const e = ctx.createRadialGradient(cx, cy - 0.004, 0, cx, cy - 0.004, 0.03)
-      e.addColorStop(0, rgbaHex(ICE.fire, ember))
-      e.addColorStop(1, rgbaHex(ICE.fireDeep, 0))
-      ctx.fillStyle = e
-      ctx.fillRect(cx - 0.03, cy - 0.034, 0.06, 0.06)
-      ctx.restore()
+    if (u >= 0) {
+      // The fire's light on the snow: a plain warm wash over the cap. The vent at the crater's mouth, molten.
+      ctx.fillStyle = rgbaHex(ICE.fire, 0.32 * fire)
+      ctx.fill(volcanoCap())
+      const vent = sm(u, 0, 0.12)
+      ctx.fillStyle = rgbaHex(ICE.fireDeep, 0.95 * vent)
+      ctx.beginPath()
+      ctx.ellipse(cx, cy + 0.001, 0.008, 0.0032, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = rgbaHex(ICE.fireGold, 0.9 * vent)
+      ctx.beginPath()
+      ctx.ellipse(cx, cy + 0.0005, 0.0045, 0.0016, 0, 0, Math.PI * 2)
+      ctx.fill()
 
-      // The shock: a ring going out through the air from the crater, and a fainter one after it.
-      for (const [delay, a0] of [[0, 0.45], [0.14, 0.22]] as const) {
-        const v = u - delay
-        if (v < 0 || v > 1.8) continue
-        const rr = 0.02 + 0.34 * (1 - Math.exp(-v / 0.45))
-        const fade = 1 - sm(v, 0.1, 1.8)
-        ctx.beginPath()
-        ctx.ellipse(cx, cy - 0.02, rr, rr * 0.42, 0, 0, Math.PI * 2)
-        // The ring is a band of compressed air: a soft wide edge and a bright thin one.
-        ctx.strokeStyle = rgbaHex(ICE.shock, a0 * 0.35 * fade)
-        ctx.lineWidth = (6 + 14 * Math.min(1, v)) * px
-        ctx.stroke()
-        ctx.strokeStyle = rgbaHex(ICE.shock, a0 * fade)
-        ctx.lineWidth = (1.5 + 2 * Math.min(1, v)) * px
-        ctx.stroke()
-      }
-
-      // The stones: thrown out glowing, arcing over and falling back on the cone.
+      // The stones: thrown out hot, arcing over and falling back on the cone.
       if (u < 2.8) {
         const trails = new Path2D()
         const stones = new Path2D()
@@ -203,9 +184,9 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
           const a = -Math.PI / 2 + (hash(i, 21) - 0.5) * 1.9
           const sp = 0.1 + 0.08 * hash(i, 22)
           const at = (w: number): [number, number] => [cx + Math.cos(a) * sp * w, cy + Math.sin(a) * sp * w + 0.05 * w * w]
-          const [x, y] = at(Math.max(0, u))
-          if (y > cy + 0.012 || u < 0) continue
-          const [bx, by] = at(Math.max(0, u - 0.09))
+          const [x, y] = at(u)
+          if (y > cy + 0.012) continue
+          const [bx, by] = at(Math.max(0, u - 0.06))
           trails.moveTo(bx, by)
           trails.lineTo(x, y)
           stones.moveTo(x + 0.0035, y)
@@ -214,12 +195,12 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
           hearts.arc(x, y, 0.0018, 0, Math.PI * 2)
         }
         ctx.lineCap = 'round'
-        ctx.strokeStyle = rgbaHex(ICE.fireGold, 0.8 * (1 - sm(u, 1.2, 2.8)))
-        ctx.lineWidth = 2 * px
+        ctx.strokeStyle = rgbaHex(ICE.fireDeep, 0.5 * (1 - sm(u, 1.2, 2.8)))
+        ctx.lineWidth = 1.5 * px
         ctx.stroke(trails)
         ctx.fillStyle = ICE.basalt
         ctx.fill(stones)
-        // Each still glowing at its heart as it flies.
+        // Each still hot at its heart as it flies.
         ctx.fillStyle = rgbaHex(ICE.fire, 0.95 * (1 - sm(u, 1.5, 2.8)))
         ctx.fill(hearts)
       }
@@ -250,11 +231,11 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
         }
         ctx.lineCap = 'round'
         ctx.lineJoin = 'round'
-        ctx.strokeStyle = rgbaHex(ICE.fireDeep, 0.45)
-        ctx.lineWidth = 5 * px
+        ctx.strokeStyle = rgbaHex(ICE.fireDeep, 0.85)
+        ctx.lineWidth = 2.4 * px
         ctx.stroke(lava)
-        ctx.strokeStyle = rgbaHex(ICE.fireGold, 0.9 * (0.85 + 0.15 * Math.sin(t * 5.1)))
-        ctx.lineWidth = 1.8 * px
+        ctx.strokeStyle = rgbaHex(ICE.fireGold, 0.9)
+        ctx.lineWidth = 1.1 * px
         ctx.stroke(lava)
         ctx.fillStyle = rgbaHex(ICE.steam, 0.55)
         ctx.fill(steam)
@@ -300,32 +281,20 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
       ctx.fill(path)
     })
     ctx.globalAlpha = 1
-    if (u > 0) {
-      const fire = (0.55 * Math.exp(-u / 1.6) + 0.3) * (1 - 0.45 * sm(t, HUSH + 4, T1))
-      ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
+    if (fire > 0.005) {
       const under = new Path2D()
       for (const p of puffs) {
         if (p.low < 0.55) continue
         under.moveTo(p.at[0] + p.r * 0.8, p.at[1] + p.r * 0.25)
         under.ellipse(p.at[0], p.at[1] + p.r * 0.25, p.r * 0.8, p.r * 0.6, 0, 0, Math.PI * 2)
       }
-      ctx.fillStyle = rgbaHex(ICE.fireDeep, 0.32 * fire)
+      ctx.fillStyle = rgbaHex(ICE.fireDeep, 0.5 * fire)
       ctx.fill(under)
-      const top = plumeTop(t)
-      const gr = Math.min(0.12, top * 0.3)
-      const g = ctx.createRadialGradient(cx, cy - gr * 0.3, 0, cx, cy - gr * 0.3, gr)
-      g.addColorStop(0, rgbaHex(ICE.fire, 0.4 * fire))
-      g.addColorStop(1, rgbaHex(ICE.fire, 0))
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.arc(cx, cy - gr * 0.3, gr, 0, Math.PI * 2)
-      ctx.fill()
 
-      // The fountain: gold sparks thrown up out of the crater and falling back, on and on.
+      // The fountain: lava thrown up out of the crater and falling back, on and on.
       const fount = (0.45 + 0.55 * Math.exp(-u / 3)) * (1 - 0.5 * sm(t, HUSH + 4, T1))
-      const sparks = new Path2D()
-      for (let i = 0; i < 28; i++) {
+      const spatter = new Path2D()
+      for (let i = 0; i < 16; i++) {
         const period = 0.8 + 0.7 * hash(i, 31)
         const age = (t + hash(i, 32) * period) % period
         const a = -Math.PI / 2 + (hash(i, 33) - 0.5) * 0.9
@@ -333,43 +302,36 @@ export function drawEruption(ctx: CanvasRenderingContext2D, f: Frame, k: number,
         const x = cx + Math.cos(a) * sp * age
         const y = cy - 0.002 + Math.sin(a) * sp * age + 0.06 * age * age
         if (y > cy + 0.004) continue
-        sparks.moveTo(x, y)
-        sparks.lineTo(x - Math.cos(a) * 0.004, y - (Math.sin(a) * sp + 0.12 * age) * 0.08)
+        spatter.moveTo(x, y)
+        spatter.lineTo(x - Math.cos(a) * 0.004, y - (Math.sin(a) * sp + 0.12 * age) * 0.08)
       }
-      ctx.strokeStyle = rgbaHex(ICE.fireGold, 0.9 * fount)
-      ctx.lineWidth = 1.2 * px
+      ctx.strokeStyle = rgbaHex(ICE.fire, 0.9 * fount)
+      ctx.lineWidth = 1.4 * px
       ctx.lineCap = 'round'
-      ctx.stroke(sparks)
-      ctx.restore()
+      ctx.stroke(spatter)
     }
 
-    // The lightning, in the ash.
+    // The lightning, in the ash: each bolt lights the column round it from inside.
     for (let n = 0; n < BOLTS.length; n++) {
       const age = t - BOLTS[n]
       const light = boltLight(age) * boltStrength(BOLTS[n])
       if (light <= 0.01) continue
+      const lit = new Path2D()
+      for (const p of puffs) {
+        if (p.low < 0.2 || p.low > 0.85) continue
+        lit.moveTo(p.at[0] + p.r * 0.85, p.at[1])
+        lit.ellipse(p.at[0], p.at[1], p.r * 0.85, p.r * 0.75, 0, 0, Math.PI * 2)
+      }
+      ctx.fillStyle = rgbaHex(mixHex(ICE.bolt, ICE.boltCore, 0.5), 0.22 * light)
+      ctx.fill(lit)
       const path = boltPath(n, BOLTS[n])
-      ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
-      const top = plumeTop(t)
-      const my = CRATER[1] - top * 0.5
-      const mx = CRATER[0] + 0.06 * 0.25 * top * 4
-      const gr = Math.min(0.14, top * 0.32)
-      const g = ctx.createRadialGradient(mx, my, 0, mx, my, gr)
-      g.addColorStop(0, rgbaHex(ICE.bolt, 0.3 * light))
-      g.addColorStop(1, rgbaHex(ICE.bolt, 0))
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.arc(mx, my, gr, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.restore()
       ctx.lineJoin = 'round'
       ctx.lineCap = 'round'
-      ctx.strokeStyle = rgbaHex(ICE.bolt, 0.45 * light)
-      ctx.lineWidth = 5 * px
+      ctx.strokeStyle = rgbaHex(ICE.bolt, 0.6 * light)
+      ctx.lineWidth = 2.6 * px
       ctx.stroke(path)
       ctx.strokeStyle = rgbaHex(ICE.boltCore, 0.95 * light)
-      ctx.lineWidth = 1.5 * px
+      ctx.lineWidth = 1.2 * px
       ctx.stroke(path)
     }
   })

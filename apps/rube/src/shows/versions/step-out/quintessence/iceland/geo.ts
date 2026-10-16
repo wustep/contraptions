@@ -302,7 +302,7 @@ export function walterSpin(t: number): number {
 
 /* ------------------------------------------------------------------ the posts */
 
-/** The reflector posts: one passed on every second beat along the ridge, every beat down the face. Each glints as he goes by. */
+/** The reflector posts: one passed on every second beat along the ridge, every beat down the face. Each lights as he goes by. */
 export const POSTS: { t: number; p: Pt }[] = (() => {
   const out: { t: number; p: Pt }[] = []
   for (const t of beats([52, 4], [55, 4]).filter((_, i) => i % 2 === 0)) {

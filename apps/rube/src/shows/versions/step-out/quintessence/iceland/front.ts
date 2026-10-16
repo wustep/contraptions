@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { layer, motes, rgbaOf, sway, view, type View } from '../depth'
 import { hash, scenery } from '../kit'
-import { lightning } from './erupt'
+import { fireLight, lightning } from './erupt'
 import { ERUPT, FINAL, HUSH, T1 } from './geo'
 import { ICE } from './theme'
 import { edges } from './vignette'
@@ -12,15 +12,14 @@ import { edges } from './vignette'
  * changes his colour. It is handed show time as `t`.
  *
  * Near: tufts of grass at the frame's foot, bent by the wind; now and then a reflector post going by close, faster
- * than the road, while he rides; grit on the wind. The eruption's amber flash over the whole land and the lightning's
- * flicker after it. Then the hush: the ash in the air, the light going grey-mauve, flakes falling near and far.
+ * than the road, while he rides; grit on the wind. The fire's warm light over the land from the burst on, and the
+ * lightning's. Then the hush: the ash in the air, the light going grey-mauve, flakes falling near and far.
  */
 
 const sm = (t: number, a: number, b: number): number => {
   const u = Math.max(0, Math.min(1, (t - a) / (b - a)))
   return u * u * (3 - 2 * u)
 }
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x))
 
 /** Where the near plane is true: the camera's resting place, at the frame's usual height. */
 const ANCHOR: Pt = [FINAL[0], FINAL[1] - 0.6]
@@ -28,9 +27,12 @@ const REF = 5
 
 /** The wide (110.4 to 115.5): the camera is off the ground, so nothing is near it. */
 const inWide = (t: number): number => sm(t, 109.9, 110.9) * (1 - sm(t, 115.0, 116.0))
-/** When the near posts go by: only while he is moving and the camera with him, never on a held frame. */
+/**
+ * When the near posts go by: only while he is moving and the camera with him, never on a held frame, and only while
+ * the land is under the frame's foot (after the wide the fjord is).
+ */
 const postsOn = (t: number): number =>
-  Math.max(sm(t, 96.0, 96.4) * (1 - sm(t, 101.0, 101.5)), sm(t, 106.6, 107.0) * (1 - sm(t, 119.2, 119.6))) * (1 - inWide(t))
+  Math.max(sm(t, 96.0, 96.4) * (1 - sm(t, 101.0, 101.5)), sm(t, 106.6, 107.0) * (1 - sm(t, 109.9, 110.5))) * (1 - inWide(t))
 
 /** The tufts at the foot of the frame: clumps of blades on the near plane, swaying on the wind. */
 function tufts(ctx: CanvasRenderingContext2D, inner: View, t: number, a: number): void {
@@ -103,7 +105,6 @@ export const icelandFront = scenery<null>({
     if (t < 95 || t > 134) return
     const ctx = p.drawingContext as CanvasRenderingContext2D
     const v = view(p, c.k)
-    const u = t - ERUPT
 
     // The ash in the air: the haze it makes, going grey-mauve and thickening to the cut (the director's cover then
     // takes the frame), and the flakes coming down through it.
@@ -118,11 +119,11 @@ export const icelandFront = scenery<null>({
     if (ash > 0) {
       ctx.save()
       ctx.globalAlpha = ash
-      motes(ctx, v, t, { n: 80, seed: 621, tile: [5, 3.5], r: [0.008, 0.02], v: [0.12, 0.22], spread: 0.4, sway: [0.08, 0.3], color: ICE.ash, twinkle: 0.4, square: true })
+      motes(ctx, v, t, { n: 80, seed: 621, tile: [5, 3.5], r: [0.008, 0.02], v: [0.12, 0.22], spread: 0.4, sway: [0.08, 0.3], color: ICE.ash, square: true })
       ctx.globalAlpha = sm(t, HUSH + 2, T1 - 3)
-      motes(ctx, v, t, { n: 160, seed: 622, tile: [5, 3.5], r: [0.008, 0.018], v: [0.1, 0.2], spread: 0.4, sway: [0.06, 0.25], color: ICE.ashDark, twinkle: 0.3, square: true })
+      motes(ctx, v, t, { n: 160, seed: 622, tile: [5, 3.5], r: [0.008, 0.018], v: [0.1, 0.2], spread: 0.4, sway: [0.06, 0.25], color: ICE.ashDark, square: true })
       ctx.globalAlpha = sm(t, HUSH + 5, T1 - 2)
-      motes(ctx, v, t, { n: 220, seed: 623, tile: [5, 3.5], r: [0.007, 0.016], v: [0.09, 0.18], spread: 0.4, sway: [0.06, 0.2], color: ICE.ash, twinkle: 0.3, square: true })
+      motes(ctx, v, t, { n: 220, seed: 623, tile: [5, 3.5], r: [0.007, 0.016], v: [0.09, 0.18], spread: 0.4, sway: [0.06, 0.2], color: ICE.ash, square: true })
       ctx.globalAlpha = sm(t, HUSH + 7, T1 - 1)
       motes(ctx, v, t, { n: 420, seed: 624, tile: [5, 3.5], r: [0.006, 0.013], v: [0.08, 0.16], spread: 0.4, sway: [0.05, 0.2], color: ICE.ashDeep, square: true })
       ctx.restore()
@@ -150,34 +151,14 @@ export const icelandFront = scenery<null>({
       })
     }
 
-    // The eruption's light: an amber flash over the whole land, falling away with a long warm tail; then the
-    // lightning's flicker, white-violet.
-    if (u > -0.02 && u < 9) {
-      // The burst, two after-pulses as the column clears the crater, and a long warm tail.
-      const w = Math.max(0, u)
-      const pulse = (at: number, a: number, d: number) => (w < at ? 0 : a * Math.exp(-(w - at) / d))
-      const flash = clamp01(pulse(0, 0.19, 0.3) + pulse(0.38, 0.09, 0.25) + pulse(0.86, 0.06, 0.3) + 0.07 * Math.exp(-w / 2.4) + 0.035 * Math.exp(-w / 7))
-      const bolt = 0.09 * lightning(t)
-      ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
-      if (flash > 0.01) {
-        ctx.fillStyle = rgbaOf(ICE.fire, flash)
-        ctx.fillRect((v.x0 - 0.5) * c.k, (v.y0 - 0.5) * c.k, (v.w + 1) * c.k, (v.h + 1) * c.k)
-      }
-      if (bolt > 0.004) {
-        ctx.fillStyle = rgbaOf(ICE.bolt, bolt)
-        ctx.fillRect((v.x0 - 0.5) * c.k, (v.y0 - 0.5) * c.k, (v.w + 1) * c.k, (v.h + 1) * c.k)
-      }
-      ctx.restore()
-    } else if (u >= 9) {
-      const bolt = 0.06 * lightning(t)
-      if (bolt > 0.004) {
-        ctx.save()
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.fillStyle = rgbaOf(ICE.bolt, bolt)
-        ctx.fillRect((v.x0 - 0.5) * c.k, (v.y0 - 0.5) * c.k, (v.w + 1) * c.k, (v.h + 1) * c.k)
-        ctx.restore()
-      }
+    // The eruption's light: the fire's, a plain warm wash over the land that comes up with the burst and stays,
+    // fading, through the hush; and the lightning's, the whole frame going pale for an instant.
+    const warm = 0.12 * fireLight(t)
+    const bolt = (t < ERUPT + 9 ? 0.16 : 0.12) * lightning(t)
+    for (const [hex, a] of [[ICE.fire, warm], [ICE.flash, bolt]] as const) {
+      if (a <= 0.004) continue
+      ctx.fillStyle = rgbaOf(hex, a)
+      ctx.fillRect((v.x0 - 0.5) * c.k, (v.y0 - 0.5) * c.k, (v.w + 1) * c.k, (v.h + 1) * c.k)
     }
 
     // The frame's corners fall away a little, more as the ash closes in.

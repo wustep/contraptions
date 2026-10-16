@@ -64,9 +64,9 @@ const CLIFF = cached(() => {
   }
   return { face, columns }
 })
-/** The fall off the cliff: from a notch in its lip down to the first ledge. */
-const FALL_X = EDGE - 0.05
-const FALL_TOP = TOP + 0.3
+/** The fall off the cliff: over its lip and down the face to the first ledge, where the face steps out. */
+const FALL_X = EDGE - 0.1
+const FALL_TOP = TOP + 0.02
 const FALL_FOOT = PINS[0].cy + RY + 0.2
 
 /* ------------------------------------------------------------------ the moss */
@@ -338,34 +338,59 @@ export function drawLand(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: 
     ctx.lineWidth = 0.02
     ctx.lineCap = 'butt'
     ctx.stroke(cliff.columns)
+    // The fall: a ribbon of white water off the lip, widening as it drops, its edges stirring and its strands and
+    // pale streaks running down it; spray where it lands on the ledge, and a stain of wet rock either side of it.
     const len = FALL_FOOT - FALL_TOP
-    const wob = (y: number) => FALL_X + 0.03 * Math.sin(y * 2.3) + 0.02 * (y - FALL_TOP) / len
-    const thread = new Path2D()
-    for (let y = FALL_TOP; y <= FALL_FOOT; y += 0.2) (y === FALL_TOP ? thread.moveTo(wob(y), y) : thread.lineTo(wob(y), y))
-    const water = new Path2D()
-    for (let j = 0; j < 9; j++) {
-      const y0 = FALL_TOP + ((j / 9 + t * 0.55 / len + hash(j, 1, 261) * 0.1) % 1) * len
-      const y1 = Math.min(FALL_FOOT, y0 + 0.35)
-      water.moveTo(wob(y0), y0)
-      water.lineTo(wob(y1), y1)
+    const mid = (y: number) => FALL_X + 0.03 * Math.sin(y * 2.3) + (0.06 * (y - FALL_TOP)) / len
+    const half = (y: number) => {
+      const u = (y - FALL_TOP) / len
+      return 0.022 + 0.04 * u + 0.006 * Math.sin(y * 11 - t * 9) * Math.min(1, u * 4)
+    }
+    const left: Pt[] = []
+    const right: Pt[] = []
+    const n = 24
+    for (let i = 0; i <= n; i++) {
+      const y = FALL_TOP + (len * i) / n
+      left.push([mid(y) - half(y), y])
+      right.push([mid(y) + half(y), y])
+    }
+    ctx.fillStyle = rgbaHex(ICE.basaltLight, 0.9)
+    ctx.fill(outline([...left.map(([x, y]): Pt => [x - 0.035, y]), ...right.map(([x, y]): Pt => [x + 0.035, y]).reverse()]))
+    ctx.fillStyle = rgbaHex(ICE.fall, 0.9)
+    ctx.fill(outline([...left, ...[...right].reverse()]))
+    const strands = new Path2D()
+    for (const at of [-0.45, 0.15, 0.6]) {
+      for (let i = 0; i <= n; i++) {
+        const y = FALL_TOP + (len * i) / n
+        const x = mid(y) + at * half(y) + 0.004 * Math.sin(y * 17 + at * 5)
+        if (i) strands.lineTo(x, y)
+        else strands.moveTo(x, y)
+      }
     }
     ctx.lineCap = 'round'
-    ctx.strokeStyle = ICE.fall
-    ctx.globalAlpha = 0.5
-    ctx.lineWidth = 0.05
-    ctx.stroke(thread)
-    ctx.globalAlpha = 0.95
-    ctx.lineWidth = 0.035
+    ctx.strokeStyle = rgbaHex(ICE.fallShade, 0.55)
+    ctx.lineWidth = 0.008
+    ctx.stroke(strands)
+    const water = new Path2D()
+    for (let j = 0; j < 12; j++) {
+      const y0 = FALL_TOP + ((j / 12 + (t * 0.7) / len + hash(j, 1, 261) * 0.08) % 1) * len
+      const y1 = Math.min(FALL_FOOT, y0 + 0.16 + 0.1 * hash(j, 2, 261))
+      const at = (hash(j, 3, 261) - 0.5) * 1.2
+      water.moveTo(mid(y0) + at * half(y0), y0)
+      water.lineTo(mid(y1) + at * half(y1), y1)
+    }
+    ctx.strokeStyle = rgbaHex(ICE.foam, 0.95)
+    ctx.lineWidth = 0.014
     ctx.stroke(water)
-    ctx.globalAlpha = 0.5
-    ctx.fillStyle = ICE.fall
+    ctx.fillStyle = rgbaHex(ICE.fall, 0.7)
     ctx.beginPath()
-    for (let m = 0; m < 3; m++) {
-      const r = 0.12 + 0.05 * Math.sin(t * 2.1 + m * 2)
-      ctx.ellipse(wob(FALL_FOOT) + (m - 1) * 0.12, FALL_FOOT + 0.02, r, r * 0.4, 0, 0, Math.PI * 2)
+    for (let m = 0; m < 4; m++) {
+      const r = 0.09 + 0.03 * Math.sin(t * 2.1 + m * 2)
+      const x = mid(FALL_FOOT) + (m - 1.5) * 0.08
+      ctx.moveTo(x + r, FALL_FOOT - 0.01)
+      ctx.ellipse(x, FALL_FOOT - 0.01, r, r * 0.55, 0, 0, Math.PI * 2)
     }
     ctx.fill()
-    ctx.globalAlpha = 1
   }
 
   // The road: gravel shoulders, the asphalt with its wear, a pale line at its near edge.
