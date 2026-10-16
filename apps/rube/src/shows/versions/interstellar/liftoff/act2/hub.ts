@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutBack } from '../../../../../../../../src/core/ease'
-import { FLOOR, mixHex, puff, type Pt } from '../../../../../parts'
+import { FLOOR, mixHex, puff, R, type Pt } from '../../../../../parts'
 import { alpha, carried, knock, lastOf, part, route, smooth, type Ctx, type PartShot } from '../kit'
 import { cue } from '../music'
 import { DUST } from '../worlds'
@@ -491,9 +491,37 @@ function drawFront(p: p5, s: HubState, c: Ctx): void {
   const T = c.t + s.begin
   const { k } = c
   inHub(p, k, () => {
+    drawSill(p, c, T)
     drawCanopy(p, c, T)
     drawClaw(p, c, T)
   })
+}
+
+/**
+ * In front of him as the arm lowers him into the seat and while he sits in it: the hull's near side, below the sill,
+ * drawn again inside his own disc and only over the cockpit's span. So he sits down in the cockpit, behind the hull's
+ * side, and not on top of its white. (Hub frame.)
+ */
+function drawSill(p: p5, c: Ctx, T: number): void {
+  if (T < SWUNG) return
+  const { k, ink, weight } = c
+  const [bx, by] = ballAt(T)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc((bx - AX[0]) * k, (by - AX[1]) * k, R * k + weight, 0, TAU)
+  ctx.clip()
+  inShip(p, c, T, (cs) => {
+    ctx.beginPath()
+    ctx.rect(-0.46 * k, 0.06 * k, 1.02 * k, 0.5 * k)
+    ctx.clip()
+    solid(p, ink, cs.weight, DUST.bone)
+    shape(p, k, HULL)
+    p.noStroke()
+    p.fill(ink)
+    shape(p, k, BELLY)
+  })
+  ctx.restore()
 }
 
 /* ---- the bay: the hub's light, and the end wall behind the ship */
