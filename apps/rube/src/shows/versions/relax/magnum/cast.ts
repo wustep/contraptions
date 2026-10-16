@@ -179,7 +179,8 @@ export function since(times: readonly number[], t: number): number {
  */
 export function flashBurst(p: p5, k: number, at: Pt, u: number, reach = 1.6, color = '#FFFDF6'): void {
   const { pop, after } = flashAt(u)
-  const a = Math.min(1, pop + 0.35 * after)
+  // The ember is quick: gone in a third of a second, never a dull disc hanging in the dark.
+  const a = Math.min(1, pop + 0.5 * after * Math.exp(-u / 0.15))
   if (a < 0.02) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const r = (reach / 17) * k * (0.7 + 0.3 * pop)

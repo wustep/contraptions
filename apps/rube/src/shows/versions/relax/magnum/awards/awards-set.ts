@@ -66,6 +66,65 @@ function drawTiers(p: p5, k: number, f: Frame, t: number): void {
   }
 }
 
+/** The dress circle over the stalls: the front of its balcony, and the underside's shadow below it. */
+const CIRCLE = { front: -3.22, lip: -2.86, soffit: -2.6 }
+
+/**
+ * The dress circle: a balcony over the back of the stalls, its front a band of dark plaster with gilt mouldings and
+ * panels, a row of heads over it, the dark under it. Its face is lit from the stage as the house comes up, most near
+ * the proscenium and falling off up the house; the heads over it stay dark on dark.
+ */
+function drawCircle(p: p5, k: number, f: Frame, t: number): void {
+  const x1 = Math.min(f.x1 + 1, LEG_L.x0 + 0.3)
+  const x0 = Math.max(f.x0 - 1, -40)
+  if (x1 <= x0 || f.y0 > CIRCLE.soffit || f.y1 < CIRCLE.front - 0.6) return
+  const X = (v: number) => v * k
+  const up = houseUp(t)
+  const heave = level(t)
+  // The heads in the circle, cut off by its front.
+  p.noStroke()
+  p.fill(mixHex(A.crowd, A.house, 0.72))
+  const S = 0.5
+  const gap = 0.5 * S
+  for (let i = Math.floor(x0 / gap) - 1; i <= Math.ceil(x1 / gap) + 1; i++) {
+    const hx = i * gap + (hash(i, 9, 3) - 0.5) * 0.12 * S
+    if (hx < x0 - 0.5 || hx > x1) continue
+    const bob = 0.012 * heave * (0.5 + 0.5 * Math.sin(1.9 * t + i * 1.3))
+    person(p, k, hx, CIRCLE.front - 0.4 + (hash(i, 9, 7) - 0.5) * 0.06 - bob, S * (0.92 + 0.16 * hash(i, 9, 5)), CIRCLE.front + 0.1, hairOf(i, 9))
+  }
+  // The shadow under it, over the back of the house.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const sh = ctx.createLinearGradient(0, X(CIRCLE.lip), 0, X(CIRCLE.soffit + 0.35))
+  sh.addColorStop(0, rgba(A.houseDeep, 0.85))
+  sh.addColorStop(1, rgba(A.houseDeep, 0))
+  ctx.save()
+  ctx.fillStyle = sh
+  ctx.fillRect(X(x0), X(CIRCLE.lip), X(x1 - x0), X(CIRCLE.soffit + 0.35 - CIRCLE.lip))
+  // Its face, brighter toward the stage.
+  const near = Math.min(x1, LEG_L.x0)
+  const face = ctx.createLinearGradient(X(near - 14), 0, X(near), 0)
+  const dark = mixHex(A.stage, A.houseDeep, 0.35)
+  face.addColorStop(0, dark)
+  face.addColorStop(1, mixHex(dark, A.curtainShade, 0.25 + 0.5 * up))
+  ctx.fillStyle = face
+  ctx.fillRect(X(x0), X(CIRCLE.front), X(x1 - x0), X(CIRCLE.lip - CIRCLE.front))
+  ctx.restore()
+  // The gilt: its top rail and a moulding along the bottom, and the panels between.
+  const gilt = (x: number) => 0.08 + (0.1 + 0.32 * up) * Math.max(0, 1 - (LEG_L.x0 - x) / 14)
+  for (let x = Math.floor(x0); x < x1; x += 1) {
+    const a = gilt(x + 0.5)
+    const xe = Math.min(x + 1, x1)
+    p.fill(rgba(A.gold, a))
+    p.rect(X(x), X(CIRCLE.front), X(xe - x), Math.max(1, X(0.035)))
+    p.fill(rgba(A.gold, a * 0.6))
+    p.rect(X(x), X(CIRCLE.lip - 0.06), X(xe - x), Math.max(1, X(0.02)))
+  }
+  for (let x = Math.ceil(x0 / 1.1) * 1.1; x < x1 - 0.2; x += 1.1) {
+    p.fill(rgba(A.gold, gilt(x) * 0.5))
+    p.rect(X(x), X(CIRCLE.front + 0.08), Math.max(1, X(0.018)), X(CIRCLE.lip - CIRCLE.front - 0.16))
+  }
+}
+
 /** How far the house has come up: low until the wall of bulbs lights, bank by bank. */
 export const houseUp = (t: number): number => 0.5 * Math.min(1, Math.max(0, snapOn(t - BANK1))) + 0.5 * Math.min(1, Math.max(0, snapOn(t - BANK2)))
 
@@ -101,7 +160,7 @@ function drawFly(p: p5, k: number, c: Ctx, f: Frame, t: number): void {
 /** How lit bank `b` of the wall of bulbs is at `t`. */
 const bankOn = (b: number, t: number): number => snapOn(t - (b === 0 ? BANK1 : BANK2))
 
-/** The wall of bulbs behind the stage: dark strips of dull bulbs until the lights come up, then a slow chase. */
+/** The wall of bulbs behind the stage: dark strips of dull bulbs until the lights come up, then lit, steady. */
 function drawBulbs(p: p5, k: number, f: Frame, t: number): void {
   const wx0 = LEG_L.x1
   const wx1 = LEG_R.x0
@@ -112,7 +171,7 @@ function drawBulbs(p: p5, k: number, f: Frame, t: number): void {
   p.fill(mixHex(A.houseDeep, A.stage, 0.35))
   p.rect(wx0 * k, top * k, (wx1 - wx0) * k, (SURF - top) * k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const beat = 0.85 + 0.15 * level(t)
+  const beat = 0.92 + 0.08 * level(t)
   // On the drums the wall goes dark behind Derek and stays up toward Hansel; it comes back as Hansel parades.
   const focus = ease(t, SWING, SWING + 0.45) * (1 - ease(t, PARADE, PARADE + 1.6))
   const hx = Math.min(MOUTH - 0.4, hanselLag(t, 0.3))
@@ -136,15 +195,10 @@ function drawBulbs(p: p5, k: number, f: Frame, t: number): void {
       ctx.fillRect((x - 0.42) * k, (top + 0.1) * k, 0.84 * k, (SURF - top - 0.1) * k)
       ctx.restore()
     }
+    // The bulbs: lit points, steady (no chase, no halo), breathing a little with the room.
+    const b = on * 0.66 * beat
     for (let j = 0; j < BULBS.rows; j++) {
       const y = BULBS.y0 - j * BULBS.dy
-      const chase = 0.5 + 0.5 * Math.sin(2.4 * t - 0.55 * j + 0.8 * i)
-      const b = on * (0.5 + 0.32 * chase) * beat
-      if (b > 0.02) {
-        p.noStroke()
-        p.fill(rgba(A.bulb, 0.13 * b))
-        p.circle(x * k, y * k, 0.15 * k)
-      }
       p.noStroke()
       // A bulb turned low goes back toward the dull of an unlit one.
       p.fill(mixHex(mixHex(A.gold, A.crowd, 0.62), mixHex(A.gold, A.bulb, Math.min(1, b)), Math.min(1, b * 3)))
@@ -333,6 +387,7 @@ export function drawTheatre(p: p5, c: Ctx, t: number): void {
   p.push()
   p.rectMode(p.CORNER)
   drawHouse(p, k, f)
+  drawCircle(p, k, f, t)
   drawTiers(p, k, f, t)
   drawBulbs(p, k, f, t)
   drawValance(p, k, c, f)
