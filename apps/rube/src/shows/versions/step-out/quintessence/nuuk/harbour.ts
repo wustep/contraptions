@@ -7,8 +7,9 @@ import { FLOOR, OUT } from './geo'
  * The harbour at Nuuk, outside the bar (B's): what is seen past the doors and through the window, on its own planes
  * behind the room so it moves slower than the room as the camera goes. Far off, Sermitsiaq's dark bulk under its snow
  * and the cloud going over it; across the water, the town's houses in their colours (ochre, teal, mustard, blue,
- * white); boats at their moorings bobbing on the swell; the swell itself, slow far off and quicker near; gulls; and
- * the light changing on all of it as the cloud goes over. Drawn straight onto the canvas in the place's cells.
+ * white); boats at their moorings bobbing on the swell; the swell itself, slow far off and quicker near; gulls; a
+ * trawler tied up at the quay by the harbour door; and the light changing on all of it as the cloud goes over. Drawn
+ * straight onto the canvas in the place's cells.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -60,6 +61,7 @@ export function drawHarbour(g: C2, v: View, t: number): void {
   // The cloud going over, far off: long flat banks in two values, drifting.
   layer(g, v, 0.06, BAR_AT, BAR_REF, (inner) => clouds(g, inner, t))
   layer(g, v, 0.14, BAR_AT, BAR_REF, (inner) => mountain(g, inner))
+  layer(g, v, 0.18, BAR_AT, BAR_REF, (inner) => scud(g, inner, t))
   // The water, from the far shore to the quay.
   const shore = onLayer(v, 0.3, BAR_AT, BAR_REF, [v.cx, SHORE_Y])[1]
   const wg = g.createLinearGradient(0, shore * k, 0, (FLOOR + 0.2) * k)
@@ -71,6 +73,7 @@ export function drawHarbour(g: C2, v: View, t: number): void {
   swell(g, v, t, shore)
   layer(g, v, 0.5, BAR_AT, BAR_REF, (inner) => boats(g, inner, t))
   layer(g, v, 0.75, BAR_AT, BAR_REF, (inner) => gulls(g, inner, t))
+  if (v.x0 < MOORED.x + 1.4) layer(g, v, 0.85, BAR_AT, BAR_REF, (inner) => moored(g, inner, t))
   // The cloud's shadow coming and going over all of it.
   const dim = 1 - daylight(t)
   if (dim > 0.005) {
@@ -129,6 +132,37 @@ function mountain(g: C2, v: View): void {
     g.fillStyle = r.rock === H.rockFar ? '#C5CDCF' : H.snow
     g.fill(snow)
   }
+}
+
+/**
+ * Low cloud torn off the overcast, hanging on the mountain's flanks and going by on the wind in front of it, quicker
+ * than the banks above: a few long rags, each two flat values.
+ */
+function scud(g: C2, v: View, t: number): void {
+  const k = v.k
+  const body = new Path2D()
+  const under = new Path2D()
+  const span = 12
+  for (let i = 0; i < 4; i++) {
+    const gx = hash(i, 1, 9) * span - t * (0.22 + 0.08 * hash(i, 2, 9))
+    const x = v.x0 - 3 + ((((gx - (v.x0 - 3)) % span) + span) % span)
+    const y = -2.05 + 0.6 * hash(i, 3, 9)
+    const w = 1.1 + 0.9 * hash(i, 4, 9)
+    for (let j = 0; j < 4; j++) {
+      const ox = (j - 1.5) * w * 0.38
+      const ww = w * (0.32 + 0.12 * hash(i, j, 10))
+      const hh = 0.07 + 0.05 * hash(i, j, 11)
+      const oy = (hash(i, j, 12) - 0.5) * 0.08
+      body.moveTo((x + ox + ww) * k, (y + oy) * k)
+      body.ellipse((x + ox) * k, (y + oy) * k, ww * k, hh * k, 0, 0, Math.PI * 2)
+      under.moveTo((x + ox + ww * 0.8) * k, (y + oy + hh * 0.45) * k)
+      under.ellipse((x + ox) * k, (y + oy + hh * 0.45) * k, ww * 0.8 * k, hh * 0.5 * k, 0, 0, Math.PI * 2)
+    }
+  }
+  g.fillStyle = H.cloud
+  g.fill(body)
+  g.fillStyle = H.cloudDark
+  g.fill(under)
 }
 
 /** The town across the water: the low shore and the houses up it in their colours, roofs dark, a window lit here and there. */
@@ -208,39 +242,65 @@ function swell(g: C2, v: View, t: number, shore: number): void {
   g.stroke(troughs)
 }
 
-/** Small boats at their moorings, each riding the swell on its own: a hull, a wheelhouse, a mast. */
+/**
+ * Small boats at their moorings, each riding the swell on its own: a hull, a wheelhouse, a mast. And one going out
+ * across the harbour under way, nearer, its wake spreading behind it.
+ */
 function boats(g: C2, v: View, t: number): void {
   const k = v.k
+  const out = -0.2 + 0.5 * (t - OUT_FROM)
+  if (out - 1.4 < v.x1 && out + 0.8 > v.x0) {
+    // The wake: two lines spreading back from the bow, and the churn under the stern.
+    const wy = -0.62 + 0.025 * Math.sin(t * 1.3)
+    const wake = new Path2D()
+    for (const side of [-1, 1]) {
+      wake.moveTo((out + 0.4) * k, (wy + 0.02) * k)
+      wake.lineTo((out - 1.3) * k, (wy + 0.02 + side * 0.05 + 0.04) * k)
+    }
+    wake.moveTo((out - 0.55) * k, (wy + 0.04) * k)
+    wake.lineTo((out - 1.0) * k, (wy + 0.05) * k)
+    g.lineWidth = Math.max(0.8, 0.014 * k)
+    g.strokeStyle = rgbaOf(H.crest, 0.75)
+    g.stroke(wake)
+    hull(g, k, out, wy, 0.75, 1, 0.04 * Math.sin(t * 1.7))
+  }
   for (const [bx, s, pale, seed] of [[-3.4, 1, 0, 1], [3.9, 0.8, 1, 2], [7.6, 1.1, 0, 3], [11.4, 0.9, 1, 4], [-7.2, 0.85, 1, 5]] as [number, number, number, number][]) {
     if (bx + 1 < v.x0 || bx - 1 > v.x1) continue
     const wy = -0.78 + 0.03 * Math.sin(t * 1.1 + seed * 2)
-    const roll = 0.06 * Math.sin(t * 0.9 + seed * 1.3)
-    g.save()
-    g.translate(bx * k, wy * k)
-    g.rotate(roll)
-    g.scale(s, s)
-    g.fillStyle = pale ? H.hullPale : H.hull
-    g.beginPath()
-    g.moveTo(-0.42 * k, -0.1 * k)
-    g.lineTo(0.5 * k, -0.12 * k)
-    g.lineTo(0.38 * k, 0.03 * k)
-    g.lineTo(-0.36 * k, 0.03 * k)
-    g.closePath()
-    g.fill()
-    g.fillStyle = H.cabin
-    g.fillRect(-0.12 * k, -0.27 * k, 0.24 * k, 0.16 * k)
-    g.fillStyle = '#33424A'
-    g.fillRect(-0.06 * k, -0.24 * k, 0.12 * k, 0.05 * k)
-    g.strokeStyle = '#3A4448'
-    g.lineWidth = Math.max(0.8, 0.012 * k)
-    g.beginPath()
-    g.moveTo(0.05 * k, -0.27 * k)
-    g.lineTo(0.05 * k, -0.62 * k)
-    g.moveTo(0.05 * k, -0.6 * k)
-    g.lineTo(-0.38 * k, -0.11 * k)
-    g.stroke()
-    g.restore()
+    hull(g, k, bx, wy, s, pale, 0.06 * Math.sin(t * 0.9 + seed * 1.3))
   }
+}
+
+/** When the boat going out across the harbour is off the bar's door. */
+const OUT_FROM = 37
+
+/** A boat on the water: hull, wheelhouse, mast and stay, at `x, y`, its size `s`, rolled by `roll`. */
+function hull(g: C2, k: number, bx: number, wy: number, s: number, pale: number, roll: number): void {
+  g.save()
+  g.translate(bx * k, wy * k)
+  g.rotate(roll)
+  g.scale(s, s)
+  g.fillStyle = pale ? H.hullPale : H.hull
+  g.beginPath()
+  g.moveTo(-0.42 * k, -0.1 * k)
+  g.lineTo(0.5 * k, -0.12 * k)
+  g.lineTo(0.38 * k, 0.03 * k)
+  g.lineTo(-0.36 * k, 0.03 * k)
+  g.closePath()
+  g.fill()
+  g.fillStyle = H.cabin
+  g.fillRect(-0.12 * k, -0.27 * k, 0.24 * k, 0.16 * k)
+  g.fillStyle = '#33424A'
+  g.fillRect(-0.06 * k, -0.24 * k, 0.12 * k, 0.05 * k)
+  g.strokeStyle = '#3A4448'
+  g.lineWidth = Math.max(0.8, 0.012 * k)
+  g.beginPath()
+  g.moveTo(0.05 * k, -0.27 * k)
+  g.lineTo(0.05 * k, -0.62 * k)
+  g.moveTo(0.05 * k, -0.6 * k)
+  g.lineTo(-0.38 * k, -0.11 * k)
+  g.stroke()
+  g.restore()
 }
 
 /** Gulls over the water, wheeling slowly on stiff wings, now and then a beat. */
@@ -265,6 +325,95 @@ function gulls(g: C2, v: View, t: number): void {
   g.lineWidth = Math.max(1, 0.018 * k)
   g.strokeStyle = H.gullDark
   g.stroke(path)
+}
+
+/** The trawler at the quay: where its middle is, on its plane (just behind the quay's), and its waterline. */
+const MOORED = { x: -1.4, y: FLOOR + 0.08 }
+
+/**
+ * A small trawler tied up alongside the quay by the harbour door, its hull below the quay's edge: the sheer and its
+ * stripe, tyres for fenders, the wheelhouse aft with its windows, a mast and its boom, the rigging, a flag. It rolls
+ * and heaves a little on the swell, and its lines go slack and taut with it.
+ */
+function moored(g: C2, v: View, t: number): void {
+  const k = v.k
+  const roll = 0.022 * Math.sin(t * 0.85 + 1) + 0.01 * Math.sin(t * 2.1)
+  const heave = 0.025 * Math.sin(t * 1.05 + 0.4)
+  g.save()
+  g.translate(MOORED.x * k, (MOORED.y + heave) * k)
+  g.rotate(roll)
+  // The hull: bow to the left, standing higher; its white stripe under the rail.
+  g.fillStyle = '#2B4248'
+  g.beginPath()
+  g.moveTo(-0.95 * k, -0.5 * k)
+  g.lineTo(0.85 * k, -0.34 * k)
+  g.lineTo(0.82 * k, 0.12 * k)
+  g.lineTo(-0.72 * k, 0.12 * k)
+  g.closePath()
+  g.fill()
+  g.fillStyle = '#C9CFCD'
+  g.beginPath()
+  g.moveTo(-0.93 * k, -0.46 * k)
+  g.lineTo(0.84 * k, -0.31 * k)
+  g.lineTo(0.84 * k, -0.27 * k)
+  g.lineTo(-0.91 * k, -0.42 * k)
+  g.closePath()
+  g.fill()
+  // Tyres hung over the side.
+  g.fillStyle = '#161A1B'
+  for (const x of [-0.35, 0.3]) {
+    g.beginPath()
+    g.ellipse(x * k, -0.17 * k, 0.07 * k, 0.09 * k, 0, 0, Math.PI * 2)
+    g.fill()
+  }
+  // The wheelhouse aft, its roof, its windows on the grey day.
+  g.fillStyle = '#D5D9D6'
+  g.fillRect(0.3 * k, -0.86 * k, 0.45 * k, 0.53 * k)
+  g.fillStyle = '#3B474B'
+  g.fillRect(0.26 * k, -0.9 * k, 0.53 * k, 0.05 * k)
+  g.fillStyle = '#6F7E84'
+  g.fillRect(0.35 * k, -0.78 * k, 0.15 * k, 0.12 * k)
+  g.fillRect(0.55 * k, -0.78 * k, 0.15 * k, 0.12 * k)
+  // The mast, the boom down to the bow, the rigging; one stroke.
+  g.strokeStyle = '#2F3A3E'
+  g.lineCap = 'round'
+  g.lineWidth = Math.max(1, 0.03 * k)
+  g.beginPath()
+  g.moveTo(-0.15 * k, -0.42 * k)
+  g.lineTo(-0.15 * k, -1.75 * k)
+  g.moveTo(-0.15 * k, -1.2 * k)
+  g.lineTo(-0.8 * k, -0.62 * k)
+  g.stroke()
+  g.lineWidth = Math.max(0.6, 0.01 * k)
+  g.beginPath()
+  g.moveTo(-0.15 * k, -1.72 * k)
+  g.lineTo(-0.94 * k, -0.52 * k)
+  g.moveTo(-0.15 * k, -1.72 * k)
+  g.lineTo(0.5 * k, -0.9 * k)
+  g.moveTo(-0.8 * k, -0.62 * k)
+  g.lineTo(-0.8 * k, -0.45 * k)
+  g.stroke()
+  // The flag at the masthead, snapping in the wind.
+  const flap = (u: number) => 0.035 * Math.sin(t * 6.5 - u * 5) * u
+  g.fillStyle = '#E2E5E0'
+  g.beginPath()
+  g.moveTo(-0.15 * k, -1.75 * k)
+  for (let i = 1; i <= 4; i++) g.lineTo((-0.15 + i * 0.07) * k, (-1.75 + flap(i / 4)) * k)
+  for (let i = 4; i >= 0; i--) g.lineTo((-0.15 + i * 0.065) * k, (-1.63 + flap(i / 4)) * k)
+  g.closePath()
+  g.fill()
+  g.restore()
+  // Its lines to the quay, from bow and stern: the slack in them as it heaves.
+  g.strokeStyle = '#B9A47A'
+  g.lineWidth = Math.max(0.8, 0.012 * k)
+  g.beginPath()
+  for (const [x, to] of [[-0.85, -1.9], [0.8, 0.95]] as [number, number][]) {
+    const a: Pt = [MOORED.x + x, MOORED.y + heave - 0.38 + roll * x]
+    const b: Pt = [MOORED.x + to, FLOOR - 0.02]
+    g.moveTo(a[0] * k, a[1] * k)
+    g.quadraticCurveTo(((a[0] + b[0]) / 2) * k, (Math.max(a[1], b[1]) + 0.1 - heave * 2) * k, b[0] * k, b[1] * k)
+  }
+  g.stroke()
 }
 
 /** How much the grey daylight has flooded into the room through the back door, banged open as he runs out. */
