@@ -422,7 +422,7 @@ export function drawDeepBack(g: C2, v: View, t: number): void {
   layer(g, v, 0.22, DEEP_AT, DEEP_REF, (inner) => {
     drawKeel(g, inner.k, t, 1)
     // Low in the dark, a long ribbon of capelin, pale where the light from above still finds their backs.
-    drawShoal(g, inner, t, { at: [1.2, 4.35], n: 380, w: 11, h: 1.6, bend: 0.75, len: 0.1, seed: 12, colour: DEEP.capelin }, 0.5 * life)
+    drawShoal(g, inner, t, { at: [1.2, 4.35], n: 270, w: 11, h: 1.2, bend: 0.75, len: 0.1, seed: 12, colour: DEEP.capelin }, 0.5 * life)
   })
   // Two fans of rays: many thin far ones, and a few broader ones nearer, faint, so they never grey the water.
   drawRays(g, v, t, { z: 0.4, n: 36, seed: 3, a: 0.1, w: [0.02, 0.09], len: 12, color: DEEP.jade })
