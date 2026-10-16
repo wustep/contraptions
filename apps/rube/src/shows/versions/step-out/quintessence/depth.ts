@@ -11,8 +11,8 @@ import { frame, hash } from './kit'
  *   scales less (or more) than the world when the camera pushes in or pulls back, as far things do.
  * - `motes`: things in the air, scattered over a plane and wrapped round the frame so there are always some in it:
  *   dust in a beam, snow, ash, embers, bubbles, marine snow. Drawn in one path a colour, so a few hundred are cheap.
- * - `glow`, `shaft`, `vignette`, `wash`: the light. A source has a bloom; a window or a lamp throws a shaft; the
- *   frame's edges fall away; a grade colours the whole plate.
+ * - `wash`: a grade over the whole plate. The places light themselves: a lamp's pool on the floor, a window's light on
+ *   the wall, a fire's warmth on what is round it.
  *
  * Everything here draws from the time it is given and the camera read back off the canvas (`frame`), never the wall
  * clock, so a still at any time is the same as that frame of the show. Every function draws in the piece's own cells
@@ -90,8 +90,6 @@ export interface Motes {
   sway?: Pt
   /** 'rgba(…)' or '#rrggbb': what they are. */
   color: string
-  /** Twinkle: each mote's alpha goes between 1 - twinkle and 1, at its own pace (one path per brightness band). */
-  twinkle?: number
   /** Only within this box of the plane (cells): a beam's dust, a chimney's sparks. */
   within?: { x0: number; y0: number; x1: number; y1: number }
   /** Square motes (cheaper; at a few pixels no one can tell): for snow and ash far off. */
@@ -114,9 +112,7 @@ export function motes(ctx: C2, inner: View, t: number, m: Motes): void {
   const by0 = box ? Math.max(inner.y0, box.y0) : inner.y0
   const by1 = box ? Math.min(inner.y1, box.y1) : inner.y1
   if (bx1 <= bx0 || by1 <= by0) return
-  const bands = m.twinkle ? 3 : 1
-  const paths: Path2D[] = []
-  for (let b = 0; b < bands; b++) paths.push(new Path2D())
+  const path = new Path2D()
   const spread = m.spread ?? 0.3
   const [sa, sf] = m.sway ?? [0, 0]
   const rx = Math.max(m.r[1], 0.02)
@@ -140,8 +136,6 @@ export function motes(ctx: C2, inner: View, t: number, m: Motes): void {
     x = ((x % tw) + tw) % tw
     y = ((y % th) + th) % th
     const r = m.r[0] + (m.r[1] - m.r[0]) * h4
-    const band = bands > 1 ? Math.min(bands - 1, Math.floor(((Math.sin(t * (0.7 + h3 * 1.6) + h1 * 40) + 1) / 2) * bands)) : 0
-    const path = paths[band]
     for (let i = i0; i <= i1; i++) {
       const px = x + i * tw
       if (px < bx0 - r || px > bx1 + r) continue
@@ -165,12 +159,8 @@ export function motes(ctx: C2, inner: View, t: number, m: Motes): void {
     ctx.lineCap = 'round'
     ctx.lineWidth = Math.max(0.5, 2 * m.r[1] * k)
   } else ctx.fillStyle = m.color
-  const base = ctx.globalAlpha
-  for (let b = 0; b < bands; b++) {
-    ctx.globalAlpha = base * (bands > 1 ? 1 - (m.twinkle ?? 0) * (1 - b / (bands - 1)) : 1)
-    if (m.streak) ctx.stroke(paths[b])
-    else ctx.fill(paths[b])
-  }
+  if (m.streak) ctx.stroke(path)
+  else ctx.fill(path)
   ctx.restore()
 }
 
@@ -180,66 +170,6 @@ export function motes(ctx: C2, inner: View, t: number, m: Motes): void {
 export function rgbaOf(hex: string, a: number): string {
   const n = parseInt(hex.slice(1), 16)
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`
-}
-
-/** A bloom round a source at `x, y` (cells), radius `r`: brightest at the middle, gone at the rim. `add` adds light (a lamp in the dark); otherwise it is laid on. */
-export function glow(ctx: C2, k: number, x: number, y: number, r: number, hex: string, a: number, add = false, squash = 1): void {
-  if (a <= 0.003 || r <= 0) return
-  ctx.save()
-  if (add) ctx.globalCompositeOperation = 'lighter'
-  ctx.translate(x * k, y * k)
-  if (squash !== 1) ctx.scale(1, squash)
-  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * k)
-  g.addColorStop(0, rgbaOf(hex, a))
-  g.addColorStop(0.35, rgbaOf(hex, a * 0.45))
-  g.addColorStop(1, rgbaOf(hex, 0))
-  ctx.fillStyle = g
-  ctx.fillRect(-r * k, -r * k, 2 * r * k, 2 * r * k)
-  ctx.restore()
-}
-
-/**
- * A shaft of light from a source: from `a` (its width there `wa`) to `b` (width `wb`), brightest at `a` and gone at
- * `b`. A window's sun, a lamp's cone, the surface's light down through the water.
- */
-export function shaft(ctx: C2, k: number, a: Pt, wa: number, b: Pt, wb: number, hex: string, alpha: number, add = false): void {
-  if (alpha <= 0.003) return
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  const len = Math.hypot(dx, dy) || 1
-  const nx = -dy / len
-  const ny = dx / len
-  ctx.save()
-  if (add) ctx.globalCompositeOperation = 'lighter'
-  const g = ctx.createLinearGradient(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-  g.addColorStop(0, rgbaOf(hex, alpha))
-  g.addColorStop(0.6, rgbaOf(hex, alpha * 0.35))
-  g.addColorStop(1, rgbaOf(hex, 0))
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo((a[0] + nx * wa / 2) * k, (a[1] + ny * wa / 2) * k)
-  ctx.lineTo((b[0] + nx * wb / 2) * k, (b[1] + ny * wb / 2) * k)
-  ctx.lineTo((b[0] - nx * wb / 2) * k, (b[1] - ny * wb / 2) * k)
-  ctx.lineTo((a[0] - nx * wa / 2) * k, (a[1] - ny * wa / 2) * k)
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
-}
-
-/** The frame's edges falling away into `hex`: none inside `inner` of the half-diagonal, `a` at the corners. */
-export function vignette(ctx: C2, v: View, hex: string, a: number, inner = 0.55): void {
-  if (a <= 0.003) return
-  const k = v.k
-  const rx = (v.w / 2) * 1.42
-  ctx.save()
-  ctx.translate(v.cx * k, v.cy * k)
-  ctx.scale(1, v.h / v.w)
-  const g = ctx.createRadialGradient(0, 0, rx * inner * k, 0, 0, rx * k)
-  g.addColorStop(0, rgbaOf(hex, 0))
-  g.addColorStop(1, rgbaOf(hex, a))
-  ctx.fillStyle = g
-  ctx.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
-  ctx.restore()
 }
 
 /**

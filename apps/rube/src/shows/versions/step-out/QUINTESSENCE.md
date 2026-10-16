@@ -159,13 +159,13 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 146.519 | 83.1, the build | The negative grows to fill the frame, and he is at the foot of a snow face at eighteen thousand feet, in the blue hour. A gust tears the snow off the rock over him. The build is a sunrise. |
-| 147.3 to 168.08 | 83 to 96 | The climb, up three legs of a switchback to a ledge. A step every other beat, then one on every beat as the choir comes up. The range rises behind the near ridges as he climbs, the wind builds, and as the choir comes up the highest peaks take a rose-gold first light. |
+| 146.519 | 83.1, the build | The negative grows to fill the frame, snow driven through it, and he is at the foot of a snow face at eighteen thousand feet, in the blue hour. A gust tears the snow off the rock over him. The build is a sunrise. |
+| 147.3 to 168.08 | 83 to 96 | The climb, up three legs of a switchback to a ledge, an old fixed rope clipped up the last pitch. A step every other beat, then one on every beat as the choir comes up. The range rises behind the near ridges as he climbs, the wind builds, rows of altocumulus take the dawn on their undersides, and as the choir comes up the highest peaks take a rose-gold first light. |
 | 168.08 | 96.1 | On the ledge, Sean sits behind his long lens, still. Walter stops beside him. They wait. |
-| 169.74 to 174.75 | 97 to 99 | While the music builds, they hold still. The world round them moves on the beats: snow sifting off the rock, spindrift off the summits, the camera strap knocking the tripod's leg. |
+| 169.74 to 174.75 | 97 to 99 | While the music builds, they hold still. The world round them moves on the beats: snow sifting off the rock, spindrift off the highest summits, the camera strap knocking the tripod's leg and shaking rime off it. |
 | 174.75 to 176.79 | 100.1 to 101.2 | Across the valley, the snow leopard comes out onto the rocks, pale on pale, one soft step a beat, and stops. The sun's edge clears the far ridge. |
 | 178.91 | 102.3 | Sean does not take the picture. He comes back off the eyepiece to Walter's side, and the camera stands alone while they look. The camera draws back until the two of them are a speck on the ledge in the whole range (183.3), then comes back in past the cat. |
-| 185.15 to 188.91 | 106.2 to 108.3 | The cat goes. They are left side by side on the ledge in gold-white light. |
+| 185.15 to 188.91 | 106.2 to 108.3 | The cat goes. They are left side by side on the ledge in gold-white light, over a sea of cloud with the summits' long shadows across it. |
 
 ### Life (191.409 to 226.384)
 
@@ -261,7 +261,7 @@ a building's front as well as over the sky. Each card holds 3.4 to 5 s; the last
   - `passage.ts`: the passages. At each cut the place coming is painted into its own picture by the camera carried
     across the cut, and laid over the place going through a shape that grows round him, with Walter drawn again on
     top, untouched.
-  - `depth.ts`: the depth kit the places draw with: parallax planes (`layer`), motes, vignettes and washes.
+  - `depth.ts`: the depth kit the places draw with: parallax planes (`layer`), motes and washes.
   - `seams.ts`: what Walter is doing at each cut: his velocity, the camera's distance and his place in the frame.
   - `music.ts`: the clock read from the onset file.
   - `worlds.ts`: the cast's colours.

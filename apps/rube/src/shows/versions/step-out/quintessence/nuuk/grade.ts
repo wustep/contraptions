@@ -1,7 +1,7 @@
 import { rgbaOf, type View } from '../depth'
 
 /**
- * The frame's edges falling away into `hex`: `vignette`'s light, with its middle left out of the fill, so
+ * The frame's edges falling away into `hex`, with its middle left out of the fill, so
  * the part of the frame it does not darken costs nothing, and its centre raised by `lift` of the frame's height, so
  * the dark gathers more at the foot than the head (the deep under him, the floor of a room).
  */

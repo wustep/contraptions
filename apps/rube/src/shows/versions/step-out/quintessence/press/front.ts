@@ -238,8 +238,8 @@ function near(ctx: C2, v: View, t: number, xr: number): void {
 }
 
 /**
- * The edges falling away into ink, as `vignette` draws them, but only where there is any: the clear middle is left out
- * of the fill, so the rasteriser does not shade the part of the frame the gradient leaves alone.
+ * The edges falling away into ink, only where there is any: the clear middle is left out of the fill, so the
+ * rasteriser does not shade the part of the frame the gradient leaves alone.
  */
 function ring(ctx: C2, v: View, hex: string, a: number, inner: number): void {
   const k = v.k

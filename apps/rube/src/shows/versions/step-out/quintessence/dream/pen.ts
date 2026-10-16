@@ -88,20 +88,6 @@ export function path(pen: Pen, pts: Pt[], col: string, lw = 0.8): void {
   p.endShape()
 }
 
-/** A soft round light: `col` at `a` in the middle, nothing at radius `r`. */
-export function glow(pen: Pen, c: Pt, r: number, col: string, a: number): void {
-  if (a <= 0.003 || r <= 0) return
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
-  const g = ctx.createRadialGradient(c[0] * k, c[1] * k, 0, c[0] * k, c[1] * k, r * k)
-  g.addColorStop(0, rgba(pen, col, a))
-  g.addColorStop(0.45, rgba(pen, col, a * 0.42))
-  g.addColorStop(1, rgba(pen, col, 0))
-  ctx.save()
-  ctx.fillStyle = g
-  ctx.fillRect((c[0] - r) * k, (c[1] - r) * k, 2 * r * k, 2 * r * k)
-  ctx.restore()
-}
 
 /** A box filled with a vertical gradient through `stops` ([at 0..1, colour, alpha]). */
 export function vgrad(pen: Pen, x0: number, y0: number, x1: number, y1: number, stops: [number, string, number][]): void {
