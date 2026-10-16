@@ -5,7 +5,7 @@ import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, farSide, frame, hash, knock, part, smooth, type Ctx, type PartShot } from '../kit'
 import { cue, UNDOCK } from '../music'
 import { BALL, DARK, VOID } from '../worlds'
-import { drawFar, drawLensing, drawNear } from './undock-far'
+import { drawFar, drawNear } from './undock-far'
 
 /**
  * Undocking: the film's docking run backwards.
@@ -556,13 +556,11 @@ function nearBand(a0: number, a1: number, r: number): [number, number][] {
 }
 
 /**
- * A jet's breath: a short tapered plume out of the nozzle for the first instant, and the vapour it leaves, blown on
- * along `dir`, spreading and thinning, gone in a little over half a second. Vapour, not a cloud: no ink.
+ * A jet's breath: a short tapered plume out of the nozzle for the first instant, then nothing. (It left a fan of
+ * vapour behind it, and the roll jets, firing both ways at once, drew a grey hourglass behind the ship with it.)
  */
 function jet(p: p5, c: Ctx, age: number, at: Pt, dir: Pt, size = 1): void {
-  if (age < 0 || age > 0.7) return
-  const u = age / 0.7
-  const go = 1 - (1 - u) ** 2
+  if (age < 0 || age >= 0.2) return
   const len = Math.hypot(dir[0], dir[1]) || 1
   const ux = dir[0] / len
   const uy = dir[1] / len
@@ -570,37 +568,19 @@ function jet(p: p5, c: Ctx, age: number, at: Pt, dir: Pt, size = 1): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   // The plume: out to full length in a few hundredths, then back into the nozzle.
-  if (age < 0.2) {
-    const v = age / 0.2
-    const L = 0.5 * size * Math.sin(Math.PI * Math.min(1, v * 1.6 + 0.08)) * (1 - 0.3 * v)
-    const W = 0.07 * size
-    const g = ctx.createLinearGradient(at[0] * k, at[1] * k, (at[0] + ux * L) * k, (at[1] + uy * L) * k)
-    g.addColorStop(0, `rgba(${BONE_RGB}, ${0.95 * (1 - 0.5 * v)})`)
-    g.addColorStop(1, `rgba(${BONE_RGB}, 0)`)
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo((at[0] - uy * W) * k, (at[1] + ux * W) * k)
-    ctx.lineTo((at[0] + ux * L) * k, (at[1] + uy * L) * k)
-    ctx.lineTo((at[0] + uy * W) * k, (at[1] - ux * W) * k)
-    ctx.closePath()
-    ctx.fill()
-  }
-  // The vapour: blown out along the way the jet went, a narrow flat fan from the nozzle that thins as it goes. (Wide
-  // and doubled it read as a grey hourglass over the ship when the roll jets fired both ways.)
-  const a = 0.2 * (1 - u) ** 1.6
-  for (const [reach, spread, share] of [[0.75, 0.6, 1]]) {
-    const d = (0.25 + 0.75 * go) * size * reach
-    const w = (0.05 + 0.2 * Math.sqrt(u)) * size * spread
-    const n = 0.03 * size
-    ctx.fillStyle = `rgba(${BONE_RGB}, ${(a * share).toFixed(3)})`
-    ctx.beginPath()
-    ctx.moveTo((at[0] - uy * n) * k, (at[1] + ux * n) * k)
-    ctx.lineTo((at[0] + ux * d - uy * w) * k, (at[1] + uy * d + ux * w) * k)
-    ctx.quadraticCurveTo((at[0] + ux * d * 1.18) * k, (at[1] + uy * d * 1.18) * k, (at[0] + ux * d + uy * w) * k, (at[1] + uy * d - ux * w) * k)
-    ctx.lineTo((at[0] + uy * n) * k, (at[1] - ux * n) * k)
-    ctx.closePath()
-    ctx.fill()
-  }
+  const v = age / 0.2
+  const L = 0.5 * size * Math.sin(Math.PI * Math.min(1, v * 1.6 + 0.08)) * (1 - 0.3 * v)
+  const W = 0.07 * size
+  const g = ctx.createLinearGradient(at[0] * k, at[1] * k, (at[0] + ux * L) * k, (at[1] + uy * L) * k)
+  g.addColorStop(0, `rgba(${BONE_RGB}, ${0.95 * (1 - 0.5 * v)})`)
+  g.addColorStop(1, `rgba(${BONE_RGB}, 0)`)
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo((at[0] - uy * W) * k, (at[1] + ux * W) * k)
+  ctx.lineTo((at[0] + ux * L) * k, (at[1] + uy * L) * k)
+  ctx.lineTo((at[0] + uy * W) * k, (at[1] - ux * W) * k)
+  ctx.closePath()
+  ctx.fill()
   ctx.restore()
 }
 
@@ -903,8 +883,6 @@ function drawSphere(p: p5, c: Ctx, t: number, f: Frame, q: Pose): void {
   if (f.x1 < sx - RS * 2 || f.x0 > sx + RS * 2 || f.y1 < sy - RS * 2 || f.y0 > sy + RS * 2) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const X = (v: number) => v * k
-  // Round it, the stars behind it drawn out along the rim by the lens, more as the ship comes near.
-  drawLensing(p, c, SPHERE, RS, smooth(t, cue(203), CONTACT))
   // Inside: the other side's sky, turning slowly and sliding a little with the camera.
   farSide(p, X(sx), X(sy), X(RS), 0.4 + t * 0.025 + (f.cy - sy) * 0.015, ((f.cx - sx) * -0.06) / RS, 81, 150, ink)
   p.push()

@@ -12,10 +12,11 @@ import { DARK } from '../worlds'
  *   habitats off past Cooper Station while it lets the Ranger go, turning, their window strips going round, with a
  *   hauler easing into one of them; and, out over Saturn, Enceladus and Mimas. They keep their place in the frame and
  *   slide a little against the camera (Titan least, Mimas most), as far things do.
- * - Between: the station's traffic, a shuttle running in across the top and a tug towing a container across the
- *   bottom, in front of the habitats and behind the station.
- * - Near, over everything and kept to the frame's edges: flakes of foil and a loose tether drifting past the port,
- *   and, as the ship runs out over the rings, chunks of ring ice going by under it, fast.
+ * - Near, over everything and kept to the frame's foot: as the ship runs out over the rings, chunks of ring ice going
+ *   by under it, fast.
+ *
+ * (The port's traffic, a shuttle and a tug with its container, and the foil and loose tether drifting past it, went:
+ * round the undock they were six more things in a frame that is about one ship leaving.)
  *
  * Flat paint and no ink round the far things (balls have ink round them; nothing here is a ball). No glow.
  */
@@ -130,10 +131,10 @@ function habitat(ctx: CanvasRenderingContext2D, x: number, y: number, len: numbe
   ctx.restore()
 }
 
-/** A small craft side on, nose along `dir`: hull above, slate below, steady lamps (red aft, ice at the nose), and its burn behind. In pixels. */
-function craft(ctx: CanvasRenderingContext2D, x: number, y: number, len: number, dir: number, burn: number, a: number, kind: 'shuttle' | 'tug'): void {
+/** The hauler, side on, nose along `dir`: hull above, slate below, steady lamps (red aft, ice at the nose), and its burn behind. In pixels. */
+function hauler(ctx: CanvasRenderingContext2D, x: number, y: number, len: number, dir: number, burn: number, a: number): void {
   if (a <= 0.01) return
-  const h = len * (kind === 'shuttle' ? 0.24 : 0.42)
+  const h = len * 0.42
   ctx.save()
   ctx.translate(x, y)
   ctx.rotate(dir)
@@ -147,19 +148,11 @@ function craft(ctx: CanvasRenderingContext2D, x: number, y: number, len: number,
   }
   ctx.fillStyle = rgba(DARK.hull, 0.92 * a)
   ctx.beginPath()
-  if (kind === 'shuttle') {
-    ctx.moveTo(len / 2, h * 0.15)
-    ctx.lineTo(len * 0.1, -h * 0.5)
-    ctx.lineTo(-len / 2, -h * 0.5)
-    ctx.lineTo(-len / 2, h * 0.5)
-    ctx.lineTo(len * 0.3, h * 0.5)
-  } else {
-    ctx.rect(-len / 2, -h / 2, len * 0.7, h)
-    ctx.rect(len * 0.2, -h * 0.32, len * 0.3, h * 0.64)
-  }
+  ctx.rect(-len / 2, -h / 2, len * 0.7, h)
+  ctx.rect(len * 0.2, -h * 0.32, len * 0.3, h * 0.64)
   ctx.fill()
   ctx.fillStyle = rgba(DARK.slate, 0.95 * a)
-  ctx.fillRect(-len / 2, h * 0.12, len * (kind === 'shuttle' ? 0.8 : 0.7), h * 0.38)
+  ctx.fillRect(-len / 2, h * 0.12, len * 0.7, h * 0.38)
   const dot = Math.max(1.3, len * 0.06)
   ctx.fillStyle = rgba(DARK.red, a)
   ctx.fillRect(-len / 2 - dot / 2, -h * 0.5 - dot / 2, dot, dot)
@@ -169,8 +162,8 @@ function craft(ctx: CanvasRenderingContext2D, x: number, y: number, len: number,
 }
 
 /**
- * Behind everything in the part, drawn first: Titan, the sister habitats with the hauler, the traffic, Enceladus and
- * Mimas. `t` is show time.
+ * Behind everything in the part, drawn first: Titan, the sister habitats with the hauler, Enceladus and Mimas. `t` is
+ * show time.
  */
 export function drawFar(p: p5, c: Ctx, t: number): void {
   if (t > END + 0.3) return
@@ -236,31 +229,7 @@ export function drawFar(p: p5, c: Ctx, t: number): void {
     const dy = Math.sin(-0.06)
     const hx = A[0] + dx * (lenA / 2 + S * 0.006 + S * 0.016 + gap * S * 0.06)
     const hy = A[1] + dy * (lenA / 2 + S * 0.006 + S * 0.016 + gap * S * 0.06)
-    craft(ctx, hx * k, hy * k, S * 0.032 * k, -0.06 + Math.PI, u < 1 ? 0.5 * (1 - u) : 0, habs, 'tug')
-
-    // The traffic, nearer: a shuttle in across the top, behind the station's end as it goes; a tug towing a
-    // container along the bottom. Moving on their own, and sliding against the camera a little faster than the habitats.
-    const mid: Pt = ref
-    const s0 = UNDOCK + 0.8
-    const sh = at(0.64 - 0.105 * (t - s0), -0.43 + 0.008 * (t - s0), 0.4, mid)
-    craft(ctx, sh[0] * k, sh[1] * k, S * 0.055 * k, Math.PI - 0.07, 0.8, habs * smooth(t, s0 - 0.3, s0 + 0.2), 'shuttle')
-    const g0 = UNDOCK + 1.6
-    const tg = at(-0.16 + 0.038 * (t - g0), 0.4 - 0.004 * (t - g0), 0.4, mid)
-    const tow = S * 0.07
-    const box: Pt = [tg[0] - tow, tg[1] + S * 0.004]
-    ctx.strokeStyle = rgba(DARK.hull, 0.5 * habs)
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(box[0] * k, box[1] * k)
-    ctx.lineTo((tg[0] - S * 0.014) * k, tg[1] * k)
-    ctx.stroke()
-    ctx.fillStyle = rgba(mixHex(DARK.red, DARK.slate, 0.35), habs)
-    const bw = S * 0.05 * k
-    const bh = S * 0.018 * k
-    ctx.fillRect(box[0] * k - bw, box[1] * k - bh / 2, bw, bh)
-    ctx.fillStyle = rgba(DARK.deep, 0.45 * habs)
-    for (let j = 1; j < 4; j++) ctx.fillRect(box[0] * k - bw + (bw * j) / 4, box[1] * k - bh / 2, Math.max(0.8, bw * 0.04), bh)
-    craft(ctx, tg[0] * k, tg[1] * k, S * 0.028 * k, 0, 0.6, habs, 'tug')
+    hauler(ctx, hx * k, hy * k, S * 0.032 * k, -0.06 + Math.PI, u < 1 ? 0.5 * (1 - u) : 0, habs)
   }
 
   // Home, behind him: Cooper Station falling away on the left as he burns out over Saturn, smaller every beat, its
@@ -286,19 +255,6 @@ export function drawFar(p: p5, c: Ctx, t: number): void {
 }
 
 /* ------------------------------------------------------------------ near */
-
-/** A flake: a quad that tumbles (its width the cosine of its turn), in pixels. */
-function flake(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, spin: number, tilt: number, fill: string, edge: string, a: number): void {
-  const cw = w * Math.cos(spin)
-  ctx.save()
-  ctx.translate(x, y)
-  ctx.rotate(tilt)
-  ctx.fillStyle = rgba(Math.cos(spin) > 0 ? fill : mixHex(fill, DARK.deep, 0.45), a)
-  ctx.fillRect(-Math.abs(cw) / 2, -h / 2, Math.max(1, Math.abs(cw)), h)
-  ctx.fillStyle = rgba(edge, 0.7 * a)
-  ctx.fillRect(-Math.abs(cw) / 2, -h / 2, Math.max(1, Math.abs(cw)), Math.max(0.8, h * 0.18))
-  ctx.restore()
-}
 
 /** A chunk of ring ice or rock: a lumpy polygon, lit on its upper left, tumbling. In pixels. */
 function chunk(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, turn: number, seed: number, fill: string, a: number, ink: string): void {
@@ -333,52 +289,14 @@ function chunk(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, t
 const RINGS_ON = cue(203.3)
 const RINGS_OFF = cue(207.3)
 
-/** Over everything in the part: what drifts past the port, and the ring ice the ship runs out over. `t` is show time. */
+/** Over everything in the part: the ring ice the ship runs out over. `t` is show time. */
 export function drawNear(p: p5, c: Ctx, t: number): void {
   if (t > END - 0.05) return
   const f = frame(p, c.k)
-  const { W, H, S, at } = view(f)
+  const { W, H, S } = view(f)
   const k = c.k
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
-
-  // By the port: flakes of foil and paint off the clamps and the collar, in the frame's top and bottom bands, and a
-  // loose tether hanging in at the lower left. Sliding past faster than the station as the camera moves.
-  const port = smooth(t, UNDOCK - 0.1, UNDOCK + 0.6) * (1 - smooth(t, SWING - 1.2, SWING - 0.2))
-  if (port > 0) {
-    const ref: Pt = [-1.3, 0.1]
-    for (let i = 0; i < 8; i++) {
-      const band = i % 2 ? 1 : -1
-      const u0 = -0.42 + 0.95 * hash(i, 11)
-      const v0 = band * (0.34 + 0.13 * hash(i, 12))
-      const du = (hash(i, 13) - 0.5) * 0.025
-      const dv = (hash(i, 14) - 0.5) * 0.01
-      const q = at(u0 + du * (t - UNDOCK), v0 + dv * (t - UNDOCK), -0.8, ref)
-      const size = S * (0.012 + 0.014 * hash(i, 15))
-      // Round the edges: wrap across (out of sight past either edge), so it stays as many flakes.
-      const span = W + 4 * size
-      const x = f.x0 - 2 * size + ((((q[0] - f.x0 + 2 * size) % span) + span) % span)
-      const gold = hash(i, 16) < 0.45
-      flake(ctx, x * k, q[1] * k, size * k, size * 0.6 * k, t * (1.2 + 2 * hash(i, 17)) + 6 * hash(i, 18), hash(i, 19) * 3, gold ? DARK.gold : DARK.slate, DARK.hull, 0.85 * port)
-    }
-    // The tether: from out of the frame at the lower left, bowed in, its clip swinging slowly.
-    const sway = Math.sin(t * 0.7) * 0.03
-    const a0 = at(-0.58, 0.6, -0.7, ref)
-    const a1 = at(-0.36 + sway, 0.36 - sway * 0.5, -0.7, ref)
-    const a2 = at(-0.27 + sway * 1.6, 0.47 + sway, -0.7, ref)
-    ctx.lineCap = 'round'
-    for (const [hex, w] of [[c.ink, S * 0.009], [DARK.slate, S * 0.005]] as const) {
-      ctx.strokeStyle = rgba(hex, port)
-      ctx.lineWidth = Math.max(1, w * k)
-      ctx.beginPath()
-      ctx.moveTo(a0[0] * k, a0[1] * k)
-      ctx.quadraticCurveTo(a1[0] * k, a1[1] * k, a2[0] * k, a2[1] * k)
-      ctx.stroke()
-    }
-    ctx.fillStyle = rgba(DARK.gold, port)
-    const cw = S * 0.016 * k
-    ctx.fillRect(a2[0] * k - cw / 2, a2[1] * k - cw / 2, cw, cw * 1.4)
-  }
 
   // Over the rings: ice and rock going by under the ship, near, so twice and more as fast as the rings themselves.
   const rings = smooth(t, RINGS_ON - 0.6, RINGS_ON + 0.4) * (1 - smooth(t, RINGS_OFF - 0.6, RINGS_OFF + 0.3))
@@ -402,36 +320,6 @@ export function drawNear(p: p5, c: Ctx, t: number): void {
         chunk(ctx, x * k, y * k, r * k, t * (0.6 + hash(i, layer, 26)) * (hash(i, layer, 27) < 0.5 ? -1 : 1), i * 7 + layer, ice ? mixHex(DARK.hull, DARK.gold, 0.18) : mixHex(DARK.slate, DARK.gold, 0.3), rings * (layer === 1 ? 0.75 : 0.9), c.ink)
       }
     }
-  }
-  ctx.restore()
-}
-
-/* ------------------------------------------------------------------ the sphere's lensing */
-
-/**
- * Round the sphere, outside its glass: the stars behind it bent into short arcs along its rim, longer the nearer the
- * rim and the nearer the ship. Lines, not a glow. In cells: the sphere's centre and radius; `near`, 0 to 1, how close
- * the ship has come.
- */
-export function drawLensing(p: p5, c: Ctx, centre: Pt, rs: number, near: number): void {
-  if (near <= 0.01) return
-  const k = c.k
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
-  ctx.lineCap = 'round'
-  const [sx, sy] = centre
-  for (let i = 0; i < 26; i++) {
-    const out = hash(i, 41) ** 1.3
-    const r = rs * (1.03 + 0.3 * out)
-    // The nearer the rim, the more it is drawn out along it.
-    const len = (0.03 + 0.22 * (1 - out) ** 2) * (0.4 + 0.6 * near)
-    const a = hash(i, 42) * TAU
-    const bright = (0.12 + 0.22 * hash(i, 43)) * near * (1 - 0.7 * out)
-    ctx.strokeStyle = rgba(hash(i, 44) < 0.35 ? DARK.ice : DARK.hull, bright)
-    ctx.lineWidth = Math.max(0.8, k * 0.018 * (1 - 0.5 * out))
-    ctx.beginPath()
-    ctx.arc(sx * k, sy * k, r * k, a, a + len)
-    ctx.stroke()
   }
   ctx.restore()
 }
