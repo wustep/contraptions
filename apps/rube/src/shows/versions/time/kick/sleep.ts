@@ -1,25 +1,19 @@
 import { R, type Pt } from '../../../../parts'
-import { bloom, rgba } from './cast'
+import { rgba } from './cast'
 import { box, frame, hash, scenery } from './kit'
 import { SEAM } from './music'
-import { BAND, DOWN, SLEEP_BANDS, UP, type Crossing } from './stack'
+import { BAND, SLEEP_BANDS } from './stack'
 import { COBB, SLEEP } from './worlds'
 
 /**
  * The dark of sleep between two levels (the director's): a band of deep night under each level's ground and over the
  * next one's sky, feathered into both so neither ends on a ruled line, with a few motes drifting in it as dust drifts in
  * a dark room. It is drawn after every part of the dream and before the balls, so a level's ground or sky never shows
- * a hard edge where it meets it, and the ball is seen crossing it: going down, a slow wake of pale light behind him;
- * thrown up, a streak.
+ * a hard edge where it meets it, and the ball is seen crossing it, his colour against the dark (no light round him).
  */
 
 /** How far the dark feathers into the level over it and the one under it, cells. */
 const FEATHER = 1.4
-
-const CROSSINGS: (Crossing & { up: boolean })[] = [
-  ...Object.values(DOWN).map((c) => ({ ...c, up: false })),
-  ...Object.values(UP).map((c) => ({ ...c, up: true })),
-]
 
 /**
  * Where he is, and when the camera is out on the whole stack at once (the director's great wides): `score.ts` hands
@@ -81,17 +75,6 @@ export const sleep = scenery<null>({
         ctx.fill()
       }
     }
-    // Where he crosses: going down, a soft pale wake that opens round him and fades; thrown up, a brief bright one.
-    for (const cr of CROSSINGS) {
-      const u = t - cr.t
-      if (u < -0.8 || u > 2.2) continue
-      const at: Pt = [cr.at[0], cr.at[1] + cr.v[1] * u * 0.3]
-      const a = cr.up ? 0.5 * Math.exp(-Math.abs(u) / 0.25) : 0.22 * Math.exp(-Math.abs(u) / 0.7)
-      // Seen from far off (the great wides), a thrown one is a spark climbing through the dark: its glow grows with the
-      // frame so it is still found at a hundred cells.
-      const far = Math.max(1, (f.y1 - f.y0) / 24)
-      bloom(p, k, at, (cr.up ? 1.6 : 2.4) * (cr.up ? far : 1), SLEEP.mote, a * (cr.up ? Math.min(1.6, 0.8 + far * 0.2) : 1))
-    }
     const out = f.y1 - f.y0 >= FAR_OUT
     const span = wide?.spans.find(([a, b]) => t >= a && t <= b) ?? (out ? wide?.dream.find(([a, b]) => t >= a && t <= b) : undefined)
     for (const [a, b] of span ? [span] : []) {
@@ -115,7 +98,6 @@ export const sleep = scenery<null>({
         ctx.stroke()
       }
       ctx.restore()
-      bloom(p, k, at, 1.5 * far, SLEEP.mote, 0.55)
       ctx.fillStyle = COBB
       ctx.beginPath()
       ctx.arc(at[0] * k, at[1] * k, Math.max(2, 0.19 * far * k), 0, Math.PI * 2)
