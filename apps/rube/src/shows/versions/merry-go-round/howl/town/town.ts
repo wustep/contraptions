@@ -219,26 +219,41 @@ export function glow(p: p5, k: number, x: number, y: number, r: number, hex: str
   ctx.restore()
 }
 
-/** A shaft of light from a window: a quad from the opening's edge (a0, a1) to where it lands (b0, b1), fading. Added. */
-export function shaft(p: p5, k: number, a0: Pt, a1: Pt, b0: Pt, b1: Pt, hex: string, a: number): void {
+/**
+ * A shaft of light from a window: from the opening's edge (a0, a1) to where it lands (b0, b1), fading as it goes.
+ * Soft at its sides, never a hard-edged wedge: thin layers, each narrower toward its middle, so the light ramps up from
+ * nothing at its edges. `glass` (x0, y0, x1, y1) is left out: the window itself is the light, never washed over.
+ */
+export function shaft(p: p5, k: number, a0: Pt, a1: Pt, b0: Pt, b1: Pt, hex: string, a: number, glass?: readonly [number, number, number, number]): void {
   if (a <= 0.003) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const mid = (u: Pt, v: Pt): Pt => [(u[0] + v[0]) / 2, (u[1] + v[1]) / 2]
-  const from = mid(a0, a1)
-  const to = mid(b0, b1)
-  const g = ctx.createLinearGradient(from[0] * k, from[1] * k, to[0] * k, to[1] * k)
-  g.addColorStop(0, hexA(hex, a))
-  g.addColorStop(1, hexA(hex, a * 0.15))
+  const lerp = (u: Pt, v: Pt, f: number): Pt => [u[0] + (v[0] - u[0]) * f, u[1] + (v[1] - u[1]) * f]
+  const LAYERS = 8
   ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo(a0[0] * k, a0[1] * k)
-  ctx.lineTo(a1[0] * k, a1[1] * k)
-  ctx.lineTo(b1[0] * k, b1[1] * k)
-  ctx.lineTo(b0[0] * k, b0[1] * k)
-  ctx.closePath()
-  ctx.fill()
+  if (glass) {
+    ctx.beginPath()
+    ctx.rect(-1e5, -1e5, 2e5, 2e5)
+    ctx.rect(glass[0] * k, glass[1] * k, (glass[2] - glass[0]) * k, (glass[3] - glass[1]) * k)
+    ctx.clip('evenodd')
+  }
+  for (let i = 0; i < LAYERS; i++) {
+    const f = (0.36 * i) / (LAYERS - 1)
+    const tl = lerp(a0, a1, f)
+    const tr = lerp(a1, a0, f)
+    const br = lerp(b1, b0, f)
+    const bl = lerp(b0, b1, f)
+    const g = ctx.createLinearGradient(((tl[0] + tr[0]) / 2) * k, ((tl[1] + tr[1]) / 2) * k, ((bl[0] + br[0]) / 2) * k, ((bl[1] + br[1]) / 2) * k)
+    g.addColorStop(0, hexA(hex, a / LAYERS))
+    g.addColorStop(1, hexA(hex, (0.15 * a) / LAYERS))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo(tl[0] * k, tl[1] * k)
+    ctx.lineTo(tr[0] * k, tr[1] * k)
+    ctx.lineTo(br[0] * k, br[1] * k)
+    ctx.lineTo(bl[0] * k, bl[1] * k)
+    ctx.closePath()
+    ctx.fill()
+  }
   ctx.restore()
 }
 
@@ -1116,8 +1131,8 @@ function drawShop(p: p5, k: number, W: number, ink: string, t: number, tone: Ton
 
   // The dawn's light through it, across the workroom (only in the morning).
   if (t < SEAM.alley + 1) {
-    const a = 0.2 * smooth(t, 0.5, 8) * (1 - 0.4 * smooth(t, 20, 36))
-    shaft(p, k, [wx0, wy0], [wx1, wy1 - 0.1], [wx0 + 3.2, G - 0.6], [wx1 + 4.6, G + 0.05], TOWN.glow, a)
+    const a = 0.34 * smooth(t, 0.5, 8) * (1 - 0.4 * smooth(t, 20, 36))
+    shaft(p, k, [wx0, wy0], [wx1, wy1 - 0.1], [wx0 + 3.2, G - 0.6], [wx1 + 4.6, G + 0.05], TOWN.glow, a, [wx0, wy0, wx1, wy1])
   }
 
   // The shelves of hats on the shop's back wall, over the counter.
