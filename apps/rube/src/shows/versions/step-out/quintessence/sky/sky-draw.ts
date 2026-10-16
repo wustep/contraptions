@@ -426,6 +426,10 @@ const GULLS: { x: number; up: number; vx: number; vy: number }[] = [
  * one stroke for all the wings in the air.
  */
 function drawGulls(g: C2, k: number, f: ReturnType<typeof frame>, t: number, y0: number): void {
+  const bodies = new Path2D()
+  const backs = new Path2D()
+  const tails = new Path2D()
+  const legs = new Path2D()
   const wings = new Path2D()
   const tips = new Path2D()
   for (let i = 0; i < GULLS.length; i++) {
@@ -434,30 +438,22 @@ function drawGulls(g: C2, k: number, f: ReturnType<typeof frame>, t: number, y0:
     const dir = i % 2 ? -1 : 1
     if (s < 0) {
       if (b.x < f.x0 - 0.3 || b.x > f.x1 + 0.3) continue
-      // Standing: a body, a folded wing, a head that turns now and then, legs.
+      // Standing: a body, a folded wing, a head that turns now and then, legs and a beak.
       const look = Math.sin(t * 0.9 + i * 2.3) > 0.4 ? -dir : dir
       const x = b.x
-      g.fillStyle = '#E9ECE9'
-      g.beginPath()
-      g.ellipse(x * k, (y0 - 0.1) * k, 0.1 * k, 0.05 * k, 0, 0, Math.PI * 2)
-      g.ellipse((x + look * 0.08) * k, (y0 - 0.17) * k, 0.035 * k, 0.032 * k, 0, 0, Math.PI * 2)
-      g.fill()
-      g.fillStyle = '#98A3A6'
-      g.beginPath()
-      g.ellipse((x - look * 0.02) * k, (y0 - 0.12) * k, 0.075 * k, 0.03 * k, 0, 0, Math.PI * 2)
-      g.fill()
-      g.fillStyle = '#2E3538'
-      g.fillRect((x - look * 0.11) * k, (y0 - 0.12) * k, 0.04 * k, 0.025 * k)
-      g.strokeStyle = '#C8A04E'
-      g.lineWidth = Math.max(1, 0.012 * k)
-      g.beginPath()
-      g.moveTo((x - 0.02) * k, (y0 - 0.06) * k)
-      g.lineTo((x - 0.02) * k, y0 * k)
-      g.moveTo((x + 0.02) * k, (y0 - 0.06) * k)
-      g.lineTo((x + 0.02) * k, y0 * k)
-      g.moveTo((x + look * 0.11) * k, (y0 - 0.17) * k)
-      g.lineTo((x + look * 0.15) * k, (y0 - 0.165) * k)
-      g.stroke()
+      bodies.moveTo((x + 0.1) * k, (y0 - 0.1) * k)
+      bodies.ellipse(x * k, (y0 - 0.1) * k, 0.1 * k, 0.05 * k, 0, 0, Math.PI * 2)
+      bodies.moveTo((x + look * 0.08 + 0.035) * k, (y0 - 0.17) * k)
+      bodies.ellipse((x + look * 0.08) * k, (y0 - 0.17) * k, 0.035 * k, 0.032 * k, 0, 0, Math.PI * 2)
+      backs.moveTo((x - look * 0.02 + 0.075) * k, (y0 - 0.12) * k)
+      backs.ellipse((x - look * 0.02) * k, (y0 - 0.12) * k, 0.075 * k, 0.03 * k, 0, 0, Math.PI * 2)
+      tails.rect((x - look * 0.11) * k, (y0 - 0.12) * k, 0.04 * k, 0.025 * k)
+      legs.moveTo((x - 0.02) * k, (y0 - 0.06) * k)
+      legs.lineTo((x - 0.02) * k, y0 * k)
+      legs.moveTo((x + 0.02) * k, (y0 - 0.06) * k)
+      legs.lineTo((x + 0.02) * k, y0 * k)
+      legs.moveTo((x + look * 0.11) * k, (y0 - 0.17) * k)
+      legs.lineTo((x + look * 0.15) * k, (y0 - 0.165) * k)
       continue
     }
     // In the air: up off the quay beating hard, then wheeling on the wind, the circle drifting downwind.
@@ -480,8 +476,17 @@ function drawGulls(g: C2, k: number, f: ReturnType<typeof frame>, t: number, y0:
     tips.moveTo((x + span) * k, (y - span * lift) * k)
     tips.lineTo((x + span * 0.75) * k, (y - span * lift * 0.85) * k)
   }
+  g.fillStyle = '#E9ECE9'
+  g.fill(bodies)
+  g.fillStyle = '#98A3A6'
+  g.fill(backs)
+  g.fillStyle = '#2E3538'
+  g.fill(tails)
   g.lineCap = 'round'
   g.lineJoin = 'round'
+  g.strokeStyle = '#C8A04E'
+  g.lineWidth = Math.max(1, 0.012 * k)
+  g.stroke(legs)
   g.lineWidth = Math.max(1.2, 0.03 * k)
   g.strokeStyle = '#E9ECE9'
   g.stroke(wings)
