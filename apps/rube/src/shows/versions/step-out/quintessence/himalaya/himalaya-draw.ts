@@ -136,7 +136,7 @@ function inside(poly: readonly Pt[], x: number, y: number): boolean {
   return hit
 }
 
-/** A snowfield: its outline, and its rock in bands (made once); the stones and ripples on it are made as they come into view. */
+/** A snowfield: its outline, and its rock in bands (made once); the ripples on it are made as they come into view. */
 interface Field {
   spec: FieldSpec
   outline: Path2D
@@ -157,7 +157,7 @@ interface FieldSpec {
   /** How the strata tilt: y per x. */
   tilt: number
   rows: number
-  /** How thick the stones and ripples lie, 1 for the face. */
+  /** How thick the ripples lie, 1 for the face. */
   density: number
 }
 
@@ -181,7 +181,7 @@ function field(fs: FieldSpec): Field {
   for (let j = 0; j < fs.rows; j++) {
     const y0 = fs.y0 + (j + h(j, 41) * 0.4) * (H / fs.rows)
     for (let q = 0; q < cols; q++) {
-      if (h(j, q, 46) < 0.26) continue
+      if (h(j, q, 46) < 0.3) continue
       const xa = fs.x0 + q * 3.9 + h(j, q, 42) * 2.6 + (j % 2) * 1.7 - 1
       const len = 0.7 + h(j, q, 43) ** 1.5 * 3.2
       if (![0, 0.5, 1].every((u) => inside(fs.outline, xa + len * u, y0 + (xa + len * u - fs.x0) * fs.tilt))) continue
@@ -209,22 +209,22 @@ function field(fs: FieldSpec): Field {
 }
 
 let faceGeo: Field | null = null
-const faceOf = (): Field => (faceGeo ??= field({ outline: FACE, x0: -21, y0: -13.4, x1: 11.6, y1: 8, seed: 41, tilt: -0.09, rows: 20, density: 1 }))
+const faceOf = (): Field => (faceGeo ??= field({ outline: FACE, x0: -21, y0: -13.4, x1: 11.6, y1: 8, seed: 41, tilt: -0.09, rows: 18, density: 1 }))
 
 /**
- * The stones and the wind's ripples on a snowfield, made for what is in view: on a grid that is finer the closer the
- * camera is (each finer grid fading in as it comes), so the snow has grain at every distance and only what is seen is
- * drawn. Each grid square's ripples and stone are its own, by hash, so they stay put.
+ * The wind's ripples on a snowfield, made for what is in view: on a grid that is finer the closer the camera is (each
+ * finer grid fading in as it comes), so the snow has grain at every distance and only what is seen is drawn. Each grid
+ * square's ripples are its own, by hash, so they stay put.
  */
 const LEVELS = [2, 1, 0.5, 0.25, 0.125]
 /** Grid squares to a tile: the grain is made a tile at a time, the first time the tile is seen, and kept. */
 const TILE = 8
-const tiles = new Map<string, { ripples: Path2D; stones: Path2D }>()
-function tileOf(fs: FieldSpec, li: number, g: number, tx: number, ty: number): { ripples: Path2D; stones: Path2D } {
+const tiles = new Map<string, Path2D>()
+function tileOf(fs: FieldSpec, li: number, g: number, tx: number, ty: number): Path2D {
   const key = `${fs.seed}:${li}:${tx}:${ty}`
   let tile = tiles.get(key)
   if (tile) return tile
-  tile = { ripples: new Path2D(), stones: new Path2D() }
+  tile = new Path2D()
   for (let gx = tx * TILE; gx < (tx + 1) * TILE; gx++) {
     for (let gy = ty * TILE; gy < (ty + 1) * TILE; gy++) {
       if (!inside(fs.outline, (gx + 0.5) * g, (gy + 0.5) * g)) continue
@@ -234,19 +234,9 @@ function tileOf(fs: FieldSpec, li: number, g: number, tx: number, ty: number): {
         const y = (gy + h(i * 3 + 1)) * g
         const len = g * 0.75 * (0.5 + h(i * 3 + 2))
         const bow = (h(i + 9) - 0.5) * 0.12 * len
-        tile.ripples.moveTo(x, y)
-        tile.ripples.lineTo(x + len / 2, y + (fs.tilt * len) / 2 + bow)
-        tile.ripples.lineTo(x + len, y + fs.tilt * len)
-      }
-      if (li < 4 && h(20) < 0.12) {
-        const x = (gx + h(21)) * g
-        const y = (gy + h(22)) * g
-        const r = g * 0.07 * (0.4 + h(23))
-        tile.stones.moveTo(x - r, y + r * 0.3)
-        tile.stones.lineTo(x - r * 0.3, y - r * 0.5)
-        tile.stones.lineTo(x + r * 0.6, y - r * 0.35)
-        tile.stones.lineTo(x + r, y + r * 0.3)
-        tile.stones.closePath()
+        tile.moveTo(x, y)
+        tile.lineTo(x + len / 2, y + (fs.tilt * len) / 2 + bow)
+        tile.lineTo(x + len, y + fs.tilt * len)
       }
     }
   }
@@ -254,7 +244,7 @@ function tileOf(fs: FieldSpec, li: number, g: number, tx: number, ty: number): {
   return tile
 }
 
-function grain(c: C2, fs: FieldSpec, f: Frame, tn: Tone, rock: string): void {
+function grain(c: C2, fs: FieldSpec, f: Frame, tn: Tone): void {
   const x0 = Math.max(fs.x0, f.x0 - 0.5)
   const x1 = Math.min(fs.x1, f.x1 + 0.5)
   const y0 = Math.max(fs.y0, f.y0 - 0.5)
@@ -270,31 +260,24 @@ function grain(c: C2, fs: FieldSpec, f: Frame, tn: Tone, rock: string): void {
     const a = smooth(g * kpx, 18, 28)
     if (a < 0.05 || g * kpx > 260) return
     const ripples = new Path2D()
-    const stones = new Path2D()
     const span = g * TILE
     for (let tx = Math.floor(x0 / span); tx <= Math.floor(x1 / span); tx++) {
-      for (let ty = Math.floor(y0 / span); ty <= Math.floor(y1 / span); ty++) {
-        const tile = tileOf(fs, li, g, tx, ty)
-        ripples.addPath(tile.ripples)
-        stones.addPath(tile.stones)
-      }
+      for (let ty = Math.floor(y0 / span); ty <= Math.floor(y1 / span); ty++) ripples.addPath(tileOf(fs, li, g, tx, ty))
     }
     // Hairlines: one pixel wide, which the canvas draws fastest.
     c.strokeStyle = rgba(tn.faceShade, 0.5 * a)
     c.stroke(ripples)
-    c.fillStyle = rgba(rock, 0.8 * a)
-    c.fill(stones)
   })
 }
 
 /**
- * What is on a snowfield, in the hour's light: the wind's ripples and the stones, the drift-shadows, the rock in bands
- * (a value lighter than the steps' slabs, so the climb reads against them), and the snow's lip along each band, which
- * catches the sun where it has reached.
+ * What is on a snowfield, in the hour's light: the wind's ripples, the drift-shadows, the rock in bands (a value
+ * lighter than the steps' slabs, so the climb reads against them), and the snow's lip along each band, which catches
+ * the sun where it has reached.
  */
 function paintField(c: C2, g: Field, tn: Tone, t: number, f: Frame, rock: string): void {
   const ly = litY(t, 'world')
-  grain(c, g.spec, f, tn, rock)
+  grain(c, g.spec, f, tn)
   c.fillStyle = rgba(tn.faceShade, 0.4)
   c.fill(g.under)
   c.fillStyle = rock
@@ -546,15 +529,13 @@ const ISLANDS: [number, number, number, number][] = [[22.6, 0.25, 2.6, 0.9], [30
 const HEAPS: [number, number, number, number?][] = [
   [10.9, 0.25, 0.8, 2.4], [11.75, 0.12, 0.5, 2],
   // Far off: small and flat, close together, as the sea goes away from the lens.
-  [13.4, 0.15, 0.55], [15.2, 0.2, 0.7], [17.6, 0.12, 0.6], [21.6, 0.18, 0.75], [24.0, 0.1, 0.5], [29.4, 0.15, 0.7],
-  [31.5, 0.25, 1.0], [20.0, 0.35, 1.4], [35.0, 0.4, 1.6], [12.2, 0.45, 1.0], [25.8, 0.4, 0.9], [27.5, 0.55, 1.8],
-  [16.9, 0.6, 0.9], [22.6, 0.7, 1.0], [38.0, 0.75, 1.3], [14.4, 0.9, 1.1], [11.0, 0.95, 0.8], [24.4, 1.0, 1.3],
-  [30.4, 1.05, 1.2], [18.6, 1.4, 1.6], [12.8, 1.5, 1.4],
+  [13.4, 0.15, 0.55], [15.2, 0.2, 0.7], [17.6, 0.12, 0.6], [21.6, 0.18, 0.75], [24.0, 0.1, 0.5], [29.4, 0.15, 0.7], [31.5, 0.25, 1.0],
+  [20.0, 0.35, 1.4], [35.0, 0.4, 1.6], [12.2, 0.45, 1.0], [25.8, 0.4, 0.9], [27.5, 0.55, 1.8], [16.9, 0.6, 0.9], [22.6, 0.7, 1.0],
+  [38.0, 0.75, 1.3], [14.4, 0.9, 1.1], [11.0, 0.95, 0.8], [24.4, 1.0, 1.3], [30.4, 1.05, 1.2], [18.6, 1.4, 1.6], [12.8, 1.5, 1.4],
   // Nearer: fewer, bigger and rounder, in twos and threes.
-  [38.6, 1.8, 2.0], [23.0, 2.2, 3.0], [26.6, 2.6, 2.0], [16.4, 2.9, 2.2], [33.5, 3.0, 3.4], [27.4, 3.5, 2.6],
-  [15.6, 4.6, 3.2], [38.4, 4.4, 3.0], [22.0, 5.4, 3.4], [25.4, 6.1, 2.6], [34.6, 5.7, 2.8], [30.0, 6.6, 4.2],
-  [18.4, 6.9, 2.8], [40.0, 7.6, 4.6], [14.6, 7.6, 3.4],
-  [22.4, 8.4, 3.8],
+  [38.6, 1.8, 2.0], [29.6, 1.9, 1.6], [23.0, 2.2, 3.0], [26.6, 2.6, 2.0], [36.0, 2.6, 1.8], [16.4, 2.9, 2.2], [33.5, 3.0, 3.4],
+  [12.4, 3.4, 1.8], [27.4, 3.5, 2.6], [20.2, 3.6, 2.0], [31.4, 4.2, 2.2], [15.6, 4.6, 3.2], [38.4, 4.4, 3.0], [22.0, 5.4, 3.4],
+  [25.4, 6.1, 2.6], [34.6, 5.7, 2.8], [30.0, 6.6, 4.2], [18.4, 6.9, 2.8], [40.0, 7.6, 4.6], [14.6, 7.6, 3.4], [22.4, 8.4, 3.8],
 ]
 /** Everything standing up out of the sea, furthest first: so each lies over the feet of what is behind it. */
 const STANDING = [...HEAPS.map((h, i) => ({ d: h[1], i, heap: true })), ...ISLANDS.map((h, i) => ({ d: h[1], i, heap: false }))].sort((a, b) => a.d - b.d)
@@ -576,43 +557,28 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
     const base = DECK + d + 0.12
     const hz = Math.max(0.1, 0.42 - 0.12 * d)
     const q = (i: number) => hash(n, i, 91)
-    const sx = x + (q(1) - 0.4) * 0.2 * w
-    const pts: Pt[] = [
-      [x - w / 2, base],
-      [x - w * 0.36, base - h * (0.3 + 0.1 * q(2))],
-      [x - w * 0.22, base - h * 0.5],
-      [x - w * 0.1, base - h * (0.66 + 0.1 * q(3))],
-      [sx, base - h],
-      [sx + w * 0.1, base - h * 0.82],
-      [x + w * 0.18, base - h * (0.7 + 0.1 * q(4))],
-      [x + w * 0.3, base - h * 0.45],
-      [x + w / 2, base],
-    ]
+    const sx = (q(1) - 0.4) * 0.2
+    // Its outline from the left foot over the summit to the right; the flank toward the sun from the summit down.
+    const pts: Pt[] = [[-0.5, 0], [-0.36, 0.3 + 0.1 * q(2)], [-0.22, 0.5], [-0.1, 0.66 + 0.1 * q(3)], [sx, 1], [sx + 0.1, 0.82], [0.18, 0.7 + 0.1 * q(4)], [0.3, 0.45], [0.5, 0]]
+    const at = ([u, v]: Pt): Pt => [x + u * w, base - v * h]
+    const fill = (poly: Pt[], col: string) => {
+      c.fillStyle = col
+      c.beginPath()
+      poly.forEach((p, i) => (i ? c.lineTo(...at(p)) : c.moveTo(...at(p))))
+      c.closePath()
+      c.fill()
+    }
     // Snow in the shade on the flank away from the sun, then the flank toward it, lit as the light comes down to it.
-    c.fillStyle = mix(mix(tn.faceShade, tn.faceSnow, 0.25), tn.haze, hz)
-    c.beginPath()
-    pts.forEach(([px, py], i) => (i ? c.lineTo(px, py) : c.moveTo(px, py)))
-    c.closePath()
-    c.fill()
+    fill(pts, mix(mix(tn.faceShade, tn.faceSnow, 0.25), tn.haze, hz))
     const on = smooth(ly - (base - h), -0.2, 0.5)
-    c.fillStyle = mix(mix(tn.faceSnow, tn.faceLit, 0.9 * on), tn.haze, hz)
-    c.beginPath()
-    c.moveTo(sx, base - h)
-    c.lineTo(sx + w * 0.1, base - h * 0.82)
-    c.lineTo(x + w * 0.18, base - h * (0.7 + 0.1 * q(4)))
-    c.lineTo(x + w * 0.3, base - h * 0.45)
-    c.lineTo(x + w / 2, base)
-    c.lineTo(sx + w * 0.06, base)
-    c.lineTo(sx - w * 0.03, base - h * 0.5)
-    c.closePath()
-    c.fill()
+    fill([...pts.slice(4), [sx + 0.06, 0], [sx - 0.03, 0.5]], mix(mix(tn.faceSnow, tn.faceLit, 0.9 * on), tn.haze, hz))
   }
   // The floor of the sea between the heaps, in their shadow: bluer toward the lens.
   const floor = (y: number) => mix(top, tn.cloudUnder, 0.12 + 0.4 * smooth(y, DECK, DECK + 5))
   // A heap: a dome with a lesser top behind it and two shoulders before it, each lobe in front of the one behind, so
   // it is lumped as cloud is.
   const heap = (c: C2, [hx, d, r, tall = 1]: [number, number, number, number?], n: number) => {
-    const x = hx + (t - 170) * (tall > 1 ? 0.01 : 0.08 * (1 + 0.3 * d))
+    const x = hx + (t - 170) * (tall > 1 ? 0.01 : 0.13 * (1 + 0.3 * d))
     const base = DECK + d
     if (x + 1.3 * r < Math.max(lo, flank(base) - 0.6) || x - 1.3 * r > hi || base - r > f.y1) return
     // Flat far off, rounder near.
@@ -672,7 +638,7 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
         path.lineTo(x - L, base + 0.38 * L)
         path.closePath()
       })
-      c.fillStyle = rgba(shade, 0.32 * sea)
+      c.fillStyle = rgba(shade, 0.5 * sea)
       c.fill(path)
     }
   })
@@ -790,9 +756,6 @@ export function drawTripod(pen: Pen, t: number): void {
   fillPoly(pen, [[sx + 0.4, sy - 0.2], [sx + 1.1, sy - 0.22], [sx + 1.1, sy - 0.04], [sx + 0.4, sy - 0.06]], C.lens)
   fillPoly(pen, [[sx + 0.66, sy - 0.21], [sx + 0.76, sy - 0.21], [sx + 0.76, sy - 0.05], [sx + 0.66, sy - 0.05]], C.lensBand)
   fillPoly(pen, [[sx + 1.1, sy - 0.24], [sx + 1.3, sy - 0.25], [sx + 1.3, sy - 0.01], [sx + 1.1, sy - 0.02]], mix(C.lens, '#000000', 0.2))
-  // The light along the top of the lens: cold at first, warm once the sun is up.
-  const tn = tone(t)
-  line(pen, [[sx + 0.42, sy - 0.2], [sx + 1.1, sy - 0.215]], rgba(mix('#FFFFFF', tn.faceLit, tn.light), 0.18 + 0.3 * tn.light), 0.012)
 }
 
 /** The strap's swing, -1..1: the wind lifts it away, and it falls back against the leg on each tick. */

@@ -162,8 +162,7 @@ export const SUN_R = 0.3
 
 /**
  * The gusts: on every other downbeat through the slow climb, every downbeat as the choir comes up, and on the third
- * beats too through the hold, so the wind builds with the music. Each one tears snow off every ridge, and sends a
- * sheet of it across the near plane.
+ * beats too through the hold, so the wind builds with the music. Each one tears snow off every ridge.
  */
 export const GUSTS: number[] = (() => {
   const out: number[] = []
@@ -184,11 +183,4 @@ export function wind(t: number): number {
     g = Math.max(g, (1 - Math.exp(-d / 0.1)) * Math.exp(-d / 0.9))
   }
   return 0.25 + 0.5 * rise(t) + g * (0.5 + 0.4 * rise(t))
-}
-
-/** The last gust at or before `t` and how long ago, for a sheet of snow crossing the near plane. */
-export function lastGust(t: number): { at: number; ago: number; i: number } {
-  let i = -1
-  for (let j = 0; j < GUSTS.length; j++) if (GUSTS[j] <= t) i = j
-  return { at: i < 0 ? -Infinity : GUSTS[i], ago: i < 0 ? Infinity : t - GUSTS[i], i }
 }

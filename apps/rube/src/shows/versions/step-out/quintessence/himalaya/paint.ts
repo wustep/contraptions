@@ -140,44 +140,28 @@ export function rowOutline(tops: Float64Array, lows: Float64Array, x0: number, d
 
 /** How many samples across a lobe of cloud. */
 const LOBE = 20
-const LX = new Float64Array(LOBE + 1)
-const LT = new Float64Array(LOBE + 1)
-const LB = new Float64Array(LOBE + 1)
 
 /**
- * One lobe of a heap of cloud (an ellipse at `cx, cy`, radii `rx, ry`), standing in what is under it along `foot`:
- * the whole of it in shadow (`side`); the part the sun reaches, moved toward it (`body`); and its crown, up and toward
- * the sun (`crown`), lit. Each part is the lobe cut by another ellipse inside it, so none spills out of it.
+ * One lobe of a heap of cloud (an ellipse at `cx, cy`, radii `rx, ry`), standing in what is under it along `foot`,
+ * sampled across: the whole of it in shadow (`side`); the part the sun reaches, the lobe moved toward it (`body`); and
+ * its crown, up and toward the sun (`crown`), lit. Each part keeps inside the lobe.
  */
 export function lobe(c: C2, cx: number, cy: number, rx: number, ry: number, foot: (x: number) => number, side: string, body: string, crown: string): void {
-  for (let k = 0; k <= LOBE; k++) {
-    const u = -1 + (2 * k) / LOBE
-    const v = Math.sqrt(Math.max(0, 1 - u * u))
-    LX[k] = cx + u * rx
-    LT[k] = cy - ry * v
-    LB[k] = Math.max(LT[k], Math.min(cy + ry * v, foot(LX[k])))
-  }
-  // The top of an ellipse inside the lobe, moved `ox` (of the radius) along and `oy` up, scaled `s`, at sample `k`.
-  const inner = (k: number, ox: number, oy: number, sc: number) => {
-    const u = (LX[k] - cx - ox * rx) / (sc * rx)
-    return Math.abs(u) < 1 ? Math.min(LB[k], Math.max(LT[k], cy - oy * ry - sc * ry * Math.sqrt(1 - u * u))) : NaN
-  }
-  const run = (tops: (k: number) => number, lows: (k: number, y: number) => number, col: string) => {
-    let a = -1
-    let b = -1
-    for (let k = 0; k <= LOBE; k++) {
-      if (Number.isNaN(tops(k))) continue
-      if (a < 0) a = k
-      b = k
-    }
-    if (b - a < 1) return
+  // The top of the lobe moved `ox` (of its radius) toward the sun and `oy` up, scaled `sc`, at `u` across it (-1 to 1).
+  const top = (u: number, ox = 0, oy = 0, sc = 1) => cy - oy * ry - sc * ry * Math.sqrt(Math.max(0, 1 - ((u - ox) / sc) ** 2))
+  const low = (u: number) => Math.max(top(u), Math.min(2 * cy - top(u), foot(cx + u * rx)))
+  const part = (u0: number, u1: number, ox: number, oy: number, sc: number, down: number, col: string) => {
+    const y = (u: number) => Math.min(low(u), Math.max(top(u), top(u, ox, oy, sc)))
     c.beginPath()
-    for (let k = a; k <= b; k++) c.lineTo(LX[k], tops(k))
-    for (let k = b; k >= a; k--) c.lineTo(LX[k], lows(k, tops(k)))
+    for (let k = 0; k <= LOBE; k++) c.lineTo(cx + (u0 + ((u1 - u0) * k) / LOBE) * rx, y(u0 + ((u1 - u0) * k) / LOBE))
+    for (let k = LOBE; k >= 0; k--) {
+      const u = u0 + ((u1 - u0) * k) / LOBE
+      c.lineTo(cx + u * rx, y(u) + down * (low(u) - y(u)))
+    }
     c.fillStyle = col
     c.fill()
   }
-  run((k) => LT[k], (k) => LB[k], side)
-  run((k) => inner(k, 0.28, 0, 1), (k) => LB[k], body)
-  run((k) => inner(k, 0.12, 0.18, 0.84), (k, y) => y + 0.45 * (LB[k] - y), crown)
+  part(-1, 1, 0, 0, 1, 1, side)
+  part(-0.72, 1, 0.28, 0, 1, 1, body)
+  part(-0.72, 0.96, 0.12, 0.18, 0.84, 0.45, crown)
 }
