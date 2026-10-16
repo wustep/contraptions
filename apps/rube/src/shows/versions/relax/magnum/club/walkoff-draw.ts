@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { FLOOR, mixHex, R, type Pt } from '../../../../../parts'
-import { beam, bloom, flashBurst, glint, pool, rgba } from '../cast'
+import { beam, flashBurst, glint, pool, rgba } from '../cast'
 import { frame, hash } from '../kit'
 import { level, PERIOD, PHASE } from '../music'
 import { CLUB } from '../worlds'
@@ -9,11 +9,7 @@ import {
   CEIL,
   cheer,
   CONVERGE,
-  D_LINE_LAND,
   D_LUNGE,
-  D_POP_TOP,
-  D_WALK_STOP,
-  ECHOES,
   GATES,
   GRID_HALF,
   GRID_OFF,
@@ -23,9 +19,6 @@ import {
   H_CENTRE,
   H_HUM,
   FLARES,
-  H_JUMP_TOP,
-  H_POP_TOP,
-  H_WALK_STOP,
   hanselAt,
   hush,
   IN,
@@ -426,7 +419,15 @@ function drawRigs(p: p5, k: number, t: number, weight: number, balls: Pt[]): voi
     if (on > 0.01) {
       const c = cut(from, [tx, FLOOR], balls)
       laser(ctx, k, from, c.end, r.color, 0.85 * on * pulse)
-      if (!c.broken) bloom(p, k, [tx, FLOOR], 0.14, r.color, 0.4 * on)
+      // Where it lands: a fleck of its colour on the concrete.
+      if (!c.broken) {
+        ctx.save()
+        ctx.fillStyle = rgba(r.color, 0.75 * on)
+        ctx.beginPath()
+        ctx.ellipse(X(tx), X(FLOOR + 0.005), Math.max(1, X(0.07)), Math.max(0.6, X(0.014)), 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+      }
     }
     // The rig: a small dark box on a hanger from the duct, turned to where it points, its lens alight.
     p.push()
@@ -464,8 +465,8 @@ function drawLamp(p: p5, k: number, t: number, weight: number, derek: Pt): void 
   const { end } = lampEnd(lens, [x, y])
   // Brighter as it settles on the winner.
   const hard = 1 + (t > WIN - 0.1 && t < TOUCH + 2 ? 0.3 * sm(t, WIN - 0.1, WIN + 0.2) : 0)
-  beam(p, k, lens, end, 0.2, 0.5 + wide, CLUB.spot, 0.42 * hard)
-  beam(p, k, lens, end, 0.12, 0.25 + wide * 0.5, CLUB.spot, 0.3 * hard)
+  beam(p, k, lens, end, 0.2, 0.5 + wide, CLUB.spot, 0.3 * hard)
+  beam(p, k, lens, end, 0.12, 0.25 + wide * 0.5, CLUB.spot, 0.18 * hard)
   p.push()
   p.stroke(RIM)
   p.strokeWeight(weight * 0.6)
@@ -490,7 +491,6 @@ function drawLamp(p: p5, k: number, t: number, weight: number, derek: Pt): void 
   p.fill(LIT)
   p.rect(X(0.33), 0, X(0.035), X(0.25))
   p.pop()
-  bloom(p, k, lens, 0.3, CLUB.spot, 0.55 * hard)
 }
 
 /** The grid's bar: stowed under the ceiling on its cables, dropped on the downbeat, wound back up after. */
@@ -634,7 +634,6 @@ function drawFloor(p: p5, k: number, t: number, weight: number, f: F, derek: Pt,
       p.fill(ok ? mixHex(CLUB.laserRed, LIT, 0.35) : DARK)
       p.rect(X(x), X(FLOOR + 0.025), X(0.07), X(0.03))
       p.pop()
-      if (ok) bloom(p, k, [x, FLOOR], 0.12, CLUB.laserRed, 0.4 * on)
     }
   }
 
@@ -682,12 +681,11 @@ function drawPuffs(p: p5, k: number, t: number, f: F): void {
 /** Where the grid's first beam cuts on Derek's nose as it lands: the top of him, at the grid's edge. */
 const NOSE: Pt = [MID - GRID_HALF, -Math.sqrt(Math.max(0, R * R - (MID - GRID_HALF - D_LUNGE) ** 2))]
 
-/** The beam burning on his nose: a spray of hot sparks off the cut, falling and going out; a red flash at it. */
+/** The beam burning on his nose: a spray of hot sparks off the cut, falling and going out. */
 function spark(p: p5, k: number, t: number): void {
   const s = t - GRID_ON
   if (s < 0 || s > 0.7) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  bloom(p, k, NOSE, 0.22, CLUB.laserRed, 0.5 * Math.exp(-s / 0.08))
   ctx.save()
   ctx.lineCap = 'round'
   for (let i = 0; i < 16; i++) {
@@ -717,18 +715,11 @@ function spark(p: p5, k: number, t: number): void {
 
 /* ------------------------------------------------------------------ the looks */
 
-/** Every look in the walk-off: who gives it, when, how big. */
-const LOOKS: { who: 'derek' | 'hansel'; at: number; size: number }[] = [
-  { who: 'derek', at: D_POP_TOP, size: 0.3 },
-  { who: 'hansel', at: H_POP_TOP, size: 0.36 },
-  { who: 'hansel', at: H_JUMP_TOP, size: 0.36 },
-  { who: 'derek', at: D_WALK_STOP, size: 0.32 },
-  { who: 'hansel', at: H_WALK_STOP, size: 0.34 },
-  { who: 'derek', at: D_LINE_LAND[2], size: 0.4 },
-  { who: 'hansel', at: ECHOES[2], size: 0.4 },
-  { who: 'hansel', at: H_CENTRE, size: 0.45 },
-]
-export const LOOK_TIMES = LOOKS.map((l) => l.at)
+/**
+ * The walk-off's one look: Hansel's, stopped dead in the middle of the closed grid. (The moves trade turns to the
+ * judge, not glints: the glint is given three times in the show, and this is the second.)
+ */
+const LOOKS: { who: 'derek' | 'hansel'; at: number; size: number }[] = [{ who: 'hansel', at: H_CENTRE, size: 0.45 }]
 
 /* ------------------------------------------------------------------ all of it */
 

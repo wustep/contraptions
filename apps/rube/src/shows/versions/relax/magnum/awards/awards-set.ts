@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
-import { beam, bloom, flashAt, pool, rgba } from '../cast'
+import { beam, flashAt, pool, rgba } from '../cast'
 import { frame, hash, type Ctx } from '../kit'
 import { level } from '../music'
 import { AWARDS as A } from '../worlds'
@@ -373,5 +373,4 @@ function drawWings(p: p5, k: number, f: Frame, t: number): void {
   // A wedge of it comes in past the curtain's edge from high up, onto the boards just inside.
   beam(p, k, [LEG_R.x0 - 0.35, -5.0], [LEG_R.x1 + 0.9, SURF], 0.45, 2.1, A.warm, 0.17 * spill)
   pool(p, k, [LEG_R.x1 + 0.8, SURF + 0.04], 1.3, 0.1, A.warm, 0.32 * spill)
-  bloom(p, k, [LEG_R.x1 + 0.5, -0.7], 1.7, A.warm, 0.04 * spill)
 }

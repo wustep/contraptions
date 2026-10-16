@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, bloom, flashBurst, pool, rgba } from '../cast'
+import { beam, flashBurst, pool, rgba } from '../cast'
 import { hash } from '../kit'
 import { level } from '../music'
 import { CLUB, SPA } from '../worlds'
@@ -72,8 +72,12 @@ function drawCandle(pen: Pen, x: number, i: number, t: number): void {
   const wind = windAt(x, t)
   const lean = 0.09 * wind
   const g = f * (1 - 0.35 * wind)
-  bloom(p, pen.k, [x, NICHE_Y - 0.02], 0.95, SPA.candle, 0.2 * g)
-  bloom(p, pen.k, [x + lean * 0.5, NICHE_Y - 0.08], 0.28, SPA.candle, 0.45 * g)
+  // Its light on the niche round it: warm on the stone, falling off down to the sill.
+  vwash(pen, x - w / 2, x + w / 2, top + w / 2, bot, [
+    [0, SPA.candle, 0.16 * g],
+    [0.5, SPA.candle, 0.34 * g],
+    [1, SPA.candle, 0.1 * g],
+  ])
   box(pen, x - 0.04, NICHE_Y + 0.02, x + 0.04, bot, SPA.towel, 0)
   const fx = x + 0.008 * Math.sin(t * 4 + i)
   shape(
@@ -153,7 +157,6 @@ function drawDoorway(pen: Pen, t: number): void {
   ])
   const f = 0.9 + 0.1 * Math.sin(t * 1.7)
   pool(pen.p, pen.k, [x, FLOOR_Y + 0.05], 1.25, 0.14, SPA.candle, 0.3 * f)
-  bloom(pen.p, pen.k, [x, FLOOR_Y - 0.6], 1.1, SPA.candle, 0.12 * f)
   // Its frame: brass, a keystone at the top of the arch.
   const frameOut = arch.map(([ax, ay]): Pt => [x + (ax - x) * 1.1, ay < FLOOR_Y - 0.01 ? top + hw + (ay - top - hw) * 1.1 - 0.02 : ay])
   shape(pen, frameOut, null, 1.6, SPA.brass)
@@ -351,7 +354,6 @@ export function drawSet(p: p5, k: number, t: number, ink: string, weight: number
     for (let x = Math.floor(x0 / 2.8) * 2.8 + 1.1; x < inX1; x += 2.8) {
       const i = Math.round(x / 2.8)
       const glow = 0.22 + 0.05 * Math.sin(t * 0.9 + i) + 0.08 * level(t)
-      bloom(p, k, [x, FLOOR_LIP + 0.45], 1.1, SPA.waterLight, glow * 0.45)
       pool(p, k, [x, FLOOR_LIP + 0.45], 0.4, 0.1, SPA.waterLight, glow * 0.8)
     }
     // The shine on its surface: soft bands drifting along under the lip.

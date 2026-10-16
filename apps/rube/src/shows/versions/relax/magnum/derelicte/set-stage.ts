@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex } from '../../../../../parts'
-import { bloom, rgba } from '../cast'
+import { pool, rgba } from '../cast'
 import { hash, type frame } from '../kit'
 import { DERELICTE } from '../worlds'
 import { FLOOR_Y, MUGATU_PERCH, PM_SEAT, RUNWAY, STEPS, WINGS } from './geo'
@@ -91,14 +91,13 @@ export function drawRunway(p: p5, k: number, f: Frame, t: number, ink: Ink): voi
     const s0 = Math.max(EDGE_SECTIONS[i], x0)
     const s1 = Math.min(EDGE_SECTIONS[i + 1], x1)
     if (s1 <= s0) continue
-    const g = ctx.createLinearGradient(0, X(TOP - 0.1), 0, X(TOP + 0.12))
-    g.addColorStop(0, rgba(DERELICTE.runwayEdge, 0))
-    g.addColorStop(0.45, rgba(DERELICTE.runwayEdge, 0.35 * a))
-    g.addColorStop(0.55, rgba(DERELICTE.runwayEdge, 0.35 * a))
+    // The light on its lip: the deck's face pale at the top where the banks catch it, none in the air over it.
+    const g = ctx.createLinearGradient(0, X(TOP), 0, X(TOP + DECK))
+    g.addColorStop(0, rgba(DERELICTE.runwayEdge, 0.3 * a))
     g.addColorStop(1, rgba(DERELICTE.runwayEdge, 0))
     ctx.save()
     ctx.fillStyle = g
-    ctx.fillRect(X(s0), X(TOP - 0.1), X(s1 - s0), X(0.22))
+    ctx.fillRect(X(s0), X(TOP), X(s1 - s0), X(DECK))
     ctx.restore()
     p.push()
     p.stroke(rgba(DERELICTE.runwayEdge, 0.95 * a))
@@ -194,8 +193,9 @@ export function drawCurtainLeak(p: p5, k: number, t: number): void {
   const a = Math.min(1, bankAt(0, t))
   if (a <= 0) return
   const up = hoistAt(t)
-  bloom(p, k, [CURTAIN.x1 + 0.25, -1.4], 1.9, DERELICTE.spot, 0.12 * a * (1 - 0.5 * up))
-  bloom(p, k, [CURTAIN.x0 - 0.1, hemAt(t) + 0.05], 0.9, DERELICTE.spot, 0.1 * a * (1 - up))
+  // On the boards past the curtain's edge, and in under its hem onto the wings' deck.
+  pool(p, k, [CURTAIN.x1 + 0.6, TOP + 0.02], 1.4, 0.1, DERELICTE.spot, 0.3 * a * (1 - 0.5 * up))
+  pool(p, k, [CURTAIN.x0 - 0.15, TOP + 0.02], 0.8, 0.07, DERELICTE.spot, 0.24 * a * (1 - up))
 }
 
 /** The curtain of black bin bags at the runway's head: hoisted in three jerks on the trigger, and left up. */
@@ -298,8 +298,6 @@ export function drawPerch(p: p5, k: number, f: Frame, t: number, ink: Ink): void
   p.rect(X(0.27), 0, X(0.04), X(0.15))
   p.pop()
   p.pop()
-  // His own dim light up there: a work lamp's glow on the rail.
-  bloom(p, k, [-2.9, PERCH.deck - 0.9], 1.1, DERELICTE.fire, 0.07)
 }
 
 /* ------------------------------------------------------------------ the canopy */

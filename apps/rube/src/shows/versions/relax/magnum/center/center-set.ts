@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
-import { bloom, pool, rgba } from '../cast'
+import { pool, rgba } from '../cast'
 import { frame, hash, type Ctx } from '../kit'
 import { AWARDS, CENTER } from '../worlds'
 import { dk, drawLamp, drawTree, setDusk } from './center-draw'
@@ -56,7 +56,7 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, (HORIZON - top + 0.5) * k)
   ctx.restore()
-  // The first stars, far off (they move a little less than the land), each its own size, twinkling slowly.
+  // The first stars, far off (they move a little less than the land), each its own size: points, steady.
   if (d > 0.5) {
     const ctxStars = ctx
     ctxStars.save()
@@ -66,7 +66,6 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
       const x = sx + f.cx * 0.12
       const y = sy + f.cy * 0.12
       const color = warm ? AWARDS.bulb : CENTER.cloud
-      bloom(p, k, [x, y], 0.07 + 0.16 * size, color, (0.22 + 0.3 * size) * a)
       const r = Math.max(0.55, (0.5 + 1.1 * size) * (k / 22.5))
       ctxStars.fillStyle = rgba(color, Math.min(1, (0.55 + 0.45 * size) * a))
       ctxStars.beginPath()

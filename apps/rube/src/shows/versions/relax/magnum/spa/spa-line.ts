@@ -1,5 +1,5 @@
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { beam, bloom, pool } from '../cast'
+import { beam, pool } from '../cast'
 import { hash } from '../kit'
 import { DEREK, SPA } from '../worlds'
 import { G, G_LOW } from '../physics'
@@ -27,7 +27,6 @@ import {
   HOOD,
   lerp,
   LAMPS_ON,
-  LIFT_GO,
   LIFT_X,
   liftRise,
   MUD_TIP,
@@ -46,7 +45,7 @@ import {
   WAY,
   XT,
 } from './spa-geo'
-import { box, column, dot, line, polyline, puff, rbox, shape, vwash, type Pen } from './spa-kit'
+import { box, column, disc, dot, line, polyline, puff, rbox, shape, vwash, type Pen } from './spa-kit'
 import { CEIL } from './spa-set'
 
 /**
@@ -121,7 +120,6 @@ export function drawLift(pen: Pen, t: number): void {
   line(pen, [x - 0.28, y - 0.36], [x + 0.28, y - 0.36], SPA.brass, 0.4)
   // Its cable up into the dark.
   line(pen, [x, top - 0.14], [x, CEIL], SPA.steelDark, 0.4)
-  if (t > LIFT_GO - 0.3 && t < LIFT_GO + 0.4) bloom(pen.p, pen.k, [x, y - 0.3], 0.6, SPA.candle, 0.1 * (1 - sm(t, LIFT_GO, LIFT_GO + 0.4)))
 }
 
 /* ------------------------------------------------------------------ the gantries and their lamps */
@@ -167,7 +165,8 @@ export function drawGantries(pen: Pen, t: number, f: { x0: number; x1: number })
       SPA.brass,
       0.5,
     )
-    bloom(pen.p, pen.k, [g.x, GANTRY_TOP + 0.16], 0.35, SPA.candle, 0.6 * lit)
+    // Its bulb under the shade, pale when it is on.
+    disc(pen, [g.x, GANTRY_TOP + 0.15], 0.045, 0.03, mixHex(SPA.brass, SPA.candle, 0.2 + 0.8 * Math.min(1, lit)), 0)
   })
 }
 
@@ -431,7 +430,11 @@ export function drawCabinet(pen: Pen, t: number, front: boolean): void {
     // Its inside: dark marble, the steam in it lit from a lamp in its roof.
     box(pen, x0, top, x1, FLOOR_Y, mixHex(SPA.tile, SPA.marble, 0.4), 0.7)
     const lamp = t < CAB_LAMP ? 0.15 : 0.15 + 0.85 * Math.min(1, (t - CAB_LAMP) / 0.05) * (1 - sm(t, CAB_OUT + 0.5, CAB_OUT + 1.5))
-    bloom(pen.p, pen.k, [(x0 + x1) / 2, top + 0.4], 0.9, SPA.candle, 0.3 * lamp)
+    vwash(pen, x0, x1, top, FLOOR_Y, [
+      [0, SPA.candle, 0.22 * lamp],
+      [0.6, SPA.candle, 0.06 * lamp],
+      [1, SPA.candle, 0.1 * lamp],
+    ])
     pool(pen.p, pen.k, [(x0 + x1) / 2, FLOOR_Y], 0.6, 0.06, SPA.candle, 0.3 * lamp)
     // The steam cloud rolling out of the far door after him.
     const out = t - CAB_OUT

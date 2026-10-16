@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, bloom, pool, rgba } from '../cast'
+import { beam, pool, rgba } from '../cast'
 import { hash, type Ctx } from '../kit'
 import { level } from '../music'
 import { DERELICTE } from '../worlds'
@@ -198,8 +198,6 @@ function drawSub(d: Draw): void {
   p.ellipse(X(d, cx), X(d, cy - lift * 0.6), X(d, w * 0.66), X(d, 0.085 + lift * 0.3))
   p.fill(DERELICTE.bagSheen)
   p.ellipse(X(d, cx), X(d, cy - lift), X(d, 0.16), X(d, 0.035))
-  // The air it moves: a breath of light off the cone on the hard kicks.
-  if (lift > 0.02) bloom(p, d.k, [cx, cy - 0.15], 0.55, DERELICTE.spot, Math.min(0.12, lift * 0.9))
 }
 
 /* ------------------------------------------------------------------ the booth */
@@ -281,8 +279,10 @@ function drawTurntable(d: Draw, on: number): void {
   p.fill(lit(d, GEAR, GEAR_LIT))
   p.rect(X(d, MIXER.x0 + 0.02), X(d, MIXER.top + 0.01), X(d, MIXER.x1 - MIXER.x0 - 0.04), Math.max(1, X(d, 0.018)))
   if (powered(t)) {
-    const lv = level(t)
-    bloom(p, d.k, [MIXER.x1 - 0.1, MIXER.top + 0.05], 0.12, DERELICTE.fireCore, 0.2 + 0.4 * lv * cone(t))
+    // Its meter: a short bar that rides the song.
+    const lv = Math.min(1, 0.2 + 0.8 * level(t) * cone(t))
+    p.fill(DERELICTE.fireCore)
+    p.rect(X(d, MIXER.x1 - 0.2), X(d, MIXER.top + 0.04), X(d, 0.16 * lv), Math.max(1, X(d, 0.02)))
   }
 }
 
@@ -295,9 +295,8 @@ function drawLamp(d: Draw, on: number, ember: number): void {
   poly(d, [[hx - 0.05, hy - 0.08], [hx + 0.05, hy - 0.08], [hx + 0.12, hy + 0.07], [hx - 0.12, hy + 0.07]], GEAR, 0.5)
   // Its mouth: lit, or its filament's last glow.
   p.noStroke()
-  p.fill(mixHex(GEAR, DERELICTE.spot, Math.min(1, on * 0.9)))
+  p.fill(mixHex(mixHex(GEAR, DERELICTE.fire, Math.min(1, ember)), DERELICTE.spot, Math.min(1, on * 0.9)))
   p.rect(X(d, hx - 0.11), X(d, hy + 0.055), X(d, 0.22), Math.max(1, X(d, 0.025)))
-  if (ember > 0.01) bloom(p, d.k, [hx, hy + 0.07], 0.12, DERELICTE.fire, 0.55 * ember)
 }
 
 /** The lamp's light over the decks: its beam, its pool, and the booth glowing in the hall. */
@@ -305,10 +304,8 @@ function drawBoothLight(d: Draw, on: number): void {
   if (on <= 0.01) return
   const { p, k } = d
   const [hx, hy] = LAMP.head
-  bloom(p, k, [27.4, DECK - 0.7], 3.0, DERELICTE.spot, 0.11 * on)
   beam(p, k, [hx, hy + 0.07], [PLATTER.at[0] + 0.15, CASE.top], 0.2, 1.05, DERELICTE.spot, 0.42 * on)
   pool(p, k, [PLATTER.at[0] + 0.2, DECK - 0.05], 1.0, 0.12, DERELICTE.spot, 0.38 * on)
-  bloom(p, k, [hx, hy + 0.07], 0.35, DERELICTE.spot, 0.6 * on)
 }
 
 /** The skirt of bin bags round the deck: Derelicte's couture, as a booth's fascia. */
@@ -423,9 +420,21 @@ function drawLead(d: Draw): void {
     const [bx, by] = pts[n - 1]
     const a = Math.atan2(by - ay, bx - ax)
     plug(d, [bx + Math.cos(a) * (PLUG_LEN / 2 - 0.02), by + Math.sin(a) * (PLUG_LEN / 2 - 0.02)], a + Math.PI)
-    // The spark as it comes out.
+    // The spark as it comes out: a few hot bits off the pins, flung and falling, out in a quarter of a second.
     const u = t - PULLED
-    if (u >= 0 && u < 0.25) bloom(p, d.k, [PLUG[0] - PLUG_LEN / 2 + 0.02, PLUG[1]], 0.3, DERELICTE.fireCore, 0.9 * Math.exp(-u / 0.05))
+    if (u >= 0 && u < 0.25) {
+      const [sx, sy] = [PLUG[0] - PLUG_LEN / 2 + 0.02, PLUG[1]]
+      p.stroke(DERELICTE.fireCore)
+      p.strokeWeight(Math.max(1, X(d, 0.018)))
+      for (let i = 0; i < 7; i++) {
+        const a = -2.6 + 0.62 * i
+        const v = 1.6 + 0.5 * ((i * 0.618) % 1)
+        const x = sx + Math.cos(a) * v * u
+        const y = sy + Math.sin(a) * v * u + 2.5 * u * u
+        p.line(X(d, x), X(d, y), X(d, x - Math.cos(a) * 0.06), X(d, y - Math.sin(a) * 0.06))
+      }
+      p.noStroke()
+    }
   }
 }
 
