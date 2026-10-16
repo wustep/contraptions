@@ -273,7 +273,7 @@ function drawTurntable(d: Draw, on: number): void {
   p.rect(X(d, hx - 0.03), X(d, hy - 0.015), X(d, 0.05), X(d, 0.028))
   p.fill(DERELICTE.steelDark)
   p.circle(X(d, ARM_PIVOT[0]), X(d, ARM_PIVOT[1]), X(d, 0.06))
-  // The mixer beside it, its meter glowing with the song.
+  // The mixer beside it, its meter riding the song.
   box(d, MIXER.x0, MIXER.top, MIXER.x1, CASE.top, GEAR, 0.5)
   p.noStroke()
   p.fill(lit(d, GEAR, GEAR_LIT))
@@ -299,7 +299,7 @@ function drawLamp(d: Draw, on: number, ember: number): void {
   p.rect(X(d, hx - 0.11), X(d, hy + 0.055), X(d, 0.22), Math.max(1, X(d, 0.025)))
 }
 
-/** The lamp's light over the decks: its beam, its pool, and the booth glowing in the hall. */
+/** The lamp's light over the decks: its beam and its pool. */
 function drawBoothLight(d: Draw, on: number): void {
   if (on <= 0.01) return
   const { p, k } = d

@@ -486,7 +486,7 @@ export function drawLight(p: p5, k: number, f: Frame, t: number): void {
 export function drawHall(p: p5, k: number, f: Frame, t: number, ink: Ink): void {
   const tw = AIR(t)
   drawWall(p, k, f, t)
-  // The fires' glow on the brick first, then the drums and the flames.
+  // The fires' smoke first, then the trusses, then the drums and the flames.
   for (const [i, d] of DRUMS.entries()) {
     if (d.x < f.x0 - 3 || d.x > f.x1 + 3) continue
     drawSmoke(p, k, d.x, d.base - DRUM_H, tw, i)

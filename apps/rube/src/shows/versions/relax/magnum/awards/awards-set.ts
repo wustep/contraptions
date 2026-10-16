@@ -184,7 +184,7 @@ function drawBulbs(p: p5, k: number, f: Frame, t: number): void {
     p.noStroke()
     p.fill(mixHex(A.runway, A.stageEdge, 0.4))
     p.rect((x - 0.05) * k, (top + 0.1) * k, 0.1 * k, (SURF - top - 0.1) * k)
-    // Its glow on the wall, soft, when it is on.
+    // Its light on the wall behind it, soft, when it is on.
     if (on > 0.01) {
       const g = ctx.createLinearGradient((x - 0.42) * k, 0, (x + 0.42) * k, 0)
       g.addColorStop(0, rgba(A.bulb, 0))

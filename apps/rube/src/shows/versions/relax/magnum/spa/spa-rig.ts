@@ -253,7 +253,7 @@ export function drawHorn(pen: Pen, t: number): void {
     SPA.candle,
     0.7,
   )
-  // The bell's mouth, seen a little from the side: dark inside, a glow in it on each breath.
+  // The bell's mouth, seen a little from the side: dark inside, opening a little on each breath.
   const { p, k } = pen
   p.push()
   p.translate(BELL[0] * k, BELL[1] * k)
@@ -352,7 +352,7 @@ export function drawBigDryer(pen: Pen, t: number): void {
   }
   shape(pen, dome, CHROME, 0.75)
   line(pen, [-0.4, -0.12], [0.28, -0.2], SPA.steam, 1.0)
-  // Its mouth, edge on: a rim, the glow of its heaters.
+  // Its mouth, edge on: a rim, warm with its heaters.
   disc(pen, [0, 0.22], 0.6, 0.09, mixHex(SPA.steelDark, SPA.candle, 0.4 * d.spin), 0.75)
   p.pop()
   // The blast: hot air rolling out of it along the floor, his way.

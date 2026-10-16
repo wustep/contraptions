@@ -81,7 +81,7 @@ function lobe(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, rx
   ctx.restore()
 }
 
-/** A laser: a solid thin core, a soft edge, a faint wide glow in the smoke. Never dashed. */
+/** A laser: a solid thin core and a soft edge where it lights the smoke; no wider glow round it. Never dashed. */
 function laser(ctx: CanvasRenderingContext2D, k: number, a: Pt, b: Pt, color: string, amount: number): void {
   if (amount <= 0.01) return
   ctx.save()
@@ -91,10 +91,6 @@ function laser(ctx: CanvasRenderingContext2D, k: number, a: Pt, b: Pt, color: st
     ctx.moveTo(a[0] * k, a[1] * k)
     ctx.lineTo(b[0] * k, b[1] * k)
   }
-  ctx.strokeStyle = rgba(color, 0.08 * amount)
-  ctx.lineWidth = Math.max(3, 0.12 * k)
-  path()
-  ctx.stroke()
   ctx.strokeStyle = rgba(color, 0.2 * amount)
   ctx.lineWidth = Math.max(1.6, 0.04 * k)
   path()

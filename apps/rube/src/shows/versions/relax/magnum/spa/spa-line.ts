@@ -601,7 +601,7 @@ export function drawHood(pen: Pen, t: number): void {
       column(pen, xx + 0.03 * Math.sin(t * 9 + j), bottom + ph * 0.3, bottom + ph * 0.3 + 0.18, 0.05, SPA.candle, 0.35 * blow * (1 - ph), 0.05)
     }
   }
-  // The hood: a long chrome shell, a highlight along it, its vents glowing when it blows.
+  // The hood: a long chrome shell, a highlight along it, its vents lit warm when it blows.
   const pts: Pt[] = [
     [x0, bottom],
     [x0 + 0.08, top + 0.1],
