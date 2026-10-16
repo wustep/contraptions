@@ -429,7 +429,7 @@ export function drawDeepBack(g: C2, v: View, t: number): void {
   drawRays(g, v, t, { z: 0.75, n: 6, seed: 5, a: 0.06, w: [0.1, 0.28], len: 9, color: DEEP.jade })
   layer(g, v, 0.32, DEEP_AT, DEEP_REF, (inner) => {
     drawSnow(g, inner, t, 'far', 1)
-    drawShoal(g, inner, t, { at: [2.6, 1.7], n: 240, w: 6.5, h: 0.9, bend: 0.35, len: 0.12, seed: 7, colour: DEEP.fish }, 0.55 * life)
+    drawShoal(g, inner, t, { at: [2.6, 1.35], n: 240, w: 6.5, h: 0.9, bend: 0.35, len: 0.12, seed: 7, colour: DEEP.fish }, 0.55 * life)
   })
   layer(g, v, 0.45, DEEP_AT, DEEP_REF, (inner) => {
     drawShoal(g, inner, t, { at: [3.4, 4.1], n: 80, w: 3.2, h: 0.9, bend: 0.2, len: 0.15, seed: 15, colour: DEEP.fish }, 0.6 * life)
