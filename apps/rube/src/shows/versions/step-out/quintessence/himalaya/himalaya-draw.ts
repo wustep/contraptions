@@ -534,6 +534,8 @@ const MASSES: [number, number, number][] = [
   [21.0, 0.4, 1.3], [35.6, 0.5, 1.4], [13.6, 0.7, 1.0], [27.2, 0.8, 1.5], [23.8, 1.1, 1.0], [17.6, 1.4, 1.5], [31.6, 1.7, 1.7],
   [11.8, 1.8, 1.2], [39.4, 2.0, 1.7], [27.8, 2.2, 1.3], [20.0, 2.4, 1.2], [23.6, 2.6, 2.4], [36.4, 2.9, 1.5], [14.0, 3.4, 2.2],
   [33.4, 3.6, 2.6], [20.4, 4.3, 1.8], [26.6, 5.0, 2.8], [17.4, 6.2, 3.2], [38.8, 6.4, 3.4], [27.6, 8.4, 3.6],
+  // Close under the face, the gorge packed with them.
+  [16.6, 2.4, 1.4], [13.4, 5.0, 2.0], [19.8, 7.4, 2.6], [14.0, 8.6, 2.8],
 ]
 /** The heaps of cloud: x, how far into the sea, how big, and how much taller than the rest (the two welling up in the gorge under the ledge, which stay where they are). */
 const HEAPS: [number, number, number, number?][] = [
@@ -587,7 +589,7 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
   // A heap: a dome with a lesser top behind it and two shoulders before it, each lobe in front of the one behind, so
   // it is lumped as cloud is.
   const heap = (c: C2, [hx, d, r, tall = 1]: [number, number, number, number?], n: number) => {
-    const x = hx + (t - 170) * (tall > 1 ? 0.01 : 0.13 * (1 + 0.3 * d))
+    const x = hx + (t - 170) * (tall > 1 ? 0.01 : 0.08 * (1 + 0.3 * d))
     const base = DECK + d
     if (x + 1.3 * r < Math.max(lo, flank(base) - 0.6) || x - 1.3 * r > hi || base - r > f.y1) return
     // Flat far off, rounder near.

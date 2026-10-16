@@ -29,19 +29,28 @@ export function rise(t: number): number {
 
 /* ------------------------------------------------------------------ the colours */
 
-/** When the light changes: the blue hour, the horizon warming, first light on the summits, the alpenglow, the sun's edge, the sun on the ledge, gold-white. */
+/**
+ * When the light changes: the blue hour, the horizon warming, first light on the summits, the alpenglow, the sun's
+ * edge, the sun on the ledge, gold-white. It goes on from one to the next without stopping at any of them, so the
+ * picture is never quite still while the camera holds.
+ */
 const KEYS = [146.5, 157, 166.4, 173, 179, 185, 191.4]
 
+/** Which stretch between keys `t` is in, and how far through it. */
+function between(t: number): [number, number] {
+  let i = 0
+  while (i + 2 < KEYS.length && t >= KEYS[i + 1]) i++
+  return [i, Math.max(0, Math.min(1, (t - KEYS[i]) / (KEYS[i + 1] - KEYS[i])))]
+}
+
 function ramp(t: number, cols: readonly string[]): string {
-  if (t <= KEYS[0]) return cols[0]
-  for (let i = 0; i + 1 < KEYS.length; i++) if (t < KEYS[i + 1]) return mix(cols[i], cols[i + 1], smooth(t, KEYS[i], KEYS[i + 1]))
-  return cols[cols.length - 1]
+  const [i, u] = between(t)
+  return mix(cols[i], cols[i + 1], u)
 }
 
 function num(t: number, vals: readonly number[]): number {
-  if (t <= KEYS[0]) return vals[0]
-  for (let i = 0; i + 1 < KEYS.length; i++) if (t < KEYS[i + 1]) return vals[i] + (vals[i + 1] - vals[i]) * smooth(t, KEYS[i], KEYS[i + 1])
-  return vals[vals.length - 1]
+  const [i, u] = between(t)
+  return vals[i] + (vals[i + 1] - vals[i]) * u
 }
 
 export interface Tone {
