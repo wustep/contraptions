@@ -1,10 +1,8 @@
-import type { Pt } from '../../../../../parts'
 import { layer, motes, rgbaOf, view, type View } from '../depth'
 import { hash, scenery, smooth } from '../kit'
 import { edgeDark } from './grade'
 import { mix } from '../dream/pen'
-import { spotOn } from './draw'
-import { CEIL, CHERYL_AT, DOOR_IN, FLOOR, SPOT, STAGE_TOP, WALL_OUT } from './geo'
+import { CEIL, DOOR_IN, FLOOR, WALL_OUT } from './geo'
 import { BAR_AT, BAR_REF, daylight, flood } from './harbour'
 import { ASH } from './room'
 
@@ -13,8 +11,8 @@ import { ASH } from './room'
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * Inside: the cigarette's smoke going up from the ashtray, a little dust, and when the little stage's spotlight comes
- * on, the dust in its beam. Outside the doors, sleet going by on the wind. Nearest the camera, at the frame's foot: the
+ * Inside: the cigarette's smoke going up from the ashtray, and a little dust. Outside the doors, sleet going by on the
+ * wind. Nearest the camera, at the frame's foot: the
  * end of the near counter with its beer tap, and out on the quay its near edge, a stack of fish boxes and a coil of
  * rope. Over it all the tungsten warmth of the room closing in at the frame's edges; and when he bangs the back door
  * open the grey daylight cools the room.
@@ -38,7 +36,7 @@ export const nuukFront = scenery<null>({
 /** The room's inside, where the smoke and the dust are: from wall to wall, ceiling to floor. */
 const ROOM = { x0: DOOR_IN[1], x1: WALL_OUT[0], y0: CEIL, y1: FLOOR }
 
-/** The air in the room: the cigarette's smoke, a little dust, and the spotlight's beam full of dust while it is on. */
+/** The air in the room: the cigarette's smoke, and a little dust. */
 function drawAir(g: CanvasRenderingContext2D, v: View, t: number): void {
   const k = v.k
   if (v.x0 > ROOM.x1 || v.x1 < ROOM.x0) return
@@ -72,22 +70,6 @@ function drawAir(g: CanvasRenderingContext2D, v: View, t: number): void {
   g.stroke(high)
   // A little dust in the room's air, drifting slowly.
   motes(g, v, t, { n: 10, seed: 27, tile: [2.2, 1.6], r: [0.005, 0.009], v: [0.03, -0.02], spread: 0.6, sway: [0.06, 0.15], color: rgbaOf('#D9B98A', 0.3), within: ROOM })
-  // The spotlight's beam full of dust while it is on.
-  const on = Math.min(1, spotOn(t))
-  if (on > 0.01) {
-    const src: Pt = [SPOT[0] + 0.12, SPOT[1] + 0.12]
-    const target: Pt = [CHERYL_AT[0], STAGE_TOP]
-    g.save()
-    g.beginPath()
-    g.moveTo((src[0] - 0.06) * k, src[1] * k)
-    g.lineTo((src[0] + 0.08) * k, src[1] * k)
-    g.lineTo((target[0] + 0.62) * k, target[1] * k)
-    g.lineTo((target[0] - 0.62) * k, target[1] * k)
-    g.closePath()
-    g.clip()
-    motes(g, v, t, { n: 24, seed: 33, tile: [1.6, 1.4], r: [0.006, 0.011], v: [0.03, 0.05], spread: 0.6, sway: [0.06, 0.3], color: rgbaOf('#FFE9BC', 0.6 * on), within: { x0: src[0] - 0.7, y0: src[1], x1: target[0] + 0.7, y1: target[1] } })
-    g.restore()
-  }
   g.restore()
 }
 
@@ -110,10 +92,7 @@ function drawSleet(g: CanvasRenderingContext2D, v: View, t: number): void {
   g.restore()
 }
 
-/**
- * When he bangs the back door open, a cool lift over the whole room, the tungsten no longer alone (its light on the
- * boards beside the door is the set's, `drawDoorLight`).
- */
+/** When he bangs the back door open, a cool lift over the whole room, the tungsten no longer alone. */
 function drawDaylight(g: CanvasRenderingContext2D, v: View, t: number): void {
   const f = flood(t)
   if (f <= 0.01 || v.x0 > WALL_OUT[1] + 1) return
@@ -190,6 +169,13 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
       g.lineWidth = Math.max(0.8, 0.012 * k)
       g.strokeStyle = '#3E3D3A'
       g.stroke(seams)
+      // The deck's end: its planks' dark end grain, and a pile standing up at its corner.
+      g.fillStyle = '#3E3D3A'
+      g.fillRect(d0 * k, top * k, 0.06 * k, (inner.y1 - top + 1) * k)
+      g.fillStyle = '#2A2826'
+      g.fillRect((d0 + 0.02) * k, (top - 0.3) * k, 0.16 * k, 0.3 * k)
+      g.fillStyle = '#4A4744'
+      g.fillRect((d0 + 0.02) * k, (top - 0.3) * k, 0.16 * k, 0.03 * k)
       const pools = new Path2D()
       const rings = new Path2D()
       for (let i = 0; i < 6; i++) {

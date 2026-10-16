@@ -2,9 +2,9 @@ import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { frame, hash, lastOf, smooth } from '../kit'
 import { drawBoatAbove } from '../sea/boat'
-import { beatPhase, BEGIN, BUMPS, END, H, heli, IN, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF, WIDE_FROM } from './sky-plan'
+import { beatPhase, BEGIN, END, H, heli, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF, WIDE_FROM } from './sky-plan'
 import { ctxOf, mix, oval, poly, rgba, rrect, vgrad, type C2 } from './paint'
-import { drawBanks, drawBergs, drawDeck, drawRanges, drawSkein, drawSun, drawSunPath, drawSwell, drawTown, F, type Eye } from './air'
+import { drawBanks, drawBergs, drawDeck, drawRanges, drawSkein, drawSun, drawSwell, drawTown, F, type Eye } from './air'
 
 /**
  * How the sky is drawn (B3's): the harbour and its pad, the overcast, the grey-green sea going away to the ice and
@@ -99,7 +99,6 @@ export function drawSkySet(p: p5, k: number, t: number, under = false): void {
   drawTown(g, k, e, t, SURF, SKY.seaFar)
   drawBergs(g, k, e, t, SURF, SKY.seaFar)
   drawSwell(g, k, e, t, SURF)
-  drawSunPath(g, k, e, t, SURF)
   drawFloes(g, k, f, hz, t)
   drawSkein(g, k, e, t, SKEIN, WIDE_FROM, 30, -8.4, heli(SKEIN).x + 26, -3, 15)
   if (!under) drawNearWater(g, k, f, t)
@@ -132,12 +131,15 @@ function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t:
     if (y < f.y0 - 1 || y > f.y1 + 1) continue
     const fog = Math.pow(1 - s, 1.6)
     const band = Math.min(BANDS - 1, Math.floor(fog * BANDS))
-    // The ice thins out away from the coast: floes are fewer near, more toward the far ice.
+    // The ice is fewer near than toward the far ice, and far off it lies in a few long streams with open water between.
     const density = 0.22 + 0.4 * (1 - s)
     const squash = Math.max(0.07, Math.min(0.6, e / z))
     for (let n = n0; n <= n1; n++) {
-      if (hash(n, L, 21) > density) continue
+      const q = hash(n, L, 21)
+      if (q > density * (s + (1 - s) * 1.4)) continue
       const gx = (n + hash(n, L, 22)) * spacing + Math.sin(t * 0.15 + n) * 0.05
+      const stream = Math.sin(gx * 0.09 - z * 0.12 + 1.3) + 0.6 * Math.sin(gx * 0.031 + z * 0.05)
+      if (q > density * (s + (1 - s) * smooth(stream, -0.5, 0.6) * 1.4)) continue
       const x = f.cx + (gx - f.cx) * s
       const w = (0.35 + 1.4 * Math.pow(hash(n, L, 23), 2)) * s
       if (x + w < f.x0 - 0.5 || x - w > f.x1 + 0.5) continue
@@ -417,7 +419,6 @@ const GULLS: { x: number; up: number; vx: number; vy: number }[] = [
   { x: 6.95, up: LIFT - 0.95, vx: 0.8, vy: -2.6 },
   { x: 7.2, up: LIFT - 0.7, vx: 1.2, vy: -2.2 },
   { x: 5.6, up: LIFT - 0.5, vx: 0.6, vy: -2.3 },
-  { x: 7.05, up: LIFT - 0.3, vx: 1.1, vy: -2.5 },
 ]
 
 /**
@@ -487,6 +488,10 @@ function drawGulls(g: C2, k: number, f: ReturnType<typeof frame>, t: number, y0:
   g.strokeStyle = '#C8A04E'
   g.lineWidth = Math.max(1, 0.012 * k)
   g.stroke(legs)
+  // The wings white over a grey edge, so a gull reads against the pale sky as well as the sea.
+  g.lineWidth = Math.max(2, 0.05 * k)
+  g.strokeStyle = '#6C777A'
+  g.stroke(wings)
   g.lineWidth = Math.max(1.2, 0.03 * k)
   g.strokeStyle = '#E9ECE9'
   g.stroke(wings)
@@ -703,12 +708,8 @@ export function drawParcel(g: C2, k: number, x: number, y: number, rot: number):
 function drawRotor(g: C2, k: number, t: number, side: number): void {
   const { x, y } = H.mast
   const L = H.blade
-  // The disc: a thin blur across the blades' sweep, brighter on the beat.
-  const ph = beatPhase(t)
-  const pulse = Math.pow(Math.cos(ph * Math.PI) ** 2, 6)
-  if (side < 0) {
-    oval(g, k, x, y, L, 0.07, rgba(SKY.rotor, 0.12 + 0.06 * pulse))
-  }
+  // The disc: a thin flat blur across the blades' sweep.
+  if (side < 0) oval(g, k, x, y, L, 0.07, rgba(SKY.rotor, 0.12))
   g.strokeStyle = SKY.rotor
   g.lineCap = 'round'
   for (const [c, n] of blades(t)) {
@@ -731,18 +732,21 @@ function drawRotor(g: C2, k: number, t: number, side: number): void {
   }
 }
 
+/** The tail rotor: its two blades turning, and a fainter pair just behind them for the sweep. */
 function drawTailRotor(g: C2, k: number, t: number): void {
   const cx = H.tail.x
   const cy = H.tail.y
   const r = H.tail.r
-  oval(g, k, cx, cy, r, r, rgba(SKY.rotor, 0.1))
   const a = beatPhase(t) * Math.PI * 2 * 3
-  g.strokeStyle = rgba(SKY.rotor, 0.75)
   g.lineWidth = Math.max(1, 0.05 * k)
-  g.beginPath()
-  g.moveTo((cx - Math.cos(a) * r) * k, (cy - Math.sin(a) * r) * k)
-  g.lineTo((cx + Math.cos(a) * r) * k, (cy + Math.sin(a) * r) * k)
-  g.stroke()
+  for (const [lag, alpha] of [[0.45, 0.2], [0, 0.75]]) {
+    const b = a - lag
+    g.strokeStyle = rgba(SKY.rotor, alpha)
+    g.beginPath()
+    g.moveTo((cx - Math.cos(b) * r) * k, (cy - Math.sin(b) * r) * k)
+    g.lineTo((cx + Math.cos(b) * r) * k, (cy + Math.sin(b) * r) * k)
+    g.stroke()
+  }
   oval(g, k, cx, cy, 0.06, 0.06, SKY.metal)
 }
 
@@ -788,7 +792,7 @@ function drawPilot(g: C2, k: number, t: number): void {
 
 /* ------------------------------------------------------------------ the wash and the spray */
 
-/** Under the helicopter: on the pad, the wash flattening the puddles as it lifts; over the sea, rings and spray. */
+/** Under the helicopter: on the pad, the wash flattening the puddles as it lifts; over the sea, rings going out. */
 export function drawWash(p: p5, k: number, t: number): void {
   const g = ctxOf(p)
   const h = heli(t)
@@ -803,24 +807,17 @@ export function drawWash(p: p5, k: number, t: number): void {
       oval(g, k, x, 0.04 - u * 0.12, 0.25 + u * 0.4, 0.03 + u * 0.05, rgba('#DDE2E0', a * 0.35 * (1 - u)))
     }
   }
-  // Over the water, when it is low: rings going out on the sea, and spray.
+  // Over the water, when it is low: rings going out on the sea.
   if (height < 4.5 && t > BEGIN + 10) {
     const a = smooth(-height, -4.5, -2.0)
-    for (let i = 0; i < 5; i++) {
-      const u = ((t * 0.7 + i / 5) % 1)
+    g.lineWidth = Math.max(1, 0.03 * k)
+    for (let i = 0; i < 4; i++) {
+      const u = ((t * 0.7 + i / 4) % 1)
       const r = 0.6 + u * 3.6
       g.strokeStyle = rgba('#DCE3E0', a * 0.5 * (1 - u))
-      g.lineWidth = Math.max(1, 0.03 * k)
       g.beginPath()
       g.ellipse((h.x + 0.4) * k, (SURF + 0.06) * k, r * k, r * 0.07 * k, 0, 0, Math.PI * 2)
       g.stroke()
-    }
-    for (let i = 0; i < 26; i++) {
-      const u = ((t * 1.1 + hash(i, 61)) % 1)
-      const dir = hash(i, 62) < 0.5 ? -1 : 1
-      const x = h.x + 0.4 + dir * (0.4 + u * (1.5 + 2 * hash(i, 63)))
-      const y = SURF - 0.05 - Math.sin(u * Math.PI) * (0.25 + 0.3 * hash(i, 64))
-      oval(g, k, x, y, 0.05 + 0.08 * u, 0.04 + 0.05 * u, rgba('#E9EEEC', a * 0.45 * (1 - u)))
     }
   }
 }
@@ -828,9 +825,7 @@ export function drawWash(p: p5, k: number, t: number): void {
 /* ------------------------------------------------------------------ the parcel, as he goes */
 
 /** Where the parcel is from the step out of the door on: with him on the skid, and beside him in the fall. */
-export function parcelWith(walter: Pt, t: number): { p: Pt; rot: number } {
-  const a = smooth(t, STEP - 0.34, STEP)
-  void a
+function parcelWith(walter: Pt, t: number): { p: Pt; rot: number } {
   const rot = t > JUMP ? (t - JUMP) * 1.4 : 0
   return { p: [walter[0] + PARCEL_OFF[0], walter[1] + PARCEL_OFF[1] + 0.115], rot }
 }
@@ -847,4 +842,3 @@ export function parcelAt(t: number, walter: Pt): { p: Pt; rot: number; local: bo
   return { ...parcelWith(walter, t), local: false }
 }
 
-export { BUMPS, IN, H }

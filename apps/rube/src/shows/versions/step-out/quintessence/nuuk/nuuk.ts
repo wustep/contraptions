@@ -3,7 +3,7 @@ import { follower } from '../camera'
 import { box, frame, part, scenery, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import { WALTER_WARM } from '../worlds'
-import { drawCounter, drawDoorIn, drawDoorOut, drawGuitar, drawOver, drawPilot, drawQuay, drawRoom, drawSpot, drawStage } from './draw'
+import { drawCounter, drawDoorIn, drawDoorOut, drawGuitar, drawPilot, drawQuay, drawRoom, drawSpot, drawStage } from './draw'
 import { CHERYL_FROM, CHERYL_GONE, cherylAt, EXIT_X, HINGE, NUUK_STRIKES, OUT, PLANK, SHE_LANDS, STOP, T0, T1, V_SKY, WAY } from './geo'
 import type { Pen } from '../dream/pen'
 import { drawAshtray, drawCounterFront, drawLamps, drawRail } from './room'
@@ -32,7 +32,7 @@ export const nuukSet = scenery<null>({
     const pen = penOf(p, c.k, c.ink, c.weight)
     p.push()
     drawRoom(pen, c.t, frame(p, c.k))
-    drawCounter(pen, c.t)
+    drawCounter(pen)
     const g = p.drawingContext as CanvasRenderingContext2D
     drawCounterFront(g, c.k)
     drawRail(g, c.k, c.t)
@@ -64,12 +64,6 @@ export const bar = part<BarState>(
       drawQuay(pen, t, PLANK_X)
       drawPilot(pen, t)
       drawGuitar(pen, t)
-      p.pop()
-    },
-    over: (p, s, c) => {
-      const t = s.begin + c.t
-      p.push()
-      drawOver(penOf(p, c.k, c.ink, c.weight), t)
       p.pop()
     },
   },

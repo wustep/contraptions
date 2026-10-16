@@ -127,4 +127,3 @@ export const SKY_HITS: readonly number[] = [...new Set([
 /** The one wide: the helicopter small over the sea, coming down toward the boat (bars 33 and 34). */
 export const SKY_WIDE: [number, number][] = [[WIDE_FROM, WIDE_TO]]
 
-export { END as SKY_END, SURF as SKY_SURF }
