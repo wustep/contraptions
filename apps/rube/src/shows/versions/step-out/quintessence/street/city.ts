@@ -196,39 +196,27 @@ function vehicle(ctx: C2, k: number, car: Vehicle, x: number, y: number, dir: nu
     ctx.strokeStyle = line
     ctx.strokeRect(a * k, (y - h) * k, len * k, (h - r * 0.9) * k)
   } else if (car.kind === 'truck') {
-    // A box truck: the box in its panels, the roof rail and the rub rail darker, the rear doors' frame with their
-    // locking bar, the sun along the roof; the cab before it.
+    // A box truck: the box in its panels, its roof rail, rub rail and rear doors' post darker; the cab before it.
     const cabW = 1.25
     const bw = len - cabW - 0.05
     const cab0 = dir > 0 ? b - cabW : a
     const box0 = dir > 0 ? a : a + cabW + 0.05
     const top = y - h
-    const foot = body0 - 0.02
-    const dark = mix(color, INK, 0.4)
     ctx.fillStyle = color
-    ctx.fillRect(box0 * k, top * k, bw * k, (foot - top) * k)
-    ctx.fillStyle = dark
+    ctx.fillRect(box0 * k, top * k, bw * k, (body0 - top) * k)
+    ctx.fillStyle = mix(color, INK, 0.4)
     ctx.fillRect(box0 * k, top * k, bw * k, 0.1 * k)
-    ctx.fillRect(box0 * k, (foot - 0.16) * k, bw * k, 0.08 * k)
-    const rear = dir > 0 ? box0 : box0 + bw - 0.14
-    ctx.fillStyle = mix(color, INK, 0.22)
-    ctx.fillRect(rear * k, (top + 0.1) * k, 0.14 * k, (foot - top - 0.26) * k)
-    ctx.fillStyle = rgba('#FFF2D8', 0.45)
-    ctx.fillRect(box0 * k, top * k, bw * k, 0.03 * k)
+    ctx.fillRect(box0 * k, (body0 - 0.18) * k, bw * k, 0.08 * k)
+    ctx.fillRect((dir > 0 ? box0 : box0 + bw - 0.12) * k, (top + 0.1) * k, 0.12 * k, (body0 - top - 0.28) * k)
     ctx.strokeStyle = rgba(INK, 0.4)
     ctx.beginPath()
-    const n = Math.round(bw / 0.6)
-    for (let j = 1; j < n; j++) {
-      const sx = box0 + (bw * j) / n
+    for (let sx = box0 + 0.6; sx < box0 + bw - 0.3; sx += 0.6) {
       ctx.moveTo(sx * k, (top + 0.1) * k)
-      ctx.lineTo(sx * k, (foot - 0.16) * k)
+      ctx.lineTo(sx * k, (body0 - 0.18) * k)
     }
-    const bar = rear + 0.07
-    ctx.moveTo(bar * k, (top + 0.2) * k)
-    ctx.lineTo(bar * k, (foot - 0.2) * k)
     ctx.stroke()
     ctx.strokeStyle = line
-    ctx.strokeRect(box0 * k, top * k, bw * k, (foot - top) * k)
+    ctx.strokeRect(box0 * k, top * k, bw * k, (body0 - top) * k)
     ctx.fillStyle = '#53687A'
     ctx.fillRect(cab0 * k, (y - h * 0.72) * k, cabW * k, (h * 0.72 - r * 0.9) * k)
     ctx.fillStyle = glass
@@ -431,24 +419,8 @@ export function drawPeople(ctx: C2, v: View, t: number): void {
  * the avenue and larger the nearer they come. Each way is [time, x, y] stops, walking between them.
  */
 const CROSSERS: { way: [number, number, number][]; h: number; coat: string }[] = [
-  {
-    way: [
-      [255.2, CORNER.kerb + 0.95, -0.35],
-      [259.6, CORNER.kerb + 0.75, PAVE + 0.3],
-      [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3],
-      [WALK + 5.0, CORNER.kerb + 0.68, 4.2],
-    ],
-    h: 1.14,
-    coat: '#4B4F44',
-  },
-  {
-    way: [
-      [WALK + 1.0, CORNER.kerb + 1.08, 4.2],
-      [WALK + 6.2, CORNER.kerb + 1.02, PAVE + 0.34],
-    ],
-    h: 1.1,
-    coat: '#6E5E4E',
-  },
+  { way: [[255.2, CORNER.kerb + 0.95, -0.35], [259.6, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 5.0, CORNER.kerb + 0.68, 4.2]], h: 1.14, coat: '#4B4F44' },
+  { way: [[WALK + 1.0, CORNER.kerb + 1.08, 4.2], [WALK + 6.2, CORNER.kerb + 1.02, PAVE + 0.34]], h: 1.1, coat: '#6E5E4E' },
 ]
 
 export function drawCrossers(ctx: C2, v: View, t: number): void {

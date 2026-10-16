@@ -458,8 +458,6 @@ function drawBike(ctx: C2, k: number): void {
     ctx.beginPath()
     ctx.arc(wx * k, wy * k, r * k, 0, Math.PI * 2)
     ctx.stroke()
-    line([[wx - r * 0.7, wy - r * 0.7], [wx + r * 0.7, wy + r * 0.7]], rgba('#2A2E31', 0.5), 0.012)
-    line([[wx - r * 0.7, wy + r * 0.7], [wx + r * 0.7, wy - r * 0.7]], rgba('#2A2E31', 0.5), 0.012)
   }
   line([back, crank, seat, back], '#4A5E6A', 0.04)
   line([seat, head, neck, crank], '#4A5E6A', 0.04)
