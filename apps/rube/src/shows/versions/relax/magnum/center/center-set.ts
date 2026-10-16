@@ -138,9 +138,16 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
   p.rect(x0 * k, GROUND * k, (x1 - x0) * k, 0.07 * k)
   p.fill(dk(mixHex(CENTER.path, CENTER.lawnDark, 0.35), 0.6))
   p.rect(x0 * k, (GROUND + 0.07) * k, (x1 - x0) * k, 0.025 * k)
-  p.fill(dk(CENTER.lawn, 0.62))
-  p.rect(x0 * k, (GROUND + 0.095) * k, (x1 - x0) * k, (foot - GROUND) * k)
-  p.fill(dk(CENTER.lawnDark, 0.64))
-  p.rect(x0 * k, (GROUND + 1.4) * k, (x1 - x0) * k, (foot - GROUND) * k)
+  // The front lawn, mown in stripes across: each wider than the one beyond it as they come toward us, the grass
+  // laid one way and then the other, so they take the light a shade apart, and darker overall toward the foot.
+  const stripes = [0, 0.16, 0.36, 0.62, 0.95, 1.38, 1.92, 2.6, 3.45]
+  for (let j = 0; j < stripes.length; j++) {
+    const y0 = GROUND + 0.095 + stripes[j]
+    const y1 = j + 1 < stripes.length ? GROUND + 0.095 + stripes[j + 1] : foot
+    if (y0 > foot) break
+    const f = Math.min(0.85, 0.04 + 0.11 * j + (j % 2 ? 0.1 : 0))
+    p.fill(dk(mixHex(CENTER.lawn, CENTER.lawnDark, f), 0.62))
+    p.rect(x0 * k, y0 * k, (x1 - x0) * k, (Math.max(y1, y0) - y0 + 0.01) * k)
+  }
   p.pop()
 }

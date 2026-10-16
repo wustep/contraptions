@@ -39,6 +39,7 @@ import {
   TAP_BACK,
   TAP_OFF,
   TAP_UP,
+  WINDOW_LIGHTS,
 } from './center-plan'
 import { drawSet } from './center-set'
 
@@ -155,18 +156,25 @@ export const center = part<null>(
       riders: (t: number, hero: ShowBall) => {
         const out: ShowBall[] = [{ ...hero, spin: DEREK_LOOKS(t) }]
         if (t < KIDS_FROM) return out
-        // The kids at the lit windows, coming out of the light as each lamp comes on.
+        // The kids at the lit windows, coming out of the light as each lamp comes on, and then never quite still:
+        // each drifts along its sill on its own slow clock, looking the way it goes, within its own pane (half of
+        // it, where two share one).
         for (const q of WINDOW_KIDS) {
           const lit = litAt(q.window, t)
           if (lit <= 0) continue
+          const shared = WINDOW_KIDS.filter((o) => o.window === q.window).length > 1
+          const w = 0.23 + 0.11 * ((q.kid * 0.618) % 1)
+          const ph = q.kid * 2.3 + q.window
+          const settle = Math.min(1, Math.max(0, (t - WINDOW_LIGHTS[q.window] - 1.5) / 3))
+          const drift = settle * (shared ? 0.04 : 0.16) * Math.sin(t * w + ph)
           out.push({
             id: KID_ID + q.kid,
-            x: MODEL.x0 + D.windows[q.window] + q.dx,
+            x: MODEL.x0 + D.windows[q.window] + q.dx + drift,
             y: GROUND - D.window.y0 - KID_R,
             color: mixHex(LIT, KIDS[q.kid % KIDS.length], lit),
             rim: mixHex(LIT, CENTER_THEME.ink, lit),
             scale: KID_SCALE,
-            spin: Math.PI / 2 + q.dx * 3,
+            spin: Math.PI / 2 + q.dx * 3 - settle * 0.5 * Math.cos(t * w + ph),
           })
         }
         for (let i = 0; i < KID_COUNT; i++) {
