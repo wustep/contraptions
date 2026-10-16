@@ -1,7 +1,8 @@
 import type { Pt } from '../../../../../parts'
-import { layer, motes, sway, type View } from '../depth'
+import { layer, sway, type View } from '../depth'
 import { hash } from '../kit'
 import { mix, rgba } from '../negatives/hand'
+import { steam } from './city'
 import { FRONTS } from './fronts'
 import { goldAt, morning, S, skyAt, sunAt, whiteAt } from './light'
 
@@ -326,10 +327,7 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       ctx.fillRect((x0 - 1) * k, -2.2 * k, (x1 - x0 + 2) * k, 2.4 * k)
     })
     // Steam off a roof, always: a vent on the far side's roofs breathing out.
-    motes(ctx, { ...f, x0: 19.2, x1: 21.6, y0: -9, y1: -4.6 }, t, {
-      n: 14, seed: 8, tile: [2.4, 4.4], r: [0.14, 0.32], v: [-0.18, -0.42], spread: 0.35, sway: [0.12, 0.2], color: rgba('#FFFFFF', 0.13 + 0.05 * m),
-      within: { x0: 19.2, x1: 21.6, y0: -9, y1: -4.6 },
-    })
+    steam(ctx, f, t, 21.2, -4.7, 3.6, 8, 8, 0.75 + 0.25 * m)
   })
 }
 
