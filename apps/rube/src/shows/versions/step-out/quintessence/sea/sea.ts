@@ -46,7 +46,6 @@ import { smooth } from '../kit'
 export const SEA_AT: Pt = [0, 0]
 /** The sky's frame in the sea's: the same water, the same boat, the same helicopter, moved so he goes in at (-0.5, 0). */
 const FROM_SKY: Pt = [-0.5 - SPLASH[0], -SPLASH[1]]
-void SKY_BOAT_X0
 
 /** Everything the place's set draws, claimed coarsely so the stage draws it wherever the camera is. */
 export const SEA_CELLS = box(-14, -10, 16, 12, 2)
