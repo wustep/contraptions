@@ -32,8 +32,8 @@ The folder and file names are addresses, so they are chosen once:
   `rule-the-world` **Rally**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
-  `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
-  model's point as a hyphen (`opus5-5`, `fable5-1`). A second take by the same
+  `fable51`, `grok47`), or with a letter (`take-a`). La La Land's takes keep the
+  model's point as a hyphen (`opus5-5`, and `fable5-1`, hidden for now). A second take by the same
   hand adds its code name (`opus55-spark`). Don't repeat the work's name in it.
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
@@ -58,9 +58,9 @@ A name already shipped stays, even where it misses these (`come-recover/opus55-a
 is Everything's only take, with its code name in the id). Renaming a take moves a public link
 and its card, so the old name goes in `RENAMED_TAKES` (`../registry.ts`): the page opens the old
 address as the take and writes the new one back, and the build writes a page at the old address
-too. Three have moved: `la-la-land/opus55-sebs` → `opus5-5`, `la-la-land/fable51-epilogue` →
-`fable5-1`, `cornfield-chase/opus55-music-sync` → `opus55`. (`cornfield-chase/tech-demo` → `grok47` is
-commented out while that take is hidden.)
+too. Two have moved: `la-la-land/opus55-sebs` → `opus5-5` and `cornfield-chase/opus55-music-sync` →
+`opus55`. (`la-la-land/fable51-epilogue` → `fable5-1` and `cornfield-chase/tech-demo` → `grok47` are
+commented out while those takes are hidden.)
 A work has no such map yet, so renaming one waits for it.
 
 ## The file
@@ -285,7 +285,8 @@ against it (`apps/rube/checks/sebs.ts`). The recordings are copyrighted and
 demo only: `apps/rube/src/shows/versions/la-la-land/SEBS_ATTRIBUTION.txt`. The whole story is in
 `apps/rube/src/shows/versions/la-la-land/SEBS.md`.
 
-`la-la-land/fable5-1` (in the picker, **Fable 5.1** under
+`la-la-land/fable5-1` (hidden for now, Oct 15: its file is `fable5-1.ts`, not `fable5-1.show.ts`,
+so Epilogue is its Opus take alone; it stood in the picker as **Fable 5.1** under
 **Epilogue**) is Justin Hurwitz's *Epilogue* from La La Land, demo
 only (`apps/rube/src/shows/versions/la-la-land/EPILOGUE_ATTRIBUTION.txt`), played whole from its
 first sample, with every piece new. The show lives in `la-la-land/epilogue/`,
